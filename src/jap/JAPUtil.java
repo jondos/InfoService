@@ -66,6 +66,8 @@ import logging.LogType;
 import java.sql.Timestamp;
 import java.text.NumberFormat;
 import gui.ImageIconLoader;
+import java.text.DecimalFormat;
+import java.io.IOException;
 
 /**
  * This class contains static utility functions for Jap
@@ -94,22 +96,28 @@ final public class JAPUtil
 	/** Returns a formated number which respects different units (Bytes, kBytes, MBytes, GBytes)*/
 	public static String formatBytesValueWithoutUnit(long c)
 	{
+		DecimalFormat df=(DecimalFormat)DecimalFormat.getInstance(JAPController.getLocale());
+		double d=c;
 		if (c < 10000)
 		{
+			df.applyPattern("#,####");
 		}
 		else if (c < 1000000)
 		{
-			c /= 1000;
+			d /= 1000.0;
+			df.applyPattern("#,##0.0");
 		}
 		else if (c < 1000000000)
 		{
-			c /= 1000000;
+			d /= 1000000.0;
+			df.applyPattern("#,##0.00");
 		}
 		else
 		{
-			c /= 1000000000;
+			d /= 1000000000.0;
+			df.applyPattern("#,##0.000");
 		}
-		return NumberFormat.getNumberInstance(JAPController.getLocale()).format(c);
+		return df.format(d);
 	}
 
 	/**
@@ -413,7 +421,11 @@ final public class JAPUtil
 		return fd2;
 	}
 
-	public static JAPCertificate openCertificate(Window jf)
+	/** Shows a file open dialog and tries to read a certificate. Returns null, if the user canceld
+	 * the open request. Throws IOException if certificte could not be readed or decoded.
+	 */
+
+	public static JAPCertificate openCertificate(Window jf) throws IOException
 	{
 		File file = showFileDialog(jf).getSelectedFile();
 		JAPCertificate t_cert = null;
@@ -425,13 +437,14 @@ final public class JAPUtil
 				FileInputStream fin = new FileInputStream(file);
 				fin.read(buff);
 				fin.close();
-
 				t_cert = JAPCertificate.getInstance(buff);
 			}
 			catch (Exception e1)
 			{
-				t_cert = null;
+				throw new IOException(e1.getMessage());
 			}
+			if(t_cert==null)
+				throw new IOException("Could not create certificate!");
 		}
 		return t_cert;
 	}
