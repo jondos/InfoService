@@ -462,9 +462,9 @@ public final class JAPController implements ProxyListener, Observer
 				NamedNodeMap n = root.getAttributes();
 
 				//
-				String strVersion = XMLUtil.parseNodeString(n.getNamedItem("version"), null);
-				int port = XMLUtil.parseElementAttrInt(root, "portNumber", JAPModel.getHttpListenerPortNumber());
-				boolean bListenerIsLocal = XMLUtil.parseNodeBoolean(n.getNamedItem("listenerIsLocal"), true);
+				String strVersion = XMLUtil.parseNodeString(n.getNamedItem(JAPConstants.CONFIG_VERSION), null);
+				int port = XMLUtil.parseElementAttrInt(root, JAPConstants.CONFIG_PORT_NUMBER, JAPModel.getHttpListenerPortNumber());
+				boolean bListenerIsLocal = XMLUtil.parseNodeBoolean(n.getNamedItem(JAPConstants.CONFIG_LISTENER_IS_LOCAL), true);
 				setHTTPListener(port, bListenerIsLocal, false);
 				//port = XMLUtil.parseElementAttrInt(root, "portNumberSocks",
 				//  JAPModel.getSocksListenerPortNumber());
@@ -472,24 +472,31 @@ public final class JAPController implements ProxyListener, Observer
 				//setUseSocksPort(JAPUtil.parseNodeBoolean(n.getNamedItem("supportSocks"),false));
 				//setUseProxy(JAPUtil.parseNodeBoolean(n.getNamedItem("proxyMode"),false));
 				// load settings for the reminder message in setAnonMode
+				try
+				{
 				mbActCntMessageNeverRemind = XMLUtil.parseNodeBoolean(n.getNamedItem(
-					"neverRemindActiveContent"), false);
-				mbDoNotAbuseReminder = XMLUtil.parseNodeBoolean(n.getNamedItem("doNotAbuseReminder"), false);
+						JAPConstants.CONFIG_NEVER_REMIND_ACTIVE_CONTENT), false);
+					mbDoNotAbuseReminder = XMLUtil.parseNodeBoolean(n.getNamedItem(JAPConstants.CONFIG_DO_NOT_ABUSE_REMINDER), false);
 				if (mbActCntMessageNeverRemind && mbDoNotAbuseReminder)
 				{
 					mbActCntMessageNotRemind = true;
 					// load settings for the reminder message before goodBye
 				}
-				mbGoodByMessageNeverRemind = XMLUtil.parseNodeBoolean(n.getNamedItem("neverRemindGoodBye"), false);
+					mbGoodByMessageNeverRemind = XMLUtil.parseNodeBoolean(n.getNamedItem(JAPConstants.CONFIG_NEVER_REMIND_GOODBYE), false);
 
+				} catch (Exception ex)
+				{
+					LogHolder.log(LogLevel.INFO, LogType.MISC,
+								  "JAPController: loadConfigFile: Error loading reminder message ins setAnonMode.");
+				}
 				/* infoservice configuration options */
-				boolean b = XMLUtil.parseNodeBoolean(n.getNamedItem("infoServiceDisabled"),
+				boolean b = XMLUtil.parseNodeBoolean(n.getNamedItem(JAPConstants.CONFIG_INFOSERVICE_DISABLED),
 					JAPModel.isInfoServiceDisabled());
 				setInfoServiceDisabled(b);
-				b = XMLUtil.parseNodeBoolean(n.getNamedItem("infoServiceChange"),
+				b = XMLUtil.parseNodeBoolean(n.getNamedItem(JAPConstants.CONFIG_INFOSERVICE_CHANGE),
 											 InfoServiceHolder.getInstance().isChangeInfoServices());
 				InfoServiceHolder.getInstance().setChangeInfoServices(b);
-				int i = XMLUtil.parseNodeInt(n.getNamedItem("infoServiceTimeout"), -1);
+				int i = XMLUtil.parseNodeInt(n.getNamedItem(JAPConstants.CONFIG_INFOSERVICE_TIMEOUT), -1);
 				try
 				{
 					if ( (i >= 1) && (i <= 60))
@@ -504,18 +511,18 @@ public final class JAPController implements ProxyListener, Observer
 				}
 
 				//settings for Certificates
-				setCertCheckDisabled(XMLUtil.parseNodeBoolean(n.getNamedItem("certCheckDisabled"),
+				setCertCheckDisabled(XMLUtil.parseNodeBoolean(n.getNamedItem(JAPConstants.CONFIG_CERT_CHECK_DISABLED),
 					JAPModel.isCertCheckDisabled()));
 
 				try
 				{
 					// setCertificateStore(XMLUtil.parseNodeString(n.getNamedItem("acceptedCertList"), ""));
 					// JAPCertificateStore jcs = null;
-					Element elemCAs = (Element) XMLUtil.getFirstChildByName(root, "CertificateAuthorities");
+					Element elemCAs = (Element) XMLUtil.getFirstChildByName(root, JAPConstants.CONFIG_CERTIFICATE_AUTHORITIES);
 					if (elemCAs != null)
 					{
 						// was: NodeList nlX509Certs = xmlCA.getElementsByTagName("X509Certificate");
-						NodeList nlX509Certs = elemCAs.getElementsByTagName("CertificateAuthority");
+						NodeList nlX509Certs = elemCAs.getElementsByTagName(JAPConstants.CONFIG_CERTIFICATE_AUTHORITY);
 						if (
 							(nlX509Certs != null) &&
 							(nlX509Certs.getLength() >= 1)
@@ -563,14 +570,14 @@ public final class JAPController implements ProxyListener, Observer
 				try
 				{
 					proxyInterface = new ProxyInterface(
-						XMLUtil.parseNodeString(n.getNamedItem("proxyHostName"), null),
-						XMLUtil.parseElementAttrInt(root, "proxyPortNumber", -1),
-						XMLUtil.parseNodeString(n.getNamedItem("proxyType"),
+						XMLUtil.parseNodeString(n.getNamedItem(JAPConstants.CONFIG_PROXY_HOST_NAME), null),
+						XMLUtil.parseElementAttrInt(root, JAPConstants.CONFIG_PROXY_PORT_NUMBER, -1),
+						XMLUtil.parseNodeString(n.getNamedItem(JAPConstants.CONFIG_PROXY_TYPE),
 												ProxyInterface.PROTOCOL_STR_TYPE_HTTP),
-						XMLUtil.parseNodeString(n.getNamedItem("proxyAuthUserID"), null),
+						XMLUtil.parseNodeString(n.getNamedItem(JAPConstants.CONFIG_PROXY_AUTH_USER_ID), null),
 						getPasswordReader(),
-						XMLUtil.parseNodeBoolean(n.getNamedItem("proxyAuthorization"), false),
-						XMLUtil.parseNodeBoolean(n.getNamedItem("proxyMode"), false));
+						XMLUtil.parseNodeBoolean(n.getNamedItem(JAPConstants.CONFIG_PROXY_AUTHORIZATION), false),
+						XMLUtil.parseNodeBoolean(n.getNamedItem(JAPConstants.CONFIG_PROXY_MODE), false));
 				}
 				catch (Exception a_e)
 				{
@@ -584,12 +591,12 @@ public final class JAPController implements ProxyListener, Observer
 
 				/* try to get the info from the MixCascade node */
 				MixCascade defaultMixCascade = null;
-				Element mixCascadeNode = (Element) XMLUtil.getFirstChildByName(root, "MixCascade");
+				Element mixCascadeNode = (Element) XMLUtil.getFirstChildByName(root, JAPConstants.CONFIG_MIX_CASCADE);
 				try
 				{
 					defaultMixCascade = new MixCascade( (Element) mixCascadeNode);
 					defaultMixCascade.setIsUserDefined(
-						XMLUtil.parseElementAttrBoolean(mixCascadeNode, "userDefined", false));
+						XMLUtil.parseElementAttrBoolean(mixCascadeNode, JAPConstants.CONFIG_USER_DEFINED, false));
 				}
 				catch (Exception e)
 				{
@@ -599,19 +606,19 @@ public final class JAPController implements ProxyListener, Observer
 				setCurrentMixCascade(defaultMixCascade);
 
 				/* try to load information about user defined cascades */
-				Node nodeCascades=XMLUtil.getFirstChildByName(root,"MixCascades");
+				Node nodeCascades=XMLUtil.getFirstChildByName(root,JAPConstants.CONFIG_MIX_CASCADES);
 				if(nodeCascades!=null)
 				{
 					Node nodeCascade=nodeCascades.getFirstChild();
 					while(nodeCascade!=null)
 					{
-						if(nodeCascade.getNodeName().equals("MixCascade"))
+						if(nodeCascade.getNodeName().equals(JAPConstants.CONFIG_MIX_CASCADE))
 						{
 							try
 							{
 								MixCascade cascade=new MixCascade( (Element) nodeCascade);
 								cascade.setIsUserDefined(
-									XMLUtil.parseAttribute(nodeCascade, "userDefined", false));
+									XMLUtil.parseAttribute(nodeCascade, JAPConstants.CONFIG_USER_DEFINED, false));
 								m_vectorMixCascadeDatabase.addElement(cascade);
 							}
 							catch(Exception e){}
@@ -620,19 +627,19 @@ public final class JAPController implements ProxyListener, Observer
 					}
 				}
 
-				setDummyTraffic(XMLUtil.parseElementAttrInt(root, "DummyTrafficIntervall", -1));
-				setAutoConnect(XMLUtil.parseNodeBoolean(n.getNamedItem("autoConnect"), false));
-				setAutoReConnect(XMLUtil.parseNodeBoolean(n.getNamedItem("autoReConnect"), false));
-				setPreCreateAnonRoutes(XMLUtil.parseNodeBoolean(n.getNamedItem("preCreateAnonRoutes"), true));
-				m_Model.setMinimizeOnStartup(XMLUtil.parseNodeBoolean(n.getNamedItem("minimizedStartup"), false));
+				setDummyTraffic(XMLUtil.parseElementAttrInt(root, JAPConstants.CONFIG_DUMMY_TRAFFIC_INTERVALL, -1));
+				setAutoConnect(XMLUtil.parseNodeBoolean(n.getNamedItem(JAPConstants.CONFIG_AUTO_CONNECT), false));
+				setAutoReConnect(XMLUtil.parseNodeBoolean(n.getNamedItem(JAPConstants.CONFIG_AUTO_RECONNECT), false));
+				setPreCreateAnonRoutes(XMLUtil.parseNodeBoolean(n.getNamedItem(JAPConstants.CONFIG_PRECREATE_ANON_ROUTES), true));
+				m_Model.setMinimizeOnStartup(XMLUtil.parseNodeBoolean(n.getNamedItem(JAPConstants.CONFIG_MINIMIZED_STARTUP), false));
 				//Load Locale-Settings
-				String strLocale = XMLUtil.parseNodeString(n.getNamedItem("Locale"), m_Locale.getLanguage());
+				String strLocale = XMLUtil.parseNodeString(n.getNamedItem(JAPConstants.CONFIG_LOCALE), m_Locale.getLanguage());
 				Locale locale = new Locale(strLocale, "");
 				setLocale(locale);
 				//Load look-and-feel settings (not changed if SmmallDisplay!
 				if (!m_Model.isSmallDisplay())
 				{
-					String lf = XMLUtil.parseNodeString(n.getNamedItem("LookAndFeel"), "unknown");
+					String lf = XMLUtil.parseNodeString(n.getNamedItem(JAPConstants.CONFIG_LOOK_AND_FEEL), JAPConstants.CONFIG_UNKNOWN);
 					LookAndFeelInfo[] lfi = UIManager.getInstalledLookAndFeels();
 					for (i = 0; i < lfi.length; i++)
 					{
@@ -654,29 +661,31 @@ public final class JAPController implements ProxyListener, Observer
 					}
 				}
 				//Loading GUI Setting
-				Element elemGUI = (Element) XMLUtil.getFirstChildByName(root, "GUI");
+				Element elemGUI = (Element) XMLUtil.getFirstChildByName(root, JAPConstants.CONFIG_GUI);
 				if (elemGUI != null)
 				{
-					Element elemMainWindow = (Element) XMLUtil.getFirstChildByName(elemGUI, "MainWindow");
+					Element elemMainWindow = (Element) XMLUtil.getFirstChildByName(elemGUI, JAPConstants.CONFIG_MAIN_WINDOW);
 					if (elemMainWindow != null)
 					{
-						Element tmp = (Element) XMLUtil.getFirstChildByName(elemMainWindow, "SetOnStartup");
+						try
+						{
+							Element tmp = (Element) XMLUtil.getFirstChildByName(elemMainWindow, JAPConstants.CONFIG_SET_ON_STARTUP);
 						b = XMLUtil.parseNodeBoolean(tmp, false);
 						JAPController.setSaveMainWindowPosition(b);
 						if (b)
 						{
-							tmp = (Element) XMLUtil.getFirstChildByName(elemMainWindow, "Location");
+								tmp = (Element) XMLUtil.getFirstChildByName(elemMainWindow, JAPConstants.CONFIG_LOCATION);
 							Point p = new Point();
-							p.x = XMLUtil.parseElementAttrInt(tmp, "x", -1);
-							p.y = XMLUtil.parseElementAttrInt(tmp, "y", -1);
+								p.x = XMLUtil.parseElementAttrInt(tmp, JAPConstants.CONFIG_X, -1);
+								p.y = XMLUtil.parseElementAttrInt(tmp, JAPConstants.CONFIG_Y, -1);
 							Dimension d = new Dimension();
-							tmp = (Element) XMLUtil.getFirstChildByName(elemMainWindow, "Size");
-							d.width = XMLUtil.parseElementAttrInt(tmp, "dx", -1);
-							d.height = XMLUtil.parseElementAttrInt(tmp, "dy", -1);
+								tmp = (Element) XMLUtil.getFirstChildByName(elemMainWindow, JAPConstants.CONFIG_SIZE);
+								d.width = XMLUtil.parseElementAttrInt(tmp, JAPConstants.CONFIG_DX, -1);
+								d.height = XMLUtil.parseElementAttrInt(tmp, JAPConstants.CONFIG_DY, -1);
 							m_Model.m_OldMainWindowLocation = p;
 							m_Model.m_OldMainWindowSize = d;
 						}
-						tmp = (Element) XMLUtil.getFirstChildByName(elemMainWindow, "MoveToSystray");
+							tmp = (Element) XMLUtil.getFirstChildByName(elemMainWindow, JAPConstants.CONFIG_MOVE_TO_SYSTRAY);
 						b = XMLUtil.parseNodeBoolean(tmp, false);
 						setMoveToSystrayOnStartup(b);
 						if (b)
@@ -686,42 +695,49 @@ public final class JAPController implements ProxyListener, Observer
 								m_View.hideWindowInTaskbar();
 							}
 						}
-						tmp = (Element) XMLUtil.getFirstChildByName(elemMainWindow, "DefaultView");
-						String strDefaultView = XMLUtil.parseNodeString(tmp, "Normal");
-						if (strDefaultView.equals("Simplified"))
+							tmp = (Element) XMLUtil.getFirstChildByName(elemMainWindow, JAPConstants.CONFIG_DEFAULT_VIEW);
+							String strDefaultView = XMLUtil.parseNodeString(tmp, JAPConstants.CONFIG_NORMAL);
+							if (strDefaultView.equals(JAPConstants.CONFIG_SIMPLIFIED))
 						{
 							setDefaultView(JAPConstants.VIEW_SIMPLIFIED);
 							///todo: set simplified view...
 						}
+						} catch (Exception ex)
+						{
+							LogHolder.log(LogLevel.INFO, LogType.MISC,
+										  "JAPController: loadConfigFile: Error loading GUI configuration.");
+						}
 					}
 				}
 				//Loading debug settings
-				Element elemDebug = (Element) XMLUtil.getFirstChildByName(root, "Debug");
+				Element elemDebug = (Element) XMLUtil.getFirstChildByName(root, JAPConstants.CONFIG_DEBUG);
 				if (elemDebug != null)
 				{
-					Element elemLevel = (Element) XMLUtil.getFirstChildByName(elemDebug, "Level");
+					try
+					{
+						Element elemLevel = (Element) XMLUtil.getFirstChildByName(elemDebug, JAPConstants.CONFIG_LEVEL);
 					if (elemLevel != null)
 					{
 						int l = XMLUtil.parseNodeInt(elemLevel, JAPDebug.getInstance().getLogLevel());
 						JAPDebug.getInstance().setLogLevel(l);
 					}
-					Element elemType = (Element) XMLUtil.getFirstChildByName(elemDebug, "Type");
+						Element elemType = (Element) XMLUtil.getFirstChildByName(elemDebug, JAPConstants.CONFIG_TYPE);
 					if (elemType != null)
 					{
 						int debugtype = LogType.NUL;
-						if (XMLUtil.parseElementAttrBoolean(elemType, "GUI", false))
+							if (XMLUtil.parseElementAttrBoolean(elemType, JAPConstants.CONFIG_GUI, false))
 						{
 							debugtype += LogType.GUI;
 						}
-						if (XMLUtil.parseElementAttrBoolean(elemType, "NET", false))
+							if (XMLUtil.parseElementAttrBoolean(elemType, JAPConstants.CONFIG_NET, false))
 						{
 							debugtype += LogType.NET;
 						}
-						if (XMLUtil.parseElementAttrBoolean(elemType, "THREAD", false))
+							if (XMLUtil.parseElementAttrBoolean(elemType, JAPConstants.CONFIG_THREAD, false))
 						{
 							debugtype += LogType.THREAD;
 						}
-						if (XMLUtil.parseElementAttrBoolean(elemType, "MISC", false))
+							if (XMLUtil.parseElementAttrBoolean(elemType, JAPConstants.CONFIG_MISC, false))
 						{
 							debugtype += LogType.MISC;
 							debugtype += LogType.PAY;
@@ -729,23 +745,28 @@ public final class JAPController implements ProxyListener, Observer
 						}
 						JAPDebug.getInstance().setLogType(debugtype);
 					}
-					Node elemOutput = XMLUtil.getFirstChildByName(elemDebug, "Output");
+						Node elemOutput = XMLUtil.getFirstChildByName(elemDebug, JAPConstants.CONFIG_OUTPUT);
 					if (elemOutput != null)
 					{
 						String strConsole = XMLUtil.parseValue(elemOutput, "");
 						if (strConsole != null)
 						{
 							strConsole.trim();
-							JAPDebug.showConsole(strConsole.equalsIgnoreCase("Console"), m_View);
+								JAPDebug.showConsole(strConsole.equalsIgnoreCase(JAPConstants.CONFIG_CONSOLE), m_View);
 						}
-						Node elemFile = XMLUtil.getLastChildByName(elemOutput, "File");
+							Node elemFile = XMLUtil.getLastChildByName(elemOutput, JAPConstants.CONFIG_FILE);
 						JAPDebug.setLogToFile(XMLUtil.parseValue(elemFile, null));
+					}
+					} catch (Exception ex)
+					{
+						LogHolder.log(LogLevel.INFO, LogType.MISC,
+									  "JAPController: loadConfigFile: Error loading Debug Settings.");
 					}
 				}
 
 				/* loading infoservice settings */
 				/* infoservice list */
-				NodeList infoServicesNodes = root.getElementsByTagName("InfoServices");
+				NodeList infoServicesNodes = root.getElementsByTagName(JAPConstants.CONFIG_INFOSERVICES);
 				if (infoServicesNodes.getLength() > 0)
 				{
 					Element infoServicesNode = (Element) (infoServicesNodes.item(0));
@@ -753,11 +774,11 @@ public final class JAPController implements ProxyListener, Observer
 						infoServicesNode, Database.getInstance(InfoServiceDBEntry.class));
 				}
 				/* prefered infoservice */
-				NodeList preferedInfoServiceNodes = root.getElementsByTagName("PreferedInfoService");
+				NodeList preferedInfoServiceNodes = root.getElementsByTagName(JAPConstants.CONFIG_PREFERED_INFOSERVICE);
 				if (preferedInfoServiceNodes.getLength() > 0)
 				{
 					Element preferedInfoServiceNode = (Element) (preferedInfoServiceNodes.item(0));
-					NodeList infoServiceNodes = preferedInfoServiceNode.getElementsByTagName("InfoService");
+					NodeList infoServiceNodes = preferedInfoServiceNode.getElementsByTagName(JAPConstants.CONFIG_INFOSERVICE);
 					if (infoServiceNodes.getLength() > 0)
 					{
 						Element infoServiceNode = (Element) (infoServiceNodes.item(0));
@@ -775,19 +796,26 @@ public final class JAPController implements ProxyListener, Observer
 				}
 
 				/*loading Tor settings*/
-				Element elemTor = (Element) XMLUtil.getFirstChildByName(root, "Tor");
-				Element elem = (Element) XMLUtil.getFirstChildByName(elemTor, "MaxConnectionsPerRoute");
+				try
+				{
+					Element elemTor = (Element) XMLUtil.getFirstChildByName(root, JAPConstants.CONFIG_TOR);
+					Element elem = (Element) XMLUtil.getFirstChildByName(elemTor, JAPConstants.CONFIG_MAX_CONNECTIONS_PER_ROUTE);
 				setTorMaxConnectionsPerRoute(XMLUtil.parseNodeInt(elem, JAPModel.getTorMaxConnectionsPerRoute()));
-				elem = (Element) XMLUtil.getFirstChildByName(elemTor, "RouteLen");
+					elem = (Element) XMLUtil.getFirstChildByName(elemTor, JAPConstants.CONFIG_ROUTE_LEN);
 				int min, max;
-				min = XMLUtil.parseElementAttrInt(elem, "min", JAPModel.getTorMinRouteLen());
-				max = XMLUtil.parseElementAttrInt(elem, "max", JAPModel.getTorMaxRouteLen());
+					min = XMLUtil.parseElementAttrInt(elem, JAPConstants.CONFIG_MIN, JAPModel.getTorMinRouteLen());
+					max = XMLUtil.parseElementAttrInt(elem, JAPConstants.CONFIG_MAX, JAPModel.getTorMaxRouteLen());
 				setTorRouteLen(min, max);
+				} catch (Exception ex)
+				{
+					LogHolder.log(LogLevel.INFO, LogType.MISC,
+								  "JAPController: loadConfigFile: Error loading Tor configuration.");
+				}
 
 				/* load Payment settings */
 				if (loadPay)
 				{
-					Element elemPay = (Element) XMLUtil.getFirstChildByName(root, "Payment");
+					Element elemPay = (Element) XMLUtil.getFirstChildByName(root, JAPConstants.CONFIG_PAYMENT);
 					/*					String biName = elemPay.getAttribute("biName");
 						  if (biName == null || biName.equals(""))
 						  {
@@ -820,7 +848,7 @@ public final class JAPController implements ProxyListener, Observer
 					{
 						theBI = new BI(elemBI);
 					}
-					Element elemAccounts = (Element) XMLUtil.getFirstChildByName(elemPay, "EncryptedData");
+					Element elemAccounts = (Element) XMLUtil.getFirstChildByName(elemPay, JAPConstants.CONFIG_ENCRYPTED_DATA);
 
 					// test: is account data encrypted?
 					if (elemAccounts != null)
@@ -860,7 +888,7 @@ public final class JAPController implements ProxyListener, Observer
 					else
 					{
 						// accounts data is not encrypted
-						elemAccounts = (Element) XMLUtil.getFirstChildByName(elemPay, "PayAccountsFile");
+						elemAccounts = (Element) XMLUtil.getFirstChildByName(elemPay, JAPConstants.CONFIG_PAY_ACCOUNTS_FILE);
 						if (elemAccounts != null)
 						{
 							PayAccountsFile.init(theBI, elemAccounts);
@@ -885,7 +913,7 @@ public final class JAPController implements ProxyListener, Observer
 				if (JAPConstants.WITH_BLOCKINGRESISTANCE)
 				{
 					Element japForwardingSettingsNode = (Element) (XMLUtil.getFirstChildByName(root,
-						"JapForwardingSettings"));
+						JAPConstants.CONFIG_JAP_FORWARDING_SETTINGS));
 					if (japForwardingSettingsNode != null)
 					{
 						JAPModel.getInstance().getRoutingSettings().loadSettingsFromXml(
@@ -966,42 +994,42 @@ public final class JAPController implements ProxyListener, Observer
 			Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
 			Element e = doc.createElement("JAP");
 			doc.appendChild(e);
-			e.setAttribute("version", "0.16");
+			XMLUtil.setAttribute(e,JAPConstants.CONFIG_VERSION, "0.16");
 			//
-			e.setAttribute("portNumber", Integer.toString(JAPModel.getHttpListenerPortNumber()));
-			//e.setAttribute("portNumberSocks", Integer.toString(JAPModel.getSocksListenerPortNumber()));
-			//e.setAttribute("supportSocks",(getUseSocksPort()?"true":"false"));
-			e.setAttribute("listenerIsLocal", (JAPModel.getHttpListenerIsLocal() ? "true" : "false"));
+			XMLUtil.setAttribute(e,JAPConstants.CONFIG_PORT_NUMBER, Integer.toString(JAPModel.getHttpListenerPortNumber()));
+			//XMLUtil.setAttribute(e,"portNumberSocks", Integer.toString(JAPModel.getSocksListenerPortNumber()));
+			//XMLUtil.setAttribute(e,"supportSocks",(getUseSocksPort()?"true":"false"));
+			XMLUtil.setAttribute(e,JAPConstants.CONFIG_LISTENER_IS_LOCAL, JAPModel.getHttpListenerIsLocal());
 			ProxyInterface proxyInterface = m_Model.getProxyInterface();
 			boolean bUseProxy = proxyInterface != null && proxyInterface.isValid();
-			e.setAttribute("proxyMode", (bUseProxy ? "true" : "false"));
+			XMLUtil.setAttribute(e,JAPConstants.CONFIG_PROXY_MODE, bUseProxy);
 			if (proxyInterface != null)
 			{
-				e.setAttribute("proxyType", m_Model.getProxyInterface().getProtocolAsString().toUpperCase());
-				e.setAttribute("proxyHostName", m_Model.getProxyInterface().getHost());
-				e.setAttribute("proxyPortNumber", Integer.toString(m_Model.getProxyInterface().getPort()));
-				e.setAttribute("proxyAuthorization", (
-					m_Model.getProxyInterface().isAuthenticationUsed() ? "true" : "false"));
-				e.setAttribute("proxyAuthUserID", m_Model.getProxyInterface().getAuthenticationUserID());
+				XMLUtil.setAttribute(e,JAPConstants.CONFIG_PROXY_TYPE, m_Model.getProxyInterface().getProtocolAsString().toUpperCase());
+				XMLUtil.setAttribute(e,JAPConstants.CONFIG_PROXY_HOST_NAME, m_Model.getProxyInterface().getHost());
+				XMLUtil.setAttribute(e,JAPConstants.CONFIG_PROXY_PORT_NUMBER, Integer.toString(m_Model.getProxyInterface().getPort()));
+				XMLUtil.setAttribute(e,JAPConstants.CONFIG_PROXY_AUTHORIZATION, 
+					m_Model.getProxyInterface().isAuthenticationUsed() );
+				XMLUtil.setAttribute(e,JAPConstants.CONFIG_PROXY_AUTH_USER_ID, m_Model.getProxyInterface().getAuthenticationUserID());
 			}
 			/* infoservice configuration options */
-			e.setAttribute("infoServiceDisabled", (JAPModel.isInfoServiceDisabled() ? "true" : "false"));
-			e.setAttribute("infoServiceChange",
-						   (InfoServiceHolder.getInstance().isChangeInfoServices() ? "true" : "false"));
-			e.setAttribute("infoServiceTimeout",
+			XMLUtil.setAttribute(e,JAPConstants.CONFIG_INFOSERVICE_DISABLED, JAPModel.isInfoServiceDisabled() );
+			XMLUtil.setAttribute(e,JAPConstants.CONFIG_INFOSERVICE_CHANGE,
+						   InfoServiceHolder.getInstance().isChangeInfoServices());
+			XMLUtil.setAttribute(e,JAPConstants.CONFIG_INFOSERVICE_TIMEOUT,
 						   Integer.toString(HTTPConnectionFactory.getInstance().getTimeout()));
 
-			e.setAttribute("certCheckDisabled", (JAPModel.isCertCheckDisabled() ? "true" : "false"));
-			e.setAttribute("DummyTrafficIntervall", Integer.toString(JAPModel.getDummyTraffic()));
-			e.setAttribute("autoConnect", (JAPModel.getAutoConnect() ? "true" : "false"));
-			e.setAttribute("autoReConnect", (JAPModel.getAutoReConnect() ? "true" : "false"));
-			e.setAttribute("preCreateAnonRoutes", (JAPModel.isPreCreateAnonRoutesEnabled() ? "true" : "false"));
-			e.setAttribute("minimizedStartup", (JAPModel.getMinimizeOnStartup() ? "true" : "false"));
-			e.setAttribute("neverRemindActiveContent", (mbActCntMessageNeverRemind ? "true" : "false"));
-			e.setAttribute("doNotAbuseReminder", (mbDoNotAbuseReminder ? "true" : "false"));
-			e.setAttribute("neverRemindGoodBye", (mbGoodByMessageNeverRemind ? "true" : "false"));
-			e.setAttribute("Locale", m_Locale.getLanguage());
-			e.setAttribute("LookAndFeel", UIManager.getLookAndFeel().getClass().getName());
+			XMLUtil.setAttribute(e,JAPConstants.CONFIG_CERT_CHECK_DISABLED, JAPModel.isCertCheckDisabled() );
+			XMLUtil.setAttribute(e,JAPConstants.CONFIG_DUMMY_TRAFFIC_INTERVALL, Integer.toString(JAPModel.getDummyTraffic()));
+			XMLUtil.setAttribute(e,JAPConstants.CONFIG_AUTO_CONNECT, JAPModel.getAutoConnect() );
+			XMLUtil.setAttribute(e,JAPConstants.CONFIG_AUTO_RECONNECT, JAPModel.getAutoReConnect() );
+			XMLUtil.setAttribute(e,JAPConstants.CONFIG_PRECREATE_ANON_ROUTES, JAPModel.isPreCreateAnonRoutesEnabled());
+			XMLUtil.setAttribute(e,JAPConstants.CONFIG_MINIMIZED_STARTUP, JAPModel.getMinimizeOnStartup() );
+			XMLUtil.setAttribute(e,JAPConstants.CONFIG_NEVER_REMIND_ACTIVE_CONTENT, mbActCntMessageNeverRemind);
+			XMLUtil.setAttribute(e,JAPConstants.CONFIG_DO_NOT_ABUSE_REMINDER,mbDoNotAbuseReminder);
+			XMLUtil.setAttribute(e,JAPConstants.CONFIG_NEVER_REMIND_GOODBYE, mbGoodByMessageNeverRemind );
+			XMLUtil.setAttribute(e,JAPConstants.CONFIG_LOCALE, m_Locale.getLanguage());
+			XMLUtil.setAttribute(e,JAPConstants.CONFIG_LOOK_AND_FEEL, UIManager.getLookAndFeel().getClass().getName());
 
 			/* store the trusted CAs */
 			try
@@ -1015,7 +1043,7 @@ public final class JAPController implements ProxyListener, Observer
 				//ex.printStackTrace();
 			}
 			/*stores user defined MixCascades*/
-			Element elemCascades=doc.createElement("MixCascades");
+			Element elemCascades=doc.createElement(JAPConstants.CONFIG_MIX_CASCADES);
 			e.appendChild(elemCascades);
 			Enumeration enumer=m_vectorMixCascadeDatabase.elements();
 			while(enumer.hasMoreElements())
@@ -1024,7 +1052,7 @@ public final class JAPController implements ProxyListener, Observer
 				if(entry.isUserDefined())
 				{
 					Element elem=entry.toXmlNode(doc);
-					XMLUtil.setAttribute(elem, "userDefined", true);
+					XMLUtil.setAttribute(elem, JAPConstants.CONFIG_USER_DEFINED, true);
 					elemCascades.appendChild(elem);
 				}
 			}
@@ -1035,69 +1063,69 @@ public final class JAPController implements ProxyListener, Observer
 				Element elem = defaultMixCascade.toXmlNode(doc);
 				if (defaultMixCascade.isUserDefined())
 				{
-					XMLUtil.setAttribute(elem, "userDefined", true);
+					XMLUtil.setAttribute(elem, JAPConstants.CONFIG_USER_DEFINED, true);
 				}
 				e.appendChild(elem);
 			}
 
 			// adding GUI-Element
-			Element elemGUI = doc.createElement("GUI");
+			Element elemGUI = doc.createElement(JAPConstants.CONFIG_GUI);
 			e.appendChild(elemGUI);
-			Element elemMainWindow = doc.createElement("MainWindow");
+			Element elemMainWindow = doc.createElement(JAPConstants.CONFIG_MAIN_WINDOW);
 			elemGUI.appendChild(elemMainWindow);
 			if (JAPModel.getSaveMainWindowPosition())
 			{
-				Element tmp = doc.createElement("SetOnStartup");
+				Element tmp = doc.createElement(JAPConstants.CONFIG_SET_ON_STARTUP);
 				elemMainWindow.appendChild(tmp);
-				XMLUtil.setNodeValue(tmp, "true");
-				tmp = doc.createElement("Location");
+				XMLUtil.setValue(tmp,true);
+				tmp = doc.createElement(JAPConstants.CONFIG_LOCATION);
 				elemMainWindow.appendChild(tmp);
 				Point p = m_View.getLocation();
-				tmp.setAttribute("x", Integer.toString(p.x));
-				tmp.setAttribute("y", Integer.toString(p.y));
-				tmp = doc.createElement("Size");
+				tmp.setAttribute(JAPConstants.CONFIG_X, Integer.toString(p.x));
+				tmp.setAttribute(JAPConstants.CONFIG_Y, Integer.toString(p.y));
+				tmp = doc.createElement(JAPConstants.CONFIG_SIZE);
 				elemMainWindow.appendChild(tmp);
 				Dimension d = m_View.getSize();
-				tmp.setAttribute("dx", Integer.toString(d.width));
-				tmp.setAttribute("dy", Integer.toString(d.height));
+				tmp.setAttribute(JAPConstants.CONFIG_DX, Integer.toString(d.width));
+				tmp.setAttribute(JAPConstants.CONFIG_DY, Integer.toString(d.height));
 			}
 			if (JAPModel.getMoveToSystrayOnStartup())
 			{
-				Element tmp = doc.createElement("MoveToSystray");
+				Element tmp = doc.createElement(JAPConstants.CONFIG_MOVE_TO_SYSTRAY);
 				XMLUtil.setValue(tmp, true);
 				elemMainWindow.appendChild(tmp);
 			}
 			if (JAPModel.getDefaultView() == JAPConstants.VIEW_SIMPLIFIED)
 			{
-				Element tmp = doc.createElement("DefaultView");
-				XMLUtil.setNodeValue(tmp, "Simplified");
+				Element tmp = doc.createElement(JAPConstants.CONFIG_DEFAULT_VIEW);
+				XMLUtil.setNodeValue(tmp, JAPConstants.CONFIG_SIMPLIFIED);
 				elemMainWindow.appendChild(tmp);
 			}
 			// adding Debug-Element
-			Element elemDebug = doc.createElement("Debug");
+			Element elemDebug = doc.createElement(JAPConstants.CONFIG_DEBUG);
 			e.appendChild(elemDebug);
-			Element tmp = doc.createElement("Level");
+			Element tmp = doc.createElement(JAPConstants.CONFIG_LEVEL);
 			Text txt = doc.createTextNode(Integer.toString(JAPDebug.getInstance().getLogLevel()));
 			tmp.appendChild(txt);
 			elemDebug.appendChild(tmp);
-			tmp = doc.createElement("Type");
+			tmp = doc.createElement(JAPConstants.CONFIG_TYPE);
 			int debugtype = JAPDebug.getInstance().getLogType();
-			tmp.setAttribute("GUI", ( (debugtype & LogType.GUI) != 0) ? "true" : "false");
-			tmp.setAttribute("NET", ( (debugtype & LogType.NET) != 0) ? "true" : "false");
-			tmp.setAttribute("THREAD", ( (debugtype & LogType.THREAD) != 0) ? "true" : "false");
-			tmp.setAttribute("MISC", ( (debugtype & LogType.MISC) != 0) ? "true" : "false");
+			XMLUtil.setAttribute(tmp,JAPConstants.CONFIG_GUI, ( (debugtype & LogType.GUI) != 0) );
+			XMLUtil.setAttribute(tmp,JAPConstants.CONFIG_NET, ( (debugtype & LogType.NET) != 0));
+			XMLUtil.setAttribute(tmp,JAPConstants.CONFIG_THREAD, ( (debugtype & LogType.THREAD) != 0) );
+			XMLUtil.setAttribute(tmp,JAPConstants.CONFIG_MISC, ( (debugtype & LogType.MISC) != 0) );
 			elemDebug.appendChild(tmp);
 			if (JAPDebug.isShowConsole() || JAPDebug.isLogToFile())
 			{
-				tmp = doc.createElement("Output");
+				tmp = doc.createElement(JAPConstants.CONFIG_OUTPUT);
 				elemDebug.appendChild(tmp);
 				if (JAPDebug.isShowConsole())
 				{
-					XMLUtil.setValue(tmp, "Console");
+					XMLUtil.setValue(tmp, JAPConstants.CONFIG_CONSOLE);
 				}
 				if (JAPDebug.isLogToFile())
 				{
-					Element elemFile = doc.createElement("File");
+					Element elemFile = doc.createElement(JAPConstants.CONFIG_FILE);
 					tmp.appendChild(elemFile);
 					XMLUtil.setValue(elemFile, JAPDebug.getLogFilename());
 				}
@@ -1107,7 +1135,7 @@ public final class JAPController implements ProxyListener, Observer
 			e.appendChild(InfoServiceDBEntry.toXmlElement(doc, Database.getInstance(InfoServiceDBEntry.class)));
 			/* prefered infoservice */
 			InfoServiceDBEntry preferedInfoService = InfoServiceHolder.getInstance().getPreferedInfoService();
-			Element preferedInfoServiceNode = doc.createElement("PreferedInfoService");
+			Element preferedInfoServiceNode = doc.createElement(JAPConstants.CONFIG_PREFERED_INFOSERVICE);
 			if (preferedInfoService != null)
 			{
 				preferedInfoServiceNode.appendChild(preferedInfoService.toXmlElement(doc));
@@ -1115,13 +1143,13 @@ public final class JAPController implements ProxyListener, Observer
 			e.appendChild(preferedInfoServiceNode);
 
 			/** add tor*/
-			Element elemTor = doc.createElement("Tor");
-			Element elem = doc.createElement("MaxConnectionsPerRoute");
+			Element elemTor = doc.createElement(JAPConstants.CONFIG_TOR);
+			Element elem = doc.createElement(JAPConstants.CONFIG_MAX_CONNECTIONS_PER_ROUTE);
 			XMLUtil.setNodeValue(elem, Integer.toString(JAPModel.getTorMaxConnectionsPerRoute()));
 			elemTor.appendChild(elem);
-			elem = doc.createElement("RouteLen");
-			elem.setAttribute("min", Integer.toString(JAPModel.getTorMinRouteLen()));
-			elem.setAttribute("max", Integer.toString(JAPModel.getTorMaxRouteLen()));
+			elem = doc.createElement(JAPConstants.CONFIG_ROUTE_LEN);
+			elem.setAttribute(JAPConstants.CONFIG_MIN, Integer.toString(JAPModel.getTorMinRouteLen()));
+			elem.setAttribute(JAPConstants.CONFIG_MAX, Integer.toString(JAPModel.getTorMaxRouteLen()));
 			elemTor.appendChild(elem);
 			e.appendChild(elemTor);
 
@@ -1129,7 +1157,7 @@ public final class JAPController implements ProxyListener, Observer
 			PayAccountsFile accounts = PayAccountsFile.getInstance();
 			if (accounts != null)
 			{
-				Element elemPayment = doc.createElement("Payment");
+				Element elemPayment = doc.createElement(JAPConstants.CONFIG_PAYMENT);
 				e.appendChild(elemPayment);
 //				elemPayment.setAttribute("biHost", JAPModel.getBIHost());
 //				elemPayment.setAttribute("biPort", Integer.toString(JAPModel.getBIPort()));

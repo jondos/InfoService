@@ -84,6 +84,7 @@ final public class ServerListPanel extends JPanel implements ActionListener
 
 			//Create the mix icon and place it in the panel
 			AbstractButton mix = new JRadioButton(ms_iconServer);
+			mix.setToolTipText(JAPMessages.getString("serverPanelAdditional"));
 			mix.addActionListener(this);
 			mix.setBorder(null);
 			mix.setFocusPainted(false);

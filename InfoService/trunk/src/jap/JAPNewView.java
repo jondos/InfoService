@@ -109,7 +109,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private boolean m_bIsIconified;
 	//private final static boolean PROGRESSBARBORDER = true;
 	//private GuthabenAnzeige guthaben;
-	private boolean loadPay = false;
+	private boolean m_bWithPayment = false;
 
 	private JAPMixCascadeComboBox m_comboAnonServices;
 	private JLabel m_labelAnonService, m_labelAnonymity, m_labelAnonymitySmall, m_labelAnonymityOnOff;
@@ -161,7 +161,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 	public void create(boolean loadPay)
 	{
-		this.loadPay = loadPay;
+		this.m_bWithPayment = loadPay;
 		LogHolder.log(LogLevel.INFO, LogType.GUI, "JAPView:initializing...");
 		init();
 //			LogHolder.log(LogLevel.DEBUG,LogType.GUI,"JAPView:initialization finished!");
@@ -433,7 +433,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		northPanel.add(new JSeparator(), c);
 
 //------------------ Payment Panel
-		if (loadPay)
+		if (m_bWithPayment)
 		{
 			m_flippingPanelPayment = new FlippingPanel(this);
 
@@ -1309,8 +1309,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_labelOwnTrafficSmall.setText(JAPMessages.getString("ngOwnTraffic"));
 		m_labelOwnTrafficWWW.setText(JAPMessages.getString("ngOwnTrafficWWW"));
 		m_labelOwnTrafficOther.setText(JAPMessages.getString("ngOwnTrafficOther"));
-
-		m_labelPayment.setText(JAPMessages.getString("ngPayment"));
+		if(m_bWithPayment)
+			m_labelPayment.setText(JAPMessages.getString("ngPayment"));
 
 		//m_labelMeterDetailsName.setText(JAPMessages.getString("meterDetailsName") + " ");
 		//m_labelAnonymityUser.setText(JAPMessages.getString("meterDetailsUsers") + " ");
@@ -1485,7 +1485,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		{
 			Cursor c = getCursor();
 			setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-			m_dlgConfig = new JAPConf(this, loadPay);
+			m_dlgConfig = new JAPConf(this, m_bWithPayment);
 			setCursor(c);
 		}
 		if (card != null)
