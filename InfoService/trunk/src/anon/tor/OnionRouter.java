@@ -206,9 +206,8 @@ public class OnionRouter
 	{
 		RelayCell cell;
 
-		byte[] payload = InetAddress.getByName(address).getAddress();
-		payload = helper.conc(payload, helper.inttobyte(port, 2));
-		payload = helper.conc(payload, createExtendOnionSkin());
+		byte[] payload = helper.conc(InetAddress.getByName(address).getAddress(),
+										helper.inttobyte(port, 2), createExtendOnionSkin());
 
 		MyRSAPublicKey key = m_description.getSigningKey();
 		ByteArrayOutputStream out = new ByteArrayOutputStream();

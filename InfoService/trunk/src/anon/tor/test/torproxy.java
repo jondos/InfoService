@@ -5,6 +5,8 @@ package anon.tor.test;
 
 //import jap.JAPController;
 
+import jap.JAPController;
+
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -22,16 +24,16 @@ import anon.tor.TorChannel;
 public class torproxy {
 
 	public static void main(String[] args) throws Exception{
-		//LogHolder.setLogInstance(new SystemErrLog());
+		LogHolder.setLogInstance(new SystemErrLog());
 
-	//	JAPController m_controller = JAPController.getInstance();
-	//	m_controller.loadConfigFile(null, false);
-	//	m_controller.initialRun();
+//		JAPController m_controller = JAPController.getInstance();
+//		m_controller.loadConfigFile(null, false);
+//		m_controller.initialRun();
 
 		Tor tor = Tor.getInstance();
 		tor.setConnectionsPerRoute(10);
-		tor.initialize(new TorAnonServerDescription(true,true));
-//		tor.initialize(new TorAnonServerDescription());
+//		tor.initialize(new TorAnonServerDescription(true,true));
+		tor.initialize(new TorAnonServerDescription());
 		ServerSocket server = new ServerSocket(1234);
 		System.out.println("Server läuft");
 		int i=0;
