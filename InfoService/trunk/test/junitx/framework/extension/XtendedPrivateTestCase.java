@@ -27,25 +27,18 @@
  */
 package junitx.framework.extension;
 
-import java.io.ByteArrayInputStream;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import java.io.File;
 import java.util.Enumeration;
 import java.util.Vector;
-import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.w3c.dom.Comment;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
 import anon.util.ClassUtil;
 import anon.util.IXMLEncodable;
 import anon.util.ResourceLoader;
 import anon.util.XMLUtil;
 import junitx.framework.PrivateTestCase;
-import junitx.framework.TestAccessException;
-import junitx.framework.TestedClass;
 
 /**
  * Extends the PrivateTestCase with useful functions and should be used instead of it.
@@ -53,6 +46,12 @@ import junitx.framework.TestedClass;
  */
 public class XtendedPrivateTestCase extends PrivateTestCase
 {
+	/**
+	 * A file that can be written and read for testing purposes. Should be deleted after
+	 * all test operations.
+	 */
+	public static final File TEST_FILE = new File("documentation/~testfile~");
+
 	private static final String XML_STRUCTURE_PATH = "documentation/xmlStructures/";
 	private static final ResourceLoader ms_resourceLoader = new ResourceLoader(null);
 
@@ -137,41 +136,17 @@ public class XtendedPrivateTestCase extends PrivateTestCase
 	}
 
 	/**
-	 * Loads an xml structure from the structures directory. All comments,
-	 * empty lines and new lines are removed from the structure.
-	 * @param a_filename the name of the xml structure file
-	 * @throws Exception if an error occurs while loading the file
-	 * @return an xml structure from the structures directory
-	 */
-	public static Node loadXMLNodeFromFile(String a_filename)
-	throws Exception
-	{
-		Document doc = null;
-
-		try
-		{
-			doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(
-				new ByteArrayInputStream(
-				ms_resourceLoader.loadResource(
-				XML_STRUCTURE_PATH + a_filename)));
-			XMLUtil.removeComments(doc);
-		} catch (Exception a_e)
-		{
-		}
-
-		return doc;
-	}
-
-	/**
 	 * Writes an xml document to a file in the XML_STRUCTURE_PATH with the filename
 	 * <testclass>_<a_sequenceNumber>.xml.
 	 * @param a_doc an XML document
 	 * @param a_sequenceNumber a sequence number; only one XML element can be written with the
 	 * same sequence number;
+	 * @return the file it was written to
+	 * @exception Exception if an error occurs
 	 */
-	protected void writeXMLOutputToFile(Document a_doc, int a_sequenceNumber)
+	protected File writeXMLOutputToFile(Document a_doc, int a_sequenceNumber)
 		throws Exception {
-		writeXMLOutputToFile(a_doc.getDocumentElement(), a_sequenceNumber);
+		return writeXMLOutputToFile(a_doc.getDocumentElement(), a_sequenceNumber);
 	}
 
 
@@ -181,10 +156,13 @@ public class XtendedPrivateTestCase extends PrivateTestCase
 	 * @param a_xmlElement an XML element
 	 * @param a_sequenceNumber a sequence number; only one XML element can be written with the
 	 * same sequence number;
+	 * @return the file it was written to
+	 * @exception Exception if an error occurs
 	 */
-	protected void writeXMLOutputToFile(Element a_xmlElement, int a_sequenceNumber)
+	protected File writeXMLOutputToFile(Element a_xmlElement, int a_sequenceNumber)
 		throws Exception {
-		writeXMLOutputToFile(a_xmlElement, getClass(), getClass().getName() + "_" + a_sequenceNumber);
+		return writeXMLOutputToFile(
+				  a_xmlElement, getClass(), getClass().getName(), a_sequenceNumber);
 	}
 
 	/**
@@ -192,9 +170,28 @@ public class XtendedPrivateTestCase extends PrivateTestCase
 	 * @param a_XmlCreaterObject the object that created the node
 	 * @param a_bLongClassName if true, the filename will be the class name plus package,
 	 *                         if false, it will be the classname only
+	 * @return the file it was written to
 	 * @throws Exception if an error occurs
 	 */
-	protected void writeXMLOutputToFile(IXMLEncodable a_XmlCreaterObject, boolean a_bLongClassName)
+	protected File writeXMLOutputToFile(IXMLEncodable a_XmlCreaterObject, boolean a_bLongClassName)
+		throws Exception
+	{
+		return writeXMLOutputToFile(a_XmlCreaterObject, -1, a_bLongClassName);
+	}
+
+
+	/**
+	 * Writes an xml node to a file in the XML_STRUCTURE_PATH with the filename <class>.xml.
+	 * @param a_XmlCreaterObject the object that created the node
+	 * @param a_sequenceNumber a sequence number; only one XML element can be written with the
+	 * same sequence number;
+	 * @param a_bLongClassName if true, the filename will be the class name plus package,
+	 *                         if false, it will be the classname only
+	 * @return the file it was written to
+	 * @throws Exception if an error occurs
+	 */
+	protected File writeXMLOutputToFile(IXMLEncodable a_XmlCreaterObject, int a_sequenceNumber,
+										boolean a_bLongClassName)
 		throws Exception
 	{
 		Element element;
@@ -212,26 +209,51 @@ public class XtendedPrivateTestCase extends PrivateTestCase
 
 		element = a_XmlCreaterObject.toXmlElement(doc);
 
-		writeXMLOutputToFile(element, a_XmlCreaterObject.getClass(), filename);
+		return writeXMLOutputToFile(
+				  element, a_XmlCreaterObject.getClass(), filename, a_sequenceNumber);
 	}
 
 
 	/**
 	 * Writes an xml node to a file in the XML_STRUCTURE_PATH with the filename <class>.xml.
 	 * @param a_XmlCreaterObject the object that created the node
-	 * @throws Exception
+	 * @return the file it was written to
+	 * @throws Exception if an error occurs
 	 */
-	protected void writeXMLOutputToFile(IXMLEncodable a_XmlCreaterObject)
+	protected File writeXMLOutputToFile(IXMLEncodable a_XmlCreaterObject)
 		throws Exception
 	{
-		writeXMLOutputToFile(a_XmlCreaterObject,false);
+		return writeXMLOutputToFile(a_XmlCreaterObject,false);
 	}
 
-	private void writeXMLOutputToFile(Element a_xmlElement, Class a_creatorClass, String a_filename)
+	/**
+	 * Writes an xml node to a file in the XML_STRUCTURE_PATH with the filename <class>.xml.
+	 * @param a_XmlCreaterObject the object that created the node
+	 * @param a_sequenceNumber a sequence number; only one XML element can be written with the
+	 * same sequence number;
+	 * @return the file it was written to
+	 * @throws Exception if an error occurs
+	 */
+	protected File writeXMLOutputToFile(IXMLEncodable a_XmlCreaterObject, int a_sequenceNumber)
+		throws Exception
+	{
+		return writeXMLOutputToFile(a_XmlCreaterObject, a_sequenceNumber, false);
+	}
+
+
+
+	private File writeXMLOutputToFile(Element a_xmlElement, Class a_creatorClass, String a_filename,
+									  int a_sequenceNumber)
 		throws Exception {
+		File file;
+		String sequenceNumber = "";
 		Comment comment1, comment2;
 		Document doc = XMLUtil.createDocument();
 		Element element = (Element)doc.importNode(a_xmlElement, true);
+
+		if (a_sequenceNumber >= 0) {
+			sequenceNumber = "_" + a_sequenceNumber;
+		}
 
 		// set a comment
 		comment1 = doc.createComment("This xml structure has been created by " +
@@ -246,7 +268,11 @@ public class XtendedPrivateTestCase extends PrivateTestCase
 		doc.appendChild(element);
 
 		// write to file
-		XMLUtil.writeToFile(doc, XML_STRUCTURE_PATH + a_filename + ".xml");
+		file = new File(XML_STRUCTURE_PATH + a_filename + sequenceNumber + ".xml");
+		XMLUtil.write(doc, file);
+		return file;
 	}
+
+
 
 }

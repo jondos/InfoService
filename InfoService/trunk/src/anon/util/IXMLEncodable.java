@@ -32,42 +32,32 @@ import org.w3c.dom.Element;
 
 /**
  * Objects of this type can be transformed into xml.
- * Classes that implement this interface should also define some static methods that
- * give further description of about the constructed element. As they are static, these methods cannot
- * be part of this interface, but they are presented here in commented form.
+ * Classes that implement this interface should also define one or two constants that
+ * give further description of about the constructed element. As they are static, these constants
+ * cannot be part of this interface, but they are presented here in commented form.
  * PLEASE DO NOT DELETE THEM!
  * @author Wendolsky
  */
 public interface IXMLEncodable
 {
 	/**
+	 * The name of the XML element constructed by this class.
+	 */
+	// public static final String XML_ELEMENT_NAME = "ElementName";
+
+	/**
+	 * The name of the XML container elemene for elements constructed by this class.
+	 * Only needed if this element needs a special container element and cannot exist without
+	 * it in an XML structure.
+   */
+	// public static final String XML_ELEMENT_CONTAINER_NAME = "ElementContainerName";
+
+
+	/**
 	 * Return an element that can be appended to the document. This
-	 * Method should not change the document in any way!
+	 * Method must not change the document in any way!
 	 * @param a_doc a document
 	 * @return the interface as xml element
-	 */
+   */
 	public Element toXmlElement(Document a_doc);
-
-	/**
-	 * Returns the name of the XML element constructed by this class.
-	 * @return the name of the XML element constructed by this class
-	 */
-	/*
-	public static String getXMLElementName()
-	{
-		return "ElementName";
-	}
-   */
-
-	/**
-	 * Returns the name of the XML container for elements constructed by this class.
-	 * @return the name of the XML container for elements constructed by this class
-	 */
-	/*
-	public static String getXMLElementContainerName()
-	{
-		return "ElementName";
-	}
-   */
-
 }

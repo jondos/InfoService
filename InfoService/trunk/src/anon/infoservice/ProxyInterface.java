@@ -389,10 +389,10 @@ public final class ProxyInterface extends ListenerInterface
 		authUserID.appendChild(a_doc.createTextNode(getAuthenticationUserID()));
 
 		Element isValid = a_doc.createElement(XML_USE_PROXY);
-		isValid.appendChild(XMLUtil.createNodeBoolean(a_doc, isValid()));
+		XMLUtil.setValue(isValid, isValid());
 
 		Element useAuth = a_doc.createElement(XML_USE_AUTHENTICATION);
-		useAuth.appendChild(XMLUtil.createNodeBoolean(a_doc, isAuthenticationUsed()));
+		XMLUtil.setValue(useAuth, isAuthenticationUsed());
 
 		element.appendChild(authUserID);
 		element.appendChild(useAuth);
