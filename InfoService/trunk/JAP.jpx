@@ -135,7 +135,7 @@
   <property category="sys" name="ExcludeClassEnabled" value="0"/>
   <property category="sys" name="IncludeTestPath" value="1"/>
   <property category="sys" name="InstanceVisibility" value="0"/>
-  <property category="sys" name="JDK" value="java version 1.4.2_05-b04"/>
+  <property category="sys" name="JDK" value="1.1 mit JVM_1.3.1"/>
   <property category="sys" name="JvmVersion" value="1.4"/>
   <property category="sys" name="LastTag" value="192"/>
   <property category="sys" name="Libraries" value="http;mac;XML-1.1;Apache XML-RPC;Swing;BouncyCastleLightForJAP;JUnit;junitx;ApacheFTPClient"/>
