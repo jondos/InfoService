@@ -96,6 +96,35 @@ final public class MyRSAPrivateKey implements PrivateKey
 		return m_Params.getExponent();
 	}
 
+	public BigInteger getP()
+	{
+		return m_Params.getP();
+	}
+
+	public BigInteger getQ()
+	{
+		return m_Params.getQ();
+	}
+
+	public BigInteger getDP()
+	{
+		return m_Params.getDP();
+	}
+
+	public BigInteger getDQ()
+	{
+		return m_Params.getDQ();
+	}
+	public BigInteger getQInv()
+	{
+		return m_Params.getQInv();
+	}
+
+	public BigInteger getPublicExponent()
+	{
+		return m_Params.getPublicExponent();
+	}
+
 	public String getAlgorithm()
 	{
 		return "RSA";

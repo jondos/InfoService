@@ -50,9 +50,9 @@ public final class Literals
 	public static final String SPLASHFN = "splash.gif";
 	public static final String ABOUTFN = "info.gif";
 
-	public static final String CHARGEPATH = "/bi/";
+	public static final String CHARGEPATH = "/pay/";
 	public static final String PROTOKOLL = "http";
-	public static final String CHARGEHOST = "barna.inf.fu-berlin.de";
+	public static final String CHARGEHOST = "anon.inf.tu-dresden.de";
 	public static final String[] CHARGEPARAMS =
 		{
 		"transfernum", "lang"};
@@ -61,10 +61,6 @@ public final class Literals
 	public static final String[] BROWSERLIST =
 		{
 		"konqueror", "explorer", "mozilla", "firebird", "opera"};
-
-	public static final String PIHOST = "itsec2.inf.fu-berlin.de";
-	public static final int PIPORT = 2342;
-	public static final boolean PISSL = false;
 
 	public static final boolean SAVE_PW = false;
 	public static final String RES_PATH = "pay/res/";

@@ -131,11 +131,11 @@ public class PayInstance
 	 * @return Transfer-Zertifikat
 	 * @throws IOException
 	 */
-	/*public XMLTransCert chargeBankTransfer(String accountcert, RSAKeyParameters privKey) throws IOException
+	public XMLTransCert chargeBankTransfer(XMLAccountCertificate accountcert, MyRSAPrivateKey privKey) throws IOException
 	{
 		String type = "<ChargeMethod>Banktransfer</ChargeMethod>";
 		return charge(accountcert, privKey, type);
-	}*/
+	}
 
 	/**
 	 * Aufladen des Kontos mit Kreditkarte.
@@ -157,7 +157,7 @@ public class PayInstance
 		return charge(accountcert, privKey, type);
 	}
 */
-	private XMLTransCert charge(XMLAccountCertificate accountcert, RSAKeyParameters privKey, String type) throws IOException
+	private XMLTransCert charge(XMLAccountCertificate accountcert, MyRSAPrivateKey privKey, String type) throws IOException
 	{
 		try
 		{
@@ -190,7 +190,7 @@ public class PayInstance
 	 * @return Guthaben und Kostenbestätigungen (in XMLBalConf gekapselt)
 	 * @throws IOException
 	 */
-	public XMLBalConf getBalance(XMLAccountCertificate accountcert, RSAKeyParameters privKey) throws IOException
+	public XMLBalConf getBalance(XMLAccountCertificate accountcert, MyRSAPrivateKey privKey) throws IOException
 	{
 		//XMLBalance xmlBalance;
 		//XMLCostConfirmation[] xmlConfirms;
@@ -216,7 +216,7 @@ public class PayInstance
 		return conf;
 	}
 
-	private void authenticate(XMLAccountCertificate accountcert, RSAKeyParameters privKey) throws Exception
+	private void authenticate(XMLAccountCertificate accountcert, MyRSAPrivateKey privKey) throws Exception
 	{
 		try
 		{
@@ -227,7 +227,7 @@ public class PayInstance
 			byte[] challenge = xmlchallenge.getChallengeForSigning();
 
 			Signer signer = new Signer();
-			signer.init(true, privKey);
+			signer.init(true, privKey.getParams());
 			signer.update(challenge);
 			byte[] sig = signer.generateSignature();
 
@@ -298,7 +298,7 @@ public class PayInstance
 	 * @return Kontozertifikat
 	 * @throws Exception
 	 */
-	public XMLAccountCertificate register(RSAKeyParameters pubKey, RSAKeyParameters privKey) throws Exception
+	public XMLAccountCertificate register(RSAKeyParameters pubKey, MyRSAPrivateKey privKey) throws Exception
 	{
 		XMLJapPublicKey xmlPubKey = new XMLJapPublicKey(new MyRSAPublicKey(pubKey));
 		String xmlkey = xmlPubKey.getXMLString();
@@ -314,7 +314,7 @@ public class PayInstance
 		byte[] challenge = xmlchallenge.getChallengeForSigning();
 
 		Signer signer = new Signer();
-		signer.init(true, privKey);
+		signer.init(true, privKey.getParams());
 		signer.update(challenge);
 		byte[] sig = signer.generateSignature();
 

@@ -36,10 +36,10 @@ import anon.infoservice.MixCascade;
 import anon.infoservice.StatusInfo;
 import anon.server.AnonServiceImpl;
 import pay.Pay;
-import payxml.XMLEasyCC;
 import payxml.XMLPayRequest;
-import payxml.XMLSignature;
-
+import payxml.XMLEasyCC;
+import anon.crypto.JAPSignature;
+import anon.util.XMLUtil;
 /**
  * Die gesammt Kommunikation zwischen Pay und AI (welche ja ein Teil der Mix-Kaskade sind). Läuft als eigener Thread
  * beim erzeugen wird eine AI Channel geöffnet. Beim starten des Threads wird festgestellt ob die AI bezahlt werden will etc.
@@ -150,10 +150,11 @@ public class AICommunication extends Thread
 											 countLastTransferredBytes());
 		try
 		{
-			XMLSignature sig = new XMLSignature(cc.getXMLString(true).getBytes());
-			sig.initSign(Pay.getInstance().getAccount(Pay.getInstance().getUsedAccount()).getPrivateKey());
-			return sig.signXML();
 
+			JAPSignature sig = new JAPSignature();
+			sig.initSign(Pay.getInstance().getAccount(Pay.getInstance().getUsedAccount()).getPrivateKey());
+			sig.signXmlDoc(cc.getDomDocument());
+			return XMLUtil.XMLDocumentToString(cc.getDomDocument());
 		}
 		catch (java.security.SignatureException e)
 		{
@@ -225,16 +226,16 @@ public class AICommunication extends Thread
 		}
 		if (request.accounting)
 		{
-			send(Pay.getInstance().getAccount(Pay.getInstance().getUsedAccount()).getAccountCertificate());
+			send(Pay.getInstance().getAccount(Pay.getInstance().getUsedAccount()).getAccountCertificate().getXMLString());
 
 			if (request.balanceNeeded.equals(XMLPayRequest.TRUE))
 			{
-				send(Pay.getInstance().getAccount(Pay.getInstance().getUsedAccount()).getBalance().getXMLString(true)); // hier soll nur aus der lokalen Datei gelesen werden
+				send(Pay.getInstance().getAccount(Pay.getInstance().getUsedAccount()).getBalance().getXMLString()); // hier soll nur aus der lokalen Datei gelesen werden
 
 			}
 			if (request.balanceNeeded.equals(XMLPayRequest.NEW))
 			{
-				send(Pay.getInstance().updateBalance(Pay.getInstance().getUsedAccount()).balance.getXMLString(true)); // hier soll die BI neu kontaktiert werden.
+				send(Pay.getInstance().updateBalance(Pay.getInstance().getUsedAccount()).balance.getXMLString()); // hier soll die BI neu kontaktiert werden.
 			}
 			if (request.costConfirmsNeeded.equals(XMLPayRequest.TRUE))
 			{

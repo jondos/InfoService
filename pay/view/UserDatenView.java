@@ -200,9 +200,16 @@ public class UserDatenView extends JPanel implements ModelListener, JAPObserver,
 			{
 				JFileChooser chooser = new JFileChooser();
 				int returnVal = chooser.showOpenDialog(getParent());
+				try{
 				Pay.getInstance().exportAccountFile(chooser.getSelectedFile().getAbsolutePath());
 				LogHolder.log(LogLevel.DEBUG, LogType.PAY,
 							  "exportAccountFile to " + chooser.getSelectedFile().getAbsolutePath());
+				}
+				catch(Exception e1)
+				{
+					LogHolder.log(LogLevel.DEBUG, LogType.PAY,
+								  "Error exportAccountFile " + e1.getMessage());
+				}
 			}
 		});
 

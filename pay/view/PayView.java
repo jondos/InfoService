@@ -221,7 +221,14 @@ public class PayView extends JPanel
 				LogHolder.log(LogLevel.DEBUG, LogType.PAY, "addAccount");
 				if (pay.initDone())
 				{
+					try{
 					pay.addAccount();
+					}
+					catch(Exception e1)
+					{
+						LogHolder.log(LogLevel.DEBUG, LogType.PAY,
+									  "neue Konto erschaffen geht nicht: "+e1.getMessage());
+					}
 				}
 				else
 				{
