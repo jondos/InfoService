@@ -17,7 +17,10 @@ public final class JAPInfoService
 			{
 				model = JAPModel.getModel();
 				setInfoService(model.getInfoServiceHost(),model.getInfoServicePort());
-				setProxy(model.getProxyHost(),model.getProxyPort());
+				if(model.getUseProxy())
+					setProxy(model.getProxyHost(),model.getProxyPort());
+				else
+					setProxy(null,0);
 			}
 			
 		public int setInfoService(String host,int port)
