@@ -42,7 +42,6 @@
 #42=anon\JAPDummyTraffic.java
 #43=JAPConstants.java
 #45=gui
-#46=JAPUpdate.java
 idl[0].ProcessIDL=false
 runtime.0[0].RunnableType=com.borland.jbuilder.runtime.ApplicationRunner
 runtime.0[0].application.class=JAP
@@ -122,4 +121,3 @@ sys[42].Parent=0
 sys[43].Parent=0
 sys[45].Parent=0
 sys[45].Type=Package
-sys[46].Parent=0
