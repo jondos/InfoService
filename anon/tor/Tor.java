@@ -34,12 +34,19 @@ public class Tor implements Runnable, AnonService
 
 	private static Tor instance = null;
 
+	//list of all onion routers
 	private ORList m_orList;
+	//list of allowed OR's
 	private Vector m_allowedORs;
+	//list of allowed FirstOnionRouters
 	private Vector m_FORList;
+	//list of allowed exitnodes
 	private Vector m_exitNodes;
+	//list of used FOR's
 	private Vector m_usedFORs;
+	//list of circuits
 	private Hashtable m_circuits;
+	//active circuit
 	private int m_activeCircuit;
 
 	private FirstOnionRouterFactory m_firstORFactory;
@@ -79,10 +86,8 @@ public class Tor implements Runnable, AnonService
 		this.m_allowedORs = null;
 
 		this.m_FORList = new Vector();
-		this.m_FORList.addElement("tor26");
 
 		this.m_exitNodes = new Vector();
-		this.m_exitNodes.addElement("casandra");
 
 		this.m_circuitLengthMin = 3;
 		this.m_circuitLengthMax = 5;
@@ -100,56 +105,76 @@ public class Tor implements Runnable, AnonService
 	}
 
 	/**
+	 * selects a or randomly from a given list and returns a ORdescription
+	 * @param orlist
+	 * list of onionrouters
+	 * @return
+	 */
+	private synchronized ORDescription selectORRandomly(Vector orlist)
+	{
+		Vector temp = this.m_orList.getList();
+		Object temp2;
+		ORDescription temp3;
+		Vector orl = orlist;
+		if(orlist ==null)
+		{
+			orl=new Vector();
+		}
+		if(orl.size()>0)
+		{
+			temp2 = orl.elementAt((this.m_rand.nextInt(orl.size())));
+			if(temp2 instanceof String)
+			{
+				temp3 = this.m_orList.getORDescription((String)temp2);
+				if(temp3!=null)
+				{
+					return temp3;
+				}
+			}
+		} else
+		{
+			if(this.m_allowedORs!=null)
+			{
+				if(this.m_allowedORs.size()>0)
+				{
+					temp2 = this.m_allowedORs.elementAt(this.m_rand.nextInt(this.m_allowedORs.size()));
+					if(temp2 instanceof String)
+					{
+						temp3 = this.m_orList.getORDescription((String)temp2);
+						if(temp3!=null)
+						{
+							return temp3;
+						}
+					}
+				}
+			}
+		}
+		return (ORDescription)temp.elementAt(this.m_rand.nextInt(temp.size()));
+	}
+
+	/**
 	 * creates a new Circuit
 	 * @throws IOException
 	 */
 	private synchronized void createNewCircuit() throws IOException
 	{
-		this.updateORList();
+		ORDescription ord;
+		Object o;
+		Vector orsForNewCircuit = new Vector();
 		int circuitLength = m_rand.nextInt(this.m_circuitLengthMax - this.m_circuitLengthMin + 1) +
 			this.m_circuitLengthMin;
-		Vector orsForNewCircuit = new Vector();
-		Object o = this.m_FORList.elementAt(m_rand.nextInt(this.m_FORList.size()));
-		if (o instanceof String)
+		ord = this.selectORRandomly(this.m_FORList);
+		orsForNewCircuit.addElement(ord);
+		do
 		{
-			String firstOR = (String) o;
-			orsForNewCircuit.addElement(this.m_orList.getORDescription(firstOR));
-		}
-		else
-		{
-			throw new IOException("Cannot create Circuit");
-		}
-		o = this.m_exitNodes.elementAt(this.m_rand.nextInt(this.m_exitNodes.size()));
-		if (o instanceof String)
-		{
-			String lastOR = (String) o;
-			orsForNewCircuit.addElement(this.m_orList.getORDescription(lastOR));
-		}
-		else
-		{
-			throw new IOException("Cannot create Circuit");
-		}
-		ORDescription ord = null;
+			ord = this.selectORRandomly(this.m_exitNodes);
+		} while((orsForNewCircuit.contains(ord))/*||(!ord.getAcl().isAllowed(80))*/);
+		orsForNewCircuit.addElement(ord);
 		for (int i = 2; i < circuitLength; i++)
 		{
 			do
 			{
-				do
-				{
-					o = this.m_orList.getList().elementAt(this.m_rand.nextInt(this.m_orList.getList().size()));
-					if (o instanceof ORDescription)
-					{
-						ord = (ORDescription) o;
-						if (this.m_allowedORs != null)
-						{
-							if (!this.m_allowedORs.contains(ord.getName()))
-							{
-								ord = null;
-							}
-						}
-					}
-				}
-				while (ord == null);
+				ord=this.selectORRandomly(null);
 			}
 			while (orsForNewCircuit.contains(ord));
 			orsForNewCircuit.insertElementAt(ord, 1);
@@ -203,6 +228,7 @@ public class Tor implements Runnable, AnonService
 	 */
 	public void run()
 	{
+		this.updateORList();
 		while (m_bRun)
 		{
 			boolean error = true;
@@ -217,6 +243,7 @@ public class Tor implements Runnable, AnonService
 				{
 					LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Error during circuit creation");
 					error = true;
+					this.updateORList();
 				}
 			}
 
@@ -264,6 +291,13 @@ public class Tor implements Runnable, AnonService
 				}
 			}
 		}
+	}
+
+	public byte[] DNSResolve(String name)
+	{
+		while(this.m_activeCircuit==0);
+		Circuit c = (Circuit)this.m_circuits.get(new Integer(this.m_activeCircuit));
+		return c.DNSResolve(name);
 	}
 
 	/**

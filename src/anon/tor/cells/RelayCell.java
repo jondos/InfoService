@@ -21,6 +21,8 @@ public class RelayCell extends Cell
 	public final static byte RELAY_TRUNCATE = 8;
 	public final static byte RELAY_TRUNCATED = 9;
 	public final static byte RELAY_DROP = 10;
+	public final static byte RELAY_RESOLVE = 11;
+	public final static byte RELAY_RESOLVED = 12;
 
 	private byte m_relayCommand;
 	private int m_streamID;

@@ -8,6 +8,8 @@ package anon.tor.test;
 
 import anon.AnonChannel;
 import anon.tor.Tor;
+import anon.tor.TorAnonServerDescription;
+
 import java.net.InetAddress;
 
 /**
@@ -22,7 +24,13 @@ public class tor2jap
 	public static void main(String[] args) throws Exception
 	{
 		Tor tor = Tor.getInstance();
-		tor.shutdown();
+		tor.initialize(new TorAnonServerDescription());
+/*		byte[] temp = tor.DNSResolve("www.google.de");
+		for(int i=0;i<temp.length;i++)
+		{
+			System.out.print(" "+temp[i]);
+		}
+		System.out.println();*/
 		AnonChannel channel = tor.createChannel(InetAddress.getByName("www.google.de"), 80);
 		channel.getOutputStream().write( ("GET /index.html HTTP/1.0\n\r\n\r").getBytes());
 		for (; ; )
