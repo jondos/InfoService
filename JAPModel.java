@@ -698,6 +698,9 @@ public final class JAPModel implements JAPAnonServiceListener{
 						view.setCursor(Cursor.getDefaultCursor());
 						notifyJAPObservers();
 					}
+				else
+						view.setCursor(Cursor.getDefaultCursor());
+					
 		} else if ((proxyDirect==null) && (anonModeSelected == false)) {
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:setAnonMode("+anonModeSelected+")");
 			if(proxyAnon!=null)
@@ -811,7 +814,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 			s=s.trim();
 			// temporary changed due to stability.... (sk13)
 //				String s = vc.getNewVersionnumberFromNet("http://anon.inf.tu-dresden.de:80"+aktJAPVersionFN);
-				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:Version:"+s);
+				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:Version:"+aktVersion);
 				if ( s.compareTo(aktVersion) > 0 ) {
 					// OK, new version available
 					// ->Ask user if he/she wants to download new version
