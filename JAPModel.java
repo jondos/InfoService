@@ -1210,7 +1210,7 @@ private final class SetAnonModeAsync implements Runnable
 	public int setRMISupport(boolean b) {
 		if(b) {
 			if(anonServiceRMIServer==null)
-				anonServiceRMIServer = new Server();
+				anonServiceRMIServer = Server.generateServer();
 				anonServiceRMIServer.start();
 		} else {
 			if(anonServiceRMIServer!=null)
