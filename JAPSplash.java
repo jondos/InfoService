@@ -25,47 +25,137 @@ OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABIL
 IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY 
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
-import java.awt.BorderLayout;
-import java.awt.Color;
+//import java.awt.BorderLayout;
+//import java.awt.Color;
 import java.awt.Window;
 import java.awt.Frame;
 import java.awt.Font;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.ImageIcon;
+import java.awt.Image;
+import java.awt.Toolkit;
+import java.awt.Graphics;
+//import java.awt.Canvas;
+import java.awt.MediaTracker;
+import java.io.InputStream;
+//import javax.swing.JLabel;
+//import javax.swing.JPanel;
+//import javax.swing.ImageIcon;
 
-final class JAPSplash extends Window  {
-	public  JAPSplash (JAPModel m) {
-		super(new Frame());
-		setBackground(Color.black);
+final class JAPSplash extends Window  
+	{
+		Image imageSplash;
+		Image imageBusy;
+		Image imageOffScreen=null;
+		Font font;
+		String strLoading;
 		
-		JLabel splashLabel = new JLabel(JAPUtil.loadImageIcon(m.SPLASHFN, false));
+		JAPSplash(/*JAPModel m*/)
+			{
+				super(new Frame());
+				setLayout(null);
 		
-		JPanel p1 = new JPanel();
-		p1.setBackground(Color.black);
-		p1.setForeground(Color.white);
+				Toolkit t=Toolkit.getDefaultToolkit();
+				InputStream in=JAPSplash.class.getResourceAsStream("images/splash.gif");
+				byte[] buff=new byte[26000];
+				int len=0;
+				int aktIndex=0;
+				try
+					{
+						while((len=in.read(buff,aktIndex,26000-aktIndex))!=-1)
+							aktIndex+=len;
+					}
+				catch(Exception e)
+					{
+					}
+				imageSplash=t.createImage(buff,0,aktIndex);
+				MediaTracker ma=new MediaTracker(this);
+				ma.addImage(imageSplash,1);
+				ma.checkID(1,true);
+				in=JAPSplash.class.getResourceAsStream("images/busy.gif");
+				byte[] buff1=new byte[7000];
+				len=0;
+				aktIndex=0;
+				try
+					{
+						while((len=in.read(buff1,aktIndex,7000-aktIndex))!=-1)
+							aktIndex+=len;
+					}
+				catch(Exception e)
+					{
+					}
+				imageBusy=t.createImage(buff1,0,aktIndex);
+				ma.addImage(imageBusy,2);
+				strLoading="Lade Einstellunegen ...";//m.getString("loading");
+				font=new Font("Sans",Font.PLAIN,9);
+				setLocation(-350,-173);
+				setSize(350,173);
+				try{ma.waitForAll();}catch(Exception e){};
+				setVisible(true);
+				toFront();
+				paint(getGraphics());
+				//setSize(350,173);
+				JAPUtil.centerFrame(this);
+				System.out.println("----------------------- SPLASH FINISHED -----------------------");
+			}
+		
+		public void update(Graphics g)
+			{
+				paint(g);
+			}
+		
+		public void paint(Graphics g)
+			{
+				if(imageOffScreen==null)	
+					imageOffScreen=createImage(350,173);
+				Graphics goff=imageOffScreen.getGraphics();
+				goff.drawImage(imageSplash,0,0,this);
+				goff.drawImage(imageBusy,15,150,this);
+				goff.setFont(font);
+				goff.drawString(strLoading,15,140);
+				goff.drawString("Version: "+JAPModel.aktVersion,250,158);
+				g.drawImage(imageOffScreen,0,0,this);
+			}
 
-		JLabel waitLabel   = new JLabel(m.getString("loading"), JLabel.CENTER);
+		/*public  JAPSplash (int i) {
+//		super(new Frame());
+//		setBackground(Color.black);
+//		Toolkit t=Toolkit.getDefaultToolkit();
+//		InputStream in=this.class.getRessourceAsStream("images/splash.gif");
+//		byte buff=new byte[65000];
+//		int len=0;
+//		while((len=in.read(buff,aktIndex,65000-aktIndex))!=0)
+//			aktIndex+=len;
+//		Image image=t.createImage(buff,0,aktIndex);
+		setLayout(null);
+		add(new SplashCanvas());
+		//JLabel splashLabel = new JLabel(JAPUtil.loadImageIcon(m.SPLASHFN, false));
+		
+		//JPanel p1 = new JPanel();
+		//p1.setBackground(Color.black);
+		//p1.setForeground(Color.white);
+
+		//JLabel waitLabel   = new JLabel(m.getString("loading"), JLabel.CENTER);
 	//	waitLabel.setOpaque(false);
-		waitLabel.setBackground(Color.black);
-		waitLabel.setForeground(Color.white);
-		waitLabel.setFont(new Font("Sans",Font.PLAIN,9));
+		//waitLabel.setBackground(Color.black);
+		//waitLabel.setForeground(Color.white);
+		//waitLabel.setFont(new Font("Sans",Font.PLAIN,9));
 
-		ImageIcon busy = JAPUtil.loadImageIcon(m.BUSYFN, false);
-		JLabel busyLabel = new JLabel(busy);
-		busyLabel.setBackground(Color.black);
+		//ImageIcon busy = JAPUtil.loadImageIcon(m.BUSYFN, false);
+		//JLabel busyLabel = new JLabel(busy);
+		//busyLabel.setBackground(Color.black);
 		
-		p1.add(busyLabel);
-		p1.add(waitLabel);
+		//p1.add(busyLabel);
+		//p1.add(waitLabel);
 
-		add(splashLabel, BorderLayout.NORTH);
-		add(p1, BorderLayout.CENTER);
+		//add(splashLabel, BorderLayout.NORTH);
+		//add(p1, BorderLayout.CENTER);
 
-		pack();
+		//pack();
+		setSize(350,173);
 		JAPUtil.centerFrame(this);
 		setVisible(true);
 		toFront();
-	}
+		System.out.println("----------------------- SPLASH FINISHED -----------------------");
+	}*/
 }
 
 
