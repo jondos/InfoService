@@ -25,16 +25,17 @@ OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABIL
 IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
-package anon;
+package anonnew.server.impl;
+
 import Rijndael.Rijndael_Algorithm;
-final class JAPSymCipher
+final class SymCipher
 	{
 ///*Start AES
 			Object oKey;
 			byte[] iv=null;
 			byte[] iv2=null;
 
-			public JAPSymCipher()
+			public SymCipher()
 				{
 					oKey=null;
 					iv=new byte[16];

@@ -1,10 +1,10 @@
-import anon.JAPAnonService;
+//import anon.JAPAnonService;
 import anon.JAPAnonServiceListener;
-
+import java.net.ServerSocket;
 class JAPLean implements JAPAnonServiceListener {
 
-	static JAPAnonService    japAnonService = null;
-	
+	static JAPAnonProxy    japAnonProxy = null;
+
 	static int      portNumberHTTPListener;
 	static int      portNumberAnonService;
 	static String   hostNameAnonService;
@@ -12,22 +12,24 @@ class JAPLean implements JAPAnonServiceListener {
 	static int      nrOfChannels      = 0;
 	static int      nrOfBytes         = 0;
 
-	JAPLean ( ) {		
+	JAPLean ( ) {
 		JAPDebug.create();
 		JAPDebug.setDebugType(JAPDebug.NET);
 		JAPDebug.setDebugLevel(JAPDebug.ERR);
-		
+
 		// JAPAnonService.init();
-		japAnonService = new JAPAnonService(portNumberHTTPListener,JAPAnonService.PROTO_HTTP,false);
-		japAnonService.setAnonService(hostNameAnonService,portNumberAnonService);
-		int returnCode = japAnonService.start();
-		japAnonService.setAnonServiceListener(this);
-		if (returnCode == JAPAnonService.E_SUCCESS) {
+    ServerSocket listener=null;
+    try{listener=new ServerSocket(portNumberHTTPListener);}catch(Exception e){e.printStackTrace();System.exit(0);}
+		japAnonProxy = new JAPAnonProxy(listener);
+		japAnonProxy.setAnonService(hostNameAnonService,portNumberAnonService);
+		int returnCode = japAnonProxy.start();
+		japAnonProxy.setAnonServiceListener(this);
+		if (returnCode == JAPAnonProxy.E_SUCCESS) {
 			System.out.print("Amount of anonymized bytes: ");
 			Thread t = new Thread(new JAPLeanActivityLoop());
 			t.start();
 		}
-		else if (returnCode ==JAPAnonService.E_BIND) {
+		else if (returnCode ==JAPAnonProxy.E_BIND) {
 			System.err.println("Error binding listener!");
 			System.exit(1);
 		} else {
@@ -35,10 +37,10 @@ class JAPLean implements JAPAnonServiceListener {
 			System.exit(1);
 		}
 	}
-	
+
 	public static void main(String[] argv) {
 		// check for command line
-		if (argv == null || argv.length < 3) {			
+		if (argv == null || argv.length < 3) {
 			System.err.println("Usage: JAPLean <listener_port> <first_mix_address> <first_mix_port>");
 			System.exit(1);
 		}
@@ -47,8 +49,8 @@ class JAPLean implements JAPAnonServiceListener {
 		portNumberAnonService  = Integer.parseInt(argv[2]);
 		System.out.println("["+portNumberHTTPListener+"]-->["+hostNameAnonService+":"+portNumberAnonService+"]");
 		new JAPLean();
-	}	
-	  
+	}
+
 	/* Implementation of Interface JAPAnonServiceListener */
 	public void channelsChanged(int channels) {
 		nrOfChannels=channels;
@@ -58,7 +60,7 @@ class JAPLean implements JAPAnonServiceListener {
 	public void transferedBytes(int bytes) {
 		nrOfBytes+=bytes;
 	}
-		
+
 	private final class JAPLeanActivityLoop implements Runnable {
 		int nrOfBytesBefore = -1;
 		public void run() {

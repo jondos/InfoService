@@ -44,7 +44,7 @@ import java.text.NumberFormat;
 import HTTPClient.HTTPConnection;
 import HTTPClient.HTTPResponse;
 
-import anon.JAPAnonService;
+//import anon.JAPAnonService;
 
 /**
  * User Interface for an Mix-Cascade Monitor.
@@ -291,17 +291,15 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 					e.setStatus(JAPMessages.getString("chkConnecting"));
 					tableView.repaint();
 					// create the AnonService
-					JAPAnonService proxyAnon=new JAPAnonService(listener,JAPAnonService.PROTO_HTTP);
+					JAPAnonProxy proxyAnon=new JAPAnonProxy(listener);
 					if (model.getUseFirewall()) {
 						// connect vi proxy to first mix (via ssl portnumber)
 						if (e.getSSLPort() == -1) {
 							proxyAnon.setAnonService(e.getHost(),e.getPort());
 							proxyAnon.setFirewall(model.getFirewallHost(),model.getFirewallPort());
-							proxyAnon.connectViaFirewall(true);
 						} else {
 							proxyAnon.setAnonService(e.getHost(),e.getSSLPort());
 							proxyAnon.setFirewall(model.getFirewallHost(),model.getFirewallPort());
-							proxyAnon.connectViaFirewall(true);
 						}
 					} else {
 						// connect directly to first mix
@@ -320,16 +318,16 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 					nf.setMaximumFractionDigits(3);
 					e.setDelay("" + ((dtConnect==-1)?"-":nf.format((float)dtConnect/1000.F)) + " s");
 					tableView.repaint();
-					if(ret==JAPAnonService.E_SUCCESS) {
+					if(ret==JAPAnonProxy.E_SUCCESS) {
 						e.setStatus(JAPMessages.getString("chkConnected"));
 					} else {
 						dtConnect=-1;
-						if (ret==JAPAnonService.E_BIND)  e.setStatus(JAPMessages.getString("chkBindError"));
+						if (ret==JAPAnonProxy.E_BIND)  e.setStatus(JAPMessages.getString("chkBindError"));
 						else                             e.setStatus(JAPMessages.getString("chkConnectionError"));
 					}
 					tableView.repaint();
 					// if sucessfull perform check
-					if (ret==JAPAnonService.E_SUCCESS) {
+					if (ret==JAPAnonProxy.E_SUCCESS) {
 						// send request via AnonService
 						//
 						try {
@@ -395,7 +393,7 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 					e.setDelay("" + ((dtConnect==-1)?"-":nf.format((float)dtConnect/1000.F)) + "/" +
 						((dtResponse==-1)?"-":nf.format((float)dtResponse/1000.F)) + " s");
 					tableView.repaint();
-					ret = proxyAnon.stop();
+					proxyAnon.stop();
 				}
 				// sleep for a while
 				view.setCursor(Cursor.getDefaultCursor());

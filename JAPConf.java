@@ -51,7 +51,7 @@ import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.JFrame;
-import anon.JAPAnonService;
+//import anon.JAPAnonService;
 import update.*;
 final class JAPConf extends JDialog
 	{
@@ -950,7 +950,7 @@ final class JAPConf extends JDialog
 					m_Model.setLocale(Locale.GERMAN);
 				else
 					m_Model.setLocale(Locale.ENGLISH);
-				JAPAnonService.setEnableDummyTraffic(m_cbDummyTraffic.isSelected());
+				m_Model.setEnableDummyTraffic(m_cbDummyTraffic.isSelected());
 				// Listener settings
 				m_Model.setHTTPListenerConfig(Integer.parseInt(m_tfListenerPortNumber.getText().trim()),m_cbListenerIsLocal.isSelected());
 //				m_Model.setUseSocksPort(m_cbListenerSocks.isSelected());
@@ -1007,7 +1007,7 @@ final class JAPConf extends JDialog
 		public void updateValues()
 			{
 				// misc tab
-				m_cbDummyTraffic.setSelected(JAPAnonService.getEnableDummyTraffic());
+				m_cbDummyTraffic.setSelected(m_Model.getEnableDummyTraffic());
 				m_cbShowDebugConsole.setSelected(JAPDebug.isShowConsole());
 				m_cbDebugGui.setSelected((((JAPDebug.getDebugType()&JAPDebug.GUI)!=0)?true:false));
 				m_cbDebugNet.setSelected((((JAPDebug.getDebugType()&JAPDebug.NET)!=0)?true:false));

@@ -25,7 +25,7 @@ OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABIL
 IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
-import anon.JAPAnonService;
+//import anon.JAPAnonService;
 import java.io.Serializable;
 public final class AnonServerDBEntry implements Serializable
 	{
@@ -41,7 +41,7 @@ public final class AnonServerDBEntry implements Serializable
 		private long    m_lMixedPackets = -1;
 		private String delay  = null;
 		private String status = null;
-		private JAPAnonService service = null;
+		//private JAPAnonService service = null;
 
 		public AnonServerDBEntry (String host, int port)
 			{
@@ -140,10 +140,10 @@ public final class AnonServerDBEntry implements Serializable
 		public void setStatus(String status) {
 				this.status=status;
 		}
-		public JAPAnonService getAnonService() {
+/*		public JAPAnonService getAnonService() {
 				return service;
 		}
 		public void setAnonService(JAPAnonService service) {
 				this.service=service;
-		}
+		}*/
 	}
