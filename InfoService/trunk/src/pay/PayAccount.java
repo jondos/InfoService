@@ -27,6 +27,30 @@
  */
 package pay;
 
+import java.io.ByteArrayInputStream;
+import java.math.BigInteger;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.Vector;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import anon.crypto.JAPSignature;
+import anon.crypto.MyRSAPrivateKey;
+import anon.crypto.MyRSAPublicKey;
+import anon.util.Base64;
+import anon.util.XMLUtil;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
+import payxml.XMLAccountCertificate;
+import payxml.XMLAccountInfo;
+import payxml.XMLDocument;
+import payxml.XMLEasyCC;
+import payxml.XMLTransCert;
+
 /**
  *  Diese Klasse ist f?r die verwaltung eines Accounts zut?ndig, sie kapselt eine XML Struktur innerhalb der Klasse
  *	und Mithilfe von Klassen des payxml Packages

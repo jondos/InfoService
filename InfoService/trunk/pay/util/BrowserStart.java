@@ -32,6 +32,11 @@ package pay.util;
 /**
  * Diese Klasse dient zum starten eines Browsers in einem eigenen Thread
  **/
+import java.awt.*;
+import java.awt.event.*;
+import pay.util.*;
+import java.net.*;
+import logging.*;
 
 public class BrowserStart
 {
