@@ -88,7 +88,7 @@ public final class JAPModel {
 	
 	private static JAPModel model=null;
 //	public JAPLoading japLoading;
-	public static JAPFeedback feedback;
+	public static JAPFeedback feedback=null;
 	
 	public static JAPKeyPool keypool;
 	
@@ -202,23 +202,21 @@ public final class JAPModel {
 	}
 	
 	
-	public void initialRun() {
-		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:initial run of JAP...");
-		// start keypool thread
-		keypool=new JAPKeyPool(20,16);
-		Thread t1 = new Thread (keypool);
-		t1.setPriority(Thread.MIN_PRIORITY);
-		t1.start();
-		// start feedback thread
-		feedback=new JAPFeedback();
-		Thread t2 = new Thread (feedback);
-		t2.setPriority(Thread.MIN_PRIORITY);
-		t2.start();
-		// start Proxy
-		startProxy();
-		// start anon service immediately if autoConnect is true
-		setAnonMode(autoConnect);
-	}
+	public void initialRun()
+		{
+			JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:initial run of JAP...");
+			// start keypool thread
+			keypool=new JAPKeyPool(20,16);
+			Thread t1 = new Thread (keypool);
+			t1.setPriority(Thread.MIN_PRIORITY);
+			t1.start();
+		
+			// start Proxy
+			startProxy();
+			
+			// start anon service immediately if autoConnect is true
+			setAnonMode(autoConnect);
+		}
 	
     public int getCurrentProtectionLevel() {
 		// Hier eine moeglichst komplizierte Formel einfuegen,
@@ -276,7 +274,8 @@ public final class JAPModel {
 		return nrOfBytes;
 	}
 
-	public synchronized void setAnonMode(boolean anonModeSelected) {
+	public synchronized void setAnonMode(boolean anonModeSelected)
+	{
 		if ((anonMode == false) && (anonModeSelected == true)) {
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:setAnonMode("+anonModeSelected+")");
 			if (alreadyCheckedForNewVersion == false) {
@@ -294,6 +293,11 @@ public final class JAPModel {
 			if (canStartService) {
 				// -> we can start anonymity
 				anonMode = true;
+				// start feedback thread
+				feedback=new JAPFeedback();
+				Thread t2 = new Thread (feedback);
+				t2.setPriority(Thread.MIN_PRIORITY);
+				t2.start();
 				p.startMux();
 				notifyJAPObservers();
 			}
@@ -301,6 +305,8 @@ public final class JAPModel {
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:setAnonMode("+anonModeSelected+")");
 			anonMode = false;
 			p.stopMux();
+			feedback.stopRequests();
+			feedback=null;
 			notifyJAPObservers();
 		}
 	}
@@ -318,16 +324,18 @@ public final class JAPModel {
 		return proxyMode;
 	}
 
-	private void startProxy() {
-		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:startProxy");
-		if (isRunningProxy == false) {
-			isRunningProxy = true;
-			runningPortNumber = portNumber;
-			p = new JAPProxyServer(portNumber);
-			Thread proxyThread = new Thread (p);
-			proxyThread.start();
+	private void startProxy() 
+		{
+			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:startProxy");
+			if (isRunningProxy == false)
+				{
+					isRunningProxy = true;
+					runningPortNumber = portNumber;
+					p = new JAPProxyServer(portNumber);
+					Thread proxyThread = new Thread (p);
+					proxyThread.start();
+				}
 		}
-	}
 	
 	private void stopProxy() {
 		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:stopProxy");
