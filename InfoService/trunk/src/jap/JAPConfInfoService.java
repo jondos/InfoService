@@ -64,6 +64,7 @@ import anon.infoservice.HTTPConnectionFactory;
 import anon.infoservice.InfoServiceDBEntry;
 import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.ListenerInterface;
+import java.awt.Color;
 
 /**
  * This is the configuration GUI for the infoservice.
@@ -213,6 +214,7 @@ final class JAPConfInfoService extends AbstractJAPConfModule
 
 		JButton settingsInfoGetListButton = new JButton(JAPMessages.getString("settingsInfoGetListButton"));
 		settingsInfoGetListButton.setFont(getFontSetting());
+		settingsInfoGetListButton.setOpaque(false);
 		settingsInfoGetListButton.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent event)
@@ -258,6 +260,7 @@ final class JAPConfInfoService extends AbstractJAPConfModule
 		JButton settingsInfoSetPreferedButton = new JButton(JAPMessages.getString(
 			"settingsInfoSetPreferedButton"));
 		settingsInfoSetPreferedButton.setFont(getFontSetting());
+		settingsInfoSetPreferedButton.setOpaque(false);
 		settingsInfoSetPreferedButton.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent event)
@@ -275,6 +278,7 @@ final class JAPConfInfoService extends AbstractJAPConfModule
 		});
 		JButton settingsInfoAddButton = new JButton(JAPMessages.getString("settingsInfoAddButton"));
 		settingsInfoAddButton.setFont(getFontSetting());
+		settingsInfoAddButton.setOpaque(false);
 		settingsInfoAddButton.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent event)
@@ -285,6 +289,7 @@ final class JAPConfInfoService extends AbstractJAPConfModule
 		});
 		JButton settingsInfoRemoveButton = new JButton(JAPMessages.getString("settingsInfoRemoveButton"));
 		settingsInfoRemoveButton.setFont(getFontSetting());
+		settingsInfoRemoveButton.setOpaque(false);
 		settingsInfoRemoveButton.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent event)
