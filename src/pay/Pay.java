@@ -264,7 +264,7 @@ public class Pay
 		XMLTransCert transcert = biConn.charge();
 		biConn.disconnect();
 		account.addTransCert(transcert);
-		m_AccountsFile.save();
+//		m_AccountsFile.save();
 		return transcert.getTransferNumber();
 	}
 
@@ -318,7 +318,7 @@ public class Pay
 			account.setAccountInfo(info);
 
 			// save the modified accountsfile
-			m_AccountsFile.save();
+//			m_AccountsFile.save();
 			return info;
 		}
 		catch (Exception e)
@@ -337,7 +337,7 @@ public class Pay
 	 * This can take a while, so the user should be notified before calling this.
 	 *
 	 */
-	public void registerNewAccount() throws IllegalStateException, Exception
+	public void createAccount() throws IllegalStateException, Exception
 	{
 		RSAKeyPairGenerator pGen = new RSAKeyPairGenerator();
 
@@ -357,7 +357,7 @@ public class Pay
 		XMLJapPublicKey pubKey = new XMLJapPublicKey(rsapubkey);
 
 		LogHolder.log(LogLevel.DEBUG, LogType.PAY,
-					  "Pay.addAccount() Key successfully generated"
+					  "Pay.createAccount() Key successfully generated"
 					  );
 
 		// send it to the JPI TODO: switch SSL on
@@ -370,7 +370,7 @@ public class Pay
 
 		// add the new account to the accountsFile
 		PayAccount newAccount = new PayAccount(xmlCert, rsaprivkey, signingInstance);
-		m_AccountsFile.addAccount(newAccount); // will save automatically
+		m_AccountsFile.addAccount(newAccount);
 	}
 
 }

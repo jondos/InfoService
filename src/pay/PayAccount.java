@@ -119,7 +119,7 @@ public class PayAccount extends XMLDocument
 		// fill vector with transfer certificates
 		m_transCerts = new Vector();
 		Element elemRoot = m_theDocument.getDocumentElement();
-		Element elemTrs = (Element) XMLUtil.getFirstChildByName(elemRoot, "TransferCertfificates");
+		Element elemTrs = (Element) XMLUtil.getFirstChildByName(elemRoot, "TransferCertificates");
 		Element elemTr = (Element) elemTrs.getFirstChild();
 		while (elemTr != null)
 		{
@@ -133,7 +133,10 @@ public class PayAccount extends XMLDocument
 
 		// set account info
 		Element elemAccInfo = (Element) XMLUtil.getFirstChildByName(elemRoot, "AccountInfo");
-		m_accountInfo = new XMLAccountInfo(elemAccInfo, null);
+		if(elemAccInfo!=null)
+		{
+			m_accountInfo = new XMLAccountInfo(elemAccInfo, null);
+		}
 
 		// set private key
 		setRSAPrivateKey();
@@ -150,24 +153,21 @@ public class PayAccount extends XMLDocument
 	}
 
 	/**
-	 * Erzeugt ein {@link PayAccount} Objekt aus einem Kontozertifikat und dem
-	 * zugeh?rigen geheimen Schl?ssel.
+	 * Creates a {@link PayAccount} Objekt from the account certificate and
+	 * the private key.
 	 *
-	 * @param certificate Kontozertifikat
-	 * @param privateKey geheimer Schl?ssel
+	 * @param certificate account certificate issued by the BI
+	 * @param privateKey the private key
 	 */
 	public PayAccount(XMLAccountCertificate certificate,
 					  MyRSAPrivateKey privateKey,
 					  JAPSignature signingInstance) throws Exception
 	{
+		m_accountCertificate = certificate;
 		m_signingInstance = signingInstance;
 		m_privateKey = privateKey;
 
-
-		m_theDocument = getDocumentBuilder().newDocument();
-		Element elemRoot = m_theDocument.createElement("Account");
-		m_theDocument.appendChild(elemRoot);
-
+		constructXMLDocument();
 	}
 
 	/**
@@ -215,12 +215,14 @@ public class PayAccount extends XMLDocument
 		// add transfer certificates
 		Element elemTransCerts = m_theDocument.createElement("TransferCertificates");
 		elemRoot.appendChild(elemTransCerts);
-		Enumeration enum = m_transCerts.elements();
-		while (enum.hasMoreElements())
-		{
-			XMLTransCert cert = (XMLTransCert) enum.nextElement();
-			Node n1 = XMLUtil.importNode(m_theDocument, cert.getDomDocument().getDocumentElement(), true);
-			elemTransCerts.appendChild(n1);
+		if(m_transCerts!=null) {
+			Enumeration enum = m_transCerts.elements();
+			while (enum.hasMoreElements())
+			{
+				XMLTransCert cert = (XMLTransCert) enum.nextElement();
+				Node n1 = XMLUtil.importNode(m_theDocument, cert.getDomDocument().getDocumentElement(), true);
+				elemTransCerts.appendChild(n1);
+			}
 		}
 
 		if (m_accountInfo != null)
