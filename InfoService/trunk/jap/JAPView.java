@@ -56,6 +56,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
+import javax.swing.JTabbedPane;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.border.TitledBorder;
@@ -66,7 +67,7 @@ import gui.JAPDll;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import pay.view.GuthabenAnzeige;
+import pay.gui.PaymentMainPanel;
 
 final public class JAPView extends JFrame implements ActionListener, JAPObserver
 {
@@ -129,7 +130,7 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 	private boolean m_bIsIconified;
 	private String m_Title;
 	private final static boolean PROGRESSBARBORDER = true;
-	private GuthabenAnzeige guthaben;
+	//private GuthabenAnzeige guthaben;
 	private boolean loadPay = false;
 
 	public JAPView(String s)
@@ -210,15 +211,50 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 		JAPUtil.setMnemonic(m_bttnQuit, JAPMessages.getString("quitButtonMn"));
 
 		// add Components to Frame
-		getContentPane().setBackground(buttonPanel.getBackground());
-		getContentPane().add(level, BorderLayout.CENTER);
-		m_panelMain = level;
-		if (!JAPModel.isSmallDisplay())
+		// temporary testing of new GUI interface... (Bastian Voigt)
+		if (loadPay)
 		{
-			getContentPane().add(northPanel, BorderLayout.NORTH);
-			getContentPane().add(westLabel, BorderLayout.WEST);
-			getContentPane().add(new JLabel("  "), BorderLayout.EAST); //Spacer
-			getContentPane().add(buttonPanel, BorderLayout.SOUTH);
+			// add old GUI as a tab
+			JPanel oldInterfacePanel = new JPanel(new BorderLayout());
+			oldInterfacePanel.setBackground(buttonPanel.getBackground());
+			oldInterfacePanel.add(level, BorderLayout.CENTER);
+			m_panelMain = level;
+			if (!JAPModel.isSmallDisplay())
+			{
+				oldInterfacePanel.add(northPanel, BorderLayout.NORTH);
+				oldInterfacePanel.add(westLabel, BorderLayout.WEST);
+				oldInterfacePanel.add(new JLabel("  "), BorderLayout.EAST); //Spacer
+				oldInterfacePanel.add(buttonPanel, BorderLayout.SOUTH);
+			}
+
+			// initialize new Payment GUI
+			JPanel drumherum = new JPanel(new BorderLayout());
+			JPanel dummyPanel1 = new JPanel();
+			dummyPanel1.setBorder(new TitledBorder("Dummy Panel 1"));
+			JPanel dummyPanel2 = new JPanel();
+			dummyPanel2.setBorder(new TitledBorder("Dummy Panel 2"));
+			JPanel newInterfacePanel = new PaymentMainPanel();
+			JTabbedPane tab = new JTabbedPane();
+			drumherum.add(dummyPanel2, BorderLayout.NORTH);
+			drumherum.add(dummyPanel1, BorderLayout.CENTER);
+			drumherum.add(newInterfacePanel, BorderLayout.SOUTH);
+			tab.addTab("Old interface", oldInterfacePanel);
+			tab.addTab("New Payment Interface", drumherum);
+			getContentPane().add(tab);
+		}
+		else
+		{ // if loadPay is off, all stays as usual
+
+			getContentPane().setBackground(buttonPanel.getBackground());
+			getContentPane().add(level, BorderLayout.CENTER);
+			m_panelMain = level;
+			if (!JAPModel.isSmallDisplay())
+			{
+				getContentPane().add(northPanel, BorderLayout.NORTH);
+				getContentPane().add(westLabel, BorderLayout.WEST);
+				getContentPane().add(new JLabel("  "), BorderLayout.EAST); //Spacer
+				getContentPane().add(buttonPanel, BorderLayout.SOUTH);
+			}
 		}
 		//tabs.setSelectedComponent(level);
 
@@ -256,7 +292,7 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 			Dimension ds = Toolkit.getDefaultToolkit().getScreenSize();
 			if (m.m_OldMainWindowLocation != null && m.m_OldMainWindowLocation.x >= 0 &&
 				m.m_OldMainWindowLocation.y > 0 /*&&m.m_OldMainWindowLocation.x<ds.width&&
-					   m.m_OldMainWindowLocation.y<ds.height*/
+						m.m_OldMainWindowLocation.y<ds.height*/
 				)
 			{
 				setLocation(m.m_OldMainWindowLocation);
@@ -321,17 +357,6 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 		ownTrafficPanel.add(m_labelOwnTrafficBytes);
 
 // "Guthaben"
-		if (loadPay)
-		{
-			guthaben = new GuthabenAnzeige();
-			guthaben.addButtonListener(new ActionListener()
-			{
-				public void actionPerformed(ActionEvent e)
-				{
-					showConfigDialog(JAPConf.KONTO_TAB);
-				}
-			});
-		}
 		m_cbAnon = new JCheckBox(JAPMessages.getString("confActivateCheckBox"));
 		JAPUtil.setMnemonic(m_cbAnon, JAPMessages.getString("confActivateCheckBoxMn"));
 		m_cbAnon.setFont(fontControls);
@@ -356,6 +381,7 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 		m_bttnAnonConf.addActionListener(this);
 		p41.add(m_bttnAnonConf);
 
+		// "anonym-o-meter"
 		JPanel meterPanel = new JPanel();
 		meterPanel.setLayout(new BorderLayout());
 		m_borderAnonMeter = new TitledBorder(JAPMessages.getString("meterBorder"));
@@ -428,10 +454,6 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 
 		// Add all panels to level panel
 		levelPanel.add(ownTrafficPanel, BorderLayout.NORTH);
-		if (loadPay)
-		{
-			levelPanel.add(guthaben); //, BorderLayout.NORTH);
-		}
 		levelPanel.add(meterPanel, BorderLayout.CENTER);
 		levelPanel.add(detailsPanel, BorderLayout.SOUTH);
 
