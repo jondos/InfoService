@@ -39,6 +39,7 @@ import java.awt.event.WindowEvent;
 import javax.swing.ImageIcon;
 import javax.swing.JDialog;
 import gui.JAPAboutAutoScroller;
+import anon.util.ResourceLoader;
 
 final class JAPAbout extends JDialog
 {
@@ -77,27 +78,7 @@ final class JAPAbout extends JDialog
 		setLocation( -380, -200);
 		setSize(10, 10);
 		ImageIcon imageSplash = JAPUtil.loadImageIcon(JAPConstants.ABOUTFN, false); //loading the Background Image
-		InputStream ins = null;
-		try
-		{
-			ins = Class.forName("JAP").getResourceAsStream(JAPMessages.getString("htmlfileAbout"));
-		}
-		catch (Exception e)
-		{
-		}
-		byte[] buff = new byte[1500];
-		int len = 0;
-		int aktIndex = 0;
-		try
-		{
-			while ( (len = ins.read(buff, aktIndex, 1500 - aktIndex)) > 0 && aktIndex < 1500)
-			{
-				aktIndex += len;
-			}
-		}
-		catch (Exception e)
-		{}
-
+		byte[] buff=ResourceLoader.loadResource(JAPMessages.getString("htmlfileAbout"));
 		sp = new JAPAboutAutoScroller(ABOUT_DX, ABOUT_DY, imageSplash.getImage(), 5, 62, 210, 173 - 72,
 									  new String(buff)); //Creating a new scrolling HTML-Pane with the specified size
 		sp.addActionListener(new ActionListener()
@@ -112,7 +93,7 @@ final class JAPAbout extends JDialog
 		getContentPane().add(sp);
 		//setContentPane(sp);
 		//Now we do a little bit tricky stuff.
-		String os = System.getProperty("os.name");
+		//String os = System.getProperty("os.name");
 		show(); //now we have to ensure that the window is visible before the
 		//	if(os==null||!os.toLowerCase().startsWith("mac"))
 		{
