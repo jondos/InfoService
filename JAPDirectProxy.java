@@ -113,7 +113,7 @@ final class JAPDirectProxy implements Runnable
 									}
 								else
 									{
-										if (controller.getUseFirewall())
+										if (JAPModel.getUseFirewall())
 											{
 												JAPDirectConViaProxy doIt = new JAPDirectConViaProxy (socket);
 												Thread thread = new Thread (threadgroupAll,doIt);
@@ -241,7 +241,7 @@ final class JAPDirectProxy implements Runnable
 
 							// Transfer data client --> server
 							//first check if the us authorization for the proxy
-							if(controller.getUseFirewallAuthorization())
+							if(JAPModel.getUseFirewallAuthorization())
 								{//we need to insert an authorization line...
 									//read first line and after this insert the authorization
 									String str=JAPUtil.readLine(inputStream);

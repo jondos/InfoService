@@ -327,11 +327,7 @@ final public class JAPDebug extends WindowAdapter implements ActionListener {
 					}
 				else if(e.getActionCommand().equals("insertConfig"))
 					{
-						String s=JAPController.getController().getConfigurationAsXML();
-						if(s==null)
-						  textareaConsole.append("Error!! Could not get current configuration!\n");
-						else
-							textareaConsole.append(s+"\n");
+            textareaConsole.append(JAPModel.getModel().toString());
 					}
 				else
 					{

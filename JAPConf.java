@@ -261,8 +261,8 @@ final class JAPConf extends JDialog
 				m_cbProxy = new JCheckBox(JAPMessages.getString("settingsProxyCheckBox"));
 				m_tfProxyHost = new JTextField();
 				m_tfProxyPortNumber = new JAPJIntField();
-				m_tfProxyHost.setEnabled(m_Controller.getUseFirewall());
-				m_tfProxyPortNumber.setEnabled(m_Controller.getUseFirewall());
+				m_tfProxyHost.setEnabled(JAPModel.getUseFirewall());
+				m_tfProxyPortNumber.setEnabled(JAPModel.getUseFirewall());
 				m_cbProxy.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
 						boolean b=m_cbProxy.isSelected();
@@ -915,10 +915,10 @@ final class JAPConf extends JDialog
 		private void resetToDefault()
 			{
 				m_tfListenerPortNumber.setText(Integer.toString(JAPConstants.defaultPortNumber));
-				m_tfInfoHost.setText(JAPConstants.defaultinfoServiceHostName);
-				m_tfInfoPortNumber.setText(Integer.toString(JAPConstants.defaultinfoServicePortNumber));
-				m_tfMixHost.setText(JAPConstants.defaultanonHost);
-				m_tfMixPortNumber.setText(Integer.toString(JAPConstants.defaultanonPortNumber));
+				m_tfInfoHost.setText(JAPConstants.defaultInfoServiceHostName);
+				m_tfInfoPortNumber.setText(Integer.toString(JAPConstants.defaultInfoServicePortNumber));
+				m_tfMixHost.setText(JAPConstants.defaultAnonHost);
+				m_tfMixPortNumber.setText(Integer.toString(JAPConstants.defaultAnonPortNumber));
 				m_cbProxy.setSelected(false);
 				m_cbStartupMinimized.setSelected(false);
 				m_cbAutoConnect.setSelected(false);
@@ -952,7 +952,7 @@ final class JAPConf extends JDialog
 					m_Controller.setLocale(Locale.ENGLISH);
 				m_Controller.setEnableDummyTraffic(m_cbDummyTraffic.isSelected());
 				// Listener settings
-				m_Controller.setHTTPListenerConfig(Integer.parseInt(m_tfListenerPortNumber.getText().trim()),m_cbListenerIsLocal.isSelected());
+				m_Controller.setHTTPListener(Integer.parseInt(m_tfListenerPortNumber.getText().trim()),m_cbListenerIsLocal.isSelected());
 //				m_Controller.setUseSocksPort(m_cbListenerSocks.isSelected());
 //				m_Controller.setSocksPortNumber(Integer.parseInt(m_tfListenerPortNumberSocks.getText().trim()));
 				// Firewall settings
@@ -965,7 +965,7 @@ final class JAPConf extends JDialog
 				// Infoservice settings
 				m_Controller.setInfoService(m_tfInfoHost.getText().trim(),Integer.parseInt(m_tfInfoPortNumber.getText().trim()));
 				// Anonservice settings
-				m_Controller.autoConnect = m_cbAutoConnect.isSelected();
+				m_Controller.setAutoConnect(m_cbAutoConnect.isSelected());
 				m_Controller.setMinimizeOnStartup(m_cbStartupMinimized.isSelected());
 				int anonSSLPortNumber = -1;
 				if (!m_tfMixPortNumberSSL.getText().equals(""))
@@ -1021,18 +1021,18 @@ final class JAPConf extends JDialog
 					m_comboLanguage.setSelectedIndex(0);
 				m_bIgnoreComboLanguageEvents=false;
 				// listener tab
-				m_tfListenerPortNumber.setText(String.valueOf(m_Controller.getHTTPListenerPortNumber()));
-				m_cbListenerIsLocal.setSelected(m_Controller.getHTTPListenerIsLocal());
+				m_tfListenerPortNumber.setText(String.valueOf(JAPModel.getHttpListenerPortNumber()));
+				m_cbListenerIsLocal.setSelected(JAPModel.getHttpListenerIsLocal());
 				//m_tfListenerPortNumberSocks.setText(String.valueOf(m_Controller.getSocksPortNumber()));
 				//m_cbListenerSocks.setSelected(m_Controller.getUseSocksPort());
 				// firewall tab
-				m_cbProxy.setSelected(m_Controller.getUseFirewall());
+				m_cbProxy.setSelected(JAPModel.getUseFirewall());
 				m_tfProxyHost.setEnabled(m_cbProxy.isSelected());
 				m_tfProxyPortNumber.setEnabled(m_cbProxy.isSelected());
 				m_tfProxyHost.setText(JAPModel.getFirewallHost());
 				m_tfProxyPortNumber.setText(String.valueOf(JAPModel.getFirewallPort()));
 				m_tfProxyAuthenticationUserID.setText(JAPModel.getFirewallAuthUserID());
-				m_cbProxyAuthentication.setSelected(m_Controller.getUseFirewallAuthorization());
+				m_cbProxyAuthentication.setSelected(JAPModel.getUseFirewallAuthorization());
 				// infoservice tab
 				m_tfInfoHost.setText(JAPModel.getInfoServiceHost());
 				m_tfInfoPortNumber.setText(String.valueOf(JAPModel.getInfoServicePort()));
@@ -1047,8 +1047,8 @@ final class JAPConf extends JDialog
 				else
 					m_tfMixPortNumberSSL.setText(String.valueOf(e.getSSLPort()));
 				m_comboMixCascade.setSelectedIndex(0);
-				m_cbAutoConnect.setSelected(m_Controller.autoConnect);
-				m_cbStartupMinimized.setSelected(m_Controller.getMinimizeOnStartup());
+				m_cbAutoConnect.setSelected(JAPModel.getAutoConnect());
+				m_cbStartupMinimized.setSelected(JAPModel.getMinimizeOnStartup());
 				m_comboMixCascade.removeAllItems();
 				m_comboMixCascade.addItem(JAPMessages.getString("settingsAnonSelect"));
 				Enumeration enum = m_Controller.anonServerDatabase.elements();

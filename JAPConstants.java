@@ -27,17 +27,17 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 */
 
 public class JAPConstants {
-	static final String aktVersion = "00.01.049"; //Never change the layout of this line!
+	static final String aktVersion = "00.01.050"; //Never change the layout of this line!
 	//static final String buildDate=".."
 	//static final String buildType="..."
         //needed for update.JAPUpdate
         public static String aktVersion2 = aktVersion;
         public final static boolean m_bReleasedVersion = false;
 	static final int      defaultPortNumber            = 4001;
-	static final String   defaultanonHost              = "mix.inf.tu-dresden.de";
-	static final int      defaultanonPortNumber        = 6544;
-	static final String   defaultinfoServiceHostName   = "infoservice.inf.tu-dresden.de";
-	static final int      defaultinfoServicePortNumber = 6543;
+	static final String   defaultAnonHost              = "mix.inf.tu-dresden.de";
+	static final int      defaultAnonPortNumber        = 6544;
+	static final String   defaultInfoServiceHostName   = "infoservice.inf.tu-dresden.de";
+	static final int      defaultInfoServicePortNumber = 6543;
 	static final String   urlJAPNewVersionDownload     = "http://anon.inf.tu-dresden.de:80/~sk13/anon/jap/JAP.jar";
 	static final String   JAPLocalFilename             = "JAP.jar";
 	static final int      MAXHELPLANGUAGES             = 6;
