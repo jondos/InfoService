@@ -103,7 +103,7 @@ public final class JAPController implements ProxyListener, Observer
 	//private AnonSocksProxy m_proxySocks = null; //service object for Socks requests
 
 	private boolean isRunningHTTPListener = false; // true if a HTTP listener is running
-	private boolean isRunningSOCKSListener = false; //true if a SOCKS listener is running
+	//private boolean isRunningSOCKSListener = false; //true if a SOCKS listener is running
 
 	//private boolean  canStartService             = false; // indicates if anon service can be started
 	private boolean m_bAlreadyCheckedForNewVersion = false; // indicates if check for new version has already been done
@@ -151,7 +151,7 @@ public final class JAPController implements ProxyListener, Observer
 											   JAPConstants.defaultAnonID,
 											   JAPConstants.defaultAnonHost,
 											   JAPConstants.defaultAnonPortNumber);
-			currentMixCascade.setIsUserDefined(true);
+			currentMixCascade.setIsUserDefined(false);
 		}
 		catch (Exception e)
 		{
@@ -527,8 +527,8 @@ public final class JAPController implements ProxyListener, Observer
 						JAPCertificateStore jcs = new JAPCertificateStore();
 						JAPCertificate cert = JAPCertificate.getInstance(
 							m_Model.getResourceLoader().loadResource(
-							JAPConstants.CERTSPATH +
-							JAPConstants.TRUSTEDROOTCERT));
+								JAPConstants.CERTSPATH +
+								JAPConstants.TRUSTEDROOTCERT));
 						cert.setEnabled(true);
 						jcs.addCertificate(cert);
 						setCertificateStore(jcs);
@@ -553,7 +553,7 @@ public final class JAPController implements ProxyListener, Observer
 						XMLUtil.parseNodeString(n.getNamedItem("proxyHostName"), null),
 						XMLUtil.parseElementAttrInt(root, "proxyPortNumber", -1),
 						XMLUtil.parseNodeString(n.getNamedItem("proxyType"),
-												ProxyInterface.PROTOCOL_TYPE_HTTP),
+												ProxyInterface.PROTOCOL_STR_TYPE_HTTP),
 						XMLUtil.parseNodeString(n.getNamedItem("proxyAuthUserID"), null),
 						getPasswordReader(),
 						XMLUtil.parseNodeBoolean(n.getNamedItem("proxyAuthorization"), false),
@@ -571,12 +571,12 @@ public final class JAPController implements ProxyListener, Observer
 
 				/* try to get the info from the MixCascade node */
 				MixCascade defaultMixCascade = null;
-				Element mixCascadeNode = (Element)XMLUtil.getFirstChildByName(root, "MixCascade");
+				Element mixCascadeNode = (Element) XMLUtil.getFirstChildByName(root, "MixCascade");
 				try
 				{
 					defaultMixCascade = new MixCascade( (Element) mixCascadeNode);
 					defaultMixCascade.setIsUserDefined(
-						XMLUtil.parseElementAttrBoolean(mixCascadeNode,"userDefined",false));
+						XMLUtil.parseElementAttrBoolean(mixCascadeNode, "userDefined", false));
 				}
 				catch (Exception e)
 				{
@@ -613,7 +613,7 @@ public final class JAPController implements ProxyListener, Observer
 								LogHolder.log(LogLevel.WARNING, LogType.GUI,
 											  "JAPModel:Exception while setting look-and-feel");
 							}
-							break;
+							break ;
 						}
 					}
 				}
@@ -640,17 +640,19 @@ public final class JAPController implements ProxyListener, Observer
 							m_Model.m_OldMainWindowLocation = p;
 							m_Model.m_OldMainWindowSize = d;
 						}
-						tmp=(Element) XMLUtil.getFirstChildByName(elemMainWindow, "MoveToSystray");
-						b=XMLUtil.parseNodeBoolean(tmp,false);
+						tmp = (Element) XMLUtil.getFirstChildByName(elemMainWindow, "MoveToSystray");
+						b = XMLUtil.parseNodeBoolean(tmp, false);
 						setMoveToSystrayOnStartup(b);
-						if(b)
-						{///todo: move to systray
-							if(m_View!=null)
+						if (b)
+						{ ///todo: move to systray
+							if (m_View != null)
+							{
 								m_View.hideWindowInTaskbar();
+							}
 						}
-						tmp=(Element) XMLUtil.getFirstChildByName(elemMainWindow, "DefaultView");
-						String strDefaultView=XMLUtil.parseNodeString(tmp,"Normal");
-						if(strDefaultView.equals("Simplified"))
+						tmp = (Element) XMLUtil.getFirstChildByName(elemMainWindow, "DefaultView");
+						String strDefaultView = XMLUtil.parseNodeString(tmp, "Normal");
+						if (strDefaultView.equals("Simplified"))
 						{
 							setDefaultView(JAPConstants.VIEW_SIMPLIFIED);
 							///todo: set simplified view...
@@ -795,7 +797,7 @@ public final class JAPController implements ProxyListener, Observer
 								strMessage = "<html>Wrong password. Please try again</html>";
 								continue;
 							}
-							break;
+							break ;
 						}
 
 						PayAccountsFile.init(theBI, elemPlainTxt);
@@ -908,14 +910,18 @@ public final class JAPController implements ProxyListener, Observer
 			//e.setAttribute("portNumberSocks", Integer.toString(JAPModel.getSocksListenerPortNumber()));
 			//e.setAttribute("supportSocks",(getUseSocksPort()?"true":"false"));
 			e.setAttribute("listenerIsLocal", (JAPModel.getHttpListenerIsLocal() ? "true" : "false"));
-			e.setAttribute("proxyMode", (m_Model.getProxyInterface().isValid() ? "true" : "false"));
-			e.setAttribute("proxyType", m_Model.getProxyInterface().getProtocol().toUpperCase());
-			e.setAttribute("proxyHostName", m_Model.getProxyInterface().getHost());
-			e.setAttribute("proxyPortNumber", Integer.toString(m_Model.getProxyInterface().getPort()));
-			e.setAttribute("proxyAuthorization", (
-				m_Model.getProxyInterface().isAuthenticationUsed() ? "true" : "false"));
-			e.setAttribute("proxyAuthUserID", m_Model.getProxyInterface().getAuthenticationUserID());
-
+			ProxyInterface proxyInterface = m_Model.getProxyInterface();
+			boolean bUseProxy = proxyInterface != null && proxyInterface.isValid();
+			e.setAttribute("proxyMode", (bUseProxy ? "true" : "false"));
+			if (proxyInterface != null)
+			{
+				e.setAttribute("proxyType", m_Model.getProxyInterface().getProtocolAsString().toUpperCase());
+				e.setAttribute("proxyHostName", m_Model.getProxyInterface().getHost());
+				e.setAttribute("proxyPortNumber", Integer.toString(m_Model.getProxyInterface().getPort()));
+				e.setAttribute("proxyAuthorization", (
+					m_Model.getProxyInterface().isAuthenticationUsed() ? "true" : "false"));
+				e.setAttribute("proxyAuthUserID", m_Model.getProxyInterface().getAuthenticationUserID());
+			}
 			/* infoservice configuration options */
 			e.setAttribute("infoServiceDisabled", (JAPModel.isInfoServiceDisabled() ? "true" : "false"));
 			e.setAttribute("infoServiceChange",
@@ -949,9 +955,11 @@ public final class JAPController implements ProxyListener, Observer
 			MixCascade defaultMixCascade = getCurrentMixCascade();
 			if (defaultMixCascade != null)
 			{
-				Element elem=(Element)defaultMixCascade.toXmlNode(doc);
-				if(defaultMixCascade.isUserDefined())
-					XMLUtil.setAttribute(elem,"userDefined",true);
+				Element elem = (Element) defaultMixCascade.toXmlNode(doc);
+				if (defaultMixCascade.isUserDefined())
+				{
+					XMLUtil.setAttribute(elem, "userDefined", true);
+				}
 				e.appendChild(elem);
 			}
 
@@ -979,7 +987,7 @@ public final class JAPController implements ProxyListener, Observer
 			if (JAPModel.getMoveToSystrayOnStartup())
 			{
 				Element tmp = doc.createElement("MoveToSystray");
-				XMLUtil.setValue(tmp,true);
+				XMLUtil.setValue(tmp, true);
 				elemMainWindow.appendChild(tmp);
 			}
 			if (JAPModel.getDefaultView() == JAPConstants.VIEW_SIMPLIFIED)
@@ -1473,10 +1481,10 @@ public final class JAPController implements ProxyListener, Observer
 						{
 							JOptionPane.showMessageDialog
 								(
-								getView(),
-								JAPMessages.getString("errorMixProtocolNotSupported"),
-								JAPMessages.getString("errorMixProtocolNotSupportedTitle"),
-								JOptionPane.ERROR_MESSAGE
+									getView(),
+									JAPMessages.getString("errorMixProtocolNotSupported"),
+									JAPMessages.getString("errorMixProtocolNotSupportedTitle"),
+									JOptionPane.ERROR_MESSAGE
 								);
 						}
 //otte
@@ -1484,10 +1492,10 @@ public final class JAPController implements ProxyListener, Observer
 						{
 							JOptionPane.showMessageDialog
 								(
-								getView(),
-								JAPMessages.getString("errorMixFirstMixSigCheckFailed"),
-								JAPMessages.getString("errorMixFirstMixSigCheckFailedTitle"),
-								JOptionPane.ERROR_MESSAGE
+									getView(),
+									JAPMessages.getString("errorMixFirstMixSigCheckFailed"),
+									JAPMessages.getString("errorMixFirstMixSigCheckFailedTitle"),
+									JOptionPane.ERROR_MESSAGE
 								);
 						}
 
@@ -1495,10 +1503,10 @@ public final class JAPController implements ProxyListener, Observer
 						{
 							JOptionPane.showMessageDialog
 								(
-								getView(),
-								JAPMessages.getString("errorMixOtherMixSigCheckFailed"),
-								JAPMessages.getString("errorMixOtherMixSigCheckFailedTitle"),
-								JOptionPane.ERROR_MESSAGE
+									getView(),
+									JAPMessages.getString("errorMixOtherMixSigCheckFailed"),
+									JAPMessages.getString("errorMixOtherMixSigCheckFailedTitle"),
+									JOptionPane.ERROR_MESSAGE
 								);
 						}
 						// ootte
@@ -1508,11 +1516,11 @@ public final class JAPController implements ProxyListener, Observer
 							{
 								JOptionPane.showMessageDialog
 									(
-									getView(),
-									JAPMessages.getString("errorConnectingFirstMix") + "\n" +
-									JAPMessages.getString("errorCode") + ": " + Integer.toString(ret),
-									JAPMessages.getString("errorConnectingFirstMixTitle"),
-									JOptionPane.ERROR_MESSAGE
+										getView(),
+										JAPMessages.getString("errorConnectingFirstMix") + "\n" +
+										JAPMessages.getString("errorCode") + ": " + Integer.toString(ret),
+										JAPMessages.getString("errorConnectingFirstMixTitle"),
+										JOptionPane.ERROR_MESSAGE
 									);
 							}
 						}
@@ -1692,7 +1700,7 @@ public final class JAPController implements ProxyListener, Observer
 								  "Could not set listener accept timeout: Exception: " +
 								  e1.getMessage());
 				}
-				break;
+				break ;
 			}
 			catch (Exception e)
 			{

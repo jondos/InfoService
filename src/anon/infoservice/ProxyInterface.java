@@ -158,7 +158,7 @@ public final class ProxyInterface extends ListenerInterface
 	 *                         but then you won`t be able to use proxy authentication
 	 * @exception IllegalArgumentException if an illegal host name, port or protocol was given
 	 */
-	public ProxyInterface(String a_hostname, int a_port, String a_protocol,
+	public ProxyInterface(String a_hostname, int a_port, int a_protocol,
 						  IPasswordReader a_passwordReader)
 		throws IllegalArgumentException
 	{
@@ -180,6 +180,29 @@ public final class ProxyInterface extends ListenerInterface
 	 *                                     or if authentication should be used without password reader
 	 */
 	public ProxyInterface(String a_hostname, int a_port, String a_protocol,
+						  String a_authenticationUserID, IPasswordReader a_passwordReader,
+						  boolean a_bUseAuthentication, boolean a_bIsValid)
+		throws IllegalArgumentException
+	{
+		this(a_hostname,a_port,ListenerInterface.recognizeProtocol(a_protocol),a_authenticationUserID,
+			 a_passwordReader,a_bUseAuthentication, a_bIsValid);
+	}
+
+	/**
+	 * Creates a new interface for a proxy that needs basic http authentication.
+	 *
+	 * @param a_hostname The hostname or the IP address of this interface.
+	 * @param a_port The port of this interface (1 <= port <= 65535).
+	 * @param a_protocol The protocol information. Invalid protocols are replaced by http.
+	 * @param a_authenticationUserID a user ID for authentication
+	 * @param a_passwordReader the password reader; this is allowed to be null,
+	 *                         but then you won`t be able to use proxy authentication
+	 * @param a_bUseAuthentication true if the authentication strings are used; false otherwise
+	 * @param a_bIsValid if the proxy should be used by now (true) or later (false)
+	 * @exception IllegalArgumentException if an illegal host name, port or protocol was given
+	 *                                     or if authentication should be used without password reader
+	 */
+	public ProxyInterface(String a_hostname, int a_port, int a_protocol,
 						  String a_authenticationUserID, IPasswordReader a_passwordReader,
 						  boolean a_bUseAuthentication, boolean a_bIsValid)
 		throws IllegalArgumentException
@@ -240,8 +263,8 @@ public final class ProxyInterface extends ListenerInterface
 			{
 				exception =	"No password reader!";
 			}
-			if (!getProtocol().equals(PROTOCOL_TYPE_HTTP)&&
-				!getProtocol().equals(PROTOCOL_TYPE_SOCKS))
+			if (getProtocol()!=PROTOCOL_TYPE_HTTP&&
+				getProtocol()!=PROTOCOL_TYPE_SOCKS)
 			{
 				exception = "Wrong protocol type!";
 			}

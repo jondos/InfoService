@@ -76,7 +76,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements ListSelectionListener
 	private TitledBorder m_borderAnonSettings, m_borderAnonSettings2;
 
 	private JAPController m_Controller;
-	private long m_lastUpdate = 0;
+//	private long m_lastUpdate = 0;
 
 	private ServerListPanel m_serverList;
 	private JPanel pRoot;
@@ -106,7 +106,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements ListSelectionListener
 
 	public void recreateRootPanel()
 	{
-		m_lastUpdate = 0;
 		Font font = getFontSetting();
 
 		m_cbAutoConnect = new JCheckBox(JAPMessages.getString("settingsautoConnectCheckBox"));
@@ -504,7 +503,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements ListSelectionListener
 			//JAPCascadeMonitorView v=new JAPCascadeMonitorView(m_Controller.getView());
 			// ------ !!!!! die folgenden zwei zeilen auskommentieren, wenn JAPCascadeMonitorView
 			// ------ !!!!! ordentlich geht!!!!
-			m_lastUpdate = System.currentTimeMillis();
 			LogHolder.log(LogLevel.DEBUG, LogType.GUI, "JAPConf: setting old cursor()");
 			//m_rbMixStep2.doClick();
 		}
@@ -513,10 +511,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements ListSelectionListener
 
 	protected void onRootPanelShown()
 	{
-		if (System.currentTimeMillis() - m_lastUpdate > 600000)
-		{
-			fetchCascades(false);
-		}
 	}
 
 	/**

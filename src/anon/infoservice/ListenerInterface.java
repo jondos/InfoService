@@ -52,7 +52,7 @@ import logging.LogType;
  */
 public class ListenerInterface implements ImmutableListenerInterface, IXMLEncodable
 {
-   /**
+	/**
 	 * This is the host of this interface (hostname or IP).
 	 */
 	private String m_strHostname;
@@ -65,7 +65,7 @@ public class ListenerInterface implements ImmutableListenerInterface, IXMLEncoda
 	/**
 	 * This describes the protocol type.
 	 */
-	private String m_strProtocolType;
+	private int m_iProtocolType;
 
 	/**
 	 * This describes, whether we can reach this interface or not. If we can't get a connection
@@ -106,10 +106,10 @@ public class ListenerInterface implements ImmutableListenerInterface, IXMLEncoda
 		setHostname(strHostname);
 
 		setProtocol(XMLUtil.parseNodeString(
-				  XMLUtil.getFirstChildByName(listenerInterfaceNode, "Type"), null));
+			XMLUtil.getFirstChildByName(listenerInterfaceNode, "Type"), null));
 
 		setPort(XMLUtil.parseNodeInt(
-				  XMLUtil.getFirstChildByName(listenerInterfaceNode, "Port"), -1));
+			XMLUtil.getFirstChildByName(listenerInterfaceNode, "Port"), -1));
 
 		setUseInterface(true);
 	}
@@ -135,8 +135,7 @@ public class ListenerInterface implements ImmutableListenerInterface, IXMLEncoda
 	 * @param a_protocol The protocol information. Invalid protocols are replaced by http.
 	 * @exception IllegalArgumentException if an illegal host name, port or protocol was given
 	 */
-	public ListenerInterface(String a_hostname, int a_port, String a_protocol)
-		throws IllegalArgumentException
+	public ListenerInterface(String a_hostname, int a_port, int a_protocol) throws IllegalArgumentException
 	{
 		setHostname(a_hostname);
 		setPort(a_port);
@@ -160,7 +159,7 @@ public class ListenerInterface implements ImmutableListenerInterface, IXMLEncoda
 	 */
 	public static boolean isValidPort(int a_port)
 	{
-		if ((a_port < 1) || (a_port > 65536))
+		if ( (a_port < 1) || (a_port > 65536))
 		{
 			return false;
 		}
@@ -176,7 +175,19 @@ public class ListenerInterface implements ImmutableListenerInterface, IXMLEncoda
 	 */
 	public static boolean isValidProtocol(String a_protocol)
 	{
-		return recognizeProtocol(a_protocol) != null;
+		return recognizeProtocol(a_protocol) != PROTOCOL_TYPE_UNKNOWN;
+	}
+
+	/**
+	 * Returns if the given protocol is valid web protocol and can be recognized by
+	 * recognizeProtocol().
+	 * @param a_protocol a web protocol
+	 * @see recognizeProtocol(String)
+	 * @return true if the given protocol is valid web protocol; false otherwise
+	 */
+	public static boolean isValidProtocol(int a_protocol)
+	{
+		return recognizeProtocol(a_protocol) != PROTOCOL_TYPE_UNKNOWN;
 	}
 
 	/**
@@ -186,7 +197,7 @@ public class ListenerInterface implements ImmutableListenerInterface, IXMLEncoda
 	 */
 	public static boolean isValidHostname(String a_hostname)
 	{
-		return ((a_hostname != null) && a_hostname.length() > 0);
+		return ( (a_hostname != null) && a_hostname.length() > 0);
 	}
 
 	/**
@@ -198,17 +209,17 @@ public class ListenerInterface implements ImmutableListenerInterface, IXMLEncoda
 	{
 		StringTokenizer tokenizer;
 
-		if ((a_ipAddress == null) || (a_ipAddress.indexOf('-') != -1))
+		if ( (a_ipAddress == null) || (a_ipAddress.indexOf('-') != -1))
 		{
 			return false;
 		}
 
-		tokenizer = new StringTokenizer(a_ipAddress,".");
+		tokenizer = new StringTokenizer(a_ipAddress, ".");
 
 		try
 		{
 			// test if the IP could be IPv4 or IPv6
-			if ((tokenizer.countTokens() != 4) && (tokenizer.countTokens() != 16))
+			if ( (tokenizer.countTokens() != 4) && (tokenizer.countTokens() != 16))
 			{
 				throw new NumberFormatException();
 			}
@@ -233,9 +244,30 @@ public class ListenerInterface implements ImmutableListenerInterface, IXMLEncoda
 	 * Gets the protocol of this ListenerInterface.
 	 * @return the protocol of this ListenerInterface
 	 */
-	public String getProtocol()
+	public int getProtocol()
 	{
-		return m_strProtocolType;
+		return m_iProtocolType;
+	}
+
+	/**
+	 * Gets the protocol of this ListenerInterface as String.
+	 * @return the protocol of this ListenerInterface
+	 */
+	public String getProtocolAsString()
+	{
+		switch (m_iProtocolType)
+		{
+			case PROTOCOL_TYPE_RAW_TCP:
+				return PROTOCOL_STR_TYPE_RAW_TCP;
+			case PROTOCOL_TYPE_SOCKS:
+				return PROTOCOL_STR_TYPE_SOCKS;
+			case PROTOCOL_TYPE_HTTPS:
+				return PROTOCOL_STR_TYPE_HTTPS;
+			case PROTOCOL_TYPE_HTTP:
+				return PROTOCOL_STR_TYPE_HTTP;
+			default:
+				return PROTOCOL_STR_TYPE_UNKNOWN;
+		}
 	}
 
 	/**
@@ -267,21 +299,21 @@ public class ListenerInterface implements ImmutableListenerInterface, IXMLEncoda
 
 		if (getHost() == null)
 		{
-			if ( a_listenerInterface.getHost() != null)
+			if (a_listenerInterface.getHost() != null)
 			{
 				return false;
 			}
 		}
 		else
 		{
-			if(!getHost().equals(a_listenerInterface.getHost()))
+			if (!getHost().equals(a_listenerInterface.getHost()))
 			{
 				return false;
 			}
 		}
 
 		if (getPort() != a_listenerInterface.getPort() ||
-			!getProtocol().equals(a_listenerInterface.getProtocol()))
+			getProtocol() != a_listenerInterface.getProtocol())
 		{
 			return false;
 		}
@@ -358,33 +390,50 @@ public class ListenerInterface implements ImmutableListenerInterface, IXMLEncoda
 	/**
 	 * Transforms a given protocol into a valid protocol if recognized.
 	 * @param a_protocol a protocol
-	 * @return the protocol (my be transformed in some way) or null if not recognized
+	 * @return the protocol (my be transformed in some way) or PROTOCOL_TYPE_UNKNOWN if not recognized
 	 */
-	private static String recognizeProtocol(String a_protocol)
+	protected static int recognizeProtocol(String a_protocol)
 	{
-		String protocol = null;
+		int iProtocol = PROTOCOL_TYPE_UNKNOWN;
 
 		if (a_protocol != null)
 		{
-			if (a_protocol.equalsIgnoreCase(PROTOCOL_TYPE_HTTP))
+			if (a_protocol.equalsIgnoreCase(PROTOCOL_STR_TYPE_HTTP))
 			{
-				protocol = PROTOCOL_TYPE_HTTP;
+				iProtocol = PROTOCOL_TYPE_HTTP;
 			}
-			else if (a_protocol.equalsIgnoreCase(PROTOCOL_TYPE_HTTPS))
+			else if (a_protocol.equalsIgnoreCase(PROTOCOL_STR_TYPE_HTTPS))
 			{
-				protocol = PROTOCOL_TYPE_HTTPS;
+				iProtocol = PROTOCOL_TYPE_HTTPS;
 			}
-			else if (a_protocol.equalsIgnoreCase(PROTOCOL_TYPE_SOCKS))
+			else if (a_protocol.equalsIgnoreCase(PROTOCOL_STR_TYPE_SOCKS))
 			{
-				protocol = PROTOCOL_TYPE_SOCKS;
+				iProtocol = PROTOCOL_TYPE_SOCKS;
 			}
-			else if (a_protocol.equalsIgnoreCase(PROTOCOL_TYPE_RAW_TCP))
+			else if (a_protocol.equalsIgnoreCase(PROTOCOL_STR_TYPE_RAW_TCP))
 			{
-				protocol = PROTOCOL_TYPE_RAW_TCP;
+				iProtocol = PROTOCOL_TYPE_RAW_TCP;
 			}
 		}
 
-		return protocol;
+		return iProtocol;
+	}
+
+	/**
+	 * Transforms a given protocol into a valid protocol if recognized.
+	 * @param a_protocol a protocol
+	 * @return the protocol (my be transformed in some way) or PROTOCOL_TYPE_UNKNOWN if not recognized
+	 */
+	protected static int recognizeProtocol(int a_protocol)
+	{
+		if (a_protocol == PROTOCOL_TYPE_HTTP ||
+			a_protocol == PROTOCOL_TYPE_HTTPS ||
+			a_protocol == PROTOCOL_TYPE_RAW_TCP ||
+			a_protocol == PROTOCOL_TYPE_SOCKS)
+		{
+			return a_protocol;
+		}
+		return PROTOCOL_TYPE_UNKNOWN;
 	}
 
 	/**
@@ -400,11 +449,32 @@ public class ListenerInterface implements ImmutableListenerInterface, IXMLEncoda
 				LogHolder.log(LogLevel.NOTICE, LogType.NET, "Host " + getHost() + " has listener with " +
 							  "invalid protocol '" + a_protocol + "'!");
 			}
-			m_strProtocolType = PROTOCOL_TYPE_RAW_TCP;
+			m_iProtocolType = PROTOCOL_TYPE_RAW_TCP;
 		}
 		else
 		{
-			m_strProtocolType = recognizeProtocol(a_protocol);
+			m_iProtocolType = recognizeProtocol(a_protocol);
+		}
+	}
+
+	/**
+	 * Sets the protocol. If it is invalid, it is set to PROTOCOL_TYPE_RAW_TCP.
+	 * @param a_protocol a protocol
+	 */
+	public void setProtocol(int a_protocol)
+	{
+		if (!isValidProtocol(a_protocol))
+		{
+			if (isValidHostname(getHost()))
+			{
+				LogHolder.log(LogLevel.NOTICE, LogType.NET, "Host " + getHost() + " has listener with " +
+							  "invalid protocol '" + a_protocol + "'!");
+			}
+			m_iProtocolType = PROTOCOL_TYPE_RAW_TCP;
+		}
+		else
+		{
+			m_iProtocolType = recognizeProtocol(a_protocol);
 		}
 	}
 
@@ -465,7 +535,7 @@ public class ListenerInterface implements ImmutableListenerInterface, IXMLEncoda
 		Element listenerInterfaceNode = doc.createElement(a_strXmlElementName);
 		/* Create the child nodes of ListenerInterface (Type, Port, Host) */
 		Element typeNode = doc.createElement("Type");
-		typeNode.appendChild(doc.createTextNode(m_strProtocolType));
+		typeNode.appendChild(doc.createTextNode(getProtocolAsString()));
 		Element portNode = doc.createElement("Port");
 		portNode.appendChild(doc.createTextNode(Integer.toString(m_iInetPort)));
 		Element hostNode = doc.createElement("Host");
@@ -489,6 +559,5 @@ public class ListenerInterface implements ImmutableListenerInterface, IXMLEncoda
 		listenerInterfaceNode.appendChild(ipNode);
 		return listenerInterfaceNode;
 	}
-
 
 }

@@ -113,7 +113,7 @@ public class ListenerInterfaceTest extends XtendedPrivateTestCase
 		assertEquals(443, lf.getPort());
 		assertEquals(ListenerInterface.PROTOCOL_TYPE_SOCKS, lf.getProtocol());
 
-		new ListenerInterface("127.0.0.1", 80, null);
+		new ListenerInterface("127.0.0.1", 80, 0);
 		new ListenerInterface("127.0.0.1", 3000, ListenerInterface.PROTOCOL_TYPE_SOCKS);
 		new ListenerInterface("127.0.256.1", 3000, ListenerInterface.PROTOCOL_TYPE_SOCKS);
 		new ListenerInterface("127.0.255.1", 3000, ListenerInterface.PROTOCOL_TYPE_SOCKS);
@@ -125,7 +125,7 @@ public class ListenerInterfaceTest extends XtendedPrivateTestCase
 		assertTrue(!(new ListenerInterface(
 				  null, 80, ListenerInterface.PROTOCOL_TYPE_SOCKS).isValid()));
 		// illegal protocol
-		assertTrue((new ListenerInterface("myhost", 80, null).isValid()));
+		assertTrue((new ListenerInterface("myhost", 80, 0).isValid()));
 	}
 
 	/**

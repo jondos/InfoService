@@ -44,10 +44,10 @@ class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 		GridBagLayout l = new GridBagLayout();
 		GridBagConstraints c = new GridBagConstraints();
 		c.insets = new Insets(5, 5, 5, 5);
-		c.anchor = c.NORTHWEST;
+		c.anchor = GridBagConstraints.NORTHWEST;
 		panelRoot.setLayout(l);
 		c.gridwidth = 5;
-		c.fill = c.BOTH;
+		c.fill = GridBagConstraints.BOTH;
 		c.weightx = 1;
 		c.weighty = 1;
 		c.gridx = 0;
@@ -55,8 +55,8 @@ class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 		GridBagLayout g2 = new GridBagLayout();
 		GridBagConstraints c2 = new GridBagConstraints();
 		JPanel p = new JPanel(g2);
-		m_labelAvailableRouters = new JLabel(JAPMessages.getString("torBorderAvailableRouters")+":");
-		c2.fill = c2.HORIZONTAL;
+		m_labelAvailableRouters = new JLabel(JAPMessages.getString("torBorderAvailableRouters") + ":");
+		c2.fill = GridBagConstraints.HORIZONTAL;
 		c2.weightx = 1;
 		c2.weighty = 0;
 		p.add(m_labelAvailableRouters, c2);
@@ -68,12 +68,12 @@ class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 		model.addColumn(JAPMessages.getString("torRouterSoftware"));
 		model.setNumRows(3);
 		m_tableRouters = new JTable(model)
+		{
+			public boolean isCellEditable(int i, int j)
 			{
-				public boolean isCellEditable(int i,int j)
-				{
-					return false;
-				}
-			};
+				return false;
+			}
+		};
 		m_tableRouters.setPreferredScrollableViewportSize(new Dimension(70, 70));
 		m_tableRouters.setCellSelectionEnabled(false);
 		m_tableRouters.setColumnSelectionAllowed(false);
@@ -81,25 +81,25 @@ class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 		m_tableRouters.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		JScrollPane s = new JScrollPane(m_tableRouters);
 		s.setAutoscrolls(true);
-		c2.fill = c2.BOTH;
-		c2.gridy=1;
+		c2.fill = GridBagConstraints.BOTH;
+		c2.gridy = 1;
 		c2.weightx = 1;
 		c2.weighty = 1;
-		c2.gridwidth=2;
+		c2.gridwidth = 2;
 		p.add(s, c2);
 		m_bttnFetchRouters = new JButton(JAPMessages.getString("torBttnFetchRouters"));
-		m_bttnFetchRouters.setIcon(JAPUtil.loadImageIcon(JAPConstants.IMAGE_RELOAD,true));
-		m_bttnFetchRouters.setPressedIcon(JAPUtil.loadImageIcon(JAPConstants.IMAGE_RELOAD_ROLLOVER,true));
+		m_bttnFetchRouters.setIcon(JAPUtil.loadImageIcon(JAPConstants.IMAGE_RELOAD, true));
+		m_bttnFetchRouters.setPressedIcon(JAPUtil.loadImageIcon(JAPConstants.IMAGE_RELOAD_ROLLOVER, true));
 
 		m_bttnFetchRouters.setActionCommand("fetchRouters");
 		m_bttnFetchRouters.addActionListener(this);
-		c2.fill = c2.NONE;
+		c2.fill = GridBagConstraints.NONE;
 		c2.weighty = 0;
 		c2.gridy = 0;
-		c2.gridwidth=1;
-		c2.gridx=1;
-		c2.anchor = c.EAST;
-		c2.insets=new Insets(5,5,5,0);
+		c2.gridwidth = 1;
+		c2.gridx = 1;
+		c2.anchor = GridBagConstraints.EAST;
+		c2.insets = new Insets(5, 5, 5, 0);
 		p.add(m_bttnFetchRouters, c2);
 		panelRoot.add(p, c);
 		p = new JPanel(new GridLayout(3, 2));
@@ -135,9 +135,9 @@ class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 		p.setBorder(new TitledBorder(JAPMessages.getString("torBorderPreferences")));
 		c.gridy = 3;
 		c.weighty = 0;
-		c.fill = c.HORIZONTAL;
+		c.fill = GridBagConstraints.HORIZONTAL;
 		panelRoot.add(p, c);
-		m_lastUpdate=0;
+		m_lastUpdate = 0;
 	}
 
 	public String getTabTitle()
@@ -166,7 +166,7 @@ class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 	protected boolean onOkPressed()
 	{
 		JAPController.setTorMaxConnectionsPerRoute(m_sliderConnectionsPerPath.getValue());
-		JAPController.setTorRouteLen(m_sliderMinPathLen.getValue(),m_sliderMaxPathLen.getValue());
+		JAPController.setTorRouteLen(m_sliderMinPathLen.getValue(), m_sliderMaxPathLen.getValue());
 		return true;
 	}
 
@@ -177,8 +177,10 @@ class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 
 	protected void onRootPanelShown()
 	{
-		if(System.currentTimeMillis()-m_lastUpdate>600000)
-			fetchRouters(false);
+//		if (System.currentTimeMillis() - m_lastUpdate > 600000)
+//		{
+//			fetchRouters(false);
+//		}
 	}
 
 	private void updateGuiOutput()
@@ -193,11 +195,13 @@ class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 		ORList ol = new ORList(new InfoServiceORListFetcher());
 		if (!ol.updateList())
 		{
-			if(bShowError)
+			if (bShowError)
+			{
 				JAPConf.showError(JAPMessages.getString("torErrorFetchRouters"));
+			}
 			return;
 		}
-		m_lastUpdate=System.currentTimeMillis();
+		m_lastUpdate = System.currentTimeMillis();
 		DefaultTableModel m = (DefaultTableModel) m_tableRouters.getModel();
 		Vector ors = ol.getList();
 		m.setNumRows(ors.size());
@@ -210,8 +214,8 @@ class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 			m_tableRouters.setValueAt(ord.getSoftware(), i, 3);
 		}
 		m_labelAvailableRouters.setText(JAPMessages.getString("torBorderAvailableRouters") + " (" +
-										  DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).
-										  format(ol.getPublished()) + "):");
+										DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).
+										format(ol.getPublished()) + "):");
 		getRootPanel().updateUI();
 	}
 }

@@ -78,6 +78,7 @@ import gui.StatusPanel;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import javax.swing.SwingConstants;
 
 final public class JAPNewView extends AbstractJAPMainView implements IJAPMainView, ActionListener,
 	JAPObserver
@@ -194,7 +195,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		{
 			public void mouseClicked(MouseEvent e)
 			{
-				m_Controller.aboutJAP();
+				JAPController.aboutJAP();
 			}
 		});
 		c.insets = new Insets(0, 0, 0, 10);
@@ -244,15 +245,15 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			public void actionPerformed(ActionEvent e)
 			{
 				m_bttnReload.setEnabled(false);
-				fetchMixCascadesAsync();
+				fetchMixCascadesAsync(true);
 			}
 		});
 		m_bttnReload.setRolloverEnabled(true);
-		ImageIcon icon = JAPUtil.loadImageIcon(JAPConstants.IMAGE_RELOAD_ROLLOVER, true);
-		m_bttnReload.setRolloverIcon(icon);
-		m_bttnReload.setSelectedIcon(icon);
-		m_bttnReload.setRolloverSelectedIcon(icon);
-		m_bttnReload.setPressedIcon(icon);
+		ImageIcon tmpIcon = JAPUtil.loadImageIcon(JAPConstants.IMAGE_RELOAD_ROLLOVER, true);
+		m_bttnReload.setRolloverIcon(tmpIcon);
+		m_bttnReload.setSelectedIcon(tmpIcon);
+		m_bttnReload.setRolloverSelectedIcon(tmpIcon);
+		m_bttnReload.setPressedIcon(tmpIcon);
 		m_bttnReload.setDisabledIcon(JAPUtil.loadImageIcon(JAPConstants.IMAGE_RELOAD_DISABLED, true));
 		m_bttnReload.setOpaque(false);
 		c1.gridx = 2;
@@ -308,7 +309,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_labelAnonymityTrafficLabel = new JLabel(JAPMessages.getString("ngAnonymityTraffic"));
 		c1.gridy = 2;
 		p.add(m_labelAnonymityTrafficLabel, c1);
-		m_labelAnonymityUser = new JLabel("", JLabel.CENTER);
+		m_labelAnonymityUser = new JLabel("", SwingConstants.CENTER);
 		c1.insets = new Insets(10, 0, 0, 0);
 		c1.anchor = GridBagConstraints.CENTER;
 		c1.weightx = 1;
@@ -378,7 +379,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_cbAnonymityOn.addActionListener(this);
 		c1.gridx = 1;
 		p.add(m_cbAnonymityOn);
-		m_labelAnonymityLow = new JLabel(JAPMessages.getString("ngAnonymityLow"), JLabel.RIGHT);
+		m_labelAnonymityLow = new JLabel(JAPMessages.getString("ngAnonymityLow"), SwingConstants.RIGHT);
 		c1.insets = new Insets(0, 20, 0, 5);
 		c1.gridx = 2;
 		c1.weightx = 0.5;
@@ -483,7 +484,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_labelOwnTrafficUnit = new JLabel(JAPMessages.getString("Byte"));
 		c1.gridx = 3;
 		p.add(m_labelOwnTrafficUnit, c1);
-		m_labelOwnActivity = new JLabel(JAPMessages.getString("ngActivity"), JLabel.RIGHT);
+		m_labelOwnActivity = new JLabel(JAPMessages.getString("ngActivity"), SwingConstants.RIGHT);
 		c1.weightx = 0;
 		c1.fill = GridBagConstraints.HORIZONTAL;
 		c1.gridx = 4;
@@ -561,7 +562,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_labelOwnTrafficUnitSmall = new JLabel(JAPMessages.getString("Byte"));
 		c1.gridx = 2;
 		p.add(m_labelOwnTrafficUnitSmall, c1);
-		m_labelOwnActivitySmall = new JLabel(JAPMessages.getString("ngActivity"), JLabel.RIGHT);
+		m_labelOwnActivitySmall = new JLabel(JAPMessages.getString("ngActivity"), SwingConstants.RIGHT);
 		c1.weightx = 1;
 		c1.fill = GridBagConstraints.HORIZONTAL;
 		c1.gridx = 3;
@@ -828,7 +829,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		northPanel.add(buttonPanel, c);
 
 		// "West": Image
-		ImageIcon westImage = JAPUtil.loadImageIcon(JAPMessages.getString("westPath"), true); ;
+		ImageIcon westImage = JAPUtil.loadImageIcon(JAPMessages.getString("westPath"), true);
 		JLabel westLabel = new JLabel(westImage);
 
 		// "Center:" tabs
@@ -919,8 +920,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			Math.max(m_panelAnonService.getPreferredSize().width,
 					 m_flippingpanelForward.getPreferredSize().width),
 			m_flippingpanelAnon.getPreferredSize().width)));
-
-		m_Controller.fetchMixCascades(false);
+	m_bttnReload.setEnabled(false);
+	fetchMixCascadesAsync(false);
 		valuesChanged(true);
 		setOptimalSize();
 		JAPUtil.centerFrame(this);
@@ -1048,7 +1049,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		//m_borderDetails.setTitleFont(fontControls);
 		//detailsPanel.setBorder(m_borderDetails);
 		GridBagConstraints c = new GridBagConstraints();
-		c.anchor = c.WEST;
+		c.anchor = GridBagConstraints.WEST;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		Insets normInsets = new Insets(0, 0, 8, 0);
 		c.insets = normInsets;
@@ -1325,7 +1326,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		setOptimalSize();
 	}
 
-	protected void loadMeterIcons()
+	void loadMeterIcons()
 	{
 		// Load Images for "Anonymity Meter"
 		meterIcons = new ImageIcon[JAPConstants.METERFNARRAY.length];
@@ -1417,7 +1418,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		//}
 		else if (source == m_bttnInfo)
 		{
-			m_Controller.aboutJAP();
+			JAPController.aboutJAP();
 		}
 		else if (source == m_bttnHelp)
 		{
@@ -1687,7 +1688,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		String unit = JAPMessages.getString("Byte");
 		if (c > 9999)
 		{
-			c = c / 1000;
+			c /= 1000;
 			unit = JAPMessages.getString("kByte");
 		}
 		String s = m_NumberFormat.format(c);
@@ -1717,18 +1718,19 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_StatusPanel.removeStatusMsg(id);
 	}
 
-	private synchronized void fetchMixCascadesAsync()
+	private synchronized void fetchMixCascadesAsync(final boolean bShowError)
 	{
 		setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 		Runnable doFetchMixCascades = new Runnable()
 		{
-			public void run()
+				public void run()
 			{
-				m_Controller.fetchMixCascades(false);
+				m_Controller.fetchMixCascades(bShowError);
 				setCursor(Cursor.getDefaultCursor());
 				m_bttnReload.setEnabled(true);
 			}
 		};
-		SwingUtilities.invokeLater(doFetchMixCascades);
+		Thread t=new Thread(doFetchMixCascades);
+		t.start();
 	}
 }

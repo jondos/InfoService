@@ -125,8 +125,9 @@ final public class DirectProxy implements Runnable
 				}
 				else
 				{
-					if (JAPModel.getInstance().getProxyInterface().isValid() &&
-						JAPModel.getInstance().getProxyInterface().equals(ProxyInterface.PROTOCOL_TYPE_HTTP))
+					if (JAPModel.getInstance().getProxyInterface()!=null&&
+						JAPModel.getInstance().getProxyInterface().isValid() &&
+						JAPModel.getInstance().getProxyInterface().getProtocol()==ProxyInterface.PROTOCOL_TYPE_HTTP)
 					{
 						DirectConViaHTTPProxy doIt = new DirectConViaHTTPProxy(socket);
 						Thread thread = new Thread(threadgroupAll, doIt);

@@ -73,8 +73,8 @@ final public class ProxyConnection
 					  "ProxyConnection: Try to connect via Firewall (" +
 					  a_proxyInterface.getHost() + ":" + a_proxyInterface.getPort() +
 					  ") to Server (" + host + ":" + port + ")");
-		if (m_proxyInterface.getProtocol().equals(ProxyInterface.PROTOCOL_TYPE_HTTP) ||
-			m_proxyInterface.getProtocol().equals(ProxyInterface.PROTOCOL_TYPE_HTTPS))
+		if (m_proxyInterface.getProtocol()==ProxyInterface.PROTOCOL_TYPE_HTTP ||
+			m_proxyInterface.getProtocol()==ProxyInterface.PROTOCOL_TYPE_HTTPS)
 		{ //HTTP/HTTPS Proxy
 			m_ioSocket = new Socket(a_proxyInterface.getHost(), a_proxyInterface.getPort());
 			m_In = m_ioSocket.getInputStream();
@@ -106,7 +106,7 @@ final public class ProxyConnection
 			m_ioSocket.setSoTimeout(0);
 			return;
 		}
-		if (m_proxyInterface.getProtocol().equals(ProxyInterface.PROTOCOL_TYPE_SOCKS))
+		if (m_proxyInterface.getProtocol()==ProxyInterface.PROTOCOL_TYPE_SOCKS)
 		{
 			NVPair[] up = new NVPair[1];
 			up[0] = new NVPair(a_proxyInterface.getAuthenticationUserID(),
