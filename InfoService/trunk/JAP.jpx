@@ -443,7 +443,6 @@
   <node name="anon" type="Package"/>
   <node name="forward" type="Package"/>
   <node name="gui" type="Package"/>
-  <node name="infoservice" type="Package"/>
   <node name="jap" type="Package"/>
   <node name="jap.platform" type="Package"/>
   <node name="jarify" type="Package"/>
