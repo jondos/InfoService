@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2000, The JAP-Team
+ Copyright (c) 2000 - 2004 The JAP-Team
  All rights reserved.
  Redistribution and use in source and binary forms, with or without modification,
  are permitted provided that the following conditions are met:
@@ -25,19 +25,19 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package test;
+package anon.infoservice.test;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
+import anon.infoservice.TestProxy;
 
-/**
- * This is the test suite which combines all other JUnit tests of the project.
- * It can be run from the command line with a graphical user interface.
- *
- * @author Rolf Wendolsky
- */
 public class AllTests
 {
+	/**
+	 * The proxy is not used here, but it must be imported for automatic compilation.
+	 */
+	TestProxy m_proxy;
+
 	/**
 	 * The main function.
 	 *
@@ -56,8 +56,10 @@ public class AllTests
 	 */
 	public static Test suite()
 	{
-		TestSuite suite = new TestSuite("All tests.");
-		suite.addTest(anon.test.AllTests.suite());
+		TestSuite suite = new TestSuite("All tests of infoservice.");
+		//suite.addTestSuite(DatabaseStaticTest.class);
+		suite.addTestSuite(DatabaseTest.class);
 		return suite;
 	}
+
 }
