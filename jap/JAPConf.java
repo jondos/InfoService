@@ -1171,10 +1171,6 @@ final class JAPConf extends JDialog
 			( (AbstractJAPConfModule) (confModules.nextElement())).resetToDefaultsPressed();
 		}
 
-		if (loadPay)
-		{
-			( (pay.view.PayView) m_pKonto).userPanel.setUserData(JAPConstants.PIHOST, JAPConstants.PIPORT);
-		}
 		m_tfListenerPortNumber.setInt(JAPConstants.defaultPortNumber);
 		m_tfListenerPortNumberSocks.setInt(JAPConstants.defaultSOCKSPortNumber);
 
@@ -1325,10 +1321,6 @@ final class JAPConf extends JDialog
 		else if (selectedCard == MISC_TAB)
 		{
 			m_Tabs.setSelectedComponent(m_pMisc);
-		}
-		else if (selectedCard == KONTO_TAB && loadPay)
-		{
-			m_Tabs.setSelectedComponent(m_pKonto);
 		}
 		else
 		{
