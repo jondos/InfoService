@@ -1,11 +1,11 @@
-import java.util.*;
+import java.util.Enumeration;
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.border.*;
 
-public class JAPConf extends JDialog 
+public final class JAPConf extends JDialog 
 	{
     private JAPModel model;
     
@@ -68,7 +68,8 @@ public class JAPConf extends JDialog
 				container.add(new JLabel(new ImageIcon(model.JAPICONFN)), BorderLayout.WEST);
 				getContentPane().add(container);
 				pack();
-				centerDialog();
+				setResizable(false);
+				model.centerFrame(this);
 			}
 
 		protected JPanel buildportPanel()
@@ -94,11 +95,11 @@ public class JAPConf extends JDialog
     protected JPanel buildhttpPanel()
 			{
 				proxyCheckBox = new JCheckBox(model.getString("settingsProxyCheckBox"));
-				proxyCheckBox.setSelected(model.proxyMode);
+				proxyCheckBox.setSelected(model.isProxyMode());
 				proxyhostTextField = new JTextField(model.proxyHostName);
 				proxyportnumberTextField = new JAPJIntField(String.valueOf(model.proxyPortNumber));
-				proxyhostTextField.setEnabled(model.proxyMode);
-				proxyportnumberTextField.setEnabled(model.proxyMode);
+				proxyhostTextField.setEnabled(model.isProxyMode());
+				proxyportnumberTextField.setEnabled(model.isProxyMode());
 				proxyCheckBox.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
 						proxyhostTextField.setEnabled(proxyCheckBox.isSelected());
@@ -282,14 +283,6 @@ public class JAPConf extends JDialog
 				return p;
 			}
 
-		protected void centerDialog() 
-			{
-				Dimension screenSize = getToolkit().getScreenSize();
-				Dimension ownSize = getSize();
-				setLocation((screenSize.width  - ownSize.width )/2,
-										(screenSize.height - ownSize.height)/2);
-			}
-	
     protected void CancelPressed()
 			{
 				setVisible(false);
@@ -298,7 +291,7 @@ public class JAPConf extends JDialog
     protected void OKPressed() 
 			{
         setVisible(false);
-				model.proxyMode = proxyCheckBox.isSelected();
+				model.setProxyMode(proxyCheckBox.isSelected());
 				model.portNumber = Integer.parseInt(portnumberTextField.getText().trim());
 				model.proxyHostName = proxyhostTextField.getText().trim();
 				model.proxyPortNumber = Integer.parseInt(proxyportnumberTextField.getText().trim());

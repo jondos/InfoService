@@ -4,9 +4,10 @@ import java.io.InputStream;
 import java.io.DataInputStream;
 import java.io.FileOutputStream;
 
-public class JAPVersion
+public final class JAPVersion
 	{
-		private static String aktVersion="00.00.009";
+		private static final String aktVersion="00.00.009";
+		
 		public static int checkForNewVersion(JAPModel model)
 			{
 				try
@@ -26,6 +27,7 @@ public class JAPVersion
 						return -1;
 					}
 			}
+		
 		public static int getNewVersion(JAPModel model)
 			{
 				try
@@ -54,5 +56,10 @@ public class JAPVersion
 						return -1;
 					}
 				
+			}
+		
+		public static String getCurrentVersion()
+			{
+				return aktVersion;
 			}
 	}

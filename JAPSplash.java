@@ -15,7 +15,6 @@ public final class JAPSplash extends Window
 				waitLabel.setForeground(Color.white);
 
 				add(new JLabel(m.loadImageIcon(m.SPLASHFN, true)), BorderLayout.NORTH);
-	//			add(new JLabel(m.loadImageIcon(m.BUSYFN, true)), BorderLayout.CENTER);
 				add(waitLabel, BorderLayout.SOUTH);
 	
 				pack();
