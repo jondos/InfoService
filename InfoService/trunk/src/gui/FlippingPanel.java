@@ -63,9 +63,9 @@ final public class FlippingPanel extends JPanel
 		GridBagConstraints c = new GridBagConstraints();
 		setLayout(gbl);
 		m_labelBttn = new JLabel(ms_iconUp);
-		c.fill=GridBagConstraints.NONE;
-		c.weightx=0;
-		c.weighty=0;
+		c.fill = GridBagConstraints.NONE;
+		c.weightx = 0;
+		c.weighty = 0;
 		c.insets = new Insets(0, 0, 0, 0);
 		c.anchor = GridBagConstraints.NORTHWEST;
 		m_labelBttn.addMouseListener(new MouseListener()
@@ -135,48 +135,73 @@ final public class FlippingPanel extends JPanel
 
 	public Dimension getPreferredSize()
 	{
-		Dimension d;
-		if (m_bIsFlipped)
+		Dimension d1, d2;
+		d1 = m_panelFull.getMinimumSize();
+		d2 = m_panelSmall.getMinimumSize();
+		d1.width = Math.max(d1.width, d2.width);
+		d1.width += ms_iBttnWidth;
+		if (!m_bIsFlipped)
 		{
-			d = m_panelFull.getPreferredSize();
+			d1.height = d2.height;
+//d1.height = Math.max(d1.height, ms_iBttnHeight);
 		}
-		else
-		{
-			d = m_panelSmall.getPreferredSize();
-		}
-		d.width += ms_iBttnWidth;
-		return d;
+		return d1;
+		/*
+		  Dimension d;
+		  if (m_bIsFlipped)
+		  {
+		   d = m_panelFull.getPreferredSize();
+		  }
+		  else
+		  {
+		   d = m_panelSmall.getPreferredSize();
+		  }
+		  d.width += ms_iBttnWidth;
+		  return d;
+		 */
 	}
 
 	public Dimension getMinimumSize()
 	{
-		Dimension d;
-		if (m_bIsFlipped)
+		Dimension d1, d2;
+		d1 = m_panelFull.getMinimumSize();
+		d2 = m_panelSmall.getMinimumSize();
+		d1.width = Math.max(d1.width, d2.width);
+		d1.width += ms_iBttnWidth;
+		if (!m_bIsFlipped)
 		{
-			d = m_panelFull.getMinimumSize();
+			d1.height = d2.height;
 		}
-		else
-		{
-			d = m_panelSmall.getMinimumSize();
-		}
-		d.width += ms_iBttnWidth;
-		d.height = Math.max(d.height, ms_iBttnHeight);
-		return d;
+		d1.height = Math.max(d1.height, ms_iBttnHeight);
+		return d1;
 	}
 
 	public Dimension getMaximumSize()
 	{
-		Dimension d;
-		if (m_bIsFlipped)
+		/*		Dimension d;
+		  if (m_bIsFlipped)
+		  {
+		   d = m_panelFull.getMaximumSize();
+		  }
+		  else
+		  {
+		   d = m_panelSmall.getMaximumSize();
+		  }
+		  d.width += ms_iBttnWidth;
+		 */
+		Dimension d1, d2;
+		d1 = m_panelFull.getMaximumSize();
+		d2 = m_panelSmall.getMaximumSize();
+		d1.width = Math.max(d1.width, d2.width);
+		d1.width += ms_iBttnWidth;
+		if (!m_bIsFlipped)
 		{
-			d = m_panelFull.getMaximumSize();
+			d1.height = d2.height;
+			//d1.height = Math.max(d1.height, ms_iBttnHeight);
 		}
-		else
-		{
-			d = m_panelSmall.getMaximumSize();
-		}
-		d.width += ms_iBttnWidth;
-		return d;
+		return d1;
+
+//		return d;
 	}
 
 	public void setFlipped(boolean bFlipped)
