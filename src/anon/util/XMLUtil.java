@@ -41,6 +41,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.w3c.dom.Text;
 
 public class XMLUtil
 {
@@ -154,10 +155,24 @@ public class XMLUtil
 				{
 					n = n.getFirstChild();
 				}
-				s = n.getNodeValue();
+				if(n.getNodeType()==n.TEXT_NODE)
+				{
+					s="";
+				while(n!=null&&(n.getNodeType()==n.ENTITY_REFERENCE_NODE||n.getNodeType()==n.TEXT_NODE))
+				{
+					if(n.getNodeType()==n.ENTITY_REFERENCE_NODE)
+						s=s+n.getFirstChild().getNodeValue();
+					else
+					s =s+ n.getNodeValue();
+					n=n.getNextSibling();
+				}
+				}
+				else
+					s=n.getNodeValue();
 			}
 			catch (Exception e)
 			{
+				return defaultValue;
 			}
 		}
 		return s;
@@ -239,6 +254,7 @@ public class XMLUtil
 
 	public static void setNodeValue(Node n, String text)
 	{
+		text=quoteXML(text);
 		n.appendChild(n.getOwnerDocument().createTextNode(text));
 	}
 
@@ -520,6 +536,42 @@ public class XMLUtil
 		{
 			return null;
 		}
+	}
+
+	//Quotes a string according to XML (&,<,>)
+	public static String quoteXML(String text)
+	{
+		String s=text;
+		if(s.indexOf('&')>=0||s.indexOf('<')>=0||s.indexOf('>')>=0)
+		{
+			StringBuffer sb=new StringBuffer(text);
+			int i=0;
+			while(i<sb.length())
+			{
+				char c=sb.charAt(i);
+				if(c=='&')
+				{
+					sb.insert(i,"amp;");
+					i+=4;
+				}
+				else if(c=='<')
+				{
+					sb.deleteCharAt(i);
+					sb.insert(i,"&lt;");
+					i+=3;
+				}
+				else if(c=='>')
+				{
+					sb.deleteCharAt(i);
+					sb.insert(i,"&gt;");
+					i+=3;
+				}
+				i++;
+			}
+			return sb.toString();
+
+		}
+		return s;
 	}
 
 }

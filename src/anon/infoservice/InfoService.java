@@ -435,6 +435,7 @@ public class InfoService extends DatabaseEntry
 				}
 				Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(response.
 					getInputStream());
+
 				/* fetching the document was successful, leave this method */
 				return doc;
 			}
@@ -693,16 +694,11 @@ public class InfoService extends DatabaseEntry
 	 *
 	 * @return The raw tor nodes list as it is distributed by the tor directory servers.
 	 */
-	public String getTorNodesList() throws Exception
+	public String getTorNodesList()throws Exception
 	{
 		Document doc = getXmlDocument(HttpRequestStructure.createGetRequest("/tornodes"));
-		NodeList torNodesListNodes = doc.getElementsByTagName("TorNodesList");
-		if (torNodesListNodes.getLength() == 0)
-		{
-			throw (new Exception("InfoService: getTorNodesList: Error in XML structure."));
-		}
-		Element torNodesListNode = (Element) (torNodesListNodes.item(0));
-		return (torNodesListNode.getFirstChild().getNodeValue());
+		Element torNodeList=doc.getDocumentElement();
+		return XMLUtil.parseNodeString(torNodeList,null);
 	}
 
 	/**
