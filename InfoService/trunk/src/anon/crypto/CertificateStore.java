@@ -116,23 +116,28 @@ public class CertificateStore extends Observable
 			/* only mix and infoservice certificates can be verified at the moment */
 			synchronized (m_trustedCertificates)
 			{
-				if (m_trustedCertificates.containsKey(a_certificate.getId()) == false)
+				int rootType = JAPCertificate.CERTIFICATE_TYPE_ROOT_MIX;
+				if (a_certificateType == JAPCertificate.CERTIFICATE_TYPE_INFOSERVICE)
+				{
+					rootType = JAPCertificate.CERTIFICATE_TYPE_ROOT_INFOSERVICE;
+				}
+				if (!m_trustedCertificates.containsKey(getCertificateId(a_certificate, a_certificateType)))
 				{
 					/* the certificate isn't already in this certificate store */
 					CertificateContainer certificateContainer = new CertificateContainer(a_certificate,
 						a_certificateType, true);
-					m_trustedCertificates.put(a_certificate.getId(), certificateContainer);
+					m_trustedCertificates.put(getCertificateId(a_certificate, a_certificateType),
+											  certificateContainer);
 					/* verify the new certificate against all enabled root certificates */
-					Enumeration rootCertificates = getAvailableCertificatesByType(JAPCertificate.
-						CERTIFICATE_TYPE_ROOT).elements();
+					Enumeration rootCertificates = getAvailableCertificatesByType(rootType).elements();
 					boolean verificationSuccessful = false;
-					while (rootCertificates.hasMoreElements() && (verificationSuccessful == false))
+					while (rootCertificates.hasMoreElements() && (!verificationSuccessful))
 					{
 						/* try to verify the certificate against the next root certificate */
 						JAPCertificate currentRootCertificate = ( (CertificateInfoStructure) (
 							rootCertificates.nextElement())).getCertificate();
 						verificationSuccessful = a_certificate.verify(currentRootCertificate);
-						if (verificationSuccessful == true)
+						if (verificationSuccessful)
 						{
 							/* we have found the parent certificate */
 							certificateContainer.setParentCertificate(currentRootCertificate);
@@ -141,19 +146,21 @@ public class CertificateStore extends Observable
 					/* we have added one certificate */
 					setChanged();
 				}
-				if (a_onlyHardRemovable == false)
+				if (!a_onlyHardRemovable)
 				{
 					/* add a lock to the lock table */
 					lockId = getNextAvailableLockId();
-					m_lockTable.put(new Integer(lockId), a_certificate.getId());
+					m_lockTable.put(new Integer(lockId), getCertificateId(a_certificate, a_certificateType));
 					/* also add the new lock to the lock list of the certificate */
-					( (CertificateContainer) (m_trustedCertificates.get(a_certificate.getId()))).getLockList().
+					( (CertificateContainer) (m_trustedCertificates.get(getCertificateId(a_certificate,
+						a_certificateType)))).getLockList().
 						addElement(new Integer(lockId));
 				}
 				else
 				{
 					/* enable the only hard removable flag */
-					( (CertificateContainer) (m_trustedCertificates.get(a_certificate.getId()))).
+					( (CertificateContainer) (m_trustedCertificates.get(getCertificateId(a_certificate,
+						a_certificateType)))).
 						enableOnlyHardRemovable();
 				}
 				/* notify the observers, only meaningful, if setChanged() was called */
@@ -164,17 +171,19 @@ public class CertificateStore extends Observable
 	}
 
 	public int addCertificateWithoutVerification(JAPCertificate a_certificate, int a_certificateType,
-												 boolean a_onlyHardRemovable)
+												 boolean a_onlyHardRemovable,boolean a_bNotRemovable)
 	{
 		int lockId = -1;
 		synchronized (m_trustedCertificates)
 		{
-			if (m_trustedCertificates.containsKey(a_certificate.getId()) == false)
+			if (!m_trustedCertificates.containsKey(getCertificateId(a_certificate, a_certificateType)))
 			{
 				CertificateContainer newCertificateContainer = new CertificateContainer(a_certificate,
 					a_certificateType, false);
-				m_trustedCertificates.put(a_certificate.getId(), newCertificateContainer);
-				if (a_certificateType == JAPCertificate.CERTIFICATE_TYPE_ROOT)
+				m_trustedCertificates.put(getCertificateId(a_certificate, a_certificateType),
+										  newCertificateContainer);
+				if (a_certificateType == JAPCertificate.CERTIFICATE_TYPE_ROOT_MIX ||
+					a_certificateType == JAPCertificate.CERTIFICATE_TYPE_ROOT_INFOSERVICE)
 				{
 					/* maybe with the new certificate we can activiate some other certificates already stored
 					 * in this certificate store
@@ -184,20 +193,27 @@ public class CertificateStore extends Observable
 				/* we have added one certificate */
 				setChanged();
 			}
-			if (a_onlyHardRemovable == false)
+			if (!a_onlyHardRemovable)
 			{
 				/* add a lock to the lock table */
 				lockId = getNextAvailableLockId();
-				m_lockTable.put(new Integer(lockId), a_certificate.getId());
+				m_lockTable.put(new Integer(lockId), getCertificateId(a_certificate, a_certificateType));
 				/* also add the new lock to the lock list of the certificate */
-				( (CertificateContainer) (m_trustedCertificates.get(a_certificate.getId()))).getLockList().
+				( (CertificateContainer) (m_trustedCertificates.get(getCertificateId(a_certificate,
+					a_certificateType)))).getLockList().
 					addElement(new Integer(lockId));
 			}
 			else
 			{
 				/* enable the only hard removable flag */
-				( (CertificateContainer) (m_trustedCertificates.get(a_certificate.getId()))).
+				( (CertificateContainer) (m_trustedCertificates.get(getCertificateId(a_certificate,
+					a_certificateType)))).
 					enableOnlyHardRemovable();
+			}
+			if(a_bNotRemovable)
+			{
+				( (CertificateContainer) (m_trustedCertificates.get(getCertificateId(a_certificate,
+					a_certificateType)))).enableNotRemovable();
 			}
 			/* notify the observers, only meaningful, if setChanged() was called */
 			notifyObservers(null);
@@ -228,13 +244,13 @@ public class CertificateStore extends Observable
 			{
 				/* it is not an invalid lock -> remove the lock from the certificate */
 				lockedCertificate.getLockList().removeElement(new Integer(a_lockId));
-				if (lockedCertificate.isOnlyHardRemovable() == false)
+				if (!lockedCertificate.isOnlyHardRemovable())
 				{
 					/* check whether it was the last lock on this certificate */
 					if (lockedCertificate.getLockList().size() == 0)
 					{
 						/* no more locks -> we can remove the certificate */
-						removeCertificate(lockedCertificate.getCertificate().getId());
+						removeCertificate(lockedCertificate.getInfoStructure());
 					}
 				}
 			}
@@ -243,16 +259,19 @@ public class CertificateStore extends Observable
 		}
 	}
 
-	public void removeCertificate(String a_certificateId)
+	public void removeCertificate(CertificateInfoStructure a_certificateStructure)
 	{
 		synchronized (m_trustedCertificates)
 		{
 			CertificateContainer certificateToRemove = (CertificateContainer) (m_trustedCertificates.get(
-				a_certificateId));
+				getCertificateId(a_certificateStructure.getCertificate(),
+								 a_certificateStructure.getCertificateType())));
 			if (certificateToRemove != null)
 			{
 				/* the hashtable contains the specified certificate */
-				if (certificateToRemove.getCertificateType() == JAPCertificate.CERTIFICATE_TYPE_ROOT)
+				if (certificateToRemove.getCertificateType() == JAPCertificate.CERTIFICATE_TYPE_ROOT_MIX ||
+					certificateToRemove.getCertificateType() ==
+					JAPCertificate.CERTIFICATE_TYPE_ROOT_INFOSERVICE)
 				{
 					/* deactivate all certificates which depend on the specified certificate */
 					deactivateAllDependentCertificates(certificateToRemove.getCertificate());
@@ -264,7 +283,8 @@ public class CertificateStore extends Observable
 					m_lockTable.put(activeLocks.nextElement(), "");
 				}
 				/* remove the specified certificate */
-				m_trustedCertificates.remove(a_certificateId);
+				m_trustedCertificates.remove(getCertificateId(a_certificateStructure.getCertificate(),
+					a_certificateStructure.getCertificateType()));
 				/* we have removed one certificate -> notify the observers */
 				setChanged();
 				notifyObservers(null);
@@ -272,6 +292,7 @@ public class CertificateStore extends Observable
 		}
 	}
 
+	/** Removes all but the not removable certs from the store*/
 	public void removeAllCertificates()
 	{
 		synchronized (m_trustedCertificates)
@@ -285,7 +306,16 @@ public class CertificateStore extends Observable
 			if (m_trustedCertificates.size() > 0)
 			{
 				/* remove all certificates */
-				m_trustedCertificates.clear();
+				Enumeration it = m_trustedCertificates.keys();
+				while (it.hasMoreElements())
+				{
+					Object key = it.nextElement();
+					CertificateContainer certcontainer = (CertificateContainer) m_trustedCertificates.get(key);
+					if (!certcontainer.isNotRemovable())
+					{
+						m_trustedCertificates.remove(key);
+					}
+				}
 				/* we have removed some certificates */
 				setChanged();
 			}
@@ -294,12 +324,13 @@ public class CertificateStore extends Observable
 		}
 	}
 
-	public void setEnabled(String a_certificateId, boolean a_enabled)
+	public void setEnabled(CertificateInfoStructure a_certificateStructure, boolean a_enabled)
 	{
 		synchronized (m_trustedCertificates)
 		{
 			CertificateContainer specifiedCertificate = (CertificateContainer) (m_trustedCertificates.get(
-				a_certificateId));
+				getCertificateId(a_certificateStructure.getCertificate(),
+								 a_certificateStructure.getCertificateType())));
 			if (specifiedCertificate != null)
 			{
 				/* the certificate exists -> change the state if necessary */
@@ -307,10 +338,12 @@ public class CertificateStore extends Observable
 				{
 					/* we have to change the state */
 					specifiedCertificate.setEnabled(a_enabled);
-					if (specifiedCertificate.getCertificateType() == JAPCertificate.CERTIFICATE_TYPE_ROOT)
+					if (specifiedCertificate.getCertificateType() == JAPCertificate.CERTIFICATE_TYPE_ROOT_MIX ||
+						specifiedCertificate.getCertificateType() ==
+						JAPCertificate.CERTIFICATE_TYPE_ROOT_INFOSERVICE)
 					{
 						/* update the dependent certificates */
-						if (a_enabled == true)
+						if (a_enabled)
 						{
 							activateAllDependentCertificates(specifiedCertificate.getCertificate());
 						}
@@ -340,7 +373,7 @@ public class CertificateStore extends Observable
 					nextElement());
 				if (currentCertificateContainer.isOnlyHardRemovable())
 				{
-					trustedCertificatesNode.appendChild(currentCertificateContainer.getSettingsAsXml(a_doc));
+					trustedCertificatesNode.appendChild(currentCertificateContainer.toXmlElement(a_doc));
 				}
 			}
 		}
@@ -364,7 +397,7 @@ public class CertificateStore extends Observable
 					CertificateContainer currentCertificateContainer = new CertificateContainer(
 						certificateContainerNode);
 					/* add the certificate to the list of trusted certificates */
-					if (currentCertificateContainer.getCertificateNeedsVerification() == true)
+					if (currentCertificateContainer.getCertificateNeedsVerification())
 					{
 						addCertificateWithVerification(currentCertificateContainer.getCertificate(),
 							currentCertificateContainer.getCertificateType(), true);
@@ -372,10 +405,10 @@ public class CertificateStore extends Observable
 					else
 					{
 						addCertificateWithoutVerification(currentCertificateContainer.getCertificate(),
-							currentCertificateContainer.getCertificateType(), true);
+							currentCertificateContainer.getCertificateType(), true,false);
 					}
 					/* enable or disable the certificate */
-					setEnabled(currentCertificateContainer.getCertificate().getId(),
+					setEnabled(currentCertificateContainer.getInfoStructure(),
 							   currentCertificateContainer.isEnabled());
 				}
 				catch (Exception e)
@@ -398,7 +431,7 @@ public class CertificateStore extends Observable
 			{
 				CertificateContainer currentCertificateContainer = (CertificateContainer) (allCertificates.
 					nextElement());
-				if (currentCertificateContainer.getCertificateNeedsVerification() == true)
+				if (currentCertificateContainer.getCertificateNeedsVerification())
 				{
 					JAPCertificate parentCertificate = currentCertificateContainer.getParentCertificate();
 					if (parentCertificate == null)
@@ -426,7 +459,7 @@ public class CertificateStore extends Observable
 			{
 				CertificateContainer currentCertificateContainer = (CertificateContainer) (allCertificates.
 					nextElement());
-				if (currentCertificateContainer.getCertificateNeedsVerification() == true)
+				if (currentCertificateContainer.getCertificateNeedsVerification())
 				{
 					JAPCertificate currentParentCertificate = currentCertificateContainer.
 						getParentCertificate();
@@ -450,6 +483,11 @@ public class CertificateStore extends Observable
 			m_lockIdPointer++;
 		}
 		return m_lockIdPointer;
+	}
+
+	private String getCertificateId(JAPCertificate a_certificate, int a_certificateType)
+	{
+		return (a_certificate.getId() + Integer.toString(a_certificateType));
 	}
 
 }

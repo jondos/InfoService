@@ -89,11 +89,13 @@ final public class JAPCertificate extends X509CertificateStructure implements IX
 {
 
 	/**
-	 * This is the certificate type constant for root certificates. Root certificates are used to
+	 * This are the certificate type constant for root certificates. Root certificates are used to
 	 * verify other certificates (at the moment only one indirection is supported, so root
 	 * certificates cannot verify other root certificates).
+	 * At the moment we have root certificates for Mixes and for InfoServices.
 	 */
-	public static final int CERTIFICATE_TYPE_ROOT = 1;
+	public static final int CERTIFICATE_TYPE_ROOT_MIX = 1;
+	public static final int CERTIFICATE_TYPE_ROOT_INFOSERVICE = 5;
 
 	/**
 	 * This is the certificate type constant for mix certificates. Mix certificates are used to

@@ -869,7 +869,7 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 			Element infoServiceNode = (Element) (infoServiceNodes.item(i));
 			/* check the signature */
 			if (SignatureVerifier.getInstance().verifyXml(infoServiceNode,
-				SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE) == true)
+				SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE) )
 			{
 				/* signature is valid */
 				try

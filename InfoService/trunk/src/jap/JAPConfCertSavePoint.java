@@ -104,8 +104,7 @@ public class JAPConfCertSavePoint implements IJAPConfSavePoint
 				(currentCertificate.isOnlyHardRemovable() == true))
 			{
 				/* this is a persistent certificate without the need of verification -> remove it */
-				SignatureVerifier.getInstance().getVerificationCertificateStore().removeCertificate(
-					currentCertificate.getCertificate().getId());
+				SignatureVerifier.getInstance().getVerificationCertificateStore().removeCertificate(currentCertificate);
 			}
 		}
 		/* second: add the persistent certificates which don't need verification (they were stored by
@@ -118,10 +117,9 @@ public class JAPConfCertSavePoint implements IJAPConfSavePoint
 				nextElement());
 			SignatureVerifier.getInstance().getVerificationCertificateStore().
 				addCertificateWithoutVerification(currentCertificate.getCertificate(),
-												  currentCertificate.getCertificateType(), true);
+												  currentCertificate.getCertificateType(), true,false);
 			/* also restore the enabled/disabled state */
-			SignatureVerifier.getInstance().getVerificationCertificateStore().setEnabled(currentCertificate.
-				getCertificate().getId(), currentCertificate.isEnabled());
+			SignatureVerifier.getInstance().getVerificationCertificateStore().setEnabled(currentCertificate, currentCertificate.isEnabled());
 		}
 	}
 
@@ -139,38 +137,14 @@ public class JAPConfCertSavePoint implements IJAPConfSavePoint
 		{
 			CertificateInfoStructure currentCertificate = (CertificateInfoStructure) (allCertificates.
 				nextElement());
-			if (currentCertificate.getCertificateNeedsVerification() == false)
+			if (!currentCertificate.getCertificateNeedsVerification())
 			{
 				/* this is a certificate without the need of verification -> remove it */
-				SignatureVerifier.getInstance().getVerificationCertificateStore().removeCertificate(
-					currentCertificate.getCertificate().getId());
+				SignatureVerifier.getInstance().getVerificationCertificateStore().removeCertificate(currentCertificate);
 			}
 		}
 		/* second: add the JAP root certificate and the update messages certificate to the store */
-		JAPCertificate defaultRootCert = JAPCertificate.getInstance(ResourceLoader.loadResource(JAPConstants.
-			CERTSPATH + JAPConstants.TRUSTEDROOTCERT));
-		if (defaultRootCert != null)
-		{
-			SignatureVerifier.getInstance().getVerificationCertificateStore().
-				addCertificateWithoutVerification(defaultRootCert, JAPCertificate.CERTIFICATE_TYPE_ROOT, true);
-		}
-		else
-		{
-			LogHolder.log(LogLevel.ERR, LogType.MISC,
-						  "JAPConfCertSavePoint: restoreDefaults: Error loading default root certificate.");
-		}
-		JAPCertificate updateMessagesCert = JAPCertificate.getInstance(ResourceLoader.loadResource(
-			JAPConstants.CERTSPATH + JAPConstants.CERT_JAPINFOSERVICEMESSAGES));
-		if (updateMessagesCert != null)
-		{
-			SignatureVerifier.getInstance().getVerificationCertificateStore().
-				addCertificateWithoutVerification(updateMessagesCert, JAPCertificate.CERTIFICATE_TYPE_UPDATE, true);
-		}
-		else
-		{
-			LogHolder.log(LogLevel.ERR, LogType.MISC,
-				"JAPConfCertSavePoint: restoreDefaults: Error loading default update messages certificate.");
-		}
+		JAPController.addDefaultCertificates();
 		/* that's it -> only the default certificates and all certificate which can be verified
 		 * against the default root certificate are activated in the store
 		 */

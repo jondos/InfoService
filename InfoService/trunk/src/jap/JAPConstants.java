@@ -35,7 +35,7 @@ import anon.tor.Tor;
 
 public final class JAPConstants
 {
-	public static final String aktVersion = "00.04.007"; //Never change the layout of this line!
+	public static final String aktVersion = "00.04.008"; //Never change the layout of this line!
 	private static final String CVS_GENERATED_RELEASE_DATE = "$Date$";
 
 
@@ -149,6 +149,7 @@ public final class JAPConstants
 	public static final String IMAGE_CASCADE_INTERNET = "serverfrominternet.gif";
 	public static final String IMAGE_INFOSERVICE_MANUELL = "infoservicemanuell.gif";
 	public static final String IMAGE_INFOSERVICE_INTERNET = "infoservicefrominternet.gif";
+	public static final String IMAGE_INFOSERVICE_BIGLOGO = "infoservicebiglogo.gif";
 
 	public static final String IMAGE_SAVE = "saveicon.gif";
 	public static final String IMAGE_EXIT = "exiticon.gif";
@@ -190,9 +191,10 @@ public final class JAPConstants
 	public static final boolean PI_SSLON = false; // auf true setzten wenn die pay funktionalit\uFFFDt fertig gebaut ist.
 
 	public final static String CERTSPATH = "certificates/";
-	public final static String TRUSTEDROOTCERT = "japroot.cer";
+	public final static String TRUSTEDMIXROOTCERT = "japmixroot.cer";
+	public final static String TRUSTEDINFOSERVICEROOTCERT = "japinfoserviceroot.cer";
 	public final static String CERT_JAPCODESIGNING = "japcodesigning.cer";
-	public final static String CERT_JAPINFOSERVICEMESSAGES = "japinfoservicemessages.cer";
+	public final static String CERT_JAPINFOSERVICEMESSAGES = "japupdatemessages.cer";
 	public final static String CERT_BI = "bi.cer";
 	public static final boolean DEFAULT_CERT_CHECK_ENABLED=true;
 
