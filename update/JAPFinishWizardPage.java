@@ -39,11 +39,11 @@ public class JAPFinishWizardPage extends BasicWizardPage
 
   public JAPFinishWizardPage(String name)
   {
-    createGridBagLayout();
+    //createGridBagLayout();
   // this.setIcon(this.getIcon());
-   this.setComponentPanel();
+   //this.setComponentPanel();
    //this.setPageTitle(name);
-   this.createBorder(name);
+   //this.createBorder(name);
 
 
   }
@@ -52,11 +52,5 @@ public class JAPFinishWizardPage extends BasicWizardPage
   {
     JAPUpdateConnection.getCodeBase();
   }
-// now add the different Components to the ComponentPanel
-  public static void main(String[] args)
-  {
-  JAPFinishWizardPage j= new JAPFinishWizardPage("Finish");
-  j.setVisible(true);
-  System.out.println(j.toString());
-  }
+
 }

@@ -14,10 +14,10 @@ public class JAPDownloadWizardPage extends BasicWizardPage
 
   public JAPDownloadWizardPage()
   {
-  this.createGridBagLayout();
+  /*this.createGridBagLayout();
   // this.setIcon(this.getIcon());
    this.setComponentPanel();
    //this.setPageTitle(name);
    this.createBorder("Download");
-  }
+  */}
 }

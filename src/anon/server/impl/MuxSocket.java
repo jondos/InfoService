@@ -434,21 +434,15 @@ public final class MuxSocket implements Runnable
 											JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:Receveived MuxPacket with invalid data size: "+Integer.toString(len));
 										else
 										{
-											for(int i=0;i<3;i++)
-												{
-													try
-														{
-															tmpEntry.channel.recv(buff,3,len);
-															break;
-														}
-													catch(Exception e)
-														{
-															JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:Fehler bei write to browser...retrying..."+e.toString());
-														}
-												}
-											//try{tmpEntry.channel.getPipe().flush();}catch(Exception e){}
-											//JAPAnonService.increaseNrOfBytes(len);
-										}
+                      try
+                        {
+												  tmpEntry.channel.recv(buff,3,len);
+                        }
+                      catch(Exception e)
+                        {
+                          JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:Fehler bei write to channel..."+e.toString());
+                        }
+ 										}
 									}
 						/*		else if(flags==CHANNEL_SUSPEND)
 									{

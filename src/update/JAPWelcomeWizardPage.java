@@ -34,11 +34,11 @@ private JButton test;
   {
   this.japController = JAPController.getController();
   infoService = japController.getInfoService();
-  this.createGridBagLayout();
+ // this.createGridBagLayout();
   // this.setIcon(this.getIcon());
-   this.setComponentPanel();
+   //this.setComponentPanel();
    //this.setPageTitle(name);
-   this.createBorder("Welcome");
+   //this.createBorder("Welcome");
    //getCodeBase();
    //pmis = new ProgressMonitorInputStream();
    makeProgressBar();
@@ -62,7 +62,7 @@ private JButton test;
 
  private void makeProgressBar()
  {
-    this.componentGridBag = new GridBagLayout();
+/*    this.componentGridBag = new GridBagLayout();
     this.componentConstraints = new GridBagConstraints();
     this.componentPanel.setLayout(componentGridBag);
     progressBar = new JProgressBar(0,3102);
@@ -107,7 +107,7 @@ private JButton test;
     this.componentConstraints.gridx = 1;
     this.componentConstraints.gridy = 3;
     this.componentPanel.add(test, componentConstraints);
-  }
+ */ }
 
   private void downloadFile()
   {

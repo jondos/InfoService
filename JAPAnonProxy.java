@@ -249,7 +249,7 @@ final class Response implements Runnable
                 }
                 }
               catch(Exception e)
-                {e.printStackTrace();}
+                {}
               try{clientSocket.close();}catch(Exception e){}
               try{threadConnection.interrupt();}catch(Exception e){}
               }

@@ -56,7 +56,7 @@ import javax.swing.table.*;
 
 import HTTPClient.Codecs;
 
-final class JAPUtil
+final public class JAPUtil
 	{
 
 		public static int applyJarDiff(String oldJAR, String newJAR, String diffJAR)
@@ -388,7 +388,7 @@ final class JAPUtil
 				f.setLocation((screenSize.width-ownSize.width ) , 0 );
 			}
 
-			
+
 	/** Sets the mnemonic charcter of a component. The character must be set
 	 *  in the properties file under a name that is given in mnPropertyString.
 	 */
@@ -397,7 +397,7 @@ final class JAPUtil
 				if((bt==null)||(mn==null)||(mn.equals(""))) return;
 				bt.setMnemonic(mn.charAt(0));
 			}
-			
+
     public static void setPerfectTableSize(JTable table,Dimension maxDimension)
 			{
 				TableModel tableModel = table.getModel();
