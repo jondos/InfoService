@@ -35,11 +35,17 @@ import java.net.ServerSocket;
 import anon.infoservice.MixCascade;
 import logging.*;
 import pay.crypto.tinyssl.TinySSL;
+import java.math.*;
 import org.w3c.dom.*;
 import javax.xml.parsers.*;
 import anon.util.*;
 import anon.ErrorCodes;
-
+import org.bouncycastle.crypto.generators.RSAKeyPairGenerator;
+import org.bouncycastle.crypto.params.*;
+import java.security.*;
+import org.bouncycastle.crypto.*;
+import anon.crypto.*;
+import org.bouncycastle.crypto.params.RSAKeyGenerationParameters;
 final class JAPLean implements ProxyListener
 {
 
@@ -93,7 +99,7 @@ final class JAPLean implements ProxyListener
 
 	public static void main(String[] argv) throws Exception
 	{
-		// check for command line
+// check for command line
 		if (argv == null || argv.length < 3)
 		{
 			System.err.println("Usage: JAPLean <listener_port> <first_mix_address> <first_mix_port>");
@@ -108,9 +114,9 @@ final class JAPLean implements ProxyListener
 		{
 			new JAPLean();
 		}
-		catch (Exception e)
+		catch (Exception e1)
 		{
-			e.printStackTrace();
+			e1.printStackTrace();
 		}
 	}
 

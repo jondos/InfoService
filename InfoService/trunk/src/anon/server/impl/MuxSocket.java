@@ -58,7 +58,7 @@ import anon.util.XMLUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-
+import anon.crypto.XMLEncryption;
 public final class MuxSocket implements Runnable
 {
 	private SecureRandom m_SecureRandom;
@@ -126,7 +126,7 @@ public final class MuxSocket implements Runnable
 		public final AbstractChannel channel;
 		public SymCipher[] arCipher;
 		public boolean bIsSuspended;
-	};
+	}
 
 	private MuxSocket()
 	{
@@ -384,9 +384,6 @@ public final class MuxSocket implements Runnable
 			{
 				m_iMixProtocolVersion = MIX_PROTOCOL_VERSION_0_4;
 				m_cipherFirstMix = new SymCipher();
-				byte[] key = new byte[16];
-				m_cipherFirstMix.setEncryptionKeyAES(key);
-
 			}
 			else
 			{
@@ -426,19 +423,36 @@ public final class MuxSocket implements Runnable
 				child = child.getNextSibling();
 			}
 			//Sending symmetric keys for Mux encryption...
-			System.arraycopy("KEYPACKET".getBytes(), 0, m_MixPacketSend, 6, 9);
-			byte[] tmpBuff = new byte[64];
-			m_KeyPool.getKey(tmpBuff, 0);
-			m_KeyPool.getKey(tmpBuff, 16);
-			// zwei weitere Schlüssel für die AI
-			m_KeyPool.getKey(tmpBuff, 32);
-			m_KeyPool.getKey(tmpBuff, 48);
+			if (m_cipherFirstMix == null)
+			{
+				System.arraycopy("KEYPACKET".getBytes(), 0, m_MixPacketSend, 6, 9);
+				byte[] tmpBuff = new byte[64];
+				m_KeyPool.getKey(tmpBuff, 0);
+				m_KeyPool.getKey(tmpBuff, 16);
+				// zwei weitere Schlüssel für die AI
+				m_KeyPool.getKey(tmpBuff, 32);
+				m_KeyPool.getKey(tmpBuff, 48);
 
-			System.arraycopy(tmpBuff, 0, m_MixPacketSend, 15, tmpBuff.length);
-			m_arASymCipher[0].encrypt(m_MixPacketSend, 6, m_MixPacketSend, 6);
-			sendMixPacket();
-			setEncryptionKeys(tmpBuff);
-			setEnableEncryption(true);
+				System.arraycopy(tmpBuff, 0, m_MixPacketSend, 15, tmpBuff.length);
+				m_arASymCipher[0].encrypt(m_MixPacketSend, 6, m_MixPacketSend, 6);
+				sendMixPacket();
+				setEncryptionKeys(tmpBuff);
+				setEnableEncryption(true);
+			}
+			else
+			{
+				doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+				Element e = doc.createElement("JAPKeys");
+				doc.appendChild(e);
+				e.setAttribute("version", "0.1");
+				XMLUtil.setNodeValue(e,"Hallo");
+				XMLEncryption.encryptElement(e,m_arASymCipher[0].getPublicKey());
+				byte[] xml_buff=XMLUtil.XMLDocumentToString(doc).getBytes();
+				m_outStream.write((xml_buff.length>>8)&0x00FF);
+				m_outStream.write(xml_buff.length&0x00FF);
+				m_outStream.write(xml_buff);
+				m_outStream.flush();
+			}
 			return ErrorCodes.E_SUCCESS;
 		}
 		catch (Exception e)
@@ -748,9 +762,9 @@ public final class MuxSocket implements Runnable
 	}
 
 	/*public AIChannel getAIChannel()
-	{
-		return AIChannel.create(this);
-	}*/
+	  {
+	 return AIChannel.create(this);
+	  }*/
 
 	public synchronized int sendPayPackets(String xmlData)
 	{

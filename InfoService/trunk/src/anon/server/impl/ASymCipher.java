@@ -32,7 +32,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Text;
 import anon.ErrorCodes;
 import anon.util.Base64;
-
+import anon.crypto.MyRSAPublicKey;
 final class ASymCipher
 {
 ///* My hack Crypt...
@@ -106,6 +106,10 @@ final class ASymCipher
 		}
 	}
 
+	public MyRSAPublicKey getPublicKey()
+	{
+		return new MyRSAPublicKey(m_Modulus,m_Exponent);
+	}
 	private BigInteger getBigIntegerFromXml(Element root, String name)
 	{
 		try

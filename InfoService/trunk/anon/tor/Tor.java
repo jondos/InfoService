@@ -460,7 +460,6 @@ public class Tor implements Runnable, AnonService
 		{
 			while (this.m_activeCircuit == 0)
 			{
-				;
 			}
 			Object o = this.m_circuits.get(new Integer(this.m_activeCircuit));
 			if (o instanceof Circuit)
@@ -492,7 +491,7 @@ public class Tor implements Runnable, AnonService
 		{
 			while (this.m_activeCircuit == 0)
 			{
-				;
+				
 			}
 			Object o = this.m_circuits.get(new Integer(this.m_activeCircuit));
 			if (o instanceof Circuit)

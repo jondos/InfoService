@@ -34,16 +34,22 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import org.bouncycastle.asn1.pkcs.PKCS12PBEParams;
 import org.bouncycastle.crypto.BufferedBlockCipher;
+import org.bouncycastle.crypto.paddings.PaddedBufferedBlockCipher;
 import org.bouncycastle.crypto.CipherParameters;
 import org.bouncycastle.crypto.digests.SHA1Digest;
 import org.bouncycastle.crypto.engines.AESFastEngine;
 import org.bouncycastle.crypto.generators.PKCS12ParametersGenerator;
 import org.bouncycastle.crypto.modes.CTSBlockCipher;
+import org.bouncycastle.crypto.modes.CBCBlockCipher;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import anon.util.Base64;
 import anon.util.XMLUtil;
+import org.bouncycastle.crypto.params.*;
+import org.bouncycastle.crypto.engines.RSAEngine;
+import org.bouncycastle.crypto.encodings.OAEPEncoding;
+import org.bouncycastle.crypto.*;
 
 final public class XMLEncryption
 {
@@ -83,7 +89,7 @@ final public class XMLEncryption
 		{
 			barInput = XMLUtil.XMLNodeToString(elemPlain).getBytes();
 			len = barInput.length;
-			barOutput = codeData(true, barInput, password, kSalt);
+			barOutput = codeDataCTS(true, barInput, generatePBEKey(password, kSalt));
 		}
 		catch (Exception ex1)
 		{
@@ -97,7 +103,7 @@ final public class XMLEncryption
 		elemCrypt.setAttribute("Type", "http://www.w3.org/2001/04/xmlenc#Element");
 		elemCrypt.setAttribute("xmlns", "http://www.w3.org/2001/04/xmlenc#");
 		Element elemAlgo = doc.createElement("EncryptionMethod");
-		elemAlgo.setAttribute("Algorithm", "http://www.w3.org/2001/04/xmlenc#aes-cts");
+		elemAlgo.setAttribute("Algorithm", "aes-cts");
 		elemCrypt.appendChild(elemAlgo);
 		Element elemKeyInfo = doc.createElement("ds:KeyInfo");
 		elemKeyInfo.setAttribute("xmlns:ds", "http://www.w3.org/2000/09/xmldsig#");
@@ -123,21 +129,14 @@ final public class XMLEncryption
 	}
 
 	/**
-	 * The part that is the same for encryption and decryption..
+	 * Generates a key from a password.
 	 *
-	 * @param encrypt boolean true=encrypt, false=decrypt
-	 * @param barInput byte[] input plain or ciphertext
 	 * @param password String password
 	 * @param kSalt byte[] random salt
-	 * @param length int length of the plaintext (to cut off padding)
-	 * @throws Exception
-	 * @return byte[]
+	 * @return the Key with IV
 	 * @author Bastian Voigt
 	 */
-	private static byte[] codeData(boolean encrypt,
-								   byte[] barInput,
-								   String password,
-								   byte[] kSalt) throws Exception
+	private static CipherParameters generatePBEKey(String password, byte[] kSalt)
 	{
 		PKCS12PBEParams kParams = new PKCS12PBEParams(kSalt, MIN_ITERATIONS);
 		PKCS12ParametersGenerator paramGen =
@@ -145,12 +144,27 @@ final public class XMLEncryption
 		paramGen.init(paramGen.PKCS12PasswordToBytes(password.toCharArray()), // muss das hier auch wieder nachher genullt werden?
 					  kParams.getIV(), // warum hier IV=Salt? ist in PKCS12.java auch so gemacht, kopiere das einfach ohne es zu verstehen :-)
 					  kParams.getIterations().intValue());
-		CipherParameters params = paramGen.generateDerivedParameters(128); // sind diese laengen so richtig und sinnvoll?
+		return paramGen.generateDerivedParameters(128); // sind diese laengen so richtig und sinnvoll?
+	}
 
-		BufferedBlockCipher cipher = /*new PaddedBufferedBlockCipher(*/
+	/**
+	 * The part that is the same for encryption and decryption..
+	 *
+	 * @param encrypt boolean true=encrypt, false=decrypt
+	 * @param barInput byte[] input plain or ciphertext
+	 * @param params the key
+	 * @throws Exception
+	 * @return byte[]
+	 * @author Bastian Voigt
+	 */
+	private static byte[] codeDataCTS(boolean encrypt,
+								   byte[] barInput,
+								   CipherParameters params) throws Exception
+	{
+		BufferedBlockCipher cipher =
 			new CTSBlockCipher(
 			new AESFastEngine()
-			); //);
+			);
 		cipher.init(encrypt, params);
 
 		// encrypt the data
@@ -161,10 +175,49 @@ final public class XMLEncryption
 			len = cipher.processBytes(barInput, 0, barInput.length,
 									  barOutput, 0);
 		}
-		len += cipher.doFinal(barOutput, len);
-
+		cipher.doFinal(barOutput, len);
 		return barOutput;
 	}
+
+	/**
+	 * The part that is the same for encryption and decryption..
+	 *
+	 * @param encrypt boolean true=encrypt, false=decrypt
+	 * @param barInput byte[] input plain or ciphertext
+	 * @param params the key
+	 * @throws Exception
+	 * @return byte[]
+	 * @author Bastian Voigt
+	 */
+	private static byte[] codeDataCBCwithHMAC(boolean encrypt,
+								   byte[] barInput,
+								   CipherParameters encKey,
+								   CipherParameters macKey) throws Exception
+	{
+		PaddedBufferedBlockCipher cipher =new PaddedBufferedBlockCipher(
+			new CBCBlockCipher(
+			new AESFastEngine()
+			));
+		cipher.init(encrypt, encKey);
+
+		// encrypt the data
+		byte[] barOutput = new byte[cipher.getOutputSize(barInput.length)];
+		int len = 0;
+		if (barInput.length != 0)
+		{
+			len = cipher.processBytes(barInput, 0, barInput.length,
+									  barOutput, 0);
+		}
+		len+=cipher.doFinal(barOutput, len);
+		if(!encrypt&&len!=barOutput.length) //remove padding
+			{
+				byte[] tmp=new byte[len];
+				System.arraycopy(barOutput,0,tmp,0,len);
+				barOutput=tmp;
+			}
+		return barOutput;
+	}
+
 
 	/**
 	 * Decrypts an XML element
@@ -205,7 +258,7 @@ final public class XMLEncryption
 		try
 		{
 			// decrypt
-			barOutput = codeData(false, barInput, password, barSalt);
+			barOutput = codeDataCTS(false, barInput, generatePBEKey(password, barSalt));
 
 			// parse decrypted XML
 			DocumentBuilder parser = DocumentBuilderFactory.newInstance().newDocumentBuilder();
@@ -225,4 +278,89 @@ final public class XMLEncryption
 		return elemPlain;
 	}
 
+	/** Encrypts an Element using a public key. The element and all of its content is replaced
+	 * by the encryption.
+	 * The resulting encrypted xml struct is as follows:
+	 * <EncryptedData Type='http://www.w3.org/2001/04/xmlenc#Element'>
+	 * 	<EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+	 *  	<ds:KeyInfo xmlns:ds='http://www.w3.org/2000/09/xmldsig#'>
+	 *			<EncryptedKey>
+	 *				<EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p"/>
+	 *				<CipherData>
+	 *					<CipherValue>...</CipherValue>
+	 *				</CipherData>
+	 *			</EncryptedKey>
+	 *		</ds:KeyInfo>
+	 *		<CipherData>
+	 *			<CipherValue>...</CipherValue>
+	 *		</CipherData>
+	 *	</EncryptedData>
+	 */
+
+	public static boolean encryptElement(Element elemPlain, MyRSAPublicKey publicKey)
+	{
+		//generate the sym key and IV
+		byte[] keyAndIv = new byte[32];
+		SecureRandom sec = new SecureRandom();
+		sec.nextBytes(keyAndIv);
+		CipherParameters params = new ParametersWithIV(new KeyParameter(keyAndIv, 0, 16), keyAndIv, 16, 16);
+		// encrypt data
+		byte[] barInput = null;
+		byte[] barOutput = null;
+		try
+		{
+			barInput = XMLUtil.XMLNodeToString(elemPlain).getBytes();
+			barOutput = codeDataCBCwithHMAC(true, barInput, params,null);
+		}
+		catch (Exception ex1)
+		{
+			return false;
+		}
+		//encrpytiong the sym Key and IV
+		OAEPEncoding rsa=new OAEPEncoding(new RSAEngine());
+		rsa.init(true,publicKey.getParams());
+		byte[] encryptedKey;
+		try
+		{
+			encryptedKey = rsa.encodeBlock(keyAndIv, 0, keyAndIv.length);
+		}
+		catch (InvalidCipherTextException ex)
+		{
+			return false;
+		}
+
+		// initialize XML-Encryption-Standard structure
+		Document doc = elemPlain.getOwnerDocument();
+		Node nodeParent = elemPlain.getParentNode();
+		Element elemCrypt = doc.createElement("EncryptedData");
+		elemCrypt.setAttribute("Type", "http://www.w3.org/2001/04/xmlenc#Element");
+		elemCrypt.setAttribute("xmlns", "http://www.w3.org/2001/04/xmlenc#");
+		Element elemAlgo = doc.createElement("EncryptionMethod");
+		elemAlgo.setAttribute("Algorithm", "http://www.w3.org/2001/04/xmlenc#aes128-cbc");
+		elemCrypt.appendChild(elemAlgo);
+		Element elemKeyInfo = doc.createElement("ds:KeyInfo");
+		elemKeyInfo.setAttribute("xmlns:ds", "http://www.w3.org/2000/09/xmldsig#");
+		elemCrypt.appendChild(elemKeyInfo);
+		Element elemEncKey=doc.createElement("EncryptedKey");
+		elemKeyInfo.appendChild(elemEncKey);
+		elemAlgo=doc.createElement("EncryptionMethod");
+		elemAlgo.setAttribute("Algorithm", "http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p");
+		elemEncKey.appendChild(elemAlgo);
+		Element elemCipher = doc.createElement("CipherData");
+		elemEncKey.appendChild(elemCipher);
+		Element elemValue = doc.createElement("CipherValue");
+		elemCipher.appendChild(elemValue);
+		XMLUtil.setNodeValue(elemValue, Base64.encodeBytes(encryptedKey));
+
+		elemCipher = doc.createElement("CipherData");
+		elemCrypt.appendChild(elemCipher);
+		elemValue = doc.createElement("CipherValue");
+		elemCipher.appendChild(elemValue);
+		XMLUtil.setNodeValue(elemValue, Base64.encodeBytes(barOutput));
+
+		nodeParent.removeChild(elemPlain);
+		nodeParent.appendChild(elemCrypt);
+
+		return true;
+	}
 }

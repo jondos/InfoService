@@ -1241,8 +1241,8 @@ public final class JAPController implements ProxyListener
             if (JAPModel.getUseFirewall())
             {
               //try all possible ListenerInterfaces...
-              m_proxyAnon.setFirewall(m_Model.getFirewallType(), m_Model.getFirewallHost(),
-                m_Model.getFirewallPort());
+              m_proxyAnon.setFirewall(JAPModel.getFirewallType(), m_Model.getFirewallHost(),
+                JAPModel.getFirewallPort());
               if (JAPModel.getUseFirewallAuthorization())
               {
                 m_proxyAnon.setFirewallAuthorization(JAPModel.getFirewallAuthUserID(),
@@ -1298,8 +1298,8 @@ public final class JAPController implements ProxyListener
                 }
               }
               m_proxyAnon.setProxyListener(m_Controller);
-              m_proxyAnon.setDummyTraffic(m_Model.getDummyTraffic());
-              m_proxyAnon.setAutoReConnect(m_Model.getAutoReConnect());
+              m_proxyAnon.setDummyTraffic(JAPModel.getDummyTraffic());
+              m_proxyAnon.setAutoReConnect(JAPModel.getAutoReConnect());
               // start feedback thread
               feedback = new JAPFeedback();
               feedback.startRequests();
@@ -1311,12 +1311,12 @@ public final class JAPController implements ProxyListener
                 new Integer(JAPModel.getHttpListenerPortNumber())};
               String msg = MessageFormat.format(JAPMessages.getString("errorListenerPort"),
                 args);
-              JOptionPane.showMessageDialog(m_Controller.getView(),
+              JOptionPane.showMessageDialog(JAPController.getView(),
                 msg,
                 JAPMessages.getString("errorListenerPortTitle"),
                 JOptionPane.ERROR_MESSAGE);
               LogHolder.log(LogLevel.EMERG, LogType.NET, "Listener could not be started!");
-              m_Controller.getView().disableSetAnonMode();
+              JAPController.getView().disableSetAnonMode();
             }
             else if (ret == AnonWebProxy.E_MIX_PROTOCOL_NOT_SUPPORTED)
             {
