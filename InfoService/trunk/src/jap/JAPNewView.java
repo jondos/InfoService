@@ -72,7 +72,10 @@ import logging.LogType;
 import pay.gui.PaymentMainPanel;
 import javax.swing.*;
 import gui.*;
-final public class JAPNewView extends AbstractJAPMainView implements IJAPMainView,ActionListener, JAPObserver
+import java.awt.event.*;
+
+final public class JAPNewView extends AbstractJAPMainView implements IJAPMainView, ActionListener,
+	JAPObserver
 {
 
 	private JAPController controller;
@@ -81,15 +84,15 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private JPanel m_panelMain;
 	private JButton m_bttnInfo, m_bttnHelp, m_bttnQuit, m_bttnIconify, m_bttnConf;
 	private JButton m_bttnAnonConf;
-	private JCheckBox m_cbAnon;
+	//private JCheckBox m_cbAnon;
 	private JProgressBar userProgressBar;
 	private JProgressBar trafficProgressBar;
 	private JProgressBar protectionProgressBar;
 	private JProgressBar ownTrafficChannelsProgressBar;
 	private JLabel m_labelOwnTrafficBytes, m_labelMeterDetailsName;
-	private JLabel m_labelMeterDetailsUser, m_labelMeterDetailsTraffic;
+	private JLabel m_labelAnonymityUser, m_labelMeterDetailsTraffic;
 	private JLabel m_labelMeterDetailsRisk, m_labelOwnBytes, m_labelOwnChannels;
-	private TitledBorder m_borderOwnTraffic, m_borderAnonMeter, m_borderDetails;
+	//private TitledBorder m_borderOwnTraffic, m_borderAnonMeter, m_borderDetails;
 	private ImageIcon[] meterIcons;
 	private JAPHelp helpWindow;
 	private JAPConf m_dlgConfig;
@@ -99,6 +102,13 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private final static boolean PROGRESSBARBORDER = true;
 	//private GuthabenAnzeige guthaben;
 	private boolean loadPay = false;
+
+
+	private JLabel m_labelAnonService,m_labelAnonymity,m_labelAnonymityOnOff;
+	private JLabel m_labelOwnActivity,m_labelForwarderActivity;
+	private JLabel m_labelOwnActivitySmall,m_labelForwarderActivitySmall;
+	private JButton m_bttnAnonDetails;
+	private JRadioButton m_rbAnonOff,m_rbAnonOn;
 
 	public JAPNewView(String s)
 	{
@@ -134,424 +144,426 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		ImageIcon northImage = JAPUtil.loadImageIcon(JAPMessages.getString("northPath"), true);
 		JLabel northLabel = new JLabel(northImage);
 		JPanel northPanel = new JPanel();
-		GridBagLayout gbl=new GridBagLayout();
-		GridBagConstraints c=new GridBagConstraints();
+		GridBagLayout gbl = new GridBagLayout();
+		GridBagConstraints c = new GridBagConstraints();
 		northPanel.setLayout(gbl);
-		c.anchor=GridBagConstraints.NORTHWEST;
-		c.fill=GridBagConstraints.NONE;
-		c.weighty=1;
-		northPanel.add(northLabel,c);
-		c.gridx=1;
-		c.anchor=GridBagConstraints.SOUTHEAST;
-		JLabel l=new JLabel(JAPConstants.aktVersion);
+		c.anchor = GridBagConstraints.NORTHWEST;
+		c.fill = GridBagConstraints.NONE;
+		c.weighty = 1;
+		northPanel.add(northLabel, c);
+		c.gridx = 1;
+		c.anchor = GridBagConstraints.SOUTHEAST;
+		JLabel l = new JLabel("<HTML><BODY><A HREF=\"\">"+JAPConstants.aktVersion+"</A></BODY></HTML>");
 		l.setFont(new Font(l.getFont().getName(),
 						   l.getFont().getStyle(),
-						   (int)(l.getFont().getSize()*0.8)));
-		c.insets=new Insets(0,0,0,10);
-		northPanel.add(l,c);
-		c.gridwidth=2;
-		c.gridx=0;
-		c.gridy=1;
-		c.fill=GridBagConstraints.HORIZONTAL;
-		c.weightx=1;
-		c.insets=new Insets(5,10,5,10);
-		northPanel.add(new JSeparator(),c);
+						   (int) (l.getFont().getSize() * 0.8)));
+		l.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+		l.addMouseListener(new MouseAdapter()
+			{
+				public void mouseClicked(MouseEvent e)
+					{
+						controller.aboutJAP();
+					}
+			});
+		c.insets = new Insets(0, 0, 0, 10);
+		northPanel.add(l, c);
+		c.gridwidth = 2;
+		c.gridx = 0;
+		c.gridy = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.weightx = 1;
+		c.insets = new Insets(5, 10, 5, 10);
+		northPanel.add(new JSeparator(), c);
 
-		GridBagLayout gbl1=new GridBagLayout();
-		GridBagConstraints c1=new GridBagConstraints();
+		GridBagLayout gbl1 = new GridBagLayout();
+		GridBagConstraints c1 = new GridBagConstraints();
 
-		JPanel p=new JPanel(gbl1);
-		l=new JLabel("Anonymisierungsdienst:");
-		c1.insets=new Insets(0,17,0,0);
-		p.add(l,c1);
-		JComboBox combo=new JComboBox();
+		JPanel p = new JPanel(gbl1);
+		m_labelAnonService = new JLabel(JAPMessages.getString("ngAnonymisierungsdienst"));
+		c1.insets = new Insets(0, 17, 0, 0);
+		p.add(m_labelAnonService, c1);
+		JComboBox combo = new JComboBox();
 		combo.addItem("Dresden - Dresden");
-		c1.insets=new Insets(0,5,0,0);
-		c1.fill=GridBagConstraints.HORIZONTAL;
-		c1.weightx=1;
-		p.add(combo,c1);
-		JButton bttn=new JButton("Details");
-		c1.gridx=2;
-		p.add(bttn,c1);
+		c1.insets = new Insets(0, 5, 0, 0);
+		c1.fill = GridBagConstraints.HORIZONTAL;
+		c1.weightx = 1;
+		p.add(combo, c1);
+		m_bttnAnonDetails = new JButton(JAPMessages.getString("ngBttnAnonDetails"));
+		c1.gridx = 2;
+		p.add(m_bttnAnonDetails, c1);
 
-		c.weighty=1;
-		c.gridwidth=2;
-		c.gridy=2;
-		c.gridx=0;
-		c.anchor=GridBagConstraints.WEST;
-		northPanel.add(p,c);
-/*
-		JButton bttn=new JButton("Details");
-		c.gridwidth=1;
-		c.gridx=2;
-		northPanel.add(bttn,c);
-*/
+		c.weighty = 1;
+		c.gridwidth = 2;
+		c.gridy = 2;
+		c.gridx = 0;
+		c.anchor = GridBagConstraints.WEST;
+		northPanel.add(p, c);
+
 //------------------------------------------------------
-		c.gridwidth=2;
-		c.gridx=0;
-		c.gridy=3;
-		c.fill=GridBagConstraints.HORIZONTAL;
-		c.weightx=1;
-		northPanel.add(new JSeparator(),c);
+		c.gridwidth = 2;
+		c.gridx = 0;
+		c.gridy = 3;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.weightx = 1;
+		northPanel.add(new JSeparator(), c);
 
 //------------------ Anon Panel
-		FlippingPanel my=new FlippingPanel(this);
+		FlippingPanel my = new FlippingPanel(this);
 		//the panel with all the deatils....
-		p=new JPanel();
-		gbl1=new GridBagLayout();
-		c1=new GridBagConstraints();
-		c1.anchor=GridBagConstraints.NORTHWEST;
+		p = new JPanel();
+		gbl1 = new GridBagLayout();
+		c1 = new GridBagConstraints();
+		c1.anchor = GridBagConstraints.NORTHWEST;
 		p.setLayout(gbl1);
-		l=new JLabel("Anonymitat");
-		c1.insets=new Insets(0,5,0,0);
-		p.add(l,c1);
-		l=new JLabel("Nutzerzahl:");
-		c1.gridy=1;
-		c1.anchor=GridBagConstraints.WEST;
-		c1.insets=new Insets(10,15,0,0);
-		p.add(l,c1);
-		l=new JLabel("Verkehr:");
-		c1.gridy=2;
-		p.add(l,c1);
-		l=new JLabel("1024");
-		c1.insets=new Insets(10,0,0,0);
-		c1.anchor=GridBagConstraints.CENTER;
-		c1.gridy=1;
-		c1.gridx=1;
-		p.add(l,c1);
-		JProgressBar progress=new JProgressBar();
+		m_labelAnonymity = new JLabel(JAPMessages.getString("ngAnonymitaet"));
+		c1.insets = new Insets(0, 5, 0, 0);
+		p.add(m_labelAnonymity, c1);
+		l = new JLabel("Nutzerzahl:");
+		c1.gridy = 1;
+		c1.anchor = GridBagConstraints.WEST;
+		c1.insets = new Insets(10, 15, 0, 0);
+		p.add(l, c1);
+		l = new JLabel("Verkehr:");
+		c1.gridy = 2;
+		p.add(l, c1);
+		m_labelAnonymityUser = new JLabel("1024");
+		c1.insets = new Insets(10, 0, 0, 0);
+		c1.anchor = GridBagConstraints.CENTER;
+		c1.gridy = 1;
+		c1.gridx = 1;
+		p.add(m_labelAnonymityUser, c1);
+		JProgressBar progress = new JProgressBar();
 		progress.setUI(new MyProgressBarUI(true));
 		progress.setMinimum(0);
 		progress.setMaximum(5);
 		progress.setBorderPainted(false);
-		c1.gridy=2;
-		p.add(progress,c1);
+		c1.gridy = 2;
+		p.add(progress, c1);
 
 		l = new JLabel(getMeterImage(3));
-		c1.gridx=2;
-		c1.gridy=0;
-		c1.gridheight=3;
-		c1.anchor=GridBagConstraints.WEST;
-		c1.insets=new Insets(0,10,0,10);
-		p.add(l,c1);
+		c1.gridx = 2;
+		c1.gridy = 0;
+		c1.gridheight = 3;
+		c1.anchor = GridBagConstraints.WEST;
+		c1.insets = new Insets(0, 10, 0, 10);
+		p.add(l, c1);
 
-		GridBagLayout gbl2=new GridBagLayout();
-		GridBagConstraints c2=new GridBagConstraints();
-		JPanel p2=new JPanel(gbl2);
+		GridBagLayout gbl2 = new GridBagLayout();
+		GridBagConstraints c2 = new GridBagConstraints();
+		JPanel p2 = new JPanel(gbl2);
 		p2.setBorder(LineBorder.createBlackLineBorder());
 		//new BoxLayout(p2,BoxLayout.Y_AXIS);
-		l=new JLabel("Anonymitat");
-		c2.anchor=GridBagConstraints.NORTHWEST;
-		c2.insets=new Insets(2,2,2,2);
-		p2.add(l,c2);
-		JRadioButton r1=new JRadioButton("Ein");
-		JRadioButton r2=new JRadioButton("Aus");
-		ButtonGroup bg=new ButtonGroup();
-		bg.add(r1);
-		bg.add(r2);
-		r2.setSelected(true);
-		c2.gridy=1;
-		c2.insets=new Insets(0,7,0,0);
-		p2.add(r1,c2);
-		c2.gridy=2;
-		p2.add(r2,c2);
+		m_labelAnonymityOnOff = new JLabel(JAPMessages.getString("ngAnonymitaet"));
+		c2.anchor = GridBagConstraints.NORTHWEST;
+		c2.insets = new Insets(2, 2, 2, 2);
+		p2.add(m_labelAnonymityOnOff, c2);
+		m_rbAnonOn = new JRadioButton(JAPMessages.getString("ngAnonOn"));
+		m_rbAnonOn.addActionListener(this);
+		m_rbAnonOff = new JRadioButton(JAPMessages.getString("ngAnonOff"));
+		m_rbAnonOff.addActionListener(this);
+		ButtonGroup bg = new ButtonGroup();
+		bg.add(m_rbAnonOn);
+		bg.add(m_rbAnonOff);
+		m_rbAnonOff.setSelected(true);
+		c2.gridy = 1;
+		c2.insets = new Insets(0, 7, 0, 0);
+		p2.add(m_rbAnonOn, c2);
+		c2.gridy = 2;
+		p2.add(m_rbAnonOff, c2);
 
-		c1.gridx=3;
-		c1.anchor=GridBagConstraints.WEST;
-		p.add(p2,c1);
+		c1.gridx = 3;
+		c1.anchor = GridBagConstraints.WEST;
+		p.add(p2, c1);
 		my.setFullPanel(p);
 		//the small panel
-		gbl1=new GridBagLayout();
-		c1=new GridBagConstraints();
-		p=new JPanel(gbl1);
-		l=new JLabel("Anonymitat");
-		c1.gridx=0;
-		c1.anchor=GridBagConstraints.WEST;
-		c1.weightx=0;
-		c1.insets=new Insets(0,5,0,0);
-		p.add(l,c1);
-		l=new JLabel("gring",JLabel.RIGHT);
-		c1.insets=new Insets(0,20,0,5);
-		c1.gridx=1;
-		c1.weightx=0.5;
-		c1.fill=GridBagConstraints.HORIZONTAL;
-		c1.anchor=GridBagConstraints.EAST;
-		p.add(l,c1);
-		progress=new JProgressBar();
+		gbl1 = new GridBagLayout();
+		c1 = new GridBagConstraints();
+		p = new JPanel(gbl1);
+		l = new JLabel("Anonymitat");
+		c1.gridx = 0;
+		c1.anchor = GridBagConstraints.WEST;
+		c1.weightx = 0;
+		c1.insets = new Insets(0, 5, 0, 0);
+		p.add(l, c1);
+		l = new JLabel("gring", JLabel.RIGHT);
+		c1.insets = new Insets(0, 20, 0, 5);
+		c1.gridx = 1;
+		c1.weightx = 0.5;
+		c1.fill = GridBagConstraints.HORIZONTAL;
+		c1.anchor = GridBagConstraints.EAST;
+		p.add(l, c1);
+		progress = new JProgressBar();
 		progress.setMinimum(0);
 		progress.setMaximum(10);
 		progress.setBorderPainted(false);
 		progress.setUI(new MyProgressBarUI(true));
-		c1.weightx=0.75;
-		c1.fill=GridBagConstraints.HORIZONTAL;
-		c1.anchor=GridBagConstraints.CENTER;
-		c1.insets=new Insets(0,0,0,0);
-		c1.gridx=2;
-		p.add( progress,c1);
-		l=new JLabel("hoch");
-		c1.gridx=3;
-		c1.weightx=0.5;
-		c1.insets=new Insets(0,5,0,20);
-		c1.fill=GridBagConstraints.HORIZONTAL;
-		c1.anchor=GridBagConstraints.WEST;
-		p.add(l,c1);
+		c1.weightx = 0.75;
+		c1.fill = GridBagConstraints.HORIZONTAL;
+		c1.anchor = GridBagConstraints.CENTER;
+		c1.insets = new Insets(0, 0, 0, 0);
+		c1.gridx = 2;
+		p.add(progress, c1);
+		l = new JLabel("hoch");
+		c1.gridx = 3;
+		c1.weightx = 0.5;
+		c1.insets = new Insets(0, 5, 0, 20);
+		c1.fill = GridBagConstraints.HORIZONTAL;
+		c1.anchor = GridBagConstraints.WEST;
+		p.add(l, c1);
 		my.setSmallPanel(p);
 
-		c.fill=GridBagConstraints.HORIZONTAL;
-		c.weightx=1;
-		c.anchor=GridBagConstraints.NORTHWEST;
-		c.gridy=4;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.weightx = 1;
+		c.anchor = GridBagConstraints.NORTHWEST;
+		c.gridy = 4;
 		my.setFlipped(true);
-		northPanel.add(my,c);
-
+		northPanel.add(my, c);
 
 //------------------ Kosten Panel
 
 //-----------------------------------------------------------
-		c.gridwidth=2;
-		c.gridx=0;
-		c.gridy=5;
-		c.fill=GridBagConstraints.HORIZONTAL;
-		c.weightx=1;
-		northPanel.add(new JSeparator(),c);
+		c.gridwidth = 2;
+		c.gridx = 0;
+		c.gridy = 5;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.weightx = 1;
+		northPanel.add(new JSeparator(), c);
 
 //------------------ Own Traffic Panel
-		my=new FlippingPanel(this);
+		my = new FlippingPanel(this);
 		//full
-		gbl1=new GridBagLayout();
-		c1=new GridBagConstraints();
-		p=new JPanel(gbl1);
-		l=new JLabel("Eigene anonymiserte Daten:");
-		c1.insets=new Insets(0,5,0,0);
-		c1.anchor=GridBagConstraints.WEST;
-		p.add(l,c1);
-		l=new JLabel("350");
-		c1.gridx=1;
-		p.add(l,c1);
-		l=new JLabel("kByte");
-		c1.gridx=2;
-		p.add(l,c1);
-		l=new JLabel("Aktivität:",JLabel.RIGHT);
-		c1.weightx=1;
-		c1.fill=GridBagConstraints.HORIZONTAL;
-		c1.anchor=GridBagConstraints.EAST;
-		c1.gridx=3;
-		p.add(l,c1);
-		progress=new JProgressBar();
+		gbl1 = new GridBagLayout();
+		c1 = new GridBagConstraints();
+		p = new JPanel(gbl1);
+		l = new JLabel("Eigene anonymiserte Daten:");
+		c1.insets = new Insets(0, 5, 0, 0);
+		c1.anchor = GridBagConstraints.WEST;
+		p.add(l, c1);
+		l = new JLabel("350");
+		c1.gridx = 1;
+		p.add(l, c1);
+		l = new JLabel("kByte");
+		c1.gridx = 2;
+		p.add(l, c1);
+		m_labelOwnActivity = new JLabel(JAPMessages.getString("ngActivity"), JLabel.RIGHT);
+		c1.weightx = 1;
+		c1.fill = GridBagConstraints.HORIZONTAL;
+		c1.anchor = GridBagConstraints.EAST;
+		c1.gridx = 3;
+		p.add(m_labelOwnActivity, c1);
+		progress = new JProgressBar();
 		progress.setUI(new MyProgressBarUI(true));
 		progress.setMinimum(0);
 		progress.setMaximum(5);
 		progress.setBorderPainted(false);
-		c1.gridx=4;
-		c1.weightx=0;
-		p.add(progress,c1);
-		l=new JLabel("davon World Wide Web:");
-		c1.insets=new Insets(10,20,0,0);
-		c1.gridx=0;
-		c1.gridy=1;
-		p.add(l,c1);
-		l=new JLabel("350");
-		c1.insets=new Insets(10,5,0,0);
-		c1.gridx=1;
-		p.add(l,c1);
-		l=new JLabel("kByte");
-		c1.gridx=2;
-		p.add(l,c1);
-		l=new JLabel("andere Internetdienste:");
-		c1.insets=new Insets(7,20,0,0);
-		c1.gridx=0;
-		c1.gridy=2;
-		p.add(l,c1);
-		l=new JLabel("0");
-		c1.insets=new Insets(7,5,0,0);
-		c1.gridx=1;
-		p.add(l,c1);
-		l=new JLabel("kByte");
-		c1.gridx=2;
-		p.add(l,c1);
+		c1.gridx = 4;
+		c1.weightx = 0;
+		p.add(progress, c1);
+		l = new JLabel("davon World Wide Web:");
+		c1.insets = new Insets(10, 20, 0, 0);
+		c1.gridx = 0;
+		c1.gridy = 1;
+		p.add(l, c1);
+		l = new JLabel("350");
+		c1.insets = new Insets(10, 5, 0, 0);
+		c1.gridx = 1;
+		p.add(l, c1);
+		l = new JLabel("kByte");
+		c1.gridx = 2;
+		p.add(l, c1);
+		l = new JLabel("andere Internetdienste:");
+		c1.insets = new Insets(7, 20, 0, 0);
+		c1.gridx = 0;
+		c1.gridy = 2;
+		p.add(l, c1);
+		l = new JLabel("0");
+		c1.insets = new Insets(7, 5, 0, 0);
+		c1.gridx = 1;
+		p.add(l, c1);
+		l = new JLabel("kByte");
+		c1.gridx = 2;
+		p.add(l, c1);
 
 		my.setFullPanel(p);
 
 		//small
-		gbl1=new GridBagLayout();
-		c1=new GridBagConstraints();
-		p=new JPanel(gbl1);
-		l=new JLabel("Eigene anonymiserte Daten:");
-		c1.insets=new Insets(0,5,0,0);
-		c1.anchor=GridBagConstraints.WEST;
-		p.add(l,c1);
-		l=new JLabel("350");
-		c1.gridx=1;
-		p.add(l,c1);
-		l=new JLabel("kByte");
-		c1.gridx=2;
-		p.add(l,c1);
-		l=new JLabel("Aktivität:",JLabel.RIGHT);
-		c1.weightx=1;
-		c1.fill=GridBagConstraints.HORIZONTAL;
-		c1.anchor=GridBagConstraints.EAST;
-		c1.gridx=3;
-		p.add(l,c1);
-		progress=new JProgressBar();
+		gbl1 = new GridBagLayout();
+		c1 = new GridBagConstraints();
+		p = new JPanel(gbl1);
+		l = new JLabel("Eigene anonymiserte Daten:");
+		c1.insets = new Insets(0, 5, 0, 0);
+		c1.anchor = GridBagConstraints.WEST;
+		p.add(l, c1);
+		l = new JLabel("350");
+		c1.gridx = 1;
+		p.add(l, c1);
+		l = new JLabel("kByte");
+		c1.gridx = 2;
+		p.add(l, c1);
+		m_labelOwnActivitySmall = new JLabel(JAPMessages.getString("ngActivity"), JLabel.RIGHT);
+		c1.weightx = 1;
+		c1.fill = GridBagConstraints.HORIZONTAL;
+		c1.anchor = GridBagConstraints.EAST;
+		c1.gridx = 3;
+		p.add(m_labelOwnActivitySmall, c1);
+		progress = new JProgressBar();
 		progress.setUI(new MyProgressBarUI(true));
 		progress.setMinimum(0);
 		progress.setMaximum(5);
 		progress.setBorderPainted(false);
-		c1.weightx=0;
-		c1.gridx=4;
-		p.add(progress,c1);
+		c1.weightx = 0;
+		c1.gridx = 4;
+		p.add(progress, c1);
 		my.setSmallPanel(p);
 
-
-		c.fill=GridBagConstraints.HORIZONTAL;
-		c.weightx=1;
-		c.anchor=GridBagConstraints.NORTHWEST;
-		c.gridy=6;
-		northPanel.add(my,c);
-
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.weightx = 1;
+		c.anchor = GridBagConstraints.NORTHWEST;
+		c.gridy = 6;
+		northPanel.add(my, c);
 
 //-----------------------------------------------------------
-		c.gridwidth=2;
-		c.gridx=0;
-		c.gridy=7;
-		c.fill=GridBagConstraints.HORIZONTAL;
-		c.weightx=1;
-		northPanel.add(new JSeparator(),c);
+		c.gridwidth = 2;
+		c.gridx = 0;
+		c.gridy = 7;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.weightx = 1;
+		northPanel.add(new JSeparator(), c);
 
 //------------------ Forwarder Panel
-		my=new FlippingPanel(this);
+		my = new FlippingPanel(this);
 		//big view
-		gbl1=new GridBagLayout();
-		c1=new GridBagConstraints();
-		p=new JPanel(gbl1);
-		l=new JLabel("Forwarder (Blockungsresistenz):");
-		c1.insets=new Insets(0,5,0,0);
-		c1.anchor=GridBagConstraints.WEST;
-		p.add(l,c1);
-		gbl=new GridBagLayout();
-		c2=new GridBagConstraints();
-		p2=new JPanel(gbl2);
-		JCheckBox check=new JCheckBox("Ein");
+		gbl1 = new GridBagLayout();
+		c1 = new GridBagConstraints();
+		p = new JPanel(gbl1);
+		l = new JLabel("Forwarder (Blockungsresistenz):");
+		c1.insets = new Insets(0, 5, 0, 0);
+		c1.anchor = GridBagConstraints.WEST;
+		p.add(l, c1);
+		gbl = new GridBagLayout();
+		c2 = new GridBagConstraints();
+		p2 = new JPanel(gbl2);
+		JCheckBox check = new JCheckBox("Ein");
 		check.setBorder(null);
-		c2.gridx=0;
-		c2.weightx=1;
-		c2.fill=GridBagConstraints.HORIZONTAL;
-		p2.add(check,c2);
-		l=new JLabel("Aktivität:");
-		c2.insets=new Insets(0,5,0,0);
-		c2.gridx=1;
-		c2.weightx=0;
-		c2.fill=GridBagConstraints.NONE;
-		p2.add(l,c2);
-		progress=new JProgressBar();
+		c2.gridx = 0;
+		c2.weightx = 1;
+		c2.fill = GridBagConstraints.HORIZONTAL;
+		p2.add(check, c2);
+		m_labelForwarderActivity = new JLabel(JAPMessages.getString("ngActivity"));
+		c2.insets = new Insets(0, 5, 0, 0);
+		c2.gridx = 1;
+		c2.weightx = 0;
+		c2.fill = GridBagConstraints.NONE;
+		p2.add(m_labelForwarderActivity, c2);
+		progress = new JProgressBar();
 		progress.setUI(new MyProgressBarUI(true));
 		progress.setMinimum(0);
 		progress.setMaximum(5);
 		progress.setBorderPainted(false);
-		c2.gridx=2;
-		p2.add(progress,c2);
-		c1.fill=GridBagConstraints.HORIZONTAL;
-		c1.weightx=1;
-		c1.gridx=1;
-		c1.gridwidth=2;
-		p.add(p2,c1);
+		c2.gridx = 2;
+		p2.add(progress, c2);
+		c1.fill = GridBagConstraints.HORIZONTAL;
+		c1.weightx = 1;
+		c1.gridx = 1;
+		c1.gridwidth = 2;
+		p.add(p2, c1);
 
-		l=new JLabel("Weitergeleitete Verbindungen:");
-		c1.gridx=0;
-		c1.gridy=1;
-		c1.fill=GridBagConstraints.NONE;
-		c1.weightx=0;
-		c1.gridwidth=1;
-		c1.insets=new Insets(10,5,0,0);
-		p.add(l,c1);
-		l=new JLabel("0");
-		c1.gridx=1;
-		p.add(l,c1);
-		l=new JLabel("aktuell");
-		c1.gridx=2;
-		p.add(l,c1);
-		l=new JLabel("12");
-		c1.insets=new Insets(7,5,0,0);
-		c1.gridx=1;
-		c1.gridy=2;
-		p.add(l,c1);
-		l=new JLabel("angenommen");
-		c1.gridx=2;
-		p.add(l,c1);
-		l=new JLabel("1");
-		c1.gridx=1;
-		c1.gridy=3;
-		p.add(l,c1);
-		l=new JLabel("abgelehnt");
-		c1.gridx=2;
-		p.add(l,c1);
-		l=new JLabel("Weitergeleitetes Datenvolumen:");
-		c1.gridx=0;
-		c1.gridy=4;
-		p.add(l,c1);
-		l=new JLabel("350");
-		c1.gridx=1;
-		p.add(l,c1);
-		l=new JLabel("kByte");
-		c1.gridx=2;
-		p.add(l,c1);
-		l=new JLabel("Genutzte Bandbreite:");
-		c1.gridx=0;
-		c1.gridy=5;
-		p.add(l,c1);
-		l=new JLabel("10");
-		c1.gridx=1;
-		p.add(l,c1);
-		l=new JLabel("kByte/s");
-		c1.gridx=2;
-		p.add(l,c1);
+		l = new JLabel("Weitergeleitete Verbindungen:");
+		c1.gridx = 0;
+		c1.gridy = 1;
+		c1.fill = GridBagConstraints.NONE;
+		c1.weightx = 0;
+		c1.gridwidth = 1;
+		c1.insets = new Insets(10, 5, 0, 0);
+		p.add(l, c1);
+		l = new JLabel("0");
+		c1.gridx = 1;
+		p.add(l, c1);
+		l = new JLabel("aktuell");
+		c1.gridx = 2;
+		p.add(l, c1);
+		l = new JLabel("12");
+		c1.insets = new Insets(7, 5, 0, 0);
+		c1.gridx = 1;
+		c1.gridy = 2;
+		p.add(l, c1);
+		l = new JLabel("angenommen");
+		c1.gridx = 2;
+		p.add(l, c1);
+		l = new JLabel("1");
+		c1.gridx = 1;
+		c1.gridy = 3;
+		p.add(l, c1);
+		l = new JLabel("abgelehnt");
+		c1.gridx = 2;
+		p.add(l, c1);
+		l = new JLabel("Weitergeleitetes Datenvolumen:");
+		c1.gridx = 0;
+		c1.gridy = 4;
+		p.add(l, c1);
+		l = new JLabel("350");
+		c1.gridx = 1;
+		p.add(l, c1);
+		l = new JLabel("kByte");
+		c1.gridx = 2;
+		p.add(l, c1);
+		l = new JLabel("Genutzte Bandbreite:");
+		c1.gridx = 0;
+		c1.gridy = 5;
+		p.add(l, c1);
+		l = new JLabel("10");
+		c1.gridx = 1;
+		p.add(l, c1);
+		l = new JLabel("kByte/s");
+		c1.gridx = 2;
+		p.add(l, c1);
 
 		my.setFullPanel(p);
 
 		//smallview
-		gbl1=new GridBagLayout();
-		c1=new GridBagConstraints();
-		p=new JPanel(gbl1);
-		l=new JLabel("Forwarder (Blockungsresistenz):");
-		c1.insets=new Insets(0,5,0,0);
-		c1.anchor=GridBagConstraints.WEST;
-		p.add(l,c1);
-		c1.gridx=1;
-		c1.weightx=1;
-		c1.fill=GridBagConstraints.HORIZONTAL;
-		check=new JCheckBox("Ein");
+		gbl1 = new GridBagLayout();
+		c1 = new GridBagConstraints();
+		p = new JPanel(gbl1);
+		l = new JLabel("Forwarder (Blockungsresistenz):");
+		c1.insets = new Insets(0, 5, 0, 0);
+		c1.anchor = GridBagConstraints.WEST;
+		p.add(l, c1);
+		c1.gridx = 1;
+		c1.weightx = 1;
+		c1.fill = GridBagConstraints.HORIZONTAL;
+		check = new JCheckBox("Ein");
 		check.setBorder(null);
-		p.add(check,c1);
-		l=new JLabel("Aktivität:");
-		c1.gridx=2;
-		c1.weightx=0;
-		c1.fill=GridBagConstraints.NONE;
-		p.add(l,c1);
-		progress=new JProgressBar();
+		p.add(check, c1);
+		m_labelForwarderActivitySmall = new JLabel(JAPMessages.getString("ngActivity"));
+		c1.gridx = 2;
+		c1.weightx = 0;
+		c1.fill = GridBagConstraints.NONE;
+		p.add(m_labelForwarderActivitySmall, c1);
+		progress = new JProgressBar();
 		progress.setUI(new MyProgressBarUI(true));
 		progress.setMinimum(0);
 		progress.setMaximum(5);
 		progress.setBorderPainted(false);
-		c1.gridx=3;
-		p.add(progress,c1);
+		c1.gridx = 3;
+		p.add(progress, c1);
 		my.setSmallPanel(p);
 
-		c.fill=GridBagConstraints.HORIZONTAL;
-		c.weightx=1;
-		c.anchor=GridBagConstraints.NORTHWEST;
-		c.gridy=8;
-		northPanel.add(my,c);
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.weightx = 1;
+		c.anchor = GridBagConstraints.NORTHWEST;
+		c.gridy = 8;
+		northPanel.add(my, c);
 
 //-----------------------------------------------------------
-		c.gridwidth=2;
-		c.gridx=0;
-		c.gridy=9;
-		c.fill=GridBagConstraints.HORIZONTAL;
-		c.weightx=1;
-		northPanel.add(new JSeparator(),c);
+		c.gridwidth = 2;
+		c.gridx = 0;
+		c.gridy = 9;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.weightx = 1;
+		northPanel.add(new JSeparator(), c);
 //Buttons
-		gbl1=new GridBagLayout();
-		c1=new GridBagConstraints();
+		gbl1 = new GridBagLayout();
+		c1 = new GridBagConstraints();
 		JPanel buttonPanel = new JPanel(gbl1);
 		m_bttnInfo = new JButton(JAPMessages.getString("infoButton"));
 		m_bttnHelp = new JButton(JAPMessages.getString("helpButton"));
@@ -561,20 +573,20 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_bttnIconify.setToolTipText(JAPMessages.getString("iconifyWindow"));
 
 		// Add real buttons
-		buttonPanel.add(m_bttnIconify,c1);
+		buttonPanel.add(m_bttnIconify, c1);
 		//buttonPanel.add(m_bttnInfo);
-		c1.gridx=1;
-		c1.insets=new Insets(0,10,0,0);
-		buttonPanel.add(m_bttnHelp,c1);
-		c1.gridx=2;
-		buttonPanel.add(m_bttnConf,c1);
-		c1.gridx=3;
-		c1.weightx=1;
-		c1.fill=GridBagConstraints.HORIZONTAL;
-		buttonPanel.add(new JLabel(),c1);
-		c1.gridx=4;
-		c1.weightx=0;
-		buttonPanel.add(m_bttnQuit,c1);
+		c1.gridx = 1;
+		c1.insets = new Insets(0, 10, 0, 0);
+		buttonPanel.add(m_bttnHelp, c1);
+		c1.gridx = 2;
+		buttonPanel.add(m_bttnConf, c1);
+		c1.gridx = 3;
+		c1.weightx = 1;
+		c1.fill = GridBagConstraints.HORIZONTAL;
+		buttonPanel.add(new JLabel(), c1);
+		c1.gridx = 4;
+		c1.weightx = 0;
+		buttonPanel.add(m_bttnQuit, c1);
 		m_bttnIconify.addActionListener(this);
 		m_bttnConf.addActionListener(this);
 		m_bttnInfo.addActionListener(this);
@@ -586,9 +598,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		JAPUtil.setMnemonic(m_bttnHelp, JAPMessages.getString("helpButtonMn"));
 		JAPUtil.setMnemonic(m_bttnQuit, JAPMessages.getString("quitButtonMn"));
 
-		c.gridy=10;
-		northPanel.add(buttonPanel,c);
-
+		c.gridy = 10;
+		northPanel.add(buttonPanel, c);
 
 		// "West": Image
 		ImageIcon westImage = JAPUtil.loadImageIcon(JAPMessages.getString("westPath"), true); ;
@@ -641,12 +652,12 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			getContentPane().add(northPanel, BorderLayout.CENTER);
 			m_panelMain = level;
 			/*if (!JAPModel.isSmallDisplay())
-			{
-				getContentPane().add(northPanel, BorderLayout.NORTH);
-				getContentPane().add(westLabel, BorderLayout.WEST);
-				getContentPane().add(new JLabel("  "), BorderLayout.EAST); //Spacer
-				getContentPane().add(buttonPanel, BorderLayout.SOUTH);
-			}*/
+				{
+			 getContentPane().add(northPanel, BorderLayout.NORTH);
+			 getContentPane().add(westLabel, BorderLayout.WEST);
+			 getContentPane().add(new JLabel("  "), BorderLayout.EAST); //Spacer
+			 getContentPane().add(buttonPanel, BorderLayout.SOUTH);
+				}*/
 		}
 		//tabs.setSelectedComponent(level);
 
@@ -684,7 +695,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			Dimension ds = Toolkit.getDefaultToolkit().getScreenSize();
 			if (m.m_OldMainWindowLocation != null && m.m_OldMainWindowLocation.x >= 0 &&
 				m.m_OldMainWindowLocation.y > 0 /*&&m.m_OldMainWindowLocation.x<ds.width&&
-						m.m_OldMainWindowLocation.y<ds.height*/
+					  m.m_OldMainWindowLocation.y<ds.height*/
 				)
 			{
 				setLocation(m.m_OldMainWindowLocation);
@@ -736,9 +747,9 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 		JPanel ownTrafficPanel = new JPanel();
 		ownTrafficPanel.setLayout(new GridLayout(2, 2, 5, 5));
-		m_borderOwnTraffic = new TitledBorder(JAPMessages.getString("ownTrafficBorder"));
-		m_borderOwnTraffic.setTitleFont(fontControls);
-		ownTrafficPanel.setBorder(m_borderOwnTraffic);
+		//m_borderOwnTraffic = new TitledBorder(JAPMessages.getString("ownTrafficBorder"));
+		//m_borderOwnTraffic.setTitleFont(fontControls);
+		//ownTrafficPanel.setBorder(m_borderOwnTraffic);
 		m_labelOwnChannels = new JLabel(JAPMessages.getString("ownTrafficChannels"));
 		m_labelOwnChannels.setFont(fontControls);
 		ownTrafficPanel.add(m_labelOwnChannels);
@@ -749,16 +760,16 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		ownTrafficPanel.add(m_labelOwnTrafficBytes);
 
 // "Guthaben"
-		m_cbAnon = new JCheckBox(JAPMessages.getString("confActivateCheckBox"));
-		JAPUtil.setMnemonic(m_cbAnon, JAPMessages.getString("confActivateCheckBoxMn"));
-		m_cbAnon.setFont(fontControls);
-		m_cbAnon.addActionListener(this);
+		//m_cbAnon = new JCheckBox(JAPMessages.getString("confActivateCheckBox"));
+		//JAPUtil.setMnemonic(m_cbAnon, JAPMessages.getString("confActivateCheckBoxMn"));
+		//m_cbAnon.setFont(fontControls);
+		//m_cbAnon.addActionListener(this);
 
 		// Line 1
 		JPanel p41 = new JPanel();
 		p41.setLayout(new BoxLayout(p41, BoxLayout.X_AXIS));
 		//p41.add(Box.createRigidArea(new Dimension(10,0)) );
-		p41.add(m_cbAnon);
+		//p41.add(m_cbAnon);
 		if (!JAPModel.isSmallDisplay())
 		{
 			p41.add(Box.createRigidArea(new Dimension(5, 0)));
@@ -776,9 +787,9 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		// "anonym-o-meter"
 		JPanel meterPanel = new JPanel();
 		meterPanel.setLayout(new BorderLayout());
-		m_borderAnonMeter = new TitledBorder(JAPMessages.getString("meterBorder"));
-		m_borderAnonMeter.setTitleFont(fontControls);
-		meterPanel.setBorder(m_borderAnonMeter);
+		//m_borderAnonMeter = new TitledBorder(JAPMessages.getString("meterBorder"));
+		//m_borderAnonMeter.setTitleFont(fontControls);
+		//meterPanel.setBorder(m_borderAnonMeter);
 		meterLabel = new JLabel(getMeterImage( -1));
 		meterPanel.add(p41 /*ano1CheckBox*/, BorderLayout.NORTH);
 		meterPanel.add(meterLabel, BorderLayout.CENTER);
@@ -789,17 +800,17 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_labelCascadeName.setFont(fontControls);
 		m_labelMeterDetailsName = new JLabel(JAPMessages.getString("meterDetailsName") + " ");
 		m_labelMeterDetailsName.setFont(fontControls);
-		m_labelMeterDetailsUser = new JLabel(JAPMessages.getString("meterDetailsUsers") + " ");
-		m_labelMeterDetailsUser.setFont(fontControls);
+		m_labelAnonymityUser = new JLabel(JAPMessages.getString("meterDetailsUsers") + " ");
+		m_labelAnonymityUser.setFont(fontControls);
 		m_labelMeterDetailsTraffic = new JLabel(JAPMessages.getString("meterDetailsTraffic") + " ");
 		m_labelMeterDetailsTraffic.setFont(fontControls);
 		m_labelMeterDetailsRisk = new JLabel(JAPMessages.getString("meterDetailsRisk") + " ");
 		m_labelMeterDetailsRisk.setFont(fontControls);
 		GridBagLayout g = new GridBagLayout();
 		detailsPanel.setLayout(g);
-		m_borderDetails = new TitledBorder(JAPMessages.getString("meterDetailsBorder"));
-		m_borderDetails.setTitleFont(fontControls);
-		detailsPanel.setBorder(m_borderDetails);
+		//m_borderDetails = new TitledBorder(JAPMessages.getString("meterDetailsBorder"));
+		//m_borderDetails.setTitleFont(fontControls);
+		//detailsPanel.setBorder(m_borderDetails);
 		GridBagConstraints c = new GridBagConstraints();
 		c.anchor = c.WEST;
 		c.fill = GridBagConstraints.HORIZONTAL;
@@ -819,8 +830,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c.weightx = 0;
 		c.gridx = 0;
 		c.gridy = 1;
-		g.setConstraints(m_labelMeterDetailsUser, c);
-		detailsPanel.add(m_labelMeterDetailsUser);
+		g.setConstraints(m_labelAnonymityUser, c);
+		detailsPanel.add(m_labelAnonymityUser);
 		c.gridx = 1;
 		c.weightx = 1;
 		g.setConstraints(userProgressBar, c);
@@ -998,7 +1009,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	public void disableSetAnonMode()
 	{
 		//anonCheckBox.setEnabled(false);
-		m_cbAnon.setEnabled(false);
+		m_rbAnonOn.setEnabled(false);
+		m_rbAnonOff.setEnabled(false);
 	}
 
 	/** Used to notice the View, that the locale has Changed.
@@ -1014,18 +1026,30 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		JAPUtil.setMnemonic(m_bttnInfo, JAPMessages.getString("infoButtonMn"));
 		JAPUtil.setMnemonic(m_bttnHelp, JAPMessages.getString("helpButtonMn"));
 		JAPUtil.setMnemonic(m_bttnQuit, JAPMessages.getString("quitButtonMn"));
+
+		m_labelAnonService.setText(JAPMessages.getString("ngAnonymisierungsdienst"));
+		m_bttnAnonDetails.setText(JAPMessages.getString("ngBttnAnonDetails"));
+		m_rbAnonOn.setText(JAPMessages.getString("ngAnonOn"));
+		m_rbAnonOff.setText(JAPMessages.getString("ngAnonOff"));
+		m_labelAnonymityOnOff.setText(JAPMessages.getString("ngAnonymitaet"));
+		m_labelOwnActivity.setText(JAPMessages.getString("ngActivity"));
+		m_labelOwnActivitySmall.setText(JAPMessages.getString("ngActivity"));
+		m_labelForwarderActivity.setText(JAPMessages.getString("ngActivity"));
+		m_labelForwarderActivitySmall.setText(JAPMessages.getString("ngActivity"));
+
+
 		m_labelMeterDetailsName.setText(JAPMessages.getString("meterDetailsName") + " ");
-		m_labelMeterDetailsUser.setText(JAPMessages.getString("meterDetailsUsers") + " ");
+		m_labelAnonymityUser.setText(JAPMessages.getString("meterDetailsUsers") + " ");
 		m_labelMeterDetailsTraffic.setText(JAPMessages.getString("meterDetailsTraffic") + " ");
 		m_labelMeterDetailsRisk.setText(JAPMessages.getString("meterDetailsRisk") + " ");
-		m_borderOwnTraffic.setTitle(JAPMessages.getString("ownTrafficBorder"));
+		//m_borderOwnTraffic.setTitle(JAPMessages.getString("ownTrafficBorder"));
 		m_labelOwnChannels.setText(JAPMessages.getString("ownTrafficChannels"));
 		m_labelOwnBytes.setText(JAPMessages.getString("ownTrafficBytes"));
-		m_cbAnon.setText(JAPMessages.getString("confActivateCheckBox"));
-		JAPUtil.setMnemonic(m_cbAnon, JAPMessages.getString("confActivateCheckBoxMn"));
-		m_borderAnonMeter.setTitle(JAPMessages.getString("meterBorder"));
+		//m_cbAnon.setText(JAPMessages.getString("confActivateCheckBox"));
+		//JAPUtil.setMnemonic(m_cbAnon, JAPMessages.getString("confActivateCheckBoxMn"));
+		//m_borderAnonMeter.setTitle(JAPMessages.getString("meterBorder"));
 		m_bttnAnonConf.setText(JAPMessages.getString("confActivateButton"));
-		m_borderDetails.setTitle(JAPMessages.getString("meterDetailsBorder"));
+		//m_borderDetails.setTitle(JAPMessages.getString("meterDetailsBorder"));
 		if (m_dlgConfig != null)
 		{
 			m_dlgConfig.localeChanged();
@@ -1090,11 +1114,12 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	public void actionPerformed(ActionEvent event)
 	{
 		//		LogHolder.log(LogLevel.DEBUG,LogType.MISC,"GetEvent: "+event.getSource());
-		if (event.getSource() == m_bttnQuit)
+		Object source=event.getSource();
+		if (source == m_bttnQuit)
 		{
 			exitProgram();
 		}
-		else if (event.getSource() == m_bttnIconify)
+		else if (source == m_bttnIconify)
 		{
 			if (m_ViewIconified != null)
 			{
@@ -1103,7 +1128,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				m_ViewIconified.toFront();
 			}
 		}
-		else if (event.getSource() == m_bttnConf)
+		else if (source == m_bttnConf)
 		{
 			showConfigDialog();
 			/*else if (event.getSource() == portB)
@@ -1115,23 +1140,23 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			  else if (event.getSource() == anonB)
 			 showConfigDialog(JAPConf.ANON_TAB);*/
 		}
-		else if (event.getSource() == m_bttnAnonConf)
+		else if (source == m_bttnAnonConf)
 		{
 			showConfigDialog(JAPConf.ANON_TAB);
 		}
-		else if (event.getSource() == m_bttnInfo)
+		else if (source == m_bttnInfo)
 		{
 			controller.aboutJAP();
 		}
-		else if (event.getSource() == m_bttnHelp)
+		else if (source == m_bttnHelp)
 		{
 			showHelpWindow();
 			//else if (event.getSource() == anonCheckBox)
 			//	controller.setAnonMode(anonCheckBox.isSelected());
 		}
-		else if (event.getSource() == m_cbAnon)
+		else if (source == m_rbAnonOn||source==m_rbAnonOff)
 		{
-			controller.setAnonMode(m_cbAnon.isSelected());
+			controller.setAnonMode(m_rbAnonOn.isSelected());
 		}
 		else
 		{
@@ -1170,11 +1195,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_dlgConfig.show();
 	}
 
-	private void exitProgram()
-	{
-		controller.goodBye(true); // call the final exit procedure of JAP
-	}
-
 	public JPanel getMainPanel()
 	{
 		return m_panelMain;
@@ -1206,8 +1226,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			// Meter panel
 			try
 			{
-				m_cbAnon.setSelected(controller.getAnonMode());
-				if (controller.getAnonMode())
+				m_rbAnonOn.setSelected(controller.getAnonMode());
+/*			if (controller.getAnonMode())
 				{
 					m_cbAnon.setForeground(Color.black);
 				}
@@ -1215,7 +1235,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				{
 					m_cbAnon.setForeground(Color.red);
 				}
-				LogHolder.log(LogLevel.DEBUG, LogType.GUI, "JAPView: update CascadeName");
+*/				LogHolder.log(LogLevel.DEBUG, LogType.GUI, "JAPView: update CascadeName");
 				m_labelCascadeName.setText(currentMixCascade.getName());
 				m_labelCascadeName.setToolTipText(currentMixCascade.getName());
 				StatusInfo currentStatus = currentMixCascade.getCurrentStatus();
@@ -1337,6 +1357,5 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_labelOwnTrafficBytes.setText(m_NumberFormat.format(c) + " Bytes");
 		JAPDll.onTraffic();
 	}
-
 
 }

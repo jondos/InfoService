@@ -1630,7 +1630,7 @@ public final class JAPController implements ProxyListener
 	 *	@param bShowConfigSaveErrorMsg if true shows an error message iff saving of
 	 * 			the current configuration goes wrong
 	 */
-	public void goodBye(boolean bShowConfigSaveErrorMsg)
+	public static void goodBye(boolean bShowConfigSaveErrorMsg)
 	{
 		try
 		{
@@ -1643,7 +1643,7 @@ public final class JAPController implements ProxyListener
 			Object[] message =
 				{
 				JAPMessages.getString("disableGoodByMessage"), checkboxRemindNever};
-			if (!mbGoodByMessageNeverRemind)
+			if (!m_Controller.mbGoodByMessageNeverRemind)
 			{
 				JOptionPane.showOptionDialog(m_Controller.getView(),
 											 (Object) message,
@@ -1651,7 +1651,7 @@ public final class JAPController implements ProxyListener
 											 JOptionPane.DEFAULT_OPTION,
 											 JOptionPane.WARNING_MESSAGE,
 											 null, options, options[0]);
-				mbGoodByMessageNeverRemind = checkboxRemindNever.isSelected();
+				m_Controller.mbGoodByMessageNeverRemind = checkboxRemindNever.isSelected();
 			}
 			boolean error = m_Controller.saveConfigFile();
 			if (error && bShowConfigSaveErrorMsg)
