@@ -21,7 +21,7 @@ import javax.swing.text.Document;
 import javax.swing.text.html.HTMLDocument;
 import javax.swing.text.html.HTML;
 import javax.swing.text.AttributeSet;
-//import javax.swing.text.html.I
+
 public class JAPAbout extends JDialog
 	{
 		class ScrollerPane extends JScrollPane implements Runnable
@@ -82,24 +82,20 @@ public class JAPAbout extends JDialog
 							for (; iter.isValid(); iter.next()) {
 								AttributeSet a = iter.getAttributes();
 								String nm = (String) a.getAttribute(HTML.Attribute.NAME);
-								if ((nm != null) && nm.equals("begin"))
-									{
+								if ((nm != null) && nm.equals("begin"))									{
 		    // found a matching reference in the document.
-		    System.out.println("found begin");
-									try {
+		    System.out.println("found begin");									try {
 			Rectangle r = textArea.modelToView(iter.getStartOffset());
 			if (r != null) {
 			    // the view is visible, scroll it to the 
 			    // center of the current visible area.
-			  System.out.println(r.y);  
-				Rectangle vis = textArea.getVisibleRect();
+			  System.out.println(r.y);  				Rectangle vis = textArea.getVisibleRect();
 			    //r.y -= (vis.height / 2);
 			    r.height = vis.height;
 			    textArea.scrollRectToVisible(r);
 			}
 		    } catch (Exception ble) {
-						ble.printStackTrace();
-										getToolkit().beep();
+						ble.printStackTrace();										getToolkit().beep();
 		    }
 								}}
 		*/
@@ -162,7 +158,7 @@ public class JAPAbout extends JDialog
 				sp.setLocation(5,70);
 				setResizable(false);
 				pack();
-				this.setLocationRelativeTo(parent);
+				setLocationRelativeTo(parent);
 				setVisible(true);
 				sp.startIt();
 			}

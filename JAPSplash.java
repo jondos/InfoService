@@ -33,7 +33,7 @@ import java.awt.Font;
 import java.awt.Image;
 import java.awt.Toolkit;
 import java.awt.Graphics;
-//import java.awt.Canvas;
+import java.awt.FontMetrics;
 import java.awt.MediaTracker;
 import java.io.InputStream;
 //import javax.swing.JLabel;
@@ -47,12 +47,15 @@ final class JAPSplash extends Window
 		Image imageOffScreen=null;
 		Font font;
 		String strLoading;
-		
-		JAPSplash(/*JAPModel m*/)
+		String strVersion;
+		int xVersion;		
+		int yVersion;
+
+		JAPSplash()
 			{
 				super(new Frame());
 				setLayout(null);
-		
+		    xVersion=yVersion=100;
 				Toolkit t=Toolkit.getDefaultToolkit();
 				MediaTracker ma=new MediaTracker(this);
 				InputStream in=JAPSplash.class.getResourceAsStream("images/splash.gif");
@@ -93,7 +96,11 @@ final class JAPSplash extends Window
 							}
 					}
 				strLoading=JAPMessages.getString("loading");
+				strVersion="Version: "+JAPModel.aktVersion;
 				font=new Font("Sans",Font.PLAIN,9);
+				FontMetrics fontmetrics=t.getFontMetrics(font);
+				xVersion=350-10-fontmetrics.stringWidth(strVersion);
+				yVersion=158;
 				setLocation(-350,-173);
 				setSize(350,173);
 				try{ma.waitForAll();}catch(Exception e){};
@@ -121,7 +128,7 @@ final class JAPSplash extends Window
 					goff.drawImage(imageBusy,15,150,this);
 				goff.setFont(font);
 				goff.drawString(strLoading,15,140);
-				goff.drawString("Version: "+JAPModel.aktVersion,250,158);
+				goff.drawString(strVersion,xVersion,yVersion);
 				g.drawImage(imageOffScreen,0,0,this);
 			}
 
