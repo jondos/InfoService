@@ -39,12 +39,12 @@ import org.bouncycastle.crypto.params.RSAKeyParameters;
 import org.bouncycastle.crypto.params.RSAPrivateCrtKeyParameters;
 import pay.event.ModelEventFirerer;
 import pay.event.ModelListener;
-import pay.util.Log;
+
 import payxml.XMLBalConf;
 import payxml.XMLCertificate;
 import payxml.XMLEasyCC;
 import payxml.XMLTransCert;
-
+import logging.*;
 /**
  *  Dies ist die Hauptklasse für die Payfunktionaltiät hier werden funktionen zum kommunizieren mit der BI
  *  dem speichern der Konten angeboten.
@@ -174,13 +174,11 @@ public class Pay
 			}
 			catch (PayAccountsControl.WrongPasswordException wp)
 			{
-				Log.log(this, "öffnen des AccountFiles ging nicht => falsches Passwort angegeben " + wp,
-						Log.SHORT_DEBUG);
+				LogHolder.log(LogLevel.DEBUG,LogType.PAY, "öffnen des AccountFiles ging nicht => falsches Passwort angegeben " + wp);
 			}
 			catch (IOException io)
 			{
-				Log.log(this, "öffnen des AccountFiles ging nicht => allgemiener IOFehler! " + io,
-						Log.SHORT_DEBUG);
+				LogHolder.log(LogLevel.DEBUG,LogType.PAY, "öffnen des AccountFiles ging nicht => allgemiener IOFehler! ");
 			}
 		}
 	}
@@ -198,7 +196,7 @@ public class Pay
 		}
 		catch (Exception ex)
 		{
-			Log.log(this, "speichern des Accout FIles ging nicht", Log.SHORT_DEBUG);
+			LogHolder.log(LogLevel.DEBUG,LogType.PAY, "speichern des Accout FIles ging nicht");
 		}
 	}
 
@@ -222,13 +220,13 @@ public class Pay
 		}
 		catch (IOException io)
 		{
-			Log.log(this, "exportAccountFile: speichern geht nicht: IOException", Log.INFO);
+			LogHolder.log(LogLevel.DEBUG,LogType.PAY, "exportAccountFile: speichern geht nicht: IOException");
 		}
 	}
 
 	public void importAccountFile(String filename)
 	{
-		Log.log(this, "importAccountFile start", Log.TEST);
+		LogHolder.log(LogLevel.DEBUG,LogType.PAY, "importAccountFile start");
 		try
 		{
 			PayAccountFile accounts = accountsControl.open(filename);
@@ -236,7 +234,7 @@ public class Pay
 
 			while (en.hasMoreElements())
 			{
-				Log.log(this, "en.hasMoreElements()", Log.TEST);
+				LogHolder.log(LogLevel.DEBUG,LogType.PAY, "en.hasMoreElements()");
 				PayAccount account = (PayAccount) en.nextElement();
 				if (accountFile.getAccount(account.getAccountNumber()) == null)
 				{
@@ -246,15 +244,14 @@ public class Pay
 					}
 					catch (Exception ex)
 					{
-						Log.log(this, "account No: " + account.getAccountNumber() + " bereits vorhanden",
-								Log.INFO);
+						LogHolder.log(LogLevel.DEBUG,LogType.PAY, "account No: " + account.getAccountNumber() + " bereits vorhanden");
 					}
 				}
 			}
 		}
 		catch (Exception ex)
 		{
-			Log.log(this, "importAccountFile ging nicht");
+			LogHolder.log(LogLevel.DEBUG,LogType.PAY, "importAccountFile ging nicht");
 		}
 		fire.fireModelEvent();
 	}
@@ -282,7 +279,7 @@ public class Pay
 		}
 		catch (Exception ex)
 		{
-			Log.log(this, "Setzen des Benutzten Accounts geht nicht", Log.INFO);
+			LogHolder.log(LogLevel.DEBUG,LogType.PAY, "Setzen des Benutzten Accounts geht nicht");
 		}
 	}
 
@@ -406,7 +403,7 @@ public class Pay
 		}
 		catch (Exception e)
 		{
-			Log.log(this, "Fehler: " + e.getMessage(), Log.SHORT_DEBUG);
+			LogHolder.log(LogLevel.DEBUG,LogType.PAY, "Fehler: " + e.getMessage());
 			return -1;
 		}
 	}
@@ -428,7 +425,7 @@ public class Pay
 		}
 		catch (IllegalStateException ise)
 		{
-			Log.log(this, "getAllBalance kunktioniert nicht", Log.SHORT_DEBUG);
+			LogHolder.log(LogLevel.DEBUG,LogType.PAY, "getAllBalance kunktioniert nicht");
 		}
 	}
 

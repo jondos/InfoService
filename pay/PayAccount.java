@@ -35,13 +35,13 @@ import org.bouncycastle.crypto.params.RSAPrivateCrtKeyParameters;
 import org.w3c.dom.CharacterData;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
-import pay.util.Log;
 import payxml.XMLBalance;
 import payxml.XMLCertificate;
 import payxml.XMLCostConfirmations;
 import payxml.XMLDocument;
 import payxml.XMLTransCert;
 import payxml.util.Base64;
+import logging.*;
 /**
  *  Diese Klasse ist für die verwaltung eines Accounts zutändig, sie kapselt eine XML Struktur innerhalb der Klasse
  *	und Mithilfe von Klassen des payxml Packages
@@ -76,7 +76,7 @@ public class PayAccount extends XMLDocument
 				setRSAPrivateKey();
 				setXMLTransCert();
 				setXMLCostConfirms();
-				Log.log(this,"PayAccount Object AccountNr."+certificate.getAccountNumber()+" complete",Log.SHORT_DEBUG);
+				LogHolder.log(LogLevel.DEBUG,LogType.PAY,"PayAccount Object AccountNr."+certificate.getAccountNumber()+" complete");
 		}
 
 		/**
@@ -186,7 +186,7 @@ public class PayAccount extends XMLDocument
 
 		private void setXMLCertificate() throws Exception
 		{
-		Log.log(this,xmlDocument,Log.LONG_DEBUG);
+		LogHolder.log(LogLevel.DEBUG,LogType.PAY,xmlDocument);
 			String st = xmlDocument.substring(xmlDocument.indexOf(XMLCertificate.docElementName),xmlDocument.indexOf("</AccountCertificate>")+21);
 					certificate = new XMLCertificate(st);
 		}
@@ -209,7 +209,7 @@ public class PayAccount extends XMLDocument
 				try
 				{
 						certsString = xmlDocument.substring(xmlDocument.indexOf("<TransferCertificates>")+22,xmlDocument.indexOf("</TransferCertificates>"));
-						Log.log(this,certsString,Log.LONG_DEBUG);
+						LogHolder.log(LogLevel.DEBUG,LogType.PAY,certsString);
 
 				}
 				catch(Exception e)
@@ -241,7 +241,7 @@ public class PayAccount extends XMLDocument
 			String confirms= xmlDocument.substring(xmlDocument.indexOf(XMLCostConfirmations.docStartTag),xmlDocument.indexOf(XMLCostConfirmations.docEndTag)+XMLCostConfirmations.docEndTag.length());
 					costConfirms = new XMLCostConfirmations(confirms);
 		}catch(Exception ex){
-			Log.log(this,"noch keine CostConfirmations vorhanden",Log.INFO);
+			LogHolder.log(LogLevel.DEBUG,LogType.PAY,"noch keine CostConfirmations vorhanden");
 			costConfirms = new XMLCostConfirmations();
 		}
 		}

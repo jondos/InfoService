@@ -80,7 +80,7 @@ import javax.swing.JScrollBar;
 final public class JAPDebug extends WindowAdapter implements ActionListener, Log
 {
 
-	private int m_debugType = LogType.GUI + LogType.NET + LogType.THREAD + LogType.MISC;
+	private int m_debugType = LogType.ALL;
 	private int m_debugLevel = LogLevel.DEBUG;
 	private static JTextArea m_textareaConsole;
 	private static JDialog m_frameConsole;
@@ -92,7 +92,7 @@ final public class JAPDebug extends WindowAdapter implements ActionListener, Log
 
 	private JAPDebug()
 	{
-		m_debugType = LogType.GUI + LogType.NET + LogType.THREAD + LogType.MISC;
+		m_debugType = LogType.ALL;
 		m_debugLevel = LogLevel.DEBUG;
 		m_bConsole = false;
 	}
