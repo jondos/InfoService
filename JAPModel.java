@@ -57,7 +57,7 @@ public final class JAPModel {
 	static final String aktVersion = "00.00.020"; // Version of JAP
 	
 	private int      portNumber        = 4001;
-	private boolean  listenerIsLocal   = false;  // indicates whether the Listener serves for localhost only or not
+	private boolean  mblistenerIsLocal = true;  // indicates whether the Listener serves for localhost only or not
 	private int      runningPortNumber = 0;      // the port where proxy listens
 	private boolean  isRunningProxy    = false;  // true if a proxy is running
 	private  String   proxyHostName     = "ikt.inf.tu-dresden.de";
@@ -203,6 +203,7 @@ public final class JAPModel {
 	/** Loads the Configuration. This is an XML-File with the following structure:
 	 *	<JAP 
 	 *		portNumber=""									// Listener-Portnumber
+	 *    listenerIsLocal="true"/"false"// Listener lasucht nur an localhost ?
 	 *		proxyMode="true"/"false"			// Using a HTTP-Proxy??
 	 *		proxyHostName="..."						// the Name of the HTTP-Proxy
 	 *		proxyPortNumber="..."					// port number of the HTTP-proxy
@@ -241,7 +242,7 @@ public final class JAPModel {
 			NamedNodeMap n=root.getAttributes();
 			// 
 			portNumber=Integer.valueOf(n.getNamedItem("portNumber").getNodeValue()).intValue();
-			setListenerIsLocal(((n.getNamedItem("listenerIsLocal").getNodeValue()).equals("true")?true:false));
+			setListenerIsLocal(((n.getNamedItem("listenerIsLocal").getNodeValue()).equals("false")?false:true));
 			setUseProxy(((n.getNamedItem("proxyMode").getNodeValue()).equals("true")?true:false));
 			
 			String host;
@@ -457,7 +458,7 @@ public final class JAPModel {
 		{
 			synchronized(this)
 				{
-					listenerIsLocal=b;
+					mblistenerIsLocal=b;
 				}
 		}
 			
@@ -465,7 +466,7 @@ public final class JAPModel {
 		{
 			synchronized(this)
 				{
-					return listenerIsLocal;
+					return mblistenerIsLocal;
 				}
 		}
 		
