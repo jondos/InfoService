@@ -112,6 +112,7 @@ public final class JAPController implements ProxyListener, Observer
 	private boolean mbActCntMessageNeverRemind = false; // indicates if Warning message in setAnonMode has been deactivated forever
 	private boolean mbDoNotAbuseReminder = false; // indicates if new warning message in setAnonMode (containing Do no abuse) has been shown
 	private boolean mbGoodByMessageNeverRemind = false; // indicates if Warning message before exit has been deactivated forever
+	private boolean m_bForwarderNotExplain = false; //indicates if the warning message about forwarding should be shown
 
 	private boolean m_bPaymentFirstTime = false; // indicates if encryption dialog should be showed before saving payment configuration data
 
@@ -491,6 +492,8 @@ public final class JAPController implements ProxyListener, Observer
 					}
 					mbGoodByMessageNeverRemind = XMLUtil.parseValue(n.getNamedItem(JAPConstants.
 						CONFIG_NEVER_REMIND_GOODBYE), false);
+					m_bForwarderNotExplain = XMLUtil.parseValue(n.getNamedItem(JAPConstants.
+						CONFIG_NEVER_EXPLAIN_FORWARD), false);
 
 				}
 				catch (Exception ex)
@@ -1073,6 +1076,7 @@ public final class JAPController implements ProxyListener, Observer
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_MINIMIZED_STARTUP, JAPModel.getMinimizeOnStartup());
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_NEVER_REMIND_ACTIVE_CONTENT,
 								 mbActCntMessageNeverRemind);
+			XMLUtil.setAttribute(e, JAPConstants.CONFIG_NEVER_EXPLAIN_FORWARD, m_bForwarderNotExplain);
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_DO_NOT_ABUSE_REMINDER, mbDoNotAbuseReminder);
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_NEVER_REMIND_GOODBYE, mbGoodByMessageNeverRemind);
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_LOCALE, m_Locale.getLanguage());
@@ -2329,6 +2333,25 @@ public final class JAPController implements ProxyListener, Observer
 
 		void setServerMode(boolean b)
 		{
+			if (!m_bForwarderNotExplain && b)
+			{
+				Object[] options =
+					{
+					JAPMessages.getString("okButton")};
+				JCheckBox checkboxRemindNever = new JCheckBox(JAPMessages.getString(
+					"disableActCntMessageNeverRemind"));
+				Object[] message =
+					{
+					JAPMessages.getString("forwardingExplainMessage"), checkboxRemindNever};
+				int ret = 0;
+				ret = JOptionPane.showOptionDialog(getView(),
+					(Object) message,
+					JAPMessages.getString("forwardingExplainMessageTitle"),
+					JOptionPane.DEFAULT_OPTION,
+					JOptionPane.WARNING_MESSAGE,
+					null, options, options[0]);
+				m_bForwarderNotExplain = checkboxRemindNever.isSelected();
+			}
 			if (m_iStatusPanelMsgIdForwarderServerStatus != -1)
 			{
 				m_View.removeStatusMsg(m_iStatusPanelMsgIdForwarderServerStatus);
