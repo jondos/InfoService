@@ -1762,12 +1762,9 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				/* if the forwarding client is running, it should not be possible to start the forwarding
 				 * server, also it should not be possible to change the selected mixcascade
 				 */
-				m_cbForwarding.setEnabled(JAPModel.getInstance().getRoutingSettings().getRoutingMode() !=
-										  JAPRoutingSettings.ROUTING_MODE_CLIENT);
-				m_cbForwardingSmall.setEnabled(JAPModel.getInstance().getRoutingSettings().getRoutingMode() !=
-											   JAPRoutingSettings.ROUTING_MODE_CLIENT);
-				m_comboAnonServices.setEnabled(JAPModel.getInstance().getRoutingSettings().getRoutingMode() !=
-											   JAPRoutingSettings.ROUTING_MODE_CLIENT);
+				m_cbForwarding.setEnabled(!JAPModel.getInstance().getRoutingSettings().isConnectViaForwarder());
+				m_cbForwardingSmall.setEnabled(!JAPModel.getInstance().getRoutingSettings().isConnectViaForwarder());
+				m_comboAnonServices.setEnabled(!JAPModel.getInstance().getRoutingSettings().isConnectViaForwarder());
 			}
 			catch (Throwable t)
 			{

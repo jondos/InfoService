@@ -43,7 +43,6 @@ import anon.AnonServiceFactory;
 import anon.ErrorCodes;
 import anon.NotConnectedToMixException;
 import anon.ToManyOpenChannelsException;
-import anon.crypto.JAPCertificateStore;
 import anon.infoservice.ImmutableProxyInterface;
 import anon.infoservice.MixCascade;
 import anon.server.AnonServiceImpl;
@@ -185,12 +184,6 @@ final public class AnonProxy implements Runnable
 	public void setPreCreateAnonRoutes(boolean b)
 	{
 		m_bPreCreateAnonRoutes = b;
-	}
-
-	public void setMixCertificationCheck(boolean enabled, JAPCertificateStore trustedRoots)
-	{
-		( (AnonServiceImpl) m_Anon).setMixCertificationAuthorities(trustedRoots);
-		( (AnonServiceImpl) m_Anon).setEnableMixCertificationCheck(enabled);
 	}
 
 	public int start()

@@ -37,6 +37,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.text.SimpleDateFormat;
 import java.util.Enumeration;
+import java.util.Observer;
+import java.util.Observable;
 
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
@@ -53,14 +55,15 @@ import javax.swing.event.ListSelectionListener;
 import org.bouncycastle.asn1.x509.X509NameTokenizer;
 
 import anon.crypto.JAPCertificate;
-import anon.crypto.JAPCertificateStore;
+import anon.crypto.CertificateInfoStructure;
+import anon.crypto.SignatureVerifier;
 import anon.util.ResourceLoader;
 
 /**
  * This is the configuration GUI for the cert.
  */
 
-final class JAPConfCert extends AbstractJAPConfModule
+final class JAPConfCert extends AbstractJAPConfModule implements Observer
 {
 
 //	private DefaultListModel m_dlmCertList;
@@ -76,12 +79,13 @@ final class JAPConfCert extends AbstractJAPConfModule
 	private Enumeration m_enumCerts;
 //	private ListSelectionListener m_listsel;
 
-	private JAPCertificateStore m_jcs;
-
 	public JAPConfCert()
 	{
-		super(null);
-		m_jcs = new JAPCertificateStore();
+    super(new JAPConfCertSavePoint());
+    /* observe the store of trusted certificates */
+    SignatureVerifier.getInstance().getVerificationCertificateStore().addObserver(this);
+    /* tricky: initialize the components by calling the observer */
+    update(SignatureVerifier.getInstance().getVerificationCertificateStore(), null);
 	}
 
 	private void updateInfoPanel(JAPCertificate a_cert)
@@ -199,44 +203,6 @@ final class JAPConfCert extends AbstractJAPConfModule
 		return JAPMessages.getString("confCertTab");
 	}
 
-	/**
-	 * This method is called automatically by AbstractJAPConfModule if the cert tab comes to
-	 * foreground. This method calls updateGuiOutput().
-	 */
-	//public void onRootPanelShown()
-	//{
-	//updateGuiOutput();
-	//}
-
-	public void onResetToDefaultsPressed()
-	{
-		m_jcs = new JAPCertificateStore();
-		JAPCertificate cert = null;
-		try
-		{
-			byte[] tmp = ResourceLoader.loadResource(JAPConstants.CERTSPATH +
-				JAPConstants.TRUSTEDROOTCERT);
-			cert = JAPCertificate.getInstance(tmp);
-		}
-		catch (Exception e)
-		{
-			cert = null;
-		}
-		cert.setEnabled(true);
-		m_jcs.addCertificate(cert);
-		updateGuiOutput();
-	}
-
-	public void onCancelPressed()
-	{
-	}
-
-	public boolean onOkPressed()
-	{
-		JAPController.setCertificateStore(m_jcs);
-		return true;
-	}
-
 	private JPanel createCALabel()
 	{
 		final JPanel r_panelCALabel = new JPanel();
@@ -300,10 +266,10 @@ final class JAPConfCert extends AbstractJAPConfModule
 				}
 				else
 				{
-					JAPCertificate j = (JAPCertificate) m_listCert.getSelectedValue();
-					updateInfoPanel(j);
+          CertificateInfoStructure j = (CertificateInfoStructure) m_listCert.getSelectedValue();
+          updateInfoPanel(j.getCertificate());
 
-					if (j.getEnabled())
+          if (j.isEnabled())
 					{
 						m_bttnCertStatus.setText(JAPMessages.getString("certBttnDisable"));
 					}
@@ -360,33 +326,9 @@ final class JAPConfCert extends AbstractJAPConfModule
 				if (cert != null)
 				{
 
-					if (!m_jcs.contains(cert))
-					{
-						m_listmodelCertList.addElement(cert);
-						// m_listCert.removeAll();
-						// m_listCert.setModel(m_listmodelCertList);
-						// m_scrpaneList.getViewport().removeAll();
-						// m_scrpaneList.getViewport().add(m_listCert, null);
-						cert.setEnabled(true);
-						m_jcs.addCertificate(cert);
-						if (cert.getEnabled())
-						{
-							m_bttnCertStatus.setText(JAPMessages.getString("certBttnDisable"));
-						}
-						else
-						{
-							m_bttnCertStatus.setText(JAPMessages.getString("certBttnEnable"));
+          SignatureVerifier.getInstance().getVerificationCertificateStore().addCertificateWithoutVerification(cert, JAPCertificate.CERTIFICATE_TYPE_ROOT, true);
 						}
 					}
-					else
-					{
-						//
-					}
-				}
-				m_bttnCertRemove.setEnabled(true);
-				m_bttnCertStatus.setEnabled(true);
-
-			}
 		});
 
 		m_bttnCertRemove = new JButton(JAPMessages.getString("certBttnRemove"));
@@ -397,29 +339,9 @@ final class JAPConfCert extends AbstractJAPConfModule
 			{
 				if (m_listmodelCertList.getSize() > 0)
 				{
-					int index = m_listCert.getSelectedIndex();
-
-					JAPCertificate certActual = (JAPCertificate) m_listCert.getSelectedValue();
-					String strActualIssuerCN = (String) certActual.getIssuer().getValues().elementAt(0);
-					m_enumCerts = m_jcs.elements();
-					while (m_enumCerts.hasMoreElements())
-					{
-						JAPCertificate cert = (JAPCertificate) m_enumCerts.nextElement();
-						String strIssuerCN = (String) cert.getIssuer().getValues().elementAt(0);
-						if (strIssuerCN.equals(strActualIssuerCN))
-						{
-							m_jcs.removeCertificate(cert);
-							m_listmodelCertList.remove(index);
-
-							if (cert.getEnabled())
-							{
-								m_bttnCertStatus.setText(JAPMessages.getString("certBttnDisable"));
-							}
-							else
-							{
-								m_bttnCertStatus.setText(JAPMessages.getString("certBttnEnable"));
-							}
-						}
+          CertificateInfoStructure certActual = (CertificateInfoStructure) m_listCert.getSelectedValue();
+          if (certActual != null) {
+            SignatureVerifier.getInstance().getVerificationCertificateStore().removeCertificate(certActual.getCertificate().getId());
 					}
 				}
 				if (m_listmodelCertList.getSize() == 0)
@@ -433,8 +355,8 @@ final class JAPConfCert extends AbstractJAPConfModule
 					updateInfoPanel(null);
 					m_listCert.setSelectedIndex(0);
 
-					JAPCertificate j = (JAPCertificate) m_listCert.getSelectedValue();
-					updateInfoPanel(j);
+          CertificateInfoStructure j = (CertificateInfoStructure) m_listCert.getSelectedValue();
+          updateInfoPanel(j.getCertificate());
 				}
 			}
 		});
@@ -445,22 +367,19 @@ final class JAPConfCert extends AbstractJAPConfModule
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				JAPCertificate certActual = (JAPCertificate) m_listCert.getSelectedValue();
-				boolean enabled = certActual.getEnabled();
+        CertificateInfoStructure certActual = (CertificateInfoStructure) m_listCert.getSelectedValue();
+        boolean enabled = certActual.isEnabled();
 
 				if (enabled)
 				{
-					certActual.setEnabled(false);
-					m_jcs.addCertificate(certActual);
+          SignatureVerifier.getInstance().getVerificationCertificateStore().setEnabled(certActual.getCertificate().getId(), false);
 					m_bttnCertStatus.setText(JAPMessages.getString("certBttnEnable"));
 				}
 				else
 				{
-					certActual.setEnabled(true);
-					m_jcs.addCertificate(certActual);
+          SignatureVerifier.getInstance().getVerificationCertificateStore().setEnabled(certActual.getCertificate().getId(), true);
 					m_bttnCertStatus.setText(JAPMessages.getString("certBttnDisable"));
 				}
-				m_listCert.repaint();
 			}
 		});
 
@@ -666,44 +585,23 @@ final class JAPConfCert extends AbstractJAPConfModule
 		return panelInfo;
 	}
 
-	/**
-	 * Updates the GUI (the list of all Certificates. This
-	 * method is called automatically, if the Certifcate tab comes to foreground.
-	 */
-	private void updateGuiOutput()
-	{
-		synchronized (this)
-		{
+  public void update(Observable a_notifier, Object a_message) {
+    synchronized (this) {
+      if (a_notifier == SignatureVerifier.getInstance().getVerificationCertificateStore()) {
+        /* the message is from the SignatureVerifier trusted certificates store */
 			m_listmodelCertList.clear();
 
 			// list init, add certificates by issuer name
-			m_enumCerts = m_jcs.elements();
-			while (m_enumCerts.hasMoreElements())
-			{
-				JAPCertificate j = (JAPCertificate) m_enumCerts.nextElement();
-				// was: m_listmodelCertList.addElement(issuerCN);
+        m_enumCerts = SignatureVerifier.getInstance().getVerificationCertificateStore().getAllCertificates().elements();
+        while (m_enumCerts.hasMoreElements()) {
+          CertificateInfoStructure j = (CertificateInfoStructure) m_enumCerts.nextElement();
+          /* we handle only root certificates */
+          if (j.getCertificateType() == JAPCertificate.CERTIFICATE_TYPE_ROOT) {        
 				m_listmodelCertList.addElement(j);
 			}
-			if (m_listmodelCertList.size() > 0)
-			{
-				m_listCert.setSelectedIndex(0);
-
 			}
 		}
 	}
-
-	public void onUpdateValues()
-	{
-		JAPCertificateStore modelCerts = JAPModel.getCertificateStore();
-		if (modelCerts != null)
-		{
-			m_jcs = (JAPCertificateStore) JAPModel.getCertificateStore().clone();
-		}
-		else
-		{
-			m_jcs = new JAPCertificateStore();
-		}
-		updateGuiOutput();
 	}
 
 }

@@ -27,6 +27,7 @@
  */
 package jap;
 
+import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -35,10 +36,12 @@ import java.awt.event.ActionListener;
 import java.util.Observable;
 import java.util.Observer;
 
+import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JPanel;
 import javax.swing.border.TitledBorder;
 
+import gui.JAPHtmlMultiLineLabel;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -117,14 +120,33 @@ public class JAPConfForwardingClient extends AbstractJAPConfModule
    */
   private JPanel createForwardingClientConfigPanel()
   {
-    JPanel clientPanel = new JPanel();
+    final JPanel clientPanel = new JPanel();
 
     final JCheckBox settingsForwardingClientConfigNeedForwarderBox = new JCheckBox(JAPMessages.getString("settingsForwardingClientConfigNeedForwarderBox"));
     settingsForwardingClientConfigNeedForwarderBox.setFont(getFontSetting());
     settingsForwardingClientConfigNeedForwarderBox.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent event) {
-        /* enable or disable the connect-via-forwarder setting in JAPRoutingSettings */
-        JAPModel.getInstance().getRoutingSettings().setConnectViaForwarder(settingsForwardingClientConfigNeedForwarderBox.isSelected());
+        if (settingsForwardingClientConfigNeedForwarderBox.isSelected()) {
+          /* we shall enabled the connect-via-forwarder feature */
+          if (JAPModel.getInstance().getRoutingSettings().getRoutingMode() == JAPRoutingSettings.ROUTING_MODE_SERVER) {
+            /* we have to shutdown the server first -> user has to confirm this */
+            showForwardingClientConfirmServerShutdownDialog(clientPanel);
+            /* maybe the user has canceled the shutdown -> update the selection state of the
+             * checkbox
+             */
+            settingsForwardingClientConfigNeedForwarderBox.setSelected(JAPModel.getInstance().getRoutingSettings().isConnectViaForwarder());
+          }
+          else {
+            /* we can directly enable the connect-via-forwarder setting, because the forwarding
+             * server isn't running
+             */
+            JAPModel.getInstance().getRoutingSettings().setConnectViaForwarder(true);
+          }  
+        }
+        else {
+          /* disable the connect-via-forwarder setting in JAPRoutingSettings */
+          JAPModel.getInstance().getRoutingSettings().setConnectViaForwarder(false);
+        }
       }
     });
     
@@ -215,5 +237,83 @@ public class JAPConfForwardingClient extends AbstractJAPConfModule
 
     return clientPanel;
   }
+
+  /**
+   * Shows the forwarding server shutdown confirmation dialog. This dialog is necessary if the
+   * forwarding server is running when the connect-via-forwarder feature is enabled, because the
+   * components for starting/stopping the forwarding server will be disabled after that.
+   *
+   * @param a_parentComponent The component where the dialog will be centered over.
+   */
+  private void showForwardingClientConfirmServerShutdownDialog(Component a_parentComponent)
+  {    
+    final JAPDialog confirmDialog = new JAPDialog(a_parentComponent, JAPMessages.getString("settingsForwardingClientConfigConfirmServerShutdownDialogTitle"));
+    confirmDialog.disableManualClosing();
+    JPanel confirmPanel = confirmDialog.getRootPanel();
+
+    JAPHtmlMultiLineLabel settingsForwardingClientConfigConfirmServerShutdownLabel = new JAPHtmlMultiLineLabel(JAPMessages.getString("settingsForwardingClientConfigConfirmServerShutdownLabel"), getFontSetting());
+
+    JButton settingsForwardingClientConfigConfirmServerShutdownShutdownButton = new JButton(JAPMessages.getString("settingsForwardingClientConfigConfirmServerShutdownShutdownButton"));
+    settingsForwardingClientConfigConfirmServerShutdownShutdownButton.setFont(getFontSetting());
+    settingsForwardingClientConfigConfirmServerShutdownShutdownButton.addActionListener(new ActionListener()
+    {
+      public void actionPerformed(ActionEvent event)
+      {
+        /* if the shutdown button is pressed, shutdown the server and enable the
+         * connect-via-forwarder setting
+         */
+        JAPModel.getInstance().getRoutingSettings().setRoutingMode(JAPRoutingSettings.ROUTING_MODE_DISABLED);
+        JAPModel.getInstance().getRoutingSettings().setConnectViaForwarder(true);
+        confirmDialog.dispose();
+      }
+    });
+
+    JButton settingsForwardingClientConfigConfirmServerShutdownCancelButton = new JButton(JAPMessages.getString("cancelButton"));
+    settingsForwardingClientConfigConfirmServerShutdownCancelButton.setFont(getFontSetting());
+    settingsForwardingClientConfigConfirmServerShutdownCancelButton.addActionListener(new ActionListener()
+    {
+      public void actionPerformed(ActionEvent event)
+      {
+        /* if the Cancel button is pressed, leave everything untouched */
+        confirmDialog.dispose();
+      }
+    });
+    
+    GridBagLayout confirmPanelLayout = new GridBagLayout();
+    confirmPanel.setLayout(confirmPanelLayout);
+
+    GridBagConstraints confirmPanelConstraints = new GridBagConstraints();
+    confirmPanelConstraints.anchor = GridBagConstraints.NORTH;
+    confirmPanelConstraints.fill = GridBagConstraints.NONE;
+    confirmPanelConstraints.weighty = 0.0;
+    confirmPanelConstraints.weightx = 1.0;
+
+    confirmPanelConstraints.gridx = 0;
+    confirmPanelConstraints.gridy = 0;
+    confirmPanelConstraints.gridwidth = 2;
+    confirmPanelConstraints.insets = new Insets(10, 5, 20, 5);
+    confirmPanelLayout.setConstraints(settingsForwardingClientConfigConfirmServerShutdownLabel, confirmPanelConstraints);
+    confirmPanel.add(settingsForwardingClientConfigConfirmServerShutdownLabel);
+
+    confirmPanelConstraints.gridx = 0;
+    confirmPanelConstraints.gridy = 1;
+    confirmPanelConstraints.weighty = 1.0;
+    confirmPanelConstraints.fill = GridBagConstraints.HORIZONTAL;
+    confirmPanelConstraints.gridwidth = 1;
+    confirmPanelConstraints.insets = new Insets(0, 5, 15, 5);
+    confirmPanelLayout.setConstraints(settingsForwardingClientConfigConfirmServerShutdownShutdownButton, confirmPanelConstraints);
+    confirmPanel.add(settingsForwardingClientConfigConfirmServerShutdownShutdownButton);
+
+    confirmPanelConstraints.gridx = 1;
+    confirmPanelConstraints.gridy = 1;
+    confirmPanelConstraints.insets = new Insets(0, 5, 15, 5);
+    confirmPanelLayout.setConstraints(settingsForwardingClientConfigConfirmServerShutdownCancelButton, confirmPanelConstraints);
+    confirmPanel.add(settingsForwardingClientConfigConfirmServerShutdownCancelButton);
+
+    confirmDialog.align();
+    
+    confirmDialog.show();
+  }
+
 
 }

@@ -36,7 +36,7 @@ import anon.tor.Tor;
 
 public final class JAPConstants
 {
-	public static final String aktVersion = "00.03.036"; //Never change the layout of this line!
+	public static final String aktVersion = "00.03.037"; //Never change the layout of this line!
 	private static final String CVS_GENERATED_RELEASE_DATE = "$Date$";
 
 	//Warning: This is a little bit tricky,
@@ -220,9 +220,6 @@ public final class JAPConstants
 	public final static String CONFIG_INFOSERVICE_DISABLED="infoServiceDisabled";
 	public final static String CONFIG_INFOSERVICE_CHANGE="infoServiceChange";
 	public final static String CONFIG_INFOSERVICE_TIMEOUT="infoServiceTimeout";
-	public final static String CONFIG_CERT_CHECK_DISABLED="certCheckDisabled";
-	public final static String CONFIG_CERTIFICATE_AUTHORITIES="CertificateAuthorities";
-	public final static String CONFIG_CERTIFICATE_AUTHORITY="CertificateAuthority";
 	public final static String CONFIG_PROXY_HOST_NAME="proxyHostName";
 	public final static String CONFIG_PROXY_PORT_NUMBER="proxyPortNumber";
 	public final static String CONFIG_PROXY_TYPE="proxyType";

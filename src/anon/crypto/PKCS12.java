@@ -134,7 +134,6 @@ public final class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifier
 		m_ownerAlias = al;
 		m_keyPair = new AsymmetricCryptoKeyPair(privkey);
 		m_x509certificate = JAPCertificate.getInstance(cert);
-		m_x509certificate.setEnabled(true);
 	}
 
 	/**
@@ -151,7 +150,6 @@ public final class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifier
 		m_keyPair = a_keyPair;
 		m_x509certificate =
 			JAPCertificate.getInstance(a_ownerAlias, a_keyPair, a_validFrom, a_validTo);
-		m_x509certificate.setEnabled(true);
 	}
 
 	/**
@@ -185,7 +183,6 @@ public final class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifier
 		m_ownerAlias = a_ownerAlias;
 		m_keyPair = a_keyPair;
 		m_x509certificate = a_X509certificate;
-		m_x509certificate.setEnabled(true);
 	}
 
 
@@ -614,7 +611,6 @@ public final class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifier
 			m_x509certificate.getPublicKey().equals(a_X509certificate.getPublicKey()))
 		{
 			m_x509certificate = (JAPCertificate)a_X509certificate.clone();
-			m_x509certificate.setEnabled(true);
 			return true;
 		}
 

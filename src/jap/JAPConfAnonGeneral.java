@@ -39,6 +39,8 @@ import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.SwingConstants;
 
+import anon.crypto.SignatureVerifier;
+
 final class JAPConfAnonGeneral extends AbstractJAPConfModule
 {
 	private JCheckBox m_cbDummyTraffic, m_cbCertCheckDisabled, m_cbPreCreateRoutes;
@@ -69,7 +71,7 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		}
 		m_sliderDummyTrafficIntervall.setEnabled(iTmp > -1);
 		//cert tab
-		m_cbCertCheckDisabled.setSelected(JAPModel.isCertCheckDisabled());
+    m_cbCertCheckDisabled.setSelected(!SignatureVerifier.getInstance().isCheckSignatures());
 		m_cbPreCreateRoutes.setSelected(JAPModel.isPreCreateAnonRoutesEnabled());
 		m_cbAutoConnect.setSelected(JAPModel.getAutoConnect());
 		m_cbAutoReConnect.setSelected(JAPModel.getAutoReConnect());
@@ -80,7 +82,7 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 	{
 
 		//Cert seetings
-		m_Controller.setCertCheckDisabled(m_cbCertCheckDisabled.isSelected());
+    SignatureVerifier.getInstance().setCheckSignatures(!m_cbCertCheckDisabled.isSelected());
 		m_Controller.setPreCreateAnonRoutes(m_cbPreCreateRoutes.isSelected());
 		if (m_cbDummyTraffic.isSelected())
 		{

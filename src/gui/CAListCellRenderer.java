@@ -11,7 +11,7 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.ListCellRenderer;
 
-import anon.crypto.JAPCertificate;
+import anon.crypto.CertificateInfoStructure;
 
 final public class CAListCellRenderer extends JLabel implements ListCellRenderer
 {
@@ -28,8 +28,8 @@ final public class CAListCellRenderer extends JLabel implements ListCellRenderer
 		boolean isSelected, // is the cell selected
 		boolean cellHasFocus) // the list and the cell have the focus
 	{
-		JAPCertificate j = (JAPCertificate) value;
-		String issuerCN = (String) j.getIssuer().getValues().elementAt(0);
+		CertificateInfoStructure j = (CertificateInfoStructure) value;
+		String issuerCN = (String) j.getCertificate().getIssuer().getValues().elementAt(0);
 		setText(issuerCN);
 
 //         setIcon((s.length() > 10) ? longIcon : shortIcon);
@@ -43,7 +43,7 @@ final public class CAListCellRenderer extends JLabel implements ListCellRenderer
 			setBackground(list.getBackground());
 			setForeground(list.getForeground());
 		}
-		if (j.getEnabled())
+		if (j.isEnabled())
 		{
 			setIcon(enabledIcon);
 		}

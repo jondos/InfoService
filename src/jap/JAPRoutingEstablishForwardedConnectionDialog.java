@@ -67,7 +67,6 @@ import javax.swing.text.PlainDocument;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import anon.crypto.JAPCertificateStore;
 import anon.infoservice.ListenerInterface;
 import anon.infoservice.MixCascade;
 import forward.client.ClientForwardException;
@@ -865,11 +864,7 @@ public class JAPRoutingEstablishForwardedConnectionDialog {
         /* this is the get connection offer thread */
         try
         {
-          JAPCertificateStore certificateStore = null;
-          if (JAPModel.isCertCheckDisabled() == false) {
-            certificateStore = JAPModel.getCertificateStore();
-          }
-          ForwardConnectionDescriptor connectionDescriptor = JAPModel.getInstance().getRoutingSettings().getConnectionDescriptor(certificateStore);
+          ForwardConnectionDescriptor connectionDescriptor = JAPModel.getInstance().getRoutingSettings().getConnectionDescriptor();
           /* we are successful -> store the descriptor from the forwarder and show the next step */
           fetchedDescriptor.addElement(connectionDescriptor);
         }
