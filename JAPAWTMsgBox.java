@@ -44,6 +44,7 @@ final class JAPAWTMsgBox extends WindowAdapter implements ActionListener
 	private Dialog d;
 	private JAPAWTMsgBox(Frame parent,String msg,String title)
 		{
+		try{
 			d=new Dialog(parent,title,true);
 			d.addWindowListener(this);
 			GridLayout g=new GridLayout(0,1,0,0);
@@ -63,20 +64,23 @@ final class JAPAWTMsgBox extends WindowAdapter implements ActionListener
 			p.add(b);
 			d.add("South",p);
 			p=new Panel();
-	//		p.resize(7,7);
 			p.setSize(7,7);
 			d.add("North",p);
 			p=new Panel();
-		//	p.resize(7,7);
 			p.setSize(7,7);
 			d.add("West",p);
 			p=new Panel();
 			p.setSize(7,7);
-		//	p.resize(7,7);
 			d.add("East",p);
-			d.setResizable(false);
 			d.pack();
+			d.setResizable(false);
 			JAPUtil.centerFrame(d);
+			d.toFront();
+			}
+			catch(Exception e)
+			{
+			e.printStackTrace();
+			}
 		}
 	
 	/** Shows a Message Box.
@@ -86,17 +90,16 @@ final class JAPAWTMsgBox extends WindowAdapter implements ActionListener
 	 */
 	final static public int MsgBox(Frame parent,String msg,String title)
 		{
-			JAPAWTMsgBox msgbox=new JAPAWTMsgBox(parent,msg,title);
-			msgbox.d.show(/*true*/);
+		try{	
+		    JAPAWTMsgBox msgbox=new JAPAWTMsgBox(parent,msg,title);
+			}
+			catch(Exception e)
+			{
+			e.printStackTrace();
+			return -1;
+			}
 			return 0;
 		}
-	/*   public boolean action(Event evt, Object what) {
-        if ("   Ok   ".equals(what)) {
-            dispose();
-            return true;
-        }
-        return false;
-    }*/
 
 	public void windowClosing(WindowEvent e)
 		{

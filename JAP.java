@@ -86,7 +86,7 @@ class JAP extends Frame{
 		JAPMessages.init();
 		
 		// Show splash screen
-		JAPSplash splash = new JAPSplash();
+		JAPSplash splash = new JAPSplash(this);
 		
 		//Test for Swing....
 		try

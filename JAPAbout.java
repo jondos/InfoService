@@ -156,10 +156,11 @@ public class JAPAbout extends JDialog
 				getLayeredPane().setLayout(null);
 				getLayeredPane().add(sp);
 				sp.setLocation(5,70);
-				setResizable(false);
 				pack();
 				setLocationRelativeTo(parent);
+				setResizable(false);
 				setVisible(true);
+				toFront();
 				sp.startIt();
 			}
 		
