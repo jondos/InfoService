@@ -36,6 +36,8 @@ import java.io.BufferedOutputStream;
 import java.io.DataOutputStream;
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
+import java.io.BufferedWriter;
+import java.io.OutputStreamWriter;
 import java.lang.Integer;
 import java.util.Enumeration;
 import java.math.BigInteger;
@@ -56,6 +58,8 @@ final class JAPMuxSocket implements Runnable
 		private volatile boolean m_bRunFlag;
 		private boolean m_bIsConnected=false;
 		//private ThreadGroup threadgroupChannels;
+		
+		public static final String CRLF="\r\n";
 		
 		public final static int KEY_SIZE=16;
 		public final static int DATA_SIZE=992;
@@ -124,7 +128,12 @@ final class JAPMuxSocket implements Runnable
 				return (ms_MuxSocket!=null&&ms_MuxSocket.m_bIsConnected);
 			}
 
-		public int connect(String host, int port)
+		//2001-02-20(HF)
+		public int connect(String host, int port) {
+			return connectViaFirewall(host,port,null,-1);
+		}
+		//2001-02-20(HF)
+		public int connectViaFirewall(String host, int port, String fwHost, int fwPort)
 			{
 				synchronized(this)
 					{
@@ -132,16 +141,61 @@ final class JAPMuxSocket implements Runnable
 							return E_ALREADY_CONNECTED;
 						try
 							{
-								JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Try to connect to Mix");
-								ioSocket=new Socket(host,port);
-								JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Connected to Mix - starting Key-Exchange...");
+								//2001-02-20(HF)
+								if (fwHost==null) {
+									//Connect directly to anon service
+									JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:Try to connect directly to Mix");
+									ioSocket=new Socket(host,port);
+									inDataStream=new DataInputStream(ioSocket.getInputStream());
+								} else {
+									//Connect via a firewall betwenn JAP and anon service
+									JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:Try to connect via proxy to Mix");
+									ioSocket=new Socket(fwHost,fwPort);
+									BufferedWriter o=new BufferedWriter(new OutputStreamWriter(ioSocket.getOutputStream()));
+									inDataStream=new DataInputStream(ioSocket.getInputStream());
+									//Write stuff for connecting over proxy/firewall
+									// should look like this example
+									//   CONNECT www.inf.tu-dresden.de:443 HTTP/1.0
+									//   Connection: Keep-Alive
+									//   Proxy-Connection: Keep-Alive
+									o.write("CONNECT "+host+":"+port+" HTTP/1.1"+CRLF);
+									o.write("Connection: Keep-Alive"+CRLF);
+									o.write("Proxy-Connection: Keep-Alive"+CRLF);
+									o.write(""+CRLF);
+									o.flush();
+									//o.close();
+									
+									//Read response from proxy/firewall
+									// a typical response is
+									//   HTTP/1.0 200 Connection established
+									String l = null;
+									try {
+										l = this.readLine(inDataStream);
+									}
+									catch (Exception e) {
+										JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.NET,"JAPMuxSocket:Exception while reading response from proxy server: "+e);
+									}
+									JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:Response from firewall is <"+l+">");
+									if (l.indexOf("200")==-1) {
+										JAPDebug.out(JAPDebug.EMERG,JAPDebug.NET,"JAPMuxSocket:JAP will probably NOT work over this firewall! Sorry.");
+									}
+									JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:Reading remainig headers...");
+									l = this.readLine(inDataStream);
+									while (l.length() != 0) {
+										JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket: <"+l+">");
+										l = this.readLine(inDataStream);
+									}
+									
+								}
+								JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:Connected to Mix! Now starting key exchange...");
 								outDataStream=new DataOutputStream(new BufferedOutputStream(ioSocket.getOutputStream(),DATA_SIZE+6));
-								inDataStream=new DataInputStream(ioSocket.getInputStream());
-								JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Reading len...");
+//								inDataStream=new DataInputStream(ioSocket.getInputStream());
+								JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:Reading len...");
 								ioSocket.setSoTimeout(10000); //Timout 10 second
 								inDataStream.readUnsignedShort(); //len.. unitressteing at the moment
-								JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Reading Mix-Count...");
+								JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:Reading chainlen...");
 								chainlen=inDataStream.readByte();
+								JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:chainlen="+chainlen);
 								arASymCipher=new JAPASymCipher[chainlen];
 								for(int i=chainlen-1;i>=0;i--)
 									{
@@ -156,11 +210,12 @@ final class JAPMuxSocket implements Runnable
 										BigInteger e=new BigInteger(1,buff);
 										arASymCipher[i].setPublicKey(n,e);
 									}
-								ioSocket.setSoTimeout(0); //Now we have a unlimit time out...
+								ioSocket.setSoTimeout(0); //Now we have a unlimited time out...
 								//threadgroupChannels=new ThreadGroup("muxchannels");
 							}
 						catch(Exception e)
 							{
+								JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.NET,"JAPMuxSocket:Exception during connection: "+e);
 								arASymCipher=null;
 								m_bIsConnected=false;
 								return -1;
@@ -170,6 +225,20 @@ final class JAPMuxSocket implements Runnable
 					}
 			}
 
+    private String readLine(DataInputStream inputStream) throws Exception {
+	String returnString = "";
+	try{
+	    int byteRead = inputStream.read();
+	    while (byteRead != 10 && byteRead != -1) {
+		if (byteRead != 13) returnString += (char)byteRead;
+		byteRead = inputStream.read();
+	    }
+	} catch (Exception e) {
+	    throw e;
+	}
+	return returnString;
+    }
+	
 		public int newConnection(JAPSocket s,int type) throws ConnectException
 			{
 				synchronized(this)

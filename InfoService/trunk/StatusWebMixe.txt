@@ -16,9 +16,11 @@ JAPDirectConnection ggf. erweitern/aendern, dass direkte beobachtbare
 ?? bug: Bei Click auf einstellungen label change
 sprache aendern settings implementieren
 !! (!!=immer zu tun) properties-file: fehlende Texte zufuegen
-!! Hilfetexte
+
 
 ##ERLEDIGT (= OK)
+2000-02-02 Fehlermeldungen in JAP.java verbessert 
+           (Check auf VM-Version, Swing etc)
 OK Neue Klasse JAPFeedback, die ueber den InfoService das Anonym-O-Meter
    bedient
 OK Bei Download einer neuen JAP-Version: Frame mit Fortschrittsanzeige
