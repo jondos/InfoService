@@ -303,7 +303,7 @@
   <property category="sys" name="InstanceVisibility" value="0"/>
   <property category="sys" name="JDK" value="java version 1.5.0-rc-b63"/>
   <property category="sys" name="LastTag" value="192"/>
-  <property category="sys" name="Libraries" value="http;mac;XML-1.1;Apache XML-RPC;BouncyCastleLightForJAP;JUnit;junitx;ApacheFTPClient;Swing"/>
+  <property category="sys" name="Libraries" value="http;mac;XML-1.1;Apache XML-RPC;BouncyCastleLightForJAP;JUnit;junitx;ApacheFTPClient;Swing;ApacheBzip2"/>
   <property category="sys" name="MakeStable" value="0"/>
   <property category="sys" name="OutPath" value="classes"/>
   <property category="sys" name="SourcePath" value="src;test"/>
@@ -421,7 +421,7 @@
     <file path="images/north.gif"/>
     <file path="images/red.gif"/>
     <file path="images/reload.gif"/>
-    <file path="images/reloaddisabled.gif"/>
+    <file path="images/reloaddisabled_anim.gif"/>
     <file path="images/reloadrollover.gif"/>
     <file path="images/saveicon.gif"/>
     <file path="images/server16.gif"/>
