@@ -35,7 +35,6 @@ public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListe
 
     private final String COMMAND_SEARCH = "SEARCH";
     final JFileChooser m_fileChooser = new JFileChooser(System.getProperty("user.dir", ""));
-    boolean checkPage = false;
 
     public JAPWelcomeWizardPage()
       {
@@ -67,7 +66,7 @@ public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListe
         m_panelConstraints.gridwidth = 1 ;
         m_panelComponentsLayout.setConstraints(m_tfJapPath, m_panelConstraints);
         m_panelComponents.add(m_tfJapPath, m_panelConstraints);
-        m_tfJapPath.setText(System.getProperty("user.dir",""));
+        m_tfJapPath.setText(System.getProperty("user.dir",".")+"/JAP.jar");
 
 
         m_chooseFolder_bttn = new JButton(JAPMessages.getString("updateM_chooseFolder_bttn"));
@@ -88,26 +87,28 @@ public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListe
         m_panelComponents.add(m_labelClickNext,m_panelConstraints);
 
       }
+
       // is a file chosen? called by host when pressed next
       public boolean checkPage()
-      {
-         // needed for testing whether the user typed in a correct File
-         File testFile;
-            if(!m_tfJapPath.getText().equals(""))
-                {//test whether it's a file
-                  testFile = new File(m_tfJapPath.getText());
-                  if(testFile.isFile() && testFile.exists())
-                  {
-                    selectedFile = testFile;
-                    checkPage = true;
-                  }else
-                  {
-                    m_tfJapPath.setText("");
-                    checkPage = false;
-                  }
+        {
+          // needed for testing whether the user typed in a correct File
+          File testFile;
+          boolean checkPage = false;
+          if(!m_tfJapPath.getText().equals(""))
+            {//test whether it's a file
+              testFile = new File(m_tfJapPath.getText());
+              if(testFile.isFile() && testFile.exists())
+                {
+                  selectedFile = testFile;
+                  checkPage = true;
                 }
+              else
+                {
+                  checkPage = false;
+                }
+            }
           return checkPage;
-      }
+        }
 
       // there is sthing wrong with the selection
       public void showInformationDialog(String message)
@@ -119,7 +120,7 @@ public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListe
       {
           this.setEnabled(false);
           final JFrame m_fileChooserDialog = new JFrame("Directory");
-          final JFileChooser m_fileChooser = new JFileChooser(System.getProperty("user.dir", ""));
+          final JFileChooser m_fileChooser = new JFileChooser(m_tfJapPath.getText());
          // int returnval = m_fileChooser.showOpenDialog(m_fileChooserDialog);
           m_fileChooser.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -182,7 +183,7 @@ public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListe
 
                             showInformationDialog(JAPMessages.getString("updateM_fileChooserDialogNotAFile"));
                             m_tfJapPath.setText("");
-                            checkPage = false;
+                            //checkPage = false;
 
                           }else if(!selectedFile.exists())
                           {
@@ -191,18 +192,18 @@ public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListe
                                   m_fileChooser.cancelSelection();
                                   showInformationDialog(JAPMessages.getString("updateM_fileChooserDialogFileNotExists"));
                                   m_tfJapPath.setText("");
-                                  checkPage = false;
+                                  //checkPage = false;
                               }else
                               {//user wrote sthing in the textfield --> test wheter it exists
                                   m_tfJapPath.getText();
 
-                                  checkPage = true;
+                                //  checkPage = true;
                               }
                           }
                           else
                           {
                     //System.out.println(selectedFile.getName());
-                    checkPage = true;
+                    //checkPage = true;
                     m_tfJapPath.setText(selectedFile.getAbsolutePath());
 
                     //updateWizard.setSelectedFile(selectedFile.getAbsolutePath());

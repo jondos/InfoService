@@ -39,15 +39,15 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
     // path ->> path to the chosen File without extension i.e. 'C:\Programme\Jap'
     private String fileName,extension,path;
 
-    private final String ext_backup = ".backup";
-    private final String ext_new = ".new";
+    private final static String ext_backup = ".backup";
+    private final static String ext_new = ".new";
 
     private boolean updateAborted = false;
-    private boolean incrementalUpdate = true; // should be true by default
+    private boolean incrementalUpdate = false; // should be true by default
     //which version chose the user
     private String version;
     //which type dev or rel?
-    private int type;
+    private JAPVersionInfo japVersionInfo;
 
     //aktJapJar --> the original JAP.jar; cp_aktJapJar --> the copy of the original File extended by the current version-number
     //i.e. JAPaktVersion.jar; cp_updJapJar --> the downloaded Upgrade extended by the version-number
@@ -64,14 +64,14 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
     private Thread updateThread;
     private UpdateListener updateListener;
 
-    public JAPUpdateWizard(String version, int type)
+    public JAPUpdateWizard(String version, JAPVersionInfo info)
       {
         this.version = version;
-        this.type = type;
+        japVersionInfo = info;
         updateWizard = this;
         setWizardTitle("JAP Update Wizard");
         welcomePage = new JAPWelcomeWizardPage();
-        downloadPage = new JAPDownloadWizardPage(version, type);
+        downloadPage = new JAPDownloadWizardPage(version);
         finishPage = new JAPFinishWizardPage("");
 
         addWizardPage(0,welcomePage);
@@ -426,27 +426,25 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
         InfoService infoService;
         URL jarUrl;
         final UpdateListener l = listener;
-
-
-
-                      infoService = JAPController.getController().getInfoService();
-                      JAPVersionInfo japVersionInfo = infoService.getJAPVersionInfo(type);
-                      URL codeBase=japVersionInfo.getCodeBase();
-                      // ErrorMessage connection with infoservice failed
-                      try{
-                      //jarUrl=new URL(codeBase,japVersionInfo.getJAPJarFileName()+"?version-id="+japVersionInfo.getVersion());
-                                                              //signedJAP.jar                     //determined by JAPUpdate  00.01.068
-                      //jarUrl = new URL(codeBase,japVersionInfo.getJAPJarFileName()+"?version-id="+version+"&current-version-id="+JAPConstants.aktVersion2);
-                      jarUrl = new URL(codeBase,japVersionInfo.getJAPJarFileName()+"?version-id="+"00.01.037"+"&current-version-id="+"00.01.037");
-                      }
-                      catch(Exception e)
-                        {
-                          return -1;
-                        }
-                      //jarUrl = new URL(japVersionInfo.getCodeBase());
-                      //jarUrl =new URL(jarUrl.getProtocol(),jarUrl.getHost(),jarUrl.getPort(),jarUrl.getFile()+japVersionInfo.getJAPJarFileName());
-                      listener.progress(0,0,UpdateListener.DOWNLOAD_START);
-                     // System.out.println("Download "+codeBase+japVersionInfo.getJAPJarFileName()+"?version-id="+version+"&current-version-id="+JAPConstants.aktVersion2);
+        infoService = JAPController.getInfoService();
+          //JAPVersionInfo japVersionInfo = infoService.getJAPVersionInfo(type);
+        URL codeBase=japVersionInfo.getCodeBase();
+          // ErrorMessage connection with infoservice failed
+        try
+          {
+            if(incrementalUpdate)
+              jarUrl = new URL(codeBase,japVersionInfo.getJAPJarFileName()+"?version-id="+"00.01.037"+"&current-version-id="+"00.01.037");
+            else
+             jarUrl = new URL(codeBase,japVersionInfo.getJAPJarFileName()+"?version-id="+japVersionInfo.getVersion());
+          }
+        catch(Exception e)
+          {
+            return -1;
+          }
+          //jarUrl = new URL(japVersionInfo.getCodeBase());
+          //jarUrl =new URL(jarUrl.getProtocol(),jarUrl.getHost(),jarUrl.getPort(),jarUrl.getFile()+japVersionInfo.getJAPJarFileName());
+        listener.progress(0,0,UpdateListener.DOWNLOAD_START);
+         // System.out.println("Download "+codeBase+japVersionInfo.getJAPJarFileName()+"?version-id="+version+"&current-version-id="+JAPConstants.aktVersion2);
 
 
              //   }
@@ -668,7 +666,7 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
 
       public static void main(String[]args)
       {
-         JAPUpdateWizard juw = new JAPUpdateWizard(JAPConstants.aktVersion2,InfoService.JAP_RELEASE_VERSION);
+         //JAPUpdateWizard juw = new JAPUpdateWizard(JAPConstants.aktVersion2,InfoService.JAP_RELEASE_VERSION);
       }
 
   }

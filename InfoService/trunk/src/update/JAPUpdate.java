@@ -62,7 +62,7 @@ public class JAPUpdate implements ActionListener,ItemListener,Runnable
     private JTextArea m_taInfo;
     private JLabel m_labelVersion, m_labelDate;
 
-    private JAPController japController;
+   // private JAPController japController;
     private JComboBox m_comboType;
     private JButton m_bttnUpgrade;
 
@@ -74,14 +74,9 @@ public class JAPUpdate implements ActionListener,ItemListener,Runnable
     private final String COMMAND_UPGRADE="UPGRADE";
     private final String COMMAND_HELP="HELP";
 
-    // save the jnlp-Files and give it to JAPUpdateWizard
-    //private File jnlp_dev, jnlp_rel;
-    private boolean user_chose_released = true;
-
     public JAPUpdate()
       {
-        japController = JAPController.getController();
-        m_Dialog = new JDialog(japController.getView(),"JAP Update",true);
+        m_Dialog = new JDialog(JAPController.getView(),"JAP Update",true);
 
         GridBagLayout gridBagFrame = new GridBagLayout();
         m_Dialog.getContentPane().setLayout(gridBagFrame);
@@ -229,7 +224,7 @@ public class JAPUpdate implements ActionListener,ItemListener,Runnable
     public void run()
       {//Thread Run Loop for getting the Version Infos...
         m_taInfo.setText(JAPMessages.getString("updateFetchVersionInfo"));
-        InfoService infoService=japController.getInfoService();
+        InfoService infoService=JAPController.getInfoService();
         m_releaseVersion=infoService.getJAPVersionInfo(InfoService.JAP_RELEASE_VERSION);
         m_devVersion=infoService.getJAPVersionInfo(InfoService.JAP_DEVELOPMENT_VERSION);
 
@@ -259,14 +254,10 @@ public class JAPUpdate implements ActionListener,ItemListener,Runnable
             try{m_threadGetVersionInfo.join();}catch(Exception ex){}
             m_Dialog.dispose();
             // User' wants to Update --> give the version Info and the jnlp-file
-                 if(user_chose_released)
-                    {
-                      new JAPUpdateWizard(m_labelVersion.getText(), InfoService.JAP_RELEASE_VERSION);
-                    }
-                 else if (!(user_chose_released))
-                    {
-                      new JAPUpdateWizard(m_labelVersion.getText(), InfoService.JAP_DEVELOPMENT_VERSION);
-                    }
+            if(m_comboType.getSelectedIndex()==0)
+              new JAPUpdateWizard(m_labelVersion.getText(), m_releaseVersion);
+            else
+              new JAPUpdateWizard(m_labelVersion.getText(), m_devVersion);
           }
       }
 
@@ -278,13 +269,11 @@ public class JAPUpdate implements ActionListener,ItemListener,Runnable
               {
                 m_labelVersion.setText(m_releaseVersion.getVersion());
                 m_labelDate.setText(m_releaseVersion.getDate());
-                user_chose_released = true;
               }
             else
               {
                 m_labelVersion.setText(m_devVersion.getVersion());
                 m_labelDate.setText(m_devVersion.getDate());
-                user_chose_released = false;
               }
           }
       }
