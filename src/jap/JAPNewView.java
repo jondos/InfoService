@@ -1408,11 +1408,21 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		}
 		else if (source == m_rbAnonOn || source == m_rbAnonOff)
 		{
-			m_Controller.setAnonMode(m_rbAnonOn.isSelected());
+      if (m_rbAnonOn.isSelected()) {
+        m_Controller.startAnonymousMode(this);
+      }
+      else {      
+        m_Controller.setAnonMode(false);
+      }
 		}
 		else if (source == m_cbAnonymityOn)
 		{
-			m_Controller.setAnonMode(m_cbAnonymityOn.isSelected());
+      if (m_cbAnonymityOn.isSelected()) {
+        m_Controller.startAnonymousMode(this);
+      }
+      else {
+        m_Controller.setAnonMode(false);
+      }
 		}
 
 		else
@@ -1638,6 +1648,12 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 										   JAPRoutingSettings.ROUTING_MODE_SERVER);
 				m_cbForwardingSmall.setSelected(JAPModel.getInstance().getRoutingSettings().getRoutingMode() ==
 												JAPRoutingSettings.ROUTING_MODE_SERVER);
+        /* if the forwarding client is running, it should not be possible to start the forwarding
+         * server, also it should not be possible to change the selected mixcascade
+         */
+        m_cbForwarding.setEnabled(JAPModel.getInstance().getRoutingSettings().getRoutingMode() != JAPRoutingSettings.ROUTING_MODE_CLIENT);
+        m_cbForwardingSmall.setEnabled(JAPModel.getInstance().getRoutingSettings().getRoutingMode() != JAPRoutingSettings.ROUTING_MODE_CLIENT);
+        m_comboAnonServices.setEnabled(JAPModel.getInstance().getRoutingSettings().getRoutingMode() != JAPRoutingSettings.ROUTING_MODE_CLIENT);     
 			}
 			catch (Throwable t)
 			{

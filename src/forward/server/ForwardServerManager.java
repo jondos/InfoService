@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2000 - 2004, The JAP-Team
+ Copyright (c) 2000 - 2005, The JAP-Team
  All rights reserved.
  Redistribution and use in source and binary forms, with or without modification,
  are permitted provided that the following conditions are met:
@@ -189,27 +189,52 @@ public class ForwardServerManager {
    *
    * @param a_portNumber The portnumber where the new server socket will listen on.
    *
-   * @return True, if there was no error while establishing the socket or false, if there was one.
+   * @return An Object with the ID of the created ServerManager, which can be used to close that
+   *         ServerManager. If there occured an error while opening the socket or there is no
+   *         ForwardingScheduler running (normally because the forwarding server is not running),
+   *         null is returned.
    */
-  public boolean addListenSocket(int a_portNumber) {
-    boolean success = true;
+  public Object addListenSocket(int a_portNumber) {
+    Object serverManagerId = null;
     synchronized (this) {
       /* only one operation on the scheduler at one time */
       if (m_forwardScheduler != null) {
         ServerSocketManager serverSocketManager = new ServerSocketManager(a_portNumber);
         try {
           m_forwardScheduler.addServerManager(serverSocketManager);
+          /* ServerSocketManager established successful */
+          serverManagerId = serverSocketManager.getId();
+          LogHolder.log(LogLevel.DEBUG, LogType.NET, "ForwardServerManager: addListenSocket: Establishing ServerManager with ID '" + serverManagerId.toString() + "' was successful.");
         }
         catch (Exception e) {     
-          success = false;
-          LogHolder.log(LogLevel.EXCEPTION, LogType.NET, "ForwardServerManager: addListenSocket: Error establishing socket (" + e.toString() + ").");
+          LogHolder.log(LogLevel.EXCEPTION, LogType.NET, "ForwardServerManager: addListenSocket: Error establishing socket at port " + Integer.toString(a_portNumber) + ". Reason: " + e.toString());
         }
       }
-      else {
-        success = false;
+    }
+    return serverManagerId;
+  }
+
+  /**
+   * Removes one ServerManager from the list of associated ServerManagers of this
+   * ForwardScheduler. The shutdown() method is called on that ServerManager and it is removed
+   * from the internal list. Active forwarded connections are not affected by this call. If the
+   * ForwardScheduler isn't running or it doesn't know any ServerManager with the specified ID,
+   * nothing is done.
+   *
+   * @param a_serverManagerId The ID of the ServerManager to close, see IServerManager.getId().
+   */
+  public void removeServerManager(Object a_serverManagerId) {
+    if (a_serverManagerId != null) {
+      synchronized (this) {
+        if (m_forwardScheduler != null) {
+          m_forwardScheduler.removeServerManager(a_serverManagerId);
+          LogHolder.log(LogLevel.DEBUG, LogType.NET, "ForwardServerManager: removeServerManager: ServerManager with ID '" + a_serverManagerId.toString() + "' was removed (if it was running).");
+        }
       }
     }
-    return success;
+    else {
+      LogHolder.log(LogLevel.EXCEPTION, LogType.NET, "ForwardServerManager: removeServerManager: ServerManager ID null is invalid.");
+    }  
   }
   
   /**

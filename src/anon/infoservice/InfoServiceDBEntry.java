@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2000 - 2004, The JAP-Team
+ Copyright (c) 2000 - 2005, The JAP-Team
  All rights reserved.
  Redistribution and use in source and binary forms, with or without modification,
  are permitted provided that the following conditions are met:
@@ -29,6 +29,7 @@ package anon.infoservice;
 
 import java.io.IOException;
 import java.util.Enumeration;
+import java.util.NoSuchElementException;
 import java.util.Vector;
 
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -525,69 +526,82 @@ final public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncod
 	/**
 	 * Fetches the specified XML document from the infoservice. If a ListenerInterface can't be
 	 * reached, automatically a new one is chosen. If we can't reach the infoservice at all, an
-	 * Exception is thrown.
+   * Exception is thrown. If the operation is interrupted via the Thread instance, this method
+   * ends immediately but also the interrupted flag of the Thread is set.
 	 *
 	 * @param a_httpRequest The structure with the HTTP request.
 	 *
 	 * @return The specified XML document.
 	 */
-	private Document getXmlDocument(HttpRequestStructure a_httpRequest) throws Exception
+  private Document getXmlDocument(final HttpRequestStructure a_httpRequest) throws Exception
 	{
 		/* make sure, that we are connected */
 		int connectionCounter = 0;
 		HTTPConnectionDescriptor currentConnectionDescriptor = null;
-		while (connectionCounter < m_listenerInterfaces.size())
+    while ((connectionCounter < m_listenerInterfaces.size()) && (Thread.currentThread().isInterrupted() == false))
 		{
 			/* update the connectionCounter */
 			connectionCounter++;
 			/* get the next connection descriptor by supplying the last one */
 			currentConnectionDescriptor = connectToInfoService(currentConnectionDescriptor);
-			HTTPConnection currentConnection = currentConnectionDescriptor.getConnection();
-			try
-			{
-				HTTPResponse response = null;
-				if (a_httpRequest.getRequestCommand() == HttpRequestStructure.HTTP_COMMAND_GET)
-				{
-					LogHolder.log(LogLevel.DEBUG, LogType.NET,
-								  "InfoService: getXmlDocument: Get: " + currentConnection.getHost() + ":" +
-								  Integer.toString(currentConnection.getPort()) +
-								  a_httpRequest.getRequestFileName());
-					response = currentConnection.Get(a_httpRequest.getRequestFileName());
-				}
-				else
-				{
-					if (a_httpRequest.getRequestCommand() == HttpRequestStructure.HTTP_COMMAND_POST)
-					{
-						LogHolder.log(LogLevel.DEBUG, LogType.NET,
-									  "InfoService: getXmlDocument: Post: " + currentConnection.getHost() +
-									  ":" + Integer.toString(currentConnection.getPort()) +
-									  a_httpRequest.getRequestFileName());
+      final HTTPConnection currentConnection = currentConnectionDescriptor.getConnection();
+      
+      /* use a Vector as storage for the the result of the communication */
+      final Vector responseStorage = new Vector();
+      /* we need the possibility to interrupt the infoservice communication, but also we need to
+       * know whether the operation was interupted by an external call of Thread.interrupt() or
+       * a timeout, thus it is not enough to catch the InteruptedIOException because that
+       * Exception is thrown in both cases, so we cannot distinguish the both -> solution make
+       * an extra Thread for the communication
+       */
+      Thread communicationThread = new Thread(new Runnable() {
+        public void run() {
+          try {
+            if (a_httpRequest.getRequestCommand() == HttpRequestStructure.HTTP_COMMAND_GET) {
+              LogHolder.log(LogLevel.DEBUG, LogType.NET, "InfoServiceDBEntry: getXmlDocument: Get: " + currentConnection.getHost() + ":" + Integer.toString(currentConnection.getPort()) + a_httpRequest.getRequestFileName());
+              responseStorage.addElement(currentConnection.Get(a_httpRequest.getRequestFileName()));
+            }
+            else {
+              if (a_httpRequest.getRequestCommand() == HttpRequestStructure.HTTP_COMMAND_POST) {
+                LogHolder.log(LogLevel.DEBUG, LogType.NET, "InfoServiceDBEntry: getXmlDocument: Post: " + currentConnection.getHost() + ":" + Integer.toString(currentConnection.getPort()) + a_httpRequest.getRequestFileName());
 						String postData = "";
-						if (a_httpRequest.getRequestPostDocument() != null)
-						{
+                if (a_httpRequest.getRequestPostDocument() != null) {
 							postData = XMLUtil.toString(a_httpRequest.getRequestPostDocument());
 						}
-						response = currentConnection.Post(a_httpRequest.getRequestFileName(), postData);
+                responseStorage.addElement(currentConnection.Post(a_httpRequest.getRequestFileName(), postData));
 					}
-					else
-					{
-						throw (new Exception("InfoService: getXmlDocument: Invalid HTTP command."));
+              else {
+                throw (new Exception("InfoServiceDBEntry: getXmlDocument: Invalid HTTP command."));
+              }
+            }
+          }
+          catch (Exception e) {
+            LogHolder.log(LogLevel.ERR, LogType.NET, "InfoServiceDBEntry: getXmlDocument: Connection to infoservice interface failed: " + currentConnection.getHost() + ":" + Integer.toString(currentConnection.getPort()) + a_httpRequest.getRequestFileName() + " Reason: " + e.toString());
 					}
 				}
-				Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(response.
-					getInputStream());
+      });
+      communicationThread.setDaemon(true);
+      communicationThread.start();
+      try {
+        communicationThread.join();
+        try {
+          HTTPResponse response = (HTTPResponse)(responseStorage.firstElement());  
+          Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(response.getInputStream());
 				/* fetching the document was successful, leave this method */
 				return doc;
 			}
-			catch (IOException e)
-			{
-				/* connection with the current interface was not possible -> connect to another interface;
-				 * any other exception is a serious error -> we throw it
-				 */
-				LogHolder.log(LogLevel.ERR, LogType.NET,
-							  "InfoService: getXmlDocument: Connection to infoservice interface failed: " +
-							  currentConnection.getHost() + ":" + Integer.toString(currentConnection.getPort()) +
-							  a_httpRequest.getRequestFileName());
+        catch (NoSuchElementException e) {
+          /* fetching the information was not successful -> do nothing */
+        }   
+      }
+      catch (InterruptedException e) {
+        /* operation was interupted from the outside -> set the intterupted flag for the Thread
+         * again, so the caller of the methode can evaluate it, also interrupt the communication
+         * thread, but don't wait for the end of that thread
+         */
+        LogHolder.log(LogLevel.INFO, LogType.NET, "InfoServiceDBEntry: getXmlDocument: Current operation was interrupted.");
+        Thread.currentThread().interrupt();
+        communicationThread.interrupt();
 			}
 		}
 		/* all interfaces tested, we can't find a valid interface */

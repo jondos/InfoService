@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2000 - 2004, The JAP-Team
+ Copyright (c) 2000 - 2005, The JAP-Team
  All rights reserved.
  Redistribution and use in source and binary forms, with or without modification,
  are permitted provided that the following conditions are met:
@@ -126,6 +126,12 @@ public class JAPRoutingSettings extends Observable
   private int m_serverPort;
 
   /**
+   * Stores the ID of the current ServerManager which manages the server socket of the forwarding
+   * server. If the forwarding server is not running, this value is always null.
+   */
+  private Object m_currentServerManagerId;
+
+  /**
    * Stores the maximum bandwidth, which can be provided for forwarding. The current bandwidth
    * for forwarding can be smaller than this value.
    */
@@ -157,9 +163,20 @@ public class JAPRoutingSettings extends Observable
   private int m_forwarderPort;
 
   /**
-   * Stores, whether connections to the infoservice needs also forwarding.
+   * Stores, whether connections to the infoservice needs also forwarding. Also the instance
+   * fetching the information about a forwarder should use this to decide, whether it is possible
+   * to obtain the information about the forwarder directly from the InfoServices or the
+   * mail-gateway has to be used in order to obtain that information.
    */
   private boolean m_forwardInfoService;
+
+  /**
+   * Stores whether JAP shall connect to a forwarder when starting the anonymity mode. This value
+   * doesn't have any meaning within JAPRoutingSettings, so it is still possible to enable the
+   * client forwarding mode, if this value is false. Anybody who is starting the anonymity mode
+   * should check this value and do the necessary things.
+   */
+  private boolean m_connectViaForwarder;
 
   /**
    * Needed for synchronization if we open a new forwarded connection and have to shutdown an old
@@ -225,7 +242,7 @@ public class JAPRoutingSettings extends Observable
    * about the current registration status at the infoservices for the local forwarding server.
    */
   private JAPRoutingRegistrationStatusObserver m_registrationStatusObserver;
-  
+   
 
   /**
    * This creates a new instance of JAPRoutingSettings. We are doing some initialization here.
@@ -244,6 +261,7 @@ public class JAPRoutingSettings extends Observable
     m_connections = m_bandwidth / JAPConstants.ROUTING_BANDWIDTH_PER_USER;
     m_forwardedConnection = null;
     m_forwardInfoService = false;
+    m_connectViaForwarder = false;
     m_forwarderHost = null;
     m_forwarderPort = -1;
     m_waitForShutdownCall = false;
@@ -252,6 +270,7 @@ public class JAPRoutingSettings extends Observable
     m_runningPropagandists = new Vector();
     m_startPropagandaThread = null;
     m_propagandaStarted = false;
+    m_currentServerManagerId = null;
     m_registrationInfoServicesStore = new JAPRoutingRegistrationInfoServices();
     /* add the registration infoservices store to the observers of JAPRoutingSettings */
     addObserver(m_registrationInfoServicesStore);
@@ -301,6 +320,8 @@ public class JAPRoutingSettings extends Observable
           ForwardServerManager.getInstance().shutdownForwarding();
           /* stop the propaganda */
           stopPropaganda();
+          /* remove the server manager id */
+          m_currentServerManagerId = null;
         }
         if (m_routingMode == ROUTING_MODE_CLIENT)
         {
@@ -322,7 +343,8 @@ public class JAPRoutingSettings extends Observable
           ForwardServerManager.getInstance().startForwarding();
           ForwardServerManager.getInstance().setNetBandwidth(getBandwidth());
           ForwardServerManager.getInstance().setMaximumNumberOfConnections(getAllowedConnections());
-          if (ForwardServerManager.getInstance().addListenSocket(getServerPort()) == false)
+          m_currentServerManagerId = ForwardServerManager.getInstance().addListenSocket(getServerPort());
+          if (m_currentServerManagerId == null)
           {
             /* error while binding the socket -> shutdown the server */
             ForwardServerManager.getInstance().shutdownForwarding();
@@ -412,41 +434,42 @@ public class JAPRoutingSettings extends Observable
    *
    * @return True, if the change of the port was successful or false, if not.
    */
-  public boolean setServerPort(int a_serverPort)
-  {
+  public boolean setServerPort(int a_serverPort) {
     boolean success = false;
-    if ( (a_serverPort >= 1) && (a_serverPort <= 65535))
-    {
-      synchronized (this)
-      {
-        if (m_routingMode != ROUTING_MODE_SERVER)
-        {
-          /* server is not running, so simply change the port value */
-          m_serverPort = a_serverPort;
-          success = true;
-        }
-        else
-        {
-          if (m_serverPort != a_serverPort)
-          {
-            /* the server is running and the port differs from the old one , try to add the new port
-             * and remove the old ones
+    if ( (a_serverPort >= 1) && (a_serverPort <= 65535)) {
+      synchronized (this) {
+        if (m_serverPort != a_serverPort) {
+          if (m_routingMode != ROUTING_MODE_SERVER) {
+            /* server is not running, so simply change the port value */
+            m_serverPort = a_serverPort;
+            success = true;
+          }
+          else {
+            /* the server is running and the port differs from the old one , try to open the new
+             * port
              */
-            ForwardServerManager.getInstance().removeAllServerManagers();
-            success = ForwardServerManager.getInstance().addListenSocket(a_serverPort);
-            if (success == true)
-            {
+            Object newServerManagerId = ForwardServerManager.getInstance().addListenSocket(a_serverPort);
+            if (newServerManagerId != null) {
+              /* opening the new port was successful -> close the old one and update the values */
+              ForwardServerManager.getInstance().removeServerManager(m_currentServerManagerId);              
               m_serverPort = a_serverPort;
+              m_currentServerManagerId = newServerManagerId;
+              success = true;
               /* if the propaganda is running, restart it (the old one is stopped automatically) */
               if (m_propagandaStarted == true) {
                 startPropaganda(false);
               }
             }
-            else {
-              /* reopen the old port */
-              ForwardServerManager.getInstance().addListenSocket(m_serverPort);
-            }
           }
+          if (success == true) {
+            /* the server port was changed successfully -> notify the observers about it */
+            setChanged();
+            notifyObservers(new JAPRoutingMessage(JAPRoutingMessage.SERVER_PORT_CHANGED));
+          }
+        }
+        else {
+          /* noting to change */
+          success = true;
         }
       }
     }
@@ -596,17 +619,12 @@ public class JAPRoutingSettings extends Observable
   }
 
   /**
-   * Returns a String with the information about the current forwarder with IP, hostname (if DNS
-   * is enabled) and the port in the format "IP (hostname) : port" or "hostname (IP) : port"
-   * depending on which information was set as forwarder host. The information in brackets
-   * is returned by the DNS system, if DNS is disabled or can't resolve the name, the information
-   * in the brackets is omitted. If there is no forwarder set (or an invalid one), an empty String
-   * is returned.
+   * Returns a ListenerInterface with the information about the current forwarder. If there is no
+   * forwarder set (or an invalid one), null is returned.
    *
-   * @return A String representation of the current forwarder or an empty String.
+   * @return A ListenerInterface with the information about the current forwarder or null.
    */
-  public String getForwarderString() {
-    String forwarderString = "";
+  public ListenerInterface getForwarder() {
     ListenerInterface forwarder = null;
     synchronized (this) {
       try {
@@ -616,17 +634,19 @@ public class JAPRoutingSettings extends Observable
         /* forwarder not set */
       }
     }
-    if (forwarder != null) {
-      forwarderString = forwarder.getHostAndIp() + " : " + Integer.toString(forwarder.getPort());
-    }
-    return forwarderString;
+    return forwarder;
   }
 
   /**
-   * Changes, whether connections to the infoservice needs forwarding too.
+   * Changes whether connections to the infoservice needs forwarding too. Also the instance
+   * fetching the information about a forwarder uses this to decide, whether it is possible to
+   * obtain the information about the forwarder directly from the InfoServices or the mail-gateway
+   * has to be used in order to obtain that information.
    *
-   * @param a_forwardInfoService True, if connections to the infoservice must be forwarded, else
-   *                             false.
+   * @param a_forwardInfoService True, if connections to the infoservice must be forwarded and the
+   *                             mail-gateway is used in order to obtain the forwarder-address,
+   *                             else false (no InfoService forwarding and direct requests to the
+   *                             InfoService when fetching a forwarder address).
    */
   public void setForwardInfoService(boolean a_forwardInfoService)
   {
@@ -645,18 +665,57 @@ public class JAPRoutingSettings extends Observable
           /* restore the original proxy settings for the infoservice */
           JAPController.getInstance().applyProxySettingsToInfoService();
         }
+        setChanged();
+        notifyObservers(new JAPRoutingMessage(JAPRoutingMessage.CLIENT_SETTINGS_CHANGED));        
       }
     }
   }
 
   /**
-   * Returns, whether connections to the infoservice are also forwarded.
+   * Returns whether connections to the infoservice needs forwarding too. Also the instance
+   * fetching the information about a forwarder should use this to decide, whether it is possible
+   * to obtain the information about the forwarder directly from the InfoServices or the
+   * mail-gateway has to be used in order to obtain that information.
    *
-   * @return True, if connections to the infoservice are also forwarded, else false.
+   * @return True, if connections to the infoservice must be forwarded and the mail-gateway is
+   *         used in order to obtain the forwarder-address, else false (no InfoService forwarding
+   *         and direct requests to the InfoService when fetching a forwarder address).
    */
   public boolean getForwardInfoService()
   {
     return m_forwardInfoService;
+  }
+
+  /**
+   * Sets whether JAP shall connect to a forwarder when starting the anonymity mode. This value
+   * doesn't have any meaning within JAPRoutingSettings, so it is still possible to enable the
+   * client forwarding mode, if this value is false. Anybody who is starting the anonymity mode
+   * should check this value and do the necessary things.
+   *
+   * @param a_connectViaForwarder True, if new anonymous connections shall use a forwarder, false
+   *                              otherwise.
+   */
+
+  public void setConnectViaForwarder(boolean a_connectViaForwarder) {
+    synchronized (this) {
+      if (m_connectViaForwarder != a_connectViaForwarder) {
+        m_connectViaForwarder = a_connectViaForwarder;
+        setChanged();
+        notifyObservers(new JAPRoutingMessage(JAPRoutingMessage.CLIENT_SETTINGS_CHANGED));
+      }
+    }
+  }
+  
+  /**
+   * Returns whether JAP shall connect to a forwarder when starting the anonymity mode. This value
+   * doesn't have any meaning within JAPRoutingSettings, so it is still possible to enable the
+   * client forwarding mode, if this value is false. Anybody who is starting the anonymity mode
+   * should check this value and do the necessary things.
+   *
+   * @return True, if new anonymous connections shall use a forwarder, false otherwise.
+   */
+  public boolean isConnectViaForwarder() {
+    return m_connectViaForwarder;
   }
 
   /**
@@ -1087,6 +1146,16 @@ public class JAPRoutingSettings extends Observable
     forwardingServerNode.appendChild(getRegistrationInfoServicesStore().getSettingsAsXml(a_doc));
     forwardingServerNode.appendChild(getUseableMixCascadesStore().getSettingsAsXml(a_doc));
     japForwardingSettingsNode.appendChild(forwardingServerNode);
+
+    Element forwardingClientNode = a_doc.createElement("ForwardingClient");
+    Element connectViaForwarderNode = a_doc.createElement("ConnectViaForwarder");
+    Element forwardInfoServiceNode = a_doc.createElement("ForwardInfoService");
+    XMLUtil.setNodeBoolean(connectViaForwarderNode, isConnectViaForwarder());
+    XMLUtil.setNodeBoolean(forwardInfoServiceNode, getForwardInfoService());
+    forwardingClientNode.appendChild(connectViaForwarderNode);
+    forwardingClientNode.appendChild(forwardInfoServiceNode);
+    japForwardingSettingsNode.appendChild(forwardingClientNode);
+   
     return japForwardingSettingsNode;
   }
 
@@ -1192,6 +1261,31 @@ public class JAPRoutingSettings extends Observable
         }
       }
     }
+    /* get the forwarding client settings */
+    Element forwardingClientNode = (Element)(XMLUtil.getFirstChildByName(a_japForwardingSettingsNode, "ForwardingClient"));
+    if (forwardingClientNode == null) {
+      LogHolder.log(LogLevel.ERR, LogType.MISC, "JAPRoutingSettings: loadSettingsFromXml: Error in XML structure (ForwardingClient node): Using default forwarding client settings.");
+    }
+    else {
+      /* get the option, whether the anonymous connections shall use a forwarder */
+      Element connectViaForwarderNode = (Element)(XMLUtil.getFirstChildByName(forwardingClientNode, "ConnectViaForwarder"));
+      if (connectViaForwarderNode == null) {
+        LogHolder.log(LogLevel.ERR, LogType.MISC, "JAPRoutingSettings: loadSettingsFromXml: Error in XML structure (ConnectViaForwarder node): Using default value when enabling anonymity mode.");
+      }
+      else {
+        /* read the connect-via-forwarder client setting */
+        setConnectViaForwarder(XMLUtil.parseNodeBoolean(connectViaForwarderNode, false));
+      }   
+      /* get the option, whether the InfoService can reached directly or not */
+      Element forwardInfoServiceNode = (Element)(XMLUtil.getFirstChildByName(forwardingClientNode, "ForwardInfoService"));
+      if (forwardInfoServiceNode == null) {
+        LogHolder.log(LogLevel.ERR, LogType.MISC, "JAPRoutingSettings: loadSettingsFromXml: Error in XML structure (ForwardInfoService node): Using default value when creating a forwarded connection.");
+      }
+      else {
+        /* read the forward InfoService client setting */
+        setForwardInfoService(XMLUtil.parseNodeBoolean(forwardInfoServiceNode, false));
+      }   
+    }      
     return 0;
   }
 

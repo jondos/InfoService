@@ -29,6 +29,7 @@ package jap;
 
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.Observable;
 import java.util.Vector;
 
 import org.w3c.dom.Document;
@@ -42,8 +43,10 @@ import logging.LogType;
 
 /**
  * This class stores all known connection classes. Also the currently choosen one is stored here.
+ * Observers of this class get a notification, if the number of connection classes, the current
+ * connection class, bandwidth or connection number parameters, ... are changed.
  */
-public class JAPRoutingConnectionClassSelector {
+public class JAPRoutingConnectionClassSelector extends Observable {
   
   /**
    * This is the identifier of the 1xISDN connection class.
@@ -143,6 +146,11 @@ public class JAPRoutingConnectionClassSelector {
     }
     synchronized (m_connectionClasses) {
       m_connectionClasses.put(new Integer(CONNECTION_CLASS_USER), new JAPRoutingConnectionClass(CONNECTION_CLASS_USER, "routingConnectionClassUser", a_maxBandwidth, a_currentBandwidth));
+      /* user-defined connection class was changed (also if it was already in the list, it is a
+       * new object now -> notify the observers that the connection classes list was changed
+       */
+      setChanged();
+      notifyObservers(new JAPRoutingMessage(JAPRoutingMessage.CONNECTION_CLASSES_LIST_CHANGED));
     }
   }
   
@@ -160,8 +168,12 @@ public class JAPRoutingConnectionClassSelector {
   }
   
   /**
-   * This changes the currently used connection class. Also the forwarding system is updated to
-   * the bandwidth values of the new connection class, if you have specified a valid ID.
+   * This changes the currently used connection class. Also this methode must be called after a
+   * change of the parameters of the current connection class in order to update the forwarding
+   * system to the new bandwidth/user values. When the connection class has been changed, a
+   * CONNECTION_CLASS_CHANGED JAPRoutingMessage is sent to all observers of this class. Also
+   * a CONNECTION_PARAMETERS_CHANGED JAPRoutingMessage is sent, if the connection number/bandwidth
+   * parameters of the forwarding system has been changed.
    *
    * @param a_connectionClass The ID of the new connection class. If this is not a valid ID,
    *                          nothing is done.
@@ -172,11 +184,27 @@ public class JAPRoutingConnectionClassSelector {
       newConnectionClass = (JAPRoutingConnectionClass)(m_connectionClasses.get(new Integer(a_connectionClass)));
       if (newConnectionClass != null) {
         /* the specified connection class exists */     
+        boolean connectionClassWasChanged = false;
+        boolean userOrBandwidthValuesWereChanged = false;
+        if (m_currentConnectionClass != a_connectionClass) {
+          connectionClassWasChanged = true;
+        }
         m_currentConnectionClass = a_connectionClass;
+        if ((JAPModel.getInstance().getRoutingSettings().getMaxBandwidth() != newConnectionClass.getMaximumBandwidth()) || (JAPModel.getInstance().getRoutingSettings().getBandwidth() != newConnectionClass.getCurrentBandwidth()) || (JAPModel.getInstance().getRoutingSettings().getAllowedConnections() != newConnectionClass.getSimultaneousConnections())) {
+          userOrBandwidthValuesWereChanged = true;
+        }        
         JAPModel.getInstance().getRoutingSettings().setMaxBandwidth(newConnectionClass.getMaximumBandwidth());
         JAPModel.getInstance().getRoutingSettings().setBandwidth(newConnectionClass.getCurrentBandwidth());
         JAPModel.getInstance().getRoutingSettings().setAllowedConnections(newConnectionClass.getSimultaneousConnections());
-      }
+        if (connectionClassWasChanged == true) {
+          setChanged();
+          notifyObservers(new JAPRoutingMessage(JAPRoutingMessage.CONNECTION_CLASS_CHANGED));
+        }
+        if (userOrBandwidthValuesWereChanged == true) {
+          setChanged();
+          notifyObservers(new JAPRoutingMessage(JAPRoutingMessage.CONNECTION_PARAMETERS_CHANGED));
+        }
+      }      
     }
   }
   

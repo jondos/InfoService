@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2000 - 2004, The JAP-Team
+ Copyright (c) 2000 - 2005, The JAP-Team
  All rights reserved.
  Redistribution and use in source and binary forms, with or without modification,
  are permitted provided that the following conditions are met:
@@ -28,10 +28,10 @@
 
 package jap;
 
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.Rectangle;
-import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -58,7 +58,7 @@ public class JAPDialog
 	/**
 	 * This stores the parent component of this dialog.
 	 */
-	private JComponent m_parentComponent;
+  private Component m_parentComponent;
 
 	/**
 	 * Creates a new instance of JAPDialog. It is user resizable and modal.
@@ -68,7 +68,7 @@ public class JAPDialog
 	 *                          default frame.
 	 * @param a_strTitle The title String for this dialog.
 	 */
-	public JAPDialog(JComponent a_parentComponent, String a_strTitle)
+  public JAPDialog(Component a_parentComponent, String a_strTitle)
 	{
 		m_parentComponent = a_parentComponent;
 		JOptionPane optionPane = new JOptionPane();

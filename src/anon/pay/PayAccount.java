@@ -51,8 +51,7 @@ import anon.util.Base64;
 import anon.util.IXMLEncodable;
 import anon.util.XMLUtil;
 import anon.server.impl.MuxSocket;
-import java.sql.*;
-import java.security.*;
+import java.sql.Timestamp;
 
 /**
  * This class encapsulates one account and all additional data associated to one

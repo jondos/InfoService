@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2000 - 2004, The JAP-Team
+ Copyright (c) 2000 - 2005, The JAP-Team
  All rights reserved.
  Redistribution and use in source and binary forms, with or without modification,
  are permitted provided that the following conditions are met:
@@ -28,8 +28,9 @@
 package forward.server;
 
 import java.net.Socket;
-import java.util.Vector;
 import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.Vector;
 
 import logging.LogHolder;
 import logging.LogLevel;
@@ -78,11 +79,11 @@ public class ForwardScheduler implements Runnable {
   private Thread m_schedulerThread;
 
   /**
-   * This stores the associated ServerManagers, which manages the server sockets of this
-   * ForwardScheduler.
+   * This stores the associated ServerManagers (ID as keys and the instances as values) managing
+   * the server sockets of this ForwardScheduler.
    * @see ServerManager
    */
-  private Vector m_serverManagers;
+  private Hashtable m_serverManagers;
 
   /**
    * This stores the statistics for the ForwardScheduler.
@@ -99,7 +100,7 @@ public class ForwardScheduler implements Runnable {
     m_nrOfConnections = 0;
     m_netBandwidth = 0;
     m_connectionHandler = new Vector();
-    m_serverManagers = new Vector();
+    m_serverManagers = new Hashtable();
     m_shutdown = false;
     m_schedulerThread = new Thread(this);
     m_schedulerThread.setDaemon(true);
@@ -262,9 +263,37 @@ public class ForwardScheduler implements Runnable {
   public void addServerManager(IServerManager a_serverManager) throws Exception {
     synchronized (m_serverManagers) {
       if (m_shutdown == false) {
-        /* add it only, if this ForwardScheduler is running */
-        a_serverManager.startServerManager(this);
-        m_serverManagers.addElement(a_serverManager);
+        /* add it only, if this ForwardScheduler is running and we don't have already a server
+         * manager with the same ID
+         */
+        if (m_serverManagers.containsKey(a_serverManager.getId()) == false) {
+          a_serverManager.startServerManager(this);
+          /* the ServerManager was successfully started -> add it to our table */
+          m_serverManagers.put(a_serverManager.getId(), a_serverManager);
+        }
+        else {
+          throw (new Exception("ForwardScheduler: addServerManager: Already a ServerManager with this ID running."));
+        }
+      }
+    }
+  }
+
+  /**
+   * Removes one ServerManager from the list of associated ServerManagers of this
+   * ForwardScheduler. The shutdown() method is called on that ServerManager and it is removed
+   * from the internal list. Active forwarded connections are not affected by this call. If this
+   * ForwardScheduler doesn't know any ServerManager with the specified ID, nothing is done.
+   *
+   * @param a_serverManagerId The ID of the ServerManager to close, see IServerManager.getId().
+   */
+  public void removeServerManager(Object a_serverManagerId) {
+    if (a_serverManagerId != null) {
+      synchronized (m_serverManagers) {
+        IServerManager serverManagerToClose = (IServerManager)(m_serverManagers.get(a_serverManagerId));
+        if (serverManagerToClose != null) {
+          serverManagerToClose.shutdown();
+          m_serverManagers.remove(a_serverManagerId);
+        }
       }
     }
   }
@@ -283,8 +312,8 @@ public class ForwardScheduler implements Runnable {
       while (serverManagers.hasMoreElements()) {
         ((IServerManager)(serverManagers.nextElement())).shutdown();
       }
-      /* remove all ServerManagers from the list */
-      m_serverManagers.removeAllElements();
+      /* remove all ServerManagers from the table */
+      m_serverManagers.clear();
     }
   }
 

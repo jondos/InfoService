@@ -49,7 +49,7 @@ import logging.LogType;
  * This class manages the useable mixcascades for the clients of the local forwarding server. So
  * they get always an up-to-date list of running and allowed mixcascades.
  */
-public class JAPRoutingUseableMixCascades implements Observer, Runnable {
+public class JAPRoutingUseableMixCascades extends Observable implements Observer, Runnable {
 
   /**
    * This is the update interval of the mixcascade list. The list update is done by fetching the
@@ -146,21 +146,22 @@ public class JAPRoutingUseableMixCascades implements Observer, Runnable {
   /**
    * This changes the list of allowed mixcascades for the clients of the local forwarding server.
    * If we are in the restricted mode (accessing all available mixcascades is not enabled),
-   * clients can only connect to the mixcascades specified her, which are also running at the
+   * clients can only connect to the mixcascades specified here, which are also running at the
    * moment of the client connection. If JAPRoutingSettings is in server routing mode (mixcascade
    * management thread is running) and we are in the restricted mode, also the database of
    * useable mixcascades for the client is updated immediately. Attention: Calling this method
    * does not automatically activate the restricted mode. So you have to do this by the call
    * of the setAllowAllMixCascades() method explicitly.
    *
-   * @param a_mixCascades Start of an enumeration of mixcascades, which shall be allowed for the
-   *                      clients of the local forwarding server.
+   * @param a_mixCascades A Vector of mixcascades, which shall be allowed for the clients of the
+   *                      local forwarding server in the restricted mode.
    */
-  public void setAllowedMixCascades(Enumeration a_mixCascades) {
+  public void setAllowedMixCascades(Vector a_mixCascades) {
     synchronized (m_allowedMixCascades) {
       m_allowedMixCascades.clear();
-      while (a_mixCascades.hasMoreElements()) {
-        MixCascade currentMixCascade = (MixCascade)(a_mixCascades.nextElement());
+      Enumeration newAllowedCascades = a_mixCascades.elements();
+      while (newAllowedCascades.hasMoreElements()) {
+        MixCascade currentMixCascade = (MixCascade)(newAllowedCascades.nextElement());
         m_allowedMixCascades.put(currentMixCascade.getId(), currentMixCascade);
       }
     }
@@ -170,6 +171,77 @@ public class JAPRoutingUseableMixCascades implements Observer, Runnable {
          * the useable cascades database
          */
         updateUseableCascadesDatabase();
+      }
+      setChanged();
+      notifyObservers(new JAPRoutingMessage(JAPRoutingMessage.ALLOWED_MIXCASCADES_LIST_CHANGED));
+    }
+  }
+
+  /**
+   * This adds a MixCascade to the list of allowed mixcascades for the clients of the local
+   * forwarding server. If we are in the restricted mode (accessing all available mixcascades is
+   * not enabled), clients can only connect to the mixcascades specified in that list, which are
+   * also running at the moment of the client connection. If JAPRoutingSettings is in server
+   * routing mode (mixcascade management thread is running) and we are in the restricted mode,
+   * also the database of useable mixcascades for the client is updated immediately. Attention:
+   * Calling this method does not automatically activate the restricted mode. So you have to do
+   * this by the call of the setAllowAllMixCascades() method explicitly.
+   *
+   * @param a_mixCascade The MixCascade which should added to the list of allowed mixcascades for
+   *                     the restricted mode. If there is already a mixcascade with the same ID in
+   *                     the list, it is updated to this new cascade value.
+   */
+  public void addToAllowedMixCascades(MixCascade a_mixCascade) {
+    if (a_mixCascade != null) {
+      synchronized (m_allowedMixCascades) {
+        m_allowedMixCascades.put(a_mixCascade.getId(), a_mixCascade);
+      }
+      synchronized (this) {
+        if ((m_updateMixCascadesListThread != null) && (m_allowAllAvailableCascades == false)) {
+          /* the mixcascades management thread is running and we are in restricted mode -> update
+           * the useable cascades database
+           */
+          updateUseableCascadesDatabase();
+        }
+        setChanged();
+        notifyObservers(new JAPRoutingMessage(JAPRoutingMessage.ALLOWED_MIXCASCADES_LIST_CHANGED));
+      }
+    }
+  }  
+      
+  /**
+   * This removes a MixCascade from the list of allowed mixcascades for the clients of the local
+   * forwarding server. If we are in the restricted mode (accessing all available mixcascades is
+   * not enabled), clients can only connect to the mixcascades specified in that list, which are
+   * also running at the moment of the client connection. If JAPRoutingSettings is in server
+   * routing mode (mixcascade management thread is running) and we are in the restricted mode,
+   * also the database of useable mixcascades for the client is updated immediately. Attention:
+   * Calling this method does not automatically activate the restricted mode. So you have to do
+   * this by the call of the setAllowAllMixCascades() method explicitly.
+   *
+   * @param a_mixCascadeId The MixCascade which should removed from the list of allowed
+   *                       mixcascades for the restricted mode. If there is no mixcascade with
+   *                       this ID is in the list, nothing is done.
+   */
+  public void removeFromAllowedMixCascades(String a_mixCascadeId) {
+    if (a_mixCascadeId != null) {
+      boolean cascadeRemoved = false;
+      synchronized (m_allowedMixCascades) {
+        if (m_allowedMixCascades.remove(a_mixCascadeId) != null) {
+          cascadeRemoved = true;
+        }
+      }
+      if (cascadeRemoved == true) {
+        synchronized (this) {
+          if ((m_updateMixCascadesListThread != null) && (m_allowAllAvailableCascades == false)) {
+            /* the mixcascades management thread is running and we are in restricted mode -> update
+             * the useable cascades database
+             */
+            updateUseableCascadesDatabase();
+          }
+          setChanged();
+          notifyObservers(new JAPRoutingMessage(JAPRoutingMessage.ALLOWED_MIXCASCADES_LIST_CHANGED));
+        }
       }
     }
   }
@@ -211,6 +283,8 @@ public class JAPRoutingUseableMixCascades implements Observer, Runnable {
            */
           updateUseableCascadesDatabase();
         }
+        setChanged();
+        notifyObservers(new JAPRoutingMessage(JAPRoutingMessage.ALLOWED_MIXCASCADES_POLICY_CHANGED));
       }
     }
   }
@@ -301,7 +375,7 @@ public class JAPRoutingUseableMixCascades implements Observer, Runnable {
           noError = false;
         }
       }
-      setAllowedMixCascades(allowedMixCascades.elements());
+      setAllowedMixCascades(allowedMixCascades);
     }
     return noError;
   }

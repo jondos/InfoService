@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2000 - 2004, The JAP-Team
+ Copyright (c) 2000 - 2005, The JAP-Team
  All rights reserved.
  Redistribution and use in source and binary forms, with or without modification,
  are permitted provided that the following conditions are met:
@@ -73,6 +73,17 @@ public class ServerSocketManager implements Runnable, IServerManager {
    */
   public ServerSocketManager(int a_portNumber) {   
     m_portNumber = a_portNumber;
+  }
+
+
+  /**
+   * Returns the ID of this ServerSocketManager. It is a String of the type ClassName%PortNumber,
+   * so it should be unique within all possible ServerManagers.
+   *
+   * @return A unique identifier Object for this ServerSocketManager.
+   */
+  public Object getId() {
+    return (this.getClass().getName() + "%" + Integer.toString(m_portNumber));
   }
   
   /**

@@ -25,34 +25,23 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package forward.server;
+package jap;
+
+import java.util.Observable;
 
 /**
- * This interface defines the methods for a ServerManager. A ServerManager manages the server part
- * of the forwarding code, e.g. a ServerSocket where clients can connect to.
- */
-public interface IServerManager {
-
-  /**
-   * Returns the ID of this ServerManager. This ID must be unique for the instance of
-   * ServerManager within all possible ServerManagers, e.g. a String of the type
-   * "CLASSNAME%INSTANCE_ID" would be possible.
-   *
-   * @return A unique identifier Object for the ServerManager.
-   */
-  public Object getId();
-   
-  /**
-   * This starts the ServerManager.
-   *
-   * @param a_parentScheduler The ForwardScheduler where all new connections are reported to.
-   */
-  public void startServerManager(ForwardScheduler a_parentScheduler) throws Exception;
+ * This is the implementation of a service for sending internal messages.
+ */ 
+public class MessageSystem extends Observable {
   
   /**
-   * This method must be called, if the ServerManager shall come to an end. This method should
-   * block until everything is down (e.g. open sockets, internal threads, ...).
+   * Notifies all observers of this MessageSystem instance but without a special message.
    */
-  public void shutdown();
-    
+  public void sendMessage() {
+    synchronized (this) {
+      setChanged();
+      notifyObservers();
+    }
+  }
+  
 }

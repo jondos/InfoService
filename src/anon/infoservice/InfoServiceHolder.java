@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2000 - 2004, The JAP-Team
+ Copyright (c) 2000 - 2005, The JAP-Team
  All rights reserved.
  Redistribution and use in source and binary forms, with or without modification,
  are permitted provided that the following conditions are met:
@@ -324,7 +324,7 @@ public class InfoServiceHolder
 			/* use an empty list -> only prefered infoservice is used */
 			infoServiceList = new Vector();
 		}
-		while ( (infoServiceList.size() > 0) || (currentInfoService != null))
+    while (((infoServiceList.size() > 0) || (currentInfoService != null)) && (Thread.currentThread().isInterrupted() == false))
 		{
 			if (currentInfoService == null)
 			{
@@ -403,6 +403,7 @@ public class InfoServiceHolder
 		throw (new Exception(
 			"InfoServiceHolder: fetchInformation: No InfoService with the needed information available."));
 	}
+
 
 	/**
 	 * Get a Vector of all mixcascades the prefered infoservice knows. If we can't get a the
