@@ -156,7 +156,7 @@ public class XMLUtil
 
 	/** Gets the content of an Element or Text Node. The "content" of an Element Node is
 	 * the text between the opening and closing Element Tag. The content of an attribute node
-	 * is the value of the attributte. For all over nodes null is returned.
+	 * is the value of the attribute. For all other nodes null is returned.
 	 * @param n text node, element node or attribute node
 	 * @param defaultValue value returned, if an error occured
 	 * @return null if this node has no "content"
@@ -224,29 +224,62 @@ public class XMLUtil
 		return null;
 	}
 
-	// ootte
-	public static Node getFirstChildByNameUsingDeepSearch(Node n, String name)
+	/**
+	 *
+	 * @param node the node from that the search starts
+	 * @param childname the childnode we are looking for
+	 * @return Node the child node with the given name or null if it was not found
+	 */
+	public static Node getFirstChildByNameUsingDeepSearch(Node node, String childname) {
+		Node result = null;
+
+		try {
+			node = node.getFirstChild();
+
+			while (node != null)
+			{
+				result = getFirstChildByNameUsingDeepSearchInternal(node, childname);
+				if (result != null)
+				{
+					break;
+				}
+				node = node.getNextSibling();
+			}
+		}
+		catch (Exception a_e)
+		{
+		}
+		return result;
+	}
+
+	/**
+	 * Returns a node that is equal to the given name, starting from the given node
+	 * and, if it is not the node we are looking for, recursing to all its children.
+	 * @param node the node from that the search starts
+	 * @param name the node we are looking for
+	 * @return Node the node with the given name or null if it was not found
+	 */
+	private static Node getFirstChildByNameUsingDeepSearchInternal(Node node, String name)
 	{
 		try
 		{
-			if (n.getNodeName().equals(name)) // found!
+			if (node.getNodeName().equals(name)) // found!
 			{
-				return n;
+				return node;
 			}
-			if (n.hasChildNodes()) // not found, but the Node has children ...
+			if (node.hasChildNodes()) // not found, but the Node has children ...
 			{
-				NodeList nl = n.getChildNodes();
-				for (int i = 0; i < nl.getLength(); i++)
+				NodeList childNodes = node.getChildNodes();
+				for (int i = 0; i < childNodes.getLength(); i++)
 				{
-					Node child = nl.item(i);
-					Node tmp_result = getFirstChildByNameUsingDeepSearch(child, name);
+					Node tmp_result = getFirstChildByNameUsingDeepSearch(childNodes.item(i), name);
 					if (tmp_result != null)
 					{
 						return tmp_result;
 					}
 				}
 			}
-			else // Node has no children and is not the Node we are looking for
+			else // Node has no children and it is not the Node we are looking for
 			{
 				return null;
 			}
@@ -257,7 +290,6 @@ public class XMLUtil
 		return null;
 	}
 
-	// ootte
 	public static Node getLastChildByName(Node n, String name)
 	{
 		try
@@ -278,15 +310,16 @@ public class XMLUtil
 		return null;
 	}
 
-	public static void setNodeValue(Node n, String text)
+	public static void setNodeValue(Node node, String text)
 	{
-		n.appendChild(n.getOwnerDocument().createTextNode(text));
+		node.appendChild(node.getOwnerDocument().createTextNode(text));
 	}
 
-	public static void setNodeBoolean(Node n,boolean b)
+	public static void setNodeBoolean(Node node,boolean b)
 	{
-		setNodeValue(n,b?XML_STR_BOOLEAN_TRUE:XML_STR_BOOLEAN_FALSE);
+		setNodeValue(node,b?XML_STR_BOOLEAN_TRUE:XML_STR_BOOLEAN_FALSE);
 	}
+
 	/** Stolen from Apache Xerces-J...*/
 	public static Node importNode(Document doc, Node source, boolean deep) throws Exception
 	{
@@ -460,7 +493,7 @@ public class XMLUtil
 
 	}
 
-	/** Writes a XML-Document to an Output-Stream. Since writing was not standardzieds
+	/** Writes a XML-Document to a String. Since writing was not standardized
 	 * since JAXP 1.1 different Methods are tried
 	 */
 	public static String XMLDocumentToString(Document doc)
@@ -469,8 +502,8 @@ public class XMLUtil
 		return XMLNodeToString(doc);
 	}
 
-	/** Writes a XML-Node to an Output-Stream. If node is a Document than the <XML> header is included.
-	 * Since writing was not standardzieds
+	/** Writes a XML-Node to a String. If node is a Document then the <XML> header is included.
+	 * Since writing was not standardized
 	 * until  JAXP 1.1 different Methods are tried
 	 */
 	public static String XMLNodeToString(Node node)
