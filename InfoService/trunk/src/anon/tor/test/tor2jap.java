@@ -24,24 +24,27 @@ public class tor2jap
 	public static void main(String[] args) throws Exception
 	{
 		Tor tor = Tor.getInstance();
-		tor.initialize(new TorAnonServerDescription());
-/*		byte[] temp = tor.DNSResolve("www.google.de");
-		for(int i=0;i<temp.length;i++)
+		for(int i2=0;i2<3;i2++)
 		{
-			System.out.print(" "+temp[i]);
-		}
-		System.out.println();*/
-		AnonChannel channel = tor.createChannel(InetAddress.getByName("www.google.de"), 80);
-		channel.getOutputStream().write( ("GET /index.html HTTP/1.0\n\r\n\r").getBytes());
-		for (; ; )
-		{
-			int b = channel.getInputStream().read();
-			if (b < 0)
+			tor.initialize(new TorAnonServerDescription());
+		/*	byte[] temp = tor.DNSResolve("www.google.de");
+			for(int i=0;i<temp.length;i++)
 			{
-				break;
+				System.out.print(" "+(temp[i]&0xFF));
 			}
-			System.out.print( (char) b);
+			System.out.println();*/
+			AnonChannel channel = tor.createChannel(InetAddress.getByName("www.google.de"), 80);
+			channel.getOutputStream().write( ("GET /index.html HTTP/1.0\n\r\n\r").getBytes());
+			for (; ; )
+			{
+				int b = channel.getInputStream().read();
+				if (b < 0)
+				{
+					break;
+				}
+				System.out.print( (char) b);
+			}
+			tor.shutdown();
 		}
-		tor.shutdown();
 	}
 }

@@ -88,6 +88,7 @@ public class Tor implements Runnable, AnonService
 		this.m_FORList = new Vector();
 
 		this.m_exitNodes = new Vector();
+		this.m_exitNodes.addElement("tequila");
 
 		this.m_circuitLengthMin = 3;
 		this.m_circuitLengthMax = 5;
@@ -164,11 +165,13 @@ public class Tor implements Runnable, AnonService
 		int circuitLength = m_rand.nextInt(this.m_circuitLengthMax - this.m_circuitLengthMin + 1) +
 			this.m_circuitLengthMin;
 		ord = this.selectORRandomly(this.m_FORList);
+		System.out.println("added "+ord.getName()+" "+ord.getSoftware());
 		orsForNewCircuit.addElement(ord);
 		do
 		{
 			ord = this.selectORRandomly(this.m_exitNodes);
 		} while((orsForNewCircuit.contains(ord))/*||(!ord.getAcl().isAllowed(80))*/);
+		System.out.println("added "+ord.getName()+" "+ord.getSoftware());
 		orsForNewCircuit.addElement(ord);
 		for (int i = 2; i < circuitLength; i++)
 		{
@@ -177,6 +180,7 @@ public class Tor implements Runnable, AnonService
 				ord=this.selectORRandomly(null);
 			}
 			while (orsForNewCircuit.contains(ord));
+			System.out.println("added "+ord.getName()+" "+ord.getSoftware());
 			orsForNewCircuit.insertElementAt(ord, 1);
 		}
 		int circid;
@@ -185,8 +189,13 @@ public class Tor implements Runnable, AnonService
 			circid = this.m_rand.nextInt(65535);
 		}
 		while (this.m_circuits.containsKey(new Integer(circid)) && (circid != 0));
-		FirstOnionRouter f = this.m_firstORFactory.createFirstOnionRouter( (ORDescription) orsForNewCircuit.
-			elementAt(0));
+		FirstOnionRouter f;
+		f = this.m_firstORFactory.createFirstOnionRouter( (ORDescription) orsForNewCircuit.
+		elementAt(0));
+		if(f==null)
+		{
+			throw new IOException("Problem with router "+orsForNewCircuit+". Cannot connect.");
+		}
 		if (!this.m_usedFORs.contains(f))
 		{
 			this.m_usedFORs.addElement(f);
@@ -280,15 +289,16 @@ public class Tor implements Runnable, AnonService
 		if (this.m_createNewCircuitLoop != null)
 		{
 			m_createNewCircuitLoop.interrupt();
-			this.m_createNewCircuitLoop.join();
+			m_createNewCircuitLoop.join();
 			for (int i = 0; i < this.m_usedFORs.size(); i++)
 			{
-				if (this.m_usedFORs.elementAt(i) instanceof FirstOnionRouter)
+				if (this.m_usedFORs.elementAt(0) instanceof FirstOnionRouter)
 				{
-					FirstOnionRouter f = (FirstOnionRouter)this.m_usedFORs.elementAt(i);
+					FirstOnionRouter f = (FirstOnionRouter)this.m_usedFORs.elementAt(0);
 					f.stop();
 					f.close();
 				}
+				this.m_usedFORs.remove(0);
 			}
 		}
 	}
