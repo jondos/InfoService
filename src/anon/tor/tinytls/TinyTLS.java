@@ -84,6 +84,7 @@ public class TinyTLS extends Socket
 
 	private JAPCertificate m_servercertificate;
 	private IMyPublicKey m_trustedRoot;
+	private boolean m_checkTrustedRoot;
 	private DHParameters m_dhparams;
 	private DHPublicKeyParameters m_dhserverpub;
 	private byte[] m_serverparams;
@@ -102,6 +103,7 @@ public class TinyTLS extends Socket
 	class TLSInputStream extends InputStream
 	{
 
+		//private boolean m_closed;
 		private DataInputStream m_stream;
 		private int m_aktPendOffset; //offest of next data to deliver
 		private int m_aktPendLen; // number of bytes we could deliver imedialy
@@ -372,7 +374,7 @@ public class TinyTLS extends Socket
 				prevCert=cert;
 			}
 			//last certificat is checked, if a certificatestore is set
-			if(m_trustedRoot!=null)
+			if(m_checkTrustedRoot)
 			{
 				if(!prevCert.verify(m_trustedRoot))
 					throw new IOException("TLS Server Cert could not be verified to be trusted!");
@@ -431,8 +433,9 @@ public class TinyTLS extends Socket
 					{
 						case 0:
 						{
-							LogHolder.log(LogLevel.DEBUG, LogType.MISC,
-										  "[RECIEVED-ALERT] TYPE=WARNING ; MESSAGE=CLOSE NOTIFY");
+							//LogHolder.log(LogLevel.DEBUG, LogType.MISC,"[RECIEVED-ALERT] TYPE=WARNING ; MESSAGE=CLOSE NOTIFY");
+							//m_closed = true;
+							break;
 						}
 						default:
 						{
@@ -440,6 +443,7 @@ public class TinyTLS extends Socket
 								payload[1]);
 						}
 					}
+					break;
 				}
 				// fatal
 				case 2:
@@ -682,7 +686,7 @@ public class TinyTLS extends Socket
 		{
 			byte[] senddata = helper.conc(new byte[]
 										  { (byte) type}
-										  , helper.conc(helper.inttobyte(message.length, 3), message));
+										  , helper.inttobyte(message.length, 3), message);
 			send(22, senddata, 0, senddata.length);
 			m_handshakemessages = helper.conc(m_handshakemessages, senddata);
 		}
@@ -693,7 +697,6 @@ public class TinyTLS extends Socket
 		 */
 		public void sendClientHello() throws IOException
 		{
-			byte[] message = PROTOCOLVERSION;
 			byte[] gmt_unix_time;
 			byte[] random = new byte[28];
 			byte[] sessionid = new byte[]
@@ -720,11 +723,7 @@ public class TinyTLS extends Socket
 			Random rand = new Random(System.currentTimeMillis());
 			rand.nextBytes(random);
 
-			message = helper.conc(message, gmt_unix_time);
-			message = helper.conc(message, random);
-			message = helper.conc(message, sessionid);
-			message = helper.conc(message, ciphersuites);
-			message = helper.conc(message, compression);
+			byte[] message = helper.conc(PROTOCOLVERSION, gmt_unix_time, random, sessionid, ciphersuites, compression);
 
 			sendHandshake(1, message);
 			m_clientrandom = helper.conc(gmt_unix_time, random);
@@ -820,6 +819,7 @@ public class TinyTLS extends Socket
 		m_istream = new TLSInputStream(m_ProxyConnection.getInputStream());
 		m_ostream = new TLSOutputStream(m_ProxyConnection.getOutputStream());
 		m_trustedRoot = null;
+		m_checkTrustedRoot = true;
 	}
 
 	/**
@@ -846,12 +846,20 @@ public class TinyTLS extends Socket
 		if(m_supportedciphersuites.isEmpty())
 		{
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[NO_CIPHERSUITE_DEFINED] : using predefined");
+			this.addCipherSuite(new DHE_RSA_WITH_AES_128_CBC_SHA());
+			this.addCipherSuite(new DHE_DSS_WITH_AES_128_CBC_SHA());
+			this.addCipherSuite(new DHE_RSA_WITH_3DES_CBC_SHA());
 			this.addCipherSuite(new DHE_DSS_WITH_3DES_CBC_SHA());
-//			this.addCipherSuite(new DHE_RSA_WITH_AES_128_CBC_SHA());
+			this.addCipherSuite(new DHE_RSA_WITH_DES_CBC_SHA());
+			this.addCipherSuite(new DHE_DSS_WITH_DES_CBC_SHA());
 		}
-		if(m_trustedRoot == null)
+		if(!m_checkTrustedRoot)
 		{
-			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[TRUSTED_CERTIFICATES_NOT_SET] : all certificates are accepted without being checked");
+			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[CHECK_TRUSTED_ROOT_DEACTIVATED] : all certificates are accepted");
+		} else if(m_trustedRoot == null)
+		{
+			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[TRUSTED_CERTIFICATES_NOT_SET] : cannot verify Certificates");
+			throw new TLSException("Please set Trusted Root");
 		}
 		this.m_handshakemessages = new byte[]
 			{};
@@ -868,6 +876,11 @@ public class TinyTLS extends Socket
 	public void setRootKey(IMyPublicKey rootKey)
 	{
 		m_trustedRoot = rootKey;
+	}
+	
+	public void checkRootCertificate(boolean check)
+	{
+		m_checkTrustedRoot = check;
 	}
 
 	public InputStream getInputStream()

@@ -54,7 +54,7 @@ public class DHE_DSS_WITH_AES_128_CBC_SHA extends CipherSuite {
 	 */
 	public DHE_DSS_WITH_AES_128_CBC_SHA() throws TLSException
 	{
-		super(new byte[]{0x00,0x033});
+		super(new byte[]{0x00,0x032});
 		m_ciphersuitename = "TLS_DHE_DSS_WITH_AES_128_CBC_SHA";
 		this.setKeyExchangeAlgorithm(new DHE_DSS_Key_Exchange());
 		m_rand = new MyRandom();

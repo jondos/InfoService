@@ -6,6 +6,8 @@ import java.net.Socket;
 
 import anon.crypto.IMyPrivateKey;
 import anon.crypto.JAPCertificate;
+import anon.crypto.MyDSAPrivateKey;
+import anon.crypto.MyRSAPrivateKey;
 
 /**
  * @author stefan
@@ -14,37 +16,37 @@ public class TinyTLSServer extends ServerSocket {
 
 	private JAPCertificate m_Certificate = null;
 	private IMyPrivateKey m_PrivateKey = null;
+	private MyDSAPrivateKey m_DSSKey = null;
+	private MyRSAPrivateKey m_RSAKey = null;
+	private JAPCertificate m_DSSCertificate = null;
+	private JAPCertificate m_RSACertificate = null;
+	private TinyTLSServerSocket tls = null;
 
 	public TinyTLSServer(int port) throws IOException {
 		super(port);
 	}
-	
-	public void setServerCertificate(JAPCertificate cert)
+
+	public void setDSSParameters(JAPCertificate cert,MyDSAPrivateKey key)
 	{
-		m_Certificate = cert;
+		m_DSSCertificate = cert;
+		m_DSSKey = key;
 	}
-	
-	public void setServerPrivateKey(IMyPrivateKey key)
+
+	public void setRSAParameters(JAPCertificate cert,MyRSAPrivateKey key)
 	{
-		m_PrivateKey = key;
+		m_RSACertificate = cert;
+		m_RSAKey = key;
 	}
-	
+
 	public Socket accept() throws IOException
 	{
-		if(m_Certificate==null)
-		{
-			throw new TLSException("No ServerCertificate set");
-		}
-		if(m_PrivateKey==null)
-		{
-			throw new TLSException("No ServerPrivateKey set");
-		}
 		Socket s = super.accept();
 
-		TinyTLSServerSocket tls;
-		tls = new TinyTLSServerSocket(s,m_Certificate,m_PrivateKey);
+		tls = new TinyTLSServerSocket(s);
+		tls.setDSSParameters(m_DSSCertificate,m_DSSKey);
+		tls.setRSAParameters(m_RSACertificate,m_RSAKey);
 		tls.startHandshake();
 		return tls;
 	}
-
+	
 }

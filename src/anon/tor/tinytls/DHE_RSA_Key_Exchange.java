@@ -115,14 +115,11 @@ public class DHE_RSA_Key_Exchange extends Key_Exchange{
 		dh_g = helper.conc(helper.inttobyte(dh_g.length,2),dh_g);
 		byte[] dh_y = dhpub.getY().toByteArray();
 		dh_y = helper.conc(helper.inttobyte(dh_y.length,2),dh_y);
-		byte[] message = helper.conc(dh_p,dh_g);
-		message = helper.conc(message,dh_y);
+		byte[] message = helper.conc(dh_p,dh_g,dh_y);
 
 		byte[] signature = helper.conc(
-			hash.md5(new byte[][]
-				 {clientrandom, serverrandom, message}),
-			hash.sha(new byte[][]
-				{clientrandom, serverrandom, message}));
+			hash.md5(clientrandom, serverrandom, message),
+			hash.sha(clientrandom, serverrandom, message));
 		BigInteger modulus = rsakey.getModulus();
 		BigInteger exponent = rsakey.getPrivateExponent();
 		AsymmetricBlockCipher rsa = new PKCS1Encoding(new RSAEngine());
@@ -135,8 +132,7 @@ public class DHE_RSA_Key_Exchange extends Key_Exchange{
 		{
 			throw new TLSException("cannot encrypt signature",2,80);
 		}
-		signature2 = helper.conc(helper.inttobyte(signature2.length,2),signature2);
-		message = helper.conc(message,signature2);
+		message = helper.conc(message,signature2,helper.inttobyte(signature2.length,2),signature2);
 		
 		return message;
 	}
@@ -192,10 +188,8 @@ public class DHE_RSA_Key_Exchange extends Key_Exchange{
 		byte[] serverparams = helper.copybytes(bytes,0+bytes_offset,counter);
 
 		byte[] expectedSignature = helper.conc(
-			hash.md5(new byte[][]
-				 {clientrandom, serverrandom, serverparams}),
-			hash.sha(new byte[][]
-				{clientrandom, serverrandom, serverparams}));
+			hash.md5(clientrandom, serverrandom, serverparams),
+			hash.sha(clientrandom, serverrandom, serverparams));
 
 		byte[] recievedSignature;
 
@@ -225,7 +219,7 @@ public class DHE_RSA_Key_Exchange extends Key_Exchange{
 
 	public byte[] calculateServerFinished(byte[] handshakemessages)
 	{
-		PRF prf = new PRF(this.m_mastersecret,SERVERFINISHEDLABEL,helper.conc(hash.md5(new byte[][]{handshakemessages}),hash.sha(new byte[][]{handshakemessages})));
+		PRF prf = new PRF(this.m_mastersecret,SERVERFINISHEDLABEL,helper.conc(hash.md5(handshakemessages),hash.sha(handshakemessages)));
 		return prf.calculate(12);
 	}
 
@@ -235,7 +229,7 @@ public class DHE_RSA_Key_Exchange extends Key_Exchange{
 	 * @throws TLSException
 	 */
 	public void processServerFinished(byte[] b,int len,byte[] handshakemessages) throws TLSException {
-		PRF prf = new PRF(this.m_mastersecret,SERVERFINISHEDLABEL,helper.conc(hash.md5(new byte[][]{handshakemessages}),hash.sha(new byte[][]{handshakemessages})));
+		PRF prf = new PRF(this.m_mastersecret,SERVERFINISHEDLABEL,helper.conc(hash.md5(handshakemessages),hash.sha(handshakemessages)));
 		byte[] c = prf.calculate(12);
 		if(b[0]==20&&b[1]==0&&b[2]==0&&b[3]==12)
 		{
@@ -293,7 +287,7 @@ public class DHE_RSA_Key_Exchange extends Key_Exchange{
 
 	public void processClientFinished(byte[] verify_data,byte[] handshakemessages) throws TLSException 
 	{
-		PRF prf = new PRF(this.m_mastersecret,CLIENTFINISHEDLABEL,helper.conc(hash.md5(new byte[][]{handshakemessages}),hash.sha(new byte[][]{handshakemessages})));
+		PRF prf = new PRF(this.m_mastersecret,CLIENTFINISHEDLABEL,helper.conc(hash.md5(handshakemessages),hash.sha(handshakemessages)));
 		
 	}
 	/**
@@ -302,7 +296,7 @@ public class DHE_RSA_Key_Exchange extends Key_Exchange{
 	 * @return client finished message
 	 */
 	public byte[] calculateClientFinished(byte[] handshakemessages) throws TLSException {
-		PRF prf = new PRF(this.m_mastersecret,CLIENTFINISHEDLABEL,helper.conc(hash.md5(new byte[][]{handshakemessages}),hash.sha(new byte[][]{handshakemessages})));
+		PRF prf = new PRF(this.m_mastersecret,CLIENTFINISHEDLABEL,helper.conc(hash.md5(handshakemessages),hash.sha(handshakemessages)));
 		return prf.calculate(12);
 	}
 

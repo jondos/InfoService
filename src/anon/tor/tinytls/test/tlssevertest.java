@@ -1,17 +1,12 @@
 package anon.tor.tinytls.test;
 
-import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.net.Socket;
 
-import org.bouncycastle.asn1.DERConstructedSequence;
-import org.bouncycastle.asn1.DERInputStream;
-import org.bouncycastle.asn1.pkcs.RSAPrivateKeyStructure;
-
 import anon.crypto.JAPCertificate;
-import anon.crypto.MyRSAPrivateKey;
+import anon.crypto.MyDSAPrivateKey;
+import anon.crypto.PKCS12;
 import anon.tor.tinytls.TinyTLSServer;
-import anon.util.Base64;
 import logging.LogHolder;
 import logging.SystemErrLog;
 
@@ -22,31 +17,18 @@ public class tlssevertest {
 
 		LogHolder.setLogInstance(new SystemErrLog());
 
-		JAPCertificate cert = JAPCertificate.getInstance("/home/stefan/tlscert.pem");
 		
-		MyRSAPrivateKey key = null;
-		FileInputStream fs = new FileInputStream("/home/stefan/key.pem");
-		byte[] b = new byte[fs.available()];
-		fs.read(b);
-		b = Base64.decode(b,0,b.length);
-		DERInputStream dIn = new DERInputStream(new ByteArrayInputStream(b,0, b.length));
-		try
-		{
-			RSAPrivateKeyStructure rsa = new RSAPrivateKeyStructure((DERConstructedSequence) dIn.readObject());
-			key = new MyRSAPrivateKey(rsa.getModulus(),rsa.getPublicExponent(),rsa.getPrivateExponent(),rsa.getPrime1(),rsa.getPrime2(),rsa.getExponent1(),rsa.getExponent2(),rsa.getCoefficient());
-		} catch (Exception ex)
-		{
-			ex.printStackTrace();
-		}
-		
+		 FileInputStream fs = new FileInputStream("/home/stefan/mykey.pfx");
+		PKCS12 pkcs = PKCS12.load(fs,"".toCharArray());
+		MyDSAPrivateKey key = (MyDSAPrivateKey)pkcs.getPrivKey();
+		JAPCertificate cert = JAPCertificate.getInstance(pkcs.getX509cert());
+
 		TinyTLSServer tlsserver = new TinyTLSServer(3456);
-		tlsserver.setServerCertificate(cert);
-		tlsserver.setServerPrivateKey(key);
+		tlsserver.setDSSParameters(cert,key);
 		Socket tls = tlsserver.accept();
-		tls.getOutputStream().write(20);
-		tls.getOutputStream().write(21);
-		tls.getOutputStream().write(22);
-		Thread.sleep(5000);
+		tls.getOutputStream().write('H');
+		tls.getOutputStream().write('I');
+		tls.getOutputStream().write('!');
 		tls.close();
 		tlsserver.close();
 	}

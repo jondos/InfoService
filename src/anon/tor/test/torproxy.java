@@ -3,10 +3,6 @@
  */
 package anon.tor.test;
 
-//import jap.JAPController;
-
-import jap.JAPController;
-
 import java.net.ServerSocket;
 import java.net.Socket;
 

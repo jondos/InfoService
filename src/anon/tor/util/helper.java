@@ -44,6 +44,56 @@ public class helper {
 		return conc(b1,b2,b2.length);
 	}
 
+	public static byte[]  conc(byte[] b1,byte[] b2,byte[] b3)
+	{
+		byte[] ret = new byte[b1.length+b2.length+b3.length];
+		System.arraycopy(b1,0,ret,0,b1.length);
+		System.arraycopy(b2,0,ret,b1.length,b2.length);
+		System.arraycopy(b3,0,ret,b1.length+b2.length,b3.length);
+		return ret;
+	}
+
+	public static byte[]  conc(byte[] b1,byte[] b2, byte[] b3, byte[] b4)
+	{
+		byte[] ret = new byte[b1.length+b2.length+b3.length+b4.length];
+		System.arraycopy(b1,0,ret,0,b1.length);
+		System.arraycopy(b2,0,ret,b1.length,b2.length);
+		int len = b1.length+b2.length;
+		System.arraycopy(b3,0,ret,len,b3.length);
+		len+=b3.length;
+		System.arraycopy(b4,0,ret,len,b4.length);
+		return ret;
+	}
+
+	public static byte[]  conc(byte[] b1,byte[] b2, byte[] b3, byte[] b4,byte[] b5)
+	{
+		byte[] ret = new byte[b1.length+b2.length+b3.length+b4.length+b5.length];
+		System.arraycopy(b1,0,ret,0,b1.length);
+		System.arraycopy(b2,0,ret,b1.length,b2.length);
+		int len = b1.length+b2.length;
+		System.arraycopy(b3,0,ret,len,b3.length);
+		len+=b3.length;
+		System.arraycopy(b4,0,ret,len,b4.length);
+		len+=b4.length;
+		System.arraycopy(b5,0,ret,len,b5.length);
+		return ret;
+	}
+
+	public static byte[]  conc(byte[] b1,byte[] b2, byte[] b3, byte[] b4, byte[] b5, byte[] b6)
+	{
+		byte[] ret = new byte[b1.length+b2.length+b3.length+b4.length+b5.length+b6.length];
+		System.arraycopy(b1,0,ret,0,b1.length);
+		System.arraycopy(b2,0,ret,b1.length,b2.length);
+		int len = b1.length+b2.length;
+		System.arraycopy(b3,0,ret,len,b3.length);
+		len+=b3.length;
+		System.arraycopy(b4,0,ret,len,b4.length);
+		len+=b4.length;
+		System.arraycopy(b5,0,ret,len,b5.length);
+		len+=b5.length;
+		System.arraycopy(b6,0,ret,len,b6.length);
+		return ret;
+	}
 	/**
 	 * Concatenates two byte arrays
 	 * @param b1

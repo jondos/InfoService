@@ -81,6 +81,10 @@ public class TinyTLSServerSocket extends Socket
 
 	private JAPCertificate m_servercertificate;
 	private IMyPrivateKey m_privatekey;
+	private MyDSAPrivateKey m_DSSKey;
+	private MyRSAPrivateKey m_RSAKey;
+	private JAPCertificate m_DSSCertificate;
+	private JAPCertificate m_RSACertificate;
 
 	private byte[] m_handshakemessages;
 	private boolean m_encrypt;
@@ -346,6 +350,18 @@ public class TinyTLSServerSocket extends Socket
 									if(m_aktTLSRecord.m_Data[aktpos]==b[0]&&m_aktTLSRecord.m_Data[aktpos+1]==b[1])
 									{
 										m_selectedciphersuite = cs;
+										if(cs.getKeyExchangeAlgorithm() instanceof DHE_DSS_Key_Exchange)
+										{
+											m_servercertificate = m_DSSCertificate;
+											m_privatekey = m_DSSKey;
+										} else if(cs.getKeyExchangeAlgorithm() instanceof DHE_DSS_Key_Exchange)
+										{
+											m_servercertificate = m_RSACertificate;
+											m_privatekey = m_RSAKey;
+										} else
+										{
+											LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[ERROR!!!] : KeyExchangeAlgorithm not supported yet.(should never happen)");
+										}
 										break;
 									}
 								}
@@ -520,9 +536,8 @@ public class TinyTLSServerSocket extends Socket
 
 		public void sendHandshake(int type, byte[] message) throws IOException
 		{
-			byte[] senddata = helper.conc(new byte[]
-										  { (byte) type}
-										  , helper.conc(helper.inttobyte(message.length, 3), message));
+			byte[] senddata = helper.conc(new byte[]{ (byte) type} , 
+												helper.inttobyte(message.length, 3), message);
 			send(22, senddata, 0, senddata.length);
 			m_handshakemessages = helper.conc(m_handshakemessages, senddata);
 		}
@@ -530,7 +545,6 @@ public class TinyTLSServerSocket extends Socket
 
 		public void sendServerHello() throws IOException
 		{
-			byte[] message = PROTOCOLVERSION;
 			byte[] gmt_unix_time;
 			byte[] random = new byte[28];
 			byte[] sessionid = new byte[]{0x00};
@@ -542,10 +556,7 @@ public class TinyTLSServerSocket extends Socket
 			rand.nextBytes(random);
 			m_serverrandom = helper.conc(gmt_unix_time,random);
 
-			message = helper.conc(message, m_serverrandom);
-			message = helper.conc(message, sessionid);
-			message = helper.conc(message, ciphersuite);
-			message = helper.conc(message, compression);
+			byte[] message = helper.conc(PROTOCOLVERSION, m_serverrandom, sessionid, ciphersuite, compression);
 
 			sendHandshake(2, message);
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[SERVER_HELLO]");
@@ -612,7 +623,7 @@ public class TinyTLSServerSocket extends Socket
 	 * @param port
 	 * Server's TLS Port
 	 */
-	public TinyTLSServerSocket(Socket socket,JAPCertificate certificate,IMyPrivateKey key) throws IOException
+	public TinyTLSServerSocket(Socket socket) throws IOException
 	{
 		this.socket = socket;
 		this.m_handshakecompleted = false;
@@ -620,8 +631,10 @@ public class TinyTLSServerSocket extends Socket
 		this.m_supportedciphersuites = new Vector();
 		m_istream = new TLSInputStream(socket.getInputStream());
 		m_ostream = new TLSOutputStream(socket.getOutputStream());
-		m_servercertificate = certificate;
-		m_privatekey = key;
+		m_DSSCertificate = null;
+		m_DSSKey = null;
+		m_RSACertificate = null;
+		m_RSAKey = null;
 	}
 
 	/**
@@ -632,8 +645,15 @@ public class TinyTLSServerSocket extends Socket
 	{
 		if (!this.m_supportedciphersuites.contains(cs))
 		{
-			this.m_supportedciphersuites.addElement(cs);
-			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[CIPHERSUITE ADDED] : "+cs.toString());
+			if(((cs.getKeyExchangeAlgorithm() instanceof DHE_DSS_Key_Exchange)&&m_DSSKey!=null&&m_DSSCertificate!=null)||
+				((cs.getKeyExchangeAlgorithm() instanceof DHE_RSA_Key_Exchange)&&m_RSAKey!=null&&m_RSACertificate!=null))
+			{
+				this.m_supportedciphersuites.addElement(cs);
+				LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[CIPHERSUITE ADDED] : "+cs.toString());
+			} else
+			{
+				LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[CIPHERSUITE NOT ADDED] : Please check if you've set the Certificate and the Private Key");
+			}
 		}
 	}
 
@@ -648,9 +668,20 @@ public class TinyTLSServerSocket extends Socket
 		if(m_supportedciphersuites.isEmpty())
 		{
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[NO_CIPHERSUITE_DEFINED] : using predefined");
-			this.addCipherSuite(new DHE_RSA_WITH_3DES_CBC_SHA());
-			this.addCipherSuite(new DHE_RSA_WITH_AES_128_CBC_SHA());
-			this.addCipherSuite(new DHE_RSA_WITH_DES_CBC_SHA());
+			if(m_DSSKey!=null&&m_DSSCertificate!=null)
+			{
+				LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[DSS FOUND] : using DSS Ciphersuites");
+				this.addCipherSuite(new DHE_DSS_WITH_3DES_CBC_SHA());
+				this.addCipherSuite(new DHE_DSS_WITH_AES_128_CBC_SHA());
+				this.addCipherSuite(new DHE_DSS_WITH_DES_CBC_SHA());
+			}
+			if(m_RSAKey!=null&&m_RSACertificate!=null)
+			{
+				LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[RSA FOUND] : using RSA Ciphersuites");
+				this.addCipherSuite(new DHE_RSA_WITH_3DES_CBC_SHA());
+				this.addCipherSuite(new DHE_RSA_WITH_AES_128_CBC_SHA());
+				this.addCipherSuite(new DHE_RSA_WITH_DES_CBC_SHA());
+			}
 		}
 		this.m_handshakemessages = new byte[]{};
 		try
@@ -672,6 +703,18 @@ public class TinyTLSServerSocket extends Socket
 		this.m_handshakecompleted = true;
 	}
 
+	public void setDSSParameters(JAPCertificate cert,MyDSAPrivateKey key)
+	{
+		m_DSSCertificate = cert;
+		m_DSSKey = key;
+	}
+
+	public void setRSAParameters(JAPCertificate cert,MyRSAPrivateKey key)
+	{
+		m_RSACertificate = cert;
+		m_RSAKey = key;
+	}
+
 	public InputStream getInputStream()
 	{
 		return this.m_istream;
@@ -680,6 +723,11 @@ public class TinyTLSServerSocket extends Socket
 	public OutputStream getOutputStream()
 	{
 		return this.m_ostream;
+	}
+	
+	public void close() throws IOException
+	{
+		this.m_ostream.send(21,new byte[]{1,0},0,2);
 	}
 
 }
