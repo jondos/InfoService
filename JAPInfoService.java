@@ -216,7 +216,7 @@ final class JAPInfoService
 			service.setCurrentRisk(currentRisk);
 			service.setMixedPackets(mixedPackets);
 			service.setAnonLevel(iAnonLevel);
-			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPFeedback: "+nrOfActiveUsers+"/"+trafficSituation+"/"+currentRisk+"/"+mixedPackets);
+			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPFeedback: "+nrOfActiveUsers+"/"+trafficSituation+"/"+currentRisk+"/"+mixedPackets+"/"+iAnonLevel);
 		}
 
 
