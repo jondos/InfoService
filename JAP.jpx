@@ -305,7 +305,6 @@
   <property category="sys" name="Copyright" value="Copyright (c) 2001"/>
   <property category="sys" name="CopyrightLabel" value="Copyright:"/>
   <property category="sys" name="DefaultPath" value="src"/>
-  <property category="sys" name="Deprecations" value="0"/>
   <property category="sys" name="Description" value=""/>
   <property category="sys" name="DescriptionLabel" value="Beschreibung:"/>
   <property category="sys" name="DocPath" value="doc"/>
