@@ -46,16 +46,23 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
 				{
 					e.printStackTrace();
 				}
-			setIconImage(new ImageIcon(this.getClass().getResource("images/icon.gif")).getImage());
+			ImageIcon ii=loadImageIcon("images/icon.gif",true);
+			if(ii!=null)
+				setIconImage(ii.getImage());
 			// Show wait message
-			JLabel waitLabel = new JLabel(model.msg.getString("loading"), JLabel.CENTER);
+			ii=loadImageIcon(model.msg.getString("loading"),true);
+			JLabel waitLabel = null;
+			if(ii!=null)
+				waitLabel=new JLabel((ii), JLabel.CENTER);
+			else
+				waitLabel=new JLabel("", JLabel.CENTER);
 			//waitLabel.setFont(new Font("Sans", Font.BOLD,14));
 			waitLabel.setBackground(Color.black);
 			waitLabel.setForeground(Color.white);
 			//Color bgColor = getContentPane().getBackground();
 			getContentPane().setBackground(Color.black);
 			getContentPane().add(waitLabel, BorderLayout.SOUTH);
-			getContentPane().add(new JLabel(new ImageIcon(this.getClass().getResource(model.SPLASHFN))), BorderLayout.CENTER);
+			getContentPane().add(new JLabel(loadImageIcon(model.SPLASHFN,true)), BorderLayout.CENTER);
 			//setSize(250, 50);
 			setResizable(false);
 			pack();
@@ -77,20 +84,20 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
 		loadMeterIcons();
 		
 		// "NORTH": Image
-		ImageIcon northImage = new ImageIcon(this.getClass().getResource(model.msg.getString("northPath")));
+		ImageIcon northImage = loadImageIcon(model.msg.getString("northPath"),true);
 		JLabel northLabel = new JLabel(northImage);
 
 		// "West": Image
-		ImageIcon westImage = new ImageIcon(this.getClass().getResource(model.msg.getString("westPath")));
+		ImageIcon westImage = loadImageIcon(model.msg.getString("westPath"),true);;
 		JLabel westLabel = new JLabel(westImage);
-		westLabel.setOpaque(false);
+//		westLabel.setOpaque(false);
 		
 		// "Center:" tabs
 		JTabbedPane tabs = new JTabbedPane();
 		JPanel config = buildConfigPanel();
 		JPanel level = buildLevelPanel();
-		tabs.addTab(model.msg.getString("mainConfTab"), new ImageIcon(this.getClass().getResource(model.CONFIGICONFN)), config );
-		tabs.addTab(model.msg.getString("mainMeterTab"), new ImageIcon(this.getClass().getResource(model.METERICONFN)), level );
+		tabs.addTab(model.msg.getString("mainConfTab"), loadImageIcon(model.CONFIGICONFN,true), config );
+		tabs.addTab(model.msg.getString("mainMeterTab"), loadImageIcon(model.METERICONFN,true), level );
 		
 		// "South": Buttons
 		JPanel buttonPanel = new JPanel();
@@ -318,7 +325,7 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
 				System.out.println("METERFNARRAY.length="+model.METERFNARRAY.length);
 			for (int i=0; i<model.METERFNARRAY.length; i++)
 				{
-					meterIcons[i] = new ImageIcon(this.getClass().getResource(model.METERFNARRAY[i]));
+					meterIcons[i] = loadImageIcon(model.METERFNARRAY[i],false);
 					if (model.debug) 
 						System.out.println("Image "+model.METERFNARRAY[i]+" loaded");
 				}
@@ -336,19 +343,21 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
 					}
 			}
 
-    public ImageIcon setMeterImage(boolean b) {
-		if (model.NOMEASURE) return meterIcons[0]; // No measure available
-		else return setMeterImage();
-	}
+    public ImageIcon setMeterImage(boolean b) 
+			{
+				if (model.NOMEASURE)
+					return meterIcons[0]; // No measure available
+				else
+					return setMeterImage();
+			}
 
-    protected void centerFrame() {
-        Dimension screenSize = this.getToolkit().getScreenSize();
-		Dimension ownSize = this.getSize();
-		this.setLocation(
-			(screenSize.width  - ownSize.width )/2,
-			(screenSize.height - ownSize.height)/3
-		);
-    }
+    protected void centerFrame()
+			{
+        Dimension screenSize = getToolkit().getScreenSize();
+				Dimension ownSize = getSize();
+				setLocation((screenSize.width  - ownSize.width )/2,
+										(screenSize.height - ownSize.height)/2);
+			}
 
 	public void actionPerformed(ActionEvent event){
 		if (event.getSource() == quitB) { exitProgram(); } 
@@ -465,6 +474,31 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
 		{
 			if (model.debug) System.out.println("view.valuesChanged()");
 			updateValues();
+		}
+	
+	ImageIcon loadImageIcon(String strImage,boolean sync)
+		{
+			ImageIcon i=null;
+			try
+				{
+					i=new ImageIcon(getClass().getResource(strImage));
+				}
+			catch(Exception e)
+				{
+					return null;
+				}
+			if(sync)
+				{
+					while(true)
+						{
+							int status=i.getImageLoadStatus();
+							if((status&MediaTracker.COMPLETE)!=0)
+								return i;
+							else if(((status&MediaTracker.ABORTED)!=0)||((status&MediaTracker.ERRORED)!=0))
+								return null;
+						}
+				}
+			return i;
 		}
 }
 

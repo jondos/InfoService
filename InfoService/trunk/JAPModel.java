@@ -13,8 +13,8 @@ public class JAPModel implements JAPObserver {
 	public String		anonHostName ="sole.icsi.berkeley.edu";
 	public int			anonPortNumber = 6543;
 	private boolean		anonMode = false;
-	public String 		status1 = "<init value>";
-	public String 		status2 = "<init value>";
+	public String 		status1 = "OK";
+	public String 		status2 = "OK";
 
 	static final String url_info_version="http://anon.inf.tu-dresden.de/~sk13/anon/jap/aktVersion.txt";
 	static final String url_jap_newversion="http://anon.inf.tu-dresden.de/~sk13/anon/jap/JAP.jar";
@@ -54,14 +54,14 @@ public class JAPModel implements JAPObserver {
 	
 	public JAPModel () {
 		// Load Texts for Messages and Windows
-		msg = ResourceBundle.getBundle(MESSAGESFN, Locale.getDefault() );
+		msg = ResourceBundle.getBundle(MESSAGESFN, Locale.ENGLISH/*Locale.getDefault()*/ );
 		//
 		observerVector = new Vector();
 		//
 		anonServerDatabase = new Vector();
 		anonServerDatabase.addElement(new AnonServerDBEntry(anonHostName, anonPortNumber));
 		anonServerDatabase.addElement(new AnonServerDBEntry(proxyHostName, proxyPortNumber));
-		anonServerDatabase.addElement(new AnonServerDBEntry("ikt.inf.tu-dresden.de", 4007));
+		anonServerDatabase.addElement(new AnonServerDBEntry("anon.inf.tu-dresden.de", 6543));
 		anonServerDatabase.addElement(new AnonServerDBEntry("sole.icsi.berkeley.edu", 4007));
 		anonServerDatabase.addElement(new AnonServerDBEntry("amadeus.icsi.berkeley.edu", 4007));
 		anonServerDatabase.addElement(new AnonServerDBEntry("192.168.1.1", 4007));
