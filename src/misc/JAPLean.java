@@ -40,6 +40,7 @@ import logging.LogLevel;
 import logging.LogType;
 import proxy.AnonWebProxy;
 import proxy.ProxyListener;
+import anon.infoservice.*;
 
 final class JAPLean implements ProxyListener
 {
@@ -68,6 +69,7 @@ final class JAPLean implements ProxyListener
 		LogHolder.setLogInstance(JAPDebug.getInstance());
 		JAPDebug.getInstance().setLogType(LogType.ALL);
 		JAPDebug.getInstance().setLogLevel(LogLevel.DEBUG);
+		HTTPConnectionFactory.getInstance().setTimeout(JAPConstants.DEFAULT_INFOSERVICE_TIMEOUT);
 		InfoServiceHolder.getInstance().setPreferedInfoService(new InfoServiceDBEntry(JAPConstants.
 			defaultInfoServiceHostName,
 			JAPConstants.defaultInfoServicePortNumber));
