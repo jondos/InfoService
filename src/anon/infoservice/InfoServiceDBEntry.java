@@ -111,7 +111,7 @@ public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncodable
    * generated from the InfoService itself (false).
    */
   private boolean m_userDefined;
-  
+
 
   /**
 	 * Creates an XML node (InfoServices node) with all infoservices from the database inside.
@@ -320,7 +320,7 @@ public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncodable
 		m_infoserviceSoftware = new ServiceSoftware("unknown");
 		m_preferedListenerInterface = 0;
     m_userDefined = a_userDefined;
-    
+
     /* generate the XML representation for this InfoServiceDBEntry */
     m_xmlDescription = generateXmlRepresentation();
 	}
@@ -833,11 +833,11 @@ public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncodable
 	{
 		Document doc = getXmlDocument(HttpRequestStructure.createGetRequest("/tornodes"));
 		Element torNodeList=doc.getDocumentElement();
-    String compressedTorNodesList = XMLUtil.parseNodeString(torNodeList,null);
-    if (compressedTorNodesList == null) {
+    String strTorNodesList = XMLUtil.parseNodeString(torNodeList,null);
+    if (strTorNodesList == null) {
       throw (new Exception("InfoServiceDBEntry: getTorNodesList: Error while parsing the TOR nodes list XML structure."));
     }
-    return (new String(BZip2Tools.decompress(Base64.decode(compressedTorNodesList))));
+    return strTorNodesList;
 	}
 
 	/**
