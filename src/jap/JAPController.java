@@ -970,7 +970,7 @@ public final class JAPController implements ProxyListener, Observer
 			if (JAPModel.getMoveToSystrayOnStartup())
 			{
 				Element tmp = doc.createElement("MoveToSystray");
-				tmp.appendChild(XMLUtil.createNodeBoolean(doc, true));
+				XMLUtil.setValue(tmp,true);
 				elemMainWindow.appendChild(tmp);
 			}
 			if (JAPModel.getDefaultView() == JAPConstants.VIEW_SIMPLIFIED)
