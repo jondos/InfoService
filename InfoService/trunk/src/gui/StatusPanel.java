@@ -39,7 +39,7 @@ import jap.JAPConstants;
 import jap.JAPUtil;
 
 /** A panel which display some status messages, one after each other*/
-public class StatusPanel extends JPanel implements Runnable
+public class StatusPanel extends JPanel implements Runnable, IStatusLine
 {
 	Dimension m_dimensionPreferredSize;
 	int m_Height;
@@ -109,7 +109,7 @@ public class StatusPanel extends JPanel implements Runnable
 	 * @param msg the message to be displayed
 	 * @return an id useful for removing this message from the status panel
 	 */
-	public int addMsg(String msg, int type)
+	public int addStatusMsg(String msg, int type)
 	{
 		synchronized (oMsgSync)
 		{
@@ -150,38 +150,49 @@ public class StatusPanel extends JPanel implements Runnable
 	/** Removes a message from the ones which are displayed in the status panel
 	 * @param id the message to be removed
 	 */
-	public void removeMsg(int id)
+	public void removeStatusMsg(int id)
 	{
 		synchronized (oMsgSync)
 		{
-			if(m_Msgs==null)//zero elements
+			if (m_Msgs == null) //zero elements
+			{
 				return;
-			if (m_Msgs.m_Id == id && m_Msgs.m_Next == m_Msgs)//one element
+			}
+			if (m_Msgs.m_Id == id && m_Msgs.m_Next == m_Msgs) //one element
 			{
 				m_Msgs = null;
 				m_lastMsg = null;
-				return;
 			}
-			//more than one
-			MsgQueueEntry entry = m_Msgs;
-			MsgQueueEntry prev = null;
-			while (entry != null)
+			else
 			{
-				if (entry.m_Next.m_Id == id)
+				//more than one
+				MsgQueueEntry entry = m_Msgs;
+				MsgQueueEntry prev = null;
+				while (entry != null)
 				{
-					prev=entry;
-					entry=entry.m_Next;
-					break;
+					if (entry.m_Next.m_Id == id)
+					{
+						prev = entry;
+						entry = entry.m_Next;
+						break;
+					}
+					entry = entry.m_Next;
+					if (entry == m_Msgs)
+					{
+						return; //not found
+					}
 				}
-				entry = entry.m_Next;
-				if(entry==m_Msgs)
-					return;//not found
+				if (entry == m_Msgs) //remove curent entry
+				{
+					m_Msgs = entry.m_Next;
+				}
+				prev.m_Next = entry.m_Next; //remove entry from list
+				if (m_lastMsg == entry) //adjust last
+				{
+					m_lastMsg = prev;
+				}
 			}
-			if(entry==m_Msgs)//remove curent entry
-				m_Msgs=entry.m_Next;
-			prev.m_Next=entry.m_Next;//remove entry from list
-			if(m_lastMsg==entry) //adjust last
-				m_lastMsg=prev;
+			m_Thread.interrupt(); //display changes
 		}
 	}
 
@@ -221,11 +232,13 @@ public class StatusPanel extends JPanel implements Runnable
 	{
 		try
 		{
+			boolean bInterrupted=false;
 			while (m_bRun)
 			{
 				try
 				{
-					Thread.sleep(10000);
+					if(!bInterrupted)
+						Thread.sleep(10000);
 				}
 				catch (InterruptedException e)
 				{
@@ -234,10 +247,12 @@ public class StatusPanel extends JPanel implements Runnable
 						return;
 					}
 				}
+				bInterrupted=false;
 				synchronized (oMsgSync)
 				{
 					if (m_Msgs == null)
 					{
+						paint(getGraphics());
 						continue;
 					}
 					m_Msgs = m_Msgs.m_Next;
@@ -248,10 +263,12 @@ public class StatusPanel extends JPanel implements Runnable
 					paint(getGraphics());
 					try
 					{
-						Thread.sleep(100);
+						if(!bInterrupted)
+							Thread.sleep(100);
 					}
 					catch (InterruptedException e)
 					{
+						bInterrupted=true;
 					}
 					m_aktY++;
 				}

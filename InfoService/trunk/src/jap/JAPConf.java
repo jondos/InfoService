@@ -138,13 +138,9 @@ final class JAPConf extends JDialog
 	private JCheckBox m_cbDebugThread;
 	private JCheckBox m_cbDebugMisc;
 	private JCheckBox m_cbShowDebugConsole;
-	//private JCheckBox m_cbSaveWindowPositions;
 	private JCheckBox m_cbCertCheckDisabled;
 
 	private JSlider m_sliderDebugLevel;
-
-	//private JComboBox m_comboLanguage;
-	//private boolean m_bIgnoreComboLanguageEvents = false;
 
 	private JCheckBox m_cbDummyTraffic;
 	private JSlider m_sliderDummyTrafficIntervall;
@@ -821,7 +817,6 @@ final class JAPConf extends JDialog
 		});
 
 		m_cbCertCheckDisabled = new JCheckBox("Disable check of certificates");
-		//m_cbSaveWindowPositions = new JCheckBox("Remember Location of JAP");
 		JPanel p22 = new JPanel();
 		GridBagLayout gb = new GridBagLayout();
 		p22.setLayout(gb);
@@ -875,8 +870,6 @@ final class JAPConf extends JDialog
 		gb.setConstraints(m_sliderDummyTrafficIntervall, lc);
 		p22.add(m_sliderDummyTrafficIntervall);
 		lc.gridy++;
-		//gb.setConstraints(m_cbSaveWindowPositions, lc);
-		//p22.add(m_cbSaveWindowPositions);
 		lc.gridy++;
 		gb.setConstraints(m_cbCertCheckDisabled, lc);
 		p22.add(m_cbCertCheckDisabled);
@@ -1329,7 +1322,6 @@ final class JAPConf extends JDialog
 				  JAPModel.getInstance().getProxyInterface().isAuthenticationUsed());
 		//cert tab
 		m_cbCertCheckDisabled.setSelected(JAPModel.isCertCheckDisabled());
-//		m_cbSaveWindowPositions.setSelected(JAPModel.getSaveMainWindowPosition());
 	}
 
 }

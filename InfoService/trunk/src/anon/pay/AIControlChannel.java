@@ -96,12 +96,11 @@ public class AIControlChannel extends SyncControlChannel
 				/** @todo handle this exception */
 			}
 		}
-	/*	if(request.)
+		if(request.isAccountRequest())
 		{
 			PayAccount currentAccount = PayAccountsFile.getInstance().getActiveAccount();
 			this.sendMessage(XMLUtil.toXMLDocument(currentAccount.getAccountCertificate()));
 		}
-*/
 	}
 
 

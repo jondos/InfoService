@@ -28,7 +28,7 @@ public class XMLErrorMessage implements IXMLEncodable
 	private static final String[] m_errStrings =
 		{
 		"Success", "Internal Server Error",
-		"Wrong format", "Wrong Data", "Key not found", "Bad Signature"
+		"Wrong format", "Wrong Data", "Key not found", "Bad Signature", "Bad request"
 	};
 	public static final int ERR_BAD_REQUEST = 6;
 

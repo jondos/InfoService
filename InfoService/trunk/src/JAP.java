@@ -37,6 +37,7 @@ import jap.AbstractJAPMainView;
 import jap.JAPAWTMsgBox;
 import jap.JAPConstants;
 import jap.JAPController;
+import jap.JAPModel;
 import jap.JAPDebug;
 import jap.JAPMessages;
 import jap.JAPNewView;
@@ -245,7 +246,7 @@ class JAP extends Frame
 				"JAP:MRJ Version is " + mrjVersion + ".");
 			//initalisiere PayInstance
 		}
-		AbstractJAPMainView view =new JAPNewView(JAPConstants.TITLE,m_controller);
+		JAPNewView view =new JAPNewView(JAPConstants.TITLE,m_controller);
 		// Create the main frame
 		view.create(loadPay);
 		// Switch Debug Console Parent to MainView
@@ -264,16 +265,23 @@ class JAP extends Frame
 		// Show main frame and dispose splash screen
 		view.show();
 		view.toFront();
-		if (m_arstrCmdnLnArgs != null)
+		boolean bSystray=JAPModel.getMoveToSystrayOnStartup();
+		if (m_arstrCmdnLnArgs != null&&!bSystray)
 		{
 			for (int i = 0; i < m_arstrCmdnLnArgs.length; i++)
 			{
 				if (m_arstrCmdnLnArgs[i].equalsIgnoreCase("-minimized"))
 				{
-					view.hideWindowInTaskbar();
+					bSystray=true;
 					break;
 				}
 			}
+		}
+		if(bSystray)
+			view.hideWindowInTaskbar();
+		else if(JAPModel.getMinimizeOnStartup())
+		{
+			view.showIconifiedView();
 		}
 		splash.dispose();
 		// pre-initalize anon service
