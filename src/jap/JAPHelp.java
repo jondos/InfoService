@@ -59,6 +59,8 @@ import java.util.Vector;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import javax.swing.border.EmptyBorder;
+import java.awt.Color;
 
 /* classes modified from Swing Example "Metalworks" */
 /** Help window for the JAP. Thi is a singleton meaning that there exists only one help window all the time.*/
@@ -73,6 +75,7 @@ final class JAPHelp extends JDialog implements ActionListener, PropertyChangeLis
 	private JButton m_closeButton;
 	private JButton m_backButton;
 	private JButton m_forwardButton;
+	private JButton m_homeButton;
 
 	private JDialog m_virtualParent;
 
@@ -119,30 +122,46 @@ final class JAPHelp extends JDialog implements ActionListener, PropertyChangeLis
 		m_htmlpaneTheHelpPane.addPropertyChangeListener(this);
 		this.addWindowListener(this);
 
-		JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+		JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
 		language = new JComboBox();
-		buttonPanel.add(language);
-		buttonPanel.add(new JLabel("   "));
 
-		m_backButton = new JButton(JAPMessages.getString("backButton"));
-		buttonPanel.add(m_backButton);
-		m_forwardButton = new JButton(JAPMessages.getString("forwardButton"));
-		buttonPanel.add(m_forwardButton);
-		buttonPanel.add(new JLabel("   "));
+		m_backButton = new JButton(JAPUtil.loadImageIcon(JAPConstants.IMAGE_PREV, true));
+		m_backButton.setBackground(Color.gray); //this together with the next lines sems to be
+		m_backButton.setOpaque(false); //stupid but is necessary for JDK 1.5 on Windows XP (and maybe others)
+		m_backButton.setBorder(new EmptyBorder(0, 0, 0, 0));
+		m_backButton.setFocusPainted(false);
+
+	m_forwardButton = new JButton(JAPUtil.loadImageIcon(JAPConstants.IMAGE_NEXT, true));
+	m_forwardButton.setBackground(Color.gray); //this together with the next lines sems to be
+	m_forwardButton.setOpaque(false); //stupid but is necessary for JDK 1.5 on Windows XP (and maybe others)
+	m_forwardButton.setBorder(new EmptyBorder(0, 0, 0, 0));
+	m_forwardButton.setFocusPainted(false);
+		m_homeButton = new JButton(JAPUtil.loadImageIcon(JAPConstants.IMAGE_HOME, true));
+		m_homeButton.setBackground(Color.gray); //this together with the next lines sems to be
+		m_homeButton.setOpaque(false); //stupid but is necessary for JDK 1.5 on Windows XP (and maybe others)
+		m_homeButton.setBorder(new EmptyBorder(0, 0, 0, 0));
+		m_homeButton.setFocusPainted(false);
 		m_closeButton = new JButton(JAPMessages.getString("closeButton"));
-		buttonPanel.add(m_closeButton);
-		buttonPanel.add(new JLabel("   "));
 		m_forwardButton.setEnabled(false);
 		m_backButton.setEnabled(false);
 
+		buttonPanel.add(m_homeButton);
+		buttonPanel.add(m_backButton);
+		buttonPanel.add(m_forwardButton);
+		buttonPanel.add(new JLabel("   "));
+		buttonPanel.add(language);
+		buttonPanel.add(new JLabel("   "));
+		buttonPanel.add(m_closeButton);
+
 		getContentPane().add(m_htmlpaneTheHelpPane, BorderLayout.CENTER);
-		getContentPane().add(buttonPanel, BorderLayout.SOUTH);
+		getContentPane().add(buttonPanel, BorderLayout.NORTH);
 		//getContentPane().add(container);
 		getRootPane().setDefaultButton(m_closeButton);
 		m_closeButton.addActionListener(this);
 		m_backButton.addActionListener(this);
 		m_forwardButton.addActionListener(this);
+		m_homeButton.addActionListener(this);
 		language.addActionListener(this);
 		for (int i = 1; i < JAPConstants.MAXHELPLANGUAGES; i++)
 		{
@@ -205,6 +224,15 @@ final class JAPHelp extends JDialog implements ActionListener, PropertyChangeLis
 		{
 			forwardPressed();
 		}
+		else if (e.getSource() == m_homeButton)
+		{
+			homePressed();
+		}
+	}
+
+	private void homePressed()
+	{
+		m_htmlpaneTheHelpPane.load(helpPath + "index_" + langShort + ".html");
 	}
 
 	private void closePressed()

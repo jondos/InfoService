@@ -35,7 +35,7 @@ import anon.tor.Tor;
 
 public final class JAPConstants
 {
-	public static final String aktVersion = "00.03.044"; //Never change the layout of this line!
+	public static final String aktVersion = "00.03.045"; //Never change the layout of this line!
 	private static final String CVS_GENERATED_RELEASE_DATE = "$Date$";
 
 	//Warning: This is a little bit tricky,
@@ -155,6 +155,10 @@ public final class JAPConstants
 	public static final String IMAGE_COPY = "copyicon.gif";
 	public static final String IMAGE_COPY_CONFIG = "copyintoicon.gif";
 
+	public static final String IMAGE_HOME = "home.gif";
+	public static final String IMAGE_PREV = "previous.gif";
+	public static final String IMAGE_NEXT = "next.gif";
+
 	public static final String CERTENABLEDICON = "cenabled.gif";
 	public static final String CERTDISABLEDICON = "cdisabled.gif";
 
@@ -193,6 +197,7 @@ public final class JAPConstants
 	public final static int TOR_MAX_CONNECTIONS_PER_ROUTE = Circuit.MAX_STREAMS_OVER_CIRCUIT;
 	public final static int TOR_MAX_ROUTE_LEN = Tor.MAX_ROUTE_LEN;
 	public final static int TOR_MIN_ROUTE_LEN = Tor.MIN_ROUTE_LEN;
+	public final static boolean DEFAULT_TOR_PRECREATE_ROUTES=false;
 	/**
 	 * The minimum bandwidth per user needed for forwarding. This affects the maximum number
 	 * of users, which can be forwarded with a specified bandwidth. The default is 2 KByte/sec

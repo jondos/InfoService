@@ -441,6 +441,7 @@
     <file path="images/exiticon.gif"/>
     <file path="images/green.gif"/>
     <file path="images/haken.gif"/>
+    <file path="images/home.gif"/>
     <file path="images/host16.gif"/>
     <file path="images/icoc.gif"/>
     <file path="images/icom.gif"/>
@@ -464,7 +465,9 @@
     <file path="images/meterD.gif"/>
     <file path="images/meterN.gif"/>
     <file path="images/meterNnew.gif"/>
+    <file path="images/next.gif"/>
     <file path="images/north.gif"/>
+    <file path="images/previous.gif"/>
     <file path="images/red.gif"/>
     <file path="images/reload.gif"/>
     <file path="images/reloaddisabled_anim.gif"/>

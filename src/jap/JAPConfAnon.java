@@ -415,17 +415,17 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		c.gridy = 4;
 		m_cascadesPanel.add(m_reloadCascadesButton, c);
 
-		m_manualCascadeButton = new JButton(JAPMessages.getString("manualCascade"));
-		m_manualCascadeButton.addActionListener(this);
-		c.gridx = 1;
-		m_cascadesPanel.add(m_manualCascadeButton, c);
-
 		m_selectCascadeButton = new JButton(JAPMessages.getString("selectCascade"));
-		/* maybe the button must be disabled (if connect-via-forwarder is selected) */
-		m_selectCascadeButton.setEnabled(!JAPModel.getInstance().getRoutingSettings().isConnectViaForwarder());
-		m_selectCascadeButton.addActionListener(this);
+			/* maybe the button must be disabled (if connect-via-forwarder is selected) */
+			m_selectCascadeButton.setEnabled(!JAPModel.getInstance().getRoutingSettings().isConnectViaForwarder());
+			m_selectCascadeButton.addActionListener(this);
+			c.gridx = 1;
+			m_cascadesPanel.add(m_selectCascadeButton, c);
+
+	m_manualCascadeButton = new JButton(JAPMessages.getString("manualCascade"));
+		m_manualCascadeButton.addActionListener(this);
 		c.gridx = 2;
-		m_cascadesPanel.add(m_selectCascadeButton, c);
+		m_cascadesPanel.add(m_manualCascadeButton, c);
 
 		c.insets = new Insets(5, 20, 0, 5);
 

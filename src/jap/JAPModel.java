@@ -72,7 +72,7 @@ public final class JAPModel
 	private int m_TorMaxConnectionsPerRoute = JAPConstants.TOR_MAX_CONNECTIONS_PER_ROUTE;
 	private int m_TorMaxRouteLen = JAPConstants.TOR_MAX_ROUTE_LEN;
 	private int m_TorMinRouteLen = JAPConstants.TOR_MIN_ROUTE_LEN;
-	private boolean m_bPreCreateAnonRoutes = true;
+	private boolean m_bPreCreateAnonRoutes = JAPConstants.DEFAULT_TOR_PRECREATE_ROUTES;
 
 	/**
 	 * Stores the instance with the routing settings.
