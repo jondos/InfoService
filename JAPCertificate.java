@@ -10,13 +10,34 @@ import java.io.ByteArrayOutputStream;
 import sun.misc.BASE64Encoder;
 import sun.misc.BASE64Decoder;
 import java.util.StringTokenizer;
-public class JAPCertificate implements Certificate
+public final class JAPCertificate implements Certificate
 	{
 		private X509Cert cert;
 		
 		public final static int BASE64=1;
 		public final static int DER=2;
 		public final static int DEFAULT_ENCODING=DER;
+
+		final class BASE64InputFilter extends InputStream
+			{
+				byte[] buff;
+				int aktIndex;
+					public BASE64InputFilter(String s)
+						{
+							buff=s.getBytes();
+							aktIndex=0;
+						}
+					public int read()
+					{
+						while(aktIndex<buff.length&&(buff[aktIndex]==32||buff[aktIndex]==9))
+							aktIndex++;
+						if(aktIndex==buff.length)
+							return -1;
+						else
+							return buff[aktIndex++];
+					}
+				}
+
 		
 		public JAPCertificate(byte[] certBuff)
 			{
@@ -112,52 +133,34 @@ public class JAPCertificate implements Certificate
 				switch(type)
 					{
 						case BASE64:
-					try{
-							BASE64Decoder d=new BASE64Decoder();
-							String s=new String(buff);
-							s=s.trim();
-							System.out.println(s);
-							if(!s.startsWith("-----BEGIN CERTIFICATE-----")||!s.endsWith("-----END CERTIFICATE-----"))
-								 return;
-							s=s.substring(27,s.length()-26);
-							System.out.println(s);
-							final class BASE64InputFilter extends InputStream
-											{
-												byte[] buff;
-												int aktIndex;
-												public BASE64InputFilter(String s)
-													{
-														buff=s.getBytes();
-														aktIndex=0;
-													}
-												public int read()
-												{
-													while(aktIndex<buff.length&&(buff[aktIndex]==32||buff[aktIndex]==9))
-														aktIndex++;
-													if(aktIndex==buff.length)
-														return -1;
-													else
-														return buff[aktIndex++];
-												}
-											}
-							BASE64InputFilter in=new BASE64InputFilter(s);
-							byte[] decoded=d.decodeBuffer(in);
-							System.out.println(decoded.length);
-							decode(decoded,DER);
-					}
-					catch(Exception e)
-					{
-						e.printStackTrace();
-					}
+							try
+								{
+									BASE64Decoder d=new BASE64Decoder();
+									String s=new String(buff);
+									s=s.trim();
+									if(!s.startsWith("-----BEGIN CERTIFICATE-----")
+										 ||!s.endsWith("-----END CERTIFICATE-----"))
+										return;
+									s=s.substring(27,s.length()-26);
+									BASE64InputFilter in=new BASE64InputFilter(s);
+									byte[] decoded=d.decodeBuffer(in);
+									decode(decoded,DER);
+								}
+							catch(Exception e)
+								{
+									e.printStackTrace();
+								}
 						break;
 						case DER:
-						try{
-							cert=new X509Cert(buff);}
-						catch(Exception e)
-						{
-							cert=null;
-							e.printStackTrace();
-						}
+							try
+								{
+									cert=new X509Cert(buff);
+								}
+							catch(Exception e)
+								{
+									cert=null;
+									e.printStackTrace();
+								}
 						break;
 						default:
 							return;
