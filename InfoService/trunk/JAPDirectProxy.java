@@ -44,16 +44,14 @@ import java.text.SimpleDateFormat;
 
 final class JAPDirectProxy implements Runnable
 	{
-
-
-	private volatile boolean runFlag; 
-	private boolean isRunningProxy = false;
+		private volatile boolean runFlag; 
+		private boolean isRunningProxy = false;
     private int portN;
     private ServerSocket socketListener;
     private Thread threadRunLoop;
-	private ThreadGroup threadgroupAll;
-	private JAPModel model;
-	private boolean warnUser = true;
+		private ThreadGroup threadgroupAll;
+		private JAPModel model;
+		private boolean warnUser = true;
 
     public JAPDirectProxy (ServerSocket s) 
 			{
@@ -63,59 +61,44 @@ final class JAPDirectProxy implements Runnable
 
 		public boolean startService()
 			{
-	//			socketListener = null;
-/*				try 
-					{
-						if(model.getListenerIsLocal())
-							{
-								InetAddress[] a=InetAddress.getAllByName("localhost");
-								JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Try binding Listener on localhost: "+a[0]);
-								socketListener = new ServerSocket (portN,50,a[0]);
-							}
-						else
-							socketListener = new ServerSocket (portN);
-						JAPDebug.out(JAPDebug.INFO,JAPDebug.NET,"JAPProxyServer:Listener on port " + portN + " started.");
-						Thread t1=new Thread(this);
-						t1.start();
-						isRunningProxy = true;
-						return true;
-					}
-				catch(Exception e)
-					{
-						socketListener=null;
-						isRunningProxy = false;
-						return false;
-					}
-	*/
-						threadgroupAll=new ThreadGroup("directproxy");
-						threadRunLoop=new Thread(this);
-						threadRunLoop.start();
-						isRunningProxy = true;
-						return true;
-			
+				if(socketListener==null)
+					return false;
+				threadgroupAll=new ThreadGroup("directproxy");
+				threadRunLoop=new Thread(this);
+				threadRunLoop.start();
+				isRunningProxy = true;
+				return true;
 			}
 		
-    public void run() {
-		runFlag = true;
-		try {
-			while(runFlag) {
-				Socket socket=null;
-				try {
-					socket = socketListener.accept();
-				}
-				catch(InterruptedIOException e1) {
-					continue;
-				}
-				catch(SocketException e2) {
-					JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPDirectProxy:DirectProxy.run() accept socket excpetion: " +e2);
-					break;
-				}
-				if (warnUser) {
-					JAPDirectConnection      doIt = new JAPDirectConnection(socket);
-					Thread thread = new Thread (threadgroupAll,doIt);
-					thread.start();
-					warnUser=false;
-				} else {
+    public void run() 
+			{
+				runFlag = true;
+				try 
+					{
+						while(runFlag) 
+							{
+								Socket socket=null;
+								try
+									{
+										socket = socketListener.accept();
+									}
+								catch(InterruptedIOException e1)
+									{
+										continue;
+									}
+								catch(SocketException e2)
+									{
+										JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPDirectProxy:DirectProxy.run() accept socket excpetion: " +e2);
+										break;
+									}
+								if (warnUser)
+									{
+										JAPDirectConnection      doIt = new JAPDirectConnection(socket);
+										Thread thread = new Thread (threadgroupAll,doIt);
+										thread.start();
+										warnUser=false;
+									}
+								else {
 					if (model.getUseProxy()) {
 						JAPDirectConViaProxy doIt = new JAPDirectConViaProxy (socket);			
 						Thread thread = new Thread (threadgroupAll,doIt);
@@ -128,14 +111,10 @@ final class JAPDirectProxy implements Runnable
 				}
 			}
 		}
-		catch (Exception e) {
-//			try {
-//			socketListener.close();
-//			} 
-//			catch (Exception e2) {
-//			}
-			JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPDirectProxy:DirectProxy.run() Exception: " +e);
-		}
+		catch (Exception e) 
+			{
+				JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPDirectProxy:DirectProxy.run() Exception: " +e);
+			}
 		isRunningProxy = false;
 		JAPDebug.out(JAPDebug.INFO,JAPDebug.NET,"JAPDirect:DircetProxyServer stopped.");
 	}
