@@ -39,6 +39,7 @@ import logging.LogLevel;
 import logging.LogType;
 import proxy.AnonWebProxy;
 import proxy.ProxyListener;
+import java.util.*;
 
 final class JAPLean implements ProxyListener
 {
@@ -54,6 +55,16 @@ final class JAPLean implements ProxyListener
 
 	JAPLean() throws Exception
 	{
+		try
+		{
+			Properties systemProperties = System.getProperties();
+			systemProperties.put("java.awt.headless", "true");
+			System.setProperties(systemProperties);
+		}
+		catch (Throwable t)
+		{
+		}
+
 		LogHolder.setLogInstance(JAPDebug.getInstance());
 		JAPDebug.getInstance().setLogType(LogType.ALL);
 		JAPDebug.getInstance().setLogLevel(LogLevel.DEBUG);
