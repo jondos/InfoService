@@ -1298,7 +1298,7 @@ private final class SetAnonModeAsync implements Runnable
 							//	Object[] options = { JAPMessages.getString("newVersionNo"), JAPMessages.getString("newVersionYes") };
 							//	ImageIcon   icon = loadImageIcon(DOWNLOADFN,true);
 							String answer;
-							JAPLoading japLoading = new JAPLoading(this,view);
+							JAPLoading japLoading = new JAPLoading(view);
 								answer = japLoading.message(JAPMessages.getString("newVersionAvailableTitle"),
 						   JAPMessages.getString("newVersionAvailable"),
 						   JAPMessages.getString("newVersionNo"),

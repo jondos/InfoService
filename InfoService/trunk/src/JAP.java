@@ -90,6 +90,7 @@ class JAP extends Frame {
 				System.exit(0);
 			}
 		}
+
 		// Show splash screen
 		JAPSplash splash = new JAPSplash(this);
 		// Test for Swing

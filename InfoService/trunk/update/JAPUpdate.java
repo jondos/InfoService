@@ -61,7 +61,7 @@ public class JAPUpdate implements ActionListener,ItemListener,Runnable
 
     private JAPController japController;
     private JComboBox m_comboType;
-
+    private JButton m_bttnUpgrade;
 
     private Thread m_threadGetVersionInfo;
     private JAPVersionInfo m_devVersion;
@@ -96,13 +96,13 @@ public class JAPUpdate implements ActionListener,ItemListener,Runnable
         gridBagPanel.setConstraints(bttnHelp,cButtons);
         buttonPanel.add(bttnHelp);
 
-        JButton bttnUpgrade = new JButton("Upgrade");
-        bttnUpgrade.addActionListener(this);
-        bttnUpgrade.setActionCommand(COMMAND_UPGRADE);
+        m_bttnUpgrade = new JButton("Upgrade");
+        m_bttnUpgrade.addActionListener(this);
+        m_bttnUpgrade.setActionCommand(COMMAND_UPGRADE);
         cButtons.anchor=GridBagConstraints.CENTER;
-        gridBagPanel.setConstraints(bttnUpgrade,cButtons);
-        bttnUpgrade.setEnabled(false);
-        buttonPanel.add(bttnUpgrade);
+        gridBagPanel.setConstraints(m_bttnUpgrade,cButtons);
+        m_bttnUpgrade.setEnabled(false);
+        buttonPanel.add(m_bttnUpgrade);
 
         JButton bttnAbort = new JButton("Close");
         bttnAbort.addActionListener(this);
@@ -235,6 +235,7 @@ public class JAPUpdate implements ActionListener,ItemListener,Runnable
             m_labelDate.setText(m_releaseVersion.getDate());
             m_comboType.setEnabled(true);
             m_taInfo.setText("");
+            m_bttnUpgrade.setEnabled(true);
           }
       }
 
@@ -244,6 +245,12 @@ public class JAPUpdate implements ActionListener,ItemListener,Runnable
           {
             try{m_threadGetVersionInfo.join();}catch(Exception ex){}
             m_Dialog.dispose();
+          }
+        else if(e.getActionCommand().equals(COMMAND_UPGRADE))
+          {
+            try{m_threadGetVersionInfo.join();}catch(Exception ex){}
+            m_Dialog.dispose();
+            new JAPUpdateWizard();
           }
       }
 
