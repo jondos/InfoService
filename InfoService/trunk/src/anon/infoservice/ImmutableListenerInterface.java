@@ -41,7 +41,7 @@ public interface ImmutableListenerInterface
 	/**
 	 * The constant for the HTTP protocol.
 	 */
-	final public static String PROTOCOL_TYPE_HTTP = "http";
+	final public static String PROTOCOL_TYPE_HTTP = "HTTP/TCP";
 
 	/**
 	 * The constant for the HTTP protocol.

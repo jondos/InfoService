@@ -34,7 +34,7 @@ import java.net.Socket;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import payxml.XMLDescription;
+import anon.payxml.XMLDescription;
 
 final public class HttpClient
 {
