@@ -62,7 +62,7 @@ final class JAPLean implements ProxyListener {
 			System.exit(0);
 		}
 		japAnonProxy = new AnonProxy(listener);
-		japAnonProxy.setMixCascade(new MixCascade(hostNameMixCascade, portNumberMixCascade));
+		japAnonProxy.setMixCascade(new MixCascade(null,null,hostNameMixCascade, portNumberMixCascade));
 		int returnCode = japAnonProxy.start();
 		japAnonProxy.setProxyListener(this);
 		if (returnCode == AnonProxy.E_SUCCESS) {

@@ -157,30 +157,33 @@ public class InfoService extends DatabaseEntry
 
   /**
    * Creates a new InfoService from the hostName / IP and the port. The hostName and port are
-   * directly used for creating the ListenerInterface for this InfoService. The ID is set to a
-   * generic value derived from the hostname, the port and the name (if it is not null). If you
-   * supply a name for the infoservice then it will get the name "(User) name", if you supply null,
+   * directly used for creating the ListenerInterface for this InfoService. The ID (if not given) is set to a
+   * generic value derived from the hostname and the port. If you
+   * supply a name for the infoservice then it will get that name, if you supply null,
    * the name will be the same as the ID "(User) hostname:port". The expire time is calculated by
    * using the DEFAULT_EXPIRE_TIME constant. The software info is set to a dummy value.
    *
-   * @param hostName The hostname or IP address the infoservice is listening on.
-   * @param port The port the infoservice is listening on.
+   * @param a_strID The ID of that InfoService. If null it is generated
    * @param a_strName The name of the infoservice or null, if a generic name (=ID) shall be
    *                  used.
+   * @param hostName The hostname or IP address the infoservice is listening on.
+   * @param port The port the infoservice is listening on.
    */
-  public InfoService(String hostName, int port, String a_strName) throws Exception
+  public InfoService(String a_strName, String a_strID,String hostName, int port) throws Exception
   {
     /* set a unique ID */
-    infoServiceId = "(User) " + hostName + ":" + Integer.toString(port);
-    /* set a name */
+	if(a_strID==null)
+    	infoServiceId = "(User) " + hostName + "%3A" + Integer.toString(port);
+    else
+		infoServiceId=a_strID;
+	/* set a name */
     if (a_strName == null)
     {
-      name = infoServiceId;
+      name = "(User) " + hostName + "%3A" + Integer.toString(port);
     }
     else
     {
-      infoServiceId = infoServiceId + " " + a_strName;
-      name = "(User) " + a_strName;
+      name = a_strName;
     }
     /* create the ListenerInterface and set it as prefered */
     listenerInterfaces = new Vector();
@@ -492,7 +495,7 @@ public class InfoService extends DatabaseEntry
    *                                 StatusInfo (it is a certificate store with the certificates
    *                                 of the MixCascade). So there is no need to append the
    *                                 certificates to the StatusInfo and we can save some bytes
-   *                                 (but it is still possible to append certificates there). 
+   *                                 (but it is still possible to append certificates there).
    *
    * @return The current StatusInfo for the mixcascade with the given ID.
    */

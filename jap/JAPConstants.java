@@ -32,7 +32,7 @@ import java.awt.Insets;
 
 public final class JAPConstants
 {
-	public static final String aktVersion = "00.02.046"; //Never change the layout of this line!
+	public static final String aktVersion = "00.02.047"; //Never change the layout of this line!
 	private static final String CVS_GENERATED_RELEASE_DATE = "$Date$";
 
 	//Warning: This is a little bit tricky,
@@ -63,19 +63,21 @@ public final class JAPConstants
 	//static final String buildType="..."
 	//needed for update.JAPUpdate
 	static final int defaultPortNumber = 4001;
+	static final String defaultAnonName = "Dresden-Desden";
+	static final String defaultAnonID = "141.76.1.120%3A6544";
 	static final String defaultAnonHost = "mix.inf.tu-dresden.de";
 	static final String defaultAnonIP = "141.76.1.120"; //only used for fallback,
 
 	//if DNS could not get IP for
 	// defaultAnonHost
 	static final int defaultAnonPortNumber = 6544;
-	public static final String defaultInfoServiceHostName = "infoservice.inf.tu-dresden.de";
-	public static final int defaultInfoServicePortNumber = 6543;
-
 	/**
 	 * The name of the default infoservice.
 	 */
-	public static final String DEFAULT_INFOSERVICE_NAME = "JAP-Team InfoService";
+public static final String defaultInfoServiceName = "JAP-Team InfoService";
+	public static final String defaultInfoServiceID = "infoservice.inf.tu-dresden.de%3A80";
+	public static final String defaultInfoServiceHostName = "infoservice.inf.tu-dresden.de";
+	public static final int defaultInfoServicePortNumber = 6543;
 
 	/**
 	 * This defines, whether automatic infoservice request are disabled as default.
