@@ -54,9 +54,10 @@ public final class JAPMuxSocket extends Thread
 				oSocketList=new Hashtable();
 				oRSA=new JAPASymCipher();
 				outBuff=new byte[DATA_SIZE];
-				System.out.println("Init secur rand");
+				JAPModel model=JAPModel.getModel();
+				model.status2 = model.getString("initSecureRandom");
+				model.notifyJAPObservers();
 				rand=new SecureRandom(SecureRandom.getSeed(20));
-				System.out.println("done");
 		}
 
 		public int connect(String host, int port)
@@ -202,11 +203,12 @@ public final class JAPMuxSocket extends Thread
 									{
 										entry.arCipher[i]=new JAPSymCipher();
 										rand.nextBytes(key);
+										key[0]=(byte)(key[0]&0x7F); //RSA HACK!! (to ensure what m<n in RSA-Encrypt: c=m^e mod n)
 										entry.arCipher[i].setEncryptionKey(key);
 										entry.arCipher[i].setDecryptionKey(key);
 										System.arraycopy(key,0,outBuff,0,KEY_SIZE);
 										System.arraycopy(buff,0,outBuff,KEY_SIZE,size);
-										oRSA.encrypt(outBuff,outBuff);
+										oRSA.encrypt(outBuff,0,outBuff,0);
 										entry.arCipher[i].encrypt(outBuff,RSA_SIZE,outBuff,RSA_SIZE,DATA_SIZE-RSA_SIZE);
 										System.arraycopy(outBuff,0,buff,0,DATA_SIZE);
 										size-=KEY_SIZE;
