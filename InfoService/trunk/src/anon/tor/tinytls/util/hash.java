@@ -46,23 +46,33 @@ public class hash {
 	 * @param inputs input
 	 * @return hash
 	 */
-	public static byte[] sha(byte[][] inputs)
+	public static byte[] sha(byte[] b1)
 	{
 		SHA1Digest master_sha1 = new SHA1Digest();
-		master_sha1.reset();
-		for (int i = 0; i < inputs.length; i++)
-		{
-			master_sha1.update(inputs[i], 0, inputs[i].length);
-		}
+		master_sha1.update(b1, 0, b1.length);
 		byte[] ret = new byte[master_sha1.getDigestSize()];
 		master_sha1.doFinal(ret, 0);
 		return ret;
 	}
 
-	public static byte[] sha(byte[] input)
+	public static byte[] sha(byte[] b1, byte[] b2)
 	{
 		SHA1Digest master_sha1 = new SHA1Digest();
-		master_sha1.update(input, 0, input.length);
+		master_sha1.reset();
+		master_sha1.update(b1, 0, b1.length);
+		master_sha1.update(b2, 0, b2.length);
+		byte[] ret = new byte[master_sha1.getDigestSize()];
+		master_sha1.doFinal(ret, 0);
+		return ret;
+	}
+
+	public static byte[] sha(byte[] b1, byte[] b2, byte[] b3)
+	{
+		SHA1Digest master_sha1 = new SHA1Digest();
+		master_sha1.reset();
+		master_sha1.update(b1, 0, b1.length);
+		master_sha1.update(b2, 0, b2.length);
+		master_sha1.update(b3, 0, b3.length);
 		byte[] ret = new byte[master_sha1.getDigestSize()];
 		master_sha1.doFinal(ret, 0);
 		return ret;
@@ -73,14 +83,34 @@ public class hash {
 	 * @param inputs input
 	 * @return hash
 	 */
-	public static byte[] md5(byte[][] inputs)
+	public static byte[] md5(byte[] b1)
 	{
 		MD5Digest master_md5 = new MD5Digest();
 		master_md5.reset();
-		for (int i = 0; i < inputs.length; i++)
-		{
-			master_md5.update(inputs[i], 0, inputs[i].length);
-		}
+		master_md5.update(b1, 0, b1.length);
+		byte[] ret = new byte[master_md5.getDigestSize()];
+		master_md5.doFinal(ret, 0);
+		return ret;
+	}
+
+	public static byte[] md5(byte[] b1, byte[] b2)
+	{
+		MD5Digest master_md5 = new MD5Digest();
+		master_md5.reset();
+		master_md5.update(b1, 0, b1.length);
+		master_md5.update(b2, 0, b2.length);
+		byte[] ret = new byte[master_md5.getDigestSize()];
+		master_md5.doFinal(ret, 0);
+		return ret;
+	}
+
+	public static byte[] md5(byte[] b1, byte[] b2, byte[] b3)
+	{
+		MD5Digest master_md5 = new MD5Digest();
+		master_md5.reset();
+		master_md5.update(b1, 0, b1.length);
+		master_md5.update(b2, 0, b2.length);
+		master_md5.update(b3, 0, b3.length);
 		byte[] ret = new byte[master_md5.getDigestSize()];
 		master_md5.doFinal(ret, 0);
 		return ret;
