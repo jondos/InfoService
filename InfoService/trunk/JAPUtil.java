@@ -56,6 +56,9 @@ import javax.swing.table.*;
 
 final class JAPUtil
 	{
+	  private static final String IMGPATHHICOLOR  = "images/";
+	  private static final String IMGPATHLOWCOLOR = "images/lowcolor/";
+
 		public static int applyJarDiff(String oldJAR, String newJAR, String diffJAR)
 			{
 				try
@@ -312,7 +315,7 @@ final class JAPUtil
 			// try loading the lowcolor images
 			if(colordepth<=16)
 				{
-				  imageFilename = JAPModel.IMGPATHLOWCOLOR+strImage;
+				  imageFilename = IMGPATHLOWCOLOR+strImage;
 				  try
 						{
 					// this is necessary to make shure that the images are loaded when contained in a JAP.jar
@@ -327,7 +330,7 @@ final class JAPUtil
 			//    we have to load the hicolor images
 			if(img==null)
 				{
-				  imageFilename = JAPModel.IMGPATHHICOLOR+strImage;
+				  imageFilename = IMGPATHHICOLOR+strImage;
 				  try
 						{
 							// this is necessary to make shure that the images are loaded when contained in a JAP.jar
@@ -339,13 +342,8 @@ final class JAPUtil
 						}
 			  }
 
-			if (sync == false || img == null)
-				{
-				  if(img==null)
-						JAPDebug.out(JAPDebug.ERR,JAPDebug.GUI,"JAPModel:Image "+strImage+" not loaded!");
-				}
-			else
-				{
+			if (sync  && img == null)
+			  {
 					int statusBits=MediaTracker.ABORTED|MediaTracker.ERRORED|MediaTracker.COMPLETE;
 					for(;;)
 						{

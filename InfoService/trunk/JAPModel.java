@@ -64,7 +64,7 @@ import anon.JAPAnonServiceListener;
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPModel implements JAPAnonServiceListener{
 
-	public static final String aktVersion = "00.01.021"; // Version of JAP
+	public static final String aktVersion = "00.01.022"; // Version of JAP
 
 	public  Vector            anonServerDatabase = null; // vector of all available mix cascades
 	public final static String   defaultanonHost   = "mix.inf.tu-dresden.de";
@@ -127,8 +127,10 @@ public final class JAPModel implements JAPAnonServiceListener{
 	static final int    MAXHELPLANGUAGES = 6;
 	static final String TITLE = "JAP";
 	static final String AUTHOR = "(c) 2000 The JAP-Team";
-	static final String IMGPATHHICOLOR  = "images/";
-	static final String IMGPATHLOWCOLOR = "images/lowcolor/";
+
+// The following two definitions now in JAPUtil - due to a Henne - Ei problem
+//	static final String IMGPATHHICOLOR  = "images/";
+//	static final String IMGPATHLOWCOLOR = "images/lowcolor/";
 	static final String XMLCONFFN       = "jap.conf";
 	public static final String BUSYFN   = "busy.gif";
 	public static final String SPLASHFN = "splash.gif";
