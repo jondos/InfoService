@@ -61,7 +61,7 @@ class JAP extends Frame{
 		// Test for right VM....
 		if(vendor.startsWith("Transvirtual")) //Kaffe
 			{
-				if (vers.compareTo("1.1.2") <= 0) 
+				if (vers.compareTo("1.0.5") <= 0) 
 					{
 						JAPAWTMsgBox.MsgBox(this,"JAP must be run with a 1.1.3 or higher version VM! (Kaffe >=1.0.6)","Error");
 						System.exit(0);
