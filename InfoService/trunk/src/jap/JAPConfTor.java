@@ -89,6 +89,7 @@ class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 		p.add(s, c2);
 		m_bttnFetchRouters = new JButton(JAPMessages.getString("torBttnFetchRouters"));
 		m_bttnFetchRouters.setIcon(JAPUtil.loadImageIcon(JAPConstants.IMAGE_RELOAD, true));
+		m_bttnFetchRouters.setDisabledIcon(JAPUtil.loadImageIcon(JAPConstants.IMAGE_RELOAD_DISABLED, true));
 		m_bttnFetchRouters.setPressedIcon(JAPUtil.loadImageIcon(JAPConstants.IMAGE_RELOAD_ROLLOVER, true));
 
 		m_bttnFetchRouters.setActionCommand("fetchRouters");
@@ -158,7 +159,7 @@ class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 		}
 		else if (actionEvent.getActionCommand().equals("fetchRouters"))
 		{
-			fetchRouters(true);
+			fetchRoutersAsync(true);
 
 		}
 	}
@@ -190,32 +191,44 @@ class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 		m_sliderMinPathLen.setValue(JAPModel.getTorMinRouteLen());
 	}
 
-	private void fetchRouters(boolean bShowError)
+	private void fetchRoutersAsync(final boolean bShowError)
 	{
-		ORList ol = new ORList(new InfoServiceORListFetcher());
-		if (!ol.updateList())
+		m_bttnFetchRouters.setEnabled(false);
+		Runnable doIt = new Runnable()
 		{
-			if (bShowError)
+			public void run()
 			{
-				JAPConf.showError(JAPMessages.getString("torErrorFetchRouters"));
+				ORList ol = new ORList(new InfoServiceORListFetcher());
+				if (!ol.updateList())
+				{
+					if (bShowError)
+					{
+						JAPConf.showError(JAPMessages.getString("torErrorFetchRouters"));
+					}
+					m_bttnFetchRouters.setEnabled(true);
+					return;
+				}
+				m_lastUpdate = System.currentTimeMillis();
+				DefaultTableModel m = (DefaultTableModel) m_tableRouters.getModel();
+				Vector ors = ol.getList();
+				m.setNumRows(ors.size());
+				for (int i = 0; i < ors.size(); i++)
+				{
+					ORDescription ord = (ORDescription) ors.elementAt(i);
+					m_tableRouters.setValueAt(ord.getName(), i, 0);
+					m_tableRouters.setValueAt(ord.getAddress(), i, 1);
+					m_tableRouters.setValueAt(new Integer(ord.getPort()), i, 2);
+					m_tableRouters.setValueAt(ord.getSoftware(), i, 3);
+				}
+				m_labelAvailableRouters.setText(JAPMessages.getString("torBorderAvailableRouters") + " (" +
+												DateFormat.getDateTimeInstance(DateFormat.MEDIUM,
+					DateFormat.SHORT).
+												format(ol.getPublished()) + "):");
+				getRootPanel().updateUI();
+				m_bttnFetchRouters.setEnabled(true);
 			}
-			return;
-		}
-		m_lastUpdate = System.currentTimeMillis();
-		DefaultTableModel m = (DefaultTableModel) m_tableRouters.getModel();
-		Vector ors = ol.getList();
-		m.setNumRows(ors.size());
-		for (int i = 0; i < ors.size(); i++)
-		{
-			ORDescription ord = (ORDescription) ors.elementAt(i);
-			m_tableRouters.setValueAt(ord.getName(), i, 0);
-			m_tableRouters.setValueAt(ord.getAddress(), i, 1);
-			m_tableRouters.setValueAt(new Integer(ord.getPort()), i, 2);
-			m_tableRouters.setValueAt(ord.getSoftware(), i, 3);
-		}
-		m_labelAvailableRouters.setText(JAPMessages.getString("torBorderAvailableRouters") + " (" +
-										DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).
-										format(ol.getPublished()) + "):");
-		getRootPanel().updateUI();
+		};
+		Thread t = new Thread(doIt);
+		t.start();
 	}
 }
