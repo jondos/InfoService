@@ -243,6 +243,8 @@ public final class MuxSocket implements Runnable
 			}
 			try
 			{
+				if(m_ioSocket==null)
+					return ErrorCodes.E_NOT_CONNECTED;
 				m_inDataStream = new DataInputStream(m_ioSocket.getInputStream());
 				m_outStream = new BufferedOutputStream(m_ioSocket.getOutputStream(), PACKET_SIZE);
 				m_bisCrypted = false;
@@ -258,7 +260,7 @@ public final class MuxSocket implements Runnable
 					err = processXmlKeys(buff, bCheckMixCerts, certsTrustedRoots);
 					if (err != ErrorCodes.E_SUCCESS)
 					{
-						throw new Exception("Error during Xml-Key Exchange: " + err);
+						return err;
 					}
 				}
 				else
