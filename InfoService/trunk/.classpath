@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry including="*.java|*/*.java|*/*/*.java|*/*/*/*.java|*/*/*/*/*.java" excluding="test/" kind="src" path=""/>
+	<classpathentry kind="src" path="test"/>
+	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/BouncyCastle"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/HTTP"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/XML-RPC"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/FTP"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/MRJ"/>
-	<classpathentry kind="output" path="eclipse-classes"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/JUNIT"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/JUNITX"/>
+	<classpathentry kind="output" path="build"/>
 </classpath>
