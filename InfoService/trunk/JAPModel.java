@@ -259,8 +259,8 @@ public final class JAPModel implements JAPAnonServiceListener{
 			Element root=doc.getDocumentElement();
 			NamedNodeMap n=root.getAttributes();
 			//
-			portNumber=JAPUtil.parseNodeInt(n.getNamedItem("portNumber"),portNumber);
-			portSocksListener=JAPUtil.parseNodeInt(n.getNamedItem("portNumberSocks"),portSocksListener);
+			portNumber=JAPUtil.parseElementAttrInt(root,"portNumber",portNumber);
+			portSocksListener=JAPUtil.parseElementAttrInt(root,"portNumberSocks",portSocksListener);
 			setUseSocksPort(JAPUtil.parseNodeBoolean(n.getNamedItem("supportSocks"),false));
 			setListenerIsLocal(JAPUtil.parseNodeBoolean(n.getNamedItem("listenerIsLocal"),true));
 			setUseProxy(JAPUtil.parseNodeBoolean(n.getNamedItem("proxyMode"),false));
@@ -271,11 +271,11 @@ public final class JAPModel implements JAPAnonServiceListener{
 			String host;
 			int port;
 			host=JAPUtil.parseNodeString(n.getNamedItem("infoServiceHostName"),infoServiceHostName);
-			port=JAPUtil.parseNodeInt(n.getNamedItem("infoServicePortNumber"),infoServicePortNumber);
+			port=JAPUtil.parseElementAttrInt(root,"infoServicePortNumber",infoServicePortNumber);
 			setInfoService(host,port);
 
 			host=JAPUtil.parseNodeString(n.getNamedItem("proxyHostName"),proxyHostName);
-			port=JAPUtil.parseNodeInt(n.getNamedItem("proxyPortNumber"),proxyPortNumber);
+			port=JAPUtil.parseElementAttrInt(root,"proxyPortNumber",proxyPortNumber);
 			if(host.equalsIgnoreCase("ikt.inf.tu-dresden.de"))
 				host="";
 			setProxy(host,port);
@@ -288,8 +288,8 @@ public final class JAPModel implements JAPAnonServiceListener{
 			int anonSSLPortNumber  = model.getAnonServer().getSSLPort();
 			anonserviceName   = JAPUtil.parseNodeString(n.getNamedItem("anonserviceName"),anonserviceName);
 			anonHostName      = JAPUtil.parseNodeString(n.getNamedItem("anonHostName"),anonHostName);
-			anonPortNumber    = JAPUtil.parseNodeInt(n.getNamedItem("anonPortNumber"),anonPortNumber);
-			anonSSLPortNumber = JAPUtil.parseNodeInt(n.getNamedItem("anonSSLPortNumber"),anonSSLPortNumber);
+			anonPortNumber    = JAPUtil.parseElementAttrInt(root,"anonPortNumber",anonPortNumber);
+			anonSSLPortNumber = JAPUtil.parseElementAttrInt(root,"anonSSLPortNumber",anonSSLPortNumber);
 			model.setAnonServer(new AnonServerDBEntry(anonserviceName,anonHostName,anonPortNumber,anonSSLPortNumber));
 			// force setting the correct name of the selected service
 			model.getAnonServer().setName(anonserviceName);

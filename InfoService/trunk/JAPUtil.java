@@ -41,6 +41,9 @@ import java.awt.Window;
 import java.awt.Dimension;
 import java.awt.MediaTracker;
 import org.w3c.dom.Node;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 import javax.swing.ImageIcon;
 import java.awt.Component;
 import javax.swing.*;
@@ -169,15 +172,32 @@ final class JAPUtil
 			return true;
 		}
 	
-	public static int parseNodeInt(Node n,int defaultValue)
+
+	public static int parseNodeInt(Element parent,String name,int defaultValue)
 		{
 			int i=defaultValue;
-			if(n!=null)
+			if(parent!=null)
 				try	
 					{
-						i=Integer.parseInt(n.getNodeValue());
+						NodeList nl=parent.getElementsByTagName(name);
+						i=Integer.parseInt(nl.item(0).getFirstChild().getNodeValue());
 					}
 				catch(Exception e)
+					{
+					}
+			return i;
+		}
+
+	public static int parseElementAttrInt(Element e,String attr,int defaultValue)
+		{
+			int i=defaultValue;
+			if(e!=null)
+				try	
+					{
+						Attr at=e.getAttributeNode(attr);
+						i=Integer.parseInt(at.getValue());
+					}
+				catch(Exception ex)
 					{
 					}
 			return i;
