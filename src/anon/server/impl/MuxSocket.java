@@ -71,6 +71,7 @@ import anon.NotConnectedToMixException;
 import anon.server.AnonServiceImpl;
 import anon.crypto.JAPSignature;
 import anon.crypto.JAPCertificate;
+import anon.crypto.JAPCertificateStore;
 
 public final class MuxSocket implements Runnable
 	{
@@ -216,7 +217,8 @@ public final class MuxSocket implements Runnable
 		}
 */
 		//2001-02-20(HF)
-		public int connectViaFirewall(AnonServer anonservice, int fwType,String fwHost, int fwPort,String fwUserID,String fwPasswd)
+		public int connectViaFirewall(AnonServer anonservice, int fwType,String fwHost, int fwPort,String fwUserID,String fwPasswd,
+																	boolean bCheckMixCerts,JAPCertificateStore certsTrustedRoots)
 			{
 				synchronized(this)
 					{
@@ -254,7 +256,7 @@ public final class MuxSocket implements Runnable
 										byte[] buff=new byte[len];
 										buff[0]=(byte)m_iChainLen; //we have already read the beginning '<' !!
 										m_inDataStream.readFully(buff,1,len-1);
-										err=processXmlKeys(buff);
+										err=processXmlKeys(buff,bCheckMixCerts,certsTrustedRoots);
 										if(err!=ErrorCodes.E_SUCCESS)
 											throw new Exception("Error during Xml-Key Exchange");
 									}
@@ -312,7 +314,7 @@ public final class MuxSocket implements Runnable
 			}
 
 		/*Reads the public key from the Mixes and try to initialize the key array*/
-		private int processXmlKeys(byte[] buff)
+		private int processXmlKeys(byte[] buff,boolean bCheckMixCerts, JAPCertificateStore certsTrustedRoots)
 			{
 				try
 					{
@@ -322,7 +324,7 @@ public final class MuxSocket implements Runnable
 							return ErrorCodes.E_UNKNOWN;
 						//TODO Check Signautre of whole XML struct
 //---
-						if (!JAPModel.isCertCheckDisabled())
+						if (bCheckMixCerts)
 							{
 								// Signature Check First Mix
 								// - check signature
@@ -350,7 +352,7 @@ public final class MuxSocket implements Runnable
 										//but lets check if we do trust this cert...
 										// lets look up the certificate list we trust!
 										JAPCertificate j = null;
-										Enumeration m_certs = JAPModel.getCertificateStore().elements();
+										Enumeration m_certs = certsTrustedRoots.elements();
 										while (m_certs.hasMoreElements())
 											{
 												j = (JAPCertificate) m_certs.nextElement();
@@ -405,7 +407,7 @@ public final class MuxSocket implements Runnable
 									{
 										//TODO: Check signatures for Mix 2 .. n
 //---
-										if (!JAPModel.isCertCheckDisabled())
+										if (bCheckMixCerts)
 											{
 												try
 													{
@@ -429,7 +431,7 @@ public final class MuxSocket implements Runnable
 														//but lets check if we do trust this cert...
 														// lets look up the certificate list we trust!
 														JAPCertificate j = null;
-														Enumeration m_certs = JAPModel.getCertificateStore().elements();
+														Enumeration m_certs = certsTrustedRoots.elements();
 														while (m_certs.hasMoreElements())
 															{
 																j = (JAPCertificate) m_certs.nextElement();
