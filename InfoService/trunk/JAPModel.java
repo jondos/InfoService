@@ -69,7 +69,7 @@ public final class JAPModel implements JAPObserver {
 	private Vector observerVector;
 	public Vector anonServerDatabase;
 	
-	private ProxyServer p;
+	private JAPProxyServer p;
 	
 	private static JAPModel model=null;
 	public JAPModel () {
@@ -225,7 +225,7 @@ public final class JAPModel implements JAPObserver {
 				    status2 = getString("statusRunning");
 				    isRunningProxy = true;
 				    runningPortNumber = portNumber;
-				    p = new ProxyServer(portNumber, debug,this);
+				    p = new JAPProxyServer(portNumber);
 				    Thread proxyThread = new Thread (p);
 				    proxyThread.start();
 				    this.notifyJAPObservers();

@@ -1,28 +1,20 @@
 import java.net.* ;
 
-public class ProxyServer implements Runnable
+public class JAPProxyServer implements Runnable
 	{
     private boolean runFlag; 
-    private boolean debug = false; 
     private int portN;
     private ServerSocket server;
     private Socket socket;
-    private CAMuxSocket oMuxSocket;
+    private JAPMuxSocket oMuxSocket;
     private Thread thread;
     private JAPModel model;
     
-		public ProxyServer (int port, boolean debugFlag, JAPModel m)
-			{
-				portN = port;
-				debug = debugFlag;
-				model=m;
-			}
 
-    public ProxyServer (int port,JAPModel m)
+    public JAPProxyServer (int port)
 			{
 				portN = port;
-				debug = false;
-				model=m;
+				model=JAPModel.getModel();
 			}
 
     public void run()
@@ -33,12 +25,12 @@ public class ProxyServer implements Runnable
 				
 				while (runFlag)
 					{
-						if (debug)
-							System.out.println("ProxyServer on port " + portN + " started.");
+						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,
+												 "ProxyServer on port " + portN + " started.");
 						try
 							{
 								server = new ServerSocket (portN);
-								oMuxSocket=new CAMuxSocket();
+								oMuxSocket=new JAPMuxSocket();
 								if(oMuxSocket.connect(model.anonHostName,model.anonPortNumber)==-1)
 									{
 										model.status2 = model.getString("statusCannotConnect");
@@ -49,7 +41,7 @@ public class ProxyServer implements Runnable
 								while(runFlag)
 									{
 										socket = server.accept();
-										oMuxSocket.newConnection(new CASocket(socket));
+										oMuxSocket.newConnection(new JAPSocket(socket));
 									}
 							}
 						catch (Exception e)
@@ -61,10 +53,11 @@ public class ProxyServer implements Runnable
 								catch (Exception e2)
 									{
 									}
-								if (debug) System.out.println("ProxyServer Exception: " +e);
+								JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,
+														 "ProxyServer Exception: " +e);
 							}
 					}
-				if (debug) System.out.println("ProxyServer on port " + portN + " stopped.");
+				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"ProxyServer on port " + portN + " stopped.");
     }
 
     public void stopService()

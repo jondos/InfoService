@@ -14,11 +14,11 @@ public class JAPConf extends JDialog
     final static public int ANON_TAB = 2;    
     final static public int MISC_TAB = 3;
 		
-    private JIntField portnumberTextField;
+    private JAPJIntField portnumberTextField;
     private JCheckBox proxyCheckBox;
-    private JIntField proxyportnumberTextField;
+    private JAPJIntField proxyportnumberTextField;
     private JTextField proxyhostTextField;
-    private JIntField anonportnumberTextField;
+    private JAPJIntField anonportnumberTextField;
     private JTextField anonhostTextField;
 		private JRadioButton b1,b2,b3;
 		private JButton fetchB;
@@ -73,7 +73,7 @@ public class JAPConf extends JDialog
 
 		protected JPanel buildportPanel()
 			{
-				portnumberTextField = new JIntField(String.valueOf(model.portNumber));
+				portnumberTextField = new JAPJIntField(String.valueOf(model.portNumber));
 				portnumberTextField.addActionListener(new ActionListener() {
 	                       public void actionPerformed(ActionEvent e) {
 				   OKPressed();
@@ -96,7 +96,7 @@ public class JAPConf extends JDialog
 				proxyCheckBox = new JCheckBox(model.getString("settingsProxyCheckBox"));
 				proxyCheckBox.setSelected(model.proxyMode);
 				proxyhostTextField = new JTextField(model.proxyHostName);
-				proxyportnumberTextField = new JIntField(String.valueOf(model.proxyPortNumber));
+				proxyportnumberTextField = new JAPJIntField(String.valueOf(model.proxyPortNumber));
 				proxyhostTextField.setEnabled(model.proxyMode);
 				proxyportnumberTextField.setEnabled(model.proxyMode);
 				proxyCheckBox.addActionListener(new ActionListener() {
@@ -132,7 +132,7 @@ public class JAPConf extends JDialog
     protected JPanel buildanonPanel() 
 			{
 				anonhostTextField = new JTextField(model.anonHostName);
-				anonportnumberTextField = new JIntField(String.valueOf(model.anonPortNumber));
+				anonportnumberTextField = new JAPJIntField(String.valueOf(model.anonPortNumber));
 				anonhostTextField.setEditable(false);
 				anonportnumberTextField.setEditable(false);
 				anonhostTextField.addActionListener(new ActionListener() {

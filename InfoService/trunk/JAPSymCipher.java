@@ -1,9 +1,9 @@
 import org.logi.crypto.keys.BlowfishKey;
 
-public class JASymCipher
+public class JAPSymCipher
 	{
 			private BlowfishKey bfEnc,bfDec;
-			public JASymCipher()
+			public JAPSymCipher()
 				{
 					bfEnc=bfDec=null;
 				}

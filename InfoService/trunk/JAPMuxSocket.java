@@ -8,7 +8,7 @@ import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.lang.Integer;
 
-public class CAMuxSocket extends Thread
+public class JAPMuxSocket extends Thread
 	{
 		private int lastChannelId;
 		private Dictionary oSocketList;
@@ -17,11 +17,11 @@ public class CAMuxSocket extends Thread
 		
 		private Socket outSocket;
 		private	byte[] outBuff;
-		private JASymCipher oSymCipher;
+		private JAPSymCipher oSymCipher;
 		private int chainlen;
 		class SocketListEntry
 			{
-				SocketListEntry(CASocket s)
+				SocketListEntry(JAPSocket s)
 					{
 						inSocket=s;
 						try
@@ -30,18 +30,18 @@ public class CAMuxSocket extends Thread
 							}
 						catch(Exception e)
 							{
-								System.out.println("Oops - SocketListEntry!");
+								JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"Oops - SocketListEntry!");
 							}
 					}
-				public CASocket inSocket;
+				public JAPSocket inSocket;
 				public OutputStream out;
 			};
 
-		CAMuxSocket()
+		JAPMuxSocket()
 			{
 				lastChannelId=0;
 				oSocketList=new Hashtable();
-				oSymCipher=new JASymCipher();
+				oSymCipher=new JAPSymCipher();
 				byte[] key=new byte[16];
 				for(int i=0;i<16;i++)
 					key[i]=0;
@@ -66,19 +66,17 @@ public class CAMuxSocket extends Thread
 				return 0;
 			}
 
-		public synchronized int newConnection(CASocket s)
+		public synchronized int newConnection(JAPSocket s)
 			{
 				oSocketList.put(new Integer(lastChannelId),new SocketListEntry(s));
 				JAPModel.getModel().setNrOfChannels(oSocketList.size());
-				(new SK13ProxyConnection(s,lastChannelId,this)).start();
+				(new JAPProxyConnection(s,lastChannelId,this)).start();
 				lastChannelId++;
-//				System.out.println("CAMuxSocket - new Connection");
 				return 0;
 			}
 
 		public synchronized int close(int channel)
 			{
-	//			System.out.println("Closing channel: "+Integer.toString(channel));
 				send(channel,null,(short)0);
 				oSocketList.remove(new Integer(channel));
 				JAPModel.getModel().setNrOfChannels(oSocketList.size());
@@ -123,7 +121,7 @@ public class CAMuxSocket extends Thread
 														catch(Exception e)
 															{
 																e.printStackTrace();
-																System.out.println("Fehler bei write to browser...retrying...");														
+																JAPDebug.out(JAPDebug.WARNING,JAPDebug.NET,"Fehler bei write to browser...retrying...");														
 															}
 													}
 												tmpEntry.out.flush();
@@ -134,17 +132,15 @@ public class CAMuxSocket extends Thread
 					}
 				catch(Exception e)
 					{
-						System.out.println("CAMuxSocket -run -Exception!");
+						JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"CAMuxSocket -run -Exception!");
 						e.printStackTrace();
 					}
-				System.out.println("CAMuxSocket -exiting! "+Integer.toString(len));
 			}
 
 		public synchronized int send(int channel,byte[] buff,short len)
 			{
 				try
 					{
-			//			System.out.println("Sending: channel "+Integer.toString(channel)+"len: "+Integer.toString(len));
 						outDataStream.writeInt(channel);
 						outDataStream.writeShort(len);
 						outDataStream.writeShort(0);
@@ -160,8 +156,7 @@ public class CAMuxSocket extends Thread
 					}
 				catch(Exception e)
 					{
-						System.out.println("Sending exception!");
-//						e.printStackTrace();
+						JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"Sending exception!");
 						return -1;
 					}
 				return 0;
