@@ -10,8 +10,8 @@ public class JAPModel implements JAPObserver {
 	public String 		proxyHostName = "ikt.inf.tu-dresden.de";
 	public int 			proxyPortNumber = 80;
 	public boolean		proxyMode = false;
-	public String		anonHostName ="anon.inf.tu-dresden.de";
-	public int			anonPortNumber = 4007;
+	public String		anonHostName ="sole.icsi.berkeley.edu";
+	public int			anonPortNumber = 6543;
 	public boolean		anonMode = false;
 	public String 		status1 = "<init value>";
 	public String 		status2 = "<init value>";
@@ -91,7 +91,7 @@ public class JAPModel implements JAPObserver {
 		if (isRunningProxy == false) {
 			isRunningProxy = true;
 			runningPortNumber = portNumber;
-			p = new ProxyServer(portNumber, debug);
+			p = new ProxyServer(portNumber, debug,this);
 			Thread proxyThread = new Thread (p);
 			proxyThread.start();
 			status1 = "Listening...";
