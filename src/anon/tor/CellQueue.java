@@ -27,7 +27,7 @@
  */
 package anon.tor;
 
-import anon.tor.cells.*;
+import anon.tor.cells.Cell;
 final class CellQueue
 {
 	final class CellQueueEntry

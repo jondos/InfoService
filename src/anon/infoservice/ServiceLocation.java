@@ -29,7 +29,7 @@ package anon.infoservice;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
+
 import anon.util.XMLUtil;
 
 /**
@@ -76,23 +76,23 @@ public class ServiceLocation
 	
 		/* get the city */
 		node = XMLUtil.getFirstChildByName(locationNode, "City");
-		city = XMLUtil.parseNodeString(node, "");
+		city = XMLUtil.parseValue(node, "");
 
 		/* get the state */
 		node = XMLUtil.getFirstChildByName(locationNode, "State");
-		state = XMLUtil.parseNodeString(node, "");
+		state = XMLUtil.parseValue(node, "");
 		
 		/* get the country */
 		node = XMLUtil.getFirstChildByName(locationNode, "Country");
-		country = XMLUtil.parseNodeString(node, "");
+		country = XMLUtil.parseValue(node, "");
 
 		/* get the longitude / latitude */
 		Node positionNode = XMLUtil.getFirstChildByName(locationNode, "Position");
 		positionNode = XMLUtil.getFirstChildByName(positionNode, "Geo");
 		node = XMLUtil.getFirstChildByName(positionNode, "Longitude");
-		longitude = XMLUtil.parseNodeString(node, "");
+		longitude = XMLUtil.parseValue(node, "");
 		node = XMLUtil.getFirstChildByName(positionNode, "Latitude");
-		latitude = XMLUtil.parseNodeString(node, "");
+		latitude = XMLUtil.parseValue(node, "");
 	}
 
 	/**

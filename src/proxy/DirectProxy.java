@@ -27,6 +27,10 @@
  */
 package proxy;
 
+import jap.JAPMessages;
+import jap.JAPModel;
+import jap.JAPUtil;
+
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,15 +44,11 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
-import jap.JAPConstants;
-import jap.JAPController;
-import jap.JAPMessages;
-import jap.JAPModel;
-import jap.JAPUtil;
-import anon.infoservice.ProxyInterface;
+
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.infoservice.ProxyInterface;
 
 final public class DirectProxy implements Runnable
 {

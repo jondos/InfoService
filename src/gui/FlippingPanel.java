@@ -27,6 +27,8 @@
  */
 package gui;
 
+import jap.JAPUtil;
+
 import java.awt.CardLayout;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
@@ -36,10 +38,10 @@ import java.awt.Insets;
 import java.awt.Window;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+
 import javax.swing.Icon;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import jap.JAPUtil;
 
 /**
  * This class is used for the various panels on the Jap's

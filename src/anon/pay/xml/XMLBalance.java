@@ -1,16 +1,15 @@
 package anon.pay.xml;
 
+import java.io.ByteArrayInputStream;
+
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+
 import anon.crypto.JAPSignature;
-import anon.util.IXMLEncodable;
-import anon.util.XMLUtil;
-import anon.util.IXMLSignable;
 import anon.util.AbstractXMLSignable;
-import java.io.ByteArrayInputStream;
+import anon.util.XMLUtil;
 
 /**
  * This class holds a balance certificate. Can be converted to and from
@@ -72,23 +71,23 @@ public class XMLBalance extends AbstractXMLSignable
 		}
 
 		Element elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "AccountNumber");
-		String str = XMLUtil.parseNodeString(elem, null);
+		String str = XMLUtil.parseValue(elem, null);
 		m_lAccountNumber = Long.parseLong(str);
 
 		elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "Deposit");
-		str = XMLUtil.parseNodeString(elem, null);
+		str = XMLUtil.parseValue(elem, null);
 		m_lDeposit = Long.parseLong(str);
 
 		elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "Spent");
-		str = XMLUtil.parseNodeString(elem, null);
+		str = XMLUtil.parseValue(elem, null);
 		m_lSpent = Long.parseLong(str);
 
 		elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "Timestamp");
-		str = XMLUtil.parseNodeString(elem, null);
+		str = XMLUtil.parseValue(elem, null);
 		m_Timestamp = java.sql.Timestamp.valueOf(str);
 
 		elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "Validtime");
-		str = XMLUtil.parseNodeString(elem, null);
+		str = XMLUtil.parseValue(elem, null);
 		m_ValidTime = java.sql.Timestamp.valueOf(str);
 
 		elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "Signature");
@@ -105,19 +104,19 @@ public class XMLBalance extends AbstractXMLSignable
 		elemRoot.setAttribute("version", "1.0");
 
 		Element elem = a_doc.createElement("AccountNumber");
-		XMLUtil.setNodeValue(elem, Long.toString(m_lAccountNumber));
+		XMLUtil.setValue(elem, Long.toString(m_lAccountNumber));
 		elemRoot.appendChild(elem);
 		elem = a_doc.createElement("Deposit");
-		XMLUtil.setNodeValue(elem, Long.toString(m_lDeposit));
+		XMLUtil.setValue(elem, Long.toString(m_lDeposit));
 		elemRoot.appendChild(elem);
 		elem = a_doc.createElement("Spent");
-		XMLUtil.setNodeValue(elem, Long.toString(m_lSpent));
+		XMLUtil.setValue(elem, Long.toString(m_lSpent));
 		elemRoot.appendChild(elem);
 		elem = a_doc.createElement("Timestamp");
-		XMLUtil.setNodeValue(elem, m_Timestamp.toString());
+		XMLUtil.setValue(elem, m_Timestamp.toString());
 		elemRoot.appendChild(elem);
 		elem = a_doc.createElement("Validtime");
-		XMLUtil.setNodeValue(elem, m_ValidTime.toString());
+		XMLUtil.setValue(elem, m_ValidTime.toString());
 		elemRoot.appendChild(elem);
 		if (m_signature != null)
 		{

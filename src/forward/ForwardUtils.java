@@ -29,9 +29,8 @@ package forward;
 
 import java.net.Socket;
 
-import anon.server.AnonServiceImpl;
-import anon.server.impl.ProxyConnection;
 import anon.infoservice.ImmutableProxyInterface;
+import anon.server.impl.ProxyConnection;
 
 /**
  * This is the implementation of some helper methods for the forwarding client and server. This

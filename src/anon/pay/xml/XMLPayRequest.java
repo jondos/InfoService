@@ -28,10 +28,12 @@
 package anon.pay.xml;
 
 import java.io.ByteArrayInputStream;
+
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+
 import anon.util.IXMLEncodable;
 import anon.util.XMLUtil;
 
@@ -101,7 +103,7 @@ public class XMLPayRequest implements IXMLEncodable
 		if (elem != null)
 		{
 			Element elemTimestamp = (Element) XMLUtil.getFirstChildByName(elem, "NewerThan");
-			m_balanceNewerThan = java.sql.Timestamp.valueOf(XMLUtil.parseNodeString(elemTimestamp, ""));
+			m_balanceNewerThan = java.sql.Timestamp.valueOf(XMLUtil.parseValue(elemTimestamp, ""));
 		}
 		else
 		{

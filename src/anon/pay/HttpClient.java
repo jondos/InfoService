@@ -27,15 +27,17 @@
  */
 package anon.pay;
 
+import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+
+import javax.xml.parsers.DocumentBuilderFactory;
+
+import org.w3c.dom.Document;
+
 import anon.pay.xml.XMLDescription;
-import org.w3c.dom.*;
-import javax.xml.parsers.*;
-import java.io.*;
-import logging.*;
 
 final public class HttpClient
 {

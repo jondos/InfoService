@@ -27,22 +27,24 @@
  */
 package misc;
 
-import java.net.ServerSocket;
-import java.util.Properties;
-import anon.ErrorCodes;
-import anon.infoservice.HTTPConnectionFactory;
-import anon.infoservice.InfoServiceDBEntry;
-import anon.infoservice.InfoServiceHolder;
-import anon.infoservice.MixCascade;
-import anon.infoservice.ListenerInterface;
 import jap.JAPConstants;
 import jap.JAPDebug;
 import jap.JAPModel;
+
+import java.net.ServerSocket;
+import java.util.Properties;
+
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import proxy.AnonProxy;
 import proxy.ProxyListener;
+import anon.ErrorCodes;
+import anon.infoservice.HTTPConnectionFactory;
+import anon.infoservice.InfoServiceDBEntry;
+import anon.infoservice.InfoServiceHolder;
+import anon.infoservice.ListenerInterface;
+import anon.infoservice.MixCascade;
 
 final class JAPLean implements ProxyListener
 {

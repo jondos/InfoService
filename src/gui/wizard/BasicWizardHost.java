@@ -27,33 +27,23 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 */
 package gui.wizard;
 
-import javax.swing.Box;
-import javax.swing.border.EtchedBorder;
-import javax.swing.JTextArea;
-import javax.swing.JComboBox;
-import javax.swing.Icon;
-import javax.swing.JSeparator;
-import javax.swing.JButton;
-import javax.swing.JDialog;
-import javax.swing.JPanel;
-import javax.swing.JLabel;
-import javax.swing.JComponent;
+import jap.JAPMessages;
+import jap.JAPUtil;
 
+import java.awt.CardLayout;
+import java.awt.Dialog;
+import java.awt.Frame;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-import java.awt.BorderLayout;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Dialog;
-import java.awt.Component;
-import java.awt.Frame;
-import java.awt.Insets;
-import java.awt.CardLayout;
-
-//import java.net.URL;
-import jap.JAPMessages;
-import jap.JAPUtil;
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JSeparator;
 
 // this shall become the browser/wizardhost providing class ...
 public class BasicWizardHost implements WizardHost,ActionListener
@@ -126,11 +116,11 @@ public class BasicWizardHost implements WizardHost,ActionListener
 				JLabel l=new JLabel("");
 				cPanel.weightx=1.0;
 				cPanel.gridx=1;
-				cPanel.fill=c.HORIZONTAL;
+				cPanel.fill=GridBagConstraints.HORIZONTAL;
 				panel.add(l,cPanel);
 
 				cPanel.weightx=0;
-				cPanel.fill=c.NONE;
+				cPanel.fill=GridBagConstraints.NONE;
 				cPanel.gridx=2;
 				cPanel.insets = new Insets(10,10,10,20);
 				panel.add(m_bttnCancel,cPanel);

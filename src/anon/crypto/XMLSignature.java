@@ -27,25 +27,25 @@
  */
 package anon.crypto;
 
-import java.util.GregorianCalendar;
-import java.util.Vector;
-import java.util.Hashtable;
-import java.util.Enumeration;
-import java.security.MessageDigest;
 import java.io.ByteArrayOutputStream;
-import java.io.OutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Enumeration;
+import java.util.GregorianCalendar;
+import java.util.Hashtable;
+import java.util.Vector;
 
 import org.w3c.dom.Document;
-import org.w3c.dom.Node;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
 
-import anon.util.IXMLEncodable;
-import anon.util.XMLUtil;
 import anon.util.Base64;
+import anon.util.IXMLEncodable;
 import anon.util.XMLParseException;
-import java.security.NoSuchAlgorithmException;
+import anon.util.XMLUtil;
 
 /**
  * This class stores and creates signatures of XML nodes. The signing and verification processes
@@ -125,7 +125,7 @@ public final class XMLSignature implements IXMLEncodable
 
 		/** @todo SIGNATURE_METHOD is optional due to compatibility reasons; make this mandatory */
 		subnode = XMLUtil.getFirstChildByName(node, ELEM_SIGNATURE_METHOD);
-		m_signatureMethod = XMLUtil.parseNodeString(subnode, "");
+		m_signatureMethod = XMLUtil.parseValue(subnode, "");
 
 		node = XMLUtil.getFirstChildByName(node, ELEM_REFERENCE);
 		if (node == null)
@@ -136,14 +136,14 @@ public final class XMLSignature implements IXMLEncodable
 
 		/** @todo DIGEST_METHOD is optional due to compatibility reasons; make this mandatory */
 		subnode = XMLUtil.getFirstChildByName(node, ELEM_DIGEST_METHOD);
-		m_digestMethod = XMLUtil.parseNodeString(subnode, "");
+		m_digestMethod = XMLUtil.parseValue(subnode, "");
 
 		node = XMLUtil.getFirstChildByName(node, ELEM_DIGEST_VALUE);
 		if (node == null)
 		{
 			throw new XMLParseException(ELEM_DIGEST_VALUE);
 		}
-		m_digestValue = XMLUtil.parseNodeString(node, "");
+		m_digestValue = XMLUtil.parseValue(node, "");
 
 
 		node = XMLUtil.getFirstChildByName(m_elemSignature, ELEM_SIGNATURE_VALUE);
@@ -151,7 +151,7 @@ public final class XMLSignature implements IXMLEncodable
 		{
 			throw new XMLParseException(ELEM_SIGNATURE_VALUE);
 		}
-		m_signatureValue = XMLUtil.parseNodeString(node, "");
+		m_signatureValue = XMLUtil.parseValue(node, "");
 	}
 
 	/**
@@ -167,7 +167,7 @@ public final class XMLSignature implements IXMLEncodable
 	 */
 	public static XMLSignature sign(Node a_node, PKCS12 a_certificate) throws XMLParseException
 	{
-		XMLSignature signature = signInternal(a_node, a_certificate.getPrivKey());
+		XMLSignature signature = signInternal(a_node, a_certificate.getPrivateKey());
 
 		if (signature != null)
 		{
@@ -1111,7 +1111,7 @@ public final class XMLSignature implements IXMLEncodable
 			{
 				return 0;
 			}
-			if (node.getNodeType() == node.ELEMENT_NODE)
+			if (node.getNodeType() == Node.ELEMENT_NODE)
 			{
 				Element elem = (Element) node;
 				o.write('<');
@@ -1146,7 +1146,7 @@ public final class XMLSignature implements IXMLEncodable
 					return -1;
 				}
 			}
-			else if (node.getNodeType() == node.TEXT_NODE)
+			else if (node.getNodeType() == Node.TEXT_NODE)
 			{
 				o.write(node.getNodeValue().trim().getBytes());
 				if (makeCanonical(node.getNextSibling(), o, true, excludeNode) == -1)
@@ -1155,7 +1155,7 @@ public final class XMLSignature implements IXMLEncodable
 				}
 				return 0;
 			}
-			else if (node.getNodeType() == node.COMMENT_NODE)
+			else if (node.getNodeType() == Node.COMMENT_NODE)
 			{
 				if (makeCanonical(node.getNextSibling(), o, true, excludeNode) == -1)
 				{

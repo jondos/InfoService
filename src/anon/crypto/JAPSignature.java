@@ -38,13 +38,16 @@ import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.interfaces.DSAPrivateKey;
 import java.security.interfaces.DSAPublicKey;
+
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+
 import anon.util.Base64;
 import anon.util.XMLUtil;
 
@@ -528,7 +531,7 @@ final public class JAPSignature
 			{
 				return 0;
 			}
-			if (node.getNodeType() == node.ELEMENT_NODE)
+			if (node.getNodeType() == Node.ELEMENT_NODE)
 			{
 				Element elem = (Element) node;
 				o.write('<');
@@ -563,7 +566,7 @@ final public class JAPSignature
 					return -1;
 				}
 			}
-			else if (node.getNodeType() == node.TEXT_NODE)
+			else if (node.getNodeType() == Node.TEXT_NODE)
 			{
 				o.write(node.getNodeValue().trim().getBytes());
 				if (makeCanonical(node.getNextSibling(), o, true, excludeNode) == -1)
@@ -572,7 +575,7 @@ final public class JAPSignature
 				}
 				return 0;
 			}
-			else if (node.getNodeType() == node.COMMENT_NODE)
+			else if (node.getNodeType() == Node.COMMENT_NODE)
 			{
 				if (makeCanonical(node.getNextSibling(), o, true, excludeNode) == -1)
 				{

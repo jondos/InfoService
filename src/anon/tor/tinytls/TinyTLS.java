@@ -34,26 +34,29 @@ package anon.tor.tinytls;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
-import java.io.InterruptedIOException;
 import java.io.InputStream;
+import java.io.InterruptedIOException;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Random;
 import java.util.Vector;
-import org.bouncycastle.crypto.params.DHParameters;
-import org.bouncycastle.crypto.params.DHPublicKeyParameters;
-import anon.crypto.JAPCertificate;
-import anon.server.impl.ProxyConnection;
-import anon.tor.util.helper;
+
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import java.io.EOFException;
-import anon.crypto.*;
+
+import org.bouncycastle.crypto.params.DHParameters;
+import org.bouncycastle.crypto.params.DHPublicKeyParameters;
+
+import anon.crypto.IMyPublicKey;
+import anon.crypto.JAPCertificate;
 import anon.infoservice.ImmutableProxyInterface;
+import anon.server.impl.ProxyConnection;
+import anon.tor.util.helper;
 /**
  * @author stefan
  *

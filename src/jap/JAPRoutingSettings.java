@@ -32,18 +32,22 @@ import java.util.Enumeration;
 import java.util.Observable;
 import java.util.Vector;
 
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+import proxy.AnonProxy;
 import anon.crypto.JAPCertificateStore;
 import anon.infoservice.HTTPConnectionFactory;
-import anon.infoservice.ProxyInterface;
 import anon.infoservice.InfoServiceDBEntry;
+import anon.infoservice.ListenerInterface;
 import anon.infoservice.MixCascade;
-import anon.server.AnonServiceImpl;
+import anon.infoservice.ProxyInterface;
 import anon.server.impl.ProxyConnection;
 import anon.util.XMLUtil;
-import anon.infoservice.ListenerInterface;
 import forward.ForwardUtils;
 import forward.client.ClientForwardException;
 import forward.client.DefaultClientProtocolHandler;
@@ -51,11 +55,6 @@ import forward.client.ForwardConnectionDescriptor;
 import forward.server.ForwardSchedulerStatistics;
 import forward.server.ForwardServerManager;
 import forward.server.ServerSocketPropagandist;
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
-import proxy.AnonProxy;
-import anon.infoservice.*;
 
 /**
  * This class stores all routing settings. Observers of this class are notified, if the settings
@@ -1090,12 +1089,12 @@ public class JAPRoutingSettings extends Observable
     Element serverPortNode = a_doc.createElement("ServerPort");
     Element serverRunningNode = a_doc.createElement("ServerRunning");
     synchronized (this) {
-      XMLUtil.setNodeValue(serverPortNode, Integer.toString(getServerPort()));
+      XMLUtil.setValue(serverPortNode, Integer.toString(getServerPort()));
       if (getRoutingMode() == ROUTING_MODE_SERVER) {
-        XMLUtil.setNodeBoolean(serverRunningNode, true);
+        XMLUtil.setValue(serverRunningNode, true);
       }
       else {
-        XMLUtil.setNodeBoolean(serverRunningNode, false);
+        XMLUtil.setValue(serverRunningNode, false);
       }
     }
     forwardingServerNode.appendChild(serverPortNode);
@@ -1108,8 +1107,8 @@ public class JAPRoutingSettings extends Observable
     Element forwardingClientNode = a_doc.createElement("ForwardingClient");
     Element connectViaForwarderNode = a_doc.createElement("ConnectViaForwarder");
     Element forwardInfoServiceNode = a_doc.createElement("ForwardInfoService");
-    XMLUtil.setNodeBoolean(connectViaForwarderNode, isConnectViaForwarder());
-    XMLUtil.setNodeBoolean(forwardInfoServiceNode, getForwardInfoService());
+    XMLUtil.setValue(connectViaForwarderNode, isConnectViaForwarder());
+    XMLUtil.setValue(forwardInfoServiceNode, getForwardInfoService());
     forwardingClientNode.appendChild(connectViaForwarderNode);
     forwardingClientNode.appendChild(forwardInfoServiceNode);
     japForwardingSettingsNode.appendChild(forwardingClientNode);
@@ -1144,7 +1143,7 @@ public class JAPRoutingSettings extends Observable
         startServerIsPossible = false;
       }
       else {
-        int serverPort = XMLUtil.parseNodeInt(serverPortNode, -1);
+        int serverPort = XMLUtil.parseValue(serverPortNode, -1);
         if (serverPort == -1) {
           LogHolder.log(LogLevel.ERR, LogType.MISC, "JAPRoutingSettings: loadSettingsFromXml: Invalid server port in XML structure: Using default server port.");
           startServerIsPossible = false;
@@ -1202,7 +1201,7 @@ public class JAPRoutingSettings extends Observable
       }
       else {
         /* read the start server setting */
-        if (XMLUtil.parseNodeBoolean(serverRunningNode, false) == true) {
+        if (XMLUtil.parseValue(serverRunningNode, false) == true) {
           if (startServerIsPossible == true) {
             if (setRoutingMode(ROUTING_MODE_SERVER) == true) {
               /* start the propaganda */
@@ -1232,7 +1231,7 @@ public class JAPRoutingSettings extends Observable
       }
       else {
         /* read the connect-via-forwarder client setting */
-        setConnectViaForwarder(XMLUtil.parseNodeBoolean(connectViaForwarderNode, false));
+        setConnectViaForwarder(XMLUtil.parseValue(connectViaForwarderNode, false));
       }   
       /* get the option, whether the InfoService can reached directly or not */
       Element forwardInfoServiceNode = (Element)(XMLUtil.getFirstChildByName(forwardingClientNode, "ForwardInfoService"));
@@ -1241,7 +1240,7 @@ public class JAPRoutingSettings extends Observable
       }
       else {
         /* read the forward InfoService client setting */
-        setForwardInfoService(XMLUtil.parseNodeBoolean(forwardInfoServiceNode, false));
+        setForwardInfoService(XMLUtil.parseValue(forwardInfoServiceNode, false));
       }   
     }      
     return 0;

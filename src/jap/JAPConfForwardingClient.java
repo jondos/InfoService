@@ -38,6 +38,7 @@ import java.util.Observer;
 import javax.swing.JCheckBox;
 import javax.swing.JPanel;
 import javax.swing.border.TitledBorder;
+
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;

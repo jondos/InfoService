@@ -27,8 +27,10 @@
  */
 package jap;
 
-import java.util.Enumeration;
-import java.util.Vector;
+import gui.JAPMultilineLabel;
+import gui.ServerListPanel;
+import jap.platform.AbstractOS;
+
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Cursor;
@@ -45,6 +47,9 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.util.Enumeration;
+import java.util.Vector;
+
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
@@ -56,20 +61,17 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.JTextField;
-import javax.swing.ImageIcon;
 import javax.swing.border.LineBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 import anon.infoservice.InfoServiceDBEntry;
 import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.MixCascade;
 import anon.infoservice.MixInfo;
-import gui.JAPMultilineLabel;
-import gui.ServerListPanel;
-import jap.platform.AbstractOS;
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
 
 class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, ActionListener,
 	ListSelectionListener, ItemListener, KeyListener
@@ -297,7 +299,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		GridBagLayout layout = new GridBagLayout();
 		GridBagConstraints c = new GridBagConstraints();
 		c.insets = new Insets(5,5,5,5);
-		c.anchor = c.NORTHWEST;
+		c.anchor = GridBagConstraints.NORTHWEST;
 		m_manualPanel.setLayout(layout);
 		JLabel l = new JLabel(JAPMessages.getString("manualServiceAddHost"));
 		c.gridx = 0;
@@ -308,7 +310,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		m_manualPanel.add(l, c);
 		m_manHostField = new JTextField();
 		m_manHostField.setText(a_hostName);
-		c.fill=c.HORIZONTAL;
+		c.fill=GridBagConstraints.HORIZONTAL;
 		c.weightx = 1;
 		c.gridx = 1;
 		c.gridy = 0;
@@ -322,8 +324,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		c.gridy = 2;
 		c.gridx = 2;
 		c.gridwidth = 1;
-		c.fill=c.NONE;
-		c.anchor = c.NORTHEAST;
+		c.fill=GridBagConstraints.NONE;
+		c.anchor = GridBagConstraints.NORTHEAST;
 		if (a_newCascade)
 		{
 			m_enterCascadeButton = new JButton(JAPMessages.getString("manualServiceEnter"));

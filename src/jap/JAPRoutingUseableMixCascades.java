@@ -33,6 +33,10 @@ import java.util.Observable;
 import java.util.Observer;
 import java.util.Vector;
 
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -41,9 +45,6 @@ import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.MixCascade;
 import anon.util.XMLUtil;
 import forward.server.ForwardServerManager;
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
 
 /**
  * This class manages the useable mixcascades for the clients of the local forwarding server. So
@@ -319,7 +320,7 @@ public class JAPRoutingUseableMixCascades extends Observable implements Observer
     Element allowAllAvailableMixCascadesNode = a_doc.createElement("AllowAllAvailableMixCascades");
     Element allowedMixCascadesNode = a_doc.createElement("AllowedMixCascades");
     synchronized (this) {
-        XMLUtil.setNodeBoolean(allowAllAvailableMixCascadesNode, getAllowAllAvailableMixCascades());
+        XMLUtil.setValue(allowAllAvailableMixCascadesNode, getAllowAllAvailableMixCascades());
       Enumeration allowedMixCascades = getAllowedMixCascades().elements();
       while (allowedMixCascades.hasMoreElements()) {
         allowedMixCascadesNode.appendChild(((MixCascade)(allowedMixCascades.nextElement())).toXmlNode(a_doc));
@@ -351,7 +352,7 @@ public class JAPRoutingUseableMixCascades extends Observable implements Observer
       noError = false;
     }
     else {
-      setAllowAllAvailableMixCascades(XMLUtil.parseNodeBoolean(allowAllAvailableMixCascadesNode, getAllowAllAvailableMixCascades()));
+      setAllowAllAvailableMixCascades(XMLUtil.parseValue(allowAllAvailableMixCascadesNode, getAllowAllAvailableMixCascades()));
     }
     /* load the list of allowed mixcascades for the case, that not all available mixcascades are
      * allowed

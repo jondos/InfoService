@@ -28,14 +28,16 @@
 
 package update;
 
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import javax.swing.JLabel;
 import gui.JAPMultilineLabel;
 import gui.wizard.BasicWizardPage;
 import jap.JAPConstants;
 import jap.JAPMessages;
 import jap.JAPUtil;
+
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+
+import javax.swing.JLabel;
 
 public class JAPFinishWizardPage extends BasicWizardPage
 {

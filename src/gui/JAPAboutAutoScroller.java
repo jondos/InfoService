@@ -27,6 +27,8 @@
  */
 package gui;
 
+import jap.JAPConstants;
+
 import java.awt.Canvas;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -37,9 +39,9 @@ import java.awt.Image;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+
 import javax.swing.JButton;
 import javax.swing.JEditorPane;
-import jap.JAPConstants;
 
 public final class JAPAboutAutoScroller extends Canvas implements Runnable
 {

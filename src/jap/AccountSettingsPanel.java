@@ -27,16 +27,19 @@
  */
 package jap;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.util.Enumeration;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
+import gui.ByteNumberCellRenderer;
+import gui.TimestampCellRenderer;
+import jap.platform.AbstractOS;
 
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.sql.Timestamp;
+import java.util.Enumeration;
+
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -44,30 +47,30 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.ListSelectionModel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
-import javax.swing.filechooser.FileFilter;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.table.AbstractTableModel;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+
 import anon.crypto.XMLEncryption;
 import anon.pay.PayAccount;
 import anon.pay.PayAccountsFile;
 import anon.pay.xml.XMLAccountInfo;
 import anon.pay.xml.XMLBalance;
+import anon.pay.xml.XMLEasyCC;
 import anon.pay.xml.XMLTransCert;
 import anon.util.XMLUtil;
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
-import javax.swing.*;
-import javax.swing.event.*;
-import gui.TimestampCellRenderer;
-import gui.ByteNumberCellRenderer;
-import jap.platform.AbstractOS;
-import anon.pay.xml.XMLEasyCC;
-import java.sql.Timestamp;
 
 /**
  * The Jap Conf Module (Settings Tab Page) for the Accounts and payment Management

@@ -29,12 +29,15 @@ package anon.infoservice;
 
 import java.util.Enumeration;
 import java.util.Vector;
-import org.w3c.dom.Element;
-import anon.crypto.JAPCertificate;
-import anon.crypto.JAPCertificateStore;
+
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+
+import org.w3c.dom.Element;
+
+import anon.crypto.JAPCertificate;
+import anon.crypto.JAPCertificateStore;
 
 /**
  * This class holds the instances of the InfoService class for the JAP client and is a singleton.

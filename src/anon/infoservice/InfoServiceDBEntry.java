@@ -27,12 +27,15 @@
  */
 package anon.infoservice;
 
-import java.io.IOException;
 import java.util.Enumeration;
 import java.util.NoSuchElementException;
 import java.util.Vector;
 
 import javax.xml.parsers.DocumentBuilderFactory;
+
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -41,20 +44,14 @@ import org.w3c.dom.NodeList;
 
 import HTTPClient.HTTPConnection;
 import HTTPClient.HTTPResponse;
-
-import anon.ErrorCodes;
-import anon.crypto.JAPCertPath;
 import anon.crypto.JAPCertificate;
 import anon.crypto.JAPCertificateStore;
-import anon.crypto.JAPSignature;
-import anon.util.Base64;
+import anon.crypto.XMLSignature;
 import anon.util.BZip2Tools;
+import anon.util.Base64;
 import anon.util.IXMLEncodable;
 import anon.util.XMLParseException;
 import anon.util.XMLUtil;
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
 
 /**
  * Holds the information for an infoservice.
@@ -194,7 +191,7 @@ final public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncod
 		   }*/
 
 		/* get the name */
-		m_strName = XMLUtil.parseNodeString(XMLUtil.getFirstChildByName(a_infoServiceNode, "Name"), null);
+		m_strName = XMLUtil.parseValue(XMLUtil.getFirstChildByName(a_infoServiceNode, "Name"), null);
 		if (m_strName == null)
 		{
 			throw new XMLParseException("Name");
@@ -789,9 +786,7 @@ final public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncod
 		{
 			try
 			{
-				JAPSignature sig = new JAPSignature();
-				sig.initVerify(cert.getPublicKey());
-				if (!sig.verifyXML(japNode))
+				if(XMLSignature.verify(japNode,cert.getPublicKey())==null)
 				{
 					throw (new Exception("InfoService: getNewVersionNumber: Signature check failed!"));
 				}
@@ -855,7 +850,7 @@ final public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncod
 		{ //Compressed first
 			Document doc = getXmlDocument(HttpRequestStructure.createGetRequest("/compressedtornodes"));
 			Element torNodeList = doc.getDocumentElement();
-			String strCompressedTorNodesList = XMLUtil.parseNodeString(torNodeList, null);
+			String strCompressedTorNodesList = XMLUtil.parseValue(torNodeList, null);
 			list = new String(BZip2Tools.decompress(Base64.decode(strCompressedTorNodesList)));
 		}
 		catch (Exception e)
@@ -867,7 +862,7 @@ final public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncod
 			{
 				Document doc = getXmlDocument(HttpRequestStructure.createGetRequest("/tornodes"));
 				Element torNodeList = doc.getDocumentElement();
-				list = XMLUtil.parseNodeString(torNodeList, null);
+				list = XMLUtil.parseValue(torNodeList, null);
 			}
 			catch (Exception e)
 			{
@@ -996,20 +991,9 @@ final public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncod
 		if (a_trustedCertificates != null)
 		{
 			/* verify the signature */
-			NodeList signatureNodes = a_nodeToCheck.getElementsByTagName("Signature");
-			if (signatureNodes.getLength() == 0)
+			if ( XMLSignature.verify(a_nodeToCheck,a_trustedCertificates)==null)
 			{
-				throw (new Exception("Signature node missing."));
-			}
-			else
-			{
-				Element signatureNode = (Element) (signatureNodes.item(0));
-				int errorCode = JAPCertPath.validate(a_nodeToCheck, signatureNode, a_trustedCertificates);
-				if (errorCode != ErrorCodes.E_SUCCESS)
-				{
-					throw (new Exception("Signature is invalid. Errorcode: " +
-										 Integer.toString(errorCode)));
-				}
+				throw (new Exception("Signature is invalid. " ));
 			}
 		}
 	}

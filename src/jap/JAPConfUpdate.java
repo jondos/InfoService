@@ -28,10 +28,6 @@
 
 package jap;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
@@ -40,6 +36,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
@@ -48,9 +48,9 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.border.TitledBorder;
 
+import update.JAPUpdateWizard;
 import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.JAPVersionInfo;
-import update.JAPUpdateWizard;
 
 final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListener, ItemListener, Runnable
 {

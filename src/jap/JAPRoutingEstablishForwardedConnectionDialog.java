@@ -64,6 +64,9 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.text.PlainDocument;
 
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 import anon.crypto.JAPCertificateStore;
 import anon.infoservice.ListenerInterface;
 import anon.infoservice.MixCascade;
@@ -72,9 +75,6 @@ import forward.client.ForwardConnectionDescriptor;
 import forward.client.ForwarderInformationGrabber;
 import forward.client.captcha.IImageEncodedCaptcha;
 import gui.JAPHtmlMultiLineLabel;
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
 
 /**
  * This is implementation of the dialog shown when starting a forwarded connection. The dialog is

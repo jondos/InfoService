@@ -32,12 +32,13 @@ import java.net.ConnectException;
 import java.util.Vector;
 
 import org.apache.xmlrpc.XmlRpcClientLite;
+
 import anon.AnonChannel;
 import anon.AnonServerDescription;
 import anon.AnonService;
 import anon.AnonServiceEventListener;
-import anon.*;
-import anon.infoservice.*;
+import anon.ErrorCodes;
+import anon.infoservice.ImmutableProxyInterface;
 public class AnonServiceImplProxy implements AnonService
 {
 	String m_RpcServerHost;

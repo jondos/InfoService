@@ -27,10 +27,6 @@
  */
 package jap;
 
-import java.util.Enumeration;
-import java.util.Observable;
-import java.util.Observer;
-import java.util.Vector;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -40,9 +36,12 @@ import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.Enumeration;
+import java.util.Observable;
+import java.util.Observer;
+import java.util.Vector;
 
 import javax.swing.DefaultListModel;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -62,12 +61,12 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.text.PlainDocument;
 
-import anon.infoservice.InfoServiceDBEntry;
-import anon.infoservice.InfoServiceHolder;
-import anon.infoservice.MixCascade;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.infoservice.InfoServiceDBEntry;
+import anon.infoservice.InfoServiceHolder;
+import anon.infoservice.MixCascade;
 
 /**
  * This is the configuration GUI for the JAP forwarding server component.

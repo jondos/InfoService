@@ -27,12 +27,16 @@
  */
 package anon.pay.xml;
 
-import org.w3c.dom.CharacterData;
-import org.w3c.dom.Element;
-import org.w3c.dom.Document;
-import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.ByteArrayInputStream;
-import anon.util.*;
+
+import javax.xml.parsers.DocumentBuilderFactory;
+
+import org.w3c.dom.CharacterData;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
+import anon.util.IXMLEncodable;
+import anon.util.XMLUtil;
 
 /**
  * @todo document :-)
@@ -77,7 +81,7 @@ public class XMLDescription implements IXMLEncodable // extends XMLDocument
 	public Element toXmlElement(Document a_doc)
 	{
 		Element elemRoot = a_doc.createElement("Description");
-		XMLUtil.setNodeValue(elemRoot, m_strDescription);
+		XMLUtil.setValue(elemRoot, m_strDescription);
 		return elemRoot;
 	}
 

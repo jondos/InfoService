@@ -27,13 +27,15 @@
  */
 package jap;
 
+import gui.JAPDll;
+
 import java.awt.Dimension;
 import java.awt.Point;
-import anon.util.ResourceLoader;
-import anon.infoservice.ProxyInterface;
+
 import anon.crypto.JAPCertificate;
 import anon.crypto.JAPCertificateStore;
-import gui.JAPDll;
+import anon.infoservice.ProxyInterface;
+import anon.util.ResourceLoader;
 
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPModel

@@ -1,8 +1,9 @@
 package anon.pay.xml;
 
-import anon.util.IXMLEncodable;
-import org.w3c.dom.Element;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
+import anon.util.IXMLEncodable;
 
 public class XMLCloseAck implements IXMLEncodable
 {

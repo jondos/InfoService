@@ -33,8 +33,14 @@ package anon.tor;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.security.SecureRandom;
+import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Vector;
+
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
+import anon.crypto.MyRandom;
 import anon.tor.cells.Cell;
 import anon.tor.cells.CreatedCell;
 import anon.tor.cells.DestroyCell;
@@ -42,11 +48,6 @@ import anon.tor.cells.PaddingCell;
 import anon.tor.cells.RelayCell;
 import anon.tor.ordescription.ORDescription;
 import anon.tor.util.helper;
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
-import java.util.*;
-import anon.crypto.*;
 
 /**
  * @author stefan

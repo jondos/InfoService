@@ -27,13 +27,14 @@
  */
 package jap;
 
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import anon.util.XMLUtil;
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
 
 /**
  * This is the implementation of a structure, which stores the paramters of a connection class,
@@ -218,10 +219,10 @@ public class JAPRoutingConnectionClass {
     Element classIdentifierNode = a_doc.createElement("ClassIdentifier");
     Element maximumBandwidthNode = a_doc.createElement("MaximumBandwidth");
     Element relativeBandwidthNode = a_doc.createElement("RelativeBandwidth");
-    XMLUtil.setNodeValue(classIdentifierNode, Integer.toString(getIdentifier()));
+    XMLUtil.setValue(classIdentifierNode, Integer.toString(getIdentifier()));
     synchronized (this) {
-      XMLUtil.setNodeValue(maximumBandwidthNode, Integer.toString(getMaximumBandwidth()));
-      XMLUtil.setNodeValue(relativeBandwidthNode, Integer.toString(getRelativeBandwidth()));
+      XMLUtil.setValue(maximumBandwidthNode, Integer.toString(getMaximumBandwidth()));
+      XMLUtil.setValue(relativeBandwidthNode, Integer.toString(getRelativeBandwidth()));
     }
     connectionClassNode.appendChild(classIdentifierNode);
     connectionClassNode.appendChild(maximumBandwidthNode);
@@ -248,12 +249,12 @@ public class JAPRoutingConnectionClass {
     synchronized (this) {
       try {
         /* check, whether the class identifier matches to the connection class */
-        if (XMLUtil.parseNodeInt(XMLUtil.getFirstChildByName(a_connectionClassNode, "ClassIdentifier"), m_connectionClassIdentifier + 1) != m_connectionClassIdentifier) {
+        if (XMLUtil.parseValue(XMLUtil.getFirstChildByName(a_connectionClassNode, "ClassIdentifier"), m_connectionClassIdentifier + 1) != m_connectionClassIdentifier) {
           throw (new Exception("JAPRoutingConnectionClass: loadSettingsFromXml: The class identifer doesn't match to this class (class: " + Integer.toString(m_connectionClassIdentifier) + ")."));
         }
         if (m_connectionClassIdentifier == JAPRoutingConnectionClassSelector.CONNECTION_CLASS_USER) {
           /* user-defined connection class -> load the maximum bandwidth setting */
-          int maximumBandwidth = XMLUtil.parseNodeInt(XMLUtil.getFirstChildByName(a_connectionClassNode, "MaximumBandwidth"), -1);
+          int maximumBandwidth = XMLUtil.parseValue(XMLUtil.getFirstChildByName(a_connectionClassNode, "MaximumBandwidth"), -1);
           if (maximumBandwidth >= JAPConstants.ROUTING_BANDWIDTH_PER_USER) {
             /* maximum bandwidth needs to be at least the same as required for one forwarded
              * connection
@@ -268,7 +269,7 @@ public class JAPRoutingConnectionClass {
         }
         else {
           /* pre-defined connection class -> check whether the maximum bandwidth setting matches */      
-          if (XMLUtil.parseNodeInt(XMLUtil.getFirstChildByName(a_connectionClassNode, "MaximumBandwidth"), m_maximumBandwidth + 1) != m_maximumBandwidth) {
+          if (XMLUtil.parseValue(XMLUtil.getFirstChildByName(a_connectionClassNode, "MaximumBandwidth"), m_maximumBandwidth + 1) != m_maximumBandwidth) {
             throw (new Exception("JAPRoutingConnectionClass: loadSettingsFromXml: The maximum bandwidth doesn't match to this class (class: " + Integer.toString(m_connectionClassIdentifier) + ")."));
           }
         }
@@ -285,7 +286,7 @@ public class JAPRoutingConnectionClass {
           noError = false;
         }
         else {
-          int relativeBandwidth = XMLUtil.parseNodeInt(relativeBandwidthNode, -1);
+          int relativeBandwidth = XMLUtil.parseValue(relativeBandwidthNode, -1);
           if (relativeBandwidth < getMinimumRelativeBandwidth()) {
             LogHolder.log(LogLevel.ERR, LogType.MISC, "JAPRoutingConnectionClass: loadSettingsFromXml: Invalid relative bandwidth value for class " + Integer.toString(m_connectionClassIdentifier) + ": Using default value.");
             noError = false;

@@ -28,10 +28,12 @@
 package anon.pay.xml;
 
 import java.io.ByteArrayInputStream;
+
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+
 import anon.crypto.IMyPublicKey;
 import anon.util.AbstractXMLSignable;
 import anon.util.XMLUtil;
@@ -159,7 +161,7 @@ public class XMLAccountCertificate extends AbstractXMLSignable
 
 		// parse biID
 		elem = (Element) XMLUtil.getFirstChildByName(xml, "BiID");
-		m_biID = XMLUtil.parseNodeString(elem, "");
+		m_biID = XMLUtil.parseValue(elem, "");
 		if (m_biID.equals(""))
 		{
 			throw new Exception("XMLAccountCertificate: cannot parse BiID");
@@ -167,7 +169,7 @@ public class XMLAccountCertificate extends AbstractXMLSignable
 
 		// parse creation time
 		elem = (Element) XMLUtil.getFirstChildByName(xml, "CreationTime");
-		String timestamp = XMLUtil.parseNodeString(elem, "0");
+		String timestamp = XMLUtil.parseValue(elem, "0");
 		m_creationTime = java.sql.Timestamp.valueOf(timestamp);
 
 		// parse publickey
@@ -201,17 +203,17 @@ public class XMLAccountCertificate extends AbstractXMLSignable
 		elemRoot.setAttribute("version", "1.0");
 
 		Element elem = a_doc.createElement("AccountNumber");
-		XMLUtil.setNodeValue(elem, Long.toString(m_accountNumber));
+		XMLUtil.setValue(elem, Long.toString(m_accountNumber));
 		elemRoot.appendChild(elem);
 
 		elem = a_doc.createElement("BiID");
-		XMLUtil.setNodeValue(elem, m_biID);
+		XMLUtil.setValue(elem, m_biID);
 		elemRoot.appendChild(elem);
 
 		/** @todo check timestamp format */
 		elem = a_doc.createElement("CreationTime");
 
-		XMLUtil.setNodeValue(elem, m_creationTime.toString());
+		XMLUtil.setValue(elem, m_creationTime.toString());
 		elemRoot.appendChild(elem);
 
 		elem = a_doc.createElement("JapPublicKey");

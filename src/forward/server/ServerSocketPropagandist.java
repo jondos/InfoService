@@ -31,14 +31,15 @@ import java.util.Observable;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 import anon.infoservice.InfoServiceDBEntry;
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
 
 /**
  * This class registers the port of a ServerSocketManager at the infoservice (the IP is detected

@@ -27,7 +27,6 @@
  */
 package anon.util;
 
-import anon.util.IXMLEncodable;
 import anon.crypto.JAPSignature;
 
 /**

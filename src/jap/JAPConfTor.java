@@ -27,29 +27,29 @@
  */
 package jap;
 
-import java.text.DateFormat;
-import java.util.Vector;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.text.DateFormat;
+import java.util.Hashtable;
+import java.util.Vector;
+
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JTable;
+import javax.swing.ListSelectionModel;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
+
 import anon.tor.ordescription.InfoServiceORListFetcher;
 import anon.tor.ordescription.ORDescription;
 import anon.tor.ordescription.ORList;
-import javax.swing.ListSelectionModel;
-import javax.swing.border.EmptyBorder;
-import java.util.Hashtable;
 
 final class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 {

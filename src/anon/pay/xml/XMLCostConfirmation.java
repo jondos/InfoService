@@ -27,8 +27,6 @@
  */
 package anon.pay.xml;
 
-import anon.util.*;
-import org.w3c.dom.*;
 
 /**
  * This class is probably obsolete... not sure yet

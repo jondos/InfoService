@@ -27,11 +27,15 @@
  */
 package anon.pay.xml;
 
-import javax.xml.parsers.*;
-
-import org.w3c.dom.*;
-import anon.util.*;
 import java.io.ByteArrayInputStream;
+
+import javax.xml.parsers.DocumentBuilderFactory;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
+import anon.util.AbstractXMLSignable;
+import anon.util.XMLUtil;
 
 /** @todo add spent, BiID */
 public class XMLTransCert extends AbstractXMLSignable
@@ -105,15 +109,15 @@ public class XMLTransCert extends AbstractXMLSignable
 		}
 
 		Element element = (Element) XMLUtil.getFirstChildByName(elemRoot, "AccountNumber");
-		String str = XMLUtil.parseNodeString(element, null);
+		String str = XMLUtil.parseValue(element, null);
 		m_accountNumber = Long.parseLong(str);
 
 		element = (Element) XMLUtil.getFirstChildByName(elemRoot, "TransferNumber");
-		str = XMLUtil.parseNodeString(element, null);
+		str = XMLUtil.parseValue(element, null);
 		m_transferNumber = Long.parseLong(str);
 
 		element = (Element) XMLUtil.getFirstChildByName(elemRoot, "ValidTime");
-		str = XMLUtil.parseNodeString(element, null);
+		str = XMLUtil.parseValue(element, null);
 		m_validTime = java.sql.Timestamp.valueOf(str);
 
 		element = (Element) XMLUtil.getFirstChildByName(elemRoot, "Signature");
@@ -149,16 +153,16 @@ public class XMLTransCert extends AbstractXMLSignable
 		elemRoot.setAttribute("version", "1.0");
 //		a_doc.appendChild(elemRoot);
 		Element elem = a_doc.createElement("AccountNumber");
-		XMLUtil.setNodeValue(elem, Long.toString(m_accountNumber));
+		XMLUtil.setValue(elem, Long.toString(m_accountNumber));
 		elemRoot.appendChild(elem);
 		elem = a_doc.createElement("TransferNumber");
-		XMLUtil.setNodeValue(elem, Long.toString(m_transferNumber));
+		XMLUtil.setValue(elem, Long.toString(m_transferNumber));
 		elemRoot.appendChild(elem);
 		elem = a_doc.createElement("Deposit");
-		XMLUtil.setNodeValue(elem, Long.toString(m_deposit));
+		XMLUtil.setValue(elem, Long.toString(m_deposit));
 		elemRoot.appendChild(elem);
 		elem = a_doc.createElement("ValidTime");
-		XMLUtil.setNodeValue(elem, m_validTime.toString());
+		XMLUtil.setValue(elem, m_validTime.toString());
 		elemRoot.appendChild(elem);
 		if (m_signature != null)
 		{

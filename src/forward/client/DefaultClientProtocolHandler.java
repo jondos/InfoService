@@ -27,16 +27,13 @@
  */
 package forward.client;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.Result;
 import javax.xml.transform.Source;
@@ -45,15 +42,19 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
-import anon.ErrorCodes;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+
 import anon.crypto.JAPCertificateStore;
-import anon.crypto.JAPCertPath;
+import anon.crypto.XMLSignature;
 import anon.infoservice.MixCascade;
 import anon.server.impl.ProxyConnection;
-import logging.LogHolder;
-import logging.LogType;
-import logging.LogLevel;
-import proxy.AnonProxy;
+import anon.util.XMLParseException;
 
 /**
  * This is the implementation of the client side for the first version of the JAP routing protocol.
@@ -226,8 +227,13 @@ public class DefaultClientProtocolHandler {
           NodeList signatureNodes = currentMixCascadeNode.getElementsByTagName("Signature");
           if (signatureNodes.getLength() > 0) {
             Element signatureNode = (Element)(signatureNodes.item(0));
-            int signatureErrorCode = JAPCertPath.validate(currentMixCascadeNode, signatureNode, a_certificateStore);
-            if (signatureErrorCode == ErrorCodes.E_SUCCESS) {
+//          int signatureErrorCode = JAPCertPath.validate(currentMixCascadeNode, signatureNode, a_certificateStore);
+//          if (signatureErrorCode == ErrorCodes.E_SUCCESS) {
+			{
+				try
+				{
+					if(XMLSignature.verify(currentMixCascadeNode,a_certificateStore)!=null)
+					{
               /* signature is valid, try to add that mixcascade to the descriptor mixcascade list */
               try {
                 connectionDescriptor.addMixCascade(new MixCascade(currentMixCascadeNode));
@@ -238,7 +244,13 @@ public class DefaultClientProtocolHandler {
             }
             else {
               /* certificate check failed */
-              LogHolder.log(LogLevel.ERR, LogType.MISC, "DefaultClientProtocolHandler: getConnectionDescriptor: Signature check for a MixCascade failed (errorcode: " + Integer.toString(signatureErrorCode) + ").");
+//					  LogHolder.log(LogLevel.ERR, LogType.MISC, "DefaultClientProtocolHandler: getConnectionDescriptor: Signature check for a MixCascade failed (errorcode: " + Integer.toString(signatureErrorCode) + ").");
+					  LogHolder.log(LogLevel.ERR, LogType.MISC, "DefaultClientProtocolHandler: getConnectionDescriptor: Signature check for a MixCascade failed.");
+					}
+				} catch(XMLParseException ex)
+				{
+					LogHolder.log(LogLevel.ERR, LogType.MISC, "DefaultClientProtocolHandler: getConnectionDescriptor: Signature check for a MixCascade failed.");
+				}
             }
           }
           else {

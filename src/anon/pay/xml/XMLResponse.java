@@ -27,13 +27,16 @@
  */
 package anon.pay.xml;
 
-import org.w3c.dom.Element;
-import anon.util.Base64;
-import anon.util.XMLUtil;
-import anon.util.IXMLEncodable;
-import org.w3c.dom.Document;
-import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.ByteArrayInputStream;
+
+import javax.xml.parsers.DocumentBuilderFactory;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
+import anon.util.Base64;
+import anon.util.IXMLEncodable;
+import anon.util.XMLUtil;
 
 public class XMLResponse implements IXMLEncodable
 {

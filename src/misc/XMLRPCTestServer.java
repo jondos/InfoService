@@ -1,9 +1,9 @@
 package misc;
 
-import anon.*;
-import anon.xmlrpc.server.AnonServiceImplRemote;
-
+import anon.AnonService;
+import anon.AnonServiceFactory;
 import anon.infoservice.MixCascade;
+import anon.xmlrpc.server.AnonServiceImplRemote;
 
 public class XMLRPCTestServer
 {

@@ -28,7 +28,6 @@
 package anon.infoservice;
 
 import HTTPClient.NVPair;
-
 import anon.util.IXMLEncodable;
 
 /**

@@ -33,19 +33,19 @@ import java.net.ConnectException;
 import java.net.InetAddress;
 import java.util.Enumeration;
 import java.util.Vector;
+
 import anon.AnonChannel;
+import anon.AnonServerDescription;
 import anon.AnonService;
 import anon.AnonServiceEventListener;
 import anon.ErrorCodes;
 import anon.crypto.JAPCertificateStore;
+import anon.infoservice.ImmutableProxyInterface;
 import anon.infoservice.MixCascade;
+import anon.pay.Pay;
 import anon.server.impl.KeyPool;
 import anon.server.impl.MuxSocket;
 import anon.server.impl.ProxyConnection;
-import anon.AnonServerDescription;
-import anon.infoservice.ImmutableProxyInterface;
-import anon.pay.Pay;
-import anon.pay.BI;
 
 final public class AnonServiceImpl implements AnonService
 {

@@ -28,12 +28,15 @@
 package anon.server.impl;
 
 import javax.xml.parsers.DocumentBuilderFactory;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import anon.util.XMLUtil;
+
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
+import anon.util.XMLUtil;
 
 final public class ControlChannelTest extends SyncControlChannel implements Runnable
 {

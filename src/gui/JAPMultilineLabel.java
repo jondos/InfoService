@@ -29,8 +29,9 @@ package gui;
 
 import java.awt.GridLayout;
 import java.util.StringTokenizer;
-import javax.swing.JPanel;
+
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 
 final public class JAPMultilineLabel extends JPanel
 {

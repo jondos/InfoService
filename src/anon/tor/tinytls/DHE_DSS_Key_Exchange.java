@@ -30,6 +30,10 @@ package anon.tor.tinytls;
 import java.math.BigInteger;
 import java.security.SecureRandom;
 
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
+
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 import org.bouncycastle.crypto.agreement.DHBasicAgreement;
 import org.bouncycastle.crypto.generators.DHKeyPairGenerator;
@@ -38,15 +42,14 @@ import org.bouncycastle.crypto.params.DHParameters;
 import org.bouncycastle.crypto.params.DHPrivateKeyParameters;
 import org.bouncycastle.crypto.params.DHPublicKeyParameters;
 
+import anon.crypto.IMyPrivateKey;
+import anon.crypto.JAPCertificate;
+import anon.crypto.MyDSAPrivateKey;
+import anon.crypto.MyDSAPublicKey;
+import anon.crypto.MyDSASignature;
 import anon.tor.tinytls.util.PRF;
 import anon.tor.tinytls.util.hash;
 import anon.tor.util.helper;
-import anon.crypto.IMyPrivateKey;
-import anon.crypto.JAPCertificate;
-import anon.crypto.JAPSignature;
-import anon.crypto.MyDSAPrivateKey;
-import anon.crypto.MyDSAPublicKey;
-import logging.*;
 
 public class DHE_DSS_Key_Exchange extends Key_Exchange {
 
@@ -106,7 +109,7 @@ public class DHE_DSS_Key_Exchange extends Key_Exchange {
 		byte[] signature = hash.sha(clientrandom, serverrandom, message);
 
 
-		JAPSignature sig = new JAPSignature();
+		MyDSASignature sig = new MyDSASignature();
 		try
 		{
 			sig.initSign(dsakey);
@@ -114,7 +117,7 @@ public class DHE_DSS_Key_Exchange extends Key_Exchange {
 		{
 		}
 
-		byte[]signature2 = sig.signBytes(signature);
+		byte[]signature2 = sig.sign(signature);
 
 		helper.conc(message,helper.inttobyte(signature2.length,2),signature2);
 
@@ -182,7 +185,7 @@ public class DHE_DSS_Key_Exchange extends Key_Exchange {
 		byte[] hash = helper.copybytes(bytes,counter+bytes_offset,length);
 
 		MyDSAPublicKey dsakey;
-		JAPSignature sig = new JAPSignature();
+		MyDSASignature sig = new MyDSASignature();
 		if(servercertificate.getPublicKey() instanceof MyDSAPublicKey)
 		{
 			dsakey = (MyDSAPublicKey)servercertificate.getPublicKey();

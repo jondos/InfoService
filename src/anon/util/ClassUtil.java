@@ -27,14 +27,14 @@
  */
 package anon.util;
 
-import java.io.File;
-import java.io.PrintStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.Enumeration;
 import java.util.Vector;
-import java.util.zip.ZipFile;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 /**
  * This class performs some basic operations related to Class objects.

@@ -33,12 +33,15 @@ import java.security.SignatureException;
 import java.util.Hashtable;
 import java.util.Vector;
 import java.util.zip.ZipException;
-import org.bouncycastle.crypto.Digest;
-import org.bouncycastle.util.encoders.Base64;
-import anon.crypto.JAPCertificate;
+
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+
+import org.bouncycastle.crypto.Digest;
+import org.bouncycastle.util.encoders.Base64;
+
+import anon.crypto.JAPCertificate;
 
 /**
  * Verfies the authencity of a signed jar file.

@@ -27,9 +27,6 @@
  */
 package jap;
 
-import java.util.Enumeration;
-import java.util.Vector;
-
 import java.awt.Component;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
@@ -39,6 +36,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
+import java.util.Enumeration;
+import java.util.Vector;
+
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
@@ -64,7 +64,6 @@ import anon.infoservice.HTTPConnectionFactory;
 import anon.infoservice.InfoServiceDBEntry;
 import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.ListenerInterface;
-import java.awt.Color;
 
 /**
  * This is the configuration GUI for the infoservice.

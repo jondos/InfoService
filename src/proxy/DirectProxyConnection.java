@@ -27,6 +27,9 @@
  */
 package proxy;
 
+import jap.JAPModel;
+import jap.JAPUtil;
+
 import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.OutputStream;
@@ -38,16 +41,16 @@ import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.StringTokenizer;
-import org.apache.commons.net.ftp.FTPClient;
-import org.apache.commons.net.ftp.FTPFile;
-import anon.server.impl.ProxyConnection;
-import jap.JAPConstants;
-import jap.JAPModel;
-import jap.JAPUtil;
-import anon.infoservice.ProxyInterface;
+
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+
+import org.apache.commons.net.ftp.FTPClient;
+import org.apache.commons.net.ftp.FTPFile;
+
+import anon.infoservice.ProxyInterface;
+import anon.server.impl.ProxyConnection;
 
 final class DirectProxyConnection implements Runnable
 {
@@ -488,7 +491,7 @@ final class DirectProxyConnection implements Runnable
 			} // end if Directory
 			else //a file
 			{
-				ftpClient.setFileType(ftpClient.IMAGE_FILE_TYPE);
+				ftpClient.setFileType(FTPClient.IMAGE_FILE_TYPE);
 				FTPFile[] currentResponses = ftpClient.listFiles(m_strFile);
 				long len = currentResponses[0].getSize();
 				os.write( ("HTTP/1.0 200 Ok\r\nContent-Type: application/octet-stream\r\nContent-Length: " +

@@ -1,9 +1,11 @@
 package anon.util;
 
-import anon.crypto.JAPSignature;
+import javax.xml.parsers.DocumentBuilderFactory;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import javax.xml.parsers.DocumentBuilderFactory;
+
+import anon.crypto.JAPSignature;
 
 /**
  * Abstract class that implements the common signing and verifying of XML

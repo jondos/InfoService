@@ -39,14 +39,14 @@ import java.security.SecureRandom;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Vector;
-import anon.tor.cells.Cell;
-import anon.tor.ordescription.ORDescription;
-import anon.tor.tinytls.TinyTLS;
+
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import anon.crypto.*;
-import org.bouncycastle.asn1.x509.*;
+import anon.crypto.MyRandom;
+import anon.tor.cells.Cell;
+import anon.tor.ordescription.ORDescription;
+import anon.tor.tinytls.TinyTLS;
 /**
  *
  */

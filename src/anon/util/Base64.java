@@ -1,7 +1,5 @@
 package anon.util;
 
-import java.io.FilterInputStream;
-import java.io.FilterOutputStream;
 
 /**
  * Encodes and decodes to and from Base64 notation.

@@ -26,9 +26,11 @@
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
 package jap;
-import javax.swing.JPanel;
-import java.awt.Window;
 import gui.IStatusLine;
+
+import java.awt.Window;
+
+import javax.swing.JPanel;
 
 public interface IJAPMainView extends JAPObserver,IStatusLine
 {

@@ -28,8 +28,8 @@
 package anon;
 
 import anon.server.AnonServiceImpl;
-import anon.xmlrpc.client.AnonServiceImplProxy;
 import anon.tor.Tor;
+import anon.xmlrpc.client.AnonServiceImplProxy;
 
 final public class AnonServiceFactory
 {

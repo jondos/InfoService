@@ -30,9 +30,12 @@ package anon.pay.xml;
 import java.io.ByteArrayInputStream;
 import java.util.Enumeration;
 import java.util.Vector;
+
 import javax.xml.parsers.DocumentBuilderFactory;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+
 import anon.util.IXMLEncodable;
 import anon.util.XMLUtil;
 

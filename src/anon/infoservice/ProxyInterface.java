@@ -27,21 +27,15 @@
  */
 package anon.infoservice;
 
-import java.lang.Boolean;
-import HTTPClient.Codecs;
-import HTTPClient.NVPair;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-import anon.util.XMLUtil;
-import anon.util.Util;
+import HTTPClient.Codecs;
+import HTTPClient.NVPair;
 import anon.util.IPasswordReader;
 import anon.util.IXMLEncodable;
 import anon.util.XMLParseException;
-
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
+import anon.util.XMLUtil;
 
 /**
  * This class is used to store information about a proxy connection.
@@ -106,7 +100,7 @@ public final class ProxyInterface extends ListenerInterface
 
 		try
 		{
-			setAuthenticationUserID(XMLUtil.parseNodeString(
+			setAuthenticationUserID(XMLUtil.parseValue(
 				XMLUtil.getFirstChildByName(a_proxyInterfaceNode, XML_AUTHENTICATION_USER_ID), null));
 		}
 		catch (IllegalStateException a_e)
@@ -117,7 +111,7 @@ public final class ProxyInterface extends ListenerInterface
 
 		try
 		{
-			setUseAuthentication(Boolean.valueOf(XMLUtil.parseNodeString(
+			setUseAuthentication(Boolean.valueOf(XMLUtil.parseValue(
 						 XMLUtil.getFirstChildByName(
 								  a_proxyInterfaceNode, XML_USE_AUTHENTICATION), null)).booleanValue());
 		}
@@ -127,7 +121,7 @@ public final class ProxyInterface extends ListenerInterface
 			setUseAuthentication(false);
 		}
 
-		setUseInterface(Boolean.valueOf(XMLUtil.parseNodeString(
+		setUseInterface(Boolean.valueOf(XMLUtil.parseValue(
 								 XMLUtil.getFirstChildByName(
 									   a_proxyInterfaceNode, XML_USE_PROXY), null)).booleanValue());
 	}

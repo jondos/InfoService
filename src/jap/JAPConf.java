@@ -27,10 +27,7 @@
  */
 package jap;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Dictionary;
-import java.util.Hashtable;
+import gui.JAPMultilineLabel;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
@@ -43,6 +40,11 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.io.File;
+import java.io.IOException;
+import java.util.Dictionary;
+import java.util.Hashtable;
+
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -64,11 +66,10 @@ import javax.swing.event.ChangeListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 
-import anon.infoservice.ImmutableListenerInterface;
-import anon.infoservice.ProxyInterface;
-import gui.JAPMultilineLabel;
 import logging.LogLevel;
 import logging.LogType;
+import anon.infoservice.ImmutableListenerInterface;
+import anon.infoservice.ProxyInterface;
 
 final class JAPConf extends JDialog
 {
@@ -137,7 +138,7 @@ final class JAPConf extends JDialog
 	private boolean loadPay = false;
 
 	private JAPConfModuleSystem m_moduleSystem;
-	private JTabbedPane m_tabsAnon;
+	private JAPConfServices m_confServices;
 
 	public static JAPConf getInstance()
 	{
@@ -179,14 +180,8 @@ final class JAPConf extends JDialog
 		}
 		DefaultMutableTreeNode nodeAnon = m_moduleSystem.addComponent(rootNode, null, "ngAnonymitaet", null);
 		m_moduleSystem.addConfigurationModule(nodeAnon, new JAPConfInfoService(), INFOSERVICE_TAB);
-		m_tabsAnon = new JTabbedPane();
-		JAPConfAnon anonModule = new JAPConfAnon(null);
-		m_tabsAnon.addTab(anonModule.getTabTitle(), anonModule.getRootPanel());
-		JAPConfTor torModule = new JAPConfTor();
-		m_tabsAnon.addTab(torModule.getTabTitle(), torModule.getRootPanel());
-		JAPConfAnonGeneral anonGeneralModule = new JAPConfAnonGeneral(null);
-		m_tabsAnon.addTab(anonGeneralModule.getTabTitle(), anonGeneralModule.getRootPanel());
-		m_moduleSystem.addComponent(nodeAnon, m_tabsAnon, "ngTreeAnonService", ANON_SERVICES_TAB);
+	m_confServices=new JAPConfServices();
+	m_moduleSystem.addConfigurationModule(nodeAnon, m_confServices, ANON_SERVICES_TAB);
 		if (JAPConstants.WITH_BLOCKINGRESISTANCE)
 		{
 			m_moduleSystem.addConfigurationModule(nodeAnon, new JAPConfForwardingServer(),
@@ -890,7 +885,7 @@ final class JAPConf extends JDialog
 		if (a_strSelectedCard.equals(JAPConf.ANON_TAB))
 		{
 			m_moduleSystem.selectNode(JAPConf.ANON_SERVICES_TAB);
-			m_tabsAnon.setSelectedIndex(0);
+			m_confServices.selectAnonTab();
 		}
 		else
 		{

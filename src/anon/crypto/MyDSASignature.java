@@ -32,12 +32,12 @@
 
 package anon.crypto;
 
+import java.security.InvalidKeyException;
+import java.security.Key;
+import java.security.Signature;
+
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.asn1.x9.X9ObjectIdentifiers;
-
-import java.security.InvalidKeyException;
-import java.security.Signature;
-import java.security.Key;
 
 /**
  * Implements the DSA algorithm for signatures.

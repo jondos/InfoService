@@ -27,8 +27,8 @@
  */
 package logging;
 
-import org.apache.log4j.Logger;
 import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 
 /**
  * This is the logging service implementation for compatibility between JAP logging style and

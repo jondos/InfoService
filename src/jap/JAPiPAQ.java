@@ -28,7 +28,9 @@
 package jap;
 
 import java.util.Locale;
+
 import javax.swing.JPanel;
+
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -87,7 +89,7 @@ final public class JAPiPAQ
 
 	public void setLocale(Locale l)
 	{
-		JAPController.getInstance().setLocale(l);
+		JAPController.setLocale(l);
 	}
 
 	public static void main(String[] argv)

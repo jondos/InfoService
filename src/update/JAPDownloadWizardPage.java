@@ -28,21 +28,23 @@
 
 package update;
 
+import gui.JAPMultilineLabel;
+import gui.wizard.BasicWizardPage;
+import jap.JAPConstants;
+import jap.JAPMessages;
+import jap.JAPUtil;
+
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.SwingConstants;
-import gui.JAPMultilineLabel;
-import gui.wizard.BasicWizardPage;
-import jap.JAPConstants;
-import jap.JAPMessages;
-import jap.JAPUtil;
 
 public class JAPDownloadWizardPage extends BasicWizardPage
 {

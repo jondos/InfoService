@@ -29,12 +29,14 @@ package anon.pay.xml;
 
 import java.io.ByteArrayInputStream;
 import java.math.BigInteger;
+
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.bouncycastle.crypto.params.DSAParameters;
 import org.bouncycastle.crypto.params.DSAPublicKeyParameters;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+
 import anon.crypto.IMyPublicKey;
 import anon.crypto.MyDSAPublicKey;
 import anon.crypto.MyRSAPublicKey;
@@ -116,8 +118,8 @@ public class XMLJapPublicKey implements IXMLEncodable //extends XMLDocument
 		{
 			Element elemMod = (Element) XMLUtil.getFirstChildByName(elemRsa, "Modulus");
 			Element elemExp = (Element) XMLUtil.getFirstChildByName(elemRsa, "Exponent");
-			BigInteger modulus = new BigInteger(Base64.decode(XMLUtil.parseNodeString(elemMod, "")));
-			BigInteger exponent = new BigInteger(Base64.decode(XMLUtil.parseNodeString(elemExp, "")));
+			BigInteger modulus = new BigInteger(Base64.decode(XMLUtil.parseValue(elemMod, "")));
+			BigInteger exponent = new BigInteger(Base64.decode(XMLUtil.parseValue(elemExp, "")));
 			m_publicKey = new MyRSAPublicKey(modulus, exponent);
 			return;
 		}
@@ -125,13 +127,13 @@ public class XMLJapPublicKey implements IXMLEncodable //extends XMLDocument
 		if (elemDsa != null)
 		{
 			Element elem = (Element) XMLUtil.getFirstChildByName(elemDsa, "P");
-			BigInteger p = new BigInteger(Base64.decode(XMLUtil.parseNodeString(elem, "")));
+			BigInteger p = new BigInteger(Base64.decode(XMLUtil.parseValue(elem, "")));
 			elem = (Element) XMLUtil.getFirstChildByName(elemDsa, "Y");
-			BigInteger y = new BigInteger(Base64.decode(XMLUtil.parseNodeString(elem, "")));
+			BigInteger y = new BigInteger(Base64.decode(XMLUtil.parseValue(elem, "")));
 			elem = (Element) XMLUtil.getFirstChildByName(elemDsa, "Q");
-			BigInteger q = new BigInteger(Base64.decode(XMLUtil.parseNodeString(elem, "")));
+			BigInteger q = new BigInteger(Base64.decode(XMLUtil.parseValue(elem, "")));
 			elem = (Element) XMLUtil.getFirstChildByName(elemDsa, "G");
-			BigInteger g = new BigInteger(Base64.decode(XMLUtil.parseNodeString(elem, "")));
+			BigInteger g = new BigInteger(Base64.decode(XMLUtil.parseValue(elem, "")));
 
 			// is this really OK ????
 			DSAPublicKeyParameters param = new DSAPublicKeyParameters(

@@ -32,10 +32,10 @@ package anon.tor;
 
 import java.util.Vector;
 
-import anon.tor.ordescription.ORDescription;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.tor.ordescription.ORDescription;
 
 /**
  *

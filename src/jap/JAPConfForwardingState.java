@@ -27,14 +27,16 @@
  */
 package jap;
 
-import java.text.NumberFormat;
-import java.util.Observable;
-import java.util.Observer;
-import java.util.Vector;
+import gui.JAPHtmlMultiLineLabel;
+
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.text.NumberFormat;
+import java.util.Observable;
+import java.util.Observer;
+import java.util.Vector;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -42,11 +44,10 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.border.TitledBorder;
 
-import anon.infoservice.ListenerInterface;
-import gui.JAPHtmlMultiLineLabel;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.infoservice.ListenerInterface;
 
 /**
  * This is the configuration GUI for the JAP forwarding state component.

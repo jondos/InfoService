@@ -27,7 +27,8 @@
  */
 package jap;
 
-import java.io.InputStream;
+import gui.JAPAboutAutoScroller;
+
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Frame;
@@ -36,9 +37,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+
 import javax.swing.ImageIcon;
 import javax.swing.JDialog;
-import gui.JAPAboutAutoScroller;
+
 import anon.util.ResourceLoader;
 
 final class JAPAbout extends JDialog

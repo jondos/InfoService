@@ -28,15 +28,16 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 package gui.wizard;
 
 import jap.JAPMessages;
-import javax.swing.JPanel;
-import javax.swing.JLabel;
-import javax.swing.JComponent;
-import javax.swing.JOptionPane;
-import java.awt.GridBagLayout;
+
 import java.awt.GridBagConstraints;
-import javax.swing.ImageIcon;
-import java.awt.Dialog;
+import java.awt.GridBagLayout;
 import java.awt.Insets;
+
+import javax.swing.ImageIcon;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 
 public  class BasicWizardPage extends JPanel implements WizardPage
 	{

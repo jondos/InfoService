@@ -27,8 +27,6 @@
  */
 package jap;
 
-import java.util.Locale;
-
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -36,6 +34,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.util.Locale;
+
 import javax.swing.ButtonGroup;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -111,7 +111,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 		{
 			public void itemStateChanged(ItemEvent e)
 			{
-				if (e.getStateChange() == e.SELECTED)
+				if (e.getStateChange() == ItemEvent.SELECTED)
 				{
 					try
 					{
@@ -144,7 +144,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 		{
 			public void itemStateChanged(ItemEvent e)
 			{
-				if (!m_bIgnoreComboLanguageEvents && e.getStateChange() == e.SELECTED)
+				if (!m_bIgnoreComboLanguageEvents && e.getStateChange() == ItemEvent.SELECTED)
 				{
 					try
 					{
@@ -171,7 +171,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 		c1.anchor = GridBagConstraints.NORTHWEST;
 		c1.fill = GridBagConstraints.HORIZONTAL;
 		c1.weightx = 1;
-		c1.anchor = c1.NORTHWEST;
+		c1.anchor = GridBagConstraints.NORTHWEST;
 		panelRoot.add(p, c1);
 
 		gbl = new GridBagLayout();
@@ -192,7 +192,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 		p.add(m_rbViewSimplified, c);
 		c1.gridy = 1;
 		c1.insets = new Insets(10, 0, 10, 0);
-		c1.anchor = c1.NORTHWEST;
+		c1.anchor = GridBagConstraints.NORTHWEST;
 		panelRoot.add(p, c1);
 
 		gbl = new GridBagLayout();
@@ -225,7 +225,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 
 		c1.gridy = 2;
 		c1.insets = new Insets(0, 0, 0, 0);
-		c1.anchor = c1.NORTHWEST;
+		c1.anchor = GridBagConstraints.NORTHWEST;
 		panelRoot.add(p, c1);
 
 		c1.gridx = 0;

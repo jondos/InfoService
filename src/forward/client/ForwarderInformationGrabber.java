@@ -31,6 +31,10 @@ import java.io.ByteArrayInputStream;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -38,9 +42,6 @@ import org.w3c.dom.NodeList;
 import anon.infoservice.InfoServiceHolder;
 import forward.client.captcha.IImageEncodedCaptcha;
 import forward.client.captcha.ZipBinaryImageCaptchaClient;
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
 
 /**
  * This class provides some tools for the forwarding client to fetch and handle the information

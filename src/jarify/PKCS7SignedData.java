@@ -5,17 +5,11 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-//import java.security.cert.CRLException;
-//import java.security.cert.CertificateException;
 import java.security.SignatureException;
-//import java.util.ArrayList;
-//import java.util.Collection;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Vector;
-//import java.util.HashSet;
-//import java.util.Iterator;
-//import java.util.Set;
+
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.ASN1Set;
 import org.bouncycastle.asn1.DERInputStream;
@@ -29,6 +23,7 @@ import org.bouncycastle.asn1.pkcs.SignedData;
 import org.bouncycastle.asn1.pkcs.SignerInfo;
 import org.bouncycastle.asn1.x509.X509CertificateStructure;
 import org.bouncycastle.jce.X509Principal;
+
 import anon.crypto.JAPCertificate;
 import anon.crypto.JAPSignature;
 

@@ -27,10 +27,16 @@
  */
 package proxy;
 
+import jap.JAPModel;
+
 import java.io.InterruptedIOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 import anon.AnonChannel;
 import anon.AnonService;
 import anon.AnonServiceFactory;
@@ -44,10 +50,6 @@ import anon.server.AnonServiceImpl;
 import anon.server.impl.ProxyConnection;
 import anon.tor.Tor;
 import anon.tor.TorAnonServerDescription;
-import jap.JAPModel;
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
 
 final public class AnonProxy implements Runnable
 {

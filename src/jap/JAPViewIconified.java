@@ -27,7 +27,8 @@
  */
 package jap;
 
-import java.text.NumberFormat;
+import gui.JAPDll;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Font;
@@ -41,6 +42,9 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.lang.reflect.InvocationTargetException;
+import java.text.NumberFormat;
+
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -48,14 +52,13 @@ import javax.swing.JWindow;
 import javax.swing.OverlayLayout;
 import javax.swing.SwingUtilities;
 import javax.swing.border.LineBorder;
-import anon.infoservice.MixCascade;
-import anon.infoservice.StatusInfo;
-import gui.JAPDll;
+
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import java.lang.reflect.*;
 import proxy.ProxyListener;
+import anon.infoservice.MixCascade;
+import anon.infoservice.StatusInfo;
 
 final public class JAPViewIconified extends JWindow implements ActionListener,
 	MouseMotionListener,
@@ -105,10 +108,10 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 		x2.setFont(m_fontDlg);
 		c.gridx = 0;
 		c.gridy = 0;
-		c.fill = c.BOTH;
+		c.fill = GridBagConstraints.BOTH;
 		c.weightx = 0;
 		c.insets = new Insets(3, 3, 0, 0);
-		c.anchor = c.NORTHWEST;
+		c.anchor = GridBagConstraints.NORTHWEST;
 		la.setConstraints(x2, c);
 		pTop.add(x2);
 		c.weightx = 1;

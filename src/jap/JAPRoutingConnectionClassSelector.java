@@ -32,14 +32,15 @@ import java.util.Hashtable;
 import java.util.Observable;
 import java.util.Vector;
 
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 import anon.util.XMLUtil;
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
 
 /**
  * This class stores all known connection classes. Also the currently choosen one is stored here.
@@ -215,7 +216,7 @@ public class JAPRoutingConnectionClassSelector extends Observable {
       while (connectionClasses.hasMoreElements()) {
         connectionClassesNode.appendChild(((JAPRoutingConnectionClass)(connectionClasses.nextElement())).getSettingsAsXml(a_doc));
       }
-      XMLUtil.setNodeValue(currentConnectionClassNode, Integer.toString(m_currentConnectionClass));
+      XMLUtil.setValue(currentConnectionClassNode, Integer.toString(m_currentConnectionClass));
     }
     connectionClassSettingsNode.appendChild(connectionClassesNode);
     connectionClassSettingsNode.appendChild(currentConnectionClassNode);
@@ -255,7 +256,7 @@ public class JAPRoutingConnectionClassSelector extends Observable {
         else {        
           try {
             /* XMLUtil.parseNodeInt() is not used, because we want to know, whether there is an error */
-            int classIdentifier = Integer.parseInt(XMLUtil.parseNodeString(classIdentifierNode, "NOT_A_NUMBER"));
+            int classIdentifier = Integer.parseInt(XMLUtil.parseValue(classIdentifierNode, "NOT_A_NUMBER"));
             JAPRoutingConnectionClass currentConnectionClass = null;
             synchronized (m_connectionClasses) {
               currentConnectionClass = (JAPRoutingConnectionClass)(m_connectionClasses.get(new Integer(classIdentifier)));
@@ -286,7 +287,7 @@ public class JAPRoutingConnectionClassSelector extends Observable {
     else {
       try {
         /* XMLUtil.parseNodeInt() is not used, because we want to know, whether there is an error */
-        int currentConnectionClass = Integer.parseInt(XMLUtil.parseNodeString(currentConnectionClassNode, "NOT_A_NUMBER"));
+        int currentConnectionClass = Integer.parseInt(XMLUtil.parseValue(currentConnectionClassNode, "NOT_A_NUMBER"));
         synchronized (m_connectionClasses) {
           if (m_connectionClasses.get(new Integer(currentConnectionClass)) != null) {
             /* connection class exists -> everything ok */

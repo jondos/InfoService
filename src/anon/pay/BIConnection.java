@@ -37,21 +37,21 @@ package anon.pay;
  *
  * @author Grischan Glaenzel, Bastian Voigt
  */
-import java.io.IOException;
 import java.net.Socket;
+
+import org.w3c.dom.Document;
 
 import anon.crypto.JAPSignature;
 import anon.pay.xml.XMLAccountCertificate;
 import anon.pay.xml.XMLAccountInfo;
 import anon.pay.xml.XMLBalance;
 import anon.pay.xml.XMLChallenge;
+import anon.pay.xml.XMLErrorMessage;
 import anon.pay.xml.XMLJapPublicKey;
+import anon.pay.xml.XMLResponse;
 import anon.pay.xml.XMLTransCert;
+import anon.tor.tinytls.TinyTLS;
 import anon.util.XMLUtil;
-import logging.*;
-import anon.tor.tinytls.*;
-import anon.pay.xml.*;
-import org.w3c.dom.*;
 
 public class BIConnection
 {

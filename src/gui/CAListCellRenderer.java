@@ -1,14 +1,17 @@
 package gui;
 
+import jap.JAPConstants;
+import jap.JAPUtil;
+
 import java.awt.Color;
 import java.awt.Component;
+
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.ListCellRenderer;
+
 import anon.crypto.JAPCertificate;
-import jap.JAPConstants;
-import jap.JAPUtil;
 
 final public class CAListCellRenderer extends JLabel implements ListCellRenderer
 {

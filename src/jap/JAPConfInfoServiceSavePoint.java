@@ -29,14 +29,15 @@ package jap;
 
 import java.util.Enumeration;
 import java.util.Vector;
-import anon.infoservice.HTTPConnectionFactory;
-import anon.infoservice.InfoServiceDBEntry;
-import anon.infoservice.Database;
-import anon.infoservice.ListenerInterface;
-import anon.infoservice.InfoServiceHolder;
+
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.infoservice.Database;
+import anon.infoservice.HTTPConnectionFactory;
+import anon.infoservice.InfoServiceDBEntry;
+import anon.infoservice.InfoServiceHolder;
+import anon.infoservice.ListenerInterface;
 
 /**
  * This is the implementation for the infoservice savepoint. It is needed for restoring an old or
