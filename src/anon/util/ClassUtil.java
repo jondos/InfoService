@@ -200,8 +200,8 @@ public final class ClassUtil
 
 	/**
 	 * Returns the class directory of the specified class. The class directory is either the
-	 * directory in that the highest package in the package structure of the class is contained, 
-	 * or the jar-File in that the class is contained. For extracting the contents of a jar-File, 
+	 * directory in that the highest package in the package structure of the class is contained,
+	 * or the jar-File in that the class is contained. For extracting the contents of a jar-File,
 	 * see {@link java.util.zip.ZipFile}.
 	 * @param a_class a class
 	 * @return the class directory of the specified class, either a real directory or a Jar-file
@@ -249,7 +249,14 @@ public final class ClassUtil
 		{
 			return null;
 		}
-
+		try
+		{
+			System.out.println("getClassDirectory for: " + a_class.getName() + " returned: " +
+							   file.getCanonicalPath()+" ["+file.getCanonicalPath()+"]");
+		}
+		catch (IOException ex)
+		{
+		}
 		return file;
 	}
 
@@ -276,6 +283,7 @@ public final class ClassUtil
 	 */
 	private static void loadClassesInternal(Class a_rootClass)
 	{
+		System.out.println("loadClassesInternal() for :"+a_rootClass.getName());
 		File file;
 		Enumeration entries;
 
@@ -305,9 +313,13 @@ public final class ClassUtil
 		{
 			try
 			{
+				System.out.println("Load classes for zipentry");
 				// fetch the classes
 				Class classObject;
+				ZipFile zipfile=new ZipFile(file);
+				System.out.println("zipfile ist:"+zipfile.getName());
 				entries = new ZipFile(file).entries();
+
 				while (entries.hasMoreElements())
 				{
 					classObject = toClass(new File((((ZipEntry) entries.nextElement())).toString()),
@@ -320,6 +332,8 @@ public final class ClassUtil
 			}
 			catch (IOException a_e)
 			{
+				System.out.println("Error in loadClassesInternal() - zipentry - :"+a_e.getMessage());
+				a_e.printStackTrace();
 				// this zip file DOES exist, but we cannot read it; should not happen
 			}
 		}
