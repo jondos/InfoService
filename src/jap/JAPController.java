@@ -1358,9 +1358,13 @@ private final class SetAnonModeAsync implements Runnable
 				}
 			if((db!=null)&&(db.length>=1))
 				{
+					JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPModel:fetchAnonServers: success!");
+					JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPModel:fetchAnonServers: removing old entries");
 					m_anonServerDatabase.clean();
 					for(int i=0;i<db.length;i++)
 						m_anonServerDatabase.addEntry(db[i]);
+					JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPModel:fetchAnonServers: adding new entries finished");
+					JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPModel:fetchAnonServers: notify observers");
 					notifyJAPObservers();
 				}
 		}
@@ -1458,17 +1462,20 @@ private final class SetAnonModeAsync implements Runnable
 		}
 	public void notifyJAPObservers()
 		{
-	//		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:notifyJAPObservers()");
+			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:notifyJAPObservers()");
 			synchronized(observerVector)
 				{
 					Enumeration enum = observerVector.elements();
+					int i=0;
 					while (enum.hasMoreElements())
 						{
 							JAPObserver listener = (JAPObserver)enum.nextElement();
+							JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:notifyJAPObservers: "+i);
 							listener.valuesChanged();
+							i++;
 						}
 				}
-		//	JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:notifyJAPObservers()-ended");
+			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:notifyJAPObservers()-ended");
 		}
 	//---------------------------------------------------------------------
 	public void channelsChanged(int channels)
