@@ -34,8 +34,8 @@ import java.util.Enumeration;
 import java.util.Vector;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
+//import javax.swing.event.ChangeEvent;
+//import javax.swing.event.ChangeListener;
 
 import org.bouncycastle.crypto.params.DSAParameters;
 import org.bouncycastle.crypto.params.DSAPrivateKeyParameters;
@@ -453,7 +453,7 @@ public class PayAccount implements IXMLEncodable
 
 	private Vector m_changeListeners = new Vector();
 
-	public void addChangeListener(ChangeListener listener)
+/*	public void addChangeListener(ChangeListener listener)
 	{
 		synchronized (m_changeListeners)
 		{
@@ -475,5 +475,5 @@ public class PayAccount implements IXMLEncodable
 				( (ChangeListener) enumListeners.nextElement()).stateChanged(e);
 			}
 		}
-	}
+	}*/
 }

@@ -49,7 +49,7 @@ import anon.pay.xml.XMLJapPublicKey;
 import anon.pay.xml.XMLResponse;
 import anon.pay.xml.XMLTransCert;
 import anon.util.XMLUtil;
-import pay.crypto.tinyssl.TinySSL;
+//import pay.crypto.tinyssl.TinySSL;
 
 
 public class BIConnection
@@ -92,7 +92,7 @@ public class BIConnection
 			}
 			else
 			{
-				m_socket = new TinySSL(m_theBI.getHostName(), m_theBI.getPortNumber());
+				//m_socket = new TinySSL(m_theBI.getHostName(), m_theBI.getPortNumber());
 			}
 			m_httpClient = new HttpClient(m_socket);
 		}

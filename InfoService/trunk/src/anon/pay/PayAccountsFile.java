@@ -34,8 +34,8 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import anon.util.XMLUtil;
 import anon.util.IXMLEncodable;
-import javax.swing.event.ChangeListener;
-import javax.swing.event.ChangeEvent;
+//import javax.swing.event.ChangeListener;
+//import javax.swing.event.ChangeEvent;
 
 /**
  * This class contains the accounts configuration .
@@ -136,7 +136,7 @@ public class PayAccountsFile implements IXMLEncodable
 				if (current.getAccountNumber() == activeAccountNumber)
 				{
 					ms_AccountsFile.m_ActiveAccount = current;
-					ms_AccountsFile.fireChangeEvent(ms_AccountsFile.m_ActiveAccount);
+					//ms_AccountsFile.fireChangeEvent(ms_AccountsFile.m_ActiveAccount);
 					break;
 				}
 			}
@@ -266,7 +266,7 @@ public class PayAccountsFile implements IXMLEncodable
 		if (account != null)
 		{
 			m_ActiveAccount = account;
-			fireChangeEvent(m_ActiveAccount);
+			//fireChangeEvent(m_ActiveAccount);
 		}
 	}
 
@@ -275,7 +275,7 @@ public class PayAccountsFile implements IXMLEncodable
 		if (account != null)
 		{
 			m_ActiveAccount = account;
-			fireChangeEvent(m_ActiveAccount);
+			//fireChangeEvent(m_ActiveAccount);
 		}
 	}
 
@@ -347,7 +347,7 @@ public class PayAccountsFile implements IXMLEncodable
 				}
 			}
 		}
-		fireChangeEvent(tmp);
+		//fireChangeEvent(tmp);
 	}
 
 	/**
@@ -397,12 +397,12 @@ public class PayAccountsFile implements IXMLEncodable
 			}
 		}
 		m_Accounts.addElement(account);
-		account.addChangeListener(m_MyChangeListener);
+		//account.addChangeListener(m_MyChangeListener);
 		if (m_ActiveAccount == null)
 		{
 			m_ActiveAccount = account;
 		}
-		fireChangeEvent(account);
+		//fireChangeEvent(account);
 	}
 
 	/**
@@ -438,7 +438,7 @@ public class PayAccountsFile implements IXMLEncodable
 
 
 
-	public void addChangeListener(ChangeListener listener)
+/*	public void addChangeListener(ChangeListener listener)
 	{
 		synchronized (m_changeListeners)
 		{
@@ -461,18 +461,18 @@ public class PayAccountsFile implements IXMLEncodable
 			}
 		}
 	}
-
-	private MyChangeListener m_MyChangeListener = new MyChangeListener();
+*/
+	//private MyChangeListener m_MyChangeListener = new MyChangeListener();
 
 	/**
 	 * Listens to changes
 	 * inside the accounts and forwards the events to our changeListeners
 	 */
-	private class MyChangeListener implements ChangeListener
+/*	private class MyChangeListener implements ChangeListener
 	{
 		public void stateChanged(ChangeEvent e)
 		{
 			fireChangeEvent(e.getSource());
 		}
-	}
+	}*/
 }

@@ -585,9 +585,9 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 				elemRoot.setAttribute("filetype", "JapAccountFile");
 				elemRoot.setAttribute("version", "1.0");
 				doc.appendChild(elemRoot);
-				Document doc2 = selectedAccount.getDomDocument();
-				Element elemAccount = doc2.getDocumentElement();
-				elemAccount = (Element) XMLUtil.importNode(doc, elemAccount, true);
+				//Document doc2 = selectedAccount.toXmlElement(doc);
+				Element elemAccount = selectedAccount.toXmlElement(doc);
+				//elemAccount = (Element) XMLUtil.importNode(doc, elemAccount, true);
 				elemRoot.appendChild(elemAccount);
 
 				int choice = JOptionPane.showOptionDialog(
