@@ -30,7 +30,6 @@ import java.util.Enumeration;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.Vector;
-import com.sun.xml.tree.XmlDocument;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Text;
@@ -65,7 +64,7 @@ import anon.JAPAnonServiceListener;
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPModel implements JAPAnonServiceListener{
 
-	public static final String aktVersion = "00.01.015"; // Version of JAP
+	public static final String aktVersion = "00.01.016"; // Version of JAP
 
 	public  Vector            anonServerDatabase = null; // vector of all available mix cascades
 	private AnonServerDBEntry currentAnonService = null; // current anon service data object
@@ -364,6 +363,9 @@ public final class JAPModel implements JAPAnonServiceListener{
 
 	public void save() {
 		// Save config to xml file
+		// Achtung!! Fehler im Sun-XML --> NULL-Attributte können hinzugefügt werden, 
+		// beim Abspeichern gibt es dann aber einen Fehler! 
+		boolean error=false;
 		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:try saving configuration to "+XMLCONFFN);
 		try {
 			String dir=System.getProperty("user.home","");
@@ -388,7 +390,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 			e.setAttribute("proxyHostName",((proxyHostName==null)?"":proxyHostName));
 			e.setAttribute("proxyPortNumber",Integer.toString(proxyPortNumber));
 			e.setAttribute("proxyAuthorization",(mb_UseProxyAuthentication?"true":"false"));
-			e.setAttribute("proxyAuthUserID",m_ProxyAuthenticationUserID);
+			e.setAttribute("proxyAuthUserID",((m_ProxyAuthenticationUserID==null)?"":m_ProxyAuthenticationUserID));
 			e.setAttribute("infoServiceHostName",((infoServiceHostName==null)?"":infoServiceHostName));
 			e.setAttribute("infoServicePortNumber",Integer.toString(infoServicePortNumber));
 			AnonServerDBEntry e1 = model.getAnonServer();
@@ -421,17 +423,22 @@ public final class JAPModel implements JAPAnonServiceListener{
 					tmp.appendChild(txt);
 					elemDebug.appendChild(tmp);
 			}
-			((XmlDocument)doc).write(f);
+			error=!JAPUtil.saveXMLDocument(doc,f);
+			//((XmlDocument)doc).write(f);
 		}
 		catch(Exception ex) {
+			error=true;
 			JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.MISC,"JAPModel:save() Exception: "+ex.getMessage());
-			ex.printStackTrace();
-			JAPDebug.out(JAPDebug.ERR,JAPDebug.MISC,"JAPModel:error saving configuration to "+XMLCONFFN);
-			JOptionPane.showMessageDialog(model.getView(),
+			//ex.printStackTrace();
+		}
+		if(error)
+			{
+				JAPDebug.out(JAPDebug.ERR,JAPDebug.MISC,"JAPModel:error saving configuration to "+XMLCONFFN);
+				JOptionPane.showMessageDialog(model.getView(),
 											model.getString("errorSavingConfig"),
 											model.getString("errorSavingConfigTitle"),
 											JOptionPane.ERROR_MESSAGE);
-		}
+			}
 	}
 
 

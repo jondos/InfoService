@@ -31,11 +31,15 @@ import java.io.FileInputStream;
 import sun.misc.BASE64Decoder;
 import sun.misc.BASE64Encoder;
 import javax.xml.parsers.*;
-import com.sun.xml.tree.XmlDocument;
+//import com.sun.xml.tree.XmlDocument;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.*;
+import javax.xml.transform.*;
+import javax.xml.transform.stream.*;
+import javax.xml.transform.dom.*;
+
 import java.security.*;
 import java.io.*;
 import java.util.*;
@@ -140,15 +144,28 @@ final public class JAPTest
 //		ASN1Test();
 		
 		try{
-			ServerSocket s=new ServerSocket(5002);
-			Socket t=s.accept();
-			Thread.sleep(50000);
+	//		ServerSocket s=new ServerSocket(5002);
+	//		Socket t=s.accept();
+	//		Thread.sleep(50000);
+			writeXml();
 		}catch(Exception e)
 		{
 		}
 		System.exit(0);
 		}
 	
+	public static void networkTest2()
+		{
+		try{
+			ServerSocket os=new ServerSocket(9000);
+			Socket oSocket=os.accept();
+			InputStream out=oSocket.getInputStream();
+			Thread.sleep(100000000);
+			out.close();
+		}
+		catch(Exception e){e.printStackTrace();}
+		}
+
 	public static void networkTest(String argc[])
 		{
 		try{
@@ -190,6 +207,28 @@ final public class JAPTest
 			e.printStackTrace();
 											 }
 	}
+	
+	public static void writeXml()
+		{
+			try {
+			FileOutputStream f=null;
+			f=new FileOutputStream("test.xml");
+			Document doc=DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+			Element e=doc.createElement("JAP");
+			doc.appendChild(e);
+			Transformer t=TransformerFactory.newInstance().newTransformer();
+			Result r=new StreamResult(f);
+			Source s=new DOMSource(doc);
+			t.transform(s,r);
+			}
+			catch(Exception e)
+			{
+				e.printStackTrace();
+			}
+		}
+	
+	
+	
 	public static void testCert()
 		{
 		try{
