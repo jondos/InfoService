@@ -67,12 +67,6 @@ public class InfoService extends DatabaseEntry
 	private String infoServiceId;
 
 	/**
-	 * Time (see System.currentTimeMillis()) when the JAP client will remove this infoservice
-	 * entry from the database of all known infoservices.
-	 */
-	private long expire;
-
-	/**
 	 * The name of the infoservice.
 	 */
 	private String name;
@@ -107,6 +101,7 @@ public class InfoService extends DatabaseEntry
 	 */
 	public InfoService(Element infoServiceNode) throws Exception
 	{
+		super(0); //get the expire time from xml
 		/* get the ID */
 		infoServiceId = infoServiceNode.getAttribute("id");
 		/* get the name */
@@ -158,7 +153,7 @@ public class InfoService extends DatabaseEntry
 			throw (new Exception("InfoService: Error in XML structure."));
 		}
 		Element expireNode = (Element) (expireNodes.item(0));
-		expire = Long.parseLong(expireNode.getFirstChild().getNodeValue());
+		setExpireTime(Long.parseLong(expireNode.getFirstChild().getNodeValue()));
 		/* get the information, whether this infoservice keeps a list of JAP forwarders */
 		NodeList forwarderListNodes = infoServiceNode.getElementsByTagName("ForwarderList");
 		if (forwarderListNodes.getLength() == 0)
@@ -208,6 +203,7 @@ public class InfoService extends DatabaseEntry
 	 */
 	public InfoService(String a_strName, String a_strID, String hostName, int port) throws Exception
 	{
+		super(System.currentTimeMillis() + DEFAULT_EXPIRE_TIME);
 		/* set a unique ID */
 		if (a_strID == null)
 		{
@@ -230,8 +226,6 @@ public class InfoService extends DatabaseEntry
 		listenerInterfaces = new Vector();
 		listenerInterfaces.addElement(new ListenerInterface(hostName, port));
 		preferedListenerInterface = 0;
-		/* set the Expire time */
-		expire = System.currentTimeMillis() + DEFAULT_EXPIRE_TIME;
 		infoServiceSoftware = new ServiceSoftware("unknown");
 		m_primaryForwarderList = false;
 	}
@@ -262,7 +256,7 @@ public class InfoService extends DatabaseEntry
 		}
 		networkNode.appendChild(listenerInterfacesNode);
 		Element expireNode = doc.createElement("Expire");
-		expireNode.appendChild(doc.createTextNode(Long.toString(expire)));
+		expireNode.appendChild(doc.createTextNode(Long.toString(getExpireTime())));
 		if (m_primaryForwarderList == true)
 		{
 			/* if we hold a forwarder list, also append an ForwarderList node, at the moment this
@@ -286,19 +280,6 @@ public class InfoService extends DatabaseEntry
 	public String getId()
 	{
 		return infoServiceId;
-	}
-
-	/**
-	 * Returns the time (see System.currentTimeMillis()), when the JAP client will remove this
-	 * infoservice entry from the database of all known infoservices.
-	 *
-	 * @return The time, when this infoservice entry will become invalid in the JAP client database
-	 * of all known infoservices.
-	 *
-	 */
-	public long getExpireTime()
-	{
-		return expire;
 	}
 
 	/**

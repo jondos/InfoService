@@ -25,6 +25,9 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
+/* Hint: This file may be only a copy of the original file which is always in the JAP source tree!
+ * If you change something - do not forget to add the changes also to the JAP source tree!
+ */
 package anon.infoservice;
 
 /**
@@ -33,6 +36,19 @@ package anon.infoservice;
  */
 public abstract class DatabaseEntry
 {
+	/**
+	 * Stores the time when this entry will be deleted from the database.
+	 */
+	private long m_expireTime;
+
+	/**
+	 * Creates a new DatabaseEntry with the specified expireTime.
+	 * @param a_expireTime the time when this entry will be deleted from the database
+	 */
+	public DatabaseEntry(long a_expireTime)
+	{
+		setExpireTime(a_expireTime);
+	}
 
 	/**
 	 * Returns a unique ID for a database entry.
@@ -47,6 +63,19 @@ public abstract class DatabaseEntry
 	 *
 	 * @return The expire time for this DatabaseEntry.
 	 */
-	public abstract long getExpireTime();
+	public long getExpireTime()
+	{
+		return m_expireTime;
+	}
 
+	/**
+	 * Sets the time (see System.currentTimeMillis()) when this DatabaseEntry will be removed
+	 * from the Database, if it is not updated meanwhile.
+	 *
+	 * @param a_expireTime The expire time for this DatabaseEntry.
+	 */
+	protected void setExpireTime(long a_expireTime)
+	{
+		m_expireTime = a_expireTime;
+	}
 }
