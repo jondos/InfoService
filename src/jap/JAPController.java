@@ -368,7 +368,7 @@ public final class JAPController implements ProxyListener, Observer
    *   <ForwardingClient>                                      // since version 0.15
    *     <ConnectViaForwarder>false</ConnectViaForwarder>      // whether a forwarder is needed to contact the mixcascades when enabling the anonymous mode
    *     <ForwardInfoService>false</ForwardInfoService>        // whether an InfoService can be reached or also the InfoService needs forwarding
-   *   </ForwardingClient>                                
+   *   </ForwardingClient>
 	 * </JapForwardingSettings>
 	 *  </JAP>
 	 *  @param a_strJapConfFile - file containing the Configuration. If null $(user.home)/jap.conf or ./jap.conf is used.
@@ -1669,7 +1669,7 @@ public final class JAPController implements ProxyListener, Observer
       /* maybe connection to forwarder failed -> notify the observers, because the view maybe
        * still shows the anonymity mode enabled
        */
-      notifyJAPObservers();     
+      notifyJAPObservers();
     }
     else {
       /* simply enable the anonymous mode */
@@ -1934,6 +1934,14 @@ public final class JAPController implements ProxyListener, Observer
 		else
 		{
 			LogHolder.log(LogLevel.DEBUG, LogType.NET, "JAPController: fetchMixCascades: success!");
+			//add all user added cascades
+			Enumeration enumer=m_vectorMixCascadeDatabase.elements();
+			while(enumer.hasMoreElements())
+			{
+				MixCascade entry=(MixCascade)enumer.nextElement();
+				if(entry.isUserDefined())
+					newMixCascades.addElement(entry);
+			}
 			m_vectorMixCascadeDatabase = newMixCascades;
 			notifyJAPObservers();
 		}
