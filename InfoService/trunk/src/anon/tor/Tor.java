@@ -35,6 +35,7 @@ import java.net.ConnectException;
 import java.security.SecureRandom;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.Hashtable;
 import java.util.Vector;
 
 import logging.LogHolder;
@@ -101,6 +102,8 @@ public class Tor implements Runnable, AnonService
 
 	private Database m_DNSCache;
 
+	private Hashtable m_CircuitForDestination;
+
 	//private long m_createNewCircuitIntervall;
 	//private Thread m_createNewCircuitLoop;
 	private volatile boolean m_bIsStarted;
@@ -148,10 +151,11 @@ public class Tor implements Runnable, AnonService
 		m_rand = new MyRandom(new SecureRandom());
 		m_bIsStarted = false;
 		m_bIsCreatingCircuit = false;
-		m_MaxNrOfActiveCircuits = 10;
+		m_MaxNrOfActiveCircuits = 5;
 		m_activeCircuits = new Circuit[m_MaxNrOfActiveCircuits];
 		m_useDNSCache = true;
 		m_DNSCache = Database.getInstance(DNSCacheEntry.class);
+		m_CircuitForDestination = new Hashtable();
 		//counts the number of circuits that have been created (-1 : nouse of this variable / 0-m_maxnrofactivecircuits : number of created circuits)
 		m_closeCreator = false;
 		m_proxyInterface = null;
@@ -171,6 +175,7 @@ public class Tor implements Runnable, AnonService
 
 	protected synchronized Circuit getCircuitForDestination(String addr, int port)
 	{
+		String key = addr+":"+port;
 		if (!m_bIsStarted)
 		{
 			return null;
@@ -190,6 +195,10 @@ public class Tor implements Runnable, AnonService
 			for (int i = 0; i < 3; i++) //Try to get/create a circuit 3 times...
 			{
 				int circstart = m_rand.nextInt(m_MaxNrOfActiveCircuits);
+				if(m_CircuitForDestination.containsKey(key))
+				{
+					circstart = ((Integer)m_CircuitForDestination.get(key)).intValue();
+				}
 				int j = 0;
 				int circ = 0;
 				while (j < m_MaxNrOfActiveCircuits) //starting with a random chossen circuit we try all currently availabe circuits...
@@ -200,6 +209,8 @@ public class Tor implements Runnable, AnonService
 						m_activeCircuits[circ] = createNewCircuit(addr, port);
 						if (m_activeCircuits[circ] != null && !m_activeCircuits[circ].isShutdown())
 						{
+							//add the destination for this circuit
+							m_CircuitForDestination.put(key,new Integer(circ));
 							return m_activeCircuits[circ];
 						}
 						else
@@ -220,9 +231,13 @@ public class Tor implements Runnable, AnonService
 					//shutdown one and use them...
 					circ = circstart % m_MaxNrOfActiveCircuits;
 					m_activeCircuits[circ].shutdown();
+					//remove the destinations for this circuit
+					m_CircuitForDestination.remove(new Integer(circ));
 					m_activeCircuits[circ] = createNewCircuit(addr, port);
 					if (m_activeCircuits[circ] != null && !m_activeCircuits[circ].isShutdown())
 					{
+						//add the destination for this circuit
+						m_CircuitForDestination.put(key,new Integer(circ));
 						return m_activeCircuits[circ];
 					}
 				}
@@ -291,11 +306,18 @@ public class Tor implements Runnable, AnonService
 				while (enumer.hasMoreElements())
 				{
 					ord = (ORDescription) enumer.nextElement();
+					//remove or's that are not allowed as exit nodes
 					if (m_allowedExitNodeNames != null && !m_allowedExitNodeNames.contains(ord.getName()))
 					{
 						possibleOrs.removeElement(ord);
 					}
+					//remove or's that cannot connect to the destination
 					else if (addr != null && !ord.getAcl().isAllowed(addr, port))
+					{
+						possibleOrs.removeElement(ord);
+					}
+					//remove the or that is used as first or
+					else if(orsForNewCircuit.contains(ord))
 					{
 						possibleOrs.removeElement(ord);
 					}
