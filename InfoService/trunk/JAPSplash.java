@@ -29,6 +29,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Window;
 import java.awt.Frame;
+import java.awt.Font;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.ImageIcon;
@@ -48,6 +49,7 @@ final class JAPSplash extends Window  {
 	//	waitLabel.setOpaque(false);
 		waitLabel.setBackground(Color.black);
 		waitLabel.setForeground(Color.white);
+		waitLabel.setFont(new Font("Sans",Font.PLAIN,9));
 
 		ImageIcon busy = JAPUtil.loadImageIcon(m.BUSYFN, false);
 		JLabel busyLabel = new JLabel(busy);
