@@ -43,7 +43,7 @@ public final class AIChannel extends AbstractChannel
 
 	private AIChannel(MuxSocket muxSocket) throws IOException
 	{
-		super(0xFFFFFFFF, 0);
+		super(0xFFFFFFFF);
 		m_muxSocket = muxSocket;
 	}
 
@@ -70,4 +70,9 @@ public final class AIChannel extends AbstractChannel
 		System.arraycopy(buff, 0, toSend, 0, len);
 		m_muxSocket.sendPayPackets(toSend);
 	}
+	public int getOutputBlockSize()
+	{
+		return 1;
+	}
+
 }

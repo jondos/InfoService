@@ -155,8 +155,8 @@ public class HTTPConnectionFactory
 			}
 			if (proxyType == PROXY_TYPE_SOCKS)
 			{
-				HTTPConnection.setProxyServer(null, -1);
-				HTTPConnection.setSocksServer(proxyHost, proxyPort);
+				//HTTPConnection.setProxyServer(null, -1);
+				//HTTPConnection.setSocksServer(proxyHost, proxyPort);
 			}
 		}
 	}

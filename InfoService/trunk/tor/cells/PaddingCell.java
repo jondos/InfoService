@@ -4,35 +4,39 @@ package tor.cells;
  * @author stefan
  *
  */
-public class PaddingCell extends Cell {
+public class PaddingCell extends Cell
+{
 
 	/**
 	 * Constructor for a padding cell
 	 */
-	public PaddingCell() {
+	public PaddingCell()
+	{
 		super(0);
-	}	
-	
+	}
+
 	/**
 	 * Constructor for a padding cell
-	 * 
+	 *
 	 * @param circID
 	 * circID
 	 */
-	public PaddingCell(int circID) {
-		super(0,circID);
+	public PaddingCell(int circID)
+	{
+		super(0, circID);
 	}
-	
+
 	/**
 	 * Constructor for a padding cell
-	 * 
+	 *
 	 * @param circID
 	 * circID
 	 * @param payload
 	 * payload
 	 */
-	public PaddingCell(int circID,byte[] payload) {
-		super(0,circID,payload);
+	public PaddingCell(int circID, byte[] payload)
+	{
+		super(0, circID, payload);
 	}
 
 }

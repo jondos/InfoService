@@ -49,9 +49,8 @@ import logging.LogLevel;
 import logging.LogType;
 import pay.Pay;
 
-final public class AnonProxy implements Runnable /*,AnonServiceEventListener*/
+final public class AnonProxy implements Runnable, IAnonProxy
 {
-	public static final int E_SUCCESS = 0;
 	public static final int E_BIND = -2;
 	public final static int E_MIX_PROTOCOL_NOT_SUPPORTED = ErrorCodes.E_MIX_PROTOCOL_NOT_SUPPORTED;
 
@@ -284,7 +283,7 @@ final public class AnonProxy implements Runnable /*,AnonServiceEventListener*/
 				{
 					try
 					{
-						new Request(socket, newChannel);
+						new AnonProxyRequest(this,socket, newChannel);
 					}
 					catch (Exception e)
 					{
@@ -307,157 +306,22 @@ final public class AnonProxy implements Runnable /*,AnonServiceEventListener*/
 		m_bIsRunning = false;
 	}
 
-	protected synchronized void incNumChannels()
+	public synchronized void incNumChannels()
 	{
 		m_numChannels++;
 		m_ProxyListener.channelsChanged(m_numChannels);
 	}
 
-	protected synchronized void decNumChannels()
+	public synchronized void decNumChannels()
 	{
 		m_numChannels--;
 		m_ProxyListener.channelsChanged(m_numChannels);
 	}
 
-	protected synchronized void transferredBytes(int bytes)
+	public synchronized void transferredBytes(int bytes)
 	{
 		m_ProxyListener.transferedBytes(bytes);
 	}
 
-	final class Request implements Runnable
-	{
-		InputStream m_InChannel;
-		OutputStream m_OutChannel;
-		InputStream m_InSocket;
-		OutputStream m_OutSocket;
-		Socket m_clientSocket;
-		Thread m_threadResponse;
-		Thread m_threadRequest;
-		AnonChannel m_Channel;
-		volatile boolean m_bRequestIsAlive;
 
-		Request(Socket clientSocket, AnonChannel c)
-		{
-			try
-			{
-				m_clientSocket = clientSocket;
-				m_clientSocket.setSoTimeout(1000); //just to ensure that threads will stop
-				m_InSocket = clientSocket.getInputStream();
-				m_OutSocket = clientSocket.getOutputStream();
-				m_InChannel = c.getInputStream();
-				m_OutChannel = c.getOutputStream();
-				m_Channel = c;
-				m_threadRequest = new Thread(this, "JAP - AnonProxy Request");
-				m_threadResponse = new Thread(new Response(), "JAP - AnonProxy Response");
-				m_threadResponse.start();
-				m_threadRequest.start();
-			}
-			catch (Exception e)
-			{
-			}
-		}
-
-		public void run()
-		{
-			m_bRequestIsAlive = true;
-			incNumChannels();
-			int len = 0;
-			byte[] buff = new byte[1900];
-			try
-			{
-				for (; ; )
-				{
-					try
-					{
-						len = m_InSocket.read(buff, 0, 900);
-					}
-					catch (InterruptedIOException ioe)
-					{
-						continue;
-					}
-					if (len <= 0)
-					{
-						break;
-					}
-					m_OutChannel.write(buff, 0, len);
-					transferredBytes(len);
-				}
-			}
-			catch (Exception e)
-			{
-			}
-			m_bRequestIsAlive = false;
-			try
-			{
-				m_Channel.close();
-			}
-			catch (Exception e)
-			{}
-			decNumChannels();
-		}
-
-		final class Response implements Runnable
-		{
-			Response()
-			{
-			}
-
-			public void run()
-			{
-				int len = 0;
-				byte[] buff = new byte[2900];
-				try
-				{
-					while ( (len = m_InChannel.read(buff, 0, 1000)) > 0)
-					{
-						int count = 0;
-						for (; ; )
-						{
-							try
-							{
-								m_OutSocket.write(buff, 0, len);
-								m_OutSocket.flush();
-								break;
-							}
-							catch (InterruptedIOException ioe)
-							{
-								LogHolder.log(LogLevel.EMERG, LogType.NET,
-											  "Should never be here: Timeout in sending to Browser!");
-							}
-							count++;
-							if (count > 3)
-							{
-								throw new Exception("Could not send to Browser...");
-							}
-						}
-						transferredBytes(len);
-					}
-				}
-				catch (Exception e)
-				{}
-				try
-				{
-					m_clientSocket.close();
-				}
-				catch (Exception e)
-				{}
-				try
-				{
-					Thread.sleep(500);
-				}
-				catch (Exception e)
-				{}
-				if (m_bRequestIsAlive)
-				{
-					try
-					{
-						m_threadRequest.interrupt();
-					}
-					catch (Exception e)
-					{}
-				}
-			}
-
-		}
-	}
 }

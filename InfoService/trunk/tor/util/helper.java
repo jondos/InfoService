@@ -10,33 +10,40 @@ package tor.util;
  *some usefull utilities
  */
 public class helper {
+
+
+	public static byte[]  conc(byte[] b1,byte[] b2)
+	{
+		return conc(b1,b2,b2.length);
+	}
+
 	/**
 	 * Concatenates two byte arrays
 	 * @param b1
 	 * @param b2
 	 * @return
-	 */	
-	public static byte[]  conc(byte[] b1,byte[] b2)
+	 */
+	public static byte[]  conc(byte[] b1,byte[] b2,int b2_len)
 	{
 		if(b1.length==0)
 		{
-			return b2;
+			return copybytes(b2,0,b2_len);
 		}
-		byte[] b= new byte[b1.length+b2.length];
+		byte[] b= new byte[b1.length+b2_len];
 		for(int i=0;i<b1.length;i++)
 		{
 			b[i]=b1[i];
 		}
 		if(b2.length>0)
 		{
-			for(int i=0;i<b2.length;i++)
+			for(int i=0;i<b2_len;i++)
 			{
 				b[i+b1.length]=b2[i];
 			}
 		}
 		return b;
 	}
-	
+
 	/**
 	 * Converts a long to a array of bytes
 	 * @param l
@@ -52,7 +59,7 @@ public class helper {
 		}
 		return b;
 	}
-	
+
 	/**
 	 * copy some bytes from a array of bytes
 	 * @param bytes array of bytes

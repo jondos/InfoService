@@ -35,17 +35,17 @@ import anon.AnonChannel;
 abstract public class AbstractChannel implements AnonChannel
 {
 	private boolean m_bIsClosedByPeer = false;
-	private boolean m_bIsClosed = false;
+	protected boolean m_bIsClosed = false;
 	protected int m_id;
-	protected int m_type;
+	//protected int m_type;
 
 	private ChannelInputStream m_inputStream;
 	private ChannelOutputStream m_outputStream;
 
-	public AbstractChannel(int id, int type) throws IOException
+	public AbstractChannel(int id) throws IOException
 	{
 		m_id = id;
-		m_type = type;
+		//m_type = type;
 		m_bIsClosedByPeer = false;
 		m_bIsClosed = false;
 		m_inputStream = new ChannelInputStream(this);
@@ -344,7 +344,6 @@ final class ChannelInputStream extends InputStream
 	}
 
 	protected
-		/*synchronized*/
 		void recv(byte[] buff, int pos, int len)
 	{
 		try
@@ -364,6 +363,11 @@ final class ChannelInputStream extends InputStream
 	public int read() throws IOException
 	{
 		return m_Queue.read();
+	}
+
+	public int read(byte[] out) throws IOException
+	{
+		return m_Queue.read(out, 0, out.length);
 	}
 
 	public int read(byte[] out, int pos, int len) throws IOException

@@ -33,29 +33,43 @@ public class ORList {
 	{
 		this.onionrouters = new Vector();
 		ORDescription ord = new ORDescription("141.76.46.90","jap",9001,true);
-		ord.setOnionKey(Base64.decode("MIGJAoGBANkRpoPUldepI8wlUeZYs5p4IoCyKvsO4O0jwOI8P059ej+FNIkiQUzlDT9W01DPpThSj06lE52AunrHfnfrQ7gLq2WGmVYnzGgWTSsVNVaCi6LDTA86gimdFMkdUSw4JHak2raQGOkbe2yF5RBEsh5pMdwFb1TGQP7AGFzGA4ifAgMBAAE="));
-		this.onionrouters.addElement(ord);
+		ord.setOnionKey(Base64.decode("MIGJAoGBAL9ngMDNXrsqgL3NOk1BH5ns7wF44Uic8gGY9lgW83u49V4eHi5pggo4Cza5FQF48oFIuRhbLdhCBSxXDDwQuCuK0RiwLcJftcreZncpoWzZgS785YO5JPmr8NJYTrRV9YS1PijTWgcrh8dLI6Da+1MEwyR/nqW+HGzYqP4s5OZJAgMBAAE="));
+
+	this.onionrouters.addElement(ord);
 		ord = new ORDescription("18.244.0.188","moria1",9001,true);
-		ord.setOnionKey(Base64.decode("MIGJAoGBALu5eVTpIJhnKWjRyP1kpKy8jaGQLS9K/KddKw0MJHnp1F9gr/dDEtgJoYkR5WqLZlhisIAOUidowC3T7tZTshqMaDTnC8gLno+Jcd8Il8wJxf/Pkjy9J7B+bsVLjRgHSoDHxhslYH2wPHvL6CQAVoLi3j8L1Gzl3ZXYZnEsLfdfAgMBAAE="));
+		ord.setOnionKey(Base64.decode("MIGJAoGBALiqAA5BEjA3kjhigdDvwLraYfsgzIWrOgk15sMsZ9oT+uTaw8B6gYrJO3Ld1OYtXvVMXUDsNaPwUUIWMPeNLoBJGSjMVP7ZNQ+AWA7HlAeBx9InHbru9cNU+5aCOsspQoCqgDPSQGgVUM/JtFlmo5DoLCYYCcDHYxnWRGwNRpH5AgMBAAE="));
+
 		this.onionrouters.addElement(ord);
 		ord = new ORDescription("80.190.251.24 ","ned",9001,true);
 		ord.setOnionKey(Base64.decode("MIGJAoGBAL3w7Uk/pRTyPHIopXRPGjQfKE+tMspppHvBlurAppGnTVIfmjOIuatjUV1gfLG3XAwJdBZfWgUTbazk1EDDUg++A+IVuiT+d0XgHLTAIzpPmyBX2gGv+97hsObfbXHtFbUhVvtfgRHrUIbTKs+vOry9w5XL+NWgP5IOZ1R4E39HAgMBAAE="));
 		this.onionrouters.addElement(ord);
    	}
 
-	public void updateList(String server, int port) throws Exception
+	   /** Updates the list of available ORRouters.
+		* @return true if it was ok, false otherwise
+		*/
+
+	   public boolean updateList(String server, int port)
 	{
+		try{
 		LogHolder.log(LogLevel.DEBUG,LogType.MISC,"[UPDATE OR-LIST] Starting update on "+server+":"+port);
 		HTTPConnection http=new HTTPConnection(server,port);
 		HTTPResponse resp=http.Get("/");
 		if( resp.getStatusCode()!=200 )
 		{
-			throw new IOException("Cannot recieve OR-List");
+			return false;
 		}
 		String doc=resp.getText();
-		System.out.println(doc);
+		LogHolder.log(LogLevel.DEBUG,LogType.MISC,"ORList: "+doc);
 		parseDocument(doc);
 		LogHolder.log(LogLevel.DEBUG,LogType.MISC,"[UPDATE OR-LIST] Update finished");
+		return true;
+		}
+		catch(Throwable t)
+		{
+			LogHolder.log(LogLevel.DEBUG,LogType.MISC,"There was a problem with fetching the available ORRouters: "+t.getMessage());
+		}
+		return false;
 	}
 
 	public Vector getList()
@@ -80,7 +94,7 @@ public class ORList {
 				if(ord!=null)
 				{
 					ors.addElement(ord);
-					System.out.println("Added: "+ord);
+					LogHolder.log(LogLevel.DEBUG,LogType.MISC,"Added: "+ord);
 				}
 			}
 		}

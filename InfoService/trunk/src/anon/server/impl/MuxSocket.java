@@ -85,9 +85,9 @@ public final class MuxSocket implements Runnable
 	private SymCipher m_cipherInAI;
 	private SymCipher m_cipherOutAI;
 
-	private final static int KEY_SIZE = 16;
+	public final static int KEY_SIZE = 16;
 	private final static int DATA_SIZE = 992;
-	private final static int PAYLOAD_SIZE = 989;
+	public final static int PAYLOAD_SIZE = 989;
 	private final static int PACKET_SIZE = 998; //DATA_SIZE+6
 	private final static int RSA_SIZE = 128;
 	private final static short CHANNEL_DATA = 0;
@@ -162,6 +162,11 @@ public final class MuxSocket implements Runnable
 		boolean isConnected()
 	{
 		return ( /*ms_MuxSocket!=null&&ms_MuxSocket.*/m_bIsConnected);
+	}
+
+	public int getNumberOfMixes()
+	{
+		return m_iChainLen;
 	}
 
 	/**Enables or Disables DummyTraffic.
