@@ -29,30 +29,38 @@ package jap;
 
 import java.util.Enumeration;
 import java.awt.Cursor;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+import anon.infoservice.InfoServiceDBEntry;
+import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.MixCascade;
+import anon.infoservice.MixInfo;
+import gui.JAPMultilineLabel;
+import gui.ServerListPanel;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import javax.swing.*;
-import javax.swing.border.*;
-import gui.*;
-import java.awt.*;
-class JAPConfAnon extends AbstractJAPConfModule
+
+class JAPConfAnon extends AbstractJAPConfModule implements ListSelectionListener, ItemListener
 {
 	private JCheckBox m_cbAutoConnect;
 	private JCheckBox m_cbAutoReConnect;
@@ -155,23 +163,25 @@ class JAPConfAnon extends AbstractJAPConfModule
 			}
 		});
 
-	drawCompleteDialog();
-  }
+		drawCompleteDialog();
+	}
 
-private void drawServerPanel(int a_numberOfMixes, String a_chainName)
-{
+	private void drawServerPanel(int a_numberOfMixes, String a_chainName)
+	{
 		GridBagLayout layout = new GridBagLayout();
 		GridBagConstraints c = new GridBagConstraints();
 		c.gridx = 0;
 		c.gridy = 0;
 		c.anchor = GridBagConstraints.CENTER;
 
-	    JLabel l = new JLabel(JAPMessages.getString("infoAboutCascade"));
+		JLabel l = new JLabel(JAPMessages.getString("infoAboutCascade"));
 		m_cascadeNameLabel = new JLabel(a_chainName);
 
 		if (m_serverPanel != null)
+		{
 			m_serverPanel.removeAll();
 
+		}
 		m_serverPanel = new JPanel();
 		m_serverPanel.setLayout(layout);
 		m_serverList = new ServerListPanel(a_numberOfMixes);
@@ -191,162 +201,167 @@ private void drawServerPanel(int a_numberOfMixes, String a_chainName)
 		m_rootPanelConstraints.gridy = 1;
 		m_rootPanelConstraints.anchor = GridBagConstraints.CENTER;
 		pRoot.add(m_serverPanel, m_rootPanelConstraints);
-}
+	}
 
-private void drawServerInfoPanel(String a_operator, String a_url, String a_location)
-{
-	GridBagLayout layout = new GridBagLayout();
-	GridBagConstraints c = new GridBagConstraints();
-	c.insets = new Insets(2, 2, 2, 2);
+	private void drawServerInfoPanel(String a_operator, String a_url, String a_location)
+	{
+		GridBagLayout layout = new GridBagLayout();
+		GridBagConstraints c = new GridBagConstraints();
+		c.insets = new Insets(2, 2, 2, 2);
 
-	if (m_serverInfoPanel != null)
-		m_serverInfoPanel.removeAll();
-	m_serverInfoPanel = new JPanel();
-	m_serverInfoPanel.setLayout(layout);
+		if (m_serverInfoPanel != null)
+		{
+			m_serverInfoPanel.removeAll();
+		}
+		m_serverInfoPanel = new JPanel();
+		m_serverInfoPanel.setLayout(layout);
 
-	JLabel l = new JLabel(JAPMessages.getString("mixOperator"));
-	c.gridx = 0;
-	c.gridy = 0;
-	c.anchor = GridBagConstraints.NORTHWEST;
-	c.fill = GridBagConstraints.EAST;
-	m_serverInfoPanel.add(l, c);
+		JLabel l = new JLabel(JAPMessages.getString("mixOperator"));
+		c.gridx = 0;
+		c.gridy = 0;
+		c.anchor = GridBagConstraints.NORTHWEST;
+		c.fill = GridBagConstraints.EAST;
+		m_serverInfoPanel.add(l, c);
 
-	m_operatorLabel = new JLabel(a_operator);
-	// Temporary solution for long operator names destroying the whole layout
-	m_operatorLabel.setPreferredSize(new Dimension(400,17));
-	c.gridx = 1;
-	m_serverInfoPanel.add(m_operatorLabel, c);
+		m_operatorLabel = new JLabel(a_operator);
+		// Temporary solution for long operator names destroying the whole layout
+		m_operatorLabel.setPreferredSize(new Dimension(400, 17));
+		c.gridx = 1;
+		m_serverInfoPanel.add(m_operatorLabel, c);
 
-	l = new JLabel(JAPMessages.getString("mixUrl"));
-	c.gridx = 0;
-	c.gridy = 1;
-	m_serverInfoPanel.add(l, c);
-
-	m_urlLabel = new JLabel(a_url);
-	c.gridx = 1;
-	m_serverInfoPanel.add(m_urlLabel, c);
-
-
-	l = new JLabel(JAPMessages.getString("mixLocation"));
-	c.gridx = 0;
-	c.gridy = 2;
-	m_serverInfoPanel.add(l, c);
-
-	m_locationLabel = new JLabel(a_location);
-	c.gridx = 1;
-	m_serverInfoPanel.add(m_locationLabel, c);
-
-	m_rootPanelConstraints.anchor = GridBagConstraints.NORTHWEST;
-	m_rootPanelConstraints.gridx = 0;
-	m_rootPanelConstraints.gridy = 2;
-	pRoot.add(m_serverInfoPanel, m_rootPanelConstraints);
-}
-
-private void drawCascadesPanel()
-{
-	GridBagLayout layout = new GridBagLayout();
-	GridBagConstraints c = new GridBagConstraints();
-	c.insets = new Insets(2, 2, 2, 2);
-
-	if (m_cascadesPanel != null)
-		m_cascadesPanel.removeAll();
-	else
-		m_cascadesPanel = new JPanel();
-
-	m_cascadesPanel.setLayout(layout);
-
-	JLabel l = new JLabel(JAPMessages.getString("availableCascades"));
-	c.gridx = 0;
-	c.gridy = 0;
-	c.anchor = GridBagConstraints.NORTHWEST;
-	m_cascadesPanel.add(l, c);
-
-	m_listMixCascade = new JList();
-	   m_listMixCascade.setFixedCellWidth(l.getPreferredSize().width);
-	   m_listMixCascade.setBorder(LineBorder.createBlackLineBorder());
-	m_listMixCascade.addListSelectionListener(this);
+		l = new JLabel(JAPMessages.getString("mixUrl"));
 		c.gridx = 0;
 		c.gridy = 1;
-	c.gridheight = 3;
-	m_cascadesPanel.add(m_listMixCascade, c);
+		m_serverInfoPanel.add(l, c);
 
-	l = new JLabel(JAPMessages.getString("numOfUsersOnCascade"));
-	c.gridheight = 1;
-	c.gridx = 1;
-	c.gridy = 1;
-	c.gridheight = 1;
-	c.weightx = 1;
-	c.weighty = 1;
-	m_cascadesPanel.add(l, c);
+		m_urlLabel = new JLabel(a_url);
+		c.gridx = 1;
+		m_serverInfoPanel.add(m_urlLabel, c);
 
-	m_numOfUsersLabel = new JLabel("");
-	c.gridx = 2;
-	c.gridy = 1;
-	m_cascadesPanel.add(m_numOfUsersLabel, c);
+		l = new JLabel(JAPMessages.getString("mixLocation"));
+		c.gridx = 0;
+		c.gridy = 2;
+		m_serverInfoPanel.add(l, c);
 
-	l = new JLabel(JAPMessages.getString("cascadeReachableBy"));
-	c.gridx = 1;
-	c.gridy = 2;
-	m_cascadesPanel.add(l, c);
+		m_locationLabel = new JLabel(a_location);
+		c.gridx = 1;
+		m_serverInfoPanel.add(m_locationLabel, c);
 
-	m_reachableLabel = new JAPMultilineLabel("");
-	c.gridx = 2;
-	c.gridy = 2;
-	m_cascadesPanel.add(m_reachableLabel, c);
+		m_rootPanelConstraints.anchor = GridBagConstraints.NORTHWEST;
+		m_rootPanelConstraints.gridx = 0;
+		m_rootPanelConstraints.gridy = 2;
+		pRoot.add(m_serverInfoPanel, m_rootPanelConstraints);
+	}
 
-	l = new JLabel(JAPMessages.getString("cascadePorts"));
-	c.gridx = 1;
-	c.gridy = 3;
-	m_cascadesPanel.add(l, c);
+	private void drawCascadesPanel()
+	{
+		GridBagLayout layout = new GridBagLayout();
+		GridBagConstraints c = new GridBagConstraints();
+		c.insets = new Insets(2, 2, 2, 2);
 
-	m_portsLabel = new JAPMultilineLabel("");
-	c.gridx = 2;
+		if (m_cascadesPanel != null)
+		{
+			m_cascadesPanel.removeAll();
+		}
+		else
+		{
+			m_cascadesPanel = new JPanel();
+
+		}
+		m_cascadesPanel.setLayout(layout);
+
+		JLabel l = new JLabel(JAPMessages.getString("availableCascades"));
+		c.gridx = 0;
+		c.gridy = 0;
+		c.anchor = GridBagConstraints.NORTHWEST;
+		m_cascadesPanel.add(l, c);
+
+		m_listMixCascade = new JList();
+		m_listMixCascade.setFixedCellWidth(l.getPreferredSize().width);
+		m_listMixCascade.setBorder(LineBorder.createBlackLineBorder());
+		m_listMixCascade.addListSelectionListener(this);
+		c.gridx = 0;
+		c.gridy = 1;
+		c.gridheight = 3;
+		m_cascadesPanel.add(m_listMixCascade, c);
+
+		l = new JLabel(JAPMessages.getString("numOfUsersOnCascade"));
+		c.gridheight = 1;
+		c.gridx = 1;
+		c.gridy = 1;
+		c.gridheight = 1;
+		c.weightx = 1;
+		c.weighty = 1;
+		m_cascadesPanel.add(l, c);
+
+		m_numOfUsersLabel = new JLabel("");
+		c.gridx = 2;
+		c.gridy = 1;
+		m_cascadesPanel.add(m_numOfUsersLabel, c);
+
+		l = new JLabel(JAPMessages.getString("cascadeReachableBy"));
+		c.gridx = 1;
+		c.gridy = 2;
+		m_cascadesPanel.add(l, c);
+
+		m_reachableLabel = new JAPMultilineLabel("");
+		c.gridx = 2;
+		c.gridy = 2;
+		m_cascadesPanel.add(m_reachableLabel, c);
+
+		l = new JLabel(JAPMessages.getString("cascadePorts"));
+		c.gridx = 1;
 		c.gridy = 3;
-	m_cascadesPanel.add(m_portsLabel, c);
+		m_cascadesPanel.add(l, c);
 
-	m_rootPanelConstraints.gridx = 0;
-	m_rootPanelConstraints.gridy = 0;
-	m_rootPanelConstraints.anchor = GridBagConstraints.NORTHWEST;
-	m_rootPanelConstraints.weightx = 1;
-	m_rootPanelConstraints.weighty = 1;
+		m_portsLabel = new JAPMultilineLabel("");
+		c.gridx = 2;
+		c.gridy = 3;
+		m_cascadesPanel.add(m_portsLabel, c);
 
-	pRoot.add(m_cascadesPanel, m_rootPanelConstraints);
-}
+		m_rootPanelConstraints.gridx = 0;
+		m_rootPanelConstraints.gridy = 0;
+		m_rootPanelConstraints.anchor = GridBagConstraints.NORTHWEST;
+		m_rootPanelConstraints.weightx = 1;
+		m_rootPanelConstraints.weighty = 1;
 
-private void drawCompleteDialog()
-{
-	m_rootPanelLayout = new GridBagLayout();
-	m_rootPanelConstraints = new GridBagConstraints();
+		pRoot.add(m_cascadesPanel, m_rootPanelConstraints);
+	}
 
-	pRoot = getRootPanel();
-	pRoot.removeAll();
-	pRoot.setLayout(m_rootPanelLayout);
-	m_rootPanelConstraints.anchor = GridBagConstraints.NORTHWEST;
+	private void drawCompleteDialog()
+	{
+		m_rootPanelLayout = new GridBagLayout();
+		m_rootPanelConstraints = new GridBagConstraints();
 
-	drawCascadesPanel();
-	drawServerPanel(3, "");
-	drawServerInfoPanel(null, null, null);
-}
+		pRoot = getRootPanel();
+		pRoot.removeAll();
+		pRoot.setLayout(m_rootPanelLayout);
+		m_rootPanelConstraints.anchor = GridBagConstraints.NORTHWEST;
 
-public void itemStateChanged(ItemEvent e)
-{
-	int server = m_serverList.getSelectedIndex();
-	MixCascade cascade = (MixCascade) m_listMixCascade.getSelectedValue();
-	String selectedMixId = (String) cascade.getMixIds().elementAt(server);
-	MixInfo selectedMixInfo =
-		(MixInfo) InfoServiceHolder.getInstance().getMixInfo(selectedMixId);
+		drawCascadesPanel();
+		drawServerPanel(3, "");
+		drawServerInfoPanel(null, null, null);
+	}
 
-	m_operatorLabel.setText(selectedMixInfo.getServiceOperator().getOrganisation());
-	m_locationLabel.setText(selectedMixInfo.getServiceLocation().getCity());
-	m_urlLabel.setText(selectedMixInfo.getServiceOperator().getUrl());
+	public void itemStateChanged(ItemEvent e)
+	{
+		int server = m_serverList.getSelectedIndex();
+		MixCascade cascade = (MixCascade) m_listMixCascade.getSelectedValue();
+		String selectedMixId = (String) cascade.getMixIds().elementAt(server);
+		MixInfo selectedMixInfo =
+			(MixInfo) InfoServiceHolder.getInstance().getMixInfo(selectedMixId);
 
-}
+		m_operatorLabel.setText(selectedMixInfo.getServiceOperator().getOrganisation());
+		m_locationLabel.setText(selectedMixInfo.getServiceLocation().getCity());
+		m_urlLabel.setText(selectedMixInfo.getServiceOperator().getUrl());
+
+	}
 
 	private void updateMixCascadeCombo()
 	{
 		LogHolder.log(LogLevel.DEBUG, LogType.GUI, "JAPConf: updateMixCascadeCombo() -start");
 		Enumeration it = m_Controller.getMixCascadeDatabase().elements();
-		DefaultListModel listModel=new DefaultListModel();
+		DefaultListModel listModel = new DefaultListModel();
 		while (it.hasMoreElements())
 		{
 			listModel.addElement(it.nextElement());
@@ -453,11 +468,12 @@ public void itemStateChanged(ItemEvent e)
 		updateMixCascadeCombo();
 		if (!m_cbMixManual.isSelected()) //Auswahl is selected
 		{ //try to select the current MixCascade
-			try{
-			m_listMixCascade.setSelectedValue(mixCascade,true);
+			try
+			{
+				m_listMixCascade.setSelectedValue(mixCascade, true);
 			}
-			catch(Exception e)
-			{///@todo really undone work yet...
+			catch (Exception e)
+			{ ///@todo really undone work yet...
 			}
 		}
 	}
@@ -520,8 +536,9 @@ public void itemStateChanged(ItemEvent e)
 					drawServerPanel(cascade.getMixCount(), cascade.getName());
 					/** @todo Temporary solution for getting number of active users */
 					InfoServiceDBEntry entry = InfoServiceHolder.getInstance().getPreferedInfoService();
-					int numUsers = entry.getStatusInfo(cascade.getId(), cascade.getMixCount(), InfoServiceHolder.getInstance()
-													   .getCertificateStore()).getNrOfActiveUsers();
+					int numUsers = entry.getStatusInfo(cascade.getId(), cascade.getMixCount(),
+						InfoServiceHolder.getInstance()
+						.getCertificateStore()).getNrOfActiveUsers();
 					m_numOfUsersLabel.setText(Integer.toString(numUsers));
 					String interfaces = "";
 					String ports = "";
