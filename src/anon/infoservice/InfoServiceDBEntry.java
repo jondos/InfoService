@@ -33,6 +33,7 @@ import java.util.Vector;
 import javax.xml.parsers.DocumentBuilderFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import HTTPClient.HTTPConnection;
 import HTTPClient.HTTPResponse;
@@ -76,16 +77,23 @@ public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncodable
 
 	/**
 	 * Stores the number of the prefered ListenerInterface in the listenerInterfaces list. If we
-	 * have to connect to the infoservice, this interface is used first. If there is an connection
+	 * have to connect to the infoservice, this interface is used first. If there is a connection
 	 * error, all other interfaces will be tested. If we can get the connection over another
 	 * interface, this interface will be set as new preferedListenerInterface.
 	 */
-	private int preferedListenerInterface;
+	private int m_preferedListenerInterface;
 
 	/**
 	 * Stores whether this infoservice has a primary forwarder list (true) or not (false).
 	 */
 	private boolean m_bPrimaryForwarderList;
+
+	/**
+	 * Describes whether this infoservice is a neighbour of our one.
+	 * We send all messages only to neighbours, so we have less traffic.
+	 * For now, every remote infoservice is a neighbour and it is only false for the local one.
+	 */
+	private boolean m_neighbour = false;
 
 	/**
 	 * Creates an XML node (InfoServices node) with all infoservices from the database inside.
@@ -137,52 +145,60 @@ public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncodable
 		}
 	}
 
-
-
 	/**
 	 * Creates a new InfoService from XML description (InfoService node).
-	 *
-	 * @param infoServiceNode The InfoService node from an XML document.
+	 * @param a_infoServiceNode The InfoService node from an XML document.
 	 * @exception XMLParseException if an error in the xml structure occurs
 	 */
-	public InfoServiceDBEntry(Element infoServiceNode) throws XMLParseException
+	public InfoServiceDBEntry(Element a_infoServiceNode) throws XMLParseException
 	{
 		super(System.currentTimeMillis() + Constants.TIMEOUT_INFOSERVICE_JAP);
+
+		if (a_infoServiceNode == null)
+		{
+			throw new XMLParseException(XMLParseException.NODE_NULL_TAG);
+		}
+
 		/* get the ID */
-		m_strInfoServiceId = infoServiceNode.getAttribute("id");
+		m_strInfoServiceId = a_infoServiceNode.getAttribute("id");
+
+		/* verify the signature */
+		/*if (!SignatureManager.getInstance().verifyXml(a_infoServiceNode,
+			SignatureManager.DOCUMENT_CLASS_INFOSERVICE, m_strInfoServiceId))
+		{
+			LogHolder.log(LogLevel.WARNING, LogType.MISC,
+				"XML Signature verification failed for InfoService with ID: " + m_strInfoServiceId);
+			throw new XMLParseException("Couldn't verify XML signature.");
+		}*/
+
 		/* get the name */
-		NodeList nameNodes = infoServiceNode.getElementsByTagName("Name");
-		if (nameNodes.getLength() == 0)
+		m_strName = XMLUtil.parseNodeString(XMLUtil.getFirstChildByName(a_infoServiceNode, "Name"), null);
+		if (m_strName == null)
 		{
-			throw (new XMLParseException("Name"));
+			throw new XMLParseException("Name");
 		}
-		Element nameNode = (Element) (nameNodes.item(0));
-		m_strName = nameNode.getFirstChild().getNodeValue();
+
 		/* get the software information */
-		NodeList softwareNodes = infoServiceNode.getElementsByTagName("Software");
-		if (softwareNodes.getLength() == 0)
-		{
-			throw (new XMLParseException("Software"));
-		}
-		Element softwareNode = (Element) (softwareNodes.item(0));
-		m_infoserviceSoftware = new ServiceSoftware(softwareNode);
+		m_infoserviceSoftware = new ServiceSoftware((Element)
+				  XMLUtil.getFirstChildByName(a_infoServiceNode, ServiceSoftware.getXMLElementName()));
+
 		/* get the listener interfaces */
-		NodeList networkNodes = infoServiceNode.getElementsByTagName("Network");
-		if (networkNodes.getLength() == 0)
+		Node networkNode = XMLUtil.getFirstChildByName(a_infoServiceNode, "Network");
+		if (networkNode == null)
 		{
-			throw (new XMLParseException("Network"));
+			throw new XMLParseException("Network");
 		}
-		Element networkNode = (Element) (networkNodes.item(0));
-		NodeList listenerInterfacesNodes = networkNode.getElementsByTagName("ListenerInterfaces");
-		if (listenerInterfacesNodes.getLength() == 0)
-		{
-			throw (new XMLParseException("ListenerInterfaces"));
-		}
-		Element listenerInterfacesNode = (Element) (listenerInterfacesNodes.item(0));
-		NodeList listenerInterfaceNodes = listenerInterfacesNode.getElementsByTagName("ListenerInterface");
-		if (listenerInterfaceNodes.getLength() == 0)
+		Element listenerInterfacesNode =
+			(Element)XMLUtil.getFirstChildByName(networkNode, "ListenerInterfaces");
+		if (networkNode == null)
 		{
 			throw new XMLParseException("ListenerInterfaces");
+		}
+		NodeList listenerInterfaceNodes = listenerInterfacesNode.getElementsByTagName(
+				  ListenerInterface.getXMLElementName());
+		if (listenerInterfaceNodes.getLength() == 0)
+		{
+			throw new XMLParseException(ListenerInterface.getXMLElementName());
 		}
 		m_listenerInterfaces = new Vector();
 		for (int i = 0; i < listenerInterfaceNodes.getLength(); i++)
@@ -190,19 +206,17 @@ public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncodable
 			Element listenerInterfaceNode = (Element) (listenerInterfaceNodes.item(i));
 			m_listenerInterfaces.addElement(new ListenerInterface(listenerInterfaceNode));
 		}
+
 		/* set the first interface as prefered interface */
-		preferedListenerInterface = 0;
+		m_preferedListenerInterface = 0;
+
 		/* get the Expire timestamp */
-		NodeList expireNodes = infoServiceNode.getElementsByTagName("Expire");
-		if (expireNodes.getLength() == 0)
-		{
-			throw new XMLParseException("Expire");
-		}
-		Element expireNode = (Element) (expireNodes.item(0));
-		//setExpireTime(Long.parseLong(expireNode.getFirstChild().getNodeValue()));
+		/*m_japExpireTime =
+			XMLUtil.parseNodeLong(XMLUtil.getFirstChildByName(a_infoServiceNode, "Expire"),
+								  Constants.TIMEOUT_INFOSERVICE_JAP);*/
+
 		/* get the information, whether this infoservice keeps a list of JAP forwarders */
-		NodeList forwarderListNodes = infoServiceNode.getElementsByTagName("ForwarderList");
-		if (forwarderListNodes.getLength() == 0)
+		if (XMLUtil.getFirstChildByName(a_infoServiceNode, "ForwarderList") == null)
 		{
 			/* there is no ForwarderList node -> this infoservice doesn't keep a primary forwarder list
 			 */
@@ -213,6 +227,8 @@ public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncodable
 			/* there is a ForwarderList node -> this infoservice keeps a primary forwarder list */
 			m_bPrimaryForwarderList = true;
 		}
+		/* at the moment every infoservice talks with all other infoservices */
+		m_neighbour = true;
 	}
 
 	/**
@@ -242,86 +258,111 @@ public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncodable
 	 *
 	 * @param a_strName The name of the infoservice or null, if a generic name shall be used.
 	 * @param a_listeners The listeners the infoservice is (virtually) listening on.
+	 * @exception IllegalArgumentException if invalid listener interfaces are given
 	 */
 	public InfoServiceDBEntry(String a_strName, Vector a_listeners)
+		throws IllegalArgumentException
 	{
 		super(System.currentTimeMillis() + Constants.TIMEOUT_INFOSERVICE_JAP);
+
+		if (a_listeners == null)
+		{
+			throw new IllegalArgumentException("No listener interfaces!");
+		}
 
 		Enumeration enumListeners = a_listeners.elements();
 		m_listenerInterfaces = new Vector();
 		while (enumListeners.hasMoreElements())
 		{
 			m_listenerInterfaces.addElement(enumListeners.nextElement());
+			if (!(m_listenerInterfaces.lastElement() instanceof ListenerInterface))
+			{
+				throw new IllegalArgumentException("Invalid listener interface!");
+			}
 		}
 
-		m_strInfoServiceId = generateId();
+		m_strInfoServiceId = generateId((ListenerInterface)m_listenerInterfaces.firstElement());
 
 		/* set a name */
-		if (a_strName == null)
+		m_strName = a_strName;
+		if (m_strName == null)
 		{
-			m_strName = generateId();
-		}
-		else
-		{
-			m_strName = a_strName;
+			m_strName = m_strInfoServiceId;
 		}
 
 		m_bPrimaryForwarderList = false;
 		m_infoserviceSoftware = new ServiceSoftware("unknown");
-		preferedListenerInterface = 0;
+		m_preferedListenerInterface = 0;
 	}
 
 	/**
-	 * Creates an XML node without signature for this InfoService.
-	 *
-	 * @param doc The XML document, which is the environment for the created XML node.
-	 *
+	 * Returns the name of the XML element constructed by this class.
+	 * @return the name of the XML element constructed by this class
+	 */
+	public static String getXMLElementName()
+	{
+		return "InfoService";
+	}
+
+	/**
+	 * Creates an XML node for this InfoService.
+	 * @param a_doc The XML document, which is the environment for the created XML node.
 	 * @return The InfoService XML node.
 	 */
-	public Element toXmlElement(Document doc)
+	public Element toXmlElement(Document a_doc)
 	{
-		Element infoServiceNode = doc.createElement("InfoService");
+		/* Create the InfoService element */
+		Element infoServiceNode = a_doc.createElement(getXMLElementName());
 		infoServiceNode.setAttribute("id", m_strInfoServiceId);
-		/* Create the child nodes of InfoService (Name, Software, Network, Expire) */
-		Element nameNode = doc.createElement("Name");
-		nameNode.appendChild(doc.createTextNode(m_strName));
-		Element softwareNode = m_infoserviceSoftware.toXmlElement(doc);
-		Element networkNode = doc.createElement("Network");
-		Element listenerInterfacesNode = doc.createElement("ListenerInterfaces");
-		Enumeration it = m_listenerInterfaces.elements();
-		while (it.hasMoreElements())
+		/* Create the child nodes of InfoService */
+		Element nameNode = a_doc.createElement("Name");
+		nameNode.appendChild(a_doc.createTextNode(m_strName));
+		Element networkNode = a_doc.createElement("Network");
+		Element listenerInterfacesNode = a_doc.createElement("ListenerInterfaces");
+		Enumeration enumer = m_listenerInterfaces.elements();
+		while (enumer.hasMoreElements())
 		{
-			ListenerInterface currentListenerInterface = (ListenerInterface) (it.nextElement());
-			Element currentNode = currentListenerInterface.toXmlElement(doc);
-			listenerInterfacesNode.appendChild(currentNode);
+			ListenerInterface currentListenerInterface = (ListenerInterface) (enumer.nextElement());
+			listenerInterfacesNode.appendChild(currentListenerInterface.toXmlElement(a_doc));
 		}
 		networkNode.appendChild(listenerInterfacesNode);
-		Element expireNode = doc.createElement("Expire");
-		expireNode.appendChild(doc.createTextNode(Long.toString(getExpireTime())));
+		Element expireNode = a_doc.createElement("Expire");
+		expireNode.appendChild(a_doc.createTextNode(Long.toString(getExpireTime())));
+		infoServiceNode.appendChild(nameNode);
+		infoServiceNode.appendChild(m_infoserviceSoftware.toXmlElement(a_doc));
+		infoServiceNode.appendChild(networkNode);
+		infoServiceNode.appendChild(expireNode);
 		if (m_bPrimaryForwarderList == true)
 		{
 			/* if we hold a forwarder list, also append an ForwarderList node, at the moment this
 			 * node doesn't have any childs
 			 */
-			Element forwarderListNode = doc.createElement("ForwarderList");
+			Element forwarderListNode = a_doc.createElement("ForwarderList");
 			infoServiceNode.appendChild(forwarderListNode);
 		}
-		infoServiceNode.appendChild(nameNode);
-		infoServiceNode.appendChild(softwareNode);
-		infoServiceNode.appendChild(networkNode);
-		infoServiceNode.appendChild(expireNode);
+
+		/* sign the XML node */
+		/*try
+		{
+			SignatureManager.getInstance().signXml(infoServiceNode);
+		}
+		catch (Exception a_e)
+		{
+			LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, "Document could not be signed!");
+		}*/
+
 		return infoServiceNode;
 	}
 
 	/**
 	 * This is only for compatibility and will be rewritten next time.
 	 * @todo rewrite this
+	 * @param a_listenerInterface a ListenerInterface of this InfoService
 	 * @return Returns an ID for the infoservice (IP:Port of the first listener interface).
 	 */
-	private String generateId()
+	private String generateId(ListenerInterface a_listenerInterface)
 	{
-		return ( (ListenerInterface) (m_listenerInterfaces.firstElement())).getHost() + "%3A" +
-			Integer.toString( ( (ListenerInterface) (m_listenerInterfaces.firstElement())).getPort());
+		return a_listenerInterface.getHost() + "%3A" + a_listenerInterface.getPort();
 	}
 
 	/**
@@ -400,14 +441,14 @@ public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncodable
 	 */
 	private HTTPConnectionDescriptor connectToInfoService(HTTPConnectionDescriptor lastConnectionDescriptor)
 	{
-		int nextIndex = preferedListenerInterface;
+		int nextIndex = m_preferedListenerInterface;
 		if (lastConnectionDescriptor != null)
 		{
 			int lastIndex = m_listenerInterfaces.indexOf(lastConnectionDescriptor.getTargetInterface());
 			nextIndex = (lastIndex + 1) % (m_listenerInterfaces.size());
 		}
 		/* update the preferedListenerInterface */
-		preferedListenerInterface = nextIndex;
+		m_preferedListenerInterface = nextIndex;
 		/* create the connection descriptor */
 		ListenerInterface target = (ListenerInterface) (m_listenerInterfaces.elementAt(nextIndex));
 		HTTPConnection connection = HTTPConnectionFactory.getInstance().createHTTPConnection(target);
