@@ -29,7 +29,6 @@ package anon.pay;
 
 import java.io.ByteArrayInputStream;
 import java.math.BigInteger;
-import java.util.Date;
 import java.util.Enumeration;
 import java.util.Vector;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -52,6 +51,8 @@ import anon.util.Base64;
 import anon.util.IXMLEncodable;
 import anon.util.XMLUtil;
 import anon.server.impl.MuxSocket;
+import java.sql.*;
+import java.security.*;
 
 /**
  * This class encapsulates one account and all additional data associated to one
@@ -105,6 +106,7 @@ public class PayAccount implements IXMLEncodable
 	 */
 	private long m_mySpent;
 	private BI m_theBI;
+	private JAPSignature m_verifyingInstance;
 
 	public PayAccount(byte[] xmlData) throws Exception
 	{
@@ -297,23 +299,64 @@ public class PayAccount implements IXMLEncodable
 	 * only older information is overwritten with newer information.
 	 * @param info XMLAccountInfo
 	 */
-	public void setAccountInfo(XMLAccountInfo info)
+	public void setAccountInfo(XMLAccountInfo info) throws Exception
 	{
+		boolean fire = false;
 		if (m_accountInfo == null)
 		{
 			m_accountInfo = info;
-			fireChangeEvent();
+			fire = true;
 		}
 		else
 		{
+			// compare balance timestamps, use the newer one
 			XMLBalance b1 = info.getBalance();
 			XMLBalance b2 = m_accountInfo.getBalance();
 			if (b1.getTimestamp().after(b2.getTimestamp()))
 			{
 				m_accountInfo.setBalance(b1);
-				fireChangeEvent();
+				fire = true;
+			}
+
+			// compare CCs
+			Enumeration en = m_accountInfo.getCCs();
+			while (en.hasMoreElements())
+			{
+				XMLEasyCC myCC = (XMLEasyCC) en.nextElement();
+				XMLEasyCC newCC = info.getCC(myCC.getAIName());
+				if ( (newCC != null) && (newCC.getTransferredBytes()>myCC.getTransferredBytes()) )
+				{
+					if(newCC.verifySignature(getVerifyingInstance()))
+					{
+						addCostConfirmation(newCC);
+						fire = false; // the event is fired by ^^
+					}
+					else
+					{
+						throw new Exception("The BI is trying to betray you with faked CostConfirmations");
+					}
+				}
 			}
 		}
+		if(fire==true)
+		{
+			fireChangeEvent();
+		}
+	}
+
+	/**
+	 * getVerifyingInstance
+	 *
+	 * @return JAPSignature
+	 */
+	private JAPSignature getVerifyingInstance() throws Exception
+	{
+		if(m_verifyingInstance==null)
+		{
+			m_verifyingInstance = new JAPSignature();
+			m_verifyingInstance.initVerify(m_accountCertificate.getPublicKey());
+		}
+		return m_verifyingInstance;
 	}
 
 	/**
@@ -346,7 +389,7 @@ public class PayAccount implements IXMLEncodable
 	 *
 	 * @return Erstellungsdatum
 	 */
-	public Date getCreationDate()
+	public Timestamp getCreationTime()
 	{
 		return m_accountCertificate.getCreationTime();
 	}
@@ -356,7 +399,7 @@ public class PayAccount implements IXMLEncodable
 	 *
 	 * @return Date Gueltigkeitsdatum
 	 */
-	public Date getBalanceValidTime()
+	public Timestamp getBalanceValidTime()
 	{
 		if (m_accountInfo != null)
 		{
@@ -487,7 +530,7 @@ public class PayAccount implements IXMLEncodable
 			m_accountInfo = new XMLAccountInfo();
 		}
 		m_mySpent += m_accountInfo.addCC(cc);
-
+		fireChangeEvent();
 	}
 
 	public void addAccountListener(IAccountListener listener)
@@ -540,7 +583,7 @@ public class PayAccount implements IXMLEncodable
 	public XMLAccountInfo fetchAccountInfo() throws Exception
 	{
 		XMLAccountInfo info;
-		BIConnection biConn = new BIConnection( m_theBI,
+		BIConnection biConn = new BIConnection(m_theBI,
 											   false
 											   /* ssl off! */
 											   );
@@ -554,7 +597,6 @@ public class PayAccount implements IXMLEncodable
 		return info;
 	}
 
-
 	/**
 	 * Request a transfer certificate from the BI
 	 *
@@ -565,7 +607,7 @@ public class PayAccount implements IXMLEncodable
 	 */
 	public XMLTransCert charge() throws Exception
 	{
-		BIConnection biConn = new BIConnection( m_theBI, false /* ssl off*/);
+		BIConnection biConn = new BIConnection(m_theBI, false /* ssl off*/);
 		biConn.connect();
 		biConn.authenticate(m_accountCertificate, m_signingInstance);
 		XMLTransCert transcert = biConn.charge();
@@ -573,6 +615,5 @@ public class PayAccount implements IXMLEncodable
 		m_transCerts.addElement(transcert); //addTransCert(transcert);
 		return transcert;
 	}
-
 
 }

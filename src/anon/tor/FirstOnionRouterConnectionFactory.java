@@ -33,6 +33,9 @@ package anon.tor;
 import java.util.Vector;
 
 import anon.tor.ordescription.ORDescription;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 
 /**
  *
@@ -49,7 +52,7 @@ public class FirstOnionRouterConnectionFactory
 	public FirstOnionRouterConnectionFactory(Tor a_Tor)
 	{
 		m_firstOnionRouters = new Vector();
-		m_Tor=a_Tor;
+		m_Tor = a_Tor;
 	}
 
 	/**
@@ -62,29 +65,36 @@ public class FirstOnionRouterConnectionFactory
 	public synchronized FirstOnionRouterConnection createFirstOnionRouterConnection(ORDescription d)
 	{
 		ORDescription ord;
-		FirstOnionRouterConnection fOR=null;
+		FirstOnionRouterConnection fOR = null;
 		for (int i = 0; i < m_firstOnionRouters.size(); i++)
 		{
-			fOR=(FirstOnionRouterConnection)m_firstOnionRouters.elementAt(i);
+			fOR = (FirstOnionRouterConnection) m_firstOnionRouters.elementAt(i);
 			ord = fOR.getORDescription();
 			if (ord.equals(d))
 			{
-				if(!fOR.isClosed())
+				if (!fOR.isClosed())
+				{
 					return fOR;
+				}
 				else
+				{
 					break;
+				}
 			}
-			fOR=null;
+			fOR = null;
 		}
-		if(fOR==null)
-			fOR = new FirstOnionRouterConnection(d,m_Tor);
+		if (fOR == null)
+		{
+			fOR = new FirstOnionRouterConnection(d, m_Tor);
+		}
 		try
 		{
 			fOR.connect();
 		}
 		catch (Exception ex)
 		{
-			ex.printStackTrace();
+			LogHolder.log(LogLevel.EXCEPTION, LogType.TOR, "Error while connection to first OnionRouter");
+			LogHolder.log(LogLevel.EXCEPTION, LogType.TOR, ex);
 			return null;
 		}
 		m_firstOnionRouters.addElement(fOR);
@@ -96,7 +106,7 @@ public class FirstOnionRouterConnectionFactory
 	{
 		for (int i = 0; i < m_firstOnionRouters.size(); i++)
 		{
-			FirstOnionRouterConnection fOR=(FirstOnionRouterConnection)m_firstOnionRouters.elementAt(i);
+			FirstOnionRouterConnection fOR = (FirstOnionRouterConnection) m_firstOnionRouters.elementAt(i);
 			fOR.close();
 		}
 		m_firstOnionRouters.removeAllElements();

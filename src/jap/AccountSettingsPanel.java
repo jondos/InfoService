@@ -46,8 +46,8 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
+import javax.swing.filechooser.FileFilter;
 import javax.swing.table.AbstractTableModel;
-import javax.swing.table.JTableHeader;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -61,6 +61,10 @@ import anon.util.XMLUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import javax.swing.*;
+import javax.swing.event.*;
+import gui.TimestampCellRenderer;
+import gui.ByteNumberCellRenderer;
 
 /**
  * The Jap Conf Module (Settings Tab Page) for the Accounts and payment Management
@@ -68,7 +72,7 @@ import logging.LogType;
  * @author Bastian Voigt
  * @version 1.0
  */
-public class AccountSettingsPanel extends jap.AbstractJAPConfModule
+public class AccountSettingsPanel extends AbstractJAPConfModule
 {
 	private JTable m_Table;
 	private JButton m_btnCreateAccount;
@@ -103,6 +107,8 @@ public class AccountSettingsPanel extends jap.AbstractJAPConfModule
 	public void recreateRootPanel()
 	{
 		JPanel rootPanel = getRootPanel();
+		PayAccountsFile accounts = PayAccountsFile.getInstance();
+		PayAccount activeAccount = accounts.getActiveAccount();
 
 		/* clear the whole root panel */
 		rootPanel.removeAll();
@@ -114,7 +120,9 @@ public class AccountSettingsPanel extends jap.AbstractJAPConfModule
 		m_Table = new JTable();
 		m_MyTableModel = new MyTableModel();
 		m_Table.setModel(m_MyTableModel);
-		JTableHeader header = m_Table.getTableHeader();
+		m_Table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		m_Table.setDefaultRenderer(java.sql.Timestamp.class, new TimestampCellRenderer());
+		m_Table.setDefaultRenderer(Long.class, new ByteNumberCellRenderer());
 		centerPanel.add(new JScrollPane(m_Table), BorderLayout.CENTER);
 
 		GridLayout gl = new GridLayout(16, 1);
@@ -122,6 +130,18 @@ public class AccountSettingsPanel extends jap.AbstractJAPConfModule
 		JPanel eastPanel = new JPanel(gl);
 
 		ActionListener myActionListener = new MyActionListener();
+
+
+		//Ask to be notified of selection changes.
+		ListSelectionModel rowSM = m_Table.getSelectionModel();
+		rowSM.addListSelectionListener(new ListSelectionListener()
+		{
+			public void valueChanged(ListSelectionEvent e)
+			{
+				enableDisableButtons();
+			}
+		});
+
 		eastPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
 
 		m_btnCreateAccount = new JButton("Create Account");
@@ -131,10 +151,12 @@ public class AccountSettingsPanel extends jap.AbstractJAPConfModule
 		m_btnChargeAccount = new JButton("Charge");
 		m_btnChargeAccount.addActionListener(myActionListener);
 		eastPanel.add(m_btnChargeAccount);
+		m_btnChargeAccount.setEnabled(activeAccount != null);
 
 		m_btnStatement = new JButton("Get Accountstatement");
 		m_btnStatement.addActionListener(myActionListener);
 		eastPanel.add(m_btnStatement);
+		m_btnChargeAccount.setEnabled(activeAccount != null);
 
 		m_btnShowDetails = new JButton("Show Details");
 		m_btnShowDetails.addActionListener(myActionListener);
@@ -158,6 +180,28 @@ public class AccountSettingsPanel extends jap.AbstractJAPConfModule
 
 		centerPanel.add(eastPanel, BorderLayout.EAST);
 		rootPanel.add(centerPanel, BorderLayout.CENTER);
+		enableDisableButtons();
+	}
+
+	private void enableDisableButtons()
+	{
+		boolean enable = (m_Table.getSelectedRow() >= 0);
+		m_btnChargeAccount.setEnabled(enable);
+		m_btnStatement.setEnabled(enable);
+		m_btnShowDetails.setEnabled(enable); ;
+		if ( (enable) &&
+			(PayAccountsFile.getInstance().getActiveAccount() !=
+			 PayAccountsFile.getInstance().getAccountAt(m_Table.getSelectedRow())))
+		{
+			m_btnActivate.setEnabled(true);
+		}
+		else
+		{
+			m_btnActivate.setEnabled(false);
+		}
+
+		m_btnDeleteAccount.setEnabled(enable);
+		m_btnExportAccount.setEnabled(enable);
 	}
 
 	/**
@@ -269,7 +313,7 @@ public class AccountSettingsPanel extends jap.AbstractJAPConfModule
 			"<html><h3>Kontoauszug vom " + balance.getTimestamp() + "</h3>" +
 			"<table>" +
 			"<tr><td>Kontonummer</td><td>" + selectedAccount.getAccountNumber() + "</td></tr>" +
-			"<tr><td>Konto erzeugt am</td><td>" + selectedAccount.getCreationDate() + "</td></tr>" +
+			"<tr><td>Konto erzeugt am</td><td>" + selectedAccount.getCreationTime() + "</td></tr>" +
 			"<tr><td> </td></tr>" +
 			"<tr><td>Eingezahlt</td><td>" + balance.getDeposit() + "</td></tr>" +
 			"<tr><td>Verbraucht</td><td>" + balance.getSpent() + "</td></tr>" +
@@ -329,13 +373,13 @@ public class AccountSettingsPanel extends jap.AbstractJAPConfModule
 			);
 		if (choice == JOptionPane.YES_OPTION)
 		{
+			/** @todo find out why the wait splash screen looks so ugly */
 			JAPWaitSplash splash = null;
 			try
 			{
 				splash = JAPWaitSplash.start("Fetching transfer number...", "Please wait");
 				Thread.sleep(5);
 				transferCertificate = selectedAccount.charge();
-//				transferCertificate = Pay.getInstance().chargeAccount(selectedAccount.getAccountNumber());
 				splash.abort();
 			}
 			catch (Exception ex)
@@ -423,6 +467,7 @@ public class AccountSettingsPanel extends jap.AbstractJAPConfModule
 			);
 		if (choice == JOptionPane.YES_OPTION)
 		{
+			/** @todo find out why the wait splash screen looks so ugly */
 			JAPWaitSplash splash = null;
 			try
 			{
@@ -658,7 +703,7 @@ public class AccountSettingsPanel extends jap.AbstractJAPConfModule
 								strMessage = "Bad password. Please type a password for decryption";
 								continue;
 							}
-							break ;
+							break;
 						}
 					}
 				}
@@ -866,17 +911,6 @@ public class AccountSettingsPanel extends jap.AbstractJAPConfModule
 	}
 
 	/**
-	 * change listener
-	 */
-	/*	public void accountDataChanged()
-	 {
-	  if (m_MyTableModel != null)
-	  {
-	   m_MyTableModel.fireTableDataChanged();
-	  }
-	 }*/
-
-	/**
 	 * Table model implementation
 	 */
 	private class MyTableModel extends AbstractTableModel
@@ -893,6 +927,24 @@ public class AccountSettingsPanel extends jap.AbstractJAPConfModule
 			return m_accounts.getNumAccounts();
 		}
 
+		public Class getColumnClass(int c)
+		{
+			switch (c)
+			{
+				case 0:
+					return Object.class;
+				case 1:
+					return java.sql.Timestamp.class;
+				case 2:
+					return Long.class;
+				case 3:
+					return java.sql.Timestamp.class;
+				case 4:
+				default:
+					return Object.class;
+			}
+		}
+
 		public Object getValueAt(int rowIndex, int columnIndex)
 		{
 			PayAccount account = m_accounts.getAccountAt(rowIndex);
@@ -901,7 +953,7 @@ public class AccountSettingsPanel extends jap.AbstractJAPConfModule
 				case 0:
 					return new Long(account.getAccountNumber());
 				case 1:
-					return account.getCreationDate();
+					return account.getCreationTime();
 				case 2:
 					if (account.hasAccountInfo())
 					{
@@ -953,5 +1005,9 @@ public class AccountSettingsPanel extends jap.AbstractJAPConfModule
 			}
 		}
 
+		public boolean isCellEditable(int col, int row)
+		{
+			return false;
+		}
 	}
 }

@@ -105,7 +105,7 @@ public class PayAccountsFile implements IXMLEncodable
 
 	private Vector m_paymentListeners = new Vector();
 
-	private MyAccountListener m_MyChangeListener = new MyAccountListener();
+	private MyAccountListener m_MyAccountListener = new MyAccountListener();
 
 	/**
 	 * At this time, the implementation supports only one single BI. In the future
@@ -150,16 +150,7 @@ public class PayAccountsFile implements IXMLEncodable
 		if (ms_AccountsFile == null)
 		{
 			ms_AccountsFile = new PayAccountsFile();
-			// set values
 		}
-/*		try
-		{
-			ms_AccountsFile.m_theBI = new BI(elemBI);
-		}
-		catch (Exception ex2)
-		{
-			return false;
-		}*/
 		ms_AccountsFile.m_theBI = theBI;
 		if(elemAccountsFile != null)
 		{
@@ -173,7 +164,10 @@ public class PayAccountsFile implements IXMLEncodable
 			{
 				try
 				{
-					ms_AccountsFile.m_Accounts.addElement(new PayAccount(elemAccount));
+					PayAccount theAccount = new PayAccount(elemAccount);
+					ms_AccountsFile.addAccount(theAccount);
+/*					theAccount.addAccountListener(ms_AccountsFile.m_MyAccountListener);
+					ms_AccountsFile.m_Accounts.addElement(new PayAccount(elemAccount));*/
 					elemAccount = (Element) elemAccount.getNextSibling();
 				}
 				catch (Exception ex1)
@@ -393,7 +387,7 @@ public class PayAccountsFile implements IXMLEncodable
 				throw new Exception("Account with same accountnumber was already added");
 			}
 		}
-		account.addAccountListener(m_MyChangeListener);
+		account.addAccountListener(m_MyAccountListener);
 		m_Accounts.addElement(account);
 
 		if (m_ActiveAccount == null)
@@ -460,11 +454,6 @@ public class PayAccountsFile implements IXMLEncodable
 			}
 		}
 	}
-
-	/*	private void fireChangeEvent(PayAccount source)
-	 {
-	 }*/
-
 
 	/**
 	 * getBI

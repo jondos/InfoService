@@ -35,18 +35,20 @@ package jap;
  */
 import java.util.Enumeration;
 
-import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.Image;
-import java.awt.LayoutManager;
+import java.awt.Insets;
 import java.awt.MediaTracker;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
-import javax.swing.border.EtchedBorder;
 
 import anon.pay.PayAccount;
 import anon.pay.PayAccountsFile;
@@ -61,42 +63,6 @@ public class PaymentMainPanel extends JPanel
 	 * Icons for the account icon display
 	 */
 	private ImageIcon[] m_accountIcons;
-
-	/**
-	 * Loads some icons for the account display
-	 */
-	protected void loadIcons()
-	{
-		// Load Images for Account Icon Display
-		m_accountIcons = new ImageIcon[JAPConstants.ACCOUNTICONFNARRAY.length];
-		if (!JAPModel.isSmallDisplay())
-		{
-			for (int i = 0; i < JAPConstants.ACCOUNTICONFNARRAY.length; i++)
-			{
-				m_accountIcons[i] = JAPUtil.loadImageIcon(JAPConstants.ACCOUNTICONFNARRAY[i], false);
-			}
-		}
-		else // scale down for small displays
-		{
-			MediaTracker m = new MediaTracker(this);
-			for (int i = 0; i < JAPConstants.ACCOUNTICONFNARRAY.length; i++)
-			{
-				Image tmp = JAPUtil.loadImageIcon(JAPConstants.ACCOUNTICONFNARRAY[i], true).getImage();
-				int w = tmp.getWidth(null);
-				tmp = tmp.getScaledInstance( (int) (w * 0.75), -1, Image.SCALE_SMOOTH);
-				m.addImage(tmp, i);
-				m_accountIcons[i] = new ImageIcon(tmp);
-			}
-			try
-			{
-				m.waitForAll();
-			}
-			catch (Exception e)
-			{
-				LogHolder.log(LogLevel.DEBUG, LogType.PAY, e);
-			}
-		}
-	}
 
 	/** shows different coin icons */
 	private JLabel m_AccountIconLabel;
@@ -113,41 +79,73 @@ public class PaymentMainPanel extends JPanel
 	/** this button opens the configuration tab for payment */
 	private JButton m_ConfigButton;
 
-	public PaymentMainPanel()
+	private MyPaymentListener m_MyPaymentListener = new MyPaymentListener();
+
+	public PaymentMainPanel(final JAPNewView view)
 	{
 		super(null);
 
 		loadIcons();
-		/*		GridBagLayout l = new GridBagLayout();
-		  GridBagConstraints c = new GridBagConstraints();*/
-		LayoutManager l = new BorderLayout();
+		GridBagLayout l = new GridBagLayout();
+		GridBagConstraints c = new GridBagConstraints();
 		this.setLayout(l);
 
-		// show the icon label
-		m_AccountIconLabel = new JLabel(m_accountIcons[1]);
-		this.add(m_AccountIconLabel, BorderLayout.WEST);
+		// the date of last update
+		m_AccountText = new JLabel("LastUpdate");
+		//m_AccountText.setBorder(new EtchedBorder());
+		c.anchor = GridBagConstraints.NORTHWEST;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridx = 1;
+		c.gridy = 0;
+		c.gridwidth = 2;
+		c.weighty = 0;
+		c.weightx = 1;
+		c.insets = new Insets(0, 5, 0, 0);
+		this.add(m_AccountText, c);
 
-		JPanel centerPanel = new JPanel(new BorderLayout());
-
-		// show the date of last update
-		m_AccountText = new JLabel("");
-		m_AccountText.setBorder(new EtchedBorder());
-		centerPanel.add(m_AccountText, BorderLayout.NORTH);
-
-		JPanel kontostandPanel = new JPanel(new BorderLayout());
-		// show the current account balance
+		// the current balance (progressbar + label)
 		m_BalanceProgressBar = new JProgressBar(0, 100);
 		m_BalanceProgressBar.setValue(77);
-		kontostandPanel.add(m_BalanceProgressBar, BorderLayout.CENTER);
+		c.anchor = GridBagConstraints.SOUTHWEST;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.weightx = 1;
+		c.gridwidth = 1;
+		c.gridx = 1;
+		c.gridy = 1;
+		c.insets = new Insets(0, 5, 0, 0);
+		this.add(m_BalanceProgressBar, c);
+		m_BalanceText = new JLabel("Balance");
+		c.anchor = GridBagConstraints.SOUTHWEST;
+		c.gridx = 2;
+		this.add(m_BalanceText, c);
 
-		m_BalanceText = new JLabel("");
-		kontostandPanel.add(m_BalanceText, BorderLayout.EAST);
+		// the icon label in the middle
+		m_AccountIconLabel = new JLabel(m_accountIcons[1]);
+		c.anchor = GridBagConstraints.CENTER;
+		c.fill = GridBagConstraints.VERTICAL;
+		c.weighty = 1;
+		c.gridx = 3;
+		c.gridy = 0;
+		this.add(m_AccountIconLabel, c);
 
-		centerPanel.add(kontostandPanel, BorderLayout.SOUTH);
-		this.add(centerPanel, BorderLayout.CENTER);
+		// the JButton on the right
+		m_ConfigButton = new JButton("Aufladen");
+		c.insets.left = 0;
+		c.insets.right = 5;
+		c.gridx = 4;
+		c.gridy = 0;
+		c.anchor = GridBagConstraints.EAST;
+		c.fill = GridBagConstraints.NONE;
+		this.add(m_ConfigButton, c);
+		m_ConfigButton.addActionListener(new ActionListener()
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+				view.showConfigDialog(JAPConf.PAYMENT_TAB);
+			}
+		});
 
-		this.add(new JButton("Aufladen"), BorderLayout.EAST);
-		PayAccountsFile.getInstance().addPaymentListener(m_MyChangeListener);
+		PayAccountsFile.getInstance().addPaymentListener(m_MyPaymentListener);
 		updateDisplay(null);
 	}
 
@@ -188,7 +186,27 @@ public class PaymentMainPanel extends JPanel
 			m_AccountText.setForeground(Color.black);
 			m_AccountIconLabel.setIcon(m_accountIcons[1]);
 			m_BalanceText.setEnabled(true);
-			m_BalanceText.setText(activeAccount.getCertifiedCredit() + " Bytes");
+			long credit = activeAccount.getCertifiedCredit() * 100;
+			int log = 1;
+			while ( (credit > 102400) && (log < 4))
+			{
+				credit /= 1024;
+				log++;
+			}
+			String unit;
+			switch (log)
+			{
+				case 1:
+					unit = " Bytes";
+				case 2:
+					unit = " KB";
+				case 3:
+					unit = " MB";
+				case 4:
+				default:
+					unit = " GB";
+			}
+			m_BalanceText.setText( (credit / 100) + "." + (credit % 100) + unit);
 			m_BalanceProgressBar.setMaximum( (int) activeAccount.getDeposit());
 			m_BalanceProgressBar.setValue( (int) activeAccount.getCertifiedCredit());
 			m_BalanceProgressBar.setEnabled(true);
@@ -238,6 +256,7 @@ public class PaymentMainPanel extends JPanel
 		 */
 		public void creditChanged(PayAccount acc)
 		{
+			updateDisplay(acc);
 		}
 
 		/**
@@ -318,5 +337,39 @@ public class PaymentMainPanel extends JPanel
 		}
 	}
 
-	private MyPaymentListener m_MyChangeListener = new MyPaymentListener();
+	/**
+	 * Loads some icons for the account display
+	 */
+	protected void loadIcons()
+	{
+		// Load Images for Account Icon Display
+		m_accountIcons = new ImageIcon[JAPConstants.ACCOUNTICONFNARRAY.length];
+		if (!JAPModel.isSmallDisplay())
+		{
+			for (int i = 0; i < JAPConstants.ACCOUNTICONFNARRAY.length; i++)
+			{
+				m_accountIcons[i] = JAPUtil.loadImageIcon(JAPConstants.ACCOUNTICONFNARRAY[i], false);
+			}
+		}
+		else // scale down for small displays
+		{
+			MediaTracker m = new MediaTracker(this);
+			for (int i = 0; i < JAPConstants.ACCOUNTICONFNARRAY.length; i++)
+			{
+				Image tmp = JAPUtil.loadImageIcon(JAPConstants.ACCOUNTICONFNARRAY[i], true).getImage();
+				int w = tmp.getWidth(null);
+				tmp = tmp.getScaledInstance( (int) (w * 0.75), -1, Image.SCALE_SMOOTH);
+				m.addImage(tmp, i);
+				m_accountIcons[i] = new ImageIcon(tmp);
+			}
+			try
+			{
+				m.waitForAll();
+			}
+			catch (Exception e)
+			{
+				LogHolder.log(LogLevel.DEBUG, LogType.PAY, e);
+			}
+		}
+	}
 }
