@@ -93,6 +93,7 @@ public class Tor implements Runnable, AnonService
 	//used for synchronisation on active Circuit operations...
 	private Object m_oActiveCircuitSync;
 	private Object m_oStartStopSync;
+	private Object m_oCircuitCreatorSync;
 
 	private FirstOnionRouterConnectionFactory m_firstORFactory;
 
@@ -128,6 +129,7 @@ public class Tor implements Runnable, AnonService
 		m_orList = new ORList(new PlainORListFetcher(DEFAULT_DIR_SERVER_ADDR, DEFAULT_DIR_SERVER_PORT));
 		m_oActiveCircuitSync = new Object();
 		m_oStartStopSync = new Object();
+		m_oCircuitCreatorSync = new Object();
 		//create a new circuit every 5 minutes
 		//m_createNewCircuitIntervall = 60000 * 5;
 
@@ -183,8 +185,18 @@ public class Tor implements Runnable, AnonService
 				}
 			}
 			int maxCircuit;
-			// todo : remove busy waiting if this line works
-			while(m_CircuitsCreated==0);
+			while(m_CircuitsCreated==0)
+			{
+				synchronized (m_oCircuitCreatorSync)
+				{
+					try
+					{
+						m_oCircuitCreatorSync.wait();
+					} catch(InterruptedException ex)
+					{
+					}
+				}
+			}
 			if(m_CircuitsCreated>0)
 			{
 				maxCircuit = m_CircuitsCreated;
@@ -409,8 +421,16 @@ public class Tor implements Runnable, AnonService
 		{
 			m_activeCircuits[i] = createNewCircuit("141.76.46.90",80);
 			m_CircuitsCreated++;
+			synchronized (m_oCircuitCreatorSync)
+			{
+				m_oCircuitCreatorSync.notify();
 		}
+		}
+		synchronized (m_oCircuitCreatorSync)
+		{
 		m_CircuitsCreated = -1;
+			m_oCircuitCreatorSync.notify();
+		}
 	}
 	/*	public void run()
 	 {
@@ -468,8 +488,18 @@ public class Tor implements Runnable, AnonService
 		{
 			m_bIsStarted = false;
 			m_closeCreator = true;
-			//remove busy waiting if this works
-			while(m_CircuitsCreated!=-1);
+			while(m_CircuitsCreated!=-1)
+			{
+				try
+				{
+					synchronized (m_oCircuitCreatorSync)
+					{
+					m_oCircuitCreatorSync.wait();
+					}
+				} catch (InterruptedException ex)
+				{
+				}
+			}
 			if (m_bIsCreatingCircuit)
 			{
 				m_firstORFactory.closeAll();
@@ -707,8 +737,18 @@ public class Tor implements Runnable, AnonService
 		synchronized (m_oActiveCircuitSync)
 		{
 			int maxCircuit;
-			//todo : remove busy waiting if this line works
-			while(m_CircuitsCreated==0);
+			while(m_CircuitsCreated==0)
+			{
+				synchronized (m_oCircuitCreatorSync)
+				{
+					try
+					{
+						m_oCircuitCreatorSync.wait();
+					} catch(InterruptedException ex)
+					{
+					}
+				}
+			}
 			if(m_CircuitsCreated>0)
 			{
 				maxCircuit = m_CircuitsCreated;
