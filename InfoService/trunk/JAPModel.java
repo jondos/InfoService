@@ -64,7 +64,7 @@ import anon.JAPAnonServiceListener;
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPModel implements JAPAnonServiceListener{
 
-	public static final String aktVersion = "00.01.027"; // Version of JAP
+	public static final String aktVersion = "00.01.028"; // Version of JAP
 
 	public  Vector            anonServerDatabase = null; // vector of all available mix cascades
 	public final static String   defaultanonHost   = "mix.inf.tu-dresden.de";
@@ -102,7 +102,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 	private boolean  mbActCntMessageNotRemind    = false; // indicates if Warning message in setAnonMode has been deactivated for the session
 	private boolean  mbActCntMessageNeverRemind  = false; // indicates if Warning message in setAnonMode has been deactivated forever
 	private boolean  mbDoNotAbuseReminder        = false; // indicates if new warning message in setAnonMide (containing Do no abuse) has been shown
-	private boolean  mbGoodByMessageNeverRemind  = false; // indicates if Warning message before exit has been deactivated forever	
+	private boolean  mbGoodByMessageNeverRemind  = false; // indicates if Warning message before exit has been deactivated forever
 
 	private	static final Object oSetAnonModeSyncObject=new Object();
 
@@ -1178,7 +1178,7 @@ private final class SetAnonModeAsync implements Runnable
 												JOptionPane.WARNING_MESSAGE,
 												null, options, options[0]);
 				mbGoodByMessageNeverRemind = checkboxRemindNever.isSelected();
-			}		
+			}
 		model.save();
 		System.exit(0);
 	}
