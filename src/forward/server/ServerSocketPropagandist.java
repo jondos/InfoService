@@ -24,7 +24,7 @@
  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
- */ 
+ */
 package forward.server;
 
 import java.util.Observable;
@@ -35,7 +35,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
-import anon.infoservice.InfoService;
+import anon.infoservice.InfoServiceDBEntry;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -48,7 +48,7 @@ import logging.LogType;
  * for more information.
  */
 public class ServerSocketPropagandist extends Observable implements Runnable {
-  
+
   /**
    * This is the state, when we are registerd at the infoservice.
    */
@@ -59,18 +59,18 @@ public class ServerSocketPropagandist extends Observable implements Runnable {
    * register the first time.
    */
   public static final int STATE_CONNECTING = 1;
-  
+
   /**
    * This is the state, when we were already registered at the infoservice, but the registration
    * was lost and we are trying to register again.
    */
   public static final int STATE_RECONNECTING = 2;
-  
+
   /**
    * This is the state, when the propaganda thread was stopped.
    */
   public static final int STATE_HALTED = 3;
-  
+
   /**
    * This value is returned, if announcing or renewing of the forwarder entry at the infoservice
    * was successful.
@@ -81,13 +81,13 @@ public class ServerSocketPropagandist extends Observable implements Runnable {
    * This value is returned, if the infoservice could not verify the local forwarding server.
    */
   public static final int RETURN_VERIFICATION_ERROR = 1;
-  
+
   /**
    * This value is returned, if we could not reach the infoservice or the infoservice has no
    * forwarder list.
    */
   public static final int RETURN_INFOSERVICE_ERROR = 2;
-  
+
   /**
    * This value is returned, if there was an unexpected error while infoservice communication.
    */
@@ -118,23 +118,23 @@ public class ServerSocketPropagandist extends Observable implements Runnable {
    * is 10 minutes.
    */
   private static final long FORWARDER_RENEW_PERIOD = 10 * 60 * (long)1000;
-  
-  
+
+
   /**
    * Stores the local port nmuber which we have to announce to the infoservice.
-   */  
+   */
   private int m_portNumber;
-  
+
   /**
    * Stores the infoservice where we have to announce the local port number.
    */
-  private InfoService m_infoService;
-  
+  private InfoServiceDBEntry m_infoService;
+
   /**
    * Stores our by the infoservice assigned id, if the announcement was successful.
    */
   private String m_forwarderId;
-  
+
   /**
    * Stores the error code of the first announcement try. If there was an error while the first
    * announcement try, this is normally because of a configuration error. With that error code it
@@ -142,19 +142,19 @@ public class ServerSocketPropagandist extends Observable implements Runnable {
    * for a description of the values.
    */
   private int m_firstErrorCode;
-  
+
   /**
    * Stores the instance of the propaganda thread.
    */
   private Thread m_propagandaThread;
-  
+
   /**
    * Stores the current connection state. See the STATE constants in this class for a description
    * of the values.
    */
   private int m_currentConnectionState;
 
-  
+
   /**
    * Creates a new ServerSocketPropagandist. The instance will register a local forwarding service
    * at the infoservice. If the registration gets lost, a re-registration is tried automatically.
@@ -166,7 +166,7 @@ public class ServerSocketPropagandist extends Observable implements Runnable {
    * @param a_infoService The infoservice (which must have a forwarder list) where we shall get
    *                      registered.
    */
-  public ServerSocketPropagandist(int a_portNumber, InfoService a_infoService) {
+  public ServerSocketPropagandist(int a_portNumber, InfoServiceDBEntry a_infoService) {
     m_portNumber = a_portNumber;
     m_infoService = a_infoService;
     m_propagandaThread = new Thread(this);
@@ -181,8 +181,8 @@ public class ServerSocketPropagandist extends Observable implements Runnable {
     /* there can be no observers yet -> no need for notification */
     m_propagandaThread.start();
   }
-  
-  
+
+
   /**
    * This will stop the propaganda thread. This method doesn't block, so we set only a flag and
    * don't wait for the end of the thread.
@@ -221,16 +221,16 @@ public class ServerSocketPropagandist extends Observable implements Runnable {
   public int getFirstErrorCode() {
     return m_firstErrorCode;
   }
-  
+
   /**
    * Returns the infoservice, where this propagandist is trying to get registrated.
    *
    * @return The infoservice, which is updated by this propagandist.
    */
-  public InfoService getInfoService() {
+  public InfoServiceDBEntry getInfoService() {
     return m_infoService;
   }
-  
+
   /**
    * This is the implementation of the propaganda thread. It will register and (if needed)
    * re-register the local forwarder at the infoservice.
@@ -280,7 +280,7 @@ public class ServerSocketPropagandist extends Observable implements Runnable {
     setChanged();
     notifyObservers(null);
   }
-  
+
 
   /**
    * This method announces the local forwarding server with the specified port to the specified
@@ -369,23 +369,23 @@ public class ServerSocketPropagandist extends Observable implements Runnable {
               returnValue = RETURN_SUCCESS;
             }
           }
-        }     
+        }
       }
       catch (Exception e) {
         /* normally this exception is thrown by the infoservice class, if we can't get a connection
          * to the infoservice or if the infoservice has no forwarder list
          */
-        returnValue = RETURN_INFOSERVICE_ERROR;      
+        returnValue = RETURN_INFOSERVICE_ERROR;
         LogHolder.log(LogLevel.ERR, LogType.NET, "ServerSocketPropagandist: announceNewForwarder: InfoService communication error: " + e.toString());
       }
     }
     catch (Exception e) {
       /* unexpected error while creating the request document */
-      returnValue = RETURN_UNKNOWN_ERROR;      
+      returnValue = RETURN_UNKNOWN_ERROR;
       LogHolder.log(LogLevel.ERR, LogType.NET, "ServerSocketPropagandist: announceNewForwarder: Unexpected error while creating the request document: " + e.toString());
-    }   
+    }
     return returnValue;
-  }  
+  }
 
   /**
    * This method renews our forwarding entry at the infoservice. The infoservice will throw away
@@ -455,16 +455,16 @@ public class ServerSocketPropagandist extends Observable implements Runnable {
         /* normally this exception is thrown by the infoservice class, if we can't get a connection
          * to the infoservice or if the infoservice has no forwarder list
          */
-        returnValue = RETURN_INFOSERVICE_ERROR;      
+        returnValue = RETURN_INFOSERVICE_ERROR;
         LogHolder.log(LogLevel.ERR, LogType.NET, "ServerSocketPropagandist: renewForwarder: InfoService communication error: " + e.toString());
       }
     }
     catch (Exception e) {
       /* unexpected error while creating the request document */
-      returnValue = RETURN_UNKNOWN_ERROR;      
+      returnValue = RETURN_UNKNOWN_ERROR;
       LogHolder.log(LogLevel.ERR, LogType.NET, "ServerSocketPropagandist: renewForwarder: Unexpected error while creating the request document: " + e.toString());
-    }       
+    }
     return returnValue;
   }
-  
+
 }
