@@ -168,7 +168,7 @@ public class PaymentMainPanel extends JPanel
 		}
 
 		// account is empty :-(
-	/*	else if (activeAccount.getCredit() == 0)
+		else if (activeAccount.getCertifiedCredit() == 0)
 		{
 			m_AccountText.setText("You should recharge your account");
 			m_AccountText.setForeground(Color.red);
@@ -178,7 +178,7 @@ public class PaymentMainPanel extends JPanel
 			m_BalanceProgressBar.setValue(0);
 			m_BalanceProgressBar.setEnabled(true);
 		}
-*/
+
 		// we got everything under control, situation normal
 		else
 		{
@@ -186,9 +186,9 @@ public class PaymentMainPanel extends JPanel
 			m_AccountText.setForeground(Color.black);
 			m_AccountIconLabel.setIcon(m_accountIcons[1]);
 			m_BalanceText.setEnabled(true);
-			//m_BalanceText.setText(activeAccount.getCredit() + " Bytes");
+			m_BalanceText.setText(activeAccount.getCertifiedCredit() + " Bytes");
 			m_BalanceProgressBar.setMaximum( (int) activeAccount.getDeposit());
-			//m_BalanceProgressBar.setValue( (int) activeAccount.getCredit());
+			m_BalanceProgressBar.setValue( (int) activeAccount.getCertifiedCredit());
 			m_BalanceProgressBar.setEnabled(true);
 		}
 	}
