@@ -343,6 +343,7 @@
   <node name="pay" type="Package"/>
   <node name="payxml" type="Package"/>
   <node name="proxy" type="Package"/>
+  <node name="test" type="Package"/>
   <node name="update" type="Package"/>
   <node name="anonlib.jar" type="Archive">
     <property category="archiving" name="buildWithProject" value="0"/>
@@ -617,7 +618,6 @@
     <property category="nodeJavadoc" name="directory" value="doc"/>
     <property category="nodeJavadoc" name="displayAllOutput" value="1"/>
   </node>
-  <file path="test/test/AllTests.java"/>
   <file path="JAP.doxy"/>
   <file path="src/JAP.java"/>
   <file path="src/JAPMacintosh.java"/>
