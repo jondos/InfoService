@@ -714,8 +714,8 @@ public final class JAPModel implements JAPAnonServiceListener{
 					feedback.stopRequests();
 					feedback=null;
 				}
-			proxyDirect=new JAPDirectProxy(model.portNumber);
-			proxyDirect.start();
+			//proxyDirect=new JAPDirectProxy(model.portNumber);
+			//proxyDirect.start();
 			notifyJAPObservers();
 		}
 	}
