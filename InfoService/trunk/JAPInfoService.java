@@ -125,7 +125,7 @@ final class JAPInfoService
 						HTTPResponse resp=conInfoService.Get("/servers");
 					// XML stuff
 						Document doc=DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(resp.getInputStream());
-						model.anonServerDatabase.removeAllElements();
+						model.anonServerDatabase.clean();
 						NodeList nodelist=doc.getElementsByTagName("MixCascade");
 						for(int i=0;i<nodelist.getLength();i++)
 							{
@@ -153,7 +153,7 @@ final class JAPInfoService
 										int mixedPackets=JAPUtil.parseElementAttrInt(elem1,"MixedPackets",-1);
 										e.setMixedPackets(mixedPackets);
 									}
-								model.anonServerDatabase.addElement(e);
+								model.anonServerDatabase.addEntry(e);
 
 							}
 					}

@@ -64,9 +64,9 @@ import anon.JAPAnonServiceListener;
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPModel implements JAPAnonServiceListener{
 
-	public static final String aktVersion = "00.01.028"; // Version of JAP
+	public static final String aktVersion = "00.01.029"; // Version of JAP
 
-	public  Vector            anonServerDatabase = null; // vector of all available mix cascades
+	public  JAPAnonServerDB        anonServerDatabase = null; // vector of all available mix cascades
 	public final static String   defaultanonHost   = "mix.inf.tu-dresden.de";
 	public final static int defaultanonPortNumber=6544;
 	private AnonServerDBEntry currentAnonService = null; // current anon service data object
@@ -268,7 +268,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 	 */
 	public synchronized void load() {
 		// Load default anon services
-		anonServerDatabase = new Vector();
+		anonServerDatabase = new JAPAnonServerDB();
 //		anonServerDatabase.addElement(new AnonServerDBEntry(anonHostName, anonPortNumber));
 //		anonServerDatabase.addElement(new AnonServerDBEntry(proxyHostName, proxyPortNumber));
 //		anonServerDatabase.addElement(new AnonServerDBEntry("anon.inf.tu-dresden.de", 6543));
@@ -1166,6 +1166,8 @@ private final class SetAnonModeAsync implements Runnable
 	public void goodBye() {
 		//stopListener();
 		// show a Reminder message that active contents should be disabled
+		view.setVisible(false);
+		iconifiedView.setVisible(false);
 		Object[] options = { model.getString("okButton") };
 		JCheckBox checkboxRemindNever=new JCheckBox(model.getString("disableGoodByMessageNeverRemind"));
 		Object[] message={model.getString("disableGoodByMessage"),checkboxRemindNever};
