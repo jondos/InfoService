@@ -51,6 +51,7 @@ import logging.LogType;
 
 import HTTPClient.Codecs;
 import anon.ErrorCodes;
+import anon.AnonServer;
 import anon.AnonChannel;
 import anon.ToManyOpenChannelsException;
 public final class MuxSocket implements Runnable
@@ -214,7 +215,7 @@ public final class MuxSocket implements Runnable
 			}
 
 		//2001-02-20(HF)
-		public int connectViaFirewall(String host, int port, String fwHost, int fwPort,String fwUserID,String fwPasswd)
+		public int connectViaFirewall(AnonServer anonservice, String fwHost, int fwPort,String fwUserID,String fwPasswd)
 			{
 				synchronized(this)
 					{
@@ -222,12 +223,45 @@ public final class MuxSocket implements Runnable
 							return ErrorCodes.E_ALREADY_CONNECTED;
             try
               {
-                //Connect directly to anon service
-  							m_Log.log(LogLevel.DEBUG,LogType.NET,"MuxSocket:Try to connect directly to mix ("+host+":"+port+")");
-                m_ioSocket=new Socket(host,port);
-                m_ioSocket.setSoTimeout(10000); //Timout 10 second
-                m_inDataStream=new DataInputStream(m_ioSocket.getInputStream());
-                m_bIsConnected=true;
+                String host=anonservice.getHost();
+                int port=anonservice.getPort();
+                if(fwPort<0||fwHost==null)
+                  {
+                    //Connect directly to anon service
+  							    m_Log.log(LogLevel.DEBUG,LogType.NET,"MuxSocket:Try to connect directly to mix ("+host+":"+port+")");
+                    m_ioSocket=new Socket(host,port);
+                    m_ioSocket.setSoTimeout(10000); //Timout 10 second
+                    m_inDataStream=new DataInputStream(m_ioSocket.getInputStream());
+                    m_bIsConnected=true;
+                  }
+                else
+                  {
+                    //Connect via Firewall to anon service
+                    port=anonservice.getSSLPort();
+  							    m_Log.log(LogLevel.DEBUG,LogType.NET,"MuxSocket:Try to connect via Firewall ("+fwHost+":"+fwPort+") to mix ("+host+":"+port+")");
+                    m_ioSocket=new Socket(fwHost,fwPort);
+                    m_ioSocket.setSoTimeout(10000); //Timout 10 second
+                    Writer writer=new OutputStreamWriter(m_ioSocket.getOutputStream());
+                    try
+                      {
+                        sendHTTPProxyCommands(FIREWALL_METHOD_HTTP_1_1,writer,host,port,fwUserID,fwPasswd);
+                      }
+                    catch(Exception e1)
+                      {
+                        sendHTTPProxyCommands(FIREWALL_METHOD_HTTP_1_0,writer,host,port,fwUserID,fwPasswd);
+                      }
+                    m_inDataStream=new DataInputStream(m_ioSocket.getInputStream());
+                    String tmp=readLine(m_inDataStream);
+                    m_Log.log(LogLevel.DEBUG,LogType.NET,"MuxSocket:Firewall response is: "+tmp);
+                    if(tmp.indexOf("200")!=-1)
+                      {
+                        while(!(tmp=readLine(m_inDataStream)).equals(""))
+ 							            m_Log.log(LogLevel.DEBUG,LogType.NET,"MuxSocket:Firewall response is: "+tmp);
+                        m_bIsConnected=true;
+                      }
+                    else
+                      m_bIsConnected=false;
+                  }
               }
             catch(Exception e)
               {
