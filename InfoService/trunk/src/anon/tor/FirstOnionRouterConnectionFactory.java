@@ -32,10 +32,10 @@ package anon.tor;
 
 import java.util.Vector;
 
+import anon.tor.ordescription.ORDescription;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import anon.tor.ordescription.ORDescription;
 
 /**
  *
@@ -47,7 +47,8 @@ public class FirstOnionRouterConnectionFactory
 	private Tor m_Tor;
 	/**
 	 * constructor
-	 *
+	 * @param a_Tor
+	 * a tor instance
 	 */
 	public FirstOnionRouterConnectionFactory(Tor a_Tor)
 	{

@@ -193,8 +193,6 @@ public final class JAPConstants
 	public final static int TOR_MAX_CONNECTIONS_PER_ROUTE = Circuit.MAX_STREAMS_OVER_CIRCUIT;
 	public final static int TOR_MAX_ROUTE_LEN = Tor.MAX_ROUTE_LEN;
 	public final static int TOR_MIN_ROUTE_LEN = Tor.MIN_ROUTE_LEN;
-	public final static boolean WITH_BLOCKINGRESISTANCE = true; //Enables or diables Suuport of
-	//blocking reistance functionality
 	/**
 	 * The minimum bandwidth per user needed for forwarding. This affects the maximum number
 	 * of users, which can be forwarded with a specified bandwidth. The default is 2 KByte/sec

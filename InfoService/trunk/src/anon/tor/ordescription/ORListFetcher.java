@@ -29,5 +29,10 @@ package anon.tor.ordescription;
 
 public interface ORListFetcher
 {
+	/**
+	 * gets the ORList
+	 * @return
+	 * the router informations from the directory
+	 */
 	public String getORList();
 }

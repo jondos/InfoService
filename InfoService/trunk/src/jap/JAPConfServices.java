@@ -95,9 +95,11 @@ public class JAPConfServices extends AbstractJAPConfModule
 
 			m_tabsAnon = new JTabbedPane();
 			m_tabsAnon.addTab(anonModule.getTabTitle(), anonModule.getRootPanel());
-			m_tabsAnon.addTab(torModule.getTabTitle(), torModule.getRootPanel());
-			m_tabsAnon.addTab(anonGeneralModule.getTabTitle(), anonGeneralModule.getRootPanel());
-
+			if (JAPModel.getDefaultView() != JAPConstants.VIEW_SIMPLIFIED)
+			{
+				m_tabsAnon.addTab(torModule.getTabTitle(), torModule.getRootPanel());
+				m_tabsAnon.addTab(anonGeneralModule.getTabTitle(), anonGeneralModule.getRootPanel());
+			}
 			GridBagLayout rootPanelLayout = new GridBagLayout();
 			rootPanel.setLayout(rootPanelLayout);
 

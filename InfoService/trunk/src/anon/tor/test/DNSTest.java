@@ -1,9 +1,11 @@
 package anon.tor.test;
 
+import java.util.Vector;
+
 import anon.tor.Tor;
 import anon.tor.TorAnonServerDescription;
-import logging.*;
-import java.util.Vector;
+import logging.LogHolder;
+import logging.SystemErrLog;
 
 /**
  * @author stefan
@@ -11,13 +13,11 @@ import java.util.Vector;
 public class DNSTest
 {
 
- public static void main(String[] args) throws Exception
+	public static void main(String[] args) throws Exception
 	{
 		LogHolder.setLogInstance(new SystemErrLog());
 		Tor tor = Tor.getInstance();
 		Vector v = new Vector();
-		v.addElement("peacetime");
-		tor.setExitNodes(v);
 		tor.initialize(new TorAnonServerDescription());
 		tor.testDNS();
 		tor.shutdown();

@@ -37,9 +37,6 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Vector;
 
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
 import anon.crypto.MyRandom;
 import anon.tor.cells.Cell;
 import anon.tor.cells.CreatedCell;
@@ -48,6 +45,9 @@ import anon.tor.cells.PaddingCell;
 import anon.tor.cells.RelayCell;
 import anon.tor.ordescription.ORDescription;
 import anon.tor.util.helper;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 
 /**
  * @author stefan
@@ -116,7 +116,7 @@ public class Circuit
 		this.m_circID = circID;
 		this.m_streams = new Hashtable();
 		m_streamCounter = 0;
-		m_MaxStreamsPerCircuit=MAX_STREAMS_OVER_CIRCUIT;
+		m_MaxStreamsPerCircuit = MAX_STREAMS_OVER_CIRCUIT;
 		m_onionRouters = (Vector) orList.clone();
 		m_circuitLength = orList.size();
 		m_lastORDescription = (ORDescription) m_onionRouters.elementAt(m_circuitLength - 1);
@@ -162,7 +162,7 @@ public class Circuit
 					m_bReceivedCreatedOrExtendedCell = false;
 					RelayCell cell = m_FirstOR.extendConnection(nextOR);
 					m_FirstORConnection.send(cell);
-					m_oNotifySync.wait(30000);
+					m_oNotifySync.wait(40000);
 				}
 				if (m_State != STATE_CREATING || !m_bReceivedCreatedOrExtendedCell)
 				{
@@ -504,7 +504,7 @@ public class Circuit
 				m_streams.put(resolveStreamID, resolveStreamID);
 			}
 			RelayCell cell = new RelayCell(getCircID(), RelayCell.RELAY_RESOLVE, resolveStreamID.intValue(),
-										  name.getBytes());
+										   name.getBytes());
 			synchronized (m_oNotifySync)
 			{
 				try
@@ -604,7 +604,6 @@ public class Circuit
 	 */
 	protected synchronized void connectChannel(TorChannel channel, String addr, int port) throws IOException
 	{
-		///todo ACL ueberpruefen
 		if (isShutdown())
 		{
 			throw new ConnectException("Circuit Closed - cannot connect");
@@ -629,26 +628,42 @@ public class Circuit
 			if (!channel.connect(addr, port))
 			{
 				m_streams.remove(streamID);
-				m_streamCounter--;
+				//m_streamCounter--;
 				throw new ConnectException("Channel could not be created");
 			}
 
-			if (m_streamCounter >= MAX_STREAMS_OVER_CIRCUIT)
+			if (m_streamCounter >= m_MaxStreamsPerCircuit)
 			{
 				shutdown();
 			}
 		}
 	}
 
+	/**
+	 * Checks if it is possible to connect to given host on a given port via this circuit
+	 * @param adr
+	 * address
+	 * @param port
+	 * port
+	 * @return
+	 * true if a connection is possible, else if it is not
+	 */
 	public boolean isAllowed(String adr, int port)
 	{
 		return m_lastORDescription.getAcl().isAllowed(adr, port);
 	}
 
+	/**
+	 * Sets the maximum number of possible streams over this circuit
+	 * @param i
+	 * number of streams
+	 */
 	public void setMaxNrOfStreams(int i)
 	{
-		if(i>0&&i<=MAX_STREAMS_OVER_CIRCUIT)
-			m_MaxStreamsPerCircuit=i;
+		if (i > 0 && i <= MAX_STREAMS_OVER_CIRCUIT)
+		{
+			m_MaxStreamsPerCircuit = i;
+		}
 		if (m_streamCounter >= MAX_STREAMS_OVER_CIRCUIT)
 		{
 			shutdown();

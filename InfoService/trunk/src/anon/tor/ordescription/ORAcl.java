@@ -30,7 +30,9 @@ package anon.tor.ordescription;
 import java.net.InetAddress;
 import java.util.StringTokenizer;
 import java.util.Vector;
+
 import anon.tor.util.helper;
+
 public class ORAcl
 {
 	private Vector m_Constraints;
@@ -41,6 +43,7 @@ public class ORAcl
 		int portLow;
 		int portHigh;
 		boolean bIsAccept;
+
 		public AclElement(boolean baccept, String a, String m, int l, int h) throws Exception
 		{
 			InetAddress ia = InetAddress.getByName(a);
@@ -84,11 +87,21 @@ public class ORAcl
 
 	}
 
+	/**
+	 * Constructor
+	 *
+	 */
 	public ORAcl()
 	{
 		m_Constraints = new Vector();
 	}
 
+	/**
+	 * add a acl condition
+	 * @param acl
+	 * acl
+	 * @throws Exception
+	 */
 	public void add(String acl) throws Exception
 	{
 		StringTokenizer st = new StringTokenizer(acl);
@@ -145,11 +158,18 @@ public class ORAcl
 		m_Constraints.addElement(new AclElement(bAccept, adr, mask, l, h));
 	}
 
-	/** Checks if a nummeric ip and port is allowed*/
+	/** Checks if a nummeric ip and port is allowed
+	 * @param adr
+	 * address
+	 * @param port
+	 * port
+	 */
 	public boolean isAllowed(String adr, int port)
 	{
-		if(!helper.isIPAddress(adr))
-		   return false;
+		if (!helper.isIPAddress(adr))
+		{
+			return false;
+		}
 		try
 		{
 			for (int i = 0; i < m_Constraints.size(); i++)
@@ -167,7 +187,10 @@ public class ORAcl
 		return false;
 	}
 
-	/** Checks if a port is allowed ignoring the ip*/
+	/** Checks if a port is allowed ignoring the ip
+	 * @param port
+	 * port
+	 */
 	public boolean isAllowed(int port)
 	{
 		try

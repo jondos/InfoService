@@ -47,10 +47,6 @@ import java.security.InvalidKeyException;
 import java.util.Random;
 import java.util.Vector;
 
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
-
 import org.bouncycastle.crypto.AsymmetricBlockCipher;
 import org.bouncycastle.crypto.InvalidCipherTextException;
 import org.bouncycastle.crypto.encodings.PKCS1Encoding;
@@ -58,7 +54,6 @@ import org.bouncycastle.crypto.engines.RSAEngine;
 import org.bouncycastle.crypto.params.DHParameters;
 import org.bouncycastle.crypto.params.DHPublicKeyParameters;
 import org.bouncycastle.crypto.params.RSAKeyParameters;
-
 import anon.crypto.IMyPrivateKey;
 import anon.crypto.IMyPublicKey;
 import anon.crypto.JAPCertificate;
@@ -70,8 +65,19 @@ import anon.infoservice.HTTPConnectionFactory;
 import anon.infoservice.ImmutableProxyInterface;
 import anon.infoservice.ListenerInterface;
 import anon.server.impl.ProxyConnection;
+import anon.tor.tinytls.ciphersuites.CipherSuite;
+import anon.tor.tinytls.ciphersuites.DHE_DSS_WITH_3DES_CBC_SHA;
+import anon.tor.tinytls.ciphersuites.DHE_DSS_WITH_AES_128_CBC_SHA;
+import anon.tor.tinytls.ciphersuites.DHE_DSS_WITH_DES_CBC_SHA;
+import anon.tor.tinytls.ciphersuites.DHE_RSA_WITH_3DES_CBC_SHA;
+import anon.tor.tinytls.ciphersuites.DHE_RSA_WITH_AES_128_CBC_SHA;
+import anon.tor.tinytls.ciphersuites.DHE_RSA_WITH_DES_CBC_SHA;
 import anon.tor.tinytls.util.hash;
 import anon.tor.util.helper;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
+
 /**
  * @author stefan
  *
@@ -358,7 +364,7 @@ public class TinyTLS extends Socket
 			Vector certificates = new Vector();
 			byte[] b = helper.copybytes(bytes, offset, 3);
 			int certificateslength = ( (b[0] & 0xFF) << 16) | ( (b[1] & 0xFF) << 8) | (b[2] & 0xFF);
-			int pos = offset+3;
+			int pos = offset + 3;
 			b = helper.copybytes(bytes, pos, 3);
 			pos += 3;
 			int certificatelength = ( (b[0] & 0xFF) << 16) | ( (b[1] & 0xFF) << 8) | (b[2] & 0xFF);
@@ -372,7 +378,7 @@ public class TinyTLS extends Socket
 			m_servercertificate = japcert;
 			m_selectedciphersuite.setServerCertificate(japcert);
 			//certificates.addElement(japcert);
-			while(pos-offset<certificateslength)
+			while (pos - offset < certificateslength)
 			{
 				b = helper.copybytes(bytes, pos, 3);
 				pos += 3;
@@ -387,19 +393,23 @@ public class TinyTLS extends Socket
 				certificates.addElement(japcert);
 			}
 			//check certificates chain...
-			JAPCertificate prevCert=m_servercertificate;
-			for(int i=0;i<certificates.size();i++)
+			JAPCertificate prevCert = m_servercertificate;
+			for (int i = 0; i < certificates.size(); i++)
 			{
-				JAPCertificate cert=(JAPCertificate)certificates.elementAt(i);
-				if(!prevCert.verify(cert.getPublicKey()))
+				JAPCertificate cert = (JAPCertificate) certificates.elementAt(i);
+				if (!prevCert.verify(cert.getPublicKey()))
+				{
 					throw new IOException("TLS Server Certs could not be verified!");
-				prevCert=cert;
+				}
+				prevCert = cert;
 			}
 			//last certificat is checked, if a certificatestore is set
-			if(m_checkTrustedRoot)
+			if (m_checkTrustedRoot)
 			{
-				if(!prevCert.verify(m_trustedRoot))
+				if (!prevCert.verify(m_trustedRoot))
+				{
 					throw new IOException("TLS Server Cert could not be verified to be trusted!");
+				}
 			}
 		}
 
@@ -411,7 +421,8 @@ public class TinyTLS extends Socket
 		 */
 		private void gotServerKeyExchange(byte[] bytes, int offset, int len) throws IOException
 		{
-			m_selectedciphersuite.getKeyExchangeAlgorithm().processServerKeyExchange(bytes, offset, len, m_clientrandom, m_serverrandom,m_servercertificate);
+			m_selectedciphersuite.getKeyExchangeAlgorithm().processServerKeyExchange(bytes, offset, len,
+				m_clientrandom, m_serverrandom, m_servercertificate);
 		}
 
 		/**
@@ -423,9 +434,9 @@ public class TinyTLS extends Socket
 			m_certificaterequested = true;
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[SERVER_CERTIFICATE_REQUEST]");
 			int length = bytes[offset];
-			if(length>0)//at least one client certificate type
+			if (length > 0) //at least one client certificate type
 			{
-				m_clientcertificatetypes = helper.copybytes(bytes,offset+1,length);
+				m_clientcertificatetypes = helper.copybytes(bytes, offset + 1, length);
 				//the rest of this message contains distinguishedNames of certificate authorities
 				//see RFC2246 - 7.4.4 Certificate Request
 			}
@@ -462,7 +473,8 @@ public class TinyTLS extends Socket
 					{
 						case 0:
 						{
-							LogHolder.log(LogLevel.DEBUG, LogType.MISC,"[RECIEVED-ALERT] TYPE=WARNING ; MESSAGE=CLOSE NOTIFY");
+							LogHolder.log(LogLevel.DEBUG, LogType.MISC,
+										  "[RECIEVED-ALERT] TYPE=WARNING ; MESSAGE=CLOSE NOTIFY");
 							//LogHolder.log(LogLevel.DEBUG, LogType.MISC,"[RECIEVED-ALERT] TYPE=WARNING ; MESSAGE=CLOSE NOTIFY");
 							//m_closed = true;
 							break;
@@ -517,9 +529,9 @@ public class TinyTLS extends Socket
 				int type = m_aktTLSRecord.m_Data[0];
 				int length = ( (m_aktTLSRecord.m_Data[1] & 0xFF) << 16) |
 					( (m_aktTLSRecord.m_Data[2] & 0xFF) << 8) | (m_aktTLSRecord.m_Data[3] & 0xFF);
-				if(length!=m_aktTLSRecord.m_dataLen-4&&type!=13)
+				if (length != m_aktTLSRecord.m_dataLen - 4 && type != 13)
 				{
-					int h=3;
+					int h = 3;
 				}
 				m_handshakemessages = helper.conc(m_handshakemessages, m_aktTLSRecord.m_Data,
 												  m_aktTLSRecord.m_dataLen);
@@ -614,7 +626,7 @@ public class TinyTLS extends Socket
 				case 22:
 				{
 					LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[SERVER_FINISHED]");
-					m_selectedciphersuite.processServerFinished(m_aktTLSRecord,m_handshakemessages);
+					m_selectedciphersuite.processServerFinished(m_aktTLSRecord, m_handshakemessages);
 					break;
 				}
 				case 21:
@@ -753,7 +765,8 @@ public class TinyTLS extends Socket
 			Random rand = new Random(System.currentTimeMillis());
 			rand.nextBytes(random);
 
-			byte[] message = helper.conc(PROTOCOLVERSION, gmt_unix_time, random, sessionid, ciphersuites, compression);
+			byte[] message = helper.conc(PROTOCOLVERSION, gmt_unix_time, random, sessionid, ciphersuites,
+										 compression);
 
 			sendHandshake(1, message);
 			m_clientrandom = helper.conc(gmt_unix_time, random);
@@ -767,45 +780,45 @@ public class TinyTLS extends Socket
 		public void sendClientCertificate() throws IOException
 		{
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[CLIENT_CERTIFICATE]");
-			if (m_certificaterequested&&m_clientcertificates!=null)
+			if (m_certificaterequested && m_clientcertificates != null)
 			{
-				if(m_clientcertificatetypes!=null)
+				if (m_clientcertificatetypes != null)
 				{
-					for(int i = 0;i<m_clientcertificatetypes.length;i++)
+					for (int i = 0; i < m_clientcertificatetypes.length; i++)
 					{
-						switch(m_clientcertificatetypes[i])
+						switch (m_clientcertificatetypes[i])
 						{
-							case 1 ://rsa_sign
+							case 1: //rsa_sign
 							{
 								byte[] b = new byte[0];
-								for(int i2=0;i2<m_clientcertificates.length;i2++)
+								for (int i2 = 0; i2 < m_clientcertificates.length; i2++)
 								{
 									byte[] cert = m_clientcertificates[i2].toByteArray();
-									b = helper.conc(b,helper.inttobyte(cert.length,3),cert);
+									b = helper.conc(b, helper.inttobyte(cert.length, 3), cert);
 								}
-								b = helper.conc(helper.inttobyte(b.length,3),b);
+								b = helper.conc(helper.inttobyte(b.length, 3), b);
 								this.sendHandshake(11, b);
 								m_certificateverify = true;
 								return;
 							}
-							case 2 ://dss_sign
+							case 2: //dss_sign
 							{
 								byte[] b = new byte[0];
-								for(int i2=0;i2<m_clientcertificates.length;i2++)
+								for (int i2 = 0; i2 < m_clientcertificates.length; i2++)
 								{
 									byte[] cert = m_clientcertificates[i2].toByteArray();
-									b = helper.conc(b,helper.inttobyte(cert.length,3),cert);
+									b = helper.conc(b, helper.inttobyte(cert.length, 3), cert);
 								}
-								b = helper.conc(helper.inttobyte(b.length,3),b);
+								b = helper.conc(helper.inttobyte(b.length, 3), b);
 								this.sendHandshake(11, b);
 								m_certificateverify = true;
 								return;
 							}
-							case 3 ://rsa_fixed_dh
+							case 3: //rsa_fixed_dh
 							{
 								break;
 							}
-							case 4 ://dss_fixed_dh
+							case 4: //dss_fixed_dh
 							{
 								break;
 							}
@@ -814,7 +827,8 @@ public class TinyTLS extends Socket
 				}
 			}
 			//no certificate available
-			this.sendHandshake(11, new byte[]{0, 0, 0});
+			this.sendHandshake(11, new byte[]
+							   {0, 0, 0});
 		}
 
 		/**
@@ -827,16 +841,16 @@ public class TinyTLS extends Socket
 			sendHandshake(16, helper.conc(helper.inttobyte(message.length, 2), message));
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[CLIENT_KEY_EXCHANGE]");
 		}
-		
+
 		/**
-		 * send a certificate verify message if a certificate is used 
+		 * send a certificate verify message if a certificate is used
 		 * @throws IOException
 		 */
 		public void sendCertificateVerify() throws IOException
 		{
-			if(m_certificateverify)
+			if (m_certificateverify)
 			{
-				if(m_clientprivatekey instanceof MyRSAPrivateKey)
+				if (m_clientprivatekey instanceof MyRSAPrivateKey)
 				{
 					byte[] signature = helper.conc(
 						hash.md5(m_handshakemessages),
@@ -845,41 +859,44 @@ public class TinyTLS extends Socket
 					try
 					{
 						sig.initSign(m_clientprivatekey);
-					} catch (InvalidKeyException ex)
+					}
+					catch (InvalidKeyException ex)
 					{
 					}
 					byte[] signature2 = sig.sign(signature);
-					
-					MyRSAPrivateKey rsakey = (MyRSAPrivateKey)m_clientprivatekey;
+
+					MyRSAPrivateKey rsakey = (MyRSAPrivateKey) m_clientprivatekey;
 					BigInteger modulus = rsakey.getModulus();
 					BigInteger exponent = rsakey.getPrivateExponent();
 					AsymmetricBlockCipher rsa = new PKCS1Encoding(new RSAEngine());
-					rsa.init(true, new RSAKeyParameters(true,modulus,exponent));
+					rsa.init(true, new RSAKeyParameters(true, modulus, exponent));
 					try
 					{
-						signature2 = rsa.processBlock(signature,0,signature.length);
-					} catch(InvalidCipherTextException ex)
+						signature2 = rsa.processBlock(signature, 0, signature.length);
+					}
+					catch (InvalidCipherTextException ex)
 					{
-						throw new TLSException("cannot encrypt signature",2,80);
+						throw new TLSException("cannot encrypt signature", 2, 80);
 					}
 
-
-					signature2 = helper.conc(helper.inttobyte(signature2.length,2),signature2);
-					sendHandshake(15,signature2 );
+					signature2 = helper.conc(helper.inttobyte(signature2.length, 2), signature2);
+					sendHandshake(15, signature2);
 					LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[CLIENT_CERTIFICATE_VERIFY_RSA]");
-				}	else if(m_clientprivatekey instanceof MyDSAPrivateKey)
+				}
+				else if (m_clientprivatekey instanceof MyDSAPrivateKey)
 				{
 					MyDSASignature sig = new MyDSASignature();
 					try
 					{
 						sig.initSign(m_clientprivatekey);
-					} catch (InvalidKeyException ex)
+					}
+					catch (InvalidKeyException ex)
 					{
 					}
 					byte[] signature2 = sig.sign(m_handshakemessages);
-					
-					signature2 = helper.conc(helper.inttobyte(signature2.length,2),signature2);
-					sendHandshake(15,signature2 );
+
+					signature2 = helper.conc(helper.inttobyte(signature2.length, 2), signature2);
+					sendHandshake(15, signature2);
 					LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[CLIENT_CERTIFICATE_VERIFY_DSA]");
 				}
 
@@ -906,7 +923,8 @@ public class TinyTLS extends Socket
 		 */
 		public void sendClientFinished() throws IOException
 		{
-			sendHandshake(20, m_selectedciphersuite.getKeyExchangeAlgorithm().calculateClientFinished(m_handshakemessages));
+			sendHandshake(20,
+						  m_selectedciphersuite.getKeyExchangeAlgorithm().calculateClientFinished(m_handshakemessages));
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[CLIENT_FINISHED]");
 		}
 	}
@@ -920,25 +938,25 @@ public class TinyTLS extends Socket
 	 * @param port
 	 * Server's TLS Port
 	 */
-	public TinyTLS(String addr, int port) throws UnknownHostException, IOException,Exception
-	{
-		this(addr,port,null);
+	public TinyTLS(String addr, int port) throws UnknownHostException, IOException, Exception
+		{
+		this(addr, port, null);
 	}
-
-	/**
-	 *
-	 * TinyTLS creates a TLS Connection to a server which may use a proxy
-	 *
-	 * @param addr
-	 * Server Address
-	 * @param port
-	 * Server's TLS Port
-	 * @param a_proxyInterface Proxy Settings
-	 */
-	public TinyTLS(String addr, int port,ImmutableProxyInterface a_proxyInterface)
-		throws UnknownHostException, IOException,Exception
-	{
-		m_ProxyConnection=new ProxyConnection(HTTPConnectionFactory.getInstance().createHTTPConnection(new ListenerInterface(addr, port), a_proxyInterface).Connect());
+		/**
+		 *
+		 * TinyTLS creates a TLS Connection to a server which may use a proxy
+		 *
+		 * @param addr
+		 * Server Address
+		 * @param port
+		 * Server's TLS Port
+		 * @param a_proxyInterface Proxy Settings
+		 */
+		public TinyTLS(String addr, int port, ImmutableProxyInterface a_proxyInterface) throws
+		UnknownHostException, IOException, Exception
+		{
+		m_ProxyConnection = new ProxyConnection(HTTPConnectionFactory.getInstance().createHTTPConnection(new
+		ListenerInterface(addr, port), a_proxyInterface).Connect());
 		//super(addr, port);
 		m_handshakecompleted = false;
 		m_serverhellodone = false;
@@ -954,17 +972,16 @@ public class TinyTLS extends Socket
 		m_clientcertificates = null;
 		m_clientprivatekey = null;
 	}
-
-	/**
-	 * add a ciphersuites to TinyTLS
-	 * @param cs ciphersuite you want to add
-	 */
-	public void addCipherSuite(CipherSuite cs)
+		/**
+		 * add a ciphersuites to TinyTLS
+		 * @param cs ciphersuite you want to add
+		 */
+		public void addCipherSuite(CipherSuite cs)
 	{
 		if (!this.m_supportedciphersuites.contains(cs))
 		{
 			this.m_supportedciphersuites.addElement(cs);
-			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[CIPHERSUITE_ADDED] : "+cs.toString());
+			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[CIPHERSUITE_ADDED] : " + cs.toString());
 		}
 	}
 
@@ -976,7 +993,7 @@ public class TinyTLS extends Socket
 	 */
 	public void startHandshake() throws IOException
 	{
-		if(m_supportedciphersuites.isEmpty())
+		if (m_supportedciphersuites.isEmpty())
 		{
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[NO_CIPHERSUITE_DEFINED] : using predefined");
 			this.addCipherSuite(new DHE_RSA_WITH_AES_128_CBC_SHA());
@@ -986,12 +1003,15 @@ public class TinyTLS extends Socket
 			this.addCipherSuite(new DHE_RSA_WITH_DES_CBC_SHA());
 			this.addCipherSuite(new DHE_DSS_WITH_DES_CBC_SHA());
 		}
-		if(!m_checkTrustedRoot)
+		if (!m_checkTrustedRoot)
 		{
-			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[CHECK_TRUSTED_ROOT_DEACTIVATED] : all certificates are accepted");
-		} else if(m_trustedRoot == null)
+			LogHolder.log(LogLevel.DEBUG, LogType.MISC,
+						  "[CHECK_TRUSTED_ROOT_DEACTIVATED] : all certificates are accepted");
+		}
+		else if (m_trustedRoot == null)
 		{
-			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[TRUSTED_CERTIFICATES_NOT_SET] : cannot verify Certificates");
+			LogHolder.log(LogLevel.DEBUG, LogType.MISC,
+						  "[TRUSTED_CERTIFICATES_NOT_SET] : cannot verify Certificates");
 			throw new TLSException("Please set Trusted Root");
 		}
 		this.m_handshakemessages = new byte[]
@@ -1007,11 +1027,21 @@ public class TinyTLS extends Socket
 		this.m_handshakecompleted = true;
 	}
 
+	/**
+	 * sets the root key that is accepted
+	 * @param rootKey
+	 * rootkey
+	 */
 	public void setRootKey(IMyPublicKey rootKey)
 	{
 		m_trustedRoot = rootKey;
 	}
-	
+
+	/**
+	 * check or check not the root certificate
+	 * @param check
+	 *
+	 */
 	public void checkRootCertificate(boolean check)
 	{
 		m_checkTrustedRoot = check;
@@ -1031,33 +1061,50 @@ public class TinyTLS extends Socket
 	{
 		m_ProxyConnection.setSoTimeout(i);
 	}
-	
-	public void setClientCertificate(JAPCertificate cert,IMyPrivateKey key) throws IOException
+
+	/**
+	 * sets the client certificate
+	 * @param cert
+	 * certificate
+	 * @param key
+	 * private key
+	 * @throws IOException
+	 */
+	public void setClientCertificate(JAPCertificate cert, IMyPrivateKey key) throws IOException
 	{
-		setClientCertificate(new JAPCertificate[]{cert},key);
+		setClientCertificate(new JAPCertificate[]
+							 {cert}, key);
 	}
-	
-	public void setClientCertificate(JAPCertificate[] certificates,IMyPrivateKey key) throws IOException
+
+	/**
+	 * sets a client certificate chain
+	 * @param certificates
+	 * certificate chain, where the previous certificate is signed with the following
+	 * @param key
+	 * private key
+	 * @throws IOException
+	 */
+	public void setClientCertificate(JAPCertificate[] certificates, IMyPrivateKey key) throws IOException
 	{
 		JAPCertificate prevCert = certificates[0];
 		LogHolder.log(LogLevel.DEBUG, LogType.MISC,
-					  "[SERVER_CERTIFICATE] " + prevCert.getIssuer().toString());
+					  "[CLIENT_CERTIFICATE] " + prevCert.getIssuer().toString());
 		LogHolder.log(LogLevel.DEBUG, LogType.MISC,
-					  "[SERVER_CERTIFICATE] " + prevCert.getSubject().toString());
+					  "[CLIENT_CERTIFICATE] " + prevCert.getSubject().toString());
 		JAPCertificate cert;
-		for(int i=1;i<certificates.length;i++)
+		for (int i = 1; i < certificates.length; i++)
 		{
 			cert = certificates[i];
-			if(!prevCert.verify(cert.getPublicKey()))
+			if (!prevCert.verify(cert.getPublicKey()))
 			{
 				System.out.println("error");
 				throw new IOException("TLS Server Certs could not be verified!");
 			}
 			prevCert = cert;
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC,
-						  "[SERVER_CERTIFICATE] " + prevCert.getIssuer().toString());
+						  "[CLIENT_CERTIFICATE] " + prevCert.getIssuer().toString());
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC,
-						  "[SERVER_CERTIFICATE] " + prevCert.getSubject().toString());
+						  "[CLIENT_CERTIFICATE] " + prevCert.getSubject().toString());
 		}
 		m_clientcertificates = certificates;
 		m_clientprivatekey = key;
@@ -1071,4 +1118,5 @@ public class TinyTLS extends Socket
 	public Socket getSocket()
 	{
 		return m_ProxyConnection.getSocket();
-	}}
+	}
+}

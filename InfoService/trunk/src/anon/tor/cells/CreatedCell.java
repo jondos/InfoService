@@ -66,6 +66,15 @@ public class CreatedCell extends Cell
 		super(2, circID, payload);
 	}
 
+	/**
+	 * Constructor
+	 * @param circID
+	 * circID
+	 * @param payload
+	 * payload
+	 * @param offset
+	 * offset
+	 */
 	public CreatedCell(int circID, byte[] payload, int offset)
 	{
 		super(2, circID, payload, offset);

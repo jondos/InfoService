@@ -28,7 +28,6 @@
 package anon.tor.cells;
 
 import org.bouncycastle.crypto.digests.SHA1Digest;
-
 import anon.tor.crypto.CTRBlockCipher;
 import anon.tor.util.helper;
 
@@ -83,6 +82,8 @@ public class RelayCell extends Cell
 	 * circID
 	 * @param payload
 	 * payload
+	 * @param offset
+	 * offset
 	 */
 	public RelayCell(int circID, byte[] payload, int offset)
 	{
@@ -92,6 +93,17 @@ public class RelayCell extends Cell
 		m_digestGenerated = false;
 	}
 
+	/**
+	 * Constructor
+	 * @param circID
+	 * circID
+	 * @param relaycommand
+	 * relaycommand
+	 * @param streamid
+	 * streamID
+	 * @param data
+	 * data
+	 */
 	public RelayCell(int circID, byte relaycommand, int streamid, byte[] data)
 	{
 		super(3, circID, createPayload(relaycommand, streamid, data));
@@ -100,16 +112,31 @@ public class RelayCell extends Cell
 		this.m_digestGenerated = false;
 	}
 
+	/**
+	 * gets the command of the relay cell
+	 * @return
+	 * command
+	 */
 	public byte getRelayCommand()
 	{
 		return this.m_relayCommand;
 	}
 
+	/**
+	 * gets the streamID of the relay cell
+	 * @return
+	 * streamID
+	 */
 	public int getStreamID()
 	{
 		return this.m_streamID;
 	}
 
+	/**
+	 * generates the digest for the relay cell
+	 * @param digest
+	 * digest
+	 */
 	public void generateDigest(SHA1Digest digest)
 	{
 		if (!this.m_digestGenerated)
@@ -126,6 +153,13 @@ public class RelayCell extends Cell
 		}
 	}
 
+	/**
+	 * checks if the digest of the relay cell is correct
+	 * @param digest
+	 * digest
+	 * @throws Exception
+	 * if an error occurs
+	 */
 	public void checkDigest(SHA1Digest digest) throws Exception
 	{
 		digest.update(this.m_payload, 0, 5);
@@ -144,6 +178,11 @@ public class RelayCell extends Cell
 		this.m_digestGenerated = true;
 	}
 
+	/**
+	 * encode the cell
+	 * @param engine
+	 * a cipher
+	 */
 	public void doCryptography(CTRBlockCipher engine)
 	{
 		byte[] data = new byte[this.m_payload.length];
@@ -158,14 +197,14 @@ public class RelayCell extends Cell
 		byte[] b = new byte[]
 			{
 			relaycommand, 0x00, 0x00, }; //relaycommand + 2bytes Recognized
-		b = helper.conc(b, helper.inttobyte(streamid, 2),new byte[4]); //streamid + 4bytes digest
+		b = helper.conc(b, helper.inttobyte(streamid, 2), new byte[4]); //streamid + 4bytes digest
 		if (data == null)
 		{
 			data = new byte[498];
 		}
 		if (data.length < 499)
 		{
-			b = helper.conc(b, helper.inttobyte(data.length, 2),data); //length + data
+			b = helper.conc(b, helper.inttobyte(data.length, 2), data); //length + data
 		}
 		else //copy only the first 498 bytes into the payload and forget the rest
 		{
@@ -186,9 +225,14 @@ public class RelayCell extends Cell
 		}
 	}
 
+	/**
+	 * gets the payload of the relay cell
+	 * @return
+	 * payload
+	 */
 	public byte[] getRelayPayload()
 	{
-		int len =(m_payload[9] & 0x00FF);
+		int len = (m_payload[9] & 0x00FF);
 		len <<= 8;
 		len |= (m_payload[10] & 0x00FF);
 		return helper.copybytes(m_payload, 11, len);

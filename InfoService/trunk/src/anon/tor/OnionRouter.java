@@ -33,10 +33,6 @@ import java.math.BigInteger;
 import java.net.InetAddress;
 import java.security.SecureRandom;
 
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
-
 import org.bouncycastle.asn1.DEROutputStream;
 import org.bouncycastle.crypto.AsymmetricBlockCipher;
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
@@ -53,7 +49,6 @@ import org.bouncycastle.crypto.params.DHPrivateKeyParameters;
 import org.bouncycastle.crypto.params.DHPublicKeyParameters;
 import org.bouncycastle.crypto.params.KeyParameter;
 import org.bouncycastle.crypto.params.ParametersWithIV;
-
 import anon.crypto.MyRSAPublicKey;
 import anon.tor.cells.Cell;
 import anon.tor.cells.CreateCell;
@@ -62,6 +57,9 @@ import anon.tor.crypto.CTRBlockCipher;
 import anon.tor.ordescription.ORDescription;
 import anon.tor.tinytls.util.hash;
 import anon.tor.util.helper;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 
 /**
  * @author stefan
@@ -70,11 +68,12 @@ import anon.tor.util.helper;
 public class OnionRouter
 {
 
-	private final static BigInteger SAFEPRIME = new BigInteger("00FFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD129024E08" +
-												"8A67CC74020BBEA63B139B22514A08798E3404DDEF9519B3CD3A431B" +
-												"302B0A6DF25F14374FE1356D6D51C245E485B576625E7EC6F44C42E9" +
-												"A637ED6B0BFF5CB6F406B7EDEE386BFB5A899FA5AE9F24117C4B1FE6" +
-												"49286651ECE65381FFFFFFFFFFFFFFFF",16);
+	private final static BigInteger SAFEPRIME = new BigInteger(
+		"00FFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD129024E08" +
+		"8A67CC74020BBEA63B139B22514A08798E3404DDEF9519B3CD3A431B" +
+		"302B0A6DF25F14374FE1356D6D51C245E485B576625E7EC6F44C42E9" +
+		"A637ED6B0BFF5CB6F406B7EDEE386BFB5A899FA5AE9F24117C4B1FE6" +
+		"49286651ECE65381FFFFFFFFFFFFFFFF", 16);
 	private final static DHParameters DH_PARAMS = new DHParameters(SAFEPRIME, new BigInteger("2"));
 
 	private ORDescription m_description;
@@ -183,7 +182,7 @@ public class OnionRouter
 	{
 		try
 		{
-			checkExtendParameters(cell.getPayload(),0,148);
+			checkExtendParameters(cell.getPayload(), 0, 148);
 			return true;
 		}
 		catch (Throwable t)
@@ -204,12 +203,12 @@ public class OnionRouter
 	 * @throws InvalidCipherTextException
 	 */
 	private RelayCell extendConnection(String address, int port) throws IOException,
-		InvalidCipherTextException
-	{
+	InvalidCipherTextException
+		{
 		RelayCell cell;
 
 		byte[] payload = helper.conc(InetAddress.getByName(address).getAddress(),
-										helper.inttobyte(port, 2), createExtendOnionSkin());
+									 helper.inttobyte(port, 2), createExtendOnionSkin());
 
 		MyRSAPublicKey key = m_description.getSigningKey();
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -224,47 +223,45 @@ public class OnionRouter
 		cell = new RelayCell(m_circID, RelayCell.RELAY_EXTEND, 0, payload);
 		return cell;
 	}
-
-	/**
-	 * extends the connction to another OR and encrypts the data
-	 * @param description
-	 * ORDescription
-	 * @return
-	 * cell that is needed to extend the connection
-	 * @throws IOException
-	 * @throws InvalidCipherTextException
-	 */
-	public RelayCell extendConnection(ORDescription description) throws IOException,
-		InvalidCipherTextException
-	{
+		/**
+		 * extends the connction to another OR and encrypts the data
+		 * @param description
+		 * ORDescription
+		 * @return
+		 * cell that is needed to extend the connection
+		 * @throws IOException
+		 * @throws InvalidCipherTextException
+		 */
+		public RelayCell extendConnection(ORDescription description) throws IOException,
+	InvalidCipherTextException
+		{
 		RelayCell cell;
 		if (m_nextOR == null)
-		{
-			m_nextOR = new OnionRouter(m_circID, description);
-			cell = m_nextOR.extendConnection(description.getAddress(), description.getPort());
-			cell.generateDigest(m_digestDf);
-		}
-		else
-		{
-			cell = m_nextOR.extendConnection(description);
-		}
-		cell.doCryptography(m_encryptionEngine);
+	{
+		m_nextOR = new OnionRouter(m_circID, description);
+		cell = m_nextOR.extendConnection(description.getAddress(), description.getPort());
+		cell.generateDigest(m_digestDf);
+	}
+	else
+	{
+		cell = m_nextOR.extendConnection(description);
+	}
+	cell.doCryptography(m_encryptionEngine);
 		return cell;
 	}
-
-	/**
-	 * checks if the extendedcell has the right parameters and hash
-	 * @param cell
-	 * cell
-	 * @throws Exception
-	 */
-	public boolean checkExtendedCell(RelayCell cell)
+		/**
+		 * checks if the extendedcell has the right parameters and hash
+		 * @param cell
+		 * cell
+		 * @throws Exception
+		 */
+		public boolean checkExtendedCell(RelayCell cell)
 	{
 		try
 		{
 			if (m_nextOR == null)
 			{
-				checkExtendParameters(cell.getPayload(),11,148);
+				checkExtendParameters(cell.getPayload(), 11, 148);
 				LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[TOR] Circuit '" + m_circID + "' Extended");
 				return true;
 			}
@@ -286,14 +283,14 @@ public class OnionRouter
 	}
 
 	/**
-	 * creates the onion skin for an create or extend cell
+	 * creates the onion skin for a create or extend cell
 	 * @return
 	 * payload
 	 * @throws IOException
 	 * @throws InvalidCipherTextException
 	 */
 	private byte[] createExtendOnionSkin() throws IOException, InvalidCipherTextException
-	{
+		{
 		byte[] rsaBlock = new byte[86];
 		byte[] key = new byte[16];
 
@@ -317,10 +314,10 @@ public class OnionRouter
 		byte[] dhpubY = dhpub.getY().toByteArray();
 		int dhpubOffset = 0;
 		if (dhpubY[0] == 0)
-		{
-			dhpubOffset = 1;
-		}
-		System.arraycopy(key, 0, rsaBlock, 0, 16);
+	{
+		dhpubOffset = 1;
+	}
+	System.arraycopy(key, 0, rsaBlock, 0, 16);
 		System.arraycopy(dhpubY, dhpubOffset, rsaBlock, 16, 70);
 
 		AsymmetricBlockCipher rsa = new OAEPEncoding(new RSAEngine());
@@ -334,55 +331,62 @@ public class OnionRouter
 		aes.processBlock(dhpubY, 70 + dhpubOffset, result, 128, 58);
 		return result;
 	}
-
-	/**
-	 * checks the parameters of a extend cell and calculate the secrets
-	 * @param param
-	 * parameters
-	 * @throws Exception
-	 */
-	private void checkExtendParameters(byte[] param,int offset,int len) throws Exception
+		/**
+		 * checks the parameters of a extend cell and calculate the secrets
+		 * @param param
+		 * parameters
+		 * @param offset
+		 * offset of the parameters
+		 * @param len
+		 * length of the parameters
+		 * @throws Exception
+		 */
+		private void checkExtendParameters(byte[] param, int offset, int len) throws Exception
 	{
 		DHPublicKeyParameters dhserverpub;
 		byte[] a = new byte[128];
 		System.arraycopy(param, offset, a, 0, 128);
-		dhserverpub = new DHPublicKeyParameters(new BigInteger(1, a),DH_PARAMS);
+		dhserverpub = new DHPublicKeyParameters(new BigInteger(1, a), DH_PARAMS);
 		byte[] agreement = m_dhe.calculateAgreement(dhserverpub).toByteArray();
-		byte[] buff=new byte[129];
+		byte[] buff = new byte[129];
 		if (agreement[0] == 0)
+		{
 			System.arraycopy(agreement, 1, buff, 0, 128);
+		}
 		else
+		{
 			System.arraycopy(agreement, 0, buff, 0, 128);
+		}
 
 		byte[] kh = hash.sha(buff);
 		for (int i = 0; i < kh.length; i++)
 		{
-			if (kh[i] != param[i + offset+128])
+			if (kh[i] != param[i + offset + 128])
 			{
 				throw new Exception("wrong derivative key");
 			}
 		}
-		buff[128]=1;
+		buff[128] = 1;
 		m_digestDf = new SHA1Digest();
 		byte[] keydata = hash.sha(buff);
 		m_digestDf.update(keydata, 0, 20);
-		buff[128]=2;
+		buff[128] = 2;
 		m_digestDb = new SHA1Digest();
 		keydata = hash.sha(buff);
 		m_digestDb.update(keydata, 0, 20);
-		buff[128]=3;
+		buff[128] = 3;
 		keydata = hash.sha(buff);
 		m_encryptionEngine = new CTRBlockCipher(new AESFastEngine());
-		m_encryptionEngine.init(false,	new ParametersWithIV(new KeyParameter(keydata,0,16),
-										new byte[this.m_encryptionEngine.getBlockSize()]));
-		byte[] keyKb=new byte[16];
-		System.arraycopy(keydata,16,keyKb,0,4);
-		buff[128]=4;
+		m_encryptionEngine.init(false, new ParametersWithIV(new KeyParameter(keydata, 0, 16),
+			new byte[this.m_encryptionEngine.getBlockSize()]));
+		byte[] keyKb = new byte[16];
+		System.arraycopy(keydata, 16, keyKb, 0, 4);
+		buff[128] = 4;
 		keydata = hash.sha(buff);
-		System.arraycopy(keydata,0,keyKb,4,12);
+		System.arraycopy(keydata, 0, keyKb, 4, 12);
 		m_decryptionEngine = new CTRBlockCipher(new AESFastEngine());
-		m_decryptionEngine.init(true,	new ParametersWithIV(new KeyParameter(keyKb),
-										new byte[m_decryptionEngine.getBlockSize()]));
+		m_decryptionEngine.init(true, new ParametersWithIV(new KeyParameter(keyKb),
+			new byte[m_decryptionEngine.getBlockSize()]));
 	}
 
 }

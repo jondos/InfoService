@@ -45,10 +45,6 @@ import java.util.Vector;
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 import org.bouncycastle.crypto.generators.RSAKeyPairGenerator;
 import org.bouncycastle.crypto.params.RSAKeyGenerationParameters;
-
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
 import anon.crypto.AsymmetricCryptoKeyPair;
 import anon.crypto.JAPCertificate;
 import anon.crypto.MyRSAPrivateKey;
@@ -57,6 +53,10 @@ import anon.crypto.PKCS12;
 import anon.tor.cells.Cell;
 import anon.tor.ordescription.ORDescription;
 import anon.tor.tinytls.TinyTLS;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
+
 /**
  *
  */
@@ -75,14 +75,17 @@ public class FirstOnionRouterConnection implements Runnable
 	private Object m_oSendSync;
 	private long m_inittimeout;
 	private Tor m_Tor;
+
 	/**
 	 * constructor
 	 *
 	 * creates a FOR from the description
 	 * @param d
 	 * description of the onion router
+	 * @param a_Tor
+	 * a tor instance
 	 */
-	public FirstOnionRouterConnection(ORDescription d,Tor a_Tor)
+	public FirstOnionRouterConnection(ORDescription d, Tor a_Tor)
 	{
 		m_inittimeout = 30000;
 		m_readDataLoop = null;
@@ -91,14 +94,24 @@ public class FirstOnionRouterConnection implements Runnable
 		m_description = d;
 		m_rand = new MyRandom(new SecureRandom());
 		m_oSendSync = new Object();
-		m_Tor=a_Tor;
+		m_Tor = a_Tor;
 	}
 
+	/**
+	 * returns the description of the onion router
+	 * @return
+	 * OR description
+	 */
 	public ORDescription getORDescription()
 	{
 		return m_description;
 	}
 
+	/**
+	 * check if the connection to the first onion router is closed
+	 * @return
+	 *
+	 */
 	public boolean isClosed()
 	{
 		return m_bIsClosed;
@@ -133,7 +146,8 @@ public class FirstOnionRouterConnection implements Runnable
 
 	/**
 	 * dispatches a cell to the circuits if one is recieved
-	 *
+	 * @param cell
+	 * Cell to dispatch
 	 */
 	private boolean dispatchCell(Cell cell)
 	{
@@ -157,7 +171,6 @@ public class FirstOnionRouterConnection implements Runnable
 		{
 			ex.printStackTrace();
 			return false;
-			//TODO : Fehler ausgeben
 		}
 	}
 
@@ -173,7 +186,6 @@ public class FirstOnionRouterConnection implements Runnable
 												 m_inittimeout,
 												 m_Tor.getProxy());
 		m_tinyTLS = forct.getConnection();
-//		m_tinyTLS = new TinyTLS(m_description.getAddress(), m_description.getPort());
 		m_tinyTLS.setRootKey(m_description.getSigningKey());
 
 		//####create client certificate####
@@ -181,26 +193,30 @@ public class FirstOnionRouterConnection implements Runnable
 		try
 		{
 			RSAKeyPairGenerator kpg = new RSAKeyPairGenerator();
-			kpg.init(new RSAKeyGenerationParameters(new BigInteger(new byte[]{1,0,1}),new SecureRandom(),1024,100));
+			kpg.init(new RSAKeyGenerationParameters(new BigInteger(new byte[]
+				{1, 0, 1}), new SecureRandom(), 1024, 100));
 			AsymmetricCipherKeyPair kp = kpg.generateKeyPair();
 			MyRSAPrivateKey key = new MyRSAPrivateKey(kp.getPrivate());
 			AsymmetricCryptoKeyPair ackp = new AsymmetricCryptoKeyPair(key);
-			JAPCertificate cert = JAPCertificate.getInstance("JAP",ackp,Calendar.getInstance(),1);
+			JAPCertificate cert = JAPCertificate.getInstance("JAP", ackp, Calendar.getInstance(), 1);
 
 			RSAKeyPairGenerator kpg2 = new RSAKeyPairGenerator();
-			kpg2.init(new RSAKeyGenerationParameters(new BigInteger(new byte[]{1,0,1}),new SecureRandom(),1024,100));
+			kpg2.init(new RSAKeyGenerationParameters(new BigInteger(new byte[]
+				{1, 0, 1}), new SecureRandom(), 1024, 100));
 			AsymmetricCipherKeyPair kp2 = kpg2.generateKeyPair();
 			MyRSAPrivateKey key2 = new MyRSAPrivateKey(kp2.getPrivate());
 			AsymmetricCryptoKeyPair ackp2 = new AsymmetricCryptoKeyPair(key2);
-			PKCS12 pkcs12cert = new PKCS12("JAP User",ackp2,Calendar.getInstance(),1);
+			PKCS12 pkcs12cert = new PKCS12("JAP User", ackp2, Calendar.getInstance(), 1);
 
 			//sign cert with pkcs12cert
 			JAPCertificate cert1 = cert.sign(pkcs12cert);
 
 			JAPCertificate cert2 = JAPCertificate.getInstance(pkcs12cert.getX509Certificate());
 
-			m_tinyTLS.setClientCertificate(new JAPCertificate[]{cert1,cert2},key);
-		} catch (Exception ex)
+			m_tinyTLS.setClientCertificate(new JAPCertificate[]
+										   {cert1, cert2}, key);
+		}
+		catch (Exception ex)
 		{
 			LogHolder.log(LogLevel.DEBUG, LogType.TOR,
 						  "Error while creating Certificates. Certificates are not used.");
@@ -217,6 +233,14 @@ public class FirstOnionRouterConnection implements Runnable
 		m_bIsClosed = false;
 	}
 
+	/**
+	 * Creates a circuit with the given onion routers
+	 * @param onionRouters
+	 * vector that contains a list of onion routers
+	 * @return
+	 * on succes : the created circuit
+	 * else : null
+	 */
 	public synchronized Circuit createCircuit(Vector onionRouters)
 	{
 		int circid = 0;
@@ -267,7 +291,6 @@ public class FirstOnionRouterConnection implements Runnable
 			readPos = 0;
 			while (readPos < 512 && m_bRun)
 			{
-				//TODO:maybe we can let the thread sleep here for a while
 				int ret = 0;
 				try
 				{

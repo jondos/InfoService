@@ -148,12 +148,13 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 	private long m_lTrafficWWW, m_lTrafficOther;
 
-	private boolean m_bIsSimpleView=true;
+	private boolean m_bIsSimpleView;
 
 	public JAPNewView(String s, JAPController a_controller)
 	{
 		super(s, a_controller);
-		m_NumberFormat = NumberFormat.getInstance();
+	m_bIsSimpleView=(JAPModel.getDefaultView()==JAPConstants.VIEW_SIMPLIFIED);
+	m_NumberFormat = NumberFormat.getInstance();
 		m_Controller = JAPController.getInstance();
 		helpWindow = null; //new JAPHelp(this);
 		m_dlgConfig = null; //new JAPConf(this);

@@ -13,7 +13,8 @@ import anon.tor.TorChannel;
 /**
  * @author stefan
  */
-public class proxythread implements Runnable{
+public class proxythread implements Runnable
+{
 
 	private OutputStream torout;
 	private InputStream torin;
@@ -23,7 +24,7 @@ public class proxythread implements Runnable{
 	private Thread t;
 	private TorChannel channel;
 
-	public proxythread(Socket client,TorChannel channel) throws IOException
+	public proxythread(Socket client, TorChannel channel) throws IOException
 	{
 		this.torin = channel.getInputStream();
 		this.torout = channel.getOutputStream();
@@ -36,7 +37,7 @@ public class proxythread implements Runnable{
 
 	public void start()
 	{
-		t = new Thread(this,"Tor proxy thread");
+		t = new Thread(this, "Tor proxy thread");
 		t.start();
 	}
 
@@ -44,21 +45,23 @@ public class proxythread implements Runnable{
 	{
 		try
 		{
-			while(torin.available()>0)
+			while (torin.available() > 0)
 			{
 				byte[] b = new byte[torin.available()];
-				int len=torin.read(b);
-				out.write(b,0,len);
+				int len = torin.read(b);
+				out.write(b, 0, len);
 				out.flush();
 			}
-		} catch (Exception ex)
+		}
+		catch (Exception ex)
 		{
 		}
 		channel.close();
 		try
 		{
 			client.close();
-		} catch (Exception ex)
+		}
+		catch (Exception ex)
 		{
 			System.out.println("Fehler beim schliessen des kanals");
 		}
@@ -66,40 +69,40 @@ public class proxythread implements Runnable{
 		t.stop();
 	}
 
-	public void run() {
-		while(true)
+	public void run()
+	{
+		while (true)
 		{
 			try
 			{
-				while(torin.available()>0)
+				while (torin.available() > 0)
 				{
 					byte[] b = new byte[torin.available()];
-					int len=torin.read(b);
-					out.write(b,0,len);
+					int len = torin.read(b);
+					out.write(b, 0, len);
 					out.flush();
 				}
-				while(in.available()>0)
+				while (in.available() > 0)
 				{
 					byte[] b = new byte[in.available()];
-					int len=in.read(b);
-					torout.write(b,0,len);
+					int len = in.read(b);
+					torout.write(b, 0, len);
 					torout.flush();
 				}
-				if(channel.isClosedByPeer())
+				if (channel.isClosedByPeer())
 				{
 					this.stop();
 				}
 				Thread.sleep(20);
-			} catch (Exception ex)
+			}
+			catch (Exception ex)
 			{
-				System.out.println("Exception catched : "+ex.getLocalizedMessage());
+				System.out.println("Exception catched : " + ex.getLocalizedMessage());
 				ex.printStackTrace();
 				this.stop();
 			}
 		}
 
 	}
-
-
 
 }

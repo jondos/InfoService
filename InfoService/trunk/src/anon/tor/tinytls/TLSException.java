@@ -41,11 +41,11 @@ import java.io.IOException;
  */
 public class TLSException extends IOException
 {
-	
+
 	private byte m_AlertLevel;
 	private byte m_AlertDescription;
 	private boolean m_Alert;
-	
+
 	/**
 	 * Constructor
 	 * @param s message
@@ -57,7 +57,7 @@ public class TLSException extends IOException
 		m_AlertLevel = 0;
 		m_AlertDescription = 0;
 	}
-	
+
 	/**
 	 *  Constructor
 	 * @param s message
@@ -68,24 +68,37 @@ public class TLSException extends IOException
 	{
 		super(s);
 		m_Alert = true;
-		m_AlertLevel = (byte)(level&0xFF);
-		m_AlertDescription = (byte)(description&0xFF);
+		m_AlertLevel = (byte) (level & 0xFF);
+		m_AlertDescription = (byte) (description & 0xFF);
 	}
-	
+
+	/**
+	 * check if this Exception is an alert
+	 * @return
+	 */
 	public boolean Alert()
 	{
 		return m_Alert;
 	}
-	
+
+	/**
+	 * if the Exception is an alert an alertlevel is returned
+	 * @return
+	 * alertlevel
+	 */
 	public byte getAlertLevel()
 	{
 		return m_AlertLevel;
 	}
-	
+
+	/**
+	 * if the Exception is an alert an alertdescription is returned
+	 * @return
+	 * alertdescription
+	 */
 	public byte getAlertDescription()
 	{
 		return m_AlertDescription;
 	}
-	
-}
 
+}
