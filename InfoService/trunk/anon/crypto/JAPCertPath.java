@@ -31,15 +31,11 @@ package anon.crypto;
  * If you change something - do not forget to add the changes also to the JAP source tree!
  */
 import java.security.PublicKey;
-import java.security.interfaces.DSAPublicKey;
 import java.util.Vector;
-
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 import org.w3c.dom.Element;
-
+import org.w3c.dom.Node;
 import anon.ErrorCodes;
-import anon.util.*;
+import anon.util.XMLUtil;
 
 public class JAPCertPath
 {
@@ -65,7 +61,7 @@ public class JAPCertPath
 				return ErrorCodes.E_UNKNOWN;
 			}
 			Element nodeSig = (Element) nSig;
-			Node root =  nRoot;
+			Node root = nRoot;
 			Element elemKeyInfo = (Element) XMLUtil.getFirstChildByName(nodeSig, "KeyInfo");
 			if (elemKeyInfo != null)
 			{
