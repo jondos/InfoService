@@ -63,4 +63,13 @@ public class MyDSAParams extends DSAParameters implements DSAParams
 		this(key.getParams());
 	}
 
+	public boolean equals(Object o)
+	{
+		if(o==null)
+			return false;
+		if(!(o instanceof DSAParams))
+			return false;
+		DSAParams p=(DSAParams)o;
+		return p.getG().equals(this.getG())&&p.getP().equals(this.getP())&&p.getQ().equals(this.getQ());
+	}
 }

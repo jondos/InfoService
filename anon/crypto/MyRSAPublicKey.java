@@ -67,6 +67,16 @@ public class MyRSAPublicKey implements PublicKey
 
 	}
 
+	public BigInteger getModulus()
+	{
+		return m_n;
+	}
+
+	public BigInteger getPublicExponent()
+	{
+		return m_e;
+	}
+
 	public String getAlgorithm()
 	{
 		return "RSA";
@@ -98,5 +108,18 @@ public class MyRSAPublicKey implements PublicKey
 		}
 		return bOut.toByteArray();
 	}
+
+	public boolean equals(Object o)
+	{
+		if(o==null)
+			return false;
+		if(! (o instanceof PublicKey))
+			return false;
+		if(! (o instanceof MyRSAPublicKey))
+			return false;
+		MyRSAPublicKey r=(MyRSAPublicKey)o;
+		return r.getModulus().equals(m_n)&&r.getPublicExponent().equals(m_e);
+	}
+
 
 }
