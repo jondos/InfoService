@@ -466,7 +466,7 @@ public class AccountSettingsPanel extends jap.AbstractJAPConfModule
 					JAPMessages.getString("Creating new account.."),
 					JAPMessages.getString("Please wait")
 					);
-				Pay.getInstance().createAccount();
+				Pay.getInstance().createAccount(true); // always use DSA keys for now
 				splash.abort();
 			}
 			catch (Exception ex)

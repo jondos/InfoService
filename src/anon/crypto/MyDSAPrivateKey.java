@@ -46,8 +46,13 @@ import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.asn1.x509.DSAParameter;
 import org.bouncycastle.asn1.x9.X9ObjectIdentifiers;
 import org.bouncycastle.crypto.params.DSAPrivateKeyParameters;
+import org.w3c.dom.Document;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import org.w3c.dom.Element;
+import anon.util.*;
 
-final public class MyDSAPrivateKey implements DSAPrivateKey
+final public class MyDSAPrivateKey implements DSAPrivateKey, IMyPrivateKey
 {
 	private BigInteger m_X;
 	private DSAParams m_params;
@@ -125,5 +130,39 @@ final public class MyDSAPrivateKey implements DSAPrivateKey
 	public DSAParams getParams()
 	{
 		return m_params;
+	}
+
+
+	/**
+	 * getXmlEncoded
+	 *
+	 * @return Document
+	 */
+	public Document getXmlEncoded()
+	{
+		Document doc = null;
+		try
+		{
+			doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+		}
+		catch (ParserConfigurationException ex)
+		{
+			return null;
+		}
+		Element elemPrivKey = doc.createElement("DSAPrivateKey");
+		doc.appendChild(elemPrivKey);
+		Element elem = doc.createElement("G");
+		elemPrivKey.appendChild(elem);
+		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_params.getG().toByteArray()));
+		elem = doc.createElement("P");
+		elemPrivKey.appendChild(elem);
+		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_params.getP().toByteArray()));
+		elem = doc.createElement("Q");
+		elemPrivKey.appendChild(elem);
+		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_params.getQ().toByteArray()));
+		elem = doc.createElement("X");
+		elemPrivKey.appendChild(elem);
+		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_X.toByteArray()));
+		return doc;
 	}
 }

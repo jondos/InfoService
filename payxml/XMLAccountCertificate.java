@@ -35,6 +35,11 @@ import org.w3c.dom.NodeList;
 import anon.crypto.MyRSAPublicKey;
 import anon.util.Base64;
 import anon.util.XMLUtil;
+import anon.crypto.IMyPublicKey;
+import org.w3c.dom.Document;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.*;
+import org.w3c.dom.*;
 
 /**
  * This class contains the functionality for creating and parsing XML account
@@ -48,6 +53,7 @@ import anon.util.XMLUtil;
  *    &lt;?xml version="1.0"?&gt;
  *    &lt;AccountCertificate version="1.0"&gt;
  *      &lt;AccountNumber&gt;123456789012&lt;/AccountNumber&gt;
+ *      &lt;BiID&gt;The BI ID&lt;BiID&gt;
  *      &lt;JapPublicKey&gt;
  *        ... public key xml data (see below)
  *      &lt;/JapPublicKey&gt;
@@ -60,8 +66,8 @@ import anon.util.XMLUtil;
  *
  * <ul>
  * <li>
- * The public key is stored in {@link XMLJapPublicKey} format inside the
- * JapPublicKey tags
+ * The public key is stored in w3c xmlsig format (DSAKeyValue or RSAKeyValue)
+ * inside the JapPublicKey tags
  * </li>
  * <li>
  * Ths signature is stored in {@link XMLSignature} format inside the Signature
@@ -69,12 +75,12 @@ import anon.util.XMLUtil;
  * </li>
  * </ul>
  */
-public class XMLAccountCertificate extends XMLDocument
+public class XMLAccountCertificate //extends XMLDocument
 {
 
 	//~ Instance fields ********************************************************
 
-	private MyRSAPublicKey m_publicKey;
+	private IMyPublicKey m_publicKey;
 	private java.sql.Timestamp m_creationTime;
 	private long m_accountNumber;
 	private String m_biID;
@@ -90,7 +96,7 @@ public class XMLAccountCertificate extends XMLDocument
 	 * @param biID the signing BI's ID
 	 */
 
-	public XMLAccountCertificate(MyRSAPublicKey publicKey, long accountNumber,
+	public XMLAccountCertificate(IMyPublicKey publicKey, long accountNumber,
 								 java.sql.Timestamp creationTime, String biID
 								 ) throws Exception
 	{
@@ -98,24 +104,26 @@ public class XMLAccountCertificate extends XMLDocument
 		m_accountNumber = accountNumber;
 		m_creationTime = creationTime;
 		m_biID = biID;
-
-		XMLJapPublicKey xmlkey = new XMLJapPublicKey(publicKey);
-		m_theDocument = getDocumentBuilder().newDocument();
-		Element elemRoot = m_theDocument.createElement("AccountCertificate");
-		elemRoot.setAttribute("version", "1.0");
-		m_theDocument.appendChild(elemRoot);
-		Element elemAccountNumber = m_theDocument.createElement("AccountNumber");
-		XMLUtil.setNodeValue(elemAccountNumber, Long.toString(accountNumber));
-		elemRoot.appendChild(elemAccountNumber);
-		Node elemKey = XMLUtil.importNode(m_theDocument, xmlkey.getDomDocument().getDocumentElement(), true);
-		elemRoot.appendChild(elemKey);
-		Element elemTmp = m_theDocument.createElement("CreationTime");
-		XMLUtil.setNodeValue(elemTmp, creationTime.toString());
-		elemRoot.appendChild(elemTmp);
-		elemTmp = m_theDocument.createElement("BiID");
-		XMLUtil.setNodeValue(elemTmp, biID);
-		elemRoot.appendChild(elemTmp);
 	}
+
+	/*		m_theDocument = getDocumentBuilder().newDocument();
+	  Element elemRoot = m_theDocument.createElement("AccountCertificate");
+	  elemRoot.setAttribute("version", "1.0");
+	  m_theDocument.appendChild(elemRoot);
+	  Element elemAccountNumber = m_theDocument.createElement("AccountNumber");
+	  XMLUtil.setNodeValue(elemAccountNumber, Long.toString(accountNumber));
+	  elemRoot.appendChild(elemAccountNumber);
+	  Node elemJapKey = m_theDocument.createElement("JapPublicKey");
+	  elemRoot.appendChild(elemJapKey);
+	  Node elemKey = XMLUtil.importNode(m_theDocument, publicKey.getXmlEncoded().getDocumentElement(), true);
+	  elemJapKey.appendChild(elemKey);
+	  Element elemTmp = m_theDocument.createElement("CreationTime");
+	  XMLUtil.setNodeValue(elemTmp, creationTime.toString());
+	  elemRoot.appendChild(elemTmp);
+	  elemTmp = m_theDocument.createElement("BiID");
+	  XMLUtil.setNodeValue(elemTmp, biID);
+	  elemRoot.appendChild(elemTmp);
+	 }*/
 
 	/**
 	 * parses an existing XML certificate
@@ -124,8 +132,8 @@ public class XMLAccountCertificate extends XMLDocument
 	 */
 	public XMLAccountCertificate(String xml) throws Exception
 	{
-		setDocument(xml);
-		setValues();
+		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(xml);
+		setValues( (Node) doc.getDocumentElement());
 	}
 
 	/**
@@ -135,18 +143,82 @@ public class XMLAccountCertificate extends XMLDocument
 	 */
 	public XMLAccountCertificate(Node xml) throws Exception
 	{
-		m_theDocument=getDocumentBuilder().newDocument();
-		Node n=XMLUtil.importNode(m_theDocument,xml,true);
-		m_theDocument.appendChild(n);
-		setValues();
+		setValues(xml);
 	}
 
-	private void setValues() throws Exception
+	private void setValues(Node xml) throws Exception
 	{
-		setAccountNumber();
-		setCreationTime();
-		setID();
-		setPublicKey();
+		// parse accountnumber
+		Element elem = (Element) XMLUtil.getFirstChildByName(xml, "AccountNumber");
+		m_accountNumber = XMLUtil.parseNodeInt(elem, 0);
+
+		// parse biID
+		elem = (Element) XMLUtil.getFirstChildByName(xml, "BiID");
+		m_biID = XMLUtil.parseNodeString(elem, "UNKNOWN");
+
+		// parse creation time
+		elem = (Element) XMLUtil.getFirstChildByName(xml, "CreationTime");
+		String timestamp = XMLUtil.parseNodeString(elem, "0");
+		m_creationTime = java.sql.Timestamp.valueOf(timestamp);
+
+		// parse publickey
+		elem = (Element) XMLUtil.getFirstChildByName(xml, "JapPublicKey");
+		if (elem != null)
+		{
+			m_publicKey = new XMLJapPublicKey(elem).getPublicKey();
+		}
+	}
+
+	public Document getXmlDocument()
+	{
+		Document doc = null;
+		try
+		{
+			doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+		}
+		catch (ParserConfigurationException ex)
+		{
+			return null;
+		}
+		Element elemRoot = doc.createElement("AccountCertificate");
+		elemRoot.setAttribute("version", "1.0");
+
+		Element elem = doc.createElement("AccountNumber");
+		XMLUtil.setNodeValue(elem, Long.toString(m_accountNumber));
+		elemRoot.appendChild(elem);
+
+		elem = doc.createElement("BiID");
+		XMLUtil.setNodeValue(elem, m_biID);
+		elemRoot.appendChild(elem);
+
+		elem = doc.createElement("CreationTime");
+		XMLUtil.setNodeValue(elem, m_creationTime.toString());
+		elemRoot.appendChild(elem);
+
+		elem = doc.createElement("JapPublicKey");
+		elemRoot.appendChild(elem);
+		elem.setAttribute("version", "1.0");
+		Document tmpDoc = m_publicKey.getXmlEncoded();
+		try
+		{
+			elem.appendChild(XMLUtil.importNode(doc, tmpDoc.getDocumentElement(), true));
+		}
+		catch (Exception ex1)
+		{
+			return null;
+		}
+		return doc;
+	}
+
+/** @todo one of these two can be removed :-) */
+	public String getXmlString()
+	{
+		return XMLUtil.XMLDocumentToString(getXmlDocument());
+	}
+
+	public String getXMLString()
+	{
+		return XMLUtil.XMLDocumentToString(getXmlDocument());
 	}
 
 	//~ Methods ****************************************************************
@@ -161,70 +233,28 @@ public class XMLAccountCertificate extends XMLDocument
 		return m_creationTime;
 	}
 
-	public MyRSAPublicKey getPublicKey()
+	public IMyPublicKey getPublicKey()
 	{
 		return m_publicKey;
 	}
 
-	private void setAccountNumber() throws Exception
+	private void setAccountNumber(long accountNumber) throws Exception
 	{
-		Element element = m_theDocument.getDocumentElement();
-		if (!element.getTagName().equals("AccountCertificate"))
-		{
-			throw new Exception("XMLAccountCertificate wrong xml structure");
-		}
-		element=(Element)XMLUtil.getFirstChildByName(element,"AccountNumber");
-		String str=XMLUtil.parseNodeString(element,null);
-		m_accountNumber = Long.parseLong(str);
+		m_accountNumber = accountNumber;
 	}
 
-	/**
-	 * Parses the xml data and sets our private member variable {@link
-	 * creationTime}
-	 */
-	private void setCreationTime() throws Exception
+	private void setCreationTime(java.sql.Timestamp creationTime) throws Exception
 	{
-		Element element = m_theDocument.getDocumentElement();
-		if (!element.getTagName().equals("AccountCertificate"))
-		{
-			throw new Exception("XMLAccountCertificate wrong xml structure");
-		}
-		element=(Element)XMLUtil.getFirstChildByName(element,"CreationTime");
-		String str=XMLUtil.parseNodeString(element,null);
-		m_creationTime = java.sql.Timestamp.valueOf(str);
+		m_creationTime = creationTime;
 	}
 
-	/**
-	 * Parses the xml data and sets our private member variables {@link
-	 * m_biID}
-	 */
-	private void setID() throws Exception
+	private void setID(String biID) throws Exception
 	{
-		CharacterData chdata;
-		Element elemRoot = m_theDocument.getDocumentElement();
-		if (!elemRoot.getTagName().equals("AccountCertificate"))
-		{
-			throw new Exception("XMLAccountCertificate wrong xml structure");
-		}
-		// set hostname
-		Element elem=(Element)XMLUtil.getFirstChildByName(elemRoot,"BiID");
-		m_biID = XMLUtil.parseNodeString(elem,null);
+		m_biID = biID;
 	}
 
-	/**
-	 * Parses the modulus and the exponent from the xml document, creates a
-	 * {@link PublicKey} object from it and stores it in our member variable
-	 * {@link pubKey}.
-	 */
-	private void setPublicKey() throws Exception
+	private void setPublicKey(IMyPublicKey publicKey) throws Exception
 	{
-		Element element = m_theDocument.getDocumentElement();
-		if (!element.getTagName().equals("AccountCertificate"))
-		{
-			throw new Exception("XMLAccountCertificate wrong xml structure");
-		}
-		element=(Element)XMLUtil.getFirstChildByName(element,"JapPublicKey");
-		XMLJapPublicKey tmpKey=new XMLJapPublicKey(element);
-		m_publicKey = tmpKey.getRSAPublicKey();
+		m_publicKey = publicKey;
 	}
 }

@@ -36,120 +36,112 @@ import org.w3c.dom.NodeList;
 import anon.crypto.MyRSAPublicKey;
 import anon.util.Base64;
 import anon.util.XMLUtil;
+import anon.crypto.IMyPublicKey;
+import javax.xml.parsers.DocumentBuilderFactory;
+import java.io.ByteArrayInputStream;
+import anon.crypto.MyDSAPublicKey;
+import org.bouncycastle.crypto.params.DSAPublicKeyParameters;
+import org.bouncycastle.crypto.params.DSAParameters;
 
-/** This class handels RSA Public Key represented in XML.
- * The corresponding XML struct is as follows:
+/** This class handles RSA and DSA Public Keys represented in XML.
+ * The corresponding XML struct is as follows (for RSA):
  * <JapPublicKey version="1.0">
  * 	 <RSAKeyValue>
  *     <Modulus> Base64 encoded Modulus </Modulus>
  * 		<Exponent> Base 64 enocded Exponent </Exponent>
- * 	 </RSAKEyValue>
+ * 	 </RSAKeyValue>
  * </JapPublicKey>
+ *
+ *
  */
 
-public class XMLJapPublicKey extends XMLDocument
+public class XMLJapPublicKey //extends XMLDocument
 {
 	//~ Instance fields ********************************************************
 
-	//    private RSAPublicKey pubkey;
-	private MyRSAPublicKey m_publicKey;
+	private IMyPublicKey m_publicKey;
 
 	//~ Constructors ***********************************************************
 
-	public XMLJapPublicKey(MyRSAPublicKey key) throws Exception
+	public XMLJapPublicKey(IMyPublicKey key) throws Exception
 	{
 		m_publicKey = key;
-		createXmlDocument();
 	}
 
 	public XMLJapPublicKey(byte[] data) throws Exception
 	{
-		setDocument(data);
-		setPubKey();
+		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new
+			ByteArrayInputStream(data));
+		setPubKey(doc.getDocumentElement());
 	}
 
 	public XMLJapPublicKey(Element elemKey) throws Exception
 	{
-		m_theDocument=getDocumentBuilder().newDocument();
-		Node n=XMLUtil.importNode(m_theDocument,elemKey,true);
-		m_theDocument.appendChild(n);
-		setPubKey();
+		setPubKey(elemKey);
 	}
 
 	//~ Methods ****************************************************************
 
-	public MyRSAPublicKey getRSAPublicKey()
+	public IMyPublicKey getPublicKey()
 	{
 		return m_publicKey;
 	}
 
-	private void setPubKey() throws Exception
+	/**
+	 * Parses an XML JapPublicKey structure. Can handle RSA and DSA keys.
+	 * @param elemKey Element the "JapPublicKey" tag
+	 * @throws Exception
+	 */
+	private void setPubKey(Element elemKey) throws Exception
 	{
-		Element element = m_theDocument.getDocumentElement();
-		if (!element.getTagName().equals("JapPublicKey"))
+		if (!elemKey.getTagName().equals("JapPublicKey"))
 		{
 			throw new Exception("XMLJapPublicKey wrong xml structure");
 		}
-
-		NodeList nl = element.getElementsByTagName("RSAKeyValue");
-		if (nl.getLength() < 1)
+		Element elemRsa = (Element) XMLUtil.getFirstChildByName(elemKey, "RSAKeyValue");
+		if (elemRsa != null)
 		{
-			throw new Exception("XMLJapPublicKey wrong xml structure");
+			Element elemMod = (Element) XMLUtil.getFirstChildByName(elemRsa, "Modulus");
+			Element elemExp = (Element) XMLUtil.getFirstChildByName(elemRsa, "Exponent");
+			BigInteger modulus = new BigInteger(XMLUtil.parseNodeString(elemMod, ""));
+			BigInteger exponent = new BigInteger(XMLUtil.parseNodeString(elemExp, ""));
+			m_publicKey = new MyRSAPublicKey(modulus, exponent);
+			return;
 		}
-		element = (Element) nl.item(0);
-
-		nl = element.getElementsByTagName("Exponent");
-		if (nl.getLength() < 1)
+		Element elemDsa = (Element) XMLUtil.getFirstChildByName(elemKey, "DSAKeyValue");
+		if (elemDsa != null)
 		{
-			throw new Exception("XMLJapPublicKey wrong xml structure");
+			Element elem = (Element) XMLUtil.getFirstChildByName(elemDsa, "P");
+			BigInteger p = new BigInteger(XMLUtil.parseNodeString(elem, ""));
+			elem = (Element) XMLUtil.getFirstChildByName(elemDsa, "Y");
+			BigInteger y = new BigInteger(XMLUtil.parseNodeString(elem, ""));
+			elem = (Element) XMLUtil.getFirstChildByName(elemDsa, "Q");
+			BigInteger q = new BigInteger(XMLUtil.parseNodeString(elem, ""));
+			elem = (Element) XMLUtil.getFirstChildByName(elemDsa, "G");
+			BigInteger g = new BigInteger(XMLUtil.parseNodeString(elem, ""));
+
+			// is this really OK ????
+			DSAPublicKeyParameters param = new DSAPublicKeyParameters(
+				y,
+				new DSAParameters(p, g, q)
+				);
+			m_publicKey = new MyDSAPublicKey(param);
+			return;
 		}
-
-		Element exponent = (Element) nl.item(0);
-		String chdata = ( (CharacterData) exponent.getFirstChild()).getData();
-		BigInteger ExpBigInt = new BigInteger(
-			Base64.decode(chdata)
-			);
-
-		nl = element.getElementsByTagName("Modulus");
-		if (nl.getLength() < 1)
-		{
-			throw new Exception("XMLJapPublicKey wrong xml structure");
-		}
-
-		Element modulus = (Element) nl.item(0);
-		chdata = ( (CharacterData) modulus.getFirstChild()).getData();
-
-		BigInteger ModulusBigInt = new BigInteger(
-			Base64.decode(chdata)
-			);
-
-		//KeyFactory keyfactory= KeyFactory.getInstance("RSA");
-		//            pubkey = (RSAPublicKey)keyfactory.generatePublic(
-		//                    new RSAPublicKeySpec(ModulusBigInt, ExpBigInt));
-		m_publicKey = new MyRSAPublicKey(ModulusBigInt, ExpBigInt);
 	}
 
-	private void createXmlDocument() throws Exception
+	private Document getXmlDocument() throws Exception
 	{
-		m_theDocument = null;
-		Document doc = getDocumentBuilder().newDocument();
+		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
 		Element elemRoot = doc.createElement("JapPublicKey");
 		doc.appendChild(elemRoot);
 		elemRoot.setAttribute("version", "1.0");
-		Element elemKey = doc.createElement("RSAKeyValue");
-		elemRoot.appendChild(elemKey);
-		Element elemModulus = doc.createElement("Modulus");
-		elemKey.appendChild(elemModulus);
-		byte[] b = m_publicKey.getModulus().toByteArray();
-		XMLUtil.setNodeValue(elemModulus, Base64.encodeBytes(b));
-		Element elemExponent = doc.createElement("Exponent");
-		elemKey.appendChild(elemExponent);
-		b = m_publicKey.getPublicExponent().toByteArray();
-		XMLUtil.setNodeValue(elemExponent, Base64.encodeBytes(b));
-		m_theDocument=doc;
+		Document tmpDoc = m_publicKey.getXmlEncoded();
+		XMLUtil.importNode(tmpDoc, elemRoot, true);
+		return doc;
 	}
 
-	public BigInteger getModulus()
+/*	public BigInteger getModulus()
 	{
 		return m_publicKey.getModulus();
 	}
@@ -157,6 +149,5 @@ public class XMLJapPublicKey extends XMLDocument
 	public BigInteger getPublicExponent()
 	{
 		return m_publicKey.getPublicExponent();
-	}
+	}*/
 }
-

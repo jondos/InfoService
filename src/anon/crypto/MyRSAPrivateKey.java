@@ -44,8 +44,14 @@ import org.bouncycastle.asn1.pkcs.RSAPrivateKeyStructure;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.crypto.CipherParameters;
 import org.bouncycastle.crypto.params.RSAPrivateCrtKeyParameters;
+import org.w3c.dom.Element;
+import org.w3c.dom.Document;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import anon.util.Base64;
+import anon.util.XMLUtil;
 
-final public class MyRSAPrivateKey implements PrivateKey
+final public class MyRSAPrivateKey implements IMyPrivateKey
 {
 	private RSAPrivateCrtKeyParameters m_Params;
 
@@ -163,4 +169,44 @@ final public class MyRSAPrivateKey implements PrivateKey
 		return bOut.toByteArray();
 	}
 
+	public Document getXmlEncoded()
+	{
+		Document doc = null;
+		try
+		{
+			doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+		}
+		catch (ParserConfigurationException ex)
+		{
+			return null;
+		}
+		Element elemPrivKey = doc.createElement("RSAPrivateKey");
+		doc.appendChild(elemPrivKey);
+		Element elem = doc.createElement("Modulus");
+		elemPrivKey.appendChild(elem);
+		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_Params.getModulus().toByteArray()));
+		elem = doc.createElement("PublicExponent");
+		elemPrivKey.appendChild(elem);
+		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_Params.getPublicExponent().toByteArray()));
+		elem = doc.createElement("PrivateExponent");
+		elemPrivKey.appendChild(elem);
+		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_Params.getExponent().toByteArray()));
+		elem = doc.createElement("P");
+		elemPrivKey.appendChild(elem);
+		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_Params.getP().toByteArray()));
+		elem = doc.createElement("Q");
+		elemPrivKey.appendChild(elem);
+		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_Params.getQ().toByteArray()));
+		elem = doc.createElement("dP");
+		elemPrivKey.appendChild(elem);
+		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_Params.getDP().toByteArray()));
+		elem = doc.createElement("dQ");
+		elemPrivKey.appendChild(elem);
+		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_Params.getDQ().toByteArray()));
+		elem = doc.createElement("QInv");
+		elemPrivKey.appendChild(elem);
+		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_Params.getQInv().toByteArray()));
+
+		return doc;
+	}
 }

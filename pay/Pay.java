@@ -57,6 +57,18 @@ import payxml.XMLAccountCertificate;
 import payxml.XMLAccountInfo;
 import payxml.XMLJapPublicKey;
 import payxml.XMLTransCert;
+import org.bouncycastle.crypto.generators.DSAKeyPairGenerator;
+import org.bouncycastle.crypto.params.DSAKeyGenerationParameters;
+import org.bouncycastle.crypto.params.DSAParameters;
+import org.bouncycastle.crypto.generators.DSAParametersGenerator;
+import anon.crypto.MyDSAPublicKey;
+import anon.crypto.MyDSAPrivateKey;
+import org.bouncycastle.crypto.params.DSAPublicKeyParameters;
+import org.bouncycastle.crypto.params.DSAPrivateKeyParameters;
+import java.security.PublicKey;
+import java.security.PrivateKey;
+import anon.crypto.IMyPublicKey;
+import anon.crypto.IMyPrivateKey;
 
 /**
  * This class is the high-level part of the communication with the BI.
@@ -328,28 +340,47 @@ public class Pay
 
 	/**
 	 * Creates a new Account.
-	 * Generates an RSA key pair and then registers a new account with the BI.
+	 * Generates an RSA or DSA key pair and then registers a new account with the BI.
 	 * This can take a while, so the user should be notified before calling this.
 	 *
+	 * At the moment, only DSA should be used, because RSA is not supported by the
+	 * AI implementation
+	 *
 	 */
-	public void createAccount() throws Exception
+	public void createAccount(boolean useDSA) throws Exception
 	{
-		RSAKeyPairGenerator pGen = new RSAKeyPairGenerator();
+		IMyPublicKey pubKey = null;
+		IMyPrivateKey privKey = null;
 
-		// generate Key pair
-		//TODO: check RSAKeyGeneration
+	// generate key pair
 		// TODO: show confirmation dialog before generateing key
-		RSAKeyGenerationParameters genParam = new RSAKeyGenerationParameters(
-			BigInteger.valueOf(0x11), new SecureRandom(), 512, 25);
-		pGen.init(genParam);
-		AsymmetricCipherKeyPair pair = pGen.generateKeyPair();
-		MyRSAPrivateKey rsaprivkey = new MyRSAPrivateKey( (RSAPrivateCrtKeyParameters) pair.getPrivate());
-		MyRSAPublicKey rsapubkey = new MyRSAPublicKey( (RSAKeyParameters) pair.getPublic());
+		if (useDSA)
+		{
+			SecureRandom random = new SecureRandom();
+			DSAParametersGenerator pGen = new DSAParametersGenerator();
+			DSAKeyPairGenerator kpGen = new DSAKeyPairGenerator();
+			pGen.init(1024, 20, random);
+			kpGen.init(new DSAKeyGenerationParameters(random, pGen.generateParameters()));
+			AsymmetricCipherKeyPair ackp = kpGen.generateKeyPair();
+			pubKey = new MyDSAPublicKey( (DSAPublicKeyParameters) ackp.getPublic());
+			privKey = new MyDSAPrivateKey( (DSAPrivateKeyParameters) ackp.getPrivate());
+		}
+		else // use RSA (should not be used at the moment)
+		{
+			//TODO: check RSAKeyGeneration
+			RSAKeyPairGenerator pGen = new RSAKeyPairGenerator();
+			RSAKeyGenerationParameters genParam = new RSAKeyGenerationParameters(
+				BigInteger.valueOf(0x11), new SecureRandom(), 512, 25);
+			pGen.init(genParam);
+			AsymmetricCipherKeyPair pair = pGen.generateKeyPair();
+			privKey = new MyRSAPrivateKey( (RSAPrivateCrtKeyParameters) pair.getPrivate());
+			pubKey = new MyRSAPublicKey( (RSAKeyParameters) pair.getPublic());
+		}
 
 		JAPSignature signingInstance = new JAPSignature();
-		signingInstance.initSign(rsaprivkey);
+		signingInstance.initSign(privKey);
 
-		XMLJapPublicKey pubKey = new XMLJapPublicKey(rsapubkey);
+//		XMLJapPublicKey pubKey = new XMLJapPublicKey(rsapubkey);
 
 		LogHolder.log(LogLevel.DEBUG, LogType.PAY,
 					  "Pay.createAccount() Key successfully generated"
@@ -357,16 +388,16 @@ public class Pay
 
 		// send it to the JPI TODO: switch SSL on
 		BIConnection biConn = new BIConnection(JAPModel.getBIHost(),
-											   JAPModel.getBIPort(),
-											   false
-											   /* ssl off! */);
+			JAPModel.getBIPort(),
+			false
+			/* ssl off! */
+			);
 		biConn.connect();
 		XMLAccountCertificate xmlCert = biConn.register(pubKey, signingInstance);
 		biConn.disconnect();
 
 		// add the new account to the accountsFile
-		PayAccount newAccount = new PayAccount(xmlCert, rsaprivkey, signingInstance);
+		PayAccount newAccount = new PayAccount( xmlCert, privKey, signingInstance);
 		m_AccountsFile.addAccount(newAccount);
 	}
-
 }
