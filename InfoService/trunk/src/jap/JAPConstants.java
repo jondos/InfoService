@@ -30,11 +30,10 @@ package jap;
 import java.awt.Insets;
 import java.awt.Font;
 public final class JAPConstants {
-	public static final String aktVersion = "00.01.084"; //Never change the layout of this line!
+	public static final String aktVersion = "00.01.085"; //Never change the layout of this line!
 	//static final String buildDate=".."
 	//static final String buildType="..."
 				//needed for update.JAPUpdate
-				public static String aktVersion2 = aktVersion;
 				public final static boolean m_bReleasedVersion = false;
 	static final int      defaultPortNumber            = 4001;
 	static final String   defaultAnonHost              = "mix.inf.tu-dresden.de";

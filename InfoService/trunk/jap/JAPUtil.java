@@ -5,14 +5,14 @@ Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
 
 	- Redistributions of source code must retain the above copyright notice,
-	  this list of conditions and the following disclaimer.
+		this list of conditions and the following disclaimer.
 
 	- Redistributions in binary form must reproduce the above copyright notice,
-	  this list of conditions and the following disclaimer in the documentation and/or
+		this list of conditions and the following disclaimer in the documentation and/or
 		other materials provided with the distribution.
 
 	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
-	  may be used to endorse or promote products derived from this software without specific
+		may be used to endorse or promote products derived from this software without specific
 		prior written permission.
 
 
@@ -59,7 +59,6 @@ import javax.swing.*;
 import javax.swing.table.*;
 
 import HTTPClient.Codecs;
-import update.UpdateListener;
 
 final public class JAPUtil
 	{
@@ -81,9 +80,9 @@ final public class JAPUtil
 								ze=(ZipEntry)e.nextElement();
 								oldnames.put(ze.getName(),ze.getName());
 							}
-                                                // it shouldn't be a FileStream but an ByteArrayStream or st like that
+																								// it shouldn't be a FileStream but an ByteArrayStream or st like that
 						//zdiff=new ZipInputStream(new FileInputStream(diffJAR));
-                                                zdiff = new ZipInputStream(new ByteArrayInputStream(diffJAR));
+																								zdiff = new ZipInputStream(new ByteArrayInputStream(diffJAR));
 						znew=new ZipOutputStream(new FileOutputStream(newJAR));
 						znew.setLevel(9);
 						byte[] b=new byte[5000];
@@ -268,11 +267,11 @@ final public class JAPUtil
 						{
 							try
 								{ //For JAXP 1.1 (for Instance Apache Crimson/Xalan shipped with Java 1.4)
-								  //This seams to be realy stupid and compliecated...
-								  //But if the do a simple t.transform(), a NoClassDefError is thrown, if
-								  //the new JAXP1.1 is not present, even if we NOT call saveXMLDocument, but
-								  //calling any other method within JAPUtil.
-								  //Dont no why --> maybe this has something to to with Just in Time compiling ?
+									//This seams to be realy stupid and compliecated...
+									//But if the do a simple t.transform(), a NoClassDefError is thrown, if
+									//the new JAXP1.1 is not present, even if we NOT call saveXMLDocument, but
+									//calling any other method within JAPUtil.
+									//Dont no why --> maybe this has something to to with Just in Time compiling ?
 									Object t=
 											javax.xml.transform.TransformerFactory.newInstance().newTransformer();
 									javax.xml.transform.Result r=new javax.xml.transform.stream.StreamResult(out);
@@ -326,8 +325,8 @@ final public class JAPUtil
 			// try loading the lowcolor images
 			if(colordepth<=16)
 				{
-				  imageFilename = JAPConstants.IMGPATHLOWCOLOR+strImage;
-				  try
+					imageFilename = JAPConstants.IMGPATHLOWCOLOR+strImage;
+					try
 						{
 							// this is necessary to make shure that the images are loaded when contained in a JAP.jar
 							img = new ImageIcon(Class.forName("JAP").getResource(imageFilename));
@@ -338,31 +337,31 @@ final public class JAPUtil
 								{
 									//we have to chek, if the file exist, because new ImageIcon(String) will always success!!!
 									if((new File(imageFilename)).canRead())
-									  img = new ImageIcon(imageFilename);
+										img = new ImageIcon(imageFilename);
 								}
 							catch(Exception e1)
 								{
 								}
 						}
-		  	}
+				}
 			// if loading of lowcolor images was not successful or
 			//    we have to load the hicolor images
 			if(img==null)
 				{
-				  imageFilename = JAPConstants.IMGPATHHICOLOR+strImage;
-				  try
+					imageFilename = JAPConstants.IMGPATHHICOLOR+strImage;
+					try
 						{
 							// this is necessary to make shure that the images are loaded when contained in a JAP.jar
 							 img = new ImageIcon(Class.forName("JAP").getResource(imageFilename));
 						}
 					catch (Exception e)
 						{
-    					img = new ImageIcon(imageFilename);
+							img = new ImageIcon(imageFilename);
 						}
-			  }
+				}
 
 			if (sync  && img != null)
-			  {
+				{
 					int statusBits=MediaTracker.ABORTED|MediaTracker.ERRORED|MediaTracker.COMPLETE;
 					for(;;)
 						{
@@ -373,7 +372,7 @@ final public class JAPUtil
 								Thread.yield();
 						}
 				}
-		  return img;
+			return img;
 		}
 
 	public static void centerFrame(Window f) {
@@ -397,13 +396,13 @@ final public class JAPUtil
 				f.setLocation((screenSize.width-ownSize.width ) , 0 );
 			}
 
-  public static void showMessageBox(JFrame parent,String messageID,String titleID,int jOptionPaneMessageType)
-    {
+	public static void showMessageBox(JFrame parent,String messageID,String titleID,int jOptionPaneMessageType)
+		{
 			JOptionPane pane=new JOptionPane(JAPMessages.getString(messageID),jOptionPaneMessageType);
-      JDialog dialog=pane.createDialog(parent,JAPMessages.getString(titleID));
-      dialog.setFont(JAPController.getDialogFont());
-      dialog.show();
-    }
+			JDialog dialog=pane.createDialog(parent,JAPMessages.getString(titleID));
+			dialog.setFont(JAPController.getDialogFont());
+			dialog.show();
+		}
 
 	/** Sets the mnemonic charcter of a component. The character must be set
 	 *  in the properties file under a name that is given in mnPropertyString.
@@ -414,7 +413,7 @@ final public class JAPUtil
 				bt.setMnemonic(mn.charAt(0));
 			}
 
-    public static void setPerfectTableSize(JTable table,Dimension maxDimension)
+		public static void setPerfectTableSize(JTable table,Dimension maxDimension)
 			{
 				TableModel tableModel = table.getModel();
 				int perfectWidth  = 0;
@@ -447,17 +446,17 @@ final public class JAPUtil
 										columnHeight        += component.getPreferredSize().height;
 									}
 								int preferredColumnWidth = Math.max(headerWidth,cellWidth);
-                column.setPreferredWidth(preferredColumnWidth);
+								column.setPreferredWidth(preferredColumnWidth);
 								perfectWidth += preferredColumnWidth;
-		    				if (minimunColunmHeight == 0) minimunColunmHeight = columnHeight;
-		    				else minimunColunmHeight = Math.min(minimunColunmHeight,columnHeight);
+								if (minimunColunmHeight == 0) minimunColunmHeight = columnHeight;
+								else minimunColunmHeight = Math.min(minimunColunmHeight,columnHeight);
 							}
 					}
 		// add some space for scrollbar,... (+ 30)
 			perfectWidth  = Math.min(maxDimension.width ,perfectWidth + 30);
 			perfectHeight = Math.min(maxDimension.height,minimunColunmHeight);
 			table.setPreferredScrollableViewportSize(new Dimension(perfectWidth, perfectHeight));
-    }
+		}
 
 		public static String getProxyAuthorization(String user,String passwd)
 			{
@@ -465,7 +464,7 @@ final public class JAPUtil
 				return "Proxy-Authorization: Basic "+tmpPasswd+"\r\n";
 			}
 
-    public static String readLine(InputStream inputStream) throws Exception {
+		public static String readLine(InputStream inputStream) throws Exception {
 			String returnString = "";
 			try{
 				int byteRead = inputStream.read();
@@ -478,7 +477,7 @@ final public class JAPUtil
 				throw e;
 			}
 			return returnString;
-    	}
+			}
 
 		}
 
