@@ -79,11 +79,15 @@ public class PaymentMainPanel extends JPanel
 	/** this button opens the configuration tab for payment */
 	private JButton m_ConfigButton;
 
+	/** the main jap window */
+	private JAPNewView m_view;
+
 	private MyPaymentListener m_MyPaymentListener = new MyPaymentListener();
 
 	public PaymentMainPanel(final JAPNewView view)
 	{
 		super(null);
+		m_view = view;
 
 		loadIcons();
 		GridBagLayout l = new GridBagLayout();
@@ -160,7 +164,7 @@ public class PaymentMainPanel extends JPanel
 		// payment disabled
 		if (activeAccount == null)
 		{
-			m_AccountText.setText("Payment disabled");
+			m_AccountText.setText(JAPMessages.getString("ngPaymentDisabled"));
 			m_AccountIconLabel.setIcon(m_accountIcons[0]);
 			m_BalanceText.setText("");
 			m_BalanceText.setEnabled(false);
@@ -170,7 +174,7 @@ public class PaymentMainPanel extends JPanel
 		// account is empty :-(
 		else if (activeAccount.getCertifiedCredit() == 0)
 		{
-			m_AccountText.setText("You should recharge your account");
+			m_AccountText.setText(JAPMessages.getString("ngPaymentRecharge"));
 			m_AccountText.setForeground(Color.red);
 			m_AccountIconLabel.setIcon(m_accountIcons[2]);
 			m_BalanceText.setEnabled(true);
@@ -197,11 +201,11 @@ public class PaymentMainPanel extends JPanel
 			switch (log)
 			{
 				case 1:
-					unit = " Bytes";
+					unit = " Bytes";break;
 				case 2:
-					unit = " KB";
+					unit = " KB";break;
 				case 3:
-					unit = " MB";
+					unit = " MB";break;
 				case 4:
 				default:
 					unit = " GB";
@@ -269,14 +273,14 @@ public class PaymentMainPanel extends JPanel
 			PayAccountsFile accounts = PayAccountsFile.getInstance();
 			if (accounts.getNumAccounts() == 0)
 			{
+				/** @todo internationalize */
 				if (JOptionPane.showOptionDialog(
 					PaymentMainPanel.this,
-					"The mixcascade you are currently using wants to be payed. " +
-					"Would you like to create an account now?" +
-					"for you. ", "JAP Payment", JOptionPane.YES_NO_OPTION,
+					"<html>" + JAPMessages.getString("payCreateAccountQuestion") + "</html>",
+					JAPMessages.getString("ngPaymentTabTitle"), JOptionPane.YES_NO_OPTION,
 					JOptionPane.QUESTION_MESSAGE, null, null, null) == JOptionPane.YES_OPTION)
 				{
-					/** @todo show settings view here */
+					m_view.showConfigDialog(JAPConf.PAYMENT_TAB);
 				}
 			}
 			else
@@ -285,12 +289,8 @@ public class PaymentMainPanel extends JPanel
 				{
 					JOptionPane.showMessageDialog(
 						PaymentMainPanel.this,
-						"The mixcascade you are currently using wants to be payed. " +
-						"Your active account with the accountnumber " +
-						accounts.getActiveAccount().getAccountNumber() +
-						" will be used for payment.",
-						"JAP Payment", JOptionPane.INFORMATION_MESSAGE
-						);
+						"<html>" + JAPMessages.getString("payUseAccountQuestion") + "</html>",
+						JAPMessages.getString("ngPaymentTabTitle"), JOptionPane.INFORMATION_MESSAGE);
 				}
 				else
 				{
@@ -301,21 +301,25 @@ public class PaymentMainPanel extends JPanel
 							"The mixcascade you are currently using wants to be payed. " +
 							"You have created an account, however it is not marked as " +
 							"active. Jap will now automatically activate this account " +
-							"for you. ", "JAP Payment", JOptionPane.INFORMATION_MESSAGE
+							"for you. ",
+							JAPMessages.getString("ngPaymentTabTitle"), JOptionPane.INFORMATION_MESSAGE
 							);
 						Enumeration enumE = accounts.getAccounts();
 						accounts.setActiveAccount( (PayAccount) enumE.nextElement());
 					}
 					else
 					{
-						JOptionPane.showOptionDialog(
+						if (JOptionPane.showOptionDialog(
 							PaymentMainPanel.this,
 							"The mixcascade you are currently using wants to be payed. " +
 							"You must activate an account to allow Jap using it for payment. " +
 							"Would you like to choose an active account now?",
-							"JAP Payment", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE,
-							null, null, null);
-
+							JAPMessages.getString("ngPaymentTabTitle"),
+							JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE,
+							null, null, null) == JOptionPane.YES_OPTION)
+						{
+							m_view.showConfigDialog(JAPConf.PAYMENT_TAB);
+						}
 					}
 				}
 			}
@@ -329,9 +333,10 @@ public class PaymentMainPanel extends JPanel
 		public void accountError(XMLErrorMessage msg)
 		{
 			/** @todo internationalize */
-			JOptionPane.showOptionDialog(PaymentMainPanel.this,
-										 "The AI sent an errormessage: " + msg.getErrorDescription(),
-										 "Error message",
+			JOptionPane.showOptionDialog(
+				PaymentMainPanel.this,
+				JAPMessages.getString("aiErrorMessage") + msg.getErrorDescription(),
+				JAPMessages.getString("error"),
 										 JOptionPane.YES_NO_OPTION, JOptionPane.ERROR_MESSAGE,
 										 null, null, null);
 		}
