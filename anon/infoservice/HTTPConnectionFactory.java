@@ -68,12 +68,12 @@ public class HTTPConnectionFactory
 	private String proxyAuthPassword;
 
 	/**
-   * Stores the communication timeout (sec) for new HTTP connections. If this value is zero, a
-   * connection never times out.
-   */
-  private int m_timeout;
+	 * Stores the communication timeout (sec) for new HTTP connections. If this value is zero, a
+	 * connection never times out.
+	 */
+	private int m_timeout;
 
-  /**
+	/**
 	 * This creates a new instance of HTTPConnectionFactory. This is only used for setting some
 	 * values. Use HTTPConnectionFactory.getInstance() for getting an instance of this class.
 	 */
@@ -81,7 +81,7 @@ public class HTTPConnectionFactory
 	{
 		/* default is to use no proxy for all new HTTPConnection instances */
 		setNewProxySettings(PROXY_TYPE_NONE, null, -1, null, null);
-    m_timeout = 10;
+		m_timeout = 10;
 	}
 
 	/**
@@ -162,33 +162,37 @@ public class HTTPConnectionFactory
 	}
 
 	/**
-   * Sets the communication timeout (sec) for new HTTP connections. If this value is zero, a
-   * connection never times out. Instances of HTTPConnection which already exist, are not
-   * influenced by this method.
-   *
-   * @param a_timeout The new communication timeout.
-   */
-  public void setTimeout(int a_timeout) {
-    synchronized (this) {
-      m_timeout = a_timeout;
-    }
-  }
+	 * Sets the communication timeout (sec) for new HTTP connections. If this value is zero, a
+	 * connection never times out. Instances of HTTPConnection which already exist, are not
+	 * influenced by this method.
+	 *
+	 * @param a_timeout The new communication timeout.
+	 */
+	public void setTimeout(int a_timeout)
+	{
+		synchronized (this)
+		{
+			m_timeout = a_timeout;
+		}
+	}
 
-  /**
-   * Returns the communication timeout (sec) for new HTTP connections. If this value is zero, a
-   * connection never times out.
-   *
-   * @return The communication timeout for new connections.
-   */
-  public int getTimeout() {
-    int r_timeout = 0;
-    synchronized (this) {
-      r_timeout = m_timeout;
-    }
-    return r_timeout;
-  }
+	/**
+	 * Returns the communication timeout (sec) for new HTTP connections. If this value is zero, a
+	 * connection never times out.
+	 *
+	 * @return The communication timeout for new connections.
+	 */
+	public int getTimeout()
+	{
+		int r_timeout = 0;
+		synchronized (this)
+		{
+			r_timeout = m_timeout;
+		}
+		return r_timeout;
+	}
 
-  /**
+	/**
 	 * This method creates a new instance of HTTPConnection. The current proxy settings are used.
 	 *
 	 * @param target The ListenerInterface of the connection target.
@@ -202,7 +206,7 @@ public class HTTPConnectionFactory
 		synchronized (this)
 		{
 			/* get always the current proxy settings */
-      newConnection = new HTTPConnection(target.getHost(), target.getPort());
+			newConnection = new HTTPConnection(target.getHost(), target.getPort());
 			if (proxyAuthUserName != null)
 			{
 				/* set the proxy authorization if neccessary (only HTTP proxies) */
@@ -226,8 +230,8 @@ public class HTTPConnectionFactory
 		replaceHeader(newConnection, headers[0]);
 		replaceHeader(newConnection, headers[1]);
 		newConnection.setAllowUserInteraction(false);
-    /* set the timeout for all network operations */
-    newConnection.setTimeout(getTimeout() * 1000);
+		/* set the timeout for all network operations */
+		newConnection.setTimeout(getTimeout() * 1000);
 		return newConnection;
 	}
 

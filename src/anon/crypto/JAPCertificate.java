@@ -44,6 +44,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.SignatureException;
 import java.util.Date;
+
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.BERInputStream;
 import org.bouncycastle.asn1.DERBitString;
@@ -60,48 +61,62 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.Text;
 import anon.util.Base64;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 
-public class JAPCertificate
+/**
+ * A certificate class.
+ *
+ */
+final public class JAPCertificate
 {
-	private X509CertificateStructure x509cert;
-	private MyDSAPublicKey pubKey;
-	private Time endDate;
-	private Time startDate;
-	private X509Name issuer;
-	private X509Name subject;
-	private DERBitString sig;
-	private DERInteger serialno;
-	private AlgorithmIdentifier sigalgo;
-	private SubjectPublicKeyInfo pubkeyinfo;
-	private TBSCertificateStructure tbscert;
-	private int version;
-	private boolean enabled;
+	private X509CertificateStructure m_x509cert;
+	private MyDSAPublicKey m_DSAPKpubKey;
+	private Time m_TimeEndDate;
+	private Time m_TimeStartDate;
+	private X509Name m_X509NameIssuer;
+	private X509Name m_X509NameSubject;
+	private DERBitString m_DERBitStringSignature;
+	private DERInteger m_DERIntegerSerialNo;
+	private AlgorithmIdentifier m_AlgIdentSigAlgo;
+	private SubjectPublicKeyInfo m_SubjPubKeyInfo;
+	private TBSCertificateStructure m_TBSCertStruct;
+	private int m_version;
+	private boolean m_bEnabled;
 
 	private JAPCertificate()
 	{
 	}
 
-	public static JAPCertificate getInstance(InputStream in) throws JAPCertificateException
+	/** Creates a certificate instance by using an inputstream.
+	 *
+	 * @param a_in Inputstream that holds the certificate
+	 * @return Certificate
+	 */
+	public static JAPCertificate getInstance(InputStream a_in) throws JAPCertificateException
 	{
 		try
 		{
-			BERInputStream is = new BERInputStream(in);
-			ASN1Sequence dcs = (ASN1Sequence) is.readObject();
-			X509CertificateStructure m_x509cert = new X509CertificateStructure(dcs);
-			JAPCertificate m_japcert = new JAPCertificate();
-			m_japcert.sigalgo = m_x509cert.getSignatureAlgorithm();
-			m_japcert.startDate = m_x509cert.getStartDate();
-			m_japcert.endDate = m_x509cert.getEndDate();
-			m_japcert.issuer = m_x509cert.getIssuer();
-			m_japcert.subject = m_x509cert.getSubject();
-			m_japcert.sig = m_x509cert.getSignature();
-			m_japcert.serialno = m_x509cert.getSerialNumber();
-			m_japcert.pubkeyinfo = m_x509cert.getSubjectPublicKeyInfo();
-			m_japcert.tbscert = m_x509cert.getTBSCertificate();
-			m_japcert.version = m_x509cert.getVersion();
-			m_japcert.pubKey = new MyDSAPublicKey(m_x509cert.getSubjectPublicKeyInfo());
-			m_japcert.x509cert = m_x509cert;
-			return m_japcert;
+			BERInputStream bis = new BERInputStream(a_in);
+			ASN1Sequence seq = (ASN1Sequence) bis.readObject();
+			X509CertificateStructure m_x509cert = new X509CertificateStructure(seq);
+			JAPCertificate r_japcert = new JAPCertificate();
+
+			r_japcert.m_AlgIdentSigAlgo = m_x509cert.getSignatureAlgorithm();
+			r_japcert.m_TimeStartDate = m_x509cert.getStartDate();
+			r_japcert.m_TimeEndDate = m_x509cert.getEndDate();
+			r_japcert.m_X509NameIssuer = m_x509cert.getIssuer();
+			r_japcert.m_X509NameSubject = m_x509cert.getSubject();
+			r_japcert.m_DERBitStringSignature = m_x509cert.getSignature();
+			r_japcert.m_DERIntegerSerialNo = m_x509cert.getSerialNumber();
+			r_japcert.m_SubjPubKeyInfo = m_x509cert.getSubjectPublicKeyInfo();
+			r_japcert.m_TBSCertStruct = m_x509cert.getTBSCertificate();
+			r_japcert.m_version = m_x509cert.getVersion();
+			r_japcert.m_DSAPKpubKey = new MyDSAPublicKey(m_x509cert.getSubjectPublicKeyInfo());
+			r_japcert.m_x509cert = m_x509cert;
+
+			return r_japcert;
 		}
 		catch (Exception e)
 		{
@@ -109,42 +124,22 @@ public class JAPCertificate
 		}
 	}
 
-	/*
-	 public static JAPCertificate getInstance(TBSCertificateStructure m_tbscert)
-	 {
-	  JAPCertificate m_japcert = new JAPCertificate();
-	  try
-	  {
-	   m_japcert.startDate = m_tbscert.getStartDate();
-	   m_japcert.endDate = m_tbscert.getEndDate();
-	   m_japcert.issuer = m_tbscert.getIssuer();
-	   m_japcert.subject = m_tbscert.getSubject();
-	   m_japcert.sigalgo = m_tbscert.getSignature();
-	   m_japcert.pubkeyinfo = m_tbscert.getSubjectPublicKeyInfo();
-	   m_japcert.serialno = m_tbscert.getSerialNumber();
-	   m_japcert.version = m_tbscert.getVersion();
-	   m_japcert.pubKey = new JAPDSAPublicKey(m_tbscert.getSubjectPublicKeyInfo());
-	  }
-	  catch (Exception e)
-	  {
-	   e.printStackTrace();
-	  }
-	  return m_japcert;
-	 }
+	/** Creates a certificate instance by using a XML Node as input.
+	 *
+	 * @param a_NodeRoot X509Certificate XML Node
+	 * @return Certificate
 	 */
-
-	public static JAPCertificate getInstance(Node root) throws IOException
+	public static JAPCertificate getInstance(Node a_NodeRoot) throws IOException
 	{
-//      System.out.println("found:  " + root.toString());
-		if (!root.getNodeName().equals("X509Certificate"))
+		if (!a_NodeRoot.getNodeName().equals("X509Certificate"))
 		{
 			return null;
 		}
 
-		Element elemX509Cert = (Element) root;
+		Element elemX509Cert = (Element) a_NodeRoot;
 		Text txtX509Cert = (Text) elemX509Cert.getFirstChild();
-		String value = txtX509Cert.getNodeValue();
-		byte[] bytecert = Base64.decode(value.toCharArray());
+		String strValue = txtX509Cert.getNodeValue();
+		byte[] bytecert = Base64.decode(strValue.toCharArray());
 
 		try
 		{
@@ -152,19 +147,25 @@ public class JAPCertificate
 		}
 		catch (Exception e)
 		{
-			e.printStackTrace();
+			LogHolder.log(LogLevel.ERR, LogType.MISC,
+						  "JAPCertificate:getInstance(Node) failed!");
 		}
 		return null;
 	}
 
-	public static JAPCertificate getInstance(File file) throws JAPCertificateException
+	/** Creates a certificate instance by using a file.
+	 *
+	 * @param a_file File that holds the certificate
+	 * @return Certificate
+	 */
+	public static JAPCertificate getInstance(File a_file) throws JAPCertificateException
 	{
-		if (file != null)
+		if (a_file != null)
 		{
 			try
 			{
-				byte[] buff = new byte[ (int) file.length()];
-				FileInputStream fin = new FileInputStream(file);
+				byte[] buff = new byte[ (int) a_file.length()];
+				FileInputStream fin = new FileInputStream(a_file);
 				fin.read(buff);
 				fin.close();
 				return JAPCertificate.getInstance(buff);
@@ -175,21 +176,38 @@ public class JAPCertificate
 			}
 			catch (FileNotFoundException e)
 			{
-				new FileNotFoundException("Certificate file not found!");
+				LogHolder.log(LogLevel.EXCEPTION, LogType.MISC,
+							  "JAPCertificate:getInstance(File) - Certificate file not found!");
 			}
 			catch (Exception e)
 			{
-				new Exception("Error while processing certificate !");
+				LogHolder.log(LogLevel.EXCEPTION, LogType.MISC,
+							  "JAPCertificate:getInstance(File) failed!");
 			}
 		}
 		return null;
 	}
 
-	public static JAPCertificate getInstance(byte[] encoded) throws JAPCertificateException
+	/** Creates a certificate instance by using a file name.
+	 *
+	 * @param a_strFileName Name of File that holds the certificate
+	 * @return Certificate
+	 */
+	public static JAPCertificate getInstance(String a_strFileName) throws JAPCertificateException
+	{
+		return getInstance(new File(a_strFileName));
+	}
+
+	/** Creates a certificate instance by using the encoded variant of the certificate
+	 *
+	 * @param a_encoded Byte Array of the Certificate
+	 * @return Certificate
+	 */
+	public static JAPCertificate getInstance(byte[] a_encoded) throws JAPCertificateException
 	{
 		try
 		{
-			return getInstance(new ByteArrayInputStream(encoded));
+			return getInstance(new ByteArrayInputStream(a_encoded));
 		}
 		catch (JAPCertificateException e)
 		{
@@ -201,6 +219,7 @@ public class JAPCertificate
 		}
 	}
 
+/*
 	public static class IllegalCertificateException extends RuntimeException
 	{
 		public IllegalCertificateException(String str)
@@ -208,120 +227,181 @@ public class JAPCertificate
 			super(str);
 		}
 	};
+*/
 
+	/** Returns the start date of the certificate.
+	 *
+	 * @return Date (start)
+	 */
 	public Date getStartDate()
 	{
-		return startDate.getDate();
+		return m_TimeStartDate.getDate();
 	}
 
+	/** Returns the date when certificate expires.
+	 *
+	 * @return Date (expire)
+	 */
 	public Date getEndDate()
 	{
-		return endDate.getDate();
+		return m_TimeEndDate.getDate();
 	}
 
+	/** Returns the TBS certificate structure of a certificate.
+	 *
+	 * @return TBSCertificateStructure
+	 */
 	public TBSCertificateStructure getTBSCertificate()
 	{
-		return tbscert;
+		return m_TBSCertStruct;
 	}
 
+	/** Returns the serial number of the certificate.
+	 *
+	 * @return Serial Number
+	 */
 	public DERInteger getSerialNumber()
 	{
-		return serialno;
+		return m_DERIntegerSerialNo;
 	}
 
+	/** Returns the signature of the certificate.
+	 *
+	 * @return Signature
+	 */
 	public DERBitString getSignature()
 	{
-		return sig;
+		return m_DERBitStringSignature;
 	}
 
+	/** Returns the algorithm identifier for the signature algorithm of certificate.
+	 *
+	 * @return AlgorithmIdentifier
+	 */
 	public AlgorithmIdentifier getSignatureAlgorithm()
 	{
-		return sigalgo;
+		return m_AlgIdentSigAlgo;
 	}
 
+	/** Returns the subject public key info of the certificate.
+	 *
+	 * @return SubjectPublicKeyInfo
+	 */
 	public SubjectPublicKeyInfo getSubjectPublicKeyInfo()
 	{
-		return pubkeyinfo;
+		return m_SubjPubKeyInfo;
 	}
 
+	/** Returns the issuer of the certificate as an X509Name object.
+	 *
+	 * @return issuer (X509Name)
+	 */
 	public X509Name getIssuer()
 	{
-		return issuer;
+		return m_X509NameIssuer;
 	}
 
+	/** Returns the subject of the certificate as an X509Name object.
+	 *
+	 * @return subject (X509Name)
+	 */
 	public X509Name getSubject()
 	{
-		return subject;
+		return m_X509NameSubject;
 	}
 
+	/** Returns the version number.
+	 *
+	 * @return version
+	 */
 	public int getVersion()
 	{
-		return version;
+		return m_version;
 	}
 
+	/** Returns the public key of the certificate.
+	 *
+	 * @return public key
+	 */
 	public PublicKey getPublicKey()
 	{
-		return (PublicKey) pubKey;
+		return (PublicKey) m_DSAPKpubKey;
 	}
 
+	/** Returns the encoded form of the certificate (char array).
+	 *
+	 * @return encoded certificate
+	 */
 	public char[] getEncoded()
 	{
-		ByteArrayOutputStream bOut = new ByteArrayOutputStream();
-		DEROutputStream dOut = new DEROutputStream(bOut);
+		ByteArrayOutputStream bArrOStream = new ByteArrayOutputStream();
+		DEROutputStream dOStream = new DEROutputStream(bArrOStream);
 		try
 		{
-			dOut.writeObject(this.x509cert);
-			dOut.close();
+			dOStream.writeObject(this.m_x509cert);
+			dOStream.close();
 		}
 		catch (IOException e)
 		{
-			// throw new RuntimeException("IOException while encoding");
-			e.printStackTrace();
+			LogHolder.log(LogLevel.EXCEPTION, LogType.MISC,
+						  "JAPCertificate:getEncoded() failed (IOException)");
 		}
-		return Base64.encode(bOut.toByteArray());
+		return Base64.encode(bArrOStream.toByteArray());
 	}
 
-	public boolean validDate(Date date)
+	/** Checks if the certificate starting date is not before a given date and
+	 *  date of is not beyond the given date
+	 * @param a_date (Date)
+	 * @return true if certificate dates are within range of the given date
+	 * @return false if that's not the case
+	 */
+	public boolean isDateValid(Date a_date)
 	{
-		if (date.before(getStartDate()))
-		{
-			return false;
-		}
-		if (date.after(getEndDate()))
-		{
-			return false;
-		}
-		return true;
+		boolean bValid = true;
+		bValid = (a_date.before(getStartDate()) || a_date.after(getEndDate()));
+		return bValid;
 	}
 
-	public void setEnabled(boolean b)
+	/** Changes the status of the certificate.
+	 * @param a_bEnabled (Status)
+	 */
+	public void setEnabled(boolean a_bEnabled)
 	{
-		enabled = b;
+		m_bEnabled = a_bEnabled;
 	}
 
+	/** Returns the status of the certificate.
+	 * @return status
+	 */
 	public boolean getEnabled()
 	{
-		return enabled;
+		return m_bEnabled;
 	}
 
-	public boolean verify(PublicKey pubkey) throws NoSuchAlgorithmException, InvalidKeyException,
-		SignatureException, JAPCertificateException
+	/** Verifies the certificate by using the public key.
+	 * @param a_pubkey given public key
+	 * @return true if it could be verified
+	 * @return false if that's not the case
+	 */
+	public boolean verify(PublicKey a_pubkey) throws NoSuchAlgorithmException,
+		InvalidKeyException, SignatureException, JAPCertificateException
 	{
 		try
 		{
-			ByteArrayOutputStream bOut = new ByteArrayOutputStream();
+			ByteArrayOutputStream bArrOStream = new ByteArrayOutputStream();
 
 			JAPSignature sig = new JAPSignature();
-			sig.initVerify(pubkey);
+			sig.initVerify(a_pubkey);
 
-			(new DEROutputStream(bOut)).writeObject(this.getTBSCertificate());
+			(new DEROutputStream(bArrOStream)).writeObject(this.getTBSCertificate());
 
-			byte[] sigToVerify = this.getSignature().getBytes();
-			return sig.verify(bOut.toByteArray(), sigToVerify);
+			byte[] bArrSigToVerify = this.getSignature().getBytes();
+			return sig.verify(bArrOStream.toByteArray(), bArrSigToVerify);
 		}
 		catch (IOException e)
 		{
-			e.printStackTrace();
+			LogHolder.log(LogLevel.EXCEPTION, LogType.MISC,
+						  "JAPCertificate:verify() failed (IOException)");
 		}
 		return false;
 	}
@@ -334,19 +414,17 @@ public class JAPCertificate
 	 * @return Certificate as XML node.
 	 */
 
-	public Element toXmlNode(Document doc)
+	public Element toXmlNode(Document a_doc)
 	{
 
-		Element keyInfo = doc.createElement("KeyInfo");
-		Element x509data = doc.createElement("X509Data");
-		keyInfo.appendChild(x509data);
-		Element x509cert = doc.createElement("X509Certificate");
-		x509data.appendChild(x509cert);
-		// x509cert.setAttribute("xml:space", "preserve");
-		// falsch! x509cert.appendChild(doc.createTextNode(String.valueOf(getEncoded())));
-		x509cert.appendChild(doc.createTextNode(String.valueOf(getEncoded())));
+		Element elemKeyInfo = a_doc.createElement("KeyInfo");
+		Element elemX509Data = a_doc.createElement("X509Data");
+		elemKeyInfo.appendChild(elemX509Data);
+		Element elemX509Cert = a_doc.createElement("X509Certificate");
+		elemX509Data.appendChild(elemX509Cert);
+		elemX509Cert.appendChild(a_doc.createTextNode(String.valueOf(getEncoded())));
 
-		return keyInfo;
+		return elemKeyInfo;
 	}
 
 }

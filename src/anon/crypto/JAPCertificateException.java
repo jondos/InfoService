@@ -31,14 +31,18 @@ package anon.crypto;
  * If you change something - do not forget to add the changes also to the JAP source tree!
  */
 
-public class JAPCertificateException extends Exception
+/**
+ * This is the certificate exception class.
+ *
+ */
+final public class JAPCertificateException extends Exception
 {
 	public JAPCertificateException()
 	{
 	}
 
-	public JAPCertificateException(String msg)
+	public JAPCertificateException(String a_strMsg)
 	{
-		super(msg);
+		super(a_strMsg);
 	}
 }
