@@ -4,7 +4,7 @@ import java.util.*;
 import java.text.*;
 
 public class SK13ProxyConnection extends Thread {
-	private Socket inSocket;
+	private CASocket inSocket;
     
   private boolean debug = false; 
   private int threadNumber;
@@ -15,7 +15,7 @@ public class SK13ProxyConnection extends Thread {
 	private int channel;
 	private CAMuxSocket outSocket;
 	
-	public SK13ProxyConnection (Socket s, int channelID,CAMuxSocket muxSocket) 
+	public SK13ProxyConnection (CASocket s, int channelID,CAMuxSocket muxSocket) 
 		{
 			inSocket = s;
 			channel=channelID;
@@ -35,22 +35,34 @@ public class SK13ProxyConnection extends Thread {
 					int len;
 					while((len=fromClient.read(buff,0,1000))!=-1)
 						{
-							outSocket.send(channel,buff,len);
+							if(len>0)
+								outSocket.send(channel,buff,(short)len);
 						}
 					
 				} // if (protocol....)
 			catch (IOException ioe)
 				{
+//					System.out.println("IOException - read from Browser...");
+//					ioe.printStackTrace();
 				}
 			catch (Exception e)
 				{
 				}
-			System.out.println("ProxyConnection: Normal Exit..");
+//			System.out.println("ProxyConnection: Normal Exit..");
     	try 
 				{
-					outSocket.close(channel);
 					fromClient.close();
-					inSocket.close();
+				}
+			catch(Exception e)
+				{
+				}
+			try
+				{
+					if(!inSocket.isClosed())
+						{
+							outSocket.close(channel);
+							inSocket.close();
+						}
 				}
 			catch (Exception e)
 				{

@@ -32,12 +32,16 @@ public class ProxyServer implements Runnable {
 					{
 						server = new ServerSocket (portN);
 						oMuxSocket=new CAMuxSocket();
-						oMuxSocket.connect("anon.inf.tu-dresden.de",6543);
+						if(oMuxSocket.connect("anon.inf.tu-dresden.de",6543)==-1)
+							{
+								System.out.println("Cannot connect to Mix...!");
+								return;
+							}
 						oMuxSocket.start();
 						while(runFlag)
 							{
 								socket = server.accept();
-								oMuxSocket.newConnection(socket);
+								oMuxSocket.newConnection(new CASocket(socket));
 							}
 					}
 				catch (Exception e) {
