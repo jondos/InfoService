@@ -93,20 +93,34 @@ public class JAPAbout extends JDialog
 					//	try{t.sleep(2000);}catch(Exception e){}
 					//	try{t.sleep(2000);}catch(Exception e){}
 						bRun=true;
+						int height;
+						while(true)
+							{
+								try
+									{
+										height=textArea.getPreferredSize().height;
+										break;
+									}
+								catch(Throwable to)
+									{
+										try{t.sleep(200);}catch(Exception e){}
+									}
+							}
 						while(bRun)
 							{
 							
-								try{
-								if(i>=textArea.getPreferredSize().height)
+//								try{
+								if(i>height)
 									{	
-										i=-50;
+										i=-dimension.height;
 									}
 								p.y=i;
 								getViewport().setViewPosition(p);
-								i++;}
-								catch(Throwable  t)
-									{									 
-									}
+								i++;
+//						}
+//								catch(Throwable  to1)
+//									{									 
+//									}
 								try{t.sleep(95);}catch(Exception e){}
 							}									
 					}

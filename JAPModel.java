@@ -58,7 +58,7 @@ import anon.JAPAnonServiceListener;
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPModel implements JAPAnonServiceListener{
 
-	public static final String aktVersion = "00.01.004"; // Version of JAP
+	public static final String aktVersion = "00.01.005"; // Version of JAP
 
 	private int      portNumber            = 4001;
 	private boolean  mblistenerIsLocal     = true;  // indicates whether the Listener serves for localhost only or not
