@@ -85,11 +85,12 @@ final class JAPViewIconified extends JFrame implements ActionListener, JAPObserv
 //		getContentPane().add(new JLabel(" "), BorderLayout.EAST);
 //		getContentPane().add(new JLabel(" "), BorderLayout.WEST);
 		getContentPane().add(p2, BorderLayout.SOUTH);
-		addWindowListener(new WindowAdapter() {
-			public void windowClosing(WindowEvent e) {model.setJAPViewDeIconified();}
-			
-			
-			});	
+		addWindowListener(new WindowAdapter() {public void windowClosing(WindowEvent e) {
+//			model.setJAPViewDeIconified();
+			model.getView().setVisible(true);
+			setVisible(false);
+			}
+		});	
 		setResizable(false);
 		pack();
 		JAPUtil.upRightFrame(this);
@@ -101,13 +102,17 @@ final class JAPViewIconified extends JFrame implements ActionListener, JAPObserv
 	
 	public void actionPerformed(ActionEvent event) {
 		Object object = event.getSource();
-		if (object == b) 
-			model.setJAPViewDeIconified();
+		if (object == b) {
+//			model.setJAPViewDeIconified();
+			model.getView().setVisible(true);
+			setVisible(false);
+		}
+		
 	}	
 	
 	public void valuesChanged (JAPModel m) {
-		if (m.nrOfActiveUsers != -1)
-			z3.setText(Integer.toString(model.nrOfActiveUsers));
+		if (model.getAnonServer().getNrOfActiveUsers() != -1)
+			z3.setText(Integer.toString(model.getAnonServer().getNrOfActiveUsers()));
 		else
 			z3.setText("N/A");
 	}

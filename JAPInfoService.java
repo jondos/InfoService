@@ -108,7 +108,7 @@ final class JAPInfoService
 						throw e;
 					}
 			}
-	
+/*	
 	public void getFeedback() {
 		AnonServerDBEntry service = new AnonServerDBEntry(null,model.anonHostName,model.anonPortNumber);
 		this.getFeedback(service);
@@ -117,7 +117,7 @@ final class JAPInfoService
 		model.currentRisk      = service.getCurrentRisk();
 		model.mixedPackets     = service.getMixedPackets();
 	}
-	
+*/	
 		
 	public void getFeedback(AnonServerDBEntry service)
 		{

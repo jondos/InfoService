@@ -55,7 +55,7 @@ final class JAPFeedback implements Runnable {
 				{
 					if (model.isAnonMode())
 						{
-							model.getInfoService().getFeedback();
+							model.getInfoService().getFeedback(model.getAnonServer());
 							model.notifyJAPObservers();
 						}
 					try 
