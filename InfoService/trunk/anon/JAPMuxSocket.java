@@ -139,7 +139,7 @@ final class JAPMuxSocket implements Runnable
 								outDataStream=new DataOutputStream(new BufferedOutputStream(ioSocket.getOutputStream(),DATA_SIZE+6));
 								inDataStream=new DataInputStream(ioSocket.getInputStream());
 								JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Reading len...");
-								ioSocket.setSoTimeout(1000); //Timout 1 second
+								ioSocket.setSoTimeout(10000); //Timout 10 second
 								inDataStream.readUnsignedShort(); //len.. unitressteing at the moment
 								JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Reading Mix-Count...");
 								chainlen=inDataStream.readByte();
