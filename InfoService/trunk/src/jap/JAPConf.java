@@ -400,14 +400,14 @@ final class JAPConf extends JDialog
 			}
 		});
 
-		GridBagConstraints c=new GridBagConstraints();
+		/*GridBagConstraints c=new GridBagConstraints();
 		c.weighty=1;
-		c.weightx=0;
+		c.weightx=1;
 		c.insets=new Insets(20,10,10,10);
-		c.fill=GridBagConstraints.VERTICAL;
+		c.fill=GridBagConstraints.BOTH;
 		pContainer.add(m_Tree,c);
 		c.gridx=1;
-		c.weightx=1;
+		c.weightx=0;
 		c.fill=GridBagConstraints.BOTH;
 		pContainer.add(m_Tabs,c);
 		c.gridx=0;
@@ -417,8 +417,22 @@ final class JAPConf extends JDialog
 		c.fill=GridBagConstraints.HORIZONTAL;
 		c.insets=new Insets(0,10,10,10);
 		pContainer.add(buttonPanel,c);
+		*/
+	   	pContainer.setLayout(new BorderLayout());
+		JPanel treePanel=new JPanel(new GridBagLayout());
+		GridBagConstraints c1=new GridBagConstraints();
+		c1.weighty=1;
+		c1.fill=GridBagConstraints.BOTH;
+		c1.insets=new Insets(10,10,10,10);
+		treePanel.add(m_Tree,c1);
+		pContainer.add(treePanel,BorderLayout.WEST);
+		buttonPanel.setBorder(new EmptyBorder(10,10,10,10));
+		pContainer.add(buttonPanel,BorderLayout.SOUTH);
+		m_Tabs.setBorder(new EmptyBorder(10,10,10,10));
+		pContainer.add(m_Tabs,BorderLayout.CENTER);
 
-		getContentPane().add(pContainer);
+		setContentPane(pContainer);
+		//getContentPane().add(pContainer);
 		updateValues();
 		// largest tab to front
 		selectCard(ANON_TAB);
