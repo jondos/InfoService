@@ -22,6 +22,7 @@ import anon.tor.ordescription.ORDescription;
 import anon.tor.ordescription.ORList;
 import javax.swing.ListSelectionModel;
 import javax.swing.border.EmptyBorder;
+import java.util.Hashtable;
 
 class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 {
@@ -74,7 +75,7 @@ class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 				return false;
 			}
 		};
-		m_tableRouters.setPreferredScrollableViewportSize(new Dimension(70, 70));
+	m_tableRouters.setPreferredScrollableViewportSize(new Dimension(70, m_tableRouters.getRowHeight()*5));
 		m_tableRouters.setCellSelectionEnabled(false);
 		m_tableRouters.setColumnSelectionAllowed(false);
 		m_tableRouters.setRowSelectionAllowed(true);
@@ -103,8 +104,13 @@ class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 		c2.insets = new Insets(5, 5, 5, 0);
 		p.add(m_bttnFetchRouters, c2);
 		panelRoot.add(p, c);
-		p = new JPanel(new GridLayout(3, 2));
-		p.add(new JLabel(JAPMessages.getString("torPrefMinPathLen")));
+
+		p = new JPanel(new GridBagLayout());
+		GridBagConstraints c3=new GridBagConstraints();
+		c3.anchor=GridBagConstraints.NORTHWEST;
+		c3.insets=new Insets(2,5,2,5);
+		c3.fill=GridBagConstraints.NONE;
+		p.add(new JLabel(JAPMessages.getString("torPrefMinPathLen")),c3);
 		m_sliderMinPathLen = new JSlider();
 		m_sliderMinPathLen.setPaintLabels(true);
 		m_sliderMinPathLen.setPaintTicks(true);
@@ -112,8 +118,13 @@ class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 		m_sliderMinPathLen.setSnapToTicks(true);
 		m_sliderMinPathLen.setMinimum(JAPConstants.TOR_MIN_ROUTE_LEN);
 		m_sliderMinPathLen.setMaximum(JAPConstants.TOR_MAX_ROUTE_LEN);
-		p.add(m_sliderMinPathLen);
-		p.add(new JLabel(JAPMessages.getString("torPrefMaxPathLen")));
+		c3.gridx=1;
+		c3.fill=GridBagConstraints.HORIZONTAL;
+		p.add(m_sliderMinPathLen,c3);
+		c3.gridx=0;
+		c3.gridy=1;
+		c3.fill=GridBagConstraints.NONE;
+		p.add(new JLabel(JAPMessages.getString("torPrefMaxPathLen")),c3);
 		m_sliderMaxPathLen = new JSlider();
 		m_sliderMaxPathLen.setMinimum(JAPConstants.TOR_MIN_ROUTE_LEN);
 		m_sliderMaxPathLen.setMaximum(JAPConstants.TOR_MAX_ROUTE_LEN);
@@ -122,17 +133,32 @@ class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 		m_sliderMaxPathLen.setMajorTickSpacing(1);
 		m_sliderMaxPathLen.setMinorTickSpacing(1);
 		m_sliderMaxPathLen.setSnapToTicks(true);
-		p.add(m_sliderMaxPathLen);
-		p.add(new JLabel(JAPMessages.getString("torPrefPathSwitchTime")));
+		c3.gridx=1;
+		c3.fill=GridBagConstraints.HORIZONTAL;
+		p.add(m_sliderMaxPathLen,c3);
+		c3.gridx=0;
+		c3.gridy=2;
+		c3.fill=GridBagConstraints.NONE;
+		p.add(new JLabel(JAPMessages.getString("torPrefPathSwitchTime")),c3);
 		m_sliderConnectionsPerPath = new JSlider();
+		Hashtable sliderLabels = new Hashtable();
+		sliderLabels.put(new Integer(1), new JLabel("10"));
+		sliderLabels.put(new Integer(2), new JLabel("50"));
+		sliderLabels.put(new Integer(3), new JLabel("100"));
+		sliderLabels.put(new Integer(4), new JLabel("500"));
+		sliderLabels.put(new Integer(5), new JLabel("1000"));
+		m_sliderConnectionsPerPath.setLabelTable(sliderLabels);
 		m_sliderConnectionsPerPath.setMinimum(1);
-		m_sliderConnectionsPerPath.setMaximum(JAPConstants.TOR_MAX_CONNECTIONS_PER_ROUTE);
-		m_sliderConnectionsPerPath.setMajorTickSpacing(150);
-		m_sliderConnectionsPerPath.setMinorTickSpacing(50);
+		m_sliderConnectionsPerPath.setMaximum(5);
+		m_sliderConnectionsPerPath.setMajorTickSpacing(1);
+		m_sliderConnectionsPerPath.setMinorTickSpacing(1);
+		m_sliderConnectionsPerPath.setSnapToTicks(true);
 		m_sliderConnectionsPerPath.setPaintLabels(true);
 		m_sliderConnectionsPerPath.setPaintTicks(true);
-
-		p.add(m_sliderConnectionsPerPath);
+		c3.gridx=1;
+		c3.weightx=1;
+		c3.fill=GridBagConstraints.HORIZONTAL;
+		p.add(m_sliderConnectionsPerPath,c3);
 		p.setBorder(new TitledBorder(JAPMessages.getString("torBorderPreferences")));
 		c.gridy = 3;
 		c.weighty = 0;
@@ -166,7 +192,11 @@ class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 
 	protected boolean onOkPressed()
 	{
-		JAPController.setTorMaxConnectionsPerRoute(m_sliderConnectionsPerPath.getValue());
+		int i = m_sliderConnectionsPerPath.getValue();
+		int[] ar =
+			{
+			10, 50, 100, 500, 1000};
+		JAPController.setTorMaxConnectionsPerRoute(ar[i - 1]);
 		JAPController.setTorRouteLen(m_sliderMinPathLen.getValue(), m_sliderMaxPathLen.getValue());
 		return true;
 	}
@@ -186,7 +216,28 @@ class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 
 	private void updateGuiOutput()
 	{
-		m_sliderConnectionsPerPath.setValue(JAPModel.getTorMaxConnectionsPerRoute());
+		int i = JAPModel.getTorMaxConnectionsPerRoute();
+		if (i < 25)
+		{
+			i = 1;
+		}
+		else if (i < 75)
+		{
+			i = 2;
+		}
+		else if (i < 250)
+		{
+			i = 3;
+		}
+		else if (i < 750)
+		{
+			i = 4;
+		}
+		else
+		{
+			i = 5;
+		}
+		m_sliderConnectionsPerPath.setValue(i);
 		m_sliderMaxPathLen.setValue(JAPModel.getTorMaxRouteLen());
 		m_sliderMinPathLen.setValue(JAPModel.getTorMinRouteLen());
 	}
