@@ -36,8 +36,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.security.PublicKey;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.DERInputStream;
@@ -48,8 +46,8 @@ import org.bouncycastle.asn1.x509.RSAPublicKeyStructure;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 import org.bouncycastle.crypto.CipherParameters;
 import org.bouncycastle.crypto.params.RSAKeyParameters;
-import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Document;
 import anon.util.Base64;
 import anon.util.XMLUtil;
 
@@ -163,32 +161,23 @@ final public class MyRSAPublicKey implements IMyPublicKey
 	}
 
 	/**
-	 * Builds an XML Document containing the public key data.
+	 * Builds an XML Node containing the public key data.
 	 * This is compliant to the W3C XML Signature standard
-	 * @return Document
+	 * @param the root document
+	 * @return an XML Node
 	 */
-	public Document getXmlEncoded()
-	{
-		Document doc = null;
-		try
+	public Element toXmlElement(Document a_doc)
 		{
-			doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
-		}
-		catch (ParserConfigurationException ex)
-		{
-			return null;
-		}
-		Element elemRoot = doc.createElement("RSAKeyValue");
-		doc.appendChild(elemRoot);
-		Element elemModulus = doc.createElement("Modulus");
+		Element elemRoot = a_doc.createElement("RSAKeyValue");
+		Element elemModulus = a_doc.createElement("Modulus");
 		elemRoot.appendChild(elemModulus);
 		byte[] b = m_n.toByteArray();
 		XMLUtil.setNodeValue(elemModulus, Base64.encodeBytes(b));
-		Element elemExponent = doc.createElement("Exponent");
+		Element elemExponent = a_doc.createElement("Exponent");
 		elemRoot.appendChild(elemExponent);
 		b = m_e.toByteArray();
 		XMLUtil.setNodeValue(elemExponent, Base64.encodeBytes(b));
-		return doc;
+		return elemRoot;
 	}
 
 	public boolean equals(Object o)

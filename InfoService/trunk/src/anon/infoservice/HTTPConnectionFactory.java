@@ -106,14 +106,14 @@ public class HTTPConnectionFactory
 	 * are not influenced by that call. The default after creating the instance of
 	 * HTTPConnectionFactory is to use no proxy for all new instances of HTTPConnection.
 	 *
-	 * @param a_proxyListener the listener interface of the proxy server; if it is set to null, no
+	 * @param a_proxyInterface the listener interface of the proxy server; if it is set to null, no
 	 *                        proxy is used
 	 */
 	public synchronized void setNewProxySettings(ProxyInterface a_proxyInterface)
 	{
 		m_proxyInterface = a_proxyInterface;
 
-		if (a_proxyInterface == null)
+		if (a_proxyInterface == null || !a_proxyInterface.isValid())
 		{
 			HTTPConnection.setProxyServer(null, -1);
 			HTTPConnection.setSocksServer(null, -1);

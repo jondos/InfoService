@@ -25,12 +25,25 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-
 package anon.util;
 
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
-public interface IXMLEncodeable
+/**
+ * Objects of this type can be transformed into xml.
+ * Classes that implement this interface should also define a method of the following type
+ * <Code> public static String getXMLElementName() </Code>
+ * that should return the name of the XML element constructed by this class.
+ * @author Wendolsky
+ */
+public interface IXMLEncodable
 {
-	public Document getXmlEncoded();
+	/**
+	 * Return an element that can be appended to the document. This
+	 * Method should not change the document in any way!
+	 * @param a_doc a document
+	 * @return the interface as xml element
+	 */
+	public Element toXmlElement(Document a_doc);
 }

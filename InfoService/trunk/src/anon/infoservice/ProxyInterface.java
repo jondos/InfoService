@@ -36,13 +36,19 @@ import org.w3c.dom.Element;
 import anon.util.XMLUtil;
 import anon.util.Util;
 import anon.util.IPasswordReader;
+import anon.util.IXMLEncodable;
+import anon.util.XMLParseException;
 
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 
-
-public final class ProxyInterface extends ListenerInterface implements ImmutableProxyInterface
+/**
+ * This class is used to store information about a proxy connection.
+ * @author Wendolsky
+ */
+public final class ProxyInterface extends ListenerInterface
+	implements ImmutableProxyInterface, IXMLEncodable
 {
 	/**
 	 * The name of the xml node that describes if authentication is used.
@@ -78,7 +84,7 @@ public final class ProxyInterface extends ListenerInterface implements Immutable
 	/**
 	 * If the proxy is used or not.
 	 */
-	private boolean m_bIsValid = true;
+	private boolean m_bUseInterface = true;
 
 	/**
 	 * The password reader instance.
@@ -90,9 +96,10 @@ public final class ProxyInterface extends ListenerInterface implements Immutable
 	 * @param a_proxyInterfaceNode The ProxyInterface node from an XML document.
 	 * @param a_passwordReader the password reader; this is allowed to be null,
 	 *                         but then you won`t be able to use proxy authentication
-	 *
+	 * @exception XMLParseException if an error in the xml structure occurs
 	 */
 	public ProxyInterface(Element a_proxyInterfaceNode, IPasswordReader a_passwordReader)
+		throws XMLParseException
 	{
 		super(a_proxyInterfaceNode);
 		m_passwordReader = a_passwordReader;
@@ -120,7 +127,7 @@ public final class ProxyInterface extends ListenerInterface implements Immutable
 			setUseAuthentication(false);
 		}
 
-		setValid(Boolean.valueOf(XMLUtil.parseNodeString(
+		setUseInterface(Boolean.valueOf(XMLUtil.parseNodeString(
 								 XMLUtil.getFirstChildByName(
 									   a_proxyInterfaceNode, XML_USE_PROXY), null)).booleanValue());
 	}
@@ -182,12 +189,22 @@ public final class ProxyInterface extends ListenerInterface implements Immutable
 
 		setAuthenticationUserID(a_authenticationUserID);
 		setUseAuthentication(a_bUseAuthentication);
-		setValid(a_bIsValid);
+		setUseInterface(a_bIsValid);
+	}
+
+	/**
+	 * Gets the name of the corresponding xml element.
+	 * @return the name of the corresponding xml element
+	 */
+	public static String getXMLElementName()
+	{
+		return "ProxyInterface";
 	}
 
 	/**
 	 * Gets if the given string is a valid user ID for authentication.
 	 * @param a_authenticationUserID a String
+	 * @todo put this in a new class HTTPPasswordAuthenticationProtocol!!
 	 * @return true if the given string is a valid user ID for authentication; false otherwise
 	 */
 	public static boolean isValidUserID(String a_authenticationUserID)
@@ -233,14 +250,8 @@ public final class ProxyInterface extends ListenerInterface implements Immutable
 			}
 			if (exception != null)
 			{
-				throw new IllegalStateException(Util.getClassNameWithoutPackage(getClass()) +
+				throw new IllegalStateException(Util.getShortClassName(getClass()) +
 												": Cannot set proxy authentication! " + exception);
-			}
-
-			// read the password if not done yet
-			if (isValid())
-			{
-				getAuthenticationPassword();
 			}
 		}
 
@@ -253,6 +264,7 @@ public final class ProxyInterface extends ListenerInterface implements Immutable
 	 * Gets the authentication password of this interface. If no password is set,
 	 * it is read from the password reader.
 	 * @return the authentication password of this interface
+	 * @todo put this in a new class HTTPPasswordAuthenticationProtocol!!
 	 * @exception IllegalStateException if no password reader is registered
 	 */
 	public String getAuthenticationPassword()
@@ -260,7 +272,7 @@ public final class ProxyInterface extends ListenerInterface implements Immutable
 	{
 		if (m_passwordReader == null)
 		{
-			throw new IllegalStateException(Util.getClassNameWithoutPackage(getClass()) +
+			throw new IllegalStateException(Util.getShortClassName(getClass()) +
 											": No password reader!");
 		}
 
@@ -274,6 +286,7 @@ public final class ProxyInterface extends ListenerInterface implements Immutable
 
 	/**
 	 * Gets the authentication user ID of this interface.
+	 * @todo put this in a new class HTTPPasswordAuthenticationProtocol!!
 	 * @return the authentication user ID of this interface
 	 */
 	public String getAuthenticationUserID()
@@ -284,6 +297,7 @@ public final class ProxyInterface extends ListenerInterface implements Immutable
 	/**
 	 * Sets the authentication user ID of this interface and resets the
 	 * authentication password if the user id has changed.
+	 * @todo put this in a new class HTTPPasswordAuthenticationProtocol!!
 	 * @param a_authenticationUserID the authentication user ID of this interface
 	 */
 	public void setAuthenticationUserID(String a_authenticationUserID)
@@ -312,6 +326,7 @@ public final class ProxyInterface extends ListenerInterface implements Immutable
 	/**
 	 * Gets the authorization header with the current user id and password as a String.
 	 * @return the authorization header with the current user id and password as a String
+	 * @todo put this in a new class HTTPPasswordAuthenticationProtocol!!
 	 * @exception IllegalStateException if the authentication mode is not activated
 	 */
 	public String getProxyAuthorizationHeaderAsString()
@@ -319,7 +334,7 @@ public final class ProxyInterface extends ListenerInterface implements Immutable
 	{
 		if (!isAuthenticationUsed())
 		{
-			throw new IllegalStateException(Util.getClassNameWithoutPackage(getClass()) + ": " +
+			throw new IllegalStateException(Util.getShortClassName(getClass()) + ": " +
 											"Authentication mode is not activated! Unknown state!");
 		}
 
@@ -331,14 +346,15 @@ public final class ProxyInterface extends ListenerInterface implements Immutable
 	/**
 	 * Get the authorization header with the current user id and password.
 	 * @return the authorization header with the current user id and password
- 	 * @exception IllegalStateException if the authentication mode is not activated
+	 * @todo put this in a new class HTTPPasswordAuthenticationProtocol!!
+	  * @exception IllegalStateException if the authentication mode is not activated
 	 */
 	public NVPair getProxyAuthorizationHeader()
 		throws IllegalStateException
 	{
 		if (!isAuthenticationUsed())
 		{
-			throw new IllegalStateException(Util.getClassNameWithoutPackage(getClass()) + ": " +
+			throw new IllegalStateException(Util.getShortClassName(getClass()) + ": " +
 											"Authentication mode is not activated! Unknown state!");
 		}
 
@@ -369,9 +385,9 @@ public final class ProxyInterface extends ListenerInterface implements Immutable
 	 * @param a_doc The XML document, which is the environment for the created XML node.
 	 * @return The ProxyInterface XML node.
 	 */
-	public Element toXmlNode(Document a_doc)
+	public Element toXmlElement(Document a_doc)
 	{
-		Element element = super.toXmlNode(a_doc);
+		Element element = toXmlElementInternal(a_doc, getXMLElementName());
 
 		Element authUserID = a_doc.createElement(XML_AUTHENTICATION_USER_ID);
 		authUserID.appendChild(a_doc.createTextNode(getAuthenticationUserID()));
@@ -395,25 +411,22 @@ public final class ProxyInterface extends ListenerInterface implements Immutable
 	 */
 	public boolean isValid()
 	{
-		return m_bIsValid;
+		return super.isValid() && m_bUseInterface;
 	}
 
 	/**
-	 * Invalidates the proxy. Overwrites the method in the superclass.
+	 * Activates and deactivates the proxy.
+	 * @param a_bUseInterface boolean
 	 */
-	public void invalidate()
+	public void setUseInterface(boolean a_bUseInterface)
 	{
-		setValid(false);
-	}
+		super.setUseInterface(a_bUseInterface);
+		m_bUseInterface = a_bUseInterface;
 
-	private void setValid(boolean a_bIsValid)
-	{
-		if (a_bIsValid && isAuthenticationUsed())
+		if (isValid() && isAuthenticationUsed())
 		{
 			// read the password, if it is not done before
 			getAuthenticationPassword();
 		}
-
-		m_bIsValid = a_bIsValid;
 	}
 }

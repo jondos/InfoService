@@ -413,7 +413,7 @@ public class MixCascade implements AnonServerDescription
 		while (it.hasMoreElements())
 		{
 			ListenerInterface currentListenerInterface = (ListenerInterface) (it.nextElement());
-			Element currentNode = currentListenerInterface.toXmlNode(doc);
+			Element currentNode = currentListenerInterface.toXmlElement(doc);
 			listenerInterfacesNode.appendChild(currentNode);
 		}
 		networkNode.appendChild(listenerInterfacesNode);

@@ -32,6 +32,7 @@ import java.util.Vector;
 import anon.infoservice.HTTPConnectionFactory;
 import anon.infoservice.InfoServiceDBEntry;
 import anon.infoservice.Database;
+import anon.infoservice.ListenerInterface;
 import anon.infoservice.InfoServiceHolder;
 import logging.LogHolder;
 import logging.LogLevel;
@@ -112,8 +113,8 @@ public class JAPConfInfoServiceSavePoint implements IJAPConfSavePoint
 		{
 			InfoServiceDBEntry defaultInfoService = new InfoServiceDBEntry(
 				JAPConstants.defaultInfoServiceName,
-				JAPConstants.defaultInfoServiceID,
-				JAPConstants.defaultInfoServiceHostName, JAPConstants.defaultInfoServicePortNumber);
+				new ListenerInterface(JAPConstants.defaultInfoServiceHostName,
+									  JAPConstants.defaultInfoServicePortNumber).toVector());
 			InfoServiceHolder.getInstance().setPreferedInfoService(defaultInfoService);
 		}
 		catch (Exception e)

@@ -32,12 +32,15 @@
 package anon.util;
 
 import java.io.ByteArrayOutputStream;
+import java.io.ByteArrayInputStream;
 import java.io.OutputStreamWriter;
 import java.io.FileOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
 import java.lang.reflect.Method;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -335,7 +338,7 @@ public class XMLUtil
 		return a_doc.createTextNode(a_bValue?XML_STR_BOOLEAN_TRUE:XML_STR_BOOLEAN_FALSE);
 	}
 
-	/** Stolen from Apache Xerces-J...*/
+	/* Stolen from Apache Xerces-J...*/
 	public static Node importNode(Document doc, Node source, boolean deep) throws Exception
 	{
 
@@ -508,18 +511,22 @@ public class XMLUtil
 
 	}
 
-	/** Writes a XML-Document to a String. Since writing was not standardized
-	 * since JAXP 1.1 different Methods are tried
+	/**
+	 * Writes a XML-Document to a String. Since writing was not standardized
+	 * since JAXP 1.1 different Methods are tried.
+	 * @param a_doc an XML Document
+	 * @return an XML Document in a String representation
 	 */
-	public static String XMLDocumentToString(Document doc)
+	public static String XMLDocumentToString(Document a_doc)
 	{
-
-		return XMLNodeToString(doc);
+		return XMLNodeToString(a_doc);
 	}
 
 	/** Writes a XML-Node to a String. If node is a Document then the <XML> header is included.
 	 * Since writing was not standardized
 	 * until  JAXP 1.1 different Methods are tried
+	 * @param node an XML Node
+	 * @return an XML Node in a String representation
 	 */
 	public static String XMLNodeToString(Node node)
 	{
@@ -666,6 +673,7 @@ public class XMLUtil
 
 	/**
 	 * Removes all comments, empty lines and new lines from a node.
+	 * This is a recursive function.
 	 * @param a_node a node
 	 * @param a_parentNode the node`s parent node
 	 * @return the number of children removed (0 or 1)
@@ -701,69 +709,170 @@ public class XMLUtil
 
 	/**
 	 * Reformats a node into a human readable format.
-	 * @param a_node a node
+	 * @param a_doc an xml document
 	 */
-	public static void formatNodeHumanReadable(Node a_node)
+	public static void formatDocumentHumanReadable(Document a_doc)
 	{
-		formatNodeHumanReadableInternal(a_node, a_node);
+		formatElementHumanReadable(a_doc.getDocumentElement(), 0);
 	}
 
 	/**
-	 * Reformats a node into a human readable format.
-	 * @param a_node a node
-	 * @param a_parentNode the node`s parent node
+	 * Reformats an element into a human readable format. This is a recursive function.
+	 * @param a_element an xml element
+	 * @param a_level the level of this element
 	 * @return the number of nodes added (0 or 1)
 	 */
-	private static int formatNodeHumanReadableInternal(Node a_node, Node a_parentNode)
+	private static int formatElementHumanReadable(Node a_element, int a_level)
 	{
 		Text newLine;
+		Node node;
+		int added = 0;
+		String space;
 
-		if (a_node.getNodeType() != Document.TEXT_NODE && a_node != a_parentNode)
+		// call the function recursive for all child nodes
+		if (a_element.hasChildNodes())
 		{
-			newLine = a_node.getOwnerDocument().createTextNode("\n");
-			a_parentNode.insertBefore(newLine, a_node);
-			return 1;
-		}
-
-		if (a_node.getNodeType() == Document.TEXT_NODE && a_node.getNodeValue().trim().length() == 0)
-		{
-			newLine = a_node.getOwnerDocument().createTextNode("\n");
-			a_parentNode.replaceChild(newLine, a_node);
-			return 0;
-		}
-
-		if (a_node.hasChildNodes())
-		{
-			NodeList childNodes = a_node.getChildNodes();
+			NodeList childNodes = a_element.getChildNodes();
 			for (int i = 0; i < childNodes.getLength(); i++)
 			{
-				i += formatNodeHumanReadableInternal(childNodes.item(i), a_node);
+				i += formatElementHumanReadable(childNodes.item(i), a_level + 1);
 			}
-			newLine = a_node.getOwnerDocument().createTextNode("\n");
-			a_node.appendChild(newLine);
-			return 1;
 		}
-		return 0;
+
+		// if this is empty text, remove it!
+		if (a_element.getNodeType() == Document.TEXT_NODE &&
+			a_element.getNodeValue().trim().length() == 0)
+		{
+			a_element.getParentNode().removeChild(a_element);
+			return -1;
+		}
+
+		// do this, if this is not the root element and no text node
+		if ((a_element.getOwnerDocument().getDocumentElement() != a_element) &&
+			(a_element.getNodeType() != Document.TEXT_NODE))
+		{
+			// insert a new line before this element, if this is the first element
+			if (a_element == a_element.getParentNode().getFirstChild())
+			{
+				newLine = a_element.getOwnerDocument().createTextNode("\n");
+				a_element.getParentNode().insertBefore(newLine, a_element);
+				added++; // count one more
+			}
+
+			// insert space before the element according to the layer
+			space = new String();
+			for (int i = 0; i < a_level; i++)
+			{
+				space += "  ";
+		}
+			newLine = a_element.getOwnerDocument().createTextNode(space);
+			a_element.getParentNode().insertBefore(newLine, a_element);
+			added++; // count one more
+
+
+			// insert a new line after the current element
+			node = a_element.getNextSibling();
+			if (node != null)
+			{
+				// add a new line before the next node
+				newLine = a_element.getOwnerDocument().createTextNode("\n");
+				a_element.getParentNode().insertBefore(newLine, node);
+			}
+			else
+			{
+				// this is the last node; append a new line and space
+				space = space.substring(0, space.length() - 2);
+				newLine = a_element.getOwnerDocument().createTextNode("\n" + space);
+				a_element.getParentNode().appendChild(newLine);
+			}
+			added++; // count one more
+		}
+
+		return added;
 	}
 
 	/**
 	 * Writes an XML node to a file.
-	 * @param a_node a node
+	 * @param a_doc an XML Document
 	 * @param a_filename a file name
 	 * @throws IOException if an I/O error occurs
 	 */
-	public static void writeXMLNodeToFile(Node a_node, String a_filename)
+	public static void writeXMLDocumentToFile(Document a_doc, String a_filename)
 		throws IOException
 	{
 		FileOutputStream out;
 
 		// make document human readable
-		XMLUtil.formatNodeHumanReadable(a_node);
+		XMLUtil.formatDocumentHumanReadable(a_doc);
 
 		// write to file
 		out = new FileOutputStream(new File(a_filename));
-		out.write(XMLUtil.XMLNodeToString(a_node).getBytes());
+		out.write(XMLUtil.XMLNodeToString(a_doc).getBytes());
 		out.close();
 	}
 
+	/**
+	 * Transforms a byte array into an XML document. The byte array must be
+	 * a valid XML document in byte representation.
+	 * @param a_xmlDocument a valid XML document in byte representation
+	 * @return an XML document
+	 * @exception XMLParseException if the given byte array is no valid XML document
+	 */
+	public static Document toXMLDocument(byte[] a_xmlDocument)
+		throws XMLParseException
+	{
+		ByteArrayInputStream in = new ByteArrayInputStream(a_xmlDocument);
+		Document doc;
+		try
+		{
+			doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(in);
+		}
+		catch (Exception a_e)
+		{
+			throw new XMLParseException(XMLParseException.ROOT_TAG, "Could not transform bytes into XML.");
+		}
+
+		return doc;
+	}
+
+	/**
+	 * Transforms an IXMLEncodable object into an XML document.
+	 * @param a_xmlEncodable an IXMLEncodable
+	 * @return an XML document
+	 */
+	public static Document toXMLDocument(IXMLEncodable a_xmlEncodable)
+	{
+		Document doc;
+		Element element;
+
+		element = toXMLElement(a_xmlEncodable);
+		doc = element.getOwnerDocument();
+		doc.appendChild(element);
+
+		return doc;
+	}
+
+	/**
+	 * Transforms an IXMLEncodable object into an XML element.
+	 * @param a_xmlEncodable an IXMLEncodable
+	 * @return an XML element
+	 */
+	public static Element toXMLElement(IXMLEncodable a_xmlEncodable)
+	{
+		Document doc = null;
+		Element element;
+
+		try
+		{
+			doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+		}
+		catch (ParserConfigurationException a_e)
+		{
+			return null;
+		}
+
+		element = a_xmlEncodable.toXmlElement(doc);
+
+		return element;
+	}
 }

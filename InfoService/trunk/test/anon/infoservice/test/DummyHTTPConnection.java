@@ -348,9 +348,6 @@ public class DummyHTTPConnection extends HTTPConnection
 		return false;
 	}
 
-	public void setRawMode(boolean raw)
-	{}
-
 	public void setTimeout(int a_time)
 	{
 		m_actualTimeout = a_time;

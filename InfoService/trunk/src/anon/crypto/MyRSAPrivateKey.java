@@ -169,44 +169,34 @@ final public class MyRSAPrivateKey implements IMyPrivateKey
 		return bOut.toByteArray();
 	}
 
-	public Document getXmlEncoded()
+	public Element toXmlElement(Document a_doc)
 	{
-		Document doc = null;
-		try
-		{
-			doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
-		}
-		catch (ParserConfigurationException ex)
-		{
-			return null;
-		}
-		Element elemPrivKey = doc.createElement("RSAPrivateKey");
-		doc.appendChild(elemPrivKey);
-		Element elem = doc.createElement("Modulus");
+		Element elemPrivKey = a_doc.createElement("RSAPrivateKey");
+		Element elem = a_doc.createElement("Modulus");
 		elemPrivKey.appendChild(elem);
 		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_Params.getModulus().toByteArray()));
-		elem = doc.createElement("PublicExponent");
+		elem = a_doc.createElement("PublicExponent");
 		elemPrivKey.appendChild(elem);
 		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_Params.getPublicExponent().toByteArray()));
-		elem = doc.createElement("PrivateExponent");
+		elem = a_doc.createElement("PrivateExponent");
 		elemPrivKey.appendChild(elem);
 		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_Params.getExponent().toByteArray()));
-		elem = doc.createElement("P");
+		elem = a_doc.createElement("P");
 		elemPrivKey.appendChild(elem);
 		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_Params.getP().toByteArray()));
-		elem = doc.createElement("Q");
+		elem = a_doc.createElement("Q");
 		elemPrivKey.appendChild(elem);
 		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_Params.getQ().toByteArray()));
-		elem = doc.createElement("dP");
+		elem = a_doc.createElement("dP");
 		elemPrivKey.appendChild(elem);
 		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_Params.getDP().toByteArray()));
-		elem = doc.createElement("dQ");
+		elem = a_doc.createElement("dQ");
 		elemPrivKey.appendChild(elem);
 		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_Params.getDQ().toByteArray()));
-		elem = doc.createElement("QInv");
+		elem = a_doc.createElement("QInv");
 		elemPrivKey.appendChild(elem);
 		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_Params.getQInv().toByteArray()));
 
-		return doc;
+		return elemPrivKey;
 	}
 }

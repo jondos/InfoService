@@ -28,6 +28,10 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 package logging;
 
 import anon.util.Util;
+import java.util.StringTokenizer;
+import java.io.StringWriter;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
 /**
  * This class stores the Log instance.
@@ -39,12 +43,15 @@ public final class LogHolder {
 	 */
 	private static LogHolder ms_logHolderInstance;
 
+	/**
+	 * If the log messages are detailed or not.
+	 */
+	private static boolean m_bDetailedLog = true;
 
 	/**
 	 * Stores the Log instance.
 	 */
 	private Log m_logInstance;
-
 
 	/**
 	 * This creates a new instance of LogHolder. This is only used for setting some
@@ -54,36 +61,40 @@ public final class LogHolder {
 		m_logInstance = new DummyLog();
 	}
 
-
 	/**
-	 * Returns the instance of LogHolder (Singleton). If there is no instance,
-	 * there is a new one created.
+	 * Write the log data for an exception to the Log instance.
 	 *
-	 * @return The LogHolder instance.
+	 * @param logLevel The log level (see constants in class LogLevel).
+	 * @param logType The log type (see constants in class LogType).
+	 * @param a_exception an exception to log
 	 */
-	public static LogHolder getInstance() {
-		if (ms_logHolderInstance == null) {
-			ms_logHolderInstance = new LogHolder();
-		}
-		return ms_logHolderInstance;
+	public static void log(int logLevel, int logType, Exception a_exception) {
+		log(logLevel, logType, a_exception.toString());
 	}
 
 	/**
-	 * Write the log data to the Log instance. This is only a comfort function, which is a
-	 * shortcut to LogHolder.getInstance().getLogInstance().log()
+	 * Write the log data to the Log instance.
 	 *
 	 * @param logLevel The log level (see constants in class LogLevel).
 	 * @param logType The log type (see constants in class LogType).
 	 * @param message The message to log.
 	 */
 	public static void log(int logLevel, int logType, String message) {
-		getInstance().getLogInstance().log(logLevel, logType, message);
+		// Test the log status before calling the log method; otherwise it would be very time consuming!
+		if (logLevel <= getInstance().getLogInstance().getLogLevel() &&
+			(logType & getInstance().getLogInstance().getLogType()) == logType)
+		{
+			if (m_bDetailedLog)
+			{
+				getInstance().getLogInstance().log(logLevel, logType,
+					Util.normaliseString(getCallingMethod() + ": ", 80) + message);
 	}
-
-
-	public static void log(int logLevel, int logType, Class a_callerClass, String message)
+			else
 	{
-		log(logLevel, logType, Util.getClassNameWithoutPackage(a_callerClass) + ": " + message);
+				getInstance().getLogInstance().log(logLevel, logType,
+				Util.normaliseString(getCallingClassFile() + ": ", 40) + message);
+			}
+		}
 	}
 
 	/**
@@ -98,12 +109,66 @@ public final class LogHolder {
 	}
 
 	/**
+	 * Returns the instance of LogHolder (Singleton). If there is no instance,
+	 * there is a new one created.
+	 *
+	 * @return The LogHolder instance.
+	 */
+	private static LogHolder getInstance() {
+		if (ms_logHolderInstance == null) {
+			ms_logHolderInstance = new LogHolder();
+		}
+		return ms_logHolderInstance;
+	}
+
+	/**
 	 * Returns the logInstance. If the logInstance is not set, there is a new DummyLog instance
 	 * returned.
 	 *
 	 * @return The current logInstance.
 	 */
-	public Log getLogInstance() {
+	private Log getLogInstance() {
 		return m_logInstance;
+	}
+
+	/**
+	 * Returns the filename and line number of the calling method (from outside
+	 * this class) in the form <Code> (class.java:<LineNumber>) </Code>.
+	 * @return the filename and line number of the calling method
+	 */
+	private static String getCallingClassFile()
+	{
+		String strClassFile = getCallingMethod();
+		strClassFile = strClassFile.substring(strClassFile.indexOf('('), strClassFile.indexOf(')') + 1);
+		return strClassFile;
+	}
+
+	/**
+	 * Returns the name, class, file and line number of the calling method (from outside
+	 * this class) in the form <Code> package.class.method(class.java:<LineNumber>) </Code>.
+	 * @return the name, class and line number of the calling method
+	 */
+	private static String getCallingMethod()
+	{
+		StringTokenizer tokenizer;
+		String strCurrentMethod = "";
+		StringWriter swriter = new java.io.StringWriter();
+		PrintWriter pwriter = new java.io.PrintWriter(swriter);
+
+		new Exception().printStackTrace(pwriter);
+
+		tokenizer = new StringTokenizer(swriter.toString());
+		tokenizer.nextToken(); // jump over the exception message
+		while (tokenizer.hasMoreTokens())
+		{
+			tokenizer.nextToken(); // jump over the "at"
+			/* jump over all local class calls */
+			if ((strCurrentMethod = tokenizer.nextToken()).indexOf(LogHolder.class.getName()) < 0)
+			{
+				// this is the method that called us
+				break;
+			}
+		}
+		return strCurrentMethod;
 	}
 }

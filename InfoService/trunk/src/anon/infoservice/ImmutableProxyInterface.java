@@ -29,11 +29,13 @@ package anon.infoservice;
 
 import HTTPClient.NVPair;
 
+import anon.util.IXMLEncodable;
+
 /**
  * Objects of this type only contain immutable methods.
  * @author Rolf Wendolsky
  */
-public interface ImmutableProxyInterface extends ImmutableListenerInterface
+public interface ImmutableProxyInterface extends ImmutableListenerInterface, IXMLEncodable
 {
 	/**
 	 * Gets if the authentication strings are used.

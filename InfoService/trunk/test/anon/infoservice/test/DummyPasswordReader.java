@@ -1,7 +1,7 @@
-package anon.infoservice;
+package anon.infoservice.test;
 
-import anon.util.IPasswordReader;
 import anon.infoservice.ImmutableProxyInterface;
+import anon.util.IPasswordReader;
 
 /**
  * This class is a dummy implementation and for testing purposes only.

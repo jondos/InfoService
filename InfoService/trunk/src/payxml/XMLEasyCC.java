@@ -34,7 +34,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import anon.crypto.JAPSignature;
-import anon.util.IXMLEncodeable;
+import anon.util.IXMLEncodable;
 import anon.util.XMLUtil;
 
 
@@ -50,7 +50,7 @@ import anon.util.XMLUtil;
  * </CC>
  * @author Grischan Gl&auml;nzel, Bastian Voigt
  */
-public class XMLEasyCC implements IXMLEncodeable //extends XMLDocument
+public class XMLEasyCC implements IXMLEncodable //extends XMLDocument
 {
 	//~ Instance fields ********************************************************
 
@@ -69,7 +69,7 @@ public class XMLEasyCC implements IXMLEncodeable //extends XMLDocument
 
 		if (signer != null)
 		{
-			Document doc = getXmlEncoded();
+			Document doc = XMLUtil.toXMLDocument(this);
 			signer.signXmlDoc(doc);
 			Element elemSig = (Element) XMLUtil.getFirstChildByName(doc.getDocumentElement(), "Signature");
 			m_signature = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
@@ -105,33 +105,23 @@ public class XMLEasyCC implements IXMLEncodeable //extends XMLDocument
 		m_lTransferredBytes = XMLUtil.parseNodeLong(elem, 0);
 	}
 
-	public Document getXmlEncoded()
+	public Element toXmlElement(Document a_doc)
 	{
-		Document doc = null;
-		try
-		{
-			doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
-		}
-		catch (ParserConfigurationException ex)
-		{
-			return null;
-		}
-		Element elemRoot = doc.createElement("CC");
+		Element elemRoot = a_doc.createElement("CC");
 		elemRoot.setAttribute("version", "1.0");
-		doc.appendChild(elemRoot);
 
-		Element elem=doc.createElement("AiID");
+		Element elem=a_doc.createElement("AiID");
 		XMLUtil.setNodeValue(elem,m_strAiName);
 		elemRoot.appendChild(elem);
 
-		elem=doc.createElement("TransferredBytes");
+		elem=a_doc.createElement("TransferredBytes");
 		XMLUtil.setNodeValue(elem,Long.toString(m_lTransferredBytes));
 		elemRoot.appendChild(elem);
 
-		elem=doc.createElement("AccountNumber");
+		elem=a_doc.createElement("AccountNumber");
 		XMLUtil.setNodeValue(elem,Long.toString(m_lAccountNumber));
 		elemRoot.appendChild(elem);
-		return doc;
+		return elemRoot;
 	}
 
 	//~ Methods ****************************************************************

@@ -25,19 +25,19 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package anon.infoservice;
+package anon.infoservice.test;
 
-import junitx.framework.PrivateTestCase;
-
-import anon.infoservice.ProxyInterface;
-import org.w3c.dom.Document;
 import javax.xml.parsers.DocumentBuilderFactory;
+
+import org.w3c.dom.Document;
+import junitx.framework.extension.XtendedPrivateTestCase;
+import anon.infoservice.ProxyInterface;
 
 /**
  *  These are the tests for the ProxyInterface class.
  * @author Wendolsky
  */
-public class ProxyInterfaceTest extends PrivateTestCase
+public class ProxyInterfaceTest extends XtendedPrivateTestCase
 {
 	/**
 	 * Creates a new instance of this test.
@@ -60,15 +60,14 @@ public class ProxyInterfaceTest extends PrivateTestCase
 		// authentication is not used, therefore we have no problem here
 		new ProxyInterface("myhost", 1, ProxyInterface.PROTOCOL_TYPE_HTTPS, "Jupp", null, false, true);
 
-		try
-		{
-			new ProxyInterface(null, 1, ProxyInterface.PROTOCOL_TYPE_HTTPS, "Jupp",
+
+		new ProxyInterface(null, 1, ProxyInterface.PROTOCOL_TYPE_HTTPS, "Jupp",
 							   new DummyPasswordReader(), false, true);
-			fail();
-		}
-		catch (IllegalArgumentException a_e)
-		{
-		}
+
+		// illegal host name
+		assertTrue(!(new ProxyInterface(
+				  null, 1, ProxyInterface.PROTOCOL_TYPE_HTTP, "Jupp",
+				  new DummyPasswordReader(), false, true).isValid()));
 
 		try
 		{
@@ -95,16 +94,11 @@ public class ProxyInterfaceTest extends PrivateTestCase
 		proxyInterface =
 			new ProxyInterface("myHost",3414, ProxyInterface.PROTOCOL_TYPE_HTTP, "Max", pwr, false, true);
 
-		// authentication is off, so this should do nothing
-		proxyInterface.setUseAuthentication(false);
-		assertTrue(!pwr.isRead());
-
-		// now we switch on authentication
+		assertTrue(!proxyInterface.isAuthenticationUsed());
 		proxyInterface.setUseAuthentication(true);
-		assertTrue(pwr.isRead());
-		assertTrue(proxyInterface.getAuthenticationPassword().equals(pwr.readPassword(proxyInterface)));
-		assertTrue(proxyInterface.getAuthenticationPassword().equals("secretpassss"));
-
+		assertTrue(proxyInterface.isAuthenticationUsed());
+		proxyInterface.setUseAuthentication(false);
+		assertTrue(!proxyInterface.isAuthenticationUsed());
 	}
 
 	/**
@@ -180,12 +174,12 @@ public class ProxyInterfaceTest extends PrivateTestCase
 		interfaceOrigin = new ProxyInterface(
 				  "localhost", 525, ProxyInterface.PROTOCOL_TYPE_HTTP, "Mike",
 				  new DummyPasswordReader(), true, true);
-		interfaceFromXML = new ProxyInterface(interfaceOrigin.toXmlNode(doc), null);
+		interfaceFromXML = new ProxyInterface(interfaceOrigin.toXmlElement(doc), null);
 		// as we have no password reader, authentication cannot be used
 		assertTrue(!interfaceOrigin.equals(interfaceFromXML));
 		assertEquals(!interfaceOrigin.isAuthenticationUsed(), interfaceFromXML.isAuthenticationUsed());
 
-		interfaceFromXML = new ProxyInterface(interfaceOrigin.toXmlNode(doc), new DummyPasswordReader());
+		interfaceFromXML = new ProxyInterface(interfaceOrigin.toXmlElement(doc), new DummyPasswordReader());
 		// we have a password reader!
 		assertTrue(interfaceOrigin.equals(interfaceFromXML));
 		assertEquals(interfaceOrigin.isAuthenticationUsed(), interfaceFromXML.isAuthenticationUsed());
@@ -193,13 +187,12 @@ public class ProxyInterfaceTest extends PrivateTestCase
 		// change some values and try if they are still equal
 		interfaceOrigin.setUseAuthentication(false);
 		interfaceOrigin.setAuthenticationUserID("Bob");
-		interfaceFromXML = new ProxyInterface(interfaceOrigin.toXmlNode(doc), new DummyPasswordReader());
+		interfaceFromXML = new ProxyInterface(interfaceOrigin.toXmlElement(doc), new DummyPasswordReader());
 		assertTrue(interfaceOrigin.equals(interfaceFromXML));
 		assertEquals(interfaceOrigin.isAuthenticationUsed(), interfaceFromXML.isAuthenticationUsed());
 
 
 		// create a structure file
-		test.AllTests.writeXMLNodeToFile(interfaceOrigin.toXmlNode(doc),
-										 ProxyInterface.class, this.getClass());
+		writeXMLOutputToFile(interfaceOrigin);
 	}
 }

@@ -138,31 +138,21 @@ final public class MyDSAPrivateKey implements DSAPrivateKey, IMyPrivateKey
 	 *
 	 * @return Document
 	 */
-	public Document getXmlEncoded()
+	public Element toXmlElement(Document a_doc)
 	{
-		Document doc = null;
-		try
-		{
-			doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
-		}
-		catch (ParserConfigurationException ex)
-		{
-			return null;
-		}
-		Element elemPrivKey = doc.createElement("DSAPrivateKey");
-		doc.appendChild(elemPrivKey);
-		Element elem = doc.createElement("G");
+		Element elemPrivKey = a_doc.createElement("DSAPrivateKey");
+		Element elem = a_doc.createElement("G");
 		elemPrivKey.appendChild(elem);
 		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_params.getG().toByteArray()));
-		elem = doc.createElement("P");
+		elem = a_doc.createElement("P");
 		elemPrivKey.appendChild(elem);
 		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_params.getP().toByteArray()));
-		elem = doc.createElement("Q");
+		elem = a_doc.createElement("Q");
 		elemPrivKey.appendChild(elem);
 		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_params.getQ().toByteArray()));
-		elem = doc.createElement("X");
+		elem = a_doc.createElement("X");
 		elemPrivKey.appendChild(elem);
 		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_X.toByteArray()));
-		return doc;
+		return elemPrivKey;
 	}
 }

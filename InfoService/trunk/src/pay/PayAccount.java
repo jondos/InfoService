@@ -246,33 +246,19 @@ public class PayAccount extends XMLDocument
 			return null;
 		}
 		Element elemRoot = doc.createElement("Account");
+		Element elemTmp;
+
 		elemRoot.setAttribute("version", "1.0");
 		doc.appendChild(elemRoot);
 
 		// import AccountCertificate XML Representation
-		Document tmpDoc = m_accountCertificate.getXmlEncoded();
-		Node n = null;
-		try
-		{
-			n = XMLUtil.importNode(doc, tmpDoc.getDocumentElement(), true);
-		}
-		catch (Exception ex1)
-		{
-			return null;
-		}
-		elemRoot.appendChild(n);
+		elemTmp = m_accountCertificate.toXmlElement(doc);
+		elemRoot.appendChild(elemTmp);
 
 		// import Private Key XML Representation
-		tmpDoc = m_privateKey.getXmlEncoded();
-		try
-		{
-			n = XMLUtil.importNode(doc, tmpDoc.getDocumentElement(), true);
-		}
-		catch (Exception ex4)
-		{
-			return null;
-		}
-		elemRoot.appendChild(n);
+		elemTmp = m_privateKey.toXmlElement(doc);
+		elemRoot.appendChild(elemTmp);
+
 
 		// add transfer certificates
 		Element elemTransCerts = doc.createElement("TransferCertificates");
@@ -295,18 +281,11 @@ public class PayAccount extends XMLDocument
 			}
 		}
 
-		if (m_accountInfo != null)
-		{
-			Node n1 = null;
-			try
-			{
-				n1 = XMLUtil.importNode(doc, m_accountInfo.getXmlEncoded().getDocumentElement(), true);
-				elemRoot.appendChild(n1);
-			}
-			catch (Exception ex3)
-			{
-			}
+		if (m_accountInfo != null) {
+			elemTmp = m_accountInfo.toXmlElement(doc);
+			elemRoot.appendChild(elemTmp);
 		}
+
 		return doc;
 	}
 

@@ -315,7 +315,8 @@ public class JAPRoutingRegistrationInfoServices implements Observer, Runnable {
         XMLUtil.setNodeBoolean(useAllPrimaryInfoServicesNode,getRegisterAtAllAvailableInfoServices());
       Enumeration registrationInfoServices = getRegistrationInfoServices().elements();
       while (registrationInfoServices.hasMoreElements()) {
-        registrationInfoServicesNode.appendChild(((InfoServiceDBEntry)(registrationInfoServices.nextElement())).toXmlNode(a_doc));
+        registrationInfoServicesNode.appendChild(
+			  ((InfoServiceDBEntry)(registrationInfoServices.nextElement())).toXmlElement(a_doc));
       }
     }
     infoServiceRegistrationSettingsNode.appendChild(useAllPrimaryInfoServicesNode);

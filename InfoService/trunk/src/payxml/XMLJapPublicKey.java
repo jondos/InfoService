@@ -139,8 +139,8 @@ public class XMLJapPublicKey //extends XMLDocument
 		Element elemRoot = doc.createElement("JapPublicKey");
 		doc.appendChild(elemRoot);
 		elemRoot.setAttribute("version", "1.0");
-		Document tmpDoc = m_publicKey.getXmlEncoded();
-		Element elem = (Element) XMLUtil.importNode(doc, tmpDoc.getDocumentElement(), true);
+		Element elem = m_publicKey.toXmlElement(doc);
+
 		elemRoot.appendChild(elem);
 
 		return doc;

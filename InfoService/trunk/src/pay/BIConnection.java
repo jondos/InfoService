@@ -183,7 +183,7 @@ public class BIConnection
 		answer = m_httpClient.readAnswer();
 		info = new XMLAccountInfo(answer);
 		XMLBalance bal = info.getBalance();
-		if(Pay.getInstance().getVerifyingInstance().verifyXML(bal.getXmlEncoded())==false)
+		if(Pay.getInstance().getVerifyingInstance().verifyXML(XMLUtil.toXMLDocument(bal))==false)
 			throw new Exception("Invalid Signature");
 		return info;
 	}
@@ -197,7 +197,7 @@ public class BIConnection
 		String answer = null;
 		try
 		{
-			String StrAccountCert = XMLUtil.XMLDocumentToString(accountCert.getXmlEncoded());
+			String StrAccountCert = XMLUtil.XMLDocumentToString(XMLUtil.toXMLDocument(accountCert));
 			m_httpClient.writeRequest("POST", "authenticate", StrAccountCert);
 			answer = m_httpClient.readAnswer();
 		}

@@ -30,6 +30,8 @@ package anon.infoservice;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+import anon.util.IXMLEncodable;
+
 /**
  * Objects of this type only contain immutable methods.
  * @author Rolf Wendolsky
@@ -52,6 +54,11 @@ public interface ImmutableListenerInterface
 	final public static String PROTOCOL_TYPE_SOCKS = "socks";
 
 	/**
+	 * The constant for a custom protocol based on TCP.
+	 */
+	final public static String PROTOCOL_TYPE_RAW_TCP = "RAW/TCP";
+
+	/**
 	 * Gets the protocol of this ListenerInterface.
 	 * @return the protocol of this ListenerInterface
 	 */
@@ -69,13 +76,6 @@ public interface ImmutableListenerInterface
 	 * @return The port of this interface.
 	 */
 	public int getPort();
-
-	/**
-	 * Creates an XML node without signature for this ListenerInterface.
-	 * @param doc The XML document, which is the environment for the created XML node.
-	 * @return The ListenerInterface XML node.
-	 */
-	public Element toXmlNode(Document doc);
 
 	/**
 	 * Get the validity of this interface.

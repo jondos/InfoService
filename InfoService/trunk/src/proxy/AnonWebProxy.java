@@ -148,7 +148,8 @@ final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 			LogHolder.log(LogLevel.DEBUG, LogType.NET, "AnonWebProxy: Calling PayAccountsFile...");
 			PayAccountsFile accounts = PayAccountsFile.getInstance();
 			PayAccount mainAccount = accounts.getActiveAccount();
-			toAI = XMLUtil.XMLDocumentToString(mainAccount.getAccountCertificate().getXmlEncoded());
+			toAI = XMLUtil.XMLDocumentToString(
+						 XMLUtil.toXMLDocument(mainAccount.getAccountCertificate()));
 			( (AnonServiceImpl) m_Anon).sendPayPackets(toAI);
 		}
 		catch (Exception ex)
@@ -174,7 +175,7 @@ final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 			XMLAccountInfo info = mainAccount.getAccountInfo();
 
 			/** @todo temporary code... remove DOM functionality from here (Bastian Voigt) */
-			Document doc = info.getXmlEncoded();
+			Document doc = XMLUtil.toXMLDocument(info);
 			Element elemRoot = doc.getDocumentElement();
 			Element elemBalance = (Element) XMLUtil.getFirstChildByName(elemRoot, "Balance");
 

@@ -6,7 +6,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import anon.crypto.JAPSignature;
-import anon.util.IXMLEncodeable;
+import anon.util.IXMLEncodable;
 import anon.util.XMLUtil;
 
 /**
@@ -15,7 +15,7 @@ import anon.util.XMLUtil;
  *
  * @todo find a better internal representation for the signature
  */
-public class XMLBalance implements IXMLEncodeable
+public class XMLBalance implements IXMLEncodable
 {
 	private long m_lAccountNumber;
 	private java.sql.Timestamp m_Timestamp;
@@ -39,7 +39,7 @@ public class XMLBalance implements IXMLEncodeable
 
 		if (signer != null)
 		{
-			Document doc = getXmlEncoded();
+			Document doc = XMLUtil.toXMLDocument(this);
 			signer.signXmlDoc(doc);
 			Element elemSig = (Element) XMLUtil.getFirstChildByName(doc.getDocumentElement(), "Signature");
 			m_signature = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
@@ -100,34 +100,24 @@ public class XMLBalance implements IXMLEncodeable
 		}
 	}
 
-	public Document getXmlEncoded()
+	public Element toXmlElement(Document a_doc)
 	{
-		Document doc = null;
-		try
-		{
-			doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
-		}
-		catch (ParserConfigurationException ex)
-		{
-			return null;
-		}
-		Element elemRoot = doc.createElement("Balance");
+		Element elemRoot = a_doc.createElement("Balance");
 		elemRoot.setAttribute("version", "1.0");
-		doc.appendChild(elemRoot);
 
-		Element elem = doc.createElement("AccountNumber");
+		Element elem = a_doc.createElement("AccountNumber");
 		XMLUtil.setNodeValue(elem, Long.toString(m_lAccountNumber));
 		elemRoot.appendChild(elem);
-		elem = doc.createElement("Deposit");
+		elem = a_doc.createElement("Deposit");
 		XMLUtil.setNodeValue(elem, Long.toString(m_lDeposit));
 		elemRoot.appendChild(elem);
-		elem = doc.createElement("Spent");
+		elem = a_doc.createElement("Spent");
 		XMLUtil.setNodeValue(elem, Long.toString(m_lSpent));
 		elemRoot.appendChild(elem);
-		elem = doc.createElement("Timestamp");
+		elem = a_doc.createElement("Timestamp");
 		XMLUtil.setNodeValue(elem, m_Timestamp.toString());
 		elemRoot.appendChild(elem);
-		elem = doc.createElement("Validtime");
+		elem = a_doc.createElement("Validtime");
 		XMLUtil.setNodeValue(elem, m_ValidTime.toString());
 		elemRoot.appendChild(elem);
 		if (m_signature != null)
@@ -135,14 +125,14 @@ public class XMLBalance implements IXMLEncodeable
 			Element elemSig = null;
 			try
 			{
-				elemSig = (Element) XMLUtil.importNode(doc, m_signature.getDocumentElement(), true);
+				elemSig = (Element) XMLUtil.importNode(a_doc, m_signature.getDocumentElement(), true);
 				elemRoot.appendChild(elemSig);
 			}
 			catch (Exception ex1)
 			{
 			}
 		}
-		return doc;
+		return elemRoot;
 	}
 
 	public long getAccountNumber()
