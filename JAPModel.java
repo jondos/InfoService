@@ -56,13 +56,7 @@ import anon.JAPAnonServiceListener;
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPModel implements JAPAnonServiceListener{
 
-// 2000-08-01(HF):
-// JAPDebug now initialized in JAP in order to use
-// the functions also in JAP.main()
-
-
-
-	static final String aktVersion = "00.00.022"; // Version of JAP
+	static final String aktVersion = "00.00.023"; // Version of JAP
 
 	private int      portNumber        = 4001;
 	private boolean  mblistenerIsLocal = true;  // indicates whether the Listener serves for localhost only or not
@@ -80,7 +74,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 	public  boolean  alreadyCheckedForNewVersion = false; // indicates if check for new version has already been done
 	public  boolean  canStartService   = false;  // indicates if Anon service can be started
 	private boolean  mbActCntMessageNotRemind = false;   // indicates if Warning message in setAnonMode has been deactivated for the session
-	private boolean  mbActCntMessageNeverRemind = false;   // indicates if Warning message in setAnonMode has been deactivated for ever
+	private boolean  mbActCntMessageNeverRemind = false;   // indicates if Warning message in setAnonMode has been deactivated forever
 	public  String   status1           = "?";
 	public  String   status2           = " ";
 	private int      nrOfChannels      = 0;
@@ -114,6 +108,8 @@ public final class JAPModel implements JAPAnonServiceListener{
 	static final String DOWNLOADFN   = "images/install.gif";
 	static final String IICON16FN    = "images/icon16.gif";
 	static final String ICONFN       = "images/icon.gif";
+	static final String JAPTXTFN     = "images/japtxt.gif";
+	static final String JAPEYEFN     = "images/japeye.gif";
 	static final String JAPICONFN    = "images/japi.gif";
 	static final String CONFIGICONFN = "images/icoc.gif";
 	static final String ICONIFYICONFN= "images/iconify.gif";
@@ -660,6 +656,11 @@ public final class JAPModel implements JAPAnonServiceListener{
 						// starting MUX --> Success ???
 						proxyAnon=new JAPAnonService(m_socketHTTPListener,JAPAnonService.PROTO_HTTP);
 						proxyAnon.setAnonService(model.anonHostName,model.anonPortNumber);
+						//2001-02-20(HF)
+						if (model.getUseProxy()) {
+							proxyAnon.setFirewall(model.getProxyHost(),model.getProxyPort());
+							proxyAnon.connectViaFirewall(true);
+						}
 						int ret=proxyAnon.start();
 						if(ret==JAPAnonService.E_SUCCESS)
 							{
@@ -675,11 +676,11 @@ public final class JAPModel implements JAPAnonServiceListener{
 									{
 										ret=0;
 										ret= JOptionPane.showOptionDialog(view,
-																											message,
-																											model.getString("disableActCntMessageTitle"),
-																											JOptionPane.DEFAULT_OPTION,
-																											JOptionPane.WARNING_MESSAGE,
-																											null, options, options[1]);
+																		message,
+																		model.getString("disableActCntMessageTitle"),
+																		JOptionPane.DEFAULT_OPTION,
+																		JOptionPane.WARNING_MESSAGE,
+																		null, options, options[1]);
 										mbActCntMessageNeverRemind=checkboxRemindNever.isSelected();
 										if(ret==0||mbActCntMessageNeverRemind)
 											mbActCntMessageNotRemind=true;

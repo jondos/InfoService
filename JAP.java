@@ -54,30 +54,32 @@ class JAP extends Frame{
 	/** Initialize and starts the JAP.
 	 */
 	void startJAP() {
-		String   os;
-		String   vers;
-		vers = System.getProperty("java.version");
-		String vendor=System.getProperty("java.vendor");
+		String javaVersion = System.getProperty("java.version");
+		String vendor      = System.getProperty("java.vendor");
+		String os          = System.getProperty("os.name");
+		String mrjVersion  = System.getProperty("mrj.version"); //Macintosh Runtime for Java (MRJ) on Mac OS
+
 		// Test for right VM....
 		if(vendor.startsWith("Transvirtual")) //Kaffe
 			{
-				if (vers.compareTo("1.0.5") <= 0) 
+				if (javaVersion.compareTo("1.0.5") <= 0) 
 					{
-						JAPAWTMsgBox.MsgBox(this,"JAP must be run with a 1.1.3 or higher version VM! (Kaffe >=1.0.6)","Error");
+						JAPAWTMsgBox.MsgBox(this,"JAP must run with a 1.1.3 or higher version of Java! (Kaffe >=1.0.6) \nYou will find more information at the JAP webpage!","Error");
 						System.exit(0);
 					}
 			}
 		else
 			{
-				if (vers.compareTo("1.0.2") <= 0) 
+				if (javaVersion.compareTo("1.0.2") <= 0) 
 					{
-						System.out.println("Your JAVA Version: "+vers);
-						System.out.println("JAP must be run with a 1.1.3 or higher version VM!");
+						System.out.println("Your JAVA Version: "+javaVersion);
+						System.out.println("JAP must run with a 1.1.3 or higher version Java!");
+						System.out.println("You will find more information at the JAP webpage!");
 						System.exit(0);
 					}
-				if (vers.compareTo("1.1.2") <= 0) 
+				if (javaVersion.compareTo("1.1.2") <= 0) 
 					{
-						JAPAWTMsgBox.MsgBox(this,"JAP must be run with a 1.1.3 or higher version VM!","Error");
+						JAPAWTMsgBox.MsgBox(this,"JAP must run with a 1.1.3 or higher version of Java! \nYou will find more information at the JAP webpage!","Error");
 						System.exit(0);
 					}	
 			}
@@ -89,33 +91,30 @@ class JAP extends Frame{
 			}
 		catch(NoClassDefFoundError e)
 			{
-				JAPAWTMsgBox.MsgBox(this,"SWING must be installed!","Error");
+				JAPAWTMsgBox.MsgBox(this,"JAP needs the Swing library to run properly! \nYou will find more information at the JAP webpage!","Error");
 				System.exit(0);
 			}
 		
-		
-		os = System.getProperty("os.name");
-
 		// Create debugger object
 		JAPDebug.create();
 		JAPDebug.setDebugType(JAPDebug.NET+JAPDebug.GUI+JAPDebug.THREAD+JAPDebug.MISC);
 		JAPDebug.setDebugLevel(JAPDebug.WARNING);
-		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAP:Welcome! Java "+vers+" running on "+os+" ...");
-
 		// Create the model object
 		model = JAPModel.createModel();
+		// Show splash screen
 		JAPSplash splash = new JAPSplash(model);
-		
-		view = new JAPView (model.TITLE);
-		
-		
 		// load settings from config file
 		model.load();
-		
+		// Output some information about the system
+		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAP:Welcome! This is version "+model.aktVersion+" of JAP.");
+		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAP:Java "+javaVersion+" running on "+os+".");
+		if (mrjVersion != null)
+			JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAP:MRJ Version is "+mrjVersion+".");
+		// Create the view object
+		view = new JAPView (model.TITLE);
 		// Create the main frame
 		view.create();
 		model.addJAPObserver(view);
-		
 		// Create the iconified view
 		iconifiedView = new JAPViewIconified("JAP");
 		model.addJAPObserver(iconifiedView);
@@ -123,12 +122,10 @@ class JAP extends Frame{
 		//Init Crypto...
 		//java.security.Security.addProvider(new cryptix.jce.provider.CryptixCrypto());
 
-		
 		// Dispose the spash screen and show main frame
 		splash.dispose();
 		view.show();
 		view.toFront();		
-		
 		
 		// initially start services
 		model.initialRun();

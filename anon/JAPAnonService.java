@@ -52,6 +52,11 @@ public final class JAPAnonService implements Runnable
 		private volatile boolean m_bIsRunning=false;
 		private static String m_AnonHostName=null;
 		private static int m_AnonHostPort=-1;
+		
+		private String m_FirewallHost = null;
+		private int    m_FirewallPort = -1;
+		private boolean m_connectViaFirewall = false;
+		
 		private Thread m_threadRunLoop=null;
 		private ServerSocket m_socketListener=null;
 		private boolean m_bDontChangeListener=false;
@@ -135,6 +140,19 @@ public final class JAPAnonService implements Runnable
 				return E_SUCCESS;
 			}
 		
+		//2001-02-20(HF)	
+		public int setFirewall(String name,int port) {
+		    m_FirewallHost = name;
+		    m_FirewallPort = port;
+		    return E_SUCCESS;
+		}
+		//2001-02-20(HF)
+		public int connectViaFirewall(boolean b) {
+		    m_connectViaFirewall = b;
+		    return E_SUCCESS;
+		}
+		
+		
 		public int start()
 			{
 				if(m_bIsRunning)
@@ -172,7 +190,14 @@ public final class JAPAnonService implements Runnable
 					}				
 				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPProxyServer:Mux starting...");
 				m_MuxSocket = JAPMuxSocket.create();
-				if(m_MuxSocket.connect(m_AnonHostName,m_AnonHostPort)==-1)
+				//2001-02-20(HF)
+				int connectResult = -1;
+				if (m_connectViaFirewall) {
+					connectResult = m_MuxSocket.connectViaFirewall(m_AnonHostName,m_AnonHostPort,m_FirewallHost,m_FirewallPort);
+				} else {
+					connectResult = m_MuxSocket.connect(m_AnonHostName,m_AnonHostPort);
+				}
+				if(connectResult==-1)
 					{
 						if(!m_bDontChangeListener)
 							{

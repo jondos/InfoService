@@ -100,7 +100,7 @@ final public class JAPDebug extends WindowAdapter{
 			"Error",
 			"Warning",
 			"Notice",
-			"Info",
+			"Info ",
 			"Debug"
 		};
 //	private PrintWriter[] outStreams;
@@ -136,10 +136,10 @@ final public class JAPDebug extends WindowAdapter{
 		if ( (level <= debug.debuglevel) && (debug.debugtype & type) !=0 ) {
 //			debug.outStreams[level].println("JAPDebug: "+txt);
 			if(!debug.m_bConsole)
-				System.err.println("JAPDebug ["+strLevels[level]+"]: "+txt);
+				System.err.println("["+strLevels[level]+"] "+txt);
 			else
 				{
-					debug.textareaConsole.append("["+strLevels[level]+"]: "+txt+"\n");
+					debug.textareaConsole.append("["+strLevels[level]+"] "+txt+"\n");
 				}
 		}
 	}

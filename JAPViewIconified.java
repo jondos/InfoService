@@ -48,21 +48,31 @@ final class JAPViewIconified extends JFrame implements ActionListener, JAPObserv
 		setIconImage(model.getView().getIconImage());
 		//setBackground(Color.black);
 		//setForeground(Color.blue);
-		setFont(new Font("Sans",Font.PLAIN,9));
-		z1 = new JLabel("0000000",JLabel.LEFT);
-		z2 = new JLabel("0000000",JLabel.LEFT);
-		z3 = new JLabel("0000000",JLabel.LEFT);
+		
+		Font fnt = new Font("Sans",Font.PLAIN,9);
+		setFont(fnt);
+		
+		z1 = new JLabel("00000000  ",JLabel.LEFT);
+		z2 = new JLabel("00000000  ",JLabel.LEFT);
+		z3 = new JLabel("00000000  ",JLabel.LEFT);
 		z1.setForeground(Color.red);
 		z2.setForeground(Color.red);
 		z3.setForeground(Color.red);
+		z1.setFont(fnt);
+		z2.setFont(fnt);
+		z3.setFont(fnt);
+		
+		JLabel x1 = new JLabel(model.getString("iconifiedviewChannels")+": ",JLabel.RIGHT);
+		JLabel x2 = new JLabel(model.getString("iconifiedviewBytes")+": ",JLabel.RIGHT);
+		JLabel x3 = new JLabel(model.getString("iconifiedviewUsers")+": ",JLabel.RIGHT);
+		x1.setFont(fnt);
+		x2.setFont(fnt);
+		x3.setFont(fnt);
 		
 		JPanel p1 = new JPanel(new GridLayout(3,2) );
-		p1.add(new JLabel(model.getString("iconifiedviewChannels")+": ",JLabel.RIGHT));
-		p1.add(z1);
-		p1.add(new JLabel(model.getString("iconifiedviewBytes")+": ",JLabel.RIGHT));
-		p1.add(z2);
-		p1.add(new JLabel(model.getString("iconifiedviewUsers")+": ",JLabel.RIGHT));
-		p1.add(z3);
+		p1.add(x1); p1.add(z1);
+		p1.add(x2); p1.add(z2);
+		p1.add(x3); p1.add(z3);
 		
 		JPanel p2 = new JPanel(new FlowLayout() );
 		b = new JButton(JAPUtil.loadImageIcon(model.ENLARGEYICONFN,true));
@@ -70,7 +80,7 @@ final class JAPViewIconified extends JFrame implements ActionListener, JAPObserv
 		b.setToolTipText(model.getString("enlargeWindow"));
 		p2.add(b);
 		
-		getContentPane().add(new JLabel(JAPUtil.loadImageIcon(model.ICONFN,true)), BorderLayout.NORTH);
+		getContentPane().add(new JLabel(JAPUtil.loadImageIcon(model.JAPEYEFN,true)), BorderLayout.NORTH);
 		getContentPane().add(p1, BorderLayout.CENTER);
 //		getContentPane().add(new JLabel(" "), BorderLayout.EAST);
 //		getContentPane().add(new JLabel(" "), BorderLayout.WEST);
@@ -83,6 +93,9 @@ final class JAPViewIconified extends JFrame implements ActionListener, JAPObserv
 		setResizable(false);
 		pack();
 		JAPUtil.upRightFrame(this);
+		z1.setText("0");
+		z2.setText("0");
+		z3.setText("N/A");
 		
 	}
 	
