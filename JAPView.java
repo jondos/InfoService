@@ -30,10 +30,37 @@ import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.border.*;
-
+import javax.swing.plaf.basic.BasicProgressBarUI;
 import anon.JAPAnonServiceListener;
 
 final class JAPView extends JFrame implements ActionListener, JAPObserver {
+	
+	public class MyProgressBarUI extends BasicProgressBarUI {
+		public void paint(Graphics g, JComponent c) {
+			JProgressBar pb = (JProgressBar) c;
+			int dx=13;
+			int max=pb.getMaximum(); 
+			int anz    = pb.getWidth()/dx;
+			int value  = pb.getValue()*anz/max;
+			int x      = 0;
+			int y      = 0;
+			int height = c.getHeight();
+			int width  = 9;
+			for(int i=0;i<value;i++) {
+				g.fill3DRect(x,y,width,height,false);
+				x+=dx;
+			}
+			for(int i=value;i<anz;i++) {
+				g.draw3DRect(x,y,width,height,false);
+				x+=dx;
+			}			
+		}
+/*
+		public void update(Graphics g, JComponent c) {
+		}
+*/		
+	}
+	
 	private JAPModel 			model;
 	private JLabel				meterLabel;
 	private JLabel	 			nameLabel;
@@ -186,10 +213,10 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 //		levelPanel.setLayout(new BoxLayout(levelPanel, BoxLayout.Y_AXIS) );
 
 		// Own traffic situation: current # of channels
-		ownTrafficChannelsProgressBar = new
-			JProgressBar(JProgressBar.HORIZONTAL,0, 1);
+		ownTrafficChannelsProgressBar = new JProgressBar(JProgressBar.HORIZONTAL,0, 1);
+		ownTrafficChannelsProgressBar.setUI(new MyProgressBarUI());
 		ownTrafficChannelsProgressBar.setStringPainted(true);
-		ownTrafficChannelsProgressBar.setBorderPainted(PROGRESSBARBORDER);
+		ownTrafficChannelsProgressBar.setBorderPainted(false /*PROGRESSBARBORDER*/);
 		ownTrafficChannelsProgressBar.setString(" ");
 
 		// Own traffic situation: # of bytes transmitted
