@@ -79,7 +79,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 		p.setBorder(m_borderLookAndFeel);
 		JLabel l = new JLabel(JAPMessages.getString("settingsLookAndFeel"));
 		c.insets = new Insets(10, 10, 10, 10);
-		c.anchor = GridBagConstraints.WEST;
+		c.anchor = GridBagConstraints.NORTHWEST;
 		p.add(l, c);
 		c.gridx = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
@@ -168,9 +168,10 @@ final class JAPConfUI extends AbstractJAPConfModule
 		c.fill = GridBagConstraints.NONE;
 		c.weightx = 0;
 		p.add(m_cbSaveWindowPositions, c);
-		c1.anchor = GridBagConstraints.WEST;
+		c1.anchor = GridBagConstraints.NORTHWEST;
 		c1.fill = GridBagConstraints.HORIZONTAL;
 		c1.weightx = 1;
+		c1.anchor = c1.NORTHWEST;
 		panelRoot.add(p, c1);
 
 		gbl = new GridBagLayout();
@@ -185,18 +186,19 @@ final class JAPConfUI extends AbstractJAPConfModule
 		bg.add(m_rbViewSimplified);
 		c.insets = new Insets(10, 10, 10, 10);
 		c.weightx = 1;
-		c.anchor = GridBagConstraints.WEST;
+		c.anchor = GridBagConstraints.NORTHWEST;
 		p.add(m_rbViewNormal, c);
 		c.gridy = 1;
 		p.add(m_rbViewSimplified, c);
 		c1.gridy = 1;
 		c1.insets = new Insets(10, 0, 10, 0);
+		c1.anchor = c1.NORTHWEST;
 		panelRoot.add(p, c1);
 
 		gbl = new GridBagLayout();
 		c = new GridBagConstraints();
 		p = new JPanel(gbl);
-		p.setBorder(new TitledBorder(""));
+		p.setBorder(new TitledBorder(JAPMessages.getString("ngSettingsStartBorder")));
 		m_cbAfterStart = new JCheckBox(JAPMessages.getString("ngViewAfterStart"));
 		m_cbAfterStart.addActionListener(new ActionListener()
 		{
@@ -223,8 +225,16 @@ final class JAPConfUI extends AbstractJAPConfModule
 
 		c1.gridy = 2;
 		c1.insets = new Insets(0, 0, 0, 0);
+		c1.anchor = c1.NORTHWEST;
 		panelRoot.add(p, c1);
 
+		c1.gridx = 0;
+		c1.gridy = 3;
+		c1.anchor = GridBagConstraints.NORTHWEST;
+		c1.fill = GridBagConstraints.VERTICAL;
+		c1.weighty = 1;
+		JPanel fillPanel = new JPanel();
+		panelRoot.add(fillPanel, c1);
 	}
 
 	public String getTabTitle()
@@ -249,16 +259,12 @@ final class JAPConfUI extends AbstractJAPConfModule
 			JAPController.setLocale(Locale.FRENCH);
 		}
 		JAPController.setSaveMainWindowPosition(m_cbSaveWindowPositions.isSelected());
-		int defaultView = JAPConstants.VIEW_NORMAL;
-		if (m_rbViewSimplified.isSelected())
-		{
-			defaultView = JAPConstants.VIEW_SIMPLIFIED;
-		}
+		int defaultView=JAPConstants.VIEW_NORMAL;
+		if(m_rbViewSimplified.isSelected())
+			defaultView=JAPConstants.VIEW_SIMPLIFIED;
 		JAPController.getInstance().setDefaultView(defaultView);
-		JAPController.getInstance().setMinimizeOnStartup(m_rbViewMini.isSelected() &&
-			m_cbAfterStart.isSelected());
-		JAPController.getInstance().setMoveToSystrayOnStartup(m_rbViewSystray.isSelected() &&
-			m_cbAfterStart.isSelected());
+		JAPController.getInstance().setMinimizeOnStartup(m_rbViewMini.isSelected()&&m_cbAfterStart.isSelected());
+		JAPController.getInstance().setMoveToSystrayOnStartup(m_rbViewSystray.isSelected()&&m_cbAfterStart.isSelected());
 		return true;
 	}
 
@@ -297,9 +303,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 		m_cbAfterStart.setSelected(bAfterStart);
 		m_rbViewMini.setEnabled(bAfterStart);
 		m_rbViewSystray.setEnabled(bAfterStart);
-		if (bAfterStart && ! (m_rbViewSystray.isSelected() || m_rbViewMini.isSelected()))
-		{
+		if(bAfterStart&&!(m_rbViewSystray.isSelected()||m_rbViewMini.isSelected()))
 			m_rbViewMini.setSelected(true);
 		}
-	}
 }
