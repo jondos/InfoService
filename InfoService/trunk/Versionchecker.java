@@ -1,5 +1,9 @@
-import java.net.*;
-import java.io.*;
+import java.net.URL;
+import java.io.DataInputStream;
+import java.io.FileOutputStream;
+
+import HTTPClient.HTTPConnection;
+import HTTPClient.HTTPResponse;
 
 /** 
  * This is a class for version checking over the Internet.
@@ -21,38 +25,24 @@ public final class Versionchecker implements Runnable {
 	private int result = 0;
 	private String fn;
 
-/*
- * Stefan: Ich musste das hier alles aendern, da der Versionschecker bei mir immer versucht hat,
- * ueber den (lokalen) Proxy zu gehen, d.h. URL geht nicht. Deshalb musste ich es "von Hand" machen.
- */
 	public String getNewVersionnumberFromNet(String path) throws Exception {
 		try {
-			byte[] buff=new byte[9];
 			URL url=new URL(path);
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"Versionchecker:"+
 			" Prot: "+url.getProtocol()+
 			" Host: "+url.getHost()+
 			" Port: "+url.getPort()+
 			" File: "+url.getFile());
-			if (url.getProtocol().equalsIgnoreCase("http")!=true)
-				throw new Exception("Versioncheck wrong protocol: "+url.getProtocol()+" Should be http!");
-			Socket socket = new Socket(url.getHost(),((url.getPort()==-1)?80:url.getPort()));
-			BufferedWriter out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-			out.write("GET "+url.getFile()+" HTTP/1.0\r\n\r\n");
-			out.flush();
-			DataInputStream in=new DataInputStream(socket.getInputStream());
-			String line = readLine(in);
-			if (line.indexOf("200") == -1)
-				throw new Exception("Versioncheck bad response from server: "+line);
+			HTTPConnection.setProxyServer(null,0);
+			HTTPConnection con=new HTTPConnection(url.getHost(),
+																						url.getPort());
+			HTTPResponse resp=con.Get(url.getFile());
+			if (resp.getStatusCode()!=200)
+				throw new Exception("Versioncheck bad response from server: "+resp.getReasonLine());
 			// read remaining header lines
-			while (line.length() != 0) {
-				line = readLine(in);
-			}
-			in.readFully(buff);
-			in.close();
-			out.close();
-			socket.close();
-			String s=new String(buff);
+			byte[] buff=resp.getData();
+			String s=new String(buff).trim();
+			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"New Version: "+s);
 			if ( (s.charAt(2) == '.') && (s.charAt(5) == '.') )
 				return s;
 			throw new Exception("Versionfile has wrong format! Found: \""+s+ "\". Should be \"nn.nn.nnn\"!");
@@ -79,56 +69,37 @@ public final class Versionchecker implements Runnable {
 			" Host: "+url.getHost()+
 			" Port: "+url.getPort()+
 			" File: "+url.getFile());
-			if (url.getProtocol().equalsIgnoreCase("http")!=true)
-				throw new Exception("Download: Wrong protocol: "+url.getProtocol()+" Should be http!");
-			Socket socket = new Socket(url.getHost(),((url.getPort()==-1)?80:url.getPort()));
-			BufferedWriter out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-			out.write("GET "+url.getFile()+" HTTP/1.0\r\n\r\n");
-			out.flush();
-			DataInputStream in=new DataInputStream(socket.getInputStream());
-			String line = readLine(in);
-			if (line.indexOf("200") == -1) {
-				throw new Exception("Download: Bad response from server: "+line);
+			HTTPConnection.setProxyServer(null,0);
+			HTTPConnection con=new HTTPConnection(url.getHost(),
+																						url.getPort());
+			HTTPResponse resp=con.Get(url.getFile());
+			if (resp.getStatusCode()!=200) {
+				throw new Exception("Download: Bad response from server: "+resp.getReasonLine());
 			}
-			// read remaining header lines
+			
 			int len = -1;
-			while (line.length() != 0) {
-				int firstSpacePosition = line.indexOf(' ');
-				if (firstSpacePosition == -1) {
-					throw new Exception("Download: Bad header: missing space!");
-				}
-				String headerCommand = line.substring(0,firstSpacePosition);
-				String headerValue   = line.substring(firstSpacePosition + 1).trim();
-				if (headerCommand.equalsIgnoreCase("Content-length:")) {
-					len = Integer.parseInt(headerValue);
-				}
-				line = readLine(in);
-			}
+			len=resp.getHeaderAsInt("Content-Length");
 			//
 			if(len==-1) {
 				throw new Exception("Download: Unkown Size!");
 			}
 			
 			byte[] buff=new byte[len];
-//entweder:			
-//			in.readFully(buff);
-//oder:		
+			DataInputStream in=new DataInputStream(resp.getInputStream());
 			int progressCounter = 0;
 			int cnt = 0;
-			int onePercent = len/100; // nr of bytes for one percent progress
-			for (int i = 0; i < len; i++) {
-				buff[i]=in.readByte();
-				cnt++;
-				if (cnt == onePercent) {
-					progressCounter++;
-					vcp.progress(progressCounter);
-					cnt = 0;
+			int onePercent = (len/100)+1; // nr of bytes for one percent progress
+			while(len>0)
+				{
+					onePercent=Math.min(onePercent,len); //for the last percent...
+					in.readFully(buff,cnt,onePercent);
+					cnt+=onePercent;
+					len-=onePercent;
+					vcp.progress(++progressCounter);
 				}
-			}
 //			
 			in.close();
-			out.close();
-			socket.close();
+			
 			FileOutputStream f=new FileOutputStream(fn);
 			f.write(buff);
 			f.flush();
@@ -142,26 +113,13 @@ public final class Versionchecker implements Runnable {
 		}
 	}
 	
-	public int getResult() {
-		return result;
-	}
-	
-	public void registerProgress(Object o) {
-		this.vcp = (VersioncheckerProgress)o;
-	}
-	
-    private String readLine(DataInputStream inputStream) throws Exception {
-		String returnString = "";
-		try{
-			int byteRead = inputStream.read();
-			while (byteRead != 10 && byteRead != -1) {
-			if (byteRead != 13) returnString += (char)byteRead;
-			byteRead = inputStream.read();
-			}
-		} catch (Exception e) {
-			throw e;
+	public int getResult() 
+		{
+			return result;
 		}
-		return returnString;
-    }
 	
+	public void registerProgress(VersioncheckerProgress o)
+		{
+			vcp = o;
+		}	
 }

@@ -473,8 +473,8 @@ public final class JAPConf extends JDialog
 				setVisible(false);
 				model.setProxyMode(proxyCheckBox.isSelected());
 				model.setPortNumber(Integer.parseInt(portnumberTextField.getText().trim()));
-				model.proxyHostName = proxyhostTextField.getText().trim();
-				model.proxyPortNumber = Integer.parseInt(proxyportnumberTextField.getText().trim());
+				model.setProxy(proxyhostTextField.getText().trim(),
+											 Integer.parseInt(proxyportnumberTextField.getText().trim()));
 				
 				model.setInfoService(infohostTextField.getText().trim(),
 														 Integer.parseInt(infoportnumberTextField.getText().trim()));
@@ -519,8 +519,8 @@ public final class JAPConf extends JDialog
 		proxyCheckBox.setSelected(model.isProxyMode());
 		proxyhostTextField.setEnabled(proxyCheckBox.isSelected());
 		proxyportnumberTextField.setEnabled(proxyCheckBox.isSelected());
-		proxyhostTextField.setText(model.proxyHostName);
-		proxyportnumberTextField.setText(String.valueOf(model.proxyPortNumber));
+		proxyhostTextField.setText(model.getProxyHost());
+		proxyportnumberTextField.setText(String.valueOf(model.getProxyPort()));
 		// info tab
 		infohostTextField.setText(model.getInfoServiceHost());
 		infoportnumberTextField.setText(String.valueOf(model.getInfoServicePort()));

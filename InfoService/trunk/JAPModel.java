@@ -32,8 +32,8 @@ public final class JAPModel {
 	private int      portNumber        = 4001;
 	private int      runningPortNumber = 0;      // the port where proxy listens
 	private boolean  isRunningProxy    = false;  // true if a proxy is running
-	public  String   proxyHostName     = "ikt.inf.tu-dresden.de";
-	public  int      proxyPortNumber   = 80;
+	private  String   proxyHostName     = "ikt.inf.tu-dresden.de";
+	private  int      proxyPortNumber   = 80;
 	private boolean  proxyMode         = false;  // indicates whether JAP connects via a proxy or directly
 	private String   infoServiceHostName      = "anon.inf.tu-dresden.de";
 	private int      infoServicePortNumber    = 6543;
@@ -52,11 +52,12 @@ public final class JAPModel {
 	public int       trafficSituation  = -1;
 	public int       currentRisk       = -1;
 	static private JAPView view			   = null;
+	static private JAPInfoService mInfoService=null;
 // 2000-08-01(HF): the following url is now defined in JAPMessages.properties:
 // usage: model.getString("infoURL")
 //static final String url_download_version       = "http://www.inf.tu-dresden.de/~hf2/anon/JAP/";
 	
-	static final String aktJAPVersionFN            = "/~sk13/anon/jap/aktVersion.txt"; // retrieved from Info Service
+	static final String aktJAPVersionFN            = "/~sk13/anon/jap/aktVersionTest.txt"; // retrieved from Info Service
 	static final String urlJAPNewVersionDownload   = "/~sk13/anon/jap/JAP.jar"; // also retrieved from Info Service
 	static final String JAPLocalFilename           = "JAP.jar";
 
@@ -194,10 +195,17 @@ public final class JAPModel {
 			// 
 			portNumber=Integer.valueOf(n.getNamedItem("portNumber").getNodeValue()).intValue();
 			proxyMode=((n.getNamedItem("proxyMode").getNodeValue()).equals("true")?true:false);
-			proxyHostName=n.getNamedItem("proxyHostName").getNodeValue();
-			proxyPortNumber=Integer.valueOf(n.getNamedItem("proxyPortNumber").getNodeValue()).intValue();
-			infoServiceHostName=n.getNamedItem("infoServiceHostName").getNodeValue();
-			infoServicePortNumber=Integer.valueOf(n.getNamedItem("infoServicePortNumber").getNodeValue()).intValue();
+			
+			String host;
+			int port;
+			host=n.getNamedItem("infoServiceHostName").getNodeValue();
+			port=Integer.valueOf(n.getNamedItem("infoServicePortNumber").getNodeValue()).intValue();
+			setInfoService(host,port);
+
+			host=n.getNamedItem("proxyHostName").getNodeValue();
+			port=Integer.valueOf(n.getNamedItem("proxyPortNumber").getNodeValue()).intValue();
+			setProxy(host,port);
+
 			anonHostName=n.getNamedItem("anonHostName").getNodeValue();
 			anonPortNumber=Integer.valueOf(n.getNamedItem("anonPortNumber").getNodeValue()).intValue();
 			autoConnect=((n.getNamedItem("autoConnect").getNodeValue()).equals("true")?true:false);
@@ -362,6 +370,8 @@ public final class JAPModel {
 				{
 					infoServiceHostName=host;
 					infoServicePortNumber=port;
+					if(mInfoService!=null)
+						mInfoService.setInfoService(host,port);
 					return true;
 				}
 		}
@@ -382,6 +392,47 @@ public final class JAPModel {
 					return infoServicePortNumber;
 				}
 		}
+	
+		
+	public JAPInfoService getInfoService()
+		{
+			if(mInfoService==null)
+				mInfoService=new JAPInfoService();
+			return mInfoService;
+		}
+	
+	public boolean setProxy(String host,int port)
+		{
+			if(!isPort(port))
+				return false;
+			if(host==null)
+				return false;
+			synchronized(this)
+				{
+					proxyHostName=host;
+					proxyPortNumber=port;
+					if(mInfoService!=null)
+						mInfoService.setProxy(host,port);
+					return true;
+				}
+		}
+	
+	public String getProxyHost()
+		{
+			synchronized(this)
+				{
+					return proxyHostName;
+				}
+		}
+	
+	public int getProxyPort()
+		{
+			synchronized(this)
+				{
+					return proxyPortNumber;
+				}
+		}
+	
 	
 	public synchronized void setAnonMode(boolean anonModeSelected)
 	{
@@ -496,11 +547,10 @@ public final class JAPModel {
 	 */
 	public void fetchAnonServers() 
 		{
-			JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:Trying to fetch Anon Servers from InfoService...");
-			JAPFetchAnonServers f = new JAPFetchAnonServers();
+			JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:Trying to fetch Anon Servers from ...");
 			try
 				{
-					f.fetch();
+					getInfoService().fetchAnonServers();
 				}
 			catch (Exception e)
 				{
@@ -513,52 +563,53 @@ public final class JAPModel {
 	 *  @return -1, if version check says that anonymity mode should not be enabled.
 	 *          Reasons can be: new version found, version check failed 
 	 */
-	public int versionCheck() {
-		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:Checking for new version of JAP...");
-		try {
-			int result = 0;
-			Versionchecker vc = new Versionchecker();
+	public int versionCheck() 
+		{
+			JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:Checking for new version of JAP...");
+			try {
+				int result = 0;
+				Versionchecker vc = new Versionchecker();
 //			String s = vc.getNewVersionnumberFromNet("http://"+infoServiceHostName+":"+infoServicePortNumber+aktJAPVersionFN);
 // temporary changed due to stability.... (sk13)
-			String s = vc.getNewVersionnumberFromNet("http://anon.inf.tu-dresden.de:80"+aktJAPVersionFN);
-			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:Version:"+s);
-			if ( s.compareTo(aktVersion) > 0 ) {
-				// OK, new version available
-				// ->Ask user if he/she wants to download new version
-			//	Object[] options = { model.getString("newVersionNo"), model.getString("newVersionYes") };
-			//	ImageIcon   icon = loadImageIcon(DOWNLOADFN,true);
-				String answer;
-				JAPLoading japLoading = new JAPLoading(this,view);
-				answer = japLoading.message(model.getString("newVersionAvailableTitle"),
+				String s = vc.getNewVersionnumberFromNet("http://anon.inf.tu-dresden.de:80"+aktJAPVersionFN);
+				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:Version:"+s);
+				if ( s.compareTo(aktVersion) > 0 ) {
+					// OK, new version available
+					// ->Ask user if he/she wants to download new version
+					//	Object[] options = { model.getString("newVersionNo"), model.getString("newVersionYes") };
+					//	ImageIcon   icon = loadImageIcon(DOWNLOADFN,true);
+					String answer;
+					JAPLoading japLoading = new JAPLoading(this,view);
+					answer = japLoading.message(model.getString("newVersionAvailableTitle"),
 						   model.getString("newVersionAvailable"),
 						   model.getString("newVersionNo"),
 						   model.getString("newVersionYes"),
 						   true,false);
-				if (answer.equals(model.getString("newVersionYes"))) {
-					// User has elected to download new version of JAP
-					// ->Download, Alert, exit program
-					// To do: show busy message
-					try {
-						vc.registerProgress(japLoading);
+					if (answer.equals(model.getString("newVersionYes"))) {
+						// User has elected to download new version of JAP
+						// ->Download, Alert, exit program
+						// To do: show busy message
+						try {
+							vc.registerProgress(japLoading);
 //						vc.getVersionFromNet("http://"+infoServiceHostName+":"+infoServicePortNumber+urlJAPNewVersionDownload, JAPLocalFilename);
-						vc.getVersionFromNet("http://anon.inf.tu-dresden.de:80"+urlJAPNewVersionDownload, JAPLocalFilename);
-						Thread t = new Thread(vc);
-						t.start();
-						answer = japLoading.message(model.getString("downloadingProgressTitle"),
-						   model.getString("downloadingProgress"),
+							vc.getVersionFromNet("http://anon.inf.tu-dresden.de:80"+urlJAPNewVersionDownload, JAPLocalFilename);
+							Thread t = new Thread(vc);
+							t.start();
+							answer = japLoading.message(model.getString("downloadingProgressTitle"),
+						  model.getString("downloadingProgress"),
 						   null,
 						   null,
 						   true,true);
-						t.join();
-						result = vc.getResult();
-						if (result == 0) {
+							t.join();
+							result = vc.getResult();
+							if (result == 0) {
 							// 
-							answer = japLoading.message(model.getString("newVersionAvailableTitle"),
-							   model.getString("newVersionLoaded"),
-							   null,
-							   "OK",
-							   true,false);
-							goodBye();
+								answer = japLoading.message(model.getString("newVersionAvailableTitle"),
+							  model.getString("newVersionLoaded"),
+							  null,
+							  "OK",
+							  true,false);
+								goodBye();
 						} else {
 							throw new Exception("Error loading new version");
 						}
