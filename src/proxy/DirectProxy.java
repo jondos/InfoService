@@ -243,11 +243,11 @@ final public class DirectProxy implements Runnable
 	 */
 	private final class DirectConViaHTTPProxy implements Runnable
 	{
-		private Socket clientSocket;
+		private Socket m_clientSocket;
 
 		public DirectConViaHTTPProxy(Socket s)
 		{
-			this.clientSocket = s;
+			m_clientSocket = s;
 		}
 
 		public void run()
@@ -255,12 +255,12 @@ final public class DirectProxy implements Runnable
 			try
 			{
 				// open stream from client
-				InputStream inputStream = clientSocket.getInputStream();
+				InputStream inputStream = m_clientSocket.getInputStream();
 				// create Socket to Server
 				Socket serverSocket = new Socket(JAPModel.getFirewallHost(), JAPModel.getFirewallPort());
 				// Response from server is transfered to client in a sepatate thread
 				DirectProxyResponse pr = new DirectProxyResponse(serverSocket.getInputStream(),
-					clientSocket.getOutputStream());
+					m_clientSocket.getOutputStream());
 				Thread prt = new Thread(pr, "JAP - DirectProxyResponse");
 				prt.start();
 				// create stream --> server
@@ -277,6 +277,7 @@ final public class DirectProxy implements Runnable
 					str = JAPUtil.getProxyAuthorization(JAPModel.getFirewallAuthUserID(),
 						JAPController.getFirewallAuthPasswd());
 					outputStream.write(str.getBytes());
+					outputStream.flush();
 				}
 				byte[] buff = new byte[1000];
 				int len;
@@ -285,9 +286,9 @@ final public class DirectProxy implements Runnable
 					if (len > 0)
 					{
 						outputStream.write(buff, 0, len);
+						outputStream.flush();
 					}
 				}
-				outputStream.flush();
 				prt.join();
 				outputStream.close();
 				inputStream.close();
