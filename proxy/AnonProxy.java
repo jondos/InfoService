@@ -47,7 +47,12 @@ import jap.JAPConstants;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.util.XMLUtil;
 import pay.Pay;
+import payxml.XMLAccountInfo;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import javax.xml.parsers.DocumentBuilderFactory;
 
 final public class AnonProxy implements Runnable, IAnonProxy
 {
@@ -90,7 +95,7 @@ final public class AnonProxy implements Runnable, IAnonProxy
 		String toAI = "";
 		try
 		{
-			Pay pay=Pay.getInstance();
+			Pay pay = Pay.getInstance();
 			toAI = pay.getAccount(pay.getUsedAccount()).getAccountCertificate().getXMLString();
 			( (AnonServiceImpl) m_Anon).sendPayPackets(toAI);
 		}
@@ -100,18 +105,30 @@ final public class AnonProxy implements Runnable, IAnonProxy
 						  "AnonProxy: Fehler beim Anfordern des KontoZertifikates und/oder des Kontostandes");
 		}
 		LogHolder.log(LogLevel.DEBUG, LogType.NET,
-					  "AnonProxy: länge des zu verschickenden Certifikates : " + toAI.length());
+					  "AnonProxy: l\uFFFDnge des zu verschickenden Certifikates : " + toAI.length());
 		sendBalanceToAI();
 	}
 
 	// methode zum senden einer balance an die AI - oneway
 	public void sendBalanceToAI()
 	{
-		LogHolder.log(LogLevel.DEBUG, LogType.NET, "AnonProxy: sendBalanceToAI läuft");
+		LogHolder.log(LogLevel.DEBUG, LogType.NET, "AnonProxy: sending Balance to AI");
 		try
 		{
-			( (AnonServiceImpl) m_Anon).sendPayPackets(Pay.getInstance().getAccount(Pay.getInstance().getUsedAccount()).
-				getBalance().getXMLString());
+			Pay pay = Pay.getInstance();
+			XMLAccountInfo info = pay.getAccount(pay.getUsedAccount()).getAccountInfo();
+
+			// temporary code... TODO: remove DOM functionality from here (Bastian Voigt)
+			Document doc = info.getDomDocument();
+			Element elemRoot = doc.getDocumentElement();
+			Element elemBalance = (Element) XMLUtil.getFirstChildByName(elemRoot, "Balance");
+
+			Document balanceDoc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+			elemRoot =(Element) XMLUtil.importNode(balanceDoc, elemBalance, true);
+			balanceDoc.appendChild(elemRoot);
+
+			String strBalance = XMLUtil.XMLDocumentToString(balanceDoc);
+			( (AnonServiceImpl) m_Anon).sendPayPackets(strBalance);
 		}
 		catch (Exception ex)
 		{
@@ -239,7 +256,7 @@ final public class AnonProxy implements Runnable, IAnonProxy
 				{
 					socket = null;
 					LogHolder.log(LogLevel.ERR, LogType.NET,
-						"JAPAnonProxy.run() Could not set non-Blocking mode for Channel-Socket! Exception: " +
+								  "JAPAnonProxy.run() Could not set non-Blocking mode for Channel-Socket! Exception: " +
 								  soex);
 					continue;
 				}
@@ -284,7 +301,7 @@ final public class AnonProxy implements Runnable, IAnonProxy
 				{
 					try
 					{
-						new AnonProxyRequest(this,socket, newChannel);
+						new AnonProxyRequest(this, socket, newChannel);
 					}
 					catch (Exception e)
 					{
@@ -323,6 +340,5 @@ final public class AnonProxy implements Runnable, IAnonProxy
 	{
 		m_ProxyListener.transferedBytes(bytes);
 	}
-
 
 }

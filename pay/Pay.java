@@ -53,8 +53,8 @@ import logging.LogLevel;
 import logging.LogType;
 import pay.event.ModelEventFirerer;
 import pay.event.ModelListener;
-import payxml.XMLBalConf;
 import payxml.XMLAccountCertificate;
+import payxml.XMLAccountInfo;
 import payxml.XMLEasyCC;
 import payxml.XMLTransCert;
 
@@ -63,20 +63,22 @@ import anon.crypto.JAPCertificate;
 import anon.crypto.*;
 
 import anon.util.Base64;
-
+import payxml.XMLJapPublicKey;
 
 /**
- * Dies ist die Hauptklasse für die Payfunktionaltiät,
+ * Dies ist die Hauptklasse f\uFFFDr die Payfunktionalti\uFFFDt,
  * hier werden Funktionen zum kommunizieren mit der BI,
  * und dem Speichern der Konten angeboten.
  * Pay ist ausserdem ein ModelListener des Pay Bereiches:
- * sobald sich etwas an Pay oder den von Pay verwalteten Klassen ändert,
+ * sobald sich etwas an Pay oder den von Pay verwalteten Klassen \uFFFDndert,
  * wird ein ModelEvent geworfen.
  * Auf PayAccountFile und PayInstance und PayAccountsControl sollte aus diesem
- * Grund nur über Pay zugegriffen werden.
+ * Grund nur \uFFFDber Pay zugegriffen werden.
  *
- * @author Andreas Mueller, Grischan Glänzel, Bastian Voigt
+ * @author Andreas Mueller, Grischan Glaenzel, Bastian Voigt
  */
+
+// PS: Das diese Klasse mittlerweile schon 3 Autoren hat, spricht f\uFFFDr sich :)
 
 public class Pay
 {
@@ -84,9 +86,9 @@ public class Pay
 
 	//	private UserDaten user;
 
-	private PayInstance payInstance;
-	private PayAccountFile accountFile;
-	private PayAccountsControl accountsControl;
+//	private BIConnection payInstance;
+	private PayAccountFile m_accountFile;
+	private PayAccountsControl m_accountsControl;
 	private String host;
 	private int port;
 	private boolean sslOn;
@@ -97,7 +99,9 @@ public class Pay
 	/** for checking the JPI signatures */
 	private JAPSignature m_verifyingInstance;
 	public JAPSignature getVerifyingInstance()
-	{return m_verifyingInstance;}
+	{
+		return m_verifyingInstance;
+	}
 
 	private ModelEventFirerer fire = new ModelEventFirerer(this);
 
@@ -106,7 +110,7 @@ public class Pay
 	 */
 	private Pay()
 	{
-		accountsControl = new PayAccountsControl();
+		m_accountsControl = new PayAccountsControl();
 	}
 
 	/**
@@ -148,162 +152,305 @@ public class Pay
 	/**
 	 * Initialisiert die Pay Klasse. Ruft {@link #setPayInstance} und
 	 * {@link #openAccountFile}
-	 * auf. Die Kontendatei wird eingelesen und entschlüsselt. Hostname und
+	 * auf. Die Kontendatei wird eingelesen und entschl\uFFFDsselt. Hostname und
 	 * Hostport der Bezahlinstanz werden gesetzt.
 	 *
 	 * @param filename Dateiname der Kontendatei
-	 * @param password Passwort zur Ver- bzw. Entschlüsselung der Kontendatei
+	 * @param password Passwort zur Ver- bzw. Entschl\uFFFDsselung der Kontendatei
 	 * @param host Hostname der Bezahlinstanz
 	 * @param port Hostport der Bezahlinstanz
 	 * @param sslOn schaltet SSL ein oder aus (Debug-stuff)
 	 * @param jpiCertFileName Name der Datei, die das Public
-	 * X509 Certificate der Bezahlinstanz enthält
+	 * X509 Certificate der Bezahlinstanz enth\uFFFDlt
 	 * @return -1 wenn noch keine Kontendatei unter filename existiert, 0 sonst
 	 * @throws Exception Wenn ein Fehler beim Dateizugriff oder der
-	 * Entschlüsselung auftrat
+	 * Entschl\uFFFDsselung auftrat
 	 *
 	 * NOTE: THIS IS NEVER CALLED. REMOVE???
 	 */
 	/* public void init(String host, int port, boolean sslOn, String jpiCertFileName)
-	throws Exception
-	{
-		readJpiCertificate(certFileName); // new by Bastian Voigt
-		setPayInstance(host, port, sslOn);
-		openAccountFile();
-	}*/
+	  throws Exception
+	  /* public void init(String host, int port, boolean sslOn, String jpiCertFileName)
+		throws Exception
+		{
+	   readJpiCertificate(certFileName); // new by Bastian Voigt
+	   setPayInstance(host, port, sslOn);
+	   openAccountFile();
+		}*/
+
+	 /**
+	  * Reads the JPI's X509 certificate from a file
+	  * and initializes the signature verifying instance
+	  *
+	  * @author Bastian Voigt
+	  */
+	 public void readJpiCertificate(String fileName)
+	 {
+
+		 // the following code was copied
+		 // from MixConfig.java ( openFile() and readCertificate() )
+		 // maybe not a too good solution...
+		 // TODO: remove this copied code
+		 byte[] cert;
+		 java.io.File file = new java.io.File(fileName);
+		 try
+		 {
+			 cert = new byte[ (int) file.length()];
+			 java.io.FileInputStream fin = new java.io.FileInputStream(file);
+			 fin.read(cert);
+			 fin.close();
+		 }
+		 catch (Exception e)
+		 {
+			 LogHolder.log(LogLevel.ALERT, LogType.PAY,
+						   "Pay.readJpiCertificate(): Error reading certificate file " + fileName
+						   );
+			 return;
+		 }
+
+		 java.io.ByteArrayInputStream bin = null;
+		 X509CertificateStructure x509 = null;
+
+		 try
+		 {
+			 // start readCertificate(cert[])
+
+			 if (cert[0] != (DERInputStream.SEQUENCE | DERInputStream.CONSTRUCTED))
+			 {
+				 // Probably a Base64 encoded certificate
+				 java.io.BufferedReader in =
+					 new java.io.BufferedReader(
+					 new java.io.InputStreamReader(new java.io.ByteArrayInputStream(cert)));
+				 StringBuffer sbuf = new StringBuffer();
+				 String line;
+
+				 while ( (line = in.readLine()) != null)
+				 {
+					 if (line.equals("-----BEGIN CERTIFICATE-----")
+						 || line.equals("-----BEGIN X509 CERTIFICATE-----"))
+					 {
+						 break;
+					 }
+				 }
+
+				 while ( (line = in.readLine()) != null)
+				 {
+					 if (line.equals("-----END CERTIFICATE-----")
+						 || line.equals("-----END X509 CERTIFICATE-----"))
+					 {
+						 break;
+					 }
+					 sbuf.append(line);
+				 }
+				 bin = new java.io.ByteArrayInputStream(Base64.decode(sbuf.toString()));
+			 }
+
+			 if (bin == null && cert[1] == 0x80)
+			 {
+				 // a BER encoded certificate
+				 BERInputStream in =
+					 new BERInputStream(new java.io.ByteArrayInputStream(cert));
+				 ASN1Sequence seq = (ASN1Sequence) in.readObject();
+				 DERObjectIdentifier oid = (DERObjectIdentifier) seq.getObjectAt(0);
+				 if (oid.equals(PKCSObjectIdentifiers.signedData))
+				 {
+					 x509 = new X509CertificateStructure(
+						 (ASN1Sequence)new SignedData(
+						 (ASN1Sequence) ( (DERTaggedObject) seq
+										 .getObjectAt(1))
+						 .getObject())
+						 .getCertificates()
+						 .getObjectAt(0));
+				 }
+			 }
+			 else
+			 {
+				 if (bin == null)
+				 {
+					 bin = new java.io.ByteArrayInputStream(cert);
+					 // DERInputStream
+				 }
+				 DERInputStream in = new DERInputStream(bin);
+				 ASN1Sequence seq = (ASN1Sequence) in.readObject();
+				 if (seq.size() > 1
+					 && seq.getObjectAt(1) instanceof DERObjectIdentifier
+					 && seq.getObjectAt(0).equals(PKCSObjectIdentifiers.signedData))
+				 {
+					 x509 = X509CertificateStructure.getInstance(
+						 new SignedData(
+						 ASN1Sequence.getInstance(
+						 (ASN1TaggedObject) seq.getObjectAt(1),
+						 true))
+						 .getCertificates()
+						 .getObjectAt(0));
+				 }
+				 else
+				 {
+					 x509 = X509CertificateStructure.getInstance(seq);
+				 }
+			 }
+		 }
+		 catch (Exception e)
+		 {
+			 e.printStackTrace();
+			 x509 = null;
+		 }
+
+		 if (x509 == null)
+		 {
+			 LogHolder.log(LogLevel.ALERT, LogType.PAY,
+						   "Pay.readJpiCertificate(): Error decoding certificate!"
+						   );
+			 return;
+		 }
+
+		 try
+		 {
+			 LogHolder.log(LogLevel.DEBUG, LogType.PAY,
+						   "Pay.readJpiCertificate(): reading JPI Certificate from file '" + fileName + "'."
+						   );
+			 JAPCertificate japCert = JAPCertificate.getInstance(x509);
+			 m_verifyingInstance = new JAPSignature();
+			 m_verifyingInstance.initVerify(japCert.getPublicKey());
+		 }
+		 catch (Exception e)
+		 {
+			 e.printStackTrace();
+		 }
+	 }
 
 	/**
-	* Reads the JPI's X509 certificate from a file
-	* and initializes the signature verifying instance
-	*
-	* @author Bastian Voigt
-	*/
-	public void readJpiCertificate(String fileName)
-	{
+	 * Reads the JPI's X509 certificate from a file
+	 * and initializes the signature verifying instance
+	 *
+	 * @author Bastian Voigt
+	 */
+	/*	public void readJpiCertificate(String fileName)
+	 {
 
-		// the following code was copied
-		// from MixConfig.java ( openFile() and readCertificate() )
-		// maybe not a too good solution...
-		// TODO: remove this copied code
-		byte[] cert;
-		java.io.File file = new java.io.File(fileName);
-		try
-		{
-			cert = new byte[ (int) file.length()];
-			java.io.FileInputStream fin = new java.io.FileInputStream(file);
-			fin.read(cert);
-			fin.close();
-		}
-		catch (Exception e) {
-			LogHolder.log(LogLevel.ALERT, LogType.PAY,
-					"Pay.readJpiCertificate(): Error reading certificate file " + fileName
-				);
-			return;
-		}
+	  // the following code was copied
+	  // from MixConfig.java ( openFile() and readCertificate() )
+	  // maybe not a too good solution...
+	  // TODO: remove this copied code
+	  byte[] cert;
+	  java.io.File file = new java.io.File(fileName);
+	  try
+	  {
+	   cert = new byte[ (int) file.length()];
+	   java.io.FileInputStream fin = new java.io.FileInputStream(file);
+	   fin.read(cert);
+	   fin.close();
+	  }
+	  catch (Exception e) {
+	   LogHolder.log(LogLevel.ALERT, LogType.PAY,
+	  "Pay.readJpiCertificate(): Error reading certificate file " + fileName
+	 );
+	   return;
+	  }
 
-		java.io.ByteArrayInputStream bin = null;
-		X509CertificateStructure x509 = null;
+	  java.io.ByteArrayInputStream bin = null;
+	  X509CertificateStructure x509 = null;
 
-		try {
-			// start readCertificate(cert[])
+	  try {
+	   // start readCertificate(cert[])
 
-			if (cert[0] != (DERInputStream.SEQUENCE | DERInputStream.CONSTRUCTED))
-			{
-				// Probably a Base64 encoded certificate
-				java.io.BufferedReader in =
-					new java.io.BufferedReader(
-					new java.io.InputStreamReader(new java.io.ByteArrayInputStream(cert)));
-				StringBuffer sbuf = new StringBuffer();
-				String line;
+	   if (cert[0] != (DERInputStream.SEQUENCE | DERInputStream.CONSTRUCTED))
+	   {
+	 // Probably a Base64 encoded certificate
+	 java.io.BufferedReader in =
+	  new java.io.BufferedReader(
+	  new java.io.InputStreamReader(new java.io.ByteArrayInputStream(cert)));
+	 StringBuffer sbuf = new StringBuffer();
+	 String line;
 
-				while ( (line = in.readLine()) != null)
-				{
-					if (line.equals("-----BEGIN CERTIFICATE-----")
-						|| line.equals("-----BEGIN X509 CERTIFICATE-----"))
-					{
-						break;
-					}
-				}
+	 while ( (line = in.readLine()) != null)
+	 {
+	  if (line.equals("-----BEGIN CERTIFICATE-----")
+	   || line.equals("-----BEGIN X509 CERTIFICATE-----"))
+	  {
+	   break;
+	  }
+	 }
 
-				while ( (line = in.readLine()) != null)
-				{
-					if (line.equals("-----END CERTIFICATE-----")
-						|| line.equals("-----END X509 CERTIFICATE-----"))
-					{
-						break;
-					}
-					sbuf.append(line);
-				}
-				bin = new java.io.ByteArrayInputStream(Base64.decode(sbuf.toString()));
-			}
+	 while ( (line = in.readLine()) != null)
+	 {
+	  if (line.equals("-----END CERTIFICATE-----")
+	   || line.equals("-----END X509 CERTIFICATE-----"))
+	  {
+	   break;
+	  }
+	  sbuf.append(line);
+	 }
+	 bin = new java.io.ByteArrayInputStream(Base64.decode(sbuf.toString()));
+	   }
 
-			if (bin == null && cert[1] == 0x80)
-			{
-				// a BER encoded certificate
-				BERInputStream in =
-					new BERInputStream(new java.io.ByteArrayInputStream(cert));
-				ASN1Sequence seq = (ASN1Sequence) in.readObject();
-				DERObjectIdentifier oid = (DERObjectIdentifier) seq.getObjectAt(0);
-				if (oid.equals(PKCSObjectIdentifiers.signedData))
-				{
-					x509 = new X509CertificateStructure(
-						(ASN1Sequence)new SignedData(
-						(ASN1Sequence) ( (DERTaggedObject) seq
-										.getObjectAt(1))
-						.getObject())
-						.getCertificates()
-						.getObjectAt(0));
-				}
-			}
-			else
-			{
-				if (bin == null)
-				{
-					bin = new java.io.ByteArrayInputStream(cert);
-					// DERInputStream
-				}
-				DERInputStream in = new DERInputStream(bin);
-				ASN1Sequence seq = (ASN1Sequence) in.readObject();
-				if (seq.size() > 1
-					&& seq.getObjectAt(1) instanceof DERObjectIdentifier
-					&& seq.getObjectAt(0).equals(PKCSObjectIdentifiers.signedData))
-				{
-					x509 = X509CertificateStructure.getInstance(
-						new SignedData(
-						ASN1Sequence.getInstance(
-						(ASN1TaggedObject) seq.getObjectAt(1),
-						true))
-						.getCertificates()
-						.getObjectAt(0));
-				}
-				else
-					x509 = X509CertificateStructure.getInstance(seq);
-			}
-		}
-		catch(Exception e) {
-			e.printStackTrace();
-			x509=null;
-		}
+	   if (bin == null && cert[1] == 0x80)
+	   {
+	 // a BER encoded certificate
+	 BERInputStream in =
+	  new BERInputStream(new java.io.ByteArrayInputStream(cert));
+	 ASN1Sequence seq = (ASN1Sequence) in.readObject();
+	 DERObjectIdentifier oid = (DERObjectIdentifier) seq.getObjectAt(0);
+	 if (oid.equals(PKCSObjectIdentifiers.signedData))
+	 {
+	  x509 = new X509CertificateStructure(
+	   (ASN1Sequence)new SignedData(
+	   (ASN1Sequence) ( (DERTaggedObject) seq
+		.getObjectAt(1))
+	   .getObject())
+	   .getCertificates()
+	   .getObjectAt(0));
+	 }
+	   }
+	   else
+	   {
+	 if (bin == null)
+	 {
+	  bin = new java.io.ByteArrayInputStream(cert);
+	  // DERInputStream
+	 }
+	 DERInputStream in = new DERInputStream(bin);
+	 ASN1Sequence seq = (ASN1Sequence) in.readObject();
+	 if (seq.size() > 1
+	  && seq.getObjectAt(1) instanceof DERObjectIdentifier
+	  && seq.getObjectAt(0).equals(PKCSObjectIdentifiers.signedData))
+	 {
+	  x509 = X509CertificateStructure.getInstance(
+	   new SignedData(
+	   ASN1Sequence.getInstance(
+	   (ASN1TaggedObject) seq.getObjectAt(1),
+	   true))
+	   .getCertificates()
+	   .getObjectAt(0));
+	 }
+	 else
+	  x509 = X509CertificateStructure.getInstance(seq);
+	   }
+	  }
+	  catch(Exception e) {
+	   e.printStackTrace();
+	   x509=null;
+	  }
 
-		if(x509 == null) {
-			LogHolder.log(LogLevel.ALERT, LogType.PAY,
-					"Pay.readJpiCertificate(): Error decoding certificate!"
-				);
-			return;
-		}
+	  if(x509 == null) {
+	   LogHolder.log(LogLevel.ALERT, LogType.PAY,
+	  "Pay.readJpiCertificate(): Error decoding certificate!"
+	 );
+	   return;
+	  }
 
-		try {
-			LogHolder.log(LogLevel.DEBUG, LogType.PAY,
-					"Pay.readJpiCertificate(): reading JPI Certificate from file '"+fileName+"'."
-				);
-			JAPCertificate japCert = JAPCertificate.getInstance(x509);
-			m_verifyingInstance = new JAPSignature();
-			m_verifyingInstance.initVerify(japCert.getPublicKey());
-		}
-		catch(Exception e) {
-			e.printStackTrace();
-		}
-	}
+	  try {
+	   LogHolder.log(LogLevel.DEBUG, LogType.PAY,
+	  "Pay.readJpiCertificate(): reading JPI Certificate from file '"+fileName+"'."
+	 );
+	   JAPCertificate japCert = JAPCertificate.getInstance(x509);
+	   m_verifyingInstance = new JAPSignature();
+	   m_verifyingInstance.initVerify(japCert.getPublicKey());
+	  }
+	  catch(Exception e) {
+	   e.printStackTrace();
+	  }
+	 }*/
 
 	/**
 	 * Hostname und Hostport der Bezahlinstanz werden gesetzt.
@@ -321,47 +468,47 @@ public class Pay
 	}
 
 	/**
-	 * Einlesen und entschlüsseln der Kontendatei.
+	 * Einlesen und entschl\uFFFDsseln der Kontendatei.
 	 *
 	 * @param filename Dateiname
 	 * @param password Passwort
 	 * @return 0 wenn Kontendatei neu angelegt wurde, 1 wenn bestehende
-	 * Kontendatei geöffnet wurde. -1 Wenn ein Fehler beim Dateizugriff oder der
-	 * Entschlüsselung auftrat. 2 wenn dieses AccountFile bereits geöffnet ist
+	 * Kontendatei ge\uFFFDffnet wurde. -1 Wenn ein Fehler beim Dateizugriff oder der
+	 * Entschl\uFFFDsselung auftrat. 2 wenn dieses AccountFile bereits ge\uFFFDffnet ist
 	 */
 	public void openAccountFile() throws Exception
 	{
-		if ( (accountFile == null))
+		if ( (m_accountFile == null))
 		{
 			try
 			{
-				accountFile = accountsControl.open();
+				m_accountFile = m_accountsControl.open();
 				accountFileOpened = true;
 				fire.fireModelEvent();
 			}
 			catch (PayAccountsControl.WrongPasswordException wp)
 			{
 				LogHolder.log(LogLevel.DEBUG, LogType.PAY,
-							  "öffnen des AccountFiles ging nicht => falsches Passwort angegeben " + wp);
+							  "\uFFFDffnen des AccountFiles ging nicht => falsches Passwort angegeben " + wp);
 			}
 			catch (IOException io)
 			{
 				LogHolder.log(LogLevel.DEBUG, LogType.PAY,
-							  "öffnen des AccountFiles ging nicht => allgemiener IOFehler! ");
+							  "\uFFFDffnen des AccountFiles ging nicht => allgemiener IOFehler! ");
 			}
 		}
 	}
 
 	public boolean accountFileHasUsedAccount()
 	{
-		return (accountFileOpened() && accountFile.hasUsedAccount());
+		return (accountFileOpened() && m_accountFile.hasUsedAccount());
 	}
 
 	public void storeAccountFile()
 	{
 		try
 		{
-			accountsControl.store(accountFile);
+			m_accountsControl.store(m_accountFile);
 		}
 		catch (Exception ex)
 		{
@@ -372,20 +519,20 @@ public class Pay
 	public void changeAccountFileEncryptMode() throws Exception
 	{
 		fire.fireModelEvent();
-		accountsControl.changeEncryptMode(accountFile);
+		m_accountsControl.changeEncryptMode(m_accountFile);
 	}
 
 	public boolean isAccountFileEncrypted()
 	{
-		return accountFile.getPassword() != null;
+		return m_accountFile.getPassword() != null;
 	}
 
 	public void exportAccountFile(String filename) throws Exception
 	{
 		try
 		{
-			PayAccountFile accounts = new PayAccountFile(accountFile.getXML(), accountFile.getPassword());
-			accountsControl.store(accounts, filename);
+			PayAccountFile accounts = new PayAccountFile(m_accountFile.getXML(), m_accountFile.getPassword());
+			m_accountsControl.store(accounts, filename);
 		}
 		catch (IOException io)
 		{
@@ -398,18 +545,18 @@ public class Pay
 		LogHolder.log(LogLevel.DEBUG, LogType.PAY, "importAccountFile start");
 		try
 		{
-			PayAccountFile accounts = accountsControl.open(filename);
+			PayAccountFile accounts = m_accountsControl.open(filename);
 			Enumeration en = accounts.getAccounts();
 
 			while (en.hasMoreElements())
 			{
 				LogHolder.log(LogLevel.DEBUG, LogType.PAY, "en.hasMoreElements()");
 				PayAccount account = (PayAccount) en.nextElement();
-				if (accountFile.getAccount(account.getAccountNumber()) == null)
+				if (m_accountFile.getAccount(account.getAccountNumber()) == null)
 				{
 					try
 					{
-						accountsControl.store(accountFile.makeNewAccount(account));
+						m_accountsControl.store(m_accountFile.makeNewAccount(account));
 					}
 					catch (Exception ex)
 					{
@@ -429,7 +576,7 @@ public class Pay
 	public boolean changeAccountFilePassword()
 	{
 		fire.fireModelEvent();
-		return accountsControl.changePW(accountFile);
+		return m_accountsControl.changePW(m_accountFile);
 	}
 
 	/**
@@ -437,14 +584,14 @@ public class Pay
 	 **/
 	public void setUsedAccount(long accountNumber)
 	{
-		if (accountFile == null)
+		if (m_accountFile == null)
 		{
 			throw new IllegalStateException("accountfile not set");
 		}
 		try
 		{
-			accountFile.setUsedAccount(accountNumber);
-			accountsControl.store(accountFile);
+			m_accountFile.setUsedAccount(accountNumber);
+			m_accountsControl.store(m_accountFile);
 			fire.fireModelEvent();
 		}
 		catch (Exception ex)
@@ -458,11 +605,11 @@ public class Pay
 	 **/
 	public long getUsedAccount()
 	{
-		if (accountFile == null)
+		if (m_accountFile == null)
 		{
 			throw new IllegalStateException("accountfile not set");
 		}
-		return accountFile.getUsedAccount();
+		return m_accountFile.getUsedAccount();
 	}
 
 	/**
@@ -473,13 +620,13 @@ public class Pay
 	 */
 	public Vector getAccountVec()
 	{
-		if (accountFile == null)
+		if (m_accountFile == null)
 		{
 			throw new IllegalStateException("accountfile not set");
 		}
 		else
 		{
-			return accountFile.getAccountVec();
+			return m_accountFile.getAccountVec();
 		}
 	}
 
@@ -491,13 +638,13 @@ public class Pay
 	 */
 	public Enumeration getAccounts() throws IllegalStateException
 	{
-		if (accountFile == null)
+		if (m_accountFile == null)
 		{
 			throw new IllegalStateException("accountfile not set");
 		}
 		else
 		{
-			return accountFile.getAccounts();
+			return m_accountFile.getAccounts();
 		}
 	}
 
@@ -510,18 +657,18 @@ public class Pay
 	 */
 	public PayAccount getAccount(long accountNumber) throws IllegalStateException
 	{
-		if (accountFile == null)
+		if (m_accountFile == null)
 		{
 			throw new IllegalStateException("accountfile not set");
 		}
 		else
 		{
-			return accountFile.getAccount(accountNumber);
+			return m_accountFile.getAccount(accountNumber);
 		}
 	}
 
 	/**
-	 * Löscht das Konto mit der angebenen Kontonummer.
+	 * L\uFFFDscht das Konto mit der angebenen Kontonummer.
 	 *
 	 * @param accountNumber Kontonummer
 	 * @throws IllegalStateException Wenn die Kontendatei nicht gesetzt ist.
@@ -530,11 +677,11 @@ public class Pay
 	{
 		try
 		{
-			if (!accountFile.deleteAccount(accountNumber))
+			if (!m_accountFile.deleteAccount(accountNumber))
 			{
 				return false;
 			}
-			accountsControl.store(accountFile);
+			m_accountsControl.store(m_accountFile);
 			fire.fireModelEvent();
 		}
 		catch (Exception e)
@@ -548,11 +695,11 @@ public class Pay
 	/**
 	 * Aufladen des Kontos mit angebener Kontonummer.
 	 * Die Bezahlinstanz wird kontaktiert und ein Kontozertifikat angefragt.
-	 * Das Kontozertifikat wird den Kontoinformationen hinzugefügt und
+	 * Das Kontozertifikat wird den Kontoinformationen hinzugef\uFFFDgt und
 	 * gespeichert.
 	 *
 	 * @param accountNumber Kontonummer
-	 * @return Überweisungsnummer (Transaktionspeudonym)
+	 * @return \uFFFDberweisungsnummer (Transaktionspeudonym)
 	 * @throws IllegalStateException Wenn die Kontendatei oder die
 	 * Bezahlinstanz nicht gesetzt sind.
 	 */
@@ -560,14 +707,13 @@ public class Pay
 	{
 		try
 		{
-			PayAccount account = accountFile.getAccount(accountNumber);
-			payInstance = new PayInstance(host, port, sslOn);
-			payInstance.connect();
-			XMLTransCert transcert =
-				payInstance.chargeBankTransfer(account.getAccountCertificate(), account.getPrivateKey());
-			payInstance.disconnect();
+			PayAccount account = m_accountFile.getAccount(accountNumber);
+			BIConnection biConn = new BIConnection(host, port, sslOn);
+			biConn.connect();
+			XMLTransCert transcert = biConn.charge();
+			biConn.disconnect();
 			account.addTransCert(transcert);
-			accountsControl.store(accountFile.modifyAccount(account));
+			m_accountsControl.store(m_accountFile.modifyAccount(account));
 			fire.fireModelEvent();
 			return transcert.getTransferNumber();
 		}
@@ -579,7 +725,7 @@ public class Pay
 	}
 
 	/**
-	 * Für jede in der aktuelle KontoDatei gespeichert Konten wird getBalance aufgerufen
+	 * F\uFFFDr jede in der aktuelle KontoDatei gespeichert Konten wird getBalance aufgerufen
 	 */
 
 	public void updateAllBalance()
@@ -602,29 +748,31 @@ public class Pay
 	/**
 	 * Abfrage des Kontostandes des Kontos mit angebener Kontonummer.
 	 * Die Bezahlinstanz wird kontaktiert und der Kontostand angefragt.
-	 * Dar übermittelte Kontoschnappschuss und die Kostenbestätigungen werden
-	 * den Kontoinformationen hinzugefügt und gespeichert.
+	 * Dar \uFFFDbermittelte Kontoschnappschuss und die Kostenbest\uFFFDtigungen werden
+	 * den Kontoinformationen hinzugef\uFFFDgt und gespeichert.
 	 *
 	 * @param accountNumber Kontonummer
-	 * @return Kontoschnappschuss und Kostenbestätigungen
+	 * @return Kontoschnappschuss und Kostenbest\uFFFDtigungen
 	 */
-	public XMLBalConf updateBalance(long accountNumber) throws IllegalStateException
+	public XMLAccountInfo updateBalance(long accountNumber) throws IllegalStateException
 	{
 		try
 		{
-			XMLBalConf balConf;
-			PayAccount account = accountFile.getAccount(accountNumber);
-			payInstance = new PayInstance(host, port, sslOn);
-			payInstance.connect();
-			balConf = payInstance.getBalance(account.getAccountCertificate(), account.getPrivateKey());
-			payInstance.disconnect();
+			XMLAccountInfo info;
+			PayAccount account = m_accountFile.getAccount(accountNumber);
+			BIConnection biConn = new BIConnection(host, port, sslOn);
+			biConn.connect();
+			biConn.authenticate(account.getAccountCertificate(), account.getSigningInstance());
+			info = biConn.getAccountInfo();
+			biConn.disconnect();
 
-			account.setBalance(balConf.balance);
-			account.setCostConfirms(balConf.confirmations);
+			// save in the account object
+			account.setAccountInfo(info);
 
-			accountsControl.store(accountFile.modifyAccount(account));
+			// save the modified accountsfile
+			m_accountsControl.store(m_accountFile.modifyAccount(account));
 			fire.fireModelEvent();
-			return balConf;
+			return info;
 		}
 		catch (Exception e)
 		{
@@ -632,12 +780,12 @@ public class Pay
 		}
 	}
 
-	public XMLBalConf getBalance(long accountNumber) throws IllegalStateException
+	public XMLAccountInfo getAccountInfo(long accountNumber) throws IllegalStateException
 	{
 		try
 		{
-			PayAccount account = accountFile.getAccount(accountNumber);
-			return new XMLBalConf(account.getBalance(), account.getCostConfirms());
+			PayAccount account = m_accountFile.getAccount(accountNumber);
+			return account.getAccountInfo();
 		}
 		catch (Exception e)
 		{
@@ -649,9 +797,9 @@ public class Pay
 	{
 		try
 		{
-			PayAccount account = accountFile.getAccount(accountNumber);
-			XMLEasyCC cc = account.getCostConfirms().updateCC(aiName, accountNumber, plusCosts);
-			accountsControl.store(accountFile.modifyAccount(account));
+			PayAccount account = m_accountFile.getAccount(accountNumber);
+			XMLEasyCC cc = account.addCostConfirmation(aiName, accountNumber, plusCosts);
+// todo: move to account			m_accountsControl.store(m_accountFile.modifyAccount(account));
 			return cc;
 		}
 		catch (Exception e)
@@ -661,61 +809,53 @@ public class Pay
 	}
 
 	/**
-	 * Funktion zur Kontoeröffnung. Ein RSA-Schlüsselpaar wird generiert und
-	 * der öffentliche Schlüssel an die Bezahlinstanz übermittelt. Das
+	 * Funktion zur Kontoer\uFFFDffnung. Ein RSA-Schl\uFFFDsselpaar wird generiert und
+	 * der \uFFFDffentliche Schl\uFFFDssel an die Bezahlinstanz \uFFFDbermittelt. Das
 	 * erhaltene Kontozertifikat wird im neuen Kontodatensatz lokal
 	 * gespeichert.
 	 */
 	public void addAccount() throws IllegalStateException, Exception
 	{
 		LogHolder.log(LogLevel.DEBUG, LogType.PAY,
-				"Pay.addAccount() called. Generating key.."
-			);
+					  "Pay.addAccount() called. Generating key.."
+					  );
 		RSAKeyPairGenerator pGen = new RSAKeyPairGenerator();
-		//@todo check RSKeyGeneration
+
+		// generate Key pair
+		//TODO: check RSAKeyGeneration
+		// TODO: show confirmation dialog before generateing key
 		RSAKeyGenerationParameters genParam = new RSAKeyGenerationParameters(
 			BigInteger.valueOf(0x11), new SecureRandom(), 512, 25);
 		pGen.init(genParam);
-
 		AsymmetricCipherKeyPair pair = pGen.generateKeyPair();
+		MyRSAPrivateKey rsaprivkey = new MyRSAPrivateKey( (RSAPrivateCrtKeyParameters) pair.getPrivate());
+		MyRSAPublicKey rsapubkey = new MyRSAPublicKey( (RSAKeyParameters) pair.getPublic());
 
-		MyRSAPrivateKey rsaprivkey =new MyRSAPrivateKey( (RSAPrivateCrtKeyParameters) pair.getPrivate());
-		RSAKeyParameters rsapubkey = (RSAKeyParameters) pair.getPublic();
+		JAPSignature signingInstance = new JAPSignature();
+		signingInstance.initSign(rsaprivkey);
+
+		XMLJapPublicKey pubKey = new XMLJapPublicKey(rsapubkey);
+
 		LogHolder.log(LogLevel.DEBUG, LogType.PAY,
-				"Pay.addAccount() Key successfully generated"
-			);
+					  "Pay.addAccount() Key successfully generated"
+					  );
 
+		// send it to the JPI
+		BIConnection biConn = new BIConnection(host, port, sslOn);
 
-		try
-		{
-			payInstance = new PayInstance(host, port, sslOn);
-			payInstance.connect();
-			XMLAccountCertificate xmlCert = payInstance.register(rsapubkey, rsaprivkey);
-			payInstance.disconnect();
+		biConn.connect();
+		XMLAccountCertificate xmlCert = biConn.register(pubKey, signingInstance);
+		biConn.disconnect();
 
-			PayAccount newAccount = new PayAccount(xmlCert, rsaprivkey);
-			accountsControl.store(accountFile.makeNewAccount(newAccount));
-			fire.fireModelEvent();
-
-		}
-		catch (Exception e)
-		{
-			e.printStackTrace();
-			try
-			{
-				payInstance.disconnect();
-			}
-			catch (Exception ne)
-			{
-				ne.printStackTrace();
-			}
-		}
+		PayAccount newAccount = new PayAccount(xmlCert, rsaprivkey, signingInstance);
+		m_accountsControl.store(m_accountFile.makeNewAccount(newAccount));
+		fire.fireModelEvent();
 	}
 
 	/**
-	 * Funktion zum hinzufügen eines ModelListeners.
+	 * Funktion zum hinzuf\uFFFDgen eines ModelListeners.
 	 * An diesen wird ein ModelEvent gefeuert wenn sich das am
-	 * PayAccountFile Object oder an der speicherung deselben durch PayAccountsControl etwas geändert hat
+	 * PayAccountFile Object oder an der speicherung deselben durch PayAccountsControl etwas ge\uFFFDndert hat
 	 *
 	 */
 	public void addModelListener(ModelListener ml)
@@ -724,7 +864,7 @@ public class Pay
 	}
 
 	/**
-	 * Funktion zum löschen eines ModelListeners.
+	 * Funktion zum l\uFFFDschen eines ModelListeners.
 	 */
 	public void removeModelListener(ModelListener ml)
 	{

@@ -90,7 +90,7 @@ public class KontenTable extends AbstractTableModel implements ModelListener
 				return new Long(ac.getAccountNumber());
 				//case 2: return ac.getValidFrom();
 			case 2:
-				return ac.getValidTo();
+				return ac.getBalanceValidTime();
 			case 3:
 				return new Long(ac.getCredit());
 		}

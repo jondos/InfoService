@@ -41,11 +41,11 @@ import pay.crypto.CryptFile;
 import pay.data.Literals;
 
 /**
- *  Diese Klasse ist für die Speicherung (verschlüsselt oder unverschlüsselt) von PayAcountFile zuständig. Ausserdem enthält sie
- *  die komplette Benutzerineraktion bezüglich des Passwortschutzes.
- *  D.h. wenn mittels PayAccountControl ein PayAcountFile geöffnet oder z.B. exportiert wird fragt es den Benutzer selbst nach dem Passwort
+ *  Diese Klasse ist f\uFFFDr die Speicherung (verschl\uFFFDsselt oder unverschl\uFFFDsselt) von PayAcountFile zust\uFFFDndig. Ausserdem enth\uFFFDlt sie
+ *  die komplette Benutzerineraktion bez\uFFFDglich des Passwortschutzes.
+ *  D.h. wenn mittels PayAccountControl ein PayAcountFile ge\uFFFDffnet oder z.B. exportiert wird fragt es den Benutzer selbst nach dem Passwort
  *	oder auch ob ein Passwort angelegt werden soll.
- *	@author Grischan Glänzel
+ *	@author Grischan Gl\uFFFDnzel
  */
 
 public class PayAccountsControl
@@ -156,7 +156,7 @@ public class PayAccountsControl
 		String pass = "";
 		while (pass != null)
 		{
-			pass = checkPW("Bitte geben sie das Passwort fuer die Konten Datei ein", "Kontodaten öffnen");
+			pass = checkPW("Bitte geben sie das Passwort fuer die Konten Datei ein", "Kontodaten \uFFFDffnen");
 			try
 			{
 				byte[] tmp = cryptFile.decrypt(all, pass);
@@ -170,7 +170,7 @@ public class PayAccountsControl
 	}
 
 	/**
-	 *	gibt das Password zurück welches der Benutzer eingegeben hat oder null wenn die eingabe abgebrochen wurde
+	 *	gibt das Password zur\uFFFDck welches der Benutzer eingegeben hat oder null wenn die eingabe abgebrochen wurde
 	 */
 	private String checkPW(String titel, String message)
 	{
@@ -199,7 +199,7 @@ public class PayAccountsControl
 		{
 			String pass;
 			pass = setPW("Passworteingabe", "bitte geben sie das neue Passwort ein",
-						 "keine Übereinstimmung : bitte wiederholen");
+						 "keine \uFFFDbereinstimmung : bitte wiederholen");
 			if (pass != null)
 			{
 				accounts.setPassword(pass);
@@ -212,7 +212,7 @@ public class PayAccountsControl
 		}
 		catch (Exception ex)
 		{
-			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "geänderte Datei konnte nicht gespeichert werden");
+			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "ge\uFFFDnderte Datei konnte nicht gespeichert werden");
 		}
 		return changed;
 	}
@@ -222,7 +222,7 @@ public class PayAccountsControl
 		if (file.getPassword() == null)
 		{
 			String pass = setPW("Passworteingabe", "bitte geben sie das neue Passwort ein",
-								"keine Übereinstimmung : bitte wiederholen");
+								"keine \uFFFDbereinstimmung : bitte wiederholen");
 			if (pass != null)
 			{
 				file.setPassword(pass);
@@ -251,7 +251,7 @@ public class PayAccountsControl
 		{
 			LogHolder.log(LogLevel.DEBUG, LogType.PAY,
 						  "PayAccountsControl.store(): accountfile '"+filename+
-							"' wird verschlüsselt, passwort: " + pass);
+							"' wird verschl\uFFFDsselt, passwort: " + pass);
 			all = cryptFile.encrypt(accounts.getXML(), pass);
 		}
 		FileOutputStream out = new FileOutputStream(filename);
