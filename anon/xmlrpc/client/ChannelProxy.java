@@ -47,9 +47,9 @@ class ChannelProxy implements AnonChannel
 			}
 
 		//called from ChannelOutputStream to send data to the AnonService which belongs to this channel
-		protected /*synchronized*/ void send(byte[] buff,int len) throws IOException
+		protected /*synchronized*/ void send(byte[] buff,int off,int len) throws IOException
 			{
-				m_RemoteAnonService.send(m_id,buff,len);
+				m_RemoteAnonService.send(m_id,buff,off,len);
 			}
 
 		protected int recv(byte[] buff,int off,int len) throws IOException

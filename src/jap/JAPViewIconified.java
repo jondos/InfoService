@@ -52,13 +52,16 @@ final public class JAPViewIconified extends JWindow implements ActionListener,Mo
 	private boolean       m_bIsDragging=false;
 	private NumberFormat  m_NumberFormat;
 	private static final Font fnt = new Font("Sans",Font.PLAIN,9);
-//	static final private Frame m_frameParent=new Frame("HIDDEN JAP2wer2");
+	static final private Frame m_frameParent=new Frame("HIDDEN JAP2wer2");
 	public JAPViewIconified()
 		{
-//			super(m_frameParent);
+			super(m_frameParent);
 //			super();
 //			super(JAPController.getView());
+	//		m_frameParent.show();
+			setName(JAPConstants.TITLE);
 			m_mainView=JAPController.getView();
+			m_frameParent.setIconImage(m_mainView.getIconImage());
 			JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPViewIconified:initializing...");
 			m_Controller = JAPController.getController();
 			m_NumberFormat=NumberFormat.getInstance();
