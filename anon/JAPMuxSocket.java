@@ -73,6 +73,7 @@ final class JAPMuxSocket implements Runnable
 
 		public final static int KEY_SIZE=16;
 		public final static int DATA_SIZE=992;
+		public final static int PAYLOAD_SIZE=989;
 		private final static int RSA_SIZE=128;
 		private final static short CHANNEL_DATA=0;
 		private final static short CHANNEL_CLOSE=1;
@@ -575,7 +576,8 @@ final class JAPMuxSocket implements Runnable
 					{
 						if(!m_bIsConnected)
 							return E_NOT_CONNECTED;
-						short channelMode=CHANNEL_DATA;
+
+					short channelMode=CHANNEL_DATA;
 						m_TimeLastPacketSend=System.currentTimeMillis();
 						if(buff==null&&len==0)
 							{

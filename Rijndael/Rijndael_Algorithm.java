@@ -1,6 +1,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.1  2000/11/09 16:29:28  sk13
+// This Version now supports Protokoll Version 0.2
+//
 // Revision 1.1  1998/04/12  Paulo
 // + optimized methods for the default 128-bit block size.
 //
@@ -600,7 +603,7 @@ public final class Rijndael_Algorithm // implicit no-argument constructor
         return result;
     }
 */
- 
+
     /**
      * Return The number of rounds for a given Rijndael's key and block sizes.
      *

@@ -353,7 +353,7 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 
 							t1 = System.currentTimeMillis();
 //							HTTPResponse resp = c.Get(url.getFile());
-							String response = this.readLine(inputStream);
+							String response = JAPUtil.readLine(inputStream);
 							JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Response:>" + response + "<");
 //							if (resp==null || resp.getStatusCode()!=200) {
 							if ((response == null) || (response.length() == 0) || (response.indexOf("200")==-1)) {
@@ -361,12 +361,12 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 								tableView.repaint();
 								dtResponse=-1;
 							} else {
-								String nextLine = this.readLine(inputStream);
+								String nextLine = JAPUtil.readLine(inputStream);
 								while (nextLine.length() != 0) {
 									JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,">" + nextLine + "<");
-									nextLine = this.readLine(inputStream);
+									nextLine = JAPUtil.readLine(inputStream);
 								}
-								String data = this.readLine(inputStream);
+								String data = JAPUtil.readLine(inputStream);
 								JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Data:>" + data + "<");
 								t2 = System.currentTimeMillis();
 								dtResponse = t2-t1;
@@ -408,19 +408,6 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 			}
 		}
 
-	    private String readLine(DataInputStream inputStream) throws Exception {
-			String returnString = "";
-			try{
-				int byteRead = inputStream.read();
-				while (byteRead != 10 && byteRead != -1) {
-					if (byteRead != 13)
-						returnString += (char)byteRead;
-					byteRead = inputStream.read();
-				}
-			} catch (Exception e) {
-				throw e;
-			}
-			return returnString;
-    	}
+
 	}
 }

@@ -67,7 +67,7 @@ final class JAPDirectProxyConnection implements Runnable
 					  // open stream from client
 					  inputStream = new DataInputStream(clientSocket.getInputStream());
 					  // read first line of request
-					  requestLine = readLine(inputStream);
+					  requestLine = JAPUtil.readLine(inputStream);
 						//JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"C("+threadNumber+") - RequestLine: >" + requestLine +"<");
 						// Examples:
 						//  CONNECT 192.168.1.2:443 HTTP/1.0
@@ -205,10 +205,10 @@ final class JAPDirectProxyConnection implements Runnable
 			// create Socket to Server
 			Socket serverSocket = new Socket(host,port);
 				// next Header lines
-			String nextLine = this.readLine(inputStream);
+			String nextLine = JAPUtil.readLine(inputStream);
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"C("+threadNumber+") - Header: >" + nextLine + "<");
 			while (nextLine.length() != 0) {
-				nextLine = this.readLine(inputStream);
+				nextLine = JAPUtil.readLine(inputStream);
 				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"C("+threadNumber+") - Header: >" + nextLine + "<");
 			}
 			// create stream --> server
@@ -260,7 +260,7 @@ final class JAPDirectProxyConnection implements Runnable
 			protocolString += method+" "+file+ " "+"HTTP/1.0";
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"C("+threadNumber+") - ProtocolString: >" + protocolString + "<");
 			outputStream.write((protocolString + "\r\n").getBytes());
-      String nextLine = readLine(inputStream);
+      String nextLine = JAPUtil.readLine(inputStream);
 			////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
       JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"C("+threadNumber+") - Header: >" + nextLine + "<");
@@ -271,7 +271,7 @@ final class JAPDirectProxyConnection implements Runnable
    			} else {
 					JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"C("+threadNumber+") - Header " + nextLine + " filtered");
 				}
-				nextLine =readLine(inputStream);
+				nextLine =JAPUtil.readLine(inputStream);
 				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"C("+threadNumber+") - Header: >" + nextLine + "<");
 			}
 
@@ -366,7 +366,7 @@ final class JAPDirectProxyConnection implements Runnable
 
      OutputStream os = clientSocket.getOutputStream();
 
-     String nextLine = readLine(inputStream);
+     String nextLine = JAPUtil.readLine(inputStream);
      FTPServerResponse ftpsp = null;
      MyFTPClient ftpClient = new MyFTPClient();
 			//Login...
@@ -469,20 +469,7 @@ final class JAPDirectProxyConnection implements Runnable
 		return false;
     }
 
-    private String readLine(DataInputStream inputStream) throws Exception {
-		String returnString = "";
-		try{
-			int byteRead = inputStream.read();
-			while (byteRead != 10 && byteRead != -1) {
-				if (byteRead != 13)
-					returnString += (char)byteRead;
-				byteRead = inputStream.read();
-			}
-		} catch (Exception e) {
-	    	throw e;
-		}
-		return returnString;
-    }
+
 
     private synchronized int getThreadNumber() {
 		return threadCount++;
