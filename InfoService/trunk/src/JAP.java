@@ -25,12 +25,16 @@ public /*final*/ class JAP extends Frame{
 		String   vers;
 		vers = System.getProperty("java.version");
 		// Test for right VM....
-		if (vers.compareTo("1.1.2") < 0) 
+		if (vers.compareTo("1.0.2") <= 0) 
 			{
-				show();
-				JAPAWTMsgBox.MsgBox(this,"JAP must be run with a 1.1.2 or higher version VM!","Error");
+				System.out.println("JAP must be run with a 1.1.3 or higher version VM!");
 				System.exit(0);
 			}
+		if (vers.compareTo("1.1.2") <= 0) 
+			{
+				JAPAWTMsgBox.MsgBox(this,"JAP must be run with a 1.1.3 or higher version VM!","Error");
+				System.exit(0);
+			}	
 		os = System.getProperty("os.name");
 		
 		//Test for Swing....

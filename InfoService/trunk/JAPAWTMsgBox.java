@@ -5,20 +5,19 @@ import java.awt.Label;
 import java.awt.Panel;
 import java.awt.GridLayout;
 import java.awt.Event;
-/*import java.awt.event.WindowAdapter;
+import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
-*/import java.util.StringTokenizer;
+import java.util.StringTokenizer;
 
-final public class JAPAWTMsgBox extends Dialog/*extends WindowAdapter implements ActionListener*/
+final public class JAPAWTMsgBox extends WindowAdapter implements ActionListener
 {
-	//private Dialog d;
+	Dialog d;
 	public JAPAWTMsgBox(Frame parent,String msg,String title)
 		{
-			super(parent,title,true);
-			//d=new Dialog(new Frame(),title,true);
-//			d.addWindowListener(this);
+			d=new Dialog(parent,title,true);
+			d.addWindowListener(this);
 			GridLayout g=new GridLayout(0,1,0,0);
 			Panel p=new Panel();
 			p.setLayout(g);
@@ -29,33 +28,33 @@ final public class JAPAWTMsgBox extends Dialog/*extends WindowAdapter implements
 					p.add(l);
 				}
 			p.add(new Label(" "));
-			add("Center",p);
+			d.add("Center",p);
 			Button b=new Button("   Ok   ");
-	//		b.addActionListener(this);
+			b.addActionListener(this);
 			p=new Panel();
 			p.add(b);
-			add("South",p);
+			d.add("South",p);
 			p=new Panel();
-			p.resize(7,7);
-	//		p.setSize(7,7);
-			add("North",p);
+	//		p.resize(7,7);
+			p.setSize(7,7);
+			d.add("North",p);
 			p=new Panel();
-			p.resize(7,7);
-		//	p.setSize(7,7);
-			add("West",p);
+		//	p.resize(7,7);
+			p.setSize(7,7);
+			d.add("West",p);
 			p=new Panel();
-		//	p.setSize(7,7);
-			p.resize(7,7);
-			add("East",p);
-			setResizable(false);
-			pack();
-			JAPModel.centerFrame(this);
+			p.setSize(7,7);
+		//	p.resize(7,7);
+			d.add("East",p);
+			d.setResizable(false);
+			d.pack();
+			JAPModel.centerFrame(d);
 		}
 	
 	final static int MsgBox(Frame parent,String msg,String title)
 		{
 			JAPAWTMsgBox msgbox=new JAPAWTMsgBox(parent,msg,title);
-			msgbox.show(true);
+			msgbox.d.show(/*true*/);
 			return 0;
 		}
 	/*   public boolean action(Event evt, Object what) {
@@ -65,7 +64,7 @@ final public class JAPAWTMsgBox extends Dialog/*extends WindowAdapter implements
         }
         return false;
     }*/
-/*
+
 	public void windowClosing(WindowEvent e)
 		{
 			d.dispose();
@@ -74,6 +73,6 @@ final public class JAPAWTMsgBox extends Dialog/*extends WindowAdapter implements
 	public void actionPerformed(ActionEvent e)
 		{
 			d.dispose();
-		}*/
+		}
 }
 
