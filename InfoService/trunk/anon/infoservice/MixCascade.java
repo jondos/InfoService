@@ -189,7 +189,7 @@ public class MixCascade
   public MixCascade(String name,String id,String hostName, int port) throws Exception
   {
     /* set a unique ID */
-	if(id==null)
+	if(id==null||id.length()==0)
     	mixCascadeId = "c" + hostName + "%3A" + Integer.toString(port);
     else
 		mixCascadeId=id;
@@ -197,7 +197,7 @@ public class MixCascade
 	if(name!=null)
    		m_strName = name;
     else
-		name=hostName + ":" + Integer.toString(port);
+		m_strName=hostName + ":" + Integer.toString(port);
 	/* create the ListenerInterface */
     listenerInterfaces = new Vector();
     listenerInterfaces.addElement(new ListenerInterface(hostName, port));
