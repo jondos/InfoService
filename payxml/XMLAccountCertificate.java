@@ -77,9 +77,7 @@ public class XMLAccountCertificate extends XMLDocument
 	private MyRSAPublicKey m_publicKey;
 	private java.sql.Timestamp m_creationTime;
 	private long m_accountNumber;
-	private String m_biHostName;
-	private int m_userPort;
-	private int m_aiPort;
+	private String m_biID;
 
 	//~ Constructors ***********************************************************
 
@@ -89,23 +87,17 @@ public class XMLAccountCertificate extends XMLDocument
 	 * @param publicKey public key
 	 * @param accountNumber account number
 	 * @param creationTime creation timestamp
-	 * @param biHostName the signing BI's hostname
-	 * @param userPort the BI's JAP port
-	 * @param aiPort the BI's AI port
-	 * @todo Change biHost, userPort, aiPort --> BiID
+	 * @param biID the signing BI's ID
 	 */
 
 	public XMLAccountCertificate(MyRSAPublicKey publicKey, long accountNumber,
-								 java.sql.Timestamp creationTime, String biHostName,
-								 int userPort, int aiPort
+								 java.sql.Timestamp creationTime, String biID
 								 ) throws Exception
 	{
 		m_publicKey = publicKey;
 		m_accountNumber = accountNumber;
 		m_creationTime = creationTime;
-		m_userPort = userPort;
-		m_aiPort = aiPort;
-		m_biHostName = biHostName;
+		m_biID = biID;
 
 		XMLJapPublicKey xmlkey = new XMLJapPublicKey(publicKey);
 		m_theDocument = getDocumentBuilder().newDocument();
@@ -120,14 +112,8 @@ public class XMLAccountCertificate extends XMLDocument
 		Element elemTmp = m_theDocument.createElement("CreationTime");
 		XMLUtil.setNodeValue(elemTmp, creationTime.toString());
 		elemRoot.appendChild(elemTmp);
-		elemTmp = m_theDocument.createElement("BiHostName");
-		XMLUtil.setNodeValue(elemTmp, biHostName);
-		elemRoot.appendChild(elemTmp);
-		elemTmp = m_theDocument.createElement("UserPort");
-		XMLUtil.setNodeValue(elemTmp, Integer.toString(userPort));
-		elemRoot.appendChild(elemTmp);
-		elemTmp = m_theDocument.createElement("AiPort");
-		XMLUtil.setNodeValue(elemTmp, Integer.toString(aiPort));
+		elemTmp = m_theDocument.createElement("BiID");
+		XMLUtil.setNodeValue(elemTmp, biID);
 		elemRoot.appendChild(elemTmp);
 	}
 
@@ -159,7 +145,7 @@ public class XMLAccountCertificate extends XMLDocument
 	{
 		setAccountNumber();
 		setCreationTime();
-		setHostAndPorts();
+		setID();
 		setPublicKey();
 	}
 
@@ -210,9 +196,9 @@ public class XMLAccountCertificate extends XMLDocument
 
 	/**
 	 * Parses the xml data and sets our private member variables {@link
-	 * m_biHostName}, {@link m_userPort}, {@link m_aiPort}
+	 * m_biID}
 	 */
-	private void setHostAndPorts() throws Exception
+	private void setID() throws Exception
 	{
 		CharacterData chdata;
 		Element elemRoot = m_theDocument.getDocumentElement();
@@ -221,14 +207,8 @@ public class XMLAccountCertificate extends XMLDocument
 			throw new Exception();
 		}
 		// set hostname
-		Element elem=(Element)XMLUtil.getFirstChildByName(elemRoot,"BiHostName");
-		m_biHostName = XMLUtil.parseNodeString(elem,null);
-		// set userport
-		elem=(Element)XMLUtil.getFirstChildByName(elemRoot,"UserPort");
-		m_userPort=XMLUtil.parseNodeInt(elem,-1);
-		// set aiport
-		elem=(Element)XMLUtil.getFirstChildByName(elemRoot,"AiPort");
-		m_aiPort=XMLUtil.parseNodeInt(elem,-1);
+		Element elem=(Element)XMLUtil.getFirstChildByName(elemRoot,"BiID");
+		m_biID = XMLUtil.parseNodeString(elem,null);
 	}
 
 	/**
