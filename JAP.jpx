@@ -205,7 +205,6 @@
     <file path="images/west.gif"/>
   </node>
   <node name="anon" type="Package"/>
-  <node name="anon.tor" type="Package"/>
   <node name="forward" type="Package"/>
   <node name="gui" type="Package"/>
   <node name="jap" type="Package"/>
