@@ -201,7 +201,9 @@ public final class Database implements Runnable
 					}
 					else
 					{
-						/* the oldest entry in the database, has not reached expire time now, so there are not more old entrys */
+						/* the oldest entry in the database
+						 * has not reached expire time now, so there are not more old entrys
+						 */
 						moreOldEntrys = false;
 					}
 				}
@@ -259,7 +261,8 @@ public final class Database implements Runnable
 	public void update(DatabaseEntry newEntry)
 		throws IllegalArgumentException
 	{
-		if (!m_DatabaseEntryClass.isAssignableFrom(newEntry.getClass())) {
+		if (!m_DatabaseEntryClass.isAssignableFrom(newEntry.getClass()))
+		{
 			throw new IllegalArgumentException(
 						 "Database cannot store entries of type " +
 						 newEntry.getClass().getName() + "!");
@@ -312,10 +315,18 @@ public final class Database implements Runnable
 					/* entry at the first expire position added -> notify the cleanup thread */
 					m_serviceDatabase.notify();
 				}
-				if ( (m_distributor != null) && (newEntry instanceof IDistributable))
+				if (newEntry instanceof IDistributable)
 				{
 					// forward new entries
-					m_distributor.addJob( (IDistributable) newEntry);
+					if (m_distributor != null)
+					{
+						m_distributor.addJob( (IDistributable) newEntry);
+					} else
+					{
+						LogHolder.log(LogLevel.WARNING, LogType.MISC,
+									  "Database: update: No distributor specified." +
+									  "Cannot distribute database entries!");
+					}
 				}
 			}
 		}
@@ -325,7 +336,8 @@ public final class Database implements Runnable
 	 * Returns the DatabaseEntry class for that this Database is registered.
 	 * @return the DatabaseEntry class for that this Database is registered
 	 */
-	public Class getEntryClass() {
+	public Class getEntryClass()
+	{
 		return m_DatabaseEntryClass;
 	}
 
@@ -370,16 +382,32 @@ public final class Database implements Runnable
 	public Vector getEntryList()
 	{
 		Vector entryList = new Vector();
-		synchronized (m_serviceDatabase)
-		{
 			/* get the actual values */
 			Enumeration serviceDatabaseElements = m_serviceDatabase.elements();
 			while (serviceDatabaseElements.hasMoreElements())
 			{
 				entryList.addElement(serviceDatabaseElements.nextElement());
 			}
-		}
 		return entryList;
+	}
+
+	/**
+	 * Returns a snapshot of all entries in the Database as an Enumeration.
+	 *
+	 * @return a snapshot of all entries in the Database as an Enumeration
+	 */
+	public Enumeration getEntrySnapshotAsEnumeration()
+	{
+		return m_serviceDatabase.elements();
+	}
+
+	/**
+	 * Returns the number of DatabaseEntries in the Database.
+	 * @return the number of DatabaseEntries in the Database
+	 */
+	public int getNumberofEntries()
+	{
+		return m_serviceDatabase.size();
 	}
 
 	/**
@@ -411,8 +439,8 @@ public final class Database implements Runnable
 		DatabaseEntry resultEntry = null;
 		synchronized (m_serviceDatabase)
 		{
-			/* all keys of the database are in the timeout list -> select a random key from there and
-			 * get the associated entry from the database
+			/* all keys of the database are in the timeout list -> select a random key from there
+			 * and get the associated entry from the database
 			 */
 			if (m_timeoutList.size() > 0)
 			{

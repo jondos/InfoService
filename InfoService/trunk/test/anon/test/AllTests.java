@@ -46,7 +46,6 @@ public class AllTests
 	 * Returns the test suite that combines all other tests of the project.
 	 *
 	 * @return Test The test suite that combines all other tests of the project.
-	 * @todo No tests are implemented yet.
 	 */
 	public static Test suite()
 	{
