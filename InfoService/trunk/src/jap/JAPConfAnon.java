@@ -77,8 +77,8 @@ import logging.LogType;
 class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, ActionListener,
 	ListSelectionListener, ItemListener, KeyListener, Observer
 {
-	private static final String URL_BEGIN = "<HTML><font color=blue><u>";
-	private static final String URL_END = "</u></font></HTML>";
+	private static final String URL_BEGIN = "<html><font color=blue><u>";
+	private static final String URL_END = "</u></font></html>";
 
 	private boolean bErr;
 
@@ -417,7 +417,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		m_cascadesPanel.add(l, c);
 
 		m_listMixCascade = new JList();
-		m_listMixCascade.addListSelectionListener(this);
 		m_listMixCascade.addListSelectionListener(this);
 		c.gridx = 0;
 		c.gridy = 1;
@@ -972,10 +971,10 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	 */
 	public void valueChanged(ListSelectionEvent e)
 	{
-		Object source = e.getSource();
-		if (source == m_listMixCascade)
-		{
-			if (m_listMixCascade.getLastVisibleIndex() > -1 &&
+		//Object source = e.getSource();
+//		if (source == m_listMixCascade)
+//		{
+			if (/*m_listMixCascade.getLastVisibleIndex() > -1 &&*/
 				m_listMixCascade.getSelectedIndex() > -1)
 			{
 				MixCascade cascade = (MixCascade) m_listMixCascade.getSelectedValue();
@@ -1018,7 +1017,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				}
 				itemStateChanged(null);
 			}
-		}
+//		}
 	}
 
 	/**

@@ -73,7 +73,7 @@ public class JAPHtmlMultiLineLabel extends JLabel
 		setFont(a_defaultFont);
 		/* set the new font with the HTML default size */
     String header = "<html><body style=\"font-family:" + a_defaultFont.getFamily() + ";font-size:small\">";
-		String trailer = "</BODY></HTML>";
+		String trailer = "</BODY></html>";
 		if (a_defaultFont.isBold())
 		{
 			header = header + "<b>";
