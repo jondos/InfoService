@@ -49,10 +49,10 @@ final public class JAPCertificateStoreId
 	final public static String getId(JAPCertificate a_cert)
 	{
 		StringBuffer r_strBuffId = new StringBuffer();
-		Enumeration enum = a_cert.getIssuer().getValues().elements();
-		while (enum.hasMoreElements())
+		Enumeration enumer = a_cert.getIssuer().getValues().elements();
+		while (enumer.hasMoreElements())
 		{
-			r_strBuffId.append( (String) enum.nextElement());
+			r_strBuffId.append( (String) enumer.nextElement());
 		}
 		r_strBuffId.append(a_cert.getStartDate().toGMTString() + a_cert.getEndDate().toGMTString());
 		return r_strBuffId.toString();

@@ -216,10 +216,10 @@ public class PayAccount extends XMLDocument
 		Element elemTransCerts = m_theDocument.createElement("TransferCertificates");
 		elemRoot.appendChild(elemTransCerts);
 		if(m_transCerts!=null) {
-			Enumeration enum = m_transCerts.elements();
-			while (enum.hasMoreElements())
+			Enumeration enumer = m_transCerts.elements();
+			while (enumer.hasMoreElements())
 			{
-				XMLTransCert cert = (XMLTransCert) enum.nextElement();
+				XMLTransCert cert = (XMLTransCert) enumer.nextElement();
 				Node n1 = XMLUtil.importNode(m_theDocument, cert.getDomDocument().getDocumentElement(), true);
 				elemTransCerts.appendChild(n1);
 			}

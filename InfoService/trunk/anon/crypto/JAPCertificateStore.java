@@ -96,10 +96,10 @@ final public class JAPCertificateStore
 	public Object clone()
 	{
 		JAPCertificateStore certs = JAPCertificateStore.getInstance();
-		Enumeration enum = elements();
-		while (enum.hasMoreElements())
+		Enumeration enumer = elements();
+		while (enumer.hasMoreElements())
 		{
-			JAPCertificate cert = (JAPCertificate) enum.nextElement();
+			JAPCertificate cert = (JAPCertificate) enumer.nextElement();
 			cert = (JAPCertificate) cert.clone();
 			certs.m_HTCertStore.put(JAPCertificateStoreId.getId(cert), cert);
 		}
@@ -233,15 +233,15 @@ final public class JAPCertificateStore
 	{
 		Element r_elemCAs = a_doc.createElement("CertificateAuthorities");
 
-		Enumeration enum = elements();
+		Enumeration enumer = elements();
 
-		while (enum.hasMoreElements())
+		while (enumer.hasMoreElements())
 		{
 			Element elemCA = a_doc.createElement("CertificateAuthority");
 			r_elemCAs.appendChild(elemCA);
 			Element elemEnabled = a_doc.createElement("Enabled");
 			elemCA.appendChild(elemEnabled);
-			JAPCertificate cert = (JAPCertificate) enum.nextElement();
+			JAPCertificate cert = (JAPCertificate) enumer.nextElement();
 			boolean bEnabled = cert.getEnabled();
 
 			if (bEnabled)
