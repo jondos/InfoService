@@ -296,23 +296,26 @@ public final class JAPController implements ProxyListener {
 			//Load Locale-Settings
 			String locale=JAPUtil.parseNodeString(n.getNamedItem("Locale"),m_Locale.getLanguage());
 			setLocale(new Locale(locale,""));
-			//Load look-and-feel settings
-			String lf=JAPUtil.parseNodeString(n.getNamedItem("LookAndFeel"),"unknown");
-			LookAndFeelInfo[] lfi=UIManager.getInstalledLookAndFeels();
-			for(int i=0;i<lfi.length;i++) {
-				if(lfi[i].getName().equals(lf)) {
-					try {
-						UIManager.setLookAndFeel(lfi[i].getClassName());
-//				SwingUtilities.updateComponentTreeUI(m_frmParent);
-//				SwingUtilities.updateComponentTreeUI(SwingUtilities.getRoot(((JComboBox)e.getItemSelectable())));
-					}
-					catch(Exception lfe) {
-						JAPDebug.out(JAPDebug.WARNING,JAPDebug.GUI,"JAPModel:Exception while setting look-and-feel");
-					}
-					break;
-				}
-			}
-			//Loading debug settings
+			//Load look-and-feel settings (not changed if SmmallDisplay!
+      if(!m_Model.isSmallDisplay())
+        {
+        String lf=JAPUtil.parseNodeString(n.getNamedItem("LookAndFeel"),"unknown");
+        LookAndFeelInfo[] lfi=UIManager.getInstalledLookAndFeels();
+        for(int i=0;i<lfi.length;i++) {
+          if(lfi[i].getName().equals(lf)) {
+            try {
+              UIManager.setLookAndFeel(lfi[i].getClassName());
+  //				SwingUtilities.updateComponentTreeUI(m_frmParent);
+  //				SwingUtilities.updateComponentTreeUI(SwingUtilities.getRoot(((JComboBox)e.getItemSelectable())));
+            }
+            catch(Exception lfe) {
+              JAPDebug.out(JAPDebug.WARNING,JAPDebug.GUI,"JAPModel:Exception while setting look-and-feel");
+            }
+            break;
+          }
+        }
+      }
+        //Loading debug settings
 			NodeList nl=root.getElementsByTagName("Debug");
 			if(nl!=null&&nl.getLength()>0)
 				{

@@ -169,7 +169,10 @@ final class JAPConf extends JDialog
 				//updateValues();
 				// largest tab to front
 				m_Tabs.setSelectedComponent(m_pMix);
-				pack();
+				if(JAPModel.isSmallDisplay())
+          setSize(240,320);
+        else
+          pack();
 //				setResizable(false);
 				JAPUtil.centerFrame(this);
 			}
