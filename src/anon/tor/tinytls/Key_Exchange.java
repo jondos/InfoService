@@ -31,7 +31,10 @@
  */
 package anon.tor.tinytls;
 
+import java.math.BigInteger;
+
 import anon.crypto.JAPCertificate;
+import anon.crypto.MyRSAPrivateKey;
 
 /**
  * @author stefan
@@ -48,6 +51,8 @@ public abstract class Key_Exchange{
 	{
 	}
 
+	public abstract byte[] generateServerKeyExchange(MyRSAPrivateKey key,byte[] clientrandom, byte[] serverrandom) throws TLSException;
+
 	/**
 	 * Decode the server keys and check the certificate
 	 * @param bytes server keys
@@ -56,29 +61,35 @@ public abstract class Key_Exchange{
 	 * @param servercertificate servercertificate
 	 * @throws TLSException
 	 */
-	public abstract void  serverKeyExchange(byte[] b,int b_offset,int b_len,
+	public abstract void  processServerKeyExchange(byte[] b,int b_offset,int b_len,
 											byte[] clientrandom, byte[] serverrandom,JAPCertificate cert) throws TLSException;
+
+	public abstract byte[] calculateServerFinished(byte[] handshakemessages);
 
 	/**
 	 * checks the server finished message
 	 * @param b server finished message
 	 * @throws TLSException
 	 */
-	public abstract void serverFinished(byte[] b,int len,byte[] handshakemessages) throws TLSException;
+	public abstract void processServerFinished(byte[] b,int len,byte[] handshakemessages) throws TLSException;
+
+	public abstract void processClientKeyExchange(BigInteger dh_y);
 
 	/**
 	 * generates the client key exchange message (see RFC2246)
 	 * @return client key exchange message
 	 * @throws TLSException
 	 */
-	public abstract byte[] clientKeyExchange() throws TLSException;
+	public abstract byte[] calculateClientKeyExchange() throws TLSException;
+
+	public abstract void processClientFinished(byte[] verify_data,byte[] handshakemessages) throws TLSException;
 
 	/**
 	 * generate the client finished message (see RFC2246)
 	 * @param handshakemessages all handshakemessages that have been send before this
 	 * @return client finished message
 	 */
-	public abstract byte[] clientFinished(byte[] handshakemessages) throws TLSException;
+	public abstract byte[] calculateClientFinished(byte[] handshakemessages) throws TLSException;
 
 	/**
 	 * calculates the key material (see RFC2246 TLS Record Protocoll)

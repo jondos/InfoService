@@ -39,32 +39,27 @@ import java.io.InterruptedIOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Random;
 import java.util.Vector;
 import org.bouncycastle.crypto.params.DHParameters;
 import org.bouncycastle.crypto.params.DHPublicKeyParameters;
 import anon.crypto.JAPCertificate;
-import anon.crypto.JAPCertificateStore;
-import anon.crypto.JAPCertPath;
+import anon.server.impl.ProxyConnection;
 import anon.tor.util.helper;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import java.io.EOFException;
-import anon.ErrorCodes;
-import java.io.*;
 import anon.crypto.*;
 import anon.infoservice.ImmutableProxyInterface;
-import anon.server.impl.ProxyConnection;
-import java.net.SocketException;
-
 /**
  * @author stefan
  *
  *TinyTLS
  */
-public class TinyTLS //extends Socket
+public class TinyTLS extends Socket
 {
 
 	/**
@@ -97,6 +92,7 @@ public class TinyTLS //extends Socket
 	private byte[] m_handshakemessages;
 	private boolean m_encrypt;
 	private ProxyConnection m_ProxyConnection;
+
 	/**
 	 *
 	 * @author stefan
@@ -391,7 +387,7 @@ public class TinyTLS //extends Socket
 		 */
 		private void gotServerKeyExchange(byte[] bytes, int offset, int len) throws IOException
 		{
-			m_selectedciphersuite.serverKeyExchange(bytes, offset, len, m_clientrandom, m_serverrandom);
+			m_selectedciphersuite.getKeyExchangeAlgorithm().processServerKeyExchange(bytes, offset, len, m_clientrandom, m_serverrandom,m_servercertificate);
 		}
 
 		/**
@@ -437,7 +433,6 @@ public class TinyTLS //extends Socket
 						{
 							LogHolder.log(LogLevel.DEBUG, LogType.MISC,
 										  "[RECIEVED-ALERT] TYPE=WARNING ; MESSAGE=CLOSE NOTIFY");
-							break;
 						}
 						default:
 						{
@@ -445,7 +440,6 @@ public class TinyTLS //extends Socket
 								payload[1]);
 						}
 					}
-					break;
 				}
 				// fatal
 				case 2:
@@ -586,7 +580,7 @@ public class TinyTLS //extends Socket
 				case 22:
 				{
 					LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[SERVER_FINISHED]");
-					m_selectedciphersuite.serverFinished(m_aktTLSRecord,m_handshakemessages);
+					m_selectedciphersuite.processServerFinished(m_aktTLSRecord,m_handshakemessages);
 					break;
 				}
 				case 21:
@@ -759,7 +753,7 @@ public class TinyTLS //extends Socket
 		 */
 		public void sendClientKeyExchange() throws IOException
 		{
-			byte[] message = m_selectedciphersuite.clientKeyExchange();
+			byte[] message = m_selectedciphersuite.calculateClientKeyExchange();
 			sendHandshake(16, helper.conc(helper.inttobyte(message.length, 2), message));
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[CLIENT_KEY_EXCHANGE]");
 		}
@@ -784,7 +778,7 @@ public class TinyTLS //extends Socket
 		 */
 		public void sendClientFinished() throws IOException
 		{
-			sendHandshake(20, m_selectedciphersuite.clientFinished(m_handshakemessages));
+			sendHandshake(20, m_selectedciphersuite.getKeyExchangeAlgorithm().calculateClientFinished(m_handshakemessages));
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[CLIENT_FINISHED]");
 		}
 	}
@@ -837,6 +831,7 @@ public class TinyTLS //extends Socket
 		if (!this.m_supportedciphersuites.contains(cs))
 		{
 			this.m_supportedciphersuites.addElement(cs);
+			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[CIPHERSUITE_ADDED] : "+cs.toString());
 		}
 	}
 
@@ -850,7 +845,7 @@ public class TinyTLS //extends Socket
 	{
 		if(m_supportedciphersuites.isEmpty())
 		{
-			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[NO_CIPHERSUITE_DEFINED] : using DHE_RSA_WITH_3DES_CBC_SHA");
+			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[NO_CIPHERSUITE_DEFINED] : using predefined");
 			this.addCipherSuite(new DHE_RSA_WITH_3DES_CBC_SHA());
 //			this.addCipherSuite(new DHE_RSA_WITH_AES_128_CBC_SHA());
 		}
@@ -898,5 +893,4 @@ public class TinyTLS //extends Socket
 	public Socket getSocket()
 	{
 		return m_ProxyConnection.getSocket();
-	}
-}
+	}}

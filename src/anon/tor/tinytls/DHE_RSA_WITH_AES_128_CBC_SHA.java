@@ -58,6 +58,7 @@ public class DHE_RSA_WITH_AES_128_CBC_SHA extends CipherSuite {
 	public DHE_RSA_WITH_AES_128_CBC_SHA() throws TLSException
 	{
 		super(new byte[]{0x00,0x033});
+		m_ciphersuitename = "TLS_DHE_RSA_WITH_AES_128_CBC_SHA";
 		this.setKeyExchangeAlgorithm(new DHE_RSA_Key_Exchange());
 		m_rand = new MyRandom();
 	}
@@ -103,7 +104,7 @@ public class DHE_RSA_WITH_AES_128_CBC_SHA extends CipherSuite {
 		{
 			if(msg.m_Data[i]!=paddinglength)
 			{
-				throw new TLSException("wrong Padding detected");
+				throw new TLSException("wrong Padding detected",2,51);
 			}
 		}
 
@@ -123,12 +124,12 @@ public class DHE_RSA_WITH_AES_128_CBC_SHA extends CipherSuite {
 		{
 			if(msg.m_Data[len+i]!=mac[i])
 			{
-				throw new TLSException("Wrong MAC detected!!!");
+				throw new TLSException("Wrong MAC detected!!!",2,20);
 			}
 		}
 	}
 
-	protected void calculateKeys(byte[] keys)
+	protected void calculateKeys(byte[] keys,boolean forclient)
 	{
 		this.m_clientmacsecret = helper.copybytes(keys,0,20);
 		this.m_servermacsecret = helper.copybytes(keys,20,20);
@@ -136,10 +137,19 @@ public class DHE_RSA_WITH_AES_128_CBC_SHA extends CipherSuite {
 		this.m_serverwritekey = helper.copybytes(keys,56,16);
 		this.m_clientwriteIV = helper.copybytes(keys,72,16);
 		this.m_serverwriteIV = helper.copybytes(keys,88,16);
-		this.m_encryptcipher = new CBCBlockCipher(new AESFastEngine());
-		this.m_encryptcipher.init(true,new ParametersWithIV(new KeyParameter(this.m_clientwritekey),this.m_clientwriteIV));
-		this.m_decryptcipher = new CBCBlockCipher(new AESFastEngine());
-		this.m_decryptcipher.init(false,new ParametersWithIV(new KeyParameter(this.m_serverwritekey),this.m_serverwriteIV));
+		if(forclient)
+		{
+			this.m_encryptcipher = new CBCBlockCipher(new AESFastEngine());
+			this.m_encryptcipher.init(true,new ParametersWithIV(new KeyParameter(this.m_clientwritekey),this.m_clientwriteIV));
+			this.m_decryptcipher = new CBCBlockCipher(new AESFastEngine());
+			this.m_decryptcipher.init(false,new ParametersWithIV(new KeyParameter(this.m_serverwritekey),this.m_serverwriteIV));
+		} else
+		{
+			this.m_encryptcipher = new CBCBlockCipher(new AESFastEngine());
+			this.m_encryptcipher.init(true,new ParametersWithIV(new KeyParameter(this.m_serverwritekey),this.m_serverwriteIV));
+			this.m_decryptcipher = new CBCBlockCipher(new AESFastEngine());
+			this.m_decryptcipher.init(false,new ParametersWithIV(new KeyParameter(this.m_clientwritekey),this.m_clientwriteIV));
+		}
 
 	}
 
