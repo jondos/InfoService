@@ -99,11 +99,13 @@ public abstract class CipherSuite{
 	 * @param serverrandom serverrandom
 	 * @throws TLSException
 	 */
-	public void serverKeyExchange(byte[] b, byte[] clientrandom, byte[] serverrandom) throws TLSException
+	public void serverKeyExchange(byte[] b,int b_offset,int b_len
+								  , byte[] clientrandom, byte[] serverrandom) throws TLSException
 	{
 		if(this.m_keyexchangealgorithm!=null)
 		{
-			this.m_keyexchangealgorithm.serverKeyExchange(b,clientrandom,serverrandom,this.m_servercertificate);
+			this.m_keyexchangealgorithm.serverKeyExchange(b,b_offset,b_len,
+				clientrandom,serverrandom,this.m_servercertificate);
 		}
 	}
 

@@ -3,7 +3,7 @@ package anon.tor.ordescription;
 import java.net.InetAddress;
 import java.util.StringTokenizer;
 import java.util.Vector;
-
+import anon.tor.util.helper;
 public class ORAcl
 {
 	private Vector m_Constraints;
@@ -121,6 +121,8 @@ public class ORAcl
 	/** Checks if a nummeric ip and port is allowed*/
 	public boolean isAllowed(String adr, int port)
 	{
+		if(!helper.isIPAddress(adr))
+		   return false;
 		try
 		{
 			for (int i = 0; i < m_Constraints.size(); i++)

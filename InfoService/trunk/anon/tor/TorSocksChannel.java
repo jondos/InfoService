@@ -242,7 +242,7 @@ public class TorSocksChannel extends TorChannel
 					while (i < m_data.length && m_data[i] != 0)
 					{
 						i++;
-						consumedBytes ++;
+						consumedBytes++;
 					}
 					if (m_data[i] != 0)
 					{
@@ -250,13 +250,13 @@ public class TorSocksChannel extends TorChannel
 					}
 					consumedBytes++;
 					//check vor SOCKs 4a --> IP starts with "0.0.0" and Domain-Name follows
-					if(addr.startsWith("0.0.0"))
+					if (addr.startsWith("0.0.0"))
 					{
 						i++;
-						StringBuffer sb=new StringBuffer();
+						StringBuffer sb = new StringBuffer();
 						while (i < m_data.length && m_data[i] != 0)
 						{
-							sb.append(m_data[i]);
+							sb.append((char)m_data[i]);
 							i++;
 							consumedBytes++;
 						}
@@ -265,7 +265,7 @@ public class TorSocksChannel extends TorChannel
 							break;
 						}
 						consumedBytes++;
-						addr=sb.toString();
+						addr = sb.toString();
 					}
 					//	connect
 					Circuit circ = m_Tor.getCircuit(addr, port);

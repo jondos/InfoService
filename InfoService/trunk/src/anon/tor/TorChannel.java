@@ -5,8 +5,6 @@ package anon.tor;
 
 import java.io.IOException;
 import java.net.ConnectException;
-import java.net.InetAddress;
-import java.util.Vector;
 
 import logging.LogHolder;
 import logging.LogLevel;
@@ -95,7 +93,7 @@ public class TorChannel extends AbstractChannel
 			m_sendcellcounter--;
 			if (m_sendcellcounter < 10)
 			{
-				int h = 4;
+				throw new IOException("Should never be here: Channel sendme <10");
 			}
 
 		}

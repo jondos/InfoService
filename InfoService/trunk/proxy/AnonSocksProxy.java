@@ -64,7 +64,7 @@ final public class AnonSocksProxy extends AbstractAnonProxy implements Runnable
 			if (USE_TOR)
 			{
 				m_Tor = AnonServiceFactory.getAnonServiceInstance("TOR");
-				m_Tor.initialize(new TorAnonServerDescription(false));
+				m_Tor.initialize(new TorAnonServerDescription(true));
 			}
 			else
 			{

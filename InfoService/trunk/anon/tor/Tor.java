@@ -5,7 +5,7 @@ package anon.tor;
 
 import java.io.IOException;
 import java.net.ConnectException;
-import java.net.InetAddress;
+//import java.net.InetAddress;
 import java.security.SecureRandom;
 import java.util.Hashtable;
 import java.util.Vector;
@@ -19,6 +19,8 @@ import anon.tor.ordescription.ORList;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import java.util.StringTokenizer;
+import anon.tor.util.helper;
 
 /**
  * @author stefan
@@ -104,7 +106,30 @@ public class Tor implements /*Runnable,*/ AnonService
 	{
 		synchronized (m_oActiveCircuitSync)
 		{
-
+			if (!helper.isIPAddress(addr))
+			{
+				if (m_activeCircuit == null)
+				{
+					createNewActiveCircuit(null, -1);
+				}
+				for (int i = 0; i < 3; i++)
+				{
+					String s = m_activeCircuit.resolveDNS(addr);
+					if (s == null)
+					{
+						createNewActiveCircuit(null, -1);
+					}
+					else
+					{
+						addr = s;
+						break;
+					}
+				}
+				if (!helper.isIPAddress(addr))
+				{
+					return null;
+				}
+			}
 			if (m_activeCircuit == null || !m_activeCircuit.isAllowed(addr, port) ||
 				m_activeCircuit.isDestroyed() || m_activeCircuit.isShutdown())
 			{
@@ -147,11 +172,6 @@ public class Tor implements /*Runnable,*/ AnonService
 			LogHolder.log(LogLevel.DEBUG, LogType.TOR, "added " + ord.getName() + " " + ord.getSoftware());
 			orsForNewCircuit.addElement(ord);
 			//get last OR
-			//remove this address resolve here...
-			if (addr != null)
-			{
-				addr = InetAddress.getByName(addr).getHostAddress();
-			}
 			do
 			{
 				if (m_allowedExitNodeNames != null)
@@ -301,16 +321,6 @@ public class Tor implements /*Runnable,*/ AnonService
 		   m_firstORFactory.closeAll();
 		  }
 		 */
-	}
-
-	public byte[] DNSResolve(String name)
-	{
-		//to be changed
-		while (m_activeCircuit == null)
-		{
-			;
-		}
-		return m_activeCircuit.DNSResolve(name);
 	}
 
 	/**
