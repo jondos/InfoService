@@ -468,7 +468,7 @@ public final class JAPController implements ProxyListener
 				MixCascade defaultMixCascade = null;
 				Node mixCascadeNode = XMLUtil.getFirstChildByName(root, "MixCascade");
 				try
-				{
+				{ //TODO: Fehlerhaft, falls manuelle Konfiguration abgespeichert wurde!
 					defaultMixCascade = new MixCascade( (Element) mixCascadeNode);
 				}
 				catch (Exception e)
@@ -809,7 +809,7 @@ public final class JAPController implements ProxyListener
 			tmp.appendChild(tmp1);
 			e.appendChild(elemTor);
 
-			return JAPUtil.XMLDocumentToString(doc);
+			return XMLUtil.XMLDocumentToString(doc);
 			//((XmlDocument)doc).write(f);
 		}
 		catch (Throwable ex)

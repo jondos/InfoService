@@ -210,66 +210,6 @@ final public class JAPUtil
 		return true;
 	}
 
-	/** Writes a XML-Document to an Output-Stream. Since writing was not standardzieds
-	 * since JAXP 1.1 different Methods are tried
-	 */
-	public static String XMLDocumentToString(Document doc)
-	{
-		ByteArrayOutputStream out = null;
-		try
-		{
-			out = new ByteArrayOutputStream();
-			try //For JAXP 1.0.1 Referenc Implementation (shipped with JAP)
-			{
-				( (com.sun.xml.tree.XmlDocument) doc).write(out);
-			}
-			catch (Throwable t1)
-			{
-				try
-				{ //For JAXP 1.1 (for Instance Apache Crimson/Xalan shipped with Java 1.4)
-					//This seams to be realy stupid and compliecated...
-					//But if the do a simple t.transform(), a NoClassDefError is thrown, if
-					//the new JAXP1.1 is not present, even if we NOT call saveXMLDocument, but
-					//calling any other method within JAPUtil.
-					//Dont no why --> maybe this has something to to with Just in Time compiling ?
-					Object t =
-						javax.xml.transform.TransformerFactory.newInstance().newTransformer();
-					javax.xml.transform.Result r = new javax.xml.transform.stream.StreamResult(out);
-					javax.xml.transform.Source s = new javax.xml.transform.dom.DOMSource(doc);
-
-					//this is to simply invoke t.transform(s,r)
-					Class c = t.getClass();
-					Method m = null;
-					Method[] ms = c.getMethods();
-					for (int i = 0; i < ms.length; i++)
-					{
-						if (ms[i].getName().equals("transform"))
-						{
-							m = ms[i];
-							Class[] params = m.getParameterTypes();
-							if (params.length == 2)
-							{
-								break;
-							}
-						}
-					}
-					Object[] p = new Object[2];
-					p[0] = s;
-					p[1] = r;
-					m.invoke(t, p);
-				}
-				catch (Throwable t2)
-				{
-					return null;
-				}
-			}
-		}
-		catch (Throwable t2)
-		{
-			return null;
-		}
-		return out.toString();
-	}
 
 	/** Loads an Image from a File or a Resource.
 	 *	@param strImage the Resource or filename of the Image

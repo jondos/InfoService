@@ -31,14 +31,14 @@
  */
 package anon.util;
 
+import java.io.ByteArrayOutputStream;
+import java.lang.reflect.Method;
 import org.w3c.dom.Attr;
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.w3c.dom.Document;
-import org.w3c.dom.DOMException;
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.*;
 
 public class XMLUtil
 {
@@ -269,10 +269,10 @@ public class XMLUtil
 					for (int i = 0; i < srcattr.getLength(); i++)
 					{
 						newelement.setAttributeNode(
-							(Attr) importNode(doc,srcattr.item(i), true));
+							(Attr) importNode(doc, srcattr.item(i), true));
 					}
 				}
-				newnode =  newelement;
+				newnode = newelement;
 				break;
 			}
 
@@ -307,13 +307,13 @@ public class XMLUtil
 			case Document.ENTITY_NODE:
 			{
 				/*Entity srcentity = (Entity) source;
-				Entity newentity = doc.createEntity(source.getNodeName());
-				newentity.setPublicId(srcentity.getPublicId());
-				newentity.setSystemId(srcentity.getSystemId());
-				newentity.setNotationName(srcentity.getNotationName());
-				// Kids carry additional value
-				newnode = newentity;*/
-		   		throw new Exception("HIERARCHY_REQUEST_ERR");
+					 Entity newentity = doc.createEntity(source.getNodeName());
+					 newentity.setPublicId(srcentity.getPublicId());
+					 newentity.setSystemId(srcentity.getSystemId());
+					 newentity.setNotationName(srcentity.getNotationName());
+					 // Kids carry additional value
+					 newnode = newentity;*/
+				throw new Exception("HIERARCHY_REQUEST_ERR");
 				//break;
 			}
 
@@ -332,38 +332,38 @@ public class XMLUtil
 
 			case Document.DOCUMENT_TYPE_NODE:
 			{
-			/*	DocumentType doctype = (DocumentType) source;
-				DocumentType newdoctype =
-					doc.createDocumentType(
-					doctype.getNodeName(),
-					doctype.getPublicID(), doctype.getSystemID());
-				// Values are on NamedNodeMaps
-				NamedNodeMap smap = ( (DocumentType) source).getEntities();
-				NamedNodeMap tmap = newdoctype.getEntities();
-				if (smap != null)
-				{
-					for (int i = 0; i < smap.getLength(); i++)
-					{
-						tmap.setNamedItem( (EntityImpl) importNode(smap.item(i), true));
-					}
-				}
-				smap = ( (DocumentType) source).getNotations();
-				tmap = newdoctype.getNotations();
-				if (smap != null)
-				{
-					for (int i = 0; i < smap.getLength(); i++)
-					{
-						tmap.setNamedItem( (NotationImpl) importNode(smap.item(i), true));
-					}
-				}
-				// NOTE: At this time, the DOM definition of DocumentType
-				// doesn't cover Elements and their Attributes. domimpl's
-				// extentions in that area will not be preserved, even if
-				// copying from domimpl to domimpl. We could special-case
-				// that here. Arguably we should. Consider. ?????
-				newnode = newdoctype;
-				break;*/
-			   throw new Exception("HIERARCHY_REQUEST_ERR");
+				/*	DocumentType doctype = (DocumentType) source;
+				 DocumentType newdoctype =
+				  doc.createDocumentType(
+				  doctype.getNodeName(),
+				  doctype.getPublicID(), doctype.getSystemID());
+				 // Values are on NamedNodeMaps
+				 NamedNodeMap smap = ( (DocumentType) source).getEntities();
+				 NamedNodeMap tmap = newdoctype.getEntities();
+				 if (smap != null)
+				 {
+				  for (int i = 0; i < smap.getLength(); i++)
+				  {
+				   tmap.setNamedItem( (EntityImpl) importNode(smap.item(i), true));
+				  }
+				 }
+				 smap = ( (DocumentType) source).getNotations();
+				 tmap = newdoctype.getNotations();
+				 if (smap != null)
+				 {
+				  for (int i = 0; i < smap.getLength(); i++)
+				  {
+				   tmap.setNamedItem( (NotationImpl) importNode(smap.item(i), true));
+				  }
+				 }
+				 // NOTE: At this time, the DOM definition of DocumentType
+				 // doesn't cover Elements and their Attributes. domimpl's
+				 // extentions in that area will not be preserved, even if
+				 // copying from domimpl to domimpl. We could special-case
+				 // that here. Arguably we should. Consider. ?????
+				 newnode = newdoctype;
+				 break;*/
+				throw new Exception("HIERARCHY_REQUEST_ERR");
 
 			}
 
@@ -375,18 +375,19 @@ public class XMLUtil
 			}
 
 			case Document.NOTATION_NODE:
-			{/*
-				Notation srcnotation = (Notation) source;
-				Notation newnotation = (Notation) doc.createNotation(source.getNodeName());
-				newnotation.setPublicId(srcnotation.getPublicId());
-				newnotation.setSystemId(srcnotation.getSystemId());
-				// Kids carry additional value
-				newnode = newnotation;
-				// No name, no value
-				break;*/
-					throw new Exception("HIERARCHY_REQUEST_ERR");
+			{
+			/*
+					 Notation srcnotation = (Notation) source;
+					 Notation newnotation = (Notation) doc.createNotation(source.getNodeName());
+					 newnotation.setPublicId(srcnotation.getPublicId());
+					 newnotation.setSystemId(srcnotation.getSystemId());
+					 // Kids carry additional value
+					 newnode = newnotation;
+					 // No name, no value
+					 break;*/
+				throw new Exception("HIERARCHY_REQUEST_ERR");
 
-			}
+			 }
 
 			case Document.DOCUMENT_NODE: // Document can't be child of Document
 			default:
@@ -402,12 +403,73 @@ public class XMLUtil
 				 srckid != null;
 				 srckid = srckid.getNextSibling())
 			{
-				newnode.appendChild(importNode(doc,srckid, true));
+				newnode.appendChild(importNode(doc, srckid, true));
 			}
 		}
 
 		return newnode;
 
+	}
+
+	/** Writes a XML-Document to an Output-Stream. Since writing was not standardzieds
+	 * since JAXP 1.1 different Methods are tried
+	 */
+	public static String XMLDocumentToString(Document doc)
+	{
+		ByteArrayOutputStream out = null;
+		try
+		{
+			out = new ByteArrayOutputStream();
+			try //For JAXP 1.0.1 Referenc Implementation (shipped with JAP)
+			{
+				( (com.sun.xml.tree.XmlDocument) doc).write(out);
+			}
+			catch (Throwable t1)
+			{
+				try
+				{ //For JAXP 1.1 (for Instance Apache Crimson/Xalan shipped with Java 1.4)
+					//This seams to be realy stupid and compliecated...
+					//But if the do a simple t.transform(), a NoClassDefError is thrown, if
+					//the new JAXP1.1 is not present, even if we NOT call saveXMLDocument, but
+					//calling any other method within JAPUtil.
+					//Dont no why --> maybe this has something to to with Just in Time compiling ?
+					Object t =
+						javax.xml.transform.TransformerFactory.newInstance().newTransformer();
+					javax.xml.transform.Result r = new javax.xml.transform.stream.StreamResult(out);
+					javax.xml.transform.Source s = new javax.xml.transform.dom.DOMSource(doc);
+
+					//this is to simply invoke t.transform(s,r)
+					Class c = t.getClass();
+					Method m = null;
+					Method[] ms = c.getMethods();
+					for (int i = 0; i < ms.length; i++)
+					{
+						if (ms[i].getName().equals("transform"))
+						{
+							m = ms[i];
+							Class[] params = m.getParameterTypes();
+							if (params.length == 2)
+							{
+								break;
+							}
+						}
+					}
+					Object[] p = new Object[2];
+					p[0] = s;
+					p[1] = r;
+					m.invoke(t, p);
+				}
+				catch (Throwable t2)
+				{
+					return null;
+				}
+			}
+		}
+		catch (Throwable t2)
+		{
+			return null;
+		}
+		return out.toString();
 	}
 
 }
