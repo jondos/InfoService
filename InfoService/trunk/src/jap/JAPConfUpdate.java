@@ -28,6 +28,10 @@
 
 package jap;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
@@ -36,10 +40,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
@@ -48,9 +48,9 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.border.TitledBorder;
 
-import update.JAPUpdateWizard;
 import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.JAPVersionInfo;
+import update.JAPUpdateWizard;
 
 final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListener, ItemListener, Runnable
 {
@@ -60,7 +60,7 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 
 	// private JAPController japController;
 	private JComboBox m_comboType;
-	private JButton m_bttnUpgrade,m_bttnCheckForUpgrade;
+	private JButton m_bttnUpgrade, m_bttnCheckForUpgrade;
 
 	private Thread m_threadGetVersionInfo;
 	private JAPVersionInfo m_devVersion;
@@ -97,7 +97,7 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 		m_bttnUpgrade.addActionListener(this);
 		m_bttnUpgrade.setActionCommand(COMMAND_UPGRADE);
 		cButtons.anchor = GridBagConstraints.CENTER;
-		cButtons.gridx=1;
+		cButtons.gridx = 1;
 		gridBagPanel.setConstraints(m_bttnUpgrade, cButtons);
 		m_bttnUpgrade.setEnabled(false);
 		buttonPanel.add(m_bttnUpgrade);
@@ -109,7 +109,7 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 		m_bttnCheckForUpgrade.addActionListener(this);
 		m_bttnCheckForUpgrade.setActionCommand(COMMAND_CHECKFORUPGRADE);
 		cButtons.anchor = GridBagConstraints.CENTER;
-		cButtons.gridx=0;
+		cButtons.gridx = 0;
 		gridBagPanel.setConstraints(m_bttnCheckForUpgrade, cButtons);
 		m_bttnCheckForUpgrade.setEnabled(true);
 		buttonPanel.add(m_bttnCheckForUpgrade);
@@ -162,7 +162,7 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 		c.fill = GridBagConstraints.BOTH;
 		gridBagPanel.setConstraints(l, c);
 		installedPanel.add(l);
-		l = new JLabel(JAPMessages.getString("updateType")+": ");
+		l = new JLabel(JAPMessages.getString("updateType") + ": ");
 		c.gridy = 2;
 		c.gridx = 0;
 		c.weightx = 0;
@@ -214,7 +214,7 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 		c.fill = GridBagConstraints.BOTH;
 		gridBagPanel.setConstraints(m_labelDate, c);
 		latestPanel.add(m_labelDate);
-		l = new JLabel(JAPMessages.getString("updateType")+": ");
+		l = new JLabel(JAPMessages.getString("updateType") + ": ");
 		c.gridy = 2;
 		c.gridx = 0;
 		c.weightx = 0;

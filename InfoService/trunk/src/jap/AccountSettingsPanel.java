@@ -27,19 +27,17 @@
  */
 package jap;
 
-import gui.ByteNumberCellRenderer;
-import gui.TimestampCellRenderer;
-import jap.platform.AbstractOS;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.sql.Timestamp;
+import java.util.Enumeration;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.sql.Timestamp;
-import java.util.Enumeration;
-
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -53,16 +51,9 @@ import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.AbstractTableModel;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-
 import anon.crypto.XMLEncryption;
 import anon.pay.PayAccount;
 import anon.pay.PayAccountsFile;
@@ -71,6 +62,12 @@ import anon.pay.xml.XMLBalance;
 import anon.pay.xml.XMLEasyCC;
 import anon.pay.xml.XMLTransCert;
 import anon.util.XMLUtil;
+import gui.ByteNumberCellRenderer;
+import gui.TimestampCellRenderer;
+import jap.platform.AbstractOS;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 
 /**
  * The Jap Conf Module (Settings Tab Page) for the Accounts and payment Management
@@ -413,10 +410,11 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 			AbstractOS os = AbstractOS.getInstance();
 			String url = transferCertificate.getBaseUrl();
 			url += "?transfernum=" + transferCertificate.getTransferNumber();
-			try {
+			try
+			{
 				os.openURLInBrowser(url);
 			}
-			catch(Exception e)
+			catch (Exception e)
 			{
 				JOptionPane.showMessageDialog(
 					view,
@@ -427,47 +425,47 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 					);
 			}
 
-/*	old code to launch webbrowser:		splash = JAPWaitSplash.start("Launching browser...", "Please wait");
-			Process runcode = null;
-			String[] browser = JAPConstants.BROWSERLIST;
-			for (int i = 0; i < browser.length; i++)
-			{
+			/*	old code to launch webbrowser:		splash = JAPWaitSplash.start("Launching browser...", "Please wait");
+			   Process runcode = null;
+			   String[] browser = JAPConstants.BROWSERLIST;
+			   for (int i = 0; i < browser.length; i++)
+			   {
 				try
 				{
-					LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Trying to start browser " + browser[i]);
-					runcode = Runtime.getRuntime().exec(new String[]
-						{browser[i], url});
-					break;
+				 LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Trying to start browser " + browser[i]);
+				 runcode = Runtime.getRuntime().exec(new String[]
+				  {browser[i], url});
+				 break;
 				}
 				catch (Exception ex)
 				{
 				}
-			}
-			if (runcode == null)
-			{
+			   }
+			   if (runcode == null)
+			   {
 				splash.abort();
 				JOptionPane.showMessageDialog(
-					view,
-					"<html>" + JAPMessages.getString("ngCouldNotFindBrowser") + "<br>" +
-					"<h3>" + url + "</h3></html>",
-					JAPMessages.getString("ngCouldNotFindBrowserTitle"),
-					JOptionPane.INFORMATION_MESSAGE
-					);
-			}
-			else
-			{
+				 view,
+				 "<html>" + JAPMessages.getString("ngCouldNotFindBrowser") + "<br>" +
+				 "<h3>" + url + "</h3></html>",
+				 JAPMessages.getString("ngCouldNotFindBrowserTitle"),
+				 JOptionPane.INFORMATION_MESSAGE
+				 );
+			   }
+			   else
+			   {
 				LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Browser running. Waiting ... ");
 				try
 				{
-					runcode.waitFor();
+				 runcode.waitFor();
 				}
 				catch (InterruptedException ex1)
 				{
 				}
 				LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Browser terminated with exitcode " +
-							  runcode.exitValue());
+					 runcode.exitValue());
 				splash.abort();
-			}*/
+			   }*/
 			m_MyTableModel.fireTableDataChanged();
 		}
 	}
@@ -729,7 +727,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 								strPassword = null;
 								continue;
 							}
-							break;
+							break ;
 						}
 					}
 				}

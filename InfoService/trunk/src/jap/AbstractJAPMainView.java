@@ -27,12 +27,12 @@
  */
 package jap;
 
-import gui.JAPDll;
-
 import java.lang.reflect.InvocationTargetException;
 
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
+
+import gui.JAPDll;
 
 public abstract class AbstractJAPMainView extends JFrame implements IJAPMainView
 {

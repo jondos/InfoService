@@ -28,10 +28,11 @@
 
 package jap;
 
-import java.awt.Frame;
 import java.util.Locale;
 import java.util.PropertyResourceBundle;
 import java.util.ResourceBundle;
+
+import java.awt.Frame;
 
 public final class JAPMessages
 {

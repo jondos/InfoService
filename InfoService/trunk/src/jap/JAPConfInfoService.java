@@ -81,7 +81,6 @@ final class JAPConfInfoService extends AbstractJAPConfModule
 	 */
 	private JAPInfoServiceListModel m_infoServiceListModel;
 
-
 	/**
 	 * Constructor for JAPConfInfoService. We do some initializing here.
 	 */
@@ -173,7 +172,8 @@ final class JAPConfInfoService extends AbstractJAPConfModule
 				if ( ( (InfoServiceDBEntry) a_value).isUserDefined())
 				{
 					returnLabel = new JLabel( ( (InfoServiceDBEntry) a_value).getName(),
-											 JAPUtil.loadImageIcon(JAPConstants.IMAGE_INFOSERVICE_MANUELL, true), JLabel.LEFT);
+											 JAPUtil.loadImageIcon(JAPConstants.IMAGE_INFOSERVICE_MANUELL, true),
+											 JLabel.LEFT);
 				}
 				else
 				{

@@ -27,14 +27,6 @@
  */
 package jap;
 
-import gui.ImageIconLoader;
-import gui.SimpleFileFilter;
-
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.MediaTracker;
-import java.awt.Toolkit;
-import java.awt.Window;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -54,6 +46,11 @@ import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.MediaTracker;
+import java.awt.Toolkit;
+import java.awt.Window;
 import javax.swing.AbstractButton;
 import javax.swing.ImageIcon;
 import javax.swing.JDialog;
@@ -65,10 +62,12 @@ import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableModel;
 
+import anon.crypto.JAPCertificate;
+import gui.ImageIconLoader;
+import gui.SimpleFileFilter;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import anon.crypto.JAPCertificate;
 
 /**
  * This class contains static utility functions for Jap
@@ -97,8 +96,8 @@ final public class JAPUtil
 	/** Returns a formated number which respects different units (Bytes, kBytes, MBytes, GBytes)*/
 	public static String formatBytesValueWithoutUnit(long c)
 	{
-		DecimalFormat df=(DecimalFormat)DecimalFormat.getInstance(JAPController.getLocale());
-		double d=c;
+		DecimalFormat df = (DecimalFormat) DecimalFormat.getInstance(JAPController.getLocale());
+		double d = c;
 		if (c < 10000)
 		{
 			df.applyPattern("#,####");
@@ -130,7 +129,7 @@ final public class JAPUtil
 	 */
 	public static String formatBytesValue(long bytes)
 	{
-		return formatBytesValueWithoutUnit(bytes)+" "+formatBytesValueOnlyUnit(bytes);
+		return formatBytesValueWithoutUnit(bytes) + " " + formatBytesValueOnlyUnit(bytes);
 	}
 
 	public static int applyJarDiff(File fileOldJAR, File fileNewJAR,
@@ -275,13 +274,13 @@ final public class JAPUtil
 
 		// try loading the lowcolor images
 		if (Toolkit.getDefaultToolkit().getColorModel().getPixelSize() <= 16)
-			{
+		{
 			img = ImageIconLoader.loadImageIcon(JAPConstants.IMGPATHLOWCOLOR + strImage, sync);
 		}
 		// if loading of lowcolor images was not successful or
 		//    we have to load the hicolor images
 		if (img == null || img.getImageLoadStatus() == MediaTracker.ERRORED)
-			{
+		{
 			img = ImageIconLoader.loadImageIcon(JAPConstants.IMGPATHHICOLOR + strImage, sync);
 		}
 
@@ -444,8 +443,10 @@ final public class JAPUtil
 			{
 				throw new IOException(e1.getMessage());
 			}
-			if(t_cert==null)
+			if (t_cert == null)
+			{
 				throw new IOException("Could not create certificate!");
+			}
 		}
 		return t_cert;
 	}
@@ -462,10 +463,11 @@ final public class JAPUtil
 		if (withTime)
 		{
 //			str += " - " + date.getHours() + ":" + date.getMinutes();
-			sdf= new SimpleDateFormat("dd.MM.yyyy - HH:mm");
-		} else
+			sdf = new SimpleDateFormat("dd.MM.yyyy - HH:mm");
+		}
+		else
 		{
-			sdf= new SimpleDateFormat("dd.MM.yyyy");
+			sdf = new SimpleDateFormat("dd.MM.yyyy");
 		}
 		//return str;
 		return sdf.format(date);

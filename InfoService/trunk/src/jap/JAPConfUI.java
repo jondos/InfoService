@@ -27,6 +27,8 @@
  */
 package jap;
 
+import java.util.Locale;
+
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -34,8 +36,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import java.util.Locale;
-
 import javax.swing.ButtonGroup;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -259,12 +259,16 @@ final class JAPConfUI extends AbstractJAPConfModule
 			JAPController.setLocale(Locale.FRENCH);
 		}
 		JAPController.setSaveMainWindowPosition(m_cbSaveWindowPositions.isSelected());
-		int defaultView=JAPConstants.VIEW_NORMAL;
-		if(m_rbViewSimplified.isSelected())
-			defaultView=JAPConstants.VIEW_SIMPLIFIED;
+		int defaultView = JAPConstants.VIEW_NORMAL;
+		if (m_rbViewSimplified.isSelected())
+		{
+			defaultView = JAPConstants.VIEW_SIMPLIFIED;
+		}
 		JAPController.getInstance().setDefaultView(defaultView);
-		JAPController.getInstance().setMinimizeOnStartup(m_rbViewMini.isSelected()&&m_cbAfterStart.isSelected());
-		JAPController.getInstance().setMoveToSystrayOnStartup(m_rbViewSystray.isSelected()&&m_cbAfterStart.isSelected());
+		JAPController.getInstance().setMinimizeOnStartup(m_rbViewMini.isSelected() &&
+			m_cbAfterStart.isSelected());
+		JAPController.getInstance().setMoveToSystrayOnStartup(m_rbViewSystray.isSelected() &&
+			m_cbAfterStart.isSelected());
 		return true;
 	}
 
@@ -303,7 +307,9 @@ final class JAPConfUI extends AbstractJAPConfModule
 		m_cbAfterStart.setSelected(bAfterStart);
 		m_rbViewMini.setEnabled(bAfterStart);
 		m_rbViewSystray.setEnabled(bAfterStart);
-		if(bAfterStart&&!(m_rbViewSystray.isSelected()||m_rbViewMini.isSelected()))
+		if (bAfterStart && ! (m_rbViewSystray.isSelected() || m_rbViewMini.isSelected()))
+		{
 			m_rbViewMini.setSelected(true);
 		}
+	}
 }

@@ -27,10 +27,10 @@
  */
 package jap.platform;
 
+import jap.JAPConstants;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import jap.JAPConstants;
 
 /**
  * This class is instantiated by AbstractOS if the current OS is Linux
@@ -38,7 +38,7 @@ import jap.JAPConstants;
 public class LinuxOS extends AbstractOS
 {
 	public static final String[] BROWSERLIST =
-	{
+		{
 		"firefox", "iexplore", "explorer", "mozilla", "konqueror", "mozilla-firefox",
 		"firebird", "opera"
 	};
@@ -47,7 +47,9 @@ public class LinuxOS extends AbstractOS
 	{
 		String osName = System.getProperty("os.name", "").toLowerCase();
 		if (osName.indexOf("linux") == -1)
+		{
 			throw new Exception("Operating system is not Linux");
+		}
 	}
 
 	public void openURLInBrowser(String a_url)
@@ -60,7 +62,8 @@ public class LinuxOS extends AbstractOS
 			{
 				try
 				{
-					Runtime.getRuntime().exec(new String[] {browser[i], a_url});
+					Runtime.getRuntime().exec(new String[]
+											  {browser[i], a_url});
 					success = true;
 					break;
 				}

@@ -27,8 +27,6 @@
  */
 package jap;
 
-import gui.JAPAboutAutoScroller;
-
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Frame;
@@ -37,11 +35,11 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-
 import javax.swing.ImageIcon;
 import javax.swing.JDialog;
 
 import anon.util.ResourceLoader;
+import gui.JAPAboutAutoScroller;
 
 final class JAPAbout extends JDialog
 {
@@ -80,7 +78,7 @@ final class JAPAbout extends JDialog
 		setLocation( -380, -200);
 		setSize(10, 10);
 		ImageIcon imageSplash = JAPUtil.loadImageIcon(JAPConstants.ABOUTFN, false); //loading the Background Image
-		byte[] buff=ResourceLoader.loadResource(JAPMessages.getString("htmlfileAbout"));
+		byte[] buff = ResourceLoader.loadResource(JAPMessages.getString("htmlfileAbout"));
 		sp = new JAPAboutAutoScroller(ABOUT_DX, ABOUT_DY, imageSplash.getImage(), 5, 62, 210, 173 - 72,
 									  new String(buff)); //Creating a new scrolling HTML-Pane with the specified size
 		sp.addActionListener(new ActionListener()

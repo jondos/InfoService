@@ -29,7 +29,6 @@
 package jap;
 
 import java.awt.Font;
-
 import javax.swing.JPanel;
 import javax.swing.event.AncestorEvent;
 import javax.swing.event.AncestorListener;

@@ -27,6 +27,12 @@
  */
 package jap;
 
+import java.io.BufferedWriter;
+import java.io.DataInputStream;
+import java.io.OutputStreamWriter;
+import java.text.NumberFormat;
+import java.util.Vector;
+
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Cursor;
@@ -34,12 +40,6 @@ import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.BufferedWriter;
-import java.io.DataInputStream;
-import java.io.OutputStreamWriter;
-import java.text.NumberFormat;
-import java.util.Vector;
-
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JDialog;
@@ -54,9 +54,6 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableCellRenderer;
 
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
 import anon.AnonChannel;
 import anon.ErrorCodes;
 import anon.infoservice.InfoServiceHolder;
@@ -64,6 +61,9 @@ import anon.infoservice.MixCascade;
 import anon.infoservice.ProxyInterface;
 import anon.infoservice.StatusInfo;
 import anon.server.AnonServiceImpl;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 
 //import proxy.AnonProxy;
 /**
@@ -429,7 +429,7 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener, Ru
 		JAPMessages.init();
 		JAPController controller = JAPController.getInstance();
 		LogHolder.setLogInstance(JAPDebug.getInstance());
-		controller.loadConfigFile(null,false);
+		controller.loadConfigFile(null, false);
 		controller.fetchMixCascades(true);
 		JAPDebug.getInstance().setLogType(LogType.NET + LogType.GUI + LogType.THREAD + LogType.MISC);
 		JAPDebug.getInstance().setLogLevel(LogLevel.DEBUG);
@@ -460,11 +460,11 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener, Ru
 
 			if (JAPModel.getInstance().getProxyInterface().isValid())
 			{
-				anonService	= new AnonServiceImpl(JAPModel.getInstance().getProxyInterface());
+				anonService = new AnonServiceImpl(JAPModel.getInstance().getProxyInterface());
 			}
 			else
 			{
-				anonService	= new AnonServiceImpl((ProxyInterface)null);
+				anonService = new AnonServiceImpl( (ProxyInterface)null);
 			}
 
 			for (int i = 0; ( (i < mixCascades.size()) && (m_bTestIsRunning)); i++)

@@ -42,7 +42,8 @@ public abstract class AbstractOS
 	 * Make sure that the default OS is the last OS in the array.
 	 */
 	private static String[] REGISTERED_PLATFORM_CLASSES =
-		{"jap.platform.LinuxOS", "jap.platform.WindowsOS", "jap.platform.MacOS",
+		{
+		"jap.platform.LinuxOS", "jap.platform.WindowsOS", "jap.platform.MacOS",
 		"jap.platform.DefaultOS"};
 
 	/**
@@ -58,7 +59,7 @@ public abstract class AbstractOS
 	 */
 	public static final AbstractOS getInstance()
 	{
-		for (int i = 0; ms_operatingSystem == null && i < REGISTERED_PLATFORM_CLASSES.length ; i++)
+		for (int i = 0; ms_operatingSystem == null && i < REGISTERED_PLATFORM_CLASSES.length; i++)
 		{
 			try
 			{

@@ -27,14 +27,13 @@
  */
 package jap;
 
-import gui.JAPDll;
-
 import java.awt.Dimension;
 import java.awt.Point;
 
 import anon.crypto.JAPCertificate;
 import anon.infoservice.ProxyInterface;
 import anon.util.ResourceLoader;
+import gui.JAPDll;
 
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPModel
@@ -85,12 +84,11 @@ public final class JAPModel
 	 */
 	private String m_configFileName;
 
-        /**
-         * Stores whether the forwarding state module shall be visible within the configuration
-         * dialog.
-         */
-        private boolean m_forwardingStateModuleVisible;
-        
+	/**
+	 * Stores whether the forwarding state module shall be visible within the configuration
+	 * dialog.
+	 */
+	private boolean m_forwardingStateModuleVisible;
 
 	private JAPModel()
 	{
@@ -429,7 +427,7 @@ public final class JAPModel
 	{
 		return m_routingSettings;
 	}
-	
+
 	/**
 	 * Sets whether the forwarding state module shall be visible within the configuration
 	 * dialog.
@@ -437,18 +435,20 @@ public final class JAPModel
 	 * @param a_moduleVisible True, if the forwarding state module shall be visible, false
 	 *                        otherwise.
 	 */
-	public void setForwardingStateModuleVisible(boolean a_moduleVisible) {
-	  m_forwardingStateModuleVisible = a_moduleVisible;
+	public void setForwardingStateModuleVisible(boolean a_moduleVisible)
+	{
+		m_forwardingStateModuleVisible = a_moduleVisible;
 	}
-	
+
 	/**
 	 * Returns whether the forwarding state module shall be visible within the configuration
 	 * dialog.
 	 *
 	 * @return True, if the forwarding state module shall be visible, false otherwise.
 	 */
-	public boolean isForwardingStateModuleVisible() {
-	  return m_forwardingStateModuleVisible;
+	public boolean isForwardingStateModuleVisible()
+	{
+		return m_forwardingStateModuleVisible;
 	}
 
 	public static int getTorMaxConnectionsPerRoute()
