@@ -16,6 +16,7 @@ import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JOptionPane;
 
+import JAPMessages;
 import JAPUtil;
 import JAPConstants;
 import JAPController;
@@ -81,19 +82,25 @@ public class JAPDownloadWizardPage extends BasicWizardPage
         constraintsDownload.gridwidth = 2;
         constraintsDownload.anchor = GridBagConstraints.NORTH;
         constraintsDownload.insets = new Insets(0,5,10,5);
-        m_labelInformation = new JLabel("<html>Die neue JAP.jar Datei wird nun heruntergeladen.<BR>Bitte haben Sie etwa Geduld bis der Download abgeschlossen ist.</html>");
+        m_labelInformation = new JLabel(JAPMessages.getString("updateDownloadIntroductionMessage"));
         gridBagDownload.setConstraints(m_labelInformation,constraintsDownload);
         m_panelComponents.add(m_labelInformation,constraintsDownload);
 
         m_labelIconStep1 = new JLabel();
         m_labelIconStep1.setIcon(arrow);
+        //m_labelIconStep1.setText("   ");
         m_labelIconStep1.setPreferredSize(new Dimension(arrow.getIconWidth(),arrow.getIconHeight()));
         m_labelIconStep1.setMinimumSize(new Dimension(arrow.getIconWidth(),arrow.getIconHeight()));
-        m_labelIconStep1.setVisible(false);
+        m_labelIconStep1.setVisible(true);
         constraintsDownload.gridx = 0;
         constraintsDownload.gridy = 2;
         constraintsDownload.gridheight = 1;
         constraintsDownload.gridwidth = 1 ;
+        ////////////////////////////////////////////////////////////////////////
+        //constraintsDownload.weightx = 1.0;
+        //constraintsDownload.ipadx = arrow.getIconWidth();
+        //constraintsDownload.ipady = arrow.getIconHeight();
+
         constraintsDownload.anchor = GridBagConstraints.WEST;
         gridBagDownload.setConstraints(m_labelIconStep1, constraintsDownload);
         m_panelComponents.add(m_labelIconStep1, constraintsDownload);
@@ -102,8 +109,12 @@ public class JAPDownloadWizardPage extends BasicWizardPage
        // m_labelStep1.setIcon(arrow);
         constraintsDownload.gridx = 1;
         constraintsDownload.gridy = 2;
-        constraintsDownload.weightx = 1.0;
+        constraintsDownload.weightx = 0.0;
         constraintsDownload.gridheight =1;
+        ////////////////////////////////////////////////////////////////////////
+        //constraintsDownload.ipadx = 0;
+        //constraintsDownload.ipady = 0;
+
         constraintsDownload.anchor = GridBagConstraints.WEST;
         constraintsDownload.insets = new Insets(5,5,5,5);
         gridBagDownload.setConstraints(m_labelStep1, constraintsDownload);
@@ -115,12 +126,20 @@ public class JAPDownloadWizardPage extends BasicWizardPage
         constraintsDownload.gridx = 0;
         constraintsDownload.gridy = 3;
         constraintsDownload.weightx = 0.0;
+        ////////////////////////////////////////////////////////////////////////
+        //constraintsDownload.ipadx = arrow.getIconWidth();
+        //constraintsDownload.ipady = arrow.getIconHeight();
+
         gridBagDownload.setConstraints(m_labelIconStep2, constraintsDownload);
         m_panelComponents.add(m_labelIconStep2, constraintsDownload);
 
-        m_labelStep2 = new JLabel("<html><b>2. Herunterladen des Updates</b></html>");
+        m_labelStep2 = new JLabel(JAPMessages.getString("updateM_labelStep2"));
         constraintsDownload.gridx = 1;
         constraintsDownload.gridy = 3;
+        ////////////////////////////////////////////////////////////////////////
+        //constraintsDownload.ipadx = 0;
+        //constraintsDownload.ipady = 0;
+
         gridBagDownload.setConstraints(m_labelStep2, constraintsDownload);
         m_panelComponents.add(m_labelStep2, constraintsDownload);
 
@@ -133,7 +152,7 @@ public class JAPDownloadWizardPage extends BasicWizardPage
         gridBagDownload.setConstraints(m_labelIconStep3, constraintsDownload);
         m_panelComponents.add(m_labelIconStep3, constraintsDownload);
 
-        m_labelStep3 = new JLabel("<html><b>3. Erzeugen der neuen Jap.jar als Jap_"+version+".jar</b></html>");
+        m_labelStep3 = new JLabel(JAPMessages.getString("updateM_labelStep3Part1")+version+JAPMessages.getString("updateM_labelStep3Part2"));
         constraintsDownload.gridx = 1;
         constraintsDownload.gridy = 4;
         gridBagDownload.setConstraints(m_labelStep3, constraintsDownload);
@@ -148,7 +167,7 @@ public class JAPDownloadWizardPage extends BasicWizardPage
         gridBagDownload.setConstraints(m_labelIconStep5, constraintsDownload);
         m_panelComponents.add(m_labelIconStep5, constraintsDownload);
 
-        m_labelStep5 = new JLabel("<html><b>4. Überschreiben der alten Jap.jar</b></html>");
+        m_labelStep5 = new JLabel(JAPMessages.getString("updateM_labelStep5"));
         constraintsDownload.gridx = 1;
         constraintsDownload.gridy = 5;
         gridBagDownload.setConstraints(m_labelStep5, constraintsDownload);
@@ -159,7 +178,7 @@ public class JAPDownloadWizardPage extends BasicWizardPage
            GridBagLayout gridBagLayout = new GridBagLayout();
            GridBagConstraints constraintsPanelProgress = new GridBagConstraints();
            m_panelProgressBar.setLayout(gridBagLayout);
-           m_labelStatus= new JLabel("<html><b>Fortschritt:</b></html>");
+           m_labelStatus= new JLabel(JAPMessages.getString("updateM_labelStatus"));
            constraintsPanelProgress.gridx = 0;
            constraintsPanelProgress.gridy = 0;
            constraintsPanelProgress.insets = new Insets(10,25,5,5);
@@ -196,6 +215,10 @@ public class JAPDownloadWizardPage extends BasicWizardPage
         }
 
 
+     public boolean checkPage()
+     {
+        return true;
+     }
 
      public static void main( String[] args )
      {

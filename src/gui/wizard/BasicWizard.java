@@ -157,7 +157,12 @@ public WizardPage invokeWizard(WizardHost host)
       return m_Pages.size();
     }
 
- public WizardPage finish(WizardPage currentPage, WizardHost host){return null;}
+ public WizardPage finish(WizardPage currentPage, WizardHost host)
+ {
+    System.exit(0);
+    return null;
+
+ }
 
 
   public void wizardCompleted()
@@ -179,5 +184,9 @@ public WizardPage invokeWizard(WizardHost host)
     {
       return m_strTitle;
     }
+ /* public Vector getPageVector()
+    {
+        return this.m_Pages;
+    }*/
 }
 

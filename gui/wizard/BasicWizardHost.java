@@ -51,6 +51,7 @@ import java.awt.Insets;
 import java.util.Vector;
 
 import java.net.URL;
+import JAPMessages;
 
 import JAPUtil;
 // this shall become the browser/wizardhost providing class ...
@@ -71,6 +72,8 @@ public class BasicWizardHost implements WizardHost,ActionListener
     private final static String COMMAND_NEXT="NEXT";
     private final static String COMMAND_BACK="BACK";
     private final static String COMMAND_CANCEL="CANCEL";
+    private final static String COMMAND_FINISH="FINISH";
+    private final static String COMMAND_HELP="HELP";
 
     public BasicWizardHost(Frame parent,Wizard wizard)
       {
@@ -88,17 +91,19 @@ public class BasicWizardHost implements WizardHost,ActionListener
         JPanel panel = new JPanel();
         panel.setLayout(gridBagPanel);
 
-        m_bttnBack=new JButton("< Back");
+        m_bttnBack=new JButton(JAPMessages.getString("updateM_bttnBack"));
         m_bttnBack.setActionCommand(COMMAND_BACK);
         m_bttnBack.addActionListener(this);
-        m_bttnNext=new JButton("Next >");
+        m_bttnNext=new JButton(JAPMessages.getString("updateM_bttnNext"));
         m_bttnNext.setActionCommand(COMMAND_NEXT);
         m_bttnNext.addActionListener(this);
-        m_bttnHelp=new JButton("Help");
-        m_bttnCancel=new JButton("Cancel");
+        m_bttnHelp=new JButton(JAPMessages.getString("updateM_bttnHelp"));
+        m_bttnCancel=new JButton(JAPMessages.getString("updateM_bttnCancel"));
         m_bttnCancel.setActionCommand(COMMAND_CANCEL);
         m_bttnCancel.addActionListener(this);
-        m_bttnFinish=new JButton("Finish");
+        m_bttnFinish=new JButton(JAPMessages.getString("updateM_bttnFinish"));
+        m_bttnFinish.setActionCommand(COMMAND_FINISH);
+        m_bttnFinish.addActionListener(this);
 
         //setResizable(false);
         JSeparator separator = new JSeparator();
@@ -175,6 +180,7 @@ public class BasicWizardHost implements WizardHost,ActionListener
           m_currentPage=page;
           m_Dialog.pack();
           JAPUtil.centerFrame(m_Dialog);
+         // m_Dialog.setResizable(false);
           m_Dialog.show();
         }
       else
@@ -191,6 +197,7 @@ public class BasicWizardHost implements WizardHost,ActionListener
           //m_Dialog.repaint();
           m_currentPage=page;
           m_Dialog.pack();
+         // m_Dialog.setResizable(false);
           m_Dialog.show();
          // panel.add((Component)page);
 
@@ -389,10 +396,12 @@ public void setNextWizardPage(WizardPage currentPage, int indexOfWizardPage)
           if( m_currentPage.checkPage())
             {
                  m_Wizard.next(m_currentPage,this);
+
             }else
             {
                  System.out.println("File doesn't exist.");
                  m_currentPage.showInformationDialog("Sie haben keine Datei ausgewählt.");
+
             }
         }
       else if(command.equals(COMMAND_BACK))
@@ -403,6 +412,15 @@ public void setNextWizardPage(WizardPage currentPage, int indexOfWizardPage)
         {
           m_Wizard.wizardCompleted();
           m_Dialog.dispose();
+        }
+        else if(command.equals(COMMAND_FINISH))
+        {
+          m_Wizard.finish(m_currentPage,this);
+          System.out.println("Finish pressed");
+        }
+        else if(command.equals(COMMAND_HELP))
+        {
+        //todo show help-dialog
         }
     }
 }
