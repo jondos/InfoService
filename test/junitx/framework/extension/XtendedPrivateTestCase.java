@@ -28,19 +28,24 @@
 package junitx.framework.extension;
 
 import java.io.ByteArrayInputStream;
-
-import org.w3c.dom.Document;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.Enumeration;
+import java.util.Vector;
 import javax.xml.parsers.DocumentBuilderFactory;
+
+import org.w3c.dom.Comment;
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
-import org.w3c.dom.Comment;
-
-import junitx.framework.PrivateTestCase;
-
-import anon.util.XMLUtil;
-import anon.util.Util;
-import anon.util.ResourceLoader;
+import anon.util.ClassUtil;
 import anon.util.IXMLEncodable;
+import anon.util.ResourceLoader;
+import anon.util.XMLUtil;
+import junitx.framework.PrivateTestCase;
+import junitx.framework.TestAccessException;
+import junitx.framework.TestedClass;
 
 /**
  * Extends the PrivateTestCase with useful functions and should be used instead of it.
@@ -58,6 +63,77 @@ public class XtendedPrivateTestCase extends PrivateTestCase
 	public XtendedPrivateTestCase(String a_name)
 	{
 		super(a_name);
+	}
+
+	public static void assertContains(Vector a_expected, Vector a_actual)
+	{
+		Enumeration expectedElements;
+		Enumeration actualElements;
+		boolean bFound;
+		Object currentExpectedElement;
+		Object currentActualElement;
+
+		expectedElements = a_expected.elements();
+		actualElements = a_actual.elements();
+		while (expectedElements.hasMoreElements())
+		{
+			currentExpectedElement = expectedElements.nextElement();
+
+			bFound = false;
+			while (actualElements.hasMoreElements())
+			{
+				currentActualElement = actualElements.nextElement();
+				if (currentActualElement.equals(currentExpectedElement))
+				{
+					bFound = true;
+					break;
+				}
+			}
+
+			if (!bFound)
+			{
+				fail("The element '" + currentExpectedElement.toString() +
+					 "' was not found! Found: " +
+					 a_actual.toString());
+			}
+		}
+	}
+
+	/**
+	 * Tests if all expected Strings are contained in the actual Strings in the same order.
+	 * @param a_expected Vector
+	 * @param a_actual Vector
+	 */
+	public static void assertContainsString(Vector a_expected, Vector a_actual)
+	{
+		Enumeration expectedStrings;
+		Enumeration actualStrings;
+		boolean bFound;
+		String currentExpectedString;
+		String currentActualString;
+
+		expectedStrings = a_expected.elements();
+		actualStrings = a_actual.elements();
+		while (expectedStrings.hasMoreElements())
+		{
+			currentExpectedString = (String) expectedStrings.nextElement();
+			bFound = false;
+			while (actualStrings.hasMoreElements())
+			{
+				currentActualString = (String) actualStrings.nextElement();
+				if (currentActualString.indexOf(currentExpectedString) >= 0)
+				{
+					bFound = true;
+					break;
+				}
+			}
+
+			if (!bFound)
+			{
+				fail("The element '" + currentExpectedString + "' was not found! Found: " +
+					 a_actual.toString());
+			}
+		}
 	}
 
 	/**
@@ -85,6 +161,32 @@ public class XtendedPrivateTestCase extends PrivateTestCase
 
 		return doc;
 	}
+
+	/**
+	 * Writes an xml document to a file in the XML_STRUCTURE_PATH with the filename
+	 * <testclass>_<a_sequenceNumber>.xml.
+	 * @param a_doc an XML document
+	 * @param a_sequenceNumber a sequence number; only one XML element can be written with the
+	 * same sequence number;
+	 */
+	protected void writeXMLOutputToFile(Document a_doc, int a_sequenceNumber)
+		throws Exception {
+		writeXMLOutputToFile(a_doc.getDocumentElement(), a_sequenceNumber);
+	}
+
+
+	/**
+	 * Writes an xml element to a file in the XML_STRUCTURE_PATH with the filename
+	 * <testclass>_<a_sequenceNumber>.xml.
+	 * @param a_xmlElement an XML element
+	 * @param a_sequenceNumber a sequence number; only one XML element can be written with the
+	 * same sequence number;
+	 */
+	protected void writeXMLOutputToFile(Element a_xmlElement, int a_sequenceNumber)
+		throws Exception {
+		writeXMLOutputToFile(a_xmlElement, getClass(), getClass().getName() + "_" + a_sequenceNumber);
+	}
+
 	/**
 	 * Writes an xml node to a file in the XML_STRUCTURE_PATH with the filename <class>.xml.
 	 * @param a_XmlCreaterObject the object that created the node
@@ -92,13 +194,12 @@ public class XtendedPrivateTestCase extends PrivateTestCase
 	 *                         if false, it will be the classname only
 	 * @throws Exception if an error occurs
 	 */
-	public void writeXMLOutputToFile(IXMLEncodable a_XmlCreaterObject, boolean a_bLongClassName)
+	protected void writeXMLOutputToFile(IXMLEncodable a_XmlCreaterObject, boolean a_bLongClassName)
 		throws Exception
 	{
-		Comment comment1, comment2;
 		Element element;
 		String filename;
-		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+		Document doc = XMLUtil.createDocument();
 
 		if (a_bLongClassName)
 		{
@@ -106,25 +207,12 @@ public class XtendedPrivateTestCase extends PrivateTestCase
 		}
 		else
 		{
-			filename = Util.getShortClassName(a_XmlCreaterObject.getClass());
+			filename = ClassUtil.getShortClassName(a_XmlCreaterObject.getClass());
 		}
 
-		// set a comment
-		comment1 = doc.createComment(
-				  "This xml structure has been created by " +
-				  a_XmlCreaterObject.getClass().getName() + ".");
-		comment2 = doc.createComment( "The calling test class was " + getClass().getName() + ".");
-		//doc.appendChild(comment);
-		//doc.appendChild(doc.createComment("\n"));
-
 		element = a_XmlCreaterObject.toXmlElement(doc);
-		element.insertBefore(comment2, element.getFirstChild());
-		element.insertBefore(comment1, element.getFirstChild());
-		doc.appendChild(element);
 
-		// write to file
-		XMLUtil.writeToFile(doc, XML_STRUCTURE_PATH + filename + ".xml");
-
+		writeXMLOutputToFile(element, a_XmlCreaterObject.getClass(), filename);
 	}
 
 
@@ -133,10 +221,32 @@ public class XtendedPrivateTestCase extends PrivateTestCase
 	 * @param a_XmlCreaterObject the object that created the node
 	 * @throws Exception
 	 */
-	public void writeXMLOutputToFile(IXMLEncodable a_XmlCreaterObject)
+	protected void writeXMLOutputToFile(IXMLEncodable a_XmlCreaterObject)
 		throws Exception
 	{
 		writeXMLOutputToFile(a_XmlCreaterObject,false);
+	}
+
+	private void writeXMLOutputToFile(Element a_xmlElement, Class a_creatorClass, String a_filename)
+		throws Exception {
+		Comment comment1, comment2;
+		Document doc = XMLUtil.createDocument();
+		Element element = (Element)doc.importNode(a_xmlElement, true);
+
+		// set a comment
+		comment1 = doc.createComment("This xml structure has been created by " +
+				  a_creatorClass.getName() + ".");
+		comment2 = doc.createComment( "The calling test class was " + getClass().getName() + ".");
+		//doc.appendChild(comment);
+		//doc.appendChild(doc.createComment("\n"));
+
+		element.insertBefore(comment2, element.getFirstChild());
+		element.insertBefore(comment1, element.getFirstChild());
+
+		doc.appendChild(element);
+
+		// write to file
+		XMLUtil.writeToFile(doc, XML_STRUCTURE_PATH + a_filename + ".xml");
 	}
 
 }

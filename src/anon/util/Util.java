@@ -27,42 +27,17 @@
  */
 package anon.util;
 
-import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.Enumeration;
-import java.util.StringTokenizer;
-import java.util.Vector;
-import java.util.zip.ZipFile;
-import java.util.zip.ZipEntry;
 
 public final class Util
 {
-	private static final String JAR_FILE = "jar:file:";
-	private static final String FILE = "file:";
-
-	private static Vector ms_classNames;
-
-
 	/**
-	 * Gets the name of a class without package. It can be used to create an
-	 * xml tag with the class name.
-	 * @param a_class a Class
-	 * @return the name of the class without package
+	 * This class works without being initialised and is completely static.
+	 * Therefore, the constructor is not needed and private.
 	 */
-	public static String getShortClassName(Class a_class)
+	private Util()
 	{
-		StringTokenizer tokenizer;
-		String classname = null;
-
-		tokenizer = new StringTokenizer(a_class.getName(), ".");
-
-		while (tokenizer.hasMoreTokens())
-		{
-			classname = tokenizer.nextToken();
-		}
-
-		return classname;
 	}
 
 	/**
@@ -140,231 +115,41 @@ public final class Util
 	}
 
 	/**
-	 * Returns the current class from a static context. This method
-	 * replaces the Object.getClass() method in a static environment, as
-	 * <Code>this</Code> is not available.
-	 * @return the current class
+	 * Tests if a_length positions of two arrays are equal.
+	 * @param a_arrayA byte[]
+	 * @param a_APos int
+	 * @param a_arrayB byte[]
+	 * @param a_BPos int
+	 * @param a_length int
+	 * @return boolean
 	 */
-	public static Class getClassStatic()
+	public static final boolean arraysEqual(byte[] a_arrayA, int a_Aoff,
+											byte[] a_arrayB, int a_Boff,
+											int a_length)
 	{
-		return new ClassGetter().getCurrentClassStatic();
+		if (a_length <= 0)
+		{
+			return true;
+		}
+		if (a_arrayA == null || a_arrayB == null || a_Aoff < 0 || a_Boff < 0)
+		{
+			return false;
+		}
+		if (a_Aoff + a_length > a_arrayA.length ||
+			a_Boff + a_length > a_arrayB.length)
+		{
+			return false;
+		}
+
+		for (int i = 0; i < a_length; i++)
+		{
+			if (a_arrayA[a_Aoff + i] != a_arrayB[a_Boff + i])
+			{
+				return false;
+			}
+		}
+
+		return true;
 	}
 
-	/**
-	 * Returns the class that called the current method.
-	 * @return the class that called the current method
-	 */
-	public static Class getCallingClassStatic()
-	{
-		return new ClassGetter().getCallingClassStatic();
-	}
-
-	/**
-	 * Gets all classes that extend the given class or implement the given
-	 * interface, including the class itself.
-	 * @param a_class a Class
-	 * @return all subclasses of the given class
-	 */
-	public static Enumeration getSubclasses(Class a_class)
-	{
-		Enumeration classes;
-		Vector subclasses;
-		Class currentClass;
-
-		classes = loadClassNames();
-		subclasses = new Vector();
-
-		while (classes.hasMoreElements())
-		{
-			currentClass = (Class) classes.nextElement();
-			if (a_class.isAssignableFrom(currentClass))
-			{
-				subclasses.addElement(currentClass);
-			}
-		}
-
-		return subclasses.elements();
-	}
-
-	private static class ClassGetter extends SecurityManager
-	{
-		public Class getCurrentClassStatic()
-		{
-			return getClassContext()[2];
-		}
-
-		public Class getCallingClassStatic()
-		{
-			return getClassContext()[3];
-		}
-	}
-
-	/**
-	 * Loads all classes in the local packages into an enumeration.
-	 * @return all classes in the local packages
-	 */
-	private static Enumeration loadClassNames()
-	{
-		String classResource;
-		String classDirectory;
-
-		// look in the cache if the class names have already been read
-		if (ms_classNames != null)
-		{
-			return ms_classNames.elements();
-		}
-
-		// create the class name cache
-		ms_classNames = new Vector();
-
-		// generate a url with this class as resource
-		classResource = Util.getClassStatic().getName();
-		classResource = "/" + classResource;
-		classResource = classResource.replace('.','/');
-		classResource += ".class";
-		try
-		{
-			classDirectory =
-				Class.forName(Util.getClassStatic().getName()).getResource(classResource).toString();
-		}
-		catch (ClassNotFoundException a_e)
-		{
-			// not possible, this class DOES exist
-			classDirectory = null;
-		}
-
-		// check whether it is a jar file or a directory
-		if (classDirectory.startsWith(JAR_FILE))
-		{
-			ZipFile file;
-			Enumeration entries;
-
-			classDirectory = classDirectory.substring(
-						 JAR_FILE.length(), classDirectory.indexOf(classResource) - 1);
-
-			try
-			{
-				file = new ZipFile(classDirectory);
-			}
-			catch (Exception a_e)
-			{
-				// not possible, this class DOES exist
-				file = null;
-			}
-
-			entries = file.entries();
-			while (entries.hasMoreElements())
-			{
-				Class classObject;
-				classObject = toClass(new File((((ZipEntry) entries.nextElement())).toString()),
-									  (File)null);
-
-				if (classObject != null)
-				{
-					ms_classNames.addElement(classObject);
-				}
-			}
-		}
-		else if (classDirectory.startsWith(FILE))
-		{
-			classDirectory = classDirectory.substring(
-						 FILE.length(), classDirectory.indexOf(classResource));
-			ms_classNames = getClasses(new File(classDirectory), new File(classDirectory));
-		}
-		else
-		{
-			// we cannot read from this source; it is neither a jar-file nor a directory
-			ms_classNames = null;
-		}
-
-		return ms_classNames.elements();
-	}
-
-	/**
-	 * Returns all classes in a directory as Class objects or the given file itself as a Class,
-	 * if it is a class file.
-	 * @param a_file a class file or directory
-	 * @param a_classDirectory the directory where all class files and class directories reside
-	 * @return Class objects
-	 */
-	private static Vector getClasses(File a_file, File a_classDirectory)
-	{
-		Vector classes = new Vector();
-		Enumeration enumClasses;
-		String[] filesArray;
-
-		if (a_file != null)
-		{
-			if (!a_file.isDirectory())
-			{
-				Class classObject = toClass(a_file, a_classDirectory);
-
-				if (classObject != null)
-				{
-					classes.addElement(classObject);
-				}
-			}
-			else
-			{
-				// this file is a directory
-				filesArray = a_file.list();
-				for (int i = 0; i < filesArray.length; i++)
-				{
-					enumClasses = getClasses(new File(a_file.getAbsolutePath() + "/" + filesArray[i]),
-											 a_classDirectory).elements();
-					while (enumClasses.hasMoreElements())
-					{
-						classes.addElement(enumClasses.nextElement());
-					}
-				}
-			}
-		}
-
-		return classes;
-	}
-
-	/**
-	 * Turns class files into Class objects.
-	 * @param a_classFile a class file with full directory path
-	 * @param a_classDirectory the directory where all class files and class directories reside
-	 * @return the class file as Class object
-	 */
-	private static Class toClass(File a_classFile, File a_classDirectory)
-	{
-		Class classObject;
-		String className;
-		String classDirectory;
-		int startIndex;
-
-		if (a_classDirectory == null || !a_classDirectory.isDirectory())
-		{
-			startIndex = 0;
-		}
-		else
-		{
-			classDirectory = a_classDirectory.toString();
-			if (classDirectory.endsWith("/"))
-			{
-				startIndex = classDirectory.length();
-			}
-			else
-			{
-				startIndex = classDirectory.length() + 1;
-			}
-		}
-
-		try
-		{
-			className = a_classFile.toString();
-			className = className.substring(startIndex, className.indexOf(".class"));
-			className = className.replace('/', '.');
-			classObject = Class.forName(className);
-		}
-		catch (Throwable a_e)
-		{
-			classObject = null;
-		}
-
-		return classObject;
-	}
 }

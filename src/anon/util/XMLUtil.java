@@ -41,6 +41,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.lang.reflect.Method;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
@@ -52,9 +53,9 @@ import org.w3c.dom.NodeList;
 
 public class XMLUtil
 {
-	private final static String XML_STR_BOOLEAN_TRUE="true";
-	private final static String XML_STR_BOOLEAN_FALSE="false";
-
+	private final static String XML_STR_BOOLEAN_TRUE = "true";
+	private final static String XML_STR_BOOLEAN_FALSE = "false";
+	private static DocumentBuilder ms_DocumentBuilder;
 	public static int parseElementAttrInt(Element e, String attr, int defaultValue)
 	{
 		int i = defaultValue;
@@ -105,7 +106,6 @@ public class XMLUtil
 		}
 		return i;
 	}
-
 
 	public static boolean parseElementAttrBoolean(Element e, String attr, boolean defaultValue)
 	{
@@ -187,7 +187,7 @@ public class XMLUtil
 					s = "";
 					while (n != null &&
 						   (n.getNodeType() == n.ENTITY_REFERENCE_NODE || n.getNodeType() == n.TEXT_NODE))
-					{///@todo parsing of Documents which contains quoted chars are wrong under JAXP 1.0
+					{ ///@todo parsing of Documents which contains quoted chars are wrong under JAXP 1.0
 						if (n.getNodeType() == n.ENTITY_REFERENCE_NODE)
 						{
 							s = s + n.getFirstChild().getNodeValue();
@@ -238,10 +238,12 @@ public class XMLUtil
 	 * @param childname the childnode we are looking for
 	 * @return Node the child node with the given name or null if it was not found
 	 */
-	public static Node getFirstChildByNameUsingDeepSearch(Node node, String childname) {
+	public static Node getFirstChildByNameUsingDeepSearch(Node node, String childname)
+	{
 		Node result = null;
 
-		try {
+		try
+		{
 			node = node.getFirstChild();
 
 			while (node != null)
@@ -323,9 +325,29 @@ public class XMLUtil
 		node.appendChild(node.getOwnerDocument().createTextNode(text));
 	}
 
-	public static void setNodeBoolean(Node node,boolean b)
+	public static void setNodeBoolean(Node node, boolean b)
 	{
-		setNodeValue(node,b?XML_STR_BOOLEAN_TRUE:XML_STR_BOOLEAN_FALSE);
+		setNodeValue(node, b ? XML_STR_BOOLEAN_TRUE : XML_STR_BOOLEAN_FALSE);
+	}
+
+	/**
+	 * Creates a new Document.
+	 * @return a new Document
+	 */
+	public static Document createDocument()
+	{
+		try
+		{
+			if (ms_DocumentBuilder == null)
+			{
+				ms_DocumentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+			}
+			return ms_DocumentBuilder.newDocument();
+		}
+		catch (ParserConfigurationException a_e)
+		{
+			return null;
+		}
 	}
 
 	/**
@@ -336,7 +358,7 @@ public class XMLUtil
 	 */
 	public static Node createNodeBoolean(Document a_doc, boolean a_bValue)
 	{
-		return a_doc.createTextNode(a_bValue?XML_STR_BOOLEAN_TRUE:XML_STR_BOOLEAN_FALSE);
+		return a_doc.createTextNode(a_bValue ? XML_STR_BOOLEAN_TRUE : XML_STR_BOOLEAN_FALSE);
 	}
 
 	/* Stolen from Apache Xerces-J...*/
@@ -688,7 +710,6 @@ public class XMLUtil
 			return 1;
 		}
 
-
 		if (a_node.getNodeType() == Document.TEXT_NODE)
 		{
 			if (a_node.getNodeValue().trim().length() == 0)
@@ -750,7 +771,7 @@ public class XMLUtil
 		}
 
 		// do this, if this is not the root element and no text node
-		if ((a_element.getOwnerDocument().getDocumentElement() != a_element) &&
+		if ( (a_element.getOwnerDocument().getDocumentElement() != a_element) &&
 			(a_element.getNodeType() != Document.TEXT_NODE))
 		{
 			// insert a new line before this element, if this is the first element
@@ -766,11 +787,10 @@ public class XMLUtil
 			for (int i = 0; i < a_level; i++)
 			{
 				space += "  ";
-		}
+			}
 			newLine = a_element.getOwnerDocument().createTextNode(space);
 			a_element.getParentNode().insertBefore(newLine, a_element);
 			added++; // count one more
-
 
 			// insert a new line after the current element
 			node = a_element.getNextSibling();
@@ -799,8 +819,7 @@ public class XMLUtil
 	 * @param a_filename a file name
 	 * @throws IOException if an I/O error occurs
 	 */
-	public static void writeToFile(Document a_doc, String a_filename)
-		throws IOException
+	public static void writeToFile(Document a_doc, String a_filename) throws IOException
 	{
 		FileOutputStream out;
 
@@ -820,8 +839,7 @@ public class XMLUtil
 	 * @return an XML document
 	 * @exception XMLParseException if the given byte array is no valid XML document
 	 */
-	public static Document toXMLDocument(byte[] a_xmlDocument)
-		throws XMLParseException
+	public static Document toXMLDocument(byte[] a_xmlDocument) throws XMLParseException
 	{
 		ByteArrayInputStream in = new ByteArrayInputStream(a_xmlDocument);
 		Document doc;
