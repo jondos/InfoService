@@ -46,7 +46,7 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import anon.crypto.*;
-
+import org.bouncycastle.asn1.x509.*;
 /**
  *
  */
@@ -154,7 +154,9 @@ public class FirstOnionRouterConnection implements Runnable
 	public synchronized void connect() throws Exception
 	{
 		m_tinyTLS = new TinyTLS(m_description.getAddress(), m_description.getPort());
-		m_tinyTLS.setSoTimeout(0);
+		m_tinyTLS.setSoTimeout(60000);
+		//
+		m_tinyTLS.setRootKey(m_description.getSigningKey());
 		m_tinyTLS.startHandshake();
 		m_istream = m_tinyTLS.getInputStream();
 		m_ostream = m_tinyTLS.getOutputStream();

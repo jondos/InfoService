@@ -46,11 +46,15 @@ import org.bouncycastle.crypto.params.DHParameters;
 import org.bouncycastle.crypto.params.DHPublicKeyParameters;
 import anon.crypto.JAPCertificate;
 import anon.crypto.JAPCertificateStore;
+import anon.crypto.JAPCertPath;
 import anon.tor.util.helper;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import java.io.EOFException;
+import anon.ErrorCodes;
+import java.io.*;
+import anon.crypto.*;
 /**
  * @author stefan
  *
@@ -80,7 +84,7 @@ public class TinyTLS extends Socket
 	private boolean m_certificaterequested;
 
 	private JAPCertificate m_servercertificate;
-	private JAPCertificateStore m_trustedCertificates;
+	private IMyPublicKey m_trustedRoot;
 	private DHParameters m_dhparams;
 	private DHPublicKeyParameters m_dhserverpub;
 	private byte[] m_serverparams;
@@ -343,7 +347,7 @@ public class TinyTLS extends Socket
 						  "[SERVER_CERTIFICATE] " + japcert.getSubject().toString());
 			m_servercertificate = japcert;
 			m_selectedciphersuite.setServerCertificate(japcert);
-			certificates.addElement(japcert);
+			//certificates.addElement(japcert);
 			while(pos-offset<certificateslength)
 			{
 				b = helper.copybytes(bytes, pos, 3);
@@ -358,10 +362,20 @@ public class TinyTLS extends Socket
 							  "[NEXT_CERTIFICATE] " + japcert.getSubject().toString());
 				certificates.addElement(japcert);
 			}
-			//certificates are checked, if a certificatestore is set
-			if(m_trustedCertificates!=null)
+			//check certificates chain...
+			JAPCertificate prevCert=m_servercertificate;
+			for(int i=0;i<certificates.size();i++)
 			{
-//TODO: Zertifikate (certificates) mit JapCertificateStore(m_trustedCertificates) überprüfen
+				JAPCertificate cert=(JAPCertificate)certificates.elementAt(i);
+				if(!prevCert.verify(cert.getPublicKey()))
+					throw new IOException("TLS Server Certs could not be verified!");
+				prevCert=cert;
+			}
+			//last certificat is checked, if a certificatestore is set
+			if(m_trustedRoot!=null)
+			{
+				if(!prevCert.verify(m_trustedRoot))
+					throw new IOException("TLS Server Cert could not be verified to be trusted!");
 			}
 		}
 
@@ -790,7 +804,7 @@ public class TinyTLS extends Socket
 		this.m_supportedciphersuites = new Vector();
 		m_istream = new TLSInputStream(super.getInputStream());
 		m_ostream = new TLSOutputStream(super.getOutputStream());
-		this.m_trustedCertificates = null;
+		this.m_trustedRoot = null;
 	}
 
 	/**
@@ -819,7 +833,7 @@ public class TinyTLS extends Socket
 			this.addCipherSuite(new DHE_RSA_WITH_3DES_CBC_SHA());
 //			this.addCipherSuite(new DHE_RSA_WITH_AES_128_CBC_SHA());
 		}
-		if(m_trustedCertificates == null)
+		if(m_trustedRoot == null)
 		{
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[TRUSTED_CERTIFICATES_NOT_SET] : all certificates are accepted without being checked");
 		}
@@ -835,9 +849,9 @@ public class TinyTLS extends Socket
 		this.m_handshakecompleted = true;
 	}
 
-	public void setAllowedCertificates(JAPCertificateStore certificatestore)
+	public void setRootKey(IMyPublicKey rootKey)
 	{
-		this.m_trustedCertificates = certificatestore;
+		m_trustedRoot = rootKey;
 	}
 
 	public InputStream getInputStream()

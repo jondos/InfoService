@@ -37,14 +37,22 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import org.bouncycastle.crypto.digests.SHA1Digest;
 import org.bouncycastle.crypto.engines.RSAEngine;
-import org.bouncycastle.crypto.signers.PSSSigner;
-
+import org.bouncycastle.asn1.x509.DigestInfo;
+import org.bouncycastle.crypto.encodings.PKCS1Encoding;
+import java.io.*;
+import org.bouncycastle.asn1.*;
+import org.bouncycastle.asn1.x509.*;
+/*** SHA1withRSA Signature as descripted in RFC 2313 */
 final class MyRSASignature implements IMySignature
 {
-	PSSSigner m_SignatureAlgorithm;
+	private PKCS1Encoding m_SignatureAlgorithm;
+	private SHA1Digest m_Digest;
+	private final static AlgorithmIdentifier ms_AlgID=new AlgorithmIdentifier(X509ObjectIdentifiers.id_SHA1,null);
+
 	MyRSASignature()
 	{
-		m_SignatureAlgorithm = new PSSSigner(new RSAEngine(), new SHA1Digest(), 10);
+		m_SignatureAlgorithm = new PKCS1Encoding(new RSAEngine());
+		m_Digest=new SHA1Digest();
 	}
 
 	synchronized public void initVerify(IMyPublicKey k) throws InvalidKeyException
@@ -61,10 +69,44 @@ final class MyRSASignature implements IMySignature
 	{
 		try
 		{
-			m_SignatureAlgorithm.reset();
-			m_SignatureAlgorithm.update(message, 0, message.length);
-			return m_SignatureAlgorithm.verifySignature(sig);
-		}
+			m_Digest.reset();
+			m_Digest.update(message,0,message.length);
+			byte[]  hash = new byte[m_Digest.getDigestSize()];
+			m_Digest.doFinal(hash, 0);
+
+			byte[]	 decryptedSig = m_SignatureAlgorithm.processBlock(sig, 0, sig.length);
+			ByteArrayInputStream    bIn = new ByteArrayInputStream(decryptedSig);
+ 			DERInputStream          dIn = new DERInputStream(bIn);
+
+
+			DigestInfo	 digInfo = new DigestInfo((ASN1Sequence)new DERInputStream(bIn).readObject());
+
+			 if (!digInfo.getAlgorithmId().getObjectId().equals(ms_AlgID.getObjectId()))
+			 {
+				 return false;
+			 }
+
+			Object o=digInfo.getAlgorithmId().getParameters();
+			if(o!=null&&!(o instanceof ASN1Null))
+				return false;
+
+			 byte[]  sigHash = digInfo.getDigest();
+
+			 if (hash.length != sigHash.length)
+			 {
+				 return false;
+			 }
+
+			 for (int i = 0; i < hash.length; i++)
+			 {
+				 if (sigHash[i] != hash[i])
+				 {
+					 return false;
+				 }
+			 }
+
+			 return true;
+	 		}
 		catch (Exception e)
 		{
 			return false;
@@ -75,9 +117,18 @@ final class MyRSASignature implements IMySignature
 	{
 		try
 		{
-			m_SignatureAlgorithm.reset();
-			m_SignatureAlgorithm.update(bytesToSign, 0, bytesToSign.length);
-			return m_SignatureAlgorithm.generateSignature();
+			byte[]  hash = new byte[m_Digest.getDigestSize()];
+			m_Digest.reset();
+			m_Digest.update(bytesToSign,0,bytesToSign.length);
+			m_Digest.doFinal(hash, 0);
+
+			ByteArrayOutputStream   bOut = new ByteArrayOutputStream();
+			DEROutputStream         dOut = new DEROutputStream(bOut);
+			DigestInfo              dInfo = new DigestInfo(ms_AlgID, hash);
+	  	  	dOut.writeObject(dInfo);
+	  		byte[]  bytes= bOut.toByteArray();
+
+			return m_SignatureAlgorithm.processBlock(bytes, 0, bytes.length);
 		}
 		catch (Throwable t)
 		{

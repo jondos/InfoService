@@ -104,18 +104,19 @@ final public class X509CertGenerator extends V3TBSCertificateGenerator
 			}
 			setSignature(algID);
 
-			//calculate the digest
-			SHA1Digest digest = new SHA1Digest();
+			//calculate the bytes to sign
 			TBSCertificateStructure tbsCert = generateTBSCertificate();
 			ByteArrayOutputStream bOut = new ByteArrayOutputStream();
 			(new DEROutputStream(bOut)).writeObject(tbsCert);
-			digest.update(bOut.toByteArray(), 0, bOut.size());
-			byte[] hash = new byte[digest.getDigestSize()];
-			digest.doFinal(hash, 0);
+			byte[] bytesToSign = bOut.toByteArray();
 //generate signature
 			DERBitString sig = null;
 			if (bDSA)
-			{
+			{ ///@todo check if we can use MyDSASignature directly!
+				SHA1Digest digest = new SHA1Digest();
+				digest.update(bOut.toByteArray(), 0, bOut.size());
+				byte[] hash = new byte[digest.getDigestSize()];
+				digest.doFinal(hash, 0);
 				DSASigner signer = new DSASigner();
 				DSAPrivateKey key = (DSAPrivateKey) k;
 				DSAPrivateKeyParameters signkey = new DSAPrivateKeyParameters(key.getX(), new MyDSAParams(key));
