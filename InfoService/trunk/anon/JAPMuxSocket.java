@@ -307,9 +307,11 @@ final class JAPMuxSocket implements Runnable
 					{
 						try
 							{
+							JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"MuxSocket: try reading next MIX-Packet...");
 								channel=inDataStream.readInt();
 								flags=inDataStream.readShort();
 								inDataStream.readFully(buff);
+								JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"MuxSocket: MIX-Packet read!");
 							}
 						catch(Exception e)
 							{
