@@ -56,10 +56,13 @@ import anon.JAPAnonServiceListener;
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPModel implements JAPAnonServiceListener{
 
-	public static final String aktVersion = "00.00.023"; // Version of JAP
+	public static final String aktVersion = "00.01.001"; // Version of JAP
 
 	private int      portNumber            = 4001;
 	private boolean  mblistenerIsLocal     = true;  // indicates whether the Listener serves for localhost only or not
+	private boolean  mbSocksListener       = false;  // indicates whether JAP should support Socks
+	private int			 portSocksListener		 = 1080;
+	
 	//private int      runningPortNumber = 0;      // the port where proxy listens
 	private boolean  isRunningListener     = false;  // true if a listener is running
 	private  String  proxyHostName         = "";
@@ -200,6 +203,8 @@ public final class JAPModel implements JAPAnonServiceListener{
 	 * The configuration is a XML-File with the following structure:
 	 *	<JAP
 	 *		portNumber=""									// Listener-Portnumber
+	 *		portNumberSocks=""						// Listener-Portnumber for SOCKS
+	 *		supportSocks=""								// Will we support SOCKS ?
 	 *    listenerIsLocal="true"/"false"// Listener lasucht nur an localhost ?
 	 *		proxyMode="true"/"false"			// Using a HTTP-Proxy??
 	 *		proxyHostName="..."						// the Name of the HTTP-Proxy
@@ -250,6 +255,8 @@ public final class JAPModel implements JAPAnonServiceListener{
 			NamedNodeMap n=root.getAttributes();
 			//
 			portNumber=JAPUtil.parseNodeInt(n.getNamedItem("portNumber"),portNumber);
+			portSocksListener=JAPUtil.parseNodeInt(n.getNamedItem("portNumberSocks"),portSocksListener);
+			setUseSocksPort(JAPUtil.parseNodeBoolean(n.getNamedItem("supportSocks"),false));
 			setListenerIsLocal(JAPUtil.parseNodeBoolean(n.getNamedItem("listenerIsLocal"),true));
 			setUseProxy(JAPUtil.parseNodeBoolean(n.getNamedItem("proxyMode"),false));
 			mbActCntMessageNeverRemind=JAPUtil.parseNodeBoolean(n.getNamedItem("neverRemindActiveContent"),false);
@@ -259,18 +266,16 @@ public final class JAPModel implements JAPAnonServiceListener{
 			int port;
 			host=JAPUtil.parseNodeString(n.getNamedItem("infoServiceHostName"),infoServiceHostName);
 			port=JAPUtil.parseNodeInt(n.getNamedItem("infoServicePortNumber"),infoServicePortNumber);
-			if(host.equalsIgnoreCase("anon.inf.tu-dresden.de"))
-				host="infoservice.inf.tu-dresden.de";
 			setInfoService(host,port);
 
 			host=JAPUtil.parseNodeString(n.getNamedItem("proxyHostName"),proxyHostName);
 			port=JAPUtil.parseNodeInt(n.getNamedItem("proxyPortNumber"),proxyPortNumber);
+			if(host.equalsIgnoreCase("ikt.inf.tu-dresden.de"))
+				host="";
 			setProxy(host,port);
 
 			anonserviceName=JAPUtil.parseNodeString(n.getNamedItem("anonserviceName"),anonserviceName);
 			anonHostName=JAPUtil.parseNodeString(n.getNamedItem("anonHostName"),anonHostName);
-			if(anonHostName.equalsIgnoreCase("anon.inf.tu-dresden.de"))
-				anonHostName="mix.inf.tu-dresden.de";
 			anonPortNumber=JAPUtil.parseNodeInt(n.getNamedItem("anonPortNumber"),anonPortNumber);
 			anonSSLPortNumber=JAPUtil.parseNodeInt(n.getNamedItem("anonSSLPortNumber"),anonSSLPortNumber);
 			autoConnect=JAPUtil.parseNodeBoolean(n.getNamedItem("autoConnect"),false);
@@ -337,6 +342,8 @@ public final class JAPModel implements JAPAnonServiceListener{
 			doc.appendChild(e);
 			//
 			e.setAttribute("portNumber",Integer.toString(portNumber));
+			e.setAttribute("portNumberSocks",Integer.toString(portSocksListener));
+			e.setAttribute("supportSocks",(getUseSocksPort()?"true":"false"));
 			e.setAttribute("listenerIsLocal",(getListenerIsLocal()?"true":"false"));
 			e.setAttribute("proxyMode",(mbUseProxy?"true":"false"));
 			e.setAttribute("proxyHostName",proxyHostName);
@@ -437,12 +444,32 @@ public final class JAPModel implements JAPAnonServiceListener{
 	public int getPortNumber() {
 		return portNumber;
 	}
+	
+	public void setSocksPortNumber (int p)
+		{
+			portSocksListener = p;
+		}
+
+	public int getSocksPortNumber()
+		{
+			return portSocksListener;
+		}
 
 	public static String getString(String key) 
 		{
 			return JAPMessages.getString(key);
 		}
 
+	public void setUseSocksPort(boolean b)
+		{
+			mbSocksListener=b;
+		}
+	
+	public boolean getUseSocksPort()
+		{
+			return mbSocksListener;
+		}
+	
 	public void channelsChanged(int channels)
 		{
 			nrOfChannels=channels;
@@ -685,8 +712,11 @@ public final class JAPModel implements JAPAnonServiceListener{
 										if(ret==0||mbActCntMessageNeverRemind)
 											mbActCntMessageNotRemind=true;
 									}
-								proxyAnonSocks=new JAPAnonService(1080,JAPAnonService.PROTO_SOCKS,model.mblistenerIsLocal);
-								proxyAnonSocks.start();
+								if(mbSocksListener)
+									{
+										proxyAnonSocks=new JAPAnonService(1080,JAPAnonService.PROTO_SOCKS,model.mblistenerIsLocal);
+										proxyAnonSocks.start();
+									}
 								model.status2 = model.getString("statusRunning");
 								proxyAnon.setAnonServiceListener(this);
 								// start feedback thread

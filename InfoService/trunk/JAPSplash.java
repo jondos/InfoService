@@ -90,6 +90,7 @@ final class JAPSplash extends Window
 									aktIndex+=len;
 								imageBusy=t.createImage(buff1,0,aktIndex);
 								ma.addImage(imageBusy,2);
+								ma.checkID(2,true);
 							}
 						catch(Exception e)
 							{

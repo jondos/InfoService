@@ -54,8 +54,10 @@ final class JAPConf extends JDialog
 	//private JAPJIntField debugLevelTextField;
 	private JSlider sliderDebugLevel;
 	private JAPJIntField portnumberTextField;
+	private JAPJIntField portnumberTextFieldSocks;
 	private JCheckBox	proxyCheckBox;
-	private JCheckBox	listenerCheckBox;
+	private JCheckBox	listenerCheckBoxSocks;
+	private JCheckBox	listenerCheckBoxIsLocal;
 	private JAPJIntField proxyportnumberTextField;
 	private JTextField   proxyhostTextField;
 	private JCheckBox	autoConnectCheckBox;
@@ -132,19 +134,41 @@ final class JAPConf extends JDialog
 						   public void actionPerformed(ActionEvent e) {
 				   OKPressed();
 				   }});
-				listenerCheckBox = new JCheckBox(model.getString("settingsListenerCheckBox"));
+				listenerCheckBoxIsLocal = new JCheckBox(model.getString("settingsListenerCheckBox"));
 				// set Font in listenerCheckBox in same color as in portnumberLabel1
-				listenerCheckBox.setForeground(portnumberLabel1.getForeground());
+				listenerCheckBoxIsLocal.setForeground(portnumberLabel1.getForeground());
+
+				listenerCheckBoxSocks=new JCheckBox(model.getString("settingsListenerCheckBoxSOCKS"));
+				listenerCheckBoxSocks.setForeground(portnumberLabel1.getForeground());
+				listenerCheckBoxSocks.addChangeListener(new ChangeListener(){
+					public void stateChanged(ChangeEvent e)
+						{
+							if(listenerCheckBoxSocks.isSelected())
+								{
+									portnumberTextFieldSocks.setEnabled(true);
+								}
+							else
+								{
+									portnumberTextFieldSocks.setEnabled(false);
+								}
+					}});
+				portnumberTextFieldSocks = new JAPJIntField();
+				portnumberTextFieldSocks.addActionListener(new ActionListener() {
+						   public void actionPerformed(ActionEvent e) {
+				   OKPressed();
+				   }});
 				JPanel p = new JPanel();
 				p.setLayout( new BorderLayout() );
 				p.setBorder( new TitledBorder(model.getString("settingsListenerBorder")) );
 				JPanel p1 = new JPanel();
-				p1.setLayout( new GridLayout(4,1) );
+				p1.setLayout( new GridLayout(6,1) );
 				p1.setBorder( new EmptyBorder(5,10,10,10) );
 				p1.add(portnumberLabel1);
 				p1.add(portnumberLabel2);
 				p1.add(portnumberTextField);
-				p1.add(listenerCheckBox);
+				p1.add(listenerCheckBoxIsLocal);
+				p1.add(listenerCheckBoxSocks);
+				p1.add(portnumberTextFieldSocks);
 				p.add(p1, BorderLayout.NORTH);
 				return p;
 			}
@@ -512,7 +536,7 @@ final class JAPConf extends JDialog
 	private boolean checkValues()
 		{
 			String s=null;
-			int i;
+			int iListenerPort,i;
 			//Checking InfoService (Host + Port)
 			s=infohostTextField.getText().trim();
 			if(s==null||s.equals(""))
@@ -583,7 +607,29 @@ final class JAPConf extends JDialog
 					showError(model.getString("errorListenerPortWrong"));
 					return false;
 				}
-			
+			iListenerPort=i;
+			//checking Socks Port Number
+			if(listenerCheckBoxSocks.isSelected())
+				{
+					try
+						{
+							i=Integer.parseInt(portnumberTextFieldSocks.getText().trim());
+						}
+					catch(Exception e)
+						{
+							i=-1;
+						}
+					if(!JAPUtil.isPort(i))
+						{
+							showError(model.getString("errorSocksListenerPortWrong"));
+							return false;
+						}
+					if(i==iListenerPort)
+						{
+							showError(model.getString("errorListenerPortsAreEqual"));
+							return false;
+						}
+				}
 			//checking Debug-Level
 	/*		try
 				{
@@ -608,7 +654,9 @@ final class JAPConf extends JDialog
 				if(!checkValues())
 					return;
 				setVisible(false);
-				model.setListenerIsLocal(listenerCheckBox.isSelected());
+				model.setUseSocksPort(listenerCheckBoxSocks.isSelected());
+				model.setSocksPortNumber(Integer.parseInt(portnumberTextFieldSocks.getText().trim()));
+				model.setListenerIsLocal(listenerCheckBoxIsLocal.isSelected());
 				model.setUseProxy(proxyCheckBox.isSelected());
 				int newPort=Integer.parseInt(portnumberTextField.getText().trim());
 				if(newPort!=model.getPortNumber())
@@ -675,7 +723,11 @@ final class JAPConf extends JDialog
 		sliderDebugLevel.setValue(JAPDebug.getDebugLevel());
 		// listener tab
 		portnumberTextField.setText(String.valueOf(model.getPortNumber()));
-		listenerCheckBox.setSelected(model.getListenerIsLocal());
+		listenerCheckBoxIsLocal.setSelected(model.getListenerIsLocal());
+		portnumberTextFieldSocks.setText(String.valueOf(model.getSocksPortNumber()));
+		listenerCheckBoxSocks.setSelected(model.getUseSocksPort());
+		
+		
 		// http proxy tab
 		proxyCheckBox.setSelected(model.getUseProxy());
 		proxyhostTextField.setEnabled(proxyCheckBox.isSelected());
