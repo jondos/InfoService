@@ -135,6 +135,9 @@ public final class JAPConstants
 	public static final String IMAGE_STEPFINISHED = "haken.gif";
 	public static final String IMAGE_ARROW_DOWN = "arrowDown.gif";
 	public static final String IMAGE_ARROW_UP = "arrowUp.gif";
+	public static final String IMAGE_SERVER = "server.gif";
+	public static final String IMAGE_SERVER_BLAU = "server_blau.gif";
+	public static final String IMAGE_SERVER_ROT = "server_rot.gif";
 	public static final String CERTENABLEDICON = "cenabled.gif";
 	public static final String CERTDISABLEDICON = "cdisabled.gif";
 

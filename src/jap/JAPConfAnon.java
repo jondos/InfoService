@@ -51,6 +51,7 @@ import logging.LogType;
 import javax.swing.*;
 import javax.swing.border.*;
 import gui.*;
+import java.awt.*;
 class JAPConfAnon extends AbstractJAPConfModule
 {
 	private JCheckBox m_cbAutoConnect;
@@ -170,22 +171,28 @@ class JAPConfAnon extends AbstractJAPConfModule
 			c.insets = new Insets(5, 5, 5, 5);
 		}
 	*/
+	   JPanel pRoot = getRootPanel();
+	   pRoot.removeAll();
+	   layout = new GridBagLayout();
+	   pRoot.setLayout(layout);
+
 	   	JLabel l=new JLabel("Verfügbare Anonymisierungsserver:");
 	   m_listMixCascade.setFixedCellWidth(l.getPreferredSize().width);
 	   m_listMixCascade.setBorder(LineBorder.createBlackLineBorder());
-		c.insets=new Insets(10,10,10,10);
+	   c.anchor = GridBagConstraints.NORTHWEST;
+		c.insets=new Insets(10,10,0,0);
 		c.weightx=1;
+		c.gridwidth=2;
 		c.fill=GridBagConstraints.HORIZONTAL;
-		pp1.add(l,c);
-		c.weightx = 1;
+		pRoot.add(l,c);
+		c.weightx = 0;
 		c.weighty = 1;
+		c.gridwidth=1;
 		c.gridx = 0;
 		c.gridy = 1;
-		c.gridwidth = 1;
 		c.fill=GridBagConstraints.BOTH;
-		c.anchor = GridBagConstraints.NORTHWEST;
 //First line
-		pp1.add(m_listMixCascade,c);
+		pRoot.add(m_listMixCascade,c);
 // Second Line
 /*		c.gridx = 1;
 		c.weightx = 0;
@@ -211,22 +218,11 @@ class JAPConfAnon extends AbstractJAPConfModule
 //
 */
 // Add to main panel
-		JPanel pRoot = getRootPanel();
-		pRoot.removeAll();
-		layout = new GridBagLayout();
-		pRoot.setLayout(layout);
-		c.weightx = 1;
-		c.weighty = 1;
-		c.fill = GridBagConstraints.BOTH;
-		c.gridx = 0;
-		c.gridy = 0;
-		c.anchor=GridBagConstraints.NORTHWEST;
 /*		if (!JAPModel.isSmallDisplay())
 		{
 			c.insets = new Insets(5, 5, 5, 5);
 		}
 	*/
-		pRoot.add(pp1,c);
 /*		c.gridy = 1;
 		layout.setConstraints(m_panelManual, c);
 		p.add(m_panelManual);
@@ -250,7 +246,7 @@ class JAPConfAnon extends AbstractJAPConfModule
   		JPanel p=new JPanel(new GridBagLayout());
   		GridBagConstraints c1=new GridBagConstraints();
 		c1.anchor=GridBagConstraints.NORTHWEST;
-		c1.insets=new Insets(5,5,5,5);
+		c1.insets=new Insets(0,0,10,5);
 		l=new JLabel("Nutzerzahl:");
 		p.add(l,c1);
 		l=new JLabel("1024");
@@ -264,9 +260,10 @@ class JAPConfAnon extends AbstractJAPConfModule
 		JAPMultilineLabel multi=new JAPMultilineLabel("mix.inf.tu-dresden.de,\nanon.inf.tu-dresden.de");
 		c1.gridx=1;
 		p.add(multi,c1);
-		l=new JLabel("Ports:");
+		l=new JLabel("Ports:",JLabel.RIGHT);
 		c1.gridy=2;
 		c1.gridx=0;
+		c1.fill=GridBagConstraints.HORIZONTAL;
 		c1.weighty=1;
 		p.add(l,c1);
 		l=new JLabel("22, 80, 443, 6543");
@@ -274,10 +271,122 @@ class JAPConfAnon extends AbstractJAPConfModule
 		p.add(l,c1);
 
 		c.gridx=1;
-		c.gridy=0;
-		c.gridheight=2;
+		c.gridy=1;
+		c.gridheight=1;
 		c.weighty=1;
+		c.weightx=1;
 		c.anchor=GridBagConstraints.NORTHWEST;
+		c.fill=GridBagConstraints.BOTH;
+		pRoot.add(p,c);
+
+//Details for each Mix of the Cascade....
+		c.gridx=0;
+		c.gridwidth=2;
+		c.weightx=1;
+		c.weighty=0;
+		c.gridy=2;
+		c.gridheight=1;
+		c.insets=new Insets(10,0,10,0);
+		c.anchor=GridBagConstraints.NORTHWEST;
+		c.fill=GridBagConstraints.HORIZONTAL;
+		pRoot.add(new JSeparator(),c);
+
+		p=new JPanel(new GridBagLayout());
+		c1=new GridBagConstraints();
+		c1.weightx=1;
+		c1.anchor=GridBagConstraints.NORTHWEST;
+		c1.fill=GridBagConstraints.HORIZONTAL;
+		c1.gridwidth=2;
+		l=new JLabel("Informationen über die Server der Anonymisierungskette Dresden-Dresden");
+		p.add(l,c1);
+
+		JPanel p1=new JPanel(new GridBagLayout());
+		GridBagConstraints c2=new GridBagConstraints();
+		c2.anchor=GridBagConstraints.WEST;
+		ButtonGroup bg=new ButtonGroup();
+		AbstractButton b=new JRadioButton(JAPUtil.loadImageIcon(JAPConstants.IMAGE_SERVER,true));
+		b.setBorder(null);
+		b.setFocusPainted(false);
+		b.setRolloverEnabled(true);
+		b.setRolloverIcon(JAPUtil.loadImageIcon(JAPConstants.IMAGE_SERVER_BLAU,true));
+		b.setSelectedIcon(JAPUtil.loadImageIcon(JAPConstants.IMAGE_SERVER_ROT,true));
+		b.setSelected(true);
+		p1.add(b,c2);
+		bg.add(b);
+		c2.gridx=1;
+		JSeparator sep=new JSeparator();
+		sep.setPreferredSize(new Dimension(50,3));
+		sep.setSize(50,3);
+		p1.add(sep,c2);
+		b=new JRadioButton(JAPUtil.loadImageIcon(JAPConstants.IMAGE_SERVER,true));
+		b.setBorder(null);
+		b.setFocusPainted(false);
+		b.setRolloverEnabled(true);
+		b.setRolloverIcon(JAPUtil.loadImageIcon(JAPConstants.IMAGE_SERVER_BLAU,true));
+		b.setSelectedIcon(JAPUtil.loadImageIcon(JAPConstants.IMAGE_SERVER_ROT,true));
+		c2.gridx=2;
+		p1.add(b,c2);
+		bg.add(b);
+		sep=new JSeparator();
+		sep.setPreferredSize(new Dimension(50,3));
+		sep.setSize(50,3);
+		c2.gridx=3;
+		p1.add(sep,c2);
+
+		b=new JRadioButton(JAPUtil.loadImageIcon(JAPConstants.IMAGE_SERVER,true));
+		b.setBorder(null);
+		b.setFocusPainted(false);
+		b.setRolloverEnabled(true);
+		b.setRolloverIcon(JAPUtil.loadImageIcon(JAPConstants.IMAGE_SERVER_BLAU,true));
+		b.setSelectedIcon(JAPUtil.loadImageIcon(JAPConstants.IMAGE_SERVER_ROT,true));
+		c2.gridx=4;
+		c2.weightx=1;
+		p1.add(b,c2);
+		bg.add(b);
+		c1.gridy=1;
+		c1.insets=new Insets(20,10,0,10);
+		p.add(p1,c1);
+
+
+		l=new JLabel("Betreiber:");
+		c1.gridwidth=1;
+		c1.gridy=2;
+		c1.weightx=0;
+		p.add(l,c1);
+		l=new JLabel("TU Dresden");
+		c1.gridx=1;
+		c1.weightx=1;
+		p.add(l,c1);
+		l=new JLabel("URL:");
+		c1.gridwidth=1;
+		c1.gridy=3;
+		c1.gridx=0;
+		c1.weightx=0;
+		c1.insets=new Insets(10,20,0,10);
+		p.add(l,c1);
+		l=new JLabel("<HTML><BODY><A HREF=\"\">http://anon.inf.tu-dresden.de</A></BODY></HTML>");
+		c1.gridx=1;
+		c1.weightx=1;
+		c1.insets=new Insets(10,10,0,10);
+		p.add(l,c1);
+		l=new JLabel("Standort:");
+		c1.gridwidth=1;
+		c1.gridy=4;
+		c1.gridx=0;
+		c1.weightx=0;
+		c1.weighty=1;
+		c1.insets=new Insets(10,20,0,10);
+		p.add(l,c1);
+		l=new JLabel("Dresden, Saxony, Germany");
+		c1.gridx=1;
+		c1.weightx=1;
+		c1.insets=new Insets(10,10,0,10);
+		p.add(l,c1);
+
+
+		c.gridy=3;
+		c.insets=new Insets(10,10,10,10);
+		c.weighty=1;
 		c.fill=GridBagConstraints.BOTH;
 		pRoot.add(p,c);
   }
@@ -289,7 +398,10 @@ class JAPConfAnon extends AbstractJAPConfModule
 		DefaultListModel listModel=new DefaultListModel();
 		while (it.hasMoreElements())
 		{
-			listModel.addElement(it.nextElement());
+		/*	JLabel l=new JLabel(it.nextElement().toString(),
+								JAPUtil.loadImageIcon(JAPConstants.IMAGE_SERVER_ROT,true),
+								JLabel.LEADING);
+		*/	listModel.addElement(it.nextElement());
 		}
 
 		LogHolder.log(LogLevel.DEBUG, LogType.GUI, "JAPConf: updateMixCascadeCombo() -added All other Items");
