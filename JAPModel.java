@@ -94,7 +94,8 @@ public final class JAPModel implements JAPAnonServiceListener{
 // usage: model.getString("infoURL")
 //static final String url_download_version       = "http://www.inf.tu-dresden.de/~hf2/anon/JAP/";
 	
-	static final String aktJAPVersionFN            = "/~sk13/anon/jap/aktVersion.txt"; // retrieved from Info Service
+//	static final String aktJAPVersionFN            = "/~sk13/anon/jap/aktVersion.txt"; // retrieved from Info Service
+	static final String aktJAPVersionFN            = "/aktVersion"; // retrieved from Info Service
 	static final String urlJAPNewVersionDownload   = "/~sk13/anon/jap/JAP.jar"; // also retrieved from Info Service
 	static final String JAPLocalFilename           = "JAP.jar";
 
@@ -693,6 +694,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 									);
 							}
 						proxyAnon=null;
+						proxyAnonSocks=null;
 						view.setCursor(Cursor.getDefaultCursor());
 						notifyJAPObservers();
 					}
@@ -701,6 +703,9 @@ public final class JAPModel implements JAPAnonServiceListener{
 			if(proxyAnon!=null)
 				proxyAnon.stop();
 			proxyAnon=null;
+			if(proxyAnonSocks!=null)
+				proxyAnonSocks.stop();
+			proxyAnonSocks=null;
 			if(feedback!=null)
 				{
 					feedback.stopRequests();
@@ -800,9 +805,12 @@ public final class JAPModel implements JAPAnonServiceListener{
 			try {
 				int result = 0;
 				Versionchecker vc = new Versionchecker();
-//			String s = vc.getNewVersionnumberFromNet("http://"+infoServiceHostName+":"+infoServicePortNumber+aktJAPVersionFN);
-// temporary changed due to stability.... (sk13)
-				String s = vc.getNewVersionnumberFromNet("http://anon.inf.tu-dresden.de:80"+aktJAPVersionFN);
+			String s = vc.getNewVersionnumberFromNet("http://"+infoServiceHostName+":"+infoServicePortNumber+aktJAPVersionFN);
+			if(s==null)
+				return -1;
+			s=s.trim();
+			// temporary changed due to stability.... (sk13)
+//				String s = vc.getNewVersionnumberFromNet("http://anon.inf.tu-dresden.de:80"+aktJAPVersionFN);
 				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:Version:"+s);
 				if ( s.compareTo(aktVersion) > 0 ) {
 					// OK, new version available
