@@ -30,7 +30,7 @@ package gui;
 final public class JAPDll
 {
 	private static boolean m_sbHasOnTraffic = true;
-	/*static
+	static
 	{
 		try
 		{
@@ -43,7 +43,7 @@ final public class JAPDll
 		catch (Throwable t)
 		{
 		}
-	}*/
+	}
 
 	static public boolean setWindowOnTop(String caption, boolean onTop)
 	{
