@@ -51,9 +51,9 @@ final class JAPSplash extends Window
 		int xVersion;		
 		int yVersion;
 
-		JAPSplash()
+		JAPSplash(Frame parent)
 			{
-				super(new Frame());
+				super(parent);
 				setLayout(null);
 		    xVersion=yVersion=100;
 				Toolkit t=Toolkit.getDefaultToolkit();
@@ -106,7 +106,7 @@ final class JAPSplash extends Window
 				try{ma.waitForAll();}catch(Exception e){};
 				setVisible(true);
 				toFront();
-				paint(getGraphics());
+//				paint(getGraphics());
 				//setSize(350,173);
 				JAPUtil.centerFrame(this);
 				System.out.println("----------------------- SPLASH FINISHED -----------------------");
