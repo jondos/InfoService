@@ -33,6 +33,7 @@ import javax.swing.JProgressBar;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Attr;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.NamedNodeMap;
 import HTTPClient.HTTPConnection;
@@ -53,8 +54,12 @@ import HTTPClient.Codecs;
 import HTTPClient.ModuleException;
 import HTTPClient.ParseException;
 import anon.AnonServer;
-import JAPDebug;
-import JAPUtil;
+//import JAPDebug;
+//import JAPUtil;
+import logging.DummyLog;
+import logging.Log;
+import logging.LogLevel;
+import logging.LogType;
 final public class InfoService
 	{
 	//	private static final String DP = "%3A"; // Doppelpunkt
@@ -68,11 +73,21 @@ final public class InfoService
 		private HTTPConnection m_conInfoService=null;
     private int       m_count =0;
     private boolean   m_ready = false;
+    private Log       m_Log;
 
 		public InfoService(String host,int port)
       {
+        m_Log=new DummyLog();
 			  setInfoService(host,port);
 		  }
+
+    public void setLogging(Log log)
+      {
+        if(log==null)
+          m_Log=new DummyLog();
+       else
+          m_Log=log;
+      }
 
     /** This will set the InfoService to use. It also sets the Proxy-Configuration and autorization.
 		 */
@@ -157,11 +172,11 @@ final public class InfoService
 				    try
               {
 					      Enumeration enum=resp.listHeaders();
-					      JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"HTTPResponse: "+Integer.toString(resp.getStatusCode()));
+					      m_Log.log(LogLevel.DEBUG,LogType.NET,"HTTPResponse: "+Integer.toString(resp.getStatusCode()));
 					      while(enum.hasMoreElements())
                   {
 						        String header=(String)enum.nextElement();
-						        JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,header+": "+resp.getHeader(header));
+						        m_Log.log(LogLevel.DEBUG,LogType.NET,header+": "+resp.getHeader(header));
 					        }
 				      }
             catch(Throwable tor)
@@ -187,8 +202,8 @@ final public class InfoService
 						        host=ip;
 							      ip=null;
 						      }
-					      int port=JAPUtil.parseNodeInt(elem,"Port",-1);
-					      int proxyPort=JAPUtil.parseNodeInt(elem,"ProxyPort",-1);
+					      int port=parseNodeInt(elem,"Port",-1);
+					      int proxyPort=parseNodeInt(elem,"ProxyPort",-1);
 
 					      AnonServer e=new AnonServer(id,name,host,ip,port,proxyPort);
 
@@ -196,13 +211,13 @@ final public class InfoService
 					      if(nl!=null&&nl.getLength()>0)
                   {
 						        Element elem1=(Element)nl.item(0);
-						        int nrOfActiveUsers=JAPUtil.parseElementAttrInt(elem1,"ActiveUsers",-1);
+						        int nrOfActiveUsers=parseElementAttrInt(elem1,"ActiveUsers",-1);
 						        e.setNrOfActiveUsers(nrOfActiveUsers);
-						        int currentRisk=JAPUtil.parseElementAttrInt(elem1,"CurrentRisk",-1);
+						        int currentRisk=parseElementAttrInt(elem1,"CurrentRisk",-1);
 						        e.setCurrentRisk(currentRisk);
-						        int trafficSituation=JAPUtil.parseElementAttrInt(elem1,"TrafficSituation",-1);
+						        int trafficSituation=parseElementAttrInt(elem1,"TrafficSituation",-1);
 						        e.setTrafficSituation(trafficSituation);
-						        int mixedPackets=JAPUtil.parseElementAttrInt(elem1,"MixedPackets",-1);
+						        int mixedPackets=parseElementAttrInt(elem1,"MixedPackets",-1);
 						        e.setMixedPackets(mixedPackets);
 					        }
 					      v.addElement(e);
@@ -240,31 +255,31 @@ final public class InfoService
 					  HTTPResponse resp=m_conInfoService.Get(strGET);
             if (resp.getStatusCode()!=200)
 						  {
-							  JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPInfoService:Bad response from server: "+resp.getReasonLine());
+							  m_Log.log(LogLevel.ERR,LogType.NET,"JAPInfoService:Bad response from server: "+resp.getReasonLine());
 						  }
 					else
 						{
 							// XML stuff
 							Document doc=DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(resp.getInputStream());
 							Element root=doc.getDocumentElement();
-							nrOfActiveUsers   = JAPUtil.parseElementAttrInt(root,"nrOfActiveUsers",-1);
-							trafficSituation  = JAPUtil.parseElementAttrInt(root,"trafficSituation",-1);
-							currentRisk       = JAPUtil.parseElementAttrInt(root,"currentRisk",-1);
-							mixedPackets      = JAPUtil.parseElementAttrInt(root,"mixedPackets",-1);
-							iAnonLevel        = JAPUtil.parseElementAttrInt(root,"anonLevel",-1);
+							nrOfActiveUsers   = parseElementAttrInt(root,"nrOfActiveUsers",-1);
+							trafficSituation  = parseElementAttrInt(root,"trafficSituation",-1);
+							currentRisk       = parseElementAttrInt(root,"currentRisk",-1);
+							mixedPackets      = parseElementAttrInt(root,"mixedPackets",-1);
+							iAnonLevel        = parseElementAttrInt(root,"anonLevel",-1);
 						}
 					// close streams and socket
 				}
 			catch(Exception e)
 				{
-					JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPInfoService - Feedback: "+e);
+					m_Log.log(LogLevel.ERR,LogType.NET,"JAPInfoService - Feedback: "+e);
 				}
 			service.setNrOfActiveUsers(nrOfActiveUsers);
 			service.setTrafficSituation(trafficSituation);
 			service.setCurrentRisk(currentRisk);
 			service.setMixedPackets(mixedPackets);
 			service.setAnonLevel(iAnonLevel);
-			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPInfoService:"+nrOfActiveUsers+"/"+trafficSituation+"/"+currentRisk+"/"+mixedPackets+"/"+iAnonLevel);
+			m_Log.log(LogLevel.DEBUG,LogType.MISC,"JAPInfoService:"+nrOfActiveUsers+"/"+trafficSituation+"/"+currentRisk+"/"+mixedPackets+"/"+iAnonLevel);
 		}
 	public String getNewVersionNumber() throws Exception
 		{
@@ -276,7 +291,7 @@ final public class InfoService
 					// read remaining header lines
 					byte[] buff=resp.getData();
 					String s=new String(buff).trim();
-					JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPInfoService:New Version: "+s);
+					m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPInfoService:New Version: "+s);
 					if ( (s.charAt(2) == '.') && (s.charAt(5) == '.') )
 						return s;
 					throw new Exception("Versionfile has wrong format! Found: \""+s+ "\". Should be \"nn.nn.nnn\"!");
@@ -387,7 +402,6 @@ final public class InfoService
   }*/
            /////////////////////////////////////////////////////////////////////
 	public static void main(String[] argv) {
-		JAPDebug.setDebugLevel(JAPDebug.WARNING);
 		InfoService is=new InfoService("infoservice.inf.tu-dresden.de",6543);
 //		is.setInfoService("infoservice.inf.tu-dresden.de",6543);
 		//is.setProxy("www-proxy.t-online.de",80,null,null);
@@ -406,5 +420,34 @@ final public class InfoService
 			e.printStackTrace();
 		}
 	}
+  private int parseNodeInt(Element parent,String name,int defaultValue)
+		{
+			int i=defaultValue;
+			if(parent!=null)
+				try
+					{
+						NodeList nl=parent.getElementsByTagName(name);
+						i=Integer.parseInt(nl.item(0).getFirstChild().getNodeValue());
+					}
+				catch(Exception e)
+					{
+					}
+			return i;
+		}
+
+  	private int parseElementAttrInt(Element e,String attr,int defaultValue)
+		{
+			int i=defaultValue;
+			if(e!=null)
+				try
+					{
+						Attr at=e.getAttributeNode(attr);
+						i=Integer.parseInt(at.getValue());
+					}
+				catch(Exception ex)
+					{
+					}
+			return i;
+		}
 
 }

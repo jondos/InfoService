@@ -637,7 +637,8 @@ public final class JAPController implements ProxyListener {
 		  if(m_InfoService==null)
         {
 			    m_InfoService=new InfoService(JAPModel.getInfoServiceHost(),JAPModel.getInfoServicePort());
-			    applyProxySettingsToInfoService();
+			    m_InfoService.setLogging(JAPDebug.create());
+          applyProxySettingsToInfoService();
 		    }
 		return m_InfoService;
 	}

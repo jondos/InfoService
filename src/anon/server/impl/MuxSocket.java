@@ -45,8 +45,9 @@ import java.io.InterruptedIOException;
 import java.lang.Integer;
 import java.util.Enumeration;
 import java.math.BigInteger;
-import JAPDebug;
-
+import logging.Log;
+import logging.LogLevel;
+import logging.LogType;
 
 import HTTPClient.Codecs;
 import anon.ErrorCodes;
@@ -93,7 +94,7 @@ public final class MuxSocket implements Runnable
 		private long m_TimeLastPacketSend=0;
 		private static boolean m_bDummyTraffic=false;
 		private DummyTraffic m_DummyTraffic=null;
-
+    private Log m_Log=null;
 		private final class ChannelListEntry
 			{
 				ChannelListEntry(AbstractChannel c)
@@ -107,28 +108,40 @@ public final class MuxSocket implements Runnable
 				public boolean bIsSuspended;
 			};
 
-		private MuxSocket()
+		private MuxSocket(Log log)
 			{
+        m_Log=log;
 				lastChannelId=0;
 				m_arASymCipher=null;
 				outBuff=new byte[DATA_SIZE];
 				outBuff2=new byte[DATA_SIZE];
 				threadRunLoop=null;
-				keypool=KeyPool.start(/*20,16*/);
+				keypool=KeyPool.start(log);
 				//m_RunCount=0;
 				m_bDummyTraffic=false;
 				m_TimeLastPacketSend=0;
 				//threadgroupChannels=null;
 			}
 
-		public static MuxSocket create()
+		public static MuxSocket create(Log log)
 			{
 				if(ms_MuxSocket==null)
-					ms_MuxSocket=new MuxSocket();
+					ms_MuxSocket=new MuxSocket(log);
 				return ms_MuxSocket;
 			}
 
-		public static boolean isConnected()
+    public void setLogging(Log log)
+      {
+        m_Log=log;
+        if(m_DummyTraffic!=null)
+          m_DummyTraffic.setLogging(log);
+        if(keypool!=null)
+          {
+            keypool.setLogging(log);
+          }
+      }
+
+    public static boolean isConnected()
 			{
 				return (ms_MuxSocket!=null&&ms_MuxSocket.m_bIsConnected);
 			}
@@ -141,7 +154,7 @@ public final class MuxSocket implements Runnable
 					{
 						if(b)
 							{
-								ms_MuxSocket.m_DummyTraffic=new DummyTraffic(ms_MuxSocket);
+								ms_MuxSocket.m_DummyTraffic=new DummyTraffic(ms_MuxSocket,ms_MuxSocket.m_Log);
 								ms_MuxSocket.m_DummyTraffic.start();
 							}
 						else
@@ -204,7 +217,7 @@ public final class MuxSocket implements Runnable
             try
               {
                 //Connect directly to anon service
-  							JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"MuxSocket:Try to connect directly to mix ("+host+":"+port+")");
+  							m_Log.log(LogLevel.DEBUG,LogType.NET,"MuxSocket:Try to connect directly to mix ("+host+":"+port+")");
                 m_ioSocket=new Socket(host,port);
                 m_ioSocket.setSoTimeout(10000); //Timout 10 second
                 m_inDataStream=new DataInputStream(m_ioSocket.getInputStream());
@@ -212,27 +225,27 @@ public final class MuxSocket implements Runnable
               }
             catch(Exception e)
               {
-  						  JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"MuxSocket : Error(1) connection to mix: "+e.toString());
+  						  m_Log.log(LogLevel.DEBUG,LogType.NET,"MuxSocket : Error(1) connection to mix: "+e.toString());
                 m_bIsConnected=false;
               }
 						if(!m_bIsConnected)
 							{
-								//JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:Something goes wrong by trying to connect to Mix!");
+								//m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:Something goes wrong by trying to connect to Mix!");
 								try{m_inDataStream.close();}catch(Exception e){};
 								try{m_ioSocket.close();}catch(Exception e){};
 								m_inDataStream=null;
 								m_ioSocket=null;
 								return ErrorCodes.E_CONNECT;
 							}
-						//JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:Connected to Mix! Now starting key exchange...");
+						//m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:Connected to Mix! Now starting key exchange...");
 						try
 							{
 								m_outDataStream=new DataOutputStream(new BufferedOutputStream(m_ioSocket.getOutputStream(),PACKET_SIZE));
-							//	JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:Reading len...");
+							//	m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:Reading len...");
 								m_inDataStream.readUnsignedShort(); //len.. unitressteing at the moment
-							//	JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:Reading chainlen...");
+							//	m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:Reading chainlen...");
 								chainlen=m_inDataStream.readByte();
-								//JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:chainlen="+chainlen);
+								//m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:chainlen="+chainlen);
 								m_arASymCipher=new ASymCipher[chainlen];
 								for(int i=chainlen-1;i>=0;i--)
 									{
@@ -252,7 +265,7 @@ public final class MuxSocket implements Runnable
 							}
 						catch(Exception e)
 							{
-								JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.NET,"MuxSocket:Exception(2) during connection: "+e);
+								m_Log.log(LogLevel.EXCEPTION,LogType.NET,"MuxSocket:Exception(2) during connection: "+e);
 								m_arASymCipher=null;
 							  try{m_inDataStream.close();}catch(Exception e1){}
 							  try{m_outDataStream.close();}catch(Exception e1){}
@@ -346,7 +359,7 @@ public final class MuxSocket implements Runnable
 			{
 				synchronized(this)
 					{
-						//JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:stopService()");
+						//m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:stopService()");
 						//m_RunCount--;
 						//if(m_RunCount==0)
             close();
@@ -365,7 +378,7 @@ public final class MuxSocket implements Runnable
 								m_DummyTraffic.stop();
 								m_DummyTraffic=null;
 							}
-						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:close() Closing MuxSocket...");
+						m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:close() Closing MuxSocket...");
 						m_bRunFlag=false;
 					  try{m_inDataStream.close();}catch(Exception e1){}
 						try{threadRunLoop.interrupt();}catch(Exception e7){}
@@ -379,12 +392,12 @@ public final class MuxSocket implements Runnable
 							}
 						if(threadRunLoop.isAlive())
               {
-                  JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:close() Hm...MuxSocket is still alive...");
+                  m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:close() Hm...MuxSocket is still alive...");
                   threadRunLoop.stop();
                   runStoped();
               }
 						threadRunLoop=null;
-						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:close() MuxSocket closed!");
+						m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:close() MuxSocket closed!");
 						return 0;
 					}
 			}
@@ -393,7 +406,7 @@ public final class MuxSocket implements Runnable
 
 		public void run()
 			{
- 				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:run()");
+ 				m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:run()");
 				byte[] buff=new byte[DATA_SIZE];
 				int flags=0;
 				int channel=0;
@@ -409,7 +422,7 @@ public final class MuxSocket implements Runnable
 							}
 						catch(Exception e)
 							{
-								JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPMuxSocket:run() Exception while receiving!");
+								m_Log.log(LogLevel.ERR,LogType.NET,"JAPMuxSocket:run() Exception while receiving!");
 								break;
 							}
 						ChannelListEntry tmpEntry=(ChannelListEntry)oChannelList.get(new Integer(channel));
@@ -430,7 +443,7 @@ public final class MuxSocket implements Runnable
 										len=(buff[0]<<8)|(buff[1]&0xFF);
 										len&=0x0000FFFF;
 										if(len<0||len>DATA_SIZE)
-											JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:Receveived MuxPacket with invalid data size: "+Integer.toString(len));
+											m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:Receveived MuxPacket with invalid data size: "+Integer.toString(len));
 										else
 										{
                       try
@@ -439,29 +452,29 @@ public final class MuxSocket implements Runnable
                         }
                       catch(Exception e)
                         {
-                          JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:Fehler bei write to channel..."+e.toString());
+                          m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:Fehler bei write to channel..."+e.toString());
                         }
  										}
 									}
 						/*		else if(flags==CHANNEL_SUSPEND)
 									{
 										tmpEntry.bIsSuspended=true;
-										JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:Suspending Channel: "+Integer.toString(channel));
+										m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:Suspending Channel: "+Integer.toString(channel));
 										}
 								else if(flags==CHANNEL_RESUME)
 									{
 										tmpEntry.bIsSuspended=false;
-										JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:Resuming Channel: "+Integer.toString(channel));
+										m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:Resuming Channel: "+Integer.toString(channel));
 									}*/
 							}
 					}
 				runStoped();
-				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:MuxSocket thread run exited...");
+				m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:MuxSocket thread run exited...");
 			}
 
 		private void runStoped()
 			{
-				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:runStoped()");
+				m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:runStoped()");
 				Enumeration e=oChannelList.elements();
 				while(e.hasMoreElements())
 					{
@@ -469,17 +482,17 @@ public final class MuxSocket implements Runnable
             entry.channel.closedByPeer();
 					}
         oChannelList=null;
-				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:MuxSocket all channels closed...");
+				m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:MuxSocket all channels closed...");
 				m_bRunFlag=false;
 				m_bIsConnected=false;
 				try{m_inDataStream.close();}catch(Exception e1){}
 				try{m_outDataStream.close();}catch(Exception e2){}
 				try{m_ioSocket.close();}catch(Exception e3){}
-				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:MuxSocket socket closed...");
+				m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:MuxSocket socket closed...");
 				m_inDataStream=null;
 				m_outDataStream=null;
 				m_ioSocket=null;
-				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:All done..");
+				m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:All done..");
 			}
 
 		public synchronized int send(int channel,int type,byte[] buff,short len)
@@ -564,7 +577,7 @@ public final class MuxSocket implements Runnable
 				catch(Exception e)
 					{
 						//e.printStackTrace();
-						JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPMuxSocket:send() Exception!");
+						m_Log.log(LogLevel.ERR,LogType.NET,"JAPMuxSocket:send() Exception!");
 						return -1;
 					}
 				return 0;

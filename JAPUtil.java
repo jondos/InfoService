@@ -181,7 +181,7 @@ final public class JAPUtil
 		}
 
 
-	public static int parseNodeInt(Element parent,String name,int defaultValue)
+/*	public static int parseNodeInt(Element parent,String name,int defaultValue)
 		{
 			int i=defaultValue;
 			if(parent!=null)
@@ -194,7 +194,7 @@ final public class JAPUtil
 					{
 					}
 			return i;
-		}
+		}*/
 
 	public static int parseElementAttrInt(Element e,String attr,int defaultValue)
 		{

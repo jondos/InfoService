@@ -25,6 +25,8 @@ OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABIL
 IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
+import logging.Log;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.util.Dictionary;
@@ -53,6 +55,7 @@ import javax.swing.JTextArea;
 import javax.swing.JScrollPane;
 import javax.swing.JScrollBar;
 
+
 /**
  * This class serves as a debugging interface.
  * It provides different debug types and levels for the output of debug
@@ -68,7 +71,7 @@ import javax.swing.JScrollBar;
  * <code>JAPDebug.out(int level, int type, String txt)</code>
  * This is a Singleton!
  */
-final public class JAPDebug extends WindowAdapter implements ActionListener {
+final public class JAPDebug extends WindowAdapter implements ActionListener,Log {
 
 	/** No debugging */
 	public final static int NUL = 0;
@@ -130,9 +133,7 @@ final public class JAPDebug extends WindowAdapter implements ActionListener {
 //		dateFormatter= new SimpleDateFormat ("yyyy/MM/dd-hh:mm:ss, ");
 	}
 	public  static JAPDebug create() {
-		if(debug!=null)
-			out(debug.ALERT,debug.INFO,"Debug inialized twice - Big Bug!");
-		else
+		if(debug==null)
 			debug = new JAPDebug();
 		return debug;
 	}
@@ -158,6 +159,11 @@ final public class JAPDebug extends WindowAdapter implements ActionListener {
 			}
 		}
 	}
+
+  public void log(int level,int type,String msg)
+    {
+      out(level,type,msg);
+    }
 
 	/** Set the debugging type you like to output. To activate more than one type you simly add
 	 *  the types like this <code>setDebugType(JAPDebug.GUI+JAPDebug.NET)</code>.
