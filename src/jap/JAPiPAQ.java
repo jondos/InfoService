@@ -64,7 +64,7 @@ final public class JAPiPAQ {
     {
     }
 
-public void startJAP() {
+public void startJAP(String strJapConfFile) {
 		JAPModel.create().setSmallDisplay(true);
     // Init Messages....
 		JAPMessages.init();
@@ -76,7 +76,7 @@ public void startJAP() {
 		JAPDebug.setDebugType(JAPDebug.NET+JAPDebug.GUI+JAPDebug.THREAD+JAPDebug.MISC);
 		JAPDebug.setDebugLevel(JAPDebug.WARNING);
 		// load settings from config file
-		controller.loadConfigFile();
+		controller.loadConfigFile(strJapConfFile);
 		// Output some information about the system
 		// Create the view object
 		JAPView view = new JAPView(JAPConstants.TITLE);
@@ -101,7 +101,7 @@ public void startJAP() {
 	public static void main(String[] argv) {
     JAPiPAQ japOniPAQ = new JAPiPAQ();
 		JAPModel.create().setSmallDisplay(true);
-    japOniPAQ.startJAP();
+    japOniPAQ.startJAP(null);
     //Test
     JFrame frame=new JFrame("Test");
     frame.setContentPane(japOniPAQ.getMainPanel());

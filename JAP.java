@@ -103,7 +103,7 @@ class JAP extends Frame {
 		JAPDebug.setDebugType(JAPDebug.NET+JAPDebug.GUI+JAPDebug.THREAD+JAPDebug.MISC);
 		JAPDebug.setDebugLevel(JAPDebug.WARNING);
 		// load settings from config file
-		controller.loadConfigFile();
+		controller.loadConfigFile(null);
 		// Output some information about the system
 		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAP:Welcome! This is version "+JAPConstants.aktVersion+" of JAP.");
 		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAP:Java "+javaVersion+" running on "+os+".");

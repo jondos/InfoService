@@ -220,8 +220,9 @@ public final class JAPController implements ProxyListener {
 	 *		<Output>..</Output>						//the kind of Output, at the moment only: Console
 	 * 	</Debug>
 	 *	</JAP>
+   *  @param strJapConfFile - file containing the Configuration. If null $(user.home)/jap.conf or ./jap.conf is used.
 	 */
-	public synchronized void loadConfigFile() {
+	public synchronized void loadConfigFile(String strJapConfFile) {
 		// Load default anon services
 	//		anonServerDatabase.addElement(new AnonServerDBEntry(anonHostName, anonPortNumber));
 //		anonServerDatabase.addElement(new AnonServerDBEntry(proxyHostName, proxyPortNumber));
@@ -229,15 +230,40 @@ public final class JAPController implements ProxyListener {
 //		anonServerDatabase.addElement(new AnonServerDBEntry("passat.mesh.de", 6543));
 		// Load config from xml file
 		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:try loading configuration from "+JAPConstants.XMLCONFFN);
-		try {
-			String dir=System.getProperty("user.home","");
-			FileInputStream f=null;
-			//first tries in user.home
-			try {
-				f=new FileInputStream(dir+"/"+JAPConstants.XMLCONFFN);
-			} catch(Exception e) {
-				f=new FileInputStream(JAPConstants.XMLCONFFN); //and then in the current directory
-			}
+    FileInputStream f=null;
+		if(strJapConfFile==null)
+      {
+        try
+          {
+            String dir=System.getProperty("user.home","");
+            //first tries in user.home
+            try
+              {
+                f=new FileInputStream(dir+"/"+JAPConstants.XMLCONFFN);
+              }
+            catch(Exception e)
+              {
+                f=new FileInputStream(JAPConstants.XMLCONFFN); //and then in the current directory
+              }
+            }
+        catch(Exception e2)
+          {
+            JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:Error loading configuration! "+e2.toString());
+          }
+      }
+    else
+      {
+        try
+          {
+             f=new FileInputStream(strJapConfFile);
+          }
+        catch(Exception e2)
+          {
+            JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:Error loading configuration! "+e2.toString());
+          }
+      }
+   if(f!=null){
+    try{
 			Document doc=DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(f);
 			Element root=doc.getDocumentElement();
 			NamedNodeMap n=root.getAttributes();
@@ -356,6 +382,7 @@ public final class JAPController implements ProxyListener {
 		catch(Exception e) {
 			JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:Error loading configuration! "+e.toString());
 		}
+    }//end if f!=null
 		// fire event
 		notifyJAPObservers();
 	}
