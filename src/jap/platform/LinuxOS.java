@@ -49,7 +49,7 @@ public class LinuxOS extends AbstractOS
 			throw new Exception("Operating system is not Linux");
 	}
 
-	public void openURLInBrowser(String a_url) throws Exception
+	public void openURLInBrowser(String a_url)
 	{
 		boolean success = false;
 		try

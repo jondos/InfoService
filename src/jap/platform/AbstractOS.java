@@ -42,7 +42,8 @@ public abstract class AbstractOS
 	 * Make sure that the default OS is the last OS in the array.
 	 */
 	private static String[] REGISTERED_PLATFORM_CLASSES =
-		{"jap.platform.LinuxOS", "jap.platform.WindowsOS", "jap.platform.MacOS", "jap.platform.DefaultOS"};
+		{"jap.platform.LinuxOS", "jap.platform.WindowsOS", "jap.platform.MacOS",
+		"jap.platform.DefaultOS"};
 
 	/**
 	 * The instanciated operation system class.
@@ -79,6 +80,6 @@ public abstract class AbstractOS
 	 * Implementations of this method must open an URL in the system's internet browser
 	 * @param a_url a URL as String
 	 */
-	public abstract void openURLInBrowser(String a_url) throws Exception;
+	public abstract void openURLInBrowser(String a_url);
 
 }
