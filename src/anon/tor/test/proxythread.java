@@ -89,6 +89,7 @@ public class proxythread implements Runnable{
 				{
 					this.stop();
 				}
+				Thread.sleep(20);
 			} catch (Exception ex)
 			{
 				System.out.println("Exception catched : "+ex.getLocalizedMessage());

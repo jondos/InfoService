@@ -240,7 +240,8 @@ public final class ProxyInterface extends ListenerInterface
 			{
 				exception =	"No password reader!";
 			}
-			if (!getProtocol().equals(PROTOCOL_TYPE_HTTP))
+			if (!getProtocol().equals(PROTOCOL_TYPE_HTTP)&&
+				!getProtocol().equals(PROTOCOL_TYPE_SOCKS))
 			{
 				exception = "Wrong protocol type!";
 			}

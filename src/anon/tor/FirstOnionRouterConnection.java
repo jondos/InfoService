@@ -63,6 +63,7 @@ public class FirstOnionRouterConnection implements Runnable
 	private boolean m_bIsClosed = true;
 	private MyRandom m_rand;
 	private Object m_oSendSync;
+	private long m_inittimeout;
 	/**
 	 * constructor
 	 *
@@ -72,6 +73,7 @@ public class FirstOnionRouterConnection implements Runnable
 	 */
 	public FirstOnionRouterConnection(ORDescription d)
 	{
+		m_inittimeout = 30000;
 		m_readDataLoop = null;
 		m_bRun = false;
 		m_bIsClosed = true;
@@ -153,9 +155,9 @@ public class FirstOnionRouterConnection implements Runnable
 	 */
 	public synchronized void connect() throws Exception
 	{
-		m_tinyTLS = new TinyTLS(m_description.getAddress(), m_description.getPort());
-		m_tinyTLS.setSoTimeout(60000);
-		//
+		FirstOnionRouterConnectionThread forcs = new FirstOnionRouterConnectionThread(m_description.getAddress(), m_description.getPort(),m_inittimeout);
+		m_tinyTLS = forcs.getConnection();
+//		m_tinyTLS = new TinyTLS(m_description.getAddress(), m_description.getPort());
 		m_tinyTLS.setRootKey(m_description.getSigningKey());
 		m_tinyTLS.startHandshake();
 		m_istream = m_tinyTLS.getInputStream();

@@ -571,7 +571,11 @@ final class JAPConf extends JDialog
 				m_tfProxyHost.setEnabled(b);
 				m_tfProxyPortNumber.setEnabled(b);
 				m_cbProxyAuthentication.setEnabled(b);
-				m_tfProxyAuthenticationUserID.setEnabled(b);
+				m_labelProxyHost.setEnabled(b);
+				m_labelProxyPort.setEnabled(b);
+				m_labelProxyType.setEnabled(b);
+				m_labelProxyAuthUserID.setEnabled(m_cbProxyAuthentication.isSelected()&b);
+				m_tfProxyAuthenticationUserID.setEnabled(m_cbProxyAuthentication.isSelected()&b);
 			}
 		});
 		m_tfProxyHost.addActionListener(new ActionListener()
@@ -597,6 +601,7 @@ final class JAPConf extends JDialog
 			public void actionPerformed(ActionEvent e)
 			{
 				m_tfProxyAuthenticationUserID.setEnabled(m_cbProxyAuthentication.isSelected());
+				m_labelProxyAuthUserID.setEnabled(m_cbProxyAuthentication.isSelected());
 			}
 		});
 		m_labelProxyHost = new JLabel(JAPMessages.getString("settingsProxyHost"));
@@ -1299,10 +1304,15 @@ final class JAPConf extends JDialog
 		//m_labelSocksPortNumber.setVisible(bSocksVisible);
 		//m_cbListenerSocks.setSelected(m_Controller.getUseSocksPort());
 		// firewall tab
-		m_cbProxy.setSelected(JAPModel.getInstance().getProxyInterface().isValid());
-		m_tfProxyHost.setEnabled(m_cbProxy.isSelected());
-		m_tfProxyPortNumber.setEnabled(m_cbProxy.isSelected());
-		m_comboProxyType.setEnabled(m_cbProxy.isSelected());
+		boolean bEnableProxy=JAPModel.getInstance().getProxyInterface().isValid();
+		m_cbProxy.setSelected(bEnableProxy);
+		m_tfProxyHost.setEnabled(bEnableProxy);
+		m_tfProxyPortNumber.setEnabled(bEnableProxy);
+		m_comboProxyType.setEnabled(bEnableProxy);
+		m_tfProxyAuthenticationUserID.setEnabled(bEnableProxy);
+		m_labelProxyHost.setEnabled(bEnableProxy);
+		m_labelProxyPort.setEnabled(bEnableProxy);
+		m_labelProxyType.setEnabled(bEnableProxy);
 		if (JAPModel.getInstance().getProxyInterface().getProtocol().equals(
 				  ProxyInterface.PROTOCOL_TYPE_HTTP))
 		{
@@ -1312,7 +1322,8 @@ final class JAPConf extends JDialog
 		{
 			m_comboProxyType.setSelectedIndex(1);
 		}
-		m_cbProxyAuthentication.setEnabled(m_cbProxy.isSelected());
+		m_cbProxyAuthentication.setEnabled(bEnableProxy);
+
 		m_tfProxyHost.setText(JAPModel.getInstance().getProxyInterface().getHost());
 		m_tfProxyPortNumber.setText(String.valueOf(
 				  JAPModel.getInstance().getProxyInterface().getPort()));
@@ -1320,6 +1331,8 @@ final class JAPConf extends JDialog
 				  JAPModel.getInstance().getProxyInterface().getAuthenticationUserID());
 		m_cbProxyAuthentication.setSelected(
 				  JAPModel.getInstance().getProxyInterface().isAuthenticationUsed());
+		m_labelProxyAuthUserID.setEnabled(m_cbProxyAuthentication.isSelected()&bEnableProxy);
+		m_tfProxyAuthenticationUserID.setEnabled(m_cbProxyAuthentication.isSelected()&bEnableProxy);
 		//cert tab
 		m_cbCertCheckDisabled.setSelected(JAPModel.isCertCheckDisabled());
 	}
