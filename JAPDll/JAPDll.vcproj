@@ -74,7 +74,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="1"
 				GlobalOptimizations="TRUE"
-				InlineFunctionExpansion="0"
+				InlineFunctionExpansion="1"
 				FavorSizeOrSpeed="2"
 				OmitFramePointers="TRUE"
 				AdditionalIncludeDirectories="G:\jdk1.1.8\include;G:\jdk1.1.8\include\win32"
