@@ -29,17 +29,23 @@ package gui;
 
 import javax.swing.*;
 import java.awt.*;
+import jap.*;
 
 public class StatusPanel extends JPanel implements Runnable
 {
 	Dimension m_dimensionPreferredSize;
 	int m_Height;
 	Object oMsgSync;
+	private final static int ms_IconHeight = 16;
+	private final static int ms_IconWidth = 17;
+	private final static Image ms_imageWarning=JAPUtil.loadImageIcon(JAPConstants.IMAGE_WARNING, true).getImage();
+	private final static Image ms_imageInformation=JAPUtil.loadImageIcon(JAPConstants.IMAGE_INFORMATION, true).getImage();
+	private final static Image ms_imageError=JAPUtil.loadImageIcon(JAPConstants.IMAGE_ERROR, true).getImage();
+
 	final class MsgQueueEntry
 	{
 		String m_Msg;
-		//Image m_Icon;
-		Icon m_Icon;
+		Image m_Icon;
 		MsgQueueEntry m_Next;
 		int m_DisplayCount = 10;
 	}
@@ -53,12 +59,12 @@ public class StatusPanel extends JPanel implements Runnable
 	public StatusPanel()
 	{
 		oMsgSync = new Object();
-		Font font=new JLabel("Status").getFont();
-		m_Height=(int)(font.getSize()*0.8);
-		m_Height=Math.min(m_Height,16);
-		font=new Font(font.getName(),font.getStyle(),m_Height);
-		m_dimensionPreferredSize = new Dimension(100, 16);
-		m_idyFont=(16-font.getSize())/2;
+		Font font = new JLabel("Status").getFont();
+		m_Height = (int) (font.getSize() * 0.8);
+		m_Height = Math.min(m_Height, ms_IconHeight);
+		font = new Font(font.getName(), font.getStyle(), m_Height);
+		m_dimensionPreferredSize = new Dimension(100,ms_IconHeight);
+		m_idyFont = (ms_IconHeight - font.getSize()) / 2;
 		setLayout(null);
 		setFont(font);
 		//setBackground(Color.red);
@@ -83,23 +89,24 @@ public class StatusPanel extends JPanel implements Runnable
 		}
 	}
 
-	public void addMsg(String msg,int type)
+	public void addMsg(String msg, int type)
 	{
 		synchronized (oMsgSync)
 		{
 			MsgQueueEntry entry = new MsgQueueEntry();
 			entry.m_Msg = msg;
-			String s="OptionPane.informationIcon";
-			if(type==JOptionPane.WARNING_MESSAGE)
-				s="OptionPane.warningIcon";
-			else if(type==JOptionPane.ERROR_MESSAGE)
-				s="OptionPane.errorIcon";
-			else if(type==JOptionPane.QUESTION_MESSAGE)
-				s="OptionPane.questionIcon";
-			Icon icon=	UIManager.getDefaults().getIcon(s);
-			entry.m_Icon=icon;
-			//entry.m_Icon=((ImageIcon)icon).getImage();
-			//entry.m_Icon=entry.m_Icon.getScaledInstance(16,16,Image.SCALE_SMOOTH);
+			if (type == JOptionPane.WARNING_MESSAGE)
+			{
+				entry.m_Icon = ms_imageWarning;
+			}
+			else if (type == JOptionPane.INFORMATION_MESSAGE)
+			{
+				entry.m_Icon = ms_imageInformation;
+			}
+			else if (type == JOptionPane.ERROR_MESSAGE)
+			{
+				entry.m_Icon = ms_imageError;
+			}
 			if (m_lastMsg == null)
 			{
 				m_Msgs = entry;
@@ -130,11 +137,11 @@ public class StatusPanel extends JPanel implements Runnable
 		{
 			if (m_Msgs != null)
 			{
-				g.drawString(m_Msgs.m_Msg, 18, m_aktY-m_idyFont);
-	//if(m_Msgs.m_Icon!=null)
-				//	b=g.drawImage(m_Msgs.m_Icon,0,m_aktY,this);
-		//b=g.drawImage(m_Msgs.m_Icon,0,m_aktY-16,16,m_aktY,0,0,m_Msgs.m_Icon.getWidth(this),
-		//			 m_Msgs.m_Icon.getHeight(this) ,this);
+				g.drawString(m_Msgs.m_Msg, ms_IconWidth + 2, m_aktY - m_idyFont);
+				if (m_Msgs.m_Icon != null)
+				{
+					b = g.drawImage(m_Msgs.m_Icon, 0, m_aktY - ms_IconHeight, this);
+				}
 			}
 		}
 
@@ -176,7 +183,7 @@ public class StatusPanel extends JPanel implements Runnable
 					m_Msgs = m_Msgs.m_Next;
 					m_aktY = 0;
 				}
-				for (int i = 0; i < 16 && m_bRun; i++)
+				for (int i = 0; i < ms_IconHeight && m_bRun; i++)
 				{
 					paint(getGraphics());
 					try
