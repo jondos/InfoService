@@ -43,9 +43,6 @@ final public class Constants
 
   public static final int MAX_NR_OF_CONCURRENT_CONNECTIONS = 50;
 
-  /* don't remove the (long)-casts because the standard is only an int and so it wouldn't work
-   * with bigger values
-   */
 
   /**
    * The standard timeout for infoservice database entries in a JAP client. Is only used
@@ -57,7 +54,7 @@ final public class Constants
    */
   public static final long TIMEOUT_INFOSERVICE = 11 * 60 * 1000L; // 11 minutes
   public static final long TIMEOUT_MIX = 15 * 60 * 1000L; // 15 minutes
-  public static final long TIMEOUT_MIXCASCADE = 15 * 60 * 1000L; // 15 minutes
+ public static final long TIMEOUT_MIXCASCADE = 15 * 60 * 1000L; // 15 minutes
   public static final long TIMEOUT_STATUS = 100 * 1000L; // 100 seconds
 
   /**
@@ -77,7 +74,7 @@ final public class Constants
   /**
    * This is the general timeout for the Infoservice socket communication (milli seconds).
    */
-   public static final int	COMMUNICATION_TIMEOUT=30000; //30 seconds
+  public static final int	COMMUNICATION_TIMEOUT=30000; //30 seconds
 
   public static final long ANNOUNCE_PERIOD = 10 * 60 * (long) (1000); // 10 minutes
 
@@ -91,7 +88,7 @@ final public class Constants
   /**
    * This is the version number of the infoservice software.
    */
-  public static final String INFOSERVICE_VERSION = "IS.06.040"; //never change the layout of this line!
+  public static final String INFOSERVICE_VERSION = "IS.07.001"; //never change the layout of this line!
 
 
 }

@@ -28,19 +28,24 @@
 package anon.infoservice;
 
 import java.util.Enumeration;
+import java.util.Observable;
 import java.util.Vector;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
+import anon.util.XMLUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 
-import org.w3c.dom.Element;
-
 /**
  * This class holds the instances of the InfoService class for the JAP client and is a singleton.
+ * The instance of this class is observable and will send a notification with an
+ * InfoServiceHolderMessage, if the preferred InfoService or the InfoService management policy
+ * were changed. 
  */
-public class InfoServiceHolder
-{
+public class InfoServiceHolder extends Observable {
 
   /**
    * Function number for fetchInformation() - getMixCascades().
@@ -83,30 +88,38 @@ public class InfoServiceHolder
   private static final int GET_FORWARDER = 8;
 
   /**
+   * Stores the name of the root node of the XML settings for this class.
+   */
+  private static final String XML_SETTINGS_ROOT_NODE_NAME = "InfoServiceManagement";
+
+
+  /**
    * Stores the instance of InfoServiceHolder (Singleton).
    */
   private static InfoServiceHolder ms_infoServiceHolderInstance = null;
 
+
   /**
-   * Stores the prefered InfoService. This InfoService is asked first for every information.
+   * Stores the preferred InfoService. This InfoService is asked first for every information.
    */
-  private InfoServiceDBEntry preferedInfoService;
+  private InfoServiceDBEntry m_preferredInfoService;
 
   /**
    * Stores, whether there is an automatic change of infoservice after failure. If this value is
-   * set to false, only the prefered infoservice is used.
+   * set to false, only the preferred infoservice is used.
    */
   private boolean m_changeInfoServices;
+
 
   /**
    * This creates a new instance of InfoServiceHolder. This is only used for setting some
    * values. Use InfoServiceHolder.getInstance() for getting an instance of this class.
    */
-  private InfoServiceHolder()
-  {
-    preferedInfoService = null;
+  private InfoServiceHolder() {
+    m_preferredInfoService = null;
     m_changeInfoServices = true;
   }
+
 
   /**
    * Returns the instance of InfoServiceHolder (Singleton). If there is no instance,
@@ -124,61 +137,75 @@ public class InfoServiceHolder
   }
 
   /**
-   * Sets the prefered InfoService. This InfoService is used every time we need data from an
+   * Returns the name of the XML node used to store all settings of the InfoServiceHolder
+   * instance. This name can be used to find the XML node within a document when the settings
+   * shall be loaded.
+   *
+   * @return The name of the XML node created when storing the settings.
+   */
+  public static String getXmlSettingsRootNodeName() {
+    return XML_SETTINGS_ROOT_NODE_NAME;
+  }
+
+
+  /**
+   * Sets the preferred InfoService. This InfoService is used every time we need data from an
    * InfoService until there is an connection error. If we can't get a connection to any of the
    * interfaces of this InfoService or if we get no or wrong data from this InfoService it is
    * changed automatically.
    *
-   * @param preferedInfoService The prefered InfoService.
+   * @param a_preferredInfoService The preferred InfoService.
    */
-  public void setPreferedInfoService(InfoServiceDBEntry preferedInfoService)
-  {
-    if (preferedInfoService != null)
-    {
-      synchronized (this)
-      {
-        this.preferedInfoService = preferedInfoService;
+  public void setPreferredInfoService(InfoServiceDBEntry a_preferredInfoService) {
+    if (a_preferredInfoService != null) {
+      synchronized (this) {
+        /* also if m_preferredInfoService.equals(a_preferredInfoService), there is the possibility
+         * that some values of the infoservice, like listener interfaces or the name have been
+         * changed, so we always update the internal stored pererred infoservice
+         */
+        m_preferredInfoService = a_preferredInfoService;
+        setChanged();
+        notifyObservers(new InfoServiceHolderMessage(InfoServiceHolderMessage.PREFERRED_INFOSERVICE_CHANGED, m_preferredInfoService));
       }
-      LogHolder.log(LogLevel.INFO, LogType.NET,
-              "Prefered InfoService is now: " + preferedInfoService.getName());
+      LogHolder.log(LogLevel.INFO, LogType.NET, "Preferred InfoService is now: " + m_preferredInfoService.getName());
     }
   }
 
   /**
-   * Returns the prefered InfoService. This InfoService is used every time we need data from an
+   * Returns the preferred InfoService. This InfoService is used every time we need data from an
    * InfoService until there is an connection error. If we can't get a connection to any of the
    * interfaces of this InfoService or if we get no or wrong data from this InfoService it is
    * changed automatically.
    *
-   * @return The prefered InfoService or null, if no prefered InfoService is set.
+   * @return The preferred InfoService or null, if no preferred InfoService is set.
    */
-  public InfoServiceDBEntry getPreferedInfoService()
-  {
-    InfoServiceDBEntry preferedInfoService = null;
-    synchronized (this)
-    {
-      preferedInfoService = this.preferedInfoService;
+  public InfoServiceDBEntry getPreferredInfoService() {
+    InfoServiceDBEntry preferredInfoService = null;
+    synchronized (this) {
+      preferredInfoService = m_preferredInfoService;
     }
-    return preferedInfoService;
+    return preferredInfoService;
   }
 
   /**
    * Sets, whether there is an automatic change of infoservice after failure. If this value is
-   * set to false, only the prefered infoservice is used.
+   * set to false, only the preferred infoservice is used.
    *
    * @param a_changeInfoServices Whether there are automatic changes of the infoservice.
    */
-  public void setChangeInfoServices(boolean a_changeInfoServices)
-  {
-    synchronized (this)
-    {
+  public void setChangeInfoServices(boolean a_changeInfoServices) {
+    synchronized (this) {
+      if (m_changeInfoServices != a_changeInfoServices) {
       m_changeInfoServices = a_changeInfoServices;
+        setChanged();
+        notifyObservers(new InfoServiceHolderMessage(InfoServiceHolderMessage.INFOSERVICE_MANAGEMENT_CHANGED, new Boolean(m_changeInfoServices)));
+      }
     }
   }
 
   /**
    * Returns, whether there is an automatic change of infoservice after failure. If this value is
-   * set to false, only the prefered infoservice is used for requests.
+   * set to false, only the preferred infoservice is used for requests.
    *
    * @return Whether there are automatic changes of the infoservice.
    */
@@ -193,7 +220,7 @@ public class InfoServiceHolder
   }
 
   /**
-   * Returns a Vector of InfoServices with all known infoservices (including the prefered
+   * Returns a Vector of InfoServices with all known infoservices (including the preferred
    * infoservice), which have a forwarder list.
    *
    * @return The Vector of all known infoservices with a forwarder list, maybe this Vector is
@@ -202,11 +229,11 @@ public class InfoServiceHolder
   public Vector getInfoservicesWithForwarderList()
   {
     Vector primaryInfoServices = new Vector();
-    /* check the prefered infoservice */
-    InfoServiceDBEntry currentPreferedInfoService = getPreferedInfoService();
-    if (currentPreferedInfoService.hasPrimaryForwarderList() == true)
+    /* check the preferred infoservice */
+    InfoServiceDBEntry currentPreferredInfoService = getPreferredInfoService();
+    if (currentPreferredInfoService.hasPrimaryForwarderList() == true)
     {
-      primaryInfoServices.addElement(currentPreferedInfoService);
+      primaryInfoServices.addElement(currentPreferredInfoService);
     }
     Enumeration infoservices = Database.getInstance(InfoServiceDBEntry.class).getEntryList().elements();
     while (infoservices.hasMoreElements())
@@ -214,9 +241,9 @@ public class InfoServiceHolder
       InfoServiceDBEntry currentInfoService = (InfoServiceDBEntry) (infoservices.nextElement());
       if (currentInfoService.hasPrimaryForwarderList())
       {
-        if (currentInfoService.getId().equals(currentPreferedInfoService.getId()) == false)
+        if (currentInfoService.getId().equals(currentPreferredInfoService.getId()) == false)
         {
-          /* we have already the prefered infoservice in the list -> only add other infoservices */
+          /* we have already the preferred infoservice in the list -> only add other infoservices */
           primaryInfoServices.addElement(currentInfoService);
         }
       }
@@ -226,7 +253,7 @@ public class InfoServiceHolder
 
   /**
    * Fetches every information from the infoservices. If we can't get the information from the
-   * prefered infoservice, all other known infoservices are asked automatically until an
+   * preferred infoservice, all other known infoservices are asked automatically until an
    * infoservice has the information. If we can't get the information from any infoservice, an
    * Exception is thrown.
    *
@@ -239,7 +266,7 @@ public class InfoServiceHolder
   private Object fetchInformation(int functionNumber, Vector arguments) throws Exception
   {
     InfoServiceDBEntry currentInfoService = null;
-    currentInfoService = getPreferedInfoService();
+    currentInfoService = getPreferredInfoService();
     Vector infoServiceList = null;
     if (m_changeInfoServices)
     {
@@ -248,7 +275,7 @@ public class InfoServiceHolder
     }
     else
     {
-      /* use an empty list -> only prefered infoservice is used */
+      /* use an empty list -> only preferred infoservice is used */
       infoServiceList = new Vector();
     }
     while (((infoServiceList.size() > 0) || (currentInfoService != null)) && (Thread.currentThread().isInterrupted() == false))
@@ -299,20 +326,20 @@ public class InfoServiceHolder
         {
           result = currentInfoService.getForwarder();
         }
-        /* no error occured -> success -> update the prefered infoservice and exit */
-        InfoServiceDBEntry preferedInfoService = getPreferedInfoService();
-        if (preferedInfoService != null)
+        /* no error occured -> success -> update the preferred infoservice and exit */
+        InfoServiceDBEntry preferredInfoService = getPreferredInfoService();
+        if (preferredInfoService != null)
         {
-          if (!currentInfoService.getId().equals(preferedInfoService.getId()))
+          if (!currentInfoService.getId().equals(preferredInfoService.getId()))
           {
             /* update only, if it is another infoservice */
-            setPreferedInfoService(currentInfoService);
+            setPreferredInfoService(currentInfoService);
           }
         }
         else
         {
-          /* if no prefered infoservice set -> set current infoservice */
-          setPreferedInfoService(currentInfoService);
+          /* if no preferred infoservice set -> set current infoservice */
+          setPreferredInfoService(currentInfoService);
         }
         return result;
       }
@@ -332,8 +359,8 @@ public class InfoServiceHolder
 
 
   /**
-   * Get a Vector of all mixcascades the prefered infoservice knows. If we can't get a the
-   * information from prefered infoservice, another known infoservice is asked. If we have gotten
+   * Get a Vector of all mixcascades the preferred infoservice knows. If we can't get a the
+   * information from preferred infoservice, another known infoservice is asked. If we have gotten
    * a list from one infoservice, we stop asking other infoservices, so information is not a
    * cumulative list with information from more than one infoservice. If we can't get the
    * information from any infoservice, null is returned.
@@ -355,8 +382,8 @@ public class InfoServiceHolder
   }
 
   /**
-   * Get a Vector of all infoservices the prefered infoservice knows. If we can't get a the
-   * information from prefered infoservice, another known infoservice is asked. If we have gotten
+   * Get a Vector of all infoservices the preferred infoservice knows. If we can't get a the
+   * information from preferred infoservice, another known infoservice is asked. If we have gotten
    * a list from one infoservice, we stop asking other infoservices, so information is not a
    * cumulative list with information from more than one infoservice. If we can't get the
    * information from any infoservice, null is returned.
@@ -379,7 +406,7 @@ public class InfoServiceHolder
 
   /**
    * Get the MixInfo for the mix with the given ID. If we can't get a the information from
-   * prefered infoservice, another known infoservice is asked. If we can't get the information
+   * preferred infoservice, another known infoservice is asked. If we can't get the information
    * from any infoservice, null is returned. You should not call this method directly, better
    * call the method in MixCascade to get the MixInfo.
    *
@@ -405,7 +432,7 @@ public class InfoServiceHolder
 
   /**
    * Get the StatusInfo for the mixcascade with the given ID. If we can't get a the information
-   * from prefered infoservice, another known infoservice is asked. If we can't get the
+   * from preferred infoservice, another known infoservice is asked. If we can't get the
    * information from any infoservice, null is returned. You should not call this method directly,
    * better call the method in MixCascade to get the current status.
    *
@@ -435,7 +462,7 @@ public class InfoServiceHolder
   /**
    * Get the version String of the current JAP version from the infoservice. This function is
    * called to check, whether updates of the JAP are available. If we can't get a the information
-   * from prefered infoservice, another known infoservice is asked. If we can't get the
+   * from preferred infoservice, another known infoservice is asked. If we can't get the
    * information from any infoservice, null is returned.
    *
    * @return The version String (fromat: nn.nn.nnn) of the current JAP version.
@@ -456,9 +483,9 @@ public class InfoServiceHolder
 
   /**
    * Returns the JAPVersionInfo for the specified type. The JAPVersionInfo is generated from
-   * the JNLP files received from the infoservice. If we can't get a the information from prefered
-   * infoservice, another known infoservice is asked. If we can't get the information from any
-   * infoservice, null is returned.
+   * the JNLP files received from the infoservice. If we can't get a the information from
+   * preferred infoservice, another known infoservice is asked. If we can't get the information
+   * from any infoservice, null is returned.
    *
    * @param japVersionType Selects the JAPVersionInfo (release / development). Look at the
    *                       Constants in JAPVersionInfo.
@@ -483,7 +510,7 @@ public class InfoServiceHolder
 
   /**
    * Get the list with the tor nodes from the infoservice. If we can't get a the information from
-   * prefered infoservice, another known infoservice is asked. If we can't get the information
+   * preferred infoservice, another known infoservice is asked. If we can't get the information
    * from any infoservice, null is returned.
    *
    * @return The raw tor nodes list as it is distributed by the tor directory servers.
@@ -505,7 +532,7 @@ public class InfoServiceHolder
   /**
    * Downloads a forwarder entry from a infoservice. If that infoservice has no forwarder list,
    * it will ask another infoservice with such a list and returns the answer to us. If we can't
-   * get the information from prefered infoservice, another known infoservice is asked. If we
+   * get the information from preferred infoservice, another known infoservice is asked. If we
    * can't get the information from any infoservice, null is returned.
    *
    * @return The JapForwarder node of the answer of the infoservice's getforwarder command.
@@ -524,4 +551,68 @@ public class InfoServiceHolder
     }
   }
 
+  /**
+   * Returns all settings (including the database of known infoservices) as an XML node.
+   *
+   * @param a_doc The parent document for the created XML node.
+   *
+   * @return The settings of this instance of InfoServiceHolder as an XML node.
+   */
+  public Element getSettingsAsXml(Document a_doc) {
+    Element infoServiceManagementNode = a_doc.createElement(XML_SETTINGS_ROOT_NODE_NAME);
+    Element infoServicesNode = InfoServiceDBEntry.toXmlElement(a_doc, Database.getInstance(InfoServiceDBEntry.class));
+    Element preferredInfoServiceNode = a_doc.createElement("PreferredInfoService");
+    Element changeInfoServicesNode = a_doc.createElement("ChangeInfoServices");
+    synchronized (this) {
+      InfoServiceDBEntry preferredInfoService = getPreferredInfoService();
+      if (preferredInfoService != null) {
+        preferredInfoServiceNode.appendChild(preferredInfoService.toXmlElement(a_doc));
+      }
+      XMLUtil.setValue(changeInfoServicesNode, isChangeInfoServices());
+    }
+    infoServiceManagementNode.appendChild(infoServicesNode);
+    infoServiceManagementNode.appendChild(preferredInfoServiceNode);
+    infoServiceManagementNode.appendChild(changeInfoServicesNode);        
+    return infoServiceManagementNode;
+  }
+  
+  /**
+   * Restores the settings of this instance of InfoServiceHolder with the settings stored in the
+   * specified XML node.
+   *
+   * @param a_infoServiceManagementNode The XML node for loading the settings from. The name of
+   *                                    the needed XML node can be obtained by calling
+   *                                    getXmlSettingsRootNodeName().
+   */
+  public void loadSettingsFromXml(Element a_infoServiceManagementNode) throws Exception {
+    /* parse the whole InfoServiceManagement node */
+    Element infoServicesNode = (Element)(XMLUtil.getFirstChildByName(a_infoServiceManagementNode, "InfoServices"));
+    if (infoServicesNode == null) {
+      throw (new Exception("InfoServiceHolder: loadSettingsFromXml: No InfoServices node found."));
+    }
+    /* InfoServices node found -> load it into the database of known infoservices */
+    InfoServiceDBEntry.loadFromXml(infoServicesNode, Database.getInstance(InfoServiceDBEntry.class));
+    Element preferredInfoServiceNode = (Element)(XMLUtil.getFirstChildByName(a_infoServiceManagementNode, "PreferredInfoService"));
+    if (preferredInfoServiceNode == null) {
+      throw (new Exception("InfoServiceHolder: loadSettingsFromXml: No PreferredInfoService node found."));
+    }
+    Element infoServiceNode = (Element)(XMLUtil.getFirstChildByName(preferredInfoServiceNode, "InfoService"));
+    InfoServiceDBEntry preferredInfoService = null;
+    if (infoServiceNode != null) {
+      /* there is a preferred infoservice -> parse it */
+      preferredInfoService = new InfoServiceDBEntry(infoServiceNode);
+    }
+    Element changeInfoServicesNode = (Element)(XMLUtil.getFirstChildByName(a_infoServiceManagementNode, "ChangeInfoServices"));
+    if (changeInfoServicesNode == null) {
+      throw (new Exception("InfoServiceHolder: loadSettingsFromXml: No ChangeInfoServices node found."));
+    }
+    synchronized (this) {
+      /* we have collected all values -> set them */
+      if (preferredInfoService != null) {
+        setPreferredInfoService(preferredInfoService);
+      }
+      setChangeInfoServices(XMLUtil.parseValue(changeInfoServicesNode, isChangeInfoServices()));
+    }
+  }
+  
 }

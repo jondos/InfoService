@@ -55,8 +55,8 @@ import anon.util.XMLUtil;
 /**
  * Holds the information for an infoservice.
  */
-final public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncodable
-{
+public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistributable, IXMLEncodable {
+
   /**
    * This is the ID of this infoservice.
    */
@@ -96,7 +96,7 @@ final public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncod
    * We send all messages only to neighbours, so we have less traffic.
    * For now, every remote infoservice is a neighbour and it is only false for the local one.
    */
-  private boolean m_neighbour = false;
+  private boolean m_neighbour;
 
   /**
    * Stores the XML representation of this InfoServiceDBEntry.
@@ -108,6 +108,14 @@ final public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncod
    * generated from the InfoService itself (false).
    */
   private boolean m_userDefined;
+
+  /**
+   * Stores the time when this infoservice entry was created by the origin infoservice or by the
+   * JAP client (if it is a user-defined entry). This value is used to determine the more recent
+   * infoservice entry, if two entries are compared (higher version number -> more recent entry).
+   */
+  private long m_creationTimeStamp;
+
 
   /**
    * Creates an XML node (InfoServices node) with all infoservices from the database inside.
@@ -160,14 +168,70 @@ final public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncod
     }
   }
 
+
   /**
-   * Creates a new InfoService from XML description (InfoService node).
+   * Returns the name of the XML element constructed by this class.
+   *
+   * @return the name of the XML element constructed by this class
+   */
+  public static String getXmlElementName() {
+    return "InfoService";
+  }
+
+  /**
+   * This is only for compatibility and will be rewritten next time.
+   * @todo rewrite this
+   * @param a_listenerInterface a ListenerInterface of this InfoService
+   * @return Returns an ID for the infoservice (IP:Port of the first listener interface).
+   */
+  private static String generateId(ListenerInterface a_listenerInterface)
+  {
+    return a_listenerInterface.getHost() + "%3A" + a_listenerInterface.getPort();
+  }
+
+
+  /**
+   * Creates a new InfoService from XML description (InfoService node). The new entry will be
+   * created within the context of the JAP client (the timeout for infoservice entries within the
+   * JAP client is used).
+   *
    * @param a_infoServiceNode The InfoService node from an XML document.
+   *
    * @exception XMLParseException if an error in the xml structure occurs
    */
-  public InfoServiceDBEntry(Element a_infoServiceNode) throws XMLParseException
-  {
-    super(System.currentTimeMillis() + Constants.TIMEOUT_INFOSERVICE_JAP);
+  public InfoServiceDBEntry(Element a_infoServiceNode) throws XMLParseException {
+    this(a_infoServiceNode, true);
+  }
+
+  /**
+   * Creates a new InfoService from XML description (InfoService node). The new entry will be
+   * created within the specified context. The context influcences the timeout within the database
+   * of all infoservices.
+   *
+   * @param a_infoServiceNode The InfoService node from an XML document.
+   * @param a_japClientContext Whether the new entry will be created within the context of the
+   *                           JAP client (true) or the context of the InfoService (false). This
+   *                           setting influences the timeout of the created entry within the
+   *                           database of all infoservices.
+   *
+   * @exception XMLParseException if an error in the xml structure occurs
+   */
+  public InfoServiceDBEntry(Element a_infoServiceNode, boolean a_japClientContext) throws XMLParseException {
+    this(a_infoServiceNode, (a_japClientContext ? (System.currentTimeMillis() + Constants.TIMEOUT_INFOSERVICE_JAP) : (System.currentTimeMillis() + Constants.TIMEOUT_INFOSERVICE)));
+  }
+
+
+  /**
+   * Creates a new InfoService from XML description (InfoService node).
+   *
+   * @param a_infoServiceNode The InfoService node from an XML document.
+   * @param a_timeout The timeout of the new InfoServiceDBEntry within the database of all
+   *                  InfoServices, see System.currentTimeMillis().
+   *
+   * @exception XMLParseException if an error in the xml structure occurs
+   */
+  private InfoServiceDBEntry(Element a_infoServiceNode, long a_timeout) throws XMLParseException {
+    super(a_timeout);
 
     if (a_infoServiceNode == null)
     {
@@ -180,15 +244,6 @@ final public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncod
     /* get the ID */
     m_strInfoServiceId = a_infoServiceNode.getAttribute("id");
 
-    /* verify the signature */
-    /*if (!SignatureManager.getInstance().verifyXml(a_infoServiceNode,
-     SignatureManager.DOCUMENT_CLASS_INFOSERVICE, m_strInfoServiceId))
-       {
-     LogHolder.log(LogLevel.WARNING, LogType.MISC,
-      "XML Signature verification failed for InfoService with ID: " + m_strInfoServiceId);
-     throw new XMLParseException("Couldn't verify XML signature.");
-       }*/
-
     /* get the name */
     m_strName = XMLUtil.parseValue(XMLUtil.getFirstChildByName(a_infoServiceNode, "Name"), null);
     if (m_strName == null)
@@ -197,8 +252,7 @@ final public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncod
     }
 
     /* get the software information */
-    m_infoserviceSoftware = new ServiceSoftware( (Element)
-      XMLUtil.getFirstChildByName(a_infoServiceNode, ServiceSoftware.getXMLElementName()));
+    m_infoserviceSoftware = new ServiceSoftware((Element)XMLUtil.getFirstChildByName(a_infoServiceNode, ServiceSoftware.getXmlElementName()));
 
     /* get the listener interfaces */
     Node networkNode = XMLUtil.getFirstChildByName(a_infoServiceNode, "Network");
@@ -228,10 +282,14 @@ final public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncod
     /* set the first interface as prefered interface */
     m_preferedListenerInterface = 0;
 
-    /* get the Expire timestamp */
-    /*m_japExpireTime =
-     XMLUtil.parseNodeLong(XMLUtil.getFirstChildByName(a_infoServiceNode, "Expire"),
-      Constants.TIMEOUT_INFOSERVICE_JAP);*/
+    /* get the creation timestamp */
+    m_creationTimeStamp = XMLUtil.parseValue(XMLUtil.getFirstChildByName(a_infoServiceNode, "LastUpdate"), -1L);
+    if (m_creationTimeStamp == -1) {
+      /** use the old expire value (only needed for compatibility with InfoServices <= IS.06.040
+       *  @todo remove it and throw an XMLParseException
+       */
+      m_creationTimeStamp = XMLUtil.parseValue(XMLUtil.getFirstChildByName(a_infoServiceNode, "Expire"), System.currentTimeMillis());
+    }
 
     /* get the information, whether this infoservice keeps a list of JAP forwarders */
     if (XMLUtil.getFirstChildByName(a_infoServiceNode, "ForwarderList") == null)
@@ -266,27 +324,27 @@ final public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncod
     m_neighbour = true;
   }
 
+
   /**
-   * Creates a new InfoServiceDBEntry from the hostName / IP and the port. The hostName and port are
-   * directly used for creating the ListenerInterface for this InfoService. The ID (if not given)
-   * is set to a generic value derived from the hostname and the port. If you supply a name for
-   * the infoservice then it will get that name, if you supply null, the name will be of the type
-   * "hostname:port". The expire time is calculated by using the DEFAULT_EXPIRE_TIME constant.
-   * The software info is set to a dummy value. The "has forwarder list" value is set to false.
-   * That's no problem because such a user-defined infoservice shall only be the initial
-   * infoservice for getting the current list of working infoservices.
+   * Creates a new InfoServiceDBEntry. The ID is set to a generic value derived from the host and
+   * the port of the first listener interface. If you supply a name for the infoservice then it
+   * will get that name, if you supply null, the name will be of the type "hostname:port". If the
+   * new infoservice entry is created within the context of the JAP client, the software info is
+   * set to a dummy value. If it is created within the context of the infoservice, the software
+   * info is set to the current infoservice version (see Constants.INFOSERVICE_VERSION).
    *
    * @param a_strName The name of the infoservice or null, if a generic name shall be used.
    * @param a_listeners The listeners the infoservice is (virtually) listening on.
-   * @param a_userDefined Whether the infoservice is user-defined within the JAP client (true) or
-   *                      is generated within the InfoService system (false).
+   * @param a_primaryForwarderList Whether the infoservice holds a primary forwarder list.
+   * @param a_japClientContext Whether the new entry will be created within the context of the
+   *                           JAP client (true) or the context of the InfoService (false). This
+   *                           setting influences the timeout of the created entry within the
+   *                           database of all infoservices.
    *
    * @exception IllegalArgumentException if invalid listener interfaces are given
    */
-  public InfoServiceDBEntry(String a_strName, Vector a_listeners, boolean a_userDefined) throws
-    IllegalArgumentException
-  {
-    super(System.currentTimeMillis() + Constants.TIMEOUT_INFOSERVICE_JAP);
+  public InfoServiceDBEntry(String a_strName, Vector a_listeners, boolean a_primaryForwarderList, boolean a_japClientContext) throws IllegalArgumentException {
+    super(a_japClientContext ? (System.currentTimeMillis() + Constants.TIMEOUT_INFOSERVICE_JAP) : (System.currentTimeMillis() + Constants.TIMEOUT_INFOSERVICE));
 
     if (a_listeners == null)
     {
@@ -305,49 +363,40 @@ final public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncod
     }
 
     m_strInfoServiceId = generateId( (ListenerInterface) m_listenerInterfaces.firstElement());
+    /* if it is a user-defined infoservice use a special id to avoid collisions with real
+     * infoservices
+     */
+    if (a_japClientContext) {
+      m_strInfoServiceId = "(user)" + m_strInfoServiceId;
+    }
 
     /* set a name */
     m_strName = a_strName;
-    if (m_strName == null)
-    {
-      m_strName = m_strInfoServiceId;
+    if (m_strName == null) {
+      /* create a name with information from the first listener interface */
+      ListenerInterface firstListenerInterface = ((ListenerInterface)m_listenerInterfaces.firstElement());
+      m_strName = firstListenerInterface.getHost() + ":" + Integer.toString(firstListenerInterface.getPort());
     }
 
-    m_bPrimaryForwarderList = false;
-    m_infoserviceSoftware = new ServiceSoftware("unknown");
-    m_preferedListenerInterface = 0;
-    m_userDefined = a_userDefined;
+    m_bPrimaryForwarderList = a_primaryForwarderList;
+    if (a_japClientContext) {
+      m_infoserviceSoftware = new ServiceSoftware("unknown");
+    }
+    else {
+      m_infoserviceSoftware = new ServiceSoftware(Constants.INFOSERVICE_VERSION);
+    }
 
+    m_preferedListenerInterface = 0;
+    m_userDefined = a_japClientContext;
+    m_creationTimeStamp = System.currentTimeMillis();
+
+    /* locally created infoservices are never neighbours of our infoservice */
+    m_neighbour = false;
+    
     /* generate the XML representation for this InfoServiceDBEntry */
     m_xmlDescription = generateXmlRepresentation();
   }
 
-  /**
-   * Returns the name of the XML element constructed by this class.
-   * @return the name of the XML element constructed by this class
-   */
-  public static String getXMLElementName()
-  {
-    return "InfoService";
-  }
-
-  /**
-   * Creates an XML node for this InfoService.
-   * @param a_doc The XML document, which is the environment for the created XML node.
-   * @return The InfoService XML node.
-   */
-  public Element toXmlElement(Document a_doc)
-  {
-    Element returnXmlStructure = null;
-    try
-    {
-      returnXmlStructure = (Element) (XMLUtil.importNode(a_doc, m_xmlDescription, true));
-    }
-    catch (Exception e)
-    {
-    }
-    return returnXmlStructure;
-  }
 
   /**
    * Generates the XML representation for this InfoServiceDBEntry. That XML representation is
@@ -359,12 +408,13 @@ final public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncod
   {
     Document doc = XMLUtil.createDocument();
     /* Create the InfoService element */
-    Element infoServiceNode = doc.createElement(getXMLElementName());
+    Element infoServiceNode = doc.createElement(getXmlElementName());
     infoServiceNode.setAttribute("id", m_strInfoServiceId);
     /* Create the child nodes of InfoService */
     Element nameNode = doc.createElement("Name");
     nameNode.appendChild(doc.createTextNode(m_strName));
     Element networkNode = doc.createElement("Network");
+
     Element listenerInterfacesNode = doc.createElement("ListenerInterfaces");
     Enumeration enumer = m_listenerInterfaces.elements();
     while (enumer.hasMoreElements())
@@ -373,11 +423,20 @@ final public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncod
       listenerInterfacesNode.appendChild(currentListenerInterface.toXmlElement(doc));
     }
     networkNode.appendChild(listenerInterfacesNode);
+    Element lastUpdateNode = doc.createElement("LastUpdate");
+    lastUpdateNode.appendChild(doc.createTextNode(Long.toString(m_creationTimeStamp)));
+    /** create also an expire node for comptatibility with JAP/InfoService <= 00.03.043/IS.06.040
+     *  @todo remove it
+     */
     Element expireNode = doc.createElement("Expire");
-    expireNode.appendChild(doc.createTextNode(Long.toString(getExpireTime())));
+    expireNode.appendChild(doc.createTextNode(Long.toString(m_creationTimeStamp)));
     infoServiceNode.appendChild(nameNode);
     infoServiceNode.appendChild(m_infoserviceSoftware.toXmlElement(doc));
     infoServiceNode.appendChild(networkNode);
+    infoServiceNode.appendChild(lastUpdateNode);
+    /** append also an expire node for comptatibility with JAP/InfoService <= 00.03.043/IS.06.040
+     *  @todo remove it
+     */    
     infoServiceNode.appendChild(expireNode);
     if (m_bPrimaryForwarderList)
     {
@@ -407,16 +466,6 @@ final public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncod
     return infoServiceNode;
   }
 
-  /**
-   * This is only for compatibility and will be rewritten next time.
-   * @todo rewrite this
-   * @param a_listenerInterface a ListenerInterface of this InfoService
-   * @return Returns an ID for the infoservice (IP:Port of the first listener interface).
-   */
-  private static String generateId(ListenerInterface a_listenerInterface)
-  {
-    return a_listenerInterface.getHost() + "%3A" + a_listenerInterface.getPort();
-  }
 
   /**
    * Returns the ID of the infoservice.
@@ -436,6 +485,17 @@ final public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncod
   public String getName()
   {
     return m_strName;
+  }
+
+  /**
+   * Returns the time when this infoservice entry was created by the origin infoservice or by the
+   * JAP client (if it is a user-defined entry).
+   *
+   * @return A version number which is used to determine the more recent infoservice entry, if two
+   *         entries are compared (higher version number -> more recent entry).
+   */
+  public long getVersionNumber() {
+    return m_creationTimeStamp;
   }
 
   /**
@@ -486,6 +546,89 @@ final public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncod
     return m_strName;
   }
 
+  /**
+   * Creates an XML node for this InfoService.
+   * @param a_doc The XML document, which is the environment for the created XML node.
+   * @return The InfoService XML node.
+   */
+  public Element toXmlElement(Document a_doc)
+  {
+    Element returnXmlStructure = null;
+    try
+    {
+      returnXmlStructure = (Element) (XMLUtil.importNode(a_doc, m_xmlDescription, true));
+    }
+    catch (Exception e)
+    {
+    }
+    return returnXmlStructure;
+  }
+
+  /**
+   * Compares this object to another one. This method returns only true, if the other object is
+   * also an InfoServiceDBEntry and has the same ID as this InfoServiceDBEntry.
+   *
+   * @param a_object The object with which to compare.
+   *
+   * @return True, if the object with which to compare is also an InfoServiceDBEntry which has the
+   *         same ID as this instance. In any other case, false is returned.
+   */
+  public boolean equals(Object a_object) {
+    boolean objectEquals = false;
+    if (a_object != null) {
+      if (a_object instanceof InfoServiceDBEntry) {
+        objectEquals = this.getId().equals(((InfoServiceDBEntry)a_object).getId());
+      }
+    }
+    return objectEquals;
+  }
+  
+  /**
+   * Returns a hashcode for this instance of InfoServiceDBEntry. The hashcode is calculated from
+   * the ID, so if two instances of InfoServiceDBEntry have the same ID, they will have the same
+   * hashcode.
+   *
+   * @return The hashcode for this InfoServiceDBEntry.
+   */
+  public int hashCode() {
+    return (getId().hashCode());
+  }
+
+  /**
+   * This returns the filename (InfoService command), where this InfoServerDBEntry is posted at
+   * other InfoServices. It's always '/infoserver'.
+   *
+   * @return The filename where the information about this InfoServerDBEntry is posted at other
+   *         InfoServices when this entry is forwarded.
+   */
+  public String getPostFile()
+  {
+    return "/infoserver";
+  }
+
+  /**
+   * This returns the data, which are posted to other InfoServices. It's the whole XML structure
+   * of this InfoServerDBEntry.
+   *
+   * @return The data, which are posted to other InfoServices when this entry is forwarded.
+   */
+  public byte[] getPostData() {
+    return (XMLUtil.toString(m_xmlDescription).getBytes());
+  }
+
+  /**
+   * Returns whether this infoservice is a neighbour of our one. This is only meaningful within
+   * the context of an infoservice. We send all messages only to neighbours, so we have less
+   * traffic. For now, every remote infoservice is a neighbour and it is only false for the local
+   * one.
+   *
+   * @return Whether this infoservice is a neighbour of our one or not.
+   */
+  public boolean isNeighbour() {
+    return m_neighbour;
+  }
+
+    
   /**
    * Creates a new HTTPConnection to a ListenerInterface from the list of all listener interfaces.
    * The connection is created to the interface, which follows the interface described in
@@ -541,7 +684,7 @@ final public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncod
       /* get the next connection descriptor by supplying the last one */
       currentConnectionDescriptor = connectToInfoService(currentConnectionDescriptor);
       final HTTPConnection currentConnection = currentConnectionDescriptor.getConnection();
-
+      
       /* use a Vector as storage for the the result of the communication */
       final Vector responseStorage = new Vector();
       /* we need the possibility to interrupt the infoservice communication, but also we need to
@@ -560,12 +703,12 @@ final public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncod
             else {
               if (a_httpRequest.getRequestCommand() == HttpRequestStructure.HTTP_COMMAND_POST) {
                 LogHolder.log(LogLevel.DEBUG, LogType.NET, "InfoServiceDBEntry: getXmlDocument: Post: " + currentConnection.getHost() + ":" + Integer.toString(currentConnection.getPort()) + a_httpRequest.getRequestFileName());
-            String postData = "";
+                String postData = "";
                 if (a_httpRequest.getRequestPostDocument() != null) {
-              postData = XMLUtil.toString(a_httpRequest.getRequestPostDocument());
-            }
+                  postData = XMLUtil.toString(a_httpRequest.getRequestPostDocument());
+                }
                 responseStorage.addElement(currentConnection.Post(a_httpRequest.getRequestFileName(), postData));
-          }
+              }
               else {
                 throw (new Exception("InfoServiceDBEntry: getXmlDocument: Invalid HTTP command."));
               }
@@ -581,14 +724,14 @@ final public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncod
       try {
         communicationThread.join();
         try {
-          HTTPResponse response = (HTTPResponse)(responseStorage.firstElement());
+          HTTPResponse response = (HTTPResponse)(responseStorage.firstElement());  
           Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(response.getInputStream());
-        /* fetching the document was successful, leave this method */
-        return doc;
-      }
+          /* fetching the document was successful, leave this method */
+          return doc;
+        }
         catch (NoSuchElementException e) {
           /* fetching the information was not successful -> do nothing */
-        }
+        }   
       }
       catch (InterruptedException e) {
         /* operation was interupted from the outside -> set the intterupted flag for the Thread
@@ -683,7 +826,7 @@ final public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncod
       }
       else {
         LogHolder.log(LogLevel.ERR, LogType.MISC, "Cannot verify the signature for InfoService entry: " + XMLUtil.toString(infoServiceNode));
-      }
+      }  
     }
     return infoServices;
   }
@@ -742,38 +885,26 @@ final public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncod
   }
 
   /**
-   * Get the version String of the current JAP version from the infoservice. This function is
-   * called to check, whether updates of the JAP are available. If we can't get a connection with
-   * the infoservice, an Exception is thrown.
+   * Get the version String of the currently minimum required JAP version from the infoservice.
+   * This method is called to check, whether connection to the mixcascades are possible with the
+   * currently used JAP version. If we can't get a connection with the infoservice, an Exception
+   * is thrown.
    *
    * @return The version String (fromat: nn.nn.nnn) of the current JAP version.
    */
-  public String getNewVersionNumber() throws Exception
-  {
+  public String getNewVersionNumber() throws Exception {
     Document doc = getXmlDocument(HttpRequestStructure.createGetRequest("/currentjapversion"));
-    NodeList japNodes = doc.getElementsByTagName("Jap");
-    if (japNodes.getLength() == 0)
-    {
-      throw (new Exception("InfoService: getNewVersionNumber: Error in XML structure."));
-    }
-    Element japNode = (Element) (japNodes.item(0));
-    /* check the signature */
-    if (SignatureVerifier.getInstance().verifyXml(japNode, SignatureVerifier.DOCUMENT_CLASS_UPDATE) == false) {
+    Element japNode = (Element)(XMLUtil.getFirstChildByName(doc, JAPMinVersion.getXmlElementName()));
+    /* verify the signature */
+    if (SignatureVerifier.getInstance().verifyXml(japNode, SignatureVerifier.DOCUMENT_CLASS_UPDATE) == false) {      
       /* signature is invalid -> throw an exception */
-      throw (new Exception("InfoServiceDBEntry: getNewVersionNumber: Cannot verify the signature for Jap version number entry: " + XMLUtil.toString(japNode)));
+      throw (new Exception("InfoServiceDBEntry: getNewVersionNumber: Cannot verify the signature for JAPMinVersion entry: " + XMLUtil.toString(japNode)));
     }
     /* signature was valid */
-    NodeList softwareNodes = japNode.getElementsByTagName("Software");
-    if (softwareNodes.getLength() == 0)
-    {
-      throw (new Exception("InfoService: getNewVersionNumber: Error in XML structure."));
-    }
-    Element softwareNode = (Element) (softwareNodes.item(0));
-    ServiceSoftware currentJapSoftware = new ServiceSoftware(softwareNode);
-    String versionString = currentJapSoftware.getVersion();
-    if ( (versionString.charAt(2) != '.') || (versionString.charAt(5) != '.'))
-    {
-      throw (new Exception("InfoService: getNewVersionNumber: Error in XML structure."));
+    JAPMinVersion minimumRequiredVersion = new JAPMinVersion(japNode);
+    String versionString = minimumRequiredVersion.getJapSoftware().getVersion();
+    if ((versionString.charAt(2) != '.') || (versionString.charAt(5) != '.')) {
+      throw (new Exception("InfoServiceDBEntry: getNewVersionNumber: Invalid version number format: " + versionString));
     }
     return versionString;
   }
@@ -783,23 +914,31 @@ final public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncod
    * the JNLP files received from the infoservice. If we can't get a connection with the
    * infoservice, an Exception is thrown.
    *
-   * @param japVersionType Selects the JAPVersionInfo (release / development). Look at the
-   *                       Constants in JAPVersionInfo.
+   * @param a_japVersionType Selects the JAPVersionInfo (release / development). See the constants
+   *                         in JAPVersionInfo.
    *
    * @return The JAPVersionInfo of the specified type.
    */
-  public JAPVersionInfo getJAPVersionInfo(int japVersionType) throws Exception
+  public JAPVersionInfo getJAPVersionInfo(int a_japVersionType) throws Exception
   {
     Document doc = null;
-    if (japVersionType == JAPVersionInfo.JAP_RELEASE_VERSION)
-    {
+    if (a_japVersionType == JAPVersionInfo.JAP_RELEASE_VERSION) {
       doc = getXmlDocument(HttpRequestStructure.createGetRequest("/japRelease.jnlp"));
     }
-    else if (japVersionType == JAPVersionInfo.JAP_DEVELOPMENT_VERSION)
-    {
+    else if (a_japVersionType == JAPVersionInfo.JAP_DEVELOPMENT_VERSION) {
       doc = getXmlDocument(HttpRequestStructure.createGetRequest("/japDevelopment.jnlp"));
     }
-    return new JAPVersionInfo(doc, japVersionType);
+    else {
+      throw (new Exception("InfoServiceDBEntry: getJAPVersionInfo: Invalid version info requested."));
+    }
+    Element jnlpNode = (Element)(XMLUtil.getFirstChildByName(doc, JAPVersionInfo.getXmlElementName()));
+    /* verify the signature */
+    if (SignatureVerifier.getInstance().verifyXml(jnlpNode, SignatureVerifier.DOCUMENT_CLASS_UPDATE) == false) {      
+      /* signature is invalid -> throw an exception */
+      throw (new Exception("InfoServiceDBEntry: getJAPVersionInfo: Cannot verify the signature for JAPVersionInfo entry: " + XMLUtil.toString(jnlpNode)));
+    }
+    /* signature was valid */
+    return new JAPVersionInfo(jnlpNode, a_japVersionType);
   }
 
   /**

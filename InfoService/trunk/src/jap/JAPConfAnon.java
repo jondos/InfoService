@@ -166,6 +166,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			{
 				if (m_cbMixManual.isSelected())
 				{
+					LogHolder.log(LogLevel.DEBUG, LogType.GUI, "JAPConf:m_rbMixStep3 selected");
 					m_bttnFetchCascades.setEnabled(false);
 					m_listMixCascade.setEnabled(false);
 					m_tfMixHost.setEditable(true);
@@ -1188,7 +1189,7 @@ class InfoServiceTempLayer
 				//Get cascade id
 				String id = cascade.getId();
 				//Get number of mixes in cascade
-				int numOfMixes = cascade.getMixCount();
+				int numOfMixes = cascade.getNumberOfMixes();
 				// Get the number of users on the cascade
 				String numOfUsers = Integer.toString(cascade.getCurrentStatus().getNrOfActiveUsers());
 				// Get hostnames and ports

@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2000 - 2004, The JAP-Team
+ Copyright (c) 2000 - 2005, The JAP-Team
  All rights reserved.
  Redistribution and use in source and binary forms, with or without modification,
  are permitted provided that the following conditions are met:
@@ -31,51 +31,49 @@
 package anon.infoservice;
 
 /**
- * This is a generic definition for a database entry. Every database entry
- * must implement this functions.
+ * This is a generic definition for a database entry. Every database entry must implement this
+ * methods.
  */
-public abstract class DatabaseEntry
-{
-	/**
-	 * Stores the time when this entry will be deleted from the database.
-	 */
-	private long m_expireTime;
+public abstract class AbstractDatabaseEntry {
+  
+  /**
+   * Stores the time when this entry will be deleted from the database.
+   */
+  private long m_expireTime;
 
-	/**
-	 * Creates a new DatabaseEntry with the specified expireTime.
-	 * @param a_expireTime the time when this entry will be deleted from the database
-	 */
-	public DatabaseEntry(long a_expireTime)
-	{
-		m_expireTime = a_expireTime;
-	}
 
-	/**
-	 * Returns a unique ID for a database entry.
-	 *
-	 * @return The ID of this database entry.
-	 */
-	public abstract String getId();
+  /**
+   * Creates a new AbstractDatabaseEntry with the specified expire time.
+   *
+   * @param a_expireTime The time when this entry will be deleted from the database.
+   */
+  public AbstractDatabaseEntry(long a_expireTime) {
+    m_expireTime = a_expireTime;
+  }
 
-	/**
-	 * Returns the time (see System.currentTimeMillis()) when this DatabaseEntry will be removed
-	 * from the Database, if it is not updated meanwhile.
-	 *
-	 * @return The expire time for this DatabaseEntry.
-	 */
-	public long getExpireTime()
-	{
-		return m_expireTime;
-	}
+  /**
+   * Returns a unique ID for a database entry.
+   *
+   * @return The ID of this database entry.
+   */
+  public abstract String getId();
 
-	/**
-	 * Returns a version number that indicates if a DatabaseEntry is newer than an other
-	 * DatabaseEntry. By default, the expire time is returned.
-	 *
-	 * @return The expire time for this DatabaseEntry.
-	 */
-	public long getVersionNumber()
-	{
-		return getExpireTime();
-	}
+  /**
+   * Returns the time (see System.currentTimeMillis()) when this DatabaseEntry will be removed
+   * from the Database, if it is not updated meanwhile.
+   *
+   * @return The expire time for this DatabaseEntry.
+   */
+  public final long getExpireTime() {
+    return m_expireTime;
+  }
+
+  /**
+   * Returns version number which is used to determine the more recent infoservice entry, if two
+   * entries are compared (higher version number -> more recent entry).
+   *
+   * @return The version number for this entry.
+   */
+  public abstract long getVersionNumber();
+
 }

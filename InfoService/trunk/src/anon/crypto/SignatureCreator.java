@@ -25,36 +25,71 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-/* Hint: This file may be only a copy of the original file which is always in the JAP source tree!
- * If you change something - do not forget to add the changes also to the JAP source tree!
- */
-package anon.infoservice;
+package anon.crypto;
 
-/**
- * This is a generic definition of information that is sent to other infoservices.
- */
-public interface IDistributable
-{
+import java.util.Hashtable;
 
+import org.w3c.dom.Node;
+
+public class SignatureCreator {
+  
   /**
-   * Returns a ID for this information. It is used as an identifier for logging status information.
-   * @return The ID of this information.
+   * Stores the instance of SignatureCreator (Singleton).
    */
-  public String getId();
+  private static SignatureCreator ms_scInstance;
 
+
+  private Hashtable m_signatureKeys;
+ 
   /**
-   * Returns the filename (InfoService command) to which the data of this entry is posted at the
-   * other infoservice.
+   * Returns the instance of SignatureCreator (Singleton). If there is no instance, there is a
+   * new one created.
    *
-   * @return The filename, where the data is posted when this entry is forwarded.
+   * @return The SignatureCreator instance.
    */
-  public String getPostFile();
+  public static SignatureCreator getInstance() {
+    synchronized (SignatureCreator.class) {
+      if (ms_scInstance == null) {
+        ms_scInstance = new SignatureCreator();
+      }
+    }
+    return ms_scInstance;
+  }
 
+  
   /**
-   * Returns the data to post to the other infoservice. In general this should be an XML structure
-   * with the data of this entry.
-   *
-   * @return The data to post to the other infoservice when this entry is forwarded.
+   * Creates a new instance of SignatureVerifier.
    */
-  public byte[] getPostData();
+  private SignatureCreator() {
+    m_signatureKeys = new Hashtable();
+  }
+
+
+  public void setSigningKey(int a_purpose, PKCS12 a_signatureKey) {
+    synchronized (m_signatureKeys) {
+      m_signatureKeys.put(new Integer(a_purpose), a_signatureKey);
+    }
+  }
+  
+  public boolean signXml(int a_documentClass, Node a_nodeToSign) {
+    boolean nodeSigned = false;
+    PKCS12 signatureKey = null;
+    synchronized (m_signatureKeys) {
+      signatureKey = (PKCS12)(m_signatureKeys.get(new Integer(a_documentClass)));
+    }
+    if (signatureKey != null) {
+      XMLSignature createdSignature = null;
+      try {
+        createdSignature = XMLSignature.sign(a_nodeToSign, signatureKey);
+      }
+      catch (Exception e) {
+      }
+      if (createdSignature != null) {
+        /* signing the node was successful */
+        nodeSigned = true;
+      }
+    }
+    return nodeSigned;
+  }
+
 }

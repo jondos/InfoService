@@ -27,14 +27,13 @@
  */
 package anon.tor.util;
 
-import anon.infoservice.DatabaseEntry;
+import anon.infoservice.AbstractDatabaseEntry;
 
 /**
  * @author stefan
  *
  */
-public class DNSCacheEntry extends DatabaseEntry
-{
+public class DNSCacheEntry extends AbstractDatabaseEntry {
 
 	private String m_Id;
 	private String m_Ip;
@@ -68,6 +67,10 @@ public class DNSCacheEntry extends DatabaseEntry
 	public String getIp()
 	{
 		return m_Ip;
+	}
+
+	public long getVersionNumber() {
+	  return getExpireTime();
 	}
 
 }
