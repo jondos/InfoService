@@ -56,7 +56,6 @@ class JAPConfAnon extends AbstractJAPConfModule
 {
 	private JCheckBox m_cbAutoConnect;
 	private JCheckBox m_cbAutoReConnect;
-	private JCheckBox m_cbStartupMinimized;
 
 	private JAPJIntField m_tfMixPortNumber;
 	private JTextField m_tfMixHost;
@@ -82,8 +81,6 @@ class JAPConfAnon extends AbstractJAPConfModule
 		m_lastUpdate = 0;
 		Font font = getFontSetting();
 
-		m_cbStartupMinimized = new JCheckBox(JAPMessages.getString("settingsstartupMinimizeCheckBox"));
-		m_cbStartupMinimized.setFont(font);
 		m_cbAutoConnect = new JCheckBox(JAPMessages.getString("settingsautoConnectCheckBox"));
 		m_cbAutoConnect.setFont(font);
 		m_cbAutoReConnect = new JCheckBox(JAPMessages.getString("settingsautoReConnectCheckBox"));
@@ -431,7 +428,6 @@ class JAPConfAnon extends AbstractJAPConfModule
 	{
 		m_tfMixHost.setText(JAPConstants.defaultAnonHost);
 		m_tfMixPortNumber.setText(Integer.toString(JAPConstants.defaultAnonPortNumber));
-		m_cbStartupMinimized.setSelected(false);
 		m_cbAutoConnect.setSelected(false);
 		m_cbAutoReConnect.setSelected(false);
 
@@ -491,7 +487,6 @@ class JAPConfAnon extends AbstractJAPConfModule
 		// Anonservice settings
 		m_Controller.setAutoConnect(m_cbAutoConnect.isSelected());
 		m_Controller.setAutoReConnect(m_cbAutoReConnect.isSelected());
-		m_Controller.setMinimizeOnStartup(m_cbStartupMinimized.isSelected());
 		//Try to Set AnonService
 		if (newCascade != null)
 		{
@@ -510,7 +505,6 @@ class JAPConfAnon extends AbstractJAPConfModule
 		m_tfMixPortNumber.setText(Integer.toString(mixCascade.getListenerInterface(0).getPort()));
 		m_cbAutoConnect.setSelected(JAPModel.getAutoConnect());
 		m_cbAutoReConnect.setSelected(JAPModel.getAutoReConnect());
-		m_cbStartupMinimized.setSelected(JAPModel.getMinimizeOnStartup());
 		updateMixCascadeCombo();
 		if (!m_cbMixManual.isSelected()) //Auswahl is selected
 		{ //try to select the current MixCascade

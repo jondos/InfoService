@@ -31,6 +31,7 @@ import javax.swing.JFrame;
 import gui.JAPDll;
 import javax.swing.SwingUtilities;
 import java.lang.reflect.*;
+
 public abstract class AbstractJAPMainView extends JFrame implements IJAPMainView
 {
 	protected String m_Title;
@@ -45,59 +46,66 @@ public abstract class AbstractJAPMainView extends JFrame implements IJAPMainView
 		}
 	}
 
-	public AbstractJAPMainView(String s,JAPController a_controller)
+	public AbstractJAPMainView(String s, JAPController a_controller)
 	{
 		super(s);
-		m_Controller=a_controller;
-		m_Title=s;
-		m_runnableValueUpdate=new MyViewUpdate();
+		m_Controller = a_controller;
+		m_Title = s;
+		m_runnableValueUpdate = new MyViewUpdate();
 	}
+
 	protected void exitProgram()
 	{
 		JAPController.goodBye(true); // call the final exit procedure of JAP
 	}
 
 	public void hideWindowInTaskbar()
-{
-	synchronized (m_runnableValueUpdate) //updateValues may change the Titel of the Window!!
 	{
-		setTitle(Double.toString(Math.random())); //ensure that we have an uinque title
-		JAPDll.hideWindowInTaskbar(getTitle());
-		setTitle(m_Title);
+		synchronized (m_runnableValueUpdate) //updateValues may change the Titel of the Window!!
+		{
+			setTitle(Double.toString(Math.random())); //ensure that we have an uinque title
+			JAPDll.hideWindowInTaskbar(getTitle());
+			setTitle(m_Title);
+		}
 	}
-}
-public void valuesChanged(boolean bSync)
-{
+
+	public void valuesChanged(boolean bSync)
+	{
 //	synchronized (m_runnableValueUpdate)
-	{
-		if (SwingUtilities.isEventDispatchThread())
 		{
-			updateValues();
-		}
-		else
-		{
-			if(bSync)
-				try
-				{
-					SwingUtilities.invokeAndWait(m_runnableValueUpdate);
-				}
-				catch (InvocationTargetException ex)
-				{
-				}
-				catch (InterruptedException ex)
-				{
-				}
+			if (SwingUtilities.isEventDispatchThread())
+			{
+				updateValues();
+			}
 			else
-				SwingUtilities.invokeLater(m_runnableValueUpdate);
+			{
+				if (bSync)
+				{
+					try
+					{
+						SwingUtilities.invokeAndWait(m_runnableValueUpdate);
+					}
+					catch (InvocationTargetException ex)
+					{
+					}
+					catch (InterruptedException ex)
+					{
+					}
+				}
+				else
+				{
+					SwingUtilities.invokeLater(m_runnableValueUpdate);
+				}
+			}
 		}
+	}
+
+	private void updateValues()
+	{
+		synchronized (m_runnableValueUpdate)
+		{
+			doSynchronizedUpdateValues();
+		}
+
 	}
 }
-
-private void updateValues()
-{
-	synchronized (m_runnableValueUpdate)
-	{
-		doSynchronizedUpdateValues();
-	}
-
-}}

@@ -55,9 +55,15 @@ public class XMLEasyCC extends AbstractXMLSignable
 	private String m_strAiName;
 	private long m_lTransferredBytes;
 	private long m_lAccountNumber;
-	private Document m_signature;
+	private static final String ms_strElemName = "CC";
 
 	//~ Constructors ***********************************************************
+
+	public static String getXMLElementName()
+	{
+		return ms_strElemName;
+	}
+
 	public XMLEasyCC(String aiName, long accountNumber, long transferred, JAPSignature signer) throws
 		Exception
 	{
@@ -92,7 +98,7 @@ public class XMLEasyCC extends AbstractXMLSignable
 
 	private void setValues(Element element) throws Exception
 	{
-		if (!element.getTagName().equals("CC") ||
+		if (!element.getTagName().equals(ms_strElemName) ||
 			!element.getAttribute("version").equals("1.0"))
 		{
 			throw new Exception("XMLEasyCC wrong xml structure or wrong version");
@@ -108,7 +114,7 @@ public class XMLEasyCC extends AbstractXMLSignable
 
 	public Element toXmlElement(Document a_doc)
 	{
-		Element elemRoot = a_doc.createElement("CC");
+		Element elemRoot = a_doc.createElement(ms_strElemName);
 		elemRoot.setAttribute("version", "1.0");
 		Element elem = a_doc.createElement("AiID");
 		XMLUtil.setNodeValue(elem, m_strAiName);

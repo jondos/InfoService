@@ -43,6 +43,7 @@ import anon.util.XMLUtil;
  *   <BalanceRequest>            (optional,  meaning: Jap should send a XMLBalance)
  *     <NewerThan> Timestamp <NewerThan>
  *   </BalanceRequest>
+ *   <AccountRequest />          (optional, meaning: AI wants the Jap to send AccountCert.)
  *   <CC version="1.0">          (optional, meaning: AI wants the Jap to sign this CC)
  *      .... XMLEasyCC structure ....
  *   </CC>
@@ -55,6 +56,7 @@ public class XMLPayRequest implements IXMLEncodable
 {
 	private XMLEasyCC m_cc = null;
 	private java.sql.Timestamp m_balanceNewerThan = null;
+	private boolean m_bIsAccountRequest;
 
 	public XMLPayRequest(String xml) throws Exception
 	{
@@ -105,6 +107,17 @@ public class XMLPayRequest implements IXMLEncodable
 		{
 			m_cc = null;
 		}
+
+		// look for accountrequest
+		elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "AccountRequest");
+		if (elem != null)
+		{
+			m_bIsAccountRequest = true;
+		}
+		else
+		{
+			m_bIsAccountRequest = false;
+		}
 	}
 
 	/** @todo implement (not needed atm, only for the interface */
@@ -121,5 +134,15 @@ public class XMLPayRequest implements IXMLEncodable
 	public java.sql.Timestamp getBalanceTimestamp()
 	{
 		return m_balanceNewerThan;
+	}
+
+	/**
+	 * isAccountRequest
+	 *
+	 * @return boolean
+	 */
+	public boolean isAccountRequest()
+	{
+		return m_bIsAccountRequest;
 	}
 }

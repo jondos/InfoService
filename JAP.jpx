@@ -9,19 +9,16 @@
   <property category="debug.1" name="SmartStepRedefineClasses" value="0"/>
   <property category="debug.1" name="SmartStepSkipStaticInitializers" value="0"/>
   <property category="debug.1" name="SmartStepSkipSynthetics" value="0"/>
-  <property category="debug.10" name="SmartStepRedefineClasses" value="0"/>
-  <property category="debug.10" name="SmartStepSkipStaticInitializers" value="0"/>
-  <property category="debug.10" name="SmartStepSkipSynthetics" value="0"/>
   <property category="debug.11" name="SmartStepRedefineClasses" value="0"/>
   <property category="debug.11" name="SmartStepSkipStaticInitializers" value="0"/>
   <property category="debug.11" name="SmartStepSkipSynthetics" value="0"/>
-  <property category="debug.12" name="SmartStepRedefineClasses" value="0"/>
-  <property category="debug.12" name="SmartStepSkipStaticInitializers" value="0"/>
-  <property category="debug.12" name="SmartStepSkipSynthetics" value="0"/>
   <property category="debug.2" name="SmartStepRedefineClasses" value="0"/>
+  <property category="debug.2" name="SmartStepSkipStaticInitializers" value="0"/>
+  <property category="debug.2" name="SmartStepSkipSynthetics" value="0"/>
   <property category="debug.3" name="SmartStepRedefineClasses" value="0"/>
   <property category="debug.4" name="SmartStepRedefineClasses" value="0"/>
   <property category="debug.5" name="SmartStepRedefineClasses" value="0"/>
+  <property category="debug.6" name="SmartStepRedefineClasses" value="0"/>
   <property category="generalFormatting" name="blockIndent" value="4"/>
   <property category="generalFormatting" name="tabSize" value="4"/>
   <property category="generalFormatting" name="useTabChar" value="1"/>
@@ -44,18 +41,14 @@
   <property category="optimize.1" name="oicc.FilterFile" value="G:\projects\Jap\JAP.oif"/>
   <property category="optimize.1" name="oipr.FilterFile" value="G:\projects\Jap\JAP.oif"/>
   <property category="optimize.1" name="oira.FilterFile" value="G:\projects\Jap\JAP.oif"/>
-  <property category="optimize.10" name="OptimizableType" value="com.borland.jbuilder.optimize.IntroOptimizeitProfiler"/>
-  <property category="optimize.11" name="OptimizableType" value="intuitive.ide.borland.jb10.ThreadDBootstrap"/>
-  <property category="optimize.11" name="oicc.FilterFile" value="G:\projects\Jap\JAP.oif"/>
-  <property category="optimize.11" name="oipr.FilterFile" value="G:\projects\Jap\JAP.oif"/>
-  <property category="optimize.11" name="oira.FilterFile" value="G:\projects\Jap\JAP.oif"/>
-  <property category="optimize.12" name="OptimizableType" value="intuitive.ide.borland.jb10.ThreadDBootstrap"/>
-  <property category="optimize.12" name="oicc.FilterFile" value="G:\projects\Jap\JAP.oif"/>
-  <property category="optimize.12" name="oipr.FilterFile" value="G:\projects\Jap\JAP.oif"/>
-  <property category="optimize.12" name="oira.FilterFile" value="G:\projects\Jap\JAP.oif"/>
-  <property category="optimize.6" name="OptimizableType" value="com.borland.jbuilder.optimize.IntroOptimizeitProfiler"/>
+  <property category="optimize.11" name="OptimizableType" value="com.borland.jbuilder.optimize.IntroOptimizeitProfiler"/>
+  <property category="optimize.2" name="OptimizableType" value="intuitive.ide.borland.jb10.ThreadDBootstrap"/>
+  <property category="optimize.2" name="oicc.FilterFile" value="G:\projects\Jap\JAP.oif"/>
+  <property category="optimize.2" name="oipr.FilterFile" value="G:\projects\Jap\JAP.oif"/>
+  <property category="optimize.2" name="oira.FilterFile" value="G:\projects\Jap\JAP.oif"/>
+  <property category="optimize.7" name="OptimizableType" value="com.borland.jbuilder.optimize.IntroOptimizeitProfiler"/>
   <property category="personality" name="personality" value=""/>
-  <property category="runtime" name="ConfigurationCount" value="14"/>
+  <property category="runtime" name="ConfigurationCount" value="13"/>
   <property category="runtime.0" name="BuildTargetOnRun" value="com.borland.jbuilder.build.ProjectBuilder$ProjectBuildAction;make"/>
   <property category="runtime.0" name="ConfigurationName" value="JAP"/>
   <property category="runtime.0" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
@@ -90,26 +83,13 @@
   <property category="runtime.1" name="jsprunner.launchuri" value="/"/>
   <property category="runtime.1" name="test.harness" value="junit.textui.TestRunner"/>
   <property category="runtime.10" name="BuildTargetOnRun" value="com.borland.jbuilder.build.ProjectBuilder$ProjectBuildAction;make"/>
-  <property category="runtime.10" name="ConfigurationName" value="tor2jap"/>
+  <property category="runtime.10" name="ConfigurationName" value="TestXMLEncryption"/>
   <property category="runtime.10" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
-  <property category="runtime.10" name="application.class" value="anon.tor.test.tor2jap"/>
-  <property category="runtime.10" name="custom.init_required" value="0"/>
-  <property category="runtime.10" name="custom.required.1" value="http"/>
-  <property category="runtime.10" name="custom.required.2" value="mac"/>
-  <property category="runtime.10" name="custom.required.3" value="XML-1.1"/>
-  <property category="runtime.10" name="custom.required.4" value="Apache XML-RPC"/>
-  <property category="runtime.10" name="custom.required.5" value="Swing"/>
-  <property category="runtime.10" name="custom.required.6" value="BouncyCastleLightForJAP"/>
-  <property category="runtime.10" name="custom.required.7" value="JUnit"/>
-  <property category="runtime.10" name="custom.required.8" value="junitx"/>
-  <property category="runtime.10" name="custom.required.9" value="ApacheFTPClient"/>
-  <property category="runtime.10" name="jsprunner.launchuri" value="/"/>
-  <property category="runtime.10" name="test.harness" value="junit.textui.TestRunner"/>
+  <property category="runtime.10" name="application.class" value="test.XmlCryptTest"/>
   <property category="runtime.11" name="BuildTargetOnRun" value="com.borland.jbuilder.build.ProjectBuilder$ProjectBuildAction;make"/>
-  <property category="runtime.11" name="ConfigurationName" value="JAP newgui"/>
+  <property category="runtime.11" name="ConfigurationName" value="tor2jap"/>
   <property category="runtime.11" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
-  <property category="runtime.11" name="application.class" value="JAP"/>
-  <property category="runtime.11" name="application.parameters" value="-newgui -config h:\jap.conf"/>
+  <property category="runtime.11" name="application.class" value="anon.tor.test.tor2jap"/>
   <property category="runtime.11" name="custom.init_required" value="0"/>
   <property category="runtime.11" name="custom.required.1" value="http"/>
   <property category="runtime.11" name="custom.required.2" value="mac"/>
@@ -123,78 +103,74 @@
   <property category="runtime.11" name="jsprunner.launchuri" value="/"/>
   <property category="runtime.11" name="test.harness" value="junit.textui.TestRunner"/>
   <property category="runtime.12" name="BuildTargetOnRun" value="com.borland.jbuilder.build.ProjectBuilder$ProjectBuildAction;make"/>
-  <property category="runtime.12" name="ConfigurationName" value="JAP newgui (default config)"/>
+  <property category="runtime.12" name="ConfigurationName" value="torproxy"/>
   <property category="runtime.12" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
-  <property category="runtime.12" name="application.class" value="JAP"/>
-  <property category="runtime.12" name="application.parameters" value="-newgui"/>
-  <property category="runtime.12" name="custom.init_required" value="0"/>
-  <property category="runtime.12" name="custom.required.1" value="http"/>
-  <property category="runtime.12" name="custom.required.2" value="mac"/>
-  <property category="runtime.12" name="custom.required.3" value="XML-1.1"/>
-  <property category="runtime.12" name="custom.required.4" value="Apache XML-RPC"/>
-  <property category="runtime.12" name="custom.required.5" value="Swing"/>
-  <property category="runtime.12" name="custom.required.6" value="BouncyCastleLightForJAP"/>
-  <property category="runtime.12" name="custom.required.7" value="JUnit"/>
-  <property category="runtime.12" name="custom.required.8" value="junitx"/>
-  <property category="runtime.12" name="custom.required.9" value="ApacheFTPClient"/>
-  <property category="runtime.12" name="jsprunner.launchuri" value="/"/>
-  <property category="runtime.12" name="test.harness" value="junit.textui.TestRunner"/>
+  <property category="runtime.12" name="application.class" value="anon.tor.test.torproxy"/>
   <property category="runtime.13" name="BuildTargetOnRun" value="com.borland.jbuilder.build.ProjectBuilder$ProjectBuildAction;make"/>
-  <property category="runtime.13" name="ConfigurationName" value="torproxy"/>
+  <property category="runtime.13" name="ConfigurationName" value="IOQueueTest"/>
   <property category="runtime.13" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
-  <property category="runtime.13" name="application.class" value="anon.tor.test.torproxy"/>
-  <property category="runtime.14" name="BuildTargetOnRun" value="com.borland.jbuilder.build.ProjectBuilder$ProjectBuildAction;make"/>
-  <property category="runtime.14" name="ConfigurationName" value="IOQueueTest"/>
-  <property category="runtime.14" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
-  <property category="runtime.14" name="application.class" value="anon.server.impl.IOQueueTest"/>
-  <property category="runtime.2" name="ConfigurationName" value="XMLRPCTestServer"/>
+  <property category="runtime.13" name="application.class" value="anon.server.impl.IOQueueTest"/>
+  <property category="runtime.2" name="BuildTargetOnRun" value="com.borland.jbuilder.build.ProjectBuilder$ProjectBuildAction;make"/>
+  <property category="runtime.2" name="ConfigurationName" value="JAP (alternative config)"/>
   <property category="runtime.2" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
-  <property category="runtime.2" name="application.class" value="misc.XMLRPCTestServer"/>
+  <property category="runtime.2" name="application.class" value="JAP"/>
+  <property category="runtime.2" name="application.parameters" value="-config h:\jap.conf"/>
+  <property category="runtime.2" name="custom.init_required" value="0"/>
+  <property category="runtime.2" name="custom.required.1" value="http"/>
+  <property category="runtime.2" name="custom.required.2" value="mac"/>
+  <property category="runtime.2" name="custom.required.3" value="XML-1.1"/>
+  <property category="runtime.2" name="custom.required.4" value="Apache XML-RPC"/>
+  <property category="runtime.2" name="custom.required.5" value="Swing"/>
+  <property category="runtime.2" name="custom.required.6" value="BouncyCastleLightForJAP"/>
+  <property category="runtime.2" name="custom.required.7" value="JUnit"/>
+  <property category="runtime.2" name="custom.required.8" value="junitx"/>
+  <property category="runtime.2" name="custom.required.9" value="ApacheFTPClient"/>
   <property category="runtime.2" name="jsprunner.launchuri" value="/"/>
   <property category="runtime.2" name="test.harness" value="junit.textui.TestRunner"/>
-  <property category="runtime.3" name="ConfigurationName" value="XMLRPCTestClient"/>
+  <property category="runtime.3" name="ConfigurationName" value="XMLRPCTestServer"/>
   <property category="runtime.3" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
-  <property category="runtime.3" name="application.class" value="misc.XMLRPCTestClient"/>
+  <property category="runtime.3" name="application.class" value="misc.XMLRPCTestServer"/>
   <property category="runtime.3" name="jsprunner.launchuri" value="/"/>
   <property category="runtime.3" name="test.harness" value="junit.textui.TestRunner"/>
-  <property category="runtime.4" name="ConfigurationName" value="JAPiPAQ"/>
+  <property category="runtime.4" name="ConfigurationName" value="XMLRPCTestClient"/>
   <property category="runtime.4" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
-  <property category="runtime.4" name="application.class" value="jap.JAPiPAQ"/>
+  <property category="runtime.4" name="application.class" value="misc.XMLRPCTestClient"/>
   <property category="runtime.4" name="jsprunner.launchuri" value="/"/>
   <property category="runtime.4" name="test.harness" value="junit.textui.TestRunner"/>
-  <property category="runtime.5" name="BuildTargetOnRun" value="com.borland.jbuilder.build.ProjectBuilder$ProjectBuildAction;make"/>
-  <property category="runtime.5" name="ConfigurationName" value="JAP mit loadPay"/>
+  <property category="runtime.5" name="ConfigurationName" value="JAPiPAQ"/>
   <property category="runtime.5" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
-  <property category="runtime.5" name="application.class" value="JAP"/>
-  <property category="runtime.5" name="application.parameters" value="-pay"/>
+  <property category="runtime.5" name="application.class" value="jap.JAPiPAQ"/>
+  <property category="runtime.5" name="jsprunner.launchuri" value="/"/>
+  <property category="runtime.5" name="test.harness" value="junit.textui.TestRunner"/>
   <property category="runtime.6" name="BuildTargetOnRun" value="com.borland.jbuilder.build.ProjectBuilder$ProjectBuildAction;make"/>
-  <property category="runtime.6" name="ConfigurationName" value="Mobile"/>
+  <property category="runtime.6" name="ConfigurationName" value="JAP mit loadPay"/>
   <property category="runtime.6" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
   <property category="runtime.6" name="application.class" value="JAP"/>
-  <property category="runtime.6" name="custom.init_required" value="0"/>
-  <property category="runtime.6" name="custom.jdk" value="J2ME Wireless Toolkit 2.0_01"/>
-  <property category="runtime.6" name="custom.override_jdk" value="1"/>
-  <property category="runtime.6" name="custom.required.1" value="http"/>
-  <property category="runtime.6" name="custom.required.2" value="mac"/>
-  <property category="runtime.6" name="custom.required.3" value="XML-1.0"/>
-  <property category="runtime.6" name="custom.required.4" value="XML-1.1"/>
-  <property category="runtime.6" name="custom.required.5" value="Apache XML-RPC"/>
-  <property category="runtime.6" name="custom.required.6" value="Swing"/>
-  <property category="runtime.6" name="custom.required.7" value="ApacheFTPClient"/>
-  <property category="runtime.6" name="custom.required.8" value="BouncyCastleLightForJAP"/>
+  <property category="runtime.6" name="application.parameters" value="-pay"/>
   <property category="runtime.7" name="BuildTargetOnRun" value="com.borland.jbuilder.build.ProjectBuilder$ProjectBuildAction;make"/>
-  <property category="runtime.7" name="ConfigurationName" value="JAPLean"/>
+  <property category="runtime.7" name="ConfigurationName" value="Mobile"/>
   <property category="runtime.7" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
-  <property category="runtime.7" name="application.class" value="misc.JAPLean"/>
-  <property category="runtime.7" name="application.parameters" value="7589 localhost 4002"/>
+  <property category="runtime.7" name="application.class" value="JAP"/>
+  <property category="runtime.7" name="custom.init_required" value="0"/>
+  <property category="runtime.7" name="custom.jdk" value="J2ME Wireless Toolkit 2.0_01"/>
+  <property category="runtime.7" name="custom.override_jdk" value="1"/>
+  <property category="runtime.7" name="custom.required.1" value="http"/>
+  <property category="runtime.7" name="custom.required.2" value="mac"/>
+  <property category="runtime.7" name="custom.required.3" value="XML-1.0"/>
+  <property category="runtime.7" name="custom.required.4" value="XML-1.1"/>
+  <property category="runtime.7" name="custom.required.5" value="Apache XML-RPC"/>
+  <property category="runtime.7" name="custom.required.6" value="Swing"/>
+  <property category="runtime.7" name="custom.required.7" value="ApacheFTPClient"/>
+  <property category="runtime.7" name="custom.required.8" value="BouncyCastleLightForJAP"/>
   <property category="runtime.8" name="BuildTargetOnRun" value="com.borland.jbuilder.build.ProjectBuilder$ProjectBuildAction;make"/>
-  <property category="runtime.8" name="ConfigurationName" value="JUnit Test"/>
+  <property category="runtime.8" name="ConfigurationName" value="JAPLean"/>
   <property category="runtime.8" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
-  <property category="runtime.8" name="application.class" value="test.AllTests"/>
+  <property category="runtime.8" name="application.class" value="misc.JAPLean"/>
+  <property category="runtime.8" name="application.parameters" value="7589 localhost 4002"/>
   <property category="runtime.9" name="BuildTargetOnRun" value="com.borland.jbuilder.build.ProjectBuilder$ProjectBuildAction;make"/>
-  <property category="runtime.9" name="ConfigurationName" value="TestXMLEncryption"/>
+  <property category="runtime.9" name="ConfigurationName" value="JUnit Test"/>
   <property category="runtime.9" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
-  <property category="runtime.9" name="application.class" value="test.XmlCryptTest"/>
+  <property category="runtime.9" name="application.class" value="test.AllTests"/>
   <property category="serverservices" name="disabled.services" value="sqlj"/>
   <property category="serverservices" name="is.single.server" value="0"/>
   <property category="serverservices" name="single.server.name" value=""/>

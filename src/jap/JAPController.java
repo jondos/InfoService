@@ -183,9 +183,9 @@ public final class JAPController implements ProxyListener, Observer
 
 		m_passwordReader = new JAPFirewallPasswdDlg();
 
-    /* we want to observe some objects */
-    JAPModel.getInstance().getRoutingSettings().addObserver(this);
-    JAPModel.getInstance().getRoutingSettings().getServerStatisticsListener().addObserver(this);
+		/* we want to observe some objects */
+		JAPModel.getInstance().getRoutingSettings().addObserver(this);
+		JAPModel.getInstance().getRoutingSettings().getServerStatisticsListener().addObserver(this);
 	}
 
 	/** Creates the Controller - as Singleton.
@@ -248,7 +248,7 @@ public final class JAPController implements ProxyListener, Observer
 	 * and then in the JAP install directory.
 	 * The configuration is a XML-File with the following structure:
 	 *  <JAP
-   *    version="0.10"                     // version of the xml struct (DTD) used for saving the configuration
+	 *    version="0.11"                     // version of the xml struct (DTD) used for saving the configuration
 	 *    portNumber=""                     // Listener-Portnumber
 	 *    portNumberSocks=""                // Listener-Portnumber for SOCKS
 	 *    supportSocks=""                   // Will we support SOCKS ?
@@ -282,10 +282,12 @@ public final class JAPController implements ProxyListener, Observer
 	 *   </Network>
 	 * </MixCascade>
 	 * <GUI> //since version 0.2 --> store the position and size of JAP on the Desktop
-	 *     <MainWindow> //for the Main Window
+	 *    <MainWindow> //for the Main Window
 	 *       <SetOnStartup>"true/false"</SetOnStartup> //remember Position ?
 	 *       <Location x=".." y=".."> //Location of the upper left corner
 	 *       <Size dx=".." dy=.."> //Size of the Main window
+	 *       <DefaultView>Normal|Simplified</DefaultView> //Which view of JAP to show? (since version 0.11); default: Normal
+	 * 		 <MoveToSystray>"true"/"false"</MoveToSystray> //After start move JAP into the systray? (since version 0.11); default: false
 	 *     </MainWindow>
 	 * </GUI>
 	 * <Debug>                          //info about debug output
@@ -321,38 +323,38 @@ public final class JAPController implements ProxyListener, Observer
 	 *      </Accounts>
 	 *   </EncryptedData>
 	 * </Payment>
-   * <JapForwardingSettings>                                   // since version 0.10, if WITH_BLOCKINGRESISTANCE is enabled
-   *   <ForwardingServer>
-   *     <ServerPort>12345</ServerPort>                        // the port number, where the forwarding server is listening
-   *     <ServerRunning>false</ServerRunning>                  // whether the forwarding server shall be started, when JAP is starting
-   *     <ConnectionClassSettings>
-   *       <ConnectionClasses>                                 // list of all connection classes including settings
-   *         <ConnectionClass>                                 // a single connection class entry
-   *           <ClassIdentifier>0</ClassIdentifier>            // the identifier of the connection class
-   *           <MaximumBandwidth>10000</MaximumBandwidth>      // the maximum bandwidth (bytes/sec) the class provides
-   *           <UseableBandwidth>5000</UseableBandwidth>       // the bandwidth (bytes/sec) useable for forwarding
-   *           <SimultaneousConnections>1</SimultaneousConnections>  // the number of simultaneous connections, the server shall handle
-   *         </ConnectionClass>
-   *         ...
-   *       </ConnectionClasses>
-   *       <CurrentConnectionClass>0</CurrentConnectionClass>  // the currently selected connection class (identifier)
-   *     </ConnectionClassSettings>
-   *     <InfoServiceRegistrationSettings>
-   *       <UseAllPrimaryInfoServices>false</UseAllPrimaryInfoServices>  // whether to registrate the local forwarding server at all infoservices with a forwarder list
-   *       <RegistrationInfoServices>                                    // a list of InfoServices, where the local forwarding server shall be registrated on startup
-   *         <InfoService>...</InfoService>
-   *         ...
-   *       </RegistrationInfoServices>
-   *     </InfoServiceRegistrationSettings>
-   *     <AllowedMixCascadesSettings>
-   *       <AllowAllAvailableMixCascades>true</AllowAllAvailableMixCascades>  // whether the clients of the local forwarding server are allowed to use all running mixcascades
-   *       <AllowedMixCascades>                                               // a list of MixCascades, where the the clients are allowed to connect to
-   *         <MixCascade>...<MixCascade>
-   *         ...
-   *       </AllowedMixCascades>
-   *     </AllowedMixCascadesSettings>
-   *   </ForwardingServer>
-   * </JapForwardingSettings>
+	 * <JapForwardingSettings>                                   // since version 0.10, if WITH_BLOCKINGRESISTANCE is enabled
+	 *   <ForwardingServer>
+	 *     <ServerPort>12345</ServerPort>                        // the port number, where the forwarding server is listening
+	 *     <ServerRunning>false</ServerRunning>                  // whether the forwarding server shall be started, when JAP is starting
+	 *     <ConnectionClassSettings>
+	 *       <ConnectionClasses>                                 // list of all connection classes including settings
+	 *         <ConnectionClass>                                 // a single connection class entry
+	 *           <ClassIdentifier>0</ClassIdentifier>            // the identifier of the connection class
+	 *           <MaximumBandwidth>10000</MaximumBandwidth>      // the maximum bandwidth (bytes/sec) the class provides
+	 *           <UseableBandwidth>5000</UseableBandwidth>       // the bandwidth (bytes/sec) useable for forwarding
+	 *           <SimultaneousConnections>1</SimultaneousConnections>  // the number of simultaneous connections, the server shall handle
+	 *         </ConnectionClass>
+	 *         ...
+	 *       </ConnectionClasses>
+	 *       <CurrentConnectionClass>0</CurrentConnectionClass>  // the currently selected connection class (identifier)
+	 *     </ConnectionClassSettings>
+	 *     <InfoServiceRegistrationSettings>
+	 *       <UseAllPrimaryInfoServices>false</UseAllPrimaryInfoServices>  // whether to registrate the local forwarding server at all infoservices with a forwarder list
+	 *       <RegistrationInfoServices>                                    // a list of InfoServices, where the local forwarding server shall be registrated on startup
+	 *         <InfoService>...</InfoService>
+	 *         ...
+	 *       </RegistrationInfoServices>
+	 *     </InfoServiceRegistrationSettings>
+	 *     <AllowedMixCascadesSettings>
+	 *       <AllowAllAvailableMixCascades>true</AllowAllAvailableMixCascades>  // whether the clients of the local forwarding server are allowed to use all running mixcascades
+	 *       <AllowedMixCascades>                                               // a list of MixCascades, where the the clients are allowed to connect to
+	 *         <MixCascade>...<MixCascade>
+	 *         ...
+	 *       </AllowedMixCascades>
+	 *     </AllowedMixCascadesSettings>
+	 *   </ForwardingServer>
+	 * </JapForwardingSettings>
 	 *  </JAP>
 	 *  @param a_strJapConfFile - file containing the Configuration. If null $(user.home)/jap.conf or ./jap.conf is used.
 	 */
@@ -431,7 +433,7 @@ public final class JAPController implements ProxyListener, Observer
 				 * exist -> store the configuration in the home directory of the user
 				 */
 				JAPModel.getInstance().setConfigFile(System.getProperty("user.home", "") + "/" +
-												  JAPConstants.XMLCONFFN);
+					JAPConstants.XMLCONFFN);
 			}
 		}
 		if (f != null)
@@ -617,17 +619,36 @@ public final class JAPController implements ProxyListener, Observer
 					if (elemMainWindow != null)
 					{
 						Element tmp = (Element) XMLUtil.getFirstChildByName(elemMainWindow, "SetOnStartup");
-						m_Controller.setSaveMainWindowPosition(XMLUtil.parseNodeBoolean(tmp, false));
-						tmp = (Element) XMLUtil.getFirstChildByName(elemMainWindow, "Location");
-						Point p = new Point();
-						p.x = XMLUtil.parseElementAttrInt(tmp, "x", -1);
-						p.y = XMLUtil.parseElementAttrInt(tmp, "y", -1);
-						Dimension d = new Dimension();
-						tmp = (Element) XMLUtil.getFirstChildByName(elemMainWindow, "Size");
-						d.width = XMLUtil.parseElementAttrInt(tmp, "dx", -1);
-						d.height = XMLUtil.parseElementAttrInt(tmp, "dy", -1);
-						m_Model.m_OldMainWindowLocation = p;
-						m_Model.m_OldMainWindowSize = d;
+						b = XMLUtil.parseNodeBoolean(tmp, false);
+						m_Controller.setSaveMainWindowPosition(b);
+						if (b)
+						{
+							tmp = (Element) XMLUtil.getFirstChildByName(elemMainWindow, "Location");
+							Point p = new Point();
+							p.x = XMLUtil.parseElementAttrInt(tmp, "x", -1);
+							p.y = XMLUtil.parseElementAttrInt(tmp, "y", -1);
+							Dimension d = new Dimension();
+							tmp = (Element) XMLUtil.getFirstChildByName(elemMainWindow, "Size");
+							d.width = XMLUtil.parseElementAttrInt(tmp, "dx", -1);
+							d.height = XMLUtil.parseElementAttrInt(tmp, "dy", -1);
+							m_Model.m_OldMainWindowLocation = p;
+							m_Model.m_OldMainWindowSize = d;
+						}
+						tmp=(Element) XMLUtil.getFirstChildByName(elemMainWindow, "MoveToSystray");
+						b=XMLUtil.parseNodeBoolean(tmp,false);
+						setMoveToSystrayOnStartup(b);
+						if(b)
+						{///todo: move to systray
+							if(m_View!=null)
+								m_View.hideWindowInTaskbar();
+						}
+						tmp=(Element) XMLUtil.getFirstChildByName(elemMainWindow, "DefaultView");
+						String strDefaultView=XMLUtil.parseNodeString(tmp,"Normal");
+						if(strDefaultView.equals("Simplified"))
+						{
+							setDefaultView(JAPConstants.VIEW_SIMPLIFIED);
+							///todo: set simplified view...
+						}
 					}
 				}
 				//Loading debug settings
@@ -679,7 +700,7 @@ public final class JAPController implements ProxyListener, Observer
 				{
 					Element infoServicesNode = (Element) (infoServicesNodes.item(0));
 					InfoServiceDBEntry.loadFromXml(
-									   infoServicesNode, Database.getInstance(InfoServiceDBEntry.class));
+						infoServicesNode, Database.getInstance(InfoServiceDBEntry.class));
 				}
 				/* prefered infoservice */
 				NodeList preferedInfoServiceNodes = root.getElementsByTagName("PreferedInfoService");
@@ -718,15 +739,24 @@ public final class JAPController implements ProxyListener, Observer
 				{
 					Element elemPay = (Element) XMLUtil.getFirstChildByName(root, "Payment");
 					String biName = elemPay.getAttribute("biName");
-					if(biName==null||biName.equals("")) biName = JAPConstants.PIHOST;
+					if (biName == null || biName.equals(""))
+					{
+						biName = JAPConstants.PIHOST;
+					}
 					String biHost = elemPay.getAttribute("biHost");
-					if(biHost==null||biHost.equals("")) biHost = JAPConstants.PIHOST;
+					if (biHost == null || biHost.equals(""))
+					{
+						biHost = JAPConstants.PIHOST;
+					}
 					int biPort = Integer.parseInt(elemPay.getAttribute("biPort"));
-					if(biPort == 0) biPort = JAPConstants.PIPORT;
+					if (biPort == 0)
+					{
+						biPort = JAPConstants.PIPORT;
+					}
 					BI theBI = new BI(
-						m_Model.getResourceLoader().loadResource(JAPConstants.CERTSPATH + JAPConstants.CERT_BI),
+						m_Model.getResourceLoader().loadResource(JAPConstants.CERTSPATH +
+						JAPConstants.CERT_BI),
 						biName, biHost, biPort);
-
 
 					Element elemAccounts = (Element) XMLUtil.getFirstChildByName(elemPay, "EncryptedData");
 
@@ -781,7 +811,7 @@ public final class JAPController implements ProxyListener, Observer
 					}
 				}
 
-        /* read the settings of the JAP forwarding system, if it is enabled */
+				/* read the settings of the JAP forwarding system, if it is enabled */
 				if (JAPConstants.WITH_BLOCKINGRESISTANCE == true)
 				{
 					Element japForwardingSettingsNode = (Element) (XMLUtil.getFirstChildByName(root,
@@ -790,12 +820,12 @@ public final class JAPController implements ProxyListener, Observer
 					{
 						JAPModel.getInstance().getRoutingSettings().loadSettingsFromXml(
 							japForwardingSettingsNode);
-          }
+					}
 					else
 					{
-            LogHolder.log(LogLevel.ERR, LogType.MISC, "JAPController: loadConfigFile: Error in XML structure (JapForwardingSettings node): Using default settings for forwarding.");
-          }
-        }
+						LogHolder.log(LogLevel.ERR, LogType.MISC, "JAPController: loadConfigFile: Error in XML structure (JapForwardingSettings node): Using default settings for forwarding.");
+					}
+				}
 
 			}
 			catch (Exception e)
@@ -816,7 +846,7 @@ public final class JAPController implements ProxyListener, Observer
 	{
 		if (a_proxyInterface != null &&
 			(m_Model.getProxyInterface() == null ||
-			!m_Model.getProxyInterface().equals(a_proxyInterface)))
+			 !m_Model.getProxyInterface().equals(a_proxyInterface)))
 		{
 			// change settings
 			m_Model.setProxyListener(a_proxyInterface);
@@ -866,7 +896,7 @@ public final class JAPController implements ProxyListener, Observer
 			Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
 			Element e = doc.createElement("JAP");
 			doc.appendChild(e);
-      e.setAttribute("version", "0.10");
+			e.setAttribute("version", "0.11");
 			//
 			e.setAttribute("portNumber", Integer.toString(JAPModel.getHttpListenerPortNumber()));
 			//e.setAttribute("portNumberSocks", Integer.toString(JAPModel.getSocksListenerPortNumber()));
@@ -877,7 +907,7 @@ public final class JAPController implements ProxyListener, Observer
 			e.setAttribute("proxyHostName", m_Model.getProxyInterface().getHost());
 			e.setAttribute("proxyPortNumber", Integer.toString(m_Model.getProxyInterface().getPort()));
 			e.setAttribute("proxyAuthorization", (
-						 m_Model.getProxyInterface().isAuthenticationUsed() ? "true" : "false"));
+				m_Model.getProxyInterface().isAuthenticationUsed() ? "true" : "false"));
 			e.setAttribute("proxyAuthUserID", m_Model.getProxyInterface().getAuthenticationUserID());
 
 			/* infoservice configuration options */
@@ -917,12 +947,12 @@ public final class JAPController implements ProxyListener, Observer
 			}
 
 			// adding GUI-Element
+			Element elemGUI = doc.createElement("GUI");
+			e.appendChild(elemGUI);
+			Element elemMainWindow = doc.createElement("MainWindow");
+			elemGUI.appendChild(elemMainWindow);
 			if (JAPModel.getSaveMainWindowPosition())
 			{
-				Element elemGUI = doc.createElement("GUI");
-				e.appendChild(elemGUI);
-				Element elemMainWindow = doc.createElement("MainWindow");
-				elemGUI.appendChild(elemMainWindow);
 				Element tmp = doc.createElement("SetOnStartup");
 				elemMainWindow.appendChild(tmp);
 				XMLUtil.setNodeValue(tmp, "true");
@@ -936,6 +966,18 @@ public final class JAPController implements ProxyListener, Observer
 				Dimension d = m_View.getSize();
 				tmp.setAttribute("dx", Integer.toString(d.width));
 				tmp.setAttribute("dy", Integer.toString(d.height));
+			}
+			if (JAPModel.getMoveToSystrayOnStartup())
+			{
+				Element tmp = doc.createElement("MoveToSystray");
+				tmp.appendChild(XMLUtil.createNodeBoolean(doc, true));
+				elemMainWindow.appendChild(tmp);
+			}
+			if (JAPModel.getDefaultView() == JAPConstants.VIEW_SIMPLIFIED)
+			{
+				Element tmp = doc.createElement("DefaultView");
+				XMLUtil.setNodeValue(tmp, "Simplified");
+				elemMainWindow.appendChild(tmp);
 			}
 			// adding Debug-Element
 			Element elemDebug = doc.createElement("Debug");
@@ -1026,11 +1068,11 @@ public final class JAPController implements ProxyListener, Observer
 				}
 			}
 
-      /* add the settings of the JAP forwarding system, if it is enabled */
+			/* add the settings of the JAP forwarding system, if it is enabled */
 			if (JAPConstants.WITH_BLOCKINGRESISTANCE == true)
 			{
-        e.appendChild(JAPModel.getInstance().getRoutingSettings().getSettingsAsXml(doc));
-      }
+				e.appendChild(JAPModel.getInstance().getRoutingSettings().getSettingsAsXml(doc));
+			}
 
 			return XMLUtil.toString(doc);
 			//((XmlDocument)doc).write(f);
@@ -1073,6 +1115,22 @@ public final class JAPController implements ProxyListener, Observer
 		synchronized (this)
 		{
 			m_Model.setMinimizeOnStartup(b);
+		}
+	}
+
+	public void setMoveToSystrayOnStartup(boolean b)
+	{
+		synchronized (this)
+		{
+			m_Model.setMoveToSystrayOnStartup(b);
+		}
+	}
+
+	public void setDefaultView(int defaultView)
+	{
+		synchronized (this)
+		{
+			m_Model.setDefaultView(defaultView);
 		}
 	}
 
@@ -1179,17 +1237,17 @@ public final class JAPController implements ProxyListener, Observer
 	public static String getFirewallAuthPasswd_()
 	{
 		/*
-		if (JAPModel.getUseFirewallAuthorization())
-		{
-			if (JAPModel.getFirewallAuthPasswd() == null)
-			{
-				m_Model.setFirewallAuthPasswd(JAPFirewallPasswdDlg.getPasswd());
-			}
-			return JAPModel.getFirewallAuthPasswd();
-		}
-		else
-		{
-			return null;
+		   if (JAPModel.getUseFirewallAuthorization())
+		   {
+		 if (JAPModel.getFirewallAuthPasswd() == null)
+		 {
+		  m_Model.setFirewallAuthPasswd(JAPFirewallPasswdDlg.getPasswd());
+		 }
+		 return JAPModel.getFirewallAuthPasswd();
+		   }
+		   else
+		   {
+		 return null;
 		   }*/
 		return null;
 	}
@@ -1278,15 +1336,18 @@ public final class JAPController implements ProxyListener, Observer
 									  "Waiting for becoming current SetAnonMode Thread intterrupted!");
 					}
 				}
-				JAPWaitSplash splash = null;
+				//JAPWaitSplash splash = null;
+				int msgIdConnect = 0;
 				boolean canStartService = true;
 				//setAnonMode--> async!!
 				LogHolder.log(LogLevel.DEBUG, LogType.MISC, "JAPModel:setAnonMode(" + anonModeSelected + ")");
 				if ( (m_proxyAnon == null) && (anonModeSelected == true))
 				{ //start Anon Mode
 					m_View.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-					splash = JAPWaitSplash.start(JAPMessages.getString("setAnonModeSplashConnect"),
-												 JAPMessages.getString("setAnonModeSplashTitle"));
+					msgIdConnect = m_View.addStatusMsg(JAPMessages.getString("setAnonModeSplashConnect"),
+						JOptionPane.INFORMATION_MESSAGE);
+					//splash = JAPWaitSplash.start(JAPMessages.getString("setAnonModeSplashConnect"),
+					//							 JAPMessages.getString("setAnonModeSplashTitle"));
 					if ( (m_bAlreadyCheckedForNewVersion == false) && (!JAPModel.isInfoServiceDisabled()) &&
 						( (JAPModel.getInstance().getRoutingSettings().getRoutingMode() !=
 						   JAPRoutingSettings.ROUTING_MODE_CLIENT) ||
@@ -1312,13 +1373,6 @@ public final class JAPController implements ProxyListener, Observer
 					}
 					if (canStartService)
 					{
-						//starting SOCKS
-						/*if (JAPModel.isTorEnabled())
-							{
-						  m_proxySocks = new AnonSocksProxy(m_socketSOCKSListener);
-						  m_proxySocks.setProxyListener(m_Controller);
-						  m_proxySocks.start();
-							}*/
 						// starting MUX --> Success ???
 						if (JAPModel.getInstance().getRoutingSettings().getRoutingMode() ==
 							JAPRoutingSettings.ROUTING_MODE_CLIENT)
@@ -1331,14 +1385,14 @@ public final class JAPController implements ProxyListener, Observer
 						{
 							/* we use a direct connection */
 							if (JAPModel.getInstance().getProxyInterface().isValid())
-						{
+							{
 								m_proxyAnon = new AnonWebProxy(
 									m_socketHTTPListener, JAPModel.getInstance().getProxyInterface());
 							}
 							else
 							{
 								m_proxyAnon = new AnonWebProxy(m_socketHTTPListener, null);
-						}
+							}
 
 						}
 						MixCascade currentMixCascade = m_Controller.getCurrentMixCascade();
@@ -1357,11 +1411,6 @@ public final class JAPController implements ProxyListener, Observer
 						{
 							canStartService = false;
 							m_proxyAnon = null;
-							/*if (m_proxySocks != null)
-								  {
-							  m_proxySocks.stop();
-								  }
-								  m_proxySocks = null;*/
 						}
 						if (ret == ErrorCodes.E_SUCCESS)
 						{
@@ -1461,7 +1510,8 @@ public final class JAPController implements ProxyListener, Observer
 					}
 					m_View.setCursor(Cursor.getDefaultCursor());
 					notifyJAPObservers();
-					splash.abort();
+					//splash.abort();
+					m_View.removeStatusMsg(msgIdConnect);
 					if (!canStartService)
 					{
 						setAnonMode(false);
@@ -1471,8 +1521,11 @@ public final class JAPController implements ProxyListener, Observer
 				{
 					if (m_proxyAnon != null)
 					{
-						splash = JAPWaitSplash.start(JAPMessages.getString("setAnonModeSplashDisconnect"),
-							JAPMessages.getString("setAnonModeSplashTitle"));
+						msgIdConnect = m_View.addStatusMsg(JAPMessages.getString(
+							"setAnonModeSplashDisconnect"),
+							JOptionPane.INFORMATION_MESSAGE);
+						//splash = JAPWaitSplash.start(JAPMessages.getString("setAnonModeSplashDisconnect"),
+						//	JAPMessages.getString("setAnonModeSplashTitle"));
 						m_proxyAnon.stop();
 					}
 					m_proxyAnon = null;
@@ -1495,9 +1548,9 @@ public final class JAPController implements ProxyListener, Observer
 					JAPModel.getInstance().getRoutingSettings().anonConnectionClosed();
 
 					notifyJAPObservers();
-					if (splash != null)
+					if (msgIdConnect != 0)
 					{
-						splash.abort();
+						m_View.removeStatusMsg(msgIdConnect);
 					}
 				}
 				ms_AnonModeAsyncLastFinished++;
@@ -1680,10 +1733,10 @@ public final class JAPController implements ProxyListener, Observer
 	   if (isRunningSOCKSListener == false)
 	   {
 	  m_socketSOCKSListener = intern_startListener(JAPModel.getSocksListenerPortNumber(),
-		JAPModel.getHttpListenerIsLocal());
+	 JAPModel.getHttpListenerIsLocal());
 	  if (m_socketSOCKSListener != null)
 	  {
-		isRunningSOCKSListener = true;
+	 isRunningSOCKSListener = true;
 	  }
 	   }
 	   return isRunningSOCKSListener;
@@ -1951,72 +2004,87 @@ public final class JAPController implements ProxyListener, Observer
 		}
 	}
 
-  /**
-   * This is the observer implementation. At the moment only the routing system is observed.
-   * It's just for comfort reasons, so there is no need to registrate the JAPView at all
-   * observable objects. We collect all messages here and send them to the view. But it's also
-   * possible to registrate directly at the observed objects. So every developer can decide,
-   * whether to use the common JAP notification system or the specific ones. Also keep in mind,
-   * that maybe not all messages are forwarded to the common notification system.
-   *
-   * @param a_notifier The observed Object (JAPRoutingSettings or
-   *                   JAPRoutingServerStatisticsListener at the moment).
-   * @param a_message The reason of the notification, e.g. a JAPRoutingMessage.
-   *
-   */
-  public void update(Observable a_notifier, Object a_message) {
-    try {
-      if (a_notifier == JAPModel.getInstance().getRoutingSettings()) {
-        /* message is from JAPRoutingSettings */
-        if (((JAPRoutingMessage)(a_message)).getMessageCode() == JAPRoutingMessage.ROUTING_MODE_CHANGED) {
-          /* routing mode was changed -> notify the observers of JAPController */
-          notifyJAPObservers();
-        }
-      }
-      if (a_notifier == JAPModel.getInstance().getRoutingSettings().getServerStatisticsListener()) {
-        /* there are new routing statistics values available */
-        notifyJAPObservers();
-      }
-    }
-    catch (Exception e) {
-      /* should not happen, but better than throwing a runtime exception */
-    }
-  }
+	/**
+	 * This is the observer implementation. At the moment only the routing system is observed.
+	 * It's just for comfort reasons, so there is no need to registrate the JAPView at all
+	 * observable objects. We collect all messages here and send them to the view. But it's also
+	 * possible to registrate directly at the observed objects. So every developer can decide,
+	 * whether to use the common JAP notification system or the specific ones. Also keep in mind,
+	 * that maybe not all messages are forwarded to the common notification system.
+	 *
+	 * @param a_notifier The observed Object (JAPRoutingSettings or
+	 *                   JAPRoutingServerStatisticsListener at the moment).
+	 * @param a_message The reason of the notification, e.g. a JAPRoutingMessage.
+	 *
+	 */
+	public void update(Observable a_notifier, Object a_message)
+	{
+		try
+		{
+			if (a_notifier == JAPModel.getInstance().getRoutingSettings())
+			{
+				/* message is from JAPRoutingSettings */
+				if ( ( (JAPRoutingMessage) (a_message)).getMessageCode() ==
+					JAPRoutingMessage.ROUTING_MODE_CHANGED)
+				{
+					/* routing mode was changed -> notify the observers of JAPController */
+					notifyJAPObservers();
+				}
+			}
+			if (a_notifier == JAPModel.getInstance().getRoutingSettings().getServerStatisticsListener())
+			{
+				/* there are new routing statistics values available */
+				notifyJAPObservers();
+			}
+		}
+		catch (Exception e)
+		{
+			/* should not happen, but better than throwing a runtime exception */
+		}
+	}
 
-  /**
-   * Enables or disables the forwarding server. It's only a comfort function for lazy programmers.
-   * Attention: If there is an active forwarding client running, nothing is done and this method
-   * returns always false. Run a forwarding server and a client at the same time is not supported.
-   *
-   * @param a_activate True, if ther server shall be activated or false, if it shall be disabled.
-   *
-   * @return True, if starting/stopping the server was successful. Attention: Because the call of
-   *         this method is not blocking while the server registrates at the infoservices, it is
-   *         possible, that the registration of the local server at the infoservices failed. This
-   *         method returns also true in that case, but no client will find the server, until the
-   *         registration instances can registrate at least at one infoservice. If you need a
-   *         feedback of the initial registration process, you have to call the methods for
-   *         starting the server directly on JAPRoutingSettings and cannot use this shortcut
-   *         method.
-   */
-  public boolean enableForwardingServer(boolean a_activate) {
-    boolean returnValue = false;
-    /* don't allow to interrupt the client routing mode */
-    if (JAPModel.getInstance().getRoutingSettings().getRoutingMode() != JAPRoutingSettings.ROUTING_MODE_CLIENT) {
-      if (a_activate == true) {
-        /* start the server */
-        returnValue = JAPModel.getInstance().getRoutingSettings().setRoutingMode(JAPRoutingSettings.ROUTING_MODE_SERVER);
-        if (returnValue == true) {
-          /* starting the server was successful -> start propaganda without blocking */
-          JAPModel.getInstance().getRoutingSettings().startPropaganda(false);
-        }
-      }
-      else {
-        /* stop the server */
-        returnValue = JAPModel.getInstance().getRoutingSettings().setRoutingMode(JAPRoutingSettings.ROUTING_MODE_DISABLED);
-      }
-    }
-    return returnValue;
-  }
+	/**
+	 * Enables or disables the forwarding server. It's only a comfort function for lazy programmers.
+	 * Attention: If there is an active forwarding client running, nothing is done and this method
+	 * returns always false. Run a forwarding server and a client at the same time is not supported.
+	 *
+	 * @param a_activate True, if ther server shall be activated or false, if it shall be disabled.
+	 *
+	 * @return True, if starting/stopping the server was successful. Attention: Because the call of
+	 *         this method is not blocking while the server registrates at the infoservices, it is
+	 *         possible, that the registration of the local server at the infoservices failed. This
+	 *         method returns also true in that case, but no client will find the server, until the
+	 *         registration instances can registrate at least at one infoservice. If you need a
+	 *         feedback of the initial registration process, you have to call the methods for
+	 *         starting the server directly on JAPRoutingSettings and cannot use this shortcut
+	 *         method.
+	 */
+	public boolean enableForwardingServer(boolean a_activate)
+	{
+		boolean returnValue = false;
+		/* don't allow to interrupt the client routing mode */
+		if (JAPModel.getInstance().getRoutingSettings().getRoutingMode() !=
+			JAPRoutingSettings.ROUTING_MODE_CLIENT)
+		{
+			if (a_activate == true)
+			{
+				/* start the server */
+				returnValue = JAPModel.getInstance().getRoutingSettings().setRoutingMode(JAPRoutingSettings.
+					ROUTING_MODE_SERVER);
+				if (returnValue == true)
+				{
+					/* starting the server was successful -> start propaganda without blocking */
+					JAPModel.getInstance().getRoutingSettings().startPropaganda(false);
+				}
+			}
+			else
+			{
+				/* stop the server */
+				returnValue = JAPModel.getInstance().getRoutingSettings().setRoutingMode(JAPRoutingSettings.
+					ROUTING_MODE_DISABLED);
+			}
+		}
+		return returnValue;
+	}
 
 }

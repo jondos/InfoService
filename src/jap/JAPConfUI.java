@@ -28,12 +28,14 @@ import javax.swing.plaf.basic.*;
 import java.util.*;
 import logging.*;
 import javax.swing.UIManager.*;
+
 final class JAPConfUI extends AbstractJAPConfModule
 {
-	private TitledBorder m_borderLookAndFeel,m_borderView;
+	private TitledBorder m_borderLookAndFeel, m_borderView;
 	private JComboBox m_comboLanguage;
 	private boolean m_bIgnoreComboLanguageEvents = false;
-	private JCheckBox m_cbSaveWindowPositions;
+	private JCheckBox m_cbSaveWindowPositions, m_cbAfterStart;
+	private JRadioButton m_rbViewSimplified, m_rbViewNormal, m_rbViewMini, m_rbViewSystray;
 
 	public JAPConfUI()
 	{
@@ -46,21 +48,21 @@ final class JAPConfUI extends AbstractJAPConfModule
 
 		/* clear the whole root panel */
 		panelRoot.removeAll();
-		GridBagLayout gbl1= new GridBagLayout();
-		GridBagConstraints c1= new GridBagConstraints();
+		GridBagLayout gbl1 = new GridBagLayout();
+		GridBagConstraints c1 = new GridBagConstraints();
 		panelRoot.setLayout(gbl1);
 		GridBagLayout gbl = new GridBagLayout();
 		GridBagConstraints c = new GridBagConstraints();
-		m_borderLookAndFeel=new TitledBorder(JAPMessages.getString("settingsLookAndFeelBorder"));
-		JPanel p=new JPanel(gbl);
+		m_borderLookAndFeel = new TitledBorder(JAPMessages.getString("settingsLookAndFeelBorder"));
+		JPanel p = new JPanel(gbl);
 		p.setBorder(m_borderLookAndFeel);
-		JLabel l=new JLabel(JAPMessages.getString("settingsLookAndFeel"));
-		c.insets=new Insets(10,10,10,10);
-		c.anchor=GridBagConstraints.WEST;
-		p.add(l,c);
-		c.gridx=1;
-		c.fill=GridBagConstraints.HORIZONTAL;
-		c.weightx=1;
+		JLabel l = new JLabel(JAPMessages.getString("settingsLookAndFeel"));
+		c.insets = new Insets(10, 10, 10, 10);
+		c.anchor = GridBagConstraints.WEST;
+		p.add(l, c);
+		c.gridx = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.weightx = 1;
 		JComboBox combo = new JComboBox();
 		LookAndFeelInfo[] lf = UIManager.getInstalledLookAndFeels();
 		String currentLf = UIManager.getLookAndFeel().getClass().getName();
@@ -106,13 +108,13 @@ final class JAPConfUI extends AbstractJAPConfModule
 				}
 			}
 		});
-		p.add(combo,c);
-		l=new JLabel(JAPMessages.getString("settingsLanguage"));
-		c.gridx=0;
-		c.gridy=1;
-		c.fill=GridBagConstraints.NONE;
-		c.weightx=0;
-		p.add(l,c);
+		p.add(combo, c);
+		l = new JLabel(JAPMessages.getString("settingsLanguage"));
+		c.gridx = 0;
+		c.gridy = 1;
+		c.fill = GridBagConstraints.NONE;
+		c.weightx = 0;
+		p.add(l, c);
 		m_comboLanguage = new JComboBox();
 		m_comboLanguage.addItem("Deutsch");
 		m_comboLanguage.addItem("English");
@@ -134,66 +136,73 @@ final class JAPConfUI extends AbstractJAPConfModule
 			}
 		});
 
-		c.gridx=1;
-		c.fill=GridBagConstraints.HORIZONTAL;
-		c.weightx=1;
-		p.add(m_comboLanguage,c);
-		m_cbSaveWindowPositions=new JCheckBox(JAPMessages.getString("settingsSaveWindowPosition"));
-		c.gridwidth=2;
-		c.gridx=0;
-		c.gridy=2;
-		c.fill=GridBagConstraints.NONE;
-		c.weightx=0;
-		p.add(m_cbSaveWindowPositions,c);
-		c1.anchor=GridBagConstraints.WEST;
-		c1.fill=GridBagConstraints.HORIZONTAL;
-		c1.weightx=1;
-		panelRoot.add(p,c1);
+		c.gridx = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.weightx = 1;
+		p.add(m_comboLanguage, c);
+		m_cbSaveWindowPositions = new JCheckBox(JAPMessages.getString("settingsSaveWindowPosition"));
+		c.gridwidth = 2;
+		c.gridx = 0;
+		c.gridy = 2;
+		c.fill = GridBagConstraints.NONE;
+		c.weightx = 0;
+		p.add(m_cbSaveWindowPositions, c);
+		c1.anchor = GridBagConstraints.WEST;
+		c1.fill = GridBagConstraints.HORIZONTAL;
+		c1.weightx = 1;
+		panelRoot.add(p, c1);
 
 		gbl = new GridBagLayout();
 		c = new GridBagConstraints();
-		m_borderView=new TitledBorder(JAPMessages.getString("settingsViewBorder"));
-		p=new JPanel(gbl);
+		m_borderView = new TitledBorder(JAPMessages.getString("ngSettingsViewBorder"));
+		p = new JPanel(gbl);
 		p.setBorder(m_borderView);
-		JRadioButton r1=new JRadioButton("Normal");
-		JRadioButton r2=new JRadioButton("Vereinfachte Darstellung");
-		ButtonGroup bg=new ButtonGroup();
-		bg.add(r1);
-		bg.add(r2);
-		c.insets=new Insets(10,10,10,10);
-		c.weightx=1;
-		c.anchor=GridBagConstraints.WEST;
-		p.add(r1,c);
-		c.gridy=1;
-		p.add(r2,c);
-		c1.gridy=1;
-		c1.insets=new Insets(10,0,10,0);
-		panelRoot.add(p,c1);
+		m_rbViewNormal = new JRadioButton(JAPMessages.getString("ngSettingsViewNormal"));
+		m_rbViewSimplified = new JRadioButton(JAPMessages.getString("ngSettingsViewSimplified"));
+		ButtonGroup bg = new ButtonGroup();
+		bg.add(m_rbViewNormal);
+		bg.add(m_rbViewSimplified);
+		c.insets = new Insets(10, 10, 10, 10);
+		c.weightx = 1;
+		c.anchor = GridBagConstraints.WEST;
+		p.add(m_rbViewNormal, c);
+		c.gridy = 1;
+		p.add(m_rbViewSimplified, c);
+		c1.gridy = 1;
+		c1.insets = new Insets(10, 0, 10, 0);
+		panelRoot.add(p, c1);
 
 		gbl = new GridBagLayout();
 		c = new GridBagConstraints();
-		p=new JPanel(gbl);
+		p = new JPanel(gbl);
 		p.setBorder(new TitledBorder(""));
-		JCheckBox check=new JCheckBox("Gehe nach Start ...");
-		c.insets=new Insets(10,10,0,10);
-		c.anchor=GridBagConstraints.NORTHWEST;
-		c.weightx=1;
-		p.add(check,c);
-		r1=new JRadioButton("in die Minimalansicht");
-		r2=new JRadioButton("in den Systray");
-		bg=new ButtonGroup();
-		bg.add(r1);
-		bg.add(r2);
-		c.gridy=1;
-		c.insets=new Insets(5,30,0,10);
-		p.add(r1,c);
-		c.gridy=2;
-		p.add(r2,c);
+		m_cbAfterStart = new JCheckBox(JAPMessages.getString("ngViewAfterStart"));
+		m_cbAfterStart.addActionListener(new ActionListener()
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+				boolean b = m_cbAfterStart.isSelected();
+				updateThirdPanel(b);
+			}
+		});
+		c.insets = new Insets(10, 10, 0, 10);
+		c.anchor = GridBagConstraints.NORTHWEST;
+		c.weightx = 1;
+		p.add(m_cbAfterStart, c);
+		m_rbViewMini = new JRadioButton(JAPMessages.getString("ngViewMini"));
+		m_rbViewSystray = new JRadioButton(JAPMessages.getString("ngViewSystray"));
+		bg = new ButtonGroup();
+		bg.add(m_rbViewMini);
+		bg.add(m_rbViewSystray);
+		c.gridy = 1;
+		c.insets = new Insets(5, 30, 0, 10);
+		p.add(m_rbViewMini, c);
+		c.gridy = 2;
+		p.add(m_rbViewSystray, c);
 
-		c1.gridy=2;
-		c1.insets=new Insets(0,0,0,0);
-		panelRoot.add(p,c1);
-
+		c1.gridy = 2;
+		c1.insets = new Insets(0, 0, 0, 0);
+		panelRoot.add(p, c1);
 
 	}
 
@@ -201,7 +210,6 @@ final class JAPConfUI extends AbstractJAPConfModule
 	{
 		return JAPMessages.getString("ngUIPanelTitle");
 	}
-
 
 	protected boolean onOkPressed()
 	{
@@ -220,14 +228,19 @@ final class JAPConfUI extends AbstractJAPConfModule
 			JAPController.setLocale(Locale.FRENCH);
 		}
 		JAPController.setSaveMainWindowPosition(m_cbSaveWindowPositions.isSelected());
-	return true;
+		int defaultView=JAPConstants.VIEW_NORMAL;
+		if(m_rbViewSimplified.isSelected())
+			defaultView=JAPConstants.VIEW_SIMPLIFIED;
+		JAPController.getInstance().setDefaultView(defaultView);
+		JAPController.getInstance().setMinimizeOnStartup(m_rbViewMini.isSelected()&&m_cbAfterStart.isSelected());
+		JAPController.getInstance().setMoveToSystrayOnStartup(m_rbViewSystray.isSelected()&&m_cbAfterStart.isSelected());
+		return true;
 	}
 
 	protected void onUpdateValues()
 	{
 		updateGuiOutput();
 	}
-
 
 	private void updateGuiOutput()
 	{
@@ -246,6 +259,20 @@ final class JAPConfUI extends AbstractJAPConfModule
 		}
 		m_bIgnoreComboLanguageEvents = false;
 		m_cbSaveWindowPositions.setSelected(JAPModel.getSaveMainWindowPosition());
+		m_rbViewNormal.setSelected(JAPModel.getDefaultView() == JAPConstants.VIEW_NORMAL);
+		m_rbViewSimplified.setSelected(JAPModel.getDefaultView() == JAPConstants.VIEW_SIMPLIFIED);
+		m_rbViewSystray.setSelected(JAPModel.getMoveToSystrayOnStartup());
+		m_rbViewMini.setSelected(JAPModel.getMinimizeOnStartup());
+		boolean b = m_rbViewSystray.isSelected() || m_rbViewMini.isSelected();
+		updateThirdPanel(b);
 	}
 
+	private void updateThirdPanel(boolean bAfterStart)
+	{
+		m_cbAfterStart.setSelected(bAfterStart);
+		m_rbViewMini.setEnabled(bAfterStart);
+		m_rbViewSystray.setEnabled(bAfterStart);
+		if(bAfterStart&&!(m_rbViewSystray.isSelected()||m_rbViewMini.isSelected()))
+			m_rbViewMini.setSelected(true);
+	}
 }

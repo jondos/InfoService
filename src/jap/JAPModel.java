@@ -53,7 +53,6 @@ public final class JAPModel
   private ProxyInterface m_proxyInterface;
   private boolean m_bAutoConnect = false; // autoconnect after program start
   private boolean m_bAutoReConnect = false; // autoReconnects after loosing connection to mix
-  private boolean m_bMinimizeOnStartup = false; // true if programm will start minimized
 
   //private boolean  mbActCntMessageNotRemind    = false; // indicates if Warning message in setAnonMode has been deactivated for the session
   //private boolean  mbActCntMessageNeverRemind  = false; // indicates if Warning message in setAnonMode has been deactivated forever
@@ -65,6 +64,10 @@ public final class JAPModel
   private boolean m_bInfoServiceDisabled = false;
   private boolean m_bSaveMainWindowPosition = false;
   public Point m_OldMainWindowLocation = null;
+  private boolean m_bMinimizeOnStartup = false; // true if programm will start minimized
+  private boolean m_bMoveToSystrayOnStartup = false; // true if programm will start in the systray
+  private int     m_iDefaultView =JAPConstants.VIEW_NORMAL; //which view we should start?
+
   public Dimension m_OldMainWindowSize = null;
   private static JAPModel ms_TheModel = null;
 
@@ -178,6 +181,26 @@ public final class JAPModel
   {
     return ms_TheModel.m_bMinimizeOnStartup;
   }
+
+  protected void setMoveToSystrayOnStartup(boolean b)
+   {
+	 m_bMoveToSystrayOnStartup = b;
+   }
+
+   public static boolean getMoveToSystrayOnStartup()
+   {
+	 return ms_TheModel.m_bMoveToSystrayOnStartup;
+   }
+
+   protected void setDefaultView(int view)
+	{
+	  m_iDefaultView = view;
+	}
+
+	public static int getDefaultView()
+	{
+	  return ms_TheModel.m_iDefaultView;
+	}
 
   protected void setSaveMainWindowPosition(boolean b)
   {

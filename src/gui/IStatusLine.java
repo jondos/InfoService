@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2000 - 2004, The JAP-Team
+ Copyright (c) 2000, The JAP-Team
  All rights reserved.
  Redistribution and use in source and binary forms, with or without modification,
  are permitted provided that the following conditions are met:
@@ -25,17 +25,11 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package jap;
-import javax.swing.JPanel;
-import java.awt.Window;
-import gui.IStatusLine;
+package gui;
 
-public interface IJAPMainView extends JAPObserver,IStatusLine
+public interface IStatusLine
 {
-	public void create(boolean bWithPay);
-	public void localeChanged();
-	public void registerViewIconified(Window viewIconified);
-	public void disableSetAnonMode();
-	public JPanel getMainPanel();
-	public void doSynchronizedUpdateValues();
+	public int addStatusMsg(String msg, int type);
+
+	public void removeStatusMsg(int id);
 }
