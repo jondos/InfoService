@@ -13,7 +13,7 @@ import org.bouncycastle.crypto.digests.SHA1Digest;
  *	this class implements often used hash functions
  */
 public class hash {
-	
+
 	/**
 	 * generates a sha hash
 	 * @param inputs input
@@ -27,6 +27,15 @@ public class hash {
 		{
 			master_sha1.update(inputs[i], 0, inputs[i].length);
 		}
+		byte[] ret = new byte[master_sha1.getDigestSize()];
+		master_sha1.doFinal(ret, 0);
+		return ret;
+	}
+
+	public static byte[] sha(byte[] input)
+	{
+		SHA1Digest master_sha1 = new SHA1Digest();
+		master_sha1.update(input, 0, input.length);
 		byte[] ret = new byte[master_sha1.getDigestSize()];
 		master_sha1.doFinal(ret, 0);
 		return ret;

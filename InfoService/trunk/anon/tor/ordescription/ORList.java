@@ -50,7 +50,6 @@ public class ORList
 				return false;
 			}
 			String doc = resp.getText();
-			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "ORList: " + doc);
 			parseDocument(doc);
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[UPDATE OR-LIST] Update finished");
 			return true;
@@ -118,7 +117,7 @@ public class ORList
 				ORDescription ord = ORDescription.parse(reader);
 				if (ord != null)
 				{
-					if (strRunningOrs.indexOf(" " + ord.getName() + " ") > 0)
+					if ((strRunningOrs.indexOf(" " + ord.getName() + " ") > 0)&&(ord.getSoftware().startsWith("Tor 0.0.8")))
 					{
 						ors.addElement(ord);
 						orswn.put(ord.getName(), ord);

@@ -31,10 +31,13 @@ package anon.crypto;
  * If you change something - do not forget to add the changes also to the JAP source tree!
  */
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.security.PublicKey;
+import org.bouncycastle.asn1.ASN1Sequence;
+import org.bouncycastle.asn1.DERInputStream;
 import org.bouncycastle.asn1.DERObjectIdentifier;
 import org.bouncycastle.asn1.DEROutputStream;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
@@ -61,6 +64,20 @@ final public class MyRSAPublicKey implements PublicKey
 		m_e = p.getExponent();
 	}
 
+	MyRSAPublicKey(RSAPublicKeyStructure en) throws IllegalArgumentException
+	{
+		try
+		{
+			m_n = en.getModulus();
+			m_e = en.getPublicExponent();
+		}
+		catch (Exception e)
+		{
+			throw new IllegalArgumentException("invalid info structure in RSA public key");
+		}
+
+	}
+
 	MyRSAPublicKey(SubjectPublicKeyInfo info) throws IllegalArgumentException
 	{
 		try
@@ -71,9 +88,24 @@ final public class MyRSAPublicKey implements PublicKey
 		}
 		catch (IOException e)
 		{
-			throw new IllegalArgumentException("invalid info structure in DSA public key");
+			throw new IllegalArgumentException("invalid info structure in RSA public key");
 		}
 
+	}
+
+	public static MyRSAPublicKey getInstance(byte[] encoded)
+	{
+		try
+		{
+			return new MyRSAPublicKey(
+				new RSAPublicKeyStructure( (ASN1Sequence)new DERInputStream(new ByteArrayInputStream(encoded)).
+										  readObject())
+				);
+		}
+		catch (Throwable t)
+		{
+			return null;
+		}
 	}
 
 	public BigInteger getModulus()

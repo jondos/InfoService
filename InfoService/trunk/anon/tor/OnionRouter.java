@@ -9,6 +9,7 @@ import java.security.SecureRandom;
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.DERConstructedSequence;
 import org.bouncycastle.asn1.DERInputStream;
+
 import org.bouncycastle.asn1.x509.RSAPublicKeyStructure;
 import org.bouncycastle.crypto.AsymmetricBlockCipher;
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
@@ -19,6 +20,7 @@ import org.bouncycastle.crypto.encodings.OAEPEncoding;
 import org.bouncycastle.crypto.engines.AESFastEngine;
 import org.bouncycastle.crypto.engines.RSAEngine;
 import org.bouncycastle.crypto.generators.DHKeyPairGenerator;
+
 import anon.tor.crypto.CTRBlockCipher;
 import org.bouncycastle.crypto.modes.SICBlockCipher;
 import org.bouncycastle.crypto.params.DHKeyGenerationParameters;
@@ -37,6 +39,9 @@ import anon.tor.cells.RelayCell;
 import anon.tor.ordescription.ORDescription;
 import anon.tor.util.helper;
 import logging.*;
+import anon.crypto.*;
+import java.io.*;
+import org.bouncycastle.asn1.*;
 /**
  * @author stefan
  *
@@ -183,9 +188,20 @@ public class OnionRouter {
 	private RelayCell extendConnection(String address,int port) throws IOException,InvalidCipherTextException
 	{
 		RelayCell cell;
+
 		byte[] payload = InetAddress.getByName(address).getAddress();
 		payload = helper.conc(payload,helper.inttobyte(port,2));
 		payload = helper.conc(payload,this.createExtendPayload());
+
+		MyRSAPublicKey key=m_description.getSigningKey();
+		ByteArrayOutputStream out=new ByteArrayOutputStream();
+		DEROutputStream dout=new DEROutputStream(out);
+		dout.writeObject(key.getAsSubjectPublicKeyInfo().getPublicKey());
+		dout.flush();
+		byte[] hash1 = hash.sha(out.toByteArray());
+
+		payload = helper.conc(payload,hash1);
+
 		cell = new RelayCell(this.m_circID,RelayCell.RELAY_EXTEND,0,payload);
 		return cell;
 	}
@@ -286,12 +302,13 @@ public class OnionRouter {
 		byte[] rsaunencrypted = helper.conc(keyparam,a);
 
 		//generate RSA encrypted part
-		DERInputStream dIn = new DERInputStream(new ByteArrayInputStream(this.m_description.getOnionKey()));
-		RSAPublicKeyStructure key = new RSAPublicKeyStructure(ASN1Sequence.getInstance((DERConstructedSequence)dIn.readObject()));
+		//DERInputStream dIn = new DERInputStream(new ByteArrayInputStream(this.m_description.getOnionKey()));
+		//ASN1Sequence asn1seq = ASN1Sequence.getInstance((DERConstructedSequence)dIn.readObject());
+		//RSAPublicKeyStructure key = new RSAPublicKeyStructure(asn1seq);
 		AsymmetricBlockCipher rsa = new OAEPEncoding(new RSAEngine());
-		BigInteger modulus = key.getModulus();
-		BigInteger exponent = key.getPublicExponent();
-		rsa.init(true,new RSAKeyParameters(false,modulus,exponent));
+		//BigInteger modulus = key.getModulus();
+		//BigInteger exponent = key.getPublicExponent();
+		rsa.init(true,m_description.getOnionKey().getParams());
 
 		rsaencrypted = rsa.processBlock(rsaunencrypted,0,rsaunencrypted.length);
 		a=new byte[dhpubY.length-70];
@@ -304,12 +321,8 @@ public class OnionRouter {
 			aes.processBlock(aesencrypted,i,aesencrypted,i);
 		}
 		byte[] temp=helper.conc(rsaencrypted,aesencrypted);
-		SHA1Digest sha1=new SHA1Digest();
-		byte[] tmp=m_description.getSigningKey();
-		sha1.update(tmp,0,tmp.length);
-		byte[] hash=new byte[20];
-		sha1.doFinal(hash,0);
-		return helper.conc(temp,hash);
+
+		return temp;
 	}
 
 	/**

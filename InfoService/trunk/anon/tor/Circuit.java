@@ -8,6 +8,7 @@ import java.net.ConnectException;
 import java.net.InetAddress;
 //import java.util.Vector;
 //import java.util.HashMap;
+import java.security.SecureRandom;
 import java.util.*;
 
 import anon.tor.tinytls.TinyTLS;
@@ -39,13 +40,16 @@ public class Circuit {
 	private int m_recvCellCounter;
 	private int m_sendCellCounter;
 	private Vector m_cellQueue;
+	private byte[] m_resolvedData;
+	private MyRandom m_rand;
 	
 	//if the created or extended cells have arrived an are correct
 	private boolean m_created;
 	private boolean m_extended;
 	private boolean m_extended_correct;
 	private boolean m_destroyed;
-
+	private boolean m_resolved;
+	
 	/**
 	 * constructor
 	 * @param circID
@@ -73,6 +77,17 @@ public class Circuit {
 		this.m_recvCellCounter = 1000;
 		this.m_sendCellCounter = 1000;
 		this.m_cellQueue = new Vector();
+		this.m_rand = new MyRandom(new SecureRandom());
+	}
+
+	private synchronized void waitForNotify()
+	{
+		try
+		{
+			wait();
+		} catch (InterruptedException ex)
+		{
+		}
 	}
 
 	/**
@@ -85,14 +100,15 @@ public class Circuit {
 		LogHolder.log(LogLevel.DEBUG,LogType.MISC,"[TOR] Creating Circuit '"+this.m_circID+"'");
 		this.m_onionProxy.addCircuit(this);
 		this.m_or = new OnionRouter(this.m_circID,(ORDescription)(this.m_onionRouters.elementAt(0)));
-		InetAddress addr = InetAddress.getByName(this.m_or.getDescription().getAddress());
-		int port = this.m_or.getDescription().getPort();
 		try
 		{
 			this.m_created = false;
 			this.m_onionProxy.send(this.m_or.createConnection());
 			//wait until a created cell arrives
-			while(!this.m_created);
+			while(!this.m_created)
+			{
+				this.waitForNotify();
+			}
 			if(this.m_destroyed)
 			{
 				throw new IOException("DestroyCell recieved");
@@ -102,7 +118,10 @@ public class Circuit {
 				ORDescription nextOR = (ORDescription)(this.m_onionRouters.elementAt(i));
 				this.m_extended = false;
 				this.m_onionProxy.send(this.m_or.extendConnection(nextOR));
-				while(!this.m_extended);
+				while(!this.m_extended)
+				{
+					this.waitForNotify();
+				}
 				if(this.m_destroyed)
 				{
 					throw new IOException("DestroyCell recieved");
@@ -175,7 +194,6 @@ public class Circuit {
 	{
 		try
 		{
-
 			if(cell instanceof RelayCell)
 			{
 				if(!this.m_extended)
@@ -200,7 +218,20 @@ public class Circuit {
 
 					RelayCell c = this.m_or.decryptCell((RelayCell)cell);
 					Integer streamID = new Integer(c.getStreamID());
-					if(this.m_streams.containsKey(streamID))
+					if(c.getStreamID() == 0)	// Relay cells that belong to the circuit
+					{
+						switch(c.getRelayCommand())
+						{
+							case RelayCell.RELAY_SENDME :
+							{
+								this.m_sendCellCounter+=100;
+								this.deliverCells();
+							}
+							default :
+							{
+							}
+						}
+					} else if(this.m_streams.containsKey(streamID)) //dispatch cell to the circuit where it belongs to
 					{
 
 						TorChannel channel = (TorChannel)this.m_streams.get(streamID);
@@ -208,12 +239,15 @@ public class Circuit {
 						{
 							channel.dispatchCell(c);
 						}
-					} else if(streamID.intValue()==0)
+					} else 
 					{
-						if(c.getRelayCommand()==RelayCell.RELAY_SENDME)
+						switch(c.getRelayCommand())
 						{
-							this.m_sendCellCounter+=100;
-							this.send(null);
+							case RelayCell.RELAY_RESOLVED :
+							{
+								this.m_resolvedData = c.getPayload();
+								this.m_resolved = true;
+							}
 						}
 					}
 				}
@@ -240,6 +274,7 @@ public class Circuit {
 		{
 			throw new IOException("Unable to dispatch the cell \n"+ex.getLocalizedMessage());
 		}
+		notifyAll();
 	}
 
 	/**
@@ -254,9 +289,6 @@ public class Circuit {
 		{
 			this.m_cellQueue.addElement(this.m_or.encryptCell((RelayCell)cell));
 			this.deliverCells();
-		} else if(cell==null)
-		{
-			this.deliverCells();
 		}
 	}
 
@@ -264,7 +296,7 @@ public class Circuit {
 	 * delivers the cells if the FOR accept more cells
 	 * @throws Exception
 	 */
-	public void deliverCells() throws Exception
+	private void deliverCells() throws Exception
 	{
 		if(this.m_sendCellCounter!=0)
 		{
@@ -277,6 +309,45 @@ public class Circuit {
 				this.deliverCells();
 			}
 		}
+	}
+	
+	/**
+	 * Returns a address to a given name
+	 * @param name
+	 * @return
+     *  Type   (1 octet)
+     *  Length (1 octet)
+     *  Value  (variable-width)
+     *"Length" is the length of the Value field.  "Type" is one of:
+     * 0x04 -- IPv4 address
+     * 0x06 -- IPv6 address
+     * 0xF0 -- Error, transient
+     * 0xF1 -- Error, nontransient
+	 */
+	public byte[] DNSResolve(String name)
+	{
+		while(!this.m_extended)
+		{
+			this.waitForNotify();
+		}
+		this.m_resolved = false;
+		int temp = this.m_rand.nextInt(65535);
+		while(this.m_streams.containsKey(new Integer(temp)))
+		{
+			temp = this.m_rand.nextInt(65535);
+		}
+		RelayCell cell = new RelayCell(this.getCircID(),RelayCell.RELAY_RESOLVE,temp,name.getBytes());
+		try
+		{
+			this.send(cell);
+		} catch(Exception ex)
+		{
+		}
+		while(!this.m_resolved)
+		{
+			this.waitForNotify();
+		}
+		return this.m_resolvedData;
 	}
 
 	/**

@@ -4,6 +4,7 @@ package anon.tor.ordescription;
 import anon.util.Base64;
 import java.io.*;
 import java.util.StringTokenizer;
+import anon.crypto.MyRSAPublicKey;
 /*
  * Created on Mar 25, 2004
  *
@@ -24,8 +25,8 @@ public class ORDescription {
 	private int m_port;
 	private String m_strSoftware;
 	private ORAcl m_acl;
-	private byte[] m_onionkey;
-	private byte[] m_signingkey;
+	private MyRSAPublicKey m_onionkey;
+	private MyRSAPublicKey m_signingkey;
 
 	public ORDescription(String address, String name, int port,String strSoftware)
 	{
@@ -44,22 +45,24 @@ public class ORDescription {
 	{
 		return m_acl;
 	}
-	public void setOnionKey(byte[] onionkey)
+	public boolean setOnionKey(byte[] onionkey)
 	{
-		this.m_onionkey = onionkey;
+		m_onionkey=MyRSAPublicKey.getInstance(onionkey);
+		return m_onionkey !=null;
 	}
 
-	public byte[] getOnionKey()
+	public MyRSAPublicKey getOnionKey()
 	{
 		return this.m_onionkey;
 	}
 
-	public void setSigningKey(byte[] signingkey)
+	public boolean setSigningKey(byte[] signingkey)
 	{
-		this.m_signingkey = signingkey;
+		m_signingkey=MyRSAPublicKey.getInstance(signingkey);
+		return m_signingkey !=null;
 	}
 
-	public byte[] getSigningKey()
+	public MyRSAPublicKey getSigningKey()
 	{
 		return this.m_signingkey;
 	}
@@ -163,8 +166,8 @@ public class ORDescription {
 						if (ln.startsWith("-----END"))
 						{
 							ORDescription ord=new ORDescription(adr,nickname,Integer.parseInt(orport),strSoftware);
-							ord.setOnionKey(key);
-							ord.setSigningKey(signingkey);
+							if(!ord.setOnionKey(key)||!	ord.setSigningKey(signingkey))
+								return null;
 							ord.setAcl(acl);
 							return ord;
 						}
