@@ -28,6 +28,7 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 package jap;
 
 import java.text.MessageFormat;
+import java.awt.Point;
 import java.util.Enumeration;
 import java.util.Locale;
 import java.util.ResourceBundle;
@@ -187,7 +188,7 @@ public final class JAPController implements ProxyListener {
 	 * and then in the JAP install directory.
 	 * The configuration is a XML-File with the following structure:
 	 *	<JAP
-	 * 		version=".."									// version of the xml struct (DTD) used for saving the configuration
+	 * 		version="0.2"									// version of the xml struct (DTD) used for saving the configuration
 	 *		portNumber=""									// Listener-Portnumber
 	 *		portNumberSocks=""						// Listener-Portnumber for SOCKS
 	 *		supportSocks=""								// Will we support SOCKS ?
@@ -223,7 +224,14 @@ public final class JAPController implements ProxyListener {
 	 * 		</ListenerInterfaces>
 	 * 	</Network>
 	 * </MixCascade>
-	 *	<Debug>													//info about debug output
+	 * <GUI> //since version 0.2 --> store the position and size of JAP on the Desktop
+	 *	 	<MainWindow> //for the Main Window
+	 * 			<SetOnStartup>"true/false"</SetOnStartup> //remember Position ?
+	 * 			<Location x=".." y=".."> //Location of the upper left corner
+	 * 			<Size dx=".." dy=.."> //Size of the Main window
+	 * 		</MainWindow>
+	 * </GUI>
+	 * <Debug>													//info about debug output
 	 *		<Level>..</Level>							// the amount of output (0 means less.. 7 means max)
 	 *		<Type													// which type of messages should be logged
 	 *			GUI="true"/"false"					// messages related to the user interface
@@ -371,21 +379,39 @@ public final class JAPController implements ProxyListener {
 					}
 				}
 			}
-				//Loading debug settings
-			NodeList nl=root.getElementsByTagName("Debug");
-			if(nl!=null&&nl.getLength()>0)
+				//Loading GUI Setting
+			Element elemGUI=(Element)XMLUtil.getFirstChildByName(root,"GUI");
+			if(elemGUI!=null)
 				{
-					Element elemDebug=(Element)nl.item(0);
-					nl=elemDebug.getElementsByTagName("Level");
-					if(nl!=null&&nl.getLength()>0)
+					Element elemMainWindow=(Element)XMLUtil.getFirstChildByName(elemGUI,"MainWindow");
+					if(elemMainWindow!=null)
 						{
-							Element elemLevel=(Element)nl.item(0);
+							Element tmp=(Element)XMLUtil.getFirstChildByName(elemMainWindow,"SetOnStartup");
+							m_Controller.setSaveMainWindowPosition(XMLUtil.parseNodeBoolean(tmp,false));
+							tmp=(Element)XMLUtil.getFirstChildByName(elemMainWindow,"Location");
+							Point p=new Point();
+							p.x=XMLUtil.parseElementAttrInt(tmp,"x",-1);
+							p.y=XMLUtil.parseElementAttrInt(tmp,"y",-1);
+							Dimension d=new Dimension();
+							tmp=(Element)XMLUtil.getFirstChildByName(elemMainWindow,"Size");
+							d.width=XMLUtil.parseElementAttrInt(tmp,"dx",-1);
+							d.height=XMLUtil.parseElementAttrInt(tmp,"dy",-1);
+							m_Model.m_OldMainWindowLocation=p;
+							m_Model.m_OldMainWindowSize=d;
+						}
+				}
+				//Loading debug settings
+			Element elemDebug=(Element)XMLUtil.getFirstChildByName(root,"Debug");
+			if(elemDebug!=null)
+				{
+					Element elemLevel=(Element)XMLUtil.getFirstChildByName(elemDebug,"Level");
+					if(elemLevel!=null)
+						{
 							JAPDebug.setDebugLevel(Integer.parseInt(elemLevel.getFirstChild().getNodeValue().trim()));
 						}
-					nl=elemDebug.getElementsByTagName("Type");
-					if(nl!=null&&nl.getLength()>0)
+					Element elemType=(Element)XMLUtil.getFirstChildByName(elemDebug,"Type");
+					if(elemType!=null)
 						{
-							Element elemType=(Element)nl.item(0);
 							int debugtype=JAPDebug.NUL;
 							if(elemType.getAttribute("GUI").equals("true"))
 								debugtype+=JAPDebug.GUI;
@@ -397,10 +423,9 @@ public final class JAPController implements ProxyListener {
 								debugtype+=JAPDebug.MISC;
 							JAPDebug.setDebugType(debugtype);
 						}
-					nl=elemDebug.getElementsByTagName("Output");
-					if(nl!=null&&nl.getLength()>0)
+					Element elemOutput=(Element)XMLUtil.getFirstChildByName(elemDebug,"Output");
+					if(elemOutput!=null)
 						{
-							Element elemOutput=(Element)nl.item(0);
 							JAPDebug.showConsole(elemOutput.getFirstChild().getNodeValue().trim().equalsIgnoreCase("Console"),m_View);
 						}
 				}
@@ -506,7 +531,28 @@ public final class JAPController implements ProxyListener {
 			AnonServer e1 = m_Controller.getAnonServer();
 			e.appendChild(e1.toXmlNode(doc));
 
-			// adding Debug-Element
+			// adding GUI-Element
+			if(JAPModel.getSaveMainWindowPosition())
+				{
+					Element elemGUI = doc.createElement("GUI");
+					e.appendChild(elemGUI);
+					Element elemMainWindow = doc.createElement("MainWindow");
+					elemGUI.appendChild(elemMainWindow);
+					Element tmp=doc.createElement("SetOnStartup");
+					elemMainWindow.appendChild(tmp);
+					XMLUtil.setNodeValue(tmp,"true");
+					tmp=doc.createElement("Location");
+					elemMainWindow.appendChild(tmp);
+					Point p=m_View.getLocation();
+					tmp.setAttribute("x",Integer.toString(p.x));
+					tmp.setAttribute("y",Integer.toString(p.y));
+					tmp=doc.createElement("Size");
+					elemMainWindow.appendChild(tmp);
+					Dimension d=m_View.getSize();
+					tmp.setAttribute("dx",Integer.toString(d.width));
+					tmp.setAttribute("dy",Integer.toString(d.height));
+				}
+		// adding Debug-Element
 			Element elemDebug=doc.createElement("Debug");
 			e.appendChild(elemDebug);
 			Element tmp=doc.createElement("Level");
@@ -752,6 +798,11 @@ public final class JAPController implements ProxyListener {
 	public static void setInfoServiceDisabled(boolean b)
 		{
 			m_Model.setInfoServiceDisabled(b);
+		}
+
+	public static void setSaveMainWindowPosition(boolean b)
+		{
+			m_Model.setSaveMainWindowPosition(b);
 		}
 	//---------------------------------------------------------------------
 /*

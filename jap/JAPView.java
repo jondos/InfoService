@@ -61,13 +61,13 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 		}
 	}
 
-  final private class MyViewUpdate implements Runnable
-    {
-      public void run()
-        {
-          updateValues();
-        }
-    }
+	final private class MyViewUpdate implements Runnable
+		{
+			public void run()
+				{
+					updateValues();
+				}
+		}
 
 	private JAPController 	controller;
 	private JLabel				  meterLabel;
@@ -204,6 +204,19 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 			setOptimalSize();
 			valuesChanged();
 			JAPUtil.centerFrame(this);
+			//Change size and location if the user requested to restore the old position/size
+			if(JAPModel.getSaveMainWindowPosition())
+				{
+					JAPModel m=JAPModel.getModel();
+					Dimension ds=Toolkit.getDefaultToolkit().getScreenSize();
+					if(m.m_OldMainWindowLocation!=null&&m.m_OldMainWindowLocation.x>=0&&
+						m.m_OldMainWindowLocation.y>0/*&&m.m_OldMainWindowLocation.x<ds.width&&
+					 m.m_OldMainWindowLocation.y<ds.height*/)
+						setLocation(m.m_OldMainWindowLocation);
+					if(m.m_OldMainWindowSize!=null&&m.m_OldMainWindowSize.height>0&&
+						m.m_OldMainWindowSize.width>0)
+					 setSize(m.m_OldMainWindowSize);
+				}
 	}
 
 		private JPanel buildLevelPanel() {
@@ -665,14 +678,14 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 			}
 
 	private void updateValues() {
-  			synchronized(m_runnableValueUpdate)
+				synchronized(m_runnableValueUpdate)
 {
 		AnonServer e = controller.getAnonServer();
 		// Config panel
 		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPView:Start updateValues");
 
 		// Meter panel
-    try{
+		try{
 		m_cbAnon.setSelected(controller.getAnonMode());
 		if(controller.getAnonMode()) {
 			m_cbAnon.setForeground(Color.black);
@@ -766,14 +779,14 @@ catch(Throwable t)
 			JAPDll.onTraffic();
 		}
 
-  public void valuesChanged ()
-    {
+	public void valuesChanged ()
+		{
 			synchronized(m_runnableValueUpdate)
 				{
 					if(SwingUtilities.isEventDispatchThread())
-            updateValues();
-          else
-            SwingUtilities.invokeLater(m_runnableValueUpdate);
+						updateValues();
+					else
+						SwingUtilities.invokeLater(m_runnableValueUpdate);
 				}
 		}
 }

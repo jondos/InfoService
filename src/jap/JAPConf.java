@@ -107,6 +107,8 @@ final class JAPConf extends JDialog
 		private JCheckBox     m_cbDebugMisc;
 		private JCheckBox     m_cbShowDebugConsole;
 		private JCheckBox			m_cbInfoServiceDisabled;
+		private JCheckBox			m_cbSaveWindowPositions;
+
 		private JSlider				m_sliderDebugLevel;
 
 		private JComboBox			m_comboLanguage;
@@ -694,7 +696,7 @@ final class JAPConf extends JDialog
 				p1.add(new JLabel(JAPMessages.getString("settingsLookAndFeel")));
 				JComboBox c=new JComboBox();
 				LookAndFeelInfo[] lf=UIManager.getInstalledLookAndFeels();
-			  String currentLf=UIManager.getLookAndFeel().getClass().getName();
+				String currentLf=UIManager.getLookAndFeel().getClass().getName();
 				// add menu items
 				for(int lfidx=0;lfidx<lf.length;lfidx++) {
 					c.addItem(lf[lfidx].getName());
@@ -778,8 +780,12 @@ final class JAPConf extends JDialog
 					});
 
 				m_cbInfoServiceDisabled=new JCheckBox("Disable InfoService");
+				m_cbSaveWindowPositions=new JCheckBox("Remember Location of JAP");
 				JPanel p22 = new JPanel();
-				p22.setLayout(new GridLayout(5,1));
+				GridBagLayout gb=new GridBagLayout();
+				p22.setLayout(gb);
+				GridBagConstraints lc=new GridBagConstraints();
+
 				//p22.add(bttnPing);
 							//////////////////////////////////////////////////////////////////
 							//Einfug
@@ -799,19 +805,38 @@ final class JAPConf extends JDialog
 });
 	testButton.setVisible(true);
 	testButton.setEnabled(true);
-	 p22.add(testButton);
+		lc.gridx=0;
+		lc.gridy=0;
+		lc.gridheight=1;
+		lc.gridwidth=1;
+		lc.anchor=lc.NORTHWEST;
+		lc.fill=lc.HORIZONTAL;
+		lc.weightx=1;
+		lc.weighty=1;
+		gb.setConstraints(testButton,lc);
+		p22.add(testButton);
+		lc.gridy++;
 							//////////////////////////////////////////////////////////////////
-
-				p22.add(bttnMonitor);
-				p22.add(m_cbDummyTraffic);
-				m_sliderDummyTrafficIntervall=new JSlider(JSlider.HORIZONTAL,10,60,30);
-				m_sliderDummyTrafficIntervall.setMajorTickSpacing(10);
-				m_sliderDummyTrafficIntervall.setMinorTickSpacing(5);
-				m_sliderDummyTrafficIntervall.setPaintLabels(true);
-				m_sliderDummyTrafficIntervall.setPaintTicks(true);
-				m_sliderDummyTrafficIntervall.setSnapToTicks(true);
-				p22.add(m_sliderDummyTrafficIntervall);
-				p22.add(m_cbInfoServiceDisabled);
+		gb.setConstraints(bttnMonitor,lc);
+		p22.add(bttnMonitor);
+		lc.gridy++;
+		gb.setConstraints(m_cbDummyTraffic,lc);
+		p22.add(m_cbDummyTraffic);
+		lc.gridy++;
+		m_sliderDummyTrafficIntervall=new JSlider(JSlider.HORIZONTAL,10,60,30);
+		m_sliderDummyTrafficIntervall.setMajorTickSpacing(10);
+			m_sliderDummyTrafficIntervall.setMinorTickSpacing(5);
+			m_sliderDummyTrafficIntervall.setPaintLabels(true);
+			m_sliderDummyTrafficIntervall.setPaintTicks(true);
+			m_sliderDummyTrafficIntervall.setSnapToTicks(true);
+			gb.setConstraints(m_sliderDummyTrafficIntervall,lc);
+			p22.add(m_sliderDummyTrafficIntervall);
+			lc.gridy++;
+			gb.setConstraints(m_cbInfoServiceDisabled,lc);
+			p22.add(m_cbInfoServiceDisabled);
+			lc.gridy++;
+			gb.setConstraints(m_cbSaveWindowPositions,lc);
+			p22.add(m_cbSaveWindowPositions);
 				p2.add(p22, BorderLayout.NORTH);
 
 				// Panel for Debugging Options
@@ -1141,6 +1166,7 @@ final class JAPConf extends JDialog
 				m_Controller.setAutoConnect(m_cbAutoConnect.isSelected());
 				m_Controller.setAutoReConnect(m_cbAutoReConnect.isSelected());
 				m_Controller.setMinimizeOnStartup(m_cbStartupMinimized.isSelected());
+				m_Controller.setSaveMainWindowPosition(m_cbSaveWindowPositions.isSelected());
 				//Try to Set AnonService
 
 				AnonServer server=null;
@@ -1299,6 +1325,7 @@ final class JAPConf extends JDialog
 				m_cbAutoConnect.setSelected(JAPModel.getAutoConnect());
 				m_cbAutoReConnect.setSelected(JAPModel.getAutoReConnect());
 				m_cbStartupMinimized.setSelected(JAPModel.getMinimizeOnStartup());
+				m_cbSaveWindowPositions.setSelected(JAPModel.getSaveMainWindowPosition());
 				updateMixCascadeCombo();
 				if(m_rbMixStep2.isSelected()) //Auswahl is selected
 					{//try to select the current Anon Service
