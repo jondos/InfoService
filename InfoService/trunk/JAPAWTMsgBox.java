@@ -39,7 +39,7 @@ import java.awt.event.ActionEvent;
 import java.util.StringTokenizer;
 
 /** This is a simple Message Box. It works with JAVA 1.1 without Swing.*/
-final public class JAPAWTMsgBox extends WindowAdapter implements ActionListener
+final class JAPAWTMsgBox extends WindowAdapter implements ActionListener
 {
 	private Dialog d;
 	private JAPAWTMsgBox(Frame parent,String msg,String title)

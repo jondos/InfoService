@@ -29,7 +29,9 @@ import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 
-public final class JAPViewIconified extends JFrame implements ActionListener, JAPObserver {
+import anon.JAPAnonServiceListener;
+
+final class JAPViewIconified extends JFrame implements ActionListener, JAPObserver {
 	private JAPModel model;
 	private JLabel    z1, z2, z3;
 	private JButton   b;
@@ -90,13 +92,19 @@ public final class JAPViewIconified extends JFrame implements ActionListener, JA
 			model.setJAPViewDeIconified();
 	}	
 	
-	public synchronized void valuesChanged (JAPModel m) {
-		z1.setText(Integer.toString(m.getNrOfChannels()));
-		z2.setText(Integer.toString(m.getNrOfBytes()));
+	public void valuesChanged (JAPModel m) {
 		if (m.nrOfActiveUsers != -1)
 			z3.setText(Integer.toString(model.nrOfActiveUsers));
 		else
 			z3.setText("N/A");
 	}
-			
+
+	public void channelsChanged(int c)
+	{
+			z1.setText(Integer.toString(c));
+	}
+	public void transferedBytes(int b)
+	{
+	z2.setText(Integer.toString(b));
+	}
 }

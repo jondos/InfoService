@@ -31,8 +31,9 @@ import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.border.*;
 
+import anon.JAPAnonServiceListener;
 
-public final class JAPView extends JFrame implements ActionListener, JAPObserver {
+final class JAPView extends JFrame implements ActionListener, JAPObserver {
 	private JAPModel 			model;
 	private JLabel				meterLabel;
 	private JLabel				statusTextField1;
@@ -53,7 +54,7 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 	private ImageIcon[]			meterIcons;
 	private JAPHelp 			helpWindow;
 	private JAPConf 			configDialog;
-	
+	private Object oValueUpdateSemaphore;
 	private boolean m_bIsIconified;
 	private String m_Title;
 
@@ -66,6 +67,7 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 			helpWindow =  null;//new JAPHelp(this); 
 			configDialog = null;//new JAPConf(this);
 			m_bIsIconified=false;
+			oValueUpdateSemaphore=new Object();
 		}
 	
 	public void create()
@@ -176,9 +178,10 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 			JProgressBar(JProgressBar.HORIZONTAL,0, 1);
 		ownTrafficChannelsProgressBar.setStringPainted(true);
 		ownTrafficChannelsProgressBar.setBorderPainted(true);
-
+		ownTrafficChannelsProgressBar.setString("0");
+		
 		// Own traffic situation: # of bytes transmitted
-		ownTrafficBytesLabel = new JLabel("",SwingConstants.RIGHT);
+		ownTrafficBytesLabel = new JLabel("0 Bytes",SwingConstants.RIGHT);
 
 		//
 		userProgressBar = new 
@@ -452,6 +455,7 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 	
     private void updateValues() {
 		// Config panel
+		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"Start updateValues");
 		portnumberTextField.setText(String.valueOf(model.getPortNumber()));
 		proxyCheckBox.setSelected(model.getUseProxy());
 		proxyTextField.setText(model.getProxyHost()+":"+String.valueOf(model.getProxyPort()));
@@ -518,20 +522,33 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 			trafficProgressBar.setValue(trafficProgressBar.getMaximum());
 			trafficProgressBar.setString(model.getString("meterNA"));
 		}
-		// Nr of Channels
-		int c=model.getNrOfChannels();
-		if (c > ownTrafficChannelsProgressBar.getMaximum())
-			ownTrafficChannelsProgressBar.setMaximum(c);
-		ownTrafficChannelsProgressBar.setValue(c);
-		ownTrafficChannelsProgressBar.setString(String.valueOf(model.getNrOfChannels()));
-		// Nr of Bytes transmitted anonymously
-		ownTrafficBytesLabel.setText(NumberFormat.getInstance().format(model.getNrOfBytes())+" Bytes");
+	
  	
 		}
 	
-	public synchronized void valuesChanged (JAPModel m)
+		public void channelsChanged(int c)
 		{
-			updateValues();
+		// Nr of Channels
+		//int c=model.getNrOfChannels();
+		if (c > ownTrafficChannelsProgressBar.getMaximum())
+			ownTrafficChannelsProgressBar.setMaximum(c);
+		ownTrafficChannelsProgressBar.setValue(c);
+		ownTrafficChannelsProgressBar.setString(String.valueOf(c));
+		}
+		public void transferedBytes(int c)
+		{
+		// Nr of Bytes transmitted anonymously
+		ownTrafficBytesLabel.setText(NumberFormat.getInstance().format(c)+" Bytes");
+		}
+		
+		public void valuesChanged (JAPModel m)
+		{
+			synchronized(oValueUpdateSemaphore)
+				{
+//					JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"Start valuesChanged");
+					updateValues();
+//					JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"End valuesChanged");
+				}
 		}
 
 }

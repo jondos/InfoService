@@ -36,7 +36,7 @@ import javax.swing.border.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-public final class JAPConf extends JDialog 
+final class JAPConf extends JDialog 
 	{
 	private JAPModel model;
 		

@@ -37,7 +37,7 @@ import javax.swing.event.*;
 
 /* classes modified from Swing Example "Metalworks" */
 
-final public class JAPHelp extends JDialog implements ActionListener {
+final class JAPHelp extends JDialog implements ActionListener {
     private JAPModel model;
     private String helpPath = " ";
     private String helpLang = " ";

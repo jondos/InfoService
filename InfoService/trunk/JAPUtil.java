@@ -44,7 +44,7 @@ import org.w3c.dom.Node;
 import javax.swing.ImageIcon;
 
 
-public final class JAPUtil
+final class JAPUtil
 	{
 		public static int applyJarDiff(String oldJAR, String newJAR, String diffJAR)
 			{

@@ -426,7 +426,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 		return portNumber;
 	}
 		
-	public synchronized static String getString(String key) {
+	public static String getString(String key) {
 		try {
 			return model.msg.getString(key);
 		}
@@ -435,24 +435,38 @@ public final class JAPModel implements JAPAnonServiceListener{
 		}
 	}
 		
-	public synchronized void channelsChanged(int cannels) {
-		nrOfChannels=cannels;
-		notifyJAPObservers();
-	}
+	public void channelsChanged(int channels) 
+		{
+			nrOfChannels=channels;
+					Enumeration enum = observerVector.elements();
+					while (enum.hasMoreElements())
+						{
+							JAPObserver listener = (JAPObserver)enum.nextElement();
+							listener.channelsChanged(channels);
+						}
+		}
 	
-	public int getNrOfChannels() {
-		return nrOfChannels;
-	}
-	
-	public synchronized void transferedBytes(int bytes) {
-		nrOfBytes+=bytes;
-		notifyJAPObservers();
-	}
-	
+/*	public int getNrOfChannels() 
+		{
+			return nrOfChannels;
+		}
+	*/
+	public void transferedBytes(int bytes) 
+		{
+			nrOfBytes+=bytes;
+					Enumeration enum = observerVector.elements();
+					while (enum.hasMoreElements())
+						{
+							JAPObserver listener = (JAPObserver)enum.nextElement();
+							listener.transferedBytes(nrOfBytes);
+						}
+//			notifyJAPObservers();
+		}
+	/*
 	public int getNrOfBytes() {
 		return nrOfBytes;
 	}
-
+*/
 	public boolean setInfoService(String host,int port)
 		{
 			if(!JAPUtil.isPort(port))
@@ -626,11 +640,10 @@ public final class JAPModel implements JAPAnonServiceListener{
 					int ret=proxyAnon.start();
 					if(ret==JAPAnonService.E_SUCCESS)
 						{
+							proxyAnon.setAnonServiceListener(this);
 							// start feedback thread
 							feedback=new JAPFeedback();
-							Thread t2 = new Thread (feedback);
-							t2.setPriority(Thread.MIN_PRIORITY);
-							t2.start();
+							feedback.startRequests();
 							// show a Reminder message that active contents should be disabled
 							Object[] options = { model.getString("disableActCntMessageDontRemind"), model.getString("okButton") };
 							JCheckBox checkboxRemindNever=new JCheckBox(model.getString("disableActCntMessageNeverRemind"));
@@ -868,15 +881,20 @@ public final class JAPModel implements JAPAnonServiceListener{
 			observerVector.addElement(o);
 		}
 	
-	public synchronized void notifyJAPObservers()
+
+	public void notifyJAPObservers()
 		{
-			//JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:notifyJAPObservers()");
-			Enumeration enum = observerVector.elements();
-			while (enum.hasMoreElements())
+	//		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:notifyJAPObservers()");
+			synchronized(observerVector)
 				{
-					JAPObserver listener = (JAPObserver)enum.nextElement();
-					listener.valuesChanged(this);
+					Enumeration enum = observerVector.elements();
+					while (enum.hasMoreElements())
+						{
+							JAPObserver listener = (JAPObserver)enum.nextElement();
+							listener.valuesChanged(this);
+						}
 				}
+		//	JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:notifyJAPObservers()-ended");
 		}
 	
 

@@ -40,7 +40,7 @@ import java.io.IOException;
  * @version 0.1
  * @author  Jens Hillert
  */
-public class JAPRoundTripTimeView extends JDialog implements Runnable {
+class JAPRoundTripTimeView extends JDialog implements Runnable {
 	
 	private final boolean DEBUG = true;
 	/** Specifies the timeout between 2 connections in milliseconds */

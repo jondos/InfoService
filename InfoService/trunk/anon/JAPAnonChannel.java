@@ -28,7 +28,7 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 package anon;
 import java.io.InputStream;
 
-final public class JAPAnonChannel extends Thread 
+public class JAPAnonChannel extends Thread 
 	{ 
 		private final JAPSocket inSocket; 
 		private final JAPMuxSocket outSocket;
@@ -59,8 +59,8 @@ final public class JAPAnonChannel extends Thread
 												int ret=outSocket.send(channel,buff,(short)len);
 												if(ret==-1)
 													break;
-												if(ret==JAPMuxSocket.E_CHANNEL_SUSPENDED)
-													sleep(1000);
+												//if(ret==JAPMuxSocket.E_CHANNEL_SUSPENDED)
+												//	sleep(1000);
 											}
 									} 
 							}	
@@ -87,5 +87,6 @@ final public class JAPAnonChannel extends Thread
 					{
 						JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.THREAD,"ProxyConnection - Exception while closing: "+e); 
 					}	 
+				JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.THREAD,"Channel "+Integer.toString(channel)+"closed"); 
 			} 
 	}

@@ -70,7 +70,6 @@ import Rijndael.Rijndael_Algorithm;
 import java.util.zip.*;
 //import cryptix.asn1.lang.*;
 //import cryptix.asn1.encoding.*;
-import anon.JAPSymCipher;
 final public class JAPTest
 {
 	
@@ -140,7 +139,8 @@ final public class JAPTest
 	//	t.testJarVerify();
 //		ASN1Test();
 		
-		
+		int len=-32526;
+		len=len;
 		System.exit(0);
 		}
 	
@@ -654,7 +654,7 @@ final public class JAPTest
 	//		e.printStackTrace();
 		//}
 	//	}
-
+/*
 public static void testAES()
 {
 	try{
@@ -676,7 +676,7 @@ public static void testAES()
 	}
 }
 
-
+*/
 public static void testJarDiff()
 {
 	try{
