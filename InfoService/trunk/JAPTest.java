@@ -32,10 +32,10 @@ final public class JAPTest
 {
 	public static void main(String argc[])
 		{
-			readSig();
-			readDSAPrivKey();
+	//		readSig();
+	//		readDSAPrivKey();
 			testCert();
-			readCerts();
+	//		readCerts();
 		/*
 			int MAX=128000;
 			JAPASymCipher oRSA=new JAPASymCipher();
