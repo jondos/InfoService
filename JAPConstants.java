@@ -27,7 +27,7 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 */
 
 public final class JAPConstants {
-	static final String aktVersion = "00.01.065"; //Never change the layout of this line!
+	static final String aktVersion = "00.01.066"; //Never change the layout of this line!
 	//static final String buildDate=".."
 	//static final String buildType="..."
         //needed for update.JAPUpdate

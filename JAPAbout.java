@@ -172,8 +172,10 @@ final class JAPAbout extends JDialog implements Runnable
 				parent=p;
 				oldCursor=parent.getCursor();
 				parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-        try{
-        SwingUtilities.invokeLater(this);}
+        try
+          {
+            SwingUtilities.invokeLater(this);
+          }
         catch(Exception e)
           {
             e.printStackTrace();
@@ -195,10 +197,11 @@ final class JAPAbout extends JDialog implements Runnable
 				JLabel labelSplash=new JLabel(imageSplash); //we use a JLabel to show the Background Image
 				JLabel verstxt=new JLabel("Version:");
 				JLabel version=new JLabel(JAPConstants.aktVersion);
-				verstxt.setFont(new Font("Sans",Font.PLAIN,9));
+				Font f=new Font("Sans",Font.PLAIN,9);
+        verstxt.setFont(f);
 				verstxt.setForeground(Color.black);
 				verstxt.setSize(verstxt.getPreferredSize());  //we set the Size of the Version-Label so that the Text 'Version' would exactly fit
-				version.setFont(new Font("Sans",Font.PLAIN,9));
+				version.setFont(f);
 				version.setForeground(Color.black);
 				version.setSize(version.getPreferredSize()); //resizing the VersionNumber-Label
 				JButton bttnOk=new JButton("Ok");
@@ -237,7 +240,7 @@ final class JAPAbout extends JDialog implements Runnable
 				String os=System.getProperty("os.name");
 				if(os==null||!os.toLowerCase().startsWith("mac"))
 					{
-						setLocation(-380,-200); //First we move the Dialog to a position were it is not seen on the Screen...
+						//setLocation(-380,-200); //First we move the Dialog to a position were it is not seen on the Screen...
 						setVisible(true);   //now we have to ensure that the window is visible before the
 						setResizable(false); //get the insets (the border around the window) - also the window must look like it should
 						Insets in=getInsets(); //so for instance we need the 'NoResizable'-Border
@@ -255,7 +258,9 @@ final class JAPAbout extends JDialog implements Runnable
 				setResizable(false); //but the user shouldn't resize the Dialog again
 				setLocationRelativeTo(parent); //now showing centerd to JAP-Main
 				toFront();
-				sp.startIt(); //starting the scrolling...
+				validateTree();
+        //repaint();
+        sp.startIt(); //starting the scrolling...
 				parent.setCursor(oldCursor);
 			}
 
