@@ -195,6 +195,19 @@ public class Circuit
 	}
 
 	/**
+	 * circuit was destroyed by peer.
+	 *
+	 * @throws Exception
+	 */
+	public synchronized void destroyedByPeer() throws Exception
+	{
+		m_streams.clear();
+		m_bClosed = true;
+		m_bShutdown = true;
+		m_Tor.notifyCircuitClosed(m_circID);
+	}
+
+	/**
 	 * check if the circuit is already destroyed
 	 *
 	 * @return if the channel is closed
@@ -203,6 +216,16 @@ public class Circuit
 	{
 		return m_bClosed;
 	}
+
+	/* check if the circuit is already shutdown
+		*
+		* @return if the circuit is shutdown
+		*/
+	   public synchronized boolean isShutdown()
+	   {
+		   return m_bShutdown;
+	   }
+
 	/**
 	 * dispatches cells to the opended channels
 	 * @param cell
@@ -233,11 +256,8 @@ public class Circuit
 					m_recvCellCounter--;
 					if (m_recvCellCounter < 900)
 					{
-						//for(int i=0;i<m_circuitLength;i++)
-						{
-							RelayCell rc = new RelayCell(m_circID, RelayCell.RELAY_SENDME, 0, null);
-							send(rc/*,i*/);
-						}
+						RelayCell rc = new RelayCell(m_circID, RelayCell.RELAY_SENDME, 0, null);
+						send(rc);
 						m_recvCellCounter += 100;
 					}
 
@@ -334,15 +354,6 @@ public class Circuit
 		if (cell instanceof RelayCell)
 		{
 			this.m_cellQueue.addElement(this.m_FirstOR.encryptCell( (RelayCell) cell));
-			this.deliverCells();
-		}
-	}
-
-	public synchronized void send(Cell cell,int pathLen) throws IOException
-	{
-		if (cell instanceof RelayCell)
-		{
-			this.m_cellQueue.addElement(this.m_FirstOR.encryptCell( (RelayCell) cell,pathLen));
 			this.deliverCells();
 		}
 	}
@@ -486,12 +497,11 @@ public class Circuit
 			m_streamIDCounter++;
 			TorChannel channel = new TorChannel(this.m_streamIDCounter, this);
 			this.m_streams.put(new Integer(this.m_streamIDCounter), channel);
-
+			channel.connect(addr, port);
 			if (m_streamIDCounter == MAX_STREAMS_OVER_CIRCUIT)
 			{
 				shutdown();
 			}
-			channel.connect(addr, port);
 			return channel;
 		}
 	}

@@ -26,8 +26,7 @@ public class DHE_RSA_WITH_DES_CBC_SHA extends CipherSuite {
 	 * @param message message to encode
 	 * @return encoded message
 	 */
-	public byte[] encode(byte[] header, byte[] message) {
-		return null;
+	public void encode(TLSRecord msg) throws TLSException {
 	}
 
 	/**
@@ -36,8 +35,7 @@ public class DHE_RSA_WITH_DES_CBC_SHA extends CipherSuite {
 	 * @param message message
 	 * @return decoded message
 	 */
-	public byte[] decode(byte[] header, byte[] message) throws TLSException {
-		return null;
+	public void decode(TLSRecord msg) throws TLSException {
 	}
 
 	/**

@@ -6,19 +6,16 @@ package anon.tor;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InterruptedIOException;
 import java.io.OutputStream;
+import java.util.Enumeration;
 import java.util.Hashtable;
-
+import anon.tor.cells.Cell;
+import anon.tor.ordescription.ORDescription;
+import anon.tor.tinytls.TinyTLS;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-
-import anon.tor.cells.Cell;
-import anon.tor.cells.CreatedCell;
-import anon.tor.cells.DestroyCell;
-import anon.tor.cells.RelayCell;
-import anon.tor.ordescription.ORDescription;
-import anon.tor.tinytls.TinyTLS;
 
 /**
  *
@@ -33,6 +30,7 @@ public class FirstOnionRouterConnection implements Runnable
 	private OutputStream m_ostream;
 	private Hashtable m_Circuits;
 	private volatile boolean m_bRun;
+	private boolean m_bIsClosed = true;
 
 	/**
 	 * constructor
@@ -44,12 +42,19 @@ public class FirstOnionRouterConnection implements Runnable
 	public FirstOnionRouterConnection(ORDescription d)
 	{
 		m_readDataLoop = null;
+		m_bRun = false;
+		m_bIsClosed = true;
 		m_description = d;
 	}
 
 	public ORDescription getORDescription()
 	{
 		return m_description;
+	}
+
+	public synchronized boolean isClosed()
+	{
+		return m_bIsClosed;
 	}
 
 	/**
@@ -60,14 +65,26 @@ public class FirstOnionRouterConnection implements Runnable
 	 */
 	public synchronized void send(Cell cell) throws IOException
 	{
-		m_ostream.write(cell.getCellData());
+		for (; ; )
+		{
+			try
+			{
+				m_ostream.write(cell.getCellData());
+				m_ostream.flush();
+				break;
+			}
+			catch (InterruptedIOException ex)
+			{
+			}
+		}
+
 	}
 
 	/**
 	 * dispatches a cell to the circuits if one is recieved
 	 *
 	 */
-	private void dispatchCells()
+	private boolean dispatchCells()
 	{
 		Cell cell = null;
 		byte[] buff = new byte[512];
@@ -77,20 +94,39 @@ public class FirstOnionRouterConnection implements Runnable
 			while (readPos < 512)
 			{
 				//TODO:maybe we can let the thread sleep here for a while
+				int ret=0;
+				try
+				{
+					ret = m_istream.read(buff, readPos, 512 - readPos);
+				}
+				catch (InterruptedIOException ioe)
+				{
+					continue;
+				}
+				if (ret <= 0) //closed
+				{
+					return false;
+				}
 				readPos += m_istream.read(buff, readPos, 512 - readPos);
 			}
-			cell=Cell.createCell(buff);
-			int cid=cell.getCircuitID();
+			cell = Cell.createCell(buff);
+			int cid = cell.getCircuitID();
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC,
 						  "OnionProxy read() Tor Cell - Circuit: " + cid + " Type: " + cell.getCommand());
-			Circuit circuit = (Circuit)m_Circuits.get(new Integer(cid));
-			if(circuit!=null&&!circuit.isDestroyed())
+			Circuit circuit = (Circuit) m_Circuits.get(new Integer(cid));
+			if (circuit != null && !circuit.isDestroyed())
+			{
 				circuit.dispatchCell(cell);
+			}
 			else
+			{
 				m_Circuits.remove(new Integer(cid));
+			}
+			return true;
 		}
 		catch (IOException ex)
 		{
+			return false;
 			//TODO : Fehler ausgeben
 		}
 	}
@@ -101,12 +137,15 @@ public class FirstOnionRouterConnection implements Runnable
 	 */
 	public synchronized void connect() throws Exception
 	{
-		m_tinyTLS = new TinyTLS(this.m_description.getAddress(), this.m_description.getPort());
+		m_tinyTLS = new TinyTLS(m_description.getAddress(), m_description.getPort());
+		m_tinyTLS.setSoTimeout(0);
 		m_tinyTLS.startHandshake();
-		m_istream = this.m_tinyTLS.getInputStream();
-		m_ostream = this.m_tinyTLS.getOutputStream();
+		m_istream = m_tinyTLS.getInputStream();
+		m_ostream = m_tinyTLS.getOutputStream();
 		m_Circuits = new Hashtable();
+		m_tinyTLS.setSoTimeout(0);
 		start();
+		m_bIsClosed = false;
 	}
 
 	/**
@@ -118,7 +157,7 @@ public class FirstOnionRouterConnection implements Runnable
 		if (m_readDataLoop == null)
 		{
 			m_bRun = true;
-			m_readDataLoop = new Thread(this,"FirstOnionRouterConnection - "+m_description.getName());
+			m_readDataLoop = new Thread(this, "FirstOnionRouterConnection - " + m_description.getName());
 			m_readDataLoop.start();
 		}
 	}
@@ -130,7 +169,11 @@ public class FirstOnionRouterConnection implements Runnable
 	{
 		while (m_bRun)
 		{
-			dispatchCells();
+			if (!dispatchCells())
+			{
+				closedByPeer();
+				return;
+			}
 		}
 	}
 
@@ -140,19 +183,19 @@ public class FirstOnionRouterConnection implements Runnable
 	 */
 	private void stop() throws IOException
 	{
-		m_bRun = false;
-		if (m_readDataLoop != null)
+		if (m_readDataLoop != null && m_bRun)
 		{
 			try
 			{
+				m_bRun = false;
 				m_readDataLoop.interrupt();
 				m_readDataLoop.join();
 			}
 			catch (Throwable t)
 			{
 			}
-			m_readDataLoop = null;
 		}
+		m_readDataLoop = null;
 	}
 
 	/**
@@ -170,6 +213,30 @@ public class FirstOnionRouterConnection implements Runnable
 		catch (Throwable t)
 		{
 		}
+		m_bIsClosed = true;
+	}
+
+	/**
+	 * connection was closed by peer
+	 *
+	 */
+	public synchronized void closedByPeer()
+	{
+		try
+		{
+			stop();
+			m_tinyTLS.close();
+			Enumeration enumer = m_Circuits.elements();
+			while (enumer.hasMoreElements())
+			{
+				( (Circuit) enumer.nextElement()).destroyedByPeer();
+			}
+			m_Circuits.clear();
+		}
+		catch (Throwable t)
+		{
+		}
+		m_bIsClosed = true;
 	}
 
 	/**

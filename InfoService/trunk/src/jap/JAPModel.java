@@ -74,8 +74,6 @@ public final class JAPModel
 
   /** Tor related info**/
   private boolean m_bIsTorEnabled = JAPConstants.TOR_IS_ENABLED;
-  private String m_strTorDirServerHostName = JAPConstants.TOR_DIR_SERVER_ADR;
-  private int m_TorDirServerPortNumber = JAPConstants.TOR_DIR_SERVER_PORT;
   /**
    * Stores the instance with the routing settings.
    */
@@ -474,26 +472,6 @@ public final class JAPModel
   protected void setTorEnabled(boolean b)
   {
     m_bIsTorEnabled = b;
-  }
-
-  public static String getTorDirServerHostName()
-  {
-    return ms_TheModel.m_strTorDirServerHostName;
-  }
-
-  protected void setTorDirServerHostName(String hostname)
-  {
-    m_strTorDirServerHostName = hostname;
-  }
-
-  public static int getTorDirServerPortNumber()
-  {
-    return ms_TheModel.m_TorDirServerPortNumber;
-  }
-
-  protected void setTorDirServerPortNumber(int port)
-  {
-    m_TorDirServerPortNumber = port;
   }
 
   /**

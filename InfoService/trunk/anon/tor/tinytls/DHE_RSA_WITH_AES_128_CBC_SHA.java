@@ -6,10 +6,10 @@ package anon.tor.tinytls;
 
 /**
  * @author stefan
- *	
+ *
  */
 public class DHE_RSA_WITH_AES_128_CBC_SHA extends CipherSuite {
-	
+
 	/**
 	 * Constructor
 	 * @throws Exception
@@ -26,9 +26,8 @@ public class DHE_RSA_WITH_AES_128_CBC_SHA extends CipherSuite {
 	 * @param message message
 	 * @return encoded message
 	 */
-	public byte[] encode(byte[] header, byte[] message) 
+	public void encode(TLSRecord msg)
 	{
-		return null;
 	}
 
 	/**
@@ -37,17 +36,17 @@ public class DHE_RSA_WITH_AES_128_CBC_SHA extends CipherSuite {
 	 * @param message message
 	 * @return decoded message
 	 */
-	public byte[] decode(byte[] header, byte[] message) throws TLSException {
-		return null;
-	}
+	public void decode(TLSRecord msg)
+		{
+		}
 
 	/**
 	 * extract the keys (see RFC 2246 TLS Record Protocoll)
 	 * @param keys array of bytes that contains the keys
 	 */
-	protected void calculateKeys(byte[] keys) 
+	protected void calculateKeys(byte[] keys)
 	{
-	
+
 	}
 
 }

@@ -36,7 +36,7 @@ public class TinyTLS extends Socket
 	 *
 	 * 3.1 for TLS
 	 */
-	private static byte[] PROTOCOLVERSION = new byte[]
+	public static byte[] PROTOCOLVERSION = new byte[]
 		{
 		0x03, 0x01};
 
@@ -44,7 +44,7 @@ public class TinyTLS extends Socket
 	private Vector m_supportedciphersuites;
 	private CipherSuite m_selectedciphersuite = null;
 
-	private Socket m_socket;
+	//private Socket m_socket;
 	private TLSInputStream m_istream;
 	private TLSOutputStream m_ostream;
 
@@ -60,7 +60,7 @@ public class TinyTLS extends Socket
 	private byte[] m_serverrandom;
 	private byte[] m_handshakemessages;
 	private boolean m_encrypt;
-	private byte[] m_readRecordHeader;
+
 	/**
 	 *
 	 * @author stefan
@@ -70,24 +70,23 @@ public class TinyTLS extends Socket
 	class TLSInputStream extends InputStream
 	{
 
+
 		private DataInputStream m_stream;
 		private byte[] m_aktInput; //data that we have read but not delivered yet
 		private int m_aktPendOffset; //offest of next data to deliver
 		private int m_aktPendLen; // number of bytes we could deliver imedialy
-
+		private TLSRecord m_aktTLSRecord;
 		/**
 		 * Constructor
 		 * @param istream inputstream
 		 */
 		public TLSInputStream(InputStream istream)
 		{
+			m_aktTLSRecord = new TLSRecord();
 			this.m_stream = new DataInputStream(istream);
 			this.m_aktInput = null;
 			this.m_aktPendOffset = 0;
 			this.m_aktPendLen = 0;
-			m_readRecordHeader=new byte[5];
-			m_readRecordHeader[1]=PROTOCOLVERSION[0];
-			m_readRecordHeader[2]=PROTOCOLVERSION[1];
 		}
 
 		/**
@@ -95,41 +94,22 @@ public class TinyTLS extends Socket
 		 * Block until data is available...
 		 * @return
 		 */
-		private synchronized void readRecord() throws Exception
+		private synchronized void readRecord() throws TLSException,IOException
 		{
-			int contenttype=m_stream.readByte();
-			if(contenttype!=23&&contenttype!=21)
+			int contenttype = m_stream.readByte();
+			if (contenttype != 23 && contenttype != 21)
+			{
 				throw new TLSException("SSL Content typeProtocoll not supportet" + contenttype);
-			int version=m_stream.readShort();
-			if ( version!= PROTOCOLVERSION_SHORT)
+			}
+			int version = m_stream.readShort();
+			if (version != PROTOCOLVERSION_SHORT)
 			{
 				throw new TLSException("Protocollversion not supportet" + version);
 			}
-			m_readRecordHeader[0]=(byte)contenttype;
-			int length=m_stream.readShort();
-			m_readRecordHeader[3]=(byte)((length>>8)&0xFF);
-			m_readRecordHeader[4]=(byte)((length)&0xFF);
-			switch (contenttype)
-			{
-				case 23:
-				{
-					byte[] message = new byte[length];
-					m_stream.readFully(message);
-					m_aktInput = m_selectedciphersuite.decode(m_readRecordHeader, message);
-					m_aktPendOffset = 0;
-					m_aktPendLen = m_aktInput.length;
-					break;
-				}
-				case 21:
-				{
-					handleAlert(length);
-					break;
-				}
-				default:
-				{
-					throw new TLSException("Error while decoding application data");
-				}
-			}
+			m_aktTLSRecord.setType(contenttype);
+			int length = m_stream.readShort();
+			m_aktTLSRecord.setLength(length);
+			m_stream.readFully(m_aktTLSRecord.m_Data, 0, length);
 		}
 
 		public int read() throws IOException
@@ -154,6 +134,26 @@ public class TinyTLS extends Socket
 				try
 				{
 					readRecord();
+					switch (m_aktTLSRecord.m_Type)
+					{
+						case 23:
+						{
+							m_selectedciphersuite.decode(m_aktTLSRecord);
+							m_aktPendOffset = 0;
+							m_aktPendLen = m_aktTLSRecord.m_dataLen;
+							break;
+						}
+						case 21:
+						{
+							handleAlert();
+							break;
+						}
+						default:
+						{
+							throw new TLSException("Error while decoding application data");
+						}
+					}
+
 				}
 				catch (Throwable t)
 				{
@@ -161,7 +161,7 @@ public class TinyTLS extends Socket
 				}
 			}
 			int l = Math.min(this.m_aktPendLen, len);
-			System.arraycopy(this.m_aktInput, this.m_aktPendOffset, b, off, l);
+			System.arraycopy(m_aktTLSRecord.m_Data, m_aktPendOffset, b, off, l);
 			this.m_aktPendOffset += l;
 			this.m_aktPendLen -= l;
 			return l;
@@ -287,23 +287,20 @@ public class TinyTLS extends Socket
 		 * handle alert message
 		 * @throws IOException
 		 */
-		private void handleAlert(int length) throws IOException
+		private void handleAlert() throws IOException
 		{
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[TLS] ALERT!");
-			byte[] b = new byte[length];
-			this.m_stream.readFully(b);
 			if (m_handshakecompleted)
 			{
-				b = m_selectedciphersuite.decode(helper.conc(new byte[]
-					{21}
-					, helper.conc(PROTOCOLVERSION, helper.inttobyte(length, 2))), b);
+				m_selectedciphersuite.decode(m_aktTLSRecord);
 			}
-			switch (b[0])
+			byte[] payload=m_aktTLSRecord.m_Data;
+			switch (payload[0])
 			{
 				// warning
 				case 1:
 				{
-					switch (b[1])
+					switch (payload[1])
 					{
 						case 0:
 						{
@@ -315,7 +312,7 @@ public class TinyTLS extends Socket
 						default:
 						{
 							throw new TLSException("TLSAlert detected!! Level : Warning - Description :" +
-								b[1]);
+								payload[1]);
 						}
 					}
 					break;
@@ -323,7 +320,7 @@ public class TinyTLS extends Socket
 				// fatal
 				case 2:
 				{
-					throw new TLSException("TLSAlert detected!! Level : Fatal - Description :" + b[1]);
+					throw new TLSException("TLSAlert detected!! Level : Fatal - Description :" + payload[1]);
 				}
 				default:
 				{
@@ -344,8 +341,8 @@ public class TinyTLS extends Socket
 			{
 				int contenttype = m_stream.readByte();
 				int version = m_stream.readShort();
-				int length=m_stream.readShort();
-				if ( version!= PROTOCOLVERSION_SHORT)
+				int length = m_stream.readShort();
+				if (version != PROTOCOLVERSION_SHORT)
 				{
 					throw new TLSException("Protocollversion not supportet" + version);
 				}
@@ -354,7 +351,7 @@ public class TinyTLS extends Socket
 				{
 					case 21:
 					{
-						handleAlert(length);
+						handleAlert();
 						break;
 					}
 					case 22:
@@ -440,19 +437,13 @@ public class TinyTLS extends Socket
 		 */
 		protected void readServerFinished() throws TLSException, IOException
 		{
-			int contenttype = m_stream.readByte();
-			int version = m_stream.readShort();
-			int length=m_stream.readShort();
-			if ( version!= PROTOCOLVERSION_SHORT)
-			{
-				throw new TLSException("Protocollversion not supportet" + version);
-			}
+			readRecord();
 
-			switch (contenttype)
+			switch (m_aktTLSRecord.m_Type)
 			{
 				case 20:
 				{
-					if (length == 1 && m_stream.readByte() == 1)
+					if (m_aktTLSRecord.m_dataLen == 1 && m_aktTLSRecord.m_Data[0] == 1)
 					{
 						LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[SERVER_CHANGE_CIPHER_SPEC]");
 					}
@@ -460,7 +451,7 @@ public class TinyTLS extends Socket
 				}
 				case 21:
 				{
-					this.handleAlert(length);
+					handleAlert();
 					break;
 				}
 				default:
@@ -468,30 +459,19 @@ public class TinyTLS extends Socket
 					throw new TLSException("Error while shaking hands");
 				}
 			}
-			contenttype = m_stream.readByte();
-			version = m_stream.readShort();
-			length=m_stream.readShort();
-			m_readRecordHeader[0]=(byte)contenttype;
-			m_readRecordHeader[3]=(byte)((length>>8)&0xFF);
-			m_readRecordHeader[4]=(byte)((length)&0xFF);
-			if ( version!= PROTOCOLVERSION_SHORT)
-			{
-				throw new TLSException("Protocollversion not supportet" + version);
-			}
+			readRecord();
 
-			switch (contenttype)
+			switch (m_aktTLSRecord.m_Type)
 			{
 				case 22:
 				{
 					LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[SERVER_FINISHED]");
-					byte[] message = new byte[length];
-					this.m_stream.readFully(message);
-					m_selectedciphersuite.serverFinished(m_readRecordHeader,message);
+					m_selectedciphersuite.serverFinished(m_aktTLSRecord);
 					break;
 				}
 				case 21:
 				{
-					this.handleAlert(length);
+					this.handleAlert();
 					break;
 				}
 				default:
@@ -513,14 +493,15 @@ public class TinyTLS extends Socket
 	{
 
 		private DataOutputStream m_stream;
-
+		private TLSRecord m_aktTLSRecord;
 		/**
 		 * Constructor
 		 * @param ostream outputstream
 		 */
 		public TLSOutputStream(OutputStream ostream)
 		{
-			this.m_stream = new DataOutputStream(ostream);
+			m_aktTLSRecord=new TLSRecord();
+			m_stream = new DataOutputStream(ostream);
 		}
 
 		/**
@@ -554,22 +535,18 @@ public class TinyTLS extends Socket
 		 * @param message message
 		 * @throws IOException
 		 */
-		private void send(int type, byte[] message) throws IOException
+		private synchronized void send(int type, byte[] message) throws IOException
 		{
-			byte[] encryptedmessage = message;
+			System.arraycopy(message,0,m_aktTLSRecord.m_Data,0,message.length);
+			m_aktTLSRecord.setLength(message.length);
+			m_aktTLSRecord.setType(type);
 			if (m_encrypt)
 			{
-				encryptedmessage = m_selectedciphersuite.encode(helper.conc(new byte[]
-					{ (byte) (type & 0xFF)}
-					, helper.conc(PROTOCOLVERSION, helper.inttobyte(encryptedmessage.length, 2))),
-					encryptedmessage);
+				m_selectedciphersuite.encode(m_aktTLSRecord);
 			}
-			this.m_stream.write(helper.conc(new byte[]
-											{ (byte) (type & 0xFF)}
-											,
-											helper.conc(PROTOCOLVERSION,
-				helper.conc(helper.inttobyte(encryptedmessage.length, 2), encryptedmessage))));
-			this.m_stream.flush();
+			m_stream.write(m_aktTLSRecord.m_Header);
+			m_stream.write(m_aktTLSRecord.m_Data,0,m_aktTLSRecord.m_dataLen);
+			m_stream.flush();
 		}
 
 		/**
@@ -694,6 +671,7 @@ public class TinyTLS extends Socket
 	 */
 	public TinyTLS(String addr, int port) throws UnknownHostException, IOException, Exception
 	{
+		super(addr, port);
 		this.m_handshakecompleted = false;
 		this.m_serverhellodone = false;
 		this.m_encrypt = false;
@@ -701,9 +679,9 @@ public class TinyTLS extends Socket
 		this.m_supportedciphersuites = new Vector();
 //		this.m_addCipherSuite(new DHE_RSA_WITH_AES_128_CBC_SHA());
 		this.addCipherSuite(new DHE_RSA_WITH_3DES_CBC_SHA());
-		this.m_socket = new Socket(addr, port);
-		this.m_istream = new TLSInputStream(this.m_socket.getInputStream());
-		this.m_ostream = new TLSOutputStream(this.m_socket.getOutputStream());
+		//this.m_socket = new Socket(addr, port);
+		m_istream = new TLSInputStream(super.getInputStream());
+		m_ostream = new TLSOutputStream(super.getOutputStream());
 	}
 
 	/**
@@ -721,11 +699,11 @@ public class TinyTLS extends Socket
 	/**
 	 * close the connection to the server
 	 */
-	public void close() throws IOException
-	{
-		this.m_socket.close();
-	}
-
+	/*	public void close() throws IOException
+	 {
+	  this.m_socket.close();
+	 }
+	 */
 	/**
 	 * start the handshake
 	 * @throws IOException

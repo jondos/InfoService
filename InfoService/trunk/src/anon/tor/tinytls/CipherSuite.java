@@ -131,15 +131,16 @@ public abstract class CipherSuite{
 	{
 		return this.m_keyexchangealgorithm.clientFinished(handshakemessages);
 	}
-	
+
 	/**
 	 * validates the finishedmessage and throws a Exception if a error occure
 	 * @param finishedmessage the message that have to be valideted
 	 * @throws TLSException
 	 */
-	public void serverFinished(byte[] header, byte[] finishedmessage) throws TLSException
+	public void serverFinished(TLSRecord msg) throws TLSException
 	{
-		this.m_keyexchangealgorithm.serverFinished(decode(header, finishedmessage));
+		decode(msg);
+		m_keyexchangealgorithm.serverFinished(msg.m_Data,msg.m_dataLen);
 	}
 
 	/**
@@ -147,14 +148,14 @@ public abstract class CipherSuite{
 	 * @param message message
 	 * @return encoded message
 	 */
-	public abstract byte[] encode(byte[] header, byte[] message);
+	public abstract void encode(TLSRecord msg) throws TLSException;
 
 	/**
 	 * decodes a message with a symmetric key
 	 * @param message message
 	 * @return decoded message
 	 */
-	public abstract byte[] decode(byte[] header, byte[] message) throws TLSException;
+	public abstract void decode(TLSRecord msg) throws TLSException;
 
 	/**
 	 * calculate server and client write keys (see RFC2246 TLS Record Protocoll)
