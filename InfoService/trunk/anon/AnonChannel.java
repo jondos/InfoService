@@ -30,11 +30,33 @@ package anon;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+/**
+ * An AnonChannel could be used to send and receive data. There are different types of
+ * channels and the transmitted data must match the (proxy-)protocol implied by the type
+ * of the channel. A new channel is creted via {@link AnonService#createChannel()  createChannel()}
+ *
+ * @version 1.0
+ */
 public interface AnonChannel
   {
+    /// Constant for the channel type: HTTP-Proxy. Such a channel could be used to transmit
+    /// data which conforms to the HTTP-Porxy-Protocol
     public final static int HTTP=0;
+
+    /// Constant for the channel type: SOCKS-Proxy. Such a channel could be used to transmit
+    /// data which conforms to the SOCKS-Proxy-Protocol
     public final static int SOCKS=1;
+
+    /** The returned InputStream could be used to receive data.
+     *  @return InputStream, useful for receiving data
+     */
     public InputStream getInputStream();
+
+    /** The returned OutputStream could be used to send data.
+     *  @return OutputStream, useful for sending data
+     */
     public OutputStream getOutputStream();
+
+    /** Closes the channel and releases all resources used. */
     public void close();
   }
