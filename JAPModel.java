@@ -58,7 +58,7 @@ import anon.JAPAnonServiceListener;
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPModel implements JAPAnonServiceListener{
 
-	public static final String aktVersion = "00.01.001"; // Version of JAP
+	public static final String aktVersion = "00.01.002"; // Version of JAP
 
 	private int      portNumber            = 4001;
 	private boolean  mblistenerIsLocal     = true;  // indicates whether the Listener serves for localhost only or not
@@ -653,14 +653,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 		if ((proxyAnon == null) && (anonModeSelected == true))
 			{
 				view.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-				/*Object[] optionsAbort={new JLabel("Test")};
-				JOptionPane optionPaneAbort=new JOptionPane("Verbindungsaufbau...",JOptionPane.INFORMATION_MESSAGE,
-																						 0,null,optionsAbort);
-				JDialog dlgAbort=optionPaneAbort.createDialog(view,"Bitte warten...");
-				dlgAbort.setModal(false);
-				dlgAbort.show();
-				dlgAbort.validate();
-				dlgAbort.repaint();*/
+				//JAPSetAnonMode.start();
 				if (alreadyCheckedForNewVersion == false)
 					{
 						// Check for a new Version of JAP if not already done
