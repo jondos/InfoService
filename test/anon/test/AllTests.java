@@ -52,6 +52,7 @@ public class AllTests
 	{
 		TestSuite suite = new TestSuite("All tests of anon.");
 		suite.addTestSuite(SampleTest.class);
+		suite.addTest(anon.infoservice.test.AllTests.suite());
 		return suite;
 	}
 
