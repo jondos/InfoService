@@ -31,6 +31,7 @@ import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.plaf.basic.BasicProgressBarUI;
+
 import anon.AnonServer;
 
 final public class JAPView extends JFrame implements ActionListener, JAPObserver {
@@ -165,15 +166,14 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 
 			// add Components to Frame
 			getContentPane().setBackground(buttonPanel.getBackground());
-			getContentPane().add(/*tabs*/level, BorderLayout.CENTER);
+			getContentPane().add(level, BorderLayout.CENTER);
       m_panelMain=level;
-			getContentPane().add(buttonPanel, BorderLayout.SOUTH);
-//			getContentPane().add(northLabel, BorderLayout.NORTH);
 			if(!JAPModel.isSmallDisplay())
         {
           getContentPane().add(northPanel, BorderLayout.NORTH);
 			    getContentPane().add(westLabel, BorderLayout.WEST);
 			    getContentPane().add(new JLabel("  "), BorderLayout.EAST); //Spacer
+			    getContentPane().add(buttonPanel, BorderLayout.SOUTH);
         }
 			//tabs.setSelectedComponent(level);
 

@@ -26,11 +26,6 @@ IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISI
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
 package jap;
-import javax.swing.plaf.metal.DefaultMetalTheme;
-import javax.swing.plaf.metal.MetalLookAndFeel;
-import javax.swing.plaf.FontUIResource;
-import javax.swing.UIManager;
-import javax.swing.UIDefaults;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import java.awt.Insets;
@@ -45,23 +40,7 @@ import JAPMessages;
 
 final public class JAPiPAQ {
 
- /* private class iPAQTheme extends DefaultMetalTheme
-    {
-      public FontUIResource getControlTextFont()
-        {
-          return new FontUIResource("Dialog",FontUIResource.PLAIN,9);
-        }
-
-      public FontUIResource getUserTextFont()
-        {
-          return new FontUIResource("Dialog",FontUIResource.PLAIN,9);
-        }
-      public FontUIResource getSystemTextFont()
-        {
-          return new FontUIResource("Dialog",FontUIResource.PLAIN,9);
-        }
-    }
-*/
+  static JAPView view=null;
   public JAPiPAQ()
     {
     }
@@ -81,7 +60,7 @@ public void startJAP(String strJapConfFile) {
 		controller.loadConfigFile(strJapConfFile);
 		// Output some information about the system
 		// Create the view object
-		JAPView view = new JAPView(JAPConstants.TITLE);
+		view = new JAPView(JAPConstants.TITLE);
 		// Create the main frame
 		view.create();
 		// Switch Debug Console Parent to MainView
@@ -108,13 +87,14 @@ public void startJAP(String strJapConfFile) {
 
 	public static void main(String[] argv) {
     JAPiPAQ japOniPAQ = new JAPiPAQ();
-		JAPModel.create().setSmallDisplay(true);
-    japOniPAQ.startJAP(null);
+	  japOniPAQ.startJAP(null);
     //Test
-    JFrame frame=new JFrame("Test");
-    frame.setContentPane(japOniPAQ.getMainPanel());
-    frame.setSize(240,320);
-    frame.show();
+    //JFrame frame=new JFrame("JAP");
+    //frame.setIconImage(JAPUtil.);
+    //frame.setContentPane(japOniPAQ.getMainPanel());
+    view.setSize(240,300);
+    view.setLocation(0,0);
+    view.show();
 	}
 
 }

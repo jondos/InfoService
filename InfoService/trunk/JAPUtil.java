@@ -50,9 +50,9 @@ import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Document;
-import javax.swing.ImageIcon;
 import java.awt.Component;
 import java.lang.reflect.Method;
+
 import javax.swing.*;
 import javax.swing.table.*;
 
@@ -406,7 +406,7 @@ final public class JAPUtil
 	/** Sets the mnemonic charcter of a component. The character must be set
 	 *  in the properties file under a name that is given in mnPropertyString.
 	 */
-	public static void setMnemonic(javax.swing.AbstractButton bt, String mn)
+	public static void setMnemonic(AbstractButton bt, String mn)
 			{
 				if((bt==null)||(mn==null)||(mn.equals(""))) return;
 				bt.setMnemonic(mn.charAt(0));
@@ -445,7 +445,7 @@ final public class JAPUtil
 										columnHeight        += component.getPreferredSize().height;
 									}
 								int preferredColumnWidth = Math.max(headerWidth,cellWidth);
-								column.setPreferredWidth(preferredColumnWidth);
+                column.setPreferredWidth(preferredColumnWidth);
 								perfectWidth += preferredColumnWidth;
 		    				if (minimunColunmHeight == 0) minimunColunmHeight = columnHeight;
 		    				else minimunColunmHeight = Math.min(minimunColunmHeight,columnHeight);
