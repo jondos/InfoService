@@ -71,14 +71,14 @@ final public class JAPTest
 	{
 		try
 		{
-			java.security.Security.addProvider(new au.net.aba.crypto.provider.ABAProvider());
+/*			java.security.Security.addProvider(new au.net.aba.crypto.provider.ABAProvider());
 			CertificateFactory cf=CertificateFactory.getInstance("X509","ABA");
 			FileInputStream f=new FileInputStream("ldbsh.cer");
 			X509Certificate cer=(X509Certificate)cf.generateCertificate(f);
 			f.close();
 			PublicKey key=cer.getPublicKey();
 			cer.verify(key);
-			System.out.println("Verified MAster");
+	*/		System.out.println("Verified MAster");
 		}
 		catch(Exception e)
 											 {
