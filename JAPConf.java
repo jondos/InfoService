@@ -28,6 +28,7 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 import java.util.Enumeration;
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.Locale;
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
@@ -71,10 +72,13 @@ final class JAPConf extends JDialog
 	private JRadioButton b1,b2,b3;
 	private JButton      fetchB;
 	private JComboBox    select;
+	private JComboBox    comboLanguage;
+	private boolean			 bIgnoreComboLanguageEvents=false;
 	private JTabbedPane  tabs;
 	private JPanel       portP, httpP, infoP, anonP, miscP;
 	
 	private JFrame  parent;
+	private JAPConf japconf;
 	
 	public JAPConf (JFrame f)
 			{
@@ -83,7 +87,7 @@ final class JAPConf extends JDialog
 				model = JAPModel.getModel();
 				this.setModal(true);
 				this.setTitle(model.getString("settingsDialog"));
-	
+				japconf=this;
 				JPanel container = new JPanel();
 				container.setLayout( new BorderLayout() );
 				tabs = new JTabbedPane();
@@ -482,12 +486,27 @@ final class JAPConf extends JDialog
 					}});
 				p1.add(c);
 				p1.add(new JLabel(model.getString("settingsLanguage")));
-				c=new JComboBox();
-				c.addItem("Deutsch");
-				c.addItem("English");
-				// not yet implemented --> disable it
-				c.setEnabled(false);
-				p1.add(c);
+				comboLanguage=new JComboBox();
+				comboLanguage.addItem("Deutsch");
+				comboLanguage.addItem("English");
+				// yet implemented !! 
+				//c.setEnabled(false);
+				comboLanguage.addItemListener(new ItemListener(){
+					public void itemStateChanged(ItemEvent e){
+						if(!bIgnoreComboLanguageEvents&&e.getStateChange()==e.SELECTED)
+							{
+								try
+									{
+									
+										JOptionPane.showMessageDialog(japconf,JAPMessages.getString("confLanguageChanged"),JAPMessages.getString("information"),JOptionPane.INFORMATION_MESSAGE);
+									}
+								catch(Exception ie)
+								{
+								}
+							}
+					}});
+
+				p1.add(comboLanguage);
 				
 				// Panel for Misc Options
 				JPanel p2=new JPanel();
@@ -763,6 +782,11 @@ final class JAPConf extends JDialog
 				// force setting the correct name of the selected server
 				model.getAnonServer().setName(e.getName());
 				// force notifying the observers set the right server name
+				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"comboLanguage: "+Integer.toString(comboLanguage.getSelectedIndex()));
+				if(comboLanguage.getSelectedIndex()==0)
+					model.setLocale(Locale.GERMAN);
+				else
+					model.setLocale(Locale.ENGLISH);				
 				model.notifyJAPObservers();
 			}
 	
@@ -789,6 +813,12 @@ final class JAPConf extends JDialog
 		threadChB.setSelected((((JAPDebug.getDebugType()&JAPDebug.THREAD)!=0)?true:false));
 		miscChB.setSelected((((JAPDebug.getDebugType()&JAPDebug.MISC)!=0)?true:false));
 		sliderDebugLevel.setValue(JAPDebug.getDebugLevel());
+		bIgnoreComboLanguageEvents=true;
+		if(model.getLocale().equals(Locale.ENGLISH))
+			comboLanguage.setSelectedIndex(1);
+		else
+			comboLanguage.setSelectedIndex(0);
+		bIgnoreComboLanguageEvents=false;
 		// listener tab
 		portnumberTextField.setText(String.valueOf(model.getPortNumber()));
 		listenerCheckBoxIsLocal.setSelected(model.getListenerIsLocal());

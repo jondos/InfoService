@@ -58,7 +58,7 @@ import anon.JAPAnonServiceListener;
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPModel implements JAPAnonServiceListener{
 
-	public static final String aktVersion = "00.01.011"; // Version of JAP
+	public static final String aktVersion = "00.01.012"; // Version of JAP
 
 	public  Vector            anonServerDatabase = null; // vector of all available mix cascades
 	private AnonServerDBEntry currentAnonService = null; // current anon service data object
@@ -137,6 +137,8 @@ public final class JAPModel implements JAPAnonServiceListener{
 						};
 
 	private ResourceBundle msg;
+	
+	private Locale m_Locale=null;
 	private Vector observerVector=null;
 	private static JAPModel model=null;
 //	public JAPLoading japLoading;
@@ -150,6 +152,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 			currentAnonService = new AnonServerDBEntry("mix.inf.tu-dresden.de",6544);
 			proxyDirect=null;
 			proxyAnon=null;
+			m_Locale=Locale.getDefault();
 			//JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:initialization finished!");
 		}
 
@@ -208,6 +211,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 	 *		autoConnect="true"/"false"		// should we start the anon service immedialy after programm launch ?
 	 *		minimizedStartup="true"/"false" // should we start minimized ???
 	 *		neverRemindActiveContent="true"/"false" // should we remind the user about active content ?
+	 *    Locale="LOCALE_IDENTIFIER (two letter iso 639 code)" //the Language for the UI to use
 	 *	>
 	 *	<Debug>
 	 *		<Level>..</Level>							// the amount of output (0 means less.. 7 means max)
@@ -281,6 +285,10 @@ public final class JAPModel implements JAPAnonServiceListener{
 			autoConnect=JAPUtil.parseNodeBoolean(n.getNamedItem("autoConnect"),false);
 			mbMinimizeOnStartup=JAPUtil.parseNodeBoolean(n.getNamedItem("minimizedStartup"),false);
 
+			//Locale-Settings
+			String locale=JAPUtil.parseNodeString(n.getNamedItem("Locale"),m_Locale.getLanguage());
+			setLocale(new Locale(locale,""));
+			
 			//Loading debug settings
 			NodeList nl=root.getElementsByTagName("Debug");
 			if(nl!=null&&nl.getLength()>0)
@@ -357,6 +365,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 			e.setAttribute("autoConnect",(autoConnect?"true":"false"));
 			e.setAttribute("minimizedStartup",(mbMinimizeOnStartup?"true":"false"));
 			e.setAttribute("neverRemindActiveContent",(mbActCntMessageNeverRemind?"true":"false"));
+			e.setAttribute("Locale",m_Locale.getLanguage());
 			//
 			// adding Debug-Element
 			Element elemDebug=doc.createElement("Debug");
@@ -418,6 +427,16 @@ public final class JAPModel implements JAPAnonServiceListener{
 				}
 		}
 
+	public Locale getLocale()
+		{
+			return m_Locale;
+		}
+	
+	public void setLocale(Locale l)
+		{
+			JAPMessages.init(l);
+			m_Locale=l;	
+		}
     public int getCurrentProtectionLevel() {
 		/*
 		// Hier eine moeglichst komplizierte Formel einfuegen,
@@ -1084,7 +1103,7 @@ private final class SetAnonModeAsync implements Runnable
 				{
 					int result = 0;
 					Versionchecker vc = new Versionchecker();
-					String s = vc.getNewVersionnumberFromNet("http://"+infoServiceHostName+":"+infoServicePortNumber+aktJAPVersionFN);
+					String s = getInfoService().getNewVersionNumber();
 					if(s==null)
 						return -1;
 					s=s.trim();

@@ -12,12 +12,20 @@ public final class JAPMessages
 			{
 			}
 		
+		/* Initalize with the System default Locale...*/
 		public static void init()
+			{
+				// Load Texts for Messages and Windows
+				init(Locale.getDefault());
+			}
+
+		/* Init with the specified Locale**/
+		public static void init(Locale locale)
 			{
 				// Load Texts for Messages and Windows
 				try
 						{
-							msg = ResourceBundle.getBundle(MESSAGESFN, Locale.getDefault() );
+							msg = ResourceBundle.getBundle(MESSAGESFN, locale);
 						}
 					catch(Exception e1)
 						{
@@ -34,7 +42,7 @@ public final class JAPMessages
 								}
 						}
 			}
-		
+
 		public static String getString(String key) 
 			{
 				try

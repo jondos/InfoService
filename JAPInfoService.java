@@ -193,4 +193,35 @@ final class JAPInfoService
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPFeedback: "+nrOfActiveUsers+"/"+trafficSituation+"/"+currentRisk+"/"+mixedPackets);
 		}
 		
+	
+	public String getNewVersionNumber() throws Exception 
+		{
+			try
+				{
+/*					URL url=new URL(path);
+					JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"Versionchecker:"+
+						" Prot: "+url.getProtocol()+
+						" Host: "+url.getHost()+
+						" Port: "+url.getPort()+
+						" File: "+url.getFile());
+*///					HTTPConnection.setProxyServer(null,0);
+//					HTTPConnection con=new HTTPConnection(url.getHost(),
+//																								url.getPort());
+					HTTPResponse resp=conInfoService.Get(model.aktJAPVersionFN);
+					if (resp==null || resp.getStatusCode()!=200)
+						throw new Exception("Versioncheck bad response from server: "+resp.getReasonLine());
+					// read remaining header lines
+					byte[] buff=resp.getData();
+					String s=new String(buff).trim();
+					JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"New Version: "+s);
+					if ( (s.charAt(2) == '.') && (s.charAt(5) == '.') )
+						return s;
+					throw new Exception("Versionfile has wrong format! Found: \""+s+ "\". Should be \"nn.nn.nnn\"!");
+				}
+			catch(Exception e)
+				{
+					throw new Exception("Versioncheck getNewVersionnumberFromNet() failed: "+e);
+				}
+		}
+
 	}
