@@ -61,7 +61,6 @@ import javax.swing.table.TableModel;
 import org.w3c.dom.Document;
 import HTTPClient.Codecs;
 import anon.crypto.JAPCertificate;
-import anon.crypto.JAPCertificateException;
 import gui.SimpleFileFilter;
 import logging.LogHolder;
 import logging.LogLevel;

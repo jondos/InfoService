@@ -30,7 +30,6 @@ import org.bouncycastle.asn1.pkcs.SignerInfo;
 import org.bouncycastle.asn1.x509.X509CertificateStructure;
 import org.bouncycastle.jce.X509Principal;
 import anon.crypto.JAPCertificate;
-import anon.crypto.JAPCertificateException;
 import anon.crypto.JAPSignature;
 
 /**
@@ -82,7 +81,7 @@ public class PKCS7SignedData implements PKCSObjectIdentifiers
 	 */
 	public PKCS7SignedData(
 		byte[] in) throws SecurityException, InvalidKeyException,
-		JAPCertificateException, NoSuchAlgorithmException
+		 NoSuchAlgorithmException
 	{
 		DERInputStream din = new DERInputStream(new ByteArrayInputStream(in));
 

@@ -48,7 +48,6 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import org.bouncycastle.asn1.x509.X509NameTokenizer;
 import anon.crypto.JAPCertificate;
-import anon.crypto.JAPCertificateException;
 import anon.crypto.JAPCertificateStore;
 import anon.crypto.JAPCertificateStoreId;
 import gui.CAListCellRenderer;
