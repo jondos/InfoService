@@ -53,8 +53,14 @@ public final class JAPProxyConnection extends Thread
 								outSocket.send(channel,buff,(short)len);		
 								while((len=fromClient.read(buff,0,JAPMuxSocket.DATA_SIZE-3))!=-1)
 									{
-										if(len>0&&outSocket.send(channel,buff,(short)len)==-1)
-											break; 
+										if(len>0)
+											{
+												int ret=outSocket.send(channel,buff,(short)len);
+												if(ret==-1)
+													break;
+												if(ret==JAPMuxSocket.E_CHANNEL_SUSPENDED)
+													sleep(1000);
+											}
 									} 
 							}	
 					} // if (protocol....)  

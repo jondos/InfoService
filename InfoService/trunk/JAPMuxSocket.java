@@ -295,6 +295,11 @@ END PROTO1*/
 		public final static int KEY_SIZE=16;
 		public final static int DATA_SIZE=992;
 		private final static int RSA_SIZE=128;
+		private final static short CHANNEL_DATA=0;
+		private final static short CHANNEL_CLOSE=1;
+		private final static short CHANNEL_RESUME=1;
+		private final static short CHANNEL_SUSPEND=1;
+		public final static int E_CHANNEL_SUSPENDED=-7;	
 		
 		private final class SocketListEntry
 			{
@@ -305,6 +310,7 @@ END PROTO1*/
 							{
 								outStream=s.getOutputStream();
 								arCipher=null;
+								bIsSuspended=false;
 							}
 						catch(Exception e)
 							{
@@ -314,6 +320,7 @@ END PROTO1*/
 				public JAPSocket inSocket;
 				public OutputStream outStream;
 				public JAPSymCipher[] arCipher;
+				public boolean bIsSuspended;
 			};
 
 		JAPMuxSocket()
@@ -437,7 +444,7 @@ END PROTO1*/
 						SocketListEntry tmpEntry=(SocketListEntry)oSocketList.get(new Integer(channel));
 						if(tmpEntry!=null)
 							{
-								if(flags!=0)
+								if(flags==CHANNEL_CLOSE)
 									{
 										oSocketList.remove(new Integer(channel));
 										JAPModel.getModel().setNrOfChannels(oSocketList.size());
@@ -451,7 +458,7 @@ END PROTO1*/
 												e.printStackTrace();
 											}
 									}
-								else
+								else if(flags==CHANNEL_DATA)
 									{
 										for(int i=0;i<chainlen;i++)
 												tmpEntry.arCipher[i].encryptAES(buff);									
@@ -472,6 +479,16 @@ END PROTO1*/
 										try{tmpEntry.outStream.flush();}catch(Exception e){e.printStackTrace();};
 										JAPModel.getModel().increasNrOfBytes(len);
 									}
+								else if(flags==CHANNEL_SUSPEND)
+									{
+										tmpEntry.bIsSuspended=true;
+										JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Suspending Channel: "+Integer.toString(channel));
+										}
+								else if(flags==CHANNEL_RESUME)
+									{	
+										tmpEntry.bIsSuspended=false;
+										JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Resumeing Channel: "+Integer.toString(channel));
+									}
 							}
 					}
 			}
@@ -483,7 +500,7 @@ END PROTO1*/
 						if(buff==null&&len==0)
 							{
 								outDataStream.writeInt(channel);
-								outDataStream.writeShort(1);
+								outDataStream.writeShort(CHANNEL_CLOSE);
 								outDataStream.write(outBuff);
 								outDataStream.flush();
 								return 0;
@@ -535,10 +552,12 @@ END PROTO1*/
 								entry.arCipher[0].encryptAES(outBuff,0,buff,0,DATA_SIZE); //something throws a null pointer....			
 							}
 						outDataStream.writeInt(channel);
-						outDataStream.writeShort(0);
+						outDataStream.writeShort(CHANNEL_DATA);
 						outDataStream.write(buff,0,DATA_SIZE);
 						outDataStream.flush();
 						JAPModel.getModel().increasNrOfBytes(len);
+						if(entry!=null&&entry.bIsSuspended)
+							return E_CHANNEL_SUSPENDED;
 					}
 				catch(Exception e)
 					{
