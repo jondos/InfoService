@@ -31,27 +31,28 @@
  */
 package anon.util;
 
-import java.io.ByteArrayOutputStream;
 import java.io.ByteArrayInputStream;
-import java.io.OutputStreamWriter;
-import java.io.FileOutputStream;
-import java.io.FileInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.lang.reflect.Method;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Text;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.w3c.dom.Text;
 
 /**
  * This class provides an easy interface to XML methods.
@@ -61,22 +62,6 @@ public class XMLUtil
 	private final static String XML_STR_BOOLEAN_TRUE = "true";
 	private final static String XML_STR_BOOLEAN_FALSE = "false";
 	private static DocumentBuilder ms_DocumentBuilder;
-	public static int parseElementAttrInt(Element e, String attr, int defaultValue)
-	{
-		int i = defaultValue;
-		if (e != null)
-		{
-			try
-			{
-				Attr at = e.getAttributeNode(attr);
-				i = Integer.parseInt(at.getValue());
-			}
-			catch (Exception ex)
-			{
-			}
-		}
-		return i;
-	}
 
 	public static int parseNodeInt(Node n, int defaultValue)
 	{
@@ -112,35 +97,107 @@ public class XMLUtil
 		return i;
 	}
 
-
-	public static boolean parseElementAttrBoolean(Element e, String attr, boolean defaultValue)
+	/**
+	 * Returns the value of the specified attribute of an XML element as String.
+	 * @param a_element an XML element
+	 * @param a_attribute an attribute`s name
+	 * @param a_default the default value
+	 * @return the value of the specified attribute as String if the element has this attribute;
+	 *         otherwise, the default value is returned
+	 */
+	public static String parseAttribute(Element a_element, String a_attribute, String a_default)
 	{
-		boolean b = defaultValue;
-		if (e != null)
+		try
 		{
-			try
+			Attr at = a_element.getAttributeNode(a_attribute);
+			return at.getValue().trim();
+		}
+		catch (Exception a_e)
+		{
+			return a_default;
+		}
+	}
+
+	/**
+	 * Returns the value of the specified attribute of an XML element as boolean.
+	 * @param a_element an XML element
+	 * @param a_attribute an attribute`s name
+	 * @param a_default the default value
+	 * @return the value of the specified attribute as boolean if the element has this attribute;
+	 *         otherwise, the default value is returned
+	 */
+	public static boolean parseAttribute(Element a_element, String a_attribute, boolean a_default)
+	{
+		boolean b = a_default;
+
+		try
+		{
+			Attr at = a_element.getAttributeNode(a_attribute);
+			String tmpStr = at.getValue().trim();
+			if (tmpStr.equalsIgnoreCase("true"))
 			{
-				Attr at = e.getAttributeNode(attr);
-				String tmpStr = at.getValue().trim();
-				if (tmpStr == null)
-				{
-					return b;
-				}
-				if (tmpStr.equalsIgnoreCase("true"))
-				{
-					b = true;
-				}
-				else if (tmpStr.equalsIgnoreCase("false"))
-				{
-					b = false;
-				}
+				b = true;
 			}
-			catch (Exception ex)
+			else if (tmpStr.equalsIgnoreCase("false"))
 			{
+				b = false;
 			}
+		}
+		catch (Exception ex)
+		{
 		}
 
 		return b;
+	}
+
+	/**
+	 * Returns the value of the specified attribute of an XML element as int.
+	 * @param a_element an XML element
+	 * @param a_attribute an attribute`s name
+	 * @param a_default the default value
+	 * @return the value of the specified attribute as int if the element has this attribute;
+	 *         otherwise, the default value is returned
+	 */
+	public static int parseAttribute(Element a_element, String a_attribute, int a_default)
+	{
+		int i = a_default;
+
+		try
+		{
+			Attr at = a_element.getAttributeNode(a_attribute);
+			i = Integer.parseInt(at.getValue());
+		}
+		catch (Exception ex)
+		{
+		}
+
+		return i;
+	}
+
+	/**
+	 *
+	 * @param e Element
+	 * @param attr String
+	 * @param defaultValue boolean
+	 * @return boolean
+	 * @deprecated use parseAttribute(); removed on 04/11/3
+	 */
+	public static boolean parseElementAttrBoolean(Element e, String attr, boolean defaultValue)
+	{
+		return parseAttribute(e, attr, defaultValue);
+	}
+
+	/**
+	 *
+	 * @param e Element
+	 * @param attr String
+	 * @param defaultValue int
+	 * @return int
+	 * @deprecated use parseAtribute(); removed on 04/11/3
+	 */
+	public static int parseElementAttrInt(Element e, String attr, int defaultValue)
+	{
+		return parseAttribute(e, attr, defaultValue);
 	}
 
 	public static boolean parseNodeBoolean(Node n, boolean defaultValue)
@@ -168,7 +225,8 @@ public class XMLUtil
 		return b;
 	}
 
-	/** Gets the content of an Element or Text Node. The "content" of an Element Node is
+	/**
+	 * Gets the content of an Element or Text Node. The "content" of an Element Node is
 	 * the text between the opening and closing Element Tag. The content of an attribute node
 	 * is the value of the attribute. For all other nodes null is returned.
 	 * @param n text node, element node or attribute node
@@ -194,7 +252,7 @@ public class XMLUtil
 					while (n != null &&
 						   (n.getNodeType() == Node.ENTITY_REFERENCE_NODE ||
 							n.getNodeType() == Node.TEXT_NODE))
-					{///@todo parsing of Documents which contains quoted chars are wrong under JAXP 1.0
+					{ ///@todo parsing of Documents which contains quoted chars are wrong under JAXP 1.0
 						if (n.getNodeType() == Node.ENTITY_REFERENCE_NODE)
 						{
 							s = s + n.getFirstChild().getNodeValue();
@@ -219,14 +277,20 @@ public class XMLUtil
 		return s;
 	}
 
-	public static Node getFirstChildByName(Node n, String name)
+	/**
+	 * Returns the child node of the given node with the given name.
+	 * @param a_node the node from that the search starts
+	 * @param a_childname the childnode we are looking for
+	 * @return the child node of the given node with the given name or null if it was not found
+	 */
+	public static Node getFirstChildByName(Node a_node, String a_childname)
 	{
 		try
 		{
-			Node child = n.getFirstChild();
+			Node child = a_node.getFirstChild();
 			while (child != null)
 			{
-				if (child.getNodeName().equals(name))
+				if (child.getNodeName().equals(a_childname))
 				{
 					return child;
 				}
@@ -240,25 +304,30 @@ public class XMLUtil
 	}
 
 	/**
-	 *
-	 * @param node the node from that the search starts
-	 * @param childname the childnode we are looking for
-	 * @return Node the child node with the given name or null if it was not found
+	 * Returns the child node of the given node with the given name. If the node is not found
+	 * in the direct children of the parent node, then all child nodes will be searched and then
+	 * their child nodes and so on until either the requested child has been found or all nodes
+	 * in the XML structure have been traversed.
+	 * @param a_node the node from that the search starts
+	 * @param a_childname the childnode we are looking for
+	 * @return the child node of the given node with the given name or null if it was not found
 	 */
-	public static Node getFirstChildByNameUsingDeepSearch(Node node, String childname) {
+	public static Node getFirstChildByNameUsingDeepSearch(Node a_node, String a_childname)
+	{
 		Node result = null;
 
-		try {
-			node = node.getFirstChild();
+		try
+		{
+			a_node = a_node.getFirstChild();
 
-			while (node != null)
+			while (a_node != null)
 			{
-				result = getFirstChildByNameUsingDeepSearchInternal(node, childname);
+				result = getFirstChildByNameUsingDeepSearchInternal(a_node, a_childname);
 				if (result != null)
 				{
 					break;
 				}
-				node = node.getNextSibling();
+				a_node = a_node.getNextSibling();
 			}
 		}
 		catch (Exception a_e)
@@ -273,11 +342,11 @@ public class XMLUtil
 		{
 			Node child = n.getLastChild();
 			while (child != null)
-				{
+			{
 				if (child.getNodeName().equals(name))
-					{
+				{
 					return child;
-			}
+				}
 				child = child.getPreviousSibling();
 			}
 		}
@@ -288,65 +357,101 @@ public class XMLUtil
 	}
 
 	/**
-	 *
-	 * @param node Node
-	 * @param text String
-	 * @deprecated use setValue(Node, String); this method has been declared deprecated as its name
-	 * contained an argument type
-	 */
-	public static void setNodeValue(Node node, String text)
-				{
-		setValue(node, text);
-				}
-
-	/**
-	 * Inserts a text value into an XML node.
+	 * Inserts a String value into an XML node.
 	 * @param a_node an XML node
-	 * @param a_text a text
+	 * @param a_value a String
+	 * @deprecated use setValue(Node, String); this method has been declared deprecated as its name
+	 * contained an argument type; removed on 04/11/3
 	 */
-	public static void setValue(Node a_node, String a_text)
+	public static void setNodeValue(Node a_node, String a_value)
 	{
-		a_node.appendChild(a_node.getOwnerDocument().createTextNode(a_text));
-			}
+		setValue(a_node, a_value);
+	}
 
 	/**
-	 * Inserts a boolean value into an XML node.
-	 * @param node an XML node
-	 * @param b a boolean value
-	 * @deprecated use setValue(Node, boolean); this method has been declared deprecated as its name
-	 * contained an argument type
+	 * Inserts a String value into an XML node.
+	 * @param a_node an XML node
+	 * @param a_value a String
 	 */
-	public static void setNodeBoolean(Node node,boolean b)
+	public static void setValue(Node a_node, String a_value)
 	{
-		setValue(node,b);
-		}
+		a_node.appendChild(a_node.getOwnerDocument().createTextNode(a_value));
+	}
+
+	/**
+	 * Inserts an int value into an XML node.
+	 * @param a_node an XML node
+	 * @param a_value an int value
+	 */
+	public static void setValue(Node a_node, int a_value)
+	{
+		a_node.appendChild(a_node.getOwnerDocument().createTextNode(a_value + ""));
+	}
+
+	/**
+	 * Inserts a long value into an XML node.
+	 * @param a_node an XML node
+	 * @param a_value a long value
+	 */
+	public static void setValue(Node a_node, long a_value)
+	{
+		a_node.appendChild(a_node.getOwnerDocument().createTextNode(a_value + ""));
+	}
 
 	/**
 	 * Inserts a boolean value into an XML node.
 	 * @param a_node an XML node
 	 * @param a_bValue a boolean value
 	 */
-	public static void setValue(Node a_node,boolean a_bValue)
-		{
-		setValue(a_node,a_bValue?XML_STR_BOOLEAN_TRUE:XML_STR_BOOLEAN_FALSE);
-		}
+	public static void setValue(Node a_node, boolean a_bValue)
+	{
+		setValue(a_node, a_bValue ? XML_STR_BOOLEAN_TRUE : XML_STR_BOOLEAN_FALSE);
+	}
 
+	/**
+	 * Inserts a boolean value into an XML node.
+	 * @param node an XML node
+	 * @param b a boolean value
+	 * @deprecated use setValue(Node, boolean); this method has been declared deprecated as its name
+	 * contained an argument type; removed on 04/11/3
+	 */
+	public static void setNodeBoolean(Node node, boolean b)
+	{
+		setValue(node, b);
+	}
 
+	/**
+	 * Creates and sets an attribute with a String value to an XML element.
+	 * @param a_element an XML Element
+	 * @param a_attribute an attribute name
+	 * @param a_value a String value for the attribute
+	 */
 	public static void setAttribute(Element a_element, String a_attribute, String a_value)
 	{
 		a_element.setAttribute(a_attribute, a_value);
 	}
 
-	public static void setAttribute(Element a_element, String a_attribute, boolean a_boolean)
+	/**
+	 * Creates and sets an attribute with a boolean value to an XML element.
+	 * @param a_element an XML Element
+	 * @param a_attribute an attribute name
+	 * @param a_value a boolean value for the attribute
+	 */
+	public static void setAttribute(Element a_element, String a_attribute, boolean a_value)
 	{
-		setAttribute(a_element, a_attribute, a_boolean?XML_STR_BOOLEAN_TRUE:XML_STR_BOOLEAN_FALSE);
+		setAttribute(a_element, a_attribute, a_value ? XML_STR_BOOLEAN_TRUE : XML_STR_BOOLEAN_FALSE);
 	}
 
-	public static void setAttribute(Element a_element, String a_attribute, int a_int)
+	/**
+	 * Creates and sets an attribute with an int value to an XML element.
+	 * @param a_element an XML Element
+	 * @param a_attribute an attribute name
+	 * @param a_value an int value for the attribute
+	 */
+	public static void setAttribute(Element a_element, String a_attribute, int a_value)
 	{
-		setAttribute(a_element, a_attribute, a_int + "");
+		setAttribute(a_element, a_attribute, a_value + "");
 	}
-
 
 	/**
 	 * Creates a new Document.
@@ -725,10 +830,10 @@ public class XMLUtil
 	 * @param a_element an xml element
 	 */
 	public static void formatHumanReadable(Element a_element)
-		{
+	{
 
 		formatHumanReadable(a_element, 0);
-		}
+	}
 
 	/**
 	 * Reads an XML document from an input stream.
@@ -737,8 +842,8 @@ public class XMLUtil
 	 * @throws IOException if an I/O error occurs
 	 * @throws XMLParseException if the input stream could not be parsed correctly
 	 */
-	public static Document readXMLDocument(InputStream a_inputStream)
-		throws IOException, XMLParseException {
+	public static Document readXMLDocument(InputStream a_inputStream) throws IOException, XMLParseException
+	{
 		Document doc = null;
 
 		try
@@ -747,13 +852,16 @@ public class XMLUtil
 			removeComments(doc);
 		}
 		catch (Exception a_e)
+		{
+			if (a_e instanceof IOException)
 			{
-			if (a_e instanceof IOException) {
-				throw (IOException)a_e;
-			} else {
+				throw (IOException) a_e;
+			}
+			else
+			{
 				throw new XMLParseException(
-								XMLParseException.ROOT_TAG, "Could not parse XML input stream: " +
-								a_e.getMessage());
+					XMLParseException.ROOT_TAG, "Could not parse XML input stream: " +
+					a_e.getMessage());
 			}
 		}
 
@@ -767,10 +875,10 @@ public class XMLUtil
 	 * @throws IOException if an I/O error occurs
 	 * @throws XMLParseException if the file could not be parsed correctly
 	 */
-	public static Document readXMLDocument(File a_file) throws IOException, XMLParseException {
+	public static Document readXMLDocument(File a_file) throws IOException, XMLParseException
+	{
 		return readXMLDocument(new FileInputStream(a_file));
 	}
-
 
 	/**
 	 * Writes an XML document to an output stream.
@@ -778,9 +886,8 @@ public class XMLUtil
 	 * @param a_outputStream an output stream
 	 * @throws IOException if an I/O error occurs
 	 */
-	public static void write(Document a_doc, OutputStream a_outputStream)
-		throws IOException
-		{
+	public static void write(Document a_doc, OutputStream a_outputStream) throws IOException
+	{
 		XMLUtil.formatHumanReadable(a_doc);
 		a_outputStream.write(XMLUtil.toString(a_doc).getBytes());
 	}
@@ -791,13 +898,12 @@ public class XMLUtil
 	 * @param a_file a file
 	 * @throws IOException if an I/O error occurs
 	 */
-	public static void write(Document a_doc, File a_file)
-		throws IOException
-			{
+	public static void write(Document a_doc, File a_file) throws IOException
+	{
 		FileOutputStream out = new FileOutputStream(a_file);
 		write(a_doc, out);
 		out.close();
-			}
+	}
 
 	/**
 	 * Transforms a byte array into an XML document. The byte array must be
@@ -806,8 +912,7 @@ public class XMLUtil
 	 * @return an XML document
 	 * @exception XMLParseException if the given byte array is no valid XML document
 	 */
-	public static Document toXMLDocument(byte[] a_xmlDocument)
-		throws XMLParseException
+	public static Document toXMLDocument(byte[] a_xmlDocument) throws XMLParseException
 	{
 		ByteArrayInputStream in = new ByteArrayInputStream(a_xmlDocument);
 		Document doc;
@@ -935,7 +1040,7 @@ public class XMLUtil
 		}
 
 		// do this, if this is not the root element and no text node
-		if ((a_element.getOwnerDocument().getDocumentElement() != a_element) &&
+		if ( (a_element.getOwnerDocument().getDocumentElement() != a_element) &&
 			(a_element.getNodeType() != Document.TEXT_NODE))
 		{
 			// insert a new line before this element, if this is the first element
@@ -955,7 +1060,6 @@ public class XMLUtil
 			newLine = a_element.getOwnerDocument().createTextNode(space);
 			a_element.getParentNode().insertBefore(newLine, a_element);
 			added++; // count one more
-
 
 			// insert a new line after the current element
 			node = a_element.getNextSibling();
@@ -986,30 +1090,29 @@ public class XMLUtil
 	 * @return the number of children removed (0 or 1)
 	 */
 	private static int removeCommentsInternal(Node a_node, Node a_parentNode)
-		{
+	{
 		if (a_node.getNodeType() == Document.COMMENT_NODE)
 		{
 			a_parentNode.removeChild(a_node);
 			return 1;
 		}
 
-
 		if (a_node.getNodeType() == Document.TEXT_NODE)
-	{
+		{
 			if (a_node.getNodeValue().trim().length() == 0)
 			{
 				a_parentNode.removeChild(a_node);
 				return 1;
 			}
-	}
+		}
 
 		if (a_node.hasChildNodes())
-	{
+		{
 			NodeList childNodes = a_node.getChildNodes();
 			for (int i = 0; i < childNodes.getLength(); i++)
-		{
+			{
 				i -= removeCommentsInternal(childNodes.item(i), a_node);
-		}
+			}
 		}
 		return 0;
 	}

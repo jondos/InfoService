@@ -161,8 +161,9 @@ public class XtendedPrivateTestCase extends PrivateTestCase
 	 */
 	protected File writeXMLOutputToFile(Element a_xmlElement, int a_sequenceNumber)
 		throws Exception {
-		return writeXMLOutputToFile(
-				  a_xmlElement, getClass(), getClass().getName(), a_sequenceNumber);
+		return writeXMLOutputToFile(a_xmlElement, getClass(),
+									ClassUtil.getShortClassName(getClass()),
+									a_sequenceNumber);
 	}
 
 	/**
