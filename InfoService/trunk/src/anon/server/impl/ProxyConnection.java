@@ -40,6 +40,9 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import anon.infoservice.*;
+import HTTPClient.SocksClient;
+import HTTPClient.NVPair;
+import HTTPClient.AuthorizationInfo;
 
 final public class ProxyConnection
 {
@@ -58,38 +61,33 @@ final public class ProxyConnection
 						   String host, int port) throws Exception
 	{
 		if (a_proxyInterface == null)
-		{
+		{ //plain Socket; no Proxy...
 			m_ioSocket = new Socket(host, port);
+			m_ioSocket.setSoTimeout(0);
+			m_In = m_ioSocket.getInputStream();
+			m_Out = m_ioSocket.getOutputStream();
+			return;
 		}
-		else
-		{
-			m_proxyInterface = a_proxyInterface;
-			LogHolder.log(LogLevel.DEBUG, LogType.NET,
-						  "ProxyConnection: Try to connect via Firewall (" +
-						  a_proxyInterface.getHost() + ":" + a_proxyInterface.getPort() +
-						  ") to Server (" + host + ":" + port + ")");
+		m_proxyInterface = a_proxyInterface;
+		LogHolder.log(LogLevel.DEBUG, LogType.NET,
+					  "ProxyConnection: Try to connect via Firewall (" +
+					  a_proxyInterface.getHost() + ":" + a_proxyInterface.getPort() +
+					  ") to Server (" + host + ":" + port + ")");
+		if (m_proxyInterface.getProtocol().equals(ProxyInterface.PROTOCOL_TYPE_HTTP) ||
+			m_proxyInterface.getProtocol().equals(ProxyInterface.PROTOCOL_TYPE_HTTPS))
+		{ //HTTP/HTTPS Proxy
 			m_ioSocket = new Socket(a_proxyInterface.getHost(), a_proxyInterface.getPort());
-		}
-		m_In = m_ioSocket.getInputStream();
-		m_Out = m_ioSocket.getOutputStream();
-
-		if (a_proxyInterface != null)
-		{
+			m_In = m_ioSocket.getInputStream();
+			m_Out = m_ioSocket.getOutputStream();
 			m_ioSocket.setSoTimeout(60000);
-			if (a_proxyInterface.getProtocol().equals(ListenerInterface.PROTOCOL_TYPE_SOCKS))
-		{
-			doSOCKS(host, port);
-		}
-			else if (a_proxyInterface.getProtocol().equals(ListenerInterface.PROTOCOL_TYPE_HTTP))
-		{
 			OutputStreamWriter writer = new OutputStreamWriter(m_Out);
 			try
 			{
-					sendHTTPProxyCommands(FIREWALL_METHOD_HTTP_1_1, writer, host, port, a_proxyInterface);
+				sendHTTPProxyCommands(FIREWALL_METHOD_HTTP_1_1, writer, host, port, a_proxyInterface);
 			}
 			catch (Exception e1)
 			{
-					sendHTTPProxyCommands(FIREWALL_METHOD_HTTP_1_0, writer, host, port, a_proxyInterface);
+				sendHTTPProxyCommands(FIREWALL_METHOD_HTTP_1_0, writer, host, port, a_proxyInterface);
 			}
 			String tmp = readLine(m_In);
 			LogHolder.log(LogLevel.DEBUG, LogType.NET, "ProxyConnection: Firewall response is: " + tmp);
@@ -105,9 +103,24 @@ final public class ProxyConnection
 			{
 				throw new Exception("HTTP-Proxy response: " + tmp);
 			}
+			m_ioSocket.setSoTimeout(0);
+			return;
 		}
+		if (m_proxyInterface.getProtocol().equals(ProxyInterface.PROTOCOL_TYPE_SOCKS))
+		{
+			NVPair[] up = new NVPair[1];
+			up[0] = new NVPair(a_proxyInterface.getAuthenticationUserID(),
+							   a_proxyInterface.getAuthenticationPassword());
+			AuthorizationInfo.addAuthorization(new AuthorizationInfo(a_proxyInterface.getHost(),
+				a_proxyInterface.getPort(),
+				"SOCKS5", "USER/PASS", up, null));
+			SocksClient socksClient = new SocksClient(m_proxyInterface.getHost(),
+				m_proxyInterface.getPort());
+			m_ioSocket = socksClient.getSocket(host, port);
+			m_ioSocket.setSoTimeout(0);
+			m_In = m_ioSocket.getInputStream();
+			m_Out = m_ioSocket.getOutputStream();
 		}
-		m_ioSocket.setSoTimeout(0);
 	}
 
 	/**
@@ -138,26 +151,26 @@ final public class ProxyConnection
 		m_Out.write(buff, 0, 10 + host.length());
 		m_Out.flush();
 		//read OK for Methods...
-		int ret=m_In.read(); //Version=5
-		ret=m_In.read(); //00=No Auth
+		int ret = m_In.read(); //Version=5
+		ret = m_In.read(); //00=No Auth
 		//read ok for connect
-		ret=m_In.read();//Version=5
-		ret=m_In.read();//SUCCED=0
-		ret=m_In.read();//reserved==0;
-		int adrType=m_In.read();
-		int len=0;
-		switch(adrType)
+		ret = m_In.read(); //Version=5
+		ret = m_In.read(); //SUCCED=0
+		ret = m_In.read(); //reserved==0;
+		int adrType = m_In.read();
+		int len = 0;
+		switch (adrType)
 		{
 			case 1:
-				len=4; //IPv4
-			break;
+				len = 4; //IPv4
+				break;
 			case 3:
-				len=m_In.read(); //domainname len
-			break;
+				len = m_In.read(); //domainname len
+				break;
 			default: //unknown
 				throw new Exception("Socks: unknow adr type in reply!");
 		}
-		len+=2; //port
+		len += 2; //port
 		while (len > 0)
 		{
 			len -= m_In.read(buff, 0, len);
@@ -210,13 +223,13 @@ final public class ProxyConnection
 	/**
 	 *
 	  Write stuff for connecting over proxy/firewall
-	// should look like this example
-	//   CONNECT www.inf.tu-dresden.de:443 HTTP/1.0
-	//   Connection: Keep-Alive
-	//   Proxy-Connection: Keep-Alive
-	//differs a little bit for HTTP/1.0 and HTTP/1.1
+	  // should look like this example
+	  //   CONNECT www.inf.tu-dresden.de:443 HTTP/1.0
+	  //   Connection: Keep-Alive
+	  //   Proxy-Connection: Keep-Alive
+	  //differs a little bit for HTTP/1.0 and HTTP/1.1
 	 @todo use HTTPConnectionFactory to create a connection!!
-		*/
+	 */
 	private void sendHTTPProxyCommands(int httpMethod, OutputStreamWriter out, String host, int port,
 									   ImmutableProxyInterface a_proxyInterface) throws Exception
 	{

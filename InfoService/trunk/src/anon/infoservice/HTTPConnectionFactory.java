@@ -28,11 +28,11 @@
 package anon.infoservice;
 
 import java.util.Vector;
-import HTTPClient.Codecs;
+import HTTPClient.AuthorizationInfo;
 import HTTPClient.HTTPConnection;
 import HTTPClient.NVPair;
-
-
+import HTTPClient.DefaultAuthHandler;
+import HTTPClient.AuthorizationPrompter;
 
 /**
  * This class creates all instances of HTTPConnection for the JAP client and is a singleton.
@@ -91,7 +91,7 @@ public class HTTPConnectionFactory
 			try
 			{
 				// remove this module as it doesn`t work and as it interferes with our own implementation
-				HTTPConnection.removeDefaultModule(Class.forName("HTTPClient.AuthorizationModule"));
+				//HTTPConnection.removeDefaultModule(Class.forName("HTTPClient.AuthorizationModule"));
 			}
 			catch (Exception e)
 			{
@@ -120,22 +120,26 @@ public class HTTPConnectionFactory
 			return;
 		}
 
-			/* don't allow to create new connections until we have changed all proxy attributes */
+		/* don't allow to create new connections until we have changed all proxy attributes */
 		if (a_proxyInterface.getProtocol().equals(ListenerInterface.PROTOCOL_TYPE_HTTP))
-			{
+		{
 			/* set the new values for the proxy */
 			HTTPConnection.setProxyServer(a_proxyInterface.getHost(), a_proxyInterface.getPort());
-				HTTPConnection.setSocksServer(null, -1);
-			}
-		else
-			{
-			if (a_proxyInterface.getProtocol() == ListenerInterface.PROTOCOL_TYPE_SOCKS)
-			{
-				/** @todo check why this code is not used! */
-				//HTTPConnection.setProxyServer(null, -1);
-				//HTTPConnection.setSocksServer(a_proxyListener.getHost(), a_proxyListener.getPort());
-			}
+			HTTPConnection.setSocksServer(null, -1);
 		}
+		else if (a_proxyInterface.getProtocol() == ListenerInterface.PROTOCOL_TYPE_SOCKS)
+		{
+			/** @todo check why this code is not used! */
+			HTTPConnection.setProxyServer(null, -1);
+			HTTPConnection.setSocksServer(a_proxyInterface.getHost(), a_proxyInterface.getPort());
+			NVPair[] up = new NVPair[1];
+			up[0] = new NVPair(a_proxyInterface.getAuthenticationUserID(),
+							   a_proxyInterface.getAuthenticationPassword());
+			AuthorizationInfo.addAuthorization(new AuthorizationInfo(a_proxyInterface.getHost(),
+				a_proxyInterface.getPort(),
+				"SOCKS5", "USER/PASS", up, null));
+		}
+
 	}
 
 	/**
@@ -173,17 +177,23 @@ public class HTTPConnectionFactory
 	 * @return A new instance of HTTPConnection with a connection to the specified target and the
 	 *         current proxy settings.
 	 */
-	public HTTPConnection createHTTPConnection(ListenerInterface target)
+	public synchronized HTTPConnection createHTTPConnection(ListenerInterface target)
 	{
 		HTTPConnection newConnection = null;
 		synchronized (this)
 		{
 			newConnection = createHTTPConnectionInternal(target);
-
-			/* get always the current proxy settings */
-			if ((m_proxyInterface != null) && m_proxyInterface.isAuthenticationUsed())
+			if (m_proxyInterface.isAuthenticationUsed())
 			{
-				replaceHeader(newConnection, m_proxyInterface.getProxyAuthorizationHeader());
+				DefaultAuthHandler.setAuthorizationPrompter(new AuthorizationPrompter()
+				{
+					public NVPair getUsernamePassword(AuthorizationInfo challenge)
+					{
+						return new NVPair(m_proxyInterface.getAuthenticationUserID(),
+										  m_proxyInterface.getAuthenticationPassword());
+					}
+
+				});
 			}
 		}
 		/* set some header infos */
