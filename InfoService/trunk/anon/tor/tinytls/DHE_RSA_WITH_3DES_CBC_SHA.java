@@ -31,6 +31,8 @@
  */
 package anon.tor.tinytls;
 
+import java.math.BigInteger;
+
 import org.bouncycastle.crypto.digests.SHA1Digest;
 import org.bouncycastle.crypto.engines.DESedeEngine;
 import org.bouncycastle.crypto.macs.HMac;
@@ -59,23 +61,18 @@ public class DHE_RSA_WITH_3DES_CBC_SHA extends CipherSuite {
 		this.setKeyExchangeAlgorithm(new DHE_RSA_Key_Exchange());
 	}
 
-	/**
-	 * encode a message with a symmetric key
-	 * @param header header
-	 * @param message message
-	 * @return encoded message
-	 */
 	public void encode(TLSRecord msg)
 	{
 		HMac hmac = new HMac(new SHA1Digest());
 		hmac.reset();
 		hmac.init(new KeyParameter(m_clientmacsecret));
-		hmac.update(helper.inttobyte(this.m_writesequenznumber,8),0,8);
+		byte[]  b = helper.conc(new byte[7],this.m_writesequenznumber.toByteArray());
+		hmac.update(b,b.length-8,8);
+		m_writesequenznumber = m_writesequenznumber.add(new BigInteger("1"));
 		hmac.update(msg.m_Header,0,msg.m_Header.length);
 		hmac.update(msg.m_Data,0,msg.m_dataLen);
 		hmac.doFinal(msg.m_Data,msg.m_dataLen);
 		msg.m_dataLen+=hmac.getMacSize();
-		m_writesequenznumber++;
 		//TODO : zuf?lliges padding hinzuf?gen
 		//add padding as described in RFC2246 (6.2.3.2)
 		int paddingsize=m_encryptcipher.getBlockSize()-((msg.m_dataLen+1)%m_encryptcipher.getBlockSize());
@@ -90,12 +87,6 @@ public class DHE_RSA_WITH_3DES_CBC_SHA extends CipherSuite {
 		msg.setLength(msg.m_dataLen);
 	}
 
-	/**
-	 * decodes a message with a symmetric key
-	 * @param header header
-	 * @param message message
-	 * @return decoded message
-	 */
 	public void decode(TLSRecord msg) throws TLSException {
 		for(int i=0;i<msg.m_dataLen;i+=m_decryptcipher.getBlockSize())
 		{
@@ -111,12 +102,13 @@ public class DHE_RSA_WITH_3DES_CBC_SHA extends CipherSuite {
 
 		hmac.reset();
 		hmac.init(new KeyParameter(m_servermacsecret));
-		hmac.update(helper.inttobyte(m_readsequenznumber,8),0,8);
+		byte[]  b = helper.conc(new byte[7],this.m_readsequenznumber.toByteArray());
+		hmac.update(b,b.length-8,8);
 		hmac.update(msg.m_Header,0,msg.m_Header.length);
 		hmac.update(msg.m_Data,0,len);
 		byte[] mac = new byte[hmac.getMacSize()];
 		hmac.doFinal(mac,0);
-		m_readsequenznumber++;
+		m_readsequenznumber = m_readsequenznumber.add(new BigInteger("1"));
 
 		for(int i=0;i<mac.length;i++)
 		{
@@ -127,10 +119,6 @@ public class DHE_RSA_WITH_3DES_CBC_SHA extends CipherSuite {
 		}
 	}
 
-	/**
-	 * extract the keys (see RFC 2246 TLS Record Protocoll)
-	 * @param keys array of bytes that contains the keys
-	 */
 	protected void calculateKeys(byte[] keys)
 	{
 		this.m_clientmacsecret = helper.copybytes(keys,0,20);

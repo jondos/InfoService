@@ -201,12 +201,12 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c.weightx=1;
 		northPanel.add(new JSeparator(),c);
 
-		MyPanel my=new MyPanel();
+		FlippingPanel my=new FlippingPanel(this);
 		p=new JPanel();
 		GridBagLayout gbl1=new GridBagLayout();
 		GridBagConstraints c1=new GridBagConstraints();
 		p.setLayout(gbl1);
-		l=new JLabel("Anonymität");
+		l=new JLabel("Anonymitat");
 		p.add(l,c1);
 		l=new JLabel("Nutzerzahl:");
 		c1.gridy=1;
@@ -225,10 +225,10 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.gridheight=3;
 		p.add(l,c1);
 
-		JPanel p2=new JPanel();
+		JPanel p2=new JPanel(new GridLayout(3,1));
 		p2.setBorder(LineBorder.createBlackLineBorder());
-		new BoxLayout(p2,BoxLayout.Y_AXIS);
-		l=new JLabel("Anonymität");
+		//new BoxLayout(p2,BoxLayout.Y_AXIS);
+		l=new JLabel("Anonymitat");
 		p2.add(l);
 		p2.add(new JRadioButton("Ein"));
 		p2.add(new JRadioButton("Aus"));
@@ -238,6 +238,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		my.setFullPanel(p);
 
 		c.fill=GridBagConstraints.HORIZONTAL;
+		c.weightx=1;
 		c.anchor=GridBagConstraints.NORTHWEST;
 		c.gridy=4;
 		northPanel.add(my,c);
@@ -315,15 +316,15 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		{ // if loadPay is off, all stays as usual
 
 			getContentPane().setBackground(buttonPanel.getBackground());
-			getContentPane().add(level, BorderLayout.CENTER);
+			getContentPane().add(northPanel, BorderLayout.CENTER);
 			m_panelMain = level;
-			if (!JAPModel.isSmallDisplay())
+			/*if (!JAPModel.isSmallDisplay())
 			{
 				getContentPane().add(northPanel, BorderLayout.NORTH);
 				getContentPane().add(westLabel, BorderLayout.WEST);
 				getContentPane().add(new JLabel("  "), BorderLayout.EAST); //Spacer
 				getContentPane().add(buttonPanel, BorderLayout.SOUTH);
-			}
+			}*/
 		}
 		//tabs.setSelectedComponent(level);
 
