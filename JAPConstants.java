@@ -30,6 +30,9 @@ public class JAPConstants {
 	static final String aktVersion = "00.01.044"; //Never change the layout of this line!
 	//static final String buildDate=".."
 	//static final String buildType="..."
+        //needed for update.JAPUpdate
+        public static String aktVersion2 = aktVersion;
+        public final static boolean m_bReleasedVersion = false;
 	static final int      defaultPortNumber            = 4001;
 	static final String   defaultanonHost              = "mix.inf.tu-dresden.de";
 	static final int      defaultanonPortNumber        = 6544;
@@ -58,7 +61,7 @@ public class JAPConstants {
 	static final String   ICONIFYICONFN                = "iconify.gif";
 	static final String   ENLARGEYICONFN               = "enlarge.gif";
 	static final String   METERICONFN                  = "icom.gif";
-	static final String[] METERFNARRAY                 = {
+	static final String[] METERFNARRAY                 ={
 															"meterD.gif",    // anonymity deactivated
 															"meterNnew.gif", // no measure available
 															"meter1.gif",
