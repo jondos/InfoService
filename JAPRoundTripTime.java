@@ -52,7 +52,7 @@ public class JAPRoundTripTime {
 			myAddress = InetAddress.getByName(localHost);
 			//DEBUG*/System.out.println(myAddress.getHostName());
 		} catch (UnknownHostException e) {
-			System.out.println("Could not get local host address, are you "
+			JAPDebug.out(JAPDebug.WARNING ,JAPDebug.NET , "Could not get local host address, are you "
 									+" connected to the Internet?.");
 			throw (new UnknownHostException (e.getMessage() 
 									+ ": Could not get local host address, "
@@ -181,18 +181,13 @@ public class JAPRoundTripTime {
 					preresult = preresult | 
 								(((long)receivebuf[4 + i*8 + j]) & 0xff) 
 								  << ((7 - j) * 8);
-					//DEBUG*/ testByte = (byte) (preresult >>> ((7 - j) * 8));
-					//DEBUG*/ System.out.println((4 + i*8 + j) + ". Byte\t" + receivebuf[4 + i*8 + j] + "\tLong\t" + (((long)receivebuf[4 + i*8 + j]) & 0xff));
-					//DEBUG*/ System.out.println(preresult);
 			}
 			if (preresult == sendDate.getTime()) {
 				firstStationNumber = i;
-				//DEBUG */ System.out.println("Es gibt " + (firstStationNumber + 1) + " Station(en)");
 				result[i] = (int) ((receiveDate.getTime() 
 								   - sendDate.getTime()));
 			} else {
 				result[i] = (int) (preresult);
-				//DEBUG */ System.out.println("Dieses war der " + i + ". Streich.\n");
 			}
 		}
 		
@@ -200,16 +195,12 @@ public class JAPRoundTripTime {
 		// Sorting the results by stations.
 		for (int i=firstStationNumber; i >= 0; i--) {
 			finalResult[firstStationNumber-i] = result [i];
-			//DEBUG*/System.out.print("\t" + finalResult[firstStationNumber-i]);
 		}
-		//System.out.println();
 		// Calculate the finalResult except the last result.
 		for (int i = 0; i <= (firstStationNumber - 1); i++) {
 			finalResult[i] = finalResult[i] - finalResult[i+1];
 			if (finalResult[i] < 0) finalResult[i] = 0;
-			//DEBUG*/System.out.print("\t" + finalResult[i]);
 		}
-		//System.out.println();
 		for (int i = 0; i <= firstStationNumber; i++) {
 			finalResult[i] = finalResult[i] / 2;
 		}
@@ -220,7 +211,7 @@ public class JAPRoundTripTime {
 	
 	/** Gets all available local Addresses 
 	 * 
-	 * @return THe String Array has 2 Elements which are: 1st local reply address, 2nd amount of mixes in the chain.
+	 * @return The String Array has 2 Elements which are: 1st local reply address, 2nd amount of mixes in the chain.
 	 */
 	public synchronized static String[] getLocalReplyAddress (String remoteAddress, int portNumber) {
 		
@@ -230,16 +221,15 @@ public class JAPRoundTripTime {
 		allMyAddressesStringArray[0]       = "ERROR";
 		result[0] = "localhost";
 		result[1] = "0";
-
 		
 		try {
 			int soManyAddresses = InetAddress.getAllByName(InetAddress.getLocalHost().getHostName()).length;
 			allMyAddressesStringArray = new String[soManyAddresses];
 			allMyAddresses = InetAddress.getAllByName(InetAddress.getLocalHost().getHostName());
-			//DEBUG System.out.println("All local Addresses:");
+			JAPDebug.out(JAPDebug.INFO ,JAPDebug.NET, "all local addresses:");
 			for (int i = 0; i < soManyAddresses; i++){
 				allMyAddressesStringArray[i] = allMyAddresses[i].getHostAddress();
-				//DEBUG System.out.println((i + 1) + ". address " + allMyAddresses[i].getHostAddress());
+				JAPDebug.out(JAPDebug.INFO ,JAPDebug.NET, (i + 1) + ". address " + allMyAddresses[i].getHostAddress());
 			}
 		} catch (IOException e) {
 			System.out.println("Your local IP-Adress could not be found. Are you connected to the Internet?");
@@ -257,11 +247,10 @@ public class JAPRoundTripTime {
 				int[] times = rttTest.getRoundTripTime();
 				result[0] = allMyAddressesStringArray[i];
 				result[1] = Integer.toString(times.length);
-				//DEBUG System.out.println("\n" + allMyAddressesStringArray[i]);
+				JAPDebug.out(JAPDebug.INFO ,JAPDebug.NET, "\n" + allMyAddressesStringArray[i]);
 				return result;
 			} catch (IOException e) {
-				/*DEBUG*/ System.out.println("ERROR: \"" + e.getMessage() + "\"");
-				/*DEBUG*/ System.out.println("ERROR: Fehler bei Versuch der Adresse " + allMyAddressesStringArray[i]);
+				JAPDebug.out(JAPDebug.ERR ,JAPDebug.NET, e.getMessage() + "\n Fehler bei Versuch der Adresse " + allMyAddressesStringArray[i]);
 			} finally {
 				result[0] = "localhost";
 				result[1] = "0";
