@@ -64,6 +64,7 @@ class JAP extends Frame{
 				System.out.println("You will find more information at the JAP webpage!");
 				System.exit(0);
 			}
+		
 		//Init Messages....
 		JAPMessages.init();
 
@@ -116,6 +117,8 @@ class JAP extends Frame{
 		JAPDebug.setDebugLevel(JAPDebug.WARNING);
 		// load settings from config file
 		model.load();
+		
+		
 		// Output some information about the system
 		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAP:Welcome! This is version "+model.aktVersion+" of JAP.");
 		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAP:Java "+javaVersion+" running on "+os+".");

@@ -79,8 +79,7 @@ final class JAPAWTMsgBox extends WindowAdapter implements ActionListener
 			}
 			catch(Exception e)
 			{
-			e.printStackTrace();
-			}
+				}
 		}
 	
 	/** Shows a Message Box.
@@ -95,7 +94,6 @@ final class JAPAWTMsgBox extends WindowAdapter implements ActionListener
 			}
 			catch(Exception e)
 			{
-			e.printStackTrace();
 			return -1;
 			}
 			return 0;

@@ -100,7 +100,7 @@ final public class JAPDebug extends WindowAdapter{
 			"Error",
 			"Warning",
 			"Notice",
-			"Info ",
+			"Info",
 			"Debug"
 		};
 //	private PrintWriter[] outStreams;
