@@ -645,7 +645,7 @@ public class Tor implements /*Runnable,*/ AnonService
 		//OutputStream out=c.getOutputStream();
 		//out.write("GET /index.html HTTP/1.0\n\n".getBytes());
 		//out.flush();
-		LogHolder.log(LogLevel.DEBUG,LogType.TOR,"DNS Resolve for www.mircosoft.com returned: "+circ.resolveDNS("www.microsoft.com"));
+		LogHolder.log(LogLevel.DEBUG,LogType.TOR,"DNS Resolve for www.mircosoft.com returned: "+circ.resolveDNS("www.bild.de"));
 		LogHolder.log(LogLevel.DEBUG,LogType.TOR,"DNS Resolve for www.mircosoft.de returned: "+circ.resolveDNS("www.microsoft.de"));
 	}
 
