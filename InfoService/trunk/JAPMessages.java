@@ -1,4 +1,5 @@
 import java.util.ResourceBundle;
+import java.util.PropertyResourceBundle;
 import java.util.Locale;
 import java.awt.Frame;
 
@@ -6,12 +7,12 @@ public final class JAPMessages
 	{
 		private static final String MESSAGESFN   = "JAPMessages";
 		private static ResourceBundle msg=null;
-		
-		
+
+
 		private JAPMessages()
 			{
 			}
-		
+
 		/* Initalize with the System default Locale...*/
 		public static void init()
 			{
@@ -25,13 +26,13 @@ public final class JAPMessages
 				// Load Texts for Messages and Windows
 				try
 						{
-							msg = ResourceBundle.getBundle(MESSAGESFN, locale);
+							msg = PropertyResourceBundle.getBundle(MESSAGESFN, locale);
 						}
 					catch(Exception e1)
 						{
 							try
 								{
-									msg=ResourceBundle.getBundle(MESSAGESFN);
+									msg=PropertyResourceBundle.getBundle(MESSAGESFN);
 								}
 							catch(Exception e)
 								{
@@ -43,7 +44,7 @@ public final class JAPMessages
 						}
 			}
 
-		public static String getString(String key) 
+		public static String getString(String key)
 			{
 				try
 					{
