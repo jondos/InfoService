@@ -134,13 +134,17 @@ public final class JAPController implements ProxyListener
 		try
 		{
 			InfoService defaultInfoService = new InfoService(JAPConstants.defaultInfoServiceHostName,
-				JAPConstants.defaultInfoServicePortNumber);
+				JAPConstants.defaultInfoServicePortNumber, JAPConstants.DEFAULT_INFOSERVICE_NAME);
 			InfoServiceHolder.getInstance().setPreferedInfoService(defaultInfoService);
 		}
 		catch (Exception e)
 		{
 			LogHolder.log(LogLevel.EMERG, LogType.NET, "JAPController: Constructor: " + e.getMessage());
 		}
+		/* set some default values for infoservice communication */
+		setInfoServiceDisabled(JAPConstants.DEFAULT_INFOSERVICE_DISABLED);
+		InfoServiceHolder.getInstance().setChangeInfoServices(JAPConstants.DEFAULT_INFOSERVICE_CHANGES);
+		HTTPConnectionFactory.getInstance().setTimeout(JAPConstants.DEFAULT_INFOSERVICE_TIMEOUT);
 
 		mixCascadeDatabase = new Vector();
 		m_proxyDirect = null;
@@ -200,20 +204,22 @@ public final class JAPController implements ProxyListener
 	 * and then in the JAP install directory.
 	 * The configuration is a XML-File with the following structure:
 	 *  <JAP
-	 *     version="0.3"                  // version of the xml struct (DTD) used for saving the configuration
-	 *    portNumber=""                  // Listener-Portnumber
-	 *    portNumberSocks=""            // Listener-Portnumber for SOCKS
-	 *    supportSocks=""                // Will we support SOCKS ?
-	 *    listenerIsLocal="true"/"false"// Listener lauscht nur an localhost ?
-	 *    proxyMode="true"/"false"      // Using a HTTP-Proxy??
-	 *    proxyType="SOCKS"/"HTTP"      // which kind of proxy
-	 *    proxyHostName="..."            // the Hostname of the Proxy
-	 *    proxyPortNumber="..."          // port number of the Proxy
-	 *    proxyAuthorization="true"/"false" //Need authorization to acces the proxy ?
-	 *    porxyAuthUserID="..."         //UserId for the Proxy if Auth is neccessary
-	 *    infoServiceHostName="..."      // hostname of the infoservice
-	 *    infoServicePortnumber=".."    // the portnumber of the info service
-	 *    infoServiceDisabled="true/false"    // disable use of InfoService
+	 *    version="0.5"                     // version of the xml struct (DTD) used for saving the configuration
+	 *    portNumber=""                     // Listener-Portnumber
+	 *    portNumberSocks=""                // Listener-Portnumber for SOCKS
+	 *    supportSocks=""                   // Will we support SOCKS ?
+	 *    listenerIsLocal="true"/"false"    // Listener lauscht nur an localhost ?
+	 *    proxyMode="true"/"false"          // Using a HTTP-Proxy??
+	 *    proxyType="SOCKS"/"HTTP"          // which kind of proxy
+	 *    proxyHostName="..."               // the Hostname of the Proxy
+	 *    proxyPortNumber="..."             // port number of the Proxy
+	 *    proxyAuthorization="true"/"false" // Need authorization to acces the proxy ?
+	 *    porxyAuthUserID="..."             // UserId for the Proxy if Auth is neccessary
+	 *    infoServiceHostName="..."         // hostname of the infoservice (only config version < 0.3)
+	 *    infoServicePortnumber=".."        // the portnumber of the info service (only config version < 0.3)
+	 *    infoServiceDisabled="true/false"  // disable use of InfoService
+	 *    infoServiceChange="true/false"    // automatic change of infoservice after failure (since config version 0.5)
+	 *    infoServiceTimeout="..."          // timeout (sec) for infoservice and update communication (since config version 0.5)
 	 *    certCheckDisabled="true/false"  // disable checking of certificates
 	 * 		biHost="..." // Host for BI
 	 * 		biPort=".." //Port for BI
@@ -328,8 +334,34 @@ public final class JAPController implements ProxyListener
 					// load settings for the reminder message before goodBye
 				}
 				mbGoodByMessageNeverRemind = XMLUtil.parseNodeBoolean(n.getNamedItem("neverRemindGoodBye"), false);
-				// load settings for Info Service
-				setInfoServiceDisabled(XMLUtil.parseNodeBoolean(n.getNamedItem("infoServiceDisabled"), false));
+
+				/* infoservice configuration options */
+				String infoOptionsString = root.getAttribute("infoServiceDisabled");
+				if (!infoOptionsString.equals(""))
+				{
+					setInfoServiceDisabled(Boolean.valueOf(infoOptionsString).booleanValue());
+				}
+				infoOptionsString = root.getAttribute("infoServiceChange");
+				if (!infoOptionsString.equals(""))
+				{
+					InfoServiceHolder.getInstance().setChangeInfoServices(Boolean.valueOf(infoOptionsString).
+						booleanValue());
+				}
+				infoOptionsString = root.getAttribute("infoServiceTimeout");
+				try
+				{
+					int infoServiceTimeout = Integer.parseInt(infoOptionsString);
+					if ( (infoServiceTimeout >= 1) && (infoServiceTimeout <= 60))
+					{
+						HTTPConnectionFactory.getInstance().setTimeout(infoServiceTimeout);
+					}
+				}
+				catch (Exception e)
+				{
+					LogHolder.log(LogLevel.INFO, LogType.MISC,
+								  "JAPController: loadConfigFile: Error loading InfoService timeout.");
+				}
+
 				//settings for Certificates
 				setCertCheckDisabled(XMLUtil.parseNodeBoolean(n.getNamedItem("certCheckDisabled"),
 					JAPModel.isCertCheckDisabled()));
@@ -521,8 +553,16 @@ public final class JAPController implements ProxyListener
 					if (infoServiceNodes.getLength() > 0)
 					{
 						Element infoServiceNode = (Element) (infoServiceNodes.item(0));
-						InfoService preferedInfoService = new InfoService(infoServiceNode);
-						InfoServiceHolder.getInstance().setPreferedInfoService(preferedInfoService);
+						try
+						{
+							InfoService preferedInfoService = new InfoService(infoServiceNode);
+							InfoServiceHolder.getInstance().setPreferedInfoService(preferedInfoService);
+						}
+						catch (Exception e)
+						{
+							LogHolder.log(LogLevel.INFO, LogType.MISC,
+								"JAPController: loadConfigFile: Error loading prefered InfoService.");
+						}
 					}
 				}
 
@@ -592,7 +632,7 @@ public final class JAPController implements ProxyListener
 			Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
 			Element e = doc.createElement("JAP");
 			doc.appendChild(e);
-			e.setAttribute("version", "0.4");
+			e.setAttribute("version", "0.5");
 			//
 			e.setAttribute("portNumber", Integer.toString(JAPModel.getHttpListenerPortNumber()));
 			//e.setAttribute("portNumberSocks",Integer.toString(portSocksListener));
@@ -611,7 +651,13 @@ public final class JAPController implements ProxyListener
 			e.setAttribute("biHost", JAPModel.getBIHost());
 			e.setAttribute("biPort", Integer.toString(JAPModel.getBIPort()));
 
+			/* infoservice configuration options */
 			e.setAttribute("infoServiceDisabled", (JAPModel.isInfoServiceDisabled() ? "true" : "false"));
+			e.setAttribute("infoServiceChange",
+						   (InfoServiceHolder.getInstance().isChangeInfoServices() ? "true" : "false"));
+			e.setAttribute("infoServiceTimeout",
+						   Integer.toString(HTTPConnectionFactory.getInstance().getTimeout()));
+
 			e.setAttribute("certCheckDisabled", (JAPModel.isCertCheckDisabled() ? "true" : "false"));
 			e.setAttribute("DummyTrafficIntervall", Integer.toString(JAPModel.getDummyTraffic()));
 			e.setAttribute("autoConnect", (JAPModel.getAutoConnect() ? "true" : "false"));
@@ -922,35 +968,6 @@ public final class JAPController implements ProxyListener
 		}
 	}
 
-	//---------------------------------------------------------------------
-	/*  public boolean setInfoService(String host,int port)
-	  {
-	   if(!JAPUtil.isPort(port))
-	 return false;
-	   if(host==null)
-	 return false;
-	   synchronized(this)
-	 {
-	  if(m_InfoService!=null)
-	   this.getInfoService().setInfoService(host,port); //todo Error check
-	  m_Model.setInfoServiceHost(host);
-	  m_Model.setInfoServicePort(port);
-	  notifyJAPObservers();
-	  return true;
-	 }
-	  }
-
-	 public static InfoService getInfoService()
-	  {
-	   if(m_Controller.m_InfoService==null)
-	 {
-	 m_Controller.m_InfoService=new InfoService(JAPModel.getInfoServiceHost(),JAPModel.getInfoServicePort());
-	  m_Controller.m_InfoService.setLogging(LogLevel.create());
-	  m_Controller.applyProxySettingsToInfoService();
-	 }
-	  return m_Controller.m_InfoService;
-	 }*/
-
 	public static void setInfoServiceDisabled(boolean b)
 	{
 		m_Model.setInfoServiceDisabled(b);
@@ -963,11 +980,26 @@ public final class JAPController implements ProxyListener
 		{
 			m_proxyAnon.setMixCertificationCheck(!b, m_Model.getCertificateStore());
 		}
+		if (b == false)
+		{
+			/* certificate check enabled */
+			InfoServiceHolder.getInstance().setCertificateStore(m_Model.getCertificateStore());
+		}
+		else
+		{
+			/* certificate check disabled */
+			InfoServiceHolder.getInstance().setCertificateStore(null);
+		}
 	}
 
 	public static void setCertificateStore(JAPCertificateStore jcs)
 	{
 		m_Model.setCertificateStore(jcs);
+		if (m_Model.isCertCheckDisabled() == false)
+		{
+			/* certificate check enabled, don't change certificate store if check is disabled */
+			InfoServiceHolder.getInstance().setCertificateStore(jcs);
+		}
 	}
 
 	public static void setSaveMainWindowPosition(boolean b)

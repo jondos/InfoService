@@ -28,39 +28,32 @@
 
 package jap;
 
-import logging.Log;
-import logging.LogLevel;
-import logging.LogType;
-
 import java.io.File;
 import java.io.FileWriter;
-import java.io.StringWriter;
-import java.io.PrintWriter;
-import java.util.Dictionary;
-import java.util.Hashtable;
-import java.util.Properties;
-import java.util.Enumeration;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
-import java.awt.Frame;
-import java.awt.Font;
-import java.awt.Dimension;
-import java.awt.GridBagLayout;
-import java.awt.GridBagConstraints;
-import java.awt.Insets;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-
+import java.util.Enumeration;
+import java.util.Properties;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Frame;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JTextArea;
 import javax.swing.JScrollPane;
-import javax.swing.JScrollBar;
+import javax.swing.JTextArea;
+import logging.Log;
+import logging.LogLevel;
+import logging.LogType;
 
 /**
  * This class serves as a debugging interface.
@@ -89,7 +82,6 @@ final public class JAPDebug extends WindowAdapter implements ActionListener, Log
 	private static JAPDebug debug;
 	private static SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy/MM/dd-hh:mm:ss, ");
 
-
 	private JAPDebug()
 	{
 		m_debugType = LogType.ALL;
@@ -117,7 +109,8 @@ final public class JAPDebug extends WindowAdapter implements ActionListener, Log
 		{
 			synchronized (this)
 			{
-				String str = "[" + dateFormatter.format(new Date()) + LogLevel.STR_Levels[level] + "] " + txt + "\n";
+				String str = "[" + dateFormatter.format(new Date()) + LogLevel.STR_Levels[level] + "] " + txt +
+					"\n";
 				if (!m_bConsole)
 				{
 					System.err.print(str);
@@ -130,7 +123,6 @@ final public class JAPDebug extends WindowAdapter implements ActionListener, Log
 			}
 		}
 	}
-
 
 	/** Set the debugging type you like to output. To activate more than one type you simly add
 	 *  the types like this <code>setDebugType(JAPDebug.GUI+JAPDebug.NET)</code>.

@@ -32,6 +32,7 @@ import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Locale;
+import java.util.Vector;
 import java.awt.BorderLayout;
 import java.awt.Cursor;
 import java.awt.FlowLayout;
@@ -73,9 +74,6 @@ import org.bouncycastle.asn1.x509.X509NameTokenizer;
 import anon.crypto.JAPCertificate;
 import anon.crypto.JAPCertificateException;
 import anon.crypto.JAPCertificateStore;
-import anon.infoservice.InfoService;
-import anon.infoservice.InfoServiceDatabase;
-import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.MixCascade;
 import gui.CAListCellRenderer;
 import logging.LogHolder;
@@ -141,7 +139,6 @@ final class JAPConf extends JDialog
 	private JCheckBox m_cbDebugThread;
 	private JCheckBox m_cbDebugMisc;
 	private JCheckBox m_cbShowDebugConsole;
-	private JCheckBox m_cbInfoServiceDisabled;
 	private JCheckBox m_cbSaveWindowPositions;
 	private JCheckBox m_cbCertCheckDisabled;
 
@@ -154,7 +151,7 @@ final class JAPConf extends JDialog
 	private JSlider m_sliderDummyTrafficIntervall;
 
 	private JTabbedPane m_Tabs;
-	private JPanel m_pPort, m_pFirewall, m_pInfo, m_pMix, m_pCert, m_pMisc, m_pKonto;
+	private JPanel m_pPort, m_pFirewall, m_pMix, m_pCert, m_pMisc, m_pKonto;
 	private JButton m_bttnDefaultConfig, m_bttnCancel;
 
 	private JFrame m_frmParent;
@@ -163,6 +160,11 @@ final class JAPConf extends JDialog
 
 	private Font m_fontControls;
 
+	/**
+	 * Stores all loaded configuration modules (AbstractJAPConfModule). This is needed for handling
+	 * events.
+	 */
+	private Vector m_confModules;
 	private static File m_fileCurrentDir;
 
 	//Einfug
@@ -177,6 +179,7 @@ final class JAPConf extends JDialog
 	public JAPConf(JFrame frmParent, boolean loadPay)
 	{
 		super(frmParent);
+		m_confModules = new Vector();
 		this.loadPay = loadPay;
 		/* set the instance pointer */
 		japConfInstance = this;
@@ -192,13 +195,19 @@ final class JAPConf extends JDialog
 		m_Tabs.setFont(m_fontControls);
 		m_pPort = buildPortPanel();
 		m_pFirewall = buildProxyPanel();
-		m_pInfo = buildInfoServicePanel();
 		m_pMix = buildAnonPanel();
 		m_pCert = buildCertPanel();
 		m_pMisc = buildMiscPanel();
+
+		AbstractJAPConfModule infoServiceModule = new JAPConfInfoService();
+		/* there is no need to set the font because it is already set in the constructor but so it is
+		 * save for the future
+		 */
+		infoServiceModule.setFontSetting(m_fontControls);
+		m_confModules.addElement(infoServiceModule);
 		m_Tabs.addTab(JAPMessages.getString("confListenerTab"), null, m_pPort);
 		m_Tabs.addTab(JAPMessages.getString("confProxyTab"), null, m_pFirewall);
-		m_Tabs.addTab(JAPMessages.getString("confInfoTab"), null, m_pInfo);
+		m_Tabs.addTab(infoServiceModule.getTabTitle(), null, infoServiceModule.getRootPanel());
 		m_Tabs.addTab(JAPMessages.getString("confAnonTab"), null, m_pMix);
 		m_Tabs.addTab(JAPMessages.getString("confCertTab"), null, m_pCert);
 		if (!JAPModel.isSmallDisplay())
@@ -509,14 +518,6 @@ final class JAPConf extends JDialog
 		c.gridy = 11;
 		p.add(p1, BorderLayout.NORTH);
 		return p;
-	}
-
-	protected JPanel buildInfoServicePanel()
-	{
-		JPanel dummyPanel = new JPanel();
-		dummyPanel.setLayout(new GridLayout(1, 1));
-		dummyPanel.add(JAPConfInfoService.getInstance().createInfoServicePanel(m_fontControls));
-		return dummyPanel;
 	}
 
 	protected JPanel buildAnonPanel()
@@ -976,31 +977,31 @@ final class JAPConf extends JDialog
 						   if (j.getIssuer().getValues().elementAt(0).equals(currIssuerCN))
 						   {
 						 m_labelDateData.setText(j.getStartDate().toGMTString() + " - " + j.getEndDate().toGMTString());
-							m_labelCNData.setText("");
-							m_labelEData.setText("");
-							m_labelCSTLData.setText("");
-							m_labelOData.setText("");
-							m_labelOUData.setText("");
+						 m_labelCNData.setText("");
+						 m_labelEData.setText("");
+						 m_labelCSTLData.setText("");
+						 m_labelOData.setText("");
+						 m_labelOUData.setText("");
 
 						 X509NameTokenizer m_issuerData = new X509NameTokenizer(j.getIssuer().toString());
-							while (m_issuerData.hasMoreTokens())
-							{
-							 String m_element = (String) m_issuerData.nextToken();
-							 if (m_element.startsWith("CN="))
+						 while (m_issuerData.hasMoreTokens())
+						 {
+						  String m_element = (String) m_issuerData.nextToken();
+						  if (m_element.startsWith("CN="))
 						   m_labelCNData.setText(m_element.substring(3));
-							 else if (m_element.startsWith("E="))
+						  else if (m_element.startsWith("E="))
 						   m_labelEData.setText(m_element.substring(2));
-							 else if (m_element.startsWith("C="))
+						  else if (m_element.startsWith("C="))
 						   m_labelCSTLData.setText(m_element.substring(2) + m_labelCSTLData.getText());
-							 else if (m_element.startsWith("ST="))
+						  else if (m_element.startsWith("ST="))
 						 m_labelCSTLData.setText(m_element.substring(3) + " / " + m_labelCSTLData.getText());
-							 else if (m_element.startsWith("L="))
+						  else if (m_element.startsWith("L="))
 						 m_labelCSTLData.setText(m_element.substring(2) + " / " + m_labelCSTLData.getText());
-							 else if (m_element.startsWith("O="))
+						  else if (m_element.startsWith("O="))
 						   m_labelOData.setText(m_element.substring(2));
-							 else if (m_element.startsWith("OU="))
+						  else if (m_element.startsWith("OU="))
 						   m_labelOUData.setText(m_element.substring(3));
-							} // while
+						 } // while
 						   } // if
 						  } // while */
 					}
@@ -1071,41 +1072,41 @@ final class JAPConf extends JDialog
 					updateInfoPanel(j);
 
 					/*
-						 m_enumCerts = JAPModel.getCertificateStore().elements();
-						 JAPCertificate j;
-						 while (m_enumCerts.hasMoreElements())
-						 {
+					  m_enumCerts = JAPModel.getCertificateStore().elements();
+					  JAPCertificate j;
+					  while (m_enumCerts.hasMoreElements())
+					  {
 					   j = (JAPCertificate) m_enumCerts.nextElement();
 					   if (j.getIssuer().getValues().elementAt(0).equals(currIssuerCN))
 					   {
 					 m_labelDateData.setText(j.getStartDate().toGMTString() + " - " + j.getEndDate().toGMTString());
-						m_labelCNData.setText("");
-						m_labelEData.setText("");
-						m_labelCSTLData.setText("");
-						m_labelOData.setText("");
-						m_labelOUData.setText("");
+					 m_labelCNData.setText("");
+					 m_labelEData.setText("");
+					 m_labelCSTLData.setText("");
+					 m_labelOData.setText("");
+					 m_labelOUData.setText("");
 
 					 X509NameTokenizer m_issuerData = new X509NameTokenizer(j.getIssuer().toString());
-						while (m_issuerData.hasMoreTokens())
-						{
-						 String m_element = (String) m_issuerData.nextToken();
-						 if (m_element.startsWith("CN="))
-						  m_labelCNData.setText(m_element.substring(3));
-						 else if (m_element.startsWith("E="))
-						  m_labelEData.setText(m_element.substring(2));
-						 else if (m_element.startsWith("C="))
+					 while (m_issuerData.hasMoreTokens())
+					 {
+					  String m_element = (String) m_issuerData.nextToken();
+					  if (m_element.startsWith("CN="))
+					   m_labelCNData.setText(m_element.substring(3));
+					  else if (m_element.startsWith("E="))
+					   m_labelEData.setText(m_element.substring(2));
+					  else if (m_element.startsWith("C="))
 					 m_labelCSTLData.setText(m_element.substring(2) + m_labelCSTLData.getText());
-						 else if (m_element.startsWith("ST="))
+					  else if (m_element.startsWith("ST="))
 					 m_labelCSTLData.setText(m_element.substring(3) + " / " + m_labelCSTLData.getText());
-						 else if (m_element.startsWith("L="))
+					  else if (m_element.startsWith("L="))
 					 m_labelCSTLData.setText(m_element.substring(2) + " / " + m_labelCSTLData.getText());
-						 else if (m_element.startsWith("O="))
-						  m_labelOData.setText(m_element.substring(2));
-						 else if (m_element.startsWith("OU="))
-						  m_labelOUData.setText(m_element.substring(3));
-						} // while
+					  else if (m_element.startsWith("O="))
+					   m_labelOData.setText(m_element.substring(2));
+					  else if (m_element.startsWith("OU="))
+					   m_labelOUData.setText(m_element.substring(3));
+					 } // while
 					   } // if
-						 } // while */
+					  } // while */
 
 				}
 
@@ -1554,13 +1555,13 @@ final class JAPConf extends JDialog
 		/*				bttnPing.addActionListener(new ActionListener()
 		  {
 		   public void actionPerformed(ActionEvent e)
-			{
+		 {
 		  AnonServerDBEntry[] a=new AnonServerDBEntry[1];
 //								a[0]=new AnonServerDBEntry(m_Controller.anonHostName,m_Controller.anonHostName,m_Controller.anonPortNumber+1);
 		  a[0]=new AnonServerDBEntry(m_Controller.getAnonServer().getHost(),m_Controller.getAnonServer().getHost(),m_Controller.getAnonServer().getPort()+1);
 		  JAPRoundTripTimeView v=new JAPRoundTripTimeView(m_Controller.getView(),a);
 //								v.show();
-			}
+		 }
 		  });
 		 */
 		JButton bttnMonitor = new JButton(JAPMessages.getString("bttnMonitor"));
@@ -1588,7 +1589,6 @@ final class JAPConf extends JDialog
 			}
 		});
 
-		m_cbInfoServiceDisabled = new JCheckBox("Disable InfoService");
 		m_cbCertCheckDisabled = new JCheckBox("Disable check of certificates");
 		m_cbSaveWindowPositions = new JCheckBox("Remember Location of JAP");
 		JPanel p22 = new JPanel();
@@ -1643,9 +1643,6 @@ final class JAPConf extends JDialog
 		m_sliderDummyTrafficIntervall.setSnapToTicks(true);
 		gb.setConstraints(m_sliderDummyTrafficIntervall, lc);
 		p22.add(m_sliderDummyTrafficIntervall);
-		lc.gridy++;
-		gb.setConstraints(m_cbInfoServiceDisabled, lc);
-		p22.add(m_cbInfoServiceDisabled);
 		lc.gridy++;
 		gb.setConstraints(m_cbSaveWindowPositions, lc);
 		p22.add(m_cbSaveWindowPositions);
@@ -1722,6 +1719,12 @@ final class JAPConf extends JDialog
 
 	protected void cancelPressed()
 	{
+		/* Call the event handler of all configuration modules. */
+		Enumeration confModules = m_confModules.elements();
+		while (confModules.hasMoreElements())
+		{
+			( (AbstractJAPConfModule) (confModules.nextElement())).onCancelPressed();
+		}
 		setVisible(false);
 	}
 
@@ -1886,30 +1889,18 @@ final class JAPConf extends JDialog
 	/** Resets the Configuration to the Default values*/
 	private void resetToDefault()
 	{
+		/* Call the event handler of all configuration modules. */
+		Enumeration confModules = m_confModules.elements();
+		while (confModules.hasMoreElements())
+		{
+			( (AbstractJAPConfModule) (confModules.nextElement())).onResetToDefaultsPressed();
+		}
+
 		if (loadPay)
 		{
 			( (pay.view.PayView) m_pKonto).userPanel.setUserData(JAPConstants.PIHOST, JAPConstants.PIPORT);
 		}
 		m_tfListenerPortNumber.setText(Integer.toString(JAPConstants.defaultPortNumber));
-
-		/* remove all infoservices from database and set prefered infoservice to the default
-		 * infoservice
-		 */
-		InfoServiceDatabase.getInstance().removeAll();
-		try
-		{
-			InfoService defaultInfoService = new InfoService(JAPConstants.defaultInfoServiceHostName,
-				JAPConstants.defaultInfoServicePortNumber);
-			InfoServiceHolder.getInstance().setPreferedInfoService(defaultInfoService);
-		}
-		catch (Exception e)
-		{
-			/* should not happen, if it happens, we can't do anything */
-			LogHolder.log(LogLevel.EXCEPTION, LogType.MISC,
-						  "JAPConf: resetToDefault: Cannot create the default infoservice.");
-		}
-		/* update the GUI */
-		JAPConfInfoService.getInstance().updateGuiOutput();
 
 		m_tfMixHost.setText(JAPConstants.defaultAnonHost);
 		m_tfMixPortNumber.setText(Integer.toString(JAPConstants.defaultAnonPortNumber));
@@ -1926,7 +1917,6 @@ final class JAPConf extends JDialog
 		m_cbDebugMisc.setSelected(false);
 		m_cbDebugThread.setSelected(false);
 		m_cbDummyTraffic.setSelected(false);
-		m_cbInfoServiceDisabled.setSelected(false);
 		m_cbCertCheckDisabled.setSelected(false);
 
 		JAPController.setCertificateStore(new JAPCertificateStore(JAPConstants.CERTSPATH +
@@ -1936,6 +1926,13 @@ final class JAPConf extends JDialog
 
 	protected void okPressed()
 	{
+		/* Call the event handler of all configuration modules. */
+		Enumeration confModules = m_confModules.elements();
+		while (confModules.hasMoreElements())
+		{
+			( (AbstractJAPConfModule) (confModules.nextElement())).onOkPressed();
+		}
+
 		if (!checkValues())
 		{
 			return;
@@ -1993,7 +1990,6 @@ final class JAPConf extends JDialog
 		m_Controller.setProxy(firewallType, m_tfProxyHost.getText().trim(), port, m_cbProxy.isSelected());
 		m_Controller.setFirewallAuthUserID(m_tfProxyAuthenticationUserID.getText().trim());
 		m_Controller.setUseFirewallAuthorization(m_cbProxyAuthentication.isSelected());
-		m_Controller.setInfoServiceDisabled(m_cbInfoServiceDisabled.isSelected());
 		//Cert seetings
 		m_Controller.setCertCheckDisabled(m_cbCertCheckDisabled.isSelected());
 
@@ -2044,7 +2040,7 @@ final class JAPConf extends JDialog
 		}
 		else if (selectedCard == INFO_TAB)
 		{
-			m_Tabs.setSelectedComponent(m_pInfo);
+			m_Tabs.setSelectedIndex(INFO_TAB);
 		}
 		else if (selectedCard == ANON_TAB)
 		{
@@ -2070,6 +2066,22 @@ final class JAPConf extends JDialog
 
 	public void localeChanged()
 	{
+		/* Call the repaintRootPanel() method of all configuration modules and update the tab titles. */
+		Enumeration confModules = m_confModules.elements();
+		while (confModules.hasMoreElements())
+		{
+			AbstractJAPConfModule currentModule = (AbstractJAPConfModule) (confModules.nextElement());
+			try
+			{
+				m_Tabs.setTitleAt(m_Tabs.indexOfComponent(currentModule.getRootPanel()),
+								  currentModule.getTabTitle());
+			}
+			catch (Exception e)
+			{
+			}
+			currentModule.repaintRootPanel();
+		}
+
 		setTitle(JAPMessages.getString("settingsDialog"));
 		m_Tabs.setTitleAt(PORT_TAB, JAPMessages.getString("confListenerTab"));
 		m_Tabs.setTitleAt(PROXY_TAB, JAPMessages.getString("confProxyTab"));
@@ -2093,9 +2105,6 @@ final class JAPConf extends JDialog
 		m_borderAnonSettings2.setTitle(JAPMessages.getString("settingsAnonBorder2"));
 		m_labelAnonHost.setText(JAPMessages.getString("settingsAnonHost"));
 		m_labelAnonPort.setText(JAPMessages.getString("settingsAnonPort"));
-		//InfoService Panel
-		m_pInfo.removeAll();
-		m_pInfo.add(JAPConfInfoService.getInstance().createInfoServicePanel(m_fontControls));
 		//Port Panel
 		m_labelPortnumber1.setText(JAPMessages.getString("settingsPort1"));
 		m_labelPortnumber2.setText(JAPMessages.getString("settingsPort2"));
@@ -2137,7 +2146,6 @@ final class JAPConf extends JDialog
 		m_cbDebugThread.setSelected( ( ( (JAPDebug.getInstance().getLogType() & LogType.THREAD) != 0) ? true : false));
 		m_cbDebugMisc.setSelected( ( ( (JAPDebug.getInstance().getLogType() & LogType.MISC) != 0) ? true : false));
 		m_sliderDebugLevel.setValue(JAPDebug.getInstance().getLogLevel());
-		m_cbInfoServiceDisabled.setSelected(JAPModel.isInfoServiceDisabled());
 		m_bIgnoreComboLanguageEvents = true;
 		if (m_Controller.getLocale().equals(Locale.ENGLISH))
 		{

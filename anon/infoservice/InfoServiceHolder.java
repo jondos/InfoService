@@ -31,6 +31,7 @@ import java.util.Vector;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.crypto.JAPCertificateStore;
 
 /**
  * This class holds the instances of the InfoService class for the JAP client and is a singleton.
@@ -79,12 +80,26 @@ public class InfoServiceHolder
 	private InfoService preferedInfoService;
 
 	/**
+   * Stores the certificate store against the signatures of the XML documents are tested. If the
+   * value is null, no signature testing is done.
+   */
+  private JAPCertificateStore m_certificateStore;
+
+  /**
+   * Stores, whether there is an automatic change of infoservice after failure. If this value is
+   * set to false, only the prefered infoservice is used.
+   */
+  private boolean m_changeInfoServices;
+
+  /**
 	 * This creates a new instance of InfoServiceHolder. This is only used for setting some
 	 * values. Use InfoServiceHolder.getInstance() for getting an instance of this class.
 	 */
 	private InfoServiceHolder()
 	{
 		preferedInfoService = null;
+    m_certificateStore = null;
+    m_changeInfoServices = true;
 	}
 
 	/**
@@ -143,6 +158,65 @@ public class InfoServiceHolder
 	}
 
 	/**
+   * Sets the certificate store against the signatures of the XML documents are tested. If you
+   * supply null, no signature testing is done.
+   *
+   * @param a_certificateStore The certificate store for testing the signatures or null, if
+   *                           signature testing shall be disabled.
+   */
+  public void setCertificateStore(JAPCertificateStore a_certificateStore)
+  {
+    synchronized (this) {
+      m_certificateStore = a_certificateStore;
+    }
+  }
+
+  /**
+   * Returns the certificate store against the signatures of the XML documents are tested. A value
+   * of null means that no signature testing is done.
+   *
+   * @return The certificate store for testing the signatures or null, if signature testing is
+   * disabled.
+   */
+  public JAPCertificateStore getCertificateStore()
+  {
+    JAPCertificateStore r_certificateStore = null;
+    synchronized (this) {
+      r_certificateStore = m_certificateStore;
+    }
+    return r_certificateStore;
+  }
+  
+  /**
+   * Sets, whether there is an automatic change of infoservice after failure. If this value is
+   * set to false, only the prefered infoservice is used.
+   *
+   * @param a_changeInfoServices Whether there are automatic changes of the infoservice.
+   */
+  public void setChangeInfoServices(boolean a_changeInfoServices)
+  {
+    synchronized (this) {
+      m_changeInfoServices = a_changeInfoServices;
+    }
+  }
+
+  /**
+   * Returns, whether there is an automatic change of infoservice after failure. If this value is
+   * set to false, only the prefered infoservice is used for requests.
+   *
+   * @return Whether there are automatic changes of the infoservice.
+   */
+  public boolean isChangeInfoServices()
+  {
+    boolean r_changeInfoServices = true;
+    synchronized (this) {
+      r_changeInfoServices = m_changeInfoServices;
+    }
+    return r_changeInfoServices;
+  }
+
+   
+  /**
 	 * Fetches every information from the infoservices. If we can't get the information from the
 	 * prefered infoservice, all other known infoservices are asked automatically until an
 	 * infoservice has the information. If we can't get the information from any infoservice, an
@@ -158,7 +232,15 @@ public class InfoServiceHolder
 	{
 		InfoService currentInfoService = null;
 		currentInfoService = getPreferedInfoService();
-		Vector infoServiceList = InfoServiceDatabase.getInstance().getInfoServiceList();
+    Vector infoServiceList = null;
+    if (m_changeInfoServices) {
+      /* get the whole infoservice list */
+      infoServiceList = InfoServiceDatabase.getInstance().getInfoServiceList();
+    }
+    else {
+      /* use an empty list -> only prefered infoservice is used */
+      infoServiceList = new Vector();
+    }
 		while ( (infoServiceList.size() > 0) || (currentInfoService != null))
 		{
 			if (currentInfoService == null)
