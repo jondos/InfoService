@@ -27,7 +27,6 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 */
 
 package update;
-import update.UpdateListener;
 
 import gui.wizard.BasicWizardHost;
 import gui.wizard.BasicWizard;
@@ -632,9 +631,8 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
 		 }catch(Exception e)
 						 {
 								e.printStackTrace();
-								downloadPage.showInformationDialog(JAPMessages.getString("updateInformationMsgStep3"));
-								resetChanges();
-							return -1;
+								downloadPage.showInformationDialog(JAPMessages.getString("updateInformationMsgStep5"));
+								return -1;
 						 }
 
 			}
