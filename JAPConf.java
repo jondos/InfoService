@@ -59,7 +59,7 @@ final class JAPConf extends JDialog
 	{
 
 		final static public int PORT_TAB = 0;
-		final static public int HTTP_TAB = 1;
+		final static public int PROXY_TAB = 1;
 		final static public int INFO_TAB = 2;
 		final static public int ANON_TAB = 3;
 		final static public int MISC_TAB = 4;
@@ -67,9 +67,9 @@ final class JAPConf extends JDialog
 		private JAPController      m_Controller;
 
 		private JAPJIntField	m_tfListenerPortNumber;
-		//private JAPJIntField	m_tfListenerPortNumberSocks;
-		//private JCheckBox			m_cbListenerSocks;
 		private JCheckBox			m_cbListenerIsLocal;
+		private JLabel        m_labelPortnumber1,m_labelPortnumber2;
+		private TitledBorder	m_borderSettingsListener;
 
 		private JCheckBox			m_cbProxy;
 		private JAPJIntField	m_tfProxyPortNumber;
@@ -77,6 +77,7 @@ final class JAPConf extends JDialog
     private JComboBox     m_comboProxyType;
     private JCheckBox			m_cbProxyAuthentication;
 		private JTextField		m_tfProxyAuthenticationUserID;
+    private JLabel				m_labelProxyHost,m_labelProxyPort,m_labelProxyType,m_labelProxyAuthUserID;
 
 		private JCheckBox			m_cbAutoConnect;
 		private JCheckBox			m_cbAutoReConnect;
@@ -89,9 +90,13 @@ final class JAPConf extends JDialog
 		private JComboBox			m_comboMixCascade;
 		private JRadioButton	m_rbMixStep1,m_rbMixStep2,m_rbMixStep3;
 		private JButton				m_bttnFetchCascades;
+    private TitledBorder  m_borderAnonSettings,m_borderAnonSettings2;
+    private JLabel        m_labelAnonHost,m_labelAnonPort,m_labelAnonProxyPort;
 
-		private JAPJIntField	m_tfInfoPortNumber;
+    private JAPJIntField	m_tfInfoPortNumber;
 		private JTextField		m_tfInfoHost;
+    private JLabel				m_labelSettingsInfoText,m_labelSettingsInfoHost,m_labelSettingsInfoPort;
+    private TitledBorder  m_borderInfoService;
 
 		private JCheckBox     m_cbDebugGui;
 		private JCheckBox     m_cbDebugNet;
@@ -109,6 +114,7 @@ final class JAPConf extends JDialog
 
 		private JTabbedPane		m_Tabs;
 		private JPanel				m_pPort, m_pFirewall, m_pInfo, m_pMix, m_pMisc;
+    private JButton       m_bttnDefaultConfig,m_bttnCancel;
 
 		private JFrame        m_frmParent;
 
@@ -123,19 +129,19 @@ final class JAPConf extends JDialog
 				super(frmParent);
 				m_frmParent=frmParent;
 				m_Controller = JAPController.getController();
-				this.setModal(true);
-				this.setTitle(JAPMessages.getString("settingsDialog"));
+				setModal(true);
+				setTitle(JAPMessages.getString("settingsDialog"));
 				m_JapConf=this;
 				JPanel pContainer = new JPanel();
   			m_Tabs = new JTabbedPane();
 	      m_fontControls=JAPController.getDialogFont();
 				pContainer.setLayout( new BorderLayout() );
 				m_Tabs.setFont(m_fontControls);
-        m_pPort = buildportPanel();
+        m_pPort = buildPortPanel();
 				m_pFirewall = buildProxyPanel();
-				m_pInfo = buildinfoPanel();
-				m_pMix = buildanonPanel();
-				m_pMisc = buildmiscPanel();
+				m_pInfo = buildInfoServicePanel();
+				m_pMix = buildAnonPanel();
+				m_pMisc = buildMiscPanel();
 				m_Tabs.addTab( JAPMessages.getString("confListenerTab"), null, m_pPort );
 				m_Tabs.addTab( JAPMessages.getString("confProxyTab"), null, m_pFirewall );
 				m_Tabs.addTab( JAPMessages.getString("confInfoTab"), null, m_pInfo );
@@ -145,28 +151,28 @@ final class JAPConf extends JDialog
 
 				JPanel buttonPanel = new JPanel();
 				buttonPanel.setLayout ( new FlowLayout(FlowLayout.RIGHT) );
-				JButton bttnDefaultConfig=new JButton(JAPMessages.getString("bttnDefaultConfig"));
-				bttnDefaultConfig.setFont(m_fontControls);
-        bttnDefaultConfig.addActionListener(new ActionListener() {
+				m_bttnDefaultConfig=new JButton(JAPMessages.getString("bttnDefaultConfig"));
+				m_bttnDefaultConfig.setFont(m_fontControls);
+        m_bttnDefaultConfig.addActionListener(new ActionListener() {
 							public void actionPerformed(ActionEvent e) {
 						resetToDefault();
 				}});
 				if(!JAPModel.isSmallDisplay())
-          buttonPanel.add(bttnDefaultConfig);
-				JButton bttnCancel = new JButton(JAPMessages.getString("cancelButton"));
-				bttnCancel.setFont(m_fontControls);
-        bttnCancel.addActionListener(new ActionListener()
+          buttonPanel.add(m_bttnDefaultConfig);
+				m_bttnCancel = new JButton(JAPMessages.getString("cancelButton"));
+				m_bttnCancel.setFont(m_fontControls);
+        m_bttnCancel.addActionListener(new ActionListener()
 					{
 						public void actionPerformed(ActionEvent e)
 							{
-							  CancelPressed();
+							  cancelPressed();
 							}
 					});
-				buttonPanel.add(bttnCancel );
-				JButton ok = new JButton(JAPMessages.getString("okButton"));
+				buttonPanel.add(m_bttnCancel );
+        JButton ok = new JButton(JAPMessages.getString("okButton"));
 				ok.addActionListener(new ActionListener() {
 						   public void actionPerformed(ActionEvent e) {
-				   OKPressed();
+				   okPressed();
 				   }});
         ok.setFont(m_fontControls);
 				buttonPanel.add( ok );
@@ -188,22 +194,22 @@ final class JAPConf extends JDialog
 				JAPUtil.centerFrame(this);
 			}
 
-		protected JPanel buildportPanel()
+		protected JPanel buildPortPanel()
 			{
-				JLabel portnumberLabel1 = new JLabel(JAPMessages.getString("settingsPort1"));
-				portnumberLabel1.setFont(m_fontControls);
-        JLabel portnumberLabel2 = new JLabel(JAPMessages.getString("settingsPort2"));
-				portnumberLabel2.setFont(m_fontControls);
+				m_labelPortnumber1 = new JLabel(JAPMessages.getString("settingsPort1"));
+				m_labelPortnumber1.setFont(m_fontControls);
+        m_labelPortnumber2 = new JLabel(JAPMessages.getString("settingsPort2"));
+				m_labelPortnumber2.setFont(m_fontControls);
  				m_tfListenerPortNumber = new JAPJIntField();
 				m_tfListenerPortNumber.setFont(m_fontControls);
         m_tfListenerPortNumber.addActionListener(new ActionListener() {
 						   public void actionPerformed(ActionEvent e) {
-				   OKPressed();
+				   okPressed();
 				   }});
 				m_cbListenerIsLocal = new JCheckBox(JAPMessages.getString("settingsListenerCheckBox"));
 				m_cbListenerIsLocal.setFont(m_fontControls);
         // set Font in listenerCheckBox in same color as in portnumberLabel1
-				m_cbListenerIsLocal.setForeground(portnumberLabel1.getForeground());
+				m_cbListenerIsLocal.setForeground(m_labelPortnumber1.getForeground());
 
 				/*m_cbListenerSocks=new JCheckBox(JAPMessages.getString("settingsListenerCheckBoxSOCKS"));
 				m_cbListenerSocks.setForeground(portnumberLabel1.getForeground());
@@ -223,13 +229,13 @@ final class JAPConf extends JDialog
 				m_tfListenerPortNumberSocks = new JAPJIntField();
 				m_tfListenerPortNumberSocks.addActionListener(new ActionListener() {
 						   public void actionPerformed(ActionEvent e) {
-				   OKPressed();
+				   okPressed();
 				   }});
 				*/JPanel p = new JPanel();
 				p.setLayout( new BorderLayout() );
-				TitledBorder border=new TitledBorder(JAPMessages.getString("settingsListenerBorder"));
-        border.setTitleFont(m_fontControls);
-        p.setBorder( border );
+				m_borderSettingsListener=new TitledBorder(JAPMessages.getString("settingsListenerBorder"));
+        m_borderSettingsListener.setTitleFont(m_fontControls);
+        p.setBorder( m_borderSettingsListener );
 				JPanel p1 = new JPanel();
 				GridBagLayout g=new GridBagLayout();
 				p1.setLayout( g );
@@ -244,11 +250,11 @@ final class JAPConf extends JDialog
 				c.weighty=0;
 				Insets normInsets=new Insets(0,0,3,0);
 				c.insets=normInsets;
-				g.setConstraints(portnumberLabel1,c);
-				p1.add(portnumberLabel1);
+				g.setConstraints(m_labelPortnumber1,c);
+				p1.add(m_labelPortnumber1);
 				c.gridy=1;
-				g.setConstraints(portnumberLabel2,c);
-				p1.add(portnumberLabel2);
+				g.setConstraints(m_labelPortnumber2,c);
+				p1.add(m_labelPortnumber2);
 				c.gridy=2;
 				g.setConstraints(m_tfListenerPortNumber,c);
 				p1.add(m_tfListenerPortNumber);
@@ -304,11 +310,11 @@ final class JAPConf extends JDialog
 				}});
 				m_tfProxyHost.addActionListener(new ActionListener() {
 						   public void actionPerformed(ActionEvent e) {
-				   OKPressed();
+				   okPressed();
 				   }});
 				m_tfProxyPortNumber.addActionListener(new ActionListener() {
 						   public void actionPerformed(ActionEvent e) {
-				   OKPressed();
+				   okPressed();
 				   }});
 				m_cbProxyAuthentication=new JCheckBox(JAPMessages.getString("settingsProxyAuthenticationCheckBox"));
 				m_cbProxyAuthentication.setFont(m_fontControls);
@@ -318,17 +324,17 @@ final class JAPConf extends JDialog
 					public void actionPerformed(ActionEvent e) {
 						m_tfProxyAuthenticationUserID.setEnabled(m_cbProxyAuthentication.isSelected());
 				}});
-				JLabel proxyHostLabel = new JLabel(JAPMessages.getString("settingsProxyHost"));
-				proxyHostLabel.setFont(m_fontControls);
-        JLabel proxyPortLabel = new JLabel(JAPMessages.getString("settingsProxyPort"));
-				proxyPortLabel.setFont(m_fontControls);
-        JLabel proxyTypeLabel =new JLabel(JAPMessages.getString("settingsProxyType"));
-        proxyTypeLabel.setFont(m_fontControls);
-        JLabel proxyAuthUserIDLabel = new JLabel(JAPMessages.getString("settingsProxyAuthUserID"));
-				proxyAuthUserIDLabel.setFont(m_fontControls);
+				m_labelProxyHost = new JLabel(JAPMessages.getString("settingsProxyHost"));
+				m_labelProxyHost.setFont(m_fontControls);
+        m_labelProxyPort = new JLabel(JAPMessages.getString("settingsProxyPort"));
+				m_labelProxyPort.setFont(m_fontControls);
+        m_labelProxyType =new JLabel(JAPMessages.getString("settingsProxyType"));
+        m_labelProxyType.setFont(m_fontControls);
+        m_labelProxyAuthUserID = new JLabel(JAPMessages.getString("settingsProxyAuthUserID"));
+				m_labelProxyAuthUserID.setFont(m_fontControls);
         // set Font in m_cbProxy in same color as in proxyPortLabel
-				m_cbProxy.setForeground(proxyPortLabel.getForeground());
-				m_cbProxyAuthentication.setForeground(proxyPortLabel.getForeground());
+				m_cbProxy.setForeground(m_labelProxyPort.getForeground());
+				m_cbProxyAuthentication.setForeground(m_labelProxyPort.getForeground());
 
 
 				JPanel p = new JPanel();
@@ -360,20 +366,20 @@ final class JAPConf extends JDialog
 				g.setConstraints(m_cbProxy,c);
 				p1.add(m_cbProxy);
 				c.gridy=1;
-				g.setConstraints(proxyTypeLabel,c);
+				g.setConstraints(m_labelProxyType,c);
 				c.gridy=2;
-				p1.add(proxyTypeLabel);
+				p1.add(m_labelProxyType);
 				g.setConstraints(m_comboProxyType,c);
 				c.gridy=3;
     		p1.add(m_comboProxyType);
-				g.setConstraints(proxyHostLabel,c);
-				p1.add(proxyHostLabel);
+				g.setConstraints(m_labelProxyHost,c);
+				p1.add(m_labelProxyHost);
 				c.gridy=4;
 				g.setConstraints(m_tfProxyHost,c);
 				p1.add(m_tfProxyHost);
 				c.gridy=5;
-				g.setConstraints(proxyPortLabel,c);
-				p1.add(proxyPortLabel);
+				g.setConstraints(m_labelProxyPort,c);
+				p1.add(m_labelProxyPort);
 				c.gridy=6;
 				g.setConstraints(m_tfProxyPortNumber,c);
 				p1.add(m_tfProxyPortNumber);
@@ -391,8 +397,8 @@ final class JAPConf extends JDialog
 				g.setConstraints(m_cbProxyAuthentication,c);
 				p1.add(m_cbProxyAuthentication);
 				c.gridy=9;
-				g.setConstraints(proxyAuthUserIDLabel,c);
-				p1.add(proxyAuthUserIDLabel);
+				g.setConstraints(m_labelProxyAuthUserID,c);
+				p1.add(m_labelProxyAuthUserID);
 				c.gridy=10;
 				g.setConstraints(m_tfProxyAuthenticationUserID,c);
 				p1.add(m_tfProxyAuthenticationUserID);
@@ -401,7 +407,7 @@ final class JAPConf extends JDialog
 				return p;
 			}
 
-	  protected JPanel buildinfoPanel()
+	  protected JPanel buildInfoServicePanel()
 			{
 				m_tfInfoHost = new JTextField();
         m_tfInfoHost.setFont(m_fontControls);
@@ -409,23 +415,23 @@ final class JAPConf extends JDialog
 				m_tfInfoPortNumber.setFont(m_fontControls);
         m_tfInfoHost.addActionListener(new ActionListener() {
 									   public void actionPerformed(ActionEvent e) {
-							   OKPressed();
+							   okPressed();
 							   }});
 				m_tfInfoPortNumber.addActionListener(new ActionListener() {
 									   public void actionPerformed(ActionEvent e) {
-							   OKPressed();
+							   okPressed();
 							   }});
-				JLabel settingsInfoTextLabel = new JLabel(JAPMessages.getString("settingsInfoText"));
-				settingsInfoTextLabel.setFont(m_fontControls);
-        JLabel settingsInfoHostLabel = new JLabel(JAPMessages.getString("settingsInfoHost"));
-				settingsInfoHostLabel.setFont(m_fontControls);
-        JLabel settingsInfoPortLabel = new JLabel(JAPMessages.getString("settingsInfoPort"));
-        settingsInfoPortLabel.setFont(m_fontControls);
+				m_labelSettingsInfoText = new JLabel(JAPMessages.getString("settingsInfoText"));
+				m_labelSettingsInfoText.setFont(m_fontControls);
+        m_labelSettingsInfoHost = new JLabel(JAPMessages.getString("settingsInfoHost"));
+				m_labelSettingsInfoHost.setFont(m_fontControls);
+        m_labelSettingsInfoPort = new JLabel(JAPMessages.getString("settingsInfoPort"));
+        m_labelSettingsInfoPort.setFont(m_fontControls);
 				JPanel p = new JPanel();
 				p.setLayout( new BorderLayout() );
-        TitledBorder border=new TitledBorder(JAPMessages.getString("settingsInfoBorder"));
-				border.setTitleFont(m_fontControls);
-        p.setBorder( border );
+        m_borderInfoService=new TitledBorder(JAPMessages.getString("settingsInfoBorder"));
+				m_borderInfoService.setTitleFont(m_fontControls);
+        p.setBorder( m_borderInfoService );
 				JPanel p1 = new JPanel();
 				GridBagLayout g=new GridBagLayout();
 				p1.setLayout( g );
@@ -440,17 +446,17 @@ final class JAPConf extends JDialog
 				c.weighty=0;
 				Insets normInsets=new Insets(0,0,3,0);
 				c.insets=normInsets;
-				g.setConstraints(settingsInfoTextLabel,c);
-				p1.add(settingsInfoTextLabel);
+				g.setConstraints(m_labelSettingsInfoText,c);
+				p1.add(m_labelSettingsInfoText);
 				c.gridy=1;
-				g.setConstraints(settingsInfoHostLabel,c);
-				p1.add(settingsInfoHostLabel);
+				g.setConstraints(m_labelSettingsInfoHost,c);
+				p1.add(m_labelSettingsInfoHost);
 				c.gridy=2;
 				g.setConstraints(m_tfInfoHost,c);
 				p1.add(m_tfInfoHost);
 				c.gridy=3;
-				g.setConstraints(settingsInfoPortLabel,c);
-				p1.add(settingsInfoPortLabel);
+				g.setConstraints(m_labelSettingsInfoPort,c);
+				p1.add(m_labelSettingsInfoPort);
 				c.gridy=4;
 				g.setConstraints(m_tfInfoPortNumber,c);
 				p1.add(m_tfInfoPortNumber);
@@ -460,7 +466,7 @@ final class JAPConf extends JDialog
 				return p;
 			}
 
-	  protected JPanel buildanonPanel()
+	  protected JPanel buildAnonPanel()
 			{
 				m_cbStartupMinimized=new JCheckBox(JAPMessages.getString("settingsstartupMinimizeCheckBox"));
 				m_cbStartupMinimized.setFont(m_fontControls);
@@ -479,15 +485,15 @@ final class JAPConf extends JDialog
 				m_tfMixPortNumberSSL.setEditable(false);
 				m_tfMixHost.addActionListener(new ActionListener() {
 									   public void actionPerformed(ActionEvent e) {
-							   OKPressed();
+							   okPressed();
 							   }});
 				m_tfMixPortNumber.addActionListener(new ActionListener() {
 									   public void actionPerformed(ActionEvent e) {
-							   OKPressed();
+							   okPressed();
 							   }});
 				m_tfMixPortNumberSSL.addActionListener(new ActionListener() {
 									   public void actionPerformed(ActionEvent e) {
-							   OKPressed();
+							   okPressed();
 							   }});
 				ButtonGroup bg = new ButtonGroup();
 				m_rbMixStep1 = new JRadioButton(JAPMessages.getString("settingsAnonRadio1"), true);
@@ -526,7 +532,7 @@ final class JAPConf extends JDialog
 							m_rbMixStep2.doClick();
 						}
 						// ------ !!!!! diese wieder aktivieren!
-						//OKPressed();
+						//okPressed();
 				}});
 				m_comboMixCascade = new JComboBox();
         m_comboMixCascade.setFont(m_fontControls);
@@ -598,9 +604,9 @@ final class JAPConf extends JDialog
 				JPanel pp1 = new JPanel();
         GridBagLayout layout=new GridBagLayout();
 				pp1.setLayout( layout);
-        TitledBorder border=new TitledBorder(JAPMessages.getString("settingsAnonBorder"));
-				border.setTitleFont(m_fontControls);
-        pp1.setBorder( border );
+        m_borderAnonSettings=new TitledBorder(JAPMessages.getString("settingsAnonBorder"));
+				m_borderAnonSettings.setTitleFont(m_fontControls);
+        pp1.setBorder(m_borderAnonSettings);
         GridBagConstraints c=new GridBagConstraints();
         c.fill=GridBagConstraints.HORIZONTAL;
         c.weightx=1;
@@ -633,9 +639,9 @@ final class JAPConf extends JDialog
 				// Lower panel
 				JPanel pp2 = new JPanel();
 				pp2.setLayout( new BorderLayout() );
-				border=new TitledBorder(JAPMessages.getString("settingsAnonBorder2"));
-        border.setTitleFont(m_fontControls);
-				pp2.setBorder( border );
+				m_borderAnonSettings2=new TitledBorder(JAPMessages.getString("settingsAnonBorder2"));
+        m_borderAnonSettings2.setTitleFont(m_fontControls);
+				pp2.setBorder(m_borderAnonSettings2);
 				// Upper panel content
 				// Lower Panel content
 				JPanel p2 = new JPanel();
@@ -643,17 +649,17 @@ final class JAPConf extends JDialog
 				//p1.setBorder( new EmptyBorder(5,10,10,10) );
 				//
 				p2.add(m_rbMixStep3);
-        JLabel l=new JLabel(JAPMessages.getString("settingsAnonHost"));
-        l.setFont(m_fontControls);
-				p2.add(l);
+        m_labelAnonHost=new JLabel(JAPMessages.getString("settingsAnonHost"));
+        m_labelAnonHost.setFont(m_fontControls);
+				p2.add(m_labelAnonHost);
 				p2.add(m_tfMixHost);
-        l=new JLabel(JAPMessages.getString("settingsAnonPort"));
-        l.setFont(m_fontControls);
-				p2.add(l);
+        m_labelAnonPort=new JLabel(JAPMessages.getString("settingsAnonPort"));
+        m_labelAnonPort.setFont(m_fontControls);
+				p2.add(m_labelAnonPort);
 				p2.add(m_tfMixPortNumber);
-				l=new JLabel(JAPMessages.getString("settingsAnonSSLPort"));
-        l.setFont(m_fontControls);
-        p2.add(l);
+				m_labelAnonProxyPort=new JLabel(JAPMessages.getString("settingsAnonSSLPort"));
+        m_labelAnonProxyPort.setFont(m_fontControls);
+        p2.add(m_labelAnonProxyPort);
 				p2.add(m_tfMixPortNumberSSL);
 				//
 				p2.add(m_cbAutoConnect);
@@ -667,7 +673,7 @@ final class JAPConf extends JDialog
 				return p;
 			}
 
-		protected JPanel buildmiscPanel()
+		protected JPanel buildMiscPanel()
 			{
 				JPanel p=new JPanel();
 				p.setLayout(new BorderLayout() );
@@ -750,7 +756,7 @@ final class JAPConf extends JDialog
 						//m_Controller.fetchAnonServers();
 						JAPCascadeMonitorView v=new JAPCascadeMonitorView(m_Controller.getView());
 						//updateValues(); //THIS IS WRONG!!!!
-						//OKPressed();
+						//okPressed();
 						setCursor(c1);
 
 				}});
@@ -772,7 +778,7 @@ final class JAPConf extends JDialog
   public void actionPerformed (ActionEvent e) {
   Cursor c1=getCursor();
   setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-  CancelPressed();
+  cancelPressed();
   update = new JAPUpdate();
 //  if (update == null){
 
@@ -857,7 +863,7 @@ final class JAPConf extends JDialog
 				return p;
 			}
 
-	  protected void CancelPressed()
+	  protected void cancelPressed()
 			{
 				setVisible(false);
 		  }
@@ -1081,7 +1087,7 @@ final class JAPConf extends JDialog
         m_cbInfoServiceDisabled.setSelected(false);
 			}
 
-	  protected void OKPressed()
+	  protected void okPressed()
 			{
 				if(!checkValues())
 					return;
@@ -1155,14 +1161,14 @@ final class JAPConf extends JDialog
 				// force setting the correct name of the selected server
 				//m_Controller.getAnonServer().setName(e.getName());
 				// force notifying the observers set the right server name
-				m_Controller.notifyJAPObservers(); // this should be the last line of OKPressed() !!!
+				m_Controller.notifyJAPObservers(); // this should be the last line of okPressed() !!!
 				// ... manual settings stuff finished
 			}
 
 	  public void selectCard(int selectedCard)
 			{
 				// set selected card to foreground
-				if (selectedCard == HTTP_TAB)
+				if (selectedCard == PROXY_TAB)
 					m_Tabs.setSelectedComponent(m_pFirewall);
 				else if (selectedCard == INFO_TAB)
 					m_Tabs.setSelectedComponent(m_pInfo);
@@ -1174,7 +1180,56 @@ final class JAPConf extends JDialog
 					m_Tabs.setSelectedComponent(m_pPort);
 			}
 
-		public void updateValues()
+		public void localeChanged()
+      {
+        setTitle(JAPMessages.getString("settingsDialog"));
+   			m_Tabs.setTitleAt(PORT_TAB,JAPMessages.getString("confListenerTab"));
+ 				m_Tabs.setTitleAt(PROXY_TAB,JAPMessages.getString("confProxyTab"));
+				m_Tabs.setTitleAt(INFO_TAB,JAPMessages.getString("confInfoTab"));
+				m_Tabs.setTitleAt(ANON_TAB,JAPMessages.getString("confAnonTab"));
+				if(!JAPModel.isSmallDisplay())
+          m_Tabs.setTitleAt(MISC_TAB,JAPMessages.getString("confMiscTab"));
+ 				m_bttnDefaultConfig.setText(JAPMessages.getString("bttnDefaultConfig"));
+				m_bttnCancel.setText(JAPMessages.getString("cancelButton"));
+			  //Anon Panel
+        m_cbStartupMinimized.setText(JAPMessages.getString("settingsstartupMinimizeCheckBox"));
+        m_cbAutoConnect.setText(JAPMessages.getString("settingsautoConnectCheckBox"));
+				m_cbAutoReConnect.setText(JAPMessages.getString("settingsautoReConnectCheckBox"));
+				m_rbMixStep1.setText(JAPMessages.getString("settingsAnonRadio1"));
+				m_rbMixStep2.setText(JAPMessages.getString("settingsAnonRadio2"));
+				m_rbMixStep3.setText(JAPMessages.getString("settingsAnonRadio3"));
+				m_bttnFetchCascades.setText(JAPMessages.getString("settingsAnonFetch"));
+        m_borderAnonSettings.setTitle(JAPMessages.getString("settingsAnonBorder"));
+ 				m_borderAnonSettings2.setTitle(JAPMessages.getString("settingsAnonBorder2"));
+        m_labelAnonHost.setText(JAPMessages.getString("settingsAnonHost"));
+        m_labelAnonPort.setText(JAPMessages.getString("settingsAnonPort"));
+				m_labelAnonProxyPort.setText(JAPMessages.getString("settingsAnonSSLPort"));
+        //InfoService Panel
+				m_labelSettingsInfoText.setText(JAPMessages.getString("settingsInfoText"));
+        m_labelSettingsInfoHost.setText(JAPMessages.getString("settingsInfoHost"));
+        m_labelSettingsInfoPort.setText(JAPMessages.getString("settingsInfoPort"));
+        m_borderInfoService.setTitle(JAPMessages.getString("settingsInfoBorder"));
+	      //Port Panel
+     		m_labelPortnumber1.setText(JAPMessages.getString("settingsPort1"));
+				m_labelPortnumber2.setText(JAPMessages.getString("settingsPort2"));
+        m_cbListenerIsLocal.setText(JAPMessages.getString("settingsListenerCheckBox"));
+				m_borderSettingsListener.setTitle(JAPMessages.getString("settingsListenerBorder"));
+        //ProxyPanel
+        m_cbProxy.setText(JAPMessages.getString("settingsProxyCheckBox"));
+				int i=m_comboProxyType.getSelectedIndex();
+        m_comboProxyType.removeAllItems();
+        m_comboProxyType.addItem(JAPMessages.getString("settingsProxyTypeHTTP"));
+        m_comboProxyType.addItem(JAPMessages.getString("settingsProxyTypeSOCKS"));
+        if(i!=-1)
+          m_comboProxyType.setSelectedIndex(i);
+      	m_cbProxyAuthentication.setText(JAPMessages.getString("settingsProxyAuthenticationCheckBox"));
+				m_labelProxyHost.setText(JAPMessages.getString("settingsProxyHost"));
+	      m_labelProxyPort.setText(JAPMessages.getString("settingsProxyPort"));
+	      m_labelProxyType.setText(JAPMessages.getString("settingsProxyType"));
+        m_labelProxyAuthUserID.setText(JAPMessages.getString("settingsProxyAuthUserID"));
+			}
+
+    public void updateValues()
 			{
 				// misc tab
         int iTmp=JAPModel.getDummyTraffic();

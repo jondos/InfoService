@@ -61,31 +61,28 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 */
 	}
 
-	private JAPController 			controller;
-	private JLabel				meterLabel;
-	private JLabel	 			m_labelCascadeName;
-  private JPanel        m_panelMain;
-	//private JLabel				m_labelProxyPort;
-	//private JLabel				m_labelProxyHost;
-	//private JLabel				infoServiceTextField;
-	//private JLabel	 			anonTextField;
-	//private JLabel              anonNameTextField;
-	private JButton				/*portB, httpB,isB, anonB,*/ ano1B, infoB, helpB, quitB, iconifyB, confB;
-	//private JLabel			proxyMustUseLabel;
-	//private JCheckBox			anonCheckBox;
-	private JCheckBox			ano1CheckBox;
+	private JAPController 	controller;
+	private JLabel				  meterLabel;
+	private JLabel	 		  	m_labelCascadeName;
+  private JPanel          m_panelMain;
+	private JButton				  m_bttnInfo, m_bttnHelp,m_bttnQuit, iconifyB,m_bttnConf;
+  private JButton         m_bttnAnonConf;
+	private JCheckBox			  m_cbAnon;
 	private JProgressBar 		userProgressBar;
 	private JProgressBar 		trafficProgressBar;
 	private JProgressBar 		protectionProgressBar;
 	private JProgressBar 		ownTrafficChannelsProgressBar;
-	private JLabel 				m_labelOwnTrafficBytes;
-	private ImageIcon[]			meterIcons;
-	private JAPHelp 			helpWindow;
-	private JAPConf 			configDialog;
-	private Frame				viewIconified;
-	private Object oValueUpdateSemaphore;
-	private boolean m_bIsIconified;
-	private String m_Title;
+	private JLabel 				  m_labelOwnTrafficBytes,m_labelMeterDetailsName;
+	private JLabel          m_labelMeterDetailsUser,m_labelMeterDetailsTraffic;
+  private JLabel          m_labelMeterDetailsRisk,m_labelOwnBytes,m_labelOwnChannels;
+	private TitledBorder    m_borderOwnTraffic,m_borderAnonMeter,m_borderDetails;
+  private ImageIcon[]			meterIcons;
+	private JAPHelp 			  helpWindow;
+	private JAPConf 			  m_dlgConfig;
+	private Frame				    viewIconified;
+	private Object          oValueUpdateSemaphore;
+	private boolean         m_bIsIconified;
+	private String          m_Title;
 	private final static boolean PROGRESSBARBORDER = true;
 
 	public JAPView (String s)
@@ -94,7 +91,7 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 			m_Title=s;
 			controller = JAPController.getController();
 			helpWindow =  null;//new JAPHelp(this);
-			configDialog = null;//new JAPConf(this);
+			m_dlgConfig = null;//new JAPConf(this);
 			m_bIsIconified=false;
 			oValueUpdateSemaphore=new Object();
 		}
@@ -141,30 +138,30 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 	    // "South": Buttons
 
 			JPanel buttonPanel = new JPanel();
-	    infoB = new JButton(JAPMessages.getString("infoButton"));
-	    helpB = new JButton(JAPMessages.getString("helpButton"));
-	    quitB = new JButton(JAPMessages.getString("quitButton"));
-	    confB = new JButton(JAPMessages.getString("confButton"));
+	    m_bttnInfo = new JButton(JAPMessages.getString("infoButton"));
+	    m_bttnHelp = new JButton(JAPMessages.getString("helpButton"));
+	    m_bttnQuit = new JButton(JAPMessages.getString("quitButton"));
+	    m_bttnConf = new JButton(JAPMessages.getString("confButton"));
 			iconifyB = new JButton(JAPUtil.loadImageIcon(JAPConstants.ICONIFYICONFN,true));
 			iconifyB.setToolTipText(JAPMessages.getString("iconifyWindow"));
 
 	    // Add real buttons
 			buttonPanel.add(iconifyB);
-			buttonPanel.add(infoB);
-	    buttonPanel.add(helpB);
-			buttonPanel.add(confB);
+			buttonPanel.add(m_bttnInfo);
+	    buttonPanel.add(m_bttnHelp);
+			buttonPanel.add(m_bttnConf);
 			buttonPanel.add(new JLabel("  "));
-	    buttonPanel.add(quitB);
+	    buttonPanel.add(m_bttnQuit);
 			iconifyB.addActionListener(this);
-			confB.addActionListener(this);
-	    infoB.addActionListener(this);
-	    helpB.addActionListener(this);
-	    quitB.addActionListener(this);
+			m_bttnConf.addActionListener(this);
+	    m_bttnInfo.addActionListener(this);
+	    m_bttnHelp.addActionListener(this);
+	    m_bttnQuit.addActionListener(this);
 	    JAPUtil.setMnemonic(iconifyB,JAPMessages.getString("iconifyButtonMn"));
-	    JAPUtil.setMnemonic(confB,JAPMessages.getString("confButtonMn"));
-		  JAPUtil.setMnemonic(infoB,JAPMessages.getString("infoButtonMn"));
-	    JAPUtil.setMnemonic(helpB,JAPMessages.getString("helpButtonMn"));
-	    JAPUtil.setMnemonic(quitB,JAPMessages.getString("quitButtonMn"));
+	    JAPUtil.setMnemonic(m_bttnConf,JAPMessages.getString("confButtonMn"));
+		  JAPUtil.setMnemonic(m_bttnInfo,JAPMessages.getString("infoButtonMn"));
+	    JAPUtil.setMnemonic(m_bttnHelp,JAPMessages.getString("helpButtonMn"));
+	    JAPUtil.setMnemonic(m_bttnQuit,JAPMessages.getString("quitButtonMn"));
 
 			// add Components to Frame
 			getContentPane().setBackground(buttonPanel.getBackground());
@@ -244,44 +241,43 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 
 		JPanel ownTrafficPanel = new JPanel();
 		ownTrafficPanel.setLayout( new GridLayout(2,2,5,5) );
-    TitledBorder border=new TitledBorder(JAPMessages.getString("ownTrafficBorder"));
-    border.setTitleFont(fontControls);
-		ownTrafficPanel.setBorder( border );
-    JLabel l=new JLabel(JAPMessages.getString("ownTrafficChannels"));
-    l.setFont(fontControls);
-		ownTrafficPanel.add(l);
+    m_borderOwnTraffic=new TitledBorder(JAPMessages.getString("ownTrafficBorder"));
+    m_borderOwnTraffic.setTitleFont(fontControls);
+		ownTrafficPanel.setBorder(m_borderOwnTraffic);
+    m_labelOwnChannels=new JLabel(JAPMessages.getString("ownTrafficChannels"));
+    m_labelOwnChannels.setFont(fontControls);
+		ownTrafficPanel.add(m_labelOwnChannels);
 		ownTrafficPanel.add(ownTrafficChannelsProgressBar);
-    l=new JLabel(JAPMessages.getString("ownTrafficBytes"));
-	  l.setFont(fontControls);
-		ownTrafficPanel.add(l );
+    m_labelOwnBytes=new JLabel(JAPMessages.getString("ownTrafficBytes"));
+	  m_labelOwnBytes.setFont(fontControls);
+		ownTrafficPanel.add(m_labelOwnBytes);
 		ownTrafficPanel.add(m_labelOwnTrafficBytes);
 
-		ano1CheckBox = new JCheckBox(JAPMessages.getString("confActivateCheckBox"));
-//		ano1CheckBox.setForeground(Color.red);
-		JAPUtil.setMnemonic(ano1CheckBox,JAPMessages.getString("confActivateCheckBoxMn"));
-    ano1CheckBox.setFont(fontControls);
-    ano1CheckBox.addActionListener(this);
+		m_cbAnon = new JCheckBox(JAPMessages.getString("confActivateCheckBox"));
+		JAPUtil.setMnemonic(m_cbAnon,JAPMessages.getString("confActivateCheckBoxMn"));
+    m_cbAnon.setFont(fontControls);
+    m_cbAnon.addActionListener(this);
 
 		// Line 1
 		JPanel p41 = new JPanel();
 		p41.setLayout(new BoxLayout(p41, BoxLayout.X_AXIS) );
 		//p41.add(Box.createRigidArea(new Dimension(10,0)) );
-		p41.add(ano1CheckBox );
+		p41.add(m_cbAnon );
 		if(!JAPModel.isSmallDisplay())
       p41.add(Box.createRigidArea(new Dimension(5,0)) );
 		p41.add(Box.createHorizontalGlue() );
-		ano1B = new JButton(JAPMessages.getString("confActivateButton"));
-		ano1B.setFont(fontControls);
+		m_bttnAnonConf = new JButton(JAPMessages.getString("confActivateButton"));
+		m_bttnAnonConf.setFont(fontControls);
     if(JAPModel.isSmallDisplay())
-      ano1B.setMargin(JAPConstants.SMALL_BUTTON_MARGIN);
-    ano1B.addActionListener(this);
-		p41.add(ano1B);
+      m_bttnAnonConf.setMargin(JAPConstants.SMALL_BUTTON_MARGIN);
+    m_bttnAnonConf.addActionListener(this);
+		p41.add(m_bttnAnonConf);
 
 		JPanel meterPanel = new JPanel();
 		meterPanel.setLayout( new BorderLayout() );
-    border=new TitledBorder(JAPMessages.getString("meterBorder"));
-		border.setTitleFont(fontControls);
-    meterPanel.setBorder( border );
+    m_borderAnonMeter=new TitledBorder(JAPMessages.getString("meterBorder"));
+		m_borderAnonMeter.setTitleFont(fontControls);
+    meterPanel.setBorder(m_borderAnonMeter);
 		meterLabel = new JLabel(getMeterImage(-1));
 		meterPanel.add(p41/*ano1CheckBox*/,BorderLayout.NORTH);
 		meterPanel.add(meterLabel, BorderLayout.CENTER);
@@ -290,19 +286,19 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 		JPanel detailsPanel = new JPanel();
 		m_labelCascadeName = new JLabel();
     m_labelCascadeName.setFont(fontControls);
-		JLabel labelMeterDetailsName    = new JLabel(JAPMessages.getString("meterDetailsName")+" ");
-		labelMeterDetailsName.setFont(fontControls);
-    JLabel labelMeterDetailsUser    = new JLabel(JAPMessages.getString("meterDetailsUsers")+" ");
-	  labelMeterDetailsUser.setFont(fontControls);
- 		JLabel labelMeterDetailsTraffic = new JLabel(JAPMessages.getString("meterDetailsTraffic")+" ");
-	  labelMeterDetailsTraffic.setFont(fontControls);
-    JLabel labelMeterDetailsRisk    = new JLabel(JAPMessages.getString("meterDetailsRisk")+" ");
-	  labelMeterDetailsRisk.setFont(fontControls);
+		m_labelMeterDetailsName    = new JLabel(JAPMessages.getString("meterDetailsName")+" ");
+		m_labelMeterDetailsName.setFont(fontControls);
+    m_labelMeterDetailsUser    = new JLabel(JAPMessages.getString("meterDetailsUsers")+" ");
+	  m_labelMeterDetailsUser.setFont(fontControls);
+ 		m_labelMeterDetailsTraffic = new JLabel(JAPMessages.getString("meterDetailsTraffic")+" ");
+	  m_labelMeterDetailsTraffic.setFont(fontControls);
+    m_labelMeterDetailsRisk    = new JLabel(JAPMessages.getString("meterDetailsRisk")+" ");
+	  m_labelMeterDetailsRisk.setFont(fontControls);
  		GridBagLayout g = new GridBagLayout();
 		detailsPanel.setLayout( g );
-    border=new TitledBorder(JAPMessages.getString("meterDetailsBorder")) ;
-    border.setTitleFont(fontControls);
-		detailsPanel.setBorder( border );
+    m_borderDetails=new TitledBorder(JAPMessages.getString("meterDetailsBorder")) ;
+    m_borderDetails.setTitleFont(fontControls);
+		detailsPanel.setBorder(m_borderDetails);
 		GridBagConstraints c = new GridBagConstraints();
 		c.anchor=c.WEST;
 		c.fill=GridBagConstraints.HORIZONTAL;
@@ -313,8 +309,8 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 		c.weighty=1;
 		c.gridx=0;
 		c.gridy=0;
-		g.setConstraints(labelMeterDetailsName,c);
-		detailsPanel.add(labelMeterDetailsName);
+		g.setConstraints(m_labelMeterDetailsName,c);
+		detailsPanel.add(m_labelMeterDetailsName);
 		c.gridx=1;
 		c.weightx=1;
 		g.setConstraints(m_labelCascadeName,c);
@@ -322,8 +318,8 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 		c.weightx=0;
 		c.gridx=0;
 		c.gridy=1;
-		g.setConstraints(labelMeterDetailsUser,c);
-		detailsPanel.add(labelMeterDetailsUser);
+		g.setConstraints(m_labelMeterDetailsUser,c);
+		detailsPanel.add(m_labelMeterDetailsUser);
 		c.gridx=1;
 		c.weightx=1;
 		g.setConstraints(userProgressBar,c);
@@ -331,8 +327,8 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 		c.gridx=0;
 		c.gridy=2;
 		c.weightx=0;
-		g.setConstraints(labelMeterDetailsTraffic,c);
-		detailsPanel.add(labelMeterDetailsTraffic);
+		g.setConstraints(m_labelMeterDetailsTraffic,c);
+		detailsPanel.add(m_labelMeterDetailsTraffic);
 		c.gridx=1;
 		c.weightx=1;
 		g.setConstraints(trafficProgressBar,c);
@@ -341,7 +337,7 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 		c.insets=normInsets;
 		c.gridx=0;
 		c.gridy=3;
-		g.setConstraints(labelMeterDetailsRisk,c);
+		g.setConstraints(m_labelMeterDetailsRisk,c);
 //		detailsPanel.add(labelMeterDetailsRisk);
 		c.gridx=1;
 		g.setConstraints(protectionProgressBar,c);
@@ -501,8 +497,38 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 	public void disableSetAnonMode()
 		{
 			//anonCheckBox.setEnabled(false);
-			ano1CheckBox.setEnabled(false);
+			m_cbAnon.setEnabled(false);
 		}
+
+   /** Used to notice the View, that the locale has Changed.
+    *
+    */
+  public void localeChanged()
+    {
+      m_bttnInfo.setText(JAPMessages.getString("infoButton"));
+	    m_bttnHelp.setText(JAPMessages.getString("helpButton"));
+	    m_bttnQuit.setText(JAPMessages.getString("quitButton"));
+	    m_bttnConf.setText(JAPMessages.getString("confButton"));
+	    JAPUtil.setMnemonic(m_bttnConf,JAPMessages.getString("confButtonMn"));
+		  JAPUtil.setMnemonic(m_bttnInfo,JAPMessages.getString("infoButtonMn"));
+	    JAPUtil.setMnemonic(m_bttnHelp,JAPMessages.getString("helpButtonMn"));
+	    JAPUtil.setMnemonic(m_bttnQuit,JAPMessages.getString("quitButtonMn"));
+		  m_labelMeterDetailsName.setText(JAPMessages.getString("meterDetailsName")+" ");
+      m_labelMeterDetailsUser.setText(JAPMessages.getString("meterDetailsUsers")+" ");
+	 	  m_labelMeterDetailsTraffic.setText(JAPMessages.getString("meterDetailsTraffic")+" ");
+	    m_labelMeterDetailsRisk.setText(JAPMessages.getString("meterDetailsRisk")+" ");
+      m_borderOwnTraffic.setTitle(JAPMessages.getString("ownTrafficBorder"));
+      m_labelOwnChannels.setText(JAPMessages.getString("ownTrafficChannels"));
+      m_labelOwnBytes.setText(JAPMessages.getString("ownTrafficBytes"));
+      m_cbAnon.setText(JAPMessages.getString("confActivateCheckBox"));
+		  JAPUtil.setMnemonic(m_cbAnon,JAPMessages.getString("confActivateCheckBoxMn"));
+      m_borderAnonMeter.setTitle(JAPMessages.getString("meterBorder"));
+  	  m_bttnAnonConf.setText(JAPMessages.getString("confActivateButton"));
+      m_borderDetails.setTitle(JAPMessages.getString("meterDetailsBorder")) ;
+      if(m_dlgConfig!=null)
+        m_dlgConfig.localeChanged();
+      updateValues();
+    }
 
 	protected void loadMeterIcons() {
 		// Load Images for "Anonymity Meter"
@@ -549,7 +575,7 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 	public void actionPerformed(ActionEvent event)
 			{
 		//		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"GetEvent: "+event.getSource());
-				if (event.getSource() == quitB)
+				if (event.getSource() == m_bttnQuit)
 					exitProgram();
 				else if (event.getSource() == iconifyB) {
 					if(viewIconified!=null) {
@@ -557,7 +583,7 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 						viewIconified.setVisible(true);
 					}
 				}
-				else if (event.getSource() == confB)
+				else if (event.getSource() == m_bttnConf)
 					showConfigDialog();
 				/*else if (event.getSource() == portB)
 					showConfigDialog(JAPConf.PORT_TAB);
@@ -567,16 +593,16 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 					showConfigDialog(JAPConf.INFO_TAB);
 				else if (event.getSource() == anonB)
 					showConfigDialog(JAPConf.ANON_TAB);
-				*/else if (event.getSource() == ano1B)
+				*/else if (event.getSource() == m_bttnAnonConf)
 					showConfigDialog(JAPConf.ANON_TAB);
-				else if (event.getSource() == infoB)
+				else if (event.getSource() == m_bttnInfo)
 					controller.aboutJAP();
-				else if (event.getSource() == helpB)
+				else if (event.getSource() == m_bttnHelp)
 					showHelpWindow();
 				//else if (event.getSource() == anonCheckBox)
 				//	controller.setAnonMode(anonCheckBox.isSelected());
-				else if (event.getSource() == ano1CheckBox)
-					controller.setAnonMode(ano1CheckBox.isSelected());
+				else if (event.getSource() == m_cbAnon)
+					controller.setAnonMode(m_cbAnon.isSelected());
 				else
 					JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"Event ?????: "+event.getSource());
 			}
@@ -593,17 +619,17 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 	}
 
 	private void showConfigDialog(int card) {
-		if(configDialog==null)
+		if(m_dlgConfig==null)
 			{
 				Cursor c=getCursor();
 				setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-				configDialog=new JAPConf(this);
+				m_dlgConfig=new JAPConf(this);
 				setCursor(c);
 			}
 		if (card!=-1)
-			configDialog.selectCard(card);
-		configDialog.updateValues();
-		configDialog.show();
+			m_dlgConfig.selectCard(card);
+		m_dlgConfig.updateValues();
+		m_dlgConfig.show();
 	}
 
 	private void exitProgram() {
@@ -647,11 +673,11 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 		//}
 
 		// Meter panel
-		ano1CheckBox.setSelected(controller.getAnonMode());
+		m_cbAnon.setSelected(controller.getAnonMode());
 		if(controller.getAnonMode()) {
-			ano1CheckBox.setForeground(Color.black);
+			m_cbAnon.setForeground(Color.black);
 		} else {
-			ano1CheckBox.setForeground(Color.red);
+			m_cbAnon.setForeground(Color.red);
 		}
 		m_labelCascadeName.setText(e.getName());
 		m_labelCascadeName.setToolTipText(e.getName());

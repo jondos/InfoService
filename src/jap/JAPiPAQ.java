@@ -35,12 +35,14 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import java.awt.Insets;
 import java.util.Enumeration;
+import java.util.Locale;
 import JAPModel;
 import JAPDebug;
 import JAPController;
 import JAPConstants;
 import JAPView;
 import JAPMessages;
+
 final public class JAPiPAQ {
 
  /* private class iPAQTheme extends DefaultMetalTheme
@@ -98,6 +100,12 @@ public void startJAP(String strJapConfFile) {
     {
       return JAPController.getView().getMainPanel();
     }
+
+  public void  setLocale(Locale l)
+    {
+      JAPController.getController().setLocale(l);
+    }
+
 	public static void main(String[] argv) {
     JAPiPAQ japOniPAQ = new JAPiPAQ();
 		JAPModel.create().setSmallDisplay(true);
