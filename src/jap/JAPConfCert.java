@@ -168,10 +168,16 @@ public class JAPConfCert extends AbstractJAPConfModule
 
 		JPanel caPanel = createCertCAPanel();
 		JPanel infoPanel = createCertInfoPanel();
-
-		panelRoot.setLayout(new BorderLayout());
-		panelRoot.add(caPanel, BorderLayout.CENTER);
-		panelRoot.add(infoPanel, BorderLayout.SOUTH);
+		GridBagLayout gbl=new GridBagLayout();
+		GridBagConstraints c=new GridBagConstraints();
+		panelRoot.setLayout(gbl);
+		c.anchor=GridBagConstraints.NORTHWEST;
+		c.weightx=1;
+		c.fill=GridBagConstraints.BOTH;
+		panelRoot.add(caPanel, c);
+		c.gridy=1;
+		c.fill=GridBagConstraints.HORIZONTAL;
+		panelRoot.add(infoPanel, c);
 	}
 
 	/**

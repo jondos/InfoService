@@ -148,6 +148,7 @@ final class JAPConf extends JDialog
 
 	private JPanel m_Tabs;
 	private CardLayout m_TabsLayout;
+	private JTree m_Tree;
 	/**
 	 * Stores the index of the various tabs in the tabbed pane.
 	 */
@@ -358,7 +359,7 @@ final class JAPConf extends JDialog
 		renderer.setClosedIcon(JAPUtil.loadImageIcon("arrow.gif", true));
 		renderer.setOpenIcon(JAPUtil.loadImageIcon("arrow90.gif", true));
 		renderer.setLeafIcon(null);
-		JTree tree=new JTree(treeModel);
+		m_Tree=new JTree(treeModel);
 		TreeSelectionModel sm=new DefaultTreeSelectionModel(){
 			public void  setSelectionPath(TreePath t)
 				{
@@ -369,12 +370,12 @@ final class JAPConf extends JDialog
 		};
 
 		sm.setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
-		tree.setSelectionModel(sm);
-		tree.setRootVisible(false);
-		tree.setEditable(false);
-		tree.setCellRenderer(renderer);
-		tree.setBorder(new CompoundBorder(LineBorder.createBlackLineBorder(),new EmptyBorder(5,5,5,5)));
-		tree.addTreeSelectionListener(new TreeSelectionListener()
+		m_Tree.setSelectionModel(sm);
+		m_Tree.setRootVisible(false);
+		m_Tree.setEditable(false);
+		m_Tree.setCellRenderer(renderer);
+		m_Tree.setBorder(new CompoundBorder(LineBorder.createBlackLineBorder(),new EmptyBorder(5,5,5,5)));
+		m_Tree.addTreeSelectionListener(new TreeSelectionListener()
 									  {
 			public void valueChanged(TreeSelectionEvent e)
 			{
@@ -385,10 +386,10 @@ final class JAPConf extends JDialog
 				}
 			}
 		});
-		tree.expandPath(new TreePath(nodeNet.getPath()));
-		tree.expandPath(new TreePath(nodeAnon.getPath()));
-		tree.setSelectionRow(0);
-		tree.addTreeWillExpandListener(new TreeWillExpandListener(){
+		m_Tree.expandPath(new TreePath(nodeNet.getPath()));
+		m_Tree.expandPath(new TreePath(nodeAnon.getPath()));
+		m_Tree.setSelectionRow(0);
+		m_Tree.addTreeWillExpandListener(new TreeWillExpandListener(){
 			public void treeWillCollapse(TreeExpansionEvent event) throws ExpandVetoException
 			{
 				throw new ExpandVetoException(event);
@@ -404,8 +405,9 @@ final class JAPConf extends JDialog
 		c.weightx=0;
 		c.insets=new Insets(20,10,10,10);
 		c.fill=GridBagConstraints.VERTICAL;
-		pContainer.add(tree,c);
+		pContainer.add(m_Tree,c);
 		c.gridx=1;
+		c.weightx=1;
 		c.fill=GridBagConstraints.BOTH;
 		pContainer.add(m_Tabs,c);
 		c.gridx=0;
@@ -1175,7 +1177,6 @@ final class JAPConf extends JDialog
 			}
 			currentModule.recreateRootPanel();
 		}
-
 		setTitle(JAPMessages.getString("settingsDialog"));
 /*		m_Tabs.setTitleAt( ( (Integer) (m_tabOrder.get(new Integer(PORT_TAB)))).intValue(),
 						  JAPMessages.getString("confListenerTab"));
@@ -1211,6 +1212,12 @@ final class JAPConf extends JDialog
 		m_labelProxyPort.setText(JAPMessages.getString("settingsProxyPort"));
 		m_labelProxyType.setText(JAPMessages.getString("settingsProxyType"));
 		m_labelProxyAuthUserID.setText(JAPMessages.getString("settingsProxyAuthUserID"));
+		pack();
+	/*	if(!m_Tree.isVisible())
+		{
+			Dimension d=getSize();
+			setSize(d.width+10,d.height);
+		}*/
 	}
 
 	/** Updates the shown Values from the Model.*/

@@ -201,6 +201,7 @@ class JAPConfAnon extends AbstractJAPConfModule
 //
 // Add to main panel
 		JPanel p = getRootPanel();
+		p.removeAll();
 		layout = new GridBagLayout();
 		p.setLayout(layout);
 		c.weightx = 1;
