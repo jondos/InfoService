@@ -32,12 +32,14 @@ import java.awt.Color;
 import java.awt.Insets;
 import java.awt.BorderLayout;
 import java.awt.Point;
-import java.awt.Container;
+import java.awt.Panel;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.*;
 import java.text.NumberFormat;
 import javax.swing.*;
+import javax.swing.border.LineBorder;
+
 
 import anon.AnonServer;
 
@@ -45,107 +47,103 @@ final public class JAPViewIconified extends JWindow implements ActionListener,Mo
 	private JAPController m_Controller;
 	private JAPView       m_mainView;
 	private JLabel        m_labelBytes,m_labelUsers,m_labelTraffic;
-  private Point         m_startPoint;
-  private boolean       m_bIsDragging=false;
-  private NumberFormat  m_NumberFormat;
+	private Point         m_startPoint;
+	private boolean       m_bIsDragging=false;
+	private NumberFormat  m_NumberFormat;
 	private static final Font fnt = new Font("Sans",Font.PLAIN,9);
 	public JAPViewIconified(String s)
-    {
-		  super(JAPController.getView());
-		  m_mainView=JAPController.getView();
-		  JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPViewIconified:initializing...");
-		  m_Controller = JAPController.getController();
-		  m_NumberFormat=NumberFormat.getInstance();
-      init();
-	  }
+		{
+			super(JAPController.getView());
+			m_mainView=JAPController.getView();
+			JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPViewIconified:initializing...");
+			m_Controller = JAPController.getController();
+			m_NumberFormat=NumberFormat.getInstance();
+			init();
+		}
 
 	public void init()
-    {
-      addMouseListener(this);
-      addMouseMotionListener(this);
-      GridBagLayout la=new GridBagLayout();
-      GridBagConstraints c=new GridBagConstraints();
-      JPanel pTop = new JPanel(la);
-      pTop.setOpaque(false);
-      JLabel x2 = new JLabel(JAPMessages.getString("iconifiedviewBytes")+": ",JLabel.RIGHT);
-      x2.setFont(fnt);
-      c.gridx=0;
-      c.gridy=0;
-      c.fill=c.BOTH;
-      c.weightx=0;
-      c.insets=new Insets(3,3,0,0);
-      c.anchor=c.NORTHWEST;
-      la.setConstraints(x2,c);
-      pTop.add(x2);
-      c.weightx=1;
-      m_labelBytes = new JLabel("00000000  ",JLabel.LEFT);
-      m_labelBytes.setForeground(Color.red);
-      m_labelBytes.setFont(fnt);
-      c.gridx=1;
-      c.weightx=0;
-      la.setConstraints(m_labelBytes,c);
-      pTop.add(m_labelBytes);
+		{
+			GridBagLayout la=new GridBagLayout();
+			GridBagConstraints c=new GridBagConstraints();
+			JPanel pTop = new JPanel(la);
+			pTop.setOpaque(false);
+			JLabel x2 = new JLabel(JAPMessages.getString("iconifiedviewBytes")+": ",JLabel.RIGHT);
+			x2.setFont(fnt);
+			c.gridx=0;
+			c.gridy=0;
+			c.fill=c.BOTH;
+			c.weightx=0;
+			c.insets=new Insets(3,3,0,0);
+			c.anchor=c.NORTHWEST;
+			la.setConstraints(x2,c);
+			pTop.add(x2);
+			c.weightx=1;
+			m_labelBytes = new JLabel("00000000  ",JLabel.LEFT);
+			m_labelBytes.setForeground(Color.red);
+			m_labelBytes.setFont(fnt);
+			c.gridx=1;
+			c.weightx=0;
+			la.setConstraints(m_labelBytes,c);
+			pTop.add(m_labelBytes);
 
-      JLabel x3 = new JLabel(JAPMessages.getString("iconifiedviewUsers")+": ",JLabel.RIGHT);
-      x3.setFont(fnt);
-      c.gridx=0;
-      c.gridy=1;
-      la.setConstraints(x3,c);
-      pTop.add(x3);
+			JLabel x3 = new JLabel(JAPMessages.getString("iconifiedviewUsers")+": ",JLabel.RIGHT);
+			x3.setFont(fnt);
+			c.gridx=0;
+			c.gridy=1;
+			la.setConstraints(x3,c);
+			pTop.add(x3);
 
-      m_labelUsers = new JLabel("",JLabel.LEFT);
-      m_labelUsers.setForeground(Color.red);
-      m_labelUsers.setFont(fnt);
-      c.gridx=1;
-      la.setConstraints(m_labelUsers,c);
-      pTop.add(m_labelUsers);
+			m_labelUsers = new JLabel("",JLabel.LEFT);
+			m_labelUsers.setForeground(Color.red);
+			m_labelUsers.setFont(fnt);
+			c.gridx=1;
+			la.setConstraints(m_labelUsers,c);
+			pTop.add(m_labelUsers);
 
-      JLabel x4 = new JLabel(JAPMessages.getString("iconifiedviewTraffic")+": ",JLabel.RIGHT);
-      x4.setFont(fnt);
-      c.gridy=2;
-      c.gridx=0;
-      la.setConstraints(x4,c);
-      pTop.add(x4);
-      m_labelTraffic = new JLabel("",JLabel.LEFT);
-      m_labelTraffic.setForeground(Color.red);
-      m_labelTraffic.setFont(fnt);
-      c.gridx=1;
-      la.setConstraints(m_labelTraffic,c);
-      pTop.add(m_labelTraffic);
+			JLabel x4 = new JLabel(JAPMessages.getString("iconifiedviewTraffic")+": ",JLabel.RIGHT);
+			x4.setFont(fnt);
+			c.gridy=2;
+			c.gridx=0;
+			la.setConstraints(x4,c);
+			pTop.add(x4);
+			m_labelTraffic = new JLabel("",JLabel.LEFT);
+			m_labelTraffic.setForeground(Color.red);
+			m_labelTraffic.setFont(fnt);
+			c.gridx=1;
+			la.setConstraints(m_labelTraffic,c);
+			pTop.add(m_labelTraffic);
 
-      JButton bttn = new JButton(JAPUtil.loadImageIcon(JAPConstants.ENLARGEYICONFN,true));
-      bttn.setOpaque(false);
-      bttn.addActionListener(this);
-      bttn.setToolTipText(JAPMessages.getString("enlargeWindow"));
-      JAPUtil.setMnemonic(bttn,JAPMessages.getString("iconifyButtonMn"));
-      c.gridx=0;
-      c.gridy=3;
-      c.gridwidth=2;
-      c.fill=c.NONE;
-      c.ipadx=5;
-      c.insets=new Insets(5,5,5,5);
-      c.weightx=1;
-      c.anchor=c.CENTER;
-      la.setConstraints(bttn,c);
-      pTop.add(bttn);
+			JButton bttn = new JButton(JAPUtil.loadImageIcon(JAPConstants.ENLARGEYICONFN,true));
+			bttn.setOpaque(false);
+			bttn.addActionListener(this);
+			bttn.setToolTipText(JAPMessages.getString("enlargeWindow"));
+			JAPUtil.setMnemonic(bttn,JAPMessages.getString("iconifyButtonMn"));
 
-      JLabel l1=new JLabel(JAPUtil.loadImageIcon(JAPConstants.JAPEYEFN,true));
-      Container co=new Container();
-      co.add(pTop);
-      JPanel pBottom=new JPanel(new BorderLayout());
-      pBottom.setBackground(new Color(204,204,204));
-      pBottom.add(l1,BorderLayout.CENTER);
-      co.add(pBottom);
-      OverlayLayout lo=new OverlayLayout(co);
-      co.setLayout(lo);
-      setContentPane(co);
+			JLabel l1=new JLabel(JAPUtil.loadImageIcon(JAPConstants.JAPEYEFN,true));
+			JPanel co=new JPanel();
+			co.add(pTop);
+			JPanel pBottom=new JPanel(new BorderLayout());
+			pBottom.setBackground(new Color(204,204,204));
+			pBottom.add(l1,BorderLayout.CENTER);
+			co.add(pBottom);
+			OverlayLayout lo=new OverlayLayout(co);
+			co.setLayout(lo);
+			JPanel p=new JPanel(new BorderLayout());
+			p.setBorder(new LineBorder(Color.black,1));
+			p.add(co,BorderLayout.CENTER);
+			JPanel p2=new JPanel();
+			p2.add(bttn);
+			p.add(p2,BorderLayout.SOUTH);
+			p.addMouseListener(this);
+			p.addMouseMotionListener(this);
+			setContentPane(p);
 
-      pack();
-      JAPUtil.upRightFrame(this);
-      m_labelBytes.setText(JAPMessages.getString("iconifiedViewZero"));
-      m_labelUsers.setText(JAPMessages.getString("iconifiedViewNA"));
-      m_labelTraffic.setText(JAPMessages.getString("iconifiedViewNA"));
-	  }
+			pack();
+			JAPUtil.upRightFrame(this);
+			m_labelBytes.setText(JAPMessages.getString("iconifiedViewZero"));
+			m_labelUsers.setText(JAPMessages.getString("iconifiedViewNA"));
+			m_labelTraffic.setText(JAPMessages.getString("iconifiedViewNA"));
+		}
 
 	void switchBackToMainView() {
 			if(m_mainView==null)
@@ -182,51 +180,51 @@ final public class JAPViewIconified extends JWindow implements ActionListener,Mo
 	}
 
 	public void channelsChanged(int c)
-    {
-	  }
+		{
+		}
 
-  public void transferedBytes(int b)
-    {
-		  m_labelBytes.setText(m_NumberFormat.format(b));
-	  }
+	public void transferedBytes(int b)
+		{
+			m_labelBytes.setText(m_NumberFormat.format(b));
+		}
 
-  public void mouseExited(MouseEvent e)
-    {
-    }
-  public void mouseEntered(MouseEvent e)
-    {
-    }
-  public void mouseReleased(MouseEvent e)
-    {
-      m_bIsDragging=false;
-    }
+	public void mouseExited(MouseEvent e)
+		{
+		}
+	public void mouseEntered(MouseEvent e)
+		{
+		}
+	public void mouseReleased(MouseEvent e)
+		{
+			m_bIsDragging=false;
+		}
 
-  public void mousePressed(MouseEvent e)
-    {
-    }
+	public void mousePressed(MouseEvent e)
+		{
+		}
 
-  public void mouseClicked(MouseEvent e)
-    {
-      if(e.getClickCount()>1)
-        switchBackToMainView();
-    }
+	public void mouseClicked(MouseEvent e)
+		{
+			if(e.getClickCount()>1)
+				switchBackToMainView();
+		}
 
-  public void mouseMoved(MouseEvent e)
-    {
-    }
+	public void mouseMoved(MouseEvent e)
+		{
+		}
 
-  public void mouseDragged(MouseEvent e)
-    {
-      if(!m_bIsDragging)
-        {
-          m_bIsDragging=true;
-          m_startPoint=e.getPoint();
-        }
-      else
-        {
-          Point endPoint=e.getPoint();
-          Point aktLocation=getLocation();
-          setLocation(aktLocation.x+endPoint.x-m_startPoint.x,aktLocation.y+endPoint.y-m_startPoint.y);
-        }
-    }
+	public void mouseDragged(MouseEvent e)
+		{
+			if(!m_bIsDragging)
+				{
+					m_bIsDragging=true;
+					m_startPoint=e.getPoint();
+				}
+			else
+				{
+					Point endPoint=e.getPoint();
+					Point aktLocation=getLocation();
+					setLocation(aktLocation.x+endPoint.x-m_startPoint.x,aktLocation.y+endPoint.y-m_startPoint.y);
+				}
+		}
 }
