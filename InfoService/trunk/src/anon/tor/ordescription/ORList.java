@@ -128,6 +128,12 @@ public class ORList
 	{
 		return (ORDescription) m_onionroutersWithNames.get(name);
 	}
+	
+	public synchronized void remove(String name)
+	{
+		m_onionrouters.removeElement(getByName(name));
+		m_onionroutersWithNames.remove(name);
+	}
 
 	/**
 	 * selects a OR randomly from a given list of allowed OR names
