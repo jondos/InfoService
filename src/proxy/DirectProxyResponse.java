@@ -56,24 +56,24 @@ final class DirectProxyResponse implements Runnable
 		try
 		{
 //---to be removed!!!
-/*			String nextLine = JAPUtil.readLine(m_inputStream);
+			/*			String nextLine = JAPUtil.readLine(m_inputStream);
 				////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 				LogHolder.log(LogLevel.DEBUG, LogType.NET,
-							  "R(" + m_threadNumber + ") - Header: >" + nextLine + "<");
+					 "R(" + m_threadNumber + ") - Header: >" + nextLine + "<");
 				while (nextLine.length() != 0)
 				{
-						// write single lines to server
-						m_outputStream.write( (nextLine + "\r\n").getBytes());
-					nextLine = JAPUtil.readLine(m_inputStream);
-					LogHolder.log(LogLevel.DEBUG, LogType.NET,
-								  "R(" + m_threadNumber + ") - Header: >" + nextLine + "<");
+				  // write single lines to server
+				  m_outputStream.write( (nextLine + "\r\n").getBytes());
+				 nextLine = JAPUtil.readLine(m_inputStream);
+				 LogHolder.log(LogLevel.DEBUG, LogType.NET,
+					  "R(" + m_threadNumber + ") - Header: >" + nextLine + "<");
 				}
 
 				// send final CRLF --> server
 				m_outputStream.write("\r\n".getBytes());
 				m_outputStream.flush();
-*/
+			 */
 //TO be removed end
 
 			byte[] buff = new byte[1000];

@@ -29,14 +29,12 @@ package jap;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.lang.reflect.Method;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.StringTokenizer;
@@ -59,7 +57,6 @@ import javax.swing.JTable;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableModel;
-import org.w3c.dom.Document;
 import HTTPClient.Codecs;
 import anon.crypto.JAPCertificate;
 import gui.SimpleFileFilter;
@@ -209,7 +206,6 @@ final public class JAPUtil
 		}
 		return true;
 	}
-
 
 	/** Loads an Image from a File or a Resource.
 	 *	@param strImage the Resource or filename of the Image

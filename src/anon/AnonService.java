@@ -29,7 +29,6 @@ package anon;
 
 import java.net.ConnectException;
 import java.net.InetAddress;
-import anon.infoservice.MixCascade;
 
 /** This class is used for accessing the AnonService. An instance is created
  *  via AnonServiceFactory.
@@ -37,23 +36,24 @@ import anon.infoservice.MixCascade;
 public interface AnonService
 {
 	///The version of the AnonLib
-	public final static String ANONLIB_VERSION = "00.01.028";
+	public final static String ANONLIB_VERSION = "00.02.001";
 
-	/** Establishes a connection to an AnonServer, which is described through the
+	/** Initializes this AnonService. Depending on the AnonService, this may establish a connection to
+	 *  an AnonServer, which is described through the
 	 *  anonService parameter. This method must be called before any Channels could be created.
 	 *  @param anonService AnonServer to use
 	 *  @return E_SUCCESS, if the connection could be estblished
 	 *  @return E_ALREADY_CONNECTED, if this AnonService is already connected to a server
 	 *  @return E_INVALID_SERVICE, if anonService is not a valid server
-	 *  @return E_MIX_PROTOCOL_NOT_SUPPORTED, if the chosen AnonService uses a MixProtocol, which this version of
+	 *  @return E_PROTOCOL_NOT_SUPPORTED, if the chosen AnonService uses a Protocol, which this version of
 	 *                                        the Anon-Lib does not understand
 	 *  @return E_CONNECT, if a general connection error occured
 	 *
 	 */
-	public int connect(MixCascade mixCascade);
+	public int initialize(AnonServerDescription anonServer);
 
 	/** Disconnects form the server.*/
-	public void disconnect();
+	public void shutdown();
 
 	/** Creates a new AnonChannel, which could be used for transmitting data. There is a
 	 *  limit of 50 channels per AnonService-connection, in order to prevent Denial of Service-attacks

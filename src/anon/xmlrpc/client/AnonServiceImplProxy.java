@@ -36,6 +36,7 @@ import anon.AnonChannel;
 import anon.AnonService;
 import anon.AnonServiceEventListener;
 import anon.infoservice.MixCascade;
+import anon.AnonServerDescription;
 
 public class AnonServiceImplProxy implements AnonService
 {
@@ -51,12 +52,12 @@ public class AnonServiceImplProxy implements AnonService
 		m_ClientID = ( (Integer) o).intValue();
 	}
 
-	public int connect(MixCascade mixCascade)
+	public int initialize(AnonServerDescription mixCascade)
 	{
 		return 0;
 	}
 
-	public void disconnect()
+	public void shutdown()
 	{
 	}
 

@@ -27,11 +27,12 @@
  */
 package jap;
 
-import java.awt.*;
-
-import anon.crypto.*;
+import java.awt.Dimension;
+import java.awt.Point;
+import anon.crypto.JAPCertificate;
+import anon.crypto.JAPCertificateStore;
 import forward.server.ForwardServerManager;
-import gui.*;
+import gui.JAPDll;
 
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPModel
@@ -78,10 +79,10 @@ public final class JAPModel
 	private int m_TorDirServerPortNumber = JAPConstants.TOR_DIR_SERVER_PORT;
 	private boolean m_PayAccountsFileEncrypted;
 	private String m_PayAccountsFileName;
- /**
-   * Stores the instance with the routing settings.
-   */
-  private JAPRoutingSettings m_routingSettings;
+	/**
+	 * Stores the instance with the routing settings.
+	 */
+	private JAPRoutingSettings m_routingSettings;
 
 	private JAPModel()
 	{
@@ -104,7 +105,7 @@ public final class JAPModel
 		{
 			m_certJAPInfoServiceMessages = null;
 		}
-   m_routingSettings = new JAPRoutingSettings();
+		m_routingSettings = new JAPRoutingSettings();
 	}
 
 	// m_Locale=Locale.getDefault();
@@ -248,7 +249,7 @@ public final class JAPModel
 	protected void setDummyTraffic(int msIntervall)
 	{
 		m_iDummyTrafficIntervall = msIntervall;
-    ForwardServerManager.getInstance().setDummyTrafficInterval(msIntervall);
+		ForwardServerManager.getInstance().setDummyTrafficInterval(msIntervall);
 	}
 
 	public static int getDummyTraffic()
@@ -522,15 +523,16 @@ public final class JAPModel
 		return ms_TheModel.m_PayAccountsFileName;
 	}
 
- /**
-   * This method returns the instance of JAPRoutingSettings, where all routing settings are
-   * stored in. Changes of the routing settings are directly done on the returned instance.
-   * @see JAPRoutingSettings
-   *
-   * @return The routing settings.
-   */
-  public JAPRoutingSettings getRoutingSettings() {
-    return m_routingSettings;
-  }
+	/**
+	 * This method returns the instance of JAPRoutingSettings, where all routing settings are
+	 * stored in. Changes of the routing settings are directly done on the returned instance.
+	 * @see JAPRoutingSettings
+	 *
+	 * @return The routing settings.
+	 */
+	public JAPRoutingSettings getRoutingSettings()
+	{
+		return m_routingSettings;
+	}
 
 }

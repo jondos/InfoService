@@ -31,38 +31,37 @@ package jap;
  * This is the message, which is send from JAPRoutingSettings to the observers. The message
  * code identifies the reason of the notification.
  */
-public class JAPRoutingMessage {
-  
-  /**
-   * This message is sent after the routing mode was changed.
-   */
-  public static final int ROUTING_MODE_CHANGED = 1;
+public class JAPRoutingMessage
+{
 
-    
-  /**
-   * Stores the message code.
-   */
-  private int m_messageCode;
+	/**
+	 * This message is sent after the routing mode was changed.
+	 */
+	public static final int ROUTING_MODE_CHANGED = 1;
 
-  
-  /**
-   * This creates a new JAPRoutingMessage.
-   *
-   * @param a_messageCode The message code. See the constants in this class.
-   */
-  public JAPRoutingMessage(int a_messageCode) {
-    m_messageCode = a_messageCode;
-  }
- 
- 
-  /**
-   * This returns the message code of this JAPRoutingMessage. See the constants in this class.
-   *
-   * @return The message code.
-   */
-  public int getMessageCode() {
-    return m_messageCode;
-  }
+	/**
+	 * Stores the message code.
+	 */
+	private int m_messageCode;
+
+	/**
+	 * This creates a new JAPRoutingMessage.
+	 *
+	 * @param a_messageCode The message code. See the constants in this class.
+	 */
+	public JAPRoutingMessage(int a_messageCode)
+	{
+		m_messageCode = a_messageCode;
+	}
+
+	/**
+	 * This returns the message code of this JAPRoutingMessage. See the constants in this class.
+	 *
+	 * @return The message code.
+	 */
+	public int getMessageCode()
+	{
+		return m_messageCode;
+	}
 
 }
-  

@@ -33,22 +33,22 @@ package jap;
  */
 public interface IJAPConfSavePoint
 {
-  
-  /**
-   * Stores the current configuration or the default configuration.
-   */
-  public void createSavePoint();
-  
-  /**
-   * Restores the old configuration (stored with the last call of createSavePoint()).
-   */
-  public void restoreSavePoint();
-  
-  /**
-   * Restores the default configuration for all values of this savepoint. The internal stored
-   * values of this savepoint (stored with the last call of createSavePoint()) are not changed by
-   * this call. So a call of restoreSavePoint() will restore the old configuration.
-   */
-  public void restoreDefaults();
+
+	/**
+	 * Stores the current configuration or the default configuration.
+	 */
+	public void createSavePoint();
+
+	/**
+	 * Restores the old configuration (stored with the last call of createSavePoint()).
+	 */
+	public void restoreSavePoint();
+
+	/**
+	 * Restores the default configuration for all values of this savepoint. The internal stored
+	 * values of this savepoint (stored with the last call of createSavePoint()) are not changed by
+	 * this call. So a call of restoreSavePoint() will restore the old configuration.
+	 */
+	public void restoreDefaults();
 
 }

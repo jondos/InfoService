@@ -256,7 +256,7 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 			Dimension ds = Toolkit.getDefaultToolkit().getScreenSize();
 			if (m.m_OldMainWindowLocation != null && m.m_OldMainWindowLocation.x >= 0 &&
 				m.m_OldMainWindowLocation.y > 0 /*&&m.m_OldMainWindowLocation.x<ds.width&&
-					  m.m_OldMainWindowLocation.y<ds.height*/
+					   m.m_OldMainWindowLocation.y<ds.height*/
 				)
 			{
 				setLocation(m.m_OldMainWindowLocation);

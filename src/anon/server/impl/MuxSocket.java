@@ -360,12 +360,12 @@ public final class MuxSocket implements Runnable
 			Element elemMixProtocolVersion = (Element) root.getElementsByTagName("MixProtocolVersion").item(0);
 			if (elemMixProtocolVersion == null)
 			{
-				return ErrorCodes.E_MIX_PROTOCOL_NOT_SUPPORTED;
+				return ErrorCodes.E_PROTOCOL_NOT_SUPPORTED;
 			}
 			Node n = elemMixProtocolVersion.getFirstChild();
 			if (n == null || n.getNodeType() != n.TEXT_NODE)
 			{
-				return ErrorCodes.E_MIX_PROTOCOL_NOT_SUPPORTED;
+				return ErrorCodes.E_PROTOCOL_NOT_SUPPORTED;
 			}
 			String strProtocolVersion = n.getNodeValue().trim();
 			if (strProtocolVersion.equals("0.2"))
@@ -390,7 +390,7 @@ public final class MuxSocket implements Runnable
 			}
 			else
 			{
-				return ErrorCodes.E_MIX_PROTOCOL_NOT_SUPPORTED;
+				return ErrorCodes.E_PROTOCOL_NOT_SUPPORTED;
 			}
 			Element elemMixes = (Element) root.getElementsByTagName("Mixes").item(0);
 			m_iChainLen = Integer.parseInt(elemMixes.getAttribute("count"));

@@ -85,7 +85,8 @@ final class DirectProxyConnection implements Runnable
 			m_inputStream = new DataInputStream(m_clientSocket.getInputStream());
 			// read first line of request
 			m_requestLine = JAPUtil.readLine(m_inputStream);
-			LogHolder.log(LogLevel.DEBUG,LogType.NET,"C("+m_threadNumber+") - RequestLine: >" + m_requestLine +"<");
+			LogHolder.log(LogLevel.DEBUG, LogType.NET,
+						  "C(" + m_threadNumber + ") - RequestLine: >" + m_requestLine + "<");
 			// Examples:
 			//  CONNECT 192.168.1.2:443 HTTP/1.0
 			//  GET http://192.168.1.2/incl/button.css HTTP/1.0
@@ -518,12 +519,16 @@ final class DirectProxyConnection implements Runnable
 
 	private boolean filter(String l)
 	{
-		String[] cmp = {"Proxy-Connection","Pragma"};
-		for(int i=0;i<cmp.length;i++)
+		String[] cmp =
+			{
+			"Proxy-Connection", "Pragma"};
+		for (int i = 0; i < cmp.length; i++)
+		{
 			if (l.regionMatches(true, 0, cmp[i], 0, cmp[i].length()))
 			{
 				return true;
 			}
+		}
 		return false;
 	}
 

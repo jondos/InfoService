@@ -30,7 +30,7 @@ package anon;
 import java.net.InetAddress;
 import anon.server.AnonServiceImpl;
 import anon.xmlrpc.client.AnonServiceImplProxy;
-
+import anon.tor.Tor;
 final public class AnonServiceFactory
 {
 	private static AnonService ms_AnonService = null;
@@ -38,15 +38,33 @@ final public class AnonServiceFactory
 	{
 	}
 
-	public static AnonService create()
+
+	/** Creates an AnonService of the given kind.
+	 * At the moment the following values are defined:
+	 * "AN.ON" -- creates an AnonService which uses the WebMix cascades
+	 * "TOR" -- creates an AnonService which uses Tor nodes
+	 */
+
+	public static AnonService getAnonServiceInstance(String kind)
 	{
-		if (ms_AnonService == null)
+		if (kind == null)
 		{
-			ms_AnonService = AnonServiceImpl.create();
+			return null;
 		}
-		return ms_AnonService; //AnonServiceImpl.create();
+		if (kind.equals("AN.ON"))
+		{
+			if (ms_AnonService == null)
+			{
+				ms_AnonService = AnonServiceImpl.create();
+			}
+			return ms_AnonService; //AnonServiceImpl.create();
+		}
+		else if(kind.equals("TOR"))
+			return Tor.getInstance();
+		return null;
 	}
 
+	//should be changed...
 	public static AnonService create(InetAddress addr, int port)
 	{
 		try
