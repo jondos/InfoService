@@ -243,6 +243,7 @@ final class Request  implements Runnable
 				{
 					try{
 					m_clientSocket=clientSocket;
+          m_clientSocket.setSoTimeout(1000); //just to ensure that threads will stop
 					m_InSocket=clientSocket.getInputStream();
 					m_OutSocket=clientSocket.getOutputStream();
 					m_InChannel=c.getInputStream();
@@ -263,18 +264,29 @@ final class Request  implements Runnable
 						m_bRequestIsAlive=true;
 						incNumChannels();
 						int len=0;
-						byte[] buff=new byte[2900];
-						try{
-						while((len=m_InSocket.read(buff,0,900))>0)
-							{
-								m_OutChannel.write(buff,0,len);
-								transferredBytes(len);
-							}
+						byte[] buff=new byte[1900];
+						try
+              {
+						    for(;;)
+                  {
+                    try
+                      {
+                        len=m_InSocket.read(buff,0,900);
+                      }
+                    catch(InterruptedIOException ioe)
+                      {
+                        continue;
+                      }
+                    if(len<=0)
+                      break;
+								    m_OutChannel.write(buff,0,len);
+								    transferredBytes(len);
+                  }
 							}
 						 catch(Exception e)
-						 {
-							//e.printStackTrace();
-						 }
+						  {
+							  //e.printStackTrace();
+						  }
 						m_bRequestIsAlive=false;
 						try{m_Channel.close();}catch(Exception e){}
 						//if(m_bResponseIsAlive)
@@ -296,11 +308,26 @@ final class Request  implements Runnable
 							int len=0;
 							byte[] buff=new byte[2900];
 							try{
-							while((len=m_InChannel.read(buff,0,1000))>0)
-								{
-									m_OutSocket.write(buff,0,len);
-									transferredBytes(len);
-								}
+                while((len=m_InChannel.read(buff,0,1000))>0)
+                  {
+                    int count=0;
+                    for(;;)
+                      {
+                        try
+                          {
+                            m_OutSocket.write(buff,0,len);
+                            break;
+                          }
+                        catch(InterruptedIOException ioe)
+                          {
+                            JAPDebug.out(JAPDebug.EMERG,JAPDebug.NET,"Should never be here: Timeout in sending to Browser!");
+                          }
+                        count++;
+                        if(count>3)
+                          throw new Exception("Could not send to Browser...");
+                      }
+                    transferredBytes(len);
+                  }
 								}
 							catch(Exception e)
 								{}
