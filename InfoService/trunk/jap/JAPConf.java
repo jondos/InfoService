@@ -79,8 +79,9 @@ final class JAPConf extends JDialog
 	final static public int INFO_TAB = 2;
 	final static public int ANON_TAB = 3;
 	final static public int CERT_TAB = 4;
-	final static public int MISC_TAB = 5;
-	final static public int KONTO_TAB = 6;
+	final static public int TOR_TAB = 5;
+	final static public int MISC_TAB = 6;
+	final static public int KONTO_TAB = 7;
 
 	private static JAPConf japConfInstance = null;
 
@@ -179,21 +180,25 @@ final class JAPConf extends JDialog
 
 		AbstractJAPConfModule infoServiceModule = new JAPConfInfoService();
 		AbstractJAPConfModule certModule = new JAPConfCert();
+		AbstractJAPConfModule torModule=new JAPConfTor();
 
 		/* there is no need to set the font because it is already set in the constructor but so it is
 		 * save for the future
 		 */
 		infoServiceModule.setFontSetting(m_fontControls);
 		certModule.setFontSetting(m_fontControls);
+		torModule.setFontSetting(m_fontControls);
 
 		m_confModules.addElement(infoServiceModule);
 		m_confModules.addElement(certModule);
+		m_confModules.addElement(torModule);
 
 		m_Tabs.addTab(JAPMessages.getString("confListenerTab"), null, m_pPort);
 		m_Tabs.addTab(JAPMessages.getString("confProxyTab"), null, m_pFirewall);
 		m_Tabs.addTab(infoServiceModule.getTabTitle(), null, infoServiceModule.getRootPanel());
 		m_Tabs.addTab(JAPMessages.getString("confAnonTab"), null, m_pMix);
 		m_Tabs.addTab(certModule.getTabTitle(), null, certModule.getRootPanel());
+		m_Tabs.addTab(torModule.getTabTitle(), null, torModule.getRootPanel());
 		if (!JAPModel.isSmallDisplay())
 		{
 			m_Tabs.addTab(JAPMessages.getString("confMiscTab"), null, m_pMisc);
