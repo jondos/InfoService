@@ -35,6 +35,7 @@ import javax.swing.border.*;
 import javax.swing.plaf.basic.BasicProgressBarUI;
 
 import anon.AnonServer;
+import gui.JAPDll;
 
 final public class JAPView extends JFrame implements ActionListener, JAPObserver {
 
@@ -116,11 +117,6 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 			if(ii!=null)
 				setIconImage(ii.getImage());
 
-			// listen for events from outside the frame
-			addWindowListener(new WindowAdapter() {
-				public void windowClosing(WindowEvent e) {exitProgram();}
-			});
-
 			// Load Images for "Anonymity Meter"
 			loadMeterIcons();
 			// "NORTH": Image
@@ -181,15 +177,20 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 				}
 			//tabs.setSelectedComponent(level);
 
-			this.addWindowListener(new WindowAdapter()
+			addWindowListener(new WindowAdapter()
 				{
-					public void windowDeiconified(WindowEvent e)
+						public void windowClosing(WindowEvent e) {exitProgram();}
+
+						public void windowDeiconified(WindowEvent e)
 						{
 							m_bIsIconified=false;
 							setTitle(m_Title);
 						}
-					public void windowIconified(WindowEvent e)
+
+						public void windowIconified(WindowEvent e)
 						{
+							setTitle(Double.toString(Math.random())); //ensure that we have an uinque title
+							JAPDll.hideWindowInTaskbar(getTitle());
 							m_bIsIconified=true;
 							updateValues();
 						}

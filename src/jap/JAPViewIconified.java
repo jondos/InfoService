@@ -43,6 +43,7 @@ import javax.swing.border.LineBorder;
 
 
 import anon.AnonServer;
+import gui.JAPDll;
 
 final public class JAPViewIconified extends JWindow implements ActionListener,MouseMotionListener,MouseListener,JAPObserver {
 	private JAPController m_Controller;
@@ -52,7 +53,8 @@ final public class JAPViewIconified extends JWindow implements ActionListener,Mo
 	private boolean       m_bIsDragging=false;
 	private NumberFormat  m_NumberFormat;
 	private static final Font fnt = new Font("Sans",Font.PLAIN,9);
-	static final private Frame m_frameParent=new Frame("HIDDEN JAP2wer2");
+	private static final String STR_HIDDEN_WINDOW=Double.toString(Math.random());
+	static final private Frame m_frameParent=new Frame(STR_HIDDEN_WINDOW);
 	public JAPViewIconified()
 		{
 			super(m_frameParent);
@@ -151,6 +153,7 @@ final public class JAPViewIconified extends JWindow implements ActionListener,Mo
 			m_labelBytes.setText(JAPMessages.getString("iconifiedViewZero"));
 			m_labelUsers.setText(JAPMessages.getString("iconifiedViewNA"));
 			m_labelTraffic.setText(JAPMessages.getString("iconifiedViewNA"));
+			JAPDll.setWindowOnTop(STR_HIDDEN_WINDOW,true);
 		}
 
 	void switchBackToMainView() {
