@@ -40,7 +40,6 @@ public class JAPMixCascadeComboBox extends JComboBox
 		private JPanel m_componentUserServer;
 		private JLabel m_componentUserDefinedCascade;
 		private JLabel m_componentAvailableCascade;
-		private Font m_fontSmallFont;
 		public JAPMixCascadeComboBoxListCellRender()
 		{
 			m_componentNoServer = new JLabel(JAPMessages.getString("ngMixComboNoServers"));
@@ -50,19 +49,14 @@ public class JAPMixCascadeComboBox extends JComboBox
 
 			m_componentAvailableServer = new JLabel(JAPMessages.getString("ngMixComboAvailableServers"));
 			m_componentAvailableServer.setOpaque(true);
-			Font f = m_componentAvailableServer.getFont();
-			m_fontSmallFont = new Font(f.getName(), Font.PLAIN, (int) Math.max(9, Math.rint(f.getSize() * 0.8)));
 			m_componentAvailableServer.setHorizontalAlignment(JLabel.LEFT);
-			m_componentAvailableServer.setBorder(new EmptyBorder(2, 28, 2, 3));
-			m_componentAvailableServer.setForeground(Color.blue);
-			m_componentAvailableServer.setFont(m_fontSmallFont);
+			m_componentAvailableServer.setBorder(new EmptyBorder(1, 3, 1, 3));
 
 			m_componentUserServer = new JPanel(new GridBagLayout());
 			GridBagConstraints c = new GridBagConstraints();
 			JLabel l = new JLabel(JAPMessages.getString("ngMixComboUserServers"));
+			l.setBorder(new EmptyBorder(1, 3, 1, 3));
 			l.setHorizontalAlignment(JLabel.LEFT);
-			l.setForeground(Color.blue);
-			l.setFont(m_fontSmallFont);
 			c.fill = GridBagConstraints.HORIZONTAL;
 			c.anchor = GridBagConstraints.NORTHWEST;
 			c.weightx = 1;
@@ -73,7 +67,7 @@ public class JAPMixCascadeComboBox extends JComboBox
 			c.insets = new Insets(0, 0, 0, 0);
 			m_componentUserServer.add(new JSeparator(), c);
 			c.gridy = 2;
-			c.insets = new Insets(0, 29, 0, 0);
+			c.insets = new Insets(0, 0, 0, 0);
 			m_componentUserServer.add(l, c);
 			m_componentUserDefinedCascade = new JLabel(JAPUtil.loadImageIcon("servermanuell.gif", true));
 			m_componentUserDefinedCascade.setOpaque(true);
@@ -94,7 +88,7 @@ public class JAPMixCascadeComboBox extends JComboBox
 			}
 			if (value.equals(ITEM_AVAILABLE_CASCADES))
 			{
-				m_componentAvailableServer.setFont(m_fontSmallFont);
+				//m_componentAvailableServer.setFont(m_fontSmallFont);
 				return m_componentAvailableServer;
 			}
 			else if (value.equals(ITEM_USER_CASCADES))
