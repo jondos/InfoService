@@ -53,7 +53,7 @@ final class JAPFeedback implements Runnable {
 			runFlag = true;
 			while(runFlag)
 				{
-					if (controller.getAnonMode())
+					if (controller.getAnonMode()&&!JAPModel.isInfoServiceDisabled())
 						{
 							controller.getInfoService().getFeedback(controller.getAnonServer());
 							controller.notifyJAPObservers();

@@ -52,6 +52,7 @@ public final class JAPModel
   private int m_iDummyTrafficIntervall           = -1; // indicates what Dummy Traffic should be generated or not
 
   private boolean m_bSmallDisplay                = false;
+  private boolean m_bInfoServiceDisabled         = false;
 
   private static JAPModel model                  = null;
 
@@ -244,6 +245,15 @@ public final class JAPModel
       return model.m_bSmallDisplay;
     }
 
+ protected void setInfoServiceDisabled(boolean b)
+    {
+      m_bInfoServiceDisabled=b;
+    }
+
+  public static boolean isInfoServiceDisabled()
+    {
+      return model.m_bInfoServiceDisabled;
+    }
 
 	public String toString()
     {
