@@ -297,21 +297,21 @@ final public class AnonProxy implements Runnable
 	}
 
 	AnonChannel createChannel(int type) throws ToManyOpenChannelsException,
-		NotConnectedToMixException,
-		Exception
-	{
+	NotConnectedToMixException,
+	Exception
+		{
 		if (type == AnonChannel.SOCKS)
-		{
-			return m_Tor.createChannel(AnonChannel.SOCKS);
-		}
-		else if (type == AnonChannel.HTTP)
-		{
-			return m_Anon.createChannel(AnonChannel.HTTP);
-		}
-		return null;
+	{
+		return m_Tor.createChannel(AnonChannel.SOCKS);
+	}
+	else if (type == AnonChannel.HTTP)
+	{
+		return m_Anon.createChannel(AnonChannel.HTTP);
+	}
+	return null;
 	}
 
-	synchronized boolean reconnect()
+		synchronized boolean reconnect()
 	{
 		if (m_Anon.isConnected())
 		{
