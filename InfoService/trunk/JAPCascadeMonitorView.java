@@ -292,7 +292,7 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 					tableView.repaint();
 					// create the AnonService
 					JAPAnonProxy proxyAnon=new JAPAnonProxy(listener);
-					if (controller.getUseFirewall()) {
+					if (JAPModel.getUseFirewall()) {
 						// connect vi proxy to first mix (via ssl portnumber)
 						if (e.getSSLPort() == -1) {
 							proxyAnon.setAnonService(e.getHost(),e.getPort());

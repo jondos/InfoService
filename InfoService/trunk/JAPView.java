@@ -347,7 +347,7 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 		p11.add(Box.createRigidArea(new Dimension(10,0)) );
 		p11.add(new JLabel(JAPMessages.getString("confPort")) );
 		p11.add(Box.createRigidArea(new Dimension(5,0)) );
-		m_labelProxyPort = new JLabel(String.valueOf(controller.getHTTPListenerPortNumber()));
+		m_labelProxyPort = new JLabel(String.valueOf(JAPModel.getHttpListenerPortNumber()));
 //		m_labelProxyPort.setForeground(Color.black);
 		p11.add(m_labelProxyPort );
 		p11.add(Box.createRigidArea(new Dimension(5,0)) );
@@ -577,8 +577,8 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 		AnonServerDBEntry e = controller.getAnonServer();
 		// Config panel
 		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPView:Start updateValues");
-		m_labelProxyPort.setText(String.valueOf(controller.getHTTPListenerPortNumber()));
-		if(controller.getUseFirewall())
+		m_labelProxyPort.setText(String.valueOf(JAPModel.getHttpListenerPortNumber()));
+		if(JAPModel.getUseFirewall())
 			{
 			  proxyMustUseLabel.setText(JAPMessages.getString("firewallMustUse"));
 			  m_labelProxyHost.setVisible(true);

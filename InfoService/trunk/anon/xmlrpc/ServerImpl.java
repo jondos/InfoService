@@ -57,11 +57,11 @@ public class ServerImpl extends Server
 		{
 		}
 
-	public int getLocalListeningPort()
+/*	public int getLocalListeningPort()
 		{
 			JAPController m=JAPController.getController();
 			return m.getHTTPListenerPortNumber();
-		}
+		}*/
 
 	public MixCascade[] loadMixCascadesFromTheNet() throws Exception
 		{
