@@ -1629,7 +1629,7 @@ public final class JAPController implements ProxyListener
 	/**
 	 * Get all available mixcascades from the infoservice and store it in the database.
 	 */
-	public void fetchMixCascades()
+	public void fetchMixCascades(boolean bShowError)
 	{
 		LogHolder.log(LogLevel.INFO, LogType.MISC,
 					  "JAPController: fetchMixCascades: Trying to fetch mixcascades from infoservice.");
@@ -1638,7 +1638,7 @@ public final class JAPController implements ProxyListener
 		{
 			LogHolder.log(LogLevel.ERR, LogType.NET,
 						  "JAPController: fetchMixCascades: No connection to infoservices.");
-			if (!JAPModel.isSmallDisplay())
+			if (!JAPModel.isSmallDisplay()&&bShowError)
 			{
 				JOptionPane.showMessageDialog(m_View, JAPMessages.getString("errorConnectingInfoService"),
 											  JAPMessages.getString("errorConnectingInfoServiceTitle"),

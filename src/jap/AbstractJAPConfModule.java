@@ -144,7 +144,7 @@ public abstract class AbstractJAPConfModule
 
 	/**
 	 * This will set the font setting for this configuration module. After setting the font, the
-	 * repaintRootPanel() method is called by this method.
+	 * recreateRootPanel() method is called by this method.
 	 *
 	 * @param a_newFont The new font for this configuration module.
 	 */
@@ -170,11 +170,12 @@ public abstract class AbstractJAPConfModule
 	/**
 	 * This method is called every time the user presses the "OK" button. The onOkPressed() event
 	 * handler is called by this method.
+	 * @return true, if all values are ok and we can procceed; false otherwise
 	 */
-	public final void okPressed()
+	public final boolean okPressed()
 	{
 		/* call the event handler */
-		onOkPressed();
+		return onOkPressed();
 	}
 
 	/**
@@ -229,8 +230,9 @@ public abstract class AbstractJAPConfModule
 	 * This method can be overwritten by the children of AbstractJAPConfModule. It is called
 	 * every time the user presses "OK" in the configuration dialog.
 	 */
-	protected void onOkPressed()
+	protected boolean onOkPressed()
 	{
+		return true;
 	}
 
 	/**

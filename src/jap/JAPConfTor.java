@@ -136,14 +136,15 @@ class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 		}
 		else if (actionEvent.getActionCommand().equals("fetchRouters"))
 		{
-			fetchRouters();
+			fetchRouters(true);
 
 		}
 	}
 
-	protected void onOkPressed()
+	protected boolean onOkPressed()
 	{
 		JAPController.setTorMaxConnectionsPerRoute(m_sliderConnectionsPerPath.getValue());
+		return true;
 	}
 
 	protected void onUpdateValues()
@@ -154,7 +155,7 @@ class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 	protected void onRootPanelShown()
 	{
 		if(System.currentTimeMillis()-m_lastUpdate>600000)
-			fetchRouters();
+			fetchRouters(false);
 	}
 
 	private void updateGuiOutput()
@@ -162,12 +163,13 @@ class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 		m_sliderConnectionsPerPath.setValue(JAPModel.getTorMaxConnectionsPerRoute());
 	}
 
-	private void fetchRouters()
+	private void fetchRouters(boolean bShowError)
 	{
 		ORList ol = new ORList(new InfoServiceORListFetcher());
 		if (!ol.updateList())
 		{
-			JAPConf.showError(JAPMessages.getString("torErrorFetchRouters"));
+			if(bShowError)
+				JAPConf.showError(JAPMessages.getString("torErrorFetchRouters"));
 			return;
 		}
 		m_lastUpdate=System.currentTimeMillis();

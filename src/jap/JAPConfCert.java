@@ -215,9 +215,10 @@ public class JAPConfCert extends AbstractJAPConfModule
 	{
 	}
 
-	public void onOkPressed()
+	public boolean onOkPressed()
 	{
 		JAPController.setCertificateStore(m_jcs);
+		return true;
 	}
 
 	private JPanel createCertCAPanel()
