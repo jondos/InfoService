@@ -25,6 +25,8 @@ OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABIL
 IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
+package jap;
+
 import java.awt.Font;
 import java.awt.Frame;
 import java.awt.Color;
@@ -36,7 +38,7 @@ import javax.swing.*;
 
 import anon.AnonServer;
 
-final class JAPViewIconified extends JFrame implements ActionListener,JAPObserver {
+final public class JAPViewIconified extends JFrame implements ActionListener,JAPObserver {
 	private JAPController controller;
 	private Frame mainView;
 	private JLabel    z1, z2, z3,z4;

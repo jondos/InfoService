@@ -25,6 +25,8 @@ OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABIL
 IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
+package jap;
+
 import java.awt.Window;
 import java.awt.Frame;
 import java.awt.Font;
@@ -35,7 +37,7 @@ import java.awt.FontMetrics;
 import java.awt.MediaTracker;
 import java.io.InputStream;
 
-final class JAPSplash extends Window
+final public class JAPSplash extends Window
 	{
 		private Image m_imgSplash;
 		private Image m_imgBusy;
@@ -46,7 +48,7 @@ final class JAPSplash extends Window
 		private int m_iXVersion;
 		private int m_iYVersion;
 
-		JAPSplash(Frame frmParent)
+		public JAPSplash(Frame frmParent)
 			{
 				super(frmParent);
 				setLayout(null);

@@ -25,35 +25,9 @@ OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABIL
 IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
-import jap.JAPController;
-public class JAPMacintosh extends JAP {
+package jap;
 
-	JAPMacintosh(String[] argv) {
-		super(argv);
-	}
-
-	protected void registerMRJHandlers() {
-		//Register MRJ handlers for about and quit.
-		MRJI IMRJI = new MRJI();
-		com.apple.mrj.MRJApplicationUtils.registerQuitHandler(IMRJI);
-		com.apple.mrj.MRJApplicationUtils.registerAboutHandler(IMRJI);
-	}
-
-	// Inner class defining the MRJ Interface
-	class MRJI implements com.apple.mrj.MRJQuitHandler, com.apple.mrj.MRJAboutHandler
-	{
-		public void handleQuit() {
-			JAPController.getController().goodBye();
-		}
-		public void handleAbout() {
-			JAPController.aboutJAP();
-		}
-	}
-
-	public static void main(String[] argv) {
-		JAPMacintosh japOnMac = new JAPMacintosh(argv);
-		japOnMac.startJAP();
-		japOnMac.registerMRJHandlers();
-	}
-
+interface VersioncheckerProgress {
+	public void progress(int percent);
 }
+

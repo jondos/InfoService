@@ -25,10 +25,12 @@ OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABIL
 IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
+package jap;
+
 import java.awt.Insets;
 import java.awt.Font;
 public final class JAPConstants {
-	static final String aktVersion = "00.01.080"; //Never change the layout of this line!
+	public static final String aktVersion = "00.01.080"; //Never change the layout of this line!
 	//static final String buildDate=".."
 	//static final String buildType="..."
         //needed for update.JAPUpdate
@@ -55,7 +57,7 @@ public final class JAPConstants {
 	static final String   JAPLocalFilename             = "JAP.jar";
 	static final int      MAXHELPLANGUAGES             = 6;
 	public static final String   TITLE                 = "JAP";
-	static final String   TITLEOFICONIFIEDVIEW         = "JAP";
+	public static final String   TITLEOFICONIFIEDVIEW         = "JAP";
 	static final String   AUTHOR                       = "(c) 2000 The JAP-Team";
 	static final String   IMGPATHHICOLOR               = "images/";
 	static final String   IMGPATHLOWCOLOR              = "images/lowcolor/";
