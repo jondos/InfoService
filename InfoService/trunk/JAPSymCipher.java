@@ -53,7 +53,7 @@ public final class JAPSymCipher
 						bfEnc.encrypt(from,i+ifrom,to,i+ito);
 			/*	try{cipherEnc.doFinal(from,ifrom,len,to,ito);}
 					catch(Exception e){
-						System.out.println("e1");
+						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"e1");
 						e.printStackTrace();}
 				*/	return 0;
 				}

@@ -2,7 +2,6 @@ import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.border.*;
-import java.awt.*;
 import java.net.URL;
 import java.net.MalformedURLException;
 import java.io.*;
@@ -10,13 +9,6 @@ import javax.swing.text.*;
 import javax.swing.event.*;
 
 /* classes modified from Swing Example "Metalworks" */
-
-/* Fuer Stefan:
-Leider hat die von Dir geaenderte Version nicht mehr bei mir funktioniert.
-Ich habe deshalb (mit Muehe) wieder eine funktionierende Version gebastelt. 
-Wir sollten zukuenftig ueber groessere Aenderungen sprechen, bevor sie
-getan werden. 
-*/
 
 public class JAPHelp extends JDialog implements ActionListener {
     private JAPModel model;
@@ -104,45 +96,71 @@ public class JAPHelp extends JDialog implements ActionListener {
     }
 }
 
-/*
+
 final class HtmlPane extends JScrollPane implements HyperlinkListener 
 	{
     private JEditorPane html;
 		private URL url;
 		private Cursor cursor;
 
-    public HtmlPane(String fn)
-			{
-				try
-					{
-						html = new JEditorPane(getClass().getResource(fn));
-						html.setEditable(false);
-						html.addHyperlinkListener(this);
+    public HtmlPane(String fn) {
+		// used to find help files within a .jar file
+		try {
+			html = new JEditorPane(getClass().getResource(fn));
+		}
+		catch (Exception e) {
+			html = null;
+		}
+		// ...else
+		if (html == null) {
+			try {
+				File f = new File (fn);
+				String s = f.getAbsolutePath();
+				s = "file:"+s;
+				URL url = new URL(s);
+				html = new JEditorPane(s);
+			}
+			catch (Exception e) {
+				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPHelp:HtmlPane(constructor):Exception: " + e);
+				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"URL was: " + fn);
+			}
+		}
+		if (html != null) {
+			html.setEditable(false);
+			html.addHyperlinkListener(this);
 
-						JViewport vp = getViewport();
-						vp.add(html);
-//						cursor=html.getCursor();
-					}
-				catch (Exception e)
-					{
-						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPHelp:HtmlPane(constructor):Exception: " + e);
-						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"URL was: " + fn);
-					}	
-			}
+			JViewport vp = getViewport();
+			vp.add(html);
+			cursor=html.getCursor(); // ??? (hf)
+		}
+	}
     
-    public void load(String fn)
-			{
-				try 
-					{
-						URL url = getClass().getResource(fn);
-						linkActivated(url);
-					}
-				catch (Exception e)
-					{
-						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPHelp:load:Exception: " + e);
-						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"URL was: " + fn);
-					}
+    public void load(String fn) {
+		URL url = null;
+		// used to find help files within a .jar file
+		try  {
+			url = getClass().getResource(fn);
+		}
+		catch (Exception e) {
+				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPHelp:load:Exception: " + e);
+				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"URL was: " + fn);
+		}
+		// ...else
+		if (url == null) {
+			try {
+				File f = new File (fn);
+				String s = f.getAbsolutePath();
+				s = "file:"+s;
+				url = new URL(s);
 			}
+			catch (Exception e) {
+				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPHelp:HtmlPane(constructor):Exception: " + e);
+				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"URL was: " + fn);
+			}
+		}
+		if (url != null)
+			linkActivated(url);
+	}
 
     public void hyperlinkUpdate(HyperlinkEvent e)
 			{
@@ -205,103 +223,4 @@ final class HtmlPane extends JScrollPane implements HyperlinkListener
 					}
 			}
  }
-*/
 
-
-class HtmlPane extends JScrollPane implements HyperlinkListener {
-    JEditorPane html;
-
-    public HtmlPane(String fn) {
-	try {
-	    File f = new File (fn);
-	    String s = f.getAbsolutePath();
-	    s = "file:"+s;
-	    URL url = new URL(s);
-	    html = new JEditorPane(s);
-	    html.setEditable(false);
-	    html.addHyperlinkListener(this);
-
-	    JViewport vp = getViewport();
-	    vp.add(html);
-	} catch (MalformedURLException e) {
-	    JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPHelp:Malformed URL: " + e);
-	} catch (IOException e) {
-	    JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPHelp:IOException: " + e);
-	}	
-    }
-    
-    public void load(String fn) {
-	try {
-	    File f = new File (fn);
-	    String s = f.getAbsolutePath();
-	    s = "file:"+s;
-	    URL url = new URL(s);
-//	    html = new JEditorPane(s);
-//	    html.setEditable(false);
-//	    html.addHyperlinkListener(this);
-
-//	    JViewport vp = getViewport();
-//	    vp.add(html);
-	
-//Entweder:	    
-//	    html.setPage(s);
-//Oder:
-	    linkActivated(url);
-	    
-	} catch (MalformedURLException e) {
-	    JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPHelp:Malformed URL: " + e);
-	} catch (IOException e) {
-	    JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPHelp:IOException: " + e);
-	}	
-    }
-
-    public void hyperlinkUpdate(HyperlinkEvent e) {
-	if (e.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
-	    linkActivated(e.getURL());
-	}
-    }
-
-    protected void linkActivated(URL u) {
-	Cursor c = html.getCursor();
-	Cursor waitCursor = Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR);
-	html.setCursor(waitCursor);
-	SwingUtilities.invokeLater(new PageLoader(u, c));
-    }
-
-    class PageLoader implements Runnable {
-	
-	PageLoader(URL u, Cursor c) {
-	    url = u;
-	    cursor = c;
-	}
-
-        public void run() {
-	    if (url == null) {
-		// restore the original cursor
-		html.setCursor(cursor);
-
-		// PENDING(prinz) remove this hack when 
-		// automatic validation is activated.
-		Container parent = html.getParent();
-		parent.repaint();
-	    } else {
-		Document doc = html.getDocument();
-		try {
-		    html.setPage(url);
-		} catch (IOException ioe) {
-		    html.setDocument(doc);
-		    getToolkit().beep();
-		} finally {
-		    // schedule the cursor to revert after
-		    // the paint has happended.
-		    url = null;
-		    SwingUtilities.invokeLater(this);
-		}
-	    }
-	}
-
-	URL url;
-	Cursor cursor;
-    }
-    
-}

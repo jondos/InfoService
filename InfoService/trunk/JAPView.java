@@ -11,11 +11,10 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 	private JLabel				statusTextField1;
 	private JLabel				statusTextField2;
 	private JLabel				portnumberTextField;
-	private JLabel				proxyportnumberTextField;
-	private JLabel	 			proxyhostTextField;
-	private JLabel				anonportnumberTextField;
-	private JLabel	 			anonhostTextField;
-	private JButton				portB, httpB, anonB, infoB, helpB, startB, quitB;
+	private JLabel				proxyTextField;
+	private JLabel				infoServiceTextField;
+	private JLabel	 			anonTextField;
+	private JButton				portB, httpB, isB, anonB, infoB, helpB, startB, quitB;
 	private JCheckBox			proxyCheckBox;
 	private JCheckBox			anonCheckBox;
 	private JCheckBox			ano1CheckBox;
@@ -31,64 +30,46 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 	public JAPView (String s)
 		{
 			super(s);
+			JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPView:initializing...");
 			model = JAPModel.getModel();
 			init();
 			helpWindow =  new JAPHelp(this); 
 			configDialog = new JAPConf(this);
+			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPView:initialization finished!");
 		}
 	
 	public void init() {
-	    try 
-				{
-					UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName()); 
-				} 
-			catch(Exception e)
-				{
-				}
-		    
+	    try {
+			UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName()); 
+		} 
+		catch (Exception e) {
+			JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.GUI,"JAPView: "+e);
+		}
 	    // Load Icon in upper left corner of the frame window
 	    ImageIcon ii=model.loadImageIcon(model.IICON16FN,true);
 	    if(ii!=null) setIconImage(ii.getImage());
-
-
 	    // listen for events from outside the frame
 	    addWindowListener(new WindowAdapter() {
 		    public void windowClosing(WindowEvent e) {exitProgram();}
 	    });	
-	    
-	    // Check for new version on server
-	    if(JAPVersion.checkForNewVersion(model)==1) 
-				{
-					if(JAPVersion.getNewVersion(model)==0)
-						{
-							JOptionPane.showMessageDialog(this, model.getString("newVersion"));
-							exitProgram();
-						}
-				}
-	    
 	    // Load Images for "Anonymity Meter"
 	    loadMeterIcons();
-	    
 	    // "NORTH": Image
 	    ImageIcon northImage = model.loadImageIcon(model.getString("northPath"),true);
 	    JLabel northLabel = new JLabel(northImage);
-
 	    // "West": Image
 	    ImageIcon westImage = model.loadImageIcon(model.getString("westPath"),true);;
 	    JLabel westLabel = new JLabel(westImage);
 //		westLabel.setOpaque(false);
-	    
 	    // "Center:" tabs
 	    JTabbedPane tabs = new JTabbedPane();
 	    JPanel config = buildConfigPanel();
 	    JPanel level = buildLevelPanel();
 	    tabs.addTab(model.getString("mainConfTab"), model.loadImageIcon(model.CONFIGICONFN,true), config );
 	    tabs.addTab(model.getString("mainMeterTab"), model.loadImageIcon(model.METERICONFN,true), level );
-	    
 	    // "South": Buttons
 	    JPanel buttonPanel = new JPanel();
 //		buttonPanel.setOpaque(false);
-	    
 	    infoB = new JButton(model.getString("infoButton"));
 	    helpB = new JButton(model.getString("helpButton"));
 //		startB = new JButton(model.msg.getString("startButton"));
@@ -106,7 +87,6 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 	    helpB.setMnemonic(model.getString("helpButtonMn").charAt(0));
 //		startB.setMnemonic(model.msg.getString("startButtonMn").charAt(0));
 	    quitB.setMnemonic(model.getString("quitButtonMn").charAt(0));
-	    
 
 		// add Components to Frame
 		setVisible(false);
@@ -123,14 +103,12 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 		updateValues();
 		getContentPane().invalidate();
 	    setResizable(false);
-		try	
-			{
-				pack();  // optimize size
-			}
-		catch(Exception e)
-			{
-				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPView:Hm.. Error by Pack - Has To be fixed!!");
-			}
+		try	{
+			pack();  // optimize size
+		}
+		catch(Exception e) {
+				JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.GUI,"JAPView:Hm.. Error by Pack - Has To be fixed!!");
+		}
 		model.centerFrame(this);
 		toFront();
 		getContentPane().validate();
@@ -217,114 +195,126 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 		portPanel.setLayout(new GridLayout(2,1) );
 		portPanel.setBorder( new TitledBorder(model.getString("confListenerBorder")) );
 		// Line 1
-		JPanel p1 = new JPanel();
-		p1.setLayout(new BoxLayout(p1, BoxLayout.X_AXIS) );
-		p1.add(Box.createRigidArea(new Dimension(10,0)) );
-		p1.add(new JLabel(model.getString("confPort")) );
-		p1.add(Box.createRigidArea(new Dimension(5,0)) );
-		portnumberTextField = new JLabel(String.valueOf(model.portNumber));
-//		portnumberTextField.setForeground(Color.black);
-		p1.add(portnumberTextField );
-		p1.add(Box.createRigidArea(new Dimension(5,0)) );
-		p1.add(Box.createHorizontalGlue() );
-		portB = new JButton(model.getString("confPortButton"));
-		portB.addActionListener(this);
-		p1.add(portB);
-		portPanel.add(p1);
-		// Line 2
 		JPanel p11 = new JPanel();
 		p11.setLayout(new BoxLayout(p11, BoxLayout.X_AXIS) );
 		p11.add(Box.createRigidArea(new Dimension(10,0)) );
-		p11.add(new JLabel(model.getString("confStatus1")) );
+		p11.add(new JLabel(model.getString("confPort")) );
 		p11.add(Box.createRigidArea(new Dimension(5,0)) );
+		portnumberTextField = new JLabel(String.valueOf(model.portNumber));
+//		portnumberTextField.setForeground(Color.black);
+		p11.add(portnumberTextField );
+		p11.add(Box.createRigidArea(new Dimension(5,0)) );
+		p11.add(Box.createHorizontalGlue() );
+		portB = new JButton(model.getString("confPortButton"));
+		portB.addActionListener(this);
+		p11.add(portB);
+		// Line 2
+		JPanel p12 = new JPanel();
+		p12.setLayout(new BoxLayout(p12, BoxLayout.X_AXIS) );
+		p12.add(Box.createRigidArea(new Dimension(10,0)) );
+		p12.add(new JLabel(model.getString("confStatus1")) );
+		p12.add(Box.createRigidArea(new Dimension(5,0)) );
 		statusTextField1 = new JLabel("unknown");
-		p11.add(statusTextField1);
+		p12.add(statusTextField1);
+		// add to portPanel
 		portPanel.add(p11);
+		portPanel.add(p12);
 		// add to mainPanel
 		mainPanel.add(portPanel);	
 		
 		// HTTP Proxy
 		JPanel proxyPanel = new JPanel();
-		proxyPanel.setLayout(new GridLayout(3,1) );
+		proxyPanel.setLayout(new GridLayout(2,1) );
 		proxyPanel.setBorder( new TitledBorder(model.getString("confProxyBorder")) );
 		// Line 1
+		JPanel p21 = new JPanel();
+		p21.setLayout(new BoxLayout(p21, BoxLayout.X_AXIS) );
 		proxyCheckBox = new JCheckBox(model.getString("confProxyCheckBox"));
 		proxyCheckBox.addActionListener(this);
-		proxyPanel.add(proxyCheckBox );
-		// Line 2
-		JPanel p2 = new JPanel();
-		p2.setLayout(new BoxLayout(p2, BoxLayout.X_AXIS) );
-		p2.add(Box.createRigidArea(new Dimension(10,0)) );
-		p2.add(new JLabel(model.getString("confProxyHost")) );
-		p2.add(Box.createRigidArea(new Dimension(5,0)) );
-		proxyhostTextField = new JLabel(model.proxyHostName);
-		// set Font in proxyCheckBox in same color as in proxyhostTextField
-		proxyCheckBox.setForeground(proxyhostTextField.getForeground());
-		p2.add(proxyhostTextField);
-		proxyPanel.add(p2);
-		// Line 3
-		JPanel p3 = new JPanel();
-		p3.setLayout(new BoxLayout(p3, BoxLayout.X_AXIS) );
-		p3.add(Box.createRigidArea(new Dimension(10,0)) );
-		p3.add(new JLabel(model.getString("confProxyPort")) );
-		p3.add(Box.createRigidArea(new Dimension(5,0)) );
-		proxyportnumberTextField = new JLabel();
-		p3.add(proxyportnumberTextField );
-		p3.add(Box.createRigidArea(new Dimension(5,0)) );
-		p3.add(Box.createHorizontalGlue() );
+		// not yet implemented --> disable it
+		proxyCheckBox.setEnabled(false);
+		p21.add(proxyCheckBox);
+		p21.add(Box.createRigidArea(new Dimension(5,0)) );
+		p21.add(Box.createHorizontalGlue() );
 		httpB = new JButton(model.getString("confProxyButton"));
 		httpB.addActionListener(this);
-		p3.add(httpB);
-		proxyPanel.add(p3);
+		p21.add(httpB);
+		// Line 2
+		JPanel p22 = new JPanel();
+		p22.setLayout(new BoxLayout(p22, BoxLayout.X_AXIS) );
+		p22.add(Box.createRigidArea(new Dimension(10,0)) );
+		p22.add(new JLabel(model.getString("confProxyHost")) );
+		p22.add(Box.createRigidArea(new Dimension(5,0)) );
+		proxyTextField = new JLabel();
+		p22.add(proxyTextField);
+		// set Font in proxyCheckBox in same color as in proxyTextField
+		proxyCheckBox.setForeground(proxyTextField.getForeground());
+		// add to proxypanel
+		proxyPanel.add(p21);
+		proxyPanel.add(p22);
 		// add to mainPanel
 		mainPanel.add(proxyPanel);	
+		
+		// Information Service
+		JPanel infoServicePanel = new JPanel();
+		infoServicePanel.setLayout(new GridLayout(1,1) );
+		infoServicePanel.setBorder( new TitledBorder(model.getString("confInfoServiceBorder")) );
+		// Line 1
+		JPanel p31 = new JPanel();
+		p31.setLayout(new BoxLayout(p31, BoxLayout.X_AXIS) );
+		p31.add(Box.createRigidArea(new Dimension(10,0)) );
+		p31.add(new JLabel(model.getString("confInfoServiceHost")) );
+		p31.add(Box.createRigidArea(new Dimension(5,0)) );
+		infoServiceTextField = new JLabel();
+		p31.add(infoServiceTextField);
+		p31.add(Box.createRigidArea(new Dimension(5,0)) );
+		p31.add(Box.createHorizontalGlue() );
+		isB = new JButton(model.getString("confInfoServiceButton"));
+		isB.addActionListener(this);
+		p31.add(isB);
+		// add to infoServicePanel
+		infoServicePanel.add(p31);
+		// add to mainPanel
+		mainPanel.add(infoServicePanel);	
 		
 		// Activate Anonymity
 		JPanel activatePanel = new JPanel();
 		activatePanel.setLayout(new GridLayout(4,1) );
 		activatePanel.setBorder( new TitledBorder(model.getString("confActivateBorder")) );
 		// Line 1
-		JPanel p4 = new JPanel();
-		p4.setLayout(new BoxLayout(p4, BoxLayout.X_AXIS) );
-		//p4.add(Box.createRigidArea(new Dimension(10,0)) );
+		JPanel p41 = new JPanel();
+		p41.setLayout(new BoxLayout(p41, BoxLayout.X_AXIS) );
+		//p41.add(Box.createRigidArea(new Dimension(10,0)) );
 		anonCheckBox = new JCheckBox(model.getString("confActivateCheckBox"));
 		anonCheckBox.setForeground(Color.red);
 		anonCheckBox.setMnemonic(model.getString("confActivateCheckBoxMn").charAt(0));
 		anonCheckBox.addActionListener(this);
-		p4.add(anonCheckBox );
-		p4.add(Box.createRigidArea(new Dimension(5,0)) );
-		p4.add(Box.createHorizontalGlue() );
+		p41.add(anonCheckBox );
+		p41.add(Box.createRigidArea(new Dimension(5,0)) );
+		p41.add(Box.createHorizontalGlue() );
 		anonB = new JButton(model.getString("confActivateButton"));
 		anonB.addActionListener(this);
-		p4.add(anonB);
-		activatePanel.add(p4);
+		p41.add(anonB);
 		// Line 2
-		JPanel p21 = new JPanel();
-		p21.setLayout(new BoxLayout(p21, BoxLayout.X_AXIS) );
-		p21.add(Box.createRigidArea(new Dimension(10,0)) );
-		p21.add(new JLabel(model.getString("confAnonHost")) );
-		p21.add(Box.createRigidArea(new Dimension(5,0)) );
-		anonhostTextField = new JLabel(model.anonHostName);
-		p21.add(anonhostTextField);
-		activatePanel.add(p21);
+		JPanel p42 = new JPanel();
+		p42.setLayout(new BoxLayout(p42, BoxLayout.X_AXIS) );
+		p42.add(Box.createRigidArea(new Dimension(10,0)) );
+		p42.add(new JLabel(model.getString("confAnonHost")) );
+		p42.add(Box.createRigidArea(new Dimension(5,0)) );
+		anonTextField = new JLabel();
+		p42.add(anonTextField);
 		// Line 3
-		JPanel p31 = new JPanel();
-		p31.setLayout(new BoxLayout(p31, BoxLayout.X_AXIS) );
-		p31.add(Box.createRigidArea(new Dimension(10,0)) );
-		p31.add(new JLabel(model.getString("confAnonPort")) );
-		p31.add(Box.createRigidArea(new Dimension(5,0)) );
-		anonportnumberTextField = new JLabel();
-		p31.add(anonportnumberTextField);
-		activatePanel.add(p31);
-		// Line 4
-		JPanel p41 = new JPanel();
-		p41.setLayout(new BoxLayout(p41, BoxLayout.X_AXIS) );
-		p41.add(Box.createRigidArea(new Dimension(10,0)) );
-		p41.add(new JLabel(model.getString("confStatus2")) );
-		p41.add(Box.createRigidArea(new Dimension(5,0)) );
+		JPanel p43 = new JPanel();
+		p43.setLayout(new BoxLayout(p43, BoxLayout.X_AXIS) );
+		p43.add(Box.createRigidArea(new Dimension(10,0)) );
+		p43.add(new JLabel(model.getString("confStatus2")) );
+		p43.add(Box.createRigidArea(new Dimension(5,0)) );
 		statusTextField2 = new JLabel("unknown");
-		p41.add(statusTextField2);
+		p43.add(statusTextField2);
+		// add to activatePanel
 		activatePanel.add(p41);
+		activatePanel.add(p42);
+		activatePanel.add(p43);
 		// add to mainPanel
 		mainPanel.add(activatePanel);	
 		
@@ -337,7 +327,6 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPView:METERFNARRAY.length="+model.METERFNARRAY.length);
 		for (int i=0; i<model.METERFNARRAY.length; i++) {
 			meterIcons[i] = model.loadImageIcon(model.METERFNARRAY[i],false);
-			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPView:Image "+model.METERFNARRAY[i]+" loaded");
 		}
 	}
 	
@@ -369,10 +358,12 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 					showConfigDialog(JAPConf.PORT_TAB);
 				else if (event.getSource() == httpB)
 					showConfigDialog(JAPConf.HTTP_TAB);
+				else if (event.getSource() == isB)
+					showConfigDialog(JAPConf.INFO_TAB);
 				else if (event.getSource() == anonB)
 					showConfigDialog(JAPConf.ANON_TAB);
 				else if (event.getSource() == infoB)
-					showInfoBox();
+					model.aboutJAP();
 				else if (event.getSource() == helpB)
 					showHelpWindow();
 				else if (event.getSource() == proxyCheckBox) 
@@ -393,41 +384,23 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 	private void showConfigDialog(int card) {
 //		JAPConf d = new JAPConf(this, model);
 		configDialog.selectCard(card);
+		configDialog.updateValues();
 		configDialog.show();
 	}
 	
-    public void showInfoBox() 
-			{
-				JOptionPane.showMessageDialog(
-					this, 
-					model.TITLE + "\n" + 
-					 model.getString("infoText") + "\n\n" + 
-					 model.AUTHOR + "\n\n" +
-					 model.getString("infoEMail") + "\n" + 
-					 model.getString("infoURL") + "\n\n" + 
-					 model.getString("version")+": "+JAPVersion.getCurrentVersion()+"\n\n", 
-					model.getString("aboutBox"),
-					JOptionPane.INFORMATION_MESSAGE);
-			}
-
 	private void exitProgram() {
 		// * requestListener.stop();
-		model.goodBye();
-		System.exit(0);
+		model.goodBye(); // call the final exit procedure of JAP
 	}
 	
-    public void updateValues() {
+    private void updateValues() {
 		// Config panel
 		portnumberTextField.setText(String.valueOf(model.portNumber));
-		
-		proxyportnumberTextField.setText(String.valueOf(model.proxyPortNumber));
-		proxyhostTextField.setText(model.proxyHostName);
-		
-		anonportnumberTextField.setText(String.valueOf(model.anonPortNumber));
-		anonhostTextField.setText(model.anonHostName);
-
 		proxyCheckBox.setSelected(model.isProxyMode());
+		proxyTextField.setText(model.proxyHostName+":"+String.valueOf(model.proxyPortNumber));
+		infoServiceTextField.setText(model.infoServiceHostName+":"+String.valueOf(model.infoServicePortNumber));
 		anonCheckBox.setSelected(model.isAnonMode());
+		anonTextField.setText(model.anonHostName+":"+String.valueOf(model.anonPortNumber));
 		
 		statusTextField1.setText(model.status1);
 		statusTextField2.setText(model.status2);
