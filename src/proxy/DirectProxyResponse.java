@@ -26,7 +26,7 @@ IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISI
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
 package proxy;
-import JAPDebug;
+import jap.JAPDebug;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.IOException;

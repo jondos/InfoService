@@ -26,72 +26,63 @@ IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISI
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
 
-package update;
+package jap;
 
-import java.io.File;
-import javax.swing.filechooser.*;
+import java.util.ResourceBundle;
+import java.util.PropertyResourceBundle;
+import java.util.Locale;
+import java.awt.Frame;
 
-/**
- * Überschrift:
- * Beschreibung:
- * Copyright:     Copyright (c) 2001
- * Organisation:
- * @author
- * @version 1.0
- */
+public final class JAPMessages
+	{
+		private static ResourceBundle msg=null;
 
-public class JarFileFilter extends FileFilter
-{
 
-  private final String jarExtension = "jar";
+		private JAPMessages()
+			{
+				init();
+			}
 
-  public JarFileFilter()
-  {
-  }
-  public boolean accept(File parm1)
-  {
-      if (parm1.isDirectory())
-         {
-            return true;
-         }
+		/* Initalize with the System default Locale...*/
+		public static void init()
+			{
+				// Load Texts for Messages and Windows
+				init(Locale.getDefault());
+			}
 
-      String extension = getExtension(parm1);
+		/* Init with the specified Locale**/
+		public static void init(Locale locale)
+			{
+				// Load Texts for Messages and Windows
+				try
+						{
+							msg = PropertyResourceBundle.getBundle(JAPConstants.MESSAGESFN, locale);
+						}
+					catch(Exception e1)
+						{
+							try
+								{
+									msg=PropertyResourceBundle.getBundle(JAPConstants.MESSAGESFN);
+								}
+							catch(Exception e)
+								{
+									JAPAWTMsgBox.MsgBox(new Frame(),
+																			"File not found: "+JAPConstants.MESSAGESFN+".properties\nYour package of JAP may be corrupted.\nTry again to download or install the package.",
+																			"Error");
+									System.exit(-1);
+								}
+						}
+			}
 
-   if(extension!=null)
-       {
-
-        if(extension.equals(jarExtension))
-          {
-              return true;
-          }else
-          {
-              return false;
-          }
-        }
-     return false;
-  }
-  public String getDescription()
-  {
-    String description = "Jar File "+"(*."+jarExtension+")";
-    return description;
-  }
-
-  private String getExtension(File f)
-  {
-      String extension = null;
-      String s;
-        try{
-              s = f.getName();
-            }catch(Exception e)
-            {
-               e.printStackTrace();
-               return null;
-            }
-        int i = s.lastIndexOf('.');
-
-        if (i > 0 &&  i < s.length() - 1) {
-            extension = s.substring(i+1).toLowerCase();
-        }
-        return extension;
-  }
-}
+		public static String getString(String key)
+			{
+				try
+					{
+						return msg.getString(key);
+					}
+				catch(Exception e)
+					{
+						return key;
+					}
+			}
+	}

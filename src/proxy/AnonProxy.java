@@ -37,8 +37,8 @@ import anon.ToManyOpenChannelsException;
 import anon.NotConnectedToMixException;
 
 import anon.server.AnonServiceImpl;
-import JAPDebug;
-import JAPConstants;
+import jap.JAPDebug;
+import jap.JAPConstants;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.IOException;

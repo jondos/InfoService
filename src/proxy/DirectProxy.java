@@ -26,12 +26,12 @@ IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISI
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
 package proxy;
-import JAPDebug;
-import JAPModel;
-import JAPController;
-import JAPMessages;
-import JAPUtil;
-import JAPConstants;
+import jap.JAPDebug;
+import jap.JAPModel;
+import jap.JAPController;
+import jap.JAPMessages;
+import jap.JAPUtil;
+import jap.JAPConstants;
 import java.net.InetAddress ;
 import java.net.ServerSocket;
 import java.net.Socket;
