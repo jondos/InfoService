@@ -18,7 +18,7 @@ public final class JAPModel {
 // JAPDebug now initialized in JAP in order to use
 // the functions also in JAP.main()
     
-	static final String aktVersion = "00.00.018"; // Version of JAP
+	static final String aktVersion = "00.00.019"; // Version of JAP
 	
 	private int      portNumber        = 4001;
 	private int      runningPortNumber = 0;      // the port where proxy listens
@@ -27,9 +27,9 @@ public final class JAPModel {
 	public  int      proxyPortNumber   = 80;
 	private boolean  proxyMode         = false;  // indicates whether JAP connects via a proxy or directly
 	public  String   infoServiceHostName      = "anon.inf.tu-dresden.de";
-	public  int      infoServicePortNumber    = 80;
+	public  int      infoServicePortNumber    = 6543;
 	public  String   anonHostName      = "anon.inf.tu-dresden.de";
-	public  int      anonPortNumber    = 6543;
+	public  int      anonPortNumber    = 6544;
 	private boolean  anonMode          = false;  // indicates whether user wants to send data via MIXes or not
 	public  boolean  autoConnect       = false;  // autoconnect after program start
 	public  boolean  alreadyCheckedForNewVersion = false; // indicates if check for new version has already been done 
