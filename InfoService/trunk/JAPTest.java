@@ -77,7 +77,8 @@ final public class JAPTest
 			{z.printStackTrace();}
 		*/	
 		//readCertCryptix();
-		testCert();
+	//	testCert();
+		System.getProperties().list(System.out);
 		System.exit(0);
 		}
 	
