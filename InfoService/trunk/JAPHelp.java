@@ -39,13 +39,13 @@ public class JAPHelp extends JDialog implements ActionListener {
 				language = new JComboBox();
 				for (int i = 1; i < model.MAXHELPLANGUAGES; i++) {
 					try { 
-		helpPath = model.getString("helpPath"+String.valueOf(i)); 
-		helpLang = model.getString("lang"+String.valueOf(i));
-		// This checks if the entry exists in the properties file
-		// if yes, the item will be added
-		if (( helpLang.equals("lang"+String.valueOf(i)) )!= true)
-		    language.addItem(helpLang);
-	    }
+								helpPath = model.getString("helpPath"+String.valueOf(i)); 
+								helpLang = model.getString("lang"+String.valueOf(i));
+								// This checks if the entry exists in the properties file
+								// if yes, the item will be added
+								if (( helpLang.equals("lang"+String.valueOf(i)) )!= true)
+								    language.addItem(helpLang);
+								  }
 	    catch (Exception e) { ; }
 	}
 	language.addActionListener(this);
