@@ -86,7 +86,7 @@ import anon.infoservice.ProxyInterface;
 import gui.JAPMultilineLabel;
 import logging.LogLevel;
 import logging.LogType;
-import pay.gui.AccountSettingsPanel;
+
 
 final class JAPConf extends JDialog
 {

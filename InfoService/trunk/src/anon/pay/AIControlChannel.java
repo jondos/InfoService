@@ -1,14 +1,18 @@
 package anon.pay;
 
-import anon.server.impl.SyncControlChannel;
 import org.w3c.dom.Document;
-import anon.pay.xml.*;
+import org.w3c.dom.Element;
+import anon.pay.xml.XMLChallenge;
+import anon.pay.xml.XMLErrorMessage;
+import anon.pay.xml.XMLPayRequest;
+import anon.server.impl.MuxSocket;
+import anon.server.impl.SyncControlChannel;
+import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import logging.LogHolder;
-import anon.util.XMLUtil;
-import java.sql.Timestamp;
-import anon.server.impl.MuxSocket;
+import anon.pay.xml.*;
+import anon.util.*;
+import java.sql.*;
 
 /**
  * This control channel is used for communication with the AI (AccountingInstance or
@@ -40,30 +44,71 @@ public class AIControlChannel extends SyncControlChannel
 	 */
 	public void proccessXMLMessage(Document docMsg)
 	{
-		XMLPayRequest request;
+		Element elemRoot = docMsg.getDocumentElement();
+		String tagName = elemRoot.getTagName();
 		try
 		{
-			request = new XMLPayRequest(docMsg);
+			if (tagName.equals(XMLPayRequest.XML_ELEMENT_NAME))
+			{
+				processPayRequest(new XMLPayRequest(elemRoot));
+			}
+			else if (tagName.equals(XMLErrorMessage.XML_ELEMENT_NAME))
+			{
+				processErrorMessage(new XMLErrorMessage(elemRoot));
+			}
+			else if (tagName.equals(XMLChallenge.XML_ELEMENT_NAME))
+			{
+				processChallenge(new XMLChallenge(elemRoot));
+			}
+			else
+			{
+				throw new Exception("AIControlChannel received unknown message '" + tagName + "'");
+			}
 		}
 		catch (Exception ex)
 		{
-			// maybe it is a XMLErrorMessage then?
-			try
-			{
-				XMLErrorMessage msg = new XMLErrorMessage(docMsg);
-				PayAccountsFile.getInstance().signalAccountError(msg);
-			}
-			catch (Exception ex3)
-			{
-				// hmm, no error message, no request...
-			}
-
-			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Error parsing AI request: " + ex.getMessage());
-			// report errormessage back to AI..
-			XMLErrorMessage err = new XMLErrorMessage(XMLErrorMessage.ERR_BAD_REQUEST, ex.getMessage());
-			sendMessage(XMLUtil.toXMLDocument(err));
-			return;
+			LogHolder.log(LogLevel.DEBUG, LogType.PAY, ex);
+			PayAccountsFile.getInstance().signalAccountError(
+				new XMLErrorMessage(XMLErrorMessage.ERR_BAD_REQUEST, ex.getMessage())
+				);
 		}
+	}
+
+	/**
+	 * processChallenge
+	 *
+	 * @param xMLChallenge XMLChallenge
+	 */
+	private void processChallenge(XMLChallenge chal) throws Exception
+	{
+		byte[] arbChal = chal.getChallengeForSigning();
+		PayAccount acc = PayAccountsFile.getInstance().getActiveAccount();
+		if (acc == null)
+		{
+			throw new Exception("Received Challenge from AI but ActiveAccount not set!");
+		}
+		byte[] arbSig = acc.getSigningInstance().signBytes(arbChal);
+		XMLResponse response = new XMLResponse(arbSig);
+		this.sendMessage(XMLUtil.toXMLDocument(response));
+	}
+
+	/**
+	 * processErrorMessage
+	 *
+	 * @param msg XMLErrorMessage
+	 */
+	private void processErrorMessage(XMLErrorMessage msg)
+	{
+		PayAccountsFile.getInstance().signalAccountError(msg);
+	}
+
+	/**
+	 * processPayRequest
+	 *
+	 * @param request XMLPayRequest
+	 */
+	private void processPayRequest(XMLPayRequest request)
+	{
 		XMLEasyCC cc = request.getCC();
 		if (cc != null)
 		{
@@ -74,7 +119,7 @@ public class AIControlChannel extends SyncControlChannel
 				if ( (newBytes + currentAccount.getSpent()) < cc.getTransferredBytes())
 				{
 					// the AI wants us to sign an unrealistic number of bytes
-					/** @todo warn the user */
+					// @todo warn the user
 					cc.setTransferredBytes(newBytes + currentAccount.getSpent());
 				}
 				cc.sign(currentAccount.getSigningInstance());
@@ -84,38 +129,53 @@ public class AIControlChannel extends SyncControlChannel
 			catch (Exception ex1)
 			{
 				// the account stated by the AI does not exist or is not currently active
-				/** @todo handle this exception */
+				// @todo handle this exception
 			}
 		}
 		Timestamp t = request.getBalanceTimestamp();
 		if (t != null)
 		{
-			try
+			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "AI requested balance");
+			PayAccount currentAccount = PayAccountsFile.getInstance().getActiveAccount();
+			XMLBalance b = currentAccount.getBalance();
+			if ( (b == null) || b.getTimestamp().before(t))
 			{
-				PayAccount currentAccount = PayAccountsFile.getInstance().getActiveAccount();
-				XMLBalance b = currentAccount.getBalance();
-				if ( (b == null) || b.getTimestamp().before(t))
+				// balance too old, fetch a new one
+				LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Fetching new Balance from BI asynchronously");
+				new Thread(new Runnable()
 				{
-					// balance too old, fetch a new one
-					currentAccount.fetchAccountInfo();
-					b = currentAccount.getBalance();
-				}
-				this.sendMessage(XMLUtil.toXMLDocument(b));
+					public void run()
+					{
+						PayAccount currentAccount = PayAccountsFile.getInstance().getActiveAccount();
+						try
+						{
+							currentAccount.fetchAccountInfo();
+							XMLBalance b = currentAccount.getBalance();
+							AIControlChannel.this.sendMessage(XMLUtil.toXMLDocument(b));
+						}
+						catch (Exception ex)
+						{
+							LogHolder.log(LogLevel.DEBUG, LogType.PAY, ex);
+						}
+					}
+				}).start();
 			}
-			catch (Exception ex2)
+			else
 			{
-				/** @todo handle this exception */
+				LogHolder.log(LogLevel.DEBUG, LogType.PAY, "sending balance to AI");
+				AIControlChannel.this.sendMessage(XMLUtil.toXMLDocument(b));
 			}
 		}
-		if(request.isAccountRequest())
+		if (request.isAccountRequest())
 		{
 			PayAccount currentAccount = PayAccountsFile.getInstance().getActiveAccount();
 			/** @todo send notification to GUI - especially if currentAccount == null at this point */
 			PayAccountsFile.getInstance().signalAccountRequest();
-			this.sendMessage(XMLUtil.toXMLDocument(currentAccount.getAccountCertificate()));
+			if (currentAccount != null)
+			{
+				this.sendMessage(XMLUtil.toXMLDocument(currentAccount.getAccountCertificate()));
+			}
 		}
 	}
-
-
 
 }

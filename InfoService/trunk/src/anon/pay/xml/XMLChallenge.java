@@ -27,20 +27,21 @@
  */
 package anon.pay.xml;
 
-import org.w3c.dom.CharacterData;
-import org.w3c.dom.Element;
-import anon.util.Base64;
-import anon.util.XMLUtil;
-import anon.util.IXMLEncodable;
-import org.w3c.dom.Document;
 import java.io.ByteArrayInputStream;
 import javax.xml.parsers.DocumentBuilderFactory;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import anon.util.Base64;
+import anon.util.IXMLEncodable;
+import anon.util.XMLUtil;
 
 public class XMLChallenge implements IXMLEncodable
 {
 	//~ Constructors ***********************************************************
 
 	private byte[] m_arbChallenge;
+	public static final String XML_ELEMENT_NAME = "Challenge";
 
 	public XMLChallenge(String xml) throws Exception
 	{
@@ -48,6 +49,17 @@ public class XMLChallenge implements IXMLEncodable
 			parse(new ByteArrayInputStream(xml.getBytes()));
 		setValues(doc.getDocumentElement());
 	}
+
+	/**
+	 * XMLChallenge
+	 *
+	 * @param element Element
+	 */
+	public XMLChallenge(Element element) throws Exception
+	{
+		setValues(element);
+	}
+
 
 	/** Note: this does not parse XML, but sets the challenge byte-array directly... */
 	public XMLChallenge(byte[] data) throws Exception
@@ -61,7 +73,7 @@ public class XMLChallenge implements IXMLEncodable
 
 	private void setValues(Element elemRoot) throws Exception
 	{
-		if (!elemRoot.getTagName().equals("Challenge"))
+		if (!elemRoot.getTagName().equals(XML_ELEMENT_NAME))
 		{
 			throw new Exception("XMLChallenge wrong XML structure");
 		}
@@ -77,10 +89,12 @@ public class XMLChallenge implements IXMLEncodable
 
 	public Element toXmlElement(Document a_doc)
 	{
-		Element elemRoot = a_doc.createElement("Challenge");
+		Element elemRoot = a_doc.createElement(XML_ELEMENT_NAME);
 		Element elemChallenge = a_doc.createElement("DontPanic");
 		elemRoot.appendChild(elemChallenge);
 		XMLUtil.setNodeValue(elemChallenge, Base64.encodeBytes(m_arbChallenge));
 		return elemRoot;
 	}
+
+
 }

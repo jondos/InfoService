@@ -62,7 +62,7 @@ public class XMLResponse implements IXMLEncodable
 		{
 			throw new Exception("XMLResponse wrong xml structure");
 		}
-		String strBase64Response = XMLUtil.parseNodeString(elemRoot, null);
+		String strBase64Response = XMLUtil.parseValue(elemRoot, "");
 		m_arbResponse = Base64.decode(strBase64Response);
 	}
 
@@ -74,7 +74,7 @@ public class XMLResponse implements IXMLEncodable
 	public Element toXmlElement(Document a_doc)
 	{
 		Element elemRoot = a_doc.createElement("Response");
-		XMLUtil.setNodeValue(elemRoot, Base64.encodeBytes(m_arbResponse));
+		XMLUtil.setValue(elemRoot, Base64.encodeBytes(m_arbResponse));
 		return elemRoot;
 	}
 }

@@ -57,6 +57,7 @@ public class XMLPayRequest implements IXMLEncodable
 	private XMLEasyCC m_cc = null;
 	private java.sql.Timestamp m_balanceNewerThan = null;
 	private boolean m_bIsAccountRequest;
+	public static final Object XML_ELEMENT_NAME = "PayRequest";
 
 	public XMLPayRequest(String xml) throws Exception
 	{
@@ -77,9 +78,19 @@ public class XMLPayRequest implements IXMLEncodable
 		setValues(doc.getDocumentElement());
 	}
 
+	/**
+	 * XMLPayRequest
+	 *
+	 * @param element Element
+	 */
+	public XMLPayRequest(Element element) throws Exception
+	{
+		setValues(element);
+	}
+
 	private void setValues(Element elemRoot) throws Exception
 	{
-		if (!elemRoot.getTagName().equals("PayRequest") ||
+		if (!elemRoot.getTagName().equals(XML_ELEMENT_NAME) ||
 			!elemRoot.getAttribute("version").equals("1.0"))
 		{
 			throw new Exception("PayRequest wrong format or wrong version number");
@@ -145,4 +156,5 @@ public class XMLPayRequest implements IXMLEncodable
 	{
 		return m_bIsAccountRequest;
 	}
+
 }
