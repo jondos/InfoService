@@ -8,24 +8,26 @@ public final class JAPFetchAnonServers {
 		this.model = JAPModel.getModel();
 	}
 	
-	public void fetch() throws Exception {
-		String path = "http://"+model.getInfoServiceHost()+":"+model.getInfoServicePort()+
+	public void fetch() throws Exception
+		{
+			String path = "http://"+model.getInfoServiceHost()+":"+model.getInfoServicePort()+
 		  			  "/servers";
-		try {
-			URL url=new URL(path);
-			Socket socket = new Socket(url.getHost(),((url.getPort()==-1)?80:url.getPort()));
-			BufferedWriter out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-			out.write("GET "+url.getFile()+" HTTP/1.0\r\n\r\n");
-			out.flush();
-			DataInputStream in=new DataInputStream(socket.getInputStream());
-			String line = readLine(in);
-			if (line.indexOf("200") == -1) {
-				throw new Exception("JAPFetchAnonServers: Bad response from server: "+line);
-			}
-			// read remaining header lines
-			while (line.length() != 0) {
-				line = readLine(in);
-			}
+			try
+				{
+					URL url=new URL(path);
+					Socket socket = new Socket(url.getHost(),((url.getPort()==-1)?80:url.getPort()));
+					BufferedWriter out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+					out.write("GET "+url.getFile()+" HTTP/1.0\r\n\r\n");
+					out.flush();
+					DataInputStream in=new DataInputStream(socket.getInputStream());
+					String line = readLine(in);
+					if (line.indexOf("200") == -1) {
+						throw new Exception("JAPFetchAnonServers: Bad response from server: "+line);
+					}
+					// read remaining header lines
+					while (line.length() != 0) {
+						line = readLine(in);
+				}
 			// XML stuff
 /*						InputSource ins = new InputSource(in);
 			Document doc=DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(ins);

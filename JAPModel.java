@@ -414,17 +414,22 @@ public final class JAPModel {
 			);
 	}
 	
-	public void fetchAnonServers() {
-		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:Trying to fetch Anon Servers from InfoService...");
-		JAPFetchAnonServers f = new JAPFetchAnonServers();
-		try {
-			f.fetch();
+	/** Try to load all available MIX-Cascades form the InfoService...
+	 */
+	public void fetchAnonServers() 
+		{
+			JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:Trying to fetch Anon Servers from InfoService...");
+			JAPFetchAnonServers f = new JAPFetchAnonServers();
+			try
+				{
+					f.fetch();
+				}
+			catch (Exception e)
+				{
+					JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPModel:fetchAnonServers: "+e);
+					javax.swing.JOptionPane.showMessageDialog(null, model.getString("errorConnectingInfoService"), model.getString("errorConnectingInfoServiceTitle"), javax.swing.JOptionPane.ERROR_MESSAGE); 
+				}
 		}
-		catch (Exception e) {
-			JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPModel:fetchAnonServers: "+e);
-			javax.swing.JOptionPane.showMessageDialog(null, model.getString("errorConnectingInfoService"), model.getString("errorConnectingInfoServiceTitle"), javax.swing.JOptionPane.ERROR_MESSAGE); 
-		}
-	}
 	
 	/** Performs the Versioncheck.
 	 *  @return -1, if version check says that anonymity mode should not be enabled.
