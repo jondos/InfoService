@@ -58,7 +58,7 @@ import logging.LogType;
 /**
  * Holds the information for an infoservice.
  */
-public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncodable
+final public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncodable
 {
 	/**
 	 * This is the ID of this infoservice.
@@ -102,18 +102,17 @@ public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncodable
 	private boolean m_neighbour = false;
 
 	/**
-   * Stores the XML representation of this InfoServiceDBEntry.
-   */
-  private Element m_xmlDescription;
+	 * Stores the XML representation of this InfoServiceDBEntry.
+	 */
+	private Element m_xmlDescription;
 
-  /**
-   * Stores whether this InfoServiceDBEntry is user-defined within the JAP client (true) or was
-   * generated from the InfoService itself (false).
-   */
-  private boolean m_userDefined;
+	/**
+	 * Stores whether this InfoServiceDBEntry is user-defined within the JAP client (true) or was
+	 * generated from the InfoService itself (false).
+	 */
+	private boolean m_userDefined;
 
-
-  /**
+	/**
 	 * Creates an XML node (InfoServices node) with all infoservices from the database inside.
 	 * The Database does not need to the one registered in the central registry.
 	 *
@@ -132,7 +131,8 @@ public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncodable
 		while (it.hasMoreElements())
 		{
 			dbentry = it.nextElement();
-			if (dbentry instanceof InfoServiceDBEntry) {
+			if (dbentry instanceof InfoServiceDBEntry)
+			{
 				infoServicesNode.appendChild( ( (InfoServiceDBEntry) (dbentry)).toXmlElement(a_doc));
 			}
 		}
@@ -177,20 +177,20 @@ public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncodable
 			throw new XMLParseException(XMLParseException.NODE_NULL_TAG);
 		}
 
-    /* store the XML representation */
-    m_xmlDescription = a_infoServiceNode;
+		/* store the XML representation */
+		m_xmlDescription = a_infoServiceNode;
 
 		/* get the ID */
 		m_strInfoServiceId = a_infoServiceNode.getAttribute("id");
 
 		/* verify the signature */
 		/*if (!SignatureManager.getInstance().verifyXml(a_infoServiceNode,
-			SignatureManager.DOCUMENT_CLASS_INFOSERVICE, m_strInfoServiceId))
-		{
-			LogHolder.log(LogLevel.WARNING, LogType.MISC,
-				"XML Signature verification failed for InfoService with ID: " + m_strInfoServiceId);
-			throw new XMLParseException("Couldn't verify XML signature.");
-		}*/
+		 SignatureManager.DOCUMENT_CLASS_INFOSERVICE, m_strInfoServiceId))
+		   {
+		 LogHolder.log(LogLevel.WARNING, LogType.MISC,
+		  "XML Signature verification failed for InfoService with ID: " + m_strInfoServiceId);
+		 throw new XMLParseException("Couldn't verify XML signature.");
+		   }*/
 
 		/* get the name */
 		m_strName = XMLUtil.parseNodeString(XMLUtil.getFirstChildByName(a_infoServiceNode, "Name"), null);
@@ -200,8 +200,8 @@ public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncodable
 		}
 
 		/* get the software information */
-		m_infoserviceSoftware = new ServiceSoftware((Element)
-				  XMLUtil.getFirstChildByName(a_infoServiceNode, ServiceSoftware.getXMLElementName()));
+		m_infoserviceSoftware = new ServiceSoftware( (Element)
+			XMLUtil.getFirstChildByName(a_infoServiceNode, ServiceSoftware.getXMLElementName()));
 
 		/* get the listener interfaces */
 		Node networkNode = XMLUtil.getFirstChildByName(a_infoServiceNode, "Network");
@@ -210,13 +210,13 @@ public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncodable
 			throw new XMLParseException("Network");
 		}
 		Element listenerInterfacesNode =
-			(Element)XMLUtil.getFirstChildByName(networkNode, "ListenerInterfaces");
+			(Element) XMLUtil.getFirstChildByName(networkNode, "ListenerInterfaces");
 		if (networkNode == null)
 		{
 			throw new XMLParseException("ListenerInterfaces");
 		}
 		NodeList listenerInterfaceNodes = listenerInterfacesNode.getElementsByTagName(
-				  ListenerInterface.getXMLElementName());
+			ListenerInterface.getXMLElementName());
 		if (listenerInterfaceNodes.getLength() == 0)
 		{
 			throw new XMLParseException(ListenerInterface.getXMLElementName());
@@ -233,8 +233,8 @@ public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncodable
 
 		/* get the Expire timestamp */
 		/*m_japExpireTime =
-			XMLUtil.parseNodeLong(XMLUtil.getFirstChildByName(a_infoServiceNode, "Expire"),
-								  Constants.TIMEOUT_INFOSERVICE_JAP);*/
+		 XMLUtil.parseNodeLong(XMLUtil.getFirstChildByName(a_infoServiceNode, "Expire"),
+		  Constants.TIMEOUT_INFOSERVICE_JAP);*/
 
 		/* get the information, whether this infoservice keeps a list of JAP forwarders */
 		if (XMLUtil.getFirstChildByName(a_infoServiceNode, "ForwarderList") == null)
@@ -249,24 +249,24 @@ public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncodable
 			m_bPrimaryForwarderList = true;
 		}
 
-    /* get the information, whether this infoservice was user-defined within the JAP client */
-    if (XMLUtil.getFirstChildByName(a_infoServiceNode, "UserDefined") == null)
-    {
-      /* there is no UserDefined node -> this InfoServiceDBEntry was generated by an InfoService
-       * itself
-	 */
-      m_userDefined = false;
-    }
-    else
-	{
-      /* there is a UserDefined node -> this InfoServiceDBEntry was generated by the user within
-       * the JAP client
-       */
-      m_userDefined = true;
-    }
+		/* get the information, whether this infoservice was user-defined within the JAP client */
+		if (XMLUtil.getFirstChildByName(a_infoServiceNode, "UserDefined") == null)
+		{
+			/* there is no UserDefined node -> this InfoServiceDBEntry was generated by an InfoService
+			 * itself
+			 */
+			m_userDefined = false;
+		}
+		else
+		{
+			/* there is a UserDefined node -> this InfoServiceDBEntry was generated by the user within
+			 * the JAP client
+			 */
+			m_userDefined = true;
+		}
 
-    /* at the moment every infoservice talks with all other infoservices */
-    m_neighbour = true;
+		/* at the moment every infoservice talks with all other infoservices */
+		m_neighbour = true;
 	}
 
 	/**
@@ -281,13 +281,13 @@ public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncodable
 	 *
 	 * @param a_strName The name of the infoservice or null, if a generic name shall be used.
 	 * @param a_listeners The listeners the infoservice is (virtually) listening on.
-   * @param a_userDefined Whether the infoservice is user-defined within the JAP client (true) or
-   *                      is generated within the InfoService system (false).
-   *
+	 * @param a_userDefined Whether the infoservice is user-defined within the JAP client (true) or
+	 *                      is generated within the InfoService system (false).
+	 *
 	 * @exception IllegalArgumentException if invalid listener interfaces are given
 	 */
-  public InfoServiceDBEntry(String a_strName, Vector a_listeners, boolean a_userDefined)
-		throws IllegalArgumentException
+	public InfoServiceDBEntry(String a_strName, Vector a_listeners, boolean a_userDefined) throws
+		IllegalArgumentException
 	{
 		super(System.currentTimeMillis() + Constants.TIMEOUT_INFOSERVICE_JAP);
 
@@ -301,13 +301,13 @@ public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncodable
 		while (enumListeners.hasMoreElements())
 		{
 			m_listenerInterfaces.addElement(enumListeners.nextElement());
-			if (!(m_listenerInterfaces.lastElement() instanceof ListenerInterface))
+			if (! (m_listenerInterfaces.lastElement() instanceof ListenerInterface))
 			{
 				throw new IllegalArgumentException("Invalid listener interface!");
 			}
 		}
 
-		m_strInfoServiceId = generateId((ListenerInterface)m_listenerInterfaces.firstElement());
+		m_strInfoServiceId = generateId( (ListenerInterface) m_listenerInterfaces.firstElement());
 
 		/* set a name */
 		m_strName = a_strName;
@@ -319,10 +319,10 @@ public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncodable
 		m_bPrimaryForwarderList = false;
 		m_infoserviceSoftware = new ServiceSoftware("unknown");
 		m_preferedListenerInterface = 0;
-    m_userDefined = a_userDefined;
+		m_userDefined = a_userDefined;
 
-    /* generate the XML representation for this InfoServiceDBEntry */
-    m_xmlDescription = generateXmlRepresentation();
+		/* generate the XML representation for this InfoServiceDBEntry */
+		m_xmlDescription = generateXmlRepresentation();
 	}
 
 	/**
@@ -339,70 +339,74 @@ public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncodable
 	 * @param a_doc The XML document, which is the environment for the created XML node.
 	 * @return The InfoService XML node.
 	 */
-  public Element toXmlElement(Document a_doc) {
-    Element returnXmlStructure = null;
-    try {
-      returnXmlStructure = (Element)(XMLUtil.importNode(a_doc, m_xmlDescription, true));
-    }
-    catch (Exception e) {
-    }
-    return returnXmlStructure;
-  }
+	public Element toXmlElement(Document a_doc)
+	{
+		Element returnXmlStructure = null;
+		try
+		{
+			returnXmlStructure = (Element) (XMLUtil.importNode(a_doc, m_xmlDescription, true));
+		}
+		catch (Exception e)
+		{
+		}
+		return returnXmlStructure;
+	}
 
-  /**
-   * Generates the XML representation for this InfoServiceDBEntry. That XML representation is
-   * returnded when calling the toXmlElement method.
-   *
-   * @return The generated XML representation for this InfoServiceDBEntry.
-   */
-  private Element generateXmlRepresentation() {
-    Document doc = XMLUtil.createDocument();
+	/**
+	 * Generates the XML representation for this InfoServiceDBEntry. That XML representation is
+	 * returnded when calling the toXmlElement method.
+	 *
+	 * @return The generated XML representation for this InfoServiceDBEntry.
+	 */
+	private Element generateXmlRepresentation()
+	{
+		Document doc = XMLUtil.createDocument();
 		/* Create the InfoService element */
-    Element infoServiceNode = doc.createElement(getXMLElementName());
+		Element infoServiceNode = doc.createElement(getXMLElementName());
 		infoServiceNode.setAttribute("id", m_strInfoServiceId);
 		/* Create the child nodes of InfoService */
-    Element nameNode = doc.createElement("Name");
-    nameNode.appendChild(doc.createTextNode(m_strName));
-    Element networkNode = doc.createElement("Network");
-    Element listenerInterfacesNode = doc.createElement("ListenerInterfaces");
+		Element nameNode = doc.createElement("Name");
+		nameNode.appendChild(doc.createTextNode(m_strName));
+		Element networkNode = doc.createElement("Network");
+		Element listenerInterfacesNode = doc.createElement("ListenerInterfaces");
 		Enumeration enumer = m_listenerInterfaces.elements();
 		while (enumer.hasMoreElements())
 		{
 			ListenerInterface currentListenerInterface = (ListenerInterface) (enumer.nextElement());
-      listenerInterfacesNode.appendChild(currentListenerInterface.toXmlElement(doc));
+			listenerInterfacesNode.appendChild(currentListenerInterface.toXmlElement(doc));
 		}
 		networkNode.appendChild(listenerInterfacesNode);
-    Element expireNode = doc.createElement("Expire");
-    expireNode.appendChild(doc.createTextNode(Long.toString(getExpireTime())));
+		Element expireNode = doc.createElement("Expire");
+		expireNode.appendChild(doc.createTextNode(Long.toString(getExpireTime())));
 		infoServiceNode.appendChild(nameNode);
-    infoServiceNode.appendChild(m_infoserviceSoftware.toXmlElement(doc));
+		infoServiceNode.appendChild(m_infoserviceSoftware.toXmlElement(doc));
 		infoServiceNode.appendChild(networkNode);
 		infoServiceNode.appendChild(expireNode);
-		if (m_bPrimaryForwarderList == true)
+		if (m_bPrimaryForwarderList)
 		{
 			/* if we hold a forwarder list, also append an ForwarderList node, at the moment this
-       * node doesn't have any children
+			 * node doesn't have any children
 			 */
-      Element forwarderListNode = doc.createElement("ForwarderList");
+			Element forwarderListNode = doc.createElement("ForwarderList");
 			infoServiceNode.appendChild(forwarderListNode);
 		}
-    if (m_userDefined == true)
-    {
-      /* if this is a user-defined InfoServiceDBEntry, add the UserDefined node (has no children)
-       */
-      Element userDefinedNode = doc.createElement("UserDefined");
-      infoServiceNode.appendChild(userDefinedNode);
-    }
+		if (m_userDefined)
+		{
+			/* if this is a user-defined InfoServiceDBEntry, add the UserDefined node (has no children)
+			 */
+			Element userDefinedNode = doc.createElement("UserDefined");
+			infoServiceNode.appendChild(userDefinedNode);
+		}
 
 		/* sign the XML node */
 		/*try
-		{
-			SignatureManager.getInstance().signXml(infoServiceNode);
-		}
-		catch (Exception a_e)
-		{
-			LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, "Document could not be signed!");
-		}*/
+		   {
+		 SignatureManager.getInstance().signXml(infoServiceNode);
+		   }
+		   catch (Exception a_e)
+		   {
+		 LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, "Document could not be signed!");
+		   }*/
 		return infoServiceNode;
 	}
 
@@ -412,7 +416,7 @@ public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncodable
 	 * @param a_listenerInterface a ListenerInterface of this InfoService
 	 * @return Returns an ID for the infoservice (IP:Port of the first listener interface).
 	 */
-	private String generateId(ListenerInterface a_listenerInterface)
+	private static String generateId(ListenerInterface a_listenerInterface)
 	{
 		return a_listenerInterface.getHost() + "%3A" + a_listenerInterface.getPort();
 	}
@@ -464,16 +468,17 @@ public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncodable
 	}
 
 	/**
-   * Returns whether this InfoServiceDBEntry was generated by a user within the JAP client (true)
-   * or was generated by the InfoService itself (false).
-   *
-   * @return Whether this InfoServiceDBEntry is user-defined.
-   */
-  public boolean isUserDefined() {
-    return m_userDefined;
-  }
+	 * Returns whether this InfoServiceDBEntry was generated by a user within the JAP client (true)
+	 * or was generated by the InfoService itself (false).
+	 *
+	 * @return Whether this InfoServiceDBEntry is user-defined.
+	 */
+	public boolean isUserDefined()
+	{
+		return m_userDefined;
+	}
 
-  /**
+	/**
 	 * Returns a String representation for this InfoService object. It's just the name of the
 	 * infoservice.
 	 *
@@ -514,7 +519,7 @@ public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncodable
 		/* create the connection descriptor */
 		ListenerInterface target = (ListenerInterface) (m_listenerInterfaces.elementAt(nextIndex));
 		HTTPConnection connection = HTTPConnectionFactory.getInstance().createHTTPConnection(target);
-		return (new HTTPConnectionDescriptor(connection, target));
+		return new HTTPConnectionDescriptor(connection, target);
 	}
 
 	/**
@@ -702,7 +707,7 @@ public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncodable
 		Element mixNode = (Element) (mixNodes.item(0));
 		/* if signature is invalid, exception is thrown */
 		checkSignature(mixNode);
-		return (new MixInfo(mixNode));
+		return new MixInfo(mixNode);
 	}
 
 	/**
@@ -745,7 +750,7 @@ public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncodable
 			 */
 			checkSignature(mixCascadeStatusNode, a_additionalCertificates);
 		}
-		return (new StatusInfo(mixCascadeStatusNode, cascadeLength));
+		return new StatusInfo(mixCascadeStatusNode, cascadeLength);
 	}
 
 	/**
@@ -819,7 +824,7 @@ public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncodable
 		{
 			doc = getXmlDocument(HttpRequestStructure.createGetRequest("/japDevelopment.jnlp"));
 		}
-		return (new JAPVersionInfo(doc, japVersionType));
+		return new JAPVersionInfo(doc, japVersionType);
 	}
 
 	/**
@@ -831,13 +836,35 @@ public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncodable
 	 */
 	public String getTorNodesList() throws Exception
 	{
-		Document doc = getXmlDocument(HttpRequestStructure.createGetRequest("/tornodes"));
-		Element torNodeList=doc.getDocumentElement();
-    String strTorNodesList = XMLUtil.parseNodeString(torNodeList,null);
-    if (strTorNodesList == null) {
-      throw (new Exception("InfoServiceDBEntry: getTorNodesList: Error while parsing the TOR nodes list XML structure."));
-    }
-    return strTorNodesList;
+		String list = null;
+		try
+		{ //Compressed first
+			Document doc = getXmlDocument(HttpRequestStructure.createGetRequest("/compressedtornodes"));
+			Element torNodeList = doc.getDocumentElement();
+			String strCompressedTorNodesList = XMLUtil.parseNodeString(torNodeList, null);
+			list = new String(BZip2Tools.decompress(Base64.decode(strCompressedTorNodesList)));
+		}
+		catch (Exception e)
+		{
+		}
+		if (list == null) //umcompressed...
+		{
+			try
+			{
+				Document doc = getXmlDocument(HttpRequestStructure.createGetRequest("/tornodes"));
+				Element torNodeList = doc.getDocumentElement();
+				list = XMLUtil.parseNodeString(torNodeList, null);
+			}
+			catch (Exception e)
+			{
+			}
+		}
+		if (list == null)
+		{
+			throw (new Exception(
+				"InfoServiceDBEntry: getTorNodesList: Error while parsing the TOR nodes list XML structure."));
+		}
+		return list;
 	}
 
 	/**
@@ -851,7 +878,7 @@ public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncodable
 	 */
 	public Element postNewForwarder(Element a_japForwarderNode) throws Exception
 	{
-		if (hasPrimaryForwarderList() == false)
+		if (!hasPrimaryForwarderList())
 		{
 			/* infoservice must have a forwarder list */
 			throw (new Exception("InfoService: postNewForwarder: The InfoService " + getName() +
@@ -865,7 +892,7 @@ public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncodable
 		{
 			throw (new Exception("InfoService: postNewForwarder: Error in XML structure."));
 		}
-		return ( (Element) (japForwarderNodes.item(0)));
+		return (Element) japForwarderNodes.item(0);
 	}
 
 	/**
@@ -878,7 +905,7 @@ public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncodable
 	 */
 	public Element postRenewForwarder(Element a_japForwarderNode) throws Exception
 	{
-		if (hasPrimaryForwarderList() == false)
+		if (!hasPrimaryForwarderList())
 		{
 			/* infoservice must have a forwarder list */
 			throw (new Exception("InfoService: postRenewForwarder: The InfoService " + getName() +
@@ -892,7 +919,7 @@ public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncodable
 		{
 			throw (new Exception("InfoService: postRenewForwarder: Error in XML structure."));
 		}
-		return ( (Element) (japForwarderNodes.item(0)));
+		return (Element) japForwarderNodes.item(0);
 	}
 
 	/**
@@ -934,7 +961,7 @@ public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncodable
 	 *
 	 * @param a_nodeToCheck The node to verify.
 	 */
-	private void checkSignature(Element a_nodeToCheck) throws Exception
+	private static void checkSignature(Element a_nodeToCheck) throws Exception
 	{
 		JAPCertificateStore certificateStore = InfoServiceHolder.getInstance().getCertificateStore();
 		checkSignature(a_nodeToCheck, certificateStore);
@@ -949,7 +976,7 @@ public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncodable
 	 * @param a_trustedCertificates The store of trusted certificates. If this is null, we accept all
 	 *                              signatures.
 	 */
-	private void checkSignature(Element a_nodeToCheck, JAPCertificateStore a_trustedCertificates) throws
+	private static void checkSignature(Element a_nodeToCheck, JAPCertificateStore a_trustedCertificates) throws
 		Exception
 	{
 		if (a_trustedCertificates != null)

@@ -28,7 +28,7 @@
 package jap;
 
 import java.util.Enumeration;
-import java.awt.BorderLayout;
+
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -45,8 +45,8 @@ import javax.swing.JScrollPane;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+
 import org.bouncycastle.asn1.x509.X509NameTokenizer;
-import anon.util.ResourceLoader;
 import anon.crypto.JAPCertificate;
 import anon.crypto.JAPCertificateStore;
 import gui.CAListCellRenderer;
@@ -55,7 +55,7 @@ import gui.CAListCellRenderer;
  * This is the configuration GUI for the cert.
  */
 
-public class JAPConfCert extends AbstractJAPConfModule
+final class JAPConfCert extends AbstractJAPConfModule
 {
 
 //	private DefaultListModel m_dlmCertList;
@@ -169,15 +169,15 @@ public class JAPConfCert extends AbstractJAPConfModule
 
 		JPanel caPanel = createCertCAPanel();
 		JPanel infoPanel = createCertInfoPanel();
-		GridBagLayout gbl=new GridBagLayout();
-		GridBagConstraints c=new GridBagConstraints();
+		GridBagLayout gbl = new GridBagLayout();
+		GridBagConstraints c = new GridBagConstraints();
 		panelRoot.setLayout(gbl);
-		c.anchor=GridBagConstraints.NORTHWEST;
-		c.weightx=1;
-		c.fill=GridBagConstraints.BOTH;
+		c.anchor = GridBagConstraints.NORTHWEST;
+		c.weightx = 1;
+		c.fill = GridBagConstraints.BOTH;
 		panelRoot.add(caPanel, c);
-		c.gridy=1;
-		c.fill=GridBagConstraints.HORIZONTAL;
+		c.gridy = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
 		panelRoot.add(infoPanel, c);
 	}
 
@@ -207,7 +207,7 @@ public class JAPConfCert extends AbstractJAPConfModule
 		try
 		{
 			byte[] tmp = JAPModel.getInstance().getResourceLoader().loadResource(JAPConstants.CERTSPATH +
-											   JAPConstants.TRUSTEDROOTCERT);
+				JAPConstants.TRUSTEDROOTCERT);
 			cert = JAPCertificate.getInstance(tmp);
 		}
 		catch (Exception e)

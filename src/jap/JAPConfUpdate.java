@@ -31,6 +31,7 @@ package jap;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
@@ -41,21 +42,17 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
-import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.border.TitledBorder;
+
 import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.JAPVersionInfo;
-import jap.JAPConstants;
-import jap.JAPController;
-import jap.JAPMessages;
-import jap.JAPUtil;
-import update.*;
+import update.JAPUpdateWizard;
 
-class JAPConfUpdate extends AbstractJAPConfModule implements ActionListener, ItemListener, Runnable
+final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListener, ItemListener, Runnable
 {
 	//private JDialog m_Dialog;
 	private JTextArea m_taInfo;
@@ -80,8 +77,8 @@ class JAPConfUpdate extends AbstractJAPConfModule implements ActionListener, Ite
 	}
 
 	public void recreateRootPanel()
-{
-	JPanel panelRoot = getRootPanel();
+	{
+		JPanel panelRoot = getRootPanel();
 		panelRoot.removeAll();
 		GridBagLayout gridBagFrame = new GridBagLayout();
 		panelRoot.setLayout(gridBagFrame);
@@ -303,7 +300,7 @@ class JAPConfUpdate extends AbstractJAPConfModule implements ActionListener, Ite
 
 	public void actionPerformed(ActionEvent e)
 	{
-if (e.getActionCommand().equals(COMMAND_UPGRADE))
+		if (e.getActionCommand().equals(COMMAND_UPGRADE))
 		{
 			try
 			{
