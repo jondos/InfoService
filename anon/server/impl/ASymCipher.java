@@ -113,7 +113,7 @@ final class ASymCipher
 			Element child = (Element) root.getElementsByTagName(name).item(0);
 			Text text = (Text) child.getFirstChild();
 			String value = text.getNodeValue();
-			byte[] b = Base64.decode(value.toCharArray());
+			byte[] b = Base64.decode(value);
 			return new BigInteger(1, b);
 		}
 		catch (Exception e)

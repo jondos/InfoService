@@ -58,6 +58,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.Text;
+import org.w3c.dom.*;
 import anon.util.Base64;
 import java.io.*;
 /**
@@ -140,7 +141,7 @@ final public class JAPCertificate
 		Element elemX509Cert = (Element) a_NodeRoot;
 		Text txtX509Cert = (Text) elemX509Cert.getFirstChild();
 		String strValue = txtX509Cert.getNodeValue();
-		byte[] bytecert = Base64.decode(strValue.toCharArray());
+		byte[] bytecert = Base64.decode(strValue);
 
 		try
 		{
@@ -192,7 +193,7 @@ final public class JAPCertificate
             sbuf.append(line);
             line = in.readLine();
           }
-          return JAPCertificate.getInstance(Base64.decode(sbuf.toString().toCharArray()));
+          return JAPCertificate.getInstance(Base64.decode(sbuf.toString()));
         }
         catch (Exception e2) {
           /* there is another problem */
@@ -355,7 +356,7 @@ final public class JAPCertificate
 	 *
 	 * @return encoded certificate
 	 */
-	public char[] getEncoded()
+	public byte[] getEncoded()
 	{
 		ByteArrayOutputStream bArrOStream = new ByteArrayOutputStream();
 		DEROutputStream dOStream = new DEROutputStream(bArrOStream);
@@ -368,7 +369,7 @@ final public class JAPCertificate
 		{
 			return null;
 		}
-		return Base64.encode(bArrOStream.toByteArray());
+		return Base64.encode(bArrOStream.toByteArray(),true).getBytes();
 	}
 
 	/** Checks if the certificate starting date is not before a given date and
@@ -427,7 +428,10 @@ final public class JAPCertificate
 	}
 
 	/**
-	 * Creates XML node of certificate
+	 * Creates XML node of certificate consisting of:
+	 * <X509Certifcate>
+	 *  Base64 encocded cert
+	 * </X509Certificate>
 	 *
 	 * @param doc The XML document, which is the environment for the created XML node.
 	 *
@@ -436,15 +440,13 @@ final public class JAPCertificate
 
 	public Element toXmlNode(Document a_doc)
 	{
-
-		Element elemKeyInfo = a_doc.createElement("KeyInfo");
-		Element elemX509Data = a_doc.createElement("X509Data");
-		elemKeyInfo.appendChild(elemX509Data);
 		Element elemX509Cert = a_doc.createElement("X509Certificate");
-		elemX509Data.appendChild(elemX509Cert);
-		elemX509Cert.appendChild(a_doc.createTextNode(String.valueOf(getEncoded())));
+		Text t = a_doc.createTextNode(new String(getEncoded()));
+			elemX509Cert.setAttribute("xml:space", "preserve");
+			elemX509Cert.appendChild(t);
 
-		return elemKeyInfo;
+
+		return elemX509Cert;
 	}
 
 }
