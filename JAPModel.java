@@ -1,28 +1,28 @@
 /*
-Copyright (c) 2000, The JAP-Team 
+Copyright (c) 2000, The JAP-Team
 All rights reserved.
-Redistribution and use in source and binary forms, with or without modification, 
+Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
 
-	- Redistributions of source code must retain the above copyright notice, 
+	- Redistributions of source code must retain the above copyright notice,
 	  this list of conditions and the following disclaimer.
 
-	- Redistributions in binary form must reproduce the above copyright notice, 
-	  this list of conditions and the following disclaimer in the documentation and/or 
+	- Redistributions in binary form must reproduce the above copyright notice,
+	  this list of conditions and the following disclaimer in the documentation and/or
 		other materials provided with the distribution.
 
-	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors 
-	  may be used to endorse or promote products derived from this software without specific 
-		prior written permission. 
+	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
+	  may be used to endorse or promote products derived from this software without specific
+		prior written permission.
 
-	
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS 
-OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY 
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS
+OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
 AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS
 BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, 
-OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER 
-IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY 
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
 import java.text.MessageFormat;
@@ -54,14 +54,14 @@ import anon.JAPAnonServiceListener;
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPModel implements JAPAnonServiceListener{
 
-// 2000-08-01(HF): 
+// 2000-08-01(HF):
 // JAPDebug now initialized in JAP in order to use
 // the functions also in JAP.main()
-    
-	
-	
+
+
+
 	static final String aktVersion = "00.00.021"; // Version of JAP
-	
+
 	private int      portNumber        = 4001;
 	private boolean  mblistenerIsLocal = true;  // indicates whether the Listener serves for localhost only or not
 	//private int      runningPortNumber = 0;      // the port where proxy listens
@@ -75,9 +75,9 @@ public final class JAPModel implements JAPAnonServiceListener{
 	public  int      anonPortNumber    = 6544;
 	public  boolean  autoConnect       = false;  // autoconnect after program start
 	private boolean  mbMinimizeOnStartup =false; //true if programm should be started minimized...
-	public  boolean  alreadyCheckedForNewVersion = false; // indicates if check for new version has already been done 
+	public  boolean  alreadyCheckedForNewVersion = false; // indicates if check for new version has already been done
 	public  boolean  canStartService   = false;  // indicates if Anon service can be started
-	private boolean  mbActCntMessageNotRemind = false;   // indicates if Warning message in setAnonMode has been deactivated for the session 
+	private boolean  mbActCntMessageNotRemind = false;   // indicates if Warning message in setAnonMode has been deactivated for the session
 	private boolean  mbActCntMessageNeverRemind = false;   // indicates if Warning message in setAnonMode has been deactivated for ever
 	public  String   status1           = "?";
 	public  String   status2           = " ";
@@ -93,7 +93,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 // 2000-08-01(HF): the following url is now defined in JAPMessages.properties:
 // usage: model.getString("infoURL")
 //static final String url_download_version       = "http://www.inf.tu-dresden.de/~hf2/anon/JAP/";
-	
+
 //	static final String aktJAPVersionFN            = "/~sk13/anon/jap/aktVersion.txt"; // retrieved from Info Service
 	static final String aktJAPVersionFN            = "/aktVersion"; // retrieved from Info Service
 	static final String urlJAPNewVersionDownload   = "/~sk13/anon/jap/JAP.jar"; // also retrieved from Info Service
@@ -127,36 +127,36 @@ public final class JAPModel implements JAPAnonServiceListener{
 						"images/meter5.gif",
 						"images/meter6.gif"
 						};
-	
+
 	private Vector observerVector=null;
 	public Vector anonServerDatabase=null;
-	
+
 	private JAPDirectProxy proxyDirect=null;
 	private JAPAnonService proxyAnon=null;
-	
+
 	private JAPAnonService proxyAnonSocks=null;
-	
-	
+
+
 	private static JAPModel model=null;
 //	public JAPLoading japLoading;
 	private static JAPFeedback feedback=null;
-	
-	
+
+
 	private JAPModel ()
 		{
 			JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:initializing...");
 			// Load Texts for Messages and Windows
 			try
-				{ 
-					msg = ResourceBundle.getBundle(MESSAGESFN, Locale.getDefault() ); 
-				}	 
+				{
+					msg = ResourceBundle.getBundle(MESSAGESFN, Locale.getDefault() );
+				}
 			catch(Exception e1)
 				{
 					try
 						{
 							msg=ResourceBundle.getBundle(MESSAGESFN);
 						}
-					catch(Exception e) 
+					catch(Exception e)
 						{
 							JAPAWTMsgBox.MsgBox(new Frame(),
 																	"File not found: "+MESSAGESFN+".properties\nYour package of JAP may be corrupted.\nTry again to download or install the package.",
@@ -165,14 +165,14 @@ public final class JAPModel implements JAPAnonServiceListener{
 						}
 				}
 			JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:properties loaded");
-				
-			// Create observer object 
+
+			// Create observer object
 			observerVector = new Vector();
 			proxyDirect=null;
 			proxyAnon=null;
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:initialization finished!");
 		}
-	
+
 	/** Creates the Model - as Singleton.
 	 * @return The one and only JAPModel
 	 */
@@ -184,17 +184,17 @@ public final class JAPModel implements JAPAnonServiceListener{
 				model=new JAPModel();
 			return model;
 		}
-	
+
 	public static JAPModel getModel() {
 			return model;
 	}
-	
+
 	//---------------
 	public void setIconifiedView(JAPViewIconified v)
 		{
-			iconifiedView=v;	
+			iconifiedView=v;
 		}
-	
+
 	public JAPViewIconified getIconifiedView()
 		{
 			return iconifiedView;
@@ -203,19 +203,19 @@ public final class JAPModel implements JAPAnonServiceListener{
 	//---------------
 	public void setView(JAPView v)
 		{
-			view=v;	
+			view=v;
 		}
-	
+
 	public JAPView getView()
 		{
 			return view;
 		}
-	
-	/** Loads the Configuration. 
-	 * First tries to read the configuration file in the users home directory 
+
+	/** Loads the Configuration.
+	 * First tries to read the configuration file in the users home directory
 	 * and then in the JAP install directory.
 	 * The configuration is a XML-File with the following structure:
-	 *	<JAP 
+	 *	<JAP
 	 *		portNumber=""									// Listener-Portnumber
 	 *    listenerIsLocal="true"/"false"// Listener lasucht nur an localhost ?
 	 *		proxyMode="true"/"false"			// Using a HTTP-Proxy??
@@ -236,10 +236,10 @@ public final class JAPModel implements JAPAnonServiceListener{
 	 *			NET="true"/"false"					// messages related to the network
 	 *			THREAD="true"/"false"				// messages related to threads
 	 *			MISC="true"/"false"					// all the others
-	 *		>		
+	 *		>
 	 *		</Type>
 	 *		<Output>..</Output>						//the kind of Output, at the moment only: Console
-	 * 	</Debug>		
+	 * 	</Debug>
 	 *	</JAP>
 	 */
 	public void load() {
@@ -265,7 +265,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 			Document doc=DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(f);
 			Element root=doc.getDocumentElement();
 			NamedNodeMap n=root.getAttributes();
-			// 
+			//
 			portNumber=JAPUtil.parseNodeInt(n.getNamedItem("portNumber"),portNumber);
 			setListenerIsLocal(JAPUtil.parseNodeBoolean(n.getNamedItem("listenerIsLocal"),true));
 			setUseProxy(JAPUtil.parseNodeBoolean(n.getNamedItem("proxyMode"),false));
@@ -290,7 +290,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 			anonPortNumber=JAPUtil.parseNodeInt(n.getNamedItem("anonPortNumber"),anonPortNumber);
 			autoConnect=JAPUtil.parseNodeBoolean(n.getNamedItem("autoConnect"),false);
 			mbMinimizeOnStartup=JAPUtil.parseNodeBoolean(n.getNamedItem("minimizedStartup"),false);
-		
+
 			//Loading debug settings
 			NodeList nl=root.getElementsByTagName("Debug");
 			if(nl!=null&&nl.getLength()>0)
@@ -321,7 +321,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 					if(nl!=null&&nl.getLength()>0)
 						{
 							Element elemOutput=(Element)nl.item(0);
-							JAPDebug.showConsole(elemOutput.getFirstChild().getNodeValue().trim().equalsIgnoreCase("Console"),view);						
+							JAPDebug.showConsole(elemOutput.getFirstChild().getNodeValue().trim().equalsIgnoreCase("Console"),view);
 						}
 				}
 		}
@@ -384,23 +384,23 @@ public final class JAPModel implements JAPAnonServiceListener{
 					txt=doc.createTextNode("Console");
 					tmp.appendChild(txt);
 					elemDebug.appendChild(tmp);
-				}		
+				}
 			((XmlDocument)doc).write(f);
 		}
 		catch(Exception e) {
 			JAPDebug.out(JAPDebug.ERR,JAPDebug.MISC,"JAPModel:error saving configuration to "+XMLCONFFN);
 		}
 	}
-	
-	
+
+
 	public void initialRun()
 		{
 			JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:initial run of JAP...");
-		
+
 			// start Service if autoConnect
 			setAnonMode(autoConnect);
 		}
-	
+
     public int getCurrentProtectionLevel() {
 		// Hier eine moeglichst komplizierte Formel einfuegen,
 		// nach der die Anzeige fuer das "Anon Meter" berechnet wird.
@@ -422,14 +422,14 @@ public final class JAPModel implements JAPAnonServiceListener{
 			}
 		}
 	}
-		
+
 	public void setPortNumber (int p) {
 		portNumber = p;
 	}
 	public int getPortNumber() {
 		return portNumber;
 	}
-		
+
 	public static String getString(String key) {
 		try {
 			return model.msg.getString(key);
@@ -438,8 +438,8 @@ public final class JAPModel implements JAPAnonServiceListener{
 			return key;
 		}
 	}
-		
-	public void channelsChanged(int channels) 
+
+	public void channelsChanged(int channels)
 		{
 			nrOfChannels=channels;
 					Enumeration enum = observerVector.elements();
@@ -449,13 +449,13 @@ public final class JAPModel implements JAPAnonServiceListener{
 							listener.channelsChanged(channels);
 						}
 		}
-	
-/*	public int getNrOfChannels() 
+
+/*	public int getNrOfChannels()
 		{
 			return nrOfChannels;
 		}
 	*/
-	public void transferedBytes(int bytes) 
+	public void transferedBytes(int bytes)
 		{
 			nrOfBytes+=bytes;
 					Enumeration enum = observerVector.elements();
@@ -487,8 +487,8 @@ public final class JAPModel implements JAPAnonServiceListener{
 					return true;
 				}
 		}
-		
-	
+
+
 	public String getInfoServiceHost()
 		{
 			synchronized(this)
@@ -496,7 +496,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 					return infoServiceHostName;
 				}
 		}
-	
+
 	public int getInfoServicePort()
 		{
 			synchronized(this)
@@ -504,15 +504,15 @@ public final class JAPModel implements JAPAnonServiceListener{
 					return infoServicePortNumber;
 				}
 		}
-	
-		
+
+
 	public JAPInfoService getInfoService()
 		{
 			if(mInfoService==null)
 				mInfoService=new JAPInfoService();
 			return mInfoService;
 		}
-	
+
 	public void setListenerIsLocal(boolean b)
 		{
 			synchronized(this)
@@ -520,7 +520,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 					mblistenerIsLocal=b;
 				}
 		}
-			
+
 	public boolean getListenerIsLocal()
 		{
 			synchronized(this)
@@ -528,7 +528,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 					return mblistenerIsLocal;
 				}
 		}
-		
+
 	public void setUseProxy(boolean b)
 		{
 			synchronized(this)
@@ -540,11 +540,11 @@ public final class JAPModel implements JAPAnonServiceListener{
 								mInfoService.setProxy(proxyHostName,proxyPortNumber);
 							else
 								mInfoService.setProxy(null,0);
-						}						
+						}
 				}
 			notifyJAPObservers();
 		}
-	
+
 	public boolean getUseProxy()
 		{
 			synchronized(this)
@@ -560,7 +560,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 					mbMinimizeOnStartup=b;
 				}
 		}
-	
+
 	public boolean getMinimizeOnStartup()
 		{
 			synchronized(this)
@@ -585,7 +585,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 					return true;
 				}
 		}
-	
+
 	public String getProxyHost()
 		{
 			synchronized(this)
@@ -593,7 +593,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 					return proxyHostName;
 				}
 		}
-	
+
 	public int getProxyPort()
 		{
 			synchronized(this)
@@ -601,26 +601,26 @@ public final class JAPModel implements JAPAnonServiceListener{
 					return proxyPortNumber;
 				}
 		}
-	
+
 	public synchronized void setJAPViewIconified() {
 		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:setJAPViewIconified()");
 		view.setVisible(false);
 		iconifiedView.setVisible(true);
 	}
-	
+
 	public synchronized void setJAPViewDeIconified() {
 		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:setJAPViewDeIconified()");
 		iconifiedView.setVisible(false);
 		view.setVisible(true);
 	}
-	
+
 	public synchronized void setAnonMode(boolean anonModeSelected)
 	{
 		if ((proxyAnon == null) && (anonModeSelected == true))
 			{
 				view.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:setAnonMode("+anonModeSelected+")");
-				if (alreadyCheckedForNewVersion == false) 
+				if (alreadyCheckedForNewVersion == false)
 					{
 						// Check for a new Version of JAP if not already done
 						int ok = this.versionCheck();
@@ -653,12 +653,12 @@ public final class JAPModel implements JAPAnonServiceListener{
 								Object[] options = { model.getString("disableActCntMessageDontRemind"), model.getString("okButton") };
 								JCheckBox checkboxRemindNever=new JCheckBox(model.getString("disableActCntMessageNeverRemind"));
 								Object[] message={model.getString("disableActCntMessage"),checkboxRemindNever};
-								if (!mbActCntMessageNotRemind) 
+								if (!mbActCntMessageNotRemind)
 									{
 										ret=0;
-										ret= JOptionPane.showOptionDialog(view, 
-																											message, 
-																											model.getString("disableActCntMessageTitle"), 
+										ret= JOptionPane.showOptionDialog(view,
+																											message,
+																											model.getString("disableActCntMessageTitle"),
 																											JOptionPane.DEFAULT_OPTION,
 																											JOptionPane.WARNING_MESSAGE,
 																											null, options, options[1]);
@@ -666,8 +666,8 @@ public final class JAPModel implements JAPAnonServiceListener{
 										if(ret==0||mbActCntMessageNeverRemind)
 											mbActCntMessageNotRemind=true;
 									}
-								proxyAnonSocks=new JAPAnonService(1080,JAPAnonService.PROTO_SOCKS,model.mblistenerIsLocal);
-								proxyAnonSocks.start();
+								//proxyAnonSocks=new JAPAnonService(1080,JAPAnonService.PROTO_SOCKS,model.mblistenerIsLocal);
+								//proxyAnonSocks.start();
 								view.setCursor(Cursor.getDefaultCursor());
 								notifyJAPObservers();
 								return;
@@ -687,7 +687,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 							{
 								JOptionPane.showMessageDialog
 									(
-									 getView(), 
+									 getView(),
 									 getString("errorConnectingFirstMix")+Integer.toString(ret),
 									 getString("errorConnectingFirstMixTitle"),
 									 JOptionPane.ERROR_MESSAGE
@@ -700,7 +700,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 					}
 				else
 						view.setCursor(Cursor.getDefaultCursor());
-					
+
 		} else if ((proxyDirect==null) && (anonModeSelected == false)) {
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:setAnonMode("+anonModeSelected+")");
 			if(proxyAnon!=null)
@@ -719,13 +719,13 @@ public final class JAPModel implements JAPAnonServiceListener{
 			notifyJAPObservers();
 		}
 	}
-	
+
 	public boolean isAnonMode() {
 		return proxyAnon!=null;
 	}
 
 /*
-	private boolean startListener() 
+	private boolean startListener()
 		{
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:startListener");
 			if (isRunningListener == false)
@@ -743,7 +743,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 				}
 			return isRunningListener;
 		}
-	
+
 	private void stopListener()
 		{
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:stopListener");
@@ -755,33 +755,33 @@ public final class JAPModel implements JAPAnonServiceListener{
 				}
 		}
 	*/
-	
+
 	/** This (and only this!) is the final exit procedure of JAP!
-	 * 
+	 *
 	 */
 	public void goodBye() {
 		//stopListener();
 		save();
 		System.exit(0);
 	}
-	
+
 	public void aboutJAP() {
 		JOptionPane.showMessageDialog
-			(view, 
-			 model.TITLE + "\n" + 
-			  model.getString("infoText") + "\n\n" + 
+			(view,
+			 model.TITLE + "\n" +
+			  model.getString("infoText") + "\n\n" +
 			  model.AUTHOR + "\n\n" +
-			  model.getString("infoEMail") + "\n" + 
-			  model.getString("infoURL") + "\n\n" + 
-			  model.getString("version")+": "+model.aktVersion+"\n\n", 
+			  model.getString("infoEMail") + "\n" +
+			  model.getString("infoURL") + "\n\n" +
+			  model.getString("version")+": "+model.aktVersion+"\n\n",
 				model.getString("aboutBox"),
 				JOptionPane.INFORMATION_MESSAGE
 			);
 	}
-	
+
 	/** Try to load all available MIX-Cascades form the InfoService...
 	 */
-	public void fetchAnonServers() 
+	public void fetchAnonServers()
 		{
 			JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:Trying to fetch Anon Servers from ...");
 			try
@@ -791,18 +791,18 @@ public final class JAPModel implements JAPAnonServiceListener{
 			catch (Exception e)
 				{
 					JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPModel:fetchAnonServers: "+e);
-					JOptionPane.showMessageDialog(view, 
-																				model.getString("errorConnectingInfoService"), 
-																				model.getString("errorConnectingInfoServiceTitle"), 
-																				JOptionPane.ERROR_MESSAGE); 
+					JOptionPane.showMessageDialog(view,
+																				model.getString("errorConnectingInfoService"),
+																				model.getString("errorConnectingInfoServiceTitle"),
+																				JOptionPane.ERROR_MESSAGE);
 				}
 		}
-	
+
 	/** Performs the Versioncheck.
 	 *  @return -1, if version check says that anonymity mode should not be enabled.
-	 *          Reasons can be: new version found, version check failed 
+	 *          Reasons can be: new version found, version check failed
 	 */
-	public int versionCheck() 
+	public int versionCheck()
 		{
 			JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:Checking for new version of JAP...");
 			try {
@@ -845,7 +845,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 							t.join();
 							result = vc.getResult();
 							if (result == 0) {
-							// 
+							//
 								answer = japLoading.message(model.getString("newVersionAvailableTitle"),
 							  model.getString("newVersionLoaded"),
 							  null,
@@ -861,9 +861,9 @@ public final class JAPModel implements JAPAnonServiceListener{
 						// Alert, and reset anon mode to false
 						JAPDebug.out(JAPDebug.ERR,JAPDebug.MISC,"JAPModel:versionCheck(): Exception" + e);
 						JOptionPane.showMessageDialog(view,
-																					model.getString("downloadFailed")+model.getString("infoURL"), 
+																					model.getString("downloadFailed")+model.getString("infoURL"),
 																					model.getString("downloadFailedTitle"),
-																					JOptionPane.ERROR_MESSAGE); 
+																					JOptionPane.ERROR_MESSAGE);
 						notifyJAPObservers();
 						return -1;
 					}
@@ -878,7 +878,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 					notifyJAPObservers();
 					return -1;
 				}
-			} 
+			}
 			//endif ( s.compareTo(aktVersion) > 0 )
 			// --> no new version available, i.e. you are running the newest version of JAP
 			return 0; // meaning: version check says that anonymity service can be started
@@ -890,18 +890,18 @@ public final class JAPModel implements JAPAnonServiceListener{
 			JOptionPane.showMessageDialog(view,
 																		model.getString("errorConnectingInfoService"),
 																		model.getString("errorConnectingInfoServiceTitle"),
-																		JOptionPane.ERROR_MESSAGE); 
+																		JOptionPane.ERROR_MESSAGE);
 			notifyJAPObservers();
 			return -1;
 		}
 		// this line should never be reached
 	}
-		
+
 	public void addJAPObserver(JAPObserver o)
 		{
 			observerVector.addElement(o);
 		}
-	
+
 
 	public void notifyJAPObservers()
 		{
@@ -917,8 +917,8 @@ public final class JAPModel implements JAPAnonServiceListener{
 				}
 		//	JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:notifyJAPObservers()-ended");
 		}
-	
 
-	
+
+
 }
 
