@@ -45,8 +45,6 @@ final class JAPSplash extends Window
 		private String m_strVersion;
 		private int m_iXVersion;
 		private int m_iYVersion;
-	  private static final String SPLASHFN = "splash.gif";
-	  private static final String BUSYFN   = "busy.gif";
 
 		JAPSplash(Frame frmParent)
 			{
@@ -57,9 +55,9 @@ final class JAPSplash extends Window
 				MediaTracker ma=new MediaTracker(this);
 				InputStream in=null;
 				if(t.getColorModel().getPixelSize()<=16)
-					in=JAPSplash.class.getResourceAsStream(JAPUtil.IMGPATHLOWCOLOR+SPLASHFN);
+					in=JAPSplash.class.getResourceAsStream(JAPConstants.IMGPATHLOWCOLOR+JAPConstants.SPLASHFN);
 				if(in==null)
-					in=JAPSplash.class.getResourceAsStream(JAPUtil.IMGPATHHICOLOR+SPLASHFN);
+					in=JAPSplash.class.getResourceAsStream(JAPConstants.IMGPATHHICOLOR+JAPConstants.SPLASHFN);
 				int len;
 				int aktIndex;
 				if(in!=null)
@@ -81,9 +79,9 @@ final class JAPSplash extends Window
 					}
 				in=null;
 				if(t.getColorModel().getPixelSize()<=16)
-					in=JAPSplash.class.getResourceAsStream(JAPUtil.IMGPATHLOWCOLOR+BUSYFN);
+					in=JAPSplash.class.getResourceAsStream(JAPConstants.IMGPATHLOWCOLOR+JAPConstants.BUSYFN);
 				if(in==null)
-					in=JAPSplash.class.getResourceAsStream(JAPUtil.IMGPATHHICOLOR+BUSYFN);
+					in=JAPSplash.class.getResourceAsStream(JAPConstants.IMGPATHHICOLOR+JAPConstants.BUSYFN);
 				if(in!=null)
 					{
 						byte[] buff1=new byte[7000];
@@ -102,7 +100,7 @@ final class JAPSplash extends Window
 							}
 					}
 				m_strLoading=JAPMessages.getString("loading");
-				m_strVersion="Version: "+JAPModel.aktVersion;
+				m_strVersion="Version: "+JAPConstants.aktVersion;
 				m_fntFont=new Font("Sans",Font.PLAIN,9);
 				FontMetrics fontmetrics=t.getFontMetrics(m_fntFont);
 				m_iXVersion=350-10-fontmetrics.stringWidth(m_strVersion);

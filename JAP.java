@@ -108,7 +108,7 @@ class JAP extends Frame{
 		// load settings from config file
 		model.load();
 		// Output some information about the system
-		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAP:Welcome! This is version "+model.aktVersion+" of JAP.");
+		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAP:Welcome! This is version "+JAPConstants.aktVersion+" of JAP.");
 		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAP:Java "+javaVersion+" running on "+os+".");
 		if (mrjVersion != null)
 			JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAP:MRJ Version is "+mrjVersion+".");
@@ -122,7 +122,7 @@ class JAP extends Frame{
 			}
 		}
 		// Create the view object
-		JAPView view = new JAPView(model.TITLE);
+		JAPView view = new JAPView(JAPConstants.TITLE);
 		// Create the main frame
 		view.create();
 		// Switch Debug Console Parent to MainView
@@ -130,7 +130,7 @@ class JAP extends Frame{
 		//
 		model.addJAPObserver(view);
 		// Create the iconified view
-		JAPViewIconified iconifiedView = new JAPViewIconified(model.TITLEOFICONIFIEDVIEW);
+		JAPViewIconified iconifiedView = new JAPViewIconified(JAPConstants.TITLEOFICONIFIEDVIEW);
 		model.addJAPObserver(iconifiedView);
 
 		//Init Crypto...

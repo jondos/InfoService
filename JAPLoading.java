@@ -44,7 +44,7 @@ final class JAPLoading implements ActionListener, VersioncheckerProgress {
 			
 		JPanel iconPanel = new JPanel();
 		iconPanel.setBorder(new EmptyBorder(5,5,0,0));
-		JLabel icnLabel = new JLabel(JAPUtil.loadImageIcon(model.DOWNLOADFN, true));
+		JLabel icnLabel = new JLabel(JAPUtil.loadImageIcon(JAPConstants.DOWNLOADFN, true));
 		iconPanel.add(icnLabel);
 		
 		JPanel buttonPanel = new JPanel();
@@ -122,7 +122,7 @@ final class JAPLoading implements ActionListener, VersioncheckerProgress {
 			dialog.setVisible(false);
 		}
 	}
-		
+	/*	
 	public static void main() {
 		JAPDebug d = JAPDebug.create();
 		JAPModel model = JAPModel.createModel(); 
@@ -162,6 +162,6 @@ final class JAPLoading implements ActionListener, VersioncheckerProgress {
 		System.out.println(answer);
 		
 	}
-	
+	*/
 }
 

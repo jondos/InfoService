@@ -333,7 +333,7 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 						// send request via AnonService
 						//
 						try {
-							String target="http://"+model.getInfoServiceHost()+":"+model.getInfoServicePort()+model.aktJAPVersionFN;
+							String target="http://"+model.getInfoServiceHost()+":"+model.getInfoServicePort()+"/aktVersion";
 							// simply get the current version number via the anon service
 							URL url = new URL(target);
 

@@ -113,7 +113,7 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 		{
 			
 	    // Load Icon in upper left corner of the frame window
-	    ImageIcon ii=JAPUtil.loadImageIcon(model.IICON16FN,true);
+	    ImageIcon ii=JAPUtil.loadImageIcon(JAPConstants.IICON16FN,true);
 	    if(ii!=null)
 				setIconImage(ii.getImage());
 
@@ -140,8 +140,8 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 	    JTabbedPane tabs = new JTabbedPane();
 	    JPanel config = buildConfigPanel();
 	    JPanel level = buildLevelPanel();
-	    tabs.addTab(model.getString("mainMeterTab"),JAPUtil.loadImageIcon(model.METERICONFN, true), level );
-	    //tabs.addTab(model.getString("mainConfTab"), JAPUtil.loadImageIcon(model.CONFIGICONFN,true), config );
+	    tabs.addTab(model.getString("mainMeterTab"),JAPUtil.loadImageIcon(JAPConstants.METERICONFN, true), level );
+	    //tabs.addTab(model.getString("mainConfTab"), JAPUtil.loadImageIcon(JAPConstants.CONFIGICONFN,true), config );
 	    // "South": Buttons
 
 			JPanel buttonPanel = new JPanel();
@@ -149,7 +149,7 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 	    helpB = new JButton(model.getString("helpButton"));
 	    quitB = new JButton(model.getString("quitButton"));
 	    confB = new JButton(model.getString("confButton"));
-			iconifyB = new JButton(JAPUtil.loadImageIcon(model.ICONIFYICONFN,true));
+			iconifyB = new JButton(JAPUtil.loadImageIcon(JAPConstants.ICONIFYICONFN,true));
 			iconifyB.setToolTipText(model.getString("iconifyWindow"));
 
 	    // Add real buttons
@@ -484,10 +484,10 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 
 	protected void loadMeterIcons() {
 		// Load Images for "Anonymity Meter"
-		meterIcons = new ImageIcon [model.METERFNARRAY.length];
-//		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPView:METERFNARRAY.length="+model.METERFNARRAY.length);
-		for (int i=0; i<model.METERFNARRAY.length; i++) {
-			meterIcons[i] = JAPUtil.loadImageIcon(model.METERFNARRAY[i],false);
+		meterIcons = new ImageIcon [JAPConstants.METERFNARRAY.length];
+//		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPView:METERFNARRAY.length="+JAPConstants.METERFNARRAY.length);
+		for (int i=0; i<JAPConstants.METERFNARRAY.length; i++) {
+			meterIcons[i] = JAPUtil.loadImageIcon(JAPConstants.METERFNARRAY[i],false);
 		}
 	}
 
@@ -573,7 +573,7 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
   private void updateValues() {
 		AnonServerDBEntry e = model.getAnonServer();
 		// Config panel
-		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"Start updateValues");
+		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPView:Start updateValues");
 		m_labelProxyPort.setText(String.valueOf(model.getPortNumber()));
 		if(model.getUseFirewall())
 			{

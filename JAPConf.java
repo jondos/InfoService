@@ -889,11 +889,11 @@ final class JAPConf extends JDialog
 		/** Resets the Configuration to the Default values*/
 		private void resetToDefault()
 			{
-				m_tfListenerPortNumber.setText(Integer.toString(JAPModel.defaultPortNumber));
-				m_tfInfoHost.setText(JAPModel.defaultinfoServiceHostName);
-				m_tfInfoPortNumber.setText(Integer.toString(JAPModel.defaultinfoServicePortNumber));
-				m_tfMixHost.setText(JAPModel.defaultanonHost);
-				m_tfMixPortNumber.setText(Integer.toString(JAPModel.defaultanonPortNumber));
+				m_tfListenerPortNumber.setText(Integer.toString(JAPConstants.defaultPortNumber));
+				m_tfInfoHost.setText(JAPConstants.defaultinfoServiceHostName);
+				m_tfInfoPortNumber.setText(Integer.toString(JAPConstants.defaultinfoServicePortNumber));
+				m_tfMixHost.setText(JAPConstants.defaultanonHost);
+				m_tfMixPortNumber.setText(Integer.toString(JAPConstants.defaultanonPortNumber));
 				m_cbProxy.setSelected(false);
 				m_cbStartupMinimized.setSelected(false);
 				m_cbAutoConnect.setSelected(false);

@@ -5,7 +5,6 @@ import java.awt.Frame;
 
 public final class JAPMessages
 	{
-		private static final String MESSAGESFN   = "JAPMessages";
 		private static ResourceBundle msg=null;
 
 
@@ -26,18 +25,18 @@ public final class JAPMessages
 				// Load Texts for Messages and Windows
 				try
 						{
-							msg = PropertyResourceBundle.getBundle(MESSAGESFN, locale);
+							msg = PropertyResourceBundle.getBundle(JAPConstants.MESSAGESFN, locale);
 						}
 					catch(Exception e1)
 						{
 							try
 								{
-									msg=PropertyResourceBundle.getBundle(MESSAGESFN);
+									msg=PropertyResourceBundle.getBundle(JAPConstants.MESSAGESFN);
 								}
 							catch(Exception e)
 								{
 									JAPAWTMsgBox.MsgBox(new Frame(),
-																			"File not found: "+MESSAGESFN+".properties\nYour package of JAP may be corrupted.\nTry again to download or install the package.",
+																			"File not found: "+JAPConstants.MESSAGESFN+".properties\nYour package of JAP may be corrupted.\nTry again to download or install the package.",
 																			"Error");
 									System.exit(-1);
 								}

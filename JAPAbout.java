@@ -183,10 +183,10 @@ final class JAPAbout extends JDialog implements Runnable
 				});
 				setLocation(-380,-200);
 				setVisible(true);   //now we have to ensure that the window is visible before the
-				ImageIcon imageSplash=JAPUtil.loadImageIcon(JAPModel.ABOUTFN,false);//loading the Background Image
+				ImageIcon imageSplash=JAPUtil.loadImageIcon(JAPConstants.ABOUTFN,false);//loading the Background Image
 				JLabel labelSplash=new JLabel(imageSplash); //we use a JLabel to show the Background Image
 				JLabel verstxt=new JLabel("Version:");
-				JLabel version=new JLabel(JAPModel.aktVersion);
+				JLabel version=new JLabel(JAPConstants.aktVersion);
 				verstxt.setFont(new Font("Sans",Font.PLAIN,9));
 				verstxt.setForeground(Color.black);
 				verstxt.setSize(verstxt.getPreferredSize());  //we set the Size of the Version-Label so that the Text 'Version' would exactly fit
