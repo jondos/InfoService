@@ -78,8 +78,9 @@ public class JAP extends Frame{
 		splash.dispose();
 		view.show();
 		view.toFront();		
+		
 		// initially start services
-		//model.initialRun();
+		model.initialRun();
 	}
 	
 	public static void main(String[] argv) {

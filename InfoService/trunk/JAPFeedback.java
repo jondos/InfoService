@@ -11,62 +11,76 @@ import com.sun.xml.tree.XmlDocument;
 
 public final class JAPFeedback implements Runnable {
 	
-	public static final String DP = "%3A"; // Doppelpunkt 
-	boolean runFlag = true;
-	JAPModel model;
+	private static final String DP = "%3A"; // Doppelpunkt 
+	private boolean runFlag = true;
+	private JAPModel model;
 	
-	public JAPFeedback() {
-		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPFeedback:initializing...");
-		this.model = JAPModel.getModel();
-	}
+	public JAPFeedback()
+		{
+			JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPFeedback:initializing...");
+			model = JAPModel.getModel();
+		}
 		
-	public void run() {
-		//int counter = 0;
-		boolean error;
-		runFlag = true;
-		String path = "http://"+model.infoServiceHostName+":"+model.infoServicePortNumber+
-		  			  "/feedback/"+model.anonHostName+DP+model.anonPortNumber;
-		while(runFlag) {
-			if (model.isAnonMode()) {
-				String s = "";
-				int nrOfActiveUsers = -1;
-				int trafficSituation = -1;
-				int currentRisk = -1;
-				try {
-					error = false;
-					URL url=new URL(path);
-					Socket socket = new Socket(url.getHost(),((url.getPort()==-1)?80:url.getPort()));
-					BufferedWriter out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-					out.write("GET "+url.getFile()+" HTTP/1.0\r\n\r\n");
-					out.flush();
-					DataInputStream in=new DataInputStream(socket.getInputStream());
-					String line = readLine(in);
-					if (line.indexOf("200") == -1) {
-						error = true;
-						JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPFeedback: Bad response from server: "+line);
-					}
-					// read remaining header lines
-					while (line.length() != 0) {
-						line = readLine(in);
-					}
-					
-					if (error == false) {
-						// XML stuff
-						InputSource ins = new InputSource(in);
-						Document doc=DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(ins);
-						NamedNodeMap n=doc.getFirstChild().getAttributes();
-						
-						s                = n.getNamedItem("anonServer").getNodeValue();
-						nrOfActiveUsers  = Integer.valueOf(n.getNamedItem("nrOfActiveUsers").getNodeValue()).intValue();
-						trafficSituation = Integer.valueOf(n.getNamedItem("currentRisk").getNodeValue()).intValue();
-						currentRisk      = Integer.valueOf(n.getNamedItem("trafficSituation").getNodeValue()).intValue();
-					}
-					// close streams and socket
-					in.close();
-					out.close();
-					socket.close();
+	public void run()
+		{
+			boolean error;
+			URL url=null;
+			try{
+				url=new URL("http://"+model.infoServiceHostName+":"+model.infoServicePortNumber+
+		  							"/feedback/"+model.anonHostName+DP+model.anonPortNumber);
 				}
-				catch(Exception e) {
+			catch(Exception e)
+				{
+					return;
+				}
+			
+			runFlag = true;
+			while(runFlag)
+				{
+					if (model.isAnonMode())
+						{
+							String s = "";
+							int nrOfActiveUsers = -1;
+							int trafficSituation = -1;
+							int currentRisk = -1;
+							try
+								{
+									error = false;
+									Socket socket = new Socket(url.getHost(),((url.getPort()==-1)?80:url.getPort()));
+									BufferedWriter out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+									out.write("GET "+url.getFile()+" HTTP/1.0\r\n\r\n");
+									out.flush();
+									DataInputStream in=new DataInputStream(socket.getInputStream());
+									String line = readLine(in);
+									if (line.indexOf("200") == -1)
+										{
+											error = true;
+											JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPFeedback: Bad response from server: "+line);
+										}
+									// read remaining header lines
+									while (line.length() != 0)
+										{
+											line = readLine(in);
+										}
+					
+									if (error == false)
+										{
+											// XML stuff
+											InputSource ins = new InputSource(in);
+											Document doc=DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(ins);
+											NamedNodeMap n=doc.getFirstChild().getAttributes();
+											
+											s                = n.getNamedItem("anonServer").getNodeValue();
+											nrOfActiveUsers  = Integer.valueOf(n.getNamedItem("nrOfActiveUsers").getNodeValue()).intValue();
+											trafficSituation = Integer.valueOf(n.getNamedItem("currentRisk").getNodeValue()).intValue();
+											currentRisk      = Integer.valueOf(n.getNamedItem("trafficSituation").getNodeValue()).intValue();
+										}
+									// close streams and socket
+									in.close();
+									out.close();
+									socket.close();
+							}
+						catch(Exception e) {
 					error = true;
 					JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPFeedback: "+e);
 				}
@@ -85,7 +99,7 @@ public final class JAPFeedback implements Runnable {
 				model.notifyJAPObservers();
 			}
 			try {
-				Thread.sleep(5000);
+				Thread.sleep(60000);
 			}
 			catch (Exception e) {
 			}
@@ -96,11 +110,14 @@ public final class JAPFeedback implements Runnable {
 		String returnString = "";
 		try{
 			int byteRead = inputStream.read();
-			while (byteRead != 10 && byteRead != -1) {
-			if (byteRead != 13) returnString += (char)byteRead;
-			byteRead = inputStream.read();
-			}
-		} catch (Exception e) {
+			while (byteRead != 10 && byteRead != -1) 
+				{
+					if (byteRead != 13)
+						returnString += (char)byteRead;
+					byteRead = inputStream.read();
+				}
+				}
+		catch (Exception e) {
 			throw e;
 		}
 		return returnString;

@@ -201,10 +201,7 @@ public final class JAPMuxSocket extends Thread /*implements Runnable*/
 			{
 				try
 					{
-	/*					for(int l=0;l<1000;l++)
-							buff[l]=65;
-						len=512;
-	*/				SocketListEntry entry=(SocketListEntry)oSocketList.get(new Integer(channel));
+						SocketListEntry entry=(SocketListEntry)oSocketList.get(new Integer(channel));
 						if(entry!=null&&entry.arCipher==null)
 							{
 								int size=DATA_SIZE-16;
