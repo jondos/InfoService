@@ -175,7 +175,7 @@ public class Circuit
 		}
 		if (m_streams.isEmpty())
 		{
-			m_FirstORConnection.send(new DestroyCell(m_circID));
+			close();
 		}
 		m_State = STATE_SHUTDOWN;
 	}
@@ -185,7 +185,7 @@ public class Circuit
 	 *
 	 * @throws Exception
 	 */
-	public synchronized void close() throws Exception
+	public synchronized void close() throws IOException
 	{
 		if (m_State == STATE_CLOSED)
 		{

@@ -27,7 +27,10 @@
   <property category="javaFormatting" name="otherBraceNextLine" value="1"/>
   <property category="javaFormatting" name="wrapAtColumn" value="110"/>
   <property category="javadoc" name="custom.tags.1" value="todo;a;To Do:"/>
-  <property category="optimize.0" name="OptimizableType" value="com.borland.jbuilder.optimize.IntroOptimizeitProfiler"/>
+  <property category="optimize.0" name="OptimizableType" value="intuitive.ide.borland.jb10.ThreadDBootstrap"/>
+  <property category="optimize.0" name="oicc.FilterFile" value="G:\projects\Jap\JAP.oif"/>
+  <property category="optimize.0" name="oipr.FilterFile" value="G:\projects\Jap\JAP.oif"/>
+  <property category="optimize.0" name="oira.FilterFile" value="G:\projects\Jap\JAP.oif"/>
   <property category="optimize.5" name="OptimizableType" value="com.borland.jbuilder.optimize.IntroOptimizeitProfiler"/>
   <property category="optimize.9" name="OptimizableType" value="com.borland.jbuilder.optimize.IntroOptimizeitProfiler"/>
   <property category="personality" name="personality" value=""/>
