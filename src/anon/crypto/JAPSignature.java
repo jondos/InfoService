@@ -117,7 +117,8 @@ public class JAPSignature
 
 	/**
 	 * Verifies the XML (signature) structure.
-	 * @param n Root node of the XML structure.
+	 * @param n Root node of the XML structure. If it is a Document then the Root element of that document is
+	 *  taken.
 	 * @return true if it could be verified
 	 * @return false otherwise
 	 */
@@ -129,7 +130,13 @@ public class JAPSignature
 			{
 				return false;
 			}
-			Element root = (Element) n;
+			Element root=null;
+			if(n instanceof Document)
+				root=((Document)n).getDocumentElement();
+			else if(n instanceof Element)
+				root = (Element) n;
+			else
+				return false;
 			Element signature = (Element) XMLUtil.getFirstChildByName(root, "Signature");
 			NodeList nl = signature.getElementsByTagName("SignedInfo");
 			if (nl.getLength() < 1)

@@ -49,6 +49,7 @@ public class JAPCertPath
 	}
 
 	/** Validates the XML Signature over root done by nodeSig according to certsTrustedRoots
+	 * If root is a Document than the Root Element of that Document is taken.
 	 * ATTENTION: All certificates must include DSAPublicKeys!!!
 	 * @return ErrorCodes.E_SUCCESS if ok
 	 * @return ErrorCodes.E_INVALID_KEY if the provides key does not match to the signature
@@ -59,12 +60,13 @@ public class JAPCertPath
 	{
 		try
 		{
-			if (! (nRoot instanceof Element) || ! (nSig instanceof Element))
+
+			if (! (nSig instanceof Element))
 			{
 				return ErrorCodes.E_UNKNOWN;
 			}
 			Element nodeSig = (Element) nSig;
-			Element root = (Element) nRoot;
+			Node root =  nRoot;
 			Element elemKeyInfo = (Element) XMLUtil.getFirstChildByName(nodeSig, "KeyInfo");
 			if (elemKeyInfo != null)
 			{
