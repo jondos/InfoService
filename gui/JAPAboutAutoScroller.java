@@ -83,7 +83,7 @@ public final class JAPAboutAutoScroller extends Canvas/*JPanel*/ implements Runn
         if(d.width>76)
           d.width=76;
         m_bttnOk.setSize(d); //resizing the OK-Button
-				m_Thread=new Thread(this);
+				m_Thread=new Thread(this,"JAP - AboutScroller");
 				m_bRun=false;
 			}
 
