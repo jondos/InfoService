@@ -31,6 +31,7 @@ import java.net.Socket;
 import java.net.Socket ;
 import java.io.BufferedWriter;
 import java.io.OutputStreamWriter;
+import java.io.InterruptedIOException;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
@@ -43,7 +44,7 @@ final class JAPDirectProxy implements Runnable
  *  This class is used to inform the user that he tries to
  *  send requests although anonymity mode is off.
  */
-private final class JAPDirectConnection extends Thread 
+private final class JAPDirectConnection implements Runnable 
 	{
 		private JAPModel model;
 		private Socket s;
@@ -89,19 +90,21 @@ private final class JAPDirectConnection extends Thread
 		private boolean isRunningProxy = false;
     private int portN;
     private ServerSocket socketListener;
-    private JAPModel model;
+    private Thread threadRunLoop;
+		private ThreadGroup threadgroupAll;
+		private JAPModel model;
     
 
-    public JAPDirectProxy (int port) 
+    public JAPDirectProxy (ServerSocket s) 
 			{
-				portN = port;
+				socketListener=s;
 				model=JAPModel.getModel();
 			}
 
-		public boolean start()
+		public boolean startService()
 			{
-				socketListener = null;
-				try 
+	//			socketListener = null;
+/*				try 
 					{
 						if(model.getListenerIsLocal())
 							{
@@ -123,30 +126,43 @@ private final class JAPDirectConnection extends Thread
 						isRunningProxy = false;
 						return false;
 					}
+	*/
+						threadgroupAll=new ThreadGroup("directproxy");
+						threadRunLoop=new Thread(this);
+						threadRunLoop.start();
+						isRunningProxy = true;
+						return true;
+			
 			}
 		
     public void run()
 			{
 				runFlag = true;
-				model.status1 = model.getString("statusRunning");
-				model.notifyJAPObservers();
 				try 
 					{
 						while(runFlag)
 							{
-								Socket socket = socketListener.accept();
+								Socket socket=null;
+								try
+									{
+										socket = socketListener.accept();
+									}
+								catch(InterruptedIOException e1)
+									{
+										continue;
+									}
 								JAPDirectConnection doIt = new JAPDirectConnection(socket);
-								Thread thread = new Thread (doIt);
+								Thread thread = new Thread (threadgroupAll,doIt);
 								thread.start();
 							}
 					}
 				catch (Exception e)
 					{
-						try {
-						socketListener.close();
-						} 
-						catch (Exception e2) {
-						}
+			//			try {
+			//			socketListener.close();
+			//			} 
+			//			catch (Exception e2) {
+			//			}
 						JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPProxyServer:ProxyServer.run() Exception: " +e);
 					}
 				isRunningProxy = false;
@@ -154,13 +170,20 @@ private final class JAPDirectConnection extends Thread
 		  }
 	
 
-    public void stop() {
-		runFlag = false;
-		try {
-			socketListener.close();
-		}
-		catch(Exception e) { 
-			JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.NET,"JAPProxyServer:stopService() Exception: " +e);
-		}
-	}
+    public void stopService()
+			{
+				runFlag = false;
+				try{threadRunLoop.join(5000);}catch(Exception e){}
+				threadgroupAll.stop();
+				threadgroupAll.destroy();
+				threadgroupAll=null;
+				threadRunLoop=null;
+			}
+	//	try {
+	//		socketListener.close();
+	//	}
+	//	catch(Exception e) { 
+	//		JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.NET,"JAPProxyServer:stopService() Exception: " +e);
+	//	}
+	//}
 }

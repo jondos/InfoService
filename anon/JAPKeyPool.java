@@ -29,7 +29,7 @@ package anon;
 import java.security.SecureRandom;
 import JAPDebug;
 
-final class JAPKeyPool /*extends Thread*/ implements Runnable
+final class JAPKeyPool implements Runnable
 	{
 		private SecureRandom sr;
 		private int aktSize;
@@ -41,7 +41,8 @@ final class JAPKeyPool /*extends Thread*/ implements Runnable
 		private Object l1;
 		private Object l2;
 		private boolean runflag;
-		
+		private static JAPKeyPool m_KeyPool=null;
+		private Thread m_KeyPoolThread=null;
 		private final class KeyList
 			{
 				public byte[] key;
@@ -53,16 +54,28 @@ final class JAPKeyPool /*extends Thread*/ implements Runnable
 					}
 			}
 		
-		public JAPKeyPool(int ps,int keylength)
-			{	JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPKeyPool:initializing...");
+		
+		private JAPKeyPool(int poolsize,int keylength)
+			{	
+				JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPKeyPool:initializing...");
 				keySize=keylength;
-				poolSize=ps;
+				this.poolSize=poolsize;
 				pool=null;
 			//	keys=null;
 				aktKey=null;
 				l1=new Object();
 				l2=new Object();
+				m_KeyPoolThread=new Thread(this);
+				m_KeyPoolThread.setPriority(Thread.MIN_PRIORITY);
+				m_KeyPoolThread.start();
 				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPKeyPool:initialization finished!");
+			}
+		
+		public static JAPKeyPool start(int poolsize,int keylength)
+			{
+				if(m_KeyPool==null)
+					m_KeyPool=new JAPKeyPool(poolsize,keylength);
+				return m_KeyPool;
 			}
 		
 		public void run()
@@ -130,33 +143,33 @@ final class JAPKeyPool /*extends Thread*/ implements Runnable
 					}
 			}
 		
-		public void getKey(byte[] key)
+		public static void getKey(byte[] key)
 			{
 				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPKeyPool:getKey()");
-				if(aktKey==null)
+				if(m_KeyPool.aktKey==null)
 					try	
 						{
-							synchronized(l2)
-							{l2.wait();}
+							synchronized(m_KeyPool.l2)
+							{m_KeyPool.l2.wait();}
 						}
 					catch(InterruptedException e)
 						{
 							JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPKeyPool:getKey() waiting interrupted!");
 						}
-				synchronized(this)
+				synchronized(m_KeyPool)
 					{
 						KeyList tmpKey;
-						System.arraycopy(aktKey.key,0,key,0,keySize);
-						tmpKey=aktKey;
+						System.arraycopy(m_KeyPool.aktKey.key,0,key,0,m_KeyPool.keySize);
+						tmpKey=m_KeyPool.aktKey;
 						//if(aktKey.next!=null)
-							aktKey=aktKey.next;
+							m_KeyPool.aktKey=m_KeyPool.aktKey.next;
 						//else
 						//	aktKey=keys;
-						tmpKey.next=pool;
+						tmpKey.next=m_KeyPool.pool;
 						 							
-						pool=tmpKey;
+						m_KeyPool.pool=tmpKey;
 					}
-				synchronized(l1)
-				{l1.notify();}				
+				synchronized(m_KeyPool.l1)
+				{m_KeyPool.l1.notify();}				
 			}
 	}

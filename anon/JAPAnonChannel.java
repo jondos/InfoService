@@ -37,12 +37,12 @@ public class JAPAnonChannel implements Runnable
 		private final int m_Type;
 
     	public JAPAnonChannel (JAPSocket s, int channelID, int type,JAPMuxSocket muxSocket)
-			{
-				inSocket = s;
-				channel=channelID;
-				outSocket=muxSocket;
-				m_Type=type;
-			}
+				{
+					inSocket = s;
+					channel=channelID;
+					outSocket=muxSocket;
+					m_Type=type;
+				}
 
 		public void run()
 			{

@@ -27,6 +27,7 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 */
 package anon;
 
+import java.io.InterruptedIOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -52,7 +53,8 @@ public final class JAPAnonService implements Runnable
 		private static String m_AnonHostName=null;
 		private static int m_AnonHostPort=-1;
 		private Thread m_threadRunLoop=null;
-		private ServerSocket socketListener=null;
+		private ServerSocket m_socketListener=null;
+		private boolean m_bDontChangeListener=false;
 		private JAPMuxSocket m_MuxSocket=null;
 		
 		private static JAPAnonServiceListener m_AnonServiceListener=null;
@@ -71,12 +73,28 @@ public final class JAPAnonService implements Runnable
 				setService(port,protocol,bLocalHostOnly);
 			}
 
+		public JAPAnonService(ServerSocket listener,int protocol)
+			{
+				this();
+				setService(listener,protocol);
+			}
+
 		public int setService(int port,int protocol)
 			{
 				setPort(port);
 				return setProtocol(protocol);				
 			}
 		
+		public int setService(ServerSocket listener,int protocol)
+			{
+				if(listener==null)
+					return -1;
+				setPort(listener.getLocalPort());
+				m_socketListener=listener;
+				m_bDontChangeListener=true;
+				return setProtocol(protocol);				
+			}
+
 		public int setService(int port,int protocol,boolean bLocalHostOnly)
 			{
 				setPort(port,bLocalHostOnly);
@@ -126,32 +144,41 @@ public final class JAPAnonService implements Runnable
 				if(m_Protocol!=PROTO_HTTP&&m_Protocol!=PROTO_SOCKS)
 					return E_INVALID_PROTOCOL;
 				
-				socketListener = null;
-				try 
+				if(!m_bDontChangeListener)
 					{
-						if(m_bBindToLocalHostOnly)
-							{
-								InetAddress[] a=InetAddress.getAllByName("localhost");
-								JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Try binding Listener on localhost: "+a[0]);
-								socketListener = new ServerSocket (m_Port,50,a[0]);
-							}
-						else
-							socketListener = new ServerSocket (m_Port);
-						JAPDebug.out(JAPDebug.INFO,JAPDebug.NET,"JAPProxyServer:Listener on port " + m_Port + " started.");
-					}
-				catch(Exception e)
-					{
-						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Exception: "+e.getMessage());
-						socketListener=null;
-						return E_BIND;
-					}
-				
+						boolean bindOk=false;
+						for(int i=0;i<10;i++) //HAck for Mac!!
+							try 
+								{
+									if(m_bBindToLocalHostOnly)
+										{
+											InetAddress[] a=InetAddress.getAllByName("localhost");
+											JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Try binding Listener on localhost: "+a[0]);
+											m_socketListener = new ServerSocket (m_Port,50,a[0]);
+										}
+									else
+										m_socketListener = new ServerSocket (m_Port);
+									JAPDebug.out(JAPDebug.INFO,JAPDebug.NET,"JAPProxyServer:Listener on port " + m_Port + " started.");
+									bindOk=true;
+									break;
+								}
+							catch(Exception e)
+								{
+									JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Exception: "+e.getMessage());
+									m_socketListener=null;
+								}
+						if(!bindOk)
+							return E_BIND;
+					}				
 				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPProxyServer:Mux starting...");
 				m_MuxSocket = JAPMuxSocket.create();
 				if(m_MuxSocket.connect(m_AnonHostName,m_AnonHostPort)==-1)
 					{
-						try{ socketListener.close(); }catch(Exception e){}
-						socketListener=null;
+						if(!m_bDontChangeListener)
+							{
+								try{ m_socketListener.close(); }catch(Exception e){}
+								m_socketListener=null;
+							}
 						m_MuxSocket=null;
 						return E_CONNECT;
 					}
@@ -168,9 +195,16 @@ public final class JAPAnonService implements Runnable
 					{
 						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPAnonService: stopping...");
 						m_bIsRunning=false;
-						try{socketListener.close();}catch(Exception e1){};
+						if(!m_bDontChangeListener)
+						{try{m_socketListener.close();}catch(Exception e1){};m_socketListener=null;}
 						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPAnonService: wait for joining...");
-						m_threadRunLoop.join(5000);
+						m_threadRunLoop.join(10000);
+						if(m_threadRunLoop.isAlive())
+							{
+								JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPAnonService: Still alvie - so stopping harder...");
+								try{m_threadRunLoop.interrupt();}catch(Exception e1){};
+								m_threadRunLoop.join(3000);
+							}
 						m_threadRunLoop=null;
 					}
 				catch(Exception e)
@@ -183,12 +217,24 @@ public final class JAPAnonService implements Runnable
 		public void run()
 			{
 				m_bIsRunning=true;
-				
+//				int oldTimeOut=0;
+//				try{oldTimeOut=m_socketListener.getSoTimeout();}catch(Exception e){}
+//				try{m_socketListener.setSoTimeout(2000);}
+//				catch(Exception e1){JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Could not set accept time out: Exception: "+e1.getMessage());}
+//				try{System.out.println(m_socketListener.getSoTimeout());}catch(Exception e5){e5.printStackTrace();}
 				try 
 					{
 						while(m_bIsRunning)
 							{
-								Socket socket = socketListener.accept();
+								Socket socket=null;
+								try
+									{	
+										socket = m_socketListener.accept();
+									}
+								catch(InterruptedIOException e)
+									{
+										continue;
+									}
 								m_MuxSocket.newConnection(new JAPSocket(socket),m_Protocol);
 							}
 					}
@@ -196,16 +242,20 @@ public final class JAPAnonService implements Runnable
 					{
 						JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPProxyServer:ProxyServer.run() Exception: " +e);
 					}
+	//			try{m_socketListener.setSoTimeout(oldTimeOut);}catch(Exception e4){}
 				JAPDebug.out(JAPDebug.INFO,JAPDebug.NET,"JAPProxyServer:ProxyServer on port " + m_Port + " stopped.");
 				m_bIsRunning=false;
 				m_MuxSocket.stopService();
 				m_MuxSocket=null;
-				try
+				if(!m_bDontChangeListener)
 					{
-						socketListener.close();
-					} 
-				catch (Exception e2) {}
-				socketListener=null;
+						try
+							{
+								m_socketListener.close();
+							} 
+						catch (Exception e2) {}
+						m_socketListener=null;
+					}
 			}
 		
 		protected static void setNrOfChannels(int channels)
