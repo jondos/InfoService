@@ -17,7 +17,7 @@ import java.awt.Component;
 import java.awt.Dialog;
 import java.util.Observer;
 import update.*;
-
+import JAPModel;
 /**
  * Title:
  * Description:
@@ -42,8 +42,11 @@ private int totalSteps;
 final String[] german ={"Hilfe","Abbrechen","Zurück","Weiter","Fertig"};
 final String[] english ={"Help","Cancel","Back","Next","Finish"};
 
-  public JAPWizardBase(int totalSteps) {
+private JAPModel japModel;
+
+  public JAPWizardBase(int totalSteps , JAPModel japModel) {
   //initOpenTool((byte)2,(byte)3);
+  this.japModel = japModel;
   initTotalSteps(totalSteps);
   createWizardPages();
   currentWizardPage = (WizardPage)invokeWizard(wizardHost);
@@ -61,7 +64,7 @@ final String[] english ={"Help","Cancel","Back","Next","Finish"};
 private void createWizardPages()
 {
 wtpArray = new BasicWizardPage[totalSteps];
-wtpArray[0] = new JAPWelcomeWizardPage();
+wtpArray[0] = new JAPWelcomeWizardPage(japModel);
 wtpArray[1] = new JAPDownloadWizardPage();
 wtpArray[2] = new JAPFinishWizardPage("Finish");
 }
@@ -157,7 +160,7 @@ public WizardPage invokeWizard(WizardHost host)
  }
 public static void main(String args[])
 {
-JAPWizardBase wb = new JAPWizardBase(3);
+//JAPWizardBase wb = new JAPWizardBase(3);
 //System.out.println(wb.toString());
 }
 
