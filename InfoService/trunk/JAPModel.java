@@ -275,6 +275,8 @@ public final class JAPModel implements JAPAnonServiceListener{
 			anonPortNumber    = JAPUtil.parseNodeInt(n.getNamedItem("anonPortNumber"),anonPortNumber);
 			anonSSLPortNumber = JAPUtil.parseNodeInt(n.getNamedItem("anonSSLPortNumber"),anonSSLPortNumber);
 			model.setAnonServer(new AnonServerDBEntry(anonserviceName,anonHostName,anonPortNumber,anonSSLPortNumber));
+			// force setting the correct name of the selected service
+			model.getAnonServer().setName(anonserviceName);
 			
 			autoConnect=JAPUtil.parseNodeBoolean(n.getNamedItem("autoConnect"),false);
 			mbMinimizeOnStartup=JAPUtil.parseNodeBoolean(n.getNamedItem("minimizedStartup"),false);
