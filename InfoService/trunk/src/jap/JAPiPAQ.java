@@ -31,12 +31,7 @@ import javax.swing.JPanel;
 import java.awt.Insets;
 import java.util.Enumeration;
 import java.util.Locale;
-import JAPModel;
-import JAPDebug;
-import JAPController;
-import JAPConstants;
-import JAPView;
-import JAPMessages;
+
 
 final public class JAPiPAQ {
 

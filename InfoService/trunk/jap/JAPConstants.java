@@ -30,7 +30,7 @@ package jap;
 import java.awt.Insets;
 import java.awt.Font;
 public final class JAPConstants {
-	public static final String aktVersion = "00.01.080"; //Never change the layout of this line!
+	public static final String aktVersion = "00.01.081"; //Never change the layout of this line!
 	//static final String buildDate=".."
 	//static final String buildType="..."
         //needed for update.JAPUpdate

@@ -26,7 +26,7 @@ IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISI
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
 package misc;
-import JAPDebug;
+import jap.JAPDebug;
 import anon.AnonServer;
 import proxy.ProxyListener;
 import proxy.AnonProxy;
