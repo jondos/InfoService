@@ -27,7 +27,7 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 */
 
 public final class JAPConstants {
-	static final String aktVersion = "00.01.069"; //Never change the layout of this line!
+	static final String aktVersion = "00.01.070"; //Never change the layout of this line!
 	//static final String buildDate=".."
 	//static final String buildType="..."
         //needed for update.JAPUpdate
@@ -69,6 +69,8 @@ public final class JAPConstants {
 	static final String   ICONIFYICONFN                = "iconify.gif";
 	static final String   ENLARGEYICONFN               = "enlarge.gif";
 	static final String   METERICONFN                  = "icom.gif";
+  public static final String   IMAGE_ARROW           = "arrow46.gif";
+  public static final String   IMAGE_BLANK           = "blank.gif";
 	static final String[] METERFNARRAY                 ={
 															"meterD.gif",    // anonymity deactivated
 															"meterNnew.gif", // no measure available

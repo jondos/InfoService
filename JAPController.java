@@ -642,15 +642,15 @@ public final class JAPController implements ProxyListener {
 		    }
 	  }
 
-	public InfoService getInfoService()
+	public static InfoService getInfoService()
     {
-		  if(m_InfoService==null)
+		  if(m_Controller.m_InfoService==null)
         {
-			    m_InfoService=new InfoService(JAPModel.getInfoServiceHost(),JAPModel.getInfoServicePort());
-			    m_InfoService.setLogging(JAPDebug.create());
-          applyProxySettingsToInfoService();
+			    m_Controller.m_InfoService=new InfoService(JAPModel.getInfoServiceHost(),JAPModel.getInfoServicePort());
+			    m_Controller.m_InfoService.setLogging(JAPDebug.create());
+          m_Controller.applyProxySettingsToInfoService();
 		    }
-		return m_InfoService;
+		return m_Controller.m_InfoService;
 	}
 	//---------------------------------------------------------------------
 /*

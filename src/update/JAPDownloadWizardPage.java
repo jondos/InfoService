@@ -50,30 +50,20 @@ public class JAPDownloadWizardPage extends BasicWizardPage
     protected JProgressBar progressBar;
     protected JPanel m_panelProgressBar;
 
-    private String version;
-    private int type;
 
 
 
 
-    private GridBagLayout gridBagDownload;
-    private GridBagConstraints constraintsDownload;
-
-
-
-    public JAPDownloadWizardPage(){}
-
-    public JAPDownloadWizardPage(String version, int type)
+    public JAPDownloadWizardPage(String version)
       {
-        this.version = version;
-        this.type = type;
+        GridBagLayout gridBagDownload;
+        GridBagConstraints constraintsDownload;
+
         setIcon(JAPUtil.loadImageIcon(JAPConstants.DOWNLOADFN,false));
         setPageTitle("Download");
 
-        arrow = new ImageIcon("images/arrow46.gif");
-        blank = new ImageIcon("images/blank.jpg");
-
-
+        arrow = JAPUtil.loadImageIcon(JAPConstants.IMAGE_ARROW,false);
+        blank = JAPUtil.loadImageIcon(JAPConstants.IMAGE_BLANK,false);
 
         gridBagDownload = new GridBagLayout();
         constraintsDownload = new GridBagConstraints();
