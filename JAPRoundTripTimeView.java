@@ -32,7 +32,7 @@ import java.net.InetAddress;
 import java.net.BindException;
 import java.net.UnknownHostException;
 import java.io.IOException;
-
+import anon.AnonServer;
 
 /**
  * User Interface for an Mix-Cascade echo.
@@ -66,7 +66,7 @@ class JAPRoundTripTimeView extends JDialog implements Runnable {
 	private boolean testRuns              = false;
 	private String[] allMyAddressesStringArray;
 	private Thread rttThread;
-	private AnonServerDBEntry[] serverList;
+	private AnonServer[] serverList;
 	private	JPanel panelCenter            = new JPanel(true);
 	private JPanel[] progressPanel        = new JPanel[JAPRoundTripTime.MAX_STATIONS + 2];
 	private JButton startButton;
@@ -83,23 +83,10 @@ class JAPRoundTripTimeView extends JDialog implements Runnable {
 	private JProgressBar sumProgressBar2  = new JProgressBar();
 	private JAPController controller;
 
-
-	/**
-	 * The Main Method
-	 */
-    public static void main(String[] args) {
- 		AnonServerDBEntry[] initialServerList = new AnonServerDBEntry[2];
-		AnonServerDBEntry myEntry0 = new AnonServerDBEntry("192.168.0.11:4453", "192.168.0.11", 4453);
-		AnonServerDBEntry myEntry1 = new AnonServerDBEntry("192.168.0.2:4453", "192.168.0.2", 4453);
-		initialServerList[0] = myEntry0;
-		initialServerList[1] = myEntry1;
-		new JAPRoundTripTimeView (initialServerList);
-    }
-
 	/**
 	 * Constructor
 	 */
-	JAPRoundTripTimeView (AnonServerDBEntry[] initialServerList) {
+	JAPRoundTripTimeView (AnonServer[] initialServerList) {
         try {
             UIManager.setLookAndFeel (UIManager.getCrossPlatformLookAndFeelClassName());
        } catch (Exception e) { }
@@ -120,7 +107,7 @@ class JAPRoundTripTimeView extends JDialog implements Runnable {
 	}
 
 	//new constructor....
-	JAPRoundTripTimeView (Frame parent,AnonServerDBEntry[] initialServerList) {
+	JAPRoundTripTimeView (Frame parent,AnonServer[] initialServerList) {
  		super(parent,"Round Trip Time");
 		controller=JAPController.getController();
 		// Creating Frame & Components
@@ -142,7 +129,7 @@ class JAPRoundTripTimeView extends JDialog implements Runnable {
 	/**
 	 * This Method is used by the main method to define all of the Windows Components.
 	 */
-	private Component createComponents(AnonServerDBEntry[] initialServerList) {
+	private Component createComponents(AnonServer[] initialServerList) {
 		JPanel myPanel = new JPanel();
 		startButton     = new JButton(JAPMessages.getString("startButton"));
 		stopButton      = new JButton(JAPMessages.getString("stopButton"));
@@ -583,8 +570,8 @@ class JAPRoundTripTimeView extends JDialog implements Runnable {
 	}
 
 	/** Used to import a list of AnonServerDBEntry into the ComboBox */
-	public void setMixList(AnonServerDBEntry[] anonServerList){
-		serverList = new AnonServerDBEntry[anonServerList.length];
+	public void setMixList(AnonServer[] anonServerList){
+		serverList = new AnonServer[anonServerList.length];
 		System.arraycopy (anonServerList, 0, serverList, 0, anonServerList.length);
 
 		// Combo Box aktualisieren!!!
