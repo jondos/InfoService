@@ -1,4 +1,3 @@
-import java.util.*;
 import java.text.NumberFormat;
 import java.awt.*;
 import java.awt.event.*;
@@ -6,7 +5,7 @@ import javax.swing.*;
 import javax.swing.border.*;
 
 
-public class JAPView extends JFrame implements ActionListener, JAPObserver {
+public final class JAPView extends JFrame implements ActionListener, JAPObserver {
 	private JAPModel model;
 	private JLabel				meterLabel;
 	private JLabel				statusTextField1;
@@ -50,35 +49,7 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
 	    ImageIcon ii=model.loadImageIcon(model.IICON16FN,true);
 	    if(ii!=null) setIconImage(ii.getImage());
 
-/* 
-   // mir unklar, was die 
-   // folgenden auskommentierten 
-   // Zeilen sollen (HF)
-	
-	    ii=loadImageIcon(model.getString("loading"),true);
-	    JLabel waitLabel = null;
-	    if(ii!=null)
-		    waitLabel=new JLabel((ii), JLabel.CENTER);
-	    else
-		    waitLabel=new JLabel("", JLabel.CENTER);
-*/
 
-/*		
-	    // Show wait message
-	    JLabel waitLabel = new JLabel(model.getString("loading"), JLabel.CENTER);
-	    //waitLabel.setFont(new Font("Sans", Font.BOLD,14));
-	    waitLabel.setBackground(Color.black);
-	    waitLabel.setForeground(Color.white);
-	    Color bgColor = getContentPane().getBackground();
-	    getContentPane().setBackground(Color.black);
-	    getContentPane().add(waitLabel, BorderLayout.SOUTH);
-	    getContentPane().add(new JLabel(loadImageIcon(model.SPLASHFN,true)), BorderLayout.CENTER);
-	    //setSize(250, 50);
-	    pack();
-	    setResizable(false);
-	    centerFrame();
-	    setVisible(true);
-*/
 	    // listen for events from outside the frame
 	    addWindowListener(new WindowAdapter() {
 		    public void windowClosing(WindowEvent e) {exitProgram();}
@@ -390,52 +361,34 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
 					return setMeterImage();
 			}
 
-  
-
-	public void actionPerformed(ActionEvent event){
-		if (event.getSource() == quitB) { exitProgram(); } 
-		if (event.getSource() == portB) { 
-			if (model.debug) System.out.println("portB pressed");
-			showConfigDialog(JAPConf.PORT_TAB);
-		} else if (event.getSource() == httpB) { 
-			if (model.debug) System.out.println("httpB pressed");
-			showConfigDialog(JAPConf.HTTP_TAB);
-		} else if (event.getSource() == anonB) { 
-			if (model.debug) System.out.println("anonB pressed");
-			showConfigDialog(JAPConf.ANON_TAB);
-		} else if (event.getSource() == infoB) { 
-			if (model.debug) System.out.println("infoB pressed");
-			showInfoBox();
-		} else if (event.getSource() == helpB) { 
-			if (model.debug) System.out.println("helpB pressed");
-			showHelpWindow();
-		} else if (event.getSource() == proxyCheckBox) { 
-			if (model.debug) 
-				System.out.println("proxyCheckBox now "
-					+ (proxyCheckBox.isSelected()?"selected":"unselected")
-				);
-			model.proxyMode = proxyCheckBox.isSelected();
-			model.notifyJAPObservers();
-		} else if (event.getSource() == anonCheckBox) { 
-			if (model.debug) 
-				System.out.println("anonCheckBox now "+ (anonCheckBox.isSelected()?"selected":"unselected"));
-			model.setAnonMode(anonCheckBox.isSelected());
-		} else if (event.getSource() == ano1CheckBox) { 
-			if (model.debug) 
-				System.out.println("ano1CheckBox now "
-					+ (ano1CheckBox.isSelected()?"selected":"unselected")
-				);
-			model.setAnonMode(ano1CheckBox.isSelected());
-		} else {
-			if (model.debug) System.out.println("Event ?????: "+event.getSource());
-		}
-	}
+		public void actionPerformed(ActionEvent event)
+			{
+				if (event.getSource() == quitB)
+					exitProgram(); 
+				else if (event.getSource() == portB)
+					showConfigDialog(JAPConf.PORT_TAB);
+				else if (event.getSource() == httpB)
+					showConfigDialog(JAPConf.HTTP_TAB);
+				else if (event.getSource() == anonB)
+					showConfigDialog(JAPConf.ANON_TAB);
+				else if (event.getSource() == infoB)
+					showInfoBox();
+				else if (event.getSource() == helpB)
+					showHelpWindow();
+				else if (event.getSource() == proxyCheckBox) 
+					model.setProxyMode(proxyCheckBox.isSelected());
+				else if (event.getSource() == anonCheckBox) 
+					model.setAnonMode(anonCheckBox.isSelected());
+				else if (event.getSource() == ano1CheckBox)
+					model.setAnonMode(ano1CheckBox.isSelected());
+				else
+					JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"Event ?????: "+event.getSource());
+			}
  
-    public void showHelpWindow() {
-//		JAPHelp d = new JAPHelp(this, model);
-//		d.show();
-		helpWindow.show();
-    }
+    public void showHelpWindow()
+			{
+				helpWindow.show();
+			}	
 
 	private void showConfigDialog(int card) {
 //		JAPConf d = new JAPConf(this, model);
@@ -443,15 +396,15 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
 		configDialog.show();
 	}
 	
-    public void showInfoBox() {
-        JOptionPane.showMessageDialog(
-			this, 
-			model.TITLE + "\n" + model.getString("infoText") + "\n \n" + model.AUTHOR, 
-			model.getString("aboutBox"),
-			JOptionPane.INFORMATION_MESSAGE //,
-//			new ImageIcon(model.JAPICONFN)
-		);
-    }
+    public void showInfoBox() 
+			{
+				JOptionPane.showMessageDialog(
+					this, 
+					model.TITLE + "\n" + model.getString("infoText") + "\n\n" + model.AUTHOR+
+						"\n"+model.getString("version")+": "+JAPVersion.getCurrentVersion()+"\n", 
+					model.getString("aboutBox"),
+					JOptionPane.INFORMATION_MESSAGE);
+			}
 
 	private void exitProgram() {
 		// * requestListener.stop();
@@ -469,7 +422,7 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
 		anonportnumberTextField.setText(String.valueOf(model.anonPortNumber));
 		anonhostTextField.setText(model.anonHostName);
 
-		proxyCheckBox.setSelected(model.proxyMode);
+		proxyCheckBox.setSelected(model.isProxyMode());
 		anonCheckBox.setSelected(model.isAnonMode());
 		
 		statusTextField1.setText(model.status1);

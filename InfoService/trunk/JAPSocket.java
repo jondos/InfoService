@@ -4,7 +4,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.UnknownHostException;
 
-public class JAPSocket 
+public final class JAPSocket 
 	{
 		private volatile boolean bisClosed;
 		private Socket s;
@@ -20,25 +20,31 @@ public class JAPSocket
 				bisClosed=false;
 			}
 		
-		public synchronized void close() throws IOException
+		public void close() throws IOException
 			{
-				if(!bisClosed)
+				synchronized(this)
 					{
-						bisClosed=true;
-						try
+						if(!bisClosed)
 							{
-								s.close();
-							}
-						catch (IOException ioe)
-							{
-								throw ioe;
+								bisClosed=true;
+								try
+									{
+										s.close();
+									}
+								catch (IOException ioe)
+									{
+										throw ioe;
+									}
 							}
 					}
 			}
 		
-		public synchronized boolean isClosed()
+		public boolean isClosed()
 			{
-				return bisClosed;
+				synchronized(this)
+					{
+						return bisClosed;
+					}
 			}
 		
 		public OutputStream getOutputStream()

@@ -23,39 +23,36 @@ public class JAPProxyServer implements Runnable
 				socket = null;
 				runFlag = true;
 				
-				while (runFlag)
+				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,
+										 "ProxyServer on port " + portN + " started.");
+				try
 					{
+						server = new ServerSocket (portN);
+						oMuxSocket=new JAPMuxSocket();
+						if(oMuxSocket.connect(model.anonHostName,model.anonPortNumber)==-1)
+							{
+								model.status2 = model.getString("statusCannotConnect");
+								model.notifyJAPObservers();
+								return;
+							}
+						oMuxSocket.start();
+						while(runFlag)
+							{
+								socket = server.accept();
+								oMuxSocket.newConnection(new JAPSocket(socket));
+							}
+					}
+				catch (Exception e)
+					{
+						try 
+							{
+								server.close();
+							} 
+						catch (Exception e2)
+							{
+							}
 						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,
-												 "ProxyServer on port " + portN + " started.");
-						try
-							{
-								server = new ServerSocket (portN);
-								oMuxSocket=new JAPMuxSocket();
-								if(oMuxSocket.connect(model.anonHostName,model.anonPortNumber)==-1)
-									{
-										model.status2 = model.getString("statusCannotConnect");
-										model.notifyJAPObservers();
-										return;
-									}
-								oMuxSocket.start();
-								while(runFlag)
-									{
-										socket = server.accept();
-										oMuxSocket.newConnection(new JAPSocket(socket));
-									}
-							}
-						catch (Exception e)
-							{
-								try 
-									{
-										server.close();
-									} 
-								catch (Exception e2)
-									{
-									}
-								JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,
-														 "ProxyServer Exception: " +e);
-							}
+												 "ProxyServer Exception: " +e);
 					}
 				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"ProxyServer on port " + portN + " stopped.");
     }
@@ -66,6 +63,13 @@ public class JAPProxyServer implements Runnable
 				try
 					{
 						server.close();
+					}
+				catch(Exception e)
+					{ 
+					}
+				try
+					{
+						oMuxSocket.close();
 					}
 				catch(Exception e)
 					{ 

@@ -3,10 +3,10 @@ final public class AnonServerDBEntry
 		private String host;
 		private int    port;
 	
-		public AnonServerDBEntry (String host, int port)
+		public AnonServerDBEntry (String h, int p)
 			{
-				host = host;
-				port = port;
+				host = h;
+				port = p;
 			}
 		
 		public String getName()

@@ -20,7 +20,7 @@ public final class JAPModel implements JAPObserver {
 	private boolean		isRunningProxy = false; // true if a proxy is running
 	public String 		proxyHostName = "ikt.inf.tu-dresden.de";
 	public int 			proxyPortNumber = 80;
-	public boolean		proxyMode = false;
+	private boolean		proxyMode = false;
 	public String		anonHostName ="sole.icsi.berkeley.edu";
 	public int			anonPortNumber = 6543;
 	private boolean		anonMode = false;
@@ -39,7 +39,7 @@ public final class JAPModel implements JAPObserver {
 	private ResourceBundle msg;
 
 	static final String TITLE = "JAVA ANON PROXY -- JAP";
-    static final String AUTHOR = "The JAP-Team\n<jap@inf.tu-dresden.de>\n \n(c) 2000 \n";
+  static final String AUTHOR = "The JAP-Team\n<jap@inf.tu-dresden.de>\n\n(c) 2000\n";
 
 	static final int    MAXHELPLANGUAGES = 6;
 	static final String MESSAGESFN   = "JAPMessages";
@@ -210,10 +210,23 @@ public final class JAPModel implements JAPObserver {
 				stopProxy();
 			notifyJAPObservers();
 		}
+	
 	public boolean isAnonMode()
 		{
 			return anonMode;
 		}
+	
+	public void setProxyMode(boolean b)
+		{
+			proxyMode=b;
+			notifyJAPObservers();
+		}
+	
+	public boolean isProxyMode()
+		{
+			return proxyMode;
+		}
+
 	private void startProxy()
 		{
 			if (isRunningProxy == false)

@@ -6,7 +6,7 @@ import java.io.PrintWriter;
  * 
  * @author  Hannes Federrath (2000-Jun-26)
  */
-public class JAPDebug
+public final class JAPDebug
 	{
     /** No debugging */
     public static int NUL = 0; 

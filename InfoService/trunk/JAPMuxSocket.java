@@ -7,26 +7,28 @@ import java.io.DataOutputStream;
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.lang.Integer;
+import java.util.Enumeration;
 
-public class JAPMuxSocket extends Thread
+public final class JAPMuxSocket extends Thread
 	{
 		private int lastChannelId;
 		private Dictionary oSocketList;
 		private DataOutputStream outDataStream;
 		private DataInputStream inDataStream;
 		
-		private Socket outSocket;
+		private Socket ioSocket;
 		private	byte[] outBuff;
 		private JAPSymCipher oSymCipher;
 		private int chainlen;
-		class SocketListEntry
+		private volatile boolean runflag;
+		private final class SocketListEntry
 			{
 				SocketListEntry(JAPSocket s)
 					{
 						inSocket=s;
 						try
 							{
-								out=s.getOutputStream();
+								outStream=s.getOutputStream();
 							}
 						catch(Exception e)
 							{
@@ -34,7 +36,7 @@ public class JAPMuxSocket extends Thread
 							}
 					}
 				public JAPSocket inSocket;
-				public OutputStream out;
+				public OutputStream outStream;
 			};
 
 		JAPMuxSocket()
@@ -54,9 +56,9 @@ public class JAPMuxSocket extends Thread
 			{
 				try
 					{
-						outSocket=new Socket(host,port);
-						outDataStream=new DataOutputStream(new BufferedOutputStream(outSocket.getOutputStream(),1008));
-						inDataStream=new DataInputStream(outSocket.getInputStream());
+						ioSocket=new Socket(host,port);
+						outDataStream=new DataOutputStream(new BufferedOutputStream(ioSocket.getOutputStream(),1008));
+						inDataStream=new DataInputStream(ioSocket.getInputStream());
 						chainlen=inDataStream.readByte();
 					}
 				catch(Exception e)
@@ -68,18 +70,49 @@ public class JAPMuxSocket extends Thread
 
 		public synchronized int newConnection(JAPSocket s)
 			{
+				JAPProxyConnection p=new JAPProxyConnection(s,lastChannelId,this);
 				oSocketList.put(new Integer(lastChannelId),new SocketListEntry(s));
 				JAPModel.getModel().setNrOfChannels(oSocketList.size());
-				(new JAPProxyConnection(s,lastChannelId,this)).start();
+				p.start();
 				lastChannelId++;
 				return 0;
 			}
 
 		public synchronized int close(int channel)
 			{
-				send(channel,null,(short)0);
 				oSocketList.remove(new Integer(channel));
+				send(channel,null,(short)0);
 				JAPModel.getModel().setNrOfChannels(oSocketList.size());
+				return 0;
+			}
+
+		public synchronized int close()
+			{
+				runflag=false;
+				Enumeration e=oSocketList.keys();
+				while(e.hasMoreElements())
+					{
+						Integer key=(Integer)e.nextElement();
+						SocketListEntry entry=(SocketListEntry)oSocketList.get(key);
+						close(key.intValue());
+						try
+							{
+								entry.inSocket.close();
+							}
+						catch(Exception ie){}
+						oSocketList.remove(key);
+					}
+				JAPModel.getModel().setNrOfChannels(oSocketList.size());
+				try
+					{
+						inDataStream.close();
+						outDataStream.close();
+						ioSocket.close();
+						join();
+					}
+				catch(Exception ie)
+					{
+					};
 				return 0;
 			}
 
@@ -89,51 +122,59 @@ public class JAPMuxSocket extends Thread
 				int len=0;
 				int tmp=0;
 				int channel=0;
-				try
+				runflag=true;
+				while(runflag)
 					{
-						while(true)
+						try
 							{
 								channel=inDataStream.readInt();
 								len=inDataStream.readShort();
 								tmp=inDataStream.readShort();								
 								inDataStream.readFully(buff);
-								for(int i=0;i<chainlen;i++)
-									oSymCipher.encrypt(buff);
-								SocketListEntry tmpEntry=(SocketListEntry)oSocketList.get(new Integer(channel));
-								if(tmpEntry!=null)
+							}
+						catch(Exception e)
+							{
+								runflag=false;
+								JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"CAMuxSocket-run-Exception: receive");
+								break;
+							}
+						for(int i=0;i<chainlen;i++)
+								oSymCipher.encrypt(buff);
+						SocketListEntry tmpEntry=(SocketListEntry)oSocketList.get(new Integer(channel));
+						if(tmpEntry!=null)
+							{
+								if(len==0)
 									{
-										if(len==0)
+										oSocketList.remove(new Integer(channel));
+										JAPModel.getModel().setNrOfChannels(oSocketList.size());
+										try
 											{
-												oSocketList.remove(new Integer(channel));
-												JAPModel.getModel().setNrOfChannels(oSocketList.size());
-												tmpEntry.out.close();
+												tmpEntry.outStream.close();
 												tmpEntry.inSocket.close();
 											}
-										else
+										catch(Exception e)
 											{
-												for(int i=0;i<3;i++)
-													{
-														try
-															{
-																tmpEntry.out.write(buff,0,len);
-																break;
-															}
-														catch(Exception e)
-															{
-																e.printStackTrace();
-																JAPDebug.out(JAPDebug.WARNING,JAPDebug.NET,"Fehler bei write to browser...retrying...");														
-															}
-													}
-												tmpEntry.out.flush();
-												JAPModel.getModel().increasNrOfBytes(len);
 											}
 									}
+								else
+									{
+										for(int i=0;i<3;i++)
+											{
+												try
+													{
+														tmpEntry.outStream.write(buff,0,len);
+														break;
+													}
+												catch(Exception e)
+													{
+														e.printStackTrace();
+														JAPDebug.out(JAPDebug.WARNING,JAPDebug.NET,"Fehler bei write to browser...retrying...");														
+													}
+											}
+										try{tmpEntry.outStream.flush();}catch(Exception e){};
+										JAPModel.getModel().increasNrOfBytes(len);
+									}
 							}
-					}
-				catch(Exception e)
-					{
-						JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"CAMuxSocket -run -Exception!");
-						e.printStackTrace();
 					}
 			}
 

@@ -1,6 +1,6 @@
 import org.logi.crypto.keys.BlowfishKey;
 
-public class JAPSymCipher
+public final class JAPSymCipher
 	{
 			private BlowfishKey bfEnc,bfDec;
 			public JAPSymCipher()
