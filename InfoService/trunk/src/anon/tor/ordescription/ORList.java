@@ -192,9 +192,35 @@ public class ORList
 			{
 				break;
 			}
+			//can be removed when no routers version <0.0.9pre5 are used in tor
 			if (aktLine.startsWith("running-routers"))
 			{
 				strRunningOrs = aktLine + " ";
+			}
+			//new in version 0.0.9pre5 - added instead of running-routers line
+			else if(aktLine.startsWith("opt router-status")||aktLine.startsWith("router-status"))
+			{			
+				strRunningOrs = "";
+				StringTokenizer st = new StringTokenizer(aktLine," ");
+				String token = st.nextToken();
+				if(!token.toLowerCase().equals("router-status"))
+				{
+					token = st.nextToken();
+				}
+				while(st.hasMoreTokens())
+				{
+					token = st.nextToken();
+					//check if router is running
+					if(!token.startsWith("!"))
+					{
+						//check if the router is verified
+						if(!token.startsWith("$"))
+						{
+							strRunningOrs +=	(new StringTokenizer(token,"=")).nextToken() +" ";
+							System.out.println(strRunningOrs);			
+						}
+					}
+				}
 			}
 			else if (aktLine.startsWith("router"))
 			{
