@@ -139,12 +139,8 @@ final class JAPConf extends JDialog
 	private JCheckBox m_cbDebugThread;
 	private JCheckBox m_cbDebugMisc;
 	private JCheckBox m_cbShowDebugConsole;
-	private JCheckBox m_cbCertCheckDisabled;
 
 	private JSlider m_sliderDebugLevel;
-
-	private JCheckBox m_cbDummyTraffic;
-	private JSlider m_sliderDummyTrafficIntervall;
 
 	private JPanel m_Tabs;
 	private CardLayout m_TabsLayout;
@@ -820,7 +816,7 @@ final class JAPConf extends JDialog
 
 			}
 		});
-		m_cbDummyTraffic = new JCheckBox("Send dummy packet every x seconds:");
+	/*	m_cbDummyTraffic = new JCheckBox("Send dummy packet every x seconds:");
 		m_cbDummyTraffic.addItemListener(new ItemListener()
 		{
 			public void itemStateChanged(ItemEvent e)
@@ -830,7 +826,8 @@ final class JAPConf extends JDialog
 		});
 
 		m_cbCertCheckDisabled = new JCheckBox("Disable check of certificates");
-		JPanel p22 = new JPanel();
+		*/
+	   JPanel p22 = new JPanel();
 		GridBagLayout gb = new GridBagLayout();
 		p22.setLayout(gb);
 		GridBagConstraints lc = new GridBagConstraints();
@@ -870,7 +867,7 @@ final class JAPConf extends JDialog
 		//////////////////////////////////////////////////////////////////
 		gb.setConstraints(bttnMonitor, lc);
 		p22.add(bttnMonitor);
-		lc.gridy++;
+/*		lc.gridy++;
 		gb.setConstraints(m_cbDummyTraffic, lc);
 		p22.add(m_cbDummyTraffic);
 		lc.gridy++;
@@ -886,7 +883,8 @@ final class JAPConf extends JDialog
 		lc.gridy++;
 		gb.setConstraints(m_cbCertCheckDisabled, lc);
 		p22.add(m_cbCertCheckDisabled);
-		p2.add(p22, BorderLayout.NORTH);
+	*/
+   p2.add(p22, BorderLayout.NORTH);
 
 		// Panel for Debugging Options
 		JPanel p3 = new JPanel();
@@ -1097,9 +1095,6 @@ final class JAPConf extends JDialog
 		m_cbDebugGui.setSelected(false);
 		m_cbDebugMisc.setSelected(false);
 		m_cbDebugThread.setSelected(false);
-		m_cbDummyTraffic.setSelected(false);
-		m_cbCertCheckDisabled.setSelected(false);
-
 	}
 
 	protected void okPressed()
@@ -1128,15 +1123,6 @@ final class JAPConf extends JDialog
 			(m_cbDebugMisc.isSelected() ? LogType.MISC : LogType.NUL)
 			);
 		JAPDebug.getInstance().setLogLevel(m_sliderDebugLevel.getValue());
-		if (m_cbDummyTraffic.isSelected())
-		{
-			m_Controller.setDummyTraffic(m_sliderDummyTrafficIntervall.getValue() * 1000);
-		}
-		else
-		{
-			m_Controller.setDummyTraffic( -1);
-			// Listener settings
-		}
 		m_Controller.setHTTPListener(m_tfListenerPortNumber.getInt(),
 									 m_cbListenerIsLocal.isSelected(), true);
 		//m_Controller.setSocksPortNumber(m_tfListenerPortNumberSocks.getInt());
@@ -1162,9 +1148,6 @@ final class JAPConf extends JDialog
 							   m_Controller.getPasswordReader(),
 							   m_cbProxyAuthentication.isSelected(),
 							   m_cbProxy.isSelected()));
-
-		//Cert seetings
-		m_Controller.setCertCheckDisabled(m_cbCertCheckDisabled.isSelected());
 
 		// force notifying the observers set the right server name
 		m_Controller.notifyJAPObservers(); // this should be the last line of okPressed() !!!
@@ -1296,12 +1279,6 @@ final class JAPConf extends JDialog
 		   ( (pay.view.PayView) m_pKonto).userPanel.valuesChanged();
 		  }*/
 		// misc tab
-		int iTmp = JAPModel.getDummyTraffic();
-		m_cbDummyTraffic.setSelected(iTmp > -1);
-		if (iTmp > -1)
-		{
-			m_sliderDummyTrafficIntervall.setValue(iTmp / 1000);
-		}
 		m_cbShowDebugConsole.setSelected(JAPDebug.isShowConsole());
 		m_cbDebugGui.setSelected( ( ( (JAPDebug.getInstance().getLogType() & LogType.GUI) != 0) ? true : false));
 		m_cbDebugNet.setSelected( ( ( (JAPDebug.getInstance().getLogType() & LogType.NET) != 0) ? true : false));
@@ -1351,8 +1328,6 @@ final class JAPConf extends JDialog
 		}
 		m_labelProxyAuthUserID.setEnabled(m_cbProxyAuthentication.isSelected() & bEnableProxy);
 		m_tfProxyAuthenticationUserID.setEnabled(m_cbProxyAuthentication.isSelected() & bEnableProxy);
-		//cert tab
-		m_cbCertCheckDisabled.setSelected(JAPModel.isCertCheckDisabled());
 	}
 
 }

@@ -74,6 +74,7 @@ final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 	private MixCascade m_currentMixCascade;
 
 	private boolean m_bAutoReconnect = false;
+	private boolean m_bPreCreateAnonRoutes = true;
 
 	/**
 	 * Stores, whether we use a forwarded connection (already active, when AnonProxy is created) or
@@ -149,7 +150,7 @@ final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 	 */
 	public void setDummyTraffic(int a_interval)
 	{
-		if ( (m_forwardedConnection == false) || (m_maxDummyTrafficInterval < 0))
+		if ( (!m_forwardedConnection) || (m_maxDummyTrafficInterval < 0))
 		{
 			/* no dummy traffic restrictions */
 			( (AnonServiceImpl) m_Anon).setDummyTraffic(a_interval);
@@ -172,11 +173,16 @@ final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 
 	public void setAutoReConnect(boolean b)
 	{
-		if (m_forwardedConnection == false)
+		if (!m_forwardedConnection)
 		{
 			/* reconnect isn't supported with forwarded connections */
 			m_bAutoReconnect = b;
 		}
+	}
+
+	public void setPreCreateAnonRoutes(boolean b)
+	{
+		m_bPreCreateAnonRoutes=b;
 	}
 
 	public void setMixCertificationCheck(boolean enabled, JAPCertificateStore trustedRoots)
@@ -197,7 +203,7 @@ final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 		{
 			m_Tor = AnonServiceFactory.getAnonServiceInstance("TOR");
 			m_Tor.setProxy(m_proxyInterface);
-			m_Tor.initialize(new TorAnonServerDescription(true));
+			m_Tor.initialize(new TorAnonServerDescription(true,m_bPreCreateAnonRoutes));
 			( (Tor) m_Tor).setCircuitLength(JAPModel.getTorMinRouteLen(), JAPModel.getTorMaxRouteLen());
 		}
 		else
