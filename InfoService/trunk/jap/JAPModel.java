@@ -73,6 +73,8 @@ public final class JAPModel
   private JAPCertificateStore m_certStore = null;
 
  private int m_TorMaxConnectionsPerRoute=JAPConstants.TOR_MAX_CONNECTIONS_PER_ROUTE;
+ private int m_TorMaxRouteLen=JAPConstants.TOR_MAX_ROUTE_LEN;
+ private int m_TorMinRouteLen=JAPConstants.TOR_MIN_ROUTE_LEN;
 
   /**
    * Stores the instance with the routing settings.
@@ -503,4 +505,25 @@ public final class JAPModel
 	{
 		m_TorMaxConnectionsPerRoute=i;
 	}
+
+	public static int getTorMaxRouteLen()
+{
+	return ms_TheModel.m_TorMaxRouteLen;
+}
+
+protected void setTorMaxRouteLen(int i)
+{
+	m_TorMaxRouteLen=i;
+}
+
+public static int getTorMinRouteLen()
+{
+return ms_TheModel.m_TorMinRouteLen;
+}
+
+protected void setTorMinRouteLen(int i)
+{
+m_TorMinRouteLen=i;
+}
+
 }

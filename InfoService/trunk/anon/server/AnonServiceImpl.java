@@ -258,7 +258,7 @@ final public class AnonServiceImpl implements AnonService
 		return m_bMixCertCheckEnabled;
 	}
 
-	public void seteMixCertificationAuthorities(JAPCertificateStore trustedRoots)
+	public void setMixCertificationAuthorities(JAPCertificateStore trustedRoots)
 	{
 		m_certsTrustedRoots = trustedRoots;
 	}

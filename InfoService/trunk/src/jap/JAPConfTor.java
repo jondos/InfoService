@@ -87,16 +87,16 @@ class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 		m_sliderMinPathLen.setPaintTicks(true);
 		m_sliderMinPathLen.setMajorTickSpacing(1);
 		m_sliderMinPathLen.setSnapToTicks(true);
-		m_sliderMinPathLen.setMinimum(1);
-		m_sliderMinPathLen.setMaximum(5);
+		m_sliderMinPathLen.setMinimum(JAPConstants.TOR_MIN_ROUTE_LEN);
+		m_sliderMinPathLen.setMaximum(JAPConstants.TOR_MAX_ROUTE_LEN);
 		p.add(m_sliderMinPathLen);
 		p.add(new JLabel(JAPMessages.getString("torPrefMaxPathLen")));
 		m_sliderMaxPathLen = new JSlider();
-		m_sliderMaxPathLen.setMinimum(1);
-		m_sliderMaxPathLen.setMaximum(9);
+		m_sliderMaxPathLen.setMinimum(JAPConstants.TOR_MIN_ROUTE_LEN);
+		m_sliderMaxPathLen.setMaximum(JAPConstants.TOR_MAX_ROUTE_LEN);
 		m_sliderMaxPathLen.setPaintLabels(true);
 		m_sliderMaxPathLen.setPaintTicks(true);
-		m_sliderMaxPathLen.setMajorTickSpacing(2);
+		m_sliderMaxPathLen.setMajorTickSpacing(1);
 		m_sliderMaxPathLen.setMinorTickSpacing(1);
 		m_sliderMaxPathLen.setSnapToTicks(true);
 		p.add(m_sliderMaxPathLen);
@@ -144,6 +144,7 @@ class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 	protected boolean onOkPressed()
 	{
 		JAPController.setTorMaxConnectionsPerRoute(m_sliderConnectionsPerPath.getValue());
+		JAPController.setTorRouteLen(m_sliderMinPathLen.getValue(),m_sliderMaxPathLen.getValue());
 		return true;
 	}
 
@@ -161,6 +162,8 @@ class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 	private void updateGuiOutput()
 	{
 		m_sliderConnectionsPerPath.setValue(JAPModel.getTorMaxConnectionsPerRoute());
+		m_sliderMaxPathLen.setValue(JAPModel.getTorMaxRouteLen());
+		m_sliderMinPathLen.setValue(JAPModel.getTorMinRouteLen());
 	}
 
 	private void fetchRouters(boolean bShowError)
