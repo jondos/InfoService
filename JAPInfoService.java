@@ -118,9 +118,13 @@ public final class JAPInfoService
 			try
 				{
 					byte[] addr=InetAddress.getByName(model.anonHostName).getAddress();
-					HTTPResponse resp=conInfoService.Get("/feedback/"+Byte.toString(addr[0])+"."+
-																							 Byte.toString(addr[1])+"."+Byte.toString(addr[2])+"."+
-																							 Byte.toString(addr[3])+DP+model.anonPortNumber);
+					String strGET="/feedback/"+Integer.toString((int)addr[0]&0xFF)+"."+
+																		 Integer.toString((int)addr[1]&0xFF)+"."+
+																		 Integer.toString((int)addr[2]&0xFF)+"."+
+																		 Integer.toString((int)addr[3]&0xFF)+DP+
+																		 Integer.toString(model.anonPortNumber);
+	//				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"String GET: "+strGET);
+					HTTPResponse resp=conInfoService.Get(strGET);
 					if (resp.getStatusCode()!=200)
 						{
 							error=true;

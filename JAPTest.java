@@ -117,7 +117,16 @@ final public class JAPTest
 //	networkTest(argc);
 	//testRRT();
 		//testSymCipherCryptix();
-		testAES();
+		try{
+			byte[] addr=InetAddress.getByName("passat.mesh.de").getAddress();
+		String s="/feedback/"+Integer.toString(Math.abs(addr[0]))+"."+
+																							 Integer.toString(addr[1])+"."+Byte.toString(addr[2])+"."+
+						 Byte.toString(addr[3]);
+			s=s+" ";}
+		catch(Exception e)
+											 {
+												e.printStackTrace();
+											 }
 		System.exit(0);
 		}
 	
