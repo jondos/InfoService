@@ -107,6 +107,7 @@ public class CAMuxSocket extends Thread
 										if(len==0)
 											{
 												oSocketList.remove(new Integer(channel));
+												JAPModel.getModel().setNrOfChannels(oSocketList.size());
 												tmpEntry.out.close();
 												tmpEntry.inSocket.close();
 											}

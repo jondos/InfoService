@@ -189,6 +189,7 @@ public final class JAPModel implements JAPObserver {
 		{
 			return nrOfChannels;
 		}
+	
 	public synchronized void increasNrOfBytes(int bytes)
 		{
 			nrOfBytes+=bytes;
