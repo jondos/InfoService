@@ -30,7 +30,7 @@ public /*final*/ class JAP {
 		// Create debugger object
 		jdebug = new JAPDebug();
 		JAPDebug.setDebugType(JAPDebug.NET+JAPDebug.GUI+JAPDebug.THREAD+JAPDebug.MISC);
-		JAPDebug.setDebugLevel(JAPDebug.INFO);
+		JAPDebug.setDebugLevel(JAPDebug.DEBUG);
 		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAP:Welcome! Java "+vers+" running on "+os+" ...");
 
 		// Create the model object

@@ -440,7 +440,7 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 	
 	public void valuesChanged (Object o)
 		{
-			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPView:view.valuesChanged()");
+			//JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPView:view.valuesChanged()");
 			updateValues();
 		}
 

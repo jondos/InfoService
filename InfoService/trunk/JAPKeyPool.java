@@ -1,6 +1,6 @@
 import java.security.SecureRandom;
 
-public final class JAPKeyPool extends Thread
+public final class JAPKeyPool /*extends Thread*/ implements Runnable
 	{
 		private SecureRandom sr;
 		private int aktSize;
@@ -26,7 +26,7 @@ public final class JAPKeyPool extends Thread
 		
 		public JAPKeyPool(int ps,int keylength)
 			{	JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPKeyPool:initializing...");
-				setPriority(Thread.MIN_PRIORITY);
+//				setPriority(Thread.MIN_PRIORITY);
 				keySize=keylength;
 				poolSize=ps;
 				pool=null;
@@ -51,6 +51,7 @@ public final class JAPKeyPool extends Thread
 				runflag=true;
 				while(runflag)
 					{
+						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPKeyPool:run() loop");
 						if(pool!=null)
 							{
 								synchronized(this)
@@ -73,12 +74,14 @@ public final class JAPKeyPool extends Thread
 								}
 							catch(InterruptedException e)
 								{
+									JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPKeyPool:run() waiting interrupted!");
 								}
 					}
 			}
 		
 		public void getKey(byte[] key)
 			{
+				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPKeyPool:getKey()");
 				if(aktKey==null)
 					try	
 						{
@@ -87,6 +90,7 @@ public final class JAPKeyPool extends Thread
 						}
 					catch(InterruptedException e)
 						{
+							JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPKeyPool:getKey() waiting interrupted!");
 						}
 				synchronized(this)
 					{
