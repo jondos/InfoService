@@ -75,7 +75,7 @@ public final class MuxSocket implements Runnable
 	private byte[] m_arEmpty;
 	private ASymCipher[] m_arASymCipher;
 	private KeyPool m_KeyPool;
-	private int m_iChainLen;
+	private int m_iChainLen; //How many Mixes are in the cascade
 	private int m_iMixProtocolVersion;
 	private volatile boolean m_bRunFlag;
 	private boolean m_bIsConnected = false;
@@ -102,9 +102,9 @@ public final class MuxSocket implements Runnable
 
 	private final static int MAX_CHANNELS_PER_CONNECTION = 50;
 
-	private final static int MIX_PROTOCOL_VERSION_0_4=4;
-	private final static int MIX_PROTOCOL_VERSION_0_3=3;
-	private final static int MIX_PROTOCOL_VERSION_0_2=2;
+	private final static int MIX_PROTOCOL_VERSION_0_4 = 4;
+	private final static int MIX_PROTOCOL_VERSION_0_3 = 3;
+	private final static int MIX_PROTOCOL_VERSION_0_2 = 2;
 
 	private Thread threadRunLoop;
 
@@ -170,6 +170,7 @@ public final class MuxSocket implements Runnable
 		return ( /*ms_MuxSocket!=null&&ms_MuxSocket.*/m_bIsConnected);
 	}
 
+	/** Returns how many Mixes are in the cascade */
 	public int getNumberOfMixes()
 	{
 		return m_iChainLen;
@@ -380,19 +381,19 @@ public final class MuxSocket implements Runnable
 			{
 				m_bMixProtocolWithTimestamp = false;
 				m_iTimestampSize = 0;
-				m_iMixProtocolVersion=MIX_PROTOCOL_VERSION_0_2;
+				m_iMixProtocolVersion = MIX_PROTOCOL_VERSION_0_2;
 			}
 			else if (strProtocolVersion.equals("0.3"))
 			{
 				m_bMixProtocolWithTimestamp = true;
 				m_iTimestampSize = 2;
-				m_iMixProtocolVersion=MIX_PROTOCOL_VERSION_0_3;
+				m_iMixProtocolVersion = MIX_PROTOCOL_VERSION_0_3;
 			}
-			else if(strProtocolVersion.equalsIgnoreCase("0.4"))
+			else if (strProtocolVersion.equalsIgnoreCase("0.4"))
 			{
-				m_iMixProtocolVersion=MIX_PROTOCOL_VERSION_0_4;
-				m_cipherFirstMix=new SymCipher();
-				byte[]key=new byte[16];
+				m_iMixProtocolVersion = MIX_PROTOCOL_VERSION_0_4;
+				m_cipherFirstMix = new SymCipher();
+				byte[] key = new byte[16];
 				m_cipherFirstMix.setEncryptionKeyAES(key);
 
 			}
@@ -908,17 +909,17 @@ public final class MuxSocket implements Runnable
 					}
 					entry.arCipher[i].setEncryptionKeyAES(m_arOutBuff);
 					System.arraycopy(m_arOutBuff2, 0, m_arOutBuff, KEY_SIZE + m_iTimestampSize, size);
-					if(i>0||m_iMixProtocolVersion!=MIX_PROTOCOL_VERSION_0_4)
+					if (i > 0 || m_iMixProtocolVersion != MIX_PROTOCOL_VERSION_0_4)
 					{
 						m_arASymCipher[i].encrypt(m_arOutBuff, 0, m_arOutBuff2, 0);
 						entry.arCipher[i].encryptAES(m_arOutBuff, RSA_SIZE, m_arOutBuff2, RSA_SIZE,
-													 DATA_SIZE - RSA_SIZE);
+							DATA_SIZE - RSA_SIZE);
 					}
 					else //First Mix uses olny symmetric encryption
 					{
-						m_cipherFirstMix.encryptAES(m_arOutBuff,0,m_arOutBuff2,0,KEY_SIZE);
-						entry.arCipher[i].encryptAES(m_arOutBuff,KEY_SIZE,m_arOutBuff2,KEY_SIZE,
-													 DATA_SIZE-KEY_SIZE);
+						m_cipherFirstMix.encryptAES(m_arOutBuff, 0, m_arOutBuff2, 0, KEY_SIZE);
+						entry.arCipher[i].encryptAES(m_arOutBuff, KEY_SIZE, m_arOutBuff2, KEY_SIZE,
+							DATA_SIZE - KEY_SIZE);
 					}
 					size -= (KEY_SIZE + m_iTimestampSize);
 				}

@@ -40,15 +40,18 @@ public class XMLPayRequest extends XMLDocument
 {
 
 	/*
-	 <PayRequest>
-	  <AIName> </AIName>  eindeutiger Name der AI (brauche ich zum Speichern des CCs)
-	  <Accounting></Accounting>   true | false
-	  <BalanceNeeded></BalanceNeeded>   true | false | new
-	  <CostsConfirmationNeeded></CostsConfirmationNeeded> true | false | new
-	  <Challenge> <Challenge>   xxxxxxxxxx
+	 <PayRequest version="1.0">
+	  <BalanceRequest> optional;  //Anforderung eines aktuellen Kontoauszuges
+		  <NewerThan> Zeitstempel <NewerThan> // der Kontoauszug muss neuer als das angegeben Datum sein
+	  </BalanceRequest>
+	  <CC version="1.0"> optional //Kostenbestätigung die unterschrieben werden soll (siehe oben)
+		  <AiID>... </AiID>  eindeutiger ID der AI (brauche ich zum Speichern des CCs)
+		 <AccountNumber> ... </AccountNumber>
+		   <TransferredBytes>... </TransferredBytes>
+	 </CC>
 	 </PayRequest>
 	 */
-
+    ///@todo lots to do....
 	//~ Public Fields  ******************************************************
 	public static final String docStartTag = "<PayRequest>";
 	public static final String docEndTag = "</PayRequest>";
@@ -80,7 +83,7 @@ public class XMLPayRequest extends XMLDocument
 		this.challenge = challenge;
 		StringBuffer sb = new StringBuffer();
 		sb.append(docStartTag);
-		sb.append("<AIName>" + aiName + "</AIName>");
+		sb.append("<AiID>" + aiName + "</AiID>");
 		sb.append("<Acounting>" + accounting + "</Acounting>");
 		sb.append("<BalanceNeeded>" + balanceNeeded + "</BalanceNeeded>");
 		sb.append("<CostsConfirmationNeeded>" + costConfirmsNeeded + "</CostsConfirmationNeeded>");
@@ -99,7 +102,7 @@ public class XMLPayRequest extends XMLDocument
 			throw new Exception();
 		}
 
-		NodeList nl = element.getElementsByTagName("AIName");
+		NodeList nl = element.getElementsByTagName("AiID");
 		if (nl.getLength() < 1)
 		{
 			throw new Exception();

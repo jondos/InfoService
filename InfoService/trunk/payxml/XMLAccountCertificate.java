@@ -92,7 +92,9 @@ public class XMLAccountCertificate extends XMLDocument
 	 * @param biHostName the signing BI's hostname
 	 * @param userPort the BI's JAP port
 	 * @param aiPort the BI's AI port
+	 * @todo Change biHost, userPort, aiPort --> BiID
 	 */
+
 	public XMLAccountCertificate(MyRSAPublicKey publicKey, long accountNumber,
 								 java.sql.Timestamp creationTime, String biHostName,
 								 int userPort, int aiPort
