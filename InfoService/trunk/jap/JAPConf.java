@@ -70,6 +70,7 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import update.JAPUpdate;
+import pay.gui.AccountSettingsPanel;
 
 final class JAPConf extends JDialog
 {
@@ -185,7 +186,7 @@ final class JAPConf extends JDialog
 		AbstractJAPConfModule accountsModule = null;
 		if (loadPay)
 		{
-			accountsModule = new pay.view.JAPConfPayAccounts();
+			accountsModule = new AccountSettingsPanel();
 		}
 		AbstractJAPConfModule routingModule = new JAPConfRouting();
 
