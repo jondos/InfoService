@@ -36,6 +36,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.math.BigInteger;
 import java.net.ConnectException;
+import java.net.Socket;
 import java.security.SecureRandom;
 import java.util.Calendar;
 import java.util.Date;
@@ -63,6 +64,7 @@ import anon.crypto.JAPSignature;
 import anon.crypto.SignatureVerifier;
 import anon.crypto.XMLEncryption;
 import anon.crypto.XMLSignature;
+import anon.infoservice.HTTPConnectionFactory;
 import anon.infoservice.ImmutableProxyInterface;
 import anon.infoservice.MixCascade;
 import anon.util.Base64;
@@ -271,6 +273,7 @@ public final class MuxSocket implements Runnable
 					int tmp = m_inDataStream.readUnsignedShort();
 					byte[] buff = new byte[tmp];
 					m_inDataStream.readFully(buff);
+          System.out.println("Read data: " + new String(buff));
 					BigInteger n = new BigInteger(1, buff);
 					tmp = m_inDataStream.readUnsignedShort();
 					buff = new byte[tmp];
@@ -284,6 +287,7 @@ public final class MuxSocket implements Runnable
 		}
 		catch (Exception e)
 		{
+      e.printStackTrace();
 			LogHolder.log(LogLevel.EXCEPTION, LogType.NET,
 						  "MuxSocket:Exception(2) during connection: " + e);
 			m_arASymCipher = null;
@@ -330,27 +334,34 @@ public final class MuxSocket implements Runnable
 			{
 				return ErrorCodes.E_ALREADY_CONNECTED;
 			}
-			int err = ErrorCodes.E_CONNECT;
 			//try all possible listeners
-			ProxyConnection proxyConnection = null;
+      Socket connectedSocket = null;
 			for (int l = 0; l < mixCascade.getNumberOfListenerInterfaces(); l++)
 			{
 				try
 				{
-					String host = mixCascade.getListenerInterface(l).getHost();
-					proxyConnection = new ProxyConnection(a_proxyInterface, host,
-						mixCascade.getListenerInterface(l).getPort());
-					if (proxyConnection != null)
-					{
+          /* HTTPConnection.Connect() supports proxy and non-proxy Socket connections -> tunneling
+           * a proxy, if necessary, is no problem
+           */
+          connectedSocket = HTTPConnectionFactory.getInstance().createHTTPConnection(mixCascade.getListenerInterface(l), a_proxyInterface).Connect();
+          if (connectedSocket != null) {
 						break;
 					}
 				}
-				catch (Throwable t)
-				{
-					proxyConnection = null;
+        catch (Throwable t) {
+          LogHolder.log(LogLevel.ERR, LogType.NET, t);
+          connectedSocket = null;
+        }
 				}
+      try {
+        if (connectedSocket != null) {
+          return initialize(new ProxyConnection(connectedSocket));
+        }
+      }
+      catch (Exception e) {
+        LogHolder.log(LogLevel.ERR, LogType.NET, e);        
 			}
-      return initialize(proxyConnection);
+      return ErrorCodes.E_CONNECT;
 		}
 	}
 
@@ -392,6 +403,7 @@ public final class MuxSocket implements Runnable
 			{
 				return ErrorCodes.E_UNKNOWN;
 			}
+      Node nodeSig = XMLUtil.getFirstChildByName(root, "Signature");
 			//Check Signature of whole XML struct --> First Mix Check
 			//---
       if (SignatureVerifier.getInstance().verifyXml(root, SignatureVerifier.DOCUMENT_CLASS_MIX) == false) {
@@ -555,7 +567,6 @@ public final class MuxSocket implements Runnable
 				Node elemSigValue = XMLUtil.getFirstChildByName(root, "SignatureValue");
 				String strSigValue = XMLUtil.parseValue(elemSigValue, null);
 				byte[] sigValue = Base64.decode(strSigValue);
-        Node nodeSig = XMLUtil.getFirstChildByName(root, "Signature");
 				JAPCertificate certs[] = JAPSignature.getAppendedCertificates(nodeSig);
 				JAPSignature sig = new JAPSignature();
 				sig.initVerify(certs[0].getPublicKey());

@@ -49,6 +49,8 @@ import logging.LogType;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 
+import anon.infoservice.HTTPConnectionFactory;
+import anon.infoservice.ListenerInterface;
 import anon.infoservice.ProxyInterface;
 import anon.server.impl.ProxyConnection;
 
@@ -294,21 +296,21 @@ final class DirectProxyConnection implements Runnable
 		{
 			// create Socket to Server
 			Socket serverSocket = null;
+			ProxyConnection p = null;
 			if (JAPModel.getInstance().getProxyInterface()!=null&&
 				JAPModel.getInstance().getProxyInterface().isValid() &&
 				JAPModel.getInstance().getProxyInterface().getProtocol()==
 							ProxyInterface.PROTOCOL_TYPE_SOCKS)
 			{
-				ProxyConnection p = new ProxyConnection(
-								JAPModel.getInstance().getProxyInterface(), m_strHost, m_iPort);
-				serverSocket = p.getSocket();
+				p = new ProxyConnection(HTTPConnectionFactory.getInstance().createHTTPConnection(new ListenerInterface(m_strHost, m_iPort), JAPModel.getInstance().getProxyInterface()).Connect());
 			}
 			else
 			{
-				serverSocket = new Socket(m_strHost, m_iPort);
+				p = new ProxyConnection(HTTPConnectionFactory.getInstance().createHTTPConnection(new ListenerInterface(m_strHost, m_iPort), null).Connect());
 
-				// Send request --> server
 			}
+			// Send request --> server
+			serverSocket = p.getSocket();
 			OutputStream outputStream = serverSocket.getOutputStream();
 			// Send response --> client
 			String protocolString = "";
@@ -491,7 +493,6 @@ final class DirectProxyConnection implements Runnable
 			} // end if Directory
 			else //a file
 			{
-
 				ftpClient.setFileType(FTPClient.IMAGE_FILE_TYPE);
 				FTPFile[] currentResponses = ftpClient.listFiles(m_strFile);
 				long len = currentResponses[0].getSize();
@@ -509,8 +510,6 @@ final class DirectProxyConnection implements Runnable
 		}
 		catch (Exception e)
 		{
-			e.printStackTrace();
-
 			LogHolder.log(LogLevel.NOTICE, LogType.NET,
 						  "C(" + m_threadNumber + ") - Exception in handleFTP(): " + e);
 			try

@@ -66,7 +66,9 @@ import anon.crypto.MyDSAPrivateKey;
 import anon.crypto.MyDSASignature;
 import anon.crypto.MyRSAPrivateKey;
 import anon.crypto.MyRSASignature;
+import anon.infoservice.HTTPConnectionFactory;
 import anon.infoservice.ImmutableProxyInterface;
+import anon.infoservice.ListenerInterface;
 import anon.server.impl.ProxyConnection;
 import anon.tor.tinytls.util.hash;
 import anon.tor.util.helper;
@@ -936,7 +938,7 @@ public class TinyTLS extends Socket
 	public TinyTLS(String addr, int port,ImmutableProxyInterface a_proxyInterface)
 		throws UnknownHostException, IOException,Exception
 	{
-		m_ProxyConnection=new ProxyConnection(a_proxyInterface,addr,port);
+		m_ProxyConnection=new ProxyConnection(HTTPConnectionFactory.getInstance().createHTTPConnection(new ListenerInterface(addr, port), a_proxyInterface).Connect());
 		//super(addr, port);
 		m_handshakecompleted = false;
 		m_serverhellodone = false;

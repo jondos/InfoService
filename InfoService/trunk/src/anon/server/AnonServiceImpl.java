@@ -81,7 +81,7 @@ final public class AnonServiceImpl implements AnonService
 	public AnonServiceImpl(ProxyConnection a_proxyConnection)
 	{
 		/* call the default constructor */
-		this(a_proxyConnection.getProxyInterface());
+		this((ImmutableProxyInterface)null);
 		m_proxyConnection = a_proxyConnection;
 	}
 

@@ -29,8 +29,13 @@ package forward;
 
 import java.net.Socket;
 
+import anon.infoservice.HTTPConnectionFactory;
 import anon.infoservice.ImmutableProxyInterface;
+import anon.infoservice.ListenerInterface;
 import anon.server.impl.ProxyConnection;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 
 /**
  * This is the implementation of some helper methods for the forwarding client and server. This
@@ -93,10 +98,11 @@ public class ForwardUtils {
     try {
       synchronized (this) {
         /* get consistent proxy server data */
-        proxyConnection = new ProxyConnection(m_proxyInterface, a_host, a_port);
+        proxyConnection = new ProxyConnection(HTTPConnectionFactory.getInstance().createHTTPConnection(new ListenerInterface(a_host, a_port), m_proxyInterface).Connect());
       }
     }
     catch (Exception e) {
+      LogHolder.log(LogLevel.ERR, LogType.NET, e);
     }
     return proxyConnection;
   }
