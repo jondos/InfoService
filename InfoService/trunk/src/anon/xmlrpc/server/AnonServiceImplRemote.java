@@ -77,12 +77,11 @@ public class AnonServiceImplRemote implements XmlRpcHandler
 			ClientEntry c=m_ClientList.getClient(i);
 			AnonChannel channel=c.getChannel((Integer)params.elementAt(1));
 			InputStream in=channel.getInputStream();
-			int id=((Integer)params.elementAt(0)).intValue();
-			int len=((Integer)params.elementAt(1)).intValue();
+			int len=((Integer)params.elementAt(2)).intValue();
 			byte[] buff=new byte[len];
 			int retlen=in.read(buff);
 			if(retlen<0)
-				return new byte[0];
+				return new Integer(-1);
 			byte[] outbuff=new byte[retlen];
 			System.arraycopy(buff,0,outbuff,0,retlen);
 			return outbuff;

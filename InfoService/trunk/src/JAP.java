@@ -140,7 +140,7 @@ class JAP extends Frame {
 		// Register the Main view where they are needed
 		controller.registerMainView(view);
 		// Create the iconified view
-		JAPViewIconified viewIconified = new JAPViewIconified(JAPConstants.TITLEOFICONIFIEDVIEW);
+		JAPViewIconified viewIconified = new JAPViewIconified();
 		controller.addJAPObserver(viewIconified);
 		// Register the views where they are needed
 		view.registerViewIconified(viewIconified);

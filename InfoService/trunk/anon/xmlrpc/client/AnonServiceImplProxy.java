@@ -39,7 +39,7 @@ public class AnonServiceImplProxy implements AnonService
 			{
 				try
 					{
-						Vector v=new Vector();
+						Vector v=new Vector(1);
 						v.addElement(new Integer(m_ClientID));
 						Object o=doRemote("createChannel",v);
 						return new ChannelProxy(((Integer)o).intValue(),this);
@@ -82,23 +82,27 @@ public class AnonServiceImplProxy implements AnonService
 					}
 			}
 
-		protected void send(int id,byte[]buff,int len) throws IOException
-			{
-				Object o=doRemote("channelOutputStreamWrite",new Vector());
-			}
-
-		protected int recv(int id,byte[]buff,int len) throws IOException
+		protected void send(int channelid,byte[]buff,int len) throws IOException
 			{
 				Vector v=new Vector();
-				v.addElement(new Integer(id));
+				v.addElement(new Integer(m_ClientID));
+				v.addElement(new Integer(channelid));
+				Object o=doRemote("channelOutputStreamWrite",v);
+			}
+
+		protected int recv(int channelid,byte[]buff,int off,int len) throws IOException
+			{
+				Vector v=new Vector();
+				v.addElement(new Integer(m_ClientID));
+				v.addElement(new Integer(channelid));
 				v.addElement(new Integer(len));
 				Object o=doRemote("channelInputStreamRead",v);
 				if(o instanceof byte[])
 					{
 						len=((byte[])o).length;
-						System.arraycopy(o,0,buff,0,len);
+						System.arraycopy(o,0,buff,off,len);
 						return len;
 					}
-				return 0;
+				return -1;
 			}
 	}
