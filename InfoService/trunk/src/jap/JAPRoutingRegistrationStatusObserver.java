@@ -34,33 +34,90 @@ import java.util.Vector;
 
 import forward.server.ServerSocketPropagandist;
 
+/**
+ * This class is the backend of the forwarding server registration visualization. It can be used
+ * for displaying the current registration status of the local forwarding server at the
+ * InfoServices. Also if there are registration issues, an errorcode with more detailed
+ * information is provided. This class sends an update message to all observers, if the
+ * registration state or the errorcode has been changed. So the displayed information can be
+ * updated.
+ */
 public class JAPRoutingRegistrationStatusObserver extends Observable implements Observer {
 
+  /**
+   * This is the state, if the propaganda for the local forwaring server is not running (usually
+   * this is only the case, when the forwarding server is not running).
+   */
   public static final int STATE_DISABLED = 0;
   
+  /**
+   * This is the state, when all propaganda instances are started (usually shortly after the start
+   * of the local forwarding server). This state prevents, that there are a lot of different
+   * states and errorcodes are displayed while the propaganda is started (because some
+   * registrations may fail, others are successful).
+   */
   public static final int STATE_INITIAL_REGISTRATION = 1;
   
+  /**
+   * This is the state, if the propaganda is running but we have no valid registration at any
+   * infoservice. The getCurrentErrorCode() method provides more information about the reason in
+   * that case.
+   */
   public static final int STATE_NO_REGISTRATION = 2;
   
+  /**
+   * This is the state, if the propaganda is running and we have at least one valid registration
+   * at an InfoService.
+   */
   public static final int STATE_SUCCESSFUL_REGISTRATION = 3;
   
+  /**
+   * This is the errorcode returned in every state except STATE_INITIAL_REGISTRATION.
+   */
   public static final int ERROR_NO_ERROR = 0;
   
+  /**
+   * This is the errorcode, if we don't know any InfoService with a forwarder list. So no
+   * registration is possible (every 10 minutes we will look in the database of all known
+   * InfoServices, whether we can find one then). This errorcode can only occur in
+   * STATE_NO_REGISTRATION.
+   */ 
   public static final int ERROR_NO_KNOWN_PRIMARY_INFOSERVICES = 1;
   
+  /**
+   * This is the errorcode, if we know at least one InfoService with a forwarder list but cannot
+   * reach any of those InfoServices (we will try it every 10 minutes again). This errorcode can
+   * only occur in STATE_NO_REGISTRATION.
+   */   
   public static final int ERROR_INFOSERVICE_CONNECT_ERROR = 2;
   
+  /**
+   * This is the errorcode, if we could reach at least one InfoService with a forwarder list, but
+   * all successful reached InfoServices returned a verification error of our local forwarding
+   * server (maybe because of a running firewall).
+   */
   public static final int ERROR_VERIFICATION_ERROR = 3;
 
+  /**
+   * This is the errorcode, if we know at least one InfoService with a forwarder list but only
+   * unknown errors occured (should not happen).
+   */
   public static final int ERROR_UNKNOWN_ERROR = 4;
+
 
   /**
    * This is the list of all known propaganda instances.
    */
   private Vector m_propagandaInstances;
 
+  /**
+   * Stores the current forwarding server registration state at the infoservices.
+   */
   private int m_currentState;
   
+  /**
+   * Stores the current error code (only meaningful, if we are in STATE_NO_REGISTRATION).
+   */
   private int m_currentErrorCode;
 
 
@@ -74,11 +131,23 @@ public class JAPRoutingRegistrationStatusObserver extends Observable implements 
     m_currentErrorCode = ERROR_NO_ERROR;
   }
 
-  
+
+  /**
+   * Returns the current state of the local forwarding server registration at the infoservices.
+   *
+   * @return The current forwarding server registration state.
+   */
   public int getCurrentState() {
     return m_currentState;
   }
 
+  /**
+   * Returns the current errorcode, if the current state is STATE_NO_REGISTRATION. In any other
+   * state always ERROR_NO_ERROR is returned. See the ERROR constants in this class to get more
+   * details for the errorcodes. The errorcodes shall help to localize registration issues.
+   *
+   * @return The current error code.
+   */
   public int getCurrentErrorCode() {
     return m_currentErrorCode;
   }
@@ -149,6 +218,26 @@ public class JAPRoutingRegistrationStatusObserver extends Observable implements 
     }    
   }
 
+
+  /**
+   * Updates the current state value and the errorcode value based on the internal stored list of
+   * all propaganda instances.
+   *
+   * @param a_overwriteInitialRegistrationState If we are in STATE_INITIAL_REGISTRATION normally
+   *                                            this method should not update the state and the
+   *                                            errorcode if the registration is not finished yet.
+   *                                            But after the initial registration is done (all
+   *                                            propaganda instances have been started), the state
+   *                                            constant and error code need to be updated, so
+   *                                            also the STATE_INITIAL_REGISTRATION must be
+   *                                            overwritten. If this parameter is true, also
+   *                                            the initial registration state is overwritten, if
+   *                                            this parameter is false, the initial registration
+   *                                            state would not be changed (and also not the
+   *                                            errorcode). If we are in any other state than
+   *                                            STATE_INITIAL_REGISTRATION, we are not affected by
+   *                                            this parameter.
+   */
   private void updateCurrentState(boolean a_overwriteInitialRegistrationState) {
     synchronized (m_propagandaInstances) {
       synchronized (this) {

@@ -63,7 +63,7 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 
-class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, ActionListener,
+final class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, ActionListener,
 	ListSelectionListener, ItemListener
 {
 	private static final String URL_BEGIN = "<HTML><font color=blue><u>";
@@ -400,7 +400,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		MixCascade cascade = (MixCascade) m_listMixCascade.getSelectedValue();
 		String selectedMixId = (String) cascade.getMixIds().elementAt(server);
 		MixInfo selectedMixInfo =
-			 InfoServiceHolder.getInstance().getMixInfo(selectedMixId);
+			InfoServiceHolder.getInstance().getMixInfo(selectedMixId);
 
 		m_operatorLabel.setText(selectedMixInfo.getServiceOperator().getOrganisation());
 		m_operatorLabel.setToolTipText(selectedMixInfo.getServiceOperator().getOrganisation());

@@ -1,33 +1,54 @@
+/*
+ Copyright (c) 2000 - 2004, The JAP-Team
+ All rights reserved.
+ Redistribution and use in source and binary forms, with or without modification,
+ are permitted provided that the following conditions are met:
+
+  - Redistributions of source code must retain the above copyright notice,
+ this list of conditions and the following disclaimer.
+
+  - Redistributions in binary form must reproduce the above copyright notice,
+ this list of conditions and the following disclaimer in the documentation and/or
+ other materials provided with the distribution.
+
+  - Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
+ may be used to endorse or promote products derived from this software without specific
+ prior written permission.
+
+
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS
+ OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
+ AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS
+ BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+ OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+ IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
+ */
 package jap;
 
-import java.text.DateFormat;
-import java.util.Vector;
-import java.awt.Dimension;
+import java.util.Locale;
+
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import javax.swing.JButton;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import javax.swing.ButtonGroup;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JSlider;
-import javax.swing.JTable;
+import javax.swing.JRadioButton;
+import javax.swing.UIManager;
+import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.border.TitledBorder;
-import javax.swing.table.DefaultTableModel;
-import anon.tor.ordescription.InfoServiceORListFetcher;
-import anon.tor.ordescription.ORDescription;
-import anon.tor.ordescription.ORList;
-import javax.swing.*;
-import javax.swing.border.*;
-import java.awt.*;
-import java.awt.event.*;
-import javax.swing.plaf.basic.*;
-import java.util.*;
-import logging.*;
-import javax.swing.UIManager.*;
+
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 
 final class JAPConfUI extends AbstractJAPConfModule
 {
@@ -228,12 +249,16 @@ final class JAPConfUI extends AbstractJAPConfModule
 			JAPController.setLocale(Locale.FRENCH);
 		}
 		JAPController.setSaveMainWindowPosition(m_cbSaveWindowPositions.isSelected());
-		int defaultView=JAPConstants.VIEW_NORMAL;
-		if(m_rbViewSimplified.isSelected())
-			defaultView=JAPConstants.VIEW_SIMPLIFIED;
+		int defaultView = JAPConstants.VIEW_NORMAL;
+		if (m_rbViewSimplified.isSelected())
+		{
+			defaultView = JAPConstants.VIEW_SIMPLIFIED;
+		}
 		JAPController.getInstance().setDefaultView(defaultView);
-		JAPController.getInstance().setMinimizeOnStartup(m_rbViewMini.isSelected()&&m_cbAfterStart.isSelected());
-		JAPController.getInstance().setMoveToSystrayOnStartup(m_rbViewSystray.isSelected()&&m_cbAfterStart.isSelected());
+		JAPController.getInstance().setMinimizeOnStartup(m_rbViewMini.isSelected() &&
+			m_cbAfterStart.isSelected());
+		JAPController.getInstance().setMoveToSystrayOnStartup(m_rbViewSystray.isSelected() &&
+			m_cbAfterStart.isSelected());
 		return true;
 	}
 
@@ -272,7 +297,9 @@ final class JAPConfUI extends AbstractJAPConfModule
 		m_cbAfterStart.setSelected(bAfterStart);
 		m_rbViewMini.setEnabled(bAfterStart);
 		m_rbViewSystray.setEnabled(bAfterStart);
-		if(bAfterStart&&!(m_rbViewSystray.isSelected()||m_rbViewMini.isSelected()))
+		if (bAfterStart && ! (m_rbViewSystray.isSelected() || m_rbViewMini.isSelected()))
+		{
 			m_rbViewMini.setSelected(true);
+		}
 	}
 }
