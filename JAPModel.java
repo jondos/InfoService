@@ -120,29 +120,31 @@ public final class JAPModel implements JAPAnonServiceListener{
 	static final int    MAXHELPLANGUAGES = 6;
 	static final String TITLE = "JAVA ANON PROXY -- JAP";
 	static final String AUTHOR = "(c) 2000 The JAP-Team";
+	static final String IMGPATHHICOLOR  = "images/";
+	static final String IMGPATHLOWCOLOR = "images/lowcolor/";
 	static final String XMLCONFFN       = "jap.conf";
-	public static final String BUSYFN   = "images/busy.gif";
-	public static final String SPLASHFN = "images/splash.gif";
-	public static final String ABOUTFN  = "images/info.gif";
-	static final String DOWNLOADFN      = "images/install.gif";
-	static final String IICON16FN       = "images/icon16.gif";
-	static final String ICONFN          = "images/icon.gif";
-	static final String JAPTXTFN        = "images/japtxt.gif";
-	static final String JAPEYEFN        = "images/japeye.gif";
-	static final String JAPICONFN       = "images/japi.gif";
-	static final String CONFIGICONFN    = "images/icoc.gif";
-	static final String ICONIFYICONFN   = "images/iconify.gif";
-	static final String ENLARGEYICONFN  = "images/enlarge.gif";
-	static final String METERICONFN     = "images/icom.gif";
+	public static final String BUSYFN   = "busy.gif";
+	public static final String SPLASHFN = "splash.gif";
+	public static final String ABOUTFN  = "info.gif";
+	static final String DOWNLOADFN      = "install.gif";
+	static final String IICON16FN       = "icon16.gif";
+	static final String ICONFN          = "icon.gif";
+	static final String JAPTXTFN        = "japtxt.gif";
+	static final String JAPEYEFN        = "japeye.gif";
+	static final String JAPICONFN       = "japi.gif";
+	static final String CONFIGICONFN    = "icoc.gif";
+	static final String ICONIFYICONFN   = "iconify.gif";
+	static final String ENLARGEYICONFN  = "enlarge.gif";
+	static final String METERICONFN     = "icom.gif";
 	static final String[] METERFNARRAY  = {
-						"images/meterD.gif", // anonymity deactivated
-						"images/meterNnew.gif", // no measure available
-						"images/meter1.gif",
-						"images/meter2.gif",
-						"images/meter3.gif",
-						"images/meter4.gif",
-						"images/meter5.gif",
-						"images/meter6.gif"
+						"meterD.gif",    // anonymity deactivated
+						"meterNnew.gif", // no measure available
+						"meter1.gif",
+						"meter2.gif",
+						"meter3.gif",
+						"meter4.gif",
+						"meter5.gif",
+						"meter6.gif"
 						};
 
 	private ResourceBundle msg;
