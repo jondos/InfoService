@@ -104,6 +104,16 @@ final public class AnonServiceImpl implements AnonService
 				m_MuxSocket.stopService();
 			}
 
+		public AnonChannel getAIChannel() throws ConnectException
+			{
+				return m_MuxSocket.getAIChannel();
+			}
+
+		public int sendPayPackets(String xmlData) throws ConnectException
+			{
+				return m_MuxSocket.sendPayPackets(xmlData);
+			}
+
 		public AnonChannel createChannel(int type) throws ConnectException
 			{
 				return m_MuxSocket.newChannel(type);

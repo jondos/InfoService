@@ -57,7 +57,7 @@ public void startJAP(String strJapConfFile) {
 		// Create the view object
 		view = new JAPView(JAPConstants.TITLE);
 		// Create the main frame
-		view.create();
+		view.create(false);
 		// Switch Debug Console Parent to MainView
 		JAPDebug.setConsoleParent(view);
 		// Add observer

@@ -30,7 +30,7 @@ package jap;
 import java.awt.Insets;
 import java.awt.Font;
 public final class JAPConstants {
-	public static final String aktVersion = "00.02.020"; //Never change the layout of this line!
+	public static final String aktVersion = "00.02.021"; //Never change the layout of this line!
 	private static final String CVS_GENERATED_RELEASE_DATE= "$Date$";
 																													 //Warning: This is a little bit tricky,
 																													 //because CVS will expand the $Date$
@@ -107,6 +107,9 @@ public final class JAPConstants {
 															"meter5.gif",
 															"meter6.gif"
 														};
+	public static final String   	PIHOST					= "itsec2.inf.fu-berlin.de";
+	public static final int		 		PIPORT					= 2342;
+	public static final boolean	 	PI_SSLON				= false;    // auf true setzten wenn die pay funktionalität fertig gebaut ist.
 
 	public final static String CERTSPATH						=	"certificates/";
 	public final static String TRUSTEDROOTCERT 			= "japroot.cer";

@@ -42,6 +42,7 @@ import jap.JAPConstants;
 import jap.JAPView;
 import jap.JAPViewIconified;
 import jap.JAPSplash;
+import pay.control.PayControl;
 /** This is the main class of the JAP project. It starts everything. It can be inherited by another
  *  class that wants to initialize platform dependend features, e.g. see
  *  <A HREF="JAPMacintosh.html">JAPMacintosh.html</A>
@@ -49,6 +50,9 @@ import jap.JAPSplash;
  */
 class JAP extends Frame
 {
+	// um pay funktionalität ein oder auszuschalten
+	private boolean loadPay = false;
+
 	String[] m_arstrCmdnLnArgs=null;
 	public JAP()
 	{
@@ -143,6 +147,17 @@ class JAP extends Frame
 					"JAP:Exception while setting Cross Platform Look-And-Feel!");
 			}
 		}
+		// um pay funktionalität ein oder auszuschalten
+		if(m_arstrCmdnLnArgs!=null)
+			{
+				for(int i=0;i<m_arstrCmdnLnArgs.length;i++)
+					if(m_arstrCmdnLnArgs[i].equalsIgnoreCase("-pay"))
+						{
+							loadPay=true;
+							break;
+						}
+			}
+
 		// Create the controller object
 		JAPController controller = JAPController.create();
 		// Create debugger object
@@ -166,10 +181,13 @@ class JAP extends Frame
 				JAPDebug.INFO,
 				JAPDebug.MISC,
 				"JAP:MRJ Version is " + mrjVersion + ".");
+		//initalisiere PayInstance
+		if(loadPay)
+			PayControl.initPay();
 		// Create the view object
 		JAPView view = new JAPView(JAPConstants.TITLE);
 		// Create the main frame
-		view.create();
+		view.create(loadPay);
 		// Switch Debug Console Parent to MainView
 		JAPDebug.setConsoleParent(view);
 		// Add observer
