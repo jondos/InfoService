@@ -616,7 +616,7 @@ public final class MuxSocket implements Runnable
 				LogHolder.log(LogLevel.ERR, LogType.NET, "JAPMuxSocket:run() Exception while receiving!");
 				LogHolder.log(LogLevel.DEBUG, LogType.NET,
 							  "JAPMuxSocket:run() Exception was: " + e.getMessage());
-				StringWriter sw = new StringWriter(100);
+				StringWriter sw = new StringWriter();
 				e.printStackTrace(new PrintWriter(sw));
 				LogHolder.log(LogLevel.DEBUG, LogType.NET,
 							  "JAPMuxSocket:run() StackTrace was: " + sw.toString());
