@@ -51,11 +51,11 @@ public class JAPAnonChannel implements Runnable
 					{
 						fromClient= inSocket.getInputStream();
 						byte[] buff=new byte[JAPMuxSocket.DATA_SIZE];
-						int len=fromClient.read(buff,0,JAPMuxSocket.DATA_SIZE-3-outSocket.getChainLen()*JAPMuxSocket.KEY_SIZE);
+						int len=fromClient.read(buff,0,JAPMuxSocket.PAYLOAD_SIZE-outSocket.getChainLen()*JAPMuxSocket.KEY_SIZE*2);//*2 is a HACK!!
 						if(len!=-1)
 							{
 								outSocket.send(channel,m_Type,buff,(short)len);
-								while((len=fromClient.read(buff,0,JAPMuxSocket.DATA_SIZE-3))!=-1)
+								while((len=fromClient.read(buff,0,JAPMuxSocket.PAYLOAD_SIZE))!=-1)
 									{
 										if(len>0)
 											{

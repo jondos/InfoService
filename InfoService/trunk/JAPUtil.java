@@ -54,6 +54,7 @@ import java.lang.reflect.Method;
 import javax.swing.*;
 import javax.swing.table.*;
 
+import HTTPClient.Codecs;
 
 final class JAPUtil
 	{
@@ -433,4 +434,27 @@ final class JAPUtil
 			perfectHeight = Math.min(maxDimension.height,minimunColunmHeight);
 			table.setPreferredScrollableViewportSize(new Dimension(perfectWidth, perfectHeight));
     }
-}
+
+		public static String getProxyAuthorization(String user,String passwd)
+			{
+				String tmpPasswd=Codecs.base64Encode(user+":"+passwd);
+				return "Proxy-Authorization: Basic "+tmpPasswd+"\r\n";
+			}
+
+    public static String readLine(InputStream inputStream) throws Exception {
+			String returnString = "";
+			try{
+				int byteRead = inputStream.read();
+				while (byteRead != 10 && byteRead != -1) {
+					if (byteRead != 13)
+						returnString += (char)byteRead;
+					byteRead = inputStream.read();
+				}
+			} catch (Exception e) {
+				throw e;
+			}
+			return returnString;
+    	}
+
+		}
+

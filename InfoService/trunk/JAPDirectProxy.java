@@ -237,7 +237,19 @@ final class JAPDirectProxy implements Runnable
 							prt.start();
 							// create stream --> server
 							OutputStream outputStream = serverSocket.getOutputStream();
+
+
 							// Transfer data client --> server
+							//first check if the us authorization for the proxy
+							if(model.getUseFirewallAuthorization())
+								{//we need to insert an authorization line...
+									//read first line and after this insert the authorization
+									String str=JAPUtil.readLine(inputStream);
+									str+="\r\n";
+									outputStream.write(str.getBytes());
+									str=JAPUtil.getProxyAuthorization(model.getFirewallAuthUserID(),model.getFirewallAuthPasswd());
+									outputStream.write(str.getBytes());
+								}
 							byte[] buff=new byte[1000];
 							int len;
 							while((len=inputStream.read(buff))!=-1)
