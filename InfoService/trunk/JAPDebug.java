@@ -30,6 +30,8 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.Frame;
+import java.awt.Dimension;
 
 import javax.swing.JDialog;
 import javax.swing.JTextArea;
@@ -54,7 +56,7 @@ Koenntest Du es im Self test (main()) evtl. im Beispielcode angeben?
  * <code>JAPDebug.out(int level, int type, String txt)</code>
  * This is a Singleton!
  */
-public final class JAPDebug extends WindowAdapter{
+final public class JAPDebug extends WindowAdapter{
 
 	/** No debugging */
 	public final static int NUL = 0; 
@@ -182,9 +184,9 @@ public final class JAPDebug extends WindowAdapter{
 	
 	/** Shows or hiddes a Debug-Console-Window
 	 */
-	public static void showConsole(boolean b)
+	public static void showConsole(boolean b,Frame parent)
 		{
-			debug.internal_showConsole(b);
+			debug.internal_showConsole(b,parent);
 		}
 	
 	public static boolean isShowConsole()
@@ -192,7 +194,7 @@ public final class JAPDebug extends WindowAdapter{
 			return debug.m_bConsole;
 		}
 	
-	public void internal_showConsole(boolean b)
+	public void internal_showConsole(boolean b,Frame parent)
 		{
 			if(!b&&m_bConsole)
 				{
@@ -203,13 +205,15 @@ public final class JAPDebug extends WindowAdapter{
 				}
 			else if(b&&!m_bConsole)
 				{
-					frameConsole=new JDialog(JAPModel.getModel().getView(),"Debug-Console");
+					frameConsole=new JDialog(parent,"Debug-Console");
 					textareaConsole=new JTextArea(null,20,30);
 					textareaConsole.setEditable(false);
 					frameConsole.getContentPane().add(new JScrollPane(textareaConsole));
 					frameConsole.addWindowListener(this);
 					frameConsole.pack();
-					JAPUtil.upRightFrame(frameConsole);
+					Dimension screenSize=frameConsole.getToolkit().getScreenSize();
+					Dimension ownSize=frameConsole.getSize();
+					frameConsole.setLocation((screenSize.width-ownSize.width),0);
 					frameConsole.setVisible(true);
 					m_bConsole=true;
 				}

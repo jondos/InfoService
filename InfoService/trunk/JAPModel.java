@@ -321,7 +321,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 					if(nl!=null&&nl.getLength()>0)
 						{
 							Element elemOutput=(Element)nl.item(0);
-							JAPDebug.showConsole(elemOutput.getFirstChild().getNodeValue().trim().equalsIgnoreCase("Console"));						
+							JAPDebug.showConsole(elemOutput.getFirstChild().getNodeValue().trim().equalsIgnoreCase("Console"),view);						
 						}
 				}
 		}
