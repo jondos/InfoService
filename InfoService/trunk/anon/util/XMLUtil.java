@@ -556,14 +556,14 @@ public class XMLUtil
 				}
 				else if(c=='<')
 				{
-					sb.deleteCharAt(i);
-					sb.insert(i,"&lt;");
+					sb.setCharAt(i,'&');
+					sb.insert(i+1,"lt;");
 					i+=3;
 				}
 				else if(c=='>')
 				{
-					sb.deleteCharAt(i);
-					sb.insert(i,"&gt;");
+					sb.setCharAt(i,'&');
+					sb.insert(i+1,"gt;");
 					i+=3;
 				}
 				i++;
