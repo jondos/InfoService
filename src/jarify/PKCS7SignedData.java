@@ -182,7 +182,7 @@ public class PKCS7SignedData implements PKCSObjectIdentifiers
 		for (Enumeration enumer = certs.elements(); enumer.hasMoreElements(); )
 		{
 			JAPCertificate cert = (JAPCertificate) enumer.nextElement();
-			boolean bS = serialNumber.equals(cert.getSerialNumber());
+			boolean bS = serialNumber.equals(cert.getSerialNumber().getValue());
 			if (bS && issuer.equals(new X509Principal(cert.getIssuer())))
 			{
 				signCert = cert;
