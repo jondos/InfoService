@@ -822,7 +822,6 @@ final class JAPConf extends JDialog
 							m_scrpaneList.getViewport().add(m_listCert, null);
 							JAPCertificateStore jcs = JAPModel.getCertificateStore();
 							jcs.addCertificate(t_cert);
-							JAPModel.setCertificateStore(jcs);
 							}
 						}
 					});
@@ -844,7 +843,6 @@ final class JAPConf extends JDialog
 								{
 									JAPCertificateStore jcs = JAPModel.getCertificateStore();
 									jcs.removeCertificate(j);
-									JAPModel.setCertificateStore(jcs);
 									m_listmodelCertList.remove(t_index);
 								}
 							}

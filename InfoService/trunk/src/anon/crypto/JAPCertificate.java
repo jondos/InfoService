@@ -78,18 +78,17 @@ public class JAPCertificate
 	private SubjectPublicKeyInfo pubkeyinfo;
 	private TBSCertificateStructure tbscert;
 	private int version;
-	private byte[] x509certenc;
+	//private byte[] x509certenc;
 
 	private JAPCertificate()
 	{
 	}
 
-	public static JAPCertificate getInstance(byte[] encoded) throws IOException
+	public static JAPCertificate getInstance(InputStream in) throws IOException
 	{
 		try
 		{
-			InputStream stream = new ByteArrayInputStream(encoded);
-			BERInputStream is = new BERInputStream(stream);
+			BERInputStream is = new BERInputStream(in);
 			ASN1Sequence dcs = (ASN1Sequence) is.readObject();
 			X509CertificateStructure m_x509cert = new X509CertificateStructure(dcs);
 			JAPCertificate m_japcert = new JAPCertificate();
@@ -105,7 +104,7 @@ public class JAPCertificate
 			m_japcert.version = m_x509cert.getVersion();
 			m_japcert.pubKey = new JAPDSAPublicKey(m_x509cert.getSubjectPublicKeyInfo());
 			m_japcert.x509cert = m_x509cert;
-			m_japcert.x509certenc = encoded;
+//			m_japcert.x509certenc = encoded;
 			return m_japcert;
 		}
 		// todo: fehlerbehandlung, falls werte nicht belegt sind oder werden können
@@ -156,9 +155,8 @@ public class JAPCertificate
 			{
 						return getInstance(bytecert);
 			}
-			catch (IOException e)
+			catch (Exception e)
 			{
-				e.printStackTrace();
 			}
 			return null;
 	}
@@ -186,6 +184,18 @@ public class JAPCertificate
 			}
 			return null;
 		}
+
+		public static JAPCertificate getInstance(byte[] encoded)
+			{
+				try
+					{
+						return getInstance(new ByteArrayInputStream(encoded));
+					}
+				catch(Exception e)
+					{
+						return null;
+					}
+			}
 
 	public static class IllegalCertificateException extends RuntimeException
 	{

@@ -33,8 +33,10 @@ import gui.JAPDll;
 import anon.crypto.JAPCertificate;
 import anon.crypto.JAPCertificateStore;
 import anon.crypto.JAPSignature;
-import java.io.File;
-import java.io.FilenameFilter;
+//import java.io.File;
+//import java.io.FilenameFilter;
+import java.io.FileInputStream;
+import java.io.InputStream;
 
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPModel
@@ -76,9 +78,36 @@ public final class JAPModel
 
 	private JAPModel ()
 		{
-				m_certStore=new JAPCertificateStore();
-		 // m_Locale=Locale.getDefault();
+			m_certStore=new JAPCertificateStore();
+			//try to read default cert (which comes with JAP)
+			String certFilename = JAPConstants.CERTSPATH+JAPConstants.TRUSTEDROOTCERT;
+			InputStream in=null;
+			try
+				{
+					// this is necessary to make shure that the cert  is loaded when contained in a JAP.jar
+					in=Class.forName("JAP").getResourceAsStream(certFilename);
+				}
+			catch (Exception e)
+				{
+					try
+						{
+							//we have to chek, if it exists as file
+							in=new FileInputStream(certFilename);
+						}
+					catch(Exception e1)
+						{
+						}
+				}
+			try
+				{
+					m_certStore.addCertificate(JAPCertificate.getInstance(in));
+				}
+			catch(Exception e2)
+				{
+				}
+			try{in.close();}catch(Throwable t2){};
 		}
+			// m_Locale=Locale.getDefault();
 
 	/** Creates the Model - as Singleton.
 	 *  @return The one and only JAPModel
@@ -401,7 +430,7 @@ public final class JAPModel
 		}
 
 
-		public static boolean setRootCertificate()
+	/*	public static boolean setRootCertificate()
 		{
 			String dir=System.getProperty("user.home","");
 			File file;
@@ -425,20 +454,21 @@ public final class JAPModel
 				return false;
 			}
 		}
-
-		public static JAPCertificate getRootCertificate()
+*/
+/*		public static JAPCertificate getRootCertificate()
 		{
 			return model.m_rootCertificate;
 		}
-
+*/
 		public static JAPCertificateStore getCertificateStore()
 		{
 			return model.m_certStore;
 		}
 
-		public static boolean setCertificateStore(String certlist)
+
+	public static boolean setCertificateStore(String certlist)
 		{
-			model.m_acceptedCertList = certlist;
+/*			model.m_acceptedCertList = certlist;
 
 			JAPCertificateStore certstore = new JAPCertificateStore();
 
@@ -471,14 +501,14 @@ public final class JAPModel
 				}
 				model.m_certStore = certstore;
 				return true;
-			}
+			}*/
 			return false;
 		}
 
-		public static void setCertificateStore(JAPCertificateStore jcs)
+	/*	public static void setCertificateStore(JAPCertificateStore jcs)
 		{
 			model.m_certStore = jcs;
 		}
-
+*/
 
 }
