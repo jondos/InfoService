@@ -240,7 +240,7 @@ final class JAPUtil
 	 */
 	public static ImageIcon loadImageIcon(String strImage, boolean sync) 
 		{
-			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPModel:Image "+strImage+" loading...");
+			//JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPModel:Image "+strImage+" loading...");
 			boolean finished = false;
 			ImageIcon img = null;
 			// this is necessary to make shure that the images are loaded when contained in a JAP.jar
@@ -264,11 +264,11 @@ final class JAPUtil
 				{
 					int status = img.getImageLoadStatus();
 					if ( (status & MediaTracker.ABORTED) != 0 ) {
-						JAPDebug.out(JAPDebug.ERR,JAPDebug.GUI,"JAPModel:Loading of image "+strImage+" aborted!");
+						//JAPDebug.out(JAPDebug.ERR,JAPDebug.GUI,"JAPModel:Loading of image "+strImage+" aborted!");
 						finished = true;
 						}
 					if ( (status & MediaTracker.ERRORED) != 0 ) {
-						JAPDebug.out(JAPDebug.ERR,JAPDebug.GUI,"JAPModel:Error loading image "+strImage+"!");
+						//JAPDebug.out(JAPDebug.ERR,JAPDebug.GUI,"JAPModel:Error loading image "+strImage+"!");
 						finished = true;
 					}
 					if ( (status & MediaTracker.COMPLETE) != 0) {

@@ -27,6 +27,7 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 */
 import java.awt.Frame;
 import java.awt.Dialog;
+import java.awt.Dimension;
 import java.awt.Button;
 import java.awt.Label;
 import java.awt.Panel;
@@ -74,7 +75,17 @@ final class JAPAWTMsgBox extends WindowAdapter implements ActionListener
 			d.add("East",p);
 			d.pack();
 			d.setResizable(false);
-			JAPUtil.centerFrame(d);
+			Dimension screenSize = d.getToolkit().getScreenSize();
+			try //JAVA 1.1
+				{
+					Dimension ownSize = d.getSize();
+					d.setLocation((screenSize.width-ownSize.width )/2,(screenSize.height-ownSize.height)/2);
+				}
+		  catch(Error e) //JAVA 1.0.2
+				{
+					Dimension ownSize = d.size();
+					d.locate((screenSize.width-ownSize.width )/2,(screenSize.height-ownSize.height)/2);
+				}
 			d.show();
 			}
 			catch(Exception e)
