@@ -149,6 +149,16 @@ final class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 		m_sliderMinPathLen.setSnapToTicks(true);
 		m_sliderMinPathLen.setMinimum(JAPConstants.TOR_MIN_ROUTE_LEN);
 		m_sliderMinPathLen.setMaximum(JAPConstants.TOR_MAX_ROUTE_LEN);
+		m_sliderMinPathLen.addChangeListener(new ChangeListener()
+		{
+			public void stateChanged(ChangeEvent e)
+			{
+				if (m_sliderMaxPathLen.getValue() < m_sliderMinPathLen.getValue())
+				{
+					m_sliderMaxPathLen.setValue(m_sliderMinPathLen.getValue());
+				}
+			}
+		});
 		c3.gridx = 1;
 		c3.fill = GridBagConstraints.HORIZONTAL;
 		p.add(m_sliderMinPathLen, c3);

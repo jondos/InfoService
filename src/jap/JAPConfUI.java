@@ -325,7 +325,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 		m_rbViewSimplified.setSelected(JAPModel.getDefaultView() == JAPConstants.VIEW_SIMPLIFIED);
 		m_rbViewSystray.setSelected(JAPModel.getMoveToSystrayOnStartup());
 		m_rbViewMini.setSelected(JAPModel.getMinimizeOnStartup());
-		boolean b = m_rbViewSystray.isSelected() || m_rbViewMini.isSelected();
+		boolean b = JAPModel.getMoveToSystrayOnStartup() || JAPModel.getMinimizeOnStartup();
 		updateThirdPanel(b);
 	}
 
