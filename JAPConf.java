@@ -202,6 +202,14 @@ public final class JAPConf extends JDialog
 						setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 						model.fetchAnonServers();
 						model.notifyJAPObservers();
+		//very ugly!!!!!!!!!!!!!	
+						select.removeAllItems();
+						select.addItem(model.getString("settingsAnonSelect"));
+						Enumeration enum = model.anonServerDatabase.elements();
+						while (enum.hasMoreElements())
+							{
+								select.addItem( ((AnonServerDBEntry)enum.nextElement()).getName() );
+							}
 						b2.doClick();
 						setCursor(c);
 				}});
@@ -386,7 +394,7 @@ public final class JAPConf extends JDialog
 			s=infohostTextField.getText().trim();
 			if(s==null||s.equals(""))
 				{
-					showError(model.getString("inputInfoServiceHostNotNull"));
+					showError(model.getString("errorInfoServiceHostNotNull"));
 					return false;
 				}
 			try
@@ -399,10 +407,31 @@ public final class JAPConf extends JDialog
 				}
 			if(!model.isPort(i))
 				{
-					showError(model.getString("inputInfoServicePortWrong"));
+					showError(model.getString("errorInfoServicePortWrong"));
 					return false;
 				}
 			
+			//Checking First Mix (Host + Port)
+			s=anonhostTextField.getText().trim();
+			if(s==null||s.equals(""))
+				{
+					showError(model.getString("errorAnonHostNotNull"));
+					return false;
+				}
+			try
+				{
+					i=Integer.parseInt(anonportnumberTextField.getText().trim());
+				}
+			catch(Exception e)
+				{
+					i=-1;
+				}
+			if(!model.isPort(i))
+				{
+					showError(model.getString("errorAnonServicePortWrong"));
+					return false;
+				}
+
 			//checking Listener Port Number
 			try
 				{
@@ -414,7 +443,7 @@ public final class JAPConf extends JDialog
 				}
 			if(!model.isPort(i))
 				{
-					showError(model.getString("inputListenerPortWrong"));
+					showError(model.getString("errorListenerPortWrong"));
 					return false;
 				}
 			

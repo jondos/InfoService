@@ -173,7 +173,7 @@ final public class JAPTest
 			f=new FileInputStream("jap.cer");
 			master.decode(f);
 			master.verify(cert.getPublicKey());
-			byte[] key=master.getPublicKey().getEncoded();
+		//	byte[] key=master.getPublicKey().getEncoded();
 
 	/*		for(int i=0;i<key.length;i++)
 				System.out.print(Integer.toHexString((key[i]&0x00FF))+":");
@@ -258,7 +258,7 @@ final public class JAPTest
 	{
 		try{
 			java.security.Security.addProvider(new CryptixCrypto());
-			CertificateFactory cf=CertificateFactory.getInstance("X509");
+			//CertificateFactory cf=CertificateFactory.getInstance("X509");
 		}
 		catch(Exception e)
 		{
