@@ -721,7 +721,7 @@ final class JAPConf extends JDialog
 				m_comboLanguage=new JComboBox();
 				m_comboLanguage.addItem("Deutsch");
 				m_comboLanguage.addItem("English");
-				m_comboLanguage.addItem("Français");
+				m_comboLanguage.addItem("Fran\u00E7ais");
 				m_comboLanguage.addItemListener(new ItemListener(){
 					public void itemStateChanged(ItemEvent e){
 						if(!m_bIgnoreComboLanguageEvents&&e.getStateChange()==e.SELECTED) {
