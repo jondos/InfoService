@@ -189,17 +189,26 @@ final public class AnonProxy implements Runnable
 	public int start()
 	{
 		m_numChannels = 0;
+		LogHolder.log(LogLevel.DEBUG, LogType.NET, "AnonProxy.start(): Try to initialize AN.ON");
+		if (m_Anon == null)
+		{
+			LogHolder.log(LogLevel.EMERG, LogType.NET,
+						  "AnonProxy.start(): m_Anon is NULL - should never ever happen!");
+			return ErrorCodes.E_INVALID_SERVICE;
+		}
 		int ret = m_Anon.initialize(m_currentMixCascade);
 		if (ret != ErrorCodes.E_SUCCESS)
 		{
 			return ret;
 		}
+		LogHolder.log(LogLevel.DEBUG, LogType.NET, "AnonProxy.start(): AN.ON initialized");
 		if (USE_TOR)
 		{
 			m_Tor = AnonServiceFactory.getAnonServiceInstance("TOR");
 			m_Tor.setProxy(m_proxyInterface);
 			m_Tor.initialize(new TorAnonServerDescription(true, m_bPreCreateAnonRoutes));
 			( (Tor) m_Tor).setCircuitLength(JAPModel.getTorMinRouteLen(), JAPModel.getTorMaxRouteLen());
+			LogHolder.log(LogLevel.DEBUG, LogType.NET, "AnonProxy.start(): Tor initialized");
 		}
 		else
 		{
@@ -297,21 +306,21 @@ final public class AnonProxy implements Runnable
 	}
 
 	AnonChannel createChannel(int type) throws ToManyOpenChannelsException,
-	NotConnectedToMixException,
-	Exception
-		{
+		NotConnectedToMixException,
+		Exception
+	{
 		if (type == AnonChannel.SOCKS)
-	{
-		return m_Tor.createChannel(AnonChannel.SOCKS);
-	}
-	else if (type == AnonChannel.HTTP)
-	{
-		return m_Anon.createChannel(AnonChannel.HTTP);
-	}
-	return null;
+		{
+			return m_Tor.createChannel(AnonChannel.SOCKS);
+		}
+		else if (type == AnonChannel.HTTP)
+		{
+			return m_Anon.createChannel(AnonChannel.HTTP);
+		}
+		return null;
 	}
 
-		synchronized boolean reconnect()
+	synchronized boolean reconnect()
 	{
 		if (m_Anon.isConnected())
 		{

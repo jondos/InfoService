@@ -486,8 +486,29 @@
     <property category="archiving" name="contentRules.112" value="F:images/lowcolor/splash.gif;images/lowcolor/splash.gif"/>
     <property category="archiving" name="contentRules.113" value="F:images/lowcolor/west.gif;images/lowcolor/west.gif"/>
     <property category="archiving" name="contentRules.114" value="F:certificates/bi.cer;certificates/bi.cer"/>
+    <property category="archiving" name="contentRules.115" value="F:images/accountBroken.gif;images/accountBroken.gif"/>
+    <property category="archiving" name="contentRules.116" value="F:images/accountDisabled.gif;images/accountDisabled.gif"/>
+    <property category="archiving" name="contentRules.117" value="F:images/accountOk.gif;images/accountOk.gif"/>
+    <property category="archiving" name="contentRules.118" value="F:images/copyintoicon.gif;images/copyintoicon.gif"/>
+    <property category="archiving" name="contentRules.119" value="F:images/error.gif;images/error.gif"/>
     <property category="archiving" name="contentRules.12" value="F:help/browser_mac_en.html;help/browser_mac_en.html"/>
+    <property category="archiving" name="contentRules.120" value="F:images/home.gif;images/home.gif"/>
+    <property category="archiving" name="contentRules.121" value="F:images/information.gif;images/information.gif"/>
+    <property category="archiving" name="contentRules.122" value="F:images/infoservicefrominternet.gif;images/infoservicefrominternet.gif"/>
+    <property category="archiving" name="contentRules.123" value="F:images/infoservicemanuell.gif;images/infoservicemanuell.gif"/>
+    <property category="archiving" name="contentRules.124" value="F:images/next.gif;images/next.gif"/>
+    <property category="archiving" name="contentRules.125" value="F:images/previous.gif;images/previous.gif"/>
+    <property category="archiving" name="contentRules.126" value="F:images/reload.gif;images/reload.gif"/>
+    <property category="archiving" name="contentRules.127" value="F:images/reloaddisabled_anim.gif;images/reloaddisabled_anim.gif"/>
+    <property category="archiving" name="contentRules.128" value="F:images/reloadrollover.gif;images/reloadrollover.gif"/>
+    <property category="archiving" name="contentRules.129" value="F:images/server_blau.gif;images/server_blau.gif"/>
     <property category="archiving" name="contentRules.13" value="F:help/config_de.html;help/config_de.html"/>
+    <property category="archiving" name="contentRules.130" value="F:images/server_grau.gif;images/server_grau.gif"/>
+    <property category="archiving" name="contentRules.131" value="F:images/server_rot.gif;images/server_rot.gif"/>
+    <property category="archiving" name="contentRules.132" value="F:images/server.gif;images/server.gif"/>
+    <property category="archiving" name="contentRules.133" value="F:images/serverfrominternet.gif;images/serverfrominternet.gif"/>
+    <property category="archiving" name="contentRules.134" value="F:images/servermanuell.gif;images/servermanuell.gif"/>
+    <property category="archiving" name="contentRules.135" value="F:images/warning.gif;images/warning.gif"/>
     <property category="archiving" name="contentRules.14" value="F:help/config_en.html;help/config_en.html"/>
     <property category="archiving" name="contentRules.15" value="F:help/credits_de.html;help/credits_de.html"/>
     <property category="archiving" name="contentRules.16" value="F:help/credits_en.html;help/credits_en.html"/>
@@ -675,12 +696,13 @@
     <property category="archiving" name="extraDeployRoots.91" value="C:logging.*"/>
     <property category="archiving" name="includeDeps" value="1"/>
     <property category="archiving" name="libraryStates.1" value="3:http"/>
-    <property category="archiving" name="libraryStates.2" value="1:mac"/>
-    <property category="archiving" name="libraryStates.3" value="1:Apache XML-RPC"/>
+    <property category="archiving" name="libraryStates.2" value="3:mac"/>
+    <property category="archiving" name="libraryStates.3" value="3:Apache XML-RPC"/>
     <property category="archiving" name="libraryStates.4" value="3:BouncyCastleLightForJAP"/>
-    <property category="archiving" name="libraryStates.5" value="1:ApacheBzip2"/>
+    <property category="archiving" name="libraryStates.5" value="3:ApacheBzip2"/>
     <property category="archiving" name="libraryStates.6" value="3:Log4j"/>
-    <property category="archiving" name="libraryStates.7" value="3:XML-1.0"/>
+    <property category="archiving" name="libraryStates.7" value="3:ApacheFTPClient"/>
+    <property category="archiving" name="libraryStates.8" value="3:XML-1.0"/>
     <property category="archiving" name="manifestMainClass" value="JAP"/>
     <property category="archiving" name="obfuscator" value="RetroGuard for J2ME"/>
     <property category="archiving" name="outPathState" value="1"/>

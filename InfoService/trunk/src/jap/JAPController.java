@@ -1412,7 +1412,7 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 
 	void applyProxySettingsToInfoService()
 	{
-		if (m_Model.getProxyInterface().isValid())
+		if (m_Model.getProxyInterface()!=null&&m_Model.getProxyInterface().isValid())
 		{
 			HTTPConnectionFactory.getInstance().setNewProxySettings(m_Model.getProxyInterface());
 		}
@@ -1425,7 +1425,8 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 
 	private void applyProxySettingsToAnonService()
 	{
-		if (JAPModel.getInstance().getProxyInterface().isValid() && getAnonMode())
+		if (JAPModel.getInstance().getProxyInterface()!=null&&
+			JAPModel.getInstance().getProxyInterface().isValid() && getAnonMode())
 		{
 			// anon service is running
 			Object[] options =
@@ -1607,7 +1608,8 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 					else
 					{
 						/* we use a direct connection */
-						if (JAPModel.getInstance().getProxyInterface().isValid())
+						if (JAPModel.getInstance().getProxyInterface()!=null&&
+							JAPModel.getInstance().getProxyInterface().isValid())
 						{
 							m_proxyAnon = new AnonProxy(
 								m_socketHTTPListener, JAPModel.getInstance().getProxyInterface());
@@ -1630,6 +1632,7 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 						m_proxyDirect.stopService();
 					}
 					m_proxyDirect = null;
+					LogHolder.log(LogLevel.DEBUG, LogType.NET, "Try to start AN.ON service...");
 
 					int ret = m_proxyAnon.start();
 					if (ret != ErrorCodes.E_SUCCESS)
@@ -1639,6 +1642,7 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 					}
 					if (ret == ErrorCodes.E_SUCCESS)
 					{
+						LogHolder.log(LogLevel.DEBUG, LogType.NET, "AN.ON service started successfull");
 						if (!mbActCntMessageNotRemind && !JAPModel.isSmallDisplay())
 						{
 							// show a Reminder message that active contents should be disabled

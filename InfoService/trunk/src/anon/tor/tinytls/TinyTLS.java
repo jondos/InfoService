@@ -924,7 +924,8 @@ public class TinyTLS extends Socket
 		public void sendClientFinished() throws IOException
 		{
 			sendHandshake(20,
-						  m_selectedciphersuite.getKeyExchangeAlgorithm().calculateClientFinished(m_handshakemessages));
+						  m_selectedciphersuite.getKeyExchangeAlgorithm().calculateClientFinished(
+				m_handshakemessages));
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[CLIENT_FINISHED]");
 		}
 	}
@@ -939,24 +940,25 @@ public class TinyTLS extends Socket
 	 * Server's TLS Port
 	 */
 	public TinyTLS(String addr, int port) throws UnknownHostException, IOException, Exception
-		{
+	{
 		this(addr, port, null);
 	}
-		/**
-		 *
-		 * TinyTLS creates a TLS Connection to a server which may use a proxy
-		 *
-		 * @param addr
-		 * Server Address
-		 * @param port
-		 * Server's TLS Port
-		 * @param a_proxyInterface Proxy Settings
-		 */
-		public TinyTLS(String addr, int port, ImmutableProxyInterface a_proxyInterface) throws
+
+	/**
+	 *
+	 * TinyTLS creates a TLS Connection to a server which may use a proxy
+	 *
+	 * @param addr
+	 * Server Address
+	 * @param port
+	 * Server's TLS Port
+	 * @param a_proxyInterface Proxy Settings
+	 */
+	public TinyTLS(String addr, int port, ImmutableProxyInterface a_proxyInterface) throws
 		UnknownHostException, IOException, Exception
-		{
+	{
 		m_ProxyConnection = new ProxyConnection(HTTPConnectionFactory.getInstance().createHTTPConnection(new
-		ListenerInterface(addr, port), a_proxyInterface).Connect());
+			ListenerInterface(addr, port), a_proxyInterface).Connect());
 		//super(addr, port);
 		m_handshakecompleted = false;
 		m_serverhellodone = false;
@@ -972,11 +974,12 @@ public class TinyTLS extends Socket
 		m_clientcertificates = null;
 		m_clientprivatekey = null;
 	}
-		/**
-		 * add a ciphersuites to TinyTLS
-		 * @param cs ciphersuite you want to add
-		 */
-		public void addCipherSuite(CipherSuite cs)
+
+	/**
+	 * add a ciphersuites to TinyTLS
+	 * @param cs ciphersuite you want to add
+	 */
+	public void addCipherSuite(CipherSuite cs)
 	{
 		if (!this.m_supportedciphersuites.contains(cs))
 		{

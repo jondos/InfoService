@@ -325,8 +325,10 @@ public final class MuxSocket implements Runnable
 	//2001-02-20(HF)
 	public int connectViaFirewall(MixCascade mixCascade, ImmutableProxyInterface a_proxyInterface)
 	{
+		LogHolder.log(LogLevel.DEBUG, LogType.NET, "MuxSocket.connectViaFirewall(): Start...");
 		synchronized (this)
 		{
+
 			if (m_bIsConnected)
 			{
 				return ErrorCodes.E_ALREADY_CONNECTED;

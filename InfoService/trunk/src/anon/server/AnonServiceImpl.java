@@ -45,6 +45,9 @@ import anon.pay.Pay;
 import anon.server.impl.KeyPool;
 import anon.server.impl.MuxSocket;
 import anon.server.impl.ProxyConnection;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 
 final public class AnonServiceImpl implements AnonService
 {
@@ -56,7 +59,7 @@ final public class AnonServiceImpl implements AnonService
 	/**
 	 * Stores the connection when we use forwarding.
 	 */
-	private ProxyConnection m_proxyConnection;
+	private ProxyConnection m_proxyConnection = null;
 	private Pay m_Pay = null;
 
 	public AnonServiceImpl()
@@ -81,7 +84,7 @@ final public class AnonServiceImpl implements AnonService
 	public AnonServiceImpl(ProxyConnection a_proxyConnection)
 	{
 		/* call the default constructor */
-		this((ImmutableProxyInterface)null);
+		this( (ImmutableProxyInterface)null);
 		m_proxyConnection = a_proxyConnection;
 	}
 
@@ -89,15 +92,19 @@ final public class AnonServiceImpl implements AnonService
 	{
 		try
 		{
+			LogHolder.log(LogLevel.DEBUG, LogType.NET,
+						  "AnonServiceImpl.initialize(): Try to connect to MixCascade");
 			int rc;
-			if( (rc=connect( (MixCascade) mixCascade)) != ErrorCodes.E_SUCCESS)
+			if ( (rc = connect( (MixCascade) mixCascade)) != ErrorCodes.E_SUCCESS)
+			{
 				return rc;
+			}
 
 			// start Payment (2004-10-20 Bastian Voigt)
 			m_Pay = new Pay(m_MuxSocket);
 			return ErrorCodes.E_SUCCESS;
 		}
-		catch (Exception e)
+		catch (Throwable e)
 		{
 		}
 		return ErrorCodes.E_INVALID_SERVICE;
@@ -105,36 +112,56 @@ final public class AnonServiceImpl implements AnonService
 
 	public int setProxy(ImmutableProxyInterface a_Proxy)
 	{
-		m_proxyInterface=a_Proxy;
+		m_proxyInterface = a_Proxy;
 		return ErrorCodes.E_SUCCESS;
 	}
 
 	private int connect(MixCascade mixCascade)
 	{
-		int ret = -1;
-		if (m_proxyConnection == null)
+		try
 		{
-			ret = m_MuxSocket.connectViaFirewall(mixCascade, m_proxyInterface);
+			LogHolder.log(LogLevel.DEBUG, LogType.NET, "AnonServiceImpl.connect(): Start...");
+			if (m_MuxSocket == null)
+			{
+				LogHolder.log(LogLevel.EMERG, LogType.NET,
+							  "AnonServiceImpl.connect(): m_MuxSocket is NULL - should never ever happen!");
+				return ErrorCodes.E_INVALID_SERVICE;
+			}
+			int ret = -1;
+			if (m_proxyConnection == null)
+			{
+				LogHolder.log(LogLevel.DEBUG, LogType.NET,
+							  "AnonServiceImpl.connect(): m_proxyConnection==null");
+				ret = m_MuxSocket.connectViaFirewall(mixCascade, m_proxyInterface);
+			}
+			else
+			{
+				/* the connection already exists */
+				ret = m_MuxSocket.initialize(m_proxyConnection);
+			}
+			if (ret != ErrorCodes.E_SUCCESS)
+			{
+				return ret;
+			}
+			return m_MuxSocket.startService();
 		}
-		else
+		catch (Throwable t)
 		{
-			/* the connection already exists */
-			ret = m_MuxSocket.initialize(m_proxyConnection);
+			LogHolder.log(LogLevel.EMERG, LogType.NET,
+						  "AnonServiceImpl.connect(): Exception - should never ever happen!");
+			LogHolder.log(LogLevel.EMERG, LogType.NET, t);
+			return ErrorCodes.E_UNKNOWN;
 		}
-		if (ret != ErrorCodes.E_SUCCESS)
-		{
-			return ret;
-		}
-		return m_MuxSocket.startService();
 	}
 
 	public void shutdown()
 	{
-		if(m_Pay!=null)
+		if (m_Pay != null)
+		{
 			m_Pay.shutdown(); // shutdown payment
+		}
 		m_MuxSocket.stopService();
 	}
-
 
 	public AnonChannel createChannel(int type) throws ConnectException
 	{
@@ -215,6 +242,6 @@ final public class AnonServiceImpl implements AnonService
 
 	public boolean isConnected()
 	{
-		return m_MuxSocket!=null&&m_MuxSocket.isConnected();
+		return m_MuxSocket != null && m_MuxSocket.isConnected();
 	}
 }
