@@ -153,7 +153,7 @@ public class OnionRouter {
 	 */
 	public CreateCell createConnection() throws Exception
 	{
-		CreateCell cell = new CreateCell(this.m_circID);
+		CreateCell cell = new CreateCell(m_circID);
 		cell.setPayload(createExtendPayload(),0);
 		return cell;
 	}
