@@ -725,8 +725,9 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		StatusPanel status = new StatusPanel();
 		northPanel.add(status, c);
 		status.addMsg("Status 1", JOptionPane.WARNING_MESSAGE);
-		status.addMsg("Status 2", JOptionPane.INFORMATION_MESSAGE);
+		int id2=status.addMsg("Status 2", JOptionPane.INFORMATION_MESSAGE);
 		status.addMsg("Status 3", JOptionPane.ERROR_MESSAGE);
+		status.removeMsg(id2);
 //-----------------------------------------------------------
 //		c.gridwidth = 2;
 //		c.gridx = 0;
