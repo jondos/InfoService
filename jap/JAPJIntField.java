@@ -40,6 +40,11 @@ final class JAPJIntField extends JTextField
 	{
 	}
 
+	public JAPJIntField(int i)
+	{
+		super(i);
+	}
+
 	public JAPJIntField(String string)
 	{
 		super(string);
