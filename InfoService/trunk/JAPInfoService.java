@@ -17,13 +17,13 @@ public final class JAPInfoService
 			{
 				model = JAPModel.getModel();
 				setInfoService(model.getInfoServiceHost(),model.getInfoServicePort());
-				setProxy(/*model.proxyHostName*/null,model.getProxyPort());
+				setProxy(model.getProxyHost(),model.getProxyPort());
 			}
 			
 		public int setInfoService(String host,int port)
 			{
 				String proxy=null;
-				int proxyport=0;
+ 				int proxyport=0;
 				if(conInfoService!=null)
 					{ //get the old Proxy....
 						proxy=conInfoService.getProxyHost();

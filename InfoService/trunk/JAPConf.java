@@ -110,8 +110,8 @@ public final class JAPConf extends JDialog
 				proxyCheckBox = new JCheckBox(model.getString("settingsProxyCheckBox"));
 				proxyhostTextField = new JTextField();
 				proxyportnumberTextField = new JAPJIntField();
-				proxyhostTextField.setEnabled(model.isProxyMode());
-				proxyportnumberTextField.setEnabled(model.isProxyMode());
+				proxyhostTextField.setEnabled(model.getUseProxy());
+				proxyportnumberTextField.setEnabled(model.getUseProxy());
 				proxyCheckBox.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
 						proxyhostTextField.setEnabled(proxyCheckBox.isSelected());
@@ -136,8 +136,6 @@ public final class JAPConf extends JDialog
 				JLabel proxyPortLabel = new JLabel(model.getString("settingsProxyPort"));
 	// set Font in proxyCheckBox in same color as in proxyPortLabel
 				proxyCheckBox.setForeground(proxyPortLabel.getForeground());
-				// not yet implemented --> disable it
-				proxyCheckBox.setEnabled(false);
 				p1.add(proxyPortLabel);
 				p1.add(proxyportnumberTextField);
 				p.add(p1, BorderLayout.NORTH);
@@ -471,7 +469,7 @@ public final class JAPConf extends JDialog
 				if(!checkValues())
 					return;
 				setVisible(false);
-				model.setProxyMode(proxyCheckBox.isSelected());
+				model.setUseProxy(proxyCheckBox.isSelected());
 				model.setPortNumber(Integer.parseInt(portnumberTextField.getText().trim()));
 				model.setProxy(proxyhostTextField.getText().trim(),
 											 Integer.parseInt(proxyportnumberTextField.getText().trim()));
@@ -516,7 +514,7 @@ public final class JAPConf extends JDialog
 		// listener tab
 		portnumberTextField.setText(String.valueOf(model.getPortNumber()));
 		// http proxy tab
-		proxyCheckBox.setSelected(model.isProxyMode());
+		proxyCheckBox.setSelected(model.getUseProxy());
 		proxyhostTextField.setEnabled(proxyCheckBox.isSelected());
 		proxyportnumberTextField.setEnabled(proxyCheckBox.isSelected());
 		proxyhostTextField.setText(model.getProxyHost());
