@@ -30,6 +30,7 @@ package jap.platform;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import jap.JAPConstants;
 
 /**
  * This class is instantiated by AbstractOS if the OS cannot be determined.
@@ -45,6 +46,12 @@ public class DefaultOS extends AbstractOS
 	public void openURLInBrowser(String a_url)
 	{
 		LogHolder.log(LogLevel.INFO, LogType.MISC, "DefaultOS class is uncapable of opening URLs");
+	}
+
+	public String getConfigPath()
+	{
+		return System.getProperty("user.home", "") + "/" +
+					JAPConstants.XMLCONFFN;
 	}
 
 }

@@ -85,6 +85,8 @@ import anon.util.XMLUtil;
 import forward.server.ForwardServerManager;
 import gui.JAPHtmlMultiLineLabel;
 
+import jap.platform.AbstractOS;
+
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPController implements ProxyListener, Observer
 {
@@ -253,6 +255,11 @@ public final class JAPController implements ProxyListener, Observer
 	/** Loads the Configuration.
 	 * First tries to read the configuration file in the users home directory
 	 * and then in the JAP install directory.
+	 * If no config file is found in these locations the method will look in
+	 * the operating system specific locations for configuration files
+	 * (e.g. Library/Preferences on Mac OS X or hidden in the user's home on Linux).
+	 * If none is found there either, a new one will be created there.
+	 *
 	 * The configuration is a XML-File with the following structure:
 	 *  <JAP
 	 *    version="0.17"                     // version of the xml struct (DTD) used for saving the configuration
@@ -404,6 +411,25 @@ public final class JAPController implements ProxyListener, Observer
 		}
 		if (f == null)
 		{
+			/* no config file found -> try to use the config file in the OS-specific location */
+			japConfFile = AbstractOS.getInstance().getConfigPath();
+			LogHolder.log(LogLevel.INFO, LogType.MISC,
+						  "JAPController: loadConfigFile: Trying to load configuration from: " + japConfFile);
+			try
+			{
+				f = new FileInputStream(japConfFile);
+				/* if we are successful, use this config file also for storing the configuration */
+				JAPModel.getInstance().setConfigFile(japConfFile);
+			}
+			catch (Exception e)
+			{
+				LogHolder.log(LogLevel.ERR, LogType.MISC,
+							  "JAPController: loadConfigFile: Configuration file \"" + japConfFile +
+							  "\" not found.");
+			}
+		}
+		if (f == null)
+		{
 			/* no config file found -> try to use the config file in the home directory of the user */
 			japConfFile = System.getProperty("user.home", "") + "/" + JAPConstants.XMLCONFFN;
 			LogHolder.log(LogLevel.INFO, LogType.MISC,
@@ -440,6 +466,11 @@ public final class JAPController implements ProxyListener, Observer
 							  "\" not found.");
 			}
 		}
+		if (f == null)
+		{
+			/* no config file at any position->use OS-specific path for storing a new one*/
+			JAPModel.getInstance().setConfigFile(AbstractOS.getInstance().getConfigPath());
+		}
 		if (a_strJapConfFile != null)
 		{
 			/* always try to use the config file specified on the command-line for storing the
@@ -452,10 +483,11 @@ public final class JAPController implements ProxyListener, Observer
 			if (f == null)
 			{
 				/* no config file was specified on the command line and the default config files don't
-				 * exist -> store the configuration in the home directory of the user
+				 * exist -> store the configuration in the OS-specific directory
 				 */
-				JAPModel.getInstance().setConfigFile(System.getProperty("user.home", "") + "/" +
-					JAPConstants.XMLCONFFN);
+				JAPModel.getInstance().setConfigFile(AbstractOS.getInstance().getConfigPath());
+				/*JAPModel.getInstance().setConfigFile(System.getProperty("user.home", "") + "/" +
+					JAPConstants.XMLCONFFN);*/
 			}
 		}
 		if (f != null)
