@@ -323,6 +323,7 @@ public final class Database implements Runnable
 					/* entry at the first expire position added -> notify the cleanup thread */
 					m_serviceDatabase.notify();
 				}
+        LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Added / updated entry '" + newEntry.getId() + "' in the " + m_DatabaseEntryClass.getName() + " database. Now there are " + Integer.toString(m_serviceDatabase.size()) + " entries stored in this database. The new entry has position " + Integer.toString(i) + "/" + Integer.toString(m_timeoutList.size()) + " in the database-timeout list.");
 				if (newEntry instanceof IDistributable)
 				{
 					// forward new entries
