@@ -440,6 +440,8 @@ final class JAPConf extends JDialog
 			{
 				JPanel p=new JPanel();
 				p.setLayout(new BorderLayout() );
+				
+				// Panel for Look and Feel Options
 				JPanel p1=new JPanel();
 				p1.setLayout(new GridLayout(2,2));
 				p1.setBorder( new TitledBorder(model.getString("settingsLookAndFeelBorder")) );
@@ -476,7 +478,7 @@ final class JAPConf extends JDialog
 				c.setEnabled(false);
 				p1.add(c);
 				
-				//
+				// Panel for Misc Options
 				JPanel p2=new JPanel();
 				p2.setLayout(new BorderLayout());
 				p2.setBorder( new TitledBorder(model.getString("miscconfigBorder")) );
@@ -491,9 +493,22 @@ final class JAPConf extends JDialog
 //								v.show();
 							}
 					});
-				p2.add(bttnPing, BorderLayout.NORTH);
+				JButton bttnMonitor=new JButton(model.getString("bttnMonitor"));
+				bttnMonitor.setEnabled(false);
+				bttnMonitor.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent e) {
+						model.fetchAnonServers();
+						JAPCascadeMonitorView v=new JAPCascadeMonitorView(model.getView(),model.anonServerDatabase);
+//						v.show();
+				}});
+				JPanel p22 = new JPanel();
+				p22.setLayout(new GridLayout(2,1));
+				p22.add(bttnPing);
+				p22.add(bttnMonitor);
+//				p2.add(bttnPing, BorderLayout.NORTH);
+				p2.add(p22, BorderLayout.NORTH);
 
-				// Panel for Debugging Option
+				// Panel for Debugging Options
 				JPanel p3=new JPanel();
 				p3.setLayout( new GridLayout(1,2));
 				p3.setBorder( new TitledBorder("Debugging") );

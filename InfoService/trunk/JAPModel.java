@@ -1043,6 +1043,7 @@ private final class SetAnonModeAsync implements Runnable
 																				model.getString("errorConnectingInfoServiceTitle"),
 																				JOptionPane.ERROR_MESSAGE);
 				}
+			notifyJAPObservers();
 		}
 
 	/** Performs the Versioncheck.
