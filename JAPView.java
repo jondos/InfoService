@@ -129,7 +129,7 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 			}
 		catch(Exception e)
 			{
-				if (model.debug) System.out.println("Hm.. Error by Pack - Has To be fixed!!");
+				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPView:Hm.. Error by Pack - Has To be fixed!!");
 			}
 		model.centerFrame(this);
 		toFront();
@@ -141,22 +141,42 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 		JPanel levelPanel = new JPanel();
 		levelPanel.setLayout( new BorderLayout() );
 				
+		// Own traffic situation: current # of channels
+		ownTrafficChannelsProgressBar = new 
+			JProgressBar(JProgressBar.HORIZONTAL,0, 1);
+		ownTrafficChannelsProgressBar.setStringPainted(true);
+		ownTrafficChannelsProgressBar.setBorderPainted(true);
+
+		// Own traffic situation: # of bytes transmitted
+		ownTrafficBytesLabel = new JLabel("",SwingConstants.RIGHT);
+//			JProgressBar(JProgressBar.HORIZONTAL,0, model.MAXBYTESVALUE);
+//		ownTrafficBytesProgressBar.setStringPainted(true);
+//		ownTrafficBytesProgressBar.setBorderPainted(false);
+
 		//
 		userProgressBar = new 
 			JProgressBar(JProgressBar.HORIZONTAL,0, model.MAXPROGRESSBARVALUE);
 		userProgressBar.setStringPainted(true);
-		userProgressBar.setBorderPainted(false);
+		userProgressBar.setBorderPainted(true);
 		//
 		trafficProgressBar = new 
 			JProgressBar(JProgressBar.HORIZONTAL, 0, model.MAXPROGRESSBARVALUE);
 		trafficProgressBar.setStringPainted(true);
-		trafficProgressBar.setBorderPainted(false);
+		trafficProgressBar.setBorderPainted(true);
 		//
 		protectionProgressBar = new 
 			JProgressBar(JProgressBar.HORIZONTAL, 0, model.MAXPROGRESSBARVALUE);
 		protectionProgressBar.setStringPainted(true);
-		protectionProgressBar.setBorderPainted(false);
-		//
+		protectionProgressBar.setBorderPainted(true);
+		
+		JPanel ownTrafficPanel = new JPanel();
+		ownTrafficPanel.setLayout( new GridLayout(2,2,5,5) );
+		ownTrafficPanel.setBorder( new TitledBorder(model.getString("ownTrafficBorder")) );
+		ownTrafficPanel.add(new JLabel(model.getString("ownTrafficChannels")) );
+		ownTrafficPanel.add(ownTrafficChannelsProgressBar);
+		ownTrafficPanel.add(new JLabel(model.getString("ownTrafficBytes")) );
+		ownTrafficPanel.add(ownTrafficBytesLabel);
+		
 		ano1CheckBox = new JCheckBox(model.getString("confActivateCheckBox"));
 		ano1CheckBox.setForeground(Color.red);
 		ano1CheckBox.setMnemonic(model.getString("confActivateCheckBoxMn").charAt(0));
@@ -178,26 +198,6 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 		detailsPanel.add(trafficProgressBar);
 		detailsPanel.add(new JLabel(model.getString("meterDetailsRisk")) );
 		detailsPanel.add(protectionProgressBar);
-
-		// Own traffic situation: current # of channels
-		ownTrafficChannelsProgressBar = new 
-			JProgressBar(JProgressBar.HORIZONTAL,0, 1);
-		ownTrafficChannelsProgressBar.setStringPainted(true);
-		ownTrafficChannelsProgressBar.setBorderPainted(true);
-
-		// Own traffic situation: # of bytes transmitted
-		ownTrafficBytesLabel = new JLabel("",SwingConstants.RIGHT);
-//			JProgressBar(JProgressBar.HORIZONTAL,0, model.MAXBYTESVALUE);
-//		ownTrafficBytesProgressBar.setStringPainted(true);
-//		ownTrafficBytesProgressBar.setBorderPainted(false);
-
-		JPanel ownTrafficPanel = new JPanel();
-		ownTrafficPanel.setLayout( new GridLayout(2,2,5,5) );
-		ownTrafficPanel.setBorder( new TitledBorder(model.getString("ownTrafficBorder")) );
-		ownTrafficPanel.add(new JLabel(model.getString("ownTrafficChannels")) );
-		ownTrafficPanel.add(ownTrafficChannelsProgressBar);
-		ownTrafficPanel.add(new JLabel(model.getString("ownTrafficBytes")) );
-		ownTrafficPanel.add(ownTrafficBytesLabel);
 
 		levelPanel.add(ownTrafficPanel, BorderLayout.NORTH);
 		levelPanel.add(meterPanel, BorderLayout.CENTER);
@@ -331,19 +331,15 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 		return mainPanel;
 	}
 	
-	protected void loadMeterIcons()
-		{
+	protected void loadMeterIcons() {
 		// Load Images for "Anonymity Meter"
-			meterIcons = new ImageIcon [model.METERFNARRAY.length];
-			if (model.debug) 
-				System.out.println("METERFNARRAY.length="+model.METERFNARRAY.length);
-			for (int i=0; i<model.METERFNARRAY.length; i++)
-				{
-					meterIcons[i] = model.loadImageIcon(model.METERFNARRAY[i],false);
-					if (model.debug) 
-						System.out.println("Image "+model.METERFNARRAY[i]+" loaded");
-				}
+		meterIcons = new ImageIcon [model.METERFNARRAY.length];
+		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPView:METERFNARRAY.length="+model.METERFNARRAY.length);
+		for (int i=0; i<model.METERFNARRAY.length; i++) {
+			meterIcons[i] = model.loadImageIcon(model.METERFNARRAY[i],false);
+			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPView:Image "+model.METERFNARRAY[i]+" loaded");
 		}
+	}
 	
     public ImageIcon setMeterImage()
 			{
@@ -404,8 +400,12 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 			{
 				JOptionPane.showMessageDialog(
 					this, 
-					model.TITLE + "\n" + model.getString("infoText") + "\n\n" + model.AUTHOR+
-						"\n"+model.getString("version")+": "+JAPVersion.getCurrentVersion()+"\n", 
+					model.TITLE + "\n" + 
+					 model.getString("infoText") + "\n\n" + 
+					 model.AUTHOR + "\n\n" +
+					 model.getString("infoEMail") + "\n" + 
+					 model.getString("infoURL") + "\n\n" + 
+					 model.getString("version")+": "+JAPVersion.getCurrentVersion()+"\n\n", 
 					model.getString("aboutBox"),
 					JOptionPane.INFORMATION_MESSAGE);
 			}
@@ -467,7 +467,7 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 	
 	public void valuesChanged (Object o)
 		{
-			if (model.debug) System.out.println("view.valuesChanged()");
+			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPView:view.valuesChanged()");
 			updateValues();
 		}
 

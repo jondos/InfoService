@@ -1,85 +1,96 @@
-import java.awt.BorderLayout;
-import java.awt.Cursor;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Toolkit;
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
+import java.awt.*;
+import java.awt.event.*;
 import javax.swing.*;
+import javax.swing.border.*;
+import java.awt.*;
 import java.net.URL;
 import java.net.MalformedURLException;
-import java.io.IOException;
-import javax.swing.text.Document;
-import javax.swing.event.HyperlinkListener;
-import javax.swing.event.HyperlinkEvent;
+import java.io.*;
+import javax.swing.text.*;
+import javax.swing.event.*;
 
 /* classes modified from Swing Example "Metalworks" */
 
-public final class JAPHelp extends JDialog implements ActionListener 
-	{
+/* Fuer Stefan:
+Leider hat die von Dir geaenderte Version nicht mehr bei mir funktioniert.
+Ich habe deshalb (mit Muehe) wieder eine funktionierende Version gebastelt. 
+Wir sollten zukuenftig ueber groessere Aenderungen sprechen, bevor sie
+getan werden. 
+*/
+
+public class JAPHelp extends JDialog implements ActionListener {
     private JAPModel model;
-    private String helpPath;
-    private String helpLang;
+    private String helpPath = " ";
+    private String helpLang = " ";
     private JComboBox language;
-    private HtmlPane html;
+    HtmlPane html;
 
-    public JAPHelp(JFrame f)
-			{
-				super(f, JAPModel.getString("helpWindow"), false);
-				model=JAPModel.getModel();
-				JPanel container = new JPanel();
-				container.setLayout( new BorderLayout() );
-	
-				helpPath = model.getString("helpPath1");
-	
-				html = new HtmlPane(helpPath);
+    public JAPHelp(JFrame f) {
+	super(f, JAPModel.getString("helpWindow"), false);
+	model = JAPModel.getModel();
 
-				JPanel buttonPanel = new JPanel();
-				buttonPanel.setLayout ( new FlowLayout(FlowLayout.RIGHT) );
+	JPanel container = new JPanel();
+	container.setLayout( new BorderLayout() );
 	
-				language = new JComboBox();
-				for (int i = 1; i < model.MAXHELPLANGUAGES; i++)
-					{
-				    try { 
-									helpPath = model.getString("helpPath"+String.valueOf(i)); 
-									helpLang = model.getString("lang"+String.valueOf(i));
-									language.addItem(helpLang);
-								}
-						catch (Exception e) 
-							{
-							}
-					}
-				language.addActionListener(this);
-				buttonPanel.add( language );
-				buttonPanel.add(new JLabel("   "));
-				JButton close = new JButton(model.getString("closeButton"));
-				close.addActionListener(new ActionListener()
-					{
-						public void actionPerformed(ActionEvent e)
-							{
-								ClosePressed();
-							}
-					});
-				buttonPanel.add( close );
-				getRootPane().setDefaultButton(close);
-				buttonPanel.add(new JLabel("   "));
+	/* works but makes no sens to catch here
+	try { helpPath = model.getString("helpPath"); }
+	catch (Exception e) { helpPath = model.HELPPATH; }
+	*/
+	helpPath = model.getString("helpPath1");
+	
+	html = new HtmlPane(helpPath);
 
-				container.add(html, BorderLayout.CENTER);
-				container.add(buttonPanel, BorderLayout.SOUTH);
-				getContentPane().add(container);
-				//setBackground(getContentPane().getBackground()); //a stupid but schönermach bugfix...
-				pack();
-				model.centerFrame(this);
+	JPanel buttonPanel = new JPanel();
+	buttonPanel.setLayout ( new FlowLayout(FlowLayout.RIGHT) );
+	
+	language = new JComboBox();
+	for (int i = 1; i < model.MAXHELPLANGUAGES; i++) {
+	    try { 
+		helpPath = model.getString("helpPath"+String.valueOf(i)); 
+		helpLang = model.getString("lang"+String.valueOf(i));
+		// This checks if the entry exists in the properties file
+		// if yes, the item will be added
+		if (( helpLang.equals("lang"+String.valueOf(i)) )!= true)
+		    language.addItem(helpLang);
+	    }
+	    catch (Exception e) { ; }
+	}
+	language.addActionListener(this);
+	buttonPanel.add( language );
+	buttonPanel.add(new JLabel("   "));
+	
+	JButton close = new JButton(model.getString("closeButton"));
+	close.addActionListener(new ActionListener() {
+	                       public void actionPerformed(ActionEvent e) {
+				   ClosePressed();
+			       }});
+	buttonPanel.add( close );
+	getRootPane().setDefaultButton(close);
+	buttonPanel.add(new JLabel("   "));
+
+	container.add(html, BorderLayout.CENTER);
+	container.add(buttonPanel, BorderLayout.SOUTH);
+	getContentPane().add(container);
+	pack();
+	centerDialog();
     }
 
+    protected void centerDialog() {
+        Dimension screenSize = this.getToolkit().getScreenSize();
+	Dimension ownSize = this.getSize();
+	this.setLocation(
+		(screenSize.width  - ownSize.width )/2,
+		(screenSize.height - ownSize.height)/2
+	);
+    }
     
     public Dimension getPreferredSize()
-			{
-				Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
-				d.width = Math.min(d.width - 50, 400);
-				d.height = Math.min(d.height - 80, 300);
-				return (d);
-			}
+    {
+	Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
+	d.width = Math.min(d.width - 50, 400);
+	d.height = Math.min(d.height - 80, 300);
+	return (d);
+    }
     
     public void actionPerformed(ActionEvent e) {
 	// for Language Combobox only
@@ -93,7 +104,7 @@ public final class JAPHelp extends JDialog implements ActionListener
     }
 }
 
-
+/*
 final class HtmlPane extends JScrollPane implements HyperlinkListener 
 	{
     private JEditorPane html;
@@ -110,11 +121,12 @@ final class HtmlPane extends JScrollPane implements HyperlinkListener
 
 						JViewport vp = getViewport();
 						vp.add(html);
-						cursor=html.getCursor();
+//						cursor=html.getCursor();
 					}
 				catch (Exception e)
 					{
-						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"Exception: " + e);
+						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPHelp:HtmlPane(constructor):Exception: " + e);
+						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"URL was: " + fn);
 					}	
 			}
     
@@ -127,7 +139,8 @@ final class HtmlPane extends JScrollPane implements HyperlinkListener
 					}
 				catch (Exception e)
 					{
-						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"Exception: " + e);
+						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPHelp:load:Exception: " + e);
+						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"URL was: " + fn);
 					}
 			}
 
@@ -192,3 +205,103 @@ final class HtmlPane extends JScrollPane implements HyperlinkListener
 					}
 			}
  }
+*/
+
+
+class HtmlPane extends JScrollPane implements HyperlinkListener {
+    JEditorPane html;
+
+    public HtmlPane(String fn) {
+	try {
+	    File f = new File (fn);
+	    String s = f.getAbsolutePath();
+	    s = "file:"+s;
+	    URL url = new URL(s);
+	    html = new JEditorPane(s);
+	    html.setEditable(false);
+	    html.addHyperlinkListener(this);
+
+	    JViewport vp = getViewport();
+	    vp.add(html);
+	} catch (MalformedURLException e) {
+	    JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPHelp:Malformed URL: " + e);
+	} catch (IOException e) {
+	    JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPHelp:IOException: " + e);
+	}	
+    }
+    
+    public void load(String fn) {
+	try {
+	    File f = new File (fn);
+	    String s = f.getAbsolutePath();
+	    s = "file:"+s;
+	    URL url = new URL(s);
+//	    html = new JEditorPane(s);
+//	    html.setEditable(false);
+//	    html.addHyperlinkListener(this);
+
+//	    JViewport vp = getViewport();
+//	    vp.add(html);
+	
+//Entweder:	    
+//	    html.setPage(s);
+//Oder:
+	    linkActivated(url);
+	    
+	} catch (MalformedURLException e) {
+	    JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPHelp:Malformed URL: " + e);
+	} catch (IOException e) {
+	    JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPHelp:IOException: " + e);
+	}	
+    }
+
+    public void hyperlinkUpdate(HyperlinkEvent e) {
+	if (e.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
+	    linkActivated(e.getURL());
+	}
+    }
+
+    protected void linkActivated(URL u) {
+	Cursor c = html.getCursor();
+	Cursor waitCursor = Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR);
+	html.setCursor(waitCursor);
+	SwingUtilities.invokeLater(new PageLoader(u, c));
+    }
+
+    class PageLoader implements Runnable {
+	
+	PageLoader(URL u, Cursor c) {
+	    url = u;
+	    cursor = c;
+	}
+
+        public void run() {
+	    if (url == null) {
+		// restore the original cursor
+		html.setCursor(cursor);
+
+		// PENDING(prinz) remove this hack when 
+		// automatic validation is activated.
+		Container parent = html.getParent();
+		parent.repaint();
+	    } else {
+		Document doc = html.getDocument();
+		try {
+		    html.setPage(url);
+		} catch (IOException ioe) {
+		    html.setDocument(doc);
+		    getToolkit().beep();
+		} finally {
+		    // schedule the cursor to revert after
+		    // the paint has happended.
+		    url = null;
+		    SwingUtilities.invokeLater(this);
+		}
+	    }
+	}
+
+	URL url;
+	Cursor cursor;
+    }
+    
+}

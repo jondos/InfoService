@@ -4,7 +4,6 @@ import java.io.PrintWriter;
  * It provides different debug levels, one for GUI (Graphical User Interface) related
  * messages, and one for NET (Networking) related messages.
  * 
- * @author  Hannes Federrath (2000-Jun-26)
  */
 public final class JAPDebug
 	{
@@ -19,7 +18,7 @@ public final class JAPDebug
     /** Indicates a misc message (binary: <code>00001000</code>) */
     public static int MISC = 8; 
 
-		/** Indicates the type of message*/
+    /** Indicates the type of message*/
     public static int EMERG = 7; 
     public static int ALERT = 6; 
     public static int CRIT = 5; 
@@ -29,17 +28,19 @@ public final class JAPDebug
     public static int INFO = 1; 
     public static int DEBUG = 0; 
 
-		private int debugtype;
+    private int debugtype;
+    
     private PrintWriter[] outStreams;
 		
     private static JAPDebug debug; 
-		/** Creates the object. The debug level must be set with 
+
+    /** Creates the object. The debug level must be set with 
      *  <code>setDebuglevel(int level)</code>.
      */
     public JAPDebug ()
 			{
 				debug=this;
-				debugtype=0;
+				debugtype=GUI+NET+THREAD+MISC;
 				outStreams=new PrintWriter[8];
 				for(int i=0;i<8;i++)
 					outStreams[i]=new PrintWriter(System.out);
@@ -53,10 +54,11 @@ public final class JAPDebug
      */
     public static void out(int level,int type, String txt)
 			{
-				if(level<0||level>JAPDebug.EMERG||txt==null||debug==null||debug.outStreams[level]==null)
-					return;
+//				if(level<0||level>JAPDebug.EMERG||txt==null||debug==null||debug.outStreams[level]==null)
+//					return;
 				if ( (debug.debugtype & type) !=0 ) 
-					debug.outStreams[level].println("JAPDebug: "+txt);
+//					debug.outStreams[level].println("JAPDebug: "+txt);
+				    System.err.println("JAPDebug: "+txt);
 			}
     
     /** Set the debugging type. To activate more than one type you simly add 
@@ -73,25 +75,29 @@ public final class JAPDebug
      * @param out The assoziated otuput stream (maybe null)
     * @return true if succesful, false otherwise 
 		*/
-    public static boolean setLevelOutputStream(int level,PrintWriter out)
-			{
+    public static boolean setLevelOutputStream(int level,PrintWriter out) {
 				if(level<0 || level>JAPDebug.EMERG)
 					return false;
 				debug.outStreams[level]=out;
 				return true;
-			}
 
-		/** Prints the current debug type. This is for testing purposes only. */
-    public static void printDebugType()
-			{
-        System.out.println("JAPDebug: debugtype="+Integer.toString(debug.debugtype));
-			}
+
+    }
+ 	
+
+    /** Prints the current debug type. This is for testing purposes only. */
+    public static void printDebugType() {
+//        System.out.println("JAPDebug: debugtype="+Integer.toString(debug.debugtype));
+        System.out.println("JAPDebug: debugtype="+debug.debugtype);
+    }
     
     /** Provides a simle self test of the debugging functions. */
     public static void main() {
 	
 	System.out.println("JAPDebug: Selftest 1: GUI+NET");
-//	d.setDebuglevel(d.GUI+d.NET);
+
+//	JAPDebug.setDebuglevel(d.GUI+d.NET);
+
 	JAPDebug.printDebugType();
 	JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"This is a GUI related debug message");
 	JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"This is a NET related debug message");
