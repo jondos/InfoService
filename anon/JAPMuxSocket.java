@@ -71,6 +71,7 @@ final class JAPMuxSocket implements Runnable
 		private final static int RSA_SIZE=128;
 		private final static short CHANNEL_DATA=0;
 		private final static short CHANNEL_CLOSE=1;
+		private final static short CHANNEL_OPEN=8; //must be 0 in final version!
 	/*	#define CHANNEL_DATA		0x00
 	#define CHANNEL_OPEN		0x00
 	#define CHANNEL_CLOSE		0x01
@@ -476,6 +477,7 @@ final class JAPMuxSocket implements Runnable
 					{
 						if(!m_bIsConnected)
 							return E_NOT_CONNECTED;
+						short channelMode=CHANNEL_DATA;
 						if(buff==null&&len==0)
 							{
 								outDataStream.writeInt(channel);
@@ -522,6 +524,7 @@ final class JAPMuxSocket implements Runnable
 										entry.arCipher[i].encryptAES(outBuff,RSA_SIZE,buff,RSA_SIZE,DATA_SIZE-RSA_SIZE);
 										size-=KEY_SIZE;
 									}
+							  channelMode=CHANNEL_OPEN;
 							}
 						else
 							{
@@ -534,7 +537,7 @@ final class JAPMuxSocket implements Runnable
 								entry.arCipher[0].encryptAES(outBuff,0,buff,0,DATA_SIZE); //something throws a null pointer....
 							}
 						outDataStream.writeInt(channel);
-						outDataStream.writeShort(CHANNEL_DATA);
+						outDataStream.writeShort(channelMode);
 						outDataStream.write(buff,0,DATA_SIZE);
 						outDataStream.flush();
 						JAPAnonService.increaseNrOfBytes(len);

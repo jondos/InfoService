@@ -457,20 +457,23 @@ final class JAPConf extends JDialog
 				m_comboMixCascade.addActionListener(new ActionListener() {
 							public void actionPerformed(ActionEvent e) {
 						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPConf:Item " + m_comboMixCascade.getSelectedIndex() + " selected");
-						if (m_comboMixCascade.getSelectedIndex() > 0) {
-							m_strMixName = ((AnonServerDBEntry)m_Model.anonServerDatabase.elementAt(m_comboMixCascade.getSelectedIndex()-1)).getName();
-							m_strOldMixName = m_strMixName;
-							m_tfMixHost.setText(
-							   ((AnonServerDBEntry)m_Model.anonServerDatabase.elementAt(m_comboMixCascade.getSelectedIndex()-1)).getHost()   );
-							m_tfMixPortNumber.setText( String.valueOf(
-							   ((AnonServerDBEntry)m_Model.anonServerDatabase.elementAt(m_comboMixCascade.getSelectedIndex()-1)).getPort() ) );
-							int i = ((AnonServerDBEntry)m_Model.anonServerDatabase.elementAt(m_comboMixCascade.getSelectedIndex()-1)).getSSLPort();
-							if (i == -1)
-								m_tfMixPortNumberSSL.setText("");
-							else
-								m_tfMixPortNumberSSL.setText( String.valueOf(i) );
+						if (m_comboMixCascade.getSelectedIndex() > 0)
+						{
+							AnonServerDBEntry entry=m_Model.anonServerDatabase.getEntry(m_comboMixCascade.getSelectedIndex()-1);
+							if(entry!=null)
+								{
+									m_strMixName = entry.getName();
+									m_strOldMixName = m_strMixName;
+									m_tfMixHost.setText(entry.getHost());
+									m_tfMixPortNumber.setText(Integer.toString(entry.getPort()));
+									int i = entry.getSSLPort();
+									if (i == -1)
+										m_tfMixPortNumberSSL.setText("");
+									else
+										m_tfMixPortNumberSSL.setText(Integer.toString(i));
+								}
 						}
-				}});
+						}});
 				bg.add(m_rbMixStep1);
 				bg.add(m_rbMixStep2);
 				bg.add(m_rbMixStep3);

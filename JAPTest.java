@@ -1,28 +1,28 @@
 /*
-Copyright (c) 2000, The JAP-Team 
+Copyright (c) 2000, The JAP-Team
 All rights reserved.
-Redistribution and use in source and binary forms, with or without modification, 
+Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
 
-	- Redistributions of source code must retain the above copyright notice, 
+	- Redistributions of source code must retain the above copyright notice,
 	  this list of conditions and the following disclaimer.
 
-	- Redistributions in binary form must reproduce the above copyright notice, 
-	  this list of conditions and the following disclaimer in the documentation and/or 
+	- Redistributions in binary form must reproduce the above copyright notice,
+	  this list of conditions and the following disclaimer in the documentation and/or
 		other materials provided with the distribution.
 
-	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors 
-	  may be used to endorse or promote products derived from this software without specific 
-		prior written permission. 
+	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
+	  may be used to endorse or promote products derived from this software without specific
+		prior written permission.
 
-	
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS 
-OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY 
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS
+OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
 AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS
 BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, 
-OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER 
-IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY 
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
 import java.security.SecureRandom;
@@ -76,7 +76,7 @@ import java.util.zip.*;
 //import cryptix.asn1.encoding.*;
 final public class JAPTest
 {
-	
+
 	public static void main(String argc[])
 		{
 	/*	try{FileOutputStream fio=new FileOutputStream("test.test");
@@ -119,7 +119,7 @@ final public class JAPTest
 			io.close();}
 			catch(Exception z)
 			{z.printStackTrace();}
-		*/	
+		*/
 	//	readCertJCE();
 //		testCert();
 //		System.getProperties().list(System.out);
@@ -136,24 +136,25 @@ final public class JAPTest
 											 {
 												e.printStackTrace();
 											 }
-	*/	
+	*/
 		//testJarDiff();
 //		ASN1Test();
 	//	JAPTest t=new JAPTest();
 	//	t.testJarVerify();
 //		ASN1Test();
-		
+
 		try{
 	//		ServerSocket s=new ServerSocket(5002);
 	//		Socket t=s.accept();
 	//		Thread.sleep(50000);
-			writeXml();
+	//		writeXml();
+		testMixe();
 		}catch(Exception e)
 		{
 		}
 		System.exit(0);
 		}
-	
+
 	public static void networkTest2()
 		{
 		try{
@@ -188,7 +189,7 @@ final public class JAPTest
 		}
 		catch(Exception e){e.printStackTrace();}
 		}
-	
+
 	public static void testCertAba()
 	{
 		try
@@ -207,7 +208,7 @@ final public class JAPTest
 			e.printStackTrace();
 											 }
 	}
-	
+
 	public static void writeXml()
 		{
 			try {
@@ -226,9 +227,9 @@ final public class JAPTest
 				e.printStackTrace();
 			}
 		}
-	
-	
-	
+
+
+
 	public static void testCert()
 		{
 		try{
@@ -264,7 +265,7 @@ final public class JAPTest
 			FileOutputStream out=new FileOutputStream("base64.cer");
 			c.encode(out,JAPCertificate.BASE64);
 			out.close();
-	*/		
+	*/
 		//	Security.addProvider(new CryptixCrypto());
 		/*	Cipher cipherEnc=Cipher.getInstance("Blowfish/ECB/None");
 			Cipher cipherDec=Cipher.getInstance("Blowfish/ECB/None");
@@ -284,28 +285,28 @@ final public class JAPTest
 			cipherDec.doFinal(buff);
 			for(int i=0;i<buff.length;i++)
 				System.out.print(buff[i]+":");
-			
+
 		*/		FileInputStream f=new FileInputStream("ldbsh.cer");
 			X509Cert cert=new X509Cert();
 			cert.decode(f);
 			System.out.println(cert.getFormat());
 			System.out.println(cert.getGuarantor().getName());
-	//		System.out.println(cert.getIssuerName().getState());		
-			System.out.println(cert.getPublicKey().getAlgorithm());	
+	//		System.out.println(cert.getIssuerName().getState());
+			System.out.println(cert.getPublicKey().getAlgorithm());
 			System.out.println(cert.getPublicKey().getFormat());
 //			f=new FileInputStream("test.p7b");
 /*			PKCS8Key p8;
 			p8.decode(
 			PKCS7 p7=new PKCS7(f);
 			System.out.println(p7.toString());
-	*/	
+	*/
 			X509Cert master=new X509Cert();
 			f=new FileInputStream("jap.cer");
 			master.decode(f);
 	//		PublicKey k=cert.getPublicKey();
 	//		RSAPublicKey kp=transformKey(k);
 		//	sun.security.x509.X509Key kx=(sun.security.x509.X509Key)k;
-		
+
 		//	master.verify(kp);
 		//	byte[] key=master.getPublicKey().getEncoded();
 
@@ -313,7 +314,7 @@ final public class JAPTest
 				System.out.print(Integer.toHexString((key[i]&0x00FF))+":");
 	*///		DerInputBuffer derbuff=new DerInputBuffer();
 		//	derbuff.read;
-				
+
 	/*			DerInputStream in=new DerInputStream(key);
 				System.out.println(in.available());
 				System.out.println(in.toString());
@@ -332,14 +333,14 @@ final public class JAPTest
 				System.out.println(n.toString());
 				BigInteger e=d3.data.getInteger().toBigInteger();
 				System.out.println(e.toString());
-				
+
 			System.out.println(master.getFormat());
 			System.out.println(master.getGuarantor().getName());
-	//		System.out.println(master.getIssuerName().getState());		
-			System.out.println(master.getPublicKey().getAlgorithm());	
+	//		System.out.println(master.getIssuerName().getState());
+			System.out.println(master.getPublicKey().getAlgorithm());
 			System.out.println(master.getPublicKey().getFormat());
-		
-			
+
+
 			class ck implements RSAPublicKey
 				{
 				    public String getAlgorithm()
@@ -379,15 +380,15 @@ final public class JAPTest
 			master.verify(h);
 			cert.verify(h);*/
 			System.exit(0);
-		
+
 		}
 		catch(Exception z)
 		{
 			z.printStackTrace();
 		}
 		}
-	
-	
+
+
 /*	public static void readCertJCE()
 	{
 		try{
@@ -403,7 +404,7 @@ final public class JAPTest
 		{
 			e.printStackTrace();
 		}
-	
+
 	}
 	*/
 	public static void readCerts()
@@ -438,8 +439,8 @@ final public class JAPTest
 			e.printStackTrace();
 		}
 	}
-	
-	
+
+
 	static void readDSAPrivKey()
 	{
 		try{
@@ -450,15 +451,15 @@ final public class JAPTest
 		DerInputStream in=new DerInputStream(buff);
 		DerValue d=in.getDerValue();
 		System.out.println(d.tag);
-		
+
 		DerInputStream in1=d.data;
 		DerValue d1 =in1.getDerValue();
 		System.out.println(d1.tag);
 		System.out.println(d1.toString());
-		
+
 		BigInt b=d1.getInteger();
 		System.out.println(b.toBigInteger().toString(16));
-		
+
 		DerValue d2 =in1.getDerValue();
 		System.out.println(d2.tag);
 		System.out.println(d2.toString());
@@ -467,19 +468,19 @@ final public class JAPTest
 		System.out.println(d2.toString());
 		byte[] bu=d2.getOctetString();
 		System.out.println(bu.length);
-		
+
 		in1=new DerInputStream(bu);
 		d1=in1.getDerValue();
 		System.out.println(d1.toString());
 		BigInt b3=d1.getInteger();
 		System.out.println(b3.toBigInteger().toString(16));
 		System.exit(0);
-		
+
 		/*DerInputStream in2=d2.data;
 		DerValue d3 =in2.getDerValue();
 		System.out.println(d3.tag);
 		System.out.println(d3.toString());
-		
+
 		d3 =in2.getDerValue();
 		System.out.println(d3.toString());
 		in2=d3.data;
@@ -494,7 +495,7 @@ final public class JAPTest
 		BigInt b1=d3.getInteger();
 		System.out.println(b1.toBigInteger().toString(16));
 		*/
-		
+
 		}
 		catch(Exception e)
 		{
@@ -521,11 +522,11 @@ final public class JAPTest
 				b1[t]=0;
 			si.update(b1);
 			System.out.println(si.verify(buff));
-			System.exit(0);			
+			System.exit(0);
 			DerInputStream in=new DerInputStream(buff);
 		DerValue d=in.getDerValue();
 		System.out.println(d.toString());
-		
+
 		DerInputStream in1=d.data;
 		DerValue d1 =in1.getDerValue();
 		System.out.println(d1.toString());
@@ -534,7 +535,7 @@ final public class JAPTest
 		System.exit(0);
 		BigInt b=d1.getInteger();
 		System.out.println(b.toBigInteger().toString(16));
-		
+
 		DerValue d2 =in1.getDerValue();
 		System.out.println(d2.tag);
 		System.out.println(d2.toString());
@@ -543,19 +544,19 @@ final public class JAPTest
 		System.out.println(d2.toString());
 		byte[] bu=d2.getOctetString();
 		System.out.println(bu.length);
-		
+
 		in1=new DerInputStream(bu);
 		d1=in1.getDerValue();
 		System.out.println(d1.toString());
 		BigInt b3=d1.getInteger();
 		System.out.println(b3.toBigInteger().toString(16));
 		System.exit(0);
-		
+
 		/*DerInputStream in2=d2.data;
 		DerValue d3 =in2.getDerValue();
 		System.out.println(d3.tag);
 		System.out.println(d3.toString());
-		
+
 		d3 =in2.getDerValue();
 		System.out.println(d3.toString());
 		in2=d3.data;
@@ -570,7 +571,7 @@ final public class JAPTest
 		BigInt b1=d3.getInteger();
 		System.out.println(b1.toBigInteger().toString(16));
 		*/
-		
+
 		}
 		catch(Exception e)
 		{
@@ -591,7 +592,7 @@ final public class JAPTest
             // XXX: check for valid AlgOID
 
            // AsnObject uh = seq.get(0);
- 
+
             AsnBitString bs = (AsnBitString)seq.get(1);
             ais = new AsnInputStream( bs.toByteArray() );
 
@@ -608,7 +609,7 @@ final public class JAPTest
         } catch(ClassCastException e) {
             throw new InvalidKeySpecException(
                 "Unexpected ASN.1 type detected: " + e.getMessage() );
-            
+
         } catch(IOException e) {
             throw new InvalidKeySpecException("Could not parse key.");
         }
@@ -629,10 +630,10 @@ final public class JAPTest
 					buff[16]=(byte)(localPort>>8);
 					buff[17]=(byte)(localPort&0xFF);
 					//InetAddress returnAddr=oSocket.getLocalAddress();
-					
+
 					System.arraycopy(InetAddress.getLocalHost().getAddress(),0,buff,12,4);
 					DatagramPacket oPacket=new DatagramPacket(buff,4+8+6);
-					InetAddress addr=InetAddress.getAllByName("anon.inf.tu-dresden.de")[0];	
+					InetAddress addr=InetAddress.getAllByName("anon.inf.tu-dresden.de")[0];
 					oPacket.setAddress(addr);
 					oPacket.setPort(8001);
 					oSocket.send(oPacket);
@@ -702,7 +703,7 @@ final public class JAPTest
 public static void testAES()
 {
 	try{
-		
+
 			JAPDebug d=JAPDebug.create();
 			JAPSymCipher c=new JAPSymCipher();
 			byte[]k=new byte[16];
@@ -724,7 +725,7 @@ public static void testAES()
 public static void testJarDiff()
 {
 	try{
-			ZipFile zold=null;//new ZipInputStream(new FileInputStream("g:/projects/jap/classes/JAPold.jar"));	
+			ZipFile zold=null;//new ZipInputStream(new FileInputStream("g:/projects/jap/classes/JAPold.jar"));
 			ZipInputStream zdiff=null;//new ZipInputStream(new FileInputStream("g:/projects/jap/classes/test.jar"));
 			ZipOutputStream znew=null;//new ZipOutputStream(new FileOutputStream("g:/projects/jap/classes/JAPnew.jar"));
 			ZipEntry ze=null;
@@ -738,7 +739,7 @@ public static void testJarDiff()
 					oldnames.put(ze.getName(),ze.getName());
 				}
 			zdiff=new ZipInputStream(new FileInputStream("g:/projects/jap/classes/test.jar"));
-			znew=new ZipOutputStream(new FileOutputStream("g:/projects/jap/classes/JAPnew.jar"));		
+			znew=new ZipOutputStream(new FileOutputStream("g:/projects/jap/classes/JAPnew.jar"));
 			znew.setLevel(9);
 			byte[] b=new byte[5000];
 			while((ze=zdiff.getNextEntry())!=null)
@@ -777,7 +778,7 @@ public static void testJarDiff()
 									else if(s.equalsIgnoreCase("move"))
 										System.out.println("move "+st.nextToken());
 									else
-										System.out.println("unkown: "+s);										
+										System.out.println("unkown: "+s);
 								}
 						}
 					zdiff.closeEntry();
@@ -813,9 +814,9 @@ public static void testJarDiff()
 					}
 					in.close();
 					znew.closeEntry();
-					
+
 				}
-			
+
 			znew.finish();
 			znew.flush();
 			znew.close();
@@ -838,7 +839,7 @@ public static void testJarDiff()
 		public MyDSAPublicKey(byte[] encKey)
 		{
 			try{
-			
+
 			enc=encKey;
 			ByteArrayInputStream bin=new ByteArrayInputStream(encKey);
 			ASNCoder bc=BaseCoder.getInstance("DER");
@@ -846,7 +847,7 @@ public static void testJarDiff()
 			ASNInteger P=new ASNInteger(true);
 			ASNInteger Q=new ASNInteger(true);
 			ASNInteger G=new ASNInteger(true);
-	
+
 			ASNSequence dsaparameters=new ASNSequence(true);
 			dsaparameters.addComponent("p",P);
 			dsaparameters.addComponent("q",Q);
@@ -856,11 +857,11 @@ public static void testJarDiff()
 			ASNObject algorithmid=new ASNObjectIdentifier(true);
 			algorithmidentifier.addComponent("algorithm",algorithmid);
 			algorithmidentifier.addComponent("parameters",dsaparameters);
-			
+
 			ASNSequence publickey=new ASNSequence(true);
 			publickey.addComponent("algorithm",algorithmidentifier);
 			publickey.addComponent("publickey",new ASNBitString(true));
-			
+
 			bc.visit(publickey);
 			byte[] pk=(byte[])publickey.getComponent("publickey").getValue();
 			ASNInteger Y=new ASNInteger(true);
@@ -871,18 +872,18 @@ public static void testJarDiff()
 			p=(BigInteger)P.getValue();
 			q=(BigInteger)Q.getValue();
 			g=(BigInteger)G.getValue();
-		
+
 			//DerValue der=new DerValue(pk);
 			//System.out.println(der);
-			
-			
+
+
 			}
 			catch(Exception e)
 			{
 				e.printStackTrace();
 			}
 		}
-		
+
 		public BigInteger getY(){return y;}
 		public BigInteger getP(){return p;}
 		public BigInteger getQ(){return q;}
@@ -943,7 +944,7 @@ public void testJarVerify()
 		}
 		JAPCertificate jc=new JAPCertificate();
 		jc.decode(new FileInputStream("H:/jap.cer"));
-		
+
 		Signature js=Signature.getInstance("DSA");
 		PublicKey ke=jc.getPublicKey();
 		MyDSAPublicKey kd=new MyDSAPublicKey(ke.getEncoded());
@@ -951,20 +952,20 @@ public void testJarVerify()
 	//	kg.initialize(512);
 	//	ke=kg.generateKeyPair().getPublic();
 	//	System.out.println(ke.getAlgorithm().toString());
-	
- 		
+
+
 		js.initVerify(kd);
 		js.update(japsf,0,sflen);
 		byte[] sig=new byte[46];
 		System.arraycopy(japdsa,p-46,sig,0,46);
 		System.out.println(js.verify(sig));
-		
+
 	}
 	catch(Exception e)
 	{
 		e.printStackTrace();
 	}
-	
+
 }
 
 public static void ASN1Test()
@@ -972,14 +973,14 @@ public static void ASN1Test()
 	try{
 //		Parser parser = new Parser(new FileInputStream("h:/cryptix.asn"));
  //   parser.Main(true); // without tracing
-    
+
     ASNObject x509 = (ASNObject)
        Class.forName("cryptix.x509.Certificate").newInstance();
 		FileInputStream fis = new FileInputStream("h:/jap.cer");
     ASNCoder der = BaseCoder.getInstance("DER");
     der.init(fis);
     x509.code(der);
-    
+
 //Obtain the signature's algorithm OID used in the TBSCertificate part of this certificate:
 
     ASNObject tbsCertificate = x509.getComponent("tbsCertificate");
@@ -988,7 +989,7 @@ public static void ASN1Test()
     String oid = (String) algorithm.getValue();
 
     System.out.println("Issuer's signature algorithm OID is: "+oid);
-		
+
 	//	algorithm.setValue("1.3.14.3.2.13");
 	//	oid = (String) algorithm.getValue();
 	//	System.out.println("Issuer's signature algorithm OID is: "+oid);
@@ -998,7 +999,7 @@ public static void ASN1Test()
         Class.forName("cryptix.x509.PackageProperties").newInstance();
     System.out.println("OID "+oid+" is assigned to \""+
         module.getOID(oid)+"\"...");
-    
+
 
 
     ASNObject version = tbsCertificate.getComponent("version");
@@ -1009,7 +1010,7 @@ public static void ASN1Test()
     ASNCoder der1 = BaseCoder.getInstance("DER");
     der1.init(fos);
     x509.code(der1);
-    
+
 
 	}
 	catch(Exception ex)
@@ -1018,4 +1019,112 @@ public static void ASN1Test()
 	}
 
 }*/
+
+	static class MixTestWorkerThreadSender extends Thread
+		{
+			Socket m_Socket;
+			public MixTestWorkerThreadSender(Socket s)
+				{
+				  m_Socket=s;
+				}
+			public void run()
+				{
+					try{
+							OutputStream o=m_Socket.getOutputStream();
+							byte[] buff=new byte[900];
+							for(int i=0;i<buff.length;i++)
+								buff[i]='A';
+					while(true)
+						{
+							o.write(buff);
+						  Thread.sleep((int)(Math.random()*100));
+						}
+						}
+						catch(Exception e)
+							{
+							}
+				}
+		}
+
+	static class MixTestWorkerThread implements Runnable
+		{
+			public void run()
+				{
+					System.out.println("Worker thread started!");
+					try{
+					while(true)
+						{
+						  Thread.sleep((int)(Math.random()*1000.0));
+						  Socket s=null;
+							try{
+							s=new Socket("localhost",4002);
+							}
+							catch(Exception e){
+							continue;}
+							InputStream in=s.getInputStream();
+							byte[] buff=new byte[900];
+							new MixTestWorkerThreadSender(s).start();
+							int len=0;
+							try{
+							while(len!=-1)
+							{
+									int aktLen=0;
+									while(aktLen<buff.length&&(len=in.read(buff,aktLen,buff.length-aktLen))>0)
+										{
+											aktLen+=len;
+										}
+										if(len!=-1)
+										{
+									if(aktLen!=buff.length)
+										{
+											System.out.println("Not all read Error! Read: "+Integer.toString(aktLen));
+										}
+									else
+										for(int i=0;i<buff.length;i++)
+											{
+												if(buff[i]!='A')
+													{
+														String st=new String(buff);
+														System.out.println("Error!: "+st);
+													}
+											}
+										}
+									}
+									}
+									catch(Exception e)
+										{
+										}
+							try{
+							in.close();
+							s.close();}
+							catch(Exception e){}
+						}
+
+						}
+						catch(Exception e)
+							{
+								////e.printStackTrace();
+							}
+					System.out.println("Worker thread finished!");
+				}
+		}
+	public static void testMixe()
+		{
+			try{
+			Thread[] threads=new Thread[10];
+			for(int i=0;i<10;i++)
+				{
+					threads[i]=new Thread(new MixTestWorkerThread());
+					threads[i].start();
+				}
+			for(int i=0;i<10;i++)
+				{
+				  threads[i].join();
+				}
+				}
+				catch(Exception e)
+				{
+				e.printStackTrace();
+				}
+		}
 }

@@ -1,28 +1,28 @@
 /*
-Copyright (c) 2000, The JAP-Team 
+Copyright (c) 2000, The JAP-Team
 All rights reserved.
-Redistribution and use in source and binary forms, with or without modification, 
+Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
 
-	- Redistributions of source code must retain the above copyright notice, 
+	- Redistributions of source code must retain the above copyright notice,
 	  this list of conditions and the following disclaimer.
 
-	- Redistributions in binary form must reproduce the above copyright notice, 
-	  this list of conditions and the following disclaimer in the documentation and/or 
+	- Redistributions in binary form must reproduce the above copyright notice,
+	  this list of conditions and the following disclaimer in the documentation and/or
 		other materials provided with the distribution.
 
-	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors 
-	  may be used to endorse or promote products derived from this software without specific 
-		prior written permission. 
+	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
+	  may be used to endorse or promote products derived from this software without specific
+		prior written permission.
 
-	
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS 
-OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY 
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS
+OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
 AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS
 BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, 
-OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER 
-IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY 
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
 import javax.swing.*;
@@ -48,7 +48,7 @@ import anon.JAPAnonService;
 
 /**
  * User Interface for an Mix-Cascade Monitor.
- * 
+ *
  * @author  Hannes Federrath
  */
 class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
@@ -67,15 +67,15 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 	private JTable tableView;
 	private TableModel dataModel;
 	private int selectedRow = -1;
-	private Vector db = null;
+	private JAPAnonServerDB db = null;
 	private Thread idleThread, monitorThread;
 	private boolean runFlag = true;
-		
+
 	JAPCascadeMonitorView (Frame parent) {
  		super(parent);
 		model=JAPModel.getModel();
 		view=this;
-		this.db = model.anonServerDatabase;
+		db = model.anonServerDatabase;
 		this.setModal(true);
 		this.setTitle(model.getString("chkAvailableCascades"));
 		Component contents = this.createComponents();
@@ -84,7 +84,7 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 		JAPUtil.centerFrame(this);
 		setVisible(true);
 	}
-	
+
 	private Component createComponents() {
 	    JPanel p = new JPanel(new BorderLayout());
 		// status
@@ -97,7 +97,7 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 		// Table
 		tableAggregate = createTable();
 		// Buttons
-		JPanel buttonPanel   = new JPanel();		
+		JPanel buttonPanel   = new JPanel();
 		startButton     = new JButton(model.getString("chkBttnTest"));
 		stopButton      = new JButton(model.getString("stopButton"));
 		okButton        = new JButton(model.getString("chkBttnSelect"));
@@ -127,7 +127,7 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 		okButton.setEnabled(false);
 		okButton.addActionListener(new ActionListener() {
 		    public void actionPerformed(ActionEvent e) {
-				model.setAnonServer((AnonServerDBEntry)db.elementAt(tableView.getSelectedRow()));
+				model.setAnonServer(db.getEntry(tableView.getSelectedRow()));
 				stopTest();
 		        dispose();
 		    }
@@ -136,20 +136,20 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 		buttonPanel.add(stopButton);
 		buttonPanel.add(closeButton);
 		buttonPanel.add(okButton);
-		// add components to main panel 
+		// add components to main panel
 		p.add(statusPanel,BorderLayout.NORTH);
 //	    p.add(new JScrollPane(ta),BorderLayout.CENTER);
 	    p.add(tableAggregate,BorderLayout.CENTER);
 		p.add(buttonPanel,BorderLayout.SOUTH);
 	    return p;
 	}
-	
+
     private JScrollPane createTable() {
-				
+
         // Create a model of the data.
         dataModel = new AbstractTableModel() {
             public int getColumnCount() { return 5; }
-            public String getColumnName(int column) { 
+            public String getColumnName(int column) {
 				if (column==0) return model.getString("chkCascade");
 				if (column==1) return model.getString("chkUsers");
 				if (column==2) return model.getString("chkDelay");
@@ -159,7 +159,7 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 			}
             public int getRowCount() { return db.size();}
             public Object getValueAt(int row, int col) {
-				AnonServerDBEntry e = (AnonServerDBEntry)db.elementAt(row);
+				AnonServerDBEntry e = db.getEntry(row);
 				if (col==0) return e.getName();
 				if (col==1) return (e.getNrOfActiveUsers()==-1?" ":Integer.toString(e.getNrOfActiveUsers()));
 				if (col==2) return (e.getDelay()==null?" ":e.getDelay());
@@ -184,7 +184,7 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 		//tableView.setPreferredScrollableViewportSize(new Dimension(550,Math.min(db.size(),6)*(tableView.getRowHeight()+1)));
         return scrollpane;
     }
-	
+
     public void valueChanged(ListSelectionEvent e) {
 		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPCascadeMonitorView:valuesChanged() selected row="+tableView.getSelectedRow());
 		okButton.setEnabled(true);
@@ -205,17 +205,17 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 		monitorThread.setPriority(Thread.MAX_PRIORITY);
 		monitorThread.start();
 	}
-	
+
 	private void stopTest() {
 		statusTextField.setText(model.getString("chkCancelled"));
 		runFlag=false;
 		try {
 			idleThread.stop();
-		} catch (Exception e) {			
+		} catch (Exception e) {
 		}
 		try {
 			monitorThread.stop();
-		} catch (Exception e) {			
+		} catch (Exception e) {
 		}
 //		monitorThread=null;
 		try {
@@ -228,7 +228,7 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 		this.setCursor(Cursor.getDefaultCursor());
 		statusTextField.setText(model.getString("chkPressStartToCheck"));
 	}
-	
+
 
 	public static void main(String[] args) {
 		JAPMessages.init();
@@ -240,7 +240,7 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 		JAPDebug.setDebugLevel(JAPDebug.DEBUG);
 		new JAPCascadeMonitorView(null);
 	}
-	
+
 	private final class JAPCascadeMonitorIdle implements Runnable {
 		public void run() {
 			boolean idle = true;
@@ -286,7 +286,7 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 					statusTextField.setText(model.getString("chkListenerError"));
 				}
 				for(int i=0;i<nr;i++) {
-					AnonServerDBEntry e = (AnonServerDBEntry)db.elementAt(i);
+					AnonServerDBEntry e = db.getEntry(i);
 					statusTextField.setText(model.getString("chkCnctToCasc")+" "+e.getName());
 					e.setStatus(model.getString("chkConnecting"));
 					tableView.repaint();
@@ -324,25 +324,25 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 						e.setStatus(model.getString("chkConnected"));
 					} else {
 						dtConnect=-1;
-						if (ret==JAPAnonService.E_BIND)  e.setStatus(model.getString("chkBindError"));		
+						if (ret==JAPAnonService.E_BIND)  e.setStatus(model.getString("chkBindError"));
 						else                             e.setStatus(model.getString("chkConnectionError"));
-					}				
+					}
 					tableView.repaint();
 					// if sucessfull perform check
-					if (ret==JAPAnonService.E_SUCCESS) {					
+					if (ret==JAPAnonService.E_SUCCESS) {
 						// send request via AnonService
 						//
 						try {
 							String target="http://"+model.getInfoServiceHost()+":"+model.getInfoServicePort()+model.aktJAPVersionFN;
 							// simply get the current version number via the anon service
-							URL url = new URL(target); 
-							
-//							URL url = new URL("http://www.inf.tu-dresden.de/cgi-bin/cgiwrap/hf2/img.cgi/monitor"); 
+							URL url = new URL(target);
+
+//							URL url = new URL("http://www.inf.tu-dresden.de/cgi-bin/cgiwrap/hf2/img.cgi/monitor");
 //							HTTPConnection c = new HTTPConnection(url.getHost(),url.getPort());
 //							c.setProxyServer(InetAddress.getLocalHost().getHostAddress(),model.getAnonServer().getPort()+1);
 //							c.setAllowUserInteraction(false);
 //							c.setTimeout(8000);
-							
+
 							Socket socket = new Socket(InetAddress.getLocalHost().getHostAddress(),model.getAnonServer().getPort()+1);
 							socket.setSoTimeout(60000);
 							BufferedWriter outputStream = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
@@ -350,7 +350,7 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 							outputStream.flush();
 							JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"Sending request: "+target);
 							DataInputStream inputStream = new DataInputStream(socket.getInputStream());
-							
+
 							t1 = System.currentTimeMillis();
 //							HTTPResponse resp = c.Get(url.getFile());
 							String response = this.readLine(inputStream);
@@ -375,7 +375,7 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 //								byte[] buff=resp.getData();
 //								String s=new String(buff).trim();
 								String s=data.trim();
-								if ( (s.charAt(2) == '.') && (s.charAt(5) == '.') ) {									
+								if ( (s.charAt(2) == '.') && (s.charAt(5) == '.') ) {
 									e.setStatus(model.getString("chkOK"));
 									tableView.repaint();
 								}
@@ -389,10 +389,10 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 							e.setStatus(model.getString("chkConButError"));
 							tableView.repaint();
 							JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"Exception: "+ex);
-						}					
-													
+						}
+
 					}
-					e.setDelay("" + ((dtConnect==-1)?"-":nf.format((float)dtConnect/1000.F)) + "/" + 
+					e.setDelay("" + ((dtConnect==-1)?"-":nf.format((float)dtConnect/1000.F)) + "/" +
 						((dtResponse==-1)?"-":nf.format((float)dtResponse/1000.F)) + " s");
 					tableView.repaint();
 					ret = proxyAnon.stop();
@@ -403,17 +403,17 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 				idleThread = new Thread(idl);
 				idleThread.setPriority(Thread.MIN_PRIORITY);
 				idleThread.start();
-				try { idleThread.join(); } catch (Exception e) { ; }			
+				try { idleThread.join(); } catch (Exception e) { ; }
 				view.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 			}
 		}
-		
+
 	    private String readLine(DataInputStream inputStream) throws Exception {
 			String returnString = "";
 			try{
 				int byteRead = inputStream.read();
 				while (byteRead != 10 && byteRead != -1) {
-					if (byteRead != 13) 
+					if (byteRead != 13)
 						returnString += (char)byteRead;
 					byteRead = inputStream.read();
 				}
@@ -421,6 +421,6 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 				throw e;
 			}
 			return returnString;
-    	}		
+    	}
 	}
 }
