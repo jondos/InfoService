@@ -51,7 +51,7 @@ final public class AnonServiceImpl implements AnonService
     public static final int FIREWALL_TYPE_HTTP         = 1;
     public static final int FIREWALL_TYPE_SOCKS        = 2;
 
-    private static AnonServiceImpl m_AnonServiceImpl=null;
+    //private static AnonServiceImpl m_AnonServiceImpl=null;
     private MuxSocket m_MuxSocket=null;
     private Vector m_AnonServiceListener;
     private int m_FirewallType;
@@ -75,11 +75,12 @@ final public class AnonServiceImpl implements AnonService
 
     public static AnonService create()
       {
-        if(m_AnonServiceImpl==null)
+      /*  if(m_AnonServiceImpl==null)
           {
             m_AnonServiceImpl=new AnonServiceImpl();
           }
-        return m_AnonServiceImpl;
+        return m_AnonServiceImpl;*/
+        return new AnonServiceImpl();
       }
 
     public int connect(AnonServer anonService)

@@ -201,21 +201,6 @@ public final class AnonServer implements Serializable
 				m_strDelay=delay;
 		  }
 
-		public int getStatus()
-      {
-				return m_iStatus;
-		  }
-
-		public void setStatus(int status)
-      {
-				m_iStatus=status;
-		  }
-
-		public void setStatus(String status)
-      {
-
-		  }
-
     public String toString()
       {
         return m_strName;
