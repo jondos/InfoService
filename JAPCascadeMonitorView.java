@@ -124,7 +124,8 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 		okButton.setEnabled(false);
 		okButton.addActionListener(new ActionListener() {
 		    public void actionPerformed(ActionEvent e) {
-				model.setAnonServer((AnonServerDBEntry)db.elementAt(tableView.getSelectedRow())); 
+				model.setAnonServer((AnonServerDBEntry)db.elementAt(tableView.getSelectedRow()));
+//				model.notityJAPObservers();
 				stopTest();
 		        dispose();
 		    }
