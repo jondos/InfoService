@@ -35,6 +35,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.ByteArrayInputStream;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -56,11 +57,12 @@ import javax.swing.*;
 import javax.swing.table.*;
 
 import HTTPClient.Codecs;
+import update.UpdateListener;
 
 final public class JAPUtil
 	{
 
-		public static int applyJarDiff(String oldJAR, String newJAR, String diffJAR)
+		public static int applyJarDiff(String oldJAR, String newJAR, byte[] diffJAR /*UpdateListener listener ,String diffJAR*/)
 			{
 				try
 					{
@@ -77,7 +79,9 @@ final public class JAPUtil
 								ze=(ZipEntry)e.nextElement();
 								oldnames.put(ze.getName(),ze.getName());
 							}
-						zdiff=new ZipInputStream(new FileInputStream(diffJAR));
+                                                // it shouldn't be a FileStream but an ByteArrayStream or st like that
+						//zdiff=new ZipInputStream(new FileInputStream(diffJAR));
+                                                zdiff = new ZipInputStream(new ByteArrayInputStream(diffJAR));
 						znew=new ZipOutputStream(new FileOutputStream(newJAR));
 						znew.setLevel(9);
 						byte[] b=new byte[5000];
@@ -101,6 +105,8 @@ final public class JAPUtil
 										while((s=zdiff.read(b,0,5000))!=-1)
 											{
 												znew.write(b,0,s);
+
+
 											}
 										znew.closeEntry();
 									}

@@ -76,7 +76,7 @@ public class JAPUpdate implements ActionListener,ItemListener,Runnable
 
     // save the jnlp-Files and give it to JAPUpdateWizard
     //private File jnlp_dev, jnlp_rel;
-    private boolean user_chose_released;
+    private boolean user_chose_released = true;
 
     public JAPUpdate()
       {
