@@ -149,13 +149,13 @@ final class JAPMuxSocket implements Runnable
 								//2001-02-20(HF)
 								if (fwHost==null) {
 									//Connect directly to anon service
-									JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:Try to connect directly to Mix");
+									JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:Try to connect directly to mix ("+host+":"+port+")");
 									ioSocket=new Socket(host,port);
 								  ioSocket.setSoTimeout(10000); //Timout 10 second
 									inDataStream=new DataInputStream(ioSocket.getInputStream());
 								} else {
 									//Connect via a firewall betwenn JAP and anon service
-									JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:Try to connect via proxy to Mix");
+									JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:Try to connect via proxy ("+fwHost+":"+fwPort+") to mix ("+host+":"+port+")");
 									ioSocket=new Socket(fwHost,fwPort);
 								  ioSocket.setSoTimeout(10000); //Timout 10 second
 									BufferedWriter o=new BufferedWriter(new OutputStreamWriter(ioSocket.getOutputStream()));
@@ -232,7 +232,7 @@ final class JAPMuxSocket implements Runnable
 										BigInteger e=new BigInteger(1,buff);
 										arASymCipher[i].setPublicKey(n,e);
 									}
-								ioSocket.setSoTimeout(0); //Now we have a unlimited time out...
+								ioSocket.setSoTimeout(0); //Now we have a unlimited timeout...
 								//threadgroupChannels=new ThreadGroup("muxchannels");
 							}
 						catch(Exception e)
