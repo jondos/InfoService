@@ -41,7 +41,7 @@ public final class JAPModel
   private int m_biPort = JAPConstants.PIPORT;
   private int m_HttpListenerPortNumber = JAPConstants.defaultPortNumber; // port number of HTTP  listener
   private boolean m_bHttpListenerIsLocal = true; // indicates whether listeners serve for localhost only or not
-  private int m_SOCKSListenerPortnumber = JAPConstants.defaultSOCKSPortNumber; //port number for SOCKS requests
+  //private int m_SOCKSListenerPortnumber = JAPConstants.defaultSOCKSPortNumber; //port number for SOCKS requests
   private boolean m_bUseFirewall = false; // indicates whether JAP connects via a proxy or directly
   private int m_FirewallType = JAPConstants.defaultFirewallType;
   private String m_FirewallHostName = ""; // hostname of proxy
@@ -268,7 +268,7 @@ public final class JAPModel
     return ms_TheModel.m_HttpListenerPortNumber;
   }
 
-  protected void setSocksListenerPortNumber(int p)
+ /* protected void setSocksListenerPortNumber(int p)
   {
     m_SOCKSListenerPortnumber = p;
   }
@@ -277,7 +277,7 @@ public final class JAPModel
   {
     return ms_TheModel.m_SOCKSListenerPortnumber;
   }
-
+*/
   protected void setHttpListenerIsLocal(boolean b)
   {
     m_bHttpListenerIsLocal = b;

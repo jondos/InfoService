@@ -21,7 +21,7 @@ import anon.tor.util.helper;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-
+import java.io.EOFException;
 /**
  * @author stefan
  *
@@ -110,7 +110,7 @@ public class TinyTLS extends Socket
 				}
 				catch (InterruptedIOException ioe)
 				{
-					ioe.bytesTransferred=0;
+					ioe.bytesTransferred = 0;
 					throw ioe;
 				}
 
@@ -130,7 +130,7 @@ public class TinyTLS extends Socket
 				}
 				catch (InterruptedIOException ioe)
 				{
-					ioe.bytesTransferred=0;
+					ioe.bytesTransferred = 0;
 					throw ioe;
 				}
 				if (version != PROTOCOLVERSION_SHORT)
@@ -148,7 +148,7 @@ public class TinyTLS extends Socket
 				}
 				catch (InterruptedIOException ioe)
 				{
-					ioe.bytesTransferred=0;
+					ioe.bytesTransferred = 0;
 					throw ioe;
 				}
 				m_aktTLSRecord.setLength(length);
@@ -157,16 +157,25 @@ public class TinyTLS extends Socket
 			}
 			if (m_ReadRecordState == STATE_PAYLOAD)
 			{
-				try
+				int len = m_aktTLSRecord.m_dataLen - m_aktPendOffset;
+				while (len > 0)
 				{
-					m_stream.readFully(m_aktTLSRecord.m_Data, m_aktPendOffset,
-									   m_aktTLSRecord.m_dataLen - m_aktPendOffset);
-				}
-				catch (InterruptedIOException ioe)
-				{
-					m_aktPendOffset += ioe.bytesTransferred;
-					ioe.bytesTransferred=0;
-					throw ioe;
+					try
+					{
+						int ret = m_stream.read(m_aktTLSRecord.m_Data, m_aktPendOffset, len);
+						if (ret < 0)
+						{
+							throw new EOFException();
+						}
+						len -= ret;
+						m_aktPendOffset += ret;
+					}
+					catch (InterruptedIOException ioe)
+					{
+						m_aktPendOffset += ioe.bytesTransferred;
+						ioe.bytesTransferred = 0;
+						throw ioe;
+					}
 				}
 				m_ReadRecordState = STATE_START;
 				m_aktPendOffset = 0;

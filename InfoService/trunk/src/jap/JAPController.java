@@ -87,10 +87,10 @@ public final class JAPController implements ProxyListener
   private MixCascade currentMixCascade = null;
 
   private ServerSocket m_socketHTTPListener = null; // listener object for HTTP
-  private ServerSocket m_socketSOCKSListener = null; //listener object for SOCKS
+  //private ServerSocket m_socketSOCKSListener = null; //listener object for SOCKS
   private DirectProxy m_proxyDirect = null; // service object for direct access (bypass anon service)
   private AnonWebProxy m_proxyAnon = null; // service object for anon access
-  private AnonSocksProxy m_proxySocks = null; //service object for Socks requests
+  //private AnonSocksProxy m_proxySocks = null; //service object for Socks requests
 
   private boolean isRunningHTTPListener = false; // true if a HTTP listener is running
   private boolean isRunningSOCKSListener = false; //true if a SOCKS listener is running
@@ -163,7 +163,7 @@ public final class JAPController implements ProxyListener
     mixCascadeDatabase = new Vector();
     m_proxyDirect = null;
     m_proxyAnon = null;
-    m_proxySocks = null;
+    //m_proxySocks = null;
     m_Locale = Locale.getDefault();
   }
 
@@ -189,10 +189,10 @@ public final class JAPController implements ProxyListener
   {
     LogHolder.log(LogLevel.INFO, LogType.MISC, "JAPModel:initial run of JAP...");
     // start http listener object
-    if (JAPModel.isTorEnabled())
+   /* if (JAPModel.isTorEnabled())
     {
       startSOCKSListener();
-    }
+    }*/
     if (!startHTTPListener())
     { // start was not sucessful
       Object[] args =
@@ -368,9 +368,9 @@ public final class JAPController implements ProxyListener
         int port = XMLUtil.parseElementAttrInt(root, "portNumber", JAPModel.getHttpListenerPortNumber());
         boolean bListenerIsLocal = XMLUtil.parseNodeBoolean(n.getNamedItem("listenerIsLocal"), true);
         setHTTPListener(port, bListenerIsLocal, false);
-        port = XMLUtil.parseElementAttrInt(root, "portNumberSocks",
-          JAPModel.getSocksListenerPortNumber());
-        setSocksPortNumber(port);
+        //port = XMLUtil.parseElementAttrInt(root, "portNumberSocks",
+        //  JAPModel.getSocksListenerPortNumber());
+        //setSocksPortNumber(port);
         //setUseSocksPort(JAPUtil.parseNodeBoolean(n.getNamedItem("supportSocks"),false));
         //setUseProxy(JAPUtil.parseNodeBoolean(n.getNamedItem("proxyMode"),false));
         setUseFirewallAuthorization(XMLUtil.parseNodeBoolean(n.getNamedItem("proxyAuthorization"), false));
@@ -706,7 +706,7 @@ public final class JAPController implements ProxyListener
       e.setAttribute("version", "0.6");
       //
       e.setAttribute("portNumber", Integer.toString(JAPModel.getHttpListenerPortNumber()));
-      e.setAttribute("portNumberSocks", Integer.toString(JAPModel.getSocksListenerPortNumber()));
+      //e.setAttribute("portNumberSocks", Integer.toString(JAPModel.getSocksListenerPortNumber()));
       //e.setAttribute("supportSocks",(getUseSocksPort()?"true":"false"));
       e.setAttribute("listenerIsLocal", (JAPModel.getHttpListenerIsLocal() ? "true" : "false"));
       e.setAttribute("proxyMode", (JAPModel.getUseFirewall() ? "true" : "false"));
@@ -1103,10 +1103,10 @@ public final class JAPController implements ProxyListener
 
   //---------------------------------------------------------------------
 
-  public void setSocksPortNumber(int p)
+ /* public void setSocksPortNumber(int p)
   {
     m_Model.setSocksListenerPortNumber(p);
-  }
+  }*/
 
   //---------------------------------------------------------------------
   //---------------------------------------------------------------------
@@ -1181,12 +1181,12 @@ public final class JAPController implements ProxyListener
           if (canStartService)
           {
             //starting SOCKS
-            if (JAPModel.isTorEnabled())
+            /*if (JAPModel.isTorEnabled())
             {
               m_proxySocks = new AnonSocksProxy(m_socketSOCKSListener);
               m_proxySocks.setProxyListener(m_Controller);
               m_proxySocks.start();
-            }
+            }*/
             // starting MUX --> Success ???
             if (JAPModel.getModel().getRoutingSettings().getRoutingMode() ==
               JAPRoutingSettings.ROUTING_MODE_CLIENT)
@@ -1228,11 +1228,11 @@ public final class JAPController implements ProxyListener
             {
               canStartService = false;
               m_proxyAnon = null;
-              if (m_proxySocks != null)
+              /*if (m_proxySocks != null)
               {
                 m_proxySocks.stop();
               }
-              m_proxySocks = null;
+              m_proxySocks = null;*/
             }
             if (ret == ErrorCodes.E_SUCCESS)
             {
@@ -1347,11 +1347,11 @@ public final class JAPController implements ProxyListener
             m_proxyAnon.stop();
           }
           m_proxyAnon = null;
-          if (m_proxySocks != null)
+         /* if (m_proxySocks != null)
           {
             m_proxySocks.stop();
           }
-          m_proxySocks = null;
+          m_proxySocks = null;*/
           if (feedback != null)
           {
             feedback.stopRequests();
@@ -1532,7 +1532,7 @@ public final class JAPController implements ProxyListener
     }
   }
 
-  private boolean startSOCKSListener()
+ /* private boolean startSOCKSListener()
   {
     LogHolder.log(LogLevel.DEBUG, LogType.MISC, "JAPModel:start SOCKS Listener");
     if (isRunningSOCKSListener == false)
@@ -1546,7 +1546,7 @@ public final class JAPController implements ProxyListener
     }
     return isRunningSOCKSListener;
   }
-
+*/
   //---------------------------------------------------------------------
 
   /** This (and only this) is the final exit procedure of JAP!

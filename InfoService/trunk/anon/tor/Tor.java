@@ -130,8 +130,8 @@ public class Tor implements /*Runnable,*/ AnonService
 					return null;
 				}
 			}
-			if (m_activeCircuit == null || !m_activeCircuit.isAllowed(addr, port) ||
-				m_activeCircuit.isDestroyed() || m_activeCircuit.isShutdown())
+		//	if (m_activeCircuit == null || m_activeCircuit.isAllowed(addr, port) ||
+		//		m_activeCircuit.isDestroyed() || m_activeCircuit.isShutdown())
 			{
 				createNewActiveCircuit(addr, port);
 			}
