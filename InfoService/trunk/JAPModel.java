@@ -43,6 +43,7 @@ import java.io.FileOutputStream;
 import java.awt.Dimension;
 import java.awt.Window;
 import java.awt.Frame;
+import java.awt.Cursor;
 import java.awt.MediaTracker;
 import java.awt.Toolkit;
 import javax.swing.ImageIcon;
@@ -582,61 +583,64 @@ public final class JAPModel {
 	
 	public synchronized void setAnonMode(boolean anonModeSelected)
 	{
-		if ((anonMode == false) && (anonModeSelected == true)) {
-			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:setAnonMode("+anonModeSelected+")");
-			if (alreadyCheckedForNewVersion == false) {
-			// Check for a new Version of JAP if not already done
-				int ok = this.versionCheck();
-				if (ok == -1) {
-					// -> at the moment nothing to do
-					//canStartService = false; // no necessary to set this variable
-				} else {
-					// -> we can start anonymity
-					canStartService = true;
-					alreadyCheckedForNewVersion = true;
+		if ((anonMode == false) && (anonModeSelected == true))
+			{
+				view.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:setAnonMode("+anonModeSelected+")");
+				if (alreadyCheckedForNewVersion == false) {
+				// Check for a new Version of JAP if not already done
+					int ok = this.versionCheck();
+					if (ok == -1) {
+						// -> at the moment nothing to do
+						//canStartService = false; // no necessary to set this variable
+					} else {
+						// -> we can start anonymity
+						canStartService = true;
+						alreadyCheckedForNewVersion = true;
+					}
 				}
-			}
-			if (canStartService) {
-				// -> we can start anonymity
-				anonMode = true;
-				// starting MUX --> Success ???
-				if(listener!=null&&listener.startMux())
-					{
-						// start feedback thread
-						feedback=new JAPFeedback();
-						Thread t2 = new Thread (feedback);
-						t2.setPriority(Thread.MIN_PRIORITY);
-						t2.start();
-						// show a Reminder message that active contents should be disabled
-						Object[] options = { model.getString("disableActCntMessageDontRemind"), model.getString("okButton") };
-						JCheckBox checkboxRemindNever=new JCheckBox(model.getString("disableActCntMessageNeverRemind"));
-						Object[] message={model.getString("disableActCntMessage"),checkboxRemindNever};
-						if (!mbActCntMessageNotRemind) 
-							{
-								int ret=0;
-								ret= JOptionPane.showOptionDialog(view, 
-																									message, 
-																									model.getString("disableActCntMessageTitle"), 
-																									JOptionPane.DEFAULT_OPTION,
-																									JOptionPane.WARNING_MESSAGE,
-																									null, options, options[1]);
-								mbActCntMessageNeverRemind=checkboxRemindNever.isSelected();
-								if(ret==0||mbActCntMessageNeverRemind)
-									mbActCntMessageNotRemind=true;
+				if (canStartService) {
+					// -> we can start anonymity
+					anonMode = true;
+					// starting MUX --> Success ???
+					if(listener!=null&&listener.startMux())
+						{
+							// start feedback thread
+							feedback=new JAPFeedback();
+							Thread t2 = new Thread (feedback);
+							t2.setPriority(Thread.MIN_PRIORITY);
+							t2.start();
+							// show a Reminder message that active contents should be disabled
+							Object[] options = { model.getString("disableActCntMessageDontRemind"), model.getString("okButton") };
+							JCheckBox checkboxRemindNever=new JCheckBox(model.getString("disableActCntMessageNeverRemind"));
+							Object[] message={model.getString("disableActCntMessage"),checkboxRemindNever};
+							if (!mbActCntMessageNotRemind) 
+								{
+									int ret=0;
+									ret= JOptionPane.showOptionDialog(view, 
+																										message, 
+																										model.getString("disableActCntMessageTitle"), 
+																										JOptionPane.DEFAULT_OPTION,
+																										JOptionPane.WARNING_MESSAGE,
+																										null, options, options[1]);
+									mbActCntMessageNeverRemind=checkboxRemindNever.isSelected();
+									if(ret==0||mbActCntMessageNeverRemind)
+										mbActCntMessageNotRemind=true;
+							}
 						}
-					}
-				else
-					{
-						JOptionPane.showMessageDialog
-								(
-								 getView(), 
-								 getString("errorConnectingFirstMix"),
-								 getString("errorConnectingFirstMixTitle"),
-								 JOptionPane.ERROR_MESSAGE
-								);
-					}
-				notifyJAPObservers();
-			}
+					else
+						{
+							JOptionPane.showMessageDialog
+									(
+									 getView(), 
+									 getString("errorConnectingFirstMix"),
+									 getString("errorConnectingFirstMixTitle"),
+									 JOptionPane.ERROR_MESSAGE
+									);
+						}
+					view.setCursor(Cursor.getDefaultCursor());
+					notifyJAPObservers();
+				}
 		} else if ((anonMode == true) && (anonModeSelected == false)) {
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:setAnonMode("+anonModeSelected+")");
 			anonMode = false;
