@@ -167,7 +167,8 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 			InfoServiceDBEntry defaultInfoService = new InfoServiceDBEntry(JAPConstants.
 				defaultInfoServiceName,
 				new ListenerInterface(JAPConstants.DEFAULT_INFOSERVICE_HOSTNAME,
-									  JAPConstants.DEFAULT_INFOSERVICE_PORT_NUMBER).toVector(), false, true);
+									  JAPConstants.DEFAULT_INFOSERVICE_PORT_NUMBER).toVector(), true, true);
+			defaultInfoService.setUserDefined(false);
 			InfoServiceHolder.getInstance().setPreferredInfoService(defaultInfoService);
 		}
 		catch (Exception e)

@@ -61,7 +61,7 @@ public final class Database extends Observable implements Runnable
 	/**
 	 * The distributor that forwards new database entries.
 	 */
-  private static IDistributor m_distributor;
+	private static IDistributor m_distributor;
 
 	/**
 	 * The DatabaseEntry class for that this Database is registered.
@@ -83,7 +83,8 @@ public final class Database extends Observable implements Runnable
 	 * Registers a distributor that forwards new database entries.
 	 * @param a_distributor a distributor that forwards new database entries
 	 */
-  public static void registerDistributor(IDistributor a_distributor) {
+	public static void registerDistributor(IDistributor a_distributor)
+	{
 		m_distributor = a_distributor;
 	}
 
@@ -97,9 +98,10 @@ public final class Database extends Observable implements Runnable
 	 */
 	private static Database registerInstance(Database a_Database)
 	{
-		Database database = (Database)m_databases.get(a_Database.getEntryClass());
+		Database database = (Database) m_databases.get(a_Database.getEntryClass());
 
-		if (database == null && a_Database != null) {
+		if (database == null && a_Database != null)
+		{
 			m_databases.put(a_Database.getEntryClass(), a_Database);
 			database = a_Database;
 		}
@@ -117,7 +119,7 @@ public final class Database extends Observable implements Runnable
 	 */
 	private static Database unregisterInstance(Class a_DatabaseEntryClass)
 	{
-		return (Database)m_databases.remove(a_DatabaseEntryClass);
+		return (Database) m_databases.remove(a_DatabaseEntryClass);
 	}
 
 	/**
@@ -137,15 +139,18 @@ public final class Database extends Observable implements Runnable
 	 * @return the Database object that contains DatabaseEntries of the specified type
 	 * @exception IllegalArgumentException if the argument is no valid DatabaseEntry class
 	 */
-  public static Database getInstance(Class a_DatabaseEntryClass) throws IllegalArgumentException {
-    Database database = null;
-    synchronized (Database.class) {
-      database = (Database)m_databases.get(a_DatabaseEntryClass);
-		if (database == null) {
-			database = new Database(a_DatabaseEntryClass);
-			m_databases.put(a_DatabaseEntryClass, database);
+	public static Database getInstance(Class a_DatabaseEntryClass) throws IllegalArgumentException
+	{
+		Database database = null;
+		synchronized (Database.class)
+		{
+			database = (Database) m_databases.get(a_DatabaseEntryClass);
+			if (database == null)
+			{
+				database = new Database(a_DatabaseEntryClass);
+				m_databases.put(a_DatabaseEntryClass, database);
+			}
 		}
-    }
 		return database;
 	}
 
@@ -153,7 +158,8 @@ public final class Database extends Observable implements Runnable
 	 * Get an Enumeration of all registered Databases.
 	 * @return an Enumeration of all registered Databases
 	 */
-	public static Enumeration getInstances() {
+	public static Enumeration getInstances()
+	{
 		return m_databases.elements();
 	}
 
@@ -162,10 +168,10 @@ public final class Database extends Observable implements Runnable
 	 * @param a_DatabaseEntryClass the DatabaseEntry class for that this Database is registered
 	 * @exception IllegalArgumentException if the argument is no valid DatabaseEntry class
 	 */
-	private Database(Class a_DatabaseEntryClass)
-		throws IllegalArgumentException
+	private Database(Class a_DatabaseEntryClass) throws IllegalArgumentException
 	{
-    if (!AbstractDatabaseEntry.class.isAssignableFrom(a_DatabaseEntryClass)) {
+		if (!AbstractDatabaseEntry.class.isAssignableFrom(a_DatabaseEntryClass))
+		{
 			throw new IllegalArgumentException(
 				"There is no Database that can store entries of type " +
 				a_DatabaseEntryClass.getName() + "!");
@@ -175,7 +181,7 @@ public final class Database extends Observable implements Runnable
 		m_serviceDatabase = new Hashtable();
 		m_timeoutList = new Vector();
 
-		Thread dbThread = new Thread(this,"Database Thread: "+a_DatabaseEntryClass.toString());
+		Thread dbThread = new Thread(this, "Database Thread: " + a_DatabaseEntryClass.toString());
 		dbThread.setDaemon(true);
 		dbThread.start();
 	}
@@ -194,18 +200,19 @@ public final class Database extends Observable implements Runnable
 				/* we need exclusive access to the database */
 				while ( (m_timeoutList.size() > 0) && (moreOldEntrys))
 				{
-          AbstractDatabaseEntry entry=(AbstractDatabaseEntry)m_serviceDatabase.get(m_timeoutList.firstElement());
-					if (System.currentTimeMillis() >=entry.getExpireTime())
+					AbstractDatabaseEntry entry = (AbstractDatabaseEntry) m_serviceDatabase.get(m_timeoutList.
+						firstElement());
+					if (System.currentTimeMillis() >= entry.getExpireTime())
 					{
 						/* we remove the old entry now, because it has reached the expire time */
 						LogHolder.log(LogLevel.INFO, LogType.MISC,
-									  "DatabaseEntry ("+entry.getClass().getName()+")" +
+									  "DatabaseEntry (" + entry.getClass().getName() + ")" +
 									  entry.getId() + " has reached the expire time and is removed.");
 						m_serviceDatabase.remove(entry.getId());
 						m_timeoutList.removeElementAt(0);
-            /* notify the observers about the removal */
-            setChanged();
-            notifyObservers(new DatabaseMessage(DatabaseMessage.ENTRY_REMOVED, entry));
+						/* notify the observers about the removal */
+						setChanged();
+						notifyObservers(new DatabaseMessage(DatabaseMessage.ENTRY_REMOVED, entry));
 					}
 					else
 					{
@@ -223,7 +230,7 @@ public final class Database extends Observable implements Runnable
 				if (m_timeoutList.size() > 0)
 				{
 					/* get time until next timeout */
-          sleepTime = ( (AbstractDatabaseEntry) (m_serviceDatabase.get(m_timeoutList.firstElement()))).
+					sleepTime = ( (AbstractDatabaseEntry) (m_serviceDatabase.get(m_timeoutList.firstElement()))).
 						getExpireTime() - System.currentTimeMillis();
 				}
 				if (sleepTime > 0)
@@ -262,23 +269,22 @@ public final class Database extends Observable implements Runnable
 	 * one stored in the database for this service, the new entry is stored in the database and
 	 * forwarded to all neighbour infoservices.
 	 *
-   * @param newEntry The database entry to update.
-   * @exception IllegalArgumentException if the database entry is not of the type the Database
+	 * @param newEntry The database entry to update.
+	 * @exception IllegalArgumentException if the database entry is not of the type the Database
 	 * can store
 	 */
-  public void update(AbstractDatabaseEntry newEntry)
-		throws IllegalArgumentException
+	public void update(AbstractDatabaseEntry newEntry) throws IllegalArgumentException
 	{
 		if (!m_DatabaseEntryClass.isAssignableFrom(newEntry.getClass()))
 		{
 			throw new IllegalArgumentException(
-						 "Database cannot store entries of type " +
-						 newEntry.getClass().getName() + "!");
+				"Database cannot store entries of type " +
+				newEntry.getClass().getName() + "!");
 		}
 		synchronized (m_serviceDatabase)
 		{
 			/* we need exclusive access to the database */
-      AbstractDatabaseEntry oldEntry = (AbstractDatabaseEntry) (m_serviceDatabase.get(newEntry.getId()));
+			AbstractDatabaseEntry oldEntry = (AbstractDatabaseEntry) (m_serviceDatabase.get(newEntry.getId()));
 			boolean addEntry = false;
 			if (oldEntry == null)
 			{
@@ -298,14 +304,15 @@ public final class Database extends Observable implements Runnable
 				{
 					LogHolder.log(LogLevel.INFO, LogType.NET, "Received an expired db entry: '" +
 								  newEntry.getId() + "'. It was dropped immediatly.");
-          Object removedEntry = m_serviceDatabase.remove(newEntry.getId());
-          if (removedEntry != null) {
-            /* There was an entry with a lower version number in the database, which was not
-             * expired yet??? No matter why, now it was removed -> notify the observers.
-             */
-            setChanged();
-            notifyObservers(new DatabaseMessage(DatabaseMessage.ENTRY_REMOVED, removedEntry));
-          }
+					Object removedEntry = m_serviceDatabase.remove(newEntry.getId());
+					if (removedEntry != null)
+					{
+						/* There was an entry with a lower version number in the database, which was not
+						 * expired yet??? No matter why, now it was removed -> notify the observers.
+						 */
+						setChanged();
+						notifyObservers(new DatabaseMessage(DatabaseMessage.ENTRY_REMOVED, removedEntry));
+					}
 					return;
 				}
 
@@ -319,9 +326,9 @@ public final class Database extends Observable implements Runnable
 				{
 					if (i < m_timeoutList.size())
 					{
-            if ( ( (AbstractDatabaseEntry) (m_serviceDatabase.get(
-											  m_timeoutList.elementAt(i)))).getExpireTime() >=
-							 newEntry.getExpireTime())
+						if ( ( (AbstractDatabaseEntry) (m_serviceDatabase.get(
+							m_timeoutList.elementAt(i)))).getExpireTime() >=
+							newEntry.getExpireTime())
 						{
 							m_timeoutList.insertElementAt(newEntry.getId(), i);
 							timeoutEntryInserted = true;
@@ -340,30 +347,39 @@ public final class Database extends Observable implements Runnable
 					/* entry at the first expire position added -> notify the cleanup thread */
 					m_serviceDatabase.notify();
 				}
-        LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Added / updated entry '" + newEntry.getId() + "' in the " + m_DatabaseEntryClass.getName() + " database. Now there are " + Integer.toString(m_serviceDatabase.size()) + " entries stored in this database. The new entry has position " + Integer.toString(i) + "/" + Integer.toString(m_timeoutList.size()) + " in the database-timeout list.");
+				LogHolder.log(LogLevel.DEBUG, LogType.MISC,
+							  "Added / updated entry '" + newEntry.getId() + "' in the " +
+							  m_DatabaseEntryClass.getName() + " database. Now there are " +
+							  Integer.toString(m_serviceDatabase.size()) +
+							  " entries stored in this database. The new entry has position " +
+							  Integer.toString(i) + "/" + Integer.toString(m_timeoutList.size()) +
+							  " in the database-timeout list.");
 				if (newEntry instanceof IDistributable)
 				{
 					// forward new entries
 					if (m_distributor != null)
 					{
 						m_distributor.addJob( (IDistributable) newEntry);
-					} else
+					}
+					else
 					{
 						LogHolder.log(LogLevel.WARNING, LogType.MISC,
 									  "Database: update: No distributor specified." +
 									  "Cannot distribute database entries!");
 					}
 				}
-        /* there was an entry added or renewed in the database -> notify the observers */
-        setChanged();
-        if (oldEntry == null) {
-          /* it was really a new entry */
-          notifyObservers(new DatabaseMessage(DatabaseMessage.ENTRY_ADDED, newEntry));
-        }
-        else {
-          /* there was already an entry with the same ID -> the entry was renewed */
-          notifyObservers(new DatabaseMessage(DatabaseMessage.ENTRY_RENEWED, newEntry));
-        }
+				/* there was an entry added or renewed in the database -> notify the observers */
+				setChanged();
+				if (oldEntry == null)
+				{
+					/* it was really a new entry */
+					notifyObservers(new DatabaseMessage(DatabaseMessage.ENTRY_ADDED, newEntry));
+				}
+				else
+				{
+					/* there was already an entry with the same ID -> the entry was renewed */
+					notifyObservers(new DatabaseMessage(DatabaseMessage.ENTRY_RENEWED, newEntry));
+				}
 			}
 		}
 	}
@@ -382,20 +398,20 @@ public final class Database extends Observable implements Runnable
 	 *
 	 * @param deleteEntry The entry to remove. If it is not in the database, nothing is done.
 	 */
-  public void remove(AbstractDatabaseEntry deleteEntry)
+	public void remove(AbstractDatabaseEntry deleteEntry)
 	{
 		if (deleteEntry != null)
 		{
 			synchronized (m_serviceDatabase)
 			{
 				/* we need exclusive access to the database */
-        Object removedEntry = m_serviceDatabase.remove(deleteEntry.getId());
-        if (removedEntry != null)
+				Object removedEntry = m_serviceDatabase.remove(deleteEntry.getId());
+				if (removedEntry != null)
 				{
 					m_timeoutList.removeElement(deleteEntry.getId());
-          /* an entry was removed -> notify the observers */
-          setChanged();
-          notifyObservers(new DatabaseMessage(DatabaseMessage.ENTRY_REMOVED, removedEntry));
+					/* an entry was removed -> notify the observers */
+					setChanged();
+					notifyObservers(new DatabaseMessage(DatabaseMessage.ENTRY_REMOVED, removedEntry));
 				}
 			}
 		}
@@ -411,9 +427,9 @@ public final class Database extends Observable implements Runnable
 			/* we need exclusive access to the database */
 			m_serviceDatabase.clear();
 			m_timeoutList.removeAllElements();
-      /* database was cleared -> notify the observers */
-      setChanged();
-      notifyObservers(new DatabaseMessage(DatabaseMessage.ALL_ENTRIES_REMOVED)); 
+			/* database was cleared -> notify the observers */
+			setChanged();
+			notifyObservers(new DatabaseMessage(DatabaseMessage.ALL_ENTRIES_REMOVED));
 		}
 	}
 
@@ -425,12 +441,12 @@ public final class Database extends Observable implements Runnable
 	public Vector getEntryList()
 	{
 		Vector entryList = new Vector();
-			/* get the actual values */
-			Enumeration serviceDatabaseElements = m_serviceDatabase.elements();
-			while (serviceDatabaseElements.hasMoreElements())
-			{
-				entryList.addElement(serviceDatabaseElements.nextElement());
-			}
+		/* get the actual values */
+		Enumeration serviceDatabaseElements = m_serviceDatabase.elements();
+		while (serviceDatabaseElements.hasMoreElements())
+		{
+			entryList.addElement(serviceDatabaseElements.nextElement());
+		}
 		return entryList;
 	}
 
@@ -460,13 +476,13 @@ public final class Database extends Observable implements Runnable
 	 * @param entryId The ID of the database entry.
 	 * @return The entry with the specified ID or null, if there is no such entry.
 	 */
-  public AbstractDatabaseEntry getEntryById(String entryId)
+	public AbstractDatabaseEntry getEntryById(String entryId)
 	{
-    AbstractDatabaseEntry resultEntry = null;
+		AbstractDatabaseEntry resultEntry = null;
 		synchronized (m_serviceDatabase)
 		{
 			/* get the actual value */
-      resultEntry = (AbstractDatabaseEntry) (m_serviceDatabase.get(entryId));
+			resultEntry = (AbstractDatabaseEntry) (m_serviceDatabase.get(entryId));
 		}
 		return resultEntry;
 	}
@@ -477,9 +493,9 @@ public final class Database extends Observable implements Runnable
 	 *
 	 * @return A random entry from the database or null, if the database is empty.
 	 */
-  public AbstractDatabaseEntry getRandomEntry()
+	public AbstractDatabaseEntry getRandomEntry()
 	{
-    AbstractDatabaseEntry resultEntry = null;
+		AbstractDatabaseEntry resultEntry = null;
 		synchronized (m_serviceDatabase)
 		{
 			/* all keys of the database are in the timeout list -> select a random key from there
@@ -491,8 +507,8 @@ public final class Database extends Observable implements Runnable
 				{
 					String entryId =
 						(String) m_timeoutList.elementAt(
-										  new MyRandom().nextInt(m_timeoutList.size()));
-          resultEntry = (AbstractDatabaseEntry) (m_serviceDatabase.get(entryId));
+							new MyRandom().nextInt(m_timeoutList.size()));
+					resultEntry = (AbstractDatabaseEntry) (m_serviceDatabase.get(entryId));
 				}
 				catch (Exception e)
 				{
@@ -503,24 +519,27 @@ public final class Database extends Observable implements Runnable
 		return resultEntry;
 	}
 
-  /**
-   * Adds an observer to this database. The observer will obtain an initial message including a
-   * snapshot of the current database (this message is also sent, if the observer was already
-   * observing the database).
-   *
-   * @param a_observer The observer to add to this database.
-   */
-  public void addObserver(Observer a_observer) {
-    synchronized (m_serviceDatabase) {
-      /* add the observer -> because we have locked m_serviceDatabase, there will be no message
-       * sent to the observers, until we are done -> our message to the new observer will be the
-       * first
-       */
-      super.addObserver(a_observer);
-      /* send the initial message to the new observer */
-      a_observer.update(this, new DatabaseMessage(DatabaseMessage.INITIAL_OBSERVER_MESSAGE, getEntryList()));
-    }
-  }
+	/**
+	 * Adds an observer to this database. The observer will obtain an initial message including a
+	 * snapshot of the current database (this message is also sent, if the observer was already
+	 * observing the database).
+	 *
+	 * @param a_observer The observer to add to this database.
+	 */
+	public void addObserver(Observer a_observer)
+	{
+		synchronized (m_serviceDatabase)
+		{
+			/* add the observer -> because we have locked m_serviceDatabase, there will be no message
+			 * sent to the observers, until we are done -> our message to the new observer will be the
+			 * first
+			 */
+			super.addObserver(a_observer);
+			/* send the initial message to the new observer */
+			a_observer.update(this,
+							  new DatabaseMessage(DatabaseMessage.INITIAL_OBSERVER_MESSAGE, getEntryList()));
+		}
+	}
 
 	public boolean isEntryIdInTimeoutList(String a_entryId)
 	{
