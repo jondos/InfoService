@@ -54,7 +54,9 @@ public class PayControl
 	public static void initPay()
 	{
 		JAPModel model = JAPModel.getModel();
-		Pay pay = Pay.create();
+		Pay pay = Pay.getInstance();
+		// TODO: Make the filename configurable
+		pay.readJpiCertificate("public.cer");
 		pay.setPayInstance(model.getBIHost(), model.getBIPort(), JAPConstants.PI_SSLON);
 		pay.openAccountFile();
 		pay.updateAllBalance();
@@ -76,7 +78,7 @@ public class PayControl
 	{
 		public void actionPerformed(ActionEvent e)
 		{
-			Pay.create().changeAccountFilePassword();
+			Pay.getInstance().changeAccountFilePassword();
 		}
 	}
 
@@ -88,7 +90,7 @@ public class PayControl
 			if (e.getSource() instanceof JCheckBox)
 			{
 				check = (JCheckBox) e.getSource();
-				Pay.create().changeAccountFileEncryptMode();
+				Pay.getInstance().changeAccountFileEncryptMode();
 			}
 		}
 	}

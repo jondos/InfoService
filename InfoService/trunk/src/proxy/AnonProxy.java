@@ -90,7 +90,7 @@ final public class AnonProxy implements Runnable, IAnonProxy
 		String toAI = "";
 		try
 		{
-			toAI = Pay.create().getAccount(Pay.create().getUsedAccount()).getAccountCertificate();
+			toAI = Pay.getInstance().getAccount(Pay.getInstance().getUsedAccount()).getAccountCertificate();
 			( (AnonServiceImpl) m_Anon).sendPayPackets(toAI);
 		}
 		catch (Exception ex)
@@ -109,7 +109,7 @@ final public class AnonProxy implements Runnable, IAnonProxy
 		LogHolder.log(LogLevel.DEBUG, LogType.NET, "AnonProxy: sendBalanceToAI läuft");
 		try
 		{
-			( (AnonServiceImpl) m_Anon).sendPayPackets(Pay.create().getAccount(Pay.create().getUsedAccount()).
+			( (AnonServiceImpl) m_Anon).sendPayPackets(Pay.getInstance().getAccount(Pay.getInstance().getUsedAccount()).
 				getBalance().getXMLString(true));
 		}
 		catch (Exception ex)

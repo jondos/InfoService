@@ -49,7 +49,7 @@ import pay.util.PayText;
 public class GuthabenAnzeige extends Box implements ModelListener
 {
 
-	Pay pay = Pay.create();
+	Pay pay = Pay.getInstance();
 
 	private JLabel info;
 	private JLabel guthaben;

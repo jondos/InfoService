@@ -116,7 +116,7 @@ public class UserDatenView extends JPanel implements ModelListener, JAPObserver,
 		changePassword = new JButton(PayText.get("changePassword"));
 		ausfahren = new JButton("erweitert");
 
-		savePw.setSelected(Pay.create().isAccountFileEncrypted());
+		savePw.setSelected(Pay.getInstance().isAccountFileEncrypted());
 
 		add(changePassword, grid.feld(0, 0).size(1, 1).fill(grid.HORIZONTAL));
 		add(savePw, grid.feld(1, 0));
@@ -190,7 +190,7 @@ public class UserDatenView extends JPanel implements ModelListener, JAPObserver,
 			{
 				JFileChooser chooser = new JFileChooser();
 				int returnVal = chooser.showOpenDialog(getParent());
-				Pay.create().importAccountFile(chooser.getSelectedFile().getAbsolutePath());
+				Pay.getInstance().importAccountFile(chooser.getSelectedFile().getAbsolutePath());
 				LogHolder.log(LogLevel.DEBUG, LogType.PAY, " importAccFile");
 			}
 		});
@@ -200,7 +200,7 @@ public class UserDatenView extends JPanel implements ModelListener, JAPObserver,
 			{
 				JFileChooser chooser = new JFileChooser();
 				int returnVal = chooser.showOpenDialog(getParent());
-				Pay.create().exportAccountFile(chooser.getSelectedFile().getAbsolutePath());
+				Pay.getInstance().exportAccountFile(chooser.getSelectedFile().getAbsolutePath());
 				LogHolder.log(LogLevel.DEBUG, LogType.PAY,
 							  "exportAccountFile to " + chooser.getSelectedFile().getAbsolutePath());
 			}
@@ -230,7 +230,7 @@ public class UserDatenView extends JPanel implements ModelListener, JAPObserver,
 
 	public void modelUpdated(ModelEvent me)
 	{
-		savePw.setSelected(Pay.create().isAccountFileEncrypted());
+		savePw.setSelected(Pay.getInstance().isAccountFileEncrypted());
 	}
 
 	public void valuesChanged()

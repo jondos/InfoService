@@ -146,12 +146,12 @@ public class AICommunication extends Thread
 
 	public String getSignedCC(XMLPayRequest request)
 	{
-		XMLEasyCC cc = Pay.create().addCosts(request.aiName, Pay.create().getUsedAccount(),
+		XMLEasyCC cc = Pay.getInstance().addCosts(request.aiName, Pay.getInstance().getUsedAccount(),
 											 countLastTransferredBytes());
 		try
 		{
 			XMLSignature sig = new XMLSignature(cc.getXMLString(true).getBytes());
-			sig.initSign(Pay.create().getAccount(Pay.create().getUsedAccount()).getPrivateKey());
+			sig.initSign(Pay.getInstance().getAccount(Pay.getInstance().getUsedAccount()).getPrivateKey());
 			return sig.signXML();
 
 		}
@@ -225,16 +225,16 @@ public class AICommunication extends Thread
 		}
 		if (request.accounting)
 		{
-			send(Pay.create().getAccount(Pay.create().getUsedAccount()).getAccountCertificate());
+			send(Pay.getInstance().getAccount(Pay.getInstance().getUsedAccount()).getAccountCertificate());
 
 			if (request.balanceNeeded.equals(XMLPayRequest.TRUE))
 			{
-				send(Pay.create().getAccount(Pay.create().getUsedAccount()).getBalance().getXMLString(true)); // hier soll nur aus der lokalen Datei gelesen werden
+				send(Pay.getInstance().getAccount(Pay.getInstance().getUsedAccount()).getBalance().getXMLString(true)); // hier soll nur aus der lokalen Datei gelesen werden
 
 			}
 			if (request.balanceNeeded.equals(XMLPayRequest.NEW))
 			{
-				send(Pay.create().updateBalance(Pay.create().getUsedAccount()).balance.getXMLString(true)); // hier soll die BI neu kontaktiert werden.
+				send(Pay.getInstance().updateBalance(Pay.getInstance().getUsedAccount()).balance.getXMLString(true)); // hier soll die BI neu kontaktiert werden.
 			}
 			if (request.costConfirmsNeeded.equals(XMLPayRequest.TRUE))
 			{

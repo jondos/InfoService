@@ -47,6 +47,8 @@ import payxml.XMLSignature;
 import payxml.XMLTransCert;
 import payxml.util.Signer;
 
+import anon.crypto.JAPSignature;
+
 /**
  * Hauptklasse für die Verbindung von Pay zur BI kümmert sich inhaltlich um die Kommunikation
  * also In welcher Reihenfolge Die Challenge-Response abläuft etc.
@@ -70,6 +72,10 @@ public class PayInstance
 	 */
 	public PayInstance(String host, int port, boolean sslOn)
 	{
+		LogHolder.log(LogLevel.DEBUG, LogType.PAY,
+				"PayInstance() initializing"
+			);
+
 		this.host = host;
 		this.port = port;
 		this.sslOn = sslOn;
@@ -82,6 +88,9 @@ public class PayInstance
 	 */
 	public void connect() throws IOException
 	{
+		LogHolder.log(LogLevel.DEBUG, LogType.PAY,
+				"PayInstance.connect() .. connecting to "+host+":"+port
+			);
 		try
 		{
 			if (sslOn == false)
@@ -97,6 +106,7 @@ public class PayInstance
 		catch (Exception ex)
 		{
 			LogHolder.log(LogLevel.DEBUG, LogType.PAY, PayText.get("piServerError"));
+			ex.printStackTrace();
 		}
 	}
 
@@ -107,6 +117,9 @@ public class PayInstance
 	 */
 	public void disconnect() throws IOException
 	{
+		LogHolder.log(LogLevel.DEBUG, LogType.PAY,
+				"PayInstance.disconnect() .. closing http connection"
+			);
 		httpClient.close();
 	}
 
@@ -353,19 +366,14 @@ public class PayInstance
 		RSAKeyParameters testkey = rootCerts.getPublicKey("test server");
 
 		LogHolder.log(LogLevel.DEBUG, LogType.PAY, answer);
+		
+		boolean sigOK = Pay.getInstance().getVerifyingInstance().verifyXML(
+				new java.io.ByteArrayInputStream(answer.getBytes())
+			);
 		XMLCertificate xmlCert = new XMLCertificate(answer);
-		XMLSignature xmlSig = new XMLSignature(answer.getBytes());
-		xmlSig.initVerify(testkey);
-		if (xmlSig.verifyXML() &&
-			xmlCert.getPublicKey().getModulus().equals(pubKey.getModulus()) &&
-			xmlCert.getPublicKey().getExponent().equals(pubKey.getExponent()))
-		{
-			return xmlCert;
-		}
-		else
-		{
-			throw new Exception("wrong signatur on accountcertificate or wrong key");
-		}
-
+		boolean modOK = xmlCert.getPublicKey().getModulus().equals(pubKey.getModulus());
+		boolean expOK = xmlCert.getPublicKey().getExponent().equals(pubKey.getExponent());
+		if(sigOK && modOK && expOK) return xmlCert;
+		else throw new Exception("wrong signature on accountCertificate or wrong key");
 	}
 }

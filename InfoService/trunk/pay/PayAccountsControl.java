@@ -53,7 +53,7 @@ public class PayAccountsControl
 
 	protected CryptFile cryptFile;
 	protected String filename = Literals.RES_PATH + Literals.ACCOUNT_FILE;
-	protected String password;
+	protected String m_password;
 	public static class NoPlainPayAccount extends Exception
 	{}
 
@@ -106,20 +106,26 @@ public class PayAccountsControl
 
 	public PayAccountFile open(String filename) throws WrongPasswordException, IOException
 	{
+		LogHolder.log(LogLevel.DEBUG, LogType.PAY, 
+				"PayAccountsControl.open(): filename='"+filename+"'."
+			);
 		byte[] all = null;
 		try
-		{
+		{  // try to open the accountfile
 			all = cryptFile.read(filename);
 		}
 		catch (FileNotFoundException e)
 		{
+			// if the file does not exist, make a new one
 			String pass = setPW("Passwort eingeben",
-								"<html>Wollen sie die Konto Informationen verschlüsselt speichern ?\n<br>" +
-								"Dann geben sie bitte ein Password ein und drücken sie JA. Wenn nicht drücken sie NEIN.\n<br>" +
-								"Achtung: Wenn sie die Kontodaten mit Password speichern sollte sie dies unbedingt erinnern\n<br>" +
-								"ihr Geld ist sonst unwiederbringlich verloren<html>",
-								"Passwörter stimmt nicht überein nochmals eingeben");
-			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "paswwort = " + pass);
+								"<html><h3>M&ouml;chten Sie die Kontoinformationen verschl&uuml;sselt speichern?</h3><br>" +
+								"Dann geben sie bitte ein Password ein und dr&uuml;cken sie JA.<br>"+
+								"Wenn nicht dr&uuml;cken sie NEIN.<br>" +
+								"<strong>Achtung:</strong>Wenn sie die Kontodaten mit Password speichern,<br>"+
+								"sollten sie <strong>das Passwort niemals vergessen</strong>,<br>" +
+								"ihr Geld ist sonst unwiederbringlich verloren</html>",
+								"Passw&ouml;rter stimmen nicht &uuml;berein, bitte nochmals eingeben!");
+			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "PayAccountsControl.open(): eingegebenes passwort: " + pass);
 			PayAccountFile accounts = new PayAccountFile(pass);
 			store(accounts);
 			return accounts;
@@ -242,13 +248,17 @@ public class PayAccountsControl
 	public void store(PayAccountFile accounts, String filename) throws IOException
 	{
 		byte[] all = accounts.getXML();
-		if (accounts.getPassword() != null)
+		String pass = accounts.getPassword();
+		if (pass != null)
 		{
-			all = cryptFile.encrypt(accounts.getXML(), accounts.getPassword());
 			LogHolder.log(LogLevel.DEBUG, LogType.PAY,
-						  "store(): accounts wird encrypted gespeichert pass: " + password);
+						  "PayAccountsControl.store(): accountfile '"+filename+
+							"' wird verschlüsselt, passwort: " + pass);
+			all = cryptFile.encrypt(accounts.getXML(), pass);
 		}
 		FileOutputStream out = new FileOutputStream(filename);
+		LogHolder.log(LogLevel.DEBUG, LogType.PAY,
+				"PayAccountsControl.store(): now saving file '"+filename+"'!");
 		out.write(all);
 		out.flush();
 		out.close();

@@ -31,6 +31,11 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
+
+
 import payxml.XMLDescription;
 
 final public class HttpClient
@@ -79,9 +84,17 @@ final public class HttpClient
 	 */
 	public void writeRequest(String method, String url, String data) throws IOException
 	{
+		LogHolder.log(LogLevel.DEBUG, LogType.PAY,
+				"HttpClient.writeRequest(): "+method+" /"+url+ " HTTP/1.1"
+			);
+
 		m_dataOS.writeBytes(method + " /" + url + " HTTP/1.1\r\n");
 		if (method.equals("POST"))
 		{
+			LogHolder.log(LogLevel.DEBUG, LogType.PAY,
+				"HttpClient.writeRequest(): POSTing data: "+data
+			);
+
 			m_dataOS.writeBytes("Content-Length: " + data.length() + "\r\n");
 			m_dataOS.writeBytes("\r\n");
 			m_dataOS.writeBytes(data);
@@ -105,6 +118,7 @@ final public class HttpClient
 		byte[] data = null;
 		int index;
 		String line = readLine(m_dataIS);
+		
 
 		if ( (index = line.indexOf(" ")) == -1)
 		{
@@ -172,6 +186,10 @@ final public class HttpClient
 			}
 			throw new IOException(statusString);
 		}
+
+		LogHolder.log(LogLevel.DEBUG, LogType.PAY,
+				"HttpClient.readAnswer(): received: "+ new String(data)
+			);
 
 		return new String(data);
 
