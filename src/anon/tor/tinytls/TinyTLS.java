@@ -26,7 +26,8 @@
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
 /*
- * Created on Mar 16, 2004
+ * based on tinySSL
+ * (http://www.ritlabs.com/en/products/tinyweb/tinyssl.php)
  *
  */
 package anon.tor.tinytls;
@@ -44,6 +45,7 @@ import java.util.Vector;
 import org.bouncycastle.crypto.params.DHParameters;
 import org.bouncycastle.crypto.params.DHPublicKeyParameters;
 import anon.crypto.JAPCertificate;
+import anon.crypto.JAPCertificateStore;
 import anon.tor.util.helper;
 import logging.LogHolder;
 import logging.LogLevel;
@@ -78,6 +80,7 @@ public class TinyTLS extends Socket
 	private boolean m_certificaterequested;
 
 	private JAPCertificate m_servercertificate;
+	private JAPCertificateStore m_trustedCertificates;
 	private DHParameters m_dhparams;
 	private DHPublicKeyParameters m_dhserverpub;
 	private byte[] m_serverparams;
@@ -123,7 +126,7 @@ public class TinyTLS extends Socket
 		 * Block until data is available...
 		 * @return
 		 */
-		private synchronized void readRecord() throws TLSException, IOException
+		private synchronized void readRecord() throws IOException
 		{
 			if (m_ReadRecordState == STATE_START)
 			{
@@ -321,17 +324,18 @@ public class TinyTLS extends Socket
 		 * process server certificate
 		 * @param bytes server certificate message
 		 * @throws IOException
-		 * @throws CertificateException
 		 */
 		private void gotCertificate(byte[] bytes, int offset, int len) throws IOException
 		{
-//TODO: alle m?glichen zertifikate abfragen und nicht nur eins
 			Vector certificates = new Vector();
-			byte[] b = helper.copybytes(bytes, 0 + offset, 3);
+			byte[] b = helper.copybytes(bytes, offset, 3);
 			int certificateslength = ( (b[0] & 0xFF) << 16) | ( (b[1] & 0xFF) << 8) | (b[2] & 0xFF);
-			b = helper.copybytes(bytes, 3 + offset, 3);
+			int pos = offset+3;
+			b = helper.copybytes(bytes, pos, 3);
+			pos += 3;
 			int certificatelength = ( (b[0] & 0xFF) << 16) | ( (b[1] & 0xFF) << 8) | (b[2] & 0xFF);
-			b = helper.copybytes(bytes, 6 + offset, certificatelength);
+			b = helper.copybytes(bytes, pos, certificatelength);
+			pos += certificatelength;
 			JAPCertificate japcert = JAPCertificate.getInstance(b);
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC,
 						  "[SERVER_CERTIFICATE] " + japcert.getIssuer().toString());
@@ -339,6 +343,26 @@ public class TinyTLS extends Socket
 						  "[SERVER_CERTIFICATE] " + japcert.getSubject().toString());
 			m_servercertificate = japcert;
 			m_selectedciphersuite.setServerCertificate(japcert);
+			certificates.addElement(japcert);
+			while(pos-offset<certificateslength)
+			{
+				b = helper.copybytes(bytes, pos, 3);
+				pos += 3;
+				certificatelength = ( (b[0] & 0xFF) << 16) | ( (b[1] & 0xFF) << 8) | (b[2] & 0xFF);
+				b = helper.copybytes(bytes, pos, certificatelength);
+				pos += certificatelength;
+				japcert = JAPCertificate.getInstance(b);
+				LogHolder.log(LogLevel.DEBUG, LogType.MISC,
+							  "[NEXT_CERTIFICATE] " + japcert.getIssuer().toString());
+				LogHolder.log(LogLevel.DEBUG, LogType.MISC,
+							  "[NEXT_CERTIFICATE] " + japcert.getSubject().toString());
+				certificates.addElement(japcert);
+			}
+			//certificates are checked, if a certificatestore is set
+			if(m_trustedCertificates!=null)
+			{
+//TODO: Zertifikate (certificates) mit JapCertificateStore(m_trustedCertificates) überprüfen
+			}
 		}
 
 		/**
@@ -347,7 +371,7 @@ public class TinyTLS extends Socket
 		 * @throws IOException
 		 * @throws Exception
 		 */
-		private void gotServerKeyExchange(byte[] bytes, int offset, int len) throws IOException, Exception
+		private void gotServerKeyExchange(byte[] bytes, int offset, int len) throws IOException
 		{
 			m_selectedciphersuite.serverKeyExchange(bytes, offset, len, m_clientrandom, m_serverrandom);
 		}
@@ -393,7 +417,6 @@ public class TinyTLS extends Socket
 					{
 						case 0:
 						{
-							//TODO : close stream
 							LogHolder.log(LogLevel.DEBUG, LogType.MISC,
 										  "[RECIEVED-ALERT] TYPE=WARNING ; MESSAGE=CLOSE NOTIFY");
 							break;
@@ -424,7 +447,7 @@ public class TinyTLS extends Socket
 		 * @throws CertificateException
 		 * @throws Exception
 		 */
-		protected void readServerHandshakes() throws IOException, Exception
+		protected void readServerHandshakes() throws IOException
 		{
 			while (!m_serverhellodone)
 			{
@@ -514,7 +537,7 @@ public class TinyTLS extends Socket
 		 * wait for server finished message
 		 *
 		 */
-		protected void readServerFinished() throws TLSException, IOException
+		protected void readServerFinished() throws IOException
 		{
 			readRecord();
 
@@ -757,7 +780,7 @@ public class TinyTLS extends Socket
 	 * @param port
 	 * Server's TLS Port
 	 */
-	public TinyTLS(String addr, int port) throws UnknownHostException, IOException, Exception
+	public TinyTLS(String addr, int port) throws UnknownHostException, IOException
 	{
 		super(addr, port);
 		this.m_handshakecompleted = false;
@@ -765,14 +788,13 @@ public class TinyTLS extends Socket
 		this.m_encrypt = false;
 		this.m_certificaterequested = false;
 		this.m_supportedciphersuites = new Vector();
-		this.addCipherSuite(new DHE_RSA_WITH_3DES_CBC_SHA());
-//		this.addCipherSuite(new DHE_RSA_WITH_AES_128_CBC_SHA());
 		m_istream = new TLSInputStream(super.getInputStream());
 		m_ostream = new TLSOutputStream(super.getOutputStream());
+		this.m_trustedCertificates = null;
 	}
 
 	/**
-	 * add more ciphersuites to TinyTLS
+	 * add a ciphersuites to TinyTLS
 	 * @param cs ciphersuite you want to add
 	 */
 	public void addCipherSuite(CipherSuite cs)
@@ -789,8 +811,18 @@ public class TinyTLS extends Socket
 	 * @throws CertificateException
 	 * @throws Exception
 	 */
-	public void startHandshake() throws IOException, Exception
+	public void startHandshake() throws IOException
 	{
+		if(m_supportedciphersuites.isEmpty())
+		{
+			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[NO_CIPHERSUITE_DEFINED] : using DHE_RSA_WITH_3DES_CBC_SHA");
+			this.addCipherSuite(new DHE_RSA_WITH_3DES_CBC_SHA());
+//			this.addCipherSuite(new DHE_RSA_WITH_AES_128_CBC_SHA());
+		}
+		if(m_trustedCertificates == null)
+		{
+			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[TRUSTED_CERTIFICATES_NOT_SET] : all certificates are accepted without being checked");
+		}
 		this.m_handshakemessages = new byte[]
 			{};
 		this.m_ostream.sendClientHello();
@@ -801,6 +833,11 @@ public class TinyTLS extends Socket
 		this.m_ostream.sendClientFinished();
 		this.m_istream.readServerFinished();
 		this.m_handshakecompleted = true;
+	}
+
+	public void setAllowedCertificates(JAPCertificateStore certificatestore)
+	{
+		this.m_trustedCertificates = certificatestore;
 	}
 
 	public InputStream getInputStream()

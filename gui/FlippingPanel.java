@@ -33,95 +33,153 @@ import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.Window;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import javax.swing.Icon;
 import javax.swing.JButton;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
-import javax.swing.JToggleButton;
 import jap.JAPUtil;
-import java.awt.*;
-public class FlippingPanel extends JPanel
+
+final public class FlippingPanel extends JPanel
 {
-	JPanel mainPanel;
-	JPanel smallPanel;
-	JPanel fullPanel;
-	JToggleButton bttn;
-	CardLayout l;
-	Window m_Parent;
+	private JPanel m_panelContainer;
+	private JPanel smallPanel;
+	private JPanel fullPanel;
+	private CardLayout m_Layout;
+	private Window m_Parent;
+	private boolean m_bIsFlipped;
+	private final static Icon ms_iconUp = JAPUtil.loadImageIcon("arrow.gif", true);
+	private final static Icon ms_iconDown = JAPUtil.loadImageIcon("arrow90.gif", true);
+	private final static int ms_iBttnWidth=ms_iconUp.getIconWidth();
+	private final static int ms_iBttnHeight=ms_iconDown.getIconHeight();
+
 	public FlippingPanel(Window parent)
 	{
-		m_Parent=parent;
+		m_bIsFlipped = false;
+		m_Parent = parent;
 		GridBagLayout gbl = new GridBagLayout();
 		GridBagConstraints c = new GridBagConstraints();
 		setLayout(gbl);
-		//  	setBackground(Color.DARK_GRAY);
-		bttn = new JToggleButton(JAPUtil.loadImageIcon("arrow.gif", true));
-		bttn.setSelectedIcon(JAPUtil.loadImageIcon("arrow90.gif", true));
-		bttn.setBorderPainted(false);
-		bttn.setContentAreaFilled(false);
-		bttn.setFocusPainted(false);
+		final JLabel labelBttn = new JLabel(ms_iconUp);
 		c.insets = new Insets(0, 0, 0, 0);
 		c.anchor = GridBagConstraints.NORTHWEST;
-		bttn.addActionListener(new ActionListener()
+		labelBttn.addMouseListener(new MouseListener()
 		{
-			public void actionPerformed(ActionEvent e)
+			public void mouseClicked(MouseEvent e)
 			{
-				if (bttn.isSelected())
+				m_bIsFlipped = !m_bIsFlipped;
+				if (m_bIsFlipped)
 				{
-					l.last(mainPanel);
+					m_Layout.last(m_panelContainer);
+					labelBttn.setIcon(ms_iconDown);
 				}
 				else
 				{
-					l.first(mainPanel);
+					m_Layout.first(m_panelContainer);
+					labelBttn.setIcon(ms_iconUp);
 				}
 				m_Parent.pack();
 			}
-		});
-		add(bttn, c);
+
+			public void mouseEntered(MouseEvent e)
+			{
+			}
+
+			public void mouseExited(MouseEvent e)
+			{
+			}
+
+			public void mousePressed(MouseEvent e)
+			{
+			}
+
+			public void mouseReleased(MouseEvent e)
+			{
+			}
+		}
+		);
+		add(labelBttn, c);
 		c.gridx = 1;
 		c.fill = GridBagConstraints.BOTH;
 		c.weightx = 1;
 		c.weighty = 1;
 		c.insets = new Insets(0, 0, 0, 0);
-		mainPanel = new JPanel();
-		//addComponentListener(this);
-		l = new CardLayout();
-		mainPanel.setLayout(l);
-		//mainPanel.setSize(200,200);
-		//mainPanel.setLocation(20,5);
-		mainPanel.setBackground(Color.blue);
-		add(mainPanel, c);
+		m_panelContainer = new JPanel();
+		m_Layout = new CardLayout();
+		m_panelContainer.setLayout(m_Layout);
+		add(m_panelContainer, c);
+
 		smallPanel = new JPanel();
 		smallPanel.setBackground(Color.green);
 		smallPanel.add(new JButton("Help"));
-		mainPanel.add(smallPanel, "FIRST");
+		m_panelContainer.add(smallPanel, "FIRST");
 		fullPanel = new JPanel();
 		fullPanel.add(new JTextArea(10, 10));
 		fullPanel.setBackground(Color.red);
-		mainPanel.add(fullPanel, "FULL");
+		m_panelContainer.add(fullPanel, "FULL");
 	}
 
 	public void setFullPanel(JPanel p)
 	{
-		mainPanel.remove(1);
+		m_panelContainer.remove(1);
 		fullPanel = p;
-		mainPanel.add(fullPanel, "FULL");
+		m_panelContainer.add(fullPanel, "FULL");
+	}
+
+	public void setSmallPanel(JPanel p)
+	{
+		m_panelContainer.remove(0);
+		smallPanel = p;
+		m_panelContainer.add(smallPanel, "FIRST",0);
+		m_Layout.first(m_panelContainer);
 	}
 
 	public Dimension getPreferredSize()
 	{
 		Dimension d;
-		if (bttn.isSelected())
+		if (m_bIsFlipped)
 		{
-			d=fullPanel.getPreferredSize();
+			d = fullPanel.getPreferredSize();
 		}
 		else
 		{
-			d=smallPanel.getPreferredSize();
+			d = smallPanel.getPreferredSize();
 		}
-		d.width+=bttn.getSize().width;
+		d.width += ms_iBttnWidth;
 		return d;
 	}
 
+	public Dimension getMinimumSize()
+	{
+		Dimension d;
+		if (m_bIsFlipped)
+		{
+			d = fullPanel.getMinimumSize();
+		}
+		else
+		{
+			d = smallPanel.getMinimumSize();
+		}
+		d.width += ms_iBttnWidth;
+		d.height=Math.max(d.height,ms_iBttnHeight);
+		return d;
+	}
+
+	public Dimension getMaximumSize()
+	{
+		Dimension d;
+		if (m_bIsFlipped)
+		{
+			d = fullPanel.getMaximumSize();
+		}
+		else
+		{
+			d = smallPanel.getMaximumSize();
+		}
+		d.width += ms_iBttnWidth;
+		return d;
+	}
 }
