@@ -1645,6 +1645,10 @@ public final class JAPController implements ProxyListener, Observer
 					}
 					MixCascade currentMixCascade = m_Controller.getCurrentMixCascade();
 					m_proxyAnon.setMixCascade(currentMixCascade);
+					m_proxyAnon.setAutoReConnect(JAPModel.getAutoReConnect());
+					m_proxyAnon.setPreCreateAnonRoutes(JAPModel.isPreCreateAnonRoutesEnabled());
+					m_proxyAnon.setProxyListener(m_Controller);
+					m_proxyAnon.setDummyTraffic(JAPModel.getDummyTraffic());
 					// -> we can try to start anonymity
 					if (m_proxyDirect != null)
 					{
@@ -1685,10 +1689,6 @@ public final class JAPController implements ProxyListener, Observer
 								mbActCntMessageNotRemind = true;
 							}
 						}
-						m_proxyAnon.setProxyListener(m_Controller);
-						m_proxyAnon.setDummyTraffic(JAPModel.getDummyTraffic());
-						m_proxyAnon.setAutoReConnect(JAPModel.getAutoReConnect());
-						m_proxyAnon.setPreCreateAnonRoutes(JAPModel.isPreCreateAnonRoutesEnabled());
 						// start feedback thread
 						feedback = new JAPFeedback();
 						feedback.startRequests();
