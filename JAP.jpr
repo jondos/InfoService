@@ -46,7 +46,7 @@
 #67=logging\DummyLog.java
 idl[0].ProcessIDL=false
 runtime.0[0].RunnableType=com.borland.jbuilder.runtime.ApplicationRunner
-runtime.0[0].application.class=JAPTest
+runtime.0[0].application.class=JAP
 runtime.0[0].jsprunner.launchuri=/
 runtime.0[0].test.harness=junit.textui.TestRunner
 sys[0].AuthorLabel=@author
