@@ -41,60 +41,16 @@ import java.text.SimpleDateFormat;
 
 final class JAPDirectProxy implements Runnable
 	{
-/** 
- *  This class is used to inform the user that he tries to
- *  send requests although anonymity mode is off.
- */
-private final class JAPDirectConnection implements Runnable 
-	{
-		private JAPModel model;
-		private Socket s;
-		private SimpleDateFormat dateFormatHTTP;
-	
-		public JAPDirectConnection(Socket s)
-			{
-				this.s = s;
-				this.model = JAPModel.getModel();
-				dateFormatHTTP=new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz",Locale.US);
-				dateFormatHTTP.setTimeZone(TimeZone.getTimeZone("GMT"));
-			}
-	
-		public void run()
-			{
-				try 
-					{
-						String date=dateFormatHTTP.format(new Date());
-						BufferedWriter toClient = new BufferedWriter(new OutputStreamWriter(s.getOutputStream()));
-						toClient.write("HTTP/1.1 200 OK\r\n");
-						toClient.write("Content-type: text/html\r\n");
-						toClient.write("Expires: "+date+"\r\n");
-						toClient.write("Date: "+date+"\r\n");
-						toClient.write("Pragma: no-cache\r\n");
-						toClient.write("Cache-Control: no-cache\r\n\r\n");
-						toClient.write("<HTML><TITLE> </TITLE>");
-						toClient.write("<PRE>"+date+"</PRE>");
-						toClient.write(model.getString("htmlAnonModeOff"));
-						toClient.write("</HTML>\n");
-						toClient.flush();
-						toClient.close();
-						s.close();
-					}
-				catch (Exception e)
-					{
-						JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.NET,"JAPFeedbackConnection: Exception: "+e);
-					}
-			}
-}
 
 
-		private volatile boolean runFlag; 
-		private boolean isRunningProxy = false;
+	private volatile boolean runFlag; 
+	private boolean isRunningProxy = false;
     private int portN;
     private ServerSocket socketListener;
     private Thread threadRunLoop;
-		private ThreadGroup threadgroupAll;
-		private JAPModel model;
-    
+	private ThreadGroup threadgroupAll;
+	private JAPModel model;
+	private boolean warnUser = true;
 
     public JAPDirectProxy (ServerSocket s) 
 			{
@@ -136,44 +92,44 @@ private final class JAPDirectConnection implements Runnable
 			
 			}
 		
-    public void run()
-			{
-				runFlag = true;
-				try 
-					{
-						while(runFlag)
-							{
-								Socket socket=null;
-								try
-									{
-										socket = socketListener.accept();
-									}
-								catch(InterruptedIOException e1)
-									{
-										continue;
-									}
-								catch(SocketException e2)
-									{
-										JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPDirectProxy:DirectProxy.run() accept socket excpetion: " +e2);
-										break;
-									}
-								JAPDirectConnection doIt = new JAPDirectConnection(socket);
-								Thread thread = new Thread (threadgroupAll,doIt);
-								thread.start();
-							}
-					}
-				catch (Exception e)
-					{
-			//			try {
-			//			socketListener.close();
-			//			} 
-			//			catch (Exception e2) {
-			//			}
-						JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPDirectProxy:DirectProxy.run() Exception: " +e);
-					}
-				isRunningProxy = false;
-				JAPDebug.out(JAPDebug.INFO,JAPDebug.NET,"JAPDirect:DircetProxyServer stopped.");
-		  }
+    public void run() {
+		runFlag = true;
+		try {
+			while(runFlag) {
+				Socket socket=null;
+				try {
+					socket = socketListener.accept();
+				}
+				catch(InterruptedIOException e1) {
+					continue;
+				}
+				catch(SocketException e2) {
+					JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPDirectProxy:DirectProxy.run() accept socket excpetion: " +e2);
+					break;
+				}
+				if (warnUser) {
+					JAPDirectConnection      doIt = new JAPDirectConnection(socket);
+					Thread thread = new Thread (threadgroupAll,doIt);
+					thread.start();
+					warnUser=false;
+				} else {
+					JAPDirectProxyConnection doIt = new JAPDirectProxyConnection (socket);			
+					Thread thread = new Thread (threadgroupAll,doIt);
+					thread.start();
+				}
+			}
+		}
+		catch (Exception e) {
+//			try {
+//			socketListener.close();
+//			} 
+//			catch (Exception e2) {
+//			}
+			JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPDirectProxy:DirectProxy.run() Exception: " +e);
+		}
+		isRunningProxy = false;
+		JAPDebug.out(JAPDebug.INFO,JAPDebug.NET,"JAPDirect:DircetProxyServer stopped.");
+	}
 	
 
     public void stopService()
@@ -201,4 +157,51 @@ private final class JAPDirectConnection implements Runnable
 	//		JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.NET,"JAPProxyServer:stopService() Exception: " +e);
 	//	}
 	//}
+
+		
+/** 
+ *  This class is used to inform the user that he tries to
+ *  send requests although anonymity mode is off.
+ */
+	private final class JAPDirectConnection implements Runnable {
+		private JAPModel model;
+		private Socket s;
+		private SimpleDateFormat dateFormatHTTP;
+	
+		public JAPDirectConnection(Socket s)
+			{
+				this.s = s;
+				this.model = JAPModel.getModel();
+				dateFormatHTTP=new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz",Locale.US);
+				dateFormatHTTP.setTimeZone(TimeZone.getTimeZone("GMT"));
+			}
+	
+		public void run()
+			{
+				try 
+					{
+						String date=dateFormatHTTP.format(new Date());
+						BufferedWriter toClient = new BufferedWriter(new OutputStreamWriter(s.getOutputStream()));
+						toClient.write("HTTP/1.1 200 OK\r\n");
+						toClient.write("Content-type: text/html\r\n");
+						toClient.write("Expires: "+date+"\r\n");
+						toClient.write("Date: "+date+"\r\n");
+						toClient.write("Pragma: no-cache\r\n");
+						toClient.write("Cache-Control: no-cache\r\n\r\n");
+						toClient.write("<HTML><TITLE>JAP</TITLE>\n");
+						toClient.write("<PRE>"+date+"</PRE>\n");
+						toClient.write(model.getString("htmlAnonModeOff"));
+						toClient.write("</HTML>\n");
+						toClient.flush();
+						toClient.close();
+						s.close();
+					}
+				catch (Exception e)
+					{
+						JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.NET,"JAPFeedbackConnection: Exception: "+e);
+					}
+			}
+	}
+		
+		
 }
