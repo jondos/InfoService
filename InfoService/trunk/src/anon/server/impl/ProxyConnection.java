@@ -36,6 +36,7 @@ import HTTPClient.Codecs;
 import anon.infoservice.ImmutableProxyInterface;
 import anon.infoservice.ListenerInterface;
 import anon.server.AnonServiceImpl;
+import anon.util.SocketFactory;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -62,7 +63,7 @@ final public class ProxyConnection
 	{
 		if (a_proxyInterface == null)
 		{ //plain Socket; no Proxy...
-			m_ioSocket = new Socket(host, port);
+			m_ioSocket = SocketFactory.createSocket(host, port, 0);
 			m_ioSocket.setSoTimeout(0);
 			m_In = m_ioSocket.getInputStream();
 			m_Out = m_ioSocket.getOutputStream();
@@ -76,7 +77,7 @@ final public class ProxyConnection
 		if (m_proxyInterface.getProtocol()==ProxyInterface.PROTOCOL_TYPE_HTTP ||
 			m_proxyInterface.getProtocol()==ProxyInterface.PROTOCOL_TYPE_HTTPS)
 		{ //HTTP/HTTPS Proxy
-			m_ioSocket = new Socket(a_proxyInterface.getHost(), a_proxyInterface.getPort());
+			m_ioSocket = SocketFactory.createSocket(a_proxyInterface.getHost(), a_proxyInterface.getPort(), 0);
 			m_In = m_ioSocket.getInputStream();
 			m_Out = m_ioSocket.getOutputStream();
 			m_ioSocket.setSoTimeout(60000);

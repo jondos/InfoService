@@ -682,6 +682,23 @@ public class JAPRoutingEstablishForwardedConnectionDialog {
     connectDialog.disableManualClosing();
     JPanel connectPanel = connectDialog.getRootPanel();
 
+    /* this Vector contains a message, if an error occured. */
+    final Vector occuredError = new Vector();
+
+    final Thread connectThread = new Thread(new Runnable()
+    {
+      public void run()
+      {
+        /* this is the connect to forwarder thread */
+        /* the forwarder is already set, we only need to connect to */
+        if (JAPModel.getInstance().getRoutingSettings().setRoutingMode(JAPRoutingSettings.ROUTING_MODE_CLIENT) == false) {
+          /* error while connecting -> show a message and go back to step 1 */
+          occuredError.addElement(JAPMessages.getString("settingsRoutingClientConfigConnectToForwarderError"));
+        }
+        connectDialog.dispose();
+      }
+    });
+
     ListenerInterface currentForwarder = JAPModel.getInstance().getRoutingSettings().getForwarder();
     String currentForwarderString = "";
     if (currentForwarder != null) {
@@ -692,13 +709,25 @@ public class JAPRoutingEstablishForwardedConnectionDialog {
     JLabel settingsRoutingClientConfigDialogConnectToForwarderLabel = new JLabel(JAPMessages.getString("settingsRoutingClientConfigDialogConnectToForwarderLabel"));
     settingsRoutingClientConfigDialogConnectToForwarderLabel.setFont(getFontSetting());
     JLabel busyLabel = new JLabel(JAPUtil.loadImageIcon(JAPConstants.BUSYFN, true));
+    JButton settingsRoutingClientConfigDialogConnectToForwarderCancelButton = new JButton(JAPMessages.getString("cancelButton"));
+    settingsRoutingClientConfigDialogConnectToForwarderCancelButton.setFont(getFontSetting());
+    settingsRoutingClientConfigDialogConnectToForwarderCancelButton.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent event)
+      {
+        /* if the Cancel button is pressed, simply interrupt the connect thread -> because of the
+         * used SocketFactory class, the Socket creation should be stopped immediately ->
+         * setRoutingMode will return false
+         */
+        connectThread.interrupt();
+      }
+    });
 
     GridBagLayout connectPanelLayout = new GridBagLayout();
     connectPanel.setLayout(connectPanelLayout);
 
     GridBagConstraints connectPanelConstraints = new GridBagConstraints();
     connectPanelConstraints.anchor = GridBagConstraints.NORTHWEST;
-    connectPanelConstraints.fill = GridBagConstraints.HORIZONTAL;
+    connectPanelConstraints.fill = GridBagConstraints.NONE;
     connectPanelConstraints.weighty = 0.0;
 
     connectPanelConstraints.gridx = 0;
@@ -716,29 +745,18 @@ public class JAPRoutingEstablishForwardedConnectionDialog {
     connectPanelConstraints.gridx = 0;
     connectPanelConstraints.gridy = 2;
     connectPanelConstraints.anchor = GridBagConstraints.NORTH;
-    connectPanelConstraints.weighty = 1.0;
-    connectPanelConstraints.insets = new Insets(20, 5, 10, 5);
+    connectPanelConstraints.insets = new Insets(10, 5, 20, 5);
     connectPanelLayout.setConstraints(busyLabel, connectPanelConstraints);
     connectPanel.add(busyLabel);
 
+    connectPanelConstraints.gridx = 0;
+    connectPanelConstraints.gridy = 3;
+    connectPanelConstraints.insets = new Insets(0, 5, 5, 5);
+    connectPanelConstraints.weighty = 1.0;
+    connectPanelLayout.setConstraints(settingsRoutingClientConfigDialogConnectToForwarderCancelButton, connectPanelConstraints);
+    connectPanel.add(settingsRoutingClientConfigDialogConnectToForwarderCancelButton);
+
     connectDialog.align();
-
-    /* this Vector contains a message, if an error occured. */
-    final Vector occuredError = new Vector();
-
-    final Thread connectThread = new Thread(new Runnable()
-    {
-      public void run()
-      {
-        /* this is the connect to forwarder thread */
-        /* the forwarder is already set, we only need to connect to */
-        if (JAPModel.getInstance().getRoutingSettings().setRoutingMode(JAPRoutingSettings.ROUTING_MODE_CLIENT) == false) {
-          /* error while connecting -> show a message and go back to step 1 */
-          occuredError.addElement(JAPMessages.getString("settingsRoutingClientConfigConnectToForwarderError"));
-        }
-        connectDialog.dispose();
-      }
-    });
 
     /* for synchronization purposes, it is necessary to show the dialog first and start the thread
      * after that event

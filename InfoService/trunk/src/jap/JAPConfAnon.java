@@ -901,8 +901,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 	protected void onRootPanelShown()
 	{
-	/*	updateFromInfoservice();
-		updateMixCascadeCombo();*/
+		if (!m_infoService.isFilled())
+		{
 	   m_reloadCascadesButton.setEnabled(false);
 	   Runnable doIt = new Runnable()
 	   {
@@ -946,8 +946,9 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	   valueChanged(new ListSelectionEvent(m_listMixCascade, 0,
 										   m_listMixCascade.getModel().getSize(), false));
 	}
+	}
 
-	/**
+/**
 	 * Handles the selection of a cascade
 	 * @param e ListSelectionEvent
 	 */
@@ -964,7 +965,14 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 				if (m_infoService != null)
 				{
+					if (m_infoService.getNumOfMixes(cascadeId) == -1)
+					{
+						this.drawServerPanel(3, false);
+					}
+					else
+					{
 				this.drawServerPanel(m_infoService.getNumOfMixes(cascadeId), true);
+					}
 				m_numOfUsersLabel.setText(m_infoService.getNumOfUsers(cascadeId));
 					m_reachableLabel.setText(m_infoService.getHosts(cascadeId));
 					m_portsLabel.setText(m_infoService.getPorts(cascadeId));
@@ -1082,6 +1090,7 @@ class InfoServiceTempLayer
 {
 	private Vector m_Cascades;
 	private Vector m_Mixes;
+	private boolean m_isFilled = false;
 
 	public InfoServiceTempLayer(boolean a_autoFill)
 	{
@@ -1093,6 +1102,11 @@ class InfoServiceTempLayer
 		}
 	}
 
+	public boolean isFilled()
+	{
+		return m_isFilled;
+	}
+
 	/**
 	 * Fills the temporary database by requesting info from the infoservice.
 	 */
@@ -1100,6 +1114,7 @@ class InfoServiceTempLayer
 	{
 		m_Mixes = new Vector();
 		m_Cascades = new Vector();
+
 		InfoServiceDBEntry entry = InfoServiceHolder.getInstance().getPreferedInfoService();
 		try
 		{
@@ -1177,6 +1192,8 @@ class InfoServiceTempLayer
 		catch(Exception a_e)
 		{
 		}
+
+		m_isFilled = true;
 	}
 
 	/**

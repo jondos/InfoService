@@ -81,12 +81,6 @@ public class JAPRoutingMessage
   public static final int CONNECTION_PARAMETERS_CHANGED = 7;
 
   /**
-   * This message is sent from JAPRoutingConnectionClassSelector when there are added or removed
-   * some connection classes from the list of all connection classes.
-   */
-  public static final int CONNECTION_CLASSES_LIST_CHANGED = 8;
-
-  /**
    * This message is sent from JAPRoutingUseableMixCascades when the policy of the allowed
    * mixcascades is switched between restricted-to-list or access-to-all mode.
    */

@@ -253,7 +253,7 @@ public final class JAPController implements ProxyListener, Observer
 	 * and then in the JAP install directory.
 	 * The configuration is a XML-File with the following structure:
 	 *  <JAP
-	 *    version="0.16"                     // version of the xml struct (DTD) used for saving the configuration
+	 *    version="0.17"                     // version of the xml struct (DTD) used for saving the configuration
 	 *    portNumber=""                     // Listener-Portnumber
 	 *    portNumberSocks=""                // Listener-Portnumber for SOCKS
 	 *    supportSocks=""                   // Will we support SOCKS ?
@@ -348,8 +348,7 @@ public final class JAPController implements ProxyListener, Observer
 	 *         <ConnectionClass>                                 // a single connection class entry
 	 *           <ClassIdentifier>0</ClassIdentifier>            // the identifier of the connection class
 	 *           <MaximumBandwidth>10000</MaximumBandwidth>      // the maximum bandwidth (bytes/sec) the class provides
-	 *           <UseableBandwidth>5000</UseableBandwidth>       // the bandwidth (bytes/sec) useable for forwarding
-	 *           <SimultaneousConnections>1</SimultaneousConnections>  // the number of simultaneous connections, the server shall handle
+	 *           <RelativeBandwidth>50</RelativeBandwidth>       // since version 0.17, the percentage of the bandwidth useable for forwarding
 	 *         </ConnectionClass>
 	 *         ...
 	 *       </ConnectionClasses>
@@ -1033,7 +1032,7 @@ public final class JAPController implements ProxyListener, Observer
 			Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
 			Element e = doc.createElement("JAP");
 			doc.appendChild(e);
-			XMLUtil.setAttribute(e, JAPConstants.CONFIG_VERSION, "0.16");
+			XMLUtil.setAttribute(e, JAPConstants.CONFIG_VERSION, "0.17");
 			//
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_PORT_NUMBER,
 								 Integer.toString(JAPModel.getHttpListenerPortNumber()));
