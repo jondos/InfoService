@@ -195,7 +195,9 @@ final class IOQueue
 
     public synchronized int read(byte[] in,int pos,int len) throws IOException
       {
-       while(true)
+        if(len<=0)
+          return 0;
+        while(true)
           {
             if(bReadClosed)
               throw new IOException("IOQueue closed");
@@ -358,3 +360,6 @@ final class ChannelOutputStream extends OutputStream
       {
       }
   }
+
+
+

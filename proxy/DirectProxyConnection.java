@@ -28,6 +28,8 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 package proxy;
 import JAPDebug;
 import JAPUtil;
+import JAPModel;
+import JAPConstants;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -42,6 +44,7 @@ import java.util.StringTokenizer;
 import kasper.net.ftp.FTPClient;
 import kasper.net.ftp.FTPServerResponse;
 import kasper.net.RemoteFile;
+import anon.server.impl.ProxyConnection;
 
 final class DirectProxyConnection implements Runnable
 	{
@@ -259,7 +262,15 @@ final class DirectProxyConnection implements Runnable
 	private void handleHTTP() throws Exception {
 		try {
 			// create Socket to Server
-			Socket serverSocket = new Socket(host,port);
+			Socket serverSocket=null;
+      if(JAPModel.getUseFirewall()&&JAPModel.getFirewallType()==JAPConstants.FIREWALL_TYPE_SOCKS)
+        {
+          ProxyConnection p=new ProxyConnection(JAPDebug.create(),JAPConstants.FIREWALL_TYPE_SOCKS,JAPModel.getFirewallHost(),
+                                              JAPModel.getFirewallPort(),null,null,host,port);
+          serverSocket=p.getSocket();
+        }
+      else
+        serverSocket = new Socket(host,port);
 
 			// Send request --> server
 			OutputStream outputStream = serverSocket.getOutputStream();

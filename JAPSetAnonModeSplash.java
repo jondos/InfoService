@@ -61,8 +61,12 @@ final class JAPSetAnonModeSplash implements Runnable
 				dlgAbort=new JDialog(JAPController.getController().getView(),JAPMessages.getString("setAnonModeSplashTitle"));//optionPaneAbort.createDialog(JAPModel.getModel().getView(),JAPMessages.getString("setAnonModeSplashTitle"));
 				dlgAbort.getContentPane().setLayout(new BorderLayout());
 				JLabel l=new JLabel(message,UIManager.getIcon("OptionPane.informationIcon"),SwingConstants.CENTER);
-				l.setBorder(new EmptyBorder(10,10,10,10));
-				l.setIconTextGap(10);
+				if(JAPModel.isSmallDisplay())
+          l.setBorder(new EmptyBorder(3,3,3,3));
+				else
+          l.setBorder(new EmptyBorder(10,10,10,10));
+        l.setFont(JAPController.getDialogFont());
+        l.setIconTextGap(10);
 				dlgAbort.getContentPane().add("Center",l);
 				l=new JLabel(JAPUtil.loadImageIcon(JAPConstants.BUSYFN,true));
 				l.setBorder(new EmptyBorder(10,10,10,10));

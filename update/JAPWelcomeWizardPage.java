@@ -66,7 +66,7 @@ public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListe
         m_panelConstraints.gridwidth = 1 ;
         m_panelComponentsLayout.setConstraints(m_tfJapPath, m_panelConstraints);
         m_panelComponents.add(m_tfJapPath, m_panelConstraints);
-        m_tfJapPath.setText(System.getProperty("user.dir",".")+"/JAP.jar");
+        m_tfJapPath.setText(System.getProperty("user.dir",".")+System.getProperty("file.separator","/")+"JAP.jar");
 
 
         m_chooseFolder_bttn = new JButton(JAPMessages.getString("updateM_chooseFolder_bttn"));
