@@ -193,7 +193,7 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 			try
 				{
 					pack();  // optimize size
-					setResizable(true/*false*/); //2001-11-12(HF):Changed due to a Mac OS X problem during redraw of the progress bars
+					setResizable(/*true*/false); //2001-11-12(HF):Changed due to a Mac OS X problem during redraw of the progress bars
 				}
 			catch(Exception e) {
 				JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.GUI,"JAPView:Hm.. Error by Pack - Has To be fixed!!");

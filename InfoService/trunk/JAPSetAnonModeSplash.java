@@ -64,15 +64,17 @@ final class JAPSetAnonModeSplash implements Runnable
 				l.setBorder(new EmptyBorder(10,10,10,10));
 				l.setIconTextGap(10);
 				dlgAbort.getContentPane().add("Center",l);
-				l=new JLabel(JAPUtil.loadImageIcon(JAPConstants.BUSYFN,false));
+				l=new JLabel(JAPUtil.loadImageIcon(JAPConstants.BUSYFN,true));
 				l.setBorder(new EmptyBorder(10,10,10,10));
 				dlgAbort.getContentPane().add("South",l);
 				dlgAbort.pack();
 				dlgAbort.setResizable(false);
 				dlgAbort.setLocationRelativeTo(JAPController.getController().getView());
-				dlgAbort.setModal(true);
+				//On Mac setModel(true) does not seam to work (Dialog is not painted...)
+        String sl=System.getProperty("os.name").substring(0,3);
+        dlgAbort.setModal(!System.getProperty("os.name").substring(0,3).equalsIgnoreCase("mac"));
 				dlgAbort.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
-		   	t.start();
+        t.start();
 			}
 
 		static public void abort()
