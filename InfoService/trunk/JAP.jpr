@@ -102,7 +102,6 @@
 #163=images\splash.gif
 #164=images\west.gif
 #167=certificates
-#168=jap\JAPConfInfoService.java
 build[0].CopyExtensions.1=cer
 build[0].CopyExtensions.2=html
 debug.0[0].SmartStepRedefineClasses=0
@@ -423,4 +422,3 @@ sys[164].Parent=82
 sys[167].Parent=0
 sys[167].Type=NavigationDirectory
 directorynode[167].url=certificates
-sys[168].Parent=0
