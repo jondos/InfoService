@@ -190,11 +190,15 @@ final class JAPConf extends JDialog
 				// largest tab to front
 				m_Tabs.setSelectedComponent(m_pMix);
 				if(JAPModel.isSmallDisplay())
-					setSize(240,320);
+				{
+					setSize(240, 300);
+					setLocation(0,0);
+				}
 				else
+				{
 					pack();
-//				setResizable(false);
-				JAPUtil.centerFrame(this);
+					JAPUtil.centerFrame(this);
+				}
 			}
 
 		protected JPanel buildPortPanel()
@@ -690,7 +694,7 @@ final class JAPConf extends JDialog
 				p1.add(new JLabel(JAPMessages.getString("settingsLookAndFeel")));
 				JComboBox c=new JComboBox();
 				LookAndFeelInfo[] lf=UIManager.getInstalledLookAndFeels();
-				String currentLf=UIManager.getLookAndFeel().getName().toString();
+			  String currentLf=UIManager.getLookAndFeel().getClass().getName();
 				// add menu items
 				for(int lfidx=0;lfidx<lf.length;lfidx++) {
 					c.addItem(lf[lfidx].getName());
@@ -698,7 +702,7 @@ final class JAPConf extends JDialog
 				// select the current
 				int lfidx;
 				for(lfidx=0;lfidx<lf.length;lfidx++) {
-					if(lf[lfidx].getName().equals(currentLf)) {
+					if(lf[lfidx].getClassName().equals(currentLf)) {
 						c.setSelectedIndex(lfidx);
 						break;
 					}
