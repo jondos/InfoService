@@ -56,7 +56,7 @@ public class MockDistributor extends AbstractDistributor implements IMock
 
 	public void addJob(IDistributable a_job)
 	{
-		m_actualJobs.add(a_job);
+		m_actualJobs.addElement(a_job);
 	}
 
 	public void setExpectedJobs(Vector a_expectedJobs)
@@ -66,7 +66,7 @@ public class MockDistributor extends AbstractDistributor implements IMock
 
 	public void addExpectedJob(IDistributable a_expectedJob)
 	{
-		m_expectedJobs.add(a_expectedJob);
+		m_expectedJobs.addElement(a_expectedJob);
 	}
 
 	public void verify()
