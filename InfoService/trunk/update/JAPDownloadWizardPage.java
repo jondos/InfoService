@@ -46,17 +46,7 @@ public class JAPDownloadWizardPage extends BasicWizardPage
 
     private String version;
     private int type;
-// ------------------------------------------<<
-  /*  private String pathToJapJar;
 
-    boolean rename = false;
-    boolean renameSuccess = false;
-    //which version chose the user
-    private String version;
-    //which type dev or rel?
-    private int type;
-
-    private File jnlpFile, newFile, oldFile, newJarFile, jarFile;*/
 
     private Thread observeUpdateThread;
 
@@ -65,20 +55,14 @@ public class JAPDownloadWizardPage extends BasicWizardPage
     private GridBagLayout gridBagDownload;
     private GridBagConstraints constraintsDownload;
 
-    private JAPUpdateWizard updateWizard;
-// ---------------------------------------------<<
-  /*  private int countPackages = 0;
-    private int value =0;
-    private byte[] bufferJapJar;
-    private OutputStream os_jarFile;*/
+
 
     public JAPDownloadWizardPage(){}
 
-    public JAPDownloadWizardPage(String version, int type, JAPUpdateWizard updateWizard)
+    public JAPDownloadWizardPage(String version, int type)
       {
         this.version = version;
         this.type = type;
-        this.updateWizard = updateWizard;
         setIcon(JAPUtil.loadImageIcon(JAPConstants.DOWNLOADFN,false));
         setPageTitle("Download");
 

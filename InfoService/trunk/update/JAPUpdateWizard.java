@@ -41,8 +41,11 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
 
     private File jnlpFile, newFile, oldFile, newJarFile, jarFile;
 
+    private boolean downloadFinished = false;
     private int countPackages = 0;
-    private int value =0;
+    private int countBytes = 0;
+    private int value = 0;
+    private int totalLength = 0;
     private byte[] bufferJapJar;
     private OutputStream os_jarFile;
 
@@ -53,9 +56,10 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
       {
         this.version = version;
         this.type = type;
+        updateWizard = this;
         setWizardTitle("JAP Update Wizard");
-        welcomePage = new JAPWelcomeWizardPage(this);
-        downloadPage = new JAPDownloadWizardPage( version, type, this );
+        welcomePage = new JAPWelcomeWizardPage();
+        downloadPage = new JAPDownloadWizardPage(version, type);
         addWizardPage(0,welcomePage);
         addWizardPage(1,downloadPage);
         m_Pages = getPageVector();
@@ -77,7 +81,7 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
                                  downloadPage.progressBar.setValue(value);
                                  downloadPage.progressBar.repaint();
                                  return 0;
-                      }else if(state ==2)
+                      }else if(state == 2)
                       {
                                   downloadPage.showInformationDialog("Sichern von Jap.jar schlug fehl");
                                   return -1;
@@ -102,7 +106,8 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
                                   downloadPage.m_labelIconStep3.setIcon(downloadPage.arrow);
                                    countPackages += lenData;
                                 // the first step has the Zone from 455 to 490 in the ProgressBar
-                                 value = (35 * countPackages)/lenTotal;
+                                 value =value + (35 * countPackages)/lenTotal;
+                                 System.out.println(value+ " value 3th step");
                                  downloadPage.progressBar.setValue(value);
                                  downloadPage.progressBar.repaint();
                                  return 0;
@@ -129,7 +134,8 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
                           downloadPage.m_labelIconStep5.setIcon(downloadPage.arrow);
                                    countPackages += lenData;
                                 // the first step has the Zone from 490 to 500 in the ProgressBar
-                                 value = (10 * countPackages)/lenTotal;
+                                 value =value+ (10 * countPackages)/lenTotal;
+
                                  downloadPage.progressBar.setValue(value);
                                  downloadPage.progressBar.repaint();
                                  return 0;
@@ -150,6 +156,7 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
 
            };
            updateThread = new Thread(this);
+
            updateThread.start();
         }
 
@@ -158,6 +165,8 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
          // Start with Step 1 copy
          renameJapJar(pre,suf,updateListener);
          downloadUpdate(updateListener);
+         createNewJAPJar(updateListener);
+         createJapJar(updateListener);
         }
 
     public JAPWelcomeWizardPage getWelcomeWizardPage()
@@ -200,7 +209,9 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
       //if it is the DownloadWizardPage
       if(pageIndex == 1)
         {
-            startUpdate();
+
+            setSelectedFile(welcomePage.getSelectedFile().getAbsolutePath());
+            setPath(selectedFile);
             host.setWizardPage((WizardPage)m_Pages.elementAt(pageIndex));
             //host.setNextEnabled(true);
             startUpdateThread();
@@ -215,6 +226,7 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
    }
 
 //-----------------------------------------------------------------------------<<
+//User's clicked next and the path to the right Jar-File is set
      public void setPath(String pathToJapJar)
       {
 
@@ -275,6 +287,7 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
           }
       }
 
+
      //Step 2
     public synchronized void downloadUpdate(UpdateListener listener)
       {
@@ -288,6 +301,7 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
                       listener.progress(0,0,UpdateListener.DOWNLOAD_START);
                       //os_jarFile = new OutputStream();
                      // m_labelIconStep2.setIcon(arrow);
+
              //   }
             try
             {
@@ -299,19 +313,18 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
 
                             if(state == 1)
                               {
-                                 //write data into the RAM
-                               /*  try
-                                 {
-                                   //ByteArrayInputStream bais = new ByteArrayInputStream(data,0,lenData);
-                                  //write(data)
-                                  // ByteArrayOutputStream baos = new ByteArrayInputStream(
 
-                                 }
-                                 catch(IOException ioe)
-                                 {ioe.printStackTrace();}*/
+                                 if(totalLength == 0)
+                                    {
+                                       totalLength = lenTotal;
+                                       bufferJapJar = new byte[totalLength];
+                                    }
+                                 //write data into the RAM
+                                 System.arraycopy(data,0,bufferJapJar,countBytes,lenData);
+                                 countBytes += lenData;
                                  countPackages += lenData;
                                 // the Download has the Zone from 5 to 455 in the ProgressBar
-                                 value = (450 * countPackages)/lenTotal;
+                                 value =value + (450 * countPackages)/lenTotal;
                                  downloadPage.progressBar.setValue(value);
                                  downloadPage.progressBar.repaint();
                               }else if(state == 2)
@@ -322,10 +335,12 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
                                   return -1;
                               }else if(state == 3)
                               {
-                                 // m_labelIconStep2.setIcon(blank);
+                                  //listener.progress(0,0,UpdateListener.DOWNLOAD_READY);
+                                  //updateWizard.createNewJAPJar();
+                                  downloadFinished = true;
                                   return 0;
                               }
-                            //System.out.println(value+" value"+countPackages+" Countpak" +lenTotal+ " Total");
+                            //System.out.println(value+" value"+countPackages+" Countpak" +bufferJapJar.length+ " Total");
                             return 0;
                         }
                 });
@@ -336,28 +351,46 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
                 listener.progress(0,0,UpdateListener.DOWNLOAD_ABORT);
                 e.printStackTrace();
             }
-            listener.progress(0,0,UpdateListener.DOWNLOAD_READY);
-            //m_labelIconStep2.setIcon(blank);
-            //System.out.println("Hallo");
+            //doesn't work
+            //listener.progress(0,0,UpdateListener.DOWNLOAD_READY);
+
       }
 
 
       //Step 3
-     public void createNewJAPJar(UpdateListener listener)
+     public synchronized void createNewJAPJar(UpdateListener listener)
      {
         //get the buffer (bufferJapJar) where the data is stored
         //apply the JarDiff
         //create a new File "Jap_"+newversion+".jar"
+        while(downloadFinished == false)
+              {
+                //System.out.println("wait");
+              }
+          /*  try{
+                while(downloadFinished == false)
+                {
+                      wait();
+                }
+            }catch(InterruptedException ie)
+            {
+              ie.printStackTrace();
+            }*/
         int index = pathToJapJar.lastIndexOf("\\");
-        String path = pathToJapJar.substring(0,index);
+        System.out.println("  "+index+" index");
+        String path = pathToJapJar.substring(0,(index+1));
         path = path+"Jap_"+version+".jar";
+        System.out.println("  "+path+" path");
         try
           {
              newJarFile = new File(path);
+             //System.out.println("  "+bufferJapJar.length);
              FileOutputStream fos = new FileOutputStream(newJarFile);
+             listener.progress(bufferJapJar.length,bufferJapJar.length,UpdateListener.STATE_IN_PROGRESS_STEP3);
              fos.write(bufferJapJar);
              fos.flush();
              fos.close();
+             listener.progress(0,0,UpdateListener.STATE_FINISHED_STEP3);
           }
         catch(Exception e)
           {
@@ -367,23 +400,28 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
      }
 
      //Step 5
-     public void createJapJar()
+     public void createJapJar(UpdateListener listener)
       {
          try
              {
+                jarFile = new File(oldFile.getAbsolutePath());
                 oldFile.delete();
                 FileInputStream fis = new FileInputStream(newJarFile);
                 FileOutputStream fos = new FileOutputStream(jarFile);
+                byte buffer[]= new byte[2048];
                 int n;
-                while((n=fis.read())!=-1)
+                while((n= fis.read(buffer))!=-1)
                 {
-                  fos.write(n);
+                  fos.write(buffer,0,n);
+                  listener.progress(n,totalLength,UpdateListener.STATE_IN_PROGRESS_STEP5);
                 }
                 fis.close();
                 fos.flush();
                 fos.close();
+                listener.progress(0,0,UpdateListener.STATE_FINISHED_STEP5);
              }catch(Exception e)
              {
+                listener.progress(0,0,UpdateListener.STATE_ABORTED_STEP5);
                 e.printStackTrace();
              }
 
