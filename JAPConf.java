@@ -128,6 +128,12 @@ final class JAPConf extends JDialog
 
 				JPanel buttonPanel = new JPanel();
 				buttonPanel.setLayout ( new FlowLayout(FlowLayout.RIGHT) );
+				JButton bttnDefaultConfig=new JButton(m_Model.getString("bttnDefaultConfig"));
+				bttnDefaultConfig.addActionListener(new ActionListener() {
+							public void actionPerformed(ActionEvent e) {
+						resetToDefault();
+				}});
+				buttonPanel.add(bttnDefaultConfig);
 				JButton bttnCancel = new JButton(m_Model.getString("cancelButton"));
 				bttnCancel.addActionListener(new ActionListener()
 					{
@@ -581,17 +587,10 @@ final class JAPConf extends JDialog
 						setCursor(c1);
 
 				}});
-				JButton bttnDefaultConfig=new JButton(m_Model.getString("bttnDefaultConfig"));
-//				bttnMonitor.setEnabled(false);
-				bttnDefaultConfig.addActionListener(new ActionListener() {
-					public void actionPerformed(ActionEvent e) {
-						resetToDefault();
-				}});
 				JPanel p22 = new JPanel();
-				p22.setLayout(new GridLayout(3,1));
+				p22.setLayout(new GridLayout(2,1));
 				p22.add(bttnPing);
 				p22.add(bttnMonitor);
-				p22.add(bttnDefaultConfig);
 				p2.add(p22, BorderLayout.NORTH);
 
 				// Panel for Debugging Options
