@@ -72,6 +72,10 @@ public class ORList
 		return this.m_onionrouters;
 	}
 
+   	public ORDescription getByName(String name)
+	   {
+		   return (ORDescription)this.m_onionroutersWithNames.get(name);
+	   }
 	/**
 	 * returns a ORDescription to the given ORName
 	 * @param name
@@ -117,7 +121,7 @@ public class ORList
 				ORDescription ord = ORDescription.parse(reader);
 				if (ord != null)
 				{
-					if ((strRunningOrs.indexOf(" " + ord.getName() + " ") > 0)&&(ord.getSoftware().startsWith("Tor 0.0.8")))
+					if ((strRunningOrs.indexOf(" " + ord.getName() + " ") > 0)/*&&(ord.getSoftware().startsWith("Tor 0.0.8"))*/)
 					{
 						ors.addElement(ord);
 						orswn.put(ord.getName(), ord);

@@ -34,9 +34,9 @@ public class PaddingCell extends Cell
 	 * @param payload
 	 * payload
 	 */
-	public PaddingCell(int circID, byte[] payload)
+	public PaddingCell(int circID, byte[] payload,int offset)
 	{
-		super(0, circID, payload);
+		super(0, circID, payload,offset);
 	}
 
 }

@@ -46,6 +46,9 @@ final public class LogType
 	/** Indicates a pay message (binary: <code>00001000</code>) */
 	public final static int PAY = 16;
 
+	/** Indicates a TOR message (binary: <code>00010000</code>) */
+	public final static int TOR = 32;
+
 	/** Indicates all messagea*/
-	public final static int ALL = GUI + NET + THREAD + MISC + PAY;
+	public final static int ALL = GUI + NET + THREAD + MISC + PAY+TOR;
 }

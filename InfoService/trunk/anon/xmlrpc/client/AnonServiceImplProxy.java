@@ -40,11 +40,11 @@ import anon.AnonServerDescription;
 
 public class AnonServiceImplProxy implements AnonService
 {
-	InetAddress m_RpcServerHost;
+	String  m_RpcServerHost;
 	int m_RpcServerPort;
 	int m_ClientID;
 
-	public AnonServiceImplProxy(InetAddress addr, int port) throws Exception
+	public AnonServiceImplProxy(String addr, int port) throws Exception
 	{
 		m_RpcServerHost = addr;
 		m_RpcServerPort = port;
@@ -76,7 +76,7 @@ public class AnonServiceImplProxy implements AnonService
 		}
 	}
 
-	public AnonChannel createChannel(InetAddress host, int port) throws ConnectException
+	public AnonChannel createChannel(String host, int port) throws ConnectException
 	{
 		return null;
 	}

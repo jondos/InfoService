@@ -34,9 +34,9 @@ public class DestroyCell extends Cell
 	 * @param payload
 	 * payload
 	 */
-	public DestroyCell(int circID, byte[] payload)
+	public DestroyCell(int circID, byte[] payload, int offset)
 	{
-		super(4, circID, payload);
+		super(4, circID, payload, offset);
 	}
 
 }

@@ -56,12 +56,12 @@ public class RelayCell extends Cell
 	 * @param payload
 	 * payload
 	 */
-	public RelayCell(int circID, byte[] payload)
+	public RelayCell(int circID, byte[] payload, int offset)
 	{
-		super(3, circID, payload);
-		this.m_relayCommand = payload[0];
-		this.m_streamID = ( (payload[3] & 0xFF) << 8) | (payload[4] & 0xFF);
-		this.m_digestGenerated = false;
+		super(3, circID, payload, offset);
+		m_relayCommand = payload[0];
+		m_streamID = ( (payload[3] & 0xFF) << 8) | (payload[4] & 0xFF);
+		m_digestGenerated = false;
 	}
 
 	public RelayCell(int circID, byte relaycommand, int streamid, byte[] data)
@@ -119,7 +119,7 @@ public class RelayCell extends Cell
 	public void doCryptography(CTRBlockCipher engine)
 	{
 		byte[] data = new byte[this.m_payload.length];
-		engine.processBlock(this.m_payload, 0, data, 0,509);
+		engine.processBlock(this.m_payload, 0, data, 0, 509);
 		this.m_payload = helper.copybytes(data, 0, 509);
 		this.m_relayCommand = this.m_payload[0];
 		this.m_streamID = ( (this.m_payload[3] & 0xFF) << 8) | (this.m_payload[4] & 0xFF);
@@ -132,9 +132,9 @@ public class RelayCell extends Cell
 			relaycommand, 0x00, 0x00, }; //relaycommand + 2bytes Recognized
 		b = helper.conc(b, helper.inttobyte(streamid, 2)); //streamid
 		b = helper.conc(b, new byte[4]); //4bytes digest
-		if(data==null)
+		if (data == null)
 		{
-			data=new byte[498];
+			data = new byte[498];
 		}
 		if (data.length < 499)
 		{
@@ -161,4 +161,11 @@ public class RelayCell extends Cell
 		}
 	}
 
+	public byte[] getRelayPayload()
+	{
+		int len =(m_payload[9] & 0x00FF);
+		len <<= 8;
+		len |= (m_payload[10] & 0x00FF);
+		return helper.copybytes(m_payload, 11, len);
+	}
 }

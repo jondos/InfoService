@@ -20,37 +20,45 @@ import anon.tor.cells.PaddingCell;
 import anon.tor.cells.RelayCell;
 import anon.tor.ordescription.ORDescription;
 import logging.*;
+
 /**
  * @author stefan
  *
  */
-public class Circuit {
+public class Circuit
+{
 
 	//max number of streams over a circuit
 	private final static int MAX_STREAMS_OVER_CIRCUIT = 1000;
 
-	private OnionRouter m_or;
-	private FirstOnionRouter m_onionProxy;
+	private OnionRouter m_FirstOR;
+	private ORDescription m_lastORDescription;
+	private FirstOnionRouterConnection m_FirstORConnection;
 	private Vector m_onionRouters;
-	private TinyTLS m_tlssocket;
+	//private TinyTLS m_tlssocket;
 	private int m_circID;
 	private Hashtable m_streams;
-	private boolean m_closed;
+	/// Can we creat new channels?
+	private boolean m_bShutdown;
+	///Is this circuit destroyed?
+	private boolean m_bClosed;
 	private int m_streamIDCounter;
-	private int m_size;
+	private int m_circuitLength;
 	private int m_recvCellCounter;
 	private int m_sendCellCounter;
 	private Vector m_cellQueue;
 	private byte[] m_resolvedData;
 	private MyRandom m_rand;
-	
+	//the Tor instance this circuit belongs to...
+	private Tor m_Tor;
+
 	//if the created or extended cells have arrived an are correct
 	private boolean m_created;
 	private boolean m_extended;
 	private boolean m_extended_correct;
 	private boolean m_destroyed;
 	private boolean m_resolved;
-	
+
 	/**
 	 * constructor
 	 * @param circID
@@ -61,17 +69,20 @@ public class Circuit {
 	 * FirstOnionRouter, where all the data will be send. the onionProxy has to be the firstOR in the orList
 	 * @throws IOException
 	 */
-	public Circuit(int circID,Vector orList,FirstOnionRouter onionProxy) throws IOException
+	public Circuit(int circID, Vector orList, FirstOnionRouterConnection onionProxy, Tor tor) throws IOException
 	{
-		this.m_onionProxy = onionProxy;
+		m_Tor = tor;
+		this.m_FirstORConnection = onionProxy;
 		this.m_circID = circID;
 		this.m_streams = new Hashtable();
-		this.m_closed = false;
-		this.m_streamIDCounter = 10;
-		this.m_onionRouters= (Vector)orList.clone();
-		this.m_size = orList.size();
+		m_bShutdown = false;
+		m_bClosed=false;
+		m_streamIDCounter = 10;
+		m_onionRouters = (Vector) orList.clone();
+		m_circuitLength = orList.size();
+		m_lastORDescription=(ORDescription)m_onionRouters.elementAt(m_circuitLength-1);
 		this.m_extended_correct = true;
-		if(this.m_onionRouters.size()<1)
+		if (this.m_onionRouters.size() < 1)
 		{
 			throw new IOException("No Onionrouters defined for this circuit");
 		}
@@ -86,7 +97,8 @@ public class Circuit {
 		try
 		{
 			wait();
-		} catch (InterruptedException ex)
+		}
+		catch (InterruptedException ex)
 		{
 		}
 	}
@@ -95,99 +107,102 @@ public class Circuit {
 	 * creates a circuit and connects to all onionrouters
 	 * @throws IOException
 	 */
-	public void connect() throws IOException
+	public synchronized void connect() throws IOException
 	{
 		this.m_destroyed = false;
-		LogHolder.log(LogLevel.DEBUG,LogType.MISC,"[TOR] Creating Circuit '"+this.m_circID+"'");
-		this.m_onionProxy.addCircuit(this);
-		this.m_or = new OnionRouter(this.m_circID,(ORDescription)(this.m_onionRouters.elementAt(0)));
+		LogHolder.log(LogLevel.DEBUG, LogType.TOR, "[TOR] Creating Circuit '" + m_circID + "'");
+		m_FirstORConnection.addCircuit(this);
+		m_FirstOR = new OnionRouter(m_circID, (ORDescription) (m_onionRouters.elementAt(0)));
 		try
 		{
-			this.m_created = false;
-			this.m_onionProxy.send(this.m_or.createConnection());
+			m_created = false;
+			m_FirstORConnection.send(m_FirstOR.createConnection());
 			//wait until a created cell arrives
-			while(!this.m_created)
+			while (!m_created)
 			{
-				this.waitForNotify();
+				waitForNotify();
 			}
-			System.out.println("created");
-			if(this.m_destroyed)
+			LogHolder.log(LogLevel.DEBUG, LogType.TOR, "[TOR] created!");
+			if (m_destroyed)
 			{
 				throw new IOException("DestroyCell recieved");
 			}
-			for(int i=1;i<this.m_onionRouters.size();i++)
+			for (int i = 1; i < this.m_onionRouters.size(); i++)
 			{
-				ORDescription nextOR = (ORDescription)(this.m_onionRouters.elementAt(i));
-				this.m_extended = false;
-				System.out.println("trying to extend");
-				this.m_onionProxy.send(this.m_or.extendConnection(nextOR));
-				while(!this.m_extended)
+				ORDescription nextOR = (ORDescription) (this.m_onionRouters.elementAt(i));
+				m_extended = false;
+				LogHolder.log(LogLevel.DEBUG, LogType.TOR, "[TOR] trying to extend!");
+				m_FirstORConnection.send(m_FirstOR.extendConnection(nextOR));
+				while (!m_extended)
 				{
-					this.waitForNotify();
+					waitForNotify();
 				}
-				if(this.m_destroyed)
+				if (m_destroyed)
 				{
 					throw new IOException("DestroyCell recieved");
 				}
-				if(!this.m_extended_correct)
+				if (!m_extended_correct)
 				{
-					throw new IOException("Cannot Connect to router :"+nextOR.getAddress()+":"+nextOR.getPort());
+					throw new IOException("Cannot Connect to router :" + nextOR.getAddress() + ":" +
+										  nextOR.getPort());
 				}
-				System.out.println("extended");
+				LogHolder.log(LogLevel.DEBUG, LogType.TOR, "[TOR] extended!");
 			}
-			LogHolder.log(LogLevel.DEBUG,LogType.MISC,"[TOR] Circuit '"+this.m_circID+"' ready!!! - Length of this Circuit : "+this.m_size+" Onionrouters");
-		} catch(Exception ex)
+			m_extended=true;
+			LogHolder.log(LogLevel.DEBUG, LogType.MISC,
+						  "[TOR] Circuit '" + this.m_circID + "' ready!!! - Length of this Circuit : " +
+						  this.m_circuitLength + " Onionrouters");
+		}
+		catch (Exception ex)
 		{
 			throw new IOException(ex.getLocalizedMessage());
 		}
 	}
 
 	/**
-	 * leaves the circuit opened for all currently used channels, but no new connection is allowed
-	 * 
-	 * to close the circuit immediately use forceclose()
-	 *  
+	 * shutdown this circuit so that it cannot be used for new connections
+	 * but leaves the circuit opened for all currently used channels
+	 *
+	 * to close the circuit immediately use close()
+	 *
 	 * @throws Exception
 	 */
-	public void close() throws IOException
+	public synchronized void shutdown() throws IOException
 	{
-		if(this.m_streams.isEmpty())
+		if (m_streams.isEmpty())
 		{
-			InetAddress addr = InetAddress.getByName(this.m_or.getDescription().getAddress());
-			int port = this.m_or.getDescription().getPort();
-			this.m_onionProxy.send(new DestroyCell(this.m_circID));
+			InetAddress addr = InetAddress.getByName(m_FirstOR.getDescription().getAddress());
+			int port = m_FirstOR.getDescription().getPort();
+			m_FirstORConnection.send(new DestroyCell(m_circID));
 		}
-		this.m_closed = true;
+		m_bShutdown = true;
 	}
-	
+
 	/**
 	 * closes the circuit immediately.
-	 * 
+	 *
 	 * @throws Exception
 	 */
-	public void forceclose() throws Exception
+	public synchronized void destroy() throws Exception
 	{
-		InetAddress addr = InetAddress.getByName(this.m_or.getDescription().getAddress());
-		int port = this.m_or.getDescription().getPort();
-		this.m_onionProxy.send(new DestroyCell(this.m_circID));
-		this.m_streams.clear();
-		this.m_closed = true;
+		InetAddress addr = InetAddress.getByName(m_FirstOR.getDescription().getAddress());
+		int port =m_FirstOR.getDescription().getPort();
+		m_FirstORConnection.send(new DestroyCell(m_circID));
+		m_streams.clear();
+		m_bClosed = true;
+		m_bShutdown = true;
+		m_Tor.notifyCircuitClosed(m_circID);
 	}
-	
+
 	/**
-	 * check if the circuit is closed and no channel is opened
-	 * 
+	 * check if the circuit is already destroyed
+	 *
 	 * @return if the channel is closed
 	 */
-	public boolean closed()
+	public synchronized boolean isDestroyed()
 	{
-		if(this.m_closed&&this.m_streams.isEmpty())
-		{
-			return true;
-		}
-		return false;
+		return m_bClosed;
 	}
-	
 	/**
 	 * dispatches cells to the opended channels
 	 * @param cell
@@ -198,102 +213,136 @@ public class Circuit {
 	{
 		try
 		{
-			if(cell instanceof RelayCell)
+			if (cell instanceof RelayCell)
 			{
-				if(!this.m_extended)
+				if (!m_extended)
 				{
 					try
 					{
-						this.m_or.checkExtendedCell((RelayCell)cell);
-					} catch (Exception ex)
-					{
-						this.m_extended_correct = false;
+						m_FirstOR.checkExtendedCell( (RelayCell) cell);
 					}
-					this.m_extended = true;
-				} else
-				{
-					this.m_recvCellCounter--;
-					if(this.m_recvCellCounter<900)
+					catch (Exception ex)
 					{
-						RelayCell rc=new RelayCell(this.m_circID,RelayCell.RELAY_SENDME,0,null);
-						this.send(rc);
-						this.m_recvCellCounter+=100;
+						m_extended_correct = false;
+					}
+					m_extended = true;
+					notifyAll();
+				}
+				else
+				{
+					m_recvCellCounter--;
+					if (m_recvCellCounter < 900)
+					{
+						//for(int i=0;i<m_circuitLength;i++)
+						{
+							RelayCell rc = new RelayCell(m_circID, RelayCell.RELAY_SENDME, 0, null);
+							send(rc/*,i*/);
+						}
+						m_recvCellCounter += 100;
 					}
 
-					RelayCell c = this.m_or.decryptCell((RelayCell)cell);
+					RelayCell c = m_FirstOR.decryptCell( (RelayCell) cell);
 					Integer streamID = new Integer(c.getStreamID());
-					if(c.getStreamID() == 0)	// Relay cells that belong to the circuit
+					if (c.getStreamID() == 0) // Relay cells that belong to the circuit
 					{
-						switch(c.getRelayCommand())
+						switch (c.getRelayCommand())
 						{
-							case RelayCell.RELAY_SENDME :
+							case RelayCell.RELAY_SENDME:
 							{
-								this.m_sendCellCounter+=100;
-								this.deliverCells();
+								m_sendCellCounter += 100;
+								deliverCells();
 							}
-							default :
+							default:
 							{
+								LogHolder.log(LogLevel.DEBUG,LogType.TOR,"Upps...");
 							}
 						}
-					} else if(this.m_streams.containsKey(streamID)) //dispatch cell to the circuit where it belongs to
+					}
+					else if (this.m_streams.containsKey(streamID)) //dispatch cell to the circuit where it belongs to
 					{
 
-						TorChannel channel = (TorChannel)this.m_streams.get(streamID);
-						if(channel!=null)
+						TorChannel channel = (TorChannel)m_streams.get(streamID);
+						if (channel != null)
 						{
 							channel.dispatchCell(c);
 						}
-					} else 
+						else
+							LogHolder.log(LogLevel.DEBUG,LogType.TOR,"Upps...");
+
+					}
+					else
 					{
-						switch(c.getRelayCommand())
+						switch (c.getRelayCommand())
 						{
-							case RelayCell.RELAY_RESOLVED :
+							case RelayCell.RELAY_RESOLVED:
 							{
 								byte[] tmp = c.getPayload();
-								this.m_resolvedData = helper.copybytes(tmp,11,((tmp[9]&0xFF)<<8)+(tmp[10]&0xFF));
-								this.m_resolved = true;
+								m_resolvedData = helper.copybytes(tmp, 11,
+									( (tmp[9] & 0xFF) << 8) + (tmp[10] & 0xFF));
+								m_resolved = true;
+								notifyAll();
 							}
 						}
 					}
 				}
-			}	else if(cell instanceof CreatedCell)
-			{
-				this.m_or.checkCreatedCell(cell);
-				LogHolder.log(LogLevel.DEBUG,LogType.MISC,"[TOR] Connected to the first OR");
-				this.m_created = true;
-			}	else if(cell instanceof PaddingCell)
-			{
-			
-			} else if(cell instanceof DestroyCell)
-			{
-				LogHolder.log(LogLevel.DEBUG,LogType.MISC,"[TOR] recieved destroycell - circuit destroyed");
-				this.m_destroyed = true;
-				this.m_created = true;
-				this.m_extended = true;
-				System.out.println("Destroycell recieved");
-				
-			} else
-			{
-				LogHolder.log(LogLevel.DEBUG,LogType.MISC,"tor kein bekannter cell type");
 			}
-		} catch(Exception ex)
-		{
-			throw new IOException("Unable to dispatch the cell \n"+ex.getLocalizedMessage());
+			else if (cell instanceof CreatedCell)
+			{
+				if(!m_FirstOR.checkCreatedCell(cell))
+				{
+					LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[TOR] Should never be here - 'created' cell was wrong");
+					m_created=false;
+				}
+				else
+				{
+				LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[TOR] Connected to the first OR");
+				m_created = true;
+				}
+				notifyAll();
+			}
+			else if (cell instanceof PaddingCell)
+			{
+
+			}
+			else if (cell instanceof DestroyCell)
+			{
+				LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[TOR] recieved destroycell - circuit destroyed");
+				this.m_destroyed = true;
+				this.m_created = false;
+				this.m_extended = true;
+				notifyAll();
+			}
+			else
+			{
+				LogHolder.log(LogLevel.DEBUG, LogType.MISC, "tor kein bekannter cell type");
+			}
 		}
-		notifyAll();
+		catch (Exception ex)
+		{
+			throw new IOException("Unable to dispatch the cell \n" + ex.getLocalizedMessage());
+		}
 	}
 
 	/**
 	 * sends a cell through the circuit
 	 * @param cell
 	 * cell to send
-	 * @throws Exception
+	 * @throws IOException
 	 */
-	public synchronized void send(Cell cell) throws Exception
+	public synchronized void send(Cell cell) throws IOException
 	{
-		if(cell instanceof RelayCell)
+		if (cell instanceof RelayCell)
 		{
-			this.m_cellQueue.addElement(this.m_or.encryptCell((RelayCell)cell));
+			this.m_cellQueue.addElement(this.m_FirstOR.encryptCell( (RelayCell) cell));
+			this.deliverCells();
+		}
+	}
+
+	public synchronized void send(Cell cell,int pathLen) throws IOException
+	{
+		if (cell instanceof RelayCell)
+		{
+			this.m_cellQueue.addElement(this.m_FirstOR.encryptCell( (RelayCell) cell,pathLen));
 			this.deliverCells();
 		}
 	}
@@ -302,57 +351,58 @@ public class Circuit {
 	 * delivers the cells if the FOR accept more cells
 	 * @throws Exception
 	 */
-	private void deliverCells() throws Exception
+	private synchronized void deliverCells() throws IOException
 	{
-		if(this.m_sendCellCounter!=0)
+		if (this.m_sendCellCounter != 0)
 		{
 			RelayCell c = (RelayCell)this.m_cellQueue.elementAt(0);
 			this.m_cellQueue.removeElementAt(0);
-			this.m_onionProxy.send(c);
+			this.m_FirstORConnection.send(c);
 			this.m_sendCellCounter--;
-			if(this.m_cellQueue.size()>0)
+			if (this.m_cellQueue.size() > 0)
 			{
 				this.deliverCells();
 			}
 		}
 	}
-	
+
 	/**
 	 * Returns a address to a given name
 	 * @param name
 	 * @return
-     *  Type   (1 octet)
-     *  Length (1 octet)
-     *  Value  (variable-width)
-     *"Length" is the length of the Value field. 
-     * "Type" is one of:
-     * 0x04 -- IPv4 address
-     * 0x06 -- IPv6 address
-     * 0xF0 -- Error, transient
-     * 0xF1 -- Error, nontransient
+	 *  Type   (1 octet)
+	 *  Length (1 octet)
+	 *  Value  (variable-width)
+	 *"Length" is the length of the Value field.
+	 * "Type" is one of:
+	 * 0x04 -- IPv4 address
+	 * 0x06 -- IPv6 address
+	 * 0xF0 -- Error, transient
+	 * 0xF1 -- Error, nontransient
 	 */
 	public byte[] DNSResolve(String name)
 	{
-		while(!this.m_extended)
+		while (!m_extended)
 		{
-			this.waitForNotify();
+			waitForNotify();
 		}
 		this.m_resolved = false;
 		int temp = this.m_rand.nextInt(65535);
-		while(this.m_streams.containsKey(new Integer(temp)))
+		while (this.m_streams.containsKey(new Integer(temp)))
 		{
 			temp = this.m_rand.nextInt(65535);
 		}
-		RelayCell cell = new RelayCell(this.getCircID(),RelayCell.RELAY_RESOLVE,temp,name.getBytes());
+		RelayCell cell = new RelayCell(this.getCircID(), RelayCell.RELAY_RESOLVE, temp, name.getBytes());
 		try
 		{
 			this.send(cell);
-		} catch(Exception ex)
+		}
+		catch (Exception ex)
 		{
 		}
-		while(!this.m_resolved)
+		while (!m_resolved)
 		{
-			this.waitForNotify();
+			waitForNotify();
 		}
 		return this.m_resolvedData;
 	}
@@ -366,12 +416,13 @@ public class Circuit {
 	public void close(int streamID) throws Exception
 	{
 		Integer key = new Integer(streamID);
-		if(this.m_streams.containsKey(key))
+		if (m_streams.containsKey(key))
 		{
-			this.m_streams.remove(key);
-			if(this.m_closed)
+			m_streams.remove(key);
+			if (m_bShutdown)
 			{
-				this.close();
+				//check if we can destroy this circuit
+				shutdown();
 			}
 		}
 	}
@@ -382,7 +433,7 @@ public class Circuit {
 	 */
 	public int getCircID()
 	{
-		return this.m_circID;
+		return m_circID;
 	}
 
 	/**
@@ -393,22 +444,55 @@ public class Circuit {
 	 * a channel
 	 * @throws IOException
 	 */
-	public TorChannel createChannel(int type) throws IOException
+/*	public TorChannel createSOCKSChannel(int type) throws IOException
 	{
-		if(this.m_closed)
+		if (m_bShutdown)
 		{
 			throw new ConnectException("Circuit Closed - cannot connect");
-		} else
+		}
+		else
 		{
-			this.m_streamIDCounter++;
-			TorSocksChannel tsc =  new TorSocksChannel(this.m_streamIDCounter,this);
-			this.m_streams.put(new Integer(this.m_streamIDCounter),tsc);
+			m_streamIDCounter++;
+			TorSocksChannel tsc = new TorSocksChannel(m_streamIDCounter, this);
+			m_streams.put(new Integer(m_streamIDCounter), tsc);
 
-			if(this.m_streamIDCounter == MAX_STREAMS_OVER_CIRCUIT)
+			if (m_streamIDCounter == MAX_STREAMS_OVER_CIRCUIT)
 			{
-				this.m_closed = true;
+				shutdown();
 			}
 			return tsc;
+		}
+	}
+*/
+	/**
+	 * creates a channel through the tor-network
+	 * @param addr
+	 * address of the server you want do connect
+	 * @param port
+	 * port
+	 * @return
+	 * a channel
+	 * @throws IOException
+	 */
+	public TorChannel createChannel(String addr, int port) throws IOException
+	{
+		///todo ACL ueberpruefen
+		if (m_bShutdown)
+		{
+			throw new ConnectException("Circuit Closed - cannot connect");
+		}
+		else
+		{
+			m_streamIDCounter++;
+			TorChannel channel = new TorChannel(this.m_streamIDCounter, this);
+			this.m_streams.put(new Integer(this.m_streamIDCounter), channel);
+
+			if (m_streamIDCounter == MAX_STREAMS_OVER_CIRCUIT)
+			{
+				shutdown();
+			}
+			channel.connect(addr, port);
+			return channel;
 		}
 	}
 
@@ -422,24 +506,31 @@ public class Circuit {
 	 * a channel
 	 * @throws IOException
 	 */
-	public TorChannel createChannel(InetAddress addr, int port) throws IOException
+	protected void connectChannel(TorChannel channel,String addr, int port) throws IOException
 	{
-		if(this.m_closed)
+		///todo ACL ueberpruefen
+		if (m_bShutdown)
 		{
 			throw new ConnectException("Circuit Closed - cannot connect");
-		} else
-		{
-			this.m_streamIDCounter++;
-			TorChannel channel = new TorChannel(this.m_streamIDCounter,this);
-			this.m_streams.put(new Integer(this.m_streamIDCounter),channel);
-
-			if(this.m_streamIDCounter == MAX_STREAMS_OVER_CIRCUIT)
-			{
-				this.m_closed = true;
-			}
-			channel.connect(addr,port);
-			return channel;
 		}
+		else
+		{
+			m_streamIDCounter++;
+			channel.setStreamID(m_streamIDCounter);
+			channel.setCircuit(this);
+			m_streams.put(new Integer(this.m_streamIDCounter), channel);
+
+			if (m_streamIDCounter == MAX_STREAMS_OVER_CIRCUIT)
+			{
+				shutdown();
+			}
+			channel.connect(addr, port);
+		}
+	}
+
+	public boolean isAllowed(String adr, int port)
+	{
+		return m_lastORDescription.getAcl().isAllowed(adr,port);
 	}
 
 }

@@ -9,7 +9,7 @@ package anon.tor.test;
 import anon.AnonChannel;
 import anon.tor.Tor;
 import anon.tor.TorAnonServerDescription;
-
+import logging.*;
 import java.net.InetAddress;
 
 /**
@@ -23,17 +23,10 @@ public class tor2jap
 
 	public static void main(String[] args) throws Exception
 	{
+		LogHolder.setLogInstance(new SystemErrLog());
 		Tor tor = Tor.getInstance();
-		for(int i2=0;i2<3;i2++)
-		{
-			tor.initialize(new TorAnonServerDescription());
-		/*	byte[] temp = tor.DNSResolve("www.google.de");
-			for(int i=0;i<temp.length;i++)
-			{
-				System.out.print(" "+(temp[i]&0xFF));
-			}
-			System.out.println();*/
-			AnonChannel channel = tor.createChannel(InetAddress.getByName("www.google.de"), 80);
+		tor.initialize(new TorAnonServerDescription());
+			AnonChannel channel = tor.createChannel("www.google.de", 80);
 			channel.getOutputStream().write( ("GET /index.html HTTP/1.0\n\r\n\r").getBytes());
 			for (; ; )
 			{
@@ -46,5 +39,5 @@ public class tor2jap
 			}
 			tor.shutdown();
 		}
-	}
+
 }
