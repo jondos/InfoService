@@ -391,36 +391,46 @@ public final class JAPController implements ProxyListener {
 		// fire event
 		notifyJAPObservers();
 	}
-	public void saveConfigFile() {
-		boolean error=false;
-		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:try saving configuration to "+JAPConstants.XMLCONFFN);
-		try {
-			String dir=System.getProperty("user.home","");
-			FileOutputStream f=null;
-			//first tries in user.home
-			try  {
-				f=new FileOutputStream(dir+"/"+JAPConstants.XMLCONFFN);
-			} catch(Exception e) {
-				f=new FileOutputStream(JAPConstants.XMLCONFFN); //and then in the current directory
-			}
-			String sb=getConfigurationAsXML();
-			if(sb!=null) {
-				f.write(sb.getBytes());
-				f.flush();
-				f.close();
-			} else
-				error=true;
-		} catch(Exception e) {
-			error=true;
-		}
-		if(error) {
-			JAPDebug.out(JAPDebug.ERR,JAPDebug.MISC,"JAPModel:error saving configuration to "+JAPConstants.XMLCONFFN);
-			JOptionPane.showMessageDialog(m_Controller.getView(),
+	public void saveConfigFile()
+		{
+			boolean error=false;
+			JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:try saving configuration to "+JAPConstants.XMLCONFFN);
+			try
+				{
+					String sb=getConfigurationAsXML();
+					if(sb==null)
+						error=true;
+					else
+						{
+							String dir=System.getProperty("user.home","");
+							FileOutputStream f=null;
+							//first tries in user.home
+							try
+								{
+									f=new FileOutputStream(dir+"/"+JAPConstants.XMLCONFFN);
+								}
+							catch(Exception e)
+								{
+									f=new FileOutputStream(JAPConstants.XMLCONFFN); //and then in the current directory
+								}
+							f.write(sb.getBytes());
+							f.flush();
+							f.close();
+						}
+				}
+			catch(Exception e)
+				{
+					error=true;
+				}
+			if(error)
+				{
+					JAPDebug.out(JAPDebug.ERR,JAPDebug.MISC,"JAPModel:error saving configuration to "+JAPConstants.XMLCONFFN);
+					JOptionPane.showMessageDialog(m_Controller.getView(),
 											JAPMessages.getString("errorSavingConfig"),
 											JAPMessages.getString("errorSavingConfigTitle"),
 											JOptionPane.ERROR_MESSAGE);
+				}
 		}
-	}
 	protected String getConfigurationAsXML() {
 		// Save config to xml file
 		// Achtung!! Fehler im Sun-XML --> NULL-Attributte koennen hinzugefuegt werden,
@@ -1305,6 +1315,8 @@ private final class SetAnonModeAsync implements Runnable
 	 *
 	 */
 	public void goodBye() {
+		try
+		{
 		//stopListener();
 		//view.setVisible(false);
 		//iconifiedView.setVisible(false);
@@ -1322,6 +1334,10 @@ private final class SetAnonModeAsync implements Runnable
 				mbGoodByMessageNeverRemind = checkboxRemindNever.isSelected();
 		}
 		m_Controller.saveConfigFile();
+		}
+		catch(Throwable t)
+			{
+			}
 		System.exit(0);
 	}
 
