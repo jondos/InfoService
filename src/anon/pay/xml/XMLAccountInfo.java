@@ -27,15 +27,14 @@
  */
 package anon.pay.xml;
 
+import java.io.ByteArrayInputStream;
 import java.util.Enumeration;
 import java.util.Vector;
 import javax.xml.parsers.DocumentBuilderFactory;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import anon.util.IXMLEncodable;
 import anon.util.XMLUtil;
-import java.io.ByteArrayInputStream;
 
 /**
  * This class represents an XML AccountInfo structure.
@@ -227,5 +226,15 @@ public class XMLAccountInfo implements IXMLEncodable //extends XMLDocument
 	public void setBalance(XMLBalance b1)
 	{
 		m_balance = b1;
+	}
+
+	/**
+	 * XMLAccountInfo
+	 *
+	 * @param document Document
+	 */
+	public XMLAccountInfo(Document document) throws Exception
+	{
+		setValues(document.getDocumentElement());
 	}
 }

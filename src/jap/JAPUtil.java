@@ -63,9 +63,52 @@ import gui.SimpleFileFilter;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import java.sql.Timestamp;
 
+/**
+ * This class contains static utility functions for Jap
+ */
 final public class JAPUtil
 {
+	/**
+	 * Formats a number of bytes in human-readable kB/MB/GB format
+	 * with 2 decimal places
+	 *
+	 * @param bytes long number of bytes
+	 * @return String the formatted string
+	 */
+	public static String formatBytesValue(long bytes)
+	{
+		long l = bytes * 100;
+		int log = 1;
+		while ( (l >= 102400) && (log <= 4))
+		{
+			l /= 1024;
+			log++;
+		}
+		String fract = (l % 100 < 10 ? "0" : "") + Long.toString(l % 100);
+		long abs = l / 100;
+		String unit;
+		switch (log)
+		{
+			case 1:
+				unit = " Bytes";
+				break;
+			case 2:
+				unit = " kB";
+				break;
+			case 3:
+				unit = " MB";
+				break;
+			case 4:
+			default:
+				unit = " GB";
+				break;
+		}
+
+		return Long.toString(abs) + (log>1? ("." + fract):"") + unit;
+	}
+
 	public static int applyJarDiff(File fileOldJAR, File fileNewJAR,
 								   byte[] diffJAR)
 	{
@@ -431,6 +474,7 @@ final public class JAPUtil
 		}
 		return t_cert;
 	}
+
 	/**
 	 * Returns if the given port is valid.
 	 * @param a_port a port number
@@ -443,6 +487,21 @@ final public class JAPUtil
 			return false;
 		}
 		return true;
+	}
+
+	/**
+	 * formats a timestamp in an easily readable format.
+	 * @param date Timestamp
+	 * @param withTime boolean if true, the date+time is returned, otherwise date only.
+	 */
+	public static String formatTimestamp(Timestamp date, boolean withTime)
+	{
+		String str = date.getDate() + "." + (date.getMonth() + 1) + "." + (date.getYear() + 1900);
+		if (withTime)
+		{
+			str += " - " + date.getHours() + ":" + date.getMinutes();
+		}
+		return str;
 	}
 
 }

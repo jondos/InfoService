@@ -33,19 +33,23 @@ import javax.swing.JTable;
 import javax.swing.SwingConstants;
 import javax.swing.table.TableCellRenderer;
 import java.sql.Timestamp;
+import javax.swing.table.DefaultTableCellRenderer;
+import jap.JAPUtil;
 
 /**
  * our own renderer for Date table cells. Shows dates in a not-so-ugly format.
+ * using the JAPUtil.formatTimestamp function
  * @author Bastian Voigt
  */
-public class TimestampCellRenderer extends JLabel implements TableCellRenderer
+public class TimestampCellRenderer extends DefaultTableCellRenderer
 {
-	public TimestampCellRenderer()
+	private boolean m_bWithTime;
+
+	public TimestampCellRenderer(boolean withTime)
 	{
 		super();
-		this.setOpaque(false); //MUST do this for background to show up.
-		this.setHorizontalAlignment(SwingConstants.RIGHT);
-//		this.setFont();
+		m_bWithTime = withTime;
+		setHorizontalAlignment(SwingConstants.RIGHT);
 	}
 
 	public Component getTableCellRendererComponent(
@@ -53,17 +57,23 @@ public class TimestampCellRenderer extends JLabel implements TableCellRenderer
 		boolean isSelected, boolean hasFocus,
 		int row, int column)
 	{
-		if(!(date instanceof Timestamp))
+		if (isSelected)
+		{
+			super.setForeground(table.getSelectionForeground());
+			super.setBackground(table.getSelectionBackground());
+		}
+		else
+		{
+			super.setForeground(table.getForeground());
+			super.setBackground(table.getBackground());
+		}
+		if (! (date instanceof Timestamp))
 		{
 			setText("Error - not a Timestamp!");
 			return this;
 		}
-		Timestamp theDate = (Timestamp) date;
-		this.setText(theDate.getDay() + "." + (theDate.getMonth() + 1) + "." + (theDate.getYear() + 1900));
-		if (isSelected)
-		{
-
-		}
+		setFont(table.getFont());
+		this.setText(JAPUtil.formatTimestamp( (Timestamp) date, m_bWithTime));
 		return this;
 	}
 }

@@ -51,7 +51,7 @@ import anon.util.XMLUtil;
 import logging.*;
 import anon.tor.tinytls.*;
 import anon.pay.xml.*;
-
+import org.w3c.dom.*;
 
 public class BIConnection
 {
@@ -99,7 +99,7 @@ public class BIConnection
 	 *
 	 * @throws IOException Wenn Fehler beim Verbindungsabbau
 	 */
-	public void disconnect() throws IOException
+	public void disconnect() throws Exception
 	{
 		m_httpClient.close();
 	}
@@ -111,9 +111,9 @@ public class BIConnection
 	public XMLTransCert charge() throws Exception
 	{
 		m_httpClient.writeRequest("GET", "charge", null);
-		String answer = m_httpClient.readAnswer();
-		XMLTransCert xmltrcert = new XMLTransCert(answer);
-		if (xmltrcert.verifySignature(m_theBI.getVerifier())==true)
+		Document doc = m_httpClient.readAnswer();
+		XMLTransCert xmltrcert = new XMLTransCert(doc);
+		if (xmltrcert.verifySignature(m_theBI.getVerifier()) == true)
 		{
 			return xmltrcert;
 		}
@@ -131,12 +131,10 @@ public class BIConnection
 	 */
 	public XMLAccountInfo getAccountInfo() throws Exception
 	{
-		String answer;
 		XMLAccountInfo info = null;
 		m_httpClient.writeRequest("GET", "balance", null);
-		answer = m_httpClient.readAnswer();
-		LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Received answer: " + answer);
-		info = new XMLAccountInfo(answer);
+		Document doc = m_httpClient.readAnswer();
+		info = new XMLAccountInfo(doc);
 		XMLBalance bal = info.getBalance();
 		if (m_theBI.getVerifier().verifyXML(XMLUtil.toXMLDocument(bal)) == false)
 		{
@@ -155,18 +153,25 @@ public class BIConnection
 
 		String StrAccountCert = XMLUtil.toString(XMLUtil.toXMLDocument(accountCert));
 		m_httpClient.writeRequest("POST", "authenticate", StrAccountCert);
-		String answer = m_httpClient.readAnswer();
-
-		XMLChallenge xmlchallenge = new XMLChallenge(answer);
-		byte[] challenge = xmlchallenge.getChallengeForSigning();
-		byte[] response = signer.signBytes(challenge);
-		XMLResponse xmlResponse = new XMLResponse(response);
-		String strResponse = XMLUtil.toString(XMLUtil.toXMLDocument(xmlResponse));
-
-		m_httpClient.writeRequest("POST", "response", strResponse);
-		answer = m_httpClient.readAnswer();
+		Document doc = m_httpClient.readAnswer();
+		String tagname = doc.getDocumentElement().getTagName();
+		if (tagname.equals(XMLChallenge.XML_ELEMENT_NAME))
+		{
+			XMLChallenge xmlchallenge = new XMLChallenge(doc);
+			byte[] challenge = xmlchallenge.getChallengeForSigning();
+			byte[] response = signer.signBytes(challenge);
+			XMLResponse xmlResponse = new XMLResponse(response);
+			String strResponse = XMLUtil.toString(XMLUtil.toXMLDocument(xmlResponse));
+			m_httpClient.writeRequest("POST", "response", strResponse);
+			doc = m_httpClient.readAnswer();
+		}
+		else if (tagname.equals(XMLErrorMessage.XML_ELEMENT_NAME))
+		{
+			/** @todo handle errormessage properly */
+			throw new Exception("The BI sent an errormessage: "+
+								new XMLErrorMessage(doc).getErrorDescription());
+		}
 	}
-
 
 	/**
 	 * Registers a new account using the specified keypair.
@@ -185,29 +190,38 @@ public class BIConnection
 			"POST", "register",
 			XMLUtil.toString(XMLUtil.toXMLDocument(pubKey))
 			);
-		String answer = m_httpClient.readAnswer();
+		Document doc = m_httpClient.readAnswer();
+		String tagname = doc.getDocumentElement().getTagName();
 
 		// perform challenge-response authentication
-		XMLChallenge xmlchallenge = new XMLChallenge(answer);
-		byte[] challenge = xmlchallenge.getChallengeForSigning();
-		byte[] response = signKey.signBytes(challenge);
-		XMLResponse xmlResponse = new XMLResponse(response);
-		String strResponse = XMLUtil.toString(XMLUtil.toXMLDocument(xmlResponse));
-		m_httpClient.writeRequest("POST", "response", strResponse);
-		answer = m_httpClient.readAnswer();
-		LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Received answer: " + answer);
-		XMLAccountCertificate xmlCert = new XMLAccountCertificate(answer);
-
-		// check signature
-		if (!xmlCert.verifySignature(m_theBI.getVerifier()))
+		XMLAccountCertificate xmlCert = null;
+		if (tagname.equals(XMLChallenge.XML_ELEMENT_NAME))
 		{
-			throw new Exception("AccountCertificate: Wrong signature!");
+			XMLChallenge xmlchallenge = new XMLChallenge(doc);
+			byte[] challenge = xmlchallenge.getChallengeForSigning();
+			byte[] response = signKey.signBytes(challenge);
+			XMLResponse xmlResponse = new XMLResponse(response);
+			String strResponse = XMLUtil.toString(XMLUtil.toXMLDocument(xmlResponse));
+			m_httpClient.writeRequest("POST", "response", strResponse);
+			doc = m_httpClient.readAnswer();
+			xmlCert = new XMLAccountCertificate(doc.getDocumentElement());
+			// check signature
+			if (!xmlCert.verifySignature(m_theBI.getVerifier()))
+			{
+				throw new Exception("AccountCertificate: Wrong signature!");
+			}
+			if (!xmlCert.getPublicKey().equals(pubKey.getPublicKey()))
+			{
+				throw new Exception(
+					"The JPI is evil (sent a valid certificate, but with a wrong publickey)");
+
+			}
 		}
-		if (!xmlCert.getPublicKey().equals(pubKey.getPublicKey()))
+		else if (tagname.equals(XMLErrorMessage.XML_ELEMENT_NAME))
 		{
-			throw new Exception(
-				"The JPI is evil (sent a valid certificate, but with a wrong publickey)");
-
+			throw new Exception("The BI sent an errormessage: "+
+								new XMLErrorMessage(doc).getErrorDescription()+
+								" Authentication failed.");
 		}
 		return xmlCert;
 	}
