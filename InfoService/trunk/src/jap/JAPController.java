@@ -1476,6 +1476,7 @@ private final class SetAnonModeAsync implements Runnable
 		{
 			observerVector.addElement(o);
 		}
+
 	public void notifyJAPObservers()
 		{
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:notifyJAPObservers()");

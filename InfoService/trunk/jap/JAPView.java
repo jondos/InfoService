@@ -39,7 +39,7 @@ import gui.JAPDll;
 
 final public class JAPView extends JFrame implements ActionListener, JAPObserver {
 
-	public class MyProgressBarUI extends BasicProgressBarUI {
+	final private class MyProgressBarUI extends BasicProgressBarUI {
 		public void paint(Graphics g, JComponent c) {
 			JProgressBar pb = (JProgressBar) c;
 			int dx     = 13;
@@ -59,11 +59,15 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 				x+=dx;
 			}
 		}
-/*
-		public void update(Graphics g, JComponent c) {
-		}
-*/
 	}
+
+  final private class MyViewUpdate implements Runnable
+    {
+      public void run()
+        {
+          updateValues1();
+        }
+    }
 
 	private JAPController 	controller;
 	private JLabel				  meterLabel;
@@ -85,7 +89,7 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 	private JAPConf 			  m_dlgConfig;
 	private Window				  m_ViewIconified;
 	private NumberFormat    m_NumberFormat;
-	private Object          oValueUpdateSemaphore;
+	private MyViewUpdate    m_runnableValueUpdate;
 	private boolean         m_bIsIconified;
 	private String          m_Title;
 	private final static boolean PROGRESSBARBORDER = true;
@@ -99,7 +103,7 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 			helpWindow =  null;//new JAPHelp(this);
 			m_dlgConfig = null;//new JAPConf(this);
 			m_bIsIconified=false;
-			oValueUpdateSemaphore=new Object();
+			m_runnableValueUpdate=new MyViewUpdate();
 		}
 
 	public void create()
@@ -193,12 +197,12 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 							if(!JAPDll.hideWindowInTaskbar(getTitle()))
 								setTitle(m_Title);
 							m_bIsIconified=true;
-							updateValues();
+							valuesChanged();
 						}
 				});
 
 			setOptimalSize();
-			updateValues();
+			valuesChanged();
 			JAPUtil.centerFrame(this);
 	}
 
@@ -527,7 +531,7 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 			if(m_dlgConfig!=null)
 				m_dlgConfig.localeChanged();
 			m_NumberFormat=NumberFormat.getInstance();
-			updateValues();
+			valuesChanged();
 			setOptimalSize();
 		}
 
@@ -657,38 +661,15 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 				}
 			}
 
-	private synchronized void updateValues() {
+	private void updateValues1() {
+  			synchronized(m_runnableValueUpdate)
+{
 		AnonServer e = controller.getAnonServer();
 		// Config panel
 		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPView:Start updateValues");
-		//m_labelProxyPort.setText(String.valueOf(JAPModel.getHttpListenerPortNumber()));
-		//if(JAPModel.getUseFirewall())
-			//{
-				//proxyMustUseLabel.setText(JAPMessages.getString("firewallMustUse"));
-				//m_labelProxyHost.setVisible(true);
-				//int firewallPort=JAPModel.getFirewallPort();
-				//if(firewallPort==-1)
-					//m_labelProxyHost.setText(JAPMessages.getString("firewallNotConfigured"));
-				//else
-					//m_labelProxyHost.setText(JAPMessages.getString("confProxyHost")+" "+JAPModel.getFirewallHost()+":"+String.valueOf(firewallPort));
-			//}
-		//else
-			//{
-				//proxyMustUseLabel.setText(JAPMessages.getString("firewallMustNotUse"));
-				//m_labelProxyHost.setVisible(false);
-			//}
-		//infoServiceTextField.setText(JAPModel.getInfoServiceHost()+":"+String.valueOf(JAPModel.getInfoServicePort()));
-		//anonTextField.setText(e.getHost()+":"+String.valueOf(e.getPort())+((e.getSSLPort()==-1)?"":":"+e.getSSLPort()));
-		//anonNameTextField.setText(e.getName());
-		//anonNameTextField.setToolTipText(e.getName());
-		//anonCheckBox.setSelected(controller.getAnonMode());
-		//if(controller.getAnonMode()) {
-		//	anonCheckBox.setForeground(Color.black);
-		//} else {
-		//	anonCheckBox.setForeground(Color.red);
-		//}
 
 		// Meter panel
+    try{
 		m_cbAnon.setSelected(controller.getAnonMode());
 		if(controller.getAnonMode()) {
 			m_cbAnon.setForeground(Color.black);
@@ -757,8 +738,12 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 			trafficProgressBar.setString(JAPMessages.getString("meterNA"));
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPView:Finished updateValues");
 		}
-
-
+}
+catch(Throwable t)
+{
+			JAPDebug.out(JAPDebug.EMERG,JAPDebug.GUI,"JAPVIew: Ooops... Crash in updateValues(): "+t.getMessage());
+}
+}
 		}
 		public void registerViewIconified(Window v) {
 			m_ViewIconified = v;
@@ -777,16 +762,17 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 			m_labelOwnTrafficBytes.setText(m_NumberFormat.format(c)+" Bytes");
 			JAPDll.onTraffic();
 		}
-		public void valuesChanged ()
-		{
-			synchronized(oValueUpdateSemaphore)
+
+  public void valuesChanged ()
+    {
+			synchronized(m_runnableValueUpdate)
 				{
-//					JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"Start valuesChanged");
-					updateValues();
-//					JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"End valuesChanged");
+					if(SwingUtilities.isEventDispatchThread())
+            updateValues1();
+          else
+            SwingUtilities.invokeLater(m_runnableValueUpdate);
 				}
 		}
-
 }
 
 
