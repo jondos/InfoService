@@ -230,6 +230,25 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.fill = GridBagConstraints.HORIZONTAL;
 		c1.weightx = 1;
 		m_panelAnonService.add(m_comboAnonServices, c1);
+		JButton bttnReload=new JButton(JAPUtil.loadImageIcon(JAPConstants.IMAGE_RELOAD,true));
+		bttnReload.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e)
+			{
+				m_Controller.fetchMixCascades(false);
+			}
+		});
+		bttnReload.setRolloverEnabled(true);
+		ImageIcon icon=JAPUtil.loadImageIcon(JAPConstants.IMAGE_RELOAD_ROLLOVER,true);
+		bttnReload.setRolloverIcon(icon);
+		bttnReload.setSelectedIcon(icon);
+		bttnReload.setRolloverSelectedIcon(icon);
+		bttnReload.setPressedIcon(icon);
+		c1.gridx=2;
+		c1.weightx=0;
+		c1.fill = GridBagConstraints.NONE;
+		bttnReload.setBorder(null);
+		bttnReload.setFocusPainted(false);
+		m_panelAnonService.add(bttnReload, c1);
 		m_bttnAnonDetails = new JButton(JAPMessages.getString("ngBttnAnonDetails"));
 		m_bttnAnonDetails.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e)
@@ -237,7 +256,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				showConfigDialog(JAPConf.ANON_TAB);
 			}
 		});
-		c1.gridx = 2;
+		c1.gridx = 3;
 		c1.weightx = 0;
 		c1.fill = GridBagConstraints.NONE;
 		m_panelAnonService.add(m_bttnAnonDetails, c1);

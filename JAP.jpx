@@ -333,6 +333,8 @@
     <file path="images/meterNnew.gif"/>
     <file path="images/north.gif"/>
     <file path="images/red.gif"/>
+    <file path="images/reload.gif"/>
+    <file path="images/reloadrollover.gif"/>
     <file path="images/saveicon.gif"/>
     <file path="images/server16.gif"/>
     <file path="images/splash.gif"/>
