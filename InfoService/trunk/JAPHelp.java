@@ -97,20 +97,21 @@ class HtmlPane extends JScrollPane implements HyperlinkListener {
 
     public HtmlPane(String fn) {
 	try {
-	    File f = new File (fn);
-	    String s = f.getAbsolutePath();
-	    s = "file:"+s;
+	 //   File f = new File (fn);
+	  //  String s = f.getAbsolutePath();
+	  //  s = "file:"+s;
 //	    URL url = new URL(s);
-	    html = new JEditorPane(s);
+	    html = new JEditorPane(getClass().getResource(fn));
 	    html.setEditable(false);
 	    html.addHyperlinkListener(this);
 
 	    JViewport vp = getViewport();
 	    vp.add(html);
-	} catch (MalformedURLException e) {
-	    System.out.println("Malformed URL: " + e);
-	} catch (IOException e) {
-	    System.out.println("IOException: " + e);
+	} //catch (MalformedURLException e) {
+	   // System.out.println("Malformed URL: " + e);
+	//} 
+	catch (Exception e) {
+	    System.out.println("Exception: " + e);
 	}	
     }
     

@@ -2,7 +2,7 @@ import java.util.*;
 
 public class JAPModel implements JAPObserver {
 
-	public boolean		debug = true;
+	public boolean		debug =false;
 	
 	public int			portNumber = 4001;
 	private int			runningPortNumber = 0; // the port where proxy listens
