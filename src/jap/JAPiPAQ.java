@@ -36,7 +36,7 @@ import logging.LogType;
 final public class JAPiPAQ
 {
 
-	private JAPView view;
+	private JAPNewView view;
 	private JAPController m_controller;
 
 
@@ -60,7 +60,7 @@ final public class JAPiPAQ
 		m_controller.loadConfigFile(strJapConfFile,false);
 		// Output some information about the system
 		// Create the view object
-		view = new JAPView(JAPConstants.TITLE, m_controller);
+		view = new JAPNewView(JAPConstants.TITLE, m_controller);
 		// Create the main frame
 		view.create(false);
 		// Switch Debug Console Parent to MainView

@@ -27,25 +27,38 @@
  */
 package gui;
 
-import javax.swing.*;
-import java.awt.*;
-import jap.*;
+import java.util.Random;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Image;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import jap.JAPConstants;
+import jap.JAPUtil;
 
+/** A panel which display some status messages, one after each other*/
 public class StatusPanel extends JPanel implements Runnable
 {
 	Dimension m_dimensionPreferredSize;
 	int m_Height;
 	Object oMsgSync;
-	private final static int ms_IconHeight = 16;
-	private final static int ms_IconWidth = 17;
-	private final static Image ms_imageWarning=JAPUtil.loadImageIcon(JAPConstants.IMAGE_WARNING, true).getImage();
-	private final static Image ms_imageInformation=JAPUtil.loadImageIcon(JAPConstants.IMAGE_INFORMATION, true).getImage();
-	private final static Image ms_imageError=JAPUtil.loadImageIcon(JAPConstants.IMAGE_ERROR, true).getImage();
+	private Random m_Random;
+
+	private final static int ms_IconHeight = 15;
+	private final static int ms_IconWidth = 16;
+	private final static Image ms_imageWarning = JAPUtil.loadImageIcon(JAPConstants.IMAGE_WARNING, true).
+		getImage();
+	private final static Image ms_imageInformation = JAPUtil.loadImageIcon(JAPConstants.IMAGE_INFORMATION, true).
+		getImage();
+	private final static Image ms_imageError = JAPUtil.loadImageIcon(JAPConstants.IMAGE_ERROR, true).getImage();
 
 	final class MsgQueueEntry
 	{
 		String m_Msg;
 		Image m_Icon;
+		int m_Id;
 		MsgQueueEntry m_Next;
 		int m_DisplayCount = 10;
 	}
@@ -56,14 +69,16 @@ public class StatusPanel extends JPanel implements Runnable
 	private volatile int m_aktY;
 	private Thread m_Thread;
 	private int m_idyFont;
+
 	public StatusPanel()
 	{
+		m_Random = new Random();
 		oMsgSync = new Object();
 		Font font = new JLabel("Status").getFont();
 		m_Height = (int) (font.getSize() * 0.8);
 		m_Height = Math.min(m_Height, ms_IconHeight);
 		font = new Font(font.getName(), font.getStyle(), m_Height);
-		m_dimensionPreferredSize = new Dimension(100,ms_IconHeight);
+		m_dimensionPreferredSize = new Dimension(100, ms_IconHeight);
 		m_idyFont = (ms_IconHeight - font.getSize()) / 2;
 		setLayout(null);
 		setFont(font);
@@ -89,12 +104,18 @@ public class StatusPanel extends JPanel implements Runnable
 		}
 	}
 
-	public void addMsg(String msg, int type)
+	/** Adds a message to be displayed in the status panel.
+	 * @param type chose one of JOptionPane.*
+	 * @param msg the message to be displayed
+	 * @return an id useful for removing this message from the status panel
+	 */
+	public int addMsg(String msg, int type)
 	{
 		synchronized (oMsgSync)
 		{
 			MsgQueueEntry entry = new MsgQueueEntry();
 			entry.m_Msg = msg;
+			entry.m_Id = m_Random.nextInt();
 			if (type == JOptionPane.WARNING_MESSAGE)
 			{
 				entry.m_Icon = ms_imageWarning;
@@ -122,6 +143,45 @@ public class StatusPanel extends JPanel implements Runnable
 			}
 			//displayLastMessage....
 			m_Thread.interrupt();
+			return entry.m_Id;
+		}
+	}
+
+	/** Removes a message from the ones which are displayed in the status panel
+	 * @param id the message to be removed
+	 */
+	public void removeMsg(int id)
+	{
+		synchronized (oMsgSync)
+		{
+			if(m_Msgs==null)//zero elements
+				return;
+			if (m_Msgs.m_Id == id && m_Msgs.m_Next == m_Msgs)//one element
+			{
+				m_Msgs = null;
+				m_lastMsg = null;
+				return;
+			}
+			//more than one
+			MsgQueueEntry entry = m_Msgs;
+			MsgQueueEntry prev = null;
+			while (entry != null)
+			{
+				if (entry.m_Next.m_Id == id)
+				{
+					prev=entry;
+					entry=entry.m_Next;
+					break;
+				}
+				entry = entry.m_Next;
+				if(entry==m_Msgs)
+					return;//not found
+			}
+			if(entry==m_Msgs)//remove curent entry
+				m_Msgs=entry.m_Next;
+			prev.m_Next=entry.m_Next;//remove entry from list
+			if(m_lastMsg==entry) //adjust last
+				m_lastMsg=prev;
 		}
 	}
 
@@ -183,7 +243,7 @@ public class StatusPanel extends JPanel implements Runnable
 					m_Msgs = m_Msgs.m_Next;
 					m_aktY = 0;
 				}
-				for (int i = 0; i < ms_IconHeight && m_bRun; i++)
+				for (int i = 0; i < ms_IconHeight + 1 && m_bRun; i++)
 				{
 					paint(getGraphics());
 					try

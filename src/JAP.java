@@ -40,7 +40,6 @@ import jap.JAPController;
 import jap.JAPDebug;
 import jap.JAPMessages;
 import jap.JAPNewView;
-import jap.JAPView;
 import jap.JAPSplash;
 import jap.JAPViewIconified;
 import logging.LogHolder;
@@ -246,20 +245,7 @@ class JAP extends Frame
 				"JAP:MRJ Version is " + mrjVersion + ".");
 			//initalisiere PayInstance
 		}
-		AbstractJAPMainView view =null;
-		if (m_arstrCmdnLnArgs != null)
-		{
-			for (int i = 0; i < m_arstrCmdnLnArgs.length; i++)
-			{
-				if (m_arstrCmdnLnArgs[i].equalsIgnoreCase("-newgui"))
-				{
-					view = new JAPNewView(JAPConstants.TITLE,m_controller);
-					break;
-				}
-			}
-		}
-		if(view==null)
-			view = new JAPView(JAPConstants.TITLE, m_controller);
+		AbstractJAPMainView view =new JAPNewView(JAPConstants.TITLE,m_controller);
 		// Create the main frame
 		view.create(loadPay);
 		// Switch Debug Console Parent to MainView
