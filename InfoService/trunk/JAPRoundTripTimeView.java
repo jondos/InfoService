@@ -54,8 +54,9 @@ public class JAPRoundTripTimeView extends JDialog implements Runnable {
 	private JLabel sumProgressBarDesc2;
 	private JProgressBar sumProgressBar1  = new JProgressBar();
 	private JProgressBar sumProgressBar2  = new JProgressBar();
-	
 	private JAPModel model;
+	
+	
 	/**
 	 * The Main Method
 	 */
@@ -330,13 +331,13 @@ public class JAPRoundTripTimeView extends JDialog implements Runnable {
 		
 		// catching all the exceptions that can be thrown in JAPRoundTripTime
 		} catch (BindException e) {
-			System.out.println("ERROR: " + e.getMessage());
+			JAPDebug.out(JAPDebug.WARNING ,JAPDebug.NET,"ERROR: " + e.getMessage());
 		} catch (UnknownHostException e) {
-			System.out.println("ERROR: " + e.getMessage());
+			JAPDebug.out(JAPDebug.WARNING ,JAPDebug.NET,"ERROR: " + e.getMessage());
 		} catch (IOException e) {
-			  System.out.println("ERROR: " + e.getMessage());
+			JAPDebug.out(JAPDebug.WARNING ,JAPDebug.NET,"ERROR: " + e.getMessage());
 		} catch (Exception e) {
-			  System.out.println("SWING ERROR: " + e.getMessage());
+			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"ERROR: " + e.getMessage());
 		}
 	}
 	
