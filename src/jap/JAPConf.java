@@ -31,10 +31,10 @@ import java.io.File;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.Hashtable;
-import java.util.Locale;
 import java.util.Vector;
+
 import java.awt.BorderLayout;
-import java.awt.Cursor;
+import java.awt.CardLayout;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
@@ -45,6 +45,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+//import update.JAPUpdate;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -57,24 +58,33 @@ import javax.swing.JSeparator;
 import javax.swing.JSlider;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
-import javax.swing.UIManager;
-import javax.swing.UIManager.LookAndFeelInfo;
+import javax.swing.JTree;
+import javax.swing.SwingConstants;
+import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import logging.LogHolder;
+import javax.swing.event.TreeExpansionEvent;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
+import javax.swing.event.TreeWillExpandListener;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeCellRenderer;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.DefaultTreeSelectionModel;
+import javax.swing.tree.ExpandVetoException;
+import javax.swing.tree.TreeNode;
+import javax.swing.tree.TreePath;
+import javax.swing.tree.TreeSelectionModel;
+
+import anon.infoservice.ImmutableListenerInterface;
+import anon.infoservice.ProxyInterface;
+import gui.JAPMultilineLabel;
 import logging.LogLevel;
 import logging.LogType;
 import pay.gui.AccountSettingsPanel;
-//import update.JAPUpdate;
-import javax.swing.*;
-import javax.swing.tree.*;
-import javax.swing.event.*;
-import java.awt.*;
-import javax.swing.border.*;
-
-import anon.infoservice.ProxyInterface;
 
 final class JAPConf extends JDialog
 {
@@ -138,7 +148,9 @@ final class JAPConf extends JDialog
 	private JCheckBox m_cbDebugNet;
 	private JCheckBox m_cbDebugThread;
 	private JCheckBox m_cbDebugMisc;
-	private JCheckBox m_cbShowDebugConsole;
+	private JCheckBox m_cbShowDebugConsole, m_cbDebugToFile;
+	private JTextField m_tfDebugFileName;
+	private JButton m_bttnDebugFileNameSearch;
 
 	private JSlider m_sliderDebugLevel;
 
@@ -164,7 +176,7 @@ final class JAPConf extends JDialog
 	 * events.
 	 */
 	private Vector m_confModules;
-	private static File m_fileCurrentDir;
+	//private static File m_fileCurrentDir;
 
 	//Einfug
 	//private JAPUpdate update;
@@ -403,24 +415,6 @@ final class JAPConf extends JDialog
 			}
 		});
 
-		/*GridBagConstraints c=new GridBagConstraints();
-		   c.weighty=1;
-		   c.weightx=1;
-		   c.insets=new Insets(20,10,10,10);
-		   c.fill=GridBagConstraints.BOTH;
-		   pContainer.add(m_Tree,c);
-		   c.gridx=1;
-		   c.weightx=0;
-		   c.fill=GridBagConstraints.BOTH;
-		   pContainer.add(m_Tabs,c);
-		   c.gridx=0;
-		   c.gridwidth=2;
-		   c.weightx=1;
-		   c.weighty=0;
-		   c.fill=GridBagConstraints.HORIZONTAL;
-		   c.insets=new Insets(0,10,10,10);
-		   pContainer.add(buttonPanel,c);
-		 */
 		pContainer.setLayout(new BorderLayout());
 		JPanel treePanel = new JPanel(new GridBagLayout());
 		GridBagConstraints c1 = new GridBagConstraints();
@@ -470,7 +464,7 @@ final class JAPConf extends JDialog
 		super.show();
 	}
 
-	protected JPanel buildPortPanel()
+	JPanel buildPortPanel()
 	{
 		m_labelPortnumber1 = new JLabel(JAPMessages.getString("settingsPort1"));
 		m_labelPortnumber1.setFont(m_fontControls);
@@ -505,7 +499,7 @@ final class JAPConf extends JDialog
 		p1.setLayout(g);
 		p1.setBorder(new EmptyBorder(5, 10, 10, 10));
 		GridBagConstraints c = new GridBagConstraints();
-		c.anchor = c.NORTHWEST;
+		c.anchor = GridBagConstraints.NORTHWEST;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridwidth = 1;
 		c.gridx = 0;
@@ -550,7 +544,7 @@ final class JAPConf extends JDialog
 		return p;
 	}
 
-	protected JPanel buildProxyPanel()
+	JPanel buildProxyPanel()
 	{
 		m_cbProxy = new JCheckBox(JAPMessages.getString("settingsProxyCheckBox"));
 		m_cbProxy.setFont(m_fontControls);
@@ -637,7 +631,7 @@ final class JAPConf extends JDialog
 			p1.setBorder(new EmptyBorder(5, 10, 10, 10));
 		}
 		GridBagConstraints c = new GridBagConstraints();
-		c.anchor = c.NORTHWEST;
+		c.anchor = GridBagConstraints.NORTHWEST;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridwidth = 1;
 		c.gridx = 0;
@@ -702,218 +696,69 @@ final class JAPConf extends JDialog
 		return p;
 	}
 
-	protected JPanel buildMiscPanel()
+	JPanel buildMiscPanel()
 	{
-		JPanel p = new JPanel();
-		p.setLayout(new BorderLayout());
-
-		// Panel for Look and Feel Options
-		//JPanel p1 = new JPanel();
-		//p1.setLayout(new GridLayout(2, 2));
-		//p1.setBorder(new TitledBorder(JAPMessages.getString("settingsLookAndFeelBorder")));
-		//p1.add(new JLabel(JAPMessages.getString("settingsLookAndFeel")));
-		/*JComboBox c = new JComboBox();
-		   LookAndFeelInfo[] lf = UIManager.getInstalledLookAndFeels();
-		   String currentLf = UIManager.getLookAndFeel().getClass().getName();
-		   // add menu items
-		   for (int lfidx = 0; lfidx < lf.length; lfidx++)
-		   {
-		 c.addItem(lf[lfidx].getName());
-		   }
-		   // select the current
-		   int lfidx;
-		   for (lfidx = 0; lfidx < lf.length; lfidx++)
-		   {
-		 if (lf[lfidx].getClassName().equals(currentLf))
-		 {
-		  c.setSelectedIndex(lfidx);
-		  break;
-		 }
-		   }
-		   if (! (lfidx < lf.length))
-		   {
-		 c.addItem("(unknown)");
-		 c.setSelectedIndex(lfidx);
-		   }
-		   c.addItemListener(new ItemListener()
-		   {
-		 public void itemStateChanged(ItemEvent e)
-		 {
-		  if (e.getStateChange() == e.SELECTED)
-		  {
-		   try
-		   {
-		 UIManager.setLookAndFeel(UIManager.getInstalledLookAndFeels()[ ( (JComboBox) e.
-		  getItemSelectable()).getSelectedIndex()].getClassName());
-//									SwingUtilities.updateComponentTreeUI(m_frmParent);
-//									SwingUtilities.updateComponentTreeUI(SwingUtilities.getRoot(((JComboBox)e.getItemSelectable())));
-		 JOptionPane.showMessageDialog(m_JapConf,
-		  JAPMessages.getString("confLookAndFeelChanged"),
-		  JAPMessages.getString("information"), JOptionPane.INFORMATION_MESSAGE);
-		   }
-		   catch (Exception ie)
-		   {
-		   }
-		  }
-		 }
-		   });
-		   p1.add(c);*/
-		//p1.add(new JLabel(JAPMessages.getString("settingsLanguage")));
-		/*m_comboLanguage = new JComboBox();
-		   m_comboLanguage.addItem("Deutsch");
-		   m_comboLanguage.addItem("English");
-		   m_comboLanguage.addItem("Fran\u00E7ais");
-		   m_comboLanguage.addItemListener(new ItemListener()
-		   {
-		 public void itemStateChanged(ItemEvent e)
-		 {
-		  if (!m_bIgnoreComboLanguageEvents && e.getStateChange() == e.SELECTED)
-		  {
-		   try
-		   {
-		 JOptionPane.showMessageDialog(m_JapConf, JAPMessages.getString("confLanguageChanged"),
-		  JAPMessages.getString("information"), JOptionPane.INFORMATION_MESSAGE);
-		   }
-		   catch (Exception ie)
-		   {
-		   }
-		  }
-		 }
-		   });
-
-		   p1.add(m_comboLanguage);
-		 */
-		// Panel for Misc Options
-		JPanel p2 = new JPanel();
-		p2.setLayout(new BorderLayout());
-		p2.setBorder(new TitledBorder(JAPMessages.getString("miscconfigBorder")));
-		JButton bttnPing = new JButton(JAPMessages.getString("bttnPing"));
-		/*				bttnPing.addActionListener(new ActionListener()
-		  {
-		   public void actionPerformed(ActionEvent e)
-		 {
-		  AnonServerDBEntry[] a=new AnonServerDBEntry[1];
-//								a[0]=new AnonServerDBEntry(m_Controller.anonHostName,m_Controller.anonHostName,m_Controller.anonPortNumber+1);
-		  a[0]=new AnonServerDBEntry(m_Controller.getAnonServer().getHost(),m_Controller.getAnonServer().getHost(),m_Controller.getAnonServer().getPort()+1);
-		  JAPRoundTripTimeView v=new JAPRoundTripTimeView(m_Controller.getView(),a);
-//								v.show();
-		 }
-		  });
-		 */
-		JButton bttnMonitor = new JButton(JAPMessages.getString("bttnMonitor"));
-//				bttnMonitor.setEnabled(false);
-		bttnMonitor.addActionListener(new ActionListener()
-		{
-			public void actionPerformed(ActionEvent e)
-			{
-				Cursor c1 = getCursor();
-				setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-				//m_Controller.fetchAnonServers();
-				JAPCascadeMonitorView v = new JAPCascadeMonitorView(m_Controller.getView());
-				//updateValues(); //THIS IS WRONG!!!!
-				//okPressed();
-				setCursor(c1);
-
-			}
-		});
-	/*	m_cbDummyTraffic = new JCheckBox("Send dummy packet every x seconds:");
-		m_cbDummyTraffic.addItemListener(new ItemListener()
-		{
-			public void itemStateChanged(ItemEvent e)
-			{
-				m_sliderDummyTrafficIntervall.setEnabled(e.getStateChange() == e.SELECTED);
-			}
-		});
-
-		m_cbCertCheckDisabled = new JCheckBox("Disable check of certificates");
-		*/
-	   JPanel p22 = new JPanel();
-		GridBagLayout gb = new GridBagLayout();
-		p22.setLayout(gb);
-		GridBagConstraints lc = new GridBagConstraints();
-
-		//p22.add(bttnPing);
-		//////////////////////////////////////////////////////////////////
-		//Einfug
-		//JButton testButton = new JButton("Update");
-		//testButton.addActionListener(new ActionListener()
-		//{
-		//		public void actionPerformed(ActionEvent e)
-		//		{
-		//			Cursor c1 = getCursor();
-		//			setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-		//			cancelPressed();
-		//			update = new JAPUpdate();
-//  if (update == null){
-
-		//         }//fi
-		//updateValues();
-		//			setCursor(c1);
-		//		}
-		//	});
-		//	testButton.setVisible(true);
-		//	testButton.setEnabled(true);
-		lc.gridx = 0;
-		lc.gridy = 0;
-		lc.gridheight = 1;
-		lc.gridwidth = 1;
-		lc.anchor = lc.NORTHWEST;
-		lc.fill = lc.HORIZONTAL;
-		lc.weightx = 1;
-		lc.weighty = 1;
-		//gb.setConstraints(testButton, lc);
-		//p22.add(testButton);
-		lc.gridy++;
-		//////////////////////////////////////////////////////////////////
-		gb.setConstraints(bttnMonitor, lc);
-		p22.add(bttnMonitor);
-/*		lc.gridy++;
-		gb.setConstraints(m_cbDummyTraffic, lc);
-		p22.add(m_cbDummyTraffic);
-		lc.gridy++;
-		m_sliderDummyTrafficIntervall = new JSlider(JSlider.HORIZONTAL, 10, 60, 30);
-		m_sliderDummyTrafficIntervall.setMajorTickSpacing(10);
-		m_sliderDummyTrafficIntervall.setMinorTickSpacing(5);
-		m_sliderDummyTrafficIntervall.setPaintLabels(true);
-		m_sliderDummyTrafficIntervall.setPaintTicks(true);
-		m_sliderDummyTrafficIntervall.setSnapToTicks(true);
-		gb.setConstraints(m_sliderDummyTrafficIntervall, lc);
-		p22.add(m_sliderDummyTrafficIntervall);
-		lc.gridy++;
-		lc.gridy++;
-		gb.setConstraints(m_cbCertCheckDisabled, lc);
-		p22.add(m_cbCertCheckDisabled);
-	*/
-   p2.add(p22, BorderLayout.NORTH);
-
-		// Panel for Debugging Options
-		JPanel p3 = new JPanel();
-		p3.setLayout(new GridLayout(1, 2));
-		p3.setBorder(new TitledBorder("Debugging"));
-		JPanel p31 = new JPanel(new GridLayout(0, 1));
+		JPanel p = new JPanel(new GridBagLayout());
+		p.setBorder(new TitledBorder("Debugging"));
+		GridBagConstraints c = new GridBagConstraints();
+		c.anchor = GridBagConstraints.NORTHWEST;
+		c.insets = new Insets(5, 5, 5, 5);
+		JPanel panelLogTypes = new JPanel(new GridLayout(0, 1));
 		m_cbDebugGui = new JCheckBox("GUI");
 		m_cbDebugNet = new JCheckBox("NET");
 		m_cbDebugThread = new JCheckBox("THREAD");
 		m_cbDebugMisc = new JCheckBox("MISC");
-		p31.add(m_cbDebugGui);
-		p31.add(m_cbDebugNet);
-		p31.add(m_cbDebugThread);
-		p31.add(m_cbDebugMisc);
+		panelLogTypes.add(m_cbDebugGui);
+		panelLogTypes.add(m_cbDebugNet);
+		panelLogTypes.add(m_cbDebugThread);
+		panelLogTypes.add(m_cbDebugMisc);
 
-		m_cbShowDebugConsole = new JCheckBox("Show Console");
+		JAPMultilineLabel l = new JAPMultilineLabel(JAPMessages.getString("ConfDebugTypes"));
+		p.add(l, c);
+		c.gridy = 1;
+		p.add(panelLogTypes, c);
+		c.gridy = 2;
+		c.gridwidth = 3;
+		c.weightx = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.insets = new Insets(0, 5, 0, 5);
+		p.add(new JSeparator(), c);
+		m_cbShowDebugConsole = new JCheckBox(JAPMessages.getString("ConfDebugShowConsole"));
 		m_cbShowDebugConsole.setSelected(JAPDebug.isShowConsole());
 		m_cbShowDebugConsole.addItemListener(new ItemListener()
 		{
 			public void itemStateChanged(ItemEvent e)
 			{
-				JAPDebug.showConsole(e.getStateChange() == e.SELECTED, m_Controller.getView());
+				JAPDebug.showConsole(e.getStateChange() == ItemEvent.SELECTED,JAPController.getView());
 			}
 		});
-		p31.add(m_cbShowDebugConsole);
+		c.gridy = 3;
+		c.weighty = 0;
+		c.insets = new Insets(5, 5, 5, 5);
+		p.add(m_cbShowDebugConsole, c);
 
-		p3.add(p31);
-		JPanel p32 = new JPanel();
-		m_sliderDebugLevel = new JSlider(JSlider.VERTICAL, 0, 7, 0);
+		m_cbDebugToFile = new JCheckBox(JAPMessages.getString("ConfDebugFile"));
+		c.gridy = 4;
+		c.weighty = 0;
+		p.add(m_cbDebugToFile, c);
+		JPanel panelDebugFileName = new JPanel(new GridBagLayout());
+		GridBagConstraints c1 = new GridBagConstraints();
+		m_tfDebugFileName = new JTextField(20);
+		c1.weightx = 1;
+		c1.insets = new Insets(0, 5, 0, 5);
+		c1.fill = GridBagConstraints.HORIZONTAL;
+		panelDebugFileName.add(m_tfDebugFileName, c1);
+		m_bttnDebugFileNameSearch = new JButton(JAPMessages.getString("ConfDebugFileNameSearch"));
+		c1.gridx = 1;
+		c1.weightx = 0;
+		panelDebugFileName.add(m_bttnDebugFileNameSearch, c1);
+		c.gridy = 5;
+		c.weighty = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		p.add(panelDebugFileName, c);
+
+		JPanel panelDebugLevels = new JPanel();
+		m_sliderDebugLevel = new JSlider(SwingConstants.VERTICAL, 0, 7, 0);
 		m_sliderDebugLevel.addChangeListener(new ChangeListener()
 		{
 			public void stateChanged(ChangeEvent e)
@@ -938,21 +783,33 @@ final class JAPConf extends JDialog
 		m_sliderDebugLevel.setSnapToTicks(true);
 		m_sliderDebugLevel.setPaintTrack(true);
 		m_sliderDebugLevel.setPaintTicks(false);
+		panelDebugLevels.add(m_sliderDebugLevel);
 
-		p32.add(m_sliderDebugLevel);
-		p3.add(p32);
-
-		JPanel pp = new JPanel(new BorderLayout());
-		//pp.add(p1, BorderLayout.NORTH);
-		pp.add(p2, BorderLayout.CENTER);
-
-		p.add(p3, BorderLayout.WEST);
-		p.add(pp, BorderLayout.CENTER);
+		c.gridheight = 2;
+		c.gridwidth = 1;
+		c.insets = new Insets(0, 10, 0, 10);
+		c.gridx = 1;
+		c.gridy = 0;
+		c.weightx = 0;
+		c.weighty = 0;
+		c.fill = GridBagConstraints.VERTICAL;
+		p.add(new JSeparator(SwingConstants.VERTICAL), c);
+		c.gridheight = 1;
+		c.gridwidth = 1;
+		c.gridx = 2;
+		c.gridy = 0;
+		c.fill = GridBagConstraints.NONE;
+		c.insets = new Insets(5, 5, 5, 5);
+		JLabel la = new JLabel(JAPMessages.getString("ConfDebugLevels"));
+		p.add(la, c);
+		c.gridy = 1;
+		c.weightx = 1;
+		p.add(panelDebugLevels, c);
 
 		return p;
 	}
 
-	protected void cancelPressed()
+	void cancelPressed()
 	{
 		/* Call the event handler of all configuration modules. */
 		Enumeration confModules = m_confModules.elements();
@@ -1097,7 +954,7 @@ final class JAPConf extends JDialog
 		m_cbDebugThread.setSelected(false);
 	}
 
-	protected void okPressed()
+	void okPressed()
 	{
 		if (!checkValues())
 		{
@@ -1135,10 +992,10 @@ final class JAPConf extends JDialog
 		catch (Exception e)
 		{}
 		;
-		int firewallType = ProxyInterface.PROTOCOL_TYPE_HTTP;
+		int firewallType = ImmutableListenerInterface.PROTOCOL_TYPE_HTTP;
 		if (m_comboProxyType.getSelectedIndex() == 1)
 		{
-			firewallType = ProxyInterface.PROTOCOL_TYPE_SOCKS;
+			firewallType = ImmutableListenerInterface.PROTOCOL_TYPE_SOCKS;
 		}
 		m_Controller.changeProxyInterface(
 			new ProxyInterface(m_tfProxyHost.getText().trim(),
@@ -1307,7 +1164,7 @@ final class JAPConf extends JDialog
 		m_labelProxyType.setEnabled(bEnableProxy);
 		if (proxyInterface == null ||
 			proxyInterface.getProtocol() ==
-			ProxyInterface.PROTOCOL_TYPE_HTTP)
+			ImmutableListenerInterface.PROTOCOL_TYPE_HTTP)
 		{
 			m_comboProxyType.setSelectedIndex(0);
 		}
