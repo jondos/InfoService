@@ -57,7 +57,7 @@ final class JAPKeyPool implements Runnable
 		
 		private JAPKeyPool(int poolsize,int keylength)
 			{	
-				JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPKeyPool:initializing...");
+				//JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPKeyPool:initializing...");
 				keySize=keylength;
 				this.poolSize=poolsize;
 				pool=null;
@@ -68,13 +68,13 @@ final class JAPKeyPool implements Runnable
 				m_KeyPoolThread=new Thread(this);
 				m_KeyPoolThread.setPriority(Thread.MIN_PRIORITY);
 				m_KeyPoolThread.start();
-				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPKeyPool:initialization finished!");
+				//JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPKeyPool:initialization finished!");
 			}
 		
-		public static JAPKeyPool start(int poolsize,int keylength)
+		public static synchronized JAPKeyPool start(/*int poolsize,int keylength*/)
 			{
 				if(m_KeyPool==null)
-					m_KeyPool=new JAPKeyPool(poolsize,keylength);
+					m_KeyPool=new JAPKeyPool(20,16/*poolsize,keylength*/);
 				return m_KeyPool;
 			}
 		

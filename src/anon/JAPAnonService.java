@@ -152,6 +152,12 @@ public final class JAPAnonService implements Runnable
 		    return E_SUCCESS;
 		}
 		
+		//Starts long time initalisation procedures in the background. Returns imedaly.
+		//You don't need to call these procedure in order to use AnonService
+		public static void init()
+			{
+				JAPKeyPool.start();
+			}
 		
 		public int start()
 			{

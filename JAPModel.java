@@ -62,8 +62,8 @@ public final class JAPModel implements JAPAnonServiceListener{
 	private boolean  mblistenerIsLocal     = true;  // indicates whether the Listener serves for localhost only or not
 	//private int      runningPortNumber = 0;      // the port where proxy listens
 	private boolean  isRunningListener     = false;  // true if a listener is running
-	private  String  proxyHostName         = "ikt.inf.tu-dresden.de";
-	private  int     proxyPortNumber       = 80;
+	private  String  proxyHostName         = "";
+	private  int     proxyPortNumber       = -1;
 	private boolean  mbUseProxy            = false;  // indicates whether JAP connects via a proxy or directly
 	private String   infoServiceHostName   = "infoservice.inf.tu-dresden.de";
 	private int      infoServicePortNumber = 6543;
@@ -384,6 +384,9 @@ public final class JAPModel implements JAPAnonServiceListener{
 	public void initialRun()
 		{
 			JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:initial run of JAP...");
+			
+			//pre initalize some long time initalisations...
+			JAPAnonService.init();
 
 			// start Service if autoConnect
 			if(!startHTTPListener())
@@ -402,6 +405,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 					model.status1 = model.getString("statusRunning");
 					setAnonMode(autoConnect);
 				}
+			
 		}
 
     public int getCurrentProtectionLevel() {
