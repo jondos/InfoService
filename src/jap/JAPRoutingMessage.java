@@ -27,13 +27,14 @@
  */
 package jap;
 
+import anon.util.AbstractMessage;
+
 /**
  * This is a message implementation used for forwarding-specific messages. It is used from some
  * forwarding related classes to notify the observers. The message code identifies the reason of
  * the notification.
  */
-public class JAPRoutingMessage
-{
+public class JAPRoutingMessage extends AbstractMessage {
 
 	/**
 	 * This message is sent after the routing mode was changed.
@@ -137,15 +138,6 @@ public class JAPRoutingMessage
 	 */
 	public static final int CLIENT_SETTINGS_CHANGED = 16;
 
-	/**
-	 * Stores the message code.
-	 */
-	private int m_messageCode;
-
-	/**
-	 * Stores some message data, which maybe was sent with the message.
-	 */
-	private Object m_messageData;
 
 	/**
 	 * This creates a new JAPRoutingMessage. The message data is set to null.
@@ -154,8 +146,7 @@ public class JAPRoutingMessage
 	 */
 	public JAPRoutingMessage(int a_messageCode)
 	{
-		m_messageCode = a_messageCode;
-		m_messageData = null;
+		super(a_messageCode);
 	}
 
 	/**
@@ -166,29 +157,7 @@ public class JAPRoutingMessage
 	 */
 	public JAPRoutingMessage(int a_messageCode, Object a_messageData)
 	{
-		m_messageCode = a_messageCode;
-		m_messageData = a_messageData;
-	}
-
-	/**
-	 * This returns the message code of this JAPRoutingMessage. See the constants in this class.
-	 *
-	 * @return The message code.
-	 */
-	public int getMessageCode()
-	{
-		return m_messageCode;
-	}
-
-	/**
-	 * Returns the message data, which was sent with the message. If there was no data sent with
-	 * the message, null is returned.
-	 *
-	 * @return The message data.
-	 */
-	public Object getMessageData()
-	{
-		return m_messageData;
+		super(a_messageCode, a_messageData);
 	}
 
 }

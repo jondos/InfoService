@@ -31,7 +31,7 @@ import java.util.Vector;
 import junitx.framework.PrivateTestCase;
 
 import anon.infoservice.Database;
-import anon.infoservice.DatabaseEntry;
+import anon.infoservice.AbstractDatabaseEntry;
 import anon.infoservice.InfoServiceDBEntry;
 
 /**
@@ -55,7 +55,7 @@ public class DatabaseTest extends PrivateTestCase
 	protected void setUp() throws Exception
 	{
 		m_distributor = new MockDistributor();
-		m_DatabaseObject = Database.getInstance(DatabaseEntry.class);
+		m_DatabaseObject = Database.getInstance(AbstractDatabaseEntry.class);
 		m_DatabaseObject.registerDistributor(m_distributor);
 
 		invoke(m_DatabaseObject, "unregisterInstances", NOARGS);
@@ -72,7 +72,7 @@ public class DatabaseTest extends PrivateTestCase
 	 */
 	public void testDatabaseEntryClassChecking()
 	{
-		DatabaseEntry dbEntry;
+		AbstractDatabaseEntry dbEntry;
 
 		try
 		{
@@ -85,7 +85,7 @@ public class DatabaseTest extends PrivateTestCase
 		dbEntry = new DummyDatabaseEntry();
 
 		//this works
-		Database.getInstance(DatabaseEntry.class).update(dbEntry); // generic Database!
+		Database.getInstance(AbstractDatabaseEntry.class).update(dbEntry); // generic Database!
 		Database.getInstance(DummyDatabaseEntry.class).update(dbEntry);
 		try
 		{
@@ -150,15 +150,6 @@ public class DatabaseTest extends PrivateTestCase
 		assertEquals(2, database.getTimeoutListSize());
 		assertTrue(database.isEntryIdInTimeoutList(dbEntry_otherID.getId()));
 		expectedJobs.addElement(dbEntry_otherID);
-
-		// test if an element is deleted if its version is newer and it has expired
-		dbEntry.setExpireTime(System.currentTimeMillis() - 1); // entry has expired
-		dbEntry.setVersionNumber(dbEntry_sameID.getVersionNumber() + 1); // ... but it is newer
-		database.update(dbEntry); // this deletes any existing entry with this id...
-		assertEquals(1, database.getNumberofEntries());
-		assertEquals(1, database.getTimeoutListSize());
-		assertTrue(!database.isEntryIdInTimeoutList(dbEntry.getId()));
-		assertTrue(database.isEntryIdInTimeoutList(dbEntry_otherID.getId()));
 
 		// test if the database entries are forwarded
 		m_distributor.setExpectedJobs(expectedJobs);

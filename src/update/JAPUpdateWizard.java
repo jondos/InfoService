@@ -115,7 +115,7 @@ public final class JAPUpdateWizard extends BasicWizard implements Runnable
 		setHost(host);
 		m_Status = UPDATESTATUS_ABORTED;
 		japVersionInfo = info;
-		m_strNewJapVersion = info.getVersionNumber();
+		m_strNewJapVersion = info.getJapVersion();
 		//updateWizard = this;
 		welcomePage = new JAPWelcomeWizardPage();
 		downloadPage = new JAPDownloadWizardPage();

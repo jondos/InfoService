@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2000 - 2004, The JAP-Team
+ Copyright (c) 2000 - 2005, The JAP-Team
  All rights reserved.
  Redistribution and use in source and binary forms, with or without modification,
  are permitted provided that the following conditions are met:
@@ -25,68 +25,25 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package anon.infoservice.test;
+/* Hint: This file may be only a copy of the original file which is always in the JAP source tree!
+ * If you change something - do not forget to add the changes also to the JAP source tree!
+ */
+package anon.infoservice;
 
-import anon.infoservice.AbstractDatabaseEntry;
-import anon.infoservice.IDistributable;
 
 /**
- * This class is a dummy implementation and for testing purposes only.
- * @author Rolf Wendolsky
+ * This interface defines some methods which needs to be implemented by all kinds of infoservice
+ * distributors. They are needed to forward any distributable information between the
+ * infoservices.
  */
-public class DummyDatabaseEntry extends AbstractDatabaseEntry implements IDistributable
-{
-	private String m_id;
-	private long m_versionNumber;
-	private String m_postData;
-	private String m_postFile;
+public interface IDistributor {
 
-	public DummyDatabaseEntry()
-	{
-		super(Long.MAX_VALUE);
-		// do some initializations
-		m_id = "";
-		m_versionNumber = 0;
-	}
-
-	public byte[] getPostData()
-	{
-		return m_postData.getBytes();
-	}
-
-	public void setPostData(String a_postData)
-	{
-		m_postData = a_postData;
-	}
-
-	public String getPostFile()
-	{
-		return m_postFile;
-	}
-
-	public void setPostFile(String a_postFile)
-	{
-		m_postFile = a_postFile;
-	}
-
-	public String getId()
-	{
-		return m_id;
-	}
-
-	public void setId(String a_id)
-	{
-		m_id = a_id;
-	}
-
-	public long getVersionNumber()
-	{
-		return m_versionNumber;
-	}
-
-	public void setVersionNumber(long a_versionNumber)
-	{
-		m_versionNumber = a_versionNumber;
-	}
+  /**
+   * Adds a new job to the default job queue. So it is forwarded to all known and running
+   * neighbour infoservices.
+   *
+   * @param a_newJob The information to forward.
+   */  
+  public void addJob(IDistributable a_newJob);
 
 }
