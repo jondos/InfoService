@@ -44,7 +44,6 @@ import jap.JAPViewIconified;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import pay.control.PayControl;
 
 /** This is the main class of the JAP project. It starts everything. It can be inherited by another
  *  class that wants to initialize platform dependend features, e.g. see
