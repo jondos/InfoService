@@ -80,8 +80,11 @@ public class BasicWizardHost implements WizardHost,ActionListener
         m_Parent=parent;
         m_Wizard=wizard;
         m_currentPage=null;
+
+        //m_Parent.setResizable(false);--> no effect
+
         m_Dialog = new JDialog(parent,wizard.getWizardTitle(),true);
-        //m_Dialog.setResizable(false); --> the Icon disappaers ?
+       // m_Dialog.setResizable(false);// --> the Icon disappaers ?
         GridBagLayout gridBag= new GridBagLayout();
         GridBagConstraints c = new GridBagConstraints();
         m_Dialog.getContentPane().setLayout(gridBag);
@@ -399,7 +402,7 @@ public void setNextWizardPage(WizardPage currentPage, int indexOfWizardPage)
 
             }else
             {
-                 System.out.println("File doesn't exist.");
+                 //System.out.println("File doesn't exist.");
                  m_currentPage.showInformationDialog("Sie haben keine Datei ausgewählt.");
 
             }
@@ -412,11 +415,12 @@ public void setNextWizardPage(WizardPage currentPage, int indexOfWizardPage)
         {
           m_Wizard.wizardCompleted();
           m_Dialog.dispose();
+
         }
         else if(command.equals(COMMAND_FINISH))
         {
           m_Wizard.finish(m_currentPage,this);
-          System.out.println("Finish pressed");
+
         }
         else if(command.equals(COMMAND_HELP))
         {

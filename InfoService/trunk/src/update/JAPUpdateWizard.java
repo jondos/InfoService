@@ -37,6 +37,9 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
     // path ->> path to the chosen File without extension i.e. 'C:\Programme\Jap'
     private String fileName,extension,path;
 
+    private final String ext_backup = ".backup";
+    private final String ext_new = ".new";
+
     private boolean updateAborted = false;
     //which version chose the user
     private String version;
@@ -215,6 +218,7 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
         try {
                 aktJapJar.delete();
                 updJapJar.renameTo(new File(path+extension));
+                cp_updJapJar.delete();
             }
         catch(Exception e)
             {
@@ -324,8 +328,9 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
         downloadPage.m_labelStep1_1.setText(JAPMessages.getString("updateM_labelStep1Part1"));//+" "+pathToJapJar+" "+JAPMessages.getString("updateM_labelStep1Part2")+" "+pre+JAPConstants.aktVersion2+suf+JAPMessages.getString("updateM_labelStep1Part3"));
         downloadPage.tfSaveFrom.setText(pathToJapJar);
         downloadPage.m_labelStep1_2.setText(JAPMessages.getString("updateM_labelStep1Part2"));
-        downloadPage.tfSaveTo.setText(path+JAPConstants.aktVersion2+extension);
-        downloadPage.m_labelStep3.setText(JAPMessages.getString("updateM_labelStep3Part1")+" "+fileName+version+extension+JAPMessages.getString("updateM_labelStep3Part2"));
+        downloadPage.tfSaveTo.setText(path+JAPConstants.aktVersion2+ext_backup+extension);
+        downloadPage.m_labelStep3.setText(JAPMessages.getString("updateM_labelStep3Part1")+" "+fileName+version+ext_new+extension+JAPMessages.getString("updateM_labelStep3Part2"));
+        finishPage.tf_BackupOfJapJar.setText(path+JAPConstants.aktVersion2+ext_backup+extension);
 
       }
 
@@ -355,7 +360,7 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
           {
              //newFile = new File(prefix+JAPConstants.aktVersion2+suffix);
 
-             cp_aktJapJar = new File(path+JAPConstants.aktVersion2+extension);
+             cp_aktJapJar = new File(path+JAPConstants.aktVersion2+ext_backup+extension);
              aktJapJar = new File(path+extension);
              FileInputStream fis = new FileInputStream(aktJapJar);
              FileOutputStream fos = new FileOutputStream(cp_aktJapJar);
@@ -498,7 +503,7 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
 
         try
           {
-             cp_updJapJar = new File(path+version+extension);
+             cp_updJapJar = new File(path+version+ext_new+extension);
              FileOutputStream fos = new FileOutputStream(cp_updJapJar);
              if(bufferJapJar == null){return -1;}
              if(listener.progress(bufferJapJar.length,bufferJapJar.length,UpdateListener.STATE_IN_PROGRESS_STEP3)!=0)
