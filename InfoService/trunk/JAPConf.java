@@ -800,8 +800,9 @@ final class JAPConf extends JDialog
 						JOptionPane.showMessageDialog(this,model.getString("confmessageListernPortChanged"));	
 					}
 				model.setPortNumber(Integer.parseInt(portnumberTextField.getText().trim()));
-				model.setProxy(proxyhostTextField.getText().trim(),
-					Integer.parseInt(proxyportnumberTextField.getText().trim()));
+				int port=-1;
+				try{port=Integer.parseInt(proxyportnumberTextField.getText().trim());}catch(Exception e){};
+				model.setProxy(proxyhostTextField.getText().trim(),port);
 				model.setFirewallAuthUserID(proxyAuthenticationUserID.getText().trim());
 				// infoservice settings
 				model.setInfoService(infohostTextField.getText().trim(),

@@ -60,10 +60,12 @@ import javax.swing.JPasswordField;
 import javax.swing.JLabel;
 import anon.JAPAnonService;
 import anon.JAPAnonServiceListener;
+/* jh5 */ import rmi.JAPAnonServiceRMIServer;
+
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPModel implements JAPAnonServiceListener{
 
-	public static final String aktVersion = "00.01.014"; // Version of JAP
+	public static final String aktVersion = "00.01.015"; // Version of JAP
 
 	public  Vector            anonServerDatabase = null; // vector of all available mix cascades
 	private AnonServerDBEntry currentAnonService = null; // current anon service data object
@@ -151,6 +153,8 @@ public final class JAPModel implements JAPAnonServiceListener{
 //	public JAPLoading japLoading;
 	private static JAPFeedback feedback=null;
 
+	/* jh5 */ private static JAPAnonServiceRMIServer anonServiceRMIServer= null;
+
 	private JAPModel ()
 		{
 			//JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:initializing...");
@@ -177,6 +181,22 @@ public final class JAPModel implements JAPAnonServiceListener{
 			return model;
 	}
 
+	public int setRMISupport(boolean b)
+		{
+			if(b)
+				{
+					if(anonServiceRMIServer==null)				
+			/* jh5 */ anonServiceRMIServer = new JAPAnonServiceRMIServer(this);
+				}
+			else
+				{
+					if(anonServiceRMIServer!=null)
+						anonServiceRMIServer.quitServer();
+					anonServiceRMIServer=null;
+				}
+			return 0;
+		}
+	
 	//---------------
 	public void setIconifiedView(JAPViewIconified v)
 		{

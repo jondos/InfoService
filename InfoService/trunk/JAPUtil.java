@@ -339,8 +339,8 @@ final class JAPUtil
 							}
 					}
 		// add some space for scrollbar,... (+ 30)
-		perfectWidth  = Math.min(maxDimension.width ,perfectWidth + 30);
-		perfectHeight = Math.min(maxDimension.height,minimunColunmHeight);
-		table.setPreferredScrollableViewportSize(new Dimension(perfectWidth, perfectHeight));
+			perfectWidth  = Math.min(maxDimension.width ,perfectWidth + 30);
+			perfectHeight = Math.min(maxDimension.height,minimunColunmHeight);
+			table.setPreferredScrollableViewportSize(new Dimension(perfectWidth, perfectHeight));
     }    
 }

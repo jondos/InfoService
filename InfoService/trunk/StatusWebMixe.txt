@@ -18,9 +18,10 @@ FTP-Support für 'Direct-Proxy'
 Bessere Kryptographie im JAP (RSa-Padding,Schlüsselaustausch...)
 Signieren der Setup-Dateien
 Überlegungen zu verteiltem Support-System
-
-
-
+Problembehebung JAP <--> Netscape
+Ändern der Mixe für > 1024 Nutzer
+Integration von RMI (Beleg) in JAP
+Verbessern der Precompiled Binaries Web Page (Größe, Datum + Version)
 
 
 

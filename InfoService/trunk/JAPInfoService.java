@@ -149,9 +149,8 @@ final class JAPInfoService
 										e.setCurrentRisk(currentRisk);
 										int trafficSituation=JAPUtil.parseElementAttrInt(elem1,"TrafficSituation",-1);
 										e.setTrafficSituation(trafficSituation);
-								//nl=elem.getElementsByTagName("mixedPackets");
-								//String mixedPackets=nl.item(0).getFirstChild().getNodeValue().trim();
-								//e.setMixedPackets(Integer.parseInt(mixedPackets));
+										int mixedPackets=JAPUtil.parseElementAttrInt(elem1,"MixedPackets",-1);
+										e.setMixedPackets(mixedPackets);
 									}				 
 								model.anonServerDatabase.addElement(e);
 								
