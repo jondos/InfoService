@@ -53,7 +53,8 @@ final public class JAPViewIconified extends JWindow implements ActionListener,Mo
 	private static final Font fnt = new Font("Sans",Font.PLAIN,9);
 	public JAPViewIconified(String s)
 		{
-			super(JAPController.getView());
+//			super();
+//			super(JAPController.getView());
 			m_mainView=JAPController.getView();
 			JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPViewIconified:initializing...");
 			m_Controller = JAPController.getController();
