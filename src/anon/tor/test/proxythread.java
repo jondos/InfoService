@@ -51,14 +51,14 @@ public class proxythread implements Runnable{
 				out.write(b,0,len);
 				out.flush();
 			}
-		} catch (IOException ex)
+		} catch (Exception ex)
 		{
 		}
 		channel.close();
 		try
 		{
 			client.close();
-		} catch (IOException ex)
+		} catch (Exception ex)
 		{
 			System.out.println("Fehler beim schliessen des kanals");
 		}

@@ -162,7 +162,7 @@ public class Circuit
 					m_bReceivedCreatedOrExtendedCell = false;
 					RelayCell cell = m_FirstOR.extendConnection(nextOR);
 					m_FirstORConnection.send(cell);
-					m_oNotifySync.wait(20000);
+					m_oNotifySync.wait(30000);
 				}
 				if (m_State != STATE_CREATING || !m_bReceivedCreatedOrExtendedCell)
 				{
