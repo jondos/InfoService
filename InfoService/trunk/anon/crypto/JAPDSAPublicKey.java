@@ -10,8 +10,8 @@
  *  - Neither the name of the University of Technology Dresden, Germany nor the
  * names of its contributors may be used to endorse or promote products derived
  * from this software without specific prior written permission.
- * 
- * 
+ *
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS
  * IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
  * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -40,101 +40,104 @@ import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 import org.bouncycastle.asn1.x9.X9ObjectIdentifiers;
 import org.bouncycastle.crypto.params.DSAPublicKeyParameters;
 
-public class JAPDSAPublicKey implements DSAPublicKey
+public class JAPDSAPublicKey
+	implements DSAPublicKey
+{
+	private BigInteger y;
+	private DSAParams dsaSpec;
+
+	JAPDSAPublicKey(JAPDSAPublicKeySpec spec)
 	{
-		private BigInteger	y;
-		private DSAParams		dsaSpec;
-
-		JAPDSAPublicKey(JAPDSAPublicKeySpec spec)
-			{
-				this.y = spec.getY();
-				this.dsaSpec = new JAPDSAParameterSpec(spec.getP(), spec.getQ(), spec
-						.getG());
-			}
-
-		JAPDSAPublicKey(JAPDSAPublicKey key)
-			{
-				this.y = key.getY();
-				this.dsaSpec = key.getParams();
-			}
-
-		JAPDSAPublicKey(DSAPublicKeyParameters params)
-			{
-				this.y = params.getY();
-				this.dsaSpec = new JAPDSAParameterSpec(params.getParameters().getP(),
-						params.getParameters().getQ(), params.getParameters().getG());
-			}
-
-		JAPDSAPublicKey(BigInteger y, JAPDSAParameterSpec dsaSpec)
-			{
-				this.y = y;
-				this.dsaSpec = dsaSpec;
-			}
-
-		JAPDSAPublicKey(SubjectPublicKeyInfo info) throws IllegalArgumentException
-			{
-				DSAParameter params = new DSAParameter((ASN1Sequence) info
-						.getAlgorithmId().getParameters());
-				DERInteger derY = null;
-				try
-					{
-						derY = (DERInteger) info.getPublicKey();
-					} catch (IOException e)
-					{
-						throw new IllegalArgumentException(
-								"invalid info structure in DSA public key");
-					}
-				this.y = derY.getValue();
-				this.dsaSpec = new JAPDSAParameterSpec(params.getP(), params.getQ(),
-						params.getG());
-			}
-
-		public String getAlgorithm()
-			{
-				return "DSA";
-			}
-
-		public String getFormat()
-			{
-				return "X.509";
-			}
-
-		public byte[] getEncoded()
-			{
-				ByteArrayOutputStream bOut = new ByteArrayOutputStream();
-				DEROutputStream dOut = new DEROutputStream(bOut);
-				SubjectPublicKeyInfo info = new SubjectPublicKeyInfo(
-						new AlgorithmIdentifier(
-								X9ObjectIdentifiers.id_dsa,
-								new DSAParameter(dsaSpec.getP(), dsaSpec.getQ(), dsaSpec.getG())
-										.getDERObject()), new DERInteger(y));
-				try
-					{
-						dOut.writeObject(info);
-						dOut.close();
-					} catch (IOException e)
-					{
-						throw new RuntimeException("Error encoding DSA public key");
-					}
-				return bOut.toByteArray();
-			}
-
-		public DSAParams getParams()
-			{
-				return dsaSpec;
-			}
-
-		public BigInteger getY()
-			{
-				return y;
-			}
-
-		public String toString()
-			{
-				StringBuffer buf = new StringBuffer();
-				String nl = System.getProperty("line.separator");
-				buf.append("DSA Public Key" + nl);
-				buf.append("            y: " + this.getY().toString(16) + nl);
-				return buf.toString();
-			}
+		this.y = spec.getY();
+		this.dsaSpec = new JAPDSAParameterSpec(spec.getP(), spec.getQ(), spec
+											   .getG());
 	}
+
+	JAPDSAPublicKey(JAPDSAPublicKey key)
+	{
+		this.y = key.getY();
+		this.dsaSpec = key.getParams();
+	}
+
+	JAPDSAPublicKey(DSAPublicKeyParameters params)
+	{
+		this.y = params.getY();
+		this.dsaSpec = new JAPDSAParameterSpec(params.getParameters().getP(),
+											   params.getParameters().getQ(), params.getParameters().getG());
+	}
+
+	JAPDSAPublicKey(BigInteger y, JAPDSAParameterSpec dsaSpec)
+	{
+		this.y = y;
+		this.dsaSpec = dsaSpec;
+	}
+
+	JAPDSAPublicKey(SubjectPublicKeyInfo info) throws IllegalArgumentException
+	{
+		DSAParameter params = new DSAParameter( (ASN1Sequence) info
+											   .getAlgorithmId().getParameters());
+		DERInteger derY = null;
+		try
+		{
+			derY = (DERInteger) info.getPublicKey();
+		}
+		catch (IOException e)
+		{
+			throw new IllegalArgumentException(
+				"invalid info structure in DSA public key");
+		}
+		this.y = derY.getValue();
+		this.dsaSpec = new JAPDSAParameterSpec(params.getP(), params.getQ(),
+											   params.getG());
+	}
+
+	public String getAlgorithm()
+	{
+		return "DSA";
+	}
+
+	public String getFormat()
+	{
+		return "X.509";
+	}
+
+	public byte[] getEncoded()
+	{
+		ByteArrayOutputStream bOut = new ByteArrayOutputStream();
+		DEROutputStream dOut = new DEROutputStream(bOut);
+		SubjectPublicKeyInfo info = new SubjectPublicKeyInfo(
+			new AlgorithmIdentifier(
+			X9ObjectIdentifiers.id_dsa,
+			new DSAParameter(dsaSpec.getP(), dsaSpec.getQ(), dsaSpec.getG())
+			.getDERObject()), new DERInteger(y));
+		try
+		{
+			dOut.writeObject(info);
+			dOut.close();
+		}
+		catch (IOException e)
+		{
+			throw new RuntimeException("Error encoding DSA public key");
+		}
+		return bOut.toByteArray();
+	}
+
+	public DSAParams getParams()
+	{
+		return dsaSpec;
+	}
+
+	public BigInteger getY()
+	{
+		return y;
+	}
+
+	public String toString()
+	{
+		StringBuffer buf = new StringBuffer();
+		String nl = System.getProperty("line.separator");
+		buf.append("DSA Public Key" + nl);
+		buf.append("            y: " + this.getY().toString(16) + nl);
+		return buf.toString();
+	}
+}
