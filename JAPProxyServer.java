@@ -4,55 +4,68 @@ import java.io.*;
 public class JAPProxyServer implements Runnable
 	{
     private boolean runFlag; 
-	private boolean isRunningMux = false;
-	private boolean isRunningProxy = false;
+		private boolean isRunningMux = false;
+		private boolean isRunningProxy = false;
     private int portN;
     private ServerSocket server;
-    private Socket socket;
     private JAPMuxSocket oMuxSocket;
-//    private Thread oMuxSocketThread;
     private JAPModel model;
     
 
-    public JAPProxyServer (int port)
+    public JAPProxyServer (int port) 
 			{
 				portN = port;
 				model=JAPModel.getModel();
 			}
 
-    public void run()
+		public boolean create()
 			{
 				server = null;
-				socket = null;
+				try 
+					{
+						server = new ServerSocket (portN);
+						JAPDebug.out(JAPDebug.INFO,JAPDebug.NET,"JAPProxyServer:Listener on port " + portN + " started.");
+						return true;
+					}
+				catch(Exception e)
+					{
+						server=null;
+						return false;
+					}
+			}
+		
+    public void run()
+			{
 				runFlag = true;
-				
 				model.status1 = model.getString("statusRunning");
 				model.notifyJAPObservers();
-				JAPDebug.out(JAPDebug.INFO,JAPDebug.NET,"JAPProxyServer:Listener on port " + portN + " started.");
-				try {
-					server = new ServerSocket (portN);
-					isRunningProxy = true;
-					while(runFlag) {
-						socket = server.accept();
-						if (isRunningMux)
-							oMuxSocket.newConnection(new JAPSocket(socket));
-						else {
-							// if not anon mode selected then call a class
-							// that processes the request without anonymity
-							JAPDirectConnection doIt = new JAPDirectConnection(socket);
-							Thread thread = new Thread (doIt);
-							thread.start();
-						}
+				try 
+					{
+						isRunningProxy = true;
+						while(runFlag)
+							{
+								Socket socket = server.accept();
+								if (isRunningMux)
+									oMuxSocket.newConnection(new JAPSocket(socket));
+								else
+									{
+										// if not anon mode selected then call a class
+										// that processes the request without anonymity
+										JAPDirectConnection doIt = new JAPDirectConnection(socket);
+										Thread thread = new Thread (doIt);
+										thread.start();
+									}
+							}
 					}
-				}
-				catch (Exception e) {
-					try {
+				catch (Exception e)
+					{
+						try {
 						server.close();
-					} 
-					catch (Exception e2) {
+						} 
+						catch (Exception e2) {
+						}
+						JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPProxyServer:ProxyServer.run() Exception: " +e);
 					}
-					JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPProxyServer:ProxyServer.run() Exception: " +e);
-				}
 				stopMux();
 				isRunningProxy = false;
 				JAPDebug.out(JAPDebug.INFO,JAPDebug.NET,"JAPProxyServer:ProxyServer on port " + portN + " stopped.");
