@@ -85,6 +85,8 @@ import gui.JAPMultilineLabel;
 import logging.LogLevel;
 import logging.LogType;
 import pay.gui.AccountSettingsPanel;
+import javax.swing.JFileChooser;
+import java.io.*;
 
 final class JAPConf extends JDialog
 {
@@ -126,7 +128,7 @@ final class JAPConf extends JDialog
 	 */
 	final static public String FORWARD_TAB = "FORWARD_TAB";
 
-	private static JAPConf japConfInstance = null;
+	private static JAPConf ms_JapConfInstance = null;
 
 	private JAPController m_Controller;
 
@@ -167,7 +169,7 @@ final class JAPConf extends JDialog
 
 	//private JFrame m_frmParent;
 
-	private JAPConf m_JapConf;
+	//private JAPConf m_JapConf;
 
 	private Font m_fontControls;
 
@@ -184,7 +186,7 @@ final class JAPConf extends JDialog
 
 	public static JAPConf getInstance()
 	{
-		return japConfInstance;
+		return ms_JapConfInstance;
 	}
 
 	public JAPConf(JFrame frmParent, boolean loadPay)
@@ -193,12 +195,12 @@ final class JAPConf extends JDialog
 		m_confModules = new Vector();
 		this.loadPay = loadPay;
 		/* set the instance pointer */
-		japConfInstance = this;
+		ms_JapConfInstance = this;
 		//m_frmParent = frmParent;
 		m_Controller = JAPController.getInstance();
 		setModal(true);
 		setTitle(JAPMessages.getString("settingsDialog"));
-		m_JapConf = this;
+//		m_JapConf = this;
 		JPanel pContainer = new JPanel();
 		m_TabsLayout = new CardLayout();
 		m_Tabs = new JPanel(m_TabsLayout);
@@ -729,7 +731,7 @@ final class JAPConf extends JDialog
 		{
 			public void itemStateChanged(ItemEvent e)
 			{
-				JAPDebug.showConsole(e.getStateChange() == ItemEvent.SELECTED,JAPController.getView());
+				JAPDebug.showConsole(e.getStateChange() == ItemEvent.SELECTED, JAPController.getView());
 			}
 		});
 		c.gridy = 3;
@@ -738,6 +740,16 @@ final class JAPConf extends JDialog
 		p.add(m_cbShowDebugConsole, c);
 
 		m_cbDebugToFile = new JCheckBox(JAPMessages.getString("ConfDebugFile"));
+		m_cbDebugToFile.addItemListener(new ItemListener()
+		{
+			public void itemStateChanged(ItemEvent e)
+			{
+				boolean b = m_cbDebugToFile.isSelected();
+				m_bttnDebugFileNameSearch.setEnabled(b);
+				m_tfDebugFileName.setEnabled(b);
+			}
+		});
+
 		c.gridy = 4;
 		c.weighty = 0;
 		p.add(m_cbDebugToFile, c);
@@ -749,6 +761,36 @@ final class JAPConf extends JDialog
 		c1.fill = GridBagConstraints.HORIZONTAL;
 		panelDebugFileName.add(m_tfDebugFileName, c1);
 		m_bttnDebugFileNameSearch = new JButton(JAPMessages.getString("ConfDebugFileNameSearch"));
+		m_bttnDebugFileNameSearch.addActionListener(new ActionListener()
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+				JFileChooser fileChooser = new JFileChooser();
+				String strCurrentFile = ms_JapConfInstance.m_tfDebugFileName.getText().trim();
+				if (!strCurrentFile.equals(""))
+				{
+					try{
+					File f = new File(strCurrentFile);
+					fileChooser.setCurrentDirectory(new File(f.getParent()));
+					}
+					catch(Exception e1)
+					{
+					}
+				}
+				int ret = fileChooser.showOpenDialog(ms_JapConfInstance);
+				if (ret == JFileChooser.APPROVE_OPTION)
+				{
+					try
+					{
+						ms_JapConfInstance.m_tfDebugFileName.setText(fileChooser.getSelectedFile().
+							getCanonicalPath());
+					}
+					catch (IOException ex)
+					{
+					}
+				}
+			}
+		});
 		c1.gridx = 1;
 		c1.weightx = 0;
 		panelDebugFileName.add(m_bttnDebugFileNameSearch, c1);
@@ -824,7 +866,7 @@ final class JAPConf extends JDialog
 	 */
 	public static void showError(String msg)
 	{
-		JOptionPane.showMessageDialog(japConfInstance, msg, JAPMessages.getString("ERROR"),
+		JOptionPane.showMessageDialog(ms_JapConfInstance, msg, JAPMessages.getString("ERROR"),
 									  JOptionPane.ERROR_MESSAGE);
 	}
 
@@ -832,7 +874,7 @@ final class JAPConf extends JDialog
 	 */
 	public static void showInfo(String msg)
 	{
-		JOptionPane.showMessageDialog(japConfInstance, msg, JAPMessages.getString("information"),
+		JOptionPane.showMessageDialog(ms_JapConfInstance, msg, JAPMessages.getString("information"),
 									  JOptionPane.INFORMATION_MESSAGE);
 	}
 
@@ -952,6 +994,7 @@ final class JAPConf extends JDialog
 		m_cbDebugGui.setSelected(false);
 		m_cbDebugMisc.setSelected(false);
 		m_cbDebugThread.setSelected(false);
+		m_cbDebugToFile.setSelected(false);
 	}
 
 	void okPressed()
@@ -980,6 +1023,12 @@ final class JAPConf extends JDialog
 			(m_cbDebugMisc.isSelected() ? LogType.MISC : LogType.NUL)
 			);
 		JAPDebug.getInstance().setLogLevel(m_sliderDebugLevel.getValue());
+		String strFilename = m_tfDebugFileName.getText().trim();
+		if (!m_cbDebugToFile.isSelected())
+		{
+			strFilename = null;
+		}
+		JAPDebug.setLogToFile(strFilename);
 		m_Controller.setHTTPListener(m_tfListenerPortNumber.getInt(),
 									 m_cbListenerIsLocal.isSelected(), true);
 		//m_Controller.setSocksPortNumber(m_tfListenerPortNumberSocks.getInt());
@@ -1142,6 +1191,14 @@ final class JAPConf extends JDialog
 		m_cbDebugThread.setSelected( ( ( (JAPDebug.getInstance().getLogType() & LogType.THREAD) != 0) ? true : false));
 		m_cbDebugMisc.setSelected( ( ( (JAPDebug.getInstance().getLogType() & LogType.MISC) != 0) ? true : false));
 		m_sliderDebugLevel.setValue(JAPDebug.getInstance().getLogLevel());
+		boolean b = JAPDebug.isLogToFile();
+		m_tfDebugFileName.setEnabled(b);
+		m_bttnDebugFileNameSearch.setEnabled(b);
+		m_cbDebugToFile.setSelected(b);
+		if (b)
+		{
+			m_tfDebugFileName.setText(JAPDebug.getLogFilename());
+		}
 		// listener tab
 		m_tfListenerPortNumber.setInt(JAPModel.getHttpListenerPortNumber());
 		m_cbListenerIsLocal.setSelected(JAPModel.getHttpListenerIsLocal());
