@@ -286,7 +286,7 @@ public final class JAPUpdateWizard extends BasicWizard implements Runnable
 
 	public WizardPage finish( /*WizardPage currentPage, WizardHost host*/)
 	{
-		JAPController.getController().goodBye(false);
+		JAPController.getInstance().goodBye(false);
 		return null;
 	}
 

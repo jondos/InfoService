@@ -51,7 +51,7 @@ final public class JAPiPAQ
 		JAPMessages.init();
 		// Test (part 2) for right JVM....
 		// Create the controller object
-		m_controller = JAPController.getController();
+		m_controller = JAPController.getInstance();
 		// Create debugger object
 		LogHolder.setLogInstance(JAPDebug.getInstance());
 		JAPDebug.getInstance().setLogType(LogType.NET + LogType.GUI + LogType.THREAD + LogType.MISC);
@@ -87,7 +87,7 @@ final public class JAPiPAQ
 
 	public void setLocale(Locale l)
 	{
-		JAPController.getController().setLocale(l);
+		JAPController.getInstance().setLocale(l);
 	}
 
 	public static void main(String[] argv)

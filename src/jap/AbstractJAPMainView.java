@@ -34,7 +34,7 @@ public abstract class AbstractJAPMainView extends JFrame implements IJAPMainView
 {
 	protected String m_Title;
 	protected MyViewUpdate m_runnableValueUpdate;
-	protected JAPController controller;
+	protected JAPController m_Controller;
 
 	final private class MyViewUpdate implements Runnable
 	{
@@ -47,7 +47,7 @@ public abstract class AbstractJAPMainView extends JFrame implements IJAPMainView
 	public AbstractJAPMainView(String s,JAPController a_controller)
 	{
 		super(s);
-		controller=a_controller;
+		m_Controller=a_controller;
 		m_Title=s;
 		m_runnableValueUpdate=new MyViewUpdate();
 	}

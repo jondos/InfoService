@@ -169,7 +169,7 @@ public final class JAPController implements ProxyListener
 	/** Creates the Controller - as Singleton.
 	 *  @return The one and only JAPController
 	 */
-	public static JAPController getController()
+	public static JAPController getInstance()
 	{
 		if (m_Controller == null)
 		{

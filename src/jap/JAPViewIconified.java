@@ -87,7 +87,7 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 		m_mainView = JAPController.getView();
 		m_frameParent.setIconImage(m_mainView.getIconImage());
 		LogHolder.log(LogLevel.INFO, LogType.MISC, "JAPViewIconified:initializing...");
-		m_Controller = JAPController.getController();
+		m_Controller = JAPController.getInstance();
 		m_NumberFormat = NumberFormat.getInstance();
 		m_runnableValueUpdate = new MyViewIconifiedUpdate();
 		init();

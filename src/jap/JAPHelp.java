@@ -66,7 +66,7 @@ final class JAPHelp extends JDialog implements ActionListener
 	public JAPHelp(JFrame f)
 	{
 		super(f, JAPMessages.getString("helpWindow"), false);
-		controller = JAPController.getController();
+		controller = JAPController.getInstance();
 		init();
 	}
 

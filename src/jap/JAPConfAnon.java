@@ -71,7 +71,7 @@ class JAPConfAnon extends AbstractJAPConfModule
 	protected JAPConfAnon(IJAPConfSavePoint savePoint)
 	{
 		super(null);
-		m_Controller = JAPController.getController();
+		m_Controller = JAPController.getInstance();
 	}
 
 	public void recreateRootPanel()

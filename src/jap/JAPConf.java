@@ -187,7 +187,7 @@ final class JAPConf extends JDialog
 		/* set the instance pointer */
 		japConfInstance = this;
 		//m_frmParent = frmParent;
-		m_Controller = JAPController.getController();
+		m_Controller = JAPController.getInstance();
 		setModal(true);
 		setTitle(JAPMessages.getString("settingsDialog"));
 		m_JapConf = this;
