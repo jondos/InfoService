@@ -37,6 +37,7 @@ import java.io.BufferedOutputStream;
 import java.io.DataOutputStream;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.BufferedWriter;
 import java.io.Writer;
@@ -44,7 +45,15 @@ import java.io.OutputStreamWriter;
 import java.io.InterruptedIOException;
 import java.lang.Integer;
 import java.util.Enumeration;
+
 import java.math.BigInteger;
+
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.DocumentBuilder;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+
 import logging.Log;
 import logging.LogLevel;
 import logging.LogType;
@@ -56,7 +65,7 @@ import anon.AnonChannel;
 import anon.ToManyOpenChannelsException;
 public final class MuxSocket implements Runnable
 	{
-		private int lastChannelId;
+		private int m_iLastChannelId;
 		private Dictionary oChannelList;
 		private DataOutputStream m_outDataStream;
 		private DataInputStream m_inDataStream;
@@ -71,7 +80,7 @@ public final class MuxSocket implements Runnable
     private byte[] outBuff2;
 		private ASymCipher[] m_arASymCipher;
 		private KeyPool keypool;
-		private int chainlen;
+		private int m_iChainLen;
 		private volatile boolean m_bRunFlag;
 		private boolean m_bIsConnected=false;
 
@@ -116,7 +125,7 @@ public final class MuxSocket implements Runnable
 		private MuxSocket(Log log)
 			{
         m_Log=log;
-				lastChannelId=0;
+				m_iLastChannelId=0;
 				m_arASymCipher=null;
 				outBuff=new byte[DATA_SIZE];
 				outBuff2=new byte[DATA_SIZE];
@@ -219,7 +228,7 @@ public final class MuxSocket implements Runnable
 			{
 				synchronized(this)
 					{
-						if(m_bIsConnected)
+					  if(m_bIsConnected)
 							return ErrorCodes.E_ALREADY_CONNECTED;
             try
               {
@@ -278,28 +287,41 @@ public final class MuxSocket implements Runnable
 								return ErrorCodes.E_CONNECT;
 							}
 						//m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:Connected to Mix! Now starting key exchange...");
-						try
+						int err=ErrorCodes.E_CONNECT;
+            try
 							{
 								m_outDataStream=new DataOutputStream(new BufferedOutputStream(m_ioSocket.getOutputStream(),PACKET_SIZE));
 							//	m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:Reading len...");
-								m_inDataStream.readUnsignedShort(); //len.. unitressteing at the moment
-							//	m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:Reading chainlen...");
-								chainlen=m_inDataStream.readByte();
-								//m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:chainlen="+chainlen);
-								m_arASymCipher=new ASymCipher[chainlen];
-								for(int i=chainlen-1;i>=0;i--)
-									{
-										m_arASymCipher[i]=new ASymCipher();
-										int tmp=m_inDataStream.readUnsignedShort();
-										byte[] buff=new byte[tmp];
-										m_inDataStream.readFully(buff);
-										BigInteger n=new BigInteger(1,buff);
-										tmp=m_inDataStream.readUnsignedShort();
-										buff=new byte[tmp];
-										m_inDataStream.readFully(buff);
-										BigInteger e=new BigInteger(1,buff);
-										m_arASymCipher[i].setPublicKey(n,e);
-									}
+								int len=m_inDataStream.readUnsignedShort(); //len.. unitressteing at the moment
+							//	m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:Reading m_iChainLen...");
+								m_iChainLen=m_inDataStream.readByte();
+								if(m_iChainLen=='<') //assuming XML-Key-Exchange
+                  {
+                    byte[] buff=new byte[len];
+                    buff[0]=(byte)m_iChainLen; //we have already read the beginning '<' !!
+                    m_inDataStream.readFully(buff,1,len-1);
+                    err=processXmlKeys(buff);
+                    if(err!=ErrorCodes.E_SUCCESS)
+                      throw new Exception("Error during Xml-Key Exchange");
+                  }
+                else
+                  {
+                    //m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:m_iChainLen="+m_iChainLen);
+                    m_arASymCipher=new ASymCipher[m_iChainLen];
+                    for(int i=m_iChainLen-1;i>=0;i--)
+                      {
+                        m_arASymCipher[i]=new ASymCipher();
+                        int tmp=m_inDataStream.readUnsignedShort();
+                        byte[] buff=new byte[tmp];
+                        m_inDataStream.readFully(buff);
+                        BigInteger n=new BigInteger(1,buff);
+                        tmp=m_inDataStream.readUnsignedShort();
+                        buff=new byte[tmp];
+                        m_inDataStream.readFully(buff);
+                        BigInteger e=new BigInteger(1,buff);
+                        m_arASymCipher[i].setPublicKey(n,e);
+                      }
+                    }
 								m_ioSocket.setSoTimeout(0); //Now we have a unlimited timeout...
 	//							m_ioSocket.setSoTimeout(1000); //Now we have asecond timeout...
 							}
@@ -314,7 +336,7 @@ public final class MuxSocket implements Runnable
 								m_outDataStream=null;
 								m_ioSocket=null;
 								m_bIsConnected=false;
-								return ErrorCodes.E_CONNECT;
+								return err;
 							}
 						m_bIsConnected=true;
      				oChannelList=new Hashtable();
@@ -323,6 +345,38 @@ public final class MuxSocket implements Runnable
             return ErrorCodes.E_SUCCESS;
 					}
 			}
+
+    /*Reads the public key from the Mixes and try to initialize the key array*/
+    private int processXmlKeys(byte[] buff)
+      {
+        try
+          {
+            Document doc=DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(buff));
+            Element root=doc.getDocumentElement();
+            if(!root.getNodeName().equals("MixCascade"))
+              return ErrorCodes.E_UNKNOWN;
+            Element elemMixes=(Element)root.getElementsByTagName("Mixes").item(0);
+            m_iChainLen=Integer.parseInt(elemMixes.getAttribute("count"));
+            m_arASymCipher=new ASymCipher[m_iChainLen];
+            int i=0;
+            Node child=elemMixes.getFirstChild();
+            while(child!=null)
+              {
+                if(child.getNodeName().equals("Mix"))
+                  {
+                    m_arASymCipher[i]=new ASymCipher();
+                    if(m_arASymCipher[i++].setPublicKey((Element)child)!=ErrorCodes.E_SUCCESS)
+                      return ErrorCodes.E_UNKNOWN;
+                   }
+                child=child.getNextSibling();
+              }
+            return ErrorCodes.E_SUCCESS;
+          }
+        catch(Exception e)
+          {
+            return ErrorCodes.E_UNKNOWN;
+          }
+      }
 
 	  private String readLine(DataInputStream inputStream) throws Exception
 		  {
@@ -355,13 +409,13 @@ public final class MuxSocket implements Runnable
                   throw new ToManyOpenChannelsException();
 								try
 									{
-                    Channel c=new Channel(this,lastChannelId,type);
-										oChannelList.put(new Integer(lastChannelId),new ChannelListEntry(c));
+                    Channel c=new Channel(this,m_iLastChannelId,type);
+										oChannelList.put(new Integer(m_iLastChannelId),new ChannelListEntry(c));
 
 										//JAPAnonService.setNrOfChannels(oSocketList.size());
 										//Thread t2=new Thread(c);
 										//t2.start();
-										lastChannelId++;
+										m_iLastChannelId++;
 										return c;
 									}
 								catch(Exception e)
@@ -392,11 +446,11 @@ public final class MuxSocket implements Runnable
             try
               {
                 m_TimeLastPacketSend=System.currentTimeMillis();
-                m_outDataStream.writeInt(lastChannelId);
+                m_outDataStream.writeInt(m_iLastChannelId);
 						    m_outDataStream.writeShort(CHANNEL_DUMMY);
 						    m_outDataStream.write(outBuff);
 						    m_outDataStream.flush();
-                lastChannelId++;
+                m_iLastChannelId++;
               }
             catch(Exception e)
               {
@@ -507,7 +561,7 @@ public final class MuxSocket implements Runnable
 									}
 								else if(flags==CHANNEL_DATA)
 									{
-										for(int i=0;i<chainlen;i++)
+										for(int i=0;i<m_iChainLen;i++)
 												tmpEntry.arCipher[i].encryptAES2(buff);
 										len=(buff[0]<<8)|(buff[1]&0xFF);
 										len&=0x0000FFFF;
@@ -589,10 +643,10 @@ public final class MuxSocket implements Runnable
 						if(entry!=null&&entry.arCipher==null)
 							{
 								int size=PAYLOAD_SIZE-KEY_SIZE;
-								entry.arCipher=new SymCipher[chainlen];
+								entry.arCipher=new SymCipher[m_iChainLen];
 
 								//Last Mix
-								entry.arCipher[chainlen-1]=new SymCipher();
+								entry.arCipher[m_iChainLen-1]=new SymCipher();
 								keypool.getKey(outBuff);
 								outBuff[0]&=0x7F; //RSA HACK!! (to ensure what m<n in RSA-Encrypt: c=m^e mod n)
 
@@ -605,13 +659,13 @@ public final class MuxSocket implements Runnable
 
 								System.arraycopy(buff,0,outBuff,KEY_SIZE+3,len);
 
-								entry.arCipher[chainlen-1].setEncryptionKeyAES(outBuff);
-//								m_arASymCipher[chainlen-1].encrypt(outBuff,0,buff,0);
-//								entry.arCipher[chainlen-1].encryptAES(outBuff,RSA_SIZE,buff,RSA_SIZE,DATA_SIZE-RSA_SIZE);
-								m_arASymCipher[chainlen-1].encrypt(outBuff,0,outBuff2,0);
-								entry.arCipher[chainlen-1].encryptAES(outBuff,RSA_SIZE,outBuff2,RSA_SIZE,DATA_SIZE-RSA_SIZE);
+								entry.arCipher[m_iChainLen-1].setEncryptionKeyAES(outBuff);
+//								m_arASymCipher[m_iChainLen-1].encrypt(outBuff,0,buff,0);
+//								entry.arCipher[m_iChainLen-1].encryptAES(outBuff,RSA_SIZE,buff,RSA_SIZE,DATA_SIZE-RSA_SIZE);
+								m_arASymCipher[m_iChainLen-1].encrypt(outBuff,0,outBuff2,0);
+								entry.arCipher[m_iChainLen-1].encryptAES(outBuff,RSA_SIZE,outBuff2,RSA_SIZE,DATA_SIZE-RSA_SIZE);
 								size-=KEY_SIZE;
-								for(int i=chainlen-2;i>=0;i--)
+								for(int i=m_iChainLen-2;i>=0;i--)
 									{
 										entry.arCipher[i]=new SymCipher();
 										keypool.getKey(outBuff);
@@ -630,7 +684,7 @@ public final class MuxSocket implements Runnable
 								outBuff[2]=0;
 								outBuff[0]=(byte)(len>>8);
 								outBuff[1]=(byte)(len%256);
-								for(int i=chainlen-1;i>0;i--)
+								for(int i=m_iChainLen-1;i>0;i--)
 									entry.arCipher[i].encryptAES(outBuff); //something throws a null pointer....
 								entry.arCipher[0].encryptAES(outBuff,0,outBuff2,0,DATA_SIZE); //something throws a null pointer....
 							}
@@ -654,7 +708,7 @@ public final class MuxSocket implements Runnable
 
 	/*	public final int getChainLen()
 			{
-				return chainlen;
+				return m_iChainLen;
 			}*/
 
 		public long getTimeLastPacketSend()
