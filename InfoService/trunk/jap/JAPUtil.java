@@ -330,7 +330,7 @@ final public class JAPUtil
 				  try
 						{
 							// this is necessary to make shure that the images are loaded when contained in a JAP.jar
-							img = new ImageIcon(JAPUtil.class.getResource(imageFilename));
+							img = new ImageIcon(Class.forName("JAP").getResource(imageFilename));
 						}
 					catch (Exception e)
 						{
@@ -353,7 +353,7 @@ final public class JAPUtil
 				  try
 						{
 							// this is necessary to make shure that the images are loaded when contained in a JAP.jar
-							 img = new ImageIcon(JAPUtil.class.getResource(imageFilename));
+							 img = new ImageIcon(Class.forName("JAP").getResource(imageFilename));
 						}
 					catch (Exception e)
 						{
