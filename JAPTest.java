@@ -74,11 +74,31 @@ import Rijndael.Rijndael_Algorithm;
 import java.util.zip.*;
 //import cryptix.asn1.lang.*;
 //import cryptix.asn1.encoding.*;
+import anon.AnonService;
+import anon.AnonServer;
+import anon.AnonChannel;
+import anon.AnonServiceFactory;
 final public class JAPTest
 {
 
 	public static void main(String argc[])
 		{
+      try{
+      AnonService s=AnonServiceFactory.create();
+      s.connect(new AnonServer("mix.inf.tu-dresden.de",16544));
+      InetAddress addr=InetAddress.getByName("anon.inf.tu-dresden.de");
+      AnonChannel c=s.createChannel(addr,80);
+      InputStream in=c.getInputStream();
+      OutputStream out=c.getOutputStream();
+      out.write("GET /index.html HTTP/1.0\n\r\n\r".getBytes());
+      byte[] buff=new byte[1000];
+      in.read(buff,0,buff.length);
+      System.out.println(new String(buff));}
+      catch(Exception e)
+        {
+          e.printStackTrace();
+        }
+      System.exit(0);
 	/*	try{FileOutputStream fio=new FileOutputStream("test.test");
 			fio.write(3);
 			fio.flush();

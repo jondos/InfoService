@@ -27,12 +27,14 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 */
 package anon;
 
+import java.net.InetAddress;
 import java.net.ConnectException;
 public interface AnonService
   {
     public int connect(AnonServer anonService);
     public void disconnect();
     public AnonChannel createChannel(int type) throws ConnectException;
+    public AnonChannel createChannel(InetAddress host,int port) throws ConnectException;
     public void addEventListener(AnonServiceEventListener l);
     public void removeEventListener(AnonServiceEventListener l);
   }

@@ -50,6 +50,7 @@ import JAPDebug;
 
 import HTTPClient.Codecs;
 import anon.ErrorCodes;
+import anon.AnonChannel;
 public final class MuxSocket implements Runnable
 	{
 		private int lastChannelId;
@@ -64,6 +65,7 @@ public final class MuxSocket implements Runnable
 
 		private final static int[]FIREWALL_METHODS={FIREWALL_METHOD_HTTP_1_1,FIREWALL_METHOD_HTTP_1_0}; //which HTTP-Proxy methods to try
 		private	byte[] outBuff;
+    private byte[] outBuff2;
 		private ASymCipher[] m_arASymCipher;
 		private KeyPool keypool;
 		private int chainlen;
@@ -72,14 +74,16 @@ public final class MuxSocket implements Runnable
 
 		private static final String CRLF="\r\n";
 
-		public final static int KEY_SIZE=16;
-		public final static int DATA_SIZE=992;
-		public final static int PAYLOAD_SIZE=989;
+		private final static int KEY_SIZE=16;
+		private final static int DATA_SIZE=992;
+		private final static int PAYLOAD_SIZE=989;
 		private final static int PACKET_SIZE=998;  //DATA_SIZE+6
 		private final static int RSA_SIZE=128;
 		private final static short CHANNEL_DATA=0;
 		private final static short CHANNEL_CLOSE=1;
 		private final static short CHANNEL_OPEN=8;
+    private final static int CHANNEL_TYPE_HTTP=0;
+    private final static int CHANNEL_TYPE_SOCKS=1;
 
 		private static MuxSocket ms_MuxSocket=null;
 		//private int m_RunCount=0;
@@ -108,6 +112,7 @@ public final class MuxSocket implements Runnable
 				lastChannelId=0;
 				m_arASymCipher=null;
 				outBuff=new byte[DATA_SIZE];
+				outBuff2=new byte[DATA_SIZE];
 				threadRunLoop=null;
 				keypool=KeyPool.start(/*20,16*/);
 				//m_RunCount=0;
@@ -511,16 +516,18 @@ public final class MuxSocket implements Runnable
 
 								outBuff[KEY_SIZE]=(byte)(len>>8);
 								outBuff[KEY_SIZE+1]=(byte)(len%256);
-								//if(type==JAPAnonService.PROTO_SOCKS)
-									//outBuff[KEY_SIZE+2]=1;
-								//else
-									outBuff[KEY_SIZE+2]=0;
+								if(type==AnonChannel.SOCKS)
+									outBuff[KEY_SIZE+2]=CHANNEL_TYPE_SOCKS;
+								else
+									outBuff[KEY_SIZE+2]=CHANNEL_TYPE_HTTP;
 
-								System.arraycopy(buff,0,outBuff,KEY_SIZE+3,size);
+								System.arraycopy(buff,0,outBuff,KEY_SIZE+3,len);
 
 								entry.arCipher[chainlen-1].setEncryptionKeyAES(outBuff);
-								m_arASymCipher[chainlen-1].encrypt(outBuff,0,buff,0);
-								entry.arCipher[chainlen-1].encryptAES(outBuff,RSA_SIZE,buff,RSA_SIZE,DATA_SIZE-RSA_SIZE);
+//								m_arASymCipher[chainlen-1].encrypt(outBuff,0,buff,0);
+//								entry.arCipher[chainlen-1].encryptAES(outBuff,RSA_SIZE,buff,RSA_SIZE,DATA_SIZE-RSA_SIZE);
+								m_arASymCipher[chainlen-1].encrypt(outBuff,0,outBuff2,0);
+								entry.arCipher[chainlen-1].encryptAES(outBuff,RSA_SIZE,outBuff2,RSA_SIZE,DATA_SIZE-RSA_SIZE);
 								size-=KEY_SIZE;
 								for(int i=chainlen-2;i>=0;i--)
 									{
@@ -528,9 +535,9 @@ public final class MuxSocket implements Runnable
 										keypool.getKey(outBuff);
 										outBuff[0]&=0x7F; //RSA HACK!! (to ensure what m<n in RSA-Encrypt: c=m^e mod n)
 										entry.arCipher[i].setEncryptionKeyAES(outBuff);
-										System.arraycopy(buff,0,outBuff,KEY_SIZE,size);
-										m_arASymCipher[i].encrypt(outBuff,0,buff,0);
-										entry.arCipher[i].encryptAES(outBuff,RSA_SIZE,buff,RSA_SIZE,DATA_SIZE-RSA_SIZE);
+										System.arraycopy(outBuff2,0,outBuff,KEY_SIZE,size);
+										m_arASymCipher[i].encrypt(outBuff,0,outBuff2,0);
+										entry.arCipher[i].encryptAES(outBuff,RSA_SIZE,outBuff2,RSA_SIZE,DATA_SIZE-RSA_SIZE);
 										size-=KEY_SIZE;
 									}
 							  channelMode=CHANNEL_OPEN;
@@ -543,11 +550,11 @@ public final class MuxSocket implements Runnable
 								outBuff[1]=(byte)(len%256);
 								for(int i=chainlen-1;i>0;i--)
 									entry.arCipher[i].encryptAES(outBuff); //something throws a null pointer....
-								entry.arCipher[0].encryptAES(outBuff,0,buff,0,DATA_SIZE); //something throws a null pointer....
+								entry.arCipher[0].encryptAES(outBuff,0,outBuff2,0,DATA_SIZE); //something throws a null pointer....
 							}
 						m_outDataStream.writeInt(channel);
 						m_outDataStream.writeShort(channelMode);
-						m_outDataStream.write(buff,0,DATA_SIZE);
+						m_outDataStream.write(outBuff2,0,DATA_SIZE);
 						m_outDataStream.flush();
 						//JAPAnonService.increaseNrOfBytes(len);
 						//if(entry!=null&&entry.bIsSuspended)
