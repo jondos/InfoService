@@ -43,6 +43,8 @@ import java.util.Enumeration;
 
 import java.math.BigInteger;
 
+import java.security.SecureRandom;
+
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.DocumentBuilder;
 import org.w3c.dom.Document;
@@ -62,7 +64,7 @@ import anon.NotConnectedToMixException;
 import anon.server.AnonServiceImpl;
 public final class MuxSocket implements Runnable
 	{
-		private int m_iLastChannelId;
+		private SecureRandom m_SecureRandom;
 		private Dictionary m_ChannelList;
 		private DataOutputStream m_outDataStream;
 		private DataInputStream m_inDataStream;
@@ -116,7 +118,7 @@ public final class MuxSocket implements Runnable
 		private MuxSocket(Log log)
 			{
         m_Log=log;
-				m_iLastChannelId=0;
+				//m_iLastChannelId=0;
 				m_arASymCipher=null;
 				outBuff=new byte[DATA_SIZE];
 				outBuff2=new byte[DATA_SIZE];
@@ -125,6 +127,7 @@ public final class MuxSocket implements Runnable
 				//m_RunCount=0;
 				m_DummyTraffic=null;
 				m_TimeLastPacketSend=0;
+        m_SecureRandom=new SecureRandom();
 				//threadgroupChannels=null;
 			}
 
@@ -299,13 +302,16 @@ public final class MuxSocket implements Runnable
                   throw new ToManyOpenChannelsException();
 								try
 									{
-                    Channel c=new Channel(this,m_iLastChannelId,type);
-										m_ChannelList.put(new Integer(m_iLastChannelId),new ChannelListEntry(c));
+                    int channelId=m_SecureRandom.nextInt();
+                    while(m_ChannelList.get(new Integer(channelId))!=null)
+                      channelId=m_SecureRandom.nextInt();
+                    Channel c=new Channel(this,channelId,type);
+                    m_ChannelList.put(new Integer(channelId),new ChannelListEntry(c));
 
 										//JAPAnonService.setNrOfChannels(oSocketList.size());
 										//Thread t2=new Thread(c);
 										//t2.start();
-										m_iLastChannelId++;
+										//m_iLastChannelId++;
 										return c;
 									}
 								catch(Exception e)
@@ -336,11 +342,11 @@ public final class MuxSocket implements Runnable
             try
               {
                 m_TimeLastPacketSend=System.currentTimeMillis();
-                m_outDataStream.writeInt(m_iLastChannelId);
+                m_outDataStream.writeInt(m_SecureRandom.nextInt());
 						    m_outDataStream.writeShort(CHANNEL_DUMMY);
 						    m_outDataStream.write(outBuff);
 						    m_outDataStream.flush();
-                m_iLastChannelId++;
+                //m_iLastChannelId++;
               }
             catch(Exception e)
               {

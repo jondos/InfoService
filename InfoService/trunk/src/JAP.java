@@ -44,22 +44,14 @@ import java.awt.event.WindowEvent;
  */
 class JAP extends Frame {
 
-	boolean bSupportRMI=false;
 
 	public JAP()
     {
     }
   /** Constructor for the JAP object.
 	 * @param argv The commandline arguments.
-	 *        <code>-rmi</code>   Enable Support for RMI, so that other apllications can control the JAP
 	 */
 	JAP(String[] argv) {
-		if(argv!=null&&argv.length>0) {
-			for(int i=0;i<argv.length;i++) {
-				if(argv[i].equalsIgnoreCase("-rmi"))
-					 bSupportRMI=true;
-			}
-		}
 	}
 
 	/** Initializes and starts the JAP.
@@ -143,8 +135,6 @@ class JAP extends Frame {
 		view.registerViewIconified(viewIconified);
 		//Init Crypto...
 //		java.security.Security.addProvider(new cryptix.jce.provider.CryptixCrypto());
-		// Enable RMI if requested
-		controller.setRMISupport(bSupportRMI);
 
 		// Show main frame and dispose splash screen
 		view.show();

@@ -94,7 +94,7 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
                    resetChanges();
                    return -1;
                 }
-                   if(state == 1)// first step is going on ...
+                   if(state == UpdateListener.STATE_IN_PROGRESS_STEP1)// first step is going on ...
                       {
                                  //downloadPage.m_labelIconStep1.setText("");
 
@@ -111,9 +111,9 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
                                   downloadPage.showInformationDialog(JAPMessages.getString("updateInformationMsgStep1"));
                                   resetChanges();
                                   return -1;
-                      }else if(state == 3)
+                      }else if(state == UpdateListener.STATE_FINISHED_STEP1)
                       {
-                                  downloadPage.m_labelIconStep1.setIcon(downloadPage.blank);
+                                  downloadPage.m_labelIconStep1.setIcon(downloadPage.stepfinished);
                                   //downloadPage.m_labelIconStep2.setIcon(downloadPage.arrow);
                                   return 0;
                       }else if(state == 4)//download is going on
@@ -125,12 +125,12 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
                                   resetChanges();
                                   return -1;
                       }else if(state == 6)
-                      {            downloadPage.m_labelIconStep2.setIcon(downloadPage.blank);
+                      {            downloadPage.m_labelIconStep2.setIcon(downloadPage.stepfinished);
                                   //downloadPage.m_labelIconStep2.setVisible(false);
                                   return 0;
                       }else if(state == 7)//createNewJapJar()
                       {
-                                   downloadPage.m_labelIconStep2.setIcon(downloadPage.blank);
+                                   downloadPage.m_labelIconStep2.setIcon(downloadPage.stepfinished);
                                    downloadPage.m_labelIconStep3.setIcon(downloadPage.arrow);
                                    countPackages = 0;
                                    countPackages += lenData;
@@ -152,8 +152,8 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
                       {
                                  // downloadPage.m_labelIconStep3.setVisible(false);
 
-                                 downloadPage.m_labelIconStep3.setIcon(downloadPage.blank);
-                                 downloadPage.m_labelIconStep3.setVisible(false);
+                                 downloadPage.m_labelIconStep3.setIcon(downloadPage.stepfinished);
+                                // downloadPage.m_labelIconStep3.setVisible(false);
                                    return 0;
                       }else if(state == 10)//not needed yet
                       {
@@ -166,7 +166,7 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
                           return 0;
                       }else if(state == 13)//write the new JARFile in the directory
                       {
-                                   downloadPage.m_labelIconStep3.setIcon(downloadPage.arrow);
+                                   downloadPage.m_labelIconStep4.setIcon(downloadPage.arrow);
 
                                    countPackages += lenData;
                                 // the 5th step has the Zone from 490 to 500 in the ProgressBar
@@ -181,7 +181,7 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
                                  return -1;
                       }else if(state == 15)
                       {
-                                 downloadPage.m_labelIconStep5.setIcon(downloadPage.blank);
+                                 downloadPage.m_labelIconStep5.setIcon(downloadPage.stepfinished);
                                  host.setNextEnabled(true);
                                  host.setFinishEnabled(false);
                                  host.setCancelEnabled(false);

@@ -67,7 +67,6 @@ import anon.infoservice.InfoService;
 import proxy.ProxyListener;
 import proxy.DirectProxy;
 import proxy.AnonProxy;
-/* jh5 */ import anon.xmlrpc.Server;
 
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPController implements ProxyListener {
@@ -106,8 +105,7 @@ public final class JAPController implements ProxyListener {
 	private Locale m_Locale=null;
 	private Vector observerVector=null;
 
-	private static Server anonServiceRMIServer= null;
-  private static Font m_fontControls;
+	private static Font m_fontControls;
 
 	private JAPController ()
     {
@@ -1465,18 +1463,6 @@ private final class SetAnonModeAsync implements Runnable
 							listener.transferedBytes(nrOfBytes);
 						}
 		}
-	//---------------------------------------------------------------------
-	public int setRMISupport(boolean b) {
-		if(b) {
-			if(anonServiceRMIServer==null)
-				anonServiceRMIServer = Server.generateServer();
-				anonServiceRMIServer.start();
-		} else {
-			if(anonServiceRMIServer!=null)
-				anonServiceRMIServer.stop();
-			anonServiceRMIServer=null;
-		}
-		return 0;
-	}
+
 }
 
