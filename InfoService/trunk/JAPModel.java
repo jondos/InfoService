@@ -34,6 +34,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Text;
 import org.w3c.dom.NodeList;
+import org.w3c.dom.Node;
 import org.w3c.dom.NamedNodeMap;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.FileInputStream;
@@ -64,9 +65,9 @@ public final class JAPModel {
 	private  String   proxyHostName     = "ikt.inf.tu-dresden.de";
 	private  int      proxyPortNumber   = 80;
 	private boolean  mbUseProxy         = false;  // indicates whether JAP connects via a proxy or directly
-	private String   infoServiceHostName      = "anon.inf.tu-dresden.de";
+	private String   infoServiceHostName      = "infoservice.inf.tu-dresden.de";
 	private int      infoServicePortNumber    = 6543;
-	public  String   anonHostName      = "anon.inf.tu-dresden.de";
+	public  String   anonHostName      = "mix.inf.tu-dresden.de";
 	public  int      anonPortNumber    = 6544;
 	private boolean  anonMode          = false;  // indicates whether user wants to send data via MIXes or not
 	public  boolean  autoConnect       = false;  // autoconnect after program start
@@ -244,26 +245,26 @@ public final class JAPModel {
 			Element root=doc.getDocumentElement();
 			NamedNodeMap n=root.getAttributes();
 			// 
-			portNumber=Integer.valueOf(n.getNamedItem("portNumber").getNodeValue()).intValue();
-			setListenerIsLocal(((n.getNamedItem("listenerIsLocal").getNodeValue()).equals("false")?false:true));
-			setUseProxy(((n.getNamedItem("proxyMode").getNodeValue()).equals("true")?true:false));
-			mbActCntMessageNeverRemind=((n.getNamedItem("neverRemindActiveContent").getNodeValue()).equals("true")?true:false);
+			portNumber=parseNodeInt(n.getNamedItem("portNumber"),portNumber);
+			setListenerIsLocal(parseNodeBoolean(n.getNamedItem("isListenerLocal"),true));
+			setUseProxy(parseNodeBoolean(n.getNamedItem("proxyMode"),false));
+			mbActCntMessageNeverRemind=parseNodeBoolean(n.getNamedItem("neverRemindActiveContent"),false);
 			if(mbActCntMessageNeverRemind)
 				mbActCntMessageNotRemind=true;
 			String host;
 			int port;
-			host=n.getNamedItem("infoServiceHostName").getNodeValue();
-			port=Integer.valueOf(n.getNamedItem("infoServicePortNumber").getNodeValue()).intValue();
+			host=parseNodeString(n.getNamedItem("infoServiceHostName"),infoServiceHostName);
+			port=parseNodeInt(n.getNamedItem("infoServicePortNumber"),infoServicePortNumber);
 			setInfoService(host,port);
 
-			host=n.getNamedItem("proxyHostName").getNodeValue();
-			port=Integer.valueOf(n.getNamedItem("proxyPortNumber").getNodeValue()).intValue();
+			host=parseNodeString(n.getNamedItem("proxyHostName"),proxyHostName);
+			port=parseNodeInt(n.getNamedItem("proxyPortNumber"),proxyPortNumber);
 			setProxy(host,port);
 
-			anonHostName=n.getNamedItem("anonHostName").getNodeValue();
-			anonPortNumber=Integer.valueOf(n.getNamedItem("anonPortNumber").getNodeValue()).intValue();
-			autoConnect=((n.getNamedItem("autoConnect").getNodeValue()).equals("true")?true:false);
-			mbMinimizeOnStartup=((n.getNamedItem("minimizedStartup").getNodeValue()).equals("true")?true:false);
+			anonHostName=parseNodeString(n.getNamedItem("anonHostName"),anonHostName);
+			anonPortNumber=parseNodeInt(n.getNamedItem("anonPortNumber"),anonPortNumber);
+			autoConnect=parseNodeBoolean(n.getNamedItem("autoConnect"),false);
+			mbMinimizeOnStartup=parseNodeBoolean(n.getNamedItem("minimizedStartup"),false);
 		
 			//Loading debug settings
 			NodeList nl=root.getElementsByTagName("Debug");
@@ -904,6 +905,51 @@ public final class JAPModel {
 				return false;
 			return true;
 		}
+	
+	public static int parseNodeInt(Node n,int defaultValue)
+		{
+			int i=defaultValue;
+			if(n!=null)
+				try	
+					{
+						i=Integer.parseInt(n.getNodeValue());
+					}
+				catch(Exception e)
+					{
+					}
+			return i;
+		}
 
+	public static boolean parseNodeBoolean(Node n,boolean defaultValue)
+		{
+			boolean b=defaultValue;
+			if(n!=null)
+				try	
+					{
+						String tmpStr=n.getNodeValue();
+						if(tmpStr.equalsIgnoreCase("true"))
+							b=true;
+						else if(tmpStr.equalsIgnoreCase("false"))
+							b=false;
+					}
+				catch(Exception e)
+					{
+					}
+			return b;
+		}
+
+	public static String parseNodeString(Node n,String defaultValue)
+		{
+			String s=defaultValue;
+			if(n!=null)
+				try	
+					{
+						s=n.getNodeValue();
+					}
+				catch(Exception e)
+					{
+					}
+			return s;
+		}
 }
 
