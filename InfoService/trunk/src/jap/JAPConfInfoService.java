@@ -669,7 +669,7 @@ final class JAPConfInfoService extends AbstractJAPConfModule
 	private JPanel createInfoServiceInformationPanel()
 	{
 		JPanel informationPanel = new JPanel();
-
+		informationPanel.setOpaque(false);
 		JLabel settingsInfoListLabel = new JLabel(JAPMessages.getString("settingsInfoListLabel"));
 		settingsInfoListLabel.setFont(getFontSetting());
 
