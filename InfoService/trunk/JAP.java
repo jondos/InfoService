@@ -32,10 +32,10 @@ public final class JAP {
 		model.load();
 		
 		// register Handlers if running JAP under Mac OS
-		if (os.equals("Mac OS")) {
-			JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAP:Registering MRJHandlers");
-			model.registerMRJHandlers();
-		}
+	//	if (os.equals("Mac OS")) {
+		//	JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAP:Registering MRJHandlers");
+			//model.registerMRJHandlers();
+		//}
 
 		// Create the main frame
 		JAPView view = new JAPView (model.TITLE);

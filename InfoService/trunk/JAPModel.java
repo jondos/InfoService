@@ -478,7 +478,7 @@ public final class JAPModel {
 
 	
 	
-	
+/*	
 	
 	// Macintosh stuff
 	protected void registerMRJHandlers() {
@@ -502,7 +502,7 @@ public final class JAPModel {
 			aboutJAP();
 		}
 	}
-	
+	*/
 	
 	
 	
