@@ -41,6 +41,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.io.Reader;
 import java.lang.reflect.Method;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -52,12 +53,14 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Text;
+import org.xml.sax.InputSource;
 
 /**
  * This class provides an easy interface to XML methods.
  */
 public class XMLUtil
 {
+	private final static String DEFAULT_FORMAT_SPACE = "    ";
 	private final static String XML_STR_BOOLEAN_TRUE = "true";
 	private final static String XML_STR_BOOLEAN_FALSE = "false";
 	private static DocumentBuilder ms_DocumentBuilder;
@@ -75,6 +78,7 @@ public class XMLUtil
 			throw new XMLParseException(XMLParseException.NODE_NULL_TAG);
 		}
 	}
+
 
 	/**
 	 * Throws an XMLParseException if the given XML node has not the expected name or if it is null.
@@ -100,7 +104,19 @@ public class XMLUtil
 
 		if (!a_node.getNodeName().equals(a_strExpectedName))
 		{
-			throw new XMLParseException(a_node.getNodeName(),
+			String nodeName;
+
+			if (a_node.getOwnerDocument().getDocumentElement() == a_node ||
+				a_node.getOwnerDocument() == a_node)
+			{
+				nodeName = XMLParseException.ROOT_TAG;
+			}
+			else
+			{
+				nodeName = a_node.getNodeName();
+			}
+
+			throw new XMLParseException(nodeName,
 										"Node '" + a_node.getNodeName()
 										+ "' has not the expected name: '"
 										+ a_strExpectedName + "'");
@@ -108,6 +124,7 @@ public class XMLUtil
 
 		return a_node;
 	}
+
 
 	/**
 	 * If the current node is of the type XML document, this method returns the document
@@ -370,7 +387,7 @@ public class XMLUtil
 						}
 						else
 						{
-							s+=  a_node.getNodeValue();
+							s += a_node.getNodeValue();
 						}
 						a_node = a_node.getNextSibling();
 					}
@@ -672,8 +689,8 @@ public class XMLUtil
 			{
 				Node tmpParent = a_source.getParentNode();
 				if (tmpParent != null && tmpParent.getNodeType() != Node.ATTRIBUTE_NODE)
-				{
-					newnode = a_doc.createTextNode(a_source.getNodeValue());
+			{
+				newnode = a_doc.createTextNode(a_source.getNodeValue());
 				}
 				break;
 			}
@@ -807,6 +824,7 @@ public class XMLUtil
 		return newnode;
 
 	}
+
 
 	/**
 	 * Creates a byte array from the abstract tree of the node.
@@ -961,7 +979,7 @@ public class XMLUtil
 	 */
 	public static void removeComments(Node a_node)
 	{
-		if (a_node.getNodeType() != Node.COMMENT_NODE)
+		if (a_node.getNodeType() != Document.COMMENT_NODE)
 		{
 			removeCommentsInternal(a_node, a_node);
 		}
@@ -987,36 +1005,62 @@ public class XMLUtil
 	}
 
 	/**
+	 * Reads an XML document from an input source.
+	 * @param a_inputSource an input source
+	 * @return the XML document that was read from the input source
+	 * @throws IOException if an I/O error occurs
+	 * @throws XMLParseException if the input stream could not be parsed correctly
+	 */
+	public static Document readXMLDocument(InputSource a_inputSource)
+		throws IOException, XMLParseException
+	{
+		Document doc = null;
+
+		try
+		{
+			doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(a_inputSource);
+			removeComments(doc);
+		}
+		catch (IOException a_e)
+			{
+			throw a_e;
+			}
+		catch (Exception a_e)
+			{
+				throw new XMLParseException(
+						 XMLParseException.ROOT_TAG, "Could not parse XML document: " +
+					a_e.getMessage());
+			}
+
+
+		return doc;
+	}
+
+	/**
 	 * Reads an XML document from an input stream.
 	 * @param a_inputStream an input stream
 	 * @return the XML document that was read from the input stream
 	 * @throws IOException if an I/O error occurs
 	 * @throws XMLParseException if the input stream could not be parsed correctly
 	 */
-	public static Document readXMLDocument(InputStream a_inputStream) throws IOException, XMLParseException
+	public static Document readXMLDocument(InputStream a_inputStream)
+		throws IOException, XMLParseException
 	{
-		Document doc = null;
+		return readXMLDocument(new InputSource(a_inputStream));
+	}
 
-		try
-		{
-			doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(a_inputStream);
-			removeComments(doc);
-		}
-		catch (Exception a_e)
-		{
-			if (a_e instanceof IOException)
-			{
-				throw (IOException) a_e;
-			}
-			else
-			{
-				throw new XMLParseException(
-					XMLParseException.ROOT_TAG, "Could not parse XML input stream: " +
-					a_e.getMessage());
-			}
-		}
 
-		return doc;
+	/**
+	 * Reads an XML document from a Reader.
+	 * @param a_reader a Reader.
+	 * @return the XML document that was read from the Reader
+	 * @throws IOException if an I/O error occurs
+	 * @throws XMLParseException if the input stream could not be parsed correctly
+	 */
+	public static Document readXMLDocument(Reader a_reader)
+		throws IOException, XMLParseException
+	{
+		return readXMLDocument(new InputSource(a_reader));
 	}
 
 	/**
@@ -1041,6 +1085,20 @@ public class XMLUtil
 	{
 		XMLUtil.formatHumanReadable(a_doc);
 		a_outputStream.write(XMLUtil.toString(a_doc).getBytes());
+		a_outputStream.flush();
+	}
+
+	/**
+	 * Writes an XML document to a Writer.
+	 * @param a_doc an XML document
+	 * @param a_writer a Writer
+	 * @throws IOException if an I/O error occurs
+	 */
+	public static void write(Document a_doc, Writer a_writer) throws IOException
+	{
+		XMLUtil.formatHumanReadable(a_doc);
+		a_writer.write(toString(a_doc));
+		a_writer.flush();
 	}
 
 	/**
@@ -1054,6 +1112,18 @@ public class XMLUtil
 		FileOutputStream out = new FileOutputStream(a_file);
 		write(a_doc, out);
 		out.close();
+	}
+
+	/**
+	 * Transforms a String into an XML document. The String must be
+	 * a valid XML document in String representation.
+	 * @param a_xmlDocument a valid XML document in String representation
+	 * @return an XML document
+	 * @exception XMLParseException if the given String is no valid XML document
+	 */
+	public static Document toXMLDocument(String a_xmlDocument) throws XMLParseException
+	{
+		return toXMLDocument(a_xmlDocument.getBytes());
 	}
 
 	/**
@@ -1183,16 +1253,35 @@ public class XMLUtil
 		}
 
 		// if this is empty text, remove it!
-		if (a_element.getNodeType() == Node.TEXT_NODE &&
+		if (a_element.getNodeType() == Document.TEXT_NODE &&
 			a_element.getNodeValue().trim().length() == 0)
 		{
+			if (a_element.getNextSibling() == null)
+			{
+				// this is a last node; append a new line and space
+				space = new String();
+				for (int i = 0; i < a_level - 1; i++)
+				{
+					space += DEFAULT_FORMAT_SPACE;
+				}
+				newLine = a_element.getOwnerDocument().createTextNode(space);
+				a_element.getParentNode().appendChild(newLine);
+
+				added = 0;
+			}
+			else
+			{
+				added = -1;
+			}
+
 			a_element.getParentNode().removeChild(a_element);
-			return -1;
+			return added;
+
 		}
 
 		// do this, if this is not the root element and no text node
 		if ( (a_element.getOwnerDocument().getDocumentElement() != a_element) &&
-			(a_element.getNodeType() != Node.TEXT_NODE))
+			(a_element.getNodeType() != Document.TEXT_NODE))
 		{
 			// insert a new line before this element, if this is the first element
 			if (a_element == a_element.getParentNode().getFirstChild())
@@ -1206,7 +1295,7 @@ public class XMLUtil
 			space = new String();
 			for (int i = 0; i < a_level; i++)
 			{
-				space += "  ";
+				space += DEFAULT_FORMAT_SPACE;
 			}
 			newLine = a_element.getOwnerDocument().createTextNode(space);
 			a_element.getParentNode().insertBefore(newLine, a_element);
@@ -1223,7 +1312,7 @@ public class XMLUtil
 			else
 			{
 				// this is the last node; append a new line and space
-				space = space.substring(0, space.length() - 2);
+				space = space.substring(0, space.length() - DEFAULT_FORMAT_SPACE.length());
 				newLine = a_element.getOwnerDocument().createTextNode("\n" + space);
 				a_element.getParentNode().appendChild(newLine);
 			}
@@ -1242,13 +1331,13 @@ public class XMLUtil
 	 */
 	private static int removeCommentsInternal(Node a_node, Node a_parentNode)
 	{
-		if (a_node.getNodeType() == Node.COMMENT_NODE)
+		if (a_node.getNodeType() == Document.COMMENT_NODE)
 		{
 			a_parentNode.removeChild(a_node);
 			return 1;
 		}
 
-		if (a_node.getNodeType() == Node.TEXT_NODE)
+		if (a_node.getNodeType() == Document.TEXT_NODE)
 		{
 			if (a_node.getNodeValue().trim().length() == 0)
 			{
