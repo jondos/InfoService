@@ -729,8 +729,8 @@ public final class MuxSocket implements Runnable
 	{
 		LogHolder.log(LogLevel.DEBUG, LogType.NET, "JAPMuxSocket:run()");
 		//Test for ControlChannel...
-		//if(m_bMixSupportsControlChannels)
-		//	m_ControlChannelDispatcher.registerControlChannel(new ControlChannelTest());
+		if(m_bMixSupportsControlChannels)
+			m_ControlChannelDispatcher.registerControlChannel(new ControlChannelTest());
 
 		byte[] buff = new byte[DATA_SIZE];
 		int flags = 0;

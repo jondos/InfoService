@@ -33,12 +33,15 @@
 package anon.infoservice;
 
 import java.util.StringTokenizer;
+import java.util.Vector;
 import java.net.InetAddress;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import anon.util.XMLUtil;
 import anon.util.Util;
+import anon.util.IXMLEncodable;
+import anon.util.XMLParseException;
 
 import logging.LogHolder;
 import logging.LogLevel;
@@ -47,12 +50,12 @@ import logging.LogType;
 /**
  * Saves the information about a network server.
  */
-public class ListenerInterface implements ImmutableListenerInterface
+public class ListenerInterface implements ImmutableListenerInterface, IXMLEncodable
 {
    /**
 	 * This is the host of this interface (hostname or IP).
 	 */
-	private String m_strInetHost;
+	private String m_strHostname;
 
 	/**
 	 * This is the representation of the port of the ListenerInterface.
@@ -71,16 +74,19 @@ public class ListenerInterface implements ImmutableListenerInterface
 	 * interface (causes can be firewalls, another network, ...). This is only meaningful for
 	 * non-local (remote) interfaces.
 	 */
-	private boolean m_bIsReachable;
+	private boolean m_bUseInterface;
 
 	/**
 	 * Creates a new ListenerInterface from XML description (ListenerInterface node).
 	 * @todo remove the ip host
 	 * @param listenerInterfaceNode The ListenerInterface node from an XML document.
+	 * @exception XMLParseException if an error in the xml structure occurs
 	 */
-	public ListenerInterface(Element listenerInterfaceNode)
+	public ListenerInterface(Element listenerInterfaceNode) throws XMLParseException
 	{
 		String strHostname;
+
+		m_bUseInterface = true;
 
 		setProtocol(XMLUtil.parseNodeString(
 				  XMLUtil.getFirstChildByName(listenerInterfaceNode, "Type"), null));
@@ -92,8 +98,7 @@ public class ListenerInterface implements ImmutableListenerInterface
 		Node ipNode = XMLUtil.getFirstChildByName(listenerInterfaceNode, "IP");
 		if (hostNode == null && ipNode == null)
 		{
-			throw (new IllegalArgumentException(
-				"ListenerInterface: Error in XML structure -- Neither Host nor IP are given."));
+			throw new XMLParseException("Host,IP", "Neither Host nor IP are given.");
 		}
 		//The value give in Host supersedes the one given by IP
 		strHostname = XMLUtil.parseNodeString(hostNode, null);
@@ -102,14 +107,11 @@ public class ListenerInterface implements ImmutableListenerInterface
 			strHostname = XMLUtil.parseNodeString(ipNode, null);
 			if (!isValidIP(strHostname))
 			{
-				throw (new IllegalArgumentException(
-					"ListenerInterface: Error in XML structure -- Invalid Host and IP."));
+				throw new XMLParseException("Host, IP", "Invalid Host and IP.");
 			}
 		}
 
 		setHostname(strHostname);
-
-		m_bIsReachable = true;
 	}
 
 	/**
@@ -136,11 +138,20 @@ public class ListenerInterface implements ImmutableListenerInterface
 	public ListenerInterface(String a_hostname, int a_port, String a_protocol)
 		throws IllegalArgumentException
 	{
+		m_bUseInterface = true;
+
 		setHostname(a_hostname);
 		setPort(a_port);
 		setProtocol(a_protocol);
+	}
 
-		m_bIsReachable = true;
+	/**
+	 * Gets the name of the corresponding xml element.
+	 * @return the name of the corresponding xml element
+	 */
+	public static String getXMLElementName()
+	{
+		return "ListenerInterface";
 	}
 
 	/**
@@ -235,7 +246,7 @@ public class ListenerInterface implements ImmutableListenerInterface
 	 */
 	public String getHost()
 	{
-		return m_strInetHost;
+		return m_strHostname;
 	}
 
 	/**
@@ -254,8 +265,23 @@ public class ListenerInterface implements ImmutableListenerInterface
 	 */
 	public boolean equals(ListenerInterface a_listenerInterface)
 	{
-		if (!getHost().equals(a_listenerInterface.getHost()) ||
-			getPort() != a_listenerInterface.getPort() ||
+
+		if (getHost() == null)
+		{
+			if ( a_listenerInterface.getHost() != null)
+			{
+				return false;
+			}
+		}
+		else
+		{
+			if(!getHost().equals(a_listenerInterface.getHost()))
+			{
+				return false;
+			}
+		}
+
+		if (getPort() != a_listenerInterface.getPort() ||
 			!getProtocol().equals(a_listenerInterface.getProtocol()))
 		{
 			return false;
@@ -264,61 +290,33 @@ public class ListenerInterface implements ImmutableListenerInterface
 	}
 
 	/**
-	 * Creates an XML node without signature for this ListenerInterface.
-	 *
-	 * @todo Remove the parts that contruct the tag <IP> and the ipnode respectivly.
-	 *       They are used by InfoService:MixCascadeDBEntry
-	 *       and are only needed for compatibility with JAP < 00.02.034.
-	 *
-	 * @param doc The XML document, which is the environment for the created XML node.
+	 * Creates an XML node without signature for this ListenerInterface..
+	 * @param a_doc The XML document, which is the environment for the created XML node.
 	 * @return The ListenerInterface XML node.
 	 */
-	public Element toXmlNode(Document doc)
+	public Element toXmlElement(Document a_doc)
 	{
-		Element listenerInterfaceNode = doc.createElement(
-				  Util.getClassNameWithoutPackage(getClass()));
-		/* Create the child nodes of ListenerInterface (Type, Port, Host) */
-		Element typeNode = doc.createElement("Type");
-		typeNode.appendChild(doc.createTextNode(m_strProtocolType));
-		Element portNode = doc.createElement("Port");
-		portNode.appendChild(doc.createTextNode(Integer.toString(m_iInetPort)));
-		Element hostNode = doc.createElement("Host");
-		hostNode.appendChild(doc.createTextNode(m_strInetHost));
-		String ipString = null;
-		try
-		{
-			InetAddress interfaceAddress = InetAddress.getByName(m_strInetHost);
-			ipString = interfaceAddress.getHostAddress();
-		}
-		catch (Exception e)
-		{
-			/* maybe inetHost is a hostname and no IP, but this solution is better than nothing */
-			ipString = m_strInetHost;
-		}
-		Element ipNode = doc.createElement("IP");
-		ipNode.appendChild(doc.createTextNode(ipString));
-		listenerInterfaceNode.appendChild(typeNode);
-		listenerInterfaceNode.appendChild(portNode);
-		listenerInterfaceNode.appendChild(hostNode);
-		listenerInterfaceNode.appendChild(ipNode);
-		return listenerInterfaceNode;
+		return toXmlElementInternal(a_doc, getXMLElementName());
 	}
 
 	/**
-	 * If we can't reach this interface, we call this function to prevent further connection trys.
+	 * Sets if this interface is used or not. If it is not used, further connection
+	 * retries are prevented.
+	 * @param a_bUseInterface true if this interface is used; false otherwise
 	 */
-	public void invalidate()
+	public void setUseInterface(boolean a_bUseInterface)
 	{
-		m_bIsReachable = false;
+		m_bUseInterface = a_bUseInterface;
 	}
 
 	/**
-	 * Get the validity of this interface.
+	 * Get the validity of this interface. If it is not valid, further connection
+	 * retries are prevented.
 	 * @return Whether this interface is valid or not.
 	 */
 	public boolean isValid()
 	{
-		return m_bIsReachable;
+		return isValidPort(getPort()) && isValidHostname(getHost()) && m_bUseInterface;
 	}
 
 	/**
@@ -331,15 +329,15 @@ public class ListenerInterface implements ImmutableListenerInterface
 	 */
 	public String getHostAndIp()
 	{
-		String hostAndIp = m_strInetHost;
+		String hostAndIp = m_strHostname;
 		try
 		{
-			InetAddress interfaceAddress = InetAddress.getByName(m_strInetHost);
-			if (isValidIP(m_strInetHost))
+			InetAddress interfaceAddress = InetAddress.getByName(m_strHostname);
+			if (isValidIP(m_strHostname))
 			{
 				/* inetHost is an IP, try to add the hostname */
 				String hostName = interfaceAddress.getHostName();
-				if ( (!hostName.equals(m_strInetHost)) && (isValidHostname(hostName)))
+				if ( (!hostName.equals(m_strHostname)) && (isValidHostname(hostName)))
 				{
 					/* we got the hostname via DNS, add it */
 					hostAndIp = hostAndIp + " (" + hostName + ")";
@@ -361,7 +359,7 @@ public class ListenerInterface implements ImmutableListenerInterface
 	/**
 	 * Transforms a given protocol into a valid protocol if recognized.
 	 * @param a_protocol a protocol
-	 * @return a valid protocol or null if not recognized
+	 * @return the protocol (my be transformed in some way) or null if not recognized
 	 */
 	private static String recognizeProtocol(String a_protocol)
 	{
@@ -381,22 +379,26 @@ public class ListenerInterface implements ImmutableListenerInterface
 			{
 				protocol = PROTOCOL_TYPE_SOCKS;
 			}
+			else if (a_protocol.equalsIgnoreCase(PROTOCOL_TYPE_RAW_TCP))
+			{
+				protocol = PROTOCOL_TYPE_RAW_TCP;
+			}
 		}
 
 		return protocol;
 	}
 
 	/**
-	 * Sets the protocol.
+	 * Sets the protocol. If it is invalid, it is set to PROTOCOL_TYPE_RAW_TCP.
 	 * @param a_protocol a protocol
 	 */
-	private void setProtocol(String a_protocol)
+	public void setProtocol(String a_protocol)
 	{
 		if (!isValidProtocol(a_protocol))
 		{
-			LogHolder.log(LogLevel.NOTICE, LogType.NET, "ListenerInterface: Invalid protocol " +
-						  a_protocol + "!");
-			m_strProtocolType = PROTOCOL_TYPE_HTTP;
+			LogHolder.log(LogLevel.NOTICE, LogType.NET, "ListenerInterface: Invalid protocol '" +
+						  a_protocol + "'!");
+			m_strProtocolType = PROTOCOL_TYPE_RAW_TCP;
 		}
 		else
 		{
@@ -408,25 +410,82 @@ public class ListenerInterface implements ImmutableListenerInterface
 	 * Sets the port number.
 	 * @param a_port a port number
 	 */
-	private void setPort(int a_port)
+	public void setPort(int a_port)
 	{
 		if (!isValidPort(a_port))
 		{
-			throw (new IllegalArgumentException("ListenerInterface: Port is invalid."));
+			m_iInetPort = -1;
+			//throw (new IllegalArgumentException("ListenerInterface: Port is invalid."));
 		}
 		m_iInetPort = a_port;
 	}
 
 	/**
 	 * Sets the host name.
-	 * @param a_hostname a host name
+	 * @param a_strHostname a host name
 	 */
-	private void setHostname(String a_hostname)
+	public void setHostname(String a_strHostname)
 	{
-		if (!isValidHostname(a_hostname))
+		if (!isValidHostname(a_strHostname))
 		{
-			throw (new IllegalArgumentException("ListenerInterface: Host is invalid."));
+			//throw (new IllegalArgumentException("ListenerInterface: Host is invalid."));
+			m_strHostname = "";
 		}
-		m_strInetHost = a_hostname;
+		m_strHostname = a_strHostname;
 	}
+
+	/**
+	 * Creates a Vector of listeners with only the current listener.
+	 * @return a Vector of listeners with only the current listener
+	 */
+	public Vector toVector()
+	{
+		Vector listeners = new Vector();
+		listeners.addElement(this);
+
+		return listeners;
+	}
+
+	/**
+	 * Creates an XML node without signature for this ListenerInterface.
+	 *
+	 * @todo Remove the parts that contruct the tag <IP> and the ipnode respectively.
+	 *       They are used by InfoService:MixCascadeDBEntry
+	 *       and are only needed for compatibility with JAP < 00.02.034.
+	 *
+	 * @param doc The XML document, which is the environment for the created XML node.
+	 * @param a_strXmlElementName the name of the xml element to create
+	 * @return The ListenerInterface XML node.
+	 */
+	protected Element toXmlElementInternal(Document doc, String a_strXmlElementName)
+	{
+		Element listenerInterfaceNode = doc.createElement(a_strXmlElementName);
+		/* Create the child nodes of ListenerInterface (Type, Port, Host) */
+		Element typeNode = doc.createElement("Type");
+		typeNode.appendChild(doc.createTextNode(m_strProtocolType));
+		Element portNode = doc.createElement("Port");
+		portNode.appendChild(doc.createTextNode(Integer.toString(m_iInetPort)));
+		Element hostNode = doc.createElement("Host");
+		hostNode.appendChild(doc.createTextNode(m_strHostname));
+		String ipString = null;
+		try
+		{
+			InetAddress interfaceAddress = InetAddress.getByName(m_strHostname);
+			ipString = interfaceAddress.getHostAddress();
+		}
+		catch (Exception e)
+		{
+			/* maybe inetHost is a hostname and no IP, but this solution is better than nothing */
+			ipString = m_strHostname;
+		}
+		Element ipNode = doc.createElement("IP");
+		ipNode.appendChild(doc.createTextNode(ipString));
+		listenerInterfaceNode.appendChild(typeNode);
+		listenerInterfaceNode.appendChild(portNode);
+		listenerInterfaceNode.appendChild(hostNode);
+		listenerInterfaceNode.appendChild(ipNode);
+		return listenerInterfaceNode;
+	}
+
+
 }

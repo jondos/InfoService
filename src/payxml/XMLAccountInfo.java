@@ -34,7 +34,7 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import anon.util.IXMLEncodeable;
+import anon.util.IXMLEncodable;
 import anon.util.XMLUtil;
 
 /**
@@ -65,7 +65,7 @@ import anon.util.XMLUtil;
  *
  * @author Bastian Voigt
  */
-public class XMLAccountInfo implements IXMLEncodeable //extends XMLDocument
+public class XMLAccountInfo implements IXMLEncodable //extends XMLDocument
 {
 	//~ Instance fields ********************************************************
 
@@ -110,57 +110,30 @@ public class XMLAccountInfo implements IXMLEncodeable //extends XMLDocument
 	}
 
 	//~ Methods ****************************************************************
-	public Document getXmlEncoded()
+	public Element toXmlElement(Document a_doc)
 	{
-		Document doc = null;
-		try
-		{
-			doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
-		}
-		catch (ParserConfigurationException ex)
-		{
-			return null;
-		}
-		Element elemRoot = doc.createElement("AccountInfo");
+		Element elemRoot = a_doc.createElement("AccountInfo");
 		elemRoot.setAttribute("version", "1.0");
-		doc.appendChild(elemRoot);
 		Element elem;
-		Element elemTmp;
 
 		// add balance
-		if (m_balance != null)
-		{
-			try
-			{
-				elemTmp = m_balance.getXmlEncoded().getDocumentElement();
-				elem = (Element) XMLUtil.importNode(doc, elemTmp, true);
+		elem = m_balance.toXmlElement(a_doc);
 				elemRoot.appendChild(elem);
-			}
-			catch (Exception ex1)
-			{
-			}
-		}
+
 
 		// add CCs
-		Element elemCCs = doc.createElement("CostConfirmations");
+		Element elemCCs = a_doc.createElement("CostConfirmations");
 		elemRoot.appendChild(elemCCs);
 		Enumeration enum = m_costConfirmations.elements();
 		XMLEasyCC cc;
 		while (enum.hasMoreElements())
 		{
-			try
-			{
 				cc = (XMLEasyCC) enum.nextElement();
-				elemTmp = cc.getXmlEncoded().getDocumentElement();
-				elem = (Element) XMLUtil.importNode(doc, elemTmp, true);
+			elem = cc.toXmlElement(a_doc);
 				elemCCs.appendChild(elem);
 			}
-			catch (Exception ex2)
-			{
-			}
-		}
 
-		return doc;
+		return elemRoot;
 	}
 
 	/**

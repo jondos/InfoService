@@ -36,42 +36,58 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
+import anon.util.XMLUtil;
+import anon.util.IXMLEncodable;
+import anon.util.XMLParseException;
+
 /**
  * Holds the information about the used software in a service.
  */
-public class ServiceSoftware
+public class ServiceSoftware implements IXMLEncodable
 {
-
 	/**
 	 * This is the version of the used software.
 	 */
-	private String version;
+	private String m_strVersion;
 
 	/**
-	 * Creates a new ServiceSoftware from XML description (Software node).
+	 * Creates a new ServiceSoftware from XML description.
 	 *
-	 * @param softwareNode The Software node from an XML document.
+	 * @param a_element a ServiceSoftware xml node
+	 * @exception XMLParseException if an error occurs while parsing the xml structure
 	 */
-	public ServiceSoftware(Element softwareNode) throws Exception
+	public ServiceSoftware(Element a_element) throws XMLParseException
 	{
-		/* get the version */
-		NodeList versionNodes = softwareNode.getElementsByTagName("Version");
-		if (versionNodes.getLength() == 0)
+		if (a_element == null)
 		{
-			throw (new Exception("ServiceSoftware: Error in XML structure."));
+			throw new XMLParseException(XMLParseException.NODE_NULL_TAG);
 		}
-		Element versionNode = (Element) (versionNodes.item(0));
-		version = versionNode.getFirstChild().getNodeValue();
+
+		/* get the version */
+		m_strVersion = XMLUtil.parseNodeString(XMLUtil.getFirstChildByName(a_element, "Version"), null);
+		if (m_strVersion == null)
+		{
+			throw new XMLParseException("Version");
+		}
+	}
+
+	/**
+	 * Returns the name of the XML element constructed by this class.
+	 * @return the name of the XML element constructed by this class
+	 */
+	public static String getXMLElementName()
+	{
+		return "Software";
 	}
 
 	/**
 	 * Creates a new ServiceSoftware from the version information.
 	 *
-	 * @param version The software version for this service.
+	 * @param a_strVersion The software version for this service.
 	 */
-	public ServiceSoftware(String version)
+	public ServiceSoftware(String a_strVersion)
 	{
-		this.version = version;
+		m_strVersion = a_strVersion;
 	}
 
 	/**
@@ -81,12 +97,12 @@ public class ServiceSoftware
 	 *
 	 * @return The Software XML node.
 	 */
-	public Element toXmlNode(Document doc)
+	public Element toXmlElement(Document doc)
 	{
-		Element softwareNode = doc.createElement("Software");
+		Element softwareNode = doc.createElement(getXMLElementName());
 		/* Create the child of Software (Version) */
 		Element versionNode = doc.createElement("Version");
-		versionNode.appendChild(doc.createTextNode(version));
+		versionNode.appendChild(doc.createTextNode(m_strVersion));
 		softwareNode.appendChild(versionNode);
 		return softwareNode;
 	}
@@ -98,7 +114,7 @@ public class ServiceSoftware
 	 */
 	public String getVersion()
 	{
-		return version;
+		return m_strVersion;
 	}
 
 }

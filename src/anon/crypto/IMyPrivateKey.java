@@ -28,8 +28,8 @@
 package anon.crypto;
 
 import java.security.PrivateKey;
-import anon.util.IXMLEncodeable;
+import anon.util.IXMLEncodable;
 
-public interface IMyPrivateKey extends PrivateKey,IXMLEncodeable
+public interface IMyPrivateKey extends PrivateKey,IXMLEncodable
 {
 }

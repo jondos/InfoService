@@ -41,7 +41,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.*;
 import org.w3c.dom.*;
 import java.io.ByteArrayInputStream;
-import anon.util.IXMLEncodeable;
+import anon.util.IXMLEncodable;
 
 /**
  * This class contains the functionality for creating and parsing XML account
@@ -77,7 +77,7 @@ import anon.util.IXMLEncodeable;
  * </li>
  * </ul>
  */
-public class XMLAccountCertificate implements IXMLEncodeable
+public class XMLAccountCertificate implements IXMLEncodable
 {
 
 	//~ Instance fields ********************************************************
@@ -87,7 +87,7 @@ public class XMLAccountCertificate implements IXMLEncodeable
 	private long m_accountNumber;
 	private String m_biID;
 
-	// todo find a better representation of the signature..
+	/** @todo find a better representation of the signature.. */
 	private Document m_signature;
 
 	//~ Constructors ***********************************************************
@@ -217,59 +217,43 @@ public class XMLAccountCertificate implements IXMLEncodeable
 	 *
 	 * @return Document
 	 */
-	public Document getXmlEncoded()
+	public Element toXmlElement(Document a_doc)
 	{
-		Document doc = null;
-		try
-		{
-			doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
-		}
-		catch (ParserConfigurationException ex)
-		{
-			return null;
-		}
-		Element elemRoot = doc.createElement("AccountCertificate");
+		Element elemRoot = a_doc.createElement("AccountCertificate");
 		elemRoot.setAttribute("version", "1.0");
-		doc.appendChild(elemRoot);
 
-		Element elem = doc.createElement("AccountNumber");
+		Element elem = a_doc.createElement("AccountNumber");
 		XMLUtil.setNodeValue(elem, Long.toString(m_accountNumber));
 		elemRoot.appendChild(elem);
 
-		elem = doc.createElement("BiID");
+		elem = a_doc.createElement("BiID");
 		XMLUtil.setNodeValue(elem, m_biID);
 		elemRoot.appendChild(elem);
 
 
-		// todo check timestamp format !!
-		elem = doc.createElement("CreationTime");
+		/** @todo check timestamp format !! */
+		elem = a_doc.createElement("CreationTime");
 		XMLUtil.setNodeValue(elem, m_creationTime.toString());
 		elemRoot.appendChild(elem);
 
-		elem = doc.createElement("JapPublicKey");
+		elem = a_doc.createElement("JapPublicKey");
 		elemRoot.appendChild(elem);
 		elem.setAttribute("version", "1.0");
-		Document tmpDoc = m_publicKey.getXmlEncoded();
-		try
-		{
-			elem.appendChild(XMLUtil.importNode(doc, tmpDoc.getDocumentElement(), true));
-		}
-		catch (Exception ex1)
-		{
-			return null;
-		}
+
+		elem.appendChild(m_publicKey.toXmlElement(a_doc));
+
 		if(m_signature!=null)
 		{
 			try
 			{
-				elemRoot.appendChild(XMLUtil.importNode(doc, m_signature.getDocumentElement(), true));
+				elemRoot.appendChild(XMLUtil.importNode(a_doc, m_signature.getDocumentElement(), true));
 			}
 			catch (Exception ex2)
 			{
 				return null;
 			}
 		}
-		return doc;
+		return elemRoot;
 	}
 
 	public boolean isSigned()

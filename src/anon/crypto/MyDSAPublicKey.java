@@ -127,38 +127,28 @@ final public class MyDSAPublicKey implements DSAPublicKey,IMyPublicKey
 		return bOut.toByteArray();
 	}
 
-	public Document getXmlEncoded()
+	public Element toXmlElement(Document a_doc)
 	{
-		Document doc = null;
-		try
-		{
-			doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
-		}
-		catch (ParserConfigurationException ex)
-		{
-			return null;
-		}
-		Element elemRoot = doc.createElement("DSAKeyValue");
-		doc.appendChild(elemRoot);
+		Element elemRoot = a_doc.createElement("DSAKeyValue");
 		Element elem = null;
 
-		elem = doc.createElement("Y");
+		elem = a_doc.createElement("Y");
 		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_Y.toByteArray()));
 		elemRoot.appendChild(elem);
 
-		elem = doc.createElement("P");
+		elem = a_doc.createElement("P");
 		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_params.getP().toByteArray()));
 		elemRoot.appendChild(elem);
 
-		elem = doc.createElement("Q");
+		elem = a_doc.createElement("Q");
 		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_params.getQ().toByteArray()));
 		elemRoot.appendChild(elem);
 
-		elem = doc.createElement("G");
+		elem = a_doc.createElement("G");
 		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_params.getG().toByteArray()));
 		elemRoot.appendChild(elem);
 
-		return doc;
+		return elemRoot;
 	}
 
 	public boolean equals(Object o)

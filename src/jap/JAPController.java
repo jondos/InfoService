@@ -61,6 +61,7 @@ import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.JAPVersionInfo;
 import anon.infoservice.MixCascade;
 import anon.infoservice.ProxyInterface;
+import anon.infoservice.ListenerInterface;
 import anon.util.ResourceLoader;
 import anon.util.XMLUtil;
 import anon.util.IPasswordReader;
@@ -148,9 +149,8 @@ public final class JAPController implements ProxyListener
 		{
 			InfoServiceDBEntry defaultInfoService = new InfoServiceDBEntry(
 				JAPConstants.defaultInfoServiceName,
-				JAPConstants.defaultInfoServiceID,
-				JAPConstants.defaultInfoServiceHostName,
-				JAPConstants.defaultInfoServicePortNumber);
+				new ListenerInterface(JAPConstants.defaultInfoServiceHostName,
+									  JAPConstants.defaultInfoServicePortNumber).toVector());
 			InfoServiceHolder.getInstance().setPreferedInfoService(defaultInfoService);
 		}
 		catch (Exception e)
@@ -744,12 +744,12 @@ public final class JAPController implements ProxyListener
 	/**
 	 * Changes the common proxy.
 	 * @param a_proxyInterface a proxy interface
-	 * @param a_bUseProxy if the proxy should be used
 	 */
 	public synchronized void changeProxyInterface(ProxyInterface a_proxyInterface)
 	{
-		if (m_Model.getProxyInterface() == null ||
-			!m_Model.getProxyInterface().equals(a_proxyInterface))
+		if (a_proxyInterface != null &&
+			(m_Model.getProxyInterface() == null ||
+			!m_Model.getProxyInterface().equals(a_proxyInterface)))
 		{
 			// change settings
 			m_Model.setProxyListener(a_proxyInterface);
@@ -893,13 +893,13 @@ public final class JAPController implements ProxyListener
 			}
 			/* adding infoservice settings */
 			/* infoservice list */
-			e.appendChild(InfoServiceDBEntry.toXmlNode(doc, Database.getInstance(InfoServiceDBEntry.class)));
+			e.appendChild(InfoServiceDBEntry.toXmlElement(doc, Database.getInstance(InfoServiceDBEntry.class)));
 			/* prefered infoservice */
 			InfoServiceDBEntry preferedInfoService = InfoServiceHolder.getInstance().getPreferedInfoService();
 			Element preferedInfoServiceNode = doc.createElement("PreferedInfoService");
 			if (preferedInfoService != null)
 			{
-				preferedInfoServiceNode.appendChild(preferedInfoService.toXmlNode(doc));
+				preferedInfoServiceNode.appendChild(preferedInfoService.toXmlElement(doc));
 			}
 			e.appendChild(preferedInfoServiceNode);
 

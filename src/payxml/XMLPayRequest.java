@@ -32,7 +32,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import anon.util.IXMLEncodeable;
+import anon.util.IXMLEncodable;
 import anon.util.XMLUtil;
 
 /**
@@ -51,7 +51,7 @@ import anon.util.XMLUtil;
  *
  * @author Bastian Voigt, Stefan Koepsell
  */
-public class XMLPayRequest implements IXMLEncodeable
+public class XMLPayRequest implements IXMLEncodable
 {
 	private XMLEasyCC m_cc = null;
 	private java.sql.Timestamp m_balanceNewerThan = null;
@@ -94,7 +94,7 @@ public class XMLPayRequest implements IXMLEncodeable
 	}
 
 	// todo: implement (not needed atm, only for the interface :-)
-	public Document getXmlEncoded()
+	public Element toXmlElement(Document a_doc)
 	{
 		return null;
 	}

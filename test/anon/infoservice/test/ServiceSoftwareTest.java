@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2000 - 2004 The JAP-Team
+ Copyright (c) 2000 - 2004, The JAP-Team
  All rights reserved.
  Redistribution and use in source and binary forms, with or without modification,
  are permitted provided that the following conditions are met:
@@ -27,42 +27,32 @@
  */
 package anon.infoservice.test;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import anon.infoservice.TestProxy;
+import junitx.framework.extension.XtendedPrivateTestCase;
 
-public class AllTests
+import anon.infoservice.ServiceSoftware;
+import anon.util.XMLUtil;
+
+public class ServiceSoftwareTest extends XtendedPrivateTestCase
 {
-	/**
-	 * The proxy is not used here, but it must be imported for automatic compilation.
-	 */
-	TestProxy m_proxy;
-
-	/**
-	 * The main function.
-	 *
-	 * @param a_Args (no arguments needed)
-	 */
-	public static void main(String[] a_Args)
+	public ServiceSoftwareTest(String a_strName)
 	{
-		junit.swingui.TestRunner.run(AllTests.class);
+		super(a_strName);
 	}
 
 	/**
-	 * Returns the test suite that combines all other tests of the project.
-	 *
-	 * @return Test The test suite that combines all other tests of the project.
+	 * Tests if an object can be successfully written and read from xml.
+	 * @throws Exception if an error occurs
 	 */
-	public static Test suite()
+	public void testToXML() throws Exception
 	{
-		TestSuite suite = new TestSuite(AllTests.class.getName());
-		//suite.addTestSuite(DatabaseStaticTest.class);
-		suite.addTestSuite(DatabaseTest.class);
-		suite.addTestSuite(HTTPConnectionFactoryTest.class);
-		suite.addTestSuite(ListenerInterfaceTest.class);
-		suite.addTestSuite(ProxyInterfaceTest.class);
-		suite.addTestSuite(ServiceSoftwareTest.class);
-		suite.addTestSuite(InfoServiceDBEntryTest.class);
-		return suite;
+		ServiceSoftware ss, ssFromXML;
+
+		ss	= new ServiceSoftware("1.1.10");
+		ssFromXML = new ServiceSoftware(XMLUtil.toXMLElement(ss));
+
+		assertTrue(ss.getVersion().equals(ssFromXML.getVersion()));
+		assertTrue(ssFromXML.getVersion().equals("1.1.10"));
+
+		writeXMLOutputToFile(ss);
 	}
 }

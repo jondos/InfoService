@@ -27,7 +27,7 @@
  */
 package anon.infoservice.test;
 
-import junitx.framework.PrivateTestCase;
+import junitx.framework.extension.XtendedPrivateTestCase;
 
 import org.w3c.dom.Document;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -38,7 +38,7 @@ import anon.infoservice.ListenerInterface;
  *  These are the tests for the ListenerInterface class.
  * @author Wendolsky
  */
-public class ListenerInterfaceTest extends PrivateTestCase
+public class ListenerInterfaceTest extends XtendedPrivateTestCase
 {
 	public ListenerInterfaceTest(String a_name)
 	{
@@ -118,14 +118,14 @@ public class ListenerInterfaceTest extends PrivateTestCase
 		new ListenerInterface("127.0.256.1", 3000, ListenerInterface.PROTOCOL_TYPE_SOCKS);
 		new ListenerInterface("127.0.255.1", 3000, ListenerInterface.PROTOCOL_TYPE_SOCKS);
 
-		try
-		{
-			new ListenerInterface("127.0.0.1", -80, null);
-			fail();
-		}
-		catch (IllegalArgumentException a_e)
-		{
-		}
+		// illegal port
+		assertTrue(!(new ListenerInterface(
+				  "127.0.0.1", -80, ListenerInterface.PROTOCOL_TYPE_SOCKS).isValid()));
+		// illegal host name
+		assertTrue(!(new ListenerInterface(
+				  null, 80, ListenerInterface.PROTOCOL_TYPE_SOCKS).isValid()));
+		// illegal protocol
+		assertTrue((new ListenerInterface("myhost", 80, null).isValid()));
 	}
 
 	/**
@@ -141,12 +141,11 @@ public class ListenerInterfaceTest extends PrivateTestCase
 
 		doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
 		listenerOrigin = new ListenerInterface("127.0.0.1", 443, ListenerInterface.PROTOCOL_TYPE_HTTPS);
-		listenerFromXML = new ListenerInterface(listenerOrigin.toXmlNode(doc));
+		listenerFromXML = new ListenerInterface(listenerOrigin.toXmlElement(doc));
 		assertTrue(listenerOrigin.equals(listenerFromXML));
 
 		// create a structure file
-		test.AllTests.writeXMLNodeToFile(listenerOrigin.toXmlNode(doc),
-										 ListenerInterface.class, this.getClass());
+		writeXMLOutputToFile(listenerOrigin);
 	}
 
 	/**
@@ -178,7 +177,7 @@ public class ListenerInterfaceTest extends PrivateTestCase
 	{
 		ListenerInterface li = new ListenerInterface("testhost", 1);
 		assertTrue(li.isValid());
-		li.invalidate();
+		li.setUseInterface(false);
 		assertTrue(!li.isValid());
 	}
 }

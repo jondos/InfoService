@@ -27,21 +27,8 @@
  */
 package test;
 
-import java.io.IOException;
-import java.io.ByteArrayInputStream;
-
-import org.w3c.dom.Document;
-import javax.xml.parsers.DocumentBuilderFactory;
-import org.w3c.dom.Node;
-import org.w3c.dom.Comment;
-
 import junit.framework.Test;
-import junit.framework.TestCase;
 import junit.framework.TestSuite;
-
-import anon.util.ResourceLoader;
-import anon.util.XMLUtil;
-import anon.util.Util;
 
 /**
  * This is the test suite which combines all other JUnit tests of the project.
@@ -51,9 +38,6 @@ import anon.util.Util;
  */
 public class AllTests
 {
-	private static final String XML_STRUCTURE_PATH = "documentation/xmlStructures/";
-	private static final ResourceLoader ms_resourceLoader = new ResourceLoader(null);
-
 	/**
 	 * The main function.
 	 *
@@ -74,60 +58,5 @@ public class AllTests
 		TestSuite suite = new TestSuite(AllTests.class.getName());
 		suite.addTest(anon.test.AllTests.suite());
 		return suite;
-	}
-
-	/**
-	 * Loads an xml structure from the structures directory. All comments,
-	 * empty lines and new lines are removed from the structure.
-	 * @param a_filename the name of the xml structure file
-	 * @throws Exception if an error occurs while loading the file
-	 * @return an xml structure from the structures directory
-	 */
-	public static Node loadXMLNodeFromFile(String a_filename)
-	throws Exception
-	{
-		Document doc = null;
-
-		try
-		{
-			doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(
-				new ByteArrayInputStream(
-				ms_resourceLoader.loadResource(
-				XML_STRUCTURE_PATH + a_filename)));
-			XMLUtil.removeComments(doc);
-		} catch (Exception a_e)
-		{
-		}
-
-		return doc;
-	}
-
-	/**
-	 * Writes an xml node to a file in the XML_STRUCTURE_PATH with the filename <class>.xml.
-	 * @param a_node a Node
-	 * @param a_filename the file where the xml information is written to
-	 * @param a_createrClass the class that created the node
-	 * @param a_testClass the TestCase class that called this method
-	 * @throws IOException
-	 */
-	public static void writeXMLNodeToFile(Node a_node, Class a_createrClass, Class a_testClass)
-		throws IOException
-	{
-		if (!TestCase.class.isAssignableFrom(a_testClass))
-		{
-			throw new IllegalArgumentException("This method can only be called by a test case!");
-		}
-
-		Comment comment;
-
-		// set a comment
-		comment = a_node.getOwnerDocument().createComment(
-				  "This xml structure has been created by " + a_createrClass + ".\n" +
-				  "The calling test class was " + a_testClass + ".");
-		a_node.insertBefore(comment, a_node.getFirstChild());
-
-		// write to file
-		XMLUtil.writeXMLNodeToFile(a_node, XML_STRUCTURE_PATH +
-								   Util.getClassNameWithoutPackage(a_createrClass) + ".xml");
 	}
 }

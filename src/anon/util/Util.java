@@ -37,7 +37,7 @@ public final class Util
 	 * @param a_class a Class
 	 * @return the name of the class without package
 	 */
-	public static String getClassNameWithoutPackage(Class a_class)
+	public static String getShortClassName(Class a_class)
 	{
 		StringTokenizer tokenizer;
 		String classname = null;
@@ -52,4 +52,25 @@ public final class Util
 		return classname;
 	}
 
+	/**
+	 * Normalises a String to the given length by filling it up with spaces, if it
+	 * does not already have this length or is even longer.
+	 * @param a_string a String
+	 * @param a_normLength a length to normalise the String
+	 * @return the normalised String
+	 */
+	public static String normaliseString(String a_string, int a_normLength)
+	{
+		if (a_string.length() < a_normLength)
+		{
+			char[] space = new char[a_normLength - a_string.length()];
+			for (int i = 0; i < space.length; i++)
+			{
+				space[i] = ' ';
+			}
+			a_string = a_string + new String(space);
+		}
+
+		return a_string;
+	}
 }

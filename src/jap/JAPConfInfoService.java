@@ -567,9 +567,10 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 				 */
 				try
 				{
-					InfoServiceDBEntry newInfoService = new InfoServiceDBEntry(null, null,
+					InfoServiceDBEntry newInfoService = new InfoServiceDBEntry(
+									   new ListenerInterface(
 						settingsInfoHostField.getText().trim(),
-						Integer.parseInt(settingsInfoPortField.getText().trim()));
+						Integer.parseInt(settingsInfoPortField.getText().trim())).toVector());
 					Database.getInstance(InfoServiceDBEntry.class).update(newInfoService);
 					addDialog.hide();
 					/* update the infoservice list */

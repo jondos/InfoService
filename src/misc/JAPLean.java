@@ -34,6 +34,7 @@ import anon.infoservice.HTTPConnectionFactory;
 import anon.infoservice.InfoServiceDBEntry;
 import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.MixCascade;
+import anon.infoservice.ListenerInterface;
 import jap.JAPConstants;
 import jap.JAPDebug;
 import jap.JAPModel;
@@ -72,9 +73,10 @@ final class JAPLean implements ProxyListener
 		JAPDebug.getInstance().setLogLevel(LogLevel.DEBUG);
 		JAPModel.getInstance();
 		HTTPConnectionFactory.getInstance().setTimeout(JAPConstants.DEFAULT_INFOSERVICE_TIMEOUT);
-		InfoServiceHolder.getInstance().setPreferedInfoService(new InfoServiceDBEntry(JAPConstants.
-			defaultInfoServiceHostName,
-			JAPConstants.defaultInfoServicePortNumber));
+		InfoServiceHolder.getInstance().setPreferedInfoService(
+				  new InfoServiceDBEntry(
+						new ListenerInterface(JAPConstants.defaultInfoServiceHostName,
+											  JAPConstants.defaultInfoServicePortNumber).toVector()));
 		// JAPAnonService.init();
 		ServerSocket listener = null;
 		try

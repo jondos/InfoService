@@ -28,9 +28,9 @@
 package anon.crypto;
 
 import java.security.PublicKey;
-import anon.util.IXMLEncodeable;
+import anon.util.IXMLEncodable;
 
-public interface IMyPublicKey extends PublicKey, IXMLEncodeable
+public interface IMyPublicKey extends PublicKey, IXMLEncodable
 {
 
 }
