@@ -61,14 +61,14 @@ import logging.LogLevel;
 import logging.LogType;
 
 /* classes modified from Swing Example "Metalworks" */
-
+/** Help window for the JAP. Thi is a singleton meaning that there exists only one help window all the time.*/
 final class JAPHelp extends JDialog implements ActionListener, PropertyChangeListener, WindowListener
 {
 	private String helpPath = " ";
 	private String helpLang = " ";
 	private String langShort = " ";
 	private JComboBox language;
-	HtmlPane html;
+	HtmlPane m_htmlpaneTheHelpPane;
 
 	private JButton m_closeButton;
 	private JButton m_backButton;
@@ -78,10 +78,22 @@ final class JAPHelp extends JDialog implements ActionListener, PropertyChangeLis
 
 	private boolean m_initializing;
 
-	public JAPHelp(JFrame parent)
+	private static JAPHelp ms_theJAPHelp = null;
+
+	private JAPHelp(JFrame parent)
 	{
-		super(parent, JAPMessages.getString("helpWindow"), false);
+		super(JAPController.getView(), JAPMessages.getString("helpWindow"), false);
+//				super( JAPMessages.getString("helpWindow"));
 		init();
+	}
+
+	static JAPHelp getInstance()
+	{
+		if (ms_theJAPHelp == null)
+		{
+			ms_theJAPHelp = new JAPHelp(JAPController.getView());
+		}
+		return ms_theJAPHelp;
 	}
 
 	/**
@@ -92,19 +104,19 @@ final class JAPHelp extends JDialog implements ActionListener, PropertyChangeLis
 	 * @param parent JFrame
 	 * @param virtualParent JDialog
 	 */
-	public JAPHelp(JFrame parent, JDialog virtualParent)
-	{
-		super(parent, JAPMessages.getString("helpWindow"), false);
-		m_virtualParent = virtualParent;
-		m_virtualParent.setVisible(false);
-		init();
-	}
-
-	final private void init()
+	/*	public JAPHelp(JFrame parent, JDialog virtualParent)
+	 {
+	  super(parent, JAPMessages.getString("helpWindow"), false);
+	  m_virtualParent = virtualParent;
+	  m_virtualParent.setVisible(false);
+	  init();
+	 }
+	 */
+	private void init()
 	{
 		m_initializing = true;
-		html = new HtmlPane();
-		html.addPropertyChangeListener(this);
+		m_htmlpaneTheHelpPane = new HtmlPane();
+		m_htmlpaneTheHelpPane.addPropertyChangeListener(this);
 		this.addWindowListener(this);
 
 		JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
@@ -124,7 +136,7 @@ final class JAPHelp extends JDialog implements ActionListener, PropertyChangeLis
 		m_forwardButton.setEnabled(false);
 		m_backButton.setEnabled(false);
 
-		getContentPane().add(html, BorderLayout.CENTER);
+		getContentPane().add(m_htmlpaneTheHelpPane, BorderLayout.CENTER);
 		getContentPane().add(buttonPanel, BorderLayout.SOUTH);
 		//getContentPane().add(container);
 		getRootPane().setDefaultButton(m_closeButton);
@@ -178,7 +190,7 @@ final class JAPHelp extends JDialog implements ActionListener, PropertyChangeLis
 		{
 			helpPath = JAPMessages.getString("helpPath" + String.valueOf(language.getSelectedIndex() + 1));
 			langShort = JAPMessages.getString("langshort" + String.valueOf(language.getSelectedIndex() + 1));
-			html.load(helpPath + JAPController.getInstance().getHelpContext().getContext() + "_" + langShort +
+			m_htmlpaneTheHelpPane.load(helpPath + JAPController.getInstance().getHelpContext().getContext() + "_" + langShort +
 					  ".html");
 		}
 		else if (e.getSource() == m_closeButton)
@@ -206,13 +218,13 @@ final class JAPHelp extends JDialog implements ActionListener, PropertyChangeLis
 
 	private void backPressed()
 	{
-		html.goBack();
+		m_htmlpaneTheHelpPane.goBack();
 		checkNavigationButtons();
 	}
 
 	private void forwardPressed()
 	{
-		html.goForward();
+		m_htmlpaneTheHelpPane.goForward();
 		checkNavigationButtons();
 	}
 
@@ -221,7 +233,7 @@ final class JAPHelp extends JDialog implements ActionListener, PropertyChangeLis
 	 */
 	private void checkNavigationButtons()
 	{
-		if (html.backAllowed())
+		if (m_htmlpaneTheHelpPane.backAllowed())
 		{
 			m_backButton.setEnabled(true);
 		}
@@ -230,7 +242,7 @@ final class JAPHelp extends JDialog implements ActionListener, PropertyChangeLis
 			m_backButton.setEnabled(false);
 		}
 
-		if (html.forwardAllowed())
+		if (m_htmlpaneTheHelpPane.forwardAllowed())
 		{
 			m_forwardButton.setEnabled(true);
 		}
@@ -242,14 +254,19 @@ final class JAPHelp extends JDialog implements ActionListener, PropertyChangeLis
 
 	public void loadCurrentContext()
 	{
-		String currentContext = JAPController.getInstance().getHelpContext().getContext();
-		html.load(helpPath + currentContext + "_" + langShort + ".html");
-		if (!this.isVisible())
+		try
 		{
-			this.show();
+			String currentContext = JAPController.getInstance().getHelpContext().getContext();
+			m_htmlpaneTheHelpPane.load(helpPath + currentContext + "_" + langShort + ".html");
+			if (!isVisible())
+			{
+				show();
+			}
+		}
+		catch (Exception e)
+		{
 		}
 	}
-
 
 	/**
 	 * Listens to events fired by the HtmlPane in order to update the history buttons
@@ -257,7 +274,7 @@ final class JAPHelp extends JDialog implements ActionListener, PropertyChangeLis
 	 */
 	public void propertyChange(PropertyChangeEvent a_e)
 	{
-		if (a_e.getSource() == html)
+		if (a_e.getSource() == m_htmlpaneTheHelpPane)
 		{
 			checkNavigationButtons();
 		}

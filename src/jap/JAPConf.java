@@ -68,6 +68,7 @@ import anon.infoservice.ProxyInterface;
 import gui.JAPMultilineLabel;
 import logging.LogLevel;
 import logging.LogType;
+import javax.swing.SwingUtilities;
 
 final class JAPConf extends JDialog implements ActionListener
 {
@@ -146,9 +147,9 @@ final class JAPConf extends JDialog implements ActionListener
 
 	public JAPConf(JFrame frmParent, boolean loadPay)
 	{
-		super(frmParent);
+		super(frmParent, false);
 		m_bWithPayment = loadPay;
-		m_bIsSimpleView=(JAPModel.getDefaultView()==JAPConstants.VIEW_SIMPLIFIED);
+		m_bIsSimpleView = (JAPModel.getDefaultView() == JAPConstants.VIEW_SIMPLIFIED);
 		/* set the instance pointer */
 		ms_JapConfInstance = this;
 		m_Controller = JAPController.getInstance();
@@ -275,6 +276,7 @@ final class JAPConf extends JDialog implements ActionListener
 		pContainer.add(buttonPanel);
 
 		setContentPane(pContainer);
+		setModal(false);
 		updateValues();
 		// largest tab to front
 		if (JAPModel.isSmallDisplay())
@@ -307,9 +309,19 @@ final class JAPConf extends JDialog implements ActionListener
 	{
 		if (e.getSource() == m_bttnHelp)
 		{
-			JFrame main = (JFrame)this.getParent();
-			JAPHelp helpwindow = new JAPHelp(main, this);
-			helpwindow.loadCurrentContext();
+			SwingUtilities.invokeLater(new Runnable()
+			{
+				public void run()
+				{
+					try{
+					JAPHelp help = JAPHelp.getInstance();
+					help.loadCurrentContext();
+					}
+					catch(Exception e)
+					{
+					}
+				}
+			});
 		}
 	}
 

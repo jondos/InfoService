@@ -36,6 +36,7 @@ final class JAPHelpContext
 
 	public JAPHelpContext()
 	{
+		m_currentContext="index";
 	}
 
 	/**

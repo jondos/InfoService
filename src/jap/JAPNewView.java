@@ -82,6 +82,9 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import proxy.ProxyListener;
+import java.awt.event.WindowListener;
+import java.awt.event.ComponentListener;
+import java.awt.event.ComponentEvent;
 
 final public class JAPNewView extends AbstractJAPMainView implements IJAPMainView, ActionListener,
 	JAPObserver
@@ -101,7 +104,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private JLabel m_labelMeterDetailsRisk, m_labelOwnBytes, m_labelOwnChannels;
 	//private TitledBorder m_borderOwnTraffic, m_borderAnonMeter, m_borderDetails;
 	private ImageIcon[] meterIcons;
-	private JAPHelp helpWindow;
 	private JAPConf m_dlgConfig;
 	private Window m_ViewIconified;
 	private NumberFormat m_NumberFormat;
@@ -156,7 +158,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	m_bIsSimpleView=(JAPModel.getDefaultView()==JAPConstants.VIEW_SIMPLIFIED);
 	m_NumberFormat = NumberFormat.getInstance();
 		m_Controller = JAPController.getInstance();
-		helpWindow = null; //new JAPHelp(this);
 		m_dlgConfig = null; //new JAPConf(this);
 		m_bIsIconified = false;
 		m_lTrafficWWW = 0;
@@ -1509,14 +1510,8 @@ northPanel.add(m_flippingpanelOwnTraffic, c);
 
 	private void showHelpWindow()
 	{
-		if (helpWindow == null)
-		{
-			//Register help context
-			JAPController.getInstance().getHelpContext().setContext("index");
-			helpWindow = new JAPHelp(this);
-		}
-		helpWindow.loadCurrentContext();
-
+		JAPController.getInstance().getHelpContext().setContext("index");
+		JAPHelp.getInstance().loadCurrentContext();
 	}
 
 	private void showConfigDialog()
@@ -1531,6 +1526,24 @@ northPanel.add(m_flippingpanelOwnTraffic, c);
 			Cursor c = getCursor();
 			setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 			m_dlgConfig = new JAPConf(this, m_bWithPayment);
+			m_dlgConfig.addComponentListener(new ComponentListener(){
+				public void componentResized(ComponentEvent e)
+				{
+				}
+
+				public void componentMoved(ComponentEvent e)
+				{
+				}
+
+				public void componentShown(ComponentEvent e)
+				{
+				}
+
+				public void componentHidden(ComponentEvent e)
+				{
+					setEnabled(true);
+				}
+			});
 			setCursor(c);
 		}
 		if (card != null)
@@ -1538,6 +1551,7 @@ northPanel.add(m_flippingpanelOwnTraffic, c);
 			m_dlgConfig.selectCard(card);
 		}
 		m_dlgConfig.updateValues();
+		setEnabled(false);
 		m_dlgConfig.show();
 	}
 
