@@ -63,7 +63,7 @@ public class FirstOnionRouter implements Runnable {
 	 */
 	private void dispatchCells()
 	{
-		Cell cell = null;;
+		Cell cell = null;
 		byte[] b = new byte[512];
 		int readPos=0;
 		try

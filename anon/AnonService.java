@@ -41,7 +41,7 @@ public interface AnonService
 	/** Initializes this AnonService. Depending on the AnonService, this may establish a connection to
 	 *  an AnonServer, which is described through the
 	 *  anonService parameter. This method must be called before any Channels could be created.
-	 *  @param anonService AnonServer to use
+	 *  @param anonServer AnonServer to use
 	 *  @return E_SUCCESS, if the connection could be estblished
 	 *  @return E_ALREADY_CONNECTED, if this AnonService is already connected to a server
 	 *  @return E_INVALID_SERVICE, if anonService is not a valid server

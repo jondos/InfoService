@@ -32,8 +32,6 @@
  *  on a Macintosh to register the MRJ Handler.
  *
  */
-import java.util.Properties;
-import java.awt.Frame;
 import jap.JAPAWTMsgBox;
 import jap.JAPConstants;
 import jap.JAPController;
@@ -42,10 +40,12 @@ import jap.JAPMessages;
 import jap.JAPSplash;
 import jap.JAPView;
 import jap.JAPViewIconified;
+
+import java.awt.Frame;
+
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import java.net.*;
 
 /** This is the main class of the JAP project. It starts everything. It can be inherited by another
  *  class that wants to initialize platform dependend features, e.g. see

@@ -94,7 +94,7 @@ public class OnionRouter {
 	 */
 	public synchronized RelayCell encryptCell(RelayCell cell)
 	{
-		RelayCell c;;
+		RelayCell c;
 		if(this.m_nextOR != null)
 		{
 			c = this.m_nextOR.encryptCell(cell);

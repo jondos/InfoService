@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry including="*.java|*.properties|anon/|forward/|gui/|jap/|jarify/|logging/|pay/|payxml/|proxy/|update/" excluding="*/*.*~*~|*/CVS" kind="src" path=""/>
+	<classpathentry including="*.java|*/*.java|*/*/*.java|*/*/*/*.java|*/*/*/*/*.java" excluding="test/" kind="src" path=""/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="G:/jdk1.1.8/mac/MRJClasses.zip"/>
-	<classpathentry kind="lib" path="G:/jdk1.1.8/HTTPClient/http.jar"/>
-	<classpathentry kind="lib" path="G:/jdk1.1.8/xmlrpc-1.1/apache-xmlrpc-1.1.jar"/>
-	<classpathentry kind="lib" path="G:/jdk1.1.8/commons-net-1.2.1/ApacheFTPClient.jar"/>
-	<classpathentry kind="lib" path="G:/jdk1.1.8/jaxp1.0.1/xml.jar"/>
-	<classpathentry kind="lib" path="G:/jdk1.1.8/castle-light-124-jdk11/BouncyCastleLightForJAP.jar"/>
-	<classpathentry kind="output" path="eclips-classes"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/BouncyCastle"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/HTTP"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/XML-RPC"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/FTP"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/MRJ"/>
+	<classpathentry kind="output" path="eclipse-classes"/>
 </classpath>
