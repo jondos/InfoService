@@ -44,17 +44,11 @@ import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.TimeZone;
-
 import javax.xml.parsers.DocumentBuilderFactory;
-
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
-
 import anon.AnonChannel;
 import anon.ErrorCodes;
 import anon.NotConnectedToMixException;
@@ -69,6 +63,9 @@ import anon.infoservice.ImmutableProxyInterface;
 import anon.infoservice.MixCascade;
 import anon.util.Base64;
 import anon.util.XMLUtil;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 
 public final class MuxSocket implements Runnable
 {
@@ -131,13 +128,13 @@ public final class MuxSocket implements Runnable
 	private final static Calendar m_scalendarGMT = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
 	private ControlChannelDispatcher m_ControlChannelDispatcher;
 
-  /**
-   * Stores the lock on the certificate used by the mixcascade to sign all cascade related
-   * messages, like the MixCascade or MixCascadeStatus structures. The certificate will be
-   * stored within the signature verification certificate store until the lock is released
-   * (done when the connection to the mixcascade is closed).
-   */
-  private int m_mixCascadeCertificateLock;
+	/**
+	 * Stores the lock on the certificate used by the mixcascade to sign all cascade related
+	 * messages, like the MixCascade or MixCascadeStatus structures. The certificate will be
+	 * stored within the signature verification certificate store until the lock is released
+	 * (done when the connection to the mixcascade is closed).
+	 */
+	private int m_mixCascadeCertificateLock;
 
 	private final class ChannelListEntry
 	{
@@ -218,7 +215,7 @@ public final class MuxSocket implements Runnable
 	 *
 	 * @return The errorcode, see anon.ErrorCodes.
 	 */
-  public int initialize(ProxyConnection a_proxyConnection)
+	public int initialize(ProxyConnection a_proxyConnection)
 	{
 		int err = ErrorCodes.E_CONNECT;
 		m_ioSocket = a_proxyConnection;
@@ -256,10 +253,10 @@ public final class MuxSocket implements Runnable
 					len -= ret;
 					aktIndex += ret;
 				}
-        err = processXmlKeys(buff);
+				err = processXmlKeys(buff);
 				if (err != ErrorCodes.E_SUCCESS)
 				{
-          removeCascadeCertificateFromCertificateStore();
+					removeCascadeCertificateFromCertificateStore();
 					return err;
 				}
 			}
@@ -273,7 +270,7 @@ public final class MuxSocket implements Runnable
 					int tmp = m_inDataStream.readUnsignedShort();
 					byte[] buff = new byte[tmp];
 					m_inDataStream.readFully(buff);
-          System.out.println("Read data: " + new String(buff));
+					System.out.println("Read data: " + new String(buff));
 					BigInteger n = new BigInteger(1, buff);
 					tmp = m_inDataStream.readUnsignedShort();
 					buff = new byte[tmp];
@@ -287,7 +284,7 @@ public final class MuxSocket implements Runnable
 		}
 		catch (Exception e)
 		{
-      e.printStackTrace();
+			e.printStackTrace();
 			LogHolder.log(LogLevel.EXCEPTION, LogType.NET,
 						  "MuxSocket:Exception(2) during connection: " + e);
 			m_arASymCipher = null;
@@ -316,7 +313,7 @@ public final class MuxSocket implements Runnable
 			m_outStream = null;
 			m_ioSocket = null;
 			m_bIsConnected = false;
-      removeCascadeCertificateFromCertificateStore();
+			removeCascadeCertificateFromCertificateStore();
 			return err;
 		}
 		m_bIsConnected = true;
@@ -326,7 +323,7 @@ public final class MuxSocket implements Runnable
 	}
 
 	//2001-02-20(HF)
-  public int connectViaFirewall(MixCascade mixCascade, ImmutableProxyInterface a_proxyInterface)
+	public int connectViaFirewall(MixCascade mixCascade, ImmutableProxyInterface a_proxyInterface)
 	{
 		synchronized (this)
 		{
@@ -335,33 +332,39 @@ public final class MuxSocket implements Runnable
 				return ErrorCodes.E_ALREADY_CONNECTED;
 			}
 			//try all possible listeners
-      Socket connectedSocket = null;
+			Socket connectedSocket = null;
 			for (int l = 0; l < mixCascade.getNumberOfListenerInterfaces(); l++)
 			{
 				try
 				{
-          /* HTTPConnection.Connect() supports proxy and non-proxy Socket connections -> tunneling
-           * a proxy, if necessary, is no problem
-           */
-          connectedSocket = HTTPConnectionFactory.getInstance().createHTTPConnection(mixCascade.getListenerInterface(l), a_proxyInterface).Connect();
-          if (connectedSocket != null) {
+					/* HTTPConnection.Connect() supports proxy and non-proxy Socket connections -> tunneling
+					 * a proxy, if necessary, is no problem
+					 */
+					connectedSocket = HTTPConnectionFactory.getInstance().createHTTPConnection(mixCascade.
+						getListenerInterface(l), a_proxyInterface).Connect();
+					if (connectedSocket != null)
+					{
 						break;
 					}
 				}
-        catch (Throwable t) {
-          LogHolder.log(LogLevel.ERR, LogType.NET, t);
-          connectedSocket = null;
-        }
+				catch (Throwable t)
+				{
+					LogHolder.log(LogLevel.ERR, LogType.NET, t);
+					connectedSocket = null;
 				}
-      try {
-        if (connectedSocket != null) {
-          return initialize(new ProxyConnection(connectedSocket));
-        }
-      }
-      catch (Exception e) {
-        LogHolder.log(LogLevel.ERR, LogType.NET, e);        
 			}
-      return ErrorCodes.E_CONNECT;
+			try
+			{
+				if (connectedSocket != null)
+				{
+					return initialize(new ProxyConnection(connectedSocket));
+				}
+			}
+			catch (Exception e)
+			{
+				LogHolder.log(LogLevel.ERR, LogType.NET, e);
+			}
+			return ErrorCodes.E_CONNECT;
 		}
 	}
 
@@ -392,7 +395,7 @@ public final class MuxSocket implements Runnable
 	 * @return E_MIX_PROTOCOL_NOT_SUPPORTED if the Mix protocol is not supported by this JAP
 	 * @return E_UNKNOWN otherwise
 	 */
-  private int processXmlKeys(byte[] buff)
+	private int processXmlKeys(byte[] buff)
 	{
 		try
 		{
@@ -403,30 +406,40 @@ public final class MuxSocket implements Runnable
 			{
 				return ErrorCodes.E_UNKNOWN;
 			}
-      Node nodeSig = XMLUtil.getFirstChildByName(root, "Signature");
+			Node nodeSig = XMLUtil.getFirstChildByName(root, "Signature");
 			//Check Signature of whole XML struct --> First Mix Check
 			//---
-      if (SignatureVerifier.getInstance().verifyXml(root, SignatureVerifier.DOCUMENT_CLASS_MIX) == false) {
-					return ErrorCodes.E_SIGNATURE_CHECK_FIRSTMIX_FAILED;
+			if (SignatureVerifier.getInstance().verifyXml(root, SignatureVerifier.DOCUMENT_CLASS_MIX) == false)
+			{
+				return ErrorCodes.E_SIGNATURE_CHECK_FIRSTMIX_FAILED;
+			}
+			//---
+			/* get the appended certificate of the signature and store it in the certificate store
+			 * (needed for verification of the MixCascadeStatus messages)
+			 */
+			try
+			{
+				XMLSignature documentSignature = XMLSignature.getUnverified(root);
+				Enumeration appendedCertificates = documentSignature.getCertificates();
+				/* add the first certificate (there should be only one) to the certificate store */
+				if (appendedCertificates.hasMoreElements())
+				{
+					m_mixCascadeCertificateLock = SignatureVerifier.getInstance().
+						getVerificationCertificateStore().addCertificateWithVerification( (JAPCertificate) (
+						appendedCertificates.nextElement()), JAPCertificate.CERTIFICATE_TYPE_MIX, false);
+					LogHolder.log(LogLevel.DEBUG, LogType.MISC, "MuxSocket: processXmlKeys: Added appended certificate from the MixCascade structure to the certificate store.");
 				}
-      //---
-      /* get the appended certificate of the signature and store it in the certificate store
-       * (needed for verification of the MixCascadeStatus messages)
-       */
-      try {
-        XMLSignature documentSignature = XMLSignature.getUnverified(root); 
-        Enumeration appendedCertificates = documentSignature.getCertificates();
-        /* add the first certificate (there should be only one) to the certificate store */
-        if (appendedCertificates.hasMoreElements()) {
-          m_mixCascadeCertificateLock = SignatureVerifier.getInstance().getVerificationCertificateStore().addCertificateWithVerification((JAPCertificate)(appendedCertificates.nextElement()), JAPCertificate.CERTIFICATE_TYPE_MIX, false);
-          LogHolder.log(LogLevel.DEBUG, LogType.MISC, "MuxSocket: processXmlKeys: Added appended certificate from the MixCascade structure to the certificate store.");
-        }
-        else {
-          LogHolder.log(LogLevel.DEBUG, LogType.MISC, "MuxSocket: processXmlKeys: No appended certificates in the MixCascade structure.");
-        }
-      }
-      catch (Exception e) {
-        LogHolder.log(LogLevel.ERR, LogType.MISC, "MuxSocket: processXmlKeys: Error while looking for appended certificates in the MixCascade structure: " + e.toString());
+				else
+				{
+					LogHolder.log(LogLevel.DEBUG, LogType.MISC,
+						"MuxSocket: processXmlKeys: No appended certificates in the MixCascade structure.");
+				}
+			}
+			catch (Exception e)
+			{
+				LogHolder.log(LogLevel.ERR, LogType.MISC,
+					"MuxSocket: processXmlKeys: Error while looking for appended certificates in the MixCascade structure: " +
+							  e.toString());
 			}
 			Element elemMixProtocolVersion = (Element) root.getElementsByTagName("MixProtocolVersion").item(0);
 			if (elemMixProtocolVersion == null)
@@ -478,7 +491,7 @@ public final class MuxSocket implements Runnable
 			m_iChainLen = Integer.parseInt(elemMixes.getAttribute("count"));
 			m_arASymCipher = new ASymCipher[m_iChainLen];
 			int i = 0;
-      Element child = (Element)(elemMixes.getFirstChild());
+			Element child = (Element) (elemMixes.getFirstChild());
 			boolean bIsFirst = true;
 			while (child != null)
 			{
@@ -486,14 +499,16 @@ public final class MuxSocket implements Runnable
 				{
 					//Check signatures for Mix 2 .. n (we skip the first Mix because
 					//this key is already signed to the Signature below the whole MixCascade struct
-          //---
-          if (!bIsFirst)
+					//---
+					if (!bIsFirst)
+					{
+						if (SignatureVerifier.getInstance().verifyXml(child,
+							SignatureVerifier.DOCUMENT_CLASS_MIX) == false)
 						{
-            if (SignatureVerifier.getInstance().verifyXml(child, SignatureVerifier.DOCUMENT_CLASS_MIX) == false) {
 							return ErrorCodes.E_SIGNATURE_CHECK_OTHERMIX_FAILED;
 						}
 					}
-          //---
+					//---
 
 					bIsFirst = false;
 					m_arASymCipher[i] = new ASymCipher();
@@ -502,7 +517,7 @@ public final class MuxSocket implements Runnable
 						return ErrorCodes.E_UNKNOWN;
 					}
 				}
-        child = (Element)(child.getNextSibling());
+				child = (Element) (child.getNextSibling());
 			}
 			//Sending symmetric keys for Mux encryption...
 			if (m_cipherFirstMix == null)
@@ -761,7 +776,7 @@ public final class MuxSocket implements Runnable
 			}
 			threadRunLoop = null;
 			m_bisCrypted = false;
-      removeCascadeCertificateFromCertificateStore();
+			removeCascadeCertificateFromCertificateStore();
 			LogHolder.log(LogLevel.DEBUG, LogType.NET, "JAPMuxSocket:close() MuxSocket closed!");
 			return 0;
 		}
@@ -1128,20 +1143,23 @@ public final class MuxSocket implements Runnable
 		m_transferredBytes = 0;
 		return tmp;
 	}
-  
-  /**
-   * Releases the lock on the certificate used by the mixcascade to sign all cascade related
-   * messages, like the MixCascade or MixCascadeStatus structures. That certificate is stored
-   * within the signature verification certificate store. A call of this method will release our
-   * lock on that certificate, so the certificate can be removed from the store, if there is no
-   * other lock. If we don't have a lock on any certificate, nothing happens.
-   */ 
-  private void removeCascadeCertificateFromCertificateStore() {
-    if (m_mixCascadeCertificateLock != -1) {
-      LogHolder.log(LogLevel.DEBUG, LogType.MISC, "JAPMuxSocket: removeCascadeCertificateFromCertificateStore: Removing MixCascade certificate lock from certificate store.");
-      SignatureVerifier.getInstance().getVerificationCertificateStore().removeCertificateLock(m_mixCascadeCertificateLock);
-      m_mixCascadeCertificateLock = -1;
-    }
-  }
+
+	/**
+	 * Releases the lock on the certificate used by the mixcascade to sign all cascade related
+	 * messages, like the MixCascade or MixCascadeStatus structures. That certificate is stored
+	 * within the signature verification certificate store. A call of this method will release our
+	 * lock on that certificate, so the certificate can be removed from the store, if there is no
+	 * other lock. If we don't have a lock on any certificate, nothing happens.
+	 */
+	private void removeCascadeCertificateFromCertificateStore()
+	{
+		if (m_mixCascadeCertificateLock != -1)
+		{
+			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "JAPMuxSocket: removeCascadeCertificateFromCertificateStore: Removing MixCascade certificate lock from certificate store.");
+			SignatureVerifier.getInstance().getVerificationCertificateStore().removeCertificateLock(
+				m_mixCascadeCertificateLock);
+			m_mixCascadeCertificateLock = -1;
+		}
+	}
 
 }
