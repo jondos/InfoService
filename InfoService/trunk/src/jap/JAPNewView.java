@@ -78,7 +78,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	JAPObserver
 {
 
-	private JAPController controller;
 	//private JLabel meterLabel;
 	private JLabel m_labelCascadeName;
 	private JPanel m_panelMain;
@@ -121,9 +120,9 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private JPanel m_panelAnonService;
 	private int m_iPreferredWidth;
 
-	public JAPNewView(String s)
+	public JAPNewView(String s,JAPController a_controller)
 	{
-		super(s);
+		super(s,a_controller);
 		m_NumberFormat = NumberFormat.getInstance();
 		controller = JAPController.getController();
 		helpWindow = null; //new JAPHelp(this);
@@ -748,7 +747,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		//Change size and location if the user requested to restore the old position/size
 		if (JAPModel.getSaveMainWindowPosition())
 		{
-			JAPModel m = JAPModel.getModel();
+			JAPModel m = JAPModel.getInstance();
 			Dimension ds = Toolkit.getDefaultToolkit().getScreenSize();
 			if (m.m_OldMainWindowLocation != null && m.m_OldMainWindowLocation.x >= 0 &&
 				m.m_OldMainWindowLocation.y > 0 /*&&m.m_OldMainWindowLocation.x<ds.width&&

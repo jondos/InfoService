@@ -208,7 +208,7 @@ class JAP extends Frame
 		}
 
 		// Create the controller object
-		m_controller = JAPController.getController();
+		m_controller = JAPController.getInstance();
 		String configFileName = null;
 		/* check, whether there is the -config parameter, which means the we use userdefined config
 		 * file
@@ -253,7 +253,7 @@ class JAP extends Frame
 			{
 				if (m_arstrCmdnLnArgs[i].equalsIgnoreCase("-newgui"))
 				{
-					view = new JAPNewView(JAPConstants.TITLE);
+					view = new JAPNewView(JAPConstants.TITLE,m_controller);
 					break;
 				}
 			}
