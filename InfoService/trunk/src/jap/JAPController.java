@@ -1062,7 +1062,7 @@ private final class SetAnonModeAsync implements Runnable
 		return m_proxyAnon!=null;
 	}
 	public synchronized void setAnonMode(boolean anonModeSelected) {
-		Thread t=new Thread(new SetAnonModeAsync(anonModeSelected));
+		Thread t=new Thread(new SetAnonModeAsync(anonModeSelected),"JAP - SetAnonModeAsync");
 		t.start();
 	}
 

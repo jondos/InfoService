@@ -5,14 +5,14 @@ Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
 
 	- Redistributions of source code must retain the above copyright notice,
-	  this list of conditions and the following disclaimer.
+		this list of conditions and the following disclaimer.
 
 	- Redistributions in binary form must reproduce the above copyright notice,
-	  this list of conditions and the following disclaimer in the documentation and/or
+		this list of conditions and the following disclaimer in the documentation and/or
 		other materials provided with the distribution.
 
 	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
-	  may be used to endorse or promote products derived from this software without specific
+		may be used to endorse or promote products derived from this software without specific
 		prior written permission.
 
 
@@ -34,35 +34,35 @@ import logging.LogType;
 final class DummyTraffic implements Runnable
 	{
 		private MuxSocket m_MuxSocket=null;
-	  private volatile boolean m_bRun=false;
+		private volatile boolean m_bRun=false;
 		private Thread m_threadRunLoop=null;
 		private Log m_Log;
-    private int m_Intervall;
+		private int m_Intervall;
 //    private final static long DUMMY_TRAFFIC_INTERVAL=10000; //How long maximum to wait between packets ?
 
 		public DummyTraffic(MuxSocket muxSocket,int intervall,Log log)
 			{
-        m_Log=log;
+				m_Log=log;
 				m_MuxSocket=muxSocket;
 				m_bRun=false;
 				m_threadRunLoop=null;
-        m_Intervall=intervall;
+				m_Intervall=intervall;
 			}
 
-    public void setLogging(Log log)
-      {
-        m_Log=log;
-      }
+		public void setLogging(Log log)
+			{
+				m_Log=log;
+			}
 
-    public void run()
+		public void run()
 			{
 				while(m_bRun)
 					{
 						if(System.currentTimeMillis()-m_MuxSocket.getTimeLastPacketSend()>m_Intervall)
 							{
-							  m_Log.log(LogLevel.DEBUG,LogType.NET,"Sending Dummy!");
+								m_Log.log(LogLevel.DEBUG,LogType.NET,"Sending Dummy!");
 								m_MuxSocket.sendDummy(); //send a dummy
-						  }
+							}
 						try
 							{
 								m_threadRunLoop.sleep(m_Intervall);
@@ -75,19 +75,19 @@ final class DummyTraffic implements Runnable
 
 		public synchronized void start()
 			{
-        if(!m_bRun)
-          {
-				    m_threadRunLoop=new Thread(this);
-				    m_bRun=true;
-				    m_threadRunLoop.start();
-          }
+				if(!m_bRun)
+					{
+						m_threadRunLoop=new Thread(this,"JAP - Dummy Traffic");
+						m_bRun=true;
+						m_threadRunLoop.start();
+					}
 			}
 
 		public synchronized void stop()
 			{
 				m_bRun=false;
 				m_threadRunLoop.interrupt();
-			  try
+				try
 					{
 						m_threadRunLoop.join();
 					}

@@ -407,7 +407,7 @@ public final class MuxSocket implements Runnable
 					{
 						if(!m_bIsConnected)
 							return ErrorCodes.E_NOT_CONNECTED;
-							threadRunLoop=new Thread(this);
+							threadRunLoop=new Thread(this,"JAP - MuxSocket");
 							threadRunLoop.setPriority(Thread.MAX_PRIORITY);
 							threadRunLoop.start();
 					}

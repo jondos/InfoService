@@ -104,7 +104,7 @@ final public class AnonProxy implements Runnable/*,AnonServiceEventListener*/
 			int ret=m_Anon.connect(m_AnonServer);
 			if(ret!=ErrorCodes.E_SUCCESS)
 				return ret;
-			threadRun=new Thread(this);
+			threadRun=new Thread(this,"JAP - AnonProxy");
 			threadRun.start();
 			return E_SUCCESS;
 		}
@@ -248,8 +248,8 @@ final class Request  implements Runnable
 					m_InChannel=c.getInputStream();
 					m_OutChannel=c.getOutputStream();
 					m_Channel=c;
-					m_threadRequest=new Thread(this);
-					m_threadResponse=new Thread(new Response());
+					m_threadRequest=new Thread(this,"JAP - AnonProxy Request");
+					m_threadResponse=new Thread(new Response(),"JAP - AnonProxy Response");
 					m_threadResponse.start();
 					m_threadRequest.start();
 					 }
