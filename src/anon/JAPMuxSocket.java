@@ -166,7 +166,7 @@ final class JAPMuxSocket implements Runnable
 									//   CONNECT www.inf.tu-dresden.de:443 HTTP/1.0
 									//   Connection: Keep-Alive
 									//   Proxy-Connection: Keep-Alive
-									o.write("CONNECT "+host+":"+port+" HTTP/1.1"+CRLF);
+									o.write("CONNECT "+host+":"+port+" HTTP/1.0"+CRLF);
 									if(fwUserID!=null) // proxy authentication required...
 											{
 												String str=Codecs.base64Encode(fwUserID+":"+fwPasswd);
@@ -174,7 +174,7 @@ final class JAPMuxSocket implements Runnable
 											}
 									o.write("Connection: Keep-Alive"+CRLF);
 									o.write("Proxy-Connection: Keep-Alive"+CRLF);
-									o.write(""+CRLF);
+									o.write(CRLF);
 									o.flush();
 									//o.close();
 
