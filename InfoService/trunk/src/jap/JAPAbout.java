@@ -5,14 +5,14 @@ Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
 
 	- Redistributions of source code must retain the above copyright notice,
-	  this list of conditions and the following disclaimer.
+		this list of conditions and the following disclaimer.
 
 	- Redistributions in binary form must reproduce the above copyright notice,
-	  this list of conditions and the following disclaimer in the documentation and/or
+		this list of conditions and the following disclaimer in the documentation and/or
 		other materials provided with the distribution.
 
 	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
-	  may be used to endorse or promote products derived from this software without specific
+		may be used to endorse or promote products derived from this software without specific
 		prior written permission.
 
 
@@ -83,7 +83,14 @@ final class JAPAbout extends JDialog implements Runnable
 						setBorder(null);
 						setVerticalScrollBarPolicy(this.VERTICAL_SCROLLBAR_NEVER);
 						setHorizontalScrollBarPolicy(this.HORIZONTAL_SCROLLBAR_NEVER);
-						InputStream in=getClass().getResourceAsStream(JAPMessages.getString("htmlfileAbout"));
+						InputStream in=null;
+						try
+							{
+								in=Class.forName("JAP").getResourceAsStream(JAPMessages.getString("htmlfileAbout"));
+							}
+						catch(Exception e)
+							{
+							}
 						byte[] buff=new byte[1500];
 						int len=0;
 						int aktIndex=0;
@@ -174,15 +181,15 @@ final class JAPAbout extends JDialog implements Runnable
 				parent=p;
 				oldCursor=parent.getCursor();
 				parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-        try
-          {
-            SwingUtilities.invokeLater(this);
-          }
-        catch(Exception e)
-          {
-            e.printStackTrace();
-          }
-        //Thread theThread=new Thread(this);
+				try
+					{
+						SwingUtilities.invokeLater(this);
+					}
+				catch(Exception e)
+					{
+						e.printStackTrace();
+					}
+				//Thread theThread=new Thread(this);
 				//theThread.setPriority(Thread.MAX_PRIORITY);
 				//theThread.start(); //we have to do all the initalisation in a seperate thread in order
 				//to not block the Event-Loop Thread !!!
@@ -200,7 +207,7 @@ final class JAPAbout extends JDialog implements Runnable
 				JLabel verstxt=new JLabel("Version:");
 				JLabel version=new JLabel(JAPConstants.aktVersion);
 				Font f=new Font("Sans",Font.PLAIN,9);
-        verstxt.setFont(f);
+				verstxt.setFont(f);
 				verstxt.setForeground(Color.black);
 				verstxt.setSize(verstxt.getPreferredSize());  //we set the Size of the Version-Label so that the Text 'Version' would exactly fit
 				version.setFont(f);
@@ -210,9 +217,9 @@ final class JAPAbout extends JDialog implements Runnable
 				bttnOk.setMnemonic('O');
 
 				bttnOk.addActionListener(new ActionListener() {
-						   public void actionPerformed(ActionEvent e) {
-				   OKPressed();
-				   }});
+							 public void actionPerformed(ActionEvent e) {
+					 OKPressed();
+					 }});
 				labelSplash.setLayout(null); //the BackgroundImage-Label don't nedd a LayoutManager - we use absoult positioning instead
 				labelSplash.setSize(ABOUT_DX,ABOUT_DY); //the set the Label size to the Size of the Image
 
@@ -261,8 +268,8 @@ final class JAPAbout extends JDialog implements Runnable
 				setLocationRelativeTo(parent); //now showing centerd to JAP-Main
 				toFront();
 				validateTree();
-        //repaint();
-        sp.startIt(); //starting the scrolling...
+				//repaint();
+				sp.startIt(); //starting the scrolling...
 				parent.setCursor(oldCursor);
 			}
 

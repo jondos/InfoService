@@ -24,6 +24,7 @@ generalFormatting[0].continuationIndent=2
 generalFormatting[0].tabSize=2
 generalFormatting[0].useTabChar=1
 idl[0].ProcessIDL=false
+javaFormatting[0].EventMatch=0
 runtime[0].ConfigurationCount=3
 runtime.0[0].RunnableType=com.borland.jbuilder.runtime.ApplicationRunner
 runtime.0[0].application.class=JAP
