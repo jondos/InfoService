@@ -194,10 +194,13 @@ public class Circuit
 			Enumeration enumer = m_streams.elements();
 			while (enumer.hasMoreElements())
 			{
-				TorChannel c = (TorChannel) enumer.nextElement();
-				if (c != null)
+				try
 				{
+					TorChannel c = (TorChannel) enumer.nextElement();
 					c.close();
+				}
+				catch (Exception e1)
+				{
 				}
 			}
 		}
@@ -228,10 +231,13 @@ public class Circuit
 				Enumeration enumer = m_streams.elements();
 				while (enumer.hasMoreElements())
 				{
-					TorChannel c = (TorChannel) enumer.nextElement();
-					if (c != null)
+					try
 					{
+						TorChannel c = (TorChannel) enumer.nextElement();
 						c.closedByPeer();
+					}
+					catch (Exception e1)
+					{
 					}
 				}
 				m_streams.clear();
@@ -322,35 +328,35 @@ public class Circuit
 							}
 						}
 					}
-					else if (this.m_streams.containsKey(streamID)) //dispatch cell to the circuit where it belongs to
+					else if (m_streams.containsKey(streamID)) //dispatch cell to the circuit where it belongs to
 					{
-
-						TorChannel channel = (TorChannel) m_streams.get(streamID);
-						if (channel != null)
+						if (c.getRelayCommand() == RelayCell.RELAY_RESOLVED)
 						{
-							channel.dispatchCell(c);
+							byte[] tmp = c.getPayload();
+							m_resolvedData = helper.copybytes(tmp, 11,
+								( (tmp[9] & 0xFF) << 8) + (tmp[10] & 0xFF));
+							synchronized (m_oNotifySync)
+							{
+								m_oNotifySync.notify();
+							}
 						}
 						else
 						{
-							LogHolder.log(LogLevel.DEBUG, LogType.TOR, "Upps...");
+							TorChannel channel = (TorChannel) m_streams.get(streamID);
+							if (channel != null)
+							{
+								channel.dispatchCell(c);
+							}
+							else
+							{
+								LogHolder.log(LogLevel.DEBUG, LogType.TOR, "Upps...");
 
+							}
 						}
 					}
 					else
 					{
-						switch (c.getRelayCommand())
-						{
-							case RelayCell.RELAY_RESOLVED:
-							{
-								byte[] tmp = c.getPayload();
-								m_resolvedData = helper.copybytes(tmp, 11,
-									( (tmp[9] & 0xFF) << 8) + (tmp[10] & 0xFF));
-								synchronized (m_oNotifySync)
-								{
-									m_oNotifySync.notify();
-								}
-							}
-						}
+						LogHolder.log(LogLevel.DEBUG, LogType.TOR, "Upps...Unknown stream");
 					}
 				}
 			}
@@ -470,11 +476,10 @@ public class Circuit
 				}
 				while (m_streams.containsKey(resolveStreamID));
 				//temp add this stream id...
-				m_streams.put(resolveStreamID, null);
+				m_streams.put(resolveStreamID, resolveStreamID);
 			}
-			byte[] buff = helper.conc(name.getBytes(), new byte[1]);
 			RelayCell cell = new RelayCell(getCircID(), RelayCell.RELAY_RESOLVE, resolveStreamID.intValue(),
-										   buff);
+										  name.getBytes());
 			synchronized (m_oNotifySync)
 			{
 				try
