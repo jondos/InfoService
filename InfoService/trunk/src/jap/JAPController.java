@@ -38,6 +38,7 @@ import java.util.Observable;
 import java.util.Observer;
 import java.util.Vector;
 import javax.xml.parsers.DocumentBuilderFactory;
+
 import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
@@ -48,6 +49,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
@@ -57,18 +59,22 @@ import org.w3c.dom.Text;
 import anon.ErrorCodes;
 import anon.crypto.JAPCertificate;
 import anon.crypto.JAPCertificateStore;
-import anon.infoservice.HTTPConnectionFactory;
+import anon.crypto.XMLEncryption;
 import anon.infoservice.Database;
+import anon.infoservice.HTTPConnectionFactory;
 import anon.infoservice.InfoServiceDBEntry;
 import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.JAPVersionInfo;
+import anon.infoservice.ListenerInterface;
 import anon.infoservice.MixCascade;
 import anon.infoservice.ProxyInterface;
-import anon.infoservice.ListenerInterface;
+import anon.pay.BI;
+import anon.pay.PayAccountsFile;
+import anon.util.IPasswordReader;
 import anon.util.ResourceLoader;
 import anon.util.XMLUtil;
-import anon.util.IPasswordReader;
 import forward.server.ForwardServerManager;
+import gui.JAPHtmlMultiLineLabel;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -76,10 +82,6 @@ import proxy.AnonProxy;
 import proxy.DirectProxy;
 import proxy.ProxyListener;
 import update.JAPUpdateWizard;
-import anon.pay.PayAccountsFile;
-import anon.crypto.XMLEncryption;
-import anon.pay.BI;
-import gui.JAPHtmlMultiLineLabel;
 
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPController implements ProxyListener, Observer
@@ -134,9 +136,8 @@ public final class JAPController implements ProxyListener, Observer
 
 	private static Object oAnonSyncObject = new Object(); //for synchronisation of setMode(true/false)
 	private static Object oAnonSetThreadIDSyncObject = new Object(); //for synchronisation of setMode(true/false)
-	private static int ms_AnonModeAsyncLastStarted=-1;
-	private static int ms_AnonModeAsyncLastFinished=-1;
-
+	private static int ms_AnonModeAsyncLastStarted = -1;
+	private static int ms_AnonModeAsyncLastFinished = -1;
 
 	private JAPController()
 	{
@@ -465,7 +466,7 @@ public final class JAPController implements ProxyListener, Observer
 				//
 				String strVersion = XMLUtil.parseValue(n.getNamedItem(JAPConstants.CONFIG_VERSION), null);
 				int port = XMLUtil.parseAttribute(root, JAPConstants.CONFIG_PORT_NUMBER,
-					JAPModel.getHttpListenerPortNumber());
+												  JAPModel.getHttpListenerPortNumber());
 				boolean bListenerIsLocal = XMLUtil.parseValue(n.getNamedItem(JAPConstants.
 					CONFIG_LISTENER_IS_LOCAL), true);
 				setHTTPListener(port, bListenerIsLocal, false);
@@ -497,10 +498,10 @@ public final class JAPController implements ProxyListener, Observer
 				}
 				/* infoservice configuration options */
 				boolean b = XMLUtil.parseValue(n.getNamedItem(JAPConstants.CONFIG_INFOSERVICE_DISABLED),
-					JAPModel.isInfoServiceDisabled());
+											   JAPModel.isInfoServiceDisabled());
 				setInfoServiceDisabled(b);
 				b = XMLUtil.parseValue(n.getNamedItem(JAPConstants.CONFIG_INFOSERVICE_CHANGE),
-											 InfoServiceHolder.getInstance().isChangeInfoServices());
+									   InfoServiceHolder.getInstance().isChangeInfoServices());
 				InfoServiceHolder.getInstance().setChangeInfoServices(b);
 				int i = XMLUtil.parseValue(n.getNamedItem(JAPConstants.CONFIG_INFOSERVICE_TIMEOUT), -1);
 				try
@@ -556,8 +557,8 @@ public final class JAPController implements ProxyListener, Observer
 						JAPCertificateStore jcs = new JAPCertificateStore();
 						JAPCertificate cert = JAPCertificate.getInstance(
 							ResourceLoader.loadResource(
-							JAPConstants.CERTSPATH +
-							JAPConstants.TRUSTEDROOTCERT));
+								JAPConstants.CERTSPATH +
+								JAPConstants.TRUSTEDROOTCERT));
 						cert.setEnabled(true);
 						jcs.addCertificate(cert);
 						setCertificateStore(jcs);
@@ -582,7 +583,7 @@ public final class JAPController implements ProxyListener, Observer
 						XMLUtil.parseValue(n.getNamedItem(JAPConstants.CONFIG_PROXY_HOST_NAME), null),
 						XMLUtil.parseAttribute(root, JAPConstants.CONFIG_PROXY_PORT_NUMBER, -1),
 						XMLUtil.parseValue(n.getNamedItem(JAPConstants.CONFIG_PROXY_TYPE),
-												ProxyInterface.PROTOCOL_STR_TYPE_HTTP),
+										   ProxyInterface.PROTOCOL_STR_TYPE_HTTP),
 						XMLUtil.parseValue(n.getNamedItem(JAPConstants.CONFIG_PROXY_AUTH_USER_ID), null),
 						getPasswordReader(),
 						XMLUtil.parseValue(n.getNamedItem(JAPConstants.CONFIG_PROXY_AUTHORIZATION), false),
@@ -672,7 +673,7 @@ public final class JAPController implements ProxyListener, Observer
 								LogHolder.log(LogLevel.WARNING, LogType.GUI,
 											  "JAPModel:Exception while setting look-and-feel");
 							}
-							break;
+							break ;
 						}
 					}
 				}
@@ -835,9 +836,9 @@ public final class JAPController implements ProxyListener, Observer
 					elem = (Element) XMLUtil.getFirstChildByName(elemTor, JAPConstants.CONFIG_ROUTE_LEN);
 					int min, max;
 					min = XMLUtil.parseAttribute(elem, JAPConstants.CONFIG_MIN,
-						JAPModel.getTorMinRouteLen());
+												 JAPModel.getTorMinRouteLen());
 					max = XMLUtil.parseAttribute(elem, JAPConstants.CONFIG_MAX,
-						JAPModel.getTorMaxRouteLen());
+												 JAPModel.getTorMaxRouteLen());
 					setTorRouteLen(min, max);
 				}
 				catch (Exception ex)
@@ -914,7 +915,7 @@ public final class JAPController implements ProxyListener, Observer
 								strMessage = "<html>Wrong password. Please try again</html>";
 								continue;
 							}
-							break;
+							break ;
 						}
 
 						PayAccountsFile.init(theBI, elemPlainTxt);
@@ -1487,54 +1488,54 @@ public final class JAPController implements ProxyListener, Observer
 	//---------------------------------------------------------------------
 	private final class SetAnonModeAsync implements Runnable
 	{
-			private boolean ServerModeSelected = false;
-			private int id = 0;
+		private boolean ServerModeSelected = false;
+		private int id = 0;
 
-			public SetAnonModeAsync(boolean b)
+		public SetAnonModeAsync(boolean b)
+		{
+			synchronized (oAnonSetThreadIDSyncObject)
 			{
-				synchronized (oAnonSetThreadIDSyncObject)
-				{
-					ServerModeSelected = b;
-					ms_AnonModeAsyncLastStarted++;
-					id = ms_AnonModeAsyncLastStarted;
+				ServerModeSelected = b;
+				ms_AnonModeAsyncLastStarted++;
+				id = ms_AnonModeAsyncLastStarted;
 
-					new Thread(this,this.getClass().getName()).start();
-				}
-
+				new Thread(this, this.getClass().getName()).start();
 			}
 
-			/** @todo Still very bugy, because mode change is async done but not
-			 * all properties (like currentMixCascade etc.)are synchronized!!
-			 *
-			 */
-
-			public void run()
-			{
-				synchronized (oAnonSyncObject)
-				{
-					while (id != ms_AnonModeAsyncLastFinished + 1)
-					{
-						try
-						{
-							oAnonSyncObject.wait();
-						}
-						catch (InterruptedException ieo)
-						{
-							LogHolder.log(LogLevel.EXCEPTION, LogType.THREAD,
-										  "Waiting for becoming current SetServerModeAsnyc Thread intterrupted!");
-						}
-					}
-					setServerMode(ServerModeSelected);
-					ms_AnonModeAsyncLastFinished++;
-					oAnonSyncObject.notifyAll();
-				}
-			}
+		}
 
 		/** @todo Still very bugy, because mode change is async done but not
 		 * all properties (like currentMixCascade etc.)are synchronized!!
 		 *
 		 */
 
+		public void run()
+		{
+			synchronized (oAnonSyncObject)
+			{
+				while (id != ms_AnonModeAsyncLastFinished + 1)
+				{
+					try
+					{
+						oAnonSyncObject.wait();
+					}
+					catch (InterruptedException ieo)
+					{
+						LogHolder.log(LogLevel.EXCEPTION, LogType.THREAD,
+									  "Waiting for becoming current SetServerModeAsnyc Thread intterrupted!");
+					}
+				}
+				setServerMode(ServerModeSelected);
+				ms_AnonModeAsyncLastFinished++;
+				oAnonSyncObject.notifyAll();
+			}
+		}
+
+		/** @todo Still very bugy, because mode change is async done but not
+		 * all properties (like currentMixCascade etc.)are synchronized!!
+		 *
+		 * @param anonModeSelected true, if anonymity should be started; false otherwise
+		 */
 		private void setServerMode(boolean anonModeSelected)
 		{
 			//JAPWaitSplash splash = null;
@@ -1666,10 +1667,10 @@ public final class JAPController implements ProxyListener, Observer
 					{
 						JOptionPane.showMessageDialog
 							(
-							getView(),
-							JAPMessages.getString("errorMixProtocolNotSupported"),
-							JAPMessages.getString("errorMixProtocolNotSupportedTitle"),
-							JOptionPane.ERROR_MESSAGE
+								getView(),
+								JAPMessages.getString("errorMixProtocolNotSupported"),
+								JAPMessages.getString("errorMixProtocolNotSupportedTitle"),
+								JOptionPane.ERROR_MESSAGE
 							);
 					}
 //otte
@@ -1677,10 +1678,10 @@ public final class JAPController implements ProxyListener, Observer
 					{
 						JOptionPane.showMessageDialog
 							(
-							getView(),
-							JAPMessages.getString("errorMixFirstMixSigCheckFailed"),
-							JAPMessages.getString("errorMixFirstMixSigCheckFailedTitle"),
-							JOptionPane.ERROR_MESSAGE
+								getView(),
+								JAPMessages.getString("errorMixFirstMixSigCheckFailed"),
+								JAPMessages.getString("errorMixFirstMixSigCheckFailedTitle"),
+								JOptionPane.ERROR_MESSAGE
 							);
 					}
 
@@ -1688,10 +1689,10 @@ public final class JAPController implements ProxyListener, Observer
 					{
 						JOptionPane.showMessageDialog
 							(
-							getView(),
-							JAPMessages.getString("errorMixOtherMixSigCheckFailed"),
-							JAPMessages.getString("errorMixOtherMixSigCheckFailedTitle"),
-							JOptionPane.ERROR_MESSAGE
+								getView(),
+								JAPMessages.getString("errorMixOtherMixSigCheckFailed"),
+								JAPMessages.getString("errorMixOtherMixSigCheckFailedTitle"),
+								JOptionPane.ERROR_MESSAGE
 							);
 					}
 					// ootte
@@ -1701,11 +1702,11 @@ public final class JAPController implements ProxyListener, Observer
 						{
 							JOptionPane.showMessageDialog
 								(
-								getView(),
-								JAPMessages.getString("errorConnectingFirstMix") + "\n" +
-								JAPMessages.getString("errorCode") + ": " + Integer.toString(ret),
-								JAPMessages.getString("errorConnectingFirstMixTitle"),
-								JOptionPane.ERROR_MESSAGE
+									getView(),
+									JAPMessages.getString("errorConnectingFirstMix") + "\n" +
+									JAPMessages.getString("errorCode") + ": " + Integer.toString(ret),
+									JAPMessages.getString("errorConnectingFirstMixTitle"),
+									JOptionPane.ERROR_MESSAGE
 								);
 						}
 					}
@@ -1916,7 +1917,7 @@ public final class JAPController implements ProxyListener, Observer
 								  "Could not set listener accept timeout: Exception: " +
 								  e1.getMessage());
 				}
-				break;
+				break ;
 			}
 			catch (Exception e)
 			{
@@ -2321,7 +2322,7 @@ public final class JAPController implements ProxyListener, Observer
 	{
 		public SetForwardingServerModeAsync(boolean b)
 		{
-			super( b);
+			super(b);
 		}
 
 		void setServerMode(boolean b)
@@ -2394,10 +2395,10 @@ public final class JAPController implements ProxyListener, Observer
 							JOptionPane.ERROR_MESSAGE, true);
 						JOptionPane.showMessageDialog
 							(
-							getView(),
-							JAPMessages.getString("settingsRoutingStartServerError"),
-							JAPMessages.getString("settingsRoutingStartServerErrorTitle"),
-							JOptionPane.ERROR_MESSAGE
+								getView(),
+								JAPMessages.getString("settingsRoutingStartServerError"),
+								JAPMessages.getString("settingsRoutingStartServerErrorTitle"),
+								JOptionPane.ERROR_MESSAGE
 							);
 					}
 				}
@@ -2427,9 +2428,9 @@ public final class JAPController implements ProxyListener, Observer
 	 * @param a_activate True, if ther server shall be activated or false, if it shall be disabled.
 	 *
 	 */
-	public synchronized void enableForwardingServer(boolean anonModeSelected)
+	public synchronized void enableForwardingServer(boolean a_activate)
 	{
-		new SetForwardingServerModeAsync(anonModeSelected);
+		new SetForwardingServerModeAsync(a_activate);
 	}
 
 }
