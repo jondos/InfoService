@@ -10,7 +10,7 @@ package update;
 
 import gui.*;
 import JAPInfoService;
-import JAPModel;
+import JAPController;
 
 import HTTPClient.*;
 import java.io.IOException;
@@ -37,11 +37,11 @@ public class JAPUpdateConnection
   private File jnlpReleaseFile, jnlpDevelopmentFile;
   private byte[] data;
   private Document doc;
-  private JAPModel japModel;
+  private JAPController japController;
 
-  public JAPUpdateConnection(JAPModel japModel)
+  public JAPUpdateConnection(JAPController japController)
   {
-     this.japModel = japModel;
+     this.japController = japController;
   }
 
   public void connect(String typeLate)
@@ -57,7 +57,7 @@ public class JAPUpdateConnection
     {
 	///HTTPConnection con = new HTTPConnection("infoservice.inf.tu-dresden.de");
 	HTTPResponse   rsp;// = con.Get("/jap"+typeLate+".jnlp");
-        rsp = japModel.getInfoService().getConInfoService().Get("/jap"+typeLate+".jnlp");
+        rsp = japController.getInfoService().getConInfoService().Get("/jap"+typeLate+".jnlp");
 	if (rsp.getStatusCode() >= 300)
 	{
 	    System.err.println("Received Error: "+rsp.getReasonLine());

@@ -50,7 +50,7 @@ final class JAPDirectProxy implements Runnable
     private ServerSocket socketListener;
     private Thread threadRunLoop;
 		private ThreadGroup threadgroupAll;
-		private JAPModel model;
+		private JAPController controller;
 		private boolean warnUser = true;
 
     public JAPDirectProxy (ServerSocket s)
@@ -58,7 +58,7 @@ final class JAPDirectProxy implements Runnable
 				socketListener=s;
 			  warnUser = true;
 				isRunningProxy = false;
-				model=JAPModel.getModel();
+				controller=JAPController.getController();
 			}
 
 		public boolean startService()
@@ -113,7 +113,7 @@ final class JAPDirectProxy implements Runnable
 									}
 								else
 									{
-										if (model.getUseFirewall())
+										if (controller.getUseFirewall())
 											{
 												JAPDirectConViaProxy doIt = new JAPDirectConViaProxy (socket);
 												Thread thread = new Thread (threadgroupAll,doIt);
@@ -169,14 +169,14 @@ final class JAPDirectProxy implements Runnable
  *  send requests although anonymity mode is off.
  */
 	private final class JAPDirectConnection implements Runnable {
-		private JAPModel model;
+		private JAPController controller;
 		private Socket s;
 		private SimpleDateFormat dateFormatHTTP;
 
 		public JAPDirectConnection(Socket s)
 			{
 				this.s = s;
-				this.model = JAPModel.getModel();
+				this.controller = JAPController.getController();
 				dateFormatHTTP=new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz",Locale.US);
 				dateFormatHTTP.setTimeZone(TimeZone.getTimeZone("GMT"));
 			}
@@ -213,13 +213,13 @@ final class JAPDirectProxy implements Runnable
  */
 	private final class JAPDirectConViaProxy implements Runnable
 		{
-			private JAPModel model;
+			private JAPController controller;
 			private Socket clientSocket;
 
 			public JAPDirectConViaProxy(Socket s)
 				{
 					this.clientSocket = s;
-					this.model = JAPModel.getModel();
+					this.controller = JAPController.getController();
 				}
 
 			public void run()
@@ -229,7 +229,7 @@ final class JAPDirectProxy implements Runnable
 							// open stream from client
 							InputStream inputStream = clientSocket.getInputStream();
 							// create Socket to Server
-							Socket serverSocket = new Socket(model.getFirewallHost(),model.getFirewallPort());
+							Socket serverSocket = new Socket(JAPModel.getFirewallHost(),JAPModel.getFirewallPort());
 							// Response from server is transfered to client in a sepatate thread
 							JAPDirectProxyResponse pr = new JAPDirectProxyResponse(serverSocket.getInputStream(),
 																																		 clientSocket.getOutputStream());
@@ -241,13 +241,13 @@ final class JAPDirectProxy implements Runnable
 
 							// Transfer data client --> server
 							//first check if the us authorization for the proxy
-							if(model.getUseFirewallAuthorization())
+							if(controller.getUseFirewallAuthorization())
 								{//we need to insert an authorization line...
 									//read first line and after this insert the authorization
 									String str=JAPUtil.readLine(inputStream);
 									str+="\r\n";
 									outputStream.write(str.getBytes());
-									str=JAPUtil.getProxyAuthorization(model.getFirewallAuthUserID(),model.getFirewallAuthPasswd());
+									str=JAPUtil.getProxyAuthorization(JAPModel.getFirewallAuthUserID(),controller.getFirewallAuthPasswd());
 									outputStream.write(str.getBytes());
 								}
 							byte[] buff=new byte[1000];

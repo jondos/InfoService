@@ -1,7 +1,7 @@
 package update;
 
 import gui.wizard.*;
-import JAPModel;
+import JAPController;
 import JAPConstants;
 import javax.swing.*;
 import javax.swing.JPanel;
@@ -63,7 +63,7 @@ public class JAPUpdate
  private JTextArea textDescription;
  private JLabel labelVersion1, labelDate1, labelType1, labelVersion2, labelDate2, labelType2;
  private String versionInst, typeInst, dateInst, selectedVersion;
- private JAPModel japModel;
+ private JAPController japController;
  private JComboBox boxTypeLate;
  private String[] typeString = {"Released", "Development"};
  private int totalSteps = 3;
@@ -73,7 +73,7 @@ public class JAPUpdate
 
   public JAPUpdate()
   {
-  japModel = JAPModel.getModel();
+  japController = JAPController.getController();
   parentFrame = new JFrame("JAP-Update");
  // parentFrame.setIconImage();
  parentFrame.addWindowListener(new WindowListener(){
@@ -170,7 +170,7 @@ public class JAPUpdate
   parentFrame.setResizable(false);
   parentFrame.setVisible(true);
 
-  juc = new JAPUpdateConnection(japModel);
+  juc = new JAPUpdateConnection(japController);
   juc.connect("Released");
   setTextFieldDescription();
   parentFrame.pack();
@@ -186,7 +186,7 @@ public class JAPUpdate
 //user's clicked Upgrade
   private void makeWizardPages()
   {
-  wizardBase = new JAPWizardBase(totalSteps, japModel);
+  wizardBase = new JAPWizardBase(totalSteps, japController);
   parentFrame.setVisible(false);
 
   }
@@ -239,7 +239,7 @@ public class JAPUpdate
   String versionLate;
   if(juc == null)
     {
-      juc = new JAPUpdateConnection(japModel);
+      juc = new JAPUpdateConnection(japController);
     }
 
   if(typeLate.equals((Object)"Development"))
@@ -260,7 +260,7 @@ public class JAPUpdate
   }
 
   String dateLate = "";
-  //japModel.getInfoService().getNewVersionNumber();
+  //japController.getInfoService().getNewVersionNumber();
   if((!versionLate.equals(versionInst) || !typeLate.equals(typeInst) || !dateLate.equals(dateInst)))
   {
   setUpgradeEnabled();

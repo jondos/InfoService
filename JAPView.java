@@ -61,7 +61,7 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 */
 	}
 
-	private JAPModel 			model;
+	private JAPController 			controller;
 	private JLabel				meterLabel;
 	private JLabel	 			m_labelCascadeName;
 	private JLabel				statusTextField1;
@@ -93,7 +93,7 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 		{
 			super(s);
 			m_Title=s;
-			model = JAPModel.getModel();
+			controller = JAPController.getController();
 			helpWindow =  null;//new JAPHelp(this);
 			configDialog = null;//new JAPConf(this);
 			m_bIsIconified=false;
@@ -347,7 +347,7 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 		p11.add(Box.createRigidArea(new Dimension(10,0)) );
 		p11.add(new JLabel(JAPMessages.getString("confPort")) );
 		p11.add(Box.createRigidArea(new Dimension(5,0)) );
-		m_labelProxyPort = new JLabel(String.valueOf(model.getHTTPListenerPortNumber()));
+		m_labelProxyPort = new JLabel(String.valueOf(controller.getHTTPListenerPortNumber()));
 //		m_labelProxyPort.setForeground(Color.black);
 		p11.add(m_labelProxyPort );
 		p11.add(Box.createRigidArea(new Dimension(5,0)) );
@@ -496,7 +496,7 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 	 /**Anon Level is >=0 amd <=5. if -1 no measure is available*/
     private ImageIcon getMeterImage(int iAnonLevel)
 			{
-				if (model.getAnonMode())
+				if (controller.getAnonMode())
 					{
 						if(iAnonLevel>=0&&iAnonLevel<6)
 						  return meterIcons[iAnonLevel+2];
@@ -533,13 +533,13 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 				else if (event.getSource() == ano1B)
 					showConfigDialog(JAPConf.ANON_TAB);
 				else if (event.getSource() == infoB)
-					model.aboutJAP();
+					controller.aboutJAP();
 				else if (event.getSource() == helpB)
 					showHelpWindow();
 				else if (event.getSource() == anonCheckBox)
-					model.setAnonMode(anonCheckBox.isSelected());
+					controller.setAnonMode(anonCheckBox.isSelected());
 				else if (event.getSource() == ano1CheckBox)
-					model.setAnonMode(ano1CheckBox.isSelected());
+					controller.setAnonMode(ano1CheckBox.isSelected());
 				else
 					JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"Event ?????: "+event.getSource());
 			}
@@ -570,45 +570,45 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 	}
 
 	private void exitProgram() {
-		model.goodBye(); // call the final exit procedure of JAP
+		controller.goodBye(); // call the final exit procedure of JAP
 	}
 
   private void updateValues() {
-		AnonServerDBEntry e = model.getAnonServer();
+		AnonServerDBEntry e = controller.getAnonServer();
 		// Config panel
 		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPView:Start updateValues");
-		m_labelProxyPort.setText(String.valueOf(model.getHTTPListenerPortNumber()));
-		if(model.getUseFirewall())
+		m_labelProxyPort.setText(String.valueOf(controller.getHTTPListenerPortNumber()));
+		if(controller.getUseFirewall())
 			{
 			  proxyMustUseLabel.setText(JAPMessages.getString("firewallMustUse"));
 			  m_labelProxyHost.setVisible(true);
-				int firewallPort=model.getFirewallPort();
+				int firewallPort=JAPModel.getFirewallPort();
 				if(firewallPort==-1)
 					m_labelProxyHost.setText(JAPMessages.getString("firewallNotConfigured"));
 				else
-					m_labelProxyHost.setText(JAPMessages.getString("confProxyHost")+" "+model.getFirewallHost()+":"+String.valueOf(firewallPort));
+					m_labelProxyHost.setText(JAPMessages.getString("confProxyHost")+" "+JAPModel.getFirewallHost()+":"+String.valueOf(firewallPort));
 			}
 		else
 			{
 			  proxyMustUseLabel.setText(JAPMessages.getString("firewallMustNotUse"));
 			  m_labelProxyHost.setVisible(false);
 			}
-		infoServiceTextField.setText(model.getInfoServiceHost()+":"+String.valueOf(model.getInfoServicePort()));
+		infoServiceTextField.setText(JAPModel.getInfoServiceHost()+":"+String.valueOf(JAPModel.getInfoServicePort()));
 		anonTextField.setText(e.getHost()+":"+String.valueOf(e.getPort())+((e.getSSLPort()==-1)?"":":"+e.getSSLPort()));
 		anonNameTextField.setText(e.getName());
 		anonNameTextField.setToolTipText(e.getName());
-		statusTextField1.setText(model.status1);
-		statusTextField2.setText(model.status2);
-		anonCheckBox.setSelected(model.getAnonMode());
-		if(model.getAnonMode()) {
+		statusTextField1.setText(controller.status1);
+		statusTextField2.setText(controller.status2);
+		anonCheckBox.setSelected(controller.getAnonMode());
+		if(controller.getAnonMode()) {
 			anonCheckBox.setForeground(Color.black);
 		} else {
 			anonCheckBox.setForeground(Color.red);
 		}
 
 		// Meter panel
-		ano1CheckBox.setSelected(model.getAnonMode());
-		if(model.getAnonMode()) {
+		ano1CheckBox.setSelected(controller.getAnonMode());
+		if(controller.getAnonMode()) {
 			ano1CheckBox.setForeground(Color.black);
 		} else {
 			ano1CheckBox.setForeground(Color.red);
@@ -616,7 +616,7 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 		m_labelCascadeName.setText(e.getName());
 		m_labelCascadeName.setToolTipText(e.getName());
 		meterLabel.setIcon(getMeterImage(e.getAnonLevel()));
-		if (model.getAnonMode()) {
+		if (controller.getAnonMode()) {
 				if (e.getNrOfActiveUsers() > -1)
 					{
 						// Nr of active users
@@ -665,7 +665,7 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 			userProgressBar.setValue(userProgressBar.getMaximum());
 			userProgressBar.setString(JAPMessages.getString("meterNA"));
 			protectionProgressBar.setValue(protectionProgressBar.getMaximum());
-			if (model.getAnonMode())
+			if (controller.getAnonMode())
 				protectionProgressBar.setString(JAPMessages.getString("meterNA"));
 			else
 				protectionProgressBar.setString(JAPMessages.getString("meterRiskVeryHigh"));
@@ -680,7 +680,7 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 		}
 		public void channelsChanged(int c) {
 			// Nr of Channels
-			//int c=model.getNrOfChannels();
+			//int c=controller.getNrOfChannels();
 			if (c > ownTrafficChannelsProgressBar.getMaximum())
 				ownTrafficChannelsProgressBar.setMaximum(c);
 			ownTrafficChannelsProgressBar.setValue(c);

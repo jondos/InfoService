@@ -1,28 +1,28 @@
 /*
-Copyright (c) 2000, The JAP-Team 
+Copyright (c) 2000, The JAP-Team
 All rights reserved.
-Redistribution and use in source and binary forms, with or without modification, 
+Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
 
-	- Redistributions of source code must retain the above copyright notice, 
+	- Redistributions of source code must retain the above copyright notice,
 	  this list of conditions and the following disclaimer.
 
-	- Redistributions in binary form must reproduce the above copyright notice, 
-	  this list of conditions and the following disclaimer in the documentation and/or 
+	- Redistributions in binary form must reproduce the above copyright notice,
+	  this list of conditions and the following disclaimer in the documentation and/or
 		other materials provided with the distribution.
 
-	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors 
-	  may be used to endorse or promote products derived from this software without specific 
-		prior written permission. 
+	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
+	  may be used to endorse or promote products derived from this software without specific
+		prior written permission.
 
-	
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS 
-OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY 
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS
+OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
 AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS
 BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, 
-OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER 
-IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY 
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
 import java.awt.*;
@@ -38,38 +38,38 @@ import javax.swing.event.*;
 /* classes modified from Swing Example "Metalworks" */
 
 final class JAPHelp extends JDialog implements ActionListener {
-    private JAPModel model;
+    private JAPController controller;
     private String helpPath = " ";
     private String helpLang = " ";
     private JComboBox language;
     HtmlPane html;
 
-    public JAPHelp(JFrame f) 
+    public JAPHelp(JFrame f)
 			{
 				super(f, JAPMessages.getString("helpWindow"), false);
-				model = JAPModel.getModel();
+				controller = JAPController.getController();
 				init();
 			}
-		
+
 		final private void init()
 			{
 				//JPanel container = new JPanel();
 				//container.setLayout( new BorderLayout() );
 				//getContentPane().setLayout(new BorderLayout());
-	
+
 				html = new HtmlPane(JAPMessages.getString("helpPath1"));
 
 				JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-	
+
 				language = new JComboBox();
 				buttonPanel.add( language );
 				buttonPanel.add(new JLabel("   "));
-	
+
 				JButton close = new JButton(JAPMessages.getString("closeButton"));
 				buttonPanel.add( close );
 				buttonPanel.add(new JLabel("   "));
 
-				
+
 				getContentPane().add(html, BorderLayout.CENTER);
 				getContentPane().add(buttonPanel, BorderLayout.SOUTH);
 				//getContentPane().add(container);
@@ -77,9 +77,9 @@ final class JAPHelp extends JDialog implements ActionListener {
 				close.addActionListener(this);
 				language.addActionListener(this);
 				for (int i = 1; i < JAPConstants.MAXHELPLANGUAGES; i++) {
-					try 
-						{ 
-							helpPath = JAPMessages.getString("helpPath"+String.valueOf(i)); 
+					try
+						{
+							helpPath = JAPMessages.getString("helpPath"+String.valueOf(i));
 							helpLang = JAPMessages.getString("lang"+String.valueOf(i));
 							// This checks if the entry exists in the properties file
 							// if yes, the item will be added
@@ -92,7 +92,7 @@ final class JAPHelp extends JDialog implements ActionListener {
 				JAPUtil.centerFrame(this);
 			}
 
-    
+
     public Dimension getPreferredSize()
 			{
 				Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
@@ -100,8 +100,8 @@ final class JAPHelp extends JDialog implements ActionListener {
 				d.height = Math.min(d.height - 80, 350/*300*/);
 				return (d);
 			}
-    
-    public void actionPerformed(ActionEvent e) 
+
+    public void actionPerformed(ActionEvent e)
 			{
 				// for Language Combobox AND Close Burtton only
 				if(e.getSource()==language)
@@ -119,13 +119,13 @@ final class JAPHelp extends JDialog implements ActionListener {
 }
 
 
-final class HtmlPane extends JScrollPane implements HyperlinkListener 
+final class HtmlPane extends JScrollPane implements HyperlinkListener
 	{
     private JEditorPane html;
 		private URL url;
 		private Cursor cursor;
 
-    public HtmlPane(String fn) 
+    public HtmlPane(String fn)
 			{
 				html=new JEditorPane();
 				html.setEditable(false);
@@ -138,11 +138,11 @@ final class HtmlPane extends JScrollPane implements HyperlinkListener
 				getViewport().add(html);
 				cursor=html.getCursor(); // ??? (hf)
 			}
-    
+
 		private URL getUrlFor(String fn)
 			{
 				// used to find help files within a .jar file
-				try  
+				try
 					{
 						URL url = getClass().getResource(fn);
 						if(url!=null)
@@ -167,7 +167,7 @@ final class HtmlPane extends JScrollPane implements HyperlinkListener
 					}
 				return null;
 			}
-		
+
     public void load(String fn)
 			{
 				URL url=getUrlFor(fn);
@@ -189,7 +189,7 @@ final class HtmlPane extends JScrollPane implements HyperlinkListener
 					html.setCursor(cursor);
 			}
 
-    protected void linkActivated(URL u) 
+    protected void linkActivated(URL u)
 			{
 				Cursor waitCursor = Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR);
 				html.setCursor(waitCursor);
@@ -209,7 +209,7 @@ final class HtmlPane extends JScrollPane implements HyperlinkListener
 							{
 								// restore the original cursor
 								html.setCursor(cursor);
-								// PENDING(prinz) remove this hack when 
+								// PENDING(prinz) remove this hack when
 								// automatic validation is activated.
 								html.getParent().repaint();
 							}
@@ -224,7 +224,7 @@ final class HtmlPane extends JScrollPane implements HyperlinkListener
 									{
 										html.setDocument(doc);
 										getToolkit().beep();
-									} 
+									}
 								finally
 									{
 										// schedule the cursor to revert after

@@ -62,7 +62,7 @@ final class JAPConf extends JDialog
 		final static public int ANON_TAB = 3;
 		final static public int MISC_TAB = 4;
 
-		private JAPModel      m_Model;
+		private JAPController      m_Controller;
 
 		private JAPJIntField	m_tfListenerPortNumber;
 		//private JAPJIntField	m_tfListenerPortNumberSocks;
@@ -115,7 +115,7 @@ final class JAPConf extends JDialog
 			{
 				super(frmParent);
 				m_frmParent=frmParent;
-				m_Model = JAPModel.getModel();
+				m_Controller = JAPController.getController();
 				this.setModal(true);
 				this.setTitle(JAPMessages.getString("settingsDialog"));
 				m_JapConf=this;
@@ -161,7 +161,7 @@ final class JAPConf extends JDialog
 
 				pContainer.add(m_Tabs, BorderLayout.CENTER);
 				pContainer.add(buttonPanel, BorderLayout.SOUTH);
-//				container.add(new JLabel(new ImageIcon(m_Model.JAPICONFN)), BorderLayout.WEST);
+//				container.add(new JLabel(new ImageIcon(m_Controller.JAPICONFN)), BorderLayout.WEST);
 				getContentPane().add(pContainer);
 				updateValues();
 				// largest tab to front
@@ -261,8 +261,8 @@ final class JAPConf extends JDialog
 				m_cbProxy = new JCheckBox(JAPMessages.getString("settingsProxyCheckBox"));
 				m_tfProxyHost = new JTextField();
 				m_tfProxyPortNumber = new JAPJIntField();
-				m_tfProxyHost.setEnabled(m_Model.getUseFirewall());
-				m_tfProxyPortNumber.setEnabled(m_Model.getUseFirewall());
+				m_tfProxyHost.setEnabled(m_Controller.getUseFirewall());
+				m_tfProxyPortNumber.setEnabled(m_Controller.getUseFirewall());
 				m_cbProxy.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
 						boolean b=m_cbProxy.isSelected();
@@ -433,16 +433,16 @@ final class JAPConf extends JDialog
 						// fetch available mix cascades from the Internet
 						Cursor c=getCursor();
 						setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-						m_Model.fetchAnonServers();
-						if (m_Model.anonServerDatabase.size() == 0) {
+						m_Controller.fetchAnonServers();
+						if (m_Controller.anonServerDatabase.size() == 0) {
 							setCursor(c);
-							JOptionPane.showMessageDialog(m_Model.getView(),
+							JOptionPane.showMessageDialog(m_Controller.getView(),
 											JAPMessages.getString("settingsNoServersAvailable"),
 											JAPMessages.getString("settingsNoServersAvailableTitle"),
 											JOptionPane.INFORMATION_MESSAGE);
 						} else {
 							// show a window containing all available cascades
-							//JAPCascadeMonitorView v=new JAPCascadeMonitorView(m_Model.getView());
+							//JAPCascadeMonitorView v=new JAPCascadeMonitorView(m_Controller.getView());
 							// ------ !!!!! die folgenden zwei zeilen auskommentieren, wenn JAPCascadeMonitorView
 							// ------ !!!!! ordentlich geht!!!!
 							updateValues();
@@ -456,7 +456,7 @@ final class JAPConf extends JDialog
 				m_comboMixCascade = new JComboBox();
 				// add elements to combobox
 				m_comboMixCascade.addItem(JAPMessages.getString("settingsAnonSelect"));
-				Enumeration enum = m_Model.anonServerDatabase.elements();
+				Enumeration enum = m_Controller.anonServerDatabase.elements();
 				while (enum.hasMoreElements())
 					{
 						m_comboMixCascade.addItem( ((AnonServerDBEntry)enum.nextElement()).getName() );
@@ -468,7 +468,7 @@ final class JAPConf extends JDialog
 						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPConf:Item " + m_comboMixCascade.getSelectedIndex() + " selected");
 						if (m_comboMixCascade.getSelectedIndex() > 0)
 						{
-							AnonServerDBEntry entry=m_Model.anonServerDatabase.getEntry(m_comboMixCascade.getSelectedIndex()-1);
+							AnonServerDBEntry entry=m_Controller.anonServerDatabase.getEntry(m_comboMixCascade.getSelectedIndex()-1);
 							if(entry!=null)
 								{
 									m_strMixName = entry.getName();
@@ -640,9 +640,9 @@ final class JAPConf extends JDialog
 						public void actionPerformed(ActionEvent e)
 							{
 								AnonServerDBEntry[] a=new AnonServerDBEntry[1];
-//								a[0]=new AnonServerDBEntry(m_Model.anonHostName,m_Model.anonHostName,m_Model.anonPortNumber+1);
-								a[0]=new AnonServerDBEntry(m_Model.getAnonServer().getHost(),m_Model.getAnonServer().getHost(),m_Model.getAnonServer().getPort()+1);
-								JAPRoundTripTimeView v=new JAPRoundTripTimeView(m_Model.getView(),a);
+//								a[0]=new AnonServerDBEntry(m_Controller.anonHostName,m_Controller.anonHostName,m_Controller.anonPortNumber+1);
+								a[0]=new AnonServerDBEntry(m_Controller.getAnonServer().getHost(),m_Controller.getAnonServer().getHost(),m_Controller.getAnonServer().getPort()+1);
+								JAPRoundTripTimeView v=new JAPRoundTripTimeView(m_Controller.getView(),a);
 //								v.show();
 							}
 					});
@@ -652,8 +652,8 @@ final class JAPConf extends JDialog
 					public void actionPerformed(ActionEvent e) {
 						Cursor c1=getCursor();
 						setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-						m_Model.fetchAnonServers();
-						JAPCascadeMonitorView v=new JAPCascadeMonitorView(m_Model.getView());
+						m_Controller.fetchAnonServers();
+						JAPCascadeMonitorView v=new JAPCascadeMonitorView(m_Controller.getView());
 						updateValues();
 						OKPressed();
 						setCursor(c1);
@@ -707,7 +707,7 @@ final class JAPConf extends JDialog
 				m_cbShowDebugConsole.addItemListener(new ItemListener()
 					{public void itemStateChanged(ItemEvent e)
 					 {
-						 JAPDebug.showConsole(e.getStateChange()==e.SELECTED,m_Model.getView());
+						 JAPDebug.showConsole(e.getStateChange()==e.SELECTED,m_Controller.getView());
 					}});
 				p31.add(m_cbShowDebugConsole);
 
@@ -947,26 +947,26 @@ final class JAPConf extends JDialog
 				JAPDebug.setDebugLevel(m_sliderDebugLevel.getValue());
 				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"m_comboLanguage: "+Integer.toString(m_comboLanguage.getSelectedIndex()));
 				if(m_comboLanguage.getSelectedIndex()==0)
-					m_Model.setLocale(Locale.GERMAN);
+					m_Controller.setLocale(Locale.GERMAN);
 				else
-					m_Model.setLocale(Locale.ENGLISH);
-				m_Model.setEnableDummyTraffic(m_cbDummyTraffic.isSelected());
+					m_Controller.setLocale(Locale.ENGLISH);
+				m_Controller.setEnableDummyTraffic(m_cbDummyTraffic.isSelected());
 				// Listener settings
-				m_Model.setHTTPListenerConfig(Integer.parseInt(m_tfListenerPortNumber.getText().trim()),m_cbListenerIsLocal.isSelected());
-//				m_Model.setUseSocksPort(m_cbListenerSocks.isSelected());
-//				m_Model.setSocksPortNumber(Integer.parseInt(m_tfListenerPortNumberSocks.getText().trim()));
+				m_Controller.setHTTPListenerConfig(Integer.parseInt(m_tfListenerPortNumber.getText().trim()),m_cbListenerIsLocal.isSelected());
+//				m_Controller.setUseSocksPort(m_cbListenerSocks.isSelected());
+//				m_Controller.setSocksPortNumber(Integer.parseInt(m_tfListenerPortNumberSocks.getText().trim()));
 				// Firewall settings
 				int port=-1;
 				try{port=Integer.parseInt(m_tfProxyPortNumber.getText().trim());}catch(Exception e){};
-				m_Model.setProxy(m_tfProxyHost.getText().trim(),port);
-				m_Model.setUseProxy(m_cbProxy.isSelected());
-				m_Model.setFirewallAuthUserID(m_tfProxyAuthenticationUserID.getText().trim());
-				m_Model.setUseFirewallAuthorization(m_cbProxyAuthentication.isSelected());
+				m_Controller.setProxy(m_tfProxyHost.getText().trim(),port);
+				m_Controller.setUseProxy(m_cbProxy.isSelected());
+				m_Controller.setFirewallAuthUserID(m_tfProxyAuthenticationUserID.getText().trim());
+				m_Controller.setUseFirewallAuthorization(m_cbProxyAuthentication.isSelected());
 				// Infoservice settings
-				m_Model.setInfoService(m_tfInfoHost.getText().trim(),Integer.parseInt(m_tfInfoPortNumber.getText().trim()));
+				m_Controller.setInfoService(m_tfInfoHost.getText().trim(),Integer.parseInt(m_tfInfoPortNumber.getText().trim()));
 				// Anonservice settings
-				m_Model.autoConnect = m_cbAutoConnect.isSelected();
-				m_Model.setMinimizeOnStartup(m_cbStartupMinimized.isSelected());
+				m_Controller.autoConnect = m_cbAutoConnect.isSelected();
+				m_Controller.setMinimizeOnStartup(m_cbStartupMinimized.isSelected());
 				int anonSSLPortNumber = -1;
 				if (!m_tfMixPortNumberSSL.getText().equals(""))
 					anonSSLPortNumber = Integer.parseInt(m_tfMixPortNumberSSL.getText().trim());
@@ -979,13 +979,13 @@ final class JAPConf extends JDialog
 															Integer.parseInt(m_tfMixPortNumber.getText().trim()),
 															anonSSLPortNumber);
 				// -- if (the same server) (re)set the name from "manual" to the correct name
-				if (m_Model.getAnonServer().equals(e))
+				if (m_Controller.getAnonServer().equals(e))
 					e.setName(m_strOldMixName);
-				m_Model.setAnonServer(e);
+				m_Controller.setAnonServer(e);
 				// force setting the correct name of the selected server
-				m_Model.getAnonServer().setName(e.getName());
+				m_Controller.getAnonServer().setName(e.getName());
 				// force notifying the observers set the right server name
-				m_Model.notifyJAPObservers(); // this should be the last line of OKPressed() !!!
+				m_Controller.notifyJAPObservers(); // this should be the last line of OKPressed() !!!
 				// ... manual settings stuff finished
 			}
 
@@ -1007,7 +1007,7 @@ final class JAPConf extends JDialog
 		public void updateValues()
 			{
 				// misc tab
-				m_cbDummyTraffic.setSelected(m_Model.getEnableDummyTraffic());
+				m_cbDummyTraffic.setSelected(m_Controller.getEnableDummyTraffic());
 				m_cbShowDebugConsole.setSelected(JAPDebug.isShowConsole());
 				m_cbDebugGui.setSelected((((JAPDebug.getDebugType()&JAPDebug.GUI)!=0)?true:false));
 				m_cbDebugNet.setSelected((((JAPDebug.getDebugType()&JAPDebug.NET)!=0)?true:false));
@@ -1015,29 +1015,29 @@ final class JAPConf extends JDialog
 				m_cbDebugMisc.setSelected((((JAPDebug.getDebugType()&JAPDebug.MISC)!=0)?true:false));
 				m_sliderDebugLevel.setValue(JAPDebug.getDebugLevel());
 				m_bIgnoreComboLanguageEvents=true;
-				if(m_Model.getLocale().equals(Locale.ENGLISH))
+				if(m_Controller.getLocale().equals(Locale.ENGLISH))
 					m_comboLanguage.setSelectedIndex(1);
 				else
 					m_comboLanguage.setSelectedIndex(0);
 				m_bIgnoreComboLanguageEvents=false;
 				// listener tab
-				m_tfListenerPortNumber.setText(String.valueOf(m_Model.getHTTPListenerPortNumber()));
-				m_cbListenerIsLocal.setSelected(m_Model.getHTTPListenerIsLocal());
-				//m_tfListenerPortNumberSocks.setText(String.valueOf(m_Model.getSocksPortNumber()));
-				//m_cbListenerSocks.setSelected(m_Model.getUseSocksPort());
+				m_tfListenerPortNumber.setText(String.valueOf(m_Controller.getHTTPListenerPortNumber()));
+				m_cbListenerIsLocal.setSelected(m_Controller.getHTTPListenerIsLocal());
+				//m_tfListenerPortNumberSocks.setText(String.valueOf(m_Controller.getSocksPortNumber()));
+				//m_cbListenerSocks.setSelected(m_Controller.getUseSocksPort());
 				// firewall tab
-				m_cbProxy.setSelected(m_Model.getUseFirewall());
+				m_cbProxy.setSelected(m_Controller.getUseFirewall());
 				m_tfProxyHost.setEnabled(m_cbProxy.isSelected());
 				m_tfProxyPortNumber.setEnabled(m_cbProxy.isSelected());
-				m_tfProxyHost.setText(m_Model.getFirewallHost());
-				m_tfProxyPortNumber.setText(String.valueOf(m_Model.getFirewallPort()));
-				m_tfProxyAuthenticationUserID.setText(m_Model.getFirewallAuthUserID());
-				m_cbProxyAuthentication.setSelected(m_Model.getUseFirewallAuthorization());
+				m_tfProxyHost.setText(JAPModel.getFirewallHost());
+				m_tfProxyPortNumber.setText(String.valueOf(JAPModel.getFirewallPort()));
+				m_tfProxyAuthenticationUserID.setText(JAPModel.getFirewallAuthUserID());
+				m_cbProxyAuthentication.setSelected(m_Controller.getUseFirewallAuthorization());
 				// infoservice tab
-				m_tfInfoHost.setText(m_Model.getInfoServiceHost());
-				m_tfInfoPortNumber.setText(String.valueOf(m_Model.getInfoServicePort()));
+				m_tfInfoHost.setText(JAPModel.getInfoServiceHost());
+				m_tfInfoPortNumber.setText(String.valueOf(JAPModel.getInfoServicePort()));
 				// anon tab
-				AnonServerDBEntry e = m_Model.getAnonServer();
+				AnonServerDBEntry e = m_Controller.getAnonServer();
 				m_strMixName = e.getName();
 				m_strOldMixName = m_strMixName;
 				m_tfMixHost.setText(e.getHost());
@@ -1047,11 +1047,11 @@ final class JAPConf extends JDialog
 				else
 					m_tfMixPortNumberSSL.setText(String.valueOf(e.getSSLPort()));
 				m_comboMixCascade.setSelectedIndex(0);
-				m_cbAutoConnect.setSelected(m_Model.autoConnect);
-				m_cbStartupMinimized.setSelected(m_Model.getMinimizeOnStartup());
+				m_cbAutoConnect.setSelected(m_Controller.autoConnect);
+				m_cbStartupMinimized.setSelected(m_Controller.getMinimizeOnStartup());
 				m_comboMixCascade.removeAllItems();
 				m_comboMixCascade.addItem(JAPMessages.getString("settingsAnonSelect"));
-				Enumeration enum = m_Model.anonServerDatabase.elements();
+				Enumeration enum = m_Controller.anonServerDatabase.elements();
 				while (enum.hasMoreElements())
 					{
 						m_comboMixCascade.addItem( ((AnonServerDBEntry)enum.nextElement()).getName() );

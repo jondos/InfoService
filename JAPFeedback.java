@@ -35,7 +35,7 @@ import HTTPClient.HTTPResponse;
 
 final class JAPFeedback implements Runnable {
 
-	private JAPModel model;
+	private JAPController controller;
 	private volatile boolean runFlag;
 
 	private Thread m_threadRunLoop;
@@ -43,7 +43,7 @@ final class JAPFeedback implements Runnable {
 	public JAPFeedback()
 		{
 			JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPFeedback:initializing...");
-			model = JAPModel.getModel();
+			controller = JAPController.getController();
 			m_threadRunLoop=null;
 			runFlag=false;
 		}
@@ -53,10 +53,10 @@ final class JAPFeedback implements Runnable {
 			runFlag = true;
 			while(runFlag)
 				{
-					if (model.getAnonMode())
+					if (controller.getAnonMode())
 						{
-							model.getInfoService().getFeedback(model.getAnonServer());
-							model.notifyJAPObservers();
+							controller.getInfoService().getFeedback(controller.getAnonServer());
+							controller.notifyJAPObservers();
 						}
 					try
 						{

@@ -8,7 +8,7 @@ import java.awt.GridBagConstraints;
 import java.awt.*;
 import java.awt.event.*;
 
-import JAPModel;
+import JAPController;
 import JAPInfoService;
 /**
  * Überschrift:
@@ -26,14 +26,14 @@ public JProgressBar progressBar;
 private JTextArea taskOutput;
 private Timer timer;
 private final static int ONE_TENTH_SECOND = 100;
-private JAPModel japModel;
+private JAPController japController;
 private JAPInfoService infoService;
 private JButton test;
 //private ProgressMonitorInputStream pmis;
-  public JAPWelcomeWizardPage(JAPModel japModel)
+  public JAPWelcomeWizardPage(JAPController japController)
   {
-  this.japModel = japModel;
-  infoService = japModel.getInfoService();
+  this.japController = japController;
+  infoService = japController.getInfoService();
   this.createGridBagLayout();
   // this.setIcon(this.getIcon());
    this.setComponentPanel();

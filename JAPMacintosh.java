@@ -43,10 +43,10 @@ public class JAPMacintosh extends JAP {
 	class MRJI implements com.apple.mrj.MRJQuitHandler, com.apple.mrj.MRJAboutHandler
 	{
 		public void handleQuit() {
-			JAPModel.getModel().goodBye();
+			JAPController.getController().goodBye();
 		}
 		public void handleAbout() {
-			JAPModel.aboutJAP();
+			JAPController.aboutJAP();
 		}
 	}
 
