@@ -86,7 +86,10 @@ public class JAPDownloadWizardPage extends BasicWizardPage
         m_panelComponents.add(m_labelInformation,constraintsDownload);
 
         m_labelIconStep1 = new JLabel();
-       // m_labelIconStep1.setIcon(arrow);
+        m_labelIconStep1.setIcon(arrow);
+        m_labelIconStep1.setPreferredSize(new Dimension(arrow.getIconWidth(),arrow.getIconHeight()));
+        m_labelIconStep1.setMinimumSize(new Dimension(arrow.getIconWidth(),arrow.getIconHeight()));
+        m_labelIconStep1.setVisible(false);
         constraintsDownload.gridx = 0;
         constraintsDownload.gridy = 2;
         constraintsDownload.gridheight = 1;
@@ -96,7 +99,7 @@ public class JAPDownloadWizardPage extends BasicWizardPage
         m_panelComponents.add(m_labelIconStep1, constraintsDownload);
 
         m_labelStep1 = new JLabel();
-        //m_labelStep1.setIcon(arrow);
+       // m_labelStep1.setIcon(arrow);
         constraintsDownload.gridx = 1;
         constraintsDownload.gridy = 2;
         constraintsDownload.weightx = 1.0;
@@ -107,7 +110,8 @@ public class JAPDownloadWizardPage extends BasicWizardPage
         m_panelComponents.add(m_labelStep1, constraintsDownload);
 
         m_labelIconStep2 = new JLabel();
-       // m_labelIconStep2.setIcon(arrow);
+        m_labelIconStep2.setIcon(arrow);
+        m_labelIconStep2.setVisible(false);
         constraintsDownload.gridx = 0;
         constraintsDownload.gridy = 3;
         constraintsDownload.weightx = 0.0;
@@ -122,7 +126,8 @@ public class JAPDownloadWizardPage extends BasicWizardPage
 
 
         m_labelIconStep3 = new JLabel();
-        //m_labelIconStep3.setIcon(arrow);
+        m_labelIconStep3.setIcon(arrow);
+        m_labelIconStep3.setVisible(false);
         constraintsDownload.gridx = 0;
         constraintsDownload.gridy = 4;
         gridBagDownload.setConstraints(m_labelIconStep3, constraintsDownload);
@@ -136,7 +141,8 @@ public class JAPDownloadWizardPage extends BasicWizardPage
 
 
         m_labelIconStep5 = new JLabel();
-        //m_labelIconStep5.setIcon(arrow);
+        m_labelIconStep5.setIcon(arrow);
+        m_labelIconStep5.setVisible(false);
         constraintsDownload.gridx = 0;
         constraintsDownload.gridy = 5;
         gridBagDownload.setConstraints(m_labelIconStep5, constraintsDownload);

@@ -28,8 +28,11 @@ public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListe
     //search the folder for saving the new jap.jar
     private JButton m_chooseFolder_bttn = null;
     private File selectedFile;
+    private String pathSelectedFile;
     public static String pathToJapJar;
     private JAPUpdateWizard updateWizard;
+
+    private JarFileFilter jarFileFilter = new JarFileFilter();
 
     private final String COMMAND_SEARCH = "Durchsuchen";
     final JFileChooser m_fileChooser = new JFileChooser(System.getProperty("user.dir", ""));
@@ -59,6 +62,7 @@ public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListe
 
 
         m_tfJapPath=new JTextField(20);
+        //m_tfJapPath.
         m_panelConstraints.anchor = GridBagConstraints.WEST;
         m_panelConstraints.gridx = 0;
         m_panelConstraints.gridy = 1;
@@ -89,6 +93,19 @@ public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListe
       // is a file chosen ?
       public boolean checkPage()
       {
+         // needed for testing whether the user typed in a correct File
+         File testFile;
+            if(!m_tfJapPath.getText().equals(""))
+                {//test whether it's a file
+                  testFile = new File(m_tfJapPath.getText());
+                  if(testFile.isFile() && testFile.exists())
+                  {
+                    checkPage = true;
+                  }else
+                  {
+                    checkPage = false;
+                  }
+                }
           return checkPage;
       }
 
@@ -124,9 +141,18 @@ public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListe
           m_fileChooserDialog.pack();
       }
 
-      public File getSelectedFile()
+      public String getSelectedFile()
       {
-          return this.selectedFile;
+          if(selectedFile!= null)
+            {
+              return this.selectedFile.getAbsolutePath();
+            }else if(selectedFile == null && !m_tfJapPath.getText().equals(""))
+            {
+             //checkPage = true;
+             return m_tfJapPath.getText();
+            }else{// what now?
+             return m_tfJapPath.getText();
+                  }
       }
 
       public void actionPerformed(ActionEvent e)
@@ -138,6 +164,8 @@ public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListe
              m_fileChooser.setDialogTitle("Choose a File");
              m_fileChooser.setApproveButtonText("Choose");
              m_fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+             //m_fileChooser.setFileFilter(jarFileFilter);
+             m_fileChooser.addChoosableFileFilter(jarFileFilter);
 
 
              int returnVal = m_fileChooser.showOpenDialog(this);
@@ -155,10 +183,18 @@ public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListe
 
                           }else if(!selectedFile.exists())
                           {
-                            m_fileChooser.cancelSelection();
-                            showInformationDialog("This File does not exist");
-                            m_tfJapPath.setText("");
-                            checkPage = false;
+                           if(m_tfJapPath.getText().equals(""))
+                              {
+                                  m_fileChooser.cancelSelection();
+                                  showInformationDialog("This File does not exist");
+                                  m_tfJapPath.setText("");
+                                  checkPage = false;
+                              }else
+                              {//user wrote sthing in the textfield --> test wheter it exists
+                                  m_tfJapPath.getText();
+
+                                  checkPage = true;
+                              }
                           }
                           else
                           {
