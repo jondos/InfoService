@@ -51,6 +51,7 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Text;
+import anon.crypto.JAPCertificate;
 import anon.crypto.JAPCertificateStore;
 import anon.infoservice.HTTPConnectionFactory;
 import anon.infoservice.InfoService;
@@ -59,7 +60,6 @@ import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.JAPVersionInfo;
 import anon.infoservice.MixCascade;
 import anon.util.XMLUtil;
-import anon.crypto.*;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -391,16 +391,18 @@ public final class JAPController implements ProxyListener
 							catch (Exception e)
 							{
 								LogHolder.log(LogLevel.WARNING, LogType.MISC,
-								   "JAPModel:Could not set certificate store!");
+											  "JAPModel:Could not set certificate store!");
 							}
 						}
 					}
 					else
 					{
 						JAPCertificateStore jcs = JAPCertificateStore.getInstance();
-						JAPCertificate cert=JAPCertificate.getInstance(	JAPConstants.CERTSPATH +
-																		JAPConstants.TRUSTEDROOTCERT);
-						jcs.addCertificate(cert,true);
+						JAPCertificate cert = JAPCertificate.getInstance(
+							JAPUtil.loadRessource(
+							JAPConstants.CERTSPATH +
+							JAPConstants.TRUSTEDROOTCERT));
+						jcs.addCertificate(cert, true);
 						setCertificateStore(jcs);
 					}
 				}
@@ -568,7 +570,7 @@ public final class JAPController implements ProxyListener
 						catch (Exception e)
 						{
 							LogHolder.log(LogLevel.INFO, LogType.MISC,
-								"JAPController: loadConfigFile: Error loading prefered InfoService.");
+										  "JAPController: loadConfigFile: Error loading prefered InfoService.");
 						}
 					}
 				}
