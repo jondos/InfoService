@@ -32,7 +32,7 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
  *  on a Macintosh to register the MRJ Handler.
  *  
  */
-
+ 
 import java.lang.NoClassDefFoundError;
 import java.awt.Frame;
 import java.awt.event.WindowEvent;

@@ -639,10 +639,10 @@ public final class JAPModel implements JAPAnonServiceListener{
 
 	public synchronized void setAnonMode(boolean anonModeSelected)
 	{
+		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:setAnonMode("+anonModeSelected+")");
 		if ((proxyAnon == null) && (anonModeSelected == true))
 			{
 				view.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:setAnonMode("+anonModeSelected+")");
 				if (alreadyCheckedForNewVersion == false)
 					{
 						// Check for a new Version of JAP if not already done
@@ -784,7 +784,8 @@ public final class JAPModel implements JAPAnonServiceListener{
 							{
 								if(mblistenerIsLocal)
 									{
-										InetAddress[] a=InetAddress.getAllByName("localhost");
+										//InetAddress[] a=InetAddress.getAllByName("localhost");
+										InetAddress[] a=InetAddress.getAllByName("127.0.0.1");
 										JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Try binding Listener on localhost: "+a[0]);
 										m_socketHTTPListener = new ServerSocket (portNumber,50,a[0]);
 									}
