@@ -52,32 +52,35 @@ final class Versionchecker implements Runnable {
 	private int result = 0;
 	private String fn;
 
-	public String getNewVersionnumberFromNet(String path) throws Exception {
-		try {
-			URL url=new URL(path);
-			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"Versionchecker:"+
-			" Prot: "+url.getProtocol()+
-			" Host: "+url.getHost()+
-			" Port: "+url.getPort()+
-			" File: "+url.getFile());
-			HTTPConnection.setProxyServer(null,0);
-			HTTPConnection con=new HTTPConnection(url.getHost(),
-																						url.getPort());
-			HTTPResponse resp=con.Get(url.getFile());
-			if (resp.getStatusCode()!=200)
-				throw new Exception("Versioncheck bad response from server: "+resp.getReasonLine());
-			// read remaining header lines
-			byte[] buff=resp.getData();
-			String s=new String(buff).trim();
-			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"New Version: "+s);
-			if ( (s.charAt(2) == '.') && (s.charAt(5) == '.') )
-				return s;
-			throw new Exception("Versionfile has wrong format! Found: \""+s+ "\". Should be \"nn.nn.nnn\"!");
+	public String getNewVersionnumberFromNet(String path) throws Exception 
+		{
+			try
+				{
+					URL url=new URL(path);
+					JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"Versionchecker:"+
+						" Prot: "+url.getProtocol()+
+						" Host: "+url.getHost()+
+						" Port: "+url.getPort()+
+						" File: "+url.getFile());
+					HTTPConnection.setProxyServer(null,0);
+					HTTPConnection con=new HTTPConnection(url.getHost(),
+																								url.getPort());
+					HTTPResponse resp=con.Get(url.getFile());
+					if (resp==null || resp.getStatusCode()!=200)
+						throw new Exception("Versioncheck bad response from server: "+resp.getReasonLine());
+					// read remaining header lines
+					byte[] buff=resp.getData();
+					String s=new String(buff).trim();
+					JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"New Version: "+s);
+					if ( (s.charAt(2) == '.') && (s.charAt(5) == '.') )
+						return s;
+					throw new Exception("Versionfile has wrong format! Found: \""+s+ "\". Should be \"nn.nn.nnn\"!");
+				}
+			catch(Exception e)
+				{
+					throw new Exception("Versioncheck getNewVersionnumberFromNet() failed: "+e);
+				}
 		}
-		catch(Exception e) {
-			throw new Exception("Versioncheck failed: "+e);
-		}
-	}
 	
 	public void getVersionFromNet(String path, String localFilename) throws Exception {
 		try {
