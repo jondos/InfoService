@@ -72,17 +72,22 @@ final public class FlippingPanel extends JPanel
 		{
 			public void mouseClicked(MouseEvent e)
 			{
+				//int oldHeight=getPreferredSize().height;
 				m_bIsFlipped = !m_bIsFlipped;
+				m_Layout.next(m_panelContainer);
 				if (m_bIsFlipped)
 				{
-					m_Layout.last(m_panelContainer);
+					//m_Layout.last(m_panelContainer);
 					m_labelBttn.setIcon(ms_iconDown);
 				}
 				else
 				{
-					m_Layout.first(m_panelContainer);
+					//m_Layout.first(m_panelContainer);
 					m_labelBttn.setIcon(ms_iconUp);
 				}
+
+				//int newHeight=getPreferredSize().height;
+				//m_Parent.setSize(m_Parent.getSize().width,m_Parent.getSize().height+newHeight-oldHeight);
 				m_Parent.pack();
 			}
 
