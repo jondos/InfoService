@@ -157,21 +157,18 @@ public class RelayCell extends Cell
 		byte[] b = new byte[]
 			{
 			relaycommand, 0x00, 0x00, }; //relaycommand + 2bytes Recognized
-		b = helper.conc(b, helper.inttobyte(streamid, 2)); //streamid
-		b = helper.conc(b, new byte[4]); //4bytes digest
+		b = helper.conc(b, helper.inttobyte(streamid, 2),new byte[4]); //streamid + 4bytes digest
 		if (data == null)
 		{
 			data = new byte[498];
 		}
 		if (data.length < 499)
 		{
-			b = helper.conc(b, helper.inttobyte(data.length, 2)); //length
-			b = helper.conc(b, data); //data
+			b = helper.conc(b, helper.inttobyte(data.length, 2),data); //length + data
 		}
 		else //copy only the first 498 bytes into the payload and forget the rest
 		{
-			b = helper.conc(b, helper.inttobyte(498, 2)); //length
-			b = helper.conc(b, helper.copybytes(data, 0, 498)); //data
+			b = helper.conc(b, helper.inttobyte(498, 2), helper.copybytes(data, 0, 498)); //length+ data
 		}
 		return b;
 	}
