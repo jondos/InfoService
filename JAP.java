@@ -57,11 +57,21 @@ class JAP extends Frame{
 		String mrjVersion  = System.getProperty("mrj.version"); //Macintosh Runtime for Java (MRJ) on Mac OS
 
 		// Test for right VM....
+		if (javaVersion.compareTo("1.0.2") <= 0) 
+			{
+				System.out.println("Your JAVA Version: "+javaVersion);
+				System.out.println("JAP must run with a 1.1.3 or higher version Java!");
+				System.out.println("You will find more information at the JAP webpage!");
+				System.exit(0);
+			}
+		//Init Messages....
+		JAPMessages.init();
+
 		if(vendor.startsWith("Transvirtual")) //Kaffe
 			{
 				if (javaVersion.compareTo("1.0.5") <= 0) 
 					{
-						JAPAWTMsgBox.MsgBox(this,"JAP must run with a 1.1.3 or higher version of Java! (Kaffe >=1.0.6) \nYou will find more information at the JAP webpage!","Error");
+						JAPAWTMsgBox.MsgBox(this,JAPMessages.getString("errorNeedNewerJava"),JAPMessages.getString("error"));
 						System.exit(0);
 					}
 			}
@@ -76,14 +86,12 @@ class JAP extends Frame{
 					}
 				if (javaVersion.compareTo("1.1.2") <= 0) 
 					{
-						JAPAWTMsgBox.MsgBox(this,"JAP must run with a 1.1.3 or higher version of Java! \nYou will find more information at the JAP webpage!","Error");
+						JAPAWTMsgBox.MsgBox(this,JAPMessages.getString("errorNeedNewerJava"),JAPMessages.getString("error"));
 						System.exit(0);
 					}	
 			}
 		
 		
-		//Init Messages....
-		JAPMessages.init();
 		
 		// Show splash screen
 		JAPSplash splash = new JAPSplash(this);
