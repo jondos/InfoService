@@ -27,136 +27,85 @@
  */
 package payxml;
 
-import org.w3c.dom.CharacterData;
+import java.io.ByteArrayInputStream;
+import javax.xml.parsers.DocumentBuilderFactory;
+
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
+import anon.util.IXMLEncodeable;
+import anon.util.XMLUtil;
 
 /**
- * Datencontainer: Heirmit fordert die AI Daten von Pay an bzw. teilt mit das sie überhaupt bezahlt werden will
+ * Datacontainer: This is used by the AI to signal the Jap that it wants a costconfirmation
+ * or a balance certificate signed.
  *
- * @author Grischan Gl&auml;nzel
+ * <PayRequest version="1.0">
+ *   <BalanceRequest>            (optional,  meaning: Jap should send a XMLBalance)
+ *     <NewerThan> Timestamp <NewerThan>
+ *   </BalanceRequest>
+ *   <CC version="1.0">          (optional, meaning: AI wants the Jap to sign this CC)
+ *      .... XMLEasyCC structure ....
+ *   </CC>
+ * </PayRequest>
+ *
+ *
+ * @author Bastian Voigt, Stefan Koepsell
  */
-public class XMLPayRequest extends XMLDocument
+public class XMLPayRequest implements IXMLEncodeable
 {
+	private XMLEasyCC m_cc = null;
+	private java.sql.Timestamp m_balanceNewerThan = null;
 
-	/*
-	 <PayRequest version="1.0">
-	  <BalanceRequest> optional;  //Anforderung eines aktuellen Kontoauszuges
-		  <NewerThan> Zeitstempel <NewerThan> // der Kontoauszug muss neuer als das angegeben Datum sein
-	  </BalanceRequest>
-	  <CC version="1.0"> optional //Kostenbestätigung die unterschrieben werden soll (siehe oben)
-		  <AiID>... </AiID>  eindeutiger ID der AI (brauche ich zum Speichern des CCs)
-		 <AccountNumber> ... </AccountNumber>
-		   <TransferredBytes>... </TransferredBytes>
-	 </CC>
-	 </PayRequest>
-	 */
-    ///@todo lots to do....
-	//~ Public Fields  ******************************************************
-	public static final String docStartTag = "<PayRequest>";
-	public static final String docEndTag = "</PayRequest>";
-
-	public static final String FALSE = "false";
-	public static final String TRUE = "true";
-	public static final String NEW = "new";
-
-	//~ Instance fields ********************************************************
-
-	public String aiName;
-	public boolean accounting;
-	public String balanceNeeded; // nur true | false oder new sollten hierin stehen getTrillian(); benutzen;
-	public String costConfirmsNeeded;
-	boolean error;
-	long challenge;
-
-	//~ Constructors ***********************************************************
-
-	public XMLPayRequest(String aiName, boolean accounting, String balanceNeeded, String costConfirmsNeeded,
-						 long challenge) throws Exception
+	public XMLPayRequest(String xml) throws Exception
 	{
-		this.aiName = aiName;
-		this.accounting = accounting;
-		this.balanceNeeded = getTrillian(balanceNeeded);
-		this.costConfirmsNeeded = getTrillian(costConfirmsNeeded);
-
-		this.error = error;
-		this.challenge = challenge;
-		StringBuffer sb = new StringBuffer();
-		sb.append(docStartTag);
-		sb.append("<AiID>" + aiName + "</AiID>");
-		sb.append("<Acounting>" + accounting + "</Acounting>");
-		sb.append("<BalanceNeeded>" + balanceNeeded + "</BalanceNeeded>");
-		sb.append("<CostsConfirmationNeeded>" + costConfirmsNeeded + "</CostsConfirmationNeeded>");
-		sb.append("<Challenge>" + challenge + "</Challenge>");
-		sb.append(docEndTag);
-		setDocument(sb.toString());
+		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(xml);
+		setValues(doc.getDocumentElement());
 	}
 
-	public XMLPayRequest(byte[] data) throws Exception
+	public XMLPayRequest(byte[] xml) throws Exception
 	{
-		setDocument(data);
-
-		Element element = m_theDocument.getDocumentElement();
-		if (!element.getTagName().equals(docStartTag))
-		{
-			throw new Exception();
-		}
-
-		NodeList nl = element.getElementsByTagName("AiID");
-		if (nl.getLength() < 1)
-		{
-			throw new Exception();
-		}
-		element = (Element) nl.item(0);
-		CharacterData chdata = (CharacterData) element.getFirstChild();
-		aiName = chdata.getData();
-
-		nl = element.getElementsByTagName("Accounting");
-		if (nl.getLength() < 1)
-		{
-			throw new Exception();
-		}
-		element = (Element) nl.item(0);
-		chdata = (CharacterData) element.getFirstChild();
-		accounting = Boolean.valueOf(chdata.getData()).booleanValue();
-
-		nl = element.getElementsByTagName("BalanceNeeded");
-		if (nl.getLength() < 1)
-		{
-			throw new Exception();
-		}
-		element = (Element) nl.item(0);
-		chdata = (CharacterData) element.getFirstChild();
-		balanceNeeded = getTrillian(chdata.getData());
-
-		nl = element.getElementsByTagName("CostConfirmationNeeded");
-		if (nl.getLength() < 1)
-		{
-			throw new Exception();
-		}
-		element = (Element) nl.item(0);
-		chdata = (CharacterData) element.getFirstChild();
-		costConfirmsNeeded = getTrillian(chdata.getData());
-
-		nl = element.getElementsByTagName("Challenge");
-		if (nl.getLength() < 1)
-		{
-			throw new Exception();
-		}
-		element = (Element) nl.item(0);
-		chdata = (CharacterData) element.getFirstChild();
-		challenge = Long.parseLong(chdata.getData());
+		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new
+			ByteArrayInputStream(xml));
+		setValues(doc.getDocumentElement());
 	}
 
-	public static String getTrillian(String st)
+	private void setValues(Element elemRoot) throws Exception
 	{
-		if (st.equals(TRUE) || st.equals(NEW))
+		if (!elemRoot.getTagName().equals("PayRequest") ||
+			!elemRoot.getAttribute("version").equals("1.0"))
 		{
-			return st;
+			throw new Exception("PayRequest wrong format or wrong version number");
 		}
-		else
+
+		// look for a Balance request
+		Element elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "BalanceRequest");
+		if (elem != null)
 		{
-			return FALSE;
+			Element elemTimestamp = (Element) XMLUtil.getFirstChildByName(elem, "NewerThan");
+			m_balanceNewerThan = java.sql.Timestamp.valueOf(XMLUtil.parseNodeString(elemTimestamp, ""));
 		}
+
+		// look for a costconfirmation
+		elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "CC");
+		if (elem != null)
+		{
+			m_cc = new XMLEasyCC(elem);
+		}
+	}
+
+	// todo: implement (not needed atm, only for the interface :-)
+	public Document getXmlEncoded()
+	{
+		return null;
+	}
+
+	public XMLEasyCC getCC()
+	{
+		return m_cc;
+	}
+
+	public java.sql.Timestamp getBalanceTimestamp()
+	{
+		return m_balanceNewerThan;
 	}
 }

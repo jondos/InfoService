@@ -27,14 +27,19 @@
  */
 package payxml;
 
+import java.util.Enumeration;
+import java.util.Vector;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
+import anon.util.IXMLEncodeable;
 import anon.util.XMLUtil;
-import anon.crypto.JAPSignature;
-import org.w3c.dom.DocumentFragment;
 
 /**
  * This class represents an XML AccountInfo structure.
+ *
  *
  * The following XML structure is used:
  * <pre>
@@ -60,112 +65,37 @@ import org.w3c.dom.DocumentFragment;
  *
  * @author Bastian Voigt
  */
-public class XMLAccountInfo extends XMLDocument
+public class XMLAccountInfo implements IXMLEncodeable //extends XMLDocument
 {
 	//~ Instance fields ********************************************************
 
-	private java.sql.Timestamp m_Timestamp;
-	private java.sql.Timestamp m_ValidTime;
-	private long m_lDeposit;
-	private long m_lSpent;
-	private long m_AccountNumber;
+	/** the balance certificate */
+	private XMLBalance m_balance = null;
+
+	/**
+	 * a collection of costconfirmations (one for each mixcascade
+	 * that was used with this account)
+	 */
+	private Vector m_costConfirmations = new Vector();
 
 	//~ Constructors ***********************************************************
 
-	/**
-	 * Creates an AccountInfo structure without CCs but with signed
-	 * balance certificate.
-	 *
-	 * @param accountNumber long
-	 * @param deposit long
-	 * @param spent long
-	 * @param timestamp Timestamp
-	 * @param validTime Timestamp
-	 * @param signer JAPSignature
-	 * @throws Exception
-	 */
-	public XMLAccountInfo(long accountNumber,
-						  long deposit, long spent,
-						  java.sql.Timestamp timestamp,
-						  java.sql.Timestamp validTime,
-						  JAPSignature signer) throws Exception
+	public XMLAccountInfo(XMLBalance bal) throws Exception
 	{
-		m_lDeposit = deposit;
-		m_lSpent = spent;
-		m_Timestamp = timestamp;
-		m_ValidTime = validTime;
-		m_AccountNumber = accountNumber;
-
-		// build balance dom document
-		m_theDocument = getDocumentBuilder().newDocument();
-		Element elemRoot = m_theDocument.createElement("AccountInfo");
-		elemRoot.setAttribute("version", "1.0");
-		m_theDocument.appendChild(elemRoot);
-		Element elemBalance = m_theDocument.createElement("Balance");
-		elemRoot.appendChild(elemBalance);
-		elemBalance.setAttribute("version", "1.0");
-		Element elem = m_theDocument.createElement("AccountNumber");
-		XMLUtil.setNodeValue(elem, Long.toString(accountNumber));
-		elemBalance.appendChild(elem);
-		elem = m_theDocument.createElement("Deposit");
-		XMLUtil.setNodeValue(elem, Long.toString(deposit));
-		elemBalance.appendChild(elem);
-		elem = m_theDocument.createElement("Spent");
-		XMLUtil.setNodeValue(elem, Long.toString(spent));
-		elemBalance.appendChild(elem);
-		elem = m_theDocument.createElement("Timestamp");
-		XMLUtil.setNodeValue(elem, timestamp.toString());
-		elemBalance.appendChild(elem);
-		elem = m_theDocument.createElement("Validtime");
-		XMLUtil.setNodeValue(elem, validTime.toString());
-		elemBalance.appendChild(elem);
-
-		// append signature
-		signer.signXmlNode(elemBalance);
-
-		// add empty costconfirmations field
-		Element elemCCs = m_theDocument.createElement("CostConfirmations");
-		elemRoot.appendChild(elemCCs);
+		m_balance = bal;
 	}
 
 	/**
 	 * Creates an AccountInfo object from a string.
-	 * Checks the signature
-	 *
-	 * @param xml String
-	 * @param verifier JAPSignature must be initialized and ready to verify XML or
-	 * null if you dont want to check
-	 * @throws Exception on invalid xml format or invalid signature
 	 */
-	public XMLAccountInfo(String xml, JAPSignature verifier) throws Exception
+	public XMLAccountInfo(String xml) throws Exception
 	{
-		setDocument(xml);
-		setValues();
-
-		// maybe check signature
-		if (verifier != null)
-		{
-			if (!checkBalanceSignature(verifier))
-			{
-				throw new Exception("Invalid Signature");
-			}
-		}
+		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(xml);
+		setValues(doc.getDocumentElement());
 	}
 
-	//~ Methods ****************************************************************
-
-	/**
-	 * Adds a cost confirmation xml structure to the accountinfo.
-	 *
-	 * @param xmlCC Node
-	 */
-	public void addCC(Node xmlCC) throws Exception
-	{
-		Element elemRoot = m_theDocument.getDocumentElement();
-		Element elemCCs = (Element) XMLUtil.getFirstChildByName(elemRoot, "CostConfirmations");
-		Node myCC = XMLUtil.importNode(m_theDocument, xmlCC, true);
-		elemCCs.appendChild(myCC);
-	}
+	public XMLAccountInfo()
+	{}
 
 	/**
 	 * Creates a Balance from  an existing XML docuemnt
@@ -174,106 +104,132 @@ public class XMLAccountInfo extends XMLDocument
 	 * @param verifier JAPSignature must be initialized and ready to verify XML (or null)
 	 * @throws Exception on invalid xml format or invalid signature
 	 */
-	public XMLAccountInfo(Node xml, JAPSignature verifier) throws Exception
+	public XMLAccountInfo(Element xml) throws Exception
 	{
-		m_theDocument = getDocumentBuilder().newDocument();
-		Node n = XMLUtil.importNode(m_theDocument, xml, true);
-		m_theDocument.appendChild(n);
-		setValues();
-		if (verifier == null)
-		{
-
-		}
-		else if (!checkBalanceSignature(verifier))
-		{
-			throw new Exception("Invalid Signature");
-		}
+		setValues(xml);
 	}
 
-	private void setValues() throws Exception
+	//~ Methods ****************************************************************
+	public Document getXmlEncoded()
 	{
-		Element elemRoot = m_theDocument.getDocumentElement();
-		if (!elemRoot.getTagName().equals("AccountInfo"))
+		Document doc = null;
+		try
 		{
-			throw new Exception("XMLAccountInfo wrong xml structure");
+			doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+		}
+		catch (ParserConfigurationException ex)
+		{
+			return null;
+		}
+		Element elemRoot = doc.createElement("AccountInfo");
+		elemRoot.setAttribute("version", "1.0");
+		doc.appendChild(elemRoot);
+		Element elem;
+		Element elemTmp;
+
+		// add balance
+		if (m_balance != null)
+		{
+			try
+			{
+				elemTmp = m_balance.getXmlEncoded().getDocumentElement();
+				elem = (Element) XMLUtil.importNode(doc, elemTmp, true);
+				elemRoot.appendChild(elem);
+			}
+			catch (Exception ex1)
+			{
+			}
+		}
+
+		// add CCs
+		Element elemCCs = doc.createElement("CostConfirmations");
+		elemRoot.appendChild(elemCCs);
+		Enumeration enum = m_costConfirmations.elements();
+		XMLEasyCC cc;
+		while (enum.hasMoreElements())
+		{
+			try
+			{
+				cc = (XMLEasyCC) enum.nextElement();
+				elemTmp = cc.getXmlEncoded().getDocumentElement();
+				elem = (Element) XMLUtil.importNode(doc, elemTmp, true);
+				elemCCs.appendChild(elem);
+			}
+			catch (Exception ex2)
+			{
+			}
+		}
+
+		return doc;
+	}
+
+	/**
+	 * Adds a cost confirmation xml structure to the accountinfo.
+	 * Note: If a cost confirmation for the same AI is already present
+	 * it will be overwritten.
+	 *
+	 * @param xmlCC XMLEasyCC
+	 */
+	public void addCC(XMLEasyCC cc) throws Exception
+	{
+		String aiName = cc.getAIName();
+		Enumeration enum = m_costConfirmations.elements();
+		XMLEasyCC tmp;
+		while(enum.hasMoreElements())
+		{
+			tmp = (XMLEasyCC) enum.nextElement();
+			if(tmp.getAIName().equals(aiName))
+			{
+				m_costConfirmations.removeElement(tmp);
+				break;
+			}
+		}
+		m_costConfirmations.addElement(cc);
+	}
+
+	private void setValues(Element elemRoot) throws Exception
+	{
+		if (!elemRoot.getTagName().equals("AccountInfo") )
+//			!elemRoot.getAttribute("version").equals("1.0"))
+		{
+			throw new Exception("XMLAccountInfo wrong XML structure");
 		}
 		Element elemBalance = (Element) XMLUtil.getFirstChildByName(elemRoot, "Balance");
+		m_balance = new XMLBalance(elemBalance);
 
-		Element elem = (Element) XMLUtil.getFirstChildByName(elemBalance, "AccountNumber");
-		String str = XMLUtil.parseNodeString(elem, null);
-		m_AccountNumber = Long.parseLong(str);
+		// todo parse costconfirmations
+		Element elemCCs = (Element) XMLUtil.getFirstChildByName(elemRoot, "CostConfirmations");
+		Element elemCC = (Element) elemCCs.getFirstChild();
+		while (elemCC != null)
+		{
+			m_costConfirmations.addElement(new XMLEasyCC(elemCC));
+			elemCC = (Element) elemCC.getNextSibling();
+		}
+	}
 
-		elem = (Element) XMLUtil.getFirstChildByName(elemBalance, "Deposit");
-		str = XMLUtil.parseNodeString(elem, null);
-		m_lDeposit = Long.parseLong(str);
-
-		elem = (Element) XMLUtil.getFirstChildByName(elemBalance, "Spent");
-		str = XMLUtil.parseNodeString(elem, null);
-		m_lSpent = Long.parseLong(str);
-
-		elem = (Element) XMLUtil.getFirstChildByName(elemBalance, "Timestamp");
-		str = XMLUtil.parseNodeString(elem, null);
-		m_Timestamp = java.sql.Timestamp.valueOf(str);
-
-		elem = (Element) XMLUtil.getFirstChildByName(elemBalance, "Validtime");
-		str = XMLUtil.parseNodeString(elem, null);
-		m_ValidTime = java.sql.Timestamp.valueOf(str);
+	public XMLBalance getBalance()
+	{
+		return m_balance;
 	}
 
 	/**
-	 * Checks the signature of the <Balance> element
+	 * getCC - returns the cost confirmation with the specified aiName
 	 *
-	 * @param verifier JAPSignature must be initialized and ready to verify XML
-	 * @return boolean
+	 * @param string String
+	 * @return XMLEasyCC
 	 */
-	private boolean checkBalanceSignature(JAPSignature verifier)
+	public XMLEasyCC getCC(String aiName)
 	{
-		// check signature
-		Element e = m_theDocument.getDocumentElement();
-		Element elemBalance = (Element) XMLUtil.getFirstChildByName(e, "Balance");
-		return verifier.verifyXML(elemBalance);
-	}
-
-	public long getAccountNumber()
-	{
-		return m_AccountNumber;
-	}
-
-	public long getDeposit()
-	{
-		return m_lDeposit;
-	}
-
-	public long getSpent()
-	{
-		return m_lSpent;
-	}
-
-	public java.sql.Timestamp getTimestamp()
-	{
-		return m_Timestamp;
-	}
-
-	public java.sql.Timestamp getValidTime()
-	{
-		return m_ValidTime;
-	}
-
-	public long getCredit()
-	{
-		return m_lDeposit - m_lSpent;
-	}
-
-	/**
-	 * Neu: getBalance()..
-	 * extrahiert ein DocumentFragment, das nur die Balance enth\uFFFDlt
-	 */
-	public DocumentFragment getBalance()
-	{
-		DocumentFragment fragment = m_theDocument.createDocumentFragment();
-		Element elem = m_theDocument.getDocumentElement();
-		elem = (Element) XMLUtil.getFirstChildByName(elem, "Balance");
-		fragment.appendChild(elem);
-		return fragment;
+		Enumeration enum = m_costConfirmations.elements();
+		XMLEasyCC current;
+		while (enum.hasMoreElements())
+		{
+			current = (XMLEasyCC) enum.nextElement();
+			if (current.getAIName().equals(aiName))
+			{
+				return current;
+			}
+		}
+		return null;
 	}
 }

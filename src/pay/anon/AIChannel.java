@@ -32,7 +32,9 @@ import anon.server.impl.AbstractChannel;
 import anon.server.impl.MuxSocket;
 
 /**
- * Channel mit der Nummer 0xFFFFFFFF der nur für die Kommunikation mit der AI benutzt wird
+* Note: This class is to be replaced by the new ControlChannels implementation
+*
+ * Channel mit der Nummer 0xFFFFFFFF der nur f\uFFFDr die Kommunikation mit der AI benutzt wird
  * @author Grischan Gl&auml;nzel
  */
 

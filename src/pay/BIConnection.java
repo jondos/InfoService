@@ -56,6 +56,7 @@ import anon.crypto.IMyPublicKey;
 import anon.util.XMLUtil;
 import anon.crypto.MyDSAPublicKey;
 import anon.crypto.MyRSAPublicKey;
+import payxml.XMLBalance;
 
 public class BIConnection
 {
@@ -180,7 +181,10 @@ public class BIConnection
 		XMLAccountInfo info = null;
 		m_httpClient.writeRequest("GET", "balance", null);
 		answer = m_httpClient.readAnswer();
-		info = new XMLAccountInfo(answer, Pay.getInstance().getVerifyingInstance());
+		info = new XMLAccountInfo(answer);
+		XMLBalance bal = info.getBalance();
+		if(Pay.getInstance().getVerifyingInstance().verifyXML(bal.getXmlEncoded())==false)
+			throw new Exception("Invalid Signature");
 		return info;
 	}
 

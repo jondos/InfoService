@@ -56,6 +56,7 @@ import anon.crypto.IMyPublicKey;
 import anon.crypto.MyDSAPrivateKey;
 import org.bouncycastle.crypto.params.DSAPrivateKeyParameters;
 import org.bouncycastle.crypto.params.DSAParameters;
+import payxml.XMLBalance;
 
 /**
  *  Diese Klasse ist f?r die verwaltung eines Accounts zut?ndig, sie kapselt eine XML Struktur innerhalb der Klasse
@@ -132,7 +133,7 @@ public class PayAccount extends XMLDocument
 		Element elemAccInfo = (Element) XMLUtil.getFirstChildByName(elemRoot, "AccountInfo");
 		if (elemAccInfo != null)
 		{
-			m_accountInfo = new XMLAccountInfo(elemAccInfo, null);
+			m_accountInfo = new XMLAccountInfo(elemAccInfo);
 		}
 
 		// set private key
@@ -206,7 +207,7 @@ public class PayAccount extends XMLDocument
 		m_signingInstance.initSign(m_privateKey);
 	}
 
-	public void setAccountInfo(XMLAccountInfo info) throws Exception
+	public void setAccountInfo(XMLAccountInfo info)
 	{
 		m_accountInfo = info;
 	}
@@ -299,7 +300,7 @@ public class PayAccount extends XMLDocument
 			Node n1 = null;
 			try
 			{
-				n1 = XMLUtil.importNode(doc, m_accountInfo.getDomDocument().getDocumentElement(), true);
+				n1 = XMLUtil.importNode(doc, m_accountInfo.getXmlEncoded().getDocumentElement(), true);
 				elemRoot.appendChild(n1);
 			}
 			catch (Exception ex3)
@@ -382,7 +383,7 @@ public class PayAccount extends XMLDocument
 	{
 		if (m_accountInfo != null)
 		{
-			return m_accountInfo.getValidTime();
+			return m_accountInfo.getBalance().getValidTime();
 		}
 		return m_accountCertificate.getCreationTime();
 	}
@@ -421,7 +422,7 @@ public class PayAccount extends XMLDocument
 	{
 		if (m_accountInfo != null)
 		{
-			return m_accountInfo.getSpent();
+			return m_accountInfo.getBalance().getSpent();
 		}
 		return 0L;
 	}
@@ -435,7 +436,7 @@ public class PayAccount extends XMLDocument
 	{
 		if (m_accountInfo != null)
 		{
-			return m_accountInfo.getDeposit();
+			return m_accountInfo.getBalance().getDeposit();
 		}
 		return 0L;
 	}
@@ -449,7 +450,7 @@ public class PayAccount extends XMLDocument
 	{
 		if (m_accountInfo != null)
 		{
-			return m_accountInfo.getCredit();
+			return m_accountInfo.getBalance().getCredit();
 		}
 		return 0L;
 	}

@@ -240,6 +240,8 @@ public class XMLAccountCertificate implements IXMLEncodeable
 		XMLUtil.setNodeValue(elem, m_biID);
 		elemRoot.appendChild(elem);
 
+
+		// todo check timestamp format !!
 		elem = doc.createElement("CreationTime");
 		XMLUtil.setNodeValue(elem, m_creationTime.toString());
 		elemRoot.appendChild(elem);

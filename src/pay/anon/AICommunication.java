@@ -43,10 +43,20 @@ import pay.PayAccountsFile;
 import payxml.XMLAccountInfo;
 import payxml.XMLPayRequest;
 import anon.util.XMLUtil;
+import payxml.XMLEasyCC;
+import java.io.*;
+import java.sql.Timestamp;
+
 /**
- * Die gesammt Kommunikation zwischen Pay und AI (welche ja ein Teil der Mix-Kaskade sind). L\uFFFDuft als eigener Thread
- * beim erzeugen wird eine AI Channel ge\uFFFDffnet. Beim starten des Threads wird festgestellt ob die AI bezahlt werden will etc.
- * danach soll in regelm\uFFFDssigem abstand eine EasyCC gesendet werden wenn gefordert (noch nicht implementiert)
+ *
+ *
+ * Die gesammt Kommunikation zwischen Pay und AI (welche ja ein Teil der
+ * Mix-Kaskade sind). Laeuft als eigener Thread
+ * beim erzeugen wird eine AI Channel geoeffnet.
+ *
+ * Beim starten des Threads wird festgestellt ob die AI bezahlt werden will etc.
+ * danach soll in regelmaessigem abstand eine EasyCC gesendet werden wenn
+ * gefordert (noch nicht implementiert)
  *
  * @author Bastian Voigt
  */
@@ -58,16 +68,17 @@ public class AICommunication extends Thread
 	static int sleepIntervall = 3000;
 	static int packetSize = 998;
 
-	protected long confirmedPackets;
+	protected long m_confirmedPackets;
 	protected DataInputStream in;
 	protected OutputStream out;
-	protected MixCascade anonServer;
-	private XMLPayRequest lastRequest;
+	protected MixCascade m_anonServer;
+
+//	private XMLPayRequest m_lastRequest;
 
 	protected AnonChannel c;
 
 	private InputStreamReader isr;
-	private boolean running;
+	private boolean m_bRunning;
 
 	public AICommunication(AnonService aService)
 	{
@@ -86,101 +97,114 @@ public class AICommunication extends Thread
 
 	public void setAnonServer(MixCascade anonServer)
 	{
-		this.anonServer = anonServer;
+		this.m_anonServer = anonServer;
 	}
 
 	public long getLastTransferredBytes()
 	{
 		/**SK13 check if this is realy true!!*/
-		StatusInfo s = anonServer.getCurrentStatus();
+		StatusInfo s = m_anonServer.getCurrentStatus();
 		if (s.getMixedPackets() > 0)
 		{
-			return (s.getMixedPackets() - confirmedPackets) * packetSize;
+			return (s.getMixedPackets() - m_confirmedPackets) * packetSize;
 		}
 		return -1;
 	}
 
+	/**
+	 * Bastian: What is this method meant to do ???
+	 * @return long
+	 */
 	public long countLastTransferredBytes()
 	{
 		/**SK13 check if this is realy true!!*/
 		long trans = getLastTransferredBytes();
-		StatusInfo s = anonServer.getCurrentStatus();
+		StatusInfo s = m_anonServer.getCurrentStatus();
 		if (s.getMixedPackets() > 0)
 		{
-			confirmedPackets = s.getMixedPackets();
+			m_confirmedPackets = s.getMixedPackets();
 		}
 		return trans;
 	}
 
 	public void run()
 	{
-
-		if (anonServer == null)
+		if (m_anonServer == null)
 		{
 			LogHolder.log(LogLevel.DEBUG, LogType.PAY,
 						  "AnonServer nicht gesetzt bitte zuerst setAnonService aufrufen");
 			return;
 		}
-		running = true;
-		//send("<Hello>Hello AI</Hello>");
-		lastRequest = processPayRequest();
-		while (running)
+		m_bRunning = true;
+
+		XMLPayRequest request;
+		while (m_bRunning)
 		{
-			if (anonServer != null && getLastTransferredBytes() > sendCCIntervall)
+			// receive AI message
+			request = receiveNextAIRequest();
+
+			// does the AI want a CC signed?
+			XMLEasyCC cc = request.getCC();
+			if (cc != null)
 			{
-				processCostConfirmationRequest(lastRequest);
+
 			}
-			lastRequest = processPayRequest(); // blockiert dies solange nichts kommt ?
-			try
+			// does the AI want a Balance cert?
+			Timestamp t = request.getBalanceTimestamp();
+			if (t != null)
 			{
-				Thread.sleep(sleepIntervall);
+
 			}
-			catch (Exception ex)
-			{}
 		}
 	}
 
 	/**
-	 * Sends a cost confirmation to the AI
-	 *
-	 * @param request XMLPayRequest
+	 * Sends a cost confirmation XML structure to the AI with the current
+	 * number of transferred bytes.
 	 */
-	public void processCostConfirmationRequest(XMLPayRequest request)
+	private void sendCostConfirmation()
 	{
-		if (request != null && request.costConfirmsNeeded.equals(XMLPayRequest.TRUE))
-		{
-			;
-		}
-		//XMLEasyCC cc = Pay.create().addCosts(request.aiName,Pay.create().getUsedAccount(),countLastTransferredBytes());
-//		send(getSignedCC(request));
-	}
+		// do we already have accountInfo for this account?
+		PayAccount usedAccount = PayAccountsFile.getInstance().getActiveAccount();
+		XMLAccountInfo info = usedAccount.getAccountInfo();
 
-	/*	public String getSignedCC(XMLPayRequest request)
-	 {
-	  XMLEasyCC cc = Pay.getInstance().addCosts(request.aiName, Pay.getInstance().getUsedAccount(),
-		 countLastTransferredBytes());
-	  try
-	  {
-	   JAPSignature sig = new JAPSignature();
-	   sig.initSign(Pay.getInstance().getAccount(Pay.getInstance().getUsedAccount()).getPrivateKey());
-	   sig.signXmlDoc(cc.getDomDocument());
-	   return XMLUtil.XMLDocumentToString(cc.getDomDocument());
-	  }
-	  catch (java.security.SignatureException e)
-	  {
-	   e.printStackTrace();
-	  }
-	  catch (java.lang.Exception e)
-	  {
-	   e.printStackTrace();
-	  }
-	  return null;
-	 }*/
+		// no, then create a new empty accountInfo object
+		if (info == null)
+		{
+			info = new XMLAccountInfo();
+			usedAccount.setAccountInfo(info);
+		}
+
+		// do we already have a CC for this account and this AI ?
+		XMLEasyCC cc = info.getCC(m_anonServer.getName());
+
+		if (cc != null) // yes, add some bytes
+		{
+			cc.addTransferredBytes(17);
+		}
+		else // no, then make a new one and add it to the account (todo: use Real aiName)
+		{
+			try
+			{
+				cc = new XMLEasyCC("aiName", usedAccount.getAccountNumber(), 0, null);
+				info.addCC(cc);
+			}
+			catch (Exception ex)
+			{
+				// should never happen??
+			}
+
+
+		}
+
+		// finally (re)sign it & send to the AI
+//		cc.sign();
+	}
 
 	public void end()
 	{
-		processCostConfirmationRequest(lastRequest);
-		running = false;
+//		processCostConfirmationRequest(m_lastRequest);
+		m_bRunning = false;
 		c.close();
 	}
 
@@ -197,21 +221,37 @@ public class AICommunication extends Thread
 		}
 	}
 
-	public byte[] receive()
+	/**
+	 * Receives the next message from the AI.
+	 * To be replaced with a new controlchannel implementation
+	 *
+	 * @return XMLPayRequest
+	 */
+	public XMLPayRequest receiveNextAIRequest()
 	{
 		byte[] bytes;
+		int length = 0;
 		try
 		{
-			int length = in.readInt();
+			length = in.readInt();
 			bytes = new byte[length];
 			in.read(bytes, 0, length);
 		}
-		catch (Exception ex)
+		catch (IOException ex)
 		{
-			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "AICommunication receive ging nicht");
+			LogHolder.log(LogLevel.WARNING, LogType.PAY,
+						  "Error while receiving message from AI: " + ex.getMessage());
 			return null;
 		}
-		return bytes;
+		try
+		{
+			return new XMLPayRequest(bytes);
+		}
+		catch (Exception ex1)
+		{
+			LogHolder.log(LogLevel.WARNING, LogType.PAY, "Error parsing AI message: " + ex1.getMessage());
+			return null;
+		}
 	}
 
 	/**
@@ -219,22 +259,8 @@ public class AICommunication extends Thread
 	 * einer Antwort von derselben.
 	 * noch nicht getestet
 	 */
-	public XMLPayRequest processPayRequest()
+/*	public XMLPayRequest processAIRequest(XMLPayRequest request)
 	{
-		XMLPayRequest request = null;
-		byte[] answer = null;
-		try
-		{
-			answer = receive();
-			request = new XMLPayRequest(answer);
-		}
-		catch (Exception ex)
-		{
-			LogHolder.log(LogLevel.DEBUG, LogType.PAY,
-						  "AICommunication processPayRequest - da kam was falsches an und zwar: -" +
-						  answer + "-");
-			return null;
-		}
 		if (request.accounting)
 		{
 			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "AICommunication: calling AccountsFile...");
@@ -267,7 +293,7 @@ public class AICommunication extends Thread
 
 		}
 		return request;
-	}
+	}*/
 
 // aus MuxSocket kopiert nach dem Test dieser Klasse soll die Methode von Mux Socket nach hier verschoben werden
 	/*

@@ -440,7 +440,7 @@ public final class MuxSocket implements Runnable
 				byte[] tmpBuff = new byte[64];
 				m_KeyPool.getKey(tmpBuff, 0);
 				m_KeyPool.getKey(tmpBuff, 16);
-				// zwei weitere Schlüssel für die AI
+				// zwei weitere Schl\uFFFDssel f\uFFFDr die AI
 				m_KeyPool.getKey(tmpBuff, 32);
 				m_KeyPool.getKey(tmpBuff, 48);
 
@@ -809,16 +809,27 @@ public final class MuxSocket implements Runnable
 		m_outStream.flush();
 	}
 
-	/*public AIChannel getAIChannel()
-	  {
-	 return AIChannel.create(this);
-	  }*/
 
+	/**
+	 * Sends a message to the AI (Accounting Instance).
+	 * This implementation is to be replaced by the new control channels
+	 *
+	 * @param xmlData String
+	 * @return int
+	 */
 	public synchronized int sendPayPackets(String xmlData)
 	{
 		return sendPayPackets(xmlData.getBytes());
 	}
 
+
+	/**
+	 * Sends a message to the AI (Accounting Instance).
+	 * This implementation is to be replaced by the new control channels
+	 *
+	 * @param xmlBytes byte[]
+	 * @return int
+	 */
 	public synchronized int sendPayPackets(byte[] xmlBytes)
 	{
 
@@ -859,15 +870,15 @@ public final class MuxSocket implements Runnable
 		{
 			LogHolder.log(LogLevel.ERR, LogType.NET,
 						  "JAPMuxSocket: sendPayPacketError : IndexOutOfBounds: " + e);
+			return ErrorCodes.E_UNKNOWN;
 		}
 		catch (Exception ex)
 		{
 			LogHolder.log(LogLevel.ERR, LogType.NET, "JAPMuxSocket: sendPayPacketError : " + ex);
-			return 0;
+			return ErrorCodes.E_UNKNOWN;
 		}
 
 		return ErrorCodes.E_SUCCESS;
-
 	}
 
 	public synchronized int send(int channel, int type, byte[] buff, short len)
