@@ -46,19 +46,7 @@ public class TorAnonServerDescription implements AnonServerDescription
 
 	public TorAnonServerDescription(boolean bUseInfoService)
 	{
-		if (bUseInfoService)
-		{
-			m_strTorDirServerAddr = null;
-			m_iTorDirServerPort = -1;
-			m_bUseInfoService = true;
-		}
-		else
-		{
-			m_strTorDirServerAddr = Tor.DEFAULT_DIR_SERVER_ADDR;
-			m_iTorDirServerPort = Tor.DEFAULT_DIR_SERVER_PORT;
-			m_bUseInfoService = false;
-		}
-		m_bStartCircuitsAtStartup = false;
+		this(bUseInfoService,false);
 	}
 
 	public TorAnonServerDescription(boolean bUseInfoService, boolean bStartCircuitsAtStartup)
@@ -100,7 +88,7 @@ public class TorAnonServerDescription implements AnonServerDescription
 	{
 		return m_bUseInfoService;
 	}
-	
+
 	public boolean startCircuitsAtStartup()
 	{
 		return m_bStartCircuitsAtStartup;

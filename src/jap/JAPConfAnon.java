@@ -68,8 +68,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 {
 	private static final String URL_BEGIN = "<HTML><font color=blue><u>";
 	private static final String URL_END = "</u></font></HTML>";
-	private JCheckBox m_cbAutoConnect;
-	private JCheckBox m_cbAutoReConnect;
 
 	private JAPJIntField m_tfMixPortNumber;
 	private JTextField m_tfMixHost;
@@ -115,10 +113,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	{
 		Font font = getFontSetting();
 
-		m_cbAutoConnect = new JCheckBox(JAPMessages.getString("settingsautoConnectCheckBox"));
-		m_cbAutoConnect.setFont(font);
-		m_cbAutoReConnect = new JCheckBox(JAPMessages.getString("settingsautoReConnectCheckBox"));
-		m_cbAutoReConnect.setFont(font);
 		m_tfMixHost = new JTextField();
 		m_tfMixHost.setFont(font);
 		m_tfMixPortNumber = new JAPJIntField();
@@ -448,8 +442,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	{
 		m_tfMixHost.setText(JAPConstants.defaultAnonHost);
 		m_tfMixPortNumber.setText(Integer.toString(JAPConstants.defaultAnonPortNumber));
-		m_cbAutoConnect.setSelected(false);
-		m_cbAutoReConnect.setSelected(false);
 
 	}
 
@@ -504,9 +496,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			}
 		}
 
-		// Anonservice settings
-		m_Controller.setAutoConnect(m_cbAutoConnect.isSelected());
-		m_Controller.setAutoReConnect(m_cbAutoReConnect.isSelected());
 		//Try to Set AnonService
 		if (newCascade != null)
 		{
@@ -523,8 +512,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		MixCascade mixCascade = m_Controller.getCurrentMixCascade();
 		m_tfMixHost.setText(mixCascade.getListenerInterface(0).getHost());
 		m_tfMixPortNumber.setText(Integer.toString(mixCascade.getListenerInterface(0).getPort()));
-		m_cbAutoConnect.setSelected(JAPModel.getAutoConnect());
-		m_cbAutoReConnect.setSelected(JAPModel.getAutoReConnect());
 		updateMixCascadeCombo();
 		if (!m_cbMixManual.isSelected()) //Auswahl is selected
 		{ //try to select the current MixCascade
