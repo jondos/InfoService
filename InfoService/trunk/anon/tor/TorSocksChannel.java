@@ -240,24 +240,32 @@ public class TorSocksChannel extends TorChannel
 				{
 					m_data = helper.conc(m_data, arg0, len);
 				}
+				int requestType;
+				if (m_data.length > 0)
+				{
+					requestType = m_data[0]; // 1 = connect 2= bind
+				}
+				else
+				{
+					break;
+				}
+				if (requestType != 1) //connect request type==1
+				{
+					///@todo: close etc.
+					//command not supported
+					byte[] socksAnswer = new byte[]
+						{
+						0x00, 91, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+					m_data = null;
+					super.recv(socksAnswer, 0, socksAnswer.length);
+					break;
+				}
 				if (m_data.length >= 8)
 				{
 					byte[] socksAnswer = null;
 					int port = 0;
 					String addr = null;
-					int requestType = m_data[0];
 					int consumedBytes = 1;
-					if (requestType != 1) //connect request type==1
-					{
-						//todo: close etc.
-						//command not supported
-						socksAnswer = new byte[]
-							{
-							0x00, 91, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-						m_data = null;
-						super.recv(socksAnswer, 0, socksAnswer.length);
-						break;
-					}
 					//IP V4
 					addr = Integer.toString(m_data[3] & 0xFF) + "." +
 						Integer.toString(m_data[4] & 0xFF) + "." +
@@ -284,7 +292,7 @@ public class TorSocksChannel extends TorChannel
 						StringBuffer sb = new StringBuffer();
 						while (i < m_data.length && m_data[i] != 0)
 						{
-							sb.append((char)m_data[i]);
+							sb.append( (char) m_data[i]);
 							i++;
 							consumedBytes++;
 						}
