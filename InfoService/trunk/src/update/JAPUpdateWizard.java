@@ -180,7 +180,7 @@ public final class JAPUpdateWizard extends BasicWizard implements Runnable
 			}
 		}
 		//Step 4 - check signature
-		if(checkSignature()!=0)
+		if(!checkSignature())
 		{
 			downloadPage.showInformationDialog(JAPMessages.getString("updateInformationMsgStep4"));
 			resetChanges();
@@ -649,13 +649,14 @@ public final class JAPUpdateWizard extends BasicWizard implements Runnable
 
 	}
 
-/////////////////////////////////////////////////////////////////////////////////
-//Step 4 check the signature of the downloaded file
-private int checkSignature()
+/**
+	 * Step 4 check the signature of the downloaded file
+	 * @return true, if Signature of downloaded JAP.jar is ok
+	 * @return false otherwise
+**/
+private boolean checkSignature()
 {
-	if(JarVerifier.verify(m_fileNewJapJar,JAPModel.getJAPCodeSigningCert()))
-		return 0;
-	return -1;
+	return JarVerifier.verify(m_fileNewJapJar,JAPModel.getJAPCodeSigningCert());
 }
 
 /////////////////////////////////////////////////////////////////////////////////
