@@ -43,7 +43,7 @@ public class MacOS extends AbstractOS
 			throw new Exception("Operating system is not MacOS");
 	}
 
-	public void openURLInBrowser(String a_url) throws Exception
+	public void openURLInBrowser(String a_url)
 	{
 		try
 		{
@@ -51,7 +51,7 @@ public class MacOS extends AbstractOS
 		}
 		catch (Exception a_e)
 		{
-			throw new Exception("Cannot open URL in browser");
+			LogHolder.log(LogLevel.ERR, LogType.MISC, "Cannot open URL in browser");
 		}
 	}
 }

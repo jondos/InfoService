@@ -51,30 +51,25 @@ public class WindowsOS extends AbstractOS
 		}
 	}
 
-	public void openURLInBrowser(String a_url) throws Exception
+	public void openURLInBrowser(String a_url)
 	{
 		boolean success = false;
-		try
+
+		String[] browser = BROWSERLIST;
+		for (int i = 0; i < browser.length; i++)
 		{
-			String[] browser = BROWSERLIST;
-			for (int i = 0; i < browser.length; i++)
+			try
 			{
-				try
-				{
-					Runtime.getRuntime().exec(new String[] {browser[i], a_url});
-					success = true;
-					break;
-				}
-				catch (Exception ex)
-				{
-				}
+				Runtime.getRuntime().exec(new String[]
+										  {browser[i], a_url});
+				success = true;
+				break;
 			}
-			if(!success)
+			catch (Exception ex)
 			{
-				throw new Exception("Cannot open URL in browser");
 			}
 		}
-		catch (Exception ex)
+		if (!success)
 		{
 			LogHolder.log(LogLevel.ERR, LogType.MISC, "Cannot open URL in browser");
 		}
