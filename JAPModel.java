@@ -61,7 +61,7 @@ import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.UIManager;
 import anon.JAPAnonService;
 import anon.JAPAnonServiceListener;
-/* jh5 */ import rmi.JAPAnonServiceRMIServer;
+/* jh5 */ import anon.xmlrpc.Server;
 
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPModel implements JAPAnonServiceListener {
@@ -113,7 +113,7 @@ public final class JAPModel implements JAPAnonServiceListener {
 	private Locale m_Locale=null;
 	private Vector observerVector=null;
 
-	private static JAPAnonServiceRMIServer anonServiceRMIServer= null;
+	private static Server anonServiceRMIServer= null;
 
 	private JAPModel () {
 		//JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:initializing...");
@@ -1210,10 +1210,11 @@ private final class SetAnonModeAsync implements Runnable
 	public int setRMISupport(boolean b) {
 		if(b) {
 			if(anonServiceRMIServer==null)
-				anonServiceRMIServer = new JAPAnonServiceRMIServer(this);
+				anonServiceRMIServer = new Server();
+				anonServiceRMIServer.start();
 		} else {
 			if(anonServiceRMIServer!=null)
-				anonServiceRMIServer.quitServer();
+				anonServiceRMIServer.stop();
 			anonServiceRMIServer=null;
 		}
 		return 0;

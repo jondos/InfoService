@@ -41,7 +41,7 @@ import java.net.InetAddress;
 
 import HTTPClient.Codecs;
 
-final class JAPInfoService
+final public class JAPInfoService
 	{
 		private static final String DP = "%3A"; // Doppelpunkt
 		String proxyHost  = null;

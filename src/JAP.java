@@ -38,14 +38,14 @@ import java.awt.Frame;
 import java.awt.event.WindowEvent;
 
 /** This is the main class of the JAP project. It starts everything. It can be inherited by another
- *  class that wants to initialize platform dependend features, e.g. see 
- *  <A HREF="JAPMacintosh.html">JAPMacintosh.html</A> 
+ *  class that wants to initialize platform dependend features, e.g. see
+ *  <A HREF="JAPMacintosh.html">JAPMacintosh.html</A>
  *  as an example.
  */
 class JAP extends Frame {
 
 	boolean bSupportRMI=false;
-	
+
 	/** Constructor for the JAP object.
 	 * @param argv The commandline arguments.
 	 *        <code>-rmi</code>   Enable Support for RMI, so that other apllications can control the JAP
@@ -141,6 +141,7 @@ class JAP extends Frame {
 //		java.security.Security.addProvider(new cryptix.jce.provider.CryptixCrypto());
 		// Enable RMI if requested
 		model.setRMISupport(bSupportRMI);
+
 		// Show main frame and dispose splash screen
 		view.show();
 		view.toFront();
@@ -149,6 +150,17 @@ class JAP extends Frame {
 		anon.JAPAnonService.init();
 		// initially start services
 		model.initialRun();
+
+		//Test
+		try{
+		anon.xmlrpc.Client c=new anon.xmlrpc.Client();
+		int p=c.getLocalListeningPort();
+		anon.xmlrpc.MixCascade[] cascades=c.loadMixCascadesFromTheNet();
+		boolean b=c.setMixCascadeCurrentlyUsed(cascades[0]);
+		p=3;}
+		catch(Exception e)
+			{
+			};
 	}
 
 	public static void main(String[] argv) {
