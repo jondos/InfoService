@@ -1,11 +1,26 @@
-public class AnonServerDBEntry {
-	public String name;
-	public String host;
-	public int    port;
+final public class AnonServerDBEntry 
+	{
+		private String host;
+		private int    port;
 	
-	public AnonServerDBEntry (String host, int port) {
-		this.name = host + ":" + port;
-		this.host = host;
-		this.port = port;
+		public AnonServerDBEntry (String host, int port)
+			{
+				host = host;
+				port = port;
+			}
+		
+		public String getName()
+			{
+				return host+":"+Integer.toString(port);
+			}
+		
+		public int getPort()
+			{
+				return port;
+			}
+			
+		public String getHost()
+			{
+				return host;
+			}
 	}
-}

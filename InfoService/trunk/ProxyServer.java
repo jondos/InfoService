@@ -11,7 +11,7 @@ public class ProxyServer implements Runnable
     private Thread thread;
     private JAPModel model;
     
-		public ProxyServer (int port, boolean debugFlag,JAPModel m)
+		public ProxyServer (int port, boolean debugFlag, JAPModel m)
 			{
 				portN = port;
 				debug = debugFlag;
@@ -41,7 +41,8 @@ public class ProxyServer implements Runnable
 								oMuxSocket=new CAMuxSocket();
 								if(oMuxSocket.connect(model.anonHostName,model.anonPortNumber)==-1)
 									{
-										System.out.println("Cannot connect to Mix...!");
+										model.status2 = model.getString("statusCannotConnect");
+										model.notifyJAPObservers();
 										return;
 									}
 								oMuxSocket.start();

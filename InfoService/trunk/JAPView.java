@@ -22,10 +22,11 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
 	private JProgressBar 		userProgressBar;
 	private JProgressBar 		trafficProgressBar;
 	private JProgressBar 		protectionProgressBar;
+	private JProgressBar 		ownTrafficChannelsProgressBar;
+	private JProgressBar 		ownTrafficBytesProgressBar;
 	private ImageIcon[]			meterIcons;
 	private JAPHelp helpWindow;
 	private JAPConf configDialog;
-	
 
 	public JAPView (JAPModel m, String s)
 		{
@@ -36,91 +37,100 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
 			configDialog = new JAPConf(this, model);
 		}
 	
-	public void init()
-		{
-			try
-				{
-					UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
-				}
-			catch(Exception e)
-				{
-					e.printStackTrace();
-				}
-			ImageIcon ii=loadImageIcon("images/icon.gif",true);
-			if(ii!=null)
-				setIconImage(ii.getImage());
-			// Show wait message
-			ii=loadImageIcon(model.getString("loading"),true);
-			JLabel waitLabel = null;
-			if(ii!=null)
-				waitLabel=new JLabel((ii), JLabel.CENTER);
-			else
-				waitLabel=new JLabel("", JLabel.CENTER);
-			//waitLabel.setFont(new Font("Sans", Font.BOLD,14));
-			waitLabel.setBackground(Color.black);
-			waitLabel.setForeground(Color.white);
-			//Color bgColor = getContentPane().getBackground();
-			getContentPane().setBackground(Color.black);
-			getContentPane().add(waitLabel, BorderLayout.SOUTH);
-			getContentPane().add(new JLabel(loadImageIcon(model.SPLASHFN,true)), BorderLayout.CENTER);
-			//setSize(250, 50);
-			pack();
-			setResizable(false);
-			centerFrame();
-			setVisible(true);
+	public void init() {
+	    try {
+		UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName()); 
+	    } 
+	    catch(Exception e) {
+		if (model.debug) e.printStackTrace();
+	    }
+		    
+	    // Load Icon in upper left corner of the frame window
+	    ImageIcon ii=model.loadImageIcon(model.IICON16FN,true);
+	    if(ii!=null) setIconImage(ii.getImage());
 
-		// listen for events from outside the frame
-		addWindowListener(new WindowAdapter() {
-			public void windowClosing(WindowEvent e) {exitProgram();}
-		});	
-		
-		if(CAVersion.checkForNewVersion(model)==1)
-			{
-				CAVersion.getNewVersion(model);
-				System.out.println("Bitte neu starten...");
-				System.exit(0);
-			}
-		// Load Images for "Anonymity Meter"
-		loadMeterIcons();
-		
-		// "NORTH": Image
-		ImageIcon northImage = loadImageIcon(model.getString("northPath"),true);
-		JLabel northLabel = new JLabel(northImage);
+/* 
+   // mir unklar, was die 
+   // folgenden auskommentierten 
+   // Zeilen sollen (HF)
+	
+	    ii=loadImageIcon(model.getString("loading"),true);
+	    JLabel waitLabel = null;
+	    if(ii!=null)
+		    waitLabel=new JLabel((ii), JLabel.CENTER);
+	    else
+		    waitLabel=new JLabel("", JLabel.CENTER);
+*/
 
-		// "West": Image
-		ImageIcon westImage = loadImageIcon(model.getString("westPath"),true);;
-		JLabel westLabel = new JLabel(westImage);
+/*		
+	    // Show wait message
+	    JLabel waitLabel = new JLabel(model.getString("loading"), JLabel.CENTER);
+	    //waitLabel.setFont(new Font("Sans", Font.BOLD,14));
+	    waitLabel.setBackground(Color.black);
+	    waitLabel.setForeground(Color.white);
+	    Color bgColor = getContentPane().getBackground();
+	    getContentPane().setBackground(Color.black);
+	    getContentPane().add(waitLabel, BorderLayout.SOUTH);
+	    getContentPane().add(new JLabel(loadImageIcon(model.SPLASHFN,true)), BorderLayout.CENTER);
+	    //setSize(250, 50);
+	    pack();
+	    setResizable(false);
+	    centerFrame();
+	    setVisible(true);
+*/
+	    // listen for events from outside the frame
+	    addWindowListener(new WindowAdapter() {
+		    public void windowClosing(WindowEvent e) {exitProgram();}
+	    });	
+	    
+	    // Check for new version on server
+	    if(CAVersion.checkForNewVersion(model)==1) {
+		CAVersion.getNewVersion(model);
+		JOptionPane.showMessageDialog(this, model.getString("newVersion"));
+		exitProgram();
+	    }
+	    
+	    // Load Images for "Anonymity Meter"
+	    loadMeterIcons();
+	    
+	    // "NORTH": Image
+	    ImageIcon northImage = model.loadImageIcon(model.getString("northPath"),true);
+	    JLabel northLabel = new JLabel(northImage);
+
+	    // "West": Image
+	    ImageIcon westImage = model.loadImageIcon(model.getString("westPath"),true);;
+	    JLabel westLabel = new JLabel(westImage);
 //		westLabel.setOpaque(false);
-		
-		// "Center:" tabs
-		JTabbedPane tabs = new JTabbedPane();
-		JPanel config = buildConfigPanel();
-		JPanel level = buildLevelPanel();
-		tabs.addTab(model.getString("mainConfTab"), loadImageIcon(model.CONFIGICONFN,true), config );
-		tabs.addTab(model.getString("mainMeterTab"), loadImageIcon(model.METERICONFN,true), level );
-		
-		// "South": Buttons
-		JPanel buttonPanel = new JPanel();
+	    
+	    // "Center:" tabs
+	    JTabbedPane tabs = new JTabbedPane();
+	    JPanel config = buildConfigPanel();
+	    JPanel level = buildLevelPanel();
+	    tabs.addTab(model.getString("mainConfTab"), model.loadImageIcon(model.CONFIGICONFN,true), config );
+	    tabs.addTab(model.getString("mainMeterTab"), model.loadImageIcon(model.METERICONFN,true), level );
+	    
+	    // "South": Buttons
+	    JPanel buttonPanel = new JPanel();
 //		buttonPanel.setOpaque(false);
-		
-		infoB = new JButton(model.getString("infoButton"));
-		helpB = new JButton(model.getString("helpButton"));
+	    
+	    infoB = new JButton(model.getString("infoButton"));
+	    helpB = new JButton(model.getString("helpButton"));
 //		startB = new JButton(model.msg.getString("startButton"));
-		quitB = new JButton(model.getString("quitButton"));
-		// Add real buttons
-		buttonPanel.add(infoB);
-		buttonPanel.add(helpB);
+	    quitB = new JButton(model.getString("quitButton"));
+	    // Add real buttons
+	    buttonPanel.add(infoB);
+	    buttonPanel.add(helpB);
 //		buttonPanel.add(startB);
-		buttonPanel.add(quitB);
-		infoB.addActionListener(this);
-		helpB.addActionListener(this);
+	    buttonPanel.add(quitB);
+	    infoB.addActionListener(this);
+	    helpB.addActionListener(this);
 //		startB.addActionListener(this);
-		quitB.addActionListener(this);
-		infoB.setMnemonic(model.getString("infoButtonMn").charAt(0));
-		helpB.setMnemonic(model.getString("helpButtonMn").charAt(0));
+	    quitB.addActionListener(this);
+	    infoB.setMnemonic(model.getString("infoButtonMn").charAt(0));
+	    helpB.setMnemonic(model.getString("helpButtonMn").charAt(0));
 //		startB.setMnemonic(model.msg.getString("startButtonMn").charAt(0));
-		quitB.setMnemonic(model.getString("quitButtonMn").charAt(0));
-		
+	    quitB.setMnemonic(model.getString("quitButtonMn").charAt(0));
+	    
 
 		// add Components to Frame
 		setVisible(false);
@@ -136,15 +146,16 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
 
 		updateValues();
 		getContentPane().invalidate();
+	    setResizable(false);
 		try	
 			{
 				pack();  // optimize size
 			}
 		catch(Exception e)
 			{
-				System.out.println("Hm.. Error by Pack - Has To be fixed!!");
+				if (model.debug) System.out.println("Hm.. Error by Pack - Has To be fixed!!");
 			}
-		centerFrame();
+		model.centerFrame(this);
 		toFront();
 		getContentPane().validate();
 //		setVisible(true);
@@ -182,7 +193,6 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
 		meterPanel.add(ano1CheckBox,BorderLayout.NORTH);
 		meterPanel.add(meterLabel, BorderLayout.CENTER);
 		
-
 		JPanel detailsPanel = new JPanel();
 		detailsPanel.setLayout( new GridLayout(3,2,5,5) );
 		detailsPanel.setBorder( new TitledBorder(model.getString("meterDetailsBorder")) );
@@ -193,6 +203,27 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
 		detailsPanel.add(new JLabel(model.getString("meterDetailsRisk")) );
 		detailsPanel.add(protectionProgressBar);
 
+		// Own traffic situation: current # of channels
+		ownTrafficChannelsProgressBar = new 
+			JProgressBar(JProgressBar.HORIZONTAL,0, model.MAXCHANNELVALUE);
+		ownTrafficChannelsProgressBar.setStringPainted(true);
+		ownTrafficChannelsProgressBar.setBorderPainted(false);
+
+		// Own traffic situation: # of bytes transmitted
+		ownTrafficBytesProgressBar = new 
+			JProgressBar(JProgressBar.HORIZONTAL,0, model.MAXBYTESVALUE);
+		ownTrafficBytesProgressBar.setStringPainted(true);
+		ownTrafficBytesProgressBar.setBorderPainted(false);
+
+		JPanel ownTrafficPanel = new JPanel();
+		ownTrafficPanel.setLayout( new GridLayout(2,2,5,5) );
+		ownTrafficPanel.setBorder( new TitledBorder(model.getString("ownTrafficBorder")) );
+		ownTrafficPanel.add(new JLabel(model.getString("ownTrafficChannels")) );
+		ownTrafficPanel.add(ownTrafficChannelsProgressBar);
+		ownTrafficPanel.add(new JLabel(model.getString("ownTrafficBytes")) );
+		ownTrafficPanel.add(ownTrafficBytesProgressBar);
+
+		levelPanel.add(ownTrafficPanel, BorderLayout.NORTH);
 		levelPanel.add(meterPanel, BorderLayout.CENTER);
 		levelPanel.add(detailsPanel, BorderLayout.SOUTH);
 
@@ -332,7 +363,7 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
 				System.out.println("METERFNARRAY.length="+model.METERFNARRAY.length);
 			for (int i=0; i<model.METERFNARRAY.length; i++)
 				{
-					meterIcons[i] = loadImageIcon(model.METERFNARRAY[i],false);
+					meterIcons[i] = model.loadImageIcon(model.METERFNARRAY[i],false);
 					if (model.debug) 
 						System.out.println("Image "+model.METERFNARRAY[i]+" loaded");
 				}
@@ -358,13 +389,7 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
 					return setMeterImage();
 			}
 
-    protected void centerFrame()
-			{
-        Dimension screenSize = getToolkit().getScreenSize();
-				Dimension ownSize = getSize();
-				setLocation((screenSize.width  - ownSize.width )/2,
-										(screenSize.height - ownSize.height)/2);
-			}
+  
 
 	public void actionPerformed(ActionEvent event){
 		if (event.getSource() == quitB) { exitProgram(); } 
@@ -388,20 +413,18 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
 				System.out.println("proxyCheckBox now "
 					+ (proxyCheckBox.isSelected()?"selected":"unselected")
 				);
-				model.proxyMode = proxyCheckBox.isSelected();
-				model.notifyJAPObservers();
-		} else if (event.getSource() == anonCheckBox)
-				{ 
-					if (model.debug) 
-						System.out.println("anonCheckBox now "+ (anonCheckBox.isSelected()?"selected":"unselected"));
-					model.setAnonMode(anonCheckBox.isSelected());
-				}
-			else if (event.getSource() == ano1CheckBox) { 
-				if (model.debug) 
+			model.proxyMode = proxyCheckBox.isSelected();
+			model.notifyJAPObservers();
+		} else if (event.getSource() == anonCheckBox) { 
+			if (model.debug) 
+				System.out.println("anonCheckBox now "+ (anonCheckBox.isSelected()?"selected":"unselected"));
+			model.setAnonMode(anonCheckBox.isSelected());
+		} else if (event.getSource() == ano1CheckBox) { 
+			if (model.debug) 
 				System.out.println("ano1CheckBox now "
 					+ (ano1CheckBox.isSelected()?"selected":"unselected")
 				);
-				model.setAnonMode(ano1CheckBox.isSelected());
+			model.setAnonMode(ano1CheckBox.isSelected());
 		} else {
 			if (model.debug) System.out.println("Event ?????: "+event.getSource());
 		}
@@ -424,8 +447,8 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
 			this, 
 			model.TITLE + "\n" + model.getString("infoText") + "\n \n" + model.AUTHOR, 
 			model.getString("aboutBox"),
-			JOptionPane.INFORMATION_MESSAGE,
-			new ImageIcon(model.JAPICONFN)
+			JOptionPane.INFORMATION_MESSAGE //,
+//			new ImageIcon(model.JAPICONFN)
 		);
     }
 
@@ -475,6 +498,11 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
 			trafficProgressBar.setValue(model.MAXPROGRESSBARVALUE);
 			trafficProgressBar.setString(model.getString("meterNA"));
 		}
+		ownTrafficChannelsProgressBar.setValue(model.getNrOfChannels());
+		//ownTrafficBytesProgressBar.setValue(model.getNrOfBytes());
+		ownTrafficChannelsProgressBar.setString(String.valueOf(model.getNrOfChannels()));
+		ownTrafficBytesProgressBar.setString(String.valueOf(model.getNrOfBytes())+" Byte");
+		
     }
 	
 	public void valuesChanged (Object o)
@@ -482,31 +510,7 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
 			if (model.debug) System.out.println("view.valuesChanged()");
 			updateValues();
 		}
-	
-	ImageIcon loadImageIcon(String strImage,boolean sync)
-		{
-			ImageIcon i=null;
-			try
-				{
-					i=new ImageIcon(getClass().getResource(strImage));
-				}
-			catch(Exception e)
-				{
-					return null;
-				}
-			if(sync)
-				{
-					while(true)
-						{
-							int status=i.getImageLoadStatus();
-							if((status&MediaTracker.COMPLETE)!=0)
-								return i;
-							else if(((status&MediaTracker.ABORTED)!=0)||((status&MediaTracker.ERRORED)!=0))
-								return null;
-						}
-				}
-			return i;
-		}
+
 }
 
 

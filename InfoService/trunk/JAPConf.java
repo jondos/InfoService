@@ -159,7 +159,7 @@ public class JAPConf extends JDialog
 				Enumeration enum = model.anonServerDatabase.elements();
 				while (enum.hasMoreElements())
 					{
-						select.addItem( ((AnonServerDBEntry)enum.nextElement()).name );
+						select.addItem( ((AnonServerDBEntry)enum.nextElement()).getName() );
 					}
 					   
 				select.setEnabled(false);
@@ -168,9 +168,9 @@ public class JAPConf extends JDialog
 						if (model.debug) System.out.println("Item " + select.getSelectedIndex() + " selected");
 						if (select.getSelectedIndex() > 0) {
 							anonhostTextField.setText( 
-				               ((AnonServerDBEntry)model.anonServerDatabase.elementAt(select.getSelectedIndex()-1)).host   );
+				               ((AnonServerDBEntry)model.anonServerDatabase.elementAt(select.getSelectedIndex()-1)).getHost()   );
 							anonportnumberTextField.setText( String.valueOf(
-				               ((AnonServerDBEntry)model.anonServerDatabase.elementAt(select.getSelectedIndex()-1)).port ) );
+				               ((AnonServerDBEntry)model.anonServerDatabase.elementAt(select.getSelectedIndex()-1)).getPort() ) );
 						}
 				}});
 				bg.add(b1);
@@ -241,8 +241,11 @@ public class JAPConf extends JDialog
 		protected JPanel buildmiscPanel()
 			{
 				JPanel p=new JPanel();
-				p.setLayout(new GridLayout(2,2));
-				p.add(new JLabel(model.getString("settingsLookAndFeel")));
+				p.setLayout(new BorderLayout() );
+				JPanel p1=new JPanel();
+				p1.setLayout(new GridLayout(2,2));
+				p1.setBorder( new TitledBorder(model.getString("settingsLookAndFeelBorder")) );
+				p1.add(new JLabel(model.getString("settingsLookAndFeel")));
 				JComboBox c=new JComboBox();
 				LookAndFeelInfo[] lf=UIManager.getInstalledLookAndFeels();	
 				for(int i=0;i<lf.length;i++)
@@ -264,12 +267,18 @@ public class JAPConf extends JDialog
 								}
 							}
 					}});
-				p.add(c);
-				p.add(new JLabel(model.getString("settingsLanguage")));
+				p1.add(c);
+				p1.add(new JLabel(model.getString("settingsLanguage")));
 				c=new JComboBox();
 				c.addItem("Deutsch");
 				c.addItem("English");
-				p.add(c);
+				p1.add(c);
+				JPanel p2=new JPanel();
+				p2.setLayout(new BorderLayout());
+				p2.setBorder( new TitledBorder(model.getString("miscconfigBorder")) );
+				p2.add(new JLabel("Much space for additional settings..."), BorderLayout.NORTH);
+				p.add(p1, BorderLayout.NORTH);
+				p.add(p2, BorderLayout.CENTER);
 				return p;
 			}
 
