@@ -107,7 +107,6 @@ public final class JAPModel implements JAPAnonServiceListener{
 	static final String AUTHOR = "(c) 2000 The JAP-Team";
 
 	static final int    MAXHELPLANGUAGES = 6;
-	static final String MESSAGESFN   = "JAPMessages";
 	static final String XMLCONFFN    = "jap.conf";
 	static final String SPLASHFN     = "images/splash.gif";
 	static final String BUSYFN       = "images/busy.gif";
@@ -150,26 +149,6 @@ public final class JAPModel implements JAPAnonServiceListener{
 	private JAPModel ()
 		{
 			//JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:initializing...");
-			// Load Texts for Messages and Windows
-
-		try
-				{
-					msg = ResourceBundle.getBundle(MESSAGESFN, Locale.getDefault() );
-				}
-			catch(Exception e1)
-				{
-					try
-						{
-							msg=ResourceBundle.getBundle(MESSAGESFN);
-						}
-					catch(Exception e)
-						{
-							JAPAWTMsgBox.MsgBox(new Frame(),
-																	"File not found: "+MESSAGESFN+".properties\nYour package of JAP may be corrupted.\nTry again to download or install the package.",
-																	"Error");
-							System.exit(-1);
-						}
-				}
 			//JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:properties loaded");
 
 			// Create observer object
@@ -455,14 +434,10 @@ public final class JAPModel implements JAPAnonServiceListener{
 		return portNumber;
 	}
 
-	public static String getString(String key) {
-		try {
-			return model.msg.getString(key);
+	public static String getString(String key) 
+		{
+			return JAPMessages.getString(key);
 		}
-		catch(Exception e) {
-			return key;
-		}
-	}
 
 	public void channelsChanged(int channels)
 		{
@@ -842,7 +817,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 	}
 
 	public static void aboutJAP() {
-		JOptionPane.showMessageDialog
+	/*	JOptionPane.showMessageDialog
 			(view,
 			 model.TITLE + "\n" +
 			  model.getString("infoText") + "\n\n" +
@@ -852,7 +827,8 @@ public final class JAPModel implements JAPAnonServiceListener{
 			  model.getString("version")+": "+model.aktVersion+"\n\n",
 				model.getString("aboutBox"),
 				JOptionPane.INFORMATION_MESSAGE
-			);
+			);*/
+		new JAPAbout(view);
 	}
 
 	/** Try to load all available MIX-Cascades form the InfoService...

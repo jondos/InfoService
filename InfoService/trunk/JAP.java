@@ -81,6 +81,10 @@ class JAP extends Frame{
 					}	
 			}
 		
+		
+		//Init Messages....
+		JAPMessages.init();
+		
 		// Show splash screen
 		JAPSplash splash = new JAPSplash();
 		

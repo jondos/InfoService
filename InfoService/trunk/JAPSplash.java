@@ -54,37 +54,45 @@ final class JAPSplash extends Window
 				setLayout(null);
 		
 				Toolkit t=Toolkit.getDefaultToolkit();
-				InputStream in=JAPSplash.class.getResourceAsStream("images/splash.gif");
-				byte[] buff=new byte[26000];
-				int len=0;
-				int aktIndex=0;
-				try
-					{
-						while((len=in.read(buff,aktIndex,26000-aktIndex))!=-1)
-							aktIndex+=len;
-					}
-				catch(Exception e)
-					{
-					}
-				imageSplash=t.createImage(buff,0,aktIndex);
 				MediaTracker ma=new MediaTracker(this);
-				ma.addImage(imageSplash,1);
-				ma.checkID(1,true);
+				InputStream in=JAPSplash.class.getResourceAsStream("images/splash.gif");
+				int len;
+				int aktIndex;
+				if(in!=null)
+					{
+						byte[] buff=new byte[26000];
+						len=0;
+						aktIndex=0;
+						try
+							{
+								while((len=in.read(buff,aktIndex,26000-aktIndex))>0)
+									aktIndex+=len;
+								imageSplash=t.createImage(buff,0,aktIndex);
+								ma.addImage(imageSplash,1);
+								ma.checkID(1,true);
+							}
+						catch(Exception e)
+							{
+							}
+					}
 				in=JAPSplash.class.getResourceAsStream("images/busy.gif");
-				byte[] buff1=new byte[7000];
-				len=0;
-				aktIndex=0;
-				try
+				if(in!=null)
 					{
-						while((len=in.read(buff1,aktIndex,7000-aktIndex))!=-1)
-							aktIndex+=len;
+						byte[] buff1=new byte[7000];
+						len=0;
+						aktIndex=0;
+						try
+							{
+								while((len=in.read(buff1,aktIndex,7000-aktIndex))>0)
+									aktIndex+=len;
+								imageBusy=t.createImage(buff1,0,aktIndex);
+								ma.addImage(imageBusy,2);
+							}
+						catch(Exception e)
+							{
+							}
 					}
-				catch(Exception e)
-					{
-					}
-				imageBusy=t.createImage(buff1,0,aktIndex);
-				ma.addImage(imageBusy,2);
-				strLoading="Lade Einstellunegen ...";//m.getString("loading");
+				strLoading=JAPMessages.getString("loading");
 				font=new Font("Sans",Font.PLAIN,9);
 				setLocation(-350,-173);
 				setSize(350,173);
@@ -107,8 +115,10 @@ final class JAPSplash extends Window
 				if(imageOffScreen==null)	
 					imageOffScreen=createImage(350,173);
 				Graphics goff=imageOffScreen.getGraphics();
-				goff.drawImage(imageSplash,0,0,this);
-				goff.drawImage(imageBusy,15,150,this);
+				if(imageSplash!=null)
+					goff.drawImage(imageSplash,0,0,this);
+				if(imageBusy!=null)
+					goff.drawImage(imageBusy,15,150,this);
 				goff.setFont(font);
 				goff.drawString(strLoading,15,140);
 				goff.drawString("Version: "+JAPModel.aktVersion,250,158);
