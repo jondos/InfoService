@@ -38,11 +38,6 @@ import gui.JAPDll;
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPModel
 {
-	/**
-	 * Loads resources.
-	 */
-	private ResourceLoader m_resourceLoader;
-
 	/** @deprecated */
 	private String m_biHost = JAPConstants.PIHOST;
 	/** @deprecated */
@@ -93,12 +88,11 @@ public final class JAPModel
 
 	private JAPModel()
 	{
-		m_resourceLoader = new ResourceLoader("JAP");
 		m_certStore = new JAPCertificateStore();
 		try
 		{
 			m_certJAPCodeSigning = JAPCertificate.getInstance(
-				getResourceLoader().loadResource(JAPConstants.CERTSPATH + JAPConstants.CERT_JAPCODESIGNING));
+				ResourceLoader.loadResource(JAPConstants.CERTSPATH + JAPConstants.CERT_JAPCODESIGNING));
 		}
 		catch (Throwable t)
 		{
@@ -107,7 +101,7 @@ public final class JAPModel
 		try
 		{
 			m_certJAPInfoServiceMessages = JAPCertificate.getInstance(
-				getResourceLoader().loadResource(JAPConstants.CERTSPATH +
+				ResourceLoader.loadResource(JAPConstants.CERTSPATH +
 												 JAPConstants.CERT_JAPINFOSERVICEMESSAGES));
 		}
 		catch (Throwable t)
@@ -131,15 +125,6 @@ public final class JAPModel
 		}
 
 		return ms_TheModel;
-	}
-
-	/**
-	 * Returns the ResourceLoader used to load resources.
-	 * @return the ResourceLoader used to load resources
-	 */
-	public ResourceLoader getResourceLoader()
-	{
-		return m_resourceLoader;
 	}
 
 	public ProxyInterface getProxyInterface()

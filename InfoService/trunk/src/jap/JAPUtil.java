@@ -65,6 +65,7 @@ import logging.LogLevel;
 import logging.LogType;
 import java.sql.Timestamp;
 import java.text.NumberFormat;
+import gui.ImageIconLoader;
 
 /**
  * This class contains static utility functions for Jap
@@ -263,66 +264,18 @@ final public class JAPUtil
 	{
 		ImageIcon img = null;
 
-		// get color depth
-		int colordepth = Toolkit.getDefaultToolkit().getColorModel().getPixelSize();
-
-		String imageFilename;
 		// try loading the lowcolor images
-		if (colordepth <= 16)
-		{
-			imageFilename = JAPConstants.IMGPATHLOWCOLOR + strImage;
-			try
+		if (Toolkit.getDefaultToolkit().getColorModel().getPixelSize() <= 16)
 			{
-				// this is necessary to make shure that the images are loaded when contained in a JAP.jar
-				img = new ImageIcon(Class.forName("JAP").getResource(imageFilename));
-			}
-			catch (Exception e)
-			{
-				try
-				{
-					//we have to chek, if the file exist, because new ImageIcon(String) will always success!!!
-					if ( (new File(imageFilename)).canRead())
-					{
-						img = new ImageIcon(imageFilename);
-					}
-				}
-				catch (Exception e1)
-				{
-				}
-			}
+			img = ImageIconLoader.loadImageIcon(JAPConstants.IMGPATHLOWCOLOR + strImage, sync);
 		}
 		// if loading of lowcolor images was not successful or
 		//    we have to load the hicolor images
-		if (img == null)
-		{
-			imageFilename = JAPConstants.IMGPATHHICOLOR + strImage;
-			try
+		if (img == null || img.getImageLoadStatus() == MediaTracker.ERRORED)
 			{
-				// this is necessary to make shure that the images are loaded when contained in a JAP.jar
-				img = new ImageIcon(Class.forName("JAP").getResource(imageFilename));
-			}
-			catch (Exception e)
-			{
-				img = new ImageIcon(imageFilename);
-			}
+			img = ImageIconLoader.loadImageIcon(JAPConstants.IMGPATHHICOLOR + strImage, sync);
 		}
 
-		if (sync && img != null)
-		{
-			int statusBits = MediaTracker.ABORTED | MediaTracker.ERRORED | MediaTracker.COMPLETE;
-			for (; ; )
-			{
-				int status = img.getImageLoadStatus();
-				if ( (status & statusBits) != 0)
-				{
-					break;
-				}
-				else
-				{
-					Thread.yield();
-				}
-			}
-		}
 		return img;
 	}
 
@@ -422,12 +375,6 @@ final public class JAPUtil
 		table.setPreferredScrollableViewportSize(new Dimension(perfectWidth, perfectHeight));
 	}
 
-	public static String getProxyAuthorization(String user, String passwd)
-	{
-		String tmpPasswd = Codecs.base64Encode(user + ":" + passwd);
-		return "Proxy-Authorization: Basic " + tmpPasswd + "\r\n";
-	}
-
 	public static String readLine(InputStream inputStream) throws Exception
 	{
 		String returnString = "";
@@ -487,20 +434,6 @@ final public class JAPUtil
 			}
 		}
 		return t_cert;
-	}
-
-	/**
-	 * Returns if the given port is valid.
-	 * @param a_port a port number
-	 * @return true if the given port is valid; false otherwise
-	 */
-	public static boolean isValidPort(int a_port)
-	{
-		if ( (a_port < 1) || (a_port > 65536))
-		{
-			return false;
-		}
-		return true;
 	}
 
 	/**

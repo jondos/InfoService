@@ -847,6 +847,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_bttnIconify.setToolTipText(JAPMessages.getString("iconifyWindow"));
 
 		// Add real buttons
+		c1.fill=GridBagConstraints.VERTICAL;
 		buttonPanel.add(m_bttnIconify, c1);
 		//buttonPanel.add(m_bttnInfo);
 		c1.gridx = 1;

@@ -539,7 +539,7 @@ public final class JAPController implements ProxyListener, Observer
 					{
 						JAPCertificateStore jcs = new JAPCertificateStore();
 						JAPCertificate cert = JAPCertificate.getInstance(
-							m_Model.getResourceLoader().loadResource(
+							ResourceLoader.loadResource(
 							JAPConstants.CERTSPATH +
 							JAPConstants.TRUSTEDROOTCERT));
 						cert.setEnabled(true);
@@ -812,7 +812,7 @@ public final class JAPController implements ProxyListener, Observer
 					if (elemBI == null)
 					{
 						theBI = new BI(
-							m_Model.getResourceLoader().loadResource(JAPConstants.CERTSPATH +
+							ResourceLoader.loadResource(JAPConstants.CERTSPATH +
 							JAPConstants.CERT_BI),
 							JAPConstants.PIHOST, JAPConstants.PIHOST, JAPConstants.PIPORT);
 					}
