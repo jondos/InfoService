@@ -30,7 +30,7 @@ package anon;
 import java.net.ConnectException;
 public interface AnonService
   {
-    public void connect(AnonServer anonService);
+    public int connect(AnonServer anonService);
     public void disconnect();
     public AnonChannel createChannel(int type) throws ConnectException;
     public void addEventListener(AnonServiceEventListener l);

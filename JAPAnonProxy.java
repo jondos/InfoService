@@ -28,7 +28,7 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 
 import java.net.ServerSocket;
 import anon.JAPAnonServiceListener;
-//import anon.JAPAnonService;
+import anon.ErrorCodes;
 import anon.AnonService;
 import anon.AnonServiceFactory;
 import anon.AnonChannel;
@@ -82,7 +82,9 @@ final class JAPAnonProxy implements Runnable
   public int start()
     {
       m_numChannels=0;
-      m_Anon.connect(m_AnonServer);
+      int ret=m_Anon.connect(m_AnonServer);
+      if(ret!=ErrorCodes.E_SUCCESS)
+        return ret;
       threadRun=new Thread(this);
       threadRun.start();
       return E_SUCCESS;
