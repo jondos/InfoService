@@ -258,7 +258,7 @@ public class Configuration {
             JAPCertificate currentCertificate = loadX509Certificate(currentCertificateFile);
             if (currentCertificate != null) {
               SignatureVerifier.getInstance().getVerificationCertificateStore().addCertificateWithoutVerification(currentCertificate, JAPCertificate.CERTIFICATE_TYPE_ROOT, true);
-              LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Added the following file to the store of trusted root certificates: " + currentCertificateFile);
+              LogHolder.log(LogLevel.WARNING, LogType.MISC, "Added the following file to the store of trusted root certificates: " + currentCertificateFile);
             }
             else {
               LogHolder.log(LogLevel.ERR, LogType.MISC, "Error loading trusted root certificate: " + currentCertificateFile);

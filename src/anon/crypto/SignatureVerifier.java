@@ -38,232 +38,266 @@ import anon.util.XMLUtil;
 /**
  * Manages the verification of all signatures.
  */
-public class SignatureVerifier {
+public class SignatureVerifier
+{
 
-  /**
-   * This is the class for all documents coming from mixes (mixinfo, cascadeinfo, status).
-   */
-  public static final int DOCUMENT_CLASS_MIX = 1;
+	/**
+	 * This is the class for all documents coming from mixes (mixinfo, cascadeinfo, status).
+	 */
+	public static final int DOCUMENT_CLASS_MIX = 1;
 
-  /**
-   * This is the class for all documents coming from infoservices (infoserviceinfo).
-   */
-  public static final int DOCUMENT_CLASS_INFOSERVICE = 2;
+	/**
+	 * This is the class for all documents coming from infoservices (infoserviceinfo).
+	 */
+	public static final int DOCUMENT_CLASS_INFOSERVICE = 2;
 
-  /**
-   * This is the class for all documents with JAP update specific stuff (WebStart files,
-   * minimal JAP version).
-   */
-  public static final int DOCUMENT_CLASS_UPDATE = 3;
+	/**
+	 * This is the class for all documents with JAP update specific stuff (WebStart files,
+	 * minimal JAP version).
+	 */
+	public static final int DOCUMENT_CLASS_UPDATE = 3;
 
+	/**
+	 * Stores the name of the root node of the XML settings for this class.
+	 */
+	private static final String XML_SETTINGS_ROOT_NODE_NAME = "SignatureVerification";
 
-  /**
-   * Stores the name of the root node of the XML settings for this class.
-   */
-  private static final String XML_SETTINGS_ROOT_NODE_NAME = "SignatureVerification";
-  
+	/**
+	 * Stores the instance of SignatureVerifier (Singleton).
+	 */
+	private static SignatureVerifier ms_svInstance;
 
-  /**
-   * Stores the instance of SignatureVerifier (Singleton).
-   */
-  private static SignatureVerifier ms_svInstance;
+	/**
+	 * Stores all trusted certificates.
+	 */
+	private CertificateStore m_trustedCertificates;
 
+	/**
+	 * Stores whether signature checking is enabled or disabled. If this value is false, every
+	 * document is accept without checking the signature.
+	 */
+	private boolean m_checkSignatures;
 
-  /**
-   * Stores all trusted certificates.
-   */
-  private CertificateStore m_trustedCertificates;
+	/**
+	 * Creates a new instance of SignatureVerifier.
+	 */
+	private SignatureVerifier()
+	{
+		m_trustedCertificates = new CertificateStore();
+		m_checkSignatures = true;
+	}
 
-  /**
-   * Stores whether signature checking is enabled or disabled. If this value is false, every
-   * document is accept without checking the signature.
-   */
-  private boolean m_checkSignatures;
+	/**
+	 * Returns the instance of SignatureVerifier (Singleton). If there is no instance, there is a
+	 * new one created.
+	 *
+	 * @return The SignatureVerifier instance.
+	 */
+	public static SignatureVerifier getInstance()
+	{
+		synchronized (SignatureVerifier.class)
+		{
+			if (ms_svInstance == null)
+			{
+				ms_svInstance = new SignatureVerifier();
+			}
+		}
+		return ms_svInstance;
+	}
 
+	/**
+	 * Returns the name of the XML node used to store all settings of the SignatureVerifier
+	 * instance. This name can be used to find the XML node within a document when the settings
+	 * shall be loaded.
+	 *
+	 * @return The name of the XML node created when storing the settings.
+	 */
+	public static String getXmlSettingsRootNodeName()
+	{
+		return XML_SETTINGS_ROOT_NODE_NAME;
+	}
 
-  /**
-   * Creates a new instance of SignatureVerifier.
-   */
-  private SignatureVerifier() {
-    m_trustedCertificates = new CertificateStore();
-    m_checkSignatures = true;
-  }
+	/**
+	 * Enables or disables the check of signatures. If signature checking is disabled, the veriy
+	 * methods will return true in every case without checking anything. If this value is enabled,
+	 * every signature is verified against the internal certificate store.
+	 *
+	 * @param a_checkSignaturesEnabled True, if signature checking shall be enabled, false if it
+	 *                                 shall be disabled.
+	 */
+	public void setCheckSignatures(boolean a_checkSignaturesEnabled)
+	{
+		m_checkSignatures = a_checkSignaturesEnabled;
+	}
 
-  /**
-   * Returns the instance of SignatureVerifier (Singleton). If there is no instance, there is a
-   * new one created.
-   *
-   * @return The SignatureVerifier instance.
-   */
-  public static SignatureVerifier getInstance() {
-    synchronized (SignatureVerifier.class) {
-      if (ms_svInstance == null) {
-        ms_svInstance = new SignatureVerifier();
-      }
-    }
-    return ms_svInstance;
-  }
+	/**
+	 * Returns whether signature verification is enabled or not. If signature checking is disabled,
+	 * the veriy methods will return true in every case without checking anything. If this value is
+	 * enabled, every signature is verified against the internal certificate store.
+	 *
+	 * @return True, if every signature is really verified against the internal certificate store or
+	 *         false if the verify methods are successful without performing any verification.
+	 */
+	public boolean isCheckSignatures()
+	{
+		return m_checkSignatures;
+	}
 
-  /**
-   * Returns the name of the XML node used to store all settings of the SignatureVerifier
-   * instance. This name can be used to find the XML node within a document when the settings
-   * shall be loaded.
-   *
-   * @return The name of the XML node created when storing the settings.
-   */
-  public static String getXmlSettingsRootNodeName() {
-    return XML_SETTINGS_ROOT_NODE_NAME;
-  }
+	/**
+	 * Returns the certificate store used for the verification of all signatures.
+	 *
+	 * @return The certificate store used for the signature verification.
+	 */
+	public CertificateStore getVerificationCertificateStore()
+	{
+		return m_trustedCertificates;
+	}
 
+	/**
+	 * Verifies the signature of an XML document against the store of trusted certificates.
+	 * This methode returns true, if the signature of the document is valid, the signing certificate
+	 * can be derived from one of the trusted certificates (or is one of them) and if all of the
+	 * needed certificates in the path have the permission to sign documents of this class. This
+	 * method also returns always true if signature checking is disabled.
+	 *
+	 * @param a_rootNode The root node of the document. The Signature node must be one of the
+	 *                   children of the root node.
+	 * @param a_documentClass The class of the document. See the constants in this class.
+	 *
+	 * @return True, if the signature (and appended certificate) could be verified against the
+	 *         trusted certificates or false if not.
+	 *
+	 * @todo The ID within the document should be compared to the ID stored in the certificate.
+	 */
+	public boolean verifyXml(Element a_rootNode, int a_documentClass)
+	{
+		boolean verificationSuccessful = false;
+		synchronized (m_trustedCertificates)
+		{
+			if (!m_checkSignatures )
+			{
+				/* accept every document without testing the signature */
+				verificationSuccessful = true;
+			}
+			else
+			{
+				/* get the direct useable certificates depending on the document type */
+				Vector additionalCertificateInfoStructures = new Vector();
+				switch (a_documentClass)
+				{
+					case DOCUMENT_CLASS_MIX:
+					{
+						additionalCertificateInfoStructures = m_trustedCertificates.
+							getAvailableCertificatesByType(JAPCertificate.CERTIFICATE_TYPE_MIX);
+						break;
+					}
+					case DOCUMENT_CLASS_INFOSERVICE:
+					{
+						additionalCertificateInfoStructures = m_trustedCertificates.
+							getAvailableCertificatesByType(JAPCertificate.CERTIFICATE_TYPE_INFOSERVICE);
+						break;
+					}
+					case DOCUMENT_CLASS_UPDATE:
+					{
+						additionalCertificateInfoStructures = m_trustedCertificates.
+							getAvailableCertificatesByType(JAPCertificate.CERTIFICATE_TYPE_UPDATE);
+						break;
+					}
+				}
+				Vector additionalCertificates = new Vector();
+				Enumeration additionalCertificatesEnumerator = additionalCertificateInfoStructures.elements();
+				while (additionalCertificatesEnumerator.hasMoreElements())
+				{
+					additionalCertificates.addElement( ( (CertificateInfoStructure) (
+						additionalCertificatesEnumerator.nextElement())).getCertificate());
+				}
+				/* get the root certificates for verifying appended certificates */
+				Vector rootCertificates = new Vector();
+				if ( (a_documentClass == DOCUMENT_CLASS_MIX) ||
+					(a_documentClass == DOCUMENT_CLASS_INFOSERVICE))
+				{
+					/* if it is not an update message, we accept also all signatures which can be verified
+					 * against the root certificates
+					 */
+					Vector rootCertificateInfoStructures = m_trustedCertificates.
+						getAvailableCertificatesByType(JAPCertificate.CERTIFICATE_TYPE_ROOT);
+					Enumeration rootCertificatesEnumerator = rootCertificateInfoStructures.elements();
+					while (rootCertificatesEnumerator.hasMoreElements())
+					{
+						rootCertificates.addElement( ( (CertificateInfoStructure) (rootCertificatesEnumerator.
+							nextElement())).getCertificate());
+					}
+				}
+				/* now we have everything -> verify the signature */
+				try
+				{
+					if (XMLSignature.verify(a_rootNode, rootCertificates, additionalCertificates) != null)
+					{
+						/* verification of the signature was successful */
+						verificationSuccessful = true;
+					}
+				}
+				catch (Exception e)
+				{
+					/* this should only happen, if there is no signature child node */
+				}
+			}
+		}
+		return verificationSuccessful;
+	}
 
-  /**
-   * Enables or disables the check of signatures. If signature checking is disabled, the veriy
-   * methods will return true in every case without checking anything. If this value is enabled,
-   * every signature is verified against the internal certificate store.
-   *
-   * @param a_checkSignaturesEnabled True, if signature checking shall be enabled, false if it
-   *                                 shall be disabled.
-   */
-  public void setCheckSignatures(boolean a_checkSignaturesEnabled) {
-    m_checkSignatures = a_checkSignaturesEnabled;
-  }
-  
-  /**
-   * Returns whether signature verification is enabled or not. If signature checking is disabled,
-   * the veriy methods will return true in every case without checking anything. If this value is
-   * enabled, every signature is verified against the internal certificate store.
-   *
-   * @return True, if every signature is really verified against the internal certificate store or
-   *         false if the verify methods are successful without performing any verification.
-   */
-  public boolean isCheckSignatures() {
-    return m_checkSignatures;
-  }
-  
-  /**
-   * Returns the certificate store used for the verification of all signatures.
-   *
-   * @return The certificate store used for the signature verification.
-   */
-  public CertificateStore getVerificationCertificateStore() {
-    return m_trustedCertificates;
-  }
+	/**
+	 * Returns all settings (including the verification certificate store) as an XML node.
+	 *
+	 * @param a_doc The parent document for the created XML node.
+	 *
+	 * @return The settings of this instance of SignatureVerifier as an XML node.
+	 */
+	public Element getSettingsAsXml(Document a_doc)
+	{
+		Element signatureVerificationNode = a_doc.createElement(XML_SETTINGS_ROOT_NODE_NAME);
+		synchronized (m_trustedCertificates)
+		{
+			Element checkSignaturesNode = a_doc.createElement("CheckSignatures");
+			XMLUtil.setValue(checkSignaturesNode, m_checkSignatures);
+			Element trustedCertificatesNode = m_trustedCertificates.getSettingsAsXml(a_doc);
+			signatureVerificationNode.appendChild(checkSignaturesNode);
+			signatureVerificationNode.appendChild(trustedCertificatesNode);
+		}
+		return signatureVerificationNode;
+	}
 
-  /**
-   * Verifies the signature of an XML document against the store of trusted certificates.
-   * This methode returns true, if the signature of the document is valid, the signing certificate
-   * can be derived from one of the trusted certificates (or is one of them) and if all of the
-   * needed certificates in the path have the permission to sign documents of this class. This
-   * method also returns always true if signature checking is disabled.
-   *
-   * @param a_rootNode The root node of the document. The Signature node must be one of the
-   *                   children of the root node.
-   * @param a_documentClass The class of the document. See the constants in this class.
-   *
-   * @return True, if the signature (and appended certificate) could be verified against the
-   *         trusted certificates or false if not.
-   *
-   * @todo The ID within the document should be compared to the ID stored in the certificate.
-   */
-  public boolean verifyXml(Element a_rootNode, int a_documentClass) {
-    boolean verificationSuccessful = false;
-    synchronized (m_trustedCertificates) {
-      if (m_checkSignatures == false) {
-        /* accept every document without testing the signature */
-        verificationSuccessful = true;
-      }
-      else {
-        /* get the direct useable certificates depending on the document type */
-        Vector additionalCertificateInfoStructures = new Vector();
-        switch (a_documentClass) {
-          case DOCUMENT_CLASS_MIX: {
-            additionalCertificateInfoStructures = m_trustedCertificates.getAvailableCertificatesByType(JAPCertificate.CERTIFICATE_TYPE_MIX);
-            break;
-          }
-          case DOCUMENT_CLASS_INFOSERVICE: {
-            additionalCertificateInfoStructures = m_trustedCertificates.getAvailableCertificatesByType(JAPCertificate.CERTIFICATE_TYPE_INFOSERVICE);
-            break;
-          }
-          case DOCUMENT_CLASS_UPDATE: {
-            additionalCertificateInfoStructures = m_trustedCertificates.getAvailableCertificatesByType(JAPCertificate.CERTIFICATE_TYPE_UPDATE);
-            break;
-          }
-        }
-        Vector additionalCertificates = new Vector();
-        Enumeration additionalCertificatesEnumerator = additionalCertificateInfoStructures.elements();
-        while (additionalCertificatesEnumerator.hasMoreElements()) {
-          additionalCertificates.addElement(((CertificateInfoStructure)(additionalCertificatesEnumerator.nextElement())).getCertificate());
-        }
-        /* get the root certificates for verifying appended certificates */
-        Vector rootCertificates = new Vector();
-        if ((a_documentClass == DOCUMENT_CLASS_MIX) || (a_documentClass == DOCUMENT_CLASS_INFOSERVICE)) {
-          /* if it is not an update message, we accept also all signatures which can be verified
-           * against the root certificates
-           */
-          Vector rootCertificateInfoStructures = m_trustedCertificates.getAvailableCertificatesByType(JAPCertificate.CERTIFICATE_TYPE_ROOT);
-        Enumeration rootCertificatesEnumerator = rootCertificateInfoStructures.elements();
-        while (rootCertificatesEnumerator.hasMoreElements()) {
-          rootCertificates.addElement(((CertificateInfoStructure)(rootCertificatesEnumerator.nextElement())).getCertificate());
-        }
-        }
-        /* now we have everything -> verify the signature */
-        try {
-          if (XMLSignature.verify(a_rootNode, rootCertificates, additionalCertificates) != null) {
-            /* verification of the signature was successful */
-            verificationSuccessful = true;
-          }
-        }
-        catch (Exception e) {
-          /* this should only happen, if there is no signature child node */
-        }
-      }
-    }
-    return verificationSuccessful;
-  }
-
-  /**
-   * Returns all settings (including the verification certificate store) as an XML node.
-   *
-   * @param a_doc The parent document for the created XML node.
-   *
-   * @return The settings of this instance of SignatureVerifier as an XML node.
-   */
-  public Element getSettingsAsXml(Document a_doc) {
-    Element signatureVerificationNode = a_doc.createElement(XML_SETTINGS_ROOT_NODE_NAME);
-    synchronized (m_trustedCertificates) {
-      Element checkSignaturesNode = a_doc.createElement("CheckSignatures");
-      XMLUtil.setValue(checkSignaturesNode, m_checkSignatures);
-      Element trustedCertificatesNode = m_trustedCertificates.getSettingsAsXml(a_doc);
-      signatureVerificationNode.appendChild(checkSignaturesNode);
-      signatureVerificationNode.appendChild(trustedCertificatesNode);    
-    }
-    return signatureVerificationNode;
-  }
-  
-  /**
-   * Restores the settings of this instance of SignatureVerifier with the settings stored in the
-   * specified XML node.
-   *
-   * @param a_signatureVerificationNode The XML node for loading the settings from. The name of
-   *                                    the needed XML node can be obtained by calling
-   *                                    getXmlSettingsRootNodeName().
-   */
-  public void loadSettingsFromXml(Element a_signatureVerificationNode) throws Exception {
-    synchronized (m_trustedCertificates) {
-      /* parse the whole SignatureVerification XML structure */
-      Element checkSignaturesNode = (Element)(XMLUtil.getFirstChildByName(a_signatureVerificationNode, "CheckSignatures"));
-      if (checkSignaturesNode == null) {
-        throw (new Exception("SignatureVerifier: loadSettingsFromXml: No CheckSignatures node found."));
-      }
-      /* CheckSignatures node found -> get the value */
-      m_checkSignatures = XMLUtil.parseValue(checkSignaturesNode, true);
-      Element trustedCertificatesNode = (Element)(XMLUtil.getFirstChildByName(a_signatureVerificationNode, CertificateStore.getXmlSettingsRootNodeName()));
-      if (trustedCertificatesNode == null) {
-        throw (new Exception("SignatureVerifier: loadSettingsFromXml: No TrustedCertificates node found."));
-      }
-      /* TrustedCertificates node found -> load the certificates  */
-      m_trustedCertificates.loadSettingsFromXml(trustedCertificatesNode);
-    }  
-  }
+	/**
+	 * Restores the settings of this instance of SignatureVerifier with the settings stored in the
+	 * specified XML node.
+	 *
+	 * @param a_signatureVerificationNode The XML node for loading the settings from. The name of
+	 *                                    the needed XML node can be obtained by calling
+	 *                                    getXmlSettingsRootNodeName().
+	 */
+	public void loadSettingsFromXml(Element a_signatureVerificationNode) throws Exception
+	{
+		synchronized (m_trustedCertificates)
+		{
+			/* parse the whole SignatureVerification XML structure */
+			Element checkSignaturesNode = (Element) (XMLUtil.getFirstChildByName(a_signatureVerificationNode,
+				"CheckSignatures"));
+			if (checkSignaturesNode == null)
+			{
+				throw (new Exception("SignatureVerifier: loadSettingsFromXml: No CheckSignatures node found."));
+			}
+			/* CheckSignatures node found -> get the value */
+			m_checkSignatures = XMLUtil.parseValue(checkSignaturesNode, true);
+			Element trustedCertificatesNode = (Element) (XMLUtil.getFirstChildByName(
+				a_signatureVerificationNode, CertificateStore.getXmlSettingsRootNodeName()));
+			if (trustedCertificatesNode == null)
+			{
+				throw (new Exception(
+					"SignatureVerifier: loadSettingsFromXml: No TrustedCertificates node found."));
+			}
+			/* TrustedCertificates node found -> load the certificates  */
+			m_trustedCertificates.loadSettingsFromXml(trustedCertificatesNode);
+		}
+	}
 
 }
