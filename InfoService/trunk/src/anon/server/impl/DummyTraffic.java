@@ -80,10 +80,13 @@ final class DummyTraffic implements Runnable
 	public synchronized void stop()
 	{
 		m_bRun = false;
-		m_threadRunLoop.interrupt();
 		try
 		{
-			m_threadRunLoop.join();
+			if (m_threadRunLoop != null)
+			{
+				m_threadRunLoop.interrupt();
+				m_threadRunLoop.join();
+			}
 		}
 		catch (Exception e)
 		{

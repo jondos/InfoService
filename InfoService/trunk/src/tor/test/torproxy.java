@@ -23,18 +23,16 @@ public class torproxy {
 	public static void main(String[] args) throws Exception{
 		Tor tor = Tor.getInstance();
 		tor.start();
-		
+
 		ServerSocket server = new ServerSocket(1234);
 		System.out.println("Server läuft");
-		while(!server.isClosed())
+		while(true)
 		{
 			Socket client = server.accept();
 			proxythread t = new proxythread(client,tor.createChannel(TorChannel.SOCKS));
 			System.out.println("verbunden");
-			t.start(); 
+			t.start();
 
 		}
-		System.out.println("fertsch");
-		server.close();
 	}
 }
