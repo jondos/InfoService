@@ -210,7 +210,7 @@ public final class JAPDebug extends WindowAdapter{
 					frameConsole.addWindowListener(this);
 					frameConsole.pack();
 					JAPUtil.upRightFrame(frameConsole);
-					frameConsole.show(true);
+					frameConsole.setVisible(true);
 					m_bConsole=true;
 				}
 		}
