@@ -115,12 +115,13 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private JLabel m_labelOwnTrafficBytesSmall, m_labelOwnTrafficUnitSmall;
 	private JLabel m_labelOwnTrafficWWW, m_labelOwnTrafficOther;
 	private JLabel m_labelOwnTrafficBytesWWW, m_labelOwnTrafficUnitWWW;
+	private JLabel m_labelForwarding,m_labelForwardingSmall;
 	private JLabel m_labelForwardedTrafficBytes,m_labelForwardedTrafficBytesUnit;
 	private JLabel m_labelForwarderCurrentConnections,m_labelForwarderAcceptedConnections;
 	private JLabel m_labelForwarderRejectedConnections;
-	private JLabel m_labelForwardedTraffic;
+	private JLabel m_labelForwardedTraffic,m_labelForwarderUsedBandwidth;
 	private JLabel m_labelForwarderCurrentConnectionsLabel,m_labelForwarderAcceptedConnectionsLabel;
-	private JLabel m_labelForwarderRejectedConnectionsLabel;
+	private JLabel m_labelForwarderRejectedConnectionsLabel,m_labelForwarderUsedBandwidthLabel;
 	private JLabel m_labelForwarderConnections;
 	private JProgressBar m_progressOwnTrafficActivity, m_progressOwnTrafficActivitySmall;
 	private JButton m_bttnAnonDetails;
@@ -229,6 +230,12 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.weightx = 1;
 		m_panelAnonService.add(m_comboAnonServices, c1);
 		m_bttnAnonDetails = new JButton(JAPMessages.getString("ngBttnAnonDetails"));
+		m_bttnAnonDetails.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e)
+			{
+				showConfigDialog(JAPConf.ANON_TAB);
+			}
+		});
 		c1.gridx = 2;
 		c1.weightx = 0;
 		c1.fill = GridBagConstraints.NONE;
@@ -387,18 +394,29 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.insets = new Insets(0, 5, 0, 0);
 		c1.anchor = GridBagConstraints.WEST;
 		c1.weightx = 0;
-		c1.fill = GridBagConstraints.NONE;
+		c1.fill = GridBagConstraints.HORIZONTAL;
 		p.add(m_labelOwnTraffic, c1);
+		JComponent spacer=new JPanel();
+		Dimension spacerDimension=new Dimension(l.getFontMetrics(l.getFont()).charWidth('9')*6,1);
+		spacer.setPreferredSize(spacerDimension);
+		c1.insets = new Insets(0, 0, 0, 0);
+		c1.gridx=1;
+		c1.fill = GridBagConstraints.NONE;
+		c1.weightx = 1;
+		p.add(spacer, c1);
 		m_labelOwnTrafficBytes = new JLabel("0");
-		c1.gridx = 1;
+		c1.insets = new Insets(0, 5, 0, 0);
+		c1.weightx = 0;
+		c1.fill = GridBagConstraints.HORIZONTAL;
+		c1.gridx = 2;
 		p.add(m_labelOwnTrafficBytes, c1);
 		m_labelOwnTrafficUnit = new JLabel(JAPMessages.getString("Byte"));
-		c1.gridx = 2;
+		c1.gridx = 3;
 		p.add(m_labelOwnTrafficUnit, c1);
 		m_labelOwnActivity = new JLabel(JAPMessages.getString("ngActivity"), JLabel.RIGHT);
-		c1.weightx = 1;
+		c1.weightx = 0;
 		c1.fill = GridBagConstraints.HORIZONTAL;
-		c1.gridx = 3;
+		c1.gridx = 4;
 		p.add(m_labelOwnActivity, c1);
 		m_progressOwnTrafficActivity = new JProgressBar();
 		ui = new MyProgressBarUI(true);
@@ -407,7 +425,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_progressOwnTrafficActivity.setMinimum(0);
 		m_progressOwnTrafficActivity.setMaximum(5);
 		m_progressOwnTrafficActivity.setBorderPainted(false);
-		c1.gridx = 4;
+		c1.gridx = 5;
 		c1.weightx = 0;
 		c1.fill = GridBagConstraints.NONE;
 		p.add(m_progressOwnTrafficActivity, c1);
@@ -416,25 +434,44 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.gridx = 0;
 		c1.gridy = 1;
 		c1.anchor = GridBagConstraints.WEST;
+		c1.weightx = 0;
 		p.add(m_labelOwnTrafficWWW, c1);
+		spacer=new JPanel();
+		spacer.setPreferredSize(spacerDimension);
+		c1.gridx=1;
+		c1.insets = new Insets(0, 0, 0, 0);
+		c1.weightx=1;
+		c1.fill = GridBagConstraints.NONE;
+		p.add(spacer, c1);
 		m_labelOwnTrafficBytesWWW = new JLabel("0");
 		c1.insets = new Insets(10, 5, 0, 0);
-		c1.gridx = 1;
+		c1.gridx = 2;
+		c1.fill = GridBagConstraints.HORIZONTAL;
+		c1.weightx=0;
 		p.add(m_labelOwnTrafficBytesWWW, c1);
 		m_labelOwnTrafficUnitWWW = new JLabel(JAPMessages.getString("Byte"));
-		c1.gridx = 2;
+		c1.gridx = 3;
 		p.add(m_labelOwnTrafficUnitWWW, c1);
 		m_labelOwnTrafficOther = new JLabel(JAPMessages.getString("ngOwnTrafficOther"));
 		c1.insets = new Insets(7, 20, 0, 0);
 		c1.gridx = 0;
 		c1.gridy = 2;
 		p.add(m_labelOwnTrafficOther, c1);
+		spacer=new JPanel();
+		spacer.setPreferredSize(spacerDimension);
+		c1.insets = new Insets(0, 0, 0, 0);
+		c1.weightx=1;
+		c1.gridx=1;
+		c1.fill = GridBagConstraints.NONE;
+		p.add(spacer, c1);
 		l = new JLabel("0");
+		c1.fill = GridBagConstraints.HORIZONTAL;
+		c1.weightx=0;
 		c1.insets = new Insets(7, 5, 0, 0);
-		c1.gridx = 1;
+		c1.gridx = 2;
 		p.add(l, c1);
 		l = new JLabel(JAPMessages.getString("Byte"));
-		c1.gridx = 2;
+		c1.gridx = 3;
 		p.add(l, c1);
 		m_flippingpanelOwnTraffic.setFullPanel(p);
 
@@ -492,10 +529,10 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		gbl1 = new GridBagLayout();
 		c1 = new GridBagConstraints();
 		p = new JPanel(gbl1);
-		l = new JLabel("Forwarder (Blockungsresistenz):");
+		m_labelForwarding = new JLabel(JAPMessages.getString("ngForwarding"));
 		c1.insets = new Insets(0, 5, 0, 0);
 		c1.anchor = GridBagConstraints.WEST;
-		p.add(l, c1);
+		p.add(m_labelForwarding, c1);
 		gbl = new GridBagLayout();
 		c2 = new GridBagConstraints();
 		p2 = new JPanel(gbl2);
@@ -506,25 +543,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			{
 				/* start or shutdown the forwarding server */
 				JCheckBox source=(JCheckBox)e.getSource();
-				if (source.isSelected())
-				 {
-				   /* start the server by changing the routing mode */
-				   if (JAPModel.getInstance().getRoutingSettings().setRoutingMode(JAPRoutingSettings.
-					 ROUTING_MODE_SERVER) == false)
-				   {
-					 /* there was an error while starting the server */
-					 JOptionPane.showMessageDialog(JAPController.getView(),
-					   JAPMessages.getString("settingsRoutingStartServerError"),
-					   JAPMessages.getString("ERROR"), JOptionPane.ERROR_MESSAGE);
-				   }
-				   JAPModel.getInstance().getRoutingSettings().startPropaganda(false);
-				 }
-				 else
-				 {
-				   /* shutdown the server */
-				   JAPModel.getInstance().getRoutingSettings().setRoutingMode(JAPRoutingSettings.
-					 ROUTING_MODE_DISABLED);
-				 }
+				 m_Controller.enableForwardingServer(source.isSelected());
 				 valuesChanged(false);
 			   }
 		};
@@ -591,14 +610,14 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_labelForwardedTrafficBytesUnit = new JLabel(JAPMessages.getString("Byte"));
 		c1.gridx = 2;
 		p.add(m_labelForwardedTrafficBytesUnit, c1);
-		l = new JLabel("Genutzte Bandbreite:");
+		m_labelForwarderUsedBandwidthLabel = new JLabel(JAPMessages.getString("ngForwardedUsedBandwidth"));
 		c1.gridx = 0;
 		c1.gridy = 5;
-		p.add(l, c1);
-		l = new JLabel("10");
+		p.add(m_labelForwarderUsedBandwidthLabel, c1);
+		m_labelForwarderUsedBandwidth = new JLabel("0");
 		c1.gridx = 1;
-		p.add(l, c1);
-		l = new JLabel("kByte/s");
+		p.add(m_labelForwarderUsedBandwidth, c1);
+		l = new JLabel("Byte/s");
 		c1.gridx = 2;
 		p.add(l, c1);
 
@@ -608,10 +627,10 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		gbl1 = new GridBagLayout();
 		c1 = new GridBagConstraints();
 		p = new JPanel(gbl1);
-		l = new JLabel("Forwarder (Blockungsresistenz):");
+		m_labelForwardingSmall = new JLabel(JAPMessages.getString("ngForwarding"));
 		c1.insets = new Insets(0, 5, 0, 0);
 		c1.anchor = GridBagConstraints.WEST;
-		p.add(l, c1);
+		p.add(m_labelForwardingSmall, c1);
 		c1.gridx = 1;
 		c1.weightx = 1;
 		c1.fill = GridBagConstraints.HORIZONTAL;
@@ -658,6 +677,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 						m_labelForwarderAcceptedConnections.setText(Integer.toString(stats.getAcceptedConnections()));
 						m_labelForwarderRejectedConnections.setText(Integer.toString(stats.getRejectedConnections()));
 						m_labelForwarderCurrentConnections.setText(Integer.toString(stats.getCurrentlyForwardedConnections()));
+						m_labelForwarderUsedBandwidth.setText(Integer.toString(stats.getCurrentBandwidthUsage()));
 					}
 				}
 				catch (Throwable t)
@@ -1181,8 +1201,11 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_labelForwarderCurrentConnectionsLabel.setText(JAPMessages.getString("ngForwardedCurrentConnections"));
 		m_labelForwarderAcceptedConnectionsLabel.setText(JAPMessages.getString("ngForwardedAcceptedConnections"));
 		m_labelForwarderRejectedConnectionsLabel.setText(JAPMessages.getString("ngForwardedRejectedConnections"));
+		m_labelForwardingSmall.setText(JAPMessages.getString("ngForwarding"));
+		m_labelForwarding.setText(JAPMessages.getString("ngForwarding"));
 		m_labelForwardedTraffic.setText(JAPMessages.getString("ngForwardedTraffic"));
 		m_labelForwarderConnections.setText(JAPMessages.getString("ngForwardedConnections"));
+		m_labelForwarderUsedBandwidthLabel.setText(JAPMessages.getString("ngForwardedUsedBandwidth"));
 		m_cbForwarding.setText(JAPMessages.getString("ngForwardingOn"));
 		m_cbForwardingSmall.setText(JAPMessages.getString("ngForwardingOn"));
 

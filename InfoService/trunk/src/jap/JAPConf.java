@@ -440,7 +440,7 @@ final class JAPConf extends JDialog
 		//getContentPane().add(pContainer);
 		updateValues();
 		// largest tab to front
-		selectCard(ANON_TAB);
+		//selectCard(ANON_TAB);
 		if (JAPModel.isSmallDisplay())
 		{
 			setSize(240, 300);
@@ -1176,13 +1176,38 @@ final class JAPConf extends JDialog
 	 */
 	public void selectCard(String a_strSelectedCard)
 	{
-		/* try to get the specified card from the tab order table */
-		//Integer cardIndex = (Integer) (m_tabOrder.get(new Integer(a_selectedCard)));
-		//if (cardIndex != null)
-		//{
-			/* a card with the specified symoblic name is available in the hashtable */
-		//	m_Tabs.setSelectedIndex(cardIndex.intValue());
-		//}
+		DefaultTreeModel model=(DefaultTreeModel)m_Tree.getModel();
+		TreeNode found=findTreeNode((TreeNode)model.getRoot(),a_strSelectedCard);
+		if(found!=null)
+		{
+			m_Tree.setSelectionPath(new TreePath(
+				((DefaultMutableTreeNode)found).getPath()));
+		}
+	}
+
+	private TreeNode findTreeNode(TreeNode parent,String toFind)
+	{
+		if(parent==null)
+			return null;
+		if(parent instanceof DefaultMutableTreeNode)
+		{
+			DefaultMutableTreeNode n=(DefaultMutableTreeNode)parent;
+			Object o=n.getUserObject();
+			if(o!=null&&o instanceof TreeElement)
+			{
+				if(((TreeElement)o).getValue().equals(toFind))
+					return parent;
+			}
+		}
+		Enumeration childs=parent.children();
+		while(childs.hasMoreElements())
+		{
+			TreeNode child=(TreeNode)childs.nextElement();
+			TreeNode found=findTreeNode(child,toFind);
+			if(found!=null)
+				return found;
+		}
+		return null;
 	}
 
 	public void localeChanged()

@@ -300,7 +300,7 @@ class JAPConfAnon extends AbstractJAPConfModule
 		l=new JLabel("Informationen über die Server der Anonymisierungskette Dresden-Dresden");
 		p.add(l,c1);
 
-		JPanel p1=new JPanel(new GridBagLayout());
+		/*JPanel p1=new JPanel(new GridBagLayout());
 		GridBagConstraints c2=new GridBagConstraints();
 		c2.anchor=GridBagConstraints.WEST;
 		ButtonGroup bg=new ButtonGroup();
@@ -345,7 +345,13 @@ class JAPConfAnon extends AbstractJAPConfModule
 		bg.add(b);
 		c1.gridy=1;
 		c1.insets=new Insets(20,10,0,10);
-		p.add(p1,c1);
+		p.add(p1,c1);*/
+
+		//Paint the mix icons
+		ServerListPanel cascadePainter = new ServerListPanel(5);
+		c1.gridy=1;
+		c1.insets=new Insets(20,10,0,10);
+		p.add(cascadePainter,c1);
 
 
 		l=new JLabel("Betreiber:");

@@ -53,6 +53,7 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import anon.infoservice.*;
+
 /**
  * @author stefan
  *
@@ -204,15 +205,15 @@ public class Tor implements /*Runnable,*/ AnonService
 				}
 				if (m_activeCircuits[circ] != null && !m_activeCircuits[circ].isShutdown())
 				{
-				//all circuits are active but no one fits...
-				//shutdown one and use them...
+					//all circuits are active but no one fits...
+					//shutdown one and use them...
 					circ = circstart % m_MaxNrOfActiveCircuits;
-				m_activeCircuits[circ].shutdown();
-				m_activeCircuits[circ] = createNewCircuit(addr, port);
-				if (m_activeCircuits[circ] != null && !m_activeCircuits[circ].isShutdown())
-				{
-					return m_activeCircuits[circ];
-				}
+					m_activeCircuits[circ].shutdown();
+					m_activeCircuits[circ] = createNewCircuit(addr, port);
+					if (m_activeCircuits[circ] != null && !m_activeCircuits[circ].isShutdown())
+					{
+						return m_activeCircuits[circ];
+					}
 				}
 
 			}
