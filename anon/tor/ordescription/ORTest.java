@@ -17,7 +17,7 @@ import java.io.IOException;
 public class ORTest {
 
 	public static void main(String[] args) throws IOException {
-		ORList orl= new ORList();
-		orl.updateList("18.244.0.188",9033);
+		ORList orl= new ORList(new PlainORListFetcher("18.244.0.188",9033));
+		orl.updateList();
 	}
 }

@@ -27,10 +27,10 @@
  */
 package anon;
 
-import java.net.InetAddress;
 import anon.server.AnonServiceImpl;
 import anon.xmlrpc.client.AnonServiceImplProxy;
 import anon.tor.Tor;
+
 final public class AnonServiceFactory
 {
 	private static AnonService ms_AnonService = null;

@@ -21,7 +21,7 @@ public class TLSRecord
 		m_Header=new byte[5];
 		m_Header[1]=TinyTLS.PROTOCOLVERSION[0];
 		m_Header[2]=TinyTLS.PROTOCOLVERSION[1];
-		m_Data=new byte[0x01<<14];
+		m_Data=new byte[0xFFFF];
 		m_dataLen=0;
     }
 

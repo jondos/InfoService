@@ -3,7 +3,7 @@
  *
  */
 package anon.tor.util;
-
+import java.util.StringTokenizer;
 /**
  * @author stefan
  *
@@ -75,6 +75,34 @@ public class helper {
 			b[i] = bytes[index+i];
 		}
 		return b;
+	}
+	public static boolean isIPAddress(String addr)
+	{
+		StringTokenizer st = new StringTokenizer(addr, ".");
+		int i = 0;
+		int c;
+		while (st.hasMoreTokens())
+		{
+			String s = st.nextToken();
+			try
+			{
+				c = Integer.parseInt(s);
+			}
+			catch (Exception e)
+			{
+				return false;
+			}
+			if (c < 0 || c > 255)
+			{
+				return false;
+			}
+			i++;
+			if (i > 4)
+			{
+				return false;
+			}
+		}
+		return true;
 	}
 
 }

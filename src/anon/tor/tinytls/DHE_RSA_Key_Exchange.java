@@ -57,7 +57,8 @@ public class DHE_RSA_Key_Exchange extends Key_Exchange{
 	 * @param servercertificate servercertificate
 	 * @throws TLSException
 	 */
-	public void serverKeyExchange(byte[] bytes, byte[] clientrandom, byte[] serverrandom,JAPCertificate servercertificate) throws TLSException
+	public void serverKeyExchange(byte[] bytes,int bytes_offset,int bytes_len,
+								  byte[] clientrandom, byte[] serverrandom,JAPCertificate servercertificate) throws TLSException
 	{
 		this.m_clientrandom = clientrandom;
 		this.m_serverrandom = serverrandom;
@@ -66,26 +67,26 @@ public class DHE_RSA_Key_Exchange extends Key_Exchange{
 		BigInteger dh_g;
 		BigInteger dh_ys;
 		byte[] dummy;
-		byte[] b=helper.copybytes(bytes,counter,2);
+		byte[] b=helper.copybytes(bytes,counter+bytes_offset,2);
 		counter+=2;
 		int length =((b[0] & 0xFF) <<8)|(b[1] & 0xFF);
-		dummy = helper.copybytes(bytes,counter,length);
+		dummy = helper.copybytes(bytes,counter+bytes_offset,length);
 		counter+=length;
 		dh_p = new BigInteger(1,dummy);
 		LogHolder.log(LogLevel.DEBUG,LogType.MISC,"[SERVER_KEY_EXCHANGE] DH_P = "+dh_p.toString());
 
-		b=helper.copybytes(bytes,counter,2);
+		b=helper.copybytes(bytes,counter+bytes_offset,2);
 		counter+=2;
 		length =((b[0] & 0xFF) <<8)|(b[1] & 0xFF);
-		dummy = helper.copybytes(bytes,counter,length);
+		dummy = helper.copybytes(bytes,counter+bytes_offset,length);
 		counter+=length;
 		dh_g = new BigInteger(1,dummy);
 		LogHolder.log(LogLevel.DEBUG,LogType.MISC,"[SERVER_KEY_EXCHANGE] DH_G = "+dh_g.toString());
 
-		b=helper.copybytes(bytes,counter,2);
+		b=helper.copybytes(bytes,counter+bytes_offset,2);
 		counter+=2;
 		length =((b[0] & 0xFF) <<8)|(b[1] & 0xFF);
-		dummy = helper.copybytes(bytes,counter,length);
+		dummy = helper.copybytes(bytes,counter+bytes_offset,length);
 		counter+=length;
 		dh_ys = new BigInteger(1,dummy);
 		LogHolder.log(LogLevel.DEBUG,LogType.MISC,"[SERVER_KEY_EXCHANGE] DH_Ys = "+dh_ys.toString());
@@ -96,7 +97,7 @@ public class DHE_RSA_Key_Exchange extends Key_Exchange{
 
 		//-----------------------------------------
 
-		byte[] serverparams = helper.copybytes(bytes,0,counter);
+		byte[] serverparams = helper.copybytes(bytes,0+bytes_offset,counter);
 
 		byte[] expectedSignature = helper.conc(
 			hash.md5(new byte[][]
@@ -114,7 +115,7 @@ public class DHE_RSA_Key_Exchange extends Key_Exchange{
 			BigInteger exponent = rsa_pks.getPublicExponent();
 			AsymmetricBlockCipher rsa = new PKCS1Encoding(new RSAEngine());
 			rsa.init(false, new RSAKeyParameters(false,modulus,exponent));
-			byte[] hash = helper.copybytes(bytes,counter+2,bytes.length-counter-2);
+			byte[] hash = helper.copybytes(bytes,counter+2+bytes_offset,bytes_len-counter-2);
 			recievedSignature = rsa.processBlock(hash,0,hash.length);
 		} catch(Exception e)
 		{

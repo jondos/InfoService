@@ -29,7 +29,8 @@ public abstract class Key_Exchange{
 	 * @param servercertificate servercertificate
 	 * @throws TLSException
 	 */
-	public abstract void  serverKeyExchange(byte[] b, byte[] clientrandom, byte[] serverrandom,JAPCertificate cert) throws TLSException;
+	public abstract void  serverKeyExchange(byte[] b,int b_offset,int b_len,
+											byte[] clientrandom, byte[] serverrandom,JAPCertificate cert) throws TLSException;
 
 	/**
 	 * checks the server finished message

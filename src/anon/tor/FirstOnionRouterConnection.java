@@ -126,6 +126,7 @@ public class FirstOnionRouterConnection implements Runnable
 		}
 		catch (IOException ex)
 		{
+			ex.printStackTrace();
 			return false;
 			//TODO : Fehler ausgeben
 		}

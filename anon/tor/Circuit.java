@@ -5,21 +5,22 @@ package anon.tor;
 
 import java.io.IOException;
 import java.net.ConnectException;
-import java.net.InetAddress;
+//import java.net.InetAddress;
 //import java.util.Vector;
 //import java.util.HashMap;
 import java.security.SecureRandom;
-import java.util.*;
-
-import anon.tor.tinytls.TinyTLS;
-import anon.tor.util.helper;
+import java.util.Hashtable;
+import java.util.Vector;
 import anon.tor.cells.Cell;
 import anon.tor.cells.CreatedCell;
 import anon.tor.cells.DestroyCell;
 import anon.tor.cells.PaddingCell;
 import anon.tor.cells.RelayCell;
 import anon.tor.ordescription.ORDescription;
-import logging.*;
+import anon.tor.util.helper;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 
 /**
  * @author stefan
@@ -46,18 +47,23 @@ public class Circuit
 	private int m_circuitLength;
 	private int m_recvCellCounter;
 	private int m_sendCellCounter;
-	private Vector m_cellQueue;
+
+	private CellQueue m_cellQueue;
+
 	private byte[] m_resolvedData;
+	private Object m_oResolveSync;
+	private Object m_oSendSync;
+
 	private MyRandom m_rand;
 	//the Tor instance this circuit belongs to...
 	private Tor m_Tor;
 
 	//if the created or extended cells have arrived an are correct
-	private boolean m_created;
-	private boolean m_extended;
-	private boolean m_extended_correct;
-	private boolean m_destroyed;
-	private boolean m_resolved;
+	private volatile boolean m_created;
+	private volatile boolean m_extended;
+	private volatile boolean m_extended_correct;
+	private volatile boolean m_destroyed;
+	private volatile boolean m_resolved;
 
 	/**
 	 * constructor
@@ -69,18 +75,21 @@ public class Circuit
 	 * FirstOnionRouter, where all the data will be send. the onionProxy has to be the firstOR in the orList
 	 * @throws IOException
 	 */
-	public Circuit(int circID, Vector orList, FirstOnionRouterConnection onionProxy, Tor tor) throws IOException
+	public Circuit(int circID, Vector orList, FirstOnionRouterConnection onionProxy, Tor tor) throws
+		IOException
 	{
 		m_Tor = tor;
+		m_oResolveSync = new Object();
+		m_oSendSync = new Object();
 		this.m_FirstORConnection = onionProxy;
 		this.m_circID = circID;
 		this.m_streams = new Hashtable();
 		m_bShutdown = false;
-		m_bClosed=false;
+		m_bClosed = false;
 		m_streamIDCounter = 10;
 		m_onionRouters = (Vector) orList.clone();
 		m_circuitLength = orList.size();
-		m_lastORDescription=(ORDescription)m_onionRouters.elementAt(m_circuitLength-1);
+		m_lastORDescription = (ORDescription) m_onionRouters.elementAt(m_circuitLength - 1);
 		this.m_extended_correct = true;
 		if (this.m_onionRouters.size() < 1)
 		{
@@ -88,7 +97,7 @@ public class Circuit
 		}
 		this.m_recvCellCounter = 1000;
 		this.m_sendCellCounter = 1000;
-		this.m_cellQueue = new Vector();
+		m_cellQueue = new CellQueue();
 		this.m_rand = new MyRandom(new SecureRandom());
 	}
 
@@ -148,7 +157,7 @@ public class Circuit
 				}
 				LogHolder.log(LogLevel.DEBUG, LogType.TOR, "[TOR] extended!");
 			}
-			m_extended=true;
+			m_extended = true;
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC,
 						  "[TOR] Circuit '" + this.m_circID + "' ready!!! - Length of this Circuit : " +
 						  this.m_circuitLength + " Onionrouters");
@@ -171,8 +180,8 @@ public class Circuit
 	{
 		if (m_streams.isEmpty())
 		{
-			InetAddress addr = InetAddress.getByName(m_FirstOR.getDescription().getAddress());
-			int port = m_FirstOR.getDescription().getPort();
+			//InetAddress addr = InetAddress.getByName(m_FirstOR.getDescription().getAddress());
+			//int port = m_FirstOR.getDescription().getPort();
 			m_FirstORConnection.send(new DestroyCell(m_circID));
 		}
 		m_bShutdown = true;
@@ -185,8 +194,8 @@ public class Circuit
 	 */
 	public synchronized void destroy() throws Exception
 	{
-		InetAddress addr = InetAddress.getByName(m_FirstOR.getDescription().getAddress());
-		int port =m_FirstOR.getDescription().getPort();
+		//InetAddress addr = InetAddress.getByName(m_FirstOR.getDescription().getAddress());
+		//int port = m_FirstOR.getDescription().getPort();
 		m_FirstORConnection.send(new DestroyCell(m_circID));
 		m_streams.clear();
 		m_bClosed = true;
@@ -218,13 +227,13 @@ public class Circuit
 	}
 
 	/* check if the circuit is already shutdown
-		*
-		* @return if the circuit is shutdown
-		*/
-	   public synchronized boolean isShutdown()
-	   {
-		   return m_bShutdown;
-	   }
+	 *
+	 * @return if the circuit is shutdown
+	 */
+	public synchronized boolean isShutdown()
+	{
+		return m_bShutdown;
+	}
 
 	/**
 	 * dispatches cells to the opended channels
@@ -232,7 +241,7 @@ public class Circuit
 	 * cell
 	 * @throws IOException
 	 */
-	public synchronized void dispatchCell(Cell cell) throws IOException
+	public void dispatchCell(Cell cell) throws IOException
 	{
 		try
 		{
@@ -271,24 +280,27 @@ public class Circuit
 							{
 								m_sendCellCounter += 100;
 								deliverCells();
+								break;
 							}
 							default:
 							{
-								LogHolder.log(LogLevel.DEBUG,LogType.TOR,"Upps...");
+								LogHolder.log(LogLevel.DEBUG, LogType.TOR, "Upps...");
 							}
 						}
 					}
 					else if (this.m_streams.containsKey(streamID)) //dispatch cell to the circuit where it belongs to
 					{
 
-						TorChannel channel = (TorChannel)m_streams.get(streamID);
+						TorChannel channel = (TorChannel) m_streams.get(streamID);
 						if (channel != null)
 						{
 							channel.dispatchCell(c);
 						}
 						else
-							LogHolder.log(LogLevel.DEBUG,LogType.TOR,"Upps...");
+						{
+							LogHolder.log(LogLevel.DEBUG, LogType.TOR, "Upps...");
 
+						}
 					}
 					else
 					{
@@ -308,15 +320,16 @@ public class Circuit
 			}
 			else if (cell instanceof CreatedCell)
 			{
-				if(!m_FirstOR.checkCreatedCell(cell))
+				if (!m_FirstOR.checkCreatedCell(cell))
 				{
-					LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[TOR] Should never be here - 'created' cell was wrong");
-					m_created=false;
+					LogHolder.log(LogLevel.DEBUG, LogType.MISC,
+								  "[TOR] Should never be here - 'created' cell was wrong");
+					m_created = false;
 				}
 				else
 				{
-				LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[TOR] Connected to the first OR");
-				m_created = true;
+					LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[TOR] Connected to the first OR");
+					m_created = true;
 				}
 				notifyAll();
 			}
@@ -339,6 +352,7 @@ public class Circuit
 		}
 		catch (Exception ex)
 		{
+			ex.printStackTrace();
 			throw new IOException("Unable to dispatch the cell \n" + ex.getLocalizedMessage());
 		}
 	}
@@ -349,12 +363,12 @@ public class Circuit
 	 * cell to send
 	 * @throws IOException
 	 */
-	public synchronized void send(Cell cell) throws IOException
+	public void send(Cell cell) throws IOException
 	{
-		if (cell instanceof RelayCell)
+//		if (cell instanceof RelayCell)
 		{
-			this.m_cellQueue.addElement(this.m_FirstOR.encryptCell( (RelayCell) cell));
-			this.deliverCells();
+			m_cellQueue.addElement(m_FirstOR.encryptCell( (RelayCell) cell));
+			deliverCells();
 		}
 	}
 
@@ -362,17 +376,16 @@ public class Circuit
 	 * delivers the cells if the FOR accept more cells
 	 * @throws Exception
 	 */
-	private synchronized void deliverCells() throws IOException
+	private void deliverCells() throws IOException
 	{
-		if (this.m_sendCellCounter != 0)
+		synchronized (m_oSendSync)
 		{
-			RelayCell c = (RelayCell)this.m_cellQueue.elementAt(0);
-			this.m_cellQueue.removeElementAt(0);
-			this.m_FirstORConnection.send(c);
-			this.m_sendCellCounter--;
-			if (this.m_cellQueue.size() > 0)
+			if (m_sendCellCounter > 0 && !m_cellQueue.isEmpty())
 			{
-				this.deliverCells();
+				Cell c = m_cellQueue.removeElement();
+				m_FirstORConnection.send(c);
+				m_sendCellCounter--;
+				deliverCells();
 			}
 		}
 	}
@@ -391,31 +404,49 @@ public class Circuit
 	 * 0xF0 -- Error, transient
 	 * 0xF1 -- Error, nontransient
 	 */
-	public byte[] DNSResolve(String name)
+	public String resolveDNS(String name)
 	{
-		while (!m_extended)
+		synchronized (m_oResolveSync)
 		{
-			waitForNotify();
+			while (!m_extended && !m_destroyed)
+			{
+				waitForNotify();
+			}
+			m_resolved = false;
+			m_resolvedData = null;
+			int temp = this.m_rand.nextInt(65535);
+			while (m_streams.containsKey(new Integer(temp)))
+			{
+				temp = m_rand.nextInt(65535);
+			}
+			byte[] buff = helper.conc(name.getBytes(), new byte[1]);
+			RelayCell cell = new RelayCell(this.getCircID(), RelayCell.RELAY_RESOLVE, temp, buff);
+			try
+			{
+				send(cell);
+			}
+			catch (Exception ex)
+			{
+				return null;
+			}
+			while (!m_resolved && !m_destroyed)
+			{
+				waitForNotify();
+			}
+			if (m_resolvedData == null || m_resolvedData[0] != 4 || m_resolvedData[1] != 4)
+			{
+				return null;
+			}
+			StringBuffer sb = new StringBuffer();
+			sb.append(Integer.toString(m_resolvedData[2] & 0x00FF));
+			sb.append('.');
+			sb.append(Integer.toString(m_resolvedData[3] & 0x00FF));
+			sb.append('.');
+			sb.append(Integer.toString(m_resolvedData[4] & 0x00FF));
+			sb.append('.');
+			sb.append(Integer.toString(m_resolvedData[5] & 0x00FF));
+			return sb.toString();
 		}
-		this.m_resolved = false;
-		int temp = this.m_rand.nextInt(65535);
-		while (this.m_streams.containsKey(new Integer(temp)))
-		{
-			temp = this.m_rand.nextInt(65535);
-		}
-		RelayCell cell = new RelayCell(this.getCircID(), RelayCell.RELAY_RESOLVE, temp, name.getBytes());
-		try
-		{
-			this.send(cell);
-		}
-		catch (Exception ex)
-		{
-		}
-		while (!m_resolved)
-		{
-			waitForNotify();
-		}
-		return this.m_resolvedData;
 	}
 
 	/**
@@ -455,26 +486,26 @@ public class Circuit
 	 * a channel
 	 * @throws IOException
 	 */
-/*	public TorChannel createSOCKSChannel(int type) throws IOException
-	{
-		if (m_bShutdown)
-		{
-			throw new ConnectException("Circuit Closed - cannot connect");
-		}
-		else
-		{
-			m_streamIDCounter++;
-			TorSocksChannel tsc = new TorSocksChannel(m_streamIDCounter, this);
-			m_streams.put(new Integer(m_streamIDCounter), tsc);
+	/*	public TorChannel createSOCKSChannel(int type) throws IOException
+	 {
+	  if (m_bShutdown)
+	  {
+	   throw new ConnectException("Circuit Closed - cannot connect");
+	  }
+	  else
+	  {
+	   m_streamIDCounter++;
+	   TorSocksChannel tsc = new TorSocksChannel(m_streamIDCounter, this);
+	   m_streams.put(new Integer(m_streamIDCounter), tsc);
 
-			if (m_streamIDCounter == MAX_STREAMS_OVER_CIRCUIT)
-			{
-				shutdown();
-			}
-			return tsc;
-		}
-	}
-*/
+	   if (m_streamIDCounter == MAX_STREAMS_OVER_CIRCUIT)
+	   {
+	 shutdown();
+	   }
+	   return tsc;
+	  }
+	 }
+	 */
 	/**
 	 * creates a channel through the tor-network
 	 * @param addr
@@ -516,7 +547,7 @@ public class Circuit
 	 * a channel
 	 * @throws IOException
 	 */
-	protected void connectChannel(TorChannel channel,String addr, int port) throws IOException
+	protected void connectChannel(TorChannel channel, String addr, int port) throws IOException
 	{
 		///todo ACL ueberpruefen
 		if (m_bShutdown)
@@ -540,7 +571,7 @@ public class Circuit
 
 	public boolean isAllowed(String adr, int port)
 	{
-		return m_lastORDescription.getAcl().isAllowed(adr,port);
+		return m_lastORDescription.getAcl().isAllowed(adr, port);
 	}
 
 }
