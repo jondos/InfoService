@@ -306,6 +306,7 @@
     <file path="images/copyicon.gif"/>
     <file path="images/deleteicon.gif"/>
     <file path="images/enlarge.gif"/>
+    <file path="images/error.gif"/>
     <file path="images/exiticon.gif"/>
     <file path="images/green.gif"/>
     <file path="images/haken.gif"/>
@@ -317,6 +318,7 @@
     <file path="images/icon32.gif"/>
     <file path="images/iconify.gif"/>
     <file path="images/info.gif"/>
+    <file path="images/information.gif"/>
     <file path="images/install.gif"/>
     <file path="images/jap.gif"/>
     <file path="images/japeye.gif"/>
@@ -338,6 +340,7 @@
     <file path="images/saveicon.gif"/>
     <file path="images/server16.gif"/>
     <file path="images/splash.gif"/>
+    <file path="images/warning.gif"/>
     <file path="images/west.gif"/>
   </node>
   <node name="SampleConfiguration" type="Folder">
