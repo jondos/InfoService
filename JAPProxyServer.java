@@ -134,13 +134,6 @@ public class JAPProxyServer implements Runnable
 							model.setAnonMode(false);
 							model.status2 = model.getString("statusCannotConnect");
 							model.notifyJAPObservers();
-							javax.swing.JOptionPane.showMessageDialog
-								(
-								 model.getView(), 
-								 model.getString("errorConnectingFirstMix"),
-								 model.getString("errorConnectingFirstMixTitle"),
-								 javax.swing.JOptionPane.ERROR_MESSAGE
-								);
 							return false;
 						}
 				}

@@ -560,9 +560,9 @@ final public class JAPTest
 					
 					System.arraycopy(InetAddress.getLocalHost().getAddress(),0,buff,12,4);
 					DatagramPacket oPacket=new DatagramPacket(buff,4+8+6);
-					InetAddress addr=InetAddress.getLocalHost();	
+					InetAddress addr=InetAddress.getAllByName("anon.inf.tu-dresden.de")[0];	
 					oPacket.setAddress(addr);
-					oPacket.setPort(5000);
+					oPacket.setPort(8001);
 					oSocket.send(oPacket);
 					oSocket.receive(oPacket);
 					byte[] tmpBuff=new byte[8];

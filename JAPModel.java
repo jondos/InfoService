@@ -574,22 +574,32 @@ public final class JAPModel {
 				// -> we can start anonymity
 				anonMode = true;
 				// starting MUX --> Success ???
-				if(proxy.startMux())
+				if(proxy==null||proxy.startMux())
 					{
 						// start feedback thread
 						feedback=new JAPFeedback();
 						Thread t2 = new Thread (feedback);
 						t2.setPriority(Thread.MIN_PRIORITY);
 						t2.start();
-					}
-				// show a Reminder message that active contents should be disabled
-				Object[] options = { model.getString("disableActCntMessageDontRemind"), model.getString("okButton") };
-				if (disableActCntMessage !=0) 
-					disableActCntMessage = javax.swing.JOptionPane.showOptionDialog(view, 
+						// show a Reminder message that active contents should be disabled
+						Object[] options = { model.getString("disableActCntMessageDontRemind"), model.getString("okButton") };
+						if (disableActCntMessage !=0) 
+								disableActCntMessage = javax.swing.JOptionPane.showOptionDialog(view, 
 							 model.getString("disableActCntMessage"), 
 							 model.getString("disableActCntMessageTitle"), 
 							 javax.swing.JOptionPane.DEFAULT_OPTION, javax.swing.JOptionPane.WARNING_MESSAGE,
 							 null, options, options[1]);
+					}
+				else
+					{
+						javax.swing.JOptionPane.showMessageDialog
+								(
+								 getView(), 
+								 getString("errorConnectingFirstMix"),
+								 getString("errorConnectingFirstMixTitle"),
+								 javax.swing.JOptionPane.ERROR_MESSAGE
+								);
+					}
 				notifyJAPObservers();
 			}
 		} else if ((anonMode == true) && (anonModeSelected == false)) {
@@ -848,16 +858,8 @@ public final class JAPModel {
 
 	public static void upRightFrame(Window f) {
 		Dimension screenSize = f.getToolkit().getScreenSize();
-		try //JAVA 1.1
-			{
-				Dimension ownSize = f.getSize();
-				f.setLocation((screenSize.width-ownSize.width ) , 0 );
-			}
-		catch(Error e) //JAVA 1.0.2
-			{
-				Dimension ownSize = f.size();
-				f.locate((screenSize.width-ownSize.width ) , 0 );
-			}
+		Dimension ownSize = f.getSize();
+		f.setLocation((screenSize.width-ownSize.width ) , 0 );
 	}
 	
 	public static boolean isPort(int port)
