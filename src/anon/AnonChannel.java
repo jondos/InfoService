@@ -33,7 +33,7 @@ import java.io.OutputStream;
 /**
  * An AnonChannel could be used to send and receive data. There are different types of
  * channels and the transmitted data must match the (proxy-)protocol implied by the type
- * of the channel. A new channel is creted via {@link AnonService#createChannel()  createChannel()}
+ * of the channel. A new channel is creted via {@link AnonService#createChannel(int)  createChannel()}
  *
  * @version 1.0
  */

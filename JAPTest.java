@@ -86,8 +86,8 @@ final public class JAPTest
       try{
       AnonService s=AnonServiceFactory.create();
       s.connect(new AnonServer("mix.inf.tu-dresden.de",16544));
-      InetAddress addr=InetAddress.getByName("anon.inf.tu-dresden.de");
-      AnonChannel c=s.createChannel(addr,80);
+      InetAddress addr=InetAddress.getByName("dud33.inf.tu-dresden.de");
+      AnonChannel c=s.createChannel(addr,9999);
       InputStream in=c.getInputStream();
       OutputStream out=c.getOutputStream();
       out.write("GET /index.html HTTP/1.0\n\r\n\r".getBytes());

@@ -36,13 +36,15 @@ import logging.Log;
  */
 public interface AnonService
   {
+
+    public final static String ANONLIB_VERSION="00.00.002";
     /** Estabishes a connection to an AnonServer, which is described through the
      *  anonService parameter. This method must be called before any Channels could be created.
      *  @param anonService AnonServer to use
-     *  @returns E_SUCCESS, if the connection could be estblished
-     *  @returns E_ALREADY_CONNECTED, if this AnonService is already connected to a server
-     *  @returns E_INVALID_SERVICE, if anonService is not a valid server
-     *  @returns E_CONNECT, if a general connection error occured
+     *  @return E_SUCCESS, if the connection could be estblished
+     *  @return E_ALREADY_CONNECTED, if this AnonService is already connected to a server
+     *  @return E_INVALID_SERVICE, if anonService is not a valid server
+     *  @return E_CONNECT, if a general connection error occured
      *
      */
     public int connect(AnonServer anonService);
@@ -62,8 +64,8 @@ public interface AnonService
 
     /** Creates a new AnonChannel, which could be used like a normal TCP/IP connection
      *  to host:port.
-     *  @host Address of the server, which should be contacted
-     *  @port Port, to which connect to
+     *  @param host Address of the server, which should be contacted
+     *  @param port Port, to which connect to
      *  @return AnonChannel, useful for exchange data with host:port
      *  @throws ConnectException, if the Channel could not created
      *  @throws ToManyOpenChannels, if there a to many open channels for the AnonService
