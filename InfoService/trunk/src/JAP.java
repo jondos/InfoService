@@ -27,7 +27,7 @@ public class JAP {
 		model.addJAPObserver(view);
 		view.show();
 		
-		model.startProxy();
+		model.setAnonMode(true);
 		
 //		JAPDummy d = new JAPDummy(model, view);
 //		Thread dt = new Thread (d);

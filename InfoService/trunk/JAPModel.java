@@ -12,7 +12,7 @@ public class JAPModel implements JAPObserver {
 	public boolean		proxyMode = false;
 	public String		anonHostName ="sole.icsi.berkeley.edu";
 	public int			anonPortNumber = 6543;
-	public boolean		anonMode = false;
+	private boolean		anonMode = false;
 	public String 		status1 = "<init value>";
 	public String 		status2 = "<init value>";
 
@@ -87,24 +87,41 @@ public class JAPModel implements JAPObserver {
 	}
 	*/
 	
-	public void startProxy() {
-		if (isRunningProxy == false) {
-			isRunningProxy = true;
-			runningPortNumber = portNumber;
-			p = new ProxyServer(portNumber, debug,this);
-			Thread proxyThread = new Thread (p);
-			proxyThread.start();
-			status1 = "Listening...";
+		
+	public void setAnonMode(boolean bAnonMode)
+		{
+			anonMode=bAnonMode;
+			if(bAnonMode)
+				startProxy();
+			else
+				stopProxy();
 			notifyJAPObservers();
 		}
-	}
-	
-	public void stopProxy() {
-		if (isRunningProxy) {
-			p.stopService();
-			isRunningProxy = false;
+	public boolean isAnonMode()
+		{
+			return anonMode;
 		}
-	}
+	private void startProxy()
+		{
+			if (isRunningProxy == false)
+				{
+					isRunningProxy = true;
+					runningPortNumber = portNumber;
+					p = new ProxyServer(portNumber, debug,this);
+					Thread proxyThread = new Thread (p);
+					proxyThread.start();
+					status1 = "Listening...";
+				}
+		}
+	
+	private void stopProxy()
+		{
+			if (isRunningProxy)
+				{
+					p.stopService();
+					isRunningProxy = false;
+				}
+		}
 		
 	public void goodBye() {
 		stopProxy();
