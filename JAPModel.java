@@ -30,8 +30,8 @@ public final class JAPModel {
 	public  String   proxyHostName     = "ikt.inf.tu-dresden.de";
 	public  int      proxyPortNumber   = 80;
 	private boolean  proxyMode         = false;  // indicates whether JAP connects via a proxy or directly
-	public  String   infoServiceHostName      = "anon.inf.tu-dresden.de";
-	public  int      infoServicePortNumber    = 6543;
+	private String   infoServiceHostName      = "anon.inf.tu-dresden.de";
+	private int      infoServicePortNumber    = 6543;
 	public  String   anonHostName      = "anon.inf.tu-dresden.de";
 	public  int      anonPortNumber    = 6544;
 	private boolean  anonMode          = false;  // indicates whether user wants to send data via MIXes or not
@@ -274,6 +274,37 @@ public final class JAPModel {
 		return nrOfBytes;
 	}
 
+	public boolean setInfoService(String host,int port)
+		{
+			if(!isPort(port))
+				return false;
+			if(host==null)
+				return false;
+			synchronized(this)
+				{
+					infoServiceHostName=host;
+					infoServicePortNumber=port;
+					return true;
+				}
+		}
+		
+	
+	public String getInfoServiceHost()
+		{
+			synchronized(this)
+				{
+					return infoServiceHostName;
+				}
+		}
+	
+	public int getInfoServicePort()
+		{
+			synchronized(this)
+				{
+					return infoServicePortNumber;
+				}
+		}
+	
 	public synchronized void setAnonMode(boolean anonModeSelected)
 	{
 		if ((anonMode == false) && (anonModeSelected == true)) {
@@ -551,6 +582,13 @@ public final class JAPModel {
 				f.locate((screenSize.width-ownSize.width )/2,(screenSize.height-ownSize.height)/2);
 			}
 	}
+	
+	public static boolean isPort(int port)
+		{
+			if((port<1)||(port>65536))
+				return false;
+			return true;
+		}
 
 }
 

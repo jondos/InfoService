@@ -21,7 +21,7 @@ public final class JAPJIntField extends JTextField
 				return new IntDocument();
 			}
 
-    static class IntDocument extends PlainDocument 
+    static final class IntDocument extends PlainDocument 
 			{
 				public void insertString(int offSet,String string,AttributeSet attributeSet)
 					throws BadLocationException

@@ -388,7 +388,7 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 		portnumberTextField.setText(String.valueOf(model.getPortNumber()));
 		proxyCheckBox.setSelected(model.isProxyMode());
 		proxyTextField.setText(model.proxyHostName+":"+String.valueOf(model.proxyPortNumber));
-		infoServiceTextField.setText(model.infoServiceHostName+":"+String.valueOf(model.infoServicePortNumber));
+		infoServiceTextField.setText(model.getInfoServiceHost()+":"+String.valueOf(model.getInfoServicePort()));
 		anonCheckBox.setSelected(model.isAnonMode());
 		anonTextField.setText(model.anonHostName+":"+String.valueOf(model.anonPortNumber));
 		
@@ -443,9 +443,7 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 	
 	public synchronized void valuesChanged (JAPModel m)
 		{
-			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPView:view.valuesChanged() - start");
 			updateValues();
-			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPView:view.valuesChanged() - end");
 		}
 
 }
