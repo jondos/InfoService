@@ -18,9 +18,9 @@ JNIEXPORT void JNICALL Java_gui_JAPDll_setWindowOnTop_1dll
 /*
  * Class:     gui_JAPDll
  * Method:    hideWindowInTaskbar_dll
- * Signature: (Ljava/lang/String;)V
+ * Signature: (Ljava/lang/String;)Z
  */
-JNIEXPORT void JNICALL Java_gui_JAPDll_hideWindowInTaskbar_1dll
+JNIEXPORT jboolean JNICALL Java_gui_JAPDll_hideWindowInTaskbar_1dll
   (JNIEnv *, jclass, jstring);
 
 /*

@@ -10,7 +10,7 @@
 	#pragma once
 #endif // _MSC_VER > 1000
 
-#define JAPDLL_VERSION "00.01.003"
+#define JAPDLL_VERSION "00.01.004"
 
 // Fügen Sie hier Ihre Header-Dateien ein
 #include <windows.h>
@@ -22,22 +22,24 @@
 #define WM_TASKBAREVENT WM_USER+100
 #define BLINK_RATE 500
 
+struct t_find_window_by_name
+	{
+		const char * name;
+		HWND hWnd;
+	};
+	
 
 // globales Window Handle --> if !=null --> JAP is minimized
 HWND g_hWnd;
-// tmp Window Handle
-HWND tmp_hWnd;
-
-HWND helpwnd;
 
 // globales Moule Handle
 HINSTANCE hInstance;
 
 // Variable zur Sicherung der "alten" WndProc
-WNDPROC lpPrevWndFunc;
+WNDPROC g_lpPrevWndFunc;
 
-HANDLE hThread; //Handle for the Blinking-Thread
-BOOL isBlinking;
+HANDLE g_hThread; //Handle for the Blinking-Thread
+BOOL g_isBlinking;
 VOID ShowWindowFromTaskbar() ;
 
 
@@ -45,7 +47,7 @@ VOID ShowWindowFromTaskbar() ;
 DWORD WINAPI SetOldWndProcThread( LPVOID lpParam ) 
 	{
 		Sleep(500);
-		SetWindowLongPtr(g_hWnd,GWL_WNDPROC,(LONG_PTR)lpPrevWndFunc);
+		SetWindowLongPtr(g_hWnd,GWL_WNDPROC,(LONG_PTR)g_lpPrevWndFunc);
 		g_hWnd=NULL;
 		return 0;
 	}
@@ -62,7 +64,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
  					ShowWindowFromTaskbar();
 				return 0;
 			}  
-    return CallWindowProc(lpPrevWndFunc,hwnd, msg, wParam, lParam);
+    return CallWindowProc(g_lpPrevWndFunc,hwnd, msg, wParam, lParam);
 	}
 
 BOOL APIENTRY DllMain( HINSTANCE hModule, 
@@ -73,9 +75,8 @@ BOOL APIENTRY DllMain( HINSTANCE hModule,
 			{
 				case DLL_PROCESS_ATTACH:
 					hInstance=hModule;
-					hThread=NULL;
+					g_hThread=NULL;
 					g_hWnd=NULL;
-					tmp_hWnd=NULL;
 				break;
 				case DLL_THREAD_ATTACH:
 				break;
@@ -115,10 +116,10 @@ VOID ShowWindowFromTaskbar()
 /*
  * Versteckt g_hWnd und erzeugt ein Icon im Taskbar.
  */
-VOID HideWindowInTaskbar(HWND hWnd) 
+bool HideWindowInTaskbar(HWND hWnd) 
 {
 	if(hWnd==NULL)
-		return;
+		return false;
 	int i=10;
 	//Warten falls g_hWnd noch von letzten Aufruf "blockiert"
 	while(g_hWnd!=NULL&&i>0)
@@ -127,25 +128,43 @@ VOID HideWindowInTaskbar(HWND hWnd)
 			i--;
 		}
 	if(g_hWnd!=NULL)
-		return;
-	g_hWnd=hWnd;
-	// Window verstecken
-	ShowWindow(g_hWnd, SW_HIDE);
-	// alte WndProc sichern und neue setzen
-	lpPrevWndFunc = (WNDPROC) SetWindowLongPtr(g_hWnd,GWL_WNDPROC,(LONG_PTR)WndProc);
-	
+		return false;
+
 	// Icondaten vorbereiten
 	NOTIFYICONDATA nid;
-	nid.hWnd = g_hWnd;
+	nid.hWnd = hWnd;
 	nid.cbSize = NOTIFYICONDATA_SIZE;
 	nid.uID = IDI_JAP;
 	nid.uFlags = NIF_MESSAGE | NIF_TIP | NIF_ICON;
 	nid.uCallbackMessage = WM_TASKBAREVENT;
 	strcpy(nid.szTip, "JAP");
 	nid.hIcon = LoadIcon(hInstance,MAKEINTRESOURCE(IDI_JAP));
-	
+	if(nid.hIcon==NULL)
+		return false;
+	// Window verstecken
+	ShowWindow(hWnd, SW_HIDE);
+
 	//Icon im Taskbar setzen
-	Shell_NotifyIcon(NIM_ADD, &nid);
+
+	if(Shell_NotifyIcon(NIM_ADD, &nid)!=TRUE)
+		{
+			ShowWindow(hWnd, SW_SHOW);
+			return false;
+		}
+
+	//neu WndProc setzen
+	LONG_PTR tmpPtr=SetWindowLongPtr(hWnd,GWL_WNDPROC,(LONG_PTR)WndProc);
+	if(tmpPtr==NULL)
+		{
+			Shell_NotifyIcon(NIM_DELETE, &nid);
+			ShowWindow(hWnd, SW_SHOW);
+			return false;
+		}
+	//globales Handle und alte Prozedur setzen
+	g_lpPrevWndFunc = (WNDPROC) tmpPtr;
+	g_hWnd=hWnd;
+
+	return true;
 }
 
 /*
@@ -155,27 +174,17 @@ VOID HideWindowInTaskbar(HWND hWnd)
  */
 BOOL CALLBACK FindWindowByCaption(HWND hWnd, LPARAM lParam) 
 {
-	char *caption;
-	char *windowCaption;
-	BOOL result;
-
-	caption = (char *) malloc(255);
-	windowCaption = (char *) lParam;
+	char caption[255];
+	t_find_window_by_name* pFindWindow=(t_find_window_by_name*)lParam;
 	
 	GetWindowText(hWnd, caption, 255);
 
-	if (strncmp(caption, windowCaption, 255) == 0) 
-	{
-		tmp_hWnd = hWnd;
-		result = FALSE;
-	} 
-	else 
-	{
-		result = TRUE;
-	}
-	
-	free(caption);
-	return result;
+	if (strncmp(caption, pFindWindow->name, 255) == 0) 
+		{
+			pFindWindow->hWnd = hWnd;
+			return FALSE;
+		} 
+	return TRUE;
 }
 
 
@@ -186,9 +195,9 @@ DWORD WINAPI BlinkThread( LPVOID lpParam )
 		nid.cbSize = NOTIFYICONDATA_SIZE;
 		nid.uID = IDI_JAP;
 		nid.uFlags = NIF_ICON;
-		while (isBlinking) 
+		while (g_isBlinking) 
 			{
-				isBlinking = false;
+				g_isBlinking = false;
 				nid.hIcon = LoadIcon(hInstance,MAKEINTRESOURCE(IDI_JAP_BLINK));
 				Shell_NotifyIcon(NIM_MODIFY, &nid);
 				Sleep(BLINK_RATE);
@@ -208,17 +217,17 @@ DWORD WINAPI BlinkThread( LPVOID lpParam )
 				Shell_NotifyIcon(NIM_MODIFY, &nid);
 				Sleep(BLINK_RATE);
 			}
-			hThread=NULL;
+			g_hThread=NULL;
 			return 0;
 } 
 
 VOID OnTraffic() 
 {
   DWORD dwThreadId;
-	isBlinking = true;
-	if (hThread == NULL) 
+	g_isBlinking = true;
+	if (g_hThread == NULL) 
 		{
-			hThread = CreateThread(NULL, 0, BlinkThread, NULL, 0, &dwThreadId);                
+			g_hThread = CreateThread(NULL, 0, BlinkThread, NULL, 0, &dwThreadId);                
 		}
 }
 
@@ -230,31 +239,35 @@ VOID OnTraffic()
 JNIEXPORT void JNICALL Java_gui_JAPDll_setWindowOnTop_1dll
   (JNIEnv * env, jclass, jstring s, jboolean b)
 {
-	const char *str = env->GetStringUTFChars(s, 0);
-	
-	tmp_hWnd=NULL;
-  EnumWindows(&FindWindowByCaption, (LPARAM) str);
-	if (tmp_hWnd != NULL) 
+	t_find_window_by_name tmp;
+	tmp.name=env->GetStringUTFChars(s, 0);
+  tmp.hWnd=NULL;
+	EnumWindows(&FindWindowByCaption, (LPARAM) &tmp);
+	if (tmp.hWnd != NULL) 
 		{
 			if (b) 
-				SetWindowPos(tmp_hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
+				SetWindowPos(tmp.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
 			else
-				SetWindowPos(tmp_hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
+				SetWindowPos(tmp.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
 		}
-  env->ReleaseStringUTFChars(s, str);	
+  env->ReleaseStringUTFChars(s, tmp.name);	
   return;
 }
 
-JNIEXPORT void JNICALL Java_gui_JAPDll_hideWindowInTaskbar_1dll
+JNIEXPORT jboolean JNICALL Java_gui_JAPDll_hideWindowInTaskbar_1dll
   (JNIEnv * env, jclass, jstring s)
 {
-	const char *str = env->GetStringUTFChars(s, 0);
-  tmp_hWnd=NULL;
-	EnumWindows(&FindWindowByCaption, (LPARAM) str);
-
-	if (tmp_hWnd!= NULL) 
-		HideWindowInTaskbar(tmp_hWnd);
-  env->ReleaseStringUTFChars(s, str);
+	t_find_window_by_name tmp;
+	tmp.name=env->GetStringUTFChars(s, 0);
+  tmp.hWnd=NULL;
+	EnumWindows(&FindWindowByCaption, (LPARAM) &tmp);
+	jboolean ret=true;
+	if (tmp.hWnd!= NULL) 
+		ret=HideWindowInTaskbar(tmp.hWnd);
+	else
+		ret=false;
+	env->ReleaseStringUTFChars(s,tmp.name);
+	return ret;
 }
 
 

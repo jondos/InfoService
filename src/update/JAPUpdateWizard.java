@@ -366,6 +366,10 @@ public final class JAPUpdateWizard extends BasicWizard implements Runnable
 			{
 				private int m_retDownload=-1;
 				private int aktPos=0;
+				public JapDownloadListener()
+				  {
+				}
+
 				public int getDownloadState()
 					{
 						return m_retDownload;

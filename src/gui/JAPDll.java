@@ -33,8 +33,7 @@ final public class JAPDll
 			{
 				try
 					{
-						hideWindowInTaskbar_dll(caption);
-						return true;
+						return hideWindowInTaskbar_dll(caption);
 					}
 				catch(Throwable t)
 					{
@@ -72,7 +71,7 @@ final public class JAPDll
 
 		native static private void setWindowOnTop_dll(String caption, boolean onTop);
 
-		native static private void hideWindowInTaskbar_dll(String caption);
+		native static private boolean hideWindowInTaskbar_dll(String caption);
 
 		native static private void onTraffic_dll();
 
