@@ -170,7 +170,7 @@ public final class JAPAnonService implements Runnable
 						m_bIsRunning=false;
 						try{socketListener.close();}catch(Exception e1){};
 						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPAnonService: wait for joining...");
-						m_threadRunLoop.join();
+						m_threadRunLoop.join(5000);
 						m_threadRunLoop=null;
 					}
 				catch(Exception e){e.printStackTrace();}
