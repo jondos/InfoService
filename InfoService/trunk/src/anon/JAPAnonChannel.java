@@ -25,15 +25,16 @@ OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABIL
 IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY 
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
+package anon;
 import java.io.InputStream;
 
-public final class JAPProxyConnection extends Thread 
+final public class JAPAnonChannel extends Thread 
 	{ 
 		private final JAPSocket inSocket; 
 		private final JAPMuxSocket outSocket;
 		private final int channel;
 
-    public JAPProxyConnection (JAPSocket s, int channelID, JAPMuxSocket muxSocket) 
+    public JAPAnonChannel (JAPSocket s, int channelID, JAPMuxSocket muxSocket) 
 			{ 
 				inSocket = s;
 				channel=channelID; 

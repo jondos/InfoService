@@ -25,10 +25,7 @@ OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABIL
 IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY 
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
-//import org.logi.crypto.keys.BlowfishKey;
-//import javax.crypto.Cipher;
-//import javax.crypto.spec.SecretKeySpec;
-//import cryptix.jce.provider.key.RawSecretKey;
+package anon;
 import Rijndael.Rijndael_Algorithm;
 public final class JAPSymCipher
 	{

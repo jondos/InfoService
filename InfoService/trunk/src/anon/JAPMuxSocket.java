@@ -25,6 +25,8 @@ OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABIL
 IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY 
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
+package anon;
+
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.net.Socket;
@@ -301,6 +303,8 @@ END PROTO1*/
 		private final static short CHANNEL_SUSPEND=1;
 		public final static int E_CHANNEL_SUSPENDED=-7;	
 		
+		
+		private JAPAnonService m_AnonService=null;
 		private final class SocketListEntry
 			{
 				SocketListEntry(JAPSocket s)
@@ -323,13 +327,14 @@ END PROTO1*/
 				public boolean bIsSuspended;
 			};
 
-		JAPMuxSocket()
+		public JAPMuxSocket(JAPAnonService service)
 			{
 				lastChannelId=0;
 				oSocketList=new Hashtable();
 				arASymCipher=null;
 				outBuff=new byte[DATA_SIZE];
-				keypool=JAPModel.getModel().keypool;
+				keypool=service.getKeyPool();
+				m_AnonService=service;
 			}
 
 		public int connect(String host, int port)
@@ -369,9 +374,10 @@ END PROTO1*/
 			{
 				if(bIsConnected)
 					{
-						JAPProxyConnection p=new JAPProxyConnection(s,lastChannelId,this);
+						JAPAnonChannel p=new JAPAnonChannel(s,lastChannelId,this);
 						oSocketList.put(new Integer(lastChannelId),new SocketListEntry(s));
-						JAPModel.getModel().setNrOfChannels(oSocketList.size());
+						
+						m_AnonService.setNrOfChannels(oSocketList.size());
 						p.start();
 						lastChannelId++;
 						return 0;
@@ -384,7 +390,7 @@ END PROTO1*/
 			{
 				oSocketList.remove(new Integer(channel));
 				send(channel,null,(short)0);
-				JAPModel.getModel().setNrOfChannels(oSocketList.size());
+				m_AnonService.setNrOfChannels(oSocketList.size());
 				return 0;
 			}
 
@@ -405,7 +411,7 @@ END PROTO1*/
 						catch(Exception ie){}
 						oSocketList.remove(key);
 					}
-				JAPModel.getModel().setNrOfChannels(oSocketList.size());
+				m_AnonService.setNrOfChannels(oSocketList.size());
 				try
 					{
 						inDataStream.close();
@@ -447,7 +453,7 @@ END PROTO1*/
 								if(flags==CHANNEL_CLOSE)
 									{
 										oSocketList.remove(new Integer(channel));
-										JAPModel.getModel().setNrOfChannels(oSocketList.size());
+										m_AnonService.setNrOfChannels(oSocketList.size());
 										try
 											{
 												tmpEntry.outStream.close();
@@ -477,7 +483,7 @@ END PROTO1*/
 													}
 											}
 										try{tmpEntry.outStream.flush();}catch(Exception e){e.printStackTrace();};
-										JAPModel.getModel().increasNrOfBytes(len);
+										m_AnonService.increaseNrOfBytes(len);
 									}
 								else if(flags==CHANNEL_SUSPEND)
 									{
@@ -555,7 +561,7 @@ END PROTO1*/
 						outDataStream.writeShort(CHANNEL_DATA);
 						outDataStream.write(buff,0,DATA_SIZE);
 						outDataStream.flush();
-						JAPModel.getModel().increasNrOfBytes(len);
+						m_AnonService.increaseNrOfBytes(len);
 						if(entry!=null&&entry.bIsSuspended)
 							return E_CHANNEL_SUSPENDED;
 					}

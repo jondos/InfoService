@@ -49,8 +49,10 @@ import java.awt.Toolkit;
 import javax.swing.ImageIcon;
 import javax.swing.JCheckBox;
 import javax.swing.JOptionPane;
+import anon.JAPAnonService;
+import anon.JAPAnonServiceListener;
 /* This is the Model of All. It's a Singelton!*/
-public final class JAPModel {
+public final class JAPModel implements JAPAnonServiceListener{
 
 // 2000-08-01(HF): 
 // JAPDebug now initialized in JAP in order to use
@@ -71,7 +73,6 @@ public final class JAPModel {
 	private int      infoServicePortNumber    = 6543;
 	public  String   anonHostName      = "mix.inf.tu-dresden.de";
 	public  int      anonPortNumber    = 6544;
-	private boolean  anonMode          = false;  // indicates whether user wants to send data via MIXes or not
 	public  boolean  autoConnect       = false;  // autoconnect after program start
 	private boolean  mbMinimizeOnStartup =false; //true if programm should be started minimized...
 	public  boolean  alreadyCheckedForNewVersion = false; // indicates if check for new version has already been done 
@@ -129,13 +130,13 @@ public final class JAPModel {
 	private Vector observerVector=null;
 	public Vector anonServerDatabase=null;
 	
-	private JAPProxyServer listener=null;;
+	private JAPDirectProxy proxyDirect=null;
+	private JAPAnonService proxyAnon=null;
 	
 	private static JAPModel model=null;
 //	public JAPLoading japLoading;
 	private static JAPFeedback feedback=null;
 	
-	public static JAPKeyPool keypool=null;
 	
 	private JAPModel ()
 		{
@@ -163,7 +164,8 @@ public final class JAPModel {
 				
 			// Create observer object 
 			observerVector = new Vector();
-			anonMode=false;
+			proxyDirect=null;
+			proxyAnon=null;
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:initialization finished!");
 		}
 	
@@ -390,30 +392,9 @@ public final class JAPModel {
 	public void initialRun()
 		{
 			JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:initial run of JAP...");
-			// start keypool thread
-			keypool=new JAPKeyPool(20,16);
-			Thread t1 = new Thread (keypool);
-			t1.setPriority(Thread.MIN_PRIORITY);
-			t1.start();
 		
-			// start Listener
-			if(!startListener())
-				{
-					Object[] args={new Integer(portNumber)};
-					String msg=MessageFormat.format(model.getString("errorListenerPort"),
-																					args);
-					JOptionPane.showMessageDialog(model.getView(),
-																				msg,
-																				model.getString("errorListenerPortTitle"),
-																				JOptionPane.ERROR_MESSAGE);
-					JAPDebug.out(JAPDebug.EMERG,JAPDebug.NET,"Listener could not be started!");
-					model.getView().disableSetAnonMode();
-				}
-			else
-				{
-					// start anon service immediately if autoConnect is true
-					setAnonMode(autoConnect);
-				}	
+			// start Service if autoConnect
+			setAnonMode(autoConnect);
 		}
 	
     public int getCurrentProtectionLevel() {
@@ -454,7 +435,7 @@ public final class JAPModel {
 		}
 	}
 		
-	public synchronized void setNrOfChannels(int cannels) {
+	public synchronized void channelsChanged(int cannels) {
 		nrOfChannels=cannels;
 		notifyJAPObservers();
 	}
@@ -463,7 +444,7 @@ public final class JAPModel {
 		return nrOfChannels;
 	}
 	
-	public synchronized void increasNrOfBytes(int bytes) {
+	public synchronized void transferedBytes(int bytes) {
 		nrOfBytes+=bytes;
 		notifyJAPObservers();
 	}
@@ -617,27 +598,33 @@ public final class JAPModel {
 	
 	public synchronized void setAnonMode(boolean anonModeSelected)
 	{
-		if ((anonMode == false) && (anonModeSelected == true))
+		if ((proxyAnon == null) && (anonModeSelected == true))
 			{
 				view.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:setAnonMode("+anonModeSelected+")");
-				if (alreadyCheckedForNewVersion == false) {
-				// Check for a new Version of JAP if not already done
-					int ok = this.versionCheck();
-					if (ok == -1) {
+				if (alreadyCheckedForNewVersion == false) 
+					{
+						// Check for a new Version of JAP if not already done
+						int ok = this.versionCheck();
+						if (ok == -1) {
 						// -> at the moment nothing to do
 						//canStartService = false; // no necessary to set this variable
-					} else {
+						} else {
 						// -> we can start anonymity
 						canStartService = true;
 						alreadyCheckedForNewVersion = true;
+						}
 					}
-				}
 				if (canStartService) {
 					// -> we can start anonymity
-					anonMode = true;
+					if(proxyDirect!=null)
+						proxyDirect.stop();
+					proxyDirect=null;
 					// starting MUX --> Success ???
-					if(listener!=null&&listener.startMux())
+					proxyAnon=new JAPAnonService(model.portNumber,JAPAnonService.PROTO_HTTP);
+					proxyAnon.setAnonService(model.anonHostName,model.anonPortNumber);
+					int ret=proxyAnon.start();
+					if(ret==JAPAnonService.E_SUCCESS)
 						{
 							// start feedback thread
 							feedback=new JAPFeedback();
@@ -650,7 +637,7 @@ public final class JAPModel {
 							Object[] message={model.getString("disableActCntMessage"),checkboxRemindNever};
 							if (!mbActCntMessageNotRemind) 
 								{
-									int ret=0;
+									ret=0;
 									ret= JOptionPane.showOptionDialog(view, 
 																										message, 
 																										model.getString("disableActCntMessageTitle"), 
@@ -662,12 +649,23 @@ public final class JAPModel {
 										mbActCntMessageNotRemind=true;
 							}
 						}
+					else if (ret==JAPAnonService.E_BIND){
+										Object[] args={new Integer(portNumber)};
+					String msg=MessageFormat.format(model.getString("errorListenerPort"),
+																					args);
+					JOptionPane.showMessageDialog(model.getView(),
+																				msg,
+																				model.getString("errorListenerPortTitle"),
+																				JOptionPane.ERROR_MESSAGE);
+					JAPDebug.out(JAPDebug.EMERG,JAPDebug.NET,"Listener could not be started!");
+					model.getView().disableSetAnonMode();
+					}
 					else
 						{
 							JOptionPane.showMessageDialog
 									(
 									 getView(), 
-									 getString("errorConnectingFirstMix"),
+									 getString("errorConnectingFirstMix")+Integer.toString(ret),
 									 getString("errorConnectingFirstMixTitle"),
 									 JOptionPane.ERROR_MESSAGE
 									);
@@ -675,24 +673,27 @@ public final class JAPModel {
 					view.setCursor(Cursor.getDefaultCursor());
 					notifyJAPObservers();
 				}
-		} else if ((anonMode == true) && (anonModeSelected == false)) {
+		} else if ((proxyDirect==null) && (anonModeSelected == false)) {
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:setAnonMode("+anonModeSelected+")");
-			anonMode = false;
-			listener.stopMux();
-			if(feedback==null)
+			if(proxyAnon!=null)
+				proxyAnon.stop();
+			proxyAnon=null;
+			if(feedback!=null)
 				{
 					feedback.stopRequests();
 					feedback=null;
 				}
+			proxyDirect=new JAPDirectProxy(model.portNumber);
+			proxyDirect.start();
 			notifyJAPObservers();
 		}
 	}
 	
 	public boolean isAnonMode() {
-		return anonMode;
+		return proxyAnon!=null;
 	}
 
-
+/*
 	private boolean startListener() 
 		{
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:startListener");
@@ -722,13 +723,13 @@ public final class JAPModel {
 					isRunningListener = false;
 				}
 		}
-	
+	*/
 	
 	/** This (and only this!) is the final exit procedure of JAP!
 	 * 
 	 */
 	public void goodBye() {
-		stopListener();
+		//stopListener();
 		save();
 		System.exit(0);
 	}
@@ -829,7 +830,6 @@ public final class JAPModel {
 																					model.getString("downloadFailed")+model.getString("infoURL"), 
 																					model.getString("downloadFailedTitle"),
 																					JOptionPane.ERROR_MESSAGE); 
-						anonMode = false;
 						notifyJAPObservers();
 						return -1;
 					}
@@ -841,7 +841,6 @@ public final class JAPModel {
 						   null,
 						   "OK",
 						   true,false);
-					anonMode = false;
 					notifyJAPObservers();
 					return -1;
 				}
@@ -858,7 +857,6 @@ public final class JAPModel {
 																		model.getString("errorConnectingInfoService"),
 																		model.getString("errorConnectingInfoServiceTitle"),
 																		JOptionPane.ERROR_MESSAGE); 
-			anonMode = false;
 			notifyJAPObservers();
 			return -1;
 		}

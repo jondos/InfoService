@@ -3,8 +3,8 @@ package anon;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import anon.JAPMuxSocket;
 
-import JAPMuxSocket;
 public class JAPAnonService implements Runnable
 	{
 		public final static int E_SUCCESS=0;
@@ -26,10 +26,21 @@ public class JAPAnonService implements Runnable
 		private Thread m_threadRunLoop=null;
 		private ServerSocket socketListener=null;
 		private JAPMuxSocket m_MuxSocket=null;
-		public JAPAnonService(){}
-		public JAPAnonService(int port){setPort(port);}
+		
+		private JAPAnonServiceListener m_AnonServiceListener=null;
+
+		private static JAPKeyPool m_KeyPool=null;
+		public JAPAnonService(){if(m_KeyPool==null)
+														{
+															m_KeyPool=new JAPKeyPool(20,16);
+															Thread t1 = new Thread (m_KeyPool);
+															t1.setPriority(Thread.MIN_PRIORITY);
+															t1.start();
+														}}
+		public JAPAnonService(int port){this();setPort(port);}
 		public JAPAnonService(int port,int protocol)
 			{
+				this();
 				setService(port,protocol);
 			}
 		public int setService(int port,int protocol)
@@ -64,13 +75,19 @@ public class JAPAnonService implements Runnable
 				return E_SUCCESS;
 			}
 		
+		public int setAnonServiceListener(JAPAnonServiceListener listener)
+			{
+				m_AnonServiceListener=listener;
+				return E_SUCCESS;
+			}
+		
 		public int start()
 			{
 				if(m_bIsRunning)
 					return E_RUNNING;
 				if(m_Port<0||m_Port>0x00FFFF)
 					return E_INVALID_PORT;
-				if(m_Protocol!=PROTO_HTTP||m_Protocol!=PROTO_SOCKS)
+				if(m_Protocol!=PROTO_HTTP&&m_Protocol!=PROTO_SOCKS)
 					return E_INVALID_PROTOCOL;
 				
 				socketListener = null;
@@ -93,7 +110,7 @@ public class JAPAnonService implements Runnable
 					}
 				
 				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPProxyServer:Mux starting...");
-				m_MuxSocket = new JAPMuxSocket();
+				m_MuxSocket = new JAPMuxSocket(this);
 				if(m_MuxSocket.connect(m_AnonHostName,m_AnonHostPort)==-1)
 					{
 						try{ socketListener.close(); }catch(Exception e){}
@@ -101,9 +118,10 @@ public class JAPAnonService implements Runnable
 						m_MuxSocket=null;
 						return E_CONNECT;
 					}
+				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPProxyServer:Mux connected!");
 				m_MuxSocket.start();
 				m_threadRunLoop=new Thread(this);
-				m_threadRunLoop.run();
+				m_threadRunLoop.start();
 				return E_SUCCESS;
 			}
 		
@@ -149,4 +167,20 @@ public class JAPAnonService implements Runnable
 				m_bIsRunning=false;
 			}
 		
+		protected void setNrOfChannels(int channels)
+			{
+				if(m_AnonServiceListener!=null)
+					m_AnonServiceListener.channelsChanged(channels);
+			}
+		
+		protected void increaseNrOfBytes(int bytes)
+			{
+				if(m_AnonServiceListener!=null)
+					m_AnonServiceListener.transferedBytes(bytes);
+			}
+		
+		protected JAPKeyPool getKeyPool()
+			{
+				return m_KeyPool;
+			}
 	}
