@@ -248,7 +248,7 @@ public class XtendedPrivateTestCase extends PrivateTestCase
 		String sequenceNumber = "";
 		Comment comment1, comment2;
 		Document doc = XMLUtil.createDocument();
-		Element element = (Element)doc.importNode(a_xmlElement, true);
+		Element element = (Element)XMLUtil.importNode(doc, a_xmlElement, true);
 
 		if (a_sequenceNumber >= 0) {
 			sequenceNumber = "_" + a_sequenceNumber;

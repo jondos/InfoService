@@ -122,7 +122,7 @@ public class Tor implements Runnable, AnonService
 
 	//used to create circuits at startup
 	private Thread m_circuitCreator;
-	private volatile boolean m_closeCreator;
+	private volatile boolean m_bCloseCreator;
 
 	private ImmutableProxyInterface m_proxyInterface;
 	/**
@@ -159,7 +159,7 @@ public class Tor implements Runnable, AnonService
 		m_CircuitForDestination = new Hashtable();
 		m_KeysForCircuit = new Vector[m_MaxNrOfActiveCircuits];
 		//counts the number of circuits that have been created (-1 : nouse of this variable / 0-m_maxnrofactivecircuits : number of created circuits)
-		m_closeCreator = false;
+		m_bCloseCreator = false;
 		m_proxyInterface = null;
 	}
 
@@ -466,7 +466,7 @@ public class Tor implements Runnable, AnonService
 	{
 		int errTry = 0;
 		int aktCircuit = 0;
-		while (aktCircuit < m_MaxNrOfActiveCircuits && !m_closeCreator&& errTry < 4)
+		while (aktCircuit < m_MaxNrOfActiveCircuits && !m_bCloseCreator && errTry < 4)
 		{
 			//We do not try to be as fast as possible...
 			try
@@ -475,6 +475,10 @@ public class Tor implements Runnable, AnonService
 			}
 			catch (InterruptedException ex)
 			{
+			}
+			if (m_bCloseCreator)
+			{
+				break;
 			}
 			synchronized (m_oActiveCircuitSync)
 			{
@@ -522,6 +526,7 @@ public class Tor implements Runnable, AnonService
 		synchronized (m_oStartStopSync)
 		{
 			m_bIsStarted = true;
+			m_bCloseCreator = false;
 			m_activeCircuits = new Circuit[m_MaxNrOfActiveCircuits];
 			if (startCircuits)
 			{
@@ -543,12 +548,18 @@ public class Tor implements Runnable, AnonService
 		synchronized (m_oStartStopSync)
 		{
 			m_bIsStarted = false;
-			m_closeCreator = true;
+			m_bCloseCreator = true;
 			if (m_circuitCreator != null)
 			{
 				try
 				{
-					m_circuitCreator.wait();
+					m_circuitCreator.interrupt();
+				}
+				catch (Exception e2)
+				{}
+				try
+				{
+					m_circuitCreator.join();
 				}
 				catch (InterruptedException ex)
 				{
