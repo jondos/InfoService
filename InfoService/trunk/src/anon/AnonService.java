@@ -29,6 +29,7 @@ package anon;
 
 import java.net.InetAddress;
 import java.net.ConnectException;
+import logging.Log;
 public interface AnonService
   {
     public int connect(AnonServer anonService);
@@ -37,4 +38,5 @@ public interface AnonService
     public AnonChannel createChannel(InetAddress host,int port) throws ConnectException;
     public void addEventListener(AnonServiceEventListener l);
     public void removeEventListener(AnonServiceEventListener l);
+    public void setLogging(Log log);
   }

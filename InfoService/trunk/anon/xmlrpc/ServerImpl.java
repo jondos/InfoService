@@ -30,7 +30,7 @@ import com.tm.xmlrpc.CallManager;
 import com.tm.xmlrpc.TCPServer;
 import com.tm.xmlrpc.SerializerFactory;
 import java.net.InetAddress;
-import JAPController;
+
 import anon.infoservice.InfoService;
 import anon.AnonServer;
 /**This is only a temporaly class and will be removed in the near future*/
@@ -83,30 +83,36 @@ public class ServerImpl extends Server
 
 	public MixCascade[] loadMixCascadesFromTheNet() throws Exception
 		{
-			JAPController m=JAPController.getController();
+			/*JAPController m=JAPController.getController();
 			InfoService info=m.getInfoService();
 			AnonServer[] servers=info.getAvailableAnonServers();
 			MixCascade[] cascades=new MixCascade[servers.length];
 			for(int i=0;i<servers.length;i++)
 				cascades[i]=new MixCascade(servers[i].getName(),servers[i].getHost(),servers[i].getPort());
-			return cascades;
+			return cascades;*/
+      return null;
 		}
 
 	public MixCascade getMixCascadeCurrentlyUsed() throws Exception
 		{
+    /*
 			JAPController m=JAPController.getController();
 		  AnonServer server=m.getAnonServer();
 			return new MixCascade(server.getName(),server.getHost(),server.getPort());
+      */
+      return null;
 		}
 
 	public boolean setMixCascadeCurrentlyUsed(MixCascade cascade) throws Exception
 		{
+    /*
 			JAPController m=JAPController.getController();
 		  AnonServer server=new AnonServer(cascade.getName(),cascade.getHost(),cascade.getPort());
 		  m.setAnonServer(server);
 			if(!m.getAnonMode())
 				m.setAnonMode(true);
-		  return true;
+		  return true;*/
+      return false;
 		}
 
 }

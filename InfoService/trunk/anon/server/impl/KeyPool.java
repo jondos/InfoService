@@ -27,7 +27,9 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 */
 package anon.server.impl;
 import java.security.SecureRandom;
-import JAPDebug;
+import logging.Log;
+import logging.LogLevel;
+import logging.LogType;
 
 final public class KeyPool implements Runnable
 	{
@@ -43,6 +45,7 @@ final public class KeyPool implements Runnable
 		private boolean runflag;
 		private static KeyPool m_KeyPool=null;
 		private Thread m_KeyPoolThread=null;
+    private Log m_Log=null;
 		private final class KeyList
 			{
 				public byte[] key;
@@ -55,9 +58,10 @@ final public class KeyPool implements Runnable
 			}
 
 
-		private KeyPool(int poolsize,int keylength)
+		private KeyPool(int poolsize,int keylength,Log log)
 			{
-				//JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPKeyPool:initializing...");
+        m_Log=log;
+				//m_Log.log(JAPDebug.INFO,LogType.MISC,"JAPKeyPool:initializing...");
 				keySize=keylength;
 				this.poolSize=poolsize;
 				pool=null;
@@ -68,17 +72,23 @@ final public class KeyPool implements Runnable
 				m_KeyPoolThread=new Thread(this);
 				m_KeyPoolThread.setPriority(Thread.MIN_PRIORITY);
 				m_KeyPoolThread.start();
-				//JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPKeyPool:initialization finished!");
+				//m_Log.log(LogLevel.DEBUG,LogType.MISC,"JAPKeyPool:initialization finished!");
 			}
 
-		public static synchronized KeyPool start(/*int poolsize,int keylength*/)
+		public static synchronized KeyPool start(Log log)
 			{
 				if(m_KeyPool==null)
-					m_KeyPool=new KeyPool(20,16/*poolsize,keylength*/);
-				return m_KeyPool;
+					m_KeyPool=new KeyPool(20,16,log);
+				m_KeyPool.setLogging(log);
+        return m_KeyPool;
 			}
 
-		public void run()
+		public void setLogging(Log log)
+      {
+        m_Log=log;
+      }
+
+    public void run()
 			{
 				byte[] seed=null;
 				try
@@ -104,7 +114,7 @@ final public class KeyPool implements Runnable
 				runflag=true;
 				while(runflag)
 					{
-						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPKeyPool:run() loop");
+						m_Log.log(LogLevel.DEBUG,LogType.MISC,"JAPKeyPool:run() loop");
 						if(pool!=null)
 							{
 								synchronized(this)
@@ -138,14 +148,14 @@ final public class KeyPool implements Runnable
 								}
 							catch(InterruptedException e)
 								{
-									JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPKeyPool:run() waiting interrupted!");
+									m_Log.log(LogLevel.DEBUG,LogType.MISC,"JAPKeyPool:run() waiting interrupted!");
 								}
 					}
 			}
 
 		public static void getKey(byte[] key)
 			{
-				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPKeyPool:getKey()");
+				m_KeyPool.m_Log.log(LogLevel.DEBUG,LogType.MISC,"JAPKeyPool:getKey()");
 				if(m_KeyPool.aktKey==null)
 					try
 						{
@@ -154,7 +164,7 @@ final public class KeyPool implements Runnable
 						}
 					catch(InterruptedException e)
 						{
-							JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPKeyPool:getKey() waiting interrupted!");
+							m_KeyPool.m_Log.log(LogLevel.DEBUG,LogType.MISC,"JAPKeyPool:getKey() waiting interrupted!");
 						}
 				synchronized(m_KeyPool)
 					{

@@ -27,28 +27,38 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 */
 package anon.server.impl;
 
-import JAPDebug;
+import logging.Log;
+import logging.LogLevel;
+import logging.LogType;
+
 class DummyTraffic implements Runnable
 	{
-		MuxSocket m_MuxSocket=null;
-	  volatile boolean m_bRun=false;
-		Thread m_threadRunLoop=null;
-		private final static long DUMMY_TRAFFIC_INTERVAL=10000; //How long maximum to wait between packets ?
+		private MuxSocket m_MuxSocket=null;
+	  private volatile boolean m_bRun=false;
+		private Thread m_threadRunLoop=null;
+		private Log m_Log;
+    private final static long DUMMY_TRAFFIC_INTERVAL=10000; //How long maximum to wait between packets ?
 
-		public DummyTraffic(MuxSocket muxSocket)
+		public DummyTraffic(MuxSocket muxSocket,Log log)
 			{
+        m_Log=log;
 				m_MuxSocket=muxSocket;
 				m_bRun=false;
 				m_threadRunLoop=null;
 			}
 
-		public void run()
+    public void setLogging(Log log)
+      {
+        m_Log=log;
+      }
+
+    public void run()
 			{
 				while(m_bRun)
 					{
 						if(System.currentTimeMillis()-m_MuxSocket.getTimeLastPacketSend()>DUMMY_TRAFFIC_INTERVAL)
 							{
-							  JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Sending Dummy!");
+							  m_Log.log(LogLevel.DEBUG,LogType.NET,"Sending Dummy!");
 								m_MuxSocket.send(12345,0,null,(short)0); //this is a channel close for a hopefully non existend channel
 						  }
 						try
