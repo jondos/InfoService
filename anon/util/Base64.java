@@ -24,7 +24,7 @@
 //                                                                     //
 ////////////////////end license & copyright header///////////////////////
 
-package anon.server.impl;
+package anon.util;
 
 /**
  *   Provides encoding of raw bytes to base64-encoded characters, and

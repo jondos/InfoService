@@ -43,8 +43,8 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import anon.server.impl.Base64;
-import anon.server.impl.XMLUtil;
+import anon.util.Base64;
+import anon.util.XMLUtil;
 
 public class JAPSignature
 {
