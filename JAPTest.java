@@ -49,9 +49,9 @@ import sun.security.util.DerInputStream;
 import sun.security.util.DerValue;
 import sun.security.util.BigInt;
 //import cryptix.jce.provider.Cryptix;
-import cryptix.jce.provider.CryptixCrypto;
-import java.security.Security;
-import cryptix.jce.provider.asn.*;
+//import cryptix.jce.provider.CryptixCrypto;
+//import java.security.Security;
+//import cryptix.jce.provider.asn.*;
 //import java.security.interfaces.RSAPublicKey;
 //import javax.crypto.Cipher;
 //import cryptix.jce.provider.key.RawSecretKey;
@@ -61,8 +61,11 @@ import cryptix.jce.provider.asn.*;
 //import java.security.cert.X509Certificate;
 import java.net.*;
 import java.security.interfaces.*;
-import cryptix.jce.provider.rsa.*;
+//import cryptix.jce.provider.rsa.*;
 import java.security.spec.InvalidKeySpecException;
+
+import Rijndael.Rijndael_Algorithm;
+
 final public class JAPTest
 {
 	public static void main(String argc[])
@@ -112,7 +115,9 @@ final public class JAPTest
 //		testCert();
 //		System.getProperties().list(System.out);
 //	networkTest(argc);
-	testRRT();
+	//testRRT();
+		//testSymCipherCryptix();
+		testAES();
 		System.exit(0);
 		}
 	
@@ -193,7 +198,7 @@ final public class JAPTest
 			c.encode(out,JAPCertificate.BASE64);
 			out.close();
 	*/		
-			Security.addProvider(new CryptixCrypto());
+		//	Security.addProvider(new CryptixCrypto());
 		/*	Cipher cipherEnc=Cipher.getInstance("Blowfish/ECB/None");
 			Cipher cipherDec=Cipher.getInstance("Blowfish/ECB/None");
 			byte[]key=new byte[16];
@@ -231,10 +236,10 @@ final public class JAPTest
 			f=new FileInputStream("jap.cer");
 			master.decode(f);
 			PublicKey k=cert.getPublicKey();
-			RSAPublicKey kp=transformKey(k);
+	//		RSAPublicKey kp=transformKey(k);
 		//	sun.security.x509.X509Key kx=(sun.security.x509.X509Key)k;
 		
-			master.verify(kp);
+		//	master.verify(kp);
 		//	byte[] key=master.getPublicKey().getEncoded();
 
 	/*		for(int i=0;i<key.length;i++)
@@ -506,7 +511,7 @@ final public class JAPTest
 		};
 		 System.exit(0);
 	}
-
+/*
 	static RSAPublicKey transformKey(PublicKey k) throws InvalidKeySpecException
 	{
 		try {
@@ -541,7 +546,7 @@ final public class JAPTest
             throw new InvalidKeySpecException("Could not parse key.");
         }
     }
-	
+	*/
 	static void testRRT()
 		{
 			try
@@ -575,5 +580,77 @@ final public class JAPTest
 					e.printStackTrace();
 				}
 		}
-	
+	/*
+	static void testSymCipherCryptix()
+		{
+		try{
+			JAPDebug d=JAPDebug.create();
+			java.security.Security.addProvider(new cryptix.jce.provider.CryptixCrypto());
+			JAPSymCipher c=new JAPSymCipher();
+			byte[]k=new byte[16];
+			byte[] in=new byte[16];
+			byte[] out=new byte[16];
+			c.setEncryptionKey(k);
+			c.setEncryptionKeyL(k);
+			long l=System.currentTimeMillis();
+			//for(int i=0;i<2;i++)
+				c.encrypt(in);
+				Thread.sleep(1000);
+				c.encrypt(in);
+			l=System.currentTimeMillis()-l;
+			System.out.println("Zeit [ms]: "+Long.toString(l));
+			l=System.currentTimeMillis();
+	//		for(int i=0;i<2;i++)
+				c.encryptL(out);
+				Thread.sleep(1000);
+				c.encryptL(out);
+			l=System.currentTimeMillis()-l;
+			System.out.println("Zeit [ms]: "+Long.toString(l));
+			for(int i=0;i<1000;i++)
+				if(in[i]!=out[i])
+					System.out.print(i);
+*//*			c.setDecryptionKeyL(k);
+			c.setDecryptionKey(k);
+			c.setEncryptionKeyL(k);
+			byte[] in=new byte[1000];
+			byte[] out=new byte[1000];
+			c.encryptL(in);
+			c.encryptL(in);
+			c.encrypt(out);
+			c.encrypt(out);
+			c.encryptL(in);
+			c.encrypt(in);
+			c.decrypt(in);
+			c.decryptL(in);
+			c.decrypt(in);
+			c.decryptL(in);
+		*/
+		//Init Crypto...
+	//	}catch(Exception e)
+	//	{
+	//		e.printStackTrace();
+		//}
+	//	}
+
+public static void testAES()
+{
+	try{
+		
+			JAPDebug d=JAPDebug.create();
+			JAPSymCipher c=new JAPSymCipher();
+			byte[]k=new byte[16];
+			byte[] in=new byte[1000];
+			c.setEncryptionKeyAES(k);
+			long l=System.currentTimeMillis();
+			for(int i=0;i<1000;i++)
+				c.encryptAES(in);
+			l=System.currentTimeMillis()-l;
+			System.out.println("Zeit [ms]: "+Long.toString(l));
+	}
+	catch(Exception e)
+	{
+		e.printStackTrace();
+	}
+}
+
 }

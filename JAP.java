@@ -107,6 +107,10 @@ public class JAP extends Frame{
 		iconifiedView = new JAPViewIconified("JAP");
 		model.addJAPObserver(iconifiedView);
 		
+		//Init Crypto...
+		//java.security.Security.addProvider(new cryptix.jce.provider.CryptixCrypto());
+
+		
 		// Dispose the spash screen and show main frame
 		splash.dispose();
 		view.show();

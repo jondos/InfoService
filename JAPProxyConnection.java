@@ -27,40 +27,58 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 */
 import java.io.InputStream;
 
-public final class JAPProxyConnection extends Thread { 
-	private JAPSocket inSocket; 
-	private JAPMuxSocket outSocket;
-	private InputStream fromClient; 
-	private int channel;
+public final class JAPProxyConnection extends Thread 
+	{ 
+		private final JAPSocket inSocket; 
+		private final JAPMuxSocket outSocket;
+		private final int channel;
 
-    public JAPProxyConnection (JAPSocket s, int channelID, JAPMuxSocket muxSocket) { 
-		inSocket = s;
-		channel=channelID; 
-		outSocket=muxSocket; 
-	}
+    public JAPProxyConnection (JAPSocket s, int channelID, JAPMuxSocket muxSocket) 
+			{ 
+				inSocket = s;
+				channel=channelID; 
+				outSocket=muxSocket; 
+			}
 	
-	public void run() { 
-		try { 
-			fromClient = inSocket.getInputStream(); 
-			byte[] buff=new byte[1000]; 
-			int len; 
-			while((len=fromClient.read(buff,0,1000))!=-1) {
-				if(len>0&&outSocket.send(channel,buff,(short)len)==-1) {
-					break; 
-				} 
+		public void run()
+			{ 
+				InputStream fromClient=null;
+				try
+					{ 
+						fromClient= inSocket.getInputStream(); 
+						byte[] buff=new byte[JAPMuxSocket.DATA_SIZE]; 
+						int len=fromClient.read(buff,0,JAPMuxSocket.DATA_SIZE-3-outSocket.getChainLen()*JAPMuxSocket.KEY_SIZE);
+						if(len!=-1)
+							{
+								outSocket.send(channel,buff,(short)len);		
+								while((len=fromClient.read(buff,0,JAPMuxSocket.DATA_SIZE-3))!=-1)
+									{
+										if(len>0&&outSocket.send(channel,buff,(short)len)==-1)
+											break; 
+									} 
+							}	
+					} // if (protocol....)  
+				catch(Exception e)
+					{
+					}
+				try
+					{ 
+						fromClient.close(); 
+					}
+				catch(Exception e)
+					{
+					} 
+				try
+					{
+						if(!inSocket.isClosed())
+							{ 
+								outSocket.close(channel);
+								inSocket.close(); 
+							} 
+					}
+				catch (Exception e)
+					{
+						JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.THREAD,"ProxyConnection - Exception while closing: "+e); 
+					}	 
 			} 
-		} // if (protocol....)  
-		catch (Exception e) { }
-		try { 
-			fromClient.close(); 
-		} catch(Exception e) { } 
-		try {
-			if(!inSocket.isClosed()) { 
-				outSocket.close(channel);
-				inSocket.close(); 
-			} 
-		} catch (Exception e) {
-			JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.THREAD,"ProxyConnection - Exception while closing: "+e); 
-		} 
-	} 
-}
+	}

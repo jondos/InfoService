@@ -27,8 +27,12 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 */
 import java.math.BigInteger;
 
+//import javax.crypto.Cipher;
+//import java.security.spec.RSAPrivateKeySpec;
+//import java.security.Key;
 public final class JAPASymCipher
 {
+///* My hack Crypt...
 	private BigInteger n;
 	private BigInteger e;
 	private byte[] tmpP;
@@ -71,5 +75,49 @@ public final class JAPASymCipher
 			e=exponent;
 			return 0;
 		}
+//END My Hack CRYPT */
 
-}
+	/* Cryptix...
+	
+	private Cipher cipherEnc=null;
+	public JAPASymCipher()
+		{
+			try
+				{
+					cipherEnc=Cipher.getInstance("RSA/ECB/NONE");
+				}
+			catch(Exception e)
+				{
+					JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.MISC,"Init Asym-Cipher: "+e.toString());
+				}
+		}
+	
+	public int encrypt(byte[] from,int ifrom,byte[] to,int ito)
+		{
+			try
+				{
+					cipherEnc.update(from,ifrom,128,to,ito);
+					return 128;
+				}
+			catch(Exception e)
+				{
+					JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.MISC,"encrypt ASym-Cipher: "+e.toString());
+					return -1;
+				}
+		}
+	
+	public int setPublicKey(BigInteger modulus,BigInteger exponent)
+		{
+			try
+				{
+					cipherEnc.init(Cipher.ENCRYPT_MODE,(Key)new RSAPrivateKeySpec(modulus,exponent));
+					return 0;
+				}
+			catch(Exception e)
+				{
+					JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.MISC,"setPublicKey ASym-Cipher: "+e.toString());
+					return -1;
+				}
+		}
+*/
+	}

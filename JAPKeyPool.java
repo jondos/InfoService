@@ -134,7 +134,7 @@ public final class JAPKeyPool /*extends Thread*/ implements Runnable
 				synchronized(this)
 					{
 						KeyList tmpKey;
-						System.arraycopy(aktKey.key,0,key,0,key.length);
+						System.arraycopy(aktKey.key,0,key,0,keySize);
 						tmpKey=aktKey;
 						//if(aktKey.next!=null)
 							aktKey=aktKey.next;
