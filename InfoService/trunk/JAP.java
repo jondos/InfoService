@@ -146,8 +146,9 @@ class JAP extends Frame {
 		view.show();
 		view.toFront();
 		splash.dispose();
-		// pre-initalize anon service
-		anonnew.server.AnonServiceImpl.init();
+
+    // pre-initalize anon service
+		anon.server.AnonServiceImpl.init();
 
     // initially start services
 		model.initialRun();
