@@ -67,8 +67,10 @@ public final class JAPModel implements JAPAnonServiceListener{
 	private boolean  mbUseProxy         = false;  // indicates whether JAP connects via a proxy or directly
 	private String   infoServiceHostName      = "infoservice.inf.tu-dresden.de";
 	private int      infoServicePortNumber    = 6543;
+	public  String   anonserviceName      = "Default Mix Cascade";
 	public  String   anonHostName      = "mix.inf.tu-dresden.de";
 	public  int      anonPortNumber    = 6544;
+	public  int      anonSSLPortNumber = 443;
 	public  boolean  autoConnect       = false;  // autoconnect after program start
 	private boolean  mbMinimizeOnStartup =false; //true if programm should be started minimized...
 	public  boolean  alreadyCheckedForNewVersion = false; // indicates if check for new version has already been done
@@ -83,6 +85,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 	static final int MAXPROGRESSBARVALUE = 100; // for trafficSituation and currentRisk
 	public int       trafficSituation  = -1;
 	public int       currentRisk       = -1;
+	public int       mixedPackets      = -1;
 	static private   JAPView        view         = null;
 	static private   JAPViewIconified        iconifiedView         = null;
 	static private   JAPInfoService mInfoService = null;
@@ -283,10 +286,12 @@ public final class JAPModel implements JAPAnonServiceListener{
 			port=JAPUtil.parseNodeInt(n.getNamedItem("proxyPortNumber"),proxyPortNumber);
 			setProxy(host,port);
 
+			anonserviceName=JAPUtil.parseNodeString(n.getNamedItem("anonserviceName"),anonserviceName);
 			anonHostName=JAPUtil.parseNodeString(n.getNamedItem("anonHostName"),anonHostName);
 			if(anonHostName.equalsIgnoreCase("anon.inf.tu-dresden.de"))
 				anonHostName="mix.inf.tu-dresden.de";
 			anonPortNumber=JAPUtil.parseNodeInt(n.getNamedItem("anonPortNumber"),anonPortNumber);
+			anonSSLPortNumber=JAPUtil.parseNodeInt(n.getNamedItem("anonSSLPortNumber"),anonSSLPortNumber);
 			autoConnect=JAPUtil.parseNodeBoolean(n.getNamedItem("autoConnect"),false);
 			mbMinimizeOnStartup=JAPUtil.parseNodeBoolean(n.getNamedItem("minimizedStartup"),false);
 
@@ -357,8 +362,10 @@ public final class JAPModel implements JAPAnonServiceListener{
 			e.setAttribute("proxyPortNumber",Integer.toString(proxyPortNumber));
 			e.setAttribute("infoServiceHostName",infoServiceHostName);
 			e.setAttribute("infoServicePortNumber",Integer.toString(infoServicePortNumber));
+			e.setAttribute("anonserviceName",anonserviceName);
 			e.setAttribute("anonHostName",anonHostName);
 			e.setAttribute("anonPortNumber",Integer.toString(anonPortNumber));
+			e.setAttribute("anonSSLPortNumber",Integer.toString(anonSSLPortNumber));
 			e.setAttribute("autoConnect",(autoConnect?"true":"false"));
 			e.setAttribute("minimizedStartup",(mbMinimizeOnStartup?"true":"false"));
 			e.setAttribute("neverRemindActiveContent",(mbActCntMessageNeverRemind?"true":"false"));
@@ -655,11 +662,25 @@ public final class JAPModel implements JAPAnonServiceListener{
 						proxyDirect=null;
 						// starting MUX --> Success ???
 						proxyAnon=new JAPAnonService(m_socketHTTPListener,JAPAnonService.PROTO_HTTP);
-						proxyAnon.setAnonService(model.anonHostName,model.anonPortNumber);
 						//2001-02-20(HF)
 						if (model.getUseProxy()) {
-							proxyAnon.setFirewall(model.getProxyHost(),model.getProxyPort());
-							proxyAnon.connectViaFirewall(true);
+							// connect vi proxy to first mix (via ssl portnumber)
+							if (model.anonSSLPortNumber == -1) {
+								JOptionPane.showMessageDialog(model.getView(),
+									model.getString("errorFirewallModeNotSupported"),
+									model.getString("errorFirewallModeNotSupportedTitle"),
+									JOptionPane.ERROR_MESSAGE);
+								proxyAnon.setAnonService(model.anonHostName,model.anonPortNumber);
+								proxyAnon.setFirewall(model.getProxyHost(),model.getProxyPort());
+								proxyAnon.connectViaFirewall(true);
+							} else {
+								proxyAnon.setAnonService(model.anonHostName,model.anonSSLPortNumber);
+								proxyAnon.setFirewall(model.getProxyHost(),model.getProxyPort());
+								proxyAnon.connectViaFirewall(true);
+							}
+						} else {
+							// connect directly to first mix
+							proxyAnon.setAnonService(model.anonHostName,model.anonPortNumber);
 						}
 						int ret=proxyAnon.start();
 						if(ret==JAPAnonService.E_SUCCESS)
@@ -708,7 +729,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 								JOptionPane.showMessageDialog
 									(
 									 getView(),
-									 getString("errorConnectingFirstMix")+Integer.toString(ret),
+									 getString("errorConnectingFirstMix")+"\n"+getString("errorCode")+": "+Integer.toString(ret),
 									 getString("errorConnectingFirstMixTitle"),
 									 JOptionPane.ERROR_MESSAGE
 									);
@@ -721,7 +742,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 						setAnonMode(false);
 					}
 				else
-						view.setCursor(Cursor.getDefaultCursor());
+					view.setCursor(Cursor.getDefaultCursor());
 
 		} 
 		else if ((proxyDirect==null) && (anonModeSelected == false)) 

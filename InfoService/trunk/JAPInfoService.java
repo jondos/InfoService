@@ -98,7 +98,9 @@ final class JAPInfoService
 								String ip=nl.item(0).getFirstChild().getNodeValue().trim();
 								nl=elem.getElementsByTagName("Port");
 								String port=nl.item(0).getFirstChild().getNodeValue().trim();
-								model.anonServerDatabase.addElement(new AnonServerDBEntry(name,ip,Integer.parseInt(port)));
+								nl=elem.getElementsByTagName("ProxyPort");
+								String proxyPort=nl.item(0).getFirstChild().getNodeValue().trim();
+								model.anonServerDatabase.addElement(new AnonServerDBEntry(name,ip,Integer.parseInt(port),Integer.parseInt(proxyPort)));
 							}
 					}
 				catch(Exception e)
@@ -114,6 +116,7 @@ final class JAPInfoService
 			int nrOfActiveUsers = -1;
 			int trafficSituation = -1;
 			int currentRisk = -1;
+			int mixedPackets = -1;
 			boolean error=false;
 			try
 				{
@@ -140,6 +143,7 @@ final class JAPInfoService
 							nrOfActiveUsers  = Integer.valueOf(n.getNamedItem("nrOfActiveUsers").getNodeValue()).intValue();
 							trafficSituation = Integer.valueOf(n.getNamedItem("currentRisk").getNodeValue()).intValue();
 							currentRisk      = Integer.valueOf(n.getNamedItem("trafficSituation").getNodeValue()).intValue();
+							mixedPackets     = Integer.valueOf(n.getNamedItem("mixedPackets").getNodeValue()).intValue();
 						}
 					// close streams and socket
 				}
@@ -153,15 +157,16 @@ final class JAPInfoService
 					model.nrOfActiveUsers  = nrOfActiveUsers;
 					model.trafficSituation = trafficSituation;
 					model.currentRisk      = currentRisk;
-					JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPFeedback: "+nrOfActiveUsers+"/"+trafficSituation+"/"+currentRisk);
+					model.mixedPackets     = mixedPackets;
 				}
 			else
 				{
 					model.nrOfActiveUsers  = -1;
 					model.trafficSituation = -1;
 					model.currentRisk      = -1;
-					JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPFeedback: -1/-1/-1");
+					model.mixedPackets     = -1;
 				}
+			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPFeedback: "+nrOfActiveUsers+"/"+trafficSituation+"/"+currentRisk+"/"+mixedPackets);
 			// fire event
 			model.notifyJAPObservers();
 		}

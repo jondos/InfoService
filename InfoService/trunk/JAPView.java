@@ -36,6 +36,7 @@ import anon.JAPAnonServiceListener;
 final class JAPView extends JFrame implements ActionListener, JAPObserver {
 	private JAPModel 			model;
 	private JLabel				meterLabel;
+	private JLabel	 			nameLabel;
 	private JLabel				statusTextField1;
 	private JLabel				statusTextField2;
 	private JLabel				portnumberTextField;
@@ -172,6 +173,8 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 
     public JPanel buildLevelPanel() {
 		JPanel levelPanel = new JPanel(new BorderLayout());
+//		JPanel levelPanel = new JPanel();
+//		levelPanel.setLayout(new BoxLayout(levelPanel, BoxLayout.Y_AXIS) );
 				
 		// Own traffic situation: current # of channels
 		ownTrafficChannelsProgressBar = new 
@@ -224,13 +227,16 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 		JPanel detailsPanel = new JPanel();
 		detailsPanel.setLayout( new GridLayout(3,2,5,5) );
 		detailsPanel.setBorder( new TitledBorder(model.getString("meterDetailsBorder")) );
+		nameLabel = new JLabel();
+		detailsPanel.add(new JLabel(model.getString("meterDetailsName")) );
+		detailsPanel.add(nameLabel);
 		detailsPanel.add(new JLabel(model.getString("meterDetailsUsers")) );
 		detailsPanel.add(userProgressBar);
-//		detailsPanel.add(new JLabel(model.getString("meterDetailsTraffic")) );
-//		detailsPanel.add(trafficProgressBar);
+		detailsPanel.add(new JLabel(model.getString("meterDetailsTraffic")) );
+		detailsPanel.add(trafficProgressBar);
 //		detailsPanel.add(new JLabel(model.getString("meterDetailsRisk")) );
 //		detailsPanel.add(protectionProgressBar);
-
+		
 		levelPanel.add(ownTrafficPanel, BorderLayout.NORTH);
 		levelPanel.add(meterPanel, BorderLayout.CENTER);
 		levelPanel.add(detailsPanel, BorderLayout.SOUTH);
@@ -468,6 +474,7 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 		
 		// Meter panel
 		ano1CheckBox.setSelected(model.isAnonMode());
+		nameLabel.setText(model.anonserviceName);
 		meterLabel.setIcon(setMeterImage());
 		if (model.isAnonMode()) {
 				if (model.nrOfActiveUsers != -1)
