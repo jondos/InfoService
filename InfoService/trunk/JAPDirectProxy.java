@@ -33,8 +33,8 @@ import java.net.SocketException;
 import java.io.BufferedWriter;
 import java.io.OutputStreamWriter;
 import java.io.InterruptedIOException;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.IOException;
 import java.util.Date;
 import java.util.Locale;
@@ -98,26 +98,30 @@ final class JAPDirectProxy implements Runnable
 										thread.start();
 										warnUser=false;
 									}
-								else {
-					if (model.getUseProxy()) {
-						JAPDirectConViaProxy doIt = new JAPDirectConViaProxy (socket);			
-						Thread thread = new Thread (threadgroupAll,doIt);
-						thread.start();
-					} else {						
-						JAPDirectProxyConnection doIt = new JAPDirectProxyConnection (socket);			
-						Thread thread = new Thread (threadgroupAll,doIt);
-						thread.start();
-					}					
-				}
-			}
+								else 
+									{
+										if (model.getUseProxy())
+											{
+												JAPDirectConViaProxy doIt = new JAPDirectConViaProxy (socket);			
+												Thread thread = new Thread (threadgroupAll,doIt);
+												thread.start();
+											}
+										else
+											{						
+												JAPDirectProxyConnection doIt = new JAPDirectProxyConnection (socket);			
+												Thread thread = new Thread (threadgroupAll,doIt);
+												thread.start();
+											}					
+									}
+							}
+					}
+				catch (Exception e) 
+					{
+						JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPDirectProxy:DirectProxy.run() Exception: " +e);
+					}
+				isRunningProxy = false;
+				JAPDebug.out(JAPDebug.INFO,JAPDebug.NET,"JAPDirect:DircetProxyServer stopped.");
 		}
-		catch (Exception e) 
-			{
-				JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPDirectProxy:DirectProxy.run() Exception: " +e);
-			}
-		isRunningProxy = false;
-		JAPDebug.out(JAPDebug.INFO,JAPDebug.NET,"JAPDirect:DircetProxyServer stopped.");
-	}
 	
 
     public void stopService()
@@ -194,46 +198,54 @@ final class JAPDirectProxy implements Runnable
 /** 
  *  This class is used to transfer requests via the selected proxy
  */
-	private final class JAPDirectConViaProxy implements Runnable {
-		private JAPModel model;
-		private Socket clientSocket;
+	private final class JAPDirectConViaProxy implements Runnable 
+		{
+			private JAPModel model;
+			private Socket clientSocket;
 	
-		public JAPDirectConViaProxy(Socket s) {
-			this.clientSocket = s;
-			this.model = JAPModel.getModel();
-		}
-	
-		public void run() {
-			try {
-			// open stream from client
-			DataInputStream inputStream = new DataInputStream(clientSocket.getInputStream());
-			// create Socket to Server
-			Socket serverSocket = new Socket(model.getProxyHost(),model.getProxyPort());
-			// Response from server is transfered to client in a sepatate thread
-			JAPDirectProxyResponse pr = new JAPDirectProxyResponse(serverSocket, clientSocket);
-			Thread prt = new Thread(pr);
-			prt.start();				
-			// create stream --> server
-		    DataOutputStream outputStream = new DataOutputStream(serverSocket.getOutputStream());
-			// Transfer data client --> server
-			byte[] buff=new byte[1000];
-			int len;
-			while((len=inputStream.read(buff))!=-1) {
-				if(len>0) {
-					outputStream.write(buff,0,len);
+			public JAPDirectConViaProxy(Socket s) 
+				{
+					this.clientSocket = s;
+					this.model = JAPModel.getModel();
 				}
-			}
-		    outputStream.flush();
-			prt.join(); 
-		    outputStream.close();
-	    	inputStream.close();
-	    	serverSocket.close();		
-			} catch (IOException ioe) {
-				;
-			}
-			catch (Exception e) {
-				JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.NET,"JAPDirectConViaProxy: Exception: "+e);
-			}
+	
+			public void run() 
+				{
+					try 
+						{
+							// open stream from client
+							InputStream inputStream = clientSocket.getInputStream();
+							// create Socket to Server
+							Socket serverSocket = new Socket(model.getProxyHost(),model.getProxyPort());
+							// Response from server is transfered to client in a sepatate thread
+							JAPDirectProxyResponse pr = new JAPDirectProxyResponse(serverSocket, clientSocket);
+							Thread prt = new Thread(pr);
+							prt.start();				
+							// create stream --> server
+							OutputStream outputStream = serverSocket.getOutputStream();
+							// Transfer data client --> server
+							byte[] buff=new byte[1000];
+							int len;
+							while((len=inputStream.read(buff))!=-1) 
+								{
+									if(len>0) 
+										{
+											outputStream.write(buff,0,len);
+										}
+								}
+							outputStream.flush();
+							prt.join(); 
+							outputStream.close();
+	    				inputStream.close();
+	    				serverSocket.close();		
+						} 
+					catch (IOException ioe) 
+						{
+						}
+					catch (Exception e)
+						{
+							JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.NET,"JAPDirectConViaProxy: Exception: "+e);
+						}
+				}
 		}
-	}
 }
