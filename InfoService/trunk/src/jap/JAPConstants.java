@@ -29,10 +29,10 @@ package jap;
 
 import java.awt.Font;
 import java.awt.Insets;
-
+import anon.tor.Circuit;
 public final class JAPConstants
 {
-	public static final String aktVersion = "00.02.091"; //Never change the layout of this line!
+	public static final String aktVersion = "00.02.092"; //Never change the layout of this line!
 	private static final String CVS_GENERATED_RELEASE_DATE = "$Date$";
 
 	//Warning: This is a little bit tricky,
@@ -167,6 +167,7 @@ public final class JAPConstants
 	public final static String CERT_JAPCODESIGNING = "japcodesigning.cer";
 	public final static String CERT_JAPINFOSERVICEMESSAGES = "japinfoservicemessages.cer";
 
+	public final static int TOR_MAX_CONNECTIONS_PER_ROUTE=Circuit.MAX_STREAMS_OVER_CIRCUIT;
 	public final static boolean WITH_BLOCKINGRESISTANCE = true; //Enables or diables Suuport of
 	//blocking reistance functionality
 	/**

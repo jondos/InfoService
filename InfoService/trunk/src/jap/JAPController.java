@@ -222,7 +222,7 @@ public final class JAPController implements ProxyListener
    * and then in the JAP install directory.
    * The configuration is a XML-File with the following structure:
    *  <JAP
-   *    version="0.7"                     // version of the xml struct (DTD) used for saving the configuration
+   *    version="0.8"                     // version of the xml struct (DTD) used for saving the configuration
    *    portNumber=""                     // Listener-Portnumber
    *    portNumberSocks=""                // Listener-Portnumber for SOCKS
    *    supportSocks=""                   // Will we support SOCKS ?
@@ -280,7 +280,8 @@ public final class JAPController implements ProxyListener
    * <PreferedInfoService>                                    // info about the prefered infoservice, only one infoservice is supported here (since config version 0.3)
    *   <InfoService id="...">...</InfoService>                // the same format as from infoservice, without signature, expire time does not matter
    * </PreferedInfoService>
-   * <Tor enabled="true/false">    //  Tor related seetings (since Version 0.6)
+   * <Tor>    //  Tor related seetings (since Version 0.6)
+   * 	<MaxConnectionsPerRoute>...</MaxConnectionsPerRoute>(since Vresion 0.8) //How many connections are allowed before a new circuit is created
    * </Tor>
    * <Payment //Since version 0.7
    *    biHost="..."                      // BI's Hostname
@@ -616,12 +617,9 @@ public final class JAPController implements ProxyListener
         }
 
         /*loading Tor seetings*/
-      /*  Element elemTor = (Element) XMLUtil.getFirstChildByName(root, "Tor");
-        boolean bIsTorEnabled = XMLUtil.parseElementAttrBoolean(elemTor, "enabled",
-          JAPConstants.TOR_IS_ENABLED);
-        //TODO: very bad...
-        setTorEnabled(bIsTorEnabled);
-*/
+        Element elemTor = (Element) XMLUtil.getFirstChildByName(root, "Tor");
+ 		Element elem=(Element)XMLUtil.getFirstChildByName(elemTor,"MaxConnectionsPerRoute");
+		 setTorMaxConnectionsPerRoute(XMLUtil.parseNodeInt(elem,JAPModel.getTorMaxConnectionsPerRoute()));
 
         /* load Payment settings */
         if(loadPay) {
@@ -811,7 +809,10 @@ public final class JAPController implements ProxyListener
 
       /** add tor*/
       Element elemTor = doc.createElement("Tor");
-   	  e.appendChild(elemTor);
+   	  Element elem=doc.createElement("MaxConnectionsPerRoute");
+		 XMLUtil.setNodeValue(elem,Integer.toString(JAPModel.getTorMaxConnectionsPerRoute()));
+		elemTor.appendChild(elem);
+		e.appendChild(elemTor);
 
       /* payment configuration */
       PayAccountsFile accounts = PayAccountsFile.getInstance();
@@ -1446,6 +1447,10 @@ public final class JAPController implements ProxyListener
     m_Controller.notifyJAPObservers();
   }
 
+	public static void setTorMaxConnectionsPerRoute(int i)
+	{
+			m_Model.setTorMaxConnectionsPerRoute(i);
+	}
   //---------------------------------------------------------------------
   private ServerSocket intern_startListener(int port, boolean bLocal)
   {
