@@ -33,8 +33,10 @@ import java.text.*;
 import java.util.StringTokenizer;
 //import sun.net.ftp.FtpClient;
 //import sun.net.ftp.*;
-
-//import com.enterprisedt.net.ftp.FTPClient;
+//import net.ftp.FTPClient;
+import kasper.net.ftp.*;
+import kasper.net.*;
+//import com.aecys.net.FtpClient;
 
 final class JAPDirectProxyConnection implements Runnable {
     private Socket clientSocket;
@@ -317,111 +319,155 @@ final class JAPDirectProxyConnection implements Runnable {
 		}
     }
 
+    private String makeHTMLCode()
+    {
+    String htmlCode = "";
+    htmlCode = "<html>\n"+"<head>\n"+"<h2><title>"+"FTP root at "+uri+"/</title></h2>\n"+"</head>\n"+"<body>\n";
+    htmlCode += "<h2>"+"FTP root at "+uri+"/</h2>\n"+"<hr>\n"+"<h4>\n"+"<pre>\n";
+    return htmlCode;
+    }
+
     private void handleFTP()
     {
     //a request as GET ftp://213.244.188.60/pub/jaxp/89h324hruh/jaxp-1_1.zip was started
 
     try{
-  // Array of String[] for the list command
-    // String[] list;
+     String end="</pre>\n"+"</body>\n"+"</html>\n";
+     String endInfo ="</pre>\n"+"</h4>\n"+"<hr>\n"+"<pre>\n";
+
      System.out.println("FTP-MODE");
-    // Socket serverSocket = new Socket(host,port);
      //write response to client
      OutputStream os = clientSocket.getOutputStream();
-     //read response of the server
-    // InputStream is = serverSocket.getInputStream();
-     InputStream is ;
-     // Send request --> server
-    // BufferedWriter outputStream = new BufferedWriter(new OutputStreamWriter(serverSocket.getOutputStream()));
-     // to do parse Input for username and e-mail-adress
+
      String nextLine = this.readLine(inputStream);
      System.out.println(nextLine);
-     // create an FTP-Client and try to communicate: Browser --> FTP-Client --> FTP-Server
-   //  FTPClient ftpClient = new FTPClient (host);
-
-     // read next Header lines <-- client
-   //   FtpClient ftpClient = new FtpClient(host);
-	 //ftpClient.debugResponses(true);
-    //  ftpClient.login("anonymous","heinz@operamail.com");
-   /*   ftpClient.binary();
-    */// ftpClient.ascii();-
-
-     //File text = new File("test.txt");
-     //text.createNewFile();
-     //OutputStream fos = new FileOutputStream(text);
-     String GETString = new String(file);
-     // file or directory
-     byte[] byt = new byte[1000];
-     int len=0;
-     if (GETString.endsWith("/"))
+     FTPServerResponse ftpsp = null;
+     FTPClient ftpClient = new FTPClient();
+     //////////////////////////////////////////////////////////////////////////
+     // LIST or GET
+     String GETString = file;
+     if (GETString.indexOf(".")!= -1)//a file
      {
-      // String list = ftpClient.list(GETString,true);
+     ftpsp = ftpClient.connect(host);
+     //os.write(ftpsp.getResponse().getBytes());
+     System.out.println((Object)ftpsp+" connect");
+     //os.flush();
+   //  writeFtpStream(ftpsp,os,true);
+     ftpsp=ftpClient.user("anonymous");
+    // os.write(ftpsp.getResponse().getBytes());
+     System.out.println((Object)ftpsp+" anon");
+     //os.flush();
+   //  writeFtpStream(ftpsp,os,true);
+     ftpsp=ftpClient.pass("JAP@xxx.com");
 
-  /*             for(int i=0; i<list.length;i++)
-               {
-               byte[] byt = list[i].getBytes();
-               os.write(byt);
-                }*///for*/
-//           is = ftpClient.list();
- //          while((len = is.read())!= -1)
-           {
-            //System.out.println(len+" len");
-            //os.write(byt,0,len);
-          //  os.write(list.getBytes());
-           // if(len < 1000)
-           // break;
-           }
-        //ftpClient.quit();
-        os.flush();
-        os.close();
-    }else{
-    /*ftpClient.get(file,os);
-    ftpClient.close();*/
-    //is = ftpClient.get(file);
-//    while((len= is.read())!= -1)
-           {
-           //System.out.println(len+" len");
-            os.write((byte) len);
-            //if(len < 1000)
-           // break;
-           }
-      //     ftpClient.closeServer();
-           os.flush();
-           os.close();
-          }//else
- // to do parse the following lines
-  //   while (nextLine.length()!=0)
-    //     {
-         // nextLine = this.readLine(inputStream);
-      //    System.out.println(nextLine);
-       //  }//while
-// Response from server is transfered to client in a seperate thread through a
-// FileInputStream
-/*    InputStream fis = null;
-   if (text.exists()&&text.canRead()){
-     fis = new FileInputStream(text);
-     System.out.println("ja");
-        }else{
-                   //text.createNewFile();
-                   fis = new FileInputStream(text);
-                   System.out.println("nein");
-             }
-      fis.close(); */
-            if( clientSocket.toString()!=null)
-            {
-     //JAPDirectProxyResponse pr = new JAPDirectProxyResponse(is, clientSocket);
-     //Thread prt = new Thread(pr);
-    // prt.start();
-     System.out.println("!=null");
-     os.close();
-     ///prt.join();
+    // os.write(ftpsp.getResponse().getBytes());
+     System.out.println((Object)ftpsp+" pass");
+    // os.flush();
+
+     //writeFtpStream(ftpsp,os,true);
+
+     ftpsp=ftpClient.pasv();
+    //  writeFtpStream(ftpsp,os,false);
+
+       int x =GETString.lastIndexOf("/");
+       GETString = GETString.substring((x+1));
+       System.out.println("-------------FILE--------------"+GETString);
+       RemoteFile rf = new RemoteFile(file);
+       File localFile = new File (GETString);
+       FTPServerResponse currentResponses[] = ftpClient.retr(rf,localFile);
+       String remoteFiles[] = currentResponses[0].getResponses();
+       String temp2[] = currentResponses[1].getResponses();
+       System.out.println(" rf");
+      // RemoteFile temp1[]=currentResponses[0].getRemoteFiles();
+     //  RemoteFile temp2[]=currentResponses[1].getRemoteFiles();
+        FileInputStream fis = new FileInputStream(localFile);
+
+        byte[] buffer = new byte[1024];
+        int n = 0;
+        while((n=fis.read())!=-1){
+          os.write((byte)n);
+          os.flush();
+         }
+         fis.close();
+        // localFile.delete();
+             for (int i = 0; i<remoteFiles.length; i++)
+              {
+             //os.write(rf.toString().getBytes());
+             System.out.println(remoteFiles[i]+" remfileas "+temp2[i]);
+         //    os.write(  remoteFiles[i].getBytes());
+         //    os.flush();
+               //os.write((remoteFiles[i]));
               }
+     }else{// a directory
+
+     os.write(makeHTMLCode().getBytes());
+     ftpsp = ftpClient.connect(host);
+     //os.write(ftpsp.getResponse().getBytes());
+     System.out.println((Object)ftpsp+" connect");
+     //os.flush();
+     writeFtpStream(ftpsp,os,false);
+     ftpsp=ftpClient.user("anonymous");
+    // os.write(ftpsp.getResponse().getBytes());
+     System.out.println((Object)ftpsp+" anon");
+     //os.flush();
+     writeFtpStream(ftpsp,os,true);
+     ftpsp=ftpClient.pass("JAP@xxx.com");
+
+    // os.write(ftpsp.getResponse().getBytes());
+     System.out.println((Object)ftpsp+" pass");
+    // os.flush();
+     writeFtpStream(ftpsp,os,true);
+     os.write(endInfo.getBytes());
+
+     ftpsp=ftpClient.pasv();
+     System.out.println(file +" file");
+     if(!file.endsWith("/"))
+     {
+     file+="/";
+     }
+     FTPServerResponse currentResponses[] = ftpClient.list(file);
+     System.out.println(currentResponses[0].toString()+" current0");
+
+     System.out.println(currentResponses[0]);
+   //  System.out.println(currentResponses[1].getResponses(). +" current1");
+
+     // Now let's print out the list.  Let's print the length as well.
+
+     RemoteFile remoteFiles[] = currentResponses[0].getRemoteFiles();
+     String help="";
+
+     for (int i = 0; i < remoteFiles.length; ++i) {
+      System.out.println(remoteFiles[i].getName()+" link?"+remoteFiles[i].getSymbolicLinks() + " is "+remoteFiles[i].isDirectory() + " dir.");
+      if (remoteFiles[i].isDirectory())
+          {
+           String URL = uri;
+           if(!URL.endsWith("/"))
+           {
+           URL+="/";
+           }
+           System.out.println("is Dir()");
+           help =" "+remoteFiles[i].getProtections()+"   "+remoteFiles[i].length()+"  "+"Directory"+"  ";
+           help = help+"<a href="+URL+remoteFiles[i].getName()+"/ >"+"<b>"+remoteFiles[i].getName()+"</b>"+"</a>";
+           os.write(help.getBytes());
+           os.write("<br>".getBytes());
+           os.flush();
+          }else{
+           help =" "+remoteFiles[i].getProtections()+"   "+remoteFiles[i].length()+"             ";
+           help = help+"<a href="+uri+"/"+remoteFiles[i].getName()+" >"+remoteFiles[i].getName()+"</a>";
+           os.write(help.getBytes());
+           os.write("<br>".getBytes());
+           os.flush();
+         }//else
+       }//for
+       os.write(end.getBytes());
+    }//else
+    ftpClient.quit();
+
+    os.flush();
+    os.close();
    System.out.println("FTP-MODE 1");
 
-     }/* catch (com.aecys.net.FtpException aex)
-            {
-            aex.printStackTrace();
-            }*/catch(IOException ioe)
+     } catch(IOException ioe)
             {
              ioe.printStackTrace();
             }catch (Exception e)
@@ -431,6 +477,49 @@ final class JAPDirectProxyConnection implements Runnable {
 
 
 
+    }
+
+    private void writeFtpStream(FTPServerResponse serverResponse, OutputStream os,boolean pass)
+    {
+       try
+       {
+       //RemoteFile remoteFiles[] = serverResponse.getRemoteFiles();
+
+         String resp[] = serverResponse.getResponses();
+
+        for (int i = 0; i < resp.length; i++) {
+        System.out.println(resp[i] + " is "+ resp[i].length() + " bytes long. writeftp");
+
+
+       // resp[i]=resp[i].substring(3);
+           //if(!(resp[i].startsWith("1")||resp[i].startsWith("3")||resp[i].startsWith("4")||resp[i].startsWith("5")))
+          // {
+         //  if(pass)
+          // do{
+                if(!(resp[i].startsWith("1")||resp[i].startsWith("3")||resp[i].startsWith("4")||resp[i].startsWith("5")||resp[i].startsWith("220 ")||resp[i].startsWith("230 ")))
+                {
+                      if(resp[i].startsWith("220-")||resp[i].startsWith("230-")){
+                          resp[i]= resp[i].substring(4);
+                         }//fi
+        //   System.out.println(resp[i] + " is ");
+                 os.write(resp[i].getBytes());
+                 os.write("\n".getBytes());
+                 os.flush();
+                }//fi
+           // }while(!(resp[i].startsWith("1")||resp[i].startsWith("3")||resp[i].startsWith("4")||resp[i].startsWith("5")||resp[i].startsWith("230 ")||resp[i].startsWith("220 ")));
+           //}
+          }
+
+
+       }
+       catch(IOException ioe)
+       {
+       ioe.printStackTrace();
+       }//catch
+       catch (Exception e)
+       {
+       e.printStackTrace();
+       }
     }
 
     private boolean filter(String l) {
