@@ -34,9 +34,11 @@ import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPasswordField;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 import pay.crypto.CryptFile;
 import pay.data.Literals;
-import logging.*;
 
 /**
  *  Diese Klasse ist für die Speicherung (verschlüsselt oder unverschlüsselt) von PayAcountFile zuständig. Ausserdem enthält sie
@@ -117,7 +119,7 @@ public class PayAccountsControl
 								"Achtung: Wenn sie die Kontodaten mit Password speichern sollte sie dies unbedingt erinnern\n<br>" +
 								"ihr Geld ist sonst unwiederbringlich verloren<html>",
 								"Passwörter stimmt nicht überein nochmals eingeben");
-			LogHolder.log(LogLevel.DEBUG,LogType.PAY, "paswwort = " + pass);
+			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "paswwort = " + pass);
 			PayAccountFile accounts = new PayAccountFile(pass);
 			store(accounts);
 			return accounts;
@@ -136,7 +138,7 @@ public class PayAccountsControl
 	{
 		if ( (new String(all).indexOf(PayAccountFile.docStartTag)) != -1)
 		{
-			LogHolder.log(LogLevel.DEBUG,LogType.PAY, "readPlain : accountFile ist NOT decrypted");
+			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "readPlain : accountFile ist NOT decrypted");
 			return new PayAccountFile(all);
 		}
 		else
@@ -154,7 +156,7 @@ public class PayAccountsControl
 			try
 			{
 				byte[] tmp = cryptFile.decrypt(all, pass);
-				LogHolder.log(LogLevel.DEBUG,LogType.PAY, "readDecrypted: Decrypten hat funktioniert");
+				LogHolder.log(LogLevel.DEBUG, LogType.PAY, "readDecrypted: Decrypten hat funktioniert");
 				return new PayAccountFile(tmp, pass);
 			}
 			catch (CryptFile.DecryptException ee)
@@ -185,6 +187,7 @@ public class PayAccountsControl
 			return pass.getText();
 		}
 	}
+
 	public boolean changePW(PayAccountFile accounts)
 	{
 		boolean changed = false;
@@ -205,7 +208,7 @@ public class PayAccountsControl
 		}
 		catch (Exception ex)
 		{
-			LogHolder.log(LogLevel.DEBUG,LogType.PAY, "geänderte Datei konnte nicht gespeichert werden");
+			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "geänderte Datei konnte nicht gespeichert werden");
 		}
 		return changed;
 	}
@@ -231,7 +234,7 @@ public class PayAccountsControl
 		}
 		catch (IOException ex)
 		{
-			LogHolder.log(LogLevel.DEBUG,LogType.PAY, "speichern des Accout Files ging nicht");
+			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "speichern des Accout Files ging nicht");
 		}
 		return file;
 	}
@@ -242,7 +245,8 @@ public class PayAccountsControl
 		if (accounts.getPassword() != null)
 		{
 			all = cryptFile.encrypt(accounts.getXML(), accounts.getPassword());
-			LogHolder.log(LogLevel.DEBUG,LogType.PAY, "store(): accounts wird encrypted gespeichert pass: " + password);
+			LogHolder.log(LogLevel.DEBUG, LogType.PAY,
+						  "store(): accounts wird encrypted gespeichert pass: " + password);
 		}
 		FileOutputStream out = new FileOutputStream(filename);
 		out.write(all);

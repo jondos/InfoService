@@ -29,9 +29,11 @@ package pay;
 
 import java.util.Enumeration;
 import java.util.Vector;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 import pay.util.EasyXMLParser;
 import pay.util.PayText;
-import logging.*;
 
 /**
  *  Diese Klasse ist für die verwaltung aller Accounts zutändig, Dazu benutzt sie PayAcount's
@@ -58,11 +60,13 @@ public class PayAccountFile
 		{
 			xmlToVector();
 			setUsedAccount(Long.parseLong(EasyXMLParser.getFirst(new String(accountsBytes), "UsedAccount")));
-			LogHolder.log(LogLevel.DEBUG,LogType.PAY, "PayAccountFile erfolgreich initialisiert+ mainAccountNr : " + getUsedAccount());
+			LogHolder.log(LogLevel.DEBUG, LogType.PAY,
+						  "PayAccountFile erfolgreich initialisiert+ mainAccountNr : " + getUsedAccount());
 		}
 		catch (Exception e)
 		{
-			LogHolder.log(LogLevel.DEBUG,LogType.PAY, PayText.get("Pay AcconutFile lässt sich nicht initialisieren") + e);
+			LogHolder.log(LogLevel.DEBUG, LogType.PAY,
+						  PayText.get("Pay AcconutFile lässt sich nicht initialisieren") + e);
 		}
 
 	}
@@ -95,23 +99,21 @@ public class PayAccountFile
 		return password;
 	}
 
+	/**
+	 * Liest die Daten aus der Kontendatei und entschlüsselt sie mit Hilfe
+	 * des angegeben Passwortes.
+	 *
+	 * @param filename Name der Kontendatei
+	 * @param password Passwort
+	 * @return 0 wenn neue Kontendatei erzeugt wurde, 1 wenn vorhandene
+	 * Kontendatei gelesen wurde. -1 Wenn Fehler beim Lesen der Kontendatei, Fehler bei
+	 * der Entschlüsselung insbesondere falsches Passwort
+	 */
 
-
-	 /**
-	  * Liest die Daten aus der Kontendatei und entschlüsselt sie mit Hilfe
-	  * des angegeben Passwortes.
-	  *
-	  * @param filename Name der Kontendatei
-	  * @param password Passwort
-	  * @return 0 wenn neue Kontendatei erzeugt wurde, 1 wenn vorhandene
-	  * Kontendatei gelesen wurde. -1 Wenn Fehler beim Lesen der Kontendatei, Fehler bei
-	  * der Entschlüsselung insbesondere falsches Passwort
-	  */
-
-	 public boolean hasUsedAccount()
-	 {
-		 return mainAccount != null;
-	 }
+	public boolean hasUsedAccount()
+	{
+		return mainAccount != null;
+	}
 
 	public PayAccount getMainAccount()
 	{
@@ -195,9 +197,9 @@ public class PayAccountFile
 				if (mainAccount == tmp)
 				{
 					setNewMainAccount();
-					LogHolder.log(LogLevel.DEBUG,LogType.PAY, "mainAccount==tmp");
+					LogHolder.log(LogLevel.DEBUG, LogType.PAY, "mainAccount==tmp");
 				}
-				LogHolder.log(LogLevel.DEBUG,LogType.PAY, "mainAccount : " + mainAccount);
+				LogHolder.log(LogLevel.DEBUG, LogType.PAY, "mainAccount : " + mainAccount);
 			}
 		}
 		return true;
@@ -356,7 +358,7 @@ public class PayAccountFile
 			}
 			catch (Exception e)
 			{
-				LogHolder.log(LogLevel.DEBUG,LogType.PAY, "xmlToVector: Exception: ");
+				LogHolder.log(LogLevel.DEBUG, LogType.PAY, "xmlToVector: Exception: ");
 				e.printStackTrace();
 				throw new Exception("wrong password or corrupt accountfile");
 			}
