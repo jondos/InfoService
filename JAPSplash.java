@@ -45,6 +45,8 @@ final class JAPSplash extends Window
 		private String m_strVersion;
 		private int m_iXVersion;
 		private int m_iYVersion;
+	  private static final String SPLASHFN = "splash.gif";
+	  private static final String BUSYFN   = "busy.gif";
 
 		JAPSplash(Frame frmParent)
 			{
@@ -55,9 +57,9 @@ final class JAPSplash extends Window
 				MediaTracker ma=new MediaTracker(this);
 				InputStream in=null;
 				if(t.getColorModel().getPixelSize()<=16)
-					in=JAPSplash.class.getResourceAsStream(JAPModel.IMGPATHLOWCOLOR+JAPModel.SPLASHFN);
+					in=JAPSplash.class.getResourceAsStream(JAPUtil.IMGPATHLOWCOLOR+SPLASHFN);
 				if(in==null)
-					in=JAPSplash.class.getResourceAsStream(JAPModel.IMGPATHHICOLOR+JAPModel.SPLASHFN);
+					in=JAPSplash.class.getResourceAsStream(JAPUtil.IMGPATHHICOLOR+SPLASHFN);
 				int len;
 				int aktIndex;
 				if(in!=null)
@@ -79,9 +81,9 @@ final class JAPSplash extends Window
 					}
 				in=null;
 				if(t.getColorModel().getPixelSize()<=16)
-					in=JAPSplash.class.getResourceAsStream(JAPModel.IMGPATHLOWCOLOR+JAPModel.BUSYFN);
+					in=JAPSplash.class.getResourceAsStream(JAPUtil.IMGPATHLOWCOLOR+BUSYFN);
 				if(in==null)
-					in=JAPSplash.class.getResourceAsStream(JAPModel.IMGPATHHICOLOR+JAPModel.BUSYFN);
+					in=JAPSplash.class.getResourceAsStream(JAPUtil.IMGPATHHICOLOR+BUSYFN);
 				if(in!=null)
 					{
 						byte[] buff1=new byte[7000];

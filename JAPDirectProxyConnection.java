@@ -416,10 +416,10 @@ final class JAPDirectProxyConnection implements Runnable {
               }
    System.out.println("FTP-MODE 1");
 
-     } catch (com.aecys.net.FtpException aex)
+     }/* catch (com.aecys.net.FtpException aex)
             {
             aex.printStackTrace();
-            }catch(IOException ioe)
+            }*/catch(IOException ioe)
             {
              ioe.printStackTrace();
             }catch (Exception e)
