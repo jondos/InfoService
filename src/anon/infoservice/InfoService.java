@@ -422,7 +422,7 @@ final public class InfoService
           {
             try
               {
-                HTTPResponse resp=conn.Get(url.getFile());
+                HTTPResponse resp=conn.Get("/forward/"+url.toExternalForm());
                 if(resp.getStatusCode()!=200)
                   {
                     listener.progress(null,0,0,DownloadListener.STATE_ABORTED);
@@ -520,12 +520,15 @@ final public class InfoService
 */
            /////////////////////////////////////////////////////////////////////
 	public static void main(String[] argv) {
+	//	InfoService is=new InfoService("localhost",6543);
 		InfoService is=new InfoService("infoservice.inf.tu-dresden.de",6543);
-//		is.setInfoService("infoservice.inf.tu-dresden.de",6543);
-		is.setProxy(is.PROXY_TYPE_SOCKS,"dud14.inf.tu-dresden.de",1080,null,null);
+	//	is.setProxy(is.PROXY_TYPE_SOCKS,"dud14.inf.tu-dresden.de",1080,null,null);
 		//is.setProxyEnabled(false/*true*/);
 		try {
-	    is.retrieveURL(new URL("http","fg",3,"aktJap"),new DownloadListener()
+      JAPVersionInfo info=is.getJAPVersionInfo(is.JAP_RELEASE_VERSION);
+      URL codeBase=info.getCodeBase();
+
+      is.retrieveURL(new URL(codeBase,info.getJAPJarFileName()+"?version-id="+info.getVersion()),new DownloadListener()
       {public int progress(byte[] data,int lenData,int lenTotal,int state)
       {
         System.out.println("Progress - State: "+state+" Len: "+lenData+" Totla-Len: "+lenTotal);

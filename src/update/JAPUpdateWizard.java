@@ -406,9 +406,17 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
 
                       infoService = JAPController.getController().getInfoService();
                       JAPVersionInfo japVersionInfo = infoService.getJAPVersionInfo(type);
+                      URL codeBase=japVersionInfo.getCodeBase();
                       // ErrorMessage connection with infoservice failed
-                      jarUrl = new URL(japVersionInfo.getCodeBase());
-                      jarUrl =new URL(jarUrl.getProtocol(),jarUrl.getHost(),jarUrl.getPort(),jarUrl.getFile()+japVersionInfo.getJAPJarFileName());
+                      try{
+                      jarUrl=new URL(codeBase,japVersionInfo.getJAPJarFileName()+"?version-id="+japVersionInfo.getVersion());
+                      }
+                      catch(Exception e)
+                        {
+                          return -1;
+                        }
+                      //jarUrl = new URL(japVersionInfo.getCodeBase());
+                      //jarUrl =new URL(jarUrl.getProtocol(),jarUrl.getHost(),jarUrl.getPort(),jarUrl.getFile()+japVersionInfo.getJAPJarFileName());
                       listener.progress(0,0,UpdateListener.DOWNLOAD_START);
                       //System.out.println(jarUrl.getHost()+jarUrl.getFile());
 
@@ -419,7 +427,7 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
                 final Object oSync=new Object();
                 synchronized(oSync)
                   {
-                infoService.retrieveURL(new URL("http","fg",3,"aktJap"),// jarUrl,
+                infoService.retrieveURL(jarUrl,
                 new DownloadListener()
                 {
                     public int progress(byte[] data,int lenData,int lenTotal,int state)

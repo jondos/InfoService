@@ -220,7 +220,7 @@ public class JAPUpdate implements ActionListener,ItemListener,Runnable
         m_Dialog.getContentPane().add(buttonPanel);
         m_Dialog.pack();
         JAPUtil.centerFrame(m_Dialog);
-        m_Dialog.setResizable(false);
+        m_Dialog.setResizable(true);
         m_threadGetVersionInfo=new Thread(this);
         m_threadGetVersionInfo.start();
         m_Dialog.show();
