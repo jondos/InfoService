@@ -93,6 +93,9 @@ public final class MuxSocket implements Runnable
 	private SymCipher m_cipherInAI;
 	private SymCipher m_cipherOutAI;
 
+	// 2004-10-18 (Bastian Voigt)
+	private long m_transferredBytes; // accounting for payment
+
 	public final static int KEY_SIZE = 16;
 	public final static int DATA_SIZE = 992;
 	public final static int PAYLOAD_SIZE = 989;
@@ -304,6 +307,7 @@ public final class MuxSocket implements Runnable
 		}
 		m_bIsConnected = true;
 		m_ChannelList = new Hashtable();
+		m_transferredBytes = 0;
 		return ErrorCodes.E_SUCCESS;
 	}
 
@@ -558,7 +562,7 @@ public final class MuxSocket implements Runnable
 				try
 				{
 					int channelId = m_SecureRandom.nextInt();
-					while (channelId<256||m_ChannelList.get(new Integer(channelId)) != null)
+					while (channelId < 256 || m_ChannelList.get(new Integer(channelId)) != null)
 					{
 						channelId = m_SecureRandom.nextInt();
 					}
@@ -598,8 +602,10 @@ public final class MuxSocket implements Runnable
 				/* only do anything, if we are connected */
 				//First the Channel in Network byte order
 				int channel = m_SecureRandom.nextInt();
-				while(channel<256)
+				while (channel < 256)
+				{
 					channel = m_SecureRandom.nextInt();
+				}
 				m_MixPacketSend[0] = (byte) ( (channel >> 24) & 0xFF);
 				m_MixPacketSend[1] = (byte) ( (channel >> 16) & 0xFF);
 				m_MixPacketSend[2] = (byte) ( (channel >> 8) & 0xFF);
@@ -620,7 +626,7 @@ public final class MuxSocket implements Runnable
 		}
 	}
 
-	protected synchronized void sendRawMixPacket(int channel,short flags,byte[] data,int off,int data_len)
+	protected synchronized void sendRawMixPacket(int channel, short flags, byte[] data, int off, int data_len)
 	{
 		try
 		{
@@ -637,10 +643,10 @@ public final class MuxSocket implements Runnable
 				m_MixPacketSend[5] = (byte) ( (flags) & 0xFF);
 				//and then the payload (data)
 				System.arraycopy(data, off, m_MixPacketSend, 6, data_len);
-				if(data_len<DATA_SIZE)
+				if (data_len < DATA_SIZE)
 				{
 					m_SecureRandom.nextBytes(m_arOutBuff);
-					System.arraycopy(m_arOutBuff, 0, m_MixPacketSend, 6+data_len, DATA_SIZE-data_len);
+					System.arraycopy(m_arOutBuff, 0, m_MixPacketSend, 6 + data_len, DATA_SIZE - data_len);
 				}
 				//Send it...
 				sendMixPacket();
@@ -729,9 +735,11 @@ public final class MuxSocket implements Runnable
 	{
 		LogHolder.log(LogLevel.DEBUG, LogType.NET, "JAPMuxSocket:run()");
 		//Test for ControlChannel...
-		if(m_bMixSupportsControlChannels)
+		if (m_bMixSupportsControlChannels)
+		{
 			m_ControlChannelDispatcher.registerControlChannel(new ControlChannelTest());
 
+		}
 		byte[] buff = new byte[DATA_SIZE];
 		int flags = 0;
 		int channel = 0;
@@ -807,6 +815,7 @@ public final class MuxSocket implements Runnable
 						try
 						{
 							tmpEntry.channel.recv(buff, 3, len);
+							m_transferredBytes += len; // count bytes for payment
 						}
 						catch (Exception e)
 						{
@@ -887,26 +896,28 @@ public final class MuxSocket implements Runnable
 		m_outStream.flush();
 	}
 
-	/**
+	/*
 	 * Sends a message to the AI (Accounting Instance).
 	 * This implementation is to be replaced by the new control channels
 	 *
 	 * @param xmlData String
+	 * deprecated will be removed soon...
 	 * @return int
 	 */
-	public synchronized int sendPayPackets(String xmlData)
+	/*	public synchronized int sendPayPackets(String xmlData)
 	{
 		return sendPayPackets(xmlData.getBytes());
-	}
+	 }*/
 
-	/**
+	/*
 	 * Sends a message to the AI (Accounting Instance).
 	 * This implementation is to be replaced by the new control channels
 	 *
 	 * @param xmlBytes byte[]
+	 * deprecated will be removed soon...
 	 * @return int
 	 */
-	public synchronized int sendPayPackets(byte[] xmlBytes)
+	/*	public synchronized int sendPayPackets(byte[] xmlBytes)
 	{
 
 		int bufferLength = ( ( (int) ( (xmlBytes.length + 4) / DATA_SIZE)) + 1) * DATA_SIZE;
@@ -955,7 +966,7 @@ public final class MuxSocket implements Runnable
 		}
 
 		return ErrorCodes.E_SUCCESS;
-	}
+	 }*/
 
 	public synchronized int send(int channel, int type, byte[] buff, short len)
 	{
@@ -1093,6 +1104,7 @@ public final class MuxSocket implements Runnable
 			//m_outDataStream.write(outBuff2,0,DATA_SIZE);
 			//Send it...
 			sendMixPacket();
+			m_transferredBytes += len; // count bytes for payment
 			//JAPAnonService.increaseNrOfBytes(len);
 			//if(entry!=null&&entry.bIsSuspended)
 			//	return E_CHANNEL_SUSPENDED;
@@ -1128,5 +1140,25 @@ public final class MuxSocket implements Runnable
 	ControlChannelDispatcher getContolChannelDispatcher()
 	{
 		return m_ControlChannelDispatcher;
+	}
+
+	/**
+	 * Returns the total number of transferred payload bytes (send and receive)
+	 * since either the start of this mixcascade session or the last call to
+	 * {@link resetTransferredBytes()}.
+	 *
+	 * @return long transferred bytes
+	 */
+	public long getTransferredBytes()
+	{
+		return m_transferredBytes;
+	}
+
+	/**
+	 * Resets the payload counter to 0.
+	 */
+	public void resetTransferredBytes()
+	{
+		m_transferredBytes = 0;
 	}
 }

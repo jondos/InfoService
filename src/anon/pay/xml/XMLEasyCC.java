@@ -33,9 +33,8 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import anon.crypto.JAPSignature;
-import anon.util.IXMLSignable;
-import anon.util.XMLUtil;
 import anon.util.AbstractXMLSignable;
+import anon.util.XMLUtil;
 
 /**
  * XML structure for a easy cost confirmation (without mircopayment function) which is sent to the AI by the Jap
@@ -80,6 +79,12 @@ public class XMLEasyCC extends AbstractXMLSignable
 		setValues(doc.getDocumentElement());
 	}
 
+	public XMLEasyCC(String xml) throws Exception
+	{
+		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(xml);
+		setValues(doc.getDocumentElement());
+	}
+
 	public XMLEasyCC(Element xml) throws Exception
 	{
 		setValues(xml);
@@ -105,16 +110,16 @@ public class XMLEasyCC extends AbstractXMLSignable
 	{
 		Element elemRoot = a_doc.createElement("CC");
 		elemRoot.setAttribute("version", "1.0");
-		Element elem=a_doc.createElement("AiID");
-		XMLUtil.setNodeValue(elem,m_strAiName);
+		Element elem = a_doc.createElement("AiID");
+		XMLUtil.setNodeValue(elem, m_strAiName);
 		elemRoot.appendChild(elem);
 
-		elem=a_doc.createElement("TransferredBytes");
-		XMLUtil.setNodeValue(elem,Long.toString(m_lTransferredBytes));
+		elem = a_doc.createElement("TransferredBytes");
+		XMLUtil.setNodeValue(elem, Long.toString(m_lTransferredBytes));
 		elemRoot.appendChild(elem);
 
-		elem=a_doc.createElement("AccountNumber");
-		XMLUtil.setNodeValue(elem,Long.toString(m_lAccountNumber));
+		elem = a_doc.createElement("AccountNumber");
+		XMLUtil.setNodeValue(elem, Long.toString(m_lAccountNumber));
 		elemRoot.appendChild(elem);
 		return elemRoot;
 	}

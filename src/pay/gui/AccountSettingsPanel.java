@@ -62,17 +62,14 @@ import logging.LogType;
 import anon.pay.Pay;
 import anon.pay.PayAccount;
 import anon.pay.PayAccountsFile;
-import anon.pay.xml.XMLAccountInfo;
-import anon.pay.xml.XMLTransCert;
-import anon.pay.xml.XMLBalance;
-
+import anon.pay.xml.*;
 /**
  * The Jap Conf Module (Settings Tab Page) for the Accounts and payment Management
  *
  * @author Bastian Voigt
  * @version 1.0
  */
-public class AccountSettingsPanel extends AbstractJAPConfModule
+public class AccountSettingsPanel extends jap.AbstractJAPConfModule
 {
 	private JTable m_Table;
 	private JButton m_btnCreateAccount;
@@ -284,6 +281,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 	/**
 	 * Tries to find the right account
 	 * @return PayAccount
+	 * @todo internationalize messages
 	 */
 	private PayAccount getSelectedAccount()
 	{
@@ -297,7 +295,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 			int numAccounts = accounts.getNumAccounts();
 			if (numAccounts == 0)
 			{
-				// todo: internationalize message
 				int choice = JOptionPane.showOptionDialog(
 					view,
 					"<html>Sie haben noch kein Konto.<br>" +
@@ -330,7 +327,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 			}
 			else
 			{
-				// todo: internationalize message
 				JOptionPane.showMessageDialog(
 					view,
 					"<html>Sie haben mehrere Konten. Bitte w&auml;hlen Sie eine Zeile<br>" +
@@ -346,6 +342,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 
 	/**
 	 * Charges the selected account
+	 * @todo internationalize messages
+	 * @todo add language code to URL when launching browser
 	 */
 	private void doChargeAccount(PayAccount selectedAccount)
 	{
@@ -356,7 +354,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 		JFrame view = JAPController.getView();
 		XMLTransCert transferCertificate = null;
 
-		// TODO: internationalize: JAPMessage.get....()
 		int choice = JOptionPane.showOptionDialog(
 			view,
 			"<html>Um Ihr Konto aufzuladen, muss JAP zun&auml;chst eine<br>" +
@@ -398,7 +395,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 			String[] browser = JAPConstants.BROWSERLIST;
 			String url = transferCertificate.getBaseUrl();
 			url += "?transfernum=" + transferCertificate.getTransferNumber();
-//				url += "&lang="+JAPModel.getLa... todo: add language code
 			for (int i = 0; i < browser.length; i++)
 			{
 				try
@@ -443,11 +439,15 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 		}
 	}
 
+	/**
+	 *
+	 * @return boolean
+	 * @todo internationalize messages
+	 */
 	private boolean doCreateAccount()
 	{
 		JFrame view = JAPController.getView();
 
-		// TODO: JAPMessage.getString()
 		int choice = JOptionPane.showOptionDialog(
 			view,
 			"<html>Um ein Konto anzulegen, muss JAP zun&auml;chst ein<br>" +
@@ -584,10 +584,9 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 				Element elemRoot = doc.createElement("root");
 				elemRoot.setAttribute("filetype", "JapAccountFile");
 				elemRoot.setAttribute("version", "1.0");
+
 				doc.appendChild(elemRoot);
-				//Document doc2 = selectedAccount.toXmlElement(doc);
 				Element elemAccount = selectedAccount.toXmlElement(doc);
-				//elemAccount = (Element) XMLUtil.importNode(doc, elemAccount, true);
 				elemRoot.appendChild(elemAccount);
 
 				int choice = JOptionPane.showOptionDialog(
@@ -602,7 +601,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 					null, null, null);
 				if (choice == JOptionPane.YES_OPTION)
 				{
-					// todo: show only asterisks and input password two times!!
 					String strPassword = JOptionPane.showInputDialog(view, "Bitte Passwort eingeben:");
 					XMLEncryption.encryptElement(elemAccount, strPassword);
 				}
@@ -681,7 +679,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 					{
 						String strMessage = "Please type a password for decryption";
 						String strPassword = "";
-						while (true) // todo: handle "cancel" button properly...
+						while (true)
 						{
 							// ask for password
 							strPassword = JOptionPane.showInputDialog(
@@ -739,6 +737,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 	 * doDeleteAccount
 	 *
 	 * @param payAccount PayAccount
+	 * @todo internationalize messages
 	 */
 	private void doDeleteAccount(PayAccount selectedAccount)
 	{
@@ -792,7 +791,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 
 			if (accInfo.getBalance().getCredit() > 0)
 			{
-				// todo: internationalize message
 				int choice = JOptionPane.showOptionDialog(
 					view,
 					"<html>Auf diesem Konto befindet sich noch ein Guthaben von<br>" +
@@ -844,7 +842,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 			}
 			catch (Exception ex)
 			{
-				// konnte nicht l\uFFFDschen
 				JOptionPane.showMessageDialog(
 					view,
 					"<html>Error while deleting: " + ex.getMessage(),
@@ -864,10 +861,11 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 	/**
 	 * This method can be overwritten by the children of AbstractJAPConfModule. It is called
 	 * every time the user presses "OK" in the configuration dialog.
+	 * @todo savejapconf
 	 */
 	protected boolean onOkPressed()
 	{
-		// TODO: JAPController.saveJapConf() or sth similar;
+		// call JAPController.saveJapConf() or sth similar;
 		return true;
 	}
 
@@ -897,13 +895,10 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 	protected void onUpdateValues()
 	{
 		PayAccountsFile accounts = PayAccountsFile.getInstance();
-		if(accounts==null)
-			return;
 		Enumeration enumAccounts = accounts.getAccounts();
 		while (enumAccounts.hasMoreElements())
 		{
 			PayAccount a = (PayAccount) enumAccounts.nextElement();
-			// TODO: Update information in table
 		}
 	}
 
@@ -932,8 +927,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 
 		public int getRowCount()
 		{
-			if(m_accounts==null)
-				return 0;
 			return m_accounts.getNumAccounts();
 		}
 

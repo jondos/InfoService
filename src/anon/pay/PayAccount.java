@@ -34,7 +34,6 @@ import java.util.Enumeration;
 import java.util.Vector;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-
 import org.bouncycastle.crypto.params.DSAParameters;
 import org.bouncycastle.crypto.params.DSAPrivateKeyParameters;
 import org.w3c.dom.Document;
@@ -46,29 +45,35 @@ import anon.crypto.MyDSAPrivateKey;
 import anon.crypto.MyRSAPrivateKey;
 import anon.pay.xml.XMLAccountCertificate;
 import anon.pay.xml.XMLAccountInfo;
+import anon.pay.xml.XMLBalance;
 import anon.pay.xml.XMLEasyCC;
 import anon.pay.xml.XMLTransCert;
 import anon.util.Base64;
 import anon.util.IXMLEncodable;
 import anon.util.XMLUtil;
 import anon.server.impl.MuxSocket;
-import java.util.Hashtable;
-import anon.pay.xml.XMLBalance;
 
 /**
- *  Diese Klasse ist f?r die verwaltung eines Accounts zut?ndig, sie kapselt eine XML Struktur innerhalb der Klasse
- *	und Mithilfe von Klassen des anon.pay.xml Packages
- *  Die Struktur ist wie folgend:
+ * This class encapsulates one account and all additional data associated to one
+ * account. This includes the key pair, the account number, the transfer certificates
+ * for charging the account, cost confirmations and a balance certificate.
+ *
+ * For storing the account data in a file the {@link toXmlElement()}
+ * method is provided. It is recommended to encrypt the output of this method
+ * before storing it to disk, because it includes the secret private key.
+ *
+ * The XML structure is as follows:
+ *
  *  <Account version="1.0">
- * 		<AccountCertificate>...</AccountCertificate> // Kontozertiufkat von der BI unterschrieben
- * 		<RSAPrivateKey>...</RSAPrivateKey> // der geheime RSA-Schl?ssel zum Zugriff auf das Konto
- *      <DSAPrivateKey>...</DSAPrivateKey> // alternativ: der geheime DSA-Schluessel fuer das Konto
- * 		<TransferCertificates> //offenen Transaktionsummern
+ * 		<AccountCertificate>...</AccountCertificate> // see anon.pay.xml.XMLAccountCertificate
+ * 		<RSAPrivateKey>...</RSAPrivateKey> // the secret key. this can be either RSA or DSA
+ *      <DSAPrivateKey>...</DSAPrivateKey>
+ * 		<TransferCertificates> // see anon.pay.xml.XMLTransCert
  * 			....
  * 		</TransferCertifcates>
- * 		<AccountInfo>...</AccountInfo> //Kontostand (siehe XMLAccountInfo)
+ * 		<AccountInfo>...</AccountInfo> // see anon.pay.xml.XMLAccountInfo
  *  </Account>
- *	* @author Andreas Mueller, Grischan Gl&auml;nzel, Bastian Voigt
+ *	@author Andreas Mueller, Grischan Gl&auml;nzel, Bastian Voigt
  */
 public class PayAccount implements IXMLEncodable
 {
@@ -289,15 +294,16 @@ public class PayAccount implements IXMLEncodable
 	public void setAccountInfo(XMLAccountInfo info)
 	{
 		if (m_accountInfo == null)
-	{
-		m_accountInfo = info;
-	}
+		{
+			m_accountInfo = info;
+			fireChangeEvent();
+		}
 		else
 		{
 			XMLBalance b1 = info.getBalance();
 			XMLBalance b2 = m_accountInfo.getBalance();
 			if (b1.getTimestamp().after(b2.getTimestamp()))
-	{
+			{
 				m_accountInfo.setBalance(b1);
 			}
 
@@ -354,11 +360,6 @@ public class PayAccount implements IXMLEncodable
 		return m_accountCertificate.getCreationTime();
 	}
 
-	/**
-	 * Liefert den geheimen Schl?ssel des Kontos.
-	 *
-	 * @return Geheimer Schl?ssel
-	 */
 	public IMyPrivateKey getPrivateKey()
 	{
 		return m_privateKey;
@@ -369,18 +370,13 @@ public class PayAccount implements IXMLEncodable
 		return m_signingInstance;
 	}
 
-	/**
-	 * Liefert den ?ffentlichen Schl?ssel des Kontos.
-	 *
-	 * @return ?ffentlicher Schl?ssel
-	 */
 	public IMyPublicKey getPublicKey()
 	{
 		return m_accountCertificate.getPublicKey();
 	}
 
 	/**
-	 * Liefert die Gesamtsumme des ausgegebenen Geldes.
+	 * Returns the amount already spent.
 	 *
 	 * @return Gesamtsumme
 	 */
@@ -394,7 +390,8 @@ public class PayAccount implements IXMLEncodable
 	}
 
 	/**
-	 * Liefert die Gesamtsumme des eingezahlten Geldes.
+	 * Returns the initial amount of the account (i. e. the sum of all
+	 * incoming payment)
 	 *
 	 * @return Gesamtsumme
 	 */
@@ -408,11 +405,13 @@ public class PayAccount implements IXMLEncodable
 	}
 
 	/**
-	 * Liefert das noch verbleibene Guthaben.
+	 * Returns the current credit (i. e. deposit - spent) as certified by the BI.
+	 * It is possible that this value is outdated, so it may be a good idea to call
+	 * {@link Pay.fetchAccountInfo(long)} first.
 	 *
 	 * @return Guthaben
 	 */
-	public long getCredit()
+	public long getCertifiedCredit()
 	{
 		if (m_accountInfo != null)
 		{
@@ -422,14 +421,19 @@ public class PayAccount implements IXMLEncodable
 	}
 
 	/**
-	 * Liefert die Kostenbest?tigungen.
-	 *
-	 * @return Vector von CostConfirms
+	 * Returns the current credit (i. e. deposit - spent) as counted by the Jap
+	 * itself. It is possible that this value is outdated, so it may be a good idea
+	 * to call {@link updateCurrentBytes()} first.
+	 * @return long
 	 */
-	/* obsolete	public XMLCostConfirmations getCostConfirms()
-	 {
-	  return m_costConfirms;
-	 }*/
+	public long getCurrentCredit()
+	{
+		if (m_accountInfo != null)
+		{
+			return m_accountInfo.getBalance().getDeposit() - m_mySpent;
+		}
+		return 0L;
+	}
 
 	public XMLAccountInfo getAccountInfo()
 	{
@@ -437,7 +441,7 @@ public class PayAccount implements IXMLEncodable
 	}
 
 	/**
-	 * Liefert alle Transfer-Zertifikate.
+	 * Returns a vector with all transfer certificates
 	 *
 	 * @return Vector von {@link XMLTransCert}
 	 */
@@ -460,9 +464,14 @@ public class PayAccount implements IXMLEncodable
 		}
 
 		/** @todo realize this */
-/*		MuxSocket currentMuxSock = new MuxSocket(); //= getCurrentMuxSocket(); oder so..
-		m_currentBytes = currentMuxSock.getTransferredBytes();
-		currentMuxSock.resetTransferredBytes();*/
+		MuxSocket currentMuxSock = getCurrentMuxSocket(); // oder so..
+		long tmp = currentMuxSock.getTransferredBytes();
+		if (tmp > 0)
+		{
+			m_currentBytes += tmp;
+			fireChangeEvent();
+		}
+		currentMuxSock.resetTransferredBytes();
 		return m_currentBytes;
 	}
 
@@ -474,7 +483,7 @@ public class PayAccount implements IXMLEncodable
 		if (m_accountInfo == null)
 		{
 			m_accountInfo = new XMLAccountInfo();
-	}
+		}
 		m_mySpent += m_accountInfo.addCC(cc);
 
 	}
@@ -490,15 +499,14 @@ public class PayAccount implements IXMLEncodable
 		}
 	}
 
-	private void fireChangeEvent(Object source)
+	private void fireChangeEvent()
 	{
 		synchronized (m_accountListeners)
 		{
 			Enumeration enumListeners = m_accountListeners.elements();
-			ChangeEvent e = new ChangeEvent(source);
 			while (enumListeners.hasMoreElements())
 			{
-				( (ChangeListener) enumListeners.nextElement()).stateChanged(e);
+				( (IAccountListener) enumListeners.nextElement()).accountChanged(this);
 			}
 		}
 	}

@@ -143,7 +143,7 @@ public class PaymentMainPanel extends JPanel
 
 		this.add(new JButton("Aufladen"), BorderLayout.EAST);
 		LogHolder.log(LogLevel.DEBUG, LogType.PAY, "PaymentMainPanel: Calling accountsFile()");
-		//PayAccountsFile.getInstance().addChangeListener(m_MyChangeListener);
+		PayAccountsFile.getInstance().addPaymentListener(m_MyChangeListener);
 		LogHolder.log(LogLevel.DEBUG, LogType.PAY, "PaymentMainPanel: Calling updateDisplay()");
 		updateDisplay(null);
 	}
@@ -199,22 +199,47 @@ public class PaymentMainPanel extends JPanel
 	 *
 	 * @version 1.0
 	 */
-	private class MyChangeListener implements ChangeListener
+	private class MyPaymentListener implements anon.pay.IPaymentListener
 	{
 		private PayAccountsFile accounts = null;
-		public void stateChanged(ChangeEvent e)
+
+		/**
+		 * accountActivated
+		 *
+		 * @param acc PayAccount
+		 */
+		public void accountActivated(PayAccount acc)
 		{
-			if (accounts == null)
-			{
-				accounts = PayAccountsFile.getInstance();
-			}
-			PayAccount source = (PayAccount) e.getSource();
-			if (source == accounts.getActiveAccount())
-			{
-				updateDisplay(source);
-			}
+			updateDisplay(acc);
+		}
+
+		/**
+		 * accountAdded
+		 *
+		 * @param acc PayAccount
+		 */
+		public void accountAdded(PayAccount acc)
+		{
+		}
+
+		/**
+		 * accountRemoved
+		 *
+		 * @param acc PayAccount
+		 */
+		public void accountRemoved(PayAccount acc)
+		{
+		}
+
+		/**
+		 * creditChanged
+		 *
+		 * @param acc PayAccount
+		 */
+		public void creditChanged(PayAccount acc)
+		{
 		}
 	}
 
-	private MyChangeListener m_MyChangeListener = new MyChangeListener();
+	private MyPaymentListener m_MyChangeListener = new MyPaymentListener();
 }
