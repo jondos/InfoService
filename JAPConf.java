@@ -416,7 +416,7 @@ final class JAPConf extends JDialog
 				checkboxShowDebugConsole.addItemListener(new ItemListener()
 					{public void itemStateChanged(ItemEvent e)
 					 {
-						 JAPDebug.showConsole(e.getStateChange()==e.SELECTED);
+						 JAPDebug.showConsole(e.getStateChange()==e.SELECTED,model.getView());
 					}});
 				p31.add(checkboxShowDebugConsole);
 				
