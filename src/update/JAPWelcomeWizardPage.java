@@ -88,9 +88,22 @@ private JButton test;
     this.componentPanel.add(taskOutput, componentConstraints);
 
     test = new JButton("Download");
-    test.addActionListener(new ActionListener(){
-    public void actionPerformed(ActionEvent e){downloadFile();}
-    });
+    test.addActionListener(new ActionListener()
+      {
+        public void actionPerformed(ActionEvent e)
+          {
+            Runnable doHelloWorld = new Runnable()
+              {
+                public void run()
+                  {
+                    System.out.println("Hello World on " + Thread.currentThread());
+                    downloadFile();
+                  }
+              };
+            Thread t=new Thread(doHelloWorld);
+            t.start();
+          }
+      });
     this.componentConstraints.gridx = 1;
     this.componentConstraints.gridy = 3;
     this.componentPanel.add(test, componentConstraints);
@@ -99,7 +112,7 @@ private JButton test;
   private void downloadFile()
   {
      //timer.start();
-   //  infoService.connect("anon.inf.tu-dresden.de","/win/jap_swing/setup.exe", "setup.exe",progressBar);
+     infoService.connect("anon.inf.tu-dresden.de","/win/jap_swing/setup.exe", "setup.exe",progressBar);
   }
 
   private void makestatusField(){}

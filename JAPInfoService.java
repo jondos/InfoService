@@ -27,6 +27,8 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 */
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.DocumentBuilder;
+import javax.swing.JProgressBar;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -38,8 +40,16 @@ import HTTPClient.NVPair;
 import java.util.Enumeration;
 import java.util.Vector;
 import java.net.InetAddress;
+import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.lang.Runnable;
+import java.lang.Thread;
 
 import HTTPClient.Codecs;
+import HTTPClient.ModuleException;
+import HTTPClient.ParseException;
 
 final public class JAPInfoService
 	{
@@ -49,6 +59,9 @@ final public class JAPInfoService
 		String proxyAuthUserID = null;
 		String proxyAuthPasswd = null;
 		HTTPConnection conInfoService=null;
+                private int count =0;
+                public boolean ready = false;
+
 		public JAPInfoService(String host,int port) {
 			this.setInfoService(host,port);
 		}
@@ -220,7 +233,7 @@ final public class JAPInfoService
 						}
 					String strGET="/feedback/"+strIP+DP+Integer.toString(service.getPort());
 					HTTPResponse resp=conInfoService.Get(strGET);
-					if (resp.getStatusCode()!=200)
+                                        if (resp.getStatusCode()!=200)
 						{
 							JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPInfoService:Bad response from server: "+resp.getReasonLine());
 						}
@@ -268,6 +281,82 @@ final public class JAPInfoService
 					throw new Exception("Versioncheck failed: "+e);
 				}
 		}
+
+           /////////////////////////////////////////////////////////////////////
+           //connect for JAPUpdate .jnlp-Files
+
+        public HTTPConnection getConInfoService()
+          {
+             return this.conInfoService;
+          }
+// inner class LoadThread needed for showing Download-Progress using JProgressBar
+
+//public class LoadThread extends Thread{
+
+//  public void run(){}
+          // get the jarfiles
+  public void connect(String codeBase, String jarPath, String jarFileName, JProgressBar progressBar)
+  {
+
+   byte[]data = new byte[1024];
+
+   String jnlpRelease = "";
+   File newVersionJarFile = new File(jarFileName);
+   FileOutputStream fos;
+   int i;
+   InputStream is = null;
+
+  try
+    {
+	HTTPConnection con = new HTTPConnection(codeBase);
+	HTTPResponse   rsp = con.Get(jarPath);
+	if (rsp.getStatusCode() >= 300)
+	{
+	    System.err.println("Received Error: "+rsp.getReasonLine());
+	    System.err.println(rsp.getText());
+        //    rsp.
+	}
+	else{
+             System.out.println(rsp.getReasonLine()+rsp.getStatusCode());
+	    // data = rsp.getData();
+             fos = new FileOutputStream(newVersionJarFile);
+             is = rsp.getInputStream();
+             while((is.read(data))!= -1)
+                 {
+                   count ++;
+                   progressBar.setValue(count);
+                   progressBar.repaint();
+                 //  System.out.println(count);
+                   fos.write(data);
+                 }
+              fos.flush();
+              fos.close();
+              is.close();
+              ready = true;
+            // jnlpRelease = new String(data);
+             System.out.println(jnlpRelease);
+
+            // parseFile(typeLate, data);
+             }
+
+    }catch(ModuleException me)
+    {
+    System.err.println(me);
+    }catch(ParseException pe)
+    {
+    System.err.println(pe);
+    }
+    catch (IOException ioe)
+    {
+	System.err.println(ioe.toString());
+    }
+  }
+//}//End LoadThread
+  public int getCount()
+  {
+    return count;
+  }
+           /////////////////////////////////////////////////////////////////////
 	public static void main(String[] argv) {
 		JAPDebug.setDebugLevel(JAPDebug.WARNING);
 		JAPInfoService is=new JAPInfoService("infoservice.inf.tu-dresden.de",6543);
@@ -288,4 +377,5 @@ final public class JAPInfoService
 			e.printStackTrace();
 		}
 	}
+
 }
