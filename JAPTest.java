@@ -45,7 +45,7 @@ import sun.security.x509.X509Cert;
 import sun.security.pkcs.PKCS8Key;
 import sun.security.pkcs.PKCS7;
 import sun.security.x509.X509Key;
-
+import sun.misc.BASE64Encoder;
 import sun.security.util.DerInputStream;
 import sun.security.util.DerValue;
 import sun.security.util.BigInt;
@@ -130,7 +130,8 @@ final public class JAPTest
 												e.printStackTrace();
 											 }
 	*/	
-		testJarDiff();
+		//testJarDiff();
+		testJarVerify();
 		System.exit(0);
 		}
 	
@@ -772,6 +773,41 @@ public static void testJarDiff()
 	{
 		e.printStackTrace();
 	}
+}
+
+public static void testJarVerify()
+{
+	try
+	{
+		FileInputStream f=new FileInputStream("h:/temp/JAP.class");
+		byte[] buff=new byte[50000];
+		int s=-1;
+		int p=0;
+		while((s=f.read(buff,p,50000))!=-1)
+		{
+			p+=s;
+		}
+		MessageDigest md=MessageDigest.getInstance("SHA");
+		md.update(buff,0,p);
+		byte[] dig=md.digest();
+		BASE64Encoder be=new BASE64Encoder();
+		String enc=be.encodeBuffer(dig);
+		System.out.println(enc);
+String st="Name: JAP.class\r\nSHA1-Digest: vqtchNwSD10AjvDir5z98WKio5g=\r\n\r\n";
+byte [] stb=st.getBytes();
+//String st="vqtchNwSD10AjvDir5z98WKio5g=";
+md.update(stb);
+dig=md.digest();
+BASE64Encoder be1=new BASE64Encoder();
+	enc=be1.encodeBuffer(dig);
+	System.out.println(enc);
+
+	}
+	catch(Exception e)
+	{
+		e.printStackTrace();
+	}
+	
 }
 
 }

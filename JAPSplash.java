@@ -38,7 +38,7 @@ public final class JAPSplash extends Window  {
 		super(new Frame());
 		setBackground(Color.black);
 		
-		JLabel splashLabel = new JLabel(m.loadImageIcon(m.SPLASHFN, false));
+		JLabel splashLabel = new JLabel(JAPUtil.loadImageIcon(m.SPLASHFN, false));
 		
 		JPanel p1 = new JPanel();
 		p1.setBackground(Color.black);
@@ -49,7 +49,7 @@ public final class JAPSplash extends Window  {
 		waitLabel.setBackground(Color.black);
 		waitLabel.setForeground(Color.white);
 
-		ImageIcon busy = m.loadImageIcon(m.BUSYFN, false);
+		ImageIcon busy = JAPUtil.loadImageIcon(m.BUSYFN, false);
 		JLabel busyLabel = new JLabel(busy);
 		busyLabel.setBackground(Color.black);
 		
@@ -60,7 +60,7 @@ public final class JAPSplash extends Window  {
 		add(p1, BorderLayout.CENTER);
 
 		pack();
-		m.centerFrame(this);
+		JAPUtil.centerFrame(this);
 		setVisible(true);
 		toFront();
 	}

@@ -10,7 +10,12 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.StringTokenizer;
+import java.awt.Window;
+import java.awt.Dimension;
+import java.awt.MediaTracker;
 import org.w3c.dom.Node;
+import javax.swing.ImageIcon;
+
 
 public final class JAPUtil
 	{
@@ -176,5 +181,67 @@ public final class JAPUtil
 					}
 			return s;
 		}
+	/** Loads an Image from a File or a Resource.
+	 *	@param strImage the Resource or filename of the Image
+	 *	@param sync true if the loading is synchron, false if it should be asynchron
+	 */
+	public static ImageIcon loadImageIcon(String strImage, boolean sync) 
+		{
+			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPModel:Image "+strImage+" loading...");
+			boolean finished = false;
+			ImageIcon img = null;
+			// this is necessary to make shure that the images are loaded when contained in a JAP.jar
+			try 
+				{
+					img = new ImageIcon(JAPUtil.class.getResource(strImage));
+				}
+			catch (Exception e)
+				{
+					img = null;
+				}
+			// ...otherwise
+			if (img == null)
+				{
+					img = new ImageIcon(strImage);
+				}
+			if ((sync == false) || (img == null)) {
+				finished = true;
+			}
+			while(finished!=true)
+				{
+					int status = img.getImageLoadStatus();
+					if ( (status & MediaTracker.ABORTED) != 0 ) {
+						JAPDebug.out(JAPDebug.ERR,JAPDebug.GUI,"JAPModel:Loading of image "+strImage+" aborted!");
+						finished = true;
+						}
+					if ( (status & MediaTracker.ERRORED) != 0 ) {
+						JAPDebug.out(JAPDebug.ERR,JAPDebug.GUI,"JAPModel:Error loading image "+strImage+"!");
+						finished = true;
+					}
+					if ( (status & MediaTracker.COMPLETE) != 0) {
+						finished = true;
+					}
+				}
+		return img;
+	}
+	
+	public static void centerFrame(Window f) {
+		Dimension screenSize = f.getToolkit().getScreenSize();
+		try //JAVA 1.1
+			{
+				Dimension ownSize = f.getSize();
+				f.setLocation((screenSize.width-ownSize.width )/2,(screenSize.height-ownSize.height)/2);
+			}
+		catch(Error e) //JAVA 1.0.2
+			{
+				Dimension ownSize = f.size();
+				f.locate((screenSize.width-ownSize.width )/2,(screenSize.height-ownSize.height)/2);
+			}
+	}
 
+	public static void upRightFrame(Window f) {
+		Dimension screenSize = f.getToolkit().getScreenSize();
+		Dimension ownSize = f.getSize();
+		f.setLocation((screenSize.width-ownSize.width ) , 0 );
+	}
 }

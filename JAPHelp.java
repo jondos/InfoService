@@ -89,7 +89,7 @@ final public class JAPHelp extends JDialog implements ActionListener {
 							catch (Exception e) {}
 					}
 				pack();
-				JAPModel.centerFrame(this);
+				JAPUtil.centerFrame(this);
 			}
 
     

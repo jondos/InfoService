@@ -76,7 +76,7 @@ final public class JAPAWTMsgBox extends WindowAdapter implements ActionListener
 			d.add("East",p);
 			d.setResizable(false);
 			d.pack();
-			JAPModel.centerFrame(d);
+			JAPUtil.centerFrame(d);
 		}
 	
 	/** Shows a Message Box.

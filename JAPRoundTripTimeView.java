@@ -108,7 +108,7 @@ public class JAPRoundTripTimeView extends JDialog implements Runnable {
        //     }
        // });
 		pack();
-		model.upRightFrame(this);
+		JAPUtil.upRightFrame(this);
 		setVisible(true);
 	}
 	
@@ -190,7 +190,7 @@ public class JAPRoundTripTimeView extends JDialog implements Runnable {
  		
 		// Center part ***************************************
 		panelCenter.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
-		sumProgressBarDesc1.setIcon(model.loadImageIcon("images/server16.gif",false));
+		sumProgressBarDesc1.setIcon(JAPUtil.loadImageIcon("images/server16.gif",false));
 		sumProgressBar1.setString("");
 		sumProgressBar1.setStringPainted(true);
 		sumProgressBar2.setString("");
@@ -206,7 +206,7 @@ public class JAPRoundTripTimeView extends JDialog implements Runnable {
 		
 		// adding Progress Bars
 		myProgressBarDesc1[0] = new JLabel("lokal - Mix 1");
-		myProgressBarDesc1[0].setIcon(model.loadImageIcon("images/host16.gif",false));
+		myProgressBarDesc1[0].setIcon(JAPUtil.loadImageIcon("images/host16.gif",false));
 		myProgressBar1[0]     = new JProgressBar(0,100);
 		myProgressBar1[0].setString("");
 		myProgressBar1[0].setStringPainted(true);
@@ -222,7 +222,7 @@ public class JAPRoundTripTimeView extends JDialog implements Runnable {
 		
 		for (int i = 1; i < (JAPRoundTripTime.MAX_STATIONS - 1); i++){
 			myProgressBarDesc1[i] = new JLabel("Mix " + (i) + " - Mix " + (i + 1));
-			myProgressBarDesc1[i].setIcon(new ImageIcon("Server16.gif"));
+			myProgressBarDesc1[i].setIcon(JAPUtil.loadImageIcon("images/server16.gif",false));
 			myProgressBarDesc2[i] = new JLabel(model.getString("rttMin") + " - / " + model.getString("rttAvg") + " - / " + model.getString("rttMax") + " -", JLabel.RIGHT);
 			myProgressBar1[i]     = new JProgressBar(0,100);
 			myProgressBar1[i].setString("");
