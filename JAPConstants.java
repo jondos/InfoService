@@ -76,6 +76,7 @@ public final class JAPConstants {
 	static final String   METERICONFN                  = "icom.gif";
   public static final String   IMAGE_ARROW           = "arrow46.gif";
   public static final String   IMAGE_BLANK           = "blank.gif";
+  public static final String   IMAGE_STEPFINISHED    = "haken.gif";
 	static final String[] METERFNARRAY                 ={
 															"meterD.gif",    // anonymity deactivated
 															"meterNnew.gif", // no measure available

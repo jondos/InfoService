@@ -46,7 +46,7 @@ public class JAPDownloadWizardPage extends BasicWizardPage
     //labels as placeholders for the icon indicating which step is the current job
     protected JLabel m_labelIconStep1;
     protected JLabel m_labelIconStep2, m_labelIconStep3, m_labelIconStep4, m_labelIconStep5;
-    protected ImageIcon arrow, blank;
+    protected ImageIcon arrow, blank,stepfinished;
     protected JProgressBar progressBar;
     protected JPanel m_panelProgressBar;
 
@@ -64,6 +64,7 @@ public class JAPDownloadWizardPage extends BasicWizardPage
 
         arrow = JAPUtil.loadImageIcon(JAPConstants.IMAGE_ARROW,false);
         blank = JAPUtil.loadImageIcon(JAPConstants.IMAGE_BLANK,false);
+        stepfinished = JAPUtil.loadImageIcon(JAPConstants.IMAGE_STEPFINISHED,false);
 
         gridBagDownload = new GridBagLayout();
         constraintsDownload = new GridBagConstraints();

@@ -29,6 +29,7 @@ package anon;
 
 import java.net.InetAddress;
 import anon.server.AnonServiceImpl;
+import anon.xmlrpc.client.AnonServiceImplProxy;
 
 final public class AnonServiceFactory
   {
@@ -46,7 +47,7 @@ final public class AnonServiceFactory
 
     public static AnonService create(InetAddress addr,int port)
       {
-        return null;
+        return new AnonServiceImplProxy(addr,port);
       }
 
   }

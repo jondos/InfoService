@@ -32,7 +32,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.IOException;
 
-abstract class AbstractChannel implements AnonChannel
+abstract public class AbstractChannel implements AnonChannel
   {
     private boolean m_bIsClosedByPeer=false;
     private boolean m_bIsClosed=false;
@@ -56,6 +56,11 @@ abstract class AbstractChannel implements AnonChannel
     public void finalize()
       {
         close();
+      }
+
+    public int hashCode()
+      {
+        return m_id;
       }
 
     public InputStream getInputStream()
