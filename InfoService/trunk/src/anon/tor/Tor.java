@@ -290,16 +290,16 @@ public class Tor implements Runnable, AnonService
 		{
 			m_createNewCircuitLoop.interrupt();
 			m_createNewCircuitLoop.join();
-			for (int i = 0; i < this.m_usedFORs.size(); i++)
+			for (int i = 0; i < m_usedFORs.size(); i++)
 			{
-				if (this.m_usedFORs.elementAt(0) instanceof FirstOnionRouter)
+				if (m_usedFORs.elementAt(i) instanceof FirstOnionRouter)
 				{
-					FirstOnionRouter f = (FirstOnionRouter)this.m_usedFORs.elementAt(0);
+					FirstOnionRouter f = (FirstOnionRouter)m_usedFORs.elementAt(i);
 					f.stop();
 					f.close();
 				}
-				this.m_usedFORs.remove(0);
 			}
+			m_usedFORs.removeAllElements();
 		}
 	}
 
