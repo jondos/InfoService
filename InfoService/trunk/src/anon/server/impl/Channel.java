@@ -46,6 +46,6 @@ final class Channel extends AbstractChannel
       }
     protected void send(byte[] buff, int len)
       {
-        m_muxSocket.send(m_id,0,buff,(short)len);
+        m_muxSocket.send(m_id,m_type,buff,(short)len);
       }
   }

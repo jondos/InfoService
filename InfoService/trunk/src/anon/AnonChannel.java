@@ -32,7 +32,8 @@ import java.io.OutputStream;
 
 public interface AnonChannel
   {
-    public final static int HTTP=1;
+    public final static int HTTP=0;
+    public final static int SOCKS=1;
     public InputStream getInputStream();
     public OutputStream getOutputStream();
     public void close();

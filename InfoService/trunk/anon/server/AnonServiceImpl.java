@@ -36,10 +36,12 @@ import anon.AnonServiceEventListener;
 import anon.server.impl.MuxSocket;
 import anon.server.impl.KeyPool;
 
+import java.net.InetAddress;
 import java.net.ConnectException;
 import java.util.Vector;
 import java.util.Enumeration;
-
+import java.io.InputStream;
+import java.io.OutputStream;
 final public class AnonServiceImpl implements AnonService
   {
     private static AnonServiceImpl m_AnonServiceImpl=null;
@@ -88,6 +90,27 @@ final public class AnonServiceImpl implements AnonService
     public AnonChannel createChannel(int type) throws ConnectException
       {
         return m_MuxSocket.newChannel(type);
+      }
+
+    public AnonChannel createChannel(InetAddress addr,int port) throws ConnectException
+      {
+        try
+          {
+            AnonChannel c=createChannel(AnonChannel.SOCKS);
+            InputStream in=c.getInputStream();
+            OutputStream out=c.getOutputStream();
+            out.write(6);
+            out.write(8);
+            out.write(7);
+            out.flush();
+            int i=in.read();
+            i=in.read();
+            return c;
+          }
+        catch(Exception e)
+          {
+            throw new ConnectException("createChannel(): "+e.getMessage());
+          }
       }
 
     public synchronized void addEventListener(AnonServiceEventListener l)

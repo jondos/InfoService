@@ -37,7 +37,7 @@ abstract class AbstractChannel implements AnonChannel
     private boolean m_bIsClosedByPeer=false;
     private boolean m_bIsClosed=false;
     protected int m_id;
-
+    protected int m_type;
 
 
     private ChannelInputStream m_inputStream;
@@ -46,6 +46,7 @@ abstract class AbstractChannel implements AnonChannel
     AbstractChannel(int id,int type) throws IOException
       {
         m_id=id;
+        m_type=type;
         m_bIsClosedByPeer=false;
         m_bIsClosed=false;
         m_inputStream=new ChannelInputStream(this);
@@ -331,6 +332,9 @@ final class ChannelOutputStream extends OutputStream
       {
         if(m_bIsClosedByPeer||m_bIsClosed)
           throw new IOException("Channel closed by peer");
+        byte[] buff=new byte[1];
+        buff[0]=(byte)i;
+        m_channel.send(buff,1);
       }
 
     public /*synchronized*/ void write(byte[] buff,int start,int len) throws IOException
