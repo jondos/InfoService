@@ -421,12 +421,14 @@ public class JAPConfCert extends AbstractJAPConfModule
 
 				if (enabled)
 				{
-					m_jcs.enableCertificate(certActual, false);
+					certActual.setEnabled(false);
+					m_jcs.addCertificate(certActual);
 					m_bttnCertStatus.setText(JAPMessages.getString("certBttnEnable"));
 				}
 				else
 				{
-					m_jcs.enableCertificate(certActual, true);
+					certActual.setEnabled(true);
+					m_jcs.addCertificate(certActual);
 					m_bttnCertStatus.setText(JAPMessages.getString("certBttnDisable"));
 				}
 				m_listCert.repaint();

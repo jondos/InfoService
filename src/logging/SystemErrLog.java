@@ -7,4 +7,19 @@ public class SystemErrLog extends DummyLog
 		System.err.println(msg);
 	}
 
+	/** Get the current debug type.
+	 */
+	public int getLogType()
+	{
+		return LogType.ALL;
+	}
+
+	/** Get the current debug level.
+	 */
+	public int getLogLevel()
+	{
+		return LogLevel.DEBUG;
+	}
+
+
 }

@@ -58,7 +58,7 @@ final public class ControlChannelTest extends SyncControlChannel implements Runn
 	public void proccessXMLMessage(Document docMsg)
 	{
 		LogHolder.log(LogLevel.DEBUG, LogType.NET,
-					  "ControlTestChannel received a message: " + XMLUtil.XMLDocumentToString(docMsg));
+					  "ControlTestChannel received a message: " + XMLUtil.toString(docMsg));
 	}
 
 	public void run()

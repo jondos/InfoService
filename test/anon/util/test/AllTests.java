@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2000, The JAP-Team
+ Copyright (c) 2000 - 2004 The JAP-Team
  All rights reserved.
  Redistribution and use in source and binary forms, with or without modification,
  are permitted provided that the following conditions are met:
@@ -25,65 +25,38 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package anon.test;
+package anon.util.test;
 
-import junit.framework.*;
-// import Testclass;
+import junit.framework.Test;
+import junit.framework.TestSuite;
+import anon.infoservice.TestProxy;
 
-public class SampleTest extends TestCase
+public class AllTests
 {
-	private int m_One;
-	private boolean m_bTwo;
+	/**
+	 * The proxy is not used here, but it must be imported for automatic compilation.
+	 */
+	TestProxy m_proxy;
 
-	public SampleTest(String name)
+	/**
+	 * The main function.
+	 *
+	 * @param a_Args (no arguments needed)
+	 */
+	public static void main(String[] a_Args)
 	{
-		super(name);
+		junit.swingui.TestRunner.run(AllTests.class);
 	}
 
 	/**
-	* Method is run before each test, for example for object creation.
-	*/
-	protected void setUp() {
-		m_One = 0;
-		m_bTwo = false;
+	 * Returns the test suite that combines all other tests of the project.
+	 *
+	 * @return Test The test suite that combines all other tests of the project.
+	 */
+	public static Test suite()
+	{
+		TestSuite suite = new TestSuite(AllTests.class.getName());
+		suite.addTestSuite(XMLUtilTest.class);
+		return suite;
 	}
-
-	/**
-	* Method is run after each test, for example for object deletion.
-	*/
-   protected void tearDown() {
-	   m_One = 0;
-   }
-
-
-	/**
-	* Tests a fictive method of the Sample class with the name "doSomethingMethod".
-	*/
-   public void testDoSomethingMethod() {
-	   for (m_One = 0; m_One < 5; m_One++); /* Simulates a method call. */
-	   TestCase.assertEquals(5, m_One);
-
-	   m_One += 18; /* Simulates a method call. */
-	   TestCase.assertEquals(23, m_One);
-   }
-
-
-	/**
-	* Tests a fictive method of the Sample class with the name "doAnything".
-	*/
-   public void testDoAnything() {
-	   m_bTwo = true; /* Simulates a method call. */
-	   TestCase.assertTrue(m_bTwo);
-   }
-
-   public void testAnException() {
-	   try {
-		   if (true) {
-			   throw new ArrayIndexOutOfBoundsException("Sample exception");  /* Simulates a method call. */
-		   }
-		   TestCase.fail("Expected: ArrayIndexOutOfBoundsException");
-	   } catch (ArrayIndexOutOfBoundsException e) {}
-
-   }
 }
-

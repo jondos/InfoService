@@ -28,6 +28,8 @@
 package anon.util;
 
 import java.util.StringTokenizer;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
 public final class Util
 {
@@ -72,5 +74,23 @@ public final class Util
 		}
 
 		return a_string;
+	}
+
+	/**
+	 * Gets the stack trace of a Throwable as String.
+	 * @param a_t a Throwable
+	 * @return the stack trace of a throwable as String
+	 */
+	public static String getStackTrace(Throwable a_t)
+	{
+		PrintWriter writer;
+		StringWriter strWriter;
+
+		strWriter = new StringWriter();
+		writer = new PrintWriter(strWriter);
+
+		a_t.printStackTrace(writer);
+
+		return strWriter.toString();
 	}
 }

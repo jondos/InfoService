@@ -168,7 +168,7 @@ public final class Database implements Runnable
 		m_serviceDatabase = new Hashtable();
 		m_timeoutList = new Vector();
 
-		Thread dbThread = new Thread(this);
+		Thread dbThread = new Thread(this,"Database Thread: "+a_DatabaseEntryClass.toString());
 		dbThread.setDaemon(true);
 		dbThread.start();
 	}
@@ -276,7 +276,8 @@ public final class Database implements Runnable
 			{
 				/* this is a new unknown service */
 				addEntry = true;
-			} else if (newEntry.getVersionNumber() > oldEntry.getVersionNumber())
+			}
+			else if (newEntry.getVersionNumber() > oldEntry.getVersionNumber())
 			{
 				// we know this service, and the entry is newer than the one we have stored
 				addEntry = true;
@@ -284,6 +285,15 @@ public final class Database implements Runnable
 			}
 			if (addEntry)
 			{
+				// test first if the element has not yet expired
+				if (newEntry.getExpireTime() <= System.currentTimeMillis())
+				{
+					LogHolder.log(LogLevel.INFO, LogType.NET, "Received an expired db entry: '" +
+								  newEntry.getId() + "'. It was dropped immediatly.");
+					m_serviceDatabase.remove(newEntry.getId());
+					return;
+				}
+
 				// add the entry to the database
 				m_serviceDatabase.put(newEntry.getId(), newEntry);
 
@@ -458,5 +468,15 @@ public final class Database implements Runnable
 			}
 		}
 		return resultEntry;
+	}
+
+	public boolean isEntryIdInTimeoutList(String a_entryId)
+	{
+		return m_timeoutList.contains(a_entryId);
+	}
+
+	public int getTimeoutListSize()
+	{
+		return m_timeoutList.size();
 	}
 }

@@ -87,7 +87,7 @@ final public class XMLEncryption
 		int len = 0;
 		try
 		{
-			barInput = XMLUtil.XMLNodeToString(elemPlain).getBytes();
+			barInput = XMLUtil.toString(elemPlain).getBytes();
 			len = barInput.length;
 			barOutput = codeDataCTS(true, barInput, generatePBEKey(password, kSalt));
 		}
@@ -309,7 +309,7 @@ final public class XMLEncryption
 		byte[] barOutput = null;
 		try
 		{
-			barInput = XMLUtil.XMLNodeToString(elemPlain).getBytes();
+			barInput = XMLUtil.toString(elemPlain).getBytes();
 			barOutput = codeDataCBCwithHMAC(true, barInput, params,null);
 		}
 		catch (Exception ex1)

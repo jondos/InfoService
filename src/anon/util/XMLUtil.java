@@ -35,6 +35,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.OutputStreamWriter;
 import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
@@ -279,7 +280,7 @@ public class XMLUtil
 				NodeList childNodes = node.getChildNodes();
 				for (int i = 0; i < childNodes.getLength(); i++)
 				{
-					Node tmp_result = getFirstChildByNameUsingDeepSearch(childNodes.item(i), name);
+					Node tmp_result = getFirstChildByNameUsingDeepSearchInternal(childNodes.item(i), name);
 					if (tmp_result != null)
 					{
 						return tmp_result;
@@ -512,23 +513,24 @@ public class XMLUtil
 	}
 
 	/**
-	 * Writes a XML-Document to a String. Since writing was not standardized
-	 * since JAXP 1.1 different Methods are tried.
-	 * @param a_doc an XML Document
-	 * @return an XML Document in a String representation
+	 * Creates a byte array from the abstract tree of the node.
+	 *
+	 * @param a_inputNode The node (incl. the whole tree) which is flattened to a byte array.
+	 *
+	 * @return the node as a byte array (incl. the whole tree).
 	 */
-	public static String XMLDocumentToString(Document a_doc)
+	public static byte[] toByteArray(Node a_inputNode)
 	{
-		return XMLNodeToString(a_doc);
+		return toString(a_inputNode).getBytes();
 	}
 
-	/** Writes a XML-Node to a String. If node is a Document then the <XML> header is included.
-	 * Since writing was not standardized
-	 * until  JAXP 1.1 different Methods are tried
+	/**
+	 * Writes an XML-Node to a String. If the node is a Document then the <XML> header is included.
+	 * Since writing was not standardized until JAXP 1.1 different Methods are tried
 	 * @param node an XML Node
 	 * @return an XML Node in a String representation
 	 */
-	public static String XMLNodeToString(Node node)
+	public static String toString(Node node)
 	{
 		ByteArrayOutputStream out = null;
 		try
@@ -797,7 +799,7 @@ public class XMLUtil
 	 * @param a_filename a file name
 	 * @throws IOException if an I/O error occurs
 	 */
-	public static void writeXMLDocumentToFile(Document a_doc, String a_filename)
+	public static void writeToFile(Document a_doc, String a_filename)
 		throws IOException
 	{
 		FileOutputStream out;
@@ -807,7 +809,7 @@ public class XMLUtil
 
 		// write to file
 		out = new FileOutputStream(new File(a_filename));
-		out.write(XMLUtil.XMLNodeToString(a_doc).getBytes());
+		out.write(XMLUtil.toString(a_doc).getBytes());
 		out.close();
 	}
 

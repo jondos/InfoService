@@ -39,10 +39,13 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.Cloneable;
 import java.io.InputStreamReader;
 import java.math.BigInteger;
 import java.security.PublicKey;
 import java.util.Date;
+import java.util.Random;
+import java.util.Enumeration;
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.BERInputStream;
 import org.bouncycastle.asn1.DERBitString;
@@ -59,18 +62,53 @@ import org.w3c.dom.Text;
 import anon.util.Base64;
 import anon.util.XMLUtil;
 import anon.util.IXMLEncodable;
+
 /**
  * A certificate class.
- *
  */
-final public class JAPCertificate implements IXMLEncodable
+final public class JAPCertificate implements IXMLEncodable, Cloneable
 {
 	private X509CertificateStructure m_x509cert;
 	private IMyPublicKey m_PubKey;
 	private boolean m_bEnabled;
+	private String m_id;
 
-	private JAPCertificate()
+	/**
+	 * Creates a new certificate from a valid X509 certificate structure.
+	 * @param x509cert a valid X509 certificate structure
+	 * @exception IllegalArgumentException if the certificate structure is invalid
+	 */
+	private JAPCertificate(X509CertificateStructure x509cert)
+		throws IllegalArgumentException
 	{
+		m_bEnabled = false;
+
+		try
+		{
+			try
+			{
+				m_PubKey = new MyDSAPublicKey(x509cert.getSubjectPublicKeyInfo());
+			}
+			catch (Exception e)
+			{
+				try
+				{
+					m_PubKey = new MyRSAPublicKey(x509cert.getSubjectPublicKeyInfo());
+				}
+				catch (Exception e1)
+				{
+					throw new IllegalArgumentException(
+									   "Certificate structure contains invalid public key! " + e);
+				}
+			}
+			m_x509cert = X509CertificateStructure.getInstance(x509cert);
+		}
+		catch (Exception e)
+		{
+			throw new IllegalArgumentException("Certificate structure is invalid! " + e);
+		}
+
+		m_id = generateId();
 	}
 
 	/**
@@ -80,31 +118,18 @@ final public class JAPCertificate implements IXMLEncodable
 	 */
 	public static JAPCertificate getInstance(X509CertificateStructure x509cert)
 	{
+		JAPCertificate certificate;
+
 		try
 		{
-			JAPCertificate r_japcert = new JAPCertificate();
-			try
-			{
-				r_japcert.m_PubKey = new MyDSAPublicKey(x509cert.getSubjectPublicKeyInfo());
-			}
-			catch (Exception e)
-			{
-				try
-				{
-					r_japcert.m_PubKey = new MyRSAPublicKey(x509cert.getSubjectPublicKeyInfo());
-				}
-				catch (Exception e1)
-				{
-					return null;
-				}
-			}
-			r_japcert.m_x509cert = X509CertificateStructure.getInstance(x509cert);
-			return r_japcert;
+			certificate = new JAPCertificate(x509cert);
 		}
-		catch (Exception e)
+		catch (IllegalArgumentException a_e)
 		{
 			return null;
 		}
+
+		return certificate;
 	}
 
 	/** Creates a certificate by using an input stream.
@@ -225,7 +250,6 @@ final public class JAPCertificate implements IXMLEncodable
 	{
 		try
 		{
-
 			return getInstance(new File(a_strFileName));
 		}
 		catch (Exception e)
@@ -260,6 +284,33 @@ final public class JAPCertificate implements IXMLEncodable
 		}
 		cert.setEnabled(getEnabled());
 		return cert;
+	}
+
+	/**
+	 * Generates a unique id for this certificate.
+	 * @return a unique id for this certificate
+	 */
+	 private String generateId()
+	{
+		StringBuffer r_strBuffId = new StringBuffer();
+		Enumeration enumer = getIssuer().getValues().elements();
+		while (enumer.hasMoreElements())
+		{
+			r_strBuffId.append( (String) enumer.nextElement());
+		}
+		r_strBuffId.append(getStartDate().toGMTString());
+		r_strBuffId.append(getEndDate().toGMTString());
+		r_strBuffId.append(new Random().nextLong());
+		return r_strBuffId.toString();
+	}
+
+	/**
+	 * Returns a unique id for this certificate.
+	 * @return a unique id for this certificate
+	 */
+	public String getId()
+	{
+		return m_id;
 	}
 
 	/** Returns the start date of the certificate.

@@ -61,12 +61,12 @@ public class IOQueueTest implements Runnable
 							System.out.println("Error");
 						}
 						v++;
-						if (v > 255)
+						if (v > 10)
 						{
 							v = 0;
 						}
 					}
-					Thread.sleep( (int) (Math.random() * 1));
+					Thread.sleep( (int) (Math.random() * 100));
 				}
 			}
 
@@ -74,9 +74,17 @@ public class IOQueueTest implements Runnable
 			{
 				System.out.println("Start write");
 				int aktIndex = 0;
+				byte j=0;
 				for (; ; )
 				{
 					int len = (int) (Math.random() * 1000);
+					for(int k=0;k<len;k++)
+					{
+						outBuff[aktIndex+k]=j;
+						j++;
+						if(j==11)
+							j=0;
+					}
 					m_Queue.write(outBuff, aktIndex, len);
 					aktIndex += len;
 					aktIndex = aktIndex % 256;

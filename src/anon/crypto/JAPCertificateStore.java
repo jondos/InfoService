@@ -99,7 +99,7 @@ final public class JAPCertificateStore implements IXMLEncodable
 		{
 			JAPCertificate cert = (JAPCertificate) enumer.nextElement();
 			cert = (JAPCertificate) cert.clone();
-			certs.m_HTCertStore.put(JAPCertificateStoreId.getId(cert), cert);
+			certs.m_HTCertStore.put(cert.getId(), cert);
 		}
 		return certs;
 	}
@@ -118,29 +118,13 @@ final public class JAPCertificateStore implements IXMLEncodable
 		}
 		try
 		{
-			m_HTCertStore.put(JAPCertificateStoreId.getId(a_cert), a_cert);
+			m_HTCertStore.put(a_cert.getId(), a_cert);
 			return true;
 		}
 		catch (Exception e)
 		{
 			return false;
 		}
-	}
-
-	/**
-	 * Sets the certificate active or deactive.
-	 *
-	 * @param a_cert The certificate that is about to be activated.
-	 * @param bEnabled status of cert
-	 */
-	public void enableCertificate(JAPCertificate a_cert, boolean bEnabled)
-	{
-		if (a_cert == null)
-		{
-			return;
-		}
-		a_cert.setEnabled(bEnabled);
-		m_HTCertStore.put(JAPCertificateStoreId.getId(a_cert), a_cert);
 	}
 
 	/**
@@ -151,7 +135,7 @@ final public class JAPCertificateStore implements IXMLEncodable
 	 */
 	public JAPCertificate removeCertificate(JAPCertificate a_cert)
 	{
-		return (JAPCertificate) m_HTCertStore.remove(JAPCertificateStoreId.getId(a_cert));
+		return (JAPCertificate) m_HTCertStore.remove(a_cert.getId());
 	}
 
 	/**
@@ -163,7 +147,7 @@ final public class JAPCertificateStore implements IXMLEncodable
 	 */
 	public boolean contains(JAPCertificate a_cert)
 	{
-		return m_HTCertStore.containsKey(JAPCertificateStoreId.getId(a_cert));
+		return m_HTCertStore.containsKey(a_cert.getId());
 	}
 
 	/**
