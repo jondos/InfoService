@@ -1037,7 +1037,7 @@ public static void ASN1Test()
 					while(true)
 						{
 							o.write(buff);
-						  Thread.sleep((int)(Math.random()*100));
+						  Thread.sleep((int)(Math.random()*1000));
 						}
 						}
 						catch(Exception e)
