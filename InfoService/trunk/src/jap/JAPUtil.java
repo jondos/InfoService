@@ -64,12 +64,53 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import java.sql.Timestamp;
+import java.text.NumberFormat;
 
 /**
  * This class contains static utility functions for Jap
  */
 final public class JAPUtil
 {
+
+	/** Returns the desired unit for this amount of Bytes (Bytes, kBytes, MBytes,GBytes)*/
+	public static String formatBytesValueOnlyUnit(long c)
+	{
+		if (c < 10000)
+		{
+			return JAPMessages.getString("Byte");
+		}
+		else if (c < 1000000)
+		{
+			return JAPMessages.getString("kByte");
+		}
+		else if (c < 1000000000)
+		{
+			return JAPMessages.getString("MByte");
+		}
+		return JAPMessages.getString("GByte");
+	}
+
+	/** Returns a formated number which respects different units (Bytes, kBytes, MBytes, GBytes)*/
+	public static String formatBytesValueWithoutUnit(long c)
+	{
+		if (c < 10000)
+		{
+		}
+		else if (c < 1000000)
+		{
+			c /= 1000;
+		}
+		else if (c < 1000000000)
+		{
+			c /= 1000000;
+		}
+		else
+		{
+			c /= 1000000000;
+		}
+		return NumberFormat.getNumberInstance(JAPController.getLocale()).format(c);
+	}
+
 	/**
 	 * Formats a number of bytes in human-readable kB/MB/GB format
 	 * with 2 decimal places
@@ -79,34 +120,7 @@ final public class JAPUtil
 	 */
 	public static String formatBytesValue(long bytes)
 	{
-		long l = bytes * 100;
-		int log = 1;
-		while ( (l >= 102400) && (log <= 4))
-		{
-			l /= 1024;
-			log++;
-		}
-		String fract = (l % 100 < 10 ? "0" : "") + Long.toString(l % 100);
-		long abs = l / 100;
-		String unit;
-		switch (log)
-		{
-			case 1:
-				unit = " Bytes";
-				break;
-			case 2:
-				unit = " kB";
-				break;
-			case 3:
-				unit = " MB";
-				break;
-			case 4:
-			default:
-				unit = " GB";
-				break;
-		}
-
-		return Long.toString(abs) + (log>1? ("." + fract):"") + unit;
+		return formatBytesValueWithoutUnit(bytes)+" "+formatBytesValueOnlyUnit(bytes);
 	}
 
 	public static int applyJarDiff(File fileOldJAR, File fileNewJAR,
@@ -482,7 +496,7 @@ final public class JAPUtil
 	 */
 	public static boolean isValidPort(int a_port)
 	{
-		if ((a_port < 1) || (a_port > 65536))
+		if ( (a_port < 1) || (a_port > 65536))
 		{
 			return false;
 		}

@@ -29,7 +29,9 @@ package proxy;
 
 public interface ProxyListener
 {
-	public void channelsChanged(int channels);
+	final static int PROTOCOL_OTHER=0;
+	final static int PROTOCOL_WWW=1;
 
-	public void transferedBytes(int bytes);
+	public void channelsChanged(int channels);
+	public void transferedBytes(int bytes,int protocolType);
 }

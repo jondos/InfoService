@@ -41,13 +41,13 @@ import jap.JAPModel;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import proxy.AnonWebProxy;
+import proxy.AnonProxy;
 import proxy.ProxyListener;
 
 final class JAPLean implements ProxyListener
 {
 
-	static AnonWebProxy japAnonProxy = null;
+	static AnonProxy japAnonProxy = null;
 
 	static int portNumberHTTPListener;
 	static int portNumberMixCascade;
@@ -88,7 +88,7 @@ final class JAPLean implements ProxyListener
 			e.printStackTrace();
 			System.exit(0);
 		}
-		japAnonProxy = new AnonWebProxy(listener, null);
+		japAnonProxy = new AnonProxy(listener, null);
 		japAnonProxy.setMixCascade(new MixCascade(null, null, hostNameMixCascade, portNumberMixCascade));
 		int returnCode = japAnonProxy.start();
 		japAnonProxy.setProxyListener(this);
@@ -98,7 +98,7 @@ final class JAPLean implements ProxyListener
 			Thread t = new Thread(new JAPLeanActivityLoop());
 			t.start();
 		}
-		else if (returnCode == AnonWebProxy.E_BIND)
+		else if (returnCode == AnonProxy.E_BIND)
 		{
 			System.err.println("Error binding listener!");
 			System.exit(1);
@@ -140,7 +140,7 @@ final class JAPLean implements ProxyListener
 	}
 
 	/* Implementation of Interface JAPAnonServiceListener */
-	public void transferedBytes(int bytes)
+	public void transferedBytes(int bytes,int i)
 	{
 		nrOfBytes += bytes;
 	}

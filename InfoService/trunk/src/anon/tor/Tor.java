@@ -805,4 +805,9 @@ public class Tor implements Runnable, AnonService
 					  "DNS Resolve for www.mircosoft.de returned: " + resolveDNS("www.microsoft.de"));
 	}
 
+	public boolean isConnected()
+	{
+		return m_bIsStarted;
+	}
+
 }

@@ -72,7 +72,7 @@ import forward.server.ForwardServerManager;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import proxy.AnonWebProxy;
+import proxy.AnonProxy;
 import proxy.DirectProxy;
 import proxy.ProxyListener;
 import anon.infoservice.ImmutableProxyInterface;
@@ -86,7 +86,8 @@ import anon.pay.BI;
 public final class JAPController implements ProxyListener, Observer
 {
 	/**
-	 * Stores all MixCascades we know (information comes from infoservice).
+	 * Stores all MixCascades we know (information comes from infoservice or was entered by a user).
+	 * This list may or may not include the current active MixCascade.
 	 */
 	private Vector m_vectorMixCascadeDatabase = null;
 
@@ -97,14 +98,11 @@ public final class JAPController implements ProxyListener, Observer
 
 	private ServerSocket m_socketHTTPListener = null; // listener object for HTTP
 
-	//private ServerSocket m_socketSOCKSListener = null; //listener object for SOCKS
 	private DirectProxy m_proxyDirect = null; // service object for direct access (bypass anon service)
-	private AnonWebProxy m_proxyAnon = null; // service object for anon access
+	private AnonProxy m_proxyAnon = null; // service object for anon access
 
-	//private AnonSocksProxy m_proxySocks = null; //service object for Socks requests
 
 	private boolean isRunningHTTPListener = false; // true if a HTTP listener is running
-	//private boolean isRunningSOCKSListener = false; //true if a SOCKS listener is running
 
 	//private boolean  canStartService             = false; // indicates if anon service can be started
 	private boolean m_bAlreadyCheckedForNewVersion = false; // indicates if check for new version has already been done
@@ -126,8 +124,8 @@ public final class JAPController implements ProxyListener, Observer
 	public String status1 = " ";
 	public String status2 = " ";
 
-	//private int nrOfChannels = 0;
-	private int nrOfBytes = 0;
+	private int m_nrOfBytesWWW = 0;
+	private int m_nrOfBytesOther = 0;
 
 	private static AbstractJAPMainView m_View = null;
 	private static JAPController m_Controller = null;
@@ -251,7 +249,7 @@ public final class JAPController implements ProxyListener, Observer
 	 * and then in the JAP install directory.
 	 * The configuration is a XML-File with the following structure:
 	 *  <JAP
-   *    version="0.15"                     // version of the xml struct (DTD) used for saving the configuration
+	 *    version="0.16"                     // version of the xml struct (DTD) used for saving the configuration
 	 *    portNumber=""                     // Listener-Portnumber
 	 *    portNumberSocks=""                // Listener-Portnumber for SOCKS
 	 *    supportSocks=""                   // Will we support SOCKS ?
@@ -277,6 +275,9 @@ public final class JAPController implements ProxyListener, Observer
 	 *    Locale="LOCALE_IDENTIFIER" (two letter iso 639 code) //the Language for the UI to use
 	 *    LookAndFeel="..."             //the LookAndFeel class name
 	 *  >
+	 * <MixCascades>								//info about known MixCascades (since version 0.16)
+	 *	<MixCascade>...</MixCascade>
+	 * </MixCascades>							   //at the moment only user defined cascades are stored
 	 * <MixCascade id=.." userDefined="true/false">  //info about the used AnonServer (since version 0.1) [equal to the general MixCascade struct]
 	 *												//Attr "userDefined" since Version 0.12
 	 * 												//if true this cascade information was handcrafted by the user
@@ -365,10 +366,10 @@ public final class JAPController implements ProxyListener, Observer
 	 *       </AllowedMixCascades>
 	 *     </AllowedMixCascadesSettings>
 	 *   </ForwardingServer>
-   *   <ForwardingClient>                                      // since version 0.15
-   *     <ConnectViaForwarder>false</ConnectViaForwarder>      // whether a forwarder is needed to contact the mixcascades when enabling the anonymous mode
-   *     <ForwardInfoService>false</ForwardInfoService>        // whether an InfoService can be reached or also the InfoService needs forwarding
-   *   </ForwardingClient>
+	 *   <ForwardingClient>                                      // since version 0.15
+	 *     <ConnectViaForwarder>false</ConnectViaForwarder>      // whether a forwarder is needed to contact the mixcascades when enabling the anonymous mode
+	 *     <ForwardInfoService>false</ForwardInfoService>        // whether an InfoService can be reached or also the InfoService needs forwarding
+	 *   </ForwardingClient>
 	 * </JapForwardingSettings>
 	 *  </JAP>
 	 *  @param a_strJapConfFile - file containing the Configuration. If null $(user.home)/jap.conf or ./jap.conf is used.
@@ -539,8 +540,8 @@ public final class JAPController implements ProxyListener, Observer
 						JAPCertificateStore jcs = new JAPCertificateStore();
 						JAPCertificate cert = JAPCertificate.getInstance(
 							m_Model.getResourceLoader().loadResource(
-								JAPConstants.CERTSPATH +
-								JAPConstants.TRUSTEDROOTCERT));
+							JAPConstants.CERTSPATH +
+							JAPConstants.TRUSTEDROOTCERT));
 						cert.setEnabled(true);
 						jcs.addCertificate(cert);
 						setCertificateStore(jcs);
@@ -597,6 +598,28 @@ public final class JAPController implements ProxyListener, Observer
 				}
 				setCurrentMixCascade(defaultMixCascade);
 
+				/* try to load information about user defined cascades */
+				Node nodeCascades=XMLUtil.getFirstChildByName(root,"MixCascades");
+				if(nodeCascades!=null)
+				{
+					Node nodeCascade=nodeCascades.getFirstChild();
+					while(nodeCascade!=null)
+					{
+						if(nodeCascade.getNodeName().equals("MixCascade"))
+						{
+							try
+							{
+								MixCascade cascade=new MixCascade( (Element) nodeCascade);
+								cascade.setIsUserDefined(
+									XMLUtil.parseAttribute(nodeCascade, "userDefined", false));
+								m_vectorMixCascadeDatabase.addElement(cascade);
+							}
+							catch(Exception e){}
+						}
+						nodeCascade=nodeCascade.getNextSibling();
+					}
+				}
+
 				setDummyTraffic(XMLUtil.parseElementAttrInt(root, "DummyTrafficIntervall", -1));
 				setAutoConnect(XMLUtil.parseNodeBoolean(n.getNamedItem("autoConnect"), false));
 				setAutoReConnect(XMLUtil.parseNodeBoolean(n.getNamedItem("autoReConnect"), false));
@@ -626,7 +649,7 @@ public final class JAPController implements ProxyListener, Observer
 								LogHolder.log(LogLevel.WARNING, LogType.GUI,
 											  "JAPModel:Exception while setting look-and-feel");
 							}
-							break ;
+							break;
 						}
 					}
 				}
@@ -709,8 +732,8 @@ public final class JAPController implements ProxyListener, Observer
 					Node elemOutput = XMLUtil.getFirstChildByName(elemDebug, "Output");
 					if (elemOutput != null)
 					{
-						String strConsole=XMLUtil.parseValue(elemOutput, "");
-						if(strConsole!=null)
+						String strConsole = XMLUtil.parseValue(elemOutput, "");
+						if (strConsole != null)
 						{
 							strConsole.trim();
 							JAPDebug.showConsole(strConsole.equalsIgnoreCase("Console"), m_View);
@@ -766,23 +789,23 @@ public final class JAPController implements ProxyListener, Observer
 				{
 					Element elemPay = (Element) XMLUtil.getFirstChildByName(root, "Payment");
 					/*					String biName = elemPay.getAttribute("biName");
-					if (biName == null || biName.equals(""))
-					{
-						biName = JAPConstants.PIHOST;
-					}
-					String biHost = elemPay.getAttribute("biHost");
-					if (biHost == null || biHost.equals(""))
-					{
-						biHost = JAPConstants.PIHOST;
-					}
-					int biPort = Integer.parseInt(elemPay.getAttribute("biPort"));
-					if (biPort == 0)
-					{
-						biPort = JAPConstants.PIPORT;
-					}
-					BI theBI = new BI(
-						m_Model.getResourceLoader().loadResource(JAPConstants.CERTSPATH +
-						JAPConstants.CERT_BI),
+						  if (biName == null || biName.equals(""))
+						  {
+					 biName = JAPConstants.PIHOST;
+						  }
+						  String biHost = elemPay.getAttribute("biHost");
+						  if (biHost == null || biHost.equals(""))
+						  {
+					 biHost = JAPConstants.PIHOST;
+						  }
+						  int biPort = Integer.parseInt(elemPay.getAttribute("biPort"));
+						  if (biPort == 0)
+						  {
+					 biPort = JAPConstants.PIPORT;
+						  }
+						  BI theBI = new BI(
+					 m_Model.getResourceLoader().loadResource(JAPConstants.CERTSPATH +
+					 JAPConstants.CERT_BI),
 					   biName, biHost, biPort);*/
 					Element elemBI = (Element) XMLUtil.getFirstChildByName(elemPay, BI.XML_ELEMENT_NAME);
 					BI theBI = null;
@@ -828,7 +851,7 @@ public final class JAPController implements ProxyListener, Observer
 								strMessage = "<html>Wrong password. Please try again</html>";
 								continue;
 							}
-							break ;
+							break;
 						}
 
 						PayAccountsFile.init(theBI, elemPlainTxt);
@@ -847,8 +870,8 @@ public final class JAPController implements ProxyListener, Observer
 							}
 							else
 							{
-							m_bPaymentFirstTime = false;
-						}
+								m_bPaymentFirstTime = false;
+							}
 						}
 						else
 						{
@@ -943,7 +966,7 @@ public final class JAPController implements ProxyListener, Observer
 			Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
 			Element e = doc.createElement("JAP");
 			doc.appendChild(e);
-      e.setAttribute("version", "0.15");
+			e.setAttribute("version", "0.16");
 			//
 			e.setAttribute("portNumber", Integer.toString(JAPModel.getHttpListenerPortNumber()));
 			//e.setAttribute("portNumberSocks", Integer.toString(JAPModel.getSocksListenerPortNumber()));
@@ -990,6 +1013,20 @@ public final class JAPController implements ProxyListener, Observer
 			catch (Exception ex)
 			{
 				//ex.printStackTrace();
+			}
+			/*stores user defined MixCascades*/
+			Element elemCascades=doc.createElement("MixCascades");
+			e.appendChild(elemCascades);
+			Enumeration enumer=m_vectorMixCascadeDatabase.elements();
+			while(enumer.hasMoreElements())
+			{
+				MixCascade entry=(MixCascade)enumer.nextElement();
+				if(entry.isUserDefined())
+				{
+					Element elem=entry.toXmlNode(doc);
+					XMLUtil.setAttribute(elem, "userDefined", true);
+					elemCascades.appendChild(elem);
+				}
 			}
 			/* store the current MixCascade */
 			MixCascade defaultMixCascade = getCurrentMixCascade();
@@ -1100,11 +1137,11 @@ public final class JAPController implements ProxyListener, Observer
 				{
 					elemPayment.appendChild(accounts.getBI().toXmlElement(doc));
 
-				// get configuration from accountsfile
+					// get configuration from accountsfile
 				}
 				Element elemAccounts = accounts.toXmlElement(doc);
 				elemPayment.appendChild(elemAccounts);
-				if (m_bPaymentFirstTime && PayAccountsFile.getInstance().getNumAccounts()>0)
+				if (m_bPaymentFirstTime && PayAccountsFile.getInstance().getNumAccounts() > 0)
 				{
 					// payment functionality was used for the first time, ask user for password...
 					/** @todo internationalize, maybe check password length/strength?? */
@@ -1460,12 +1497,12 @@ public final class JAPController implements ProxyListener, Observer
 							/* we use a direct connection */
 							if (JAPModel.getInstance().getProxyInterface().isValid())
 							{
-								m_proxyAnon = new AnonWebProxy(
+								m_proxyAnon = new AnonProxy(
 									m_socketHTTPListener, JAPModel.getInstance().getProxyInterface());
 							}
 							else
 							{
-								m_proxyAnon = new AnonWebProxy(m_socketHTTPListener, null);
+								m_proxyAnon = new AnonProxy(m_socketHTTPListener, null);
 							}
 
 						}
@@ -1521,7 +1558,7 @@ public final class JAPController implements ProxyListener, Observer
 							feedback = new JAPFeedback();
 							feedback.startRequests();
 						}
-						else if (ret == AnonWebProxy.E_BIND)
+						else if (ret == AnonProxy.E_BIND)
 						{
 							Object[] args =
 								{
@@ -1535,36 +1572,36 @@ public final class JAPController implements ProxyListener, Observer
 							LogHolder.log(LogLevel.EMERG, LogType.NET, "Listener could not be started!");
 							JAPController.getView().disableSetAnonMode();
 						}
-						else if (ret == AnonWebProxy.E_MIX_PROTOCOL_NOT_SUPPORTED)
+						else if (ret == AnonProxy.E_MIX_PROTOCOL_NOT_SUPPORTED)
 						{
 							JOptionPane.showMessageDialog
 								(
-									getView(),
-									JAPMessages.getString("errorMixProtocolNotSupported"),
-									JAPMessages.getString("errorMixProtocolNotSupportedTitle"),
-									JOptionPane.ERROR_MESSAGE
+								getView(),
+								JAPMessages.getString("errorMixProtocolNotSupported"),
+								JAPMessages.getString("errorMixProtocolNotSupportedTitle"),
+								JOptionPane.ERROR_MESSAGE
 								);
 						}
 //otte
-						else if (ret == AnonWebProxy.E_SIGNATURE_CHECK_FIRSTMIX_FAILED)
+						else if (ret == AnonProxy.E_SIGNATURE_CHECK_FIRSTMIX_FAILED)
 						{
 							JOptionPane.showMessageDialog
 								(
-									getView(),
-									JAPMessages.getString("errorMixFirstMixSigCheckFailed"),
-									JAPMessages.getString("errorMixFirstMixSigCheckFailedTitle"),
-									JOptionPane.ERROR_MESSAGE
+								getView(),
+								JAPMessages.getString("errorMixFirstMixSigCheckFailed"),
+								JAPMessages.getString("errorMixFirstMixSigCheckFailedTitle"),
+								JOptionPane.ERROR_MESSAGE
 								);
 						}
 
-						else if (ret == AnonWebProxy.E_SIGNATURE_CHECK_OTHERMIX_FAILED)
+						else if (ret == AnonProxy.E_SIGNATURE_CHECK_OTHERMIX_FAILED)
 						{
 							JOptionPane.showMessageDialog
 								(
-									getView(),
-									JAPMessages.getString("errorMixOtherMixSigCheckFailed"),
-									JAPMessages.getString("errorMixOtherMixSigCheckFailedTitle"),
-									JOptionPane.ERROR_MESSAGE
+								getView(),
+								JAPMessages.getString("errorMixOtherMixSigCheckFailed"),
+								JAPMessages.getString("errorMixOtherMixSigCheckFailedTitle"),
+								JOptionPane.ERROR_MESSAGE
 								);
 						}
 						// ootte
@@ -1574,11 +1611,11 @@ public final class JAPController implements ProxyListener, Observer
 							{
 								JOptionPane.showMessageDialog
 									(
-										getView(),
-										JAPMessages.getString("errorConnectingFirstMix") + "\n" +
-										JAPMessages.getString("errorCode") + ": " + Integer.toString(ret),
-										JAPMessages.getString("errorConnectingFirstMixTitle"),
-										JOptionPane.ERROR_MESSAGE
+									getView(),
+									JAPMessages.getString("errorConnectingFirstMix") + "\n" +
+									JAPMessages.getString("errorCode") + ": " + Integer.toString(ret),
+									JAPMessages.getString("errorConnectingFirstMixTitle"),
+									JOptionPane.ERROR_MESSAGE
 									);
 							}
 						}
@@ -1649,33 +1686,36 @@ public final class JAPController implements ProxyListener, Observer
 		t.start();
 	}
 
-  /**
-   * This will do all necessary things in order to enable the anonymous mode. The method decides
-   * whether to establish the connection via a forwarder or direct to the selected anonymity
-   * service.
-   * Attention: Maybe it is necessary to show a dialog in order to get the information about a
-   *            forwarder. Thus only the Java-AWT event dispatch thread should call this method.
-   *            Any other caller will produce a freeze, if the connect-to-forwarder dialog
-   *            appears.
-   *
-   * @param a_parentComponent The parent component over which the connect to forwarder dialog (if
-   *                          necessary) is centered.
-   */
-  public void startAnonymousMode(Component a_parentComponent) {
-    /* decide whether to establish a forwarded connection or not */
-    if (JAPModel.getInstance().getRoutingSettings().isConnectViaForwarder()) {
-      /* show the connect via forwarder dialog -> the dialog will do the remaining things */
-      new JAPRoutingEstablishForwardedConnectionDialog(a_parentComponent, getDialogFont());
-      /* maybe connection to forwarder failed -> notify the observers, because the view maybe
-       * still shows the anonymity mode enabled
-       */
-      notifyJAPObservers();
-    }
-    else {
-      /* simply enable the anonymous mode */
-      setAnonMode(true);
-    }
-  }
+	/**
+	 * This will do all necessary things in order to enable the anonymous mode. The method decides
+	 * whether to establish the connection via a forwarder or direct to the selected anonymity
+	 * service.
+	 * Attention: Maybe it is necessary to show a dialog in order to get the information about a
+	 *            forwarder. Thus only the Java-AWT event dispatch thread should call this method.
+	 *            Any other caller will produce a freeze, if the connect-to-forwarder dialog
+	 *            appears.
+	 *
+	 * @param a_parentComponent The parent component over which the connect to forwarder dialog (if
+	 *                          necessary) is centered.
+	 */
+	public void startAnonymousMode(Component a_parentComponent)
+	{
+		/* decide whether to establish a forwarded connection or not */
+		if (JAPModel.getInstance().getRoutingSettings().isConnectViaForwarder())
+		{
+			/* show the connect via forwarder dialog -> the dialog will do the remaining things */
+			new JAPRoutingEstablishForwardedConnectionDialog(a_parentComponent, getDialogFont());
+			/* maybe connection to forwarder failed -> notify the observers, because the view maybe
+			 * still shows the anonymity mode enabled
+			 */
+			notifyJAPObservers();
+		}
+		else
+		{
+			/* simply enable the anonymous mode */
+			setAnonMode(true);
+		}
+	}
 
 	public void setDummyTraffic(int msIntervall)
 	{
@@ -1790,7 +1830,7 @@ public final class JAPController implements ProxyListener, Observer
 								  "Could not set listener accept timeout: Exception: " +
 								  e1.getMessage());
 				}
-				break ;
+				break;
 			}
 			catch (Exception e)
 			{
@@ -1935,12 +1975,14 @@ public final class JAPController implements ProxyListener, Observer
 		{
 			LogHolder.log(LogLevel.DEBUG, LogType.NET, "JAPController: fetchMixCascades: success!");
 			//add all user added cascades
-			Enumeration enumer=m_vectorMixCascadeDatabase.elements();
-			while(enumer.hasMoreElements())
+			Enumeration enumer = m_vectorMixCascadeDatabase.elements();
+			while (enumer.hasMoreElements())
 			{
-				MixCascade entry=(MixCascade)enumer.nextElement();
-				if(entry.isUserDefined())
+				MixCascade entry = (MixCascade) enumer.nextElement();
+				if (entry.isUserDefined())
+				{
 					newMixCascades.addElement(entry);
+				}
 			}
 			m_vectorMixCascadeDatabase = newMixCascades;
 			notifyJAPObservers();
@@ -2109,14 +2151,26 @@ public final class JAPController implements ProxyListener, Observer
 		}
 	}
 
-	public synchronized void transferedBytes(int bytes)
+	public synchronized void transferedBytes(int bytes,int protocolType)
 	{
-		nrOfBytes += bytes;
+		int b;
+		if(protocolType==ProxyListener.PROTOCOL_WWW)
+			{
+				m_nrOfBytesWWW += bytes;
+				b=m_nrOfBytesWWW;
+			}
+		else if(protocolType==ProxyListener.PROTOCOL_OTHER)
+			{
+				m_nrOfBytesOther += bytes;
+				b=m_nrOfBytesOther;
+			}
+		else
+			return;
 		Enumeration enumer = observerVector.elements();
 		while (enumer.hasMoreElements())
 		{
 			JAPObserver listener = (JAPObserver) enumer.nextElement();
-			listener.transferedBytes(nrOfBytes);
+			listener.transferedBytes(b,protocolType);
 		}
 	}
 
@@ -2128,7 +2182,7 @@ public final class JAPController implements ProxyListener, Observer
 	 * whether to use the common JAP notification system or the specific ones. Also keep in mind,
 	 * that maybe not all messages are forwarded to the common notification system.
 	 *
-   * @param a_notifier The observed Object (various forwarding related objects).
+	 * @param a_notifier The observed Object (various forwarding related objects).
 	 * @param a_message The reason of the notification, e.g. a JAPRoutingMessage.
 	 *
 	 */
@@ -2148,23 +2202,25 @@ public final class JAPController implements ProxyListener, Observer
 			}
 			if (a_notifier == JAPModel.getInstance().getRoutingSettings().getServerStatisticsListener())
 			{
-        /* message is from JAPRoutingServerStatisticsListener */
-        if ( ( (JAPRoutingMessage) (a_message)).getMessageCode() == JAPRoutingMessage.SERVER_STATISTICS_UPDATED)
-        {
-				/* there are new routing statistics values available */
-				notifyJAPObservers();
+				/* message is from JAPRoutingServerStatisticsListener */
+				if ( ( (JAPRoutingMessage) (a_message)).getMessageCode() ==
+					JAPRoutingMessage.SERVER_STATISTICS_UPDATED)
+				{
+					/* there are new routing statistics values available */
+					notifyJAPObservers();
+				}
 			}
-      }
 			if (a_notifier == JAPModel.getInstance().getRoutingSettings().getRegistrationStatusObserver())
 			{
-        /* message is from JAPRoutingRegistrationStatusObserver */
-        if ( ( (JAPRoutingMessage) (a_message)).getMessageCode() == JAPRoutingMessage.REGISTRATION_STATUS_CHANGED)
-        {
-				/* the registration status of the local forwarding server has changed */
-				notifyJAPObservers();
+				/* message is from JAPRoutingRegistrationStatusObserver */
+				if ( ( (JAPRoutingMessage) (a_message)).getMessageCode() ==
+					JAPRoutingMessage.REGISTRATION_STATUS_CHANGED)
+				{
+					/* the registration status of the local forwarding server has changed */
+					notifyJAPObservers();
+				}
 			}
 		}
-    }
 		catch (Exception e)
 		{
 			/* should not happen, but better than throwing a runtime exception */

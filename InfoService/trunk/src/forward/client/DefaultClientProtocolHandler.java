@@ -53,7 +53,7 @@ import anon.server.impl.ProxyConnection;
 import logging.LogHolder;
 import logging.LogType;
 import logging.LogLevel;
-import proxy.AnonWebProxy;
+import proxy.AnonProxy;
 
 /**
  * This is the implementation of the client side for the first version of the JAP routing protocol.

@@ -234,7 +234,8 @@ public class MixCascade implements AnonServerDescription
 			/* create the ListenerInterface */
 		}
 		listenerInterfaces = new Vector();
-		listenerInterfaces.addElement(new ListenerInterface(hostName, port));
+		listenerInterfaces.addElement(new ListenerInterface(hostName, port,
+															ListenerInterface.PROTOCOL_TYPE_RAW_TCP));
 		/* set the lastUpdate time */
 		lastUpdate = System.currentTimeMillis();
 		/* create the mixIds and set one with the same ID as the mixcascade itself */
