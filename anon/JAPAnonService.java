@@ -141,6 +141,7 @@ public final class JAPAnonService implements Runnable
 					}
 				catch(Exception e)
 					{
+						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Exception: "+e.getMessage());
 						socketListener=null;
 						return E_BIND;
 					}
