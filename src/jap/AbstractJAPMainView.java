@@ -22,6 +22,10 @@ public abstract class AbstractJAPMainView extends JFrame implements IJAPMainView
 		m_Title=s;
 		m_runnableValueUpdate=new MyViewUpdate();
 	}
+	protected void exitProgram()
+	{
+		JAPController.goodBye(true); // call the final exit procedure of JAP
+	}
 
 	public void hideWindowInTaskbar()
 {

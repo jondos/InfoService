@@ -741,11 +741,6 @@ import gui.*;
 		m_dlgConfig.show();
 	}
 
-	private void exitProgram()
-	{
-		controller.goodBye(true); // call the final exit procedure of JAP
-	}
-
 	public JPanel getMainPanel()
 	{
 		return m_panelMain;
