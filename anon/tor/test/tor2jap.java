@@ -26,6 +26,7 @@ public class tor2jap
 		LogHolder.setLogInstance(new SystemErrLog());
 		Tor tor = Tor.getInstance();
 		tor.initialize(new TorAnonServerDescription());
+		tor.testDNS();
 			AnonChannel channel = tor.createChannel("www.google.de", 80);
 			channel.getOutputStream().write( ("GET /index.html HTTP/1.0\n\r\n\r").getBytes());
 			for (; ; )

@@ -31,6 +31,8 @@
  */
 package anon.tor.tinytls;
 
+import java.math.BigInteger;
+
 import anon.crypto.JAPCertificate;
 
 /**
@@ -48,11 +50,11 @@ public abstract class CipherSuite{
 	/**
 	 * writesequenznumber for packages
 	 */
-	protected int m_writesequenznumber;
+	protected BigInteger m_writesequenznumber;
 	/**
 	 * readsequenznumber for packages
 	 */
-	protected int m_readsequenznumber;
+	protected BigInteger m_readsequenznumber;
 	/**
 	 * client write key
 	 */
@@ -145,8 +147,8 @@ public abstract class CipherSuite{
 	{
 		byte[] b = this.m_keyexchangealgorithm.clientKeyExchange();
 		calculateKeys(this.m_keyexchangealgorithm.calculateKeys());
-		this.m_writesequenznumber = 0;
-		this.m_readsequenznumber = 0;
+		this.m_writesequenznumber = new BigInteger(new byte[]{0});
+		this.m_readsequenznumber = new BigInteger(new byte[]{0});
 		return b;
 	}
 
