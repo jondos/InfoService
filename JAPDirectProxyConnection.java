@@ -1,28 +1,28 @@
 /*
-Copyright (c) 2000, The JAP-Team 
+Copyright (c) 2000, The JAP-Team
 All rights reserved.
-Redistribution and use in source and binary forms, with or without modification, 
+Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
 
-	- Redistributions of source code must retain the above copyright notice, 
+	- Redistributions of source code must retain the above copyright notice,
 	  this list of conditions and the following disclaimer.
 
-	- Redistributions in binary form must reproduce the above copyright notice, 
-	  this list of conditions and the following disclaimer in the documentation and/or 
+	- Redistributions in binary form must reproduce the above copyright notice,
+	  this list of conditions and the following disclaimer in the documentation and/or
 		other materials provided with the distribution.
 
-	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors 
-	  may be used to endorse or promote products derived from this software without specific 
-		prior written permission. 
+	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
+	  may be used to endorse or promote products derived from this software without specific
+		prior written permission.
 
-	
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS 
-OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY 
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS
+OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
 AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS
 BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, 
-OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER 
-IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY 
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
 
@@ -34,13 +34,13 @@ import java.util.StringTokenizer;
 
 final class JAPDirectProxyConnection implements Runnable {
     private Socket clientSocket;
-    
-    private boolean debug = true; 
+
+    private boolean debug = true;
     private int threadNumber;
     private static int threadCount;
 
     private DataInputStream inputStream = null;
-	
+
 	private String requestLine = null;
 
 	private String method   = "";
@@ -50,11 +50,11 @@ final class JAPDirectProxyConnection implements Runnable {
 	private String host     = "";
 	private String file     = "";
 	private int    port     = -1;
-	
+
     public JAPDirectProxyConnection (Socket s) {
 		this.clientSocket = s;
     }
-    
+
     public void run() {
 		threadNumber = getThreadNumber();
 		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"C("+threadNumber+") - New connection handler started.");
@@ -112,7 +112,8 @@ final class JAPDirectProxyConnection implements Runnable {
 				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"C("+threadNumber+") - Port: >" + port +"<");
 				file = url.getFile();
 				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"C("+threadNumber+") - File: >" + file +"<");
-				if (protocol.equalsIgnoreCase("http")) {
+
+        if (protocol.equalsIgnoreCase("http")) {
 					handleHTTP();
 				} else {
 					unknownProtocol();
@@ -133,9 +134,9 @@ final class JAPDirectProxyConnection implements Runnable {
 		} catch (Exception e) {
 			JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.NET,"C("+threadNumber+") - Exception while closing socket: " + e);
 		}
-		
-    }    
-	
+
+    }
+
 	private void responseTemplate(String error, String message) {
 		try {
 			BufferedWriter toClient = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
@@ -153,19 +154,19 @@ final class JAPDirectProxyConnection implements Runnable {
 			JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.NET,"C("+threadNumber+") - Exception: " + e);
 		}
 	}
-	
+
 	private void cannotConnect() {
 		responseTemplate("404 Connection error","Cannot connect to "+host+":"+port+".");
 	}
-	
+
 	private void unknownProtocol() {
 		responseTemplate("501 Not implemented","Protocol <B>"+protocol+"</B> not implemented, supported or unknown.");
 	}
-	
+
 	private void badRequest() {
 		responseTemplate("400 Bad Request","Bad request: "+requestLine);
 	}
-	
+
 	private void handleCONNECT() throws Exception {
 		try {
 			// create Socket to Server
@@ -173,7 +174,7 @@ final class JAPDirectProxyConnection implements Runnable {
 			// Response from server is transfered to client in a sepatate thread
 			JAPDirectProxyResponse pr = new JAPDirectProxyResponse(serverSocket, clientSocket);
 			Thread prt = new Thread(pr);
-			prt.start();			
+			prt.start();
 			// next Header lines
 			String nextLine = this.readLine(inputStream);
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"C("+threadNumber+") - Header: >" + nextLine + "<");
@@ -199,7 +200,7 @@ final class JAPDirectProxyConnection implements Runnable {
 			// wait unitl response thread has finished
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"\n");
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.THREAD,"C("+threadNumber+") - Waiting for resonse thread...");
-			prt.join(); 
+			prt.join();
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.THREAD,"C("+threadNumber+") -                           ...finished!");
 			toClient.close();
 		    outputStream.close();
@@ -209,12 +210,12 @@ final class JAPDirectProxyConnection implements Runnable {
 			throw e;
 		}
 	}
-	
-	
+
+
 	private void handleHTTP() throws Exception {
-		try {	
+		try {
 			// create Socket to Server
-			Socket serverSocket = new Socket(host,port);		
+			Socket serverSocket = new Socket(host,port);
 			// Response from server is transfered to client in a sepatate thread
 			JAPDirectProxyResponse pr = new JAPDirectProxyResponse(serverSocket, clientSocket);
 			Thread prt = new Thread(pr);
@@ -244,7 +245,7 @@ final class JAPDirectProxyConnection implements Runnable {
 			// transfer rest of request, i.e. POST data or similar --> server
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"C("+threadNumber+") - Headers sended, POST data may follow");
 			int byteRead = inputStream.read();
-			while (byteRead != -1) { 
+			while (byteRead != -1) {
 //				System.out.print((char)byteRead);
 				outputStream.write(byteRead);
 				outputStream.flush();
@@ -253,11 +254,11 @@ final class JAPDirectProxyConnection implements Runnable {
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"\n("+threadNumber+") - End of request");
 			// send final CRLF --> server
 			outputStream.write("\r\n");
-			outputStream.flush();			
+			outputStream.flush();
 			// wait unitl response thread has finished
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"\n");
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.THREAD,"C("+threadNumber+") - Waiting for resonse thread...");
-			prt.join(); 
+			prt.join();
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.THREAD,"C("+threadNumber+") -                           ...finished!");
 		    outputStream.close();
 	    	inputStream.close();
@@ -265,20 +266,20 @@ final class JAPDirectProxyConnection implements Runnable {
 		} catch (Exception e) {
 			throw e;
 		}
-    }    
-		
+    }
+
     private boolean filter(String l) {
 		String cmp = "Proxy-Connection";
 		if (l.regionMatches(true,0,cmp,0,cmp.length())) return true;
 		return false;
     }
-	
+
     private String readLine(DataInputStream inputStream) throws Exception {
 		String returnString = "";
 		try{
 			int byteRead = inputStream.read();
 			while (byteRead != 10 && byteRead != -1) {
-				if (byteRead != 13) 
+				if (byteRead != 13)
 					returnString += (char)byteRead;
 				byteRead = inputStream.read();
 			}
@@ -287,7 +288,7 @@ final class JAPDirectProxyConnection implements Runnable {
 		}
 		return returnString;
     }
-    
+
     private synchronized int getThreadNumber() {
 		return threadCount++;
     }

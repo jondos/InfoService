@@ -1,28 +1,28 @@
 /*
-Copyright (c) 2000, The JAP-Team 
+Copyright (c) 2000, The JAP-Team
 All rights reserved.
-Redistribution and use in source and binary forms, with or without modification, 
+Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
 
-	- Redistributions of source code must retain the above copyright notice, 
+	- Redistributions of source code must retain the above copyright notice,
 	  this list of conditions and the following disclaimer.
 
-	- Redistributions in binary form must reproduce the above copyright notice, 
-	  this list of conditions and the following disclaimer in the documentation and/or 
+	- Redistributions in binary form must reproduce the above copyright notice,
+	  this list of conditions and the following disclaimer in the documentation and/or
 		other materials provided with the distribution.
 
-	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors 
-	  may be used to endorse or promote products derived from this software without specific 
-		prior written permission. 
+	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
+	  may be used to endorse or promote products derived from this software without specific
+		prior written permission.
 
-	
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS 
-OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY 
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS
+OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
 AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS
 BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, 
-OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER 
-IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY 
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
 import java.text.NumberFormat;
@@ -67,25 +67,25 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 			m_Title=s;
 			model = JAPModel.getModel();
 			model.setView(this);
-			helpWindow =  null;//new JAPHelp(this); 
+			helpWindow =  null;//new JAPHelp(this);
 			configDialog = null;//new JAPConf(this);
 			m_bIsIconified=false;
 			oValueUpdateSemaphore=new Object();
 		}
-	
+
 	public void create()
 		{
 			JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPView:initializing...");
 			init();
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPView:initialization finished!");
 		}
-	
+
 	private void init()
 		{
 			try
 				{
-					UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName()); 
-				} 
+					UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
+				}
 			catch (Exception e)
 				{
 					JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.GUI,"JAPView: "+e);
@@ -94,12 +94,12 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 	    ImageIcon ii=JAPUtil.loadImageIcon(model.IICON16FN,true);
 	    if(ii!=null)
 				setIconImage(ii.getImage());
-	    
+
 			// listen for events from outside the frame
 	    addWindowListener(new WindowAdapter() {
 		    public void windowClosing(WindowEvent e) {exitProgram();}
-	    });	
-	    
+	    });
+
 			// Load Images for "Anonymity Meter"
 	    loadMeterIcons();
 	    // "NORTH": Image
@@ -115,14 +115,14 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 	    tabs.addTab(model.getString("mainConfTab"), JAPUtil.loadImageIcon(model.CONFIGICONFN,true), config );
 	    tabs.addTab(model.getString("mainMeterTab"),JAPUtil.loadImageIcon(model.METERICONFN,true), level );
 	    // "South": Buttons
-	   
+
 			JPanel buttonPanel = new JPanel();
 	    infoB = new JButton(model.getString("infoButton"));
 	    helpB = new JButton(model.getString("helpButton"));
 	    quitB = new JButton(model.getString("quitButton"));
 			iconifyB = new JButton(JAPUtil.loadImageIcon(model.ICONIFYICONFN,true));
 			iconifyB.setToolTipText(model.getString("iconifyWindow"));
-			
+
 	    // Add real buttons
 			buttonPanel.add(iconifyB);
 			buttonPanel.add(infoB);
@@ -146,7 +146,7 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 
 			updateValues();
 			tabs.setSelectedComponent(level);
-			
+
 			this.addWindowListener(new WindowAdapter()
 				{
 					public void windowDeiconified(WindowEvent e)
@@ -160,7 +160,7 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 							updateValues();
 						}
 				});
-			
+
 			try
 				{
 					pack();  // optimize size
@@ -176,35 +176,35 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 		JPanel levelPanel = new JPanel(new BorderLayout());
 //		JPanel levelPanel = new JPanel();
 //		levelPanel.setLayout(new BoxLayout(levelPanel, BoxLayout.Y_AXIS) );
-				
+
 		// Own traffic situation: current # of channels
-		ownTrafficChannelsProgressBar = new 
+		ownTrafficChannelsProgressBar = new
 			JProgressBar(JProgressBar.HORIZONTAL,0, 1);
 		ownTrafficChannelsProgressBar.setStringPainted(true);
 		ownTrafficChannelsProgressBar.setBorderPainted(true);
 		ownTrafficChannelsProgressBar.setString("0");
-		
+
 		// Own traffic situation: # of bytes transmitted
 		ownTrafficBytesLabel = new JLabel("0 Bytes",SwingConstants.RIGHT);
 
 		//
-		userProgressBar = new 
+		userProgressBar = new
 			JProgressBar(JProgressBar.HORIZONTAL,0, 1);
 		userProgressBar.setStringPainted(true);
 		userProgressBar.setBorderPainted(true);
 		//
-		trafficProgressBar = new 
+		trafficProgressBar = new
 			JProgressBar(JProgressBar.HORIZONTAL);
 		trafficProgressBar.setStringPainted(true);
 		trafficProgressBar.setBorderPainted(true);
-		
+
 		//
-		protectionProgressBar = new 
+		protectionProgressBar = new
 			JProgressBar(JProgressBar.HORIZONTAL);
 		protectionProgressBar.setStringPainted(true);
 		protectionProgressBar.setBorderPainted(true);
-		
-		
+
+
 		JPanel ownTrafficPanel = new JPanel();
 		ownTrafficPanel.setLayout( new GridLayout(2,2,5,5) );
 		ownTrafficPanel.setBorder( new TitledBorder(model.getString("ownTrafficBorder")) );
@@ -212,7 +212,7 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 		ownTrafficPanel.add(ownTrafficChannelsProgressBar);
 		ownTrafficPanel.add(new JLabel(model.getString("ownTrafficBytes")) );
 		ownTrafficPanel.add(ownTrafficBytesLabel);
-		
+
 		ano1CheckBox = new JCheckBox(model.getString("confActivateCheckBox"));
 		ano1CheckBox.setForeground(Color.red);
 		ano1CheckBox.setMnemonic(model.getString("confActivateCheckBoxMn").charAt(0));
@@ -228,7 +228,7 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 		ano1B = new JButton(model.getString("confActivateButton"));
 		ano1B.addActionListener(this);
 		p41.add(ano1B);
-		
+
 		JPanel meterPanel = new JPanel();
 		meterPanel.setLayout( new BorderLayout() );
 		meterPanel.setBorder( new TitledBorder(model.getString("meterBorder")) );
@@ -248,20 +248,20 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 		detailsPanel.add(trafficProgressBar);
 //		detailsPanel.add(new JLabel(model.getString("meterDetailsRisk")) );
 //		detailsPanel.add(protectionProgressBar);
-		
+
 		levelPanel.add(ownTrafficPanel, BorderLayout.NORTH);
 		levelPanel.add(meterPanel, BorderLayout.CENTER);
 		levelPanel.add(detailsPanel, BorderLayout.SOUTH);
 
 		return levelPanel;
     }
-	
+
 	public JPanel buildConfigPanel() {
 		// "Center" Panel
 		JPanel mainPanel = new JPanel();
 		mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS) );
 		//mainPanel.setBackground(Color.white);
-		
+
 		// Listen on Port
 		JPanel portPanel = new JPanel();
 		portPanel.setLayout(new GridLayout(2,1) );
@@ -292,8 +292,8 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 		portPanel.add(p11);
 		portPanel.add(p12);
 		// add to mainPanel
-		mainPanel.add(portPanel);	
-		
+		mainPanel.add(portPanel);
+
 		// HTTP Proxy
 		JPanel proxyPanel = new JPanel();
 		proxyPanel.setLayout(new GridLayout(2,1) );
@@ -323,8 +323,8 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 		proxyPanel.add(p21);
 		proxyPanel.add(p22);
 		// add to mainPanel
-		mainPanel.add(proxyPanel);	
-		
+		mainPanel.add(proxyPanel);
+
 		// Information Service
 		JPanel infoServicePanel = new JPanel();
 		infoServicePanel.setLayout(new GridLayout(1,1) );
@@ -345,8 +345,8 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 		// add to infoServicePanel
 		infoServicePanel.add(p31);
 		// add to mainPanel
-		mainPanel.add(infoServicePanel);	
-		
+		mainPanel.add(infoServicePanel);
+
 		// Activate Anonymity
 		JPanel activatePanel = new JPanel();
 		activatePanel.setLayout(new GridLayout(4,1) );
@@ -395,17 +395,17 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 		activatePanel.add(p42);
 		activatePanel.add(p43);
 		// add to mainPanel
-		mainPanel.add(activatePanel);	
-		
+		mainPanel.add(activatePanel);
+
 		return mainPanel;
 	}
-	
+
 	public void disableSetAnonMode()
-		{	
+		{
 			anonCheckBox.setEnabled(false);
 			ano1CheckBox.setEnabled(false);
 		}
-	
+
 	protected void loadMeterIcons() {
 		// Load Images for "Anonymity Meter"
 		meterIcons = new ImageIcon [model.METERFNARRAY.length];
@@ -414,7 +414,7 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 			meterIcons[i] = JAPUtil.loadImageIcon(model.METERFNARRAY[i],false);
 		}
 	}
-	
+
     public ImageIcon setMeterImage()
 			{
 				if (model.isAnonMode())
@@ -431,7 +431,7 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 			{
 		//		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"GetEvent: "+event.getSource());
 				if (event.getSource() == quitB)
-					exitProgram(); 
+					exitProgram();
 				else if (event.getSource() == iconifyB) {
 					model.getIconifiedView().setVisible(true);
 					this.setVisible(false);
@@ -451,22 +451,22 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 					model.aboutJAP();
 				else if (event.getSource() == helpB)
 					showHelpWindow();
-				else if (event.getSource() == proxyCheckBox) 
+				else if (event.getSource() == proxyCheckBox)
 					model.setUseProxy(proxyCheckBox.isSelected());
-				else if (event.getSource() == anonCheckBox) 
+				else if (event.getSource() == anonCheckBox)
 					model.setAnonMode(anonCheckBox.isSelected());
 				else if (event.getSource() == ano1CheckBox)
 					model.setAnonMode(ano1CheckBox.isSelected());
 				else
 					JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"Event ?????: "+event.getSource());
 			}
-	
+
   private void showHelpWindow()
 			{
 				if(helpWindow==null)
 					helpWindow=new JAPHelp(this);
 				helpWindow.show();
-			}	
+			}
 
 	private void showConfigDialog(int card) {
 		if(configDialog==null)
@@ -480,11 +480,11 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 		configDialog.updateValues();
 		configDialog.show();
 	}
-	
+
 	private void exitProgram() {
 		model.goodBye(); // call the final exit procedure of JAP
 	}
-	
+
   private void updateValues() {
 		AnonServerDBEntry e = model.getAnonServer();
 		// Config panel
@@ -494,7 +494,7 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 		int firewallPort=model.getFirewallPort();
 		if(firewallPort==-1)
 			proxyTextField.setText(JAPMessages.getString("firewallNotConfigured"));
-		else	
+		else
 			proxyTextField.setText(model.getFirewallHost()+":"+String.valueOf(firewallPort));
 		infoServiceTextField.setText(model.getInfoServiceHost()+":"+String.valueOf(model.getInfoServicePort()));
 		anonCheckBox.setSelected(model.isAnonMode());
@@ -502,7 +502,7 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 		anonNameTextField.setText(e.getName());
 		statusTextField1.setText(model.status1);
 		statusTextField2.setText(model.status2);
-		
+
 		// Meter panel
 		ano1CheckBox.setSelected(model.isAnonMode());
 		nameLabel.setText(e.getName());
@@ -536,8 +536,22 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 					protectionProgressBar.setValue(protectionProgressBar.getMaximum());
 					protectionProgressBar.setString(model.getString("meterNA"));
 				}
-				if (e.getMixedPackets() > -1) {
-					// Traffic Situation
+        int t=e.getTrafficSituation();
+				if(t>-1)
+          { //Trafic Situation directly form InfoService
+            trafficProgressBar.setMaximum(100);
+            trafficProgressBar.setValue(t);
+            if(t < 30)
+              trafficProgressBar.setString(model.getString("meterTrafficLow"));
+            else if (t< 60)
+              trafficProgressBar.setString(model.getString("meterTrafficMedium"));
+            else
+              trafficProgressBar.setString(model.getString("meterTrafficHigh"));
+          }
+        else if (e.getMixedPackets() > -1) { //buggy if one mix-cascade changes form reporting traffic to not
+					//may be buggy at all -> because call frequence of updateValues is not known!!
+
+          // Traffic Situation
 					if (last == -1) { // first value from InfoService
 						last = e.getMixedPackets();
 						trafficProgressBar.setValue(trafficProgressBar.getMaximum());
@@ -554,14 +568,14 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 							//if (diff>trafficProgressBar.getMaximum())
 							//	trafficProgressBar.setMaximum(model.trafficSituation);
 							trafficProgressBar.setValue(diff);
-							if      (diff < trafficProgressBar.getMaximum()*30/100) 
+							if      (diff < trafficProgressBar.getMaximum()*30/100)
 								trafficProgressBar.setString(model.getString("meterTrafficLow"));
-							else if (diff < trafficProgressBar.getMaximum()*60/100) 
-								trafficProgressBar.setString(model.getString("meterTrafficMedium")); 
+							else if (diff < trafficProgressBar.getMaximum()*60/100)
+								trafficProgressBar.setString(model.getString("meterTrafficMedium"));
 							else /* if (diff < trafficProgressBar.getMaximum()*90/100) */
 								trafficProgressBar.setString(model.getString("meterTrafficHigh"));
-							//else                                  
-							//	trafficProgressBar.setString(model.getString("meterTrafficCongestion")); 
+							//else
+							//	trafficProgressBar.setString(model.getString("meterTrafficCongestion"));
 						}
 					}
 				} else { // no value from InfoService
@@ -581,10 +595,10 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 			trafficProgressBar.setValue(trafficProgressBar.getMaximum());
 			trafficProgressBar.setString(model.getString("meterNA"));
 		}
-	
- 	
+
+
 		}
-	
+
 		public void channelsChanged(int c)
 		{
 		// Nr of Channels
@@ -599,7 +613,7 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 		// Nr of Bytes transmitted anonymously
 		ownTrafficBytesLabel.setText(NumberFormat.getInstance().format(c)+" Bytes");
 		}
-		
+
 		public void valuesChanged (JAPModel m)
 		{
 			synchronized(oValueUpdateSemaphore)

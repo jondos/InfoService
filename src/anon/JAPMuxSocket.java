@@ -62,9 +62,9 @@ final class JAPMuxSocket implements Runnable
 		private volatile boolean m_bRunFlag;
 		private boolean m_bIsConnected=false;
 		//private ThreadGroup threadgroupChannels;
-		
+
 		public static final String CRLF="\r\n";
-		
+
 		public final static int KEY_SIZE=16;
 		public final static int DATA_SIZE=992;
 		private final static int RSA_SIZE=128;
@@ -173,7 +173,7 @@ final class JAPMuxSocket implements Runnable
 									o.write(""+CRLF);
 									o.flush();
 									//o.close();
-									
+
 									//Read response from proxy/firewall
 									// a typical response is
 									//   HTTP/1.0 200 Connection established
@@ -192,16 +192,16 @@ final class JAPMuxSocket implements Runnable
 											l = this.readLine(inDataStream);
 											JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket: <"+l+">");
 										}while (l!=null&&l.length() != 0);
-									if(firstLine.indexOf("200")==-1) 
+									if(firstLine.indexOf("200")==-1)
 										{
 											if(firstLine.indexOf("407")!=-1) // proxy authentication required...
 												{
-													
+
 												}
 											JAPDebug.out(JAPDebug.EMERG,JAPDebug.NET,"JAPMuxSocket:JAP will probably NOT work over this firewall! Sorry.");
 										}
 									}
-									
+
 								JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:Connected to Mix! Now starting key exchange...");
 								outDataStream=new DataOutputStream(new BufferedOutputStream(ioSocket.getOutputStream(),DATA_SIZE+6));
 //								inDataStream=new DataInputStream(ioSocket.getInputStream());
@@ -253,7 +253,7 @@ final class JAPMuxSocket implements Runnable
 	}
 	return returnString;
     }
-	
+
 		public int newConnection(JAPSocket s,int type) throws ConnectException
 			{
 				synchronized(this)
@@ -392,6 +392,7 @@ final class JAPMuxSocket implements Runnable
 				m_bRunFlag=true;
 				while(m_bRunFlag)
 					{
+
 						try
 							{
 								channel=inDataStream.readInt();

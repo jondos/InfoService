@@ -1,28 +1,28 @@
 /*
-Copyright (c) 2000, The JAP-Team 
+Copyright (c) 2000, The JAP-Team
 All rights reserved.
-Redistribution and use in source and binary forms, with or without modification, 
+Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
 
-	- Redistributions of source code must retain the above copyright notice, 
+	- Redistributions of source code must retain the above copyright notice,
 	  this list of conditions and the following disclaimer.
 
-	- Redistributions in binary form must reproduce the above copyright notice, 
-	  this list of conditions and the following disclaimer in the documentation and/or 
+	- Redistributions in binary form must reproduce the above copyright notice,
+	  this list of conditions and the following disclaimer in the documentation and/or
 		other materials provided with the distribution.
 
-	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors 
-	  may be used to endorse or promote products derived from this software without specific 
-		prior written permission. 
+	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
+	  may be used to endorse or promote products derived from this software without specific
+		prior written permission.
 
-	
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS 
-OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY 
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS
+OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
 AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS
 BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, 
-OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER 
-IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY 
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
 import java.io.File;
@@ -34,6 +34,7 @@ import java.awt.event.WindowEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.awt.Frame;
+import java.awt.Font;
 import java.awt.Dimension;
 import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
@@ -60,10 +61,10 @@ Koenntest Du es im Self test (main()) evtl. im Beispielcode angeben?
  * It provides different debug types and levels for the output of debug
  * messages.
  * <P>
- * The debug level can be set with 
+ * The debug level can be set with
  * <code>JAPDebug.setDebuglevel(int level)</code>.
  * <P>
- * The debug type can be set with 
+ * The debug type can be set with
  * <code>JAPDebug.setDebugType(int type)</code>.
  * <P>
  * To output a debug message use
@@ -73,39 +74,39 @@ Koenntest Du es im Self test (main()) evtl. im Beispielcode angeben?
 final public class JAPDebug extends WindowAdapter implements ActionListener{
 
 	/** No debugging */
-	public final static int NUL = 0; 
+	public final static int NUL = 0;
 	/** Indicates a GUI related message (binary: <code>00000001</code>) */
 	public final static int GUI = 1;
 	/** Indicates a network related message (binary: <code>00000010</code>) */
-	public final static int NET = 2; 
+	public final static int NET = 2;
 	/** Indicates a thread related message (binary: <code>00000100</code>) */
-	public final static int THREAD = 4; 
+	public final static int THREAD = 4;
 	/** Indicates a misc message (binary: <code>00001000</code>) */
-	public final static int MISC = 8; 
+	public final static int MISC = 8;
 
 	/** Indicates level type of message: Emergency message*/
-	public final static int EMERG     = 0; 
+	public final static int EMERG     = 0;
 	/** Indicates level type of message: Alert message */
-	public final static int ALERT     = 1; 
+	public final static int ALERT     = 1;
 	/** Indicates level type of message: For instance to  use when catching Exeption to output a debug message.*/
 	public final static int EXCEPTION = 2; //2000-07-31(HF): CRIT zu EXCEPTION geaendert, wegen besserem Verstaendnis
 	/** Indicates level type of message: Error message */
-	public final static int ERR       = 3; 
+	public final static int ERR       = 3;
 	/** Indicates level type of message: Warning */
-	public final static int WARNING   = 4; 
+	public final static int WARNING   = 4;
 	/** Indicates level type of message: Notice */
-	public final static int NOTICE    = 5; 
+	public final static int NOTICE    = 5;
 	/** Indicates level type of message: Information */
-	public final static int INFO      = 6; 
+	public final static int INFO      = 6;
 	/** Indicates level type of message, e.g. a simple debugging message to output something */
-	public final static int DEBUG     = 7; 
+	public final static int DEBUG     = 7;
 
 	private int debugtype;
 	private int debuglevel;
 	private JTextArea textareaConsole;
 	private JDialog frameConsole;
 	private boolean m_bConsole;
-	
+
 	private final static String strLevels[]=
 		{
 			"Emergency",
@@ -118,10 +119,11 @@ final public class JAPDebug extends WindowAdapter implements ActionListener{
 			"Debug    "
 		};
 //	private PrintWriter[] outStreams;
-		
-	private static JAPDebug debug; 
+
+	private static JAPDebug debug;
 	private static SimpleDateFormat dateFormatter;
-	
+
+
 	private JAPDebug () {
 		debugtype=GUI+NET+THREAD+MISC;
 		debuglevel=DEBUG;
@@ -131,8 +133,8 @@ final public class JAPDebug extends WindowAdapter implements ActionListener{
 //			outStreams[i]=new PrintWriter(System.out);
 		dateFormatter= new SimpleDateFormat ("yyyy/MM/dd-hh:mm:ss, ");
 		}
-	
-	public static JAPDebug create()
+
+	public  static JAPDebug create()
 		{
 			if(debug!=null)
 				out(debug.ALERT,debug.INFO,"Debug inialized twice - Big Bug!");
@@ -140,28 +142,31 @@ final public class JAPDebug extends WindowAdapter implements ActionListener{
 				debug=new JAPDebug();
 			return debug;
 		}
-	
+
 	/** Output a debug message.
 	 *  @param level The level of the debugging message (EMERG,ALERT,CRIT,ERR,WARNING,NOTICE,INFO,DEBUG)
 	 *  @param type The type of the debugging message (GUI, NET, THREAD, MISC)
 	 *  @param txt   The message itself
 	 */
-	public static void out(int level, int type, String txt) 
+	public static void out(int level, int type, String txt)
 		{
 //		if(level<0||level>JAPDebug.EMERG||txt==null||debug==null||debug.outStreams[level]==null)
 //			return;
-			if ( (level <= debug.debuglevel) && (debug.debugtype & type) !=0 ) 
+			if ( (level <= debug.debuglevel) && (debug.debugtype & type) !=0 )
 				{
 //			debug.outStreams[level].println("JAPDebug: "+txt);
-					String str="["+dateFormatter.format(new Date())+strLevels[level]+"] "+txt+"\n";
-					if(!debug.m_bConsole)
-						System.err.print(str);
-					else
-						debug.textareaConsole.append(str);
+					synchronized(debug)
+            {
+              String str="["+dateFormatter.format(new Date())+strLevels[level]+"] "+txt+"\n";
+					    if(!debug.m_bConsole)
+						    System.err.print(str);
+					    else
+						    debug.textareaConsole.append(str);
+            }
 				}
 		}
-	
-	/** Set the debugging type you like to output. To activate more than one type you simly add 
+
+	/** Set the debugging type you like to output. To activate more than one type you simly add
 	 *  the types like this <code>setDebugType(JAPDebug.GUI+JAPDebug.NET)</code>.
 	 *  @param type The debug type (NUL, GUI, NET, THREAD, MISC)
 	 */
@@ -175,7 +180,7 @@ final public class JAPDebug extends WindowAdapter implements ActionListener{
 		return debug.debugtype;
 	}
 
-	/** Set the debugging level you would like to output.  
+	/** Set the debugging level you would like to output.
 	 *  The possible parameters are (EMERG, ALERT, EXCEPTION, ERR, WARNING, NOTICE, INFO, DEBUG).
 	 *  DEBUG means output all messages, EMERG means only emergency messages.
 	 *  @param type The debug level (EMERG, ALERT, EXCEPTION, ERR, WARNING, NOTICE, INFO, DEBUG)
@@ -185,27 +190,27 @@ final public class JAPDebug extends WindowAdapter implements ActionListener{
 			return;
 		debug.debuglevel = level;
 	}
-	
+
 	/** Get the current debug level.
 	 */
 	public static int getDebugLevel() {
 		return debug.debuglevel;
 	}
-	
+
 	/** Returns short words discribing each debug-level.
 	 */
 	public static final String[] getDebugLevels()
 		{
 			return strLevels;
 		}
-	
+
 	/** Shows or hiddes a Debug-Console-Window
 	 */
 	public static void showConsole(boolean b,Frame parent)
 		{
 			debug.internal_showConsole(b,parent);
 		}
-	
+
 	public static void setConsoleParent(Frame parent)
 		{
 			if(debug!=null&&debug.m_bConsole&&debug.frameConsole!=null)
@@ -225,7 +230,7 @@ final public class JAPDebug extends WindowAdapter implements ActionListener{
 		{
 			return debug.m_bConsole;
 		}
-	
+
 	public void internal_showConsole(boolean b,Frame parent)
 		{
 			if(!b&&m_bConsole)
@@ -240,7 +245,10 @@ final public class JAPDebug extends WindowAdapter implements ActionListener{
 					frameConsole=new JDialog(parent,"Debug-Console");
 					textareaConsole=new JTextArea(null,20,30);
 					textareaConsole.setEditable(false);
-					JPanel panel=new JPanel();
+					Font f=Font.decode("Courier");
+          if(f!=null)
+            textareaConsole.setFont(f);
+          JPanel panel=new JPanel();
 					JButton bttnSave=new JButton(JAPMessages.getString("bttnSaveAs")+"...",
 																			 JAPUtil.loadImageIcon("images/saveicon.gif",true));
 					bttnSave.setActionCommand("saveas");
@@ -290,12 +298,12 @@ final public class JAPDebug extends WindowAdapter implements ActionListener{
 					m_bConsole=true;
 				}
 		}
-	
+
 		public void windowClosing(WindowEvent e)
 			{
 				m_bConsole=false;
 			}
-		
+
 		public void actionPerformed(ActionEvent e)
 			{
 				if(e.getActionCommand().equals("saveas"))
@@ -317,9 +325,9 @@ final public class JAPDebug extends WindowAdapter implements ActionListener{
 					{
 						frameConsole.dispose();
 						m_bConsole=false;
-					}	
+					}
 			}
-		
+
 		private void saveLog()
 			{
 				JFileChooser fc=new JFileChooser();
@@ -347,7 +355,7 @@ final public class JAPDebug extends WindowAdapter implements ActionListener{
 //	/** Set the debugging output stream. Each debug level has his on outputstream. This defaults to System.out
 //	 * @param level The debug level
 //	 * @param out The assoziated otuput stream (maybe null)
-//	 * @return true if succesful, false otherwise 
+//	 * @return true if succesful, false otherwise
 //	*/
 //	public static boolean setLevelOutputStream(int level, PrintWriter out) {
 //	if(level<0 || level>JAPDebug.EMERG)
@@ -355,39 +363,39 @@ final public class JAPDebug extends WindowAdapter implements ActionListener{
 //	debug.outStreams[level]=out;
 //	return true;
 //	}
- 	
+
 	private static void printDebugSettings() {
 		System.out.println("JAPDebug: debugtype ="+Integer.toString(debug.debugtype));
 		System.out.println("JAPDebug: debuglevel="+Integer.toString(debug.debuglevel));
 	}
-	
+
 	/** Provides a simle self test of the debugging functions. */
 	public static void main(String argc[]) {
 	JAPDebug.create();
-	
+
 	System.out.println("JAPDebug: Self test");
-	
+
 	System.out.println("JAPDebug: Default settings");
 	JAPDebug.printDebugSettings();
-	
+
 	System.out.println("JAPDebug: Selftest 1: GUI+NET");
 	JAPDebug.setDebugType(JAPDebug.GUI+JAPDebug.NET);
 	JAPDebug.printDebugSettings();
 	JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"This is a GUI related debug message");
 	JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"This is a NET related debug message");
-	
+
 	System.out.println("JAPDebug: Selftest 2: GUI only");
 	JAPDebug.setDebugType(JAPDebug.GUI);
 	JAPDebug.printDebugSettings();
 	JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"This is a GUI related debug message");
 	JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"This is a NET related debug message");
-	
+
 	System.out.println("JAPDebug: Selftest 3: NET");
 	JAPDebug.setDebugType(JAPDebug.NET);
 	JAPDebug.printDebugSettings();
 	JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"This is a GUI related debug message");
 	JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"This is a NET related debug message");
-	
+
 	System.out.println("JAPDebug: Selftest 4: no debugging");
 	JAPDebug.setDebugType(JAPDebug.NUL);
 	JAPDebug.printDebugSettings();
