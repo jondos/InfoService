@@ -529,7 +529,9 @@ public final class MuxSocket implements Runnable
 						if(len==0)
 							return 0;
 						ChannelListEntry entry=(ChannelListEntry)m_ChannelList.get(new Integer(channel));
-						if(entry!=null&&entry.arCipher==null)
+						if(entry==null)
+              return ErrorCodes.E_UNKNOWN;
+            if(entry.arCipher==null)
 							{
 								int size=PAYLOAD_SIZE-KEY_SIZE;
 								entry.arCipher=new SymCipher[m_iChainLen];
@@ -588,11 +590,11 @@ public final class MuxSocket implements Runnable
 					}
 				catch(Exception e)
 					{
-						//e.printStackTrace();
-						m_Log.log(LogLevel.ERR,LogType.NET,"JAPMuxSocket:send() Exception!: "+e.getMessage());
-						return -1;
+						e.printStackTrace();
+						m_Log.log(LogLevel.ERR,LogType.NET,"JAPMuxSocket:send() Exception (should never be here...)!: "+e.getMessage());
+						return ErrorCodes.E_UNKNOWN;
 					}
-				return 0;
+				return ErrorCodes.E_SUCCESS;
 			}
 
 	/*	public final int getChainLen()
