@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2000, The JAP-Team
+Copyright (c) 2000 - 2004, The JAP-Team
 All rights reserved.
 Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
@@ -63,8 +63,6 @@ import logging.LogType;
 
 import HTTPClient.Codecs;
 import anon.ErrorCodes;
-import anon.AnonServer;
-import anon.ListenerInterface;
 import anon.AnonChannel;
 import anon.ToManyOpenChannelsException;
 import anon.NotConnectedToMixException;
@@ -72,6 +70,8 @@ import anon.server.AnonServiceImpl;
 import anon.crypto.JAPSignature;
 import anon.crypto.JAPCertificate;
 import anon.crypto.JAPCertificateStore;
+import anon.infoservice.MixCascade;
+import anon.infoservice.ListenerInterface;
 
 public final class MuxSocket implements Runnable
 	{
@@ -207,17 +207,8 @@ public final class MuxSocket implements Runnable
 					/*ms_MuxSocket.*/m_DummyTraffic.start();
 			}
 
-/*		public static boolean getEnableDummyTraffic()
-			{
-				return ms_MuxSocket.m_DummyTraffic!=null;
-			}
-	*//*	//2001-02-20(HF)
-		public int connect(String host, int port) {
-			return connectViaFirewall(host,port,null,-1,null,null);
-		}
-*/
 		//2001-02-20(HF)
-		public int connectViaFirewall(AnonServer anonservice, int fwType,String fwHost, int fwPort,String fwUserID,String fwPasswd,
+		public int connectViaFirewall(MixCascade mixCascade, int fwType,String fwHost, int fwPort,String fwUserID,String fwPasswd,
 																	boolean bCheckMixCerts,JAPCertificateStore certsTrustedRoots)
 			{
 				synchronized(this)
@@ -225,20 +216,21 @@ public final class MuxSocket implements Runnable
 						if(m_bIsConnected)
 							return ErrorCodes.E_ALREADY_CONNECTED;
 						int err=ErrorCodes.E_CONNECT;
-						ListenerInterface[] listeners=anonservice.getListenerInterfaces();
-						//try all possible listeners
-						m_ioSocket=null;
-						for(int l=0;l<listeners.length;l++)
-							try
-								{
-									String host=listeners[l].m_strIP;
-									if(host==null)
-										host=listeners[l].m_strHost;
-									m_ioSocket=new ProxyConnection(m_Log,fwType,fwHost,fwPort,fwUserID,fwPasswd,host,listeners[l].m_iPort);
-									if(m_ioSocket!=null)
-										break;
-								}
-							catch(Throwable t)
+           //try all possible listeners
+            m_ioSocket=null;
+            for(int l = 0; l < mixCascade.getNumberOfListenerInterfaces(); l++)
+              try
+                {
+                  String host = mixCascade.getListenerInterface(l).getIpString();
+                  if (host==null) {
+                    host = mixCascade.getListenerInterface(l).getHostName();
+                  }
+                  m_ioSocket=new ProxyConnection(m_Log,fwType,fwHost,fwPort,fwUserID,fwPasswd,host,mixCascade.getListenerInterface(l).getPort());
+                  if (m_ioSocket!=null) {
+                    break;
+                  }
+                }
+ 							catch(Throwable t)
 								{
 									m_ioSocket=null;
 								}
@@ -546,10 +538,6 @@ public final class MuxSocket implements Runnable
 										Channel c=new Channel(this,channelId,type);
 										m_ChannelList.put(new Integer(channelId),new ChannelListEntry(c));
 
-										//JAPAnonService.setNrOfChannels(oSocketList.size());
-										//Thread t2=new Thread(c);
-										//t2.start();
-										//m_iLastChannelId++;
 										return c;
 									}
 								catch(Exception e)
@@ -568,7 +556,6 @@ public final class MuxSocket implements Runnable
 					{
 						m_ChannelList.remove(new Integer(channel_id));
 						send(channel_id,0,null,(short)0);
-	//					JAPAnonService.setNrOfChannels(oSocketList.size());
 						return 0;
 					}
 			}
@@ -707,10 +694,7 @@ public final class MuxSocket implements Runnable
 								if(flags==CHANNEL_CLOSE)
 									{
 										m_ChannelList.remove(new Integer(channel));
-										//JAPAnonService.setNrOfChannels(oSocketList.size());
 										tmpEntry.channel.closedByPeer();
-										//try{tmpEntry.outStream.close();}catch(Exception e){}
-										//try{tmpEntry.inSocket.close();}catch(Exception e){}
 									}
 								else if(flags==CHANNEL_DATA)
 									{

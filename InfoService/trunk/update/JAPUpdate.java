@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2000, The JAP-Team
+Copyright (c) 2000 - 2004, The JAP-Team
 All rights reserved.
 Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
@@ -33,7 +33,7 @@ import jap.JAPConstants;
 import jap.JAPUtil;
 import jap.JAPMessages;
 
-import anon.infoservice.InfoService;
+import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.JAPVersionInfo;
 
 
@@ -279,26 +279,24 @@ public class JAPUpdate implements ActionListener,ItemListener,Runnable
 				m_Dialog.show();
 			}
 
-		public void run()
-			{//Thread Run Loop for getting the Version Infos...
+    public void run() {
+      //Thread Run Loop for getting the Version Infos...
 				m_taInfo.setText(JAPMessages.getString("updateFetchVersionInfo"));
-				InfoService infoService=JAPController.getInfoService();
-				m_releaseVersion=infoService.getJAPVersionInfo(InfoService.JAP_RELEASE_VERSION);
-				m_devVersion=infoService.getJAPVersionInfo(InfoService.JAP_DEVELOPMENT_VERSION);
-
-				if(m_releaseVersion==null||m_devVersion==null)
-					{
+      m_releaseVersion = InfoServiceHolder.getInstance().getJAPVersionInfo(JAPVersionInfo.JAP_RELEASE_VERSION);
+      m_devVersion = InfoServiceHolder.getInstance().getJAPVersionInfo(JAPVersionInfo.JAP_DEVELOPMENT_VERSION);
+      if ((m_releaseVersion == null) || (m_devVersion == null)) {
 						m_taInfo.setText(JAPMessages.getString("updateFetchVersionInfoFailed"));
 					}
-				else
-					{
+      else {
 						m_comboType.setEnabled(true);
 						m_taInfo.setText("");
 						m_labelVersion.setText(m_releaseVersion.getVersion());
-						if(m_releaseVersion.getDate()!=null)
+        if (m_releaseVersion.getDate() != null) {
 							m_labelDate.setText(m_DateFormat.format(m_releaseVersion.getDate()));
-						else
-							m_labelDate.setText("Unknown");
+        }
+        else {
+          m_labelDate.setText("Unknown");
+        }
 						m_bttnUpgrade.setEnabled(true);
 					}
 			}

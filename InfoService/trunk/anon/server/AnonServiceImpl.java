@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2000, The JAP-Team
+Copyright (c) 2000 - 2004, The JAP-Team
 All rights reserved.
 Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
@@ -28,7 +28,6 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 package anon.server;
 
 import anon.AnonService;
-import anon.AnonServer;
 import anon.AnonChannel;
 import anon.ErrorCodes;
 import anon.AnonServiceEventListener;
@@ -40,6 +39,7 @@ import anon.crypto.JAPCertificateStore;
 import logging.Log;
 import logging.DummyLog;
 
+import anon.infoservice.MixCascade;
 import java.net.InetAddress;
 import java.net.ConnectException;
 import java.util.Vector;
@@ -88,9 +88,9 @@ final public class AnonServiceImpl implements AnonService
 				return new AnonServiceImpl();
 			}
 
-		public int connect(AnonServer anonService)
+		public int connect(MixCascade mixCascade)
 			{
-				int ret=m_MuxSocket.connectViaFirewall(anonService,
+				int ret=m_MuxSocket.connectViaFirewall(mixCascade,
 																				m_FirewallType,m_FirewallHost,m_FirewallPort,
 																				m_FirewallUserID,m_FirewallPasswd,
 																				m_bMixCertCheckEnabled,m_certsTrustedRoots);

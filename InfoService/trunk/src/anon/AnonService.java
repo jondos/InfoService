@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2000, The JAP-Team
+Copyright (c) 2000- 2004, The JAP-Team
 All rights reserved.
 Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
@@ -31,13 +31,14 @@ import java.net.InetAddress;
 import java.net.ConnectException;
 import logging.Log;
 
+import anon.infoservice.MixCascade;
 /** This class is used for accessing the AnonService. An instance is created
  *  via AnonServiceFactory.
  */
 public interface AnonService
 	{
 		///The version of the AnonLib
-		public final static String ANONLIB_VERSION="00.00.008";
+		public final static String ANONLIB_VERSION="00.00.009";
 		/** Establishes a connection to an AnonServer, which is described through the
 		 *  anonService parameter. This method must be called before any Channels could be created.
 		 *  @param anonService AnonServer to use
@@ -49,7 +50,7 @@ public interface AnonService
 		 *  @return E_CONNECT, if a general connection error occured
 		 *
 		 */
-		public int connect(AnonServer anonService);
+		public int connect(MixCascade mixCascade);
 
 		/** Disconnects form the server.*/
 		public void disconnect();

@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2000, The JAP-Team
+Copyright (c) 2000 - 2004, The JAP-Team
 All rights reserved.
 Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
@@ -26,32 +26,42 @@ IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISI
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
 package misc;
+
 import jap.JAPDebug;
-import anon.AnonServer;
 import proxy.ProxyListener;
 import proxy.AnonProxy;
 import java.net.ServerSocket;
+
+import anon.infoservice.MixCascade;
+
+
 final class JAPLean implements ProxyListener {
 
 	static AnonProxy    japAnonProxy = null;
 
 	static int      portNumberHTTPListener;
-	static int      portNumberAnonService;
-	static String   hostNameAnonService;
+  static int      portNumberMixCascade;
+  static String   hostNameMixCascade;
 
 	static int      nrOfChannels      = 0;
 	static int      nrOfBytes         = 0;
 
-	JAPLean ( ) throws Exception {
+  JAPLean() throws Exception {
 		JAPDebug.create();
 		JAPDebug.setDebugType(JAPDebug.NET);
 		JAPDebug.setDebugLevel(JAPDebug.ERR);
 
 		// JAPAnonService.init();
     ServerSocket listener=null;
-    try{listener=new ServerSocket(portNumberHTTPListener);}catch(Exception e){e.printStackTrace();System.exit(0);}
-		japAnonProxy = new AnonProxy(listener);
-		japAnonProxy.setAnonService(new AnonServer(hostNameAnonService,portNumberAnonService));
+    try {
+      listener = new ServerSocket(portNumberHTTPListener);
+    }
+    catch(Exception e) {
+      e.printStackTrace();
+      System.exit(0);
+    }
+    japAnonProxy = new AnonProxy(listener);
+    japAnonProxy.setAnonService(new MixCascade(hostNameMixCascade, portNumberMixCascade));
 		int returnCode = japAnonProxy.start();
 		japAnonProxy.setProxyListener(this);
 		if (returnCode == AnonProxy.E_SUCCESS) {
@@ -75,13 +85,14 @@ final class JAPLean implements ProxyListener {
 			System.exit(1);
 		}
 		portNumberHTTPListener = Integer.parseInt(argv[0]);
-		hostNameAnonService    = argv[1];
-		portNumberAnonService  = Integer.parseInt(argv[2]);
-		System.out.println("["+portNumberHTTPListener+"]-->["+hostNameAnonService+":"+portNumberAnonService+"]");
-		try{new JAPLean();}
-    catch(Exception e)
-      {
-        e.printStackTrace();
+    hostNameMixCascade    = argv[1];
+    portNumberMixCascade  = Integer.parseInt(argv[2]);
+    System.out.println("["+portNumberHTTPListener+"]-->["+hostNameMixCascade+":"+portNumberMixCascade+"]");
+    try {
+      new JAPLean();
+    }
+    catch(Exception e) {
+      e.printStackTrace();
       }
 	}
 
@@ -98,13 +109,17 @@ final class JAPLean implements ProxyListener {
 	private final class JAPLeanActivityLoop implements Runnable {
 		int nrOfBytesBefore = -1;
 		public void run() {
-			while(true) {
-				if(nrOfBytesBefore<nrOfBytes) {
+      while (true) {
+        if (nrOfBytesBefore<nrOfBytes) {
 					System.out.print("["+nrOfBytes+"] ");
 					nrOfBytesBefore = nrOfBytes;
 				}
-				try { Thread.sleep(60000); } catch (Exception e) { ; }
-			}
+        try { 
+          Thread.sleep(60000);
+        } 
+        catch (Exception e) {
+        }
 		}
 	}
+  }
 }

@@ -32,8 +32,6 @@ import gui.wizard.BasicWizardHost;
 import gui.wizard.BasicWizard;
 import gui.wizard.*;
 
-import anon.infoservice.*;
-
 import java.io.File;
 import java.io.*;
 import java.util.Vector;
@@ -46,6 +44,14 @@ import jap.JAPMessages;
 import jap.JAPUtil;
 import jap.JAPController;
 import jap.JAPDebug;
+
+import anon.infoservice.ListenerInterface;
+import anon.infoservice.HTTPConnectionFactory;
+import anon.infoservice.JAPVersionInfo;
+
+import HTTPClient.HTTPConnection;
+import HTTPClient.HTTPResponse;
+
 
 public final class JAPUpdateWizard extends BasicWizard implements Runnable
 	{
@@ -360,110 +366,172 @@ public final class JAPUpdateWizard extends BasicWizard implements Runnable
 						}
 				}
 
+  /**
+   * This class manages the download process of a new Jap version jar file.
+   */
+  private class JapDownloadManager implements Runnable {
 
-		 //Step 2
-		private class JapDownloadListener implements DownloadListener
-			{
-				private int m_retDownload=-1;
-				private int aktPos=0;
-				public JapDownloadListener()
-				  {
-				}
+    /**
+     * Stores the ListenerInterface of the system, where the new jar file is located.
+     */
+    private ListenerInterface targetInterface;
 
-				public int getDownloadState()
-					{
-						return m_retDownload;
-					}
+    /**
+     * Stores the path, filename and the query String of the new jar file at the remote system.
+     */
+    private String fileName;
 
-				public int progress(byte[] data,int lenData,int lenTotal,int state)
-					{
-						if(updateAborted)
-							{
-								m_retDownload=-1;
-								synchronized(this)
-									{
-										this.notify();
-									}
-								return -1;
-							}
-						if(state == DownloadListener.STATE_IN_PROGRESS)
-							{
-								if(m_arBufferNewJapJar == null)
-									{
-										m_arBufferNewJapJar = new byte[lenTotal];
-										aktPos=0;
-									}
-								//write data into the RAM
-								System.arraycopy(data,0,m_arBufferNewJapJar,aktPos,lenData);
-								aktPos += lenData;
-								// the Download has the Zone from 5 to 455 in the ProgressBar
-								int value = ((450 * aktPos)/lenTotal);
+    /**
+     * Stores the download result (0 if it was successful, -1 if there was an error).
+     */
+    private int downloadResult;
+      
+    /**
+     * Stores the new jar file.
+     */
+    private byte[] newJarBuff;
+
+    /**
+     * Constructs a new JapDownloadManager.
+     *
+     * @param jarUrl The URL of the wanted jar file.
+     */
+    public JapDownloadManager(URL jarUrl) throws Exception {
+      downloadResult = -1;
+      newJarBuff = null;
+      String hostName = jarUrl.getHost();
+      int port = jarUrl.getPort();
+      if (port == -1) {
+        port = jarUrl.getDefaultPort();
+      }
+      targetInterface = new ListenerInterface(hostName, port);
+      fileName = jarUrl.getFile();
+    }
+      
+    /**
+     * This method is executed by the internal Thread. The jar file download is done here.
+     * Don't call this method directly.
+     */
+    public void run() { 
+      try {
+        /* HTTPConnectionFactory has the right proxy settings, it is updated for the infoservice.
+         * This connection is like the infoservice connection not anonymized by the JAP.
+         */
+        HTTPConnection connection = HTTPConnectionFactory.getInstance().createHTTPConnection(targetInterface);
+        HTTPResponse response = connection.Get(fileName);       
+        if (response.getStatusCode() != 200) {
+          /* if someone waiting for the end of the download, notify him */
+          synchronized (this) {
+            notify();
+          }
+          return;
+        }
+        int lenTotal = response.getHeaderAsInt("Content-Length");
+        InputStream in = response.getInputStream();
+        byte[] buff = new byte[2048];
+        newJarBuff = new byte[lenTotal];
+        int currentPos = 0;
+        int len = in.read(buff);
+        while (len > 0) {
+          System.arraycopy(buff, 0, newJarBuff, currentPos, len);
+          currentPos = currentPos + len;
+          // the Download has the Zone from 5 to 455 in the ProgressBar
+          int value = ((450 * currentPos)/lenTotal);
 								downloadPage.progressBar.setValue((value+5));
 								downloadPage.progressBar.repaint();
-								return 0;
-							}
-						else if(state == DownloadListener.STATE_ABORTED)
-							{
-								m_retDownload=-1;
-								synchronized(this)
-									{
-										this.notify();
+          if (updateAborted == true) {
+            in.close();
+            /* if someone waiting for the end of the download, notify him */
+            synchronized (this) {
+              notify();
+            }
+            return;
 									}
-								//wizardCompleted();
-							return -1;
+          len = in.read(buff);
 							}
-						else if(state == DownloadListener.STATE_FINISHED)
-							{
-								m_retDownload=0;
-								synchronized(this)
-									{
-										this.notify();
+        /* download ready */
+        downloadResult = 0;
+        /* if someone waiting for the end of the download, notify him */
+        synchronized (this) {
+          notify();
 									}
-								return 0;
 							}
-						return 0;
-					}
+      catch (Exception e) {
+        /* if someone waiting for the end of the download, notify him */
+        synchronized (this) {
+          notify();
+        }
 				}
+    }
 
-		private int downloadUpdate()
-			{
-				InfoService infoService;
-				URL jarUrl;
-				infoService = JAPController.getInfoService();
-					//JAPVersionInfo japVersionInfo = infoService.getJAPVersionInfo(type);
-				URL codeBase=japVersionInfo.getCodeBase();
-					// ErrorMessage connection with infoservice failed
-				try
-					{
-						if(incrementalUpdate)
+    /**
+     * This method starts the download of the new jar file by creating the internal thread.
+     */
+    public void startDownload() {
+      Thread downloadThread = new Thread(this);
+      downloadThread.start();
+    }
+
+    /**
+     * Returns the error code of the download (0 - download successful, -1 - download aborted).
+     *
+     * @return The result code of the download.
+     */
+    public int getDownloadResult() {
+      return downloadResult;
+    }
+
+    /**
+     * Returns the new jar file as byte array. Null is returned, if getDownloadResult() is not 0.
+     *
+     * @return The byte array of the new jar file.
+     */
+    public byte[] getNewJar() {
+      if (getDownloadResult() == 0) {
+        return newJarBuff;
+      }
+      return null;
+    }
+  
+  }
+
+  /**
+   * Downloads a new JAP jar file.
+   *
+   * @return The error code of the download (0 - successful, -1 - there was an error / abort).
+   */
+  private int downloadUpdate() {
+    URL codeBase = japVersionInfo.getCodeBase();
+    URL jarUrl;
+    try {
+      if (incrementalUpdate) {
 							jarUrl = new URL(codeBase,japVersionInfo.getJAPJarFileName()+"?version-id="+"00.01.037"+"&current-version-id="+"00.01.037");
-						else
-						 jarUrl = new URL(codeBase,japVersionInfo.getJAPJarFileName()+"?version-id="+japVersionInfo.getVersion());
+      }
+      else {
+        jarUrl = new URL(codeBase,japVersionInfo.getJAPJarFileName()+"?version-id="+japVersionInfo.getVersion());
 					}
-				catch(Exception e)
-					{
+    }
+    catch(Exception e) {
 						return -1;
 					}
 				downloadPage.m_labelIconStep2.setIcon(downloadPage.arrow);
 				int retDownload=-1;
 				int aktPos=0;
-				try
-					{
-						JapDownloadListener japDownloadListener=new JapDownloadListener();
-						synchronized(japDownloadListener)
-							{
-								infoService.retrieveURL(jarUrl,japDownloadListener);
-								japDownloadListener.wait();
-								if(japDownloadListener.getDownloadState()==-1)
-									{
+    try {    
+      JapDownloadManager downloadManager = new JapDownloadManager(jarUrl);
+      synchronized(downloadManager) {
+        downloadManager.startDownload();
+        /* wait for the end of the download */
+        downloadManager.wait();
+      }  
+      if (downloadManager.getDownloadResult() == -1) {
 										return -1;
 									}
+      m_arBufferNewJapJar = downloadManager.getNewJar();
 								downloadPage.m_labelIconStep2.setIcon(downloadPage.stepfinished);
 								return 0;
 							}
-						}
-					catch(Exception e)
-						{
+    catch (Exception e) {
 							return -1;
 						}
 			}

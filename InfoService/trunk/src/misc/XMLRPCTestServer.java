@@ -2,6 +2,9 @@ package misc;
 
 import anon.*;
 import anon.xmlrpc.server.AnonServiceImplRemote;
+
+import anon.infoservice.MixCascade;
+
 public class XMLRPCTestServer
 {
 	public static void main(String[] args)
@@ -9,7 +12,7 @@ public class XMLRPCTestServer
       try{
       AnonService lokal=AnonServiceFactory.create();
       AnonServiceImplRemote remote=new AnonServiceImplRemote(lokal);
-      lokal.connect(new AnonServer("mix.inf.tu-dresden.de",6544));
+      lokal.connect(new MixCascade("mix.inf.tu-dresden.de",6544));
       remote.startService();}
       catch(Exception e)
         {
