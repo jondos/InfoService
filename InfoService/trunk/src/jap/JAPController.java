@@ -250,7 +250,7 @@ public final class JAPController implements ProxyListener, Observer
 	 * and then in the JAP install directory.
 	 * The configuration is a XML-File with the following structure:
 	 *  <JAP
-	 *    version="0.13"                     // version of the xml struct (DTD) used for saving the configuration
+	 *    version="0.14"                     // version of the xml struct (DTD) used for saving the configuration
 	 *    portNumber=""                     // Listener-Portnumber
 	 *    portNumberSocks=""                // Listener-Portnumber for SOCKS
 	 *    supportSocks=""                   // Will we support SOCKS ?
@@ -305,7 +305,11 @@ public final class JAPController implements ProxyListener, Observer
 	 *      MISC="true"/"false"          // all the others
 	 *    >
 	 *    </Type>
-	 *    <Output>..</Output>            //the kind of Output, at the moment only: Console
+	 *    <Output>...                      //the kind of Output, at the moment only: if NodeValue==Console --> Console
+	 *       <File>...                    //if given, log to the given File (since version 0.14)
+	 *       </File>
+	 *    </Output>
+	 *
 	 * </Debug>
 	 * <InfoServices>                                           // info about all known infoservices (since config version 0.3)
 	 *   <InfoService id="...">...</InfoService>                // the same format as from infoservice, without signature, if expired, it is removed from infoservice list
@@ -697,11 +701,17 @@ public final class JAPController implements ProxyListener, Observer
 						}
 						JAPDebug.getInstance().setLogType(debugtype);
 					}
-					Element elemOutput = (Element) XMLUtil.getFirstChildByName(elemDebug, "Output");
+					Node elemOutput = XMLUtil.getFirstChildByName(elemDebug, "Output");
 					if (elemOutput != null)
 					{
-						JAPDebug.showConsole(elemOutput.getFirstChild().getNodeValue().trim().
-											 equalsIgnoreCase("Console"), m_View);
+						String strConsole=XMLUtil.parseValue(elemOutput, "");
+						if(strConsole!=null)
+						{
+							strConsole.trim();
+							JAPDebug.showConsole(strConsole.equalsIgnoreCase("Console"), m_View);
+						}
+						Node elemFile = XMLUtil.getLastChildByName(elemOutput, "File");
+						JAPDebug.setLogToFile(XMLUtil.parseValue(elemFile, null));
 					}
 				}
 
@@ -908,7 +918,7 @@ public final class JAPController implements ProxyListener, Observer
 			Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
 			Element e = doc.createElement("JAP");
 			doc.appendChild(e);
-			e.setAttribute("version", "0.13");
+			e.setAttribute("version", "0.14");
 			//
 			e.setAttribute("portNumber", Integer.toString(JAPModel.getHttpListenerPortNumber()));
 			//e.setAttribute("portNumberSocks", Integer.toString(JAPModel.getSocksListenerPortNumber()));
@@ -1015,12 +1025,20 @@ public final class JAPController implements ProxyListener, Observer
 			tmp.setAttribute("THREAD", ( (debugtype & LogType.THREAD) != 0) ? "true" : "false");
 			tmp.setAttribute("MISC", ( (debugtype & LogType.MISC) != 0) ? "true" : "false");
 			elemDebug.appendChild(tmp);
-			if (JAPDebug.isShowConsole())
+			if (JAPDebug.isShowConsole() || JAPDebug.isLogToFile())
 			{
 				tmp = doc.createElement("Output");
-				txt = doc.createTextNode("Console");
-				tmp.appendChild(txt);
 				elemDebug.appendChild(tmp);
+				if (JAPDebug.isShowConsole())
+				{
+					XMLUtil.setValue(tmp, "Console");
+				}
+				if (JAPDebug.isLogToFile())
+				{
+					Element elemFile = doc.createElement("File");
+					tmp.appendChild(elemFile);
+					XMLUtil.setValue(elemFile, JAPDebug.getLogFilename());
+				}
 			}
 			/* adding infoservice settings */
 			/* infoservice list */

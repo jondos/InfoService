@@ -402,7 +402,7 @@ public final class JAPModel
 		return buff.toString();
 	}
 
-	protected void setCertCheckDisabled(boolean b)
+	void setCertCheckDisabled(boolean b)
 	{
 		m_bCertCheckDisabled = b;
 	}
@@ -417,7 +417,7 @@ public final class JAPModel
 		return ms_TheModel.m_bPreCreateAnonRoutes;
 	}
 
-	protected void setPreCreateAnonRoutes(boolean b)
+	void setPreCreateAnonRoutes(boolean b)
 	{
 		m_bPreCreateAnonRoutes = b;
 	}

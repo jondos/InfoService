@@ -54,6 +54,7 @@ import javax.swing.JTextArea;
 import logging.Log;
 import logging.LogLevel;
 import logging.LogType;
+import logging.FileLog;
 
 /**
  * This class serves as a debugging interface.
@@ -78,7 +79,9 @@ final public class JAPDebug extends WindowAdapter implements ActionListener, Log
 	private static JTextArea m_textareaConsole;
 	private static JDialog m_frameConsole;
 	private static boolean m_bConsole = false;
-
+	private static boolean ms_bFile = false;
+	private static String ms_strFileName = null;
+	private static FileLog ms_FileLog = null;
 	private static JAPDebug debug;
 	private static SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy/MM/dd-hh:mm:ss, ");
 
@@ -87,6 +90,20 @@ final public class JAPDebug extends WindowAdapter implements ActionListener, Log
 		m_debugType = LogType.ALL;
 		m_debugLevel = LogLevel.DEBUG;
 		m_bConsole = false;
+		ms_bFile=false;
+		ms_strFileName = null;
+	}
+
+	public void finalize()
+	{
+		ms_bFile=false;
+		try
+		{
+			super.finalize();
+		}
+		catch (Throwable ex)
+		{
+		}
 	}
 
 	public static JAPDebug getInstance()
@@ -120,6 +137,10 @@ final public class JAPDebug extends WindowAdapter implements ActionListener, Log
 					m_textareaConsole.append(str);
 					m_textareaConsole.setCaretPosition(m_textareaConsole.getText().length());
 				}
+				if (ms_bFile)
+				{
+					ms_FileLog.log(level, type, txt);
+				}
 			}
 		}
 	}
@@ -131,6 +152,10 @@ final public class JAPDebug extends WindowAdapter implements ActionListener, Log
 	public void setLogType(int type)
 	{
 		m_debugType = type;
+		if (ms_bFile)
+		{
+			ms_FileLog.setLogType(type);
+		}
 	}
 
 	/** Get the current debug type.
@@ -152,6 +177,10 @@ final public class JAPDebug extends WindowAdapter implements ActionListener, Log
 			return;
 		}
 		m_debugLevel = level;
+		if (ms_bFile)
+		{
+			ms_FileLog.setLogLevel(level);
+		}
 	}
 
 	/** Get the current debug level.
@@ -174,25 +203,57 @@ final public class JAPDebug extends WindowAdapter implements ActionListener, Log
 		debug.internal_showConsole(b, parent);
 	}
 
+	/** Enables or disables log output to a File.
+	 * @param strFilename the Filename the logoutput should go to, if null (or the empty String "") log
+	 * to file is disabled.
+	 */
+	public static void setLogToFile(String strFilename)
+	{
+		if (strFilename == null||strFilename.trim().equals(""))
+		{
+			ms_bFile = false;
+			ms_FileLog = null;
+		}
+		else
+		{
+			ms_FileLog = new FileLog(strFilename, 10000000, 2);
+			ms_FileLog.setLogLevel(getInstance().m_debugLevel);
+			ms_FileLog.setLogType(getInstance().m_debugType);
+			ms_bFile = true;
+		}
+		ms_strFileName = strFilename;
+	}
+
 	public static void setConsoleParent(Frame parent)
 	{
-		if ( (debug != null) && (debug.m_bConsole) && (debug.m_frameConsole != null))
+		if ( (debug != null) && (JAPDebug.m_bConsole) && (JAPDebug.m_frameConsole != null))
 		{
 			JDialog tmpDlg = new JDialog(parent, "Debug-Console");
 			//tmpDlg.getContentPane().add(new JScrollPane(debug.textareaConsole));
-			tmpDlg.setContentPane(debug.m_frameConsole.getContentPane());
+			tmpDlg.setContentPane(JAPDebug.m_frameConsole.getContentPane());
 			tmpDlg.addWindowListener(debug);
-			tmpDlg.setSize(debug.m_frameConsole.getSize());
-			tmpDlg.setLocation(debug.m_frameConsole.getLocation());
+			tmpDlg.setSize(JAPDebug.m_frameConsole.getSize());
+			tmpDlg.setLocation(JAPDebug.m_frameConsole.getLocation());
 			tmpDlg.setVisible(true);
-			debug.m_frameConsole.dispose();
-			debug.m_frameConsole = tmpDlg;
+			JAPDebug.m_frameConsole.dispose();
+			JAPDebug.m_frameConsole = tmpDlg;
 		}
 	}
 
 	public static boolean isShowConsole()
 	{
-		return debug.m_bConsole;
+		return JAPDebug.m_bConsole;
+	}
+
+	public static boolean isLogToFile()
+	{
+		return JAPDebug.ms_bFile;
+	}
+
+	/** Returns the Filename log output goes to or null if logging to a File is disabled.*/
+	public static String getLogFilename()
+	{
+		return ms_strFileName;
 	}
 
 	public void internal_showConsole(boolean b, Frame parent)
@@ -253,8 +314,8 @@ final public class JAPDebug extends WindowAdapter implements ActionListener, Log
 			g.setConstraints(bttnDelete, c);
 			panel.add(bttnDelete);
 			c.weightx = 1;
-			c.anchor = c.EAST;
-			c.fill = c.NONE;
+			c.anchor = GridBagConstraints.EAST;
+			c.fill = GridBagConstraints.NONE;
 			c.gridx = 5;
 			g.setConstraints(bttnClose, c);
 			panel.add(bttnClose);
@@ -325,21 +386,21 @@ final public class JAPDebug extends WindowAdapter implements ActionListener, Log
 	private void saveLog()
 	{
 		JFileChooser fc = new JFileChooser();
-		fc.setDialogType(fc.SAVE_DIALOG);
-		int ret = fc.showDialog(debug.m_frameConsole, null);
-		if (ret == fc.APPROVE_OPTION)
+		fc.setDialogType(JFileChooser.SAVE_DIALOG);
+		int ret = fc.showDialog(JAPDebug.m_frameConsole, null);
+		if (ret == JFileChooser.APPROVE_OPTION)
 		{
 			File file = fc.getSelectedFile();
 			try
 			{
 				FileWriter fw = new FileWriter(file);
-				debug.m_textareaConsole.write(fw);
+				JAPDebug.m_textareaConsole.write(fw);
 				fw.flush();
 				fw.close();
 			}
 			catch (Exception e)
 			{
-				JOptionPane.showMessageDialog(debug.m_frameConsole,
+				JOptionPane.showMessageDialog(JAPDebug.m_frameConsole,
 											  JAPMessages.getString("errWritingLog"),
 											  JAPMessages.getString("error"),
 											  JOptionPane.ERROR_MESSAGE);
@@ -359,10 +420,10 @@ final public class JAPDebug extends WindowAdapter implements ActionListener, Log
 //	return true;
 //	}
 
-	private static void printDebugSettings()
+/*	private static void printDebugSettings()
 	{
 		System.out.println("JAPDebug: debugtype =" + Integer.toString(debug.m_debugType));
 		System.out.println("JAPDebug: debuglevel=" + Integer.toString(debug.m_debugLevel));
 	}
-
+*/
 }

@@ -46,6 +46,7 @@ final public class FileLog extends AbstractLog4jLog
 			RollingFileAppender appender = new RollingFileAppender(layout, fileName, true);
 			appender.setMaximumFileSize(maxFileSize);
 			appender.setMaxBackupIndex(maxBackups);
+			appender.setBufferedIO(false);
 			appender.activateOptions();
 			m_Log.removeAllAppenders();
 			m_Log.addAppender(appender);
