@@ -312,9 +312,12 @@
     <file path="images/north.gif"/>
     <file path="images/red.gif"/>
     <file path="images/reload.gif"/>
+    <file path="images/reloaddisabled.gif"/>
     <file path="images/reloadrollover.gif"/>
     <file path="images/saveicon.gif"/>
     <file path="images/server16.gif"/>
+    <file path="images/serverfrominternet.gif"/>
+    <file path="images/servermanuell.gif"/>
     <file path="images/splash.gif"/>
     <file path="images/warning.gif"/>
     <file path="images/west.gif"/>

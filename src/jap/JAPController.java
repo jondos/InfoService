@@ -87,7 +87,7 @@ public final class JAPController implements ProxyListener, Observer
 	/**
 	 * Stores all MixCascades we know (information comes from infoservice).
 	 */
-	private Vector mixCascadeDatabase = null;
+	private Vector m_vectorMixCascadeDatabase = null;
 
 	/**
 	 * Stores the active MixCascade.
@@ -151,6 +151,7 @@ public final class JAPController implements ProxyListener, Observer
 											   JAPConstants.defaultAnonID,
 											   JAPConstants.defaultAnonHost,
 											   JAPConstants.defaultAnonPortNumber);
+			currentMixCascade.setIsUserDefined(true);
 		}
 		catch (Exception e)
 		{
@@ -175,7 +176,7 @@ public final class JAPController implements ProxyListener, Observer
 		InfoServiceHolder.getInstance().setUpdateMessagesCertificate(m_Model.getJAPInfoServiceMessagesCert());
 		HTTPConnectionFactory.getInstance().setTimeout(JAPConstants.DEFAULT_INFOSERVICE_TIMEOUT);
 
-		mixCascadeDatabase = new Vector();
+		m_vectorMixCascadeDatabase = new Vector();
 		m_proxyDirect = null;
 		m_proxyAnon = null;
 		//m_proxySocks = null;
@@ -248,7 +249,7 @@ public final class JAPController implements ProxyListener, Observer
 	 * and then in the JAP install directory.
 	 * The configuration is a XML-File with the following structure:
 	 *  <JAP
-	 *    version="0.11"                     // version of the xml struct (DTD) used for saving the configuration
+	 *    version="0.12"                     // version of the xml struct (DTD) used for saving the configuration
 	 *    portNumber=""                     // Listener-Portnumber
 	 *    portNumberSocks=""                // Listener-Portnumber for SOCKS
 	 *    supportSocks=""                   // Will we support SOCKS ?
@@ -273,7 +274,10 @@ public final class JAPController implements ProxyListener, Observer
 	 *    Locale="LOCALE_IDENTIFIER" (two letter iso 639 code) //the Language for the UI to use
 	 *    LookAndFeel="..."             //the LookAndFeel class name
 	 *  >
-	 * <MixCascade id=..">                     //info about the used AnonServer (since version 0.1) [equal to the general MixCascade struct]
+	 * <MixCascade id=.." userDefined="true/false">  //info about the used AnonServer (since version 0.1) [equal to the general MixCascade struct]
+	 *												//Attr "userDefined" since Version 0.12
+	 * 												//if true this cascade information was handcrafted by the user
+	 * 												//otherwise it comes from the InfoService
 	 *   <Name>..</Name>
 	 *   <Network>
 	 *     <ListenerInterfaces>
@@ -567,10 +571,12 @@ public final class JAPController implements ProxyListener, Observer
 
 				/* try to get the info from the MixCascade node */
 				MixCascade defaultMixCascade = null;
-				Node mixCascadeNode = XMLUtil.getFirstChildByName(root, "MixCascade");
+				Element mixCascadeNode = (Element)XMLUtil.getFirstChildByName(root, "MixCascade");
 				try
 				{
 					defaultMixCascade = new MixCascade( (Element) mixCascadeNode);
+					defaultMixCascade.setIsUserDefined(
+						XMLUtil.parseElementAttrBoolean(mixCascadeNode,"userDefined",false));
 				}
 				catch (Exception e)
 				{
@@ -896,7 +902,7 @@ public final class JAPController implements ProxyListener, Observer
 			Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
 			Element e = doc.createElement("JAP");
 			doc.appendChild(e);
-			e.setAttribute("version", "0.11");
+			e.setAttribute("version", "0.12");
 			//
 			e.setAttribute("portNumber", Integer.toString(JAPModel.getHttpListenerPortNumber()));
 			//e.setAttribute("portNumberSocks", Integer.toString(JAPModel.getSocksListenerPortNumber()));
@@ -943,7 +949,10 @@ public final class JAPController implements ProxyListener, Observer
 			MixCascade defaultMixCascade = getCurrentMixCascade();
 			if (defaultMixCascade != null)
 			{
-				e.appendChild(defaultMixCascade.toXmlNode(doc));
+				Element elem=(Element)defaultMixCascade.toXmlNode(doc);
+				if(defaultMixCascade.isUserDefined())
+					XMLUtil.setAttribute(elem,"userDefined",true);
+				e.appendChild(elem);
 			}
 
 			// adding GUI-Element
@@ -1180,7 +1189,7 @@ public final class JAPController implements ProxyListener, Observer
 
 	public Vector getMixCascadeDatabase()
 	{
-		return mixCascadeDatabase;
+		return m_vectorMixCascadeDatabase;
 	}
 
 	protected void applyProxySettingsToInfoService()
@@ -1826,7 +1835,7 @@ public final class JAPController implements ProxyListener, Observer
 		else
 		{
 			LogHolder.log(LogLevel.DEBUG, LogType.NET, "JAPController: fetchMixCascades: success!");
-			mixCascadeDatabase = newMixCascades;
+			m_vectorMixCascadeDatabase = newMixCascades;
 			notifyJAPObservers();
 		}
 	}
