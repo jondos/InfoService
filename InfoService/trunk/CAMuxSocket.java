@@ -86,6 +86,7 @@ public class CAMuxSocket extends Thread
 						while(true)
 							{
 								channel=fromServer.readInt();
+		//						System.out.println("Receiving channel: "+Integer.toString(channel));
 								len=fromServer.readShort();
 								tmp=fromServer.readShort();
 								fromServer.readFully(buff);
@@ -130,7 +131,7 @@ public class CAMuxSocket extends Thread
 			{
 				try
 					{
-						//System.out.println("Sending: channel "+Integer.toString(channel)+"len: "+Integer.toString(len));
+			//			System.out.println("Sending: channel "+Integer.toString(channel)+"len: "+Integer.toString(len));
 						toServer.writeInt(channel);
 						toServer.writeShort(len);
 						toServer.writeShort(0);

@@ -36,19 +36,16 @@ public class SK13ProxyConnection extends Thread {
 					while((len=fromClient.read(buff,0,1000))!=-1)
 						{
 							if(len>0)
-								outSocket.send(channel,buff,(short)len);
+								if(outSocket.send(channel,buff,(short)len)==-1)
+									{
+										break;
+									}
 						}
 					
 				} // if (protocol....)
-			catch (IOException ioe)
-				{
-//					System.out.println("IOException - read from Browser...");
-//					ioe.printStackTrace();
-				}
 			catch (Exception e)
 				{
 				}
-//			System.out.println("ProxyConnection: Normal Exit..");
     	try 
 				{
 					fromClient.close();

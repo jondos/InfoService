@@ -30,7 +30,7 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
 	public JAPView (JAPModel m, String s)
 		{
 			super(s);
-			this.model = m;
+			model = m;
 			init();
 			helpWindow =  new JAPHelp(this, model); 
 			configDialog = new JAPConf(this, model);
@@ -40,7 +40,7 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
 		{
 			try
 				{
-					UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+					UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
 				}
 			catch(Exception e)
 				{
@@ -50,7 +50,7 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
 			if(ii!=null)
 				setIconImage(ii.getImage());
 			// Show wait message
-			ii=loadImageIcon(model.msg.getString("loading"),true);
+			ii=loadImageIcon(model.getString("loading"),true);
 			JLabel waitLabel = null;
 			if(ii!=null)
 				waitLabel=new JLabel((ii), JLabel.CENTER);
@@ -64,8 +64,8 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
 			getContentPane().add(waitLabel, BorderLayout.SOUTH);
 			getContentPane().add(new JLabel(loadImageIcon(model.SPLASHFN,true)), BorderLayout.CENTER);
 			//setSize(250, 50);
-			setResizable(false);
 			pack();
+			setResizable(false);
 			centerFrame();
 			setVisible(true);
 
@@ -84,11 +84,11 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
 		loadMeterIcons();
 		
 		// "NORTH": Image
-		ImageIcon northImage = loadImageIcon(model.msg.getString("northPath"),true);
+		ImageIcon northImage = loadImageIcon(model.getString("northPath"),true);
 		JLabel northLabel = new JLabel(northImage);
 
 		// "West": Image
-		ImageIcon westImage = loadImageIcon(model.msg.getString("westPath"),true);;
+		ImageIcon westImage = loadImageIcon(model.getString("westPath"),true);;
 		JLabel westLabel = new JLabel(westImage);
 //		westLabel.setOpaque(false);
 		
@@ -96,17 +96,17 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
 		JTabbedPane tabs = new JTabbedPane();
 		JPanel config = buildConfigPanel();
 		JPanel level = buildLevelPanel();
-		tabs.addTab(model.msg.getString("mainConfTab"), loadImageIcon(model.CONFIGICONFN,true), config );
-		tabs.addTab(model.msg.getString("mainMeterTab"), loadImageIcon(model.METERICONFN,true), level );
+		tabs.addTab(model.getString("mainConfTab"), loadImageIcon(model.CONFIGICONFN,true), config );
+		tabs.addTab(model.getString("mainMeterTab"), loadImageIcon(model.METERICONFN,true), level );
 		
 		// "South": Buttons
 		JPanel buttonPanel = new JPanel();
 //		buttonPanel.setOpaque(false);
 		
-		infoB = new JButton(model.msg.getString("infoButton"));
-		helpB = new JButton(model.msg.getString("helpButton"));
+		infoB = new JButton(model.getString("infoButton"));
+		helpB = new JButton(model.getString("helpButton"));
 //		startB = new JButton(model.msg.getString("startButton"));
-		quitB = new JButton(model.msg.getString("quitButton"));
+		quitB = new JButton(model.getString("quitButton"));
 		// Add real buttons
 		buttonPanel.add(infoB);
 		buttonPanel.add(helpB);
@@ -116,10 +116,10 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
 		helpB.addActionListener(this);
 //		startB.addActionListener(this);
 		quitB.addActionListener(this);
-		infoB.setMnemonic(model.msg.getString("infoButtonMn").charAt(0));
-		helpB.setMnemonic(model.msg.getString("helpButtonMn").charAt(0));
+		infoB.setMnemonic(model.getString("infoButtonMn").charAt(0));
+		helpB.setMnemonic(model.getString("helpButtonMn").charAt(0));
 //		startB.setMnemonic(model.msg.getString("startButtonMn").charAt(0));
-		quitB.setMnemonic(model.msg.getString("quitButtonMn").charAt(0));
+		quitB.setMnemonic(model.getString("quitButtonMn").charAt(0));
 		
 
 		// add Components to Frame
@@ -136,7 +136,14 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
 
 		updateValues();
 		getContentPane().invalidate();
-		pack();  // optimize size
+		try	
+			{
+				pack();  // optimize size
+			}
+		catch(Exception e)
+			{
+				System.out.println("Hm.. Error by Pack - Has To be fixed!!");
+			}
 		centerFrame();
 		toFront();
 		getContentPane().validate();
@@ -163,14 +170,14 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
 		protectionProgressBar.setStringPainted(true);
 		protectionProgressBar.setBorderPainted(false);
 		//
-		ano1CheckBox = new JCheckBox(model.msg.getString("confActivateCheckBox"));
+		ano1CheckBox = new JCheckBox(model.getString("confActivateCheckBox"));
 		ano1CheckBox.setForeground(Color.red);
-		ano1CheckBox.setMnemonic(model.msg.getString("confActivateCheckBoxMn").charAt(0));
+		ano1CheckBox.setMnemonic(model.getString("confActivateCheckBoxMn").charAt(0));
 		ano1CheckBox.addActionListener(this);
 
 		JPanel meterPanel = new JPanel();
 		meterPanel.setLayout( new BorderLayout() );
-		meterPanel.setBorder( new TitledBorder(model.msg.getString("meterBorder")) );
+		meterPanel.setBorder( new TitledBorder(model.getString("meterBorder")) );
 		meterLabel = new JLabel(setMeterImage(model.NOMEASURE));
 		meterPanel.add(ano1CheckBox,BorderLayout.NORTH);
 		meterPanel.add(meterLabel, BorderLayout.CENTER);
@@ -178,12 +185,12 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
 
 		JPanel detailsPanel = new JPanel();
 		detailsPanel.setLayout( new GridLayout(3,2,5,5) );
-		detailsPanel.setBorder( new TitledBorder(model.msg.getString("meterDetailsBorder")) );
-		detailsPanel.add(new JLabel(model.msg.getString("meterDetailsUsers")) );
+		detailsPanel.setBorder( new TitledBorder(model.getString("meterDetailsBorder")) );
+		detailsPanel.add(new JLabel(model.getString("meterDetailsUsers")) );
 		detailsPanel.add(userProgressBar);
-		detailsPanel.add(new JLabel(model.msg.getString("meterDetailsTraffic")) );
+		detailsPanel.add(new JLabel(model.getString("meterDetailsTraffic")) );
 		detailsPanel.add(trafficProgressBar);
-		detailsPanel.add(new JLabel(model.msg.getString("meterDetailsRisk")) );
+		detailsPanel.add(new JLabel(model.getString("meterDetailsRisk")) );
 		detailsPanel.add(protectionProgressBar);
 
 		levelPanel.add(meterPanel, BorderLayout.CENTER);
@@ -201,19 +208,19 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
 		// Listen on Port
 		JPanel portPanel = new JPanel();
 		portPanel.setLayout(new GridLayout(2,1) );
-		portPanel.setBorder( new TitledBorder(model.msg.getString("confListenerBorder")) );
+		portPanel.setBorder( new TitledBorder(model.getString("confListenerBorder")) );
 		// Line 1
 		JPanel p1 = new JPanel();
 		p1.setLayout(new BoxLayout(p1, BoxLayout.X_AXIS) );
 		p1.add(Box.createRigidArea(new Dimension(10,0)) );
-		p1.add(new JLabel(model.msg.getString("confPort")) );
+		p1.add(new JLabel(model.getString("confPort")) );
 		p1.add(Box.createRigidArea(new Dimension(5,0)) );
 		portnumberTextField = new JLabel(String.valueOf(model.portNumber));
 //		portnumberTextField.setForeground(Color.black);
 		p1.add(portnumberTextField );
 		p1.add(Box.createRigidArea(new Dimension(5,0)) );
 		p1.add(Box.createHorizontalGlue() );
-		portB = new JButton(model.msg.getString("confPortButton"));
+		portB = new JButton(model.getString("confPortButton"));
 		portB.addActionListener(this);
 		p1.add(portB);
 		portPanel.add(p1);
@@ -221,7 +228,7 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
 		JPanel p11 = new JPanel();
 		p11.setLayout(new BoxLayout(p11, BoxLayout.X_AXIS) );
 		p11.add(Box.createRigidArea(new Dimension(10,0)) );
-		p11.add(new JLabel(model.msg.getString("confStatus1")) );
+		p11.add(new JLabel(model.getString("confStatus1")) );
 		p11.add(Box.createRigidArea(new Dimension(5,0)) );
 		statusTextField1 = new JLabel("unknown");
 		p11.add(statusTextField1);
@@ -232,16 +239,16 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
 		// HTTP Proxy
 		JPanel proxyPanel = new JPanel();
 		proxyPanel.setLayout(new GridLayout(3,1) );
-		proxyPanel.setBorder( new TitledBorder(model.msg.getString("confProxyBorder")) );
+		proxyPanel.setBorder( new TitledBorder(model.getString("confProxyBorder")) );
 		// Line 1
-		proxyCheckBox = new JCheckBox(model.msg.getString("confProxyCheckBox"));
+		proxyCheckBox = new JCheckBox(model.getString("confProxyCheckBox"));
 		proxyCheckBox.addActionListener(this);
 		proxyPanel.add(proxyCheckBox );
 		// Line 2
 		JPanel p2 = new JPanel();
 		p2.setLayout(new BoxLayout(p2, BoxLayout.X_AXIS) );
 		p2.add(Box.createRigidArea(new Dimension(10,0)) );
-		p2.add(new JLabel(model.msg.getString("confProxyHost")) );
+		p2.add(new JLabel(model.getString("confProxyHost")) );
 		p2.add(Box.createRigidArea(new Dimension(5,0)) );
 		proxyhostTextField = new JLabel(model.proxyHostName);
 		// set Font in proxyCheckBox in same color as in proxyhostTextField
@@ -252,13 +259,13 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
 		JPanel p3 = new JPanel();
 		p3.setLayout(new BoxLayout(p3, BoxLayout.X_AXIS) );
 		p3.add(Box.createRigidArea(new Dimension(10,0)) );
-		p3.add(new JLabel(model.msg.getString("confProxyPort")) );
+		p3.add(new JLabel(model.getString("confProxyPort")) );
 		p3.add(Box.createRigidArea(new Dimension(5,0)) );
 		proxyportnumberTextField = new JLabel();
 		p3.add(proxyportnumberTextField );
 		p3.add(Box.createRigidArea(new Dimension(5,0)) );
 		p3.add(Box.createHorizontalGlue() );
-		httpB = new JButton(model.msg.getString("confProxyButton"));
+		httpB = new JButton(model.getString("confProxyButton"));
 		httpB.addActionListener(this);
 		p3.add(httpB);
 		proxyPanel.add(p3);
@@ -268,19 +275,19 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
 		// Activate Anonymity
 		JPanel activatePanel = new JPanel();
 		activatePanel.setLayout(new GridLayout(4,1) );
-		activatePanel.setBorder( new TitledBorder(model.msg.getString("confActivateBorder")) );
+		activatePanel.setBorder( new TitledBorder(model.getString("confActivateBorder")) );
 		// Line 1
 		JPanel p4 = new JPanel();
 		p4.setLayout(new BoxLayout(p4, BoxLayout.X_AXIS) );
 		//p4.add(Box.createRigidArea(new Dimension(10,0)) );
-		anonCheckBox = new JCheckBox(model.msg.getString("confActivateCheckBox"));
+		anonCheckBox = new JCheckBox(model.getString("confActivateCheckBox"));
 		anonCheckBox.setForeground(Color.red);
-		anonCheckBox.setMnemonic(model.msg.getString("confActivateCheckBoxMn").charAt(0));
+		anonCheckBox.setMnemonic(model.getString("confActivateCheckBoxMn").charAt(0));
 		anonCheckBox.addActionListener(this);
 		p4.add(anonCheckBox );
 		p4.add(Box.createRigidArea(new Dimension(5,0)) );
 		p4.add(Box.createHorizontalGlue() );
-		anonB = new JButton(model.msg.getString("confActivateButton"));
+		anonB = new JButton(model.getString("confActivateButton"));
 		anonB.addActionListener(this);
 		p4.add(anonB);
 		activatePanel.add(p4);
@@ -288,7 +295,7 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
 		JPanel p21 = new JPanel();
 		p21.setLayout(new BoxLayout(p21, BoxLayout.X_AXIS) );
 		p21.add(Box.createRigidArea(new Dimension(10,0)) );
-		p21.add(new JLabel(model.msg.getString("confAnonHost")) );
+		p21.add(new JLabel(model.getString("confAnonHost")) );
 		p21.add(Box.createRigidArea(new Dimension(5,0)) );
 		anonhostTextField = new JLabel(model.anonHostName);
 		p21.add(anonhostTextField);
@@ -297,7 +304,7 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
 		JPanel p31 = new JPanel();
 		p31.setLayout(new BoxLayout(p31, BoxLayout.X_AXIS) );
 		p31.add(Box.createRigidArea(new Dimension(10,0)) );
-		p31.add(new JLabel(model.msg.getString("confAnonPort")) );
+		p31.add(new JLabel(model.getString("confAnonPort")) );
 		p31.add(Box.createRigidArea(new Dimension(5,0)) );
 		anonportnumberTextField = new JLabel();
 		p31.add(anonportnumberTextField);
@@ -306,7 +313,7 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
 		JPanel p41 = new JPanel();
 		p41.setLayout(new BoxLayout(p41, BoxLayout.X_AXIS) );
 		p41.add(Box.createRigidArea(new Dimension(10,0)) );
-		p41.add(new JLabel(model.msg.getString("confStatus2")) );
+		p41.add(new JLabel(model.getString("confStatus2")) );
 		p41.add(Box.createRigidArea(new Dimension(5,0)) );
 		statusTextField2 = new JLabel("unknown");
 		p41.add(statusTextField2);
@@ -415,8 +422,8 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
     public void showInfoBox() {
         JOptionPane.showMessageDialog(
 			this, 
-			model.TITLE + "\n" + model.msg.getString("infoText") + "\n \n" + model.AUTHOR, 
-			model.msg.getString("aboutBox"),
+			model.TITLE + "\n" + model.getString("infoText") + "\n \n" + model.AUTHOR, 
+			model.getString("aboutBox"),
 			JOptionPane.INFORMATION_MESSAGE,
 			new ImageIcon(model.JAPICONFN)
 		);
@@ -453,20 +460,20 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
 			protectionProgressBar.setValue(model.currentRisk);
 			trafficProgressBar.setValue(model.trafficSituation);
 			if      (model.trafficSituation < 30) 
-				trafficProgressBar.setString(model.msg.getString("meterTrafficLow"));
+				trafficProgressBar.setString(model.getString("meterTrafficLow"));
 			else if (model.trafficSituation < 60) 
-				trafficProgressBar.setString(model.msg.getString("meterTrafficMedium")); 
+				trafficProgressBar.setString(model.getString("meterTrafficMedium")); 
 			else if (model.trafficSituation < 90) 
-				trafficProgressBar.setString(model.msg.getString("meterTrafficHigh"));
+				trafficProgressBar.setString(model.getString("meterTrafficHigh"));
 			else                                  
-				trafficProgressBar.setString(model.msg.getString("meterTrafficCongestion")); 
+				trafficProgressBar.setString(model.getString("meterTrafficCongestion")); 
 		} else {
 			userProgressBar.setValue(model.MAXPROGRESSBARVALUE);
-			userProgressBar.setString(model.msg.getString("meterNA"));
+			userProgressBar.setString(model.getString("meterNA"));
 			protectionProgressBar.setValue(model.MAXPROGRESSBARVALUE);
-			protectionProgressBar.setString(model.msg.getString("meterRiskVeryHigh"));
+			protectionProgressBar.setString(model.getString("meterRiskVeryHigh"));
 			trafficProgressBar.setValue(model.MAXPROGRESSBARVALUE);
-			trafficProgressBar.setString(model.msg.getString("meterNA"));
+			trafficProgressBar.setString(model.getString("meterNA"));
 		}
     }
 	
