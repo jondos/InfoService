@@ -281,6 +281,7 @@ public class XMLUtil
 			case Document.ATTRIBUTE_NODE:
 			{
 				newnode = doc.createAttribute(source.getNodeName());
+				newnode.setNodeValue(source.getNodeValue());
 				// Kids carry value
 				break;
 			}
