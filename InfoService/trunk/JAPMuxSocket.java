@@ -28,6 +28,7 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.net.Socket;
+import java.net.ConnectException;
 import java.io.OutputStream;
 import java.io.BufferedOutputStream;
 import java.io.DataOutputStream;
@@ -289,6 +290,7 @@ END PROTO1*/
 		private JAPKeyPool keypool;
 		private int chainlen;
 		private volatile boolean runflag;
+		private boolean bIsConnected=false;
 		
 		public final static int KEY_SIZE=16;
 		public final static int DATA_SIZE=992;
@@ -349,19 +351,26 @@ END PROTO1*/
 					}
 				catch(Exception e)
 					{
+						bIsConnected=false;
 						return -1;
 					}
+				bIsConnected=true;
 				return 0;
 			}
 
-		public synchronized int newConnection(JAPSocket s)
+		public synchronized int newConnection(JAPSocket s) throws ConnectException
 			{
-				JAPProxyConnection p=new JAPProxyConnection(s,lastChannelId,this);
-				oSocketList.put(new Integer(lastChannelId),new SocketListEntry(s));
-				JAPModel.getModel().setNrOfChannels(oSocketList.size());
-				p.start();
-				lastChannelId++;
-				return 0;
+				if(bIsConnected)
+					{
+						JAPProxyConnection p=new JAPProxyConnection(s,lastChannelId,this);
+						oSocketList.put(new Integer(lastChannelId),new SocketListEntry(s));
+						JAPModel.getModel().setNrOfChannels(oSocketList.size());
+						p.start();
+						lastChannelId++;
+						return 0;
+					}
+				else
+					throw new ConnectException("Not connected to a MIX!");
 			}
 
 		public synchronized int close(int channel)
@@ -375,6 +384,7 @@ END PROTO1*/
 		public synchronized int close()
 			{
 				runflag=false;
+				bIsConnected=false;
 				Enumeration e=oSocketList.keys();
 				while(e.hasMoreElements())
 					{
@@ -420,6 +430,7 @@ END PROTO1*/
 						catch(Exception e)
 							{
 								runflag=false;
+								bIsConnected=false;
 								JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"CAMuxSocket-run-Exception: receive");
 								break;
 							}
