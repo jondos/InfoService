@@ -6,27 +6,46 @@
  *  
  */
 
-//import java.security.Security;
-//import cryptix.jce.provider.Cryptix;
+import java.lang.NoClassDefFoundError;
+import java.awt.Frame;
 
-public /*final*/ class JAP {
+public /*final*/ class JAP extends Frame{
 
-	String   os;
-	String   vers;
+	//String   os;
+	//String   vers;
 	JAPDebug jdebug;
 	JAPModel model;
 	JAPView  view;
 	
 	JAP(String[] argv) {
-		this.vers = System.getProperty("java.version");
-		if (vers.compareTo("1.1.2") < 0) {
-			System.out.println("!!!WARNING: JAP must be run with a " +
-			 "1.1.2 or higher version VM!!!");
-		}
-		this.os = System.getProperty("os.name");
 	}
 	
 	public void startJAP() {
+		String   os;
+		String   vers;
+		vers = System.getProperty("java.version");
+		// Test for right VM....
+		if (vers.compareTo("1.1.2") < 0) 
+			{
+				show();
+				JAPAWTMsgBox.MsgBox(this,"JAP must be run with a 1.1.2 or higher version VM!","Error");
+				System.exit(0);
+			}
+		os = System.getProperty("os.name");
+		
+		//Test for Swing....
+		try
+			{
+				Object o=new javax.swing.JLabel();
+				o=null;
+			}
+		catch(NoClassDefFoundError e)
+			{
+				JAPAWTMsgBox.MsgBox(this,"SWING must be installed!","Error");
+				System.exit(0);
+			}
+		
+		
 		// Create debugger object
 		jdebug = new JAPDebug();
 		JAPDebug.setDebugType(JAPDebug.NET+JAPDebug.GUI+JAPDebug.THREAD+JAPDebug.MISC);
