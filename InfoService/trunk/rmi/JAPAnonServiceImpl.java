@@ -63,7 +63,7 @@ public class JAPAnonServiceImpl extends UnicastRemoteObject
     // ----------- local configuration ----------------------------------------
     /** @returns the port where JAP is listening at the moment */
     public int getLocalListeningPort() throws RemoteException {
-        return myJAPModel.getSocksPortNumber();
+        return -1;//myJAPModel.getSocksPortNumber();
     }
 
     /** @returns whether JAP ist actually listening locally only */
@@ -73,8 +73,8 @@ public class JAPAnonServiceImpl extends UnicastRemoteObject
 
     /** Set the port where the AnonService is locally listening */
     public boolean setLocalListeningPort(int port) throws RemoteException {
-        myJAPModel.setSocksPortNumber(port);
-        myJAPModel.setUseSocksPort(true);
+        //myJAPModel.setSocksPortNumber(port);
+        //myJAPModel.setUseSocksPort(true);
         return true;
     }
 
