@@ -25,11 +25,13 @@ OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABIL
 IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
-import java.io.*;
-import java.net.*;
-import java.text.*;
+package proxy;
+import JAPDebug;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.IOException;
 
-final class JAPDirectProxyResponse implements Runnable /*extends Thread*/
+final class DirectProxyResponse implements Runnable /*extends Thread*/
 	{
 		private int threadNumber;
     private static int threadCount;
@@ -37,7 +39,7 @@ final class JAPDirectProxyResponse implements Runnable /*extends Thread*/
     private OutputStream outputStream;
     private InputStream inputStream;
 
-    public JAPDirectProxyResponse(InputStream in, OutputStream out)
+    public DirectProxyResponse(InputStream in, OutputStream out)
     {
 			inputStream = in;
       outputStream= out;

@@ -45,7 +45,7 @@ import HTTPClient.HTTPConnection;
 import HTTPClient.HTTPResponse;
 
 import anon.AnonServer;
-
+import proxy.AnonProxy;
 /**
  * User Interface for an Mix-Cascade Monitor.
  *
@@ -291,7 +291,7 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 					e.setStatus(JAPMessages.getString("chkConnecting"));
 					tableView.repaint();
 					// create the AnonService
-					JAPAnonProxy proxyAnon=new JAPAnonProxy(listener);
+					AnonProxy proxyAnon=new AnonProxy(listener);
 					if (JAPModel.getUseFirewall()) {
 						// connect vi proxy to first mix (via ssl portnumber)
 						if (e.getSSLPort() == -1) {
@@ -318,16 +318,16 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 					nf.setMaximumFractionDigits(3);
 					e.setDelay("" + ((dtConnect==-1)?"-":nf.format((float)dtConnect/1000.F)) + " s");
 					tableView.repaint();
-					if(ret==JAPAnonProxy.E_SUCCESS) {
+					if(ret==AnonProxy.E_SUCCESS) {
 						e.setStatus(JAPMessages.getString("chkConnected"));
 					} else {
 						dtConnect=-1;
-						if (ret==JAPAnonProxy.E_BIND)  e.setStatus(JAPMessages.getString("chkBindError"));
+						if (ret==AnonProxy.E_BIND)  e.setStatus(JAPMessages.getString("chkBindError"));
 						else                             e.setStatus(JAPMessages.getString("chkConnectionError"));
 					}
 					tableView.repaint();
 					// if sucessfull perform check
-					if (ret==JAPAnonProxy.E_SUCCESS) {
+					if (ret==AnonProxy.E_SUCCESS) {
 						// send request via AnonService
 						//
 						try {

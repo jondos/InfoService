@@ -25,6 +25,12 @@ OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABIL
 IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
+package proxy;
+import JAPDebug;
+import JAPModel;
+import JAPController;
+import JAPMessages;
+import JAPUtil;
 import java.net.InetAddress ;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -42,7 +48,7 @@ import java.util.TimeZone;
 import java.text.SimpleDateFormat;
 
 
-final class JAPDirectProxy implements Runnable
+final public class DirectProxy implements Runnable
 	{
 		private volatile boolean runFlag;
 		private boolean isRunningProxy = false;
@@ -50,15 +56,13 @@ final class JAPDirectProxy implements Runnable
     private ServerSocket socketListener;
     private Thread threadRunLoop;
 		private ThreadGroup threadgroupAll;
-		private JAPController controller;
 		private boolean warnUser = true;
 
-    public JAPDirectProxy (ServerSocket s)
+    public DirectProxy (ServerSocket s)
 			{
 				socketListener=s;
 			  warnUser = true;
 				isRunningProxy = false;
-				controller=JAPController.getController();
 			}
 
 		public boolean startService()
@@ -106,7 +110,7 @@ final class JAPDirectProxy implements Runnable
 
 								if (warnUser)
 									{
-										JAPDirectConnection      doIt = new JAPDirectConnection(socket);
+										DirectConnection      doIt = new DirectConnection(socket);
 										Thread thread = new Thread (threadgroupAll,doIt);
 										thread.start();
 										warnUser=false;
@@ -115,13 +119,13 @@ final class JAPDirectProxy implements Runnable
 									{
 										if (JAPModel.getUseFirewall())
 											{
-												JAPDirectConViaProxy doIt = new JAPDirectConViaProxy (socket);
+												DirectConViaProxy doIt = new DirectConViaProxy (socket);
 												Thread thread = new Thread (threadgroupAll,doIt);
 												thread.start();
 											}
 										else
 											{
-												JAPDirectProxyConnection doIt = new JAPDirectProxyConnection (socket);
+												DirectProxyConnection doIt = new DirectProxyConnection (socket);
 												Thread thread = new Thread (threadgroupAll,doIt);
 												thread.start();
 											}
@@ -168,15 +172,13 @@ final class JAPDirectProxy implements Runnable
  *  This class is used to inform the user that he tries to
  *  send requests although anonymity mode is off.
  */
-	private final class JAPDirectConnection implements Runnable {
-		private JAPController controller;
-		private Socket s;
+	private final class DirectConnection implements Runnable {
+			private Socket s;
 		private SimpleDateFormat dateFormatHTTP;
 
-		public JAPDirectConnection(Socket s)
+		public DirectConnection(Socket s)
 			{
 				this.s = s;
-				this.controller = JAPController.getController();
 				dateFormatHTTP=new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz",Locale.US);
 				dateFormatHTTP.setTimeZone(TimeZone.getTimeZone("GMT"));
 			}
@@ -211,15 +213,13 @@ final class JAPDirectProxy implements Runnable
 /**
  *  This class is used to transfer requests via the selected proxy
  */
-	private final class JAPDirectConViaProxy implements Runnable
+	private final class DirectConViaProxy implements Runnable
 		{
-			private JAPController controller;
 			private Socket clientSocket;
 
-			public JAPDirectConViaProxy(Socket s)
+			public DirectConViaProxy(Socket s)
 				{
 					this.clientSocket = s;
-					this.controller = JAPController.getController();
 				}
 
 			public void run()
@@ -231,7 +231,7 @@ final class JAPDirectProxy implements Runnable
 							// create Socket to Server
 							Socket serverSocket = new Socket(JAPModel.getFirewallHost(),JAPModel.getFirewallPort());
 							// Response from server is transfered to client in a sepatate thread
-							JAPDirectProxyResponse pr = new JAPDirectProxyResponse(serverSocket.getInputStream(),
+							DirectProxyResponse pr = new DirectProxyResponse(serverSocket.getInputStream(),
 																																		 clientSocket.getOutputStream());
 							Thread prt = new Thread(pr);
 							prt.start();
@@ -247,7 +247,7 @@ final class JAPDirectProxy implements Runnable
 									String str=JAPUtil.readLine(inputStream);
 									str+="\r\n";
 									outputStream.write(str.getBytes());
-									str=JAPUtil.getProxyAuthorization(JAPModel.getFirewallAuthUserID(),controller.getFirewallAuthPasswd());
+									str=JAPUtil.getProxyAuthorization(JAPModel.getFirewallAuthUserID(),JAPController.getFirewallAuthPasswd());
 									outputStream.write(str.getBytes());
 								}
 							byte[] buff=new byte[1000];

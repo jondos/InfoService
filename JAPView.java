@@ -31,7 +31,7 @@ import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.plaf.basic.BasicProgressBarUI;
-import anon.JAPAnonServiceListener;
+//import anon.JAPAnonServiceListener;
 import anon.AnonServer;
 
 final class JAPView extends JFrame implements ActionListener, JAPObserver {
