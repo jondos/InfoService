@@ -243,6 +243,34 @@ public final class JAPModel
       buff.append("HttpListenerPortNumber: ");
       buff.append(m_HttpListenerPortNumber);
       buff.append("\n");
+      buff.append("HttpListenerIsLocal: ");
+      buff.append(m_bHttpListenerIsLocal);
+      buff.append("\n");
+      buff.append("InfoServiceHost: ");
+      buff.append(m_InfoServiceHostName);
+      buff.append("\n");
+      buff.append("InfoServicePort: ");
+      buff.append(m_InfoServicePortNumber);
+      buff.append("\n");
+      buff.append("UseFirewall: ");
+      buff.append(m_bUseFirewall);
+      buff.append("\n");
+      buff.append("FirewallType: ");
+      buff.append(m_FirewallType);
+      buff.append("\n");
+      buff.append("FirewallHost: ");
+      buff.append(m_FirewallHostName);
+      buff.append("\n");
+      buff.append("FirewallPort: ");
+      buff.append(m_FirewallPortNumber);
+      buff.append("\n");
+
+/*	private boolean m_bUseFirewallAuthentication   = false; //indicates whether JAP should use a UserID/Password to authenticat to the proxy
+	private String  m_FirewallAuthenticationUserID = null;  //userid for authentication
+	private String  m_FirewallAuthenticationPasswd = null;  // password --> will never be saved...
+	private boolean m_bAutoConnect                 = false; // autoconnect after program start
+	private boolean m_bMinimizeOnStartup
+  */
  /*     e.setAttribute("portNumber",Integer.toString(portNumber));
 			//e.setAttribute("portNumberSocks",Integer.toString(portSocksListener));
 			//e.setAttribute("supportSocks",(getUseSocksPort()?"true":"false"));

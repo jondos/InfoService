@@ -26,7 +26,6 @@
 
 
 package anon.server.impl;
-
 /**
 *   Provides encoding of raw bytes to base64-encoded characters, and
 *  decoding of base64 characters to raw bytes.

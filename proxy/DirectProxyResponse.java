@@ -56,7 +56,9 @@ final class DirectProxyResponse implements Runnable /*extends Thread*/
 						while((len=inputStream.read(buff))!=-1)
 							{
 								if(len>0)
-									outputStream.write(buff,0,len);
+                {
+ 									outputStream.write(buff,0,len);
+                  }
 							}
 						//-----------------------------------------------
 						outputStream.flush();
