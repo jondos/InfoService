@@ -5,14 +5,14 @@ Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
 
 	- Redistributions of source code must retain the above copyright notice,
-	  this list of conditions and the following disclaimer.
+		this list of conditions and the following disclaimer.
 
 	- Redistributions in binary form must reproduce the above copyright notice,
-	  this list of conditions and the following disclaimer in the documentation and/or
+		this list of conditions and the following disclaimer in the documentation and/or
 		other materials provided with the distribution.
 
 	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
-	  may be used to endorse or promote products derived from this software without specific
+		may be used to endorse or promote products derived from this software without specific
 		prior written permission.
 
 
@@ -38,26 +38,28 @@ import javax.swing.*;
 
 import anon.AnonServer;
 
-final public class JAPViewIconified extends JFrame implements ActionListener,JAPObserver {
+final public class JAPViewIconified extends JDialog implements ActionListener,JAPObserver {
 	private JAPController controller;
-	private Frame mainView;
+	private JAPView m_mainView;
 	private JLabel    z1, z2, z3,z4;
 	private JButton   b;
 	private JPanel p1,p2;
 	private static final Font fnt = new Font("Sans",Font.PLAIN,9);
 	public JAPViewIconified(String s) {
-		super(s);
+		super(JAPController.getView(),s,false);
+		m_mainView=JAPController.getView();
 		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPViewIconified:initializing...");
 		controller = JAPController.getController();
 		init();
 	}
 
 	public void init() {
-		if(mainView!=null)
-			setIconImage(mainView.getIconImage());
+//		if(mainView!=null)
+	//		setIconImage(mainView.getIconImage());
 		//setBackground(Color.black);
 		//setForeground(Color.blue);
-		this.setFont(fnt);
+
+		setFont(fnt);
 
 		p1 = new JPanel(new GridLayout(3/*4*/,2) );
 
@@ -89,7 +91,7 @@ final public class JAPViewIconified extends JFrame implements ActionListener,JAP
 		b = new JButton(JAPUtil.loadImageIcon(JAPConstants.ENLARGEYICONFN,true));
 		b.addActionListener(this);
 		b.setToolTipText(JAPMessages.getString("enlargeWindow"));
-	    JAPUtil.setMnemonic(b,JAPMessages.getString("iconifyButtonMn"));
+			JAPUtil.setMnemonic(b,JAPMessages.getString("iconifyButtonMn"));
 		p2.add(b);
 
 //		getContentPane().add(new JLabel(JAPUtil.loadImageIcon(JAPConstants.JAPEYEFN,true)), BorderLayout.NORTH);
@@ -111,10 +113,10 @@ final public class JAPViewIconified extends JFrame implements ActionListener,JAP
 	}
 
 	void switchBackToMainView() {
-			if(mainView==null)
+			if(m_mainView==null)
 				return;
-			this.setVisible(false);
-			mainView.setVisible(true);
+			setVisible(false);
+			m_mainView.setVisible(true);
 	}
 
 	public void actionPerformed(ActionEvent event) {
@@ -122,9 +124,6 @@ final public class JAPViewIconified extends JFrame implements ActionListener,JAP
 		if (object == b) {
 			switchBackToMainView();
 		}
-	}
-	public void registerMainView(Frame v) {
-			mainView = v;
 	}
 
 	public void valuesChanged () {
@@ -134,10 +133,10 @@ final public class JAPViewIconified extends JFrame implements ActionListener,JAP
 				z3.setText(Integer.toString(controller.getAnonServer().getNrOfActiveUsers()));
 			else
 				z3.setText(JAPMessages.getString("iconifiedViewNA"));
-        	int t=e.getTrafficSituation();
+					int t=e.getTrafficSituation();
 			if(t>-1) {
-    	    	if(t < 30)
-        			z4.setText(JAPMessages.getString("iconifiedViewMeterTrafficLow"));
+						if(t < 30)
+							z4.setText(JAPMessages.getString("iconifiedViewMeterTrafficLow"));
 				else if (t < 60)
 					z4.setText(JAPMessages.getString("iconifiedViewMeterTrafficMedium"));
 				else

@@ -1463,7 +1463,7 @@ private final class SetAnonModeAsync implements Runnable
 		// this line should never be reached
 	}
 	//---------------------------------------------------------------------
-	public void registerView(JAPView v) {
+	public void registerMainView(JAPView v) {
 			m_View=v;
 	}
 	public static JAPView getView() {

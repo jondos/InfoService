@@ -66,18 +66,24 @@ public final class MuxSocket implements Runnable
 	{
 		private SecureRandom m_SecureRandom;
 		private Dictionary m_ChannelList;
-		private DataOutputStream m_outDataStream;
+		private BufferedOutputStream m_outStream;
 		private DataInputStream m_inDataStream;
+		private byte[] m_MixPacketSend;
+		private byte[] m_MixPacketRecv;
 
 		private ProxyConnection m_ioSocket;
 
 		private	byte[] outBuff;
 		private byte[] outBuff2;
 		private ASymCipher[] m_arASymCipher;
-		private KeyPool keypool;
+		private KeyPool m_KeyPool;
 		private int m_iChainLen;
 		private volatile boolean m_bRunFlag;
 		private boolean m_bIsConnected=false;
+
+		private SymCipher m_cipherIn;
+		private SymCipher m_cipherOut;
+		private boolean m_bisCrypted;
 
 		private final static int KEY_SIZE=16;
 		private final static int DATA_SIZE=992;
@@ -93,9 +99,6 @@ public final class MuxSocket implements Runnable
 		private final static int CHANNEL_TYPE_SOCKS=1;
 
 		private final static int MAX_CHANNELS_PER_CONNECTION=50;
-
-		//private static MuxSocket ms_MuxSocket=null;
-		//private int m_RunCount=0;
 
 		private Thread threadRunLoop;
 
@@ -122,8 +125,13 @@ public final class MuxSocket implements Runnable
 				m_arASymCipher=null;
 				outBuff=new byte[DATA_SIZE];
 				outBuff2=new byte[DATA_SIZE];
+				m_MixPacketSend=new byte[PACKET_SIZE];
+				m_MixPacketRecv=new byte[PACKET_SIZE];
+				m_cipherIn=new SymCipher();
+				m_cipherOut=new SymCipher();
+				m_bisCrypted=false;
 				threadRunLoop=null;
-				keypool=KeyPool.start(log);
+				m_KeyPool=KeyPool.start(log);
 				//m_RunCount=0;
 				m_DummyTraffic=null;
 				m_TimeLastPacketSend=0;
@@ -144,9 +152,9 @@ public final class MuxSocket implements Runnable
 				m_Log=log;
 				if(m_DummyTraffic!=null)
 					m_DummyTraffic.setLogging(log);
-				if(keypool!=null)
+				if(m_KeyPool!=null)
 					{
-						keypool.setLogging(log);
+						m_KeyPool.setLogging(log);
 					}
 			}
 
@@ -202,7 +210,8 @@ public final class MuxSocket implements Runnable
 									port=anonservice.getSSLPort();
 								m_ioSocket=new ProxyConnection(m_Log,fwType,fwHost,fwPort,fwUserID,fwPasswd,host,port);
 								m_inDataStream=new DataInputStream(m_ioSocket.getInputStream());
-								m_outDataStream=new DataOutputStream(new BufferedOutputStream(m_ioSocket.getOutputStream(),PACKET_SIZE));
+								m_outStream=new BufferedOutputStream(m_ioSocket.getOutputStream(),PACKET_SIZE);
+								m_bisCrypted=false;
 							//	m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:Reading len...");
 								int len=m_inDataStream.readUnsignedShort(); //len.. unitressteing at the moment
 							//	m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:Reading m_iChainLen...");
@@ -242,10 +251,10 @@ public final class MuxSocket implements Runnable
 								m_Log.log(LogLevel.EXCEPTION,LogType.NET,"MuxSocket:Exception(2) during connection: "+e);
 								m_arASymCipher=null;
 								try{m_inDataStream.close();}catch(Exception e1){}
-								try{m_outDataStream.close();}catch(Exception e1){}
+								try{m_outStream.close();}catch(Exception e1){}
 								try{m_ioSocket.close();}catch(Exception e1){}
 								m_inDataStream=null;
-								m_outDataStream=null;
+								m_outStream=null;
 								m_ioSocket=null;
 								m_bIsConnected=false;
 								return err;
@@ -256,6 +265,17 @@ public final class MuxSocket implements Runnable
 							m_DummyTraffic.start();
 						return ErrorCodes.E_SUCCESS;
 					}
+			}
+
+		private synchronized void setEnableEncryption(boolean b)
+			{
+				m_bisCrypted=b;
+			}
+
+		private synchronized void setEncryptionKeys(byte[] keys)
+			{
+				m_cipherIn.setEncryptionKeyAES(keys);
+				m_cipherOut.setEncryptionKeyAES(keys);
 			}
 
 		/*Reads the public key from the Mixes and try to initialize the key array*/
@@ -273,7 +293,7 @@ public final class MuxSocket implements Runnable
 						Node n=elemMixProtocolVersion.getFirstChild();
 						if(n==null||n.getNodeType()!=n.TEXT_NODE)
 							return ErrorCodes.E_MIX_PROTOCOL_NOT_SUPPORTED;
-						if(!n.getNodeValue().trim().equals("0.22"))
+						if(!n.getNodeValue().trim().equals("0.2"))
 							return ErrorCodes.E_MIX_PROTOCOL_NOT_SUPPORTED;
 						Element elemMixes=(Element)root.getElementsByTagName("Mixes").item(0);
 						m_iChainLen=Integer.parseInt(elemMixes.getAttribute("count"));
@@ -290,6 +310,15 @@ public final class MuxSocket implements Runnable
 									 }
 								child=child.getNextSibling();
 							}
+						//Sending symmetric keys for Mux encryption...
+						System.arraycopy("KEYPACKET".getBytes(),0,m_MixPacketSend,6,9);
+						byte[] tmpBuff=new byte[16];
+						m_KeyPool.getKey(tmpBuff);
+						System.arraycopy(tmpBuff,0,m_MixPacketSend,15,16);
+						m_arASymCipher[0].encrypt(m_MixPacketSend,6,m_MixPacketSend,6);
+						sendMixPacket();
+						setEncryptionKeys(tmpBuff);
+						setEnableEncryption(true);
 						return ErrorCodes.E_SUCCESS;
 					}
 				catch(Exception e)
@@ -350,11 +379,19 @@ public final class MuxSocket implements Runnable
 						try
 							{
 								m_TimeLastPacketSend=System.currentTimeMillis();
-								m_outDataStream.writeInt(m_SecureRandom.nextInt());
-								m_outDataStream.writeShort(CHANNEL_DUMMY);
-								m_outDataStream.write(outBuff);
-								m_outDataStream.flush();
-								//m_iLastChannelId++;
+								//First the Channel in Network byte order
+								int channel=m_SecureRandom.nextInt();
+								m_MixPacketSend[0]=(byte)((channel>>24)&0xFF);
+								m_MixPacketSend[1]=(byte)((channel>>16)&0xFF);
+								m_MixPacketSend[2]=(byte)((channel>>8)&0xFF);
+								m_MixPacketSend[3]=(byte)((channel)&0xFF);
+								//Then the flags...
+								m_MixPacketSend[4]=(byte)((CHANNEL_DUMMY>>8)&0xFF);
+								m_MixPacketSend[5]=(byte)((CHANNEL_DUMMY)&0xFF);
+								//and then the payload (data)
+								System.arraycopy(outBuff,0,m_MixPacketSend,6,DATA_SIZE);
+								//Send it...
+								sendMixPacket();
 							}
 						catch(Exception e)
 							{
@@ -418,6 +455,7 @@ public final class MuxSocket implements Runnable
 									runStoped();
 							}
 						threadRunLoop=null;
+						m_bisCrypted=false;
 						m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:close() MuxSocket closed!");
 						return 0;
 					}
@@ -437,9 +475,19 @@ public final class MuxSocket implements Runnable
 					{
 						try
 							{
-								channel=m_inDataStream.readInt();
-								flags=m_inDataStream.readShort();
-								m_inDataStream.readFully(buff);
+								m_inDataStream.readFully(m_MixPacketRecv);
+								if(m_bisCrypted)
+									m_cipherIn.encryptAES(m_MixPacketRecv,0,m_MixPacketRecv,0,16);
+								channel=(m_MixPacketRecv[0]<<24);
+								channel|=((m_MixPacketRecv[1]<<16)&0x00FF0000);
+								channel|=((m_MixPacketRecv[2]<<8)&0x0000FF00);
+								channel|=(m_MixPacketRecv[3]&0xFF);
+								//m_inDataStream.readInt();
+								flags=	((m_MixPacketRecv[4]<<8)&0x0000FF00)|
+												((m_MixPacketRecv[5])&0xFF);
+								//m_inDataStream.readShort();
+								//m_inDataStream.readFully(buff);
+								System.arraycopy(m_MixPacketRecv,6,buff,0,DATA_SIZE);
 								m_TimeLastPacketSend=System.currentTimeMillis();
 							}
 						catch(Exception e)
@@ -523,14 +571,22 @@ public final class MuxSocket implements Runnable
 						m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:MuxSocket all channels closed...");
 						m_bIsConnected=false;
 						try{m_inDataStream.close();}catch(Exception e1){}
-						try{m_outDataStream.close();}catch(Exception e2){}
+						try{m_outStream.close();}catch(Exception e2){}
 						try{m_ioSocket.close();}catch(Exception e3){}
 						m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:MuxSocket socket closed...");
 						m_inDataStream=null;
-						m_outDataStream=null;
+						m_outStream=null;
 						m_ioSocket=null;
 						m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:All done..");
 					}
+			}
+
+		private void sendMixPacket() throws Exception
+			{
+				if(m_bisCrypted)
+					m_cipherOut.encryptAES(m_MixPacketSend,0,m_MixPacketSend,0,16);
+				m_outStream.write(m_MixPacketSend);
+				m_outStream.flush();
 			}
 
 		public synchronized int send(int channel,int type,byte[] buff,short len)
@@ -544,10 +600,18 @@ public final class MuxSocket implements Runnable
 						m_TimeLastPacketSend=System.currentTimeMillis();
 						if(buff==null&&len==0)
 							{
-								m_outDataStream.writeInt(channel);
-								m_outDataStream.writeShort(CHANNEL_CLOSE);
-								m_outDataStream.write(outBuff);
-								m_outDataStream.flush();
+								//First the Channel in Network byte order
+								m_MixPacketSend[0]=(byte)((channel>>24)&0xFF);
+								m_MixPacketSend[1]=(byte)((channel>>16)&0xFF);
+								m_MixPacketSend[2]=(byte)((channel>>8)&0xFF);
+								m_MixPacketSend[3]=(byte)((channel)&0xFF);
+								//Then the flags...
+								m_MixPacketSend[4]=(byte)((CHANNEL_CLOSE>>8)&0xFF);
+								m_MixPacketSend[5]=(byte)((CHANNEL_CLOSE)&0xFF);
+								//and then the payload (data)
+								System.arraycopy(outBuff,0,m_MixPacketSend,6,DATA_SIZE);
+								//Send it...
+								sendMixPacket();
 								return 0;
 							}
 						if(buff==null)
@@ -564,7 +628,7 @@ public final class MuxSocket implements Runnable
 
 								//Last Mix
 								entry.arCipher[m_iChainLen-1]=new SymCipher();
-								keypool.getKey(outBuff);
+								m_KeyPool.getKey(outBuff);
 								outBuff[0]&=0x7F; //RSA HACK!! (to ensure what m<n in RSA-Encrypt: c=m^e mod n)
 
 								outBuff[KEY_SIZE]=(byte)(len>>8);
@@ -585,7 +649,7 @@ public final class MuxSocket implements Runnable
 								for(int i=m_iChainLen-2;i>=0;i--)
 									{
 										entry.arCipher[i]=new SymCipher();
-										keypool.getKey(outBuff);
+										m_KeyPool.getKey(outBuff);
 										outBuff[0]&=0x7F; //RSA HACK!! (to ensure what m<n in RSA-Encrypt: c=m^e mod n)
 										entry.arCipher[i].setEncryptionKeyAES(outBuff);
 										System.arraycopy(outBuff2,0,outBuff,KEY_SIZE,size);
@@ -605,14 +669,24 @@ public final class MuxSocket implements Runnable
 									entry.arCipher[i].encryptAES(outBuff); //something throws a null pointer....
 								entry.arCipher[0].encryptAES(outBuff,0,outBuff2,0,DATA_SIZE); //something throws a null pointer....
 							}
-						m_outDataStream.writeInt(channel);
-						m_outDataStream.writeShort(channelMode);
-						m_outDataStream.write(outBuff2,0,DATA_SIZE);
-						m_outDataStream.flush();
+						//First the Channel in Network byte order
+						m_MixPacketSend[0]=(byte)((channel>>24)&0xFF);
+						m_MixPacketSend[1]=(byte)((channel>>16)&0xFF);
+						m_MixPacketSend[2]=(byte)((channel>>8)&0xFF);
+						m_MixPacketSend[3]=(byte)((channel)&0xFF);
+						//Then the flags...
+						m_MixPacketSend[4]=(byte)((channelMode>>8)&0xFF);
+						m_MixPacketSend[5]=(byte)((channelMode)&0xFF);
+						//and then the payload (data)
+						System.arraycopy(outBuff2,0,m_MixPacketSend,6,DATA_SIZE);
+						//m_outDataStream.writeInt(channel);
+						//m_outDataStream.writeShort(channelMode);
+						//m_outDataStream.write(outBuff2,0,DATA_SIZE);
+						//Send it...
+						sendMixPacket();
 						//JAPAnonService.increaseNrOfBytes(len);
 						//if(entry!=null&&entry.bIsSuspended)
 						//	return E_CHANNEL_SUSPENDED;
-
 					}
 				catch(Exception e)
 					{
@@ -623,10 +697,6 @@ public final class MuxSocket implements Runnable
 				return ErrorCodes.E_SUCCESS;
 			}
 
-	/*	public final int getChainLen()
-			{
-				return m_iChainLen;
-			}*/
 
 		public long getTimeLastPacketSend()
 			{

@@ -68,7 +68,7 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 	private JLabel				  meterLabel;
 	private JLabel	 		  	m_labelCascadeName;
 	private JPanel          m_panelMain;
-	private JButton				  m_bttnInfo, m_bttnHelp,m_bttnQuit, iconifyB,m_bttnConf;
+	private JButton				  m_bttnInfo, m_bttnHelp,m_bttnQuit, m_bttnIconify,m_bttnConf;
 	private JButton         m_bttnAnonConf;
 	private JCheckBox			  m_cbAnon;
 	private JProgressBar 		userProgressBar;
@@ -82,7 +82,7 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 	private ImageIcon[]			meterIcons;
 	private JAPHelp 			  helpWindow;
 	private JAPConf 			  m_dlgConfig;
-	private Frame				    viewIconified;
+	private JDialog				  m_ViewIconified;
 	private Object          oValueUpdateSemaphore;
 	private boolean         m_bIsIconified;
 	private String          m_Title;
@@ -145,22 +145,22 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 			m_bttnHelp = new JButton(JAPMessages.getString("helpButton"));
 			m_bttnQuit = new JButton(JAPMessages.getString("quitButton"));
 			m_bttnConf = new JButton(JAPMessages.getString("confButton"));
-			iconifyB = new JButton(JAPUtil.loadImageIcon(JAPConstants.ICONIFYICONFN,true));
-			iconifyB.setToolTipText(JAPMessages.getString("iconifyWindow"));
+			m_bttnIconify = new JButton(JAPUtil.loadImageIcon(JAPConstants.ICONIFYICONFN,true));
+			m_bttnIconify.setToolTipText(JAPMessages.getString("iconifyWindow"));
 
 			// Add real buttons
-			buttonPanel.add(iconifyB);
+			buttonPanel.add(m_bttnIconify);
 			buttonPanel.add(m_bttnInfo);
 			buttonPanel.add(m_bttnHelp);
 			buttonPanel.add(m_bttnConf);
 			buttonPanel.add(new JLabel("  "));
 			buttonPanel.add(m_bttnQuit);
-			iconifyB.addActionListener(this);
+			m_bttnIconify.addActionListener(this);
 			m_bttnConf.addActionListener(this);
 			m_bttnInfo.addActionListener(this);
 			m_bttnHelp.addActionListener(this);
 			m_bttnQuit.addActionListener(this);
-			JAPUtil.setMnemonic(iconifyB,JAPMessages.getString("iconifyButtonMn"));
+			JAPUtil.setMnemonic(m_bttnIconify,JAPMessages.getString("iconifyButtonMn"));
 			JAPUtil.setMnemonic(m_bttnConf,JAPMessages.getString("confButtonMn"));
 			JAPUtil.setMnemonic(m_bttnInfo,JAPMessages.getString("infoButtonMn"));
 			JAPUtil.setMnemonic(m_bttnHelp,JAPMessages.getString("helpButtonMn"));
@@ -573,12 +573,14 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 		//		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"GetEvent: "+event.getSource());
 				if (event.getSource() == m_bttnQuit)
 					exitProgram();
-				else if (event.getSource() == iconifyB) {
-					if(viewIconified!=null) {
-						this.setVisible(false);
-						viewIconified.setVisible(true);
+				else if (event.getSource() == m_bttnIconify)
+					{
+						if(m_ViewIconified!=null)
+							{
+								setVisible(false);
+								m_ViewIconified.setVisible(true);
+							}
 					}
-				}
 				else if (event.getSource() == m_bttnConf)
 					showConfigDialog();
 				/*else if (event.getSource() == portB)
@@ -749,8 +751,8 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 
 
 		}
-		public void registerViewIconified(Frame v) {
-			viewIconified = v;
+		public void registerViewIconified(JDialog v) {
+			m_ViewIconified = v;
 		}
 		public void channelsChanged(int c) {
 			// Nr of Channels
