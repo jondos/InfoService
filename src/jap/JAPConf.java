@@ -265,6 +265,24 @@ final class JAPConf extends JDialog
 		}
 	}
 
+
+	/**
+	 * This method overwrites the method show() from java.awt.Dialog. We need it for
+	 * creating the module savepoints. After this, we call the parent show() method.
+	 */	 
+	public void show() {
+	  /* Call the create savepoint handler of all configuration modules. Because this is
+	   * a modal dialog, every call of show() from JAPView is equal to the start of the
+	   * configuration by the user.
+	   */
+	  Enumeration confModules = m_confModules.elements();
+	  while (confModules.hasMoreElements()) {
+	    ( (AbstractJAPConfModule) (confModules.nextElement())).createSavePoint();
+	  }
+	  /* call the original method */
+	  super.show();
+	}  
+
 	protected JPanel buildPortPanel()
 	{
 		m_labelPortnumber1 = new JLabel(JAPMessages.getString("settingsPort1"));
@@ -971,7 +989,7 @@ final class JAPConf extends JDialog
 		Enumeration confModules = m_confModules.elements();
 		while (confModules.hasMoreElements())
 		{
-			( (AbstractJAPConfModule) (confModules.nextElement())).onCancelPressed();
+			( (AbstractJAPConfModule) (confModules.nextElement())).cancelPressed();
 		}
 		setVisible(false);
 	}
@@ -1141,7 +1159,7 @@ final class JAPConf extends JDialog
 		Enumeration confModules = m_confModules.elements();
 		while (confModules.hasMoreElements())
 		{
-			( (AbstractJAPConfModule) (confModules.nextElement())).onResetToDefaultsPressed();
+			( (AbstractJAPConfModule) (confModules.nextElement())).resetToDefaultsPressed();
 		}
 
 		if (loadPay)
@@ -1175,7 +1193,7 @@ final class JAPConf extends JDialog
 		Enumeration confModules = m_confModules.elements();
 		while (confModules.hasMoreElements())
 		{
-			( (AbstractJAPConfModule) (confModules.nextElement())).onOkPressed();
+			( (AbstractJAPConfModule) (confModules.nextElement())).okPressed();
 		}
 
 		if (!checkValues())
@@ -1379,7 +1397,7 @@ final class JAPConf extends JDialog
 		Enumeration confModules = m_confModules.elements();
 		while (confModules.hasMoreElements())
 		{
-			( (AbstractJAPConfModule) (confModules.nextElement())).onUpdateValues();
+			( (AbstractJAPConfModule) (confModules.nextElement())).updateValues();
 		}
 
 		if (loadPay)
