@@ -47,6 +47,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 final public class AnonServiceImpl implements AnonService
   {
+    public static final int FIREWALL_TYPE_NONE         = 0;
     public static final int FIREWALL_TYPE_HTTP         = 1;
     public static final int FIREWALL_TYPE_SOCKS        = 2;
 
@@ -63,7 +64,7 @@ final public class AnonServiceImpl implements AnonService
     protected AnonServiceImpl()
       {
         m_AnonServiceListener=new Vector();
-        m_FirewallType=FIREWALL_TYPE_HTTP;
+        m_FirewallType=FIREWALL_TYPE_NONE;
         m_FirewallHost=null;
         m_FirewallPort=-1;
         m_FirewallUserID=null;
@@ -123,7 +124,11 @@ final public class AnonServiceImpl implements AnonService
             buff[12]=(byte)(port&0xFF);
             out.write(buff,0,13);
             out.flush();
-            in.read(buff,0,12);
+            int len=12;
+            while(len>0)
+              {
+                len-=in.read(buff,0,len);
+              }
           }
         catch(Exception e)
           {
@@ -168,6 +173,8 @@ final public class AnonServiceImpl implements AnonService
         m_FirewallType=type;
         m_FirewallHost=host;
         m_FirewallPort=port;
+        if(host==null)
+          m_FirewallType=FIREWALL_TYPE_NONE;
       }
 
     public void setFirewallAuthorization(String user,String passwd)

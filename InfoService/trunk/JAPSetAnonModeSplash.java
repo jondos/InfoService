@@ -43,7 +43,7 @@ final class JAPSetAnonModeSplash implements Runnable
 				t=null;
 			}
 
-		static public void start(boolean bSetAnonMode)
+		static synchronized public void start(boolean bSetAnonMode)
 			{
 				if(oSetAnonMode==null)
 					oSetAnonMode=new JAPSetAnonModeSplash();
@@ -77,7 +77,7 @@ final class JAPSetAnonModeSplash implements Runnable
         t.start();
 			}
 
-		static public void abort()
+		static synchronized public void abort()
 			{
 				if(oSetAnonMode!=null)
 					oSetAnonMode.abort_internal();
@@ -92,6 +92,7 @@ final class JAPSetAnonModeSplash implements Runnable
 
 		public void run()
 			{
-				dlgAbort.show();
+				if(dlgAbort!=null)
+          dlgAbort.show();
 			}
 }

@@ -30,18 +30,13 @@ package anon.server.impl;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
-import java.net.Socket;
 import java.net.ConnectException;
-import java.io.OutputStream;
 import java.io.BufferedOutputStream;
 import java.io.DataOutputStream;
 import java.io.BufferedInputStream;
-import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
-import java.io.BufferedWriter;
-import java.io.Writer;
-import java.io.OutputStreamWriter;
+
 import java.io.InterruptedIOException;
 import java.lang.Integer;
 import java.util.Enumeration;
@@ -71,12 +66,8 @@ public final class MuxSocket implements Runnable
 		private DataOutputStream m_outDataStream;
 		private DataInputStream m_inDataStream;
 
-		private Socket m_ioSocket;
+		private ProxyConnection m_ioSocket;
 
-		private final static int FIREWALL_METHOD_HTTP_1_1=11;
-		private final static int FIREWALL_METHOD_HTTP_1_0=10;
-
-		private final static int[]FIREWALL_METHODS={FIREWALL_METHOD_HTTP_1_1,FIREWALL_METHOD_HTTP_1_0}; //which HTTP-Proxy methods to try
 		private	byte[] outBuff;
     private byte[] outBuff2;
 		private ASymCipher[] m_arASymCipher;
@@ -84,8 +75,6 @@ public final class MuxSocket implements Runnable
 		private int m_iChainLen;
 		private volatile boolean m_bRunFlag;
 		private boolean m_bIsConnected=false;
-
-		private static final String CRLF="\r\n";
 
 		private final static int KEY_SIZE=16;
 		private final static int DATA_SIZE=992;
@@ -192,38 +181,6 @@ public final class MuxSocket implements Runnable
 			return connectViaFirewall(host,port,null,-1,null,null);
 		}
 */
-		//Write stuff for connecting over proxy/firewall
-		// should look like this example
-		//   CONNECT www.inf.tu-dresden.de:443 HTTP/1.0
-		//   Connection: Keep-Alive
-		//   Proxy-Connection: Keep-Alive
-		//differs a little bit for HTTP/1.0 and HTTP/1.1
-		private void sendHTTPProxyCommands(int firewallMethod,Writer out,String host,int port,String user,String passwd)
-			throws Exception
-			{
-				try
-					{
-						if(firewallMethod==FIREWALL_METHOD_HTTP_1_1)
-						  out.write("CONNECT "+host+":"+Integer.toString(port)+" HTTP/1.1"+CRLF);
-						else
-						  out.write("CONNECT "+host+":"+Integer.toString(port)+" HTTP/1.0"+CRLF);
-						if(user!=null&&passwd!=null) // proxy authentication required...
-							{
-								String str=Codecs.base64Encode(user+":"+passwd);
-								out.write("Proxy-Authorization: Basic "+str+CRLF);
-							}
-						out.write("Connection: Keep-Alive"+CRLF);
-					  out.write("Keep-Alive: max=20, timeout=100"+CRLF);
-						out.write("Proxy-Connection: Keep-Alive"+CRLF);
-						out.write(CRLF);
-						out.flush();
-					}
-				catch(Exception e)
-					{
-						throw e;
-					}
-			}
-
 		//2001-02-20(HF)
 		public int connectViaFirewall(AnonServer anonservice, int fwType,String fwHost, int fwPort,String fwUserID,String fwPasswd)
 			{
@@ -231,66 +188,15 @@ public final class MuxSocket implements Runnable
 					{
 					  if(m_bIsConnected)
 							return ErrorCodes.E_ALREADY_CONNECTED;
+            int err=ErrorCodes.E_CONNECT;
             try
               {
-                String host=anonservice.getHost();
+               String host=anonservice.getHost();
                 int port=anonservice.getPort();
-                if(fwPort<0||fwHost==null||fwType==AnonServiceImpl.FIREWALL_TYPE_SOCKS)
-                  {
-                    //Connect directly to anon service
-  							    m_Log.log(LogLevel.DEBUG,LogType.NET,"MuxSocket:Try to connect directly to mix ("+host+":"+port+")");
-                    m_ioSocket=new Socket(host,port);
-                    m_ioSocket.setSoTimeout(10000); //Timout 10 second
-                    m_inDataStream=new DataInputStream(m_ioSocket.getInputStream());
-                    m_bIsConnected=true;
-                  }
-                else
-                  {
-                    //Connect via Firewall to anon service
-                    port=anonservice.getSSLPort();
-  							    m_Log.log(LogLevel.DEBUG,LogType.NET,"MuxSocket:Try to connect via Firewall ("+fwHost+":"+fwPort+") to mix ("+host+":"+port+")");
-                    m_ioSocket=new Socket(fwHost,fwPort);
-                    m_ioSocket.setSoTimeout(10000); //Timout 10 second
-                    Writer writer=new OutputStreamWriter(m_ioSocket.getOutputStream());
-                    try
-                      {
-                        sendHTTPProxyCommands(FIREWALL_METHOD_HTTP_1_1,writer,host,port,fwUserID,fwPasswd);
-                      }
-                    catch(Exception e1)
-                      {
-                        sendHTTPProxyCommands(FIREWALL_METHOD_HTTP_1_0,writer,host,port,fwUserID,fwPasswd);
-                      }
-                    m_inDataStream=new DataInputStream(m_ioSocket.getInputStream());
-                    String tmp=readLine(m_inDataStream);
-                    m_Log.log(LogLevel.DEBUG,LogType.NET,"MuxSocket:Firewall response is: "+tmp);
-                    if(tmp.indexOf("200")!=-1)
-                      {
-                        while(!(tmp=readLine(m_inDataStream)).equals(""))
- 							            m_Log.log(LogLevel.DEBUG,LogType.NET,"MuxSocket:Firewall response is: "+tmp);
-                        m_bIsConnected=true;
-                      }
-                    else
-                      m_bIsConnected=false;
-                  }
-              }
-            catch(Exception e)
-              {
-  						  m_Log.log(LogLevel.DEBUG,LogType.NET,"MuxSocket : Error(1) connection to mix: "+e.toString());
-                m_bIsConnected=false;
-              }
-						if(!m_bIsConnected)
-							{
-								//m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:Something goes wrong by trying to connect to Mix!");
-								try{m_inDataStream.close();}catch(Exception e){};
-								try{m_ioSocket.close();}catch(Exception e){};
-								m_inDataStream=null;
-								m_ioSocket=null;
-								return ErrorCodes.E_CONNECT;
-							}
-						//m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:Connected to Mix! Now starting key exchange...");
-						int err=ErrorCodes.E_CONNECT;
-            try
-							{
+                if(fwType==AnonServiceImpl.FIREWALL_TYPE_HTTP)
+                  port=anonservice.getSSLPort();
+                m_ioSocket=new ProxyConnection(m_Log,fwType,fwHost,fwPort,fwUserID,fwPasswd,host,port);
+                m_inDataStream=new DataInputStream(m_ioSocket.getInputStream());
 								m_outDataStream=new DataOutputStream(new BufferedOutputStream(m_ioSocket.getOutputStream(),PACKET_SIZE));
 							//	m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:Reading len...");
 								int len=m_inDataStream.readUnsignedShort(); //len.. unitressteing at the moment
@@ -379,25 +285,6 @@ public final class MuxSocket implements Runnable
           }
       }
 
-	  private String readLine(DataInputStream inputStream) throws Exception
-		  {
-				StringBuffer strBuff=new StringBuffer(256);
-				try
-					{
-						int byteRead = inputStream.read();
-						while (byteRead != 10 && byteRead != -1)
-							{
-								if (byteRead != 13)
-									strBuff.append((char)byteRead);
-								byteRead = inputStream.read();
-							}
-					}
-				catch (Exception e)
-					{
-						throw e;
-					}
-				return strBuff.toString();
-			}
 
 
    public Channel newChannel(int type) throws ConnectException
@@ -701,7 +588,7 @@ public final class MuxSocket implements Runnable
 				catch(Exception e)
 					{
 						//e.printStackTrace();
-						m_Log.log(LogLevel.ERR,LogType.NET,"JAPMuxSocket:send() Exception!");
+						m_Log.log(LogLevel.ERR,LogType.NET,"JAPMuxSocket:send() Exception!: "+e.getMessage());
 						return -1;
 					}
 				return 0;
