@@ -78,8 +78,8 @@ public class AICommunication extends Thread
 		{
 			System.out.println(" AICommunication Konstruktor getAIChannel wirft fehler");
 		}
-		in = new DataInputStream(c.getInputStream());
-		out = c.getOutputStream();
+		//in = new DataInputStream(c.getInputStream());
+		//out = c.getOutputStream();
 	}
 
 	public void setAnonServer(MixCascade anonServer)
