@@ -31,7 +31,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import anon.AnonChannel;
-
+import anon.server.impl.MuxSocket;
 class ChannelProxy implements AnonChannel
 {
 	private boolean m_bIsClosedByPeer = false;
@@ -84,6 +84,11 @@ class ChannelProxy implements AnonChannel
 	protected int recv(byte[] buff, int off, int len) throws IOException
 	{
 		return m_RemoteAnonService.recv(m_id, buff, off, len);
+	}
+
+	public int getOutputBlockSize()
+	{//TODO: FixMe
+		return MuxSocket.PAYLOAD_SIZE-10*MuxSocket.KEY_SIZE;
 	}
 
 	public synchronized void close()
