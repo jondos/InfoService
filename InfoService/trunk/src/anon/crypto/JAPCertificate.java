@@ -77,6 +77,9 @@ import org.w3c.dom.Text;
 import anon.util.Base64;
 import anon.util.IXMLEncodable;
 import anon.util.XMLUtil;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 
 /**
  * A certificate class.
@@ -91,19 +94,19 @@ final public class JAPCertificate extends X509CertificateStructure implements IX
    * certificates cannot verify other root certificates).
    */
   public static final int CERTIFICATE_TYPE_ROOT = 1;
-  
+
   /**
    * This is the certificate type constant for mix certificates. Mix certificates are used to
    * create or verify the signature of mix, mixcascade or cascade-state XML structures.
    */
   public static final int CERTIFICATE_TYPE_MIX = 2;
-  
+
   /**
    * This is the certificate type constant for infoservice certificates. InfoService certificates
    * are used to create or verify the signature of an infoservice XML structure.
    */
   public static final int CERTIFICATE_TYPE_INFOSERVICE = 3;
-  
+
   /**
    * This is the certificate type constant for update certificates. Update certificates are used
    * to create or verify the signature of all JAP update related structures like the minimum
@@ -244,6 +247,8 @@ final public class JAPCertificate extends X509CertificateStructure implements IX
 		}
 		catch (Exception a_e)
 		{
+			LogHolder.log(LogLevel.EXCEPTION,LogType.MISC,"Exception while createing JAPCertifcate: "+a_e.getMessage());
+			LogHolder.log(LogLevel.EXCEPTION,LogType.MISC,a_e);
 			return null;
 		}
 	}
