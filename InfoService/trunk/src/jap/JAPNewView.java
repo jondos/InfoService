@@ -117,6 +117,9 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private JProgressBar m_progressOwnTrafficActivity,m_progressOwnTrafficActivitySmall;
 	private JButton m_bttnAnonDetails;
 	private JRadioButton m_rbAnonOff,m_rbAnonOn;
+	private FlippingPanel m_flippingpanelAnon,m_flippingpanelOwnTraffic,m_flippingpanelForward;
+	private JPanel m_panelAnonService;
+	private int m_iPreferredWidth;
 
 	public JAPNewView(String s)
 	{
@@ -138,6 +141,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 	private void init()
 	{
+		m_flippingpanelOwnTraffic = new FlippingPanel(this);
+		m_flippingpanelForward = new FlippingPanel(this);
 
 		// Load Icon in upper left corner of the frame window
 		ImageIcon ii = JAPUtil.loadImageIcon(JAPConstants.IICON16FN, true);
@@ -186,31 +191,31 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		GridBagLayout gbl1 = new GridBagLayout();
 		GridBagConstraints c1 = new GridBagConstraints();
 
-		JPanel p = new JPanel(gbl1);
+		m_panelAnonService = new JPanel(gbl1);
 		m_labelAnonService = new JLabel(JAPMessages.getString("ngAnonymisierungsdienst"));
 		c1.insets = new Insets(0, 17, 0, 0);
 		c1.anchor=GridBagConstraints.WEST;
 		c1.weightx=0;
 		c1.fill=GridBagConstraints.NONE;
-		p.add(m_labelAnonService, c1);
+		m_panelAnonService.add(m_labelAnonService, c1);
 		JComboBox combo = new JComboBox();
 		combo.addItem("Dresden - Dresden");
 		c1.insets = new Insets(0, 5, 0, 0);
 		c1.fill = GridBagConstraints.HORIZONTAL;
 		c1.weightx = 1;
-		p.add(combo, c1);
+		m_panelAnonService.add(combo, c1);
 		m_bttnAnonDetails = new JButton(JAPMessages.getString("ngBttnAnonDetails"));
 		c1.gridx = 2;
 		c1.weightx = 0;
 		c1.fill = GridBagConstraints.NONE;
-		p.add(m_bttnAnonDetails, c1);
+		m_panelAnonService.add(m_bttnAnonDetails, c1);
 
 		c.weighty = 1;
 		c.gridwidth = 2;
 		c.gridy = 2;
 		c.gridx = 0;
 		c.anchor = GridBagConstraints.WEST;
-		northPanel.add(p, c);
+		northPanel.add(m_panelAnonService, c);
 
 //------------------------------------------------------
 		c.gridwidth = 2;
@@ -221,9 +226,9 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		northPanel.add(new JSeparator(), c);
 
 //------------------ Anon Panel
-		FlippingPanel my = new FlippingPanel(this);
+		m_flippingpanelAnon = new FlippingPanel(this);
 		//the panel with all the deatils....
-		p = new JPanel();
+		JPanel p = new JPanel();
 		gbl1 = new GridBagLayout();
 		c1 = new GridBagConstraints();
 		c1.anchor = GridBagConstraints.NORTHWEST;
@@ -293,7 +298,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.gridx = 3;
 		c1.anchor = GridBagConstraints.WEST;
 		p.add(p2, c1);
-		my.setFullPanel(p);
+		m_flippingpanelAnon.setFullPanel(p);
 		//the small panel
 		gbl1 = new GridBagLayout();
 		c1 = new GridBagConstraints();
@@ -329,14 +334,14 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.fill = GridBagConstraints.HORIZONTAL;
 		c1.anchor = GridBagConstraints.WEST;
 		p.add(l, c1);
-		my.setSmallPanel(p);
+		m_flippingpanelAnon.setSmallPanel(p);
 
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.weightx = 1;
 		c.anchor = GridBagConstraints.NORTHWEST;
 		c.gridy = 4;
-		my.setFlipped(true);
-		northPanel.add(my, c);
+		m_flippingpanelAnon.setFlipped(true);
+		northPanel.add(m_flippingpanelAnon, c);
 
 //------------------ Kosten Panel
 
@@ -349,7 +354,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		northPanel.add(new JSeparator(), c);
 
 //------------------ Own Traffic Panel
-		my = new FlippingPanel(this);
+		//m_flippingpanelOwnTraffic = new FlippingPanel(this);
 		//full
 		gbl1 = new GridBagLayout();
 		c1 = new GridBagConstraints();
@@ -407,7 +412,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		l = new JLabel("kByte");
 		c1.gridx = 2;
 		p.add(l, c1);
-		my.setFullPanel(p);
+		m_flippingpanelOwnTraffic.setFullPanel(p);
 
 		//small
 		gbl1 = new GridBagLayout();
@@ -441,13 +446,13 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.fill=GridBagConstraints.NONE;
 		c1.gridx = 4;
 		p.add(m_progressOwnTrafficActivitySmall, c1);
-		my.setSmallPanel(p);
+		m_flippingpanelOwnTraffic.setSmallPanel(p);
 
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.weightx = 1;
 		c.anchor = GridBagConstraints.NORTHWEST;
 		c.gridy = 6;
-		northPanel.add(my, c);
+		northPanel.add(m_flippingpanelOwnTraffic, c);
 
 //-----------------------------------------------------------
 		c.gridwidth = 2;
@@ -458,7 +463,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		northPanel.add(new JSeparator(), c);
 
 //------------------ Forwarder Panel
-		my = new FlippingPanel(this);
+		m_flippingpanelForward = new FlippingPanel(this);
 		//big view
 		gbl1 = new GridBagLayout();
 		c1 = new GridBagConstraints();
@@ -545,7 +550,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.gridx = 2;
 		p.add(l, c1);
 
-		my.setFullPanel(p);
+		m_flippingpanelForward.setFullPanel(p);
 
 		//smallview
 		gbl1 = new GridBagLayout();
@@ -573,13 +578,13 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		progress.setBorderPainted(false);
 		c1.gridx = 3;
 		p.add(progress, c1);
-		my.setSmallPanel(p);
+		m_flippingpanelForward.setSmallPanel(p);
 
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.weightx = 1;
 		c.anchor = GridBagConstraints.NORTHWEST;
 		c.gridy = 8;
-		northPanel.add(my, c);
+		northPanel.add(m_flippingpanelForward, c);
 
 //-----------------------------------------------------------
 		c.gridwidth = 2;
@@ -711,6 +716,15 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				valuesChanged();
 			}
 		});
+
+
+		Dimension d=super.getPreferredSize();
+		m_iPreferredWidth=Math.max(d.width,Math.max(m_flippingpanelOwnTraffic.getPreferredSize().width,
+										  Math.max(
+										  Math.max(m_panelAnonService.getPreferredSize().width,
+													m_flippingpanelForward.getPreferredSize().width),
+			m_flippingpanelAnon.getPreferredSize().width)));
+
 
 		setOptimalSize();
 		valuesChanged();
@@ -1411,4 +1425,10 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		JAPDll.onTraffic();
 	}
 
+	public Dimension getPreferredSize()
+	{
+		Dimension d=super.getPreferredSize();
+		d.width=m_iPreferredWidth;
+		return d;
+	}
 }
