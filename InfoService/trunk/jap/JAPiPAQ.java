@@ -5,14 +5,14 @@ Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
 
 	- Redistributions of source code must retain the above copyright notice,
-	  this list of conditions and the following disclaimer.
+		this list of conditions and the following disclaimer.
 
 	- Redistributions in binary form must reproduce the above copyright notice,
-	  this list of conditions and the following disclaimer in the documentation and/or
+		this list of conditions and the following disclaimer in the documentation and/or
 		other materials provided with the distribution.
 
 	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
-	  may be used to endorse or promote products derived from this software without specific
+		may be used to endorse or promote products derived from this software without specific
 		prior written permission.
 
 
@@ -35,14 +35,14 @@ import java.util.Locale;
 
 final public class JAPiPAQ {
 
-  static JAPView view=null;
-  public JAPiPAQ()
-    {
-    }
+	static JAPView view=null;
+	public JAPiPAQ()
+		{
+		}
 
 public void startJAP(String strJapConfFile) {
 		JAPModel.create().setSmallDisplay(true);
-    // Init Messages....
+		// Init Messages....
 		JAPMessages.init();
 		// Test (part 2) for right JVM....
 		// Create the controller object
@@ -63,33 +63,33 @@ public void startJAP(String strJapConfFile) {
 		// Add observer
 		controller.addJAPObserver(view);
 		// Register the views where they are needed
-		controller.registerView(view);
+		controller.registerMainView(view);
 		// pre-initalize anon service
 		anon.server.AnonServiceImpl.init();
-    // initially start services
+		// initially start services
 		controller.initialRun();
 	}
 
-  public JPanel getMainPanel()
-    {
-      return JAPController.getView().getMainPanel();
-    }
+	public JPanel getMainPanel()
+		{
+			return JAPController.getView().getMainPanel();
+		}
 
-  public void  setLocale(Locale l)
-    {
-      JAPController.getController().setLocale(l);
-    }
+	public void  setLocale(Locale l)
+		{
+			JAPController.getController().setLocale(l);
+		}
 
 	public static void main(String[] argv) {
-    JAPiPAQ japOniPAQ = new JAPiPAQ();
-	  japOniPAQ.startJAP(null);
-    //Test
-    //JFrame frame=new JFrame("JAP");
-    //frame.setIconImage(JAPUtil.);
-    //frame.setContentPane(japOniPAQ.getMainPanel());
-    view.setSize(240,300);
-    view.setLocation(0,0);
-    view.show();
+		JAPiPAQ japOniPAQ = new JAPiPAQ();
+		japOniPAQ.startJAP(null);
+		//Test
+		//JFrame frame=new JFrame("JAP");
+		//frame.setIconImage(JAPUtil.);
+		//frame.setContentPane(japOniPAQ.getMainPanel());
+		view.setSize(240,300);
+		view.setLocation(0,0);
+		view.show();
 	}
 
 }

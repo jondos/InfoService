@@ -137,12 +137,12 @@ class JAP extends Frame {
 		JAPDebug.setConsoleParent(view);
 		// Add observer
 		controller.addJAPObserver(view);
+		// Register the Main view where they are needed
+		controller.registerMainView(view);
 		// Create the iconified view
 		JAPViewIconified viewIconified = new JAPViewIconified(JAPConstants.TITLEOFICONIFIEDVIEW);
 		controller.addJAPObserver(viewIconified);
 		// Register the views where they are needed
-		controller.registerView(view);
-		viewIconified.registerMainView(view);
 		view.registerViewIconified(viewIconified);
 		//Init Crypto...
 //		java.security.Security.addProvider(new cryptix.jce.provider.CryptixCrypto());

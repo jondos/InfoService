@@ -130,13 +130,16 @@ public class JAPUpdate implements ActionListener,ItemListener,Runnable
 				l=new JLabel(JAPMessages.getString("updateLabelDate")+" ");
 				l.setBorder(b);
 				installedPanel.add(l);
-				l=new JLabel("22.12.2001");
+				l=new JLabel(JAPConstants.strReleaseDate);
 				l.setBorder(b);
 				installedPanel.add(l);
 				l=new JLabel("Type: ");
 				l.setBorder(b);
 				installedPanel.add(l);
-				l=new JLabel("Release");
+				if(JAPConstants.m_bReleasedVersion)
+					l=new JLabel("Release");
+				else
+					l=new JLabel("Development");
 				l.setBorder(b);
 				installedPanel.add(l);
 
