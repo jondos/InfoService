@@ -173,7 +173,10 @@ public final class JAPAnonService implements Runnable
 						m_threadRunLoop.join(5000);
 						m_threadRunLoop=null;
 					}
-				catch(Exception e){e.printStackTrace();}
+				catch(Exception e)
+					{
+						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Exception: "+e.getMessage());
+					}
 				return E_SUCCESS;
 			}
 		
