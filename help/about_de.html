@@ -1,63 +1,136 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 <HTML>
+
 <HEAD>
+
 <TITLE>&Uuml;ber Java Anon Proxy</TITLE>
+
+<LINK HREF="xhelpfrms.css" REL="stylesheet" TITLE="css" TYPE="text/css">
 </HEAD>
-<BODY>
 
-<H2>
-<FONT FACE="Geneva, Arial, Helvetica">
-<A HREF="index_de.html"><IMG SRC="japback.gif" WIDTH="65" HEIGHT="50" 
-BORDER="0" ALIGN="MIDDLE"></A>
-&Uuml;ber Java Anon Proxy
-</FONT>
-</H2>
+<BODY BGCOLOR="#FFFFFF">
 
-<FONT FACE="Geneva, Arial, Helvetica" SIZE="2">
+<H2><A HREF="index_de.html"><IMG SRC="japback.gif" WIDTH="65" HEIGHT="50" 
+BORDER="0" ALIGN="MIDDLE"></A>&Uuml;ber Java Anon Proxy</H2>
 
-<P><B>Der Java Anon Proxy (JAP)</B>
+<P>
+<B>Der Java Anon Proxy (JAP)</B>
+
+<P>
+Mit dem Java Anon Proxy (JAP) ist es m&ouml;glich, Webseiten unbeobachtbar 
+aufzurufen. Das bedeutet, da&szlig; weder der angefragte Server noch ein 
+Lauscher auf den Verbindungen mitbekommt, welcher Benutzer welche Webseite 
+aufgerufen hat.
+
+<P>
+JAP mu&szlig; auf dem Rechner des Internetnutzers installiert werden, damit 
+dieser unbeobachtbar und anonym im Internet surfen kann. Dies ist deshalb 
+erforderlich, da zur Anonymisierung alle Anfragen in das Netz und auch die 
+Anworten der Server &uuml;ber
+
+<P>
+Diese Funktion wird dadurch erreicht, da&szlig; die 
+Kommunikationsverbindung nicht direkt an den Webserver geschickt wird, 
+sondern &uuml;ber eine sogenannte <B>Mix Proxy Kaskade</B> geschickt wird. 
+Dies sind zwischengeschaltete Stationen, &uuml;ber die alle Nachrichten 
+geleitet werden.
+
+<P>
+Da viele Benutzer gleichzeitig den Anonymit&auml;tsdienst nutzen, werden 
+die Internetverbindungen jedes Benutzers unter denen aller anderen Benutzer 
+versteckt: Jeder Benutzer k&ouml;nnte der Urheber einer Verbindung gewesen 
+sein. Niemand, kein Au&szlig;enstehender, kein anderer Benutzer, nicht 
+einmal der Betreiber des Anonymit&auml;tsdienstes kann herausbekommen, 
+welche Verbindungen ein bestimmter Benutzer hat.
+
+<P>
+<B>Der Anondienst</B>
+
+<P>
+Im Regelfall werden in einem Anondienst mindestens drei Mix Proxies 
+arbeiten, die von unabh&auml;ngigen Institutionen betrieben werden und die 
+in einer <B>Selbstverpflichtung</B> erkl&auml;rt haben, da&szlig; sie weder 
+Log-Files &uuml;ber die transportierten Verbindungen speichern, noch mit 
+den anderen Mix Proxy Betreibern Daten austauschen, die dazu f&uuml;hren 
+k&ouml;nnten, da&szlig; ein Benutzer von JAP enttarnt wird.
+
+<P>
+Da jedoch keiner der zwischengeschalteten Station vollst&auml;ndig vertraut 
+werden soll, werden alle gesendeten Daten mehrfach verschl&uuml;sselt (1 
+mal pro Station).
+
+<P>
+Die Verschl&uuml;sselung der Anfragen und die Entschl&uuml;sselung der 
+Antworten erfolgt im JAP. Der Nutzer mu&szlig; nur noch seinen Browser so 
+<A HREF="config_de.html">konfigurieren</A>, da&szlig; alle WWW-Anfragen 
+&uuml;ber den JAP gesendet werden.
+
+<P>
+Die Anonymisierung der Nutzer erfolgt dadurch, da&szlig; jede Anfrage 
+mehrfach verschl&uuml;sselt &uuml;ber eine Folge von Zwischenstationen, die 
+auf dem Mix-Konzept von David Chaum basieren, gesendet werden. Da sich in 
+der endg&uuml;ltigen Version alle Nutzer gleich verhalten (gleich viele 
+Daten pro Zeiteinheit &uuml;ber die gleiche Folge von Mixen senden), sind 
+unter der Annahme, da&szlig; mindestens ein Mix nicht mit einem globalen 
+Angreifer zusammenarbeitet, die Aktionen des einzelnen Teilnehmers nicht 
+mehr erkennbar.
+
+<P>
+Unser Ziel ist es, einen Dienst zur Verf&uuml;gung zu stellen, welcher 
+diesen Anforderungen wirklich gen&uuml;gt.
+
+<P>
+<B>Achtung!</B> Die momentan vorliegende Version erreicht diese Sicherheit 
+noch nicht vollst&auml;ndig, da sich die Software noch in der Entwicklung 
+befindet! Diese Version garaniert jedoch bereits eine wesentlich 
+h&ouml;here Sicherheit , als beispielsweise Systeme die als einfache 
+Proxies arbeiten.
+
+<P>
+Die vorliegende Version sch&uuml;tzt die Anonymit&auml;t des Nutzers 
+zumindest gegen einen lokalen Angreifer (z.B. den Provider, den Webserver, 
+den Chef). Zus&auml;tzlich sch&uuml;tzt sie auch gegen uns, die 
+Betreiber eines Mixes. Je nachdem, welchen Mix wir betreiben, k&ouml;nnen 
+wir nur erfahren, welcher Teilnehmer (IP-Nummer) den Dienst nutzt 
+<B>oder</B> erfahren, welche Anfragen in das Netz gesendet werden, nicht 
+jedoch von welcher IP-Nummer eine Anfrage stammt.
+
+<P>
+Gegen einen Angreifer, der alle Leitungen des Internets &uuml;berwacht bzw. 
+den ersten <B>und</B> den letzten Mix kontrolliert, sch&uuml;tzt die 
+gegenw&auml;rtige Version noch nicht.
+
+<P>
+Folgende weiter Gr&uuml;nde haben wir, das System bereits jetzt anzubieten:
 
 <UL>
-Der JAP ist ein Programm, welches auf dem Rechner des Internetnutzers installiert werden muß, wenn dieser anonym im Internet surfen will. Dies ist deshalb erforderlich, da zur Anonymisierung alle Anfragen in das Netz und auch die Anworten der Server über zwischengeschaltete Stationen geleitet werden müssen. Da diese Stationen von vielen Nutzern gleichzeitig verwendet werden, ist eine abgehende Anfrage nicht mehr einem bestimmten Nutzer zuzuordnen. 
-<BR>
-Da jedoch keiner der zwischengeschalteten Station vollständig vertraut werden soll, werden alle gesendeten Daten mehrfach verschlüsselt (1 mal pro Station). Nur wenn die Nachricht von allen Stationen in der richtigen Reihenfolge entschlüsselt wurde, kann der Nachrichteninhalt ermittelt werden.
-<BR>
-Die Verschlüsselung der Anfragen und die Entschlüsselung der Antworten erfolgt im JAP. Der Nutzer muß nur noch seinen Browser so <A HREF="config_de.html">konfigurieren</A>, daß alle WWW-Anfragen über den JAP gesendet werden.  
+	<LI>Wir m&uuml;ssen Erfahrungen mit einen laufenden System sammeln, um noch 
+	enthaltene Fehler und die Probleme in der Praxis kennenzulernen und 
+	&uuml;berwinden zu k&ouml;nnen.
+	<LI>Um einen sicheren Dienst anbieten zu k&ouml;nnen, ben&ouml;tigt man von 
+	Anfang an eine gro&szlig;e und stabile Anonymit&auml;tsgruppe. Diese Gruppe 
+	hoffen wir bereits jetzt zu gewinnen und w&auml;hrend der Weiterentwicklung 
+	zu halten.
 </UL>
 
+<P>
+Um diese Ziele zu erreichen, ben&ouml;tigen wir Ihre Hilfe. Wir w&auml;ren 
+Ihnen dankbar, wenn Sie den Anonymisierungsdienst dauerhaft nutzen 
+w&uuml;rden und uns Ihre Probleme, Meinungen und 
+Verbesserungsvorschl&auml;ge mitteilen w&uuml;rden.
 
-<P><B>Der Anondienst</B>
+<P>
+Sie k&ouml;nnen uns unter <B>jap@inf.tu-dresden.de</B> erreichen.
 
-<UL>
-Die Anonymisierung der Nutzer erfolgt dadurch, das jede Anfrage mehrfach verschlüsselt über eine Folge von Zwischenstationen, die auf dem MIXkonzept von David Chaum basieren, gesendet werden. Da sich in der endgültigen Version alle Nutzer gleich verhalten (gleich viele Daten pro Zeiteinheit über die gleiche Folge von MIXen senden), sind unter der Annahme, daß mindestens ein MIX nicht mit einem globalen Angreifer zusammenarbeitet, die Aktionen des einzelnen Teilnehmers nicht mehr erkennbar.
-Um diese sehr hohe Anforderung an die Sicherheit erfüllen zu können, ist selbst ohne zusätzliche Erweiterungen, die bestimmte Angriffe verhindern, noch nicht ausreichend.<BR>
-Unser Ziel ist es, einen Dienst zur Verfügung zu stellen, welcher diesen Anforderungen wirklich genügt.
 <P>
-Die momentan vorliegende Version erreicht diese Sicherheit noch nicht! In dieser Version ist noch nicht einmal das MIXkonzept vollständig verwirklicht. Wir bieten diese Version jedoch an, da Sie bereits eine wesentlich höhere Sicherheit garaniert, als beispielsweise Systeme die als einfache Proxies arbeiten.
-<BR> Die vorliegende Version schützt die Anonymität des Nutzers zumindest gegen einen lokalen Angreifer (z.B. den Provider, den Webserver, den Chef ...). Zusätzlich schützt sie auch gegen uns, die Betreiber eines Mixes. Je nachdem, welchen Mix wir betreiben, können wir nur erfahren, welcher Teilnehmer (IP-Nummer) den Dienst nutzt <B>oder</B> erfahren, welche Anfragen in das Netz gesendet werden. <BR>
-Gegen einen Angreifer, der alle Leitungen des Internets überwacht bzw. den ersten <B>und</B> den letzten Mix kontrolliert, schützt die gegenwärtige Version nicht.
-<P>
-Folgende weiter Gründe haben wir, das System bereits jetzt anzubieten:
-<P>
-<li>Wir müssen Erfahrungen mit einen laufenden System sammeln, um noch enthaltene Fehler und die Probleme in der Praxis kennenzulernen und überwinden zu können.
-<li>Um einen sicheren Dienst anbieten zu können, benötigt man von Anfang an eine große und stabile Anonymitätsgruppe. Diese Gruppe hoffen wir bereits jetzt zu gewinnen und während der Weiterentwicklung zu halten.
-<P>
-Um diese Ziele zu erreichen benötigen wir Ihre Hilfe. Wir wären ihnen Dankbar, wenn Sie den Anonymisierungsdienst dauerhaft nutzen würden und uns Ihre Probleme, Meinungen und Verbesserungsvorschläge mitteilen würden.
-<P> 
 Weitere Informationen finden Sie auf unserer Projektwebseite <BR>
 <B>http://www.inf.tu-dresden.de/~hf2/anon/ </B>.
+
 <P>
-Sie können uns unter <BR>
-<B>mix@inf.tu-dresden.de</B> erreichen. 
-
-</UL>
-
-
-
-
-<P><A HREF="index_de.html"><IMG SRC="back.gif" WIDTH="65" HEIGHT="21" 
+<A HREF="index_de.html"><IMG SRC="back.gif" WIDTH="65" HEIGHT="21" 
 BORDER="0" ALIGN="MIDDLE"></A><BR>
-<IMG SRC="bl.gif" WIDTH="200" HEIGHT="1" BORDER="0"><BR>&copy; 2000 JAP Team
-
-</FONT>
+<IMG SRC="bl.gif" WIDTH="200" HEIGHT="1" BORDER="0"><BR>
+&copy; 2000 JAP Team
 </BODY>
+
 </HTML>

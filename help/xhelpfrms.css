@@ -1,0 +1,12 @@
+h1{color:blue;text-align:center;}
+h2{border:1pt solid;width:100%;background-color:white;text-align:left;color:black;padding:6pt}
+b,h3{font-weight:bold;color:maroon;}
+body{background-color:white;margin:8%;}
+h1,h2,h3,p,address,ol,ul,tr,td,th,blockquote{font-family:geneva,arial,helvetica;}
+p,address,ol,ul,tr,td,th,blockquote{font-size:10pt;}
+address{font-style:normal;}
+h2,hr{font-weight:bold;color:#006699;}
+a:link{color:blue;font-weight:bold;}
+a:visited{color:gray;font-weight:bold;}
+a:active{color:red;font-weight:bold;}
+a:hover{color:red;font-weight:bold;}
