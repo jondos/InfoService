@@ -25,35 +25,43 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package anon.test;
+package anon.crypto.test;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
+import java.security.SecureRandom;
 
-public class AllTests
+/**
+ * These are the tests for the dummy signature algorithm.
+ * @author Rolf Wendolsky
+ */
+public class DummySignatureAlgorithmTest extends AbstractSignatureAlgorithmTest
 {
 	/**
-	 * The main function.
-	 *
-	 * @param a_Args (no arguments needed)
+	 * Creates a new test case.
+	 * @param a_name name of the test case
 	 */
-	public static void main(String[] a_Args)
+	public DummySignatureAlgorithmTest(String a_name)
 	{
-		junit.swingui.TestRunner.run(AllTests.class);
+		super(a_name);
 	}
 
 	/**
-	 * Returns the test suite that combines all other tests of the project.
-	 *
-	 * @return Test The test suite that combines all other tests of the project.
+	 * This method initialises the keys and the signature algorithm.
 	 */
-	public static Test suite()
+	protected void setUp()
 	{
-		TestSuite suite = new TestSuite(AllTests.class.getName());
-		suite.addTest(anon.infoservice.test.AllTests.suite());
-		suite.addTest(anon.util.test.AllTests.suite());
-		suite.addTest(anon.crypto.test.AllTests.suite());
-		return suite;
-	}
+		DummyKeyPair keyPair;
+		SecureRandom random = new SecureRandom();
 
+		// initialise the algorithm
+		setSignatureAlgorithm(new DummySignatureAlgorithm());
+
+		// initialise the keys
+		random.setSeed(68963753);
+		for (int i = 0; i < NUMBER_OF_KEYS; i++)
+		{
+			keyPair = DummyKeyPair.getInstance(random);
+			getPublicKeys()[i] = keyPair.getPublic();
+			getPrivateKeys()[i] = keyPair.getPrivate();
+		}
+	}
 }

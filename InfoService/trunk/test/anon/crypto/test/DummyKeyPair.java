@@ -25,35 +25,76 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package anon.test;
+package anon.crypto.test;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
+import java.security.SecureRandom;
 
-public class AllTests
+import anon.crypto.AsymmetricCryptoKeyPair;
+
+/**
+ * This class creates key pairs for a dummy algorithm.
+ * @author Rolf Wendolsky
+ */
+public class DummyKeyPair extends AsymmetricCryptoKeyPair
 {
 	/**
-	 * The main function.
+	 * Creates a new dummy key pair.
 	 *
-	 * @param a_Args (no arguments needed)
+	 * @param a_privateKey a private key
 	 */
-	public static void main(String[] a_Args)
+	public DummyKeyPair(DummyPrivateKey a_privateKey)
 	{
-		junit.swingui.TestRunner.run(AllTests.class);
+		super(a_privateKey);
 	}
 
 	/**
-	 * Returns the test suite that combines all other tests of the project.
+	 * Creates a new dummy key pair.
 	 *
-	 * @return Test The test suite that combines all other tests of the project.
+	 * @param a_key the key as long value
+	 * @return a key pair or null if no key pair could be created with this long value
 	 */
-	public static Test suite()
+	public static DummyKeyPair getInstance(long a_key)
 	{
-		TestSuite suite = new TestSuite(AllTests.class.getName());
-		suite.addTest(anon.infoservice.test.AllTests.suite());
-		suite.addTest(anon.util.test.AllTests.suite());
-		suite.addTest(anon.crypto.test.AllTests.suite());
-		return suite;
+		DummyKeyPair keyPair;
+
+		try
+		{
+			keyPair = new DummyKeyPair(new DummyPrivateKey(a_key));
+		}
+		catch (Exception a_e)
+		{
+			keyPair = null;
+		}
+
+		if (!isValidKeyPair(keyPair))
+		{
+			return null;
+		}
+
+
+
+		return keyPair;
 	}
 
+	/**
+	 * Creates a new dummy key pair.
+	 *
+	 * @param a_random a random number generator
+	 * @return a key pair or null if no key pair could be created
+	 */
+	public static DummyKeyPair getInstance(SecureRandom a_random)
+	{
+		DummyKeyPair keyPair;
+
+		try
+		{
+			keyPair = getInstance(a_random.nextLong());
+		}
+		catch (Exception a_e)
+		{
+			keyPair = null;
+		}
+
+		return keyPair;
+	}
 }
