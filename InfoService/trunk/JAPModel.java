@@ -58,7 +58,7 @@ import anon.JAPAnonServiceListener;
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPModel implements JAPAnonServiceListener{
 
-	public static final String aktVersion = "00.01.012"; // Version of JAP
+	public static final String aktVersion = "00.01.013"; // Version of JAP
 
 	public  Vector            anonServerDatabase = null; // vector of all available mix cascades
 	private AnonServerDBEntry currentAnonService = null; // current anon service data object
@@ -81,7 +81,9 @@ public final class JAPModel implements JAPAnonServiceListener{
 	private boolean  mbUseProxy            = false;  // indicates whether JAP connects via a proxy or directly
 	private  String  proxyHostName         = "";     // hostname of proxy
 	private  int     proxyPortNumber       = -1;     // portnumber of proxy
-	
+	private boolean  mb_UseProxyAuthentication=false; //indicates whether JAp should use a UserID/Password to authenticat to the proxy
+	private String  m_ProxyAuthenticationUserID=null;   //userid for authentication
+	private String m_ProxyAuthenticationPasswd =null; // password --> will never be saved...	
 	public  boolean  autoConnect                 = false; // autoconnect after program start
 	private boolean  mbMinimizeOnStartup         = false; // true if programm will start minimized
 	public  boolean  canStartService             = false; // indicates if anon service can be started
@@ -616,9 +618,9 @@ public final class JAPModel implements JAPAnonServiceListener{
 					if(mInfoService!=null)
 						{
 							if(mbUseProxy)
-								mInfoService.setProxy(proxyHostName,proxyPortNumber);
+								mInfoService.setProxy(proxyHostName,proxyPortNumber,null,null);
 							else
-								mInfoService.setProxy(null,0);
+								mInfoService.setProxy(null,0,null,null);
 						}
 				}
 			notifyJAPObservers();
@@ -659,7 +661,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 					proxyHostName=host;
 					proxyPortNumber=port;
 					if(mInfoService!=null&&mbUseProxy)
-						mInfoService.setProxy(host,port);
+						mInfoService.setProxy(host,port,null,null);
 					notifyJAPObservers();
 					return true;
 				}

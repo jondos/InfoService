@@ -25,15 +25,29 @@ OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABIL
 IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY 
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
-// import java.io.PrintWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
 import java.awt.Frame;
 import java.awt.Dimension;
-
+import java.awt.GridBagLayout;
+import java.awt.GridBagConstraints;
+import java.awt.Insets;
+//import java.awt.PrintJob;
+//import java.awt.Toolkit;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import javax.swing.JButton;
 import javax.swing.JDialog;
+import javax.swing.JFileChooser;
+//import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.JScrollPane;
 import javax.swing.JScrollBar;
@@ -56,7 +70,7 @@ Koenntest Du es im Self test (main()) evtl. im Beispielcode angeben?
  * <code>JAPDebug.out(int level, int type, String txt)</code>
  * This is a Singleton!
  */
-final public class JAPDebug extends WindowAdapter{
+final public class JAPDebug extends WindowAdapter implements ActionListener{
 
 	/** No debugging */
 	public final static int NUL = 0; 
@@ -95,18 +109,19 @@ final public class JAPDebug extends WindowAdapter{
 	private final static String strLevels[]=
 		{
 			"Emergency",
-			"Alert",
+			"Alert    ",
 			"Exception",
-			"Error",
-			"Warning",
-			"Notice",
-			"Info",
-			"Debug"
+			"Error    ",
+			"Warning  ",
+			"Notice   ",
+			"Info     ",
+			"Debug    "
 		};
 //	private PrintWriter[] outStreams;
 		
 	private static JAPDebug debug; 
-
+	private static SimpleDateFormat dateFormatter;
+	
 	private JAPDebug () {
 		debugtype=GUI+NET+THREAD+MISC;
 		debuglevel=DEBUG;
@@ -114,6 +129,7 @@ final public class JAPDebug extends WindowAdapter{
 //		outStreams=new PrintWriter[8];
 //		for(int i=0;i<8;i++)
 //			outStreams[i]=new PrintWriter(System.out);
+		dateFormatter= new SimpleDateFormat ("yyyy/MM/dd-hh:mm:ss, ");
 		}
 	
 	public static JAPDebug create()
@@ -130,19 +146,20 @@ final public class JAPDebug extends WindowAdapter{
 	 *  @param type The type of the debugging message (GUI, NET, THREAD, MISC)
 	 *  @param txt   The message itself
 	 */
-	public static void out(int level, int type, String txt) {
+	public static void out(int level, int type, String txt) 
+		{
 //		if(level<0||level>JAPDebug.EMERG||txt==null||debug==null||debug.outStreams[level]==null)
 //			return;
-		if ( (level <= debug.debuglevel) && (debug.debugtype & type) !=0 ) {
-//			debug.outStreams[level].println("JAPDebug: "+txt);
-			if(!debug.m_bConsole)
-				System.err.println("["+strLevels[level]+"] "+txt);
-			else
+			if ( (level <= debug.debuglevel) && (debug.debugtype & type) !=0 ) 
 				{
-					debug.textareaConsole.append("["+strLevels[level]+"] "+txt+"\n");
+//			debug.outStreams[level].println("JAPDebug: "+txt);
+					String str="["+dateFormatter.format(new Date())+strLevels[level]+"] "+txt+"\n";
+					if(!debug.m_bConsole)
+						System.err.print(str);
+					else
+						debug.textareaConsole.append(str);
 				}
 		}
-	}
 	
 	/** Set the debugging type you like to output. To activate more than one type you simly add 
 	 *  the types like this <code>setDebugType(JAPDebug.GUI+JAPDebug.NET)</code>.
@@ -194,12 +211,14 @@ final public class JAPDebug extends WindowAdapter{
 			if(debug!=null&&debug.m_bConsole&&debug.frameConsole!=null)
 				{
 					JDialog tmpDlg=new JDialog(parent,"Debug-Console");
-					tmpDlg.getContentPane().add(new JScrollPane(debug.textareaConsole));
+					//tmpDlg.getContentPane().add(new JScrollPane(debug.textareaConsole));
+					tmpDlg.setContentPane(debug.frameConsole.getContentPane());
 					tmpDlg.addWindowListener(debug);
 					tmpDlg.setSize(debug.frameConsole.getSize());
 					tmpDlg.setLocation(debug.frameConsole.getLocation());
 					tmpDlg.setVisible(true);
 					debug.frameConsole.dispose();
+					debug.frameConsole=tmpDlg;
 				}
 		}
 	public static boolean isShowConsole()
@@ -221,7 +240,47 @@ final public class JAPDebug extends WindowAdapter{
 					frameConsole=new JDialog(parent,"Debug-Console");
 					textareaConsole=new JTextArea(null,20,30);
 					textareaConsole.setEditable(false);
-					frameConsole.getContentPane().add(new JScrollPane(textareaConsole));
+					JPanel panel=new JPanel();
+					JButton bttnSave=new JButton(JAPMessages.getString("bttnSaveAs")+"...",
+																			 JAPUtil.loadImageIcon("images/saveicon.gif",true));
+					bttnSave.setActionCommand("saveas");
+					bttnSave.addActionListener(debug);
+					JButton bttnCopy=new JButton(JAPMessages.getString("bttnCopy"),
+																			 JAPUtil.loadImageIcon("images/copyicon.gif",true));
+					bttnCopy.setActionCommand("copy");
+					bttnCopy.addActionListener(debug);
+					JButton bttnDelete=new JButton(JAPMessages.getString("bttnDelete"),
+																			 JAPUtil.loadImageIcon("images/deleteicon.gif",true));
+					bttnDelete.setActionCommand("delete");
+					bttnDelete.addActionListener(debug);
+					JButton bttnClose=new JButton(JAPMessages.getString("bttnClose"),
+																				JAPUtil.loadImageIcon("images/exiticon.gif",true));
+					bttnClose.setActionCommand("close");
+					bttnClose.addActionListener(debug);
+					GridBagLayout g=new GridBagLayout();
+					panel.setLayout(g);
+					GridBagConstraints c=new GridBagConstraints();
+					c.insets=new Insets(5,5,5,5);
+					c.gridy=0;
+					c.gridx=1;
+					c.weightx=0;
+					g.setConstraints(bttnSave,c);
+					panel.add(bttnSave);
+					c.gridx=2;
+					g.setConstraints(bttnCopy,c);
+					panel.add(bttnCopy);
+					c.gridx=3;
+					g.setConstraints(bttnDelete,c);
+					panel.add(bttnDelete);
+					c.weightx=1;
+					c.anchor=c.EAST;
+					c.fill=c.NONE;
+					c.gridx=4;
+					g.setConstraints(bttnClose,c);
+					panel.add(bttnClose);
+					//panel.add("Center",new Canvas());
+					frameConsole.getContentPane().add("North",panel);
+					frameConsole.getContentPane().add("Center",new JScrollPane(textareaConsole));
 					frameConsole.addWindowListener(this);
 					frameConsole.pack();
 					Dimension screenSize=frameConsole.getToolkit().getScreenSize();
@@ -235,6 +294,55 @@ final public class JAPDebug extends WindowAdapter{
 		public void windowClosing(WindowEvent e)
 			{
 				m_bConsole=false;
+			}
+		
+		public void actionPerformed(ActionEvent e)
+			{
+				if(e.getActionCommand().equals("saveas"))
+					{
+						saveLog();
+					}
+				else if(e.getActionCommand().equals("copy"))
+					{
+						textareaConsole.copy();
+//						PrintJob p=Toolkit.getDefaultToolkit().getPrintJob(JAPModel.getModel().getView(),"Print Log",null);
+//						debug.textareaConsole.print(p.getGraphics());
+//						p.end();
+					}
+				else if(e.getActionCommand().equals("delete"))
+					{
+						textareaConsole.setText("");
+					}
+				else
+					{
+						frameConsole.dispose();
+						m_bConsole=false;
+					}	
+			}
+		
+		private void saveLog()
+			{
+				JFileChooser fc=new JFileChooser();
+				fc.setDialogType(fc.SAVE_DIALOG);
+				int ret=fc.showDialog(debug.frameConsole,null);
+				if(ret==fc.APPROVE_OPTION)
+					{
+						File file=fc.getSelectedFile();
+						try
+							{
+								FileWriter fw=new FileWriter(file);
+								debug.textareaConsole.write(fw);
+								fw.flush();
+								fw.close();
+							}
+						catch(Exception e)
+							{
+								JOptionPane.showMessageDialog(debug.frameConsole,
+																							JAPMessages.getString("errWritingLog"),
+																							JAPMessages.getString("error"),
+																							JOptionPane.ERROR_MESSAGE);
+							}
+					}
 			}
 //	/** Set the debugging output stream. Each debug level has his on outputstream. This defaults to System.out
 //	 * @param level The debug level

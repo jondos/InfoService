@@ -48,9 +48,9 @@ final class JAPInfoService
 				model = JAPModel.getModel();
 				setInfoService(model.getInfoServiceHost(),model.getInfoServicePort());
 				if(model.getUseProxy())
-					setProxy(model.getProxyHost(),model.getProxyPort());
+					setProxy(model.getProxyHost(),model.getProxyPort(),null,null);
 				else
-					setProxy(null,0);
+					setProxy(null,0,null,null);
 			}
 			
 		public int setInfoService(String host,int port)
@@ -72,7 +72,7 @@ final class JAPInfoService
 				return 0;
 			}
 		
-		public int setProxy(String host,int port)
+		public int setProxy(String host,int port,String authUserID,String authPasswd)
 			{	
 				if(conInfoService==null)
 					return -1;

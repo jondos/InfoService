@@ -53,29 +53,31 @@ final class JAPConf extends JDialog
 	private JCheckBox    miscChB;
 	private JCheckBox    checkboxShowDebugConsole;
 	//private JAPJIntField debugLevelTextField;
-	private JSlider      sliderDebugLevel;
-	private JAPJIntField portnumberTextField;
-	private JAPJIntField portnumberTextFieldSocks;
-	private JCheckBox	 proxyCheckBox;
-	private JCheckBox	 listenerCheckBoxSocks;
-	private JCheckBox	 listenerCheckBoxIsLocal;
-	private JAPJIntField proxyportnumberTextField;
-	private JTextField   proxyhostTextField;
-	private JCheckBox	 autoConnectCheckBox;
-	private JCheckBox	 startupMinimizeCheckBox;
-	private JAPJIntField anonportnumberTextField;
-	private JAPJIntField anonsslportnumberTextField;
-	private String       anonServerName,oldAnonServerName;
-	private JTextField   anonhostTextField;
-	private JAPJIntField infoportnumberTextField;
-	private JTextField   infohostTextField;
-	private JRadioButton b1,b2,b3;
-	private JButton      fetchB;
-	private JComboBox    select;
-	private JComboBox    comboLanguage;
-	private boolean			 bIgnoreComboLanguageEvents=false;
-	private JTabbedPane  tabs;
-	private JPanel       portP, httpP, infoP, anonP, miscP;
+	private JSlider				sliderDebugLevel;
+	private JAPJIntField	portnumberTextField;
+	private JAPJIntField	portnumberTextFieldSocks;
+	private JCheckBox			proxyCheckBox;
+	private JCheckBox			listenerCheckBoxSocks;
+	private JCheckBox			listenerCheckBoxIsLocal;
+	private JAPJIntField	proxyportnumberTextField;
+	private JTextField		proxyhostTextField;
+	private JCheckBox			proxyAuthenticationCheckBox;
+	private JTextField		proxyAuthenticationUserID;
+	private JCheckBox			autoConnectCheckBox;
+	private JCheckBox			startupMinimizeCheckBox;
+	private JAPJIntField	anonportnumberTextField;
+	private JAPJIntField	anonsslportnumberTextField;
+	private String				anonServerName,oldAnonServerName;
+	private JTextField		anonhostTextField;
+	private JAPJIntField	infoportnumberTextField;
+	private JTextField		infohostTextField;
+	private JRadioButton	b1,b2,b3;
+	private JButton				fetchB;
+	private JComboBox			select;
+	private JComboBox			comboLanguage;
+	private boolean				bIgnoreComboLanguageEvents=false;
+	private JTabbedPane		tabs;
+	private JPanel				portP, httpP, infoP, anonP, miscP;
 	
 	private JFrame  parent;
 	private JAPConf japconf;
@@ -234,11 +236,20 @@ final class JAPConf extends JDialog
 						   public void actionPerformed(ActionEvent e) {
 				   OKPressed();
 				   }});
+				proxyAuthenticationCheckBox=new JCheckBox(model.getString("settingsProxyAuthenticationCheckBox"));
+				proxyAuthenticationUserID=new JTextField();
+	
+				proxyAuthenticationCheckBox.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent e) {
+						proxyAuthenticationUserID.setEnabled(proxyAuthenticationCheckBox.isSelected());
+				}});
+	
+				
 				JPanel p = new JPanel();
 				p.setLayout( new BorderLayout() );
 				p.setBorder( new TitledBorder(model.getString("settingsProxyBorder")) );
 				JPanel p1 = new JPanel();
-				p1.setLayout( new GridLayout(4,1) );
+				p1.setLayout( new GridLayout(6,1) );
 				p1.setBorder( new EmptyBorder(5,10,10,10) );
 				p1.add(proxyCheckBox);
 				p1.add(proxyhostTextField);
@@ -247,6 +258,8 @@ final class JAPConf extends JDialog
 				proxyCheckBox.setForeground(proxyPortLabel.getForeground());
 				p1.add(proxyPortLabel);
 				p1.add(proxyportnumberTextField);
+				p1.add(proxyAuthenticationCheckBox);
+				p1.add(proxyAuthenticationUserID);
 				p.add(p1, BorderLayout.NORTH);
 				return p;
 			}

@@ -56,7 +56,9 @@ public final class JAPAnonService implements Runnable
 		private String m_FirewallHost = null;
 		private int    m_FirewallPort = -1;
 		private boolean m_connectViaFirewall = false;
-		
+		private boolean m_bUseFirewallAuthentication=false;
+		private String m_FirewallAuthenticationUserID=null;
+		private String m_FirewallAuthenticationPasswd=null;
 		private Thread m_threadRunLoop=null;
 		private ServerSocket m_socketListener=null;
 		private boolean m_bDontChangeListener=false;
@@ -146,6 +148,15 @@ public final class JAPAnonService implements Runnable
 		    m_FirewallPort = port;
 		    return E_SUCCESS;
 		}
+		
+		public int setFirewallAuthentication(String userid,String passwd)
+			{
+				m_FirewallAuthenticationUserID=userid;
+				m_FirewallAuthenticationPasswd=passwd;
+				m_bUseFirewallAuthentication=true;
+				return E_SUCCESS;
+			}
+		
 		//2001-02-20(HF)
 		public int connectViaFirewall(boolean b) {
 		    m_connectViaFirewall = b;
@@ -199,7 +210,7 @@ public final class JAPAnonService implements Runnable
 				//2001-02-20(HF)
 				int connectResult = -1;
 				if (m_connectViaFirewall) {
-					connectResult = m_MuxSocket.connectViaFirewall(m_AnonHostName,m_AnonHostPort,m_FirewallHost,m_FirewallPort);
+					connectResult = m_MuxSocket.connectViaFirewall(m_AnonHostName,m_AnonHostPort,m_FirewallHost,m_FirewallPort,m_FirewallAuthenticationUserID,m_FirewallAuthenticationPasswd);
 				} else {
 					connectResult = m_MuxSocket.connect(m_AnonHostName,m_AnonHostPort);
 				}
