@@ -1,28 +1,28 @@
 /*
-Copyright (c) 2000, The JAP-Team 
+Copyright (c) 2000, The JAP-Team
 All rights reserved.
-Redistribution and use in source and binary forms, with or without modification, 
+Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
 
-	- Redistributions of source code must retain the above copyright notice, 
+	- Redistributions of source code must retain the above copyright notice,
 	  this list of conditions and the following disclaimer.
 
-	- Redistributions in binary form must reproduce the above copyright notice, 
-	  this list of conditions and the following disclaimer in the documentation and/or 
+	- Redistributions in binary form must reproduce the above copyright notice,
+	  this list of conditions and the following disclaimer in the documentation and/or
 		other materials provided with the distribution.
 
-	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors 
-	  may be used to endorse or promote products derived from this software without specific 
-		prior written permission. 
+	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
+	  may be used to endorse or promote products derived from this software without specific
+		prior written permission.
 
-	
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS 
-OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY 
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS
+OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
 AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS
 BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, 
-OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER 
-IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY 
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
 import java.net.InetAddress ;
@@ -44,7 +44,7 @@ import java.text.SimpleDateFormat;
 
 final class JAPDirectProxy implements Runnable
 	{
-		private volatile boolean runFlag; 
+		private volatile boolean runFlag;
 		private boolean isRunningProxy = false;
     private int portN;
     private ServerSocket socketListener;
@@ -53,7 +53,7 @@ final class JAPDirectProxy implements Runnable
 		private JAPModel model;
 		private boolean warnUser = true;
 
-    public JAPDirectProxy (ServerSocket s) 
+    public JAPDirectProxy (ServerSocket s)
 			{
 				socketListener=s;
 				model=JAPModel.getModel();
@@ -69,13 +69,13 @@ final class JAPDirectProxy implements Runnable
 				isRunningProxy = true;
 				return true;
 			}
-		
-    public void run() 
+
+    public void run()
 			{
 				runFlag = true;
-				try 
+				try
 					{
-						while(runFlag) 
+						while(runFlag)
 							{
 								Socket socket=null;
 								try
@@ -91,6 +91,17 @@ final class JAPDirectProxy implements Runnable
 										JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPDirectProxy:DirectProxy.run() accept socket excpetion: " +e2);
 										break;
 									}
+								try
+									{
+										socket.setSoTimeout(0); //Ensur socket is in Blocking Mode
+									}
+								catch(SocketException soex)
+									{
+										JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPDirectProxy:DirectProxy.run() Colud not set sockt to blocking mode! Excpetion: " +soex);
+										socket=null;
+										continue;
+									}
+
 								if (warnUser)
 									{
 										JAPDirectConnection      doIt = new JAPDirectConnection(socket);
@@ -98,31 +109,31 @@ final class JAPDirectProxy implements Runnable
 										thread.start();
 										warnUser=false;
 									}
-								else 
+								else
 									{
 										if (model.getUseFirewall())
 											{
-												JAPDirectConViaProxy doIt = new JAPDirectConViaProxy (socket);			
+												JAPDirectConViaProxy doIt = new JAPDirectConViaProxy (socket);
 												Thread thread = new Thread (threadgroupAll,doIt);
 												thread.start();
 											}
 										else
-											{						
-												JAPDirectProxyConnection doIt = new JAPDirectProxyConnection (socket);			
+											{
+												JAPDirectProxyConnection doIt = new JAPDirectProxyConnection (socket);
 												Thread thread = new Thread (threadgroupAll,doIt);
 												thread.start();
-											}					
+											}
 									}
 							}
 					}
-				catch (Exception e) 
+				catch (Exception e)
 					{
 						JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPDirectProxy:DirectProxy.run() Exception: " +e);
 					}
 				isRunningProxy = false;
 				JAPDebug.out(JAPDebug.INFO,JAPDebug.NET,"JAPDirect:DircetProxyServer stopped.");
 		}
-	
+
 
     public void stopService()
 			{
@@ -145,13 +156,13 @@ final class JAPDirectProxy implements Runnable
 	//	try {
 	//		socketListener.close();
 	//	}
-	//	catch(Exception e) { 
+	//	catch(Exception e) {
 	//		JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.NET,"JAPProxyServer:stopService() Exception: " +e);
 	//	}
 	//}
 
-		
-/** 
+
+/**
  *  This class is used to inform the user that he tries to
  *  send requests although anonymity mode is off.
  */
@@ -159,7 +170,7 @@ final class JAPDirectProxy implements Runnable
 		private JAPModel model;
 		private Socket s;
 		private SimpleDateFormat dateFormatHTTP;
-	
+
 		public JAPDirectConnection(Socket s)
 			{
 				this.s = s;
@@ -167,10 +178,10 @@ final class JAPDirectProxy implements Runnable
 				dateFormatHTTP=new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz",Locale.US);
 				dateFormatHTTP.setTimeZone(TimeZone.getTimeZone("GMT"));
 			}
-	
+
 		public void run()
 			{
-				try 
+				try
 					{
 						String date=dateFormatHTTP.format(new Date());
 						BufferedWriter toClient = new BufferedWriter(new OutputStreamWriter(s.getOutputStream()));
@@ -194,24 +205,24 @@ final class JAPDirectProxy implements Runnable
 					}
 			}
 	}
-	
-/** 
+
+/**
  *  This class is used to transfer requests via the selected proxy
  */
-	private final class JAPDirectConViaProxy implements Runnable 
+	private final class JAPDirectConViaProxy implements Runnable
 		{
 			private JAPModel model;
 			private Socket clientSocket;
-	
-			public JAPDirectConViaProxy(Socket s) 
+
+			public JAPDirectConViaProxy(Socket s)
 				{
 					this.clientSocket = s;
 					this.model = JAPModel.getModel();
 				}
-	
-			public void run() 
+
+			public void run()
 				{
-					try 
+					try
 						{
 							// open stream from client
 							InputStream inputStream = clientSocket.getInputStream();
@@ -220,26 +231,26 @@ final class JAPDirectProxy implements Runnable
 							// Response from server is transfered to client in a sepatate thread
 							JAPDirectProxyResponse pr = new JAPDirectProxyResponse(serverSocket, clientSocket);
 							Thread prt = new Thread(pr);
-							prt.start();				
+							prt.start();
 							// create stream --> server
 							OutputStream outputStream = serverSocket.getOutputStream();
 							// Transfer data client --> server
 							byte[] buff=new byte[1000];
 							int len;
-							while((len=inputStream.read(buff))!=-1) 
+							while((len=inputStream.read(buff))!=-1)
 								{
-									if(len>0) 
+									if(len>0)
 										{
 											outputStream.write(buff,0,len);
 										}
 								}
 							outputStream.flush();
-							prt.join(); 
+							prt.join();
 							outputStream.close();
 	    				inputStream.close();
-	    				serverSocket.close();		
-						} 
-					catch (IOException ioe) 
+	    				serverSocket.close();
+						}
+					catch (IOException ioe)
 						{
 						}
 					catch (Exception e)

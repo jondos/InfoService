@@ -1,28 +1,28 @@
 /*
-Copyright (c) 2000, The JAP-Team 
+Copyright (c) 2000, The JAP-Team
 All rights reserved.
-Redistribution and use in source and binary forms, with or without modification, 
+Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
 
-	- Redistributions of source code must retain the above copyright notice, 
+	- Redistributions of source code must retain the above copyright notice,
 	  this list of conditions and the following disclaimer.
 
-	- Redistributions in binary form must reproduce the above copyright notice, 
-	  this list of conditions and the following disclaimer in the documentation and/or 
+	- Redistributions in binary form must reproduce the above copyright notice,
+	  this list of conditions and the following disclaimer in the documentation and/or
 		other materials provided with the distribution.
 
-	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors 
-	  may be used to endorse or promote products derived from this software without specific 
-		prior written permission. 
+	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
+	  may be used to endorse or promote products derived from this software without specific
+		prior written permission.
 
-	
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS 
-OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY 
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS
+OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
 AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS
 BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, 
-OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER 
-IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY 
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
 package anon;
@@ -31,6 +31,7 @@ import java.io.InterruptedIOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import anon.JAPMuxSocket;
 import JAPDebug;
 
@@ -42,17 +43,17 @@ public final class JAPAnonService implements Runnable
 		public final static int E_INVALID_PORT=-7;
 		public final static int E_BIND=-8;
 		public final static int E_CONNECT=-10;
-		
+
 		public final static int PROTO_HTTP=1;
 		public final static int PROTO_SOCKS=2;
-		
+
 		private int m_Port=-1;
 		private int m_Protocol=-1;
 		private boolean m_bBindToLocalHostOnly=true;
 		private volatile boolean m_bIsRunning=false;
 		private static String m_AnonHostName=null;
 		private static int m_AnonHostPort=-1;
-		
+
 		private String m_FirewallHost = null;
 		private int    m_FirewallPort = -1;
 		private boolean m_connectViaFirewall = false;
@@ -63,7 +64,7 @@ public final class JAPAnonService implements Runnable
 		private ServerSocket m_socketListener=null;
 		private boolean m_bDontChangeListener=false;
 		private JAPMuxSocket m_MuxSocket=null;
-		
+
 		private static JAPAnonServiceListener m_AnonServiceListener=null;
 
 		public JAPAnonService(){}
@@ -73,7 +74,7 @@ public final class JAPAnonService implements Runnable
 				this();
 				setService(port,protocol);
 			}
-		
+
 		public JAPAnonService(int port,int protocol,boolean bLocalHostOnly)
 			{
 				this();
@@ -89,9 +90,9 @@ public final class JAPAnonService implements Runnable
 		public int setService(int port,int protocol)
 			{
 				setPort(port);
-				return setProtocol(protocol);				
+				return setProtocol(protocol);
 			}
-		
+
 		public int setService(ServerSocket listener,int protocol)
 			{
 				if(listener==null)
@@ -99,13 +100,13 @@ public final class JAPAnonService implements Runnable
 				setPort(listener.getLocalPort());
 				m_socketListener=listener;
 				m_bDontChangeListener=true;
-				return setProtocol(protocol);				
+				return setProtocol(protocol);
 			}
 
 		public int setService(int port,int protocol,boolean bLocalHostOnly)
 			{
 				setPort(port,bLocalHostOnly);
-				return setProtocol(protocol);				
+				return setProtocol(protocol);
 			}
 
 		public int setPort(int port)
@@ -113,7 +114,7 @@ public final class JAPAnonService implements Runnable
 				m_Port=port;
 				return E_SUCCESS;
 			}
-		
+
 		public int setPort(int port,boolean bLocalHostOnly)
 			{
 				m_Port=port;
@@ -126,7 +127,7 @@ public final class JAPAnonService implements Runnable
 				m_Protocol=protocol;
 				return E_SUCCESS;
 			}
-		
+
 		public static int setAnonService(String name,int port)
 			{
 				if(JAPMuxSocket.isConnected())
@@ -135,20 +136,20 @@ public final class JAPAnonService implements Runnable
 				m_AnonHostPort=port;
 				return E_SUCCESS;
 			}
-		
+
 		public int setAnonServiceListener(JAPAnonServiceListener listener)
 			{
 				m_AnonServiceListener=listener;
 				return E_SUCCESS;
 			}
-		
-		//2001-02-20(HF)	
+
+		//2001-02-20(HF)
 		public int setFirewall(String name,int port) {
 		    m_FirewallHost = name;
 		    m_FirewallPort = port;
 		    return E_SUCCESS;
 		}
-		
+
 		public int setFirewallAuthorization(String userid,String passwd)
 			{
 				m_FirewallAuthenticationUserID=userid;
@@ -156,23 +157,23 @@ public final class JAPAnonService implements Runnable
 				if(userid!=null)
 					m_bUseFirewallAuthentication=true;
 				else
-					m_bUseFirewallAuthentication=false;					
+					m_bUseFirewallAuthentication=false;
 				return E_SUCCESS;
 			}
-		
+
 		//2001-02-20(HF)
 		public int connectViaFirewall(boolean b) {
 		    m_connectViaFirewall = b;
 		    return E_SUCCESS;
 		}
-		
+
 		//Starts long time initalisation procedures in the background. Returns imedaly.
 		//You don't need to call these procedure in order to use AnonService
 		public static void init()
 			{
 				JAPKeyPool.start();
 			}
-		
+
 		public int start()
 			{
 				if(m_bIsRunning)
@@ -181,12 +182,12 @@ public final class JAPAnonService implements Runnable
 					return E_INVALID_PORT;
 				if(m_Protocol!=PROTO_HTTP&&m_Protocol!=PROTO_SOCKS)
 					return E_INVALID_PROTOCOL;
-				
+
 				if(!m_bDontChangeListener)
 					{
 						boolean bindOk=false;
 						for(int i=0;i<10;i++) //HAck for Mac!!
-							try 
+							try
 								{
 									if(m_bBindToLocalHostOnly)
 										{
@@ -207,7 +208,7 @@ public final class JAPAnonService implements Runnable
 								}
 						if(!bindOk)
 							return E_BIND;
-					}				
+					}
 				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPProxyServer:Mux starting...");
 				m_MuxSocket = JAPMuxSocket.create();
 				//2001-02-20(HF)
@@ -233,7 +234,7 @@ public final class JAPAnonService implements Runnable
 				m_threadRunLoop.start();
 				return E_SUCCESS;
 			}
-		
+
 		public int stop()
 			{
 				try
@@ -258,7 +259,7 @@ public final class JAPAnonService implements Runnable
 					}
 				return E_SUCCESS;
 			}
-		
+
 		public void run()
 			{
 				m_bIsRunning=true;
@@ -267,25 +268,35 @@ public final class JAPAnonService implements Runnable
 //				try{m_socketListener.setSoTimeout(2000);}
 //				catch(Exception e1){JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Could not set accept time out: Exception: "+e1.getMessage());}
 //				try{System.out.println(m_socketListener.getSoTimeout());}catch(Exception e5){e5.printStackTrace();}
-				try 
+				try
 					{
 						while(m_bIsRunning)
 							{
 								Socket socket=null;
 								try
-									{	
+									{
 										socket = m_socketListener.accept();
 									}
 								catch(InterruptedIOException e)
 									{
 										continue;
 									}
+								try
+									{
+										socket.setSoTimeout(0); //ensure that socket is blocking!
+									}
+								catch(SocketException soex)
+									{
+										socket=null;
+										JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPAnonService.run() Could not set non-Blocking mode for Channel-Socket! Exception: " +soex);
+										continue;
+									}
 								//2001-04-04(HF)
-								try 
+								try
 									{
 										m_MuxSocket.newConnection(new JAPSocket(socket),m_Protocol);
 									}
-								catch(Exception e) 
+								catch(Exception e)
 									{
 										JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPAnonService.run() Exception: " +e);
 									}
@@ -305,12 +316,12 @@ public final class JAPAnonService implements Runnable
 						try
 							{
 								m_socketListener.close();
-							} 
+							}
 						catch (Exception e2) {}
 						m_socketListener=null;
 					}
 			}
-		
+
 		protected static void setNrOfChannels(int channels)
 			{
 				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Notify channel listeners");
@@ -318,7 +329,7 @@ public final class JAPAnonService implements Runnable
 					m_AnonServiceListener.channelsChanged(channels);
 				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"End Notify channel listeners");
 			}
-		
+
 		protected static void increaseNrOfBytes(int bytes)
 			{
 				//JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Notify bytes listeners");
@@ -326,6 +337,6 @@ public final class JAPAnonService implements Runnable
 					m_AnonServiceListener.transferedBytes(bytes);
 				//JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"End Notify bytes listeners");
 			}
-		
-		
+
+
 	}
