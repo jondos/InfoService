@@ -1,55 +1,37 @@
 package tor.ordescription;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.net.Socket;
-//import java.util.ArrayList;
-
-import anon.util.Base64;
 
 import HTTPClient.*;
 import java.io.*;
+import java.util.Hashtable;
 import java.util.Vector;
 import logging.*;
 /*
  * Created on Mar 25, 2004
  *
- * To change the template for this generated file go to
- * Window&gt;Preferences&gt;Java&gt;Code Generation&gt;Code and Comments
  */
 
 /**
  * @author stefan
  *
- * To change the template for this generated type comment go to
- * Window&gt;Preferences&gt;Java&gt;Code Generation&gt;Code and Comments
+
  */
 public class ORList {
 
 	private Vector onionrouters;
+	private Hashtable onionroutersWithNames;
 
+	/**
+	 * constructor
+	 *
+	 */
 	public ORList()
 	{
-		this.onionrouters = new Vector();
-		ORDescription ord = new ORDescription("141.76.46.90","jap",9001,true);
-		ord.setOnionKey(Base64.decode("MIGJAoGBAL9ngMDNXrsqgL3NOk1BH5ns7wF44Uic8gGY9lgW83u49V4eHi5pggo4Cza5FQF48oFIuRhbLdhCBSxXDDwQuCuK0RiwLcJftcreZncpoWzZgS785YO5JPmr8NJYTrRV9YS1PijTWgcrh8dLI6Da+1MEwyR/nqW+HGzYqP4s5OZJAgMBAAE="));
-
-	this.onionrouters.addElement(ord);
-		ord = new ORDescription("18.244.0.188","moria1",9001,true);
-		ord.setOnionKey(Base64.decode("MIGJAoGBALiqAA5BEjA3kjhigdDvwLraYfsgzIWrOgk15sMsZ9oT+uTaw8B6gYrJO3Ld1OYtXvVMXUDsNaPwUUIWMPeNLoBJGSjMVP7ZNQ+AWA7HlAeBx9InHbru9cNU+5aCOsspQoCqgDPSQGgVUM/JtFlmo5DoLCYYCcDHYxnWRGwNRpH5AgMBAAE="));
-
-		this.onionrouters.addElement(ord);
-		ord = new ORDescription("80.190.251.24 ","ned",9001,true);
-		ord.setOnionKey(Base64.decode("MIGJAoGBAL3w7Uk/pRTyPHIopXRPGjQfKE+tMspppHvBlurAppGnTVIfmjOIuatjUV1gfLG3XAwJdBZfWgUTbazk1EDDUg++A+IVuiT+d0XgHLTAIzpPmyBX2gGv+97hsObfbXHtFbUhVvtfgRHrUIbTKs+vOry9w5XL+NWgP5IOZ1R4E39HAgMBAAE="));
-		this.onionrouters.addElement(ord);
    	}
 
-	   /** Updates the list of available ORRouters.
-		* @return true if it was ok, false otherwise
-		*/
-
-	   public boolean updateList(String server, int port)
+	 /** Updates the list of available ORRouters.
+	  * @return true if it was ok, false otherwise
+	  */
+	public boolean updateList(String server, int port)
 	{
 		try{
 		LogHolder.log(LogLevel.DEBUG,LogType.MISC,"[UPDATE OR-LIST] Starting update on "+server+":"+port);
@@ -72,14 +54,41 @@ public class ORList {
 		return false;
 	}
 
+	/**
+	 * returns a List of all onionrouters
+	 * @return
+	 * List of ORDescriptions
+	 */
 	public Vector getList()
 	{
 		return this.onionrouters;
 	}
 
+	/**
+	 * returns a ORDescription to the given ORName
+	 * @param name
+	 * ORName
+	 * @return
+	 * ORDescription if the OR exist, null else
+	 */
+	public ORDescription getORDescription(String name)
+	{
+		if(this.onionroutersWithNames.containsKey(name))
+		{
+			return (ORDescription)this.onionroutersWithNames.get(name);
+		}
+		return null;
+	}
+
+	/**
+	 * parses the document and creates a list with all ORDescriptions
+	 * @param strDocument
+	 * @throws Exception
+	 */
 	private void parseDocument(String strDocument) throws Exception
 	{
 		Vector ors=new Vector();
+		Hashtable orswn = new Hashtable();
 		LineNumberReader reader=new LineNumberReader(new StringReader(strDocument));
 		for(;;)
 		{
@@ -94,11 +103,13 @@ public class ORList {
 				if(ord!=null)
 				{
 					ors.addElement(ord);
+					orswn.put(ord.getName(),ord);
 					LogHolder.log(LogLevel.DEBUG,LogType.MISC,"Added: "+ord);
 				}
 			}
 		}
-		onionrouters=ors;
+		this.onionrouters=ors;
+		this.onionroutersWithNames = orswn;
 	}
 }
 

@@ -1,27 +1,17 @@
 /*
  * Created on May 9, 2004
- *
- * To change the template for this generated file go to
- * Window&gt;Preferences&gt;Java&gt;Code Generation&gt;Code and Comments
  */
 package tor;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.InetAddress;
 
-import tor.cells.Cell;
 import tor.cells.RelayCell;
 import tor.util.helper;
 
-import anon.AnonChannel;
 
 /**
  * @author stefan
- *
- * To change the template for this generated type comment go to
- * Window&gt;Preferences&gt;Java&gt;Code Generation&gt;Code and Comments
  */
 public class TorSocksChannel extends TorChannel
 {
@@ -36,6 +26,14 @@ public class TorSocksChannel extends TorChannel
 	private int status;
 	private byte[] data; //buffer for socks protocol headers
 
+	/**
+	 * constructor
+	 * @param streamID
+	 * streamID for this stream
+	 * @param circuit
+	 * circuit where this stream belongs to
+	 * @throws IOException
+	 */
 	public TorSocksChannel(int streamID, Circuit circuit) throws IOException
 	{
 		super(streamID, circuit);
@@ -106,7 +104,7 @@ public class TorSocksChannel extends TorChannel
 								addr = InetAddress.getByName("" + (this.data[4] & 0xFF) + "." +
 									(this.data[5] & 0xFF) + "." + (this.data[6] & 0xFF) + "." +
 									(this.data[7] & 0xFF));
-								port = ( (this.data[7] & 0xFF) << 8) | (this.data[8] & 0xFF);
+								port = ( (this.data[8] & 0xFF) << 8) | (this.data[9] & 0xFF);
 							}
 							break;
 						}
@@ -152,41 +150,7 @@ public class TorSocksChannel extends TorChannel
 								//	connect
 								case 1:
 								{
-									byte[] payload = ("" + addr.getHostAddress() + ":" + port).getBytes();
-									payload = helper.conc(payload, new byte[1]);
-									RelayCell cell = new RelayCell(circuit.getCircID(), RelayCell.RELAY_BEGIN,
-										streamID, payload);
-									Cell c;
-									try
-									{
-										circuit.send(cell);
-										c = circuit.read(streamID);
-									}
-									catch (Exception ex)
-									{
-										throw new IOException(ex.getMessage());
-									}
-
-									if (c instanceof RelayCell)
-									{
-										cell = (RelayCell) c;
-										if (cell.getRelayCommand() == RelayCell.RELAY_CONNECTED)
-										{
-											socksAnswer = helper.conc(new byte[]
-												{0x05, 0x00, 0x00}
-												, helper.copybytes(this.data, 3, this.data.length - 3));
-											recv(socksAnswer,0,socksAnswer.length);
-											this.data = new byte[0];
-											this.status = DATA_MODE;
-											start();
-											return;
-										}
-									}
-									socksAnswer = helper.conc(new byte[]
-										{0x05, 0x04, 0x00}
-										, helper.copybytes(this.data, 3, this.data.length - 3));
-									this.data = new byte[0];
-									this.close();
+									this.connect(addr,port);
 
 									break;
 								}
@@ -219,4 +183,41 @@ public class TorSocksChannel extends TorChannel
 		}
 
 	}
+	
+	public void dispatchCell(RelayCell cell)
+	{
+		if(this.status == SOCKS_WAIT_FOR_REQUEST)
+		{
+			if(cell!=null)
+			{
+				if(cell.getRelayCommand()==RelayCell.RELAY_CONNECTED)
+				{
+					socksAnswer = helper.conc(new byte[]
+						{0x05, 0x00, 0x00}
+						, helper.copybytes(this.data, 3, this.data.length - 3));
+					try
+					{
+						recv(socksAnswer,0,socksAnswer.length);
+					} catch (Exception ex)
+					{
+						this.error = true;
+						//TODO : Handle Exception
+					}
+					this.data = new byte[0];
+					this.status = DATA_MODE;
+					this.opened = true;
+					return;
+				}
+			}
+			socksAnswer = helper.conc(new byte[]
+				{0x05, 0x04, 0x00}
+				, helper.copybytes(this.data, 3, this.data.length - 3));
+			this.data = new byte[0];
+			this.close();
+
+			
+		}
+		super.dispatchCell(cell);
+	}
+
 }
