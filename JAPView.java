@@ -111,14 +111,7 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 
 	private void init()
 		{
-			try
-				{
-					UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
-				}
-			catch (Exception e)
-				{
-					JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.GUI,"JAPView: "+e);
-				}
+			
 	    // Load Icon in upper left corner of the frame window
 	    ImageIcon ii=JAPUtil.loadImageIcon(model.IICON16FN,true);
 	    if(ii!=null)
@@ -132,8 +125,13 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 			// Load Images for "Anonymity Meter"
 	    loadMeterIcons();
 	    // "NORTH": Image
-	    ImageIcon northImage = JAPUtil.loadImageIcon(model.getString("northPath"),true);
+	    ImageIcon northImage = JAPUtil.loadImageIcon(model.getString("northPath"),true);		
 	    JLabel northLabel = new JLabel(northImage);
+		JPanel northPanel = new JPanel();
+		northPanel.setLayout(new BoxLayout(northPanel, BoxLayout.X_AXIS) );
+		northPanel.add(northLabel);
+		northPanel.add(Box.createHorizontalGlue());
+		
 	    // "West": Image
 	    ImageIcon westImage = JAPUtil.loadImageIcon(model.getString("westPath"),true);;
 	    JLabel westLabel = new JLabel(westImage);
@@ -175,7 +173,8 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 			// add Components to Frame
 			getContentPane().setBackground(buttonPanel.getBackground());
 			getContentPane().add(buttonPanel, BorderLayout.SOUTH);
-			getContentPane().add(northLabel, BorderLayout.NORTH);
+//			getContentPane().add(northLabel, BorderLayout.NORTH);
+			getContentPane().add(northPanel, BorderLayout.NORTH);
 			getContentPane().add(westLabel, BorderLayout.WEST);
 			getContentPane().add(new JLabel("  "), BorderLayout.EAST); //Spacer
 			getContentPane().add(tabs, BorderLayout.CENTER);
@@ -272,19 +271,57 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 		meterPanel.add(p41/*ano1CheckBox*/,BorderLayout.NORTH);
 		meterPanel.add(meterLabel, BorderLayout.CENTER);
 
+		// details panel
 		JPanel detailsPanel = new JPanel();
-		detailsPanel.setLayout( new GridLayout(3,2,5,5) );
-		detailsPanel.setBorder( new TitledBorder(model.getString("meterDetailsBorder")) );
 		m_labelCascadeName = new JLabel();
-		detailsPanel.add(new JLabel(model.getString("meterDetailsName")) );
+		JLabel labelMeterDetailsName    = new JLabel(model.getString("meterDetailsName"));		
+		JLabel labelMeterDetailsUser    = new JLabel(model.getString("meterDetailsUsers"));
+		JLabel labelMeterDetailsTraffic = new JLabel(model.getString("meterDetailsTraffic"));
+		JLabel labelMeterDetailsRisk    = new JLabel(model.getString("meterDetailsRisk"));
+		GridBagLayout g = new GridBagLayout();
+		detailsPanel.setLayout( g );
+		detailsPanel.setBorder( new TitledBorder(model.getString("meterDetailsBorder")) );
+		GridBagConstraints c = new GridBagConstraints();
+		c.anchor=c.NORTHWEST;
+		c.anchor=c.NORTHWEST;
+		c.fill=GridBagConstraints.HORIZONTAL;
+		Insets normInsets = new Insets(0,0,8,0);
+		c.insets=normInsets;
+		c.gridwidth=1;
+		c.weightx=1;
+		c.weighty=0;
+		c.gridx=0;
+		c.gridy=0;
+		g.setConstraints(labelMeterDetailsName,c);
+		detailsPanel.add(labelMeterDetailsName);
+		c.gridx=1;
+		g.setConstraints(m_labelCascadeName,c);
 		detailsPanel.add(m_labelCascadeName);
-		detailsPanel.add(new JLabel(model.getString("meterDetailsUsers")) );
+		c.gridx=0;
+		c.gridy=1;
+		g.setConstraints(labelMeterDetailsUser,c);
+		detailsPanel.add(labelMeterDetailsUser);
+		c.gridx=1;
+		g.setConstraints(userProgressBar,c);
 		detailsPanel.add(userProgressBar);
-		detailsPanel.add(new JLabel(model.getString("meterDetailsTraffic")) );
+		c.gridx=0;
+		c.gridy=2;
+		g.setConstraints(labelMeterDetailsTraffic,c);
+		detailsPanel.add(labelMeterDetailsTraffic);
+		c.gridx=1;
+		g.setConstraints(trafficProgressBar,c);
 		detailsPanel.add(trafficProgressBar);
-//		detailsPanel.add(new JLabel(model.getString("meterDetailsRisk")) );
+		normInsets = new Insets(0,0,0,0);
+		c.insets=normInsets;
+		c.gridx=0;
+		c.gridy=3;
+		g.setConstraints(labelMeterDetailsRisk,c);
+//		detailsPanel.add(labelMeterDetailsRisk);
+		c.gridx=1;
+		g.setConstraints(protectionProgressBar,c);
 //		detailsPanel.add(protectionProgressBar);
-
+				
+		// Add all panels to level panel
 		levelPanel.add(ownTrafficPanel, BorderLayout.NORTH);
 		levelPanel.add(meterPanel, BorderLayout.CENTER);
 		levelPanel.add(detailsPanel, BorderLayout.SOUTH);

@@ -58,7 +58,7 @@ class JAP extends Frame{
 				}
 		}
 
-	/** Initialize and starts the JAP.
+	/** Initializes and starts the JAP.
 	 */
 	void startJAP() {
 		final String  msg  = "JAP must run with a 1.1.3 or higher version Java!\nYou will find more information at the JAP webpage!\nYour Java Version: ";
@@ -66,80 +66,68 @@ class JAP extends Frame{
 		String vendor      = System.getProperty("java.vendor");
 		String os          = System.getProperty("os.name");
 		String mrjVersion  = System.getProperty("mrj.version"); //Macintosh Runtime for Java (MRJ) on Mac OS
-
-		// Test for right VM....
-		if (javaVersion.compareTo("1.0.2") <= 0)
-			{
+		// Test (part 1) for right JVM
+		if (javaVersion.compareTo("1.0.2") <= 0) {
+			System.out.println(msg+javaVersion);
+			System.exit(0);
+		}
+		// Init Messages....
+		JAPMessages.init();
+		// Test (part 2) for right JVM....
+		if(vendor.startsWith("Transvirtual"))  {  // Kaffe
+			if (javaVersion.compareTo("1.0.5") <= 0) {
+				JAPAWTMsgBox.MsgBox(this,JAPMessages.getString("errorNeedNewerJava"),JAPMessages.getString("error"));
+				System.exit(0);
+			}
+		} else {
+			if (javaVersion.compareTo("1.0.2") <= 0) {
 				System.out.println(msg+javaVersion);
 				System.exit(0);
 			}
-
-		//Init Messages....
-		JAPMessages.init();
-
-		if(vendor.startsWith("Transvirtual")) //Kaffe
-			{
-				if (javaVersion.compareTo("1.0.5") <= 0)
-					{
-						JAPAWTMsgBox.MsgBox(this,JAPMessages.getString("errorNeedNewerJava"),JAPMessages.getString("error"));
-						System.exit(0);
-					}
-			}
-		else
-			{
-				if (javaVersion.compareTo("1.0.2") <= 0)
-					{
-						System.out.println(msg+javaVersion);
-						System.exit(0);
-					}
-				if (javaVersion.compareTo("1.1.2") <= 0)
-					{
-						JAPAWTMsgBox.MsgBox(this,JAPMessages.getString("errorNeedNewerJava"),JAPMessages.getString("error"));
-						System.exit(0);
-					}
-			}
-
-
-
-		// Show splash screen
-		JAPSplash splash = new JAPSplash(this);
-
-		//Test for Swing....
-		try
-			{
-				Object o=new javax.swing.JLabel();
-				o=null;
-			}
-		catch(NoClassDefFoundError e)
-			{
-				JAPAWTMsgBox.MsgBox(this,JAPMessages.getString("errorSwingNotInstalled"),JAPMessages.getString("error"));
+			if (javaVersion.compareTo("1.1.2") <= 0) {
+				JAPAWTMsgBox.MsgBox(this,JAPMessages.getString("errorNeedNewerJava"),JAPMessages.getString("error"));
 				System.exit(0);
 			}
+		}
+		// Show splash screen
+		JAPSplash splash = new JAPSplash(this);
+		//Test for Swing
+		try {
+			Object o=new javax.swing.JLabel();
+			o=null;
+		} catch(NoClassDefFoundError e) {
+			JAPAWTMsgBox.MsgBox(this,JAPMessages.getString("errorSwingNotInstalled"),JAPMessages.getString("error"));
+			System.exit(0);
+		}
 		// Create the model object
 		JAPModel model = JAPModel.createModel();
-
 		// Create debugger object
 		JAPDebug.create();
 		JAPDebug.setDebugType(JAPDebug.NET+JAPDebug.GUI+JAPDebug.THREAD+JAPDebug.MISC);
 		JAPDebug.setDebugLevel(JAPDebug.WARNING);
 		// load settings from config file
 		model.load();
-
-
 		// Output some information about the system
 		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAP:Welcome! This is version "+model.aktVersion+" of JAP.");
 		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAP:Java "+javaVersion+" running on "+os+".");
 		if (mrjVersion != null)
 			JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAP:MRJ Version is "+mrjVersion+".");
+		// Set the Look-And-Feel
+		if (!os.regionMatches(true,0,"mac",0,3)) {
+			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAP:Setting Cross Platform Look-And-Feel!");
+			try {
+				javax.swing.UIManager.setLookAndFeel(javax.swing.UIManager.getCrossPlatformLookAndFeelClassName());
+			} catch (Exception e) {
+				JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.GUI,"JAP:Exception while setting Cross Platform Look-And-Feel!");
+			}
+		}
 		// Create the view object
-		JAPView view = new JAPView (model.TITLE);
-
+		JAPView view = new JAPView(model.TITLE);
 		// Create the main frame
 		view.create();
-
-		//Switching Debug Console Parent to MainView
+		// Switch Debug Console Parent to MainView
 		JAPDebug.setConsoleParent(view);
-
+		//
 		model.addJAPObserver(view);
 		// Create the iconified view
 		JAPViewIconified iconifiedView = new JAPViewIconified(model.TITLEOFICONIFIEDVIEW);

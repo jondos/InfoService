@@ -1,5 +1,12 @@
 #!/bin/sh
 #This script is used for development under MacOS X
+#
+#####################################################
+#
+japjarspath="/Users/feder/Federrath/Java/libraries/japjars";
+libs="${japjarspath}/http.jar:${japjarspath}/xml.jar:${japjarspath}/xml-1.1.jar:${japjarspath}/kasperftp.jar:.";
+#
+#####################################################
 action=$1;
 nocommand="0";
 if [ -z "${action}" ]; then
@@ -22,10 +29,10 @@ case "${action}" in
  "l")  action="lean";;
 esac
 if [ "${action}" = "make" ]; then
- javac -classpath ../japjars/http.jar:../japjars/xml.jar:../japjars/xml-1.1.jar:../japjars/kasperftp.jar:. JAPDebug.java
- javac -classpath ../japjars/http.jar:../japjars/xml.jar:../japjars/xml-1.1.jar:../japjars/kasperftp.jar:. anon/*.java
- javac -classpath ../japjars/http.jar:../japjars/xml.jar:../japjars/xml-1.1.jar:../japjars/kasperftp.jar:. rijndael/*.java
- javac -classpath ../japjars/http.jar:../japjars/xml.jar:../japjars/xml-1.1.jar:../japjars/kasperftp.jar:. *.java
+ javac -classpath ${libs} JAPDebug.java
+ javac -classpath ${libs} anon/*.java
+ javac -classpath ${libs} rijndael/*.java
+ javac -classpath ${libs} *.java
 fi
 if [ "${action}" = "clean" ]; then
  rm -r *.class
@@ -33,10 +40,10 @@ if [ "${action}" = "clean" ]; then
  rm -r rijndael/*.class
 fi
 if [ "${action}" = "start" ]; then
- java -classpath ../japjars/http.jar:../japjars/xml.jar:../japjars/xml-1.1.jar:../japjars/kasperftp.jar:. JAP &
+ java -classpath ${libs} JAP &
 fi
 if [ "${action}" = "lean" ]; then
- java -classpath ../japjars/http.jar:../japjars/xml.jar:../japjars/xml-1.1.jar:../japjars/kasperftp.jar:. JAPLean 4001 mix.inf.tu-dresden.de 6544
+ java -classpath ${libs} JAPLean 4001 mix.inf.tu-dresden.de 6544
 fi
 if [ "${nocommand}" = "0" ]; then
  break;

@@ -579,48 +579,49 @@ final class JAPConf extends JDialog
 				p1.setBorder( new TitledBorder(m_Model.getString("settingsLookAndFeelBorder")) );
 				p1.add(new JLabel(m_Model.getString("settingsLookAndFeel")));
 				JComboBox c=new JComboBox();
-				// not yet implemented, or doesn't work very well on my Mac --> disable it
-				// c.setEnabled(false);
 				LookAndFeelInfo[] lf=UIManager.getInstalledLookAndFeels();
-				for(int i=0;i<lf.length;i++)
-					{
-						c.addItem(lf[i].getName());
+				String currentLf=UIManager.getLookAndFeel().getName().toString();
+				// add menu items
+				for(int lfidx=0;lfidx<lf.length;lfidx++) {
+					c.addItem(lf[lfidx].getName());
+				}
+				// select the current
+				int lfidx;
+				for(lfidx=0;lfidx<lf.length;lfidx++) {
+					if(lf[lfidx].getName().equals(currentLf)) {
+						c.setSelectedIndex(lfidx);
+						break;
 					}
+				}
+				if ( !(lfidx<lf.length) ) {
+					c.addItem("(unknown)");
+					c.setSelectedIndex(lfidx);
+				}
 				c.addItemListener(new ItemListener(){
 					public void itemStateChanged(ItemEvent e){
-						if(e.getStateChange()==e.SELECTED)
-							{
-								try
-									{
-										UIManager.setLookAndFeel(UIManager.getInstalledLookAndFeels()[((JComboBox)e.getItemSelectable()).getSelectedIndex()].getClassName());
-										SwingUtilities.updateComponentTreeUI(m_frmParent);
-										SwingUtilities.updateComponentTreeUI(SwingUtilities.getRoot(((JComboBox)e.getItemSelectable())));
-									}
-								catch(Exception ie)
-								{
+						if(e.getStateChange()==e.SELECTED) {
+								try {
+									UIManager.setLookAndFeel(UIManager.getInstalledLookAndFeels()[((JComboBox)e.getItemSelectable()).getSelectedIndex()].getClassName());
+//									SwingUtilities.updateComponentTreeUI(m_frmParent);
+//									SwingUtilities.updateComponentTreeUI(SwingUtilities.getRoot(((JComboBox)e.getItemSelectable())));
+									JOptionPane.showMessageDialog(m_JapConf,JAPMessages.getString("confLookAndFeelChanged"),JAPMessages.getString("information"),JOptionPane.INFORMATION_MESSAGE);
+								} catch(Exception ie) {
 								}
-							}
+						}
 					}});
 				p1.add(c);
 				p1.add(new JLabel(m_Model.getString("settingsLanguage")));
 				m_comboLanguage=new JComboBox();
 				m_comboLanguage.addItem("Deutsch");
 				m_comboLanguage.addItem("English");
-				// yet implemented !!
-				//c.setEnabled(false);
 				m_comboLanguage.addItemListener(new ItemListener(){
 					public void itemStateChanged(ItemEvent e){
-						if(!m_bIgnoreComboLanguageEvents&&e.getStateChange()==e.SELECTED)
-							{
-								try
-									{
-
-										JOptionPane.showMessageDialog(m_JapConf,JAPMessages.getString("confLanguageChanged"),JAPMessages.getString("information"),JOptionPane.INFORMATION_MESSAGE);
-									}
-								catch(Exception ie)
-								{
-								}
+						if(!m_bIgnoreComboLanguageEvents&&e.getStateChange()==e.SELECTED) {
+							try {
+								JOptionPane.showMessageDialog(m_JapConf,JAPMessages.getString("confLanguageChanged"),JAPMessages.getString("information"),JOptionPane.INFORMATION_MESSAGE);
+							} catch(Exception ie) {
 							}
+						}
 					}});
 
 				p1.add(m_comboLanguage);
