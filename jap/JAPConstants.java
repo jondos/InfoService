@@ -32,7 +32,7 @@ import java.awt.Insets;
 import anon.tor.Circuit;
 public final class JAPConstants
 {
-	public static final String aktVersion = "00.02.095"; //Never change the layout of this line!
+	public static final String aktVersion = "00.02.096"; //Never change the layout of this line!
 	private static final String CVS_GENERATED_RELEASE_DATE = "$Date$";
 
 	//Warning: This is a little bit tricky,
