@@ -46,7 +46,7 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
 		Color bgColor = getContentPane().getBackground();
 		getContentPane().setBackground(Color.black);
 		getContentPane().add(waitLabel, BorderLayout.SOUTH);
-		getContentPane().add(new JLabel(new ImageIcon(model.SPLASHFN)), BorderLayout.CENTER);
+		getContentPane().add(new JLabel(new ImageIcon(this.getClass().getResource(model.SPLASHFN))), BorderLayout.CENTER);
 		//setSize(250, 50);
 		setResizable(false);
 		pack();
@@ -62,19 +62,19 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
 		loadMeterIcons();
 		
 		// "NORTH": Image
-		ImageIcon northImage = new ImageIcon(model.msg.getString("northPath"));
+		ImageIcon northImage = new ImageIcon(this.getClass().getResource(model.msg.getString("northPath")));
 		JLabel northLabel = new JLabel(northImage);
 
 		// "West": Image
-		ImageIcon westImage = new ImageIcon(model.msg.getString("westPath"));
+		ImageIcon westImage = new ImageIcon(this.getClass().getResource(model.msg.getString("westPath")));
 		JLabel westLabel = new JLabel(westImage);
 
 		// "Center:" tabs
 		JTabbedPane tabs = new JTabbedPane();
 		JPanel config = buildConfigPanel();
 		JPanel level = buildLevelPanel();
-		tabs.addTab(model.msg.getString("mainConfTab"), new ImageIcon(model.CONFIGICONFN), config );
-		tabs.addTab(model.msg.getString("mainMeterTab"), new ImageIcon(model.METERICONFN), level );
+		tabs.addTab(model.msg.getString("mainConfTab"), new ImageIcon(this.getClass().getResource(model.CONFIGICONFN)), config );
+		tabs.addTab(model.msg.getString("mainMeterTab"), new ImageIcon(this.getClass().getResource(model.METERICONFN)), level );
 		
 		// "South": Buttons
 		JPanel buttonPanel = new JPanel();
@@ -111,6 +111,7 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
 		updateValues();
 		pack();  // optimize size
 		centerFrame();
+		toFront();
 //		setVisible(true);
 	}
 
@@ -288,18 +289,19 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
 		return mainPanel;
 	}
 	
-	protected void loadMeterIcons() {
+	protected void loadMeterIcons()
+		{
 		// Load Images for "Anonymity Meter"
-		meterIcons = new ImageIcon [model.METERFNARRAY.length];
-		if (model.debug) 
-			System.out.println("METERFNARRAY.length="
-							   +model.METERFNARRAY.length);
-		for (int i=0; i<model.METERFNARRAY.length; i++) {
-			meterIcons[i] = new ImageIcon(model.METERFNARRAY[i]);
+			meterIcons = new ImageIcon [model.METERFNARRAY.length];
 			if (model.debug) 
-				System.out.println("Image "+model.METERFNARRAY[i]+" loaded");
+				System.out.println("METERFNARRAY.length="+model.METERFNARRAY.length);
+			for (int i=0; i<model.METERFNARRAY.length; i++)
+				{
+					meterIcons[i] = new ImageIcon(this.getClass().getResource(model.METERFNARRAY[i]));
+					if (model.debug) 
+						System.out.println("Image "+model.METERFNARRAY[i]+" loaded");
+				}
 		}
-	}
 	
     public ImageIcon setMeterImage() {
 		if (model.anonMode) {
