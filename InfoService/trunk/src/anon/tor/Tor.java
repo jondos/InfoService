@@ -58,6 +58,9 @@ public class Tor implements Runnable,AnonService{
 
 	private MyRandom m_rand;
 
+	public final static String DEFAULT_DIR_SERVER_ADDR="moria.seul.org";
+	public final static int DEFAULT_DIR_SERVER_PORT=9031;
+
 	/**
 	 * Constructor
 	 *
@@ -66,8 +69,8 @@ public class Tor implements Runnable,AnonService{
 	private Tor()
 	{
 		this.m_orList = new ORList();
-		this.m_ORListServer = "moria.seul.org";
-		this.m_ORListPort = 9031;
+		this.m_ORListServer = DEFAULT_DIR_SERVER_ADDR;
+		this.m_ORListPort = DEFAULT_DIR_SERVER_PORT;
 
 		//create a new circuit every 5 minutes
 		this.m_createNewCircuitIntervall = 60000*5;

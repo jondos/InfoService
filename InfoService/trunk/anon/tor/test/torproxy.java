@@ -22,7 +22,7 @@ public class torproxy {
 
 	public static void main(String[] args) throws Exception{
 		Tor tor = Tor.getInstance();
-		tor.start();
+		tor.initialize(new TorAnonServerDescription());
 
 		ServerSocket server = new ServerSocket(1234);
 		System.out.println("Server läuft");
