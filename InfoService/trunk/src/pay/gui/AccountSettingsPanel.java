@@ -64,6 +64,7 @@ import pay.PayAccount;
 import pay.PayAccountsFile;
 import payxml.XMLAccountInfo;
 import payxml.XMLTransCert;
+import payxml.XMLBalance;
 
 /**
  * The Jap Conf Module (Settings Tab Page) for the Accounts and payment Management
@@ -243,7 +244,7 @@ public class AccountSettingsPanel extends jap.AbstractJAPConfModule
 		{
 			// if timestamp is older than 24 hours... maybe user wants to fetch
 			// a new statement
-			java.sql.Timestamp t = selectedAccount.getAccountInfo().getTimestamp();
+			java.sql.Timestamp t = selectedAccount.getAccountInfo().getBalance().getTimestamp();
 			if (t.getTime() < (System.currentTimeMillis() - 1000 * 60 * 60 * 24))
 			{
 				int choice = JOptionPane.showOptionDialog(
@@ -262,17 +263,18 @@ public class AccountSettingsPanel extends jap.AbstractJAPConfModule
 			}
 		}
 		XMLAccountInfo accountInfo = selectedAccount.getAccountInfo();
+		XMLBalance balance = accountInfo.getBalance();
 		JOptionPane.showMessageDialog(
 			view,
-			"<html><h3>Kontoauszug vom " + accountInfo.getTimestamp() + "</h3>" +
+			"<html><h3>Kontoauszug vom " + balance.getTimestamp() + "</h3>" +
 			"<table>" +
 			"<tr><td>Kontonummer</td><td>" + selectedAccount.getAccountNumber() + "</td></tr>" +
 			"<tr><td>Konto erzeugt am</td><td>" + selectedAccount.getCreationDate() + "</td></tr>" +
 			"<tr><td> </td></tr>" +
-			"<tr><td>Eingezahlt</td><td>" + accountInfo.getDeposit() + "</td></tr>" +
-			"<tr><td>Verbraucht</td><td>" + accountInfo.getSpent() + "</td></tr>" +
-			"<tr><td>aktueller Kontostand</td><td>" + accountInfo.getCredit() + "</td></tr>" +
-			"<tr><td>Guthaben g&uuml;ltig bis</td><td>" + accountInfo.getValidTime() + "</td></tr>" +
+			"<tr><td>Eingezahlt</td><td>" + balance.getDeposit() + "</td></tr>" +
+			"<tr><td>Verbraucht</td><td>" + balance.getSpent() + "</td></tr>" +
+			"<tr><td>aktueller Kontostand</td><td>" + (balance.getDeposit()-balance.getSpent()) + "</td></tr>" +
+			"<tr><td>Guthaben g&uuml;ltig bis</td><td>" + balance.getValidTime() + "</td></tr>" +
 			"</table></html>",
 			"Detaillierte Kontoinformationen",
 			JOptionPane.INFORMATION_MESSAGE
@@ -769,7 +771,7 @@ public class AccountSettingsPanel extends jap.AbstractJAPConfModule
 		if (selectedAccount.hasAccountInfo())
 		{
 			XMLAccountInfo accInfo = selectedAccount.getAccountInfo();
-			if (accInfo.getTimestamp().getTime() < (System.currentTimeMillis() - 1000 * 60 * 60 * 24))
+			if (accInfo.getBalance().getTimestamp().getTime() < (System.currentTimeMillis() - 1000 * 60 * 60 * 24))
 			{
 				int choice = JOptionPane.showOptionDialog(
 					view,
@@ -788,13 +790,13 @@ public class AccountSettingsPanel extends jap.AbstractJAPConfModule
 				}
 			}
 
-			if (accInfo.getCredit() > 0)
+			if (accInfo.getBalance().getCredit() > 0)
 			{
 				// todo: internationalize message
 				int choice = JOptionPane.showOptionDialog(
 					view,
 					"<html>Auf diesem Konto befindet sich noch ein Guthaben von<br>" +
-					accInfo.getCredit() + " Bytes<br>" +
+					accInfo.getBalance().getCredit() + " Bytes<br>" +
 					"Das Guthaben geht beim Entfernen unwiederbringlich verloren, <br>" +
 					"au&szlig;er Sie haben das Konto zuvor exportiert.<br><br>" +
 					"M&ouml;chten Sie dieses Konto wirklich trotzdem entfernen?</html>",
@@ -943,7 +945,7 @@ public class AccountSettingsPanel extends jap.AbstractJAPConfModule
 				case 2:
 					if (account.hasAccountInfo())
 					{
-						return new Long(account.getAccountInfo().getCredit());
+						return new Long(account.getAccountInfo().getBalance().getCredit());
 					}
 					else
 					{
@@ -952,7 +954,7 @@ public class AccountSettingsPanel extends jap.AbstractJAPConfModule
 				case 3:
 					if (account.hasAccountInfo())
 					{
-						return account.getAccountInfo().getValidTime();
+						return account.getAccountInfo().getBalance().getValidTime();
 					}
 					else
 					{

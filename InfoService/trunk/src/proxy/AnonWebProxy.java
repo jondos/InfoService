@@ -56,6 +56,7 @@ import payxml.XMLAccountInfo;
 import anon.tor.*;
 import java.io.*;
 import jap.*;
+import pay.anon.AICommunication;
 final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 {
 	public static final int E_BIND = -2;
@@ -73,7 +74,7 @@ final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 	private Thread threadRun;
 	private volatile boolean m_bIsRunning;
 	private ServerSocket m_socketListener;
-	//private AICommunication m_AICom;
+	private AICommunication m_AICom;
 
 	/**
 	 * Stores the MixCascade we are connected to.
@@ -104,9 +105,9 @@ final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 		setFirewall(JAPConstants.FIREWALL_TYPE_HTTP, null, -1);
 		setFirewallAuthorization(null, null);
 		setDummyTraffic( -1);
-		//m_AICom = new AICommunication(m_Anon);
+		m_AICom = new AICommunication(m_Anon);
 		m_forwardedConnection = false;
-		//SOCKS´
+		//SOCKS\uFFFD
 	}
 
 	/**
@@ -129,7 +130,7 @@ final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 	{
 		m_socketListener = a_listener;
 		m_Anon = new AnonServiceImpl(a_proxyConnection); //uups very nasty....
-		//m_AICom = new AICommunication(m_Anon);
+		m_AICom = new AICommunication(m_Anon);
 		m_forwardedConnection = true;
 		m_bAutoReconnect = false;
 		m_maxDummyTrafficInterval = a_maxDummyTrafficInterval;
@@ -171,7 +172,7 @@ final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 			XMLAccountInfo info = mainAccount.getAccountInfo();
 
 			// temporary code... TODO: remove DOM functionality from here (Bastian Voigt)
-			Document doc = info.getDomDocument();
+			Document doc = info.getXmlEncoded();
 			Element elemRoot = doc.getDocumentElement();
 			Element elemBalance = (Element) XMLUtil.getFirstChildByName(elemRoot, "Balance");
 
@@ -197,7 +198,7 @@ final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 	public void setMixCascade(MixCascade newMixCascade)
 	{
 		m_currentMixCascade = newMixCascade;
-		//m_AICom.setAnonServer(newMixCascade);
+		m_AICom.setAnonServer(newMixCascade);
 	}
 
 	public void setFirewall(int type, String host, int port)
@@ -290,7 +291,7 @@ final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 
 	public void stop()
 	{
-		//m_AICom.end();
+		m_AICom.end();
 		m_Anon.shutdown();
 		m_Tor.shutdown();
 		m_bIsRunning = false;
@@ -308,7 +309,7 @@ final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 		int oldTimeOut = 0;
 		LogHolder.log(LogLevel.DEBUG, LogType.NET, "AnonProxy: AnonProxy is running as Thread");
 
-		//m_AICom.start();
+		m_AICom.start();
 		try
 		{
 			oldTimeOut = m_socketListener.getSoTimeout();

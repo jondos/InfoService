@@ -27,11 +27,17 @@
  */
 package payxml;
 
-import org.w3c.dom.CharacterData;
+import java.io.ByteArrayInputStream;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
-import org.w3c.dom.*;
+import anon.crypto.JAPSignature;
+import anon.util.IXMLEncodeable;
 import anon.util.XMLUtil;
+
+
 /**
  * XML structure for a easy cost confirmation (without mircopayment function) which is sent to the AI by the Jap
  * <CC version "1.0">
@@ -44,96 +50,88 @@ import anon.util.XMLUtil;
  * </CC>
  * @author Grischan Gl&auml;nzel, Bastian Voigt
  */
-public class XMLEasyCC extends XMLDocument
+public class XMLEasyCC implements IXMLEncodeable //extends XMLDocument
 {
 	//~ Instance fields ********************************************************
 
 	private String m_strAiName;
-
-	//private byte[] hash;
 	private long m_lTransferredBytes;
 	private long m_lAccountNumber;
+	private Document m_signature;
 
 	//~ Constructors ***********************************************************
-	public XMLEasyCC(String aiName, long accountNumber, long transferred) throws Exception
+	public XMLEasyCC(String aiName, long accountNumber, long transferred, JAPSignature signer) throws Exception
 	{
-
 		m_strAiName = aiName;
 		m_lTransferredBytes = transferred;
 		m_lAccountNumber = accountNumber;
-		m_theDocument=getDocumentBuilder().newDocument();
-		Element elemRoot=m_theDocument.createElement("CC");
-		elemRoot.setAttribute("version","1.0");
-		m_theDocument.appendChild(elemRoot);
+		m_signature = null;
 
-		Element elem=m_theDocument.createElement("AiID");
-		XMLUtil.setNodeValue(elem,aiName);
-		elemRoot.appendChild(elem);
-
-		elem=m_theDocument.createElement("TransferredBytes");
-		XMLUtil.setNodeValue(elem,Long.toString(transferred));
-		elemRoot.appendChild(elem);
-
-		elem=m_theDocument.createElement("AccountNumber");
-		XMLUtil.setNodeValue(elem,Long.toString(accountNumber));
-		elemRoot.appendChild(elem);
+		if (signer != null)
+		{
+			Document doc = getXmlEncoded();
+			signer.signXmlDoc(doc);
+			Element elemSig = (Element) XMLUtil.getFirstChildByName(doc.getDocumentElement(), "Signature");
+			m_signature = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+			Element elem = (Element) XMLUtil.importNode(m_signature, elemSig, true);
+			m_signature.appendChild(elem);
+		}
 	}
 
 	public XMLEasyCC(byte[] data) throws Exception
 	{
-		setDocument(data);
-		setValues();
+		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(data));
+		setValues(doc.getDocumentElement());
 	}
 
-	/**
-	 * Creates an EaysCC from  an existing XML docuemnt
-	 *
-	 * @param xml the node that represents the EasyCC
-	 */
-	public XMLEasyCC(Node xml) throws Exception
+	public XMLEasyCC(Element xml) throws Exception
 	{
-		m_theDocument=getDocumentBuilder().newDocument();
-		Node n=XMLUtil.importNode(m_theDocument,xml,true);
-		m_theDocument.appendChild(n);
-		setValues();
+		setValues(xml);
 	}
 
-	private void setValues() throws Exception
+	private void setValues(Element element) throws Exception
 	{
-		Element element = m_theDocument.getDocumentElement();
-		if (!element.getTagName().equals("CC"))
+		if (!element.getTagName().equals("CC") ||
+			!element.getAttribute("version").equals("1.0"))
 		{
-			throw new Exception("XMLEasyCC wrong xml structure");
+			throw new Exception("XMLEasyCC wrong xml structure or wrong version");
 		}
 
-		NodeList nl = element.getElementsByTagName("AiID");
-		if (nl.getLength() < 1)
+		Element elem = (Element) XMLUtil.getFirstChildByName(element, "AiID");
+		m_strAiName = XMLUtil.parseNodeString(elem, "");
+		elem = (Element) XMLUtil.getFirstChildByName(element, "AccountNumber");
+		m_lAccountNumber = XMLUtil.parseNodeLong(elem, 0);
+		elem = (Element) XMLUtil.getFirstChildByName(element, "TransferredBytes");
+		m_lTransferredBytes = XMLUtil.parseNodeLong(elem, 0);
+	}
+
+	public Document getXmlEncoded()
+	{
+		Document doc = null;
+		try
 		{
-			throw new Exception("XMLEasyCC wrong xml structure");
+			doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
 		}
-		element = (Element) nl.item(0);
-
-		CharacterData chdata = (CharacterData) element.getFirstChild();
-		m_strAiName = chdata.getData();
-
-		nl = element.getElementsByTagName("AccountNumber");
-		if (nl.getLength() < 1)
+		catch (ParserConfigurationException ex)
 		{
-			throw new Exception("XMLEasyCC wrong xml structure");
+			return null;
 		}
-		element = (Element) nl.item(0);
-		chdata = (CharacterData) element.getFirstChild();
-		m_lAccountNumber = Long.parseLong(chdata.getData());
+		Element elemRoot = doc.createElement("CC");
+		elemRoot.setAttribute("version", "1.0");
+		doc.appendChild(elemRoot);
 
-		nl = element.getElementsByTagName("TransferredBytes");
-		if (nl.getLength() < 1)
-		{
-			throw new Exception("XMLEasyCC wrong xml structure");
-		}
-		element = (Element) nl.item(0);
-		chdata = (CharacterData) element.getFirstChild();
-		m_lTransferredBytes = Integer.parseInt(chdata.getData());
+		Element elem=doc.createElement("AiID");
+		XMLUtil.setNodeValue(elem,m_strAiName);
+		elemRoot.appendChild(elem);
 
+		elem=doc.createElement("TransferredBytes");
+		XMLUtil.setNodeValue(elem,Long.toString(m_lTransferredBytes));
+		elemRoot.appendChild(elem);
+
+		elem=doc.createElement("AccountNumber");
+		XMLUtil.setNodeValue(elem,Long.toString(m_lAccountNumber));
+		elemRoot.appendChild(elem);
+		return doc;
 	}
 
 	//~ Methods ****************************************************************
@@ -153,9 +151,11 @@ public class XMLEasyCC extends XMLDocument
 		return m_lTransferredBytes;
 	}
 
+	/** this makes the signature invalid! */
 	public void addTransferredBytes(long plusBytes)
 	{
 		m_lTransferredBytes += plusBytes;
+		m_signature = null;
 	}
 
 }
