@@ -74,7 +74,7 @@ public abstract class Database implements Runnable {
 						/* we remove the old entry now, because it has reached the expire time */
 						LogHolder.log(LogLevel.INFO, LogType.MISC, "Database: run: DatabaseEntry " + ((DatabaseEntry)(serviceDatabase.get(timeoutList.firstElement()))).getId() + " has reached the expire time and is removed.");
 						serviceDatabase.remove(timeoutList.firstElement());
-						timeoutList.removeElementAt(0); /**SK13_LL possible change of semantic --> deletion during...
+						timeoutList.removeElementAt(0); /**SK13_LL possible change of semantic --> deletion during...**/
 					}
 					else {
 						/* the oldest entry in the database, has not reached expire time now, so there are not more old entrys */
