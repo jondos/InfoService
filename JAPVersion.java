@@ -34,7 +34,6 @@ public final class JAPVersion
 					{
 						URL url=new URL(model.url_jap_newversion);
 						URLConnection urlconn=url.openConnection();
-						System.out.println("Hier");
 						int len=urlconn.getContentLength();
 						if(len==-1)
 							{
@@ -55,7 +54,6 @@ public final class JAPVersion
 					{
 						return -1;
 					}
-				
 			}
 		
 		public static String getCurrentVersion()

@@ -9,7 +9,6 @@ public final class JAP
 							System.out.println("!!!WARNING: JAP must be run with a " +
 			       "1.1.2 or higher version VM!!!");
 					}
-				new JAPDebug();
 				JAPModel model = new JAPModel();
 				JAPSplash splash = new JAPSplash(model);
 				splash.show(); // show splash screen as soon as possible
@@ -22,6 +21,6 @@ public final class JAP
 				splash.dispose();
 				view.show();
 
-				model.setAnonMode(true);
+			//	model.setAnonMode(true);
     }
 }

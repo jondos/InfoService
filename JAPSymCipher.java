@@ -27,6 +27,13 @@ public final class JAPSymCipher
 					return 0;
 				}
 			
+			public int encrypt(byte[] from,int ifrom,byte[] to,int ito,int len)
+				{
+					for(int i=0;i<len;i+=8)
+						bfEnc.encrypt(from,i+ifrom,to,i+ito);
+					return 0;
+				}
+
 			public int decrypt(byte[] buff)
 				{
 					for(int i=0;i<buff.length;i+=8)

@@ -38,12 +38,13 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 		}
 	
 	public void init() {
-	    try {
-		UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName()); 
-	    } 
-	    catch(Exception e) {
-		if (model.debug) e.printStackTrace();
-	    }
+	    try 
+				{
+					UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName()); 
+				} 
+			catch(Exception e)
+				{
+				}
 		    
 	    // Load Icon in upper left corner of the frame window
 	    ImageIcon ii=model.loadImageIcon(model.IICON16FN,true);
@@ -56,11 +57,14 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 	    });	
 	    
 	    // Check for new version on server
-	    if(JAPVersion.checkForNewVersion(model)==1) {
-		JAPVersion.getNewVersion(model);
-		JOptionPane.showMessageDialog(this, model.getString("newVersion"));
-		exitProgram();
-	    }
+	    if(JAPVersion.checkForNewVersion(model)==1) 
+				{
+					if(JAPVersion.getNewVersion(model)==0)
+						{
+							JOptionPane.showMessageDialog(this, model.getString("newVersion"));
+							exitProgram();
+						}
+				}
 	    
 	    // Load Images for "Anonymity Meter"
 	    loadMeterIcons();
