@@ -29,8 +29,6 @@ public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListe
     //search the folder for saving the new jap.jar
     private JButton m_chooseFolder_bttn = null;
     private File selectedFile;
-    private String pathSelectedFile;
-    public static String pathToJapJar;
     private JAPUpdateWizard updateWizard;
 
     private JarFileFilter jarFileFilter = new JarFileFilter();
@@ -91,7 +89,7 @@ public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListe
         m_panelComponents.add(m_labelClickNext,m_panelConstraints);
 
       }
-      // is a file chosen ?
+      // is a file chosen? called by host when pressed next
       public boolean checkPage()
       {
          // needed for testing whether the user typed in a correct File
@@ -101,9 +99,11 @@ public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListe
                   testFile = new File(m_tfJapPath.getText());
                   if(testFile.isFile() && testFile.exists())
                   {
+                    selectedFile = testFile;
                     checkPage = true;
                   }else
                   {
+                    m_tfJapPath.setText("");
                     checkPage = false;
                   }
                 }
@@ -142,18 +142,21 @@ public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListe
           m_fileChooserDialog.pack();
       }
 
+      //called by JAPUpdateWizard.next()
       public String getSelectedFile()
       {
-          if(selectedFile!= null)
+         /* if(selectedFile!= null)
             {
               return this.selectedFile.getAbsolutePath();
             }else if(selectedFile == null && !m_tfJapPath.getText().equals(""))
             {
              //checkPage = true;
+             System.out.println("getSelectedFile");
              return m_tfJapPath.getText();
             }else{// what now?
              return m_tfJapPath.getText();
-                  }
+                  }*/
+           return this.selectedFile.getAbsolutePath();
       }
 
       public void actionPerformed(ActionEvent e)
