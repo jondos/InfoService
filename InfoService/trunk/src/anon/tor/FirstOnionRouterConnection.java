@@ -161,7 +161,7 @@ public class FirstOnionRouterConnection implements Runnable
 		m_istream = m_tinyTLS.getInputStream();
 		m_ostream = m_tinyTLS.getOutputStream();
 		m_Circuits = new Hashtable();
-		m_tinyTLS.setSoTimeout(1000);
+		m_tinyTLS.setSoTimeout(30000);
 		start();
 		m_bIsClosed = false;
 	}
