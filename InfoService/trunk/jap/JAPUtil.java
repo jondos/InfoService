@@ -30,6 +30,7 @@ package jap;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -362,7 +363,7 @@ final public class JAPUtil
 			{
 				in = null;
 			}
-			if (in == null)
+			if (in == null || len == 0)
 			{
 				try
 				{
@@ -374,7 +375,9 @@ final public class JAPUtil
 						len = (int) f.length();
 					}
 					else
+					{
 						return null;
+					}
 				}
 				catch (Exception e1)
 				{
@@ -382,10 +385,7 @@ final public class JAPUtil
 				}
 			}
 			byte[] tmp = new byte[len];
-			if (in.read(tmp) != len)
-			{
-				return null;
-			}
+			new DataInputStream(in).readFully(tmp);
 			return tmp;
 		}
 		catch (Throwable t)
