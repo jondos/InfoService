@@ -641,10 +641,10 @@ public class Tor implements /*Runnable,*/ AnonService
 		Circuit circ=this.createNewCircuit(null,-1);
 		LogHolder.log(LogLevel.DEBUG,LogType.TOR,"DNS Resolve for www.mircosoft.com returned: "+circ.resolveDNS("www.microsoft.com"));
 		LogHolder.log(LogLevel.DEBUG,LogType.TOR,"DNS Resolve for www.mircosoft.de returned: "+circ.resolveDNS("www.microsoft.de"));
-		TorChannel c=circ.createChannel("anon.inf.tu-dresden.de",80);
-		OutputStream out=c.getOutputStream();
-		out.write("GET /index.html HTTP/1.0\n\n".getBytes());
-		out.flush();
+		//TorChannel c=circ.createChannel("anon.inf.tu-dresden.de",80);
+		//OutputStream out=c.getOutputStream();
+		//out.write("GET /index.html HTTP/1.0\n\n".getBytes());
+		//out.flush();
 		LogHolder.log(LogLevel.DEBUG,LogType.TOR,"DNS Resolve for www.mircosoft.com returned: "+circ.resolveDNS("www.microsoft.com"));
 		LogHolder.log(LogLevel.DEBUG,LogType.TOR,"DNS Resolve for www.mircosoft.de returned: "+circ.resolveDNS("www.microsoft.de"));
 	}
