@@ -5,14 +5,14 @@ Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
 
 	- Redistributions of source code must retain the above copyright notice,
-	  this list of conditions and the following disclaimer.
+		this list of conditions and the following disclaimer.
 
 	- Redistributions in binary form must reproduce the above copyright notice,
-	  this list of conditions and the following disclaimer in the documentation and/or
+		this list of conditions and the following disclaimer in the documentation and/or
 		other materials provided with the distribution.
 
 	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
-	  may be used to endorse or promote products derived from this software without specific
+		may be used to endorse or promote products derived from this software without specific
 		prior written permission.
 
 
@@ -32,20 +32,21 @@ import java.awt.Dialog;
 public interface WizardHost
 {
 
-  //set the number of total steps of the Wizard
-  //public void setTotalSteps(int numberOfSteps);
-  //public int getTotalSteps();
+	//set the number of total steps of the Wizard
+	//public void setTotalSteps(int numberOfSteps);
+	//public int getTotalSteps();
 
-  public Dialog getDialogParent();
+	public Dialog getDialogParent();
 
-    //set all the Buttons enabled/disabled which are needed during the Wizard takes its Action
-  public void setFinishEnabled(boolean enabled);
-  public void setNextEnabled(boolean enabled);
-  public void setCancelEnabled(boolean enabled);
-  public void setBackEnabled(boolean enabled);
-  public void setHelpEnabled(boolean enabled);
+		//set all the Buttons enabled/disabled which are needed during the Wizard takes its Action
+	public void setFinishEnabled(boolean enabled);
+	public void setNextEnabled(boolean enabled);
+	public void setCancelEnabled(boolean enabled);
+	public void setBackEnabled(boolean enabled);
+	public void setHelpEnabled(boolean enabled);
 
-  public void setWizardPage(WizardPage page);
+	public void addWizardPage(int index,WizardPage wizardPage);
+	public void showWizardPage(int index);
 // what Type of is the WizardHost launched?
 //JFrame getParentFrame();
 }

@@ -10,6 +10,7 @@
 	#pragma once
 #endif // _MSC_VER > 1000
 
+#define JAPDLL_VERSION "00.01.003"
 
 // Fügen Sie hier Ihre Header-Dateien ein
 #include <windows.h>
@@ -256,12 +257,6 @@ JNIEXPORT void JNICALL Java_gui_JAPDll_hideWindowInTaskbar_1dll
   env->ReleaseStringUTFChars(s, str);
 }
 
-/*
-JNIEXPORT void JNICALL Java_gui_JAPDll_showWindowFromTaskbar_1dll
-  (JNIEnv *env, jobject obj, jstring s)
-	{
-		ShowWindowFromTaskbar();
-	}*/ 
 
 JNIEXPORT void JNICALL Java_gui_JAPDll_onTraffic_1dll
   (JNIEnv *, jclass) 
@@ -271,4 +266,9 @@ JNIEXPORT void JNICALL Java_gui_JAPDll_onTraffic_1dll
 		OnTraffic();
 	}
 }
-   
+
+JNIEXPORT jstring JNICALL Java_gui_JAPDll_getDllVersion_1dll
+  (JNIEnv * env, jclass)
+	{
+		return env->NewStringUTF(JAPDLL_VERSION);
+	}

@@ -287,6 +287,7 @@ public final class MuxSocket implements Runnable
 						Element root=doc.getDocumentElement();
 						if(!root.getNodeName().equals("MixCascade"))
 							return ErrorCodes.E_UNKNOWN;
+						//TODO Check Signautre of whole XML struct
 						Element elemMixProtocolVersion=(Element)root.getElementsByTagName("MixProtocolVersion").item(0);
 						if(elemMixProtocolVersion==null)
 							return ErrorCodes.E_MIX_PROTOCOL_NOT_SUPPORTED;
@@ -304,6 +305,7 @@ public final class MuxSocket implements Runnable
 							{
 								if(child.getNodeName().equals("Mix"))
 									{
+										//TODO: Check signatures for Mix 2 .. n
 										m_arASymCipher[i]=new ASymCipher();
 										if(m_arASymCipher[i++].setPublicKey((Element)child)!=ErrorCodes.E_SUCCESS)
 											return ErrorCodes.E_UNKNOWN;

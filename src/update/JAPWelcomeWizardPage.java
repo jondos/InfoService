@@ -28,9 +28,11 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 
 package update;
 import gui.wizard.BasicWizardPage;
+import gui.JAPMultilineLabel;
 import java.awt.GridLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Insets;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
 import javax.swing.JButton;
@@ -49,6 +51,7 @@ import java.io.File;
 import jap.JAPUtil;
 import jap.JAPConstants;
 import jap.JAPMessages;
+
 
 public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListener
 	{
@@ -76,13 +79,15 @@ public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListe
 				m_panelComponents.setLayout(m_panelComponentsLayout);
 
 
-				JLabel label = new JLabel(JAPMessages.getString("updateIntroductionMessage"));
+				JAPMultilineLabel label = new JAPMultilineLabel(JAPMessages.getString("updateIntroductionMessage"));
+
+				m_panelConstraints.anchor = GridBagConstraints.NORTHWEST;
+				m_panelConstraints.fill=GridBagConstraints.HORIZONTAL;
 				m_panelConstraints.weightx = 1.0;
-				m_panelConstraints.weighty = 1.0;
+				m_panelConstraints.weighty = 0;
 				m_panelConstraints.gridx = 0;
 				m_panelConstraints.gridy = 0;
 				m_panelConstraints.gridwidth = 2;
-				m_panelConstraints.anchor = GridBagConstraints.NORTH;
 				m_panelComponentsLayout.setConstraints(label, m_panelConstraints);
 				m_panelComponents.add(label);
 
@@ -92,6 +97,10 @@ public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListe
 				m_panelConstraints.gridx = 0;
 				m_panelConstraints.gridy = 1;
 				m_panelConstraints.gridwidth = 1 ;
+				m_panelConstraints.weighty = 0;
+				m_panelConstraints.weightx = 1.0;
+				m_panelConstraints.insets=new Insets(10,0,10,10);
+				m_panelConstraints.fill=GridBagConstraints.HORIZONTAL;
 				m_panelComponentsLayout.setConstraints(m_tfJapPath, m_panelConstraints);
 				m_panelComponents.add(m_tfJapPath, m_panelConstraints);
 				m_tfJapPath.setText(System.getProperty("user.dir",".")+System.getProperty("file.separator","/")+"JAP.jar");
@@ -101,18 +110,33 @@ public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListe
 				m_panelConstraints.anchor = GridBagConstraints.EAST;
 				m_panelConstraints.gridx = 1;
 				m_panelConstraints.gridy = 1;
+				m_panelConstraints.weightx = 0;
+				m_panelConstraints.insets=new Insets(10,0,10,0);
+				m_panelConstraints.fill=GridBagConstraints.NONE;
 				m_panelComponentsLayout.setConstraints(m_bttnChooseJapFile, m_panelConstraints);
 				m_panelComponents.add(m_bttnChooseJapFile, m_panelConstraints);
 				m_bttnChooseJapFile.addActionListener(this);
 				m_bttnChooseJapFile.setActionCommand(COMMAND_SEARCH);
 
 				m_labelClickNext = new JLabel(JAPMessages.getString("updateM_labelClickNext"));
+				m_panelConstraints.insets=new Insets(0,0,0,0);
 				m_panelConstraints.anchor = GridBagConstraints.WEST;
 				m_panelConstraints.gridx = 0;
 				m_panelConstraints.gridy = 2;
+				m_panelConstraints.weightx = 1.0;
+				m_panelConstraints.weighty = 0;
+				m_panelConstraints.fill=GridBagConstraints.HORIZONTAL;
 				m_panelConstraints.gridwidth = 2;
 				m_panelComponentsLayout.setConstraints(m_labelClickNext, m_panelConstraints);
 				m_panelComponents.add(m_labelClickNext,m_panelConstraints);
+
+				JLabel l = new JLabel("");
+				m_panelConstraints.gridx = 0;
+				m_panelConstraints.gridy = 3;
+				m_panelConstraints.weighty = 1.0;
+				m_panelConstraints.fill=GridBagConstraints.VERTICAL;
+				m_panelComponentsLayout.setConstraints(l, m_panelConstraints);
+				m_panelComponents.add(l,m_panelConstraints);
 
 			}
 
@@ -132,44 +156,12 @@ public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListe
 								}
 							else
 								{
+											showInformationDialog(JAPMessages.getString("updateM_SelectedJapJarDoesNotExist"));
 									checkPage = false;
 								}
 						}
 					return checkPage;
 				}
-
-			// there is sthing wrong with the selection
-			public void showInformationDialog(String message)
-			{
-					JOptionPane.showMessageDialog((Component)this, message);
-			}
-
-	/*    private void createFileChooser()
-			{
-					this.setEnabled(false);
-					final JFrame m_fileChooserDialog = new JFrame("Directory");
-					final JFileChooser m_fileChooser = new JFileChooser(m_tfJapPath.getText());
-				 // int returnval = m_fileChooser.showOpenDialog(m_fileChooserDialog);
-					m_fileChooser.addActionListener(new ActionListener() {
-						public void actionPerformed(ActionEvent e) {
-								int returnVal = m_fileChooser.showOpenDialog(m_fileChooserDialog);
-
-								if (returnVal == JFileChooser.APPROVE_OPTION) {
-										 m_fileAktJapJar = m_fileChooser.getSelectedFile();
-										//System.out.println(selectedFile.getName());
-										m_fileChooserDialog.dispose();
-
-								} else {
-
-								}
-						}
-				});
-
-					//m_fileChooserDialog.getContentPane().add(m_fileChooser);
-					m_fileChooserDialog.setVisible(true);
-					m_fileChooserDialog.pack();
-			}
-*/
 			//called by JAPUpdateWizard.next()
 			public File getJapJarFile()
 				{

@@ -5,14 +5,14 @@ Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
 
 	- Redistributions of source code must retain the above copyright notice,
-	  this list of conditions and the following disclaimer.
+		this list of conditions and the following disclaimer.
 
 	- Redistributions in binary form must reproduce the above copyright notice,
-	  this list of conditions and the following disclaimer in the documentation and/or
+		this list of conditions and the following disclaimer in the documentation and/or
 		other materials provided with the distribution.
 
 	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
-	  may be used to endorse or promote products derived from this software without specific
+		may be used to endorse or promote products derived from this software without specific
 		prior written permission.
 
 
@@ -27,108 +27,108 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 */
 package gui.wizard;
 
+import jap.JAPMessages;
 import javax.swing.JPanel;
 import javax.swing.JLabel;
 import javax.swing.JComponent;
+import javax.swing.JOptionPane;
 import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
 import javax.swing.ImageIcon;
 import java.awt.Dialog;
 import java.awt.Insets;
 
-//import java.awt.Color;
-
 public  class BasicWizardPage extends JPanel implements WizardPage
-  {
-    private String  m_strTitle;
-    private JLabel m_labelTitle;
-    private ImageIcon m_Icon;
-    private JLabel m_labelIcon;
-    protected JPanel m_panelComponents;
-    private String message;
+	{
+		private String  m_strTitle;
+		private JLabel m_labelTitle;
+		private ImageIcon m_Icon;
+		private JLabel m_labelIcon;
+		protected JPanel m_panelComponents;
+		private String message;
+
+		public BasicWizardPage()
+			{
+				GridBagLayout gridBag = new GridBagLayout();
+				setLayout(gridBag);
+				GridBagConstraints c = new GridBagConstraints();
+				m_labelTitle=new JLabel();
+				m_labelIcon=new JLabel();
+				m_panelComponents=new JPanel();
+				//Add Icon
+				c.fill = GridBagConstraints.NONE;
+				c.anchor=GridBagConstraints.WEST;
+				c.gridheight=2;
+				c.gridwidth=1;
+				c.gridx=0;
+				c.gridy=0;
+				c.insets=new Insets(10,10,10,10);
+				c.weightx=0;
+				c.weighty=1;
+				gridBag.setConstraints(m_labelIcon,c);
+				add(m_labelIcon);
+				//Title
+				c.gridheight=1;
+				c.gridx=1;
+				c.insets=new Insets(10,10,10,10);
+				c.weightx=1.0;
+				c.weighty=0;
+				gridBag.setConstraints(m_labelTitle,c);
+				add(m_labelTitle);
+				//Main Part
+				c.fill=GridBagConstraints.BOTH;
+				c.gridy=1;
+				c.weightx=1.0;
+				c.weighty=1.0;
+				c.insets=new Insets(0,0,10,10);
+				gridBag.setConstraints(m_panelComponents,c);
+				add(m_panelComponents);
+			}
 
 
-    public BasicWizardPage()
-      {
-        GridBagLayout gridBag = new GridBagLayout();
-        setLayout(gridBag);
-        GridBagConstraints c = new GridBagConstraints();
-        m_labelTitle=new JLabel();
-        m_labelIcon=new JLabel();
-        m_panelComponents=new JPanel();
-        //Add Icon
-        c.fill = GridBagConstraints.NONE;
-        c.anchor=GridBagConstraints.WEST;
-        c.gridheight=2;
-        c.gridwidth=1;
-        c.gridx=0;
-        c.gridy=0;
-        c.insets=new Insets(10,10,10,10);
-        c.weightx=0;
-        c.weighty=1;
-        gridBag.setConstraints(m_labelIcon,c);
-        add(m_labelIcon);
-        //Title
-        c.gridheight=1;
-        c.gridx=1;
-        c.insets=new Insets(10,10,10,10);
-        c.weightx=1.0;
-        c.weighty=0;
-        gridBag.setConstraints(m_labelTitle,c);
-        add(m_labelTitle);
-        //Main Part
-        c.fill=GridBagConstraints.BOTH;
-        c.gridy=1;
-        c.weightx=1.0;
-        c.weighty=1.0;
-        c.insets=new Insets(0,0,10,10);
-        gridBag.setConstraints(m_panelComponents,c);
-        add(m_panelComponents);
-      }
+
+	public void setPageTitle(String title)
+		{
+			m_strTitle=title;
+			m_labelTitle.setText(title);
+		}
+
+	public void deactivated(WizardHost host)
+		{
+			//setVisible(false);
+		}
 
 
+	public void setIcon(ImageIcon icon)
+		{
+			m_Icon=icon;
+			m_labelIcon.setIcon(icon);
+		}
 
-  public void setPageTitle(String title)
-    {
-      m_strTitle=title;
-      m_labelTitle.setText(title);
-    }
+	public void activated(WizardHost host)
+		{
+			//setVisible(true);
+		}
 
-  public void deactivated(WizardHost host)
-    {
-      setVisible(false);
-    }
+	public JComponent getPageComponent(/*WizardHost host*/)
+		{
+			return this;
+		}
 
+	public boolean checkPage()
+		{
+			return false;
+		}
 
-  public void setIcon(ImageIcon icon)
-    {
-      m_Icon=icon;
-      m_labelIcon.setIcon(icon);
-    }
+	public void showInformationDialog(String message)
+		{
+			JOptionPane.showMessageDialog(this, message,JAPMessages.getString("information"),
+																		JOptionPane.INFORMATION_MESSAGE);
+		}
 
-  public void activated(WizardHost host)
-    {
-      setVisible(true);
-    }
-
-  public JComponent getPageComponent(WizardHost host)
-    {
-      return this;
-    }
-
-  public boolean checkPage()
-    {
-      return false;
-    }
-
-  public void showInformationDialog(String message)
-    {
-
-    }
-
-  public ImageIcon getIcon()
-    {
-      return m_Icon;
-    }
+	public ImageIcon getIcon()
+		{
+			return m_Icon;
+		}
 
 }

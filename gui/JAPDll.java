@@ -2,7 +2,7 @@ package gui;
 
 final public class JAPDll
 	{
-    static boolean m_bHaveOnTraffic=true;
+		private static boolean m_sbHasOnTraffic=true;
 		static
 			{
 				try
@@ -44,24 +44,37 @@ final public class JAPDll
 
 		static public boolean onTraffic()
 			{
+				if(m_sbHasOnTraffic)
+					try
+						{
+							onTraffic_dll();
+							return true;
+						}
+					catch(Throwable t)
+						{
+							m_sbHasOnTraffic=false;
+							return false;
+						}
+				return false;
+			}
+
+		static public String getDllVersion()
+			{
 				try
 					{
-            if(!m_bHaveOnTraffic)
-              return false;
-            onTraffic_dll();
-						return true;
+						return getDllVersion_dll();
 					}
 				catch(Throwable t)
 					{
-            m_bHaveOnTraffic=false;
 					}
-				return false;
-      }
+				return null;
+			}
 
 		native static private void setWindowOnTop_dll(String caption, boolean onTop);
 
 		native static private void hideWindowInTaskbar_dll(String caption);
 
-    native static private void onTraffic_dll();
+		native static private void onTraffic_dll();
 
+		native static private String getDllVersion_dll();
 }

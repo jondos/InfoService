@@ -5,14 +5,14 @@ Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
 
 	- Redistributions of source code must retain the above copyright notice,
-	  this list of conditions and the following disclaimer.
+		this list of conditions and the following disclaimer.
 
 	- Redistributions in binary form must reproduce the above copyright notice,
-	  this list of conditions and the following disclaimer in the documentation and/or
+		this list of conditions and the following disclaimer in the documentation and/or
 		other materials provided with the distribution.
 
 	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
-	  may be used to endorse or promote products derived from this software without specific
+		may be used to endorse or promote products derived from this software without specific
 		prior written permission.
 
 
@@ -26,6 +26,7 @@ IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISI
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
 package jap;
+import gui.JAPDll;
 
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPModel
@@ -38,7 +39,7 @@ public final class JAPModel
 	private boolean m_bHttpListenerIsLocal         = true;  // indicates whether listeners serve for localhost only or not
 	private boolean m_bUseFirewall                 = false; // indicates whether JAP connects via a proxy or directly
 	private int     m_FirewallType                 = JAPConstants.defaultFirewallType;
-  private String  m_FirewallHostName             = "";     // hostname of proxy
+	private String  m_FirewallHostName             = "";     // hostname of proxy
 	private int     m_FirewallPortNumber           = -1;     // portnumber of proxy
 	private boolean m_bUseFirewallAuthentication   = false; //indicates whether JAP should use a UserID/Password to authenticat to the proxy
 	private String  m_FirewallAuthenticationUserID = null;  //userid for authentication
@@ -50,151 +51,151 @@ public final class JAPModel
 	//private boolean  mbActCntMessageNeverRemind  = false; // indicates if Warning message in setAnonMode has been deactivated forever
 	//private boolean  mbDoNotAbuseReminder        = false; // indicates if new warning message in setAnonMode (containing Do no abuse) has been shown
 	//private boolean  mbGoodByMessageNeverRemind  = false; // indicates if Warning message before exit has been deactivated forever
-  private int m_iDummyTrafficIntervall           = -1; // indicates what Dummy Traffic should be generated or not
+	private int m_iDummyTrafficIntervall           = -1; // indicates what Dummy Traffic should be generated or not
 
-  private boolean m_bSmallDisplay                = false;
-  private boolean m_bInfoServiceDisabled         = false;
+	private boolean m_bSmallDisplay                = false;
+	private boolean m_bInfoServiceDisabled         = false;
 
-  private static JAPModel model                  = null;
+	private static JAPModel model                  = null;
 
 	private JAPModel ()
-    {
+		{
 		 // m_Locale=Locale.getDefault();
-	  }
+		}
 
 	/** Creates the Model - as Singleton.
 	 *  @return The one and only JAPModel
 	 */
 	public static JAPModel create()
-    {
-		  if(model==null)
-			  model=new JAPModel();
-		  return model;
-	  }
-
-  public static JAPModel getModel()
-    {
+		{
+			if(model==null)
+				model=new JAPModel();
 			return model;
-	  }
+		}
+
+	public static JAPModel getModel()
+		{
+			return model;
+		}
 
 	protected void setInfoServiceHost(String host)
-    {
+		{
 			m_InfoServiceHostName=host;
 		}
 
-  public static String getInfoServiceHost()
-    {
-      return model.m_InfoServiceHostName;
-	  }
+	public static String getInfoServiceHost()
+		{
+			return model.m_InfoServiceHostName;
+		}
 
-  protected void setInfoServicePort(int port)
-    {
+	protected void setInfoServicePort(int port)
+		{
 			model.m_InfoServicePortNumber=port;
 		}
 
-  public static int getInfoServicePort()
-    {
+	public static int getInfoServicePort()
+		{
 			return model.m_InfoServicePortNumber;
 		}
 
-  protected void setUseFirewall(boolean b)
-    {
+	protected void setUseFirewall(boolean b)
+		{
 			m_bUseFirewall=b;
 		}
 
-  public static boolean getUseFirewall()
-    {
+	public static boolean getUseFirewall()
+		{
 			return model.m_bUseFirewall;
 		}
 
-  protected void setFirewallType(int type)
-    {
-      m_FirewallType=type;
-    }
-
-  public static int getFirewallType()
-    {
-	    return model.m_FirewallType;
+	protected void setFirewallType(int type)
+		{
+			m_FirewallType=type;
 		}
 
-  protected void setFirewallHost(String host)
-    {
-      m_FirewallHostName=host;
-    }
+	public static int getFirewallType()
+		{
+			return model.m_FirewallType;
+		}
+
+	protected void setFirewallHost(String host)
+		{
+			m_FirewallHostName=host;
+		}
 
 	public static String getFirewallHost()
-    {
-	    return model.m_FirewallHostName;
-	  }
-
-  protected void setFirewallPort(int port)
-    {
-      m_FirewallPortNumber=port;
-    }
-
-  public static int getFirewallPort()
-    {
-	    return model.m_FirewallPortNumber;
+		{
+			return model.m_FirewallHostName;
 		}
 
-  protected void setUseFirewallAuthorization(boolean b)
-    {
+	protected void setFirewallPort(int port)
+		{
+			m_FirewallPortNumber=port;
+		}
+
+	public static int getFirewallPort()
+		{
+			return model.m_FirewallPortNumber;
+		}
+
+	protected void setUseFirewallAuthorization(boolean b)
+		{
 			m_bUseFirewallAuthentication=b;
-	  }
+		}
 
-  public static boolean getUseFirewallAuthorization()
-    {
+	public static boolean getUseFirewallAuthorization()
+		{
 			return model.m_bUseFirewallAuthentication;
-	  }
+		}
 
-  protected void setFirewallAuthUserID(String userid)
-    {
+	protected void setFirewallAuthUserID(String userid)
+		{
 			m_FirewallAuthenticationUserID=userid;
-	  }
+		}
 
 	public static String getFirewallAuthUserID()
-    {
+		{
 			return model.m_FirewallAuthenticationUserID;
-	  }
-
-	protected void setFirewallAuthPasswd(String passwd)
-    {
-			m_FirewallAuthenticationPasswd=passwd;
-	  }
-
-	public static String getFirewallAuthPasswd()
-    {
-			return model.m_FirewallAuthenticationPasswd;
-	  }
-
-  protected void setAutoConnect(boolean b)
-    {
-      m_bAutoConnect=b;
-    }
-
-  public static boolean getAutoConnect()
-    {
-      return model.m_bAutoConnect;
-    }
-
-  protected void setAutoReConnect(boolean b)
-    {
-      m_bAutoReConnect=b;
-    }
-
-  public static boolean getAutoReConnect()
-    {
-      return model.m_bAutoReConnect;
-    }
-
- 	protected void setMinimizeOnStartup(boolean b)
-    {
-		  m_bMinimizeOnStartup=b;
 		}
 
- 	public static boolean getMinimizeOnStartup()
-    {
-		  return model.m_bMinimizeOnStartup;
+	protected void setFirewallAuthPasswd(String passwd)
+		{
+			m_FirewallAuthenticationPasswd=passwd;
+		}
+
+	public static String getFirewallAuthPasswd()
+		{
+			return model.m_FirewallAuthenticationPasswd;
+		}
+
+	protected void setAutoConnect(boolean b)
+		{
+			m_bAutoConnect=b;
+		}
+
+	public static boolean getAutoConnect()
+		{
+			return model.m_bAutoConnect;
+		}
+
+	protected void setAutoReConnect(boolean b)
+		{
+			m_bAutoReConnect=b;
+		}
+
+	public static boolean getAutoReConnect()
+		{
+			return model.m_bAutoReConnect;
+		}
+
+	protected void setMinimizeOnStartup(boolean b)
+		{
+			m_bMinimizeOnStartup=b;
+		}
+
+	public static boolean getMinimizeOnStartup()
+		{
+			return model.m_bMinimizeOnStartup;
 		}
 
 /*
@@ -206,99 +207,106 @@ public final class JAPModel
 	//---------------------------------------------------------------------
 */
 
-  protected void setDummyTraffic(int msIntervall)
-    {
-      m_iDummyTrafficIntervall=msIntervall;
-    }
+	protected void setDummyTraffic(int msIntervall)
+		{
+			m_iDummyTrafficIntervall=msIntervall;
+		}
 
-  public static int getDummyTraffic()
-    {
-      return model.m_iDummyTrafficIntervall;
-    }
+	public static int getDummyTraffic()
+		{
+			return model.m_iDummyTrafficIntervall;
+		}
 
-  protected void setHttpListenerPortNumber(int p)
-    {
-      m_HttpListenerPortNumber=p;
-    }
+	protected void setHttpListenerPortNumber(int p)
+		{
+			m_HttpListenerPortNumber=p;
+		}
 
 	public static int getHttpListenerPortNumber()
-    {
-		  return model.m_HttpListenerPortNumber;
-	  }
+		{
+			return model.m_HttpListenerPortNumber;
+		}
 
 	protected void setHttpListenerIsLocal(boolean b)
-    {
+		{
 			m_bHttpListenerIsLocal=b;
 		}
 
 	public static boolean getHttpListenerIsLocal()
-    {
+		{
 			return model.m_bHttpListenerIsLocal;
 		}
 
-  public void setSmallDisplay(boolean b)
-    {
-      m_bSmallDisplay=b;
-    }
+	public void setSmallDisplay(boolean b)
+		{
+			m_bSmallDisplay=b;
+		}
 
-  public static boolean isSmallDisplay()
-    {
-      return model.m_bSmallDisplay;
-    }
+	public static boolean isSmallDisplay()
+		{
+			return model.m_bSmallDisplay;
+		}
 
  protected void setInfoServiceDisabled(boolean b)
-    {
-      m_bInfoServiceDisabled=b;
-    }
+		{
+			m_bInfoServiceDisabled=b;
+		}
 
-  public static boolean isInfoServiceDisabled()
-    {
-      return model.m_bInfoServiceDisabled;
-    }
+	public static boolean isInfoServiceDisabled()
+		{
+			return model.m_bInfoServiceDisabled;
+		}
 
 	public String toString()
-    {
+		{
 			StringBuffer buff=new StringBuffer(2048);
-      buff.append("Configuration for JAP Version ");
-      buff.append(JAPConstants.aktVersion);
-      buff.append("\n");
-      buff.append("HttpListenerPortNumber: ");
-      buff.append(m_HttpListenerPortNumber);
-      buff.append("\n");
-      buff.append("HttpListenerIsLocal: ");
-      buff.append(m_bHttpListenerIsLocal);
-      buff.append("\n");
-      buff.append("InfoServiceHost: ");
-      buff.append(m_InfoServiceHostName);
-      buff.append("\n");
-      buff.append("InfoServicePort: ");
-      buff.append(m_InfoServicePortNumber);
-      buff.append("\n");
-      buff.append("UseFirewall: ");
-      buff.append(m_bUseFirewall);
-      buff.append("\n");
-      buff.append("FirewallType: ");
-      buff.append(m_FirewallType);
-      buff.append("\n");
-      buff.append("FirewallHost: ");
-      buff.append(m_FirewallHostName);
-      buff.append("\n");
-      buff.append("FirewallPort: ");
-      buff.append(m_FirewallPortNumber);
-      buff.append("\n");
-      buff.append("AutoConnect: ");
-      buff.append(m_bAutoConnect);
-      buff.append("\n");
-      buff.append("AutoReConnect: ");
-      buff.append(m_bAutoReConnect);
-      buff.append("\n");
+			buff.append("Configuration for JAP Version ");
+			buff.append(JAPConstants.aktVersion);
+			buff.append("\n");
+			String s=JAPDll.getDllVersion();
+			if(s!=null)
+				{
+					buff.append("Using JAPDll: ");
+					buff.append(s);
+					buff.append("\n");
+				}
+			buff.append("HttpListenerPortNumber: ");
+			buff.append(m_HttpListenerPortNumber);
+			buff.append("\n");
+			buff.append("HttpListenerIsLocal: ");
+			buff.append(m_bHttpListenerIsLocal);
+			buff.append("\n");
+			buff.append("InfoServiceHost: ");
+			buff.append(m_InfoServiceHostName);
+			buff.append("\n");
+			buff.append("InfoServicePort: ");
+			buff.append(m_InfoServicePortNumber);
+			buff.append("\n");
+			buff.append("UseFirewall: ");
+			buff.append(m_bUseFirewall);
+			buff.append("\n");
+			buff.append("FirewallType: ");
+			buff.append(m_FirewallType);
+			buff.append("\n");
+			buff.append("FirewallHost: ");
+			buff.append(m_FirewallHostName);
+			buff.append("\n");
+			buff.append("FirewallPort: ");
+			buff.append(m_FirewallPortNumber);
+			buff.append("\n");
+			buff.append("AutoConnect: ");
+			buff.append(m_bAutoConnect);
+			buff.append("\n");
+			buff.append("AutoReConnect: ");
+			buff.append(m_bAutoReConnect);
+			buff.append("\n");
 
 /*	private boolean m_bUseFirewallAuthentication   = false; //indicates whether JAP should use a UserID/Password to authenticat to the proxy
 	private String  m_FirewallAuthenticationUserID = null;  //userid for authentication
 	private String  m_FirewallAuthenticationPasswd = null;  // password --> will never be saved...
 	private boolean m_bAutoConnect                 = false; // autoconnect after program start
 	private boolean m_bMinimizeOnStartup
-  */
+	*/
  /*     e.setAttribute("portNumber",Integer.toString(portNumber));
 			//e.setAttribute("portNumberSocks",Integer.toString(portSocksListener));
 			//e.setAttribute("supportSocks",(getUseSocksPort()?"true":"false"));
@@ -350,7 +358,7 @@ public final class JAPModel
 			JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.MISC,"JAPModel:save() Exception: "+ex.getMessage());
 			//ex.printStackTrace();
 		}
-    */
+		*/
 		return buff.toString();
 	}
 

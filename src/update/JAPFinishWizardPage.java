@@ -33,8 +33,8 @@ import jap.JAPUtil;
 import jap.JAPMessages;
 
 import gui.wizard.BasicWizardPage;
+import gui.JAPMultilineLabel;
 import javax.swing.JLabel;
-import javax.swing.JTextField;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -45,18 +45,19 @@ public class JAPFinishWizardPage extends BasicWizardPage
 
 public JLabel m_labelBackupOfJapJar;
 
-	public JAPFinishWizardPage(String name)
+	public JAPFinishWizardPage()
 	{
 		setIcon(JAPUtil.loadImageIcon(JAPConstants.DOWNLOADFN,false));
-		setPageTitle("Update-Wizard beenden");
+		setPageTitle(JAPMessages.getString("updateTitel_Update-WizardFertig"));
 		GridBagLayout gridBagFinish=new GridBagLayout();
 		GridBagConstraints constraintsFinish=new GridBagConstraints();
 
 		m_panelComponents.setLayout(gridBagFinish);
-		JLabel labelFinish = new JLabel(JAPMessages.getString("updateFinishMessage"));
+		JAPMultilineLabel labelFinish = new JAPMultilineLabel(JAPMessages.getString("updateFinishMessage"));
 		constraintsFinish.gridx = 0;
 		constraintsFinish.gridy = 0;
 		constraintsFinish.weightx=1;
+		constraintsFinish.weighty=0;
 		constraintsFinish.fill=GridBagConstraints.HORIZONTAL;
 		constraintsFinish.anchor = GridBagConstraints.NORTHWEST;
 		gridBagFinish.setConstraints(labelFinish,constraintsFinish);
@@ -66,10 +67,22 @@ public JLabel m_labelBackupOfJapJar;
 		constraintsFinish.gridx = 0;
 		constraintsFinish.gridy = 1;
 		constraintsFinish.gridwidth = 2;
+		constraintsFinish.weighty=0;
 		constraintsFinish.anchor = GridBagConstraints.WEST;
 		constraintsFinish.fill = GridBagConstraints.HORIZONTAL;
 		gridBagFinish.setConstraints(m_labelBackupOfJapJar,constraintsFinish);
 		m_panelComponents.add(m_labelBackupOfJapJar);
+
+		JLabel l = new JLabel();
+		constraintsFinish.gridx = 0;
+		constraintsFinish.gridy = 2;
+		constraintsFinish.gridwidth = 2;
+		constraintsFinish.weighty=1;
+		constraintsFinish.anchor = GridBagConstraints.NORTHWEST;
+		constraintsFinish.fill = GridBagConstraints.BOTH;
+		gridBagFinish.setConstraints(l,constraintsFinish);
+		m_panelComponents.add(l);
+
 //    setVisible(true);
 	}
 

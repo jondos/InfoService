@@ -5,14 +5,14 @@ Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
 
 	- Redistributions of source code must retain the above copyright notice,
-	  this list of conditions and the following disclaimer.
+		this list of conditions and the following disclaimer.
 
 	- Redistributions in binary form must reproduce the above copyright notice,
-	  this list of conditions and the following disclaimer in the documentation and/or
+		this list of conditions and the following disclaimer in the documentation and/or
 		other materials provided with the distribution.
 
 	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
-	  may be used to endorse or promote products derived from this software without specific
+		may be used to endorse or promote products derived from this software without specific
 		prior written permission.
 
 
@@ -32,30 +32,36 @@ import java.util.Vector;
 
 public interface Wizard
 {
-  //determine Number and Order of the WizardPages
-  public WizardPage invokeWizard(WizardHost host);
+	//Set the Host to use by this Wizard
+	public void setHost(WizardHost host);
 
-  //user's clicked finish --> do the work
-  public WizardPage finish(WizardPage currentPage, WizardHost host);
+	//Getst the Host to use by this Wizard
+	public WizardHost getHost();
 
-  //user's clicked next --> return next WizardPage
-  public WizardPage next(WizardPage currentPage, WizardHost host);
+	//determine Number and Order of the WizardPages
+	public WizardPage invokeWizard(/*WizardHost host*/);
+
+	//user's clicked finish --> do the work
+	public WizardPage finish(/*WizardPage currentPage, WizardHost host*/);
+
+	//user's clicked next --> return next WizardPage
+	public WizardPage next(/*WizardPage currentPage, WizardHost host*/);
 
  //user's clicked back --> return prev WizardPage
-  public WizardPage back(WizardPage currentPage, WizardHost host);
+	public WizardPage back(/*WizardPage currentPage, WizardHost host*/);
 
-  //user's clicked help --> make Help Dialog
-  public void help(WizardPage currentPage, WizardHost host);
+	//user's clicked help --> make Help Dialog
+	public void help(/*WizardPage currentPage, WizardHost host*/);
 
-  //get the number of total steps
-  public int initTotalSteps();
+	//get the number of total steps
+	public int initTotalSteps();
 
-  //user's clicked finish or cancel, wizard has completed
-  public void wizardCompleted();
+	//user's clicked finish or cancel, wizard has completed
+	public void wizardCompleted();
 
-  //Title of Wizard
-  public String getWizardTitle();
+	//Title of Wizard
+	public String getWizardTitle();
 
-  //determine the concrete action depending on the individual Pages
-  public Vector getPageVector();
+	//determine the concrete action depending on the individual Pages
+	//public Vector getPageVector();
 }
