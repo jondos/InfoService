@@ -58,7 +58,7 @@ public final class JAPModel {
     
 	
 	
-	static final String aktVersion = "00.00.020"; // Version of JAP
+	static final String aktVersion = "00.00.021"; // Version of JAP
 	
 	private int      portNumber        = 4001;
 	private boolean  mblistenerIsLocal = true;  // indicates whether the Listener serves for localhost only or not
