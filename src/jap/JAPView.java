@@ -695,6 +695,8 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 		} else {
 			m_cbAnon.setForeground(Color.red);
 		}
+		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPView: update CascadeName");
+
 		m_labelCascadeName.setText(e.getName());
 		m_labelCascadeName.setToolTipText(e.getName());
 		meterLabel.setIcon(getMeterImage(e.getAnonLevel()));
@@ -753,6 +755,7 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 				protectionProgressBar.setString(JAPMessages.getString("meterRiskVeryHigh"));
 			trafficProgressBar.setValue(trafficProgressBar.getMaximum());
 			trafficProgressBar.setString(JAPMessages.getString("meterNA"));
+			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPView:Finished updateValues");
 		}
 
 
