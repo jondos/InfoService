@@ -37,7 +37,7 @@ import anon.infoservice.ImmutableProxyInterface;
 public interface AnonService
 {
 	///The version of the AnonLib
-	public final static String ANONLIB_VERSION = "00.02.009";
+	String ANONLIB_VERSION = "00.02.010";
 
 	/** Initializes this AnonService. Depending on the AnonService, this may establish a connection to
 	 *  an AnonServer, which is described through the
@@ -51,16 +51,16 @@ public interface AnonService
 	 *  @return E_CONNECT, if a general connection error occured
 	 *
 	 */
-	public int initialize(AnonServerDescription anonServer);
+	int initialize(AnonServerDescription anonServer);
 
 	/** Sets the settings ofr the proxy, which should be used to establish network connections
 	 * @return E_SUCCESS, if ok
 	 * @return E_UNKNOWN, if an error occured
 	 */
-	public int setProxy(ImmutableProxyInterface a_Proxy);
+	int setProxy(ImmutableProxyInterface a_Proxy);
 
 	/** Disconnects form the server.*/
-	public void shutdown();
+	void shutdown();
 
 	/** Creates a new AnonChannel, which could be used for transmitting data. There is a
 	 *  limit of 50 channels per AnonService-connection, in order to prevent Denial of Service-attacks
@@ -70,7 +70,7 @@ public interface AnonService
 	 *  @throws ConnectException, if the Channel could not created
 	 *  @throws ToManyOpenChannels, if there a to many open channels for this AnonService
 	 */
-	public AnonChannel createChannel(int type) throws ConnectException;
+	AnonChannel createChannel(int type) throws ConnectException;
 
 	/** Creates a new AnonChannel, which could be used like a normal TCP/IP connection
 	 *  to host:port.
@@ -81,17 +81,17 @@ public interface AnonService
 	 *  @throws ToManyOpenChannels if there a to many open channels for the AnonService
 	 *
 	 */
-	public AnonChannel createChannel(String host, int port) throws ConnectException;
+	AnonChannel createChannel(String host, int port) throws ConnectException;
 
 	/** Adds an AnonServiceEventListener. This listener will receive events like:
 	 *  ... For more information see {@link AnonServiceEventListener AnonServiceEventListener}.
 	 *  @param l Listener to add
 	 */
-	public void addEventListener(AnonServiceEventListener l);
+	void addEventListener(AnonServiceEventListener l);
 
 	/** Removes an AnonServiceEventListener. This Listener will not receive any Events anymore.
 	 *  @param l Listener, which will be removed
 	 */
-	public void removeEventListener(AnonServiceEventListener l);
+	void removeEventListener(AnonServiceEventListener l);
 
 }
