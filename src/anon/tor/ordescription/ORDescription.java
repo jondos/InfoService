@@ -22,15 +22,17 @@ public class ORDescription {
 	private String m_address;
 	private String m_name;
 	private int m_port;
-	//private boolean m_running;
+	private String m_strSoftware;
 	private ORAcl m_acl;
 	private byte[] m_onionkey;
+	private byte[] m_signingkey;
 
-	public ORDescription(String address, String name, int port)
+	public ORDescription(String address, String name, int port,String strSoftware)
 	{
 		this.m_address = address;
 		this.m_name = name;
 		this.m_port = port;
+		m_strSoftware=strSoftware;
 		m_acl=new ORAcl();
 	}
 
@@ -52,6 +54,16 @@ public class ORDescription {
 		return this.m_onionkey;
 	}
 
+	public void setSigningKey(byte[] signingkey)
+	{
+		this.m_signingkey = signingkey;
+	}
+
+	public byte[] getSigningKey()
+	{
+		return this.m_signingkey;
+	}
+
 	public String getAddress()
 	{
 		return this.m_address;
@@ -65,6 +77,11 @@ public class ORDescription {
 	public int getPort()
 	{
 		return this.m_port;
+	}
+
+	public String getSoftware()
+	{
+		return m_strSoftware;
 	}
 
 	public boolean equals(ORDescription or)
@@ -95,7 +112,16 @@ public class ORDescription {
 			String socksport=st.nextToken();
 			String dirport=st.nextToken();
 			byte[] key=null;
+			byte[] signingkey=null;
 			ORAcl acl=new ORAcl();
+			String strSoftware="";
+			ln=reader.readLine();
+			if(ln.startsWith("platform"))
+			{
+				st=new StringTokenizer(ln);
+				st.nextToken();
+				strSoftware=st.nextToken()+" "+st.nextToken();
+			}
 			for(;;)
 			{
 				ln=reader.readLine();
@@ -114,6 +140,21 @@ public class ORDescription {
 						buff.append(ln);
 					}
 				}
+				else if(ln.startsWith("signing-key"))
+				{
+					StringBuffer buff=new StringBuffer();
+					ln=reader.readLine(); //skip -----begin
+					for(;;)
+					{
+						ln = reader.readLine();
+						if (ln.startsWith("-----END"))
+						{
+							signingkey=Base64.decode(buff.toString());
+							break;
+						}
+						buff.append(ln);
+					}
+				}
 				else if(ln.startsWith("router-signature"))
 				{
 					for(;;)
@@ -121,8 +162,9 @@ public class ORDescription {
 						ln = reader.readLine(); // skip siganture
 						if (ln.startsWith("-----END"))
 						{
-							ORDescription ord=new ORDescription(adr,nickname,Integer.parseInt(orport));
+							ORDescription ord=new ORDescription(adr,nickname,Integer.parseInt(orport),strSoftware);
 							ord.setOnionKey(key);
+							ord.setSigningKey(signingkey);
 							ord.setAcl(acl);
 							return ord;
 						}

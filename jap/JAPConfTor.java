@@ -83,6 +83,7 @@ class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 		model.addColumn(JAPMessages.getString("torRouterName"));
 		model.addColumn(JAPMessages.getString("torRouterAdr"));
 		model.addColumn(JAPMessages.getString("torRouterPort"));
+		model.addColumn(JAPMessages.getString("torRouterSoftwaret"));
 		model.setNumRows(3);
 		m_tableRouters = new JTable(model);
 		m_tableRouters.setPreferredScrollableViewportSize(new Dimension(70, 70));
@@ -209,6 +210,7 @@ class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 			m_tableRouters.setValueAt(ord.getName(), i, 0);
 			m_tableRouters.setValueAt(ord.getAddress(), i, 1);
 			m_tableRouters.setValueAt(new Integer(ord.getPort()), i, 2);
+			m_tableRouters.setValueAt(ord.getSoftware(),i,3);
 		}
 	}
 }

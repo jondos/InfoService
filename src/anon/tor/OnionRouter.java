@@ -80,7 +80,7 @@ public class OnionRouter {
 
 	/**
 	 * returns a description of this router
-	 * @return 
+	 * @return
 	 * ORDescription
 	 */
 	public ORDescription getDescription()
@@ -142,7 +142,7 @@ public class OnionRouter {
 
 	/**
 	 * create cell
-	 * 
+	 *
 	 * this cell is needed to connect to the first OR.
 	 * after the connection is established extendConnection is used
 	 * @return
@@ -280,7 +280,7 @@ public class OnionRouter {
 			System.arraycopy(dhpubY,1,a,0,a.length);
 			dhpubY = a;
 		}
-	
+
 		a = new byte[70];
 		System.arraycopy(dhpubY,0,a,0,70);
 		byte[] rsaunencrypted = helper.conc(keyparam,a);
@@ -303,7 +303,13 @@ public class OnionRouter {
 		{
 			aes.processBlock(aesencrypted,i,aesencrypted,i);
 		}
-		return helper.conc(rsaencrypted,aesencrypted);
+		byte[] temp=helper.conc(rsaencrypted,aesencrypted);
+		SHA1Digest sha1=new SHA1Digest();
+		byte[] tmp=m_description.getSigningKey();
+		sha1.update(tmp,0,tmp.length);
+		byte[] hash=new byte[20];
+		sha1.doFinal(hash,0);
+		return helper.conc(temp,hash);
 	}
 
 	/**
