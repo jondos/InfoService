@@ -54,7 +54,7 @@ final public class JAPiPAQ
 		JAPDebug.getInstance().setLogType(LogType.NET + LogType.GUI + LogType.THREAD + LogType.MISC);
 		JAPDebug.getInstance().setLogLevel(LogLevel.WARNING);
 		// load settings from config file
-		controller.loadConfigFile(strJapConfFile);
+		controller.loadConfigFile(strJapConfFile,false);
 		// Output some information about the system
 		// Create the view object
 		view = new JAPView(JAPConstants.TITLE);

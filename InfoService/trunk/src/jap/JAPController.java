@@ -69,7 +69,7 @@ import proxy.AnonWebProxy;
 import proxy.DirectProxy;
 import proxy.ProxyListener;
 import update.JAPUpdateWizard;
-
+import pay.PayAccountsFile;
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPController implements ProxyListener
 {
@@ -228,7 +228,7 @@ public final class JAPController implements ProxyListener
 	 * and then in the JAP install directory.
 	 * The configuration is a XML-File with the following structure:
 	 *  <JAP
-	 *    version="0.6"                     // version of the xml struct (DTD) used for saving the configuration
+	 *    version="0.7"                     // version of the xml struct (DTD) used for saving the configuration
 	 *    portNumber=""                     // Listener-Portnumber
 	 *    portNumberSocks=""                // Listener-Portnumber for SOCKS
 	 *    supportSocks=""                   // Will we support SOCKS ?
@@ -245,10 +245,6 @@ public final class JAPController implements ProxyListener
 	 *    infoServiceChange="true/false"    // automatic change of infoservice after failure (since config version 0.5)
 	 *    infoServiceTimeout="..."          // timeout (sec) for infoservice and update communication (since config version 0.5)
 	 *    certCheckDisabled="true/false"    // disable checking of certificates
-	 *    biHost="..."                      // BI's Hostname
-	 *    biPort="..."                      // BI's portnumber
-	 *    payAccountsFileEncrypted="true/false"   // is the accountsfile encrypted
-	 *    payAccountsFileName="..."         // filename and path of the accountsfile
 	 *    autoConnect="true"/"false"    // should we start the anon service immedialy after programm launch ?
 	 *    autoReConnect="true"/"false"    // should we automatically reconnect to mix if connection was lost ?
 	 *    DummyTrafficIntervall=".."    //Time of inactivity in milli seconds after which a dummy is send
@@ -302,12 +298,23 @@ public final class JAPController implements ProxyListener
 	 *     </Network>
 	 *   <DirServer>
 	 * </Tor>
+	 * <Payment //Since version 0.7
+	 *    biHost="..."                      // BI's Hostname
+	 *    biPort="..."                      // BI's portnumber
+	 * >
+	 *   <EncryptedData>  // Account data encrypted with password
+	 *      <Accounts>
+	 *        <Account>.....</Account>
+	 *        <Account>.....</Account>
+	 *      </Accounts>
+	 *   </EncryptedData>
+	 * </Payment>
 	 *  </JAP>
 
 
 	 *  @param strJapConfFile - file containing the Configuration. If null $(user.home)/jap.conf or ./jap.conf is used.
 	 */
-	public synchronized void loadConfigFile(String strJapConfFile)
+	public synchronized void loadConfigFile(String strJapConfFile,boolean loadPay)
 	{
 		// Load config from xml file
 		LogHolder.log(LogLevel.INFO, LogType.MISC,
@@ -452,18 +459,6 @@ public final class JAPController implements ProxyListener
 					LogHolder.log(LogLevel.ERR, LogType.MISC,
 								  "JAPModel:Could not set certificate store! No input data?");
 				}
-				//load settings for Payment
-				setBIHost(XMLUtil.parseNodeString(n.getNamedItem("biHost"), JAPModel.getBIHost()));
-				setBIPort(XMLUtil.parseElementAttrInt(root, "biPort", JAPModel.getBIPort()));
-				setPayAccountsFileEncrypted(XMLUtil.parseElementAttrBoolean(root, "payAccountsFileEncrypted",
-					JAPModel.isPayAccountsFileEncrypted()));
-
-				String accountsFileName = root.getAttribute("payAccountsFileName");
-				if (accountsFileName == null || accountsFileName.equals(""))
-				{
-					accountsFileName = "JAPAccounts.dat";
-				}
-				setPayAccountsFileName(accountsFileName);
 
 				// load settings for proxy
 				String proxyHost = XMLUtil.parseNodeString(n.getNamedItem("proxyHostName"),
@@ -636,6 +631,28 @@ public final class JAPController implements ProxyListener
 					JAPConstants.TOR_DIR_SERVER_PORT);
 				setTorDirServer(strTorDirServerHost, iTorDirServerPort);
 				setTorEnabled(bIsTorEnabled);
+
+
+				/* load Payment settings */
+				if(loadPay) {
+					Element elemPay = (Element) XMLUtil.getFirstChildByName(root, "Payment");
+					setBIHost(elemPay.getAttribute("biHost"));
+					setBIPort(Integer.parseInt(elemPay.getAttribute("biPort")));
+
+					Element elemAccounts = (Element) XMLUtil.getFirstChildByName(elemPay, "EncryptedData");
+
+					// test: is account data encrypted?
+					if (elemAccounts != null)
+					{
+						// it is encrypted -> initialize PayAccountsFile with encrypted data
+						pay.PayAccountsFile.getInstance().initEncrypted(elemAccounts);
+					}
+					else
+					{
+						elemAccounts = (Element) XMLUtil.getFirstChildByName(elemPay, "PayAccountsFile");
+						pay.PayAccountsFile.getInstance().initPlaintext(elemAccounts);
+					}
+				}
 			}
 			catch (Exception e)
 			{
@@ -647,20 +664,6 @@ public final class JAPController implements ProxyListener
 		notifyJAPObservers();
 	}
 
-	/**
-	 * setPayAccountsFileName
-	 *
-	 * @param string String
-	 */
-	private void setPayAccountsFileName(String string)
-	{
-		m_Model.setPayAccountsFileName(string);
-	}
-
-	private void setPayAccountsFileEncrypted(boolean b)
-	{
-		m_Model.setPayAccountsFileEncrypted(b);
-	}
 
 	public void saveConfigFile()
 	{
@@ -747,13 +750,6 @@ public final class JAPController implements ProxyListener
 			e.setAttribute("proxyAuthorization", (JAPModel.getUseFirewallAuthorization() ? "true" : "false"));
 			tmpStr = m_Model.getFirewallAuthUserID();
 			e.setAttribute("proxyAuthUserID", ( (tmpStr == null) ? "" : tmpStr));
-
-			/* payment configuration */
-			e.setAttribute("biHost", JAPModel.getBIHost());
-			e.setAttribute("biPort", Integer.toString(JAPModel.getBIPort()));
-			e.setAttribute("payAccountsFileEncrypted",
-						   (JAPModel.isPayAccountsFileEncrypted() ? "true" : "false"));
-			e.setAttribute("payAccountsFileName", JAPModel.getPayAccountsFileName());
 
 			/* infoservice configuration options */
 			e.setAttribute("infoServiceDisabled", (JAPModel.isInfoServiceDisabled() ? "true" : "false"));
@@ -861,6 +857,20 @@ public final class JAPController implements ProxyListener
 			XMLUtil.setNodeValue(tmp1, Integer.toString(m_Model.getTorDirServerPortNumber()));
 			tmp.appendChild(tmp1);
 			e.appendChild(elemTor);
+
+			/* payment configuration */
+			PayAccountsFile accounts = PayAccountsFile.getInstance();
+			if(accounts.isInitialized()) {
+				Element elemPayment = doc.createElement("Payment");
+				e.appendChild(elemPayment);
+				elemPayment.setAttribute("biHost", JAPModel.getBIHost());
+				elemPayment.setAttribute("biPort", Integer.toString(JAPModel.getBIPort()));
+
+				// returns the configuration data, encrypted or not, as the user wishes.
+				Element elemAccounts = accounts.getConfigurationData();
+				Element myAccounts = (Element) XMLUtil.importNode(doc, elemAccounts, true);
+				elemPayment.appendChild(myAccounts);
+			}
 
 			return XMLUtil.XMLDocumentToString(doc);
 			//((XmlDocument)doc).write(f);

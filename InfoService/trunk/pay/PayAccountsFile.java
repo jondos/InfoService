@@ -27,18 +27,27 @@
  */
 package pay;
 
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.util.Enumeration;
 import java.util.Vector;
+import javax.xml.parsers.DocumentBuilderFactory;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import anon.util.XMLUtil;
+import jap.JAPModel;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import pay.util.PayText;
-import org.w3c.dom.*;
-import javax.xml.parsers.*;
-import anon.util.*;
-import java.io.*;
-import jap.JAPModel;
-
+import jap.JAPView;
+import jap.JAPController;
+import javax.swing.JOptionPane;
+import javax.xml.parsers.ParserConfigurationException;
+import anon.crypto.XMLEncryption;
 /**
  * This class contains the accounts configuration and the functionality to read
  * and write the configuration file. Because the configuration file contains
@@ -65,26 +74,31 @@ import jap.JAPModel;
  * &lt;/PayAccountsFile&gt;
  * </pre>
  *
- * @todo implement encryption and decryption
  * @author Bastian Voigt
  * @version 1.0
  */
 public class PayAccountsFile
 {
+	private String m_Password = null;
+	private boolean m_bIsInitialized = false;
+	private boolean m_bIsEncrypted = false;
+	private boolean m_bWasEncrypted = false;
+	private boolean m_bFirstTime = false;
+	private Document m_TheDocument = null;
+
 	/** contains a vector of PayAccount objects, one for each account */
-	protected Vector m_Accounts;
+	protected Vector m_Accounts = new Vector();
 
 	/** the active account */
-	protected PayAccount m_ActiveAccount;
+	protected PayAccount m_ActiveAccount = null;
 
 	/** the one and only accountsfile */
 	private static PayAccountsFile ms_AccountsFile;
+	private String m_strWasPassword;
 
 	// singleton!
 	private PayAccountsFile()
 	{
-		m_Accounts = new Vector();
-		m_ActiveAccount = null;
 	}
 
 	/**
@@ -97,74 +111,160 @@ public class PayAccountsFile
 		if (ms_AccountsFile == null)
 		{
 			ms_AccountsFile = new PayAccountsFile();
-			try
+		}
+		else
+		{
+			if (ms_AccountsFile.m_bIsInitialized)
 			{
-				// TODO: implement encryption
-				ms_AccountsFile.readFromFile(JAPModel.getPayAccountsFileName(),
-											 false, null);
+				if (ms_AccountsFile.m_bIsEncrypted)
+				{
+					ms_AccountsFile.doInit();
+				}
 			}
-			catch (Exception e) // if the file could not be read
+			else
 			{
-				LogHolder.log(LogLevel.DEBUG, LogType.PAY,
-							  "Could not read accountFile.. perhaps it does not yet exist.. trying to save:"
-							  );
-				try
-				{
-					ms_AccountsFile.save();
-				}
-				catch (Exception ex)
-				{
-					LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Could not save file!");
-					ex.printStackTrace();
-				}
+				ms_AccountsFile.m_bFirstTime = true;
+				ms_AccountsFile.m_bIsInitialized = true;
+				ms_AccountsFile.m_bIsEncrypted = false;
 			}
 		}
 		return ms_AccountsFile;
 	}
 
 	/**
-	 * Reads the accountsfile from disk.
-	 * @param fileName String
-	 * @param isEncrypted boolean
-	 * @param password String can be null if not encrypted
+	 * Initializes the accountsFile with encrypted XML data from the config
+	 * file. The user will be asked for a password for decryption later
+	 * on demand, because at the time this is called by JAPController, the
+	 * main window does not exist.
+	 *
+	 * @param elemCrypt Element encrypted Accounts structure from configfile
+	 * @return boolean succeeded?
 	 */
-	public void readFromFile(String fileName, boolean isEncrypted, String password) throws Exception
+	public boolean initEncrypted(Element elemCrypt)
 	{
-		LogHolder.log(LogLevel.DEBUG, LogType.PAY,
-					  "pay.PayAccountsFile.readFromFile: Reading PayAccounts from file "+fileName);
-
-		// read file from disk
-		File f = new File(fileName);
-		int l = (int) f.length();
-		byte[] xmlByteArray = new byte[l];
-		FileInputStream inStream = new FileInputStream(f);
-		inStream.read(xmlByteArray);
-		inStream.close();
-
-		// decrypt the ByteArray using the supplied password
-		if (isEncrypted)
+		if (m_bIsInitialized)
 		{
-			if (password == null)
+			return false;
+		}
+		try
+		{
+			m_TheDocument = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+			Element elemRoot = m_TheDocument.createElement("Root");
+			m_TheDocument.appendChild(elemRoot);
+			Element myCrypt = (Element) XMLUtil.importNode(m_TheDocument, elemCrypt, true);
+			elemRoot.appendChild(myCrypt);
+		}
+		catch (Exception ex)
+		{
+			return false;
+		}
+		m_bIsEncrypted = true;
+		m_bIsInitialized = true;
+		m_bFirstTime = false;
+		return true;
+	}
+
+	/**
+	 * Initializes the accountsFile with plaintext xml data
+	 *
+	 * @param elemPlain Element
+	 * @return boolean succeeded?
+	 */
+	public boolean initPlaintext(Element elemPlain)
+	{
+		if (m_bIsInitialized)
+		{
+			return false;
+		}
+		try
+		{
+			m_TheDocument = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+			Element elemRoot = m_TheDocument.createElement("Root");
+			m_TheDocument.appendChild(elemRoot);
+			Element myCrypt = (Element) XMLUtil.importNode(m_TheDocument, elemPlain, true);
+			elemRoot.appendChild(myCrypt);
+		}
+		catch (Exception ex)
+		{
+			return false;
+		}
+		doInit();
+		m_bIsEncrypted = false;
+		m_bIsInitialized = true;
+		m_bFirstTime = false;
+		return true;
+	}
+
+	/**
+	 * Performs the initialization. If necessary, the user will be asked for a
+	 * password to decrypt the accounts data
+	 *
+	 * @return boolean succeeded?
+	 * @todo cancel-Fall abfangen und vernuenftig behandeln (-> m_bIsEncrypted = true lassen und abbrechen)
+	 */
+	private boolean doInit()
+	{
+		Element elemRoot = m_TheDocument.getDocumentElement();
+		Element elemAccountsFile = null;
+
+		// decrypt if necessary
+		if (m_bIsEncrypted)
+		{
+			JAPView mainView = JAPController.getView();
+			String strPassword = "";
+			String strMessage = "Bitte Passwort f&uuml; die Entschl&uuml;sselung eingeben";
+			Element elemCrypt = (Element) XMLUtil.getFirstChildByName(elemRoot, "EncryptedData");
+
+			while (true)
 			{
-				throw new Exception("Cannot encrypt with null password");
+				// ask for password
+				strPassword = JOptionPane.showInputDialog(
+					mainView, strMessage,
+					"Passwort eingeben",
+					JOptionPane.QUESTION_MESSAGE | JOptionPane.OK_CANCEL_OPTION
+					);
+
+				try
+				{
+					elemAccountsFile = XMLEncryption.decryptElement(elemCrypt, strPassword);
+				}
+				catch (Exception ex)
+				{
+					strMessage = "Falsches Passwort. Bitte geben Sie das Passwort " +
+						"f&uuml;r die Entschl&uuml;sselung ein";
+					continue;
+				}
+				m_strWasPassword = strPassword;
+				break;
 			}
-			// TODO: Implement decryption
+			m_bIsEncrypted = false;
+			m_bWasEncrypted = true;
+		}
+		else
+		{
+			elemAccountsFile = (Element) XMLUtil.getFirstChildByName(elemRoot, "PayAccountsFile");
 		}
 
-		// construct Dom Document
-		ByteArrayInputStream bai = new ByteArrayInputStream(xmlByteArray);
-		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(bai);
-		Element elemRoot = doc.getDocumentElement();
-
-		// finally set values
-		Element elemActiveAccount = (Element) XMLUtil.getFirstChildByName(elemRoot, "ActiveAccountNumber");
+		// set values
+		Element elemActiveAccount = (Element) XMLUtil.getFirstChildByName(elemAccountsFile,
+			"ActiveAccountNumber");
 		long activeAccountNumber = Long.parseLong(XMLUtil.parseNodeString(elemActiveAccount, "0"));
 
-		Element elemAccounts = (Element) XMLUtil.getFirstChildByName(elemRoot, "Accounts");
+		Element elemAccounts = (Element) XMLUtil.getFirstChildByName(elemAccountsFile, "Accounts");
 		Element elemAccount = (Element) elemAccounts.getFirstChild();
 		while (elemAccount != null)
 		{
-			m_Accounts.addElement(new PayAccount(elemAccounts));
+			try
+			{
+				m_Accounts.addElement(new PayAccount(elemAccount));
+				elemAccount = (Element) elemAccounts.getNextSibling();
+			}
+			catch (Exception ex1)
+			{
+				LogHolder.log(LogLevel.ERR, LogType.PAY, "Could not read accounts data: " + ex1.toString());
+				ex1.printStackTrace();
+				return false;
+			}
 		}
 
 		// find activeAccount
@@ -181,18 +281,54 @@ public class PayAccountsFile
 				}
 			}
 		}
-	}
-
-	public void save() throws Exception
-	{
-		// TODO: Implement encryption
-		String fileName = JAPModel.getPayAccountsFileName();
-		LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Got accountsfilename from JapModel: " + fileName);
-		saveToFile(fileName, false, null);
+		m_TheDocument = null;
+		return true;
 	}
 
 	/**
-	 * Save the accountfile to disk
+	 * Reads the accountsfile from disk. (Import Function)
+	 * @param fileName String
+	 */
+	public void readFromFile(String fileName) throws Exception
+	{
+		LogHolder.log(LogLevel.DEBUG, LogType.PAY,
+					  "pay.PayAccountsFile.readFromFile: Reading PayAccounts from file " + fileName);
+		// delete old accountdata
+		if (m_bIsInitialized)
+		{
+			m_Accounts.removeAllElements();
+			m_ActiveAccount = null;
+		}
+
+		// read file from disk
+		File f = new File(fileName);
+		FileInputStream inStream = new FileInputStream(f);
+		m_TheDocument = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(inStream);
+		inStream.close();
+		m_bIsInitialized = true;
+
+		Element elemRoot = m_TheDocument.getDocumentElement();
+		Element elemAccountsFile = (Element) XMLUtil.getFirstChildByName(elemRoot, "PayAccountsFile");
+		if (elemAccountsFile == null)
+		{
+			elemAccountsFile = (Element) XMLUtil.getFirstChildByName(elemRoot, "EncryptedData");
+			if (elemAccountsFile == null)
+			{
+				throw new Exception("Wrong XML Format");
+			}
+			m_bIsEncrypted = true;
+		}
+		else
+		{
+			m_bIsEncrypted = false;
+		}
+
+		m_bFirstTime = true;
+		doInit();
+	}
+
+	/**
+	 * Save the accountfile to disk (export function)
 	 *
 	 * @param fileName String
 	 * @param saveEncrypted boolean if true, file will be encrypted
@@ -202,24 +338,7 @@ public class PayAccountsFile
 	public void saveToFile(String fileName, boolean saveEncrypted, String password) throws Exception
 	{
 		LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Saving accountsfile to " + fileName + "...");
-		// construct xml document
-		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
-		Element elemRoot = doc.createElement("PayAccountsFile");
-		doc.appendChild(elemRoot);
-		elemRoot.setAttribute("version", "1.0");
-
-		Element elem = doc.createElement("ActiveAccountNumber");
-		XMLUtil.setNodeValue(elem, Long.toString(getActiveAccountNumber()));
-		elemRoot.appendChild(elem);
-
-		elem = doc.createElement("Accounts");
-		elemRoot.appendChild(elem);
-		for (int i = 0; i < m_Accounts.size(); i++)
-		{
-			PayAccount account = (PayAccount) m_Accounts.elementAt(i);
-			Node n = XMLUtil.importNode(doc, account.getDomDocument().getDocumentElement(), true);
-			elem.appendChild(n);
-		}
+		Document doc = constructXmlDocument(saveEncrypted, password);
 
 		// convert it to a bytearray
 		byte[] xmlByteArray = XMLUtil.XMLDocumentToString(doc).getBytes();
@@ -242,6 +361,46 @@ public class PayAccountsFile
 		LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Saving Was successful");
 	}
 
+	/**
+	 * constructs the xml structure
+	 *
+	 * @param encrypt boolean if true it will be encrypted
+	 * @param password String password for encrypting
+	 * @throws Exception
+	 * @return Document
+	 */
+	private Document constructXmlDocument(boolean encrypt, String password) throws Exception
+	{
+		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+		Element elemRoot = doc.createElement("Root");
+		elemRoot.setAttribute("filetype", "JapAccountsFile");
+		elemRoot.setAttribute("version", "1.0");
+		doc.appendChild(elemRoot);
+
+		Element elemAccountsFile = doc.createElement("PayAccountsFile");
+		elemAccountsFile.setAttribute("version", "1.0");
+		elemRoot.appendChild(elemAccountsFile);
+
+		Element elem = doc.createElement("ActiveAccountNumber");
+		XMLUtil.setNodeValue(elem, Long.toString(getActiveAccountNumber()));
+		elemAccountsFile.appendChild(elem);
+
+		elem = doc.createElement("Accounts");
+		elemAccountsFile.appendChild(elem);
+		for (int i = 0; i < m_Accounts.size(); i++)
+		{
+			PayAccount account = (PayAccount) m_Accounts.elementAt(i);
+			Node n = XMLUtil.importNode(doc, account.getDomDocument().getDocumentElement(), true);
+			elem.appendChild(n);
+		}
+
+		if (encrypt)
+		{
+			XMLEncryption.encryptElement(elemAccountsFile, password);
+		}
+		return doc;
+	}
+
 	public boolean hasActiveAccount()
 	{
 		return m_ActiveAccount != null;
@@ -255,7 +414,6 @@ public class PayAccountsFile
 	public void setActiveAccount(long accountNumber) throws Exception
 	{
 		m_ActiveAccount = getAccount(accountNumber);
-		save();
 	}
 
 	public long getActiveAccountNumber()
@@ -302,7 +460,6 @@ public class PayAccountsFile
 	 */
 	public boolean deleteAccount(long accountNumber) throws Exception
 	{
-
 		PayAccount tmp = getAccount(accountNumber);
 		if (tmp.getCredit() > 0)
 		{
@@ -323,7 +480,6 @@ public class PayAccountsFile
 				}
 			}
 		}
-		save();
 		return true;
 	}
 
@@ -379,6 +535,113 @@ public class PayAccountsFile
 		{
 			m_ActiveAccount = account;
 		}
-		save();
+	}
+
+	/**
+	 * getNumAccounts
+	 *
+	 * @return int
+	 */
+	public int getNumAccounts()
+	{
+		return m_Accounts.size();
+	}
+
+	/**
+	 * getAccountAt
+	 *
+	 * @param rowIndex int
+	 * @return PayAccount
+	 */
+	public PayAccount getAccountAt(int rowIndex)
+	{
+		return (PayAccount) m_Accounts.elementAt(rowIndex);
+	}
+
+	/**
+	 * isInitialized
+	 *
+	 * @return boolean
+	 */
+	public boolean isInitialized()
+	{
+		return m_bIsInitialized;
+	}
+
+	/**
+	 * getConfigurationData - returns the XML PayAccountsFile element
+	 * so that it can be saved in the Jap.conf
+	 *
+	 * @return Element
+	 */
+	public Element getConfigurationData()
+	{
+		Document doc = null;
+		if (m_bIsInitialized && m_bIsEncrypted)
+		{
+			doc = m_TheDocument;
+		}
+		else
+		{
+			String strPassword = "";
+			boolean encrypt = false;
+
+			// is it the first time we save the accountsdata? then we should
+			// ask the user for a new password
+			if (m_bFirstTime)
+			{
+				JAPView mainView = JAPController.getView();
+				int choice = JOptionPane.showOptionDialog(
+					mainView,
+					"<html>Sie haben w&auml;hrend dieser JAP-Sitzung zum ersten Mal<br> " +
+					"Konten angelegt. Zu jedem Konto geh&ouml;rt auch ein<br> " +
+					"privater Schl&uuml;ssel, der sicher verwahrt werden muss.<br> " +
+					"Sie haben deshalb jetzt die M&ouml;glichkeit, Ihre<br> " +
+					"Kontendaten verschl&uuml;sselt zu speichern.<br> " +
+					"Falls Ihre Kontendaten verschl&uuml;sselt sind,<br> " +
+					"m&uuml;ssen Sie von nun an bei jedem JAP-Start das Passwort<br> " +
+					"zum Entschl&uuml;sseln eingeben.<br><br>" +
+					"M&ouml;chten Sie Ihre Kontendaten jetzt verschl&uuml;sselt speichern?</html>",
+					"Verschluesselung der Kontendaten",
+					JOptionPane.YES_NO_OPTION,
+					JOptionPane.QUESTION_MESSAGE,
+					null, null, null
+					);
+				if (choice == JOptionPane.YES_OPTION)
+				{
+					encrypt = true;
+					strPassword = JOptionPane.showInputDialog("Geben Sie ein Passwort ein:");
+				}
+			}
+
+			// it is not the first time
+			else
+			{
+				encrypt = m_bWasEncrypted;
+				strPassword = m_strWasPassword;
+			}
+
+			// save it
+			try
+			{
+				LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Constructing XML PayAccountsFile .. encrypt=" +
+							  (encrypt ? "true" : "false") + ", Password='" + strPassword + "'");
+				doc = constructXmlDocument(encrypt, strPassword);
+			}
+			catch (Exception ex)
+			{
+				LogHolder.log(LogLevel.ERR, LogType.PAY,
+							  "Error constructing PayAccountsFile XML Document");
+				return null;
+			}
+		}
+
+		Element elemRoot = doc.getDocumentElement();
+		Element elemConfig = (Element) XMLUtil.getFirstChildByName(elemRoot, "PayAccountsFile");
+		if (elemConfig == null)
+		{
+			elemConfig = (Element) XMLUtil.getFirstChildByName(elemRoot, "EncryptedData");
+		}
+		return elemConfig;
 	}
 }

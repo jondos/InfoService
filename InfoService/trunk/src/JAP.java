@@ -53,7 +53,7 @@ import pay.control.PayControl;
  */
 class JAP extends Frame
 {
-	// um pay funktionalität ein oder auszuschalten
+	// um pay funktionalitaet ein oder auszuschalten
 	private boolean loadPay = false;
 
 	String[] m_arstrCmdnLnArgs = null;
@@ -157,7 +157,7 @@ class JAP extends Frame
 					"JAP:Exception while setting Cross Platform Look-And-Feel!");
 			}
 		}
-		// um pay funktionalität ein oder auszuschalten
+		// um pay funktionalitaet ein oder auszuschalten
 		if (m_arstrCmdnLnArgs != null)
 		{
 			for (int i = 0; i < m_arstrCmdnLnArgs.length; i++)
@@ -190,7 +190,7 @@ class JAP extends Frame
       }
     }
 		// load settings from config file
-		controller.loadConfigFile(configFileName);
+		controller.loadConfigFile(configFileName,loadPay);
 		// Output some information about the system
 		LogHolder.log(
 			LogLevel.INFO,

@@ -115,7 +115,7 @@ public class UserDatenView extends JPanel implements JAPObserver, ActionListener
 		changePassword = new JButton(PayText.get("changePassword"));
 		ausfahren = new JButton("erweitert");
 
-		savePw.setSelected(JAPModel.isPayAccountsFileEncrypted());
+		savePw.setSelected(/*JAPModel.isPayAccountsFileEncrypted()*/ true);
 
 		add(changePassword, grid.feld(0, 0).size(1, 1).fill(grid.HORIZONTAL));
 		add(savePw, grid.feld(1, 0));
@@ -191,13 +191,9 @@ public class UserDatenView extends JPanel implements JAPObserver, ActionListener
 				int returnVal = chooser.showOpenDialog(getParent());
 				PayAccountsFile accounts = PayAccountsFile.getInstance();
 
-				// TODO: make it possible to import/export encrypted
 				try
 				{
-					accounts.readFromFile(chooser.getSelectedFile().getAbsolutePath(),
-										  false
-										  /* not encrypted */
-										  , null);
+					accounts.readFromFile(chooser.getSelectedFile().getAbsolutePath());
 				}
 				catch (Exception ex)
 				{

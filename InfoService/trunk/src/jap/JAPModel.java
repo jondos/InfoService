@@ -77,8 +77,6 @@ public final class JAPModel
 	private boolean m_bIsTorEnabled = JAPConstants.TOR_IS_ENABLED;
 	private String m_strTorDirServerHostName = JAPConstants.TOR_DIR_SERVER_ADR;
 	private int m_TorDirServerPortNumber = JAPConstants.TOR_DIR_SERVER_PORT;
-	private boolean m_PayAccountsFileEncrypted;
-	private String m_PayAccountsFileName;
 	/**
 	 * Stores the instance with the routing settings.
 	 */
@@ -493,35 +491,7 @@ public final class JAPModel
 		m_TorDirServerPortNumber = port;
 	}
 
-	/**
-	 * setPayAccountsFileEncrypted
-	 *
-	 * @param b boolean
-	 */
-	public void setPayAccountsFileEncrypted(boolean b)
-	{
-		m_PayAccountsFileEncrypted = b;
-	}
 
-	public static boolean isPayAccountsFileEncrypted()
-	{
-		return ms_TheModel.m_PayAccountsFileEncrypted;
-	}
-
-	/**
-	 * setPayAccountsFileName
-	 *
-	 * @param string String
-	 */
-	public void setPayAccountsFileName(String string)
-	{
-		m_PayAccountsFileName = string;
-	}
-
-	public static String getPayAccountsFileName()
-	{
-		return ms_TheModel.m_PayAccountsFileName;
-	}
 
 	/**
 	 * This method returns the instance of JAPRoutingSettings, where all routing settings are
