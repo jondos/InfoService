@@ -43,9 +43,9 @@ import logging.LogType;
 /**
  * This class registers the port of a ServerSocketManager at the infoservice (the IP is detected
  * by the infoservice). So the blockees can find that interface and can connect to. This class
- * is also observable. When the registration state changes, the observers are notified (there
- * is no message sent -> message = null). See the STATE constants and the getCurrentState() method
- * for more information.
+ * is also observable. When the registration state or the current error code changes, the
+ * observers are notified (there is no message sent -> message = null). See the STATE and RETURN
+ * constants and the getCurrentState() and getCurrentErrorCode() method for more information.
  */
 public class ServerSocketPropagandist extends Observable implements Runnable {
 
@@ -141,7 +141,7 @@ public class ServerSocketPropagandist extends Observable implements Runnable {
    * should be easier to find the configuration problem. See the RETURN constants in this class
    * for a description of the values.
    */
-  private int m_firstErrorCode;
+  private int m_currentErrorCode;
 
   /**
    * Stores the instance of the propaganda thread.
@@ -171,8 +171,8 @@ public class ServerSocketPropagandist extends Observable implements Runnable {
     m_infoService = a_infoService;
     m_propagandaThread = new Thread(this);
     m_propagandaThread.setDaemon(true);
-    m_firstErrorCode = announceNewForwarder();
-    if (m_firstErrorCode != RETURN_SUCCESS) {
+    m_currentErrorCode = announceNewForwarder();
+    if (m_currentErrorCode != RETURN_SUCCESS) {
       m_currentConnectionState = STATE_CONNECTING;
     }
     else {
@@ -210,16 +210,17 @@ public class ServerSocketPropagandist extends Observable implements Runnable {
   }
 
   /**
-   * Returns the error code of the first announcement try. If there was an error while the first
+   * Returns the error code of the last announcement try. If there was an error while the last
    * announcement try, this is normally because of a configuration error. With that error code it
    * should be easier to find the configuration problem. See the RETURN constants in this class
    * for a description of the values. Only RETURN_SUCCESS, RETURN_VERIFICATION_ERROR,
-   * RETURN_INFOSERVICE_ERROR or RETURN_UNKNOWN_ERROR are possible here.
+   * RETURN_INFOSERVICE_ERROR or RETURN_UNKNOWN_ERROR are possible here. In the states
+   * STATE_REGISTERED or STATE_HALTED, always RETURN_SUCCESS is returned.
    *
-   * @return The error code of the first announcement try.
+   * @return The error code of the last announcement try.
    */
-  public int getFirstErrorCode() {
-    return m_firstErrorCode;
+  public int getCurrentErrorCode() {
+    return m_currentErrorCode;
   }
 
   /**
@@ -252,30 +253,44 @@ public class ServerSocketPropagandist extends Observable implements Runnable {
         }
       }
       if (stopPropaganda == false) {
+        boolean notifyObservers = false;
         if (m_currentConnectionState == STATE_REGISTERED) {
           /* try to renew the forwarder entry */
           if (renewForwarder() != RETURN_SUCCESS) {
             /* there was an error -> registration is lost -> we have to register again */
             m_currentConnectionState = STATE_RECONNECTING;
-            /* notify the observers */
-            setChanged();
-            notifyObservers(null);
+            /* we have notify the observers after the next try */
+            notifyObservers = true;
           }
         }
         if ((m_currentConnectionState == STATE_CONNECTING) || (m_currentConnectionState == STATE_RECONNECTING)) {
           /* try to register at the infoservice */
-          if (announceNewForwarder() == RETURN_SUCCESS) {
+          int currentErrorCode = announceNewForwarder();
+          if (currentErrorCode == RETURN_SUCCESS) {
             /* we are registered */
             m_currentConnectionState = STATE_REGISTERED;
             /* notify the observers */
+            notifyObservers = true;
+          }
+          if (currentErrorCode != m_currentErrorCode) {
+            /* if the errorcode is another one than the last time, we have also to notify the
+             * observers
+             */
+            notifyObservers = true;
+          }
+          /* store the current errorcode */
+          m_currentErrorCode = currentErrorCode;
+          /* notify the observers, if necessary */
+          if (notifyObservers == true) {
             setChanged();
             notifyObservers(null);
-          }
+          } 
         }
       }
     }
     /* propaganda was stopped */
     m_currentConnectionState = STATE_HALTED;
+    m_currentErrorCode = RETURN_SUCCESS;
     /* notify the observers */
     setChanged();
     notifyObservers(null);

@@ -160,10 +160,7 @@ public final class JAPController implements ProxyListener, Observer
 		/* set a default infoservice */
 		try
 		{
-			InfoServiceDBEntry defaultInfoService = new InfoServiceDBEntry(
-				JAPConstants.defaultInfoServiceName,
-				new ListenerInterface(JAPConstants.defaultInfoServiceHostName,
-									  JAPConstants.defaultInfoServicePortNumber).toVector());
+      InfoServiceDBEntry defaultInfoService = new InfoServiceDBEntry(JAPConstants.defaultInfoServiceName, new ListenerInterface(JAPConstants.defaultInfoServiceHostName, JAPConstants.defaultInfoServicePortNumber).toVector(), true);
 			InfoServiceHolder.getInstance().setPreferedInfoService(defaultInfoService);
 		}
 		catch (Exception e)
@@ -187,6 +184,7 @@ public final class JAPController implements ProxyListener, Observer
 		/* we want to observe some objects */
 		JAPModel.getInstance().getRoutingSettings().addObserver(this);
 		JAPModel.getInstance().getRoutingSettings().getServerStatisticsListener().addObserver(this);
+    JAPModel.getInstance().getRoutingSettings().getRegistrationStatusObserver().addObserver(this);    
 	}
 
 	/** Creates the Controller - as Singleton.
@@ -571,12 +569,12 @@ public final class JAPController implements ProxyListener, Observer
 
 				/* try to get the info from the MixCascade node */
 				MixCascade defaultMixCascade = null;
-				Element mixCascadeNode = (Element) XMLUtil.getFirstChildByName(root, "MixCascade");
+        Element mixCascadeNode = (Element)XMLUtil.getFirstChildByName(root, "MixCascade");
 				try
 				{
 					defaultMixCascade = new MixCascade( (Element) mixCascadeNode);
 					defaultMixCascade.setIsUserDefined(
-						XMLUtil.parseElementAttrBoolean(mixCascadeNode, "userDefined", false));
+            XMLUtil.parseElementAttrBoolean(mixCascadeNode,"userDefined",false));
 				}
 				catch (Exception e)
 				{
@@ -613,7 +611,7 @@ public final class JAPController implements ProxyListener, Observer
 								LogHolder.log(LogLevel.WARNING, LogType.GUI,
 											  "JAPModel:Exception while setting look-and-feel");
 							}
-							break ;
+              break;
 						}
 					}
 				}
@@ -640,19 +638,17 @@ public final class JAPController implements ProxyListener, Observer
 							m_Model.m_OldMainWindowLocation = p;
 							m_Model.m_OldMainWindowSize = d;
 						}
-						tmp = (Element) XMLUtil.getFirstChildByName(elemMainWindow, "MoveToSystray");
-						b = XMLUtil.parseNodeBoolean(tmp, false);
+            tmp=(Element) XMLUtil.getFirstChildByName(elemMainWindow, "MoveToSystray");
+            b=XMLUtil.parseNodeBoolean(tmp,false);
 						setMoveToSystrayOnStartup(b);
-						if (b)
-						{ ///todo: move to systray
-							if (m_View != null)
-							{
+            if(b)
+            {///todo: move to systray
+              if(m_View!=null)
 								m_View.hideWindowInTaskbar();
 							}
-						}
-						tmp = (Element) XMLUtil.getFirstChildByName(elemMainWindow, "DefaultView");
-						String strDefaultView = XMLUtil.parseNodeString(tmp, "Normal");
-						if (strDefaultView.equals("Simplified"))
+            tmp=(Element) XMLUtil.getFirstChildByName(elemMainWindow, "DefaultView");
+            String strDefaultView=XMLUtil.parseNodeString(tmp,"Normal");
+            if(strDefaultView.equals("Simplified"))
 						{
 							setDefaultView(JAPConstants.VIEW_SIMPLIFIED);
 							///todo: set simplified view...
@@ -797,7 +793,7 @@ public final class JAPController implements ProxyListener, Observer
 								strMessage = "<html>Wrong password. Please try again</html>";
 								continue;
 							}
-							break ;
+              break;
 						}
 
 						PayAccountsFile.init(theBI, elemPlainTxt);
@@ -2053,6 +2049,10 @@ public final class JAPController implements ProxyListener, Observer
 				/* there are new routing statistics values available */
 				notifyJAPObservers();
 			}
+      if (a_notifier == JAPModel.getInstance().getRoutingSettings().getRegistrationStatusObserver()) {
+        /* the registration status of the local forwarding server has changed */
+        notifyJAPObservers();
+      }    
 		}
 		catch (Exception e)
 		{

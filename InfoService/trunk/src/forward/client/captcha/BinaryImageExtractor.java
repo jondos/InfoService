@@ -27,27 +27,17 @@
  */
 package forward.client.captcha;
 
-import java.awt.Button;
 import java.awt.Color;
 import java.awt.Image;
+import java.awt.Toolkit;
 import java.awt.image.MemoryImageSource;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.util.zip.Deflater;
-import java.util.zip.DeflaterOutputStream;
-import java.util.zip.Inflater;
 
 /**
- * This is a helper class for handling binary images. We need support for AWT components here
- * because Java 1.1 doesn't support images without AWT components. So this class cannot be used
- * in a text-console. If you need console support, look in the InfoService source tree, there
- * you can find an implementation, which can also run in a console, but needs a newer Java
- * version than 1.1 (we need support for java.awt.image.BufferedImage there). This implementation
- * of BinaryImage contains no support for writing the binary image format.
+ * This is a helper class for extracting binary images.
  */
-public class BinaryImage {
+public class BinaryImageExtractor {
   
   /**
    * Transfroms the data of our own binary image format back to a Image. The returned Image uses
@@ -67,7 +57,7 @@ public class BinaryImage {
       int width = transformer.readInt();
       int height = transformer.readInt();
       if ((width < 0) || (height < 0) || (a_binaryData.length != 8 + ((height * width) + 7) / 8)) {
-        throw (new Exception("BinaryImage: binaryToImage: The binary image has an invalid size."));
+        throw (new Exception("BinaryImageExtractor: binaryToImage: The binary image has an invalid size."));
       }
       /* create the pixel array */
       int[] pixels = new int[width * height];
@@ -93,8 +83,8 @@ public class BinaryImage {
            */
         }
       }
-      /* create the image via a awt component -> simply take a button */
-      resultImage = (new Button()).createImage(new MemoryImageSource(width, height, pixels, 0, width));
+      /* create the image via the awt toolkit */
+      resultImage = Toolkit.getDefaultToolkit().createImage(new MemoryImageSource(width, height, pixels, 0, width));
     }
     catch (Exception e) {
       /* anything was wrong with the binary data */
@@ -102,55 +92,6 @@ public class BinaryImage {
     }
     /* that's it */
     return resultImage;
-  }
-
-  /**
-   * Compresses the specified data with the ZLIB in the best compression mode.
-   *
-   * @param a_data The data to compress.
-   *
-   * @return The compressed data or null, if there was an error while the compression.
-   */
-  public static byte[] zipBinaryData(byte[] a_data) {
-    byte[] resultData = null;
-    try {
-      Deflater zipper = new Deflater(Deflater.BEST_COMPRESSION);
-      ByteArrayOutputStream zippedData = new ByteArrayOutputStream();
-      DeflaterOutputStream zipStream = new DeflaterOutputStream(zippedData, zipper);
-      zipStream.write(a_data, 0, a_data.length);
-      zipStream.finish();
-      resultData = zippedData.toByteArray();
-    }
-    catch (Exception e) {
-      /* should not happen */
-    }
-    return resultData;
-  }
-
-  /**
-   * Decompresses the specified data.
-   *
-   * @param a_data The ZLIB compressed data.
-   *
-   * @return The uncompressed data or null, if the specified data are not ZLIB compressed.
-   */
-  public static byte[] unzipBinaryData(byte[] a_data) {
-    byte[] resultData = null;
-    try {
-      ByteArrayOutputStream unzippedData = new ByteArrayOutputStream();
-      Inflater unzipper = new Inflater();
-      unzipper.setInput(a_data);
-      byte[] currentByte = new byte[1];
-      while (unzipper.inflate(currentByte) != 0) {
-        unzippedData.write(currentByte);
-      }
-      unzippedData.flush();
-      resultData = unzippedData.toByteArray();
-    }
-    catch (Exception e) {
-      /* something was wrong with the compressed data */
-    }
-    return resultData;
   }
     
 }    

@@ -46,19 +46,25 @@ public class JAPRoutingMessage
   public static final int PROPAGANDA_INSTANCES_ADDED = 2;
   
   /**
+   * This message is sent, when JAPRoutingSettings.startPropaganda() is called and the 
+   * propaganda is also started (we are in SERVER_ROUTING_MODE).
+   */    
+  public static final int START_PROPAGANDA_BEGIN = 3;
+
+  /**
    * This message is sent, when JAPRoutingSettings.startPropaganda() is ready, which means
    * that all propaganda instances are started. The data must be the list of all started
    * propaganda instances.
    */    
-  public static final int START_PROPAGANDA_READY = 3;
+  public static final int START_PROPAGANDA_READY = 4;
 
   /**
    * This message is sent, after JAPRoutingSettings.stopPropaganda() was called. So all
    * propaganda instances are stopped. Attention: This message can appear without a
-   * prior START_PROPAGANDA_READY message, if the startPropaganda thread was interrupted
-   * while starting all propaganda instances.
+   * prior START_PROPAGANDA_READY or START_PROPAGANDA_BEGIN message, e.g. if the
+   * startPropaganda thread was interrupted while starting all propaganda instances.
    */
-  public static final int STOP_PROPAGANDA_CALLED = 4;
+  public static final int STOP_PROPAGANDA_CALLED = 5;
   
           
   /**
