@@ -15,17 +15,22 @@ public class TorSocksChannel extends TorChannel
 
 //	private boolean socksReplyGenerated = false;
 
-	private final static int SOCKS_WAIT_FOR_METHODS = 1;
-	private final static int SOCKS_WAIT_FOR_REQUEST = 2;
-	private final static int SOCKS_WAIT_FOR_CONNECTED = 3;
+	private final static int SOCKS_WAIT_FOR_VERSION = 0;
+	private final static int SOCKS5_WAIT_FOR_METHODS = 1;
+	private final static int SOCKS5_WAIT_FOR_REQUEST = 2;
+	private final static int SOCKS4_WAIT_FOR_REQUEST = 3;
 	private final static int DATA_MODE = 4;
-	private int m_status;
+
+	private final static int SOCKS_5 = 5;
+	private final static int SOCKS_4 = 4;
+	private int m_state;
+	private int m_version;
 	private byte[] m_data; //buffer for socks protocol headers
 	private Tor m_Tor;
 
 	public TorSocksChannel(Tor tor) throws IOException
 	{
-		m_status = SOCKS_WAIT_FOR_METHODS;
+		m_state = SOCKS_WAIT_FOR_VERSION;
 		m_data = null;
 		m_Tor = tor;
 	}
@@ -37,37 +42,62 @@ public class TorSocksChannel extends TorChannel
 	//this we can transparently forward the data
 	protected void send(byte[] arg0, int len) throws IOException
 	{
-		switch (m_status)
+		switch (m_state)
 		{
-			case SOCKS_WAIT_FOR_METHODS:
+			case SOCKS_WAIT_FOR_VERSION:
 			{ //initial state
 				if (arg0 != null && len > 0)
 				{
 					m_data = helper.conc(m_data, arg0, len);
 				}
-				if (m_data.length > 2)
+				if (m_data.length > 1)
 				{
-					//m_data[0]=Version (0x05)
-					//m_data[1]=Number of Methods
-					//m_data[2-x]=Methods
-					if (m_data[0] != 5)
+					//m_data[0]=Version (0x05||0x04)
+					m_version = m_data[0];
+					if (m_version != SOCKS_5 && m_version != SOCKS_4)
 					{
 						close();
 						throw new IOException("Wrong Sock Protocol number");
 					}
-					int nrOfMethods = (m_data[1] & 0xFF);
-					int length = nrOfMethods + 2;
+					m_data = helper.copybytes(m_data, 1, m_data.length - 1);
+					if (m_version == SOCKS_5)
+					{
+						m_state = SOCKS5_WAIT_FOR_METHODS;
+					}
+					else
+					{
+						m_state = SOCKS4_WAIT_FOR_REQUEST;
+					}
+					send(null, 0);
+				}
+				break;
+			}
+
+			case SOCKS5_WAIT_FOR_METHODS:
+			{ //auth mehtods (version5)
+				if (arg0 != null && len > 0)
+				{
+					m_data = helper.conc(m_data, arg0, len);
+				}
+				if (m_data.length > 1)
+				{
+					//m_data[0]=Number of Methods
+					//m_data[1-x]=Methods
+					int nrOfMethods = (m_data[0] & 0xFF);
+					int length = nrOfMethods + 1;
 					if (m_data.length >= length)
 					{
 						boolean methodFound = false;
 						byte[] socksAnswer = null;
 						for (int i = 0; i < nrOfMethods; i++)
 						{
-							if (m_data[i + 2] == 0)
+							if (m_data[i + 1] == 0)
 							{
 								methodFound = true;
-								socksAnswer = new byte[]{0x05, 0x00};
-								m_status = SOCKS_WAIT_FOR_REQUEST;
+								socksAnswer = new byte[]
+									{
+									0x05, 0x00};
+								m_state = SOCKS5_WAIT_FOR_REQUEST;
 								break;
 							}
 						}
@@ -93,8 +123,8 @@ public class TorSocksChannel extends TorChannel
 				}
 				break;
 			}
-			case SOCKS_WAIT_FOR_REQUEST:
-			{ //waiting for a request....
+			case SOCKS5_WAIT_FOR_REQUEST:
+			{ //v5 waiting for a request....
 				if (arg0 != null && len > 0)
 				{
 					m_data = helper.conc(m_data, arg0, len);
@@ -150,7 +180,7 @@ public class TorSocksChannel extends TorChannel
 							socksAnswer = helper.conc(new byte[]
 								{0x05, 0x08, 0x00}
 								, helper.copybytes(m_data, 3, m_data.length - 3));
-	 						 super.recv(socksAnswer, 0, socksAnswer.length);
+							super.recv(socksAnswer, 0, socksAnswer.length);
 							m_data = null;
 							//todo close
 						}
@@ -159,26 +189,103 @@ public class TorSocksChannel extends TorChannel
 					if (addr != null) //we found an address
 					{
 						//	connect
-						Circuit circ = m_Tor.createNewActiveCircuit(addr, port);
+						Circuit circ = m_Tor.getCircuit(addr, port);
 						circ.connectChannel(this, addr, port);
 						socksAnswer = helper.conc(new byte[]
-								{0x05, 0x00, 0x00}
-								, helper.copybytes(m_data, 3, consumedBytes-3));
-	 	 				super.recv(socksAnswer, 0, socksAnswer.length);
+												  {0x05, 0x00, 0x00}
+												  , helper.copybytes(m_data, 3, consumedBytes - 3));
+						super.recv(socksAnswer, 0, socksAnswer.length);
 						m_data = helper.copybytes(m_data, consumedBytes, m_data.length - consumedBytes);
-						m_status=SOCKS_WAIT_FOR_CONNECTED;
+						m_state = DATA_MODE;
 						if (m_data.length > 0)
 						{
 							send(m_data, m_data.length);
-							m_data=null;
+							m_data = null;
 						}
-						break;
 					}
 				}
 				break;
 			}
+			case SOCKS4_WAIT_FOR_REQUEST:
+			{ //v4 waiting for a request....
+				if (arg0 != null && len > 0)
+				{
+					m_data = helper.conc(m_data, arg0, len);
+				}
+				if (m_data.length > 8)
+				{
+					byte[] socksAnswer = null;
+					int port = 0;
+					String addr = null;
+					int requestType = m_data[0];
+					int consumedBytes = 1;
+					if (requestType != 1) //connect request type==1
+					{
+						//todo: close etc.
+						//command not supported
+						socksAnswer = new byte[]
+							{
+							0x00, 91, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+						m_data = null;
+						super.recv(socksAnswer, 0, socksAnswer.length);
+						break;
+					}
+					//IP V4
+					addr = Integer.toString(m_data[3] & 0xFF) + "." +
+						Integer.toString(m_data[4] & 0xFF) + "." +
+						Integer.toString(m_data[5] & 0xFF) + "." +
+						Integer.toString(m_data[6] & 0xFF);
+					port = ( (m_data[1] & 0xFF) << 8) | (m_data[2] & 0xFF);
+					consumedBytes += 6;
+					//skip userid
+					int i = 7;
+					while (i < m_data.length && m_data[i] != 0)
+					{
+						i++;
+						consumedBytes ++;
+					}
+					if (m_data[i] != 0)
+					{
+						break;
+					}
+					consumedBytes++;
+					//check vor SOCKs 4a --> IP starts with "0.0.0" and Domain-Name follows
+					if(addr.startsWith("0.0.0"))
+					{
+						i++;
+						StringBuffer sb=new StringBuffer();
+						while (i < m_data.length && m_data[i] != 0)
+						{
+							sb.append(m_data[i]);
+							i++;
+							consumedBytes++;
+						}
+						if (m_data[i] != 0)
+						{
+							break;
+						}
+						consumedBytes++;
+						addr=sb.toString();
+					}
+					//	connect
+					Circuit circ = m_Tor.getCircuit(addr, port);
+					circ.connectChannel(this, addr, port);
+					socksAnswer = new byte[]
+						{
+						0x00, 90, 0x00, 0, 0, 0, 0, 0};
+					super.recv(socksAnswer, 0, socksAnswer.length);
+					m_data = helper.copybytes(m_data, consumedBytes, m_data.length - consumedBytes);
+					m_state = DATA_MODE;
+					if (m_data.length > 0)
+					{
+						send(m_data, m_data.length);
+						m_data = null;
+					}
+				}
+				break;
+			}
+
 			case DATA_MODE:
-			case SOCKS_WAIT_FOR_CONNECTED:
 			{
 				super.send(arg0, len);
 				break;
@@ -191,10 +298,10 @@ public class TorSocksChannel extends TorChannel
 
 	}
 
-/*	protected void recv(byte[] buff, int pos, int len) throws IOException
-	{
+	/*	protected void recv(byte[] buff, int pos, int len) throws IOException
+	 {
 
-		System.out.println("hier");
-	}
-*/
+	  System.out.println("hier");
+	 }
+	 */
 }

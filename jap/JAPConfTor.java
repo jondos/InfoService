@@ -19,13 +19,11 @@ import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
 import anon.tor.ordescription.ORDescription;
-import anon.tor.ordescription.ORList;
+import anon.tor.ordescription.*;
 
 class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 {
 	JCheckBox m_cbEnableTor;
-	JTextField m_tfDirServerAdr;
-	JAPJIntField m_tfDirServerPort;
 	JTable m_tableRouters;
 	JSlider m_sliderMaxPathLen, m_sliderMinPathLen, m_sliderPathSwitchTime;
 	JButton m_bttnFetchRouters;
@@ -51,23 +49,6 @@ class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 		panelRoot.setLayout(l);
 		c.gridwidth = 5;
 		panelRoot.add(m_cbEnableTor, c);
-		JLabel label = new JLabel(JAPMessages.getString("torDirServer"));
-		c.gridy = 1;
-		c.gridwidth = 1;
-		panelRoot.add(label, c);
-		m_tfDirServerAdr = new JTextField(15);
-		c.gridx = 1;
-		c.fill = c.HORIZONTAL;
-		c.weightx = 1;
-		panelRoot.add(m_tfDirServerAdr, c);
-		label = new JLabel(JAPMessages.getString("torDirServerPort"));
-		c.gridx = 2;
-		c.fill = c.NONE;
-		c.weightx = 0;
-		panelRoot.add(label, c);
-		m_tfDirServerPort = new JAPJIntField(5);
-		c.gridx = 3;
-		panelRoot.add(m_tfDirServerPort, c);
 		c.gridwidth = 5;
 		c.fill = c.BOTH;
 		c.weightx = 1;
@@ -166,16 +147,12 @@ class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 
 	protected void onOkPressed()
 	{
-		JAPController.getController().setTorDirServer(m_tfDirServerAdr.getText(),
-			m_tfDirServerPort.getInt());
 		JAPController.getController().setTorEnabled(m_cbEnableTor.isSelected());
 	}
 
 	protected void onUpdateValues()
 	{
 		m_cbEnableTor.setSelected(JAPModel.isTorEnabled());
-		m_tfDirServerAdr.setText(JAPModel.getTorDirServerHostName());
-		m_tfDirServerPort.setInt(JAPModel.getTorDirServerPortNumber());
 		updateGuiOutput();
 	}
 
@@ -184,8 +161,6 @@ class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 		boolean bEnabled = m_cbEnableTor.isSelected();
 		this.m_bttnFetchRouters.setEnabled(bEnabled);
 		this.m_tableRouters.setEnabled(bEnabled);
-		this.m_tfDirServerAdr.setEnabled(bEnabled);
-		this.m_tfDirServerPort.setEnabled(bEnabled);
 		this.m_sliderMaxPathLen.setEnabled(bEnabled);
 		this.m_sliderMinPathLen.setEnabled(bEnabled);
 		this.m_sliderPathSwitchTime.setEnabled(bEnabled);
@@ -194,9 +169,8 @@ class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 
 	private void fetchRouters()
 	{
-		ORList ol = new ORList();
-		if (!ol.updateList(m_tfDirServerAdr.getText(),
-						   m_tfDirServerPort.getInt()))
+		ORList ol = new ORList(new InfoServiceORListFetcher());
+		if (!ol.updateList())
 		{
 			JAPConf.showError(JAPMessages.getString("torErrorFetchRouters"));
 			return;

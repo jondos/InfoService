@@ -36,7 +36,7 @@ public abstract class Key_Exchange{
 	 * @param b server finished message
 	 * @throws TLSException
 	 */
-	public abstract void serverFinished(byte[] b) throws TLSException;
+	public abstract void serverFinished(byte[] b,int len) throws TLSException;
 
 	/**
 	 * generates the client key exchange message (see RFC2246)

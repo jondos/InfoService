@@ -282,16 +282,6 @@ public final class JAPController implements ProxyListener
    *   <InfoService id="...">...</InfoService>                // the same format as from infoservice, without signature, expire time does not matter
    * </PreferedInfoService>
    * <Tor enabled="true/false">    //  Tor related seetings (since Version 0.6)
-   *   <DirServer>                //Information about the DirServer to use
-   *     <Network>
-   *       <ListenerInterfaces>
-   *         <ListenerInterface>   //how to reach the DirServer
-   *           <Host>....</Host>
-   *           <Port>....</Port>
-   *         </ListenerInterface>
-   *       <ListenerInterfaces>
-   *     </Network>
-   *   <DirServer>
    * </Tor>
    * <Payment //Since version 0.7
    *    biHost="..."                      // BI's Hostname
@@ -631,15 +621,6 @@ public final class JAPController implements ProxyListener
         boolean bIsTorEnabled = XMLUtil.parseElementAttrBoolean(elemTor, "enabled",
           JAPConstants.TOR_IS_ENABLED);
         //TODO: very bad...
-        Element elemTorDirServerHost = (Element) XMLUtil.getFirstChildByNameUsingDeepSearch(elemTor,
-          "Host");
-        Element elemTorDirServerPort = (Element) XMLUtil.getFirstChildByNameUsingDeepSearch(elemTor,
-          "Port");
-        String strTorDirServerHost = XMLUtil.parseNodeString(elemTorDirServerHost,
-          JAPConstants.TOR_DIR_SERVER_ADR);
-        int iTorDirServerPort = XMLUtil.parseNodeInt(elemTorDirServerPort,
-          JAPConstants.TOR_DIR_SERVER_PORT);
-        setTorDirServer(strTorDirServerHost, iTorDirServerPort);
         setTorEnabled(bIsTorEnabled);
 
 
@@ -832,19 +813,7 @@ public final class JAPController implements ProxyListener
       /** add tor*/
       Element elemTor = doc.createElement("Tor");
       elemTor.setAttribute("enabled", JAPModel.isTorEnabled() ? "true" : "false");
-      tmp = doc.createElement("DirServer");
-      elemTor.appendChild(tmp);
-      Element tmp1 = doc.createElement("ListenerInterfaces");
-      tmp.appendChild(tmp1);
-      tmp = doc.createElement("ListenerInterface");
-      tmp1.appendChild(tmp);
-      tmp1 = doc.createElement("Host");
-      XMLUtil.setNodeValue(tmp1, m_Model.getTorDirServerHostName());
-      tmp.appendChild(tmp1);
-      tmp1 = doc.createElement("Port");
-      XMLUtil.setNodeValue(tmp1, Integer.toString(m_Model.getTorDirServerPortNumber()));
-      tmp.appendChild(tmp1);
-      e.appendChild(elemTor);
+   	  e.appendChild(elemTor);
 
       /* payment configuration */
       PayAccountsFile accounts = PayAccountsFile.getInstance();
@@ -1060,12 +1029,6 @@ public final class JAPController implements ProxyListener
   public void setTorEnabled(boolean b)
   {
     m_Model.setTorEnabled(b);
-  }
-
-  public void setTorDirServer(String hostname, int port)
-  {
-    m_Model.setTorDirServerHostName(hostname);
-    m_Model.setTorDirServerPortNumber(port);
   }
 
   public static Font getDialogFont()

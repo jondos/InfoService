@@ -29,13 +29,19 @@
 package anon.tor;
 
 import java.util.Random;
+import java.security.SecureRandom;
 
-class MyRandom
+public final class MyRandom
 {
 	Random m_TheRandom;
 	public MyRandom(Random rand)
 	{
 		m_TheRandom = rand;
+	}
+
+	public MyRandom()
+	{
+		this(new SecureRandom());
 	}
 
 	public int nextInt(int max)

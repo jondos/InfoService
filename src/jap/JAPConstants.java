@@ -32,7 +32,7 @@ import java.awt.Insets;
 
 public final class JAPConstants
 {
-	public static final String aktVersion = "00.02.079"; //Never change the layout of this line!
+	public static final String aktVersion = "00.02.080"; //Never change the layout of this line!
 	private static final String CVS_GENERATED_RELEASE_DATE = "$Date$";
 
 	//Warning: This is a little bit tricky,
@@ -169,8 +169,6 @@ public final class JAPConstants
 
 	/** Tor related defaults **/
 	public final static boolean TOR_IS_ENABLED = false;
-	public final static String TOR_DIR_SERVER_ADR = "moria.seul.org";
-	public final static int TOR_DIR_SERVER_PORT = 9031;
 
 	public final static boolean WITH_BLOCKINGRESISTANCE = true; //Enables or diables Suuport of
 	//blocking reistance functionality

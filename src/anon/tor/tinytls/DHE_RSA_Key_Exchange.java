@@ -135,7 +135,7 @@ public class DHE_RSA_Key_Exchange extends Key_Exchange{
 	 * @param b server finished message
 	 * @throws TLSException
 	 */
-	public void serverFinished(byte[] b) throws TLSException {
+	public void serverFinished(byte[] b,int len) throws TLSException {
 		//TODO : server finished auswerten
 	}
 

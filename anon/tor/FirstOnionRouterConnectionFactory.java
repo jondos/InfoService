@@ -34,17 +34,21 @@ public class FirstOnionRouterConnectionFactory
 	public synchronized FirstOnionRouterConnection createFirstOnionRouterConnection(ORDescription d)
 	{
 		ORDescription ord;
-		FirstOnionRouterConnection fOR;
+		FirstOnionRouterConnection fOR=null;
 		for (int i = 0; i < m_firstOnionRouters.size(); i++)
 		{
 			fOR=(FirstOnionRouterConnection)m_firstOnionRouters.elementAt(i);
 			ord = fOR.getORDescription();
 			if (ord.equals(d))
 			{
-				return fOR;
+				if(!fOR.isClosed())
+					return fOR;
+				else
+					break;
 			}
 		}
-		fOR = new FirstOnionRouterConnection(d);
+		if(fOR==null)
+			fOR = new FirstOnionRouterConnection(d);
 		try
 		{
 			fOR.connect();

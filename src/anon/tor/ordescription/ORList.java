@@ -4,12 +4,10 @@ import java.io.LineNumberReader;
 import java.io.StringReader;
 import java.util.Hashtable;
 import java.util.Vector;
-import HTTPClient.HTTPConnection;
-import HTTPClient.HTTPResponse;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-
+import anon.tor.MyRandom;
 /*
  * Created on Mar 25, 2004
  *
@@ -25,33 +23,38 @@ public class ORList
 
 	private Vector m_onionrouters;
 	private Hashtable m_onionroutersWithNames;
-
+	private MyRandom m_rand;
+	private ORListFetcher m_orlistFetcher;
 	/**
 	 * constructor
 	 *
 	 */
-	public ORList()
+	public ORList(ORListFetcher fetcher)
 	{
+		m_onionrouters=new Vector();
+		m_onionroutersWithNames=new Hashtable();
+		m_orlistFetcher=fetcher;
+		m_rand=new MyRandom();
 	}
 
+	public synchronized int size()
+	{
+		return m_onionrouters.size();
+	}
+
+	public synchronized void setFetcher(ORListFetcher fetcher)
+	{
+		m_orlistFetcher=fetcher;
+	}
 	/** Updates the list of available ORRouters.
 	 * @return true if it was ok, false otherwise
 	 */
-	public boolean updateList(String server, int port)
+	public synchronized boolean updateList()
 	{
 		try
 		{
-			LogHolder.log(LogLevel.DEBUG, LogType.MISC,
-						  "[UPDATE OR-LIST] Starting update on " + server + ":" + port);
-			HTTPConnection http = new HTTPConnection(server, port);
-			HTTPResponse resp = http.Get("/");
-			if (resp.getStatusCode() != 200)
-			{
-				return false;
-			}
-			String doc = resp.getText();
+			String doc=m_orlistFetcher.getORList();
 			parseDocument(doc);
-			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[UPDATE OR-LIST] Update finished");
 			return true;
 		}
 		catch (Throwable t)
@@ -69,13 +72,34 @@ public class ORList
 	 */
 	public Vector getList()
 	{
-		return this.m_onionrouters;
+		return  (Vector)m_onionrouters.clone();
 	}
 
-   	public ORDescription getByName(String name)
+   	public synchronized ORDescription getByName(String name)
 	   {
-		   return (ORDescription)this.m_onionroutersWithNames.get(name);
+		   return (ORDescription)m_onionroutersWithNames.get(name);
 	   }
+
+	/**
+	 * selects a OR randomly from a given list of allowed OR names
+	 * @param orlist list of onionrouter names
+	 * @return
+	 */
+
+	public synchronized ORDescription getByRandom(Vector allowedNames)
+	{
+		String orName = (String) allowedNames.elementAt( (m_rand.nextInt(allowedNames.size())));
+		return getByName(orName);
+	}
+
+	/**
+	 * selects a OR randomly
+	 * @return
+	 */
+	public synchronized ORDescription getByRandom()
+	{
+		return (ORDescription) this.m_onionrouters.elementAt(m_rand.nextInt(m_onionrouters.size()));
+	}
 	/**
 	 * returns a ORDescription to the given ORName
 	 * @param name
@@ -83,7 +107,7 @@ public class ORList
 	 * @return
 	 * ORDescription if the OR exist, null else
 	 */
-	public ORDescription getORDescription(String name)
+	public synchronized ORDescription getORDescription(String name)
 	{
 		if (this.m_onionroutersWithNames.containsKey(name))
 		{
