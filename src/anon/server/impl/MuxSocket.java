@@ -63,6 +63,7 @@ import anon.ErrorCodes;
 import anon.AnonServer;
 import anon.AnonChannel;
 import anon.ToManyOpenChannelsException;
+import anon.server.AnonServiceImpl;
 public final class MuxSocket implements Runnable
 	{
 		private int m_iLastChannelId;
@@ -224,7 +225,7 @@ public final class MuxSocket implements Runnable
 			}
 
 		//2001-02-20(HF)
-		public int connectViaFirewall(AnonServer anonservice, String fwHost, int fwPort,String fwUserID,String fwPasswd)
+		public int connectViaFirewall(AnonServer anonservice, int fwType,String fwHost, int fwPort,String fwUserID,String fwPasswd)
 			{
 				synchronized(this)
 					{
@@ -234,7 +235,7 @@ public final class MuxSocket implements Runnable
               {
                 String host=anonservice.getHost();
                 int port=anonservice.getPort();
-                if(fwPort<0||fwHost==null)
+                if(fwPort<0||fwHost==null||fwType==AnonServiceImpl.FIREWALL_TYPE_SOCKS)
                   {
                     //Connect directly to anon service
   							    m_Log.log(LogLevel.DEBUG,LogType.NET,"MuxSocket:Try to connect directly to mix ("+host+":"+port+")");

@@ -73,7 +73,8 @@ final class JAPConf extends JDialog
 		private JCheckBox			m_cbProxy;
 		private JAPJIntField	m_tfProxyPortNumber;
 		private JTextField		m_tfProxyHost;
-		private JCheckBox			m_cbProxyAuthentication;
+    private JComboBox     m_comboProxyType;
+    private JCheckBox			m_cbProxyAuthentication;
 		private JTextField		m_tfProxyAuthenticationUserID;
 
 		private JCheckBox			m_cbAutoConnect;
@@ -125,7 +126,7 @@ final class JAPConf extends JDialog
 				pContainer.setLayout( new BorderLayout() );
 				m_Tabs = new JTabbedPane();
 				m_pPort = buildportPanel();
-				m_pFirewall = buildhttpPanel();
+				m_pFirewall = buildProxyPanel();
 				m_pInfo = buildinfoPanel();
 				m_pMix = buildanonPanel();
 				m_pMisc = buildmiscPanel();
@@ -258,17 +259,21 @@ final class JAPConf extends JDialog
 				return p;
 			}
 
-	  protected JPanel buildhttpPanel()
+	  protected JPanel buildProxyPanel()
 			{
 				m_cbProxy = new JCheckBox(JAPMessages.getString("settingsProxyCheckBox"));
-				m_tfProxyHost = new JTextField();
+				m_comboProxyType=new JComboBox();
+        m_comboProxyType.addItem(JAPMessages.getString("settingsProxyTypeHTTP"));
+        m_comboProxyType.addItem(JAPMessages.getString("settingsProxyTypeSOCKS"));
+        m_tfProxyHost = new JTextField();
 				m_tfProxyPortNumber = new JAPJIntField();
 				m_tfProxyHost.setEnabled(JAPModel.getUseFirewall());
 				m_tfProxyPortNumber.setEnabled(JAPModel.getUseFirewall());
 				m_cbProxy.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
 						boolean b=m_cbProxy.isSelected();
-						m_tfProxyHost.setEnabled(b);
+						m_comboProxyType.setEnabled(b);
+            m_tfProxyHost.setEnabled(b);
 						m_tfProxyPortNumber.setEnabled(b);
 						m_cbProxyAuthentication.setEnabled(b);
 						m_tfProxyAuthenticationUserID.setEnabled(b);
@@ -290,7 +295,8 @@ final class JAPConf extends JDialog
 				}});
 				JLabel proxyHostLabel = new JLabel(JAPMessages.getString("settingsProxyHost"));
 				JLabel proxyPortLabel = new JLabel(JAPMessages.getString("settingsProxyPort"));
-				JLabel proxyAuthUserIDLabel = new JLabel(JAPMessages.getString("settingsProxyAuthUserID"));
+				JLabel proxyTypeLabel =new JLabel(JAPMessages.getString("settingsProxyType"));
+        JLabel proxyAuthUserIDLabel = new JLabel(JAPMessages.getString("settingsProxyAuthUserID"));
 				// set Font in m_cbProxy in same color as in proxyPortLabel
 				m_cbProxy.setForeground(proxyPortLabel.getForeground());
 				m_cbProxyAuthentication.setForeground(proxyPortLabel.getForeground());
@@ -316,34 +322,40 @@ final class JAPConf extends JDialog
 				g.setConstraints(m_cbProxy,c);
 				p1.add(m_cbProxy);
 				c.gridy=1;
+				g.setConstraints(proxyTypeLabel,c);
+				c.gridy=2;
+				p1.add(proxyTypeLabel);
+				g.setConstraints(m_comboProxyType,c);
+				c.gridy=3;
+    		p1.add(m_comboProxyType);
 				g.setConstraints(proxyHostLabel,c);
 				p1.add(proxyHostLabel);
-				c.gridy=2;
+				c.gridy=4;
 				g.setConstraints(m_tfProxyHost,c);
 				p1.add(m_tfProxyHost);
-				c.gridy=3;
+				c.gridy=5;
 				g.setConstraints(proxyPortLabel,c);
 				p1.add(proxyPortLabel);
-				c.gridy=4;
+				c.gridy=6;
 				g.setConstraints(m_tfProxyPortNumber,c);
 				p1.add(m_tfProxyPortNumber);
 				JSeparator seperator=new JSeparator();
-				c.gridy=5;
+				c.gridy=7;
 				c.insets=new Insets(10,0,0,0);
 				g.setConstraints(seperator,c);
 				p1.add(seperator);
 				c.insets=normInsets;
-				c.gridy=6;
+				c.gridy=8;
 				c.insets=new Insets(10,0,0,0);
 				g.setConstraints(m_cbProxyAuthentication,c);
 				p1.add(m_cbProxyAuthentication);
-				c.gridy=7;
+				c.gridy=9;
 				g.setConstraints(proxyAuthUserIDLabel,c);
 				p1.add(proxyAuthUserIDLabel);
-				c.gridy=8;
+				c.gridy=10;
 				g.setConstraints(m_tfProxyAuthenticationUserID,c);
 				p1.add(m_tfProxyAuthenticationUserID);
-				c.gridy=9;
+				c.gridy=11;
 				p.add(p1, BorderLayout.NORTH);
 				return p;
 			}
@@ -1007,7 +1019,10 @@ final class JAPConf extends JDialog
 				// Firewall settings
 				int port=-1;
 				try{port=Integer.parseInt(m_tfProxyPortNumber.getText().trim());}catch(Exception e){};
-				m_Controller.setProxy(m_tfProxyHost.getText().trim(),port,m_cbProxy.isSelected());
+				int firewallType=JAPConstants.FIREWALL_TYPE_HTTP;
+        if(m_comboProxyType.getSelectedIndex()==1)
+          firewallType=JAPConstants.FIREWALL_TYPE_SOCKS;
+        m_Controller.setProxy(firewallType,m_tfProxyHost.getText().trim(),port,m_cbProxy.isSelected());
 				m_Controller.setFirewallAuthUserID(m_tfProxyAuthenticationUserID.getText().trim());
 				m_Controller.setUseFirewallAuthorization(m_cbProxyAuthentication.isSelected());
 				// Infoservice settings
@@ -1094,7 +1109,13 @@ final class JAPConf extends JDialog
 				m_cbProxy.setSelected(JAPModel.getUseFirewall());
 				m_tfProxyHost.setEnabled(m_cbProxy.isSelected());
 				m_tfProxyPortNumber.setEnabled(m_cbProxy.isSelected());
-				m_tfProxyHost.setText(JAPModel.getFirewallHost());
+        m_comboProxyType.setEnabled(m_cbProxy.isSelected());
+				if(JAPModel.getFirewallType()==JAPConstants.FIREWALL_TYPE_HTTP)
+          m_comboProxyType.setSelectedIndex(0);
+        else
+          m_comboProxyType.setSelectedIndex(1);
+        m_cbProxyAuthentication.setEnabled(m_cbProxy.isSelected());
+        m_tfProxyHost.setText(JAPModel.getFirewallHost());
 				m_tfProxyPortNumber.setText(String.valueOf(JAPModel.getFirewallPort()));
 				m_tfProxyAuthenticationUserID.setText(JAPModel.getFirewallAuthUserID());
 				m_cbProxyAuthentication.setSelected(JAPModel.getUseFirewallAuthorization());

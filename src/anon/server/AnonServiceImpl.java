@@ -47,9 +47,13 @@ import java.io.InputStream;
 import java.io.OutputStream;
 final public class AnonServiceImpl implements AnonService
   {
+    public static final int FIREWALL_TYPE_HTTP         = 1;
+    public static final int FIREWALL_TYPE_SOCKS        = 2;
+
     private static AnonServiceImpl m_AnonServiceImpl=null;
     private MuxSocket m_MuxSocket=null;
     private Vector m_AnonServiceListener;
+    private int m_FirewallType;
     private String m_FirewallHost;
     private int m_FirewallPort;
     private String m_FirewallUserID;
@@ -59,6 +63,7 @@ final public class AnonServiceImpl implements AnonService
     protected AnonServiceImpl()
       {
         m_AnonServiceListener=new Vector();
+        m_FirewallType=FIREWALL_TYPE_HTTP;
         m_FirewallHost=null;
         m_FirewallPort=-1;
         m_FirewallUserID=null;
@@ -79,7 +84,7 @@ final public class AnonServiceImpl implements AnonService
     public int connect(AnonServer anonService)
       {
         int ret=m_MuxSocket.connectViaFirewall(anonService,
-                                        m_FirewallHost,m_FirewallPort,
+                                        m_FirewallType,m_FirewallHost,m_FirewallPort,
                                         m_FirewallUserID,m_FirewallPasswd);
         if(ret!=ErrorCodes.E_SUCCESS)
           return ret;
@@ -158,8 +163,9 @@ final public class AnonServiceImpl implements AnonService
         m_MuxSocket.setDummyTraffic(intervall);
       }
 
-    public void setFirewall(String host,int port)
+    public void setFirewall(int type,String host,int port)
       {
+        m_FirewallType=type;
         m_FirewallHost=host;
         m_FirewallPort=port;
       }

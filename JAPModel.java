@@ -36,7 +36,8 @@ public final class JAPModel
 	private int     m_HttpListenerPortNumber       = JAPConstants.defaultPortNumber;  // port number of HTTP  listener
 	private boolean m_bHttpListenerIsLocal         = true;  // indicates whether listeners serve for localhost only or not
 	private boolean m_bUseFirewall                 = false; // indicates whether JAP connects via a proxy or directly
-	private String  m_FirewallHostName             = "";     // hostname of proxy
+	private int     m_FirewallType                 = JAPConstants.defaultFirewallType;
+  private String  m_FirewallHostName             = "";     // hostname of proxy
 	private int     m_FirewallPortNumber           = -1;     // portnumber of proxy
 	private boolean m_bUseFirewallAuthentication   = false; //indicates whether JAP should use a UserID/Password to authenticat to the proxy
 	private String  m_FirewallAuthenticationUserID = null;  //userid for authentication
@@ -48,6 +49,8 @@ public final class JAPModel
 	//private boolean  mbDoNotAbuseReminder        = false; // indicates if new warning message in setAnonMode (containing Do no abuse) has been shown
 	//private boolean  mbGoodByMessageNeverRemind  = false; // indicates if Warning message before exit has been deactivated forever
   private int m_iDummyTrafficIntervall           = -1; // indicates what Dummy Traffic should be generated or not
+
+  private boolean m_bSmallDisplay                = false;
 
   private static JAPModel model                  = null;
 
@@ -99,6 +102,16 @@ public final class JAPModel
   public static boolean getUseFirewall()
     {
 			return model.m_bUseFirewall;
+		}
+
+  protected void setFirewallType(int type)
+    {
+      m_FirewallType=type;
+    }
+
+  public static int getFirewallType()
+    {
+	    return model.m_FirewallType;
 		}
 
   protected void setFirewallHost(String host)
@@ -209,6 +222,17 @@ public final class JAPModel
     {
 			return model.m_bHttpListenerIsLocal;
 		}
+
+  protected void setSmallDisplay(boolean b)
+    {
+      m_bSmallDisplay=b;
+    }
+
+  public static boolean isSmallDisplay()
+    {
+      return model.m_bSmallDisplay;
+    }
+
 
 	public String toString()
     {

@@ -186,6 +186,7 @@ public final class JAPController implements ProxyListener {
 	 *		supportSocks=""								// Will we support SOCKS ?
 	 *    listenerIsLocal="true"/"false"// Listener lasucht nur an localhost ?
 	 *		proxyMode="true"/"false"			// Using a HTTP-Proxy??
+   *    proxyType="SOCKS"/"HTTP"      // which kind of proxy
 	 *		proxyHostName="..."						// the Name of the HTTP-Proxy
 	 *		proxyPortNumber="..."					// port number of the HTTP-proxy
 	 *    proxyAuthorization="true"/"false" //Need authorization to acces the proxy ?
@@ -264,8 +265,12 @@ public final class JAPController implements ProxyListener {
 			if(host.equalsIgnoreCase("ikt.inf.tu-dresden.de"))
 				host="";
       boolean bUseProxy=JAPUtil.parseNodeBoolean(n.getNamedItem("proxyMode"),false);
-			setProxy(host,port,bUseProxy);
-			String userid=JAPUtil.parseNodeString(n.getNamedItem("proxyAuthUserID"),JAPModel.getFirewallAuthUserID());
+			String type=JAPUtil.parseNodeString(n.getNamedItem("proxyType"),"HTTP");
+			if(type.equalsIgnoreCase("SOCKS"))
+        setProxy(JAPConstants.FIREWALL_TYPE_SOCKS,host,port,bUseProxy);
+			else
+        setProxy(JAPConstants.FIREWALL_TYPE_HTTP,host,port,bUseProxy);
+     String userid=JAPUtil.parseNodeString(n.getNamedItem("proxyAuthUserID"),JAPModel.getFirewallAuthUserID());
 			setFirewallAuthUserID(userid);
 
       String anonserviceId  = JAPUtil.parseNodeString(n.getNamedItem("anonserviceID"),null);
@@ -391,6 +396,7 @@ public final class JAPController implements ProxyListener {
 			//e.setAttribute("supportSocks",(getUseSocksPort()?"true":"false"));
   		e.setAttribute("listenerIsLocal",(JAPModel.getHttpListenerIsLocal()?"true":"false"));
 			e.setAttribute("proxyMode",(JAPModel.getUseFirewall()?"true":"false"));
+			e.setAttribute("proxyType",(JAPModel.getFirewallType()==JAPConstants.FIREWALL_TYPE_SOCKS?"SOCKS":"HTTP"));
       String tmpStr=m_Model.getFirewallHost();
       e.setAttribute("proxyHostName",((tmpStr==null)?"":tmpStr));
 			int tmpInt=m_Model.getFirewallPort();
@@ -491,7 +497,7 @@ public final class JAPController implements ProxyListener {
   //---------------------------------------------------------------------
 	//May be the host and port changed - or if we should us it or not
   // or both....
-  public boolean setProxy(String host,int port,boolean bUseProxy)
+  public boolean setProxy(int type,String host,int port,boolean bUseProxy)
     {
 		  if(bUseProxy)
         {//only if we want to use this proxy....
@@ -503,7 +509,7 @@ public final class JAPController implements ProxyListener {
       if(host==null)
         host="";
 		  // check if values have changed
-		  if((bUseProxy!=m_Model.getUseFirewall())||(!host.equals(m_Model.getFirewallHost()))||(port!=m_Model.getFirewallPort()))
+		  if((type!=m_Model.getFirewallType())||(bUseProxy!=m_Model.getUseFirewall())||(!host.equals(m_Model.getFirewallHost()))||(port!=m_Model.getFirewallPort()))
         {
 			    // reset firewall authentication password
 			    m_Model.setFirewallAuthPasswd(null);
@@ -513,6 +519,7 @@ public final class JAPController implements ProxyListener {
 				      m_Model.setFirewallHost(host);
 				      m_Model.setFirewallPort(port);
 			        m_Model.setUseFirewall(bUseProxy);
+              m_Model.setFirewallType(type);
               applyProxySettingsToInfoService();
               applyProxySettingsToAnonService();
             }
@@ -546,16 +553,16 @@ public final class JAPController implements ProxyListener {
 			  if(JAPModel.getUseFirewall())
           {
             if(JAPModel.getUseFirewallAuthorization())
-              m_InfoService.setProxy(m_Model.getFirewallHost(),
+              m_InfoService.setProxy(m_Model.getFirewallType(),m_Model.getFirewallHost(),
                                     m_Model.getFirewallPort(),
                                     JAPModel.getFirewallAuthUserID(),
                                     getFirewallAuthPasswd());
             else
-              m_InfoService.setProxy(m_Model.getFirewallHost(),
+              m_InfoService.setProxy(m_Model.getFirewallType(),m_Model.getFirewallHost(),
                                     m_Model.getFirewallPort(),null,null);
           }
         else //not Proxy should be used....
-          m_InfoService.setProxy(null,-1,null,null);
+          m_InfoService.setProxy(0,null,-1,null,null);
     }
 
 
@@ -858,8 +865,8 @@ private final class SetAnonModeAsync implements Runnable
               m_proxyAnon.setAnonService(e);
               if (JAPModel.getUseFirewall())
                 {
-                  // connect vi proxy to first mix (via ssl portnumber)
-                  if (e.getSSLPort() == -1)
+                  // connect vi proxy to first mix (via ssl portnumber, if HTTP(S) proxy)
+                  if (e.getSSLPort() == -1&&m_Model.getFirewallType()==JAPConstants.FIREWALL_TYPE_HTTP)
                     {
                       JOptionPane.showMessageDialog(m_Controller.getView(),
                                                     JAPMessages.getString("errorFirewallModeNotSupported"),
@@ -871,7 +878,7 @@ private final class SetAnonModeAsync implements Runnable
                     }
                   else
                     {
-                      m_proxyAnon.setFirewall(m_Model.getFirewallHost(),m_Model.getFirewallPort());
+                      m_proxyAnon.setFirewall(m_Model.getFirewallType(),m_Model.getFirewallHost(),m_Model.getFirewallPort());
                       if(JAPModel.getUseFirewallAuthorization())
                         {
                           m_proxyAnon.setFirewallAuthorization(JAPModel.getFirewallAuthUserID(),

@@ -68,11 +68,17 @@ final public class InfoService
 	//	private static final String DP = "%3A"; // Doppelpunkt
     final public static int JAP_RELEASE_VERSION=1;
     final public static int JAP_DEVELOPMENT_VERSION=2;
+    final public static int PROXY_TYPE_NONE=0;
+    final public static int PROXY_TYPE_HTTP=1;
+    final public static int PROXY_TYPE_SOCKS=2;
 
+    private int       m_proxyType = PROXY_TYPE_NONE;
     private String    m_proxyHost  = null;
 		private int       m_proxyPort  = 0;
 		private String    m_proxyAuthUserID = null;
 		private String    m_proxyAuthPasswd = null;
+    private String    m_infoserviceHost=null;
+    private int m_infoservicePort=-1;
 		private HTTPConnection m_conInfoService=null;
     private int       m_count =0;
     private boolean   m_ready = false;
@@ -81,7 +87,9 @@ final public class InfoService
 		public InfoService(String host,int port)
       {
         m_Log=new DummyLog();
-			  setInfoService(host,port);
+	      try{HTTPConnection.removeDefaultModule(Class.forName("HTTPClient.AuthorizationModule"));} //????
+			  catch(Exception e){};
+ 			  setInfoService(host,port);
 		  }
 
     public void setLogging(Log log)
@@ -98,13 +106,52 @@ final public class InfoService
       {
 
 			  //We are doing authorization on our own - so remove....
-			  try{m_conInfoService.removeDefaultModule(Class.forName("HTTPClient.AuthorizationModule"));} //????
-			  catch(Exception e){};
-			  m_conInfoService=new HTTPConnection(host,port);
-        return applyInfoServiceSettings(m_conInfoService);
+			  m_infoserviceHost=host;
+        m_infoservicePort=port;
+        m_conInfoService=createInfoServiceConnection();
+        return 0;
 		  }
 
-		private int applyInfoServiceSettings(HTTPConnection conn)
+    private HTTPConnection createInfoServiceConnection()
+      {
+			  //First: new static ProxySettings
+			  if(m_proxyType==PROXY_TYPE_NONE)
+          {
+            HTTPConnection.setProxyServer(null,-1);
+            HTTPConnection.setSocksServer(null,-1);
+          }
+			  else if(m_proxyType==PROXY_TYPE_HTTP)
+          {
+            HTTPConnection.setProxyServer(m_proxyHost,m_proxyPort);
+            HTTPConnection.setSocksServer(null,-1);
+          }
+        else if(m_proxyType==PROXY_TYPE_SOCKS)
+          {
+            HTTPConnection.setSocksServer(m_proxyHost,m_proxyPort);
+            HTTPConnection.setProxyServer(null,-1);
+          }
+        //Second: new HTTPConnection Instance
+        HTTPConnection conn=new HTTPConnection(m_infoserviceHost,m_infoservicePort);
+
+        //Third: Proxy authorization if neccessary
+        if(m_proxyType==PROXY_TYPE_HTTP&&m_proxyAuthUserID!=null)
+          {
+            String tmpPasswd=Codecs.base64Encode(m_proxyAuthUserID+":"+m_proxyAuthPasswd);
+            NVPair authoHeader=new NVPair("Proxy-Authorization","Basic "+tmpPasswd);
+            replaceHeader(conn,authoHeader);
+          }
+
+        NVPair[] headers=new NVPair[2];
+			  headers[0]=new NVPair("Cache-Control","no-cache");
+			  headers[1]=new NVPair("Pragma","no-cache");
+			  replaceHeader(conn,headers[0]);
+			  replaceHeader(conn,headers[1]);
+			  conn.setAllowUserInteraction(false);
+			  conn.setTimeout(10000);
+        return conn;
+      }
+
+		/*private int applyInfoServiceSettings(HTTPConnection conn)
       {
 			  NVPair[] headers=new NVPair[2];
 			  headers[0]=new NVPair("Cache-Control","no-cache");
@@ -115,32 +162,44 @@ final public class InfoService
 			  conn.setTimeout(10000);
 			  applyProxySettings(conn);
         return 0;
-		  }
+		  }*/
 
-		public void setProxy(String proxyHost,int proxyPort,String proxyAuthUserID,String proxyAuthPasswd)
+		public void setProxy(int proxyType,String proxyHost,int proxyPort,String proxyAuthUserID,String proxyAuthPasswd)
       {
-			  m_proxyHost  = proxyHost;
+			  m_proxyType  = proxyType;
+        m_proxyHost  = proxyHost;
 			  m_proxyPort  = proxyPort;
-		  	m_proxyAuthUserID = proxyAuthUserID;
+		  	if(proxyHost==null)
+          m_proxyType=PROXY_TYPE_NONE;
+        m_proxyAuthUserID = proxyAuthUserID;
 		  	m_proxyAuthPasswd = proxyAuthPasswd;
-			  applyProxySettings(m_conInfoService);
+        m_conInfoService=createInfoServiceConnection();
 		  }
 
-		private void applyProxySettings(HTTPConnection conn)
+	/*	private void applyProxySettings(HTTPConnection conn)
       {
 			  if(conn==null)
 				  return;
-			  conn.setProxyServer(m_proxyHost,m_proxyPort);
-			  conn.setCurrentProxy(m_proxyHost,m_proxyPort);
-			  //setting Proxy authorization...
-			  if(m_proxyAuthUserID!=null)
+			  if(m_proxyType==PROXY_TYPE_HTTP)
           {
-				    String tmpPasswd=Codecs.base64Encode(m_proxyAuthUserID+":"+m_proxyAuthPasswd);
-				    NVPair authoHeader=new NVPair("Proxy-Authorization","Basic "+tmpPasswd);
-				    replaceHeader(conn,authoHeader);
-			    }
+            conn.setProxyServer(m_proxyHost,m_proxyPort);
+			      conn.setCurrentProxy(m_proxyHost,m_proxyPort);
+            //setting Proxy authorization...
+            if(m_proxyAuthUserID!=null)
+              {
+                String tmpPasswd=Codecs.base64Encode(m_proxyAuthUserID+":"+m_proxyAuthPasswd);
+                NVPair authoHeader=new NVPair("Proxy-Authorization","Basic "+tmpPasswd);
+                replaceHeader(conn,authoHeader);
+              }
+          }
+        else
+          {
+            conn.setProxyServer(null,-1);
+			      conn.setCurrentProxy(null,-1);
+            conn.setSocksServer(m_proxyHost,m_proxyPort);
+          }
 		  }
-
+*/
     private int replaceHeader(HTTPConnection con,NVPair header)
 			{
 				NVPair headers[]=con.getDefaultHeaders();
@@ -354,8 +413,8 @@ final public class InfoService
           {
             url=u;
             listener=l;
-            conn=new HTTPConnection(m_conInfoService.getHost(),m_conInfoService.getPort());
-            applyInfoServiceSettings(conn);
+            conn=createInfoServiceConnection();
+            //applyInfoServiceSettings(conn);
             new Thread(this).start();
           }
 
@@ -463,7 +522,7 @@ final public class InfoService
 	public static void main(String[] argv) {
 		InfoService is=new InfoService("infoservice.inf.tu-dresden.de",6543);
 //		is.setInfoService("infoservice.inf.tu-dresden.de",6543);
-		//is.setProxy("www-proxy.t-online.de",80,null,null);
+		is.setProxy(is.PROXY_TYPE_SOCKS,"dud14.inf.tu-dresden.de",1080,null,null);
 		//is.setProxyEnabled(false/*true*/);
 		try {
 	    is.retrieveURL(new URL("http","fg",3,"aktJap"),new DownloadListener()
