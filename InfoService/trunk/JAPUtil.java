@@ -56,8 +56,8 @@ import javax.swing.table.*;
 
 final class JAPUtil
 	{
-	  private static final String IMGPATHHICOLOR  = "images/";
-	  private static final String IMGPATHLOWCOLOR = "images/lowcolor/";
+	  protected static final String IMGPATHHICOLOR  = "images/";
+	  protected static final String IMGPATHLOWCOLOR = "images/lowcolor/";
 
 		public static int applyJarDiff(String oldJAR, String newJAR, String diffJAR)
 			{

@@ -133,7 +133,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 //	static final String IMGPATHLOWCOLOR = "images/lowcolor/";
 	static final String XMLCONFFN       = "jap.conf";
 	public static final String BUSYFN   = "busy.gif";
-	public static final String SPLASHFN = "splash.gif";
+//	public static final String SPLASHFN = "splash.gif";
 	public static final String ABOUTFN  = "info.gif";
 	static final String DOWNLOADFN      = "install.gif";
 	static final String IICON16FN       = "icon16.gif";
