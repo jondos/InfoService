@@ -89,6 +89,9 @@ final class JAPAnonProxy implements Runnable
 
   public void stop()
     {
+      m_Anon.disconnect();
+      m_bIsRunning=false;
+      try{threadRun.join();}catch(Exception e){}
     }
 
   public void setAnonServiceListener(JAPAnonServiceListener l)
@@ -98,11 +101,16 @@ final class JAPAnonProxy implements Runnable
 	public void run()
 			{
 				m_bIsRunning=true;
-//				int oldTimeOut=0;
-//				try{oldTimeOut=m_socketListener.getSoTimeout();}catch(Exception e){}
-//				try{m_socketListener.setSoTimeout(2000);}
-//				catch(Exception e1){JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Could not set accept time out: Exception: "+e1.getMessage());}
-//				try{System.out.println(m_socketListener.getSoTimeout());}catch(Exception e5){e5.printStackTrace();}
+				int oldTimeOut=0;
+				try{oldTimeOut=m_socketListener.getSoTimeout();}catch(Exception e){}
+				try
+          {
+            m_socketListener.setSoTimeout(2000);
+          }
+				catch(Exception e1)
+          {
+            JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Could not set accept time out: Exception: "+e1.getMessage());
+          }
 				try
 					{
 						while(m_bIsRunning)
@@ -123,7 +131,7 @@ final class JAPAnonProxy implements Runnable
 								catch(SocketException soex)
 									{
 										socket=null;
-										JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPAnonService.run() Could not set non-Blocking mode for Channel-Socket! Exception: " +soex);
+										JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPAnonProxy.run() Could not set non-Blocking mode for Channel-Socket! Exception: " +soex);
 										continue;
 									}
 								//2001-04-04(HF)
@@ -133,7 +141,7 @@ final class JAPAnonProxy implements Runnable
  									}
 								catch(Exception e)
 									{
-										JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPAnonService.run() Exception: " +e);
+										JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPAnonPrxy.run() Exception: " +e);
 									}
 							}
 					}
@@ -141,8 +149,8 @@ final class JAPAnonProxy implements Runnable
 					{
 						JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPProxyServer:ProxyServer.run1() Exception: " +e);
 					}
-	//			try{m_socketListener.setSoTimeout(oldTimeOut);}catch(Exception e4){}
-				//JAPDebug.out(JAPDebug.INFO,JAPDebug.NET,"JAPProxyServer:ProxyServer on port " + m_Port + " stopped.");
+			  try{m_socketListener.setSoTimeout(oldTimeOut);}catch(Exception e4){}
+				JAPDebug.out(JAPDebug.INFO,JAPDebug.NET,"JAPAnonProxyServer stopped.");
 				m_bIsRunning=false;
 			}
 

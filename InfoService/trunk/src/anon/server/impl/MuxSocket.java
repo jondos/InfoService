@@ -84,7 +84,7 @@ public final class MuxSocket implements Runnable
 		public final static int E_NOT_CONNECTED=-9;
 
 		private static MuxSocket ms_MuxSocket=null;
-		private int m_RunCount=0;
+		//private int m_RunCount=0;
 
 		private Thread threadRunLoop;
 
@@ -108,12 +108,11 @@ public final class MuxSocket implements Runnable
 		private MuxSocket()
 			{
 				lastChannelId=0;
-				oChannelList=new Hashtable();
 				m_arASymCipher=null;
 				outBuff=new byte[DATA_SIZE];
 				threadRunLoop=null;
 				keypool=KeyPool.start(/*20,16*/);
-				m_RunCount=0;
+				//m_RunCount=0;
 				m_bDummyTraffic=false;
 				m_TimeLastPacketSend=0;
 				//threadgroupChannels=null;
@@ -246,6 +245,7 @@ public final class MuxSocket implements Runnable
 										m_arASymCipher[i].setPublicKey(n,e);
 									}
 								m_ioSocket.setSoTimeout(0); //Now we have a unlimited timeout...
+	//							m_ioSocket.setSoTimeout(1000); //Now we have asecond timeout...
 							}
 						catch(Exception e)
 							{
@@ -261,7 +261,8 @@ public final class MuxSocket implements Runnable
 								return -1;
 							}
 						m_bIsConnected=true;
-						return 0;
+     				oChannelList=new Hashtable();
+            return 0;
 					}
 			}
 
@@ -325,32 +326,67 @@ public final class MuxSocket implements Runnable
 			}
 
 
-		public int startService()
+		public void startService()
 			{
 				synchronized(this)
 					{
 						if(!m_bIsConnected)
-							return -1;
-						if(m_RunCount==0)
+							return ;
+//						if(m_RunCount==0)
 							{
 								threadRunLoop=new Thread(this);
 								threadRunLoop.setPriority(Thread.MAX_PRIORITY);
 								threadRunLoop.start();
 							}
-						m_RunCount++;
-						return m_RunCount;
+//						m_RunCount++;
+//						return m_RunCount;
 					}
 			}
 
-		public int stopService()
+		public void stopService()
 			{
 				synchronized(this)
 					{
 						//JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:stopService()");
-						m_RunCount--;
+						//m_RunCount--;
 						//if(m_RunCount==0)
-							//close();
-						return m_RunCount;
+            close();
+						//return m_RunCount;
+					}
+			}
+
+		private int close()
+			{
+				synchronized(this)
+					{
+						if(!m_bIsConnected)
+							return E_NOT_CONNECTED;
+						if(m_bDummyTraffic)
+							{
+								m_DummyTraffic.stop();
+								m_DummyTraffic=null;
+							}
+						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:close() Closing MuxSocket...");
+						m_bRunFlag=false;
+					  try{m_inDataStream.close();}catch(Exception e1){}
+						try{threadRunLoop.interrupt();}catch(Exception e7){}
+						try
+							{
+								threadRunLoop.join(1000);
+							}
+						catch(Exception e)
+							{
+								//e.printStackTrace();
+							}
+						if(threadRunLoop.isAlive())
+              {
+                  JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:close() Hm...MuxSocket is still alive...");
+                  threadRunLoop.stop();
+                  runStoped();
+              }
+						threadRunLoop=null;
+						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:close() MuxSocket closed!");
+						return 0;
 					}
 			}
 
@@ -366,10 +402,9 @@ public final class MuxSocket implements Runnable
 				m_bRunFlag=true;
 				while(m_bRunFlag)
 					{
-
 						try
 							{
-								channel=m_inDataStream.readInt();
+                channel=m_inDataStream.readInt();
 								flags=m_inDataStream.readShort();
 								m_inDataStream.readFully(buff);
 							}
@@ -427,8 +462,31 @@ public final class MuxSocket implements Runnable
 									}*/
 							}
 					}
-				//runStoped();
+				runStoped();
 				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:MuxSocket thread run exited...");
+			}
+
+		private void runStoped()
+			{
+				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:runStoped()");
+				Enumeration e=oChannelList.elements();
+				while(e.hasMoreElements())
+					{
+						ChannelListEntry entry=(ChannelListEntry)e.nextElement();
+            entry.channel.closedByPeer();
+					}
+        oChannelList=null;
+				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:MuxSocket all channels closed...");
+				m_bRunFlag=false;
+				m_bIsConnected=false;
+				try{m_inDataStream.close();}catch(Exception e1){}
+				try{m_outDataStream.close();}catch(Exception e2){}
+				try{m_ioSocket.close();}catch(Exception e3){}
+				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:MuxSocket socket closed...");
+				m_inDataStream=null;
+				m_outDataStream=null;
+				m_ioSocket=null;
+				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:All done..");
 			}
 
 		public synchronized int send(int channel,int type,byte[] buff,short len)
