@@ -26,11 +26,10 @@ IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISI
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
 package proxy;
-import jap.JAPDebug;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.IOException;
-
+import logging.*;
 final class DirectProxyResponse implements Runnable /*extends Thread*/
 	{
 		private int threadNumber;
@@ -48,7 +47,7 @@ final class DirectProxyResponse implements Runnable /*extends Thread*/
     public void run()
 			{
 				threadNumber = getThreadNumber();
-				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"R("+threadNumber+") - Response thread started.");
+				LogHolder.log(LogLevel.DEBUG,LogType.NET,"R("+threadNumber+") - Response thread started.");
 				try
 					{
 						byte[] buff=new byte[1000];
@@ -62,7 +61,7 @@ final class DirectProxyResponse implements Runnable /*extends Thread*/
 							}
 						//-----------------------------------------------
 						outputStream.flush();
-						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"R("+threadNumber+") - EOF from Server.");
+						LogHolder.log(LogLevel.DEBUG,LogType.NET,"R("+threadNumber+") - EOF from Server.");
 					}
 				catch (IOException ioe)
 					{
@@ -71,7 +70,7 @@ final class DirectProxyResponse implements Runnable /*extends Thread*/
 					}
 				catch (Exception e)
 					{
- 						JAPDebug.out(JAPDebug.NOTICE,JAPDebug.NET,"R("+threadNumber+") - Exception during transmission: " + e);
+ 						LogHolder.log(LogLevel.NOTICE,LogType.NET,"R("+threadNumber+") - Exception during transmission: " + e);
 					}
 				try
 					{
@@ -80,9 +79,9 @@ final class DirectProxyResponse implements Runnable /*extends Thread*/
 					}
 				catch (Exception e)
 					{
-						JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.NET,"R("+threadNumber+") - Exception while closing: " +e.toString());
+						LogHolder.log(LogLevel.EXCEPTION,LogType.NET,"R("+threadNumber+") - Exception while closing: " +e.toString());
 					}
-				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"R("+threadNumber+") - Response thread stopped.");
+				LogHolder.log(LogLevel.DEBUG,LogType.NET,"R("+threadNumber+") - Response thread stopped.");
     }
 
     private synchronized int getThreadNumber() {

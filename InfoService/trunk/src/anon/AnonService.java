@@ -38,7 +38,7 @@ import anon.infoservice.MixCascade;
 public interface AnonService
 	{
 		///The version of the AnonLib
-		public final static String ANONLIB_VERSION="00.00.013";
+		public final static String ANONLIB_VERSION="00.00.014";
 		/** Establishes a connection to an AnonServer, which is described through the
 		 *  anonService parameter. This method must be called before any Channels could be created.
 		 *  @param anonService AnonServer to use
@@ -87,10 +87,4 @@ public interface AnonService
 		 */
 		public void removeEventListener(AnonServiceEventListener l);
 
-		/** Enables or disables logging, which could be used for instance for debugging. The default
-		 *  is, that all output goes to a DummyLog.
-		 *  @param log Log, which receives all logging messages. Use the value null to disable
-		 *  logging.
-		 */
-		public void setLogging(Log log);
 	}

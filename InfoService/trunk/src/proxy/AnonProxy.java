@@ -26,29 +26,25 @@ IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISI
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
 package proxy;
-import java.net.ServerSocket;
-import anon.ErrorCodes;
-import anon.AnonService;
-import anon.AnonServiceEventListener;
-import anon.AnonServiceFactory;
-import anon.AnonChannel;
-
-import anon.ToManyOpenChannelsException;
-import anon.NotConnectedToMixException;
-
-import anon.infoservice.MixCascade;
-import anon.server.AnonServiceImpl;
-import anon.crypto.JAPCertificateStore;
-import jap.JAPDebug;
-import jap.JAPConstants;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.IOException;
 import java.io.InterruptedIOException;
+import java.io.OutputStream;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import anon.AnonChannel;
+import anon.AnonService;
+import anon.AnonServiceFactory;
+import anon.ErrorCodes;
+import anon.NotConnectedToMixException;
+import anon.ToManyOpenChannelsException;
+import anon.crypto.JAPCertificateStore;
+import anon.infoservice.MixCascade;
 import anon.pay.AICommunication;
-	import pay.Pay;
+import anon.server.AnonServiceImpl;
+import jap.JAPConstants;
+import logging.*;
+import pay.Pay;
 final public class AnonProxy implements Runnable/*,AnonServiceEventListener*/
 {
 	public static final int E_SUCCESS=0;
@@ -80,7 +76,6 @@ final public class AnonProxy implements Runnable/*,AnonServiceEventListener*/
 		{
 			m_socketListener=listener;
 			m_Anon=AnonServiceFactory.create();
-			m_Anon.setLogging(JAPDebug.create());
 			setFirewall(JAPConstants.FIREWALL_TYPE_HTTP,null,-1);
 			setFirewallAuthorization(null,null);
 			setDummyTraffic(-1);
@@ -94,19 +89,19 @@ final public class AnonProxy implements Runnable/*,AnonServiceEventListener*/
 			toAI = Pay.create().getAccount(Pay.create().getUsedAccount()).getAccountCertificate();
 			((AnonServiceImpl)m_Anon).sendPayPackets(toAI);
 		}catch(Exception ex){
-			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"AnonProxy: Fehler beim Anfordern des KontoZertifikates und/oder des Kontostandes");
+			LogHolder.log(LogLevel.DEBUG,LogType.NET,"AnonProxy: Fehler beim Anfordern des KontoZertifikates und/oder des Kontostandes");
 		}
-		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"AnonProxy: länge des zu verschickenden Certifikates : "+toAI.length());
+		LogHolder.log(LogLevel.DEBUG,LogType.NET,"AnonProxy: länge des zu verschickenden Certifikates : "+toAI.length());
 		sendBalanceToAI();
 	}
 
 	// methode zum senden einer balance an die AI - oneway
 	public void sendBalanceToAI(){
-		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"AnonProxy: sendBalanceToAI läuft");
+		LogHolder.log(LogLevel.DEBUG,LogType.NET,"AnonProxy: sendBalanceToAI läuft");
 		try{
 			((AnonServiceImpl)m_Anon).sendPayPackets(Pay.create().getAccount(Pay.create().getUsedAccount()).getBalance().getXMLString(true));
 		}catch(Exception ex){
-			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"AnonProxy: Fehler beim Anfordern des KontoZertifikates und/oder des Kontostandes");
+			LogHolder.log(LogLevel.DEBUG,LogType.NET,"AnonProxy: Fehler beim Anfordern des KontoZertifikates und/oder des Kontostandes");
 		}
 	}
 
@@ -178,7 +173,7 @@ final public class AnonProxy implements Runnable/*,AnonServiceEventListener*/
 			{
 				m_bIsRunning=true;
 				int oldTimeOut=0;
-				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"AnonProxy: AnonProxy is running as Thread");
+				LogHolder.log(LogLevel.DEBUG,LogType.NET,"AnonProxy: AnonProxy is running as Thread");
 
 				m_AICom.start();
 				try{oldTimeOut=m_socketListener.getSoTimeout();}catch(Exception e){}
@@ -188,7 +183,7 @@ final public class AnonProxy implements Runnable/*,AnonServiceEventListener*/
 					}
 				catch(Exception e1)
 					{
-						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Could not set accept time out: Exception: "+e1.getMessage());
+						LogHolder.log(LogLevel.DEBUG,LogType.NET,"Could not set accept time out: Exception: "+e1.getMessage());
 					}
 				try
 					{
@@ -210,7 +205,7 @@ final public class AnonProxy implements Runnable/*,AnonServiceEventListener*/
 								catch(SocketException soex)
 									{
 										socket=null;
-										JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPAnonProxy.run() Could not set non-Blocking mode for Channel-Socket! Exception: " +soex);
+										LogHolder.log(LogLevel.ERR,LogType.NET,"JAPAnonProxy.run() Could not set non-Blocking mode for Channel-Socket! Exception: " +soex);
 										continue;
 									}
 								//2001-04-04(HF)
@@ -225,12 +220,12 @@ final public class AnonProxy implements Runnable/*,AnonServiceEventListener*/
 											}
 										catch(ToManyOpenChannelsException te)
 											{
-												JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPAnonProxy.run() ToManyOpenChannelsExeption");
+												LogHolder.log(LogLevel.ERR,LogType.NET,"JAPAnonProxy.run() ToManyOpenChannelsExeption");
 												Thread.sleep(1000);
 											}
 										catch(NotConnectedToMixException ec)
 											{
-												JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPAnonProxy.run() Connection to Mix lost");
+												LogHolder.log(LogLevel.ERR,LogType.NET,"JAPAnonProxy.run() Connection to Mix lost");
 												if(!m_bAutoReconnect)
 													{
 														m_bIsRunning=false;
@@ -238,7 +233,7 @@ final public class AnonProxy implements Runnable/*,AnonServiceEventListener*/
 													}
 												while(m_bIsRunning&&m_bAutoReconnect)
 													{
-														JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPAnonProxy.run() Try reconnect to Mix");
+														LogHolder.log(LogLevel.ERR,LogType.NET,"JAPAnonProxy.run() Try reconnect to Mix");
 														int ret=m_Anon.connect(m_currentMixCascade);
 														if(ret==ErrorCodes.E_SUCCESS)
 															break;
@@ -253,16 +248,16 @@ final public class AnonProxy implements Runnable/*,AnonServiceEventListener*/
 										}
 									catch(Exception e)
 										{
-											JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPAnonPrxoy.run() Exception: " +e);
+											LogHolder.log(LogLevel.ERR,LogType.NET,"JAPAnonPrxoy.run() Exception: " +e);
 										}
 							}
 					}
 				catch (Exception e)
 					{
-						JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPProxyServer:ProxyServer.run1() Exception: " +e);
+						LogHolder.log(LogLevel.ERR,LogType.NET,"JAPProxyServer:ProxyServer.run1() Exception: " +e);
 					}
 				try{m_socketListener.setSoTimeout(oldTimeOut);}catch(Exception e4){}
-				JAPDebug.out(JAPDebug.INFO,JAPDebug.NET,"JAPAnonProxyServer stopped.");
+				LogHolder.log(LogLevel.INFO,LogType.NET,"JAPAnonProxyServer stopped.");
 				m_bIsRunning=false;
 			}
 
@@ -376,7 +371,7 @@ final class Request  implements Runnable
 													}
 												catch(InterruptedIOException ioe)
 													{
-														JAPDebug.out(JAPDebug.EMERG,JAPDebug.NET,"Should never be here: Timeout in sending to Browser!");
+														LogHolder.log(LogLevel.EMERG,LogType.NET,"Should never be here: Timeout in sending to Browser!");
 													}
 												count++;
 												if(count>3)

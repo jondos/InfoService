@@ -1,30 +1,30 @@
 /*
-Copyright (c) 2000, The JAP-Team
-All rights reserved.
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
+ Copyright (c) 2000, The JAP-Team
+ All rights reserved.
+ Redistribution and use in source and binary forms, with or without modification,
+ are permitted provided that the following conditions are met:
 
-	- Redistributions of source code must retain the above copyright notice,
-		this list of conditions and the following disclaimer.
+ - Redistributions of source code must retain the above copyright notice,
+  this list of conditions and the following disclaimer.
 
-	- Redistributions in binary form must reproduce the above copyright notice,
-		this list of conditions and the following disclaimer in the documentation and/or
-		other materials provided with the distribution.
+ - Redistributions in binary form must reproduce the above copyright notice,
+  this list of conditions and the following disclaimer in the documentation and/or
+  other materials provided with the distribution.
 
-	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
-		may be used to endorse or promote products derived from this software without specific
-		prior written permission.
+ - Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
+  may be used to endorse or promote products derived from this software without specific
+  prior written permission.
 
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS
-OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
-AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS
-BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
-OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
-IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
-OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
-*/
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS
+ OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
+ AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS
+ BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+ OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+ IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
+ */
 /** Project Web Mixes: Java Anon Proxy -- JAP
  *
  *  The class JAP can be inherited by another class
@@ -32,17 +32,20 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
  *  on a Macintosh to register the MRJ Handler.
  *
  */
-import java.lang.NoClassDefFoundError;
 import java.awt.Frame;
+import jap.JAPAWTMsgBox;
+import jap.JAPConstants;
+import jap.JAPController;
 import jap.JAPDebug;
 import jap.JAPMessages;
-import jap.JAPAWTMsgBox;
-import jap.JAPController;
-import jap.JAPConstants;
+import jap.JAPSplash;
 import jap.JAPView;
 import jap.JAPViewIconified;
-import jap.JAPSplash;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 import pay.control.PayControl;
+
 /** This is the main class of the JAP project. It starts everything. It can be inherited by another
  *  class that wants to initialize platform dependend features, e.g. see
  *  <A HREF="JAPMacintosh.html">JAPMacintosh.html</A>
@@ -53,17 +56,19 @@ class JAP extends Frame
 	// um pay funktionalität ein oder auszuschalten
 	private boolean loadPay = false;
 
-	String[] m_arstrCmdnLnArgs=null;
+	String[] m_arstrCmdnLnArgs = null;
 	public JAP()
 	{
 	}
+
 	/** Constructor for the JAP object.
 	 * @param argv The commandline arguments.
 	 */
 	JAP(String[] argv)
 	{
-		m_arstrCmdnLnArgs=argv;
+		m_arstrCmdnLnArgs = argv;
 	}
+
 	/** Initializes and starts the JAP.
 	 */
 	void startJAP()
@@ -116,7 +121,7 @@ class JAP extends Frame
 		// Test for Swing
 		try
 		{
-			Object o=new javax.swing.JLabel();
+			Object o = new javax.swing.JLabel();
 			o = null;
 		}
 		catch (NoClassDefFoundError e)
@@ -127,12 +132,18 @@ class JAP extends Frame
 				JAPMessages.getString("error"));
 			System.exit(0);
 		}
+		// Create debugger object and set the LogHolder to JAPDebug
+		LogHolder.setLogInstance(JAPDebug.getInstance());
+		JAPDebug.getInstance().setLogType(
+			LogType.NET + LogType.GUI + LogType.THREAD + LogType.MISC);
+		JAPDebug.getInstance().setLogLevel(LogLevel.WARNING);
+
 		// Set the default Look-And-Feel
 		if (!os.regionMatches(true, 0, "mac", 0, 3))
 		{
-			JAPDebug.out(
-				JAPDebug.DEBUG,
-				JAPDebug.GUI,
+			LogHolder.log(
+				LogLevel.DEBUG,
+				LogType.GUI,
 				"JAP:Setting Cross Platform Look-And-Feel!");
 			try
 			{
@@ -141,50 +152,51 @@ class JAP extends Frame
 			}
 			catch (Exception e)
 			{
-				JAPDebug.out(
-					JAPDebug.EXCEPTION,
-					JAPDebug.GUI,
+				LogHolder.log(
+					LogLevel.EXCEPTION,
+					LogType.GUI,
 					"JAP:Exception while setting Cross Platform Look-And-Feel!");
 			}
 		}
 		// um pay funktionalität ein oder auszuschalten
-		if(m_arstrCmdnLnArgs!=null)
+		if (m_arstrCmdnLnArgs != null)
+		{
+			for (int i = 0; i < m_arstrCmdnLnArgs.length; i++)
 			{
-				for(int i=0;i<m_arstrCmdnLnArgs.length;i++)
-					if(m_arstrCmdnLnArgs[i].equalsIgnoreCase("-pay"))
-						{
-							loadPay=true;
-							break;
-						}
+				if (m_arstrCmdnLnArgs[i].equalsIgnoreCase("-pay"))
+				{
+					loadPay = true;
+					break;
+				}
 			}
+		}
 
 		// Create the controller object
 		JAPController controller = JAPController.create();
-		// Create debugger object
-		JAPDebug.create();
-		JAPDebug.setDebugType(
-			JAPDebug.NET + JAPDebug.GUI + JAPDebug.THREAD + JAPDebug.MISC);
-		JAPDebug.setDebugLevel(JAPDebug.WARNING);
 		// load settings from config file
 		controller.loadConfigFile(null);
 		// Output some information about the system
-		JAPDebug.out(
-			JAPDebug.INFO,
-			JAPDebug.MISC,
+		LogHolder.log(
+			LogLevel.INFO,
+			LogType.MISC,
 			"JAP:Welcome! This is version " + JAPConstants.aktVersion + " of JAP.");
-		JAPDebug.out(
-			JAPDebug.INFO,
-			JAPDebug.MISC,
+		LogHolder.log(
+			LogLevel.INFO,
+			LogType.MISC,
 			"JAP:Java " + javaVersion + " running on " + os + ".");
 		if (mrjVersion != null)
-			JAPDebug.out(
-				JAPDebug.INFO,
-				JAPDebug.MISC,
+		{
+			LogHolder.log(
+				LogLevel.INFO,
+				LogType.MISC,
 				"JAP:MRJ Version is " + mrjVersion + ".");
-		//initalisiere PayInstance
-		if(loadPay)
+			//initalisiere PayInstance
+		}
+		if (loadPay)
+		{
 			PayControl.initPay();
-		// Create the view object
+			// Create the view object
+		}
 		JAPView view = new JAPView(JAPConstants.TITLE);
 		// Create the main frame
 		view.create(loadPay);
@@ -204,21 +216,24 @@ class JAP extends Frame
 		// Show main frame and dispose splash screen
 		view.show();
 		view.toFront();
-		if(m_arstrCmdnLnArgs!=null)
+		if (m_arstrCmdnLnArgs != null)
+		{
+			for (int i = 0; i < m_arstrCmdnLnArgs.length; i++)
 			{
-				for(int i=0;i<m_arstrCmdnLnArgs.length;i++)
-					if(m_arstrCmdnLnArgs[i].equalsIgnoreCase("-minimized"))
-						{
-							view.hideWindowInTaskbar();
-							break;
-						}
+				if (m_arstrCmdnLnArgs[i].equalsIgnoreCase("-minimized"))
+				{
+					view.hideWindowInTaskbar();
+					break;
+				}
 			}
+		}
 		splash.dispose();
 		// pre-initalize anon service
 		anon.server.AnonServiceImpl.init();
 		// initially start services
 		controller.initialRun();
 	}
+
 	public static void main(String[] argv)
 	{
 		// do NOT change anything in main!

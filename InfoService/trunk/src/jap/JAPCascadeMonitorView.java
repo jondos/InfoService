@@ -56,7 +56,7 @@ import anon.infoservice.StatusInfo;
 import anon.infoservice.InfoServiceHolder;
 
 import java.util.Vector;
-
+import logging.*;
 //import proxy.AnonProxy;
 /**
  * User Interface for an Mix-Cascade Monitor.
@@ -300,7 +300,7 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener,Run
 		}
 
 		public void valueChanged(ListSelectionEvent e) {
-		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPCascadeMonitorView:valuesChanged() selected row="+tableView.getSelectedRow());
+		LogHolder.log(LogLevel.DEBUG,LogType.GUI,"JAPCascadeMonitorView:valuesChanged() selected row="+tableView.getSelectedRow());
 		okButton.setEnabled(true);
 		}
 
@@ -340,16 +340,16 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener,Run
 	public static void main(String[] args) {
 		JAPMessages.init();
 		JAPController controller = JAPController.create();
-		JAPDebug.create();
-		controller.loadConfigFile(null);
+		LogHolder.setLogInstance(JAPDebug.getInstance());
+	    controller.loadConfigFile(null);
 		controller.fetchMixCascades();
-		JAPDebug.setDebugType(JAPDebug.NET+JAPDebug.GUI+JAPDebug.THREAD+JAPDebug.MISC);
-		JAPDebug.setDebugLevel(JAPDebug.DEBUG);
+		JAPDebug.getInstance().setLogType(LogType.NET+LogType.GUI+LogType.THREAD+LogType.MISC);
+		JAPDebug.getInstance().setLogLevel(LogLevel.DEBUG);
 		new JAPCascadeMonitorView(null);
 	}
 
 	public void run() {
-			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPCascadeMonitor:run()");
+			LogHolder.log(LogLevel.DEBUG,LogType.MISC,"JAPCascadeMonitor:run()");
 		while (m_bTestIsRunning) {
 					setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 					// get the feedback from InfoSercive
@@ -409,12 +409,12 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener,Run
 						AnonChannel c = anonService.createChannel(AnonChannel.HTTP);
 											BufferedWriter outputStream = new BufferedWriter(new OutputStreamWriter(c.getOutputStream()));
 											DataInputStream inputStream = new DataInputStream(c.getInputStream());
-											JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"Sending request: "+target);
+											LogHolder.log(LogLevel.DEBUG,LogType.MISC,"Sending request: "+target);
 											t1 = System.currentTimeMillis();
 											outputStream.write("GET "+target+" HTTP/1.0\r\n\r\n");
 											outputStream.flush();
 											String response = JAPUtil.readLine(inputStream);
-											JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Response:>" + response + "<");
+											LogHolder.log(LogLevel.DEBUG,LogType.NET,"Response:>" + response + "<");
 						if ((response == null) || (response.length() == 0) || (response.indexOf("200")==-1)) {
 													setStatus(i,JAPMessages.getString("chkBadResponse"));
 													tableView.repaint();
@@ -423,11 +423,11 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener,Run
 						else {
 													String nextLine = JAPUtil.readLine(inputStream);
 													while (nextLine.length() != 0) {
-														JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,">" + nextLine + "<");
+														LogHolder.log(LogLevel.DEBUG,LogType.NET,">" + nextLine + "<");
 														nextLine = JAPUtil.readLine(inputStream);
 													}
 													String data = JAPUtil.readLine(inputStream);
-													JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Data:>" + data + "<");
+													LogHolder.log(LogLevel.DEBUG,LogType.NET,"Data:>" + data + "<");
 													t2 = System.currentTimeMillis();
 													dtResponse = t2-t1;
 													setStatus(i,JAPMessages.getString("chkCascResponding"));
@@ -447,7 +447,7 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener,Run
 											dtResponse = -1;
 											setStatus(i,"RED");
 											tableView.repaint();
-											JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"Exception: "+ex);
+											LogHolder.log(LogLevel.DEBUG,LogType.MISC,"Exception: "+ex);
 										}
 								}//if connect was succesful
 				if (dtConnect == -1) {

@@ -63,6 +63,7 @@ import javax.swing.plaf.basic.BasicProgressBarUI;
 import anon.infoservice.MixCascade;
 import anon.infoservice.StatusInfo;
 import gui.JAPDll;
+	  import logging.*;
 import pay.view.GuthabenAnzeige;
 
 final public class JAPView extends JFrame implements ActionListener, JAPObserver {
@@ -139,9 +140,9 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 	public void create(boolean loadPay)
 		{
 			this.loadPay = loadPay;
-			JAPDebug.out(JAPDebug.INFO,JAPDebug.GUI,"JAPView:initializing...");
+			LogHolder.log(LogLevel.INFO,LogType.GUI,"JAPView:initializing...");
 			init();
-//			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPView:initialization finished!");
+//			LogHolder.log(LogLevel.DEBUG,LogType.GUI,"JAPView:initialization finished!");
 		}
 
 	private void init()
@@ -594,7 +595,7 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 	protected void loadMeterIcons() {
 		// Load Images for "Anonymity Meter"
 		meterIcons = new ImageIcon [JAPConstants.METERFNARRAY.length];
-//		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPView:METERFNARRAY.length="+JAPConstants.METERFNARRAY.length);
+//		LogHolder.log(LogLevel.DEBUG,LogType.MISC,"JAPView:METERFNARRAY.length="+JAPConstants.METERFNARRAY.length);
 		if(!JAPModel.isSmallDisplay())
 			{
 				for (int i=0; i<JAPConstants.METERFNARRAY.length; i++)
@@ -635,7 +636,7 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 
 	public void actionPerformed(ActionEvent event)
 			{
-		//		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"GetEvent: "+event.getSource());
+		//		LogHolder.log(LogLevel.DEBUG,LogType.MISC,"GetEvent: "+event.getSource());
 				if (event.getSource() == m_bttnQuit)
 					exitProgram();
 				else if (event.getSource() == m_bttnIconify)
@@ -668,7 +669,7 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 				else if (event.getSource() == m_cbAnon)
 					controller.setAnonMode(m_cbAnon.isSelected());
 				else
-					JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"Event ?????: "+event.getSource());
+					LogHolder.log(LogLevel.DEBUG,LogType.GUI,"Event ?????: "+event.getSource());
 			}
 
 	private void showHelpWindow()
@@ -716,7 +717,7 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 						}
 				}
 				catch(Exception e) {
-					JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.GUI,"JAPView:Hm.. Error by Pack - Has To be fixed!!");
+					LogHolder.log(LogLevel.EXCEPTION,LogType.GUI,"JAPView:Hm.. Error by Pack - Has To be fixed!!");
 				}
 			}
 
@@ -724,7 +725,7 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 		synchronized (m_runnableValueUpdate) {
 			MixCascade currentMixCascade = controller.getCurrentMixCascade();
 		// Config panel
-		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPView:Start updateValues");
+		LogHolder.log(LogLevel.DEBUG,LogType.GUI,"JAPView:Start updateValues");
 		// Meter panel
 			try {
 		m_cbAnon.setSelected(controller.getAnonMode());
@@ -734,7 +735,7 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 				else {
 					m_cbAnon.setForeground(Color.red);
 		}
-		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPView: update CascadeName");
+		LogHolder.log(LogLevel.DEBUG,LogType.GUI,"JAPView: update CascadeName");
 				m_labelCascadeName.setText(currentMixCascade.getName());
 				m_labelCascadeName.setToolTipText(currentMixCascade.getName());
 				StatusInfo currentStatus = currentMixCascade.getCurrentStatus();
@@ -803,11 +804,11 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 				protectionProgressBar.setString(JAPMessages.getString("meterNA"));
 			trafficProgressBar.setValue(trafficProgressBar.getMaximum());
 			trafficProgressBar.setString(JAPMessages.getString("meterNA"));
-			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPView:Finished updateValues");
+			LogHolder.log(LogLevel.DEBUG,LogType.GUI,"JAPView:Finished updateValues");
 		}
 			}
 			catch(Throwable t) {
-			JAPDebug.out(JAPDebug.EMERG,JAPDebug.GUI,"JAPVIew: Ooops... Crash in updateValues(): "+t.getMessage());
+			LogHolder.log(LogLevel.EMERG,LogType.GUI,"JAPVIew: Ooops... Crash in updateValues(): "+t.getMessage());
 		}
 		}
 	}

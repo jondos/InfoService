@@ -60,7 +60,6 @@ final public class AnonServiceImpl implements AnonService
 		private int m_FirewallPort;
 		private String m_FirewallUserID;
 		private String m_FirewallPasswd;
-		private Log m_Log;
 
 		private boolean m_bMixCertCheckEnabled;
 		private JAPCertificateStore m_certsTrustedRoots;
@@ -72,10 +71,9 @@ final public class AnonServiceImpl implements AnonService
 				m_FirewallPort=-1;
 				m_FirewallUserID=null;
 				m_FirewallPasswd=null;
-				m_Log=new DummyLog();
 				m_bMixCertCheckEnabled=false;
 				m_certsTrustedRoots=null;
-				m_MuxSocket=MuxSocket.create(m_Log);
+				m_MuxSocket=MuxSocket.create();
 			}
 
 		public static AnonService create()
@@ -174,16 +172,7 @@ final public class AnonServiceImpl implements AnonService
 				m_AnonServiceListener.removeElement(l);
 			}
 
-
-		public void setLogging(Log log)
-			{
-				if(log==null)
-					m_Log=new DummyLog();
-				else
-					m_Log=log;
-				 m_MuxSocket.setLogging(m_Log);
-			}
-		//special local Service functions
+	//special local Service functions
 		public void setDummyTraffic(int intervall)
 			{
 				m_MuxSocket.setDummyTraffic(intervall);
@@ -221,6 +210,6 @@ final public class AnonServiceImpl implements AnonService
 
 		public static void init()
 			{
-				KeyPool.start(new DummyLog());
+				KeyPool.start();
 			}
 	}

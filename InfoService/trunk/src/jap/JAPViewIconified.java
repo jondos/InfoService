@@ -46,7 +46,7 @@ import gui.JAPDll;
 
 import anon.infoservice.MixCascade;
 import anon.infoservice.StatusInfo;
-
+import logging.*;
 final public class JAPViewIconified extends     JWindow
                                     implements  ActionListener,
                                                 MouseMotionListener,
@@ -79,7 +79,7 @@ final public class JAPViewIconified extends     JWindow
 			  setName(JAPConstants.TITLE);
 			  m_mainView=JAPController.getView();
 			  m_frameParent.setIconImage(m_mainView.getIconImage());
-			  JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPViewIconified:initializing...");
+			  LogHolder.log(LogLevel.INFO,LogType.MISC,"JAPViewIconified:initializing...");
 			  m_Controller = JAPController.getController();
         m_NumberFormat=NumberFormat.getInstance();
 			  m_runnableValueUpdate=new MyViewIconifiedUpdate();

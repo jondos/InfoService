@@ -26,7 +26,6 @@ IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISI
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
 package proxy;
-import jap.JAPDebug;
 import jap.JAPModel;
 import jap.JAPController;
 import jap.JAPMessages;
@@ -48,7 +47,7 @@ import java.util.Locale;
 import java.util.TimeZone;
 import java.text.SimpleDateFormat;
 
-
+import logging.*;
 final public class DirectProxy implements Runnable
 	{
 		private volatile boolean runFlag;
@@ -96,7 +95,7 @@ final public class DirectProxy implements Runnable
 									}
 								catch(SocketException e2)
 									{
-										JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPDirectProxy:DirectProxy.run() accept socket excpetion: " +e2);
+										LogHolder.log(LogLevel.ERR,LogType.NET,"JAPDirectProxy:DirectProxy.run() accept socket excpetion: " +e2);
 										break;
 									}
 								try
@@ -105,7 +104,7 @@ final public class DirectProxy implements Runnable
 									}
 								catch(SocketException soex)
 									{
-										JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPDirectProxy:DirectProxy.run() Colud not set sockt to blocking mode! Excpetion: " +soex);
+										LogHolder.log(LogLevel.ERR,LogType.NET,"JAPDirectProxy:DirectProxy.run() Colud not set sockt to blocking mode! Excpetion: " +soex);
 										socket=null;
 										continue;
 									}
@@ -136,10 +135,10 @@ final public class DirectProxy implements Runnable
 					}
 				catch (Exception e)
 					{
-						JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPDirectProxy:DirectProxy.run() Exception: " +e);
+						LogHolder.log(LogLevel.ERR,LogType.NET,"JAPDirectProxy:DirectProxy.run() Exception: " +e);
 					}
 				isRunningProxy = false;
-				JAPDebug.out(JAPDebug.INFO,JAPDebug.NET,"JAPDirect:DircetProxyServer stopped.");
+				LogHolder.log(LogLevel.INFO,LogType.NET,"JAPDirect:DircetProxyServer stopped.");
 		}
 
 
@@ -162,7 +161,7 @@ final public class DirectProxy implements Runnable
 					}
 				catch(Exception e)
 					{
-						JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPDirect:DirectProxyServer could not be stopped!!!");
+						LogHolder.log(LogLevel.ERR,LogType.NET,"JAPDirect:DirectProxyServer could not be stopped!!!");
 					}
 				if(threadgroupAll!=null)
 					{
@@ -182,7 +181,7 @@ final public class DirectProxy implements Runnable
 	//		socketListener.close();
 	//	}
 	//	catch(Exception e) {
-	//		JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.NET,"JAPProxyServer:stopService() Exception: " +e);
+	//		LogHolder.log(LogLevel.EXCEPTION,LogLevel.NET,"JAPProxyServer:stopService() Exception: " +e);
 	//	}
 	//}
 
@@ -224,7 +223,7 @@ final public class DirectProxy implements Runnable
 					}
 				catch (Exception e)
 					{
-						JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.NET,"JAPFeedbackConnection: Exception: "+e);
+						LogHolder.log(LogLevel.EXCEPTION,LogType.NET,"JAPFeedbackConnection: Exception: "+e);
 					}
 			}
 	}
@@ -289,7 +288,7 @@ final public class DirectProxy implements Runnable
 						}
 					catch (Exception e)
 						{
-							JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.NET,"JAPDirectConViaProxy: Exception: "+e);
+							LogHolder.log(LogLevel.EXCEPTION,LogType.NET,"JAPDirectConViaProxy: Exception: "+e);
 						}
 				}
 		}

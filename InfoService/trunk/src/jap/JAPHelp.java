@@ -36,7 +36,7 @@ import java.net.MalformedURLException;
 import java.io.*;
 import javax.swing.text.*;
 import javax.swing.event.*;
-
+import logging.*;
 /* classes modified from Swing Example "Metalworks" */
 
 final class JAPHelp extends JDialog implements ActionListener {
@@ -151,8 +151,8 @@ final class HtmlPane extends JScrollPane implements HyperlinkListener
 							return url;
 					}
 				catch (Exception e) {
-						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPHelp:load:Exception: " + e);
-						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"URL was: " + fn);
+						LogHolder.log(LogLevel.DEBUG,LogType.MISC,"JAPHelp:load:Exception: " + e);
+						LogHolder.log(LogLevel.DEBUG,LogType.MISC,"URL was: " + fn);
 					}
 				// ...else
 				try
@@ -164,8 +164,8 @@ final class HtmlPane extends JScrollPane implements HyperlinkListener
 					}
 				catch (Exception e)
 					{
-						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPHelp:HtmlPane(constructor):Exception: " + e);
-						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"URL was: " + fn);
+						LogHolder.log(LogLevel.DEBUG,LogType.MISC,"JAPHelp:HtmlPane(constructor):Exception: " + e);
+						LogHolder.log(LogLevel.DEBUG,LogType.MISC,"URL was: " + fn);
 					}
 				return null;
 			}
