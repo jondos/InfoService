@@ -58,6 +58,9 @@ final public class AnonProxy implements Runnable
       m_socketListener=listener;
       m_Anon=AnonServiceFactory.create();
       m_Anon.setLogging(JAPDebug.create());
+      setFirewall(null,-1);
+      setFirewallAuthorization(null,null);
+      setDummyTraffic(-1);
     }
 
   public void setAnonService(AnonServer server)
