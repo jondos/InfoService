@@ -33,7 +33,6 @@ import java.awt.Insets;
 import anon.tor.Circuit;
 import anon.tor.Tor;
 
-
 public final class JAPConstants
 {
 	public static final String aktVersion = "00.03.037"; //Never change the layout of this line!
@@ -68,7 +67,7 @@ public final class JAPConstants
 	//needed for update.JAPUpdate
 	static final int defaultPortNumber = 4001;
 	//static final int defaultSOCKSPortNumber = 1080;
-	static final String defaultAnonName = "Dresden-Desden";
+	static final String defaultAnonName = "Dresden-Dresden";
 	static final String defaultAnonID = "141.76.1.120%3A6544";
 	static final String defaultAnonHost = "mix.inf.tu-dresden.de";
 	static final String defaultAnonIP = "141.76.1.120"; //only used for fallback,
@@ -104,8 +103,8 @@ public final class JAPConstants
 	static final int SMALL_FONT_STYLE = Font.PLAIN;
 	static final Insets SMALL_BUTTON_MARGIN = new Insets(1, 1, 1, 1);
 
-	static final int VIEW_NORMAL=1;
-	static final int VIEW_SIMPLIFIED=2;
+	static final int VIEW_NORMAL = 1;
+	static final int VIEW_SIMPLIFIED = 2;
 
 	static final String JAPLocalFilename = "JAP.jar";
 	static final int MAXHELPLANGUAGES = 6;
@@ -156,7 +155,6 @@ public final class JAPConstants
 	public static final String IMAGE_COPY = "copyicon.gif";
 	public static final String IMAGE_COPY_CONFIG = "copyintoicon.gif";
 
-
 	public static final String CERTENABLEDICON = "cenabled.gif";
 	public static final String CERTDISABLEDICON = "cdisabled.gif";
 
@@ -192,9 +190,9 @@ public final class JAPConstants
 	public final static String CERT_JAPINFOSERVICEMESSAGES = "japinfoservicemessages.cer";
 	public final static String CERT_BI = "bi.cer";
 
-	public final static int TOR_MAX_CONNECTIONS_PER_ROUTE=Circuit.MAX_STREAMS_OVER_CIRCUIT;
-	public final static int TOR_MAX_ROUTE_LEN=Tor.MAX_ROUTE_LEN;
-	public final static int TOR_MIN_ROUTE_LEN=Tor.MIN_ROUTE_LEN;
+	public final static int TOR_MAX_CONNECTIONS_PER_ROUTE = Circuit.MAX_STREAMS_OVER_CIRCUIT;
+	public final static int TOR_MAX_ROUTE_LEN = Tor.MAX_ROUTE_LEN;
+	public final static int TOR_MIN_ROUTE_LEN = Tor.MIN_ROUTE_LEN;
 	public final static boolean WITH_BLOCKINGRESISTANCE = true; //Enables or diables Suuport of
 	//blocking reistance functionality
 	/**
@@ -210,66 +208,66 @@ public final class JAPConstants
 	public static final String MAIL_SYSTEM_ADDRESS = "japmailsystem@infoservice.inf.tu-dresden.de";
 
 	//japconfig
-	public final static String CONFIG_VERSION="version";
-	public final static String CONFIG_PORT_NUMBER="portNumber";
-	public final static String CONFIG_LISTENER_IS_LOCAL="listenerIsLocal";
-	public final static String CONFIG_NEVER_REMIND_ACTIVE_CONTENT="neverRemindActiveContent";
-	public final static String CONFIG_NEVER_EXPLAIN_FORWARD="neverExplainForward";
-	public final static String CONFIG_DO_NOT_ABUSE_REMINDER="doNotAbuseReminder";
-	public final static String CONFIG_NEVER_REMIND_GOODBYE="neverRemindGoodBye";
-	public final static String CONFIG_INFOSERVICE_DISABLED="infoServiceDisabled";
-	public final static String CONFIG_INFOSERVICE_CHANGE="infoServiceChange";
-	public final static String CONFIG_INFOSERVICE_TIMEOUT="infoServiceTimeout";
-	public final static String CONFIG_PROXY_HOST_NAME="proxyHostName";
-	public final static String CONFIG_PROXY_PORT_NUMBER="proxyPortNumber";
-	public final static String CONFIG_PROXY_TYPE="proxyType";
-	public final static String CONFIG_PROXY_AUTH_USER_ID="proxyAuthUserID";
-	public final static String CONFIG_PROXY_AUTHORIZATION="proxyAuthorization";
-	public final static String CONFIG_PROXY_MODE="proxyMode";
-	public final static String CONFIG_MIX_CASCADE="MixCascade";
-	public final static String CONFIG_MIX_CASCADES="MixCascades";
-	public final static String CONFIG_USER_DEFINED="userDefined";
-	public final static String CONFIG_DUMMY_TRAFFIC_INTERVALL="DummyTrafficIntervall";
-	public final static String CONFIG_AUTO_CONNECT="autoConnect";
-	public final static String CONFIG_AUTO_RECONNECT="autoReConnect";
-	public final static String CONFIG_PRECREATE_ANON_ROUTES="preCreateAnonRoutes";
-	public final static String CONFIG_MINIMIZED_STARTUP="minimizedStartup";
-	public final static String CONFIG_LOCALE="Locale";
-	public final static String CONFIG_LOOK_AND_FEEL="LookAndFeel";
-	public final static String CONFIG_UNKNOWN="unknown";
-	public final static String CONFIG_GUI="GUI";
-	public final static String CONFIG_MAIN_WINDOW="MainWindow";
-	public final static String CONFIG_SET_ON_STARTUP="SetOnStartup";
-	public final static String CONFIG_LOCATION="Location";
-	public final static String CONFIG_X="x";
-	public final static String CONFIG_Y="y";
-	public final static String CONFIG_DX="dx";
-	public final static String CONFIG_DY="dy";
-	public final static String CONFIG_SIZE="Size";
-	public final static String CONFIG_MOVE_TO_SYSTRAY="MoveToSystray";
-	public final static String CONFIG_DEFAULT_VIEW="DefaultView";
-	public final static String CONFIG_NORMAL="Normal";
-	public final static String CONFIG_SIMPLIFIED="Simplified";
-	public final static String CONFIG_DEBUG="Debug";
-	public final static String CONFIG_LEVEL="Level";
-	public final static String CONFIG_TYPE="Type";
-	public final static String CONFIG_NET="NET";
-	public final static String CONFIG_THREAD="THREAD";
-	public final static String CONFIG_MISC="MISC";
-	public final static String CONFIG_OUTPUT="Output";
-	public final static String CONFIG_CONSOLE="Console";
-	public final static String CONFIG_FILE="File";
-	public final static String CONFIG_INFOSERVICE="InfoService";
-	public final static String CONFIG_INFOSERVICES="InfoServices";
-	public final static String CONFIG_PREFERED_INFOSERVICE="PreferedInfoService";
-	public final static String CONFIG_TOR="Tor";
-	public final static String CONFIG_MAX_CONNECTIONS_PER_ROUTE="MaxConnectionsPerRoute";
-	public final static String CONFIG_ROUTE_LEN="RouteLen";
-	public final static String CONFIG_MIN="min";
-	public final static String CONFIG_MAX="max";
-	public final static String CONFIG_PAYMENT="Payment";
-	public final static String CONFIG_ENCRYPTED_DATA="EncryptedData";
-	public final static String CONFIG_PAY_ACCOUNTS_FILE="PayAccountsFile";
-	public final static String CONFIG_JAP_FORWARDING_SETTINGS="JapForwardingSettings";
+	public final static String CONFIG_VERSION = "version";
+	public final static String CONFIG_PORT_NUMBER = "portNumber";
+	public final static String CONFIG_LISTENER_IS_LOCAL = "listenerIsLocal";
+	public final static String CONFIG_NEVER_REMIND_ACTIVE_CONTENT = "neverRemindActiveContent";
+	public final static String CONFIG_NEVER_EXPLAIN_FORWARD = "neverExplainForward";
+	public final static String CONFIG_DO_NOT_ABUSE_REMINDER = "doNotAbuseReminder";
+	public final static String CONFIG_NEVER_REMIND_GOODBYE = "neverRemindGoodBye";
+	public final static String CONFIG_INFOSERVICE_DISABLED = "infoServiceDisabled";
+	public final static String CONFIG_INFOSERVICE_CHANGE = "infoServiceChange";
+	public final static String CONFIG_INFOSERVICE_TIMEOUT = "infoServiceTimeout";
+	public final static String CONFIG_PROXY_HOST_NAME = "proxyHostName";
+	public final static String CONFIG_PROXY_PORT_NUMBER = "proxyPortNumber";
+	public final static String CONFIG_PROXY_TYPE = "proxyType";
+	public final static String CONFIG_PROXY_AUTH_USER_ID = "proxyAuthUserID";
+	public final static String CONFIG_PROXY_AUTHORIZATION = "proxyAuthorization";
+	public final static String CONFIG_PROXY_MODE = "proxyMode";
+	public final static String CONFIG_MIX_CASCADE = "MixCascade";
+	public final static String CONFIG_MIX_CASCADES = "MixCascades";
+	public final static String CONFIG_USER_DEFINED = "userDefined";
+	public final static String CONFIG_DUMMY_TRAFFIC_INTERVALL = "DummyTrafficIntervall";
+	public final static String CONFIG_AUTO_CONNECT = "autoConnect";
+	public final static String CONFIG_AUTO_RECONNECT = "autoReConnect";
+	public final static String CONFIG_PRECREATE_ANON_ROUTES = "preCreateAnonRoutes";
+	public final static String CONFIG_MINIMIZED_STARTUP = "minimizedStartup";
+	public final static String CONFIG_LOCALE = "Locale";
+	public final static String CONFIG_LOOK_AND_FEEL = "LookAndFeel";
+	public final static String CONFIG_UNKNOWN = "unknown";
+	public final static String CONFIG_GUI = "GUI";
+	public final static String CONFIG_MAIN_WINDOW = "MainWindow";
+	public final static String CONFIG_SET_ON_STARTUP = "SetOnStartup";
+	public final static String CONFIG_LOCATION = "Location";
+	public final static String CONFIG_X = "x";
+	public final static String CONFIG_Y = "y";
+	public final static String CONFIG_DX = "dx";
+	public final static String CONFIG_DY = "dy";
+	public final static String CONFIG_SIZE = "Size";
+	public final static String CONFIG_MOVE_TO_SYSTRAY = "MoveToSystray";
+	public final static String CONFIG_DEFAULT_VIEW = "DefaultView";
+	public final static String CONFIG_NORMAL = "Normal";
+	public final static String CONFIG_SIMPLIFIED = "Simplified";
+	public final static String CONFIG_DEBUG = "Debug";
+	public final static String CONFIG_LEVEL = "Level";
+	public final static String CONFIG_TYPE = "Type";
+	public final static String CONFIG_NET = "NET";
+	public final static String CONFIG_THREAD = "THREAD";
+	public final static String CONFIG_MISC = "MISC";
+	public final static String CONFIG_OUTPUT = "Output";
+	public final static String CONFIG_CONSOLE = "Console";
+	public final static String CONFIG_FILE = "File";
+	public final static String CONFIG_INFOSERVICE = "InfoService";
+	public final static String CONFIG_INFOSERVICES = "InfoServices";
+	public final static String CONFIG_PREFERED_INFOSERVICE = "PreferedInfoService";
+	public final static String CONFIG_TOR = "Tor";
+	public final static String CONFIG_MAX_CONNECTIONS_PER_ROUTE = "MaxConnectionsPerRoute";
+	public final static String CONFIG_ROUTE_LEN = "RouteLen";
+	public final static String CONFIG_MIN = "min";
+	public final static String CONFIG_MAX = "max";
+	public final static String CONFIG_PAYMENT = "Payment";
+	public final static String CONFIG_ENCRYPTED_DATA = "EncryptedData";
+	public final static String CONFIG_PAY_ACCOUNTS_FILE = "PayAccountsFile";
+	public final static String CONFIG_JAP_FORWARDING_SETTINGS = "JapForwardingSettings";
 
 }

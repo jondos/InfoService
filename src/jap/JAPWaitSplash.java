@@ -28,7 +28,6 @@
 package jap;
 
 import java.awt.BorderLayout;
-
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.SwingConstants;

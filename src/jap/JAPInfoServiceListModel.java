@@ -35,30 +35,36 @@ import javax.swing.DefaultListModel;
 /**
  * This class is the implementation of the data model for InfoService lists in the InfoService
  * configuration dialog.
- */ 
-public class JAPInfoServiceListModel extends DefaultListModel {
-  
-  /**
-   * This method changes the data stored in the InfoService lists.
-   *
-   * @param a_data A Vector of InfoServices which shall be displayed in the InfoService lists.
-   *               All InfoServices which are currently in the lists, are removed first.
-   */
-  public void setData(Vector a_data) {
-    synchronized (this) {
-      int oldsize = size();
-      removeAllElements();
-      if (oldsize > 0) {
-        fireIntervalRemoved(this, 0, oldsize - 1);
-      }
-      Enumeration newListElements = a_data.elements();
-      while (newListElements.hasMoreElements()) {
-        addElement(newListElements.nextElement());
-      }
-      if (size() > 0) {
-        fireIntervalAdded(this, 0, size() - 1);
-      }
-    }
-  }
+ */
+public class JAPInfoServiceListModel extends DefaultListModel
+{
+
+	/**
+	 * This method changes the data stored in the InfoService lists.
+	 *
+	 * @param a_data A Vector of InfoServices which shall be displayed in the InfoService lists.
+	 *               All InfoServices which are currently in the lists, are removed first.
+	 */
+	public void setData(Vector a_data)
+	{
+		synchronized (this)
+		{
+			int oldsize = size();
+			removeAllElements();
+			if (oldsize > 0)
+			{
+				fireIntervalRemoved(this, 0, oldsize - 1);
+			}
+			Enumeration newListElements = a_data.elements();
+			while (newListElements.hasMoreElements())
+			{
+				addElement(newListElements.nextElement());
+			}
+			if (size() > 0)
+			{
+				fireIntervalAdded(this, 0, size() - 1);
+			}
+		}
+	}
 
 }

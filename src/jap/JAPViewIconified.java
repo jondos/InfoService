@@ -27,7 +27,8 @@
  */
 package jap;
 
-import gui.JAPDll;
+import java.lang.reflect.InvocationTargetException;
+import java.text.NumberFormat;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -42,9 +43,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
-import java.lang.reflect.InvocationTargetException;
-import java.text.NumberFormat;
-
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -53,12 +51,13 @@ import javax.swing.OverlayLayout;
 import javax.swing.SwingUtilities;
 import javax.swing.border.LineBorder;
 
+import anon.infoservice.MixCascade;
+import anon.infoservice.StatusInfo;
+import gui.JAPDll;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import proxy.ProxyListener;
-import anon.infoservice.MixCascade;
-import anon.infoservice.StatusInfo;
 
 final public class JAPViewIconified extends JWindow implements ActionListener,
 	MouseMotionListener,
@@ -74,7 +73,7 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 	private static final Font m_fontDlg = new Font("Sans", Font.PLAIN, 9);
 	private static final String STR_HIDDEN_WINDOW = Double.toString(Math.random());
 	private static final Frame m_frameParent = new Frame(STR_HIDDEN_WINDOW);
-	private long m_lTrafficWWW,m_lTrafficOther;
+	private long m_lTrafficWWW, m_lTrafficOther;
 	final private class MyViewIconifiedUpdate implements Runnable
 	{
 		public void run()
@@ -115,7 +114,7 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 		la.setConstraints(x2, c);
 		pTop.add(x2);
 		c.weightx = 1;
-		m_lTrafficOther=m_lTrafficWWW=0;
+		m_lTrafficOther = m_lTrafficWWW = 0;
 		m_labelBytes = new JLabel("00000000  ", JLabel.LEFT);
 		m_labelBytes.setForeground(Color.red);
 		m_labelBytes.setFont(m_fontDlg);
@@ -288,13 +287,17 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 	{
 	}
 
-	public void transferedBytes(int b,int protocolType)
+	public void transferedBytes(int b, int protocolType)
 	{ //TODO: do it the right way --> it must be executed in the EventThread!!!
-		if(protocolType==ProxyListener.PROTOCOL_WWW)
-			m_lTrafficWWW=b;
-		else if(protocolType==ProxyListener.PROTOCOL_OTHER)
-			m_lTrafficOther=b;
-		m_labelBytes.setText(JAPUtil.formatBytesValue(m_lTrafficWWW+m_lTrafficOther));
+		if (protocolType == ProxyListener.PROTOCOL_WWW)
+		{
+			m_lTrafficWWW = b;
+		}
+		else if (protocolType == ProxyListener.PROTOCOL_OTHER)
+		{
+			m_lTrafficOther = b;
+		}
+		m_labelBytes.setText(JAPUtil.formatBytesValue(m_lTrafficWWW + m_lTrafficOther));
 	}
 
 	public void mouseExited(MouseEvent e)

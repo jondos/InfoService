@@ -28,6 +28,13 @@
 
 package jap;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.Properties;
+
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Frame;
@@ -38,13 +45,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.File;
-import java.io.FileWriter;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.Properties;
-
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
@@ -92,13 +92,13 @@ final public class JAPDebug extends WindowAdapter implements ActionListener, Log
 		m_debugType = LogType.ALL;
 		m_debugLevel = LogLevel.DEBUG;
 		m_bConsole = false;
-		ms_bFile=false;
+		ms_bFile = false;
 		ms_strFileName = null;
 	}
 
 	public void finalize()
 	{
-		ms_bFile=false;
+		ms_bFile = false;
 		try
 		{
 			super.finalize();
@@ -211,7 +211,7 @@ final public class JAPDebug extends WindowAdapter implements ActionListener, Log
 	 */
 	public static void setLogToFile(String strFilename)
 	{
-		if (strFilename == null||strFilename.trim().equals(""))
+		if (strFilename == null || strFilename.trim().equals(""))
 		{
 			ms_bFile = false;
 			ms_FileLog = null;
@@ -287,7 +287,7 @@ final public class JAPDebug extends WindowAdapter implements ActionListener, Log
 			bttnCopy.setActionCommand("copy");
 			bttnCopy.addActionListener(debug);
 			JButton bttnInsertConfig = new JButton(JAPMessages.getString("bttnInsertConfig"),
-											 JAPUtil.loadImageIcon(JAPConstants.IMAGE_COPY_CONFIG, true));
+				JAPUtil.loadImageIcon(JAPConstants.IMAGE_COPY_CONFIG, true));
 			bttnInsertConfig.setActionCommand("insertConfig");
 			bttnInsertConfig.addActionListener(debug);
 			JButton bttnDelete = new JButton(JAPMessages.getString("bttnDelete"),
@@ -423,10 +423,10 @@ final public class JAPDebug extends WindowAdapter implements ActionListener, Log
 //	return true;
 //	}
 
-/*	private static void printDebugSettings()
-	{
-		System.out.println("JAPDebug: debugtype =" + Integer.toString(debug.m_debugType));
-		System.out.println("JAPDebug: debuglevel=" + Integer.toString(debug.m_debugLevel));
-	}
-*/
+	/*	private static void printDebugSettings()
+	 {
+	  System.out.println("JAPDebug: debugtype =" + Integer.toString(debug.m_debugType));
+	  System.out.println("JAPDebug: debuglevel=" + Integer.toString(debug.m_debugLevel));
+	 }
+	 */
 }

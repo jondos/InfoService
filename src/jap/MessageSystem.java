@@ -31,17 +31,20 @@ import java.util.Observable;
 
 /**
  * This is the implementation of a service for sending internal messages.
- */ 
-public class MessageSystem extends Observable {
-  
-  /**
-   * Notifies all observers of this MessageSystem instance but without a special message.
-   */
-  public void sendMessage() {
-    synchronized (this) {
-      setChanged();
-      notifyObservers();
-    }
-  }
-  
+ */
+public class MessageSystem extends Observable
+{
+
+	/**
+	 * Notifies all observers of this MessageSystem instance but without a special message.
+	 */
+	public void sendMessage()
+	{
+		synchronized (this)
+		{
+			setChanged();
+			notifyObservers();
+		}
+	}
+
 }

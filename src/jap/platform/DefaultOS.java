@@ -27,10 +27,10 @@
  */
 package jap.platform;
 
+import jap.JAPConstants;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import jap.JAPConstants;
 
 /**
  * This class is instantiated by AbstractOS if the OS cannot be determined.
@@ -51,7 +51,7 @@ public class DefaultOS extends AbstractOS
 	public String getConfigPath()
 	{
 		return System.getProperty("user.home", "") + "/" +
-					JAPConstants.XMLCONFFN;
+			JAPConstants.XMLCONFFN;
 	}
 
 }

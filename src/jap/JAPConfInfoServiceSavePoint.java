@@ -30,14 +30,14 @@ package jap;
 import java.util.Enumeration;
 import java.util.Vector;
 
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
 import anon.infoservice.Database;
 import anon.infoservice.HTTPConnectionFactory;
 import anon.infoservice.InfoServiceDBEntry;
 import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.ListenerInterface;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 
 /**
  * This is the implementation for the infoservice savepoint. It is needed for restoring an old or
@@ -46,84 +46,88 @@ import anon.infoservice.ListenerInterface;
 public class JAPConfInfoServiceSavePoint implements IJAPConfSavePoint
 {
 
-  /**
-   * The Vector of all known infoservices.
-   */
-  private Vector m_knownInfoServices;
+	/**
+	 * The Vector of all known infoservices.
+	 */
+	private Vector m_knownInfoServices;
 
-  /**
-   * The prefered infoservice.
-   */
-  private InfoServiceDBEntry m_preferedInfoService;
+	/**
+	 * The prefered infoservice.
+	 */
+	private InfoServiceDBEntry m_preferedInfoService;
 
-  /**
-   * Whether automatic infoservice requests are disabled or not.
-   */
-  private boolean m_automaticInfoServiceRequestsDisabled;
+	/**
+	 * Whether automatic infoservice requests are disabled or not.
+	 */
+	private boolean m_automaticInfoServiceRequestsDisabled;
 
-  /**
-   * Whether automatic changes of infoservice are enabled (if the default infoservice fails).
-   */
-  private boolean m_automaticInfoServiceChanges;
+	/**
+	 * Whether automatic changes of infoservice are enabled (if the default infoservice fails).
+	 */
+	private boolean m_automaticInfoServiceChanges;
 
-  /**
-   * The timeout in seconds for infoservice communication.
-   */
-  private int m_infoserviceTimeout;
+	/**
+	 * The timeout in seconds for infoservice communication.
+	 */
+	private int m_infoserviceTimeout;
 
-  /**
-   * This method will store the current infoservice configuration in this savepoint.
-   */
-  public void createSavePoint()
-  {
-    m_knownInfoServices = Database.getInstance(InfoServiceDBEntry.class).getEntryList();
-    m_preferedInfoService = InfoServiceHolder.getInstance().getPreferedInfoService();
-    m_automaticInfoServiceRequestsDisabled = JAPModel.isInfoServiceDisabled();
-    m_automaticInfoServiceChanges = InfoServiceHolder.getInstance().isChangeInfoServices();
-    m_infoserviceTimeout = HTTPConnectionFactory.getInstance().getTimeout();
-  }
+	/**
+	 * This method will store the current infoservice configuration in this savepoint.
+	 */
+	public void createSavePoint()
+	{
+		m_knownInfoServices = Database.getInstance(InfoServiceDBEntry.class).getEntryList();
+		m_preferedInfoService = InfoServiceHolder.getInstance().getPreferedInfoService();
+		m_automaticInfoServiceRequestsDisabled = JAPModel.isInfoServiceDisabled();
+		m_automaticInfoServiceChanges = InfoServiceHolder.getInstance().isChangeInfoServices();
+		m_infoserviceTimeout = HTTPConnectionFactory.getInstance().getTimeout();
+	}
 
-  /**
-   * Restores the old infoservice configuration (stored with the last call of createSavePoint()).
-   */
-  public void restoreSavePoint()
-  {
-    /* remove all infoservices from database and load the stored ones */
-    Database.getInstance(InfoServiceDBEntry.class).removeAll();
-    Enumeration infoServices = m_knownInfoServices.elements();
-    while (infoServices.hasMoreElements())
-    {
-      Database.getInstance(InfoServiceDBEntry.class).update( (InfoServiceDBEntry) (infoServices.nextElement()));
-    }
-    InfoServiceHolder.getInstance().setPreferedInfoService(m_preferedInfoService);
-    JAPController.setInfoServiceDisabled(m_automaticInfoServiceRequestsDisabled);
-    InfoServiceHolder.getInstance().setChangeInfoServices(m_automaticInfoServiceChanges);
-    HTTPConnectionFactory.getInstance().setTimeout(m_infoserviceTimeout);
-  }
+	/**
+	 * Restores the old infoservice configuration (stored with the last call of createSavePoint()).
+	 */
+	public void restoreSavePoint()
+	{
+		/* remove all infoservices from database and load the stored ones */
+		Database.getInstance(InfoServiceDBEntry.class).removeAll();
+		Enumeration infoServices = m_knownInfoServices.elements();
+		while (infoServices.hasMoreElements())
+		{
+			Database.getInstance(InfoServiceDBEntry.class).update( (InfoServiceDBEntry) (infoServices.
+				nextElement()));
+		}
+		InfoServiceHolder.getInstance().setPreferedInfoService(m_preferedInfoService);
+		JAPController.setInfoServiceDisabled(m_automaticInfoServiceRequestsDisabled);
+		InfoServiceHolder.getInstance().setChangeInfoServices(m_automaticInfoServiceChanges);
+		HTTPConnectionFactory.getInstance().setTimeout(m_infoserviceTimeout);
+	}
 
-  /**
-   * Loads the default infoservice configuration.
-   */
-  public void restoreDefaults()
-  {
-    /* remove all infoservices from database and set prefered infoservice to the default
-     * infoservice
-     */
-    Database.getInstance(InfoServiceDBEntry.class).removeAll();
-    try
-    {
-      InfoServiceDBEntry defaultInfoService = new InfoServiceDBEntry(JAPConstants.defaultInfoServiceName, new ListenerInterface(JAPConstants.defaultInfoServiceHostName, JAPConstants.defaultInfoServicePortNumber).toVector(), true);
-      InfoServiceHolder.getInstance().setPreferedInfoService(defaultInfoService);
-    }
-    catch (Exception e)
-    {
-      /* should not happen, if it happens, we can't do anything */
-      LogHolder.log(LogLevel.EXCEPTION, LogType.MISC,
-        "JAPConfInfoServiceSavePoint: restoreDefaults: Cannot create the default infoservice.");
-    }
-    JAPController.setInfoServiceDisabled(JAPConstants.DEFAULT_INFOSERVICE_DISABLED);
-    InfoServiceHolder.getInstance().setChangeInfoServices(JAPConstants.DEFAULT_INFOSERVICE_CHANGES);
-    HTTPConnectionFactory.getInstance().setTimeout(JAPConstants.DEFAULT_INFOSERVICE_TIMEOUT);
-  }
+	/**
+	 * Loads the default infoservice configuration.
+	 */
+	public void restoreDefaults()
+	{
+		/* remove all infoservices from database and set prefered infoservice to the default
+		 * infoservice
+		 */
+		Database.getInstance(InfoServiceDBEntry.class).removeAll();
+		try
+		{
+			InfoServiceDBEntry defaultInfoService = new InfoServiceDBEntry(JAPConstants.
+				defaultInfoServiceName,
+				new ListenerInterface(JAPConstants.defaultInfoServiceHostName,
+									  JAPConstants.defaultInfoServicePortNumber).toVector(), true);
+			InfoServiceHolder.getInstance().setPreferedInfoService(defaultInfoService);
+		}
+		catch (Exception e)
+		{
+			/* should not happen, if it happens, we can't do anything */
+			LogHolder.log(LogLevel.EXCEPTION, LogType.MISC,
+						  "JAPConfInfoServiceSavePoint: restoreDefaults: Cannot create the default infoservice.");
+		}
+		JAPController.setInfoServiceDisabled(JAPConstants.DEFAULT_INFOSERVICE_DISABLED);
+		InfoServiceHolder.getInstance().setChangeInfoServices(JAPConstants.DEFAULT_INFOSERVICE_CHANGES);
+		HTTPConnectionFactory.getInstance().setTimeout(JAPConstants.DEFAULT_INFOSERVICE_TIMEOUT);
+	}
 
 }

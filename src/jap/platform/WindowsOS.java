@@ -27,10 +27,10 @@
  */
 package jap.platform;
 
+import jap.JAPConstants;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import jap.JAPConstants;
 
 /**
  * This class is instantiated by AbstractOS if the current OS is Windows
@@ -38,7 +38,7 @@ import jap.JAPConstants;
 public class WindowsOS extends AbstractOS
 {
 	public static final String[] BROWSERLIST =
-	{
+		{
 		"firefox", "iexplore", "explorer", "mozilla", "konqueror", "mozilla-firefox",
 		"firebird", "opera"
 	};
@@ -79,7 +79,7 @@ public class WindowsOS extends AbstractOS
 	public String getConfigPath()
 	{
 		return System.getProperty("user.home", "") + "/" +
-				JAPConstants.XMLCONFFN;
+			JAPConstants.XMLCONFFN;
 	}
 
 }

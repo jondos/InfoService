@@ -27,11 +27,11 @@
  */
 package jap;
 
-import gui.FlippingPanel;
-import gui.JAPDll;
-import gui.JAPMixCascadeComboBox;
-import gui.MyProgressBarUI;
-import gui.StatusPanel;
+import java.text.NumberFormat;
+import java.util.Enumeration;
+import java.util.Observable;
+import java.util.Observer;
+import java.util.Vector;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -54,12 +54,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.text.NumberFormat;
-import java.util.Enumeration;
-import java.util.Observable;
-import java.util.Observer;
-import java.util.Vector;
-
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
@@ -74,15 +68,20 @@ import javax.swing.JProgressBar;
 import javax.swing.JRadioButton;
 import javax.swing.JSeparator;
 import javax.swing.SwingConstants;
+import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 
+import anon.infoservice.MixCascade;
+import anon.infoservice.StatusInfo;
+import gui.FlippingPanel;
+import gui.JAPDll;
+import gui.JAPMixCascadeComboBox;
+import gui.MyProgressBarUI;
+import gui.StatusPanel;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import proxy.ProxyListener;
-import anon.infoservice.MixCascade;
-import anon.infoservice.StatusInfo;
-import javax.swing.border.EmptyBorder;
 
 final public class JAPNewView extends AbstractJAPMainView implements IJAPMainView, ActionListener,
 	JAPObserver
@@ -769,7 +768,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			Dimension ds = Toolkit.getDefaultToolkit().getScreenSize();
 			if (m.m_OldMainWindowLocation != null && m.m_OldMainWindowLocation.x >= 0 &&
 				m.m_OldMainWindowLocation.y > 0 /*&&m.m_OldMainWindowLocation.x<ds.width&&
-					   m.m_OldMainWindowLocation.y<ds.height*/
+						 m.m_OldMainWindowLocation.y<ds.height*/
 				)
 			{
 				setLocation(m.m_OldMainWindowLocation);
@@ -1763,8 +1762,10 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				 * server, also it should not be possible to change the selected mixcascade
 				 */
 				m_cbForwarding.setEnabled(!JAPModel.getInstance().getRoutingSettings().isConnectViaForwarder());
-				m_cbForwardingSmall.setEnabled(!JAPModel.getInstance().getRoutingSettings().isConnectViaForwarder());
-				m_comboAnonServices.setEnabled(!JAPModel.getInstance().getRoutingSettings().isConnectViaForwarder());
+				m_cbForwardingSmall.setEnabled(!JAPModel.getInstance().getRoutingSettings().
+											   isConnectViaForwarder());
+				m_comboAnonServices.setEnabled(!JAPModel.getInstance().getRoutingSettings().
+											   isConnectViaForwarder());
 			}
 			catch (Throwable t)
 			{

@@ -27,16 +27,16 @@
  */
 package jap;
 
+import java.text.DateFormat;
+import java.util.Hashtable;
+import java.util.Vector;
+
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.text.DateFormat;
-import java.util.Hashtable;
-import java.util.Vector;
-
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -102,7 +102,7 @@ final class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 				return false;
 			}
 		};
-	m_tableRouters.setPreferredScrollableViewportSize(new Dimension(70, m_tableRouters.getRowHeight()*5));
+		m_tableRouters.setPreferredScrollableViewportSize(new Dimension(70, m_tableRouters.getRowHeight() * 5));
 		m_tableRouters.setCellSelectionEnabled(false);
 		m_tableRouters.setColumnSelectionAllowed(false);
 		m_tableRouters.setRowSelectionAllowed(true);
@@ -133,11 +133,11 @@ final class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 		panelRoot.add(p, c);
 
 		p = new JPanel(new GridBagLayout());
-		GridBagConstraints c3=new GridBagConstraints();
-		c3.anchor=GridBagConstraints.NORTHWEST;
-		c3.insets=new Insets(2,5,2,5);
-		c3.fill=GridBagConstraints.NONE;
-		p.add(new JLabel(JAPMessages.getString("torPrefMinPathLen")),c3);
+		GridBagConstraints c3 = new GridBagConstraints();
+		c3.anchor = GridBagConstraints.NORTHWEST;
+		c3.insets = new Insets(2, 5, 2, 5);
+		c3.fill = GridBagConstraints.NONE;
+		p.add(new JLabel(JAPMessages.getString("torPrefMinPathLen")), c3);
 		m_sliderMinPathLen = new JSlider();
 		m_sliderMinPathLen.setPaintLabels(true);
 		m_sliderMinPathLen.setPaintTicks(true);
@@ -145,13 +145,13 @@ final class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 		m_sliderMinPathLen.setSnapToTicks(true);
 		m_sliderMinPathLen.setMinimum(JAPConstants.TOR_MIN_ROUTE_LEN);
 		m_sliderMinPathLen.setMaximum(JAPConstants.TOR_MAX_ROUTE_LEN);
-		c3.gridx=1;
-		c3.fill=GridBagConstraints.HORIZONTAL;
-		p.add(m_sliderMinPathLen,c3);
-		c3.gridx=0;
-		c3.gridy=1;
-		c3.fill=GridBagConstraints.NONE;
-		p.add(new JLabel(JAPMessages.getString("torPrefMaxPathLen")),c3);
+		c3.gridx = 1;
+		c3.fill = GridBagConstraints.HORIZONTAL;
+		p.add(m_sliderMinPathLen, c3);
+		c3.gridx = 0;
+		c3.gridy = 1;
+		c3.fill = GridBagConstraints.NONE;
+		p.add(new JLabel(JAPMessages.getString("torPrefMaxPathLen")), c3);
 		m_sliderMaxPathLen = new JSlider();
 		m_sliderMaxPathLen.setMinimum(JAPConstants.TOR_MIN_ROUTE_LEN);
 		m_sliderMaxPathLen.setMaximum(JAPConstants.TOR_MAX_ROUTE_LEN);
@@ -160,13 +160,13 @@ final class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 		m_sliderMaxPathLen.setMajorTickSpacing(1);
 		m_sliderMaxPathLen.setMinorTickSpacing(1);
 		m_sliderMaxPathLen.setSnapToTicks(true);
-		c3.gridx=1;
-		c3.fill=GridBagConstraints.HORIZONTAL;
-		p.add(m_sliderMaxPathLen,c3);
-		c3.gridx=0;
-		c3.gridy=2;
-		c3.fill=GridBagConstraints.NONE;
-		p.add(new JLabel(JAPMessages.getString("torPrefPathSwitchTime")),c3);
+		c3.gridx = 1;
+		c3.fill = GridBagConstraints.HORIZONTAL;
+		p.add(m_sliderMaxPathLen, c3);
+		c3.gridx = 0;
+		c3.gridy = 2;
+		c3.fill = GridBagConstraints.NONE;
+		p.add(new JLabel(JAPMessages.getString("torPrefPathSwitchTime")), c3);
 		m_sliderConnectionsPerPath = new JSlider();
 		Hashtable sliderLabels = new Hashtable();
 		sliderLabels.put(new Integer(1), new JLabel("10"));
@@ -182,10 +182,10 @@ final class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 		m_sliderConnectionsPerPath.setSnapToTicks(true);
 		m_sliderConnectionsPerPath.setPaintLabels(true);
 		m_sliderConnectionsPerPath.setPaintTicks(true);
-		c3.gridx=1;
-		c3.weightx=1;
-		c3.fill=GridBagConstraints.HORIZONTAL;
-		p.add(m_sliderConnectionsPerPath,c3);
+		c3.gridx = 1;
+		c3.weightx = 1;
+		c3.fill = GridBagConstraints.HORIZONTAL;
+		p.add(m_sliderConnectionsPerPath, c3);
 		p.setBorder(new TitledBorder(JAPMessages.getString("torBorderPreferences")));
 		c.gridy = 3;
 		c.weighty = 0;

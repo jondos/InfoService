@@ -27,12 +27,11 @@
  */
 package jap.platform;
 
+import com.apple.mrj.MRJFileUtils;
+import jap.JAPConstants;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-
-import com.apple.mrj.MRJFileUtils;
-import jap.JAPConstants;
 
 /**
  * This class is instantiated by AbstractOS if the current OS is MacOS
@@ -42,7 +41,9 @@ public class MacOS extends AbstractOS
 	public MacOS() throws Exception
 	{
 		if (System.getProperty("mrj.version") == null)
+		{
 			throw new Exception("Operating system is not MacOS");
+		}
 	}
 
 	public void openURLInBrowser(String a_url)

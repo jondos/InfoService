@@ -27,7 +27,10 @@
  */
 package jap;
 
-import gui.JAPMultilineLabel;
+import java.io.File;
+import java.io.IOException;
+import java.util.Dictionary;
+import java.util.Hashtable;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
@@ -40,11 +43,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import java.io.File;
-import java.io.IOException;
-import java.util.Dictionary;
-import java.util.Hashtable;
-
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -56,7 +54,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.JSlider;
-import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
@@ -66,10 +63,11 @@ import javax.swing.event.ChangeListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 
-import logging.LogLevel;
-import logging.LogType;
 import anon.infoservice.ImmutableListenerInterface;
 import anon.infoservice.ProxyInterface;
+import gui.JAPMultilineLabel;
+import logging.LogLevel;
+import logging.LogType;
 
 final class JAPConf extends JDialog
 {
@@ -180,8 +178,8 @@ final class JAPConf extends JDialog
 		}
 		DefaultMutableTreeNode nodeAnon = m_moduleSystem.addComponent(rootNode, null, "ngAnonymitaet", null);
 		m_moduleSystem.addConfigurationModule(nodeAnon, new JAPConfInfoService(), INFOSERVICE_TAB);
-	m_confServices=new JAPConfServices();
-	m_moduleSystem.addConfigurationModule(nodeAnon, m_confServices, ANON_SERVICES_TAB);
+		m_confServices = new JAPConfServices();
+		m_moduleSystem.addConfigurationModule(nodeAnon, m_confServices, ANON_SERVICES_TAB);
 		if (JAPConstants.WITH_BLOCKINGRESISTANCE)
 		{
 			m_moduleSystem.addConfigurationModule(nodeAnon, new JAPConfForwardingServer(),

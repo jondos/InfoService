@@ -27,11 +27,6 @@
  */
 package jap;
 
-import java.awt.Component;
-import java.awt.Cursor;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.Point;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.net.InetAddress;
@@ -42,17 +37,18 @@ import java.util.Locale;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Vector;
+import javax.xml.parsers.DocumentBuilderFactory;
 
+import java.awt.Component;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Point;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
-import javax.xml.parsers.DocumentBuilderFactory;
-
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -60,11 +56,6 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Text;
-
-import proxy.AnonProxy;
-import proxy.DirectProxy;
-import proxy.ProxyListener;
-import update.JAPUpdateWizard;
 import anon.ErrorCodes;
 import anon.crypto.JAPCertificate;
 import anon.crypto.SignatureVerifier;
@@ -84,8 +75,14 @@ import anon.util.ResourceLoader;
 import anon.util.XMLUtil;
 import forward.server.ForwardServerManager;
 import gui.JAPHtmlMultiLineLabel;
-
 import jap.platform.AbstractOS;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
+import proxy.AnonProxy;
+import proxy.DirectProxy;
+import proxy.ProxyListener;
+import update.JAPUpdateWizard;
 
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPController implements ProxyListener, Observer
@@ -180,21 +177,31 @@ public final class JAPController implements ProxyListener, Observer
 		setInfoServiceDisabled(JAPConstants.DEFAULT_INFOSERVICE_DISABLED);
 		InfoServiceHolder.getInstance().setChangeInfoServices(JAPConstants.DEFAULT_INFOSERVICE_CHANGES);
 
-    /* load the default certificates */
-    JAPCertificate defaultRootCert = JAPCertificate.getInstance(ResourceLoader.loadResource(JAPConstants.CERTSPATH + JAPConstants.TRUSTEDROOTCERT));
-    if (defaultRootCert != null) {
-      SignatureVerifier.getInstance().getVerificationCertificateStore().addCertificateWithoutVerification(defaultRootCert, JAPCertificate.CERTIFICATE_TYPE_ROOT, true);  
-    }
-    else {
-      LogHolder.log(LogLevel.ERR, LogType.MISC, "JAPController: Constructor: Error loading default root certificate.");
-    }
-    JAPCertificate updateMessagesCert = JAPCertificate.getInstance(ResourceLoader.loadResource(JAPConstants.CERTSPATH + JAPConstants.CERT_JAPINFOSERVICEMESSAGES));
-    if (updateMessagesCert != null) {
-      SignatureVerifier.getInstance().getVerificationCertificateStore().addCertificateWithoutVerification(updateMessagesCert, JAPCertificate.CERTIFICATE_TYPE_UPDATE, true);  
-    }
-    else {
-      LogHolder.log(LogLevel.ERR, LogType.MISC, "JAPController: Constructor: Error loading default update messages certificate.");
-    }
+		/* load the default certificates */
+		JAPCertificate defaultRootCert = JAPCertificate.getInstance(ResourceLoader.loadResource(JAPConstants.
+			CERTSPATH + JAPConstants.TRUSTEDROOTCERT));
+		if (defaultRootCert != null)
+		{
+			SignatureVerifier.getInstance().getVerificationCertificateStore().
+				addCertificateWithoutVerification(defaultRootCert, JAPCertificate.CERTIFICATE_TYPE_ROOT, true);
+		}
+		else
+		{
+			LogHolder.log(LogLevel.ERR, LogType.MISC,
+						  "JAPController: Constructor: Error loading default root certificate.");
+		}
+		JAPCertificate updateMessagesCert = JAPCertificate.getInstance(ResourceLoader.loadResource(
+			JAPConstants.CERTSPATH + JAPConstants.CERT_JAPINFOSERVICEMESSAGES));
+		if (updateMessagesCert != null)
+		{
+			SignatureVerifier.getInstance().getVerificationCertificateStore().
+				addCertificateWithoutVerification(updateMessagesCert, JAPCertificate.CERTIFICATE_TYPE_UPDATE, true);
+		}
+		else
+		{
+			LogHolder.log(LogLevel.ERR, LogType.MISC,
+						  "JAPController: Constructor: Error loading default update messages certificate.");
+		}
 
 		HTTPConnectionFactory.getInstance().setTimeout(JAPConstants.DEFAULT_INFOSERVICE_TIMEOUT);
 
@@ -269,16 +276,17 @@ public final class JAPController implements ProxyListener, Observer
 
 	//---------------------------------------------------------------------
 	/** Loads the Configuration.
-	 * First tries to read the configuration file in the users home directory
-	 * and then in the JAP install directory.
-	 * If no config file is found in these locations the method will look in
-	 * the operating system specific locations for configuration files
-	 * (e.g. Library/Preferences on Mac OS X or hidden in the user's home on Linux).
-	 * If none is found there either, a new one will be created there.
+	 * First tries to read a config file provided on the command line.
+	 * If none is provided, it will look in the operating system specific locations
+	 * for configuration files (e.g. Library/Preferences on Mac OS X or hidden
+	 * in the user's home on Linux).
+	 * If there are no config files in these locations, the method will look
+	 * in the user's home directory and in the installation path of JAP
+	 * (the last two locations are checked for compatibility reasons and are deprecated).
 	 *
 	 * The configuration is a XML-File with the following structure:
 	 *  <JAP
-   *    version="0.18"                     // version of the xml struct (DTD) used for saving the configuration
+	 *    version="0.18"                     // version of the xml struct (DTD) used for saving the configuration
 	 *    portNumber=""                     // Listener-Portnumber
 	 *    portNumberSocks=""                // Listener-Portnumber for SOCKS
 	 *    supportSocks=""                   // Will we support SOCKS ?
@@ -341,20 +349,20 @@ public final class JAPController implements ProxyListener, Observer
 	 *    </Output>
 	 *
 	 * </Debug>
-   * <SignatureVerification>                                   // since version 0.18
-   *   <CheckSignatures>true</CheckSignatures>                 // whether signature verification of received XML data is enabled or disabled
-   *   <TrustedCertificates>                                   // list of all certificates to uses for signature verification
-   *     <CertificateContainer>
-   *       <CertificateType>1</CertificateType>                              // the type of the stored certificate (until it's stored within the certificate itself), see JAPCertificate.java
-   *       <CertificateNeedsVerification>true<CertificateNeedsVerification>  // whether the certificate has to be verified against an active root certificate from the certificat store in order to get activated itself
-   *       <CertificateEnabled>true<CertificateEnabled>                      // whether the certificate is enabled (available for signature verification) or not
-   *       <CertificateData>
-   *         <X509Certificate>...</X509Certificate>                          // the certificate data, see JAPCertificate.java
-   *       </CertificateData>
-   *     </CertificateContainer>
-   *     ...
-   *   </TrustedCertificates>
-   * </SignatureVerification>  
+	 * <SignatureVerification>                                   // since version 0.18
+	 *   <CheckSignatures>true</CheckSignatures>                 // whether signature verification of received XML data is enabled or disabled
+	 *   <TrustedCertificates>                                   // list of all certificates to uses for signature verification
+	 *     <CertificateContainer>
+	 *       <CertificateType>1</CertificateType>                              // the type of the stored certificate (until it's stored within the certificate itself), see JAPCertificate.java
+	 *       <CertificateNeedsVerification>true<CertificateNeedsVerification>  // whether the certificate has to be verified against an active root certificate from the certificat store in order to get activated itself
+	 *       <CertificateEnabled>true<CertificateEnabled>                      // whether the certificate is enabled (available for signature verification) or not
+	 *       <CertificateData>
+	 *         <X509Certificate>...</X509Certificate>                          // the certificate data, see JAPCertificate.java
+	 *       </CertificateData>
+	 *     </CertificateContainer>
+	 *     ...
+	 *   </TrustedCertificates>
+	 * </SignatureVerification>
 	 * <InfoServices>                                           // info about all known infoservices (since config version 0.3)
 	 *   <InfoService id="...">...</InfoService>                // the same format as from infoservice, without signature, if expired, it is removed from infoservice list
 	 *   <InfoService id="...">...</InfoService>
@@ -419,83 +427,28 @@ public final class JAPController implements ProxyListener, Observer
 	public synchronized void loadConfigFile(String a_strJapConfFile, boolean loadPay)
 	{
 		String japConfFile = a_strJapConfFile;
-		FileInputStream f = null;
+		boolean success = false;
 		if (japConfFile != null)
 		{
 			/* try the config file from the command line */
-			LogHolder.log(LogLevel.INFO, LogType.MISC,
-						  "JAPController: loadConfigFile: Trying to load configuration from: " + japConfFile);
-			try
-			{
-				f = new FileInputStream(japConfFile);
-				/* if we are successful, use this config file also for storing the configuration */
-				JAPModel.getInstance().setConfigFile(japConfFile);
-			}
-			catch (Exception e)
-			{
-				LogHolder.log(LogLevel.ERR, LogType.MISC,
-							  "JAPController: loadConfigFile: Configuration file \"" + japConfFile +
-							  "\" not found.");
-			}
+			success = this.loadConfigFileCommandLine(japConfFile);
 		}
-		if (f == null)
+		if (!success)
 		{
 			/* no config file found -> try to use the config file in the OS-specific location */
-			japConfFile = AbstractOS.getInstance().getConfigPath();
-			LogHolder.log(LogLevel.INFO, LogType.MISC,
-						  "JAPController: loadConfigFile: Trying to load configuration from: " + japConfFile);
-			try
-			{
-				f = new FileInputStream(japConfFile);
-				/* if we are successful, use this config file also for storing the configuration */
-				JAPModel.getInstance().setConfigFile(japConfFile);
-			}
-			catch (Exception e)
-			{
-				LogHolder.log(LogLevel.ERR, LogType.MISC,
-							  "JAPController: loadConfigFile: Configuration file \"" + japConfFile +
-							  "\" not found.");
-			}
+			success = this.loadConfigFileOSdependent();
 		}
-		if (f == null)
+		if (!success)
 		{
 			/* no config file found -> try to use the config file in the home directory of the user */
-			japConfFile = System.getProperty("user.home", "") + "/" + JAPConstants.XMLCONFFN;
-			LogHolder.log(LogLevel.INFO, LogType.MISC,
-						  "JAPController: loadConfigFile: Trying to load configuration from: " + japConfFile);
-			try
-			{
-				f = new FileInputStream(japConfFile);
-				/* if we are successful, use this config file also for storing the configuration */
-				JAPModel.getInstance().setConfigFile(japConfFile);
-			}
-			catch (Exception e)
-			{
-				LogHolder.log(LogLevel.ERR, LogType.MISC,
-							  "JAPController: loadConfigFile: Configuration file \"" + japConfFile +
-							  "\" not found.");
-			}
+			success = this.loadConfigFileHome();
 		}
-		if (f == null)
+		if (!success)
 		{
 			/* no config file found -> try to use the config file in the current directory */
-			japConfFile = JAPConstants.XMLCONFFN;
-			LogHolder.log(LogLevel.INFO, LogType.MISC,
-						  "JAPController: loadConfigFile: Trying to load configuration from: " + japConfFile);
-			try
-			{
-				f = new FileInputStream(japConfFile);
-				/* if we are successful, use this config file also for storing the configuration */
-				JAPModel.getInstance().setConfigFile(japConfFile);
-			}
-			catch (Exception e)
-			{
-				LogHolder.log(LogLevel.ERR, LogType.MISC,
-							  "JAPController: loadConfigFile: Configuration file \"" + japConfFile +
-							  "\" not found.");
-			}
+			success = this.loadConfigFileCurrentDir();
 		}
-		if (f == null)
+		if (!success)
 		{
 			/* no config file at any position->use OS-specific path for storing a new one*/
 			JAPModel.getInstance().setConfigFile(AbstractOS.getInstance().getConfigPath());
@@ -509,20 +462,19 @@ public final class JAPController implements ProxyListener, Observer
 		}
 		else
 		{
-			if (f == null)
+			if (!success)
 			{
 				/* no config file was specified on the command line and the default config files don't
 				 * exist -> store the configuration in the OS-specific directory
 				 */
 				JAPModel.getInstance().setConfigFile(AbstractOS.getInstance().getConfigPath());
-				/*JAPModel.getInstance().setConfigFile(System.getProperty("user.home", "") + "/" +
-					JAPConstants.XMLCONFFN);*/
 			}
 		}
-		if (f != null)
+		if (success)
 		{
 			try
 			{
+				FileInputStream f = new FileInputStream(JAPModel.getInstance().getConfigFile());
 				Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(f);
 				Element root = doc.getDocumentElement();
 				NamedNodeMap n = root.getAttributes();
@@ -801,19 +753,24 @@ public final class JAPController implements ProxyListener, Observer
 					}
 				}
 
-        /* load the signature verification settings */
-        try {
-          Element signatureVerificationNode = (Element)(XMLUtil.getFirstChildByName(root, SignatureVerifier.getXmlSettingsRootNodeName()));
-          if (signatureVerificationNode != null) {
-            SignatureVerifier.getInstance().loadSettingsFromXml(signatureVerificationNode);
-          }
-          else {
-            throw (new Exception("JAPController: loadConfigFile: No SignatureVerification node found. Using default settings for signature verification."));
-          }
-        }
-        catch (Exception e) {
-          LogHolder.log(LogLevel.ERR, LogType.MISC, e);
-        }
+				/* load the signature verification settings */
+				try
+				{
+					Element signatureVerificationNode = (Element) (XMLUtil.getFirstChildByName(root,
+						SignatureVerifier.getXmlSettingsRootNodeName()));
+					if (signatureVerificationNode != null)
+					{
+						SignatureVerifier.getInstance().loadSettingsFromXml(signatureVerificationNode);
+					}
+					else
+					{
+						throw (new Exception("JAPController: loadConfigFile: No SignatureVerification node found. Using default settings for signature verification."));
+					}
+				}
+				catch (Exception e)
+				{
+					LogHolder.log(LogLevel.ERR, LogType.MISC, e);
+				}
 
 				/* loading infoservice settings */
 				/* infoservice list */
@@ -997,6 +954,107 @@ public final class JAPController implements ProxyListener, Observer
 	}
 
 	/**
+	 * Tries to load the config file provided in the command line
+	 * @return FileInputStream
+	 */
+	private boolean loadConfigFileCommandLine(String a_configFile)
+	{
+		LogHolder.log(LogLevel.INFO, LogType.MISC,
+					  "JAPController: loadConfigFile: Trying to load configuration from: " + a_configFile);
+		try
+		{
+			FileInputStream f = new FileInputStream(a_configFile);
+			/* if we are successful, use this config file also for storing the configuration */
+			JAPModel.getInstance().setConfigFile(a_configFile);
+			return true;
+		}
+		catch (Exception e)
+		{
+			LogHolder.log(LogLevel.ERR, LogType.MISC,
+						  "JAPController: loadConfigFile: Configuration file \"" + a_configFile +
+						  "\" not found.");
+			return false;
+		}
+	}
+
+	/**
+	 * Tries to load a config file in OS-depended locations
+	 * @return boolean
+	 */
+	private boolean loadConfigFileOSdependent()
+	{
+		String japConfFile = AbstractOS.getInstance().getConfigPath();
+		LogHolder.log(LogLevel.INFO, LogType.MISC,
+					  "JAPController: loadConfigFile: Trying to load configuration from: " + japConfFile);
+		try
+		{
+			FileInputStream f = new FileInputStream(japConfFile);
+			/* if we are successful, use this config file also for storing the configuration */
+			JAPModel.getInstance().setConfigFile(japConfFile);
+			return true;
+		}
+		catch (Exception e)
+		{
+			LogHolder.log(LogLevel.ERR, LogType.MISC,
+						  "JAPController: loadConfigFile: Configuration file \"" + japConfFile +
+						  "\" not found.");
+			return false;
+		}
+	}
+
+	/**
+	 * Tries to load a config file from the user's home directory
+	 * @return boolean
+	 */
+	private boolean loadConfigFileHome()
+	{
+		String japConfFile = System.getProperty("user.home", "") + "/" + JAPConstants.XMLCONFFN;
+		LogHolder.log(LogLevel.INFO, LogType.MISC,
+					  "JAPController: loadConfigFile: Trying to load configuration from: " + japConfFile);
+		try
+		{
+			FileInputStream f = new FileInputStream(japConfFile);
+			/* if we are successful, use this config file also for storing the configuration */
+			JAPModel.getInstance().setConfigFile(japConfFile);
+			return true;
+		}
+		catch (Exception e)
+		{
+			LogHolder.log(LogLevel.ERR, LogType.MISC,
+						  "JAPController: loadConfigFile: Configuration file \"" + japConfFile +
+						  "\" not found.");
+			return false;
+		}
+
+	}
+
+	/**
+	 * Tries to load a config file in the current directory
+	 * @return boolean
+	 */
+	private boolean loadConfigFileCurrentDir()
+	{
+		String japConfFile = JAPConstants.XMLCONFFN;
+		LogHolder.log(LogLevel.INFO, LogType.MISC,
+					  "JAPController: loadConfigFile: Trying to load configuration from: " + japConfFile);
+		try
+		{
+			FileInputStream f = new FileInputStream(japConfFile);
+			/* if we are successful, use this config file also for storing the configuration */
+			JAPModel.getInstance().setConfigFile(japConfFile);
+			return true;
+		}
+		catch (Exception e)
+		{
+			LogHolder.log(LogLevel.ERR, LogType.MISC,
+						  "JAPController: loadConfigFile: Configuration file \"" + japConfFile +
+						  "\" not found.");
+			return false;
+		}
+
+	}
+
+	/**
 	 * Changes the common proxy.
 	 * @param a_proxyInterface a proxy interface
 	 */
@@ -1054,7 +1112,7 @@ public final class JAPController implements ProxyListener, Observer
 			Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
 			Element e = doc.createElement("JAP");
 			doc.appendChild(e);
-      XMLUtil.setAttribute(e, JAPConstants.CONFIG_VERSION, "0.18");
+			XMLUtil.setAttribute(e, JAPConstants.CONFIG_VERSION, "0.18");
 			//
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_PORT_NUMBER,
 								 Integer.toString(JAPModel.getHttpListenerPortNumber()));
@@ -1189,8 +1247,8 @@ public final class JAPController implements ProxyListener, Observer
 				}
 			}
 
-      /* adding signature verification settings */
-      e.appendChild(SignatureVerifier.getInstance().getSettingsAsXml(doc));
+			/* adding signature verification settings */
+			e.appendChild(SignatureVerifier.getInstance().getSettingsAsXml(doc));
 
 			/* adding infoservice settings */
 			/* infoservice list */
@@ -2273,12 +2331,14 @@ public final class JAPController implements ProxyListener, Observer
 					/* routing mode was changed -> notify the observers of JAPController */
 					notifyJAPObservers();
 				}
-        if (((JAPRoutingMessage) (a_message)).getMessageCode() == JAPRoutingMessage.CLIENT_SETTINGS_CHANGED) {
-          /* the forwarding-client settings were changed -> notify the observers of JAPController */
-			  notifyJAPObservers();
-			 }
+				if ( ( (JAPRoutingMessage) (a_message)).getMessageCode() ==
+					JAPRoutingMessage.CLIENT_SETTINGS_CHANGED)
+				{
+					/* the forwarding-client settings were changed -> notify the observers of JAPController */
+					notifyJAPObservers();
+				}
 
-      }
+			}
 			else if (a_notifier == JAPModel.getInstance().getRoutingSettings().getRegistrationStatusObserver())
 			{
 				/* message is from JAPRoutingRegistrationStatusObserver */
