@@ -4,16 +4,12 @@
 package anon.tor;
 
 import java.io.IOException;
-import java.net.ConnectException;
-
+import anon.server.impl.AbstractChannel;
+import anon.tor.cells.RelayCell;
+import anon.tor.util.helper;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-
-import anon.tor.cells.RelayCell;
-import anon.tor.util.helper;
-
-import anon.server.impl.AbstractChannel;
 
 /**
  * @author stefan
@@ -24,8 +20,6 @@ public class TorChannel extends AbstractChannel
 	private final static int MAX_CELL_DATA = 498;
 
 	protected Circuit m_circuit;
-	protected boolean m_opened;
-	protected boolean m_error;
 	private int m_recvcellcounter;
 	private int m_sendcellcounter;
 	private Object m_oWaitForOpen;
@@ -38,18 +32,16 @@ public class TorChannel extends AbstractChannel
 	 * the circuit where this channel belongs to
 	 * @throws IOException
 	 */
-	public TorChannel(int streamID, Circuit circuit) throws IOException
-	{
-		this();
-		this.m_circuit = circuit;
-		setStreamID(streamID);
-	}
-
-	public TorChannel() throws IOException
+	/*	public TorChannel(int streamID, Circuit circuit)
+	 {
+	  this();
+	  m_circuit = circuit;
+	  setStreamID(streamID);
+	 }
+	 */
+	public TorChannel()
 	{
 		super();
-		m_opened = false;
-		m_error = false;
 		m_recvcellcounter = 500;
 		m_sendcellcounter = 500;
 		m_oWaitForOpen = new Object();
@@ -57,7 +49,7 @@ public class TorChannel extends AbstractChannel
 
 	protected void setStreamID(int id)
 	{
-		super.m_id = id;
+		m_id = id;
 	}
 
 	protected void setCircuit(Circuit c)
@@ -72,6 +64,10 @@ public class TorChannel extends AbstractChannel
 
 	protected synchronized void send(byte[] arg0, int len) throws IOException
 	{
+		if (m_bIsClosed)
+		{
+			throw new IOException("Tor-Channel is closed");
+		}
 		byte[] b = arg0;
 		RelayCell cell;
 		while (len != 0)
@@ -99,8 +95,38 @@ public class TorChannel extends AbstractChannel
 		}
 	}
 
+	public synchronized void close()
+	{
+		super.close();
+		synchronized (m_oWaitForOpen)
+		{
+			m_oWaitForOpen.notify();
+		}
+
+	}
+
+	public void closedByPeer()
+	{
+		super.closedByPeer();
+		synchronized (m_oWaitForOpen)
+		{
+			m_oWaitForOpen.notify();
+		}
+
+	}
+
 	protected void close_impl()
 	{
+		try
+		{
+			if (!m_bIsClosed)
+			{
+				m_circuit.close(m_id);
+			}
+		}
+		catch (Exception e)
+		{
+		}
 	}
 
 	/**
@@ -111,34 +137,31 @@ public class TorChannel extends AbstractChannel
 	 * port
 	 * @throws ConnectException
 	 */
-	public synchronized void connect(String addr, int port) throws ConnectException
+	public boolean connect(String addr, int port)
 	{
-		byte[] data = (addr + ":" + Integer.toString(port)).getBytes();
-		data = helper.conc(data, new byte[1]);
-		RelayCell cell = new RelayCell(m_circuit.getCircID(), RelayCell.RELAY_BEGIN, m_id, data);
 		try
 		{
-			m_circuit.send(cell);
-		}
-		catch (Exception ex)
-		{
-			throw new ConnectException(ex.getLocalizedMessage());
-		}
-		while (!m_opened)
-		{
-			try
+			if (m_bIsClosed || m_bIsClosedByPeer)
 			{
-				synchronized (m_oWaitForOpen)
-				{
-					m_oWaitForOpen.wait();
-				}
+				return false;
 			}
-			catch (Exception e)
-			{}
+			byte[] data = (addr + ":" + Integer.toString(port)).getBytes();
+			data = helper.conc(data, new byte[1]);
+			RelayCell cell = new RelayCell(m_circuit.getCircID(), RelayCell.RELAY_BEGIN, m_id, data);
+			m_circuit.send(cell);
+			synchronized (m_oWaitForOpen)
+			{
+				m_oWaitForOpen.wait();
+			}
+			if (m_bIsClosed || m_bIsClosedByPeer)
+			{
+				return false;
+			}
+			return true;
 		}
-		if (this.m_error)
+		catch (Throwable t)
 		{
-			throw new ConnectException("Cannot connect to " + addr + ":" + port);
+			return false;
 		}
 	}
 
@@ -153,7 +176,6 @@ public class TorChannel extends AbstractChannel
 		{
 			case RelayCell.RELAY_CONNECTED:
 			{
-				m_opened = true;
 				synchronized (m_oWaitForOpen)
 				{
 					m_oWaitForOpen.notify();
@@ -177,6 +199,8 @@ public class TorChannel extends AbstractChannel
 					}
 					catch (Throwable t)
 					{
+						closedByPeer();
+						return;
 					}
 					m_recvcellcounter += 50;
 				}
@@ -187,7 +211,8 @@ public class TorChannel extends AbstractChannel
 				}
 				catch (Exception ex)
 				{
-					close();
+					closedByPeer();
+					return;
 				}
 				break;
 			}
@@ -198,10 +223,9 @@ public class TorChannel extends AbstractChannel
 			}
 			default:
 			{
-				m_error = true;
-				m_opened = false;
 				closedByPeer();
 			}
 		}
 	}
+
 }

@@ -34,7 +34,7 @@ import anon.AnonChannel;
 
 abstract public class AbstractChannel implements AnonChannel
 {
-	private boolean m_bIsClosedByPeer = false;
+	protected boolean m_bIsClosedByPeer = false;
 	protected boolean m_bIsClosed = false;
 	protected int m_id;
 	//protected int m_type;
@@ -42,13 +42,13 @@ abstract public class AbstractChannel implements AnonChannel
 	private ChannelInputStream m_inputStream;
 	private ChannelOutputStream m_outputStream;
 
-	public AbstractChannel(int id) throws IOException
+	public AbstractChannel(int id)
 	{
 		this();
 		m_id = id;
 	}
 
-	public AbstractChannel() throws IOException
+	public AbstractChannel()
 	{
 		//m_type = type;
 		m_bIsClosedByPeer = false;
@@ -111,9 +111,7 @@ abstract public class AbstractChannel implements AnonChannel
 	//called from ChannelOutputStream to send data to the AnonService which belongs to this channel
 	abstract protected /*synchronized*/ void send(byte[] buff, int len) throws IOException;
 
-	public
-		/*synchronized*/
-		void closedByPeer()
+	public	void closedByPeer()
 	{
 		try
 		{
@@ -340,7 +338,7 @@ final class ChannelInputStream extends InputStream
 	private boolean m_bIsClosed = false;
 	private AbstractChannel m_channel;
 
-	ChannelInputStream(AbstractChannel c) throws IOException
+	ChannelInputStream(AbstractChannel c)
 	{
 		m_Queue = new IOQueue();
 		m_bIsClosedByPeer = false;
