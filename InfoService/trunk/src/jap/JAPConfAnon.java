@@ -48,7 +48,9 @@ import anon.infoservice.MixCascade;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-
+import javax.swing.*;
+import javax.swing.border.*;
+import gui.*;
 class JAPConfAnon extends AbstractJAPConfModule
 {
 	private JCheckBox m_cbAutoConnect;
@@ -61,7 +63,7 @@ class JAPConfAnon extends AbstractJAPConfModule
 	private JLabel m_labelAnonHost, m_labelAnonPort;
 	private JCheckBox m_cbMixManual;
 	private JButton m_bttnFetchCascades;
-	private JComboBox m_comboMixCascade;
+	private JList m_listMixCascade;
 
 	private TitledBorder m_borderAnonSettings, m_borderAnonSettings2;
 
@@ -108,11 +110,11 @@ class JAPConfAnon extends AbstractJAPConfModule
 				//okPressed();
 			}
 		});
-		m_comboMixCascade = new JComboBox();
-		m_comboMixCascade.setFont(font);
+		m_listMixCascade = new JList();
+		m_listMixCascade.setFont(font);
 
-		m_comboMixCascade.setEnabled(true);
-		m_comboMixCascade.addActionListener(new ActionListener()
+		m_listMixCascade.setEnabled(true);
+	/*	m_listMixCascade.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent e)
 			{
@@ -129,7 +131,7 @@ class JAPConfAnon extends AbstractJAPConfModule
 				}
 			}
 		});
-
+*/
 		m_cbMixManual.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent e)
@@ -138,14 +140,14 @@ class JAPConfAnon extends AbstractJAPConfModule
 				{
 					LogHolder.log(LogLevel.DEBUG, LogType.GUI, "JAPConf:m_rbMixStep3 selected");
 					m_bttnFetchCascades.setEnabled(false);
-					m_comboMixCascade.setEnabled(false);
+					m_listMixCascade.setEnabled(false);
 					m_tfMixHost.setEditable(true);
 					m_tfMixPortNumber.setEditable(true);
 				}
 				else
 				{
 					m_bttnFetchCascades.setEnabled(true);
-					m_comboMixCascade.setEnabled(true);
+					m_listMixCascade.setEnabled(true);
 					m_tfMixHost.setEditable(false);
 					m_tfMixPortNumber.setEditable(false);
 				}
@@ -160,24 +162,32 @@ class JAPConfAnon extends AbstractJAPConfModule
 		pp1.setLayout(layout);
 		m_borderAnonSettings = new TitledBorder(JAPMessages.getString("settingsAnonBorder"));
 		m_borderAnonSettings.setTitleFont(font);
-		pp1.setBorder(m_borderAnonSettings);
+		//pp1.setBorder(m_borderAnonSettings);
 		GridBagConstraints c = new GridBagConstraints();
 		c.fill = GridBagConstraints.HORIZONTAL;
-		if (!JAPModel.isSmallDisplay())
+	/*	if (!JAPModel.isSmallDisplay())
 		{
 			c.insets = new Insets(5, 5, 5, 5);
 		}
+	*/
+	   	JLabel l=new JLabel("Verfügbare Anonymisierungsserver:");
+	   m_listMixCascade.setFixedCellWidth(l.getPreferredSize().width);
+	   m_listMixCascade.setBorder(LineBorder.createBlackLineBorder());
+		c.insets=new Insets(10,10,10,10);
+		c.weightx=1;
+		c.fill=GridBagConstraints.HORIZONTAL;
+		pp1.add(l,c);
 		c.weightx = 1;
 		c.weighty = 1;
 		c.gridx = 0;
-		c.gridy = 0;
+		c.gridy = 1;
 		c.gridwidth = 1;
+		c.fill=GridBagConstraints.BOTH;
 		c.anchor = GridBagConstraints.NORTHWEST;
 //First line
-		layout.setConstraints(m_comboMixCascade, c);
-		pp1.add(m_comboMixCascade);
+		pp1.add(m_listMixCascade,c);
 // Second Line
-		c.gridx = 1;
+/*		c.gridx = 1;
 		c.weightx = 0;
 		c.fill = GridBagConstraints.NONE;
 		layout.setConstraints(m_bttnFetchCascades, c);
@@ -199,23 +209,25 @@ class JAPConfAnon extends AbstractJAPConfModule
 		m_panelManual.add(m_labelAnonPort);
 		m_panelManual.add(m_tfMixPortNumber);
 //
+*/
 // Add to main panel
-		JPanel p = getRootPanel();
-		p.removeAll();
+		JPanel pRoot = getRootPanel();
+		pRoot.removeAll();
 		layout = new GridBagLayout();
-		p.setLayout(layout);
+		pRoot.setLayout(layout);
 		c.weightx = 1;
-		c.weighty = 0;
-		c.fill = GridBagConstraints.HORIZONTAL;
+		c.weighty = 1;
+		c.fill = GridBagConstraints.BOTH;
 		c.gridx = 0;
 		c.gridy = 0;
-		if (!JAPModel.isSmallDisplay())
+		c.anchor=GridBagConstraints.NORTHWEST;
+/*		if (!JAPModel.isSmallDisplay())
 		{
 			c.insets = new Insets(5, 5, 5, 5);
 		}
-		layout.setConstraints(pp1, c);
-		p.add(pp1);
-		c.gridy = 1;
+	*/
+		pRoot.add(pp1,c);
+/*		c.gridy = 1;
 		layout.setConstraints(m_panelManual, c);
 		p.add(m_panelManual);
 
@@ -232,22 +244,57 @@ class JAPConfAnon extends AbstractJAPConfModule
 		c.fill = GridBagConstraints.VERTICAL;
 		layout.setConstraints(label, c);
 		p.add(label);
-	}
+*/
+
+  //Details for Cascade Panel...
+  		JPanel p=new JPanel(new GridBagLayout());
+  		GridBagConstraints c1=new GridBagConstraints();
+		c1.anchor=GridBagConstraints.NORTHWEST;
+		c1.insets=new Insets(5,5,5,5);
+		l=new JLabel("Nutzerzahl:");
+		p.add(l,c1);
+		l=new JLabel("1024");
+		c1.gridx=1;
+		c1.gridy=0;
+		p.add(l,c1);
+		l=new JLabel("erreichbar über:");
+		c1.gridy=1;
+		c1.gridx=0;
+		p.add(l,c1);
+		JAPMultilineLabel multi=new JAPMultilineLabel("mix.inf.tu-dresden.de,\nanon.inf.tu-dresden.de");
+		c1.gridx=1;
+		p.add(multi,c1);
+		l=new JLabel("Ports:");
+		c1.gridy=2;
+		c1.gridx=0;
+		c1.weighty=1;
+		p.add(l,c1);
+		l=new JLabel("22, 80, 443, 6543");
+		c1.gridx=1;
+		p.add(l,c1);
+
+		c.gridx=1;
+		c.gridy=0;
+		c.gridheight=2;
+		c.weighty=1;
+		c.anchor=GridBagConstraints.NORTHWEST;
+		c.fill=GridBagConstraints.BOTH;
+		pRoot.add(p,c);
+  }
 
 	private void updateMixCascadeCombo()
 	{
 		LogHolder.log(LogLevel.DEBUG, LogType.GUI, "JAPConf: updateMixCascadeCombo() -start");
-		m_comboMixCascade.removeAllItems();
-		LogHolder.log(LogLevel.DEBUG, LogType.GUI, "JAPConf: updateMixCascadeCombo() -all ItemsRemoved");
-		m_comboMixCascade.addItem(JAPMessages.getString("settingsAnonSelect"));
-		LogHolder.log(LogLevel.DEBUG, LogType.GUI, "JAPConf: updateMixCascadeCombo() -added Default Item");
 		Enumeration it = m_Controller.getMixCascadeDatabase().elements();
+		DefaultListModel listModel=new DefaultListModel();
 		while (it.hasMoreElements())
 		{
-			m_comboMixCascade.addItem(it.nextElement());
+			listModel.addElement(it.nextElement());
 		}
+
 		LogHolder.log(LogLevel.DEBUG, LogType.GUI, "JAPConf: updateMixCascadeCombo() -added All other Items");
-		m_comboMixCascade.setSelectedIndex(0);
+		m_listMixCascade.setModel(listModel);
+		m_listMixCascade.setSelectedIndex(0);
 		LogHolder.log(LogLevel.DEBUG, LogType.GUI,
 					  "JAPConf: updateMixCascadeCombo() - select First Item -- finished!");
 	}
@@ -315,7 +362,7 @@ class JAPConfAnon extends AbstractJAPConfModule
 			try
 			{
 				// check, if something is selected //
-				newCascade = (MixCascade) m_comboMixCascade.getSelectedItem();
+				newCascade = (MixCascade) m_listMixCascade.getSelectedValue();
 			}
 			catch (Exception e)
 			{
@@ -349,7 +396,7 @@ class JAPConfAnon extends AbstractJAPConfModule
 		updateMixCascadeCombo();
 		if (!m_cbMixManual.isSelected()) //Auswahl is selected
 		{ //try to select the current MixCascade
-			m_comboMixCascade.setSelectedItem(mixCascade);
+			m_listMixCascade.setSelectedValue(mixCascade,true);
 		}
 	}
 
@@ -381,7 +428,6 @@ class JAPConfAnon extends AbstractJAPConfModule
 			// ------ !!!!! ordentlich geht!!!!
 			m_lastUpdate = System.currentTimeMillis();
 			LogHolder.log(LogLevel.DEBUG, LogType.GUI, "JAPConf: setting old cursor()");
-			m_comboMixCascade.showPopup();
 			//m_rbMixStep2.doClick();
 		}
 

@@ -438,4 +438,14 @@ public class MixCascade implements AnonServerDescription
 		return mixCascadeNode;
 	}
 
+	/*** Equals iff it has the same id... */
+	public boolean equals(Object o)
+	{
+		if(o==null)
+			return false;
+		if(!(o instanceof MixCascade))
+			return false;
+		MixCascade c=(MixCascade)o;
+		return getId().equals(c.getId());
+	}
 }

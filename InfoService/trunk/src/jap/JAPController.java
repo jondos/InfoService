@@ -950,13 +950,12 @@ public final class JAPController implements ProxyListener
 	 */
 	public void setCurrentMixCascade(MixCascade newMixCascade)
 	{
-		if (newMixCascade != null)
+		if (newMixCascade != null&&!currentMixCascade.getId().equals(newMixCascade.getId()))
 		{
 			synchronized (this)
 			{
 				/* we need consistent states */
-				if ( (getAnonMode() == true) && (currentMixCascade != null) &&
-					(!currentMixCascade.getId().equals(newMixCascade.getId())))
+				if ( (getAnonMode() == true) && (currentMixCascade != null))
 				{
 					/* we are running in anonymity mode */
 					setAnonMode(false);
