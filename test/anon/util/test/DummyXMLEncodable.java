@@ -98,10 +98,10 @@ public class DummyXMLEncodable implements IXMLEncodable
 		{
 			element = (Element) XMLUtil.getFirstChildByName(a_element, NODE_STRING);
 			m_valueString = XMLUtil.parseNodeString(element, null);
-			m_attributeBoolean = XMLUtil.parseElementAttrBoolean(element, ATTRIBUTE_BOOLEAN, false);
+			m_attributeBoolean = XMLUtil.parseAttribute(element, ATTRIBUTE_BOOLEAN, false);
 
 			element = (Element) XMLUtil.getFirstChildByName(a_element, NODE_CONTAINER);
-			m_attributeInt = XMLUtil.parseElementAttrInt(element, ATTRIBUTE_INT, -1);
+			m_attributeInt = XMLUtil.parseAttribute(element, ATTRIBUTE_INT, -1);
 
 			element = (Element)XMLUtil.getFirstChildByNameUsingDeepSearch(a_element, NODE_NUMBER);
 			m_valueInt = XMLUtil.parseNodeInt(element, -1);
@@ -174,17 +174,17 @@ public class DummyXMLEncodable implements IXMLEncodable
 		element1.setAttributeNode(attribute);
 
 		element2 = a_doc.createElement(NODE_NUMBER);
-		XMLUtil.setNodeValue(element2, String.valueOf(m_valueInt));
+		XMLUtil.setValue(element2, String.valueOf(m_valueInt));
 		element1.appendChild(element2);
 
 		element2 = a_doc.createElement(NODE_NUMBER);
-		XMLUtil.setNodeValue(element2, String.valueOf(m_valueLong));
+		XMLUtil.setValue(element2, String.valueOf(m_valueLong));
 		element1.appendChild(element2);
 
 		element.appendChild(element1);
 
 		element1 = a_doc.createElement(NODE_BOOLEAN);
-		XMLUtil.setNodeValue(element1, String.valueOf(m_valueBoolean));
+		XMLUtil.setValue(element1, String.valueOf(m_valueBoolean));
 		element.appendChild(element1);
 
 		return element;
