@@ -689,10 +689,6 @@ public final class JAPModel implements JAPAnonServiceListener{
 						int ret=proxyAnon.start();
 						if(ret==JAPAnonService.E_SUCCESS)
 							{
-								proxyAnon.setAnonServiceListener(this);
-								// start feedback thread
-								feedback=new JAPFeedback();
-								feedback.startRequests();
 								// show a Reminder message that active contents should be disabled
 								Object[] options = { model.getString("disableActCntMessageDontRemind"), model.getString("okButton") };
 								JCheckBox checkboxRemindNever=new JCheckBox(model.getString("disableActCntMessageNeverRemind"));
@@ -713,6 +709,10 @@ public final class JAPModel implements JAPAnonServiceListener{
 								//proxyAnonSocks=new JAPAnonService(1080,JAPAnonService.PROTO_SOCKS,model.mblistenerIsLocal);
 								//proxyAnonSocks.start();
 								model.status2 = model.getString("statusRunning");
+								proxyAnon.setAnonServiceListener(this);
+								// start feedback thread
+								feedback=new JAPFeedback();
+								feedback.startRequests();
 								view.setCursor(Cursor.getDefaultCursor());
 								notifyJAPObservers();
 								return;
