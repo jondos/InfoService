@@ -1,28 +1,28 @@
 /*
-Copyright (c) 2000, The JAP-Team 
+Copyright (c) 2000, The JAP-Team
 All rights reserved.
-Redistribution and use in source and binary forms, with or without modification, 
+Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
 
-	- Redistributions of source code must retain the above copyright notice, 
+	- Redistributions of source code must retain the above copyright notice,
 	  this list of conditions and the following disclaimer.
 
-	- Redistributions in binary form must reproduce the above copyright notice, 
-	  this list of conditions and the following disclaimer in the documentation and/or 
+	- Redistributions in binary form must reproduce the above copyright notice,
+	  this list of conditions and the following disclaimer in the documentation and/or
 		other materials provided with the distribution.
 
-	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors 
-	  may be used to endorse or promote products derived from this software without specific 
-		prior written permission. 
+	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
+	  may be used to endorse or promote products derived from this software without specific
+		prior written permission.
 
-	
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS 
-OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY 
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS
+OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
 AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS
 BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, 
-OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER 
-IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY 
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
 package anon;
@@ -30,34 +30,34 @@ import Rijndael.Rijndael_Algorithm;
 final class JAPSymCipher
 	{
 	/** Start LOGI-CRYPT
-	 	
-			
+
+
 	//		BlowfishKey bfEnc;//,bfDec;
 	//		public JAPSymCipher()
 //				{
 //					bfEnc=null;
 //				}
-			
+
 			public int setEncryptionKeyL(byte[] key)
 				{
 					bfEnc=new BlowfishKey(key);
 					return 0;
 				}
-			
+
 			public int setDecryptionKeyL(byte[] key)
 				{
 					bfDec=new BlowfishKey(key);
 					return 0;
 				}
-			
+
 			public int encryptL(byte[] buff)
 				{
 					for(int i=0;i<buff.length;i+=8)
 						bfEnc.encrypt(buff,i,buff,i);
-				
+
 					return 0;
 				}
-			
+
 			public int encryptL(byte[] from,int ifrom,byte[] to,int ito,int len)
 				{
 					for(int i=0;i<len;i+=8)
@@ -73,9 +73,9 @@ final class JAPSymCipher
 				}
 	*///	* END LOGICYRPT
 	//	*/
-	
+
  /** Start Cryptix...
- 	
+
 			private Cipher cipherEnc;
 //			private Cipher cipherDec;
 			public JAPSymCipher()
@@ -90,7 +90,7 @@ final class JAPSymCipher
 							e.printStackTrace();
 						}
 				}
-			
+
 			public int setEncryptionKey(byte[] key)
 				{
 					SecretKeySpec k=new SecretKeySpec(key,"Blowfish");
@@ -104,7 +104,7 @@ final class JAPSymCipher
 						}
 					return 0;
 				}
-			
+
 			public int setDecryptionKey(byte[] key)
 				{
 					SecretKeySpec k=new SecretKeySpec(key,"Blowfish");
@@ -118,7 +118,7 @@ final class JAPSymCipher
 						}
 					return 0;
 				}
-		
+
 			public int encrypt(byte[] buff)
 				{
 					try
@@ -129,10 +129,10 @@ final class JAPSymCipher
 						{
 							JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.MISC,"encrypt(buff)"+e.toString());
 							e.printStackTrace();
-						}				
+						}
 					return 0;
 				}
-			
+
 			public int encrypt(byte[] from,int ifrom,byte[] to,int ito,int len)
 				{
 					try
@@ -167,15 +167,19 @@ final class JAPSymCipher
 ///*Start AES
 			Object oKey;
 			byte[] iv=null;
-			
+			byte[] iv2=null;
+
 			public JAPSymCipher()
 				{
 					oKey=null;
 					iv=new byte[16];
 					for(int i=0;i<16;i++)
 						iv[i]=0;
+					iv2=new byte[16];
+					for(int i=0;i<16;i++)
+						iv2[i]=0;
 				}
-			
+
 			public int setEncryptionKeyAES(byte[] key)
 				{
 					try
@@ -188,7 +192,7 @@ final class JAPSymCipher
 							return -1;
 						}
 				}
-			
+
 			public int encryptAES(byte[] buff)
 				{
 					int i=0;
@@ -222,7 +226,7 @@ final class JAPSymCipher
 						}
 					return 0;
 				}
-			
+
 			public int encryptAES(byte[] from,int ifrom,byte[] to,int ito,int len)
 				{
 					len=ifrom+len;
@@ -255,8 +259,74 @@ final class JAPSymCipher
 						}
 					return 0;
 				}
-			
-			
+
+			public int encryptAES2(byte[] buff)
+				{
+					int i=0;
+					int len=buff.length;
+					while(i<len-15)
+						{
+							Rijndael_Algorithm.blockEncrypt(iv2,iv2,oKey);
+							buff[i++]^=iv2[0];
+							buff[i++]^=iv2[1];
+							buff[i++]^=iv2[2];
+							buff[i++]^=iv2[3];
+							buff[i++]^=iv2[4];
+							buff[i++]^=iv2[5];
+							buff[i++]^=iv2[6];
+							buff[i++]^=iv2[7];
+							buff[i++]^=iv2[8];
+							buff[i++]^=iv2[9];
+							buff[i++]^=iv2[10];
+							buff[i++]^=iv2[11];
+							buff[i++]^=iv2[12];
+							buff[i++]^=iv2[13];
+							buff[i++]^=iv2[14];
+							buff[i++]^=iv2[15];
+						}
+					if(i<len)
+						{
+							Rijndael_Algorithm.blockEncrypt(iv2,iv2,oKey);
+							len-=i;
+							for(int k=0;k<len;k++)
+								buff[i++]^=iv2[k];
+						}
+					return 0;
+				}
+
+			public int encryptAES2(byte[] from,int ifrom,byte[] to,int ito,int len)
+				{
+					len=ifrom+len;
+					while(ifrom<len-15)
+						{
+							Rijndael_Algorithm.blockEncrypt(iv2,iv2,oKey);
+							to[ito++]=(byte)(from[ifrom++]^iv2[0]);
+							to[ito++]=(byte)(from[ifrom++]^iv2[1]);
+							to[ito++]=(byte)(from[ifrom++]^iv2[2]);
+							to[ito++]=(byte)(from[ifrom++]^iv2[3]);
+							to[ito++]=(byte)(from[ifrom++]^iv2[4]);
+							to[ito++]=(byte)(from[ifrom++]^iv2[5]);
+							to[ito++]=(byte)(from[ifrom++]^iv2[6]);
+							to[ito++]=(byte)(from[ifrom++]^iv2[7]);
+							to[ito++]=(byte)(from[ifrom++]^iv2[8]);
+							to[ito++]=(byte)(from[ifrom++]^iv2[9]);
+							to[ito++]=(byte)(from[ifrom++]^iv2[10]);
+							to[ito++]=(byte)(from[ifrom++]^iv2[11]);
+							to[ito++]=(byte)(from[ifrom++]^iv2[12]);
+							to[ito++]=(byte)(from[ifrom++]^iv2[13]);
+							to[ito++]=(byte)(from[ifrom++]^iv2[14]);
+							to[ito++]=(byte)(from[ifrom++]^iv2[15]);
+						}
+					if(ifrom<len)
+						{
+							Rijndael_Algorithm.blockEncrypt(iv2,iv2,oKey);
+							len-=ifrom;
+							for(int k=0;k<len;k++)
+								to[ito++]=(byte)(from[ifrom++]^iv2[k]);
+						}
+					return 0;
+				}
+
 //	END AES		*/
 
 }
