@@ -81,7 +81,7 @@ class JAPRoundTripTimeView extends JDialog implements Runnable {
 	private JLabel sumProgressBarDesc2;
 	private JProgressBar sumProgressBar1  = new JProgressBar();
 	private JProgressBar sumProgressBar2  = new JProgressBar();
-	private JAPModel model;
+	private JAPController controller;
 
 
 	/**
@@ -122,7 +122,7 @@ class JAPRoundTripTimeView extends JDialog implements Runnable {
 	//new constructor....
 	JAPRoundTripTimeView (Frame parent,AnonServerDBEntry[] initialServerList) {
  		super(parent,"Round Trip Time");
-		model=JAPModel.getModel();
+		controller=JAPController.getController();
 		// Creating Frame & Components
    //     JFrame mainFrame = new JFrame("Round Trip Time");
 		Component contents = this.createComponents(initialServerList);

@@ -70,19 +70,18 @@ final class JAPFirewallPasswdDlg implements ActionListener
 				JPanel p=new JPanel(new BorderLayout());
 				p.add("Center",dlg.pwdField);
 				p.add("South",panel);
-				JAPModel m=JAPModel.getModel();
 				Object[] options=new Object[1];
 				options[0]=p;
 				JOptionPane o=new JOptionPane(JAPMessages.getString("passwdDlgInput")+"\n"+
 																			JAPMessages.getString("passwdDlgHost")+": "+
-																			m.getFirewallHost()+"\n"+
+																			JAPModel.getFirewallHost()+"\n"+
 																			JAPMessages.getString("passwdDlgPort")+": "+
-																			m.getFirewallPort()+"\n"+
+																			JAPModel.getFirewallPort()+"\n"+
 																			JAPMessages.getString("passwdDlgUserID")+": "+
-																			m.getFirewallAuthUserID()+"\n",
+																			JAPModel.getFirewallAuthUserID()+"\n",
 																			JOptionPane.QUESTION_MESSAGE,0
 																			,null,options);
-				dlg.dialog=o.createDialog(JAPModel.getView(),JAPMessages.getString("passwdDlgTitle"));
+				dlg.dialog=o.createDialog(JAPController.getView(),JAPMessages.getString("passwdDlgTitle"));
 				dlg.dialog.toFront();
 				dlg.dialog.show();
 				return dlg.passwd;

@@ -58,7 +58,7 @@ final class JAPSetAnonModeSplash implements Runnable
 					message=JAPMessages.getString("setAnonModeSplashConnect");
 				else
 					message=JAPMessages.getString("setAnonModeSplashDisconnect");
-				dlgAbort=new JDialog(JAPModel.getModel().getView(),JAPMessages.getString("setAnonModeSplashTitle"));//optionPaneAbort.createDialog(JAPModel.getModel().getView(),JAPMessages.getString("setAnonModeSplashTitle"));
+				dlgAbort=new JDialog(JAPController.getController().getView(),JAPMessages.getString("setAnonModeSplashTitle"));//optionPaneAbort.createDialog(JAPModel.getModel().getView(),JAPMessages.getString("setAnonModeSplashTitle"));
 				dlgAbort.getContentPane().setLayout(new BorderLayout());
 				JLabel l=new JLabel(message,UIManager.getIcon("OptionPane.informationIcon"),SwingConstants.CENTER);
 				l.setBorder(new EmptyBorder(10,10,10,10));
@@ -69,7 +69,7 @@ final class JAPSetAnonModeSplash implements Runnable
 				dlgAbort.getContentPane().add("South",l);
 				dlgAbort.pack();
 				dlgAbort.setResizable(false);
-				dlgAbort.setLocationRelativeTo(JAPModel.getModel().getView());
+				dlgAbort.setLocationRelativeTo(JAPController.getController().getView());
 				dlgAbort.setModal(true);
 				dlgAbort.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
 		   	t.start();

@@ -53,7 +53,7 @@ import HTTPClient.HTTPResponse;
  */
 class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 	private int IDLETIME = 90000;
-	private JAPModel model;
+	private JAPController controller;
 	private JAPCascadeMonitor cm = null;
 	private ServerSocket listener=null;
 	private JAPCascadeMonitorView view = null;
@@ -73,9 +73,9 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 
 	JAPCascadeMonitorView (Frame parent) {
  		super(parent);
-		model=JAPModel.getModel();
+		controller=JAPController.getController();
 		view=this;
-		db = model.anonServerDatabase;
+		db = controller.anonServerDatabase;
 		this.setModal(true);
 		this.setTitle(JAPMessages.getString("chkAvailableCascades"));
 		Component contents = this.createComponents();
@@ -127,7 +127,7 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 		okButton.setEnabled(false);
 		okButton.addActionListener(new ActionListener() {
 		    public void actionPerformed(ActionEvent e) {
-				model.setAnonServer(db.getEntry(tableView.getSelectedRow()));
+				controller.setAnonServer(db.getEntry(tableView.getSelectedRow()));
 				stopTest();
 		        dispose();
 		    }
@@ -146,7 +146,7 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 
     private JScrollPane createTable() {
 
-        // Create a model of the data.
+        // Create a controller of the data.
         dataModel = new AbstractTableModel() {
             public int getColumnCount() { return 5; }
             public String getColumnName(int column) {
@@ -164,7 +164,7 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 				if (col==1) return (e.getNrOfActiveUsers()==-1?" ":Integer.toString(e.getNrOfActiveUsers()));
 				if (col==2) return (e.getDelay()==null?" ":e.getDelay());
 				if (col==3) return (e.getStatus()==null?"                              ":e.getStatus());
-				if (col==4) return (e.equals(model.getAnonServer())?JAPMessages.getString("chkSelected"):" ");
+				if (col==4) return (e.equals(controller.getAnonServer())?JAPMessages.getString("chkSelected"):" ");
 				return " ";
 			}
             public Class getColumnClass(int c) {return getValueAt(0, c).getClass();}
@@ -193,11 +193,11 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 	private void startTest() {
 		this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 		try {
-			if (listener==null) listener = new ServerSocket(model.getAnonServer().getPort()+1);
+			if (listener==null) listener = new ServerSocket(controller.getAnonServer().getPort()+1);
 		}
 		catch (Exception ex) {
 			JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPCascadeMonitor:Cannot establish listener on port "+
-						 Integer.toString(model.getAnonServer().getPort()+1));
+						 Integer.toString(controller.getAnonServer().getPort()+1));
 		}
 		if (cm == null)
 			cm = new JAPCascadeMonitor();
@@ -223,7 +223,7 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 		}
 		catch (Exception e) {
 			JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPCascadeMonitor:Error closing listener on port "+
-						 Integer.toString(model.getAnonServer().getPort()+1));
+						 Integer.toString(controller.getAnonServer().getPort()+1));
 		}
 		this.setCursor(Cursor.getDefaultCursor());
 		statusTextField.setText(JAPMessages.getString("chkPressStartToCheck"));
@@ -232,10 +232,10 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 
 	public static void main(String[] args) {
 		JAPMessages.init();
-		JAPModel model = JAPModel.create();
+		JAPController controller = JAPController.create();
 		JAPDebug.create();
-		model.loadConfigFile();
-		model.fetchAnonServers();
+		controller.loadConfigFile();
+		controller.fetchAnonServers();
 		JAPDebug.setDebugType(JAPDebug.NET+JAPDebug.GUI+JAPDebug.THREAD+JAPDebug.MISC);
 		JAPDebug.setDebugLevel(JAPDebug.DEBUG);
 		new JAPCascadeMonitorView(null);
@@ -275,7 +275,7 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 				statusTextField.setText(JAPMessages.getString("chkGettingFeedback"));
 				Enumeration enum = db.elements();
 				while (enum.hasMoreElements()) {
-					model.getInfoService().getFeedback((AnonServerDBEntry)enum.nextElement());
+					controller.getInfoService().getFeedback((AnonServerDBEntry)enum.nextElement());
 					tableView.repaint();
 				}
 				statusTextField.setText(JAPMessages.getString("chkFeedbackReceived"));
@@ -292,14 +292,14 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 					tableView.repaint();
 					// create the AnonService
 					JAPAnonProxy proxyAnon=new JAPAnonProxy(listener);
-					if (model.getUseFirewall()) {
+					if (controller.getUseFirewall()) {
 						// connect vi proxy to first mix (via ssl portnumber)
 						if (e.getSSLPort() == -1) {
 							proxyAnon.setAnonService(e.getHost(),e.getPort());
-							proxyAnon.setFirewall(model.getFirewallHost(),model.getFirewallPort());
+							proxyAnon.setFirewall(JAPModel.getFirewallHost(),JAPModel.getFirewallPort());
 						} else {
 							proxyAnon.setAnonService(e.getHost(),e.getSSLPort());
-							proxyAnon.setFirewall(model.getFirewallHost(),model.getFirewallPort());
+							proxyAnon.setFirewall(JAPModel.getFirewallHost(),JAPModel.getFirewallPort());
 						}
 					} else {
 						// connect directly to first mix
@@ -331,17 +331,17 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 						// send request via AnonService
 						//
 						try {
-							String target="http://"+model.getInfoServiceHost()+":"+model.getInfoServicePort()+"/aktVersion";
+							String target="http://"+JAPModel.getInfoServiceHost()+":"+JAPModel.getInfoServicePort()+"/aktVersion";
 							// simply get the current version number via the anon service
 							URL url = new URL(target);
 
 //							URL url = new URL("http://www.inf.tu-dresden.de/cgi-bin/cgiwrap/hf2/img.cgi/monitor");
 //							HTTPConnection c = new HTTPConnection(url.getHost(),url.getPort());
-//							c.setProxyServer(InetAddress.getLocalHost().getHostAddress(),model.getAnonServer().getPort()+1);
+//							c.setProxyServer(InetAddress.getLocalHost().getHostAddress(),controller.getAnonServer().getPort()+1);
 //							c.setAllowUserInteraction(false);
 //							c.setTimeout(8000);
 
-							Socket socket = new Socket(InetAddress.getLocalHost().getHostAddress(),model.getAnonServer().getPort()+1);
+							Socket socket = new Socket(InetAddress.getLocalHost().getHostAddress(),controller.getAnonServer().getPort()+1);
 							socket.setSoTimeout(60000);
 							BufferedWriter outputStream = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
 							outputStream.write("GET "+target+" HTTP/1.0\r\n\r\n");

@@ -100,14 +100,14 @@ class JAP extends Frame {
 			JAPAWTMsgBox.MsgBox(this,JAPMessages.getString("errorSwingNotInstalled"),JAPMessages.getString("error"));
 			System.exit(0);
 		}
-		// Create the model object
-		JAPModel model = JAPModel.create();
+		// Create the controller object
+		JAPController controller = JAPController.create();
 		// Create debugger object
 		JAPDebug.create();
 		JAPDebug.setDebugType(JAPDebug.NET+JAPDebug.GUI+JAPDebug.THREAD+JAPDebug.MISC);
 		JAPDebug.setDebugLevel(JAPDebug.WARNING);
 		// load settings from config file
-		model.loadConfigFile();
+		controller.loadConfigFile();
 		// Output some information about the system
 		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAP:Welcome! This is version "+JAPConstants.aktVersion+" of JAP.");
 		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAP:Java "+javaVersion+" running on "+os+".");
@@ -129,18 +129,18 @@ class JAP extends Frame {
 		// Switch Debug Console Parent to MainView
 		JAPDebug.setConsoleParent(view);
 		// Add observer
-		model.addJAPObserver(view);
+		controller.addJAPObserver(view);
 		// Create the iconified view
 		JAPViewIconified viewIconified = new JAPViewIconified(JAPConstants.TITLEOFICONIFIEDVIEW);
-		model.addJAPObserver(viewIconified);
+		controller.addJAPObserver(viewIconified);
 		// Register the views where they are needed
-		model.registerView(view);
+		controller.registerView(view);
 		viewIconified.registerMainView(view);
 		view.registerViewIconified(viewIconified);
 		//Init Crypto...
 //		java.security.Security.addProvider(new cryptix.jce.provider.CryptixCrypto());
 		// Enable RMI if requested
-		model.setRMISupport(bSupportRMI);
+		controller.setRMISupport(bSupportRMI);
 
 		// Show main frame and dispose splash screen
 		view.show();
@@ -151,7 +151,7 @@ class JAP extends Frame {
 		anon.server.AnonServiceImpl.init();
 
     // initially start services
-		model.initialRun();
+		controller.initialRun();
 	}
 
 	public static void main(String[] argv) {
