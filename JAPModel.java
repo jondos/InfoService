@@ -25,6 +25,7 @@ OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABIL
 IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY 
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
+import java.text.MessageFormat;
 import java.util.Enumeration;
 import java.util.Locale;
 import java.util.ResourceBundle;
@@ -359,8 +360,11 @@ public final class JAPModel {
 			// start Listener
 			if(!startListener())
 				{
+					Object[] args={new Integer(portNumber)};
+					String msg=MessageFormat.format(model.getString("errorListenerPort"),
+																					args);
 					JOptionPane.showMessageDialog(model.getView(),
-																				model.getString("errorListenerPort"),
+																				msg,
 																				model.getString("errorListenerPortTitle"),
 																				JOptionPane.ERROR_MESSAGE);
 					JAPDebug.out(JAPDebug.EMERG,JAPDebug.NET,"Listener could not be started!");
