@@ -103,13 +103,13 @@ public class XMLEasyCC extends XMLDocument
 		Element element = m_theDocument.getDocumentElement();
 		if (!element.getTagName().equals("CC"))
 		{
-			throw new Exception();
+			throw new Exception("XMLEasyCC wrong xml structure");
 		}
 
 		NodeList nl = element.getElementsByTagName("AiID");
 		if (nl.getLength() < 1)
 		{
-			throw new Exception();
+			throw new Exception("XMLEasyCC wrong xml structure");
 		}
 		element = (Element) nl.item(0);
 
@@ -119,7 +119,7 @@ public class XMLEasyCC extends XMLDocument
 		nl = element.getElementsByTagName("AccountNumber");
 		if (nl.getLength() < 1)
 		{
-			throw new Exception();
+			throw new Exception("XMLEasyCC wrong xml structure");
 		}
 		element = (Element) nl.item(0);
 		chdata = (CharacterData) element.getFirstChild();
@@ -128,7 +128,7 @@ public class XMLEasyCC extends XMLDocument
 		nl = element.getElementsByTagName("TransferredBytes");
 		if (nl.getLength() < 1)
 		{
-			throw new Exception();
+			throw new Exception("XMLEasyCC wrong xml structure");
 		}
 		element = (Element) nl.item(0);
 		chdata = (CharacterData) element.getFirstChild();

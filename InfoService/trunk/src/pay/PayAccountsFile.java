@@ -27,27 +27,18 @@
  */
 package pay;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.util.Enumeration;
-import java.util.Vector;
-import javax.xml.parsers.DocumentBuilderFactory;
+import java.util.*;
+import javax.xml.parsers.*;
 
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import anon.util.XMLUtil;
-import jap.JAPModel;
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
-import jap.JAPView;
-import jap.JAPController;
-import javax.swing.JOptionPane;
-import javax.xml.parsers.ParserConfigurationException;
-import anon.crypto.XMLEncryption;
+import javax.swing.*;
+import javax.swing.event.*;
+
+import org.w3c.dom.*;
+import anon.crypto.*;
+import anon.util.*;
+import jap.*;
+import logging.*;
+
 /**
  * This class contains the accounts configuration and the functionality to read
  * and write the configuration file. Because the configuration file contains
@@ -108,6 +99,7 @@ public class PayAccountsFile
 	 */
 	public static PayAccountsFile getInstance()
 	{
+		LogHolder.log(LogLevel.DEBUG, LogType.PAY, "PayAccountsFile.getInstance()");
 		if (ms_AccountsFile == null)
 		{
 			ms_AccountsFile = new PayAccountsFile();
@@ -118,6 +110,7 @@ public class PayAccountsFile
 			{
 				if (ms_AccountsFile.m_bIsEncrypted)
 				{
+					LogHolder.log(LogLevel.DEBUG, LogType.PAY, "PayAccountsFile: isEncrypted.. calling doInit()");
 					ms_AccountsFile.doInit();
 				}
 			}
@@ -204,6 +197,7 @@ public class PayAccountsFile
 	 */
 	private boolean doInit()
 	{
+		LogHolder.log(LogLevel.DEBUG, LogType.PAY, "PayAccountsFile: doInit()");
 		Element elemRoot = m_TheDocument.getDocumentElement();
 		Element elemAccountsFile = null;
 
@@ -257,7 +251,7 @@ public class PayAccountsFile
 			try
 			{
 				m_Accounts.addElement(new PayAccount(elemAccount));
-				elemAccount = (Element) elemAccounts.getNextSibling();
+				elemAccount = (Element) elemAccount.getNextSibling();
 			}
 			catch (Exception ex1)
 			{
@@ -268,7 +262,7 @@ public class PayAccountsFile
 		}
 
 		// find activeAccount
-		if (activeAccountNumber != 0)
+		if (activeAccountNumber > 0)
 		{
 			Enumeration e = m_Accounts.elements();
 			while (e.hasMoreElements())
@@ -277,6 +271,7 @@ public class PayAccountsFile
 				if (current.getAccountNumber() == activeAccountNumber)
 				{
 					m_ActiveAccount = current;
+					fireChangeEvent(m_ActiveAccount);
 					break;
 				}
 			}
@@ -289,7 +284,7 @@ public class PayAccountsFile
 	 * Reads the accountsfile from disk. (Import Function)
 	 * @param fileName String
 	 */
-	public void readFromFile(String fileName) throws Exception
+/*	public void readFromFile(String fileName) throws Exception
 	{
 		LogHolder.log(LogLevel.DEBUG, LogType.PAY,
 					  "pay.PayAccountsFile.readFromFile: Reading PayAccounts from file " + fileName);
@@ -326,7 +321,7 @@ public class PayAccountsFile
 		m_bFirstTime = true;
 		doInit();
 	}
-
+*/
 	/**
 	 * Save the accountfile to disk (export function)
 	 *
@@ -335,7 +330,7 @@ public class PayAccountsFile
 	 * @param password String can be null if not encrypted
 	 * @throws Exception
 	 */
-	public void saveToFile(String fileName, boolean saveEncrypted, String password) throws Exception
+/*	public void saveToFile(String fileName, boolean saveEncrypted, String password) throws Exception
 	{
 		LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Saving accountsfile to " + fileName + "...");
 		Document doc = constructXmlDocument(saveEncrypted, password);
@@ -359,7 +354,7 @@ public class PayAccountsFile
 		outStream.flush();
 		outStream.close();
 		LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Saving Was successful");
-	}
+	}*/
 
 	/**
 	 * constructs the xml structure
@@ -413,7 +408,21 @@ public class PayAccountsFile
 
 	public void setActiveAccount(long accountNumber) throws Exception
 	{
-		m_ActiveAccount = getAccount(accountNumber);
+		PayAccount account = getAccount(accountNumber);
+		if (account != null)
+		{
+			m_ActiveAccount = account;
+			fireChangeEvent(m_ActiveAccount);
+		}
+	}
+
+	public void setActiveAccount(PayAccount account) throws Exception
+	{
+		if (account != null)
+		{
+			m_ActiveAccount = account;
+			fireChangeEvent(m_ActiveAccount);
+		}
 	}
 
 	public long getActiveAccountNumber()
@@ -458,29 +467,33 @@ public class PayAccountsFile
 	 * @param accountNumber account number
 	 * @throws Exception Wenn ein Fehler bei Dateizugriff auftrat
 	 */
-	public boolean deleteAccount(long accountNumber) throws Exception
+	public void deleteAccount(long accountNumber)
 	{
 		PayAccount tmp = getAccount(accountNumber);
-		if (tmp.getCredit() > 0)
+		if (tmp != null)
 		{
-			return false;
-		}
-		for (int i = 0; i < m_Accounts.size(); i++)
-		{
-			tmp = (PayAccount) m_Accounts.elementAt(i);
-			if (tmp.getAccountNumber() == accountNumber)
+			for (int i = 0; i < m_Accounts.size(); i++)
 			{
-				m_Accounts.removeElementAt(i);
-				if (m_ActiveAccount == tmp)
+				tmp = (PayAccount) m_Accounts.elementAt(i);
+				if (tmp.getAccountNumber() == accountNumber)
 				{
-					if (m_Accounts.size() > 0)
+					m_Accounts.removeElementAt(i);
+					if (m_ActiveAccount == tmp)
 					{
-						m_ActiveAccount = (PayAccount) m_Accounts.firstElement();
+						if (m_Accounts.size() > 0)
+						{
+							m_ActiveAccount = (PayAccount) m_Accounts.firstElement();
+						}
+						else
+						{
+							m_ActiveAccount = null;
+						}
 					}
+					break;
 				}
 			}
 		}
-		return true;
+		fireChangeEvent(tmp);
 	}
 
 	/**
@@ -488,23 +501,23 @@ public class PayAccountsFile
 	 *
 	 * @return Enumeration von Long-Werten
 	 */
-	public Enumeration getAccountNumbers()
-	{
-		PayAccount tmpAccount;
-		Vector tmp = new Vector();
-		Enumeration enumer = m_Accounts.elements();
-		while (enumer.hasMoreElements())
-		{
-			tmpAccount = (PayAccount) enumer.nextElement();
-			tmp.addElement(new Long(tmpAccount.getAccountNumber()));
-		}
-		return tmp.elements();
-	}
+	/*	public Enumeration getAccountNumbers()
+	 {
+	  PayAccount tmpAccount;
+	  Vector tmp = new Vector();
+	  Enumeration enumer = m_Accounts.elements();
+	  while (enumer.hasMoreElements())
+	  {
+	   tmpAccount = (PayAccount) enumer.nextElement();
+	   tmp.addElement(new Long(tmpAccount.getAccountNumber()));
+	  }
+	  return tmp.elements();
+	 }*/
 
 	/**
-	 * Liefert alle Konten der Kontendatei.
+	 * Returns an enumeration of all accounts
 	 *
-	 * @return Enumeration von {@link PayAccount}s
+	 * @return Enumeration of {@link PayAccount}
 	 */
 	public Enumeration getAccounts()
 	{
@@ -512,11 +525,10 @@ public class PayAccountsFile
 	}
 
 	/**
-	 * Schreibt ein neues Konto in die Kontendatei.
+	 * Adds a new account
 	 *
-	 * @param account zu speicherndes Konto
-	 * @throws Exception Wenn ein Konto unter der Kontonummer schon in der
-	 * Kontendatei enthalten ist. Wenn ein Dateizugriffsfehler auftrat.
+	 * @param account new account
+	 * @throws Exception If the same account was already added
 	 */
 	public void addAccount(PayAccount account) throws Exception
 	{
@@ -527,14 +539,16 @@ public class PayAccountsFile
 			tmp = (PayAccount) enumer.nextElement();
 			if (tmp.getAccountNumber() == account.getAccountNumber())
 			{
-				throw new IllegalArgumentException();
+				throw new Exception("Account with same accountnumber was already added");
 			}
 		}
 		m_Accounts.addElement(account);
+		account.addChangeListener(m_MyChangeListener);
 		if (m_ActiveAccount == null)
 		{
 			m_ActiveAccount = account;
 		}
+		fireChangeEvent(account);
 	}
 
 	/**
@@ -601,7 +615,7 @@ public class PayAccountsFile
 					"Falls Ihre Kontendaten verschl&uuml;sselt sind,<br> " +
 					"m&uuml;ssen Sie von nun an bei jedem JAP-Start das Passwort<br> " +
 					"zum Entschl&uuml;sseln eingeben.<br><br>" +
-					"M&ouml;chten Sie Ihre Kontendaten jetzt verschl&uuml;sselt speichern?</html>",
+					"M&ouml;chten Sie Ihre Kontendaten jetzt verschl&uuml;sseln?</html>",
 					"Verschluesselung der Kontendaten",
 					JOptionPane.YES_NO_OPTION,
 					JOptionPane.QUESTION_MESSAGE,
@@ -624,8 +638,6 @@ public class PayAccountsFile
 			// save it
 			try
 			{
-				LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Constructing XML PayAccountsFile .. encrypt=" +
-							  (encrypt ? "true" : "false") + ", Password='" + strPassword + "'");
 				doc = constructXmlDocument(encrypt, strPassword);
 			}
 			catch (Exception ex)
@@ -643,5 +655,46 @@ public class PayAccountsFile
 			elemConfig = (Element) XMLUtil.getFirstChildByName(elemRoot, "EncryptedData");
 		}
 		return elemConfig;
+	}
+
+	private Vector m_changeListeners = new Vector();
+
+
+	public void addChangeListener(ChangeListener listener)
+	{
+		synchronized(m_changeListeners)
+		{
+			if (listener != null)
+			{
+				m_changeListeners.addElement(listener);
+			}
+		}
+	}
+
+	private void fireChangeEvent(Object source)
+	{
+		synchronized(m_changeListeners)
+		{
+			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "PayAccountsFile: FireChangeEvent....................................");
+			Enumeration enumListeners = m_changeListeners.elements();
+			ChangeEvent e = new ChangeEvent(source);
+			while (enumListeners.hasMoreElements())
+			{
+				( (ChangeListener) enumListeners.nextElement()).stateChanged(e);
+			}
+		}
+	}
+
+	private MyChangeListener m_MyChangeListener = new MyChangeListener();
+	/**
+	 * Listens to changes
+	 * inside the accounts and forwards the events to our changeListeners
+	 */
+	private class MyChangeListener implements ChangeListener
+	{
+		public void stateChanged(ChangeEvent e)
+		{
+			fireChangeEvent(e.getSource());
+		}
 	}
 }

@@ -88,20 +88,20 @@ public class XMLJapPublicKey extends XMLDocument
 		Element element = m_theDocument.getDocumentElement();
 		if (!element.getTagName().equals("JapPublicKey"))
 		{
-			throw new Exception();
+			throw new Exception("XMLJapPublicKey wrong xml structure");
 		}
 
 		NodeList nl = element.getElementsByTagName("RSAKeyValue");
 		if (nl.getLength() < 1)
 		{
-			throw new Exception();
+			throw new Exception("XMLJapPublicKey wrong xml structure");
 		}
 		element = (Element) nl.item(0);
 
 		nl = element.getElementsByTagName("Exponent");
 		if (nl.getLength() < 1)
 		{
-			throw new Exception();
+			throw new Exception("XMLJapPublicKey wrong xml structure");
 		}
 
 		Element exponent = (Element) nl.item(0);
@@ -113,7 +113,7 @@ public class XMLJapPublicKey extends XMLDocument
 		nl = element.getElementsByTagName("Modulus");
 		if (nl.getLength() < 1)
 		{
-			throw new Exception();
+			throw new Exception("XMLJapPublicKey wrong xml structure");
 		}
 
 		Element modulus = (Element) nl.item(0);

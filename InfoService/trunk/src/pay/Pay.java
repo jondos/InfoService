@@ -81,6 +81,7 @@ public class Pay
 		readJpiCertificate("certificates/bi.cer");
 
 		// read PayAccountsFile from disk
+		LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Pay(): Calling PayAccountsFile...");
 		m_AccountsFile = PayAccountsFile.getInstance();
 	}
 
@@ -239,55 +240,45 @@ public class Pay
 	}
 
 	/**
-	 * Aufladen des Kontos mit angebener Kontonummer.
-	 * Die Bezahlinstanz wird kontaktiert und ein Kontozertifikat angefragt.
-	 * Das Kontozertifikat wird den Kontoinformationen hinzugef\uFFFDgt und
-	 * gespeichert.
+	 * Request a transfer certificate from the BI
 	 *
-	 * @param accountNumber Kontonummer
-	 * @return \uFFFDberweisungsnummer (Transaktionspeudonym)
-	 * @throws IllegalStateException Wenn die Kontendatei oder die
-	 * Bezahlinstanz nicht gesetzt sind.
+	 * @param accountNumber account number
+	 * @return xml transfer certificate
+	 * @throws Exception
 	 */
-	public long chargeAccount(long accountNumber) throws Exception
+	public XMLTransCert chargeAccount(long accountNumber) throws Exception
 	{
 		PayAccount account = m_AccountsFile.getAccount(accountNumber);
+		if (account == null)
+		{
+			throw new Exception("Invalid Account Number: "+accountNumber);
+		}
 
 		// TODO: switch SSL on when everything works
-		BIConnection biConn = new BIConnection(JAPModel.getBIHost(),
-											   JAPModel.getBIPort(),
-											   false
-											   /* ssl off */
-											   );
+		BIConnection biConn = new BIConnection(
+			  JAPModel.getBIHost(), JAPModel.getBIPort(),
+			  false // ssl off
+			  );
 		biConn.connect();
 		biConn.authenticate(account.getAccountCertificate(), account.getSigningInstance());
 		XMLTransCert transcert = biConn.charge();
 		biConn.disconnect();
 		account.addTransCert(transcert);
 //		m_AccountsFile.save();
-		return transcert.getTransferNumber();
+		return transcert;
 	}
-
 
 	/**
 	 * Fetches AccountInfo XML structure for each account in the accountsFile.
 	 * @todo do not connect/disconnect everytime
 	 */
-	public void fetchAccountInfoForAllAccounts()
+	public void fetchAccountInfoForAllAccounts() throws Exception
 	{
-		try
+		Enumeration accounts = m_AccountsFile.getAccounts();
+		while (accounts.hasMoreElements())
 		{
-			Enumeration accounts = m_AccountsFile.getAccounts();
-			while (accounts.hasMoreElements())
-			{
-				PayAccount ac = (PayAccount) accounts.nextElement();
-				ms_Pay.fetchAccountInfo(ac.getAccountNumber());
-			}
-		}
-		catch (IllegalStateException ise)
-		{
-			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Could not get account info from BI");
-			ise.printStackTrace();
+			PayAccount ac = (PayAccount) accounts.nextElement();
+			ms_Pay.fetchAccountInfo(ac.getAccountNumber());
 		}
 	}
 
@@ -298,38 +289,29 @@ public class Pay
 	 * @throws IllegalStateException
 	 * @return XMLAccountInfo
 	 */
-	public XMLAccountInfo fetchAccountInfo(long accountNumber) throws IllegalStateException
+	public XMLAccountInfo fetchAccountInfo(long accountNumber) throws Exception
 	{
-		try
-		{
-			XMLAccountInfo info;
-			PayAccount account = m_AccountsFile.getAccount(accountNumber);
+		XMLAccountInfo info;
+		PayAccount account = m_AccountsFile.getAccount(accountNumber);
 
-			// TODO: Switch SSL on when everything works
-			BIConnection biConn = new BIConnection(JAPModel.getBIHost(),
-												   JAPModel.getBIPort(),
-												   false /* ssl off! */);
-			biConn.connect();
-			biConn.authenticate(account.getAccountCertificate(), account.getSigningInstance());
-			info = biConn.getAccountInfo();
-			biConn.disconnect();
+		// TODO: Switch SSL on when everything works
+		BIConnection biConn = new BIConnection(JAPModel.getBIHost(),
+											   JAPModel.getBIPort(),
+											   false
+											   /* ssl off! */
+											   );
+		biConn.connect();
+		biConn.authenticate(account.getAccountCertificate(), account.getSigningInstance());
+		info = biConn.getAccountInfo();
+		biConn.disconnect();
 
-			// save in the account object
-			account.setAccountInfo(info);
+		// save in the account object
+		account.setAccountInfo(info);
 
-			// save the modified accountsfile
+		// save the modified accountsfile
 //			m_AccountsFile.save();
-			return info;
-		}
-		catch (Exception e)
-		{
-			LogHolder.log(LogLevel.ERR, LogType.PAY,
-						  "Could not fetch AccountInfo from the BI for Account No. "+accountNumber);
-			e.printStackTrace();
-			return null;
-		}
+		return info;
 	}
-
 
 	/**
 	 * Creates a new Account.
@@ -337,7 +319,7 @@ public class Pay
 	 * This can take a while, so the user should be notified before calling this.
 	 *
 	 */
-	public void createAccount() throws IllegalStateException, Exception
+	public void createAccount() throws Exception
 	{
 		RSAKeyPairGenerator pGen = new RSAKeyPairGenerator();
 
@@ -363,7 +345,8 @@ public class Pay
 		// send it to the JPI TODO: switch SSL on
 		BIConnection biConn = new BIConnection(JAPModel.getBIHost(),
 											   JAPModel.getBIPort(),
-											   false /* ssl off! */);
+											   false
+											   /* ssl off! */);
 		biConn.connect();
 		XMLAccountCertificate xmlCert = biConn.register(pubKey, signingInstance);
 		biConn.disconnect();

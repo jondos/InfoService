@@ -27,28 +27,17 @@
  */
 package pay;
 
-import java.math.BigInteger;
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.Vector;
-import org.w3c.dom.CharacterData;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
-import payxml.XMLAccountInfo;
-import payxml.XMLAccountCertificate;
-import payxml.XMLAccountInfo;
-import payxml.XMLDocument;
-import payxml.XMLTransCert;
-import anon.util.Base64;
-import anon.util.XMLUtil;
+import java.io.*;
+import java.math.*;
+import java.util.*;
+
+import javax.swing.event.*;
+
 import org.w3c.dom.*;
-import anon.crypto.MyRSAPrivateKey;
-import anon.crypto.MyRSAPublicKey;
-import anon.crypto.JAPSignature;
-import payxml.XMLEasyCC;
+import anon.crypto.*;
+import anon.util.*;
+import logging.*;
+import payxml.*;
 
 /**
  *  Diese Klasse ist f?r die verwaltung eines Accounts zut?ndig, sie kapselt eine XML Struktur innerhalb der Klasse
@@ -81,44 +70,35 @@ public class PayAccount extends XMLDocument
 	/** the signing instance */
 	private JAPSignature m_signingInstance;
 
-	// Exceptions
-	public static class WrongCertificateException extends Exception
-	{};
-	public static class WrongCCsException extends Exception
-	{};
 
-	/**
-	 * Erzeugt ein PayAccount Objekt aus einem XML-Dokument.
-	 *
-	 * @param xmlData XML-Dokument
-	 * @throws Exception Wenn XML-Dokument fehlerhaft
-	 */
 	public PayAccount(byte[] xmlData) throws Exception
 	{
-		setDocument(xmlData);
-		setValues();
+		Document doc = getDocumentBuilder().parse(new ByteArrayInputStream(xmlData));
+		Element elemRoot = doc.getDocumentElement();
+		setValues(elemRoot);
 	}
 
-	/**
-	 * Erzeugt ein PayAccount Objekt aus einem XML-Dokument.
-	 *
-	 * @param xml XML-Dokument
-	 * @throws Exception Wenn XML-Dokument fehlerhaft
-	 */
-	public PayAccount(Node xml) throws Exception
+	public PayAccount(Element elemRoot) throws Exception
 	{
-		m_theDocument = getDocumentBuilder().newDocument();
-		Node n = XMLUtil.importNode(m_theDocument, xml, true);
-		m_theDocument.appendChild(n);
-		setValues();
+		setValues(elemRoot);
 	}
 
-	private void setValues() throws Exception
+	public PayAccount(Document doc) throws Exception
 	{
+		Element elemRoot = doc.getDocumentElement();
+		setValues(elemRoot);
+	}
+
+
+	private void setValues(Element elemRoot) throws Exception
+	{
+		if( !(elemRoot.getTagName().equals("Account") && (elemRoot.getAttribute("version").equals("1.0"))))
+		{
+			throw new Exception("PayAccount wrong XML format");
+		}
 
 		// fill vector with transfer certificates
 		m_transCerts = new Vector();
-		Element elemRoot = m_theDocument.getDocumentElement();
 		Element elemTrs = (Element) XMLUtil.getFirstChildByName(elemRoot, "TransferCertificates");
 		Element elemTr = (Element) elemTrs.getFirstChild();
 		while (elemTr != null)
@@ -139,173 +119,6 @@ public class PayAccount extends XMLDocument
 		}
 
 		// set private key
-		setRSAPrivateKey();
-
-		// set signing instance
-		m_signingInstance = new JAPSignature();
-		m_signingInstance.initSign(m_privateKey);
-	}
-
-	public void setAccountInfo(XMLAccountInfo info) throws Exception
-	{
-		m_accountInfo = info;
-		constructXMLDocument();
-	}
-
-	/**
-	 * Creates a {@link PayAccount} Objekt from the account certificate and
-	 * the private key.
-	 *
-	 * @param certificate account certificate issued by the BI
-	 * @param privateKey the private key
-	 */
-	public PayAccount(XMLAccountCertificate certificate,
-					  MyRSAPrivateKey privateKey,
-					  JAPSignature signingInstance) throws Exception
-	{
-		m_accountCertificate = certificate;
-		m_signingInstance = signingInstance;
-		m_privateKey = privateKey;
-
-		constructXMLDocument();
-	}
-
-	/**
-	 * Liefert die XML-Repr&auml;sentation des Kontos.
-	 *
-	 * @return XML-Dokument als String
-	 */
-	private void constructXMLDocument() throws Exception
-	{
-		m_theDocument = getDocumentBuilder().newDocument();
-		Element elemRoot = m_theDocument.createElement("Account");
-		elemRoot.setAttribute("version", "1.0");
-		m_theDocument.appendChild(elemRoot);
-		Document tmpDoc = m_accountCertificate.getDomDocument();
-		Node n = XMLUtil.importNode(m_theDocument, tmpDoc.getDocumentElement(), true);
-		elemRoot.appendChild(n);
-
-		Element elemPrivKey = m_theDocument.createElement("RSAPrivateKey");
-		elemRoot.appendChild(elemPrivKey);
-		Element elem = m_theDocument.createElement("Modulus");
-		elemPrivKey.appendChild(elem);
-		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_privateKey.getModulus().toByteArray()));
-		elem = m_theDocument.createElement("PublicExponent");
-		elemPrivKey.appendChild(elem);
-		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_privateKey.getPublicExponent().toByteArray()));
-		elem = m_theDocument.createElement("PrivateExponent");
-		elemPrivKey.appendChild(elem);
-		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_privateKey.getPrivateExponent().toByteArray()));
-		elem = m_theDocument.createElement("P");
-		elemPrivKey.appendChild(elem);
-		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_privateKey.getP().toByteArray()));
-		elem = m_theDocument.createElement("Q");
-		elemPrivKey.appendChild(elem);
-		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_privateKey.getQ().toByteArray()));
-		elem = m_theDocument.createElement("dP");
-		elemPrivKey.appendChild(elem);
-		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_privateKey.getDP().toByteArray()));
-		elem = m_theDocument.createElement("dQ");
-		elemPrivKey.appendChild(elem);
-		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_privateKey.getDQ().toByteArray()));
-		elem = m_theDocument.createElement("QInv");
-		elemPrivKey.appendChild(elem);
-		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_privateKey.getQInv().toByteArray()));
-
-		// add transfer certificates
-		Element elemTransCerts = m_theDocument.createElement("TransferCertificates");
-		elemRoot.appendChild(elemTransCerts);
-		if(m_transCerts!=null) {
-			Enumeration enumer = m_transCerts.elements();
-			while (enumer.hasMoreElements())
-			{
-				XMLTransCert cert = (XMLTransCert) enumer.nextElement();
-				Node n1 = XMLUtil.importNode(m_theDocument, cert.getDomDocument().getDocumentElement(), true);
-				elemTransCerts.appendChild(n1);
-			}
-		}
-
-		if (m_accountInfo != null)
-		{
-			Node n1 = XMLUtil.importNode(m_theDocument, m_accountInfo.getDomDocument().getDocumentElement(), true);
-			elemRoot.appendChild(n1);
-		}
-	}
-
-	/**
-	 * Hinzuf?gen eines Transfer-Zertifikats.
-	 *
-	 * @param cert Transfer-Zertifikat
-	 */
-	public void addTransCert(XMLTransCert cert) throws Exception
-	{
-		m_transCerts.addElement(cert);
-		constructXMLDocument();
-	}
-
-	/**
-	 * Setzen des Kontoguthabens.
-	 *
-	 * @param balance Kontoguthaben
-	 */
-	public void setBalance(XMLAccountInfo info) throws Exception
-	{
-		m_accountInfo = info;
-		constructXMLDocument();
-	}
-
-	private void setXMLAccountCertificate() throws Exception
-	{
-		Element elemRoot = m_theDocument.getDocumentElement();
-		Element elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "AccountCertificate");
-		m_accountCertificate = new XMLAccountCertificate(elem);
-	}
-
-	private void setXMLBalance()
-	{
-		try
-		{
-			Element elemRoot = m_theDocument.getDocumentElement();
-			Element elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "Balance");
-
-			// todo: add signature verifying
-			m_accountInfo = new XMLAccountInfo(elem, null);
-		}
-		catch (Exception e)
-		{
-			m_accountInfo = null;
-		}
-	}
-
-	private void setXMLTransCertificates() throws Exception
-	{
-		try
-		{
-			Element elemRoot = m_theDocument.getDocumentElement();
-			Element elemTransCerts = (Element) XMLUtil.getFirstChildByName(elemRoot, "TransferCertificates");
-			Node n = elemTransCerts.getFirstChild();
-			while (n != null)
-			{
-				try
-				{
-					XMLTransCert cert = new XMLTransCert(n);
-					m_transCerts.addElement(cert);
-				}
-				catch (Exception e)
-				{
-				}
-				n = n.getNextSibling();
-			}
-		}
-		catch (Exception e)
-		{
-			return;
-		}
-	}
-
-	private void setRSAPrivateKey() throws Exception
-	{
-		Element elemRoot = m_theDocument.getDocumentElement();
 		Element elemPrivKey = (Element) XMLUtil.getFirstChildByName(elemRoot, "RSAPrivateKey");
 		Element elem = (Element) XMLUtil.getFirstChildByName(elemPrivKey, "Modulus");
 		String str = XMLUtil.parseNodeString(elem, null);
@@ -341,9 +154,154 @@ public class PayAccount extends XMLDocument
 
 		m_privateKey = new MyRSAPrivateKey(modulus, publicExponent, privateExponent, p, q, dP, dQ,
 										   qInv);
+
+		// set signing instance
 		m_signingInstance = new JAPSignature();
 		m_signingInstance.initSign(m_privateKey);
+	}
 
+	public void setAccountInfo(XMLAccountInfo info) throws Exception
+	{
+		m_accountInfo = info;
+	}
+
+	/**
+	 * Creates a {@link PayAccount} Objekt from the account certificate and
+	 * the private key.
+	 *
+	 * @param certificate account certificate issued by the BI
+	 * @param privateKey the private key
+	 */
+	public PayAccount(XMLAccountCertificate certificate,
+					  MyRSAPrivateKey privateKey,
+					  JAPSignature signingInstance) throws Exception
+	{
+		m_accountCertificate = certificate;
+		m_signingInstance = signingInstance;
+		m_privateKey = privateKey;
+		m_transCerts = new Vector();
+	}
+
+	/**
+	 * Returns the xml representation of the account
+	 *
+	 * @return XML-Document
+	 */
+	public Document getDomDocument()
+	{
+		Document doc = null;
+		try
+		{
+			doc = getDocumentBuilder().newDocument();
+		}
+		catch (Exception ex)
+		{
+			return null;
+		}
+		Element elemRoot = doc.createElement("Account");
+		elemRoot.setAttribute("version", "1.0");
+		doc.appendChild(elemRoot);
+		Document tmpDoc = m_accountCertificate.getDomDocument();
+		Node n = null;
+		try
+		{
+			n = XMLUtil.importNode(doc, tmpDoc.getDocumentElement(), true);
+		}
+		catch (Exception ex1)
+		{
+			return null;
+		}
+		elemRoot.appendChild(n);
+
+		Element elemPrivKey = doc.createElement("RSAPrivateKey");
+		elemRoot.appendChild(elemPrivKey);
+		Element elem = doc.createElement("Modulus");
+		elemPrivKey.appendChild(elem);
+		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_privateKey.getModulus().toByteArray()));
+		elem = doc.createElement("PublicExponent");
+		elemPrivKey.appendChild(elem);
+		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_privateKey.getPublicExponent().toByteArray()));
+		elem = doc.createElement("PrivateExponent");
+		elemPrivKey.appendChild(elem);
+		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_privateKey.getPrivateExponent().toByteArray()));
+		elem = doc.createElement("P");
+		elemPrivKey.appendChild(elem);
+		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_privateKey.getP().toByteArray()));
+		elem = doc.createElement("Q");
+		elemPrivKey.appendChild(elem);
+		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_privateKey.getQ().toByteArray()));
+		elem = doc.createElement("dP");
+		elemPrivKey.appendChild(elem);
+		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_privateKey.getDP().toByteArray()));
+		elem = doc.createElement("dQ");
+		elemPrivKey.appendChild(elem);
+		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_privateKey.getDQ().toByteArray()));
+		elem = doc.createElement("QInv");
+		elemPrivKey.appendChild(elem);
+		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_privateKey.getQInv().toByteArray()));
+
+		// add transfer certificates
+		Element elemTransCerts = doc.createElement("TransferCertificates");
+		elemRoot.appendChild(elemTransCerts);
+		if(m_transCerts!=null) {
+			Enumeration enumer = m_transCerts.elements();
+			while (enumer.hasMoreElements())
+			{
+				XMLTransCert cert = (XMLTransCert) enumer.nextElement();
+				Node n1 = null;
+				try
+				{
+					n1 = XMLUtil.importNode(doc, cert.getDomDocument().getDocumentElement(), true);
+					elemTransCerts.appendChild(n1);
+				}
+				catch (Exception ex2)
+				{
+				}
+			}
+		}
+
+		if (m_accountInfo != null)
+		{
+			Node n1 = null;
+			try
+			{
+				n1 = XMLUtil.importNode(doc, m_accountInfo.getDomDocument().getDocumentElement(), true);
+				elemRoot.appendChild(n1);
+			}
+			catch (Exception ex3)
+			{
+			}
+		}
+		return doc;
+	}
+
+	/**
+	 * Hinzuf?gen eines Transfer-Zertifikats.
+	 *
+	 * @param cert Transfer-Zertifikat
+	 */
+	public void addTransCert(XMLTransCert cert) throws Exception
+	{
+		m_transCerts.addElement(cert);
+//		getDomDocument();
+	}
+
+	/**
+	 * Setzen des Kontoguthabens.
+	 *
+	 * @param balance Kontoguthaben
+	 */
+	public void setBalance(XMLAccountInfo info) throws Exception
+	{
+		m_accountInfo = info;
+//		getDomDocument();
+	}
+
+
+
+
+	private void setRSAPrivateKey() throws Exception
+	{
 	}
 
 	/**
@@ -424,18 +382,33 @@ public class PayAccount extends XMLDocument
 	}
 
 	/**
+	 * Liefert die Gesamtsumme des ausgegebenen Geldes.
+	 *
+	 * @return Gesamtsumme
+	 */
+	public long getSpent()
+	{
+		if (m_accountInfo != null)
+		{
+			return m_accountInfo.getSpent();
+		}
+		return 0L;
+	}
+
+	/**
 	 * Liefert die Gesamtsumme des eingezahlten Geldes.
 	 *
 	 * @return Gesamtsumme
 	 */
-	public long getCreditMax()
+	public long getDeposit()
 	{
 		if (m_accountInfo != null)
 		{
-			return m_accountInfo.getCreditMax();
+			return m_accountInfo.getDeposit();
 		}
 		return 0L;
 	}
+
 
 	/**
 	 * Liefert das noch verbleibene Guthaben.
@@ -483,9 +456,38 @@ public class PayAccount extends XMLDocument
 	 * @param accountNumber long
 	 * @param plusCosts long
 	 * @return XMLEasyCC
+	 * @todo implement
 	 */
 	public XMLEasyCC addCostConfirmation(String aiName, long accountNumber, long plusCosts)
 	{
 		return null;
+	}
+
+	private Vector m_changeListeners = new Vector();
+
+
+	public void addChangeListener(ChangeListener listener)
+	{
+		synchronized(m_changeListeners)
+		{
+			if (listener != null)
+			{
+				m_changeListeners.addElement(listener);
+			}
+		}
+	}
+
+	private void fireChangeEvent(Object source)
+	{
+		synchronized(m_changeListeners)
+		{
+			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "PayAccountsFile: FireChangeEvent..");
+			Enumeration enumListeners = m_changeListeners.elements();
+			ChangeEvent e = new ChangeEvent(source);
+			while (enumListeners.hasMoreElements())
+			{
+				( (ChangeListener) enumListeners.nextElement()).stateChanged(e);
+			}
+		}
 	}
 }

@@ -62,7 +62,7 @@ public class XMLDescription extends XMLDocument
 		Element element = m_theDocument.getDocumentElement();
 		if (!element.getTagName().equals("Description"))
 		{
-			throw new Exception();
+			throw new Exception("XMLDescription wrong xml structure");
 		}
 
 		CharacterData chdata = (CharacterData) element.getFirstChild();

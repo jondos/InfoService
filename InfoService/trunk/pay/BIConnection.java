@@ -49,6 +49,7 @@ import payxml.XMLTransCert;
 import anon.crypto.JAPSignature;
 import java.security.Signature;
 import anon.crypto.*;
+import java.net.*;
 
 /**
  * Diese Klasse kapselt eine Verbindung zur BI, fuehrt die Authentikation durch
@@ -83,7 +84,7 @@ public class BIConnection
 						int biPort,
 						boolean sslOn
 						/*						XMLAccountCertificate accountCert,
-						 MyRSAPrivateKey privKey*/
+							  MyRSAPrivateKey privKey*/
 						)
 	{
 		m_BIHostName = biHostname;
@@ -97,13 +98,14 @@ public class BIConnection
 	 * Baut eine TCP-Verbindung zur Bezahlinstanz auf und initialisiert den
 	 * HttpClient.
 	 *
-	 * @throws IOException Wenn Fehler beim Verbindungsaufbau
+	 * @throws Exception Wenn Fehler beim Verbindungsaufbau
 	 */
-	public void connect() throws IOException
+	public void connect() throws Exception
 	{
-		LogHolder.log(LogLevel.DEBUG, LogType.PAY,
-					  "BIConnection.connect() .. connecting to " + m_BIHostName + ":" + m_BIUserPort
-					  );
+		LogHolder.log(
+			LogLevel.DEBUG, LogType.PAY,
+			"BIConnection.connect() .. connecting to " + m_BIHostName + ":" + m_BIUserPort
+			);
 		try
 		{
 			if (m_bIsSslOn == false)
@@ -118,10 +120,14 @@ public class BIConnection
 		}
 		catch (Exception ex)
 		{
-			LogHolder.log(LogLevel.DEBUG, LogType.PAY, PayText.get("piServerError"));
-			ex.printStackTrace();
+			throw new Exception(
+				"Could not connect to BI at " + m_BIHostName + ":" + m_BIUserPort +
+				" (" + ex.getMessage() + ")");
 		}
 	}
+
+
+
 
 	/**
 	 * Schliesst die Verbindung zur Bezahlinstanz.
@@ -190,27 +196,32 @@ public class BIConnection
 
 	public void authenticate(XMLAccountCertificate accountcert, JAPSignature signer) throws Exception
 	{
+		//Log.log(this,accountcert,Log.TEST);
+		String answer = null;
 		try
 		{
-			//Log.log(this,accountcert,Log.TEST);
 			m_httpClient.writeRequest("POST", "authenticate", accountcert.getXMLString());
-			String answer = m_httpClient.readAnswer();
-			XMLChallenge xmlchallenge = new XMLChallenge(answer);
-			byte[] challenge = xmlchallenge.getChallengeForSigning();
+			answer = m_httpClient.readAnswer();
+		}
+		catch (IOException ex)
+		{
+			throw new Exception("Error in http communication: "+ex.getMessage());
+		}
+		XMLChallenge xmlchallenge = new XMLChallenge(answer);
+		byte[] challenge = xmlchallenge.getChallengeForSigning();
+		byte[] response = signer.signBytes(challenge);
+		XMLResponse xmlResponse = new XMLResponse(response);
+		String strResponse = xmlResponse.getXMLString();
 
-			byte[] response = signer.signBytes(challenge);
-			XMLResponse xmlResponse = new XMLResponse(response);
-			String strResponse = xmlResponse.getXMLString();
-
+		try
+		{
 			m_httpClient.writeRequest("POST", "response", strResponse);
 			answer = m_httpClient.readAnswer();
 		}
-		catch (Exception e)
+		catch (IOException ex1)
 		{
-			e.printStackTrace();
-			throw e;
+			throw new Exception("Error in http communication: "+ex1.getMessage());
 		}
-
 	}
 
 	/*
@@ -260,11 +271,11 @@ public class BIConnection
 	 */
 
 	/**
-	 * Er?ffnet ein neues Konto bei der Bezahlinstanz.
+	 * Creates a new account
 	 *
-	 * @param pubKey ?ffentlicher Schl?ssel
-	 * @param privKey geheimer Schl?ssel
-	 * @return Kontozertifikat
+	 * @param pubKey public key
+	 * @param privKey private key
+	 * @return XMLAccountCertificate the certificate issued by the BI
 	 * @throws Exception
 	 */
 	public XMLAccountCertificate register(XMLJapPublicKey xmlPubKey, JAPSignature signKey) throws Exception

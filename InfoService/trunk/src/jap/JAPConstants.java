@@ -32,7 +32,7 @@ import java.awt.Insets;
 
 public final class JAPConstants
 {
-	public static final String aktVersion = "00.02.065"; //Never change the layout of this line!
+	public static final String aktVersion = "00.02.066"; //Never change the layout of this line!
 	private static final String CVS_GENERATED_RELEASE_DATE = "$Date$";
 
 	//Warning: This is a little bit tricky,
@@ -153,6 +153,11 @@ public final class JAPConstants
 		"accountDisabled.gif", "accountOk.gif", "accountBroken.gif"
 	};
 
+	// Bastian Voigt: Browser executable names for the browserstart hack
+	public static final String[] BROWSERLIST =
+		{
+		"firefox", "iexplore", "explorer", "mozilla", "konqueror", "mozilla-firefox", "firebird", "opera"
+	};
 	public static final String PIHOST = "anon.inf.tu-dresden.de";
 	public static final int PIPORT = 2342;
 	public static final boolean PI_SSLON = false; // auf true setzten wenn die pay funktionalität fertig gebaut ist.

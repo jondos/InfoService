@@ -58,7 +58,7 @@ public class XMLChallenge extends XMLDocument
 		Element element = m_theDocument.getDocumentElement();
 		if (!element.getTagName().equals("Challenge"))
 		{
-			throw new Exception();
+			throw new Exception("XMLChallenge wrong XML structure");
 		}
 		element = (Element) XMLUtil.getFirstChildByName(element, "DontPanic");
 

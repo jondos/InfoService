@@ -1,24 +1,15 @@
 package pay.gui;
 
-import javax.swing.JPanel;
-import java.awt.GridBagLayout;
-import javax.swing.ImageIcon;
+import java.awt.*;
+import javax.swing.*;
+import javax.swing.border.*;
+import javax.swing.event.*;
 
-import jap.JAPConstants;
-import jap.JAPModel;
-import jap.JAPUtil;
-import java.awt.Image;
-import java.awt.MediaTracker;
-import javax.swing.JLabel;
-import javax.swing.JProgressBar;
-import javax.swing.JButton;
-import java.awt.GridBagConstraints;
-import javax.swing.border.BevelBorder;
-import javax.swing.border.EtchedBorder;
-import javax.swing.border.TitledBorder;
-import java.awt.BorderLayout;
-import javax.swing.BoxLayout;
-import java.awt.Dimension;
+import jap.*;
+import pay.*;
+import logging.LogLevel;
+import logging.LogType;
+import logging.LogHolder;
 
 /**
  * This class is the main payment view on JAP's main gui window
@@ -89,50 +80,101 @@ public class PaymentMainPanel extends JPanel
 		loadIcons();
 
 		setBorder(new TitledBorder("Account information"));
-//		GridBagConstraints c = new GridBagConstraints();
 
 		// show the icon label
 		m_AccountIconLabel = new JLabel(m_accountIcons[1]);
-/*		c.gridx = 1;
-		c.gridy = 1;
-		c.weightx = 3.0;
-		c.gridheight = 3;
-		c.fill = GridBagConstraints.BOTH;
-		layout.setConstraints(m_AccountIconLabel, c);*/
 		this.add(m_AccountIconLabel, BorderLayout.WEST);
 
 		JPanel centerPanel = new JPanel(new BorderLayout());
+
 		// show the date of last update
-		m_AccountText = new JLabel("Auszug vom: 27.07.77 17:17 Uhr");
+		m_AccountText = new JLabel("");
 		m_AccountText.setBorder(new EtchedBorder());
-/*		c.gridx = 2;
-		c.gridwidth = GridBagConstraints.REMAINDER;
-		c.gridheight = 1;
-		layout.setConstraints(m_AccountText, c);*/
 		centerPanel.add(m_AccountText, BorderLayout.NORTH);
 
 		JPanel kontostandPanel = new JPanel(new BorderLayout());
 		// show the current account balance
 		m_BalanceProgressBar = new JProgressBar(0, 100);
 		m_BalanceProgressBar.setValue(77);
-/*		c.gridx = 2;
-		c.gridy = 2;
-		//	c.weightx=3.0;
-		c.gridheight = 1;
-		c.gridwidth=GridBagConstraints.RELATIVE;
-		layout.setConstraints(m_BalanceProgressBar, c);*/
 		kontostandPanel.add(m_BalanceProgressBar, BorderLayout.CENTER);
 
-		m_BalanceText = new JLabel("\u20AC 177,07");
-//		c.gridx = 3;
-//		c.gridy = 2;
-/*		c.gridwidth = GridBagConstraints.REMAINDER;
-		layout.setConstraints(m_BalanceText, c);*/
+		m_BalanceText = new JLabel("");
 		kontostandPanel.add(m_BalanceText, BorderLayout.EAST);
+
 		centerPanel.add(kontostandPanel, BorderLayout.SOUTH);
 		this.add(centerPanel, BorderLayout.CENTER);
 
-	    this.add(new JButton("Aufladen"), BorderLayout.EAST);
+		this.add(new JButton("Aufladen"), BorderLayout.EAST);
+		LogHolder.log(LogLevel.DEBUG, LogType.PAY, "PaymentMainPanel: Calling accountsFile()");
+		PayAccountsFile.getInstance().addChangeListener(m_MyChangeListener);
+		LogHolder.log(LogLevel.DEBUG, LogType.PAY, "PaymentMainPanel: Calling updateDisplay()");
+		updateDisplay(null);
 	}
 
+	/**
+	 * This should be called by the changelistener whenever the state of the
+	 * active account changes.
+	 *
+	 * @param activeAccount PayAccount
+	 */
+	private void updateDisplay(PayAccount activeAccount)
+	{
+		// payment disabled
+		if (activeAccount == null)
+		{
+			m_AccountText.setText("Payment disabled");
+			m_AccountIconLabel.setIcon(m_accountIcons[0]);
+			m_BalanceText.setText("");
+			m_BalanceText.setEnabled(false);
+			m_BalanceProgressBar.setValue(0);
+			m_BalanceProgressBar.setEnabled(false);
+		}
+
+		// account is empty :-(
+		else if (activeAccount.getCredit() == 0)
+		{
+			m_AccountText.setText("You should recharge your account");
+			m_AccountText.setForeground(Color.red);
+			m_AccountIconLabel.setIcon(m_accountIcons[2]);
+			m_BalanceText.setEnabled(true);
+			m_BalanceText.setText("0 Bytes");
+			m_BalanceProgressBar.setValue(0);
+			m_BalanceProgressBar.setEnabled(true);
+		}
+
+		// we got everything under control, situation normal
+		else
+		{
+			m_AccountText.setText("Auszug vom "+activeAccount.getBalanceValidTime());
+			m_AccountText.setForeground(Color.black);
+			m_AccountIconLabel.setIcon(m_accountIcons[1]);
+			m_BalanceText.setEnabled(true);
+			m_BalanceText.setText(activeAccount.getCredit() + " Bytes");
+			m_BalanceProgressBar.setMaximum( (int) activeAccount.getDeposit());
+			m_BalanceProgressBar.setValue( (int) activeAccount.getCredit());
+			m_BalanceProgressBar.setEnabled(true);
+		}
+	}
+
+	/**
+	 * Notifies us when the state of the active account changes, so we can update
+	 * the display
+	 *
+	 * @version 1.0
+	 */
+	private class MyChangeListener implements ChangeListener
+	{
+		private PayAccountsFile accounts = null;
+		public void stateChanged(ChangeEvent e)
+		{
+			if(accounts==null) accounts = PayAccountsFile.getInstance();
+			PayAccount source = (PayAccount) e.getSource();
+			if (source == accounts.getActiveAccount())
+			{
+				updateDisplay(source);
+			}
+		}
+	}
+
+	private MyChangeListener m_MyChangeListener = new MyChangeListener();
 }

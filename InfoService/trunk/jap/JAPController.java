@@ -645,10 +645,12 @@ public final class JAPController implements ProxyListener
 					if (elemAccounts != null)
 					{
 						// it is encrypted -> initialize PayAccountsFile with encrypted data
+						LogHolder.log(LogLevel.DEBUG, LogType.PAY, "JAPController: calling PayAccountsFile...");
 						pay.PayAccountsFile.getInstance().initEncrypted(elemAccounts);
 					}
 					else
 					{
+						LogHolder.log(LogLevel.DEBUG, LogType.PAY, "JAPController: calling PayAccountsFile...");
 						elemAccounts = (Element) XMLUtil.getFirstChildByName(elemPay, "PayAccountsFile");
 						pay.PayAccountsFile.getInstance().initPlaintext(elemAccounts);
 					}

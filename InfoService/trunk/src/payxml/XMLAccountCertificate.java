@@ -171,7 +171,7 @@ public class XMLAccountCertificate extends XMLDocument
 		Element element = m_theDocument.getDocumentElement();
 		if (!element.getTagName().equals("AccountCertificate"))
 		{
-			throw new Exception();
+			throw new Exception("XMLAccountCertificate wrong xml structure");
 		}
 		element=(Element)XMLUtil.getFirstChildByName(element,"AccountNumber");
 		String str=XMLUtil.parseNodeString(element,null);
@@ -187,7 +187,7 @@ public class XMLAccountCertificate extends XMLDocument
 		Element element = m_theDocument.getDocumentElement();
 		if (!element.getTagName().equals("AccountCertificate"))
 		{
-			throw new Exception();
+			throw new Exception("XMLAccountCertificate wrong xml structure");
 		}
 		element=(Element)XMLUtil.getFirstChildByName(element,"CreationTime");
 		String str=XMLUtil.parseNodeString(element,null);
@@ -204,7 +204,7 @@ public class XMLAccountCertificate extends XMLDocument
 		Element elemRoot = m_theDocument.getDocumentElement();
 		if (!elemRoot.getTagName().equals("AccountCertificate"))
 		{
-			throw new Exception();
+			throw new Exception("XMLAccountCertificate wrong xml structure");
 		}
 		// set hostname
 		Element elem=(Element)XMLUtil.getFirstChildByName(elemRoot,"BiID");
@@ -221,7 +221,7 @@ public class XMLAccountCertificate extends XMLDocument
 		Element element = m_theDocument.getDocumentElement();
 		if (!element.getTagName().equals("AccountCertificate"))
 		{
-			throw new Exception();
+			throw new Exception("XMLAccountCertificate wrong xml structure");
 		}
 		element=(Element)XMLUtil.getFirstChildByName(element,"JapPublicKey");
 		XMLJapPublicKey tmpKey=new XMLJapPublicKey(element);

@@ -3,7 +3,7 @@ package payxml;
 public class XMLAuthenticationSuccess
 {
 	final static private byte[] XML_AUTH_SUCCESS=("<?xml version=\"1.0\" ?>"+
-		"<Authentication>Success</Authentication>CloseAck/>").getBytes();
+		"<Authentication>Success</Authentication>").getBytes();
 
 	public static byte[] getXMLByteArray()
 		{

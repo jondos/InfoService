@@ -56,7 +56,7 @@ public class XMLResponse extends XMLDocument
 		Element element = m_theDocument.getDocumentElement();
 		if (!element.getTagName().equals("Response"))
 		{
-			throw new Exception();
+			throw new Exception("XMLResponse wrong xml structure");
 		}
 		String strBase64Response = XMLUtil.parseNodeString(element, null);
 		m_arbResponse = Base64.decode(strBase64Response);

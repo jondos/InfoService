@@ -132,7 +132,7 @@ final class JAPConf extends JDialog
 	private JSlider m_sliderDummyTrafficIntervall;
 
 	private JTabbedPane m_Tabs;
-	private JPanel m_pPort, m_pFirewall, m_pMix, m_pCert, m_pMisc, m_pKonto;
+	private JPanel m_pPort, m_pFirewall, m_pMix, m_pCert, m_pMisc;
 	private JButton m_bttnDefaultConfig, m_bttnCancel;
 
 	private JFrame m_frmParent;
