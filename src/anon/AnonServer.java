@@ -45,7 +45,7 @@ public final class AnonServer implements Serializable
 		private int     m_iAnonLevel =-1;
 		private long    m_lMixedPackets = -1;
 		private String  m_strDelay  = null;
-		private String  m_strStatus = null;
+		private int     m_iStatus = 0;
 
 		public AnonServer (String host, int port) throws UnknownServiceException
 			{
@@ -201,14 +201,19 @@ public final class AnonServer implements Serializable
 				m_strDelay=delay;
 		  }
 
-		public String getStatus()
+		public int getStatus()
       {
-				return m_strStatus;
+				return m_iStatus;
+		  }
+
+		public void setStatus(int status)
+      {
+				m_iStatus=status;
 		  }
 
 		public void setStatus(String status)
       {
-				m_strStatus=status;
+
 		  }
 
     public String toString()

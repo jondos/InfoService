@@ -510,10 +510,13 @@ final class JAPConf extends JDialog
             updateMixCascadeCombo();
 						if (m_Controller.getAnonServerDB().size() == 0) {
 							setCursor(c);
-							JOptionPane.showMessageDialog(m_Controller.getView(),
+							if(!JAPModel.isSmallDisplay())
+                {
+                  JOptionPane.showMessageDialog(m_Controller.getView(),
 											JAPMessages.getString("settingsNoServersAvailable"),
 											JAPMessages.getString("settingsNoServersAvailableTitle"),
 											JOptionPane.INFORMATION_MESSAGE);
+                }
 						} else {
 							// show a window containing all available cascades
 							//JAPCascadeMonitorView v=new JAPCascadeMonitorView(m_Controller.getView());
@@ -744,10 +747,10 @@ final class JAPConf extends JDialog
 					public void actionPerformed(ActionEvent e) {
 						Cursor c1=getCursor();
 						setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-						m_Controller.fetchAnonServers();
+						//m_Controller.fetchAnonServers();
 						JAPCascadeMonitorView v=new JAPCascadeMonitorView(m_Controller.getView());
-						updateValues(); //THIS IS WRONG!!!!
-						OKPressed();
+						//updateValues(); //THIS IS WRONG!!!!
+						//OKPressed();
 						setCursor(c1);
 
 				}});
