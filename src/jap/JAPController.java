@@ -84,7 +84,7 @@ import proxy.DirectProxy;
 import proxy.ProxyListener;
 import update.JAPUpdateWizard;
 
-/* This is the Model of All. It's a Singelton!*/
+/* This is the Controller of All. It's a Singelton!*/
 public final class JAPController extends Observable implements ProxyListener, Observer
 {
 	/**
@@ -141,8 +141,6 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 	private static int ms_AnonModeAsyncLastStarted = -1;
 	private static int ms_AnonModeAsyncLastFinished = -1;
 
-	private JAPHelpContext m_helpContext;
-
 	private JAPController()
 	{
 		m_Model = JAPModel.getInstance();
@@ -152,10 +150,11 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 		/* set a default mixcascade */
 		try
 		{
-			m_currentMixCascade = new MixCascade(JAPConstants.defaultAnonName,
-												 JAPConstants.defaultAnonID,
-												 JAPConstants.defaultAnonHost,
-												 JAPConstants.defaultAnonPortNumber);
+			m_currentMixCascade = new MixCascade(JAPConstants.DEFAULT_ANON_NAME,
+												 JAPConstants.DEFAULT_ANON_ID,
+												 JAPConstants.DEFAULT_ANON_HOST,
+												 JAPConstants.DEFAULT_ANON_PORT_NUMBER);
+			m_currentMixCascade.setUserDefined(false);
 		}
 		catch (Exception e)
 		{
@@ -167,13 +166,12 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 		{
 			InfoServiceDBEntry defaultInfoService = new InfoServiceDBEntry(JAPConstants.
 				defaultInfoServiceName,
-				new ListenerInterface(JAPConstants.defaultInfoServiceHostName,
-									  JAPConstants.defaultInfoServicePortNumber).toVector(), false, true);
+				new ListenerInterface(JAPConstants.DEFAULT_INFOSERVICE_HOSTNAME,
+									  JAPConstants.DEFAULT_INFOSERVICE_PORT_NUMBER).toVector(), false, true);
 			InfoServiceHolder.getInstance().setPreferredInfoService(defaultInfoService);
 		}
 		catch (Exception e)
 		{
-			e.printStackTrace();
 			LogHolder.log(LogLevel.EMERG, LogType.NET,
 						  "JAPController: Constructor - default info service: " + e.getMessage());
 		}
@@ -206,6 +204,7 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 			LogHolder.log(LogLevel.ERR, LogType.MISC,
 						  "JAPController: Constructor: Error loading default update messages certificate.");
 		}
+		SignatureVerifier.getInstance().setCheckSignatures(JAPConstants.DEFAULT_CERT_CHECK_ENABLED);
 
 		HTTPConnectionFactory.getInstance().setTimeout(JAPConstants.DEFAULT_INFOSERVICE_TIMEOUT);
 
@@ -222,9 +221,6 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 		JAPModel.getInstance().getRoutingSettings().getServerStatisticsListener().addObserver(this);
 		JAPModel.getInstance().getRoutingSettings().getRegistrationStatusObserver().addObserver(this);
 		m_iStatusPanelMsgIdForwarderServerStatus = -1;
-
-		// Global help context object
-		m_helpContext = new JAPHelpContext();
 	}
 
 	/** Creates the Controller - as Singleton.
@@ -1565,8 +1561,6 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 				m_View.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 				msgIdConnect = m_View.addStatusMsg(JAPMessages.getString("setAnonModeSplashConnect"),
 					JOptionPane.INFORMATION_MESSAGE, false);
-				//splash = JAPWaitSplash.start(JAPMessages.getString("setAnonModeSplashConnect"),
-				//							 JAPMessages.getString("setAnonModeSplashTitle"));
 				if ( (!m_bAlreadyCheckedForNewVersion) && (!JAPModel.isInfoServiceDisabled()) &&
 					( (JAPModel.getInstance().getRoutingSettings().getRoutingMode() !=
 					   JAPRoutingSettings.ROUTING_MODE_CLIENT) ||
@@ -1641,8 +1635,8 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 							Object[] options =
 								{
 								JAPMessages.getString("okButton")};
-							JCheckBox checkboxRemindNever = new JCheckBox(JAPMessages.getString(
-								"disableActCntMessageNeverRemind"));
+							JCheckBox checkboxRemindNever = new JCheckBox(
+								JAPMessages.getString("disableActCntMessageNeverRemind"));
 							Object[] message =
 								{
 								JAPMessages.getString("disableActCntMessage"), checkboxRemindNever};
@@ -1739,19 +1733,11 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 			{
 				if (m_proxyAnon != null)
 				{
-					msgIdConnect = m_View.addStatusMsg(JAPMessages.getString(
-						"setAnonModeSplashDisconnect"),
+					msgIdConnect = m_View.addStatusMsg(JAPMessages.getString("setAnonModeSplashDisconnect"),
 						JOptionPane.INFORMATION_MESSAGE, false);
-					//splash = JAPWaitSplash.start(JAPMessages.getString("setAnonModeSplashDisconnect"),
-					//	JAPMessages.getString("setAnonModeSplashTitle"));
 					m_proxyAnon.stop();
 				}
 				m_proxyAnon = null;
-				/* if (m_proxySocks != null)
-				 {
-				   m_proxySocks.stop();
-				 }
-				 m_proxySocks = null;*/
 				if (feedback != null)
 				{
 					feedback.stopRequests();
@@ -2006,8 +1992,8 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 			Object[] options =
 				{
 				JAPMessages.getString("okButton")};
-			JCheckBox checkboxRemindNever = new JCheckBox(JAPMessages.getString(
-				"disableGoodByMessageNeverRemind"));
+			JCheckBox checkboxRemindNever = new JCheckBox(
+						 JAPMessages.getString("disableGoodByMessageNeverRemind"));
 			Object[] message =
 				{
 				JAPMessages.getString("disableGoodByMessage"), checkboxRemindNever};
@@ -2051,15 +2037,6 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 		{
 			t.printStackTrace();
 		}
-	}
-
-	/**
-	 * Returns the global help context object
-	 * @return JAPHelpContext
-	 */
-	public JAPHelpContext getHelpContext()
-	{
-		return m_helpContext;
 	}
 
 	/**
@@ -2353,8 +2330,8 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 				Object[] options =
 					{
 					JAPMessages.getString("okButton")};
-				JCheckBox checkboxRemindNever = new JCheckBox(JAPMessages.getString(
-					"disableActCntMessageNeverRemind"));
+				JCheckBox checkboxRemindNever = new JCheckBox(
+								JAPMessages.getString("disableActCntMessageNeverRemind"));
 				Object[] message =
 					{
 					JAPMessages.getString("forwardingExplainMessage"), checkboxRemindNever};
@@ -2380,8 +2357,9 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 			{
 				if (b)
 				{
-					int msgId = m_View.addStatusMsg(JAPMessages.getString(
-						"controllerStatusMsgRoutingStartServer"), JOptionPane.INFORMATION_MESSAGE, false);
+					int msgId = m_View.addStatusMsg(
+									   JAPMessages.getString("controllerStatusMsgRoutingStartServer"),
+									   JOptionPane.INFORMATION_MESSAGE, false);
 					// start the server //
 					returnValue = JAPModel.getInstance().getRoutingSettings().setRoutingMode(
 						JAPRoutingSettings.
@@ -2394,8 +2372,9 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 						if (registrationStatus == JAPRoutingSettings.REGISTRATION_NO_INFOSERVICES)
 						{
 							JOptionPane.showMessageDialog(m_View,
-								new JAPHtmlMultiLineLabel(JAPMessages.
-								getString("settingsRoutingServerRegistrationEmptyListError"), getDialogFont()),
+								new JAPHtmlMultiLineLabel(
+								JAPMessages.getString("settingsRoutingServerRegistrationEmptyListError"),
+								getDialogFont()),
 								JAPMessages.getString("ERROR"), JOptionPane.ERROR_MESSAGE);
 						}
 						else if (registrationStatus == JAPRoutingSettings.REGISTRATION_UNKNOWN_ERRORS)
@@ -2408,21 +2387,21 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 						else if (registrationStatus == JAPRoutingSettings.REGISTRATION_INFOSERVICE_ERRORS)
 						{
 							JOptionPane.showMessageDialog(m_View,
-								new JAPHtmlMultiLineLabel(JAPMessages.
-								getString("settingsRoutingServerRegistrationInfoservicesError"),
+								new JAPHtmlMultiLineLabel(
+								JAPMessages.getString("settingsRoutingServerRegistrationInfoservicesError"),
 								getDialogFont()), JAPMessages.getString("ERROR"), JOptionPane.ERROR_MESSAGE);
 						}
 						else if (registrationStatus == JAPRoutingSettings.REGISTRATION_VERIFY_ERRORS)
 						{
 							JOptionPane.showMessageDialog(m_View,
-								new JAPHtmlMultiLineLabel(JAPMessages.
-								getString("settingsRoutingServerRegistrationVerificationError"),
+								new JAPHtmlMultiLineLabel(
+								JAPMessages.getString("settingsRoutingServerRegistrationVerificationError"),
 								getDialogFont()), JAPMessages.getString("ERROR"), JOptionPane.ERROR_MESSAGE);
 						}
 						else if (registrationStatus == JAPRoutingSettings.REGISTRATION_SUCCESS)
 						{
-							m_iStatusPanelMsgIdForwarderServerStatus = m_View.addStatusMsg(JAPMessages.
-								getString("controllerStatusMsgRoutingStartServerSuccess"),
+							m_iStatusPanelMsgIdForwarderServerStatus = m_View.addStatusMsg(
+								JAPMessages.getString("controllerStatusMsgRoutingStartServerSuccess"),
 								JOptionPane.INFORMATION_MESSAGE, true);
 						}
 
@@ -2430,8 +2409,8 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 					else
 					{ //starting 1 stage was not succesfull
 						m_View.removeStatusMsg(msgId);
-						m_iStatusPanelMsgIdForwarderServerStatus = m_View.addStatusMsg(JAPMessages.
-							getString("controllerStatusMsgRoutingStartServerError"),
+						m_iStatusPanelMsgIdForwarderServerStatus = m_View.addStatusMsg(
+						JAPMessages.getString("controllerStatusMsgRoutingStartServerError"),
 							JOptionPane.ERROR_MESSAGE, true);
 						JOptionPane.showMessageDialog
 							(
@@ -2445,14 +2424,16 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 				else
 				{
 					// stop the server //
-					int msgId = m_View.addStatusMsg(JAPMessages.getString(
-						"controllerStatusMsgRoutingStopServer"), JOptionPane.INFORMATION_MESSAGE, false);
+					int msgId = m_View.addStatusMsg(
+					JAPMessages.getString("controllerStatusMsgRoutingStopServer"),
+					JOptionPane.INFORMATION_MESSAGE, false);
 					returnValue = JAPModel.getInstance().getRoutingSettings().setRoutingMode(
 						JAPRoutingSettings.
 						ROUTING_MODE_DISABLED);
 					m_View.removeStatusMsg(msgId);
-					m_iStatusPanelMsgIdForwarderServerStatus = m_View.addStatusMsg(JAPMessages.getString(
-						"controllerStatusMsgRoutingServerStopped"), JOptionPane.INFORMATION_MESSAGE, true);
+					m_iStatusPanelMsgIdForwarderServerStatus = m_View.addStatusMsg(
+									   JAPMessages.getString("controllerStatusMsgRoutingServerStopped"),
+									   JOptionPane.INFORMATION_MESSAGE, true);
 				}
 
 			}

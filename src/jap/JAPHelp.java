@@ -61,6 +61,8 @@ import logging.LogLevel;
 import logging.LogType;
 import javax.swing.border.EmptyBorder;
 import java.awt.Color;
+import javax.swing.LookAndFeel;
+import javax.swing.UIManager;
 
 /* classes modified from Swing Example "Metalworks" */
 /** Help window for the JAP. Thi is a singleton meaning that there exists only one help window all the time.*/
@@ -80,13 +82,13 @@ final class JAPHelp extends JDialog implements ActionListener, PropertyChangeLis
 	private JDialog m_virtualParent;
 
 	private boolean m_initializing;
+	private JAPHelpContext m_helpContext;
 
 	private static JAPHelp ms_theJAPHelp = null;
 
 	private JAPHelp(JFrame parent)
 	{
 		super(JAPController.getView(), JAPMessages.getString("helpWindow"), false);
-//				super( JAPMessages.getString("helpWindow"));
 		init();
 	}
 
@@ -107,17 +109,10 @@ final class JAPHelp extends JDialog implements ActionListener, PropertyChangeLis
 	 * @param parent JFrame
 	 * @param virtualParent JDialog
 	 */
-	/*	public JAPHelp(JFrame parent, JDialog virtualParent)
-	 {
-	  super(parent, JAPMessages.getString("helpWindow"), false);
-	  m_virtualParent = virtualParent;
-	  m_virtualParent.setVisible(false);
-	  init();
-	 }
-	 */
 	private void init()
 	{
 		m_initializing = true;
+		m_helpContext = new JAPHelpContext();
 		m_htmlpaneTheHelpPane = new HtmlPane();
 		m_htmlpaneTheHelpPane.addPropertyChangeListener(this);
 		this.addWindowListener(this);
@@ -126,19 +121,35 @@ final class JAPHelp extends JDialog implements ActionListener, PropertyChangeLis
 
 		language = new JComboBox();
 
+		LookAndFeel laf = UIManager.getLookAndFeel();
+		boolean bMetalWorkAround = false;
+		if (laf != null && UIManager.getCrossPlatformLookAndFeelClassName().equals(laf.getClass().getName())) //stupid but is necessary for JDK 1.5 and Metal L&F on Windows XP (and maybe others)
+		{
+			bMetalWorkAround = true;
+		}
+
 		m_backButton = new JButton(JAPUtil.loadImageIcon(JAPConstants.IMAGE_PREV, true));
-		m_backButton.setBackground(Color.gray); //this together with the next lines sems to be
+		if (bMetalWorkAround)
+		{
+			m_backButton.setBackground(Color.gray); //this together with the next lines sems to be
+		}
 		m_backButton.setOpaque(false); //stupid but is necessary for JDK 1.5 on Windows XP (and maybe others)
 		m_backButton.setBorder(new EmptyBorder(0, 0, 0, 0));
 		m_backButton.setFocusPainted(false);
 
 		m_forwardButton = new JButton(JAPUtil.loadImageIcon(JAPConstants.IMAGE_NEXT, true));
-		m_forwardButton.setBackground(Color.gray); //this together with the next lines sems to be
+		if (bMetalWorkAround)
+		{
+			m_forwardButton.setBackground(Color.gray); //this together with the next lines sems to be
+		}
 		m_forwardButton.setOpaque(false); //stupid but is necessary for JDK 1.5 on Windows XP (and maybe others)
 		m_forwardButton.setBorder(new EmptyBorder(0, 0, 0, 0));
 		m_forwardButton.setFocusPainted(false);
 		m_homeButton = new JButton(JAPUtil.loadImageIcon(JAPConstants.IMAGE_HOME, true));
-		m_homeButton.setBackground(Color.gray); //this together with the next lines sems to be
+		if (bMetalWorkAround)
+		{
+			m_homeButton.setBackground(Color.gray); //this together with the next lines sems to be
+		}
 		m_homeButton.setOpaque(false); //stupid but is necessary for JDK 1.5 on Windows XP (and maybe others)
 		m_homeButton.setBorder(new EmptyBorder(0, 0, 0, 0));
 		m_homeButton.setFocusPainted(false);
@@ -209,7 +220,7 @@ final class JAPHelp extends JDialog implements ActionListener, PropertyChangeLis
 		{
 			helpPath = JAPMessages.getString("helpPath" + String.valueOf(language.getSelectedIndex() + 1));
 			langShort = JAPMessages.getString("langshort" + String.valueOf(language.getSelectedIndex() + 1));
-			m_htmlpaneTheHelpPane.load(helpPath + JAPController.getInstance().getHelpContext().getContext() +
+			m_htmlpaneTheHelpPane.load(helpPath + m_helpContext.getContext() +
 									   "_" + langShort +
 									   ".html");
 		}
@@ -285,7 +296,7 @@ final class JAPHelp extends JDialog implements ActionListener, PropertyChangeLis
 	{
 		try
 		{
-			String currentContext = JAPController.getInstance().getHelpContext().getContext();
+			String currentContext = m_helpContext.getContext();
 			m_htmlpaneTheHelpPane.load(helpPath + currentContext + "_" + langShort + ".html");
 			if (!isVisible())
 			{
@@ -295,6 +306,15 @@ final class JAPHelp extends JDialog implements ActionListener, PropertyChangeLis
 		catch (Exception e)
 		{
 		}
+	}
+
+	/**
+	 * Returns the context object
+	 * @return JAPHelpContext
+	 */
+	public JAPHelpContext getContextObj()
+	{
+		return m_helpContext;
 	}
 
 	/**
@@ -388,10 +408,11 @@ final class HtmlPane extends JScrollPane implements HyperlinkListener
 	 */
 	private void addToHistory(URL a_url)
 	{
-		if (m_historyPosition == -1 || !a_url.getFile().equalsIgnoreCase( ( (URL) m_history.elementAt(m_historyPosition)).getFile()))
+		if (m_historyPosition == -1 ||
+			!a_url.getFile().equalsIgnoreCase( ( (URL) m_history.elementAt(m_historyPosition)).getFile()))
 		{
-		m_history.insertElementAt(a_url, ++m_historyPosition);
-	}
+			m_history.insertElementAt(a_url, ++m_historyPosition);
+		}
 	}
 
 	private URL getUrlFor(String fn)

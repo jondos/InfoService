@@ -51,6 +51,8 @@ import anon.tor.ordescription.InfoServiceORListFetcher;
 import anon.tor.ordescription.ORDescription;
 import anon.tor.ordescription.ORList;
 import javax.swing.JCheckBox;
+import javax.swing.event.ChangeListener;
+import javax.swing.event.ChangeEvent;
 
 final class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 {
@@ -162,6 +164,16 @@ final class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 		m_sliderMaxPathLen.setMajorTickSpacing(1);
 		m_sliderMaxPathLen.setMinorTickSpacing(1);
 		m_sliderMaxPathLen.setSnapToTicks(true);
+		m_sliderMaxPathLen.addChangeListener(new ChangeListener()
+		{
+			public void stateChanged(ChangeEvent e)
+			{
+				if (m_sliderMaxPathLen.getValue() < m_sliderMinPathLen.getValue())
+				{
+					m_sliderMinPathLen.setValue(m_sliderMaxPathLen.getValue());
+				}
+			}
+		});
 		c3.gridx = 1;
 		c3.fill = GridBagConstraints.HORIZONTAL;
 		p.add(m_sliderMaxPathLen, c3);
@@ -245,6 +257,8 @@ final class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 
 	protected void onRootPanelShown()
 	{
+		//Register help context
+		JAPHelp.getInstance().getContextObj().setContext("services");
 //		if (System.currentTimeMillis() - m_lastUpdate > 600000)
 //		{
 //			fetchRouters(false);
@@ -324,5 +338,8 @@ final class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 	public void onResetToDefaultsPressed()
 	{
 		m_cbPreCreateRoutes.setSelected(JAPConstants.DEFAULT_TOR_PRECREATE_ROUTES);
+		m_sliderMaxPathLen.setValue(JAPConstants.DEFAULT_TOR_MAX_ROUTE_LEN);
+		m_sliderMinPathLen.setValue(JAPConstants.DEFAULT_TOR_MIN_ROUTE_LEN);
+		m_sliderConnectionsPerPath.setValue(JAPConstants.DEFAULT_TOR_MAX_CONNECTIONS_PER_ROUTE);
 	}
 }

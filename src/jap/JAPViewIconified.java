@@ -230,8 +230,8 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 						{
 							if (t < 60)
 							{
-								m_labelTraffic.setText(JAPMessages.getString(
-									"iconifiedViewMeterTrafficMedium"));
+								m_labelTraffic.setText(
+									JAPMessages.getString("iconifiedViewMeterTrafficMedium"));
 							}
 							else
 							{

@@ -35,7 +35,7 @@ import anon.tor.Tor;
 
 public final class JAPConstants
 {
-	public static final String aktVersion = "00.04.002"; //Never change the layout of this line!
+	public static final String aktVersion = "00.04.003"; //Never change the layout of this line!
 	private static final String CVS_GENERATED_RELEASE_DATE = "$Date$";
 
 
@@ -63,26 +63,23 @@ public final class JAPConstants
 		}
 	}
 
-	//static final String buildDate=".."
-	//static final String buildType="..."
-	//needed for update.JAPUpdate
-	static final int defaultPortNumber = 4001;
-	//static final int defaultSOCKSPortNumber = 1080;
-	static final String defaultAnonName = "Dresden-Dresden";
-	static final String defaultAnonID = "141.76.1.120%3A6544";
-	static final String defaultAnonHost = "mix.inf.tu-dresden.de";
-	static final String defaultAnonIP = "141.76.1.120"; //only used for fallback,
+	static final int DEFAULT_PORT_NUMBER = 4001;
+	static final boolean DEFAULT_LISTENER_IS_LOCAL=true;
+	static final String DEFAULT_ANON_NAME = "Dresden-Dresden";
+	static final String DEFAULT_ANON_ID = "141.76.1.120%3A6544";
+	static final String DEFAULT_ANON_HOST = "mix.inf.tu-dresden.de";
+	static final String DEFAULT_ANON_IP = "141.76.1.120"; //only used for fallback,
 
 	//if DNS could not get IP for
 	// defaultAnonHost
-	static final int defaultAnonPortNumber = 6544;
+	static final int DEFAULT_ANON_PORT_NUMBER = 6544;
 	/**
 	 * The name of the default infoservice.
 	 */
 	public static final String defaultInfoServiceName = "JAP-Team InfoService";
 	public static final String defaultInfoServiceID = "infoservice.inf.tu-dresden.de%3A80";
-	public static final String defaultInfoServiceHostName = "infoservice.inf.tu-dresden.de";
-	public static final int defaultInfoServicePortNumber = 6543;
+	public static final String DEFAULT_INFOSERVICE_HOSTNAME = "infoservice.inf.tu-dresden.de";
+	public static final int DEFAULT_INFOSERVICE_PORT_NUMBER = 6543;
 
 	/**
 	 * This defines, whether automatic infoservice request are disabled as default.
@@ -104,8 +101,14 @@ public final class JAPConstants
 	static final int SMALL_FONT_STYLE = Font.PLAIN;
 	static final Insets SMALL_BUTTON_MARGIN = new Insets(1, 1, 1, 1);
 
+
 	static final int VIEW_NORMAL = 1;
 	static final int VIEW_SIMPLIFIED = 2;
+	static final int DEFAULT_VIEW = VIEW_NORMAL;
+
+	static final boolean DEFAULT_SAVE_MAIN_WINDOW_POSITION=false;
+	static final boolean DEFAULT_MOVE_TO_SYSTRAY_ON_STARTUP=false;
+	static final boolean DEFAULT_MINIMIZE_ON_STARTUP=false;
 
 	static final String JAPLocalFilename = "JAP.jar";
 	static final int MAXHELPLANGUAGES = 6;
@@ -194,11 +197,16 @@ public final class JAPConstants
 	public final static String CERT_JAPCODESIGNING = "japcodesigning.cer";
 	public final static String CERT_JAPINFOSERVICEMESSAGES = "japinfoservicemessages.cer";
 	public final static String CERT_BI = "bi.cer";
+	public static final boolean DEFAULT_CERT_CHECK_ENABLED=true;
 
 	public final static int TOR_MAX_CONNECTIONS_PER_ROUTE = Circuit.MAX_STREAMS_OVER_CIRCUIT;
 	public final static int TOR_MAX_ROUTE_LEN = Tor.MAX_ROUTE_LEN;
 	public final static int TOR_MIN_ROUTE_LEN = Tor.MIN_ROUTE_LEN;
 	public final static boolean DEFAULT_TOR_PRECREATE_ROUTES=false;
+	public final static int DEFAULT_TOR_MIN_ROUTE_LEN=Tor.MIN_ROUTE_LEN;
+	public final static int DEFAULT_TOR_MAX_ROUTE_LEN=Tor.MIN_ROUTE_LEN+1;
+	public final static int DEFAULT_TOR_MAX_CONNECTIONS_PER_ROUTE = Circuit.MAX_STREAMS_OVER_CIRCUIT;
+
 	/**
 	 * The minimum bandwidth per user needed for forwarding. This affects the maximum number
 	 * of users, which can be forwarded with a specified bandwidth. The default is 2 KByte/sec

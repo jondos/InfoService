@@ -53,8 +53,8 @@ import logging.LogType;
 final class JAPConfUI extends AbstractJAPConfModule
 {
 	private TitledBorder m_borderLookAndFeel, m_borderView;
-	private JComboBox m_comboLanguage;
-	private boolean m_bIgnoreComboLanguageEvents = false;
+	private JComboBox m_comboLanguage, m_comboUI;
+	private boolean m_bIgnoreComboLanguageEvents = false, m_bIgnoreComboUIEvents = false;
 	private JCheckBox m_cbSaveWindowPositions, m_cbAfterStart;
 	private JRadioButton m_rbViewSimplified, m_rbViewNormal, m_rbViewMini, m_rbViewSystray;
 
@@ -119,13 +119,13 @@ final class JAPConfUI extends AbstractJAPConfModule
 		c.gridx = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.weightx = 1;
-		JComboBox combo = new JComboBox();
+		m_comboUI = new JComboBox();
 		LookAndFeelInfo[] lf = UIManager.getInstalledLookAndFeels();
 		String currentLf = UIManager.getLookAndFeel().getClass().getName();
 // add menu items
 		for (int lfidx = 0; lfidx < lf.length; lfidx++)
 		{
-			combo.addItem(lf[lfidx].getName());
+			m_comboUI.addItem(lf[lfidx].getName());
 		}
 // select the current
 		int lfidx;
@@ -133,38 +133,26 @@ final class JAPConfUI extends AbstractJAPConfModule
 		{
 			if (lf[lfidx].getClassName().equals(currentLf))
 			{
-				combo.setSelectedIndex(lfidx);
+				m_comboUI.setSelectedIndex(lfidx);
 				break;
 			}
 		}
 		if (! (lfidx < lf.length))
 		{
-			combo.addItem("(unknown)");
-			combo.setSelectedIndex(lfidx);
+			m_comboUI.addItem("(unknown)");
+			m_comboUI.setSelectedIndex(lfidx);
 		}
-		combo.addItemListener(new ItemListener()
+		m_comboUI.addItemListener(new ItemListener()
 		{
 			public void itemStateChanged(ItemEvent e)
 			{
-				if (e.getStateChange() == ItemEvent.SELECTED)
+				if (!m_bIgnoreComboUIEvents && e.getStateChange() == ItemEvent.SELECTED)
 				{
-					try
-					{
-						UIManager.setLookAndFeel(UIManager.getInstalledLookAndFeels()[ ( (JComboBox) e.
-							getItemSelectable()).getSelectedIndex()].getClassName());
-//									SwingUtilities.updateComponentTreeUI(m_frmParent);
-//									SwingUtilities.updateComponentTreeUI(SwingUtilities.getRoot(((JComboBox)e.getItemSelectable())));
-
-						JAPConf.showInfo(
-							JAPMessages.getString("confLookAndFeelChanged"));
-					}
-					catch (Exception ie)
-					{
-					}
+					JAPConf.showInfo(JAPMessages.getString("confLookAndFeelChanged"));
 				}
 			}
 		});
-		p.add(combo, c);
+		p.add(m_comboUI, c);
 		l = new JLabel(JAPMessages.getString("settingsLanguage"));
 		c.gridx = 0;
 		c.gridy = 1;
@@ -218,7 +206,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 		ButtonGroup bg = new ButtonGroup();
 		bg.add(m_rbViewNormal);
 		bg.add(m_rbViewSimplified);
-		ActionListener listener=new ActionListener()
+		ActionListener listener = new ActionListener()
 		{
 			public void actionPerformed(ActionEvent e)
 			{
@@ -300,6 +288,14 @@ final class JAPConfUI extends AbstractJAPConfModule
 			m_cbAfterStart.isSelected());
 		JAPController.getInstance().setMoveToSystrayOnStartup(m_rbViewSystray.isSelected() &&
 			m_cbAfterStart.isSelected());
+		try
+		{
+			UIManager.setLookAndFeel(UIManager.getInstalledLookAndFeels()[m_comboUI
+									 .getSelectedIndex()].getClassName());
+		}
+		catch (Exception ex)
+		{
+		}
 		return true;
 	}
 
@@ -333,6 +329,42 @@ final class JAPConfUI extends AbstractJAPConfModule
 		updateThirdPanel(b);
 	}
 
+	public void onResetToDefaultsPressed()
+	{
+		m_bIgnoreComboLanguageEvents = true;
+		Locale defaultLocale = Locale.getDefault();
+		if (Locale.GERMAN.equals(defaultLocale))
+		{
+			m_comboLanguage.setSelectedIndex(0);
+		}
+		else if (Locale.FRENCH.equals(defaultLocale))
+		{
+			m_comboLanguage.setSelectedIndex(2);
+		}
+		else
+		{
+			m_comboLanguage.setSelectedIndex(1);
+		}
+		m_bIgnoreComboLanguageEvents = false;
+		LookAndFeelInfo lookandfeels[] = UIManager.getInstalledLookAndFeels();
+		for (int i = 0; i < lookandfeels.length; i++)
+		{
+			if (lookandfeels[i].getClassName().equals(UIManager.getCrossPlatformLookAndFeelClassName()))
+			{
+				m_bIgnoreComboUIEvents = true;
+				m_comboUI.setSelectedIndex(i);
+				m_bIgnoreComboUIEvents = false;
+				break;
+			}
+		}
+		m_cbSaveWindowPositions.setSelected(JAPConstants.DEFAULT_SAVE_MAIN_WINDOW_POSITION);
+		m_rbViewNormal.setSelected(JAPConstants.DEFAULT_VIEW == JAPConstants.VIEW_NORMAL);
+		m_rbViewSimplified.setSelected(JAPConstants.DEFAULT_VIEW == JAPConstants.VIEW_SIMPLIFIED);
+		m_rbViewSystray.setSelected(JAPConstants.DEFAULT_MOVE_TO_SYSTRAY_ON_STARTUP);
+		m_rbViewMini.setSelected(JAPConstants.DEFAULT_MINIMIZE_ON_STARTUP);
+		updateThirdPanel(JAPConstants.DEFAULT_MOVE_TO_SYSTRAY_ON_STARTUP||JAPConstants.DEFAULT_MINIMIZE_ON_STARTUP);
+	}
+
 	private void updateThirdPanel(boolean bAfterStart)
 	{
 		m_cbAfterStart.setSelected(bAfterStart);
@@ -342,5 +374,11 @@ final class JAPConfUI extends AbstractJAPConfModule
 		{
 			m_rbViewMini.setSelected(true);
 		}
+	}
+
+	protected void onRootPanelShown()
+	{
+		//Register help context
+		JAPHelp.getInstance().getContextObj().setContext("appearance");
 	}
 }

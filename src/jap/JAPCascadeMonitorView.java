@@ -510,8 +510,8 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener, Ru
 					try
 					{
 						// simply get the current version number via the anon service from the InfoService
-						String target = "http://" + JAPConstants.defaultInfoServiceHostName + ":" +
-							Integer.toString(JAPConstants.defaultInfoServicePortNumber) +
+						String target = "http://" + JAPConstants.DEFAULT_INFOSERVICE_HOSTNAME + ":" +
+							Integer.toString(JAPConstants.DEFAULT_INFOSERVICE_PORT_NUMBER) +
 							"/aktVersion";
 						AnonChannel c = anonService.createChannel(AnonChannel.HTTP);
 						BufferedWriter outputStream = new BufferedWriter(new OutputStreamWriter(c.

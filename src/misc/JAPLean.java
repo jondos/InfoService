@@ -77,8 +77,8 @@ final class JAPLean implements ProxyListener
 		HTTPConnectionFactory.getInstance().setTimeout(JAPConstants.DEFAULT_INFOSERVICE_TIMEOUT);
 		InfoServiceHolder.getInstance().setPreferredInfoService(
 				  new InfoServiceDBEntry("DeafultIS",
-						new ListenerInterface(JAPConstants.defaultInfoServiceHostName,
-											  JAPConstants.defaultInfoServicePortNumber).toVector(),true,true));
+						new ListenerInterface(JAPConstants.DEFAULT_INFOSERVICE_HOSTNAME,
+											  JAPConstants.DEFAULT_INFOSERVICE_PORT_NUMBER).toVector(),true,true));
 		// JAPAnonService.init();
 		ServerSocket listener = null;
 		try

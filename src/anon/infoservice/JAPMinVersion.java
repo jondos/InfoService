@@ -84,9 +84,11 @@ public class JAPMinVersion extends AbstractDatabaseEntry implements IDistributab
       throw (new Exception("JAPMinVersion: Constructor: Error in XML structure: No software node."));
     }
     m_japSoftware = new ServiceSoftware(softwareNode);
-    m_lastUpdate = XMLUtil.parseValue(XMLUtil.getFirstChildByName(a_japRootNode, "LastUpdate"), -1L);
+    /** @todo FixMe: Removed because new IS does not work...*/
+	m_lastUpdate = XMLUtil.parseValue(XMLUtil.getFirstChildByName(a_japRootNode, "LastUpdate"), -1L);
     if (m_lastUpdate == -1) {
-      throw (new Exception("JAPMinVersion: Constructor: No LastUpdate node found."));
+		m_lastUpdate=System.currentTimeMillis();
+      //throw (new Exception("JAPMinVersion: Constructor: No LastUpdate node found."));
     }
     m_xmlStructure = a_japRootNode;
   }
@@ -112,7 +114,7 @@ public class JAPMinVersion extends AbstractDatabaseEntry implements IDistributab
    *
    * @return A version number which is used to determine the more recent minimum version info
    *         entry, if two entries are compared (higher version number -> more recent entry).
-   */  
+   */
   public long getVersionNumber() {
     return m_lastUpdate;
   }

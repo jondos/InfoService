@@ -425,47 +425,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 					);
 			}
 
-			/*	old code to launch webbrowser:		splash = JAPWaitSplash.start("Launching browser...", "Please wait");
-			   Process runcode = null;
-			   String[] browser = JAPConstants.BROWSERLIST;
-			   for (int i = 0; i < browser.length; i++)
-			   {
-				try
-				{
-				 LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Trying to start browser " + browser[i]);
-				 runcode = Runtime.getRuntime().exec(new String[]
-				  {browser[i], url});
-				 break;
-				}
-				catch (Exception ex)
-				{
-				}
-			   }
-			   if (runcode == null)
-			   {
-				splash.abort();
-				JOptionPane.showMessageDialog(
-				 view,
-				 "<html>" + JAPMessages.getString("ngCouldNotFindBrowser") + "<br>" +
-				 "<h3>" + url + "</h3></html>",
-				 JAPMessages.getString("ngCouldNotFindBrowserTitle"),
-				 JOptionPane.INFORMATION_MESSAGE
-				 );
-			   }
-			   else
-			   {
-				LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Browser running. Waiting ... ");
-				try
-				{
-				 runcode.waitFor();
-				}
-				catch (InterruptedException ex1)
-				{
-				}
-				LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Browser terminated with exitcode " +
-					 runcode.exitValue());
-				splash.abort();
-			   }*/
 			m_MyTableModel.fireTableDataChanged();
 		}
 	}

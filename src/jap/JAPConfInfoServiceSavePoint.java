@@ -108,7 +108,7 @@ public class JAPConfInfoServiceSavePoint implements IJAPConfSavePoint {
      */
     Database.getInstance(InfoServiceDBEntry.class).removeAll();
     try {
-      InfoServiceDBEntry defaultInfoService = new InfoServiceDBEntry(JAPConstants.defaultInfoServiceName, new ListenerInterface(JAPConstants.defaultInfoServiceHostName, JAPConstants.defaultInfoServicePortNumber).toVector(), false, true);
+      InfoServiceDBEntry defaultInfoService = new InfoServiceDBEntry(JAPConstants.defaultInfoServiceName, new ListenerInterface(JAPConstants.DEFAULT_INFOSERVICE_HOSTNAME, JAPConstants.DEFAULT_INFOSERVICE_PORT_NUMBER).toVector(), false, true);
       InfoServiceHolder.getInstance().setPreferredInfoService(defaultInfoService);
     }
     catch (Exception e) {
