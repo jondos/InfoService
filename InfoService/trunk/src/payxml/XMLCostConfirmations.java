@@ -98,6 +98,7 @@ public class XMLCostConfirmations extends XMLDocument
 	{
 		m_theDocument=getDocumentBuilder().newDocument();
 		Element elemRoot=m_theDocument.createElement("CostConfirmations");
+		m_theDocument.appendChild(elemRoot);
 		for(int i=0;i<m_Confs.size();i++)
 		{
 			XMLEasyCC cc=(XMLEasyCC)m_Confs.elementAt(i);
