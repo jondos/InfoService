@@ -13,6 +13,7 @@ import java.awt.event.ActionEvent;
 import java.awt.Point;
 import java.io.InputStream;
 
+
 import javax.swing.JDialog;
 import javax.swing.JScrollPane;
 import javax.swing.JButton;
@@ -25,24 +26,29 @@ import javax.swing.text.html.HTMLDocument;
 import javax.swing.text.html.HTML;
 import javax.swing.text.AttributeSet;
 
-public class JAPAbout extends JDialog
+final class JAPAbout extends JDialog implements Runnable
 	{
 	
 		private final static int ABOUT_DY=173;
 		private final static int ABOUT_DX=350;
-																			
-		class ScrollerPane extends JScrollPane implements Runnable
+		private Cursor oldCursor;
+		private Frame parent;
+		private ScrollerPane sp;
+		
+		private final class ScrollerPane extends JScrollPane implements Runnable
 			{
-				Dimension dimension;
-				JEditorPane textArea;
-				Thread t;
+				private Dimension dimension;
+				private JEditorPane textArea;
+				private Thread t;
 				private volatile boolean bRun;
-				public ScrollerPane(int w,int h)
+				protected ScrollerPane(int w,int h)
 					{
 						setSize(w,h);
 						dimension=new Dimension(w,h);
 						setMaximumSize(dimension);
 						setMinimumSize(dimension);
+						setPreferredSize(dimension);
+				//		setLayout(null);
 						setBorder(null);
 						setVerticalScrollBarPolicy(this.VERTICAL_SCROLLBAR_NEVER);
 						setHorizontalScrollBarPolicy(this.HORIZONTAL_SCROLLBAR_NEVER);
@@ -57,6 +63,7 @@ public class JAPAbout extends JDialog
 								}}catch(Exception e){};	
 						
 						textArea=new JEditorPane();
+						textArea.setLayout(null);
 						setOpaque(false);
 						getViewport().setOpaque(false);
 						getViewport().add(textArea);
@@ -66,8 +73,6 @@ public class JAPAbout extends JDialog
 						textArea.setEnabled(false);
 						textArea.setContentType("text/html");
 						textArea.setText(new String(buff).trim());
-//						Point p=new Point(0,70);
-//						getViewport().setViewPosition(p);
 						t=new Thread(this);
 						t.setPriority(Thread.MAX_PRIORITY);
 				}
@@ -88,10 +93,6 @@ public class JAPAbout extends JDialog
 	
 						int i=0;//;dimension.height;
 						Point p=new Point(0,i);
-					//	getViewport().setViewPosition(p);
-					//	Toolkit.getDefaultToolkit().sync();
-					//	try{t.sleep(2000);}catch(Exception e){}
-					//	try{t.sleep(2000);}catch(Exception e){}
 						bRun=true;
 						int height;
 						while(true)
@@ -125,60 +126,83 @@ public class JAPAbout extends JDialog
 							}									
 					}
 			}
-		ScrollerPane sp;
-		
-		public JAPAbout(Frame parent)
+		public JAPAbout(Frame p)
 			{
-				super(parent,"Info...",false);
-				Cursor oldCursor=parent.getCursor();
+				super(p,"Info...",false);
+				parent=p;
+				oldCursor=parent.getCursor();
 				parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+				Thread theThread=new Thread(this);
+				theThread.setPriority(Thread.MAX_PRIORITY);
+				theThread.start(); //we have to do all the initalisation in a seperate thread in order
+				//to not block the Event-Loop Thread !!! 
+			}
+		
+		public void run()
+			{
 				addWindowListener(new WindowAdapter() {
 					public void windowClosing(WindowEvent e) {OKPressed();}
 				});	
-				ImageIcon imageSplash=JAPUtil.loadImageIcon(JAPModel.ABOUTFN,false);
-				JLabel labelSplash=new JLabel(imageSplash);
+				setLocation(-380,-200);
+				setVisible(true);   //now we have to ensure that the window is visible before the
+				ImageIcon imageSplash=JAPUtil.loadImageIcon(JAPModel.ABOUTFN,false);//loading the Background Image
+				JLabel labelSplash=new JLabel(imageSplash); //we use a JLabel to show the Background Image
 				JLabel verstxt=new JLabel("Version:");
 				JLabel version=new JLabel(JAPModel.aktVersion);
 				verstxt.setFont(new Font("Sans",Font.PLAIN,9));
 				verstxt.setForeground(Color.black);
-				verstxt.setSize(verstxt.getPreferredSize());
+				verstxt.setSize(verstxt.getPreferredSize());  //we set the Size of the Version-Label so that the Text 'Version' would exactly fit
 				version.setFont(new Font("Sans",Font.PLAIN,9));
 				version.setForeground(Color.black);
-				version.setSize(version.getPreferredSize());
+				version.setSize(version.getPreferredSize()); //resizing the VersionNumber-Label
 				JButton bttnOk=new JButton("Ok");
 				bttnOk.setMnemonic('O');
 				bttnOk.addActionListener(new ActionListener() {
 						   public void actionPerformed(ActionEvent e) {
 				   OKPressed();
 				   }});
-				labelSplash.setLayout(null);
-				labelSplash.setSize(ABOUT_DX,ABOUT_DY);
-				labelSplash.add(version);
-				labelSplash.add(verstxt);
-				labelSplash.add(bttnOk);
-				bttnOk.setSize(bttnOk.getPreferredSize());
-				int x=ABOUT_DX-5-bttnOk.getSize().width;
-				int y=ABOUT_DY-5-bttnOk.getSize().height;
-				bttnOk.setLocation(x,y);
-				version.setLocation(x-version.getSize().width-8,y-2+version.getSize().height);
-				verstxt.setLocation(version.getLocation().x, version.getLocation().y-11);
+				labelSplash.setLayout(null); //the BackgroundImage-Label don't nedd a LayoutManager - we use absoult positioning instead
+				labelSplash.setSize(ABOUT_DX,ABOUT_DY); //the set the Label size to the Size of the Image
+				labelSplash.add(version); //the add the Version Number...
+				labelSplash.add(verstxt); //..and text
+				labelSplash.add(bttnOk); //the add the Ok-Button
+				bttnOk.setSize(bttnOk.getPreferredSize()); //resizing the OK-Button
+				int x=ABOUT_DX-5-bttnOk.getSize().width; //calculating the coordinates for the Button...
+				int y=ABOUT_DY-5-bttnOk.getSize().height; //.. it should appear 5 Points away from the right and bottom border
+				bttnOk.setLocation(x,y); //the set the Position of the Button
+				//Now the set the Position of the VersionNumber...
+				//...it should appear 5 Points above the bottom border (as the OK-Button does)...
+				//...and 5 Points away from the OK-Button
+				version.setLocation(x-5-version.getSize().width, ABOUT_DY-5-version.getSize().height);
+				//Finaly the set the Position of the 'Version'-Text...
+				//...it should appear at the same height as the OK-Button...
+				//...and it should be in a row with the Anonym-O-Meter left border
+				verstxt.setLocation(225,y);
 				
-				setContentPane(labelSplash);
+				setContentPane(labelSplash); //Setting the BackgroundImage-Label with the Version-Texts and OK-button as
+				labelSplash.setDoubleBuffered(false);
 				
-				sp=new ScrollerPane(210,173-72);
-				getLayeredPane().setLayout(null);
-				getLayeredPane().add(sp);
-				sp.setLocation(5,62);
+				sp=new ScrollerPane(210,173-72); //Creating a new scrolling HTML-Pane with the specified size
+				getLayeredPane().setLayout(null); //we have to add the HTML-Pane at the LayerdPane, because it
+				getLayeredPane().add(sp);        //should appear over the Background image
+				sp.setLocation(5,62);           //setting the position of the HTML-Pane
+				//Now we do a little bit tricky...
+				
+				//First we move the Dialog to a position were it is not seen on the Screen...
 				setLocation(-380,-200);
-				setVisible(true);   //we have to ensure that the window is visible before the
-				setResizable(false); //get the insets - also the window must look like it should
+				setVisible(true);   //now we have to ensure that the window is visible before the
+				setResizable(false); //get the insets (the border around the window) - also the window must look like it should
 				Insets in=getInsets(); //so for instance we need the 'NoResizable'-Border
-				setResizable(true); //we want to resize
-				setSize(ABOUT_DX+in.left+in.right,ABOUT_DY+in.bottom+in.top);
-				setResizable(false); //but the user shouldn't
-				setLocationRelativeTo(parent); //showing centerd to JAP-Main
+				setResizable(true); //now we want to resize the whole dialog
+				
+				//We do not use pack() because it doesnt work well on Windows!
+				
+				setSize(ABOUT_DX+in.left+in.right,ABOUT_DY+in.bottom+in.top);// so what the background image does exactly fit
+				setResizable(false); //but the user shouldn't resize the Dialog again
+				//setLocationRelativeTo(parent); //now showing centerd to JAP-Main
+				JAPUtil.centerFrame(this);
 				toFront();
-				sp.startIt();
+				sp.startIt(); //starting the scrolling...
 				parent.setCursor(oldCursor);
 			}
 		
