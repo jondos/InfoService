@@ -39,10 +39,9 @@ import java.util.Enumeration;
  */
 final public class JAPCertificateStoreId
 {
-	// private String strId; // using signature, hashcode of the certificate leads nowhere ...
-
 	/**
 	 * Returns the unique id for a certificate within the certificate store
+	 * @todo Doesn't seem to be very unique at the moment....
 	 *
 	 * @param a_cert The certificate of which an id is requested.
 	 * @return id

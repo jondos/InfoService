@@ -32,10 +32,8 @@ package anon.crypto;
  */
 import java.security.PublicKey;
 import java.util.Vector;
-import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import anon.ErrorCodes;
-import anon.util.XMLUtil;
 
 public class JAPCertPath
 {
@@ -45,84 +43,110 @@ public class JAPCertPath
 	}
 
 	/** Validates the XML Signature over root done by nodeSig according to certsTrustedRoots
+	 * If a Certifcate is embedded within the Signature we try to verify also this certifcate chain
 	 * If root is a Document than the Root Element of that Document is taken.
 	 * ATTENTION: All certificates must include DSAPublicKeys!!!
 	 * @return ErrorCodes.E_SUCCESS if ok
 	 * @return ErrorCodes.E_INVALID_KEY if the provides key does not match to the signature
-	 * @return ErrorCodes.E_INVALID_CERTIFICATE if the trustwortyness of the key could not verified
 	 * @return ErrorCodes.E_UNKNOWN otherwise
 	 */
-	public static int validate(Node nRoot, Node nSig, JAPCertificateStore certsTrustedRoots)
+	public static int validate(Node root, Node nSig, JAPCertificateStore certsTrustedRoots)
 	{
 		try
 		{
-			if (! (nSig instanceof Element))
-			{
-				return ErrorCodes.E_UNKNOWN;
-			}
-			Element nodeSig = (Element) nSig;
-			Node root = nRoot;
-			Element elemKeyInfo = (Element) XMLUtil.getFirstChildByName(nodeSig, "KeyInfo");
-			if (elemKeyInfo != null)
+			JAPCertificate[] appendedCerts = JAPSignature.getAppendedCertificates(nSig);
+			if (appendedCerts != null)
 			{
 				/* there is a certificate appended */
-				Element elemX509Data = (Element) XMLUtil.getFirstChildByName(elemKeyInfo, "X509Data");
-				Element elemX509Certificate = (Element) XMLUtil.getFirstChildByName(elemX509Data,
-					"X509Certificate");
-				JAPCertificate appendedCertificate = null;
-				try
-				{
-					appendedCertificate = JAPCertificate.getInstance(elemX509Certificate);
-				}
-				catch (Throwable to)
-				{
-				}
+				JAPCertificate appendedCertificate = appendedCerts[0];
 				if (appendedCertificate != null)
 				{
 					/* check the signature against the public key from the certificate */
-					JAPSignature signatureInstance = new JAPSignature();
-					signatureInstance.initVerify(appendedCertificate.getPublicKey());
-					if (signatureInstance.verifyXML(root) == true)
+					try
 					{
-						/* signature is valid, try to verify the appended certificate against the trusted
-						 * root certificates
-						 */
-						Vector allCertificates = certsTrustedRoots.getAllEnabledCertificates();
-						boolean certificateVerified = false;
-						while ( (allCertificates.size() > 0) && (certificateVerified == false))
+						JAPSignature signatureInstance = new JAPSignature();
+						signatureInstance.initVerify(appendedCertificate.getPublicKey());
+						if (signatureInstance.verifyXML(root) == true)
 						{
-							PublicKey currentPublicKey = ( (JAPCertificate) (allCertificates.firstElement())).
-								getPublicKey();
-							allCertificates.removeElementAt(0);
-							try
+							/* signature is valid, try to verify the appended certificate against the trusted
+							 * root certificates
+							 */
+							if (validate(appendedCertificate, certsTrustedRoots) == ErrorCodes.E_SUCCESS)
 							{
-								if (currentPublicKey.equals(appendedCertificate.getPublicKey()) ||
-									(appendedCertificate.verify(currentPublicKey)))
-								{
-									/* the appended certificate is identical to the current trusted root certificate
-									 * (same public key) or could be derived from it
-									 */
-									return ErrorCodes.E_SUCCESS;
-								}
+								return ErrorCodes.E_SUCCESS;
 							}
-							catch (Exception e)
-							{
-								/* there was an error while comparing the certificate-keys or while checking the
-								 * signature of a certificate -> ignore that certificate
-								 */
-							}
+
 						}
+					}
+					catch (Exception ta)
+					{
 					}
 				}
 			}
 			/* there was no appended certificate, check the signature against all public keys from
 			 * the store of trusted certificates
 			 */
-			Vector allCertificates = certsTrustedRoots.getAllEnabledCertificates();
-			JAPSignature signatureInstance = new JAPSignature();
-			for (int i = 0; i < allCertificates.size(); i++)
+			return validate(root,certsTrustedRoots);
+		}
+		catch (Exception e)
+		{
+		}
+		return ErrorCodes.E_UNKNOWN;
+	}
+
+	/** Checks if a given Certificate could be directly verified agains a set a trusted Certificates
+	 * @return ErrorCodes.E_SUCCESS if this check was ok
+	 * @return ErrorCodes.E_UNKNOWN otherwise
+	 */
+
+	public static int validate(JAPCertificate cert, JAPCertificateStore certsTrustedRoots)
+	{
+		if (certsTrustedRoots == null)
+		{
+			return ErrorCodes.E_UNKNOWN;
+		}
+		Vector allCertificates = certsTrustedRoots.getAllEnabledCertificates();
+		for (int i = 0; i < allCertificates.size(); i++)
+		{
+			PublicKey currentPublicKey = ( (JAPCertificate) (allCertificates.elementAt(0))).
+				getPublicKey();
+			try
 			{
-				/* take the first certificate */
+				if (currentPublicKey.equals(cert.getPublicKey()) ||
+					(cert.verify(currentPublicKey)))
+				{
+					/* the appended certificate is identical to the current trusted root certificate
+					 * (same public key) or could be derived from it
+					 */
+					return ErrorCodes.E_SUCCESS;
+				}
+			}
+			catch (Exception e)
+			{
+				/* there was an error while comparing the certificate-keys or while checking the
+				 * signature of a certificate -> ignore that certificate
+				 */
+			}
+		}
+		return ErrorCodes.E_UNKNOWN;
+	}
+
+	/* check the signature directly against all public keys from the store of trusted certificates.
+	 * Certs included within the Signature are ignored!
+	 * @return ErrorCodes.E_SUCCESS if ok
+	 * @return ErrorCodes.E_INVALID_KEY if no key matches
+	 */
+	public static int validate(Node root, JAPCertificateStore certsTrustedRoots)
+	{
+		if(certsTrustedRoots==null)
+			return ErrorCodes.E_INVALID_KEY;
+		Vector allCertificates = certsTrustedRoots.getAllEnabledCertificates();
+		JAPSignature signatureInstance = new JAPSignature();
+		for (int i = 0; i < allCertificates.size(); i++)
+		{
+			/* take the first certificate */
+			try
+			{
 				signatureInstance.initVerify( ( (JAPCertificate) (allCertificates.elementAt(i))).
 											 getPublicKey());
 				if (signatureInstance.verifyXML(root))
@@ -132,13 +156,12 @@ public class JAPCertPath
 					return ErrorCodes.E_SUCCESS;
 				}
 			}
-			/* we could not verify the signature (without certificate) against a trusted root */
-			return ErrorCodes.E_INVALID_KEY;
-		}
-		catch (Exception e)
-		{
-		}
-		return ErrorCodes.E_UNKNOWN;
-	}
+			catch (Exception e)
+			{
+			}
 
+		}
+		/* we could not verify the signature (without certificate) against a trusted root */
+		return ErrorCodes.E_INVALID_KEY;
+	}
 }
