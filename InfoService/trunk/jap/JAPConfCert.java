@@ -368,7 +368,11 @@ public class JAPConfCert extends AbstractJAPConfModule
 				{
 					cert = JAPUtil.openCertificate(new JFrame());
 				}
-				catch (JAPCertificateException je)
+				catch (Exception je)
+				{
+					cert=null;
+				}
+				if(cert==null)
 				{
 					JOptionPane.showMessageDialog(r_panelCA,
 												  JAPMessages.getString("certInputError"),

@@ -535,7 +535,7 @@ final public class JAPUtil
 		return fd2;
 	}
 
-	public static JAPCertificate openCertificate(Window jf) throws JAPCertificateException
+	public static JAPCertificate openCertificate(Window jf)
 	{
 		File file = showFileDialog(jf).getSelectedFile();
 		JAPCertificate t_cert = null;
@@ -549,10 +549,6 @@ final public class JAPUtil
 				fin.close();
 
 				t_cert = JAPCertificate.getInstance(buff);
-			}
-			catch (JAPCertificateException e)
-			{
-				throw e;
 			}
 			catch (Exception e1)
 			{
