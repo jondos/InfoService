@@ -109,10 +109,12 @@ final public class ServerListPanel extends JPanel implements ActionListener
 	{
 		Object source = e.getSource();
 		Enumeration mixes = m_bgMixe.getElements();
+		int index=0;
 		while (mixes.hasMoreElements())
 		{
 			if (source == mixes.nextElement())
 			{
+				m_selectedIndex=index;
 				ItemEvent itemEvent = new ItemEvent( (AbstractButton) source, ItemEvent.ITEM_STATE_CHANGED,
 					source, ItemEvent.SELECTED);
 				Enumeration enumer = m_itemListeners.elements();
@@ -122,6 +124,7 @@ final public class ServerListPanel extends JPanel implements ActionListener
 				}
 				return;
 			}
+			index++;
 		}
 	}
 
