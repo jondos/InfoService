@@ -464,7 +464,7 @@ public class PayAccount implements IXMLEncodable
 		}
 
 		/** @todo realize this */
-		MuxSocket currentMuxSock = getCurrentMuxSocket(); // oder so..
+		MuxSocket currentMuxSock = null;//getCurrentMuxSocket(); // oder so..
 		long tmp = currentMuxSock.getTransferredBytes();
 		if (tmp > 0)
 		{

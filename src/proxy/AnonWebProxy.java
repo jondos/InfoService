@@ -137,7 +137,7 @@ final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 	/**
 		 * @deprecated to be removed
 		 * @todo move somwhere to anon.impl... */
-	public void authenticateForAI()
+/*	public void authenticateForAI()
 	{
 		String toAI = "";
 		try
@@ -151,7 +151,7 @@ final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 		}
 		catch (Exception ex)
 		{
-			/** @todo translate this into english!! */
+			// @todo translate this into english!!
 			LogHolder.log(LogLevel.DEBUG, LogType.NET,
 						  "AnonProxy: Fehler beim Anfordern des KontoZertifikates und/oder des Kontostandes");
 		}
@@ -159,10 +159,10 @@ final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 					  "AnonProxy: l\uFFFDnge des zu verschickenden Certifikates : " + toAI.length());
 		sendBalanceToAI();
 	}
-
+*/
 	// methode zum senden einer balance an die AI - oneway
 	/** @todo move somwhere to anon.impl... */
-	public void sendBalanceToAI()
+	/*public void sendBalanceToAI()
 	{
 		LogHolder.log(LogLevel.DEBUG, LogType.NET, "AnonProxy: sending Balance to AI");
 		try
@@ -171,7 +171,7 @@ final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 			PayAccount mainAccount = accounts.getActiveAccount();
 			XMLAccountInfo info = mainAccount.getAccountInfo();
 
-			/** @todo temporary code... remove DOM functionality from here (Bastian Voigt) */
+			// @todo temporary code... remove DOM functionality from here (Bastian Voigt)
 			Document doc = XMLUtil.toXMLDocument(info);
 			Element elemRoot = doc.getDocumentElement();
 			Element elemBalance = (Element) XMLUtil.getFirstChildByName(elemRoot, "Balance");
@@ -185,12 +185,12 @@ final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 		}
 		catch (Exception ex)
 		{
-			/** @todo translate this into english!! */
+			// @todo translate this into english!!
 			LogHolder.log(LogLevel.DEBUG, LogType.NET,
 						  "AnonProxy: Fehler beim Anfordern des KontoZertifikates und/oder des Kontostandes");
 		}
 	}
-
+*/
 	/**
 	 * Sets a new MixCascade.
 	 *

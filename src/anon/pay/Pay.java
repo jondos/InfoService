@@ -124,7 +124,7 @@ public class Pay
 		{
 			throw new Exception("Invalid Account Number: " + accountNumber);
 		}
-		BIConnection biConn = new BIConnection( (BI) m_KnownBIs.get(0), false /* ssl off*/);
+		BIConnection biConn = new BIConnection( (BI) m_KnownBIs.elementAt(0), false /* ssl off*/);
 		biConn.connect();
 		biConn.authenticate(account.getAccountCertificate(), account.getSigningInstance());
 		XMLTransCert transcert = biConn.charge();
@@ -160,7 +160,7 @@ public class Pay
 		XMLAccountInfo info;
 		PayAccount account = m_AccountsFile.getAccount(accountNumber);
 
-		BIConnection biConn = new BIConnection( (BI) m_KnownBIs.get(0),
+		BIConnection biConn = new BIConnection( (BI) m_KnownBIs.elementAt(0),
 											   false
 											   /* ssl off! */
 											   );
@@ -215,7 +215,7 @@ public class Pay
 		signingInstance.initSign(privKey);
 		XMLJapPublicKey xmlKey = new XMLJapPublicKey(pubKey);
 
-		BIConnection biConn = new BIConnection( (BI) m_KnownBIs.get(0),
+		BIConnection biConn = new BIConnection( (BI) m_KnownBIs.elementAt(0),
 											   false
 											   /* ssl off! */
 											   );
