@@ -1,8 +1,5 @@
 /*
  * Created on Apr 21, 2004
- *
- * To change the template for this generated file go to
- * Window&gt;Preferences&gt;Java&gt;Code Generation&gt;Code and Comments
  */
 package anon.tor.test;
 
@@ -10,14 +7,11 @@ import anon.AnonChannel;
 import anon.tor.Tor;
 import anon.tor.TorAnonServerDescription;
 import logging.*;
-import java.net.InetAddress;
 
 /**
  * @author stefan
  *
- * To change the template for this generated type comment go to
- * Window&gt;Preferences&gt;Java&gt;Code Generation&gt;Code and Comments
- */
+  */
 public class tor2jap
 {
 

@@ -32,9 +32,6 @@ package anon.tor;
 
 import java.io.IOException;
 import java.net.ConnectException;
-//import java.net.InetAddress;
-//import java.util.Vector;
-//import java.util.HashMap;
 import java.security.SecureRandom;
 import java.util.Hashtable;
 import java.util.Vector;
@@ -95,9 +92,6 @@ public class Circuit
 	private volatile boolean m_bReceivedCreatedOrExtendedCell;
 	private Object m_oNotifySync;
 	private MyRandom m_rand;
-
-	//the Tor instance this circuit belongs to...
-	//private Tor m_Tor;
 
 	/**
 	 * constructor
@@ -293,7 +287,7 @@ public class Circuit
 		return m_State == STATE_CLOSED;
 	}
 
-	/* check if the circuit is already shutdown
+	/** check if the circuit is already shutdown
 	 *
 	 * @return if the circuit is shutdown
 	 */
@@ -580,34 +574,6 @@ public class Circuit
 		return m_circID;
 	}
 
-	/**
-	 * creates a channel through the tor-network
-	 * @param type
-	 * type of the channel
-	 * @return
-	 * a channel
-	 * @throws IOException
-	 */
-	/*	public TorChannel createSOCKSChannel(int type) throws IOException
-	 {
-	  if (m_bShutdown)
-	  {
-	   throw new ConnectException("Circuit Closed - cannot connect");
-	  }
-	  else
-	  {
-	   m_streamIDCounter++;
-	   TorSocksChannel tsc = new TorSocksChannel(m_streamIDCounter, this);
-	   m_streams.put(new Integer(m_streamIDCounter), tsc);
-
-	   if (m_streamIDCounter == MAX_STREAMS_OVER_CIRCUIT)
-	   {
-	 shutdown();
-	   }
-	   return tsc;
-	  }
-	 }
-	 */
 	/**
 	 * creates a channel through the tor-network
 	 * @param addr

@@ -31,7 +31,6 @@
  */
 package anon.tor.tinytls;
 
-import java.math.BigInteger;
 
 import org.bouncycastle.crypto.digests.SHA1Digest;
 import org.bouncycastle.crypto.engines.DESEngine;
@@ -40,6 +39,7 @@ import org.bouncycastle.crypto.modes.CBCBlockCipher;
 import org.bouncycastle.crypto.params.KeyParameter;
 import org.bouncycastle.crypto.params.ParametersWithIV;
 
+import anon.crypto.MyRandom;
 import anon.tor.util.helper;
 
 /**
@@ -50,6 +50,7 @@ public class DHE_RSA_WITH_DES_CBC_SHA extends CipherSuite {
 
 	private CBCBlockCipher m_encryptcipher;
 	private CBCBlockCipher m_decryptcipher;
+	private MyRandom m_rand;
 
 	/**
 	 * Constuctor
@@ -59,6 +60,7 @@ public class DHE_RSA_WITH_DES_CBC_SHA extends CipherSuite {
 	{
 		super(new byte[]{0x00,0x15});
 		this.setKeyExchangeAlgorithm(new DHE_RSA_Key_Exchange());
+		m_rand = new MyRandom();
 	}
 
 	public void encode(TLSRecord msg)
@@ -72,9 +74,9 @@ public class DHE_RSA_WITH_DES_CBC_SHA extends CipherSuite {
 		hmac.update(msg.m_Data,0,msg.m_dataLen);
 		hmac.doFinal(msg.m_Data,msg.m_dataLen);
 		msg.m_dataLen+=hmac.getMacSize();
-		//TODO : zuf?lliges padding hinzuf?gen
 		//add padding as described in RFC2246 (6.2.3.2)
-		int paddingsize=m_encryptcipher.getBlockSize()-((msg.m_dataLen+1)%m_encryptcipher.getBlockSize());
+		int paddingsize=m_rand.nextInt(240);
+		paddingsize=paddingsize+(m_encryptcipher.getBlockSize()-((msg.m_dataLen+1+paddingsize)%m_encryptcipher.getBlockSize()));
 		for(int i=0;i<paddingsize+1;i++)
 		{
 			msg.m_Data[msg.m_dataLen++] = (byte)paddingsize;
@@ -94,11 +96,20 @@ public class DHE_RSA_WITH_DES_CBC_SHA extends CipherSuite {
 		//remove padding and mac
 		HMac hmac = new HMac(new SHA1Digest());
 		int len=msg.m_dataLen-hmac.getMacSize()-1;
-		len-=msg.m_Data[msg.m_dataLen-1];//padding
+		byte paddinglength = msg.m_Data[msg.m_dataLen-1];//padding 
+
+		//check if we've recieved the right padding
+		for(int i=msg.m_dataLen-1;i>msg.m_dataLen - paddinglength-2;i--)
+		{
+			if(msg.m_Data[i]!=paddinglength)
+			{
+				throw new TLSException("wrong Padding detected");
+			}
+		}
+
+		len-= (paddinglength & 0xFF);
 		msg.setLength(len);
-
-		//TODO :auf richtiges padding vergleichen
-
+		
 		hmac.reset();
 		hmac.init(new KeyParameter(m_servermacsecret));
 		hmac.update(helper.inttobyte(m_readsequenznumber,8),0,8);

@@ -27,8 +27,6 @@
  */
 package anon.tor.ordescription;
 
-//import java.util.HashSet;
-
 import anon.util.Base64;
 import java.io.*;
 import java.util.StringTokenizer;
@@ -37,15 +35,11 @@ import anon.crypto.MyRSAPublicKey;
 /*
  * Created on Mar 25, 2004
  *
- * To change the template for this generated file go to
- * Window&gt;Preferences&gt;Java&gt;Code Generation&gt;Code and Comments
  */
 
 /**
  * @author stefan
  *
- * To change the template for this generated type comment go to
- * Window&gt;Preferences&gt;Java&gt;Code Generation&gt;Code and Comments
  */
 public class ORDescription
 {

@@ -1,8 +1,5 @@
 /*
  * Created on Jun 22, 2004
- *
- * To change the template for this generated file go to
- * Window&gt;Preferences&gt;Java&gt;Code Generation&gt;Code and Comments
  */
 package anon.tor.test;
 
@@ -15,9 +12,6 @@ import anon.AnonChannel;
 
 /**
  * @author stefan
- *
- * To change the template for this generated type comment go to
- * Window&gt;Preferences&gt;Java&gt;Code Generation&gt;Code and Comments
  */
 public class proxythread implements Runnable{
 
@@ -68,7 +62,7 @@ public class proxythread implements Runnable{
 				}
 			} catch (Exception ex)
 			{
-				System.out.println("Exception catched");
+				System.out.println("Exception catched : "+ex.getLocalizedMessage());
 				this.stop();
 			}
 		}

@@ -166,23 +166,6 @@ public class Tor implements /*Runnable,*/ AnonService
 		{
 			if (!helper.isIPAddress(addr))
 			{
-//				for (int i = 0; i < 3; i++)
-//				{
-//					int circ = m_rand.nextInt(m_MaxNrOfActiveCircuits);
-//					if (m_activeCircuits[circ] == null || m_activeCircuits[circ].isShutdown())
-//					{
-//						m_activeCircuits[circ] = createNewCircuit(null, -1);
-//					}
-//					if (m_activeCircuits[circ] != null && !m_activeCircuits[circ].isShutdown())
-//					{
-//						String s = m_activeCircuits[circ].resolveDNS(addr);
-//						if (s != null)
-//						{
-//							addr = s;
-//							break;
-//						}
-//					}
-//				}
 				addr = resolveDNS(addr);
 				if (!helper.isIPAddress(addr))
 				{

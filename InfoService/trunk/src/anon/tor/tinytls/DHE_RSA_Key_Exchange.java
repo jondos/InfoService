@@ -65,7 +65,8 @@ public class DHE_RSA_Key_Exchange extends Key_Exchange{
 	//see RFC2246 for more information
 	private final static int MAXKEYMATERIALLENGTH = 104;
 
-	private final static byte[] FINISHEDLABEL = ("client finished").getBytes();
+	private final static byte[] CLIENTFINISHEDLABEL = ("client finished").getBytes();
+	private final static byte[] SERVERFINISHEDLABEL = ("server finished").getBytes();
 	private final static byte[] KEYEXPANSION = ("key expansion").getBytes();
 	private final static byte[] MASTERSECRET = ("master secret").getBytes();
 
@@ -163,8 +164,21 @@ public class DHE_RSA_Key_Exchange extends Key_Exchange{
 	 * @param b server finished message
 	 * @throws TLSException
 	 */
-	public void serverFinished(byte[] b,int len) throws TLSException {
-		//TODO : server finished auswerten
+	public void serverFinished(byte[] b,int len,byte[] handshakemessages) throws TLSException {
+		PRF prf = new PRF(this.m_mastersecret,SERVERFINISHEDLABEL,helper.conc(hash.md5(new byte[][]{handshakemessages}),hash.sha(new byte[][]{handshakemessages})));
+		byte[] c = prf.calculate(12);
+		if(b[0]==20&&b[1]==0&&b[2]==0&&b[3]==12)
+		{
+			for(int i=0;i<c.length;i++)
+			{
+				if(c[i]!=b[i+4])
+				{
+					throw new TLSException("wrong Server Finished message recieved");
+				}
+			}
+			return;
+		}
+		throw new TLSException("wrong Server Finished message recieved");
 	}
 
 	/**
@@ -200,7 +214,7 @@ public class DHE_RSA_Key_Exchange extends Key_Exchange{
 	 * @return client finished message
 	 */
 	public byte[] clientFinished(byte[] handshakemessages) throws TLSException {
-		PRF prf = new PRF(this.m_mastersecret,FINISHEDLABEL,helper.conc(hash.md5(new byte[][]{handshakemessages}),hash.sha(new byte[][]{handshakemessages})));
+		PRF prf = new PRF(this.m_mastersecret,CLIENTFINISHEDLABEL,helper.conc(hash.md5(new byte[][]{handshakemessages}),hash.sha(new byte[][]{handshakemessages})));
 		return prf.calculate(12);
 	}
 

@@ -31,8 +31,6 @@
  */
 package anon.tor.tinytls;
 
-import java.math.BigInteger;
-
 import anon.crypto.JAPCertificate;
 
 /**
@@ -168,10 +166,10 @@ public abstract class CipherSuite{
 	 * @param finishedmessage the message that have to be valideted
 	 * @throws TLSException
 	 */
-	public void serverFinished(TLSRecord msg) throws TLSException
+	public void serverFinished(TLSRecord msg,byte[] handshakemessages) throws TLSException
 	{
 		decode(msg);
-		m_keyexchangealgorithm.serverFinished(msg.m_Data,msg.m_dataLen);
+		m_keyexchangealgorithm.serverFinished(msg.m_Data,msg.m_dataLen,handshakemessages);
 	}
 
 	/**
