@@ -98,7 +98,7 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 			getContentPane().add(tabs, BorderLayout.CENTER);
 
 			updateValues();
-			getContentPane().invalidate();
+	//		getContentPane().invalidate();
 //	    setResizable(false);
 			try
 				{
@@ -109,7 +109,7 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 				}
 			model.centerFrame(this);
 	//		toFront();
-			getContentPane().validate();
+//			getContentPane().validate();
 //		setVisible(true);
 	}
 

@@ -1,5 +1,12 @@
 import java.net.*;
 import java.io.*;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.DocumentBuilder;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import javax.xml.parsers.ParserConfigurationException;
+import com.sun.xml.tree.XmlDocument;
 
 public final class JAPFetchAnonServers {
 	JAPModel model;
@@ -29,19 +36,24 @@ public final class JAPFetchAnonServers {
 						line = readLine(in);
 				}
 			// XML stuff
-/*						InputSource ins = new InputSource(in);
-			Document doc=DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(ins);
-			NamedNodeMap n=doc.getFirstChild().getAttributes();
-			
-			s                = n.getNamedItem("anonServer").getNodeValue();
-			nrOfActiveUsers  = Integer.valueOf(n.getNamedItem("nrOfActiveUsers").getNodeValue()).intValue();
-			trafficSituation = Integer.valueOf(n.getNamedItem("currentRisk").getNodeValue()).intValue();
-			currentRisk      = Integer.valueOf(n.getNamedItem("trafficSituation").getNodeValue()).intValue();
-*/
-			// close streams and socket
-			in.close();
-			out.close();
-			socket.close();
+					Document doc=DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(in);
+					model.anonServerDatabase.removeAllElements();
+					NodeList nodelist=doc.getElementsByTagName("MixCascade");
+					for(int i=0;i<nodelist.getLength();i++)
+						{
+							Element elem=(Element)nodelist.item(i);
+							NodeList nl=elem.getElementsByTagName("Name");
+							String name=nl.item(0).getFirstChild().getNodeValue().trim();
+							nl=elem.getElementsByTagName("IP");
+							String ip=nl.item(0).getFirstChild().getNodeValue().trim();
+							nl=elem.getElementsByTagName("Port");
+							String port=nl.item(0).getFirstChild().getNodeValue().trim();
+							model.anonServerDatabase.addElement(new AnonServerDBEntry(name,ip,Integer.parseInt(port)));
+						}
+					// close streams and socket
+					in.close();
+					out.close();
+					socket.close();
 		}
 		catch(Exception e) {
 			throw e;
