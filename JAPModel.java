@@ -147,7 +147,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 			//JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:initializing...");
 			// Create observer object
 			observerVector = new Vector();
-			currentAnonService = new AnonServerDBEntry("Default Mix Cascade","mix.inf.tu-dresden.de",6544);
+			currentAnonService = new AnonServerDBEntry("mix.inf.tu-dresden.de",6544);
 			proxyDirect=null;
 			proxyAnon=null;
 			//JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:initialization finished!");
@@ -343,14 +343,15 @@ public final class JAPModel implements JAPAnonServiceListener{
 			e.setAttribute("supportSocks",(getUseSocksPort()?"true":"false"));
 			e.setAttribute("listenerIsLocal",(getListenerIsLocal()?"true":"false"));
 			e.setAttribute("proxyMode",(mbUseProxy?"true":"false"));
-			e.setAttribute("proxyHostName",proxyHostName);
+			e.setAttribute("proxyHostName",((proxyHostName==null)?"":proxyHostName));
 			e.setAttribute("proxyPortNumber",Integer.toString(proxyPortNumber));
-			e.setAttribute("infoServiceHostName",infoServiceHostName);
+			e.setAttribute("infoServiceHostName",((infoServiceHostName==null)?"":infoServiceHostName));
 			e.setAttribute("infoServicePortNumber",Integer.toString(infoServicePortNumber));
-			e.setAttribute("anonserviceName",model.getAnonServer().getName());
-			e.setAttribute("anonHostName",   model.getAnonServer().getHost());
-			e.setAttribute("anonPortNumber",   Integer.toString(model.getAnonServer().getPort()));
-			e.setAttribute("anonSSLPortNumber",Integer.toString(model.getAnonServer().getSSLPort()));
+			AnonServerDBEntry e1 = model.getAnonServer();
+			e.setAttribute("anonserviceName",((e1.getName()==null)?"":e1.getName()));
+			e.setAttribute("anonHostName",   ((e1.getHost()==null)?"":e1.getHost()));
+			e.setAttribute("anonPortNumber",   Integer.toString(e1.getPort()));
+			e.setAttribute("anonSSLPortNumber",Integer.toString(e1.getSSLPort()));
 			e.setAttribute("autoConnect",(autoConnect?"true":"false"));
 			e.setAttribute("minimizedStartup",(mbMinimizeOnStartup?"true":"false"));
 			e.setAttribute("neverRemindActiveContent",(mbActCntMessageNeverRemind?"true":"false"));
@@ -378,8 +379,13 @@ public final class JAPModel implements JAPAnonServiceListener{
 			((XmlDocument)doc).write(f);
 		}
 		catch(Exception ex) {
-			JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.MISC,"JAPModel:save() Exception: "+ex);
+			JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.MISC,"JAPModel:save() Exception: "+ex.getMessage());
+			ex.printStackTrace();
 			JAPDebug.out(JAPDebug.ERR,JAPDebug.MISC,"JAPModel:error saving configuration to "+XMLCONFFN);
+			JOptionPane.showMessageDialog(model.getView(),
+											model.getString("errorSavingConfig"),
+											model.getString("errorSavingConfigTitle"),
+											JOptionPane.ERROR_MESSAGE);
 		}
 	}
 
@@ -439,15 +445,17 @@ public final class JAPModel implements JAPAnonServiceListener{
 	
 	//---------------------------------------------------------------------
 	
-	public void setAnonServer(AnonServerDBEntry s) {
-	    if (this.currentAnonService.equals(s)) {
-		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:currentAnonService NOT changed");
+	public synchronized void setAnonServer(AnonServerDBEntry s) {
+	    if (model.getAnonServer().equals(s)) {
+			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:currentAnonService NOT changed");
+			if (!model.getAnonServer().getName().equals(s.getName()))
+				model.getAnonServer().setName(s.getName());
 	    } else {
-		// if service has changed --> stop service
-		setAnonMode(false);
-		this.currentAnonService = s;
-		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:currentAnonService changed");
-		notifyJAPObservers();
+			// if service has changed --> stop service
+			setAnonMode(false);
+			this.currentAnonService = s;
+			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:currentAnonService changed");
+			notifyJAPObservers();
 	    }
 	}
 	
@@ -1039,7 +1047,7 @@ private final class SetAnonModeAsync implements Runnable
 				}
 			catch(Throwable t)
 				{
-				};
+				}
 		}
 
 	/** Try to load all available MIX-Cascades form the InfoService...
