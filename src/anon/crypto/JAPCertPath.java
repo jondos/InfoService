@@ -60,7 +60,6 @@ public class JAPCertPath
 	{
 		try
 		{
-
 			if (! (nSig instanceof Element))
 			{
 				return ErrorCodes.E_UNKNOWN;
