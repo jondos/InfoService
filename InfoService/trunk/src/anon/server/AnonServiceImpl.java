@@ -100,6 +100,7 @@ final public class AnonServiceImpl implements AnonService
 
 			// start Payment (2004-10-20 Bastian Voigt)
 			m_Pay = new Pay(m_MuxSocket);
+			return ErrorCodes.E_SUCCESS;
 		}
 		catch (Exception e)
 		{
@@ -135,7 +136,8 @@ final public class AnonServiceImpl implements AnonService
 
 	public void shutdown()
 	{
-		m_Pay.shutdown(); // shutdown payment
+		if(m_Pay!=null)
+			m_Pay.shutdown(); // shutdown payment
 		m_MuxSocket.stopService();
 	}
 
