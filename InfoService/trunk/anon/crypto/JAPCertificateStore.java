@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2000 - 2003, The JAP-Team
+ Copyright (c) 2000 - 2004, The JAP-Team
  All rights reserved.
  Redistribution and use in source and binary forms, with or without modification,
  are permitted provided that the following conditions are met:
@@ -22,16 +22,17 @@
  */
 package anon.crypto;
 
+/* Hint: This file may be only a copy of the original file which is always in the JAP source tree!
+ * If you change something - do not forget to add the changes also to the JAP source tree!
+ */
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.Vector;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import anon.util.XMLUtil;
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
 
 /**
  * Certificate store class. It contains the (root) certificates in a hashtable structure,
@@ -152,8 +153,6 @@ final public class JAPCertificateStore
 		}
 		catch (Exception e)
 		{
-			LogHolder.log(LogLevel.ERR, LogType.MISC,
-						  "JAPCertificateStore:constructor(NodeList) finally failed!");
 			return null;
 		}
 	}
@@ -252,6 +251,24 @@ final public class JAPCertificateStore
 	{
 		return m_HTCertStore.elements();
 	}
+ /**
+   * Returns a Vector with the snapshot of all enabled certificates (JAPCertificate) in this
+   * JAPCertificateStore. The returned Vector is independent from this JAPCertificateStore,
+   * only the certificates are the same.
+   *
+   * @return The Vector with all enabled certificates.
+   */
+  public Vector getAllEnabledCertificates() {
+    Vector r_certificatesVector = new Vector();
+    Enumeration certificatesEnumeration = m_HTCertStore.elements();
+    while (certificatesEnumeration.hasMoreElements()) {
+      JAPCertificate currentCertificate = (JAPCertificate)(certificatesEnumeration.nextElement());
+      if (currentCertificate.getEnabled() == true) {
+        r_certificatesVector.addElement(currentCertificate);
+      }
+    }
+    return r_certificatesVector;
+  }
 
 	/**
 	 * Creates the trusted CA XML node
