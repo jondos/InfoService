@@ -38,15 +38,20 @@ import java.io.StringWriter;
  */
 public final class LogHolder {
 
+	//The possible detail levels of the log messages.
+	private static final int DETAIL_LEVEL_LOW = 0;
+	private static final int DETAIL_LEVEL_HIGH = 1;
+	private static final int DETAIL_LEVEL_HIGHEST = 2;
+
 	/**
 	 * Stores the instance of LogHolder (Singleton).
 	 */
 	private static LogHolder ms_logHolderInstance;
 
 	/**
-	 * If the log messages are detailed or not.
+	 * The current detail level of all log messages.
 	 */
-	private static boolean m_bDetailedLog = false;
+	private static int m_messageDetailLevel = DETAIL_LEVEL_LOW;
 
 	/**
 	 * Stores the Log instance.
@@ -59,6 +64,15 @@ public final class LogHolder {
 	 */
 	private LogHolder() {
 		m_logInstance = new DummyLog();
+	}
+
+	/**
+	 * Sets the detail level of all log messages. Use one of the class constants to set it.
+	 * @param a_detailLevel the detail level of all log messages
+	 */
+	public static void setDetailLevel(int a_messageDetailLevel)
+	{
+		m_messageDetailLevel = a_messageDetailLevel;
 	}
 
 	/**
@@ -80,19 +94,23 @@ public final class LogHolder {
 	 * @param message The message to log.
 	 */
 	public static void log(int logLevel, int logType, String message) {
-		// Test the log status before calling the log method; otherwise it would be very time consuming!
+		// test the log status before calling the log method; otherwise it could be very time consuming!
 		if (logLevel <= getInstance().getLogInstance().getLogLevel() &&
 			(logType & getInstance().getLogInstance().getLogType()) == logType)
 		{
-			if (m_bDetailedLog)
+			if (m_messageDetailLevel <= DETAIL_LEVEL_LOW)
+			{
+				getInstance().getLogInstance().log(logLevel, logType, message);
+			}
+			else if (m_messageDetailLevel == DETAIL_LEVEL_HIGH)
+			{
+				getInstance().getLogInstance().log(logLevel, logType,
+				Util.normaliseString(getCallingClassFile() + ": ", 40) + message);
+			}
+			else
 			{
 				getInstance().getLogInstance().log(logLevel, logType,
 					Util.normaliseString(getCallingMethod() + ": ", 80) + message);
-	}
-			else
-	{
-				getInstance().getLogInstance().log(logLevel, logType,
-				Util.normaliseString(getCallingClassFile() + ": ", 40) + message);
 			}
 		}
 	}
@@ -146,6 +164,7 @@ public final class LogHolder {
 	/**
 	 * Returns the name, class, file and line number of the calling method (from outside
 	 * this class) in the form <Code> package.class.method(class.java:<LineNumber>) </Code>.
+	 * This method does need some processing time, as an exception with the stack trace is generated.
 	 * @return the name, class and line number of the calling method
 	 */
 	private static String getCallingMethod()
