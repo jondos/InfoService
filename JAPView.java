@@ -133,7 +133,7 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 
 		//
 		userProgressBar = new 
-			JProgressBar(JProgressBar.HORIZONTAL,0, model.MAXPROGRESSBARVALUE);
+			JProgressBar(JProgressBar.HORIZONTAL,0, 1);
 		userProgressBar.setStringPainted(true);
 		userProgressBar.setBorderPainted(true);
 		//
@@ -163,7 +163,7 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 		JPanel meterPanel = new JPanel();
 		meterPanel.setLayout( new BorderLayout() );
 		meterPanel.setBorder( new TitledBorder(model.getString("meterBorder")) );
-		meterLabel = new JLabel(setMeterImage(model.NOMEASURE));
+		meterLabel = new JLabel(setMeterImage());
 		meterPanel.add(ano1CheckBox,BorderLayout.NORTH);
 		meterPanel.add(meterLabel, BorderLayout.CENTER);
 		
@@ -338,19 +338,11 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 					}
 				else
 					{
-						return meterIcons[1]; // Anon deactivated
+						return meterIcons[0]; // Anon deactivated
 					}
 			}
 
-    public ImageIcon setMeterImage(boolean b) 
-			{
-				if (model.NOMEASURE)
-					return meterIcons[0]; // No measure available
-				else
-					return setMeterImage();
-			}
-
-		public void actionPerformed(ActionEvent event)
+	public void actionPerformed(ActionEvent event)
 			{
 				if (event.getSource() == quitB)
 					exitProgram(); 
@@ -408,11 +400,19 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 		// Meter panel
 		ano1CheckBox.setSelected(model.isAnonMode());
 		meterLabel.setIcon(setMeterImage());
-		if (model.isAnonMode())
-			{
+		if (model.isAnonMode() && (model.nrOfActiveUsers != -1) && (model.currentRisk != -1) && (model.trafficSituation != -1)) {
+				// Nr of active users
+				if (model.nrOfActiveUsers > userProgressBar.getMaximum())
+					userProgressBar.setMaximum(model.nrOfActiveUsers);
 				userProgressBar.setValue(model.nrOfActiveUsers);
 				userProgressBar.setString(String.valueOf(model.nrOfActiveUsers));
+				// Current Risk
 				protectionProgressBar.setValue(model.currentRisk);
+				if (model.currentRisk < 80)
+					protectionProgressBar.setString(String.valueOf(model.currentRisk)+" %");
+				else
+					protectionProgressBar.setString(model.getString("meterRiskVeryHigh"));
+				// Traffic Situation
 				trafficProgressBar.setValue(model.trafficSituation);
 				if      (model.trafficSituation < 30) 
 					trafficProgressBar.setString(model.getString("meterTrafficLow"));
@@ -422,20 +422,25 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 					trafficProgressBar.setString(model.getString("meterTrafficHigh"));
 				else                                  
 					trafficProgressBar.setString(model.getString("meterTrafficCongestion")); 
-			} else {
-			userProgressBar.setValue(model.MAXPROGRESSBARVALUE);
+		} else {
+			userProgressBar.setValue(userProgressBar.getMaximum());
 			userProgressBar.setString(model.getString("meterNA"));
-			protectionProgressBar.setValue(model.MAXPROGRESSBARVALUE);
-			protectionProgressBar.setString(model.getString("meterRiskVeryHigh"));
-			trafficProgressBar.setValue(model.MAXPROGRESSBARVALUE);
+			protectionProgressBar.setValue(protectionProgressBar.getMaximum());
+			if (model.isAnonMode())
+				protectionProgressBar.setString(model.getString("meterNA"));
+			else
+				protectionProgressBar.setString(model.getString("meterRiskVeryHigh"));
+			trafficProgressBar.setValue(trafficProgressBar.getMaximum());
 			trafficProgressBar.setString(model.getString("meterNA"));
 		}
-			int c=model.getNrOfChannels();
-			if(c>ownTrafficChannelsProgressBar.getMaximum())
-				ownTrafficChannelsProgressBar.setMaximum(c);
-			ownTrafficChannelsProgressBar.setValue(c);
-			ownTrafficChannelsProgressBar.setString(String.valueOf(model.getNrOfChannels()));
-			ownTrafficBytesLabel.setText(NumberFormat.getInstance().format(model.getNrOfBytes())+" Bytes");
+		// Nr of Channels
+		int c=model.getNrOfChannels();
+		if (c > ownTrafficChannelsProgressBar.getMaximum())
+			ownTrafficChannelsProgressBar.setMaximum(c);
+		ownTrafficChannelsProgressBar.setValue(c);
+		ownTrafficChannelsProgressBar.setString(String.valueOf(model.getNrOfChannels()));
+		// Nr of Bytes transmitted anonymously
+		ownTrafficBytesLabel.setText(NumberFormat.getInstance().format(model.getNrOfBytes())+" Bytes");
     }
 	
 	public void valuesChanged (Object o)

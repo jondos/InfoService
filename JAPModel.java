@@ -36,11 +36,12 @@ public final class JAPModel {
 	public  boolean  canStartService   = false;  // indicates if Anon service can be started
 	public  String   status1           = "?";
 	public  String   status2           = " ";
-
-	private int nrOfChannels = 0;
-	private int nrOfBytes    = 0;
-	//static final int MAXCHANNELVALUE = 5; // maximal number of anonymous channels
-	//static final int MAXBYTESVALUE = 100000; // maximal bytes of all anonymous channels
+	private int      nrOfChannels      = 0;
+	private int      nrOfBytes         = 0;
+	public int       nrOfActiveUsers   = -1;
+	static final int MAXPROGRESSBARVALUE = 100; // for trafficSituation and currentRisk
+	public int       trafficSituation  = -1;
+	public int       currentRisk       = -1;
 
 // 2000-08-01(HF): the following url is now defined in JAPMessages.properties:
 // usage: model.getString("infoURL")
@@ -66,8 +67,8 @@ public final class JAPModel {
 	static final String CONFIGICONFN = "images/icoc.gif";
 	static final String METERICONFN  = "images/icom.gif";
 	static final String[] METERFNARRAY = {
-						"images/meterN.gif", // no measure available
 						"images/meterD.gif", // anonymity deactivated
+						"images/meterN.gif", // no measure available
 						"images/meter1.gif",
 						"images/meter2.gif",
 						"images/meter3.gif",
@@ -75,11 +76,6 @@ public final class JAPModel {
 						"images/meter5.gif",
 						"images/meter6.gif"
 						};
-	static final int MAXPROGRESSBARVALUE = 100;
-	static final boolean NOMEASURE = false;
-	public int nrOfActiveUsers = 1;
-	public int trafficSituation = 0;
-	public int currentRisk = 100;
 	
 	private Vector observerVector;
 	public Vector anonServerDatabase;
@@ -88,6 +84,7 @@ public final class JAPModel {
 	
 	private static JAPModel model=null;
 	public JAPLoading japLoading;
+	public static JAPFeedback feedback;
 	
 	public static JAPKeyPool keypool;
 	
@@ -185,9 +182,14 @@ public final class JAPModel {
 		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:initial run of JAP...");
 		// start keypool thread
 		keypool=new JAPKeyPool(20,16);
-		Thread t = new Thread (keypool);
-		t.setPriority(Thread.MIN_PRIORITY);
-		t.start();
+		Thread t1 = new Thread (keypool);
+		t1.setPriority(Thread.MIN_PRIORITY);
+		t1.start();
+		// start feedback thread
+		feedback=new JAPFeedback();
+		Thread t2 = new Thread (feedback);
+		t2.setPriority(Thread.MIN_PRIORITY);
+		t2.start();
 		// start Proxy
 		startProxy();
 		// start anon service immediately if autoConnect is true
@@ -197,12 +199,23 @@ public final class JAPModel {
     public int getCurrentProtectionLevel() {
 		// Hier eine moeglichst komplizierte Formel einfuegen,
 		// nach der die Anzeige fuer das "Anon Meter" berechnet wird.
-//		float f = (trafficSituation/MAXPROGRESSBARVALUE)*(METERFNARRAY.length-1);
-		float f;
-		f = trafficSituation / (float)MAXPROGRESSBARVALUE;
-		f = f * (METERFNARRAY.length-3) + 2;
-	//	JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:getCurrentProtectionLevel(): f="+f);
-		return (int)f;
+		if ((nrOfActiveUsers  == -1) ||
+			(trafficSituation == -1) ||
+			(currentRisk      == -1)) {
+				return 1;
+		} else {
+			try {
+				float f;
+				f = trafficSituation / (float)MAXPROGRESSBARVALUE;
+				f = f * (METERFNARRAY.length-3) + 2;
+				//JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:getCurrentProtectionLevel(): f="+f);
+				return (int)f;
+			}
+			catch (Exception e) {
+				JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.MISC,"JAPModel:getCurrentProtectionLevel(): "+e);
+				return 1;
+			}
+		}
 	}
 		
 	public void setPortNumber (int p) {

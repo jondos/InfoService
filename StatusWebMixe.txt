@@ -3,7 +3,6 @@
 ###########################################################
 
 ##IN-WORK
-Wenn Anon ausgeschaltet, dann direkte Verbindung ins internet
 Autostart startet MUX nicht
 Bei Abschalten "anonymer zugriff":
    ProxyServer Exception: java.io.InterruptedIOException: accept interrupted
@@ -11,7 +10,7 @@ Bei Abschalten "anonymer zugriff":
 ?? Exception bei Server 
 
 ##TODO
-Versionscheck via Proxy, wenn Proxy-Mode ist aktiviert
+Versionscheck, JAPFeedback via Proxy, wenn Proxy-Mode ist aktiviert
 JAPDirectConnection ggf. erweitern/aendern, dass direkte beobachtbare
    Verbindung nach Warnung moeglich ist
 ?? bug: Bei Click auf einstellungen label change
@@ -20,6 +19,8 @@ sprache aendern settings implementieren
 !! Hilfetexte
 
 ##ERLEDIGT (= OK)
+OK Neue Klasse JAPFeedback, die ueber den InfoService das Anonym-O-Meter
+   bedient
 OK Bei Download einer neuen JAP-Version: Frame mit Fortschrittsanzeige
 OK Probleme bei Bilder laden (habe hier was geaendert, aber jetzt klappt 
    es nicht mehr, wenn ich das .jar File versuche zu starten. 
