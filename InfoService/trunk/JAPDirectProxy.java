@@ -29,6 +29,7 @@ import java.net.InetAddress ;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.Socket ;
+import java.net.SocketException;
 import java.io.BufferedWriter;
 import java.io.OutputStreamWriter;
 import java.io.InterruptedIOException;
@@ -151,6 +152,11 @@ private final class JAPDirectConnection implements Runnable
 									{
 										continue;
 									}
+								catch(SocketException e2)
+									{
+										JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPDirectProxy:DirectProxy.run() accept socket excpetion: " +e2);
+										break;
+									}
 								JAPDirectConnection doIt = new JAPDirectConnection(socket);
 								Thread thread = new Thread (threadgroupAll,doIt);
 								thread.start();
@@ -163,10 +169,10 @@ private final class JAPDirectConnection implements Runnable
 			//			} 
 			//			catch (Exception e2) {
 			//			}
-						JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPProxyServer:ProxyServer.run() Exception: " +e);
+						JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPDirectProxy:DirectProxy.run() Exception: " +e);
 					}
 				isRunningProxy = false;
-				JAPDebug.out(JAPDebug.INFO,JAPDebug.NET,"JAPProxyServer:ProxyServer on port " + portN + " stopped.");
+				JAPDebug.out(JAPDebug.INFO,JAPDebug.NET,"JAPDirect:DircetProxyServer stopped.");
 		  }
 	
 

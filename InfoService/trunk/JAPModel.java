@@ -730,7 +730,6 @@ public final class JAPModel implements JAPAnonServiceListener{
 		}
 		else if ((proxyDirect==null) && (anonModeSelected == false))
 			{
-				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:setAnonMode("+anonModeSelected+")");
 				if(proxyAnon!=null)
 					proxyAnon.stop();
 				proxyAnon=null;
