@@ -97,7 +97,7 @@ public final class JAPController implements ProxyListener {
 	private int      nrOfChannels      = 0;
 	private int      nrOfBytes         = 0;
 
-	private static  JAPView           view          = null;
+	private static  JAPView           m_View          = null;
 	private static  InfoService    m_InfoService  = null;
 	private static  JAPController     m_Controller         = null;
 	private static  JAPModel          m_Model         = null;
@@ -375,7 +375,7 @@ public final class JAPController implements ProxyListener {
 					if(nl!=null&&nl.getLength()>0)
 						{
 							Element elemOutput=(Element)nl.item(0);
-							JAPDebug.showConsole(elemOutput.getFirstChild().getNodeValue().trim().equalsIgnoreCase("Console"),view);
+							JAPDebug.showConsole(elemOutput.getFirstChild().getNodeValue().trim().equalsIgnoreCase("Console"),m_View);
 						}
 				}
 		}
@@ -493,8 +493,11 @@ public final class JAPController implements ProxyListener {
 		return m_Locale;
 	}
 	public void setLocale(Locale l) {
-		JAPMessages.init(l);
+		if(m_Locale.equals(l))
+      return;
+    JAPMessages.init(l);
 		m_Locale=l;
+    m_View.localeChanged();
 	}
 	//---------------------------------------------------------------------
 	public void setMinimizeOnStartup(boolean b)
@@ -891,7 +894,7 @@ private final class SetAnonModeAsync implements Runnable
 		      JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:setAnonMode("+anonModeSelected+")");
 		      if ((m_proxyAnon == null) && (anonModeSelected == true))
 			      {//start Anon Mode
-				      view.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+				      m_View.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 				      JAPSetAnonModeSplash.start(true);
 	            if (m_bAlreadyCheckedForNewVersion == false&&!JAPModel.isInfoServiceDisabled())
 					      {
@@ -907,7 +910,7 @@ private final class SetAnonModeAsync implements Runnable
 					      }
               if(!canStartService)
                 {
-                  view.setCursor(Cursor.getDefaultCursor());
+                  m_View.setCursor(Cursor.getDefaultCursor());
 						      JAPSetAnonModeSplash.abort();
                   return;
                 }
@@ -924,7 +927,7 @@ private final class SetAnonModeAsync implements Runnable
                                                     JAPMessages.getString("errorFirewallModeNotSupported"),
                                                     JAPMessages.getString("errorFirewallModeNotSupportedTitle"),
                                                     JOptionPane.ERROR_MESSAGE);
-                      view.setCursor(Cursor.getDefaultCursor());
+                      m_View.setCursor(Cursor.getDefaultCursor());
                       JAPSetAnonModeSplash.abort();
                       return;
                     }
@@ -971,7 +974,7 @@ private final class SetAnonModeAsync implements Runnable
                   // start feedback thread
                   feedback=new JAPFeedback();
                   feedback.startRequests();
-                  view.setCursor(Cursor.getDefaultCursor());
+                  m_View.setCursor(Cursor.getDefaultCursor());
                   notifyJAPObservers();
                   JAPSetAnonModeSplash.abort();
                   return;
@@ -1001,7 +1004,7 @@ private final class SetAnonModeAsync implements Runnable
                     }
                 }
               m_proxyAnon=null;
-              view.setCursor(Cursor.getDefaultCursor());
+              m_View.setCursor(Cursor.getDefaultCursor());
               notifyJAPObservers();
               JAPSetAnonModeSplash.abort();
               setAnonMode(false);
@@ -1307,7 +1310,7 @@ private final class SetAnonModeAsync implements Runnable
 	 */
 	public static void aboutJAP() {
 		try {
-			new JAPAbout(view);
+			new JAPAbout(m_View);
 		} catch(Throwable t) {
       t.printStackTrace();
 		}
@@ -1328,7 +1331,7 @@ private final class SetAnonModeAsync implements Runnable
 			    JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPModel:fetchAnonServers: "+e);
 			    if(!JAPModel.isSmallDisplay())
             {
-              JOptionPane.showMessageDialog(view,
+              JOptionPane.showMessageDialog(m_View,
                       JAPMessages.getString("errorConnectingInfoService"),
 											JAPMessages.getString("errorConnectingInfoServiceTitle"),
 											JOptionPane.ERROR_MESSAGE);
@@ -1368,7 +1371,7 @@ private final class SetAnonModeAsync implements Runnable
 							//	Object[] options = { JAPMessages.getString("newVersionNo"), JAPMessages.getString("newVersionYes") };
 							//	ImageIcon   icon = loadImageIcon(DOWNLOADFN,true);
 							String answer;
-							JAPLoading japLoading = new JAPLoading(view);
+							JAPLoading japLoading = new JAPLoading(m_View);
 								answer = japLoading.message(JAPMessages.getString("newVersionAvailableTitle"),
 						   JAPMessages.getString("newVersionAvailable"),
 						   JAPMessages.getString("newVersionNo"),
@@ -1406,7 +1409,7 @@ private final class SetAnonModeAsync implements Runnable
 						// Download failed
 						// Alert, and reset anon mode to false
 						JAPDebug.out(JAPDebug.ERR,JAPDebug.MISC,"JAPModel:versionCheck(): Exception" + e);
-						JOptionPane.showMessageDialog(view,
+						JOptionPane.showMessageDialog(m_View,
 																					JAPMessages.getString("downloadFailed")+JAPMessages.getString("infoURL"),
 																					JAPMessages.getString("downloadFailedTitle"),
 																					JOptionPane.ERROR_MESSAGE);
@@ -1433,7 +1436,7 @@ private final class SetAnonModeAsync implements Runnable
 			// Verson check failed
 			// ->Alert, and reset anon mode to false
 			JAPDebug.out(JAPDebug.ERR,JAPDebug.MISC,"JAPModel: "+e);
-			JAPUtil.showMessageBox(view,"errorConnectingInfoService","errorConnectingInfoServiceTitle",JOptionPane.ERROR_MESSAGE);
+			JAPUtil.showMessageBox(m_View,"errorConnectingInfoService","errorConnectingInfoServiceTitle",JOptionPane.ERROR_MESSAGE);
       //JOptionPane.showMessageDialog(view,
 			//															JAPMessages.getString("errorConnectingInfoService"),
 			//															JAPMessages.getString("errorConnectingInfoServiceTitle"),
@@ -1445,10 +1448,10 @@ private final class SetAnonModeAsync implements Runnable
 	}
 	//---------------------------------------------------------------------
 	public void registerView(JAPView v) {
-			view=v;
+			m_View=v;
 	}
 	public static JAPView getView() {
-			return m_Controller.view;
+			return m_Controller.m_View;
 	}
 	//---------------------------------------------------------------------
 	public void addJAPObserver(JAPObserver o)

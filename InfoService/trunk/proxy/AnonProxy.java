@@ -118,6 +118,7 @@ final public class AnonProxy implements Runnable/*,AnonServiceEventListener*/
     {
       m_ProxyListener=l;
     }
+
 	public void run()
 			{
 				m_bIsRunning=true;

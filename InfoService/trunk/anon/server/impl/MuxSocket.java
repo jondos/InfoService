@@ -493,25 +493,36 @@ public final class MuxSocket implements Runnable
 
 		private void runStoped()
 			{
-				m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:runStoped()");
-				Enumeration e=m_ChannelList.elements();
-				while(e.hasMoreElements())
-					{
-						ChannelListEntry entry=(ChannelListEntry)e.nextElement();
-            entry.channel.closedByPeer();
-					}
-        m_ChannelList=null;
-				m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:MuxSocket all channels closed...");
-				m_bRunFlag=false;
-				m_bIsConnected=false;
-				try{m_inDataStream.close();}catch(Exception e1){}
-				try{m_outDataStream.close();}catch(Exception e2){}
-				try{m_ioSocket.close();}catch(Exception e3){}
-				m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:MuxSocket socket closed...");
-				m_inDataStream=null;
-				m_outDataStream=null;
-				m_ioSocket=null;
-				m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:All done..");
+        synchronized(this)
+          {
+            m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:runStoped()");
+            m_bRunFlag=false;
+            if(m_DummyTraffic!=null)
+              {
+                m_DummyTraffic.stop();
+                m_DummyTraffic=null;
+              }
+            if(m_ChannelList!=null)
+              {
+                Enumeration e=m_ChannelList.elements();
+                while(e.hasMoreElements())
+                  {
+                    ChannelListEntry entry=(ChannelListEntry)e.nextElement();
+                    entry.channel.closedByPeer();
+                  }
+              }
+            m_ChannelList=null;
+            m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:MuxSocket all channels closed...");
+            m_bIsConnected=false;
+            try{m_inDataStream.close();}catch(Exception e1){}
+            try{m_outDataStream.close();}catch(Exception e2){}
+            try{m_ioSocket.close();}catch(Exception e3){}
+            m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:MuxSocket socket closed...");
+            m_inDataStream=null;
+            m_outDataStream=null;
+            m_ioSocket=null;
+            m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:All done..");
+          }
 			}
 
 		public synchronized int send(int channel,int type,byte[] buff,short len)
