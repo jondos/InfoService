@@ -164,8 +164,10 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 		}
 		catch (Exception e)
 		{
+			e.printStackTrace();
 			LogHolder.log(LogLevel.EMERG, LogType.NET,
 						  "JAPController: Constructor - default mix cascade: " + e.getMessage());
+			LogHolder.log(LogLevel.EMERG,LogType.NET,e);
 		}
 		/* set a default infoservice */
 		try
