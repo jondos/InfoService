@@ -49,7 +49,6 @@ import org.bouncycastle.crypto.params.DHPrivateKeyParameters;
 import org.bouncycastle.crypto.params.DHPublicKeyParameters;
 import org.bouncycastle.crypto.params.KeyParameter;
 import org.bouncycastle.crypto.params.ParametersWithIV;
-import org.bouncycastle.util.encoders.Hex;
 
 import anon.tor.tinytls.util.hash;
 import anon.tor.cells.Cell;
@@ -78,8 +77,6 @@ public class OnionRouter
 
 	private ORDescription m_description;
 	private DHBasicAgreement m_dhe;
-	//private byte[] m_keyKf;
-	//private byte[] m_keyKb;
 	private CTRBlockCipher m_encryptionEngine;
 	private CTRBlockCipher m_decryptionEngine;
 	private OnionRouter m_nextOR;
@@ -135,21 +132,6 @@ public class OnionRouter
 		return cell;
 	}
 
-/*	public synchronized RelayCell encryptCell(RelayCell cell, int remainingPathLen)
-	{
-		if (m_nextOR != null && remainingPathLen > 0)
-		{
-			cell = m_nextOR.encryptCell(cell, remainingPathLen - 1);
-		}
-		else
-		{
-			cell.generateDigest(m_digestDf);
-		}
-		cell.doCryptography(m_encryptionEngine);
-		LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Tor sent something...");
-		return cell;
-	}
-*/
 	/**
 	 * decrypts a RelayCell
 	 * @param cell

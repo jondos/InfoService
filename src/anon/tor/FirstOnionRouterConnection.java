@@ -332,16 +332,6 @@ public class FirstOnionRouterConnection implements Runnable
 		}
 	}
 
-	/**
-	 * adds a circuit to the FOR. its only possible to dispatch cells to here registered circuits
-	 * @param circ
-	 * a circuit
-	 */
-	/*	public synchronized void addCircuit(Circuit circ)
-	 {
-	  m_Circuits.put(new Integer(circ.getCircID()), circ);
-	 }
-	 */
 	protected void notifyCircuitClosed(Circuit circ)
 	{
 		m_Circuits.remove(new Integer(circ.getCircID()));

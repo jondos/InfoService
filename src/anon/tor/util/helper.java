@@ -57,17 +57,8 @@ public class helper {
 			return copybytes(b2,0,b2_len);
 		}
 		byte[] b= new byte[b1.length+b2_len];
-		for(int i=0;i<b1.length;i++)
-		{
-			b[i]=b1[i];
-		}
-		if(b2.length>0)
-		{
-			for(int i=0;i<b2_len;i++)
-			{
-				b[i+b1.length]=b2[i];
-			}
-		}
+		System.arraycopy(b1,0,b,0,b1.length);
+		System.arraycopy(b2,0,b,b1.length,b2_len);
 		return b;
 	}
 
@@ -97,10 +88,7 @@ public class helper {
 	public static byte[] copybytes(byte[] bytes,int index,int length)
 	{
 		byte[] b = new byte[length];
-		for(int i=0;i<length;i++)
-		{
-			b[i] = bytes[index+i];
-		}
+		System.arraycopy(bytes,index,b,0,length);
 		return b;
 	}
 	public static boolean isIPAddress(String addr)

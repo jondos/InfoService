@@ -35,12 +35,10 @@ import anon.tor.util.helper;
 
 /**
  * @author stefan
- * @todo redesign this very ugly design!!!
  */
 public class TorSocksChannel extends TorChannel
 {
 
-//	private boolean socksReplyGenerated = false;
 
 	private final static int SOCKS_WAIT_FOR_VERSION = 0;
 	private final static int SOCKS5_WAIT_FOR_METHODS = 1;
@@ -73,6 +71,42 @@ public class TorSocksChannel extends TorChannel
 		{
 			case SOCKS_WAIT_FOR_VERSION:
 			{ //initial state
+				state_WaitForVersion(arg0,len);
+				break;
+			}
+
+			case SOCKS5_WAIT_FOR_METHODS:
+			{ //auth mehtods (version5)
+				state_WaitForMethods(arg0,len);
+				break;
+			}
+			case SOCKS5_WAIT_FOR_REQUEST:
+			{ //v5 waiting for a request....
+				state_WaitForRequest_Socks5(arg0,len);
+				break;
+			}
+			case SOCKS4_WAIT_FOR_REQUEST:
+			{ //v4 waiting for a request....
+				//version number is already consumed...
+				state_WaitForRequest_Socks4(arg0,len);
+				break;
+			}
+
+			case DATA_MODE:
+			{
+				super.send(arg0, len);
+				break;
+			}
+			default:
+			{
+				throw new IOException("illegal status");
+			}
+		}
+
+	}
+	
+	private void state_WaitForVersion(byte[] arg0, int len) throws IOException
+	{
 				if (arg0 != null && len > 0)
 				{
 					m_data = helper.conc(m_data, arg0, len);
@@ -97,11 +131,10 @@ public class TorSocksChannel extends TorChannel
 					}
 					send(null, 0);
 				}
-				break;
 			}
 
-			case SOCKS5_WAIT_FOR_METHODS:
-			{ //auth mehtods (version5)
+	private void state_WaitForMethods(byte[] arg0, int len) throws IOException
+	{
 				if (arg0 != null && len > 0)
 				{
 					m_data = helper.conc(m_data, arg0, len);
@@ -138,7 +171,7 @@ public class TorSocksChannel extends TorChannel
 						if (!methodFound)
 						{
 							//todo close this channel
-							break;
+					return;
 						}
 						m_data = helper.copybytes(m_data, length, m_data.length - length);
 						if (m_data.length > 0)
@@ -148,94 +181,10 @@ public class TorSocksChannel extends TorChannel
 					}
 
 				}
-				break;
-			}
-			case SOCKS5_WAIT_FOR_REQUEST:
-			{ //v5 waiting for a request....
-				if (arg0 != null && len > 0)
-				{
-					m_data = helper.conc(m_data, arg0, len);
-				}
-				if (m_data.length > 6)
-				{
-					byte[] socksAnswer = null;
-					int port = 0;
-					String addr = null;
-					int requestType = m_data[1];
-					int addrType = m_data[3];
-					int consumedBytes = 0;
-					if (requestType != 1) //connect request type==1
-					{
-						//todo: close etc.
-						//command not supported
-						socksAnswer = helper.conc(new byte[]
-												  {0x05, 0x07, 0x00}
-												  , helper.copybytes(this.m_data, 3, this.m_data.length - 3));
-						m_data = null;
-						super.recv(socksAnswer, 0, socksAnswer.length);
-						break;
-					}
-					switch (addrType)
-					{
-						case 1: //IP V4
-						{
-							if (m_data.length > 9)
-							{
-								addr = Integer.toString(m_data[4] & 0xFF) + "." +
-									Integer.toString(m_data[5] & 0xFF) + "." +
-									Integer.toString(m_data[6] & 0xFF) + "." +
-									Integer.toString(m_data[7] & 0xFF);
-								port = ( (m_data[8] & 0xFF) << 8) | (m_data[9] & 0xFF);
-								consumedBytes = 10;
-							}
-							break;
-						}
-						case 3: //Domain Name
-						{
-							int length = m_data[4] & 0xFF;
-							if (m_data.length >= (7 + length))
-							{
-								addr = new String(m_data, 5, length);
-								port = ( (m_data[5 + length] & 0xFF) << 8) | (m_data[6 + length] & 0xFF);
-								consumedBytes = length + 7;
-							}
-							break;
-						}
-						default:
-						{
-							//addresstype not supportet
-							socksAnswer = helper.conc(new byte[]
-								{0x05, 0x08, 0x00}
-								, helper.copybytes(m_data, 3, m_data.length - 3));
-							super.recv(socksAnswer, 0, socksAnswer.length);
-							m_data = null;
-							//todo close
-						}
 					}
 
-					if (addr != null) //we found an address
-					{
-						//	connect
-						Circuit circ = m_Tor.getCircuitForDestination(addr, port);
-						circ.connectChannel(this, addr, port);
-						socksAnswer = helper.conc(new byte[]
-												  {0x05, 0x00, 0x00}
-												  , helper.copybytes(m_data, 3, consumedBytes - 3));
-						super.recv(socksAnswer, 0, socksAnswer.length);
-						m_data = helper.copybytes(m_data, consumedBytes, m_data.length - consumedBytes);
-						m_state = DATA_MODE;
-						if (m_data.length > 0)
+	private void state_WaitForRequest_Socks4(byte[] arg0, int len) throws IOException
 						{
-							send(m_data, m_data.length);
-							m_data = null;
-						}
-					}
-				}
-				break;
-			}
-			case SOCKS4_WAIT_FOR_REQUEST:
-			{ //v4 waiting for a request....
-				//version number is already consumed...
 				if (arg0 != null && len > 0)
 				{
 					m_data = helper.conc(m_data, arg0, len);
@@ -247,7 +196,7 @@ public class TorSocksChannel extends TorChannel
 				}
 				else
 				{
-					break;
+			return;
 				}
 				if (requestType != 1) //connect request type==1
 				{
@@ -258,7 +207,7 @@ public class TorSocksChannel extends TorChannel
 						0x00, 91, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 					m_data = null;
 					super.recv(socksAnswer, 0, socksAnswer.length);
-					break;
+			return;
 				}
 				if (m_data.length >= 8)
 				{
@@ -282,7 +231,7 @@ public class TorSocksChannel extends TorChannel
 					}
 					if (m_data[i] != 0)
 					{
-						break;
+				return;
 					}
 					consumedBytes++;
 					//check vor SOCKs 4a --> IP starts with "0.0.0" and Domain-Name follows
@@ -298,7 +247,7 @@ public class TorSocksChannel extends TorChannel
 						}
 						if (m_data[i] != 0)
 						{
-							break;
+					return;
 						}
 						consumedBytes++;
 						addr = sb.toString();
@@ -318,26 +267,89 @@ public class TorSocksChannel extends TorChannel
 						m_data = null;
 					}
 				}
-				break;
 			}
 
-			case DATA_MODE:
+	private void state_WaitForRequest_Socks5(byte[] arg0, int len) throws IOException
 			{
-				super.send(arg0, len);
-				break;
-			}
-			default:
-			{
-				throw new IOException("illegal status");
-			}
+		if (arg0 != null && len > 0)
+		{
+			m_data = helper.conc(m_data, arg0, len);
 		}
-
+		if (m_data.length > 6)
+		{
+			byte[] socksAnswer = null;
+			int port = 0;
+			String addr = null;
+			int requestType = m_data[1];
+			int addrType = m_data[3];
+			int consumedBytes = 0;
+			if (requestType != 1) //connect request type==1
+			{
+				//todo: close etc.
+				//command not supported
+				socksAnswer = helper.conc(new byte[]
+										  {0x05, 0x07, 0x00}
+										  , helper.copybytes(this.m_data, 3, this.m_data.length - 3));
+				m_data = null;
+				super.recv(socksAnswer, 0, socksAnswer.length);
+				return;
+			}
+			switch (addrType)
+			{
+				case 1: //IP V4
+				{
+					if (m_data.length > 9)
+					{
+						addr = Integer.toString(m_data[4] & 0xFF) + "." +
+							Integer.toString(m_data[5] & 0xFF) + "." +
+							Integer.toString(m_data[6] & 0xFF) + "." +
+							Integer.toString(m_data[7] & 0xFF);
+						port = ( (m_data[8] & 0xFF) << 8) | (m_data[9] & 0xFF);
+						consumedBytes = 10;
+					}
+				break;
+			}
+				case 3: //Domain Name
+			{
+					int length = m_data[4] & 0xFF;
+					if (m_data.length >= (7 + length))
+					{
+						addr = new String(m_data, 5, length);
+						port = ( (m_data[5 + length] & 0xFF) << 8) | (m_data[6 + length] & 0xFF);
+						consumedBytes = length + 7;
+			}
+					break;
+				}
+				default:
+				{
+					//addresstype not supportet
+					socksAnswer = helper.conc(new byte[]
+						{0x05, 0x08, 0x00}
+						, helper.copybytes(m_data, 3, m_data.length - 3));
+					super.recv(socksAnswer, 0, socksAnswer.length);
+					m_data = null;
+					//todo close
+		}
 	}
 
-	/*	protected void recv(byte[] buff, int pos, int len) throws IOException
+			if (addr != null) //we found an address
 	 {
-
-	  System.out.println("hier");
+				//	connect
+				Circuit circ = m_Tor.getCircuitForDestination(addr, port);
+				circ.connectChannel(this, addr, port);
+				socksAnswer = helper.conc(new byte[]
+										  {0x05, 0x00, 0x00}
+										  , helper.copybytes(m_data, 3, consumedBytes - 3));
+				super.recv(socksAnswer, 0, socksAnswer.length);
+				m_data = helper.copybytes(m_data, consumedBytes, m_data.length - consumedBytes);
+				m_state = DATA_MODE;
+				if (m_data.length > 0)
+				{
+					send(m_data, m_data.length);
+					m_data = null;
 	 }
-	 */
+			}
+		}	
+	}
+
 }

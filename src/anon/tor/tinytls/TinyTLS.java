@@ -568,7 +568,7 @@ public class TinyTLS extends Socket
 				case 22:
 				{
 					LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[SERVER_FINISHED]");
-					m_selectedciphersuite.serverFinished(m_aktTLSRecord);
+					m_selectedciphersuite.serverFinished(m_aktTLSRecord,m_handshakemessages);
 					break;
 				}
 				case 21:

@@ -51,21 +51,6 @@ public class TorChannel extends AbstractChannel
 	private int m_sendcellcounter;
 	private Object m_oWaitForOpen;
 
-	/**
-	 * constructor
-	 * @param streamID
-	 * streamID of the new channel
-	 * @param circuit
-	 * the circuit where this channel belongs to
-	 * @throws IOException
-	 */
-	/*	public TorChannel(int streamID, Circuit circuit)
-	 {
-	  this();
-	  m_circuit = circuit;
-	  setStreamID(streamID);
-	 }
-	 */
 	public TorChannel()
 	{
 		super();
