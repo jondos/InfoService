@@ -95,6 +95,8 @@ public class ORList
 		try
 		{
 			String doc = m_orlistFetcher.getORList();
+			if(doc==null)
+				return false;
 			parseDocument(doc);
 			return true;
 		}
