@@ -13,12 +13,13 @@ class XMLRPCTestClient
 			AnonChannel c=anonService.createChannel(AnonChannel.HTTP);
 			InputStream in=c.getInputStream();
 			OutputStream out=c.getOutputStream();
-			out.write(1);
+			out.write("GET HTTP://anon.inf.tu-dresden.de/index.html HTTP/1.1\n\n".getBytes());
+			out.flush();
 			int b;
 			byte[] buff=new byte[100];
-			while(in.read(buff)>0)
+			while((b=in.read(buff))>0)
 				{
-					System.out.print(new String(buff));
+					System.out.print(new String(buff,0,b));
 				}
 				}
 				catch(Exception e)

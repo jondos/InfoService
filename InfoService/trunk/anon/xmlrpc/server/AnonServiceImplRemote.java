@@ -93,7 +93,8 @@ public class AnonServiceImplRemote implements XmlRpcHandler
 			ClientEntry c=m_ClientList.getClient(i);
 			AnonChannel channel=c.getChannel((Integer)params.elementAt(1));
 			OutputStream out=channel.getOutputStream();
-			out.write("GET HTTP://www.bild.de/ HTTP/1.0\n\n".getBytes());
+			byte[] buff=(byte[])params.elementAt(2);
+			out.write(buff);
 			out.flush();
 			return new Integer(0);
 		}

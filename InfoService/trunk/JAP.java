@@ -32,7 +32,6 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
  *  on a Macintosh to register the MRJ Handler.
  *
  */
-
 import java.lang.NoClassDefFoundError;
 import java.awt.Frame;
 import java.awt.event.WindowEvent;
@@ -45,90 +44,128 @@ import jap.JAPView;
 import jap.JAPViewIconified;
 import jap.JAPObserver;
 import jap.JAPSplash;
-
 /** This is the main class of the JAP project. It starts everything. It can be inherited by another
  *  class that wants to initialize platform dependend features, e.g. see
  *  <A HREF="JAPMacintosh.html">JAPMacintosh.html</A>
  *  as an example.
  */
-class JAP extends Frame {
-
-
+class JAP extends Frame
+{
 	public JAP()
-		{
-		}
+	{
+	}
 	/** Constructor for the JAP object.
 	 * @param argv The commandline arguments.
 	 */
-	JAP(String[] argv) {
+	JAP(String[] argv)
+	{
 	}
-
 	/** Initializes and starts the JAP.
 	 */
-	void startJAP() {
-		final String  msg  = "JAP must run with a 1.1.3 or higher version Java!\nYou will find more information at the JAP webpage!\nYour Java Version: ";
+	void startJAP()
+	{
+		final String msg =
+			"JAP must run with a 1.1.3 or higher version Java!\nYou will find more information at the JAP webpage!\nYour Java Version: ";
 		String javaVersion = System.getProperty("java.version");
-		String vendor      = System.getProperty("java.vendor");
-		String os          = System.getProperty("os.name");
-		String mrjVersion  = System.getProperty("mrj.version"); //Macintosh Runtime for Java (MRJ) on Mac OS
+		String vendor = System.getProperty("java.vendor");
+		String os = System.getProperty("os.name");
+		String mrjVersion = System.getProperty("mrj.version");
+		//Macintosh Runtime for Java (MRJ) on Mac OS
 		// Test (part 1) for right JVM
-		if (javaVersion.compareTo("1.0.2") <= 0) {
-			System.out.println(msg+javaVersion);
+		if (javaVersion.compareTo("1.0.2") <= 0)
+		{
+			System.out.println(msg + javaVersion);
 			System.exit(0);
 		}
 		// Init Messages....
 		JAPMessages.init();
 		// Test (part 2) for right JVM....
-		if(vendor.startsWith("Transvirtual"))  {  // Kaffe
-			if (javaVersion.compareTo("1.0.5") <= 0) {
-				JAPAWTMsgBox.MsgBox(this,JAPMessages.getString("errorNeedNewerJava"),JAPMessages.getString("error"));
-				System.exit(0);
-			}
-		} else {
-			if (javaVersion.compareTo("1.0.2") <= 0) {
-				System.out.println(msg+javaVersion);
-				System.exit(0);
-			}
-			if (javaVersion.compareTo("1.1.2") <= 0) {
-				JAPAWTMsgBox.MsgBox(this,JAPMessages.getString("errorNeedNewerJava"),JAPMessages.getString("error"));
+		if (vendor.startsWith("Transvirtual"))
+		{ // Kaffe
+			if (javaVersion.compareTo("1.0.5") <= 0)
+			{
+				JAPAWTMsgBox.MsgBox(
+					this,
+					JAPMessages.getString("errorNeedNewerJava"),
+					JAPMessages.getString("error"));
 				System.exit(0);
 			}
 		}
-
+		else
+		{
+			if (javaVersion.compareTo("1.0.2") <= 0)
+			{
+				System.out.println(msg + javaVersion);
+				System.exit(0);
+			}
+			if (javaVersion.compareTo("1.1.2") <= 0)
+			{
+				JAPAWTMsgBox.MsgBox(
+					this,
+					JAPMessages.getString("errorNeedNewerJava"),
+					JAPMessages.getString("error"));
+				System.exit(0);
+			}
+		}
 		// Show splash screen
 		JAPSplash splash = new JAPSplash(this);
 		// Test for Swing
-		try {
-			Object o=new javax.swing.JLabel();
-			o=null;
-		} catch(NoClassDefFoundError e) {
-			JAPAWTMsgBox.MsgBox(this,JAPMessages.getString("errorSwingNotInstalled"),JAPMessages.getString("error"));
+		try
+		{
+			Object o = new javax.swing.JLabel();
+			o = null;
+		}
+		catch (NoClassDefFoundError e)
+		{
+			JAPAWTMsgBox.MsgBox(
+				this,
+				JAPMessages.getString("errorSwingNotInstalled"),
+				JAPMessages.getString("error"));
 			System.exit(0);
 		}
-
 		// Set the default Look-And-Feel
-		if (!os.regionMatches(true,0,"mac",0,3)) {
-			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAP:Setting Cross Platform Look-And-Feel!");
-			try {
-				javax.swing.UIManager.setLookAndFeel(javax.swing.UIManager.getCrossPlatformLookAndFeelClassName());
-			} catch (Exception e) {
-				JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.GUI,"JAP:Exception while setting Cross Platform Look-And-Feel!");
+		if (!os.regionMatches(true, 0, "mac", 0, 3))
+		{
+			JAPDebug.out(
+				JAPDebug.DEBUG,
+				JAPDebug.GUI,
+				"JAP:Setting Cross Platform Look-And-Feel!");
+			try
+			{
+				javax.swing.UIManager.setLookAndFeel(
+					javax.swing.UIManager.getCrossPlatformLookAndFeelClassName());
+			}
+			catch (Exception e)
+			{
+				JAPDebug.out(
+					JAPDebug.EXCEPTION,
+					JAPDebug.GUI,
+					"JAP:Exception while setting Cross Platform Look-And-Feel!");
 			}
 		}
-
 		// Create the controller object
 		JAPController controller = JAPController.create();
 		// Create debugger object
 		JAPDebug.create();
-		JAPDebug.setDebugType(JAPDebug.NET+JAPDebug.GUI+JAPDebug.THREAD+JAPDebug.MISC);
+		JAPDebug.setDebugType(
+			JAPDebug.NET + JAPDebug.GUI + JAPDebug.THREAD + JAPDebug.MISC);
 		JAPDebug.setDebugLevel(JAPDebug.WARNING);
 		// load settings from config file
 		controller.loadConfigFile(null);
 		// Output some information about the system
-		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAP:Welcome! This is version "+JAPConstants.aktVersion+" of JAP.");
-		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAP:Java "+javaVersion+" running on "+os+".");
+		JAPDebug.out(
+			JAPDebug.INFO,
+			JAPDebug.MISC,
+			"JAP:Welcome! This is version " + JAPConstants.aktVersion + " of JAP.");
+		JAPDebug.out(
+			JAPDebug.INFO,
+			JAPDebug.MISC,
+			"JAP:Java " + javaVersion + " running on " + os + ".");
 		if (mrjVersion != null)
-			JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAP:MRJ Version is "+mrjVersion+".");
+			JAPDebug.out(
+				JAPDebug.INFO,
+				JAPDebug.MISC,
+				"JAP:MRJ Version is " + mrjVersion + ".");
 		// Create the view object
 		JAPView view = new JAPView(JAPConstants.TITLE);
 		// Create the main frame
@@ -145,21 +182,18 @@ class JAP extends Frame {
 		// Register the views where they are needed
 		view.registerViewIconified(viewIconified);
 		//Init Crypto...
-//		java.security.Security.addProvider(new cryptix.jce.provider.CryptixCrypto());
-
+		//		java.security.Security.addProvider(new cryptix.jce.provider.CryptixCrypto());
 		// Show main frame and dispose splash screen
 		view.show();
 		view.toFront();
 		splash.dispose();
-
 		// pre-initalize anon service
 		anon.server.AnonServiceImpl.init();
-
 		// initially start services
 		controller.initialRun();
 	}
-
-	public static void main(String[] argv) {
+	public static void main(String[] argv)
+	{
 		// do NOT change anything in main!
 		JAP jap = new JAP(argv);
 		jap.startJAP();

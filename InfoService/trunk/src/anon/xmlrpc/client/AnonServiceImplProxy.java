@@ -82,11 +82,14 @@ public class AnonServiceImplProxy implements AnonService
 					}
 			}
 
-		protected void send(int channelid,byte[]buff,int len) throws IOException
+		protected void send(int channelid,byte[]buff,int off,int len) throws IOException
 			{
 				Vector v=new Vector();
 				v.addElement(new Integer(m_ClientID));
 				v.addElement(new Integer(channelid));
+				byte[] tmpBuff=new byte[len];
+				System.arraycopy(buff,off,tmpBuff,0,len);
+				v.addElement(tmpBuff);
 				Object o=doRemote("channelOutputStreamWrite",v);
 			}
 
