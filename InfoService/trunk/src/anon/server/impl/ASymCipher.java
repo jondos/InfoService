@@ -27,18 +27,22 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 */
 package anon.server.impl;
 import java.math.BigInteger;
+import org.w3c.dom.Node;
+import org.w3c.dom.Element;
+import org.w3c.dom.Text;
 
+import anon.ErrorCodes;
 final class ASymCipher
 {
 ///* My hack Crypt...
-	private BigInteger n;
-	private BigInteger e;
+	private BigInteger m_Modulus;
+	private BigInteger m_Exponent;
 	private byte[] tmpP;
 
 	public ASymCipher()
 		{
-			n=null;
-			e=null;
+			m_Modulus=null;
+			m_Exponent=null;
 			tmpP=new byte[128];
 		}
 
@@ -52,7 +56,7 @@ final class ASymCipher
 					System.arraycopy(from,ifrom,tmpP,0,128);
 					P = new BigInteger(1,tmpP);
 				}
-			BigInteger C = P.modPow(e,n);
+			BigInteger C = P.modPow(m_Exponent,m_Modulus);
 			byte[] r=C.toByteArray();
 			if(r.length==128)
 				System.arraycopy(r,0,to,ito,128);
@@ -69,10 +73,43 @@ final class ASymCipher
 
 	public int setPublicKey(BigInteger modulus,BigInteger exponent)
 		{
-			n=modulus;
-			e=exponent;
-			return 0;
+      if(modulus==null||exponent==null)
+        return ErrorCodes.E_UNKNOWN;
+			m_Modulus=modulus;
+			m_Exponent=exponent;
+			return ErrorCodes.E_SUCCESS;
 		}
+
+  public int setPublicKey(Element xmlKey)
+    {
+      try
+        {
+          Element elemRSAKEyValue=(Element)xmlKey.getElementsByTagName("RSAKeyValue").item(0);
+          BigInteger n=getBigIntegerFromXml(elemRSAKEyValue,"Modulus");
+          BigInteger e=getBigIntegerFromXml(elemRSAKEyValue,"Exponent");
+          return setPublicKey(n,e);
+        }
+      catch(Exception e)
+        {
+          return ErrorCodes.E_UNKNOWN;
+        }
+    }
+
+  private BigInteger getBigIntegerFromXml(Element root,String name)
+    {
+      try
+        {
+          Element child=(Element)root.getElementsByTagName(name).item(0);
+          Text text=(Text)child.getFirstChild();
+          String value=text.getNodeValue();
+          byte[] b=Base64.decode(value.toCharArray());
+          return new BigInteger(1,b);
+        }
+      catch(Exception e)
+        {
+          return null;
+        }
+    }
 //END My Hack CRYPT */
 
 	/* Cryptix...
