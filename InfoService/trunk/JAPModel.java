@@ -64,7 +64,7 @@ import anon.JAPAnonServiceListener;
 /* jh5 */ import rmi.JAPAnonServiceRMIServer;
 
 /* This is the Model of All. It's a Singelton!*/
-public final class JAPModel implements JAPAnonServiceListener{
+public final class JAPModel implements JAPAnonServiceListener {
 
 	public  JAPAnonServerDB      anonServerDatabase   = null; // vector of all available mix cascades
 	private AnonServerDBEntry    currentAnonService   = null; // current anon service data object
@@ -83,16 +83,16 @@ public final class JAPModel implements JAPAnonServiceListener{
 	private String   m_ProxyAuthenticationUserID = null;  //userid for authentication
 	private String   m_ProxyAuthenticationPasswd = null;  // password --> will never be saved...
 	private boolean  mb_UseProxyAuthentication   = false; //indicates whether JAp should use a UserID/Password to authenticat to the proxy
-	private boolean  mblistenerIsLocal           = true;   // indicates whether listeners serve for localhost only or not
-	private boolean  isRunningListener           = false;  // true if a listener is running
-	private boolean  mbUseProxy                  = false;  // indicates whether JAP connects via a proxy or directly
+	private boolean  mblistenerIsLocal           = true;  // indicates whether listeners serve for localhost only or not
+	private boolean  isRunningListener           = false; // true if a listener is running
+	private boolean  mbUseProxy                  = false; // indicates whether JAP connects via a proxy or directly
 	public  boolean  autoConnect                 = false; // autoconnect after program start
 	private boolean  mbMinimizeOnStartup         = false; // true if programm will start minimized
 	public  boolean  canStartService             = false; // indicates if anon service can be started
 	public  boolean  alreadyCheckedForNewVersion = false; // indicates if check for new version has already been done
 	private boolean  mbActCntMessageNotRemind    = false; // indicates if Warning message in setAnonMode has been deactivated for the session
 	private boolean  mbActCntMessageNeverRemind  = false; // indicates if Warning message in setAnonMode has been deactivated forever
-	private boolean  mbDoNotAbuseReminder        = false; // indicates if new warning message in setAnonMide (containing Do no abuse) has been shown
+	private boolean  mbDoNotAbuseReminder        = false; // indicates if new warning message in setAnonMode (containing Do no abuse) has been shown
 	private boolean  mbGoodByMessageNeverRemind  = false; // indicates if Warning message before exit has been deactivated forever
 
 	private	static final Object oSetAnonModeSyncObject=new Object();
@@ -104,83 +104,64 @@ public final class JAPModel implements JAPAnonServiceListener{
 	private int      nrOfBytes         = 0;
 
 	private static  JAPView           view          = null;
-	private static  JAPViewIconified  iconifiedView = null;
+//	private static  JAPViewIconified  iconifiedView = null;
 	private static  JAPInfoService    mInfoService  = null;
 	private static  JAPModel          model         = null;
 	private static  JAPFeedback       feedback      = null;
-
-	private ResourceBundle msg;
-
+//	public JAPLoading japLoading;
+//	private ResourceBundle msg;
 	private Locale m_Locale=null;
 	private Vector observerVector=null;
-//	public JAPLoading japLoading;
 
-	/* jh5 */ private static JAPAnonServiceRMIServer anonServiceRMIServer= null;
+	private static JAPAnonServiceRMIServer anonServiceRMIServer= null;
 
-	private JAPModel ()
-		{
-			//JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:initializing...");
-			// Create observer object
-			observerVector = new Vector();
-			currentAnonService = new AnonServerDBEntry(JAPConstants.defaultanonHost,JAPConstants.defaultanonPortNumber);
-			proxyDirect=null;
-			proxyAnon=null;
-			m_Locale=Locale.getDefault();
-			//JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:initialization finished!");
-		}
-
+	private JAPModel () {
+		//JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:initializing...");
+		// Create observer object
+		observerVector = new Vector();
+		currentAnonService = new AnonServerDBEntry(JAPConstants.defaultanonHost,JAPConstants.defaultanonPortNumber);
+		proxyDirect=null;
+		proxyAnon=null;
+		m_Locale=Locale.getDefault();
+		//JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:initialization finished!");
+	}
 	/** Creates the Model - as Singleton.
-	 * @return The one and only JAPModel
+	 *  @return The one and only JAPModel
 	 */
-	public static JAPModel createModel()
-		{
-			if(model==null)
-				model=new JAPModel();
-			return model;
-		}
-
+	public static JAPModel create() {
+		if(model==null)
+			model=new JAPModel();
+		return model;
+	}
 	public static JAPModel getModel() {
 			return model;
 	}
-
-	public int setRMISupport(boolean b)
-		{
-			if(b)
-				{
-					if(anonServiceRMIServer==null)
-			/* jh5 */ anonServiceRMIServer = new JAPAnonServiceRMIServer(this);
-				}
+	//---------------------------------------------------------------------	
+	public void initialRun() {
+		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:initial run of JAP...");
+		// start http listener object
+		if(!startHTTPListener())
+			{	// start was not sucessful
+				Object[] args={new Integer(portNumber)};
+				String msg=MessageFormat.format(JAPMessages.getString("errorListenerPort"),args);
+				// output error message
+				JOptionPane.showMessageDialog(model.getView(),
+										msg,
+										JAPMessages.getString("errorListenerPortTitle"),
+										JOptionPane.ERROR_MESSAGE);
+				JAPDebug.out(JAPDebug.EMERG,JAPDebug.NET,"Cannot start listener!");
+				model.status1 = JAPMessages.getString("statusCannotStartListener");
+				model.getView().disableSetAnonMode();
+				notifyJAPObservers();
+			}
 			else
-				{
-					if(anonServiceRMIServer!=null)
-						anonServiceRMIServer.quitServer();
-					anonServiceRMIServer=null;
+				{	// listender has started correctly
+					model.status1 = JAPMessages.getString("statusRunning");
+					// initial setting of anonMode
+					setAnonMode(autoConnect);
 				}
-			return 0;
-		}
-
-	//---------------
-	public void setIconifiedView(JAPViewIconified v)
-		{
-			iconifiedView=v;
-		}
-
-	public JAPViewIconified getIconifiedView()
-		{
-			return iconifiedView;
-		}
-
-	//---------------
-	public void setView(JAPView v)
-		{
-			view=v;
-		}
-
-	public static JAPView getView()
-		{
-			return model.view;
-		}
-
+	}
+	//---------------------------------------------------------------------	
 	/** Loads the Configuration.
 	 * First tries to read the configuration file in the users home directory
 	 * and then in the JAP install directory.
@@ -217,7 +198,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 	 * 	</Debug>
 	 *	</JAP>
 	 */
-	public synchronized void load() {
+	public synchronized void loadConfigFile() {
 		// Load default anon services
 		anonServerDatabase = new JAPAnonServerDB();
 //		anonServerDatabase.addElement(new AnonServerDBEntry(anonHostName, anonPortNumber));
@@ -229,22 +210,20 @@ public final class JAPModel implements JAPAnonServiceListener{
 		try {
 			String dir=System.getProperty("user.home","");
 			FileInputStream f=null;
-			try  //first tries in user.home
-				{
-					f=new FileInputStream(dir+"/"+JAPConstants.XMLCONFFN);
-				}
-			catch(Exception e)
-				{
-					f=new FileInputStream(JAPConstants.XMLCONFFN); //and then in the current directory
-				};
+			//first tries in user.home
+			try {
+				f=new FileInputStream(dir+"/"+JAPConstants.XMLCONFFN);
+			} catch(Exception e) {
+				f=new FileInputStream(JAPConstants.XMLCONFFN); //and then in the current directory
+			}
 			Document doc=DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(f);
 			Element root=doc.getDocumentElement();
 			NamedNodeMap n=root.getAttributes();
 			//
 			portNumber=JAPUtil.parseElementAttrInt(root,"portNumber",portNumber);
+			mblistenerIsLocal=JAPUtil.parseNodeBoolean(n.getNamedItem("listenerIsLocal"),true);
 			//portSocksListener=JAPUtil.parseElementAttrInt(root,"portNumberSocks",portSocksListener);
 			//setUseSocksPort(JAPUtil.parseNodeBoolean(n.getNamedItem("supportSocks"),false));
-			setListenerIsLocal(JAPUtil.parseNodeBoolean(n.getNamedItem("listenerIsLocal"),true));
 			setUseProxy(JAPUtil.parseNodeBoolean(n.getNamedItem("proxyMode"),false));
 			setUseFirewallAuthorization(JAPUtil.parseNodeBoolean(n.getNamedItem("proxyAuthorization"),false));
 			// load settings for the reminder message in setAnonMode
@@ -302,15 +281,6 @@ public final class JAPModel implements JAPAnonServiceListener{
 					break;
 				}
 			}
-					
-			
-			
-			
-			
-			
-			
-			
-
 			//Loading debug settings
 			NodeList nl=root.getElementsByTagName("Debug");
 			if(nl!=null&&nl.getLength()>0)
@@ -351,49 +321,39 @@ public final class JAPModel implements JAPAnonServiceListener{
 		// fire event
 		notifyJAPObservers();
 	}
-
-	public void save() {
+	public void saveConfigFile() {
 		boolean error=false;
 		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:try saving configuration to "+JAPConstants.XMLCONFFN);
 		try {
 			String dir=System.getProperty("user.home","");
 			FileOutputStream f=null;
-			try  //first tries in user.home
-				{
-					f=new FileOutputStream(dir+"/"+JAPConstants.XMLCONFFN);
-				}
-			catch(Exception e)
-				{
-					f=new FileOutputStream(JAPConstants.XMLCONFFN); //and then in the current directory
-				};
-		   String sb=getConfigurationAsXML();
-			 if(sb!=null)
-				{
-					f.write(sb.getBytes());
-					f.flush();
-					f.close();
-				}
-			else
-				error=true;
+			//first tries in user.home
+			try  {
+				f=new FileOutputStream(dir+"/"+JAPConstants.XMLCONFFN);
+			} catch(Exception e) {
+				f=new FileOutputStream(JAPConstants.XMLCONFFN); //and then in the current directory
 			}
-		catch(Exception e)
-			{
+			String sb=getConfigurationAsXML();
+			if(sb!=null) {
+				f.write(sb.getBytes());
+				f.flush();
+				f.close();
+			} else
 				error=true;
-			}
-		if(error)
-			{
-				JAPDebug.out(JAPDebug.ERR,JAPDebug.MISC,"JAPModel:error saving configuration to "+JAPConstants.XMLCONFFN);
-				JOptionPane.showMessageDialog(model.getView(),
-											model.getString("errorSavingConfig"),
-											model.getString("errorSavingConfigTitle"),
+		} catch(Exception e) {
+			error=true;
+		}
+		if(error) {
+			JAPDebug.out(JAPDebug.ERR,JAPDebug.MISC,"JAPModel:error saving configuration to "+JAPConstants.XMLCONFFN);
+			JOptionPane.showMessageDialog(model.getView(),
+											JAPMessages.getString("errorSavingConfig"),
+											JAPMessages.getString("errorSavingConfigTitle"),
 											JOptionPane.ERROR_MESSAGE);
-			}
-	  }
-	protected String getConfigurationAsXML()
-
-	{
+		}
+	}
+	protected String getConfigurationAsXML() {
 		// Save config to xml file
-		// Achtung!! Fehler im Sun-XML --> NULL-Attributte können hinzugefügt werden,
+		// Achtung!! Fehler im Sun-XML --> NULL-Attributte koennen hinzugefuegt werden,
 		// beim Abspeichern gibt es dann aber einen Fehler!
 		try {
 			Document doc=DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
@@ -403,7 +363,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 			e.setAttribute("portNumber",Integer.toString(portNumber));
 			//e.setAttribute("portNumberSocks",Integer.toString(portSocksListener));
 			//e.setAttribute("supportSocks",(getUseSocksPort()?"true":"false"));
-			e.setAttribute("listenerIsLocal",(getListenerIsLocal()?"true":"false"));
+			e.setAttribute("listenerIsLocal",(mblistenerIsLocal?"true":"false"));
 			e.setAttribute("proxyMode",(mbUseProxy?"true":"false"));
 			e.setAttribute("proxyHostName",((proxyHostName==null)?"":proxyHostName));
 			e.setAttribute("proxyPortNumber",Integer.toString(proxyPortNumber));
@@ -423,8 +383,6 @@ public final class JAPModel implements JAPAnonServiceListener{
 			e.setAttribute("neverRemindGoodBye",(mbGoodByMessageNeverRemind?"true":"false"));
 			e.setAttribute("Locale",m_Locale.getLanguage());
 			e.setAttribute("LookAndFeel",UIManager.getLookAndFeel().getName());			
-
-			//
 			// adding Debug-Element
 			Element elemDebug=doc.createElement("Debug");
 			e.appendChild(elemDebug);
@@ -454,322 +412,206 @@ public final class JAPModel implements JAPAnonServiceListener{
 		}
 		return null;
 	}
-
-	public void initialRun()
-		{
-			JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:initial run of JAP...");
-			//pre initalize some long time initalizations...
-			JAPAnonService.init();
-			// start Service if autoConnect
-			if(!startHTTPListener())
-				{
-					Object[] args={new Integer(portNumber)};
-					String msg=MessageFormat.format(model.getString("errorListenerPort"),args);
-					JOptionPane.showMessageDialog(model.getView(),
-											msg,
-											model.getString("errorListenerPortTitle"),
-											JOptionPane.ERROR_MESSAGE);
-					JAPDebug.out(JAPDebug.EMERG,JAPDebug.NET,"Cannot start listener!");
-					model.status1 = model.getString("statusCannotStartListener");
-					model.getView().disableSetAnonMode();
-					notifyJAPObservers();
-				}
-			else
-				{
-					model.status1 = model.getString("statusRunning");
-					setAnonMode(autoConnect);
-				}
-		}
-
-	public Locale getLocale()
-		{
-			return m_Locale;
-		}
-
-	public void setLocale(Locale l)
-		{
-			JAPMessages.init(l);
-			m_Locale=l;
-		}
-
-
-
-
-
-
-
 	//---------------------------------------------------------------------
-
-	public synchronized void setAnonServer(AnonServerDBEntry s)
-		{
-			if(s==null)
-				return;
+	public Locale getLocale() {
+		return m_Locale;
+	}
+	public void setLocale(Locale l) {
+		JAPMessages.init(l);
+		m_Locale=l;
+	}
+	//---------------------------------------------------------------------
+	public void setMinimizeOnStartup(boolean b) {
+		synchronized(this) {
+			mbMinimizeOnStartup=b;
+		}
+	}
+	public boolean getMinimizeOnStartup() {
+		synchronized(this) {
+			return mbMinimizeOnStartup;
+		}
+	}
+	//---------------------------------------------------------------------
+	public synchronized void setAnonServer(AnonServerDBEntry s) {
+		if(s==null)
+			return;
 	    AnonServerDBEntry current=getAnonServer();
-		  if (current!=null&&current.equals(s))
-				{
-					JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:currentAnonService NOT changed");
-				}
-		  else
-				{
-					// if service has changed --> stop service (if running) and restart
-			    this.currentAnonService = s;
-			    if(getAnonMode())
-					  {
-					    setAnonMode(false);
-					    JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:currentAnonService changed");
-					    setAnonMode(true);
-					  }
-			  }
-		  model.notifyJAPObservers();
-	  }
-
+		if (current!=null&&current.equals(s)) {
+			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:currentAnonService NOT changed");
+		} else {
+			// if service has changed --> stop service (if running) and restart
+			this.currentAnonService = s;
+			if(getAnonMode()) {
+				setAnonMode(false);
+				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:currentAnonService changed");
+				setAnonMode(true);
+			}
+		}
+		model.notifyJAPObservers();
+	}
 	public AnonServerDBEntry getAnonServer() {
 	    return this.currentAnonService;
+	}		
+	//---------------------------------------------------------------------
+	public boolean setProxy(String host,int port) {
+		if(!JAPUtil.isPort(port))
+			return false;
+		if(host==null)
+			return false;
+		// check if values have changed
+		if((!host.equals(proxyHostName))||(port!=proxyPortNumber)) {
+			// reset firewall authentication password
+			m_ProxyAuthenticationPasswd=null;
+			// change settings
+			synchronized(this) {
+				proxyHostName=host;
+				proxyPortNumber=port;
+			}
+		}
+		// apply changes to infoservice
+		applyProxySettingsToInfoService();
+		// apply changes to anonservice
+		applyProxySettingsToAnonService(); 
+		notifyJAPObservers();
+		return true;
 	}
-
-	public void setPortNumber (int p) {
-		portNumber = p;
+	public void setUseProxy(boolean b) {
+		synchronized(this) {
+			// if service already runs in proxy/firewall mode, we do not have to
+			// change settings of InfoService and AnonService, since setProxy()
+			// has already done this.
+			if(!mbUseProxy) {
+				mbUseProxy=b;
+				// apply changes to infoservice
+				applyProxySettingsToInfoService();
+				// apply changes to anonservice
+				applyProxySettingsToAnonService();
+			}
+		}
+		notifyJAPObservers();
 	}
-
-	public int getPortNumber() {
-		return portNumber;
+	private void applyProxySettingsToInfoService() {
+		if(mInfoService!=null)
+			if(mbUseProxy)
+				if(mb_UseProxyAuthentication)
+					mInfoService.setProxy(proxyHostName,proxyPortNumber,m_ProxyAuthenticationUserID,this.getFirewallAuthPasswd());
+				else
+					mInfoService.setProxy(proxyHostName,proxyPortNumber,null,null);
+			else
+				mInfoService.setProxyEnabled(false);
 	}
+	private void applyProxySettingsToAnonService() {
+		if(mbUseProxy && getAnonMode()) {
+			// anon service is running
+			Object[] options = { JAPMessages.getString("later"),JAPMessages.getString("reconnect") };
+			int ret = JOptionPane.showOptionDialog(model.getView(),
+														JAPMessages.getString("reconnectAfterProxyChangeMsg"),
+														JAPMessages.getString("reconnectAfterProxyChangeTitle"),
+														JOptionPane.DEFAULT_OPTION,
+														JOptionPane.WARNING_MESSAGE,
+														null, options, options[0]);
+			if(ret==1) {
+				// reconnect
+				setAnonMode(false);
+				setAnonMode(true);
+			}	 
+		}
+	}
+	public void setFirewallAuthUserID(String userid) {
+		// check if values have changed
+		if(!userid.equals(m_ProxyAuthenticationUserID)) {
+			m_ProxyAuthenticationPasswd=null;   // reset firewall authentication password
+			m_ProxyAuthenticationUserID=userid; // change settings
+		}
+	}
+	public void setUseFirewallAuthorization(boolean b) {
+			mb_UseProxyAuthentication=b;
+	}
+	//---------------------------------------------------------------------
+	public boolean getUseFirewall() {
+		synchronized(this) {
+			return mbUseProxy;
+		}
+	}
+	public String getFirewallHost() {
+		synchronized(this) {
+			return proxyHostName;
+		}
+	}
+	public int getFirewallPort() {
+		synchronized(this) {
+			return proxyPortNumber;
+		}
+	}
+	public boolean getUseFirewallAuthorization() {
+			return mb_UseProxyAuthentication;
+	}
+	public String getFirewallAuthUserID() {
+			return m_ProxyAuthenticationUserID;
+	}
+	public String getFirewallAuthPasswd() {
+		if(mb_UseProxyAuthentication) {
+			if(m_ProxyAuthenticationPasswd==null)
+				m_ProxyAuthenticationPasswd=JAPFirewallPasswdDlg.getPasswd();
+				return m_ProxyAuthenticationPasswd;
+			} else
+				return null;
+	}
+	//---------------------------------------------------------------------
+	public boolean setInfoService(String host,int port) {
+		if(!JAPUtil.isPort(port))
+			return false;
+		if(host==null)
+			return false;
+		synchronized(this) {
+			infoServiceHostName=host;
+			infoServicePortNumber=port;
+			if(mInfoService!=null)
+				this.getInfoService().setInfoService(host,port);
+			notifyJAPObservers();
+			return true;
+		}
+	}
+	public String getInfoServiceHost() {
+		synchronized(this) {
+			return infoServiceHostName;
+		}
+	}
+	public int getInfoServicePort() {
+		synchronized(this) {
+			return infoServicePortNumber;
+		}
+	}
+	public JAPInfoService getInfoService() {
+		if(mInfoService==null) {
+			mInfoService=new JAPInfoService(infoServiceHostName,infoServicePortNumber);
+			this.applyProxySettingsToInfoService();
+		}
+		return mInfoService;
+	}
+	//---------------------------------------------------------------------
 /*
 	public void setSocksPortNumber (int p)
 		{
 			portSocksListener = p;
 		}
-
 	public int getSocksPortNumber()
 		{
 			return portSocksListener;
 		}
-*/
-	public static String getString(String key)
-		{
-			return JAPMessages.getString(key);
-		}
-/*
 	public void setUseSocksPort(boolean b)
 		{
 			mbSocksListener=b;
 		}
-
 	public boolean getUseSocksPort()
 		{
 			return mbSocksListener;
 		}
 */
-	public void channelsChanged(int channels)
-		{
-			nrOfChannels=channels;
-					Enumeration enum = observerVector.elements();
-					while (enum.hasMoreElements())
-						{
-							JAPObserver listener = (JAPObserver)enum.nextElement();
-							listener.channelsChanged(channels);
-						}
-		}
 
-/*	public int getNrOfChannels()
-		{
-			return nrOfChannels;
-		}
-	*/
-	public void transferedBytes(int bytes)
-		{
-			nrOfBytes+=bytes;
-					Enumeration enum = observerVector.elements();
-					while (enum.hasMoreElements())
-						{
-							JAPObserver listener = (JAPObserver)enum.nextElement();
-							listener.transferedBytes(nrOfBytes);
-						}
-//			notifyJAPObservers();
-		}
-	/*
-	public int getNrOfBytes() {
-		return nrOfBytes;
-	}
-*/
-	public boolean setInfoService(String host,int port)
-		{
-			if(!JAPUtil.isPort(port))
-				return false;
-			if(host==null)
-				return false;
-			synchronized(this)
-				{
-					infoServiceHostName=host;
-					infoServicePortNumber=port;
-					if(mInfoService!=null)
-						mInfoService.setInfoService(host,port);
-					notifyJAPObservers();
-					return true;
-				}
-		}
-
-
-	public String getInfoServiceHost()
-		{
-			synchronized(this)
-				{
-					return infoServiceHostName;
-				}
-		}
-
-	public int getInfoServicePort()
-		{
-			synchronized(this)
-				{
-					return infoServicePortNumber;
-				}
-		}
-
-
-	public JAPInfoService getInfoService()
-		{
-			if(mInfoService==null)
-				mInfoService=new JAPInfoService();
-			return mInfoService;
-		}
-
-	public void setListenerIsLocal(boolean b)
-		{
-			synchronized(this)
-				{
-					mblistenerIsLocal=b;
-				}
-		}
-
-	public boolean getListenerIsLocal()
-		{
-			synchronized(this)
-				{
-					return mblistenerIsLocal;
-				}
-		}
-
-	public void setUseProxy(boolean b)
-		{
-			synchronized(this)
-				{
-					mbUseProxy=b;
-					if(mInfoService!=null)
-						{
-							if(mbUseProxy)
-								mInfoService.setProxy(proxyHostName,proxyPortNumber,null,null);
-							else
-								mInfoService.setProxy(null,0,null,null);
-						}
-				}
-			notifyJAPObservers();
-		}
-
-
-	public void setMinimizeOnStartup(boolean b)
-		{
-			synchronized(this)
-				{
-					mbMinimizeOnStartup=b;
-				}
-		}
-
-	public boolean getMinimizeOnStartup()
-		{
-			synchronized(this)
-				{
-					return mbMinimizeOnStartup;
-				}
-		}
-
-	public boolean setProxy(String host,int port)
-		{
-			if(!JAPUtil.isPort(port))
-				return false;
-			if(host==null)
-				return false;
-			synchronized(this)
-				{
-					proxyHostName=host;
-					proxyPortNumber=port;
-					if(mInfoService!=null&&mbUseProxy)
-						mInfoService.setProxy(host,port,null,null);
-					notifyJAPObservers();
-					return true;
-				}
-		}
-
-	public boolean getUseFirewall()
-		{
-			synchronized(this)
-				{
-					return mbUseProxy;
-				}
-		}
-
-	public String getFirewallHost()
-		{
-			synchronized(this)
-				{
-					return proxyHostName;
-				}
-		}
-
-	public int getFirewallPort()
-		{
-			synchronized(this)
-				{
-					return proxyPortNumber;
-				}
-		}
-
-	public void setUseFirewallAuthorization(boolean b)
-		{
-			mb_UseProxyAuthentication=b;
-		}
-
-	public boolean getUseFirewallAuthorization()
-		{
-			return mb_UseProxyAuthentication;
-		}
-
-	public void  setFirewallAuthUserID(String userid)
-		{
-			m_ProxyAuthenticationUserID=userid;
-		}
-
-	public String getFirewallAuthUserID()
-		{
-			return m_ProxyAuthenticationUserID;
-		}
-
-	public String getFirewallAuthPasswd()
-		{
-			if(mb_UseProxyAuthentication)
-				{
-					if(m_ProxyAuthenticationPasswd==null)
-						m_ProxyAuthenticationPasswd=JAPFirewallPasswdDlg.getPasswd();
-					return m_ProxyAuthenticationPasswd;
-				}
-			else
-				return null;
-		}
-
-	/*
-	public synchronized void setJAPViewIconified() {
-		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:setJAPViewIconified()");
-		view.setVisible(false);
-		iconifiedView.setVisible(true);
-	}
-
-	public synchronized void setJAPViewDeIconified() {
-		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:setJAPViewDeIconified()");
-		iconifiedView.setVisible(false);
-		view.setVisible(true);
-	}
-*/
-
+	//---------------------------------------------------------------------	
+	//---------------------------------------------------------------------	
+	//---------------------------------------------------------------------	
 private final class SetAnonModeAsync implements Runnable
 {
 	boolean anonModeSelected=false;
@@ -814,8 +656,8 @@ private final class SetAnonModeAsync implements Runnable
 							// connect vi proxy to first mix (via ssl portnumber)
 							if (e.getSSLPort() == -1) {
 								JOptionPane.showMessageDialog(model.getView(),
-									model.getString("errorFirewallModeNotSupported"),
-									model.getString("errorFirewallModeNotSupportedTitle"),
+									JAPMessages.getString("errorFirewallModeNotSupported"),
+									JAPMessages.getString("errorFirewallModeNotSupportedTitle"),
 									JOptionPane.ERROR_MESSAGE);
 								return; //TODO: Maybe need to check what to do...--> anonmode=false =?
 							} else {
@@ -836,15 +678,15 @@ private final class SetAnonModeAsync implements Runnable
 						if(ret==JAPAnonService.E_SUCCESS)
 							{
 								// show a Reminder message that active contents should be disabled
-								Object[] options = { /*model.getString("disableActCntMessageDontRemind"),*/ model.getString("okButton") };
-								JCheckBox checkboxRemindNever=new JCheckBox(model.getString("disableActCntMessageNeverRemind"));
-								Object[] message={model.getString("disableActCntMessage"),checkboxRemindNever};
+								Object[] options = { /*JAPMessages.getString("disableActCntMessageDontRemind"),*/ JAPMessages.getString("okButton") };
+								JCheckBox checkboxRemindNever=new JCheckBox(JAPMessages.getString("disableActCntMessageNeverRemind"));
+								Object[] message={JAPMessages.getString("disableActCntMessage"),checkboxRemindNever};
 								if (!mbActCntMessageNotRemind)
 									{
 										ret=0;
 										ret= JOptionPane.showOptionDialog(model.getView(),
 																		(Object)message,
-																		model.getString("disableActCntMessageTitle"),
+																		JAPMessages.getString("disableActCntMessageTitle"),
 																		JOptionPane.DEFAULT_OPTION,
 																		JOptionPane.WARNING_MESSAGE,
 																		null, options, options[0]);
@@ -858,7 +700,7 @@ private final class SetAnonModeAsync implements Runnable
 										proxyAnonSocks=new JAPAnonService(1080,JAPAnonService.PROTO_SOCKS,model.mblistenerIsLocal);
 										proxyAnonSocks.start();
 									}*/
-								model.status2 = model.getString("statusRunning");
+								model.status2 = JAPMessages.getString("statusRunning");
 								proxyAnon.setAnonServiceListener(model);
 								// start feedback thread
 								feedback=new JAPFeedback();
@@ -871,10 +713,10 @@ private final class SetAnonModeAsync implements Runnable
 						if (ret==JAPAnonService.E_BIND)
 							{
 								Object[] args={new Integer(portNumber)};
-								String msg=MessageFormat.format(model.getString("errorListenerPort"),args);
+								String msg=MessageFormat.format(JAPMessages.getString("errorListenerPort"),args);
 								JOptionPane.showMessageDialog(model.getView(),
 																							msg,
-																							model.getString("errorListenerPortTitle"),
+																							JAPMessages.getString("errorListenerPortTitle"),
 																							JOptionPane.ERROR_MESSAGE);
 								JAPDebug.out(JAPDebug.EMERG,JAPDebug.NET,"Listener could not be started!");
 								model.getView().disableSetAnonMode();
@@ -884,15 +726,15 @@ private final class SetAnonModeAsync implements Runnable
 								JOptionPane.showMessageDialog
 									(
 									 getView(),
-									 getString("errorConnectingFirstMix")+"\n"+getString("errorCode")+": "+Integer.toString(ret),
-									 getString("errorConnectingFirstMixTitle"),
+									 JAPMessages.getString("errorConnectingFirstMix")+"\n"+JAPMessages.getString("errorCode")+": "+Integer.toString(ret),
+									 JAPMessages.getString("errorConnectingFirstMixTitle"),
 									 JOptionPane.ERROR_MESSAGE
 									);
 							}
 						proxyAnon=null;
 						//proxyAnonSocks=null;
 						view.setCursor(Cursor.getDefaultCursor());
-						model.status2 = model.getString("statusNotRunning");
+						model.status2 = JAPMessages.getString("statusNotRunning");
 						notifyJAPObservers();
 						JAPSetAnonModeSplash.abort();
 						setAnonMode(false);
@@ -919,7 +761,7 @@ private final class SetAnonModeAsync implements Runnable
 						feedback.stopRequests();
 						feedback=null;
 					}
-				model.status2 = model.getString("statusNotRunning");
+				model.status2 = JAPMessages.getString("statusNotRunning");
 				proxyDirect=new JAPDirectProxy(m_socketHTTPListener);
 				proxyDirect.startService();
 
@@ -933,11 +775,16 @@ private final class SetAnonModeAsync implements Runnable
 	}
 }
 	}
-	public synchronized void setAnonMode(boolean anonModeSelected)
-		{
-			Thread t=new Thread(new SetAnonModeAsync(anonModeSelected));
-			t.start();
-		}
+	//---------------------------------------------------------------------	
+	//---------------------------------------------------------------------	
+	//---------------------------------------------------------------------	
+	public boolean getAnonMode() {
+		return proxyAnon!=null;
+	}
+	public synchronized void setAnonMode(boolean anonModeSelected) {
+		Thread t=new Thread(new SetAnonModeAsync(anonModeSelected));
+		t.start();
+	}
 	/*public synchronized void setAnonMode(boolean anonModeSelected)
 	{
 		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:setAnonMode("+anonModeSelected+")");
@@ -973,8 +820,8 @@ private final class SetAnonModeAsync implements Runnable
 							// connect vi proxy to first mix (via ssl portnumber)
 							if (model.anonSSLPortNumber == -1) {
 								JOptionPane.showMessageDialog(model.getView(),
-									model.getString("errorFirewallModeNotSupported"),
-									model.getString("errorFirewallModeNotSupportedTitle"),
+									JAPMessages.getString("errorFirewallModeNotSupported"),
+									JAPMessages.getString("errorFirewallModeNotSupportedTitle"),
 									JOptionPane.ERROR_MESSAGE);
 								proxyAnon.setAnonService(model.anonHostName,model.anonPortNumber);
 								proxyAnon.setFirewall(model.getProxyHost(),model.getProxyPort());
@@ -992,15 +839,15 @@ private final class SetAnonModeAsync implements Runnable
 						if(ret==JAPAnonService.E_SUCCESS)
 							{
 								// show a Reminder message that active contents should be disabled
-								Object[] options = { model.getString("disableActCntMessageDontRemind"), model.getString("okButton") };
-								JCheckBox checkboxRemindNever=new JCheckBox(model.getString("disableActCntMessageNeverRemind"));
-								Object[] message={model.getString("disableActCntMessage"),checkboxRemindNever};
+								Object[] options = { JAPMessages.getString("disableActCntMessageDontRemind"), JAPMessages.getString("okButton") };
+								JCheckBox checkboxRemindNever=new JCheckBox(JAPMessages.getString("disableActCntMessageNeverRemind"));
+								Object[] message={JAPMessages.getString("disableActCntMessage"),checkboxRemindNever};
 								if (!mbActCntMessageNotRemind)
 									{
 										ret=0;
 										ret= JOptionPane.showOptionDialog(model.getView(),
 																		(Object)message,
-																		model.getString("disableActCntMessageTitle"),
+																		JAPMessages.getString("disableActCntMessageTitle"),
 																		JOptionPane.DEFAULT_OPTION,
 																		JOptionPane.WARNING_MESSAGE,
 																		null, options, options[1]);
@@ -1013,7 +860,7 @@ private final class SetAnonModeAsync implements Runnable
 										proxyAnonSocks=new JAPAnonService(1080,JAPAnonService.PROTO_SOCKS,model.mblistenerIsLocal);
 										proxyAnonSocks.start();
 									}
-								model.status2 = model.getString("statusRunning");
+								model.status2 = JAPMessages.getString("statusRunning");
 								proxyAnon.setAnonServiceListener(this);
 								// start feedback thread
 								feedback=new JAPFeedback();
@@ -1025,10 +872,10 @@ private final class SetAnonModeAsync implements Runnable
 						if (ret==JAPAnonService.E_BIND)
 							{
 								Object[] args={new Integer(portNumber)};
-								String msg=MessageFormat.format(model.getString("errorListenerPort"),args);
+								String msg=MessageFormat.format(JAPMessages.getString("errorListenerPort"),args);
 								JOptionPane.showMessageDialog(model.getView(),
 																							msg,
-																							model.getString("errorListenerPortTitle"),
+																							JAPMessages.getString("errorListenerPortTitle"),
 																							JOptionPane.ERROR_MESSAGE);
 								JAPDebug.out(JAPDebug.EMERG,JAPDebug.NET,"Listener could not be started!");
 								model.getView().disableSetAnonMode();
@@ -1046,7 +893,7 @@ private final class SetAnonModeAsync implements Runnable
 						proxyAnon=null;
 						proxyAnonSocks=null;
 						view.setCursor(Cursor.getDefaultCursor());
-						model.status2 = model.getString("statusNotRunning");
+						model.status2 = JAPMessages.getString("statusNotRunning");
 						notifyJAPObservers();
 						setAnonMode(false);
 					}
@@ -1067,7 +914,7 @@ private final class SetAnonModeAsync implements Runnable
 						feedback.stopRequests();
 						feedback=null;
 					}
-				model.status2 = model.getString("statusNotRunning");
+				model.status2 = JAPMessages.getString("statusNotRunning");
 				proxyDirect=new JAPDirectProxy(m_socketHTTPListener);
 				proxyDirect.startService();
 				model.mixedPackets = -1;
@@ -1078,11 +925,27 @@ private final class SetAnonModeAsync implements Runnable
 			}
 	}
 */
-	public boolean getAnonMode() {
-		return proxyAnon!=null;
+	//---------------------------------------------------------------------
+	public void setHTTPListenerConfig(int port, boolean isLocal) {
+		if((portNumber!=port)||(mblistenerIsLocal!=isLocal)) {
+			portNumber = port;
+			synchronized(this) {
+				mblistenerIsLocal=isLocal;
+			}
+			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:HTTP listener settings changed");
+			JOptionPane.showMessageDialog(model.getView(),JAPMessages.getString("confmessageListernPortChanged"));
+			model.notifyJAPObservers();
+		}
 	}
-
-
+	public int getHTTPListenerPortNumber() {
+		return portNumber;
+	}
+	public boolean getHTTPListenerIsLocal() {
+		synchronized(this) {
+			return mblistenerIsLocal;
+		}
+	}
+	//---------------------------------------------------------------------	
 	private boolean startHTTPListener()
 		{
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:startListener");
@@ -1101,14 +964,14 @@ private final class SetAnonModeAsync implements Runnable
 									}
 								else
 									m_socketHTTPListener = new ServerSocket (portNumber);
-								JAPDebug.out(JAPDebug.INFO,JAPDebug.NET,"JAPProxyServer:Listener on port " + portNumber + " started.");
+								JAPDebug.out(JAPDebug.INFO,JAPDebug.NET,"Listener on port " + portNumber + " started.");
 								try
 									{
 										m_socketHTTPListener.setSoTimeout(2000);
 									}
 								catch(Exception e1)
 									{
-										JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Could not set accept time out: Exception: "+e1.getMessage());
+										JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Could not set listener accept timeout: Exception: "+e1.getMessage());
 									}
 								bindOk=true;
 								break;
@@ -1122,7 +985,6 @@ private final class SetAnonModeAsync implements Runnable
 				}
 			return isRunningListener;
 		}
-
 	private void stopHTTPListener()
 		{
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:stopListener");
@@ -1134,63 +996,62 @@ private final class SetAnonModeAsync implements Runnable
 					isRunningListener = false;
 				}
 		}
-
+	//---------------------------------------------------------------------	
 
 	/** This (and only this!) is the final exit procedure of JAP!
 	 *
 	 */
 	public void goodBye() {
 		//stopListener();
+		//view.setVisible(false);
+		//iconifiedView.setVisible(false);
 		// show a Reminder message that active contents should be disabled
-		view.setVisible(false);
-		iconifiedView.setVisible(false);
-		Object[] options = { model.getString("okButton") };
-		JCheckBox checkboxRemindNever=new JCheckBox(model.getString("disableGoodByMessageNeverRemind"));
-		Object[] message={model.getString("disableGoodByMessage"),checkboxRemindNever};
-		if (!mbGoodByMessageNeverRemind)
-			{
+		Object[] options = { JAPMessages.getString("okButton") };
+		JCheckBox checkboxRemindNever=new JCheckBox(JAPMessages.getString("disableGoodByMessageNeverRemind"));
+		Object[] message = { JAPMessages.getString("disableGoodByMessage"),checkboxRemindNever };
+		if (!mbGoodByMessageNeverRemind) {
 				JOptionPane.showOptionDialog(model.getView(),
 												(Object)message,
-												model.getString("disableGoodByMessageTitle"),
+												JAPMessages.getString("disableGoodByMessageTitle"),
 												JOptionPane.DEFAULT_OPTION,
 												JOptionPane.WARNING_MESSAGE,
 												null, options, options[0]);
 				mbGoodByMessageNeverRemind = checkboxRemindNever.isSelected();
-			}
-		model.save();
+		}
+		model.saveConfigFile();
 		System.exit(0);
 	}
 
-	public static void aboutJAP()
-		{
-			try
-				{
-					new JAPAbout(view);
-				}
-			catch(Throwable t)
-				{
-				}
+	/** Shows the About dialog
+	 */
+	public static void aboutJAP() {
+		try {
+			new JAPAbout(view);
+		} catch(Throwable t) {
 		}
+	}
 
 	/** Try to load all available MIX-Cascades form the InfoService...
 	 */
-	public void fetchAnonServers()
-		{
-			JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:Trying to fetch Anon Servers from ...");
-			try
-				{
-					getInfoService().fetchAnonServers();
-				}
-			catch (Exception e)
-				{
-					JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPModel:fetchAnonServers: "+e);
-					JOptionPane.showMessageDialog(view,
-																				model.getString("errorConnectingInfoService"),
-																				model.getString("errorConnectingInfoServiceTitle"),
-																				JOptionPane.ERROR_MESSAGE);
-				}
+	public void fetchAnonServers() {
+		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:Trying to fetch anon servers from InfoService");
+		AnonServerDBEntry[] db=null;
+		try {
+			db=getInfoService().getAvailableAnonServers();
+		} catch (Exception e) {
+			JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPModel:fetchAnonServers: "+e);
+			JOptionPane.showMessageDialog(view,
+											JAPMessages.getString("errorConnectingInfoService"),
+											JAPMessages.getString("errorConnectingInfoServiceTitle"),
+											JOptionPane.ERROR_MESSAGE);
+		}
+		if((db!=null)&&(db.length>=1)) {
+			anonServerDatabase.clean();
+			for(int i=0;i<db.length;i++)
+				anonServerDatabase.addEntry(db[i]);
 			notifyJAPObservers();
 		}
+	}
 
 	/** Performs the Versioncheck.
 	 *  @return -1, if version check says that anonymity mode should not be enabled.
@@ -1214,26 +1075,26 @@ private final class SetAnonModeAsync implements Runnable
 						{
 							// OK, new version available
 							// ->Ask user if he/she wants to download new version
-							//	Object[] options = { model.getString("newVersionNo"), model.getString("newVersionYes") };
+							//	Object[] options = { JAPMessages.getString("newVersionNo"), JAPMessages.getString("newVersionYes") };
 							//	ImageIcon   icon = loadImageIcon(DOWNLOADFN,true);
 							String answer;
 							JAPLoading japLoading = new JAPLoading(this,view);
-								answer = japLoading.message(model.getString("newVersionAvailableTitle"),
-						   model.getString("newVersionAvailable"),
-						   model.getString("newVersionNo"),
-						   model.getString("newVersionYes"),
+								answer = japLoading.message(JAPMessages.getString("newVersionAvailableTitle"),
+						   JAPMessages.getString("newVersionAvailable"),
+						   JAPMessages.getString("newVersionNo"),
+						   JAPMessages.getString("newVersionYes"),
 						   true,false);
-					if (answer.equals(model.getString("newVersionYes"))) {
+					if (answer.equals(JAPMessages.getString("newVersionYes"))) {
 						// User has elected to download new version of JAP
 						// ->Download, Alert, exit program
 						// To do: show busy message
 						try {
 							vc.registerProgress(japLoading);
-							vc.getVersionFromNet(JAPConstants.urlJAPNewVersionDownload, JAPConstants.JAPLocalFilename);
+							vc.getVersionFromNet(JAPConstants.urlJAPNewVersionDownload,JAPConstants.JAPLocalFilename);
 							Thread t = new Thread(vc);
 							t.start();
-							answer = japLoading.message(model.getString("downloadingProgressTitle"),
-						  model.getString("downloadingProgress"),
+							answer = japLoading.message(JAPMessages.getString("downloadingProgressTitle"),
+						  JAPMessages.getString("downloadingProgress"),
 						   null,
 						   null,
 						   true,true);
@@ -1241,8 +1102,8 @@ private final class SetAnonModeAsync implements Runnable
 							result = vc.getResult();
 							if (result == 0) {
 							//
-								answer = japLoading.message(model.getString("newVersionAvailableTitle"),
-							  model.getString("newVersionLoaded"),
+								answer = japLoading.message(JAPMessages.getString("newVersionAvailableTitle"),
+							  JAPMessages.getString("newVersionLoaded"),
 							  null,
 							  "OK",
 							  true,false);
@@ -1256,8 +1117,8 @@ private final class SetAnonModeAsync implements Runnable
 						// Alert, and reset anon mode to false
 						JAPDebug.out(JAPDebug.ERR,JAPDebug.MISC,"JAPModel:versionCheck(): Exception" + e);
 						JOptionPane.showMessageDialog(view,
-																					model.getString("downloadFailed")+model.getString("infoURL"),
-																					model.getString("downloadFailedTitle"),
+																					JAPMessages.getString("downloadFailed")+JAPMessages.getString("infoURL"),
+																					JAPMessages.getString("downloadFailedTitle"),
 																					JOptionPane.ERROR_MESSAGE);
 						notifyJAPObservers();
 						return -1;
@@ -1265,8 +1126,8 @@ private final class SetAnonModeAsync implements Runnable
 				} else {
 					// User has elected not to download
 					// ->Alert, we should'nt start the system due to possible compatibility problems
-					answer = japLoading.message(model.getString("youShouldUpdateTitle"),
-						   model.getString("youShouldUpdate")+model.getString("infoURL"),
+					answer = japLoading.message(JAPMessages.getString("youShouldUpdateTitle"),
+						   JAPMessages.getString("youShouldUpdate")+JAPMessages.getString("infoURL"),
 						   null,
 						   "OK",
 						   true,false);
@@ -1283,21 +1144,26 @@ private final class SetAnonModeAsync implements Runnable
 			// ->Alert, and reset anon mode to false
 			JAPDebug.out(JAPDebug.ERR,JAPDebug.MISC,"JAPModel: "+e);
 			JOptionPane.showMessageDialog(view,
-																		model.getString("errorConnectingInfoService"),
-																		model.getString("errorConnectingInfoServiceTitle"),
+																		JAPMessages.getString("errorConnectingInfoService"),
+																		JAPMessages.getString("errorConnectingInfoServiceTitle"),
 																		JOptionPane.ERROR_MESSAGE);
 			notifyJAPObservers();
 			return -1;
 		}
 		// this line should never be reached
 	}
-
+	//---------------------------------------------------------------------	
+	public void registerView(JAPView v) {
+			view=v;
+	}
+	public static JAPView getView() {
+			return model.view;
+	}
+	//---------------------------------------------------------------------	
 	public void addJAPObserver(JAPObserver o)
 		{
 			observerVector.addElement(o);
 		}
-
-
 	public void notifyJAPObservers()
 		{
 	//		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:notifyJAPObservers()");
@@ -1307,11 +1173,43 @@ private final class SetAnonModeAsync implements Runnable
 					while (enum.hasMoreElements())
 						{
 							JAPObserver listener = (JAPObserver)enum.nextElement();
-							listener.valuesChanged(this);
+							listener.valuesChanged();
 						}
 				}
 		//	JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:notifyJAPObservers()-ended");
 		}
-
+	//---------------------------------------------------------------------	
+	public void channelsChanged(int channels)
+		{
+			nrOfChannels=channels;
+					Enumeration enum = observerVector.elements();
+					while (enum.hasMoreElements())
+						{
+							JAPObserver listener = (JAPObserver)enum.nextElement();
+							listener.channelsChanged(channels);
+						}
+		}
+	public void transferedBytes(int bytes)
+		{
+			nrOfBytes+=bytes;
+					Enumeration enum = observerVector.elements();
+					while (enum.hasMoreElements())
+						{
+							JAPObserver listener = (JAPObserver)enum.nextElement();
+							listener.transferedBytes(nrOfBytes);
+						}
+		}
+	//---------------------------------------------------------------------	
+	public int setRMISupport(boolean b) {
+		if(b) {
+			if(anonServiceRMIServer==null)
+				anonServiceRMIServer = new JAPAnonServiceRMIServer(this);
+		} else {
+			if(anonServiceRMIServer!=null)
+				anonServiceRMIServer.quitServer();
+			anonServiceRMIServer=null;
+		}
+		return 0;
+	}
 }
 

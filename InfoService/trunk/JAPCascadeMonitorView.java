@@ -77,7 +77,7 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 		view=this;
 		db = model.anonServerDatabase;
 		this.setModal(true);
-		this.setTitle(model.getString("chkAvailableCascades"));
+		this.setTitle(JAPMessages.getString("chkAvailableCascades"));
 		Component contents = this.createComponents();
 		getContentPane().add(contents, BorderLayout.CENTER);
 		pack();
@@ -89,8 +89,8 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 	    JPanel p = new JPanel(new BorderLayout());
 		// status
 		JPanel statusPanel = new JPanel();
-		statusTextField = new JLabel(model.getString("chkPressStartToCheck"));
-		contCheckBox = new JCheckBox(model.getString("chkChontinouslyCheck"));
+		statusTextField = new JLabel(JAPMessages.getString("chkPressStartToCheck"));
+		contCheckBox = new JCheckBox(JAPMessages.getString("chkChontinouslyCheck"));
 //		statusPanel.add(new JLabel("Status: "));
 		statusPanel.add(statusTextField);
 //		statusPanel.add(contCheckBox);
@@ -98,11 +98,11 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 		tableAggregate = createTable();
 		// Buttons
 		JPanel buttonPanel   = new JPanel();
-		startButton     = new JButton(model.getString("chkBttnTest"));
-		stopButton      = new JButton(model.getString("stopButton"));
-		okButton        = new JButton(model.getString("chkBttnSelect"));
+		startButton     = new JButton(JAPMessages.getString("chkBttnTest"));
+		stopButton      = new JButton(JAPMessages.getString("stopButton"));
+		okButton        = new JButton(JAPMessages.getString("chkBttnSelect"));
 		stopButton.setEnabled(false);
-		final JButton closeButton = new JButton(model.getString("cancelButton"));
+		final JButton closeButton = new JButton(JAPMessages.getString("cancelButton"));
 		startButton.addActionListener(new ActionListener() {
 		    public void actionPerformed(ActionEvent e) {
 				stopButton.setEnabled(true);
@@ -150,11 +150,11 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
         dataModel = new AbstractTableModel() {
             public int getColumnCount() { return 5; }
             public String getColumnName(int column) {
-				if (column==0) return model.getString("chkCascade");
-				if (column==1) return model.getString("chkUsers");
-				if (column==2) return model.getString("chkDelay");
-				if (column==3) return model.getString("chkStatus");
-				if (column==4) return model.getString("chkSelect");
+				if (column==0) return JAPMessages.getString("chkCascade");
+				if (column==1) return JAPMessages.getString("chkUsers");
+				if (column==2) return JAPMessages.getString("chkDelay");
+				if (column==3) return JAPMessages.getString("chkStatus");
+				if (column==4) return JAPMessages.getString("chkSelect");
 				return " ";
 			}
             public int getRowCount() { return db.size();}
@@ -164,7 +164,7 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 				if (col==1) return (e.getNrOfActiveUsers()==-1?" ":Integer.toString(e.getNrOfActiveUsers()));
 				if (col==2) return (e.getDelay()==null?" ":e.getDelay());
 				if (col==3) return (e.getStatus()==null?"                              ":e.getStatus());
-				if (col==4) return (e.equals(model.getAnonServer())?model.getString("chkSelected"):" ");
+				if (col==4) return (e.equals(model.getAnonServer())?JAPMessages.getString("chkSelected"):" ");
 				return " ";
 			}
             public Class getColumnClass(int c) {return getValueAt(0, c).getClass();}
@@ -207,7 +207,7 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 	}
 
 	private void stopTest() {
-		statusTextField.setText(model.getString("chkCancelled"));
+		statusTextField.setText(JAPMessages.getString("chkCancelled"));
 		runFlag=false;
 		try {
 			idleThread.stop();
@@ -226,15 +226,15 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 						 Integer.toString(model.getAnonServer().getPort()+1));
 		}
 		this.setCursor(Cursor.getDefaultCursor());
-		statusTextField.setText(model.getString("chkPressStartToCheck"));
+		statusTextField.setText(JAPMessages.getString("chkPressStartToCheck"));
 	}
 
 
 	public static void main(String[] args) {
 		JAPMessages.init();
-		JAPModel model = JAPModel.createModel();
+		JAPModel model = JAPModel.create();
 		JAPDebug.create();
-		model.load();
+		model.loadConfigFile();
 		model.fetchAnonServers();
 		JAPDebug.setDebugType(JAPDebug.NET+JAPDebug.GUI+JAPDebug.THREAD+JAPDebug.MISC);
 		JAPDebug.setDebugLevel(JAPDebug.DEBUG);
@@ -249,7 +249,7 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 				long t2 = System.currentTimeMillis();
 				long milisec = t2 - t1;
 				if (milisec < IDLETIME) {
-					statusTextField.setText(model.getString("chkIdle")+" "+((IDLETIME-milisec)/1000)+" s");
+					statusTextField.setText(JAPMessages.getString("chkIdle")+" "+((IDLETIME-milisec)/1000)+" s");
 					try {
 						idleThread.sleep(1000);
 					} catch (Exception e) {
@@ -272,23 +272,23 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPCascadeMonitor:run()");
 			while(runFlag) {
 				// get the feedback from InfoSercive
-				statusTextField.setText(model.getString("chkGettingFeedback"));
+				statusTextField.setText(JAPMessages.getString("chkGettingFeedback"));
 				Enumeration enum = db.elements();
 				while (enum.hasMoreElements()) {
 					model.getInfoService().getFeedback((AnonServerDBEntry)enum.nextElement());
 					tableView.repaint();
 				}
-				statusTextField.setText(model.getString("chkFeedbackReceived"));
+				statusTextField.setText(JAPMessages.getString("chkFeedbackReceived"));
 				// connect to all Mix cascades
 				int nr = db.size();
 				if (listener==null) {
 					nr = 0;
-					statusTextField.setText(model.getString("chkListenerError"));
+					statusTextField.setText(JAPMessages.getString("chkListenerError"));
 				}
 				for(int i=0;i<nr;i++) {
 					AnonServerDBEntry e = db.getEntry(i);
-					statusTextField.setText(model.getString("chkCnctToCasc")+" "+e.getName());
-					e.setStatus(model.getString("chkConnecting"));
+					statusTextField.setText(JAPMessages.getString("chkCnctToCasc")+" "+e.getName());
+					e.setStatus(JAPMessages.getString("chkConnecting"));
 					tableView.repaint();
 					// create the AnonService
 					JAPAnonService proxyAnon=new JAPAnonService(listener,JAPAnonService.PROTO_HTTP);
@@ -321,11 +321,11 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 					e.setDelay("" + ((dtConnect==-1)?"-":nf.format((float)dtConnect/1000.F)) + " s");
 					tableView.repaint();
 					if(ret==JAPAnonService.E_SUCCESS) {
-						e.setStatus(model.getString("chkConnected"));
+						e.setStatus(JAPMessages.getString("chkConnected"));
 					} else {
 						dtConnect=-1;
-						if (ret==JAPAnonService.E_BIND)  e.setStatus(model.getString("chkBindError"));
-						else                             e.setStatus(model.getString("chkConnectionError"));
+						if (ret==JAPAnonService.E_BIND)  e.setStatus(JAPMessages.getString("chkBindError"));
+						else                             e.setStatus(JAPMessages.getString("chkConnectionError"));
 					}
 					tableView.repaint();
 					// if sucessfull perform check
@@ -357,7 +357,7 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 							JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Response:>" + response + "<");
 //							if (resp==null || resp.getStatusCode()!=200) {
 							if ((response == null) || (response.length() == 0) || (response.indexOf("200")==-1)) {
-								e.setStatus(model.getString("chkBadResponse"));
+								e.setStatus(JAPMessages.getString("chkBadResponse"));
 								tableView.repaint();
 								dtResponse=-1;
 							} else {
@@ -370,13 +370,13 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 								JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Data:>" + data + "<");
 								t2 = System.currentTimeMillis();
 								dtResponse = t2-t1;
-								e.setStatus(model.getString("chkCascResponding"));
+								e.setStatus(JAPMessages.getString("chkCascResponding"));
 								tableView.repaint();
 //								byte[] buff=resp.getData();
 //								String s=new String(buff).trim();
 								String s=data.trim();
 								if ( (s.charAt(2) == '.') && (s.charAt(5) == '.') ) {
-									e.setStatus(model.getString("chkOK"));
+									e.setStatus(JAPMessages.getString("chkOK"));
 									tableView.repaint();
 								}
 							}
@@ -386,7 +386,7 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 						}
 						catch (Exception ex) {
 							dtResponse = -1;
-							e.setStatus(model.getString("chkConButError"));
+							e.setStatus(JAPMessages.getString("chkConButError"));
 							tableView.repaint();
 							JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"Exception: "+ex);
 						}

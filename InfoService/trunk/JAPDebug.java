@@ -52,9 +52,6 @@ import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.JScrollPane;
 import javax.swing.JScrollBar;
-/* 2000-08-01(HF):
-Stefan, ich habe das Zeug mit PrintWriter und so auskommentiert, weil es irgendwie nicht ging.
-Koenntest Du es im Self test (main()) evtl. im Beispielcode angeben?
 
 /**
  * This class serves as a debugging interface.
@@ -71,7 +68,7 @@ Koenntest Du es im Self test (main()) evtl. im Beispielcode angeben?
  * <code>JAPDebug.out(int level, int type, String txt)</code>
  * This is a Singleton!
  */
-final public class JAPDebug extends WindowAdapter implements ActionListener{
+final public class JAPDebug extends WindowAdapter implements ActionListener {
 
 	/** No debugging */
 	public final static int NUL = 0;
@@ -101,11 +98,14 @@ final public class JAPDebug extends WindowAdapter implements ActionListener{
 	/** Indicates level type of message, e.g. a simple debugging message to output something */
 	public final static int DEBUG     = 7;
 
-	private int debugtype;
-	private int debuglevel;
-	private JTextArea textareaConsole;
-	private JDialog frameConsole;
-	private boolean m_bConsole;
+	private static int debugtype=GUI+NET+THREAD+MISC;
+	private static int debuglevel=DEBUG;
+	private static JTextArea textareaConsole;
+	private static JDialog frameConsole;
+	private static boolean m_bConsole=false;
+//	private PrintWriter[] outStreams;
+	private static JAPDebug debug;
+	private static SimpleDateFormat dateFormatter=new SimpleDateFormat ("yyyy/MM/dd-hh:mm:ss, ");
 
 	private final static String strLevels[]=
 		{
@@ -118,10 +118,6 @@ final public class JAPDebug extends WindowAdapter implements ActionListener{
 			"Info     ",
 			"Debug    "
 		};
-//	private PrintWriter[] outStreams;
-
-	private static JAPDebug debug;
-	private static SimpleDateFormat dateFormatter;
 
 
 	private JAPDebug () {
@@ -131,55 +127,53 @@ final public class JAPDebug extends WindowAdapter implements ActionListener{
 //		outStreams=new PrintWriter[8];
 //		for(int i=0;i<8;i++)
 //			outStreams[i]=new PrintWriter(System.out);
-		dateFormatter= new SimpleDateFormat ("yyyy/MM/dd-hh:mm:ss, ");
-		}
-
-	public  static JAPDebug create()
-		{
-			if(debug!=null)
-				out(debug.ALERT,debug.INFO,"Debug inialized twice - Big Bug!");
-			else
-				debug=new JAPDebug();
-			return debug;
-		}
+//		dateFormatter= new SimpleDateFormat ("yyyy/MM/dd-hh:mm:ss, ");
+	}
+	public  static JAPDebug create() {
+		if(debug!=null)
+			out(debug.ALERT,debug.INFO,"Debug inialized twice - Big Bug!");
+		else
+			debug = new JAPDebug();
+		return debug;
+	}
 
 	/** Output a debug message.
 	 *  @param level The level of the debugging message (EMERG,ALERT,CRIT,ERR,WARNING,NOTICE,INFO,DEBUG)
 	 *  @param type The type of the debugging message (GUI, NET, THREAD, MISC)
 	 *  @param txt   The message itself
 	 */
-	public static void out(int level, int type, String txt)
-		{
-//		if(level<0||level>JAPDebug.EMERG||txt==null||debug==null||debug.outStreams[level]==null)
-//			return;
-			if ( (level <= debug.debuglevel) && (debug.debugtype & type) !=0 )
-				{
+	public static void out(int level, int type, String txt) {
+		if(debug==null)
+			JAPDebug.create();
+		if ( (level <= debug.debuglevel) && (debug.debugtype & type) !=0 ) {
 //			debug.outStreams[level].println("JAPDebug: "+txt);
-					synchronized(debug)
-            {
-              String str="["+dateFormatter.format(new Date())+strLevels[level]+"] "+txt+"\n";
-					    if(!debug.m_bConsole)
-						    System.err.print(str);
-					    else
-						    {
-									debug.textareaConsole.append(str);
-									debug.textareaConsole.setCaretPosition(debug.textareaConsole.getText().length());
-								}
-            }
+			synchronized(debug) {
+				String str="["+dateFormatter.format(new Date())+strLevels[level]+"] "+txt+"\n";
+				if(!debug.m_bConsole)
+					System.err.print(str);
+				else {
+					debug.textareaConsole.append(str);
+					debug.textareaConsole.setCaretPosition(debug.textareaConsole.getText().length());
 				}
+			}
 		}
+	}
 
 	/** Set the debugging type you like to output. To activate more than one type you simly add
 	 *  the types like this <code>setDebugType(JAPDebug.GUI+JAPDebug.NET)</code>.
 	 *  @param type The debug type (NUL, GUI, NET, THREAD, MISC)
 	 */
 	public static void setDebugType(int type) {
+		if(debug==null)
+			JAPDebug.create();
 		debug.debugtype = type;
 	}
 
 	/** Get the current debug type.
 	 */
 	public static int getDebugType() {
+		if(debug==null)
+			JAPDebug.create();
 		return debug.debugtype;
 	}
 
@@ -191,48 +185,47 @@ final public class JAPDebug extends WindowAdapter implements ActionListener{
 	public static void setDebugLevel(int level) {
 		if(level<0||level>DEBUG)
 			return;
+		if(debug==null)
+			JAPDebug.create();
 		debug.debuglevel = level;
 	}
 
 	/** Get the current debug level.
 	 */
 	public static int getDebugLevel() {
+		if(debug==null)
+			JAPDebug.create();
 		return debug.debuglevel;
 	}
 
 	/** Returns short words discribing each debug-level.
 	 */
-	public static final String[] getDebugLevels()
-		{
-			return strLevels;
-		}
+	public static final String[] getDebugLevels() {
+		return strLevels;
+	}
 
 	/** Shows or hiddes a Debug-Console-Window
 	 */
-	public static void showConsole(boolean b,Frame parent)
-		{
-			debug.internal_showConsole(b,parent);
-		}
+	public static void showConsole(boolean b,Frame parent) {
+		debug.internal_showConsole(b,parent);
+	}
 
-	public static void setConsoleParent(Frame parent)
-		{
-			if(debug!=null&&debug.m_bConsole&&debug.frameConsole!=null)
-				{
-					JDialog tmpDlg=new JDialog(parent,"Debug-Console");
-					//tmpDlg.getContentPane().add(new JScrollPane(debug.textareaConsole));
-					tmpDlg.setContentPane(debug.frameConsole.getContentPane());
-					tmpDlg.addWindowListener(debug);
-					tmpDlg.setSize(debug.frameConsole.getSize());
-					tmpDlg.setLocation(debug.frameConsole.getLocation());
-					tmpDlg.setVisible(true);
-					debug.frameConsole.dispose();
-					debug.frameConsole=tmpDlg;
-				}
+	public static void setConsoleParent(Frame parent) {
+		if((debug!=null)&&(debug.m_bConsole)&&(debug.frameConsole!=null)) {
+			JDialog tmpDlg=new JDialog(parent,"Debug-Console");
+			//tmpDlg.getContentPane().add(new JScrollPane(debug.textareaConsole));
+			tmpDlg.setContentPane(debug.frameConsole.getContentPane());
+			tmpDlg.addWindowListener(debug);
+			tmpDlg.setSize(debug.frameConsole.getSize());
+			tmpDlg.setLocation(debug.frameConsole.getLocation());
+			tmpDlg.setVisible(true);
+			debug.frameConsole.dispose();
+			debug.frameConsole=tmpDlg;
 		}
-	public static boolean isShowConsole()
-		{
+	}
+	public static boolean isShowConsole() {
 			return debug.m_bConsole;
-		}
+	}
 
 	public void internal_showConsole(boolean b,Frame parent)
 		{

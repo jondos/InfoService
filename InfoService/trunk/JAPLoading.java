@@ -40,7 +40,7 @@ final class JAPLoading implements ActionListener, VersioncheckerProgress {
 
     public  JAPLoading (JAPModel model,Frame parent) {
 		dialog = new JDialog(parent);
-		dialog.setTitle(model.getString("Message"));
+		dialog.setTitle(JAPMessages.getString("Message"));
 			
 		JPanel iconPanel = new JPanel();
 		iconPanel.setBorder(new EmptyBorder(5,5,0,0));
@@ -129,15 +129,15 @@ final class JAPLoading implements ActionListener, VersioncheckerProgress {
 		JAPLoading l = new JAPLoading(model,new Frame());
 		String answer;
 
-		answer = l.message(model.getString("newVersionAvailableTitle"),
-						   model.getString("newVersionAvailable"),
-						   model.getString("newVersionNo"),
-						   model.getString("newVersionYes"),
+		answer = l.message(JAPMessages.getString("newVersionAvailableTitle"),
+						   JAPMessages.getString("newVersionAvailable"),
+						   JAPMessages.getString("newVersionNo"),
+						   JAPMessages.getString("newVersionYes"),
 						   true,false);
 		System.out.println(answer);
 
-		answer = l.message(model.getString("downloadingProgressTitle"),
-						   model.getString("downloadingProgress"),
+		answer = l.message(JAPMessages.getString("downloadingProgressTitle"),
+						   JAPMessages.getString("downloadingProgress"),
 						   null,
 						   null,
 						   false,true);
@@ -147,15 +147,15 @@ final class JAPLoading implements ActionListener, VersioncheckerProgress {
 				l.progress(i);
 		System.out.println(answer);
 		
-		answer = l.message(model.getString("newVersionAvailableTitle"),
-						   model.getString("newVersionLoaded"),
+		answer = l.message(JAPMessages.getString("newVersionAvailableTitle"),
+						   JAPMessages.getString("newVersionLoaded"),
 						   null,
 						   "OK",
 						   true,false);
 		System.out.println(answer);
 
-		answer = l.message(model.getString("youShouldUpdateTitle"),
-						   model.getString("youShouldUpdate")+model.getString("infoURL"),
+		answer = l.message(JAPMessages.getString("youShouldUpdateTitle"),
+						   JAPMessages.getString("youShouldUpdate")+JAPMessages.getString("infoURL"),
 						   null,
 						   "OK",
 						   true,false);

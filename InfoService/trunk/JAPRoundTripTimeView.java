@@ -144,18 +144,18 @@ class JAPRoundTripTimeView extends JDialog implements Runnable {
 	 */
 	private Component createComponents(AnonServerDBEntry[] initialServerList) {
 		JPanel myPanel = new JPanel();
-		startButton     = new JButton(model.getString("startButton"));
-		stopButton      = new JButton(model.getString("stopButton"));
-		sumProgressBarDesc1    = new JLabel(model.getString("rttSumTime"));
-		sumProgressBarDesc2    = new JLabel(model.getString("rttMin") + " - / " + model.getString("rttAvg") + " - / " + model.getString("rttMax") + " -", JLabel.RIGHT);
+		startButton     = new JButton(JAPMessages.getString("startButton"));
+		stopButton      = new JButton(JAPMessages.getString("stopButton"));
+		sumProgressBarDesc1    = new JLabel(JAPMessages.getString("rttSumTime"));
+		sumProgressBarDesc2    = new JLabel(JAPMessages.getString("rttMin") + " - / " + JAPMessages.getString("rttAvg") + " - / " + JAPMessages.getString("rttMax") + " -", JLabel.RIGHT);
 
 		// The Northern Part Definitions
 		GridBagLayout gbLayoutNorth = new GridBagLayout();
 		GridBagConstraints c        = new GridBagConstraints();
 		JPanel panelNorth           = new JPanel(gbLayoutNorth);
-		JLabel myLabel              = new JLabel(model.getString("rttMixCascade"));
-		JRadioButton valueAbsoluteButton   = new JRadioButton(model.getString("rttValAbsolute"));
-		JRadioButton valuePercentButton    = new JRadioButton(model.getString("rttValPercent"));
+		JLabel myLabel              = new JLabel(JAPMessages.getString("rttMixCascade"));
+		JRadioButton valueAbsoluteButton   = new JRadioButton(JAPMessages.getString("rttValAbsolute"));
+		JRadioButton valuePercentButton    = new JRadioButton(JAPMessages.getString("rttValPercent"));
 		ButtonGroup chooseValueButtonGroup = new ButtonGroup();
 		JPanel panelControlls1 = new JPanel();
 		panelControlls1.setLayout(new BoxLayout(panelControlls1, BoxLayout.Y_AXIS));
@@ -171,7 +171,7 @@ class JAPRoundTripTimeView extends JDialog implements Runnable {
 		// The Southern Part Definitions
 		JPanel panelSouth   = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
 		// startButton & stopButton are global
-		final JButton closeButton = new JButton(model.getString("closeButton"));
+		final JButton closeButton = new JButton(JAPMessages.getString("closeButton"));
 
 		// Northern part *************************************
 		chooseValueButtonGroup.add(valueAbsoluteButton);
@@ -204,7 +204,7 @@ class JAPRoundTripTimeView extends JDialog implements Runnable {
 		c.gridx   = 0;
 		c.gridy   = 1;
 		c.insets  = new Insets(0,0,0,0);
-		panelNorth.add(new JLabel(model.getString("rttLocalAddress")), c);
+		panelNorth.add(new JLabel(JAPMessages.getString("rttLocalAddress")), c);
 		c.gridx   = 1;
 		c.gridy   = 1;
 		c.insets  = new Insets(0,10,0,10);
@@ -250,7 +250,7 @@ class JAPRoundTripTimeView extends JDialog implements Runnable {
 		for (int i = 1; i < (JAPRoundTripTime.MAX_STATIONS - 1); i++){
 			myProgressBarDesc1[i] = new JLabel("Mix " + (i) + " - Mix " + (i + 1));
 			myProgressBarDesc1[i].setIcon(JAPUtil.loadImageIcon("server16.gif",false));
-			myProgressBarDesc2[i] = new JLabel(model.getString("rttMin") + " - / " + model.getString("rttAvg") + " - / " + model.getString("rttMax") + " -", JLabel.RIGHT);
+			myProgressBarDesc2[i] = new JLabel(JAPMessages.getString("rttMin") + " - / " + JAPMessages.getString("rttAvg") + " - / " + JAPMessages.getString("rttMax") + " -", JLabel.RIGHT);
 			myProgressBar1[i]     = new JProgressBar(0,100);
 			myProgressBar1[i].setString("");
 			myProgressBar1[i].setStringPainted(true);
@@ -409,9 +409,9 @@ class JAPRoundTripTimeView extends JDialog implements Runnable {
 						myProgressBar2[i].setValue((avgPerConnection[i] * 100 / avgAtAll));
 						myProgressBar2[i].setString((avgPerConnection[i] * 100 / avgAtAll) + " %");
 					}
-					myProgressBarDesc2[i].setText(model.getString("rttMin") + " " + minPerConnection[i]
-										+ " / " + model.getString("rttAvg") + " " + avgPerConnection[i]
-										+ " / " + model.getString("rttMax") + " " + maxPerConnection[i]);
+					myProgressBarDesc2[i].setText(JAPMessages.getString("rttMin") + " " + minPerConnection[i]
+										+ " / " + JAPMessages.getString("rttAvg") + " " + avgPerConnection[i]
+										+ " / " + JAPMessages.getString("rttMax") + " " + maxPerConnection[i]);
 				}
 			}
 		};

@@ -36,27 +36,28 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 import java.lang.NoClassDefFoundError;
 import java.awt.Frame;
 import java.awt.event.WindowEvent;
-/** This is the MAIN of all this. It starts everything.
- */
-class JAP extends Frame{
 
-	//JAPDebug jdebug;
+/** This is the main class of the JAP project. It starts everything. It can be inherited by another
+ *  class that wants to initialize platform dependend features, e.g. see 
+ *  <A HREF="JAPMacintosh.html">JAPMacintosh.html</A> 
+ *  as an example.
+ */
+class JAP extends Frame {
+
 	boolean bSupportRMI=false;
-	/** At the moment - just do nothing...
+	
+	/** Constructor for the JAP object.
 	 * @param argv The commandline arguments.
-	 *		-rmi   Enable Support for RMI, so that other apllications can control the JAP
+	 *        <code>-rmi</code>   Enable Support for RMI, so that other apllications can control the JAP
 	 */
-	JAP(String[] argv)
-		{
-			if(argv!=null&&argv.length>0)
-				{
-					for(int i=0;i<argv.length;i++)
-						{
-							if(argv[i].equalsIgnoreCase("-rmi"))
-								 bSupportRMI=true;
-						}
-				}
+	JAP(String[] argv) {
+		if(argv!=null&&argv.length>0) {
+			for(int i=0;i<argv.length;i++) {
+				if(argv[i].equalsIgnoreCase("-rmi"))
+					 bSupportRMI=true;
+			}
 		}
+	}
 
 	/** Initializes and starts the JAP.
 	 */
@@ -91,7 +92,7 @@ class JAP extends Frame{
 		}
 		// Show splash screen
 		JAPSplash splash = new JAPSplash(this);
-		//Test for Swing
+		// Test for Swing
 		try {
 			Object o=new javax.swing.JLabel();
 			o=null;
@@ -100,13 +101,13 @@ class JAP extends Frame{
 			System.exit(0);
 		}
 		// Create the model object
-		JAPModel model = JAPModel.createModel();
+		JAPModel model = JAPModel.create();
 		// Create debugger object
 		JAPDebug.create();
 		JAPDebug.setDebugType(JAPDebug.NET+JAPDebug.GUI+JAPDebug.THREAD+JAPDebug.MISC);
 		JAPDebug.setDebugLevel(JAPDebug.WARNING);
 		// load settings from config file
-		model.load();
+		model.loadConfigFile();
 		// Output some information about the system
 		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAP:Welcome! This is version "+JAPConstants.aktVersion+" of JAP.");
 		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAP:Java "+javaVersion+" running on "+os+".");
@@ -127,23 +128,25 @@ class JAP extends Frame{
 		view.create();
 		// Switch Debug Console Parent to MainView
 		JAPDebug.setConsoleParent(view);
-		//
+		// Add observer
 		model.addJAPObserver(view);
 		// Create the iconified view
-		JAPViewIconified iconifiedView = new JAPViewIconified(JAPConstants.TITLEOFICONIFIEDVIEW);
-		model.addJAPObserver(iconifiedView);
-
+		JAPViewIconified viewIconified = new JAPViewIconified(JAPConstants.TITLEOFICONIFIEDVIEW);
+		model.addJAPObserver(viewIconified);
+		// Register the views where they are needed
+		model.registerView(view);
+		viewIconified.registerMainView(view);
+		view.registerViewIconified(viewIconified);
 		//Init Crypto...
-		//java.security.Security.addProvider(new cryptix.jce.provider.CryptixCrypto());
-
+//		java.security.Security.addProvider(new cryptix.jce.provider.CryptixCrypto());
 		// Enable RMI if requested
 		model.setRMISupport(bSupportRMI);
-
+		// Show main frame and dispose splash screen
 		view.show();
 		view.toFront();
 		splash.dispose();
-//		view.show();
-//		view.toFront();
+		// pre-initalize anon service
+		anon.JAPAnonService.init();
 		// initially start services
 		model.initialRun();
 	}

@@ -68,7 +68,7 @@ public class JAPAnonServiceImpl extends UnicastRemoteObject
 
     /** @returns whether JAP ist actually listening locally only */
     public boolean getLocallyListeningOnly() throws RemoteException {
-        return myJAPModel.getListenerIsLocal();
+        return myJAPModel.getHTTPListenerIsLocal();
     }
 
     /** Set the port where the AnonService is locally listening */
@@ -80,9 +80,12 @@ public class JAPAnonServiceImpl extends UnicastRemoteObject
 
     /** Set whether the AnonService is only available for the local computer */
     public boolean setLocallyListeningOnly(boolean listenOnlyLocally) throws RemoteException {
-        myJAPModel.setListenerIsLocal(listenOnlyLocally);
+//        myJAPModel.setHTTPListenerIsLocal(listenOnlyLocally);
+//2001-11-12(HF):
+		myJAPModel.setHTTPListenerConfig(myJAPModel.getHTTPListenerPortNumber(),listenOnlyLocally);
         return true;
     }
+    
 
 // ----------- infoServiceConfiguration -----------------------------------
 

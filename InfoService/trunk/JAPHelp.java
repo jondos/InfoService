@@ -46,7 +46,7 @@ final class JAPHelp extends JDialog implements ActionListener {
 
     public JAPHelp(JFrame f) 
 			{
-				super(f, JAPModel.getString("helpWindow"), false);
+				super(f, JAPMessages.getString("helpWindow"), false);
 				model = JAPModel.getModel();
 				init();
 			}
@@ -57,7 +57,7 @@ final class JAPHelp extends JDialog implements ActionListener {
 				//container.setLayout( new BorderLayout() );
 				//getContentPane().setLayout(new BorderLayout());
 	
-				html = new HtmlPane(model.getString("helpPath1"));
+				html = new HtmlPane(JAPMessages.getString("helpPath1"));
 
 				JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 	
@@ -65,7 +65,7 @@ final class JAPHelp extends JDialog implements ActionListener {
 				buttonPanel.add( language );
 				buttonPanel.add(new JLabel("   "));
 	
-				JButton close = new JButton(model.getString("closeButton"));
+				JButton close = new JButton(JAPMessages.getString("closeButton"));
 				buttonPanel.add( close );
 				buttonPanel.add(new JLabel("   "));
 
@@ -79,8 +79,8 @@ final class JAPHelp extends JDialog implements ActionListener {
 				for (int i = 1; i < JAPConstants.MAXHELPLANGUAGES; i++) {
 					try 
 						{ 
-							helpPath = model.getString("helpPath"+String.valueOf(i)); 
-							helpLang = model.getString("lang"+String.valueOf(i));
+							helpPath = JAPMessages.getString("helpPath"+String.valueOf(i)); 
+							helpLang = JAPMessages.getString("lang"+String.valueOf(i));
 							// This checks if the entry exists in the properties file
 							// if yes, the item will be added
 							if (( helpLang.equals("lang"+String.valueOf(i)) )!= true)
@@ -106,7 +106,7 @@ final class JAPHelp extends JDialog implements ActionListener {
 				// for Language Combobox AND Close Burtton only
 				if(e.getSource()==language)
 					{
-						helpPath = model.getString("helpPath"+String.valueOf(language.getSelectedIndex()+1));
+						helpPath = JAPMessages.getString("helpPath"+String.valueOf(language.getSelectedIndex()+1));
 						html.load(helpPath);
 					}
 				else

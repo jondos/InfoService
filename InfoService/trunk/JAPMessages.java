@@ -10,6 +10,7 @@ public final class JAPMessages
 
 		private JAPMessages()
 			{
+				init();
 			}
 
 		/* Initalize with the System default Locale...*/

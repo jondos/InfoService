@@ -28,5 +28,5 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 import anon.JAPAnonServiceListener;
 interface JAPObserver extends JAPAnonServiceListener
 	{
-		void valuesChanged(JAPModel m);
+		void valuesChanged();
 	}
