@@ -139,8 +139,13 @@ final public class JAPTest
 	//	t.testJarVerify();
 //		ASN1Test();
 		
-		int len=-32526;
-		len=len;
+		try{
+			ServerSocket s=new ServerSocket(5002);
+			Socket t=s.accept();
+			Thread.sleep(50000);
+		}catch(Exception e)
+		{
+		}
 		System.exit(0);
 		}
 	

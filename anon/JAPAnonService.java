@@ -171,7 +171,7 @@ public final class JAPAnonService implements Runnable
 						while(m_bIsRunning)
 							{
 								Socket socket = socketListener.accept();
-								m_MuxSocket.newConnection(new JAPSocket(socket));
+								m_MuxSocket.newConnection(new JAPSocket(socket),m_Protocol);
 							}
 					}
 				catch (Exception e)

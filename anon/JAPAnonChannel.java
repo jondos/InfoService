@@ -33,12 +33,14 @@ public class JAPAnonChannel extends Thread
 		private final JAPSocket inSocket; 
 		private final JAPMuxSocket outSocket;
 		private final int channel;
-
-    public JAPAnonChannel (JAPSocket s, int channelID, JAPMuxSocket muxSocket) 
+		private final int m_Type;
+		
+    public JAPAnonChannel (JAPSocket s, int channelID, int type,JAPMuxSocket muxSocket) 
 			{ 
 				inSocket = s;
 				channel=channelID; 
-				outSocket=muxSocket; 
+				outSocket=muxSocket;
+				m_Type=type;
 			}
 	
 		public void run()
@@ -51,12 +53,12 @@ public class JAPAnonChannel extends Thread
 						int len=fromClient.read(buff,0,JAPMuxSocket.DATA_SIZE-3-outSocket.getChainLen()*JAPMuxSocket.KEY_SIZE);
 						if(len!=-1)
 							{
-								outSocket.send(channel,buff,(short)len);		
+								outSocket.send(channel,m_Type,buff,(short)len);		
 								while((len=fromClient.read(buff,0,JAPMuxSocket.DATA_SIZE-3))!=-1)
 									{
 										if(len>0)
 											{
-												int ret=outSocket.send(channel,buff,(short)len);
+												int ret=outSocket.send(channel,m_Type,buff,(short)len);
 												if(ret==-1)
 													break;
 												//if(ret==JAPMuxSocket.E_CHANNEL_SUSPENDED)

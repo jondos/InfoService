@@ -137,6 +137,7 @@ final class JAPMuxSocket implements Runnable
 								outDataStream=new DataOutputStream(new BufferedOutputStream(ioSocket.getOutputStream(),DATA_SIZE+6));
 								inDataStream=new DataInputStream(ioSocket.getInputStream());
 								JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Reading len...");														
+								ioSocket.setSoTimeout(1000); //Timout 1 second
 								inDataStream.readUnsignedShort(); //len.. unitressteing at the moment
 								JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Reading Mix-Count...");														
 								chainlen=inDataStream.readByte();
@@ -154,9 +155,11 @@ final class JAPMuxSocket implements Runnable
 										BigInteger e=new BigInteger(1,buff);
 										arASymCipher[i].setPublicKey(n,e);
 									}
+								ioSocket.setSoTimeout(0); //Now we have a unlimit time out...
 							}
 						catch(Exception e)
 							{
+								arASymCipher=null;
 								m_bIsConnected=false;
 								return -1;
 							}
@@ -165,13 +168,13 @@ final class JAPMuxSocket implements Runnable
 					}
 			}
 
-		public int newConnection(JAPSocket s) throws ConnectException
+		public int newConnection(JAPSocket s,int type) throws ConnectException
 			{
 				synchronized(this)
 					{
 						if(m_bIsConnected)
 							{
-								JAPAnonChannel p=new JAPAnonChannel(s,lastChannelId,this);
+								JAPAnonChannel p=new JAPAnonChannel(s,lastChannelId,type,this);
 								oSocketList.put(new Integer(lastChannelId),new SocketListEntry(s));
 								
 								JAPAnonService.setNrOfChannels(oSocketList.size());
@@ -189,7 +192,7 @@ final class JAPMuxSocket implements Runnable
 				synchronized(this)
 					{
 						oSocketList.remove(new Integer(channel));
-						send(channel,null,(short)0);
+						send(channel,0,null,(short)0);
 						JAPAnonService.setNrOfChannels(oSocketList.size());
 						return 0;
 					}
@@ -369,7 +372,7 @@ final class JAPMuxSocket implements Runnable
 				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"MuxSocket thread run exited...");														
 			}
 
-		public synchronized int send(int channel,byte[] buff,short len)
+		public synchronized int send(int channel,int type,byte[] buff,short len)
 			{
 				try
 					{
@@ -401,7 +404,10 @@ final class JAPMuxSocket implements Runnable
 								System.arraycopy(buff,0,outBuff,KEY_SIZE+3,size-3);
 								outBuff[KEY_SIZE]=(byte)(len>>8);
 								outBuff[KEY_SIZE+1]=(byte)(len%256);
-								outBuff[KEY_SIZE+2]=0;
+								if(type==JAPAnonService.PROTO_SOCKS)
+									outBuff[KEY_SIZE+2]=1;
+								else
+									outBuff[KEY_SIZE+2]=0;
 																
 								entry.arCipher[chainlen-1].setEncryptionKeyAES(outBuff);
 								arASymCipher[chainlen-1].encrypt(outBuff,0,buff,0);
