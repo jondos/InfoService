@@ -43,10 +43,13 @@ import HTTPClient.NVPair;
 import java.util.Enumeration;
 import java.util.Vector;
 import java.net.InetAddress;
-import java.io.*;
+import java.net.URL;
+
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.Runnable;
 import java.lang.Thread;
 
@@ -93,18 +96,24 @@ final public class InfoService
 		 */
 		public int setInfoService(String host,int port)
       {
+
 			  //We are doing authorization on our own - so remove....
 			  try{m_conInfoService.removeDefaultModule(Class.forName("HTTPClient.AuthorizationModule"));} //????
 			  catch(Exception e){};
 			  m_conInfoService=new HTTPConnection(host,port);
+        return applyInfoServiceSettings(m_conInfoService);
+		  }
+
+		private int applyInfoServiceSettings(HTTPConnection conn)
+      {
 			  NVPair[] headers=new NVPair[2];
 			  headers[0]=new NVPair("Cache-Control","no-cache");
 			  headers[1]=new NVPair("Pragma","no-cache");
-			  replaceHeader(m_conInfoService,headers[0]);
-			  replaceHeader(m_conInfoService,headers[1]);
-			  m_conInfoService.setAllowUserInteraction(false);
-			  m_conInfoService.setTimeout(10000);
-			  applyProxySettings();
+			  replaceHeader(conn,headers[0]);
+			  replaceHeader(conn,headers[1]);
+			  conn.setAllowUserInteraction(false);
+			  conn.setTimeout(10000);
+			  applyProxySettings(conn);
         return 0;
 		  }
 
@@ -114,21 +123,21 @@ final public class InfoService
 			  m_proxyPort  = proxyPort;
 		  	m_proxyAuthUserID = proxyAuthUserID;
 		  	m_proxyAuthPasswd = proxyAuthPasswd;
-			  applyProxySettings();
+			  applyProxySettings(m_conInfoService);
 		  }
 
-		private void applyProxySettings()
+		private void applyProxySettings(HTTPConnection conn)
       {
-			  if(m_conInfoService==null)
+			  if(conn==null)
 				  return;
-			  m_conInfoService.setProxyServer(m_proxyHost,m_proxyPort);
-			  m_conInfoService.setCurrentProxy(m_proxyHost,m_proxyPort);
+			  conn.setProxyServer(m_proxyHost,m_proxyPort);
+			  conn.setCurrentProxy(m_proxyHost,m_proxyPort);
 			  //setting Proxy authorization...
 			  if(m_proxyAuthUserID!=null)
           {
 				    String tmpPasswd=Codecs.base64Encode(m_proxyAuthUserID+":"+m_proxyAuthPasswd);
 				    NVPair authoHeader=new NVPair("Proxy-Authorization","Basic "+tmpPasswd);
-				    replaceHeader(m_conInfoService,authoHeader);
+				    replaceHeader(conn,authoHeader);
 			    }
 		  }
 
@@ -163,7 +172,7 @@ final public class InfoService
 					}
 			}
 
-    public AnonServer[] getAvailableAnonServers() throws Exception
+    synchronized public AnonServer[] getAvailableAnonServers() throws Exception
       {
 			  Vector v = new Vector();
 			  try
@@ -242,7 +251,7 @@ final public class InfoService
           }
       }
 
-	  public void getFeedback(AnonServer service)
+	  synchronized public void getFeedback(AnonServer service)
 		  {
 			  int nrOfActiveUsers = -1;
 			  int trafficSituation = -1;
@@ -281,7 +290,7 @@ final public class InfoService
 			service.setAnonLevel(iAnonLevel);
 			m_Log.log(LogLevel.DEBUG,LogType.MISC,"JAPInfoService:"+nrOfActiveUsers+"/"+trafficSituation+"/"+currentRisk+"/"+mixedPackets+"/"+iAnonLevel);
 		}
-	public String getNewVersionNumber() throws Exception
+	synchronized public String getNewVersionNumber() throws Exception
 		{
 			try
 				{
@@ -302,7 +311,7 @@ final public class InfoService
 				}
 		}
 
-  public JAPVersionInfo getJAPVersionInfo(int type)
+  synchronized public JAPVersionInfo getJAPVersionInfo(int type)
     {
       String strQuery=null;
       if(type==JAP_RELEASE_VERSION)
@@ -326,6 +335,58 @@ final public class InfoService
 				}
     }
 
+  /** This will retrieve the data of an URL from the InfoService. This is done asynchronous. The DownloadListener will
+   *  be informed if some new data is available or if an error occured etc.
+   *  @param url URL, which should be retrieved
+   *  @param listener, downloadListener, which is informed about new data etc.
+   */
+  synchronized public void retrieveURL(URL url,DownloadListener listener)
+    {
+      new AsyncDownload(url,listener);
+    }
+
+    private final class AsyncDownload implements Runnable
+      {
+        private final URL url;
+        private final DownloadListener listener;
+        private HTTPConnection conn;
+        public AsyncDownload(URL u,DownloadListener l)
+          {
+            url=u;
+            listener=l;
+            conn=new HTTPConnection(m_conInfoService.getHost(),m_conInfoService.getPort());
+            applyInfoServiceSettings(conn);
+            new Thread(this).start();
+          }
+
+        public void run()
+          {
+            try
+              {
+                HTTPResponse resp=conn.Get(url.getFile());
+                if(resp.getStatusCode()!=200)
+                  {
+                    listener.progress(null,0,0,DownloadListener.STATE_ABORTED);
+                    return;
+                  }
+                int lenTotal=resp.getHeaderAsInt("Content-Length");
+                InputStream in=resp.getInputStream();
+                byte[] buff=new byte[2048];
+                int len=0;
+                while((len=in.read(buff))>0)
+                  {
+                    if(listener.progress(buff,len,lenTotal,DownloadListener.STATE_IN_PROGRESS)!=0)
+                      return;
+                  }
+               listener.progress(null,0,lenTotal,DownloadListener.STATE_FINISHED);
+              }
+            catch(Exception e)
+              {
+                e.printStackTrace();
+                listener.progress(null,0,0,DownloadListener.STATE_ABORTED);
+              }
+          }
+      }
            /////////////////////////////////////////////////////////////////////
            //connect for JAPUpdate .jnlp-Files
 
@@ -339,7 +400,7 @@ final public class InfoService
 
 //  public void run(){}
           // get the jarfiles
-  public void connect(String codeBase, String jarPath, String jarFileName, JProgressBar progressBar)
+ /* public void connect(String codeBase, String jarPath, String jarFileName, JProgressBar progressBar)
   {
 
    byte[]data = new byte[1024];
@@ -396,10 +457,8 @@ final public class InfoService
     }
   }
 //}//End LoadThread
-  /*public int getCount()
-  {
-    return count;
-  }*/
+
+*/
            /////////////////////////////////////////////////////////////////////
 	public static void main(String[] argv) {
 		InfoService is=new InfoService("infoservice.inf.tu-dresden.de",6543);
@@ -407,6 +466,12 @@ final public class InfoService
 		//is.setProxy("www-proxy.t-online.de",80,null,null);
 		//is.setProxyEnabled(false/*true*/);
 		try {
+	    is.retrieveURL(new URL("http","fg",3,"aktJap"),new DownloadListener()
+      {public int progress(byte[] data,int lenData,int lenTotal,int state)
+      {
+        System.out.println("Progress - State: "+state+" Len: "+lenData+" Totla-Len: "+lenTotal);
+        return 0;
+      }});
 			System.out.println("Version:"+is.getNewVersionNumber());
 			AnonServer[] d = is.getAvailableAnonServers();
 			if(d!=null) {
@@ -415,7 +480,7 @@ final public class InfoService
 					System.out.println("Service:"+d[i].getName()+" Users:"+d[i].getNrOfActiveUsers());
 				}
 			}
-		}
+  	}
 		catch(Exception e) {
 			e.printStackTrace();
 		}
