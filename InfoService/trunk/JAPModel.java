@@ -75,12 +75,12 @@ public final class JAPModel implements JAPAnonServiceListener{
 
 	private JAPDirectProxy proxyDirect    = null;    // service object for direct access (bypass anon service)
 	private JAPAnonService proxyAnon      = null;    // service object for HTTP  listener
-	private JAPAnonService proxyAnonSocks = null;    // service object for SOCKS listener
+	//private JAPAnonService proxyAnonSocks = null;    // service object for SOCKS listener
 
 	public final static int defaultPortNumber=4001;
 	private int      portNumber            = defaultPortNumber;   // port number of HTTP  listener
-	private int      portSocksListener     = 1080;   // port number of SOCKS listener
-	private boolean  mbSocksListener       = false;  // indicates whether JAP should support SOCKS or not
+	//private int      portSocksListener     = 1080;   // port number of SOCKS listener
+	//private boolean  mbSocksListener       = false;  // indicates whether JAP should support SOCKS or not
 	private boolean  mblistenerIsLocal     = true;   // indicates whether listeners serve for localhost only or not
 	private boolean  isRunningListener     = false;  // true if a listener is running
 
@@ -291,8 +291,8 @@ public final class JAPModel implements JAPAnonServiceListener{
 			NamedNodeMap n=root.getAttributes();
 			//
 			portNumber=JAPUtil.parseElementAttrInt(root,"portNumber",portNumber);
-			portSocksListener=JAPUtil.parseElementAttrInt(root,"portNumberSocks",portSocksListener);
-			setUseSocksPort(JAPUtil.parseNodeBoolean(n.getNamedItem("supportSocks"),false));
+			//portSocksListener=JAPUtil.parseElementAttrInt(root,"portNumberSocks",portSocksListener);
+			//setUseSocksPort(JAPUtil.parseNodeBoolean(n.getNamedItem("supportSocks"),false));
 			setListenerIsLocal(JAPUtil.parseNodeBoolean(n.getNamedItem("listenerIsLocal"),true));
 			setUseProxy(JAPUtil.parseNodeBoolean(n.getNamedItem("proxyMode"),false));
 			setUseFirewallAuthorization(JAPUtil.parseNodeBoolean(n.getNamedItem("proxyAuthorization"),false));
@@ -427,8 +427,8 @@ public final class JAPModel implements JAPAnonServiceListener{
 			doc.appendChild(e);
 			//
 			e.setAttribute("portNumber",Integer.toString(portNumber));
-			e.setAttribute("portNumberSocks",Integer.toString(portSocksListener));
-			e.setAttribute("supportSocks",(getUseSocksPort()?"true":"false"));
+			//e.setAttribute("portNumberSocks",Integer.toString(portSocksListener));
+			//e.setAttribute("supportSocks",(getUseSocksPort()?"true":"false"));
 			e.setAttribute("listenerIsLocal",(getListenerIsLocal()?"true":"false"));
 			e.setAttribute("proxyMode",(mbUseProxy?"true":"false"));
 			e.setAttribute("proxyHostName",((proxyHostName==null)?"":proxyHostName));
@@ -558,7 +558,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 	public int getPortNumber() {
 		return portNumber;
 	}
-
+/*
 	public void setSocksPortNumber (int p)
 		{
 			portSocksListener = p;
@@ -568,12 +568,12 @@ public final class JAPModel implements JAPAnonServiceListener{
 		{
 			return portSocksListener;
 		}
-
+*/
 	public static String getString(String key)
 		{
 			return JAPMessages.getString(key);
 		}
-
+/*
 	public void setUseSocksPort(boolean b)
 		{
 			mbSocksListener=b;
@@ -583,7 +583,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 		{
 			return mbSocksListener;
 		}
-
+*/
 	public void channelsChanged(int channels)
 		{
 			nrOfChannels=channels;
@@ -877,11 +877,11 @@ private final class SetAnonModeAsync implements Runnable
 										if(/*ret==0||*/mbActCntMessageNeverRemind)
 											mbActCntMessageNotRemind=true;
 									}
-								if(mbSocksListener)
+								/*if(mbSocksListener)
 									{
 										proxyAnonSocks=new JAPAnonService(1080,JAPAnonService.PROTO_SOCKS,model.mblistenerIsLocal);
 										proxyAnonSocks.start();
-									}
+									}*/
 								model.status2 = model.getString("statusRunning");
 								proxyAnon.setAnonServiceListener(model);
 								// start feedback thread
@@ -914,7 +914,7 @@ private final class SetAnonModeAsync implements Runnable
 									);
 							}
 						proxyAnon=null;
-						proxyAnonSocks=null;
+						//proxyAnonSocks=null;
 						view.setCursor(Cursor.getDefaultCursor());
 						model.status2 = model.getString("statusNotRunning");
 						notifyJAPObservers();
@@ -935,9 +935,9 @@ private final class SetAnonModeAsync implements Runnable
 						proxyAnon.stop();
 					}
 				proxyAnon=null;
-				if(proxyAnonSocks!=null)
-					proxyAnonSocks.stop();
-				proxyAnonSocks=null;
+				//if(proxyAnonSocks!=null)
+				//	proxyAnonSocks.stop();
+				//proxyAnonSocks=null;
 				if(feedback!=null)
 					{
 						feedback.stopRequests();
