@@ -109,6 +109,7 @@
   <property category="sys" name="WorkingDirectory" value="classes"/>
   <property category="sys" name="enable.auto.packages" value="false"/>
   <node name="certificates" type="Folder">
+    <file path="certificates/bi.cer"/>
     <file path="certificates/japcodesigning.cer"/>
     <file path="certificates/japinfoservicemessages.cer"/>
     <file path="certificates/japroot.cer"/>

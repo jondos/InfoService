@@ -246,7 +246,7 @@ public class PayView extends JPanel
 				{
 					if (table.getSelectedRow() != -1)
 					{
-						pay.getBalance(kontenTable.getAccountNumber(table.getSelectedRow()));
+						pay.getAccountInfo(kontenTable.getAccountNumber(table.getSelectedRow())).getBalance();
 					}
 					else
 					{

@@ -618,7 +618,7 @@ public class Pay
 	 * @return Vector von {@link PayAccount}s
 	 * @throws IllegalStateException Wenn die Kontendatei nicht gesetzt ist.
 	 */
-	public Vector getAccountVec()
+	public Vector getAccountVec() throws IllegalStateException
 	{
 		if (m_accountFile == null)
 		{
