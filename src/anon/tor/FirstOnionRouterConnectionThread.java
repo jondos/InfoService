@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.net.SocketException;
 
 import anon.tor.tinytls.TinyTLS;
+import anon.infoservice.ImmutableProxyInterface;
 
 public class FirstOnionRouterConnectionThread implements Runnable {
 
@@ -40,15 +41,18 @@ public class FirstOnionRouterConnectionThread implements Runnable {
 	private String m_name;
 	private int m_port;
 	private long m_timeout;
-	private IOException m_exception;
+	private Exception m_exception;
 	private Object m_oNotifySync = new Object();
+	private ImmutableProxyInterface m_proxyInterface;
 
-	public FirstOnionRouterConnectionThread(String name, int port,long timeout)
+	public FirstOnionRouterConnectionThread(String name, int port,long timeout,
+											ImmutableProxyInterface a_ProxyInterface)
 	{
 		m_name = name;
 		m_port = port;
 		m_timeout = timeout;
 		m_exception = null;
+		m_proxyInterface=a_ProxyInterface;
 	}
 
 	public TinyTLS getConnection() throws IOException
@@ -67,7 +71,7 @@ public class FirstOnionRouterConnectionThread implements Runnable {
 		//if an error occured throw the exception
 		if(m_exception!=null)
 		{
-			throw m_exception;
+			throw new IOException(m_exception.getMessage());
 		}
 		if(m_tls==null)
 		{
@@ -82,8 +86,8 @@ public class FirstOnionRouterConnectionThread implements Runnable {
 		TinyTLS tls = null;
 		try
 		{
-			tls = new TinyTLS(m_name,m_port);
-		} catch(IOException ex)
+			tls = new TinyTLS(m_name,m_port,m_proxyInterface);
+		} catch(Exception ex)
 		{
 			m_exception = ex;
 		}

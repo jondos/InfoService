@@ -41,14 +41,15 @@ public class FirstOnionRouterConnectionFactory
 {
 
 	private Vector m_firstOnionRouters;
-
+	private Tor m_Tor;
 	/**
 	 * constructor
 	 *
 	 */
-	public FirstOnionRouterConnectionFactory()
+	public FirstOnionRouterConnectionFactory(Tor a_Tor)
 	{
 		m_firstOnionRouters = new Vector();
+		m_Tor=a_Tor;
 	}
 
 	/**
@@ -76,7 +77,7 @@ public class FirstOnionRouterConnectionFactory
 			fOR=null;
 		}
 		if(fOR==null)
-			fOR = new FirstOnionRouterConnection(d);
+			fOR = new FirstOnionRouterConnection(d,m_Tor);
 		try
 		{
 			fOR.connect();

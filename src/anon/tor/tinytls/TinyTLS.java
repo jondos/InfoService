@@ -55,12 +55,16 @@ import java.io.EOFException;
 import anon.ErrorCodes;
 import java.io.*;
 import anon.crypto.*;
+import anon.infoservice.ImmutableProxyInterface;
+import anon.server.impl.ProxyConnection;
+import java.net.SocketException;
+
 /**
  * @author stefan
  *
  *TinyTLS
  */
-public class TinyTLS extends Socket
+public class TinyTLS //extends Socket
 {
 
 	/**
@@ -92,7 +96,7 @@ public class TinyTLS extends Socket
 	private byte[] m_serverrandom;
 	private byte[] m_handshakemessages;
 	private boolean m_encrypt;
-
+	private ProxyConnection m_ProxyConnection;
 	/**
 	 *
 	 * @author stefan
@@ -794,17 +798,34 @@ public class TinyTLS extends Socket
 	 * @param port
 	 * Server's TLS Port
 	 */
-	public TinyTLS(String addr, int port) throws UnknownHostException, IOException
+	public TinyTLS(String addr, int port) throws UnknownHostException, IOException,Exception
 	{
-		super(addr, port);
-		this.m_handshakecompleted = false;
-		this.m_serverhellodone = false;
-		this.m_encrypt = false;
-		this.m_certificaterequested = false;
-		this.m_supportedciphersuites = new Vector();
-		m_istream = new TLSInputStream(super.getInputStream());
-		m_ostream = new TLSOutputStream(super.getOutputStream());
-		this.m_trustedRoot = null;
+		this(addr,port,null);
+	}
+
+	/**
+	 *
+	 * TinyTLS creates a TLS Connection to a server which may use a proxy
+	 *
+	 * @param addr
+	 * Server Address
+	 * @param port
+	 * Server's TLS Port
+	 * @param a_proxyInterface Proxy Settings
+	 */
+	public TinyTLS(String addr, int port,ImmutableProxyInterface a_proxyInterface)
+		throws UnknownHostException, IOException,Exception
+	{
+		m_ProxyConnection=new ProxyConnection(a_proxyInterface,addr,port);
+		//super(addr, port);
+		m_handshakecompleted = false;
+		m_serverhellodone = false;
+		m_encrypt = false;
+		m_certificaterequested = false;
+		m_supportedciphersuites = new Vector();
+		m_istream = new TLSInputStream(m_ProxyConnection.getInputStream());
+		m_ostream = new TLSOutputStream(m_ProxyConnection.getOutputStream());
+		m_trustedRoot = null;
 	}
 
 	/**
@@ -864,4 +885,18 @@ public class TinyTLS extends Socket
 		return this.m_ostream;
 	}
 
+	public void setSoTimeout(int i) throws SocketException
+	{
+		m_ProxyConnection.setSoTimeout(i);
+	}
+
+	public void close()
+	{
+		m_ProxyConnection.close();
+	}
+
+	public Socket getSocket()
+	{
+		return m_ProxyConnection.getSocket();
+	}
 }

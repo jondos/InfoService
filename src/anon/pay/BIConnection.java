@@ -97,7 +97,7 @@ public class BIConnection
 				TinyTLS tls = new TinyTLS(m_theBI.getHostName(), m_theBI.getPortNumber());
 				tls.setRootKey(m_theBI.getCertificate());
 				tls.startHandshake();
-				m_socket = tls;
+				m_socket = tls.getSocket();
 			}
 			m_httpClient = new HttpClient(m_socket);
 		}
