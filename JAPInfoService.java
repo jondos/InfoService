@@ -38,7 +38,7 @@ import HTTPClient.AuthorizationInfo;
 
 import java.net.InetAddress;
 
-import sun.misc.BASE64Encoder;
+import HTTPClient.Codecs;
 
 final class JAPInfoService 
 	{
@@ -110,10 +110,7 @@ final class JAPInfoService
 				conInfoService.setCurrentProxy(host,port);
 				if(authUserID!=null) //setting Proxy authorization...
 					{
-						String tmpPasswd;
-						BASE64Encoder enc=new BASE64Encoder();
-						tmpPasswd=enc.encodeBuffer((authUserID+":"+authPasswd).getBytes());
-						tmpPasswd=tmpPasswd.trim();
+						String tmpPasswd=Codecs.base64Encode(authUserID+":"+authPasswd);
 						NVPair authoHeader=new NVPair("Proxy-Authorization","Basic "+tmpPasswd);
 						replaceHeader(conInfoService,authoHeader);
 					}
