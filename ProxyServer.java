@@ -8,15 +8,17 @@ public class ProxyServer implements Runnable {
     private Socket socket;
     private CAMuxSocket oMuxSocket;
     private Thread thread;
-    
-    public ProxyServer (int port, boolean debugFlag) {
+    private JAPModel model;
+    public ProxyServer (int port, boolean debugFlag,JAPModel m) {
 			this.portN = port;
 			this.debug = debugFlag;
+			model=m;
     }
 
-    public ProxyServer (int port) {
+    public ProxyServer (int port,JAPModel m) {
 	this.portN = port;
 	this.debug = false;
+	model=m;
     }
 
     public void run()
@@ -32,7 +34,7 @@ public class ProxyServer implements Runnable {
 					{
 						server = new ServerSocket (portN);
 						oMuxSocket=new CAMuxSocket();
-						if(oMuxSocket.connect("anon.inf.tu-dresden.de",6543)==-1)
+						if(oMuxSocket.connect(model.anonHostName,model.anonPortNumber)==-1)
 							{
 								System.out.println("Cannot connect to Mix...!");
 								return;
