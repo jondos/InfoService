@@ -863,9 +863,10 @@ public class AccountSettingsPanel extends jap.AbstractJAPConfModule
 	 * This method can be overwritten by the children of AbstractJAPConfModule. It is called
 	 * every time the user presses "OK" in the configuration dialog.
 	 */
-	protected void onOkPressed()
+	protected boolean onOkPressed()
 	{
 		// TODO: JAPController.saveJapConf() or sth similar;
+		return true;
 	}
 
 	/**
