@@ -82,6 +82,7 @@ final class JAPLean implements ProxyListener {
 	public static void main(String[] argv) {
 		// check for command line
 		try{
+			//TLS_EDH_RSA_WITH_DES_192_CBC3_SHA",
 		TinySSL sl=new TinySSL("18.244.0.188",9001,true,true);}
 	catch(Exception e)
 	{
