@@ -383,13 +383,23 @@ final class JAPUtil
 			}
 	}
 
-		public static void upRightFrame(Window f)
+	public static void upRightFrame(Window f)
 			{
 				Dimension screenSize = f.getToolkit().getScreenSize();
 				Dimension ownSize = f.getSize();
 				f.setLocation((screenSize.width-ownSize.width ) , 0 );
 			}
 
+			
+	/** Sets the mnemonic charcter of a component. The character must be set
+	 *  in the properties file under a name that is given in mnPropertyString.
+	 */
+	public static void setMnemonic(javax.swing.AbstractButton bt, String mn)
+			{
+				if((bt==null)||(mn==null)||(mn.equals(""))) return;
+				bt.setMnemonic(mn.charAt(0));
+			}
+			
     public static void setPerfectTableSize(JTable table,Dimension maxDimension)
 			{
 				TableModel tableModel = table.getModel();
