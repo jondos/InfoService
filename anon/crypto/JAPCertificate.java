@@ -136,7 +136,7 @@ final public class JAPCertificate
 				return null;
 			}
 			Element elemX509Cert = (Element) a_NodeRoot;
-			String strValue=XMLUtil.parseNodeString(elemX509Cert,null);
+			String strValue = XMLUtil.parseNodeString(elemX509Cert, null);
 			byte[] bytecert = Base64.decode(strValue);
 			return getInstance(bytecert);
 		}

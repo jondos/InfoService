@@ -12,13 +12,12 @@ import tor.util.helper;
 
 /**
  * @author stefan
+ * @todo redesign this very ugly design!!!
  */
 public class TorSocksChannel extends TorChannel
 {
 
-	// used for exchange data between is and os, when a socks connection is established
-	private byte[] socksAnswer = null;
-	private boolean socksReplyGenerated = false;
+//	private boolean socksReplyGenerated = false;
 
 	private final static int SOCKS_WAIT_FOR_METHODS = 1;
 	private final static int SOCKS_WAIT_FOR_REQUEST = 2;
@@ -90,6 +89,7 @@ public class TorSocksChannel extends TorChannel
 			}
 			case SOCKS_WAIT_FOR_REQUEST:
 			{
+				byte[] socksAnswer = null;
 				this.m_data = helper.conc(this.m_data, arg0,len);
 				if (this.m_data.length > 6)
 				{
@@ -168,7 +168,8 @@ public class TorSocksChannel extends TorChannel
 
 					}
 				}
-				recv(socksAnswer, 0, socksAnswer.length);
+				if(socksAnswer!=null)
+					recv(socksAnswer, 0, socksAnswer.length);
 				break;
 			}
 			case DATA_MODE:
@@ -183,11 +184,12 @@ public class TorSocksChannel extends TorChannel
 		}
 
 	}
-	
+
 	public void dispatchCell(RelayCell cell)
 	{
 		if(this.m_status == SOCKS_WAIT_FOR_REQUEST)
 		{
+			byte[] socksAnswer = null;
 			if(cell!=null)
 			{
 				if(cell.getRelayCommand()==RelayCell.RELAY_CONNECTED)
@@ -215,7 +217,7 @@ public class TorSocksChannel extends TorChannel
 			this.m_data = new byte[0];
 			this.close();
 
-			
+
 		}
 		super.dispatchCell(cell);
 	}

@@ -43,6 +43,7 @@ public class Tor implements Runnable{
 
 	private long m_createNewCircuitIntervall;
 	private Thread m_createNewCircuitLoop;
+	private volatile boolean m_bRun;
 
 	private int m_circuitLengthMin;
 	private int m_circuitLengthMax;
@@ -189,7 +190,7 @@ public class Tor implements Runnable{
 	 */
 	public void run()
 	{
-		while(this.m_createNewCircuitLoop.isAlive())
+		while(m_bRun)
 		{
 			boolean error = true;
 			while(error)
@@ -223,6 +224,7 @@ public class Tor implements Runnable{
 		this.m_circuits = new Hashtable();
 		this.m_activeCircuit = 0;
 		this.m_createNewCircuitLoop = new Thread(this);
+		m_bRun=true;
 		this.m_createNewCircuitLoop.start();
 	}
 
@@ -230,11 +232,13 @@ public class Tor implements Runnable{
 	 * stops the Tor-Service and all opended connections
 	 * @throws IOException
 	 */
-	public void stop() throws IOException
+	public void stop() throws IOException,InterruptedException
 	{
+		m_bRun=false;
 		if(this.m_createNewCircuitLoop!=null)
 		{
-			this.m_createNewCircuitLoop.stop();
+			m_createNewCircuitLoop.interrupt();
+			this.m_createNewCircuitLoop.join();
 			for(int i=0;i<this.m_usedFORs.size();i++)
 			{
 				if(this.m_usedFORs.elementAt(i) instanceof FirstOnionRouter)

@@ -46,7 +46,7 @@ import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 import org.bouncycastle.asn1.x9.X9ObjectIdentifiers;
 import org.bouncycastle.crypto.params.DSAPublicKeyParameters;
 
-public class MyDSAPublicKey implements DSAPublicKey
+final public class MyDSAPublicKey implements DSAPublicKey
 {
 	private BigInteger m_Y;
 	private DSAParams m_params;

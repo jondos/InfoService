@@ -47,7 +47,7 @@ import org.bouncycastle.asn1.x509.DSAParameter;
 import org.bouncycastle.asn1.x9.X9ObjectIdentifiers;
 import org.bouncycastle.crypto.params.DSAPrivateKeyParameters;
 
-public class MyDSAPrivateKey implements DSAPrivateKey
+final public class MyDSAPrivateKey implements DSAPrivateKey
 {
 	private BigInteger m_X;
 	private DSAParams m_params;

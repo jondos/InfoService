@@ -46,6 +46,7 @@ class MyRandom
 		for (; ; )
 		{
 			int v = m_TheRandom.nextInt();
+			v&=0x7FFFFFFF;
 			if (v < randMax)
 			{
 				return v % max;

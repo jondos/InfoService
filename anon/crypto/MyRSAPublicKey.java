@@ -40,8 +40,8 @@ import org.bouncycastle.asn1.DEROutputStream;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.asn1.x509.RSAPublicKeyStructure;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
-import org.bouncycastle.crypto.params.RSAKeyParameters;
 import org.bouncycastle.crypto.CipherParameters;
+import org.bouncycastle.crypto.params.RSAKeyParameters;
 
 final public class MyRSAPublicKey implements PublicKey
 {
@@ -56,9 +56,9 @@ final public class MyRSAPublicKey implements PublicKey
 
 	public MyRSAPublicKey(CipherParameters cipherparams) throws Exception
 	{
-		RSAKeyParameters p=(RSAKeyParameters)cipherparams;
-		m_n=p.getModulus();
-		m_e=p.getExponent();
+		RSAKeyParameters p = (RSAKeyParameters) cipherparams;
+		m_n = p.getModulus();
+		m_e = p.getExponent();
 	}
 
 	MyRSAPublicKey(SubjectPublicKeyInfo info) throws IllegalArgumentException
@@ -100,6 +100,11 @@ final public class MyRSAPublicKey implements PublicKey
 	{
 		AlgorithmIdentifier algID = new AlgorithmIdentifier(new DERObjectIdentifier("1.2.840.113549.1.1.1")); //RSA
 		return new SubjectPublicKeyInfo(algID, new RSAPublicKeyStructure(m_n, m_e).getDERObject());
+	}
+
+	public CipherParameters getParams()
+	{
+		return new RSAKeyParameters(false, m_n, m_e);
 	}
 
 	public byte[] getEncoded()

@@ -26,31 +26,62 @@
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
 
-package tor;
+/* Hint: This file may be only a copy of the original file which is always in the JAP source tree!
+ * If you change something - do not forget to add the changes also to the JAP source tree!
+ */
 
-import java.util.Random;
+package anon.crypto;
 
-class MyRandom
+import java.security.InvalidKeyException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import org.bouncycastle.crypto.digests.SHA1Digest;
+import org.bouncycastle.crypto.engines.RSAEngine;
+import org.bouncycastle.crypto.signers.PSSSigner;
+
+final class MyRSASignature implements IMySignature
 {
-	Random m_TheRandom;
-	public MyRandom(Random rand)
+	PSSSigner m_SignatureAlgorithm;
+	MyRSASignature()
 	{
-		m_TheRandom = rand;
+		m_SignatureAlgorithm = new PSSSigner(new RSAEngine(), new SHA1Digest(), 10);
 	}
 
-	public int nextInt(int max)
+	synchronized public void initVerify(PublicKey k) throws InvalidKeyException
 	{
-		int randMax = Integer.MAX_VALUE;
-		randMax -= randMax % max;
+		m_SignatureAlgorithm.init(false, ( (MyRSAPublicKey) k).getParams());
+	}
 
-		for (; ; )
+	synchronized public void initSign(PrivateKey k) throws InvalidKeyException
+	{
+		m_SignatureAlgorithm.init(true, ( (MyRSAPrivateKey) k).getParams());
+	}
+
+	synchronized public boolean verify(byte[] message, byte[] sig)
+	{
+		try
 		{
-			int v = m_TheRandom.nextInt();
-			v&=0x7FFFFFFF;
-			if (v < randMax)
-			{
-				return v % max;
-			}
+			m_SignatureAlgorithm.reset();
+			m_SignatureAlgorithm.update(message, 0, message.length);
+			return m_SignatureAlgorithm.verifySignature(sig);
+		}
+		catch (Exception e)
+		{
+			return false;
+		}
+	}
+
+	synchronized public byte[] sign(byte[] bytesToSign)
+	{
+		try
+		{
+			m_SignatureAlgorithm.reset();
+			m_SignatureAlgorithm.update(bytesToSign, 0, bytesToSign.length);
+			return m_SignatureAlgorithm.generateSignature();
+		}
+		catch (Throwable t)
+		{
+			return null;
 		}
 	}
 
