@@ -6,11 +6,14 @@ EndProject
 Global
 	GlobalSection(SolutionConfiguration) = preSolution
 		Debug = Debug
+		Debug_JDK1.4 = Debug_JDK1.4
 		Release = Release
 	EndGlobalSection
 	GlobalSection(ProjectConfiguration) = postSolution
 		{E329FC96-0CAD-40E3-B934-F0204FC198CE}.Debug.ActiveCfg = Debug|Win32
 		{E329FC96-0CAD-40E3-B934-F0204FC198CE}.Debug.Build.0 = Debug|Win32
+		{E329FC96-0CAD-40E3-B934-F0204FC198CE}.Debug_JDK1.4.ActiveCfg = Debug_JDK1.4|Win32
+		{E329FC96-0CAD-40E3-B934-F0204FC198CE}.Debug_JDK1.4.Build.0 = Debug_JDK1.4|Win32
 		{E329FC96-0CAD-40E3-B934-F0204FC198CE}.Release.ActiveCfg = Release|Win32
 		{E329FC96-0CAD-40E3-B934-F0204FC198CE}.Release.Build.0 = Release|Win32
 	EndGlobalSection

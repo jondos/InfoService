@@ -18,7 +18,7 @@
 #include "japdll_jni.h"
 #include "resource.h"
 
-#define WM_TASKBAREVENT WM_USER+1
+#define WM_TASKBAREVENT WM_USER+100
 #define BLINK_RATE 500
 
 
@@ -26,6 +26,8 @@
 HWND g_hWnd;
 // tmp Window Handle
 HWND tmp_hWnd;
+
+HWND helpwnd;
 
 // globales Moule Handle
 HINSTANCE hInstance;
@@ -35,92 +37,101 @@ WNDPROC lpPrevWndFunc;
 
 HANDLE hThread; //Handle for the Blinking-Thread
 BOOL isBlinking;
+VOID ShowWindowFromTaskbar() ;
 
 
-BOOL APIENTRY DllMain( HINSTANCE hModule, 
-                       DWORD  ul_reason_for_call, 
-                       LPVOID lpReserved
-					 )
-{
-    switch (ul_reason_for_call)
+
+DWORD WINAPI SetOldWndProcThread( LPVOID lpParam ) 
 	{
-		case DLL_PROCESS_ATTACH:
-			hInstance=hModule;
-			hThread=NULL;
-			g_hWnd=NULL;
-			tmp_hWnd=NULL;
-			break;
-		case DLL_THREAD_ATTACH:
-			break;
-		case DLL_THREAD_DETACH:
-			break;
-		case DLL_PROCESS_DETACH:
-			break;
-    }
-    return TRUE;
-}
-
-/*
- * Zeigt g_hWnd (wieder) und entfernt das Icon aus dem Taskbar.
- * (Vorher sollte HideWindowInTaskbar aufgerufen worden sein)
- */
-VOID ShowWindowFromTaskbar() 
-{
-	if(g_hWnd==NULL)
-		return;
-
-	// alte WndProc wieder setzen 
-	SetWindowLong(g_hWnd,GWL_WNDPROC,(LONG)lpPrevWndFunc);
-
-	// Icondaten vorbereiten
-	NOTIFYICONDATA nid;
-	nid.hWnd = g_hWnd;
-	nid.cbSize = NOTIFYICONDATA_SIZE;
-	nid.uID = IDI_JAP;
-	nid.uFlags = 0;
-
-	// Window (wieder) anzeigen und Icon aus Taskbar entfernen
-	//ShowWindow(g_hWnd, SW_SHOWNORMAL);
-	SetWindowPos(g_hWnd, HWND_TOP, 0, 0, 0, 0, SWP_NOSIZE|SWP_NOMOVE|SWP_SHOWWINDOW);
-	ShowWindow(g_hWnd, SW_SHOWNORMAL);
-	//ShowWindow(g_hWnd, SW_RESTORE);
-	Shell_NotifyIcon(NIM_DELETE, &nid);
-	g_hWnd=NULL;
-}
+		Sleep(500);
+		SetWindowLongPtr(g_hWnd,GWL_WNDPROC,(LONG_PTR)lpPrevWndFunc);
+		g_hWnd=NULL;
+		return 0;
+	}
 
 /*
  * Neue WndProc zum Handeln von Ereignissen, besonders WM_TASKBAREVENT, 
  * das gesendet wird wenn etwas an "unserem" Icon im Taskbar passiert.
  */
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-    switch(msg)
-    {
-        case WM_TASKBAREVENT:
-					switch (lParam) 
-					{
-						case WM_LBUTTONUP: 
-							ShowWindowFromTaskbar();
-						break;
-					}
-					return 0;
-        break;
-        default:
-            return CallWindowProc(lpPrevWndFunc,hwnd, msg, wParam, lParam);
-    }
-}
+	{
+		if(msg==WM_TASKBAREVENT)
+			{
+				if(lParam==WM_LBUTTONUP)
+ 					ShowWindowFromTaskbar();
+				return 0;
+			}  
+    return CallWindowProc(lpPrevWndFunc,hwnd, msg, wParam, lParam);
+	}
+
+BOOL APIENTRY DllMain( HINSTANCE hModule, 
+                       DWORD  ul_reason_for_call, 
+                       LPVOID lpReserved)
+	{
+    switch (ul_reason_for_call)
+			{
+				case DLL_PROCESS_ATTACH:
+					hInstance=hModule;
+					hThread=NULL;
+					g_hWnd=NULL;
+					tmp_hWnd=NULL;
+				break;
+				case DLL_THREAD_ATTACH:
+				break;
+				case DLL_THREAD_DETACH:
+				break;
+				case DLL_PROCESS_DETACH:
+				break;
+			}
+    return TRUE;
+	}
+
+/*
+ * Zeigt g_hWnd (wieder) und entfernt das Icon aus dem Taskbar.
+ * (Vorher sollte HideWindowInTaskbar aufgerufen worden sein)
+ */
+VOID ShowWindowFromTaskbar() 
+	{
+		if(g_hWnd==NULL)
+			return;
+		SetWindowPos(g_hWnd, HWND_TOP, 0, 0, 0, 0, SWP_NOSIZE|SWP_NOMOVE|SWP_SHOWWINDOW);
+		ShowWindow(g_hWnd, SW_SHOWNORMAL);
+
+		// Icondaten vorbereiten
+		NOTIFYICONDATA nid;
+		nid.hWnd = g_hWnd;
+		nid.cbSize = NOTIFYICONDATA_SIZE;
+		nid.uID = IDI_JAP;
+		nid.uFlags = 0;
+
+		Shell_NotifyIcon(NIM_DELETE, &nid);
+		
+		//Async old WndProc wieder setzen
+		DWORD dwThreadId;
+		CreateThread(NULL, 0, SetOldWndProcThread, NULL, 0, &dwThreadId); 
+	}
 
 /*
  * Versteckt g_hWnd und erzeugt ein Icon im Taskbar.
  */
 VOID HideWindowInTaskbar(HWND hWnd) 
 {
-	if(g_hWnd!=NULL||hWnd==NULL)
+	if(hWnd==NULL)
+		return;
+	int i=10;
+	//Warten falls g_hWnd noch von letzten Aufruf "blockiert"
+	while(g_hWnd!=NULL&&i>0)
+		{
+			Sleep(100);
+			i--;
+		}
+	if(g_hWnd!=NULL)
 		return;
 	g_hWnd=hWnd;
+	// Window verstecken
+	ShowWindow(g_hWnd, SW_HIDE);
 	// alte WndProc sichern und neue setzen
-	lpPrevWndFunc = (WNDPROC) GetWindowLong(g_hWnd,GWL_WNDPROC);
-	SetWindowLong(g_hWnd,GWL_WNDPROC,(LONG)WndProc);
+	lpPrevWndFunc = (WNDPROC) SetWindowLongPtr(g_hWnd,GWL_WNDPROC,(LONG_PTR)WndProc);
 	
 	// Icondaten vorbereiten
 	NOTIFYICONDATA nid;
@@ -131,9 +142,8 @@ VOID HideWindowInTaskbar(HWND hWnd)
 	nid.uCallbackMessage = WM_TASKBAREVENT;
 	strcpy(nid.szTip, "JAP");
 	nid.hIcon = LoadIcon(hInstance,MAKEINTRESOURCE(IDI_JAP));
-
-	// Window verstecken und Icon im Taskbar setzen
-	ShowWindow(g_hWnd, SW_HIDE);
+	
+	//Icon im Taskbar setzen
 	Shell_NotifyIcon(NIM_ADD, &nid);
 }
 
