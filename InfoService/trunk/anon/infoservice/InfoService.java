@@ -246,6 +246,10 @@ final public class InfoService
 						        String header=(String)enum.nextElement();
 						        m_Log.log(LogLevel.DEBUG,LogType.NET,header+": "+resp.getHeader(header));
 					        }
+                if(resp.getStatusCode()!=200)
+                  {
+                    m_Log.log(LogLevel.DEBUG,LogType.NET,"Body: "+resp.getText());
+                  }
 				      }
             catch(Throwable tor)
               {
