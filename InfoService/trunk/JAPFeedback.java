@@ -123,8 +123,9 @@ public final class JAPFeedback implements Runnable {
 		return returnString;
     }
 	
-    public void stopRequests() {
-		runFlag = false;
-	}
+    public void stopRequests() 
+			{
+				runFlag = false;
+			}
 
 }

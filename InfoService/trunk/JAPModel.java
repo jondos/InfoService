@@ -293,20 +293,26 @@ public final class JAPModel {
 			if (canStartService) {
 				// -> we can start anonymity
 				anonMode = true;
+				// starting MUX --> Success ???
+				if(p.startMux())
+					{
 				// start feedback thread
-				feedback=new JAPFeedback();
-				Thread t2 = new Thread (feedback);
-				t2.setPriority(Thread.MIN_PRIORITY);
-				t2.start();
-				p.startMux();
+						feedback=new JAPFeedback();
+						Thread t2 = new Thread (feedback);
+						t2.setPriority(Thread.MIN_PRIORITY);
+						t2.start();
+					}
 				notifyJAPObservers();
 			}
 		} else if ((anonMode == true) && (anonModeSelected == false)) {
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:setAnonMode("+anonModeSelected+")");
 			anonMode = false;
 			p.stopMux();
-			feedback.stopRequests();
-			feedback=null;
+			if(feedback==null)
+				{
+					feedback.stopRequests();
+					feedback=null;
+				}
 			notifyJAPObservers();
 		}
 	}
