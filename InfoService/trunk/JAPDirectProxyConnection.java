@@ -32,6 +32,8 @@ import java.util.*;
 import java.text.*;
 import java.util.StringTokenizer;
 
+import com.aecys.net.FtpClient;
+
 final class JAPDirectProxyConnection implements Runnable {
     private Socket clientSocket;
 
@@ -56,6 +58,7 @@ final class JAPDirectProxyConnection implements Runnable {
     }
 
     public void run() {
+                System.out.println("run().jappr");
 		threadNumber = getThreadNumber();
 		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"C("+threadNumber+") - New connection handler started.");
 		try {
@@ -63,6 +66,7 @@ final class JAPDirectProxyConnection implements Runnable {
 			inputStream = new DataInputStream(clientSocket.getInputStream());
 			// read first line of request
 			requestLine = this.readLine(inputStream);
+              System.out.println(requestLine+ "request DirectProx.run()");
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"C("+threadNumber+") - RequestLine: >" + requestLine +"<");
 			// Examples:
 			//  CONNECT 192.168.1.2:443 HTTP/1.0
@@ -115,13 +119,15 @@ final class JAPDirectProxyConnection implements Runnable {
 
         if (protocol.equalsIgnoreCase("http")) {
 					handleHTTP();
-				} else {
-					unknownProtocol();
-				}
+				} else if (protocol.equalsIgnoreCase("ftp")){
+                                     // unknownProtocol();
+                                     handleFTP();
+                        }
 			} else {
 				badRequest();
 			}
-		} catch (IOException ioe) {
+		}//else if
+                        catch (IOException ioe) {
 //			JAPDebug.out(JAPDebug.NOTICE,JAPDebug.NET,"C("+threadNumber+") - Exception: " + ioe);
 			if (ioe.toString().startsWith("java.net.UnknownHostException"))
 				cannotConnect();
@@ -174,7 +180,6 @@ final class JAPDirectProxyConnection implements Runnable {
 			// Response from server is transfered to client in a sepatate thread
 			JAPDirectProxyResponse pr = new JAPDirectProxyResponse(serverSocket, clientSocket);
 			Thread prt = new Thread(pr);
-			prt.start();
 			// next Header lines
 			String nextLine = this.readLine(inputStream);
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"C("+threadNumber+") - Header: >" + nextLine + "<");
@@ -188,6 +193,7 @@ final class JAPDirectProxyConnection implements Runnable {
 			BufferedWriter toClient = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
 			toClient.write("HTTP/1.0 200 Connection established\r\n\r\n");
 			toClient.flush();
+			prt.start();
 			// Transfer data client --> server
 			byte[] buff=new byte[1000];
 			int len;
@@ -215,24 +221,32 @@ final class JAPDirectProxyConnection implements Runnable {
 	private void handleHTTP() throws Exception {
 		try {
 			// create Socket to Server
+                      System.out.println("handlehttp()");
 			Socket serverSocket = new Socket(host,port);
+
 			// Response from server is transfered to client in a sepatate thread
+                        System.out.println(serverSocket.toString()+" serverSocket");
 			JAPDirectProxyResponse pr = new JAPDirectProxyResponse(serverSocket, clientSocket);
 			Thread prt = new Thread(pr);
 			prt.start();
 			// Send request --> server
 			BufferedWriter outputStream = new BufferedWriter(new OutputStreamWriter(serverSocket.getOutputStream()));
 			String protocolString = "";
-//			protocolString += method+" "+file+ " "+version;
+                        // protocolString += method+" "+file+ " "+version;
 			protocolString += method+" "+file+ " "+"HTTP/1.0";
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"C("+threadNumber+") - ProtocolString: >" + protocolString + "<");
 			outputStream.write(protocolString + "\r\n");
 			// read next Header lines <-- client
 			String nextLine = this.readLine(inputStream);
+   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                         System.out.println(nextLine+" nextline handleHTTP()");
+   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"C("+threadNumber+") - Header: >" + nextLine + "<");
 			while (nextLine.length() != 0) {
 				if (! filter(nextLine) ) {
+                        // write single lines to server
 					outputStream.write(nextLine+"\r\n");
+                                        System.out.println(nextLine);
 				} else {
 					JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"C("+threadNumber+") - Header " + nextLine + " filtered");
 				}
@@ -266,6 +280,84 @@ final class JAPDirectProxyConnection implements Runnable {
 		} catch (Exception e) {
 			throw e;
 		}
+    }
+
+    private void handleFTP()
+    {
+    //a request as GET ftp://213.244.188.60/pub/jaxp/89h324hruh/jaxp-1_1.zip was started
+
+    try{
+  // Array of String[] for the list command
+     String[] list;
+     System.out.println("FTP-MODE");
+     // to do parse Input for username and e-mail-adress
+     String nextLine = this.readLine(inputStream);
+     System.out.println(nextLine);
+     // create an FTP-Client and try to communicate: Browser --> FTP-Client --> FTP-Server
+     FtpClient ftpClient = new FtpClient (host,"anonymous","heinz@operamail.com");
+     // read next Header lines <-- client
+
+     File text = new File("test.txt");
+     //text.createNewFile();
+     OutputStream os = new FileOutputStream(text);
+     String testFile = new String(file);
+     // file or directory
+     if (testFile.endsWith("/"))
+     {
+       list = ftpClient.list(testFile);
+
+               for(int i=0; i<list.length;i++)
+               {
+               byte[] byt = list[i].getBytes();
+               os.write(byt);
+                }//for
+
+        os.flush();
+        os.close();
+    }else{
+    ftpClient.get(file,os);
+    ftpClient.close();
+          }//else
+ // to do parse the following lines
+     while (nextLine.length()!=0)
+         {
+          nextLine = this.readLine(inputStream);
+          System.out.println(nextLine);
+         }//while
+// Response from server is transfered to client in a sepatate thread through a
+// FileInputStream
+    InputStream is = null;
+   if (text.exists()&&text.canRead()){
+     is = new FileInputStream(text);
+     System.out.println("ja");
+        }else{
+                   //text.createNewFile();
+                   is = new FileInputStream(text);
+                   System.out.println("nein");
+             }
+
+            if( clientSocket.toString()!=null)
+            {
+     JAPDirectProxyResponse pr = new JAPDirectProxyResponse(is, clientSocket);
+     Thread prt = new Thread(pr);
+     prt.start();
+     System.out.println("!=null");
+              }
+   System.out.println("FTP-MODE 1");
+
+     } catch (com.aecys.net.FtpException aex)
+            {
+            aex.printStackTrace();
+            }catch(IOException ioe)
+            {
+             ioe.printStackTrace();
+            }catch (Exception e)
+            {
+            e.printStackTrace();
+            }
+
+
+
     }
 
     private boolean filter(String l) {
