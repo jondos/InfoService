@@ -242,7 +242,7 @@ public final class JAPController implements ProxyListener {
 			//
 			int port=JAPUtil.parseElementAttrInt(root,"portNumber",JAPModel.getHttpListenerPortNumber());
 			boolean bListenerIsLocal=JAPUtil.parseNodeBoolean(n.getNamedItem("listenerIsLocal"),true);
-			setHTTPListener(port,bListenerIsLocal);
+			setHTTPListener(port,bListenerIsLocal,false);
       //portSocksListener=JAPUtil.parseElementAttrInt(root,"portNumberSocks",portSocksListener);
 			//setUseSocksPort(JAPUtil.parseNodeBoolean(n.getNamedItem("supportSocks"),false));
 			//setUseProxy(JAPUtil.parseNodeBoolean(n.getNamedItem("proxyMode"),false));
@@ -1143,15 +1143,18 @@ private final class SetAnonModeAsync implements Runnable
 	}
 */
 	//---------------------------------------------------------------------
-	public void setHTTPListener(int port, boolean isLocal)
+	public void setHTTPListener(int port, boolean isLocal,boolean bShowWarning)
     {
-		if((JAPModel.getHttpListenerPortNumber()!=port)||(JAPModel.getHttpListenerIsLocal()!=isLocal)) {
+      if(JAPModel.getHttpListenerPortNumber()==port)
+        bShowWarning=false;
+		  if((JAPModel.getHttpListenerPortNumber()!=port)||(JAPModel.getHttpListenerIsLocal()!=isLocal)) {
 			m_Model.setHttpListenerPortNumber(port);
 			synchronized(this) {
 				m_Model.setHttpListenerIsLocal(isLocal);
 			}
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:HTTP listener settings changed");
-			JOptionPane.showMessageDialog(m_Controller.getView(),JAPMessages.getString("confmessageListernPortChanged"));
+			if(bShowWarning)
+        JOptionPane.showMessageDialog(m_Controller.getView(),JAPMessages.getString("confmessageListernPortChanged"));
 			m_Controller.notifyJAPObservers();
 		}
 	}
