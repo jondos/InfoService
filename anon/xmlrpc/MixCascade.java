@@ -30,6 +30,7 @@ import com.tm.xmlrpc.Serializer;
 import com.tm.xmlrpc.SerializerFactory;
 import java.util.Hashtable;
 import java.util.Vector;
+import java.io.Serializable;
 /** This class had to be made because of bugs in the JAVA RMI Compiler
  *  It provides all features of AnonServerDBEntry
  */
@@ -38,7 +39,9 @@ final public class MixCascade implements Serializer {
     private int    port;
     private String name;
 
-    public MixCascade()
+		static final long serialVersionUID = 8477495015849363L;
+
+		public MixCascade()
 			{
 			};
 		public MixCascade (String n,String h, int p) {
