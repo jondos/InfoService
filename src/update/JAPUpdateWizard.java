@@ -43,18 +43,17 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
     //which type dev or rel?
     private int type;
 
-    //oldFile --> the original JAP.jar; newFile --> the copy of the original File extended by the current version-number
-    //i.e. JAPaktVersion.jar; newJarFile --> the downloaded Upgrade extended by the version-number
-    //jarFile --> copy of the newJarFile without version-number named JAP.jar
+    //aktJapJar --> the original JAP.jar; cp_aktJapJar --> the copy of the original File extended by the current version-number
+    //i.e. JAPaktVersion.jar; cp_updJapJar --> the downloaded Upgrade extended by the version-number
+    //cp_updJapJar --> copy of the newJarFile without version-number named JAP.jar
 
-    private File newFile, oldFile, newJarFile, jarFile;
+    private File cp_aktJapJar, aktJapJar, cp_updJapJar, updJapJar;
 
     private int countPackages = 0;
     private int countBytes = 0;
     private int value = 0;
     private int totalLength = 0;
     private byte[] bufferJapJar;
-    private OutputStream os_jarFile;
 
     private Thread updateThread;
     private UpdateListener updateListener;
@@ -170,7 +169,6 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
                       }else if(state == 14)
                       {
                                  downloadPage.showInformationDialog(JAPMessages.getString("updateInformationMsgStep5"));
-                                 //try{updateThread.join();}catch(Exception e){}
                                  resetChanges();
                                  return -1;
                       }else if(state == 15)
@@ -215,8 +213,8 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
             return;
           }
         try {
-                oldFile.delete();
-                jarFile.renameTo(new File(path+extension));
+                aktJapJar.delete();
+                updJapJar.renameTo(new File(path+extension));
             }
         catch(Exception e)
             {
@@ -226,15 +224,11 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
 
         }
 
-   /* public JAPWelcomeWizardPage getWelcomeWizardPage()
-        {
-            return welcomePage;
-        }*/
+
 
     public void setSelectedFile (String selectedFile)
       {
         this.selectedFile = selectedFile;
-        //downloadPage.setPath(selectedFile);
       }
 
     public String getSelectedFile()
@@ -361,12 +355,12 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
           {
              //newFile = new File(prefix+JAPConstants.aktVersion2+suffix);
 
-             newFile = new File(path+JAPConstants.aktVersion2+extension);
-             oldFile = new File(path+extension);
-             FileInputStream fis = new FileInputStream(oldFile);
-             FileOutputStream fos = new FileOutputStream(newFile);
+             cp_aktJapJar = new File(path+JAPConstants.aktVersion2+extension);
+             aktJapJar = new File(path+extension);
+             FileInputStream fis = new FileInputStream(aktJapJar);
+             FileOutputStream fos = new FileOutputStream(cp_aktJapJar);
              int n;
-             int totalLength = (int)oldFile.length();
+             int totalLength = (int)aktJapJar.length();
              while ((n = fis.read(buffer))!=-1)
                 {
 
@@ -377,8 +371,8 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
                     {
                       fis.close();
                       fos.close();
-                      newFile.delete();
-                      newFile = null;
+                      cp_aktJapJar.delete();
+                      cp_aktJapJar = null;
                       return -1;
                     }
                 }
@@ -389,7 +383,7 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
           }catch(Exception e)
           {
           e.printStackTrace();
-          newFile.delete();
+          cp_aktJapJar.delete();
           return listener.progress(0,0,UpdateListener.STATE_ABORTED_STEP1);
 
           }
@@ -410,6 +404,7 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
                       // ErrorMessage connection with infoservice failed
                       jarUrl = japVersionInfo.getJarUrl();
                       listener.progress(0,0,UpdateListener.DOWNLOAD_START);
+                      //System.out.println(jarUrl.getHost()+jarUrl.getFile());
 
 
              //   }
@@ -429,9 +424,9 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
                                   {
                                     oSync.notify();
                                   }
-                                  //updateListener.progress(0,0,5);
+
                                   l.progress(0,0,UpdateListener.DOWNLOAD_ABORT);
-                                return -1;
+                                  return -1;
                               }
                             if(state == 1)
                               {
@@ -447,8 +442,6 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
                                  countPackages += lenData;
                                 // the Download has the Zone from 5 to 455 in the ProgressBar
                                  value = ((450 * countBytes)/lenTotal);
-                                // int test = ((450 * countBytes)/lenTotal);
-                                 System.out.println(value+" value ");
                                  downloadPage.progressBar.setValue((value+5));
                                  downloadPage.progressBar.repaint();
                                  //if (abbruch){return -1}
@@ -463,12 +456,11 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
                                   {
                                       oSync.notify();
                                   }
-                                  wizardCompleted();
+                                  //wizardCompleted();
                                   return -1;
                               }else if(state == 3)
                               {
-                                  //listener.progress(0,0,UpdateListener.DOWNLOAD_READY);
-                                  //downloadFinished = true;
+
                                   synchronized(oSync)
                                   {
                                       oSync.notify();
@@ -476,7 +468,7 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
                                   l.progress(0,0,UpdateListener.DOWNLOAD_READY);
                                   return 0;
                               }
-                            //System.out.println(value+" value"+countPackages+" Countpak" +bufferJapJar.length+ " Total");
+
                             return 0;
 
                         }
@@ -506,15 +498,15 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
 
         try
           {
-             newJarFile = new File(path+version+extension);
-             FileOutputStream fos = new FileOutputStream(newJarFile);
+             cp_updJapJar = new File(path+version+extension);
+             FileOutputStream fos = new FileOutputStream(cp_updJapJar);
              if(bufferJapJar == null){return -1;}
              if(listener.progress(bufferJapJar.length,bufferJapJar.length,UpdateListener.STATE_IN_PROGRESS_STEP3)!=0)
                 {
                     fos.close();
-                    System.out.println("new JarFile.delete()"+ newJarFile.delete());
-                    newJarFile.delete();
-                    newFile.delete();
+                    //System.out.println("new JarFile.delete()"+ cp_updJapJar.delete());
+                    cp_updJapJar.delete();
+                    cp_aktJapJar.delete();
                     return -1;
                 }
              fos.write(bufferJapJar);
@@ -535,10 +527,10 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
       {
          try
              {
-                jarFile = new File(path+"_temp"+extension);
+                updJapJar = new File(path+"_temp"+extension);
                 //oldFile.delete();
-                FileInputStream fis = new FileInputStream(newJarFile);
-                FileOutputStream fos = new FileOutputStream(jarFile);
+                FileInputStream fis = new FileInputStream(cp_updJapJar);
+                FileOutputStream fos = new FileOutputStream(updJapJar);
                 byte buffer[]= new byte[2048];
                 int n;
                 while((n = fis.read(buffer))!=-1)
@@ -550,9 +542,9 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
                       System.out.println("createJapJar aborted"+n);
                       fis.close();
                       fos.close();
-                      jarFile.delete();
-                      newJarFile.delete();
-                      newFile.delete();
+                      updJapJar.delete();
+                      cp_updJapJar.delete();
+                      cp_aktJapJar.delete();
                       return -1;
                     }
                 }
@@ -579,17 +571,17 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
           {
             e.printStackTrace();
           }
-        if(newFile!=null)
+        if(cp_aktJapJar!=null)
         {
-          newFile.delete();
+          cp_aktJapJar.delete();
         }
-        if(newJarFile!=null)
+        if(cp_updJapJar!=null)
         {
-          newJarFile.delete();
+          cp_updJapJar.delete();
         }
-        if(jarFile!=null)
+        if(updJapJar!=null)
         {
-          jarFile.delete();
+          updJapJar.delete();
         }
       }
 

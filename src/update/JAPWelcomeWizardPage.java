@@ -33,7 +33,7 @@ public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListe
 
     private JarFileFilter jarFileFilter = new JarFileFilter();
 
-    private final String COMMAND_SEARCH = "Durchsuchen";
+    private final String COMMAND_SEARCH = "SEARCH";
     final JFileChooser m_fileChooser = new JFileChooser(System.getProperty("user.dir", ""));
     boolean checkPage = false;
 
@@ -61,7 +61,6 @@ public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListe
 
 
         m_tfJapPath=new JTextField(20);
-        //m_tfJapPath.
         m_panelConstraints.anchor = GridBagConstraints.WEST;
         m_panelConstraints.gridx = 0;
         m_panelConstraints.gridy = 1;
@@ -128,7 +127,7 @@ public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListe
 
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
                      selectedFile = m_fileChooser.getSelectedFile();
-                    System.out.println(selectedFile.getName());
+                    //System.out.println(selectedFile.getName());
                     m_fileChooserDialog.dispose();
 
                 } else {
@@ -202,7 +201,7 @@ public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListe
                           }
                           else
                           {
-                    System.out.println(selectedFile.getName());
+                    //System.out.println(selectedFile.getName());
                     checkPage = true;
                     m_tfJapPath.setText(selectedFile.getAbsolutePath());
 
