@@ -32,7 +32,7 @@ import java.awt.Insets;
 
 public final class JAPConstants
 {
-	public static final String aktVersion = "00.02.062"; //Never change the layout of this line!
+	public static final String aktVersion = "00.02.063"; //Never change the layout of this line!
 	private static final String CVS_GENERATED_RELEASE_DATE = "$Date$";
 
 	//Warning: This is a little bit tricky,
@@ -63,7 +63,7 @@ public final class JAPConstants
 	//static final String buildType="..."
 	//needed for update.JAPUpdate
 	static final int defaultPortNumber = 4001;
-	static final int defaultSOCKSPortNumber=1080;
+	static final int defaultSOCKSPortNumber = 1080;
 	static final String defaultAnonName = "Dresden-Desden";
 	static final String defaultAnonID = "141.76.1.120%3A6544";
 	static final String defaultAnonHost = "mix.inf.tu-dresden.de";
@@ -157,12 +157,12 @@ public final class JAPConstants
 	public final static String CERT_JAPINFOSERVICEMESSAGES = "japinfoservicemessages.cer";
 
 	/** Tor related defaults **/
-	public final static boolean TOR_IS_ENABLED=false;
-	public final static String TOR_DIR_SERVER_ADR="moria.seul.org";
-	public final static int TOR_DIR_SERVER_PORT=9031;
+	public final static boolean TOR_IS_ENABLED = false;
+	public final static String TOR_DIR_SERVER_ADR = "moria.seul.org";
+	public final static int TOR_DIR_SERVER_PORT = 9031;
 
-	public final static boolean WITH_BLOCKINGRESISTANCE=true; 	//Enables or diables Suuport of
-																//blocking reistance functionality
+	public final static boolean WITH_BLOCKINGRESISTANCE = true; //Enables or diables Suuport of
+	//blocking reistance functionality
 	/**
 	 * The minimum bandwidth per user needed for forwarding. This affects the maximum number
 	 * of users, which can be forwarded with a specified bandwidth. The default is 2 KByte/sec

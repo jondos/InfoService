@@ -381,145 +381,147 @@ final public class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifier
 		}
 	}
 
-	public static PKCS12 load(InputStream stream, char[] password) throws IOException, InvalidKeyException
+	public static PKCS12 load(InputStream stream, char[] password)
 	{
-		String alias = null;
-		PrivateKey privKey = null;
-		PublicKey pubKey = null;
-		X509CertificateStructure x509cert = null;
-
-		BERInputStream is = new BERInputStream(stream);
-		ASN1Sequence dcs = (ASN1Sequence) is.readObject();
-		Pfx pfx = new Pfx(dcs);
-		ContentInfo cinfo = pfx.getAuthSafe();
-		// TODO: Check MAC
-		// Look at JDKPKCS12KeyStore.engineLoad (starting with bag.getMacData())
-
-		if (!cinfo.getContentType().equals(PKCSObjectIdentifiers.data))
+		try
 		{
-			throw (new IllegalCertificateException("No certificates found."));
-		}
+			String alias = null;
+			PrivateKey privKey = null;
+			X509CertificateStructure x509cert = null;
 
-		is = new BERInputStream(new ByteArrayInputStream( ( (DEROctetString) cinfo.getContent()).getOctets()));
-		ContentInfo[] cinfos = (new AuthenticatedSafe( (ASN1Sequence) is.readObject())).getContentInfo();
+			BERInputStream is = new BERInputStream(stream);
+			ASN1Sequence dcs = (ASN1Sequence) is.readObject();
+			Pfx pfx = new Pfx(dcs);
+			ContentInfo cinfo = pfx.getAuthSafe();
+			// TODO: Check MAC
+			// Look at JDKPKCS12KeyStore.engineLoad (starting with bag.getMacData())
 
-		for (int i = 0; i < cinfos.length; i++)
-		{
-			ASN1Sequence cseq;
-			if (cinfos[i].getContentType().equals(PKCSObjectIdentifiers.data))
+			if (!cinfo.getContentType().equals(PKCSObjectIdentifiers.data))
 			{
-				DERInputStream dis = new DERInputStream(new ByteArrayInputStream(
-					( (DEROctetString) cinfos[i].getContent())
-					.getOctets()));
-				cseq = (ASN1Sequence) dis.readObject();
+				return null;
 			}
-			else if (cinfos[i].getContentType().equals(PKCSObjectIdentifiers.encryptedData))
+
+			is = new BERInputStream(new ByteArrayInputStream( ( (DEROctetString) cinfo.getContent()).
+				getOctets()));
+			ContentInfo[] cinfos = (new AuthenticatedSafe( (ASN1Sequence) is.readObject())).getContentInfo();
+
+			for (int i = 0; i < cinfos.length; i++)
 			{
-				EncryptedData ed = new EncryptedData( (ASN1Sequence) cinfos[i].getContent());
-				String algId = ed.getEncryptionAlgorithm().getObjectId().getId();
-				MyCipher cipher = getCipher(algId);
-				if (cipher == null)
+				ASN1Sequence cseq;
+				if (cinfos[i].getContentType().equals(PKCSObjectIdentifiers.data))
 				{
-					throw (new IllegalCertificateException("Encryption Algorithm '" + algId
-						+ "' is currently not supported."));
+					DERInputStream dis = new DERInputStream(new ByteArrayInputStream(
+						( (DEROctetString) cinfos[i].getContent())
+						.getOctets()));
+					cseq = (ASN1Sequence) dis.readObject();
 				}
-				PKCS12PBEParams pbeParams = new PKCS12PBEParams( (ASN1Sequence) ed.getEncryptionAlgorithm()
-					.getParameters());
-				BERInputStream bis = new BERInputStream(new ByteArrayInputStream(
-					PKCS12.codeData(false, ed.getContent().getOctets(), pbeParams, password,
-									cipher.cipher, cipher.keysize)));
-				cseq = (ASN1Sequence) bis.readObject();
-			}
-			else
-			{
-				continue;
-			}
-
-			for (int j = 0; j < cseq.size(); j++)
-			{
-				SafeBag sb = new SafeBag( (ASN1Sequence) cseq.getObjectAt(j));
-
-				if (sb.getBagId().equals(PKCSObjectIdentifiers.certBag))
+				else if (cinfos[i].getContentType().equals(PKCSObjectIdentifiers.encryptedData))
 				{
-					DERInputStream cin = new BERInputStream(
-						new ByteArrayInputStream( ( (DEROctetString)new CertBag( (ASN1Sequence)
-						sb.getBagValue()).getCertValue()).getOctets()));
-
-					ASN1Sequence xseq = (ASN1Sequence) cin.readObject();
-					if (xseq.size() > 1
-						&& xseq.getObjectAt(1) instanceof DERObjectIdentifier
-						&& xseq.getObjectAt(0).equals(PKCSObjectIdentifiers.signedData))
-					{
-						x509cert = X509CertificateStructure.getInstance(
-							new SignedData(
-							ASN1Sequence.getInstance(
-							(ASN1TaggedObject) xseq.getObjectAt(1),
-							true))
-							.getCertificates()
-							.getObjectAt(0));
-					}
-					else
-					{
-						x509cert = X509CertificateStructure.getInstance(xseq);
-					}
-				}
-				else if (sb.getBagId().equals(PKCSObjectIdentifiers.pkcs8ShroudedKeyBag))
-				{
-					EncryptedPrivateKeyInfo ePrivKey = new EncryptedPrivateKeyInfo( (ASN1Sequence) sb.
-						getBagValue());
-					MyCipher cipher = getCipher(ePrivKey.getEncryptionAlgorithm().getObjectId().getId());
+					EncryptedData ed = new EncryptedData( (ASN1Sequence) cinfos[i].getContent());
+					String algId = ed.getEncryptionAlgorithm().getObjectId().getId();
+					MyCipher cipher = getCipher(algId);
 					if (cipher == null)
 					{
-						throw (new IllegalCertificateException(
-							"Encryption Algorithm '"
-							+ ePrivKey.getEncryptionAlgorithm().getObjectId().getId()
-							+ "' is currently not supported."));
+						return null;
 					}
-					PKCS12PBEParams pbeParams = new PKCS12PBEParams( (ASN1Sequence) ePrivKey
-						.getEncryptionAlgorithm().getParameters());
-					byte[] pkData = PKCS12.codeData(false, ePrivKey.getEncryptedData(),
-						pbeParams, password, cipher.cipher, cipher.keysize);
-					ByteArrayInputStream bIn = new ByteArrayInputStream(pkData);
-					DERInputStream dIn = new DERInputStream(bIn);
-					PrivateKeyInfo privKeyInfo = new PrivateKeyInfo( (ASN1Sequence) dIn.readObject());
-					/**@todo check for Alg --> now done by try catch */
-					try
-					{
-						privKey = new MyDSAPrivateKey(privKeyInfo);
-
-					}
-					catch (Exception e)
-					{
-						try
-						{
-							privKey = new MyRSAPrivateKey(privKeyInfo);
-						}
-						catch (Exception e1)
-						{
-							throw new InvalidKeyException("Key currentlic not supported");
-						}
-					}
+					PKCS12PBEParams pbeParams = new PKCS12PBEParams( (ASN1Sequence) ed.getEncryptionAlgorithm()
+						.getParameters());
+					BERInputStream bis = new BERInputStream(new ByteArrayInputStream(
+						PKCS12.codeData(false, ed.getContent().getOctets(), pbeParams, password,
+										cipher.cipher, cipher.keysize)));
+					cseq = (ASN1Sequence) bis.readObject();
+				}
+				else
+				{
+					continue;
 				}
 
-				if (alias == null && sb.getBagAttributes() != null)
+				for (int j = 0; j < cseq.size(); j++)
 				{
-					Enumeration e = sb.getBagAttributes().getObjects();
-					while (e.hasMoreElements())
+					SafeBag sb = new SafeBag( (ASN1Sequence) cseq.getObjectAt(j));
+
+					if (sb.getBagId().equals(PKCSObjectIdentifiers.certBag))
 					{
-						ASN1Sequence ba = (ASN1Sequence) e.nextElement();
-						DERObjectIdentifier oid = (DERObjectIdentifier) ba.getObjectAt(0);
-						DERObject att = (DERObject) ( (ASN1Set) ba.getObjectAt(1)).getObjectAt(0);
-						if (oid.equals(pkcs_9_at_friendlyName))
+						DERInputStream cin = new BERInputStream(
+							new ByteArrayInputStream( ( (DEROctetString)new CertBag( (ASN1Sequence)
+							sb.getBagValue()).getCertValue()).getOctets()));
+
+						ASN1Sequence xseq = (ASN1Sequence) cin.readObject();
+						if (xseq.size() > 1
+							&& xseq.getObjectAt(1) instanceof DERObjectIdentifier
+							&& xseq.getObjectAt(0).equals(PKCSObjectIdentifiers.signedData))
 						{
-							alias = ( (DERBMPString) att).getString();
+							x509cert = X509CertificateStructure.getInstance(
+								new SignedData(
+								ASN1Sequence.getInstance(
+								(ASN1TaggedObject) xseq.getObjectAt(1),
+								true))
+								.getCertificates()
+								.getObjectAt(0));
+						}
+						else
+						{
+							x509cert = X509CertificateStructure.getInstance(xseq);
+						}
+					}
+					else if (sb.getBagId().equals(PKCSObjectIdentifiers.pkcs8ShroudedKeyBag))
+					{
+						EncryptedPrivateKeyInfo ePrivKey = new EncryptedPrivateKeyInfo( (ASN1Sequence) sb.
+							getBagValue());
+						MyCipher cipher = getCipher(ePrivKey.getEncryptionAlgorithm().getObjectId().getId());
+						if (cipher == null)
+						{
+							return null;
+						}
+						PKCS12PBEParams pbeParams = new PKCS12PBEParams( (ASN1Sequence) ePrivKey
+							.getEncryptionAlgorithm().getParameters());
+						byte[] pkData = PKCS12.codeData(false, ePrivKey.getEncryptedData(),
+							pbeParams, password, cipher.cipher, cipher.keysize);
+						ByteArrayInputStream bIn = new ByteArrayInputStream(pkData);
+						DERInputStream dIn = new DERInputStream(bIn);
+						PrivateKeyInfo privKeyInfo = new PrivateKeyInfo( (ASN1Sequence) dIn.readObject());
+						/**@todo check for Alg --> now done by try catch */
+						try
+						{
+							privKey = new MyDSAPrivateKey(privKeyInfo);
+
+						}
+						catch (Exception e)
+						{
+							try
+							{
+								privKey = new MyRSAPrivateKey(privKeyInfo);
+							}
+							catch (Exception e1)
+							{
+								return null;
+							}
+						}
+					}
+
+					if (alias == null && sb.getBagAttributes() != null)
+					{
+						Enumeration e = sb.getBagAttributes().getObjects();
+						while (e.hasMoreElements())
+						{
+							ASN1Sequence ba = (ASN1Sequence) e.nextElement();
+							DERObjectIdentifier oid = (DERObjectIdentifier) ba.getObjectAt(0);
+							DERObject att = (DERObject) ( (ASN1Set) ba.getObjectAt(1)).getObjectAt(0);
+							if (oid.equals(pkcs_9_at_friendlyName))
+							{
+								alias = ( (DERBMPString) att).getString();
+							}
 						}
 					}
 				}
 			}
+			if (alias != null && x509cert != null) //????
+			{
+				return new PKCS12(alias, privKey, x509cert);
+			}
 		}
-		if (alias != null && x509cert != null) //????
+		catch (Throwable t)
 		{
-			return new PKCS12(alias, privKey, x509cert);
 		}
 		return null;
 	}

@@ -27,23 +27,48 @@
  */
 package jap;
 
-import java.io.*;
-import java.net.*;
-import java.text.*;
-import java.util.*;
-import javax.xml.parsers.*;
-
-import java.awt.*;
-import javax.swing.*;
-import javax.swing.UIManager.*;
-
-import org.w3c.dom.*;
-import anon.crypto.*;
-import anon.infoservice.*;
-import anon.util.*;
-import logging.*;
-import proxy.*;
-import update.*;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.text.MessageFormat;
+import java.util.Enumeration;
+import java.util.Locale;
+import java.util.Vector;
+import javax.xml.parsers.DocumentBuilderFactory;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Point;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JOptionPane;
+import javax.swing.UIManager;
+import javax.swing.UIManager.LookAndFeelInfo;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.w3c.dom.Text;
+import anon.ErrorCodes;
+import anon.crypto.JAPCertificate;
+import anon.crypto.JAPCertificateStore;
+import anon.infoservice.HTTPConnectionFactory;
+import anon.infoservice.InfoService;
+import anon.infoservice.InfoServiceDatabase;
+import anon.infoservice.InfoServiceHolder;
+import anon.infoservice.JAPVersionInfo;
+import anon.infoservice.MixCascade;
+import anon.util.XMLUtil;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
+import proxy.AnonSocksProxy;
+import proxy.AnonWebProxy;
+import proxy.DirectProxy;
+import proxy.ProxyListener;
+import update.JAPUpdateWizard;
 
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPController implements ProxyListener
@@ -62,8 +87,8 @@ public final class JAPController implements ProxyListener
 	private ServerSocket m_socketHTTPListener = null; // listener object for HTTP
 	private ServerSocket m_socketSOCKSListener = null; //listener object for SOCKS
 	private DirectProxy m_proxyDirect = null; // service object for direct access (bypass anon service)
-	private AnonProxy m_proxyAnon = null; // service object for anon access
-	private SocksProxy m_proxySocks = null; //service object for Socks requests
+	private AnonWebProxy m_proxyAnon = null; // service object for anon access
+	private AnonSocksProxy m_proxySocks = null; //service object for Socks requests
 
 	private boolean isRunningHTTPListener = false; // true if a HTTP listener is running
 	private boolean isRunningSOCKSListener = false; //true if a SOCKS listener is running
@@ -355,13 +380,13 @@ public final class JAPController implements ProxyListener
 				mbGoodByMessageNeverRemind = XMLUtil.parseNodeBoolean(n.getNamedItem("neverRemindGoodBye"), false);
 
 				/* infoservice configuration options */
-				boolean b=XMLUtil.parseNodeBoolean(n.getNamedItem("infoServiceDisabled"),
+				boolean b = XMLUtil.parseNodeBoolean(n.getNamedItem("infoServiceDisabled"),
 					JAPModel.isInfoServiceDisabled());
 				setInfoServiceDisabled(b);
-				b=XMLUtil.parseNodeBoolean(n.getNamedItem("infoServiceChange"),
-					InfoServiceHolder.getInstance().isChangeInfoServices());
-					InfoServiceHolder.getInstance().setChangeInfoServices(b);
-				int i=XMLUtil.parseNodeInt(n.getNamedItem("infoServiceTimeout"),-1);
+				b = XMLUtil.parseNodeBoolean(n.getNamedItem("infoServiceChange"),
+											 InfoServiceHolder.getInstance().isChangeInfoServices());
+				InfoServiceHolder.getInstance().setChangeInfoServices(b);
+				int i = XMLUtil.parseNodeInt(n.getNamedItem("infoServiceTimeout"), -1);
 				try
 				{
 					if ( (i >= 1) && (i <= 60))
@@ -485,7 +510,7 @@ public final class JAPController implements ProxyListener
 				{
 					String lf = XMLUtil.parseNodeString(n.getNamedItem("LookAndFeel"), "unknown");
 					LookAndFeelInfo[] lfi = UIManager.getInstalledLookAndFeels();
-					for ( i = 0; i < lfi.length; i++)
+					for (i = 0; i < lfi.length; i++)
 					{
 						if (lfi[i].getName().equals(lf) || lfi[i].getClassName().equals(lf))
 						{
@@ -1197,7 +1222,8 @@ public final class JAPController implements ProxyListener
 						//starting SOCKS
 						if (JAPModel.isTorEnabled())
 						{
-							m_proxySocks = new SocksProxy(m_socketSOCKSListener);
+							m_proxySocks = new AnonSocksProxy(m_socketSOCKSListener);
+							m_proxySocks.setProxyListener(m_Controller);
 							m_proxySocks.start();
 						}
 						// starting MUX --> Success ???
@@ -1211,7 +1237,7 @@ public final class JAPController implements ProxyListener
 						else
 						{
 							/* we use a direct connection */
-							m_proxyAnon = new AnonProxy(m_socketHTTPListener);
+							m_proxyAnon = new AnonWebProxy(m_socketHTTPListener);
 						}
 						MixCascade currentMixCascade = m_Controller.getCurrentMixCascade();
 						m_proxyAnon.setMixCascade(currentMixCascade);
@@ -1237,7 +1263,7 @@ public final class JAPController implements ProxyListener
 						m_proxyDirect = null;
 
 						int ret = m_proxyAnon.start();
-						if (ret != AnonProxy.E_SUCCESS)
+						if (ret != ErrorCodes.E_SUCCESS)
 						{
 							canStartService = false;
 							m_proxyAnon = null;
@@ -1247,7 +1273,7 @@ public final class JAPController implements ProxyListener
 							}
 							m_proxySocks = null;
 						}
-						if (ret == AnonProxy.E_SUCCESS)
+						if (ret == ErrorCodes.E_SUCCESS)
 						{
 							if (!mbActCntMessageNotRemind && !JAPModel.isSmallDisplay())
 							{
@@ -1281,7 +1307,7 @@ public final class JAPController implements ProxyListener
 							feedback = new JAPFeedback();
 							feedback.startRequests();
 						}
-						else if (ret == AnonProxy.E_BIND)
+						else if (ret == AnonWebProxy.E_BIND)
 						{
 							Object[] args =
 								{
@@ -1295,7 +1321,7 @@ public final class JAPController implements ProxyListener
 							LogHolder.log(LogLevel.EMERG, LogType.NET, "Listener could not be started!");
 							m_Controller.getView().disableSetAnonMode();
 						}
-						else if (ret == AnonProxy.E_MIX_PROTOCOL_NOT_SUPPORTED)
+						else if (ret == AnonWebProxy.E_MIX_PROTOCOL_NOT_SUPPORTED)
 						{
 							JOptionPane.showMessageDialog
 								(
@@ -1306,7 +1332,7 @@ public final class JAPController implements ProxyListener
 								);
 						}
 //otte
-						else if (ret == AnonProxy.E_SIGNATURE_CHECK_FIRSTMIX_FAILED)
+						else if (ret == AnonWebProxy.E_SIGNATURE_CHECK_FIRSTMIX_FAILED)
 						{
 							JOptionPane.showMessageDialog
 								(
@@ -1317,7 +1343,7 @@ public final class JAPController implements ProxyListener
 								);
 						}
 
-						else if (ret == AnonProxy.E_SIGNATURE_CHECK_OTHERMIX_FAILED)
+						else if (ret == AnonWebProxy.E_SIGNATURE_CHECK_OTHERMIX_FAILED)
 						{
 							JOptionPane.showMessageDialog
 								(
@@ -1788,7 +1814,7 @@ public final class JAPController implements ProxyListener
 	}
 
 	//---------------------------------------------------------------------
-	public void channelsChanged(int channels)
+	public synchronized void channelsChanged(int channels)
 	{
 		nrOfChannels = channels;
 		Enumeration enum = observerVector.elements();
@@ -1799,7 +1825,7 @@ public final class JAPController implements ProxyListener
 		}
 	}
 
-	public void transferedBytes(int bytes)
+	public synchronized void transferedBytes(int bytes)
 	{
 		nrOfBytes += bytes;
 		Enumeration enum = observerVector.elements();

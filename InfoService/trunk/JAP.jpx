@@ -100,8 +100,8 @@
   <property category="sys" name="Libraries" value="http;mac;XML-1.1;Apache XML-RPC;Swing;BouncyCastleLightForJAP;JUnit;junitx;ApacheFTPClient"/>
   <property category="sys" name="MakeStable" value="0"/>
   <property category="sys" name="OutPath" value="classes"/>
-  <property category="sys" name="SourcePath" value=".;test"/>
-  <property category="sys" name="TestPath" value="test"/>
+  <property category="sys" name="SourcePath" value="."/>
+  <property category="sys" name="TestPath" value="."/>
   <property category="sys" name="Title" value=""/>
   <property category="sys" name="TitleLabel" value="\u00dcberschrift:"/>
   <property category="sys" name="Version" value="1.0"/>
@@ -205,6 +205,7 @@
     <file path="images/west.gif"/>
   </node>
   <node name="anon" type="Package"/>
+  <node name="anon.tor" type="Package"/>
   <node name="forward" type="Package"/>
   <node name="gui" type="Package"/>
   <node name="jap" type="Package"/>
@@ -215,7 +216,6 @@
   <node name="payxml" type="Package"/>
   <node name="proxy" type="Package"/>
   <node name="test" type="Package"/>
-  <node name="tor" type="Package"/>
   <node name="update" type="Package"/>
   <node name="JAP.jar" type="Archive">
     <property category="archiving" name="archiverClass" value="com.borland.jbuilder.wizard.archive.ApplicationArchiver"/>

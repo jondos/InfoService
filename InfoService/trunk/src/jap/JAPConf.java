@@ -70,7 +70,6 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import update.JAPUpdate;
-import pay.view.JAPConfPayAccounts;
 
 final class JAPConf extends JDialog
 {

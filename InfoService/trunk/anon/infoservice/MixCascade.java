@@ -36,11 +36,11 @@ import anon.crypto.JAPCertificate;
 import anon.crypto.JAPCertificateStore;
 import anon.crypto.JAPSignature;
 import anon.util.XMLUtil;
-
+import anon.AnonServerDescription;
 /**
  * Holds the information for a mixcascade.
  */
-public class MixCascade
+public class MixCascade implements AnonServerDescription
 {
 
 	/**

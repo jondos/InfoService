@@ -477,7 +477,7 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener, Ru
 				long t1 = 0;
 				long t2 = 0;
 				t1 = System.currentTimeMillis();
-				int ret = anonService.connect(currentMixCascade);
+				int ret = anonService.initialize(currentMixCascade);
 				t2 = System.currentTimeMillis();
 				dtConnect = t2 - t1;
 				NumberFormat nf = NumberFormat.getInstance();
@@ -583,7 +583,7 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener, Ru
 					}
 				}
 				tableView.repaint();
-				anonService.disconnect();
+				anonService.shutdown();
 			} //for all Cascades
 			// sleep for a while
 			setCursor(Cursor.getDefaultCursor());

@@ -35,7 +35,7 @@ public final class ErrorCodes
 	public final static int E_INVALID_SERVICE = -5;
 	public final static int E_CONNECT = -6;
 	public final static int E_NOT_CONNECTED = -9;
-	public final static int E_MIX_PROTOCOL_NOT_SUPPORTED = -10;
+	public final static int E_PROTOCOL_NOT_SUPPORTED = -10;
 	public final static int E_INVALID_CERTIFICATE = -20;
 	public final static int E_INVALID_KEY = -21;
 	public final static int E_SIGNATURE_CHECK_FIRSTMIX_FAILED = -22;

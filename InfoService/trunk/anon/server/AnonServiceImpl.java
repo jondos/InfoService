@@ -42,6 +42,7 @@ import anon.infoservice.MixCascade;
 import anon.server.impl.KeyPool;
 import anon.server.impl.MuxSocket;
 import anon.server.impl.ProxyConnection;
+import anon.AnonServerDescription;
 
 final public class AnonServiceImpl implements AnonService
 {
@@ -60,18 +61,18 @@ final public class AnonServiceImpl implements AnonService
 
 	private boolean m_bMixCertCheckEnabled;
 	private JAPCertificateStore m_certsTrustedRoots;
-  
-  /**
-   * Stores the connection when we use forwarding.
-   */
-  private ProxyConnection m_proxyConnection;
-  
-  /**
-   * Stores, whether we use a forwarded connection -> connection already exists -> we don't
-   * create a new connection, when connect() is called.
-   */
-  private boolean m_forwardedConnection;
-  
+
+	/**
+	 * Stores the connection when we use forwarding.
+	 */
+	private ProxyConnection m_proxyConnection;
+
+	/**
+	 * Stores, whether we use a forwarded connection -> connection already exists -> we don't
+	 * create a new connection, when connect() is called.
+	 */
+	private boolean m_forwardedConnection;
+
 	protected AnonServiceImpl()
 	{
 		m_AnonServiceListener = new Vector();
@@ -83,22 +84,22 @@ final public class AnonServiceImpl implements AnonService
 		m_bMixCertCheckEnabled = false;
 		m_certsTrustedRoots = null;
 		m_MuxSocket = MuxSocket.create();
-    m_proxyConnection = null;
-    m_forwardedConnection = false;
-  }
+		m_proxyConnection = null;
+		m_forwardedConnection = false;
+	}
 
-  /**
-   * This creates a new AnonServiceImpl with a forwarded connection.
-   *
-   * @param a_proxyConnection An active connection to the first mix of a cascade.
-   */
-  public AnonServiceImpl(ProxyConnection a_proxyConnection) {
-    /* call the default constructor */
-    this();
-    m_forwardedConnection = true;
-    m_proxyConnection = a_proxyConnection;
-  }  
-	
+	/**
+	 * This creates a new AnonServiceImpl with a forwarded connection.
+	 *
+	 * @param a_proxyConnection An active connection to the first mix of a cascade.
+	 */
+	public AnonServiceImpl(ProxyConnection a_proxyConnection)
+	{
+		/* call the default constructor */
+		this();
+		m_forwardedConnection = true;
+		m_proxyConnection = a_proxyConnection;
+	}
 
 	public static AnonService create()
 	{
@@ -110,23 +111,40 @@ final public class AnonServiceImpl implements AnonService
 		return new AnonServiceImpl();
 	}
 
- public int connect(MixCascade mixCascade)
-  {
-    int ret = -1;
-    if (m_forwardedConnection == false) {
-      ret = m_MuxSocket.connectViaFirewall(mixCascade, m_FirewallType, m_FirewallHost, m_FirewallPort, m_FirewallUserID, m_FirewallPasswd, m_bMixCertCheckEnabled, m_certsTrustedRoots);
-    }
-    else {
-      /* the connection already exists */
-      ret = m_MuxSocket.initialize(m_proxyConnection, m_bMixCertCheckEnabled, m_certsTrustedRoots);
-    }
-    if (ret != ErrorCodes.E_SUCCESS) {
-      return ret;
-    }
-    return m_MuxSocket.startService();
-  }
+	public int initialize(AnonServerDescription mixCascade)
+	{
+		try
+		{
+			return connect( (MixCascade) mixCascade);
+		}
+		catch (Exception e)
+		{
+		}
+		return ErrorCodes.E_INVALID_SERVICE;
+	}
 
-	public void disconnect()
+	private int connect(MixCascade mixCascade)
+	{
+		int ret = -1;
+		if (m_forwardedConnection == false)
+		{
+			ret = m_MuxSocket.connectViaFirewall(mixCascade, m_FirewallType, m_FirewallHost, m_FirewallPort,
+												 m_FirewallUserID, m_FirewallPasswd, m_bMixCertCheckEnabled,
+												 m_certsTrustedRoots);
+		}
+		else
+		{
+			/* the connection already exists */
+			ret = m_MuxSocket.initialize(m_proxyConnection, m_bMixCertCheckEnabled, m_certsTrustedRoots);
+		}
+		if (ret != ErrorCodes.E_SUCCESS)
+		{
+			return ret;
+		}
+		return m_MuxSocket.startService();
+	}
+
+	public void shutdown()
 	{
 		m_MuxSocket.stopService();
 	}

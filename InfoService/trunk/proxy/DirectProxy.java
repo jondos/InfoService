@@ -109,7 +109,7 @@ final public class DirectProxy implements Runnable
 				catch (SocketException soex)
 				{
 					LogHolder.log(LogLevel.ERR, LogType.NET,
-						"JAPDirectProxy:DirectProxy.run() Colud not set sockt to blocking mode! Excpetion: " +
+								  "JAPDirectProxy:DirectProxy.run() Colud not set sockt to blocking mode! Excpetion: " +
 								  soex);
 					socket = null;
 					continue;
