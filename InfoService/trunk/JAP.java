@@ -32,6 +32,7 @@
  *  on a Macintosh to register the MRJ Handler.
  *
  */
+import java.util.Properties;
 import java.awt.Frame;
 import jap.JAPAWTMsgBox;
 import jap.JAPConstants;
@@ -156,6 +157,34 @@ class JAP extends Frame
 					"JAP:Exception while setting Cross Platform Look-And-Feel!");
 			}
 		}
+		//deactivate socks proxy settings if given by the os
+		try
+		{
+			Properties p = System.getProperties();
+			boolean changed = false;
+			if (p.containsKey("socksProxyHost"))
+			{
+				p.remove(p.get("socksProxyHost"));
+				changed = true;
+			}
+			if (p.containsKey("socksProxyPort"))
+			{
+				p.remove(p.get("socksProxyPort"));
+				changed = true;
+			}
+			if (changed)
+			{
+				System.setProperties(p);
+
+			}
+		}
+		catch (Throwable t)
+		{
+			LogHolder.log(
+				LogLevel.EXCEPTION,
+				LogType.NET,
+				"JAP:Exception while trying to deactivate SOCKS proxy settings: " + t.getMessage());
+		}
 		// um pay funktionalitaet ein oder auszuschalten
 		if (m_arstrCmdnLnArgs != null)
 		{
@@ -171,25 +200,26 @@ class JAP extends Frame
 
 		// Create the controller object
 		JAPController controller = JAPController.create();
-    String configFileName = null;
-    /* check, whether there is the -config parameter, which means the we use userdefined config
-     * file
-     */
-    if (m_arstrCmdnLnArgs != null)
-    {
-      for (int i = 0; i < m_arstrCmdnLnArgs.length; i++)
-      {
-        if (m_arstrCmdnLnArgs[i].equalsIgnoreCase("-config"))
-        {
-          if (i + 1 < m_arstrCmdnLnArgs.length) {
-            configFileName = m_arstrCmdnLnArgs[i + 1];
-          }
-          break;
-        }
-      }
-    }
+		String configFileName = null;
+		/* check, whether there is the -config parameter, which means the we use userdefined config
+		 * file
+		 */
+		if (m_arstrCmdnLnArgs != null)
+		{
+			for (int i = 0; i < m_arstrCmdnLnArgs.length; i++)
+			{
+				if (m_arstrCmdnLnArgs[i].equalsIgnoreCase("-config"))
+				{
+					if (i + 1 < m_arstrCmdnLnArgs.length)
+					{
+						configFileName = m_arstrCmdnLnArgs[i + 1];
+					}
+					break;
+				}
+			}
+		}
 		// load settings from config file
-		controller.loadConfigFile(configFileName,loadPay);
+		controller.loadConfigFile(configFileName, loadPay);
 		// Output some information about the system
 		LogHolder.log(
 			LogLevel.INFO,
