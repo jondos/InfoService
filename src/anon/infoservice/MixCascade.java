@@ -161,13 +161,11 @@ public class MixCascade implements AnonServerDescription
 		Element lastUpdateNode = (Element) (lastUpdateNodes.item(0));
 		lastUpdate = Long.parseLong(lastUpdateNode.getFirstChild().getNodeValue());
 		/* try to get the certificates from the Signature node */
-		NodeList signatureNodes = mixCascadeNode.getElementsByTagName("Signature");
+		XMLSignature sig = XMLSignature.getUnverified(mixCascadeNode);
 		/* create an empty certificate store */
 		m_mixCascadeCertificates = new JAPCertificateStore();
-		if (signatureNodes.getLength() > 0)
+		if (sig!=null)
 		{
-			Element signatureNode = (Element) (signatureNodes.item(0));
-			XMLSignature sig = XMLSignature.getUnverified(signatureNode);
 			Enumeration certificates = sig.getCertificates();
 			if (certificates != null)
 			{
@@ -177,7 +175,7 @@ public class MixCascade implements AnonServerDescription
 					Object obj = certificates.nextElement();
 					if(obj instanceof JAPCertificate)
 					{
-						JAPCertificate certificate = (JAPCertificate)obj; 
+						JAPCertificate certificate = (JAPCertificate)obj;
 						certificate.setEnabled(true);
 						m_mixCascadeCertificates.addCertificate(certificate);
 					}

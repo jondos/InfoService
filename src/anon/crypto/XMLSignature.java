@@ -932,7 +932,8 @@ public final class XMLSignature implements IXMLEncodable
 	}
 
 	/**
-	 * Finds the signature element in the given node if present. The signature is not verified.
+	 * Finds the signature element of the given node if present. This signature element is only found
+	 * if it is a direct child of a_node. The signature is not verified.
 	 * @param a_node an XML Node
 	 * @return the node`s XMLSignature or null if no signature node was found
 	 * @exception XMLParseException if the node has an invalid valid XML signature element structure
