@@ -109,8 +109,6 @@ public class JAP extends Frame{
 		
 		// Dispose the spash screen and show main frame
 		splash.dispose();
-		//if(model.getMinimizeOnStartup())
-			view.getToolkit().getSystemEventQueue().postEvent(new WindowEvent(view,WindowEvent.WINDOW_ICONIFIED));
 		view.show();
 		view.toFront();		
 		

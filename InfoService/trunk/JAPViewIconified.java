@@ -43,8 +43,9 @@ public final class JAPViewIconified extends JFrame implements ActionListener, JA
 	}
 	
 	public void init() {
-		setBackground(Color.black);
-		setForeground(Color.blue);
+		setIconImage(model.getView().getIconImage());
+		//setBackground(Color.black);
+		//setForeground(Color.blue);
 		setFont(new Font("Sans",Font.PLAIN,9));
 		z1 = new JLabel("0000000",JLabel.LEFT);
 		z2 = new JLabel("0000000",JLabel.LEFT);
@@ -54,11 +55,11 @@ public final class JAPViewIconified extends JFrame implements ActionListener, JA
 		z3.setForeground(Color.red);
 		
 		JPanel p1 = new JPanel(new GridLayout(3,2) );
-		p1.add(new JLabel("Chnls:",JLabel.RIGHT));
+		p1.add(new JLabel(model.getString("iconifiedviewChannels")+": ",JLabel.RIGHT));
 		p1.add(z1);
-		p1.add(new JLabel("Bytes:",JLabel.RIGHT));
+		p1.add(new JLabel(model.getString("iconifiedviewBytes")+": ",JLabel.RIGHT));
 		p1.add(z2);
-		p1.add(new JLabel("Users:",JLabel.RIGHT));
+		p1.add(new JLabel(model.getString("iconifiedviewUsers")+": ",JLabel.RIGHT));
 		p1.add(z3);
 		
 		JPanel p2 = new JPanel(new FlowLayout() );
@@ -73,8 +74,10 @@ public final class JAPViewIconified extends JFrame implements ActionListener, JA
 //		getContentPane().add(new JLabel(" "), BorderLayout.WEST);
 		getContentPane().add(p2, BorderLayout.SOUTH);
 		addWindowListener(new WindowAdapter() {
-			public void windowClosing(WindowEvent e) { model.setJAPViewDeIconified(); }
-		});	
+			public void windowClosing(WindowEvent e) {model.setJAPViewDeIconified();}
+			
+			
+			});	
 		setResizable(false);
 		pack();
 		model.upRightFrame(this);
@@ -88,10 +91,10 @@ public final class JAPViewIconified extends JFrame implements ActionListener, JA
 	}	
 	
 	public synchronized void valuesChanged (JAPModel m) {
-		z1.setText(""+model.getNrOfChannels());
-		z2.setText(""+model.getNrOfBytes());
-		if (model.nrOfActiveUsers != -1)
-			z3.setText(""+model.nrOfActiveUsers);
+		z1.setText(Integer.toString(m.getNrOfChannels()));
+		z2.setText(Integer.toString(m.getNrOfBytes()));
+		if (m.nrOfActiveUsers != -1)
+			z3.setText(Integer.toString(model.nrOfActiveUsers));
 		else
 			z3.setText("N/A");
 	}
