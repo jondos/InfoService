@@ -67,24 +67,50 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import pay.gui.AccountSettingsPanel;
-import update.JAPUpdate;
-
+//import update.JAPUpdate;
+import javax.swing.*;
+import javax.swing.tree.*;
+import javax.swing.event.*;
+import java.awt.*;
+import javax.swing.border.*;
 final class JAPConf extends JDialog
 {
 
-	final static public int PORT_TAB = 0;
-	final static public int PROXY_TAB = 1;
-	final static public int INFO_TAB = 2;
-	final static public int ANON_TAB = 3;
-	final static public int CERT_TAB = 4;
-	final static public int TOR_TAB = 5;
-	final static public int MISC_TAB = 6;
-	final static public int KONTO_TAB = 7;
+	final class TreeElement
+	{
+		final String m_Name;
+		final String m_Value;
+		TreeElement(String name,String value)
+		{
+			m_Name=name;
+			m_Value=value;
+		}
+
+		public String toString()
+		{
+			return m_Name;
+		}
+
+		public String getValue()
+		{
+			return m_Value;
+		}
+	}
+	final static public String PORT_TAB = "PORT_TAB";
+	final static public String UI_TAB = "UI_TAB";
+	final static public String UPDATE_TAB = "UPDATE_TAB";
+	final static public String PROXY_TAB = "PROXY_TAB";
+	final static public String INFOSERVICE_TAB = "INFOSERVICE_TAB";
+	final static public String ANON_TAB = "ANON_TAB";
+	final static public String CERT_TAB = "CERT_TAB";
+	final static public String TOR_TAB = "TOR_TAB";
+	final static public String DEBUG_TAB = "DEBUG_TAB";
+	final static public String PAYMENT_TAB = "PAYMENT_TAB";
 
 	/**
 	 * This constant is a symbolic name for accessing the forwarding tab.
 	 */
-	final static public int FORWARD_TAB = 8;
+	final static public String FORWARD_TAB = "FORWARD_TAB";
 
 	private static JAPConf japConfInstance = null;
 
@@ -109,23 +135,23 @@ final class JAPConf extends JDialog
 	private JCheckBox m_cbDebugThread;
 	private JCheckBox m_cbDebugMisc;
 	private JCheckBox m_cbShowDebugConsole;
-	private JCheckBox m_cbSaveWindowPositions;
+	//private JCheckBox m_cbSaveWindowPositions;
 	private JCheckBox m_cbCertCheckDisabled;
 
 	private JSlider m_sliderDebugLevel;
 
-	private JComboBox m_comboLanguage;
-	private boolean m_bIgnoreComboLanguageEvents = false;
+	//private JComboBox m_comboLanguage;
+	//private boolean m_bIgnoreComboLanguageEvents = false;
 
 	private JCheckBox m_cbDummyTraffic;
 	private JSlider m_sliderDummyTrafficIntervall;
 
-	private JTabbedPane m_Tabs;
-
+	private JPanel m_Tabs;
+	private CardLayout m_TabsLayout;
 	/**
 	 * Stores the index of the various tabs in the tabbed pane.
 	 */
-	private Hashtable m_tabOrder;
+	//private Hashtable m_tabOrder;
 
 	private JPanel m_pPort, m_pFirewall, m_pMisc;
 	private JButton m_bttnDefaultConfig, m_bttnCancel;
@@ -144,7 +170,7 @@ final class JAPConf extends JDialog
 	private static File m_fileCurrentDir;
 
 	//Einfug
-	private JAPUpdate update;
+	//private JAPUpdate update;
 	private boolean loadPay = false;
 
 	public static JAPConf getInstance()
@@ -165,14 +191,18 @@ final class JAPConf extends JDialog
 		setTitle(JAPMessages.getString("settingsDialog"));
 		m_JapConf = this;
 		JPanel pContainer = new JPanel();
-		m_Tabs = new JTabbedPane();
+		m_TabsLayout=new CardLayout();
+		m_Tabs = new JPanel(m_TabsLayout);
 		m_fontControls = JAPController.getDialogFont();
-		pContainer.setLayout(new BorderLayout());
+		GridBagLayout gbl=new GridBagLayout();
+		pContainer.setLayout(gbl);
 		m_Tabs.setFont(m_fontControls);
 		m_pPort = buildPortPanel();
 		m_pFirewall = buildProxyPanel();
 		m_pMisc = buildMiscPanel();
 
+		AbstractJAPConfModule uiModule = new JAPConfUI();
+		AbstractJAPConfModule updateModule = new JAPConfUpdate();
 		AbstractJAPConfModule infoServiceModule = new JAPConfInfoService();
 		AbstractJAPConfModule certModule = new JAPConfCert();
 		AbstractJAPConfModule torModule = new JAPConfTor();
@@ -193,6 +223,8 @@ final class JAPConf extends JDialog
 		//torModule.setFontSetting(m_fontControls);
 		//anonModul
 
+		m_confModules.addElement(uiModule);
+		m_confModules.addElement(updateModule);
 		m_confModules.addElement(infoServiceModule);
 		m_confModules.addElement(certModule);
 		m_confModules.addElement(torModule);
@@ -207,38 +239,49 @@ final class JAPConf extends JDialog
 		}
 
 		/* create the hashtable, which stores the index of the tabs in the tabbed pane */
-		m_tabOrder = new Hashtable();
+		//m_tabOrder = new Hashtable();
 
-		m_Tabs.addTab(JAPMessages.getString("confListenerTab"), null, m_pPort);
-		m_tabOrder.put(new Integer(PORT_TAB), new Integer(m_Tabs.getTabCount() - 1));
-		m_Tabs.addTab(JAPMessages.getString("confProxyTab"), null, m_pFirewall);
-		m_tabOrder.put(new Integer(PROXY_TAB), new Integer(m_Tabs.getTabCount() - 1));
-		m_Tabs.addTab(infoServiceModule.getTabTitle(), null, infoServiceModule.getRootPanel());
-		m_tabOrder.put(new Integer(INFO_TAB), new Integer(m_Tabs.getTabCount() - 1));
-		m_Tabs.addTab(anonModule.getTabTitle(), null, anonModule.getRootPanel());
-		m_tabOrder.put(new Integer(ANON_TAB), new Integer(m_Tabs.getTabCount() - 1));
-		m_Tabs.addTab(certModule.getTabTitle(), null, certModule.getRootPanel());
-		m_tabOrder.put(new Integer(CERT_TAB), new Integer(m_Tabs.getTabCount() - 1));
-		m_Tabs.addTab(torModule.getTabTitle(), null, torModule.getRootPanel());
-		m_tabOrder.put(new Integer(TOR_TAB), new Integer(m_Tabs.getTabCount() - 1));
+		m_Tabs.add(m_pPort,PORT_TAB);
+		//m_Tabs.addTab(JAPMessages.getString("confListenerTab"), null, m_pPort);
+		//m_tabOrder.put(new Integer(PORT_TAB), new Integer(m_Tabs.getTabCount() - 1));
+		m_Tabs.add(m_pFirewall,PROXY_TAB);
+//		m_tabOrder.put(new Integer(PROXY_TAB), new Integer(m_Tabs.getTabCount() - 1));
+		m_Tabs.add(uiModule.getRootPanel(),UI_TAB);
+		m_Tabs.add(updateModule.getRootPanel(),UPDATE_TAB);
+		m_Tabs.add(infoServiceModule.getRootPanel(),INFOSERVICE_TAB);
+		//m_tabOrder.put(new Integer(INFO_TAB), new Integer(m_Tabs.getTabCount() - 1));
+		JTabbedPane tabs=new JTabbedPane();
+		tabs.addTab(anonModule.getTabTitle(),anonModule.getRootPanel());
+		tabs.addTab(torModule.getTabTitle(),torModule.getRootPanel());
+		tabs.addTab("Allgemein",new JPanel());
+		m_Tabs.add(tabs,ANON_TAB);
+		//m_tabOrder.put(new Integer(ANON_TAB), new Integer(m_Tabs.getTabCount() - 1));
+		m_Tabs.add(certModule.getRootPanel(),CERT_TAB);
+		//m_tabOrder.put(new Integer(CERT_TAB), new Integer(m_Tabs.getTabCount() - 1));
+		//m_Tabs.addTab(torModule.getTabTitle(), null, torModule.getRootPanel());
+		//m_tabOrder.put(new Integer(TOR_TAB), new Integer(m_Tabs.getTabCount() - 1));
 		if (JAPConstants.WITH_BLOCKINGRESISTANCE)
 		{
-			m_Tabs.addTab(routingModule.getTabTitle(), null, routingModule.getRootPanel());
-			m_tabOrder.put(new Integer(FORWARD_TAB), new Integer(m_Tabs.getTabCount() - 1));
+			m_Tabs.add(routingModule.getRootPanel(),FORWARD_TAB);
+			//m_tabOrder.put(new Integer(FORWARD_TAB), new Integer(m_Tabs.getTabCount() - 1));
 		}
 		if (loadPay)
 		{
-			m_Tabs.addTab(accountsModule.getTabTitle(), null, accountsModule.getRootPanel());
-			m_tabOrder.put(new Integer(KONTO_TAB), new Integer(m_Tabs.getTabCount() - 1));
+			m_Tabs.add(accountsModule.getRootPanel(),PAYMENT_TAB);
+			//m_tabOrder.put(new Integer(KONTO_TAB), new Integer(m_Tabs.getTabCount() - 1));
 		}
 
 		if (!JAPModel.isSmallDisplay())
 		{
-			m_Tabs.addTab(JAPMessages.getString("confMiscTab"), null, m_pMisc);
-			m_tabOrder.put(new Integer(MISC_TAB), new Integer(m_Tabs.getTabCount() - 1));
+			m_Tabs.add(m_pMisc,DEBUG_TAB);
+	//		m_tabOrder.put(new Integer(MISC_TAB), new Integer(m_Tabs.getTabCount() - 1));
 		}
 		JPanel buttonPanel = new JPanel();
 		buttonPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
+		JButton bttnHelp = new JButton(JAPMessages.getString("updateM_bttnHelp"));
+		bttnHelp.setFont(m_fontControls);
+		buttonPanel.add(bttnHelp);
+
 		m_bttnDefaultConfig = new JButton(JAPMessages.getString("bttnDefaultConfig"));
 		m_bttnDefaultConfig.setFont(m_fontControls);
 		m_bttnDefaultConfig.addActionListener(new ActionListener()
@@ -279,9 +322,100 @@ final class JAPConf extends JDialog
 		buttonPanel.add(new JLabel("   "));
 		getRootPane().setDefaultButton(ok);
 
-		pContainer.add(m_Tabs, BorderLayout.CENTER);
-		pContainer.add(buttonPanel, BorderLayout.SOUTH);
+
 //				container.add(new JLabel(new ImageIcon(m_Controller.JAPICONFN)), BorderLayout.WEST);
+//new Config select...
+		DefaultMutableTreeNode rootNode=new DefaultMutableTreeNode("root");
+		DefaultTreeModel treeModel=new DefaultTreeModel(rootNode);
+		DefaultMutableTreeNode node=new DefaultMutableTreeNode(new TreeElement("Erscheinungsbild",UI_TAB));
+		rootNode.add(node);
+		if (loadPay)
+		{
+		node=new DefaultMutableTreeNode("Bezahlung");
+		rootNode.add(node);
+		}
+		node=new DefaultMutableTreeNode(new TreeElement("JAP-Update",UPDATE_TAB));
+		rootNode.add(node);
+		DefaultMutableTreeNode nodeNet=new DefaultMutableTreeNode("Netz");
+		rootNode.add(nodeNet);
+		DefaultMutableTreeNode n2=new DefaultMutableTreeNode(new TreeElement("Listener",PORT_TAB));
+		nodeNet.add(n2);
+		n2=new DefaultMutableTreeNode(new TreeElement("Firewall",PROXY_TAB));
+		nodeNet.add(n2);
+		DefaultMutableTreeNode nodeAnon=new DefaultMutableTreeNode("Anonymität");
+		rootNode.add(nodeAnon);
+		n2=new DefaultMutableTreeNode(new TreeElement("InfoService",INFOSERVICE_TAB));
+		nodeAnon.add(n2);
+		n2=new DefaultMutableTreeNode(new TreeElement("Dienste",ANON_TAB));
+		nodeAnon.add(n2);
+		n2=new DefaultMutableTreeNode(new TreeElement("Blockungsresistenz",FORWARD_TAB));
+		nodeAnon.add(n2);
+		node=new DefaultMutableTreeNode(new TreeElement("Zertifikate",CERT_TAB));
+		rootNode.add(node);
+		node=new DefaultMutableTreeNode(new TreeElement("Debugging",DEBUG_TAB));
+		rootNode.add(node);
+		DefaultTreeCellRenderer renderer=new DefaultTreeCellRenderer();
+		renderer.setClosedIcon(JAPUtil.loadImageIcon("arrow.gif", true));
+		renderer.setOpenIcon(JAPUtil.loadImageIcon("arrow90.gif", true));
+		renderer.setLeafIcon(null);
+		JTree tree=new JTree(treeModel);
+		TreeSelectionModel sm=new DefaultTreeSelectionModel(){
+			public void  setSelectionPath(TreePath t)
+				{
+					if(((TreeNode)t.getLastPathComponent()).isLeaf())
+						super.setSelectionPath(t);
+					//return false;
+				}
+		};
+
+		sm.setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
+		tree.setSelectionModel(sm);
+		tree.setRootVisible(false);
+		tree.setEditable(false);
+		tree.setCellRenderer(renderer);
+		tree.setBorder(new CompoundBorder(LineBorder.createBlackLineBorder(),new EmptyBorder(5,5,5,5)));
+		tree.addTreeSelectionListener(new TreeSelectionListener()
+									  {
+			public void valueChanged(TreeSelectionEvent e)
+			{
+				if(e.isAddedPath())
+				{
+					DefaultMutableTreeNode n=(DefaultMutableTreeNode)e.getPath().getLastPathComponent();
+					m_TabsLayout.show(m_Tabs,((TreeElement)n.getUserObject()).getValue());
+				}
+			}
+		});
+		tree.expandPath(new TreePath(nodeNet.getPath()));
+		tree.expandPath(new TreePath(nodeAnon.getPath()));
+		tree.setSelectionRow(0);
+		tree.addTreeWillExpandListener(new TreeWillExpandListener(){
+			public void treeWillCollapse(TreeExpansionEvent event) throws ExpandVetoException
+			{
+				throw new ExpandVetoException(event);
+			}
+
+			public void treeWillExpand(TreeExpansionEvent event)
+			{
+			}
+		});
+
+		GridBagConstraints c=new GridBagConstraints();
+		c.weighty=1;
+		c.weightx=0;
+		c.insets=new Insets(20,10,10,10);
+		c.fill=GridBagConstraints.VERTICAL;
+		pContainer.add(tree,c);
+		c.gridx=1;
+		c.fill=GridBagConstraints.BOTH;
+		pContainer.add(m_Tabs,c);
+		c.gridx=0;
+		c.gridwidth=2;
+		c.weightx=1;
+		c.weighty=0;
+		c.fill=GridBagConstraints.HORIZONTAL;
+		c.insets=new Insets(0,10,10,10);
+		pContainer.add(buttonPanel,c);
+
 		getContentPane().add(pContainer);
 		updateValues();
 		// largest tab to front
@@ -548,11 +682,11 @@ final class JAPConf extends JDialog
 		p.setLayout(new BorderLayout());
 
 		// Panel for Look and Feel Options
-		JPanel p1 = new JPanel();
-		p1.setLayout(new GridLayout(2, 2));
-		p1.setBorder(new TitledBorder(JAPMessages.getString("settingsLookAndFeelBorder")));
-		p1.add(new JLabel(JAPMessages.getString("settingsLookAndFeel")));
-		JComboBox c = new JComboBox();
+		//JPanel p1 = new JPanel();
+		//p1.setLayout(new GridLayout(2, 2));
+		//p1.setBorder(new TitledBorder(JAPMessages.getString("settingsLookAndFeelBorder")));
+		//p1.add(new JLabel(JAPMessages.getString("settingsLookAndFeel")));
+		/*JComboBox c = new JComboBox();
 		LookAndFeelInfo[] lf = UIManager.getInstalledLookAndFeels();
 		String currentLf = UIManager.getLookAndFeel().getClass().getName();
 		// add menu items
@@ -597,9 +731,9 @@ final class JAPConf extends JDialog
 				}
 			}
 		});
-		p1.add(c);
-		p1.add(new JLabel(JAPMessages.getString("settingsLanguage")));
-		m_comboLanguage = new JComboBox();
+		p1.add(c);*/
+		//p1.add(new JLabel(JAPMessages.getString("settingsLanguage")));
+		/*m_comboLanguage = new JComboBox();
 		m_comboLanguage.addItem("Deutsch");
 		m_comboLanguage.addItem("English");
 		m_comboLanguage.addItem("Fran\u00E7ais");
@@ -622,7 +756,7 @@ final class JAPConf extends JDialog
 		});
 
 		p1.add(m_comboLanguage);
-
+*/
 		// Panel for Misc Options
 		JPanel p2 = new JPanel();
 		p2.setLayout(new BorderLayout());
@@ -666,7 +800,7 @@ final class JAPConf extends JDialog
 		});
 
 		m_cbCertCheckDisabled = new JCheckBox("Disable check of certificates");
-		m_cbSaveWindowPositions = new JCheckBox("Remember Location of JAP");
+		//m_cbSaveWindowPositions = new JCheckBox("Remember Location of JAP");
 		JPanel p22 = new JPanel();
 		GridBagLayout gb = new GridBagLayout();
 		p22.setLayout(gb);
@@ -675,24 +809,24 @@ final class JAPConf extends JDialog
 		//p22.add(bttnPing);
 		//////////////////////////////////////////////////////////////////
 		//Einfug
-		JButton testButton = new JButton("Update");
-		testButton.addActionListener(new ActionListener()
-		{
-			public void actionPerformed(ActionEvent e)
-			{
-				Cursor c1 = getCursor();
-				setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-				cancelPressed();
-				update = new JAPUpdate();
+		//JButton testButton = new JButton("Update");
+		//testButton.addActionListener(new ActionListener()
+		//{
+	//		public void actionPerformed(ActionEvent e)
+	//		{
+	//			Cursor c1 = getCursor();
+	//			setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+	//			cancelPressed();
+	//			update = new JAPUpdate();
 //  if (update == null){
 
 				//         }//fi
 				//updateValues();
-				setCursor(c1);
-			}
-		});
-		testButton.setVisible(true);
-		testButton.setEnabled(true);
+	//			setCursor(c1);
+	//		}
+	//	});
+	//	testButton.setVisible(true);
+	//	testButton.setEnabled(true);
 		lc.gridx = 0;
 		lc.gridy = 0;
 		lc.gridheight = 1;
@@ -701,8 +835,8 @@ final class JAPConf extends JDialog
 		lc.fill = lc.HORIZONTAL;
 		lc.weightx = 1;
 		lc.weighty = 1;
-		gb.setConstraints(testButton, lc);
-		p22.add(testButton);
+		//gb.setConstraints(testButton, lc);
+		//p22.add(testButton);
 		lc.gridy++;
 		//////////////////////////////////////////////////////////////////
 		gb.setConstraints(bttnMonitor, lc);
@@ -720,8 +854,8 @@ final class JAPConf extends JDialog
 		gb.setConstraints(m_sliderDummyTrafficIntervall, lc);
 		p22.add(m_sliderDummyTrafficIntervall);
 		lc.gridy++;
-		gb.setConstraints(m_cbSaveWindowPositions, lc);
-		p22.add(m_cbSaveWindowPositions);
+		//gb.setConstraints(m_cbSaveWindowPositions, lc);
+		//p22.add(m_cbSaveWindowPositions);
 		lc.gridy++;
 		gb.setConstraints(m_cbCertCheckDisabled, lc);
 		p22.add(m_cbCertCheckDisabled);
@@ -784,7 +918,7 @@ final class JAPConf extends JDialog
 		p3.add(p32);
 
 		JPanel pp = new JPanel(new BorderLayout());
-		pp.add(p1, BorderLayout.NORTH);
+		//pp.add(p1, BorderLayout.NORTH);
 		pp.add(p2, BorderLayout.CENTER);
 
 		p.add(p3, BorderLayout.WEST);
@@ -810,6 +944,14 @@ final class JAPConf extends JDialog
 	{
 		JOptionPane.showMessageDialog(japConfInstance, msg, JAPMessages.getString("ERROR"),
 									  JOptionPane.ERROR_MESSAGE);
+	}
+
+	/**Shows a Dialog with some info
+	 */
+	public static void showInfo(String msg)
+	{
+		JOptionPane.showMessageDialog(japConfInstance, msg, JAPMessages.getString("information"),
+									  JOptionPane.INFORMATION_MESSAGE);
 	}
 
 	/** Checks if all Input in all Fiels make sense. Displays InfoBoxes about what is wrong.
@@ -958,20 +1100,6 @@ final class JAPConf extends JDialog
 			(m_cbDebugMisc.isSelected() ? LogType.MISC : LogType.NUL)
 			);
 		JAPDebug.getInstance().setLogLevel(m_sliderDebugLevel.getValue());
-		LogHolder.log(LogLevel.DEBUG, LogType.GUI,
-					  "m_comboLanguage: " + Integer.toString(m_comboLanguage.getSelectedIndex()));
-		if (m_comboLanguage.getSelectedIndex() == 0)
-		{
-			m_Controller.setLocale(Locale.GERMAN);
-		}
-		else if (m_comboLanguage.getSelectedIndex() == 1)
-		{
-			m_Controller.setLocale(Locale.ENGLISH);
-		}
-		else
-		{
-			m_Controller.setLocale(Locale.FRENCH);
-		}
 		if (m_cbDummyTraffic.isSelected())
 		{
 			m_Controller.setDummyTraffic(m_sliderDummyTrafficIntervall.getValue() * 1000);
@@ -1004,7 +1132,7 @@ final class JAPConf extends JDialog
 		//Cert seetings
 		m_Controller.setCertCheckDisabled(m_cbCertCheckDisabled.isSelected());
 
-		m_Controller.setSaveMainWindowPosition(m_cbSaveWindowPositions.isSelected());
+//		m_Controller.setSaveMainWindowPosition(m_cbSaveWindowPositions.isSelected());
 
 		// force notifying the observers set the right server name
 		m_Controller.notifyJAPObservers(); // this should be the last line of okPressed() !!!
@@ -1019,15 +1147,15 @@ final class JAPConf extends JDialog
 	 * @param a_selectedCard The card to bring to the foreground. See the TAB constants in this
 	 *                       class.
 	 */
-	public void selectCard(int a_selectedCard)
+	public void selectCard(String a_strSelectedCard)
 	{
 		/* try to get the specified card from the tab order table */
-		Integer cardIndex = (Integer) (m_tabOrder.get(new Integer(a_selectedCard)));
-		if (cardIndex != null)
-		{
+		//Integer cardIndex = (Integer) (m_tabOrder.get(new Integer(a_selectedCard)));
+		//if (cardIndex != null)
+		//{
 			/* a card with the specified symoblic name is available in the hashtable */
-			m_Tabs.setSelectedIndex(cardIndex.intValue());
-		}
+		//	m_Tabs.setSelectedIndex(cardIndex.intValue());
+		//}
 	}
 
 	public void localeChanged()
@@ -1039,8 +1167,8 @@ final class JAPConf extends JDialog
 			AbstractJAPConfModule currentModule = (AbstractJAPConfModule) (confModules.nextElement());
 			try
 			{
-				m_Tabs.setTitleAt(m_Tabs.indexOfComponent(currentModule.getRootPanel()),
-								  currentModule.getTabTitle());
+//				m_Tabs.setTitleAt(m_Tabs.indexOfComponent(currentModule.getRootPanel()),
+//								  currentModule.getTabTitle());
 			}
 			catch (Exception e)
 			{
@@ -1049,7 +1177,7 @@ final class JAPConf extends JDialog
 		}
 
 		setTitle(JAPMessages.getString("settingsDialog"));
-		m_Tabs.setTitleAt( ( (Integer) (m_tabOrder.get(new Integer(PORT_TAB)))).intValue(),
+/*		m_Tabs.setTitleAt( ( (Integer) (m_tabOrder.get(new Integer(PORT_TAB)))).intValue(),
 						  JAPMessages.getString("confListenerTab"));
 		m_Tabs.setTitleAt( ( (Integer) (m_tabOrder.get(new Integer(PROXY_TAB)))).intValue(),
 						  JAPMessages.getString("confProxyTab"));
@@ -1060,7 +1188,7 @@ final class JAPConf extends JDialog
 			m_Tabs.setTitleAt( ( (Integer) (m_tabOrder.get(new Integer(MISC_TAB)))).intValue(),
 							  JAPMessages.getString("confMiscTab"));
 		}
-		m_bttnDefaultConfig.setText(JAPMessages.getString("bttnDefaultConfig"));
+	*/	m_bttnDefaultConfig.setText(JAPMessages.getString("bttnDefaultConfig"));
 		m_bttnCancel.setText(JAPMessages.getString("cancelButton"));
 		//Port Panel
 		m_labelPortnumber1.setText(JAPMessages.getString("settingsPort1"));
@@ -1112,20 +1240,6 @@ final class JAPConf extends JDialog
 		m_cbDebugThread.setSelected( ( ( (JAPDebug.getInstance().getLogType() & LogType.THREAD) != 0) ? true : false));
 		m_cbDebugMisc.setSelected( ( ( (JAPDebug.getInstance().getLogType() & LogType.MISC) != 0) ? true : false));
 		m_sliderDebugLevel.setValue(JAPDebug.getInstance().getLogLevel());
-		m_bIgnoreComboLanguageEvents = true;
-		if (m_Controller.getLocale().equals(Locale.ENGLISH))
-		{
-			m_comboLanguage.setSelectedIndex(1);
-		}
-		else if (m_Controller.getLocale().equals(Locale.FRENCH))
-		{
-			m_comboLanguage.setSelectedIndex(2);
-		}
-		else
-		{
-			m_comboLanguage.setSelectedIndex(0);
-		}
-		m_bIgnoreComboLanguageEvents = false;
 		// listener tab
 		m_tfListenerPortNumber.setInt(JAPModel.getHttpListenerPortNumber());
 		m_cbListenerIsLocal.setSelected(JAPModel.getHttpListenerIsLocal());
@@ -1154,7 +1268,7 @@ final class JAPConf extends JDialog
 		m_cbProxyAuthentication.setSelected(JAPModel.getUseFirewallAuthorization());
 		//cert tab
 		m_cbCertCheckDisabled.setSelected(JAPModel.isCertCheckDisabled());
-		m_cbSaveWindowPositions.setSelected(JAPModel.getSaveMainWindowPosition());
+//		m_cbSaveWindowPositions.setSelected(JAPModel.getSaveMainWindowPosition());
 	}
 
 }

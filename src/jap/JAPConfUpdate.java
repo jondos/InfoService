@@ -26,7 +26,7 @@
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
 
-package update;
+package jap;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -53,10 +53,11 @@ import jap.JAPConstants;
 import jap.JAPController;
 import jap.JAPMessages;
 import jap.JAPUtil;
+import update.*;
 
-public class JAPUpdate implements ActionListener, ItemListener, Runnable
+class JAPConfUpdate extends AbstractJAPConfModule implements ActionListener, ItemListener, Runnable
 {
-	private JDialog m_Dialog;
+	//private JDialog m_Dialog;
 	private JTextArea m_taInfo;
 	private JLabel m_labelVersion, m_labelDate;
 
@@ -69,16 +70,21 @@ public class JAPUpdate implements ActionListener, ItemListener, Runnable
 	private JAPVersionInfo m_releaseVersion;
 	private DateFormat m_DateFormat;
 
-	private final String COMMAND_ABORT = "ABORT";
+	//private final String COMMAND_ABORT = "ABORT";
 	private final String COMMAND_UPGRADE = "UPGRADE";
-	private final String COMMAND_HELP = "HELP";
+	//private final String COMMAND_HELP = "HELP";
 
-	public JAPUpdate()
+	public JAPConfUpdate()
 	{
-		m_Dialog = new JDialog(JAPController.getView(), "JAP Update", true);
+		super(null);
+	}
+
+	public void recreateRootPanel()
+{
+	JPanel panelRoot = getRootPanel();
 
 		GridBagLayout gridBagFrame = new GridBagLayout();
-		m_Dialog.getContentPane().setLayout(gridBagFrame);
+		panelRoot.setLayout(gridBagFrame);
 
 		//The Buttons
 		JPanel buttonPanel = new JPanel();
@@ -91,12 +97,6 @@ public class JAPUpdate implements ActionListener, ItemListener, Runnable
 		cButtons.fill = GridBagConstraints.NONE;
 		cButtons.anchor = GridBagConstraints.WEST;
 
-		JButton bttnHelp = new JButton(JAPMessages.getString("updateM_bttnHelp"));
-		bttnHelp.addActionListener(this);
-		bttnHelp.setActionCommand(COMMAND_HELP);
-		gridBagPanel.setConstraints(bttnHelp, cButtons);
-		buttonPanel.add(bttnHelp);
-
 		m_bttnUpgrade = new JButton("Upgrade");
 		m_bttnUpgrade.addActionListener(this);
 		m_bttnUpgrade.setActionCommand(COMMAND_UPGRADE);
@@ -104,13 +104,6 @@ public class JAPUpdate implements ActionListener, ItemListener, Runnable
 		gridBagPanel.setConstraints(m_bttnUpgrade, cButtons);
 		m_bttnUpgrade.setEnabled(false);
 		buttonPanel.add(m_bttnUpgrade);
-
-		JButton bttnAbort = new JButton(JAPMessages.getString("updateM_bttnCancel"));
-		bttnAbort.addActionListener(this);
-		bttnAbort.setActionCommand(COMMAND_ABORT);
-		cButtons.anchor = GridBagConstraints.EAST;
-		gridBagPanel.setConstraints(bttnAbort, cButtons);
-		buttonPanel.add(bttnAbort);
 
 		//The Installed-Panel
 		gridBagPanel = new GridBagLayout();
@@ -250,13 +243,13 @@ public class JAPUpdate implements ActionListener, ItemListener, Runnable
 		cFrame.anchor = GridBagConstraints.NORTHWEST;
 		cFrame.fill = GridBagConstraints.BOTH;
 		gridBagFrame.setConstraints(installedPanel, cFrame);
-		m_Dialog.getContentPane().add(installedPanel);
+		panelRoot.add(installedPanel);
 
 		cFrame.gridx = 1;
 		cFrame.gridy = 0;
 		cFrame.anchor = GridBagConstraints.NORTHEAST;
 		gridBagFrame.setConstraints(latestPanel, cFrame);
-		m_Dialog.getContentPane().add(latestPanel);
+		panelRoot.add(latestPanel);
 
 		cFrame.gridx = 0;
 		cFrame.gridy = 1;
@@ -266,7 +259,7 @@ public class JAPUpdate implements ActionListener, ItemListener, Runnable
 		cFrame.weightx = 1.0;
 		cFrame.weighty = 1.0;
 		gridBagFrame.setConstraints(infoPanel, cFrame);
-		m_Dialog.getContentPane().add(infoPanel);
+		panelRoot.add(infoPanel);
 
 		cFrame.gridx = 0;
 		cFrame.gridy = 2;
@@ -274,13 +267,9 @@ public class JAPUpdate implements ActionListener, ItemListener, Runnable
 		cFrame.fill = GridBagConstraints.HORIZONTAL;
 		cFrame.anchor = GridBagConstraints.SOUTH;
 		gridBagFrame.setConstraints(buttonPanel, cFrame);
-		m_Dialog.getContentPane().add(buttonPanel);
-		m_Dialog.pack();
-		JAPUtil.centerFrame(m_Dialog);
-		m_Dialog.setResizable(true);
+		panelRoot.add(buttonPanel);
 		m_threadGetVersionInfo = new Thread(this);
 		m_threadGetVersionInfo.start();
-		m_Dialog.show();
 	}
 
 	public void run()
@@ -314,7 +303,7 @@ public class JAPUpdate implements ActionListener, ItemListener, Runnable
 
 	public void actionPerformed(ActionEvent e)
 	{
-		if (e.getActionCommand().equals(COMMAND_ABORT))
+if (e.getActionCommand().equals(COMMAND_UPGRADE))
 		{
 			try
 			{
@@ -322,17 +311,6 @@ public class JAPUpdate implements ActionListener, ItemListener, Runnable
 			}
 			catch (Exception ex)
 			{}
-			m_Dialog.dispose();
-		}
-		else if (e.getActionCommand().equals(COMMAND_UPGRADE))
-		{
-			try
-			{
-				m_threadGetVersionInfo.join();
-			}
-			catch (Exception ex)
-			{}
-			m_Dialog.dispose();
 			// User' wants to Update --> give the version Info and the jnlp-file
 			if (m_comboType.getSelectedIndex() == 0)
 			{
@@ -375,4 +353,10 @@ public class JAPUpdate implements ActionListener, ItemListener, Runnable
 			}
 		}
 	}
+
+	public String getTabTitle()
+	{
+		return JAPMessages.getString("confTabUpdate");
+	}
+
 }
