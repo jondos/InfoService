@@ -34,12 +34,12 @@ import javax.swing.plaf.basic.BasicProgressBarUI;
 import anon.JAPAnonServiceListener;
 
 final class JAPView extends JFrame implements ActionListener, JAPObserver {
-	
+
 	public class MyProgressBarUI extends BasicProgressBarUI {
 		public void paint(Graphics g, JComponent c) {
 			JProgressBar pb = (JProgressBar) c;
 			int dx     = 13;
-			int max    = pb.getMaximum(); 
+			int max    = pb.getMaximum();
 			int anz    = pb.getWidth()/dx;
 			int value  = pb.getValue()*anz/max;
 			int x      = 0;
@@ -58,9 +58,9 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 /*
 		public void update(Graphics g, JComponent c) {
 		}
-*/		
+*/
 	}
-	
+
 	private JAPModel 			model;
 	private JLabel				meterLabel;
 	private JLabel	 			nameLabel;
@@ -87,7 +87,7 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 	private boolean m_bIsIconified;
 	private String m_Title;
 	private final static boolean PROGRESSBARBORDER = true;
-	
+
 	//private int diff, avg, last=-1, sum=0, cnt=0; // helper variables for calculating traffic situation
 
 	public JAPView (String s)
@@ -249,7 +249,7 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 		ownTrafficPanel.add(ownTrafficBytesLabel);
 
 		ano1CheckBox = new JCheckBox(model.getString("confActivateCheckBox"));
-//		ano1CheckBox.setForeground(Color.red);		
+//		ano1CheckBox.setForeground(Color.red);
 		ano1CheckBox.setMnemonic(model.getString("confActivateCheckBoxMn").charAt(0));
 		ano1CheckBox.addActionListener(this);
 
@@ -433,7 +433,7 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 		return mainPanel;
 	}
 
-	/** 
+	/**
 	 * Used to disable activation on JAP
 	 * Example: Activation of listener failed
 	 *          --> disable activation checkboxes
@@ -480,7 +480,7 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 //					model.setJAPViewIconified();
 				}
 				else if (event.getSource() == confB)
-					showConfigDialog();					
+					showConfigDialog();
 				else if (event.getSource() == portB)
 					showConfigDialog(JAPConf.PORT_TAB);
 				else if (event.getSource() == httpB)
@@ -510,10 +510,10 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 				helpWindow.show();
 			}
 
-	private void showConfigDialog() { 
+	private void showConfigDialog() {
 		showConfigDialog(-1);
 	}
-	
+
 	private void showConfigDialog(int card) {
 		if(configDialog==null)
 			{
@@ -522,7 +522,7 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 				configDialog=new JAPConf(this);
 				setCursor(c);
 			}
-		if (card!=-1) 
+		if (card!=-1)
 			configDialog.selectCard(card);
 		configDialog.updateValues();
 		configDialog.show();
