@@ -323,7 +323,7 @@ END PROTO1*/
 				public boolean bIsSuspended;
 			};
 
-		JAPMuxSocket()
+		public JAPMuxSocket()
 			{
 				lastChannelId=0;
 				oSocketList=new Hashtable();
