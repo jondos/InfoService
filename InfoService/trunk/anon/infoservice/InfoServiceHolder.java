@@ -71,6 +71,12 @@ public class InfoServiceHolder
 	private static final int GET_JAPVERSIONINFO = 6;
 
 	/**
+   * Function number for fetchInformation() - getTorNodesList()
+   */
+  private static final int GET_TORNODESLIST = 7;
+  
+
+  /**
 	 * Stores the instance of InfoServiceHolder (Singleton).
 	 */
 	private static InfoServiceHolder infoServiceHolderInstance = null;
@@ -322,6 +328,9 @@ public class InfoServiceHolder
 					result = currentInfoService.getJAPVersionInfo( ( (Integer) (arguments.elementAt(0))).
 						intValue());
 				}
+        if (functionNumber == GET_TORNODESLIST) {
+          result = currentInfoService.getTorNodesList();
+        }
 				/* no error occured -> success -> update the prefered infoservice and exit */
 				InfoService preferedInfoService = getPreferedInfoService();
 				if (preferedInfoService != null)
@@ -509,5 +518,25 @@ public class InfoServiceHolder
 			return null;
 		}
 	}
+
+  /**
+   * Get the list with the tor nodes from the infoservice. If we can't get a the information from
+   * prefered infoservice, another known infoservice is asked. If we can't get the information
+   * from any infoservice, null is returned.
+   *
+   * @return The raw tor nodes list as it is distributed by the tor directory servers. 
+   */
+  public String getTorNodesList() {
+    try
+    {
+      return (String) (fetchInformation(GET_TORNODESLIST, null));
+    }
+    catch (Exception e)
+    {
+      LogHolder.log(LogLevel.ERR, LogType.NET,
+              "InfoServiceHolder: getTorNodesList: No InfoService with the needed information available.");
+      return null;
+    }
+  }
 
 }

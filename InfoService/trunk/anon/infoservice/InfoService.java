@@ -44,6 +44,7 @@ import anon.crypto.JAPSignature;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.util.XMLUtil;
 
 /**
  * Holds the information for an infoservice.
@@ -603,6 +604,29 @@ public class InfoService extends DatabaseEntry
 			doc = getXmlDocument("/japDevelopment.jnlp");
 		}
 		return (new JAPVersionInfo(doc, japVersionType));
+	}
+
+	/**
+	 * Get the list with the tor nodes from the infoservice. If we can't get a connection with the
+	 * infoservice null is returned .
+	 *
+	 * @return The raw tor nodes list as it is distributed by the tor directory servers or null if it
+	 * could not be retrieved.
+	 */
+	public String getTorNodesList()
+	{
+		try
+		{
+			Document doc = getXmlDocument("/tornodes");
+			Element elemRoot = doc.getDocumentElement();
+			if (!elemRoot.getNodeName().equals("TorNodesList"))
+				return null;
+			return XMLUtil.parseNodeString(elemRoot,null);
+		}
+		catch (Throwable t)
+		{
+			return null;
+		}
 	}
 
 	/**
