@@ -286,11 +286,11 @@ public class Tor implements /*Runnable,*/ AnonService
 					ord = (ORDescription) enumer.nextElement();
 					if(m_allowedExitNodeNames!=null&&!m_allowedExitNodeNames.contains(ord.getName()))
 					{
-						possibleOrs.remove(ord);
+						possibleOrs.removeElement(ord);
 					}
 					else if (addr != null && !ord.getAcl().isAllowed(addr, port))
 					{
-						possibleOrs.remove(ord);
+						possibleOrs.removeElement(ord);
 					}
 					else if (!ord.getSoftware().startsWith("Tor 0.0.7"))
 					{
@@ -306,7 +306,7 @@ public class Tor implements /*Runnable,*/ AnonService
 						ord = (ORDescription) enumer.nextElement();
 						if (ord.getSoftware().startsWith("Tor 0.0.7"))
 						{
-							possibleOrs.remove(ord);
+							possibleOrs.removeElement(ord);
 						}
 					}
 				}
