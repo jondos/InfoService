@@ -32,6 +32,7 @@
 
 package anon.crypto;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -39,11 +40,9 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.math.BigInteger;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
-import java.security.SignatureException;
 import java.util.Date;
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.BERInputStream;
@@ -58,9 +57,8 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.Text;
-import org.w3c.dom.*;
 import anon.util.Base64;
-import java.io.*;
+
 /**
  * A certificate class.
  *
@@ -75,7 +73,8 @@ final public class JAPCertificate
 	{
 	}
 
-	public static JAPCertificate getInstance(X509CertificateStructure x509cert) throws JAPCertificateException
+	public static JAPCertificate getInstance(X509CertificateStructure x509cert) throws
+		JAPCertificateException
 	{
 		try
 		{
@@ -84,13 +83,13 @@ final public class JAPCertificate
 			{
 				r_japcert.m_PubKey = new MyDSAPublicKey(x509cert.getSubjectPublicKeyInfo());
 			}
-			catch(Exception e)
+			catch (Exception e)
 			{
 				try
 				{
 					r_japcert.m_PubKey = new MyRSAPublicKey(x509cert.getSubjectPublicKeyInfo());
 				}
-				catch(Exception e1)
+				catch (Exception e1)
 				{
 					throw new JAPCertificateException();
 				}
@@ -125,10 +124,9 @@ final public class JAPCertificate
 		}
 	}
 
-
 	/** Creates a certificate instance by using a XML Node as input.
 	 *
-	 * @param a_NodeRoot X509Certificate XML Node
+	 * @param a_NodeRoot <X509Certificate> XML Node
 	 * @return Certificate
 	 */
 	public static JAPCertificate getInstance(Node a_NodeRoot) throws IOException
@@ -162,7 +160,7 @@ final public class JAPCertificate
 	{
 		if (a_file != null)
 		{
-			byte[] buff=null;
+			byte[] buff = null;
 			try
 			{
 				buff = new byte[ (int) a_file.length()];
@@ -173,44 +171,53 @@ final public class JAPCertificate
 			}
 			catch (JAPCertificateException e)
 			{
-       /* maybe the file is BASE64 encoded */
-        try {
-          /* data should already be in the buffer */
-          BufferedReader in = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(buff)));
-          StringBuffer sbuf = new StringBuffer();
-          String line = in.readLine();
-          while (line != null) {
-            if (line.equals("-----BEGIN CERTIFICATE-----") || line.equals("-----BEGIN X509 CERTIFICATE-----")) {
-              break;
-            }
-            line = in.readLine();
-          }
-          line = in.readLine();
-          while (line != null) {
-            if (line.equals("-----END CERTIFICATE-----") || line.equals("-----END X509 CERTIFICATE-----")) {
-              break;
-            }
-            sbuf.append(line);
-            line = in.readLine();
-          }
-          return JAPCertificate.getInstance(Base64.decode(sbuf.toString()));
-        }
-        catch (Exception e2) {
-          /* there is another problem */
-          throw new JAPCertificateException();
-        }
-      }
-      catch (FileNotFoundException e)
-      {
-        new FileNotFoundException("Certificate file not found!");
-      }
-      catch (Exception e)
-      {
-        new Exception("Error while processing certificate !");
-      }
-    }
-    return null;
-  }
+				/* maybe the file is BASE64 encoded */
+				try
+				{
+					/* data should already be in the buffer */
+					BufferedReader in = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(
+						buff)));
+					StringBuffer sbuf = new StringBuffer();
+					String line = in.readLine();
+					while (line != null)
+					{
+						if (line.equals("-----BEGIN CERTIFICATE-----") ||
+							line.equals("-----BEGIN X509 CERTIFICATE-----"))
+						{
+							break;
+						}
+						line = in.readLine();
+					}
+					line = in.readLine();
+					while (line != null)
+					{
+						if (line.equals("-----END CERTIFICATE-----") ||
+							line.equals("-----END X509 CERTIFICATE-----"))
+						{
+							break;
+						}
+						sbuf.append(line);
+						line = in.readLine();
+					}
+					return JAPCertificate.getInstance(Base64.decode(sbuf.toString()));
+				}
+				catch (Exception e2)
+				{
+					/* there is another problem */
+					throw new JAPCertificateException();
+				}
+			}
+			catch (FileNotFoundException e)
+			{
+				new FileNotFoundException("Certificate file not found!");
+			}
+			catch (Exception e)
+			{
+				new Exception("Error while processing certificate !");
+			}
+		}
+		return null;
+	}
 
 	/** Creates a certificate instance by using a file name.
 	 *
@@ -243,15 +250,15 @@ final public class JAPCertificate
 		}
 	}
 
-/*
-	public static class IllegalCertificateException extends RuntimeException
-	{
-		public IllegalCertificateException(String str)
-		{
-			super(str);
-		}
-	};
-*/
+	/*
+	 public static class IllegalCertificateException extends RuntimeException
+	 {
+	  public IllegalCertificateException(String str)
+	  {
+	   super(str);
+	  }
+	 };
+	 */
 
 	/** Returns the start date of the certificate.
 	 *
@@ -369,7 +376,7 @@ final public class JAPCertificate
 		{
 			return null;
 		}
-		return Base64.encode(bArrOStream.toByteArray(),true).getBytes();
+		return Base64.encode(bArrOStream.toByteArray(), true).getBytes();
 	}
 
 	/** Checks if the certificate starting date is not before a given date and
@@ -406,8 +413,7 @@ final public class JAPCertificate
 	 * @return true if it could be verified
 	 * @return false if that's not the case
 	 */
-	public boolean verify(PublicKey a_pubkey) throws NoSuchAlgorithmException,
-		InvalidKeyException, SignatureException, JAPCertificateException
+	public boolean verify(PublicKey a_pubkey)
 	{
 		try
 		{
@@ -421,7 +427,7 @@ final public class JAPCertificate
 			byte[] bArrSigToVerify = this.getSignature().getBytes();
 			return sig.verify(bArrOStream.toByteArray(), bArrSigToVerify);
 		}
-		catch (IOException e)
+		catch (Throwable e)
 		{
 		}
 		return false;
@@ -442,9 +448,8 @@ final public class JAPCertificate
 	{
 		Element elemX509Cert = a_doc.createElement("X509Certificate");
 		Text t = a_doc.createTextNode(new String(getEncoded()));
-			elemX509Cert.setAttribute("xml:space", "preserve");
-			elemX509Cert.appendChild(t);
-
+		elemX509Cert.setAttribute("xml:space", "preserve");
+		elemX509Cert.appendChild(t);
 
 		return elemX509Cert;
 	}
