@@ -557,20 +557,18 @@ final class JAPConf extends JDialog
 			//--------------
 			if (anonsslportnumberTextField.getText().trim().equals("")) {
 				;
-			}
-			else
-			try {
-				i=Integer.parseInt(anonsslportnumberTextField.getText().trim());
-			} 
-			catch(Exception e) {
-				i=-1;
-			}
-			if(!JAPUtil.isPort(i))
-				{
+			} else {
+				try {
+					i=Integer.parseInt(anonsslportnumberTextField.getText().trim());
+				} 
+				catch(Exception e) {
+					i=-1;
+				}
+				if(!JAPUtil.isPort(i)) {
 					showError(model.getString("errorAnonServicePortWrong"));
 					return false;
 				}
-
+			}
 			//checking Listener Port Number
 			try
 				{
@@ -680,7 +678,10 @@ final class JAPConf extends JDialog
 		// anon tab
 		anonhostTextField.setText(model.anonHostName);
 		anonportnumberTextField.setText(String.valueOf(model.anonPortNumber));
-		anonsslportnumberTextField.setText(String.valueOf(model.anonSSLPortNumber));
+		if (model.anonSSLPortNumber==-1)
+			anonsslportnumberTextField.setText("");
+		else
+			anonsslportnumberTextField.setText(String.valueOf(model.anonSSLPortNumber));
 		select.setSelectedIndex(0);
 		autoConnectCheckBox.setSelected(model.autoConnect);
 		startupMinimizeCheckBox.setSelected(model.getMinimizeOnStartup());

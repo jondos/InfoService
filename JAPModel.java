@@ -58,25 +58,25 @@ public final class JAPModel implements JAPAnonServiceListener{
 
 	static final String aktVersion = "00.00.023"; // Version of JAP
 
-	private int      portNumber        = 4001;
-	private boolean  mblistenerIsLocal = true;  // indicates whether the Listener serves for localhost only or not
+	private int      portNumber            = 4001;
+	private boolean  mblistenerIsLocal     = true;  // indicates whether the Listener serves for localhost only or not
 	//private int      runningPortNumber = 0;      // the port where proxy listens
-	private boolean  isRunningListener= false;  // true if a listener is running
-	private  String   proxyHostName     = "ikt.inf.tu-dresden.de";
-	private  int      proxyPortNumber   = 80;
-	private boolean  mbUseProxy         = false;  // indicates whether JAP connects via a proxy or directly
-	private String   infoServiceHostName      = "infoservice.inf.tu-dresden.de";
-	private int      infoServicePortNumber    = 6543;
-	public  String   anonserviceName      = "Default Mix Cascade";
-	public  String   anonHostName      = "mix.inf.tu-dresden.de";
-	public  int      anonPortNumber    = 6544;
-	public  int      anonSSLPortNumber = 443;
-	public  boolean  autoConnect       = false;  // autoconnect after program start
-	private boolean  mbMinimizeOnStartup =false; //true if programm should be started minimized...
+	private boolean  isRunningListener     = false;  // true if a listener is running
+	private  String  proxyHostName         = "ikt.inf.tu-dresden.de";
+	private  int     proxyPortNumber       = 80;
+	private boolean  mbUseProxy            = false;  // indicates whether JAP connects via a proxy or directly
+	private String   infoServiceHostName   = "infoservice.inf.tu-dresden.de";
+	private int      infoServicePortNumber = 6543;
+	public  String   anonserviceName       = "Default Mix Cascade";
+	public  String   anonHostName          = "mix.inf.tu-dresden.de";
+	public  int      anonPortNumber        = 6544;
+	public  int      anonSSLPortNumber     = 443;
+	public  boolean  autoConnect                 = false; // autoconnect after program start
+	private boolean  mbMinimizeOnStartup         = false; // true if programm should be started minimized...
+	public  boolean  canStartService             = false; // indicates if Anon service can be started
 	public  boolean  alreadyCheckedForNewVersion = false; // indicates if check for new version has already been done
-	public  boolean  canStartService   = false;  // indicates if Anon service can be started
-	private boolean  mbActCntMessageNotRemind = false;   // indicates if Warning message in setAnonMode has been deactivated for the session
-	private boolean  mbActCntMessageNeverRemind = false;   // indicates if Warning message in setAnonMode has been deactivated forever
+	private boolean  mbActCntMessageNotRemind    = false; // indicates if Warning message in setAnonMode has been deactivated for the session
+	private boolean  mbActCntMessageNeverRemind  = false; // indicates if Warning message in setAnonMode has been deactivated forever
 	public  String   status1           = "?";
 	public  String   status2           = " ";
 	private int      nrOfChannels      = 0;
@@ -86,9 +86,9 @@ public final class JAPModel implements JAPAnonServiceListener{
 	public int       trafficSituation  = -1;
 	public int       currentRisk       = -1;
 	public int       mixedPackets      = -1;
-	static private   JAPView        view         = null;
-	static private   JAPViewIconified        iconifiedView         = null;
-	static private   JAPInfoService mInfoService = null;
+	static private   JAPView           view          = null;
+	static private   JAPViewIconified  iconifiedView = null;
+	static private   JAPInfoService    mInfoService  = null;
 // 2000-08-01(HF): the following url is now defined in JAPMessages.properties:
 // usage: model.getString("infoURL")
 //static final String url_download_version       = "http://www.inf.tu-dresden.de/~hf2/anon/JAP/";
@@ -244,7 +244,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 	 * 	</Debug>
 	 *	</JAP>
 	 */
-	public void load() {
+	public synchronized void load() {
 		// Load default anon services
 		anonServerDatabase = new Vector();
 //		anonServerDatabase.addElement(new AnonServerDBEntry(anonHostName, anonPortNumber));
@@ -393,7 +393,8 @@ public final class JAPModel implements JAPAnonServiceListener{
 				}
 			((XmlDocument)doc).write(f);
 		}
-		catch(Exception e) {
+		catch(Exception ex) {
+			JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.MISC,"JAPModel:save() Exception: "+ex);
 			JAPDebug.out(JAPDebug.ERR,JAPDebug.MISC,"JAPModel:error saving configuration to "+XMLCONFFN);
 		}
 	}
@@ -409,9 +410,9 @@ public final class JAPModel implements JAPAnonServiceListener{
 								Object[] args={new Integer(portNumber)};
 								String msg=MessageFormat.format(model.getString("errorListenerPort"),args);
 								JOptionPane.showMessageDialog(model.getView(),
-																							msg,
-																							model.getString("errorListenerPortTitle"),
-																							JOptionPane.ERROR_MESSAGE);
+																msg,
+																model.getString("errorListenerPortTitle"),
+																JOptionPane.ERROR_MESSAGE);
 								JAPDebug.out(JAPDebug.EMERG,JAPDebug.NET,"Listener could not be started!");
 								model.getView().disableSetAnonMode();
 				}
@@ -447,6 +448,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 	public void setPortNumber (int p) {
 		portNumber = p;
 	}
+	
 	public int getPortNumber() {
 		return portNumber;
 	}
@@ -696,8 +698,8 @@ public final class JAPModel implements JAPAnonServiceListener{
 								if (!mbActCntMessageNotRemind)
 									{
 										ret=0;
-										ret= JOptionPane.showOptionDialog(view,
-																		message,
+										ret= JOptionPane.showOptionDialog(model.getView(),
+																		(Object)message,
 																		model.getString("disableActCntMessageTitle"),
 																		JOptionPane.DEFAULT_OPTION,
 																		JOptionPane.WARNING_MESSAGE,
@@ -832,7 +834,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 		System.exit(0);
 	}
 
-	public void aboutJAP() {
+	public void aboutJAP() { 
 		JOptionPane.showMessageDialog
 			(view,
 			 model.TITLE + "\n" +
@@ -843,7 +845,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 			  model.getString("version")+": "+model.aktVersion+"\n\n",
 				model.getString("aboutBox"),
 				JOptionPane.INFORMATION_MESSAGE
-			);
+			); 
 	}
 
 	/** Try to load all available MIX-Cascades form the InfoService...

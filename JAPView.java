@@ -43,6 +43,7 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 	private JLabel				proxyTextField;
 	private JLabel				infoServiceTextField;
 	private JLabel	 			anonTextField;
+	private JLabel              anonNameTextField;
 	private JButton				portB, httpB, isB, anonB, infoB, helpB, startB, quitB, iconifyB;
 	private JCheckBox			proxyCheckBox;
 	private JCheckBox			anonCheckBox;
@@ -225,15 +226,15 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 		meterPanel.add(meterLabel, BorderLayout.CENTER);
 		
 		JPanel detailsPanel = new JPanel();
-		detailsPanel.setLayout( new GridLayout(3,2,5,5) );
+		detailsPanel.setLayout( new GridLayout(2,2,5,5) );
 		detailsPanel.setBorder( new TitledBorder(model.getString("meterDetailsBorder")) );
 		nameLabel = new JLabel();
 		detailsPanel.add(new JLabel(model.getString("meterDetailsName")) );
 		detailsPanel.add(nameLabel);
 		detailsPanel.add(new JLabel(model.getString("meterDetailsUsers")) );
 		detailsPanel.add(userProgressBar);
-		detailsPanel.add(new JLabel(model.getString("meterDetailsTraffic")) );
-		detailsPanel.add(trafficProgressBar);
+//		detailsPanel.add(new JLabel(model.getString("meterDetailsTraffic")) );
+//		detailsPanel.add(trafficProgressBar);
 //		detailsPanel.add(new JLabel(model.getString("meterDetailsRisk")) );
 //		detailsPanel.add(protectionProgressBar);
 		
@@ -369,8 +370,17 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 		p43.add(Box.createRigidArea(new Dimension(5,0)) );
 		statusTextField2 = new JLabel("unknown");
 		p43.add(statusTextField2);
+		// Line 4
+		JPanel p44 = new JPanel();
+		p44.setLayout(new BoxLayout(p44, BoxLayout.X_AXIS) );
+		p44.add(Box.createRigidArea(new Dimension(10,0)) );
+		p44.add(new JLabel(model.getString("confAnonName")) );
+		p44.add(Box.createRigidArea(new Dimension(5,0)) );
+		anonNameTextField = new JLabel();
+		p44.add(anonNameTextField);
 		// add to activatePanel
 		activatePanel.add(p41);
+		activatePanel.add(p44);
 		activatePanel.add(p42);
 		activatePanel.add(p43);
 		// add to mainPanel
@@ -467,8 +477,8 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 		proxyTextField.setText(model.getProxyHost()+":"+String.valueOf(model.getProxyPort()));
 		infoServiceTextField.setText(model.getInfoServiceHost()+":"+String.valueOf(model.getInfoServicePort()));
 		anonCheckBox.setSelected(model.isAnonMode());
-		anonTextField.setText(model.anonHostName+":"+String.valueOf(model.anonPortNumber));
-		
+		anonTextField.setText(model.anonHostName+":"+String.valueOf(model.anonPortNumber)+((model.anonSSLPortNumber==-1)?"":":"+model.anonSSLPortNumber));
+		anonNameTextField.setText(model.anonserviceName);
 		statusTextField1.setText(model.status1);
 		statusTextField2.setText(model.status2);
 		
@@ -505,15 +515,17 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 				}
 				if (model.trafficSituation != -1) {
 					// Traffic Situation
+					if (model.trafficSituation>trafficProgressBar.getMaximum())
+							trafficProgressBar.setMaximum(model.trafficSituation);
 					trafficProgressBar.setValue(model.trafficSituation);
-					if      (model.trafficSituation < 30) 
+					if      (model.trafficSituation < trafficProgressBar.getMaximum()*30/100) 
 						trafficProgressBar.setString(model.getString("meterTrafficLow"));
-					else if (model.trafficSituation < 60) 
+					else if (model.trafficSituation < trafficProgressBar.getMaximum()*60/100) 
 						trafficProgressBar.setString(model.getString("meterTrafficMedium")); 
-					else if (model.trafficSituation < 90) 
+					else /* if (model.trafficSituation < trafficProgressBar.getMaximum()*90/100) */
 						trafficProgressBar.setString(model.getString("meterTrafficHigh"));
-					else                                  
-						trafficProgressBar.setString(model.getString("meterTrafficCongestion")); 
+					//else                                  
+					//	trafficProgressBar.setString(model.getString("meterTrafficCongestion")); 
 				} else {
 					trafficProgressBar.setValue(trafficProgressBar.getMaximum());
 					trafficProgressBar.setString(model.getString("meterNA"));
