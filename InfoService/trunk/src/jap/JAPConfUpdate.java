@@ -93,7 +93,7 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 		cButtons.fill = GridBagConstraints.NONE;
 		cButtons.anchor = GridBagConstraints.WEST;
 
-		m_bttnUpgrade = new JButton("Upgrade");
+		m_bttnUpgrade = new JButton(JAPMessages.getString("confUpgrade"));
 		m_bttnUpgrade.addActionListener(this);
 		m_bttnUpgrade.setActionCommand(COMMAND_UPGRADE);
 		cButtons.anchor = GridBagConstraints.CENTER;
@@ -294,6 +294,7 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 		else
 		{
 			m_comboType.setEnabled(true);
+			m_comboType.setSelectedIndex(0);
 			m_taInfo.setText("");
 			m_labelVersion.setText(m_releaseVersion.getJapVersion());
 			if (m_releaseVersion.getDate() != null)
@@ -373,4 +374,9 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 		return JAPMessages.getString("ngUpdatePanelTitle");
 	}
 
+	protected void onRootPanelShown()
+	{
+		//Register help context
+		JAPHelp.getInstance().getContextObj().setContext("update");
+	}
 }

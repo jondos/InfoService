@@ -87,8 +87,8 @@ public class JAPDownloadWizardPage extends BasicWizardPage
 		constraintsDownload.fill = GridBagConstraints.HORIZONTAL;
 		constraintsDownload.anchor = GridBagConstraints.NORTHWEST;
 		constraintsDownload.insets = new Insets(0, 5, 10, 5);
-		JAPMultilineLabel labelInformation = new JAPMultilineLabel(JAPMessages.getString(
-			"updateDownloadIntroductionMessage"));
+		JAPMultilineLabel labelInformation = new JAPMultilineLabel(
+			  JAPMessages.getString("updateDownloadIntroductionMessage"));
 
 		gridBagDownload.setConstraints(labelInformation, constraintsDownload);
 		m_panelComponents.add(labelInformation, constraintsDownload);

@@ -232,6 +232,7 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 		labelTrust2.setFont(getFontSetting());
 
 		m_cbCertCheckEnabled = new JCheckBox();
+		m_cbCertCheckEnabled.setSelected(true);
 		m_cbCertCheckEnabled.addItemListener(new ItemListener()
 		{
 			public void itemStateChanged(ItemEvent e)
@@ -365,11 +366,7 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 				if (cert == null && decode_error)
 				{
 					JAPConf.showError(JAPMessages.getString("certInputErrorTitle"));
-					/*					JOptionPane.showMessageDialog(m_r_panelCA,
-						 JAPMessages.getString("certInputError"),
-						 JAPMessages.getString("certInputErrorTitle"),
-						 JOptionPane.ERROR_MESSAGE);
-					 */
+
 				}
 				if (cert != null)
 				{
@@ -615,22 +612,6 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 		r_panelInfo.add(m_labelDateData);
 		panelConstraintsInfo.anchor = GridBagConstraints.WEST;
 
-		/*		panelConstraintsInfo.gridx = 0;
-		  panelConstraintsInfo.gridy = 7;
-		  panelConstraintsInfo.fill = GridBagConstraints.HORIZONTAL;
-		  panelConstraintsInfo.weightx = 0;
-		  panelConstraintsInfo.insets = new Insets(0, 10, 0, 0);
-		  panelLayoutInfo.setConstraints(m_labelDate, panelConstraintsInfo);
-		  r_panelInfo.add(m_labelDate);
-
-		  panelConstraintsInfo.gridx = 1;
-		  panelConstraintsInfo.gridy = 7;
-		  panelConstraintsInfo.weightx = 1;
-		  panelLayoutInfo.setConstraints(m_labelDateData, panelConstraintsInfo);
-		  r_panelInfo.add(m_labelDateData);*/
-
-
-
 		return r_panelInfo;
 
 	}
@@ -679,6 +660,12 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 	protected void onResetToDefaultsPressed()
 	{
 		super.onResetToDefaultsPressed();
-		m_cbCertCheckEnabled.setSelected(false);
+		m_cbCertCheckEnabled.setSelected(JAPConstants.DEFAULT_CERT_CHECK_ENABLED);
+}
+	protected void onRootPanelShown()
+	{
+		//Register help context
+		JAPHelp.getInstance().getContextObj().setContext("cert");
 	}
+	
 }

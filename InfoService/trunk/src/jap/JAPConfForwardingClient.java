@@ -125,8 +125,8 @@ public class JAPConfForwardingClient extends AbstractJAPConfModule
 	{
 		final JPanel clientPanel = new JPanel();
 
-		final JCheckBox settingsForwardingClientConfigNeedForwarderBox = new JCheckBox(JAPMessages.getString(
-			"settingsForwardingClientConfigNeedForwarderBox"));
+		final JCheckBox settingsForwardingClientConfigNeedForwarderBox =
+			new JCheckBox(JAPMessages.getString("settingsForwardingClientConfigNeedForwarderBox"));
 		settingsForwardingClientConfigNeedForwarderBox.setFont(getFontSetting());
 		settingsForwardingClientConfigNeedForwarderBox.addActionListener(new ActionListener()
 		{
@@ -162,8 +162,8 @@ public class JAPConfForwardingClient extends AbstractJAPConfModule
 			}
 		});
 
-		final JCheckBox settingsForwardingClientConfigForwardInfoServiceBox = new JCheckBox(JAPMessages.
-			getString("settingsForwardingClientConfigForwardInfoServiceBox"));
+		final JCheckBox settingsForwardingClientConfigForwardInfoServiceBox = new JCheckBox(
+			  JAPMessages.getString("settingsForwardingClientConfigForwardInfoServiceBox"));
 		settingsForwardingClientConfigForwardInfoServiceBox.setFont(getFontSetting());
 		settingsForwardingClientConfigForwardInfoServiceBox.addActionListener(new ActionListener()
 		{
@@ -175,8 +175,8 @@ public class JAPConfForwardingClient extends AbstractJAPConfModule
 			}
 		});
 
-		TitledBorder settingsForwardingClientConfigBorder = new TitledBorder(JAPMessages.getString(
-			"settingsForwardingClientConfigBorder"));
+		TitledBorder settingsForwardingClientConfigBorder = new TitledBorder(
+			  JAPMessages.getString("settingsForwardingClientConfigBorder"));
 		settingsForwardingClientConfigBorder.setTitleFont(getFontSetting());
 		clientPanel.setBorder(settingsForwardingClientConfigBorder);
 
@@ -284,11 +284,11 @@ public class JAPConfForwardingClient extends AbstractJAPConfModule
 		JPanel confirmPanel = confirmDialog.getRootPanel();
 
 		JAPHtmlMultiLineLabel settingsForwardingClientConfigConfirmServerShutdownLabel = new
-			JAPHtmlMultiLineLabel(JAPMessages.getString(
-			"settingsForwardingClientConfigConfirmServerShutdownLabel"), getFontSetting());
+			JAPHtmlMultiLineLabel(
+		JAPMessages.getString("settingsForwardingClientConfigConfirmServerShutdownLabel"), getFontSetting());
 
-		JButton settingsForwardingClientConfigConfirmServerShutdownShutdownButton = new JButton(JAPMessages.
-			getString("settingsForwardingClientConfigConfirmServerShutdownShutdownButton"));
+		JButton settingsForwardingClientConfigConfirmServerShutdownShutdownButton = new JButton(
+			  JAPMessages.getString("settingsForwardingClientConfigConfirmServerShutdownShutdownButton"));
 		settingsForwardingClientConfigConfirmServerShutdownShutdownButton.setFont(getFontSetting());
 		settingsForwardingClientConfigConfirmServerShutdownShutdownButton.addActionListener(new
 			ActionListener()
@@ -305,8 +305,8 @@ public class JAPConfForwardingClient extends AbstractJAPConfModule
 			}
 		});
 
-		JButton settingsForwardingClientConfigConfirmServerShutdownCancelButton = new JButton(JAPMessages.
-			getString("cancelButton"));
+		JButton settingsForwardingClientConfigConfirmServerShutdownCancelButton = new JButton(
+			  JAPMessages.getString("cancelButton"));
 		settingsForwardingClientConfigConfirmServerShutdownCancelButton.setFont(getFontSetting());
 		settingsForwardingClientConfigConfirmServerShutdownCancelButton.addActionListener(new ActionListener()
 		{
@@ -354,6 +354,12 @@ public class JAPConfForwardingClient extends AbstractJAPConfModule
 		confirmDialog.align();
 
 		confirmDialog.show();
+	}
+
+	protected void onRootPanelShown()
+	{
+		//Register help context
+		JAPHelp.getInstance().getContextObj().setContext("forwarding_client");
 	}
 
 }

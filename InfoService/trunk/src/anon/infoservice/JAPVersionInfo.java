@@ -51,35 +51,35 @@ public class JAPVersionInfo extends AbstractDatabaseEntry implements IDistributa
    */
   public final static int JAP_DEVELOPMENT_VERSION = 2;
 
-  
+
   /**
    * The timeout for JAP version information in the database. This should be an infinite timeout
    * (1000 years are infinite enough).
    */
   private static final long DATABASE_TIMEOUT = 1000 * 365 * 24 * 3600 * 1000L;
 
-  
+
   /**
    * Stores whether this is the version info for the development version or the release version.
    * See the constants in this class.
    */
   private int m_versionInfoType;
-  
+
   /**
    * Stores the version number of the described JAP version.
    */
   private String m_version;
-  
+
   /**
    * Stores release date of the described JAP version.
    */
   private Date m_releaseDate;
-  
+
   /**
    * Stores the filename of the where the corresponding JAP software is available on the server.
    */
   private String m_jarFileName;
-  
+
   /**
    * Stores the URL of the server, where the corresponding JAP software can be downloaded from.
    */
@@ -90,7 +90,7 @@ public class JAPVersionInfo extends AbstractDatabaseEntry implements IDistributa
    * propagated this version info.
    */
   private long m_lastUpdate;
-  
+
   /**
    * Stores the XML structure of this JAPVersionInfo.
    */
@@ -142,7 +142,9 @@ public class JAPVersionInfo extends AbstractDatabaseEntry implements IDistributa
     }
     m_lastUpdate = XMLUtil.parseValue(XMLUtil.getFirstChildByName(a_jnlpRootNode, "LastUpdate"), -1L);
     if (m_lastUpdate == -1) {
-      throw (new Exception("JAPVersionInfo: Constructor: No LastUpdate node found."));
+		/**@todo FixMe Removed because new Is does not work..*/
+		m_lastUpdate=System.currentTimeMillis();
+      //throw (new Exception("JAPVersionInfo: Constructor: No LastUpdate node found."));
     }
     m_xmlStructure = a_jnlpRootNode;
   }
@@ -173,11 +175,11 @@ public class JAPVersionInfo extends AbstractDatabaseEntry implements IDistributa
    *
    * @return A version number which is used to determine the more recent version info entry, if
    *         two entries are compared (higher version number -> more recent entry).
-   */  
+   */
   public long getVersionNumber() {
     return m_lastUpdate;
   }
-  
+
   /**
    * Returns the JAP software version described by this version info structure.
    *

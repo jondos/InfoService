@@ -85,6 +85,8 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import proxy.ProxyListener;
+import javax.swing.UIManager;
+import javax.swing.LookAndFeel;
 
 final public class JAPNewView extends AbstractJAPMainView implements IJAPMainView, ActionListener,
 	JAPObserver
@@ -256,6 +258,12 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.weightx = 1;
 		m_panelAnonService.add(m_comboAnonServices, c1);
 		m_bttnReload = new JButton(JAPUtil.loadImageIcon(JAPConstants.IMAGE_RELOAD, true));
+		m_bttnReload.setOpaque(false);
+		LookAndFeel laf = UIManager.getLookAndFeel();
+		if (laf != null && UIManager.getCrossPlatformLookAndFeelClassName().equals(laf.getClass().getName())) //stupid but is necessary for JDK 1.5 and Metal L&F on Windows XP (and maybe others)
+		{
+			m_bttnReload.setBackground(Color.gray);
+		}
 		m_bttnReload.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent e)
@@ -272,10 +280,9 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_bttnReload.setRolloverSelectedIcon(tmpIcon);
 		m_bttnReload.setPressedIcon(tmpIcon);
 		m_bttnReload.setDisabledIcon(JAPUtil.loadImageIcon(JAPConstants.IMAGE_RELOAD_DISABLED, true));
-		m_bttnReload.setBackground(Color.gray); //this together with the next lines sems to be
-		m_bttnReload.setOpaque(false); //stupid but is necessary for JDK 1.5 on Windows XP (and maybe others)
 		m_bttnReload.setBorder(new EmptyBorder(0, 0, 0, 0));
 		m_bttnReload.setFocusPainted(false);
+
 		c1.gridx = 2;
 		c1.weightx = 0;
 		c1.fill = GridBagConstraints.NONE;
@@ -730,7 +737,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		//JTabbedPane tabs = new JTabbedPane();
 		//JPanel config = buildConfigPanel();
 		JPanel level = buildLevelPanel();
-		//tabs.addTab(JAPMessages.getString("mainMeterTab"),JAPUtil.loadImageIcon(JAPConstants.METERICONFN, true), level );
 		// "South": Buttons
 
 		getContentPane().setBackground(buttonPanel.getBackground());
@@ -790,7 +796,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			Point oldLocation = m.getOldMainWindowLocation();
 			if (oldLocation != null && oldLocation.x >= 0 &&
 				oldLocation.y >= 0 /*&&m.m_OldMainWindowLocation.x<ds.width&&
-					   m.m_OldMainWindowLocation.y<ds.height*/
+						 m.m_OldMainWindowLocation.y<ds.height*/
 				)
 			{
 				setLocation(oldLocation);
@@ -842,23 +848,14 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 		JPanel ownTrafficPanel = new JPanel();
 		ownTrafficPanel.setLayout(new GridLayout(2, 2, 5, 5));
-		//m_borderOwnTraffic = new TitledBorder(JAPMessages.getString("ownTrafficBorder"));
-		//m_borderOwnTraffic.setTitleFont(fontControls);
-		//ownTrafficPanel.setBorder(m_borderOwnTraffic);
 		m_labelOwnChannels = new JLabel(JAPMessages.getString("ownTrafficChannels"));
 		m_labelOwnChannels.setFont(fontControls);
 		ownTrafficPanel.add(m_labelOwnChannels);
-		//ownTrafficPanel.add(ownTrafficChannelsProgressBar);
 		m_labelOwnBytes = new JLabel(JAPMessages.getString("ownTrafficBytes"));
 		m_labelOwnBytes.setFont(fontControls);
 		ownTrafficPanel.add(m_labelOwnBytes);
-		//ownTrafficPanel.add(m_labelOwnTrafficBytes);
 
 // "Guthaben"
-		//m_cbAnon = new JCheckBox(JAPMessages.getString("confActivateCheckBox"));
-		//JAPUtil.setMnemonic(m_cbAnon, JAPMessages.getString("confActivateCheckBoxMn"));
-		//m_cbAnon.setFont(fontControls);
-		//m_cbAnon.addActionListener(this);
 
 		// Line 1
 		JPanel p41 = new JPanel();
@@ -870,42 +867,15 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			p41.add(Box.createRigidArea(new Dimension(5, 0)));
 		}
 		p41.add(Box.createHorizontalGlue());
-		//m_bttnAnonConf = new JButton(JAPMessages.getString("confActivateButton"));
-		//m_bttnAnonConf.setFont(fontControls);
-		/*if (JAPModel.isSmallDisplay())
-		   {
-		 m_bttnAnonConf.setMargin(JAPConstants.SMALL_BUTTON_MARGIN);
-		   }
-		   m_bttnAnonConf.addActionListener(this);
-		   p41.add(m_bttnAnonConf);
-		 */
-		// "anonym-o-meter"
-		//JPanel meterPanel = new JPanel();
-		//meterPanel.setLayout(new BorderLayout());
-		//m_borderAnonMeter = new TitledBorder(JAPMessages.getString("meterBorder"));
-		//m_borderAnonMeter.setTitleFont(fontControls);
-		//meterPanel.setBorder(m_borderAnonMeter);
-		//meterLabel = new JLabel(getMeterImage( -1));
-		//meterPanel.add(p41 /*ano1CheckBox*/, BorderLayout.NORTH);
-		//meterPanel.add(meterLabel, BorderLayout.CENTER);
 
 		// details panel
 		JPanel detailsPanel = new JPanel();
 		m_labelCascadeName = new JLabel();
 		m_labelCascadeName.setFont(fontControls);
-		//m_labelMeterDetailsName = new JLabel(JAPMessages.getString("meterDetailsName") + " ");
-		//m_labelMeterDetailsName.setFont(fontControls);
-		//m_labelAnonymityUser = new JLabel(JAPMessages.getString("meterDetailsUsers") + " ");
-		//m_labelAnonymityUser.setFont(fontControls);
-		//m_labelMeterDetailsTraffic = new JLabel(JAPMessages.getString("meterDetailsTraffic") + " ");
-		//m_labelMeterDetailsTraffic.setFont(fontControls);
 		m_labelMeterDetailsRisk = new JLabel(JAPMessages.getString("meterDetailsRisk") + " ");
 		m_labelMeterDetailsRisk.setFont(fontControls);
 		GridBagLayout g = new GridBagLayout();
 		detailsPanel.setLayout(g);
-		//m_borderDetails = new TitledBorder(JAPMessages.getString("meterDetailsBorder"));
-		//m_borderDetails.setTitleFont(fontControls);
-		//detailsPanel.setBorder(m_borderDetails);
 		GridBagConstraints c = new GridBagConstraints();
 		c.anchor = GridBagConstraints.WEST;
 		c.fill = GridBagConstraints.HORIZONTAL;
@@ -1043,8 +1013,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.weightx = 0;
 		c1.gridx = 2;
 		p.add(m_labelForwarderCurrentConnections, c1);
-		m_labelForwarderCurrentConnectionsLabel = new JLabel(JAPMessages.getString(
-			"ngForwardedCurrentConnections"));
+		m_labelForwarderCurrentConnectionsLabel = new JLabel(
+			JAPMessages.getString("ngForwardedCurrentConnections"));
 		c1.gridx = 3;
 		p.add(m_labelForwarderCurrentConnectionsLabel, c1);
 		m_labelForwarderAcceptedConnections = new JLabel("0");
@@ -1053,8 +1023,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.gridx = 2;
 		c1.gridy = 2;
 		p.add(m_labelForwarderAcceptedConnections, c1);
-		m_labelForwarderAcceptedConnectionsLabel = new JLabel(JAPMessages.getString(
-			"ngForwardedAcceptedConnections"));
+		m_labelForwarderAcceptedConnectionsLabel = new JLabel(
+			JAPMessages.getString("ngForwardedAcceptedConnections"));
 		c1.gridx = 3;
 		p.add(m_labelForwarderAcceptedConnectionsLabel, c1);
 		m_labelForwarderRejectedConnections = new JLabel("0");
@@ -1062,8 +1032,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.gridx = 2;
 		c1.gridy = 3;
 		p.add(m_labelForwarderRejectedConnections, c1);
-		m_labelForwarderRejectedConnectionsLabel = new JLabel(JAPMessages.getString(
-			"ngForwardedRejectedConnections"));
+		m_labelForwarderRejectedConnectionsLabel = new JLabel(
+			JAPMessages.getString("ngForwardedRejectedConnections"));
 		c1.gridx = 3;
 		p.add(m_labelForwarderRejectedConnectionsLabel, c1);
 		m_labelForwardedTraffic = new JLabel(JAPMessages.getString("ngForwardedTraffic"));
@@ -1158,144 +1128,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		return flippingPanel;
 	}
 
-	/*private JPanel buildConfigPanel() {
-	 // "Center" Panel
-	 JPanel mainPanel = new JPanel();
-	 mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS) );
-	 //mainPanel.setBackground(Color.white);
-
-	 // Listen on Port
-	 JPanel portPanel = new JPanel();
-	 portPanel.setLayout(new GridLayout(2,1) );
-	 portPanel.setBorder( new TitledBorder(JAPMessages.getString("confListenerBorder")) );
-	 // Line 1
-	 JPanel p11 = new JPanel();
-	 p11.setLayout(new BoxLayout(p11, BoxLayout.X_AXIS) );
-	 p11.add(Box.createRigidArea(new Dimension(10,0)) );
-	 p11.add(new JLabel(JAPMessages.getString("confPort")) );
-	 p11.add(Box.createRigidArea(new Dimension(5,0)) );
-	 m_labelProxyPort = new JLabel(String.valueOf(JAPModel.getHttpListenerPortNumber()));
-//		m_labelProxyPort.setForeground(Color.black);
-	 p11.add(m_labelProxyPort );
-	 p11.add(Box.createRigidArea(new Dimension(5,0)) );
-	 p11.add(Box.createHorizontalGlue() );
-	 portB = new JButton(JAPMessages.getString("confPortButton"));
-	 portB.addActionListener(this);
-	 p11.add(portB);
-	 // Line 2
-	 JPanel p12 = new JPanel();
-	 p12.setLayout(new BoxLayout(p12, BoxLayout.X_AXIS) );
-	 p12.add(Box.createRigidArea(new Dimension(10,0)) );
-	 p12.add(new JLabel(JAPMessages.getString("confStatus1")) );
-	 p12.add(Box.createRigidArea(new Dimension(5,0)) );
-	 // add to portPanel
-	 portPanel.add(p11);
-	 portPanel.add(p12);
-	 // add to mainPanel
-	 mainPanel.add(portPanel);
-
-	 // HTTP Proxy
-	 JPanel proxyPanel = new JPanel();
-	 proxyPanel.setLayout(new GridLayout(2,1) );
-	 proxyPanel.setBorder( new TitledBorder(JAPMessages.getString("confProxyBorder")) );
-	 // Line 1
-	 JPanel p21 = new JPanel();
-	 p21.setLayout(new BoxLayout(p21, BoxLayout.X_AXIS) );
-	 p21.add(Box.createRigidArea(new Dimension(10,0)) );
-	 proxyMustUseLabel = new JLabel();
-	 p21.add(proxyMustUseLabel);
-	 p21.add(Box.createRigidArea(new Dimension(5,0)) );
-	 p21.add(Box.createHorizontalGlue() );
-	 httpB = new JButton(JAPMessages.getString("confProxyButton"));
-	 httpB.addActionListener(this);
-	 p21.add(httpB);
-	 // Line 2
-	 JPanel p22 = new JPanel();
-	 p22.setLayout(new BoxLayout(p22, BoxLayout.X_AXIS) );
-	 p22.add(Box.createRigidArea(new Dimension(10,0)) );
-//		p22.add(new JLabel(JAPMessages.getString("confProxyHost")) );
-//		p22.add(Box.createRigidArea(new Dimension(5,0)) );
-	 m_labelProxyHost = new JLabel();
-	 p22.add(m_labelProxyHost);
-	 // add to proxypanel
-	 proxyPanel.add(p21);
-	 proxyPanel.add(p22);
-	 // add to mainPanel
-	 mainPanel.add(proxyPanel);
-
-	 // Information Service
-	 JPanel infoServicePanel = new JPanel();
-	 infoServicePanel.setLayout(new GridLayout(1,1) );
-	 infoServicePanel.setBorder( new TitledBorder(JAPMessages.getString("confInfoServiceBorder")) );
-	 // Line 1
-	 JPanel p31 = new JPanel();
-	 p31.setLayout(new BoxLayout(p31, BoxLayout.X_AXIS) );
-	 p31.add(Box.createRigidArea(new Dimension(10,0)) );
-	 p31.add(new JLabel(JAPMessages.getString("confInfoServiceHost")) );
-	 p31.add(Box.createRigidArea(new Dimension(5,0)) );
-	 infoServiceTextField = new JLabel();
-	 p31.add(infoServiceTextField);
-	 p31.add(Box.createRigidArea(new Dimension(5,0)) );
-	 p31.add(Box.createHorizontalGlue() );
-	 isB = new JButton(JAPMessages.getString("confInfoServiceButton"));
-	 isB.addActionListener(this);
-	 p31.add(isB);
-	 // add to infoServicePanel
-	 infoServicePanel.add(p31);
-	 // add to mainPanel
-	 mainPanel.add(infoServicePanel);
-
-	 // Activate Anonymity
-	 JPanel activatePanel = new JPanel();
-	 activatePanel.setLayout(new GridLayout(4,1) );
-	 activatePanel.setBorder( new TitledBorder(JAPMessages.getString("confActivateBorder")) );
-	 // Line 1
-	 JPanel p41 = new JPanel();
-	 p41.setLayout(new BoxLayout(p41, BoxLayout.X_AXIS) );
-	 //p41.add(Box.createRigidArea(new Dimension(10,0)) );
-	 anonCheckBox = new JCheckBox(JAPMessages.getString("confActivateCheckBox"));
-//		anonCheckBox.setForeground(Color.red);
-	 JAPUtil.setMnemonic(anonCheckBox,JAPMessages.getString("confActivateCheckBoxMn"));
-	 anonCheckBox.addActionListener(this);
-	 p41.add(anonCheckBox );
-	 p41.add(Box.createRigidArea(new Dimension(5,0)) );
-	 p41.add(Box.createHorizontalGlue() );
-	 anonB = new JButton(JAPMessages.getString("confActivateButton"));
-	 anonB.addActionListener(this);
-	 p41.add(anonB);
-	 // Line 2
-	 JPanel p42 = new JPanel();
-	 p42.setLayout(new BoxLayout(p42, BoxLayout.X_AXIS) );
-	 p42.add(Box.createRigidArea(new Dimension(10,0)) );
-	 p42.add(new JLabel(JAPMessages.getString("confAnonHost")) );
-	 p42.add(Box.createRigidArea(new Dimension(5,0)) );
-	 anonTextField = new JLabel();
-	 p42.add(anonTextField);
-	 // Line 3
-	 JPanel p43 = new JPanel();
-	 p43.setLayout(new BoxLayout(p43, BoxLayout.X_AXIS) );
-	 p43.add(Box.createRigidArea(new Dimension(10,0)) );
-	 p43.add(new JLabel(JAPMessages.getString("confStatus2")) );
-	 p43.add(Box.createRigidArea(new Dimension(5,0)) );
-	 // Line 4
-	 JPanel p44 = new JPanel();
-	 p44.setLayout(new BoxLayout(p44, BoxLayout.X_AXIS) );
-	 p44.add(Box.createRigidArea(new Dimension(10,0)) );
-	 p44.add(new JLabel(JAPMessages.getString("confAnonName")) );
-	 p44.add(Box.createRigidArea(new Dimension(5,0)) );
-	 anonNameTextField = new JLabel();
-	 p44.add(anonNameTextField);
-	 // add to activatePanel
-	 activatePanel.add(p41);
-	 activatePanel.add(p44);
-	 activatePanel.add(p42);
-	 activatePanel.add(p43);
-	 // add to mainPanel
-	 mainPanel.add(activatePanel);
-
-	 return mainPanel;
-	  }
-	 */
 	/**
 	 * Used to disable activation on JAP
 	 * Example: Activation of listener failed
@@ -1340,10 +1172,10 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_labelForwarderActivity.setText(JAPMessages.getString("ngActivity"));
 		m_labelForwarderActivitySmall.setText(JAPMessages.getString("ngActivity"));
 		m_labelForwarderCurrentConnectionsLabel.setText(JAPMessages.getString("ngForwardedCurrentConnections"));
-		m_labelForwarderAcceptedConnectionsLabel.setText(JAPMessages.getString(
-			"ngForwardedAcceptedConnections"));
-		m_labelForwarderRejectedConnectionsLabel.setText(JAPMessages.getString(
-			"ngForwardedRejectedConnections"));
+		m_labelForwarderAcceptedConnectionsLabel.setText(
+			JAPMessages.getString("ngForwardedAcceptedConnections"));
+		m_labelForwarderRejectedConnectionsLabel.setText(
+			JAPMessages.getString("ngForwardedRejectedConnections"));
 		m_labelForwardingSmall.setText(JAPMessages.getString("ngForwarding"));
 		m_labelForwarding.setText(JAPMessages.getString("ngForwarding"));
 		m_labelForwardedTraffic.setText(JAPMessages.getString("ngForwardedTraffic"));
@@ -1360,19 +1192,10 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		{
 			m_labelPayment.setText(JAPMessages.getString("ngPayment"));
 
-			//m_labelMeterDetailsName.setText(JAPMessages.getString("meterDetailsName") + " ");
-			//m_labelAnonymityUser.setText(JAPMessages.getString("meterDetailsUsers") + " ");
-			//m_labelMeterDetailsTraffic.setText(JAPMessages.getString("meterDetailsTraffic") + " ");
 		}
 		m_labelMeterDetailsRisk.setText(JAPMessages.getString("meterDetailsRisk") + " ");
-		//m_borderOwnTraffic.setTitle(JAPMessages.getString("ownTrafficBorder"));
 		m_labelOwnChannels.setText(JAPMessages.getString("ownTrafficChannels"));
 		m_labelOwnBytes.setText(JAPMessages.getString("ownTrafficBytes"));
-		//m_cbAnon.setText(JAPMessages.getString("confActivateCheckBox"));
-		//JAPUtil.setMnemonic(m_cbAnon, JAPMessages.getString("confActivateCheckBoxMn"));
-		//m_borderAnonMeter.setTitle(JAPMessages.getString("meterBorder"));
-		//m_bttnAnonConf.setText(JAPMessages.getString("confActivateButton"));
-		//m_borderDetails.setTitle(JAPMessages.getString("meterDetailsBorder"));
 		if (m_dlgConfig != null)
 		{
 			m_dlgConfig.localeChanged();
@@ -1520,8 +1343,9 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 	private void showHelpWindow()
 	{
-		JAPController.getInstance().getHelpContext().setContext("index");
-		JAPHelp.getInstance().loadCurrentContext();
+		JAPHelp help = JAPHelp.getInstance();
+		help.getContextObj().setContext("index");
+		help.loadCurrentContext();
 	}
 
 	private void showConfigDialog()
@@ -1668,53 +1492,10 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					{
 						m_labelAnonymityUser.setText(JAPMessages.getString("meterNA"));
 
-						//userProgressBar.setValue(userProgressBar.getMaximum());
-						//userProgressBar.setString(JAPMessages.getString("meterNA"));
 					}
-					/*	if (currentStatus.getCurrentRisk() > -1)
-					 {
-					  // Current Risk
-					  if (currentStatus.getCurrentRisk() > protectionProgressBar.getMaximum())
-					  {
-					   protectionProgressBar.setMaximum(currentStatus.getCurrentRisk());
-					  }
-					  protectionProgressBar.setValue(currentStatus.getCurrentRisk());
-					  if (currentStatus.getCurrentRisk() < 80)
-					  {
-					   protectionProgressBar.setString(String.valueOf(currentStatus.getCurrentRisk()) +
-					 " %");
-					  }
-					  else
-					  {
-					   protectionProgressBar.setString(JAPMessages.getString("meterRiskVeryHigh"));
-					  }
-					 }
-					 else
-					 {
-					  protectionProgressBar.setValue(protectionProgressBar.getMaximum());
-					  protectionProgressBar.setString(JAPMessages.getString("meterNA"));
-					 }*/
 					int t = currentStatus.getTrafficSituation();
 					if (t > -1)
 					{
-						//Trafic Situation directly from InfoService
-						/*trafficProgressBar.setMaximum(100);
-						 trafficProgressBar.setValue(t);
-						 if (t < 30)
-						 {
-						 trafficProgressBar.setString(JAPMessages.getString("meterTrafficLow"));
-						 }
-						 else
-						 {
-						 if (t < 60)
-						 {
-						  trafficProgressBar.setString(JAPMessages.getString("meterTrafficMedium"));
-						 }
-						 else
-						 {
-						  trafficProgressBar.setString(JAPMessages.getString("meterTrafficHigh"));
-						 }
-						 }*/
 						//map 0..100 --> 0..5
 						//0 --> 0
 						//1..20 --> 1
@@ -1729,8 +1510,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 						// no value from InfoService
 						m_progressAnonTraffic.setValue(0);
 
-						//trafficProgressBar.setValue(trafficProgressBar.getMaximum());
-						//trafficProgressBar.setString(JAPMessages.getString("meterNA"));
 					}
 				}
 				else
@@ -1739,12 +1518,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					m_progressAnonTraffic.setValue(0);
 					m_labelAnonymityUser.setText("");
 					m_progressAnonLevel.setValue(0);
-					//userProgressBar.setValue(userProgressBar.getMaximum());
-					//userProgressBar.setString(JAPMessages.getString("meterNA"));
-					//protectionProgressBar.setValue(protectionProgressBar.getMaximum());
-					//protectionProgressBar.setString(JAPMessages.getString("meterNA"));
-					//trafficProgressBar.setValue(trafficProgressBar.getMaximum());
-					//trafficProgressBar.setString(JAPMessages.getString("meterNA"));
 					LogHolder.log(LogLevel.DEBUG, LogType.GUI, "JAPView:Finished updateValues");
 				}
 				boolean bForwaringServerOn = JAPModel.getInstance().getRoutingSettings().getRoutingMode() ==

@@ -42,6 +42,7 @@
   <property category="generalFormatting2" name="tabSize" value="4"/>
   <property category="generalFormatting2" name="useTabChar" value="1"/>
   <property category="idl" name="ProcessIDL" value="false"/>
+  <property category="java" name="compiler" value="projectjavac"/>
   <property category="java.sapient" name="ACE" value="false"/>
   <property category="java.sapient" name="AFLV" value="true"/>
   <property category="java.sapient" name="AFP" value="false"/>
@@ -360,59 +361,14 @@
   <property category="sys" name="WorkingDirectory" value="."/>
   <property category="sys" name="enable.auto.packages" value="false"/>
   <property category="together" name="language" value="java"/>
+  <node name="help" type="NavigationDirectory">
+    <property category="directorynode" name="url" value="help"/>
+  </node>
   <node name="certificates" type="Folder">
     <file path="certificates/bi.cer"/>
     <file path="certificates/japcodesigning.cer"/>
     <file path="certificates/japinfoservicemessages.cer"/>
     <file path="certificates/japroot.cer"/>
-  </node>
-  <node name="help" type="Folder">
-    <file path="help/about_de.html"/>
-    <file path="help/about_en.html"/>
-    <file path="help/anon_de.html"/>
-    <file path="help/anon_en.html"/>
-    <file path="help/back.gif"/>
-    <file path="help/bl.gif"/>
-    <file path="help/browser_de.html"/>
-    <file path="help/browser_en.html"/>
-    <file path="help/browser_mac_de.html"/>
-    <file path="help/browser_mac_en.html"/>
-    <file path="help/config_de.html"/>
-    <file path="help/config_en.html"/>
-    <file path="help/credits_de.html"/>
-    <file path="help/credits_en.html"/>
-    <file path="help/http_de.html"/>
-    <file path="help/http_en.html"/>
-    <file path="help/IEProxyConf_de.gif"/>
-    <file path="help/IEProxyConf_en.gif"/>
-    <file path="help/IEProxyConfHTTP_de.gif"/>
-    <file path="help/IEProxyConfHTTP_en.gif"/>
-    <file path="help/IEProxyConfHTTPS_de.gif"/>
-    <file path="help/IEProxyConfHTTPS_en.gif"/>
-    <file path="help/index_de.html"/>
-    <file path="help/index_en.html"/>
-    <file path="help/infoservice_de.html"/>
-    <file path="help/infoservice_en.html"/>
-    <file path="help/jap_about_de.html"/>
-    <file path="help/jap_about_en.html"/>
-    <file path="help/jap.gif"/>
-    <file path="help/japback.gif"/>
-    <file path="help/listen_de.html"/>
-    <file path="help/listen_en.html"/>
-    <file path="help/meter_de.html"/>
-    <file path="help/meter_en.html"/>
-    <file path="help/misc_de.html"/>
-    <file path="help/misc_en.html"/>
-    <file path="help/smile.gif"/>
-    <file path="help/steps_de.html"/>
-    <file path="help/steps_en.html"/>
-    <file path="help/trouble_de.html"/>
-    <file path="help/trouble_en.html"/>
-    <file path="help/update_de.html"/>
-    <file path="help/update_en.html"/>
-    <file path="help/xdeu.gif"/>
-    <file path="help/xeng.gif"/>
-    <file path="help/xhelpfrms.css"/>
   </node>
   <node name="images" type="Folder">
     <node name="lowcolor" type="Folder">

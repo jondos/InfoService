@@ -196,8 +196,8 @@ public final class JAPUpdateWizard extends BasicWizard implements Runnable
 		{
 			if (!m_fileNewJapJar.delete())
 			{
-				downloadPage.showInformationDialog(JAPMessages.getString( (
-					"updateM_DeletingofJAP_new.jarfailed")));
+				downloadPage.showInformationDialog(
+								JAPMessages.getString("updateM_DeletingofJAP_new.jarfailed"));
 				return;
 			}
 			host.setNextEnabled(true);
@@ -219,9 +219,7 @@ public final class JAPUpdateWizard extends BasicWizard implements Runnable
 		//Setting the Texts according to the Jap.jar File choosen...
 		String strFileNameJapJarBackup = m_strAktJapJarPath + m_strAktJapJarFileName +
 			JAPConstants.aktVersion + EXTENSION_BACKUP + m_strAktJapJarExtension;
-		//downloadPage.m_labelStep1_1.setText(JAPMessages.getString("updateM_labelStep1Part1"));
 		downloadPage.m_labelSaveFrom.setText(m_fileAktJapJar.getAbsolutePath());
-		//downloadPage.m_labelStep1_2.setText(JAPMessages.getString("updateM_labelStep1Part2"));
 		downloadPage.m_labelSaveTo.setText(strFileNameJapJarBackup);
 		downloadPage.m_labelStep3.setText(JAPMessages.getString("updateM_labelStep3Part1") + " " +
 										  m_strAktJapJarFileName + m_strNewJapVersion + EXTENSION_NEW +
@@ -230,18 +228,6 @@ public final class JAPUpdateWizard extends BasicWizard implements Runnable
 
 	}
 
-	/*	public String getSelectedFile()
-	  {
-	   return selectedFile;
-	  }
-	 */
-	// called by the WizardHost when the User's clicked next
-	/*		public void startUpdate()
-	   {
-	 //start the Update
-	 setPath(selectedFile);
-	   }
-	 */
 	public WizardPage next( /*WizardPage currentPage, WizardHost host*/)
 	{
 

@@ -69,6 +69,8 @@ import gui.JAPMultilineLabel;
 import logging.LogLevel;
 import logging.LogType;
 import javax.swing.SwingUtilities;
+import java.awt.event.ComponentListener;
+import java.awt.event.ComponentEvent;
 
 final class JAPConf extends JDialog implements ActionListener
 {
@@ -313,11 +315,12 @@ final class JAPConf extends JDialog implements ActionListener
 			{
 				public void run()
 				{
-					try{
-					JAPHelp help = JAPHelp.getInstance();
-					help.loadCurrentContext();
+					try
+					{
+						JAPHelp help = JAPHelp.getInstance();
+						help.loadCurrentContext();
 					}
-					catch(Exception e)
+					catch (Exception e)
 					{
 					}
 				}
@@ -385,23 +388,33 @@ final class JAPConf extends JDialog implements ActionListener
 		c.insets = normInsets;
 		c.gridy = 4;
 		c.insets = new Insets(10, 0, 0, 0);
-		//m_labelSocksPortNumber = new JLabel(JAPMessages.getString("settingsListenerSOCKS"));
-		//m_labelSocksPortNumber.setFont(m_fontControls);
-		//p1.add(m_labelSocksPortNumber, c);
-		//c.gridy = 5;
-		//g.setConstraints(m_tfListenerPortNumberSocks, c);
-		//p1.add(m_tfListenerPortNumberSocks);
-		//c.gridy = 6;
-		//JSeparator seperator2 = new JSeparator();
-		//c.insets = new Insets(10, 0, 0, 0);
-		//g.setConstraints(seperator2, c);
-		//p1.add(seperator2);
 
 		c.gridy = 7;
 		c.insets = new Insets(10, 0, 0, 0);
 		g.setConstraints(m_cbListenerIsLocal, c);
 		p1.add(m_cbListenerIsLocal);
 		p.add(p1, BorderLayout.NORTH);
+		p.addComponentListener(new ComponentListener()
+		{
+			public void componentShown(ComponentEvent e)
+			{
+				//Register help context
+				JAPHelp.getInstance().getContextObj().setContext("portlistener");
+			}
+
+			public void componentHidden(ComponentEvent e)
+			{
+			}
+
+			public void componentMoved(ComponentEvent e)
+			{
+			}
+
+			public void componentResized(ComponentEvent e)
+			{
+			}
+		});
+
 		return p;
 	}
 
@@ -418,12 +431,12 @@ final class JAPConf extends JDialog implements ActionListener
 		m_tfProxyPortNumber = new JAPJIntField();
 		m_tfProxyPortNumber.setFont(m_fontControls);
 		ProxyInterface proxyInterface = JAPModel.getInstance().getProxyInterface();
-		boolean bUseProxy = proxyInterface != null && proxyInterface.isValid();
+		boolean bUseProxy = (proxyInterface != null && proxyInterface.isValid());
 		m_tfProxyHost.setEnabled(bUseProxy);
 		m_tfProxyPortNumber.setEnabled(bUseProxy);
-		m_cbProxy.addActionListener(new ActionListener()
+		m_cbProxy.addItemListener(new ItemListener()
 		{
-			public void actionPerformed(ActionEvent e)
+			public void itemStateChanged(ItemEvent e)
 			{
 				boolean b = m_cbProxy.isSelected();
 				m_comboProxyType.setEnabled(b);
@@ -436,6 +449,7 @@ final class JAPConf extends JDialog implements ActionListener
 				m_labelProxyAuthUserID.setEnabled(m_cbProxyAuthentication.isSelected() & b);
 				m_tfProxyAuthenticationUserID.setEnabled(m_cbProxyAuthentication.isSelected() & b);
 			}
+
 		});
 		m_tfProxyHost.addActionListener(new ActionListener()
 		{
@@ -554,6 +568,27 @@ final class JAPConf extends JDialog implements ActionListener
 		p1.add(m_tfProxyAuthenticationUserID);
 		c.gridy = 11;
 		p.add(p1, BorderLayout.NORTH);
+		p.addComponentListener(new ComponentListener()
+		{
+			public void componentShown(ComponentEvent e)
+			{
+				//Register help context
+				JAPHelp.getInstance().getContextObj().setContext("proxy");
+			}
+
+			public void componentHidden(ComponentEvent e)
+			{
+			}
+
+			public void componentMoved(ComponentEvent e)
+			{
+			}
+
+			public void componentResized(ComponentEvent e)
+			{
+			}
+		});
+
 		return p;
 	}
 
@@ -707,7 +742,26 @@ final class JAPConf extends JDialog implements ActionListener
 		c.gridy = 1;
 		c.weightx = 1;
 		p.add(panelDebugLevels, c);
+		p.addComponentListener(new ComponentListener()
+		{
+			public void componentShown(ComponentEvent e)
+			{
+				//Register help context
+				JAPHelp.getInstance().getContextObj().setContext("debugging");
+			}
 
+			public void componentHidden(ComponentEvent e)
+			{
+			}
+
+			public void componentMoved(ComponentEvent e)
+			{
+			}
+
+			public void componentResized(ComponentEvent e)
+			{
+			}
+		});
 		return p;
 	}
 
@@ -758,25 +812,6 @@ final class JAPConf extends JDialog implements ActionListener
 			return false;
 		}
 		iListenerPort = i;
-		//checking Socks Port Number
-		/*try
-		   {
-		 i = Integer.parseInt(m_tfListenerPortNumberSocks.getText().trim());
-		   }
-		   catch (Exception e)
-		   {
-		 i = -1;
-		   }*/
-		/*if (!JAPUtil.isPort(i))
-		   {
-		 showError(JAPMessages.getString("errorSocksListenerPortWrong"));
-		 return false;
-		   }*/
-		/*		if (i == iListenerPort)
-		  {
-		   showError(JAPMessages.getString("errorListenerPortsAreEqual"));
-		   return false;
-		  }*/
 		//Checking Firewall Settings (Host + Port)
 		if (m_cbProxy.isSelected())
 		{
@@ -809,21 +844,6 @@ final class JAPConf extends JDialog implements ActionListener
 				}
 			}
 		}
-		//checking Debug-Level
-		/*		try
-		   {
-		 i=Integer.parseInt(debugLevelTextField.getText().trim());
-		   }
-		  catch(Exception e)
-		   {
-		 i=-1;
-		   }
-		  if(i<0||i>LogLevel.DEBUG)
-		   {
-		 showError(JAPMessages.getString("errorDebugLevelWrong"));
-		 return false;
-		   }
-		 */
 
 		return true;
 	}
@@ -832,11 +852,10 @@ final class JAPConf extends JDialog implements ActionListener
 	private void resetToDefault()
 	{
 		m_moduleSystem.processResetToDefaultsPressedEvent();
-		m_tfListenerPortNumber.setInt(JAPConstants.defaultPortNumber);
-		//m_tfListenerPortNumberSocks.setInt(JAPConstants.defaultSOCKSPortNumber);
+		m_tfListenerPortNumber.setInt(JAPConstants.DEFAULT_PORT_NUMBER);
+		m_cbListenerIsLocal.setSelected(JAPConstants.DEFAULT_LISTENER_IS_LOCAL);
 
 		m_cbProxy.setSelected(false);
-		//m_cbListenerSocks.setSelected(false);
 		m_cbShowDebugConsole.setSelected(false);
 		m_sliderDebugLevel.setValue(LogLevel.EMERG);
 		m_cbDebugNet.setSelected(false);
@@ -934,7 +953,6 @@ final class JAPConf extends JDialog implements ActionListener
 		m_labelPortnumber2.setText(JAPMessages.getString("settingsPort2"));
 		m_cbListenerIsLocal.setText(JAPMessages.getString("settingsListenerCheckBox"));
 		m_borderSettingsListener.setTitle(JAPMessages.getString("settingsListenerBorder"));
-		//m_labelSocksPortNumber.setText(JAPMessages.getString("settingsListenerSOCKS"));
 		//ProxyPanel
 		m_cbProxy.setText(JAPMessages.getString("settingsProxyCheckBox"));
 		int i = m_comboProxyType.getSelectedIndex();

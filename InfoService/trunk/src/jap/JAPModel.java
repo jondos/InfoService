@@ -42,37 +42,33 @@ public final class JAPModel
 	private String m_biHost = JAPConstants.PIHOST;
 	/** @deprecated */
 	private int m_biPort = JAPConstants.PIPORT;
-	private int m_HttpListenerPortNumber = JAPConstants.defaultPortNumber; // port number of HTTP  listener
-	private boolean m_bHttpListenerIsLocal = true; // indicates whether listeners serve for localhost only or not
+	private int m_HttpListenerPortNumber = JAPConstants.DEFAULT_PORT_NUMBER; // port number of HTTP  listener
+	private boolean m_bHttpListenerIsLocal = JAPConstants.DEFAULT_LISTENER_IS_LOCAL; // indicates whether listeners serve for localhost only or not
 	private ProxyInterface m_proxyInterface;
 	private boolean m_bAutoConnect = false; // autoconnect after program start
 	private boolean m_bAutoReConnect = false; // autoReconnects after loosing connection to mix
 
-	//private boolean  mbActCntMessageNotRemind    = false; // indicates if Warning message in setAnonMode has been deactivated for the session
-	//private boolean  mbActCntMessageNeverRemind  = false; // indicates if Warning message in setAnonMode has been deactivated forever
-	//private boolean  mbDoNotAbuseReminder        = false; // indicates if new warning message in setAnonMode (containing Do no abuse) has been shown
-	//private boolean  mbGoodByMessageNeverRemind  = false; // indicates if Warning message before exit has been deactivated forever
 	private int m_iDummyTrafficIntervall = -1; // indicates what Dummy Traffic should be generated or not
 
 	private boolean m_bSmallDisplay = false;
-	private boolean m_bInfoServiceDisabled = false;
-	private boolean m_bMinimizeOnStartup = false; // true if programm will start minimized
-	private boolean m_bMoveToSystrayOnStartup = false; // true if programm will start in the systray
-	private int m_iDefaultView = JAPConstants.VIEW_NORMAL; //which view we should start?
+	private boolean m_bInfoServiceDisabled = JAPConstants.DEFAULT_INFOSERVICE_DISABLED;
+	private boolean m_bMinimizeOnStartup = JAPConstants.DEFAULT_MINIMIZE_ON_STARTUP; // true if programm will start minimized
+	private boolean m_bMoveToSystrayOnStartup = JAPConstants.DEFAULT_MOVE_TO_SYSTRAY_ON_STARTUP; // true if programm will start in the systray
+	private int m_iDefaultView = JAPConstants.DEFAULT_VIEW; //which view we should start?
 
-	private boolean m_bSaveMainWindowPosition = false;
+	private boolean m_bSaveMainWindowPosition = JAPConstants.DEFAULT_SAVE_MAIN_WINDOW_POSITION;
 	private Dimension m_OldMainWindowSize = null;
 	private Point m_OldMainWindowLocation = null;
 
 	private static JAPModel ms_TheModel = null;
 
-	private boolean m_bCertCheckDisabled = true;
+	//private boolean m_bCertCheckDisabled = true;
 
 	private JAPCertificate m_certJAPCodeSigning = null;
 
-	private int m_TorMaxConnectionsPerRoute = JAPConstants.TOR_MAX_CONNECTIONS_PER_ROUTE;
-	private int m_TorMaxRouteLen = JAPConstants.TOR_MAX_ROUTE_LEN;
-	private int m_TorMinRouteLen = JAPConstants.TOR_MIN_ROUTE_LEN;
+	private int m_TorMaxConnectionsPerRoute = JAPConstants.DEFAULT_TOR_MAX_CONNECTIONS_PER_ROUTE;
+	private int m_TorMaxRouteLen = JAPConstants.DEFAULT_TOR_MAX_ROUTE_LEN;
+	private int m_TorMinRouteLen = JAPConstants.DEFAULT_TOR_MIN_ROUTE_LEN;
 	private boolean m_bPreCreateAnonRoutes = JAPConstants.DEFAULT_TOR_PRECREATE_ROUTES;
 
 	/**

@@ -1026,4 +1026,9 @@ public class JAPConfInfoService extends AbstractJAPConfModule {
     return returnValue;
   }
   
+  protected void onRootPanelShown()
+  {
+	  //Register help context
+		JAPHelp.getInstance().getContextObj().setContext("infoservice");
+  }
 }

@@ -239,26 +239,26 @@ public class JAPConfForwardingState extends AbstractJAPConfModule
 							if (currentRegistrationState ==
 								JAPRoutingRegistrationStatusObserver.STATE_DISABLED)
 							{
-								settingsRoutingServerStatusLabel.changeText(JAPMessages.getString(
-									"settingsRoutingServerStatusLabelStateRegistrationDisabled"));
+								settingsRoutingServerStatusLabel.changeText(
+						JAPMessages.getString("settingsRoutingServerStatusLabelStateRegistrationDisabled"));
 							}
 							else if (currentRegistrationState ==
 									 JAPRoutingRegistrationStatusObserver.STATE_INITIAL_REGISTRATION)
 							{
-								settingsRoutingServerStatusLabel.changeText(JAPMessages.getString(
-									"settingsRoutingServerStatusLabelStateRegistrationInitiated"));
+								settingsRoutingServerStatusLabel.changeText(
+						JAPMessages.getString("settingsRoutingServerStatusLabelStateRegistrationInitiated"));
 							}
 							else if (currentRegistrationState ==
 									 JAPRoutingRegistrationStatusObserver.STATE_NO_REGISTRATION)
 							{
-								settingsRoutingServerStatusLabel.changeText(JAPMessages.getString(
-									"settingsRoutingServerStatusLabelStateRegistrationFailed"));
+								settingsRoutingServerStatusLabel.changeText(
+							JAPMessages.getString("settingsRoutingServerStatusLabelStateRegistrationFailed"));
 							}
 							else if (currentRegistrationState ==
 									 JAPRoutingRegistrationStatusObserver.STATE_SUCCESSFUL_REGISTRATION)
 							{
-								settingsRoutingServerStatusLabel.changeText(JAPMessages.getString(
-									"settingsRoutingServerStatusLabelStateRegistrationSuccessful"));
+								settingsRoutingServerStatusLabel.changeText(
+						JAPMessages.getString("settingsRoutingServerStatusLabelStateRegistrationSuccessful"));
 							}
 							if (currentErrorCode == JAPRoutingRegistrationStatusObserver.ERROR_NO_ERROR)
 							{
@@ -267,30 +267,26 @@ public class JAPConfForwardingState extends AbstractJAPConfModule
 							else if (currentErrorCode ==
 									 JAPRoutingRegistrationStatusObserver.ERROR_NO_KNOWN_PRIMARY_INFOSERVICES)
 							{
-								settingsRoutingServerStatusRegistrationErrorLabel.setText(JAPMessages.
-									getString(
-									"settingsRoutingServerStatusRegistrationErrorLabelNoKnownInfoServices"));
+								settingsRoutingServerStatusRegistrationErrorLabel.setText(
+			JAPMessages.getString("settingsRoutingServerStatusRegistrationErrorLabelNoKnownInfoServices"));
 							}
 							else if (currentErrorCode ==
 									 JAPRoutingRegistrationStatusObserver.ERROR_INFOSERVICE_CONNECT_ERROR)
 							{
-								settingsRoutingServerStatusRegistrationErrorLabel.setText(JAPMessages.
-									getString(
-									"settingsRoutingServerStatusRegistrationErrorLabelConnectionFailed"));
+								settingsRoutingServerStatusRegistrationErrorLabel.setText(
+									JAPMessages.getString("settingsRoutingServerStatusRegistrationErrorLabelConnectionFailed"));
 							}
 							else if (currentErrorCode ==
 									 JAPRoutingRegistrationStatusObserver.ERROR_VERIFICATION_ERROR)
 							{
-								settingsRoutingServerStatusRegistrationErrorLabel.setText(JAPMessages.
-									getString(
-									"settingsRoutingServerStatusRegistrationErrorLabelVerificationFailed"));
+								settingsRoutingServerStatusRegistrationErrorLabel.setText(
+									JAPMessages.getString("settingsRoutingServerStatusRegistrationErrorLabelVerificationFailed"));
 							}
 							else if (currentErrorCode ==
 									 JAPRoutingRegistrationStatusObserver.ERROR_UNKNOWN_ERROR)
 							{
-								settingsRoutingServerStatusRegistrationErrorLabel.setText(JAPMessages.
-									getString(
-									"settingsRoutingServerStatusRegistrationErrorLabelUnknownReason"));
+								settingsRoutingServerStatusRegistrationErrorLabel.setText(
+									JAPMessages.getString("settingsRoutingServerStatusRegistrationErrorLabelUnknownReason"));
 							}
 						}
 					}
@@ -344,8 +340,8 @@ public class JAPConfForwardingState extends AbstractJAPConfModule
 
 		JPanel serverStatusPanel = new JPanel();
 
-		TitledBorder settingsRoutingServerStatusBorder = new TitledBorder(JAPMessages.getString(
-			"settingsRoutingServerStatusBorder"));
+		TitledBorder settingsRoutingServerStatusBorder = new TitledBorder(
+			  JAPMessages.getString("settingsRoutingServerStatusBorder"));
 		settingsRoutingServerStatusBorder.setTitleFont(getFontSetting());
 		serverStatusPanel.setBorder(settingsRoutingServerStatusBorder);
 
@@ -388,8 +384,8 @@ public class JAPConfForwardingState extends AbstractJAPConfModule
 
 		JPanel serverStatusStatisticsPanel = new JPanel();
 
-		TitledBorder settingsRoutingServerStatusStatisticsBorder = new TitledBorder(JAPMessages.getString(
-			"settingsRoutingServerStatusStatisticsBorder"));
+		TitledBorder settingsRoutingServerStatusStatisticsBorder = new TitledBorder(
+			  JAPMessages.getString("settingsRoutingServerStatusStatisticsBorder"));
 		settingsRoutingServerStatusStatisticsBorder.setTitleFont(getFontSetting());
 		serverStatusStatisticsPanel.setBorder(settingsRoutingServerStatusStatisticsBorder);
 
@@ -486,11 +482,11 @@ public class JAPConfForwardingState extends AbstractJAPConfModule
 	{
 		JPanel clientStatusPanel = new JPanel();
 
-		JLabel settingsRoutingClientStatusClientRunningLabel = new JLabel(JAPMessages.getString(
-			"settingsRoutingClientStatusClientRunningLabel"));
+		JLabel settingsRoutingClientStatusClientRunningLabel = new JLabel(
+			  JAPMessages.getString("settingsRoutingClientStatusClientRunningLabel"));
 		settingsRoutingClientStatusClientRunningLabel.setFont(getFontSetting());
-		JLabel settingsRoutingClientStatusConnectedViaLabel = new JLabel(JAPMessages.getString(
-			"settingsRoutingClientStatusConnectedViaLabel"));
+		JLabel settingsRoutingClientStatusConnectedViaLabel = new JLabel(
+			  JAPMessages.getString("settingsRoutingClientStatusConnectedViaLabel"));
 		settingsRoutingClientStatusConnectedViaLabel.setFont(getFontSetting());
 		final JLabel settingsRoutingClientStatusForwarderInformationLabel = new JLabel();
 		settingsRoutingClientStatusForwarderInformationLabel.setFont(getFontSetting());
@@ -534,9 +530,8 @@ public class JAPConfForwardingState extends AbstractJAPConfModule
 								else
 								{
 									/* should never occur */
-									settingsRoutingClientStatusForwarderInformationLabel.setText(JAPMessages.
-										getString(
-										"settingsRoutingClientStatusForwarderInformationLabelInvalid"));
+									settingsRoutingClientStatusForwarderInformationLabel.setText(
+										JAPMessages.getString("settingsRoutingClientStatusForwarderInformationLabelInvalid"));
 								}
 							}
 						}
@@ -564,8 +559,8 @@ public class JAPConfForwardingState extends AbstractJAPConfModule
 		clientStatusObserver.update(JAPModel.getInstance().getRoutingSettings(),
 									new JAPRoutingMessage(JAPRoutingMessage.ROUTING_MODE_CHANGED));
 
-		TitledBorder settingsRoutingClientStatusBorder = new TitledBorder(JAPMessages.getString(
-			"settingsRoutingClientStatusBorder"));
+		TitledBorder settingsRoutingClientStatusBorder = new TitledBorder(
+			  JAPMessages.getString("settingsRoutingClientStatusBorder"));
 		settingsRoutingClientStatusBorder.setTitleFont(getFontSetting());
 		clientStatusPanel.setBorder(settingsRoutingClientStatusBorder);
 
@@ -613,12 +608,12 @@ public class JAPConfForwardingState extends AbstractJAPConfModule
 	{
 		JPanel disabledStatusPanel = new JPanel();
 
-		JLabel settingsRoutingDisabledStatusNothingRunningLabel = new JLabel(JAPMessages.getString(
-			"settingsRoutingDisabledStatusNothingRunningLabel"));
+		JLabel settingsRoutingDisabledStatusNothingRunningLabel = new JLabel(
+			  JAPMessages.getString("settingsRoutingDisabledStatusNothingRunningLabel"));
 		settingsRoutingDisabledStatusNothingRunningLabel.setFont(getFontSetting());
 
-		TitledBorder settingsRoutingDisabledStatusBorder = new TitledBorder(JAPMessages.getString(
-			"settingsRoutingDisabledStatusBorder"));
+		TitledBorder settingsRoutingDisabledStatusBorder = new TitledBorder(
+			  JAPMessages.getString("settingsRoutingDisabledStatusBorder"));
 		settingsRoutingDisabledStatusBorder.setTitleFont(getFontSetting());
 		disabledStatusPanel.setBorder(settingsRoutingDisabledStatusBorder);
 

@@ -583,68 +583,13 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 	public void onResetToDefaultsPressed()
 	{
-		m_tfMixHost.setText(JAPConstants.defaultAnonHost);
-		m_tfMixPortNumber.setText(Integer.toString(JAPConstants.defaultAnonPortNumber));
+		m_tfMixHost.setText(JAPConstants.DEFAULT_ANON_HOST);
+		m_tfMixPortNumber.setText(Integer.toString(JAPConstants.DEFAULT_ANON_PORT_NUMBER));
 
 	}
 
 	public boolean onOkPressed()
-	{ //Checking First Mix (Host + Port)
-		/*		MixCascade newCascade = null;
-		   if (m_cbMixManual.isSelected())
-		   { // -- do stuff for manual setting of anon service
-		 String host = m_tfMixHost.getText().trim();
-		 if (host == null || host.equals(""))
-		 {
-		  JAPConf.showError(JAPMessages.getString("errorAnonHostNotNull"));
-		  return false;
-		 }
-		 int port;
-		 try
-		 {
-		  port = Integer.parseInt(m_tfMixPortNumber.getText().trim());
-		 }
-		 catch (Exception e)
-		 {
-		  port = -1;
-		 }
-		 if (!JAPUtil.isValidPort(port))
-		 {
-		  JAPConf.showError(JAPMessages.getString("errorAnonServicePortWrong"));
-		  return false;
-		 }
-		 //now combine it together...
-		 try
-		 {
-		  // this is only a test for the values
-		  newCascade = new MixCascade(null, null, host, port);
-		 }
-		 catch (Exception ex)
-		 {
-		  JAPConf.showError(JAPMessages.getString("errorAnonServiceWrong"));
-		  return false;
-		 }
-		   }
-		   else
-		   {
-		 //AnonService NOT manual selected
-		 try
-		 {
-		  // check, if something is selected //
-		  newCascade = (MixCascade) m_listMixCascade.getSelectedValue();
-		 }
-		 catch (Exception e)
-		 {
-		  newCascade = null;
-		 }
-		   }
-
-		   //Try to Set AnonService
-		   if (newCascade != null)
-		   {
-		 m_Controller.setCurrentMixCascade(newCascade);
-		   }
-		 */
+	{
 		return true;
 
 	}
@@ -906,7 +851,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	protected void onRootPanelShown()
 	{
 		//Register help context
-		JAPController.getInstance().getHelpContext().setContext("anon");
+		JAPHelp.getInstance().getContextObj().setContext("services");
 		if (!m_infoService.isFilled())
 		{
 			m_reloadCascadesButton.setEnabled(false);

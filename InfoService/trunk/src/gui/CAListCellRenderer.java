@@ -53,6 +53,7 @@ final public class CAListCellRenderer extends JLabel implements ListCellRenderer
 			subjectCN = name.toString();
 		}
 		setText(subjectCN);
+		setEnabled(list.isEnabled());
 
 //         setIcon((s.length() > 10) ? longIcon : shortIcon);
 		if (isSelected)
@@ -74,7 +75,6 @@ final public class CAListCellRenderer extends JLabel implements ListCellRenderer
 			setForeground(Color.red);
 			setIcon(disabledIcon);
 		}
-		setEnabled(list.isEnabled());
 		setFont(list.getFont());
 		setOpaque(true);
 		return this;

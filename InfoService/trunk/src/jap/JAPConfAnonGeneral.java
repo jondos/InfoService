@@ -146,4 +146,10 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		m_cbAutoConnect.setSelected(false);
 		m_cbAutoReConnect.setSelected(false);
 	}
+
+	protected void onRootPanelShown()
+	{
+		//Register help context
+		JAPHelp.getInstance().getContextObj().setContext("services");
+	}
 }
