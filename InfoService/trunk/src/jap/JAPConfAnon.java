@@ -280,6 +280,10 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 	private void drawManualPanel(String a_hostName, String a_port, boolean a_newCascade)
 	{
+		if (m_manualPanel != null)
+		{
+			pRoot.remove(m_manualPanel);
+		}
 		m_manualPanel = new JPanel();
 		GridBagLayout layout = new GridBagLayout();
 		GridBagConstraints c = new GridBagConstraints();
@@ -320,7 +324,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		{
 			m_editCascadeButton = new JButton(JAPMessages.getString("manualServiceEdit"));
 			m_editCascadeButton.addActionListener(this);
-			m_editCascadeButton.setVisible(false);
+			m_editCascadeButton.setVisible(true);
 			m_manualPanel.add(m_editCascadeButton, c);
 			m_manHostField.addKeyListener(this);
 			m_manPortField.addKeyListener(this);
@@ -739,17 +743,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		}
 		else if (e.getSource() == m_manualCascadeButton)
 		{
-			MixCascade cascade = (MixCascade) m_listMixCascade.getSelectedValue();
-			if (cascade.isUserDefined())
-			{
-				this.drawManualPanel(cascade.getListenerInterface(0).getHost(),
-									 String.valueOf(cascade.getListenerInterface(0).getPort()),
-									 false);
-			}
-			else
-			{
 				this.drawManualPanel(null, null, true);
-			}
 		}
 		else if (e.getSource() == m_enterCascadeButton)
 		{
@@ -775,7 +769,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			m_Controller.getMixCascadeDatabase().removeElement(oldCascade);
 			m_Controller.getMixCascadeDatabase().addElement(c);
 			this.updateMixCascadeCombo();
-			m_enterCascadeButton.setVisible(false);
+			m_listMixCascade.setSelectedIndex(m_listMixCascade.getModel().getSize()-1);
 		}
 		catch (Exception a_e)
 		{
@@ -794,6 +788,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 										  Integer.parseInt(m_manPortField.getText()));
 			m_Controller.getMixCascadeDatabase().addElement(c);
 			this.updateMixCascadeCombo();
+			m_listMixCascade.setSelectedIndex(m_listMixCascade.getModel().getSize()-1);
 			m_enterCascadeButton.setVisible(false);
 		}
 		catch (Exception a_e)
@@ -897,7 +892,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				m_reachableLabel.setText(m_infoService.getHosts(cascadeId));
 				m_portsLabel.setText(m_infoService.getPorts(cascadeId));
 					itemStateChanged(null);
-				//m_listMixCascade.repaint();
 				}
 		}
 	}
