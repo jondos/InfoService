@@ -1,30 +1,30 @@
 /*
-Copyright (c) 2000 - 2004, The JAP-Team
-All rights reserved.
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
+ Copyright (c) 2000 - 2004, The JAP-Team
+ All rights reserved.
+ Redistribution and use in source and binary forms, with or without modification,
+ are permitted provided that the following conditions are met:
 
-	- Redistributions of source code must retain the above copyright notice,
-		this list of conditions and the following disclaimer.
+ - Redistributions of source code must retain the above copyright notice,
+  this list of conditions and the following disclaimer.
 
-	- Redistributions in binary form must reproduce the above copyright notice,
-		this list of conditions and the following disclaimer in the documentation and/or
-		other materials provided with the distribution.
+ - Redistributions in binary form must reproduce the above copyright notice,
+  this list of conditions and the following disclaimer in the documentation and/or
+  other materials provided with the distribution.
 
-	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
-		may be used to endorse or promote products derived from this software without specific
-		prior written permission.
+ - Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
+  may be used to endorse or promote products derived from this software without specific
+  prior written permission.
 
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS
-OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
-AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS
-BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
-OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
-IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
-OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
-*/
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS
+ OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
+ AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS
+ BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+ OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+ IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
+ */
 package logging;
 
 import anon.util.Util;
@@ -36,7 +36,8 @@ import java.io.StringWriter;
 /**
  * This class stores the Log instance.
  */
-public final class LogHolder {
+public final class LogHolder
+{
 
 	/// the lowest detail level that is possible
 	public static final int DETAIL_LEVEL_LOWEST = 0;
@@ -63,8 +64,24 @@ public final class LogHolder {
 	 * This creates a new instance of LogHolder. This is only used for setting some
 	 * values. Use LogHolder.getInstance() for getting an instance of this class.
 	 */
-	private LogHolder() {
+	private LogHolder()
+	{
 		m_logInstance = new DummyLog();
+	}
+
+	public void finalize()
+	{
+		if (equals(ms_logHolderInstance))
+		{
+			ms_logHolderInstance = null;
+		}
+		try
+		{
+			super.finalize();
+		}
+		catch (Throwable ex)
+		{
+		}
 	}
 
 	/**
@@ -103,7 +120,8 @@ public final class LogHolder {
 	 * @param logType The log type (see constants in class LogType).
 	 * @param a_throwable a Throwable to log
 	 */
-	public static void log(int logLevel, int logType, Throwable a_throwable) {
+	public static void log(int logLevel, int logType, Throwable a_throwable)
+	{
 		if (isLogged(logLevel, logType))
 		{
 			if (m_messageDetailLevel == DETAIL_LEVEL_LOWEST)
@@ -128,7 +146,8 @@ public final class LogHolder {
 	 * @param logType The log type (see constants in class LogType).
 	 * @param message The message to log.
 	 */
-	public static void log(int logLevel, int logType, String message) {
+	public static void log(int logLevel, int logType, String message)
+	{
 		if (isLogged(logLevel, logType))
 		{
 			if (m_messageDetailLevel == DETAIL_LEVEL_LOWEST)
@@ -138,7 +157,7 @@ public final class LogHolder {
 			else if (m_messageDetailLevel == DETAIL_LEVEL_HIGH)
 			{
 				getInstance().getLogInstance().log(logLevel, logType,
-				Util.normaliseString(getCallingClassFile() + ": ", 40) + message);
+					Util.normaliseString(getCallingClassFile() + ": ", 40) + message);
 			}
 			else
 			{
@@ -153,10 +172,13 @@ public final class LogHolder {
 	 *
 	 * @param logInstance The instance of a Log implementation.
 	 */
-	public static void setLogInstance(Log logInstance) {
+	public static void setLogInstance(Log logInstance)
+	{
 		getInstance().m_logInstance = logInstance;
-		if(getInstance().m_logInstance==null)
-			getInstance().m_logInstance=new DummyLog();
+		if (getInstance().m_logInstance == null)
+		{
+			getInstance().m_logInstance = new DummyLog();
+		}
 	}
 
 	/**
@@ -165,8 +187,10 @@ public final class LogHolder {
 	 *
 	 * @return The LogHolder instance.
 	 */
-	private static LogHolder getInstance() {
-		if (ms_logHolderInstance == null) {
+	private static synchronized LogHolder getInstance()
+	{
+		if (ms_logHolderInstance == null)
+		{
 			ms_logHolderInstance = new LogHolder();
 		}
 		return ms_logHolderInstance;
@@ -178,14 +202,15 @@ public final class LogHolder {
 	 *
 	 * @return The current logInstance.
 	 */
-	private Log getLogInstance() {
+	private Log getLogInstance()
+	{
 		return m_logInstance;
 	}
 
 	private static boolean isLogged(int a_logLevel, int a_logType)
 	{
 		return (a_logLevel <= getInstance().getLogInstance().getLogLevel()) &&
-			((a_logType & getInstance().getLogInstance().getLogType()) == a_logType);
+			( (a_logType & getInstance().getLogInstance().getLogType()) == a_logType);
 	}
 
 	/**
@@ -221,7 +246,7 @@ public final class LogHolder {
 		{
 			tokenizer.nextToken(); // jump over the "at"
 			/* jump over all local class calls */
-			if ((strCurrentMethod = tokenizer.nextToken()).indexOf(LogHolder.class.getName()) < 0)
+			if ( (strCurrentMethod = tokenizer.nextToken()).indexOf(LogHolder.class.getName()) < 0)
 			{
 				// this is the method that called us
 				break;

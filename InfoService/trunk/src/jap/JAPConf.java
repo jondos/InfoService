@@ -28,6 +28,7 @@
 package jap;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -50,6 +51,7 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -85,8 +87,6 @@ import gui.JAPMultilineLabel;
 import logging.LogLevel;
 import logging.LogType;
 import pay.gui.AccountSettingsPanel;
-import javax.swing.JFileChooser;
-import java.io.*;
 
 final class JAPConf extends JDialog
 {
@@ -153,6 +153,7 @@ final class JAPConf extends JDialog
 	private JCheckBox m_cbShowDebugConsole, m_cbDebugToFile;
 	private JTextField m_tfDebugFileName;
 	private JButton m_bttnDebugFileNameSearch;
+	private JAPMultilineLabel m_labelConfDebugLevel, m_labelConfDebugTypes;
 
 	private JSlider m_sliderDebugLevel;
 
@@ -715,8 +716,8 @@ final class JAPConf extends JDialog
 		panelLogTypes.add(m_cbDebugThread);
 		panelLogTypes.add(m_cbDebugMisc);
 
-		JAPMultilineLabel l = new JAPMultilineLabel(JAPMessages.getString("ConfDebugTypes"));
-		p.add(l, c);
+		m_labelConfDebugTypes = new JAPMultilineLabel(JAPMessages.getString("ConfDebugTypes"));
+		p.add(m_labelConfDebugTypes, c);
 		c.gridy = 1;
 		p.add(panelLogTypes, c);
 		c.gridy = 2;
@@ -769,11 +770,12 @@ final class JAPConf extends JDialog
 				String strCurrentFile = ms_JapConfInstance.m_tfDebugFileName.getText().trim();
 				if (!strCurrentFile.equals(""))
 				{
-					try{
-					File f = new File(strCurrentFile);
-					fileChooser.setCurrentDirectory(new File(f.getParent()));
+					try
+					{
+						File f = new File(strCurrentFile);
+						fileChooser.setCurrentDirectory(new File(f.getParent()));
 					}
-					catch(Exception e1)
+					catch (Exception e1)
 					{
 					}
 				}
@@ -842,8 +844,8 @@ final class JAPConf extends JDialog
 		c.gridy = 0;
 		c.fill = GridBagConstraints.NONE;
 		c.insets = new Insets(5, 5, 5, 5);
-		JLabel la = new JLabel(JAPMessages.getString("ConfDebugLevels"));
-		p.add(la, c);
+		m_labelConfDebugLevel = new JAPMultilineLabel(JAPMessages.getString("ConfDebugLevels"));
+		p.add(m_labelConfDebugLevel, c);
 		c.gridy = 1;
 		c.weightx = 1;
 		p.add(panelDebugLevels, c);
@@ -1128,17 +1130,6 @@ final class JAPConf extends JDialog
 			currentModule.recreateRootPanel();
 		}
 		setTitle(JAPMessages.getString("settingsDialog"));
-		/*		m_Tabs.setTitleAt( ( (Integer) (m_tabOrder.get(new Integer(PORT_TAB)))).intValue(),
-		  JAPMessages.getString("confListenerTab"));
-		  m_Tabs.setTitleAt( ( (Integer) (m_tabOrder.get(new Integer(PROXY_TAB)))).intValue(),
-		  JAPMessages.getString("confProxyTab"));
-		  m_Tabs.setTitleAt( ( (Integer) (m_tabOrder.get(new Integer(ANON_TAB)))).intValue(),
-		  JAPMessages.getString("confAnonTab"));
-		  if (!JAPModel.isSmallDisplay())
-		  {
-		   m_Tabs.setTitleAt( ( (Integer) (m_tabOrder.get(new Integer(MISC_TAB)))).intValue(),
-		   JAPMessages.getString("confMiscTab"));
-		  }*/
 		m_bttnDefaultConfig.setText(JAPMessages.getString("bttnDefaultConfig"));
 		m_bttnCancel.setText(JAPMessages.getString("cancelButton"));
 		//Port Panel
@@ -1162,6 +1153,11 @@ final class JAPConf extends JDialog
 		m_labelProxyPort.setText(JAPMessages.getString("settingsProxyPort"));
 		m_labelProxyType.setText(JAPMessages.getString("settingsProxyType"));
 		m_labelProxyAuthUserID.setText(JAPMessages.getString("settingsProxyAuthUserID"));
+		m_labelConfDebugLevel.setText(JAPMessages.getString("ConfDebugLevels"));
+		m_labelConfDebugTypes.setText(JAPMessages.getString("ConfDebugTypes"));
+		m_bttnDebugFileNameSearch.setText(JAPMessages.getString("ConfDebugFileNameSearch"));
+		m_cbShowDebugConsole.setText(JAPMessages.getString("ConfDebugShowConsole"));
+		m_cbDebugToFile.setText(JAPMessages.getString("ConfDebugFile"));
 		pack();
 		/*	if(!m_Tree.isVisible())
 		 {
