@@ -1,5 +1,11 @@
 import java.util.*;
-
+import com.sun.xml.tree.XmlDocument;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
+import javax.xml.parsers.DocumentBuilderFactory;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 public class JAPModel implements JAPObserver {
 
 	public boolean		debug =false;
@@ -22,7 +28,7 @@ public class JAPModel implements JAPObserver {
 	private ResourceBundle msg;
 
 	static final String TITLE = "JAVA ANON PROXY -- JAP";
-    static final String AUTHOR = "Hannes Federrath\n<federrath@inf.tu-dresden.de>\n \n(c) 2000 \n";
+    static final String AUTHOR = "The JAP-Team\n<jap@inf.tu-dresden.de>\n \n(c) 2000 \n";
 
 	static final String MESSAGESFN = "JAPMessages";
 	static final int	MAXHELPLANGUAGES = 6;
@@ -88,6 +94,43 @@ public class JAPModel implements JAPObserver {
 		anonServerDatabase.addElement(new AnonServerDBEntry("localhost", 6543));
 		anonServerDatabase.addElement(new AnonServerDBEntry("192.168.1.1", 4007));
 	}
+	
+		public boolean load()
+			{
+				try
+					{
+						FileInputStream f=new FileInputStream("jap.conf");
+						Document doc=DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(f);
+						NamedNodeMap n=doc.getFirstChild().getAttributes();
+						anonHostName=n.getNamedItem("host").getNodeValue();
+						anonPortNumber=Integer.valueOf(n.getNamedItem("port").getNodeValue()).intValue();
+						System.out.println(anonHostName);
+						return true;	
+					}
+				catch(Exception e)
+					{
+						return false;
+					}
+			}
+	
+		public boolean save()
+			{
+				try
+					{
+						FileOutputStream f=new FileOutputStream("jap.conf");
+						Document doc=DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+						Element e=doc.createElement("anonhost");
+						e.setAttribute("host",anonHostName);
+						e.setAttribute("port",Integer.toString(anonPortNumber));
+						doc.appendChild(e);
+						((XmlDocument)doc).write(f);
+						return true;
+					}
+				catch(Exception e)
+					{
+						return false;
+					}
+			}
 	
     public int getCurrentProtectionLevel() {
 		// Hier eine moeglichst komplizierte Formel einfuegen,
@@ -157,9 +200,11 @@ public class JAPModel implements JAPObserver {
 				}
 		}
 		
-	public void goodBye() {
-		stopProxy();
-	}
+	public void goodBye()
+		{
+			stopProxy();
+			save();
+		}
 	
 	public void addJAPObserver(Object o) {
 		observerVector.addElement(o);
