@@ -118,6 +118,7 @@ final class JAPConf extends JDialog
 	final static public String PROXY_TAB = "PROXY_TAB";
 	final static public String INFOSERVICE_TAB = "INFOSERVICE_TAB";
 	final static public String ANON_TAB = "ANON_TAB";
+	final static public String ANON_SERVICES_TAB = "SERVICES_TAB";
 	final static public String CERT_TAB = "CERT_TAB";
 	final static public String TOR_TAB = "TOR_TAB";
 	final static public String DEBUG_TAB = "DEBUG_TAB";
@@ -158,6 +159,7 @@ final class JAPConf extends JDialog
 	private JSlider m_sliderDebugLevel;
 
 	private JPanel m_Tabs;
+	private JTabbedPane m_tabsAnonServices;
 	private CardLayout m_TabsLayout;
 	private JTree m_Tree;
 	/**
@@ -264,11 +266,11 @@ final class JAPConf extends JDialog
 		m_Tabs.add(updateModule.getRootPanel(), UPDATE_TAB);
 		m_Tabs.add(infoServiceModule.getRootPanel(), INFOSERVICE_TAB);
 		//m_tabOrder.put(new Integer(INFO_TAB), new Integer(m_Tabs.getTabCount() - 1));
-		JTabbedPane tabs = new JTabbedPane();
-		tabs.addTab(anonModule.getTabTitle(), anonModule.getRootPanel());
-		tabs.addTab(torModule.getTabTitle(), torModule.getRootPanel());
-		tabs.addTab(anongeneralModule.getTabTitle(), anongeneralModule.getRootPanel());
-		m_Tabs.add(tabs, ANON_TAB);
+		m_tabsAnonServices = new JTabbedPane();
+		m_tabsAnonServices.addTab(anonModule.getTabTitle(), anonModule.getRootPanel());
+		m_tabsAnonServices.addTab(torModule.getTabTitle(), torModule.getRootPanel());
+		m_tabsAnonServices.addTab(anongeneralModule.getTabTitle(), anongeneralModule.getRootPanel());
+		m_Tabs.add(m_tabsAnonServices, ANON_SERVICES_TAB);
 		//m_tabOrder.put(new Integer(ANON_TAB), new Integer(m_Tabs.getTabCount() - 1));
 		m_Tabs.add(certModule.getRootPanel(), CERT_TAB);
 		//m_tabOrder.put(new Integer(CERT_TAB), new Integer(m_Tabs.getTabCount() - 1));
@@ -361,7 +363,7 @@ final class JAPConf extends JDialog
 		rootNode.add(nodeAnon);
 		n2 = new DefaultMutableTreeNode(new TreeElement(infoServiceModule.getTabTitle(), INFOSERVICE_TAB));
 		nodeAnon.add(n2);
-		n2 = new DefaultMutableTreeNode(new TreeElement(JAPMessages.getString("ngTreeAnonService"), ANON_TAB));
+		n2 = new DefaultMutableTreeNode(new TreeElement(JAPMessages.getString("ngTreeAnonService"), ANON_SERVICES_TAB));
 		nodeAnon.add(n2);
 		n2 = new DefaultMutableTreeNode(new TreeElement(routingModule.getTabTitle(), FORWARD_TAB));
 		nodeAnon.add(n2);
@@ -1069,15 +1071,26 @@ final class JAPConf extends JDialog
 	 *
 	 * @param a_selectedCard The card to bring to the foreground. See the TAB constants in this
 	 *                       class.
+	 * @todo there is a temporally hack to select the anon tab of the tab-pane inside the services card
 	 */
 	public void selectCard(String a_strSelectedCard)
 	{
+		boolean bSearchForAnon=false;
 		DefaultTreeModel model = (DefaultTreeModel) m_Tree.getModel();
+		if(a_strSelectedCard.equals(ANON_TAB))
+		{
+			bSearchForAnon=true;
+			a_strSelectedCard=ANON_SERVICES_TAB;
+		}
 		TreeNode found = findTreeNode( (TreeNode) model.getRoot(), a_strSelectedCard);
 		if (found != null)
 		{
 			m_Tree.setSelectionPath(new TreePath(
 				( (DefaultMutableTreeNode) found).getPath()));
+   			if(bSearchForAnon)
+			   {
+					m_tabsAnonServices.setSelectedIndex(0);
+			   }
 		}
 	}
 
