@@ -28,8 +28,11 @@
 package jap;
 
 import java.util.Enumeration;
-
+import java.util.Vector;
+import java.awt.Color;
+import java.awt.Component;
 import java.awt.Cursor;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -38,35 +41,34 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JSeparator;
 import javax.swing.JTextField;
 import javax.swing.border.LineBorder;
-import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.*;
-
 import anon.infoservice.InfoServiceDBEntry;
 import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.MixCascade;
 import anon.infoservice.MixInfo;
 import gui.JAPMultilineLabel;
 import gui.ServerListPanel;
+import jap.platform.AbstractOS;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-
-import jap.platform.*;
 
 class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, ActionListener,
 	ListSelectionListener, ItemListener, KeyListener
@@ -75,6 +77,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	private static final String URL_END = "</u></font></HTML>";
 
 	private boolean bErr;
+
+	private InfoServiceTempLayer m_infoService;
 
 	private JAPJIntField m_tfMixPortNumber;
 	private JTextField m_tfMixHost;
@@ -495,11 +499,10 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		MixInfo selectedMixInfo =
 			InfoServiceHolder.getInstance().getMixInfo(selectedMixId);
 
-		m_operatorLabel.setText(selectedMixInfo.getServiceOperator().getOrganisation());
-		m_operatorLabel.setToolTipText(selectedMixInfo.getServiceOperator().getOrganisation());
-		m_locationLabel.setText(selectedMixInfo.getServiceLocation().getCity() + ", " +
-								selectedMixInfo.getServiceLocation().getCountry());
-		m_urlLabel.setText(URL_BEGIN + selectedMixInfo.getServiceOperator().getUrl()
+				m_operatorLabel.setText(m_infoService.getOperator(selectedMixId));
+				m_operatorLabel.setToolTipText(m_infoService.getOperator(selectedMixId));
+				m_locationLabel.setText(m_infoService.getLocation(selectedMixId));
+				m_urlLabel.setText(URL_BEGIN + m_infoService.getUrl(selectedMixId)
 						   + URL_END);
 			}
 			catch(Exception ex)
@@ -516,6 +519,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 	private void updateMixCascadeCombo()
 	{
+		//Update the temporary infoservice database
+		m_infoService = new InfoServiceTempLayer();
 		LogHolder.log(LogLevel.DEBUG, LogType.GUI, "-start");
 		Enumeration it = m_Controller.getMixCascadeDatabase().elements();
 		DefaultListModel listModel = new DefaultListModel();
@@ -876,21 +881,11 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				m_listMixCascade.getSelectedIndex() > -1)
 			{
 				MixCascade cascade = (MixCascade) m_listMixCascade.getSelectedValue();
+				String cascadeId = cascade.getId();
 
 				this.drawServerPanel(cascade.getMixCount(), true);
 				this.drawServerInfoPanel(null, null, null);
-				try
-				{
-					InfoServiceDBEntry entry = InfoServiceHolder.getInstance().getPreferedInfoService();
-					int numUsers = entry.getStatusInfo(cascade.getId(), cascade.getMixCount(),
-						InfoServiceHolder.getInstance()
-						.getCertificateStore()).getNrOfActiveUsers();
-					m_numOfUsersLabel.setText(Integer.toString(numUsers));
-				}
-				catch (Exception ex)
-				{
-
-				}
+				m_numOfUsersLabel.setText(m_infoService.getNumOfUsers(cascadeId));
 
 				if (cascade.isUserDefined())
 				{
@@ -899,53 +894,10 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 										 false);
 				}
 
-					String interfaces = "";
-					String ports = "";
-					int[] portsArray = new int[cascade.getNumberOfListenerInterfaces()];
-
-					for (int i = 0; i < cascade.getNumberOfListenerInterfaces(); i++)
-					{
-						if (interfaces.indexOf(cascade.getListenerInterface(i).getHost()) == -1)
-						{
-							interfaces += cascade.getListenerInterface(i).getHost();
-						}
-						portsArray[i] = cascade.getListenerInterface(i).getPort();
-
-						if (i != cascade.getNumberOfListenerInterfaces() - 1)
-						{
-							interfaces += "\n";
-						}
-
-					}
-
-					// Sort the array containing the port numbers and put the numbers into a string
-					for (int i = 0; i < portsArray.length; i++)
-					{
-						for (int j = i + 1; j < portsArray.length; j++)
-						{
-							if (portsArray[i] > portsArray[j])
-							{
-								int tmp = portsArray[j];
-								portsArray[j] = portsArray[i];
-								portsArray[i] = tmp;
-							}
-						}
-					}
-
-					for (int i = 0; i < portsArray.length; i++)
-					{
-						ports += String.valueOf(portsArray[i]);
-						if (i != portsArray.length - 1)
-						{
-							ports += ", ";
-						}
-
-					}
-
-					m_reachableLabel.setText(interfaces);
-					m_portsLabel.setText(ports);
+				m_reachableLabel.setText(m_infoService.getHosts(cascadeId));
+				m_portsLabel.setText(m_infoService.getPorts(cascadeId));
 					itemStateChanged(null);
-				m_listMixCascade.repaint();
+				//m_listMixCascade.repaint();
 				}
 		}
 	}
@@ -980,7 +932,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	public void keyReleased(KeyEvent e)
 	{
 			}
-
 }
 
 /**
@@ -1031,4 +982,290 @@ class CustomRenderer extends DefaultListCellRenderer
 
 		return l;
 	}
+}
+
+/**
+ * Temporary image of relevant infoservice entries. For better response time
+ * of the GUI.
+ */
+class InfoServiceTempLayer
+{
+	private Vector m_Cascades;
+	private Vector m_Mixes;
+
+	public InfoServiceTempLayer()
+	{
+		this.fill();
+	}
+
+	/**
+	 * Fills the temporary database by requesting info from the infoservice.
+	 */
+	public void fill()
+	{
+		m_Mixes = new Vector();
+		m_Cascades = new Vector();
+		InfoServiceDBEntry entry = InfoServiceHolder.getInstance().getPreferedInfoService();
+		try
+		{
+			Vector c  = entry.getMixCascades();
+			for(int j=0;j<c.size();j++)
+			{
+				MixCascade cascade = (MixCascade)c.elementAt(j);
+				//Get cascade id
+				String id = cascade.getId();
+				// Get the number of users on the cascade
+				String numOfUsers = Integer.toString(entry.getStatusInfo(cascade.getId(), cascade.getMixCount(),
+						InfoServiceHolder.getInstance()
+						.getCertificateStore()).getNrOfActiveUsers());
+				// Get hostnames and ports
+				String interfaces = "";
+				String ports = "";
+				int[] portsArray = new int[cascade.getNumberOfListenerInterfaces()];
+
+				for (int i = 0; i < cascade.getNumberOfListenerInterfaces(); i++)
+				{
+					if (interfaces.indexOf(cascade.getListenerInterface(i).getHost()) == -1)
+					{
+						interfaces += cascade.getListenerInterface(i).getHost();
+					}
+					portsArray[i] = cascade.getListenerInterface(i).getPort();
+
+					if (i != cascade.getNumberOfListenerInterfaces() - 1)
+					{
+						interfaces += "\n";
+					}
+
+				}
+
+				// Sort the array containing the port numbers and put the numbers into a string
+				for (int i = 0; i < portsArray.length; i++)
+				{
+					for (int k = i + 1; k < portsArray.length; k++)
+					{
+						if (portsArray[i] > portsArray[k])
+						{
+							int tmp = portsArray[k];
+							portsArray[k] = portsArray[i];
+							portsArray[i] = tmp;
+						}
+					}
+				}
+
+				for (int i = 0; i < portsArray.length; i++)
+				{
+					ports += String.valueOf(portsArray[i]);
+					if (i != portsArray.length - 1)
+					{
+						ports += ", ";
+					}
+
+				}
+				m_Cascades.addElement(new TempCascade(id, numOfUsers, interfaces, ports));
+				//Get mixes in cascade
+				Vector mixIds = cascade.getMixIds();
+				for(int k=0;k<mixIds.size();k++)
+				{
+					String mixId = (String)mixIds.elementAt(k);
+					MixInfo mixInfo =
+						InfoServiceHolder.getInstance().getMixInfo(mixId);
+					m_Mixes.addElement(new TempMix(mixId, mixInfo.getServiceOperator().getOrganisation(),
+												   mixInfo.getServiceOperator().getUrl(),
+												   mixInfo.getServiceLocation().getCity() + ", "+
+												   mixInfo.getServiceLocation().getCountry()));
+
+				}
+			}
+		}
+		catch(Exception a_e)
+		{
+		}
+	}
+
+	/**
+	 * Get the number of users in a cascade as a String.
+	 * @param a_cascadeId String
+	 * @return String
+	 */
+	public String getNumOfUsers(String a_cascadeId)
+	{
+		for(int i=0;i<m_Cascades.size();i++)
+		{
+			if (((TempCascade)m_Cascades.elementAt(i)).getId().equalsIgnoreCase(a_cascadeId))
+			{
+				return ((TempCascade)m_Cascades.elementAt(i)).getNumOfUsers();
+			}
+		}
+		return "N/A";
+	}
+
+	/**
+	 * Get the hostnames of a cascade.
+	 * @param a_cascadeId String
+	 * @return String
+	 */
+	public String getHosts(String a_cascadeId)
+	{
+		for (int i = 0; i < m_Cascades.size(); i++)
+		{
+			if ( ( (TempCascade) m_Cascades.elementAt(i)).getId().equalsIgnoreCase(a_cascadeId))
+			{
+				return ( (TempCascade) m_Cascades.elementAt(i)).getHosts();
+			}
+		}
+		return "N/A";
+	}
+
+	/**
+	 * Get the ports of a cascade.
+	 * @param a_cascadeId String
+	 * @return String
+	 */
+	public String getPorts(String a_cascadeId)
+	{
+		for (int i = 0; i < m_Cascades.size(); i++)
+		{
+			if ( ( (TempCascade) m_Cascades.elementAt(i)).getId().equalsIgnoreCase(a_cascadeId))
+			{
+				return ( (TempCascade) m_Cascades.elementAt(i)).getPorts();
+			}
+		}
+		return "N/A";
+	}
+
+	/**
+	 * Get the operator name of a cascade.
+	 * @param a_mixId String
+	 * @return String
+	 */
+	public String getOperator(String a_mixId)
+	{
+		for (int i = 0; i < m_Mixes.size(); i++)
+		{
+			if ( ( (TempMix) m_Mixes.elementAt(i)).getId().equalsIgnoreCase(a_mixId))
+			{
+				return ( (TempMix) m_Mixes.elementAt(i)).getOperator();
+			}
+		}
+		return "N/A";
+	}
+	/**
+	 * Get the web URL of a cascade.
+	 * @param a_mixId String
+	 * @return String
+	 */
+	public String getUrl(String a_mixId)
+	{
+		for (int i = 0; i < m_Mixes.size(); i++)
+		{
+			if ( ( (TempMix) m_Mixes.elementAt(i)).getId().equalsIgnoreCase(a_mixId))
+			{
+				return ( (TempMix) m_Mixes.elementAt(i)).getUrl();
+			}
+		}
+		return "N/A";
+	}
+
+	/**
+	 * Get the location of a cascade.
+	 * @param a_mixId String
+	 * @return String
+	 */
+	public String getLocation(String a_mixId)
+	{
+		for (int i = 0; i < m_Mixes.size(); i++)
+		{
+			if ( ( (TempMix) m_Mixes.elementAt(i)).getId().equalsIgnoreCase(a_mixId))
+			{
+				return ( (TempMix) m_Mixes.elementAt(i)).getLocation();
+			}
+		}
+		return "N/A";
+	}
+
+
+
+
+
+}
+
+/**
+ *
+ * Cascade database entry for the temporary infoservice.
+ */
+class TempCascade
+{
+	private String m_id;
+	private String m_users;
+	private String m_ports;
+	private String m_hosts;
+
+	public TempCascade(String a_id, String a_numOfUsers, String a_hosts, String a_ports)
+	{
+		m_id = a_id;
+		m_users = a_numOfUsers;
+		m_hosts = a_hosts;
+		m_ports = a_ports;
+	}
+
+	public String getId()
+	{
+		return m_id;
+	}
+
+	public String getNumOfUsers()
+	{
+		return m_users;
+	}
+
+	public String getPorts()
+	{
+		return m_ports;
+	}
+
+	public String getHosts()
+	{
+		return m_hosts;
+	}
+
+}
+
+/**
+ * Mix database entry for the temporary cascade
+ */
+class TempMix
+{
+	private String m_id;
+	private String m_operator;
+	private String m_url;
+	private String m_location;
+
+	public TempMix(String a_id, String a_operator, String a_url, String a_location)
+	{
+		m_id = a_id;
+		m_operator = a_operator;
+		m_url = a_url;
+		m_location = a_location;
+	}
+
+	public String getId()
+	{
+		return m_id;
+	}
+
+	public String getOperator()
+	{
+		return m_operator;
+	}
+
+	public String getUrl()
+	{
+		return m_url;
+	}
+
+	public String getLocation()
+	{
+		return m_location;
+	}
+
 }

@@ -32,6 +32,7 @@ import java.awt.Insets;
 import anon.tor.Circuit;
 import anon.tor.Tor;
 
+
 public final class JAPConstants
 {
 	public static final String aktVersion = "00.03.022"; //Never change the layout of this line!
