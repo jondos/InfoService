@@ -39,9 +39,8 @@ import java.io.DataInputStream;
 import java.lang.Integer;
 import java.util.Enumeration;
 import java.math.BigInteger;
-public final class JAPMuxSocket extends Thread /*implements Runnable*/
+final class JAPMuxSocket implements Runnable
 	{
-/*PROTO1
 		private int lastChannelId;
 		private Dictionary oSocketList;
 		private DataOutputStream outDataStream;
@@ -52,259 +51,30 @@ public final class JAPMuxSocket extends Thread /*implements Runnable*/
 		private JAPASymCipher[] arASymCipher;
 		private JAPKeyPool keypool;
 		private int chainlen;
-		private volatile boolean runflag;
-		
-		private final static int KEY_SIZE=16;
-		private final static int DATA_SIZE=1000;
-		private final static int RSA_SIZE=128;
-		
-		private final class SocketListEntry
-			{
-				SocketListEntry(JAPSocket s)
-					{
-						inSocket=s;
-						try
-							{
-								outStream=s.getOutputStream();
-								arCipher=null;
-							}
-						catch(Exception e)
-							{
-								JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"Oops - SocketListEntry!");
-							}
-					}
-				public JAPSocket inSocket;
-				public OutputStream outStream;
-				public JAPSymCipher[] arCipher;
-			};
-
-		JAPMuxSocket()
-			{
-				lastChannelId=0;
-				oSocketList=new Hashtable();
-				arASymCipher=null;
-				outBuff=new byte[DATA_SIZE];
-				keypool=JAPModel.getModel().keypool;
-			}
-
-		public int connect(String host, int port)
-			{
-				try
-					{
-						ioSocket=new Socket(host,port);
-						outDataStream=new DataOutputStream(new BufferedOutputStream(ioSocket.getOutputStream(),1008));
-						inDataStream=new DataInputStream(ioSocket.getInputStream());
-						inDataStream.readUnsignedShort(); //len.. unitressteing at the moment
-						chainlen=inDataStream.readByte();
-						arASymCipher=new JAPASymCipher[chainlen];
-						for(int i=chainlen-1;i>=0;i--)
-							{
-								arASymCipher[i]=new JAPASymCipher();
-								int tmp=inDataStream.readUnsignedShort();
-								byte[] buff=new byte[tmp];
-								inDataStream.readFully(buff);
-								BigInteger n=new BigInteger(1,buff);
-								tmp=inDataStream.readUnsignedShort();
-								buff=new byte[tmp];
-								inDataStream.readFully(buff);
-								BigInteger e=new BigInteger(1,buff);
-								arASymCipher[i].setPublicKey(n,e);
-							}
-					}
-				catch(Exception e)
-					{
-						return -1;
-					}
-				return 0;
-			}
-
-		public synchronized int newConnection(JAPSocket s)
-			{
-				JAPProxyConnection p=new JAPProxyConnection(s,lastChannelId,this);
-				oSocketList.put(new Integer(lastChannelId),new SocketListEntry(s));
-				JAPModel.getModel().setNrOfChannels(oSocketList.size());
-				p.start();
-				lastChannelId++;
-				return 0;
-			}
-
-		public synchronized int close(int channel)
-			{
-				oSocketList.remove(new Integer(channel));
-				send(channel,null,(short)0);
-				JAPModel.getModel().setNrOfChannels(oSocketList.size());
-				return 0;
-			}
-
-		public synchronized int close()
-			{
-				runflag=false;
-				Enumeration e=oSocketList.keys();
-				while(e.hasMoreElements())
-					{
-						Integer key=(Integer)e.nextElement();
-						SocketListEntry entry=(SocketListEntry)oSocketList.get(key);
-						close(key.intValue());
-						try
-							{
-								entry.inSocket.close();
-							}
-						catch(Exception ie){}
-						oSocketList.remove(key);
-					}
-				JAPModel.getModel().setNrOfChannels(oSocketList.size());
-				try
-					{
-						inDataStream.close();
-						outDataStream.close();
-						ioSocket.close();
-						join();
-					}
-				catch(Exception ie)
-					{
-					};
-				return 0;
-			}
-
-		public void run()
-			{
- 				byte[] buff=new byte[1000];
-				int len=0;
-				int tmp=0;
-				int channel=0;
-				runflag=true;
-				while(runflag)
-					{
-						try
-							{
-								channel=inDataStream.readInt();
-								len=inDataStream.readShort();
-								tmp=inDataStream.readShort();								
-								inDataStream.readFully(buff);
-							}
-						catch(Exception e)
-							{
-								runflag=false;
-								JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"CAMuxSocket-run-Exception: receive");
-								break;
-							}
-						SocketListEntry tmpEntry=(SocketListEntry)oSocketList.get(new Integer(channel));
-						if(tmpEntry!=null)
-							{
-								for(int i=0;i<chainlen;i++)
-										tmpEntry.arCipher[i].encryptAES(buff);
-								if(len==0)
-									{
-										oSocketList.remove(new Integer(channel));
-										JAPModel.getModel().setNrOfChannels(oSocketList.size());
-										try
-											{
-												tmpEntry.outStream.close();
-												tmpEntry.inSocket.close();
-											}
-										catch(Exception e)
-											{
-											}
-									}
-								else
-									{
-										for(int i=0;i<3;i++)
-											{
-												try
-													{
-														tmpEntry.outStream.write(buff,0,len);
-														break;
-													}
-												catch(Exception e)
-													{
-														e.printStackTrace();
-														JAPDebug.out(JAPDebug.WARNING,JAPDebug.NET,"Fehler bei write to browser...retrying...");														
-													}
-											}
-										try{tmpEntry.outStream.flush();}catch(Exception e){};
-										JAPModel.getModel().increasNrOfBytes(len);
-									}
-							}
-					}
-			}
-
-		public synchronized int send(int channel,byte[] buff,short len)
-			{
-				try
-					{
-						SocketListEntry entry=(SocketListEntry)oSocketList.get(new Integer(channel));
-						if(entry!=null&&entry.arCipher==null)
-							{
-								int size=DATA_SIZE-16;
-								byte[] key=new byte[KEY_SIZE];		
-								entry.arCipher=new JAPSymCipher[chainlen];
-								for(int i=chainlen-1;i>=0;i--)
-									{
-										entry.arCipher[i]=new JAPSymCipher();
-										keypool.getKey(key);
-										key[0]=(byte)(key[0]&0x7F); //RSA HACK!! (to ensure what m<n in RSA-Encrypt: c=m^e mod n)
-										entry.arCipher[i].setEncryptionKeyAES(key);
-	//									entry.arCipher[i].setEncryptionKey(key);
-										
-										System.arraycopy(key,0,outBuff,0,KEY_SIZE);
-										System.arraycopy(buff,0,outBuff,KEY_SIZE,size);
-										arASymCipher[i].encrypt(outBuff,0,outBuff,0);
-										entry.arCipher[i].encryptAES(outBuff,RSA_SIZE,outBuff,RSA_SIZE,DATA_SIZE-RSA_SIZE);
-										System.arraycopy(outBuff,0,buff,0,DATA_SIZE);
-										size-=KEY_SIZE;
-										len+=KEY_SIZE;
-									}						
-							}
-						else
-							{
-								if(buff!=null)
-									{
-										System.arraycopy(buff,0,outBuff,0,len);
-										for(int i=chainlen-1;i>=0;i--)
-											entry.arCipher[i].encryptAES(outBuff); //something throws a null pointer....
-									}	
-							}
-						outDataStream.writeInt(channel);
-						outDataStream.writeShort(len);
-						outDataStream.writeShort(0);
-						outDataStream.write(outBuff);
-						outDataStream.flush();
-						JAPModel.getModel().increasNrOfBytes(len);
-					}
-				catch(Exception e)
-					{
-						e.printStackTrace();
-						JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"Sending exception!");
-						return -1;
-					}
-				return 0;
-			}
-END PROTO1*/
-///*PROTO2
-		private int lastChannelId;
-		private Dictionary oSocketList;
-		private DataOutputStream outDataStream;
-		private DataInputStream inDataStream;
-		
-		private Socket ioSocket;
-		private	byte[] outBuff;
-		private JAPASymCipher[] arASymCipher;
-		private JAPKeyPool keypool;
-		private int chainlen;
-		private volatile boolean runflag;
-		private boolean bIsConnected=false;
+		private volatile boolean m_bRunFlag;
+		private boolean m_bIsConnected=false;
 		
 		public final static int KEY_SIZE=16;
 		public final static int DATA_SIZE=992;
 		private final static int RSA_SIZE=128;
 		private final static short CHANNEL_DATA=0;
 		private final static short CHANNEL_CLOSE=1;
-		private final static short CHANNEL_RESUME=1;
-		private final static short CHANNEL_SUSPEND=1;
-		public final static int E_CHANNEL_SUSPENDED=-7;	
+	/*	#define CHANNEL_DATA		0x00
+	#define CHANNEL_OPEN		0x00
+	#define CHANNEL_CLOSE		0x01
+	#define CHANNEL_SUSPEND 0x02
+	#define	CHANNEL_RESUME	0x04
+	*/	//private final static short CHANNEL_RESUME=1;
+		//private final static short CHANNEL_SUSPEND=1;
+		//public final static int E_CHANNEL_SUSPENDED=-7;	
+		public final static int E_ALREADY_CONNECTED=-8;	
+		public final static int E_NOT_CONNECTED=-8;	
 		
+		private static JAPMuxSocket ms_MuxSocket=null;
+		private int m_RunCount=0;
 		
-		private JAPAnonService m_AnonService=null;
+		private Thread threadRunLoop;
+
 		private final class SocketListEntry
 			{
 				SocketListEntry(JAPSocket s)
@@ -327,77 +97,170 @@ END PROTO1*/
 				public boolean bIsSuspended;
 			};
 
-		public JAPMuxSocket(JAPAnonService service)
+		private JAPMuxSocket()
 			{
 				lastChannelId=0;
 				oSocketList=new Hashtable();
 				arASymCipher=null;
 				outBuff=new byte[DATA_SIZE];
-				keypool=service.getKeyPool();
-				m_AnonService=service;
+				threadRunLoop=null;
+				keypool=new JAPKeyPool(20,16);
+				Thread t1 = new Thread (keypool);
+				t1.setPriority(Thread.MIN_PRIORITY);
+				t1.start();
+				m_RunCount=0;
 			}
 
+		public static JAPMuxSocket create()
+			{
+				if(ms_MuxSocket==null)
+					ms_MuxSocket=new JAPMuxSocket();
+				return ms_MuxSocket;
+			}
+		
+		public static boolean isConnected()
+			{
+				return (ms_MuxSocket!=null&&ms_MuxSocket.m_bIsConnected);
+			}
+		
 		public int connect(String host, int port)
 			{
-				try
+				synchronized(this)
 					{
-						ioSocket=new Socket(host,port);
-						outDataStream=new DataOutputStream(new BufferedOutputStream(ioSocket.getOutputStream(),DATA_SIZE+6));
-						inDataStream=new DataInputStream(ioSocket.getInputStream());
-						inDataStream.readUnsignedShort(); //len.. unitressteing at the moment
-						chainlen=inDataStream.readByte();
-						arASymCipher=new JAPASymCipher[chainlen];
-						for(int i=chainlen-1;i>=0;i--)
+						if(m_bIsConnected)
+							return E_ALREADY_CONNECTED;
+						try
 							{
-								arASymCipher[i]=new JAPASymCipher();
-								int tmp=inDataStream.readUnsignedShort();
-								byte[] buff=new byte[tmp];
-								inDataStream.readFully(buff);
-								BigInteger n=new BigInteger(1,buff);
-								tmp=inDataStream.readUnsignedShort();
-								buff=new byte[tmp];
-								inDataStream.readFully(buff);
-								BigInteger e=new BigInteger(1,buff);
-								arASymCipher[i].setPublicKey(n,e);
+								JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Try to connect to Mix");														
+								ioSocket=new Socket(host,port);
+								JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Connected to Mix - starting Key-Exchange...");														
+								outDataStream=new DataOutputStream(new BufferedOutputStream(ioSocket.getOutputStream(),DATA_SIZE+6));
+								inDataStream=new DataInputStream(ioSocket.getInputStream());
+								JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Reading len...");														
+								inDataStream.readUnsignedShort(); //len.. unitressteing at the moment
+								JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Reading Mix-Count...");														
+								chainlen=inDataStream.readByte();
+								arASymCipher=new JAPASymCipher[chainlen];
+								for(int i=chainlen-1;i>=0;i--)
+									{
+										arASymCipher[i]=new JAPASymCipher();
+										int tmp=inDataStream.readUnsignedShort();
+										byte[] buff=new byte[tmp];
+										inDataStream.readFully(buff);
+										BigInteger n=new BigInteger(1,buff);
+										tmp=inDataStream.readUnsignedShort();
+										buff=new byte[tmp];
+										inDataStream.readFully(buff);
+										BigInteger e=new BigInteger(1,buff);
+										arASymCipher[i].setPublicKey(n,e);
+									}
 							}
-					}
-				catch(Exception e)
-					{
-						bIsConnected=false;
-						return -1;
-					}
-				bIsConnected=true;
-				return 0;
-			}
-
-		public synchronized int newConnection(JAPSocket s) throws ConnectException
-			{
-				if(bIsConnected)
-					{
-						JAPAnonChannel p=new JAPAnonChannel(s,lastChannelId,this);
-						oSocketList.put(new Integer(lastChannelId),new SocketListEntry(s));
-						
-						m_AnonService.setNrOfChannels(oSocketList.size());
-						p.start();
-						lastChannelId++;
+						catch(Exception e)
+							{
+								m_bIsConnected=false;
+								return -1;
+							}
+						m_bIsConnected=true;
 						return 0;
 					}
-				else
-					throw new ConnectException("Not connected to a MIX!");
 			}
 
-		public synchronized int close(int channel)
+		public int newConnection(JAPSocket s) throws ConnectException
 			{
-				oSocketList.remove(new Integer(channel));
-				send(channel,null,(short)0);
-				m_AnonService.setNrOfChannels(oSocketList.size());
-				return 0;
+				synchronized(this)
+					{
+						if(m_bIsConnected)
+							{
+								JAPAnonChannel p=new JAPAnonChannel(s,lastChannelId,this);
+								oSocketList.put(new Integer(lastChannelId),new SocketListEntry(s));
+								
+								JAPAnonService.setNrOfChannels(oSocketList.size());
+								p.start();
+								lastChannelId++;
+								return 0;
+							}
+						else
+							throw new ConnectException("Not connected to a MIX!");
+					}
 			}
 
-		public synchronized int close()
+		public int close(int channel)
 			{
-				runflag=false;
-				bIsConnected=false;
+				synchronized(this)
+					{
+						oSocketList.remove(new Integer(channel));
+						send(channel,null,(short)0);
+						JAPAnonService.setNrOfChannels(oSocketList.size());
+						return 0;
+					}
+			}
+
+		private int close()
+			{
+				synchronized(this)
+					{
+						if(!m_bIsConnected)
+							return E_NOT_CONNECTED;
+						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Closing MuxSocket...");														
+						m_bRunFlag=false;
+						try	
+							{
+								threadRunLoop.join(100);
+							}
+						catch(Exception e)
+							{
+								e.printStackTrace();
+							}
+						if(threadRunLoop.isAlive())
+							{
+								try{inDataStream.close();}catch(Exception e1){}
+								try{threadRunLoop.join(2000);}catch(Exception e){e.printStackTrace();}
+								if(threadRunLoop.isAlive())
+									{
+										JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Hm.. still alive");														
+										threadRunLoop.stop();
+										runStoped();
+									}
+							}
+						threadRunLoop=null;
+						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"MuxSocket closed!");														
+						return 0;
+					}
+			}
+
+		public int startService()
+			{
+				synchronized(this)
+					{
+						if(!m_bIsConnected)
+							return -1;
+						if(m_RunCount==0)
+							{
+								threadRunLoop=new Thread(this);
+								threadRunLoop.setPriority(Thread.MAX_PRIORITY);
+								threadRunLoop.start();
+							}
+						m_RunCount++;
+						return m_RunCount;
+					}
+			}
+		
+		public int stopService()
+			{	
+				synchronized(this)
+					{
+						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Stopping Service...");														
+						m_RunCount--;
+						if(m_RunCount==0)
+							close();
+						return m_RunCount;
+					}
+			}
+		
+		
+		private void runStoped()
+			{
+				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"MuxSocket run stoped...");														
 				Enumeration e=oSocketList.keys();
 				while(e.hasMoreElements())
 					{
@@ -411,28 +274,30 @@ END PROTO1*/
 						catch(Exception ie){}
 						oSocketList.remove(key);
 					}
-				m_AnonService.setNrOfChannels(oSocketList.size());
-				try
-					{
-						inDataStream.close();
-						outDataStream.close();
-						ioSocket.close();
-						join();
-					}
-				catch(Exception ie)
-					{
-					};
-				return 0;
+				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"MuxSocket all channels closed...");														
+				m_bRunFlag=false;
+				m_bIsConnected=false;
+				try{inDataStream.close();}catch(Exception e1){}
+				try{outDataStream.close();}catch(Exception e2){}
+				try{ioSocket.close();}catch(Exception e3){}
+				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"MuxSocket socket closed...");														
+				inDataStream=null;
+				outDataStream=null;
+				ioSocket=null;
+				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Updating View...");														
+				JAPAnonService.setNrOfChannels(oSocketList.size());
+				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"All done..");														
 			}
-
+		
 		public void run()
 			{
- 				byte[] buff=new byte[DATA_SIZE];
+ 				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"MuxSocket is running...");														
+				byte[] buff=new byte[DATA_SIZE];
 				int flags=0;
 				int channel=0;
 				int len=0;
-				runflag=true;
-				while(runflag)
+				m_bRunFlag=true;
+				while(m_bRunFlag)
 					{
 						try
 							{
@@ -442,8 +307,6 @@ END PROTO1*/
 							}
 						catch(Exception e)
 							{
-								runflag=false;
-								bIsConnected=false;
 								JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"CAMuxSocket-run-Exception: receive");
 								break;
 							}
@@ -453,7 +316,7 @@ END PROTO1*/
 								if(flags==CHANNEL_CLOSE)
 									{
 										oSocketList.remove(new Integer(channel));
-										m_AnonService.setNrOfChannels(oSocketList.size());
+										JAPAnonService.setNrOfChannels(oSocketList.size());
 										try
 											{
 												tmpEntry.outStream.close();
@@ -469,23 +332,28 @@ END PROTO1*/
 										for(int i=0;i<chainlen;i++)
 												tmpEntry.arCipher[i].encryptAES(buff);									
 										len=(buff[0]<<8)|(buff[1]&0xFF);
-										for(int i=0;i<3;i++)
-											{
-												try
-													{
-														tmpEntry.outStream.write(buff,3,len);
-														break;
-													}
-												catch(Exception e)
-													{
-														JAPDebug.out(JAPDebug.WARNING,JAPDebug.NET,"Fehler bei write to browser...retrying..."+e.toString());														
-														len=0;
-													}
-											}
-										try{tmpEntry.outStream.flush();}catch(Exception e){e.printStackTrace();};
-										m_AnonService.increaseNrOfBytes(len);
+										len&=0x0000FFFF;
+										if(len<0||len>DATA_SIZE)
+											JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Receveived MuxPacket with invalid data size: "+Integer.toString(len));											
+										else
+										{
+											for(int i=0;i<3;i++)
+												{
+													try
+														{
+															tmpEntry.outStream.write(buff,3,len);
+															break;
+														}
+													catch(Exception e)
+														{
+															JAPDebug.out(JAPDebug.WARNING,JAPDebug.NET,"Fehler bei write to browser...retrying..."+e.toString());														
+														}
+												}
+											try{tmpEntry.outStream.flush();}catch(Exception e){e.printStackTrace();};
+											JAPAnonService.increaseNrOfBytes(len);
+										}
 									}
-								else if(flags==CHANNEL_SUSPEND)
+						/*		else if(flags==CHANNEL_SUSPEND)
 									{
 										tmpEntry.bIsSuspended=true;
 										JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Suspending Channel: "+Integer.toString(channel));
@@ -494,15 +362,19 @@ END PROTO1*/
 									{	
 										tmpEntry.bIsSuspended=false;
 										JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Resumeing Channel: "+Integer.toString(channel));
-									}
+									}*/
 							}
 					}
+				runStoped();
+				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"MuxSocket thread run exited...");														
 			}
 
 		public synchronized int send(int channel,byte[] buff,short len)
 			{
 				try
 					{
+						if(!m_bIsConnected)
+							return E_NOT_CONNECTED;
 						if(buff==null&&len==0)
 							{
 								outDataStream.writeInt(channel);
@@ -561,9 +433,9 @@ END PROTO1*/
 						outDataStream.writeShort(CHANNEL_DATA);
 						outDataStream.write(buff,0,DATA_SIZE);
 						outDataStream.flush();
-						m_AnonService.increaseNrOfBytes(len);
-						if(entry!=null&&entry.bIsSuspended)
-							return E_CHANNEL_SUSPENDED;
+						JAPAnonService.increaseNrOfBytes(len);
+						//if(entry!=null&&entry.bIsSuspended)
+						//	return E_CHANNEL_SUSPENDED;
 					}
 				catch(Exception e)
 					{

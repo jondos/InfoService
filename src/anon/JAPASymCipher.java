@@ -28,7 +28,7 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 package anon;
 import java.math.BigInteger;
 
-public final class JAPASymCipher
+final class JAPASymCipher
 {
 ///* My hack Crypt...
 	private BigInteger n;

@@ -33,7 +33,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.ImageIcon;
 
-public final class JAPSplash extends Window  {
+final class JAPSplash extends Window  {
 	public  JAPSplash (JAPModel m) {
 		super(new Frame());
 		setBackground(Color.black);

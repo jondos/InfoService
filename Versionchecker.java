@@ -45,7 +45,7 @@ import HTTPClient.HTTPResponse;
  * of the program from http://path and stores the received data to file <code>localFilename</code>.
  * 
  */
-public final class Versionchecker implements Runnable {
+final class Versionchecker implements Runnable {
 
 	private VersioncheckerProgress vcp = null;
 	private URL url;

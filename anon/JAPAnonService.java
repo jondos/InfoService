@@ -1,3 +1,30 @@
+/*
+Copyright (c) 2000, The JAP-Team 
+All rights reserved.
+Redistribution and use in source and binary forms, with or without modification, 
+are permitted provided that the following conditions are met:
+
+	- Redistributions of source code must retain the above copyright notice, 
+	  this list of conditions and the following disclaimer.
+
+	- Redistributions in binary form must reproduce the above copyright notice, 
+	  this list of conditions and the following disclaimer in the documentation and/or 
+		other materials provided with the distribution.
+
+	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors 
+	  may be used to endorse or promote products derived from this software without specific 
+		prior written permission. 
+
+	
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS 
+OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY 
+AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS
+BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, 
+OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER 
+IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY 
+OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
+*/
 package anon;
 
 import java.net.InetAddress;
@@ -5,7 +32,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import anon.JAPMuxSocket;
 
-public class JAPAnonService implements Runnable
+public final class JAPAnonService implements Runnable
 	{
 		public final static int E_SUCCESS=0;
 		public final static int E_RUNNING=-6;
@@ -20,23 +47,16 @@ public class JAPAnonService implements Runnable
 		private int m_Port=-1;
 		private int m_Protocol=-1;
 		private boolean m_bBindToLocalHostOnly=true;
-		private boolean m_bIsRunning=false;
-		private String m_AnonHostName=null;
-		private int m_AnonHostPort=-1;
+		private volatile boolean m_bIsRunning=false;
+		private static String m_AnonHostName=null;
+		private static int m_AnonHostPort=-1;
 		private Thread m_threadRunLoop=null;
 		private ServerSocket socketListener=null;
 		private JAPMuxSocket m_MuxSocket=null;
 		
-		private JAPAnonServiceListener m_AnonServiceListener=null;
+		private static JAPAnonServiceListener m_AnonServiceListener=null;
 
-		private static JAPKeyPool m_KeyPool=null;
-		public JAPAnonService(){if(m_KeyPool==null)
-														{
-															m_KeyPool=new JAPKeyPool(20,16);
-															Thread t1 = new Thread (m_KeyPool);
-															t1.setPriority(Thread.MIN_PRIORITY);
-															t1.start();
-														}}
+		public JAPAnonService(){}
 		public JAPAnonService(int port){this();setPort(port);}
 		public JAPAnonService(int port,int protocol)
 			{
@@ -68,8 +88,10 @@ public class JAPAnonService implements Runnable
 				return E_SUCCESS;
 			}
 		
-		public int setAnonService(String name,int port)
+		public static int setAnonService(String name,int port)
 			{
+				if(JAPMuxSocket.isConnected())
+					return E_CONNECT;
 				m_AnonHostName=name;
 				m_AnonHostPort=port;
 				return E_SUCCESS;
@@ -110,7 +132,7 @@ public class JAPAnonService implements Runnable
 					}
 				
 				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPProxyServer:Mux starting...");
-				m_MuxSocket = new JAPMuxSocket(this);
+				m_MuxSocket = JAPMuxSocket.create();
 				if(m_MuxSocket.connect(m_AnonHostName,m_AnonHostPort)==-1)
 					{
 						try{ socketListener.close(); }catch(Exception e){}
@@ -119,7 +141,7 @@ public class JAPAnonService implements Runnable
 						return E_CONNECT;
 					}
 				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPProxyServer:Mux connected!");
-				m_MuxSocket.start();
+				m_MuxSocket.startService();
 				m_threadRunLoop=new Thread(this);
 				m_threadRunLoop.start();
 				return E_SUCCESS;
@@ -129,16 +151,14 @@ public class JAPAnonService implements Runnable
 			{
 				try
 					{
+						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPAnonService: stopping...");
 						m_bIsRunning=false;
-						m_threadRunLoop.interrupt();
+						try{socketListener.close();}catch(Exception e1){};
+						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPAnonService: wait for joining...");
 						m_threadRunLoop.join();
 						m_threadRunLoop=null;
-						m_MuxSocket.close();
-						m_MuxSocket=null;
-						socketListener.close();
-						socketListener=null;
 					}
-				catch(Exception e){}
+				catch(Exception e){e.printStackTrace();}
 				return E_SUCCESS;
 			}
 		
@@ -156,31 +176,35 @@ public class JAPAnonService implements Runnable
 					}
 				catch (Exception e)
 					{
-						try
-							{
-								socketListener.close();
-							} 
-						catch (Exception e2) {}
 						JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPProxyServer:ProxyServer.run() Exception: " +e);
 					}
 				JAPDebug.out(JAPDebug.INFO,JAPDebug.NET,"JAPProxyServer:ProxyServer on port " + m_Port + " stopped.");
 				m_bIsRunning=false;
+				m_MuxSocket.stopService();
+				m_MuxSocket=null;
+				try
+					{
+						socketListener.close();
+					} 
+				catch (Exception e2) {}
+				socketListener=null;
 			}
 		
-		protected void setNrOfChannels(int channels)
+		protected static void setNrOfChannels(int channels)
 			{
+				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Notify channel listeners");
 				if(m_AnonServiceListener!=null)
 					m_AnonServiceListener.channelsChanged(channels);
+				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"End Notify channel listeners");
 			}
 		
-		protected void increaseNrOfBytes(int bytes)
+		protected static void increaseNrOfBytes(int bytes)
 			{
+				//JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Notify bytes listeners");
 				if(m_AnonServiceListener!=null)
 					m_AnonServiceListener.transferedBytes(bytes);
+				//JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"End Notify bytes listeners");
 			}
 		
-		protected JAPKeyPool getKeyPool()
-			{
-				return m_KeyPool;
-			}
+		
 	}

@@ -33,15 +33,19 @@ import org.w3c.dom.NamedNodeMap;
 import HTTPClient.HTTPConnection;
 import HTTPClient.HTTPResponse;
 
-public final class JAPFeedback implements Runnable {
+final class JAPFeedback implements Runnable {
 	
 	private JAPModel model;
-	private boolean runFlag = true;
+	private volatile boolean runFlag;
+	
+	private Thread m_threadRunLoop;
 	
 	public JAPFeedback()
 		{
 			JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPFeedback:initializing...");
 			model = JAPModel.getModel();
+			m_threadRunLoop=null;
+			runFlag=false;
 		}
 		
 	public void run()
@@ -62,10 +66,25 @@ public final class JAPFeedback implements Runnable {
 				}
 		}
 	
+	public void startRequests() 
+		{
+			if(!runFlag)
+				{
+					m_threadRunLoop=new Thread(this);
+					m_threadRunLoop.setPriority(Thread.MIN_PRIORITY);
+					m_threadRunLoop.start();
+				}
+		}
+
 	public void stopRequests() 
 		{
 			runFlag = false;
-			this.notify();
+			if(m_threadRunLoop!=null)
+				{
+					m_threadRunLoop.interrupt();
+					try{m_threadRunLoop.join();}catch(Exception e){}
+					m_threadRunLoop=null;
+				}
 		}
 
 }

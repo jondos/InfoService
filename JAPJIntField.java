@@ -31,7 +31,7 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.text.PlainDocument;
 
-public final class JAPJIntField extends JTextField 
+final class JAPJIntField extends JTextField 
 	{
 
     public JAPJIntField() 

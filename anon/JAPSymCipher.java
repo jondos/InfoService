@@ -27,7 +27,7 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 */
 package anon;
 import Rijndael.Rijndael_Algorithm;
-public final class JAPSymCipher
+final class JAPSymCipher
 	{
 	/** Start LOGI-CRYPT
 	 	

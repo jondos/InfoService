@@ -37,7 +37,7 @@ import java.io.ByteArrayOutputStream;
 import sun.misc.BASE64Encoder;
 import sun.misc.BASE64Decoder;
 import java.util.StringTokenizer;
-public final class JAPCertificate implements Certificate
+final class JAPCertificate implements Certificate
 	{
 		private X509Cert cert;
 		

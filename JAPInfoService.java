@@ -37,7 +37,7 @@ import HTTPClient.NVPair;
 
 import java.net.InetAddress;
 
-public final class JAPInfoService 
+final class JAPInfoService 
 	{
 		private static final String DP = "%3A"; // Doppelpunkt 
 

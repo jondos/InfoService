@@ -30,7 +30,7 @@ import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.border.*;
 
-public final class JAPLoading implements ActionListener, VersioncheckerProgress {
+final class JAPLoading implements ActionListener, VersioncheckerProgress {
     private JButton b1,b2;
     private JLabel head;
     private JProgressBar p;

@@ -37,7 +37,7 @@ import java.util.Date;
  * @version 0.1
  * @author  Jens Hillert
  */
-public class JAPRoundTripTime {
+class JAPRoundTripTime {
 	
 	boolean DEBUG = true;
 	/** maximum numbers of mixes including the local client. */

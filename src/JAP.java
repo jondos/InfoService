@@ -38,7 +38,7 @@ import java.awt.Frame;
 import java.awt.event.WindowEvent;
 /** This is the MAIN of all this. It starts everything.
  */
-public class JAP extends Frame{
+class JAP extends Frame{
 
 	//JAPDebug jdebug;
 	JAPModel model;

@@ -32,7 +32,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.UnknownHostException;
 
-public final class JAPSocket 
+final class JAPSocket 
 	{
 		private volatile boolean bisClosed;
 		private Socket s;
