@@ -27,7 +27,8 @@
  */
 package payxml;
 
-import payxml.util.Base64;
+import anon.util.*;
+import org.w3c.dom.*;
 
 public class XMLCostConfirmation extends XMLDocument
 {
@@ -46,17 +47,13 @@ public class XMLCostConfirmation extends XMLDocument
 	public XMLCostConfirmation(byte[] data) throws Exception
 	{
 		setDocument(data);
+		Element elemRoot=m_theDocument.getDocumentElement();
+		Element elem=(Element)XMLUtil.getFirstChildByName(elemRoot,"CC");
+		cc = new XMLCC(elem);
 
-		String ccString = xmlDocument.substring(xmlDocument.indexOf("<CC>"),
-												xmlDocument.indexOf("</CC>") + 5
-												);
-		cc = new XMLCC(ccString.getBytes());
-
-		String digestString = xmlDocument.substring(xmlDocument.indexOf(
-			"<Digest>"
-			) + 9, xmlDocument.indexOf("</Digest>")
-			);
-		digest = Base64.decode(digestString.toCharArray());
+		elem=(Element)XMLUtil.getFirstChildByName(elemRoot,"Digest");
+		String strdigest=XMLUtil.parseNodeString(elem,null);
+		digest = Base64.decode(strdigest);
 	}
 
 	//~ Methods ****************************************************************
@@ -91,15 +88,4 @@ public class XMLCostConfirmation extends XMLDocument
 		return cc.getTickPrice();
 	}
 
-	public String getXMLString(boolean withHead)
-	{
-		if (withHead)
-		{
-			return XML_HEAD + xmlDocument;
-		}
-		else
-		{
-			return xmlDocument;
-		}
-	}
 }

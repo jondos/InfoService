@@ -28,11 +28,13 @@
 package payxml;
 
 import java.math.BigInteger;
-import org.bouncycastle.crypto.params.RSAKeyParameters;
 import org.w3c.dom.CharacterData;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import payxml.util.Base64;
+import anon.crypto.MyRSAPublicKey;
+import anon.util.Base64;
+import anon.util.XMLUtil;
 
 /**
  * This class contains the functionality for creating and parsing XML account
@@ -67,15 +69,12 @@ import payxml.util.Base64;
  * </li>
  * </ul>
  */
-public class XMLCertificate extends XMLDocument
+public class XMLAccountCertificate extends XMLDocument
 {
-	//~ Static fields/initializers *********************************************
-
-	public static final String docElementName = "<AccountCertificate version=\"1.0\">";
 
 	//~ Instance fields ********************************************************
 
-	private RSAKeyParameters m_publicKey;
+	private MyRSAPublicKey m_publicKey;
 	private java.sql.Timestamp m_creationTime;
 	private long m_accountNumber;
 	private String m_biHostName;
@@ -94,10 +93,10 @@ public class XMLCertificate extends XMLDocument
 	 * @param userPort the BI's JAP port
 	 * @param aiPort the BI's AI port
 	 */
-	public XMLCertificate(RSAKeyParameters publicKey, long accountNumber,
-						  java.sql.Timestamp creationTime, String biHostName,
-						  int userPort, int aiPort
-						  ) throws Exception
+	public XMLAccountCertificate(MyRSAPublicKey publicKey, long accountNumber,
+								 java.sql.Timestamp creationTime, String biHostName,
+								 int userPort, int aiPort
+								 ) throws Exception
 	{
 		m_publicKey = publicKey;
 		m_accountNumber = accountNumber;
@@ -107,14 +106,27 @@ public class XMLCertificate extends XMLDocument
 		m_biHostName = biHostName;
 
 		XMLJapPublicKey xmlkey = new XMLJapPublicKey(publicKey);
-		xmlDocument = docElementName + "\n" +
-			"  <AccountNumber>" + accountNumber + "</AccountNumber>\n"
-			+ xmlkey.getXMLString(false) + "\n" +
-			"  <CreationTime>" + creationTime.toString() + "</CreationTime>\n" +
-			"  <BiHostName>" + biHostName + "</BiHostName>\n" +
-			"  <UserPort>" + userPort + "</UserPort>\n" +
-			"  <AiPort>" + aiPort + "</AiPort>\n" +
-			"</AccountCertificate>\n";
+		m_theDocument = getDocumentBuilder().newDocument();
+		Element elemRoot = m_theDocument.createElement("AccountCertificate");
+		elemRoot.setAttribute("version", "1.0");
+		m_theDocument.appendChild(elemRoot);
+		Element elemAccountNumber = m_theDocument.createElement("AccountNumber");
+		XMLUtil.setNodeValue(elemAccountNumber, Long.toString(accountNumber));
+		elemRoot.appendChild(elemAccountNumber);
+		Node elemKey = XMLUtil.importNode(m_theDocument, xmlkey.getDomDocument().getDocumentElement(), true);
+		elemRoot.appendChild(elemKey);
+		Element elemTmp = m_theDocument.createElement("CreationTime");
+		XMLUtil.setNodeValue(elemTmp, creationTime.toString());
+		elemRoot.appendChild(elemTmp);
+		elemTmp = m_theDocument.createElement("BiHostName");
+		XMLUtil.setNodeValue(elemTmp, biHostName);
+		elemRoot.appendChild(elemTmp);
+		elemTmp = m_theDocument.createElement("UserPort");
+		XMLUtil.setNodeValue(elemTmp, Integer.toString(userPort));
+		elemRoot.appendChild(elemTmp);
+		elemTmp = m_theDocument.createElement("AiPort");
+		XMLUtil.setNodeValue(elemTmp, Integer.toString(aiPort));
+		elemRoot.appendChild(elemTmp);
 	}
 
 	/**
@@ -122,7 +134,7 @@ public class XMLCertificate extends XMLDocument
 	 *
 	 * @param xml the certificate as string
 	 */
-	public XMLCertificate(String xml) throws Exception
+	public XMLAccountCertificate(String xml) throws Exception
 	{
 		setDocument(xml);
 		setAccountNumber();
@@ -143,28 +155,21 @@ public class XMLCertificate extends XMLDocument
 		return m_creationTime;
 	}
 
-	public RSAKeyParameters getPublicKey()
+	public MyRSAPublicKey getPublicKey()
 	{
 		return m_publicKey;
 	}
 
 	private void setAccountNumber() throws Exception
 	{
-		Element element = domDocument.getDocumentElement();
+		Element element = m_theDocument.getDocumentElement();
 		if (!element.getTagName().equals("AccountCertificate"))
 		{
 			throw new Exception();
 		}
-
-		NodeList nl = element.getElementsByTagName("AccountNumber");
-		if (nl.getLength() < 1)
-		{
-			throw new Exception();
-		}
-		element = (Element) nl.item(0);
-
-		CharacterData chdata = (CharacterData) element.getFirstChild();
-		m_accountNumber = Long.parseLong(chdata.getData());
+		element=(Element)XMLUtil.getFirstChildByName(element,"AccountNumber");
+		String str=XMLUtil.parseNodeString(element,null);
+		m_accountNumber = Long.parseLong(str);
 	}
 
 	/**
@@ -173,21 +178,14 @@ public class XMLCertificate extends XMLDocument
 	 */
 	private void setCreationTime() throws Exception
 	{
-		Element element = domDocument.getDocumentElement();
+		Element element = m_theDocument.getDocumentElement();
 		if (!element.getTagName().equals("AccountCertificate"))
 		{
 			throw new Exception();
 		}
-
-		NodeList nl = element.getElementsByTagName("CreationTime");
-		if (nl.getLength() < 1)
-		{
-			throw new Exception();
-		}
-		element = (Element) nl.item(0);
-
-		CharacterData chdata = (CharacterData) element.getFirstChild();
-		m_creationTime = java.sql.Timestamp.valueOf(chdata.getData());
+		element=(Element)XMLUtil.getFirstChildByName(element,"CreationTime");
+		String str=XMLUtil.parseNodeString(element,null);
+		m_creationTime = java.sql.Timestamp.valueOf(str);
 	}
 
 	/**
@@ -197,38 +195,20 @@ public class XMLCertificate extends XMLDocument
 	private void setHostAndPorts() throws Exception
 	{
 		CharacterData chdata;
-		Element element = domDocument.getDocumentElement();
-		if (!element.getTagName().equals("AccountCertificate"))
+		Element elemRoot = m_theDocument.getDocumentElement();
+		if (!elemRoot.getTagName().equals("AccountCertificate"))
 		{
 			throw new Exception();
 		}
 		// set hostname
-		NodeList nl = element.getElementsByTagName("BiHostName");
-		if (nl.getLength() > 0)
-		{
-			//throw new Exception();
-			element = (Element) nl.item(0);
-			chdata = (CharacterData) element.getFirstChild();
-			m_biHostName = new String(chdata.getData());
-		}
+		Element elem=(Element)XMLUtil.getFirstChildByName(elemRoot,"BiHostName");
+		m_biHostName = XMLUtil.parseNodeString(elem,null);
 		// set userport
-		nl = element.getElementsByTagName("UserPort");
-		if (nl.getLength() > 0)
-		{
-			//throw new Exception();
-			element = (Element) nl.item(0);
-			chdata = (CharacterData) element.getFirstChild();
-			m_userPort = Integer.parseInt(chdata.getData());
-		}
+		elem=(Element)XMLUtil.getFirstChildByName(elemRoot,"UserPort");
+		m_userPort=XMLUtil.parseNodeInt(elem,-1);
 		// set aiport
-		nl = element.getElementsByTagName("AiPort");
-		if (nl.getLength() > 0)
-		{
-			//throw new Exception();
-			element = (Element) nl.item(0);
-			chdata = (CharacterData) element.getFirstChild();
-			m_aiPort = Integer.parseInt(chdata.getData());
-		}
+		elem=(Element)XMLUtil.getFirstChildByName(elemRoot,"AiPort");
+		m_aiPort=XMLUtil.parseNodeInt(elem,-1);
 	}
 
 	/**
@@ -238,56 +218,13 @@ public class XMLCertificate extends XMLDocument
 	 */
 	private void setPublicKey() throws Exception
 	{
-		Element element = domDocument.getDocumentElement();
+		Element element = m_theDocument.getDocumentElement();
 		if (!element.getTagName().equals("AccountCertificate"))
 		{
 			throw new Exception();
 		}
-
-		NodeList nl = element.getElementsByTagName("JapPublicKey");
-		if (nl.getLength() < 1)
-		{
-			throw new Exception();
-		}
-		element = (Element) nl.item(0);
-		nl = element.getElementsByTagName("RSAKeyValue");
-		if (nl.getLength() < 1)
-		{
-			throw new Exception();
-		}
-		element = (Element) nl.item(0);
-
-		nl = element.getElementsByTagName("Exponent");
-		if (nl.getLength() < 1)
-		{
-			throw new Exception();
-		}
-
-		Element exponent = (Element) nl.item(0);
-		CharacterData chdata = (CharacterData) exponent.getFirstChild();
-		BigInteger ExpBigInt = new BigInteger(Base64.decode(
-			chdata.getData().toCharArray()
-			)
-											  );
-
-		nl = element.getElementsByTagName("Modulus");
-		if (nl.getLength() < 1)
-		{
-			throw new Exception();
-		}
-
-		Element modulus = (Element) nl.item(0);
-		chdata = (CharacterData) modulus.getFirstChild();
-
-		BigInteger ModulusBigInt = new BigInteger(Base64.decode(
-			chdata.getData().toCharArray()
-			)
-												  );
-
-		//needs jdk > 1.1.8, which is not available on MacOS < X
-		//KeyFactory keyfactory= KeyFactory.getInstance("RSA");
-		//	pubKey = (RSAPublicKey)keyfactory.generatePublic(
-		//                new RSAPublicKeySpec(ModulusBigInt, ExpBigInt));
-		m_publicKey = new RSAKeyParameters(false, ModulusBigInt, ExpBigInt);
+		element=(Element)XMLUtil.getFirstChildByName(element,"JapPublicKey");
+		XMLJapPublicKey tmpKey=new XMLJapPublicKey(element);
+		m_publicKey = tmpKey.getRSAPublicKey();
 	}
 }

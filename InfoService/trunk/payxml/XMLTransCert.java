@@ -27,19 +27,14 @@
  */
 package payxml;
 
-import org.w3c.dom.CharacterData;
 import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
+import anon.util.XMLUtil;
 
 public class XMLTransCert extends XMLDocument
 {
-	//~ Public Fields  ******************************************************
-	public static final String docStartTag = "<TransferCertificate version=\"1.0\">";
-	public static final String docEndTag = "</TransferCertificate>";
-
 	//~ Instance fields ********************************************************
 
-	private String signature;
+	//private String signature;
 	private java.sql.Timestamp m_validTime;
 	private long m_accountNumber;
 	private long m_transferNumber;
@@ -54,13 +49,21 @@ public class XMLTransCert extends XMLDocument
 		m_transferNumber = transferNumber;
 		m_maxBalance = maxBalance;
 		m_validTime = validTime;
-
-		xmlDocument = docStartTag +
-			"  <AccountNumber>" + accountNumber + "</AccountNumber>\n" +
-			"  <TransferNumber>" + transferNumber + "</TransferNumber>\n" +
-			"  <MaxBalance>" + maxBalance + "</MaxBalance>\n" +
-			"  <ValidTime>" + validTime + "</ValidTime>\n" +
-			docEndTag + "\n";
+		m_theDocument = getDocumentBuilder().newDocument();
+		Element elemRoot = m_theDocument.createElement("TransferCertificate");
+		elemRoot.setAttribute("version", "1.0");
+		m_theDocument.appendChild(elemRoot);
+		Element elem = m_theDocument.createElement("AccountNumber");
+		XMLUtil.setNodeValue(elem, Long.toString(accountNumber));
+		elemRoot.appendChild(elem);
+		elem = m_theDocument.createElement("TransferNumber");
+		XMLUtil.setNodeValue(elem, Long.toString(transferNumber));
+		elemRoot.appendChild(elem);
+		elem = m_theDocument.createElement("MaxBalance");
+		XMLUtil.setNodeValue(elem, Long.toString(maxBalance));
+		elemRoot.appendChild(elem);
+		elem = m_theDocument.createElement("ValidTime");
+		XMLUtil.setNodeValue(elem, validTime.toString());
 	}
 
 	public XMLTransCert(String xml) throws Exception
@@ -69,16 +72,7 @@ public class XMLTransCert extends XMLDocument
 		setAccountNumber();
 		setTransferNumber();
 		setValidTime();
-		setSignature();
-	}
-
-	public XMLTransCert(byte[] xml) throws Exception
-	{
-		setDocument(xml);
-		setAccountNumber();
-		setTransferNumber();
-		setValidTime();
-		setSignature();
+		//setSignature();
 	}
 
 	//~ Methods ****************************************************************
@@ -100,65 +94,45 @@ public class XMLTransCert extends XMLDocument
 
 	private void setAccountNumber() throws Exception
 	{
-		Element element = domDocument.getDocumentElement();
+		Element element = m_theDocument.getDocumentElement();
 		if (!element.getTagName().equals("TransferCertificate"))
 		{
 			throw new Exception();
 		}
-
-		NodeList nl = element.getElementsByTagName("AccountNumber");
-		if (nl.getLength() < 1)
-		{
-			throw new Exception();
-		}
-		element = (Element) nl.item(0);
-
-		CharacterData chdata = (CharacterData) element.getFirstChild();
-		m_accountNumber = Long.parseLong(chdata.getData());
+		element = (Element) XMLUtil.getFirstChildByName(element, "AccountNumber");
+		String str = XMLUtil.parseNodeString(element, null);
+		m_accountNumber = Long.parseLong(str);
 	}
 
-	private void setSignature()
-	{
-		signature = xmlDocument.substring(xmlDocument.indexOf("<Signature"),
-										  xmlDocument.indexOf("</Signature>") + 12
-										  );
-	}
+	/*private void setSignature()
+	  {
+	 signature = xmlDocument.substring(xmlDocument.indexOf("<Signature"),
+			   xmlDocument.indexOf("</Signature>") + 12
+			   );
+	  }*/
 
 	private void setTransferNumber() throws Exception
 	{
-		Element element = domDocument.getDocumentElement();
+		Element element = m_theDocument.getDocumentElement();
 		if (!element.getTagName().equals("TransferCertificate"))
 		{
 			throw new Exception();
 		}
 
-		NodeList nl = element.getElementsByTagName("TransferNumber");
-		if (nl.getLength() < 1)
-		{
-			throw new Exception();
-		}
-		element = (Element) nl.item(0);
-
-		CharacterData chdata = (CharacterData) element.getFirstChild();
-		m_transferNumber = Long.parseLong(chdata.getData());
+		element = (Element) XMLUtil.getFirstChildByName(element, "TransferNumber");
+		String str = XMLUtil.parseNodeString(element, null);
+		m_transferNumber = Long.parseLong(str);
 	}
 
 	private void setValidTime() throws Exception
 	{
-		Element element = domDocument.getDocumentElement();
+		Element element = m_theDocument.getDocumentElement();
 		if (!element.getTagName().equals("TransferCertificate"))
 		{
 			throw new Exception();
 		}
-
-		NodeList nl = element.getElementsByTagName("ValidTime");
-		if (nl.getLength() < 1)
-		{
-			throw new Exception();
-		}
-		element = (Element) nl.item(0);
-
-		CharacterData chdata = (CharacterData) element.getFirstChild();
-		m_validTime = java.sql.Timestamp.valueOf(chdata.getData());
+		element = (Element) XMLUtil.getFirstChildByName(element, "ValidTime");
+		String str = XMLUtil.parseNodeString(element, null);
+		m_validTime = java.sql.Timestamp.valueOf(str);
 	}
 }

@@ -39,7 +39,7 @@ import pay.crypto.tinyssl.TinySSL;
 import pay.util.HttpClient;
 import pay.util.PayText;
 import payxml.XMLBalConf;
-import payxml.XMLCertificate;
+import payxml.XMLAccountCertificate;
 import payxml.XMLChallenge;
 import payxml.XMLJapPublicKey;
 import payxml.XMLResponse;
@@ -366,7 +366,7 @@ public class PayInstance
 		RSAKeyParameters testkey = rootCerts.getPublicKey("test server");
 
 		LogHolder.log(LogLevel.DEBUG, LogType.PAY, answer);
-		
+
 		boolean sigOK = Pay.getInstance().getVerifyingInstance().verifyXML(
 				new java.io.ByteArrayInputStream(answer.getBytes())
 			);

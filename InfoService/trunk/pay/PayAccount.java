@@ -40,7 +40,7 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import payxml.XMLBalance;
-import payxml.XMLCertificate;
+import payxml.XMLAccountCertificate;
 import payxml.XMLCostConfirmations;
 import payxml.XMLDocument;
 import payxml.XMLTransCert;
@@ -53,7 +53,7 @@ import payxml.util.Base64;
  */
 public class PayAccount extends XMLDocument
 {
-	private XMLCertificate certificate;
+	private XMLAccountCertificate certificate;
 	private XMLBalance balance;
 	private RSAPrivateCrtKeyParameters privateKey;
 	private Vector transCerts;
@@ -92,7 +92,7 @@ public class PayAccount extends XMLDocument
 	 * @param certificate Kontozertifikat
 	 * @param privateKey geheimer Schlüssel
 	 */
-	public PayAccount(XMLCertificate certificate, RSAPrivateCrtKeyParameters privateKey)
+	public PayAccount(XMLAccountCertificate certificate, RSAPrivateCrtKeyParameters privateKey)
 	{
 		this.certificate = certificate;
 		this.privateKey = privateKey;
@@ -194,9 +194,9 @@ public class PayAccount extends XMLDocument
 	private void setXMLCertificate() throws Exception
 	{
 		LogHolder.log(LogLevel.DEBUG, LogType.PAY, xmlDocument);
-		String st = xmlDocument.substring(xmlDocument.indexOf(XMLCertificate.docElementName),
+		String st = xmlDocument.substring(xmlDocument.indexOf(XMLAccountCertificate.docElementName),
 										  xmlDocument.indexOf("</AccountCertificate>") + 21);
-		certificate = new XMLCertificate(st);
+		certificate = new XMLAccountCertificate(st);
 	}
 
 	private void setXMLBalance()

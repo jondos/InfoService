@@ -54,7 +54,7 @@ import logging.LogType;
 import pay.event.ModelEventFirerer;
 import pay.event.ModelListener;
 import payxml.XMLBalConf;
-import payxml.XMLCertificate;
+import payxml.XMLAccountCertificate;
 import payxml.XMLEasyCC;
 import payxml.XMLTransCert;
 
