@@ -1,4 +1,4 @@
-package payxml;
+package anon.pay.xml;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -8,6 +8,7 @@ import org.w3c.dom.Element;
 import anon.crypto.JAPSignature;
 import anon.util.IXMLEncodable;
 import anon.util.XMLUtil;
+import anon.util.IXMLSignable;
 
 /**
  * This class holds a balance certificate. Can be converted to and from
@@ -15,7 +16,7 @@ import anon.util.XMLUtil;
  *
  * @todo find a better internal representation for the signature
  */
-public class XMLBalance implements IXMLEncodable
+public class XMLBalance implements IXMLSignable
 {
 	private long m_lAccountNumber;
 	private java.sql.Timestamp m_Timestamp;
@@ -39,12 +40,6 @@ public class XMLBalance implements IXMLEncodable
 
 		if (signer != null)
 		{
-			Document doc = XMLUtil.toXMLDocument(this);
-			signer.signXmlDoc(doc);
-			Element elemSig = (Element) XMLUtil.getFirstChildByName(doc.getDocumentElement(), "Signature");
-			m_signature = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
-			Element elem = (Element) XMLUtil.importNode(m_signature, elemSig, true);
-			m_signature.appendChild(elem);
 		}
 	}
 
@@ -163,5 +158,37 @@ public class XMLBalance implements IXMLEncodable
 	public java.sql.Timestamp getValidTime()
 	{
 		return m_ValidTime;
+	}
+
+	public void sign(JAPSignature signer) throws Exception
+	{
+		Document doc = XMLUtil.toXMLDocument(this);
+		signer.signXmlDoc(doc);
+		Element elemSig = (Element) XMLUtil.getFirstChildByName(doc.getDocumentElement(), "Signature");
+		m_signature = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+		Element elem = (Element) XMLUtil.importNode(m_signature, elemSig, true);
+		m_signature.appendChild(elem);
+	}
+
+	public boolean verifySignature(JAPSignature verifier)
+	{
+		try{
+		Document doc = XMLUtil.toXMLDocument(this);
+		return verifier.verifyXML(doc.getDocumentElement());
+		}
+		catch(Exception e)
+		{
+			return false;
+		}
+	}
+
+	/**
+	 * isSigned
+	 *
+	 * @return boolean
+	 */
+	public boolean isSigned()
+	{
+		return (m_signature!=null);
 	}
 }

@@ -25,10 +25,14 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package payxml;
+package anon.pay.xml;
 
 import org.w3c.dom.CharacterData;
 import org.w3c.dom.Element;
+import org.w3c.dom.Document;
+import javax.xml.parsers.DocumentBuilderFactory;
+import java.io.ByteArrayInputStream;
+import anon.util.*;
 
 /**
  * @todo document :-)
@@ -39,34 +43,45 @@ import org.w3c.dom.Element;
  * @author not attributable
  * @version 1.0
  */
-public class XMLDescription extends XMLDocument
+public class XMLDescription implements IXMLEncodable // extends XMLDocument
 {
 	//~ Constructors ***********************************************************
+	private String m_strDescription;
+
 
 	public XMLDescription(byte[] data) throws Exception
 	{
-		String xmlDocument = new String(data);
-		setDocument(xmlDocument);
+		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(data));
+		setValues(doc);
 	}
 
 	public XMLDescription(String data) throws Exception
 	{
-		String xmlDocument = "<Description>" + data + "</Description>";
-		setDocument(xmlDocument);
+		m_strDescription = data;
 	}
 
 	//~ Methods ****************************************************************
 
-	public String getDescription() throws Exception
+	private void setValues(Document doc) throws Exception
 	{
-		Element element = m_theDocument.getDocumentElement();
+		Element element = doc.getDocumentElement();
 		if (!element.getTagName().equals("Description"))
 		{
 			throw new Exception("XMLDescription wrong xml structure");
 		}
 
 		CharacterData chdata = (CharacterData) element.getFirstChild();
-
-		return chdata.getData();
+		m_strDescription = chdata.getData();
 	}
+
+	public Element toXmlElement(Document a_doc)
+	{
+		Element elemRoot = a_doc.createElement("Description");
+		XMLUtil.setNodeValue(elemRoot, m_strDescription);
+		return elemRoot;
+	}
+
+
+	public String getDescription()
+	{return m_strDescription;}
 }

@@ -52,8 +52,8 @@ import jap.JAPUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import pay.PayAccount;
-import pay.PayAccountsFile;
+import anon.pay.PayAccount;
+import anon.pay.PayAccountsFile;
 
 public class PaymentMainPanel extends JPanel
 {

@@ -28,8 +28,11 @@
 package pay.anon;
 
 import java.io.DataInputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.sql.Timestamp;
+
 import anon.AnonChannel;
 import anon.AnonService;
 import anon.infoservice.MixCascade;
@@ -37,16 +40,9 @@ import anon.infoservice.StatusInfo;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import pay.Pay;
-import pay.PayAccount;
-import pay.PayAccountsFile;
-import payxml.XMLAccountInfo;
-import payxml.XMLPayRequest;
-import anon.util.XMLUtil;
-import payxml.XMLEasyCC;
-import java.io.*;
-import java.sql.Timestamp;
-
+import anon.pay.PayAccount;
+import anon.pay.PayAccountsFile;
+import anon.pay.xml.*;
 /**
  *
  *
@@ -59,167 +55,175 @@ import java.sql.Timestamp;
  * gefordert (noch nicht implementiert)
  *
  * @author Bastian Voigt
+ * @deprecated to be removed
  */
 
-public class AICommunication extends Thread
-{
+/*public class AICommunication extends Thread
+ {
 
-	static int sendCCIntervall = 10000;
-	static int sleepIntervall = 3000;
-	static int packetSize = 998;
+ static int sendCCIntervall = 10000;
+ static int sleepIntervall = 3000;
+ static int packetSize = 998;
 
-	protected long m_confirmedPackets;
-	protected DataInputStream in;
-	protected OutputStream out;
-	protected MixCascade m_anonServer;
+ protected long m_confirmedPackets;
+ protected DataInputStream in;
+ protected OutputStream out;
+ protected MixCascade m_anonServer;
 
 //	private XMLPayRequest m_lastRequest;
 
-	protected AnonChannel c;
+ protected AnonChannel c;
 
-	private InputStreamReader isr;
-	private boolean m_bRunning;
+ private InputStreamReader isr;
+ private boolean m_bRunning;
 
-	public AICommunication(AnonService aService)
+ public AICommunication(AnonService aService)
+ {
+  try
+  {
+   //c = ( (AnonServiceImpl) aService).getAIChannel();
+  }
+  catch (Exception ex)
+  {
+   LogHolder.log(LogLevel.DEBUG, LogType.PAY,
+		"AICommunication Konstruktor getAIChannel wirft fehler");
+  }
+  //in = new DataInputStream(c.getInputStream());
+  //out = c.getOutputStream();
+ }
+
+ public void setAnonServer(MixCascade anonServer)
+ {
+  this.m_anonServer = anonServer;
+ }
+
+ public long getLastTransferredBytes()
+ {
+  /**SK13 check if this is realy true!!*/
+ /*		StatusInfo s = m_anonServer.getCurrentStatus();
+   if (s.getMixedPackets() > 0)
+   {
+	return (s.getMixedPackets() - m_confirmedPackets) * packetSize;
+   }
+   return -1;
+  }
+
+  /**
+   * Bastian: What is this method meant to do ???
+   * @return long
+   */
+  /*	public long countLastTransferredBytes()
+   {*/
+  /**SK13 check if this is realy true!!*/
+  /*		long trans = getLastTransferredBytes();
+	StatusInfo s = m_anonServer.getCurrentStatus();
+	if (s.getMixedPackets() > 0)
 	{
-		try
-		{
-			//c = ( (AnonServiceImpl) aService).getAIChannel();
-		}
-		catch (Exception ex)
-		{
-			LogHolder.log(LogLevel.DEBUG, LogType.PAY,
-						  "AICommunication Konstruktor getAIChannel wirft fehler");
-		}
-		//in = new DataInputStream(c.getInputStream());
-		//out = c.getOutputStream();
+	 m_confirmedPackets = s.getMixedPackets();
 	}
+	return trans;
+   }
 
-	public void setAnonServer(MixCascade anonServer)
+   public void run()
+   {
+	if (m_anonServer == null)
 	{
-		this.m_anonServer = anonServer;
+	 LogHolder.log(LogLevel.DEBUG, LogType.PAY,
+		  "AnonServer nicht gesetzt bitte zuerst setAnonService aufrufen");
+	 return;
 	}
+	m_bRunning = true;
 
-	public long getLastTransferredBytes()
+	XMLPayRequest request;
+	while (m_bRunning)
 	{
-		/**SK13 check if this is realy true!!*/
-		StatusInfo s = m_anonServer.getCurrentStatus();
-		if (s.getMixedPackets() > 0)
-		{
-			return (s.getMixedPackets() - m_confirmedPackets) * packetSize;
-		}
-		return -1;
+	 // receive AI message
+	 request = receiveNextAIRequest();
+
+	 // does the AI want a CC signed?
+	 XMLEasyCC cc = request.getCC();
+	 if (cc != null)
+	 {
+
+	 }
+	 // does the AI want a Balance cert?
+	 Timestamp t = request.getBalanceTimestamp();
+	 if (t != null)
+	 {
+
+	 }
 	}
+   }
 
-	/**
-	 * Bastian: What is this method meant to do ???
-	 * @return long
-	 */
-	public long countLastTransferredBytes()
+   /**
+	* Sends a cost confirmation XML structure to the AI with the current
+	* number of transferred bytes.
+	* @todo use real AI name
+	*/
+   /*	private void sendCostConfirmation(XMLEasyCC cc)
 	{
-		/**SK13 check if this is realy true!!*/
-		long trans = getLastTransferredBytes();
-		StatusInfo s = m_anonServer.getCurrentStatus();
-		if (s.getMixedPackets() > 0)
-		{
-			m_confirmedPackets = s.getMixedPackets();
-		}
-		return trans;
-	}
+	 // do we already have accountInfo for this account?
+	 PayAccount usedAccount = PayAccountsFile.getInstance().getActiveAccount();
+	 XMLAccountInfo info = usedAccount.getAccountInfo();
 
-	public void run()
-	{
-		if (m_anonServer == null)
-		{
-			LogHolder.log(LogLevel.DEBUG, LogType.PAY,
-						  "AnonServer nicht gesetzt bitte zuerst setAnonService aufrufen");
-			return;
-		}
-		m_bRunning = true;
+	 // no, then create a new empty accountInfo object
+	 if (info == null)
+	 {
+	  info = new XMLAccountInfo();
+	  usedAccount.setAccountInfo(info);
+	 }
 
-		XMLPayRequest request;
-		while (m_bRunning)
-		{
-			// receive AI message
-			request = receiveNextAIRequest();
+	 // do we already have a CC for this account and this AI ?
+	 XMLEasyCC oldCC = info.getCC(m_anonServer.getName());
 
-			// does the AI want a CC signed?
-			XMLEasyCC cc = request.getCC();
-			if (cc != null)
-			{
+	 if (oldCC != null) // yes, add some bytes
+	 {
+	  cc.addTransferredBytes(17);
+	 }
+	 else // no, then make a new one and add it to the account, use Real aiName!!
+	 {
+	  try
+	  {
+	   cc = new XMLEasyCC("aiName", usedAccount.getAccountNumber(), 0, null);
+	   info.addCC(cc);
+	  }
+	  catch (Exception ex)
+	  {
+	   // should never happen??
+	  }
+	 }
 
-			}
-			// does the AI want a Balance cert?
-			Timestamp t = request.getBalanceTimestamp();
-			if (t != null)
-			{
-
-			}
-		}
-	}
-
-	/**
-	 * Sends a cost confirmation XML structure to the AI with the current
-	 * number of transferred bytes.
-	 */
-	private void sendCostConfirmation()
-	{
-		// do we already have accountInfo for this account?
-		PayAccount usedAccount = PayAccountsFile.getInstance().getActiveAccount();
-		XMLAccountInfo info = usedAccount.getAccountInfo();
-
-		// no, then create a new empty accountInfo object
-		if (info == null)
-		{
-			info = new XMLAccountInfo();
-			usedAccount.setAccountInfo(info);
-		}
-
-		// do we already have a CC for this account and this AI ?
-		XMLEasyCC cc = info.getCC(m_anonServer.getName());
-
-		if (cc != null) // yes, add some bytes
-		{
-			cc.addTransferredBytes(17);
-		}
-		else // no, then make a new one and add it to the account (todo: use Real aiName)
-		{
-			try
-			{
-				cc = new XMLEasyCC("aiName", usedAccount.getAccountNumber(), 0, null);
-				info.addCC(cc);
-			}
-			catch (Exception ex)
-			{
-				// should never happen??
-			}
-
-
-		}
-
-		// finally (re)sign it & send to the AI
-//		cc.sign();
+	 // finally (re)sign it & send to the AI
+	 try
+	 {
+	  cc.sign(usedAccount.getSigningInstance());
+	 }
+	 catch (Exception ex1)
+	 {
+	  LogHolder.log(LogLevel.ERR, LogType.PAY,
+		   "AICommunication Could not sign CostConfirmation: "+ex1.getMessage());
+	 }
 	}
 
 	public void end()
 	{
 //		processCostConfirmationRequest(m_lastRequest);
-		m_bRunning = false;
-		if(c!=null)
-			c.close();
+	 m_bRunning = false;
+	 if(c!=null)
+	  c.close();
 	}
 
 	public void send(String st)
 	{
-		try
-		{
-			byte[] buff = st.getBytes();
-			out.write(buff, 0, buff.length);
-		}
-		catch (Exception ex)
-		{
-			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "AICommunication send ging nicht");
-		}
+	 try
+	 {
+	  byte[] buff = st.getBytes();
+	  out.write(buff, 0, buff.length);
+	 }
+	 catch (Exception ex)
+	 {
+	  LogHolder.log(LogLevel.DEBUG, LogType.PAY, "AICommunication send ging nicht");
+	 }
 	}
 
 	/**
@@ -228,113 +232,113 @@ public class AICommunication extends Thread
 	 *
 	 * @return XMLPayRequest
 	 */
-	public XMLPayRequest receiveNextAIRequest()
-	{
-		byte[] bytes;
-		int length = 0;
-		try
-		{
-			length = in.readInt();
-			bytes = new byte[length];
-			in.read(bytes, 0, length);
-		}
-		catch (IOException ex)
-		{
-			LogHolder.log(LogLevel.WARNING, LogType.PAY,
-						  "Error while receiving message from AI: " + ex.getMessage());
-			return null;
-		}
-		try
-		{
-			return new XMLPayRequest(bytes);
-		}
-		catch (Exception ex1)
-		{
-			LogHolder.log(LogLevel.WARNING, LogType.PAY, "Error parsing AI message: " + ex1.getMessage());
-			return null;
-		}
-	}
+	/*	public XMLPayRequest receiveNextAIRequest()
+	 {
+	  byte[] bytes;
+	  int length = 0;
+	  try
+	  {
+	   length = in.readInt();
+	   bytes = new byte[length];
+	   in.read(bytes, 0, length);
+	  }
+	  catch (IOException ex)
+	  {
+	   LogHolder.log(LogLevel.WARNING, LogType.PAY,
+			"Error while receiving message from AI: " + ex.getMessage());
+	   return null;
+	  }
+	  try
+	  {
+	   return new XMLPayRequest(bytes);
+	  }
+	  catch (Exception ex1)
+	  {
+	   LogHolder.log(LogLevel.WARNING, LogType.PAY, "Error parsing AI message: " + ex1.getMessage());
+	   return null;
+	  }
+	 }
 
-	/**
-	 * Methode zum senden eines AccountCertifikates und einer balance an die AI und empfangen
-	 * einer Antwort von derselben.
-	 * noch nicht getestet
-	 */
-/*	public XMLPayRequest processAIRequest(XMLPayRequest request)
-	{
-		if (request.accounting)
+	 /**
+	  * Methode zum senden eines AccountCertifikates und einer balance an die AI und empfangen
+	  * einer Antwort von derselben.
+	  * noch nicht getestet
+	  */
+	 /*	public XMLPayRequest processAIRequest(XMLPayRequest request)
+	  {
+	   if (request.accounting)
+	   {
+		LogHolder.log(LogLevel.DEBUG, LogType.PAY, "AICommunication: calling AccountsFile...");
+		PayAccountsFile accounts = PayAccountsFile.getInstance();
+		PayAccount activeAccount = accounts.getActiveAccount();
+
+		send(XMLUtil.XMLDocumentToString(activeAccount.getAccountCertificate().getXmlEncoded()));
+
+		if (request.balanceNeeded.equals(XMLPayRequest.TRUE))
 		{
-			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "AICommunication: calling AccountsFile...");
-			PayAccountsFile accounts = PayAccountsFile.getInstance();
-			PayAccount activeAccount = accounts.getActiveAccount();
-
-			send(XMLUtil.XMLDocumentToString(activeAccount.getAccountCertificate().getXmlEncoded()));
-
-			if (request.balanceNeeded.equals(XMLPayRequest.TRUE))
-			{
-				send(activeAccount.getAccountInfo().getXMLString());
-				// hier soll nur aus der lokalen Datei gelesen werden
-			}
-			if (request.balanceNeeded.equals(XMLPayRequest.NEW))
-			{
-				XMLAccountInfo info = null;
-				try
-				{
-					info = Pay.getInstance().fetchAccountInfo(activeAccount.getAccountNumber());
-				}
-				catch (Exception e)
-				{}
-				send(info.getXMLString());
-				// hier soll die BI neu kontaktiert werden.
-			}
-			if (request.costConfirmsNeeded.equals(XMLPayRequest.TRUE))
-			{
-				; // hier CostConfirmations verschicken
-			}
-
+		 send(activeAccount.getAccountInfo().getXMLString());
+		 // hier soll nur aus der lokalen Datei gelesen werden
 		}
-		return request;
-	}*/
+		if (request.balanceNeeded.equals(XMLPayRequest.NEW))
+		{
+		 XMLAccountInfo info = null;
+		 try
+		 {
+		  info = Pay.getInstance().fetchAccountInfo(activeAccount.getAccountNumber());
+		 }
+		 catch (Exception e)
+		 {}
+		 send(info.getXMLString());
+		 // hier soll die BI neu kontaktiert werden.
+		}
+		if (request.costConfirmsNeeded.equals(XMLPayRequest.TRUE))
+		{
+		 ; // hier CostConfirmations verschicken
+		}
+
+	   }
+	   return request;
+	  }*/
 
 // aus MuxSocket kopiert nach dem Test dieser Klasse soll die Methode von Mux Socket nach hier verschoben werden
-	/*
-	 public synchronized int sendPayPackets(byte[] xmlBytes) {
-	  int bufferLength = (((int)((xmlBytes.length+4) / DATA_SIZE))+1)*DATA_SIZE;
-	  byte[] outBuffer = new byte[bufferLength];
-	  int len = xmlBytes.length;
-	  try{
-	   outBuffer[0]=(byte)(len>>24);
-	   outBuffer[1]=(byte)(len>>16);
-	   outBuffer[2]=(byte)(len>>8);
-	   outBuffer[3]=(byte)(len);
+	 /*
+	  public synchronized int sendPayPackets(byte[] xmlBytes) {
+	   int bufferLength = (((int)((xmlBytes.length+4) / DATA_SIZE))+1)*DATA_SIZE;
+	   byte[] outBuffer = new byte[bufferLength];
+	   int len = xmlBytes.length;
+	   try{
+		outBuffer[0]=(byte)(len>>24);
+		outBuffer[1]=(byte)(len>>16);
+		outBuffer[2]=(byte)(len>>8);
+		outBuffer[3]=(byte)(len);
 
-	   System.arraycopy(xmlBytes,0,outBuffer,4,xmlBytes.length);
-	   ai_cipherOut.encryptAES2(outBuffer);
-	   //System.arraycopy(outBuffer,0,m_MixPacketSend,6,xmlZeiger);
-	   //sendMixPacket();
-	   m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket: sendPayPackets: xmlbytes.length()= "+xmlBytes.length+" bufferLength = "+outBuffer.length);
-	   for(int i=0;i<outBuffer.length;i+=DATA_SIZE){
-	 m_MixPacketSend[0]=(byte)(0xFF);
-	 m_MixPacketSend[1]=(byte)(0xFF);
-	 m_MixPacketSend[2]=(byte)(0xFF);
-	 m_MixPacketSend[3]=(byte)(0xFF);
-	 m_MixPacketSend[4]=(byte)((CHANNEL_OPEN>>8)&(0xFF));
-	 m_MixPacketSend[5]=(byte)((CHANNEL_OPEN>>8)&(0xFF));
+		System.arraycopy(xmlBytes,0,outBuffer,4,xmlBytes.length);
+		ai_cipherOut.encryptAES2(outBuffer);
+		//System.arraycopy(outBuffer,0,m_MixPacketSend,6,xmlZeiger);
+		//sendMixPacket();
+		m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket: sendPayPackets: xmlbytes.length()= "+xmlBytes.length+" bufferLength = "+outBuffer.length);
+		for(int i=0;i<outBuffer.length;i+=DATA_SIZE){
+	  m_MixPacketSend[0]=(byte)(0xFF);
+	  m_MixPacketSend[1]=(byte)(0xFF);
+	  m_MixPacketSend[2]=(byte)(0xFF);
+	  m_MixPacketSend[3]=(byte)(0xFF);
+	  m_MixPacketSend[4]=(byte)((CHANNEL_OPEN>>8)&(0xFF));
+	  m_MixPacketSend[5]=(byte)((CHANNEL_OPEN>>8)&(0xFF));
 
-	 System.arraycopy(outBuffer,i,m_MixPacketSend,6,DATA_SIZE);
-	 sendMixPacket();
-	 m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket: sendPayPackets: Bytes Verschickt: "+i);
+	  System.arraycopy(outBuffer,i,m_MixPacketSend,6,DATA_SIZE);
+	  sendMixPacket();
+	  m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket: sendPayPackets: Bytes Verschickt: "+i);
+		}
+
+	   }catch (IndexOutOfBoundsException e){
+	  m_Log.log(LogLevel.ERR,LogType.NET,"JAPMuxSocket: sendPayPacketError : IndexOutOfBounds: "+e);
+	   }
+	   catch (Exception ex){
+		m_Log.log(LogLevel.ERR,LogType.NET,"JAPMuxSocket: sendPayPacketError : "+ex);
+		return 0;
 	   }
 
-	  }catch (IndexOutOfBoundsException e){
-	 m_Log.log(LogLevel.ERR,LogType.NET,"JAPMuxSocket: sendPayPacketError : IndexOutOfBounds: "+e);
+	   return ErrorCodes.E_SUCCESS;
 	  }
-	  catch (Exception ex){
-	   m_Log.log(LogLevel.ERR,LogType.NET,"JAPMuxSocket: sendPayPacketError : "+ex);
-	   return 0;
-	  }
-
-	  return ErrorCodes.E_SUCCESS;
-	 }
-	 */
-}
+	  */
+//}

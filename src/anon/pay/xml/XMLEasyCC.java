@@ -25,18 +25,17 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package payxml;
+package anon.pay.xml;
 
 import java.io.ByteArrayInputStream;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import anon.crypto.JAPSignature;
 import anon.util.IXMLEncodable;
 import anon.util.XMLUtil;
-
+import anon.util.IXMLSignable;
 
 /**
  * XML structure for a easy cost confirmation (without mircopayment function) which is sent to the AI by the Jap
@@ -50,7 +49,7 @@ import anon.util.XMLUtil;
  * </CC>
  * @author Grischan Gl&auml;nzel, Bastian Voigt
  */
-public class XMLEasyCC implements IXMLEncodable //extends XMLDocument
+public class XMLEasyCC implements IXMLSignable
 {
 	//~ Instance fields ********************************************************
 
@@ -60,7 +59,8 @@ public class XMLEasyCC implements IXMLEncodable //extends XMLDocument
 	private Document m_signature;
 
 	//~ Constructors ***********************************************************
-	public XMLEasyCC(String aiName, long accountNumber, long transferred, JAPSignature signer) throws Exception
+	public XMLEasyCC(String aiName, long accountNumber, long transferred, JAPSignature signer) throws
+		Exception
 	{
 		m_strAiName = aiName;
 		m_lTransferredBytes = transferred;
@@ -69,18 +69,14 @@ public class XMLEasyCC implements IXMLEncodable //extends XMLDocument
 
 		if (signer != null)
 		{
-			Document doc = XMLUtil.toXMLDocument(this);
-			signer.signXmlDoc(doc);
-			Element elemSig = (Element) XMLUtil.getFirstChildByName(doc.getDocumentElement(), "Signature");
-			m_signature = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
-			Element elem = (Element) XMLUtil.importNode(m_signature, elemSig, true);
-			m_signature.appendChild(elem);
+			this.sign(signer);
 		}
 	}
 
 	public XMLEasyCC(byte[] data) throws Exception
 	{
-		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(data));
+		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new
+			ByteArrayInputStream(data));
 		setValues(doc.getDocumentElement());
 	}
 
@@ -109,7 +105,6 @@ public class XMLEasyCC implements IXMLEncodable //extends XMLDocument
 	{
 		Element elemRoot = a_doc.createElement("CC");
 		elemRoot.setAttribute("version", "1.0");
-
 		Element elem=a_doc.createElement("AiID");
 		XMLUtil.setNodeValue(elem,m_strAiName);
 		elemRoot.appendChild(elem);
@@ -148,4 +143,43 @@ public class XMLEasyCC implements IXMLEncodable //extends XMLDocument
 		m_signature = null;
 	}
 
+	/**
+	 * Signs the existing XMLEasyCC with the given JAPSignature signer.
+	 * The signer must already be initialized (initSign)
+	 *
+	 * @param signer JAPSignature
+	 * @throws Exception
+	 */
+	public void sign(JAPSignature signer) throws Exception
+	{
+		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+		doc.appendChild(toXmlElement(doc));
+		signer.signXmlDoc(doc);
+		Element elemSig = (Element) XMLUtil.getFirstChildByName(doc.getDocumentElement(), "Signature");
+		m_signature = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+		Element elem = (Element) XMLUtil.importNode(m_signature, elemSig, true);
+		m_signature.appendChild(elem);
+	}
+
+	/**
+	 * isSigned
+	 *
+	 * @return boolean
+	 */
+	public boolean isSigned()
+	{
+		return (m_signature!=null);
+	}
+
+	/**
+	 * verifySignature
+	 *
+	 * @param verifyingInstance JAPSignature
+	 * @return boolean
+	 */
+	public boolean verifySignature(JAPSignature verifier)
+	{
+		Document doc = XMLUtil.toXMLDocument(this);
+		return verifier.verifyXML(doc.getDocumentElement());
+	}
 }

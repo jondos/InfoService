@@ -25,7 +25,7 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package payxml;
+package anon.pay.xml;
 
 import java.util.Enumeration;
 import java.util.Vector;
@@ -163,14 +163,12 @@ public class XMLAccountInfo implements IXMLEncodable //extends XMLDocument
 	private void setValues(Element elemRoot) throws Exception
 	{
 		if (!elemRoot.getTagName().equals("AccountInfo") )
-//			!elemRoot.getAttribute("version").equals("1.0"))
 		{
 			throw new Exception("XMLAccountInfo wrong XML structure");
 		}
 		Element elemBalance = (Element) XMLUtil.getFirstChildByName(elemRoot, "Balance");
 		m_balance = new XMLBalance(elemBalance);
 
-		// todo parse costconfirmations
 		Element elemCCs = (Element) XMLUtil.getFirstChildByName(elemRoot, "CostConfirmations");
 		Element elemCC = (Element) elemCCs.getFirstChild();
 		while (elemCC != null)

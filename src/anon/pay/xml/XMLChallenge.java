@@ -25,53 +25,59 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package payxml;
+package anon.pay.xml;
 
+import org.w3c.dom.CharacterData;
 import org.w3c.dom.Element;
 import anon.util.Base64;
 import anon.util.XMLUtil;
+import anon.util.IXMLEncodable;
+import org.w3c.dom.Document;
+import java.io.ByteArrayInputStream;
+import javax.xml.parsers.DocumentBuilderFactory;
 
-public class XMLResponse extends XMLDocument
+public class XMLChallenge implements IXMLEncodable
 {
-	private byte[] m_arbResponse;
+	//~ Constructors ***********************************************************
 
-   /** Creates a XMLResponse from the XML representation **/
-	public XMLResponse(String xml) throws Exception
+	private byte[] m_arbChallenge;
+
+	public XMLChallenge(String xml) throws Exception
 	{
-		setDocument(xml);
-		setResponse();
+		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(xml);
+		setValues(doc.getDocumentElement());
 	}
 
-	/** Creates an XML Response from the supplied signature bytes
-	 *
-	 */
-	public XMLResponse(byte[] sig) throws Exception
-	 {
-	  m_arbResponse = sig;
-	  createXmlDocument();
-	 }
-
-	private void setResponse() throws Exception
+	public XMLChallenge(byte[] data) throws Exception
 	{
-		Element element = m_theDocument.getDocumentElement();
-		if (!element.getTagName().equals("Response"))
+		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(data));
+		setValues(doc.getDocumentElement());
+	}
+
+	//~ Methods ****************************************************************
+
+	private void setValues(Element elemRoot) throws Exception
+	{
+		if (!elemRoot.getTagName().equals("Challenge"))
 		{
-			throw new Exception("XMLResponse wrong xml structure");
+			throw new Exception("XMLChallenge wrong XML structure");
 		}
-		String strBase64Response = XMLUtil.parseNodeString(element, null);
-		m_arbResponse = Base64.decode(strBase64Response);
+		Element element = (Element) XMLUtil.getFirstChildByName(elemRoot, "DontPanic");
+		m_arbChallenge = Base64.decode(XMLUtil.parseNodeString(element, ""));
 	}
 
-	public byte[] getResponse()
+	public byte[] getChallengeForSigning()
 	{
-		return m_arbResponse;
+		String tmp = "<DontPanic>" + Base64.encodeBytes(m_arbChallenge) + "</DontPanic>";
+		return tmp.getBytes();
 	}
 
-	private void createXmlDocument() throws Exception
-	  {
-		  m_theDocument=getDocumentBuilder().newDocument();
-		  Element elemRoot=m_theDocument.createElement("Response");
-		  XMLUtil.setNodeValue(elemRoot,Base64.encodeBytes(m_arbResponse));
-		  m_theDocument.appendChild(elemRoot);
-	  }
+	public Element toXmlElement(Document a_doc)
+	{
+		Element elemRoot = a_doc.createElement("Challenge");
+		Element elemChallenge = a_doc.createElement("DontPanic");
+		elemRoot.appendChild(elemChallenge);
+		XMLUtil.setNodeValue(elemChallenge, Base64.encodeBytes(m_arbChallenge));
+		return elemRoot;
+	}
 }

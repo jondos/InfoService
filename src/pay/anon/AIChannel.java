@@ -36,6 +36,7 @@ import anon.server.impl.MuxSocket;
 *
  * Channel mit der Nummer 0xFFFFFFFF der nur f\uFFFDr die Kommunikation mit der AI benutzt wird
  * @author Grischan Gl&auml;nzel
+* @deprecated now AIControlChannel should be used instead
  */
 
 public final class AIChannel extends AbstractChannel

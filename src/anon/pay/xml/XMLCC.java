@@ -25,7 +25,7 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package payxml;
+package anon.pay.xml;
 
 import org.w3c.dom.CharacterData;
 import org.w3c.dom.Element;
@@ -35,8 +35,9 @@ import anon.util.*;
 
 /**
  * XML structure for a cost confirmation which is sent to the AI by the Jap
+* @todo convert to new IXMLEncodeable
  */
-public class XMLCC extends XMLDocument
+/*public class XMLCC extends XMLDocument
 {
 	//~ Instance fields ********************************************************
 
@@ -145,3 +146,4 @@ public class XMLCC extends XMLDocument
 		return tickPrice;
 	}
 }
+*/

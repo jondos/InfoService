@@ -25,7 +25,7 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package pay;
+package anon.pay;
 
 import java.math.BigInteger;
 import java.security.SecureRandom;
@@ -48,32 +48,24 @@ import anon.crypto.JAPCertificate;
 import anon.crypto.JAPSignature;
 import anon.crypto.MyRSAPrivateKey;
 import anon.crypto.MyRSAPublicKey;
+import anon.crypto.MyDSAPublicKey;
+import anon.crypto.MyDSAPrivateKey;
+import anon.crypto.IMyPublicKey;
+import anon.crypto.IMyPrivateKey;
+import anon.util.XMLUtil;
 import anon.util.Base64;
 import anon.util.ResourceLoader;
-import jap.JAPModel;
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
-import payxml.XMLAccountCertificate;
-import payxml.XMLAccountInfo;
-import payxml.XMLJapPublicKey;
-import payxml.XMLTransCert;
+import anon.pay.xml.*;
 import org.bouncycastle.crypto.generators.DSAKeyPairGenerator;
 import org.bouncycastle.crypto.params.DSAKeyGenerationParameters;
 import org.bouncycastle.crypto.params.DSAParameters;
 import org.bouncycastle.crypto.generators.DSAParametersGenerator;
-import anon.crypto.MyDSAPublicKey;
-import anon.crypto.MyDSAPrivateKey;
 import org.bouncycastle.crypto.params.DSAPublicKeyParameters;
 import org.bouncycastle.crypto.params.DSAPrivateKeyParameters;
-import java.security.PublicKey;
-import java.security.PrivateKey;
-import anon.crypto.IMyPublicKey;
-import anon.crypto.IMyPrivateKey;
-import anon.util.XMLUtil;
-import jap.JAPUtil;
-import jap.JAPConstants;
+
 import java.security.*;
+import java.util.Vector;
+import org.w3c.dom.Element;
 
 /**
  * This class is the high-level part of the communication with the BI.
@@ -87,44 +79,36 @@ import java.security.*;
 
 public class Pay
 {
-	/** the one and only payoff */
-	private static Pay ms_Pay;
+	/** the one and only pay */
+	private static Pay ms_Pay = null;
 
 	/** the accounts file, an object that holds accounts configuration data */
 	private PayAccountsFile m_AccountsFile;
 
-	/** for checking the JPI signatures */
-	private JAPSignature m_verifyingInstance;
-
-	/** Returns the verifying instance for checking the JPI signatures */
-	public JAPSignature getVerifyingInstance()
-	{
-		return m_verifyingInstance;
-	}
+	/** the known BIs */
+	private Vector m_KnownBIs;
 
 	/**
 	 * make default constructor private: singleton
 	 */
-	private Pay()
+	private Pay(BI theBI, Element accountsData) throws
+		Exception
 	{
-		// read JPI Certificate from resource file
-		byte[] barCert = JAPModel.getInstance().getResourceLoader().loadResource(
-				  JAPConstants.CERTSPATH + JAPConstants.CERT_BI);
-		JAPCertificate cert = JAPCertificate.getInstance(barCert);
-		m_verifyingInstance = new JAPSignature();
-		try
-		{
-			m_verifyingInstance.initVerify(cert.getPublicKey());
-		}
-		catch (InvalidKeyException ex)
-		{
-			LogHolder.log(LogLevel.ERR, LogType.PAY, "Could not load BI Certificate");
-			m_verifyingInstance = null;
-		}
+		m_KnownBIs = new Vector();
+		m_KnownBIs.addElement(theBI);
 
-		// read PayAccountsFile from disk
-		LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Pay(): Calling PayAccountsFile...");
+		PayAccountsFile.init(accountsData);
 		m_AccountsFile = PayAccountsFile.getInstance();
+	}
+
+	/**
+	 * Initializes the payment functionality.
+	 * @param biCert JAPCertificate the BI's certificate
+	 */
+	public static void init(BI theBI, Element accountsData) throws
+		Exception
+	{
+		ms_Pay = new Pay(theBI, accountsData);
 	}
 
 	/**
@@ -132,153 +116,8 @@ public class Pay
 	 */
 	public static Pay getInstance()
 	{
-		if (ms_Pay == null)
-		{
-			ms_Pay = new Pay();
-		}
 		return ms_Pay;
 	}
-
-	/**
-	 * Reads the JPI's X509 certificate from a file
-	 * and initializes the signature verifying instance
-	 *
-	 * @author Bastian Voigt
-	 */
-	/*	public void readJpiCertificate(String fileName)
-	 {
-	  // the following code was copied
-	  // from MixConfig.java ( openFile() and readCertificate() )
-	  // maybe not a too good solution...
-	  // TODO: remove this copied code
-	  byte[] cert;
-	  java.io.File file = new java.io.File(fileName);
-	  try
-	  {
-	   cert = new byte[ (int) file.length()];
-	   java.io.FileInputStream fin = new java.io.FileInputStream(file);
-	   fin.read(cert);
-	   fin.close();
-	  }
-	  catch (Exception e)
-	  {
-	   LogHolder.log(LogLevel.ALERT, LogType.PAY,
-			"Pay.readJpiCertificate(): Error reading certificate file " + fileName
-			);
-	   e.printStackTrace();
-	   return;
-	  }
-
-	  java.io.ByteArrayInputStream bin = null;
-	  X509CertificateStructure x509 = null;
-
-	  try
-	  {
-	   // start readCertificate(cert[])
-
-	   if (cert[0] != (DERInputStream.SEQUENCE | DERInputStream.CONSTRUCTED))
-	   {
-		// Probably a Base64 encoded certificate
-		java.io.BufferedReader in =
-		 new java.io.BufferedReader(
-		 new java.io.InputStreamReader(new java.io.ByteArrayInputStream(cert)));
-		StringBuffer sbuf = new StringBuffer();
-		String line;
-
-		while ( (line = in.readLine()) != null)
-		{
-		 if (line.equals("-----BEGIN CERTIFICATE-----")
-		  || line.equals("-----BEGIN X509 CERTIFICATE-----"))
-		 {
-		  break;
-		 }
-		}
-
-		while ( (line = in.readLine()) != null)
-		{
-		 if (line.equals("-----END CERTIFICATE-----")
-		  || line.equals("-----END X509 CERTIFICATE-----"))
-		 {
-		  break;
-		 }
-		 sbuf.append(line);
-		}
-		bin = new java.io.ByteArrayInputStream(Base64.decode(sbuf.toString()));
-	   }
-
-	   if (bin == null && cert[1] == 0x80)
-	   {
-		// a BER encoded certificate
-		BERInputStream in =
-		 new BERInputStream(new java.io.ByteArrayInputStream(cert));
-		ASN1Sequence seq = (ASN1Sequence) in.readObject();
-		DERObjectIdentifier oid = (DERObjectIdentifier) seq.getObjectAt(0);
-		if (oid.equals(PKCSObjectIdentifiers.signedData))
-		{
-		 x509 = new X509CertificateStructure(
-		  (ASN1Sequence)new SignedData(
-		  (ASN1Sequence) ( (DERTaggedObject) seq
-			  .getObjectAt(1))
-		  .getObject())
-		  .getCertificates()
-		  .getObjectAt(0));
-		}
-	   }
-	   else
-	   {
-		if (bin == null)
-		{
-		 bin = new java.io.ByteArrayInputStream(cert);
-		 // DERInputStream
-		}
-		DERInputStream in = new DERInputStream(bin);
-		ASN1Sequence seq = (ASN1Sequence) in.readObject();
-		if (seq.size() > 1
-		 && seq.getObjectAt(1) instanceof DERObjectIdentifier
-		 && seq.getObjectAt(0).equals(PKCSObjectIdentifiers.signedData))
-		{
-		 x509 = X509CertificateStructure.getInstance(
-		  new SignedData(
-		  ASN1Sequence.getInstance(
-		  (ASN1TaggedObject) seq.getObjectAt(1),
-		  true))
-		  .getCertificates()
-		  .getObjectAt(0));
-		}
-		else
-		{
-		 x509 = X509CertificateStructure.getInstance(seq);
-		}
-	   }
-	  }
-	  catch (Exception e)
-	  {
-	   e.printStackTrace();
-	   x509 = null;
-	  }
-
-	  if (x509 == null)
-	  {
-	   LogHolder.log(LogLevel.ALERT, LogType.PAY,
-			"Pay.readJpiCertificate(): Error decoding certificate!"
-			);
-	   return;
-	  }
-
-	  try
-	  {
-	   LogHolder.log(LogLevel.DEBUG, LogType.PAY,
-			"Pay.readJpiCertificate(): reading JPI Certificate from file '" + fileName + "'."
-			);
-	   JAPCertificate japCert = JAPCertificate.getInstance(x509);
-	   m_verifyingInstance = new JAPSignature();
-	   m_verifyingInstance.initVerify(japCert.getPublicKey());
-	  }
-	  catch (Exception e)
-	  {
-	   e.printStackTrace();
-	  }
-	 }*/
 
 	/**
 	 * Request a transfer certificate from the BI
@@ -286,6 +125,7 @@ public class Pay
 	 * @param accountNumber account number
 	 * @return xml transfer certificate
 	 * @throws Exception
+	 * @todo switch SSL on
 	 */
 	public XMLTransCert chargeAccount(long accountNumber) throws Exception
 	{
@@ -294,18 +134,12 @@ public class Pay
 		{
 			throw new Exception("Invalid Account Number: " + accountNumber);
 		}
-
-		// TODO: switch SSL on when everything works
-		BIConnection biConn = new BIConnection(
-			JAPModel.getBIHost(), JAPModel.getBIPort(),
-			false // ssl off
-			);
+		BIConnection biConn = new BIConnection((BI)m_KnownBIs.elementAt(0), false /* ssl off*/);
 		biConn.connect();
 		biConn.authenticate(account.getAccountCertificate(), account.getSigningInstance());
 		XMLTransCert transcert = biConn.charge();
 		biConn.disconnect();
 		account.addTransCert(transcert);
-//		m_AccountsFile.save();
 		return transcert;
 	}
 
@@ -329,15 +163,14 @@ public class Pay
 	 * @param accountNumber long
 	 * @throws IllegalStateException
 	 * @return XMLAccountInfo
+	 * @todo switch SSL on
 	 */
 	public XMLAccountInfo fetchAccountInfo(long accountNumber) throws Exception
 	{
 		XMLAccountInfo info;
 		PayAccount account = m_AccountsFile.getAccount(accountNumber);
 
-		// TODO: Switch SSL on when everything works
-		BIConnection biConn = new BIConnection(JAPModel.getBIHost(),
-											   JAPModel.getBIPort(),
+		BIConnection biConn = new BIConnection((BI)m_KnownBIs.elementAt(0),
 											   false
 											   /* ssl off! */
 											   );
@@ -348,9 +181,6 @@ public class Pay
 
 		// save in the account object
 		account.setAccountInfo(info);
-
-		// save the modified accountsfile
-//			m_AccountsFile.save();
 		return info;
 	}
 
@@ -362,14 +192,13 @@ public class Pay
 	 * At the moment, only DSA should be used, because RSA is not supported by the
 	 * AI implementation
 	 *
+	 * @todo check RSA keygen implementation, switch SSL on
 	 */
 	public void createAccount(boolean useDSA) throws Exception
 	{
 		IMyPublicKey pubKey = null;
 		IMyPrivateKey privKey = null;
 
-		// generate key pair
-		// TODO: show confirmation dialog before generateing key
 		if (useDSA)
 		{
 			SecureRandom random = new SecureRandom();
@@ -383,7 +212,6 @@ public class Pay
 		}
 		else // use RSA (should not be used at the moment)
 		{
-			//TODO: check RSAKeyGeneration
 			RSAKeyPairGenerator pGen = new RSAKeyPairGenerator();
 			RSAKeyGenerationParameters genParam = new RSAKeyGenerationParameters(
 				BigInteger.valueOf(0x11), new SecureRandom(), 512, 25);
@@ -397,9 +225,7 @@ public class Pay
 		signingInstance.initSign(privKey);
 		XMLJapPublicKey xmlKey = new XMLJapPublicKey(pubKey);
 
-		// send it to the JPI TODO: switch SSL on
-		BIConnection biConn = new BIConnection(JAPModel.getBIHost(),
-											   JAPModel.getBIPort(),
+		BIConnection biConn = new BIConnection((BI)m_KnownBIs.elementAt(0),
 											   false
 											   /* ssl off! */
 											   );

@@ -27,12 +27,15 @@
  */
 package anon.server.impl;
 
+import javax.xml.parsers.DocumentBuilderFactory;
 import org.w3c.dom.Document;
-import org.w3c.dom.*;
-import javax.xml.parsers.*;
-import anon.util.*;
-import logging.*;
-public class ControlChannelTest extends SyncControlChannel implements Runnable
+import org.w3c.dom.Element;
+import anon.util.XMLUtil;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
+
+final public class ControlChannelTest extends SyncControlChannel implements Runnable
 {
 	private Thread m_Thread;
 	private volatile boolean m_bRun;
@@ -41,7 +44,7 @@ public class ControlChannelTest extends SyncControlChannel implements Runnable
 	{
 		super(255, false);
 		m_bRun = true;
-		m_Thread = new Thread(this,"ControlChannelTest - loop");
+		m_Thread = new Thread(this, "ControlChannelTest - loop");
 		m_Thread.setDaemon(true);
 		m_Thread.start();
 	}
@@ -52,9 +55,10 @@ public class ControlChannelTest extends SyncControlChannel implements Runnable
 		m_Thread.interrupt();
 	}
 
-	void proccessXMLMessage(Document docMsg)
+	public void proccessXMLMessage(Document docMsg)
 	{
-		LogHolder.log(LogLevel.DEBUG,LogType.NET,"ControlTestChannel received a message: "+XMLUtil.XMLDocumentToString(docMsg));
+		LogHolder.log(LogLevel.DEBUG, LogType.NET,
+					  "ControlTestChannel received a message: " + XMLUtil.XMLDocumentToString(docMsg));
 	}
 
 	public void run()
