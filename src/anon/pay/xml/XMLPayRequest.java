@@ -58,7 +58,8 @@ public class XMLPayRequest implements IXMLEncodable
 
 	public XMLPayRequest(String xml) throws Exception
 	{
-		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(xml);
+		ByteArrayInputStream in = new ByteArrayInputStream(xml.getBytes());
+		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(in);
 		setValues(doc.getDocumentElement());
 	}
 

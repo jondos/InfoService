@@ -44,14 +44,17 @@ public class XMLChallenge implements IXMLEncodable
 
 	public XMLChallenge(String xml) throws Exception
 	{
-		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(xml);
+		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().
+			parse(new ByteArrayInputStream(xml.getBytes()));
 		setValues(doc.getDocumentElement());
 	}
 
+	/** Note: this does not parse XML, but sets the challenge byte-array directly... */
 	public XMLChallenge(byte[] data) throws Exception
 	{
-		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(data));
-		setValues(doc.getDocumentElement());
+		/*		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(data));
+		  setValues(doc.getDocumentElement());*/
+		m_arbChallenge = data;
 	}
 
 	//~ Methods ****************************************************************

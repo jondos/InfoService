@@ -35,6 +35,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import anon.util.IXMLEncodable;
 import anon.util.XMLUtil;
+import java.io.ByteArrayInputStream;
 
 /**
  * This class represents an XML AccountInfo structure.
@@ -79,7 +80,7 @@ public class XMLAccountInfo implements IXMLEncodable //extends XMLDocument
 
 	//~ Constructors ***********************************************************
 
-	public XMLAccountInfo(XMLBalance bal) throws Exception
+	public XMLAccountInfo(XMLBalance bal)
 	{
 		m_balance = bal;
 	}
@@ -89,7 +90,8 @@ public class XMLAccountInfo implements IXMLEncodable //extends XMLDocument
 	 */
 	public XMLAccountInfo(String xml) throws Exception
 	{
-		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(xml);
+		ByteArrayInputStream in = new ByteArrayInputStream(xml.getBytes());
+		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(in);
 		setValues(doc.getDocumentElement());
 	}
 
@@ -117,8 +119,7 @@ public class XMLAccountInfo implements IXMLEncodable //extends XMLDocument
 
 		// add balance
 		elem = m_balance.toXmlElement(a_doc);
-				elemRoot.appendChild(elem);
-
+		elemRoot.appendChild(elem);
 
 		// add CCs
 		Element elemCCs = a_doc.createElement("CostConfirmations");
@@ -127,10 +128,10 @@ public class XMLAccountInfo implements IXMLEncodable //extends XMLDocument
 		XMLEasyCC cc;
 		while (enum.hasMoreElements())
 		{
-				cc = (XMLEasyCC) enum.nextElement();
+			cc = (XMLEasyCC) enum.nextElement();
 			elem = cc.toXmlElement(a_doc);
-				elemCCs.appendChild(elem);
-			}
+			elemCCs.appendChild(elem);
+		}
 
 		return elemRoot;
 	}
@@ -150,10 +151,10 @@ public class XMLAccountInfo implements IXMLEncodable //extends XMLDocument
 		long oldBytes = 0;
 		Enumeration enum = m_costConfirmations.elements();
 		XMLEasyCC tmp;
-		while(enum.hasMoreElements())
+		while (enum.hasMoreElements())
 		{
 			tmp = (XMLEasyCC) enum.nextElement();
-			if(tmp.getAIName().equals(aiName))
+			if (tmp.getAIName().equals(aiName))
 			{
 				oldBytes = tmp.getTransferredBytes();
 				m_costConfirmations.removeElement(tmp);
@@ -166,7 +167,7 @@ public class XMLAccountInfo implements IXMLEncodable //extends XMLDocument
 
 	private void setValues(Element elemRoot) throws Exception
 	{
-		if (!elemRoot.getTagName().equals("AccountInfo") )
+		if (!elemRoot.getTagName().equals("AccountInfo"))
 		{
 			throw new Exception("XMLAccountInfo wrong XML structure");
 		}

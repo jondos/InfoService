@@ -133,64 +133,7 @@ final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 	}
 
 
-	// methode zum senden eines AccountCertifikates und einer balance an die AI - oneway
-	/**
-		 * @deprecated to be removed
-		 * @todo move somwhere to anon.impl... */
-/*	public void authenticateForAI()
-	{
-		String toAI = "";
-		try
-		{
-			LogHolder.log(LogLevel.DEBUG, LogType.NET, "AnonWebProxy: Calling PayAccountsFile...");
-			PayAccountsFile accounts = PayAccountsFile.getInstance();
-			PayAccount mainAccount = accounts.getActiveAccount();
-			toAI = XMLUtil.XMLDocumentToString(
-						 XMLUtil.toXMLDocument(mainAccount.getAccountCertificate()));
-			( (AnonServiceImpl) m_Anon).sendPayPackets(toAI);
-		}
-		catch (Exception ex)
-		{
-			// @todo translate this into english!!
-			LogHolder.log(LogLevel.DEBUG, LogType.NET,
-						  "AnonProxy: Fehler beim Anfordern des KontoZertifikates und/oder des Kontostandes");
-		}
-		LogHolder.log(LogLevel.DEBUG, LogType.NET,
-					  "AnonProxy: l\uFFFDnge des zu verschickenden Certifikates : " + toAI.length());
-		sendBalanceToAI();
-	}
-*/
-	// methode zum senden einer balance an die AI - oneway
-	/** @todo move somwhere to anon.impl... */
-	/*public void sendBalanceToAI()
-	{
-		LogHolder.log(LogLevel.DEBUG, LogType.NET, "AnonProxy: sending Balance to AI");
-		try
-		{
-			PayAccountsFile accounts = PayAccountsFile.getInstance();
-			PayAccount mainAccount = accounts.getActiveAccount();
-			XMLAccountInfo info = mainAccount.getAccountInfo();
 
-			// @todo temporary code... remove DOM functionality from here (Bastian Voigt)
-			Document doc = XMLUtil.toXMLDocument(info);
-			Element elemRoot = doc.getDocumentElement();
-			Element elemBalance = (Element) XMLUtil.getFirstChildByName(elemRoot, "Balance");
-
-			Document balanceDoc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
-			elemRoot = (Element) XMLUtil.importNode(balanceDoc, elemBalance, true);
-			balanceDoc.appendChild(elemRoot);
-
-			String strBalance = XMLUtil.XMLDocumentToString(balanceDoc);
-			( (AnonServiceImpl) m_Anon).sendPayPackets(strBalance);
-		}
-		catch (Exception ex)
-		{
-			// @todo translate this into english!!
-			LogHolder.log(LogLevel.DEBUG, LogType.NET,
-						  "AnonProxy: Fehler beim Anfordern des KontoZertifikates und/oder des Kontostandes");
-		}
-	}
-*/
 	/**
 	 * Sets a new MixCascade.
 	 *

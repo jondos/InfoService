@@ -896,78 +896,6 @@ public final class MuxSocket implements Runnable
 		m_outStream.flush();
 	}
 
-	/*
-	 * Sends a message to the AI (Accounting Instance).
-	 * This implementation is to be replaced by the new control channels
-	 *
-	 * @param xmlData String
-	 * deprecated will be removed soon...
-	 * @return int
-	 */
-	/*	public synchronized int sendPayPackets(String xmlData)
-	{
-		return sendPayPackets(xmlData.getBytes());
-	 }*/
-
-	/*
-	 * Sends a message to the AI (Accounting Instance).
-	 * This implementation is to be replaced by the new control channels
-	 *
-	 * @param xmlBytes byte[]
-	 * deprecated will be removed soon...
-	 * @return int
-	 */
-	/*	public synchronized int sendPayPackets(byte[] xmlBytes)
-	{
-
-		int bufferLength = ( ( (int) ( (xmlBytes.length + 4) / DATA_SIZE)) + 1) * DATA_SIZE;
-		byte[] outBuffer = new byte[bufferLength];
-		int len = xmlBytes.length;
-		try
-		{
-			outBuffer[0] = (byte) (len >> 24);
-			outBuffer[1] = (byte) (len >> 16);
-			outBuffer[2] = (byte) (len >> 8);
-			outBuffer[3] = (byte) (len);
-
-			System.arraycopy(xmlBytes, 0, outBuffer, 4, xmlBytes.length);
-			m_cipherOutAI.encryptAES2(outBuffer);
-			//System.arraycopy(outBuffer,0,m_MixPacketSend,6,xmlZeiger);
-			//sendMixPacket();
-			LogHolder.log(LogLevel.DEBUG, LogType.NET,
-						  "JAPMuxSocket: sendPayPackets: xmlbytes.length()= " + xmlBytes.length +
-						  " bufferLength = " + outBuffer.length);
-			for (int i = 0; i < outBuffer.length; i += DATA_SIZE)
-			{
-				m_MixPacketSend[0] = (byte) (0xFF);
-				m_MixPacketSend[1] = (byte) (0xFF);
-				m_MixPacketSend[2] = (byte) (0xFF);
-				m_MixPacketSend[3] = (byte) (0xFF);
-				m_MixPacketSend[4] = (byte) ( (CHANNEL_OPEN >> 8) & (0xFF));
-				m_MixPacketSend[5] = (byte) ( (CHANNEL_OPEN >> 8) & (0xFF));
-
-				System.arraycopy(outBuffer, i, m_MixPacketSend, 6, DATA_SIZE);
-				sendMixPacket();
-				LogHolder.log(LogLevel.DEBUG, LogType.NET,
-							  "JAPMuxSocket: sendPayPackets: Bytes Verschickt: " + i);
-			}
-
-		}
-		catch (IndexOutOfBoundsException e)
-		{
-			LogHolder.log(LogLevel.ERR, LogType.NET,
-						  "JAPMuxSocket: sendPayPacketError : IndexOutOfBounds: " + e);
-			return ErrorCodes.E_UNKNOWN;
-		}
-		catch (Exception ex)
-		{
-			LogHolder.log(LogLevel.ERR, LogType.NET, "JAPMuxSocket: sendPayPacketError : " + ex);
-			return ErrorCodes.E_UNKNOWN;
-		}
-
-		return ErrorCodes.E_SUCCESS;
-	 }*/
-
 	public synchronized int send(int channel, int type, byte[] buff, short len)
 	{
 		try
@@ -1137,7 +1065,7 @@ public final class MuxSocket implements Runnable
 
 	}
 
-	ControlChannelDispatcher getContolChannelDispatcher()
+	public ControlChannelDispatcher getControlChannelDispatcher()
 	{
 		return m_ControlChannelDispatcher;
 	}
@@ -1155,10 +1083,13 @@ public final class MuxSocket implements Runnable
 	}
 
 	/**
-	 * Resets the payload counter to 0.
+	 * Resets the payload counter to 0 and returns the value as it was before
+	 * the reset.
 	 */
-	public void resetTransferredBytes()
+	public long getAndResetTransferredBytes()
 	{
+		long tmp = m_transferredBytes;
 		m_transferredBytes = 0;
+		return tmp;
 	}
 }

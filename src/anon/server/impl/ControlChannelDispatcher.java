@@ -37,13 +37,13 @@ public final class ControlChannelDispatcher
 		m_MuxSocket=a_MuxSocket;
 	}
 
-	void registerControlChannel(AbstractControlChannel channel)
+	public void registerControlChannel(AbstractControlChannel channel)
 	{
 		m_ControlChannels[channel.getID()]=channel;
 		channel.setDispatcher(this);
 	}
 
-	void removeControlChannel(AbstractControlChannel channel)
+	public void removeControlChannel(AbstractControlChannel channel)
 	{
 	}
 

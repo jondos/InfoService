@@ -10,6 +10,7 @@ import anon.util.IXMLEncodable;
 import anon.util.XMLUtil;
 import anon.util.IXMLSignable;
 import anon.util.AbstractXMLSignable;
+import java.io.ByteArrayInputStream;
 
 /**
  * This class holds a balance certificate. Can be converted to and from
@@ -41,6 +42,7 @@ public class XMLBalance extends AbstractXMLSignable
 
 		if (signer != null)
 		{
+			sign(signer);
 		}
 	}
 
@@ -51,6 +53,7 @@ public class XMLBalance extends AbstractXMLSignable
 
 	public XMLBalance(String xmlDoc) throws Exception
 	{
+		ByteArrayInputStream in = new ByteArrayInputStream(xmlDoc.getBytes());
 		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(xmlDoc);
 		setValues(doc.getDocumentElement());
 	}

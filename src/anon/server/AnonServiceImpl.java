@@ -44,6 +44,8 @@ import anon.server.impl.MuxSocket;
 import anon.server.impl.ProxyConnection;
 import anon.AnonServerDescription;
 import anon.infoservice.ImmutableProxyInterface;
+import anon.pay.Pay;
+import anon.pay.BI;
 
 final public class AnonServiceImpl implements AnonService
 {
@@ -58,6 +60,7 @@ final public class AnonServiceImpl implements AnonService
 	 * Stores the connection when we use forwarding.
 	 */
 	private ProxyConnection m_proxyConnection;
+	private Pay m_Pay = null;
 
 	public AnonServiceImpl()
 	{
@@ -91,7 +94,12 @@ final public class AnonServiceImpl implements AnonService
 	{
 		try
 		{
-			return connect( (MixCascade) mixCascade);
+			int rc;
+			if( (rc=connect( (MixCascade) mixCascade)) != ErrorCodes.E_SUCCESS)
+				return rc;
+
+			// start Payment (2004-10-20 Bastian Voigt)
+			m_Pay = new Pay(m_MuxSocket);
 		}
 		catch (Exception e)
 		{
@@ -127,19 +135,10 @@ final public class AnonServiceImpl implements AnonService
 
 	public void shutdown()
 	{
+		m_Pay.shutdown(); // shutdown payment
 		m_MuxSocket.stopService();
 	}
 
-	/*public AnonChannel getAIChannel() throws ConnectException
-	  {
-	 return m_MuxSocket.getAIChannel();
-	  }*/
-
-	/** @deprecated to be removed */
-	/*public int sendPayPackets(String xmlData) throws ConnectException
-	{
-		return m_MuxSocket.sendPayPackets(xmlData);
-	}*/
 
 	public AnonChannel createChannel(int type) throws ConnectException
 	{

@@ -33,11 +33,8 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import anon.crypto.IMyPublicKey;
-import anon.util.IXMLEncodable;
-import anon.util.XMLUtil;
-import anon.crypto.JAPSignature;
-import anon.util.IXMLSignable;
 import anon.util.AbstractXMLSignable;
+import anon.util.XMLUtil;
 
 /**
  * This class contains the functionality for creating and parsing XML account
@@ -83,8 +80,6 @@ public class XMLAccountCertificate extends AbstractXMLSignable
 	private long m_accountNumber;
 	private String m_biID;
 
-	/** @todo find a better representation of the signature.. */
-	private Document m_signature;
 
 	//~ Constructors ***********************************************************
 
@@ -98,7 +93,7 @@ public class XMLAccountCertificate extends AbstractXMLSignable
 	 */
 	public XMLAccountCertificate(IMyPublicKey publicKey, long accountNumber,
 								 java.sql.Timestamp creationTime, String biID
-								 ) throws Exception
+								 )
 	{
 		m_publicKey = publicKey;
 		m_accountNumber = accountNumber;
@@ -232,7 +227,6 @@ public class XMLAccountCertificate extends AbstractXMLSignable
 		return elemRoot;
 	}
 
-
 	//~ Methods ****************************************************************
 
 	public long getAccountNumber()
@@ -269,6 +263,5 @@ public class XMLAccountCertificate extends AbstractXMLSignable
 	{
 		m_publicKey = publicKey;
 	}
-
 
 }

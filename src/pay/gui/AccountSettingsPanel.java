@@ -59,6 +59,7 @@ import jap.JAPWaitSplash;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+
 import anon.pay.Pay;
 import anon.pay.PayAccount;
 import anon.pay.PayAccountsFile;
@@ -373,7 +374,8 @@ public class AccountSettingsPanel extends jap.AbstractJAPConfModule
 			{
 				splash = JAPWaitSplash.start("Fetching transfer number...", "Please wait");
 				Thread.sleep(5);
-				transferCertificate = Pay.getInstance().chargeAccount(selectedAccount.getAccountNumber());
+				transferCertificate = selectedAccount.charge();
+//				transferCertificate = Pay.getInstance().chargeAccount(selectedAccount.getAccountNumber());
 				splash.abort();
 			}
 			catch (Exception ex)
@@ -468,12 +470,13 @@ public class AccountSettingsPanel extends jap.AbstractJAPConfModule
 					JAPMessages.getString("Creating new account.."),
 					JAPMessages.getString("Please wait")
 					);
-				Pay.getInstance().createAccount(true); // always use DSA keys for now
+				PayAccountsFile.getInstance().createAccount(true); // always use DSA keys for now
 				splash.abort();
 			}
 			catch (Exception ex)
 			{
 				splash.abort();
+				ex.printStackTrace();
 				LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Exception CreateAccount: " + ex.toString());
 				JOptionPane.showMessageDialog(
 					view,
@@ -537,7 +540,7 @@ public class AccountSettingsPanel extends jap.AbstractJAPConfModule
 				JAPMessages.getString("Fetching account statement"),
 				JAPMessages.getString("Please wait")
 				);
-			Pay.getInstance().fetchAccountInfo(selectedAccount.getAccountNumber());
+			selectedAccount.fetchAccountInfo();
 			splash.abort();
 		}
 		catch (Exception ex)

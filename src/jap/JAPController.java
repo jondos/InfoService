@@ -95,9 +95,11 @@ public final class JAPController implements ProxyListener, Observer
 	private MixCascade currentMixCascade = null;
 
 	private ServerSocket m_socketHTTPListener = null; // listener object for HTTP
+
 	//private ServerSocket m_socketSOCKSListener = null; //listener object for SOCKS
 	private DirectProxy m_proxyDirect = null; // service object for direct access (bypass anon service)
 	private AnonWebProxy m_proxyAnon = null; // service object for anon access
+
 	//private AnonSocksProxy m_proxySocks = null; //service object for Socks requests
 
 	private boolean isRunningHTTPListener = false; // true if a HTTP listener is running
@@ -539,7 +541,8 @@ public final class JAPController implements ProxyListener, Observer
 				// load settings for proxy
 				ProxyInterface proxyInterface = null;
 
-				try {
+				try
+				{
 					proxyInterface = new ProxyInterface(
 						XMLUtil.parseNodeString(n.getNamedItem("proxyHostName"), null),
 						XMLUtil.parseElementAttrInt(root, "proxyPortNumber", -1),
@@ -549,7 +552,8 @@ public final class JAPController implements ProxyListener, Observer
 						getPasswordReader(),
 						XMLUtil.parseNodeBoolean(n.getNamedItem("proxyAuthorization"), false),
 						XMLUtil.parseNodeBoolean(n.getNamedItem("proxyMode"), false));
-				} catch(Exception a_e)
+				}
+				catch (Exception a_e)
 				{
 					a_e.printStackTrace();
 					LogHolder.log(LogLevel.NOTICE, LogType.NET,
@@ -699,7 +703,7 @@ public final class JAPController implements ProxyListener, Observer
 					}
 				}
 
-				/*loading Tor seetings*/
+				/*loading Tor settings*/
 				Element elemTor = (Element) XMLUtil.getFirstChildByName(root, "Tor");
 				Element elem = (Element) XMLUtil.getFirstChildByName(elemTor, "MaxConnectionsPerRoute");
 				setTorMaxConnectionsPerRoute(XMLUtil.parseNodeInt(elem, JAPModel.getTorMaxConnectionsPerRoute()));
@@ -708,16 +712,20 @@ public final class JAPController implements ProxyListener, Observer
 				min = XMLUtil.parseElementAttrInt(elem, "min", JAPModel.getTorMinRouteLen());
 				max = XMLUtil.parseElementAttrInt(elem, "max", JAPModel.getTorMaxRouteLen());
 				setTorRouteLen(min, max);
+
 				/* load Payment settings */
 				if (loadPay)
 				{
 					Element elemPay = (Element) XMLUtil.getFirstChildByName(root, "Payment");
-/*					setBIHost(elemPay.getAttribute("biHost"));
-					setBIPort(Integer.parseInt(elemPay.getAttribute("biPort")));*/
+					String biName = elemPay.getAttribute("biName");
+					if(biName==null||biName.equals("")) biName = JAPConstants.PIHOST;
+					String biHost = elemPay.getAttribute("biHost");
+					if(biHost==null||biHost.equals("")) biHost = JAPConstants.PIHOST;
+					int biPort = Integer.parseInt(elemPay.getAttribute("biPort"));
+					if(biPort == 0) biPort = JAPConstants.PIPORT;
 					BI theBI = new BI(
 						m_Model.getResourceLoader().loadResource(JAPConstants.CERTSPATH + JAPConstants.CERT_BI),
-						elemPay.getAttribute("biName"), elemPay.getAttribute("biHost"),
-						Integer.parseInt(elemPay.getAttribute("biPort")));
+						biName, biHost, biPort);
 
 
 					Element elemAccounts = (Element) XMLUtil.getFirstChildByName(elemPay, "EncryptedData");
@@ -754,7 +762,7 @@ public final class JAPController implements ProxyListener, Observer
 							break;
 						}
 
-						Pay.init(theBI, elemPlainTxt);
+						PayAccountsFile.init(theBI, elemPlainTxt);
 						m_bPaymentFirstTime = false;
 					}
 					else
@@ -763,19 +771,28 @@ public final class JAPController implements ProxyListener, Observer
 						elemAccounts = (Element) XMLUtil.getFirstChildByName(elemPay, "PayAccountsFile");
 						if (elemAccounts != null)
 						{
-							Pay.init(theBI, elemAccounts);
+							PayAccountsFile.init(theBI, elemAccounts);
 							m_bPaymentFirstTime = false;
+						}
+						else
+						{
+							PayAccountsFile.init(theBI, null);
 						}
 					}
 				}
 
         /* read the settings of the JAP forwarding system, if it is enabled */
-        if (JAPConstants.WITH_BLOCKINGRESISTANCE == true) {
-          Element japForwardingSettingsNode = (Element)(XMLUtil.getFirstChildByName(root, "JapForwardingSettings"));
-          if (japForwardingSettingsNode != null) {
-            JAPModel.getInstance().getRoutingSettings().loadSettingsFromXml(japForwardingSettingsNode);
+				if (JAPConstants.WITH_BLOCKINGRESISTANCE == true)
+				{
+					Element japForwardingSettingsNode = (Element) (XMLUtil.getFirstChildByName(root,
+						"JapForwardingSettings"));
+					if (japForwardingSettingsNode != null)
+					{
+						JAPModel.getInstance().getRoutingSettings().loadSettingsFromXml(
+							japForwardingSettingsNode);
           }
-          else {
+					else
+					{
             LogHolder.log(LogLevel.ERR, LogType.MISC, "JAPController: loadConfigFile: Error in XML structure (JapForwardingSettings node): Using default settings for forwarding.");
           }
         }
@@ -1010,7 +1027,8 @@ public final class JAPController implements ProxyListener, Observer
 			}
 
       /* add the settings of the JAP forwarding system, if it is enabled */
-      if (JAPConstants.WITH_BLOCKINGRESISTANCE == true) {
+			if (JAPConstants.WITH_BLOCKINGRESISTANCE == true)
+			{
         e.appendChild(JAPModel.getInstance().getRoutingSettings().getSettingsAsXml(doc));
       }
 
@@ -1049,7 +1067,6 @@ public final class JAPController implements ProxyListener, Observer
 		}
 	}
 
-
 	//---------------------------------------------------------------------
 	public void setMinimizeOnStartup(boolean b)
 	{
@@ -1066,7 +1083,7 @@ public final class JAPController implements ProxyListener, Observer
 	 */
 	public void setCurrentMixCascade(MixCascade newMixCascade)
 	{
-		if (newMixCascade != null&&!currentMixCascade.getId().equals(newMixCascade.getId()))
+		if (newMixCascade != null && !currentMixCascade.getId().equals(newMixCascade.getId()))
 		{
 			synchronized (this)
 			{
@@ -1173,7 +1190,8 @@ public final class JAPController implements ProxyListener, Observer
 		else
 		{
 			return null;
-		}*/ return null;
+		   }*/
+		return null;
 	}
 
 	public static void setInfoServiceDisabled(boolean b)
@@ -1319,9 +1337,8 @@ public final class JAPController implements ProxyListener, Observer
 							}
 							else
 							{
-								m_proxyAnon = new AnonWebProxy(m_socketHTTPListener,null);
+								m_proxyAnon = new AnonWebProxy(m_socketHTTPListener, null);
 						}
-
 
 						}
 						MixCascade currentMixCascade = m_Controller.getCurrentMixCascade();
