@@ -97,7 +97,7 @@ public class TinyTLS extends Socket
 		private synchronized void readRecord() throws TLSException,IOException
 		{
 			int contenttype = m_stream.readByte();
-			if (contenttype != 23 && contenttype != 21)
+			if (contenttype <20 || contenttype > 23)
 			{
 				throw new TLSException("SSL Content typeProtocoll not supportet" + contenttype);
 			}
@@ -342,7 +342,9 @@ public class TinyTLS extends Socket
 				int contenttype = m_stream.readByte();
 				int version = m_stream.readShort();
 				int length = m_stream.readShort();
-				if (version != PROTOCOLVERSION_SHORT)
+	if(contenttype==21)
+		length=m_stream.readShort();
+	if (version != PROTOCOLVERSION_SHORT)
 				{
 					throw new TLSException("Protocollversion not supportet" + version);
 				}
@@ -560,7 +562,7 @@ public class TinyTLS extends Socket
 			byte[] senddata = helper.conc(new byte[]
 										  { (byte) type}
 										  , helper.conc(helper.inttobyte(message.length, 3), message));
-			this.send(22, senddata);
+			send(22, senddata);
 			m_handshakemessages = helper.conc(m_handshakemessages, senddata);
 		}
 
@@ -604,7 +606,7 @@ public class TinyTLS extends Socket
 			message = helper.conc(message, ciphersuites);
 			message = helper.conc(message, compression);
 
-			this.sendHandshake(1, message);
+			sendHandshake(1, message);
 			m_clientrandom = helper.conc(gmt_unix_time, random);
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[CLIENT_HELLO]");
 		}
@@ -632,7 +634,7 @@ public class TinyTLS extends Socket
 		public void sendClientKeyExchange() throws IOException
 		{
 			byte[] message = m_selectedciphersuite.clientKeyExchange();
-			this.sendHandshake(16, helper.conc(helper.inttobyte(message.length, 2), message));
+			sendHandshake(16, helper.conc(helper.inttobyte(message.length, 2), message));
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[CLIENT_KEY_EXCHANGE]");
 		}
 
@@ -643,7 +645,7 @@ public class TinyTLS extends Socket
 		 */
 		public void sendChangeCipherSpec() throws IOException
 		{
-			this.send(20, new byte[]
+			send(20, new byte[]
 					  {1});
 			m_encrypt = true;
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[CLIENT_CHANGE_CIPHER_SPEC]");

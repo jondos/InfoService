@@ -55,6 +55,7 @@ public class FirstOnionRouterConnectionFactory
 		}
 		catch (Exception ex)
 		{
+			ex.printStackTrace();
 			return null;
 		}
 		m_firstOnionRouters.addElement(fOR);

@@ -54,7 +54,7 @@ public class TorChannel extends AbstractChannel
 		m_error = false;
 		m_recvcellcounter = 500;
 		m_sendcellcounter = 500;
-		m_oWaitForOpen=new Object();
+		m_oWaitForOpen = new Object();
 	}
 
 	protected void setStreamID(int id)
@@ -92,10 +92,10 @@ public class TorChannel extends AbstractChannel
 				len = 0;
 			}
 			m_circuit.send(cell);
-			m_sendcellcounter --;
-			if(m_sendcellcounter<10)
+			m_sendcellcounter--;
+			if (m_sendcellcounter < 10)
 			{
-				int h=4;
+				int h = 4;
 			}
 
 		}
@@ -130,9 +130,12 @@ public class TorChannel extends AbstractChannel
 		{
 			try
 			{
-				m_oWaitForOpen.wait();
+				synchronized (m_oWaitForOpen)
+				{
+					m_oWaitForOpen.wait();
+				}
 			}
-			catch(Exception e)
+			catch (Exception e)
 			{}
 		}
 		if (this.m_error)
@@ -153,7 +156,10 @@ public class TorChannel extends AbstractChannel
 			case RelayCell.RELAY_CONNECTED:
 			{
 				m_opened = true;
-				m_oWaitForOpen.notify();
+				synchronized (m_oWaitForOpen)
+				{
+					m_oWaitForOpen.notify();
+				}
 				break;
 			}
 			case RelayCell.RELAY_SENDME:
@@ -187,9 +193,10 @@ public class TorChannel extends AbstractChannel
 				}
 				break;
 			}
-			case	RelayCell.RELAY_END:
+			case RelayCell.RELAY_END:
 			{
-				LogHolder.log(LogLevel.DEBUG,LogType.TOR,"Relay stream closed with reason: "+cell.getRelayPayload()[0]);
+				LogHolder.log(LogLevel.DEBUG, LogType.TOR,
+							  "Relay stream closed with reason: " + cell.getRelayPayload()[0]);
 			}
 			default:
 			{

@@ -107,7 +107,7 @@ public class FirstOnionRouterConnection implements Runnable
 				{
 					return false;
 				}
-				readPos += m_istream.read(buff, readPos, 512 - readPos);
+				readPos += ret;
 			}
 			cell = Cell.createCell(buff);
 			int cid = cell.getCircuitID();
