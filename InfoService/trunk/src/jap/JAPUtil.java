@@ -203,52 +203,7 @@ final public class JAPUtil
 			return i;
 		}*/
 
-	public static int parseElementAttrInt(Element e,String attr,int defaultValue)
-		{
-			int i=defaultValue;
-			if(e!=null)
-				try
-					{
-						Attr at=e.getAttributeNode(attr);
-						i=Integer.parseInt(at.getValue());
-					}
-				catch(Exception ex)
-					{
-					}
-			return i;
-		}
 
-	public static boolean parseNodeBoolean(Node n,boolean defaultValue)
-		{
-			boolean b=defaultValue;
-			if(n!=null)
-				try
-					{
-						String tmpStr=n.getNodeValue();
-						if(tmpStr.equalsIgnoreCase("true"))
-							b=true;
-						else if(tmpStr.equalsIgnoreCase("false"))
-							b=false;
-					}
-				catch(Exception e)
-					{
-					}
-			return b;
-		}
-
-	public static String parseNodeString(Node n,String defaultValue)
-		{
-			String s=defaultValue;
-			if(n!=null)
-				try
-					{
-						s=n.getNodeValue();
-					}
-				catch(Exception e)
-					{
-					}
-			return s;
-		}
 
 	/** Writes a XML-Document to an Output-Stream. Since writing was not standardzieds
 	 * since JAXP 1.1 different Methods are tried

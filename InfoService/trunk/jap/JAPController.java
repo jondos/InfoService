@@ -65,8 +65,10 @@ import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.UIManager;
 
 import anon.AnonServer;
+import anon.ListenerInterface;
 import anon.infoservice.InfoService;
 import anon.infoservice.JAPVersionInfo;
+import anon.server.impl.XMLUtil;
 import proxy.ProxyListener;
 import proxy.DirectProxy;
 import proxy.AnonProxy;
@@ -272,46 +274,46 @@ public final class JAPController implements ProxyListener {
 			Element root=doc.getDocumentElement();
 			NamedNodeMap n=root.getAttributes();
 			//
-			int port=JAPUtil.parseElementAttrInt(root,"portNumber",JAPModel.getHttpListenerPortNumber());
-			boolean bListenerIsLocal=JAPUtil.parseNodeBoolean(n.getNamedItem("listenerIsLocal"),true);
+			int port=XMLUtil.parseElementAttrInt(root,"portNumber",JAPModel.getHttpListenerPortNumber());
+			boolean bListenerIsLocal=XMLUtil.parseNodeBoolean(n.getNamedItem("listenerIsLocal"),true);
 			setHTTPListener(port,bListenerIsLocal,false);
 			//portSocksListener=JAPUtil.parseElementAttrInt(root,"portNumberSocks",portSocksListener);
 			//setUseSocksPort(JAPUtil.parseNodeBoolean(n.getNamedItem("supportSocks"),false));
 			//setUseProxy(JAPUtil.parseNodeBoolean(n.getNamedItem("proxyMode"),false));
-			setUseFirewallAuthorization(JAPUtil.parseNodeBoolean(n.getNamedItem("proxyAuthorization"),false));
+			setUseFirewallAuthorization(XMLUtil.parseNodeBoolean(n.getNamedItem("proxyAuthorization"),false));
 			// load settings for the reminder message in setAnonMode
-			mbActCntMessageNeverRemind=JAPUtil.parseNodeBoolean(n.getNamedItem("neverRemindActiveContent"),false);
-			mbDoNotAbuseReminder      =JAPUtil.parseNodeBoolean(n.getNamedItem("doNotAbuseReminder"),false);
+			mbActCntMessageNeverRemind=XMLUtil.parseNodeBoolean(n.getNamedItem("neverRemindActiveContent"),false);
+			mbDoNotAbuseReminder      =XMLUtil.parseNodeBoolean(n.getNamedItem("doNotAbuseReminder"),false);
 			if(mbActCntMessageNeverRemind && mbDoNotAbuseReminder)
 				mbActCntMessageNotRemind=true;
 			// load settings for the reminder message before goodBye
-			mbGoodByMessageNeverRemind=JAPUtil.parseNodeBoolean(n.getNamedItem("neverRemindGoodBye"),false);
+			mbGoodByMessageNeverRemind=XMLUtil.parseNodeBoolean(n.getNamedItem("neverRemindGoodBye"),false);
 			// load settings for Info Service
 			String host;
-			host=JAPUtil.parseNodeString(n.getNamedItem("infoServiceHostName"),JAPModel.getInfoServiceHost());
-			port=JAPUtil.parseElementAttrInt(root,"infoServicePortNumber",JAPModel.getInfoServicePort());
+			host=XMLUtil.parseNodeString(n.getNamedItem("infoServiceHostName"),JAPModel.getInfoServiceHost());
+			port=XMLUtil.parseElementAttrInt(root,"infoServicePortNumber",JAPModel.getInfoServicePort());
 			setInfoService(host,port);
-			setInfoServiceDisabled(JAPUtil.parseNodeBoolean(n.getNamedItem("infoServiceDisabled"),false));
+			setInfoServiceDisabled(XMLUtil.parseNodeBoolean(n.getNamedItem("infoServiceDisabled"),false));
 			// load settings for proxy
-			host=JAPUtil.parseNodeString(n.getNamedItem("proxyHostName"),m_Model.getFirewallHost());
-			port=JAPUtil.parseElementAttrInt(root,"proxyPortNumber",m_Model.getFirewallPort());
+			host=XMLUtil.parseNodeString(n.getNamedItem("proxyHostName"),m_Model.getFirewallHost());
+			port=XMLUtil.parseElementAttrInt(root,"proxyPortNumber",m_Model.getFirewallPort());
 			if(host.equalsIgnoreCase("ikt.inf.tu-dresden.de"))
 				host="";
-			boolean bUseProxy=JAPUtil.parseNodeBoolean(n.getNamedItem("proxyMode"),false);
-			String type=JAPUtil.parseNodeString(n.getNamedItem("proxyType"),"HTTP");
+			boolean bUseProxy=XMLUtil.parseNodeBoolean(n.getNamedItem("proxyMode"),false);
+			String type=XMLUtil.parseNodeString(n.getNamedItem("proxyType"),"HTTP");
 			if(type.equalsIgnoreCase("SOCKS"))
 				setProxy(JAPConstants.FIREWALL_TYPE_SOCKS,host,port,bUseProxy);
 			else
 				setProxy(JAPConstants.FIREWALL_TYPE_HTTP,host,port,bUseProxy);
-		 String userid=JAPUtil.parseNodeString(n.getNamedItem("proxyAuthUserID"),JAPModel.getFirewallAuthUserID());
+		 String userid=XMLUtil.parseNodeString(n.getNamedItem("proxyAuthUserID"),JAPModel.getFirewallAuthUserID());
 			setFirewallAuthUserID(userid);
 
-			String anonserviceId  = JAPUtil.parseNodeString(n.getNamedItem("anonserviceID"),null);
-			String anonserviceName   = JAPUtil.parseNodeString(n.getNamedItem("anonserviceName"),null);
-			String anonHostName      = JAPUtil.parseNodeString(n.getNamedItem("anonHostName"),null);
-			String anonHostIP      = JAPUtil.parseNodeString(n.getNamedItem("anonHostIP"),null);
-			int anonPortNumber    = JAPUtil.parseElementAttrInt(root,"anonPortNumber",-1);
-			int anonSSLPortNumber = JAPUtil.parseElementAttrInt(root,"anonSSLPortNumber",-1);
+			String anonserviceId  = XMLUtil.parseNodeString(n.getNamedItem("anonserviceID"),null);
+			String anonserviceName   = XMLUtil.parseNodeString(n.getNamedItem("anonserviceName"),null);
+			String anonHostName      = XMLUtil.parseNodeString(n.getNamedItem("anonHostName"),null);
+			String anonHostIP      = XMLUtil.parseNodeString(n.getNamedItem("anonHostIP"),null);
+			int anonPortNumber    = XMLUtil.parseElementAttrInt(root,"anonPortNumber",-1);
+			int anonSSLPortNumber = XMLUtil.parseElementAttrInt(root,"anonSSLPortNumber",-1);
 			AnonServer server=null;
 			try
 				{
@@ -323,18 +325,18 @@ public final class JAPController implements ProxyListener {
 					server=m_Controller.getAnonServer();
 				}
 			m_Controller.setAnonServer(server);
-			setDummyTraffic(JAPUtil.parseElementAttrInt(root,"DummyTrafficIntervall",-1));
-			setAutoConnect(JAPUtil.parseNodeBoolean(n.getNamedItem("autoConnect"),false));
-			setAutoReConnect(JAPUtil.parseNodeBoolean(n.getNamedItem("autoReConnect"),false));
-			m_Model.setMinimizeOnStartup(JAPUtil.parseNodeBoolean(n.getNamedItem("minimizedStartup"),false));
+			setDummyTraffic(XMLUtil.parseElementAttrInt(root,"DummyTrafficIntervall",-1));
+			setAutoConnect(XMLUtil.parseNodeBoolean(n.getNamedItem("autoConnect"),false));
+			setAutoReConnect(XMLUtil.parseNodeBoolean(n.getNamedItem("autoReConnect"),false));
+			m_Model.setMinimizeOnStartup(XMLUtil.parseNodeBoolean(n.getNamedItem("minimizedStartup"),false));
 			//Load Locale-Settings
-			String strLocale=JAPUtil.parseNodeString(n.getNamedItem("Locale"),m_Locale.getLanguage());
+			String strLocale=XMLUtil.parseNodeString(n.getNamedItem("Locale"),m_Locale.getLanguage());
 			Locale locale=new Locale(strLocale,"");
 			setLocale(locale);
 			//Load look-and-feel settings (not changed if SmmallDisplay!
 			if(!m_Model.isSmallDisplay())
 				{
-				String lf=JAPUtil.parseNodeString(n.getNamedItem("LookAndFeel"),"unknown");
+				String lf=XMLUtil.parseNodeString(n.getNamedItem("LookAndFeel"),"unknown");
 				LookAndFeelInfo[] lfi=UIManager.getInstalledLookAndFeels();
 				for(int i=0;i<lfi.length;i++) {
 					if(lfi[i].getName().equals(lf)) {
@@ -431,82 +433,84 @@ public final class JAPController implements ProxyListener {
 											JOptionPane.ERROR_MESSAGE);
 				}
 		}
-
-  private String getConfigurationAsXML()
-    {
-		  // Save config to xml file
-		  // Achtung!! Fehler im Sun-XML --> NULL-Attributte koennen hinzugefuegt werden,
-		  // beim Abspeichern gibt es dann aber einen Fehler!
-		  try
-        {
-			    Document doc=DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
-			    Element e=doc.createElement("JAP");
-			    doc.appendChild(e);
-			    //
-			    e.setAttribute("portNumber",Integer.toString(JAPModel.getHttpListenerPortNumber()));
-			    //e.setAttribute("portNumberSocks",Integer.toString(portSocksListener));
-			    //e.setAttribute("supportSocks",(getUseSocksPort()?"true":"false"));
-			    e.setAttribute("listenerIsLocal",(JAPModel.getHttpListenerIsLocal()?"true":"false"));
-			    e.setAttribute("proxyMode",(JAPModel.getUseFirewall()?"true":"false"));
-          e.setAttribute("proxyType",(JAPModel.getFirewallType()==JAPConstants.FIREWALL_TYPE_SOCKS?"SOCKS":"HTTP"));
-          String tmpStr=m_Model.getFirewallHost();
-          e.setAttribute("proxyHostName",((tmpStr==null)?"":tmpStr));
-          int tmpInt=m_Model.getFirewallPort();
-          e.setAttribute("proxyPortNumber",Integer.toString(tmpInt));
-          e.setAttribute("proxyAuthorization",(JAPModel.getUseFirewallAuthorization()?"true":"false"));
-          tmpStr=m_Model.getFirewallAuthUserID();
-          e.setAttribute("proxyAuthUserID",((tmpStr==null)?"":tmpStr));
-          tmpStr=m_Model.getInfoServiceHost();
-          e.setAttribute("infoServiceHostName",((tmpStr==null)?"":tmpStr));
-          tmpInt=m_Model.getInfoServicePort();
-          e.setAttribute("infoServicePortNumber",Integer.toString(tmpInt));
-          e.setAttribute("infoServiceDisabled",(JAPModel.isInfoServiceDisabled()?"true":"false"));
-          AnonServer e1 = m_Controller.getAnonServer();
-          e.setAttribute("anonserviceID",((e1.getID()==null)?"":e1.getID()));
-          e.setAttribute("anonserviceName",((e1.getName()==null)?"":e1.getName()));
-          e.setAttribute("anonHostName",   ((e1.getHost()==null)?"":e1.getHost()));
-          e.setAttribute("anonHostIP",   ((e1.getIP()==null)?"":e1.getIP()));
-          e.setAttribute("anonPortNumber",   Integer.toString(e1.getPort()));
-          e.setAttribute("anonSSLPortNumber",Integer.toString(e1.getSSLPort()));
-          e.setAttribute("DummyTrafficIntervall",Integer.toString(JAPModel.getDummyTraffic()));
-          e.setAttribute("autoConnect",(JAPModel.getAutoConnect()?"true":"false"));
-          e.setAttribute("autoReConnect",(JAPModel.getAutoReConnect()?"true":"false"));
-          e.setAttribute("minimizedStartup",(JAPModel.getMinimizeOnStartup()?"true":"false"));
-          e.setAttribute("neverRemindActiveContent",(mbActCntMessageNeverRemind?"true":"false"));
-          e.setAttribute("doNotAbuseReminder",(mbDoNotAbuseReminder?"true":"false"));
-          e.setAttribute("neverRemindGoodBye",(mbGoodByMessageNeverRemind?"true":"false"));
-          e.setAttribute("Locale",m_Locale.getLanguage());
-          e.setAttribute("LookAndFeel",UIManager.getLookAndFeel().getName());
-          // adding Debug-Element
-          Element elemDebug=doc.createElement("Debug");
-          e.appendChild(elemDebug);
-          Element tmp=doc.createElement("Level");
-          Text txt=doc.createTextNode(Integer.toString(JAPDebug.getDebugLevel()));
-          tmp.appendChild(txt);
-          elemDebug.appendChild(tmp);
-          tmp=doc.createElement("Type");
-          int debugtype=JAPDebug.getDebugType();
-          tmp.setAttribute("GUI",(debugtype&JAPDebug.GUI)!=0?"true":"false");
-          tmp.setAttribute("NET",(debugtype&JAPDebug.NET)!=0?"true":"false");
-          tmp.setAttribute("THREAD",(debugtype&JAPDebug.THREAD)!=0?"true":"false");
-          tmp.setAttribute("MISC",(debugtype&JAPDebug.MISC)!=0?"true":"false");
-          elemDebug.appendChild(tmp);
-          if(JAPDebug.isShowConsole())
-            {
-              tmp=doc.createElement("Output");
-              txt=doc.createTextNode("Console");
-              tmp.appendChild(txt);
-              elemDebug.appendChild(tmp);
-            }
-			    return JAPUtil.XMLDocumentToString(doc);
-        }
-		  catch(Throwable ex)
-        {
-			    JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.MISC,"JAPModel:save() Exception: "+ex.getMessage());
-		    }
-		  return null;
-	  }
-
+	protected String getConfigurationAsXML() {
+		// Save config to xml file
+		// Achtung!! Fehler im Sun-XML --> NULL-Attributte koennen hinzugefuegt werden,
+		// beim Abspeichern gibt es dann aber einen Fehler!
+		try {
+			Document doc=DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+			Element e=doc.createElement("JAP");
+			doc.appendChild(e);
+			//
+			e.setAttribute("portNumber",Integer.toString(JAPModel.getHttpListenerPortNumber()));
+			//e.setAttribute("portNumberSocks",Integer.toString(portSocksListener));
+			//e.setAttribute("supportSocks",(getUseSocksPort()?"true":"false"));
+			e.setAttribute("listenerIsLocal",(JAPModel.getHttpListenerIsLocal()?"true":"false"));
+			e.setAttribute("proxyMode",(JAPModel.getUseFirewall()?"true":"false"));
+			e.setAttribute("proxyType",(JAPModel.getFirewallType()==JAPConstants.FIREWALL_TYPE_SOCKS?"SOCKS":"HTTP"));
+			String tmpStr=m_Model.getFirewallHost();
+			e.setAttribute("proxyHostName",((tmpStr==null)?"":tmpStr));
+			int tmpInt=m_Model.getFirewallPort();
+			e.setAttribute("proxyPortNumber",Integer.toString(tmpInt));
+			e.setAttribute("proxyAuthorization",(JAPModel.getUseFirewallAuthorization()?"true":"false"));
+			tmpStr=m_Model.getFirewallAuthUserID();
+			e.setAttribute("proxyAuthUserID",((tmpStr==null)?"":tmpStr));
+			tmpStr=m_Model.getInfoServiceHost();
+			e.setAttribute("infoServiceHostName",((tmpStr==null)?"":tmpStr));
+			tmpInt=m_Model.getInfoServicePort();
+			e.setAttribute("infoServicePortNumber",Integer.toString(tmpInt));
+			e.setAttribute("infoServiceDisabled",(JAPModel.isInfoServiceDisabled()?"true":"false"));
+			AnonServer e1 = m_Controller.getAnonServer();
+			e.setAttribute("anonserviceID",((e1.getID()==null)?"":e1.getID()));
+			e.setAttribute("anonserviceName",((e1.getName()==null)?"":e1.getName()));
+			ListenerInterface[] listenerInterfaces=e1.getListenerInterfaces();
+			ListenerInterface defaultListener=listenerInterfaces[0];
+			e.setAttribute("anonHostName",   ((defaultListener.m_strHost==null)?"":defaultListener.m_strHost));
+			e.setAttribute("anonHostIP",   ((defaultListener.m_strIP==null)?"":defaultListener.m_strIP));
+			e.setAttribute("anonPortNumber",   Integer.toString(defaultListener.m_iPort));
+			if(listenerInterfaces.length>1)
+				{
+					ListenerInterface secondListener=listenerInterfaces[1];
+					e.setAttribute("anonSSLPortNumber",Integer.toString(secondListener.m_iPort));
+				}
+			e.setAttribute("DummyTrafficIntervall",Integer.toString(JAPModel.getDummyTraffic()));
+			e.setAttribute("autoConnect",(JAPModel.getAutoConnect()?"true":"false"));
+			e.setAttribute("autoReConnect",(JAPModel.getAutoReConnect()?"true":"false"));
+			e.setAttribute("minimizedStartup",(JAPModel.getMinimizeOnStartup()?"true":"false"));
+			e.setAttribute("neverRemindActiveContent",(mbActCntMessageNeverRemind?"true":"false"));
+			e.setAttribute("doNotAbuseReminder",(mbDoNotAbuseReminder?"true":"false"));
+			e.setAttribute("neverRemindGoodBye",(mbGoodByMessageNeverRemind?"true":"false"));
+			e.setAttribute("Locale",m_Locale.getLanguage());
+			e.setAttribute("LookAndFeel",UIManager.getLookAndFeel().getName());
+			// adding Debug-Element
+			Element elemDebug=doc.createElement("Debug");
+			e.appendChild(elemDebug);
+			Element tmp=doc.createElement("Level");
+			Text txt=doc.createTextNode(Integer.toString(JAPDebug.getDebugLevel()));
+			tmp.appendChild(txt);
+			elemDebug.appendChild(tmp);
+			tmp=doc.createElement("Type");
+			int debugtype=JAPDebug.getDebugType();
+			tmp.setAttribute("GUI",(debugtype&JAPDebug.GUI)!=0?"true":"false");
+			tmp.setAttribute("NET",(debugtype&JAPDebug.NET)!=0?"true":"false");
+			tmp.setAttribute("THREAD",(debugtype&JAPDebug.THREAD)!=0?"true":"false");
+			tmp.setAttribute("MISC",(debugtype&JAPDebug.MISC)!=0?"true":"false");
+			elemDebug.appendChild(tmp);
+			if(JAPDebug.isShowConsole()){
+					tmp=doc.createElement("Output");
+					txt=doc.createTextNode("Console");
+					tmp.appendChild(txt);
+					elemDebug.appendChild(tmp);
+			}
+			return JAPUtil.XMLDocumentToString(doc);
+			//((XmlDocument)doc).write(f);
+		}
+		catch(Throwable ex) {
+			JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.MISC,"JAPModel:save() Exception: "+ex.getMessage());
+			//ex.printStackTrace();
+		}
+		return null;
+	}
 	//---------------------------------------------------------------------
 	public Locale getLocale() {
 		return m_Locale;
@@ -943,25 +947,12 @@ private final class SetAnonModeAsync implements Runnable
 							m_proxyAnon.setAnonService(e);
 							if (JAPModel.getUseFirewall())
 								{
-									// connect vi proxy to first mix (via ssl portnumber, if HTTP(S) proxy)
-									if (e.getSSLPort() == -1&&m_Model.getFirewallType()==JAPConstants.FIREWALL_TYPE_HTTP)
+									//try all possible ListenerInterfaces...
+									m_proxyAnon.setFirewall(m_Model.getFirewallType(),m_Model.getFirewallHost(),m_Model.getFirewallPort());
+									if(JAPModel.getUseFirewallAuthorization())
 										{
-											JOptionPane.showMessageDialog(m_Controller.getView(),
-																										JAPMessages.getString("errorFirewallModeNotSupported"),
-																										JAPMessages.getString("errorFirewallModeNotSupportedTitle"),
-																										JOptionPane.ERROR_MESSAGE);
-											m_View.setCursor(Cursor.getDefaultCursor());
-											JAPSetAnonModeSplash.abort();
-											return;
-										}
-									else
-										{
-											m_proxyAnon.setFirewall(m_Model.getFirewallType(),m_Model.getFirewallHost(),m_Model.getFirewallPort());
-											if(JAPModel.getUseFirewallAuthorization())
-												{
-													m_proxyAnon.setFirewallAuthorization(JAPModel.getFirewallAuthUserID(),
-																																m_Controller.getFirewallAuthPasswd());
-												}
+											m_proxyAnon.setFirewallAuthorization(JAPModel.getFirewallAuthUserID(),
+																														m_Controller.getFirewallAuthPasswd());
 										}
 								}
 

@@ -56,7 +56,8 @@ import javax.swing.event.ChangeListener;
 import javax.swing.JFrame;
 
 import anon.AnonServer;
-import update.*;
+import anon.ListenerInterface;
+import update.JAPUpdate;
 final class JAPConf extends JDialog
 	{
 
@@ -557,13 +558,13 @@ final class JAPConf extends JDialog
 							AnonServer entry=(AnonServer)m_comboMixCascade.getSelectedItem();
 							m_strMixName = entry.getName();
 							m_strOldMixName = m_strMixName;
-							m_tfMixHost.setText(entry.getHost());
-							m_tfMixPortNumber.setText(Integer.toString(entry.getPort()));
-							int i = entry.getSSLPort();
-							if (i == -1)
-								m_tfMixPortNumberSSL.setText("");
+							ListenerInterface[] listener=entry.getListenerInterfaces();
+							m_tfMixHost.setText(listener[0].m_strHost);
+							m_tfMixPortNumber.setText(Integer.toString(listener[0].m_iPort));
+							if(listener.length>1)
+								m_tfMixPortNumberSSL.setText(Integer.toString(listener[1].m_iPort));
 							else
-							m_tfMixPortNumberSSL.setText(Integer.toString(i));
+								m_tfMixPortNumberSSL.setText("-1");
 						}
 						}});
 				bg.add(m_rbMixStep1);
@@ -1284,12 +1285,13 @@ final class JAPConf extends JDialog
 				AnonServer server = m_Controller.getAnonServer();
 				m_strMixName = server.getName();
 				m_strOldMixName = m_strMixName;
-				m_tfMixHost.setText(server.getHost());
-				m_tfMixPortNumber.setText(String.valueOf(server.getPort()));
-				if (server.getSSLPort()==-1)
+				ListenerInterface[] listeners=server.getListenerInterfaces();
+				m_tfMixHost.setText(listeners[0].m_strHost);
+				m_tfMixPortNumber.setText(String.valueOf(listeners[0].m_iPort));
+				if (listeners.length<2)
 					m_tfMixPortNumberSSL.setText("");
 				else
-					m_tfMixPortNumberSSL.setText(String.valueOf(server.getSSLPort()));
+					m_tfMixPortNumberSSL.setText(String.valueOf(listeners[1].m_iPort));
 				m_cbAutoConnect.setSelected(JAPModel.getAutoConnect());
 				m_cbAutoReConnect.setSelected(JAPModel.getAutoReConnect());
 				m_cbStartupMinimized.setSelected(JAPModel.getMinimizeOnStartup());

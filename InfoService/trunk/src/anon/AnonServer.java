@@ -5,14 +5,14 @@ Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
 
 	- Redistributions of source code must retain the above copyright notice,
-	  this list of conditions and the following disclaimer.
+		this list of conditions and the following disclaimer.
 
 	- Redistributions in binary form must reproduce the above copyright notice,
-	  this list of conditions and the following disclaimer in the documentation and/or
+		this list of conditions and the following disclaimer in the documentation and/or
 		other materials provided with the distribution.
 
 	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
-	  may be used to endorse or promote products derived from this software without specific
+		may be used to endorse or promote products derived from this software without specific
 		prior written permission.
 
 
@@ -28,17 +28,21 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 package anon;
 
 import java.io.Serializable;
-import java.net.InetAddress;
 import java.net.UnknownServiceException;
+import java.net.InetAddress;
+import java.util.Vector;
+
+import org.w3c.dom.Node;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+
+import anon.server.impl.XMLUtil;
 
 public final class AnonServer implements Serializable
 	{
 		private String  m_strId    = null; //the ID od this Service
-    private String  m_strHost  = null; //this may be the hostname or an ip string
-		private String  m_strIP    =null; //this MUST be an IP-String, if not null
-		private int     m_iPort  = -1;
+		private ListenerInterface[] m_ListenerInterfaces=null;
 		private String  m_strName  = null;
-		private int     m_iProxyPort = -1;
 		private int     m_iUsers = -1;
 		private int     m_iTraffic = -1;
 		private int     m_iRisk   = -1;
@@ -59,77 +63,129 @@ public final class AnonServer implements Serializable
 
 		public AnonServer (String id,String name,String host,String strip, int port, int proxyport) throws UnknownServiceException
 			{
-        if(host==null||(port==-1&&proxyport==-1))
-          throw new UnknownServiceException("Wrong AnonService Info");
-        if(port==-1)
-          port=proxyport;
-        try
-          {
-            if(name==null)
-              m_strName = host+":"+Integer.toString(port);
-            else
-              m_strName = name;
-            m_strHost = host;
-            m_strIP=strip;
-            if(m_strIP!=null&&m_strIP.trim().equals(""))
-              m_strIP=null;
-            m_iPort = port;
-            m_iProxyPort = proxyport;
-            if(id==null)
-              {
-                if(m_strIP==null) //try to get it from host
-                  {
-                    byte[] addr=null;
-                    addr=InetAddress.getByName(m_strHost).getAddress();
-                    String tmp=Integer.toString((int)addr[0]&0xFF)+"."+
-                                              Integer.toString((int)addr[1]&0xFF)+"."+
-                                              Integer.toString((int)addr[2]&0xFF)+"."+
-                                              Integer.toString((int)addr[3]&0xFF);
-                    m_strId=tmp+"%3A"+Integer.toString(m_iPort);
-                  }
-                else
-                  m_strId=m_strIP+"%3A"+Integer.toString(m_iPort);
-              }
-            else
-              m_strId=id;
-          }
-        catch(Exception e)
-          {
-            throw new UnknownServiceException("Wrong AnonService Info "+e.getMessage());
-          }
+				if(host==null||(port==-1&&proxyport==-1))
+					throw new UnknownServiceException("Wrong AnonService Info");
+				if(port==-1)
+					port=proxyport;
+				try
+					{
+						if(name==null)
+							m_strName = host+":"+Integer.toString(port);
+						else
+							m_strName = name;
+						if(proxyport>0)
+							{
+								m_ListenerInterfaces=new ListenerInterface[2];
+								m_ListenerInterfaces[1]=new ListenerInterface(host,strip,proxyport);
+							}
+						else
+							m_ListenerInterfaces=new ListenerInterface[1];
+						m_ListenerInterfaces[0]=new ListenerInterface(host,strip,port);
+						if(id==null)
+							{
+								if(strip==null) //try to get it from host
+									{
+										byte[] addr=null;
+										addr=InetAddress.getByName(host).getAddress();
+										String tmp=Integer.toString((int)addr[0]&0xFF)+"."+
+																							Integer.toString((int)addr[1]&0xFF)+"."+
+																							Integer.toString((int)addr[2]&0xFF)+"."+
+																							Integer.toString((int)addr[3]&0xFF);
+										m_strId=tmp+"%3A"+Integer.toString(port);
+									}
+								else
+									m_strId=strip+"%3A"+Integer.toString(port);
+							}
+						else
+							m_strId=id;
+					}
+				catch(Exception e)
+					{
+						throw new UnknownServiceException("Wrong AnonService Info "+e.getMessage());
+					}
 			}
+
+		public AnonServer(Node n) throws UnknownServiceException
+			{
+				try
+					{
+						Element elem=(Element)n;
+						m_strId=elem.getAttribute("id");
+						NodeList nl=elem.getElementsByTagName("Name");
+						m_strName=nl.item(0).getFirstChild().getNodeValue().trim();
+						nl=elem.getElementsByTagName("ListenerInterface");
+						Vector listeners=new Vector();
+						for(int i=0;i<nl.getLength();i++)
+							{
+								try
+									{
+										ListenerInterface l=new ListenerInterface(nl.item(i));
+										listeners.addElement(l);
+									}
+								catch(Throwable t)
+									{
+									}
+							}
+						if(listeners.size()<1)
+							throw new UnknownServiceException("No useable ListenerInterface Info");
+						m_ListenerInterfaces=new ListenerInterface[listeners.size()];
+						listeners.copyInto(m_ListenerInterfaces);
+						nl=elem.getElementsByTagName("CurrentStatus");
+						if(nl!=null&&nl.getLength()>0)
+							{
+								Element elem1=(Element)nl.item(0);
+								int nrOfActiveUsers=XMLUtil.parseElementAttrInt(elem1,"ActiveUsers",-1);
+								setNrOfActiveUsers(nrOfActiveUsers);
+								int currentRisk=XMLUtil.parseElementAttrInt(elem1,"CurrentRisk",-1);
+								setCurrentRisk(currentRisk);
+								int trafficSituation=XMLUtil.parseElementAttrInt(elem1,"TrafficSituation",-1);
+								setTrafficSituation(trafficSituation);
+								int mixedPackets=XMLUtil.parseElementAttrInt(elem1,"MixedPackets",-1);
+								setMixedPackets(mixedPackets);
+							}
+					}
+				catch(Throwable t)
+					{
+						throw new UnknownServiceException("Wrong AnonServiceInfo: "+t.getMessage());
+					}
+			}
+
 
 		public boolean equals(AnonServer e) //TODO: Buggy!
 			{
-        if(e==null)
-          return false;
-        return m_strId.equals(e.getID());
-		  }
+				if(e==null)
+					return false;
+				return m_strId.equals(e.getID());
+			}
 
-    public String getID()
-      {
-        return m_strId;
-      }
+		public String getID()
+			{
+				return m_strId;
+			}
 
-    public String getName()
-      {
-        return m_strName;
-		  }
+		public String getName()
+			{
+				return m_strName;
+			}
 
-    /*public void setName(String m_strName)
-      {
+		public ListenerInterface[] getListenerInterfaces()
+			{
+				return m_ListenerInterfaces;
+			}
+		/*public void setName(String m_strName)
+			{
 				m_strName=m_strName;
-      }*/
+			}*/
 
-    public int getPort()
-      {
-				return m_iPort;
-		  }
+/*    public int getPort()
+			{
+				return m_ListenerInterfaces[0].m_iPort;
+			}
 
-    public String getHost()
-      {
+		public String getHost()
+			{
 				return m_strHost;
-		  }
+			}
 
 		public String getIP()
 			{
@@ -137,72 +193,72 @@ public final class AnonServer implements Serializable
 			}
 
 		public int getSSLPort()
-      {
+			{
 				return m_iProxyPort;
-		  }
+			}
+*/
+		public int getNrOfActiveUsers()
+			{
+				return m_iUsers;
+			}
 
-    public int getNrOfActiveUsers()
-      {
-			  return m_iUsers;
-		  }
-
-    public void setNrOfActiveUsers(int users)
-      {
+		public void setNrOfActiveUsers(int users)
+			{
 				m_iUsers=users;
-		  }
+			}
 
-    public int getTrafficSituation()
-      {
+		public int getTrafficSituation()
+			{
 				return m_iTraffic;
-		  }
+			}
 
 		public void setTrafficSituation(int traffic)
-      {
+			{
 				m_iTraffic=traffic;
-		  }
+			}
 
-    public int getAnonLevel()
-      {
+		public int getAnonLevel()
+			{
 				return m_iAnonLevel;
-		  }
+			}
 
-    public void setAnonLevel(int iAnonLevel)
-      {
+		public void setAnonLevel(int iAnonLevel)
+			{
 				m_iAnonLevel=iAnonLevel;
-		  }
+			}
 
 		public int getCurrentRisk()
-      {
+			{
 				return m_iRisk;
-		  }
+			}
 
-    public void setCurrentRisk(int risk)
-      {
+		public void setCurrentRisk(int risk)
+			{
 				m_iRisk=risk;
-		  }
+			}
 
-    public long getMixedPackets()
-      {
+		public long getMixedPackets()
+			{
 				return m_lMixedPackets;
-		  }
+			}
 
-    public void setMixedPackets(int m_lMixedPackets)
-      {
+		public void setMixedPackets(int m_lMixedPackets)
+			{
 				m_lMixedPackets=m_lMixedPackets;
-		  }
+			}
 
-    public String getDelay()
-      {
+		public String getDelay()
+			{
 				return m_strDelay;
-		  }
+			}
 
-    public void setDelay(String delay)
-      {
+		public void setDelay(String delay)
+			{
 				m_strDelay=delay;
-		  }
+			}
 
-    public String toString()
-      {
-        return m_strName;
-      }
+		public String toString()
+			{
+				return m_strName;
+			}
 	}
