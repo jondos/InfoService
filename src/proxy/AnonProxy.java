@@ -163,7 +163,7 @@ final public class AnonProxy implements Runnable/*,AnonServiceEventListener*/
 
 	public void stop()
 		{
-			m_AICom.end();
+			//m_AICom.end();
 			m_Anon.disconnect();
 			m_bIsRunning=false;
 			try{threadRun.join();}catch(Exception e){}

@@ -464,12 +464,8 @@ final public class JAPUtil
 					FileInputStream fin = new FileInputStream(file);
 					fin.read(buff);
 					fin.close();
-					String t_filename = ".." + File.separator + "certificates" +
-						File.separator + file.getName();
-					FileOutputStream fout = new FileOutputStream(t_filename);
-					fout.write(buff);
-					fout.close();
-					t_cert = JAPCertificate.getInstance(new File(t_filename));
+
+					t_cert = JAPCertificate.getInstance(buff);
 				}
 				catch (Exception e)
 				{

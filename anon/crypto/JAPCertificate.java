@@ -50,6 +50,7 @@ import org.bouncycastle.asn1.x509.TBSCertificateStructure;
 import org.bouncycastle.asn1.x509.Time;
 import org.bouncycastle.asn1.x509.X509CertificateStructure;
 import org.bouncycastle.asn1.x509.X509Name;
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.Text;
@@ -63,6 +64,7 @@ import java.security.MessageDigest;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+
 
 public class JAPCertificate
 {
@@ -78,6 +80,7 @@ public class JAPCertificate
 	private SubjectPublicKeyInfo pubkeyinfo;
 	private TBSCertificateStructure tbscert;
 	private int version;
+	private boolean enabled;
 	//private byte[] x509certenc;
 
 	private JAPCertificate()
@@ -86,13 +89,12 @@ public class JAPCertificate
 
 	public static JAPCertificate getInstance(InputStream in) throws IOException
 	{
-		try
-		{
+	  try
+	  {
 			BERInputStream is = new BERInputStream(in);
 			ASN1Sequence dcs = (ASN1Sequence) is.readObject();
 			X509CertificateStructure m_x509cert = new X509CertificateStructure(dcs);
-			JAPCertificate m_japcert = new JAPCertificate();
-			m_japcert.sigalgo = m_x509cert.getSignatureAlgorithm();
+			JAPCertificate m_japcert = new JAPCertificate(); 		m_japcert.sigalgo = m_x509cert.getSignatureAlgorithm();
 			m_japcert.startDate = m_x509cert.getStartDate();
 			m_japcert.endDate = m_x509cert.getEndDate();
 			m_japcert.issuer = m_x509cert.getIssuer();
@@ -108,12 +110,12 @@ public class JAPCertificate
 			return m_japcert;
 		}
 		// todo: fehlerbehandlung, falls werte nicht belegt sind oder werden können
-		catch (IOException e)
+		catch (Exception e)
 		{
 			e.printStackTrace();
 		}
 		return null;
-	}
+	} 
 
 /*
 	public static JAPCertificate getInstance(TBSCertificateStructure m_tbscert)
@@ -144,6 +146,7 @@ public class JAPCertificate
 //      System.out.println("found:  " + root.toString());
 			if (!root.getNodeName().equals("X509Certificate"))
 			{
+				System.out.println("ist null!!!!");
 				return null;
 			}
 
@@ -151,12 +154,14 @@ public class JAPCertificate
 			Text txtX509Cert = (Text) elemX509Cert.getFirstChild();
 			String value = txtX509Cert.getNodeValue();
 			byte[] bytecert = Base64.decode(value.toCharArray());
+			
 			try
 			{
 						return getInstance(bytecert);
 			}
 			catch (Exception e)
 			{
+				e.printStackTrace();
 			}
 			return null;
 	}
@@ -185,17 +190,19 @@ public class JAPCertificate
 			return null;
 		}
 
+
 		public static JAPCertificate getInstance(byte[] encoded)
-			{
-				try
-					{
-						return getInstance(new ByteArrayInputStream(encoded));
-					}
-				catch(Exception e)
-					{
-						return null;
-					}
-			}
+		{
+			try
+				{
+					return getInstance(new ByteArrayInputStream(encoded));
+				}
+			catch(Exception e)
+				{
+					return null;
+				}
+		}
+
 
 	public static class IllegalCertificateException extends RuntimeException
 	{
@@ -257,6 +264,23 @@ public class JAPCertificate
 		return (PublicKey) pubKey;
 	}
 
+	public char[] getEncoded()
+{
+		ByteArrayOutputStream bOut = new ByteArrayOutputStream();
+		DEROutputStream dOut = new DEROutputStream(bOut);
+		try
+		{
+			dOut.writeObject(this.x509cert);
+			dOut.close();
+		}
+		catch (IOException e)
+		{
+			// throw new RuntimeException("IOException while encoding");
+			e.printStackTrace();
+		}
+		return Base64.encode(bOut.toByteArray());
+}
+
 	public boolean validDate(Date date)
 	{
 		if (date.before(getStartDate()))
@@ -264,6 +288,16 @@ public class JAPCertificate
 		if (date.after(getEndDate()))
 			return false;
 		return true;
+	}
+
+	public void setEnabled(boolean b)
+	{
+		enabled = b; 
+	}
+
+	public boolean getEnabled()
+	{	
+		return enabled;
 	}
 
 	public boolean verify(PublicKey pubkey) throws NoSuchAlgorithmException, InvalidKeyException,SignatureException, JAPCertificateException
@@ -286,5 +320,29 @@ public class JAPCertificate
 		}
 		return false;
 	}
+
+
+  /**
+   * Creates XML node of certificate
+   *
+   * @param doc The XML document, which is the environment for the created XML node.
+   *
+   * @return Certificate as XML node.
+   */
+
+  public Element toXmlNode(Document doc)
+ {
+
+		Element keyInfo = doc.createElement("KeyInfo");
+		Element x509data = doc.createElement("X509Data");
+		keyInfo.appendChild(x509data);
+		Element x509cert = doc.createElement("X509Certificate");
+		x509data.appendChild(x509cert);
+		// x509cert.setAttribute("xml:space", "preserve");
+		// falsch! x509cert.appendChild(doc.createTextNode(String.valueOf(getEncoded())));
+		x509cert.appendChild(doc.createTextNode(String.valueOf(getEncoded())));
+			
+		return keyInfo;
+  }
 
 }

@@ -33,6 +33,7 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Locale;
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.FlowLayout;
 import java.awt.Font;
@@ -121,9 +122,9 @@ final class JAPConf extends JDialog
 
 		private DefaultListModel m_dlmCertList;
 		private TitledBorder m_borderCertInfo;
-		private JLabel m_labelDate, m_labelCN, m_labelE, m_labelCSTL, m_labelO,	m_labelOU;
-		private JButton m_bttnCertInsert, m_bttnCertRemove;
-		private JTextField m_tfDate, m_tfCN, m_tfE, m_tfCSTL, m_tfO, m_tfOU;
+		private JLabel m_labelTrust1, m_labelTrust2, m_labelDate, m_labelCN, m_labelE, m_labelCSTL, m_labelO,	m_labelOU;
+		private JLabel m_labelDateData, m_labelCNData, m_labelEData, m_labelCSTLData, m_labelOData,	m_labelOUData;
+		private JButton m_bttnCertInsert, m_bttnCertRemove, m_bttnCertEnable, m_bttnCertDisable;
 		private DefaultListModel m_listmodelCertList;
 		private JList m_listCert;
 		private JScrollPane m_scrpaneList;
@@ -657,99 +658,209 @@ final class JAPConf extends JDialog
 				return p;
 			}
 
-		protected JPanel buildCertPanel()
+	/*
+	 * TODO: updates info panel by list element, ugly, needs fix
+	 */
+	private void updateInfoPanel(String currIssuerCN)
+	{
+		m_enumCerts = JAPModel.getCertificateStore().elements();
+		JAPCertificate j;
+		while (m_enumCerts.hasMoreElements())
+		{
+			j = (JAPCertificate) m_enumCerts.nextElement();
+
+			if (j.getIssuer().getValues().elementAt(0).equals(currIssuerCN))
 			{
-					JPanel p = new JPanel();
-					p.setLayout(new BorderLayout());
+				m_labelDateData.setText(j.getStartDate().toGMTString() + " - " + j.getEndDate().toGMTString());
+				m_labelCNData.setText("");
+				m_labelEData.setText("");
+				m_labelCSTLData.setText("");
+				m_labelOData.setText("");
+				m_labelOUData.setText("");
 
-					JPanel pp1 = new JPanel();
-					GridBagLayout layout1 = new GridBagLayout();
-					pp1.setLayout(layout1);
-					m_borderCertInfo = new TitledBorder(JAPMessages.getString("certBorder"));
-					m_borderCertInfo.setTitleFont(m_fontControls);
-					pp1.setBorder(m_borderCertInfo);
+				X509NameTokenizer m_issuerData = new X509NameTokenizer(j.getIssuer().toString());
+				while (m_issuerData.hasMoreTokens())
+				{
+					String m_element = (String) m_issuerData.nextToken();
+					if (m_element.startsWith("CN="))
+						m_labelCNData.setText(m_element.substring(3));
+					else if (m_element.startsWith("E="))
+						m_labelEData.setText(m_element.substring(2));
+					else if (m_element.startsWith("C="))
+						m_labelCSTLData.setText(m_element.substring(2) + m_labelCSTLData.getText());
+					else if (m_element.startsWith("ST="))
+						m_labelCSTLData.setText(m_element.substring(3) + " / " + m_labelCSTLData.getText());
+					else if (m_element.startsWith("L="))
+						m_labelCSTLData.setText(m_element.substring(2) + " / " + m_labelCSTLData.getText());
+					else if (m_element.startsWith("O="))
+						m_labelOData.setText(m_element.substring(2));
+					else if (m_element.startsWith("OU="))
+						m_labelOUData.setText(m_element.substring(3));
+				}
 
-					/*				GridBagConstraints c1=new GridBagConstraints();
-							c1.fill=GridBagConstraints.HORIZONTAL;
-							c1.weightx=1;
-							c1.weighty=1;
-							c1.gridx=0;
-							c1.gridy=0;
-							c1.gridwidth=2;
-							c1.gridheight=2;
-							/* private ListSelectionListener m_listselCertList;
-							 private DefaultListModel m_listmodelCertList;
-							 private JScrollPane m_scrpaneList; */
+				if (m_labelCSTLData.getText().trim().endsWith("/"))
+				{
+					String t_label = m_labelCSTLData.getText().trim();
+					int length = t_label.length();
+					t_label = t_label.substring(0,length-1);
+					m_labelCSTLData.setText(t_label);
+				}
+				if (j.getEnabled())
+					m_listCert.setSelectionForeground(Color.black);
+				else
+					m_listCert.setSelectionForeground(Color.red);
 
-					m_listmodelCertList = new DefaultListModel();
+				// m_tfIssuer.setText(j.getIssuer().toString());
+			}
+		} // while
+	}
 
 
-					m_enumCerts = JAPModel.getCertificateStore().elements();
+	protected JPanel buildCertPanel()
+	{
+
+
+		JPanel p = new JPanel();
+		p.setLayout(new BorderLayout());
+
+		JPanel caPanel = new JPanel();
+		GridBagLayout caPanelLayout = new GridBagLayout();
+		caPanel.setLayout(caPanelLayout);
+
+		m_labelTrust1 = new JLabel(JAPMessages.getString("certTrust1"));
+		m_labelTrust1.setFont(m_fontControls);
+		m_labelTrust2 = new JLabel(JAPMessages.getString("certTrust2"));
+		m_labelTrust2.setFont(m_fontControls);
+
+		GridBagConstraints caPanelConstraints = new GridBagConstraints();
+		caPanelConstraints.anchor = GridBagConstraints.NORTHWEST;
+		caPanelConstraints.fill = GridBagConstraints.HORIZONTAL;
+		caPanelConstraints.weightx = 1.0;
+		caPanelConstraints.insets = new Insets(10, 10, 0, 0);
+
+		caPanelConstraints.gridx = 0;
+		caPanelConstraints.gridy = 0;
+		caPanelLayout.setConstraints(m_labelTrust1, caPanelConstraints);
+		caPanel.add(m_labelTrust1);
+
+		caPanelConstraints.gridx = 0;
+		caPanelConstraints.gridy = 1;
+		caPanelConstraints.insets = new Insets(0, 10, 10, 0);
+		caPanelLayout.setConstraints(m_labelTrust2, caPanelConstraints);
+		caPanel.add(m_labelTrust2);
+
+
+
+		GridBagConstraints c = new GridBagConstraints();
+
+//		GridBagLayout layout1 = new GridBagLayout();
+//		pp2.setLayout(layout1);
+//		m_borderCertInfo = new TitledBorder(JAPMessages.getString("certBorder"));
+//		m_borderCertInfo.setTitleFont(m_fontControls);
+//		pp2.setBorder(m_borderCertInfo);
+
+		m_listmodelCertList = new DefaultListModel();
+
+		// list init, add certificates by issuer name
+		m_enumCerts = JAPModel.getCertificateStore().elements();
+		while (m_enumCerts.hasMoreElements())
+		{
+			JAPCertificate j = (JAPCertificate) m_enumCerts.nextElement();
+			String issuerCN = (String) j.getIssuer().getValues().elementAt(0);
+			m_listmodelCertList.addElement(issuerCN);
+		}
+
+		m_listCert = new JList(m_listmodelCertList);
+		m_listCert.setSelectedIndex(0);
+
+		m_listCert.addListSelectionListener(new ListSelectionListener()
+		{
+
+			public void valueChanged(ListSelectionEvent e)
+			{
+				System.out.println(m_listmodelCertList.getSize());
+
+				if (m_listmodelCertList.getSize() == 0)
+				{
+					m_labelDateData.setText("");
+					m_labelCNData.setText("");
+					m_labelEData.setText("");
+					m_labelCSTLData.setText("");
+					m_labelOData.setText("");
+					m_labelOUData.setText("");
+				}
+				else
+				{
+					String currIssuerCN = (String) m_listCert.getSelectedValue();
+					updateInfoPanel(currIssuerCN);
+
+/*					m_enumCerts = JAPModel.getCertificateStore().elements();
+					JAPCertificate j;
 					while (m_enumCerts.hasMoreElements())
 					{
-						JAPCertificate j = (JAPCertificate) m_enumCerts.nextElement();
-						String issuerCN = (String) j.getIssuer().getValues().elementAt(0);
-						m_listmodelCertList.addElement(issuerCN);
-					}
+						j = (JAPCertificate) m_enumCerts.nextElement();
 
-					m_listCert = new JList(m_listmodelCertList);
-					m_listCert.setSelectedIndex(0);
-					m_listCert.addListSelectionListener(new ListSelectionListener()
-					{
-						public void valueChanged(ListSelectionEvent e)
+						if (j.getIssuer().getValues().elementAt(0).equals(currIssuerCN))
 						{
-							// System.out.println((String)m_listCert.getSelectedValue());
-							String currIssuerCN = (String) m_listCert.getSelectedValue();
-							m_enumCerts = JAPModel.getCertificateStore().elements();
-							JAPCertificate j;
-							while (m_enumCerts.hasMoreElements())
-							{
-								j = (JAPCertificate) m_enumCerts.nextElement();
-								if (j.getIssuer().getValues().elementAt(0).equals(currIssuerCN))
-								{
-									m_tfDate.setText(j.getStartDate().toGMTString() + " - " +
-																	 j.getEndDate().toGMTString());
-									m_tfCN.setText("");
-									m_tfE.setText("");
-									m_tfCSTL.setText("");
-									m_tfO.setText("");
-									m_tfOU.setText("");
+							m_labelDateData.setText(j.getStartDate().toGMTString() + " - " + j.getEndDate().toGMTString());
+							m_labelCNData.setText("");
+							m_labelEData.setText("");
+							m_labelCSTLData.setText("");
+							m_labelOData.setText("");
+							m_labelOUData.setText("");
 
-									X509NameTokenizer m_issuerData = new X509NameTokenizer(j.getIssuer().
-										toString());
-									while (m_issuerData.hasMoreTokens())
-									{
-										String m_element = (String) m_issuerData.nextToken();
-										if (m_element.startsWith("CN="))
-											m_tfCN.setText(m_element.substring(3));
-										else if (m_element.startsWith("E="))
-											m_tfE.setText(m_element.substring(2));
-										else if (m_element.startsWith("C="))
-											m_tfCSTL.setText(m_element.substring(2) + m_tfCSTL.getText());
-										else if (m_element.startsWith("ST="))
-											m_tfCSTL.setText(m_element.substring(3) + " / " +
-																			 m_tfCSTL.getText());
-										else if (m_element.startsWith("L="))
-											m_tfCSTL.setText(m_element.substring(2) + " / " +
-																			 m_tfCSTL.getText());
-										else if (m_element.startsWith("O="))
-											m_tfO.setText(m_element.substring(2));
-										else if (m_element.startsWith("OU="))
-											m_tfOU.setText(m_element.substring(3));
-									}
-									// m_tfIssuer.setText(j.getIssuer().toString());
-									m_tfCN.setCaretPosition(0);
-									m_tfE.setCaretPosition(0);
-									m_tfCSTL.setCaretPosition(0);
-									m_tfO.setCaretPosition(0);
-									m_tfOU.setCaretPosition(0);
-			break;
-								}
+							X509NameTokenizer m_issuerData = new X509NameTokenizer(j.getIssuer().toString());
+							while (m_issuerData.hasMoreTokens())
+							{
+								String m_element = (String) m_issuerData.nextToken();
+								if (m_element.startsWith("CN="))
+									m_labelCNData.setText(m_element.substring(3));
+								else if (m_element.startsWith("E="))
+									m_labelEData.setText(m_element.substring(2));
+								else if (m_element.startsWith("C="))
+									m_labelCSTLData.setText(m_element.substring(2) + m_labelCSTLData.getText());
+								else if (m_element.startsWith("ST="))
+									m_labelCSTLData.setText(m_element.substring(3) + " / " + m_labelCSTLData.getText());
+								else if (m_element.startsWith("L="))
+									m_labelCSTLData.setText(m_element.substring(2) + " / " + m_labelCSTLData.getText());
+								else if (m_element.startsWith("O="))
+									m_labelOData.setText(m_element.substring(2));
+								else if (m_element.startsWith("OU="))
+									m_labelOUData.setText(m_element.substring(3));
 							}
+
+							if (m_labelCSTLData.getText().trim().endsWith("/"))
+							{
+								String t_label = m_labelCSTLData.getText().trim();
+								int length = t_label.length();
+								t_label = t_label.substring(0,length-1);
+								m_labelCSTLData.setText(t_label);
+							}
+							if (j.getEnabled())
+								m_listCert.setSelectionForeground(Color.black);
+							else
+								m_listCert.setSelectionForeground(Color.red);
+
+							// m_tfIssuer.setText(j.getIssuer().toString());
 						}
-					});
+					} // while */
+				} // else
+
+
+			} // valuechanged
+		});
+
+
 					m_scrpaneList = new JScrollPane();
 					m_scrpaneList.getViewport().add(m_listCert, null);
+					caPanelConstraints.gridx = 0;
+					caPanelConstraints.gridy = 2;
+					caPanelConstraints.gridheight = 5;
+					caPanelConstraints.weighty = 1.0;
+					caPanelConstraints.insets = new Insets(0, 10, 20, 0);
+					caPanelConstraints.fill = GridBagConstraints.BOTH;
+					caPanelLayout.setConstraints(m_scrpaneList, caPanelConstraints);
+					caPanel.add(m_scrpaneList);
 
 					m_bttnCertInsert = new JButton(JAPMessages.getString("certBttnInsert"));
 					m_bttnCertInsert.setFont(m_fontControls);
@@ -760,15 +871,81 @@ final class JAPConf extends JDialog
 							JAPCertificate t_cert = JAPUtil.openFile(new JFrame());
 							if(t_cert!=null)
 							{
-							String issuerCN = (String) t_cert.getIssuer().getValues().elementAt(0);
-							m_listmodelCertList.addElement(issuerCN);
-							m_listCert.removeAll();
-							m_listCert.setModel(m_listmodelCertList);
-							m_scrpaneList.getViewport().removeAll();
-							m_scrpaneList.getViewport().add(m_listCert, null);
-							JAPCertificateStore jcs = JAPModel.getCertificateStore();
-							jcs.addCertificate(t_cert);
+								String issuerCN = (String) t_cert.getIssuer().getValues().elementAt(0);
+
+								JAPCertificateStore jcs = JAPModel.getCertificateStore();
+
+								if (! jcs.checkCertificateExists(t_cert))
+								{
+									System.out.println("zertifikat existiert nicht ...");
+									System.out.println("groesse:  " + jcs.size());
+									m_listmodelCertList.addElement(issuerCN);
+									// m_listCert.removeAll();
+									// m_listCert.setModel(m_listmodelCertList);
+									// m_scrpaneList.getViewport().removeAll();
+									// m_scrpaneList.getViewport().add(m_listCert, null);
+									jcs.addCertificate(t_cert);
+									JAPController.setCertificateStore(jcs);
+									jcs.dumpKeys();
+								}
+								else
+								{
+									System.out.println("zertifikat existiert");
+								}
 							}
+							m_bttnCertRemove.setEnabled(true);
+							m_bttnCertDisable.setEnabled(true);
+							m_bttnCertEnable.setEnabled(true);
+							if (m_listmodelCertList.getSize() == 1)
+							{
+								m_labelDateData.setText("");
+								m_labelCNData.setText("");
+								m_labelEData.setText("");
+								m_labelCSTLData.setText("");
+								m_labelOData.setText("");
+								m_labelOUData.setText("");
+
+								m_listCert.setSelectedIndex(0);
+								String currIssuerCN = (String) m_listCert.getSelectedValue();
+								updateInfoPanel(currIssuerCN);
+
+/*								m_enumCerts = JAPModel.getCertificateStore().elements();
+								JAPCertificate j;
+								while (m_enumCerts.hasMoreElements())
+								{
+									j = (JAPCertificate) m_enumCerts.nextElement();
+									if (j.getIssuer().getValues().elementAt(0).equals(currIssuerCN))
+									{
+										m_labelDateData.setText(j.getStartDate().toGMTString() + " - " + j.getEndDate().toGMTString());
+										m_labelCNData.setText("");
+										m_labelEData.setText("");
+										m_labelCSTLData.setText("");
+										m_labelOData.setText("");
+										m_labelOUData.setText("");
+
+										X509NameTokenizer m_issuerData = new X509NameTokenizer(j.getIssuer().toString());
+										while (m_issuerData.hasMoreTokens())
+										{
+											String m_element = (String) m_issuerData.nextToken();
+											if (m_element.startsWith("CN="))
+												m_labelCNData.setText(m_element.substring(3));
+											else if (m_element.startsWith("E="))
+												m_labelEData.setText(m_element.substring(2));
+											else if (m_element.startsWith("C="))
+												m_labelCSTLData.setText(m_element.substring(2) + m_labelCSTLData.getText());
+											else if (m_element.startsWith("ST="))
+												m_labelCSTLData.setText(m_element.substring(3) + " / " + m_labelCSTLData.getText());
+											else if (m_element.startsWith("L="))
+												m_labelCSTLData.setText(m_element.substring(2) + " / " + m_labelCSTLData.getText());
+											else if (m_element.startsWith("O="))
+												m_labelOData.setText(m_element.substring(2));
+											else if (m_element.startsWith("OU="))
+												m_labelOUData.setText(m_element.substring(3));
+										} // while
+									} // if
+								} // while */
+							}
+
 						}
 					});
 
@@ -790,12 +967,129 @@ final class JAPConf extends JDialog
 									JAPCertificateStore jcs = JAPModel.getCertificateStore();
 									jcs.removeCertificate(j);
 									m_listmodelCertList.remove(t_index);
+									JAPController.setCertificateStore(jcs);
 								}
 							}
+							if (m_listmodelCertList.getSize() == 0)
+							{
+								m_bttnCertRemove.setEnabled(false);
+								m_bttnCertDisable.setEnabled(false);
+								m_bttnCertEnable.setEnabled(false);
+								m_labelDateData.setText("");
+								m_labelCNData.setText("");
+								m_labelEData.setText("");
+								m_labelCSTLData.setText("");
+								m_labelOData.setText("");
+								m_labelOUData.setText("");
+							}
+							else
+							{
+								m_labelDateData.setText("");
+								m_labelCNData.setText("");
+								m_labelEData.setText("");
+								m_labelCSTLData.setText("");
+								m_labelOData.setText("");
+								m_labelOUData.setText("");
+
+								m_listCert.setSelectedIndex(0);
+								String currIssuerCN = (String) m_listCert.getSelectedValue();
+								updateInfoPanel(currIssuerCN);
+
+/*
+
+											m_enumCerts = JAPModel.getCertificateStore().elements();
+											JAPCertificate j;
+											while (m_enumCerts.hasMoreElements())
+											{
+												j = (JAPCertificate) m_enumCerts.nextElement();
+												if (j.getIssuer().getValues().elementAt(0).equals(currIssuerCN))
+												{
+													m_labelDateData.setText(j.getStartDate().toGMTString() + " - " + j.getEndDate().toGMTString());
+													m_labelCNData.setText("");
+													m_labelEData.setText("");
+													m_labelCSTLData.setText("");
+													m_labelOData.setText("");
+													m_labelOUData.setText("");
+
+													X509NameTokenizer m_issuerData = new X509NameTokenizer(j.getIssuer().toString());
+													while (m_issuerData.hasMoreTokens())
+													{
+														String m_element = (String) m_issuerData.nextToken();
+														if (m_element.startsWith("CN="))
+															m_labelCNData.setText(m_element.substring(3));
+														else if (m_element.startsWith("E="))
+															m_labelEData.setText(m_element.substring(2));
+														else if (m_element.startsWith("C="))
+															m_labelCSTLData.setText(m_element.substring(2) + m_labelCSTLData.getText());
+														else if (m_element.startsWith("ST="))
+															m_labelCSTLData.setText(m_element.substring(3) + " / " + m_labelCSTLData.getText());
+														else if (m_element.startsWith("L="))
+															m_labelCSTLData.setText(m_element.substring(2) + " / " + m_labelCSTLData.getText());
+														else if (m_element.startsWith("O="))
+															m_labelOData.setText(m_element.substring(2));
+														else if (m_element.startsWith("OU="))
+															m_labelOUData.setText(m_element.substring(3));
+													} // while
+												} // if
+											} // while */
+
+							}
+
+
 						}
 					});
 
-					GridBagConstraints c = new GridBagConstraints();
+					m_bttnCertEnable = new JButton(JAPMessages.getString("certBttnEnable"));
+					m_bttnCertEnable.setFont(m_fontControls);
+					m_bttnCertEnable.addActionListener(new ActionListener()
+					{
+						public void actionPerformed(ActionEvent e)
+						{
+							int t_index = m_listCert.getSelectedIndex();
+							String t_issuerCN = (String) m_listCert.getSelectedValue();
+							m_enumCerts = JAPModel.getCertificateStore().elements();
+							while (m_enumCerts.hasMoreElements())
+							{
+								JAPCertificate j = (JAPCertificate) m_enumCerts.nextElement();
+								String issuerCN = (String) j.getIssuer().getValues().elementAt(0);
+								if (issuerCN.equals(t_issuerCN))
+								{
+									JAPCertificateStore jcs = JAPModel.getCertificateStore();
+									jcs.enableCertificate(j);
+									m_listCert.setSelectionForeground(Color.black);
+									JAPController.setCertificateStore(jcs);
+									}
+								}
+							}
+						});
+
+					m_bttnCertDisable = new JButton(JAPMessages.getString("certBttnDisable"));
+					m_bttnCertDisable.setFont(m_fontControls);
+					m_bttnCertDisable.addActionListener(new ActionListener()
+					{
+						public void actionPerformed(ActionEvent e)
+						{
+							int t_index = m_listCert.getSelectedIndex();
+							String t_issuerCN = (String) m_listCert.getSelectedValue();
+							m_enumCerts = JAPModel.getCertificateStore().elements();
+							while (m_enumCerts.hasMoreElements())
+							{
+								JAPCertificate j = (JAPCertificate) m_enumCerts.nextElement();
+								String issuerCN = (String) j.getIssuer().getValues().elementAt(0);
+								if (issuerCN.equals(t_issuerCN))
+								{
+									JAPCertificateStore jcs = JAPModel.getCertificateStore();
+									jcs.disableCertificate(j);
+									m_listCert.setSelectionForeground(Color.red);
+									JAPController.setCertificateStore(jcs);
+									break;
+								}
+							}
+							}
+						});
+
+
+/*
 					c.gridx = 0;
 					c.gridy = 0;
 					c.gridwidth = 1;
@@ -804,260 +1098,254 @@ final class JAPConf extends JDialog
 //	 c.weighty = 1;
 					c.fill = GridBagConstraints.HORIZONTAL;
 					c.anchor = GridBagConstraints.CENTER;
-					pp1.add(m_scrpaneList, c);
+*/
 
-					c.gridx = 1;
-					c.gridy = 0;
-					c.gridwidth = 1;
-					c.gridheight = 1;
-					c.weightx = 0;
-					c.weighty = 0;
 
-					c.anchor = GridBagConstraints.CENTER;
-					pp1.add(m_bttnCertInsert, c);
+			caPanelConstraints.gridx = 2;
+			caPanelConstraints.gridy = 2;
+			caPanelConstraints.weightx = 0.0;
+			caPanelConstraints.gridheight = 1;
+			caPanelConstraints.weighty = 0.0;
+			caPanelConstraints.fill = GridBagConstraints.BOTH;
+			caPanelConstraints.insets = new Insets(0, 10, 0, 0);
+			caPanelLayout.setConstraints(m_bttnCertInsert, caPanelConstraints);
+			caPanel.add(m_bttnCertInsert);
 
-					c.gridx = 1;
-					c.gridy = 1;
-					c.gridwidth = 1;
-					c.gridheight = 1;
-					// c.insets = new Insets(0,0,1,0);
-					c.anchor = GridBagConstraints.NORTHEAST;
-					pp1.add(m_bttnCertRemove, c);
+			caPanelConstraints.gridx = 2;
+			caPanelConstraints.gridy = 3;
+			caPanelConstraints.fill = GridBagConstraints.BOTH;
+			caPanelLayout.setConstraints(m_bttnCertRemove, caPanelConstraints);
+			caPanel.add(m_bttnCertRemove);
 
-					JPanel pp2 = new JPanel();
-					GridBagLayout layout2 = new GridBagLayout();
-					pp2.setLayout(layout2);
-					m_borderCertInfo = new TitledBorder(JAPMessages.getString("certInfoBorder"));
-					m_borderCertInfo.setTitleFont(m_fontControls);
-					pp2.setBorder(m_borderCertInfo);
+			caPanelConstraints.gridx = 2;
+			caPanelConstraints.gridy = 4;
+			caPanelConstraints.fill = GridBagConstraints.BOTH;
+			caPanelLayout.setConstraints(m_bttnCertEnable, caPanelConstraints);
+			caPanel.add(m_bttnCertEnable);
 
-					/*				GridBagConstraints c2=new GridBagConstraints();
-							c2.fill=GridBagConstraints.HORIZONTAL;
-							c2.weightx=1;
-							c2.weighty=1;
-							c2.gridx=0;
-							c2.gridy=0;
-							c2.gridwidth=2;
-							c2.anchor=GridBagConstraints.NORTHWEST; */
+			caPanelConstraints.gridx = 2;
+			caPanelConstraints.gridy = 5;
+			caPanelConstraints.fill = GridBagConstraints.BOTH;
+			caPanelLayout.setConstraints(m_bttnCertDisable, caPanelConstraints);
+			caPanel.add(m_bttnCertDisable);
 
-					m_labelDate = new JLabel(JAPMessages.getString("certDate"));
-					m_labelDate.setFont(m_fontControls);
+			JPanel infoPanel = new JPanel();
+			GridBagLayout infoPanelLayout = new GridBagLayout();
+			infoPanel.setLayout(infoPanelLayout);
+
+			GridBagConstraints infoPanelConstraints = new GridBagConstraints();
+			infoPanelConstraints.anchor = GridBagConstraints.NORTHWEST;
+			infoPanelConstraints.fill = GridBagConstraints.HORIZONTAL;
+			infoPanelConstraints.weightx = 1.0;
+			infoPanelConstraints.insets = new Insets(10, 10, 0, 0);
+
+			infoPanelConstraints.gridx = 0;
+			infoPanelConstraints.gridy = 0;
+
+			m_borderCertInfo = new TitledBorder(JAPMessages.getString("certInfoBorder"));
+			m_borderCertInfo.setTitleFont(m_fontControls);
+			infoPanel.setBorder(m_borderCertInfo);
+
+			m_labelDate = new JLabel(JAPMessages.getString("certDate"));
+			m_labelDate.setFont(m_fontControls);
 //				m_labelIssuer = new JLabel(JAPMessages.getString("certIssuer"));
 
-					m_labelCN = new JLabel(JAPMessages.getString("certName"));
-					m_labelCN.setFont(m_fontControls);
-					m_labelE = new JLabel(JAPMessages.getString("certMail"));
-					m_labelE.setFont(m_fontControls);
-					m_labelCSTL = new JLabel(JAPMessages.getString("certLocation"));
-					m_labelCSTL.setFont(m_fontControls);
-					m_labelO = new JLabel(JAPMessages.getString("certOrg"));
-					m_labelO.setFont(m_fontControls);
-					m_labelOU = new JLabel(JAPMessages.getString("certOrgUnit"));
-					m_labelOU.setFont(m_fontControls);
+			m_labelCN = new JLabel(JAPMessages.getString("certName"));
+			m_labelCN.setFont(m_fontControls);
+			m_labelE = new JLabel(JAPMessages.getString("certMail"));
+			m_labelE.setFont(m_fontControls);
+			m_labelCSTL = new JLabel(JAPMessages.getString("certLocation"));
+			m_labelCSTL.setFont(m_fontControls);
+			m_labelO = new JLabel(JAPMessages.getString("certOrg"));
+			m_labelO.setFont(m_fontControls);
+			m_labelOU = new JLabel(JAPMessages.getString("certOrgUnit"));
+			m_labelOU.setFont(m_fontControls);
 
-					m_tfDate = new JTextField();
-					m_tfDate.setFont(m_fontControls);
-					m_tfDate.setEditable(false);
+					/*
+						m_tfDate = new JTextField();
+						m_tfDate.setFont(m_fontControls);
+						m_tfDate.setEditable(false);
+					*/
 
-					/*				m_tfIssuer = new JTextField();
-							m_tfIssuer.setFont(m_fontControls);
-							m_tfIssuer.setEditable(false);
-							m_tfIssuer.setMaximumSize(new Dimension(80,1)); */
+			m_labelDateData = new JLabel();
+			m_labelDateData.setFont(m_fontControls);
 
-					m_tfCN = new JTextField();
-					m_tfCN.setFont(m_fontControls);
-					m_tfCN.setEditable(false);
+					/*
+						m_tfCN = new JTextField();
+						m_tfCN.setFont(m_fontControls);
+						m_tfCN.setEditable(false);
+					*/
 
-					m_tfE = new JTextField();
-					m_tfE.setFont(m_fontControls);
-					m_tfE.setEditable(false);
+			m_labelCNData = new JLabel();
+			m_labelCNData.setFont(m_fontControls);
 
-					m_tfCSTL = new JTextField();
-					m_tfCSTL.setFont(m_fontControls);
-					m_tfCSTL.setEditable(false);
+					/*
+						m_tfE = new JTextField();
+						m_tfE.setFont(m_fontControls);
+						m_tfE.setEditable(false);
+					*/
 
-					m_tfO = new JTextField();
-					m_tfO.setFont(m_fontControls);
-					m_tfO.setEditable(false);
+			m_labelEData = new JLabel();
+			m_labelEData.setFont(m_fontControls);
 
-					m_tfOU = new JTextField();
-					m_tfOU.setFont(m_fontControls);
-					m_tfOU.setEditable(false);
+					/*
+						m_tfCSTL = new JTextField();
+						m_tfCSTL.setFont(m_fontControls);
+						m_tfCSTL.setEditable(false);
+					*/
 
-					// init with first certificate of store
-					JAPCertificateStore csw=JAPModel.getCertificateStore();
-					if(csw!=null&&csw.elements().hasMoreElements())
-					{
-					JAPCertificate j = (JAPCertificate) csw.elements().nextElement();
-					m_tfDate.setText(j.getStartDate().toGMTString() + " - " +
-													 j.getEndDate().toGMTString());
-					m_tfCN.setText("");
-					m_tfE.setText("");
-					m_tfCSTL.setText("");
-					m_tfO.setText("");
-					m_tfOU.setText("");
+			m_labelCSTLData = new JLabel();
+			m_labelCSTLData.setFont(m_fontControls);
 
-					X509NameTokenizer m_issuerData = new X509NameTokenizer(j.getIssuer().
-						toString());
-					while (m_issuerData.hasMoreTokens())
-					{
-						String m_element = (String) m_issuerData.nextToken();
-						if (m_element.startsWith("CN="))
-							m_tfCN.setText(m_element.substring(3));
-						else if (m_element.startsWith("E="))
-							m_tfE.setText(m_element.substring(2));
-						else if (m_element.startsWith("C="))
-							m_tfCSTL.setText(m_element.substring(2) + " / " + m_tfCSTL.getText());
-						else if (m_element.startsWith("ST="))
-							m_tfCSTL.setText(m_element.substring(3) + " / " + m_tfCSTL.getText());
-						else if (m_element.startsWith("L="))
-							m_tfCSTL.setText(m_element.substring(2) + " / " + m_tfCSTL.getText());
-						else if (m_element.startsWith("O="))
-							m_tfO.setText(m_element.substring(2));
-						else if (m_element.startsWith("OU="))
-							m_tfOU.setText(m_element.substring(3));
+					/*
+						m_tfO = new JTextField();
+						m_tfO.setFont(m_fontControls);
+						m_tfO.setEditable(false);
+					*/
 
-						m_tfCN.setCaretPosition(0);
-						m_tfE.setCaretPosition(0);
-						m_tfCSTL.setCaretPosition(0);
-						m_tfO.setCaretPosition(0);
-						m_tfOU.setCaretPosition(0);
-					}
-					}
-					GridBagConstraints c2 = new GridBagConstraints();
+			m_labelOData = new JLabel();
+			m_labelOData.setFont(m_fontControls);
 
-					c2.gridx = 0;
-					c2.gridy = 0;
-					c2.gridheight = 1;
-					c2.gridwidth = 1;
-					c2.weightx = 0;
-					c2.anchor = GridBagConstraints.EAST;
-					c2.fill = GridBagConstraints.HORIZONTAL;
-					c2.insets = new Insets(0, 5, 0, 0);
-					pp2.add(m_labelDate, c2);
+					/*
+						m_tfOU = new JTextField();
+						m_tfOU.setFont(m_fontControls);
+						m_tfOU.setEditable(false);
+					*/
 
-					c2.gridx = 1;
-					c2.gridy = 0;
-					c2.gridheight = 1;
-					c2.gridwidth = 1;
-					c2.weightx = 0;
-					c2.anchor = GridBagConstraints.WEST;
-					pp2.add(m_tfDate, c2);
+			m_labelOUData = new JLabel();
+			m_labelOUData.setFont(m_fontControls);
 
-					c2.gridx = 0;
-					c2.gridy = 1;
-					c2.gridheight = 1;
-					c2.gridwidth = 1;
-					c2.weightx = 0;
-					c2.anchor = GridBagConstraints.EAST;
-					pp2.add(m_labelCN, c2);
+			// init with first certificate of store
+			JAPCertificateStore csw=JAPModel.getCertificateStore();
+			if(csw!=null&&csw.elements().hasMoreElements())
+			{
+				JAPCertificate j = (JAPCertificate) csw.elements().nextElement();
 
-					c2.gridx = 1;
-					c2.gridy = 1;
-					c2.gridheight = 1;
-					c2.gridwidth = 1;
-					c2.weightx = 0;
-					c2.anchor = GridBagConstraints.WEST;
-					pp2.add(m_tfCN, c2);
+				m_labelDateData.setText(j.getStartDate().toGMTString() + " - " + j.getEndDate().toGMTString());
 
-					c2.gridx = 0;
-					c2.gridy = 2;
-					c2.gridheight = 1;
-					c2.gridwidth = 1;
-					c2.weightx = 0;
-					c2.anchor = GridBagConstraints.EAST;
-					pp2.add(m_labelE, c2);
+				X509NameTokenizer m_issuerData = new X509NameTokenizer(j.getIssuer().toString());
+				while (m_issuerData.hasMoreTokens())
+				{
+					String m_element = (String) m_issuerData.nextToken();
+					if (m_element.startsWith("CN="))
+						m_labelCNData.setText(m_element.substring(3));
+					else if (m_element.startsWith("E="))
+						m_labelEData.setText(m_element.substring(2));
+					else if (m_element.startsWith("C="))
+						m_labelCSTLData.setText(m_element.substring(2) + " / " + m_labelCSTLData.getText());
+					else if (m_element.startsWith("ST="))
+						m_labelCSTLData.setText(m_element.substring(3) + " / " + m_labelCSTLData.getText());
+					else if (m_element.startsWith("L="))
+						m_labelCSTLData.setText(m_element.substring(2) + " / " + m_labelCSTLData.getText());
+					else if (m_element.startsWith("O="))
+						m_labelOData.setText(m_element.substring(2));
+					else if (m_element.startsWith("OU="))
+						m_labelOUData.setText(m_element.substring(3));
 
-					c2.gridx = 1;
-					c2.gridy = 2;
-					c2.gridheight = 1;
-					c2.gridwidth = 1;
-					c2.weightx = 0;
-					c2.anchor = GridBagConstraints.WEST;
-					pp2.add(m_tfE, c2);
-
-					c2.gridx = 0;
-					c2.gridy = 3;
-					c2.gridheight = 1;
-					c2.gridwidth = 1;
-					c2.weightx = 0;
-					c2.anchor = GridBagConstraints.EAST;
-					pp2.add(m_labelCSTL, c2);
-
-					c2.gridx = 1;
-					c2.gridy = 3;
-					c2.gridheight = 1;
-					c2.gridwidth = 1;
-					c2.weightx = 0;
-					c2.anchor = GridBagConstraints.WEST;
-					pp2.add(m_tfCSTL, c2);
-
-			/*
-						c2.gridx = 2; // 0
-						c2.gridy = 4; // 5
-						c2.gridheight = 1;
-						c2.gridwidth = 1;
-						c2.weightx = 0;
-						c2.anchor = GridBagConstraints.EAST;
-						pp2.add(m_labelST, c2);
-						c2.gridx = 3; // 1
-						c2.gridy = 4; // 5
-						c2.gridheight = 1;
-						c2.gridwidth = 1;
-						c2.weightx = 0;
-						c2.anchor = GridBagConstraints.WEST;
-						pp2.add(m_tfST, c2);
-						c2.gridx = 4; // 0
-						 c2.gridy = 4; // 6
-						 c2.gridheight = 1;
-						 c2.gridwidth = 1;
-						 c2.weightx = 0;
-						 c2.anchor = GridBagConstraints.EAST;
-						 pp2.add(m_labelL, c2);
-						 c2.gridx = 5; // 1
-						 c2.gridy = 4; // 6
-						 c2.gridheight = 1;
-						 c2.gridwidth = 1;
-						 c2.weightx = 0;
-						 c2.anchor = GridBagConstraints.WEST;
-						 pp2.add(m_tfL, c2); */
-
-					c2.gridx = 0;
-					c2.gridy = 4;
-					c2.gridheight = 1;
-					c2.gridwidth = 1;
-					c2.weightx = 0;
-					c2.anchor = GridBagConstraints.EAST;
-					pp2.add(m_labelO, c2);
-
-					c2.gridx = 1;
-					c2.gridy = 4;
-					c2.gridheight = 1;
-					c2.gridwidth = 1;
-					c2.weightx = 0;
-					c2.anchor = GridBagConstraints.WEST;
-					pp2.add(m_tfO, c2);
-
-					c2.gridx = 0;
-					c2.gridy = 5;
-					c2.gridheight = 1;
-					c2.gridwidth = 1;
-					c2.weightx = 0;
-					c2.anchor = GridBagConstraints.EAST;
-					pp2.add(m_labelOU, c2);
-
-					c2.gridx = 1;
-					c2.gridy = 5;
-					c2.gridheight = 1;
-					c2.gridwidth = 1;
-					c2.weightx = 0;
-					c2.anchor = GridBagConstraints.WEST;
-					pp2.add(m_tfOU, c2);
-
-					p.add(pp1, BorderLayout.CENTER);
-					p.add(pp2, BorderLayout.SOUTH);
-					return p;
+				}
+				if (m_labelCSTLData.getText().trim().endsWith("/"))
+				{
+					String t_label = m_labelCSTLData.getText().trim();
+					int length = t_label.length();
+					t_label = t_label.substring(0,length-1);
+					m_labelCSTLData.setText(t_label);
+				}
 			}
+
+			/*		    	gridx
+							0:				1:
+				gridy	0:
+						1:  labelDate		labelDateData
+						2:  labelCN			labelCNData
+						3:	labelE			labelEData
+						4:	labelCSTL		labelCSTLData
+						5:	labelO			labelOData
+						6:	labelOU			labelOUData
+			*/
+
+			// infoPanelConstraints.weightx = 1.0;
+			infoPanelConstraints.ipadx = 5;
+			infoPanelConstraints.ipady = 5;
+
+			infoPanelConstraints.gridx = 0;
+			infoPanelConstraints.gridy = 1;
+			infoPanelConstraints.ipadx = 10;
+			infoPanelConstraints.fill = GridBagConstraints.BOTH;
+			infoPanelConstraints.insets = new Insets(0,10,0,10);
+			infoPanelLayout.setConstraints(m_labelDate, infoPanelConstraints);
+			infoPanel.add(m_labelDate);
+
+			infoPanelConstraints.gridx = 1;
+			infoPanelConstraints.gridy = 1;
+			infoPanelLayout.setConstraints(m_labelDateData, infoPanelConstraints);
+			infoPanel.add(m_labelDateData);
+
+			infoPanelConstraints.gridx = 0;
+			infoPanelConstraints.gridy = 2;
+			infoPanelConstraints.fill = GridBagConstraints.BOTH;
+			infoPanelConstraints.insets = new Insets(0,10,0,10);
+			infoPanelLayout.setConstraints(m_labelCN, infoPanelConstraints);
+			infoPanel.add(m_labelCN);
+
+			infoPanelConstraints.gridx = 1;
+			infoPanelConstraints.gridy = 2;
+			infoPanelConstraints.fill = GridBagConstraints.BOTH;
+			infoPanelLayout.setConstraints(m_labelCNData, infoPanelConstraints);
+			infoPanel.add(m_labelCNData);
+
+			infoPanelConstraints.gridx = 0;
+			infoPanelConstraints.gridy = 3;
+			infoPanelConstraints.fill = GridBagConstraints.BOTH;
+			infoPanelConstraints.insets = new Insets(0,10,0,10);
+			infoPanelLayout.setConstraints(m_labelE, infoPanelConstraints);
+			infoPanel.add(m_labelE);
+
+			infoPanelConstraints.gridx = 1;
+			infoPanelConstraints.gridy = 3;
+			infoPanelConstraints.fill = GridBagConstraints.BOTH;
+			infoPanelLayout.setConstraints(m_labelEData, infoPanelConstraints);
+			infoPanel.add(m_labelEData);
+
+			infoPanelConstraints.gridx = 0;
+			infoPanelConstraints.gridy = 4;
+			infoPanelConstraints.fill = GridBagConstraints.BOTH;
+			infoPanelConstraints.insets = new Insets(0,10,0,10);
+			infoPanelLayout.setConstraints(m_labelCSTL, infoPanelConstraints);
+			infoPanel.add(m_labelCSTL);
+
+			infoPanelConstraints.gridx = 1;
+			infoPanelConstraints.gridy = 4;
+			infoPanelConstraints.fill = GridBagConstraints.BOTH;
+			infoPanelLayout.setConstraints(m_labelCSTLData, infoPanelConstraints);
+			infoPanel.add(m_labelCSTLData);
+
+			infoPanelConstraints.gridx = 0;
+			infoPanelConstraints.gridy = 5;
+			infoPanelConstraints.fill = GridBagConstraints.BOTH;
+			infoPanelLayout.setConstraints(m_labelO, infoPanelConstraints);
+			infoPanel.add(m_labelO);
+
+			infoPanelConstraints.gridx = 1;
+			infoPanelConstraints.gridy = 5;
+			infoPanelLayout.setConstraints(m_labelOData, infoPanelConstraints);
+			infoPanel.add(m_labelOData);
+
+			infoPanelConstraints.gridx = 0;
+			infoPanelConstraints.gridy = 6;
+			infoPanelConstraints.fill = GridBagConstraints.BOTH;
+			infoPanelLayout.setConstraints(m_labelOU, infoPanelConstraints);
+			infoPanel.add(m_labelOU);
+
+			infoPanelConstraints.gridx = 1;
+			infoPanelConstraints.gridy = 6;
+			infoPanelLayout.setConstraints(m_labelOUData, infoPanelConstraints);
+			infoPanel.add(m_labelOUData);
+
+			p.add(caPanel, BorderLayout.CENTER); // , BorderLayout.NORTH);
+			p.add(infoPanel, BorderLayout.SOUTH);
+
+			return p;
+		}
 
 		protected JPanel buildMiscPanel()
 			{
