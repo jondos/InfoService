@@ -52,13 +52,13 @@ public class XMLJapPublicKey extends XMLDocument
 	//~ Instance fields ********************************************************
 
 	//    private RSAPublicKey pubkey;
-	private MyRSAPublicKey pubkey;
+	private MyRSAPublicKey m_publicKey;
 
 	//~ Constructors ***********************************************************
 
 	public XMLJapPublicKey(MyRSAPublicKey key) throws Exception
 	{
-		pubkey = key;
+		m_publicKey = key;
 		createXmlDocument();
 	}
 
@@ -80,7 +80,7 @@ public class XMLJapPublicKey extends XMLDocument
 
 	public MyRSAPublicKey getRSAPublicKey()
 	{
-		return pubkey;
+		return m_publicKey;
 	}
 
 	private void setPubKey() throws Exception
@@ -126,7 +126,7 @@ public class XMLJapPublicKey extends XMLDocument
 		//KeyFactory keyfactory= KeyFactory.getInstance("RSA");
 		//            pubkey = (RSAPublicKey)keyfactory.generatePublic(
 		//                    new RSAPublicKeySpec(ModulusBigInt, ExpBigInt));
-		pubkey = new MyRSAPublicKey(ModulusBigInt, ExpBigInt);
+		m_publicKey = new MyRSAPublicKey(ModulusBigInt, ExpBigInt);
 	}
 
 	private void createXmlDocument() throws Exception
@@ -140,12 +140,23 @@ public class XMLJapPublicKey extends XMLDocument
 		elemRoot.appendChild(elemKey);
 		Element elemModulus = doc.createElement("Modulus");
 		elemKey.appendChild(elemModulus);
-		byte[] b = pubkey.getModulus().toByteArray();
+		byte[] b = m_publicKey.getModulus().toByteArray();
 		XMLUtil.setNodeValue(elemModulus, Base64.encodeBytes(b));
 		Element elemExponent = doc.createElement("Exponent");
 		elemKey.appendChild(elemExponent);
-		b = pubkey.getPublicExponent().toByteArray();
+		b = m_publicKey.getPublicExponent().toByteArray();
 		XMLUtil.setNodeValue(elemExponent, Base64.encodeBytes(b));
 		m_theDocument=doc;
 	}
+
+	public BigInteger getModulus()
+	{
+		return m_publicKey.getModulus();
+	}
+
+	public BigInteger getPublicExponent()
+	{
+		return m_publicKey.getPublicExponent();
+	}
 }
+

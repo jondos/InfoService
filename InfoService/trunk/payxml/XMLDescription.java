@@ -30,6 +30,15 @@ package payxml;
 import org.w3c.dom.CharacterData;
 import org.w3c.dom.Element;
 
+/**
+ * @todo document :-)
+ * <p>\u00DCberschrift: </p>
+ * <p>Beschreibung: </p>
+ * <p>Copyright: Copyright (c) 2001</p>
+ * <p>Organisation: </p>
+ * @author not attributable
+ * @version 1.0
+ */
 public class XMLDescription extends XMLDocument
 {
 	//~ Constructors ***********************************************************
