@@ -45,6 +45,8 @@ public  class BasicWizardPage extends JPanel implements WizardPage
     private ImageIcon m_Icon;
     private JLabel m_labelIcon;
     protected JPanel m_panelComponents;
+    private String message;
+
 
     public BasicWizardPage()
       {
@@ -114,8 +116,14 @@ public  class BasicWizardPage extends JPanel implements WizardPage
       return this;
     }
 
-  public void checkPage()
+  public boolean checkPage()
     {
+      return false;
+    }
+
+  public void showInformationDialog(String message)
+    {
+
     }
 
   public ImageIcon getIcon()

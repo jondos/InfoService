@@ -38,5 +38,9 @@ public interface WizardPage
     // called when this page is no longer current
     void deactivated (WizardHost host);
 
+    boolean checkPage();
+
+    void showInformationDialog(String message);
+
     JComponent getPageComponent(WizardHost host);
   }

@@ -1,22 +1,174 @@
 package update;
 import gui.wizard.BasicWizardPage;
 import java.awt.GridLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
+import javax.swing.JButton;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.JFrame;
+import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
+import javax.swing.filechooser.*;
+import java.awt.Component;
+import java.awt.Image;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
+import java.io.File;
+
 import JAPUtil;
 import JAPConstants;
 
-public class JAPWelcomeWizardPage extends BasicWizardPage
+public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListener
   {
     private JTextField m_tfJapPath=null;
-    public JAPWelcomeWizardPage()
+    private JLabel m_labelClickNext;
+    //search the folder for saving the new jap.jar
+    private JButton m_chooseFolder_bttn = null;
+    private File selectedFile;
+    public static String pathToJapJar;
+    private JAPUpdateWizard updateWizard;
+
+    private final String COMMAND_SEARCH = "Durchsuchen";
+    final JFileChooser m_fileChooser = new JFileChooser(System.getProperty("user.dir", ""));
+    boolean checkPage = false;
+
+    public JAPWelcomeWizardPage(JAPUpdateWizard updateWizard)
       {
+        this.updateWizard = updateWizard;
         setIcon(JAPUtil.loadImageIcon(JAPConstants.DOWNLOADFN,false));
         setPageTitle("Informationen zum Update");
-        m_panelComponents.setLayout(new GridLayout(2,1));
-        m_panelComponents.add(new JLabel("<html>Um das Update auf eine andere Version durchführen zu können,<BR>werden noch einige Informationen benötigt.<BR>Unten sehen Sie, welches JAP-Programm aktualisiert wird.<BR>Bitte überprüfen Sie, dass es sich um die richtige Datei handelt<BR>bzw. ändern Sie dies entsprechend.</html>"));
-        m_tfJapPath=new JTextField(40);
-        m_panelComponents.add(m_tfJapPath);
+
+        GridBagLayout m_panelComponentsLayout = new GridBagLayout();
+        GridBagConstraints m_panelConstraints = new GridBagConstraints();
+
+        m_panelComponents.setLayout(m_panelComponentsLayout);
+
+
+        JLabel label = new JLabel("<html>Um das Update auf eine andere Version durchführen zu können,<BR>werden noch einige Informationen benötigt.<BR>Unten sehen Sie, welches JAP-Programm aktualisiert wird.<BR>Bitte überprüfen Sie, dass es sich um die richtige Datei handelt<BR>bzw. ändern Sie dies entsprechend.</html>");
+        m_panelConstraints.weightx = 1.0;
+        m_panelConstraints.weighty = 1.0;
+        m_panelConstraints.gridx = 0;
+        m_panelConstraints.gridy = 0;
+        m_panelConstraints.gridwidth = 2;
+        m_panelConstraints.anchor = GridBagConstraints.NORTH;
+        m_panelComponentsLayout.setConstraints(label, m_panelConstraints);
+        m_panelComponents.add(label);
+
+
+        m_tfJapPath=new JTextField(20);
+        m_panelConstraints.anchor = GridBagConstraints.WEST;
+        m_panelConstraints.gridx = 0;
+        m_panelConstraints.gridy = 1;
+        m_panelConstraints.gridwidth = 1 ;
+        m_panelComponentsLayout.setConstraints(m_tfJapPath, m_panelConstraints);
+        m_panelComponents.add(m_tfJapPath, m_panelConstraints);
         m_tfJapPath.setText(System.getProperty("user.dir",""));
+
+
+        m_chooseFolder_bttn = new JButton("Durchsuchen");
+        m_panelConstraints.anchor = GridBagConstraints.EAST;
+        m_panelConstraints.gridx = 1;
+        m_panelConstraints.gridy = 1;
+        m_panelComponentsLayout.setConstraints(m_chooseFolder_bttn, m_panelConstraints);
+        m_panelComponents.add(m_chooseFolder_bttn, m_panelConstraints);
+        m_chooseFolder_bttn.addActionListener(this);
+        m_chooseFolder_bttn.setActionCommand(COMMAND_SEARCH);
+
+        m_labelClickNext = new JLabel("<html>Nachdem sie die richtige Datei ausgewählt haben, klicken sie auf Next.</html>");
+        m_panelConstraints.anchor = GridBagConstraints.WEST;
+        m_panelConstraints.gridx = 0;
+        m_panelConstraints.gridy = 2;
+        m_panelConstraints.gridwidth = 2;
+        m_panelComponentsLayout.setConstraints(m_labelClickNext, m_panelConstraints);
+        m_panelComponents.add(m_labelClickNext,m_panelConstraints);
+
       }
-  }
+      // is a file chosen ?
+      public boolean checkPage()
+      {
+          return checkPage;
+      }
+
+      // there is sthing wrong with the selection
+      public void showInformationDialog(String message)
+      {
+          JOptionPane.showMessageDialog((Component)this, message);
+      }
+
+      private void createFileChooser()
+      {
+          this.setEnabled(false);
+          final JFrame m_fileChooserDialog = new JFrame("Directory");
+          final JFileChooser m_fileChooser = new JFileChooser(System.getProperty("user.dir", ""));
+         // int returnval = m_fileChooser.showOpenDialog(m_fileChooserDialog);
+          m_fileChooser.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                int returnVal = m_fileChooser.showOpenDialog(m_fileChooserDialog);
+
+                if (returnVal == JFileChooser.APPROVE_OPTION) {
+                     selectedFile = m_fileChooser.getSelectedFile();
+                    System.out.println(selectedFile.getName());
+                    m_fileChooserDialog.dispose();
+
+                } else {
+
+                }
+            }
+        });
+
+          //m_fileChooserDialog.getContentPane().add(m_fileChooser);
+          m_fileChooserDialog.setVisible(true);
+          m_fileChooserDialog.pack();
+      }
+
+      public void actionPerformed(ActionEvent e)
+      {
+        if(e.getActionCommand().equals(COMMAND_SEARCH))
+          {
+
+             //final JFileChooser m_fileChooser = new JFileChooser(System.getProperty("user.dir", ""));
+             m_fileChooser.setDialogTitle("Choose a File");
+             m_fileChooser.setApproveButtonText("Choose");
+             m_fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+
+
+             int returnVal = m_fileChooser.showOpenDialog(this);
+
+                if (returnVal == JFileChooser.APPROVE_OPTION)
+                {
+                     selectedFile = m_fileChooser.getSelectedFile();
+                        if((!selectedFile.isFile()))
+                          {
+                            m_fileChooser.cancelSelection();
+
+                            showInformationDialog("That's not a file.");
+                            m_tfJapPath.setText("");
+                            checkPage = false;
+
+                          }else if(!selectedFile.exists())
+                          {
+                            m_fileChooser.cancelSelection();
+                            showInformationDialog("This File does not exist");
+                            m_tfJapPath.setText("");
+                            checkPage = false;
+                          }
+                          else
+                          {
+                    System.out.println(selectedFile.getName());
+                    checkPage = true;
+                    m_tfJapPath.setText(selectedFile.getAbsolutePath());
+
+                    updateWizard.setSelectedFile(selectedFile.getAbsolutePath());
+
+
+                          }//else
+
+                }
+
+           }
+     }
+
+}
