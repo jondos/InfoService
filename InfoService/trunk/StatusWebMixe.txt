@@ -22,8 +22,8 @@ Problembehebung JAP <--> Netscape
 Ändern der Mixe für > 1024 Nutzer
 Integration von RMI (Beleg) in JAP
 Verbessern der Precompiled Binaries Web Page (Größe, Datum + Version)
-
-
+Fehlerbeseitgung: Schnelles Verbindungstrenne; erneutes Verbinden
+!!Verhindern des Blockieren des Mixes, wenn Squid keine Daten mehr entgegennimmt!!
 
 
 
