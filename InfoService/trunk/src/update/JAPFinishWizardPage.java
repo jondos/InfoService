@@ -28,7 +28,7 @@ private GridBagConstraints constraintsFinish;
     labelFinish = new JLabel(JAPMessages.getString("updateFinishMessage"));
     constraintsFinish.gridx = 0;
     constraintsFinish.gridy = 0;
-    constraintsFinish.gridwidth =2;
+    constraintsFinish.gridwidth = 2;
     constraintsFinish.anchor = GridBagConstraints.CENTER;
     gridBagFinish.setConstraints(labelFinish,constraintsFinish);
     m_panelComponents.add(labelFinish, constraintsFinish);
