@@ -1,6 +1,7 @@
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.net.Socket;
+import java.io.OutputStream;
 import java.io.BufferedOutputStream;
 import java.io.DataOutputStream;
 import java.io.BufferedInputStream;
@@ -21,8 +22,9 @@ public class CAMuxSocket extends Thread
 				SocketListEntry(CASocket s)
 					{
 						inSocket=s;
-						try{
-							out=new BufferedOutputStream(s.getOutputStream());
+						try
+							{
+								out=s.getOutputStream();
 							}
 						catch(Exception e)
 							{
@@ -30,7 +32,7 @@ public class CAMuxSocket extends Thread
 							}
 					}
 				public CASocket inSocket;
-				public BufferedOutputStream out;
+				public OutputStream out;
 			};
 
 		CAMuxSocket()
@@ -77,49 +79,45 @@ public class CAMuxSocket extends Thread
 			{
  				byte[] buff=new byte[1000];
 				int len=0;
-//				int count=0;
 				int tmp=0;
 				int channel=0;
-				try{
-				while(true)
+				try
 					{
-	//					System.out.print("CAMuxSocket - receving ");
-						channel=fromServer.readInt();
-						len=fromServer.readShort();
-						tmp=fromServer.readShort();
-						fromServer.readFully(buff);
-//						count=1000;
-//						tmp=0;
-//						do
-//							{
-//								tmp=fromServer.read(buff,tmp,count);
-//								count-=tmp;
-//							}
-//						while (tmp!=-1&&count>0);
-//						if(tmp==-1)
-//							break;
-//						System.out.println("channel- "+Integer.toString(channel));
-						SocketListEntry tmpEntry=(SocketListEntry)oSocketList.get(new Integer(channel));
-						if(tmpEntry!=null)
+						while(true)
 							{
-								if(len==0)
+								channel=fromServer.readInt();
+								len=fromServer.readShort();
+								tmp=fromServer.readShort();
+								fromServer.readFully(buff);
+								SocketListEntry tmpEntry=(SocketListEntry)oSocketList.get(new Integer(channel));
+								if(tmpEntry!=null)
 									{
-										oSocketList.remove(new Integer(channel));
-										tmpEntry.out.close();
-										tmpEntry.inSocket.close();
-									}
-								else
-									{
-	//									System.out.println("CAMuxSocket - writing to Browser ");
-										tmpEntry.out.write(buff,0,len);
-										tmpEntry.out.flush();
-		//								System.out.print(Integer.toString(len)+" Bytes ");
+										if(len==0)
+											{
+												oSocketList.remove(new Integer(channel));
+												tmpEntry.out.close();
+												tmpEntry.inSocket.close();
+											}
+										else
+											{
+												for(int i=0;i<3;i++)
+													{
+														try
+															{
+																tmpEntry.out.write(buff,0,len);
+																break;
+															}
+														catch(Exception e)
+															{
+																e.printStackTrace();
+																System.out.println("Fehler bei write to browser...retrying...");														
+															}
+													}
+												tmpEntry.out.flush();
+											}
 									}
 							}
-				//		else
-				//			System.out.println("Channel not valid!");
 					}
-				}
 				catch(Exception e)
 					{
 						System.out.println("CAMuxSocket -run -Exception!");

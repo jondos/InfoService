@@ -27,38 +27,40 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
 	private JAPConf configDialog;
 	
 
-	public JAPView (JAPModel m, String s) {
-		super(s);
-		this.model = m;
-		init();
-		
-		helpWindow =  new JAPHelp(this, model); 
-		configDialog = new JAPConf(this, model);
-		
-	}
-	
-	public void init() {
-		try{
-			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+	public JAPView (JAPModel m, String s)
+		{
+			super(s);
+			this.model = m;
+			init();
+			helpWindow =  new JAPHelp(this, model); 
+			configDialog = new JAPConf(this, model);
 		}
-		catch(Exception e)
-			{
-				e.printStackTrace();
-			}
-		// Show wait message
-		JLabel waitLabel = new JLabel(model.msg.getString("loading"), JLabel.CENTER);
-		//waitLabel.setFont(new Font("Sans", Font.BOLD,14));
-		waitLabel.setBackground(Color.black);
-		waitLabel.setForeground(Color.white);
-		Color bgColor = getContentPane().getBackground();
-		getContentPane().setBackground(Color.black);
-		getContentPane().add(waitLabel, BorderLayout.SOUTH);
-		getContentPane().add(new JLabel(new ImageIcon(this.getClass().getResource(model.SPLASHFN))), BorderLayout.CENTER);
-		//setSize(250, 50);
-		setResizable(false);
-		pack();
-		centerFrame();
-		setVisible(true);
+	
+	public void init()
+		{
+			try
+				{
+					UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+				}
+			catch(Exception e)
+				{
+					e.printStackTrace();
+				}
+			setIconImage(new ImageIcon(this.getClass().getResource("images/icon.gif")).getImage());
+			// Show wait message
+			JLabel waitLabel = new JLabel(model.msg.getString("loading"), JLabel.CENTER);
+			//waitLabel.setFont(new Font("Sans", Font.BOLD,14));
+			waitLabel.setBackground(Color.black);
+			waitLabel.setForeground(Color.white);
+			//Color bgColor = getContentPane().getBackground();
+			getContentPane().setBackground(Color.black);
+			getContentPane().add(waitLabel, BorderLayout.SOUTH);
+			getContentPane().add(new JLabel(new ImageIcon(this.getClass().getResource(model.SPLASHFN))), BorderLayout.CENTER);
+			//setSize(250, 50);
+			setResizable(false);
+			pack();
+			centerFrame();
+			setVisible(true);
 
 		// listen for events from outside the frame
 		addWindowListener(new WindowAdapter() {
@@ -66,7 +68,11 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
 		});	
 		
 		if(CAVersion.checkForNewVersion(model)==1)
-			CAVersion.getNewVersion(model);
+			{
+				CAVersion.getNewVersion(model);
+				System.out.println("Bitte neu starten...");
+				System.exit(0);
+			}
 		// Load Images for "Anonymity Meter"
 		loadMeterIcons();
 		
@@ -77,7 +83,8 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
 		// "West": Image
 		ImageIcon westImage = new ImageIcon(this.getClass().getResource(model.msg.getString("westPath")));
 		JLabel westLabel = new JLabel(westImage);
-
+		westLabel.setOpaque(false);
+		
 		// "Center:" tabs
 		JTabbedPane tabs = new JTabbedPane();
 		JPanel config = buildConfigPanel();
@@ -87,6 +94,8 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
 		
 		// "South": Buttons
 		JPanel buttonPanel = new JPanel();
+//		buttonPanel.setOpaque(false);
+		
 		infoB = new JButton(model.msg.getString("infoButton"));
 		helpB = new JButton(model.msg.getString("helpButton"));
 //		startB = new JButton(model.msg.getString("startButton"));
@@ -108,8 +117,9 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
 
 		// add Components to Frame
 		setVisible(false);
-		setResizable(true);
-		getContentPane().setBackground(bgColor);
+		//setResizable(true);
+		setBackground(buttonPanel.getBackground());
+		getContentPane().setBackground(buttonPanel.getBackground());
 		getContentPane().removeAll();
 		getContentPane().add(buttonPanel, BorderLayout.SOUTH);
 		getContentPane().add(northLabel, BorderLayout.NORTH);
@@ -118,9 +128,11 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
 		getContentPane().add(tabs, BorderLayout.CENTER);
 
 		updateValues();
+		getContentPane().invalidate();
 		pack();  // optimize size
 		centerFrame();
 		toFront();
+		getContentPane().validate();
 //		setVisible(true);
 	}
 
@@ -312,14 +324,17 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
 				}
 		}
 	
-    public ImageIcon setMeterImage() {
-		if (model.anonMode) {
-			return meterIcons[model.getCurrentProtectionLevel()];
-		}
-		else {
-			return meterIcons[1]; // Anon deactivated
-		}
-	}
+    public ImageIcon setMeterImage()
+			{
+				if (model.isAnonMode())
+					{
+						return meterIcons[model.getCurrentProtectionLevel()];
+					}
+				else
+					{
+						return meterIcons[1]; // Anon deactivated
+					}
+			}
 
     public ImageIcon setMeterImage(boolean b) {
 		if (model.NOMEASURE) return meterIcons[0]; // No measure available
@@ -359,20 +374,18 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
 				);
 				model.proxyMode = proxyCheckBox.isSelected();
 				model.notifyJAPObservers();
-		} else if (event.getSource() == anonCheckBox) { 
-			if (model.debug) 
-				System.out.println("anonCheckBox now "
-					+ (anonCheckBox.isSelected()?"selected":"unselected")
-				);
-				model.anonMode = anonCheckBox.isSelected();
-				model.notifyJAPObservers();
-		} else if (event.getSource() == ano1CheckBox) { 
-			if (model.debug) 
+		} else if (event.getSource() == anonCheckBox)
+				{ 
+					if (model.debug) 
+						System.out.println("anonCheckBox now "+ (anonCheckBox.isSelected()?"selected":"unselected"));
+					model.setAnonMode(anonCheckBox.isSelected());
+				}
+			else if (event.getSource() == ano1CheckBox) { 
+				if (model.debug) 
 				System.out.println("ano1CheckBox now "
 					+ (ano1CheckBox.isSelected()?"selected":"unselected")
 				);
-				model.anonMode = ano1CheckBox.isSelected();
-				model.notifyJAPObservers();
+				model.setAnonMode(ano1CheckBox.isSelected());
 		} else {
 			if (model.debug) System.out.println("Event ?????: "+event.getSource());
 		}
@@ -417,15 +430,15 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
 		anonhostTextField.setText(model.anonHostName);
 
 		proxyCheckBox.setSelected(model.proxyMode);
-		anonCheckBox.setSelected(model.anonMode);
+		anonCheckBox.setSelected(model.isAnonMode());
 		
 		statusTextField1.setText(model.status1);
 		statusTextField2.setText(model.status2);
 		
 		// Meter panel
-		ano1CheckBox.setSelected(model.anonMode);
+		ano1CheckBox.setSelected(model.isAnonMode());
 		meterLabel.setIcon(setMeterImage());
-		if (model.anonMode) {
+		if (model.isAnonMode()) {
 			userProgressBar.setValue(model.nrOfActiveUsers);
 			userProgressBar.setString(String.valueOf(model.nrOfActiveUsers));
 			protectionProgressBar.setValue(model.currentRisk);
@@ -448,10 +461,11 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
 		}
     }
 	
-	public void valuesChanged (Object o) {
-		if (model.debug) System.out.println("view.valuesChanged()");
-		updateValues();
-	}
+	public void valuesChanged (Object o)
+		{
+			if (model.debug) System.out.println("view.valuesChanged()");
+			updateValues();
+		}
 }
 
 
