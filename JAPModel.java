@@ -16,6 +16,9 @@ public class JAPModel implements JAPObserver {
 	public String 		status1 = "<init value>";
 	public String 		status2 = "<init value>";
 
+	static final String url_info_version="http://anon.inf.tu-dresden.de/~sk13/anon/jap/aktVersion.txt";
+	static final String url_jap_newversion="http://anon.inf.tu-dresden.de/~sk13/anon/jap/JAP.jar";
+
 	static ResourceBundle msg;
 
 	static final String TITLE = "JAVA ANON PROXY -- JAP";

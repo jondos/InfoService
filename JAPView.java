@@ -58,6 +58,8 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
 			public void windowClosing(WindowEvent e) {exitProgram();}
 		});	
 		
+		if(CAVersion.checkForNewVersion(model)==1)
+			CAVersion.getNewVersion(model);
 		// Load Images for "Anonymity Meter"
 		loadMeterIcons();
 		
