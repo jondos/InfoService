@@ -95,6 +95,13 @@ public class JAPDialog
 	}
 
 	/**
+   * Disposes the dialog (set it to invisible and releases all resources).
+   */
+  public void dispose() {
+    m_internalDialog.dispose();
+  }
+  
+  /**
 	 * Set the dialog to the optimal size and center it over the parent component.
 	 */
 	public void align()
@@ -135,5 +142,14 @@ public class JAPDialog
 	{
 		m_internalDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
 	}
+
+  /**
+   * Returns the internal used JDialog class.
+   *
+   * @return The internal used JDialog class.
+   */ 
+  public JDialog getInternalDialog() {
+    return m_internalDialog;
+  }
 
 }

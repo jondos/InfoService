@@ -266,7 +266,7 @@ public final class JAPController implements ProxyListener
 	 * and then in the JAP install directory.
 	 * The configuration is a XML-File with the following structure:
 	 *  <JAP
-	 *    version="0.9"                     // version of the xml struct (DTD) used for saving the configuration
+   *    version="0.10"                     // version of the xml struct (DTD) used for saving the configuration
 	 *    portNumber=""                     // Listener-Portnumber
 	 *    portNumberSocks=""                // Listener-Portnumber for SOCKS
 	 *    supportSocks=""                   // Will we support SOCKS ?
@@ -339,9 +339,39 @@ public final class JAPController implements ProxyListener
 	 *      </Accounts>
 	 *   </EncryptedData>
 	 * </Payment>
+   * <JapForwardingSettings>                                   // since version 0.10, if WITH_BLOCKINGRESISTANCE is enabled
+   *   <ForwardingServer>
+   *     <ServerPort>12345</ServerPort>                        // the port number, where the forwarding server is listening 
+   *     <ServerRunning>false</ServerRunning>                  // whether the forwarding server shall be started, when JAP is starting
+   *     <ConnectionClassSettings>
+   *       <ConnectionClasses>                                 // list of all connection classes including settings
+   *         <ConnectionClass>                                 // a single connection class entry
+   *           <ClassIdentifier>0</ClassIdentifier>            // the identifier of the connection class
+   *           <MaximumBandwidth>10000</MaximumBandwidth>      // the maximum bandwidth (bytes/sec) the class provides
+   *           <UseableBandwidth>5000</UseableBandwidth>       // the bandwidth (bytes/sec) useable for forwarding
+   *           <SimultaneousConnections>1</SimultaneousConnections>  // the number of simultaneous connections, the server shall handle
+   *         </ConnectionClass>
+   *         ...
+   *       </ConnectionClasses>
+   *       <CurrentConnectionClass>0</CurrentConnectionClass>  // the currently selected connection class (identifier)
+   *     </ConnectionClassSettings>
+   *     <InfoServiceRegistrationSettings>
+   *       <UseAllPrimaryInfoServices>false</UseAllPrimaryInfoServices>  // whether to registrate the local forwarding server at all infoservices with a forwarder list
+   *       <RegistrationInfoServices>                                    // a list of InfoServices, where the local forwarding server shall be registrated on startup
+   *         <InfoService>...</InfoService>
+   *         ...
+   *       </RegistrationInfoServices>
+   *     </InfoServiceRegistrationSettings>
+   *     <AllowedMixCascadesSettings>
+   *       <AllowAllAvailableMixCascades>true</AllowAllAvailableMixCascades>  // whether the clients of the local forwarding server are allowed to use all running mixcascades
+   *       <AllowedMixCascades>                                               // a list of MixCascades, where the the clients are allowed to connect to
+   *         <MixCascade>...<MixCascade>
+   *         ...
+   *       </AllowedMixCascades>
+   *     </AllowedMixCascadesSettings>
+   *   </ForwardingServer>
+   * </JapForwardingSettings>
 	 *  </JAP>
-
-
 	 *  @param a_strJapConfFile - file containing the Configuration. If null $(user.home)/jap.conf or ./jap.conf is used.
 	 */
 	public synchronized void loadConfigFile(String a_strJapConfFile, boolean loadPay)
@@ -717,6 +747,18 @@ public final class JAPController implements ProxyListener
 						pay.PayAccountsFile.getInstance().initPlaintext(elemAccounts);
 					}
 				}
+
+        /* read the settings of the JAP forwarding system, if it is enabled */
+        if (JAPConstants.WITH_BLOCKINGRESISTANCE == true) {
+          Element japForwardingSettingsNode = (Element)(XMLUtil.getFirstChildByName(root, "JapForwardingSettings"));
+          if (japForwardingSettingsNode != null) {
+            JAPModel.getModel().getRoutingSettings().loadSettingsFromXml(japForwardingSettingsNode);
+          }
+          else {
+            LogHolder.log(LogLevel.ERR, LogType.MISC, "JAPController: loadConfigFile: Error in XML structure (JapForwardingSettings node): Using default settings for forwarding.");
+          }
+        }
+
 			}
 			catch (Exception e)
 			{
@@ -766,7 +808,7 @@ public final class JAPController implements ProxyListener
 			Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
 			Element e = doc.createElement("JAP");
 			doc.appendChild(e);
-			e.setAttribute("version", "0.9");
+      e.setAttribute("version", "0.10");
 			//
 			e.setAttribute("portNumber", Integer.toString(JAPModel.getHttpListenerPortNumber()));
 			//e.setAttribute("portNumberSocks", Integer.toString(JAPModel.getSocksListenerPortNumber()));
@@ -898,6 +940,11 @@ public final class JAPController implements ProxyListener
 				Element myAccounts = (Element) XMLUtil.importNode(doc, elemAccounts, true);
 				elemPayment.appendChild(myAccounts);
 			}
+
+      /* add the settings of the JAP forwarding system, if it is enabled */
+      if (JAPConstants.WITH_BLOCKINGRESISTANCE == true) {
+        e.appendChild(JAPModel.getModel().getRoutingSettings().getSettingsAsXml(doc));
+      }
 
 			return XMLUtil.XMLDocumentToString(doc);
 			//((XmlDocument)doc).write(f);

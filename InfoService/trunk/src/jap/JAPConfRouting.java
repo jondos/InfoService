@@ -40,6 +40,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -82,10 +84,10 @@ import forward.client.ForwarderInformationGrabber;
 import forward.client.captcha.IImageEncodedCaptcha;
 import forward.server.ForwardSchedulerStatistics;
 import forward.server.ForwardServerManager;
+import gui.JAPHtmlMultiLineLabel;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import gui.*;
 
 /**
  * This is the configuration GUI for the JAP routing component.
@@ -151,16 +153,6 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
    */
   private JAPRoutingInfoServiceRegistrationTableModel m_infoServiceRegistrationData;
 
-  /**
-   * This stores the infoservice registration table.
-   */
-  private JTable m_infoServiceRegistrationTable;
-
-  /**
-   * This stores the JScrollPane, which shows the infoservice registration table.
-   */
-  private JScrollPane m_infoServiceRegistrationTableScrollPane;
-
 
   /**
    * Constructor for JAPConfRouting. We do some initializing here.
@@ -168,14 +160,12 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
   public JAPConfRouting()
   {
     super(null);
-    m_infoServiceRegistrationData = new JAPRoutingInfoServiceRegistrationTableModel();
-    m_infoServiceRegistrationTable = new JTable(m_infoServiceRegistrationData);
-    m_infoServiceRegistrationTableScrollPane = new JScrollPane(m_infoServiceRegistrationTable);
+    /* we want to be notidfied, if the forwarding settings are changed */
     JAPModel.getModel().getRoutingSettings().addObserver(this);
   }
 
   /**
-   * Creates the infoservice root panel with all child-panels.
+   * Creates the forwarding root panel with all child-panels.
    */
   public void recreateRootPanel()
   {
@@ -212,7 +202,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
         }
         if (((JAPRoutingMessage)(a_message)).getMessageCode() == JAPRoutingMessage.PROPAGANDA_INSTANCES_ADDED) {
           /* update the propagandists in the infoservice registration table */
-          m_infoServiceRegistrationData.updatePropagandaInstancesList((Vector)(((JAPRoutingMessage)a_message).getMessageData()));
+          getInfoServiceRegistrationTableModel().updatePropagandaInstancesList((Vector)(((JAPRoutingMessage)a_message).getMessageData()));
         }
       }
     }
@@ -409,7 +399,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
          * process is also canceled
          */
         JAPModel.getModel().getRoutingSettings().setRoutingMode(JAPRoutingSettings.ROUTING_MODE_DISABLED);
-        registerDialog.hide();
+        registerDialog.dispose();
       }
     });
 
@@ -442,7 +432,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
 
     registerDialog.align();
 
-    Thread registerThread = new Thread(new Runnable()
+    final Thread registerThread = new Thread(new Runnable()
     {
       public void run()
       {
@@ -461,11 +451,20 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
         }
         if (registrationStatus != JAPRoutingSettings.REGISTRATION_INTERRUPTED) {
           /* if the registration was interrupted, the dialog is already hidden */
-          registerDialog.hide();
+          registerDialog.dispose();
         }
       }
     });
-    registerThread.start();
+
+    /* for synchronization purposes, it is necessary to show the dialog first and start the thread
+     * after that event
+     */
+    registerDialog.getInternalDialog().addWindowListener(new WindowAdapter() {
+      public void windowOpened(WindowEvent a_event) {
+        registerDialog.getInternalDialog().removeWindowListener(this);
+        registerThread.start();
+      }
+    });
 
     registerDialog.show();
   }
@@ -509,13 +508,17 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
     JLabel settingsRoutingServerStatusInfoServiceRegistrationsLabel = new JLabel(JAPMessages.getString("settingsRoutingServerStatusInfoServiceRegistrationsLabel"));
     settingsRoutingServerStatusInfoServiceRegistrationsLabel.setFont(getFontSetting());
 
-    m_infoServiceRegistrationTable.setFont(getFontSetting());
-    m_infoServiceRegistrationTable.getColumnModel().getColumn(1).setMaxWidth(125);
-    m_infoServiceRegistrationTable.getColumnModel().getColumn(1).setPreferredWidth(125);
-    m_infoServiceRegistrationTable.setEnabled(false);
-    m_infoServiceRegistrationTable.getTableHeader().setFont(getFontSetting());
-    m_infoServiceRegistrationTable.getTableHeader().setResizingAllowed(false);
-    m_infoServiceRegistrationTable.getTableHeader().setReorderingAllowed(false);
+    JTable infoServiceRegistrationTable = new JTable(getInfoServiceRegistrationTableModel());
+    infoServiceRegistrationTable.setFont(getFontSetting());
+    infoServiceRegistrationTable.getColumnModel().getColumn(1).setMaxWidth(125);
+    infoServiceRegistrationTable.getColumnModel().getColumn(1).setPreferredWidth(125);
+    infoServiceRegistrationTable.setEnabled(false);
+    infoServiceRegistrationTable.getTableHeader().setFont(getFontSetting());
+    infoServiceRegistrationTable.getTableHeader().setResizingAllowed(false);
+    infoServiceRegistrationTable.getTableHeader().setReorderingAllowed(false);
+    JScrollPane infoServiceRegistrationTableScrollPane = new JScrollPane(infoServiceRegistrationTable);
+    infoServiceRegistrationTableScrollPane.setPreferredSize(
+		  new Dimension(infoServiceRegistrationTableScrollPane.getPreferredSize().width, 50));
 
     TitledBorder settingsRoutingServerStatusBorder = new TitledBorder(JAPMessages.getString(
       "settingsRoutingServerStatusBorder"));
@@ -587,8 +590,8 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
     serverStatusPanelConstraints.gridy = 4;
     serverStatusPanelConstraints.weighty = 1.0;
     serverStatusPanelConstraints.insets = new Insets(0, 5, 5, 5);
-    serverStatusPanelLayout.setConstraints(m_infoServiceRegistrationTableScrollPane, serverStatusPanelConstraints);
-    serverStatusPanel.add(m_infoServiceRegistrationTableScrollPane);
+    serverStatusPanelLayout.setConstraints(infoServiceRegistrationTableScrollPane, serverStatusPanelConstraints);
+    serverStatusPanel.add(infoServiceRegistrationTableScrollPane);
 
     /* create the status update thread */
     m_serverStatusThread = new Thread(new Runnable()
@@ -727,7 +730,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
             throw (new Exception(
               "JAPConfRouting: showChangeServerPortDialog: Error while changing server port."));
           }
-          changeDialog.hide();
+          changeDialog.dispose();
         }
         catch (Exception e)
         {
@@ -744,7 +747,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
       public void actionPerformed(ActionEvent event)
       {
         /* if the Cancel button is pressed, close the dialog */
-        changeDialog.hide();
+        changeDialog.dispose();
       }
     });
     JLabel settingsRoutingChangeDialogPortLabel = new JLabel(JAPMessages.getString(
@@ -816,6 +819,8 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
         /* update the connection class' current bandwidth */
         JAPRoutingConnectionClass currentConnectionClass = JAPModel.getModel().getRoutingSettings().getConnectionClassSelector().getCurrentConnectionClass();
         currentConnectionClass.setCurrentBandwidth((m_settingsRoutingBandwidthSlider.getValue() * 1000) / 8);
+        /* also update the number of simultaneous connections -> set it always to the maximum */
+        currentConnectionClass.setSimultaneousConnections(currentConnectionClass.getMaxSimultaneousConnections());
         /* write the values to the routing system */
         JAPModel.getModel().getRoutingSettings().getConnectionClassSelector().setCurrentConnectionClass(currentConnectionClass.getIdentifier());
         updateBandwidthLabel();
@@ -853,8 +858,10 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
       public void stateChanged(ChangeEvent event)
       {
         /* change the number of simultaneously forwarded connections */
-        JAPModel.getModel().getRoutingSettings().setAllowedConnections(m_settingsRoutingUserSlider.
-          getValue());
+        JAPRoutingConnectionClass currentConnectionClass = JAPModel.getModel().getRoutingSettings().getConnectionClassSelector().getCurrentConnectionClass();
+        currentConnectionClass.setSimultaneousConnections(m_settingsRoutingUserSlider.getValue());
+        /* write the values to the routing system */
+        JAPModel.getModel().getRoutingSettings().getConnectionClassSelector().setCurrentConnectionClass(currentConnectionClass.getIdentifier());
         updateUserLabel();
       }
     });
@@ -866,8 +873,10 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
     {
       public void actionPerformed(ActionEvent event)
       {
-        /* if the edit cascades button is pressed, show the edit allowed cascades dialog */
-        showAllowedMixCascadesDialog(expertDialog.getRootPanel());
+        /* if the edit cascades button is pressed, fetch the available MixCascades and later show
+         * the edit allowed cascades dialog
+         */
+        showFetchMixCascadesDialog(expertDialog.getRootPanel());
       }
     });
 
@@ -911,7 +920,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
       public void actionPerformed(ActionEvent event)
       {
         /* if the ready button is pressed, we can close the dialog and update the root panel */
-        expertDialog.hide();
+        expertDialog.dispose();
         updateRootPanel();
       }
     });
@@ -1008,7 +1017,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
           int maxBandwidth = (Integer.parseInt(settingsRoutingBandwidthField.getText().trim()) * 1000) / 8;
           JAPModel.getModel().getRoutingSettings().getConnectionClassSelector().changeUserDefinedClass(maxBandwidth, JAPModel.getModel().getRoutingSettings().getBandwidth());
           JAPModel.getModel().getRoutingSettings().getConnectionClassSelector().setCurrentConnectionClass(JAPRoutingConnectionClassSelector.CONNECTION_CLASS_USER);
-          bandwidthDialog.hide();
+          bandwidthDialog.dispose();
         }
         catch (Exception e)
         {
@@ -1025,7 +1034,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
       public void actionPerformed(ActionEvent event)
       {
         /* if the Cancel button is pressed, close the dialog */
-        bandwidthDialog.hide();
+        bandwidthDialog.dispose();
       }
     });
     JLabel settingsRoutingBandwidthDialogBandwidthLabel = new JLabel(JAPMessages.getString(
@@ -1079,11 +1088,96 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
   }
 
   /**
+   * Shows the register at infoservices box after starting the forwarding server.
+   */
+  private void showFetchMixCascadesDialog(final JComponent a_parentComponent)
+  {
+    final JAPDialog fetchMixCascadesDialog = new JAPDialog(a_parentComponent, JAPMessages.getString("settingsRoutingServerFetchMixCascadesDialogTitle"));
+    fetchMixCascadesDialog.disableManualClosing();
+    final JPanel fetchMixCascadesPanel = fetchMixCascadesDialog.getRootPanel();
+
+    JLabel settingsRoutingServerFetchMixCascadesDialogFetchLabel = new JLabel(JAPMessages.getString("settingsRoutingServerFetchMixCascadesDialogFetchLabel"));
+    settingsRoutingServerFetchMixCascadesDialogFetchLabel.setFont(getFontSetting());
+    JLabel busyLabel = new JLabel(JAPUtil.loadImageIcon(JAPConstants.BUSYFN, true));
+
+    final Thread fetchMixCascadesThread = new Thread(new Runnable()
+    {
+      public void run()
+      {
+        Vector knownMixCascades = InfoServiceHolder.getInstance().getMixCascades();
+        fetchMixCascadesDialog.dispose();
+        /* clear the interrupted flag, if it is set */
+        Thread.interrupted();
+        if (knownMixCascades == null) {
+          JOptionPane.showMessageDialog(a_parentComponent, JAPMessages.getString("settingsRoutingFetchCascadesError"), JAPMessages.getString("ERROR"), JOptionPane.ERROR_MESSAGE);
+          knownMixCascades = new Vector();
+        }
+        showAllowedMixCascadesDialog(a_parentComponent, knownMixCascades);
+      }
+    });
+
+    JButton settingsRoutingFetchMixCascadesDialogCancelButton = new JButton(JAPMessages.getString("cancelButton"));
+    settingsRoutingFetchMixCascadesDialogCancelButton.setFont(getFontSetting());
+    settingsRoutingFetchMixCascadesDialogCancelButton.addActionListener(new ActionListener()
+    {
+      public void actionPerformed(ActionEvent event)
+      {
+        /* if the Cancel button is pressed, interrupt fetching of the mixcascades -> it is stopped
+         * immediately
+         */
+        fetchMixCascadesThread.interrupt();
+      }
+    });
+
+    GridBagLayout fetchMixCascadesPanelLayout = new GridBagLayout();
+    fetchMixCascadesPanel.setLayout(fetchMixCascadesPanelLayout);
+
+    GridBagConstraints fetchMixCascadesPanelConstraints = new GridBagConstraints();
+    fetchMixCascadesPanelConstraints.anchor = GridBagConstraints.NORTH;
+    fetchMixCascadesPanelConstraints.fill = GridBagConstraints.NONE;
+    fetchMixCascadesPanelConstraints.weighty = 0.0;
+
+    fetchMixCascadesPanelConstraints.gridx = 0;
+    fetchMixCascadesPanelConstraints.gridy = 0;
+    fetchMixCascadesPanelConstraints.insets = new Insets(5, 5, 0, 5);
+    fetchMixCascadesPanelLayout.setConstraints(settingsRoutingServerFetchMixCascadesDialogFetchLabel, fetchMixCascadesPanelConstraints);
+    fetchMixCascadesPanel.add(settingsRoutingServerFetchMixCascadesDialogFetchLabel);
+
+    fetchMixCascadesPanelConstraints.gridx = 0;
+    fetchMixCascadesPanelConstraints.gridy = 1;
+    fetchMixCascadesPanelConstraints.insets = new Insets(10, 5, 10, 5);
+    fetchMixCascadesPanelLayout.setConstraints(busyLabel, fetchMixCascadesPanelConstraints);
+    fetchMixCascadesPanel.add(busyLabel);
+
+    fetchMixCascadesPanelConstraints.gridx = 0;
+    fetchMixCascadesPanelConstraints.gridy = 2;
+    fetchMixCascadesPanelConstraints.insets = new Insets(0, 5, 5, 5);
+    fetchMixCascadesPanelConstraints.weighty = 1.0;
+    fetchMixCascadesPanelLayout.setConstraints(settingsRoutingFetchMixCascadesDialogCancelButton, fetchMixCascadesPanelConstraints);
+    fetchMixCascadesPanel.add(settingsRoutingFetchMixCascadesDialogCancelButton);
+
+    fetchMixCascadesDialog.align();
+
+    /* for synchronization purposes, it is necessary to show the dialog first and start the thread
+     * after that event
+     */
+    fetchMixCascadesDialog.getInternalDialog().addWindowListener(new WindowAdapter() {
+      public void windowOpened(WindowEvent a_event) {
+        fetchMixCascadesDialog.getInternalDialog().removeWindowListener(this);
+        fetchMixCascadesThread.start();
+      }
+    });
+
+    fetchMixCascadesDialog.show();
+  }
+
+  /**
    * Shows the allowed mixcascades dialog.
    *
    * @param a_parentComponent The parent component over which the dialog is centered.
+   * @param a_knownMixCascades A Vector with currently known MixCascades, can be empty, but not null.
    */
-  private void showAllowedMixCascadesDialog(JComponent a_parentComponent)
+  private void showAllowedMixCascadesDialog(JComponent a_parentComponent, Vector a_knownMixCascades)
   {
     final JAPDialog cascadesDialog = new JAPDialog(a_parentComponent, JAPMessages.getString("settingsRoutingCascadesDialogTitle"));
     JPanel cascadesPanel = cascadesDialog.getRootPanel();
@@ -1094,16 +1188,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
     final JLabel settingsRoutingCascadesDialogAllowedCascadesLabel = new JLabel(JAPMessages.getString("settingsRoutingCascadesDialogAllowedCascadesLabel"));
     settingsRoutingCascadesDialogAllowedCascadesLabel.setFont(getFontSetting());
 
-    Vector knownCascades = InfoServiceHolder.getInstance().getMixCascades();
-    if (knownCascades == null)
-    {
-      JOptionPane.showMessageDialog(cascadesPanel,
-                      JAPMessages.getString("settingsRoutingFetchCascadesError"),
-                      JAPMessages.getString("ERROR"), JOptionPane.ERROR_MESSAGE);
-      knownCascades = new Vector();
-    }
-
-    final JList knownCascadesList = new JList(knownCascades);
+    final JList knownCascadesList = new JList(a_knownMixCascades);
     knownCascadesList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
     final JScrollPane knownCascadesScrollPane = new JScrollPane(knownCascadesList);
     knownCascadesScrollPane.setFont(getFontSetting());
@@ -1201,7 +1286,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
         /* if the Cancel button is pressed, we leave the dialog, without updating the system
          * configuration
          */
-        cascadesDialog.hide();
+        cascadesDialog.dispose();
       }
     });
 
@@ -1214,7 +1299,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
         /* if the Ok button is pressed, we leave the dialog and update the system configuration */
         JAPModel.getModel().getRoutingSettings().getUseableMixCascadesStore().setAllowedMixCascades(allowedCascadesListModel.elements());
         JAPModel.getModel().getRoutingSettings().getUseableMixCascadesStore().setAllowAllAvailableMixCascades(settingsRoutingCascadesDialogAllowAllBox.isSelected());
-        cascadesDialog.hide();
+        cascadesDialog.dispose();
       }
     });
 
@@ -1414,7 +1499,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
         /* if the Cancel button is pressed, we leave the dialog, without updating the system
          * configuration
          */
-        registrationDialog.hide();
+        registrationDialog.dispose();
       }
     });
 
@@ -1427,7 +1512,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
         /* if the Ok button is pressed, we leave the dialog and update the system configuration */
         JAPModel.getModel().getRoutingSettings().getRegistrationInfoServicesStore().setRegisterAtAllAvailableInfoServices(settingsRoutingSelectRegistrationInfoServicesDialogRegisterAtAllBox.isSelected());
         JAPModel.getModel().getRoutingSettings().getRegistrationInfoServicesStore().setRegistrationInfoServices(registrationInfoServicesListModel.elements());
-        registrationDialog.hide();
+        registrationDialog.dispose();
       }
     });
 
@@ -1528,7 +1613,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
       {
         /* if the can infoservice reach button is pressed, set the connection method */
         m_clientConnectionMethod = CLIENT_CONNECTION_DIRECT_TO_INFOSERVICE;
-        client0Dialog.hide();
+        client0Dialog.dispose();
         showConfigClientDialogStep1();
       }
     });
@@ -1542,7 +1627,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
       {
         /* if the cannot infoservice reach button is pressed, set the connection method */
         m_clientConnectionMethod = CLIENT_CONNECTION_VIA_MAIL;
-        client0Dialog.hide();
+        client0Dialog.dispose();
         showConfigClientDialogStep1();
       }
     });
@@ -1555,7 +1640,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
       public void actionPerformed(ActionEvent event)
       {
         /* if the Cancel button is pressed, close the dialog */
-        client0Dialog.hide();
+        client0Dialog.dispose();
       }
     });
 
@@ -1654,7 +1739,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
           }
         }
         if (weAreFirst == true) {
-          infoserviceDialog.hide();
+          infoserviceDialog.dispose();
         }
       }
     });
@@ -1688,7 +1773,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
 
     infoserviceDialog.align();
 
-    Thread infoserviceThread = new Thread(new Runnable()
+    final Thread infoserviceThread = new Thread(new Runnable()
     {
       public void run()
       {
@@ -1708,25 +1793,34 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
         if (weAreFirst == true) {
           if (grabber.getErrorCode() == ForwarderInformationGrabber.RETURN_INFOSERVICE_ERROR) {
             JOptionPane.showMessageDialog(infoservicePanel, JAPMessages.getString("settingsRoutingClientGrabCapchtaInfoServiceError"), JAPMessages.getString("ERROR"), JOptionPane.ERROR_MESSAGE);
-            infoserviceDialog.hide();
+            infoserviceDialog.dispose();
           }
           if (grabber.getErrorCode() == ForwarderInformationGrabber.RETURN_UNKNOWN_ERROR) {
             JOptionPane.showMessageDialog(infoservicePanel, JAPMessages.getString("settingsRoutingClientGrabCaptchaUnknownError"), JAPMessages.getString("ERROR"), JOptionPane.ERROR_MESSAGE);
-            infoserviceDialog.hide();
+            infoserviceDialog.dispose();
           }
           if (grabber.getErrorCode() == ForwarderInformationGrabber.RETURN_NO_CAPTCHA_IMPLEMENTATION) {
             JOptionPane.showMessageDialog(infoservicePanel, JAPMessages.getString("settingsRoutingClientGrabCapchtaImplementationError"), JAPMessages.getString("ERROR"), JOptionPane.ERROR_MESSAGE);
-            infoserviceDialog.hide();
+            infoserviceDialog.dispose();
           }
           if (grabber.getErrorCode() == ForwarderInformationGrabber.RETURN_SUCCESS) {
             /* we are successful -> go to the solve captcha dialog */
-            infoserviceDialog.hide();
+            infoserviceDialog.dispose();
             showConfigClientDialogCaptcha(grabber.getCaptcha());
           }
         }
       }
     });
-    infoserviceThread.start();
+
+    /* for synchronization purposes, it is necessary to show the dialog first and start the thread
+     * after that event
+     */
+    infoserviceDialog.getInternalDialog().addWindowListener(new WindowAdapter() {
+      public void windowOpened(WindowEvent a_event) {
+        infoserviceDialog.getInternalDialog().removeWindowListener(this);
+        infoserviceThread.start();
+      }
+    });
 
     infoserviceDialog.show();
   }
@@ -1782,12 +1876,12 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
         /* if the Next button is pressed, parse the replied data and show the captcha dialog */
         ForwarderInformationGrabber dataParser = new ForwarderInformationGrabber(settingsRoutingAnswerArea.getText());
         if (dataParser.getErrorCode() == ForwarderInformationGrabber.RETURN_SUCCESS) {
-          client1MailDialog.hide();
+          client1MailDialog.dispose();
           showConfigClientDialogCaptcha(dataParser.getCaptcha());
         }
         if (dataParser.getErrorCode() == ForwarderInformationGrabber.RETURN_NO_CAPTCHA_IMPLEMENTATION) {
           JOptionPane.showMessageDialog(client1MailPanel, JAPMessages.getString("settingsRoutingClientGrabCapchtaImplementationError"), JAPMessages.getString("ERROR"), JOptionPane.ERROR_MESSAGE);
-          client1MailDialog.hide();
+          client1MailDialog.dispose();
         }
         if (dataParser.getErrorCode() == ForwarderInformationGrabber.RETURN_UNKNOWN_ERROR) {
           JOptionPane.showMessageDialog(client1MailPanel, JAPMessages.getString("settingsRoutingClientConfigDialog1MailParseError"), JAPMessages.getString("ERROR"), JOptionPane.ERROR_MESSAGE);
@@ -1818,7 +1912,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
       public void actionPerformed(ActionEvent event)
       {
         /* if the Cancel button is pressed, close the dialog */
-        client1MailDialog.hide();
+        client1MailDialog.dispose();
       }
     });
 
@@ -1956,7 +2050,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
           ListenerInterface forwarder = a_captcha.solveCaptcha(captchaField.getText().trim());
           JAPModel.getModel().getRoutingSettings().setForwarder(forwarder.getHost(), forwarder.getPort());
           /* forwarder was set, try to connect to the forwarder */
-          captchaDialog.hide();
+          captchaDialog.dispose();
           showConfigClientDialogConnectToForwarder();
         }
         catch (Exception e) {
@@ -1974,7 +2068,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
       public void actionPerformed(ActionEvent event)
       {
         /* if the Cancel button is pressed, close the dialog */
-        captchaDialog.hide();
+        captchaDialog.dispose();
       }
     });
 
@@ -2084,7 +2178,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
 
     connectDialog.align();
 
-    Thread connectThread = new Thread(new Runnable()
+    final Thread connectThread = new Thread(new Runnable()
     {
       public void run()
       {
@@ -2097,18 +2191,27 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
           JOptionPane.showMessageDialog(connectPanel,
                           JAPMessages.getString("settingsRoutingClientConfigConnectToForwarderError"),
                           JAPMessages.getString("ERROR"), JOptionPane.ERROR_MESSAGE);
-          connectDialog.hide();
+          connectDialog.dispose();
           showConfigClientDialogStep1();
         }
         else
         {
           /* connection successful */
-          connectDialog.hide();
+          connectDialog.dispose();
           showConfigClientDialogGetOffer();
         }
       }
     });
-    connectThread.start();
+
+    /* for synchronization purposes, it is necessary to show the dialog first and start the thread
+     * after that event
+     */
+    connectDialog.getInternalDialog().addWindowListener(new WindowAdapter() {
+      public void windowOpened(WindowEvent a_event) {
+        connectDialog.getInternalDialog().removeWindowListener(this);
+        connectThread.start();
+      }
+    });
 
     connectDialog.show();
   }
@@ -2171,7 +2274,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
 
     offerDialog.align();
 
-    Thread offerThread = new Thread(new Runnable()
+    final Thread offerThread = new Thread(new Runnable()
     {
       public void run()
       {
@@ -2213,18 +2316,27 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
                 JAPMessages.getString("ERROR"), JOptionPane.ERROR_MESSAGE);
             }
           }
-          offerDialog.hide();
+          offerDialog.dispose();
           showConfigClientDialogStep1();
         }
         if (connectionDescriptor != null)
         {
           /* receiving connection offer was successful */
-          offerDialog.hide();
+          offerDialog.dispose();
           showConfigClientDialogStep2(connectionDescriptor);
         }
       }
     });
-    offerThread.start();
+
+    /* for synchronization purposes, it is necessary to show the dialog first and start the thread
+     * after that event
+     */
+    offerDialog.getInternalDialog().addWindowListener(new WindowAdapter() {
+      public void windowOpened(WindowEvent a_event) {
+        offerDialog.getInternalDialog().removeWindowListener(this);
+        offerThread.start();
+      }
+    });
 
     offerDialog.show();
   }
@@ -2306,7 +2418,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
       public void actionPerformed(ActionEvent event)
       {
         /* if the Finish button is pressed, we start the submit mixcascade step */
-        client2Dialog.hide();
+        client2Dialog.dispose();
         showConfigClientDialogAnnounceCascade( (MixCascade) (supportedCascadesList.getSelectedValue()));
       }
     });
@@ -2321,7 +2433,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
         /* if the Cancel button is pressed, stop routing and close the dialog */
         JAPModel.getModel().getRoutingSettings().setRoutingMode(JAPRoutingSettings.
           ROUTING_MODE_DISABLED);
-        client2Dialog.hide();
+        client2Dialog.dispose();
         /* let the user enter another forwarder, maybe he gets a better one */
         showConfigClientDialogStep1();
       }
@@ -2457,7 +2569,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
 
     announceDialog.align();
 
-    Thread announceThread = new Thread(new Runnable()
+    final Thread announceThread = new Thread(new Runnable()
     {
       public void run()
       {
@@ -2469,7 +2581,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
           JAPController.getController().setCurrentMixCascade(a_selectedMixCascade);
           JAPController.getController().setAnonMode(true);
           /* finish the client configuration dialog */
-          announceDialog.hide();
+          announceDialog.dispose();
         }
         catch (ClientForwardException e)
         {
@@ -2488,12 +2600,21 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
               JAPMessages.getString("settingsRoutingClientAnnounceCascadeUnknownError"),
               JAPMessages.getString("ERROR"), JOptionPane.ERROR_MESSAGE);
           }
-          announceDialog.hide();
+          announceDialog.dispose();
           showConfigClientDialogStep1();
         }
       }
     });
-    announceThread.start();
+
+    /* for synchronization purposes, it is necessary to show the dialog first and start the thread
+     * after that event
+     */
+    announceDialog.getInternalDialog().addWindowListener(new WindowAdapter() {
+      public void windowOpened(WindowEvent a_event) {
+        announceDialog.getInternalDialog().removeWindowListener(this);
+        announceThread.start();
+      }
+    });
 
     announceDialog.show();
   }
@@ -2671,6 +2792,23 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
       rootPanel.setVisible(false);
       rootPanel.setVisible(true);
     }
+  }
+
+  /**
+   * Returns the instance of the infoservice registration table model, which manages the data
+   * displayed in the registration table. If there is no instance yet, a new one is created.
+   *
+   * @return The infoservice registration table model.
+   */
+  private JAPRoutingInfoServiceRegistrationTableModel getInfoServiceRegistrationTableModel() {
+    synchronized (this) {
+      if (m_infoServiceRegistrationData == null) {
+        /* create a new table model and bring it up-to-date*/
+        m_infoServiceRegistrationData = new JAPRoutingInfoServiceRegistrationTableModel();
+        m_infoServiceRegistrationData.updatePropagandaInstancesList(JAPModel.getModel().getRoutingSettings().getRunningPropagandaInstances());
+      }
+    }
+    return m_infoServiceRegistrationData;
   }
 
 }

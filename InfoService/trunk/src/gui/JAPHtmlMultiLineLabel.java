@@ -44,47 +44,34 @@ public class JAPHtmlMultiLineLabel extends JLabel
 	private String m_rawText;
 
 	/**
-	 * Creates a new JAPHtmlMultiLineLabel. The default charset is ISO-8859-1, so there are no
-	 * problems with handling the special German characteres. So there is no need for special
-	 * HTML quotations, they can simply be included in the normal text.
+   * Creates a new JAPHtmlMultiLineLabel.
 	 *
 	 * @param a_text Any HTML 3.2 conform text, which is allowed in the body of an HTML 3.2 structure
 	 *               (without the leading and trailing <html> and <body> tags).
-	 * @param a_defaultFont The font to use as the default font for the text (the whole text is
-	 *                      included within one <font> tag which describes the default font). So any
-	 *                      part of the text, which is not influenced by special modifiers is
-	 *                      displayed with this default font. If the specified Font is BOLD, the text
-	 *                      is also included within a <b> tag.
+   * @param a_defaultFont The font to use as the default font for the text (set in the HTML body
+   *                      tag). So any part of the text, which is not influenced by special
+   *                      modifiers is displayed with this default font. If the specified Font is
+   *                      BOLD, the text is also included within a <b> tag.
 	 */
 	public JAPHtmlMultiLineLabel(String a_text, Font a_defaultFont)
 	{
-		// setContentType("text/html; charset=ISO-8859-1");
-		//setBorder(new EmptyBorder(0, 0, 0, 0));
 		m_rawText = a_text;
 		changeFont(a_defaultFont);
-		/* set the same background color as used from a normal JLabel */
-		setBackground( (new JLabel()).getBackground());
-		// setEditable(false);
-		//setEnabled(false);
-		//setSize(new Dimension(10,10));
 	}
 
 	/**
 	 * Changes the default font of the displayed text.
 	 *
-	 * @param a_defaultFont The font to use as the default font for the text (the whole text is
-	 *                      included within one <font> tag which describes the default font). So any
-	 *                      part of the text, which is not influenced by special modifiers is
-	 *                      displayed with this default font. If the specified Font is BOLD, the text
-	 *                      is also included within a <b> tag.
+   * @param a_defaultFont The font to use as the default font for the text (set in the HTML body
+   *                      tag). So any part of the text, which is not influenced by special
+   *                      modifiers is displayed with this default font. If the specified Font is
+   *                      BOLD, the text is also included within a <b> tag.
 	 */
 	public void changeFont(Font a_defaultFont)
 	{
 		setFont(a_defaultFont);
 		/* set the new font with the HTML default size */
-		String header = "<html><body style=\"font-family:" + a_defaultFont.getFamily() +
-			";font-size:small\">";
-		//	<font face=\"" + a_defaultFont.getFamily() + "\" size=\"3\">";
+    String header = "<html><body style=\"font-family:" + a_defaultFont.getFamily() + ";font-size:small\">";
 		String trailer = "</BODY></HTML>";
 		if (a_defaultFont.isBold())
 		{

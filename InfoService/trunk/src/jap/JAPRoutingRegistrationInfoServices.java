@@ -32,8 +32,14 @@ import java.util.Observable;
 import java.util.Observer;
 import java.util.Vector;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+
+import anon.infoservice.Database;
 import anon.infoservice.InfoService;
 import anon.infoservice.InfoServiceHolder;
+import anon.util.XMLUtil;
 import forward.server.ServerSocketPropagandist;
 import logging.LogHolder;
 import logging.LogLevel;
@@ -44,7 +50,7 @@ import logging.LogType;
  * tried.
  */
 public class JAPRoutingRegistrationInfoServices implements Observer, Runnable {
-  
+
   /**
    * If the automatic management of the registration infoservices (registrate at all available
    * infoservices) is enabled, this constant is the update interval of the infoservice list
@@ -53,40 +59,40 @@ public class JAPRoutingRegistrationInfoServices implements Observer, Runnable {
    * instances. The default is 10 minutes.
    */
   private static final long INFOSERVICELIST_UPDATE_INTERVAL = 10 * 60 * (long)1000;
-  
-  
+
+
   /**
    * This stores the list of infoservices, where the registration is tried, if we are not in the
    * automatic management mode.
    */
   Vector m_registrationInfoServices;
-  
+
   /**
    * This stores, whether the automatic management mode for the registration at the infoservices
    * is used (true) or the manual mode with the stored list of registration infoservices is used
    * (false).
-   */ 
+   */
   boolean m_registerAtAllAvailableInfoServices;
-  
+
   /**
    * This stores, whether propaganda for the local forwarding server is running at the moment
    * (true) or not (false).
    */
   boolean m_propagandaIsRunning;
-  
+
   /**
    * This stores the list of infoservice IDs, where the local forwarding server is already
    * registrated or it is tried to registrate.
    */
   Vector m_runningInfoServiceRegistrations;
-  
+
   /**
    * This stores the instance of the automatic infoservice registration management thread. If it
    * is not running at the moment, this value is null.
    */
   Thread m_updateInfoServiceListThread;
-  
-  
+
+
   /**
    * This creates a new instance of JAPRoutingRegistrationInfoServices. Some initialization is
    * done here. The new instance is configured for automatic management mode.
@@ -98,7 +104,7 @@ public class JAPRoutingRegistrationInfoServices implements Observer, Runnable {
     m_runningInfoServiceRegistrations = new Vector();
     m_updateInfoServiceListThread = null;
   }
-  
+
 
   /**
    * This is the observer implementation to observe the instance of JAPRoutingSettings. We handle
@@ -143,7 +149,7 @@ public class JAPRoutingRegistrationInfoServices implements Observer, Runnable {
             /* first stop the infoservice list update thread, if it is running */
             if (m_registerAtAllAvailableInfoServices) {
               stopInfoServiceListUpdateThread();
-            }         
+            }
             m_propagandaIsRunning = false;
             /* clear the list of running propagandists, it is important to do this after the
              * infoservice list update thread is stopped, else the thread may adds some more
@@ -153,13 +159,13 @@ public class JAPRoutingRegistrationInfoServices implements Observer, Runnable {
               m_runningInfoServiceRegistrations.removeAllElements();
             }
           }
-        }                              
+        }
       }
       catch (Exception e) {
       }
     }
   }
-  
+
   /**
    * This changes the list of registration infoservices, which are used, if we are in manual
    * infoservice registration mode. If we are currently in the manual mode, also for the new
@@ -180,7 +186,7 @@ public class JAPRoutingRegistrationInfoServices implements Observer, Runnable {
     }
     synchronized (this) {
       if (m_registerAtAllAvailableInfoServices == false) {
-        /* we are in manual management mode -> start new propaganda instances, if necessary */      
+        /* we are in manual management mode -> start new propaganda instances, if necessary */
         synchronized (m_runningInfoServiceRegistrations) {
           /* start propaganda instances for the new infoservices, where no registration process is
            * running at the moment
@@ -204,7 +210,7 @@ public class JAPRoutingRegistrationInfoServices implements Observer, Runnable {
       }
     }
   }
-  
+
   /**
    * Returns a clone of the list of infoservices, which shall be used, if we are in manual
    * infoservice registration management mode.
@@ -218,7 +224,7 @@ public class JAPRoutingRegistrationInfoServices implements Observer, Runnable {
     }
     return resultValue;
   }
-  
+
   /**
    * This returns a list of infoservices, where the startPropaganda() method of JAPRoutingSettings
    * shall try the registration. If we are in automatic management mode, all already known
@@ -247,7 +253,7 @@ public class JAPRoutingRegistrationInfoServices implements Observer, Runnable {
     }
     return resultValue;
   }
-  
+
   /**
    * This changes the management mode between automatic infoservice registration and manual
    * infoservice registration. If the propaganda is running at the moment and the mode is
@@ -273,10 +279,10 @@ public class JAPRoutingRegistrationInfoServices implements Observer, Runnable {
             stopInfoServiceListUpdateThread();
           }
         }
-      }  
+      }
     }
   }
-  
+
   /**
    * Returns the current setting of the management mode.
    *
@@ -289,6 +295,95 @@ public class JAPRoutingRegistrationInfoServices implements Observer, Runnable {
       returnValue = m_registerAtAllAvailableInfoServices;
     }
     return returnValue;
+  }
+
+  /**
+   * Returns the current settings for the registration of the forwarding server at the infoservice
+   * system (registration infoservices, whether to registrate at all running primary infoservices)
+   * for storage within an XML document.
+   *
+   * @param a_doc The context document for the infoservice registration settings.
+   *
+   * @return An XML node (InfoServiceRegistrationSettings) with the infoservice registration
+   *         related settings.
+   */
+  public Element getSettingsAsXml(Document a_doc) {
+    Element infoServiceRegistrationSettingsNode = a_doc.createElement("InfoServiceRegistrationSettings");
+    Element useAllPrimaryInfoServicesNode = a_doc.createElement("UseAllPrimaryInfoServices");
+    Element registrationInfoServicesNode = a_doc.createElement("RegistrationInfoServices");
+    synchronized (this) {
+        XMLUtil.setNodeBoolean(useAllPrimaryInfoServicesNode,getRegisterAtAllAvailableInfoServices());
+      Enumeration registrationInfoServices = getRegistrationInfoServices().elements();
+      while (registrationInfoServices.hasMoreElements()) {
+        registrationInfoServicesNode.appendChild(((InfoService)(registrationInfoServices.nextElement())).toXmlNode(a_doc));
+      }
+    }
+    infoServiceRegistrationSettingsNode.appendChild(useAllPrimaryInfoServicesNode);
+    infoServiceRegistrationSettingsNode.appendChild(registrationInfoServicesNode);
+    return infoServiceRegistrationSettingsNode;
+  }
+
+  /**
+   * This method loads all settings for the registration of the forwarding server at the
+   * infoservice system (registration infoservices, whether to registrate at all running primary
+   * infoservices) from a prior created XML structure. If there is an error while loading the
+   * settings, it is still tried to load as much settings as possible.
+   *
+   * @param a_infoServiceRegistrationSettingsNode The InfoServiceRegistrationSettings XML node,
+   *                                              which was created by the getSettingsAsXml()
+   *                                              method.
+   *
+   * @return True, if there was no error while loading the settings and false, if there was one.
+   */
+  public boolean loadSettingsFromXml(Element a_infoServiceRegistrationSettingsNode) {
+    /* store, whether there were some errors while loading the settings */
+    boolean noError = true;
+    /* get the UseAllPrimaryInfoServices settings */
+    Element useAllPrimaryInfoServicesNode = (Element)(XMLUtil.getFirstChildByName(a_infoServiceRegistrationSettingsNode, "UseAllPrimaryInfoServices"));
+    if (useAllPrimaryInfoServicesNode == null) {
+      LogHolder.log(LogLevel.ERR, LogType.MISC, "JAPRoutingRegistrationInfoServices: loadSettingsFromXml: Error in XML structure (UseAllPrimaryInfoServices node): Using default setting.");
+      noError = false;
+    }
+    else {
+      setRegisterAtAllAvailableInfoServices(XMLUtil.parseNodeBoolean(useAllPrimaryInfoServicesNode, getRegisterAtAllAvailableInfoServices()));
+    }
+    /* load the list of used registration infoservices for the case, that not every primary
+     * infoservice shall be used
+     */
+    Element registrationInfoServicesNode = (Element)(XMLUtil.getFirstChildByName(a_infoServiceRegistrationSettingsNode, "RegistrationInfoServices"));
+    if (registrationInfoServicesNode == null) {
+      LogHolder.log(LogLevel.ERR, LogType.MISC, "JAPRoutingRegistrationInfoServices: loadSettingsFromXml: Error in XML structure (RegistrationInfoServices node): Skip loading of registration infoservices.");
+      noError = false;
+    }
+    else {
+      NodeList infoServiceNodes = registrationInfoServicesNode.getElementsByTagName("InfoService");
+      Vector registrationInfoServices = new Vector();
+      for (int i = 0; i < infoServiceNodes.getLength(); i++) {
+        Element infoServiceNode = (Element) (infoServiceNodes.item(i));
+        try {
+          InfoService currentInfoService = new InfoService(infoServiceNode);
+          /* try to get an updated version of the InfoService from the database of all InfoServices */
+          InfoService updatedInfoService = (InfoService)(Database.getInstance(InfoService.class).getEntryById(currentInfoService.getId()));
+          if (updatedInfoService != null) {
+            currentInfoService = updatedInfoService;
+          }
+          if (currentInfoService.hasPrimaryForwarderList()) {
+            /* only add infoservices with a primary forwarder list */
+            registrationInfoServices.addElement(currentInfoService);
+          }
+          else {
+            LogHolder.log(LogLevel.ERR, LogType.MISC, "JAPRoutingRegistrationInfoServices: loadSettingsFromXml: Error while loading one registration InfoService: The InfoService " + currentInfoService.getName() + " has no primary forwarder list: Skipping this infoservice.");
+            noError = false;
+          }
+        }
+        catch (Exception e) {
+          LogHolder.log(LogLevel.ERR, LogType.MISC, "JAPRoutingRegistrationInfoServices: loadSettingsFromXml: Error while loading one registration InfoService: Skipping this infoservice (" + e.toString() + ").");
+          noError = false;
+        }
+      }
+      setRegistrationInfoServices(registrationInfoServices.elements());
+    }
+    return noError;
   }
 
   /**
@@ -334,15 +429,15 @@ public class JAPRoutingRegistrationInfoServices implements Observer, Runnable {
                    */
                   JAPModel.getModel().getRoutingSettings().addPropagandaInstance(currentInfoService);
                   m_runningInfoServiceRegistrations.addElement(currentInfoService.getId());
-                }  
+                }
               }
             }
           }
         }
-      }  
+      }
     }
   }
-  
+
   /**
    * This starts the automatic infoservice registration thread, if it is not already running.
    */
@@ -356,10 +451,10 @@ public class JAPRoutingRegistrationInfoServices implements Observer, Runnable {
       }
       else {
         LogHolder.log(LogLevel.INFO, LogType.MISC, "JAPRoutingRegistrationInfoServices: startInfoServiceListUpdateThread: The infoservice registration management thread was already started.");
-      }  
+      }
     }
   }
-  
+
   /**
    * This stops the automatic infoservice registration thread, if it is running.
    */
@@ -379,9 +474,9 @@ public class JAPRoutingRegistrationInfoServices implements Observer, Runnable {
         m_updateInfoServiceListThread = null;
       }
       else {
-        LogHolder.log(LogLevel.INFO, LogType.MISC, "JAPRoutingRegistrationInfoServices: stopInfoServiceListUpdateThread: Infoservice registration management thread was not running.");        
+        LogHolder.log(LogLevel.INFO, LogType.MISC, "JAPRoutingRegistrationInfoServices: stopInfoServiceListUpdateThread: Infoservice registration management thread was not running.");
       }
     }
   }
-          
+
 }

@@ -34,7 +34,7 @@ import anon.tor.Tor;
 
 public final class JAPConstants
 {
-	public static final String aktVersion = "00.02.107"; //Never change the layout of this line!
+	public static final String aktVersion = "00.02.108"; //Never change the layout of this line!
 	private static final String CVS_GENERATED_RELEASE_DATE = "$Date$";
 
 	//Warning: This is a little bit tricky,
@@ -180,7 +180,7 @@ public final class JAPConstants
 	 * of users, which can be forwarded with a specified bandwidth. The default is 2 KByte/sec
 	 * for each user.
 	 */
-	public static final int ROUTING_BANDWIDTH_PER_USER = 2048;
+	public static final int ROUTING_BANDWIDTH_PER_USER = 4000;
 
 	/**
 	 * This is the mailaddress of the InfoService mailgateway.
