@@ -53,6 +53,9 @@ import payxml.XMLTransCert;
 import java.security.PrivateKey;
 import anon.crypto.IMyPrivateKey;
 import anon.crypto.IMyPublicKey;
+import anon.crypto.MyDSAPrivateKey;
+import org.bouncycastle.crypto.params.DSAPrivateKeyParameters;
+import org.bouncycastle.crypto.params.DSAParameters;
 
 /**
  *  Diese Klasse ist f?r die verwaltung eines Accounts zut?ndig, sie kapselt eine XML Struktur innerhalb der Klasse
@@ -61,7 +64,7 @@ import anon.crypto.IMyPublicKey;
  *  <Account version="1.0">
  * 		<AccountCertificate>...</AccountCertificate> // Kontozertiufkat von der BI unterschrieben
  * 		<RSAPrivateKey>...</RSAPrivateKey> // der geheime RSA-Schl?ssel zum Zugriff auf das Konto
-*      <DSAPrivateKey>...</DSAPrivateKey> // alternativ: der geheime DSA-Schluessel fuer das Konto
+ *      <DSAPrivateKey>...</DSAPrivateKey> // alternativ: der geheime DSA-Schluessel fuer das Konto
  * 		<TransferCertificates> //offenen Transaktionsummern
  * 			....
  * 		</TransferCertifcates>
@@ -133,41 +136,70 @@ public class PayAccount extends XMLDocument
 		}
 
 		// set private key
-		Element elemPrivKey = (Element) XMLUtil.getFirstChildByName(elemRoot, "RSAPrivateKey");
-		Element elem = (Element) XMLUtil.getFirstChildByName(elemPrivKey, "Modulus");
-		String str = XMLUtil.parseNodeString(elem, null);
-		BigInteger modulus = new BigInteger(Base64.decode(str));
+		Element elemRsaKey = (Element) XMLUtil.getFirstChildByName(elemRoot, "RSAPrivateKey");
+		Element elemDsaKey = (Element) XMLUtil.getFirstChildByName(elemRoot, "DSAPrivateKey");
+		if (elemRsaKey != null)
+		{
+			Element elem = (Element) XMLUtil.getFirstChildByName(elemRsaKey, "Modulus");
+			String str = XMLUtil.parseNodeString(elem, null);
+			BigInteger modulus = new BigInteger(Base64.decode(str));
 
-		elem = (Element) XMLUtil.getFirstChildByName(elemPrivKey, "PublicExponent");
-		str = XMLUtil.parseNodeString(elem, null);
-		BigInteger publicExponent = new BigInteger(Base64.decode(str));
+			elem = (Element) XMLUtil.getFirstChildByName(elemRsaKey, "PublicExponent");
+			str = XMLUtil.parseNodeString(elem, null);
+			BigInteger publicExponent = new BigInteger(Base64.decode(str));
 
-		elem = (Element) XMLUtil.getFirstChildByName(elemPrivKey, "PrivateExponent");
-		str = XMLUtil.parseNodeString(elem, null);
-		BigInteger privateExponent = new BigInteger(Base64.decode(str));
+			elem = (Element) XMLUtil.getFirstChildByName(elemRsaKey, "PrivateExponent");
+			str = XMLUtil.parseNodeString(elem, null);
+			BigInteger privateExponent = new BigInteger(Base64.decode(str));
 
-		elem = (Element) XMLUtil.getFirstChildByName(elemPrivKey, "P");
-		str = XMLUtil.parseNodeString(elem, null);
-		BigInteger p = new BigInteger(Base64.decode(str));
+			elem = (Element) XMLUtil.getFirstChildByName(elemRsaKey, "P");
+			str = XMLUtil.parseNodeString(elem, null);
+			BigInteger p = new BigInteger(Base64.decode(str));
 
-		elem = (Element) XMLUtil.getFirstChildByName(elemPrivKey, "Q");
-		str = XMLUtil.parseNodeString(elem, null);
-		BigInteger q = new BigInteger(Base64.decode(str));
+			elem = (Element) XMLUtil.getFirstChildByName(elemRsaKey, "Q");
+			str = XMLUtil.parseNodeString(elem, null);
+			BigInteger q = new BigInteger(Base64.decode(str));
 
-		elem = (Element) XMLUtil.getFirstChildByName(elemPrivKey, "dP");
-		str = XMLUtil.parseNodeString(elem, null);
-		BigInteger dP = new BigInteger(Base64.decode(str));
+			elem = (Element) XMLUtil.getFirstChildByName(elemRsaKey, "dP");
+			str = XMLUtil.parseNodeString(elem, null);
+			BigInteger dP = new BigInteger(Base64.decode(str));
 
-		elem = (Element) XMLUtil.getFirstChildByName(elemPrivKey, "dQ");
-		str = XMLUtil.parseNodeString(elem, null);
-		BigInteger dQ = new BigInteger(Base64.decode(str));
+			elem = (Element) XMLUtil.getFirstChildByName(elemRsaKey, "dQ");
+			str = XMLUtil.parseNodeString(elem, null);
+			BigInteger dQ = new BigInteger(Base64.decode(str));
 
-		elem = (Element) XMLUtil.getFirstChildByName(elemPrivKey, "QInv");
-		str = XMLUtil.parseNodeString(elem, null);
-		BigInteger qInv = new BigInteger(Base64.decode(str));
+			elem = (Element) XMLUtil.getFirstChildByName(elemRsaKey, "QInv");
+			str = XMLUtil.parseNodeString(elem, null);
+			BigInteger qInv = new BigInteger(Base64.decode(str));
 
-		m_privateKey = new MyRSAPrivateKey(modulus, publicExponent, privateExponent, p, q, dP, dQ,
-										   qInv);
+			m_privateKey = new MyRSAPrivateKey(modulus, publicExponent, privateExponent, p, q, dP, dQ,
+											   qInv);
+		}
+		else if (elemDsaKey != null)
+		{
+			Element elem = (Element) XMLUtil.getFirstChildByName(elemDsaKey, "G");
+			String str = XMLUtil.parseNodeString(elem, null);
+			BigInteger g = new BigInteger(Base64.decode(str));
+
+			elem = (Element) XMLUtil.getFirstChildByName(elemDsaKey, "P");
+			str = XMLUtil.parseNodeString(elem, null);
+			BigInteger p = new BigInteger(Base64.decode(str));
+
+			elem = (Element) XMLUtil.getFirstChildByName(elemDsaKey, "Q");
+			str = XMLUtil.parseNodeString(elem, null);
+			BigInteger q = new BigInteger(Base64.decode(str));
+
+			elem = (Element) XMLUtil.getFirstChildByName(elemDsaKey, "X");
+			str = XMLUtil.parseNodeString(elem, null);
+			BigInteger x = new BigInteger(Base64.decode(str));
+			DSAPrivateKeyParameters param = new DSAPrivateKeyParameters(
+				x, new DSAParameters(p, q, g));
+			m_privateKey = new MyDSAPrivateKey(param);
+		}
+		else
+		{
+			throw new Exception("No RSA and no DSA private key found");
+		}
 
 		// set signing instance
 		m_signingInstance = new JAPSignature();
@@ -217,7 +249,7 @@ public class PayAccount extends XMLDocument
 		doc.appendChild(elemRoot);
 
 		// import AccountCertificate XML Representation
-		Document tmpDoc = m_accountCertificate.getXmlDocument();
+		Document tmpDoc = m_accountCertificate.getXmlEncoded();
 		Node n = null;
 		try
 		{
@@ -240,7 +272,6 @@ public class PayAccount extends XMLDocument
 			return null;
 		}
 		elemRoot.appendChild(n);
-
 
 		// add transfer certificates
 		Element elemTransCerts = doc.createElement("TransferCertificates");

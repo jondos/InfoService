@@ -89,7 +89,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private JProgressBar trafficProgressBar;
 	private JProgressBar protectionProgressBar;
 	private JProgressBar ownTrafficChannelsProgressBar;
-	private JLabel m_labelOwnTrafficBytes, m_labelMeterDetailsName;
 
 	private JLabel m_labelMeterDetailsRisk, m_labelOwnBytes, m_labelOwnChannels;
 	//private TitledBorder m_borderOwnTraffic, m_borderAnonMeter, m_borderDetails;
@@ -109,8 +108,12 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private JProgressBar m_progressAnonTraffic;
 	private JLabel m_labelAnonymityUser;
 
+	private JLabel m_labelOwnTraffic,m_labelOwnTrafficSmall;
 	private JLabel m_labelOwnActivity,m_labelForwarderActivity;
 	private JLabel m_labelOwnActivitySmall,m_labelForwarderActivitySmall;
+	private JLabel m_labelOwnTrafficBytes,m_labelOwnTrafficUnit;
+	private JLabel m_labelOwnTrafficBytesSmall,m_labelOwnTrafficUnitSmall;
+	private JLabel m_labelOwnTrafficWWW,m_labelOwnTrafficBytesWWW,m_labelOwnTrafficUnitWWW;
 	private JButton m_bttnAnonDetails;
 	private JRadioButton m_rbAnonOff,m_rbAnonOn;
 
@@ -185,6 +188,9 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		JPanel p = new JPanel(gbl1);
 		m_labelAnonService = new JLabel(JAPMessages.getString("ngAnonymisierungsdienst"));
 		c1.insets = new Insets(0, 17, 0, 0);
+		c1.anchor=GridBagConstraints.WEST;
+		c1.weightx=0;
+		c1.fill=GridBagConstraints.NONE;
 		p.add(m_labelAnonService, c1);
 		JComboBox combo = new JComboBox();
 		combo.addItem("Dresden - Dresden");
@@ -194,6 +200,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		p.add(combo, c1);
 		m_bttnAnonDetails = new JButton(JAPMessages.getString("ngBttnAnonDetails"));
 		c1.gridx = 2;
+		c1.weightx = 0;
+		c1.fill = GridBagConstraints.NONE;
 		p.add(m_bttnAnonDetails, c1);
 
 		c.weighty = 1;
@@ -253,6 +261,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.gridy = 0;
 		c1.gridheight = 3;
 		c1.anchor = GridBagConstraints.WEST;
+		c1.weightx=0;
 		c1.fill=GridBagConstraints.NONE;
 		c1.insets = new Insets(0, 10, 0, 10);
 		p.add(m_labelAnonMeter, c1);
@@ -344,16 +353,18 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		gbl1 = new GridBagLayout();
 		c1 = new GridBagConstraints();
 		p = new JPanel(gbl1);
-		l = new JLabel("Eigene anonymiserte Daten:");
+		m_labelOwnTraffic = new JLabel(JAPMessages.getString("ngOwnTraffic"));
 		c1.insets = new Insets(0, 5, 0, 0);
 		c1.anchor = GridBagConstraints.WEST;
-		p.add(l, c1);
-		l = new JLabel("350");
+		c1.weightx=0;
+		c1.fill=GridBagConstraints.NONE;
+		p.add(m_labelOwnTraffic, c1);
+		m_labelOwnTrafficBytes = new JLabel("0");
 		c1.gridx = 1;
-		p.add(l, c1);
-		l = new JLabel("kByte");
+		p.add(m_labelOwnTrafficBytes, c1);
+		m_labelOwnTrafficUnit = new JLabel("Byte");
 		c1.gridx = 2;
-		p.add(l, c1);
+		p.add(m_labelOwnTrafficUnit, c1);
 		m_labelOwnActivity = new JLabel(JAPMessages.getString("ngActivity"), JLabel.RIGHT);
 		c1.weightx = 1;
 		c1.fill = GridBagConstraints.HORIZONTAL;
@@ -367,19 +378,21 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		progress.setBorderPainted(false);
 		c1.gridx = 4;
 		c1.weightx = 0;
+		c1.fill = GridBagConstraints.NONE;
 		p.add(progress, c1);
-		l = new JLabel("davon World Wide Web:");
+		m_labelOwnTrafficWWW = new JLabel(JAPMessages.getString("ngOwnTrafficWWW"));
 		c1.insets = new Insets(10, 20, 0, 0);
 		c1.gridx = 0;
 		c1.gridy = 1;
-		p.add(l, c1);
-		l = new JLabel("350");
+		c1.anchor=GridBagConstraints.WEST;
+		p.add(m_labelOwnTrafficWWW, c1);
+		m_labelOwnTrafficBytesWWW = new JLabel("0");
 		c1.insets = new Insets(10, 5, 0, 0);
 		c1.gridx = 1;
-		p.add(l, c1);
-		l = new JLabel("kByte");
+		p.add(m_labelOwnTrafficBytesWWW, c1);
+		m_labelOwnTrafficUnitWWW = new JLabel("Byte");
 		c1.gridx = 2;
-		p.add(l, c1);
+		p.add(m_labelOwnTrafficUnitWWW, c1);
 		l = new JLabel("andere Internetdienste:");
 		c1.insets = new Insets(7, 20, 0, 0);
 		c1.gridx = 0;
@@ -392,23 +405,24 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		l = new JLabel("kByte");
 		c1.gridx = 2;
 		p.add(l, c1);
-
 		my.setFullPanel(p);
 
 		//small
 		gbl1 = new GridBagLayout();
 		c1 = new GridBagConstraints();
 		p = new JPanel(gbl1);
-		l = new JLabel("Eigene anonymiserte Daten:");
+		m_labelOwnTrafficSmall = new JLabel(JAPMessages.getString("ngOwnTraffic"));
 		c1.insets = new Insets(0, 5, 0, 0);
+		c1.weightx=0;
+		c1.fill=GridBagConstraints.NONE;
 		c1.anchor = GridBagConstraints.WEST;
-		p.add(l, c1);
-		l = new JLabel("350");
+		p.add(m_labelOwnTrafficSmall, c1);
+		m_labelOwnTrafficBytesSmall = new JLabel("0");
 		c1.gridx = 1;
-		p.add(l, c1);
-		l = new JLabel("kByte");
+		p.add(m_labelOwnTrafficBytesSmall, c1);
+		m_labelOwnTrafficUnitSmall = new JLabel("Byte");
 		c1.gridx = 2;
-		p.add(l, c1);
+		p.add(m_labelOwnTrafficUnitSmall, c1);
 		m_labelOwnActivitySmall = new JLabel(JAPMessages.getString("ngActivity"), JLabel.RIGHT);
 		c1.weightx = 1;
 		c1.fill = GridBagConstraints.HORIZONTAL;
@@ -421,6 +435,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		progress.setMaximum(5);
 		progress.setBorderPainted(false);
 		c1.weightx = 0;
+		c1.fill=GridBagConstraints.NONE;
 		c1.gridx = 4;
 		p.add(progress, c1);
 		my.setSmallPanel(p);
@@ -733,8 +748,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		ownTrafficChannelsProgressBar.setString(" ");
 
 		// Own traffic situation: # of bytes transmitted
-		m_labelOwnTrafficBytes = new JLabel("0 Bytes", SwingConstants.RIGHT);
-		m_labelOwnTrafficBytes.setFont(fontControls);
+		//m_labelOwnTrafficBytes = new JLabel("0 Bytes", SwingConstants.RIGHT);
+		//m_labelOwnTrafficBytes.setFont(fontControls);
 		//
 		//userProgressBar = new
 		//	JProgressBar(JProgressBar.HORIZONTAL, 0, 1);
@@ -766,7 +781,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_labelOwnBytes = new JLabel(JAPMessages.getString("ownTrafficBytes"));
 		m_labelOwnBytes.setFont(fontControls);
 		ownTrafficPanel.add(m_labelOwnBytes);
-		ownTrafficPanel.add(m_labelOwnTrafficBytes);
+		//ownTrafficPanel.add(m_labelOwnTrafficBytes);
 
 // "Guthaben"
 		//m_cbAnon = new JCheckBox(JAPMessages.getString("confActivateCheckBox"));
@@ -807,8 +822,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		JPanel detailsPanel = new JPanel();
 		m_labelCascadeName = new JLabel();
 		m_labelCascadeName.setFont(fontControls);
-		m_labelMeterDetailsName = new JLabel(JAPMessages.getString("meterDetailsName") + " ");
-		m_labelMeterDetailsName.setFont(fontControls);
+		//m_labelMeterDetailsName = new JLabel(JAPMessages.getString("meterDetailsName") + " ");
+		//m_labelMeterDetailsName.setFont(fontControls);
 		//m_labelAnonymityUser = new JLabel(JAPMessages.getString("meterDetailsUsers") + " ");
 		//m_labelAnonymityUser.setFont(fontControls);
 		//m_labelMeterDetailsTraffic = new JLabel(JAPMessages.getString("meterDetailsTraffic") + " ");
@@ -830,8 +845,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c.weighty = 1;
 		c.gridx = 0;
 		c.gridy = 0;
-		g.setConstraints(m_labelMeterDetailsName, c);
-		detailsPanel.add(m_labelMeterDetailsName);
+		//g.setConstraints(m_labelMeterDetailsName, c);
+		//detailsPanel.add(m_labelMeterDetailsName);
 		c.gridx = 1;
 		c.weightx = 1;
 		g.setConstraints(m_labelCascadeName, c);
@@ -1045,9 +1060,12 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_labelOwnActivitySmall.setText(JAPMessages.getString("ngActivity"));
 		m_labelForwarderActivity.setText(JAPMessages.getString("ngActivity"));
 		m_labelForwarderActivitySmall.setText(JAPMessages.getString("ngActivity"));
+		m_labelOwnTraffic.setText(JAPMessages.getString("ngOwnTraffic"));
+		m_labelOwnTrafficSmall.setText(JAPMessages.getString("ngOwnTraffic"));
+		m_labelOwnTrafficWWW.setText(JAPMessages.getString("ngOwnTrafficWWW"));
 
 
-		m_labelMeterDetailsName.setText(JAPMessages.getString("meterDetailsName") + " ");
+		//m_labelMeterDetailsName.setText(JAPMessages.getString("meterDetailsName") + " ");
 		//m_labelAnonymityUser.setText(JAPMessages.getString("meterDetailsUsers") + " ");
 		//m_labelMeterDetailsTraffic.setText(JAPMessages.getString("meterDetailsTraffic") + " ");
 		m_labelMeterDetailsRisk.setText(JAPMessages.getString("meterDetailsRisk") + " ");
@@ -1376,7 +1394,19 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	public void transferedBytes(int c)
 	{
 		// Nr of Bytes transmitted anonymously
-		m_labelOwnTrafficBytes.setText(m_NumberFormat.format(c) + " Bytes");
+		String unit="Byte";
+		if(c>9999)
+		{
+			c=c/1000;
+			unit="kByte";
+		}
+		String s=m_NumberFormat.format(c);
+		m_labelOwnTrafficBytes.setText(s);
+		m_labelOwnTrafficUnit.setText(unit);
+		m_labelOwnTrafficBytesSmall.setText(s);
+		m_labelOwnTrafficUnitSmall.setText(unit);
+		m_labelOwnTrafficBytesWWW.setText(s);
+		m_labelOwnTrafficUnitWWW.setText(unit);
 		JAPDll.onTraffic();
 	}
 

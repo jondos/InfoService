@@ -82,7 +82,7 @@ public class BIConnection
 						int biPort,
 						boolean sslOn
 						/*						XMLAccountCertificate accountCert,
-							  MyRSAPrivateKey privKey*/
+						 MyRSAPrivateKey privKey*/
 						)
 	{
 		m_BIHostName = biHostname;
@@ -152,12 +152,9 @@ public class BIConnection
 	 */
 	public XMLTransCert charge() throws Exception
 	{
-		// authenticate(m_accountCert, m_privateKey);
 		m_httpClient.writeRequest("GET", "charge", null);
 		String answer = m_httpClient.readAnswer();
-
 		XMLTransCert xmltrcert = new XMLTransCert(answer);
-
 		if (Pay.getInstance().getVerifyingInstance().verifyXML(xmltrcert.getDomDocument()))
 		{
 			return xmltrcert;
@@ -183,19 +180,21 @@ public class BIConnection
 		XMLAccountInfo info = null;
 		m_httpClient.writeRequest("GET", "balance", null);
 		answer = m_httpClient.readAnswer();
-
 		info = new XMLAccountInfo(answer, Pay.getInstance().getVerifyingInstance());
-
 		return info;
 	}
 
-	public void authenticate(XMLAccountCertificate accountcert, JAPSignature signer) throws Exception
+	public void authenticate(XMLAccountCertificate accountCert, JAPSignature signer) throws Exception
 	{
-		//Log.log(this,accountcert,Log.TEST);
+		if(accountCert.isSigned()==false)
+		{
+			throw new Exception("BIConnection.authenticate: Your account certificate is not signed!");
+		}
 		String answer = null;
 		try
 		{
-			m_httpClient.writeRequest("POST", "authenticate", accountcert.getXMLString());
+			String StrAccountCert = XMLUtil.XMLDocumentToString(accountCert.getXmlEncoded());
+			m_httpClient.writeRequest("POST", "authenticate", StrAccountCert);
 			answer = m_httpClient.readAnswer();
 		}
 		catch (IOException ex)
@@ -273,12 +272,12 @@ public class BIConnection
 	 * @return XMLAccountCertificate the certificate issued by the BI
 	 * @throws Exception
 	 */
-	public XMLAccountCertificate register(IMyPublicKey pubKey, JAPSignature signKey) throws Exception
+	public XMLAccountCertificate register(XMLJapPublicKey pubKey, JAPSignature signKey) throws Exception
 	{
 		// send our public key
 		m_httpClient.writeRequest(
 			"POST", "register",
-			XMLUtil.XMLDocumentToString(pubKey.getXmlEncoded())
+			XMLUtil.XMLDocumentToString(pubKey.getXmlDocument())
 			);
 		String answer = m_httpClient.readAnswer();
 
@@ -290,23 +289,25 @@ public class BIConnection
 		String strResponse = xmlResponse.getXMLString();
 		m_httpClient.writeRequest("POST", "response", strResponse);
 		answer = m_httpClient.readAnswer();
-		LogHolder.log(LogLevel.DEBUG, LogType.PAY, answer);
+		LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Received cert: "+answer);
 
 		// check signature
 		boolean sigOK = Pay.getInstance().getVerifyingInstance().verifyXML(
 			new java.io.ByteArrayInputStream(answer.getBytes())
 			);
-		XMLAccountCertificate xmlCert = new XMLAccountCertificate(answer);
 
+		XMLAccountCertificate xmlCert = new XMLAccountCertificate(answer);
 		// check if the certificate signed by the BI contains the right
 		// public key
-		if (xmlCert.getPublicKey().equals(pubKey))
+		if (xmlCert.getPublicKey().equals(pubKey.getPublicKey()))
 		{
 			return xmlCert;
 		}
 		else
 		{
-			throw new Exception("The JPI is evil (sent a valid certificate, but with a wrong publickey)");
+			throw new Exception(
+				"The JPI is evil (sent a valid certificate, but with a wrong publickey)");
+
 		}
 	}
 }

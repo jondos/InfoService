@@ -44,14 +44,15 @@ import org.bouncycastle.crypto.params.DSAPublicKeyParameters;
 import org.bouncycastle.crypto.params.DSAParameters;
 
 /** This class handles RSA and DSA Public Keys represented in XML.
+ * It is used mainly for formatting and parsing xml keys
  * The corresponding XML struct is as follows (for RSA):
+ *
  * <JapPublicKey version="1.0">
  * 	 <RSAKeyValue>
  *     <Modulus> Base64 encoded Modulus </Modulus>
  * 		<Exponent> Base 64 enocded Exponent </Exponent>
  * 	 </RSAKeyValue>
  * </JapPublicKey>
- *
  *
  */
 
@@ -96,13 +97,14 @@ public class XMLJapPublicKey //extends XMLDocument
 	{
 		if (!elemKey.getTagName().equals("JapPublicKey"))
 		{
-			throw new Exception("XMLJapPublicKey wrong xml structure");
+			throw new Exception("XMLJapPublicKey wrong xml structure. Tagname is"+elemKey.getTagName());
 		}
 		Element elemRsa = (Element) XMLUtil.getFirstChildByName(elemKey, "RSAKeyValue");
 		if (elemRsa != null)
 		{
 			Element elemMod = (Element) XMLUtil.getFirstChildByName(elemRsa, "Modulus");
 			Element elemExp = (Element) XMLUtil.getFirstChildByName(elemRsa, "Exponent");
+			// todo add bas64 decode
 			BigInteger modulus = new BigInteger(XMLUtil.parseNodeString(elemMod, ""));
 			BigInteger exponent = new BigInteger(XMLUtil.parseNodeString(elemExp, ""));
 			m_publicKey = new MyRSAPublicKey(modulus, exponent);
@@ -112,32 +114,35 @@ public class XMLJapPublicKey //extends XMLDocument
 		if (elemDsa != null)
 		{
 			Element elem = (Element) XMLUtil.getFirstChildByName(elemDsa, "P");
-			BigInteger p = new BigInteger(XMLUtil.parseNodeString(elem, ""));
+			BigInteger p = new BigInteger(Base64.decode(XMLUtil.parseNodeString(elem, "")));
 			elem = (Element) XMLUtil.getFirstChildByName(elemDsa, "Y");
-			BigInteger y = new BigInteger(XMLUtil.parseNodeString(elem, ""));
+			BigInteger y = new BigInteger(Base64.decode(XMLUtil.parseNodeString(elem, "")));
 			elem = (Element) XMLUtil.getFirstChildByName(elemDsa, "Q");
-			BigInteger q = new BigInteger(XMLUtil.parseNodeString(elem, ""));
+			BigInteger q = new BigInteger(Base64.decode(XMLUtil.parseNodeString(elem, "")));
 			elem = (Element) XMLUtil.getFirstChildByName(elemDsa, "G");
-			BigInteger g = new BigInteger(XMLUtil.parseNodeString(elem, ""));
+			BigInteger g = new BigInteger(Base64.decode(XMLUtil.parseNodeString(elem, "")));
 
 			// is this really OK ????
 			DSAPublicKeyParameters param = new DSAPublicKeyParameters(
 				y,
-				new DSAParameters(p, g, q)
+				new DSAParameters(p, q, g)
 				);
 			m_publicKey = new MyDSAPublicKey(param);
 			return;
 		}
+		throw new Exception("Wrong key format: Neither RSAKeyValue nor DSAKeyValue found!");
 	}
 
-	private Document getXmlDocument() throws Exception
+	public Document getXmlDocument() throws Exception
 	{
 		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
 		Element elemRoot = doc.createElement("JapPublicKey");
 		doc.appendChild(elemRoot);
 		elemRoot.setAttribute("version", "1.0");
 		Document tmpDoc = m_publicKey.getXmlEncoded();
-		XMLUtil.importNode(tmpDoc, elemRoot, true);
+		Element elem = (Element) XMLUtil.importNode(doc, tmpDoc.getDocumentElement(), true);
+		elemRoot.appendChild(elem);
+
 		return doc;
 	}
 

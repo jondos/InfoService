@@ -102,7 +102,7 @@
   <property category="runtime.11" name="ConfigurationName" value="JAP newgui"/>
   <property category="runtime.11" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
   <property category="runtime.11" name="application.class" value="JAP"/>
-  <property category="runtime.11" name="application.parameters" value="-newgui"/>
+  <property category="runtime.11" name="application.parameters" value="-newgui -config h:\jap.conf"/>
   <property category="runtime.11" name="custom.init_required" value="0"/>
   <property category="runtime.11" name="custom.required.1" value="http"/>
   <property category="runtime.11" name="custom.required.2" value="mac"/>
@@ -352,6 +352,7 @@
     <property category="archiving" name="contentRules.110" value="F:images/lowcolor/north.gif;images/lowcolor/north.gif"/>
     <property category="archiving" name="contentRules.111" value="F:images/lowcolor/splash.gif;images/lowcolor/splash.gif"/>
     <property category="archiving" name="contentRules.112" value="F:images/lowcolor/west.gif;images/lowcolor/west.gif"/>
+    <property category="archiving" name="contentRules.113" value="F:certificates/bi.cer;certificates/bi.cer"/>
     <property category="archiving" name="contentRules.12" value="F:help/config_de.html;help/config_de.html"/>
     <property category="archiving" name="contentRules.13" value="F:help/config_en.html;help/config_en.html"/>
     <property category="archiving" name="contentRules.14" value="F:help/credits_de.html;help/credits_de.html"/>
