@@ -19,7 +19,7 @@ public class JAPDummy implements Runnable {
 
 		while(true) {
 			if (i==ani.length) i=0;
-			model.status1=model.msg.getString("statusRunning") + ani[i];
+			model.status1=model.getString("statusRunning") + ani[i];
 			i++;
 			//
 			float r = rand.nextFloat();

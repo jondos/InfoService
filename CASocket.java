@@ -6,7 +6,7 @@ import java.net.UnknownHostException;
 
 public class CASocket 
 	{
-		private boolean bisClosed;
+		private volatile boolean bisClosed;
 		private Socket s;
 		
 		public CASocket()

@@ -10,24 +10,27 @@ import javax.swing.event.*;
 
 /* classes modified from Swing Example "Metalworks" */
 
-public class JAPHelp extends JDialog implements ActionListener {
+public class JAPHelp extends JDialog implements ActionListener 
+	{
     private JAPModel model;
     private String helpPath = " ";
     private String helpLang = " ";
     private JComboBox language;
     HtmlPane html;
 
-    public JAPHelp(JFrame f, JAPModel m) {
-	super(f, m.msg.getString("helpWindow"), false);
-
-	JPanel container = new JPanel();
-	container.setLayout( new BorderLayout() );
+    public JAPHelp(JFrame f, JAPModel m)
+			{
+				super(f, m.getString("helpWindow"), false);
+				model=m;
+				JPanel container = new JPanel();
+				container.setLayout( new BorderLayout() );
 	
 	/* works but makes no sens to catch here
 	try { helpPath = model.msg.getString("helpPath"); }
 	catch (Exception e) { helpPath = model.HELPPATH; }
 	*/
-	helpPath = model.msg.getString("helpPath1");
+
+		helpPath = model.getString("helpPath1");
 	
 	html = new HtmlPane(helpPath);
 
@@ -35,18 +38,21 @@ public class JAPHelp extends JDialog implements ActionListener {
 	buttonPanel.setLayout ( new FlowLayout(FlowLayout.RIGHT) );
 	
 	language = new JComboBox();
-	for (int i = 1; i < model.MAXHELPLANGUAGES; i++) {
+	for (int i = 1; i < 2/*model.MAXHELPLANGUAGES*/; i++)
+		{
 	    try { 
-		helpPath = model.msg.getString("helpPath"+String.valueOf(i)); 
-		helpLang = model.msg.getString("lang"+String.valueOf(i));
-		language.addItem(helpLang);
-	    } catch (Exception e) { ; }
-	}
+						helpPath = model.getString("helpPath"+String.valueOf(i)); 
+						helpLang = model.getString("lang"+String.valueOf(i));
+						language.addItem(helpLang);
+					}
+			catch (Exception e) 
+				{
+				}
+		}
 	language.addActionListener(this);
 	buttonPanel.add( language );
 	buttonPanel.add(new JLabel("   "));
-	
-	JButton close = new JButton(model.msg.getString("closeButton"));
+	JButton close = new JButton(model.getString("closeButton"));
 	close.addActionListener(new ActionListener() {
 	                       public void actionPerformed(ActionEvent e) {
 				   ClosePressed();
@@ -81,7 +87,7 @@ public class JAPHelp extends JDialog implements ActionListener {
     
     public void actionPerformed(ActionEvent e) {
 	// for Language Combobox only
-	helpPath = model.msg.getString("helpPath"
+	helpPath = model.getString("helpPath"
 		    +String.valueOf(language.getSelectedIndex()+1));
 	html.load(helpPath);
     }

@@ -1,6 +1,7 @@
 import java.net.* ;
 
-public class ProxyServer implements Runnable {
+public class ProxyServer implements Runnable
+	{
     private boolean runFlag; 
     private boolean debug = false; 
     private int portN;
@@ -9,17 +10,20 @@ public class ProxyServer implements Runnable {
     private CAMuxSocket oMuxSocket;
     private Thread thread;
     private JAPModel model;
-    public ProxyServer (int port, boolean debugFlag,JAPModel m) {
-			this.portN = port;
-			this.debug = debugFlag;
-			model=m;
-    }
+    
+		public ProxyServer (int port, boolean debugFlag,JAPModel m)
+			{
+				portN = port;
+				debug = debugFlag;
+				model=m;
+			}
 
-    public ProxyServer (int port,JAPModel m) {
-	this.portN = port;
-	this.debug = false;
-	model=m;
-    }
+    public ProxyServer (int port,JAPModel m)
+			{
+				portN = port;
+				debug = false;
+				model=m;
+			}
 
     public void run()
 			{
@@ -27,41 +31,50 @@ public class ProxyServer implements Runnable {
 				socket = null;
 				runFlag = true;
 				
-				while (runFlag) {
-				if (debug)
-					System.out.println("ProxyServer on port " + portN + " started.");
-				try
+				while (runFlag)
 					{
-						server = new ServerSocket (portN);
-						oMuxSocket=new CAMuxSocket();
-						if(oMuxSocket.connect(model.anonHostName,model.anonPortNumber)==-1)
+						if (debug)
+							System.out.println("ProxyServer on port " + portN + " started.");
+						try
 							{
-								System.out.println("Cannot connect to Mix...!");
-								return;
+								server = new ServerSocket (portN);
+								oMuxSocket=new CAMuxSocket();
+								if(oMuxSocket.connect(model.anonHostName,model.anonPortNumber)==-1)
+									{
+										System.out.println("Cannot connect to Mix...!");
+										return;
+									}
+								oMuxSocket.start();
+								while(runFlag)
+									{
+										socket = server.accept();
+										oMuxSocket.newConnection(new CASocket(socket));
+									}
 							}
-						oMuxSocket.start();
-						while(runFlag)
+						catch (Exception e)
 							{
-								socket = server.accept();
-								oMuxSocket.newConnection(new CASocket(socket));
+								try 
+									{
+										server.close();
+									} 
+								catch (Exception e2)
+									{
+									}
+								if (debug) System.out.println("ProxyServer Exception: " +e);
 							}
 					}
-				catch (Exception e) {
-		try { server.close(); } catch (Exception e2) {
-		    ;
-		}
-		if (debug) System.out.println("ProxyServer Exception: " +e);
-	    }
-	}
-	if (debug) System.out.println("ProxyServer on port " + portN + " stopped.");
+				if (debug) System.out.println("ProxyServer on port " + portN + " stopped.");
     }
 
-    public void stopService() {
-	runFlag = false;
-	try {
-	    server.close();
-	} catch(Exception e) { 
-	    ;
-	}
-    }
+    public void stopService()
+			{
+				runFlag = false;
+				try
+					{
+						server.close();
+					}
+				catch(Exception e)
+					{ 
+					}
+			}
 }

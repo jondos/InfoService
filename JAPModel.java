@@ -19,7 +19,7 @@ public class JAPModel implements JAPObserver {
 	static final String url_info_version="http://anon.inf.tu-dresden.de/~sk13/anon/jap/aktVersion.txt";
 	static final String url_jap_newversion="http://anon.inf.tu-dresden.de/~sk13/anon/jap/JAP.jar";
 
-	static ResourceBundle msg;
+	private ResourceBundle msg;
 
 	static final String TITLE = "JAVA ANON PROXY -- JAP";
     static final String AUTHOR = "Hannes Federrath\n<federrath@inf.tu-dresden.de>\n \n(c) 2000 \n";
@@ -54,7 +54,29 @@ public class JAPModel implements JAPObserver {
 	
 	public JAPModel () {
 		// Load Texts for Messages and Windows
-		msg = ResourceBundle.getBundle(MESSAGESFN, Locale.ENGLISH/*Locale.getDefault()*/ );
+		try
+			{
+				msg = ResourceBundle.getBundle(MESSAGESFN, Locale.getDefault() );
+			}
+		catch(Exception e)
+			{
+				try
+					{
+						msg = ResourceBundle.getBundle(MESSAGESFN, Locale.ENGLISH );
+					}
+				catch(Exception e1)
+					{
+						try
+							{
+								msg = ResourceBundle.getBundle(MESSAGESFN);
+							}
+						catch(Exception e2)
+							{
+								System.out.println("Can't find any Message String - Critical Error - Terminating...");
+								System.exit(-1);
+							}
+					}
+			}
 		//
 		observerVector = new Vector();
 		//
@@ -87,6 +109,18 @@ public class JAPModel implements JAPObserver {
 	}
 	*/
 	
+		
+	public String getString(String key)
+		{
+			try
+				{
+					return msg.getString(key);
+				}
+			catch(Exception e)
+				{
+					return key;
+				}
+		}
 		
 	public void setAnonMode(boolean bAnonMode)
 		{
