@@ -34,7 +34,7 @@ import anon.tor.Tor;
 
 public final class JAPConstants
 {
-	public static final String aktVersion = "00.02.122"; //Never change the layout of this line!
+	public static final String aktVersion = "00.02.123"; //Never change the layout of this line!
 	private static final String CVS_GENERATED_RELEASE_DATE = "$Date$";
 
 	//Warning: This is a little bit tricky,
@@ -134,6 +134,9 @@ public final class JAPConstants
 	public static final String IMAGE_SERVER = "server.gif";
 	public static final String IMAGE_SERVER_BLAU = "server_blau.gif";
 	public static final String IMAGE_SERVER_ROT = "server_rot.gif";
+	public static final String IMAGE_RELOAD = "reload.gif";
+	public static final String IMAGE_RELOAD_ROLLOVER = "reloadrollover.gif";
+
 	public static final String CERTENABLEDICON = "cenabled.gif";
 	public static final String CERTDISABLEDICON = "cdisabled.gif";
 
