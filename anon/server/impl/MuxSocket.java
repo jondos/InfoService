@@ -53,7 +53,7 @@ import anon.ToManyOpenChannelsException;
 import anon.crypto.JAPCertPath;
 import anon.crypto.JAPCertificateStore;
 import anon.infoservice.MixCascade;
-import anon.pay.AIChannel;
+import pay.anon.AIChannel;
 import anon.util.XMLUtil;
 import logging.LogHolder;
 import logging.LogLevel;
