@@ -25,68 +25,53 @@ OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABIL
 IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
-import org.xml.sax.InputSource;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.DocumentBuilder;
-import org.w3c.dom.Document;
-import org.w3c.dom.NamedNodeMap;
-import HTTPClient.HTTPConnection;
-import HTTPClient.HTTPResponse;
+package jap;
 
-final class JAPFeedback implements Runnable {
+import javax.swing.JTextField;
+import javax.swing.text.AttributeSet;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.Document;
+import javax.swing.text.PlainDocument;
 
-	private JAPController controller;
-	private volatile boolean runFlag;
 
-	private Thread m_threadRunLoop;
 
-	public JAPFeedback()
-		{
-			JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPFeedback:initializing...");
-			controller = JAPController.getController();
-			m_threadRunLoop=null;
-			runFlag=false;
-		}
+final class JAPJIntField extends JTextField
+	{
 
-	public void run()
-		{
-			runFlag = true;
-			while(runFlag)
-				{
-					if (controller.getAnonMode()&&!JAPModel.isInfoServiceDisabled())
-						{
-							controller.getInfoService().getFeedback(controller.getAnonServer());
-							controller.notifyJAPObservers();
-						}
-					try
-						{
-							Thread.sleep(60000);
-							//Thread.sleep(6000); // for testing only
-						}
-					catch (Exception e)
-						{}
-				}
-		}
+    public JAPJIntField()
+			{
+			}
 
-	public void startRequests()
-		{
-			if(!runFlag)
-				{
-					m_threadRunLoop=new Thread(this);
-					m_threadRunLoop.setPriority(Thread.MIN_PRIORITY);
-					m_threadRunLoop.start();
-				}
-		}
+    public JAPJIntField(String string)
+			{
+				super(string);
+			}
 
-	public void stopRequests()
-		{
-			runFlag = false;
-			if(m_threadRunLoop!=null)
-				{
-					m_threadRunLoop.interrupt();
-					try{m_threadRunLoop.join();}catch(Exception e){}
-					m_threadRunLoop=null;
-				}
-		}
+    protected Document createDefaultModel()
+			{
+				return new IntDocument();
+			}
 
-}
+    static final class IntDocument extends PlainDocument
+			{
+				public void insertString(int offSet,String string,AttributeSet attributeSet)
+					throws BadLocationException
+					{
+						if (string == null)
+							{
+								return;
+							}
+						boolean intError = false;
+						try
+							{
+								Integer.valueOf(string);
+							}
+						catch(Exception e)
+							{
+								intError = true;
+							}
+						if (!intError)
+							super.insertString(offSet,string,attributeSet);
+					}
+			}
+	}

@@ -25,35 +25,70 @@ OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABIL
 IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
-import jap.JAPController;
-public class JAPMacintosh extends JAP {
+package jap;
 
-	JAPMacintosh(String[] argv) {
-		super(argv);
-	}
+import org.xml.sax.InputSource;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.DocumentBuilder;
+import org.w3c.dom.Document;
+import org.w3c.dom.NamedNodeMap;
+import HTTPClient.HTTPConnection;
+import HTTPClient.HTTPResponse;
 
-	protected void registerMRJHandlers() {
-		//Register MRJ handlers for about and quit.
-		MRJI IMRJI = new MRJI();
-		com.apple.mrj.MRJApplicationUtils.registerQuitHandler(IMRJI);
-		com.apple.mrj.MRJApplicationUtils.registerAboutHandler(IMRJI);
-	}
+final class JAPFeedback implements Runnable {
 
-	// Inner class defining the MRJ Interface
-	class MRJI implements com.apple.mrj.MRJQuitHandler, com.apple.mrj.MRJAboutHandler
-	{
-		public void handleQuit() {
-			JAPController.getController().goodBye();
+	private JAPController controller;
+	private volatile boolean runFlag;
+
+	private Thread m_threadRunLoop;
+
+	public JAPFeedback()
+		{
+			JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPFeedback:initializing...");
+			controller = JAPController.getController();
+			m_threadRunLoop=null;
+			runFlag=false;
 		}
-		public void handleAbout() {
-			JAPController.aboutJAP();
-		}
-	}
 
-	public static void main(String[] argv) {
-		JAPMacintosh japOnMac = new JAPMacintosh(argv);
-		japOnMac.startJAP();
-		japOnMac.registerMRJHandlers();
-	}
+	public void run()
+		{
+			runFlag = true;
+			while(runFlag)
+				{
+					if (controller.getAnonMode()&&!JAPModel.isInfoServiceDisabled())
+						{
+							controller.getInfoService().getFeedback(controller.getAnonServer());
+							controller.notifyJAPObservers();
+						}
+					try
+						{
+							Thread.sleep(60000);
+							//Thread.sleep(6000); // for testing only
+						}
+					catch (Exception e)
+						{}
+				}
+		}
+
+	public void startRequests()
+		{
+			if(!runFlag)
+				{
+					m_threadRunLoop=new Thread(this);
+					m_threadRunLoop.setPriority(Thread.MIN_PRIORITY);
+					m_threadRunLoop.start();
+				}
+		}
+
+	public void stopRequests()
+		{
+			runFlag = false;
+			if(m_threadRunLoop!=null)
+				{
+					m_threadRunLoop.interrupt();
+					try{m_threadRunLoop.join();}catch(Exception e){}
+					m_threadRunLoop=null;
+				}
+		}
 
 }

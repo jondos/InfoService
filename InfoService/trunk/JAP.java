@@ -36,6 +36,15 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 import java.lang.NoClassDefFoundError;
 import java.awt.Frame;
 import java.awt.event.WindowEvent;
+import jap.JAPDebug;
+import jap.JAPMessages;
+import jap.JAPAWTMsgBox;
+import jap.JAPController;
+import jap.JAPConstants;
+import jap.JAPView;
+import jap.JAPViewIconified;
+import jap.JAPObserver;
+import jap.JAPSplash;
 
 /** This is the main class of the JAP project. It starts everything. It can be inherited by another
  *  class that wants to initialize platform dependend features, e.g. see

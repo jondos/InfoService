@@ -1,30 +1,32 @@
 /*
-Copyright (c) 2000, The JAP-Team 
+Copyright (c) 2000, The JAP-Team
 All rights reserved.
-Redistribution and use in source and binary forms, with or without modification, 
+Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
 
-	- Redistributions of source code must retain the above copyright notice, 
+	- Redistributions of source code must retain the above copyright notice,
 	  this list of conditions and the following disclaimer.
 
-	- Redistributions in binary form must reproduce the above copyright notice, 
-	  this list of conditions and the following disclaimer in the documentation and/or 
+	- Redistributions in binary form must reproduce the above copyright notice,
+	  this list of conditions and the following disclaimer in the documentation and/or
 		other materials provided with the distribution.
 
-	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors 
-	  may be used to endorse or promote products derived from this software without specific 
-		prior written permission. 
+	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
+	  may be used to endorse or promote products derived from this software without specific
+		prior written permission.
 
-	
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS 
-OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY 
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS
+OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
 AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS
 BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, 
-OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER 
-IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY 
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
+package jap;
+
 import java.net.URL;
 import java.io.DataInputStream;
 import java.io.FileOutputStream;
@@ -32,7 +34,7 @@ import java.io.FileOutputStream;
 import HTTPClient.HTTPConnection;
 import HTTPClient.HTTPResponse;
 
-/** 
+/**
  * This is a class for version checking over the Internet.
  * The programmer has to provide a text file on a web server
  * at http://path.
@@ -43,7 +45,7 @@ import HTTPClient.HTTPResponse;
  * <P>
  * <code>void getVersionFromNet(String path, String localFilename)</code> gets the new version
  * of the program from http://path and stores the received data to file <code>localFilename</code>.
- * 
+ *
  */
 final class Versionchecker implements Runnable {
 
@@ -52,7 +54,7 @@ final class Versionchecker implements Runnable {
 	private int result = 0;
 	private String fn;
 
-	
+
 	public void getVersionFromNet(String path, String localFilename) throws Exception {
 		try {
 			this.url = new URL(path);
@@ -62,7 +64,7 @@ final class Versionchecker implements Runnable {
 			throw e;
 		}
 	}
-	
+
 	public void run() {
 		try {
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"Versionchecker:"+
@@ -77,14 +79,14 @@ final class Versionchecker implements Runnable {
 			if (resp.getStatusCode()!=200) {
 				throw new Exception("Download: Bad response from server: "+resp.getReasonLine());
 			}
-			
+
 			int len = -1;
 			len=resp.getHeaderAsInt("Content-Length");
 			//
 			if(len==-1) {
 				throw new Exception("Download: Unkown Size!");
 			}
-			
+
 			byte[] buff=new byte[len];
 			DataInputStream in=new DataInputStream(resp.getInputStream());
 			int progressCounter = 0;
@@ -98,9 +100,9 @@ final class Versionchecker implements Runnable {
 					len-=onePercent;
 					vcp.progress(++progressCounter);
 				}
-//			
+//
 			in.close();
-			
+
 			FileOutputStream f=new FileOutputStream(fn);
 			f.write(buff);
 			f.flush();
@@ -113,14 +115,14 @@ final class Versionchecker implements Runnable {
 //			throw e;
 		}
 	}
-	
-	public int getResult() 
+
+	public int getResult()
 		{
 			return result;
 		}
-	
+
 	public void registerProgress(VersioncheckerProgress o)
 		{
 			vcp = o;
-		}	
+		}
 }
