@@ -967,6 +967,9 @@ public final class MuxSocket implements Runnable
 					}
 					else //First Mix uses olny symmetric encryption
 					{
+						for(int j=0;j<16;j++)
+							m_arOutBuff2[j]=(byte)0xFF;
+						entry.arCipher[i].setIV2(m_arOutBuff2);
 						m_cipherFirstMix.encryptAES(m_arOutBuff, 0, m_arOutBuff2, 0, KEY_SIZE);
 						entry.arCipher[i].encryptAES(m_arOutBuff, KEY_SIZE, m_arOutBuff2, KEY_SIZE,
 							DATA_SIZE - KEY_SIZE);

@@ -55,7 +55,7 @@ final class AnonProxyRequest implements Runnable
 		{
 			m_Proxy = proxy;
 			m_clientSocket = clientSocket;
-			m_clientSocket.setSoTimeout(1000); //just to ensure that threads will stop
+			m_clientSocket.setSoTimeout(0); //just to ensure that threads will stop
 			m_InSocket = clientSocket.getInputStream();
 			m_OutSocket = clientSocket.getOutputStream();
 			m_InChannel = c.getInputStream();

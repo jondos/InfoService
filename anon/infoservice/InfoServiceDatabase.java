@@ -55,7 +55,7 @@ public class InfoServiceDatabase extends Database
 		if (isdbInstance == null)
 		{
 			isdbInstance = new InfoServiceDatabase();
-			Thread isdbThread = new Thread(isdbInstance);
+			Thread isdbThread = new Thread(isdbInstance,"InfoServiceDatabase");
 			isdbThread.setDaemon(true);
 			isdbThread.start();
 		}

@@ -44,7 +44,12 @@ abstract public class AbstractChannel implements AnonChannel
 
 	public AbstractChannel(int id) throws IOException
 	{
+		this();
 		m_id = id;
+	}
+
+	public AbstractChannel() throws IOException
+	{
 		//m_type = type;
 		m_bIsClosedByPeer = false;
 		m_bIsClosed = false;

@@ -42,7 +42,7 @@ import anon.NotConnectedToMixException;
 import anon.ToManyOpenChannelsException;
 import anon.crypto.JAPCertificateStore;
 import anon.infoservice.MixCascade;
-import pay.anon.AICommunication;
+//import pay.anon.AICommunication;
 import anon.server.AnonServiceImpl;
 import anon.server.impl.ProxyConnection;
 import anon.util.XMLUtil;
@@ -69,7 +69,7 @@ final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 	private Thread threadRun;
 	private volatile boolean m_bIsRunning;
 	private ServerSocket m_socketListener;
-	private AICommunication m_AICom;
+	//private AICommunication m_AICom;
 
 	/**
 	 * Stores the MixCascade we are connected to.
@@ -99,7 +99,7 @@ final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 		setFirewall(JAPConstants.FIREWALL_TYPE_HTTP, null, -1);
 		setFirewallAuthorization(null, null);
 		setDummyTraffic( -1);
-		m_AICom = new AICommunication(m_Anon);
+		//m_AICom = new AICommunication(m_Anon);
 		m_forwardedConnection = false;
 
 	}
@@ -124,7 +124,7 @@ final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 	{
 		m_socketListener = a_listener;
 		m_Anon = new AnonServiceImpl(a_proxyConnection); //uups very nasty....
-		m_AICom = new AICommunication(m_Anon);
+		//m_AICom = new AICommunication(m_Anon);
 		m_forwardedConnection = true;
 		m_bAutoReconnect = false;
 		m_maxDummyTrafficInterval = a_maxDummyTrafficInterval;
@@ -192,7 +192,7 @@ final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 	public void setMixCascade(MixCascade newMixCascade)
 	{
 		m_currentMixCascade = newMixCascade;
-		m_AICom.setAnonServer(newMixCascade);
+		//m_AICom.setAnonServer(newMixCascade);
 	}
 
 	public void setFirewall(int type, String host, int port)
@@ -292,7 +292,7 @@ final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 		int oldTimeOut = 0;
 		LogHolder.log(LogLevel.DEBUG, LogType.NET, "AnonProxy: AnonProxy is running as Thread");
 
-		m_AICom.start();
+		//m_AICom.start();
 		try
 		{
 			oldTimeOut = m_socketListener.getSoTimeout();

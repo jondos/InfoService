@@ -94,25 +94,30 @@ public class OnionRouter {
 	 */
 	public synchronized RelayCell encryptCell(RelayCell cell)
 	{
-		RelayCell c;
-		if(this.m_nextOR != null)
+		if(m_nextOR != null)
 		{
-			c = this.m_nextOR.encryptCell(cell);
+			cell = m_nextOR.encryptCell(cell);
 		} else
 		{
-			c = cell;
-			c.generateDigest(this.m_digestDf);
+			cell.generateDigest(m_digestDf);
 		}
-		c.doCryptography(this.m_encryptionEngine);
-		c = cell;
-		byte[]b=c.getCellData();
-		String s="";
-		for(int i=0;i<b.length;i++)
+		cell.doCryptography(m_encryptionEngine);
+		LogHolder.log(LogLevel.DEBUG,LogType.MISC,"Tor sent something...");
+		return cell;
+	}
+
+	public synchronized RelayCell encryptCell(RelayCell cell,int remainingPathLen)
+	{
+		if(m_nextOR != null&&remainingPathLen>0)
 		{
-			s+=b[i]+",";
+			cell = m_nextOR.encryptCell(cell,remainingPathLen-1);
+		} else
+		{
+			cell.generateDigest(m_digestDf);
 		}
-		LogHolder.log(LogLevel.DEBUG,LogType.MISC,"Tor sent: "+s);
-		return c;
+		cell.doCryptography(m_encryptionEngine);
+		LogHolder.log(LogLevel.DEBUG,LogType.MISC,"Tor sent something...");
+		return cell;
 	}
 
 	/**
@@ -149,7 +154,7 @@ public class OnionRouter {
 	public CreateCell createConnection() throws Exception
 	{
 		CreateCell cell = new CreateCell(this.m_circID);
-		cell.setPayload(this.createExtendPayload());
+		cell.setPayload(createExtendPayload(),0);
 		return cell;
 	}
 
@@ -159,11 +164,18 @@ public class OnionRouter {
 	 * createdcell
 	 * @throws Exception
 	 */
-	public void checkCreatedCell(Cell cell) throws Exception
+	public boolean checkCreatedCell(Cell cell)
 	{
+		try{
 		byte[] a = new byte[148];
 		System.arraycopy(cell.getPayload(),0,a,0,148);
 		this.checkExtendParameters(a);
+		return true;
+		}
+		catch(Throwable t)
+		{
+			return false;
+		}
 	}
 
 	/**
@@ -180,7 +192,7 @@ public class OnionRouter {
 	private RelayCell extendConnection(String address,int port) throws IOException,InvalidCipherTextException
 	{
 		RelayCell cell;
-		
+
 		byte[] payload = InetAddress.getByName(address).getAddress();
 		payload = helper.conc(payload,helper.inttobyte(port,2));
 		payload = helper.conc(payload,this.createExtendPayload());

@@ -9,7 +9,7 @@ class XMLRPCTestClient
 	public static void main(String[] args)
 		{
 			try{
-			AnonService anonService=AnonServiceFactory.create(InetAddress.getLocalHost(),8889);
+			AnonService anonService=AnonServiceFactory.create(InetAddress.getLocalHost().getHostAddress(),8889);
 			AnonChannel c=anonService.createChannel(AnonChannel.HTTP);
 			InputStream in=c.getInputStream();
 			OutputStream out=c.getOutputStream();

@@ -65,7 +65,7 @@ final public class AnonServiceFactory
 	}
 
 	//should be changed...
-	public static AnonService create(InetAddress addr, int port)
+	public static AnonService create(String addr, int port)
 	{
 		try
 		{

@@ -62,7 +62,7 @@ final public class ProxyConnection
 						  ") to Server (" + host + ":" + port + ")");
 			m_ioSocket = new Socket(fwHost, fwPort);
 		}
-		m_ioSocket.setSoTimeout(30000);
+		m_ioSocket.setSoTimeout(0);
 		m_In = m_ioSocket.getInputStream();
 		m_Out = m_ioSocket.getOutputStream();
 		if (fwType == AnonServiceImpl.FIREWALL_TYPE_SOCKS)

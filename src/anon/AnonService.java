@@ -36,7 +36,7 @@ import java.net.InetAddress;
 public interface AnonService
 {
 	///The version of the AnonLib
-	public final static String ANONLIB_VERSION = "00.02.002";
+	public final static String ANONLIB_VERSION = "00.02.003";
 
 	/** Initializes this AnonService. Depending on the AnonService, this may establish a connection to
 	 *  an AnonServer, which is described through the
@@ -74,7 +74,7 @@ public interface AnonService
 	 *  @throws ToManyOpenChannels if there a to many open channels for the AnonService
 	 *
 	 */
-	public AnonChannel createChannel(InetAddress host, int port) throws ConnectException;
+	public AnonChannel createChannel(String host, int port) throws ConnectException;
 
 	/** Adds an AnonServiceEventListener. This listener will receive events like:
 	 *  ... For more information see {@link AnonServiceEventListener AnonServiceEventListener}.

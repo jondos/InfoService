@@ -323,7 +323,7 @@ public final class JAPController implements ProxyListener
       }
       catch (Exception e) {
         LogHolder.log(LogLevel.ERR, LogType.MISC, "JAPController: loadConfigFile: Configuration file \"" + japConfFile + "\" not found.");
-      }  
+      }
     }
     if (f == null) {
       /* no config file found -> try to use the config file in the home directory of the user */
@@ -337,7 +337,7 @@ public final class JAPController implements ProxyListener
       catch (Exception e) {
         LogHolder.log(LogLevel.ERR, LogType.MISC, "JAPController: loadConfigFile: Configuration file \"" + japConfFile + "\" not found.");
       }
-    } 
+    }
     if (f == null) {
       /* no config file found -> try to use the config file in the current directory */
       japConfFile = JAPConstants.XMLCONFFN;
@@ -584,6 +584,7 @@ public final class JAPController implements ProxyListener
             {
               debugtype += LogType.MISC;
               debugtype += LogType.PAY;
+			  debugtype += LogType.TOR;
             }
             JAPDebug.getInstance().setLogType(debugtype);
           }

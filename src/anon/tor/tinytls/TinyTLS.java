@@ -11,24 +11,23 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
-
-//import java.util.ArrayList;
-//import java.util.Iterator;
-import java.util.*;
-
+import java.util.Random;
+import java.util.Vector;
 import org.bouncycastle.crypto.params.DHParameters;
 import org.bouncycastle.crypto.params.DHPublicKeyParameters;
-
-import anon.tor.util.helper;
 import anon.crypto.JAPCertificate;
-import logging.*;
+import anon.tor.util.helper;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
+
 /**
  * @author stefan
  *
  *TinyTLS
-  */
-public class TinyTLS extends Socket {
-
+ */
+public class TinyTLS extends Socket
+{
 
 //TODO : DEBUGString entfernen
 	String debugstring;
@@ -37,8 +36,11 @@ public class TinyTLS extends Socket {
 	 *
 	 * 3.1 for TLS
 	 */
-	private static byte[] PROTOCOLVERSION = new byte[]{0x03,0x01};
+	private static byte[] PROTOCOLVERSION = new byte[]
+		{
+		0x03, 0x01};
 
+	private static int PROTOCOLVERSION_SHORT = 0x0301;
 	private Vector m_supportedciphersuites;
 	private CipherSuite m_selectedciphersuite = null;
 
@@ -58,20 +60,20 @@ public class TinyTLS extends Socket {
 	private byte[] m_serverrandom;
 	private byte[] m_handshakemessages;
 	private boolean m_encrypt;
-
+	private byte[] m_readRecordHeader;
 	/**
 	 *
 	 * @author stefan
 	 *
-	* TLSInputStream
+	 * TLSInputStream
 	 */
 	class TLSInputStream extends InputStream
 	{
 
 		private DataInputStream m_stream;
-		private byte[] m_aktInput;  //data that we have read but not delivered yet
+		private byte[] m_aktInput; //data that we have read but not delivered yet
 		private int m_aktPendOffset; //offest of next data to deliver
-		private int m_aktPendLen;// number of bytes we could deliver imedialy
+		private int m_aktPendLen; // number of bytes we could deliver imedialy
 
 		/**
 		 * Constructor
@@ -81,8 +83,11 @@ public class TinyTLS extends Socket {
 		{
 			this.m_stream = new DataInputStream(istream);
 			this.m_aktInput = null;
-			this.m_aktPendOffset=0;
-			this.m_aktPendLen=0;
+			this.m_aktPendOffset = 0;
+			this.m_aktPendLen = 0;
+			m_readRecordHeader=new byte[5];
+			m_readRecordHeader[1]=PROTOCOLVERSION[0];
+			m_readRecordHeader[2]=PROTOCOLVERSION[1];
 		}
 
 		/**
@@ -90,70 +95,75 @@ public class TinyTLS extends Socket {
 		 * Block until data is available...
 		 * @return
 		 */
-		private void  readRecord() throws Exception
+		private synchronized void readRecord() throws Exception
 		{
-			byte[] contenttype = new byte[1];
-			byte[] version = new byte[2];
-			this.m_stream.readFully(contenttype);
-			this.m_stream.readFully(version);
-			if((version[0]!=PROTOCOLVERSION[0]) || (version[1]!=PROTOCOLVERSION[1]))
+			int contenttype=m_stream.readByte();
+			if(contenttype!=23&&contenttype!=21)
+				throw new TLSException("SSL Content typeProtocoll not supportet" + contenttype);
+			int version=m_stream.readShort();
+			if ( version!= PROTOCOLVERSION_SHORT)
 			{
-				throw new TLSException("Protocollversion not supportet"+version[0]+"."+version[1]);
+				throw new TLSException("Protocollversion not supportet" + version);
 			}
-				switch(contenttype[0])
+			m_readRecordHeader[0]=(byte)contenttype;
+			int length=m_stream.readShort();
+			m_readRecordHeader[3]=(byte)((length>>8)&0xFF);
+			m_readRecordHeader[4]=(byte)((length)&0xFF);
+			switch (contenttype)
+			{
+				case 23:
 				{
-					case 23:
-					{
-						byte[] b = new byte[2];
-						this.m_stream.readFully(b);
-						int length =  (( b[0] & 0xFF)  << 8) | (b[1]  & 0xFF);
-
-						byte[] m = new byte[length];
-						this.m_stream.readFully(m);
-						this.m_aktInput=m_selectedciphersuite.decode(helper.conc(contenttype,helper.conc(version,b)),m);
-						this.m_aktPendOffset=0;
-						this.m_aktPendLen=this.m_aktInput.length;
-						break;
-					}
-					case 21 :
-					{
-						this.handleAlert();
-						break;
-					}
-					default :
-					{
-						throw new TLSException("Error while decoding application data");
-					}
+					byte[] message = new byte[length];
+					m_stream.readFully(message);
+					m_aktInput = m_selectedciphersuite.decode(m_readRecordHeader, message);
+					m_aktPendOffset = 0;
+					m_aktPendLen = m_aktInput.length;
+					break;
 				}
+				case 21:
+				{
+					handleAlert(length);
+					break;
+				}
+				default:
+				{
+					throw new TLSException("Error while decoding application data");
+				}
+			}
 		}
 
 		public int read() throws IOException
 		{
-			byte []b=new byte[1];
-			if(read(b,0,1)<1)
+			byte[] b = new byte[1];
+			if (read(b, 0, 1) < 1)
+			{
 				return -1;
+			}
 			return (b[0] & 0x00FF);
 		}
 
-		public int read(byte[] b)throws IOException
+		public int read(byte[] b) throws IOException
 		{
-			return read(b,0,b.length);
+			return read(b, 0, b.length);
 		}
 
-		public int read(byte []b,int off,int len) throws IOException
+		public int read(byte[] b, int off, int len) throws IOException
 		{
-			while(this.m_aktPendLen<1)
-				try{
-				readRecord();
-				}
-			catch(Throwable t)
+			while (this.m_aktPendLen < 1)
 			{
-				throw new IOException("Exception by reading next TSL record: "+t.getMessage());
+				try
+				{
+					readRecord();
+				}
+				catch (Throwable t)
+				{
+					throw new IOException("Exception by reading next TSL record: " + t.getMessage());
+				}
 			}
-			int l=Math.min(this.m_aktPendLen,len);
-			System.arraycopy(this.m_aktInput,this.m_aktPendOffset,b,off,l);
-			this.m_aktPendOffset+=l;
-			this.m_aktPendLen-=l;
+			int l = Math.min(this.m_aktPendLen, len);
+			System.arraycopy(this.m_aktInput, this.m_aktPendOffset, b, off, l);
+			this.m_aktPendOffset += l;
+			this.m_aktPendLen -= l;
 			return l;
 		}
 
@@ -161,6 +171,7 @@ public class TinyTLS extends Socket {
 		{
 			return this.m_aktPendLen;
 		}
+
 		/**
 		 * process server hello
 		 * @param bytes server hello message
@@ -169,40 +180,46 @@ public class TinyTLS extends Socket {
 		private void gotServerHello(byte[] bytes) throws IOException
 		{
 			byte[] b;
-			byte[] sslversion = helper.copybytes(bytes,0,2);
-			LogHolder.log(LogLevel.DEBUG,LogType.MISC,"[SERVER_HELLO] SSLVERSION :"+sslversion[0]+"."+sslversion[1]);
-			byte[] random = helper.copybytes(bytes,2,32);
-			debugstring="";
-			for(int i=0;i<32;i++)
+			byte[] sslversion = helper.copybytes(bytes, 0, 2);
+			LogHolder.log(LogLevel.DEBUG, LogType.MISC,
+						  "[SERVER_HELLO] SSLVERSION :" + sslversion[0] + "." + sslversion[1]);
+			byte[] random = helper.copybytes(bytes, 2, 32);
+			debugstring = "";
+			for (int i = 0; i < 32; i++)
 			{
-				debugstring +=""+i+":"+(random[i] & 0xFF)+" ";
+				debugstring += "" + i + ":" + (random[i] & 0xFF) + " ";
 			}
-			LogHolder.log(LogLevel.DEBUG,LogType.MISC,"[SERVER_HELLO] RANDOMBYTES :"+debugstring);
+			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[SERVER_HELLO] RANDOMBYTES :" + debugstring);
 			byte[] sessionid = new byte[0];
 			int sessionidlength = bytes[34];
-			if(sessionidlength>0)
+			if (sessionidlength > 0)
 			{
-				sessionid = helper.copybytes(bytes,35,sessionidlength);
+				sessionid = helper.copybytes(bytes, 35, sessionidlength);
 			}
-			LogHolder.log(LogLevel.DEBUG,LogType.MISC,"[SERVER_HELLO] Laenge der SessionID : "+sessionidlength);
-			byte[] ciphersuite = helper.copybytes(bytes,35+sessionidlength,2);
-			LogHolder.log(LogLevel.DEBUG,LogType.MISC,"[SERVER_HELLO] Ciphersuite : "+ciphersuite[0]+" "+ciphersuite[1]);
-			byte[] compression = helper.copybytes(bytes,37+sessionidlength,1);
-			LogHolder.log(LogLevel.DEBUG,LogType.MISC,"[SERVER_HELLO] Kompression : "+compression[0]);
-			if((sslversion[0]!=PROTOCOLVERSION[0]) || (sslversion[1]!=PROTOCOLVERSION[1])) {throw new TLSException("Server replies with wrong protocoll");}
+			LogHolder.log(LogLevel.DEBUG, LogType.MISC,
+						  "[SERVER_HELLO] Laenge der SessionID : " + sessionidlength);
+			byte[] ciphersuite = helper.copybytes(bytes, 35 + sessionidlength, 2);
+			LogHolder.log(LogLevel.DEBUG, LogType.MISC,
+						  "[SERVER_HELLO] Ciphersuite : " + ciphersuite[0] + " " + ciphersuite[1]);
+			byte[] compression = helper.copybytes(bytes, 37 + sessionidlength, 1);
+			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[SERVER_HELLO] Kompression : " + compression[0]);
+			if ( (sslversion[0] != PROTOCOLVERSION[0]) || (sslversion[1] != PROTOCOLVERSION[1]))
+			{
+				throw new TLSException("Server replies with wrong protocoll");
+			}
 			//Iterator i = supportedciphersuites.iterator();
 			CipherSuite cs = null;
-			for(int i=0;i<m_supportedciphersuites.size();i++)
+			for (int i = 0; i < m_supportedciphersuites.size(); i++)
 			{
-				cs =(CipherSuite)m_supportedciphersuites.elementAt(i);
-				b=cs.getCipherSuiteCode();
-				if((b[0]==ciphersuite[0])&&(b[1]==ciphersuite[1]))
+				cs = (CipherSuite) m_supportedciphersuites.elementAt(i);
+				b = cs.getCipherSuiteCode();
+				if ( (b[0] == ciphersuite[0]) && (b[1] == ciphersuite[1]))
 				{
 					break;
 				}
 				cs = null;
 			}
-			if(cs==null)
+			if (cs == null)
 			{
 				throw new TLSException("Unsupported Ciphersuite selected");
 			}
@@ -221,14 +238,16 @@ public class TinyTLS extends Socket {
 		{
 //TODO: alle m?glichen zertifikate abfragen und nicht nur eins
 			Vector certificates = new Vector();
-			byte[] b = helper.copybytes(bytes,0,3);
-			int certificateslength = ((b[0] &0xFF)<<16)|((b[1] & 0xFF) <<8)|(b[2] & 0xFF);
-			b = helper.copybytes(bytes,3,3);
-			int certificatelength = ((b[0] &0xFF)<<16)|((b[1] & 0xFF) <<8)|(b[2] & 0xFF);
-			b= helper.copybytes(bytes,6,certificatelength);
+			byte[] b = helper.copybytes(bytes, 0, 3);
+			int certificateslength = ( (b[0] & 0xFF) << 16) | ( (b[1] & 0xFF) << 8) | (b[2] & 0xFF);
+			b = helper.copybytes(bytes, 3, 3);
+			int certificatelength = ( (b[0] & 0xFF) << 16) | ( (b[1] & 0xFF) << 8) | (b[2] & 0xFF);
+			b = helper.copybytes(bytes, 6, certificatelength);
 			JAPCertificate japcert = JAPCertificate.getInstance(b);
-			LogHolder.log(LogLevel.DEBUG,LogType.MISC,"[SERVER_CERTIFICATE] "+japcert.getIssuer().toString());
-			LogHolder.log(LogLevel.DEBUG,LogType.MISC,"[SERVER_CERTIFICATE] "+japcert.getSubject().toString());
+			LogHolder.log(LogLevel.DEBUG, LogType.MISC,
+						  "[SERVER_CERTIFICATE] " + japcert.getIssuer().toString());
+			LogHolder.log(LogLevel.DEBUG, LogType.MISC,
+						  "[SERVER_CERTIFICATE] " + japcert.getSubject().toString());
 			m_servercertificate = japcert;
 			m_selectedciphersuite.setServerCertificate(japcert);
 		}
@@ -239,9 +258,9 @@ public class TinyTLS extends Socket {
 		 * @throws IOException
 		 * @throws Exception
 		 */
-		private void gotServerKeyExchange(byte[] bytes) throws IOException,Exception
+		private void gotServerKeyExchange(byte[] bytes) throws IOException, Exception
 		{
-			m_selectedciphersuite.serverKeyExchange(bytes,m_clientrandom,m_serverrandom);
+			m_selectedciphersuite.serverKeyExchange(bytes, m_clientrandom, m_serverrandom);
 		}
 
 		/**
@@ -251,7 +270,7 @@ public class TinyTLS extends Socket {
 		private void gotCertificateRequest(byte[] bytes)
 		{
 			m_certificaterequested = true;
-			LogHolder.log(LogLevel.DEBUG,LogType.MISC,"[SERVER_CERTIFICATE_REQUEST]");
+			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[SERVER_CERTIFICATE_REQUEST]");
 		}
 
 		/**
@@ -261,51 +280,52 @@ public class TinyTLS extends Socket {
 		private void gotServerHelloDone(byte[] bytes)
 		{
 			m_serverhellodone = true;
-			LogHolder.log(LogLevel.DEBUG,LogType.MISC,"[SERVER_HELLO_DONE]");
+			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[SERVER_HELLO_DONE]");
 		}
 
 		/**
 		 * handle alert message
 		 * @throws IOException
 		 */
-		private void handleAlert() throws IOException
+		private void handleAlert(int length) throws IOException
 		{
-			LogHolder.log(LogLevel.DEBUG,LogType.MISC,"[TLS] ALERT!");
-			byte[] b = new byte[2];
+			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[TLS] ALERT!");
+			byte[] b = new byte[length];
 			this.m_stream.readFully(b);
-			int length = ((b[0] & 0xFF) << 8 ) | (b[1] & 0xFF);
-			b= new byte[length];
-			this.m_stream.readFully(b);
-			if(m_handshakecompleted)
+			if (m_handshakecompleted)
 			{
-				b = m_selectedciphersuite.decode(helper.conc(new byte[]{21},helper.conc(PROTOCOLVERSION,helper.inttobyte(length,2))),b);
+				b = m_selectedciphersuite.decode(helper.conc(new byte[]
+					{21}
+					, helper.conc(PROTOCOLVERSION, helper.inttobyte(length, 2))), b);
 			}
-			switch(b[0])
+			switch (b[0])
 			{
 				// warning
-				case 1 :
+				case 1:
 				{
-					switch(b[1])
+					switch (b[1])
 					{
-						case 0 :
+						case 0:
 						{
 							//TODO : close stream
-							LogHolder.log(LogLevel.DEBUG,LogType.MISC,"[RECIEVED-ALERT] TYPE=WARNING ; MESSAGE=CLOSE NOTIFY");
+							LogHolder.log(LogLevel.DEBUG, LogType.MISC,
+										  "[RECIEVED-ALERT] TYPE=WARNING ; MESSAGE=CLOSE NOTIFY");
 							break;
 						}
-						default :
+						default:
 						{
-							throw new TLSException("TLSAlert detected!! Level : Warning - Description :"+b[1]);
+							throw new TLSException("TLSAlert detected!! Level : Warning - Description :" +
+								b[1]);
 						}
 					}
 					break;
 				}
 				// fatal
-				case 2 :
+				case 2:
 				{
-					throw new TLSException("TLSAlert detected!! Level : Fatal - Description :"+b[1]);
+					throw new TLSException("TLSAlert detected!! Level : Fatal - Description :" + b[1]);
 				}
-				default :
+				default:
 				{
 					throw new TLSException("Unknown TLSAlert detected!!");
 				}
@@ -320,92 +340,94 @@ public class TinyTLS extends Socket {
 		 */
 		protected void readServerHandshakes() throws IOException, Exception
 		{
-			while(!m_serverhellodone)
+			while (!m_serverhellodone)
 			{
-				byte[] b;
-				byte[] contenttype = new byte[1];
-				this.m_stream.readFully(contenttype);
-				byte[] version = new byte[2];
-				this.m_stream.readFully(version);
-
-				if((version[0]!=PROTOCOLVERSION[0]) || (version[1]!=PROTOCOLVERSION[1]))
-				{ throw new TLSException("Protocollversion not supportet"+version[0]+"."+version[1]);}
-
-				switch(contenttype[0])
+				int contenttype = m_stream.readByte();
+				int version = m_stream.readShort();
+				int length=m_stream.readShort();
+				if ( version!= PROTOCOLVERSION_SHORT)
 				{
-					case 21 :
+					throw new TLSException("Protocollversion not supportet" + version);
+				}
+
+				switch (contenttype)
+				{
+					case 21:
 					{
-						this.handleAlert();
+						handleAlert(length);
 						break;
 					}
 					case 22:
 					{
 						break;
 					}
-					default :
+					default:
 					{
 						throw new TLSException("Error while shaking hands");
 					}
 				}
-				b = new byte[6];
+				byte[] b = new byte[4];
 				this.m_stream.readFully(b);
-				int fragmentlength = ((b[0] & 0xFF) << 8 ) | (b[1] & 0xFF);
-				int type = b[2];
-				int length = ( (b[3] & 0xFF) << 16 ) | ( (b[4] & 0xFF)  << 8) | (b[5] & 0xFF);
+				int fragmentlength = length;
+				int type = b[0];
+				length = ( (b[1] & 0xFF) << 16) | ( (b[2] & 0xFF) << 8) | (b[3] & 0xFF);
 				b = new byte[length];
 				this.m_stream.readFully(b);
-				byte[] recieveddata = helper.conc(helper.inttobyte(type,1),helper.conc(helper.inttobyte(length,3),b));
-				m_handshakemessages = helper.conc(m_handshakemessages,recieveddata);
-				switch(type)
+				byte[] recieveddata = helper.conc(helper.inttobyte(type, 1),
+												  helper.conc(helper.inttobyte(length, 3), b));
+				m_handshakemessages = helper.conc(m_handshakemessages, recieveddata);
+				switch (type)
 				{
 					//Server hello
-					case 2 :
+					case 2:
 					{
 						this.gotServerHello(b);
 						break;
 					}
 					//certificate
-					case 11 :
+					case 11:
 					{
 						this.gotCertificate(b);
 						break;
 					}
 					//server key exchange
-					case 12 :
+					case 12:
 					{
 						this.gotServerKeyExchange(b);
 						break;
 					}
 					//certificate request
-					case 13 :
+					case 13:
 					{
 						this.gotCertificateRequest(b);
 
 						b = new byte[4];
 						this.m_stream.readFully(b);
 						type = b[0];
-						length = ( (b[1] & 0xFF) << 16 ) | ( (b[2] & 0xFF)  << 8) | (b[3]  & 0xFF);
+						length = ( (b[1] & 0xFF) << 16) | ( (b[2] & 0xFF) << 8) | (b[3] & 0xFF);
 						b = new byte[length];
 						this.m_stream.readFully(b);
-						if(type!=14)
+						if (type != 14)
 						{
-							throw new TLSException("ServerHelloDone expected but Server has returned something else");
+							throw new TLSException(
+								"ServerHelloDone expected but Server has returned something else");
 						}
-						recieveddata = helper.conc(helper.inttobyte(type,1),helper.conc(helper.inttobyte(length,3),b));
+						recieveddata = helper.conc(helper.inttobyte(type, 1),
+							helper.conc(helper.inttobyte(length, 3), b));
 						this.gotServerHelloDone(b);
-						m_handshakemessages = helper.conc(m_handshakemessages,recieveddata);
+						m_handshakemessages = helper.conc(m_handshakemessages, recieveddata);
 
 						break;
 					}
 					//server hello done
-					case 14 :
+					case 14:
 					{
 						this.gotServerHelloDone(b);
 						break;
 					}
-					default :
+					default:
 					{
-						throw new TLSException("Unexpected Handshake type"+type);
+						throw new TLSException("Unexpected Handshake type" + type);
 					}
 				}
 			}
@@ -416,68 +438,68 @@ public class TinyTLS extends Socket {
 		 * wait for server finished message
 		 *
 		 */
-		protected void readServerFinished() throws TLSException,IOException
+		protected void readServerFinished() throws TLSException, IOException
 		{
-			byte[] b;
-			byte[] contenttype = new byte[1];
-			this.m_stream.readFully(contenttype);
-			byte[] version = new byte[2];
-			this.m_stream.readFully(version);
-			if((version[0]!=PROTOCOLVERSION[0]) || (version[1]!=PROTOCOLVERSION[1]))
-			{ throw new TLSException("Protocollversion not supportet"+version[0]+"."+version[1]);}
+			int contenttype = m_stream.readByte();
+			int version = m_stream.readShort();
+			int length=m_stream.readShort();
+			if ( version!= PROTOCOLVERSION_SHORT)
+			{
+				throw new TLSException("Protocollversion not supportet" + version);
+			}
 
-			switch(contenttype[0])
+			switch (contenttype)
 			{
 				case 20:
 				{
-					b = new byte[3];
-					this.m_stream.readFully(b);
-					if(b[0]==0&&b[1]==1&&b[2]==1)
+					if (length == 1 && m_stream.readByte() == 1)
 					{
-						LogHolder.log(LogLevel.DEBUG,LogType.MISC,"[SERVER_CHANGE_CIPHER_SPEC]");
+						LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[SERVER_CHANGE_CIPHER_SPEC]");
 					}
 					break;
 				}
-				case 21 :
+				case 21:
 				{
-					this.handleAlert();
+					this.handleAlert(length);
 					break;
 				}
-				default :
+				default:
 				{
 					throw new TLSException("Error while shaking hands");
 				}
 			}
-			this.m_stream.readFully(contenttype);
-			this.m_stream.readFully(version);
-			if((version[0]!=PROTOCOLVERSION[0]) || (version[1]!=PROTOCOLVERSION[1]))
-			{ throw new TLSException("Protocollversion not supportet"+version[0]+"."+version[1]);}
+			contenttype = m_stream.readByte();
+			version = m_stream.readShort();
+			length=m_stream.readShort();
+			m_readRecordHeader[0]=(byte)contenttype;
+			m_readRecordHeader[3]=(byte)((length>>8)&0xFF);
+			m_readRecordHeader[4]=(byte)((length)&0xFF);
+			if ( version!= PROTOCOLVERSION_SHORT)
+			{
+				throw new TLSException("Protocollversion not supportet" + version);
+			}
 
-			switch(contenttype[0])
+			switch (contenttype)
 			{
 				case 22:
 				{
-					LogHolder.log(LogLevel.DEBUG,LogType.MISC,"[SERVER_FINISHED]");
-					b = new byte[2];
-					this.m_stream.readFully(b);
-					int length =  (( b[0] & 0xFF)  << 8) | (b[1]  & 0xFF);
+					LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[SERVER_FINISHED]");
 					byte[] message = new byte[length];
 					this.m_stream.readFully(message);
-					m_selectedciphersuite.serverFinished(helper.conc(contenttype,helper.conc(version,b)),message);
+					m_selectedciphersuite.serverFinished(m_readRecordHeader,message);
 					break;
 				}
-				case 21 :
+				case 21:
 				{
-					this.handleAlert();
+					this.handleAlert(length);
 					break;
 				}
-				default :
+				default:
 				{
 					throw new TLSException("Error while shaking hands");
 				}
 			}
 		}
-
 
 	}
 
@@ -506,7 +528,7 @@ public class TinyTLS extends Socket {
 		 */
 		public void write(byte[] message) throws IOException
 		{
-			this.send(23,message);
+			this.send(23, message);
 		}
 
 		/**
@@ -514,7 +536,8 @@ public class TinyTLS extends Socket {
 		 */
 		public void write(int i) throws IOException
 		{
-			this.write(new byte[]{(byte) i});
+			this.write(new byte[]
+					   { (byte) i});
 		}
 
 		/**
@@ -531,14 +554,21 @@ public class TinyTLS extends Socket {
 		 * @param message message
 		 * @throws IOException
 		 */
-		private void send(int type,byte[] message) throws IOException
+		private void send(int type, byte[] message) throws IOException
 		{
 			byte[] encryptedmessage = message;
-			if(m_encrypt)
+			if (m_encrypt)
 			{
-				encryptedmessage= m_selectedciphersuite.encode(helper.conc(new byte[]{(byte)(type & 0xFF)},helper.conc(PROTOCOLVERSION,helper.inttobyte(encryptedmessage.length,2))) ,encryptedmessage);
+				encryptedmessage = m_selectedciphersuite.encode(helper.conc(new byte[]
+					{ (byte) (type & 0xFF)}
+					, helper.conc(PROTOCOLVERSION, helper.inttobyte(encryptedmessage.length, 2))),
+					encryptedmessage);
 			}
-			this.m_stream.write(helper.conc(new byte[]{(byte)(type & 0xFF)},helper.conc(PROTOCOLVERSION,helper.conc(helper.inttobyte(encryptedmessage.length,2) ,encryptedmessage))));
+			this.m_stream.write(helper.conc(new byte[]
+											{ (byte) (type & 0xFF)}
+											,
+											helper.conc(PROTOCOLVERSION,
+				helper.conc(helper.inttobyte(encryptedmessage.length, 2), encryptedmessage))));
 			this.m_stream.flush();
 		}
 
@@ -548,11 +578,13 @@ public class TinyTLS extends Socket {
 		 * @param message message
 		 * @throws IOException
 		 */
-		public void sendHandshake(int type,byte[] message) throws IOException
+		public void sendHandshake(int type, byte[] message) throws IOException
 		{
-			byte[] senddata = helper.conc(new byte[]{(byte)type},helper.conc(helper.inttobyte(message.length,3),message));
-			this.send(22,senddata);
-			m_handshakemessages = helper.conc(m_handshakemessages,senddata);
+			byte[] senddata = helper.conc(new byte[]
+										  { (byte) type}
+										  , helper.conc(helper.inttobyte(message.length, 3), message));
+			this.send(22, senddata);
+			m_handshakemessages = helper.conc(m_handshakemessages, senddata);
 		}
 
 		/**
@@ -561,38 +593,43 @@ public class TinyTLS extends Socket {
 		 */
 		public void sendClientHello() throws IOException
 		{
-			byte[] message= PROTOCOLVERSION;
+			byte[] message = PROTOCOLVERSION;
 			byte[] gmt_unix_time;
 			byte[] random = new byte[28];
-			byte[] sessionid = new byte[]{0x00};
-			byte[] ciphers = new byte[m_supportedciphersuites.size()*2];
+			byte[] sessionid = new byte[]
+				{
+				0x00};
+			byte[] ciphers = new byte[m_supportedciphersuites.size() * 2];
 			//Iterator i = supportedciphersuites.iterator();
 			int counter = 0;
-			for(int i=0;i<m_supportedciphersuites.size();i++)
+			for (int i = 0; i < m_supportedciphersuites.size(); i++)
 			{
-				CipherSuite cs = (CipherSuite)m_supportedciphersuites.elementAt(i);
+				CipherSuite cs = (CipherSuite) m_supportedciphersuites.elementAt(i);
 				ciphers[counter] = cs.getCipherSuiteCode()[0];
 				counter++;
 				ciphers[counter] = cs.getCipherSuiteCode()[1];
 				counter++;
 
 			}
-			byte[] ciphersuites = helper.conc(helper.inttobyte(m_supportedciphersuites.size()*2,2),ciphers);
-			byte[] compression = new byte[]{0x01,0x00};
+			byte[] ciphersuites = helper.conc(helper.inttobyte(m_supportedciphersuites.size() * 2, 2),
+											  ciphers);
+			byte[] compression = new byte[]
+				{
+				0x01, 0x00};
 
-			gmt_unix_time = helper.inttobyte((System.currentTimeMillis() / (long) 1000),4);
+			gmt_unix_time = helper.inttobyte( (System.currentTimeMillis() / (long) 1000), 4);
 			Random rand = new Random(System.currentTimeMillis());
 			rand.nextBytes(random);
 
-			message = helper.conc(message,gmt_unix_time);
-			message = helper.conc(message,random);
-			message = helper.conc(message,sessionid);
-			message = helper.conc(message,ciphersuites);
-			message = helper.conc(message,compression);
+			message = helper.conc(message, gmt_unix_time);
+			message = helper.conc(message, random);
+			message = helper.conc(message, sessionid);
+			message = helper.conc(message, ciphersuites);
+			message = helper.conc(message, compression);
 
-			this.sendHandshake(1,message);
-			m_clientrandom =helper. conc(gmt_unix_time,random);
-			LogHolder.log(LogLevel.DEBUG,LogType.MISC,"[CLIENT_HELLO]");
+			this.sendHandshake(1, message);
+			m_clientrandom = helper.conc(gmt_unix_time, random);
+			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[CLIENT_HELLO]");
 		}
 
 		/**
@@ -602,11 +639,12 @@ public class TinyTLS extends Socket {
 		 */
 		public void sendClientCertificate() throws IOException
 		{
-			if(m_certificaterequested)
+			if (m_certificaterequested)
 			{
 				//no certificate available
-				this.sendHandshake(11,new byte[]{0,0,0});
-				LogHolder.log(LogLevel.DEBUG,LogType.MISC,"[CLIENT_CERTIFICATE]");
+				this.sendHandshake(11, new byte[]
+								   {0, 0, 0});
+				LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[CLIENT_CERTIFICATE]");
 			}
 		}
 
@@ -617,8 +655,8 @@ public class TinyTLS extends Socket {
 		public void sendClientKeyExchange() throws IOException
 		{
 			byte[] message = m_selectedciphersuite.clientKeyExchange();
-			this.sendHandshake(16,helper.conc(helper.inttobyte(message.length,2),message));
-			LogHolder.log(LogLevel.DEBUG,LogType.MISC,"[CLIENT_KEY_EXCHANGE]");
+			this.sendHandshake(16, helper.conc(helper.inttobyte(message.length, 2), message));
+			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[CLIENT_KEY_EXCHANGE]");
 		}
 
 		/**
@@ -628,9 +666,10 @@ public class TinyTLS extends Socket {
 		 */
 		public void sendChangeCipherSpec() throws IOException
 		{
-			this.send(20,new byte[]{1});
+			this.send(20, new byte[]
+					  {1});
 			m_encrypt = true;
-			LogHolder.log(LogLevel.DEBUG,LogType.MISC,"[CLIENT_CHANGE_CIPHER_SPEC]");
+			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[CLIENT_CHANGE_CIPHER_SPEC]");
 		}
 
 		/**
@@ -639,8 +678,8 @@ public class TinyTLS extends Socket {
 		 */
 		public void sendClientFinished() throws IOException
 		{
-			sendHandshake(20,m_selectedciphersuite.clientFinished(m_handshakemessages));
-			LogHolder.log(LogLevel.DEBUG,LogType.MISC,"[CLIENT_FINISHED]");
+			sendHandshake(20, m_selectedciphersuite.clientFinished(m_handshakemessages));
+			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[CLIENT_FINISHED]");
 		}
 	}
 
@@ -653,7 +692,7 @@ public class TinyTLS extends Socket {
 	 * @param port
 	 * Server's TLS Port
 	 */
-	public TinyTLS(String addr,int port) throws UnknownHostException , IOException, Exception
+	public TinyTLS(String addr, int port) throws UnknownHostException, IOException, Exception
 	{
 		this.m_handshakecompleted = false;
 		this.m_serverhellodone = false;
@@ -662,7 +701,7 @@ public class TinyTLS extends Socket {
 		this.m_supportedciphersuites = new Vector();
 //		this.m_addCipherSuite(new DHE_RSA_WITH_AES_128_CBC_SHA());
 		this.addCipherSuite(new DHE_RSA_WITH_3DES_CBC_SHA());
-		this.m_socket = new Socket(addr,port);
+		this.m_socket = new Socket(addr, port);
 		this.m_istream = new TLSInputStream(this.m_socket.getInputStream());
 		this.m_ostream = new TLSOutputStream(this.m_socket.getOutputStream());
 	}
@@ -673,7 +712,7 @@ public class TinyTLS extends Socket {
 	 */
 	public void addCipherSuite(CipherSuite cs)
 	{
-		if(!this.m_supportedciphersuites.contains(cs))
+		if (!this.m_supportedciphersuites.contains(cs))
 		{
 			this.m_supportedciphersuites.addElement(cs);
 		}
@@ -693,9 +732,10 @@ public class TinyTLS extends Socket {
 	 * @throws CertificateException
 	 * @throws Exception
 	 */
-	public void startHandshake() throws IOException,Exception
+	public void startHandshake() throws IOException, Exception
 	{
-		this.m_handshakemessages = new byte[]{};
+		this.m_handshakemessages = new byte[]
+			{};
 		this.m_ostream.sendClientHello();
 		this.m_istream.readServerHandshakes();
 		this.m_ostream.sendClientCertificate();
@@ -715,6 +755,5 @@ public class TinyTLS extends Socket {
 	{
 		return this.m_ostream;
 	}
-
 
 }

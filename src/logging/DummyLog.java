@@ -27,7 +27,7 @@
  */
 package logging;
 
-final public class DummyLog implements Log
+public class DummyLog implements Log
 {
 	public DummyLog()
 	{

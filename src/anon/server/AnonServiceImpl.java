@@ -164,7 +164,7 @@ final public class AnonServiceImpl implements AnonService
 		return m_MuxSocket.newChannel(type);
 	}
 
-	public AnonChannel createChannel(InetAddress addr, int port) throws ConnectException
+	public AnonChannel createChannel(String addr, int port) throws ConnectException
 	{
 		byte[] buff = new byte[13];
 		AnonChannel c = null;
@@ -181,7 +181,7 @@ final public class AnonServiceImpl implements AnonService
 			buff[4] = 1;
 			buff[5] = 0;
 			buff[6] = 1;
-			System.arraycopy(addr.getAddress(), 0, buff, 7, 4); //7,8,9,10
+			System.arraycopy(InetAddress.getByName(addr).getAddress(), 0, buff, 7, 4); //7,8,9,10
 			buff[11] = (byte) (port >> 8);
 			buff[12] = (byte) (port & 0xFF);
 			out.write(buff, 0, 13);

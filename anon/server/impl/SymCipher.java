@@ -53,7 +53,7 @@ final class SymCipher
 
 	public int setEncryptionKeyAES(byte[] key)
 	{
-		return setEncryptionKeyAES(key, 0,16);
+		return setEncryptionKeyAES(key, 0, 16);
 	}
 
 	/**
@@ -90,6 +90,14 @@ final class SymCipher
 		catch (Exception e)
 		{
 			return -1;
+		}
+	}
+
+	public void setIV2(byte[] buff)
+	{
+		for (int i = 0; i < 16; i++)
+		{
+			iv2[i] = buff[i];
 		}
 	}
 

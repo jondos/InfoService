@@ -25,7 +25,7 @@ public class helper {
 	 */
 	public static byte[]  conc(byte[] b1,byte[] b2,int b2_len)
 	{
-		if(b1.length==0)
+		if(b1==null||b1.length==0)
 		{
 			return copybytes(b2,0,b2_len);
 		}

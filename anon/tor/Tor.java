@@ -37,19 +37,19 @@ public class Tor implements Runnable, AnonService
 	//list of all onion routers
 	private ORList m_orList;
 	//list of allowed OR's
-	private Vector m_allowedORs;
+	private Vector m_allowedORNames;
 	//list of allowed FirstOnionRouters
-	private Vector m_FORList;
+	private Vector m_allowedFirstORNames;
 	//list of allowed exitnodes
-	private Vector m_exitNodes;
-	//list of used FOR's
-	private Vector m_usedFORs;
+	private Vector m_allowedExitNodeNames;
 	//list of circuits
-	private Hashtable m_circuits;
+	private Hashtable m_Circuits;
 	//active circuit
-	private int m_activeCircuit;
+	private Circuit m_activeCircuit;
+	//used for synchronisation on active Circuit operations...
+	private Object m_oActiveCircuitSync;
 
-	private FirstOnionRouterFactory m_firstORFactory;
+	private FirstOnionRouterConnectionFactory m_firstORFactory;
 
 	private long m_createNewCircuitIntervall;
 	private Thread m_createNewCircuitLoop;
@@ -73,150 +73,149 @@ public class Tor implements Runnable, AnonService
 	 */
 	private Tor()
 	{
-		this.m_orList = new ORList();
-		this.m_ORListServer = DEFAULT_DIR_SERVER_ADDR;
-		this.m_ORListPort = DEFAULT_DIR_SERVER_PORT;
-
+		m_orList = new ORList();
+		m_ORListServer = DEFAULT_DIR_SERVER_ADDR;
+		m_ORListPort = DEFAULT_DIR_SERVER_PORT;
+		m_oActiveCircuitSync = new Object();
 		//create a new circuit every 5 minutes
-		this.m_createNewCircuitIntervall = 60000 * 5;
+		m_createNewCircuitIntervall = 60000 * 5;
 
-		this.m_firstORFactory = new FirstOnionRouterFactory();
+		m_firstORFactory = new FirstOnionRouterConnectionFactory();
+		m_allowedORNames = null;
 
-		this.m_usedFORs = new Vector();
-		this.m_allowedORs = null;
+		m_allowedFirstORNames = null;
 
-		this.m_FORList = new Vector();
+		m_allowedExitNodeNames = null;
 
-		this.m_exitNodes = new Vector();
-		this.m_exitNodes.addElement("tequila");
+		m_circuitLengthMin = 3;
+		m_circuitLengthMax = 5;
 
-		this.m_circuitLengthMin = 3;
-		this.m_circuitLengthMax = 5;
-
-		this.m_rand = new MyRandom(new SecureRandom());
+		m_rand = new MyRandom(new SecureRandom());
 	}
 
 	/**
 	 * updates the ORList
 	 *
 	 */
-	private void updateORList()
+	private synchronized void updateORList()
 	{
-		this.m_orList.updateList(this.m_ORListServer, this.m_ORListPort);
+		synchronized(m_orList)
+		{
+			m_orList.updateList(m_ORListServer, m_ORListPort);
+		}
 	}
 
 	/**
-	 * selects a or randomly from a given list and returns a ORdescription
-	 * @param orlist
-	 * list of onionrouters
+	 * selects a OR randomly from a given list or from all allowed ORs and returns the ORdescription
+	 * @param orlist list of onionrouter names
+	 * if null, all possible ORs are used
 	 * @return
 	 */
 	private synchronized ORDescription selectORRandomly(Vector orlist)
 	{
-		Vector temp = this.m_orList.getList();
-		Object temp2;
-		ORDescription temp3;
-		Vector orl = orlist;
-		if(orlist ==null)
+		if (orlist == null)
 		{
-			orl=new Vector();
-		}
-		if(orl.size()>0)
-		{
-			temp2 = orl.elementAt((this.m_rand.nextInt(orl.size())));
-			if(temp2 instanceof String)
+			Vector allORDescriptions = m_orList.getList();
+			if (allORDescriptions == null)
 			{
-				temp3 = this.m_orList.getORDescription((String)temp2);
-				if(temp3!=null)
-				{
-					return temp3;
-				}
+				return null;
 			}
-		} else
-		{
-			if(this.m_allowedORs!=null)
-			{
-				if(this.m_allowedORs.size()>0)
-				{
-					temp2 = this.m_allowedORs.elementAt(this.m_rand.nextInt(this.m_allowedORs.size()));
-					if(temp2 instanceof String)
-					{
-						temp3 = this.m_orList.getORDescription((String)temp2);
-						if(temp3!=null)
-						{
-							return temp3;
-						}
-					}
-				}
-			}
+			return (ORDescription) allORDescriptions.elementAt(m_rand.nextInt(allORDescriptions.size()));
 		}
-		return (ORDescription)temp.elementAt(this.m_rand.nextInt(temp.size()));
+		String orName = (String) orlist.elementAt( (m_rand.nextInt(orlist.size())));
+		return m_orList.getORDescription(orName);
 	}
 
 	/**
-	 * creates a new Circuit
+	 * creates a new random Circuit
 	 * @throws IOException
 	 */
-	private synchronized void createNewCircuit() throws IOException
+	protected synchronized Circuit createNewActiveCircuit(String addr, int port) throws IOException
 	{
-		ORDescription ord;
-		Object o;
-		Vector orsForNewCircuit = new Vector();
-		int circuitLength = m_rand.nextInt(this.m_circuitLengthMax - this.m_circuitLengthMin + 1) +
-			this.m_circuitLengthMin;
-		ord = this.selectORRandomly(this.m_FORList);
-		System.out.println("added "+ord.getName()+" "+ord.getSoftware());
-		orsForNewCircuit.addElement(ord);
-		do
+		synchronized (m_orList)
 		{
-			ord = this.selectORRandomly(this.m_exitNodes);
-		} while((orsForNewCircuit.contains(ord))/*||(!ord.getAcl().isAllowed(80))*/);
-		System.out.println("added "+ord.getName()+" "+ord.getSoftware());
-		orsForNewCircuit.addElement(ord);
-		for (int i = 2; i < circuitLength; i++)
-		{
+			ORDescription ord;
+			Vector orsForNewCircuit = new Vector();
+			int circuitLength = m_rand.nextInt(m_circuitLengthMax - m_circuitLengthMin + 1) +
+				m_circuitLengthMin;
+			//check if know about some Onion Routers...
+			if (m_orList.getList() == null)
+			{
+				updateORList();
+				if (m_orList.getList() == null)
+				{
+					return null;
+				}
+			}
+			//get first OR
+			ord = selectORRandomly(m_allowedFirstORNames);
+			LogHolder.log(LogLevel.DEBUG, LogType.TOR, "added " + ord.getName() + " " + ord.getSoftware());
+			orsForNewCircuit.addElement(ord);
+			//get last OR
+			//remove this address resolve here...
+			if (addr != null)
+			{
+				addr = InetAddress.getByName(addr).getHostAddress();
+			}
 			do
 			{
-				ord=this.selectORRandomly(null);
+				ord = selectORRandomly(m_allowedExitNodeNames);
 			}
-			while (orsForNewCircuit.contains(ord));
-			System.out.println("added "+ord.getName()+" "+ord.getSoftware());
-			orsForNewCircuit.insertElementAt(ord, 1);
-		}
-		int circid;
-		do
-		{
-			circid = this.m_rand.nextInt(65535);
-		}
-		while (this.m_circuits.containsKey(new Integer(circid)) && (circid != 0));
-		FirstOnionRouter f;
-		f = this.m_firstORFactory.createFirstOnionRouter( (ORDescription) orsForNewCircuit.
-		elementAt(0));
-		if(f==null)
-		{
-			throw new IOException("Problem with router "+orsForNewCircuit+". Cannot connect.");
-		}
-		if (!this.m_usedFORs.contains(f))
-		{
-			this.m_usedFORs.addElement(f);
-		}
-		Circuit c = new Circuit(circid, orsForNewCircuit, f);
-		c.connect();
-		this.m_circuits.put(new Integer(circid), c);
-		if (this.m_activeCircuit != 0)
-		{
-			int last = this.m_activeCircuit;
-			this.m_activeCircuit = circid;
-			o = this.m_circuits.get(new Integer(last));
-			if (o instanceof Circuit)
+			while (orsForNewCircuit.contains(ord) || (addr != null && !ord.getAcl().isAllowed(addr, port)));
+			orsForNewCircuit.addElement(ord);
+			LogHolder.log(LogLevel.DEBUG, LogType.TOR, "added " + ord.getName() + " " + ord.getSoftware());
+			//get middle ORs
+			for (int i = 2; i < circuitLength; i++)
 			{
-				( (Circuit) o).close();
+				do
+				{
+					ord = selectORRandomly(m_allowedORNames);
+				}
+				while (orsForNewCircuit.contains(ord));
+				LogHolder.log(LogLevel.DEBUG, LogType.TOR, "added " + ord.getName() + " " + ord.getSoftware());
+				orsForNewCircuit.insertElementAt(ord, 1);
 			}
+			//get Circuit ID
+			int circid;
+			do
+			{
+				circid = m_rand.nextInt(65535);
+			}
+			while (m_Circuits.containsKey(new Integer(circid)) && (circid != 0));
+			//establishes or gets an already established SSL-connection to the first OR
+			FirstOnionRouterConnection firstOR;
+			firstOR = m_firstORFactory.createFirstOnionRouterConnection( (ORDescription) orsForNewCircuit.
+				elementAt(0));
+			if (firstOR == null)
+			{
+				throw new IOException("Problem with router " + orsForNewCircuit + ". Cannot connect.");
+			}
+			Circuit circuit = new Circuit(circid, orsForNewCircuit, firstOR, this);
+			//creates the circuit
+			circuit.connect();
+			m_Circuits.put(new Integer(circid), circuit);
+			synchronized (m_oActiveCircuitSync)
+			{
+				if (m_activeCircuit != null)
+				{
+					//if there exists an "old" circuit --> close them --> move this to run()
+					Circuit last = m_activeCircuit;
+					m_activeCircuit = circuit;
+					last.shutdown();
+				}
+				else
+				{
+					m_activeCircuit = circuit;
+				}
+			}
+			return circuit;
 		}
-		else
-		{
-			this.m_activeCircuit = circid;
-		}
+	}
+
+	/** Used by a circuit to notify the Tor instance that a circuit was closed*/
+	protected void notifyCircuitClosed(int circid)
+	{
+		m_Circuits.remove(new Integer(circid));
 	}
 
 	/**
@@ -237,7 +236,6 @@ public class Tor implements Runnable, AnonService
 	 */
 	public void run()
 	{
-		this.updateORList();
 		while (m_bRun)
 		{
 			boolean error = true;
@@ -246,19 +244,19 @@ public class Tor implements Runnable, AnonService
 				error = false;
 				try
 				{
-					this.createNewCircuit();
+					createNewActiveCircuit(null, -1);
 				}
 				catch (IOException ex)
 				{
 					LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Error during circuit creation");
 					error = true;
-					this.updateORList();
+					updateORList();
 				}
 			}
 
 			try
 			{
-				Thread.sleep(this.m_createNewCircuitIntervall);
+				Thread.sleep(m_createNewCircuitIntervall);
 			}
 			catch (InterruptedException ex)
 			{
@@ -270,98 +268,60 @@ public class Tor implements Runnable, AnonService
 	 * starts the Tor-Service
 	 * @throws IOException
 	 */
-	private void start() throws IOException
+	private synchronized void start() throws IOException
 	{
-		this.m_circuits = new Hashtable();
-		this.m_activeCircuit = 0;
-		this.m_createNewCircuitLoop = new Thread(this);
+		m_Circuits = new Hashtable();
+		m_activeCircuit = null;
+		m_createNewCircuitLoop = new Thread(this,"Tor");
 		m_bRun = true;
-		this.m_createNewCircuitLoop.start();
+		//m_createNewCircuitLoop.start();
 	}
 
 	/**
 	 * stops the Tor-Service and all opended connections
 	 * @throws IOException
 	 */
-	private void stop() throws IOException, InterruptedException
+	private synchronized void stop() throws IOException, InterruptedException
 	{
 		m_bRun = false;
-		if (this.m_createNewCircuitLoop != null)
+		if (m_createNewCircuitLoop != null)
 		{
 			m_createNewCircuitLoop.interrupt();
 			m_createNewCircuitLoop.join();
-			for (int i = 0; i < m_usedFORs.size(); i++)
-			{
-				if (m_usedFORs.elementAt(i) instanceof FirstOnionRouter)
-				{
-					FirstOnionRouter f = (FirstOnionRouter)m_usedFORs.elementAt(i);
-					f.stop();
-					f.close();
-				}
-			}
-			m_usedFORs.removeAllElements();
+			m_firstORFactory.closeAll();
 		}
 	}
 
 	public byte[] DNSResolve(String name)
 	{
-		while(this.m_activeCircuit==0);
-		Circuit c = (Circuit)this.m_circuits.get(new Integer(this.m_activeCircuit));
-		return c.DNSResolve(name);
+		//to be changed
+		while (m_activeCircuit == null)
+		{
+			;
+		}
+		return m_activeCircuit.DNSResolve(name);
 	}
 
 	/**
-	 * sets a List of allowed Onion Routers
+	 * sets a List of allowed middle Onion Routers
 	 *
 	 * @param ORList
 	 * List of the names of allowed Onion Routers
 	 * if ORList is null, then all OR's are used
 	 */
-	public void setOnionRouterList(Vector ORList)
+	public void setOnionRouterList(Vector listOfORNames)
 	{
-		if (ORList == null)
-		{
-			this.m_allowedORs = null;
-			return;
-		}
-		for (int i = 0; i < ORList.size(); i++)
-		{
-			if (! (ORList.elementAt(i) instanceof String))
-			{
-				return;
-			}
-			else if (this.m_orList.getORDescription( (String) ORList.elementAt(i)) == null)
-			{
-				return;
-			}
-
-		}
-		if (ORList.size() >= MIN_ONION_ROUTERS)
-		{
-			this.m_allowedORs = ORList;
-		}
-
+		m_allowedORNames = listOfORNames;
 	}
 
 	/**
 	 * sets a List of allowed Onion Routers that are used as entry point to the Tor Network
 	 * @param FORList
-	 * List of Onion Routers
+	 * List of Onion Routers, if null all are allowed
 	 */
-	public void setFirstOnionRouterList(Vector FORList)
+	public void setFirstOnionRouterList(Vector listOfORNames)
 	{
-		for (int i = 0; i < FORList.size(); i++)
-		{
-			if (! (this.m_FORList.elementAt(i) instanceof String))
-			{
-				return;
-			}
-			if (this.m_orList.getORDescription( (String) FORList.elementAt(i)) == null)
-			{
-				return;
-			}
-		}
-		this.m_FORList = FORList;
+		m_allowedFirstORNames = listOfORNames;
 	}
 
 	/**
@@ -369,20 +329,9 @@ public class Tor implements Runnable, AnonService
 	 * @param exitNodes
 	 * List of exit nodes
 	 */
-	public void setExitNodes(Vector exitNodes)
+	public void setExitNodes(Vector listOfORNames)
 	{
-		for (int i = 0; i < exitNodes.size(); i++)
-		{
-			if (! (this.m_exitNodes.elementAt(i) instanceof String))
-			{
-				return;
-			}
-			if (this.m_orList.getORDescription( (String) exitNodes.elementAt(i)) == null)
-			{
-				return;
-			}
-		}
-		this.m_exitNodes = exitNodes;
+		m_allowedExitNodeNames = listOfORNames;
 	}
 
 	/**
@@ -443,7 +392,7 @@ public class Tor implements Runnable, AnonService
 	 */
 	public Vector getFirstOnionRouterList()
 	{
-		return this.m_FORList;
+		return this.m_allowedFirstORNames;
 	}
 
 	/**
@@ -458,21 +407,12 @@ public class Tor implements Runnable, AnonService
 	{
 		try
 		{
-			while (this.m_activeCircuit == 0)
-			{
-			}
-			Object o = this.m_circuits.get(new Integer(this.m_activeCircuit));
-			if (o instanceof Circuit)
-			{
-				Circuit c = (Circuit) o;
-				return c.createChannel(type);
-			}
+			return new TorSocksChannel(this);
 		}
 		catch (Exception e)
 		{
 			throw new ConnectException("Could not create Tor-Channel: " + e.getMessage());
 		}
-		return null;
 	}
 
 	/**
@@ -485,26 +425,26 @@ public class Tor implements Runnable, AnonService
 	 * a channel
 	 * @throws IOException
 	 */
-	public AnonChannel createChannel(InetAddress addr, int port) throws ConnectException
+	public AnonChannel createChannel(String addr, int port) throws ConnectException
 	{
 		try
 		{
-			while (this.m_activeCircuit == 0)
+			synchronized (m_oActiveCircuitSync)
 			{
-				
-			}
-			Object o = this.m_circuits.get(new Integer(this.m_activeCircuit));
-			if (o instanceof Circuit)
-			{
-				Circuit c = (Circuit) o;
-				return c.createChannel(addr, port);
+				if (m_activeCircuit == null || !m_activeCircuit.isAllowed(addr, port))
+				{
+					while (m_activeCircuit == null)
+					{
+						createNewActiveCircuit(addr, port);
+					}
+				}
+				return m_activeCircuit.createChannel(addr, port);
 			}
 		}
 		catch (Exception e)
 		{
 			throw new ConnectException("Error creating Tor channel: " + e.getMessage());
 		}
-		return null;
 	}
 
 	public int initialize(AnonServerDescription torDirServer)
