@@ -61,6 +61,14 @@ public class OnionRouter {
 	private SHA1Digest digestDb;
 	private boolean extended;
 
+	/**
+	 * Constructor
+	 * @param circID
+	 * circID of the circuit where it is used
+	 * @param description
+	 * ORDescription of the onionrouter
+	 * @throws IOException
+	 */
 	public OnionRouter(int circID,ORDescription description) throws IOException
 	{
 		this.description = description;
@@ -70,11 +78,23 @@ public class OnionRouter {
 		this.extended = false;
 	}
 
+	/**
+	 * returns a description of this router
+	 * @return 
+	 * ORDescription
+	 */
 	public ORDescription getDescription()
 	{
 		return this.description;
 	}
 
+	/**
+	 * encrypts a RelayCell
+	 * @param cell
+	 * unencrypted cell
+	 * @return
+	 * encrypted cell
+	 */
 	public synchronized RelayCell encryptCell(RelayCell cell)
 	{
 		RelayCell c;;
@@ -98,6 +118,14 @@ public class OnionRouter {
 		return c;
 	}
 
+	/**
+	 * decrypts a RelayCell
+	 * @param cell
+	 * encrypted cell
+	 * @return
+	 * decrypted cell
+	 * @throws Exception
+	 */
 	public synchronized RelayCell decryptCell(RelayCell cell) throws Exception
 	{
 		RelayCell c = cell;
@@ -112,7 +140,15 @@ public class OnionRouter {
 		return c;
 	}
 
-
+	/**
+	 * create cell
+	 * 
+	 * this cell is needed to connect to the first OR.
+	 * after the connection is established extendConnection is used
+	 * @return
+	 * createCell
+	 * @throws Exception
+	 */
 	public CreateCell createConnection() throws Exception
 	{
 		CreateCell cell = new CreateCell(this.circID);
@@ -120,11 +156,30 @@ public class OnionRouter {
 		return cell;
 	}
 
+	/**
+	 * checks the created cell if the answer was right
+	 * @param cell
+	 * createdcell
+	 * @throws Exception
+	 */
 	public void checkCreatedCell(Cell cell) throws Exception
 	{
-		this.checkExtendParameters(helper.copybytes(cell.getPayload(),0,148));
+		byte[] a = new byte[148];
+		System.arraycopy(cell.getPayload(),0,a,0,148);
+		this.checkExtendParameters(a);
 	}
 
+	/**
+	 * extends the connection to another OR
+	 * @param address
+	 * address of the OR
+	 * @param port
+	 * port
+	 * @return
+	 * RelayCell with the data that is needed to connect to the new OR
+	 * @throws IOException
+	 * @throws InvalidCipherTextException
+	 */
 	private RelayCell extendConnection(String address,int port) throws IOException,InvalidCipherTextException
 	{
 		RelayCell cell;
@@ -135,6 +190,15 @@ public class OnionRouter {
 		return cell;
 	}
 
+	/**
+	 * extends the connction to another OR and encrypts the data
+	 * @param description
+	 * ORDescription
+	 * @return
+	 * cell that is needed to extend the connection
+	 * @throws IOException
+	 * @throws InvalidCipherTextException
+	 */
 	public RelayCell extendConnection(ORDescription description) throws IOException,InvalidCipherTextException
 	{
 		RelayCell cell;
@@ -151,11 +215,19 @@ public class OnionRouter {
 		return cell;
 	}
 
+	/**
+	 * checks if the extendedcell has the right parameters and hash
+	 * @param cell
+	 * cell
+	 * @throws Exception
+	 */
 	public void checkExtendedCell(RelayCell cell) throws Exception
 	{
 		if(this.nextOR==null)
 		{
-			this.checkExtendParameters(helper.copybytes(cell.getPayload(),11,148));
+			byte[] a = new byte[148];
+			System.arraycopy(cell.getPayload(),11,a,0,148);
+			this.checkExtendParameters(a);
 			LogHolder.log(LogLevel.DEBUG,LogType.MISC,"[TOR] Circuit '"+this.circID+"' Extended");
 		} else
 		{
@@ -169,10 +241,18 @@ public class OnionRouter {
 		}
 	}
 
+	/**
+	 * creates the payload for a extendcell
+	 * @return
+	 * payload
+	 * @throws IOException
+	 * @throws InvalidCipherTextException
+	 */
 	private byte[] createExtendPayload() throws IOException,InvalidCipherTextException
 	{
 		byte[] rsaencrypted;
 		byte[] aesencrypted;
+		byte[] a;
 
 		//generate AES Key and Engine
 		SICBlockCipher aes = new SICBlockCipher(new AESFastEngine());
@@ -196,10 +276,14 @@ public class OnionRouter {
 
 		if(dhpubY[0]==0)
 		{
-			dhpubY =helper.copybytes(dhpubY,1,dhpubY.length-1);
+			a = new byte[dhpubY.length-1];
+			System.arraycopy(dhpubY,1,a,0,a.length);
+			dhpubY = a;
 		}
-
-		byte[] rsaunencrypted = helper.conc(keyparam,helper.copybytes(dhpubY,0,70));
+	
+		a = new byte[70];
+		System.arraycopy(dhpubY,0,a,0,70);
+		byte[] rsaunencrypted = helper.conc(keyparam,a);
 
 		//generate RSA encrypted part
 		DERInputStream dIn = new DERInputStream(new ByteArrayInputStream(this.description.getOnionKey()));
@@ -210,8 +294,9 @@ public class OnionRouter {
 		rsa.init(true,new RSAKeyParameters(false,modulus,exponent));
 
 		rsaencrypted = rsa.processBlock(rsaunencrypted,0,rsaunencrypted.length);
-
-		aesencrypted = helper.conc(helper.copybytes(dhpubY,70,dhpubY.length-70),new byte[aes.getBlockSize()- ( (dhpubY.length-70) % aes.getBlockSize())]);
+		a=new byte[dhpubY.length-70];
+		System.arraycopy(dhpubY,70,a,0,a.length);
+		aesencrypted = helper.conc(a,new byte[aes.getBlockSize()- ( (dhpubY.length-70) % aes.getBlockSize())]);
 
 		//gernerate AES encrypted part
 		for(int i=0;i<aesencrypted.length;i+=aes.getBlockSize())
@@ -221,14 +306,24 @@ public class OnionRouter {
 		return helper.conc(rsaencrypted,aesencrypted);
 	}
 
+	/**
+	 * checks the parameters of a extend cell and calculate the secrets
+	 * @param param
+	 * parameters
+	 * @throws Exception
+	 */
 	private void checkExtendParameters(byte[] param) throws Exception
 	{
 		DHPublicKeyParameters dhserverpub;
-		dhserverpub = new DHPublicKeyParameters(new BigInteger(helper.conc(new byte[]{0},helper.copybytes(param,0,128))),dhparams);
+		byte[] a = new byte[128];
+		System.arraycopy(param,0,a,0,128);
+		dhserverpub = new DHPublicKeyParameters(new BigInteger(helper.conc(new byte[]{0},a)),dhparams);
 		byte[] agreement = this.dhe.calculateAgreement(dhserverpub).toByteArray();
 		if(agreement[0]==0)
 		{
-			agreement = helper.copybytes(agreement,1,agreement.length-1);
+			a = new byte[agreement.length-1];
+			System.arraycopy(agreement,1,a,0,a.length);
+			agreement = a;
 		}
 		byte[] kh = hash.sha(new byte[][]{agreement,new byte[]{0x00}});
 		for(int i=0;i<kh.length;i++)
@@ -248,8 +343,12 @@ public class OnionRouter {
 		this.digestDb = new SHA1Digest();
 		this.digestDb.reset();
 		this.digestDb.update(keydata,20,20);
-		this.keyKf = helper.copybytes(keydata,40,16);
-		this.keyKb = helper.copybytes(keydata,56,16);
+		a = new byte[16];
+		System.arraycopy(keydata,40,a,0,16);
+		this.keyKf = a;
+		a = new byte[16];
+		System.arraycopy(keydata,56,a,0,16);
+		this.keyKb = a;
 		this.decryptionEngine = new CTRBlockCipher(new AESFastEngine());
 		this.decryptionEngine.init(true,new ParametersWithIV(new KeyParameter(this.keyKb),new byte[this.decryptionEngine.getBlockSize()]));
 		this.encryptionEngine = new CTRBlockCipher(new AESFastEngine());

@@ -44,11 +44,12 @@ import anon.infoservice.MixCascade;
 import anon.pay.AICommunication;
 import anon.server.AnonServiceImpl;
 import jap.JAPConstants;
+import jap.*;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import pay.Pay;
-import tor.Circuit;
+import tor.*;
 import tor.OnionRouter;
 import tor.ordescription.ORDescription;
 import tor.ordescription.ORList;
@@ -59,10 +60,10 @@ final public class SocksProxy implements Runnable, IAnonProxy
 {
 
 
-	private Thread threadRun;
+	private Tor m_Tor;
 	private volatile boolean m_bIsRunning;
 	private ServerSocket m_socketListener;
-	private Circuit m_Circuit;
+	//private Circuit m_Circuit;
 
 	public SocksProxy(ServerSocket listener)
 	{
@@ -74,7 +75,11 @@ final public class SocksProxy implements Runnable, IAnonProxy
 	public int start()
 	{
 		try{
-		ORList orl = new ORList();
+			m_Tor=Tor.getInstance();
+			m_Tor.setORListServer(JAPModel.getTorDirServerHostName(),
+								  JAPModel.getTorDirServerPortNumber());
+			m_Tor.start();
+/*		ORList orl = new ORList();
 		orl.updateList("moria.seul.org",9031);
 		Vector ors=orl.getList();
 		Vector orsToUse=new Vector(1);
@@ -89,12 +94,12 @@ final public class SocksProxy implements Runnable, IAnonProxy
 				orsToUse.setElementAt(od,1);
 		}
 		LogHolder.log(LogLevel.DEBUG,LogType.MISC,"[TOR] Creating new circuit");
-		m_Circuit = new Circuit(10,orsToUse);
+		//m_Circuit = new Circuit(10,orsToUse);
 		LogHolder.log(LogLevel.DEBUG,LogType.MISC,"[TOR] Connecting");
 		m_Circuit.connect();
 
 		threadRun = new Thread(this, "JAP - SocksProxy");
-		threadRun.start();
+		threadRun.start();*/
 		return E_SUCCESS;
 		}
 		catch(Exception e)
@@ -108,7 +113,7 @@ final public class SocksProxy implements Runnable, IAnonProxy
 		m_bIsRunning = false;
 		try
 		{
-			threadRun.join();
+			m_Tor.stop();
 		}
 		catch (Exception e)
 		{}
@@ -167,7 +172,7 @@ final public class SocksProxy implements Runnable, IAnonProxy
 					try
 					{
 						newChannel = null;
-						newChannel = m_Circuit.createChannel(AnonChannel.SOCKS);
+						newChannel = m_Tor.createChannel(AnonChannel.SOCKS);
 						break;
 					}
 					catch (ToManyOpenChannelsException te)
