@@ -33,6 +33,8 @@ import java.util.Date;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+import anon.crypto.JAPCertificate;
+import anon.crypto.JAPSignature;
 
 public class JAPVersionInfo
 {
@@ -66,6 +68,26 @@ public class JAPVersionInfo
 	{
 		versionInfoType = type;
 		Element root = doc.getDocumentElement();
+		//signature check...
+		JAPCertificate cert = InfoServiceHolder.getInstance().getCertificateForUpdateMessages();
+		if (cert != null)
+		{
+			try
+			{
+				JAPSignature sig = new JAPSignature();
+				sig.initVerify(cert.getPublicKey());
+				if (!sig.verifyXML(root))
+				{
+					throw (new Exception("InfoService: new JAPVersionInfo: Signature check failed!"));
+				}
+
+			}
+			catch (Exception e)
+			{
+				throw (new Exception("InfoService: new JAPVersionInfo: Signature check failed!"));
+			}
+		}
+
 		m_Version = root.getAttribute("version"); //the JAP version
 		try
 		{

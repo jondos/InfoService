@@ -531,13 +531,13 @@ public class InfoService extends DatabaseEntry
 				sig.initVerify(cert.getPublicKey());
 				if (!sig.verifyXML(japNode))
 				{
-					//throw (new Exception("InfoService: getNewVersionNumber: Sginatrue check failed!"));
+					throw (new Exception("InfoService: getNewVersionNumber: Signature check failed!"));
 				}
 
 			}
 			catch (Exception e)
 			{
-				//throw (new Exception("InfoService: getNewVersionNumber: Sginatrue check failed!"));
+				throw (new Exception("InfoService: getNewVersionNumber: Signature check failed!"));
 			}
 		}
 	NodeList softwareNodes = japNode.getElementsByTagName("Software");
