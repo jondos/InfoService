@@ -352,7 +352,7 @@ final class JAPConf extends JDialog
 				JLabel settingsInfoTextLabel = new JLabel(m_Model.getString("settingsInfoText"));
 				JLabel settingsInfoHostLabel = new JLabel(m_Model.getString("settingsInfoHost"));
 				JLabel settingsInfoPortLabel = new JLabel(m_Model.getString("settingsInfoPort"));
-				
+
 				JPanel p = new JPanel();
 				p.setLayout( new BorderLayout() );
 				p.setBorder( new TitledBorder(m_Model.getString("settingsInfoBorder")) );
@@ -385,7 +385,7 @@ final class JAPConf extends JDialog
 				g.setConstraints(m_tfInfoPortNumber,c);
 				p1.add(m_tfInfoPortNumber);
 				c.gridy=5;
-				
+
 				p.add(p1, BorderLayout.NORTH);
 				return p;
 			}
@@ -648,7 +648,7 @@ final class JAPConf extends JDialog
 				}});
 				JPanel p22 = new JPanel();
 				p22.setLayout(new GridLayout(2,1));
-				p22.add(bttnPing);
+				//p22.add(bttnPing);
 				p22.add(bttnMonitor);
 				p2.add(p22, BorderLayout.NORTH);
 
