@@ -36,19 +36,21 @@ import HTTPClient.HTTPResponse;
 import anon.JAPAnonService;
 
 public final class JAPCascadeMonitor implements Runnable {
-	private int IDLETIME = 60000;
+	private int IDLETIME = 90000;
 	private ServerSocket listener=null;
 
 	public void CascadeMonitor() {
+		try {
+			if (listener==null) listener = new ServerSocket(model.getAnonServer.getPort()+1);
+		}
+		catch (Exception ex) {
+			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPCascadeMonitor:Cannot establish listener on port "+model.getAnonServer.getPort()+1);
+		}
 	}
 	
 	public synchronized void run() {
+		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPCascadeMonitor:run()");
 /*		
-		try {
-			if (listener==null) listener = new ServerSocket(model.getPortNumber()+1);
-		}
-		catch (Exception ex) {
-		}
 		while(runFlag) {
 			// get the feedback from InfoSercive
 			statusTextField.setText(model.getString("chkGettingFeedback"));
