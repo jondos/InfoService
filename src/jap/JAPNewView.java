@@ -74,6 +74,7 @@ import javax.swing.*;
 import gui.*;
 import java.awt.event.*;
 import java.util.*;
+import java.awt.Component;
 
 final public class JAPNewView extends AbstractJAPMainView implements IJAPMainView, ActionListener,
 	JAPObserver
@@ -102,7 +103,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	//private GuthabenAnzeige guthaben;
 	private boolean loadPay = false;
 
-	private JComboBox m_comboAnonServices;
+	private JAPMixCascadeComboBox m_comboAnonServices;
 	private JLabel m_labelAnonService, m_labelAnonymity, m_labelAnonymitySmall, m_labelAnonymityOnOff;
 	private JLabel m_labelAnonMeter, m_labelAnonymityLow, m_labelAnonymityHigh;
 	private JProgressBar m_progressAnonTraffic;
@@ -206,12 +207,12 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 		m_panelAnonService = new JPanel(gbl1);
 		m_labelAnonService = new JLabel(JAPMessages.getString("ngAnonymisierungsdienst"));
-		c1.insets = new Insets(0, 17, 0, 0);
+		c1.insets = new Insets(0, 0, 0, 0);
 		c1.anchor = GridBagConstraints.WEST;
 		c1.weightx = 0;
 		c1.fill = GridBagConstraints.NONE;
 		m_panelAnonService.add(m_labelAnonService, c1);
-		m_comboAnonServices = new JComboBox();
+		m_comboAnonServices = new JAPMixCascadeComboBox();
 		m_comboAnonServices.addItemListener(new ItemListener()
 		{
 			public void itemStateChanged(ItemEvent e)
@@ -227,6 +228,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				}
 			}
 		});
+
 		c1.insets = new Insets(0, 5, 0, 0);
 		c1.fill = GridBagConstraints.HORIZONTAL;
 		c1.weightx = 1;
@@ -249,7 +251,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.gridx = 2;
 		c1.weightx = 0;
 		c1.fill = GridBagConstraints.NONE;
-		bttnReload.setBorder(new EmptyBorder(0,0,0,0));
+		bttnReload.setBorder(new EmptyBorder(0, 0, 0, 0));
 		bttnReload.setFocusPainted(false);
 		m_panelAnonService.add(bttnReload, c1);
 		m_bttnAnonDetails = new JButton(JAPMessages.getString("ngBttnAnonDetails"));
@@ -1459,22 +1461,27 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			m_bIgnoreAnonComboEvents = true;
 			boolean bMixCascadeAlreadyIncluded = false;
 			m_comboAnonServices.removeAllItems();
-			if (v != null)
+			if (v != null&&v.size()>0)
 			{
 				Enumeration enumer = v.elements();
 				while (enumer.hasMoreElements())
 				{
 					MixCascade c = (MixCascade) enumer.nextElement();
-					m_comboAnonServices.addItem(c);
+					m_comboAnonServices.addMixCascade(c);
 					if (c.equals(currentMixCascade))
 					{
 						bMixCascadeAlreadyIncluded = true;
 					}
 				}
 			}
+			else
+			{
+
+				m_comboAnonServices.setNoDataAvailable();
+			}
 			if (!bMixCascadeAlreadyIncluded)
 			{
-				m_comboAnonServices.addItem(currentMixCascade);
+				m_comboAnonServices.addMixCascade(currentMixCascade);
 			}
 			m_comboAnonServices.setSelectedItem(currentMixCascade);
 			m_bIgnoreAnonComboEvents = false;
@@ -1557,13 +1564,13 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					{
 						//Trafic Situation directly from InfoService
 						/*trafficProgressBar.setMaximum(100);
-							trafficProgressBar.setValue(t);
-							if (t < 30)
-							{
+						 trafficProgressBar.setValue(t);
+						 if (t < 30)
+						 {
 						 trafficProgressBar.setString(JAPMessages.getString("meterTrafficLow"));
-							}
-							else
-							{
+						 }
+						 else
+						 {
 						 if (t < 60)
 						 {
 						  trafficProgressBar.setString(JAPMessages.getString("meterTrafficMedium"));
@@ -1572,7 +1579,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 						 {
 						  trafficProgressBar.setString(JAPMessages.getString("meterTrafficHigh"));
 						 }
-							}*/
+						 }*/
 						//map 0..100 --> 0..5
 						//0 --> 0
 						//1..20 --> 1
