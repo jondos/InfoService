@@ -166,11 +166,11 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 	    infoB.addActionListener(this);
 	    helpB.addActionListener(this);
 	    quitB.addActionListener(this);
-	    iconifyB.setMnemonic(model.getString("iconifyButtonMn").charAt(0));
-	    confB.setMnemonic(model.getString("confButtonMn").charAt(0));
-	    infoB.setMnemonic(model.getString("infoButtonMn").charAt(0));
-	    helpB.setMnemonic(model.getString("helpButtonMn").charAt(0));
-	    quitB.setMnemonic(model.getString("quitButtonMn").charAt(0));
+	    JAPUtil.setMnemonic(iconifyB,model.getString("iconifyButtonMn"));
+	    JAPUtil.setMnemonic(confB,model.getString("confButtonMn"));
+		JAPUtil.setMnemonic(infoB,model.getString("infoButtonMn"));
+	    JAPUtil.setMnemonic(helpB,model.getString("helpButtonMn"));
+	    JAPUtil.setMnemonic(quitB,model.getString("quitButtonMn"));
 
 			// add Components to Frame
 			getContentPane().setBackground(buttonPanel.getBackground());
@@ -251,7 +251,7 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 
 		ano1CheckBox = new JCheckBox(model.getString("confActivateCheckBox"));
 //		ano1CheckBox.setForeground(Color.red);
-		ano1CheckBox.setMnemonic(model.getString("confActivateCheckBoxMn").charAt(0));
+		JAPUtil.setMnemonic(ano1CheckBox,model.getString("confActivateCheckBoxMn"));
 		ano1CheckBox.addActionListener(this);
 
 		// Line 1
@@ -391,7 +391,7 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 		//p41.add(Box.createRigidArea(new Dimension(10,0)) );
 		anonCheckBox = new JCheckBox(model.getString("confActivateCheckBox"));
 //		anonCheckBox.setForeground(Color.red);
-		anonCheckBox.setMnemonic(model.getString("confActivateCheckBoxMn").charAt(0));
+		JAPUtil.setMnemonic(anonCheckBox,model.getString("confActivateCheckBoxMn"));
 		anonCheckBox.addActionListener(this);
 		p41.add(anonCheckBox );
 		p41.add(Box.createRigidArea(new Dimension(5,0)) );

@@ -580,7 +580,7 @@ final class JAPConf extends JDialog
 				p1.add(new JLabel(m_Model.getString("settingsLookAndFeel")));
 				JComboBox c=new JComboBox();
 				// not yet implemented, or doesn't work very well on my Mac --> disable it
-				c.setEnabled(false);
+				// c.setEnabled(false);
 				LookAndFeelInfo[] lf=UIManager.getInstalledLookAndFeels();
 				for(int i=0;i<lf.length;i++)
 					{
