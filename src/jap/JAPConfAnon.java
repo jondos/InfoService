@@ -56,6 +56,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.JTextField;
+import javax.swing.ImageIcon;
 import javax.swing.border.LineBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -122,13 +123,12 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	{
 		super(null);
 		m_Controller = JAPController.getInstance();
+		m_infoService = new InfoServiceTempLayer(false);
 	}
 
 	public void recreateRootPanel()
 	{
 		Font font = getFontSetting();
-		//Update the temporary infoservice database
-		m_infoService = new InfoServiceTempLayer();
 		m_tfMixHost = new JTextField();
 		m_tfMixHost.setFont(font);
 		m_tfMixPortNumber = new JAPJIntField();
@@ -177,7 +177,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				}
 			}
 		});
-
 		drawCompleteDialog();
 	}
 
@@ -237,12 +236,20 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		m_serverInfoPanel = new JPanel();
 		m_serverInfoPanel.setLayout(layout);
 
-		JLabel l = new JLabel(JAPMessages.getString("mixOperator"));
+		JLabel l = new JLabel(JAPMessages.getString("infoAboutMix"));
 		c.gridx = 0;
 		c.gridy = 0;
 		c.weightx = 0;
+		c.gridwidth = 2;
 		c.fill = GridBagConstraints.NONE;
 		c.anchor = GridBagConstraints.NORTHWEST;
+		c.insets = new Insets(5, 20, 5, 5);
+		m_serverInfoPanel.add(l, c);
+
+		l = new JLabel(JAPMessages.getString("mixOperator"));
+		c.gridy = 1;
+		c.gridwidth = 1;
+		c.insets = new Insets(5, 30, 5, 5);
 		m_serverInfoPanel.add(l, c);
 
 		m_operatorLabel = new JLabel(a_operator);
@@ -253,7 +260,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 		l = new JLabel(JAPMessages.getString("mixUrl"));
 		c.gridx = 0;
-		c.gridy = 1;
+		c.gridy = 2;
 		c.weightx = 0;
 		m_serverInfoPanel.add(l, c);
 
@@ -264,7 +271,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 		l = new JLabel(JAPMessages.getString("mixLocation"));
 		c.gridx = 0;
-		c.gridy = 2;
+		c.gridy = 3;
 		m_serverInfoPanel.add(l, c);
 
 		m_locationLabel = new JLabel(a_location);
@@ -399,6 +406,10 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 		c.insets = new Insets(2, 5, 0, 5);
 		m_reloadCascadesButton = new JButton(JAPMessages.getString("reloadCascades"));
+		m_reloadCascadesButton.setIcon(JAPUtil.loadImageIcon(JAPConstants.IMAGE_RELOAD, true));
+		m_reloadCascadesButton.setDisabledIcon(JAPUtil.loadImageIcon(JAPConstants.IMAGE_RELOAD_DISABLED, true));
+		m_reloadCascadesButton.setPressedIcon(JAPUtil.loadImageIcon(JAPConstants.IMAGE_RELOAD_ROLLOVER, true));
+
 		m_reloadCascadesButton.addActionListener(this);
 		c.gridy = 4;
 		m_cascadesPanel.add(m_reloadCascadesButton, c);
@@ -667,7 +678,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 		m_Controller.fetchMixCascades(bErr);
 		//Update the temporary infoservice database
-		m_infoService = new InfoServiceTempLayer();
+				updateFromInfoservice();
 		updateMixCascadeCombo();
 
 		LogHolder.log(LogLevel.DEBUG, LogType.GUI, "JAPConf: finished updateMixCascadeCombo()");
@@ -890,6 +901,50 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 	protected void onRootPanelShown()
 	{
+	/*	updateFromInfoservice();
+		updateMixCascadeCombo();*/
+	   m_reloadCascadesButton.setEnabled(false);
+	   Runnable doIt = new Runnable()
+	   {
+		   public void run()
+		   {
+			   Cursor c = getRootPanel().getCursor();
+			   getRootPanel().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+
+			   m_Controller.fetchMixCascades(bErr);
+			   //Update the temporary infoservice database
+			   updateFromInfoservice();
+			   updateMixCascadeCombo();
+
+			   getRootPanel().setCursor(c);
+
+			   if (m_Controller.getMixCascadeDatabase().size() == 0)
+			   {
+				   if (!JAPModel.isSmallDisplay() && bErr)
+				   {
+					   JOptionPane.showMessageDialog(JAPController.getView(),
+						   JAPMessages.getString("settingsNoServersAvailable"),
+						   JAPMessages.getString("settingsNoServersAvailableTitle"),
+						   JOptionPane.INFORMATION_MESSAGE);
+
+				   }
+				   //No mixcascades returned by Infoservice
+				   deactivate();
+			   }
+			   else
+			   {
+				   // show a window containing all available cascades
+				   m_listMixCascade.setEnabled(true);
+			   }
+			   m_reloadCascadesButton.setEnabled(true);
+		   }
+	   };
+	   Thread t = new Thread(doIt);
+	   t.start();
+
+	   m_listMixCascade.setSelectedValue(m_Controller.getCurrentMixCascade(), true);
+	   valueChanged(new ListSelectionEvent(m_listMixCascade, 0,
+										   m_listMixCascade.getModel().getSize(), false));
 	}
 
 	/**
@@ -907,9 +962,15 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				MixCascade cascade = (MixCascade) m_listMixCascade.getSelectedValue();
 				String cascadeId = cascade.getId();
 
+				if (m_infoService != null)
+				{
 				this.drawServerPanel(m_infoService.getNumOfMixes(cascadeId), true);
-				this.drawServerInfoPanel(null, null, null);
 				m_numOfUsersLabel.setText(m_infoService.getNumOfUsers(cascadeId));
+					m_reachableLabel.setText(m_infoService.getHosts(cascadeId));
+					m_portsLabel.setText(m_infoService.getPorts(cascadeId));
+				}
+				this.drawServerInfoPanel(null, null, null);
+
 
 				if (cascade.isUserDefined())
 				{
@@ -917,13 +978,11 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 										 String.valueOf(cascade.getListenerInterface(0).getPort()),
 										 false);
 				}
-
-				m_reachableLabel.setText(m_infoService.getHosts(cascadeId));
-				m_portsLabel.setText(m_infoService.getPorts(cascadeId));
 					itemStateChanged(null);
 				}
 		}
 	}
+
 
 	/**
 	 * keyTyped
@@ -955,9 +1014,17 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	public void keyReleased(KeyEvent e)
 	{
 			}
+
+	/**
+	 * Refresh the temporary infoservice database
+	 */
+	private void updateFromInfoservice()
+	{
+		m_infoService = new InfoServiceTempLayer(true);
+	}
 }
 
-/**
+/*
  * Allows usage of icons in elements of the MixCascade list
  */
 class CustomRenderer extends DefaultListCellRenderer
@@ -1016,9 +1083,14 @@ class InfoServiceTempLayer
 	private Vector m_Cascades;
 	private Vector m_Mixes;
 
-	public InfoServiceTempLayer()
+	public InfoServiceTempLayer(boolean a_autoFill)
+	{
+		m_Cascades = new Vector();
+		m_Mixes = new Vector();
+		if (a_autoFill)
 	{
 		this.fill();
+		}
 	}
 
 	/**
