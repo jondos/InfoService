@@ -34,8 +34,6 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import anon.util.XMLUtil;
 import anon.util.IXMLEncodable;
-//import javax.swing.event.ChangeListener;
-//import javax.swing.event.ChangeEvent;
 
 /**
  * This class contains the accounts configuration .
@@ -76,7 +74,7 @@ public class PayAccountsFile implements IXMLEncodable
 	/** the one and only accountsfile */
 	private static PayAccountsFile ms_AccountsFile = null;
 
-	private Vector m_changeListeners = new Vector();
+	private Vector m_paymentListeners = new Vector();
 
 	// singleton!
 	private PayAccountsFile()
@@ -135,8 +133,13 @@ public class PayAccountsFile implements IXMLEncodable
 				PayAccount current = (PayAccount) e.nextElement();
 				if (current.getAccountNumber() == activeAccountNumber)
 				{
-					ms_AccountsFile.m_ActiveAccount = current;
-					//ms_AccountsFile.fireChangeEvent(ms_AccountsFile.m_ActiveAccount);
+					try
+					{
+						ms_AccountsFile.setActiveAccount(current);
+					}
+					catch (Exception ex)
+					{
+					}
 					break;
 				}
 			}
@@ -262,12 +265,7 @@ public class PayAccountsFile implements IXMLEncodable
 
 	public void setActiveAccount(long accountNumber) throws Exception
 	{
-		PayAccount account = getAccount(accountNumber);
-		if (account != null)
-		{
-			m_ActiveAccount = account;
-			//fireChangeEvent(m_ActiveAccount);
-		}
+		setActiveAccount(getAccount(accountNumber));
 	}
 
 	public void setActiveAccount(PayAccount account) throws Exception
@@ -275,7 +273,14 @@ public class PayAccountsFile implements IXMLEncodable
 		if (account != null)
 		{
 			m_ActiveAccount = account;
-			//fireChangeEvent(m_ActiveAccount);
+			synchronized (m_paymentListeners)
+			{
+				Enumeration enumListeners = m_paymentListeners.elements();
+				while (enumListeners.hasMoreElements())
+				{
+					( (IPaymentListener) enumListeners.nextElement()).accountActivated(m_ActiveAccount);
+				}
+			}
 		}
 	}
 
@@ -347,7 +352,14 @@ public class PayAccountsFile implements IXMLEncodable
 				}
 			}
 		}
-		//fireChangeEvent(tmp);
+		synchronized (m_paymentListeners)
+		{
+			Enumeration enumListeners = m_paymentListeners.elements();
+			while (enumListeners.hasMoreElements())
+			{
+				( (IPaymentListener) enumListeners.nextElement()).accountRemoved(m_ActiveAccount);
+			}
+		}
 	}
 
 	/**
@@ -397,12 +409,20 @@ public class PayAccountsFile implements IXMLEncodable
 			}
 		}
 		m_Accounts.addElement(account);
-		//account.addChangeListener(m_MyChangeListener);
+		account.addAccountListener(m_MyChangeListener);
 		if (m_ActiveAccount == null)
 		{
 			m_ActiveAccount = account;
 		}
-		//fireChangeEvent(account);
+		// fire event
+		synchronized (m_paymentListeners)
+		{
+			Enumeration enumListeners = m_paymentListeners.elements();
+			while (enumListeners.hasMoreElements())
+			{
+				( (IPaymentListener) enumListeners.nextElement()).accountAdded(m_ActiveAccount);
+			}
+		}
 	}
 
 	/**
@@ -438,41 +458,45 @@ public class PayAccountsFile implements IXMLEncodable
 
 
 
-/*	public void addChangeListener(ChangeListener listener)
+	public void addPaymentListener(IPaymentListener listener)
 	{
-		synchronized (m_changeListeners)
+		synchronized (m_paymentListeners)
 		{
 			if (listener != null)
 			{
-				m_changeListeners.addElement(listener);
+				m_paymentListeners.addElement(listener);
 			}
 		}
 	}
 
-	private void fireChangeEvent(Object source)
+/*	private void fireChangeEvent(PayAccount source)
 	{
-		synchronized (m_changeListeners)
-		{
-			Enumeration enumListeners = m_changeListeners.elements();
-			ChangeEvent e = new ChangeEvent(source);
-			while (enumListeners.hasMoreElements())
-			{
-				( (ChangeListener) enumListeners.nextElement()).stateChanged(e);
-			}
-		}
-	}
-*/
-	//private MyChangeListener m_MyChangeListener = new MyChangeListener();
+	}*/
+
+	private MyAccountListener m_MyChangeListener = new MyAccountListener();
 
 	/**
 	 * Listens to changes
 	 * inside the accounts and forwards the events to our changeListeners
 	 */
-/*	private class MyChangeListener implements ChangeListener
+	private class MyAccountListener implements IAccountListener
 	{
-		public void stateChanged(ChangeEvent e)
+		/**
+		 * accountChanged
+		 *
+		 * @param acc PayAccount
+		 */
+		public void accountChanged(PayAccount acc)
 		{
-			fireChangeEvent(e.getSource());
+			// fire event
+			synchronized (m_paymentListeners)
+			{
+				Enumeration enumListeners = m_paymentListeners.elements();
+				while (enumListeners.hasMoreElements())
+		{
+					( (IPaymentListener) enumListeners.nextElement()).creditChanged(m_ActiveAccount);
+				}
+			}
 		}
-	}*/
+		}
 }

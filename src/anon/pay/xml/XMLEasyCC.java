@@ -33,9 +33,9 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import anon.crypto.JAPSignature;
-import anon.util.IXMLEncodable;
-import anon.util.XMLUtil;
 import anon.util.IXMLSignable;
+import anon.util.XMLUtil;
+import anon.util.AbstractXMLSignable;
 
 /**
  * XML structure for a easy cost confirmation (without mircopayment function) which is sent to the AI by the Jap
@@ -49,7 +49,7 @@ import anon.util.IXMLSignable;
  * </CC>
  * @author Grischan Gl&auml;nzel, Bastian Voigt
  */
-public class XMLEasyCC implements IXMLSignable
+public class XMLEasyCC extends AbstractXMLSignable
 {
 	//~ Instance fields ********************************************************
 
@@ -144,42 +144,12 @@ public class XMLEasyCC implements IXMLSignable
 	}
 
 	/**
-	 * Signs the existing XMLEasyCC with the given JAPSignature signer.
-	 * The signer must already be initialized (initSign)
+	 * setTransferredBytes
 	 *
-	 * @param signer JAPSignature
-	 * @throws Exception
+	 * @param numBytes long
 	 */
-	public void sign(JAPSignature signer) throws Exception
+	public void setTransferredBytes(long numBytes)
 	{
-		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
-		doc.appendChild(toXmlElement(doc));
-		signer.signXmlDoc(doc);
-		Element elemSig = (Element) XMLUtil.getFirstChildByName(doc.getDocumentElement(), "Signature");
-		m_signature = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
-		Element elem = (Element) XMLUtil.importNode(m_signature, elemSig, true);
-		m_signature.appendChild(elem);
-	}
-
-	/**
-	 * isSigned
-	 *
-	 * @return boolean
-	 */
-	public boolean isSigned()
-	{
-		return (m_signature!=null);
-	}
-
-	/**
-	 * verifySignature
-	 *
-	 * @param verifyingInstance JAPSignature
-	 * @return boolean
-	 */
-	public boolean verifySignature(JAPSignature verifier)
-	{
-		Document doc = XMLUtil.toXMLDocument(this);
-		return verifier.verifyXML(doc.getDocumentElement());
+		m_lTransferredBytes = numBytes;
 	}
 }

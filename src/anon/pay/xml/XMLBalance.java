@@ -9,6 +9,7 @@ import anon.crypto.JAPSignature;
 import anon.util.IXMLEncodable;
 import anon.util.XMLUtil;
 import anon.util.IXMLSignable;
+import anon.util.AbstractXMLSignable;
 
 /**
  * This class holds a balance certificate. Can be converted to and from
@@ -16,14 +17,14 @@ import anon.util.IXMLSignable;
  *
  * @todo find a better internal representation for the signature
  */
-public class XMLBalance implements IXMLSignable
+public class XMLBalance extends AbstractXMLSignable
 {
 	private long m_lAccountNumber;
 	private java.sql.Timestamp m_Timestamp;
 	private java.sql.Timestamp m_ValidTime;
 	private long m_lDeposit;
 	private long m_lSpent;
-	private Document m_signature;
+//	private Document m_signature;
 
 	public XMLBalance(long accountNumber,
 					  long deposit, long spent,
@@ -160,35 +161,4 @@ public class XMLBalance implements IXMLSignable
 		return m_ValidTime;
 	}
 
-	public void sign(JAPSignature signer) throws Exception
-	{
-		Document doc = XMLUtil.toXMLDocument(this);
-		signer.signXmlDoc(doc);
-		Element elemSig = (Element) XMLUtil.getFirstChildByName(doc.getDocumentElement(), "Signature");
-		m_signature = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
-		Element elem = (Element) XMLUtil.importNode(m_signature, elemSig, true);
-		m_signature.appendChild(elem);
-	}
-
-	public boolean verifySignature(JAPSignature verifier)
-	{
-		try{
-		Document doc = XMLUtil.toXMLDocument(this);
-		return verifier.verifyXML(doc.getDocumentElement());
-		}
-		catch(Exception e)
-		{
-			return false;
-		}
-	}
-
-	/**
-	 * isSigned
-	 *
-	 * @return boolean
-	 */
-	public boolean isSigned()
-	{
-		return (m_signature!=null);
-	}
 }

@@ -1,0 +1,35 @@
+package anon.pay;
+
+import java.util.EventListener;
+
+/**
+ * GUI classes can implement this interface and register with the Payment library
+ * to be notified about payment specific events
+ * @version 1.0
+ */
+public interface IPaymentListener extends EventListener
+{
+	/**
+	 * The active account changed.
+	 * @param acc PayAccount the account which is becoming active
+	 */
+	void accountActivated(PayAccount acc);
+
+	/**
+	 * An account was removed
+	 * @param acc PayAccount the account which was removed
+	 */
+	void accountRemoved(PayAccount acc);
+
+	/**
+	 * An account was added
+	 * @param acc PayAccount the new Account
+	 */
+	void accountAdded(PayAccount acc);
+
+	/**
+	 * The credit changed for the given account.
+	 * @param acc PayAccount
+	 */
+	void creditChanged(PayAccount acc);
+}

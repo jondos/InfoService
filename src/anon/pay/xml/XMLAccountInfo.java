@@ -30,7 +30,6 @@ package anon.pay.xml;
 import java.util.Enumeration;
 import java.util.Vector;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -142,10 +141,13 @@ public class XMLAccountInfo implements IXMLEncodable //extends XMLDocument
 	 * it will be overwritten.
 	 *
 	 * @param xmlCC XMLEasyCC
+	 * @return the difference in the number of bytes between the old and the
+	 * new costconfirmation for the same AI
 	 */
-	public void addCC(XMLEasyCC cc) throws Exception
+	public long addCC(XMLEasyCC cc) throws Exception
 	{
 		String aiName = cc.getAIName();
+		long oldBytes = 0;
 		Enumeration enum = m_costConfirmations.elements();
 		XMLEasyCC tmp;
 		while(enum.hasMoreElements())
@@ -153,11 +155,13 @@ public class XMLAccountInfo implements IXMLEncodable //extends XMLDocument
 			tmp = (XMLEasyCC) enum.nextElement();
 			if(tmp.getAIName().equals(aiName))
 			{
+				oldBytes = tmp.getTransferredBytes();
 				m_costConfirmations.removeElement(tmp);
 				break;
 			}
 		}
 		m_costConfirmations.addElement(cc);
+		return cc.getTransferredBytes() - oldBytes;
 	}
 
 	private void setValues(Element elemRoot) throws Exception
@@ -202,5 +206,15 @@ public class XMLAccountInfo implements IXMLEncodable //extends XMLDocument
 			}
 		}
 		return null;
+	}
+
+	/**
+	 * setBalance
+	 *
+	 * @param b1 XMLBalance
+	 */
+	public void setBalance(XMLBalance b1)
+	{
+		m_balance = b1;
 	}
 }
