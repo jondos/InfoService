@@ -146,6 +146,8 @@ final public class JAPCertificate extends X509CertificateStructure implements IX
 		}
 		catch (Exception a_e)
 		{
+			LogHolder.log(LogLevel.EXCEPTION,LogType.MISC,"Exception in JAOCertifciate():"+a_e.getMessage());
+			LogHolder.log(LogLevel.EXCEPTION,LogType.MISC,a_e);
 			throw new IllegalArgumentException(
 				"Certificate structure contains invalid public key! " + a_e);
 		}
