@@ -274,8 +274,8 @@ public final class MuxSocket implements Runnable
 
 		private synchronized void setEncryptionKeys(byte[] keys)
 			{
-				m_cipherIn.setEncryptionKeyAES(keys);
-				m_cipherOut.setEncryptionKeyAES(keys);
+				m_cipherIn.setEncryptionKeyAES(keys,0);
+				m_cipherOut.setEncryptionKeyAES(keys,16);
 			}
 
 		/*Reads the public key from the Mixes and try to initialize the key array*/
@@ -312,9 +312,10 @@ public final class MuxSocket implements Runnable
 							}
 						//Sending symmetric keys for Mux encryption...
 						System.arraycopy("KEYPACKET".getBytes(),0,m_MixPacketSend,6,9);
-						byte[] tmpBuff=new byte[16];
-						m_KeyPool.getKey(tmpBuff);
-						System.arraycopy(tmpBuff,0,m_MixPacketSend,15,16);
+						byte[] tmpBuff=new byte[32];
+						m_KeyPool.getKey(tmpBuff,0);
+						m_KeyPool.getKey(tmpBuff,16);
+						System.arraycopy(tmpBuff,0,m_MixPacketSend,15,32);
 						m_arASymCipher[0].encrypt(m_MixPacketSend,6,m_MixPacketSend,6);
 						sendMixPacket();
 						setEncryptionKeys(tmpBuff);
