@@ -36,7 +36,6 @@ import javax.swing.JSeparator;
 import javax.swing.ButtonGroup;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
-import java.awt.event.MouseEvent;
 import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
 import java.awt.Dimension;
@@ -60,7 +59,7 @@ final public class ServerListPanel extends JPanel implements ActionListener
 	 * Creates a panel with numberOfMixes Mix-icons
 	 * @param numberOfMixes int
 	 */
-	public ServerListPanel(int a_numberOfMixes)
+	public ServerListPanel(int a_numberOfMixes, boolean a_enabled)
 	{
 		m_itemListeners = new Vector();
 		GridBagLayout layout = new GridBagLayout();
@@ -98,6 +97,8 @@ final public class ServerListPanel extends JPanel implements ActionListener
 			layout.setConstraints(mix, constraints);
 			this.add(mix);
 			m_bgMixe.add(mix);
+			if (!a_enabled)
+				mix.setEnabled(false);
 		}
 	}
 
