@@ -11,10 +11,12 @@ import java.io.File;
 import java.io.*;
 import java.util.Vector;
 
+
 import java.net.URL;
 
 import JAPConstants;
 import JAPMessages;
+import JAPUtil;
 
 import JAPController;
 public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Runnable
@@ -41,6 +43,7 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
     private final String ext_new = ".new";
 
     private boolean updateAborted = false;
+    private boolean incrementalUpdate = true; // should be true by default
     //which version chose the user
     private String version;
     //which type dev or rel?
@@ -88,6 +91,7 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
                 //boolean updateAborted = false;
                 if(updateAborted)
                 {
+                   resetChanges();
                    return -1;
                 }
                    if(state == 1)// first step is going on ...
@@ -140,8 +144,9 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
                       }else if(state == 8)//creation of new JARFile failed
                       {
                                   //set blank
-                                  downloadPage.showInformationDialog(JAPMessages.getString("updateInformationMsgStep3"));
                                   resetChanges();
+                                  downloadPage.showInformationDialog(JAPMessages.getString("updateInformationMsgStep3"));
+
                                   return -1;
                       }else if(state == 9)// finshed creation of the new JarFile
                       {
@@ -204,25 +209,39 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
             return;
           }
         // Step 2
-         if(downloadUpdate(updateListener)!=0){return;}
-        //Step 3
-        if( createNewJAPJar(updateListener)!=0)
-          {
+         if(downloadUpdate(updateListener)!=0)
+         {
             return;
-          }
+         }
+        //Step 3 or 3'
+        if(incrementalUpdate)
+        {
+            if(applyJARDiffJAPJar(updateListener)!=0)
+              {
+                return;
+              }
+        }
+        else
+          {
+            if( createNewJAPJar(updateListener)!=0)
+              {
+                return;
+              }
+           }
         // Step 5
         if( createJapJar(updateListener)!=0)
           {
             return;
           }
         try {
-                aktJapJar.delete();
-                updJapJar.renameTo(new File(path+extension));
-                cp_updJapJar.delete();
+                if(!aktJapJar.delete()) {downloadPage.showInformationDialog("Deleting original JAP.jar failed");}
+                if(!updJapJar.renameTo(new File(path+extension))) {downloadPage.showInformationDialog("Renaming JAP_temp.jar failed.");}
+                if(!cp_updJapJar.delete()){downloadPage.showInformationDialog("Deleting of JAP_new.jar failed!");}
             }
         catch(Exception e)
             {
                 e.printStackTrace();
+                downloadPage.showInformationDialog(e.toString());
                 return;
             }
 
@@ -376,8 +395,8 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
                     {
                       fis.close();
                       fos.close();
-                      cp_aktJapJar.delete();
-                      cp_aktJapJar = null;
+                      //cp_aktJapJar.delete();
+                      //cp_aktJapJar = null;
                       return -1;
                     }
                 }
@@ -409,7 +428,9 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
                       URL codeBase=japVersionInfo.getCodeBase();
                       // ErrorMessage connection with infoservice failed
                       try{
-                      jarUrl=new URL(codeBase,japVersionInfo.getJAPJarFileName()+"?version-id="+japVersionInfo.getVersion());
+                      //jarUrl=new URL(codeBase,japVersionInfo.getJAPJarFileName()+"?version-id="+japVersionInfo.getVersion());
+                                                              //signedJAP.jar                       00.01.067
+                      jarUrl = new URL(codeBase,japVersionInfo.getJAPJarFileName()+"?version-id="+japVersionInfo.getVersion()+"&current-version-id="+JAPConstants.aktVersion2);
                       }
                       catch(Exception e)
                         {
@@ -418,7 +439,7 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
                       //jarUrl = new URL(japVersionInfo.getCodeBase());
                       //jarUrl =new URL(jarUrl.getProtocol(),jarUrl.getHost(),jarUrl.getPort(),jarUrl.getFile()+japVersionInfo.getJAPJarFileName());
                       listener.progress(0,0,UpdateListener.DOWNLOAD_START);
-                      //System.out.println(jarUrl.getHost()+jarUrl.getFile());
+                      System.out.println(jarUrl.getHost()+jarUrl.getFile());
 
 
              //   }
@@ -503,7 +524,7 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
       }
 
 
-      //Step 3
+      //Step 3 needed by a full Update
      private synchronized int createNewJAPJar(UpdateListener listener)
      {
         //get the buffer (bufferJapJar) where the data is stored
@@ -518,9 +539,9 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
              if(listener.progress(bufferJapJar.length,bufferJapJar.length,UpdateListener.STATE_IN_PROGRESS_STEP3)!=0)
                 {
                     fos.close();
-                    //System.out.println("new JarFile.delete()"+ cp_updJapJar.delete());
-                    cp_updJapJar.delete();
-                    cp_aktJapJar.delete();
+                   //System.out.println("new JarFile.delete()"+ cp_updJapJar.delete());
+                   // cp_updJapJar.delete();
+                   // cp_aktJapJar.delete();
                     return -1;
                 }
              fos.write(bufferJapJar);
@@ -535,7 +556,44 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
           }
 
      }
+/////////////////////////////////////////////////////////////////////////////////
+      //Step 3' needed by a differential Update
+     private synchronized int applyJARDiffJAPJar(UpdateListener listener)
+     {
+        //get the buffer (bufferJapJar) where the data is stored
+        //apply the JarDiff
+        //create a new File "Jap_"+newversion+".jar"
 
+        try
+          {
+             cp_updJapJar = new File(path+version+ext_new+extension);
+             // FileOutputStream fos = new FileOutputStream(cp_updJapJar);
+             if(bufferJapJar == null)
+              {
+                return -1;
+              }
+
+               if(listener.progress(bufferJapJar.length,bufferJapJar.length,UpdateListener.STATE_IN_PROGRESS_STEP3)!=0)
+              {
+                return -1;
+              }
+
+             if(JAPUtil.applyJarDiff(aktJapJar.getAbsolutePath(), cp_updJapJar.getAbsolutePath(),bufferJapJar)!=0)
+              {
+                return listener.progress(0,0,UpdateListener.STATE_ABORTED_STEP3);
+              }
+
+
+             return listener.progress(0,0,UpdateListener.STATE_FINISHED_STEP3);
+          }
+        catch(Exception e)
+          {
+             e.printStackTrace();
+             return listener.progress(0,0,UpdateListener.STATE_ABORTED_STEP3);
+          }
+
+     }
+/////////////////////////////////////////////////////////////////////////////////
      //Step 5 create the new JAP.jar-File by overwriting the oldFile by the new downloaded file
      private int createJapJar(UpdateListener listener)
       {
@@ -556,9 +614,9 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
                       System.out.println("createJapJar aborted"+n);
                       fis.close();
                       fos.close();
-                      updJapJar.delete();
-                      cp_updJapJar.delete();
-                      cp_aktJapJar.delete();
+                      //updJapJar.delete();
+                      //cp_updJapJar.delete();
+                      //cp_aktJapJar.delete();
                       return -1;
                     }
                 }
@@ -578,13 +636,7 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
       // by the system
       private void resetChanges()
       {
-        try{
-            updateThread.join();
-            }
-        catch(Exception e)
-          {
-            e.printStackTrace();
-          }
+
         if(cp_aktJapJar!=null)
         {
           cp_aktJapJar.delete();
@@ -597,6 +649,14 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
         {
           updJapJar.delete();
         }
+
+     /*    try{
+            updateThread.join();
+            }
+        catch(Exception e)
+          {
+            e.printStackTrace();
+          }*/
       }
 
       public static void main(String[]args)
