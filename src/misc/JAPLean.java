@@ -31,7 +31,7 @@ import jap.JAPDebug;
 import proxy.ProxyListener;
 import proxy.AnonWebProxy;
 import java.net.ServerSocket;
-
+import anon.infoservice.*;
 import anon.infoservice.MixCascade;
 import logging.*;
 import pay.crypto.tinyssl.TinySSL;
@@ -46,7 +46,9 @@ import org.bouncycastle.crypto.params.*;
 import java.security.*;
 import org.bouncycastle.crypto.*;
 import anon.crypto.*;
+import jap.*;
 import org.bouncycastle.crypto.params.RSAKeyGenerationParameters;
+import anon.infoservice.InfoServiceHolder;
 final class JAPLean implements ProxyListener
 {
 
@@ -62,9 +64,10 @@ final class JAPLean implements ProxyListener
 	JAPLean() throws Exception
 	{
 		LogHolder.setLogInstance(JAPDebug.getInstance());
-		JAPDebug.getInstance().setLogType(LogType.NET);
-		JAPDebug.getInstance().setLogLevel(LogLevel.ERR);
-
+		JAPDebug.getInstance().setLogType(LogType.ALL);
+		JAPDebug.getInstance().setLogLevel(LogLevel.DEBUG);
+		InfoServiceHolder.getInstance().setPreferedInfoService(new InfoServiceDBEntry(JAPConstants.defaultInfoServiceHostName,
+			JAPConstants.defaultInfoServicePortNumber));
 		// JAPAnonService.init();
 		ServerSocket listener = null;
 		try
@@ -100,13 +103,7 @@ final class JAPLean implements ProxyListener
 
 	public static void main(String[] argv) throws Exception
 	{
-		Document doc=DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
-		Element elm=doc.createElement("Test");
-		doc.appendChild(elm);
-		XMLUtil.setNodeValue(elm,"Test&<Test>Test");
-		String s=XMLUtil.XMLDocumentToString(doc);
-		System.out.println(s);
-// check for command line
+	// check for command line
 		if (argv == null || argv.length < 3)
 		{
 			System.err.println("Usage: JAPLean <listener_port> <first_mix_address> <first_mix_port>");
