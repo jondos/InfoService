@@ -5,14 +5,14 @@ Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
 
 	- Redistributions of source code must retain the above copyright notice,
-	  this list of conditions and the following disclaimer.
+		this list of conditions and the following disclaimer.
 
 	- Redistributions in binary form must reproduce the above copyright notice,
-	  this list of conditions and the following disclaimer in the documentation and/or
+		this list of conditions and the following disclaimer in the documentation and/or
 		other materials provided with the distribution.
 
 	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
-	  may be used to endorse or promote products derived from this software without specific
+		may be used to endorse or promote products derived from this software without specific
 		prior written permission.
 
 
@@ -30,30 +30,30 @@ package jap;
 import java.awt.Insets;
 import java.awt.Font;
 public final class JAPConstants {
-	public static final String aktVersion = "00.01.081"; //Never change the layout of this line!
+	public static final String aktVersion = "00.01.082"; //Never change the layout of this line!
 	//static final String buildDate=".."
 	//static final String buildType="..."
-        //needed for update.JAPUpdate
-        public static String aktVersion2 = aktVersion;
-        public final static boolean m_bReleasedVersion = false;
+				//needed for update.JAPUpdate
+				public static String aktVersion2 = aktVersion;
+				public final static boolean m_bReleasedVersion = false;
 	static final int      defaultPortNumber            = 4001;
 	static final String   defaultAnonHost              = "mix.inf.tu-dresden.de";
 	static final String   defaultAnonIP                = "141.76.1.120"; //only used for fallback,
-                                                                      //if DNS could not get IP for
-                                                                      // defaultAnonHost
+																																			//if DNS could not get IP for
+																																			// defaultAnonHost
 	static final int      defaultAnonPortNumber        = 6544;
 	static final String   defaultInfoServiceHostName   = "infoservice.inf.tu-dresden.de";
 	static final int      defaultInfoServicePortNumber = 6543;
 
-  public static final int FIREWALL_TYPE_HTTP         = 1;
-  public static final int FIREWALL_TYPE_SOCKS        = 2;
-  static final int      defaultFirewallType          = FIREWALL_TYPE_HTTP;
+	public static final int FIREWALL_TYPE_HTTP         = 1;
+	public static final int FIREWALL_TYPE_SOCKS        = 2;
+	static final int      defaultFirewallType          = FIREWALL_TYPE_HTTP;
 
-  static final int      SMALL_FONT_SIZE              = 9;
-  static final int      SMALL_FONT_STYLE             = Font.PLAIN;
-  static final Insets   SMALL_BUTTON_MARGIN          = new Insets(1,1,1,1);
+	static final int      SMALL_FONT_SIZE              = 9;
+	static final int      SMALL_FONT_STYLE             = Font.PLAIN;
+	static final Insets   SMALL_BUTTON_MARGIN          = new Insets(1,1,1,1);
 
-  static final String   urlJAPNewVersionDownload     = "http://anon.inf.tu-dresden.de:80/~sk13/anon/jap/JAP.jar";
+	static final String   urlJAPNewVersionDownload     = "http://anon.inf.tu-dresden.de:80/~sk13/anon/jap/JAP.jar";
 	static final String   JAPLocalFilename             = "JAP.jar";
 	static final int      MAXHELPLANGUAGES             = 6;
 	public static final String   TITLE                 = "JAP";
@@ -76,9 +76,9 @@ public final class JAPConstants {
 	static final String   ICONIFYICONFN                = "iconify.gif";
 	static final String   ENLARGEYICONFN               = "enlarge.gif";
 	static final String   METERICONFN                  = "icom.gif";
-  public static final String   IMAGE_ARROW           = "arrow46.gif";
-  public static final String   IMAGE_BLANK           = "blank.gif";
-  public static final String   IMAGE_STEPFINISHED    = "haken.gif";
+	public static final String   IMAGE_ARROW           = "arrow46.gif";
+	public static final String   IMAGE_BLANK           = "blank.gif";
+	public static final String   IMAGE_STEPFINISHED    = "haken.gif";
 	static final String[] METERFNARRAY                 ={
 															"meterD.gif",    // anonymity deactivated
 															"meterNnew.gif", // no measure available

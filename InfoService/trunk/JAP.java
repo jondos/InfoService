@@ -5,14 +5,14 @@ Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
 
 	- Redistributions of source code must retain the above copyright notice,
-	  this list of conditions and the following disclaimer.
+		this list of conditions and the following disclaimer.
 
 	- Redistributions in binary form must reproduce the above copyright notice,
-	  this list of conditions and the following disclaimer in the documentation and/or
+		this list of conditions and the following disclaimer in the documentation and/or
 		other materials provided with the distribution.
 
 	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
-	  may be used to endorse or promote products derived from this software without specific
+		may be used to endorse or promote products derived from this software without specific
 		prior written permission.
 
 
@@ -55,9 +55,9 @@ class JAP extends Frame {
 
 
 	public JAP()
-    {
-    }
-  /** Constructor for the JAP object.
+		{
+		}
+	/** Constructor for the JAP object.
 	 * @param argv The commandline arguments.
 	 */
 	JAP(String[] argv) {
@@ -105,6 +105,17 @@ class JAP extends Frame {
 			JAPAWTMsgBox.MsgBox(this,JAPMessages.getString("errorSwingNotInstalled"),JAPMessages.getString("error"));
 			System.exit(0);
 		}
+
+		// Set the default Look-And-Feel
+		if (!os.regionMatches(true,0,"mac",0,3)) {
+			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAP:Setting Cross Platform Look-And-Feel!");
+			try {
+				javax.swing.UIManager.setLookAndFeel(javax.swing.UIManager.getCrossPlatformLookAndFeelClassName());
+			} catch (Exception e) {
+				JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.GUI,"JAP:Exception while setting Cross Platform Look-And-Feel!");
+			}
+		}
+
 		// Create the controller object
 		JAPController controller = JAPController.create();
 		// Create debugger object
@@ -118,15 +129,6 @@ class JAP extends Frame {
 		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAP:Java "+javaVersion+" running on "+os+".");
 		if (mrjVersion != null)
 			JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAP:MRJ Version is "+mrjVersion+".");
-		// Set the Look-And-Feel
-		if (!os.regionMatches(true,0,"mac",0,3)) {
-			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAP:Setting Cross Platform Look-And-Feel!");
-			try {
-				javax.swing.UIManager.setLookAndFeel(javax.swing.UIManager.getCrossPlatformLookAndFeelClassName());
-			} catch (Exception e) {
-				JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.GUI,"JAP:Exception while setting Cross Platform Look-And-Feel!");
-			}
-		}
 		// Create the view object
 		JAPView view = new JAPView(JAPConstants.TITLE);
 		// Create the main frame
@@ -150,10 +152,10 @@ class JAP extends Frame {
 		view.toFront();
 		splash.dispose();
 
-    // pre-initalize anon service
+		// pre-initalize anon service
 		anon.server.AnonServiceImpl.init();
 
-    // initially start services
+		// initially start services
 		controller.initialRun();
 	}
 
