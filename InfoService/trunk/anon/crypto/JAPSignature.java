@@ -39,7 +39,6 @@ import java.security.MessageDigest;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Signature;
-import java.security.SignatureException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
@@ -101,7 +100,7 @@ public class JAPSignature
 		}
 	}
 
-	public boolean verifyXML(InputStream xmlDoc) throws SignatureException
+	public boolean verifyXML(InputStream xmlDoc)
 	{
 		try
 		{
@@ -112,7 +111,7 @@ public class JAPSignature
 		}
 		catch (Exception e)
 		{
-			throw new SignatureException(e.getMessage());
+			return false;
 		}
 	}
 
@@ -121,22 +120,21 @@ public class JAPSignature
 	 * @param n Root node of the XML structure.
 	 * @return true if it could be verified
 	 * @return false otherwise
-	 * @throws SignatureException
 	 */
-	public boolean verifyXML(Node n) throws SignatureException
+	public boolean verifyXML(Node n)
 	{
 		try
 		{
 			if (n == null)
 			{
-				throw new SignatureException("Root Node is null");
+				return false;
 			}
 			Element root = (Element) n;
 			Element signature = (Element) XMLUtil.getFirstChildByName(root, "Signature");
 			NodeList nl = signature.getElementsByTagName("SignedInfo");
 			if (nl.getLength() < 1)
 			{
-				throw new SignatureException("No <SignedInfo> Tag");
+				return false;
 			}
 			Element siginfo = (Element) nl.item(0);
 
@@ -144,14 +142,14 @@ public class JAPSignature
 			ByteArrayOutputStream out = new ByteArrayOutputStream();
 			if (makeCanonical(siginfo, out, false, null) == -1)
 			{
-				throw new SignatureException("Could not make <SignedInfo> canonical");
+				return false;
 			}
 			out.flush();
 			//System.out.println(new String(out.toByteArray())+"   Size:"+Integer.toString(out.size()));
 			nl = signature.getElementsByTagName("SignatureValue");
 			if (nl.getLength() < 1)
 			{
-				throw new SignatureException("No <SignatureValue> Tag");
+				return false;
 			}
 			Element signaturevalue = (Element) nl.item(0);
 			String strSigValue = signaturevalue.getFirstChild().getNodeValue();
@@ -164,7 +162,7 @@ public class JAPSignature
 			//System.out.println("Size of rsbuff: "+Integer.toString(rsbuff.length));
 			if (rsbuff.length != 40)
 			{
-				throw new SignatureException("Wrong Size of rs-Value");
+				return false;
 			}
 
 			//now rsBuff contains r (20 bytes) and s (20 bytes)
@@ -239,7 +237,7 @@ public class JAPSignature
 			out.reset();
 			if (makeCanonical(root, out, true, signature) == -1)
 			{
-				throw new SignatureException("Could not make ROOT canonical");
+				return false;
 			}
 			out.flush();
 			//System.out.println(new String(out.toByteArray())+"   Size:"+Integer.toString(out.size()));
@@ -252,7 +250,7 @@ public class JAPSignature
 			nl = siginfo.getElementsByTagName("DigestValue");
 			if (nl.getLength() < 1)
 			{
-				throw new SignatureException("No <DigestValue> Tag");
+				return false;
 			}
 			String strDigest = nl.item(0).getFirstChild().getNodeValue();
 			tmpBuff = Base64.decode(strDigest);
@@ -260,14 +258,20 @@ public class JAPSignature
 		}
 		catch (Exception e)
 		{
-			throw new SignatureException(e.getMessage());
+			return false;
 		}
 	}
 
-	public boolean verify(byte[] message, byte[] sig) throws SignatureException
+	public boolean verify(byte[] message, byte[] sig)
 	{
-		signatureAlgorithm.update(message);
-		return signatureAlgorithm.verify(sig);
+		try{
+			signatureAlgorithm.update(message);
+			return signatureAlgorithm.verify(sig);
+		}catch(Exception e)
+		{
+			return false;
+		}
+
 	}
 
 	/**
