@@ -10,6 +10,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.*;
 import java.security.*;
+import au.net.aba.security.cert.*;
 /*import java.math.BigInteger;
 import sun.security.x509.X509Cert;
 import sun.security.pkcs.PKCS8Key;
@@ -34,7 +35,7 @@ final public class JAPTest
 		{
 	//		readSig();
 	//		readDSAPrivKey();
-			testCert();
+			testCertAba();
 	//		readCerts();
 		/*
 			int MAX=128000;
@@ -66,6 +67,24 @@ final public class JAPTest
 		*/	System.exit(0);
 		}
 	
+	public static void testCertAba()
+	{
+		try
+		{
+			java.security.Security.addProvider(new au.net.aba.crypto.provider.ABAProvider());
+			CertificateFactory cf=CertificateFactory.getInstance("X509","ABA");
+			FileInputStream f=new FileInputStream("ldbsh.cer");
+			X509Certificate cer=(X509Certificate)cf.generateCertificate(f);
+			f.close();
+			PublicKey key=cer.getPublicKey();
+			cer.verify(key);
+			System.out.println("Verified MAster");
+		}
+		catch(Exception e)
+											 {
+			e.printStackTrace();
+											 }
+	}
 	public static void testCert()
 		{
 		try{
