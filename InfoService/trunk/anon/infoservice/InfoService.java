@@ -292,7 +292,8 @@ final public class InfoService
 										e.setMixedPackets(mixedPackets);
 									}
 								v.addElement(e);
-							}//End for all Mixes
+								m_Log.log(LogLevel.DEBUG,LogType.NET,"Added MixKaskade: "+e.toString());
+								}//End for all Mixes
 					}
 				catch(Exception e)
 					{
@@ -309,6 +310,7 @@ final public class InfoService
 							{
 								db[i]=(AnonServer)v.elementAt(i);
 							}
+						m_Log.log(LogLevel.DEBUG,LogType.NET,"Finished!");
 						return db;
 					}
 			}

@@ -6,11 +6,12 @@ final public class JAPDll
 			{
 				try
 					{
-						System.loadLibrary("japdll");
+						String osName=System.getProperty("os.name","").toLowerCase();
+						if(osName.indexOf("win")>-1)
+							System.loadLibrary("japdll");
 					}
 				catch(Throwable t)
 					{
-						t.printStackTrace();
 					}
 			}
 
@@ -23,7 +24,6 @@ final public class JAPDll
 					}
 				catch(Throwable t)
 					{
-						t.printStackTrace();
 					}
 				return false;
 			}
@@ -37,7 +37,6 @@ final public class JAPDll
 					}
 				catch(Throwable t)
 					{
-						t.printStackTrace();
 						return false;
 					}
 			}
