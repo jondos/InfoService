@@ -53,10 +53,14 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 	private ImageIcon[]			meterIcons;
 	private JAPHelp 			helpWindow;
 	private JAPConf 			configDialog;
+	
+	private boolean m_bIsIconified;
+	private String m_Title;
 
 	public JAPView (String s)
 		{
 			super(s);
+			m_Title=s;
 			JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPView:initializing...");
 			model = JAPModel.getModel();
 			model.setView(this);
@@ -64,6 +68,7 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 			helpWindow =  null;//new JAPHelp(this); 
 			configDialog = null;//new JAPConf(this);
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPView:initialization finished!");
+			m_bIsIconified=false;
 		}
 	
 	private void init()
@@ -132,6 +137,21 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 
 			updateValues();
 			tabs.setSelectedComponent(level);
+			
+			this.addWindowListener(new WindowAdapter()
+				{
+					public void windowDeiconified(WindowEvent e)
+						{
+							m_bIsIconified=false;
+							setTitle(m_Title);
+						}
+					public void windowIconified(WindowEvent e)
+						{
+							m_bIsIconified=true;
+							updateValues();
+						}
+				});
+			
 			try
 				{
 					pack();  // optimize size
@@ -442,16 +462,21 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 		ano1CheckBox.setSelected(model.isAnonMode());
 		meterLabel.setIcon(setMeterImage());
 		if (model.isAnonMode()) {
-				if (model.nrOfActiveUsers != -1) {
-					// Nr of active users
-					if (model.nrOfActiveUsers > userProgressBar.getMaximum())
-						userProgressBar.setMaximum(model.nrOfActiveUsers);
-					userProgressBar.setValue(model.nrOfActiveUsers);
-					userProgressBar.setString(String.valueOf(model.nrOfActiveUsers));
-				} else {
-					userProgressBar.setValue(userProgressBar.getMaximum());
-					userProgressBar.setString(model.getString("meterNA"));
-				}
+				if (model.nrOfActiveUsers != -1)
+					{
+						// Nr of active users
+						if (model.nrOfActiveUsers > userProgressBar.getMaximum())
+							userProgressBar.setMaximum(model.nrOfActiveUsers);
+						userProgressBar.setValue(model.nrOfActiveUsers);
+						userProgressBar.setString(String.valueOf(model.nrOfActiveUsers));
+						if(m_bIsIconified)
+							setTitle("JAP ("+Integer.toString(model.nrOfActiveUsers)+" "+model.getString("iconifiedviewUsers")+")");
+					}
+				else
+					{
+							userProgressBar.setValue(userProgressBar.getMaximum());
+							userProgressBar.setString(model.getString("meterNA"));
+					}
 				if (model.currentRisk != -1) {
 					// Current Risk
 					protectionProgressBar.setValue(model.currentRisk);
@@ -497,7 +522,8 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 		ownTrafficChannelsProgressBar.setString(String.valueOf(model.getNrOfChannels()));
 		// Nr of Bytes transmitted anonymously
 		ownTrafficBytesLabel.setText(NumberFormat.getInstance().format(model.getNrOfBytes())+" Bytes");
-    }
+ 	
+		}
 	
 	public synchronized void valuesChanged (JAPModel m)
 		{

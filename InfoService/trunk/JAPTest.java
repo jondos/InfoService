@@ -38,6 +38,7 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.*;
 import java.security.*;
 import java.io.*;
+import java.util.*;
 //import au.net.aba.security.cert.*;
 import java.math.BigInteger;
 import sun.security.x509.X509Cert;
@@ -65,7 +66,8 @@ import java.security.interfaces.*;
 import java.security.spec.InvalidKeySpecException;
 
 import Rijndael.Rijndael_Algorithm;
-
+//import com.sun.javaws.jardiff.*;
+import java.util.zip.*;
 final public class JAPTest
 {
 	public static void main(String argc[])
@@ -117,7 +119,7 @@ final public class JAPTest
 //	networkTest(argc);
 	//testRRT();
 		//testSymCipherCryptix();
-		try{
+/*		try{
 			byte[] addr=InetAddress.getByName("passat.mesh.de").getAddress();
 		String s="/feedback/"+Integer.toString(Math.abs(addr[0]))+"."+
 																							 Integer.toString(addr[1])+"."+Byte.toString(addr[2])+"."+
@@ -127,6 +129,8 @@ final public class JAPTest
 											 {
 												e.printStackTrace();
 											 }
+	*/	
+		testJarDiff();
 		System.exit(0);
 		}
 	
@@ -244,7 +248,7 @@ final public class JAPTest
 			X509Cert master=new X509Cert();
 			f=new FileInputStream("jap.cer");
 			master.decode(f);
-			PublicKey k=cert.getPublicKey();
+	//		PublicKey k=cert.getPublicKey();
 	//		RSAPublicKey kp=transformKey(k);
 		//	sun.security.x509.X509Key kx=(sun.security.x509.X509Key)k;
 		
@@ -570,7 +574,7 @@ final public class JAPTest
 					int localPort=oSocket.getLocalPort();
 					buff[16]=(byte)(localPort>>8);
 					buff[17]=(byte)(localPort&0xFF);
-					InetAddress returnAddr=oSocket.getLocalAddress();
+					//InetAddress returnAddr=oSocket.getLocalAddress();
 					
 					System.arraycopy(InetAddress.getLocalHost().getAddress(),0,buff,12,4);
 					DatagramPacket oPacket=new DatagramPacket(buff,4+8+6);
@@ -657,6 +661,114 @@ public static void testAES()
 			System.out.println("Zeit [ms]: "+Long.toString(l));
 	}
 	catch(Exception e)
+	{
+		e.printStackTrace();
+	}
+}
+
+
+public static void testJarDiff()
+{
+	try{
+			ZipFile zold=null;//new ZipInputStream(new FileInputStream("g:/projects/jap/classes/JAPold.jar"));	
+			ZipInputStream zdiff=null;//new ZipInputStream(new FileInputStream("g:/projects/jap/classes/test.jar"));
+			ZipOutputStream znew=null;//new ZipOutputStream(new FileOutputStream("g:/projects/jap/classes/JAPnew.jar"));
+			ZipEntry ze=null;
+// geting old names
+			zold=new ZipFile("g:/projects/jap/classes/JAPold.jar");
+			Hashtable oldnames=new Hashtable();
+			Enumeration e=zold.entries();
+			while(e.hasMoreElements())
+				{
+					ze=(ZipEntry)e.nextElement();
+					oldnames.put(ze.getName(),ze.getName());
+				}
+			zdiff=new ZipInputStream(new FileInputStream("g:/projects/jap/classes/test.jar"));
+			znew=new ZipOutputStream(new FileOutputStream("g:/projects/jap/classes/JAPnew.jar"));		
+			znew.setLevel(9);
+			byte[] b=new byte[5000];
+			while((ze=zdiff.getNextEntry())!=null)
+				{
+					ZipEntry zeout=new ZipEntry(ze.getName());
+					if(!ze.getName().equalsIgnoreCase("META-INF/INDEX.JD"))
+						{
+							System.out.println(ze.getName());
+							oldnames.remove(ze.getName());
+							int s=-1;
+							zeout.setTime(ze.getTime());
+							zeout.setComment(ze.getComment());
+							zeout.setExtra(ze.getExtra());
+							zeout.setMethod(ze.getMethod());
+							if(ze.getSize()!=-1)
+								zeout.setSize(ze.getSize());
+							if(ze.getCrc()!=-1)
+								zeout.setCrc(ze.getCrc());
+							znew.putNextEntry(zeout);
+							while((s=zdiff.read(b,0,5000))!=-1)
+								{
+									znew.write(b,0,s);
+								}
+							znew.closeEntry();
+						}
+					else
+						{
+							BufferedReader br=new BufferedReader(new InputStreamReader(zdiff));
+							String s=null;
+							while((s=br.readLine())!=null)
+								{
+									StringTokenizer st=new StringTokenizer(s);
+									s=st.nextToken();
+									if(s.equalsIgnoreCase("remove"))
+										oldnames.remove(st.nextToken());
+									else if(s.equalsIgnoreCase("move"))
+										System.out.println("move "+st.nextToken());
+									else
+										System.out.println("unkown: "+s);										
+								}
+						}
+					zdiff.closeEntry();
+				}
+			e=oldnames.elements();
+			while(e.hasMoreElements())
+				{
+					String s=(String)e.nextElement();
+					System.out.println(s);
+					ze=zold.getEntry(s);
+					ZipEntry zeout=new ZipEntry(ze.getName());
+					zeout.setTime(ze.getTime());
+					zeout.setComment(ze.getComment());
+					zeout.setExtra(ze.getExtra());
+					zeout.setMethod(ze.getMethod());
+					if(ze.getSize()!=-1)
+						zeout.setSize(ze.getSize());
+					if(ze.getCrc()!=-1)
+						zeout.setCrc(ze.getCrc());
+					znew.putNextEntry(zeout);
+					System.out.println("Getting in..");
+					InputStream in=zold.getInputStream(ze);
+					int l=-1;
+					System.out.println("Reading..");
+					try{
+					while((l=in.read(b,0,5000))!=-1)
+						{
+							znew.write(b,0,l);
+					}}
+					catch(Exception er)
+					{
+						er.printStackTrace(System.out);
+					}
+					in.close();
+					znew.closeEntry();
+					
+				}
+			
+			znew.finish();
+			znew.flush();
+			znew.close();
+			zold.close();
+			zdiff.close();
+	}
+	catch(Throwable e)
 	{
 		e.printStackTrace();
 	}
