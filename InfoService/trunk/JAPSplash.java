@@ -53,7 +53,11 @@ final class JAPSplash extends Window
 		    xVersion=yVersion=100;
 				Toolkit t=Toolkit.getDefaultToolkit();
 				MediaTracker ma=new MediaTracker(this);
-				InputStream in=JAPSplash.class.getResourceAsStream(JAPModel.SPLASHFN);
+				InputStream in=null;
+				if(t.getColorModel().getPixelSize()<=16)
+					in=JAPSplash.class.getResourceAsStream(JAPModel.IMGPATHLOWCOLOR+JAPModel.SPLASHFN);
+				if(in==null)
+					in=JAPSplash.class.getResourceAsStream(JAPModel.IMGPATHHICOLOR+JAPModel.SPLASHFN);
 				int len;
 				int aktIndex;
 				if(in!=null)
@@ -73,7 +77,11 @@ final class JAPSplash extends Window
 							{
 							}
 					}
-				in=JAPSplash.class.getResourceAsStream(JAPModel.BUSYFN);
+				in=null;
+				if(t.getColorModel().getPixelSize()<=16)
+					in=JAPSplash.class.getResourceAsStream(JAPModel.IMGPATHLOWCOLOR+JAPModel.BUSYFN);
+				if(in==null)
+					in=JAPSplash.class.getResourceAsStream(JAPModel.IMGPATHHICOLOR+JAPModel.BUSYFN);
 				if(in!=null)
 					{
 						byte[] buff1=new byte[7000];

@@ -41,6 +41,7 @@ import java.util.StringTokenizer;
 import java.awt.Window;
 import java.awt.Dimension;
 import java.awt.MediaTracker;
+import java.awt.Toolkit;
 import org.w3c.dom.Node;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
@@ -305,23 +306,44 @@ final class JAPUtil
 			//JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPModel:Image "+strImage+" loading...");
 			boolean finished = false;
 			ImageIcon img = null;
-			// this is necessary to make shure that the images are loaded when contained in a JAP.jar
-			try
-				{
-					img = new ImageIcon(JAPUtil.class.getResource(strImage));
-				}
-			catch (Exception e)
-				{
+			
+			// get color depth
+			Toolkit t=Toolkit.getDefaultToolkit();
+			int colordepth = Toolkit.getDefaultToolkit().getColorModel().getPixelSize();			
+			
+			String imageFilename;
+			// try loading the lowcolor images
+			if(colordepth<=16) {
+				imageFilename = JAPModel.IMGPATHLOWCOLOR+strImage;
+				try {
+					// this is necessary to make shure that the images are loaded when contained in a JAP.jar
+					img = new ImageIcon(JAPUtil.class.getResource(imageFilename));
+				} catch (Exception e) {	
 					img = null;
 				}
-			// ...otherwise
-			if (img == null)
-				{
-					img = new ImageIcon(strImage);
+				if(img==null) {
+					img = new ImageIcon(imageFilename);
 				}
+			}
+			// if loading of lowcolor images was not successful or
+			//    we have to load the hicolor images
+			if((img==null)||(img.getIconHeight()<=0)||(img.getIconWidth()<=0)) {
+				imageFilename = JAPModel.IMGPATHHICOLOR+strImage;
+				try {
+					// this is necessary to make shure that the images are loaded when contained in a JAP.jar
+					img = new ImageIcon(JAPUtil.class.getResource(imageFilename));
+				} catch (Exception e) {	
+					img = null;
+				}
+				if(img==null) {
+					img = new ImageIcon(imageFilename);
+				}
+			}
+			
 			if ((sync == false) || (img == null)) {
 				finished = true;
 			}
+			
 			while(finished!=true)
 				{
 					int status = img.getImageLoadStatus();
@@ -337,6 +359,8 @@ final class JAPUtil
 						finished = true;
 					}
 				}
+			if((img==null)||(img.getIconHeight()<=0)||(img.getIconWidth()<=0))
+				JAPDebug.out(JAPDebug.ERR,JAPDebug.GUI,"JAPModel:Image "+strImage+" not loaded!");
 		return img;
 	}
 
