@@ -100,11 +100,11 @@ public class JAPMixCascadeComboBox extends JComboBox
 			//c.gridy = 2;
 			//c.insets = new Insets(0, 0, 0, 0);
 			//m_componentUserServer.add(l, c);
-			m_componentUserDefinedCascade = new JLabel(JAPUtil.loadImageIcon("servermanuell.gif", true));
+			m_componentUserDefinedCascade = new JLabel(JAPUtil.loadImageIcon(JAPConstants.IMAGE_CASCADE_MANUELL, true));
 			m_componentUserDefinedCascade.setOpaque(true);
 			m_componentUserDefinedCascade.setHorizontalAlignment(JLabel.LEFT);
 			m_componentUserDefinedCascade.setBorder(new EmptyBorder(1, 3, 1, 3));
-			m_componentAvailableCascade = new JLabel(JAPUtil.loadImageIcon("serverfrominternet.gif", true));
+			m_componentAvailableCascade = new JLabel(JAPUtil.loadImageIcon(JAPConstants.IMAGE_CASCADE_INTERNET, true));
 			m_componentAvailableCascade.setHorizontalAlignment(JLabel.LEFT);
 			m_componentAvailableCascade.setOpaque(true);
 			m_componentAvailableCascade.setBorder(new EmptyBorder(1, 3, 1, 3));

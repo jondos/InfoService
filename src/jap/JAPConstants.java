@@ -145,6 +145,17 @@ public final class JAPConstants
 	public static final String IMAGE_WARNING = "warning.gif";
 	public static final String IMAGE_INFORMATION = "information.gif";
 	public static final String IMAGE_ERROR = "error.gif";
+	public static final String IMAGE_CASCADE_MANUELL = "servermanuell.gif";
+	public static final String IMAGE_CASCADE_INTERNET = "serverfrominternet.gif";
+	public static final String IMAGE_INFOSERVICE_MANUELL = "infoservicemanuell.gif";
+	public static final String IMAGE_INFOSERVICE_INTERNET = "infoservicefrominternet.gif";
+
+	public static final String IMAGE_SAVE = "saveicon.gif";
+	public static final String IMAGE_EXIT = "exiticon.gif";
+	public static final String IMAGE_DELETE = "deleteicon.gif";
+	public static final String IMAGE_COPY = "copyicon.gif";
+	public static final String IMAGE_COPY_CONFIG = "copyintoicon.gif";
+
 
 	public static final String CERTENABLEDICON = "cenabled.gif";
 	public static final String CERTDISABLEDICON = "cdisabled.gif";
