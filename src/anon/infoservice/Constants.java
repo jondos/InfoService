@@ -33,27 +33,6 @@ final public class Constants
 {
   public static final String DEFAULT_RESSOURCE_FILENAME = "InfoService.properties";
 
-  public static final String CRLF = "\r\n";
-  public static final String TYPE = "Content-type: ";
-  public static final String LENGTH = "Content-length: ";
-  public static final String LOCATION = "Location: ";
-  public static final String DATE = "Date: ";
-  public static final String EXPIRES = "Expires: ";
-  public static final String CACHE_CONTROL = "Cache-Control: ";
-  public static final String PRAGMA = "Pragma: ";
-
-  public static final String OCTET_STREAM = "application/octet-stream";
-  public static final String TEXT_PLAIN = "text/plain";
-  public static final String TEXT_HTML = "text/html";
-  public static final String TEXT_XML = "text/xml";
-  public static final String APPLICATION_JNLP = "application/x-java-jnlp-file";
-  public static final String OK = "HTTP/1.1 200 OK";
-  public static final String MOVED = "HTTP/1.1 301 Moved Permanently";
-  public static final String ERROR = "HTTP/1.1 400 Bad Request";
-  public static final String NOTFOUND = "HTTP/1.1 404 Not Found";
-  public static final String HTML_NOTFOUND = "<HTML><TITLE>404 File Not Found</TITLE><H1>404 File Not Found</H1><P>File not found on this server.</P></HTML>";
-  public static final String HTML_INVALID_REQUEST = "<HTML><TITLE>400 Bad Request</TITLE><H1>400 Bad Request</H1><P>Your request has been rejected by the server.</P></HTML>";
-  public static final String HTML_HASMOVED = "<HTML><TITLE>301 Moved Permanently</TITLE><H1>301 Moved Permanently</H1><P>The document has moved <A HREF=\"%\">here</A>.</P></HTML>";
   public static final String CERTSPATH = "certificates/";
   public static final String CERT_JAPINFOSERVICEMESSAGES = "japinfoservicemessages.cer";;
   public static final int MAX_REQUEST_HEADER_SIZE = 10000;
@@ -76,10 +55,10 @@ final public class Constants
   /**
    * The standard timeout for infoservice database entries in an infoservice.
    */
-  public static final long TIMEOUT_INFOSERVICE = 11 * 60 * (long) (1000); // 11 minutes
-  public static final long TIMEOUT_MIX = 11 * 60 * (long) (1000); // 11 minutes
-  public static final long TIMEOUT_MIXCASCADE = 11 * 60 * (long) (1000); // 11 minutes
-  public static final long TIMEOUT_STATUS = 100 * (long) (1000); // 100 seconds
+  public static final long TIMEOUT_INFOSERVICE = 11 * 60 * 1000L; // 11 minutes
+  public static final long TIMEOUT_MIX = 15 * 60 * 1000L; // 15 minutes
+  public static final long TIMEOUT_MIXCASCADE = 15 * 60 * 1000L; // 15 minutes
+  public static final long TIMEOUT_STATUS = 100 * 1000L; // 100 seconds
 
   /**
    * The timeout for all entries in the database of JAP forwarders. If we don't get a new  update
@@ -112,7 +91,7 @@ final public class Constants
   /**
    * This is the version number of the infoservice software.
    */
-  public static final String INFOSERVICE_VERSION = "IS.06.037"; //never change the layout of this line!
+  public static final String INFOSERVICE_VERSION = "IS.06.040"; //never change the layout of this line!
 
 
 }
