@@ -73,6 +73,9 @@ import javax.swing.tree.*;
 import javax.swing.event.*;
 import java.awt.*;
 import javax.swing.border.*;
+
+import anon.infoservice.ProxyInterface;
+
 final class JAPConf extends JDialog
 {
 
@@ -561,8 +564,8 @@ final class JAPConf extends JDialog
 		m_tfProxyHost.setFont(m_fontControls);
 		m_tfProxyPortNumber = new JAPJIntField();
 		m_tfProxyPortNumber.setFont(m_fontControls);
-		m_tfProxyHost.setEnabled(JAPModel.getUseFirewall());
-		m_tfProxyPortNumber.setEnabled(JAPModel.getUseFirewall());
+		m_tfProxyHost.setEnabled(JAPModel.getInstance().getProxyInterface().isValid());
+		m_tfProxyPortNumber.setEnabled(JAPModel.getInstance().getProxyInterface().isValid());
 		m_cbProxy.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent e)
@@ -991,7 +994,7 @@ final class JAPConf extends JDialog
 		{
 			i = -1;
 		}
-		if (!JAPUtil.isPort(i))
+		if (!ProxyInterface.isValidPort(i))
 		{
 			showError(JAPMessages.getString("errorListenerPortWrong"));
 			return false;
@@ -1033,7 +1036,7 @@ final class JAPConf extends JDialog
 			{
 				i = -1;
 			}
-			if (!JAPUtil.isPort(i))
+			if (!ProxyInterface.isValidPort(i))
 			{
 				showError(JAPMessages.getString("errorFirewallServicePortWrong"));
 				return false;
@@ -1140,14 +1143,20 @@ final class JAPConf extends JDialog
 		catch (Exception e)
 		{}
 		;
-		int firewallType = JAPConstants.FIREWALL_TYPE_HTTP;
+		String firewallType = ProxyInterface.PROTOCOL_TYPE_HTTP;
 		if (m_comboProxyType.getSelectedIndex() == 1)
 		{
-			firewallType = JAPConstants.FIREWALL_TYPE_SOCKS;
+			firewallType = ProxyInterface.PROTOCOL_TYPE_SOCKS;
 		}
-		m_Controller.setProxy(firewallType, m_tfProxyHost.getText().trim(), port, m_cbProxy.isSelected());
-		m_Controller.setFirewallAuthUserID(m_tfProxyAuthenticationUserID.getText().trim());
-		m_Controller.setUseFirewallAuthorization(m_cbProxyAuthentication.isSelected());
+		m_Controller.changeProxyInterface(
+				  new ProxyInterface(m_tfProxyHost.getText().trim(),
+									 port,
+									 firewallType,
+									 m_tfProxyAuthenticationUserID.getText().trim(),
+									 m_Controller.getPasswordReader(),
+									 m_cbProxyAuthentication.isSelected(),
+									 m_cbProxy.isSelected()));
+
 		//Cert seetings
 		m_Controller.setCertCheckDisabled(m_cbCertCheckDisabled.isSelected());
 
@@ -1272,11 +1281,12 @@ final class JAPConf extends JDialog
 		//m_labelSocksPortNumber.setVisible(bSocksVisible);
 		//m_cbListenerSocks.setSelected(m_Controller.getUseSocksPort());
 		// firewall tab
-		m_cbProxy.setSelected(JAPModel.getUseFirewall());
+		m_cbProxy.setSelected(JAPModel.getInstance().getProxyInterface().isValid());
 		m_tfProxyHost.setEnabled(m_cbProxy.isSelected());
 		m_tfProxyPortNumber.setEnabled(m_cbProxy.isSelected());
 		m_comboProxyType.setEnabled(m_cbProxy.isSelected());
-		if (JAPModel.getFirewallType() == JAPConstants.FIREWALL_TYPE_HTTP)
+		if (JAPModel.getInstance().getProxyInterface().getProtocol().equals(
+				  ProxyInterface.PROTOCOL_TYPE_HTTP))
 		{
 			m_comboProxyType.setSelectedIndex(0);
 		}
@@ -1285,10 +1295,13 @@ final class JAPConf extends JDialog
 			m_comboProxyType.setSelectedIndex(1);
 		}
 		m_cbProxyAuthentication.setEnabled(m_cbProxy.isSelected());
-		m_tfProxyHost.setText(JAPModel.getFirewallHost());
-		m_tfProxyPortNumber.setText(String.valueOf(JAPModel.getFirewallPort()));
-		m_tfProxyAuthenticationUserID.setText(JAPModel.getFirewallAuthUserID());
-		m_cbProxyAuthentication.setSelected(JAPModel.getUseFirewallAuthorization());
+		m_tfProxyHost.setText(JAPModel.getInstance().getProxyInterface().getHost());
+		m_tfProxyPortNumber.setText(String.valueOf(
+				  JAPModel.getInstance().getProxyInterface().getPort()));
+		m_tfProxyAuthenticationUserID.setText(
+				  JAPModel.getInstance().getProxyInterface().getAuthenticationUserID());
+		m_cbProxyAuthentication.setSelected(
+				  JAPModel.getInstance().getProxyInterface().isAuthenticationUsed());
 		//cert tab
 		m_cbCertCheckDisabled.setSelected(JAPModel.isCertCheckDisabled());
 //		m_cbSaveWindowPositions.setSelected(JAPModel.getSaveMainWindowPosition());

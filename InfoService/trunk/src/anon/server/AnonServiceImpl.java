@@ -43,22 +43,14 @@ import anon.server.impl.KeyPool;
 import anon.server.impl.MuxSocket;
 import anon.server.impl.ProxyConnection;
 import anon.AnonServerDescription;
+import anon.infoservice.ImmutableProxyInterface;
 
 final public class AnonServiceImpl implements AnonService
 {
-	public static final int FIREWALL_TYPE_NONE = 0;
-	public static final int FIREWALL_TYPE_HTTP = 1;
-	public static final int FIREWALL_TYPE_SOCKS = 2;
-
 	//private static AnonServiceImpl m_AnonServiceImpl=null;
 	private MuxSocket m_MuxSocket = null;
 	private Vector m_AnonServiceListener;
-	private int m_FirewallType;
-	private String m_FirewallHost;
-	private int m_FirewallPort;
-	private String m_FirewallUserID;
-	private String m_FirewallPasswd;
-
+	private ImmutableProxyInterface m_proxyInterface;
 	private boolean m_bMixCertCheckEnabled;
 	private JAPCertificateStore m_certsTrustedRoots;
 
@@ -67,25 +59,20 @@ final public class AnonServiceImpl implements AnonService
 	 */
 	private ProxyConnection m_proxyConnection;
 
-	/**
-	 * Stores, whether we use a forwarded connection -> connection already exists -> we don't
-	 * create a new connection, when connect() is called.
-	 */
-	private boolean m_forwardedConnection;
+	public AnonServiceImpl()
+	{
+		this( (ImmutableProxyInterface)null);
+	}
 
-	protected AnonServiceImpl()
+	public AnonServiceImpl(ImmutableProxyInterface a_proxyInterface)
 	{
 		m_AnonServiceListener = new Vector();
-		m_FirewallType = FIREWALL_TYPE_NONE;
-		m_FirewallHost = null;
-		m_FirewallPort = -1;
-		m_FirewallUserID = null;
-		m_FirewallPasswd = null;
 		m_bMixCertCheckEnabled = false;
 		m_certsTrustedRoots = null;
 		m_MuxSocket = MuxSocket.create();
 		m_proxyConnection = null;
-		m_forwardedConnection = false;
+		m_proxyInterface = null;
+		setProxy(a_proxyInterface);
 	}
 
 	/**
@@ -96,19 +83,8 @@ final public class AnonServiceImpl implements AnonService
 	public AnonServiceImpl(ProxyConnection a_proxyConnection)
 	{
 		/* call the default constructor */
-		this();
-		m_forwardedConnection = true;
+		this(a_proxyConnection.getProxyInterface());
 		m_proxyConnection = a_proxyConnection;
-	}
-
-	public static AnonService create()
-	{
-		/*  if(m_AnonServiceImpl==null)
-		  {
-		   m_AnonServiceImpl=new AnonServiceImpl();
-		  }
-		 return m_AnonServiceImpl;*/
-		return new AnonServiceImpl();
 	}
 
 	public int initialize(AnonServerDescription mixCascade)
@@ -123,13 +99,18 @@ final public class AnonServiceImpl implements AnonService
 		return ErrorCodes.E_INVALID_SERVICE;
 	}
 
+	public int setProxy(ImmutableProxyInterface a_Proxy)
+	{
+		m_proxyInterface=a_Proxy;
+		return ErrorCodes.E_SUCCESS;
+	}
+
 	private int connect(MixCascade mixCascade)
 	{
 		int ret = -1;
-		if (m_forwardedConnection == false)
+		if (m_proxyConnection == null)
 		{
-			ret = m_MuxSocket.connectViaFirewall(mixCascade, m_FirewallType, m_FirewallHost, m_FirewallPort,
-												 m_FirewallUserID, m_FirewallPasswd, m_bMixCertCheckEnabled,
+			ret = m_MuxSocket.connectViaFirewall(mixCascade, m_proxyInterface, m_bMixCertCheckEnabled,
 												 m_certsTrustedRoots);
 		}
 		else
@@ -150,9 +131,9 @@ final public class AnonServiceImpl implements AnonService
 	}
 
 	/*public AnonChannel getAIChannel() throws ConnectException
-	{
-		return m_MuxSocket.getAIChannel();
-	}*/
+	  {
+	 return m_MuxSocket.getAIChannel();
+	  }*/
 
 	public int sendPayPackets(String xmlData) throws ConnectException
 	{
@@ -229,23 +210,6 @@ final public class AnonServiceImpl implements AnonService
 	public void setDummyTraffic(int intervall)
 	{
 		m_MuxSocket.setDummyTraffic(intervall);
-	}
-
-	public void setFirewall(int type, String host, int port)
-	{
-		m_FirewallType = type;
-		m_FirewallHost = host;
-		m_FirewallPort = port;
-		if (host == null)
-		{
-			m_FirewallType = FIREWALL_TYPE_NONE;
-		}
-	}
-
-	public void setFirewallAuthorization(String user, String passwd)
-	{
-		m_FirewallUserID = user;
-		m_FirewallPasswd = passwd;
 	}
 
 	public void setEnableMixCertificationCheck(boolean b)

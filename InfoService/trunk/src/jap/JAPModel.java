@@ -30,6 +30,7 @@ package jap;
 import java.awt.Dimension;
 import java.awt.Point;
 import anon.util.ResourceLoader;
+import anon.infoservice.ProxyInterface;
 import anon.crypto.JAPCertificate;
 import anon.crypto.JAPCertificateStore;
 import gui.JAPDll;
@@ -47,14 +48,7 @@ public final class JAPModel
   private int m_biPort = JAPConstants.PIPORT;
   private int m_HttpListenerPortNumber = JAPConstants.defaultPortNumber; // port number of HTTP  listener
   private boolean m_bHttpListenerIsLocal = true; // indicates whether listeners serve for localhost only or not
-  //private int m_SOCKSListenerPortnumber = JAPConstants.defaultSOCKSPortNumber; //port number for SOCKS requests
-  private boolean m_bUseFirewall = false; // indicates whether JAP connects via a proxy or directly
-  private int m_FirewallType = JAPConstants.defaultFirewallType;
-  private String m_FirewallHostName = ""; // hostname of proxy
-  private int m_FirewallPortNumber = -1; // portnumber of proxy
-  private boolean m_bUseFirewallAuthentication = false; //indicates whether JAP should use a UserID/Password to authenticat to the proxy
-  private String m_FirewallAuthenticationUserID = null; //userid for authentication
-  private String m_FirewallAuthenticationPasswd = null; // password --> will never be saved...
+  private ProxyInterface m_proxyInterface;
   private boolean m_bAutoConnect = false; // autoconnect after program start
   private boolean m_bAutoReConnect = false; // autoReconnects after loosing connection to mix
   private boolean m_bMinimizeOnStartup = false; // true if programm will start minimized
@@ -130,6 +124,7 @@ public final class JAPModel
     {
       ms_TheModel = new JAPModel();
     }
+
     return ms_TheModel;
   }
 
@@ -142,74 +137,14 @@ public final class JAPModel
 	  return m_resourceLoader;
   }
 
-  protected void setUseFirewall(boolean b)
+  public ProxyInterface getProxyInterface()
   {
-    m_bUseFirewall = b;
+	  return m_proxyInterface;
   }
 
-  public static boolean getUseFirewall()
+  protected void setProxyListener(ProxyInterface a_proxyInterface)
   {
-    return ms_TheModel.m_bUseFirewall;
-  }
-
-  protected void setFirewallType(int type)
-  {
-    m_FirewallType = type;
-  }
-
-  public static int getFirewallType()
-  {
-    return ms_TheModel.m_FirewallType;
-  }
-
-  protected void setFirewallHost(String host)
-  {
-    m_FirewallHostName = host;
-  }
-
-  public static String getFirewallHost()
-  {
-    return ms_TheModel.m_FirewallHostName;
-  }
-
-  protected void setFirewallPort(int port)
-  {
-    m_FirewallPortNumber = port;
-  }
-
-  public static int getFirewallPort()
-  {
-    return ms_TheModel.m_FirewallPortNumber;
-  }
-
-  protected void setUseFirewallAuthorization(boolean b)
-  {
-    m_bUseFirewallAuthentication = b;
-  }
-
-  public static boolean getUseFirewallAuthorization()
-  {
-    return ms_TheModel.m_bUseFirewallAuthentication;
-  }
-
-  protected void setFirewallAuthUserID(String userid)
-  {
-    m_FirewallAuthenticationUserID = userid;
-  }
-
-  public static String getFirewallAuthUserID()
-  {
-    return ms_TheModel.m_FirewallAuthenticationUserID;
-  }
-
-  protected void setFirewallAuthPasswd(String passwd)
-  {
-    m_FirewallAuthenticationPasswd = passwd;
-  }
-
-  public static String getFirewallAuthPasswd()
-  {
-    return ms_TheModel.m_FirewallAuthenticationPasswd;
+    m_proxyInterface = a_proxyInterface;
   }
 
   protected void setAutoConnect(boolean b)
@@ -361,16 +296,16 @@ public final class JAPModel
     buff.append(m_bHttpListenerIsLocal);
     buff.append("\n");
     buff.append("UseFirewall: ");
-    buff.append(m_bUseFirewall);
+    buff.append(m_proxyInterface.isValid());
     buff.append("\n");
     buff.append("FirewallType: ");
-    buff.append(m_FirewallType);
+    buff.append(m_proxyInterface.getProtocol());
     buff.append("\n");
     buff.append("FirewallHost: ");
-    buff.append(m_FirewallHostName);
+    buff.append(m_proxyInterface.getHost());
     buff.append("\n");
     buff.append("FirewallPort: ");
-    buff.append(m_FirewallPortNumber);
+    buff.append(m_proxyInterface.getPort());
     buff.append("\n");
     buff.append("AutoConnect: ");
     buff.append(m_bAutoConnect);

@@ -198,15 +198,6 @@ final public class JAPUtil
 		return 0;
 	}
 
-	public static boolean isPort(int port)
-	{
-		if ( (port < 1) || (port > 65536))
-		{
-			return false;
-		}
-		return true;
-	}
-
 	/** Loads an Image from a File or a Resource.
 	 *	@param strImage the Resource or filename of the Image
 	 *	@param sync true if the loading is synchron, false if it should be asynchron
@@ -440,4 +431,18 @@ final public class JAPUtil
 		}
 		return t_cert;
 	}
+	/**
+	 * Returns if the given port is valid.
+	 * @param a_port a port number
+	 * @return true if the given port is valid; false otherwise
+	 */
+	public static boolean isValidPort(int a_port)
+	{
+		if ((a_port < 1) || (a_port > 65536))
+		{
+			return false;
+		}
+		return true;
+	}
+
 }

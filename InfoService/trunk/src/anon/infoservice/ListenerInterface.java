@@ -38,28 +38,18 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import anon.util.XMLUtil;
+import anon.util.Util;
+
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 
 /**
- * Saves the information about one listener-interface IP / hostname and port.
+ * Saves the information about a network server.
  */
-public final class ListenerInterface
+public class ListenerInterface implements ImmutableListenerInterface
 {
    /**
-	* The constant for the HTTP protocol.
-	*/
-   final public static String PROTOCOL_TYPE_HTTP = "http";
-
-   /**
-	* The constant for the HTTP protocol.
-	*/
-   final public static String PROTOCOL_TYPE_HTTPS = "https";
-
-   /**
-	* The constant for the HTTP protocol.
-	*/
-   final public static String PROTOCOL_TYPE_SOCKS = "socks";
-
-	/**
 	 * This is the host of this interface (hostname or IP).
 	 */
 	private String m_strInetHost;
@@ -85,23 +75,19 @@ public final class ListenerInterface
 
 	/**
 	 * Creates a new ListenerInterface from XML description (ListenerInterface node).
-	 *
+	 * @todo remove the ip host
 	 * @param listenerInterfaceNode The ListenerInterface node from an XML document.
 	 */
 	public ListenerInterface(Element listenerInterfaceNode)
 	{
-		Node typeNode = XMLUtil.getFirstChildByName(listenerInterfaceNode, "Type");
-		m_strProtocolType = XMLUtil.parseNodeString(typeNode, null);
-		if (!isValidProtocol(m_strProtocolType))
-		{
-			throw (new IllegalArgumentException("ListenerInterface: Error in XML structure -- Type not specified"));
-		}
-		Node portNode = XMLUtil.getFirstChildByName(listenerInterfaceNode, "Port");
-		m_iInetPort = XMLUtil.parseNodeInt(portNode, -1);
-		if (!isValidPort(m_iInetPort))
-		{
-			throw (new IllegalArgumentException("ListenerInterface: Port is invalid."));
-		}
+		String strHostname;
+
+		setProtocol(XMLUtil.parseNodeString(
+				  XMLUtil.getFirstChildByName(listenerInterfaceNode, "Type"), null));
+
+		setPort(XMLUtil.parseNodeInt(
+				  XMLUtil.getFirstChildByName(listenerInterfaceNode, "Port"), -1));
+
 		Node hostNode = XMLUtil.getFirstChildByName(listenerInterfaceNode, "Host");
 		Node ipNode = XMLUtil.getFirstChildByName(listenerInterfaceNode, "IP");
 		if (hostNode == null && ipNode == null)
@@ -110,16 +96,18 @@ public final class ListenerInterface
 				"ListenerInterface: Error in XML structure -- Neither Host nor IP are given."));
 		}
 		//The value give in Host supersedes the one given by IP
-		m_strInetHost = XMLUtil.parseNodeString(hostNode, null);
-		if (!isValidHostname(m_strInetHost))
+		strHostname = XMLUtil.parseNodeString(hostNode, null);
+		if (!isValidHostname(strHostname))
 		{
-			m_strInetHost = XMLUtil.parseNodeString(ipNode, null);
-			if (!isValidIP(m_strInetHost))
+			strHostname = XMLUtil.parseNodeString(ipNode, null);
+			if (!isValidIP(strHostname))
 			{
 				throw (new IllegalArgumentException(
 					"ListenerInterface: Error in XML structure -- Invalid Host and IP."));
 			}
 		}
+
+		setHostname(strHostname);
 
 		m_bIsReachable = true;
 	}
@@ -133,39 +121,26 @@ public final class ListenerInterface
 	 */
 	public ListenerInterface(String a_hostname, int a_port) throws IllegalArgumentException
 	{
-		if (!isValidPort(a_port))
-		{
-			throw (new IllegalArgumentException("ListenerInterface: Port is invalid."));
-		}
-		if (!isValidHostname(a_hostname))
-		{
-			throw (new IllegalArgumentException("ListenerInterface: Host is invalid."));
-		}
-		m_iInetPort = a_port;
-		m_strInetHost = a_hostname;
-		m_strProtocolType = this.PROTOCOL_TYPE_HTTP;
-		m_bIsReachable = true;
+		this(a_hostname, a_port, PROTOCOL_TYPE_HTTP);
 	}
 
 	/**
 	 * Creates a new ListenerInterface from a hostname / IP address, a port and a protocol
-	 * information. The protocol information does not have any function. It is just a bonus
-	 * infromation.
+	 * information.
 	 *
 	 * @param a_hostname The hostname or the IP address of this interface.
 	 * @param a_port The port of this interface (1 <= port <= 65535).
-	 * @param a_protocol The protocol information.
+	 * @param a_protocol The protocol information. Invalid protocols are replaced by http.
 	 * @exception IllegalArgumentException if an illegal host name, port or protocol was given
 	 */
 	public ListenerInterface(String a_hostname, int a_port, String a_protocol)
 		throws IllegalArgumentException
 	{
-		this(a_hostname, a_port);
-		if (!isValidProtocol(a_protocol))
-		{
-			throw new IllegalArgumentException("ListenerInterface: Invalid protocol type!");
-		}
-		m_strProtocolType = a_protocol;
+		setHostname(a_hostname);
+		setPort(a_port);
+		setProtocol(a_protocol);
+
+		m_bIsReachable = true;
 	}
 
 	/**
@@ -183,19 +158,15 @@ public final class ListenerInterface
 	}
 
 	/**
-	 * Returns if the given protocol is valid web protocol.
-	 * @todo check if all aother than the specified protocols are invalid
+	 * Returns if the given protocol is valid web protocol and can be recognized by
+	 * recognizeProtocol().
 	 * @param a_protocol a web protocol
+	 * @see recognizeProtocol(String)
 	 * @return true if the given protocol is valid web protocol; false otherwise
 	 */
 	public static boolean isValidProtocol(String a_protocol)
 	{
-		return (a_protocol != null);
-		/*
-		return (a_protocol != null &&
-				(a_protocol.equals(PROTOCOL_TYPE_HTTP) ||
-				 a_protocol.equals(PROTOCOL_TYPE_HTTPS) ||
-				 a_protocol.equals(PROTOCOL_TYPE_SOCKS)));*/
+		return recognizeProtocol(a_protocol) != null;
 	}
 
 	/**
@@ -277,6 +248,22 @@ public final class ListenerInterface
 	}
 
 	/**
+	 * Tests if two ListenerInterface instances are equal.
+	 * @param a_listenerInterface a ListenerInterface
+	 * @return true if the two ListenerInterface instances are equal; false otherwise
+	 */
+	public boolean equals(ListenerInterface a_listenerInterface)
+	{
+		if (!getHost().equals(a_listenerInterface.getHost()) ||
+			getPort() != a_listenerInterface.getPort() ||
+			!getProtocol().equals(a_listenerInterface.getProtocol()))
+		{
+			return false;
+		}
+		return true;
+	}
+
+	/**
 	 * Creates an XML node without signature for this ListenerInterface.
 	 *
 	 * @todo Remove the parts that contruct the tag <IP> and the ipnode respectivly.
@@ -284,12 +271,12 @@ public final class ListenerInterface
 	 *       and are only needed for compatibility with JAP < 00.02.034.
 	 *
 	 * @param doc The XML document, which is the environment for the created XML node.
-	 *
 	 * @return The ListenerInterface XML node.
 	 */
 	public Element toXmlNode(Document doc)
 	{
-		Element listenerInterfaceNode = doc.createElement("ListenerInterface");
+		Element listenerInterfaceNode = doc.createElement(
+				  Util.getClassNameWithoutPackage(getClass()));
 		/* Create the child nodes of ListenerInterface (Type, Port, Host) */
 		Element typeNode = doc.createElement("Type");
 		typeNode.appendChild(doc.createTextNode(m_strProtocolType));
@@ -371,4 +358,75 @@ public final class ListenerInterface
 		return hostAndIp;
 	}
 
+	/**
+	 * Transforms a given protocol into a valid protocol if recognized.
+	 * @param a_protocol a protocol
+	 * @return a valid protocol or null if not recognized
+	 */
+	private static String recognizeProtocol(String a_protocol)
+	{
+		String protocol = null;
+
+		if (a_protocol != null)
+		{
+			if (a_protocol.equalsIgnoreCase(PROTOCOL_TYPE_HTTP))
+			{
+				protocol = PROTOCOL_TYPE_HTTP;
+			}
+			else if (a_protocol.equalsIgnoreCase(PROTOCOL_TYPE_HTTPS))
+			{
+				protocol = PROTOCOL_TYPE_HTTPS;
+			}
+			else if (a_protocol.equalsIgnoreCase(PROTOCOL_TYPE_SOCKS))
+			{
+				protocol = PROTOCOL_TYPE_SOCKS;
+			}
+		}
+
+		return protocol;
+	}
+
+	/**
+	 * Sets the protocol.
+	 * @param a_protocol a protocol
+	 */
+	private void setProtocol(String a_protocol)
+	{
+		if (!isValidProtocol(a_protocol))
+		{
+			LogHolder.log(LogLevel.NOTICE, LogType.NET, "ListenerInterface: Invalid protocol " +
+						  a_protocol + "!");
+			m_strProtocolType = PROTOCOL_TYPE_HTTP;
+		}
+		else
+		{
+			m_strProtocolType = recognizeProtocol(a_protocol);
+		}
+	}
+
+	/**
+	 * Sets the port number.
+	 * @param a_port a port number
+	 */
+	private void setPort(int a_port)
+	{
+		if (!isValidPort(a_port))
+		{
+			throw (new IllegalArgumentException("ListenerInterface: Port is invalid."));
+		}
+		m_iInetPort = a_port;
+	}
+
+	/**
+	 * Sets the host name.
+	 * @param a_hostname a host name
+	 */
+	private void setHostname(String a_hostname)
+	{
+		if (!isValidHostname(a_hostname))
+		{
+			throw (new IllegalArgumentException("ListenerInterface: Host is invalid."));
+		}
+		m_strInetHost = a_hostname;
+	}
 }

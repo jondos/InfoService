@@ -36,7 +36,8 @@ import anon.AnonChannel;
 import anon.AnonServerDescription;
 import anon.AnonService;
 import anon.AnonServiceEventListener;
-
+import anon.*;
+import anon.infoservice.*;
 public class AnonServiceImplProxy implements AnonService
 {
 	String m_RpcServerHost;
@@ -54,6 +55,11 @@ public class AnonServiceImplProxy implements AnonService
 	public int initialize(AnonServerDescription mixCascade)
 	{
 		return 0;
+	}
+
+	public int setProxy(ImmutableProxyInterface a_Proxy)
+	{
+		return ErrorCodes.E_UNKNOWN;
 	}
 
 	public void shutdown()

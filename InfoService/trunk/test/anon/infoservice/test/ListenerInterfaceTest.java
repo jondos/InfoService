@@ -33,7 +33,6 @@ import org.w3c.dom.Document;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import anon.infoservice.ListenerInterface;
-import anon.util.XMLUtil;
 
 /**
  *  These are the tests for the ListenerInterface class.
@@ -65,8 +64,10 @@ public class ListenerInterfaceTest extends PrivateTestCase
 	public void testIsValidProtocol()
 	{
 		assertTrue(!ListenerInterface.isValidProtocol(null));
-		//assertTrue(!ListenerInterface.isValidProtocol(""));
-		//assertTrue(!ListenerInterface.isValidProtocol("ftp"));
+		assertTrue(!ListenerInterface.isValidProtocol(""));
+		assertTrue(!ListenerInterface.isValidProtocol("ftp"));
+		assertTrue(ListenerInterface.isValidProtocol("HTTP"));
+		assertTrue(ListenerInterface.isValidProtocol("http"));
 		assertTrue(ListenerInterface.isValidProtocol(ListenerInterface.PROTOCOL_TYPE_HTTP));
 		assertTrue(ListenerInterface.isValidProtocol(ListenerInterface.PROTOCOL_TYPE_HTTPS));
 		assertTrue(ListenerInterface.isValidProtocol(ListenerInterface.PROTOCOL_TYPE_SOCKS));
@@ -111,13 +112,15 @@ public class ListenerInterfaceTest extends PrivateTestCase
 		assertEquals("68.43.14.98", lf.getHost());
 		assertEquals(443, lf.getPort());
 		assertEquals(ListenerInterface.PROTOCOL_TYPE_SOCKS, lf.getProtocol());
-		assertTrue(lf.isValid());
-		lf.invalidate();
-		assertTrue(!lf.isValid());
+
+		new ListenerInterface("127.0.0.1", 80, null);
+		new ListenerInterface("127.0.0.1", 3000, ListenerInterface.PROTOCOL_TYPE_SOCKS);
+		new ListenerInterface("127.0.256.1", 3000, ListenerInterface.PROTOCOL_TYPE_SOCKS);
+		new ListenerInterface("127.0.255.1", 3000, ListenerInterface.PROTOCOL_TYPE_SOCKS);
 
 		try
 		{
-			lf = new ListenerInterface("127.0.0.1", 80, null);
+			new ListenerInterface("127.0.0.1", -80, null);
 			fail();
 		}
 		catch (IllegalArgumentException a_e)
@@ -126,7 +129,7 @@ public class ListenerInterfaceTest extends PrivateTestCase
 	}
 
 	/**
-	 * Test if a ListenerInterface can be succesfully converted in XML and reconverted
+	 * Tests if a ListenerInterface can be succesfully converted in XML and reconverted
 	 * to a ListenerInterface with the same values.
 	 * Also, a structure of the xml content is created.
 	 * @throws Exception
@@ -139,14 +142,43 @@ public class ListenerInterfaceTest extends PrivateTestCase
 		doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
 		listenerOrigin = new ListenerInterface("127.0.0.1", 443, ListenerInterface.PROTOCOL_TYPE_HTTPS);
 		listenerFromXML = new ListenerInterface(listenerOrigin.toXmlNode(doc));
-
-		assertEquals(listenerOrigin.getHost(), listenerFromXML.getHost());
-		assertEquals(listenerOrigin.getHostAndIp(), listenerFromXML.getHostAndIp());
-		assertEquals(listenerOrigin.getPort(), listenerFromXML.getPort());
-		assertEquals(listenerOrigin.getProtocol(), listenerFromXML.getProtocol());
+		assertTrue(listenerOrigin.equals(listenerFromXML));
 
 		// create a structure file
-		test.AllTests.writeXMLNodeToFile(listenerOrigin.toXmlNode(doc), "ListenerInterface.xml",
+		test.AllTests.writeXMLNodeToFile(listenerOrigin.toXmlNode(doc),
 										 ListenerInterface.class, this.getClass());
+	}
+
+	/**
+	 * Tests if two objects can be correctly compared.
+	 */
+	public void testEquals()
+	{
+		ListenerInterface one, two, three, four;
+
+		one = new ListenerInterface("myhost", 80);
+		two = new ListenerInterface("myhost", 80, ListenerInterface.PROTOCOL_TYPE_HTTP);
+		three = new ListenerInterface("otherhost", 80);
+		four = new ListenerInterface("myhost", 80, ListenerInterface.PROTOCOL_TYPE_SOCKS);
+
+		assertTrue(one.equals(one));
+		assertTrue(one.equals(two));
+		assertTrue(!one.equals(three));
+		assertTrue(!one.equals(four));
+		assertTrue(!two.equals(three));
+		assertTrue(!two.equals(four));
+		assertTrue(!three.equals(four));
+		assertTrue(four.equals(four));
+	}
+
+	/**
+	 * Tests if an object can succesfully be invalidated.
+	 */
+	public void testInvalidate()
+	{
+		ListenerInterface li = new ListenerInterface("testhost", 1);
+		assertTrue(li.isValid());
+		li.invalidate();
+		assertTrue(!li.isValid());
 	}
 }

@@ -34,7 +34,7 @@ import anon.tor.Tor;
 
 public final class JAPConstants
 {
-	public static final String aktVersion = "00.02.115"; //Never change the layout of this line!
+	public static final String aktVersion = "00.02.116"; //Never change the layout of this line!
 	private static final String CVS_GENERATED_RELEASE_DATE = "$Date$";
 
 	//Warning: This is a little bit tricky,
@@ -97,10 +97,6 @@ public final class JAPConstants
 	 * have also this timeout because of the same HTTPConnectionFactory).
 	 */
 	public static final int DEFAULT_INFOSERVICE_TIMEOUT = 30;
-
-	public static final int FIREWALL_TYPE_HTTP = 1;
-	public static final int FIREWALL_TYPE_SOCKS = 2;
-	static final int defaultFirewallType = FIREWALL_TYPE_HTTP;
 
 	static final int SMALL_FONT_SIZE = 9;
 	static final int SMALL_FONT_STYLE = Font.PLAIN;

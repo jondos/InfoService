@@ -35,18 +35,17 @@ import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
+import anon.util.IPasswordReader;
+import anon.infoservice.ImmutableProxyInterface;
 
-final class JAPFirewallPasswdDlg implements ActionListener
+/**
+ * This class shows a dialog window and reads a password from user input.
+ */
+final class JAPFirewallPasswdDlg implements ActionListener, IPasswordReader
 {
 	private String passwd;
-	private static JAPFirewallPasswdDlg dlg = null;
 	private JDialog dialog = null;
 	private JPasswordField pwdField;
-
-	private JAPFirewallPasswdDlg()
-	{
-		passwd = null;
-	}
 
 	public void actionPerformed(ActionEvent e)
 	{
@@ -57,35 +56,34 @@ final class JAPFirewallPasswdDlg implements ActionListener
 		dialog.dispose();
 	}
 
-	public static String getPasswd()
+	public String readPassword(ImmutableProxyInterface a_proxyInterface)
 	{
-		dlg = new JAPFirewallPasswdDlg();
-		dlg.pwdField = new JPasswordField(20);
+		pwdField = new JPasswordField(20);
 		JPanel panel = new JPanel();
 		JButton bttnOk = new JButton(JAPMessages.getString("bttnOk"));
 		bttnOk.setActionCommand("ok");
-		bttnOk.addActionListener(dlg);
+		bttnOk.addActionListener(this);
 		JButton bttnCancel = new JButton(JAPMessages.getString("bttnCancel"));
-		bttnCancel.addActionListener(dlg);
+		bttnCancel.addActionListener(this);
 		panel.add(bttnOk);
 		panel.add(bttnCancel);
 		JPanel p = new JPanel(new BorderLayout());
-		p.add("Center", dlg.pwdField);
+		p.add("Center", pwdField);
 		p.add("South", panel);
 		Object[] options = new Object[1];
 		options[0] = p;
 		JOptionPane o = new JOptionPane(JAPMessages.getString("passwdDlgInput") + "\n" +
 										JAPMessages.getString("passwdDlgHost") + ": " +
-										JAPModel.getFirewallHost() + "\n" +
+										a_proxyInterface.getHost() + "\n" +
 										JAPMessages.getString("passwdDlgPort") + ": " +
-										JAPModel.getFirewallPort() + "\n" +
+										a_proxyInterface.getPort() + "\n" +
 										JAPMessages.getString("passwdDlgUserID") + ": " +
-										JAPModel.getFirewallAuthUserID() + "\n",
+										a_proxyInterface.getAuthenticationUserID() + "\n",
 										JOptionPane.QUESTION_MESSAGE, 0
 										, null, options);
-		dlg.dialog = o.createDialog(JAPController.getView(), JAPMessages.getString("passwdDlgTitle"));
-		dlg.dialog.toFront();
-		dlg.dialog.show();
-		return dlg.passwd;
+		dialog = o.createDialog(JAPController.getView(), JAPMessages.getString("passwdDlgTitle"));
+		dialog.toFront();
+		dialog.show();
+		return passwd;
 	}
 }

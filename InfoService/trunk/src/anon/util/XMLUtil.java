@@ -324,6 +324,17 @@ public class XMLUtil
 		setNodeValue(node,b?XML_STR_BOOLEAN_TRUE:XML_STR_BOOLEAN_FALSE);
 	}
 
+	/**
+	 * Create a new node with a boolean value.
+	 * @param a_doc Document
+	 * @param a_bValue boolean
+	 * @return Node
+	 */
+	public static Node createNodeBoolean(Document a_doc, boolean a_bValue)
+	{
+		return a_doc.createTextNode(a_bValue?XML_STR_BOOLEAN_TRUE:XML_STR_BOOLEAN_FALSE);
+	}
+
 	/** Stolen from Apache Xerces-J...*/
 	public static Node importNode(Document doc, Node source, boolean deep) throws Exception
 	{
@@ -654,7 +665,7 @@ public class XMLUtil
 	}
 
 	/**
-	 * Removes all comments and empty lines from a node.
+	 * Removes all comments, empty lines and new lines from a node.
 	 * @param a_node a node
 	 * @param a_parentNode the node`s parent node
 	 * @return the number of children removed (0 or 1)
@@ -692,7 +703,6 @@ public class XMLUtil
 	 * Reformats a node into a human readable format.
 	 * @param a_node a node
 	 */
-
 	public static void formatNodeHumanReadable(Node a_node)
 	{
 		formatNodeHumanReadableInternal(a_node, a_node);
@@ -706,16 +716,18 @@ public class XMLUtil
 	 */
 	private static int formatNodeHumanReadableInternal(Node a_node, Node a_parentNode)
 	{
+		Text newLine;
+
 		if (a_node.getNodeType() != Document.TEXT_NODE && a_node != a_parentNode)
 		{
-			Text newLine = a_node.getOwnerDocument().createTextNode("\n");
+			newLine = a_node.getOwnerDocument().createTextNode("\n");
 			a_parentNode.insertBefore(newLine, a_node);
 			return 1;
 		}
 
 		if (a_node.getNodeType() == Document.TEXT_NODE && a_node.getNodeValue().trim().length() == 0)
 		{
-			Text newLine = a_node.getOwnerDocument().createTextNode("\n");
+			newLine = a_node.getOwnerDocument().createTextNode("\n");
 			a_parentNode.replaceChild(newLine, a_node);
 			return 0;
 		}
@@ -727,8 +739,9 @@ public class XMLUtil
 			{
 				i += formatNodeHumanReadableInternal(childNodes.item(i), a_node);
 			}
-			Text newLine = a_node.getOwnerDocument().createTextNode("\n");
+			newLine = a_node.getOwnerDocument().createTextNode("\n");
 			a_node.appendChild(newLine);
+			return 1;
 		}
 		return 0;
 	}
@@ -752,4 +765,5 @@ public class XMLUtil
 		out.write(XMLUtil.XMLNodeToString(a_node).getBytes());
 		out.close();
 	}
+
 }

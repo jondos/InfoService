@@ -62,9 +62,11 @@ import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.MixCascade;
 import anon.infoservice.StatusInfo;
 import anon.server.AnonServiceImpl;
+import anon.infoservice.ProxyInterface;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.infoservice.*;
 
 //import proxy.AnonProxy;
 /**
@@ -457,11 +459,15 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener, Ru
 			}
 			statusTextField.setText(JAPMessages.getString("chkFeedbackReceived"));
 			// create local AnonService directly!
-			AnonServiceImpl anonService = (AnonServiceImpl) AnonServiceImpl.create();
-			if (JAPModel.getUseFirewall())
+			AnonServiceImpl anonService;
+
+			if (JAPModel.getInstance().getProxyInterface().isValid())
 			{
-				anonService.setFirewall(JAPModel.getFirewallType(), JAPModel.getFirewallHost(),
-										JAPModel.getFirewallPort());
+				anonService	= new AnonServiceImpl(JAPModel.getInstance().getProxyInterface());
+			}
+			else
+			{
+				anonService	= new AnonServiceImpl((ProxyInterface)null);
 			}
 
 			for (int i = 0; ( (i < mixCascades.size()) && (m_bTestIsRunning)); i++)

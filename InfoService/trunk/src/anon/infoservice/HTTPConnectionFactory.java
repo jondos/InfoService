@@ -32,26 +32,13 @@ import HTTPClient.Codecs;
 import HTTPClient.HTTPConnection;
 import HTTPClient.NVPair;
 
+
+
 /**
  * This class creates all instances of HTTPConnection for the JAP client and is a singleton.
  */
 public class HTTPConnectionFactory
 {
-	/**
-	 * This value means, that there is no proxy server to use for the HTTP connection.
-	 */
-	final public static int PROXY_TYPE_NONE = 0;
-
-	/**
-	 * This is the value for using an HTTP proxy server.
-	 */
-	final public static int PROXY_TYPE_HTTP = 1;
-
-	/**
-	 * This is the value for using a SOCKS proxy server.
-	 */
-	final public static int PROXY_TYPE_SOCKS = 2;
-
 	/**
 	 * Defines the HTTPConnection class for that this factory constructs instances.
 	 */
@@ -68,20 +55,15 @@ public class HTTPConnectionFactory
 	private Vector m_vecHTTPConnections;
 
 	/**
-	 * Stores the username for the proxy authorization.
-	 */
-	private String proxyAuthUserName;
-
-	/**
-	 * Stores the password for the proxy authorization.
-	 */
-	private String proxyAuthPassword;
-
-	/**
 	 * Stores the communication timeout (sec) for new HTTP connections. If this value is zero, a
 	 * connection never times out.
 	 */
 	private int m_timeout;
+
+	/**
+	 * The listener for the proxy used.
+	 */
+	private ProxyInterface m_proxyInterface;
 
 	/**
 	 * This creates a new instance of HTTPConnectionFactory. This is only used for setting some
@@ -90,14 +72,7 @@ public class HTTPConnectionFactory
 	private HTTPConnectionFactory()
 	{
 		/* default is to use no proxy for all new HTTPConnection instances */
-		setNewProxySettings(PROXY_TYPE_NONE, null, -1, null, null);
-		try
-		{
-			HTTPConnection.removeDefaultModule(Class.forName("HTTPClient.AuthorizationModule"));
-		}
-		catch (Exception e)
-		{
-		}
+		setNewProxySettings(null);
 		m_timeout = 10;
 	}
 
@@ -112,6 +87,15 @@ public class HTTPConnectionFactory
 		if (ms_httpConnectionFactoryInstance == null)
 		{
 			ms_httpConnectionFactoryInstance = new HTTPConnectionFactory();
+
+			try
+			{
+				// remove this module as it doesn`t work and as it interferes with our own implementation
+				HTTPConnection.removeDefaultModule(Class.forName("HTTPClient.AuthorizationModule"));
+			}
+			catch (Exception e)
+			{
+			}
 		}
 		return ms_httpConnectionFactoryInstance;
 	}
@@ -122,67 +106,51 @@ public class HTTPConnectionFactory
 	 * are not influenced by that call. The default after creating the instance of
 	 * HTTPConnectionFactory is to use no proxy for all new instances of HTTPConnection.
 	 *
-	 * @param proxyType The type of the proxy (see the constants in this class).
-	 * @param proxyHost IP address or hostname of the proxy server. If no hostname is supplied, the
-	 *                  proxyType is set to PROXY_TYPE_NONE.
-	 * @param proxyPort The port of the proxy server. The value must be between 1 and 65535. If it
-	 *                  is not, the proxyType is set to PROXY_TYPE_NONE.
-	 * @param proxyAuthUserName The username for the authorization. If the proxy server does not
-	 *                          need authentication, take null. This value is only meaningful, if
-	 *                          the proxyType is PROXY_TYPE_HTTP.
-	 * @param proxyAuthPassword The password for the authorization. If the proxy server does not
-	 *                          need authentication, take null. This value is only meaningful, if
-	 *                          the proxyType is PROXY_TYPE_HTTP and proxyAuthUserName is not null.
+	 * @param a_proxyListener the listener interface of the proxy server; if it is set to null, no
+	 *                        proxy is used
 	 */
-	public void setNewProxySettings(int proxyType, String proxyHost, int proxyPort,
-									String proxyAuthUserName, String proxyAuthPassword)
+	public synchronized void setNewProxySettings(ProxyInterface a_proxyInterface)
 	{
-		if (proxyHost == null || !ListenerInterface.isValidPort(proxyPort))
+		m_proxyInterface = a_proxyInterface;
+
+		if (a_proxyInterface == null)
 		{
-			proxyType = PROXY_TYPE_NONE;
+			HTTPConnection.setProxyServer(null, -1);
+			HTTPConnection.setSocksServer(null, -1);
+			return;
 		}
-		synchronized (this)
-		{
+
 			/* don't allow to create new connections until we have changed all proxy attributes */
-			if (proxyType == PROXY_TYPE_HTTP)
+		if (a_proxyInterface.getProtocol().equals(ListenerInterface.PROTOCOL_TYPE_HTTP))
 			{
-				// proxy authorization is only supported for HTTP proxies
-				this.proxyAuthUserName = proxyAuthUserName;
-				this.proxyAuthPassword = proxyAuthPassword;
-			}
-			else
-			{
-				this.proxyAuthUserName = null;
-				this.proxyAuthPassword = null;
-			}
 			/* set the new values for the proxy */
-			if (proxyType == PROXY_TYPE_NONE)
-			{
-				HTTPConnection.setProxyServer(null, -1);
+			HTTPConnection.setProxyServer(a_proxyInterface.getHost(), a_proxyInterface.getPort());
 				HTTPConnection.setSocksServer(null, -1);
 			}
-			if (proxyType == PROXY_TYPE_HTTP)
+		else
 			{
-				HTTPConnection.setProxyServer(proxyHost, proxyPort);
-				HTTPConnection.setSocksServer(null, -1);
-			}
-			if (proxyType == PROXY_TYPE_SOCKS)
+			if (a_proxyInterface.getProtocol() == ListenerInterface.PROTOCOL_TYPE_SOCKS)
 			{
+				/** @todo check why this code is not used! */
 				//HTTPConnection.setProxyServer(null, -1);
-				//HTTPConnection.setSocksServer(proxyHost, proxyPort);
+				//HTTPConnection.setSocksServer(a_proxyListener.getHost(), a_proxyListener.getPort());
 			}
 		}
 	}
 
 	/**
-	 * Sets the communication timeout (sec) for new HTTP connections. If this value is zero, a
-	 * connection never times out. Instances of HTTPConnection which already exist, are not
-	 * influenced by this method.
+	 * Sets the communication timeout (sec) for new HTTP connections. If this value is zero
+	 * or lower, a connection never times out. Instances of HTTPConnection which already exist,
+	 * are not influenced by this method.
 	 *
 	 * @param a_timeout The new communication timeout.
 	 */
 	public synchronized void setTimeout(int a_timeout)
 	{
+		if (a_timeout < 0)
+		{
+			a_timeout = 0;
+		}
 		m_timeout = a_timeout;
 	}
 
@@ -213,19 +181,9 @@ public class HTTPConnectionFactory
 			newConnection = createHTTPConnectionInternal(target);
 
 			/* get always the current proxy settings */
-			if (proxyAuthUserName != null)
+			if ((m_proxyInterface != null) && m_proxyInterface.isAuthenticationUsed())
 			{
-				/* set the proxy authorization if neccessary (only HTTP proxies) */
-				String tmpPassword = null;
-				if (proxyAuthPassword != null)
-				{
-					tmpPassword = Codecs.base64Encode(proxyAuthUserName + ":" + proxyAuthPassword);
-				}
-				else
-				{
-					tmpPassword = Codecs.base64Encode(proxyAuthUserName + ":");
-				}
-				replaceHeader(newConnection, new NVPair("Proxy-Authorization", "Basic " + tmpPassword));
+				replaceHeader(newConnection, m_proxyInterface.getProxyAuthorizationHeader());
 			}
 		}
 		/* set some header infos */

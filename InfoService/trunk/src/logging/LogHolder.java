@@ -27,6 +27,7 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 */
 package logging;
 
+import anon.util.Util;
 
 /**
  * This class stores the Log instance.
@@ -79,6 +80,11 @@ public final class LogHolder {
 		getInstance().getLogInstance().log(logLevel, logType, message);
 	}
 
+
+	public static void log(int logLevel, int logType, Class a_callerClass, String message)
+	{
+		log(logLevel, logType, Util.getClassNameWithoutPackage(a_callerClass) + ": " + message);
+	}
 
 	/**
 	 * Sets the logInstance.

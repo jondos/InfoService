@@ -52,7 +52,7 @@ import anon.tor.util.helper;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-
+import anon.infoservice.*;
 /**
  * @author stefan
  *
@@ -612,6 +612,12 @@ public class Tor implements /*Runnable,*/ AnonService
 			return ErrorCodes.E_NOT_CONNECTED;
 		}
 		return ErrorCodes.E_SUCCESS;
+	}
+
+	/** Proxies are not supported at the moment!*/
+	public int setProxy(ImmutableProxyInterface a_Proxy)
+	{
+		return ErrorCodes.E_UNKNOWN;
 	}
 
 	public void shutdown()

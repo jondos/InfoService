@@ -178,7 +178,7 @@
   <property category="runtime.7" name="ConfigurationName" value="JAPLean"/>
   <property category="runtime.7" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
   <property category="runtime.7" name="application.class" value="misc.JAPLean"/>
-  <property category="runtime.7" name="application.parameters" value="4002 mix.inf.tu-dresden.de 6544"/>
+  <property category="runtime.7" name="application.parameters" value="4001 mix.inf.tu-dresden.de 6544"/>
   <property category="runtime.8" name="BuildTargetOnRun" value="com.borland.jbuilder.build.ProjectBuilder$ProjectBuildAction;make"/>
   <property category="runtime.8" name="ConfigurationName" value="JUnit Test"/>
   <property category="runtime.8" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
