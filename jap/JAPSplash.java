@@ -5,14 +5,14 @@ Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
 
 	- Redistributions of source code must retain the above copyright notice,
-	  this list of conditions and the following disclaimer.
+		this list of conditions and the following disclaimer.
 
 	- Redistributions in binary form must reproduce the above copyright notice,
-	  this list of conditions and the following disclaimer in the documentation and/or
+		this list of conditions and the following disclaimer in the documentation and/or
 		other materials provided with the distribution.
 
 	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
-	  may be used to endorse or promote products derived from this software without specific
+		may be used to endorse or promote products derived from this software without specific
 		prior written permission.
 
 
@@ -52,14 +52,22 @@ final public class JAPSplash extends Window
 			{
 				super(frmParent);
 				setLayout(null);
-		    m_iXVersion=m_iYVersion=100;
+				m_iXVersion=m_iYVersion=100;
 				Toolkit t=Toolkit.getDefaultToolkit();
 				MediaTracker ma=new MediaTracker(this);
 				InputStream in=null;
+				Class c=null;
+				try
+					{
+						c=Class.forName("JAP");
+					}
+				catch(Exception e)
+					{
+					}
 				if(t.getColorModel().getPixelSize()<=16)
-					in=JAPSplash.class.getResourceAsStream(JAPConstants.IMGPATHLOWCOLOR+JAPConstants.SPLASHFN);
+					in=c.getResourceAsStream(JAPConstants.IMGPATHLOWCOLOR+JAPConstants.SPLASHFN);
 				if(in==null)
-					in=JAPSplash.class.getResourceAsStream(JAPConstants.IMGPATHHICOLOR+JAPConstants.SPLASHFN);
+					in=c.getResourceAsStream(JAPConstants.IMGPATHHICOLOR+JAPConstants.SPLASHFN);
 				int len;
 				int aktIndex;
 				if(in!=null)
@@ -81,9 +89,9 @@ final public class JAPSplash extends Window
 					}
 				in=null;
 				if(t.getColorModel().getPixelSize()<=16)
-					in=JAPSplash.class.getResourceAsStream(JAPConstants.IMGPATHLOWCOLOR+JAPConstants.BUSYFN);
+					in=c.getResourceAsStream(JAPConstants.IMGPATHLOWCOLOR+JAPConstants.BUSYFN);
 				if(in==null)
-					in=JAPSplash.class.getResourceAsStream(JAPConstants.IMGPATHHICOLOR+JAPConstants.BUSYFN);
+					in=c.getResourceAsStream(JAPConstants.IMGPATHHICOLOR+JAPConstants.BUSYFN);
 				if(in!=null)
 					{
 						byte[] buff1=new byte[7000];
