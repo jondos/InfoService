@@ -176,6 +176,23 @@ public class InfoService extends DatabaseEntry
 
 	/**
 	 * Creates a new InfoService from the hostName / IP and the port. The hostName and port are
+	 * directly used for creating the ListenerInterface for this InfoService. The ID
+	 * is set to a generic value derived from the hostname and the port. The name will be of the type
+	 * "hostname:port". The expire time is calculated by using the DEFAULT_EXPIRE_TIME constant.
+	 * The software info is set to a dummy value. The "has forwarder list" value is set to false.
+	 * That's no problem because such a user-defined infoservice shall only be the initial
+	 * infoservice for getting the current list of working infoservices.
+	 *
+	 * @param hostName The hostname or IP address the infoservice is listening on.
+	 * @param port The port the infoservice is listening on.
+	 */
+	public InfoService(String hostName, int port) throws Exception
+	{
+		this(null,null,hostName,port);
+	}
+
+	/**
+	 * Creates a new InfoService from the hostName / IP and the port. The hostName and port are
 	 * directly used for creating the ListenerInterface for this InfoService. The ID (if not given)
 	 * is set to a generic value derived from the hostname and the port. If you supply a name for
 	 * the infoservice then it will get that name, if you supply null, the name will be of the type

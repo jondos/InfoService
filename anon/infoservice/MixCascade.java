@@ -179,6 +179,22 @@ public class MixCascade implements AnonServerDescription
 
 	/**
 	 * Creates a new MixCascade from the hostName / IP and the port. The hostName and port are
+	 * directly used for creating the ListenerInterface for this MixCascade. ID and the name
+	 * are set to a generic value derived from the name and the port. The lastUpdate time is the
+	 * current system time. One mixId is created, it is the same as the mixCascadeId. The current
+	 * status is set to dummy value. Cause the infoservice does not know this mixCascadeId and the
+	 * created mixId, you will never get a StatusInfo or a MixInfo other than the dummy one.
+	 *
+	 * @param hostName The hostname or IP address the mixcascade (first mix) is listening on.
+	 * @param port The port the mixcascade (first mix) is listening on.
+	 */
+	public MixCascade(String hostName, int port) throws Exception
+	{
+		this(null,null,hostName,port);
+	}
+
+	/**
+	 * Creates a new MixCascade from the hostName / IP and the port. The hostName and port are
 	 * directly used for creating the ListenerInterface for this MixCascade. If ID and the name
 	 * are not provided, than they are set to a generic value derived from the name and the port. The lastUpdate time is the
 	 * current system time. One mixId is created, it is the same as the mixCascadeId. The current
