@@ -227,6 +227,22 @@ class JAP extends Frame
 				}
 			}
 		}
+		/* check, whether there is the -forwarding_state parameter, which extends
+		 * the configuration dialog
+		 */
+		boolean forwardingStateVisible = false;
+		if (m_arstrCmdnLnArgs != null)
+		{
+			for (int i = 0; i < m_arstrCmdnLnArgs.length; i++)
+			{
+				if (m_arstrCmdnLnArgs[i].equalsIgnoreCase("-forwarding_state"))
+				{
+				  forwardingStateVisible = true;
+				  break;
+				}
+			}
+		}
+		JAPModel.getInstance().setForwardingStateModuleVisible(forwardingStateVisible);
 		// load settings from config file
 		m_controller.loadConfigFile(configFileName, loadPay);
 		// Output some information about the system

@@ -35,7 +35,6 @@ import java.util.Hashtable;
 import java.util.Vector;
 
 import java.awt.BorderLayout;
-import java.awt.CardLayout;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
@@ -46,7 +45,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-//import update.JAPUpdate;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -60,26 +58,13 @@ import javax.swing.JSeparator;
 import javax.swing.JSlider;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
-import javax.swing.JTree;
 import javax.swing.SwingConstants;
-import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
-import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import javax.swing.event.TreeExpansionEvent;
-import javax.swing.event.TreeSelectionEvent;
-import javax.swing.event.TreeSelectionListener;
-import javax.swing.event.TreeWillExpandListener;
 import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeCellRenderer;
-import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.DefaultTreeSelectionModel;
-import javax.swing.tree.ExpandVetoException;
-import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
-import javax.swing.tree.TreeSelectionModel;
 
 import anon.infoservice.ImmutableListenerInterface;
 import anon.infoservice.ProxyInterface;
@@ -90,27 +75,6 @@ import logging.LogType;
 
 final class JAPConf extends JDialog
 {
-
-	final class TreeElement
-	{
-		final String m_Name;
-		final String m_Value;
-		TreeElement(String name, String value)
-		{
-			m_Name = name;
-			m_Value = value;
-		}
-
-		public String toString()
-		{
-			return m_Name;
-		}
-
-		public String getValue()
-		{
-			return m_Value;
-		}
-	}
 
 	final static public String PORT_TAB = "PORT_TAB";
 	final static public String UI_TAB = "UI_TAB";
@@ -125,9 +89,20 @@ final class JAPConf extends JDialog
 	final static public String PAYMENT_TAB = "PAYMENT_TAB";
 
 	/**
-	 * This constant is a symbolic name for accessing the forwarding tab.
+   * This constant is a symbolic name for accessing the forwarding client configuration tab.
 	 */
-	final static public String FORWARD_TAB = "FORWARD_TAB";
+  final static public String FORWARDING_CLIENT_TAB = "FORWARDING_CLIENT_TAB";
+
+  /**
+   * This constant is a symbolic name for accessing the forwarding server configuration tab.
+   */
+  final static public String FORWARDING_SERVER_TAB = "FORWARDING_SERVER_TAB";
+
+  /**
+   * This constant is a symbolic name for accessing the forwarding state tab.
+   */
+  final static public String FORWARDING_STATE_TAB = "FORWARDING_STATE_TAB";
+
 
 	private static JAPConf ms_JapConfInstance = null;
 
@@ -158,35 +133,16 @@ final class JAPConf extends JDialog
 
 	private JSlider m_sliderDebugLevel;
 
-	private JPanel m_Tabs;
-	private JTabbedPane m_tabsAnonServices;
-	private CardLayout m_TabsLayout;
-	private JTree m_Tree;
-	/**
-	 * Stores the index of the various tabs in the tabbed pane.
-	 */
-	//private Hashtable m_tabOrder;
-
 	private JPanel m_pPort, m_pFirewall, m_pMisc;
 	private JButton m_bttnDefaultConfig, m_bttnCancel;
 
-	//private JFrame m_frmParent;
-
-	//private JAPConf m_JapConf;
-
 	private Font m_fontControls;
 
-	/**
-	 * Stores all loaded configuration modules (AbstractJAPConfModule). This is needed for handling
-	 * events.
-	 */
-	private Vector m_confModules;
-	//private static File m_fileCurrentDir;
-
-	//Einfug
-	//private JAPUpdate update;
 	private boolean loadPay = false;
 
+  private JAPConfModuleSystem m_moduleSystem;
+  
+  
 	public static JAPConf getInstance()
 	{
 		return ms_JapConfInstance;
@@ -195,103 +151,57 @@ final class JAPConf extends JDialog
 	public JAPConf(JFrame frmParent, boolean loadPay)
 	{
 		super(frmParent);
-		m_confModules = new Vector();
 		this.loadPay = loadPay;
 		/* set the instance pointer */
 		ms_JapConfInstance = this;
-		//m_frmParent = frmParent;
 		m_Controller = JAPController.getInstance();
 		setModal(true);
 		setTitle(JAPMessages.getString("settingsDialog"));
-//		m_JapConf = this;
 		JPanel pContainer = new JPanel();
-		m_TabsLayout = new CardLayout();
-		m_Tabs = new JPanel(m_TabsLayout);
 		m_fontControls = JAPController.getDialogFont();
 		GridBagLayout gbl = new GridBagLayout();
 		pContainer.setLayout(gbl);
-		m_Tabs.setFont(m_fontControls);
 		m_pPort = buildPortPanel();
 		m_pFirewall = buildProxyPanel();
 		m_pMisc = buildMiscPanel();
 
-		AbstractJAPConfModule uiModule = new JAPConfUI();
-		AbstractJAPConfModule updateModule = new JAPConfUpdate();
-		AbstractJAPConfModule infoServiceModule = new JAPConfInfoService();
-		AbstractJAPConfModule certModule = new JAPConfCert();
-		AbstractJAPConfModule torModule = new JAPConfTor();
-		AbstractJAPConfModule anonModule = new JAPConfAnon(null);
-		AbstractJAPConfModule anongeneralModule = new JAPConfAnonGeneral(null);
-		AbstractJAPConfModule accountsModule = null;
-		if (loadPay)
-		{
-			accountsModule = new AccountSettingsPanel();
-		}
-		AbstractJAPConfModule routingModule = new JAPConfRouting();
+    m_moduleSystem = new JAPConfModuleSystem();
+    DefaultMutableTreeNode rootNode = m_moduleSystem.getConfigurationTreeRootNode();
+    m_moduleSystem.addConfigurationModule(rootNode, new JAPConfUI(), UI_TAB);
+    if (loadPay) {
+      m_moduleSystem.addConfigurationModule(rootNode, new AccountSettingsPanel(), PAYMENT_TAB);
+    }
+    m_moduleSystem.addConfigurationModule(rootNode, new JAPConfUpdate(), UPDATE_TAB);
+    DefaultMutableTreeNode nodeNet = m_moduleSystem.addComponent(rootNode, null, "ngTreeNetwork", null);
+    m_moduleSystem.addComponent(nodeNet, m_pPort, "confListenerTab", PORT_TAB);
+    m_moduleSystem.addComponent(nodeNet, m_pFirewall, "confProxyTab", PROXY_TAB);   
+    if (JAPConstants.WITH_BLOCKINGRESISTANCE) {
+      m_moduleSystem.addConfigurationModule(nodeNet, new JAPConfForwardingClient(), FORWARDING_CLIENT_TAB);
+    }
+    DefaultMutableTreeNode nodeAnon = m_moduleSystem.addComponent(rootNode, null, "ngAnonymitaet", null);
+    m_moduleSystem.addConfigurationModule(nodeAnon, new JAPConfInfoService(), INFOSERVICE_TAB);    
+    JTabbedPane anonTabs = new JTabbedPane();
+    JAPConfAnon anonModule = new JAPConfAnon(null);
+    anonTabs.addTab(anonModule.getTabTitle(), anonModule.getRootPanel());
+    JAPConfTor torModule = new JAPConfTor();
+    anonTabs.addTab(torModule.getTabTitle(), torModule.getRootPanel());
+    JAPConfAnonGeneral anonGeneralModule = new JAPConfAnonGeneral(null);
+    anonTabs.addTab(anonGeneralModule.getTabTitle(), anonGeneralModule.getRootPanel());
+    m_moduleSystem.addComponent(nodeAnon, anonTabs, "ngTreeAnonService", ANON_TAB);   
+    if (JAPConstants.WITH_BLOCKINGRESISTANCE) {    
+      m_moduleSystem.addConfigurationModule(nodeAnon, new JAPConfForwardingServer(), FORWARDING_SERVER_TAB);
+    }  
+    m_moduleSystem.addConfigurationModule(nodeAnon, new JAPConfCert(), CERT_TAB);    
+    DefaultMutableTreeNode debugNode = m_moduleSystem.addComponent(rootNode, m_pMisc, "ngTreeDebugging", DEBUG_TAB);
+    if ((JAPConstants.WITH_BLOCKINGRESISTANCE) && (JAPModel.getInstance().isForwardingStateModuleVisible())) {        
+      m_moduleSystem.addConfigurationModule(debugNode, new JAPConfForwardingState(), FORWARDING_STATE_TAB);    
+    }
+    m_moduleSystem.getConfigurationTree().expandPath(new TreePath(nodeNet.getPath()));
+    m_moduleSystem.getConfigurationTree().expandPath(new TreePath(nodeAnon.getPath()));
+    m_moduleSystem.getConfigurationTree().setSelectionRow(0);
+    /* after finishing building the tree, it is important to update the tree size */
+    m_moduleSystem.getConfigurationTree().setMinimumSize(m_moduleSystem.getConfigurationTree().getPreferredSize());
 
-		/* there is no need to set the font because it is already set in the constructor but so it is
-		 * save for the future
-		 */
-		//remove due to performance reasons...
-		//infoServiceModule.setFontSetting(m_fontControls);
-		//certModule.setFontSetting(m_fontControls);
-		//torModule.setFontSetting(m_fontControls);
-		//anonModul
-
-		m_confModules.addElement(uiModule);
-		m_confModules.addElement(updateModule);
-		m_confModules.addElement(infoServiceModule);
-		m_confModules.addElement(certModule);
-		m_confModules.addElement(torModule);
-		m_confModules.addElement(anonModule);
-		m_confModules.addElement(anongeneralModule);
-		if (JAPConstants.WITH_BLOCKINGRESISTANCE)
-		{
-			m_confModules.addElement(routingModule);
-		}
-		if (loadPay)
-		{
-			m_confModules.addElement(accountsModule);
-		}
-
-		/* create the hashtable, which stores the index of the tabs in the tabbed pane */
-		//m_tabOrder = new Hashtable();
-
-		m_Tabs.add(m_pPort, PORT_TAB);
-		//m_Tabs.addTab(JAPMessages.getString("confListenerTab"), null, m_pPort);
-		//m_tabOrder.put(new Integer(PORT_TAB), new Integer(m_Tabs.getTabCount() - 1));
-		m_Tabs.add(m_pFirewall, PROXY_TAB);
-//		m_tabOrder.put(new Integer(PROXY_TAB), new Integer(m_Tabs.getTabCount() - 1));
-		m_Tabs.add(uiModule.getRootPanel(), UI_TAB);
-		m_Tabs.add(updateModule.getRootPanel(), UPDATE_TAB);
-		m_Tabs.add(infoServiceModule.getRootPanel(), INFOSERVICE_TAB);
-		//m_tabOrder.put(new Integer(INFO_TAB), new Integer(m_Tabs.getTabCount() - 1));
-		m_tabsAnonServices = new JTabbedPane();
-		m_tabsAnonServices.addTab(anonModule.getTabTitle(), anonModule.getRootPanel());
-		m_tabsAnonServices.addTab(torModule.getTabTitle(), torModule.getRootPanel());
-		m_tabsAnonServices.addTab(anongeneralModule.getTabTitle(), anongeneralModule.getRootPanel());
-		m_Tabs.add(m_tabsAnonServices, ANON_SERVICES_TAB);
-		//m_tabOrder.put(new Integer(ANON_TAB), new Integer(m_Tabs.getTabCount() - 1));
-		m_Tabs.add(certModule.getRootPanel(), CERT_TAB);
-		//m_tabOrder.put(new Integer(CERT_TAB), new Integer(m_Tabs.getTabCount() - 1));
-		//m_Tabs.addTab(torModule.getTabTitle(), null, torModule.getRootPanel());
-		//m_tabOrder.put(new Integer(TOR_TAB), new Integer(m_Tabs.getTabCount() - 1));
-		if (JAPConstants.WITH_BLOCKINGRESISTANCE)
-		{
-			m_Tabs.add(routingModule.getRootPanel(), FORWARD_TAB);
-			//m_tabOrder.put(new Integer(FORWARD_TAB), new Integer(m_Tabs.getTabCount() - 1));
-		}
-		if (loadPay)
-		{
-			m_Tabs.add(accountsModule.getRootPanel(), PAYMENT_TAB);
-			//m_tabOrder.put(new Integer(KONTO_TAB), new Integer(m_Tabs.getTabCount() - 1));
-		}
-
-		if (!JAPModel.isSmallDisplay())
-		{
-			m_Tabs.add(m_pMisc, DEBUG_TAB);
-			//		m_tabOrder.put(new Integer(MISC_TAB), new Integer(m_Tabs.getTabCount() - 1));
-		}
 		JPanel buttonPanel = new JPanel();
 		buttonPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
 		JButton bttnHelp = new JButton(JAPMessages.getString("updateM_bttnHelp"));
@@ -329,115 +239,36 @@ final class JAPConf extends JDialog
 				okPressed();
 			}
 		});
-		/*		if (loadPay)
-		  {
-		   ok.addActionListener( ( (pay.view.PayView) m_pKonto).userPanel);
-		  }*/
 		ok.setFont(m_fontControls);
 		buttonPanel.add(ok);
 		buttonPanel.add(new JLabel("   "));
 		getRootPane().setDefaultButton(ok);
 
-//				container.add(new JLabel(new ImageIcon(m_Controller.JAPICONFN)), BorderLayout.WEST);
-//new Config select...
-		DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode("root");
-		DefaultTreeModel treeModel = new DefaultTreeModel(rootNode);
-		DefaultMutableTreeNode node = new DefaultMutableTreeNode(new TreeElement(uiModule.getTabTitle(),
-			UI_TAB));
-		rootNode.add(node);
-		if (loadPay)
-		{
-			node = new DefaultMutableTreeNode(new TreeElement(accountsModule.getTabTitle(), PAYMENT_TAB));
-			rootNode.add(node);
-		}
-		node = new DefaultMutableTreeNode(new TreeElement(updateModule.getTabTitle(), UPDATE_TAB));
-		rootNode.add(node);
-		DefaultMutableTreeNode nodeNet = new DefaultMutableTreeNode(JAPMessages.getString("ngTreeNetwork"));
-		rootNode.add(nodeNet);
-		DefaultMutableTreeNode n2 = new DefaultMutableTreeNode(new TreeElement(JAPMessages.getString(
-			"confListenerTab"), PORT_TAB));
-		nodeNet.add(n2);
-		n2 = new DefaultMutableTreeNode(new TreeElement(JAPMessages.getString("confProxyTab"), PROXY_TAB));
-		nodeNet.add(n2);
-		DefaultMutableTreeNode nodeAnon = new DefaultMutableTreeNode(JAPMessages.getString("ngAnonymitaet"));
-		rootNode.add(nodeAnon);
-		n2 = new DefaultMutableTreeNode(new TreeElement(infoServiceModule.getTabTitle(), INFOSERVICE_TAB));
-		nodeAnon.add(n2);
-		n2 = new DefaultMutableTreeNode(new TreeElement(JAPMessages.getString("ngTreeAnonService"), ANON_SERVICES_TAB));
-		nodeAnon.add(n2);
-		n2 = new DefaultMutableTreeNode(new TreeElement(routingModule.getTabTitle(), FORWARD_TAB));
-		nodeAnon.add(n2);
-		node = new DefaultMutableTreeNode(new TreeElement(certModule.getTabTitle(), CERT_TAB));
-		rootNode.add(node);
-		node = new DefaultMutableTreeNode(new TreeElement(JAPMessages.getString("ngTreeDebugging"), DEBUG_TAB));
-		rootNode.add(node);
-		DefaultTreeCellRenderer renderer = new DefaultTreeCellRenderer();
-		renderer.setClosedIcon(JAPUtil.loadImageIcon("arrow.gif", true));
-		renderer.setOpenIcon(JAPUtil.loadImageIcon("arrow90.gif", true));
-		renderer.setLeafIcon(null);
-		m_Tree = new JTree(treeModel);
-		TreeSelectionModel sm = new DefaultTreeSelectionModel()
-		{
-			public void setSelectionPath(TreePath t)
-			{
-				if ( ( (TreeNode) t.getLastPathComponent()).isLeaf())
-				{
-					super.setSelectionPath(t);
-				}
-				//return false;
-			}
-		};
+    JPanel moduleSystemPanel = m_moduleSystem.getRootPanel();
 
-		sm.setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
-		m_Tree.setSelectionModel(sm);
-		m_Tree.setRootVisible(false);
-		m_Tree.setEditable(false);
-		m_Tree.setCellRenderer(renderer);
-		m_Tree.setBorder(new CompoundBorder(LineBorder.createBlackLineBorder(), new EmptyBorder(5, 5, 5, 5)));
-		m_Tree.addTreeSelectionListener(new TreeSelectionListener()
-		{
-			public void valueChanged(TreeSelectionEvent e)
-			{
-				if (e.isAddedPath())
-				{
-					DefaultMutableTreeNode n = (DefaultMutableTreeNode) e.getPath().getLastPathComponent();
-					m_TabsLayout.show(m_Tabs, ( (TreeElement) n.getUserObject()).getValue());
-				}
-			}
-		});
-		m_Tree.expandPath(new TreePath(nodeNet.getPath()));
-		m_Tree.expandPath(new TreePath(nodeAnon.getPath()));
-		m_Tree.setSelectionRow(0);
-		m_Tree.addTreeWillExpandListener(new TreeWillExpandListener()
-		{
-			public void treeWillCollapse(TreeExpansionEvent event) throws ExpandVetoException
-			{
-				throw new ExpandVetoException(event);
-			}
+    GridBagLayout configPanelLayout = new GridBagLayout();
+    pContainer.setLayout(configPanelLayout);
 
-			public void treeWillExpand(TreeExpansionEvent event)
-			{
-			}
-		});
+    GridBagConstraints configPanelConstraints = new GridBagConstraints();
+    configPanelConstraints.anchor = GridBagConstraints.NORTHWEST;
+    configPanelConstraints.fill = GridBagConstraints.BOTH;
+    configPanelConstraints.weightx = 1.0;
+    configPanelConstraints.weighty = 1.0;
+    configPanelConstraints.gridx = 0;
+    configPanelConstraints.gridy = 0;
+    configPanelLayout.setConstraints(moduleSystemPanel, configPanelConstraints);
+    pContainer.add(moduleSystemPanel);
 
-		pContainer.setLayout(new BorderLayout());
-		JPanel treePanel = new JPanel(new GridBagLayout());
-		GridBagConstraints c1 = new GridBagConstraints();
-		c1.weighty = 1;
-		c1.fill = GridBagConstraints.BOTH;
-		c1.insets = new Insets(10, 10, 10, 10);
-		treePanel.add(m_Tree, c1);
-		pContainer.add(treePanel, BorderLayout.WEST);
-		buttonPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
-		pContainer.add(buttonPanel, BorderLayout.SOUTH);
-		m_Tabs.setBorder(new EmptyBorder(10, 10, 10, 10));
-		pContainer.add(m_Tabs, BorderLayout.CENTER);
+    configPanelConstraints.weighty = 0.0;
+    configPanelConstraints.gridx = 0;
+    configPanelConstraints.gridy = 1;
+    configPanelConstraints.insets = new Insets(10, 10, 10, 10);
+    configPanelLayout.setConstraints(buttonPanel, configPanelConstraints);
+    pContainer.add(buttonPanel);
 
 		setContentPane(pContainer);
-		//getContentPane().add(pContainer);
 		updateValues();
 		// largest tab to front
-		//selectCard(ANON_TAB);
 		if (JAPModel.isSmallDisplay())
 		{
 			setSize(240, 300);
@@ -456,15 +287,10 @@ final class JAPConf extends JDialog
 	 */
 	public void show()
 	{
-		/* Call the create savepoint handler of all configuration modules. Because this is
-		 * a modal dialog, every call of show() from JAPView is equal to the start of the
-		 * configuration by the user.
+    /* every time the configuration is set to visible, we need to create the savepoints for the
+     * modules for the case that 'Cancel' is pressed later
 		 */
-		Enumeration confModules = m_confModules.elements();
-		while (confModules.hasMoreElements())
-		{
-			( (AbstractJAPConfModule) (confModules.nextElement())).createSavePoint();
-		}
+    m_moduleSystem.createSavePoints();
 		/* call the original method */
 		super.show();
 	}
@@ -857,12 +683,7 @@ final class JAPConf extends JDialog
 
 	void cancelPressed()
 	{
-		/* Call the event handler of all configuration modules. */
-		Enumeration confModules = m_confModules.elements();
-		while (confModules.hasMoreElements())
-		{
-			( (AbstractJAPConfModule) (confModules.nextElement())).cancelPressed();
-		}
+    m_moduleSystem.processCancelPressedEvent();
 		setVisible(false);
 	}
 
@@ -980,13 +801,7 @@ final class JAPConf extends JDialog
 	/** Resets the Configuration to the Default values*/
 	private void resetToDefault()
 	{
-		/* Call the event handler of all configuration modules. */
-		Enumeration confModules = m_confModules.elements();
-		while (confModules.hasMoreElements())
-		{
-			( (AbstractJAPConfModule) (confModules.nextElement())).resetToDefaultsPressed();
-		}
-
+    m_moduleSystem.processResetToDefaultsPressedEvent();
 		m_tfListenerPortNumber.setInt(JAPConstants.defaultPortNumber);
 		//m_tfListenerPortNumberSocks.setInt(JAPConstants.defaultSOCKSPortNumber);
 
@@ -1007,17 +822,9 @@ final class JAPConf extends JDialog
 		{
 			return;
 		}
-		/* Call the event handler of all configuration modules. */
-		Enumeration confModules = m_confModules.elements();
-		while (confModules.hasMoreElements())
-		{
-			AbstractJAPConfModule confModule = (AbstractJAPConfModule) (confModules.nextElement());
-			if (!confModule.okPressed())
-			{
+    if (m_moduleSystem.processOkPressedEvent() == false) {
 				return;
 			}
-		}
-
 		setVisible(false);
 		// Misc settings
 		JAPDebug.getInstance().setLogType(
@@ -1071,77 +878,15 @@ final class JAPConf extends JDialog
 	 *
 	 * @param a_selectedCard The card to bring to the foreground. See the TAB constants in this
 	 *                       class.
-	 * @todo there is a temporally hack to select the anon tab of the tab-pane inside the services card
 	 */
 	public void selectCard(String a_strSelectedCard)
 	{
-		boolean bSearchForAnon=false;
-		DefaultTreeModel model = (DefaultTreeModel) m_Tree.getModel();
-		if(a_strSelectedCard.equals(ANON_TAB))
-		{
-			bSearchForAnon=true;
-			a_strSelectedCard=ANON_SERVICES_TAB;
-		}
-		TreeNode found = findTreeNode( (TreeNode) model.getRoot(), a_strSelectedCard);
-		if (found != null)
-		{
-			m_Tree.setSelectionPath(new TreePath(
-				( (DefaultMutableTreeNode) found).getPath()));
-   			if(bSearchForAnon)
-			   {
-					m_tabsAnonServices.setSelectedIndex(0);
-			   }
-		}
-	}
-
-	private TreeNode findTreeNode(TreeNode parent, String toFind)
-	{
-		if (parent == null)
-		{
-			return null;
-		}
-		if (parent instanceof DefaultMutableTreeNode)
-		{
-			DefaultMutableTreeNode n = (DefaultMutableTreeNode) parent;
-			Object o = n.getUserObject();
-			if (o != null && o instanceof TreeElement)
-			{
-				if ( ( (TreeElement) o).getValue().equals(toFind))
-				{
-					return parent;
-				}
-			}
-		}
-		Enumeration childs = parent.children();
-		while (childs.hasMoreElements())
-		{
-			TreeNode child = (TreeNode) childs.nextElement();
-			TreeNode found = findTreeNode(child, toFind);
-			if (found != null)
-			{
-				return found;
-			}
-		}
-		return null;
+    m_moduleSystem.selectNode(a_strSelectedCard);
 	}
 
 	public void localeChanged()
 	{
-		/* Call the repaintRootPanel() method of all configuration modules and update the tab titles. */
-		Enumeration confModules = m_confModules.elements();
-		while (confModules.hasMoreElements())
-		{
-			AbstractJAPConfModule currentModule = (AbstractJAPConfModule) (confModules.nextElement());
-			try
-			{
-//				m_Tabs.setTitleAt(m_Tabs.indexOfComponent(currentModule.getRootPanel()),
-//								  currentModule.getTabTitle());
-			}
-			catch (Exception e)
-			{
-			}
-			currentModule.recreateRootPanel();
-		}
+    m_moduleSystem.repaintEverything();
 		setTitle(JAPMessages.getString("settingsDialog"));
 		m_bttnDefaultConfig.setText(JAPMessages.getString("bttnDefaultConfig"));
 		m_bttnCancel.setText(JAPMessages.getString("cancelButton"));
@@ -1182,13 +927,7 @@ final class JAPConf extends JDialog
 	/** Updates the shown Values from the Model.*/
 	public void updateValues()
 	{
-		/* Call the event handler of all configuration modules. */
-		Enumeration confModules = m_confModules.elements();
-		while (confModules.hasMoreElements())
-		{
-			( (AbstractJAPConfModule) (confModules.nextElement())).updateValues();
-		}
-
+    m_moduleSystem.processUpdateValuesEvent();
 		/*		if (loadPay)
 		  {
 		   ( (pay.view.PayView) m_pKonto).userPanel.valuesChanged();

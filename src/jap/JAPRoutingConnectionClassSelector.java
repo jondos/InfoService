@@ -111,14 +111,15 @@ public class JAPRoutingConnectionClassSelector extends Observable {
    */
   public JAPRoutingConnectionClassSelector() {
     m_connectionClasses = new Hashtable();
-    m_connectionClasses.put(new Integer(CONNECTION_CLASS_ISDN64), new JAPRoutingConnectionClass(CONNECTION_CLASS_ISDN64, "routingConnectionClassIsdn64", 8000, 4000));
-    m_connectionClasses.put(new Integer(CONNECTION_CLASS_ISDN128), new JAPRoutingConnectionClass(CONNECTION_CLASS_ISDN128, "routingConnectionClassIsdn128", 16000, 8000));
-    m_connectionClasses.put(new Integer(CONNECTION_CLASS_DSL128), new JAPRoutingConnectionClass(CONNECTION_CLASS_DSL128, "routingConnectionClassDsl128", 16000, 8000));
-    m_connectionClasses.put(new Integer(CONNECTION_CLASS_DSL192), new JAPRoutingConnectionClass(CONNECTION_CLASS_DSL192, "routingConnectionClassDsl192", 24000, 12000));
-    m_connectionClasses.put(new Integer(CONNECTION_CLASS_DSL256), new JAPRoutingConnectionClass(CONNECTION_CLASS_DSL256, "routingConnectionClassDsl256", 32000, 16000));
-    m_connectionClasses.put(new Integer(CONNECTION_CLASS_DSL384), new JAPRoutingConnectionClass(CONNECTION_CLASS_DSL384, "routingConnectionClassDsl384", 48000, 24000));
-    m_connectionClasses.put(new Integer(CONNECTION_CLASS_DSL512), new JAPRoutingConnectionClass(CONNECTION_CLASS_DSL512, "routingConnectionClassDsl512", 64000, 32000));
-    m_connectionClasses.put(new Integer(CONNECTION_CLASS_1MBIT), new JAPRoutingConnectionClass(CONNECTION_CLASS_1MBIT, "routingConnectionClass1Mbit", 125000, 62500));
+    m_connectionClasses.put(new Integer(CONNECTION_CLASS_ISDN64), new JAPRoutingConnectionClass(CONNECTION_CLASS_ISDN64, "routingConnectionClassIsdn64", 8000, 50));
+    m_connectionClasses.put(new Integer(CONNECTION_CLASS_ISDN128), new JAPRoutingConnectionClass(CONNECTION_CLASS_ISDN128, "routingConnectionClassIsdn128", 16000, 50));
+    m_connectionClasses.put(new Integer(CONNECTION_CLASS_DSL128), new JAPRoutingConnectionClass(CONNECTION_CLASS_DSL128, "routingConnectionClassDsl128", 16000, 50));
+    m_connectionClasses.put(new Integer(CONNECTION_CLASS_DSL192), new JAPRoutingConnectionClass(CONNECTION_CLASS_DSL192, "routingConnectionClassDsl192", 24000, 50));
+    m_connectionClasses.put(new Integer(CONNECTION_CLASS_DSL256), new JAPRoutingConnectionClass(CONNECTION_CLASS_DSL256, "routingConnectionClassDsl256", 32000, 50));
+    m_connectionClasses.put(new Integer(CONNECTION_CLASS_DSL384), new JAPRoutingConnectionClass(CONNECTION_CLASS_DSL384, "routingConnectionClassDsl384", 48000, 50));
+    m_connectionClasses.put(new Integer(CONNECTION_CLASS_DSL512), new JAPRoutingConnectionClass(CONNECTION_CLASS_DSL512, "routingConnectionClassDsl512", 64000, 50));
+    m_connectionClasses.put(new Integer(CONNECTION_CLASS_1MBIT), new JAPRoutingConnectionClass(CONNECTION_CLASS_1MBIT, "routingConnectionClass1Mbit", 125000, 50));
+    m_connectionClasses.put(new Integer(CONNECTION_CLASS_USER), new JAPRoutingConnectionClass(CONNECTION_CLASS_USER, "routingConnectionClassUser", 16000, 50));
     /* don't call setCurrentConnectionClass() here, because this constructor is called by the
      * constructor of JAPRoutingSettings, so JAPModel.getModel().getRoutingSettings()
      * does not work, when this constructor is called - nevertheless JAPRoutingSettings will get
@@ -127,32 +128,6 @@ public class JAPRoutingConnectionClassSelector extends Observable {
     m_currentConnectionClass = CONNECTION_CLASS_DSL128;
   }
 
-  
-  /**
-   * This changes the values of the user-defined connection class. Attention, this method only
-   * changes the values of the class, if you want to use them in the routing system, you have
-   * to call setCurrentConnectionClass explicitly. The user-defined connection class will only
-   * occur in the list of all connection classes, after this method was called at least once.
-   *
-   * @param a_maxBandwidth The maximum usable bandwidth (bytes /sec) of the user-defined
-   *                       connection class.
-   * @param a_currentBandwidth The maximum bandwidth (bytes / sec) to use for the forwarding
-   *                           server. If this bandwidth is bigger than the maximum bandwidht
-   *                           for this connection class, it is lowered to that maximum value.
-   */
-  public void changeUserDefinedClass(int a_maxBandwidth, int a_currentBandwidth) {
-    if (a_currentBandwidth > a_maxBandwidth) {
-      a_currentBandwidth = a_maxBandwidth;
-    }
-    synchronized (m_connectionClasses) {
-      m_connectionClasses.put(new Integer(CONNECTION_CLASS_USER), new JAPRoutingConnectionClass(CONNECTION_CLASS_USER, "routingConnectionClassUser", a_maxBandwidth, a_currentBandwidth));
-      /* user-defined connection class was changed (also if it was already in the list, it is a
-       * new object now -> notify the observers that the connection classes list was changed
-       */
-      setChanged();
-      notifyObservers(new JAPRoutingMessage(JAPRoutingMessage.CONNECTION_CLASSES_LIST_CHANGED));
-    }
-  }
   
   /**
    * This returns the currently used connection class.
@@ -190,12 +165,11 @@ public class JAPRoutingConnectionClassSelector extends Observable {
           connectionClassWasChanged = true;
         }
         m_currentConnectionClass = a_connectionClass;
-        if ((JAPModel.getInstance().getRoutingSettings().getMaxBandwidth() != newConnectionClass.getMaximumBandwidth()) || (JAPModel.getInstance().getRoutingSettings().getBandwidth() != newConnectionClass.getCurrentBandwidth()) || (JAPModel.getInstance().getRoutingSettings().getAllowedConnections() != newConnectionClass.getSimultaneousConnections())) {
+        if ((JAPModel.getInstance().getRoutingSettings().getBandwidth() != newConnectionClass.getCurrentBandwidth()) || (JAPModel.getInstance().getRoutingSettings().getAllowedConnections() != newConnectionClass.getMaxSimultaneousConnections())) {
           userOrBandwidthValuesWereChanged = true;
         }        
-        JAPModel.getInstance().getRoutingSettings().setMaxBandwidth(newConnectionClass.getMaximumBandwidth());
         JAPModel.getInstance().getRoutingSettings().setBandwidth(newConnectionClass.getCurrentBandwidth());
-        JAPModel.getInstance().getRoutingSettings().setAllowedConnections(newConnectionClass.getSimultaneousConnections());
+        JAPModel.getInstance().getRoutingSettings().setAllowedConnections(newConnectionClass.getMaxSimultaneousConnections());
         if (connectionClassWasChanged == true) {
           setChanged();
           notifyObservers(new JAPRoutingMessage(JAPRoutingMessage.CONNECTION_CLASS_CHANGED));
@@ -286,49 +260,14 @@ public class JAPRoutingConnectionClassSelector extends Observable {
             synchronized (m_connectionClasses) {
               currentConnectionClass = (JAPRoutingConnectionClass)(m_connectionClasses.get(new Integer(classIdentifier)));
             }
-            if ((currentConnectionClass != null) && (classIdentifier != CONNECTION_CLASS_USER)) {
+            if (currentConnectionClass != null) {
               /* load the class settings */
               noError = currentConnectionClass.loadSettingsFromXml(connectionClassNode);
             }
             else {
-              /* maybe it's the user-defined class, which doesn't exist yet */
-              if (classIdentifier == CONNECTION_CLASS_USER) {
-                /* load all values */
-                Element maximumBandwidthNode = (Element)(XMLUtil.getFirstChildByName(connectionClassNode, "MaximumBandwidth"));
-                if (maximumBandwidthNode == null) {
-                  LogHolder.log(LogLevel.ERR, LogType.MISC, "JAPRoutingConnectionClassSelector: loadSettingsFromXml: Error in XML structure (MaximumBandwidth node for user-defined connection class " + Integer.toString(classIdentifier) + "): Skipping this class.");
-                  noError = false;
-                }
-                else {
-                  int maximumBandwidth = XMLUtil.parseNodeInt(maximumBandwidthNode, -1);
-                  if (maximumBandwidth < 0) {
-                    LogHolder.log(LogLevel.ERR, LogType.MISC, "JAPRoutingConnectionClassSelector: loadSettingsFromXml: Invalid MaximumBandwidth value for the user-defined connection class " + Integer.toString(classIdentifier) + "): Skipping this class.");
-                    noError = false;
-                  }
-                  else {
-                    Element useableBandwidthNode = (Element)(XMLUtil.getFirstChildByName(connectionClassNode, "UseableBandwidth"));
-                    if (useableBandwidthNode == null) {
-                      LogHolder.log(LogLevel.ERR, LogType.MISC, "JAPRoutingConnectionClassSelector: loadSettingsFromXml: Error in XML structure (UseableBandwidth node for user-defined connection class " + Integer.toString(classIdentifier) + "): Skipping this class.");
-                      noError = false;
-                    }
-                    else {
-                      int useableBandwidth = XMLUtil.parseNodeInt(useableBandwidthNode, -1);
-                      if ((useableBandwidth < 0) || (useableBandwidth > maximumBandwidth)) {
-                        LogHolder.log(LogLevel.ERR, LogType.MISC, "JAPRoutingConnectionClassSelector: loadSettingsFromXml: Invalid UseableBandwidth value for the user-defined connection class " + Integer.toString(classIdentifier) + ": Skipping this class.");
-                        noError = false;
-                      }
-                      else {
-                        changeUserDefinedClass(maximumBandwidth, useableBandwidth);
-                      }
-                    }
-                  }
-                }
-              }
-              else {
-                /* the class wasn't found and it is also not the user-defined class */
-                LogHolder.log(LogLevel.ERR, LogType.MISC, "JAPRoutingConnectionClassSelector: loadSettingsFromXml: The connection class " + Integer.toString(classIdentifier) + " is not known in the system. Skipping the entry.");
-                noError = false;
-              }
+              /* the connection class wasn't found in our system */
+              LogHolder.log(LogLevel.ERR, LogType.MISC, "JAPRoutingConnectionClassSelector: loadSettingsFromXml: The connection class " + Integer.toString(classIdentifier) + " is not known in the system. Skipping the entry.");
+              noError = false;
             }
           }
           catch (Exception e) {

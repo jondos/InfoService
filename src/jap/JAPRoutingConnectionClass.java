@@ -59,20 +59,14 @@ public class JAPRoutingConnectionClass {
    * Stores the maximal possible bandwidth for this connection class in bytes/sec.
    */
   private int m_maximumBandwidth;
-  
+
   /**
-   * Stores the bandwidth (bytes/sec), which can be used for forwarding with this connection
-   * class.
+   * Stores the percentage of the maximum bandwidth of the connection which shall be used for
+   * forwarding.
    */
-  private int m_currentBandwidth;
-  
-  /**
-   * Stores the number of connections, which can be forwarded simultaneously by the forwarding
-   * server. It's limited by the current available bandwidth for forwarding.
-   */
-  private int m_simultaneousConnections;
-  
-  
+  private int m_relativeBandwidth;
+
+    
   /**
    * Creates a new JAPRoutingConnectionClass structure. The number is depending on
    * a_currentBandwidth set to the maximum possible value according to
@@ -87,12 +81,11 @@ public class JAPRoutingConnectionClass {
    * @param a_currentBandwidth The bandwidth which can be used for the forwarding server with
    *                           this connection class.
    */
-  public JAPRoutingConnectionClass(int a_connectionClassIdentifier, String a_connectionClassName, int a_maximumBandwidth, int a_currentBandwidth) {
+  public JAPRoutingConnectionClass(int a_connectionClassIdentifier, String a_connectionClassName, int a_maximumBandwidth, int a_relativeBandwidth) {
     m_connectionClassIdentifier = a_connectionClassIdentifier;
     m_connectionClassName = a_connectionClassName;
     m_maximumBandwidth = a_maximumBandwidth;
-    m_currentBandwidth = a_currentBandwidth;
-    m_simultaneousConnections = getMaxSimultaneousConnections();
+    setRelativeBandwidth(a_relativeBandwidth);
   }
   
   
@@ -116,31 +109,39 @@ public class JAPRoutingConnectionClass {
   public int getMaximumBandwidth() {
     return m_maximumBandwidth;
   }
-  
+
+  /**
+   * Changes the maximum bandwidth of this connection class. This is only possible for the
+   * user-defined connection class. Any other connection class will ignore a call of this method.
+   *
+   * @param a_maximumBandwidth The new maximum bandwidth (in bytes/sec), for this connection
+   *                           class.
+   */
+  public void setMaximumBandwidth(int a_maximumBandwidth) {
+    if (m_connectionClassIdentifier == JAPRoutingConnectionClassSelector.CONNECTION_CLASS_USER) {
+      synchronized (this) {
+        m_maximumBandwidth = a_maximumBandwidth;
+        /* set the useable bandwidth to the smallest possible value above the current one */
+        setRelativeBandwidth(getRelativeBandwidth());
+      }
+    }
+  }
+      
   /**
    * Returns the current maximum bandwidth, which can be used for the forwarding server with this
-   * connection class.
+   * connection class (= relative bandwidth * maximum bandwidth).
    *
    * @return The current maximum bandwidth in bytes/sec, which can be used for the forwarding
    *         server with this connection class.
    */
   public int getCurrentBandwidth() {
-    return m_currentBandwidth;
-  }
-  
-  /**
-   * Changes the maximum bandwidth, which can be used for the forwarding server with this
-   * connection class.
-   *
-   * @param a_currentBandwidth The new bandwidth limit (in bytes/sec), which can be used for the
-   *                           forwarding server with this connection class.
-   */
-  public void setCurrentBandwidth(int a_currentBandwidth) {
+    int currentAbsoluteBandwidth = 0;
     synchronized (this) {
-      m_currentBandwidth = a_currentBandwidth;
+      currentAbsoluteBandwidth = (m_maximumBandwidth * m_relativeBandwidth) / 100;
     }
+    return currentAbsoluteBandwidth;
   }
-  
+    
   /**
    * Returns the maximum number of simultaneous connections, the forwarding server can handle
    * with the current bandwidth. The value depends on JAPConstants.ROUTING_BANDWIDTH_PER_USER.
@@ -153,28 +154,45 @@ public class JAPRoutingConnectionClass {
   }
 
   /**
-   * Returns the number of simultaneous connections, the forwarding server shall handle (if there
-   * are enough requesting clients). The forwarding server will accept new forwarding connections
-   * until this number is reached. Any further connection request will be dropped.
+   * Returns the percentage of the maximum bandwidth which shall be used for forwarding.
    *
-   * @return The number of simultaneous forwarded connections, the server shall handle.
+   * @return The relative connection bandwidth (in %) useable for forwarding.
    */
-  public int getSimultaneousConnections() {
-    return m_simultaneousConnections;
+  public int getRelativeBandwidth() {
+    return m_relativeBandwidth;
   }
- 
+  
   /**
-   * Changes the number of simultaneous connections, the forwarding server shall handle (if there
-   * are enough requesting clients). The forwarding server will accept new forwarding connections
-   * until this number is reached. Any further connection request will be dropped.
+   * Changes the percentage of the maximum bandwidth which shall be used for forwarding. The new
+   * value must not be smaller than the value returned by getMinimumRelativeBandwidth() (if it is
+   * smaller, the value returned by getMinimumRelativeBandwidth() is set as the new relative
+   * bandwidth).
    *
-   * @param a_simultaneousConnections The number of simultaneous forwarded connections, the server
-   *                                  shall handle.
-   */  
-  public void setSimultaneousConnections(int a_simultaneousConnections) {
+   * @param a_relativeBandwidth The relative connection bandwidth (in %) useable for forwarding.
+   */
+  public void setRelativeBandwidth(int a_relativeBandwidth) {
     synchronized (this) {
-      m_simultaneousConnections = a_simultaneousConnections;
+      if (a_relativeBandwidth > getMinimumRelativeBandwidth()) {
+        m_relativeBandwidth = a_relativeBandwidth;
+      }
+      else {
+        /* less than the minimum bandwidth value is not possible */
+        m_relativeBandwidth = getMinimumRelativeBandwidth();
+      }
     }
+  }  
+
+  /**
+   * Returns the minimum relative forwarding bandwidth. This is the percentage of the maximum
+   * bandwidth necessary to forward at least one connection, see
+   * JAPConstants.ROUTING_BANDWIDTH_PER_USER).
+   *
+   * @return The minimum possible relative connection bandwidth (in %).
+   */
+  public int getMinimumRelativeBandwidth() {
+    int maximumBandwidth = m_maximumBandwidth;
+    /* the +(maximumBandwidth-1) is only for rounding up the result */
+    return ((JAPConstants.ROUTING_BANDWIDTH_PER_USER * 100) + (maximumBandwidth - 1)) / maximumBandwidth;
   }
   
   /**
@@ -199,27 +217,25 @@ public class JAPRoutingConnectionClass {
     Element connectionClassNode = a_doc.createElement("ConnectionClass");
     Element classIdentifierNode = a_doc.createElement("ClassIdentifier");
     Element maximumBandwidthNode = a_doc.createElement("MaximumBandwidth");
-    Element useableBandwidthNode = a_doc.createElement("UseableBandwidth");
-    Element simultaneousConnectionsNode = a_doc.createElement("SimultaneousConnections");
+    Element relativeBandwidthNode = a_doc.createElement("RelativeBandwidth");
     XMLUtil.setNodeValue(classIdentifierNode, Integer.toString(getIdentifier()));
-    XMLUtil.setNodeValue(maximumBandwidthNode, Integer.toString(getMaximumBandwidth()));
     synchronized (this) {
-      XMLUtil.setNodeValue(useableBandwidthNode, Integer.toString(getCurrentBandwidth()));
-      XMLUtil.setNodeValue(simultaneousConnectionsNode, Integer.toString(getSimultaneousConnections()));
+      XMLUtil.setNodeValue(maximumBandwidthNode, Integer.toString(getMaximumBandwidth()));
+      XMLUtil.setNodeValue(relativeBandwidthNode, Integer.toString(getRelativeBandwidth()));
     }
     connectionClassNode.appendChild(classIdentifierNode);
     connectionClassNode.appendChild(maximumBandwidthNode);
-    connectionClassNode.appendChild(useableBandwidthNode);
-    connectionClassNode.appendChild(simultaneousConnectionsNode);
+    connectionClassNode.appendChild(relativeBandwidthNode);
     return connectionClassNode;
   }
   
   /**
    * This method loads some settings for this connection class from a prior created XML structure.
    * But the identifier and the maximum bandwidth (both belong to the characteristics of this
-   * connection class) are never changed, but checked, whether they match to this connection
-   * class. If there is an error while loading the settings, it is still tried to load as much
-   * settings as possible.
+   * connection class) are normally not changed, but checked, whether they match to this
+   * connection class. Only the user-defined connection class will change the maximum bandwidth
+   * value to the loaded setting. If there is an error while loading the settings, it is still
+   * tried to load as much settings as possible.
    *
    * @param a_connectionClassNode The ConnectionClass XML node, which was created by the
    *                              getSettingsAsXml() method.
@@ -229,52 +245,53 @@ public class JAPRoutingConnectionClass {
   public boolean loadSettingsFromXml(Element a_connectionClassNode) {
     /* store, whether there were some errors while loading the settings */
     boolean noError = true;
-    /* check, whether the class identifier and the maximum bandwidth matches, both values are
-     * characteristic for this connection class and are not changed
-     */
-    try {
-      if (XMLUtil.parseNodeInt(XMLUtil.getFirstChildByName(a_connectionClassNode, "ClassIdentifier"), m_connectionClassIdentifier + 1) != m_connectionClassIdentifier) {
-        throw (new Exception("JAPRoutingConnectionClass: loadSettingsFromXml: The class identifer doesn't match to this class (class: " + Integer.toString(m_connectionClassIdentifier) + ")."));
+    synchronized (this) {
+      try {
+        /* check, whether the class identifier matches to the connection class */
+        if (XMLUtil.parseNodeInt(XMLUtil.getFirstChildByName(a_connectionClassNode, "ClassIdentifier"), m_connectionClassIdentifier + 1) != m_connectionClassIdentifier) {
+          throw (new Exception("JAPRoutingConnectionClass: loadSettingsFromXml: The class identifer doesn't match to this class (class: " + Integer.toString(m_connectionClassIdentifier) + ")."));
+        }
+        if (m_connectionClassIdentifier == JAPRoutingConnectionClassSelector.CONNECTION_CLASS_USER) {
+          /* user-defined connection class -> load the maximum bandwidth setting */
+          int maximumBandwidth = XMLUtil.parseNodeInt(XMLUtil.getFirstChildByName(a_connectionClassNode, "MaximumBandwidth"), -1);
+          if (maximumBandwidth >= JAPConstants.ROUTING_BANDWIDTH_PER_USER) {
+            /* maximum bandwidth needs to be at least the same as required for one forwarded
+             * connection
+             */
+            m_maximumBandwidth = maximumBandwidth;
+            /* set the useable bandwidth to 50% or to the smallest possible value above 50% */
+            setRelativeBandwidth(50);
+          }
+          else {
+            throw (new Exception("JAPRoutingConnectionClass: loadSettingsFromXml: Invalid maximum bandwidth value (class: " + Integer.toString(m_connectionClassIdentifier) + ")."));
+          }   
+        }
+        else {
+          /* pre-defined connection class -> check whether the maximum bandwidth setting matches */      
+          if (XMLUtil.parseNodeInt(XMLUtil.getFirstChildByName(a_connectionClassNode, "MaximumBandwidth"), m_maximumBandwidth + 1) != m_maximumBandwidth) {
+            throw (new Exception("JAPRoutingConnectionClass: loadSettingsFromXml: The maximum bandwidth doesn't match to this class (class: " + Integer.toString(m_connectionClassIdentifier) + ")."));
+          }
+        }
       }
-      if (XMLUtil.parseNodeInt(XMLUtil.getFirstChildByName(a_connectionClassNode, "MaximumBandwidth"), m_maximumBandwidth + 1) != m_maximumBandwidth) {
-        throw (new Exception("JAPRoutingConnectionClass: loadSettingsFromXml: The maximum bandwidth doesn't match to this class (class: " + Integer.toString(m_connectionClassIdentifier) + ")."));
+      catch (Exception e) {
+        LogHolder.log(LogLevel.ERR, LogType.NET, "JAPRoutingConnectionClass: loadSettingsFromXml: Loading the settings for this connection class failed: " + e.toString());
+        noError = false;
       }
-    }
-    catch (Exception e) {
-      LogHolder.log(LogLevel.ERR, LogType.NET, "JAPRoutingConnectionClass: loadSettingsFromXml: Loading the settings for this connection class failed: " + e.toString());
-      noError = false;
-    }
-    if (noError = true) {
-      /* only load the settings, if everything is ok */
-      synchronized (this) {
-        Element useableBandwidthNode = (Element)(XMLUtil.getFirstChildByName(a_connectionClassNode, "UseableBandwidth"));
-        if (useableBandwidthNode == null) {
-          LogHolder.log(LogLevel.ERR, LogType.MISC, "JAPRoutingConnectionClass: loadSettingsFromXml: Error in XML structure (UseableBandwidth node for class " + Integer.toString(m_connectionClassIdentifier) + "): Using default value.");
+      if (noError = true) {
+        /* only load the settings, if everything is ok */
+        Element relativeBandwidthNode = (Element)(XMLUtil.getFirstChildByName(a_connectionClassNode, "RelativeBandwidth"));
+        if (relativeBandwidthNode == null) {
+          LogHolder.log(LogLevel.ERR, LogType.MISC, "JAPRoutingConnectionClass: loadSettingsFromXml: Error in XML structure (RelativeBandwidth node for class " + Integer.toString(m_connectionClassIdentifier) + "): Using default value.");
           noError = false;
         }
         else {
-          int useableBandwidth = XMLUtil.parseNodeInt(useableBandwidthNode, -1);
-          if ((useableBandwidth < 0) || (useableBandwidth > getMaximumBandwidth())) {
-            LogHolder.log(LogLevel.ERR, LogType.MISC, "JAPRoutingConnectionClass: loadSettingsFromXml: Invalid UseableBandwidth value for class " + Integer.toString(m_connectionClassIdentifier) + ": Using default value.");
+          int relativeBandwidth = XMLUtil.parseNodeInt(relativeBandwidthNode, -1);
+          if (relativeBandwidth < getMinimumRelativeBandwidth()) {
+            LogHolder.log(LogLevel.ERR, LogType.MISC, "JAPRoutingConnectionClass: loadSettingsFromXml: Invalid relative bandwidth value for class " + Integer.toString(m_connectionClassIdentifier) + ": Using default value.");
             noError = false;
           }
           else {
-            setCurrentBandwidth(useableBandwidth);
-          }
-        }
-        Element simultaneousConnectionsNode = (Element)(XMLUtil.getFirstChildByName(a_connectionClassNode, "SimultaneousConnections"));
-        if (simultaneousConnectionsNode == null) {
-          LogHolder.log(LogLevel.ERR, LogType.MISC, "JAPRoutingConnectionClass: loadSettingsFromXml: Error in XML structure (SimultaneousConnections node for class " + Integer.toString(m_connectionClassIdentifier) + "): Using default value.");
-          noError = false;
-        }
-        else {
-          int simultaneousConnections = XMLUtil.parseNodeInt(simultaneousConnectionsNode, -1);
-          if ((simultaneousConnections < 0) || (simultaneousConnections > getMaxSimultaneousConnections())) {
-            LogHolder.log(LogLevel.ERR, LogType.MISC, "JAPRoutingConnectionClass: loadSettingsFromXml: Invalid SimultaneousConnections value for class " + Integer.toString(m_connectionClassIdentifier) + ": Using default value.");
-            noError = false;
-          }
-          else {
-            setSimultaneousConnections(simultaneousConnections);
+            setRelativeBandwidth(relativeBandwidth);
           }
         }
       }    

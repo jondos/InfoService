@@ -30,6 +30,7 @@ package jap;
 import java.util.Date;
 import java.util.Enumeration;
 
+import java.awt.BorderLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -48,6 +49,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import org.bouncycastle.asn1.x509.X509NameTokenizer;
+
 import anon.crypto.JAPCertificate;
 import anon.crypto.JAPCertificateStore;
 import anon.util.ResourceLoader;
@@ -96,13 +98,11 @@ final class JAPConfCert extends AbstractJAPConfModule
 		
 		StringBuffer strBuff = new StringBuffer();
 		Date date = a_cert.getStartDate();
-		String datestr = date.toLocaleString();
-		datestr=datestr.substring(0,datestr.indexOf(" "));
+		String datestr = date.getDay()+"."+date.getMonth()+"."+(date.getYear()+1900);
 		strBuff.append(datestr);
 		strBuff.append(" - ");
 		date = a_cert.getEndDate();
-		datestr = date.toLocaleString();
-		datestr=datestr.substring(0,datestr.indexOf(" "));
+		datestr = date.getDay()+"."+date.getMonth()+"."+(date.getYear()+1900);
 		strBuff.append(datestr);
 		m_labelDateData.setText(strBuff.toString());
 
@@ -181,18 +181,14 @@ final class JAPConfCert extends AbstractJAPConfModule
 		m_borderCert = new TitledBorder(JAPMessages.getString("confCertTab"));
 		m_borderCert.setTitleFont(getFontSetting());
 		panelRoot.setBorder(m_borderCert);
+		JPanel caLabel = createCALabel();
 		JPanel caPanel = createCertCAPanel();
 		JPanel infoPanel = createCertInfoPanel();
-		GridBagLayout gbl = new GridBagLayout();
-		GridBagConstraints c = new GridBagConstraints();
-		panelRoot.setLayout(gbl);
-		c.anchor = GridBagConstraints.NORTHWEST;
-		c.weightx = 1;
-		c.fill = GridBagConstraints.BOTH;
-		panelRoot.add(caPanel, c);
-		c.gridy = 1;
-		//c.fill = GridBagConstraints.HORIZONTAL;
-		panelRoot.add(infoPanel, c);
+		BorderLayout bl = new BorderLayout();
+		panelRoot.setLayout(bl);
+		panelRoot.add(caLabel,BorderLayout.NORTH);
+		panelRoot.add(caPanel);
+		panelRoot.add(infoPanel,BorderLayout.SOUTH);
 	}
 
 	/**
@@ -243,12 +239,12 @@ final class JAPConfCert extends AbstractJAPConfModule
 		return true;
 	}
 
-	private JPanel createCertCAPanel()
+	private JPanel createCALabel()
 	{
-		final JPanel r_panelCA = new JPanel();
+		final JPanel r_panelCALabel = new JPanel();
 
 		GridBagLayout panelLayoutCA = new GridBagLayout();
-		r_panelCA.setLayout(panelLayoutCA);
+		r_panelCALabel.setLayout(panelLayoutCA);
 
 		m_labelTrust1 = new JLabel(JAPMessages.getString("certTrust1"));
 		m_labelTrust1.setFont(getFontSetting());
@@ -264,13 +260,29 @@ final class JAPConfCert extends AbstractJAPConfModule
 		panelConstraintsCA.gridx = 0;
 		panelConstraintsCA.gridy = 0;
 		panelLayoutCA.setConstraints(m_labelTrust1, panelConstraintsCA);
-		r_panelCA.add(m_labelTrust1);
+		r_panelCALabel.add(m_labelTrust1);
 
 		panelConstraintsCA.gridx = 0;
 		panelConstraintsCA.gridy = 1;
 		panelConstraintsCA.insets = new Insets(5, 10, 15, 0);
 		panelLayoutCA.setConstraints(m_labelTrust2, panelConstraintsCA);
-		r_panelCA.add(m_labelTrust2);
+		r_panelCALabel.add(m_labelTrust2);
+	
+		return r_panelCALabel;
+	}
+
+	private JPanel createCertCAPanel()
+	{
+		final JPanel r_panelCA = new JPanel();
+
+		GridBagLayout panelLayoutCA = new GridBagLayout();
+		r_panelCA.setLayout(panelLayoutCA);
+
+		GridBagConstraints panelConstraintsCA = new GridBagConstraints();
+		panelConstraintsCA.anchor = GridBagConstraints.NORTHWEST;
+		panelConstraintsCA.fill = GridBagConstraints.HORIZONTAL;
+		panelConstraintsCA.weightx = 1.0;
+		panelConstraintsCA.insets = new Insets(10, 10, 0, 0);
 
 		m_listmodelCertList = new DefaultListModel();
 
@@ -313,7 +325,7 @@ final class JAPConfCert extends AbstractJAPConfModule
 		m_scrpaneList.getViewport().add(m_listCert, null);
 	
 		panelConstraintsCA.gridx = 0;
-		panelConstraintsCA.gridy = 2;
+		panelConstraintsCA.gridy = 0;
 		panelConstraintsCA.gridheight = 5;
 		panelConstraintsCA.weighty = 1.0;
 		panelConstraintsCA.insets = new Insets(0, 10, 20, 0);
@@ -454,8 +466,8 @@ final class JAPConfCert extends AbstractJAPConfModule
 			}
 		});
 
-		panelConstraintsCA.gridx = 2;
-		panelConstraintsCA.gridy = 2;
+		panelConstraintsCA.gridx = 1;
+		panelConstraintsCA.gridy = 0;
 		panelConstraintsCA.weightx = 0.0;
 		panelConstraintsCA.gridheight = 1;
 		panelConstraintsCA.weighty = 0.0;
@@ -466,18 +478,18 @@ final class JAPConfCert extends AbstractJAPConfModule
 		r_panelCA.add(m_bttnCertInsert);
 
 		panelConstraintsCA.ipadx = 0;
-		panelConstraintsCA.gridx = 2;
-		panelConstraintsCA.gridy = 3;
+		panelConstraintsCA.gridx = 1;
+		panelConstraintsCA.gridy = 1;
 		panelConstraintsCA.fill = GridBagConstraints.BOTH;
 		panelConstraintsCA.insets = new Insets(10, 10, 0, 10);
 		panelLayoutCA.setConstraints(m_bttnCertRemove, panelConstraintsCA);
 		r_panelCA.add(m_bttnCertRemove);
 
-		panelConstraintsCA.gridx = 2;
-		panelConstraintsCA.gridy = 4;
+		panelConstraintsCA.gridx = 1;
+		panelConstraintsCA.gridy = 2;
 		panelConstraintsCA.fill = GridBagConstraints.BOTH;
-		panelConstraintsCA.insets = new Insets(30, 10, 100, 10);
-		panelLayoutCA.setConstraints(m_bttnCertStatus, panelConstraintsCA);
+		panelConstraintsCA.insets = new Insets(30, 10, 20, 10);
+	panelLayoutCA.setConstraints(m_bttnCertStatus, panelConstraintsCA);
 		r_panelCA.add(m_bttnCertStatus);
 
 		return r_panelCA;
@@ -646,7 +658,14 @@ final class JAPConfCert extends AbstractJAPConfModule
 		r_panelInfo.add(m_labelDateData);*/
 
 
-		return r_panelInfo;
+		JPanel panelInfo = new JPanel();
+		panelLayoutInfo = new GridBagLayout();
+		panelInfo.setLayout(panelLayoutInfo);
+		panelConstraintsInfo.insets = new Insets(5, 5, 5, 5);
+
+		panelInfo.add(r_panelInfo,panelConstraintsInfo);
+
+		return panelInfo;
 	}
 
 	/**
