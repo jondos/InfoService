@@ -10,7 +10,7 @@ public class JAPProxyServer implements Runnable
     private ServerSocket server;
     private Socket socket;
     private JAPMuxSocket oMuxSocket;
-    private Thread thread;
+//    private Thread oMuxSocketThread;
     private JAPModel model;
     
 
@@ -64,7 +64,10 @@ public class JAPProxyServer implements Runnable
 		if (isRunningProxy && (isRunningMux == false)) {
 			try {
 				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPProxyServer:Mux starting...");
-				oMuxSocket=new JAPMuxSocket();
+				oMuxSocket = new JAPMuxSocket();
+				// ???
+//				oMuxSocketThread=new Thread(oMuxSocket);
+				//
 				if(oMuxSocket.connect(model.anonHostName,model.anonPortNumber)==-1) {
 					model.setAnonMode(false);
 					model.status2 = model.getString("statusCannotConnect");
@@ -77,7 +80,10 @@ public class JAPProxyServer implements Runnable
 							 javax.swing.JOptionPane.ERROR_MESSAGE
 							);
 				}
+				// ???
+//				oMuxSocketThread.start();
 				oMuxSocket.start();
+				//
 				model.status2 = model.getString("statusRunning");
 				model.notifyJAPObservers();
 				isRunningMux = true;

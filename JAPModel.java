@@ -178,11 +178,13 @@ public final class JAPModel {
 	
 	
 	public void initialRun() {
+		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:initial run of JAP...");
 		// start Proxy
 		startProxy();
 		// start keypool thread
 		keypool=new JAPKeyPool(20,16);
 		Thread t = new Thread (keypool);
+		t.setPriority(Thread.MIN_PRIORITY);
 		t.start();
 		// start anon service immediately if autoConnect is true
 		setAnonMode(autoConnect);
@@ -412,7 +414,7 @@ public final class JAPModel {
 	}
 	
 	public synchronized void notifyJAPObservers() {
-		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:notifyJAPObservers()");
+		//JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:notifyJAPObservers()");
 		Enumeration enum = observerVector.elements();
 		while (enum.hasMoreElements()) {
 			JAPObserver listener = (JAPObserver)enum.nextElement();
@@ -461,35 +463,5 @@ public final class JAPModel {
 		f.setLocation((screenSize.width-ownSize.width )/2,(screenSize.height-ownSize.height)/2);
 	}
 
-	
-	
-/*	
-	
-	// Macintosh stuff
-	protected void registerMRJHandlers() {
-		//Register MRJ handlers for open, about and quit.
-		MRJI IMRJI = new MRJI();
-		com.apple.mrj.MRJApplicationUtils.registerQuitHandler(IMRJI);
-		com.apple.mrj.MRJApplicationUtils.registerAboutHandler(IMRJI);
-	}
-
-	// Macintosh stuff
-	//Inner class defining the MRJ Interface
-	//Insert "SlideShow MRJI"
-	class MRJI implements com.apple.mrj.MRJQuitHandler, com.apple.mrj.MRJAboutHandler
-	{
-		public void handleQuit() {
-			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"Macintosh MRJ event: Quit");
-			goodBye();
-		}
-		public void handleAbout() {
-			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"Macintosh MRJ event: About");
-			aboutJAP();
-		}
-	}
-	*/
-	
-	
-	
 }
 

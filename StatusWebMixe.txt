@@ -4,8 +4,7 @@
 
 ##IN-WORK
 Wenn Anon ausgeschaltet, dann direkte Verbindung ins internet
-Wenn Exception in Listener kommt, dann steht in Statuszeile 
-   trotzdem "aktiv", obwohl ein Fehler gemeldet werden muesste
+Autostart startet MUX nicht
 Bei Abschalten "anonymer zugriff":
    ProxyServer Exception: java.io.InterruptedIOException: accept interrupted
    besser: regulaer accept schliessen
@@ -14,18 +13,17 @@ Bei Abschalten "anonymer zugriff":
 ##TODO
 Versionscheck via Proxy, wenn Proxy-Mode ist aktiviert
 Bei Download einer neuen JAP-Version: Frame mit Fortschrittsanzeige
-Probleme bei Bilder laden (habe hier was geaendert, aber jetzt klappt 
-   es nicht mehr, wenn ich das .jar File versuche zu starten. 
-   (Mac-PC-Inkompatibilitaet?)
 JAPDirectConnection ggf. erweitern/aendern, dass direkte beobachtbare
    Verbindung nach Warnung moeglich ist
-JAPDebug MISC/NET/GUI checken etc.
 ?? bug: Bei Click auf einstellungen label change
 sprache aendern settings implementieren
 !! (!!=immer zu tun) properties-file: fehlende Texte zufuegen
 !! Hilfetexte
 
 ##ERLEDIGT (= OK)
+OK Probleme bei Bilder laden (habe hier was geaendert, aber jetzt klappt 
+   es nicht mehr, wenn ich das .jar File versuche zu starten. 
+   (Mac-PC-Inkompatibilitaet?)
 OK Info Service wird Ÿber 6543 kontaktiert ab sofort
 OK Konfiguration f. InfoService hinzugefuegt
 OK Versionscheck geht jetzt ueber InfoService

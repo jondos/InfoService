@@ -9,7 +9,7 @@ import java.io.DataInputStream;
 import java.lang.Integer;
 import java.util.Enumeration;
 import java.math.BigInteger;
-public final class JAPMuxSocket extends Thread
+public final class JAPMuxSocket extends Thread /*implements Runnable*/
 	{
 		private int lastChannelId;
 		private Dictionary oSocketList;
