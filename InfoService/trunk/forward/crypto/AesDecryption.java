@@ -25,22 +25,49 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
+package forward.crypto;
 
-/* Hint: This file may be only a copy of the original file which is always in the JAP source tree!
- * If you change something - do not forget to add the changes also to the JAP source tree!
- */
-
-package forward;
+import org.bouncycastle.crypto.engines.AESFastEngine;
+import org.bouncycastle.crypto.params.KeyParameter;
 
 /**
- * This is only a dummy class for using threads as anonymous classes.
+ * This class is a wrapper for doing AES decryption stuff.
  */
-public class JAPThread implements Runnable {
+public class AesDecryption {
 
   /**
-   * This method mus be overwritten by the instances of this class.
+   * Stores the used AES decryption algorithm.
    */
-  public void run() {
+  private AESFastEngine m_decryptionInstance;
+
+
+  /**
+   * Creates a new instance of AesDecryption. The size of the key must be 16 bytes (128 bit),
+   * 24 bytes (192 bit) or 32 bytes (256 bit). If the key size doesn't fit, an exception is
+   * thrown.
+   *
+   * @param a_aesKey The 128 bit or 192 bit or 256 bit AES key.
+   */
+  public AesDecryption(byte[] a_aesKey) throws Exception {
+    m_decryptionInstance = new AESFastEngine();
+    m_decryptionInstance.init(false, new KeyParameter(a_aesKey));
+  }
+
+
+  /**
+   * Decrypts one single cipher data block and returns the plain data block. The blocksize is
+   * always 16 bytes (128 bit). If the cipher data block is shorter than 16 bytes, an exception
+   * is thrown, if it is longer, only the first 16 bytes are decrypted and returned in the plain
+   * block.
+   *
+   * @param a_cipherData The cipher data block.
+   *
+   * @return The plain data block. The length is always 16 bytes.
+   */
+  public byte[] decrypt(byte[] a_cipherData) throws Exception {
+    byte[] plainBlock = new byte[16];
+    m_decryptionInstance.processBlock(a_cipherData, 0, plainBlock, 0);
+    return plainBlock;
   }
 
 }

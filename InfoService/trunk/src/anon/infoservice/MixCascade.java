@@ -32,11 +32,12 @@ import java.util.Vector;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+import anon.AnonServerDescription;
 import anon.crypto.JAPCertificate;
 import anon.crypto.JAPCertificateStore;
 import anon.crypto.JAPSignature;
 import anon.util.XMLUtil;
-import anon.AnonServerDescription;
+
 /**
  * Holds the information for a mixcascade.
  */
