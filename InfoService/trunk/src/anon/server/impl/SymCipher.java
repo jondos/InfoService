@@ -154,7 +154,7 @@ final class SymCipher
 		int len = buff.length;
 		while (i < len - 15)
 		{
-			aesEngine.processBlock(iv2,0,iv2,0);
+			aesEngine.processBlock(iv2, 0, iv2, 0);
 			buff[i++] ^= iv2[0];
 			buff[i++] ^= iv2[1];
 			buff[i++] ^= iv2[2];
@@ -174,7 +174,7 @@ final class SymCipher
 		}
 		if (i < len)
 		{
-			aesEngine.processBlock(iv2,0,iv2,0);
+			aesEngine.processBlock(iv2, 0, iv2, 0);
 			len -= i;
 			for (int k = 0; k < len; k++)
 			{
@@ -189,7 +189,7 @@ final class SymCipher
 		len = ifrom + len;
 		while (ifrom < len - 15)
 		{
-			aesEngine.processBlock(iv2,0,iv2,0);
+			aesEngine.processBlock(iv2, 0, iv2, 0);
 			to[ito++] = (byte) (from[ifrom++] ^ iv2[0]);
 			to[ito++] = (byte) (from[ifrom++] ^ iv2[1]);
 			to[ito++] = (byte) (from[ifrom++] ^ iv2[2]);
@@ -209,7 +209,7 @@ final class SymCipher
 		}
 		if (ifrom < len)
 		{
-			aesEngine.processBlock(iv2,0,iv2,0);
+			aesEngine.processBlock(iv2, 0, iv2, 0);
 			len -= ifrom;
 			for (int k = 0; k < len; k++)
 			{

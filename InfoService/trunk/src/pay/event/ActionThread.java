@@ -31,10 +31,11 @@ import java.awt.Container;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import jap.JAPWaitSplash;
-import logging.*;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 
-public abstract class ActionThread
-	implements Runnable, ActionListener
+public abstract class ActionThread implements Runnable, ActionListener
 {
 	protected ActionEvent event;
 	protected Container container;
@@ -52,23 +53,23 @@ public abstract class ActionThread
 
 	public void actionPerformed(ActionEvent event)
 	{
-		LogHolder.log(LogLevel.DEBUG,LogType.PAY, "Action Thread action performed ANFANG");
+		LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Action Thread action performed ANFANG");
 		this.event = event;
 		new Thread(this).start();
-		LogHolder.log(LogLevel.DEBUG,LogType.PAY, "Action Thread action performed ENDE");
+		LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Action Thread action performed ENDE");
 
 	}
 
 	public void run()
 	{
-		LogHolder.log(LogLevel.DEBUG,LogType.PAY, "Action Thread run() ANFANG");
+		LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Action Thread run() ANFANG");
 		//EasyProgressWindow pf = new EasyProgressWindow(container,titel);
 
 		JAPWaitSplash splash = JAPWaitSplash.start("Work is in progress", titel);
 		action(event);
 		splash.abort();
 		//pf = null;
-		LogHolder.log(LogLevel.DEBUG,LogType.PAY, "Action Thread run() ENDE");
+		LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Action Thread run() ENDE");
 		//container.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 	}
 

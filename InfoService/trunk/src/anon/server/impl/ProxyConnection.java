@@ -1,190 +1,218 @@
 /*
-Copyright (c) 2000, The JAP-Team
-All rights reserved.
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
+ Copyright (c) 2000, The JAP-Team
+ All rights reserved.
+ Redistribution and use in source and binary forms, with or without modification,
+ are permitted provided that the following conditions are met:
 
-	- Redistributions of source code must retain the above copyright notice,
-		this list of conditions and the following disclaimer.
+ - Redistributions of source code must retain the above copyright notice,
+  this list of conditions and the following disclaimer.
 
-	- Redistributions in binary form must reproduce the above copyright notice,
-		this list of conditions and the following disclaimer in the documentation and/or
-		other materials provided with the distribution.
+ - Redistributions in binary form must reproduce the above copyright notice,
+  this list of conditions and the following disclaimer in the documentation and/or
+  other materials provided with the distribution.
 
-	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
-		may be used to endorse or promote products derived from this software without specific
-		prior written permission.
+ - Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
+  may be used to endorse or promote products derived from this software without specific
+  prior written permission.
 
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS
-OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
-AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS
-BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
-OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
-IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
-OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
-*/
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS
+ OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
+ AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS
+ BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+ OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+ IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
+ */
 package anon.server.impl;
 
-import java.net.Socket;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.net.Socket;
 import java.net.SocketException;
-import anon.server.AnonServiceImpl;
 import HTTPClient.Codecs;
+import anon.server.AnonServiceImpl;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 
 final public class ProxyConnection
-  {
- 		private final static int FIREWALL_METHOD_HTTP_1_1=11;
-		private final static int FIREWALL_METHOD_HTTP_1_0=10;
-		private static final String CRLF="\r\n";
+{
+	private final static int FIREWALL_METHOD_HTTP_1_1 = 11;
+	private final static int FIREWALL_METHOD_HTTP_1_0 = 10;
+	private static final String CRLF = "\r\n";
 
-    private Socket m_ioSocket;
-    private InputStream m_In;
-    private OutputStream m_Out;
-    public ProxyConnection(int fwType,String fwHost,int fwPort,
-                            String fwUserID,String fwPasswd,
-                            String host, int port)
-                            throws Exception
-      {
-        if(fwType==AnonServiceImpl.FIREWALL_TYPE_NONE)
-          m_ioSocket=new Socket(host,port);
-        else
-          {
- 			      LogHolder.log(LogLevel.DEBUG,LogType.NET,"ProxyConnection: Try to connect via Firewall ("+fwHost+":"+fwPort+") to Server ("+host+":"+port+")");
-            m_ioSocket=new Socket(fwHost,fwPort);
-          }
-        m_ioSocket.setSoTimeout(10000);
-        m_In=m_ioSocket.getInputStream();
-        m_Out=m_ioSocket.getOutputStream();
-        if(fwType==AnonServiceImpl.FIREWALL_TYPE_SOCKS)
-          {
-            doSOCKS(host,port);
-          }
-        else if(fwType==AnonServiceImpl.FIREWALL_TYPE_HTTP)
-          {
-            OutputStreamWriter writer=new OutputStreamWriter(m_Out);
-            try
-              {
-                sendHTTPProxyCommands(FIREWALL_METHOD_HTTP_1_1,writer,host,port,fwUserID,fwPasswd);
-              }
-            catch(Exception e1)
-              {
-                sendHTTPProxyCommands(FIREWALL_METHOD_HTTP_1_0,writer,host,port,fwUserID,fwPasswd);
-              }
-            String tmp=readLine(m_In);
-            LogHolder.log(LogLevel.DEBUG,LogType.NET,"ProxyConnection: Firewall response is: "+tmp);
-            if(tmp.indexOf("200")!=-1)
-              {
-                while(!(tmp=readLine(m_In)).equals(""))
-                  LogHolder.log(LogLevel.DEBUG,LogType.NET,"ProxyConnection: Firewall response is: "+tmp);
-              }
-            else
-              throw new Exception("HTTP-Proxy response: "+tmp);
-          }
-        m_ioSocket.setSoTimeout(0);
-      }
-
-    private void doSOCKS(String host,int port) throws Exception
-      {
-        byte[] buff=new byte[10+host.length()];
-        buff[0]=5; //SOCKS Version 5
-        buff[1]=1; //NO Auth
-        buff[2]=0;
-
-        buff[3]=5;
-        buff[4]=1; //CMD=Connect
-        buff[5]=0; //RSV
-        buff[6]=3; //Addr=Host-String
-        buff[7]=(byte)host.length();
-
-        System.arraycopy(host.getBytes(),0,buff,8,host.length());
-        buff[8+host.length()]=(byte)(port>>8);
-        buff[9+host.length()]=(byte)(port&0xFF);
-        m_Out.write(buff,0,10+host.length());
-        m_Out.flush();
-        int len=12;
-        while(len>0)
-          {
-            len-=m_In.read(buff,0,len);
-          }
-      }
-
-
-    public Socket getSocket()
-      {
-        return m_ioSocket;
-      }
-
-    public InputStream getInputStream()
-      {
-        return m_In;
-      }
-
-    public OutputStream getOutputStream()
-      {
-        return m_Out;
-      }
-
-    public void setSoTimeout(int ms) throws SocketException
-      {
-        m_ioSocket.setSoTimeout(ms);
-      }
-
-    public void close()
-      {
-        try{m_In.close();}catch(Exception e){}
-        try{m_Out.close();}catch(Exception e){}
-        try{m_ioSocket.close();}catch(Exception e){}
-      }
-
-    		//Write stuff for connecting over proxy/firewall
-		// should look like this example
-		//   CONNECT www.inf.tu-dresden.de:443 HTTP/1.0
-		//   Connection: Keep-Alive
-		//   Proxy-Connection: Keep-Alive
-		//differs a little bit for HTTP/1.0 and HTTP/1.1
-		private void sendHTTPProxyCommands(int httpMethod,OutputStreamWriter out,String host,int port,String user,String passwd)
-			throws Exception
+	private Socket m_ioSocket;
+	private InputStream m_In;
+	private OutputStream m_Out;
+	public ProxyConnection(int fwType, String fwHost, int fwPort,
+						   String fwUserID, String fwPasswd,
+						   String host, int port) throws Exception
+	{
+		if (fwType == AnonServiceImpl.FIREWALL_TYPE_NONE)
+		{
+			m_ioSocket = new Socket(host, port);
+		}
+		else
+		{
+			LogHolder.log(LogLevel.DEBUG, LogType.NET,
+						  "ProxyConnection: Try to connect via Firewall (" + fwHost + ":" + fwPort +
+						  ") to Server (" + host + ":" + port + ")");
+			m_ioSocket = new Socket(fwHost, fwPort);
+		}
+		m_ioSocket.setSoTimeout(10000);
+		m_In = m_ioSocket.getInputStream();
+		m_Out = m_ioSocket.getOutputStream();
+		if (fwType == AnonServiceImpl.FIREWALL_TYPE_SOCKS)
+		{
+			doSOCKS(host, port);
+		}
+		else if (fwType == AnonServiceImpl.FIREWALL_TYPE_HTTP)
+		{
+			OutputStreamWriter writer = new OutputStreamWriter(m_Out);
+			try
 			{
-        if(httpMethod==FIREWALL_METHOD_HTTP_1_1)
-          out.write("CONNECT "+host+":"+Integer.toString(port)+" HTTP/1.1"+CRLF);
-        else
-          out.write("CONNECT "+host+":"+Integer.toString(port)+" HTTP/1.0"+CRLF);
-        if(user!=null&&passwd!=null) // proxy authentication required...
-          {
-            String str=Codecs.base64Encode(user+":"+passwd);
-            out.write("Proxy-Authorization: Basic "+str+CRLF);
-          }
-        out.write("Connection: Keep-Alive"+CRLF);
-        out.write("Keep-Alive: max=20, timeout=100"+CRLF);
-        out.write("Proxy-Connection: Keep-Alive"+CRLF);
-        out.write(CRLF);
-        out.flush();
+				sendHTTPProxyCommands(FIREWALL_METHOD_HTTP_1_1, writer, host, port, fwUserID, fwPasswd);
 			}
+			catch (Exception e1)
+			{
+				sendHTTPProxyCommands(FIREWALL_METHOD_HTTP_1_0, writer, host, port, fwUserID, fwPasswd);
+			}
+			String tmp = readLine(m_In);
+			LogHolder.log(LogLevel.DEBUG, LogType.NET, "ProxyConnection: Firewall response is: " + tmp);
+			if (tmp.indexOf("200") != -1)
+			{
+				while (! (tmp = readLine(m_In)).equals(""))
+				{
+					LogHolder.log(LogLevel.DEBUG, LogType.NET,
+								  "ProxyConnection: Firewall response is: " + tmp);
+				}
+			}
+			else
+			{
+				throw new Exception("HTTP-Proxy response: " + tmp);
+			}
+		}
+		m_ioSocket.setSoTimeout(0);
+	}
 
-	  private String readLine(InputStream inputStream) throws Exception
-		  {
-				StringBuffer strBuff=new StringBuffer(256);
-				try
-					{
-						int byteRead = inputStream.read();
-						while (byteRead != 10 && byteRead != -1)
-							{
-								if (byteRead != 13)
-									strBuff.append((char)byteRead);
-								byteRead = inputStream.read();
-							}
-					}
-				catch (Exception e)
-					{
-						throw e;
-					}
-				return strBuff.toString();
+	private void doSOCKS(String host, int port) throws Exception
+	{
+		byte[] buff = new byte[10 + host.length()];
+		buff[0] = 5; //SOCKS Version 5
+		buff[1] = 1; //NO Auth
+		buff[2] = 0;
+
+		buff[3] = 5;
+		buff[4] = 1; //CMD=Connect
+		buff[5] = 0; //RSV
+		buff[6] = 3; //Addr=Host-String
+		buff[7] = (byte) host.length();
+
+		System.arraycopy(host.getBytes(), 0, buff, 8, host.length());
+		buff[8 + host.length()] = (byte) (port >> 8);
+		buff[9 + host.length()] = (byte) (port & 0xFF);
+		m_Out.write(buff, 0, 10 + host.length());
+		m_Out.flush();
+		int len = 12;
+		while (len > 0)
+		{
+			len -= m_In.read(buff, 0, len);
+		}
+	}
+
+	public Socket getSocket()
+	{
+		return m_ioSocket;
+	}
+
+	public InputStream getInputStream()
+	{
+		return m_In;
+	}
+
+	public OutputStream getOutputStream()
+	{
+		return m_Out;
+	}
+
+	public void setSoTimeout(int ms) throws SocketException
+	{
+		m_ioSocket.setSoTimeout(ms);
+	}
+
+	public void close()
+	{
+		try
+		{
+			m_In.close();
+		}
+		catch (Exception e)
+		{}
+		try
+		{
+			m_Out.close();
+		}
+		catch (Exception e)
+		{}
+		try
+		{
+			m_ioSocket.close();
+		}
+		catch (Exception e)
+		{}
+	}
+
+	//Write stuff for connecting over proxy/firewall
+	// should look like this example
+	//   CONNECT www.inf.tu-dresden.de:443 HTTP/1.0
+	//   Connection: Keep-Alive
+	//   Proxy-Connection: Keep-Alive
+	//differs a little bit for HTTP/1.0 and HTTP/1.1
+	private void sendHTTPProxyCommands(int httpMethod, OutputStreamWriter out, String host, int port,
+									   String user, String passwd) throws Exception
+	{
+		if (httpMethod == FIREWALL_METHOD_HTTP_1_1)
+		{
+			out.write("CONNECT " + host + ":" + Integer.toString(port) + " HTTP/1.1" + CRLF);
+		}
+		else
+		{
+			out.write("CONNECT " + host + ":" + Integer.toString(port) + " HTTP/1.0" + CRLF);
+		}
+		if (user != null && passwd != null) // proxy authentication required...
+		{
+			String str = Codecs.base64Encode(user + ":" + passwd);
+			out.write("Proxy-Authorization: Basic " + str + CRLF);
+		}
+		out.write("Connection: Keep-Alive" + CRLF);
+		out.write("Keep-Alive: max=20, timeout=100" + CRLF);
+		out.write("Proxy-Connection: Keep-Alive" + CRLF);
+		out.write(CRLF);
+		out.flush();
+	}
+
+	private String readLine(InputStream inputStream) throws Exception
+	{
+		StringBuffer strBuff = new StringBuffer(256);
+		try
+		{
+			int byteRead = inputStream.read();
+			while (byteRead != 10 && byteRead != -1)
+			{
+				if (byteRead != 13)
+				{
+					strBuff.append( (char) byteRead);
+				}
+				byteRead = inputStream.read();
 			}
-  }
+		}
+		catch (Exception e)
+		{
+			throw e;
+		}
+		return strBuff.toString();
+	}
+}

@@ -1,36 +1,35 @@
 /*
-Copyright (c) 2000, The JAP-Team
-All rights reserved.
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
+ Copyright (c) 2000, The JAP-Team
+ All rights reserved.
+ Redistribution and use in source and binary forms, with or without modification,
+ are permitted provided that the following conditions are met:
 
-	- Redistributions of source code must retain the above copyright notice,
-		this list of conditions and the following disclaimer.
+ - Redistributions of source code must retain the above copyright notice,
+  this list of conditions and the following disclaimer.
 
-	- Redistributions in binary form must reproduce the above copyright notice,
-		this list of conditions and the following disclaimer in the documentation and/or
-		other materials provided with the distribution.
+ - Redistributions in binary form must reproduce the above copyright notice,
+  this list of conditions and the following disclaimer in the documentation and/or
+  other materials provided with the distribution.
 
-	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
-		may be used to endorse or promote products derived from this software without specific
-		prior written permission.
+ - Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
+  may be used to endorse or promote products derived from this software without specific
+  prior written permission.
 
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS
-OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
-AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS
-BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
-OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
-IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
-OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
-*/
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS
+ OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
+ AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS
+ BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+ OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+ IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
+ */
 package payxml;
 
 import org.w3c.dom.CharacterData;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
-
 
 /**
  * This class contains the functionality for creating and parsing XML balance
@@ -57,8 +56,6 @@ public class XMLBalance extends XMLDocument
 	public static final String docStartTag = "<Balance version=\"1.0\">";
 	public static final String docEndTag = "</Balance>";
 
-
-
 	//~ Instance fields ********************************************************
 
 	private java.sql.Timestamp timestamp;
@@ -70,9 +67,9 @@ public class XMLBalance extends XMLDocument
 	//~ Constructors ***********************************************************
 
 	public XMLBalance(int balance, long maxbalance,
-		java.sql.Timestamp timestamp, java.sql.Timestamp validTime,
-		long accountNumber
-	) throws Exception
+					  java.sql.Timestamp timestamp, java.sql.Timestamp validTime,
+					  long accountNumber
+					  ) throws Exception
 	{
 		this.credit = balance;
 		this.creditMax = maxbalance;
@@ -80,7 +77,7 @@ public class XMLBalance extends XMLDocument
 		this.validTime = validTime;
 		this.accountNumber = accountNumber;
 
-		xmlDocument = docStartTag+"\n" + "  <AccountNumber>" +
+		xmlDocument = docStartTag + "\n" + "  <AccountNumber>" +
 			accountNumber + "</AccountNumber>\n" + "  <CreditMax>" +
 			maxbalance + "</CreditMax>\n" + "  <Credit>" + balance +
 			"</Credit>\n" + "  <Timestamp>" + timestamp + "</Timestamp>\n" +
@@ -89,18 +86,19 @@ public class XMLBalance extends XMLDocument
 		setDocument(xmlDocument);
 	}
 
-
 	public XMLBalance(String xml) throws Exception
 	{
 		setDocument(xml);
 
 		Element element = domDocument.getDocumentElement();
-		if (!element.getTagName().equals("Balance")) {
+		if (!element.getTagName().equals("Balance"))
+		{
 			throw new Exception();
 		}
 
 		NodeList nl = element.getElementsByTagName("AccountNumber");
-		if (nl.getLength() < 1) {
+		if (nl.getLength() < 1)
+		{
 			throw new Exception();
 		}
 
@@ -109,7 +107,8 @@ public class XMLBalance extends XMLDocument
 		accountNumber = Long.parseLong(chdata.getData());
 
 		nl = element.getElementsByTagName("CreditMax");
-		if (nl.getLength() < 1) {
+		if (nl.getLength() < 1)
+		{
 			throw new Exception();
 		}
 		elementChild = (Element) nl.item(0);
@@ -117,7 +116,8 @@ public class XMLBalance extends XMLDocument
 		creditMax = Long.parseLong(chdata.getData());
 
 		nl = element.getElementsByTagName("Credit");
-		if (nl.getLength() < 1) {
+		if (nl.getLength() < 1)
+		{
 			throw new Exception();
 		}
 		elementChild = (Element) nl.item(0);
@@ -125,7 +125,8 @@ public class XMLBalance extends XMLDocument
 		credit = Integer.parseInt(chdata.getData());
 
 		nl = element.getElementsByTagName("Timestamp");
-		if (nl.getLength() < 1) {
+		if (nl.getLength() < 1)
+		{
 			throw new Exception();
 		}
 		elementChild = (Element) nl.item(0);
@@ -133,7 +134,8 @@ public class XMLBalance extends XMLDocument
 		timestamp = java.sql.Timestamp.valueOf(chdata.getData());
 
 		nl = element.getElementsByTagName("Validtime");
-		if (nl.getLength() < 1) {
+		if (nl.getLength() < 1)
+		{
 			throw new Exception();
 		}
 		elementChild = (Element) nl.item(0);
@@ -148,24 +150,20 @@ public class XMLBalance extends XMLDocument
 		return accountNumber;
 	}
 
-
 	public int getCredit()
 	{
 		return credit;
 	}
-
 
 	public long getCreditMax()
 	{
 		return creditMax;
 	}
 
-
 	public java.sql.Timestamp getTimestamp()
 	{
 		return timestamp;
 	}
-
 
 	public java.sql.Timestamp getValidTime()
 	{

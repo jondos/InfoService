@@ -33,8 +33,6 @@ import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.math.BigInteger;
 import java.net.ConnectException;
-import java.security.InvalidKeyException;
-import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.util.Calendar;
 import java.util.Date;
@@ -50,15 +48,13 @@ import anon.AnonChannel;
 import anon.ErrorCodes;
 import anon.NotConnectedToMixException;
 import anon.ToManyOpenChannelsException;
-import anon.crypto.JAPCertificate;
+import anon.crypto.JAPCertPath;
 import anon.crypto.JAPCertificateStore;
-import anon.crypto.JAPSignature;
 import anon.infoservice.MixCascade;
 import anon.pay.AIChannel;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import anon.crypto.JAPCertPath;
 
 public final class MuxSocket implements Runnable
 {
@@ -251,7 +247,7 @@ public final class MuxSocket implements Runnable
 					err = processXmlKeys(buff, bCheckMixCerts, certsTrustedRoots);
 					if (err != ErrorCodes.E_SUCCESS)
 					{
-						throw new Exception("Error during Xml-Key Exchange: "+err);
+						throw new Exception("Error during Xml-Key Exchange: " + err);
 					}
 				}
 				else

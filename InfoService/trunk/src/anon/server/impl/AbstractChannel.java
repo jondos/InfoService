@@ -97,7 +97,8 @@ abstract public class AbstractChannel implements AnonChannel
 
 	//called from the AnonService to send data to this channel
 	protected
-	/*synchronized*/ void recv(byte[] buff, int pos, int len) throws IOException
+		/*synchronized*/
+		void recv(byte[] buff, int pos, int len) throws IOException
 	{
 		m_inputStream.recv(buff, pos, len);
 	}
@@ -106,7 +107,8 @@ abstract public class AbstractChannel implements AnonChannel
 	abstract protected /*synchronized*/ void send(byte[] buff, int len) throws IOException;
 
 	protected
-	/*synchronized*/ void closedByPeer()
+		/*synchronized*/
+		void closedByPeer()
 	{
 		try
 		{
@@ -342,7 +344,8 @@ final class ChannelInputStream extends InputStream
 	}
 
 	protected
-	/*synchronized*/ void recv(byte[] buff, int pos, int len)
+		/*synchronized*/
+		void recv(byte[] buff, int pos, int len)
 	{
 		try
 		{
@@ -369,7 +372,8 @@ final class ChannelInputStream extends InputStream
 	}
 
 	protected
-	/*synchronized*/ void closedByPeer()
+		/*synchronized*/
+		void closedByPeer()
 	{
 		m_bIsClosedByPeer = true;
 		try
@@ -410,7 +414,8 @@ final class ChannelOutputStream extends OutputStream
 
 	//OutputStream Methods
 	public
-	/*synchronized*/ void write(int i) throws IOException
+		/*synchronized*/
+		void write(int i) throws IOException
 	{
 		if ( /*m_bIsClosedByPeer||*/m_bIsClosed)
 		{
@@ -422,7 +427,8 @@ final class ChannelOutputStream extends OutputStream
 	}
 
 	public
-	/*synchronized*/ void write(byte[] buff, int start, int len) throws IOException
+		/*synchronized*/
+		void write(byte[] buff, int start, int len) throws IOException
 	{
 		if ( /*m_bIsClosedByPeer||*/m_bIsClosed)
 		{
@@ -432,7 +438,8 @@ final class ChannelOutputStream extends OutputStream
 	}
 
 	public
-	/*synchronized*/ void close()
+		/*synchronized*/
+		void close()
 	{
 		m_bIsClosed = true;
 	}

@@ -632,7 +632,7 @@ public final class JAPController implements ProxyListener
 			}
 			catch (Exception ex)
 			{
-				ex.printStackTrace();
+				//ex.printStackTrace();
 			}
 			/* store the current MixCascade */
 			MixCascade defaultMixCascade = getCurrentMixCascade();

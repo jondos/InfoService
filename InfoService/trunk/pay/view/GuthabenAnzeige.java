@@ -83,7 +83,7 @@ public class GuthabenAnzeige extends Box implements ModelListener
 	{
 		TitledBorder border = new TitledBorder(PayText.get("Balance"));
 		/**SK13 setBorder not Swing1.1
-			//box.setBorder(border);*/
+		 //box.setBorder(border);*/
 		box.setBackground(Color.red);
 		box.add(info);
 		box.add(Box.createHorizontalGlue());
