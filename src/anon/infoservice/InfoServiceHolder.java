@@ -325,7 +325,7 @@ public class InfoServiceHolder
 			/* use an empty list -> only prefered infoservice is used */
 			infoServiceList = new Vector();
 		}
-		while ( (infoServiceList.size() > 0) || (currentInfoService != null))
+    while (((infoServiceList.size() > 0) || (currentInfoService != null)) && (Thread.currentThread().isInterrupted() == false))
 		{
 			if (currentInfoService == null)
 			{

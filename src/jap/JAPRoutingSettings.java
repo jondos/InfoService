@@ -31,6 +31,10 @@ import java.net.ServerSocket;
 import java.util.Enumeration;
 import java.util.Observable;
 import java.util.Vector;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
 import anon.crypto.JAPCertificateStore;
 import anon.infoservice.HTTPConnectionFactory;
 import anon.infoservice.ListenerInterface;
@@ -38,6 +42,7 @@ import anon.infoservice.InfoService;
 import anon.infoservice.MixCascade;
 import anon.server.AnonServiceImpl;
 import anon.server.impl.ProxyConnection;
+import anon.util.XMLUtil;
 import forward.ForwardUtils;
 import forward.client.ClientForwardException;
 import forward.client.DefaultClientProtocolHandler;
@@ -45,6 +50,9 @@ import forward.client.ForwardConnectionDescriptor;
 import forward.server.ForwardSchedulerStatistics;
 import forward.server.ForwardServerManager;
 import forward.server.ServerSocketPropagandist;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 import proxy.AnonWebProxy;
 
 /**
@@ -75,19 +83,19 @@ public class JAPRoutingSettings extends Observable
    * server.
    */
   public static final int REGISTRATION_NO_INFOSERVICES = 1;
-  
+
   /**
    * This value means, that there occured unknown errors while the registration of the local
    * forwarding server at every infoservice.
    */
   public static final int REGISTRATION_UNKNOWN_ERRORS = 2;
-  
+
   /**
    * This value means, that we could not reach any infoservice while the registration of the
    * local forwarding server.
    */
   public static final int REGISTRATION_INFOSERVICE_ERRORS = 3;
-  
+
   /**
    * This value means, that no infoservice could verify the local forwarding server.
    */
@@ -97,13 +105,13 @@ public class JAPRoutingSettings extends Observable
    * This value means, that the registration process was interrupted.
    */
   public static final int REGISTRATION_INTERRUPTED = 5;
-    
+
   /**
    * This value means, that we have registrated the local forwarding server successful at least
    * at one infoservice.
    */
   public static final int REGISTRATION_SUCCESS = 0;
-  
+
 
   /**
    * This stores the current routing mode. See the constants in this class.
@@ -172,7 +180,7 @@ public class JAPRoutingSettings extends Observable
    * Stores a list of ServerSocketPropagandists, which are currently running.
    */
   private Vector m_runningPropagandists;
-  
+
   /**
    * Stores the instance of the startPropaganda Thread, if there is a currently running instance
    * (else this value is null).
@@ -191,7 +199,7 @@ public class JAPRoutingSettings extends Observable
    * forwarding server startup.
    */
   private JAPRoutingRegistrationInfoServices m_registrationInfoServicesStore;
-  
+
   /**
    * Stores, whether the propaganda for the local forwarding server is running (true) or not
    * (false).
@@ -203,7 +211,7 @@ public class JAPRoutingSettings extends Observable
    * clients will always get an up-to-date list of usebale mixcascades.
    */
   private JAPRoutingUseableMixCascades m_useableMixCascadesStore;
-  
+
 
   /**
    * This creates a new instance of JAPRoutingSettings. We are doing some initialization here.
@@ -417,7 +425,7 @@ public class JAPRoutingSettings extends Observable
             else {
               /* reopen the old port */
               ForwardServerManager.getInstance().addListenSocket(m_serverPort);
-            }            
+            }
           }
         }
       }
@@ -614,7 +622,7 @@ public class JAPRoutingSettings extends Observable
     }
     return forwarderString;
   }
-      
+
   /**
    * Changes, whether connections to the infoservice needs forwarding too.
    *
@@ -894,7 +902,7 @@ public class JAPRoutingSettings extends Observable
                 /* we can notify the observers, thate propaganda was started successfully */
                 setChanged();
                 notifyObservers(new JAPRoutingMessage(JAPRoutingMessage.START_PROPAGANDA_READY, currentPropagandists.clone()));
-              }               
+              }
             }
             /* we are at the end -> notify the master thread, if it is waiting at the lock */
             synchronized (masterThreadLock) {
@@ -911,7 +919,7 @@ public class JAPRoutingSettings extends Observable
         /* we are not in server routing mode -> we are ready because nothing was to do */
         masterThreadLock.propagandaThreadIsReady();
       }
-    }      
+    }
     int registrationStatus = 0;
     synchronized (masterThreadLock) {
       if (a_blocking == true) {
@@ -925,7 +933,7 @@ public class JAPRoutingSettings extends Observable
           catch (InterruptedException e) {
           }
         }
-      }     
+      }
     }
     return registrationStatus;
   }
@@ -933,7 +941,7 @@ public class JAPRoutingSettings extends Observable
   /**
    * Stops all running propaganda instances, which register the local forwarder at the specified
    * infoservices.
-   */   
+   */
   public void stopPropaganda() {
     synchronized (this) {
       if (m_startPropagandaThread != null) {
@@ -954,7 +962,7 @@ public class JAPRoutingSettings extends Observable
       m_propagandaStarted = false;
       /* notify the observers */
       setChanged();
-      notifyObservers(new JAPRoutingMessage(JAPRoutingMessage.STOP_PROPAGANDA_CALLED));      
+      notifyObservers(new JAPRoutingMessage(JAPRoutingMessage.STOP_PROPAGANDA_CALLED));
     }
   }
 
@@ -982,7 +990,7 @@ public class JAPRoutingSettings extends Observable
           serverPort = m_serverPort;
         }
         ServerSocketPropagandist newPropagandist = null;
-        if (startNewPropagandist == true) {   
+        if (startNewPropagandist == true) {
           newPropagandist = new ServerSocketPropagandist(serverPort, a_registrationInfoService);
           synchronized (JAPModel.getModel().getRoutingSettings()) {
             if ((m_serverPort == serverPort) && (m_propagandaStarted == true)) {
@@ -1001,8 +1009,23 @@ public class JAPRoutingSettings extends Observable
     });
     addPropagandistThread.setDaemon(true);
     addPropagandistThread.start();
-  }        
-  
+  }
+
+  /**
+   * Returns a snapshot of the list of currently running propaganda instances, which registrate
+   * the local forwarding server at the infoservices. If there are no running propaganda instances
+   * (maybe because we are not in server routing mode), an empty Vector is returned.
+   *
+   * @return A Vector with all currently running propaganda instances.
+   */
+  public Vector getRunningPropagandaInstances() {
+    Vector resultValue = null;
+    synchronized (this) {
+      resultValue = (Vector)(m_runningPropagandists.clone());
+    }
+    return resultValue;
+  }
+
   /**
    * Returns the instance of the connection class selector of the forwarding server. This is
    * only needed because of some comfort reasons. It makes it easier for a user to configure
@@ -1013,7 +1036,7 @@ public class JAPRoutingSettings extends Observable
   public JAPRoutingConnectionClassSelector getConnectionClassSelector() {
     return m_connectionClassSelector;
   }
-  
+
   /**
    * Returns the structure, where the infoservices are stored, used for registration of the
    * local forwarding server.
@@ -1035,7 +1058,142 @@ public class JAPRoutingSettings extends Observable
     return m_useableMixCascadesStore;
   }
 
-  
+  /**
+   * Returns the current routing settings for storage within an XML document.
+   *
+   * @param a_doc The context document for the routing settings.
+   *
+   * @return An XML node (JapForwardingSettings) with all routing related settings.
+   */
+  public Element getSettingsAsXml(Document a_doc) {
+    Element japForwardingSettingsNode = a_doc.createElement("JapForwardingSettings");
+    Element forwardingServerNode = a_doc.createElement("ForwardingServer");
+    Element serverPortNode = a_doc.createElement("ServerPort");
+    Element serverRunningNode = a_doc.createElement("ServerRunning");
+    synchronized (this) {
+      XMLUtil.setNodeValue(serverPortNode, Integer.toString(getServerPort()));
+      if (getRoutingMode() == ROUTING_MODE_SERVER) {
+        XMLUtil.setNodeBoolean(serverRunningNode, true);
+      }
+      else {
+        XMLUtil.setNodeBoolean(serverRunningNode, false);
+      }
+    }
+    forwardingServerNode.appendChild(serverPortNode);
+    forwardingServerNode.appendChild(serverRunningNode);
+    forwardingServerNode.appendChild(getConnectionClassSelector().getSettingsAsXml(a_doc));
+    forwardingServerNode.appendChild(getRegistrationInfoServicesStore().getSettingsAsXml(a_doc));
+    forwardingServerNode.appendChild(getUseableMixCascadesStore().getSettingsAsXml(a_doc));
+    japForwardingSettingsNode.appendChild(forwardingServerNode);
+    return japForwardingSettingsNode;
+  }
+
+  /**
+   * This method loads all forwarding related settings from a prior created XML structure. If there
+   * is an error while loading the server settings, it is still tried to load as much settings as
+   * possible, but the server is never started in that case, because of security reasons.
+   *
+   * @param a_japForwardingSettingsNode The JapForwardingSettings XML node, which was created by
+   *                                    the getSettingsAsXml() method.
+   */
+  public int loadSettingsFromXml(Element a_japForwardingSettingsNode) {
+    /* this value stores, whether there are no errors -> starting the server is possible, so the
+     * server is never started, if there are any errors while reading the configuration, that's
+     * better for security
+     */
+    boolean startServerIsPossible = true;
+    /* get the ForwardingServer settings */
+    Element forwardingServerNode = (Element)(XMLUtil.getFirstChildByName(a_japForwardingSettingsNode, "ForwardingServer"));
+    if (forwardingServerNode == null) {
+      LogHolder.log(LogLevel.ERR, LogType.MISC, "JAPRoutingSettings: loadSettingsFromXml: Error in XML structure (ForwardingServer node): Using default forwarding server settings.");
+    }
+    else {
+      /* get the ServerPort */
+      Element serverPortNode = (Element)(XMLUtil.getFirstChildByName(forwardingServerNode, "ServerPort"));
+      if (serverPortNode == null) {
+        LogHolder.log(LogLevel.ERR, LogType.MISC, "JAPRoutingSettings: loadSettingsFromXml: Error in XML structure (ServerPort node): Using default server port.");
+        startServerIsPossible = false;
+      }
+      else {
+        int serverPort = XMLUtil.parseNodeInt(serverPortNode, -1);
+        if (serverPort == -1) {
+          LogHolder.log(LogLevel.ERR, LogType.MISC, "JAPRoutingSettings: loadSettingsFromXml: Invalid server port in XML structure: Using default server port.");
+          startServerIsPossible = false;
+        }
+        else {
+          /* we have read a valid server port -> set it */
+          if (setServerPort(serverPort) == false) {
+            LogHolder.log(LogLevel.ERR, LogType.MISC, "JAPRoutingSettings: loadSettingsFromXml: Error while setting the server port: Using default server port.");
+            startServerIsPossible = false;
+          }
+        }
+      }
+      /* get the connection class settings */
+      Element connectionClassSettingsNode = (Element)(XMLUtil.getFirstChildByName(forwardingServerNode, "ConnectionClassSettings"));
+      if (connectionClassSettingsNode == null) {
+        LogHolder.log(LogLevel.ERR, LogType.MISC, "JAPRoutingSettings: loadSettingsFromXml: Error in XML structure (ConnectionClassSettings node): Using default connection class settings.");
+        startServerIsPossible = false;
+      }
+      else {
+        /* load the connection class settings */
+        if (getConnectionClassSelector().loadSettingsFromXml(connectionClassSettingsNode) == false) {
+          startServerIsPossible = false;
+        }
+      }
+      /* get the infoservice registration settings */
+      Element infoserviceRegistrationSettingsNode = (Element)(XMLUtil.getFirstChildByName(forwardingServerNode, "InfoServiceRegistrationSettings"));
+      if (infoserviceRegistrationSettingsNode == null) {
+        LogHolder.log(LogLevel.ERR, LogType.MISC, "JAPRoutingSettings: loadSettingsFromXml: Error in XML structure (InfoServiceRegistrationSettings node): Using default infoservice registration settings.");
+        startServerIsPossible = false;
+      }
+      else {
+        /* load the infoservice registration settings */
+        if (getRegistrationInfoServicesStore().loadSettingsFromXml(infoserviceRegistrationSettingsNode) == false) {
+          startServerIsPossible = false;
+        }
+      }
+      /* get the allowed mixcascades */
+      Element allowedMixCascadesSettingsNode = (Element)(XMLUtil.getFirstChildByName(forwardingServerNode, "AllowedMixCascadesSettings"));
+      if (allowedMixCascadesSettingsNode == null) {
+        LogHolder.log(LogLevel.ERR, LogType.MISC, "JAPRoutingSettings: loadSettingsFromXml: Error in XML structure (AllowedMixCascadesSettings node): Using default forwarding mixcascade settings.");
+        startServerIsPossible = false;
+      }
+      else {
+        /* load the allowed mixcascades */
+        if (getUseableMixCascadesStore().loadSettingsFromXml(allowedMixCascadesSettingsNode) == false) {
+          startServerIsPossible = false;
+        }
+      }
+      /* get the option, whether the server shall be started, this should be done after loading all
+       * other forwarding settings
+       */
+      Element serverRunningNode = (Element)(XMLUtil.getFirstChildByName(forwardingServerNode, "ServerRunning"));
+      if (serverRunningNode == null) {
+        LogHolder.log(LogLevel.ERR, LogType.MISC, "JAPRoutingSettings: loadSettingsFromXml: Error in XML structure (ServerRunning node): Server not started.");
+      }
+      else {
+        /* read the start server setting */
+        if (XMLUtil.parseNodeBoolean(serverRunningNode, false) == true) {
+          if (startServerIsPossible == true) {
+            if (setRoutingMode(ROUTING_MODE_SERVER) == true) {
+              /* start the propaganda */
+              startPropaganda(false);
+              LogHolder.log(LogLevel.INFO, LogType.MISC, "JAPRoutingSettings: loadSettingsFromXml: According to the configuration, the forwarding server was started.");
+            }
+            else {
+              LogHolder.log(LogLevel.ERR, LogType.MISC, "JAPRoutingSettings: loadSettingsFromXml: Error while starting the forwarding server.");
+            }
+          }
+          else {
+            LogHolder.log(LogLevel.ERR, LogType.MISC, "JAPRoutingSettings: loadSettingsFromXml: Because of errors while loading the configuration, the forwarding server was not started.");
+          }
+        }
+      }
+    }
+    return 0;
+  }
+
+
   /**
    * If the infoservice needs forwarding, this changes the infoservice proxy settings to the
    * JAP HTTP listener port (where JAP accept requests from browsers). So all infoservice requests
@@ -1054,5 +1212,5 @@ public class JAPRoutingSettings extends Observable
       }
     }
   }
-    
+
 }

@@ -33,8 +33,13 @@ import java.util.Observable;
 import java.util.Observer;
 import java.util.Vector;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+
 import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.MixCascade;
+import anon.util.XMLUtil;
 import forward.server.ForwardServerManager;
 import logging.LogHolder;
 import logging.LogLevel;
@@ -45,7 +50,7 @@ import logging.LogType;
  * they get always an up-to-date list of running and allowed mixcascades.
  */
 public class JAPRoutingUseableMixCascades implements Observer, Runnable {
-  
+
   /**
    * This is the update interval of the mixcascade list. The list update is done by fetching the
    * mixcascade list from the infoservices (via InfoServiceHolder.getMixCascades()). Then the
@@ -55,8 +60,8 @@ public class JAPRoutingUseableMixCascades implements Observer, Runnable {
    * default update interval is 10 minutes.
    */
   private static final long MIXCASCADELIST_UPDATE_INTERVAL = 10 * 60 * (long)1000;
-  
-  
+
+
   /**
    * This stores the list of allowed mixcascades. This list is used, if the access to the
    * mixcascades shall be restricted for the clients of the local forwarding server. So if
@@ -65,20 +70,20 @@ public class JAPRoutingUseableMixCascades implements Observer, Runnable {
    * easier.
    */
   Hashtable m_allowedMixCascades;
-  
+
   /**
    * This stores, whether the access to all available mixcascades shall be allowed for the clients
    * of the local forwarding server (true) or it shall be restricted to some cascades (false).
    */
   boolean m_allowAllAvailableCascades;
-  
+
   /**
    * This stores the list of currently running mixcascades. This list is updated once within an
    * update interval. The usage of the hashtable has only comfort reasons. So accessing the
    * cascades by the ID is much easier.
    */
   Hashtable m_currentlyRunningMixCascades;
-     
+
   /**
    * This stores the instance of the update thread for the mixcascades. It updates the list of
    * currently running mixcascades and also the database of useable mixcascades for the clients
@@ -87,8 +92,8 @@ public class JAPRoutingUseableMixCascades implements Observer, Runnable {
    * running instance of that thread at one time.
    */
   Thread m_updateMixCascadesListThread;
-  
-  
+
+
   /**
    * This creates a new instance of JAPRoutingUseableMixCascades. Some initialization is done
    * here. The new instance is configured for allowing access to all available mixcascades.
@@ -99,7 +104,7 @@ public class JAPRoutingUseableMixCascades implements Observer, Runnable {
     m_currentlyRunningMixCascades = new Hashtable();
     m_updateMixCascadesListThread = null;
   }
-  
+
 
   /**
    * This is the observer implementation to observe the instance of JAPRoutingSettings. We handle
@@ -168,7 +173,7 @@ public class JAPRoutingUseableMixCascades implements Observer, Runnable {
       }
     }
   }
-  
+
   /**
    * Returns a clone of the list of allowed mixcascades for the forwarding server.
    *
@@ -179,13 +184,13 @@ public class JAPRoutingUseableMixCascades implements Observer, Runnable {
     Vector resultValue = new Vector();
     synchronized (m_allowedMixCascades) {
       Enumeration allowedCascades = m_allowedMixCascades.elements();
-      while (allowedCascades.hasMoreElements()) {       
+      while (allowedCascades.hasMoreElements()) {
         resultValue.addElement(allowedCascades.nextElement());
       }
     }
     return resultValue;
   }
-  
+
   /**
    * This changes the restriction mode for the clients between no restriction (access to all
    * running mixcascades is allowed) or restriction to the list of allowed mixcascades, which
@@ -209,7 +214,7 @@ public class JAPRoutingUseableMixCascades implements Observer, Runnable {
       }
     }
   }
-  
+
   /**
    * Returns the restriction mode. This method returns true, if the clients of the local
    * forwarding server have access to all available mixcascades or false, if they have only access
@@ -224,8 +229,83 @@ public class JAPRoutingUseableMixCascades implements Observer, Runnable {
       returnValue = m_allowAllAvailableCascades;
     }
     return returnValue;
-  }  
-  
+  }
+
+  /**
+   * Returns the current settings for the allowed forwarding mixcascades (allowed cascades,
+   * whether all running mixcascades are allowed) for storage within an XML document.
+   *
+   * @param a_doc The context document for the forwarding mixcascades settings.
+   *
+   * @return An XML node (AllowedMixCascadesSettings) with the allowed forwarding mixcascades
+   *         related settings.
+   */
+  public Element getSettingsAsXml(Document a_doc) {
+    Element allowedMixCascadesSettingsNode = a_doc.createElement("AllowedMixCascadesSettings");
+    Element allowAllAvailableMixCascadesNode = a_doc.createElement("AllowAllAvailableMixCascades");
+    Element allowedMixCascadesNode = a_doc.createElement("AllowedMixCascades");
+    synchronized (this) {
+        XMLUtil.setNodeBoolean(allowAllAvailableMixCascadesNode, getAllowAllAvailableMixCascades());
+      Enumeration allowedMixCascades = getAllowedMixCascades().elements();
+      while (allowedMixCascades.hasMoreElements()) {
+        allowedMixCascadesNode.appendChild(((MixCascade)(allowedMixCascades.nextElement())).toXmlNode(a_doc));
+      }
+    }
+    allowedMixCascadesSettingsNode.appendChild(allowAllAvailableMixCascadesNode);
+    allowedMixCascadesSettingsNode.appendChild(allowedMixCascadesNode);
+    return allowedMixCascadesSettingsNode;
+  }
+
+  /**
+   * This method loads all settings for the allowed mixcascades for the forwarding server from a
+   * prior created XML structure. If there is an error while loading the settings, it is still
+   * tried to load as much settings as possible.
+   *
+   * @param a_infoServiceRegistrationSettingsNode The AllowedMixCascadesSettings XML node,
+   *                                              which was created by the getSettingsAsXml()
+   *                                              method.
+   *
+   * @return True, if there was no error while loading the settings and false, if there was one.
+   */
+  public boolean loadSettingsFromXml(Element a_allowedMixCascadesSettingsNode) {
+    /* store, whether there were some errors while loading the settings */
+    boolean noError = true;
+    /* get the AllowAllAvailableMixCascades settings */
+    Element allowAllAvailableMixCascadesNode = (Element)(XMLUtil.getFirstChildByName(a_allowedMixCascadesSettingsNode, "AllowAllAvailableMixCascades"));
+    if (allowAllAvailableMixCascadesNode == null) {
+      LogHolder.log(LogLevel.ERR, LogType.MISC, "JAPRoutingUseableMixCascades: loadSettingsFromXml: Error in XML structure (AllowAllAvailableMixCascades node): Using default setting.");
+      noError = false;
+    }
+    else {
+      setAllowAllAvailableMixCascades(XMLUtil.parseNodeBoolean(allowAllAvailableMixCascadesNode, getAllowAllAvailableMixCascades()));
+    }
+    /* load the list of allowed mixcascades for the case, that not all available mixcascades are
+     * allowed
+     */
+    Element allowedMixCascadesNode = (Element)(XMLUtil.getFirstChildByName(a_allowedMixCascadesSettingsNode, "AllowedMixCascades"));
+    if (allowedMixCascadesNode == null) {
+      LogHolder.log(LogLevel.ERR, LogType.MISC, "JAPRoutingUseableMixCascades: loadSettingsFromXml: Error in XML structure (AllowedMixCascades node): Skip loading of allowed mixcascades.");
+      noError = false;
+    }
+    else {
+      NodeList mixCascadeNodes = allowedMixCascadesNode.getElementsByTagName("MixCascade");
+      Vector allowedMixCascades = new Vector();
+      for (int i = 0; i < mixCascadeNodes.getLength(); i++) {
+        Element mixCascadeNode = (Element) (mixCascadeNodes.item(i));
+        try {
+          MixCascade currentMixCascade = new MixCascade(mixCascadeNode);
+          allowedMixCascades.addElement(currentMixCascade);
+        }
+        catch (Exception e) {
+          LogHolder.log(LogLevel.ERR, LogType.MISC, "JAPRoutingUseableMixCascades: loadSettingsFromXml: Error while loading one allowed MixCascade: Skipping this MixCascade (" + e.toString() + ").");
+          noError = false;
+        }
+      }
+      setAllowedMixCascades(allowedMixCascades.elements());
+    }
+    return noError;
+  }
+
   /**
    * This is the implementation of the mixcascades management thread for the local forwarding
    * server. It fetches the currently running mixcascades once per update interval from the
@@ -323,12 +403,12 @@ public class JAPRoutingUseableMixCascades implements Observer, Runnable {
           else {
             /* the mixcascade is not running any more -> remove it */
             ForwardServerManager.getInstance().getAllowedCascadesDatabase().removeCascade(currentForwardingMixCascade.getId());
-          }  
-        }  
+          }
+        }
       }
     }
   }
-  
+
   /**
    * This starts the management thread for the useable mixcascades of the local forwarding server,
    * if it is not already running.
@@ -343,10 +423,10 @@ public class JAPRoutingUseableMixCascades implements Observer, Runnable {
       }
       else {
         LogHolder.log(LogLevel.INFO, LogType.MISC, "JAPRoutingUseableMixCascades: startMixCascadesListUpdateThread: The mixcascade management thread of the forwarding server was already started.");
-      }  
+      }
     }
   }
-  
+
   /**
    * This stops the management thread for the useable mixcascades of the local forwarding server,
    * if it is running.
@@ -367,9 +447,9 @@ public class JAPRoutingUseableMixCascades implements Observer, Runnable {
         m_updateMixCascadesListThread = null;
       }
       else {
-        LogHolder.log(LogLevel.INFO, LogType.MISC, "JAPRoutingUseableMixCascades: stopMixCascadesListUpdateThread: The mixcascade management thread of the forwarding server was not running.");        
+        LogHolder.log(LogLevel.INFO, LogType.MISC, "JAPRoutingUseableMixCascades: stopMixCascadesListUpdateThread: The mixcascade management thread of the forwarding server was not running.");
       }
     }
   }
-          
+
 }

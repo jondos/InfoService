@@ -27,6 +27,14 @@
  */
 package jap;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
+import anon.util.XMLUtil;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
+
 /**
  * This is the implementation of a structure, which stores the paramters of a connection class,
  * like ISDN, DSL, ...
@@ -58,9 +66,17 @@ public class JAPRoutingConnectionClass {
    */
   private int m_currentBandwidth;
   
+  /**
+   * Stores the number of connections, which can be forwarded simultaneously by the forwarding
+   * server. It's limited by the current available bandwidth for forwarding.
+   */
+  private int m_simultaneousConnections;
+  
   
   /**
-   * Creates a new JAPRoutingConnectionClass structure.
+   * Creates a new JAPRoutingConnectionClass structure. The number is depending on
+   * a_currentBandwidth set to the maximum possible value according to
+   * JAPConstants.ROUTING_BANDWIDTH_PER_USER.
    *
    * @param a_connectionClassIdentifier The identifier for this connection class. See the
    *                                    constants in JAPRoutingConnectionClassSelector.
@@ -76,6 +92,7 @@ public class JAPRoutingConnectionClass {
     m_connectionClassName = a_connectionClassName;
     m_maximumBandwidth = a_maximumBandwidth;
     m_currentBandwidth = a_currentBandwidth;
+    m_simultaneousConnections = getMaxSimultaneousConnections();
   }
   
   
@@ -119,7 +136,45 @@ public class JAPRoutingConnectionClass {
    *                           forwarding server with this connection class.
    */
   public void setCurrentBandwidth(int a_currentBandwidth) {
-    m_currentBandwidth = a_currentBandwidth;
+    synchronized (this) {
+      m_currentBandwidth = a_currentBandwidth;
+    }
+  }
+  
+  /**
+   * Returns the maximum number of simultaneous connections, the forwarding server can handle
+   * with the current bandwidth. The value depends on JAPConstants.ROUTING_BANDWIDTH_PER_USER.
+   *
+   * @return The maximum number of simultaneous forwarded connections, the server can handle with
+   *         the current bandwidth.
+   */
+  public int getMaxSimultaneousConnections() {
+    return (getCurrentBandwidth() / JAPConstants.ROUTING_BANDWIDTH_PER_USER);
+  }
+
+  /**
+   * Returns the number of simultaneous connections, the forwarding server shall handle (if there
+   * are enough requesting clients). The forwarding server will accept new forwarding connections
+   * until this number is reached. Any further connection request will be dropped.
+   *
+   * @return The number of simultaneous forwarded connections, the server shall handle.
+   */
+  public int getSimultaneousConnections() {
+    return m_simultaneousConnections;
+  }
+ 
+  /**
+   * Changes the number of simultaneous connections, the forwarding server shall handle (if there
+   * are enough requesting clients). The forwarding server will accept new forwarding connections
+   * until this number is reached. Any further connection request will be dropped.
+   *
+   * @param a_simultaneousConnections The number of simultaneous forwarded connections, the server
+   *                                  shall handle.
+   */  
+  public void setSimultaneousConnections(int a_simultaneousConnections) {
+    synchronized (this) {
+      m_simultaneousConnections = a_simultaneousConnections;
+    }
   }
   
   /**
@@ -130,6 +185,101 @@ public class JAPRoutingConnectionClass {
    */
   public String toString() {
     return JAPMessages.getString(m_connectionClassName);
+  }
+
+  /**
+   * Returns the settings for this connection class (bandwidth settings) for storage within an XML
+   * document.
+   *
+   * @param a_doc The context document for the connection class settings.
+   *
+   * @return An XML node (ConnectionClass) with all settings of this connection class.
+   */
+  public Element getSettingsAsXml(Document a_doc) {
+    Element connectionClassNode = a_doc.createElement("ConnectionClass");
+    Element classIdentifierNode = a_doc.createElement("ClassIdentifier");
+    Element maximumBandwidthNode = a_doc.createElement("MaximumBandwidth");
+    Element useableBandwidthNode = a_doc.createElement("UseableBandwidth");
+    Element simultaneousConnectionsNode = a_doc.createElement("SimultaneousConnections");
+    XMLUtil.setNodeValue(classIdentifierNode, Integer.toString(getIdentifier()));
+    XMLUtil.setNodeValue(maximumBandwidthNode, Integer.toString(getMaximumBandwidth()));
+    synchronized (this) {
+      XMLUtil.setNodeValue(useableBandwidthNode, Integer.toString(getCurrentBandwidth()));
+      XMLUtil.setNodeValue(simultaneousConnectionsNode, Integer.toString(getSimultaneousConnections()));
+    }
+    connectionClassNode.appendChild(classIdentifierNode);
+    connectionClassNode.appendChild(maximumBandwidthNode);
+    connectionClassNode.appendChild(useableBandwidthNode);
+    connectionClassNode.appendChild(simultaneousConnectionsNode);
+    return connectionClassNode;
+  }
+  
+  /**
+   * This method loads some settings for this connection class from a prior created XML structure.
+   * But the identifier and the maximum bandwidth (both belong to the characteristics of this
+   * connection class) are never changed, but checked, whether they match to this connection
+   * class. If there is an error while loading the settings, it is still tried to load as much
+   * settings as possible.
+   *
+   * @param a_connectionClassNode The ConnectionClass XML node, which was created by the
+   *                              getSettingsAsXml() method.
+   *
+   * @return True, if there was no error while loading the settings and false, if there was one.
+   */
+  public boolean loadSettingsFromXml(Element a_connectionClassNode) {
+    /* store, whether there were some errors while loading the settings */
+    boolean noError = true;
+    /* check, whether the class identifier and the maximum bandwidth matches, both values are
+     * characteristic for this connection class and are not changed
+     */
+    try {
+      if (XMLUtil.parseNodeInt(XMLUtil.getFirstChildByName(a_connectionClassNode, "ClassIdentifier"), m_connectionClassIdentifier + 1) != m_connectionClassIdentifier) {
+        throw (new Exception("JAPRoutingConnectionClass: loadSettingsFromXml: The class identifer doesn't match to this class (class: " + Integer.toString(m_connectionClassIdentifier) + ")."));
+      }
+      if (XMLUtil.parseNodeInt(XMLUtil.getFirstChildByName(a_connectionClassNode, "MaximumBandwidth"), m_maximumBandwidth + 1) != m_maximumBandwidth) {
+        throw (new Exception("JAPRoutingConnectionClass: loadSettingsFromXml: The maximum bandwidth doesn't match to this class (class: " + Integer.toString(m_connectionClassIdentifier) + ")."));
+      }
+    }
+    catch (Exception e) {
+      LogHolder.log(LogLevel.ERR, LogType.NET, "JAPRoutingConnectionClass: loadSettingsFromXml: Loading the settings for this connection class failed: " + e.toString());
+      noError = false;
+    }
+    if (noError = true) {
+      /* only load the settings, if everything is ok */
+      synchronized (this) {
+        Element useableBandwidthNode = (Element)(XMLUtil.getFirstChildByName(a_connectionClassNode, "UseableBandwidth"));
+        if (useableBandwidthNode == null) {
+          LogHolder.log(LogLevel.ERR, LogType.MISC, "JAPRoutingConnectionClass: loadSettingsFromXml: Error in XML structure (UseableBandwidth node for class " + Integer.toString(m_connectionClassIdentifier) + "): Using default value.");
+          noError = false;
+        }
+        else {
+          int useableBandwidth = XMLUtil.parseNodeInt(useableBandwidthNode, -1);
+          if ((useableBandwidth < 0) || (useableBandwidth > getMaximumBandwidth())) {
+            LogHolder.log(LogLevel.ERR, LogType.MISC, "JAPRoutingConnectionClass: loadSettingsFromXml: Invalid UseableBandwidth value for class " + Integer.toString(m_connectionClassIdentifier) + ": Using default value.");
+            noError = false;
+          }
+          else {
+            setCurrentBandwidth(useableBandwidth);
+          }
+        }
+        Element simultaneousConnectionsNode = (Element)(XMLUtil.getFirstChildByName(a_connectionClassNode, "SimultaneousConnections"));
+        if (simultaneousConnectionsNode == null) {
+          LogHolder.log(LogLevel.ERR, LogType.MISC, "JAPRoutingConnectionClass: loadSettingsFromXml: Error in XML structure (SimultaneousConnections node for class " + Integer.toString(m_connectionClassIdentifier) + "): Using default value.");
+          noError = false;
+        }
+        else {
+          int simultaneousConnections = XMLUtil.parseNodeInt(simultaneousConnectionsNode, -1);
+          if ((simultaneousConnections < 0) || (simultaneousConnections > getMaxSimultaneousConnections())) {
+            LogHolder.log(LogLevel.ERR, LogType.MISC, "JAPRoutingConnectionClass: loadSettingsFromXml: Invalid SimultaneousConnections value for class " + Integer.toString(m_connectionClassIdentifier) + ": Using default value.");
+            noError = false;
+          }
+          else {
+            setSimultaneousConnections(simultaneousConnections);
+          }
+        }
+      }    
+    }
+    return noError;
   }
   
 }

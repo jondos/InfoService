@@ -75,13 +75,19 @@ public class JAPRoutingInfoServiceRegistrationTableModel extends AbstractTableMo
          */
         ServerSocketPropagandist currentPropagandist = (ServerSocketPropagandist)(propagandists.nextElement());
         if (m_propagandaInstances.contains(currentPropagandist) == false) {
-          /* add only the new propagandists to the list of all known propaganda instances */
-          m_propagandaInstances.addElement(currentPropagandist);
           /* observe the added propagandist, no problem also, if we already observe this
            * propagandist, then addObserver() does nothing
            */
           currentPropagandist.addObserver(this);
-          addedRows++;
+          if (currentPropagandist.getCurrentState() != ServerSocketPropagandist.STATE_HALTED) {
+            /* add only the new propagandists to the list of all known propaganda instances */
+            m_propagandaInstances.addElement(currentPropagandist);
+            addedRows++;
+          }
+          else {
+            /* the propagandist was stopped in the meantime -> don't add it and stop observing */
+            currentPropagandist.deleteObserver(this);
+          }  
         }
       }
       if (addedRows > 0) {

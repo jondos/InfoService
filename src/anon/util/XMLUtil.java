@@ -44,6 +44,8 @@ import org.w3c.dom.NodeList;
 
 public class XMLUtil
 {
+	private final static String XML_STR_BOOLEAN_TRUE="true";
+	private final static String XML_STR_BOOLEAN_FALSE="false";
 
 	public static int parseElementAttrInt(Element e, String attr, int defaultValue)
 	{
@@ -137,11 +139,11 @@ public class XMLUtil
 			{
 				return b;
 			}
-			if (tmpStr.equalsIgnoreCase("true"))
+			if (tmpStr.equalsIgnoreCase(XML_STR_BOOLEAN_TRUE))
 			{
 				b = true;
 			}
-			else if (tmpStr.equalsIgnoreCase("false"))
+			else if (tmpStr.equalsIgnoreCase(XML_STR_BOOLEAN_FALSE))
 			{
 				b = false;
 			}
@@ -281,6 +283,10 @@ public class XMLUtil
 		n.appendChild(n.getOwnerDocument().createTextNode(text));
 	}
 
+	public static void setNodeBoolean(Node n,boolean b)
+	{
+		setNodeValue(n,b?XML_STR_BOOLEAN_TRUE:XML_STR_BOOLEAN_FALSE);
+	}
 	/** Stolen from Apache Xerces-J...*/
 	public static Node importNode(Document doc, Node source, boolean deep) throws Exception
 	{
