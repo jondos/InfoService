@@ -35,9 +35,9 @@ public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListe
     final JFileChooser m_fileChooser = new JFileChooser(System.getProperty("user.dir", ""));
     boolean checkPage = false;
 
-    public JAPWelcomeWizardPage(JAPUpdateWizard updateWizard)
+    public JAPWelcomeWizardPage()
       {
-        this.updateWizard = updateWizard;
+        //this.updateWizard = updateWizard;
         setIcon(JAPUtil.loadImageIcon(JAPConstants.DOWNLOADFN,false));
         setPageTitle("Informationen zum Update");
 
@@ -124,6 +124,11 @@ public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListe
           m_fileChooserDialog.pack();
       }
 
+      public File getSelectedFile()
+      {
+          return this.selectedFile;
+      }
+
       public void actionPerformed(ActionEvent e)
       {
         if(e.getActionCommand().equals(COMMAND_SEARCH))
@@ -161,7 +166,7 @@ public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListe
                     checkPage = true;
                     m_tfJapPath.setText(selectedFile.getAbsolutePath());
 
-                    updateWizard.setSelectedFile(selectedFile.getAbsolutePath());
+                    //updateWizard.setSelectedFile(selectedFile.getAbsolutePath());
 
 
                           }//else

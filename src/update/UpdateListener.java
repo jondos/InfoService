@@ -41,4 +41,5 @@ package update;
      *          -1, if the download should be aborted
      */
     public int progress(int lenData,int lenTotal,int state);
+    //public int progress(byte[] data,int lenData,int lenTotal,int state);
   }
