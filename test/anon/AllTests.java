@@ -25,17 +25,11 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package test;
+package test.anon;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
-/**
- * This is the test suite which combines all other JUnit tests of the project.
- * It can be run from the command line with a graphical user interface.
- *
- * @author Rolf Wendolsky
- */
 public class AllTests
 {
 	/**
@@ -56,8 +50,9 @@ public class AllTests
 	 */
 	public static Test suite()
 	{
-		TestSuite suite = new TestSuite("All tests.");
-		suite.addTest(test.anon.AllTests.suite());
+		TestSuite suite = new TestSuite("All tests of anon.");
+		suite.addTestSuite(SampleTest.class);
 		return suite;
 	}
+
 }

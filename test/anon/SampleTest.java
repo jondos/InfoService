@@ -25,39 +25,65 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package test;
+package test.anon;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
+import junit.framework.*;
+// import Testclass;
 
-/**
- * This is the test suite which combines all other JUnit tests of the project.
- * It can be run from the command line with a graphical user interface.
- *
- * @author Rolf Wendolsky
- */
-public class AllTests
+public class SampleTest extends TestCase
 {
-	/**
-	 * The main function.
-	 *
-	 * @param a_Args (no arguments needed)
-	 */
-	public static void main(String[] a_Args)
+	private int m_One;
+	private boolean m_bTwo;
+
+	public SampleTest(String name)
 	{
-		junit.swingui.TestRunner.run(AllTests.class);
+		super(name);
 	}
 
 	/**
-	 * Returns the test suite that combines all other tests of the project.
-	 *
-	 * @return Test The test suite that combines all other tests of the project.
-	 * @todo No tests are implemented yet.
-	 */
-	public static Test suite()
-	{
-		TestSuite suite = new TestSuite("All tests.");
-		suite.addTest(test.anon.AllTests.suite());
-		return suite;
+	* Method is run before each test, for example for object creation.
+	*/
+	protected void setUp() {
+		m_One = 0;
+		m_bTwo = false;
 	}
+
+	/**
+	* Method is run after each test, for example for object deletion.
+	*/
+   protected void tearDown() {
+	   m_One = 0;
+   }
+
+
+	/**
+	* Tests a fictive method of the Sample class with the name "doSomethingMethod".
+	*/
+   public void testDoSomethingMethod() {
+	   for (m_One = 0; m_One < 5; m_One++); /* Simulates a method call. */
+	   TestCase.assertEquals(5, m_One);
+
+	   m_One += 18; /* Simulates a method call. */
+	   TestCase.assertEquals(23, m_One);
+   }
+
+
+	/**
+	* Tests a fictive method of the Sample class with the name "doAnything".
+	*/
+   public void testDoAnything() {
+	   m_bTwo = true; /* Simulates a method call. */
+	   TestCase.assertTrue(m_bTwo);
+   }
+
+   public void testAnException() {
+	   try {
+		   if (true) {
+			   throw new ArrayIndexOutOfBoundsException("Sample exception");  /* Simulates a method call. */
+		   }
+		   TestCase.fail("Expected: ArrayIndexOutOfBoundsException");
+	   } catch (ArrayIndexOutOfBoundsException e) {}
+
+   }
 }
+
