@@ -516,6 +516,7 @@ final class JAPConf extends JDialog
 						setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 						m_Controller.fetchAnonServers();
 						updateMixCascadeCombo();
+						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPConf: finished updateMixCascadeCombo()");
 						if (m_Controller.getAnonServerDB().size() == 0) {
 							setCursor(c);
 							if(!JAPModel.isSmallDisplay())
@@ -530,8 +531,9 @@ final class JAPConf extends JDialog
 							//JAPCascadeMonitorView v=new JAPCascadeMonitorView(m_Controller.getView());
 							// ------ !!!!! die folgenden zwei zeilen auskommentieren, wenn JAPCascadeMonitorView
 							// ------ !!!!! ordentlich geht!!!!
+							JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPConf: setting old cursor()");
 							setCursor(c);
-							m_rbMixStep2.doClick();
+								m_rbMixStep2.doClick();
 						}
 						// ------ !!!!! diese wieder aktivieren!
 						//okPressed();
