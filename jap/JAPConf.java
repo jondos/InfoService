@@ -27,48 +27,56 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 */
 package jap;
 
-import java.util.Enumeration;
+import java.io.File;
 import java.util.Dictionary;
+import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Locale;
-
 import java.awt.BorderLayout;
 import java.awt.Cursor;
-import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Insets;
-
-import java.awt.event.*;
-
-import javax.swing.*;
-
-import javax.swing.UIManager.LookAndFeelInfo;
-
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import javax.swing.ButtonGroup;
+import javax.swing.DefaultListModel;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JDialog;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+import javax.swing.JScrollPane;
+import javax.swing.JSeparator;
+import javax.swing.JSlider;
+import javax.swing.JTabbedPane;
+import javax.swing.JTextField;
+import javax.swing.UIManager;
+import javax.swing.UIManager$LookAndFeelInfo;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
-
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import javax.swing.event.ListSelectionListener;
 import javax.swing.event.ListSelectionEvent;
-import javax.swing.JFrame;
-
-
-import update.JAPUpdate;
-import anon.infoservice.MixCascade;
+import javax.swing.event.ListSelectionListener;
+import org.bouncycastle.asn1.x509.X509NameTokenizer;
+import anon.crypto.JAPCertificate;
+import anon.crypto.JAPCertificateStore;
 import anon.infoservice.InfoService;
 import anon.infoservice.InfoServiceDatabase;
 import anon.infoservice.InfoServiceHolder;
-
-import java.io.File;
-import anon.crypto.JAPCertificate;
-import anon.crypto.JAPCertificateStore;
-import org.bouncycastle.asn1.x509.X509NameTokenizer;
-
+import anon.infoservice.MixCascade;
+import update.JAPUpdate;
 final class JAPConf extends JDialog
 	{
 
@@ -77,7 +85,8 @@ final class JAPConf extends JDialog
 		final static public int INFO_TAB = 2;
 		final static public int ANON_TAB = 3;
 		final static public int CERT_TAB = 4;
-		final static public int MISC_TAB = 5;
+		final static public int KONTO_TAB = 5;
+		final static public int MISC_TAB = 6;
 
 		private static JAPConf japConfInstance = null;
 
@@ -139,7 +148,7 @@ final class JAPConf extends JDialog
 		private JSlider				m_sliderDummyTrafficIntervall;
 
 		private JTabbedPane		m_Tabs;
-		private JPanel				m_pPort, m_pFirewall, m_pInfo, m_pMix, m_pCert,m_pMisc;
+		private JPanel				m_pPort, m_pFirewall, m_pInfo, m_pMix, m_pCert,m_pMisc, m_pKonto;
 		private JButton       m_bttnDefaultConfig,m_bttnCancel;
 
 		private JFrame        m_frmParent;
@@ -152,15 +161,17 @@ final class JAPConf extends JDialog
 
 		//Einfug
 		private JAPUpdate update;
+		private boolean loadPay = false;
 
 
 		public static JAPConf getInstance() {
 			return japConfInstance;
 		}
 
-		public JAPConf (JFrame frmParent)
+		public JAPConf (JFrame frmParent,boolean loadPay)
 			{
 				super(frmParent);
+				this.loadPay = loadPay;
 				/* set the instance pointer */
 				japConfInstance = this;
 				m_frmParent=frmParent;
@@ -178,6 +189,11 @@ final class JAPConf extends JDialog
 				m_pInfo = buildInfoServicePanel();
 				m_pMix = buildAnonPanel();
 				m_pCert = buildCertPanel();
+				if(loadPay)
+					{
+						m_pKonto = new pay.view.PayView();
+						m_Tabs.addTab( pay.util.PayText.get("confAccountTab"), null, m_pKonto );
+					}
 				m_pMisc = buildMiscPanel();
 				m_Tabs.addTab( JAPMessages.getString("confListenerTab"), null, m_pPort );
 				m_Tabs.addTab( JAPMessages.getString("confProxyTab"), null, m_pFirewall );
@@ -212,6 +228,8 @@ final class JAPConf extends JDialog
 							 public void actionPerformed(ActionEvent e) {
 					 okPressed();
 					 }});
+				if(loadPay)
+					ok.addActionListener(((pay.view.PayView)m_pKonto).userPanel);
 				ok.setFont(m_fontControls);
 				buttonPanel.add( ok );
 				buttonPanel.add(new JLabel("   "));
@@ -1421,6 +1439,8 @@ final class JAPConf extends JDialog
 		/** Resets the Configuration to the Default values*/
 		private void resetToDefault()
 			{
+				if(loadPay)
+					((pay.view.PayView)m_pKonto).userPanel.setUserData(JAPConstants.PIHOST, JAPConstants.PIPORT);
 				m_tfListenerPortNumber.setText(Integer.toString(JAPConstants.defaultPortNumber));
 
 				/* remove all infoservices from database and set prefered infoservice to the default
@@ -1542,6 +1562,8 @@ final class JAPConf extends JDialog
 					m_Tabs.setSelectedComponent(m_pCert);
 				else if (selectedCard == MISC_TAB)
 					m_Tabs.setSelectedComponent(m_pMisc);
+				else if (selectedCard == KONTO_TAB&&loadPay)
+					m_Tabs.setSelectedComponent(m_pKonto);
 				else
 					m_Tabs.setSelectedComponent(m_pPort);
 			}
@@ -1594,6 +1616,8 @@ final class JAPConf extends JDialog
 
 		public void updateValues()
 			{
+				if(loadPay)
+					((pay.view.PayView)m_pKonto).userPanel.valuesChanged();
 				// misc tab
 				int iTmp=JAPModel.getDummyTraffic();
 				m_cbDummyTraffic.setSelected(iTmp>-1);

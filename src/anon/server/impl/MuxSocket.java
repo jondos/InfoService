@@ -28,50 +28,36 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 
 package anon.server.impl;
 
-import java.util.Dictionary;
-import java.util.Hashtable;
-import java.util.TimeZone;
-import java.util.Calendar;
-import java.util.Date;
-import java.net.ConnectException;
 import java.io.BufferedOutputStream;
-import java.io.DataOutputStream;
-import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
-
-import java.io.InterruptedIOException;
-import java.lang.Integer;
-import java.util.Enumeration;
-
 import java.math.BigInteger;
-
-import java.security.SecureRandom;
-import java.security.PublicKey;
+import java.net.ConnectException;
 import java.security.InvalidKeyException;
-
+import java.security.PublicKey;
+import java.security.SecureRandom;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Dictionary;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.TimeZone;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.DocumentBuilder;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
+import anon.AnonChannel;
+import anon.ErrorCodes;
+import anon.NotConnectedToMixException;
+import anon.ToManyOpenChannelsException;
+import anon.crypto.JAPCertificate;
+import anon.crypto.JAPCertificateStore;
+import anon.crypto.JAPSignature;
+import anon.infoservice.MixCascade;
+import anon.pay.AIChannel;
 import logging.Log;
 import logging.LogLevel;
 import logging.LogType;
-
-import HTTPClient.Codecs;
-import anon.ErrorCodes;
-import anon.AnonChannel;
-import anon.ToManyOpenChannelsException;
-import anon.NotConnectedToMixException;
-import anon.server.AnonServiceImpl;
-import anon.crypto.JAPSignature;
-import anon.crypto.JAPCertificate;
-import anon.crypto.JAPCertificateStore;
-import anon.infoservice.MixCascade;
-import anon.infoservice.ListenerInterface;
 
 public final class MuxSocket implements Runnable
 	{
@@ -96,6 +82,8 @@ public final class MuxSocket implements Runnable
 		private SymCipher m_cipherIn;
 		private SymCipher m_cipherOut;
 		private boolean m_bisCrypted;
+		private SymCipher m_cipherInAI;
+		private SymCipher m_cipherOutAI;
 
 		private final static int KEY_SIZE=16;
 		private final static int DATA_SIZE=992;
@@ -149,6 +137,8 @@ public final class MuxSocket implements Runnable
 				m_MixPacketRecv=new byte[PACKET_SIZE];
 				m_cipherIn=new SymCipher();
 				m_cipherOut=new SymCipher();
+				m_cipherInAI=new SymCipher();
+				m_cipherOutAI=new SymCipher();
 				m_bisCrypted=false;
 				threadRunLoop=null;
 				m_KeyPool=KeyPool.start(log);
@@ -303,6 +293,9 @@ public final class MuxSocket implements Runnable
 			{
 				m_cipherIn.setEncryptionKeyAES(keys,0);
 				m_cipherOut.setEncryptionKeyAES(keys,16);
+				/** Ist das hier so ok ???*/
+				m_cipherInAI.setEncryptionKeyAES(keys,32);
+				m_cipherOutAI.setEncryptionKeyAES(keys,48);
 			}
 
 		/*Reads the public key from the Mixes and try to initialize the key array*/
@@ -507,10 +500,14 @@ public final class MuxSocket implements Runnable
 							}
 						//Sending symmetric keys for Mux encryption...
 						System.arraycopy("KEYPACKET".getBytes(),0,m_MixPacketSend,6,9);
-						byte[] tmpBuff=new byte[32];
+						byte[] tmpBuff=new byte[64];
 						m_KeyPool.getKey(tmpBuff,0);
 						m_KeyPool.getKey(tmpBuff,16);
-						System.arraycopy(tmpBuff,0,m_MixPacketSend,15,32);
+						// zwei weitere Schlüssel für die AI
+						m_KeyPool.getKey(tmpBuff,32);
+						m_KeyPool.getKey(tmpBuff,48);
+
+						System.arraycopy(tmpBuff,0,m_MixPacketSend,15,tmpBuff.length);
 						m_arASymCipher[0].encrypt(m_MixPacketSend,6,m_MixPacketSend,6);
 						sendMixPacket();
 						setEncryptionKeys(tmpBuff);
@@ -776,6 +773,58 @@ public final class MuxSocket implements Runnable
 				m_outStream.write(m_MixPacketSend);
 				m_outStream.flush();
 			}
+
+		public AIChannel getAIChannel()
+			{
+				return AIChannel.create(this);
+			}
+
+		public synchronized int sendPayPackets(String xmlData)
+			{
+				return sendPayPackets(xmlData.getBytes());
+			}
+
+		public synchronized int sendPayPackets(byte[] xmlBytes)
+			{
+
+			int bufferLength = (((int)((xmlBytes.length+4) / DATA_SIZE))+1)*DATA_SIZE;
+			byte[] outBuffer = new byte[bufferLength];
+			int len = xmlBytes.length;
+			try{
+				outBuffer[0]=(byte)(len>>24);
+				outBuffer[1]=(byte)(len>>16);
+				outBuffer[2]=(byte)(len>>8);
+				outBuffer[3]=(byte)(len);
+
+				System.arraycopy(xmlBytes,0,outBuffer,4,xmlBytes.length);
+				m_cipherOutAI.encryptAES2(outBuffer);
+				//System.arraycopy(outBuffer,0,m_MixPacketSend,6,xmlZeiger);
+				//sendMixPacket();
+				m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket: sendPayPackets: xmlbytes.length()= "+xmlBytes.length+" bufferLength = "+outBuffer.length);
+				for(int i=0;i<outBuffer.length;i+=DATA_SIZE){
+					m_MixPacketSend[0]=(byte)(0xFF);
+					m_MixPacketSend[1]=(byte)(0xFF);
+					m_MixPacketSend[2]=(byte)(0xFF);
+					m_MixPacketSend[3]=(byte)(0xFF);
+					m_MixPacketSend[4]=(byte)((CHANNEL_OPEN>>8)&(0xFF));
+					m_MixPacketSend[5]=(byte)((CHANNEL_OPEN>>8)&(0xFF));
+
+					System.arraycopy(outBuffer,i,m_MixPacketSend,6,DATA_SIZE);
+					sendMixPacket();
+					m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket: sendPayPackets: Bytes Verschickt: "+i);
+				}
+
+			}catch (IndexOutOfBoundsException e){
+					m_Log.log(LogLevel.ERR,LogType.NET,"JAPMuxSocket: sendPayPacketError : IndexOutOfBounds: "+e);
+			}
+			catch (Exception ex){
+				m_Log.log(LogLevel.ERR,LogType.NET,"JAPMuxSocket: sendPayPacketError : "+ex);
+				return 0;
+			}
+
+			return ErrorCodes.E_SUCCESS;
+
+		}
 
 		public synchronized int send(int channel,int type,byte[] buff,short len)
 			{

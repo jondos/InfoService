@@ -47,6 +47,8 @@ import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.net.Socket;
 import java.net.SocketException;
+import anon.pay.AICommunication;
+	import pay.Pay;
 final public class AnonProxy implements Runnable/*,AnonServiceEventListener*/
 {
 	public static final int E_SUCCESS=0;
@@ -66,12 +68,13 @@ final public class AnonProxy implements Runnable/*,AnonServiceEventListener*/
 	private ServerSocket m_socketListener;
 	private ProxyListener m_ProxyListener;
 	private volatile int m_numChannels=0;
-	
+	private AICommunication m_AICom;
+
 	/**
-   * Stores the MixCascade we are connected to.
-   */
-  private MixCascade currentMixCascade;
-  
+	 * Stores the MixCascade we are connected to.
+	 */
+	private MixCascade m_currentMixCascade;
+
 	private boolean m_bAutoReconnect=false;
 	public AnonProxy(ServerSocket listener)
 		{
@@ -81,16 +84,41 @@ final public class AnonProxy implements Runnable/*,AnonServiceEventListener*/
 			setFirewall(JAPConstants.FIREWALL_TYPE_HTTP,null,-1);
 			setFirewallAuthorization(null,null);
 			setDummyTraffic(-1);
+		m_AICom = new AICommunication(m_Anon);
 		}
 
+	// methode zum senden eines AccountCertifikates und einer balance an die AI - oneway
+	public void authenticateForAI(){
+		String toAI = "";
+		try{
+			toAI = Pay.create().getAccount(Pay.create().getUsedAccount()).getAccountCertificate();
+			((AnonServiceImpl)m_Anon).sendPayPackets(toAI);
+		}catch(Exception ex){
+			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"AnonProxy: Fehler beim Anfordern des KontoZertifikates und/oder des Kontostandes");
+		}
+		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"AnonProxy: länge des zu verschickenden Certifikates : "+toAI.length());
+		sendBalanceToAI();
+	}
+
+	// methode zum senden einer balance an die AI - oneway
+	public void sendBalanceToAI(){
+		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"AnonProxy: sendBalanceToAI läuft");
+		try{
+			((AnonServiceImpl)m_Anon).sendPayPackets(Pay.create().getAccount(Pay.create().getUsedAccount()).getBalance().getXMLString(true));
+		}catch(Exception ex){
+			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"AnonProxy: Fehler beim Anfordern des KontoZertifikates und/oder des Kontostandes");
+		}
+	}
+
  /**
-   * Sets a new MixCascade.
-   *
-   * @param newMixCascade The new MixCascade we are connected to.
-   */
-  public void setMixCascade(MixCascade newMixCascade) {
-    currentMixCascade = newMixCascade;
-  }
+	 * Sets a new MixCascade.
+	 *
+	 * @param newMixCascade The new MixCascade we are connected to.
+	 */
+	public void setMixCascade(MixCascade newMixCascade) {
+		m_currentMixCascade = newMixCascade;
+		m_AICom.setAnonServer(newMixCascade);
+ }
 
 	public void setFirewall(int type,String host,int port)
 		{
@@ -125,7 +153,7 @@ final public class AnonProxy implements Runnable/*,AnonServiceEventListener*/
 	public int start()
 		{
 			m_numChannels=0;
-			int ret=m_Anon.connect(currentMixCascade);
+			int ret=m_Anon.connect(m_currentMixCascade);
 			if(ret!=ErrorCodes.E_SUCCESS)
 				return ret;
 			threadRun=new Thread(this,"JAP - AnonProxy");
@@ -135,6 +163,7 @@ final public class AnonProxy implements Runnable/*,AnonServiceEventListener*/
 
 	public void stop()
 		{
+			m_AICom.end();
 			m_Anon.disconnect();
 			m_bIsRunning=false;
 			try{threadRun.join();}catch(Exception e){}
@@ -149,6 +178,9 @@ final public class AnonProxy implements Runnable/*,AnonServiceEventListener*/
 			{
 				m_bIsRunning=true;
 				int oldTimeOut=0;
+				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"AnonProxy: AnonProxy is running as Thread");
+
+				m_AICom.start();
 				try{oldTimeOut=m_socketListener.getSoTimeout();}catch(Exception e){}
 				try
 					{
@@ -207,7 +239,7 @@ final public class AnonProxy implements Runnable/*,AnonServiceEventListener*/
 												while(m_bIsRunning&&m_bAutoReconnect)
 													{
 														JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPAnonProxy.run() Try reconnect to Mix");
-														int ret=m_Anon.connect(currentMixCascade);
+														int ret=m_Anon.connect(m_currentMixCascade);
 														if(ret==ErrorCodes.E_SUCCESS)
 															break;
 														Thread.sleep(10000);

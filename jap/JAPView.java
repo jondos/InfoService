@@ -28,16 +28,42 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 package jap;
 
 import java.text.NumberFormat;
-import java.awt.*;
-import java.awt.event.*;
-import javax.swing.*;
-import javax.swing.border.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
+import java.awt.Image;
+import java.awt.Insets;
+import java.awt.MediaTracker;
+import java.awt.Toolkit;
+import java.awt.Window;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JProgressBar;
+import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
+import javax.swing.border.TitledBorder;
 import javax.swing.plaf.basic.BasicProgressBarUI;
-
-import gui.JAPDll;
-
 import anon.infoservice.MixCascade;
 import anon.infoservice.StatusInfo;
+import gui.JAPDll;
+import pay.view.GuthabenAnzeige;
 
 final public class JAPView extends JFrame implements ActionListener, JAPObserver {
 
@@ -95,6 +121,8 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 	private boolean         m_bIsIconified;
 	private String          m_Title;
 	private final static boolean PROGRESSBARBORDER = true;
+	private GuthabenAnzeige guthaben;
+	private boolean loadPay = false;
 
 	public JAPView (String s)
 		{
@@ -108,8 +136,9 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 			m_runnableValueUpdate=new MyViewUpdate();
 		}
 
-	public void create()
+	public void create(boolean loadPay)
 		{
+			this.loadPay = loadPay;
 			JAPDebug.out(JAPDebug.INFO,JAPDebug.GUI,"JAPView:initializing...");
 			init();
 //			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPView:initialization finished!");
@@ -272,6 +301,15 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 		ownTrafficPanel.add(m_labelOwnBytes);
 		ownTrafficPanel.add(m_labelOwnTrafficBytes);
 
+// "Guthaben"
+		if(loadPay){
+			guthaben = new GuthabenAnzeige();
+			guthaben.addButtonListener(new ActionListener(){
+				public void actionPerformed(ActionEvent e){
+					showConfigDialog(JAPConf.KONTO_TAB);
+				}
+			});
+		}
 		m_cbAnon = new JCheckBox(JAPMessages.getString("confActivateCheckBox"));
 		JAPUtil.setMnemonic(m_cbAnon,JAPMessages.getString("confActivateCheckBoxMn"));
 		m_cbAnon.setFont(fontControls);
@@ -364,6 +402,8 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 
 		// Add all panels to level panel
 		levelPanel.add(ownTrafficPanel, BorderLayout.NORTH);
+		if(loadPay)
+			levelPanel.add(guthaben);			 	//, BorderLayout.NORTH);
 		levelPanel.add(meterPanel, BorderLayout.CENTER);
 		levelPanel.add(detailsPanel, BorderLayout.SOUTH);
 
@@ -647,7 +687,7 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 			{
 				Cursor c=getCursor();
 				setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-				m_dlgConfig=new JAPConf(this);
+				m_dlgConfig=new JAPConf(this,loadPay);
 				setCursor(c);
 			}
 		if (card!=-1)
@@ -681,83 +721,83 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 			}
 
 	private void updateValues() {
-    synchronized (m_runnableValueUpdate) {
-      MixCascade currentMixCascade = controller.getCurrentMixCascade();
+		synchronized (m_runnableValueUpdate) {
+			MixCascade currentMixCascade = controller.getCurrentMixCascade();
 		// Config panel
 		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPView:Start updateValues");
 		// Meter panel
-      try {
+			try {
 		m_cbAnon.setSelected(controller.getAnonMode());
-        if (controller.getAnonMode()) {
+				if (controller.getAnonMode()) {
 			m_cbAnon.setForeground(Color.black);
-        }
-        else {
-          m_cbAnon.setForeground(Color.red);
+				}
+				else {
+					m_cbAnon.setForeground(Color.red);
 		}
 		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPView: update CascadeName");
-        m_labelCascadeName.setText(currentMixCascade.getName());
-        m_labelCascadeName.setToolTipText(currentMixCascade.getName());
-        StatusInfo currentStatus = currentMixCascade.getCurrentStatus();
-        meterLabel.setIcon(getMeterImage(currentStatus.getAnonLevel()));
+				m_labelCascadeName.setText(currentMixCascade.getName());
+				m_labelCascadeName.setToolTipText(currentMixCascade.getName());
+				StatusInfo currentStatus = currentMixCascade.getCurrentStatus();
+				meterLabel.setIcon(getMeterImage(currentStatus.getAnonLevel()));
 		if (controller.getAnonMode()) {
-          if (currentStatus.getNrOfActiveUsers() > -1) {
+					if (currentStatus.getNrOfActiveUsers() > -1) {
 						// Nr of active users
-            if (currentStatus.getNrOfActiveUsers() > userProgressBar.getMaximum()) {
-              userProgressBar.setMaximum(currentStatus.getNrOfActiveUsers());
+						if (currentStatus.getNrOfActiveUsers() > userProgressBar.getMaximum()) {
+							userProgressBar.setMaximum(currentStatus.getNrOfActiveUsers());
 					}
-            userProgressBar.setValue(currentStatus.getNrOfActiveUsers());
-            userProgressBar.setString(String.valueOf(currentStatus.getNrOfActiveUsers()));
-            if(m_bIsIconified) {
-              setTitle("JAP ("+Integer.toString(currentStatus.getNrOfActiveUsers())+" "+JAPMessages.getString("iconifiedviewUsers")+")");
-            }
-          }
-          else {
-            userProgressBar.setValue(userProgressBar.getMaximum());
+						userProgressBar.setValue(currentStatus.getNrOfActiveUsers());
+						userProgressBar.setString(String.valueOf(currentStatus.getNrOfActiveUsers()));
+						if(m_bIsIconified) {
+							setTitle("JAP ("+Integer.toString(currentStatus.getNrOfActiveUsers())+" "+JAPMessages.getString("iconifiedviewUsers")+")");
+						}
+					}
+					else {
+						userProgressBar.setValue(userProgressBar.getMaximum());
 							userProgressBar.setString(JAPMessages.getString("meterNA"));
 					}
-          if (currentStatus.getCurrentRisk() > -1) {
+					if (currentStatus.getCurrentRisk() > -1) {
 					// Current Risk
-            if (currentStatus.getCurrentRisk() > protectionProgressBar.getMaximum()) {
-              protectionProgressBar.setMaximum(currentStatus.getCurrentRisk());
-            }
-            protectionProgressBar.setValue(currentStatus.getCurrentRisk());
-            if (currentStatus.getCurrentRisk() < 80) {
-              protectionProgressBar.setString(String.valueOf(currentStatus.getCurrentRisk())+" %");
-            }
-            else {
-              protectionProgressBar.setString(JAPMessages.getString("meterRiskVeryHigh"));
-            }
-          }
-          else {
-            protectionProgressBar.setValue(protectionProgressBar.getMaximum());
+						if (currentStatus.getCurrentRisk() > protectionProgressBar.getMaximum()) {
+							protectionProgressBar.setMaximum(currentStatus.getCurrentRisk());
+						}
+						protectionProgressBar.setValue(currentStatus.getCurrentRisk());
+						if (currentStatus.getCurrentRisk() < 80) {
+							protectionProgressBar.setString(String.valueOf(currentStatus.getCurrentRisk())+" %");
+						}
+						else {
+							protectionProgressBar.setString(JAPMessages.getString("meterRiskVeryHigh"));
+						}
+					}
+					else {
+						protectionProgressBar.setValue(protectionProgressBar.getMaximum());
 					protectionProgressBar.setString(JAPMessages.getString("meterNA"));
 				}
-          int t = currentStatus.getTrafficSituation();
-          if (t > -1) { 
-            //Trafic Situation directly from InfoService
+					int t = currentStatus.getTrafficSituation();
+					if (t > -1) {
+						//Trafic Situation directly from InfoService
 						trafficProgressBar.setMaximum(100);
 						trafficProgressBar.setValue(t);
-            if (t < 30) {
+						if (t < 30) {
 							trafficProgressBar.setString(JAPMessages.getString("meterTrafficLow"));
-            }
-            else {
-              if (t < 60) {
-                trafficProgressBar.setString(JAPMessages.getString("meterTrafficMedium"));
-              }
-              else {
-                trafficProgressBar.setString(JAPMessages.getString("meterTrafficHigh"));
+						}
+						else {
+							if (t < 60) {
+								trafficProgressBar.setString(JAPMessages.getString("meterTrafficMedium"));
+							}
+							else {
+								trafficProgressBar.setString(JAPMessages.getString("meterTrafficHigh"));
 					}
-            }
-          }
-          else { 
-            // no value from InfoService
-            trafficProgressBar.setValue(trafficProgressBar.getMaximum());
+						}
+					}
+					else {
+						// no value from InfoService
+						trafficProgressBar.setValue(trafficProgressBar.getMaximum());
 					trafficProgressBar.setString(JAPMessages.getString("meterNA"));
 				}
-        }
-        else {
-          /* we are not in anonymity mode */
-          userProgressBar.setValue(userProgressBar.getMaximum());
+				}
+				else {
+					/* we are not in anonymity mode */
+					userProgressBar.setValue(userProgressBar.getMaximum());
 			userProgressBar.setString(JAPMessages.getString("meterNA"));
 			protectionProgressBar.setValue(protectionProgressBar.getMaximum());
 				protectionProgressBar.setString(JAPMessages.getString("meterNA"));
@@ -765,14 +805,14 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 			trafficProgressBar.setString(JAPMessages.getString("meterNA"));
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPView:Finished updateValues");
 		}
-      }
-      catch(Throwable t) {
+			}
+			catch(Throwable t) {
 			JAPDebug.out(JAPDebug.EMERG,JAPDebug.GUI,"JAPVIew: Ooops... Crash in updateValues(): "+t.getMessage());
 		}
-    }
-  }
-  
-  
+		}
+	}
+
+
 		public void registerViewIconified(Window v) {
 			m_ViewIconified = v;
 		}

@@ -43,6 +43,8 @@ public final class JAPModel
 {
 
 
+	private String 	m_biHost					   					 = JAPConstants.PIHOST;
+	private int			m_biPort					   					 = JAPConstants.PIPORT;
 	private String  m_InfoServiceHostName          = JAPConstants.defaultInfoServiceHostName;
 	private int     m_InfoServicePortNumber        = JAPConstants.defaultInfoServicePortNumber;
 	private int     m_HttpListenerPortNumber       = JAPConstants.defaultPortNumber;  // port number of HTTP  listener
@@ -312,6 +314,26 @@ public final class JAPModel
 	public static boolean isInfoServiceDisabled()
 		{
 			return model.m_bInfoServiceDisabled;
+		}
+
+	public static String getBIHost()
+		{
+			return model.m_biHost;
+		}
+
+	public static int getBIPort()
+		{
+			return model.m_biPort;
+		}
+
+	protected static void setBIHost(String host)
+		{
+			model.m_biHost = host;
+		}
+
+	protected static void setBIPort(int port)
+		{
+			model.m_biPort = port;
 		}
 
 	public String toString()
