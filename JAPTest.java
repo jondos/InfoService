@@ -26,10 +26,10 @@ import java.security.Security;
 //import java.security.interfaces.RSAPublicKey;
 //import javax.crypto.Cipher;
 //import cryptix.jce.provider.key.RawSecretKey;
-//import java.security.cert.CertificateFactory;
+import java.security.cert.CertificateFactory;
 //import org.logi.crypto.keys.BlowfishKey;
-
-
+import iaik.security.provider.IAIK;
+import java.security.cert.X509Certificate;
 
 final public class JAPTest
 {
@@ -76,9 +76,9 @@ final public class JAPTest
 			catch(Exception z)
 			{z.printStackTrace();}
 		*/	
-		//readCertCryptix();
+		readCertJCE();
 	//	testCert();
-		System.getProperties().list(System.out);
+//		System.getProperties().list(System.out);
 		System.exit(0);
 		}
 	
@@ -255,11 +255,16 @@ final public class JAPTest
 		}
 	
 	
-	public static void readCertCryptix()
+	public static void readCertJCE()
 	{
 		try{
-			//java.security.Security.addProvider(new CryptixCrypto());
-			//CertificateFactory cf=CertificateFactory.getInstance("X509");
+			java.security.Security.addProvider(new IAIK());
+			CertificateFactory cf=CertificateFactory.getInstance("X.509");
+			FileInputStream in=new FileInputStream("ldbsh.cer");
+			X509Certificate master=(X509Certificate)cf.generateCertificate(in);
+			in=new FileInputStream("jap.cer");
+			X509Certificate slave=(X509Certificate)cf.generateCertificate(in);
+			slave.verify(master.getPublicKey());
 		}
 		catch(Exception e)
 		{
