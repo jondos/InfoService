@@ -28,8 +28,9 @@
 package jap;
 
 /**
- * This is the message, which is send from JAPRoutingSettings to the observers. The message
- * code identifies the reason of the notification.
+ * This is a message implementation used for forwarding-specific messages. It is used from some
+ * forwarding related classes to notify the observers. The message code identifies the reason of
+ * the notification.
  */
 public class JAPRoutingMessage
 {
@@ -65,6 +66,82 @@ public class JAPRoutingMessage
    * startPropaganda thread was interrupted while starting all propaganda instances.
    */
   public static final int STOP_PROPAGANDA_CALLED = 5;
+  
+  /**
+   * This message is sent from JAPRoutingConnectionClassSelector when the current connection class
+   * has been changed (switched to another class).
+   */
+  public static final int CONNECTION_CLASS_CHANGED = 6;
+  
+  /**
+   * This message is sent from JAPRoutingConnectionClassSelector when the forwarding bandwidth
+   * values or the number of simultaneous connections of the current connection class were changed
+   * and the forwarding system is updated to the new values.
+   */
+  public static final int CONNECTION_PARAMETERS_CHANGED = 7;
+
+  /**
+   * This message is sent from JAPRoutingConnectionClassSelector when there are added or removed
+   * some connection classes from the list of all connection classes.
+   */
+  public static final int CONNECTION_CLASSES_LIST_CHANGED = 8;
+
+  /**
+   * This message is sent from JAPRoutingUseableMixCascades when the policy of the allowed
+   * mixcascades is switched between restricted-to-list or access-to-all mode.
+   */
+  public static final int ALLOWED_MIXCASCADES_POLICY_CHANGED = 9;
+
+  /**
+   * This message is sent from JAPRoutingUseableMixCascades whenever a MixCascade is
+   * added/updated/removed in the list of allowed mixcascades for the restricted mode. Attention:
+   * This can also occur, if access-to-all mode is selected and also doesn't mean that there was
+   * a change in the list of allowed mixcascades for the restricted mode.
+   */
+  public static final int ALLOWED_MIXCASCADES_LIST_CHANGED = 10;
+
+  /**
+   * This message is sent from JAPRoutingRegistrationInfoServices when the policy of the
+   * registration at the infoservices is switched between restricted-to-list or register-at-all
+   * mode.
+   */
+  public static final int REGISTRATION_INFOSERVICES_POLICY_CHANGED = 11;
+
+  /**
+   * This message is sent from JAPRoutingRegistrationInfoServices whenever an InfoService is
+   * added/updated/removed in the list of registration infoservices for the registration
+   * restricted-to-list mode. Attention: This can also occur, if register-at-all mode is selected
+   * and also doesn't mean that there was a change in the list of registration infoservices for
+   * the restricted-to-list mode.
+   */
+  public static final int REGISTRATION_INFOSERVICES_LIST_CHANGED = 12;
+
+  /**
+   * This message is sent from JAPRoutingServerStatisticsListener when new server statistics are
+   * available.
+   */
+  public static final int SERVER_STATISTICS_UPDATED = 13;
+
+  /**
+   * This message is sent from JAPRoutingRegistrationStatusObserver, if the registration status
+   * or the reason why the registration failed has been changed.
+   */
+  public static final int REGISTRATION_STATUS_CHANGED = 14;
+  
+  /**
+   * This message is sent from JAPRoutingSettings, if the port where the forwarding server is
+   * listening on for client requests, was changed successfully (regardless whether the forwarding
+   * server is currently running or not).
+   */
+  public static final int SERVER_PORT_CHANGED = 15;
+  
+  /**
+   * This message is sent from JAPRoutingSettings, if the client settings were changed (whether
+   * new connections to the anonymity servers shall use a forwarder, whether it is possible to
+   * obtain the information about a forwarder directly from the InfoServices or the mail-gateway
+   * has to be used and the InfoService requests need also forwarding).
+   */
+  public static final int CLIENT_SETTINGS_CHANGED = 16;
   
           
   /**

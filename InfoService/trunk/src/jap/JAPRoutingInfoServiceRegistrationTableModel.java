@@ -206,4 +206,25 @@ public class JAPRoutingInfoServiceRegistrationTableModel extends AbstractTableMo
     return returnValue;
   }
 
+  /**
+   * Removes all propaganda instances from the table. Also observing of those propaganda instances
+   * is stopped.
+   */
+  public void clearPropagandaInstancesTable() {
+    synchronized (m_propagandaInstances) {
+      int propagandaInstancesCount = m_propagandaInstances.size();
+      if (propagandaInstancesCount > 0) {
+        Enumeration propagandaInstances = m_propagandaInstances.elements();
+        while (propagandaInstances.hasMoreElements()) {
+          ServerSocketPropagandist currentPropagandaInstance = (ServerSocketPropagandist)(propagandaInstances.nextElement());
+          /* stop observing the propagandist */
+          currentPropagandaInstance.deleteObserver(this);
+        }
+        /* clear the whole table */
+        m_propagandaInstances.removeAllElements();
+        fireTableRowsDeleted(0, propagandaInstancesCount - 1);
+      }
+    }
+  }   
+
 }

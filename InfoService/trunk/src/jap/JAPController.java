@@ -38,6 +38,7 @@ import java.util.Observable;
 import java.util.Observer;
 import java.util.Vector;
 import javax.xml.parsers.DocumentBuilderFactory;
+import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -250,7 +251,7 @@ public final class JAPController implements ProxyListener, Observer
 	 * and then in the JAP install directory.
 	 * The configuration is a XML-File with the following structure:
 	 *  <JAP
-	 *    version="0.14"                     // version of the xml struct (DTD) used for saving the configuration
+   *    version="0.15"                     // version of the xml struct (DTD) used for saving the configuration
 	 *    portNumber=""                     // Listener-Portnumber
 	 *    portNumberSocks=""                // Listener-Portnumber for SOCKS
 	 *    supportSocks=""                   // Will we support SOCKS ?
@@ -364,6 +365,10 @@ public final class JAPController implements ProxyListener, Observer
 	 *       </AllowedMixCascades>
 	 *     </AllowedMixCascadesSettings>
 	 *   </ForwardingServer>
+   *   <ForwardingClient>                                      // since version 0.15
+   *     <ConnectViaForwarder>false</ConnectViaForwarder>      // whether a forwarder is needed to contact the mixcascades when enabling the anonymous mode
+   *     <ForwardInfoService>false</ForwardInfoService>        // whether an InfoService can be reached or also the InfoService needs forwarding
+   *   </ForwardingClient>                                
 	 * </JapForwardingSettings>
 	 *  </JAP>
 	 *  @param a_strJapConfFile - file containing the Configuration. If null $(user.home)/jap.conf or ./jap.conf is used.
@@ -938,7 +943,7 @@ public final class JAPController implements ProxyListener, Observer
 			Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
 			Element e = doc.createElement("JAP");
 			doc.appendChild(e);
-			e.setAttribute("version", "0.14");
+      e.setAttribute("version", "0.15");
 			//
 			e.setAttribute("portNumber", Integer.toString(JAPModel.getHttpListenerPortNumber()));
 			//e.setAttribute("portNumberSocks", Integer.toString(JAPModel.getSocksListenerPortNumber()));
@@ -1644,6 +1649,34 @@ public final class JAPController implements ProxyListener, Observer
 		t.start();
 	}
 
+  /**
+   * This will do all necessary things in order to enable the anonymous mode. The method decides
+   * whether to establish the connection via a forwarder or direct to the selected anonymity
+   * service.
+   * Attention: Maybe it is necessary to show a dialog in order to get the information about a
+   *            forwarder. Thus only the Java-AWT event dispatch thread should call this method.
+   *            Any other caller will produce a freeze, if the connect-to-forwarder dialog
+   *            appears.
+   *
+   * @param a_parentComponent The parent component over which the connect to forwarder dialog (if
+   *                          necessary) is centered.
+   */
+  public void startAnonymousMode(Component a_parentComponent) {
+    /* decide whether to establish a forwarded connection or not */
+    if (JAPModel.getInstance().getRoutingSettings().isConnectViaForwarder()) {
+      /* show the connect via forwarder dialog -> the dialog will do the remaining things */
+      new JAPRoutingEstablishForwardedConnectionDialog(a_parentComponent, getDialogFont());
+      /* maybe connection to forwarder failed -> notify the observers, because the view maybe
+       * still shows the anonymity mode enabled
+       */
+      notifyJAPObservers();     
+    }
+    else {
+      /* simply enable the anonymous mode */
+      setAnonMode(true);
+    }
+  }
+
 	public void setDummyTraffic(int msIntervall)
 	{
 		m_Model.setDummyTraffic(msIntervall);
@@ -2087,8 +2120,7 @@ public final class JAPController implements ProxyListener, Observer
 	 * whether to use the common JAP notification system or the specific ones. Also keep in mind,
 	 * that maybe not all messages are forwarded to the common notification system.
 	 *
-	 * @param a_notifier The observed Object (JAPRoutingSettings or
-	 *                   JAPRoutingServerStatisticsListener at the moment).
+   * @param a_notifier The observed Object (various forwarding related objects).
 	 * @param a_message The reason of the notification, e.g. a JAPRoutingMessage.
 	 *
 	 */
@@ -2108,15 +2140,23 @@ public final class JAPController implements ProxyListener, Observer
 			}
 			if (a_notifier == JAPModel.getInstance().getRoutingSettings().getServerStatisticsListener())
 			{
+        /* message is from JAPRoutingServerStatisticsListener */
+        if ( ( (JAPRoutingMessage) (a_message)).getMessageCode() == JAPRoutingMessage.SERVER_STATISTICS_UPDATED)
+        {
 				/* there are new routing statistics values available */
 				notifyJAPObservers();
 			}
+      }
 			if (a_notifier == JAPModel.getInstance().getRoutingSettings().getRegistrationStatusObserver())
 			{
+        /* message is from JAPRoutingRegistrationStatusObserver */
+        if ( ( (JAPRoutingMessage) (a_message)).getMessageCode() == JAPRoutingMessage.REGISTRATION_STATUS_CHANGED)
+        {
 				/* the registration status of the local forwarding server has changed */
 				notifyJAPObservers();
 			}
 		}
+    }
 		catch (Exception e)
 		{
 			/* should not happen, but better than throwing a runtime exception */

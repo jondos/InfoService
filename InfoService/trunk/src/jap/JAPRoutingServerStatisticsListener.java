@@ -35,9 +35,10 @@ import forward.server.ForwardSchedulerStatistics;
 /**
  * This class is the implementation for the forwarding server statistics update. Every class
  * interested in the forwarding server statistics should add itself to the observers of this
- * class. It gets an update message, every time some values might have changed. So it can ask for
- * the instance of this class for the new values. There should be only one instance of this class
- * running, which also runs, if there is no server running.
+ * class. It gets an update message with JAPRoutingMessage.SERVER_STATISTICS_UPDATED, every time
+ * some values might have changed. So it can ask for the instance of this class for the new
+ * values. This class is also available, if the server is not running (but fetching of new
+ * statistics is only done, when the forwarding server is running).
  */
 public class JAPRoutingServerStatisticsListener extends Observable implements Observer, Runnable {
   
@@ -212,7 +213,7 @@ public class JAPRoutingServerStatisticsListener extends Observable implements Ob
         if (somethingHasChanged == true) {
           /* notify the observers if something has changed */
         setChanged();
-        notifyObservers();
+        notifyObservers(new JAPRoutingMessage(JAPRoutingMessage.SERVER_STATISTICS_UPDATED));
         }
         try {
           Thread.sleep(SERVER_STATISTICS_UPDATE_INTERVAL);
@@ -268,7 +269,7 @@ public class JAPRoutingServerStatisticsListener extends Observable implements Ob
       if ((oldRejectedConnections != m_rejectedConnections) || (oldAcceptedConnections != m_acceptedConnections) || (oldForwardedConnections != m_currentlyForwardedConnections) || (oldTransferedBytes != m_transferedBytes) || (oldBandwidthUsage != m_currentBandwidthUsage)) {      
         /* something has changed -> notify the observers */
       setChanged();
-      notifyObservers();
+      notifyObservers(new JAPRoutingMessage(JAPRoutingMessage.SERVER_STATISTICS_UPDATED));
     }
   }
   }

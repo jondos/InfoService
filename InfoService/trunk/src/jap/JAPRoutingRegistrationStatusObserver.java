@@ -38,9 +38,9 @@ import forward.server.ServerSocketPropagandist;
  * This class is the backend of the forwarding server registration visualization. It can be used
  * for displaying the current registration status of the local forwarding server at the
  * InfoServices. Also if there are registration issues, an errorcode with more detailed
- * information is provided. This class sends an update message to all observers, if the
- * registration state or the errorcode has been changed. So the displayed information can be
- * updated.
+ * information is provided. This class sends a JAPRoutingMessage.REGISTRATION_STATUS_CHANGED to
+ * all observers, if the registration state or the errorcode has been changed. So the displayed
+ * information can be updated.
  */
 public class JAPRoutingRegistrationStatusObserver extends Observable implements Observer {
 
@@ -209,7 +209,7 @@ public class JAPRoutingRegistrationStatusObserver extends Observable implements 
         }
         if (notifyObserversNecessary == true) {
           setChanged();
-          notifyObservers(null);
+          notifyObservers(new JAPRoutingMessage(JAPRoutingMessage.REGISTRATION_STATUS_CHANGED));
         }
       }
     }
@@ -274,7 +274,7 @@ public class JAPRoutingRegistrationStatusObserver extends Observable implements 
             m_currentState = registrationStatus;
             m_currentErrorCode = registrationError;
             setChanged();
-            notifyObservers(null);
+            notifyObservers(new JAPRoutingMessage(JAPRoutingMessage.REGISTRATION_STATUS_CHANGED));
           }
         }
       }

@@ -28,6 +28,7 @@
 package jap;
 
 import java.util.Enumeration;
+import java.util.Hashtable;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Vector;
@@ -49,7 +50,7 @@ import logging.LogType;
  * This class manages the infoservices, where the registration of the local forwarding server is
  * tried.
  */
-public class JAPRoutingRegistrationInfoServices implements Observer, Runnable {
+public class JAPRoutingRegistrationInfoServices extends Observable implements Observer, Runnable {
 
   /**
    * If the automatic management of the registration infoservices (registrate at all available
@@ -63,9 +64,11 @@ public class JAPRoutingRegistrationInfoServices implements Observer, Runnable {
 
   /**
    * This stores the list of infoservices, where the registration is tried, if we are not in the
-   * automatic management mode.
+   * automatic management mode. So if registration at all available primary infoservices is
+   * enabled, this list is not used. The usage of the hashtable has only comfort reasons. So
+   * accessing the InfoServices by the ID is much easier.
    */
-  Vector m_registrationInfoServices;
+  Hashtable m_registrationInfoServices;
 
   /**
    * This stores, whether the automatic management mode for the registration at the infoservices
@@ -98,7 +101,7 @@ public class JAPRoutingRegistrationInfoServices implements Observer, Runnable {
    * done here. The new instance is configured for automatic management mode.
    */
   public JAPRoutingRegistrationInfoServices() {
-    m_registrationInfoServices = new Vector();
+    m_registrationInfoServices = new Hashtable();
     m_registerAtAllAvailableInfoServices = true;
     m_propagandaIsRunning = false;
     m_runningInfoServiceRegistrations = new Vector();
@@ -172,16 +175,21 @@ public class JAPRoutingRegistrationInfoServices implements Observer, Runnable {
    * infoservices, where we are not registrated in the moment, a new propaganda instance is
    * started. But running instances are not stopped, even if the corresponding infoservice is
    * not in the new list any more. If we are automatic management mode at the moment, only the
-   * internal manual infoservices list is updated, but there is no check done for new instances.
+   * internal manual infoservices list is updated, but nothing else is done (especially no
+   * propaganda instances are started).
    *
-   * @param a_infoServices Start of an enumeration of infoservices, which shall be used for
-   *                       registration, if we are in manual management mode.
+   * @param a_infoServices A Vector of primary infoservices, which shall be used for registration,
+   *                       if we are in manual management mode.
    */
-  public void setRegistrationInfoServices(Enumeration a_infoServices) {
+  public void setRegistrationInfoServices(Vector a_infoServices) {
     synchronized (m_registrationInfoServices) {
-      m_registrationInfoServices.removeAllElements();
-      while (a_infoServices.hasMoreElements()) {
-        m_registrationInfoServices.addElement(a_infoServices.nextElement());
+      m_registrationInfoServices.clear();
+      Enumeration newRegistrationInfoServices = a_infoServices.elements();
+      while (newRegistrationInfoServices.hasMoreElements()) {
+        InfoServiceDBEntry currentInfoService = (InfoServiceDBEntry)(newRegistrationInfoServices.nextElement());
+        if (currentInfoService.hasPrimaryForwarderList()) {
+          m_registrationInfoServices.put(currentInfoService.getId(), currentInfoService);
+        }
       }
     }
     synchronized (this) {
@@ -191,9 +199,9 @@ public class JAPRoutingRegistrationInfoServices implements Observer, Runnable {
           /* start propaganda instances for the new infoservices, where no registration process is
            * running at the moment
            */
-          Enumeration newRegistrationInfoServices = m_registrationInfoServices.elements();
-          while (newRegistrationInfoServices.hasMoreElements()) {
-            InfoServiceDBEntry currentInfoService = (InfoServiceDBEntry)(newRegistrationInfoServices.nextElement());
+          Enumeration registrationInfoServices = m_registrationInfoServices.elements();
+          while (registrationInfoServices.hasMoreElements()) {
+            InfoServiceDBEntry currentInfoService = (InfoServiceDBEntry)(registrationInfoServices.nextElement());
             if (m_runningInfoServiceRegistrations.contains(currentInfoService.getId()) == false) {
               /* no propaganda instance for the current infoservice is running -> try to start a new
                * one, this is only done, if propaganda is running at the moment, so no problem, when
@@ -208,6 +216,83 @@ public class JAPRoutingRegistrationInfoServices implements Observer, Runnable {
           }
         }
       }
+      setChanged();
+      notifyObservers(new JAPRoutingMessage(JAPRoutingMessage.REGISTRATION_INFOSERVICES_LIST_CHANGED));
+    }
+  }
+
+  /**
+   * This adds a primary InfoService to the list of registration infoservices, which is used, if
+   * we are in manual infoservice registration mode. If we are currently in the manual mode and we
+   * don't have a registration at the new InfoService, a new propaganda instance for that
+   * InfoService is started. If we are automatic management mode at the moment, only the internal
+   * stored manual registration list is updated, but nothing else is done (especially no
+   * propaganda instance is started).
+   *
+   * @param a_infoServices A primary Infoservice, which shall be added to the list of registration
+   *                       infoservices for the manual management mode. If there is already an
+   *                       InfoService with the same ID is in the list, it is updated to this new
+   *                       value (but the propaganda keeps running with the old instance until a
+   *                       restart of the whole propaganda system).
+   */
+  public void addToRegistrationInfoServices(InfoServiceDBEntry a_infoService) {
+    if (a_infoService != null) {
+      if (a_infoService.hasPrimaryForwarderList()) {
+        synchronized (m_registrationInfoServices) {
+          m_registrationInfoServices.put(a_infoService.getId(), a_infoService);
+        }
+        synchronized (this) {
+          if (m_registerAtAllAvailableInfoServices == false) {
+            /* we are in manual management mode -> start new propaganda instances, if necessary */
+            synchronized (m_runningInfoServiceRegistrations) {
+              /* start propaganda instances for the new infoservices, where no registration process is
+               * running at the moment
+               */
+              if (m_runningInfoServiceRegistrations.contains(a_infoService.getId()) == false) {
+                /* no propaganda instance for the new infoservice is running -> try to start a new
+                 * one, this is only done, if propaganda is running at the moment, so no problem, when
+                 * no propaganda is running
+                 */
+                JAPModel.getInstance().getRoutingSettings().addPropagandaInstance(a_infoService);
+                if (m_propagandaIsRunning == true) {
+                  /* we can add the new infoservice id to the propaganda list already yet */
+                  m_runningInfoServiceRegistrations.addElement(a_infoService.getId());
+                }
+              }
+            }
+          }
+          setChanged();
+          notifyObservers(new JAPRoutingMessage(JAPRoutingMessage.REGISTRATION_INFOSERVICES_LIST_CHANGED));
+        }
+      }
+    }
+  }
+
+  /**
+   * This removes an InfoService from the list of registration infoservices, which is used, if we
+   * are in manual infoservice registration mode. Attention: Even if we are in manual registration
+   * mode and there is a running propaganda instance for this InfoService, the propaganda instance
+   * is not removed until the whole propaganda system is stopped. If we are automatic management
+   * mode at the moment, only the internal stored manual registration list is updated.
+   *
+   * @param a_infoServiceId The InfoService which should be removed from the list of registration
+   *                        infoservices for the manual registration mode. If there is no
+   *                        infoservice with this ID is in the list, nothing is done.
+   */
+  public void removeFromRegistrationInfoServices(String a_infoServiceId) {
+    if (a_infoServiceId != null) {
+      boolean infoServiceRemoved = false;
+      synchronized (m_registrationInfoServices) {
+        if (m_registrationInfoServices.remove(a_infoServiceId) != null) {
+          infoServiceRemoved = true;
+        }
+      }
+      if (infoServiceRemoved == true) {
+        synchronized (this) {
+          setChanged();
+          notifyObservers(new JAPRoutingMessage(JAPRoutingMessage.REGISTRATION_INFOSERVICES_LIST_CHANGED));
+        }
+      }
     }
   }
 
@@ -220,7 +305,10 @@ public class JAPRoutingRegistrationInfoServices implements Observer, Runnable {
   public Vector getRegistrationInfoServices() {
     Vector resultValue = new Vector();
     synchronized (m_registrationInfoServices) {
-      resultValue = (Vector)(m_registrationInfoServices.clone());
+      Enumeration registrationInfoServices = m_registrationInfoServices.elements();
+      while (registrationInfoServices.hasMoreElements()) {
+        resultValue.addElement(registrationInfoServices.nextElement());
+      }
     }
     return resultValue;
   }
@@ -246,9 +334,7 @@ public class JAPRoutingRegistrationInfoServices implements Observer, Runnable {
       }
       else {
         /* return only the specified infoservices, stored in the internal list */
-        synchronized (m_registrationInfoServices) {
-          resultValue = (Vector)(m_registrationInfoServices.clone());
-        }
+        resultValue = getRegistrationInfoServices();
       }
     }
     return resultValue;
@@ -279,6 +365,8 @@ public class JAPRoutingRegistrationInfoServices implements Observer, Runnable {
             stopInfoServiceListUpdateThread();
           }
         }
+        setChanged();
+        notifyObservers(new JAPRoutingMessage(JAPRoutingMessage.REGISTRATION_INFOSERVICES_POLICY_CHANGED));
       }
     }
   }
@@ -382,7 +470,7 @@ public class JAPRoutingRegistrationInfoServices implements Observer, Runnable {
           noError = false;
         }
       }
-      setRegistrationInfoServices(registrationInfoServices.elements());
+      setRegistrationInfoServices(registrationInfoServices);
     }
     return noError;
   }
