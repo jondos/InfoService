@@ -254,7 +254,7 @@
   <property category="runtime.6" name="ConfigurationName" value="JAP mit loadPay"/>
   <property category="runtime.6" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
   <property category="runtime.6" name="application.class" value="JAP"/>
-  <property category="runtime.6" name="application.parameters" value="-pay"/>
+  <property category="runtime.6" name="application.parameters" value="-pay -config h:\jap.conf"/>
   <property category="runtime.7" name="BuildTargetOnRun" value="com.borland.jbuilder.build.ProjectBuilder$ProjectBuildAction;make"/>
   <property category="runtime.7" name="ConfigurationName" value="Mobile"/>
   <property category="runtime.7" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>

@@ -79,7 +79,7 @@ final public class JAPDebug extends WindowAdapter implements ActionListener, Log
 	private static JTextArea m_textareaConsole;
 	private static JDialog m_frameConsole;
 	private static boolean m_bConsole = false;
-	private static boolean ms_bFile = false;
+	private static volatile boolean ms_bFile = false;
 	private static String ms_strFileName = null;
 	private static FileLog ms_FileLog = null;
 	private static JAPDebug debug;

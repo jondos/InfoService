@@ -446,14 +446,14 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			c.gridy = 6;
 			m_flippingPanelPayment.setFlipped(false);
 			northPanel.add(m_flippingPanelPayment, c);
+			c.gridwidth = 2;
+			c.gridx = 0;
+			c.gridy = 7;
+			c.fill = GridBagConstraints.HORIZONTAL;
+			c.weightx = 1;
+			northPanel.add(new JSeparator(), c);
 		}
 //-----------------------------------------------------------
-		c.gridwidth = 2;
-		c.gridx = 0;
-		c.gridy = 7;
-		c.fill = GridBagConstraints.HORIZONTAL;
-		c.weightx = 1;
-		northPanel.add(new JSeparator(), c);
 
 //------------------ Own Traffic Panel
 		//m_flippingpanelOwnTraffic = new FlippingPanel(this);
