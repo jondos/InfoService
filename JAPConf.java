@@ -621,13 +621,23 @@ final class JAPConf extends JDialog
 				
 				model.setInfoService(infohostTextField.getText().trim(),
 														 Integer.parseInt(infoportnumberTextField.getText().trim()));
-				model.anonserviceName = anonserviceName;
-				model.anonHostName = anonhostTextField.getText().trim();
-				model.anonPortNumber  = Integer.parseInt(anonportnumberTextField.getText().trim());
-				if (anonsslportnumberTextField.getText().equals(""))
-					model.anonSSLPortNumber = -1;
-				else
-					model.anonSSLPortNumber = Integer.parseInt(anonsslportnumberTextField.getText().trim());
+				// anon settings
+				// if anon values have changed --> stop and restart anon service
+				int anonSSLPortNumber = -1; 
+				if (!anonsslportnumberTextField.getText().equals(""))
+					anonSSLPortNumber = Integer.parseInt(anonsslportnumberTextField.getText().trim());
+				if (!anonhostTextField.getText().trim().equals(model.anonHostName)
+				    || Integer.parseInt(anonportnumberTextField.getText().trim()) != model.anonPortNumber
+					|| anonSSLPortNumber != model.anonSSLPortNumber) 
+					{
+						model.setAnonMode(false);
+				  		model.anonserviceName = anonserviceName;
+						model.anonHostName = anonhostTextField.getText().trim();
+						model.anonPortNumber  = Integer.parseInt(anonportnumberTextField.getText().trim());
+						model.anonSSLPortNumber = anonSSLPortNumber;
+				  		//model.setAnonMode(true); // geht noch nicht
+					}
+				
 				model.autoConnect = autoConnectCheckBox.isSelected();
 				model.setMinimizeOnStartup(startupMinimizeCheckBox.isSelected());
 				JAPDebug.setDebugType(

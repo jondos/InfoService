@@ -59,8 +59,8 @@ final class JAPFeedback implements Runnable {
 						}
 					try 
 						{
-							//Thread.sleep(60000);
-							Thread.sleep(6000);
+							Thread.sleep(60000);
+							//Thread.sleep(6000); // for testing only
 						}
 					catch (Exception e)
 						{}

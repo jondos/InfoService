@@ -59,6 +59,7 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 	private Object oValueUpdateSemaphore;
 	private boolean m_bIsIconified;
 	private String m_Title;
+	private int diff, avg, last=-1, sum=0, cnt=0; // helper variables for calculating traffic situation
 
 	public JAPView (String s)
 		{
@@ -226,15 +227,15 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 		meterPanel.add(meterLabel, BorderLayout.CENTER);
 		
 		JPanel detailsPanel = new JPanel();
-		detailsPanel.setLayout( new GridLayout(2,2,5,5) );
+		detailsPanel.setLayout( new GridLayout(3,2,5,5) );
 		detailsPanel.setBorder( new TitledBorder(model.getString("meterDetailsBorder")) );
 		nameLabel = new JLabel();
 		detailsPanel.add(new JLabel(model.getString("meterDetailsName")) );
 		detailsPanel.add(nameLabel);
 		detailsPanel.add(new JLabel(model.getString("meterDetailsUsers")) );
 		detailsPanel.add(userProgressBar);
-//		detailsPanel.add(new JLabel(model.getString("meterDetailsTraffic")) );
-//		detailsPanel.add(trafficProgressBar);
+		detailsPanel.add(new JLabel(model.getString("meterDetailsTraffic")) );
+		detailsPanel.add(trafficProgressBar);
 //		detailsPanel.add(new JLabel(model.getString("meterDetailsRisk")) );
 //		detailsPanel.add(protectionProgressBar);
 		
@@ -513,24 +514,41 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 					protectionProgressBar.setValue(protectionProgressBar.getMaximum());
 					protectionProgressBar.setString(model.getString("meterNA"));
 				}
-				if (model.trafficSituation != -1) {
+				if (/*model.trafficSituation != -1*/model.mixedPackets!=-1) {
 					// Traffic Situation
-					if (model.trafficSituation>trafficProgressBar.getMaximum())
-							trafficProgressBar.setMaximum(model.trafficSituation);
-					trafficProgressBar.setValue(model.trafficSituation);
-					if      (model.trafficSituation < trafficProgressBar.getMaximum()*30/100) 
-						trafficProgressBar.setString(model.getString("meterTrafficLow"));
-					else if (model.trafficSituation < trafficProgressBar.getMaximum()*60/100) 
-						trafficProgressBar.setString(model.getString("meterTrafficMedium")); 
-					else /* if (model.trafficSituation < trafficProgressBar.getMaximum()*90/100) */
-						trafficProgressBar.setString(model.getString("meterTrafficHigh"));
-					//else                                  
-					//	trafficProgressBar.setString(model.getString("meterTrafficCongestion")); 
-				} else {
+					if (last == -1) { // first value from InfoService
+						last = model.mixedPackets;
+						trafficProgressBar.setValue(trafficProgressBar.getMaximum());
+						trafficProgressBar.setString(model.getString("meterGettingTrafficInfo"));
+					} else { // now we have enough data...
+						diff = model.mixedPackets -last;
+						if (diff != 0 ) { // do we?
+							sum = sum + diff;
+							cnt = cnt +1;
+							avg = sum/cnt;
+							last = model.mixedPackets;
+							JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"sum ="+sum+" avg="+avg+", diff="+diff);
+							trafficProgressBar.setMaximum(2*avg);
+							//if (diff>trafficProgressBar.getMaximum())
+							//	trafficProgressBar.setMaximum(model.trafficSituation);
+							trafficProgressBar.setValue(diff);
+							if      (diff < trafficProgressBar.getMaximum()*30/100) 
+								trafficProgressBar.setString(model.getString("meterTrafficLow"));
+							else if (diff < trafficProgressBar.getMaximum()*60/100) 
+								trafficProgressBar.setString(model.getString("meterTrafficMedium")); 
+							else /* if (diff < trafficProgressBar.getMaximum()*90/100) */
+								trafficProgressBar.setString(model.getString("meterTrafficHigh"));
+							//else                                  
+							//	trafficProgressBar.setString(model.getString("meterTrafficCongestion")); 
+						}
+					}
+				} else { // no value from InfoService
+					last = -1;
 					trafficProgressBar.setValue(trafficProgressBar.getMaximum());
 					trafficProgressBar.setString(model.getString("meterNA"));
 				}
 		} else {
+			last = -1;
 			userProgressBar.setValue(userProgressBar.getMaximum());
 			userProgressBar.setString(model.getString("meterNA"));
 			protectionProgressBar.setValue(protectionProgressBar.getMaximum());
