@@ -72,22 +72,17 @@ final public class FlippingPanel extends JPanel
 		{
 			public void mouseClicked(MouseEvent e)
 			{
-				//int oldHeight=getPreferredSize().height;
 				m_bIsFlipped = !m_bIsFlipped;
 				m_Layout.next(m_panelContainer);
 				if (m_bIsFlipped)
 				{
-					//m_Layout.last(m_panelContainer);
 					m_labelBttn.setIcon(ms_iconDown);
 				}
 				else
 				{
-					//m_Layout.first(m_panelContainer);
 					m_labelBttn.setIcon(ms_iconUp);
 				}
 
-				//int newHeight=getPreferredSize().height;
-				//m_Parent.setSize(m_Parent.getSize().width,m_Parent.getSize().height+newHeight-oldHeight);
 				m_Parent.pack();
 			}
 
@@ -148,22 +143,8 @@ final public class FlippingPanel extends JPanel
 		if (!m_bIsFlipped)
 		{
 			d1.height = d2.height;
-//d1.height = Math.max(d1.height, ms_iBttnHeight);
 		}
 		return d1;
-		/*
-		  Dimension d;
-		  if (m_bIsFlipped)
-		  {
-		   d = m_panelFull.getPreferredSize();
-		  }
-		  else
-		  {
-		   d = m_panelSmall.getPreferredSize();
-		  }
-		  d.width += ms_iBttnWidth;
-		  return d;
-		 */
 	}
 
 	public Dimension getMinimumSize()
@@ -183,17 +164,6 @@ final public class FlippingPanel extends JPanel
 
 	public Dimension getMaximumSize()
 	{
-		/*		Dimension d;
-		  if (m_bIsFlipped)
-		  {
-		   d = m_panelFull.getMaximumSize();
-		  }
-		  else
-		  {
-		   d = m_panelSmall.getMaximumSize();
-		  }
-		  d.width += ms_iBttnWidth;
-		 */
 		Dimension d1, d2;
 		d1 = m_panelFull.getMaximumSize();
 		d2 = m_panelSmall.getMaximumSize();
@@ -202,11 +172,8 @@ final public class FlippingPanel extends JPanel
 		if (!m_bIsFlipped)
 		{
 			d1.height = d2.height;
-			//d1.height = Math.max(d1.height, ms_iBttnHeight);
 		}
 		return d1;
-
-//		return d;
 	}
 
 	public void setFlipped(boolean bFlipped)
