@@ -48,9 +48,14 @@ final class SymCipher
 
 			public int setEncryptionKeyAES(byte[] key)
 				{
+					return setEncryptionKeyAES(key,0);
+				}
+
+			public int setEncryptionKeyAES(byte[] key,int offset)
+				{
 					try
 						{
-							oKey=Rijndael_Algorithm.makeKey(key);
+							oKey=Rijndael_Algorithm.makeKey(key,offset,16);
 							for(int i=0;i<16;i++)
 								iv[i]=0;
 							for(int i=0;i<16;i++)

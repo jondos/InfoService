@@ -5,14 +5,14 @@ Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
 
 	- Redistributions of source code must retain the above copyright notice,
-	  this list of conditions and the following disclaimer.
+		this list of conditions and the following disclaimer.
 
 	- Redistributions in binary form must reproduce the above copyright notice,
-	  this list of conditions and the following disclaimer in the documentation and/or
+		this list of conditions and the following disclaimer in the documentation and/or
 		other materials provided with the distribution.
 
 	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
-	  may be used to endorse or promote products derived from this software without specific
+		may be used to endorse or promote products derived from this software without specific
 		prior written permission.
 
 
@@ -30,7 +30,7 @@ import java.security.SecureRandom;
 import logging.Log;
 import logging.LogLevel;
 import logging.LogType;
-
+import anon.ErrorCodes;
 final public class KeyPool implements Runnable
 	{
 		private SecureRandom sr;
@@ -45,7 +45,7 @@ final public class KeyPool implements Runnable
 		private boolean runflag;
 		private static KeyPool m_KeyPool=null;
 		private Thread m_KeyPoolThread=null;
-    private Log m_Log=null;
+		private Log m_Log=null;
 		private final class KeyList
 			{
 				public byte[] key;
@@ -60,7 +60,7 @@ final public class KeyPool implements Runnable
 
 		private KeyPool(int poolsize,int keylength,Log log)
 			{
-        m_Log=log;
+				m_Log=log;
 				//m_Log.log(JAPDebug.INFO,LogType.MISC,"JAPKeyPool:initializing...");
 				keySize=keylength;
 				this.poolSize=poolsize;
@@ -80,15 +80,15 @@ final public class KeyPool implements Runnable
 				if(m_KeyPool==null)
 					m_KeyPool=new KeyPool(20,16,log);
 				m_KeyPool.setLogging(log);
-        return m_KeyPool;
+				return m_KeyPool;
 			}
 
 		public void setLogging(Log log)
-      {
-        m_Log=log;
-      }
+			{
+				m_Log=log;
+			}
 
-    public void run()
+		public void run()
 			{
 				byte[] seed=null;
 				try
@@ -153,8 +153,15 @@ final public class KeyPool implements Runnable
 					}
 			}
 
-		public static void getKey(byte[] key)
+		public static int getKey(byte[] key)
 			{
+				return getKey(key,0);
+			}
+
+		public static int getKey(byte[] key,int offset)
+			{
+				if(key==null||(key.length-offset)<m_KeyPool.keySize)
+					return ErrorCodes.E_UNKNOWN;
 				m_KeyPool.m_Log.log(LogLevel.DEBUG,LogType.MISC,"JAPKeyPool:getKey()");
 				if(m_KeyPool.aktKey==null)
 					try
@@ -169,7 +176,7 @@ final public class KeyPool implements Runnable
 				synchronized(m_KeyPool)
 					{
 						KeyList tmpKey;
-						System.arraycopy(m_KeyPool.aktKey.key,0,key,0,m_KeyPool.keySize);
+						System.arraycopy(m_KeyPool.aktKey.key,0,key,offset,m_KeyPool.keySize);
 						tmpKey=m_KeyPool.aktKey;
 						//if(aktKey.next!=null)
 							m_KeyPool.aktKey=m_KeyPool.aktKey.next;
@@ -180,6 +187,9 @@ final public class KeyPool implements Runnable
 						m_KeyPool.pool=tmpKey;
 					}
 				synchronized(m_KeyPool.l1)
-				{m_KeyPool.l1.notify();}
+					{
+						m_KeyPool.l1.notify();
+					}
+				return ErrorCodes.E_SUCCESS;
 			}
 	}
