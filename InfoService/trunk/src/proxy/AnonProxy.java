@@ -36,6 +36,7 @@ import anon.ToManyOpenChannelsException;
 
 import anon.server.AnonServiceImpl;
 import JAPDebug;
+import JAPConstants;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.IOException;
@@ -58,7 +59,7 @@ final public class AnonProxy implements Runnable
       m_socketListener=listener;
       m_Anon=AnonServiceFactory.create();
       m_Anon.setLogging(JAPDebug.create());
-      setFirewall(null,-1);
+      setFirewall(JAPConstants.FIREWALL_TYPE_HTTP,null,-1);
       setFirewallAuthorization(null,null);
       setDummyTraffic(-1);
     }
@@ -68,9 +69,13 @@ final public class AnonProxy implements Runnable
       m_AnonServer=server;
     }
 
-  public void setFirewall(String host,int port)
+  public void setFirewall(int type,String host,int port)
     {
-      ((AnonServiceImpl)m_Anon).setFirewall(host,port);
+      if(type==JAPConstants.FIREWALL_TYPE_SOCKS)
+        type=AnonServiceImpl.FIREWALL_TYPE_SOCKS;
+      else
+        type=AnonServiceImpl.FIREWALL_TYPE_HTTP;
+      ((AnonServiceImpl)m_Anon).setFirewall(type,host,port);
     }
 
   public void setFirewallAuthorization(String id,String passwd)

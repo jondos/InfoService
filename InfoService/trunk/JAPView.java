@@ -123,10 +123,10 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 	    // "NORTH": Image
 	    ImageIcon northImage = JAPUtil.loadImageIcon(JAPMessages.getString("northPath"),true);
 	    JLabel northLabel = new JLabel(northImage);
-		JPanel northPanel = new JPanel();
-		northPanel.setLayout(new BoxLayout(northPanel, BoxLayout.X_AXIS) );
-		northPanel.add(northLabel);
-		northPanel.add(Box.createHorizontalGlue());
+		  JPanel northPanel = new JPanel();
+		  northPanel.setLayout(new BoxLayout(northPanel, BoxLayout.X_AXIS) );
+		  northPanel.add(northLabel);
+		  northPanel.add(Box.createHorizontalGlue());
 
 	    // "West": Image
 	    ImageIcon westImage = JAPUtil.loadImageIcon(JAPMessages.getString("westPath"),true);;
@@ -161,19 +161,21 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 	    quitB.addActionListener(this);
 	    JAPUtil.setMnemonic(iconifyB,JAPMessages.getString("iconifyButtonMn"));
 	    JAPUtil.setMnemonic(confB,JAPMessages.getString("confButtonMn"));
-		JAPUtil.setMnemonic(infoB,JAPMessages.getString("infoButtonMn"));
+		  JAPUtil.setMnemonic(infoB,JAPMessages.getString("infoButtonMn"));
 	    JAPUtil.setMnemonic(helpB,JAPMessages.getString("helpButtonMn"));
 	    JAPUtil.setMnemonic(quitB,JAPMessages.getString("quitButtonMn"));
 
 			// add Components to Frame
 			getContentPane().setBackground(buttonPanel.getBackground());
+			getContentPane().add(/*tabs*/level, BorderLayout.CENTER);
 			getContentPane().add(buttonPanel, BorderLayout.SOUTH);
 //			getContentPane().add(northLabel, BorderLayout.NORTH);
-			getContentPane().add(northPanel, BorderLayout.NORTH);
-			getContentPane().add(westLabel, BorderLayout.WEST);
-			getContentPane().add(new JLabel("  "), BorderLayout.EAST); //Spacer
-			getContentPane().add(/*tabs*/level, BorderLayout.CENTER);
-
+			if(!JAPModel.isSmallDisplay())
+        {
+          getContentPane().add(northPanel, BorderLayout.NORTH);
+			    getContentPane().add(westLabel, BorderLayout.WEST);
+			    getContentPane().add(new JLabel("  "), BorderLayout.EAST); //Spacer
+        }
 			//tabs.setSelectedComponent(level);
 
 			this.addWindowListener(new WindowAdapter()

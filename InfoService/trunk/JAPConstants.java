@@ -41,7 +41,12 @@ public final class JAPConstants {
 	static final int      defaultAnonPortNumber        = 6544;
 	static final String   defaultInfoServiceHostName   = "infoservice.inf.tu-dresden.de";
 	static final int      defaultInfoServicePortNumber = 6543;
-	static final String   urlJAPNewVersionDownload     = "http://anon.inf.tu-dresden.de:80/~sk13/anon/jap/JAP.jar";
+
+  public static final int FIREWALL_TYPE_HTTP         = 1;
+  public static final int FIREWALL_TYPE_SOCKS        = 2;
+  static final int      defaultFirewallType          = FIREWALL_TYPE_HTTP;
+
+  static final String   urlJAPNewVersionDownload     = "http://anon.inf.tu-dresden.de:80/~sk13/anon/jap/JAP.jar";
 	static final String   JAPLocalFilename             = "JAP.jar";
 	static final int      MAXHELPLANGUAGES             = 6;
 	static final String   TITLE                        = "JAP";
