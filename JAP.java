@@ -61,6 +61,7 @@ class JAP extends Frame{
 	/** Initialize and starts the JAP.
 	 */
 	void startJAP() {
+		final String  msg  = "JAP must run with a 1.1.3 or higher version Java!\nYou will find more information at the JAP webpage!\nYour Java Version: ";
 		String javaVersion = System.getProperty("java.version");
 		String vendor      = System.getProperty("java.vendor");
 		String os          = System.getProperty("os.name");
@@ -69,9 +70,7 @@ class JAP extends Frame{
 		// Test for right VM....
 		if (javaVersion.compareTo("1.0.2") <= 0) 
 			{
-				System.out.println("Your JAVA Version: "+javaVersion);
-				System.out.println("JAP must run with a 1.1.3 or higher version Java!");
-				System.out.println("You will find more information at the JAP webpage!");
+				System.out.println(msg+javaVersion);
 				System.exit(0);
 			}
 		
@@ -90,9 +89,7 @@ class JAP extends Frame{
 			{
 				if (javaVersion.compareTo("1.0.2") <= 0) 
 					{
-						System.out.println("Your JAVA Version: "+javaVersion);
-						System.out.println("JAP must run with a 1.1.3 or higher version Java!");
-						System.out.println("You will find more information at the JAP webpage!");
+						System.out.println(msg+javaVersion);
 						System.exit(0);
 					}
 				if (javaVersion.compareTo("1.1.2") <= 0) 
@@ -145,7 +142,7 @@ class JAP extends Frame{
 		
 		model.addJAPObserver(view);
 		// Create the iconified view
-		JAPViewIconified iconifiedView = new JAPViewIconified("JAP");
+		JAPViewIconified iconifiedView = new JAPViewIconified(model.TITLEOFICONIFIEDVIEW);
 		model.addJAPObserver(iconifiedView);
 		
 		//Init Crypto...

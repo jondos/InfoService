@@ -64,7 +64,7 @@ import anon.JAPAnonServiceListener;
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPModel implements JAPAnonServiceListener{
 
-	public static final String aktVersion = "00.01.024"; // Version of JAP
+	public static final String aktVersion = "00.01.025"; // Version of JAP
 
 	public  Vector            anonServerDatabase = null; // vector of all available mix cascades
 	public final static String   defaultanonHost   = "mix.inf.tu-dresden.de";
@@ -102,6 +102,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 	private boolean  mbActCntMessageNotRemind    = false; // indicates if Warning message in setAnonMode has been deactivated for the session
 	private boolean  mbActCntMessageNeverRemind  = false; // indicates if Warning message in setAnonMode has been deactivated forever
 	private boolean  mbDoNotAbuseReminder        = false; // indicates if new warning message in setAnonMide (containing Do no abuse) has been shown
+	private boolean  mbGoodByMessageNeverRemind  = false; // indicates if Warning message before exit has been deactivated forever	
 
 	private	static final Object oSetAnonModeSyncObject=new Object();
 
@@ -126,6 +127,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 
 	static final int    MAXHELPLANGUAGES = 6;
 	static final String TITLE = "JAP";
+	static final String TITLEOFICONIFIEDVIEW = "JAP";
 	static final String AUTHOR = "(c) 2000 The JAP-Team";
 
 // The following two definitions now in JAPUtil - due to a Henne - Ei problem
@@ -299,6 +301,8 @@ public final class JAPModel implements JAPAnonServiceListener{
 			mbDoNotAbuseReminder      =JAPUtil.parseNodeBoolean(n.getNamedItem("doNotAbuseReminder"),false);
 			if(mbActCntMessageNeverRemind && mbDoNotAbuseReminder)
 				mbActCntMessageNotRemind=true;
+			// load settings for the reminder message before goodBye
+			mbGoodByMessageNeverRemind=JAPUtil.parseNodeBoolean(n.getNamedItem("neverRemindGoodBye"),false);
 			// load settings for Info Service
 			String host;
 			int port;
@@ -442,6 +446,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 			e.setAttribute("minimizedStartup",(mbMinimizeOnStartup?"true":"false"));
 			e.setAttribute("neverRemindActiveContent",(mbActCntMessageNeverRemind?"true":"false"));
 			e.setAttribute("doNotAbuseReminder",(mbDoNotAbuseReminder?"true":"false"));
+			e.setAttribute("neverRemindGoodBye",(mbGoodByMessageNeverRemind?"true":"false"));
 			e.setAttribute("Locale",m_Locale.getLanguage());
 			//
 			// adding Debug-Element
@@ -1158,8 +1163,22 @@ private final class SetAnonModeAsync implements Runnable
 	/** This (and only this!) is the final exit procedure of JAP!
 	 *
 	 */
-	public static void goodBye() {
+	public void goodBye() {
 		//stopListener();
+		// show a Reminder message that active contents should be disabled
+		Object[] options = { model.getString("okButton") };
+		JCheckBox checkboxRemindNever=new JCheckBox(model.getString("disableGoodByMessageNeverRemind"));
+		Object[] message={model.getString("disableGoodByMessage"),checkboxRemindNever};
+		if (!mbGoodByMessageNeverRemind)
+			{
+				JOptionPane.showOptionDialog(model.getView(),
+												(Object)message,
+												model.getString("disableGoodByMessageTitle"),
+												JOptionPane.DEFAULT_OPTION,
+												JOptionPane.WARNING_MESSAGE,
+												null, options, options[0]);
+				mbGoodByMessageNeverRemind = checkboxRemindNever.isSelected();
+			}		
 		model.save();
 		System.exit(0);
 	}

@@ -96,8 +96,8 @@ final class JAPHelp extends JDialog implements ActionListener {
     public Dimension getPreferredSize()
 			{
 				Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
-				d.width = Math.min(d.width - 50, 400);
-				d.height = Math.min(d.height - 80, 300);
+				d.width = Math.min(d.width - 50, 600/*400*/);
+				d.height = Math.min(d.height - 80, 350/*300*/);
 				return (d);
 			}
     

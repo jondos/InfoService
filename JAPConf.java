@@ -277,25 +277,62 @@ final class JAPConf extends JDialog
 					public void actionPerformed(ActionEvent e) {
 						m_tfProxyAuthenticationUserID.setEnabled(m_cbProxyAuthentication.isSelected());
 				}});
+				JLabel proxyHostLabel = new JLabel(m_Model.getString("settingsProxyHost"));
+				JLabel proxyPortLabel = new JLabel(m_Model.getString("settingsProxyPort"));
+				JLabel proxyAuthUserIDLabel = new JLabel(JAPMessages.getString("settingsProxyAuthUserID"));
+				// set Font in m_cbProxy in same color as in proxyPortLabel
+				m_cbProxy.setForeground(proxyPortLabel.getForeground());
+				m_cbProxyAuthentication.setForeground(proxyPortLabel.getForeground());
 
 
 				JPanel p = new JPanel();
 				p.setLayout( new BorderLayout() );
 				p.setBorder( new TitledBorder(m_Model.getString("settingsProxyBorder")) );
 				JPanel p1 = new JPanel();
-				p1.setLayout( new GridLayout(7,1) );
+				GridBagLayout g=new GridBagLayout();
+				p1.setLayout( g );
 				p1.setBorder( new EmptyBorder(5,10,10,10) );
+				GridBagConstraints c=new GridBagConstraints();
+				c.anchor=c.NORTHWEST;
+				c.fill=GridBagConstraints.HORIZONTAL;
+				c.gridwidth=1;
+				c.gridx=0;
+				c.gridy=0;
+				c.weightx=1;
+				c.weighty=0;
+				Insets normInsets=new Insets(0,0,3,0);
+				c.insets=normInsets;
+				g.setConstraints(m_cbProxy,c);
 				p1.add(m_cbProxy);
+				c.gridy=1;
+				g.setConstraints(proxyHostLabel,c);
+				p1.add(proxyHostLabel);
+				c.gridy=2;
+				g.setConstraints(m_tfProxyHost,c);
 				p1.add(m_tfProxyHost);
-				JLabel proxyPortLabel = new JLabel(m_Model.getString("settingsProxyPort"));
-				// set Font in m_cbProxy in same color as in proxyPortLabel
-				m_cbProxy.setForeground(proxyPortLabel.getForeground());
-				m_cbProxyAuthentication.setForeground(proxyPortLabel.getForeground());
+				c.gridy=3;
+				g.setConstraints(proxyPortLabel,c);
 				p1.add(proxyPortLabel);
+				c.gridy=4;
+				g.setConstraints(m_tfProxyPortNumber,c);
 				p1.add(m_tfProxyPortNumber);
+				JSeparator seperator=new JSeparator();
+				c.gridy=5;
+				c.insets=new Insets(10,0,0,0);
+				g.setConstraints(seperator,c);
+				p1.add(seperator);
+				c.insets=normInsets;
+				c.gridy=6;
+				c.insets=new Insets(10,0,0,0);
+				g.setConstraints(m_cbProxyAuthentication,c);
 				p1.add(m_cbProxyAuthentication);
-				p1.add(new JLabel(JAPMessages.getString("settingsProxyAuthUserID")));
+				c.gridy=7;
+				g.setConstraints(proxyAuthUserIDLabel,c);
+				p1.add(proxyAuthUserIDLabel);
+				c.gridy=8;
+				g.setConstraints(m_tfProxyAuthenticationUserID,c);
 				p1.add(m_tfProxyAuthenticationUserID);
+				c.gridy=9;
 				p.add(p1, BorderLayout.NORTH);
 				return p;
 			}
@@ -312,21 +349,43 @@ final class JAPConf extends JDialog
 									   public void actionPerformed(ActionEvent e) {
 							   OKPressed();
 							   }});
-				// InfoServer settings
+				JLabel settingsInfoTextLabel = new JLabel(m_Model.getString("settingsInfoText"));
+				JLabel settingsInfoHostLabel = new JLabel(m_Model.getString("settingsInfoHost"));
+				JLabel settingsInfoPortLabel = new JLabel(m_Model.getString("settingsInfoPort"));
+				
 				JPanel p = new JPanel();
 				p.setLayout( new BorderLayout() );
 				p.setBorder( new TitledBorder(m_Model.getString("settingsInfoBorder")) );
 				JPanel p1 = new JPanel();
-				p1.setLayout( new GridLayout(5,1) );
+				GridBagLayout g=new GridBagLayout();
+				p1.setLayout( g );
 				p1.setBorder( new EmptyBorder(5,10,10,10) );
-				// lines
-				p1.add(new JLabel(m_Model.getString("settingsInfoText")));
-				//p1.add(new JLabel(" ")); //vertical spacer
-				p1.add(new JLabel(m_Model.getString("settingsInfoHost")));
+				GridBagConstraints c=new GridBagConstraints();
+				c.anchor=c.NORTHWEST;
+				c.fill=GridBagConstraints.HORIZONTAL;
+				c.gridwidth=1;
+				c.gridx=0;
+				c.gridy=0;
+				c.weightx=1;
+				c.weighty=0;
+				Insets normInsets=new Insets(0,0,3,0);
+				c.insets=normInsets;
+				g.setConstraints(settingsInfoTextLabel,c);
+				p1.add(settingsInfoTextLabel);
+				c.gridy=1;
+				g.setConstraints(settingsInfoHostLabel,c);
+				p1.add(settingsInfoHostLabel);
+				c.gridy=2;
+				g.setConstraints(m_tfInfoHost,c);
 				p1.add(m_tfInfoHost);
-				p1.add(new JLabel(m_Model.getString("settingsInfoPort")));
+				c.gridy=3;
+				g.setConstraints(settingsInfoPortLabel,c);
+				p1.add(settingsInfoPortLabel);
+				c.gridy=4;
+				g.setConstraints(m_tfInfoPortNumber,c);
 				p1.add(m_tfInfoPortNumber);
-				//
+				c.gridy=5;
+				
 				p.add(p1, BorderLayout.NORTH);
 				return p;
 			}
