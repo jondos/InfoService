@@ -98,6 +98,7 @@ final class JAPConf extends JDialog
 		private JCheckBox     m_cbDebugThread;
 		private JCheckBox     m_cbDebugMisc;
 		private JCheckBox     m_cbShowDebugConsole;
+		private JCheckBox			m_cbInfoServiceDisabled;
 		private JSlider				m_sliderDebugLevel;
 
 		private JComboBox			m_comboLanguage;
@@ -757,8 +758,9 @@ final class JAPConf extends JDialog
 						}
 					});
 
+				m_cbInfoServiceDisabled=new JCheckBox("Disable InfoService");
         JPanel p22 = new JPanel();
-				p22.setLayout(new GridLayout(4,1));
+				p22.setLayout(new GridLayout(5,1));
 				//p22.add(bttnPing);
               //////////////////////////////////////////////////////////////////
               //Einfug
@@ -790,6 +792,7 @@ final class JAPConf extends JDialog
         m_sliderDummyTrafficIntervall.setPaintTicks(true);
         m_sliderDummyTrafficIntervall.setSnapToTicks(true);
         p22.add(m_sliderDummyTrafficIntervall);
+        p22.add(m_cbInfoServiceDisabled);
         p2.add(p22, BorderLayout.NORTH);
 
 				// Panel for Debugging Options
@@ -1071,6 +1074,8 @@ final class JAPConf extends JDialog
 				m_cbDebugGui.setSelected(false);
 				m_cbDebugMisc.setSelected(false);
 				m_cbDebugThread.setSelected(false);
+        m_cbDummyTraffic.setSelected(false);
+        m_cbInfoServiceDisabled.setSelected(false);
 			}
 
 	  protected void OKPressed()
@@ -1110,7 +1115,8 @@ final class JAPConf extends JDialog
 				m_Controller.setUseFirewallAuthorization(m_cbProxyAuthentication.isSelected());
 				// Infoservice settings
 				m_Controller.setInfoService(m_tfInfoHost.getText().trim(),Integer.parseInt(m_tfInfoPortNumber.getText().trim()));
-				// Anonservice settings
+				m_Controller.setInfoServiceDisabled(m_cbInfoServiceDisabled.isSelected());
+        // Anonservice settings
 				m_Controller.setAutoConnect(m_cbAutoConnect.isSelected());
 				m_Controller.setAutoReConnect(m_cbAutoReConnect.isSelected());
 				m_Controller.setMinimizeOnStartup(m_cbStartupMinimized.isSelected());
@@ -1178,6 +1184,7 @@ final class JAPConf extends JDialog
 				m_cbDebugThread.setSelected((((JAPDebug.getDebugType()&JAPDebug.THREAD)!=0)?true:false));
 				m_cbDebugMisc.setSelected((((JAPDebug.getDebugType()&JAPDebug.MISC)!=0)?true:false));
 				m_sliderDebugLevel.setValue(JAPDebug.getDebugLevel());
+        m_cbInfoServiceDisabled.setSelected(JAPModel.isInfoServiceDisabled());
 				m_bIgnoreComboLanguageEvents=true;
 				if(m_Controller.getLocale().equals(Locale.ENGLISH))
 					m_comboLanguage.setSelectedIndex(1);
@@ -1206,7 +1213,7 @@ final class JAPConf extends JDialog
 				// infoservice tab
 				m_tfInfoHost.setText(JAPModel.getInfoServiceHost());
 				m_tfInfoPortNumber.setText(String.valueOf(JAPModel.getInfoServicePort()));
-				// anon tab
+        // anon tab
 				AnonServer server = m_Controller.getAnonServer();
 				m_strMixName = server.getName();
 				m_strOldMixName = m_strMixName;

@@ -83,8 +83,8 @@ public final class JAPController implements ProxyListener {
 	private AnonProxy    m_proxyAnon             = null; // service object for anon access
 
 	private boolean  isRunningListener           = false; // true if a listener is running
-	private boolean  canStartService             = false; // indicates if anon service can be started
-	private boolean  alreadyCheckedForNewVersion = false; // indicates if check for new version has already been done
+	//private boolean  canStartService             = false; // indicates if anon service can be started
+	private boolean  m_bAlreadyCheckedForNewVersion = false; // indicates if check for new version has already been done
 	private boolean  mbActCntMessageNotRemind    = false; // indicates if Warning message in setAnonMode has been deactivated for the session
 	private boolean  mbActCntMessageNeverRemind  = false; // indicates if Warning message in setAnonMode has been deactivated forever
 	private boolean  mbDoNotAbuseReminder        = false; // indicates if new warning message in setAnonMode (containing Do no abuse) has been shown
@@ -195,6 +195,7 @@ public final class JAPController implements ProxyListener {
 	 *    porxyAuthUserID="..."         //UserId for the Proxy if Auth is neccesary
 	 *		infoServiceHostName="..."			// hostname of the infoservice
 	 *		infoServicePortnumber=".."		// the portnumber of the info service
+   *		infoServiceDisabled="true/false"		// disable use of InfoService
    *    anonserviceID=".."            //the Id of the anonService
 	 *    anonserviceName=".."          //the name of the anon-service
 	 *		anonHostName=".."							// the hostname of the anon-service
@@ -262,6 +263,7 @@ public final class JAPController implements ProxyListener {
 			host=JAPUtil.parseNodeString(n.getNamedItem("infoServiceHostName"),JAPModel.getInfoServiceHost());
 			port=JAPUtil.parseElementAttrInt(root,"infoServicePortNumber",JAPModel.getInfoServicePort());
 			setInfoService(host,port);
+			setInfoServiceDisabled(JAPUtil.parseNodeBoolean(n.getNamedItem("infoServiceDisabled"),false));
 			// load settings for proxy
 			host=JAPUtil.parseNodeString(n.getNamedItem("proxyHostName"),m_Model.getFirewallHost());
 			port=JAPUtil.parseElementAttrInt(root,"proxyPortNumber",m_Model.getFirewallPort());
@@ -415,7 +417,8 @@ public final class JAPController implements ProxyListener {
       e.setAttribute("infoServiceHostName",((tmpStr==null)?"":tmpStr));
       tmpInt=m_Model.getInfoServicePort();
 			e.setAttribute("infoServicePortNumber",Integer.toString(tmpInt));
-			AnonServer e1 = m_Controller.getAnonServer();
+	    e.setAttribute("infoServiceDisabled",(JAPModel.isInfoServiceDisabled()?"true":"false"));
+  		AnonServer e1 = m_Controller.getAnonServer();
 			e.setAttribute("anonserviceID",((e1.getID()==null)?"":e1.getID()));
 			e.setAttribute("anonserviceName",((e1.getName()==null)?"":e1.getName()));
 			e.setAttribute("anonHostName",   ((e1.getHost()==null)?"":e1.getHost()));
@@ -666,6 +669,11 @@ public final class JAPController implements ProxyListener {
 		    }
 		return m_Controller.m_InfoService;
 	}
+
+  public static void setInfoServiceDisabled(boolean b)
+    {
+      m_Model.setInfoServiceDisabled(b);
+    }
 	//---------------------------------------------------------------------
 /*
 	public void setSocksPortNumber (int p)
@@ -853,22 +861,24 @@ private final class SetAnonModeAsync implements Runnable
     {
 		  synchronized(oSetAnonModeSyncObject)
 		    {
-	        //setAnonMode--> async!!
+	        boolean canStartService=true;
+          //setAnonMode--> async!!
 		      JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:setAnonMode("+anonModeSelected+")");
 		      if ((m_proxyAnon == null) && (anonModeSelected == true))
 			      {//start Anon Mode
 				      view.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 				      JAPSetAnonModeSplash.start(true);
-	            if (alreadyCheckedForNewVersion == false)
+	            if (m_bAlreadyCheckedForNewVersion == false&&!JAPModel.isInfoServiceDisabled())
 					      {
 						      // Check for a new Version of JAP if not already done
 						      int ok = versionCheck();
 						      if (ok != -1)
                     {
 						          // -> we can start anonymity
-						          canStartService = true;
-						          alreadyCheckedForNewVersion = true;
+						          m_bAlreadyCheckedForNewVersion = true;
 						        }
+                  else
+     			          canStartService = false;
 					      }
               if(!canStartService)
                 {
