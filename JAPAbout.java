@@ -3,6 +3,8 @@ import java.awt.Font;
 import java.awt.Dimension;
 import java.awt.Rectangle;
 import java.awt.Color;
+import java.awt.Cursor;
+import java.awt.Insets;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.ActionListener;
@@ -49,6 +51,8 @@ public class JAPAbout extends JDialog
 									aktIndex+=len;
 								}}catch(Exception e){};	
 						textArea=new JEditorPane("text/html",new String(buff).trim());
+						setOpaque(false);
+						getViewport().setOpaque(false);
 						getViewport().add(textArea);
 						textArea.setOpaque(false);
 						//textArea.setSize(w,textArea.getPreferredSize().height);
@@ -76,29 +80,7 @@ public class JAPAbout extends JDialog
 				
 				public void run()
 					{
-	/*					Document d = textArea.getDocument();
-						HTMLDocument doc = (HTMLDocument) d;
-						HTMLDocument.Iterator iter = doc.getIterator(HTML.Tag.A);
-							for (; iter.isValid(); iter.next()) {
-								AttributeSet a = iter.getAttributes();
-								String nm = (String) a.getAttribute(HTML.Attribute.NAME);
-								if ((nm != null) && nm.equals("begin"))									{
-		    // found a matching reference in the document.
-		    System.out.println("found begin");									try {
-			Rectangle r = textArea.modelToView(iter.getStartOffset());
-			if (r != null) {
-			    // the view is visible, scroll it to the 
-			    // center of the current visible area.
-			  System.out.println(r.y);  				Rectangle vis = textArea.getVisibleRect();
-			    //r.y -= (vis.height / 2);
-			    r.height = vis.height;
-			    textArea.scrollRectToVisible(r);
-			}
-		    } catch (Exception ble) {
-						ble.printStackTrace();										getToolkit().beep();
-		    }
-								}}
-		*/
+	
 						int i=100;
 						Point p=new Point(0,i);
 						getViewport().setViewPosition(p);
@@ -107,6 +89,7 @@ public class JAPAbout extends JDialog
 						while(bRun)
 							{
 							
+								try{
 								if(i>=textArea.getPreferredSize().height/*-dimension.height*/)
 									{	
 										i=0;
@@ -115,8 +98,12 @@ public class JAPAbout extends JDialog
 								//textArea.getView
 								p.y=i;
 								getViewport().setViewPosition(p);
-								i++;
-								try{Thread.sleep(65);}catch(Exception e){}
+								i++;}
+								catch(Throwable  t)
+									{									 
+										//t.printStackTrace();
+									}
+								try{Thread.sleep(75);}catch(Exception e){}
 							}									
 					}
 			}
@@ -125,6 +112,8 @@ public class JAPAbout extends JDialog
 		public JAPAbout(Frame parent)
 			{
 				super(parent,"Info...",false);
+				Cursor oldCursor=parent.getCursor();
+				parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 				addWindowListener(new WindowAdapter() {
 					public void windowClosing(WindowEvent e) {OKPressed();}
 				});	
@@ -144,10 +133,10 @@ public class JAPAbout extends JDialog
 						   public void actionPerformed(ActionEvent e) {
 				   OKPressed();
 				   }});
+				labelSplash.setLayout(null);
 				labelSplash.setSize(370,173);
 				labelSplash.add(version);
 				labelSplash.add(verstxt);
-				labelSplash.setLayout(null);
 				labelSplash.add(bttnOk);
 				bttnOk.setSize(bttnOk.getPreferredSize());
 				int x=350-5-bttnOk.getSize().width;
@@ -162,12 +151,17 @@ public class JAPAbout extends JDialog
 				getLayeredPane().setLayout(null);
 				getLayeredPane().add(sp);
 				sp.setLocation(4,52);
-				pack();
-				setLocationRelativeTo(parent);
-				setResizable(false);
-				setVisible(true);
+				setLocation(-380,-200);
+				setVisible(true);   //we have to ensure that the window is visible before the
+				setResizable(false); //get the insets - also the window must look like it should
+				Insets in=getInsets(); //so for instance we need the 'NoResizable'-Border
+				setResizable(true); //we want to resize
+				setSize(370+in.left+in.right,173+in.bottom+in.top);
+				setResizable(false); //but the user shouldn't
+				setLocationRelativeTo(parent); //showing centerd to JAP-Main
 				toFront();
 				sp.startIt();
+				parent.setCursor(oldCursor);
 			}
 		
 		private void OKPressed()

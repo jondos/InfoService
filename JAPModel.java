@@ -58,7 +58,7 @@ import anon.JAPAnonServiceListener;
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPModel implements JAPAnonServiceListener{
 
-	public static final String aktVersion = "00.01.003"; // Version of JAP
+	public static final String aktVersion = "00.01.004"; // Version of JAP
 
 	private int      portNumber            = 4001;
 	private boolean  mblistenerIsLocal     = true;  // indicates whether the Listener serves for localhost only or not
@@ -1013,20 +1013,16 @@ private final class SetAnonModeAsync implements Runnable
 		System.exit(0);
 	}
 
-	public static void aboutJAP() {
-	/*	JOptionPane.showMessageDialog
-			(view,
-			 model.TITLE + "\n" +
-			  model.getString("infoText") + "\n\n" +
-			  model.AUTHOR + "\n\n" +
-			  model.getString("infoEMail") + "\n" +
-			  model.getString("infoURL") + "\n\n" +
-			  model.getString("version")+": "+model.aktVersion+"\n\n",
-				model.getString("aboutBox"),
-				JOptionPane.INFORMATION_MESSAGE
-			);*/
-		new JAPAbout(view);
-	}
+	public static void aboutJAP() 
+		{
+			try
+				{
+					new JAPAbout(view);
+				}
+			catch(Throwable t)
+				{
+				};
+		}
 
 	/** Try to load all available MIX-Cascades form the InfoService...
 	 */

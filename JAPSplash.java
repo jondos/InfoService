@@ -25,8 +25,6 @@ OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABIL
 IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY 
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
-//import java.awt.BorderLayout;
-//import java.awt.Color;
 import java.awt.Window;
 import java.awt.Frame;
 import java.awt.Font;
@@ -36,9 +34,6 @@ import java.awt.Graphics;
 import java.awt.FontMetrics;
 import java.awt.MediaTracker;
 import java.io.InputStream;
-//import javax.swing.JLabel;
-//import javax.swing.JPanel;
-//import javax.swing.ImageIcon;
 
 final class JAPSplash extends Window  
 	{
@@ -58,17 +53,17 @@ final class JAPSplash extends Window
 		    xVersion=yVersion=100;
 				Toolkit t=Toolkit.getDefaultToolkit();
 				MediaTracker ma=new MediaTracker(this);
-				InputStream in=JAPSplash.class.getResourceAsStream("images/splash.gif");
+				InputStream in=JAPSplash.class.getResourceAsStream(JAPModel.SPLASHFN);
 				int len;
 				int aktIndex;
 				if(in!=null)
 					{
-						byte[] buff=new byte[26000];
+						byte[] buff=new byte[27000];
 						len=0;
 						aktIndex=0;
 						try
 							{
-								while((len=in.read(buff,aktIndex,26000-aktIndex))>0)
+								while((len=in.read(buff,aktIndex,27000-aktIndex))>0)
 									aktIndex+=len;
 								imageSplash=t.createImage(buff,0,aktIndex);
 								ma.addImage(imageSplash,1);
@@ -78,7 +73,7 @@ final class JAPSplash extends Window
 							{
 							}
 					}
-				in=JAPSplash.class.getResourceAsStream("images/busy.gif");
+				in=JAPSplash.class.getResourceAsStream(JAPModel.BUSYFN);
 				if(in!=null)
 					{
 						byte[] buff1=new byte[7000];
@@ -107,10 +102,7 @@ final class JAPSplash extends Window
 				try{ma.waitForAll();}catch(Exception e){};
 				setVisible(true);
 				toFront();
-//				paint(getGraphics());
-				//setSize(350,173);
 				JAPUtil.centerFrame(this);
-//				System.out.println("----------------------- SPLASH FINISHED -----------------------");
 			}
 		
 		public void update(Graphics g)
@@ -133,47 +125,6 @@ final class JAPSplash extends Window
 				g.drawImage(imageOffScreen,0,0,this);
 			}
 
-		/*public  JAPSplash (int i) {
-//		super(new Frame());
-//		setBackground(Color.black);
-//		Toolkit t=Toolkit.getDefaultToolkit();
-//		InputStream in=this.class.getRessourceAsStream("images/splash.gif");
-//		byte buff=new byte[65000];
-//		int len=0;
-//		while((len=in.read(buff,aktIndex,65000-aktIndex))!=0)
-//			aktIndex+=len;
-//		Image image=t.createImage(buff,0,aktIndex);
-		setLayout(null);
-		add(new SplashCanvas());
-		//JLabel splashLabel = new JLabel(JAPUtil.loadImageIcon(m.SPLASHFN, false));
-		
-		//JPanel p1 = new JPanel();
-		//p1.setBackground(Color.black);
-		//p1.setForeground(Color.white);
-
-		//JLabel waitLabel   = new JLabel(m.getString("loading"), JLabel.CENTER);
-	//	waitLabel.setOpaque(false);
-		//waitLabel.setBackground(Color.black);
-		//waitLabel.setForeground(Color.white);
-		//waitLabel.setFont(new Font("Sans",Font.PLAIN,9));
-
-		//ImageIcon busy = JAPUtil.loadImageIcon(m.BUSYFN, false);
-		//JLabel busyLabel = new JLabel(busy);
-		//busyLabel.setBackground(Color.black);
-		
-		//p1.add(busyLabel);
-		//p1.add(waitLabel);
-
-		//add(splashLabel, BorderLayout.NORTH);
-		//add(p1, BorderLayout.CENTER);
-
-		//pack();
-		setSize(350,173);
-		JAPUtil.centerFrame(this);
-		setVisible(true);
-		toFront();
-		System.out.println("----------------------- SPLASH FINISHED -----------------------");
-	}*/
 }
 
 
