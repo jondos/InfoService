@@ -52,8 +52,8 @@ public class FirstOnionRouterFactory {
 			return null;
 		}
 		firstOR.start();
-		this.m_firstOnionRouters.add(firstOR);
-		this.m_firstORDescription.add(d);
+		this.m_firstOnionRouters.addElement(firstOR);
+		this.m_firstORDescription.addElement(d);
 		return firstOR;
 	}
 
