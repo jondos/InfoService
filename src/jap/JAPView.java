@@ -256,7 +256,7 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 			Dimension ds = Toolkit.getDefaultToolkit().getScreenSize();
 			if (m.m_OldMainWindowLocation != null && m.m_OldMainWindowLocation.x >= 0 &&
 				m.m_OldMainWindowLocation.y > 0 /*&&m.m_OldMainWindowLocation.x<ds.width&&
-					  m.m_OldMainWindowLocation.y<ds.height*/
+					   m.m_OldMainWindowLocation.y<ds.height*/
 				)
 			{
 				setLocation(m.m_OldMainWindowLocation);
@@ -694,36 +694,35 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 			showConfigDialog();
 			/*else if (event.getSource() == portB)
 			 showConfigDialog(JAPConf.PORT_TAB);
-				 else if (event.getSource() == httpB)
+			  else if (event.getSource() == httpB)
 			 showConfigDialog(JAPConf.HTTP_TAB);
-				 else if (event.getSource() == isB)
+			  else if (event.getSource() == isB)
 			 showConfigDialog(JAPConf.INFO_TAB);
-				 else if (event.getSource() == anonB)
-			 showConfigDialog(JAPConf.ANON_TAB);
+			  else if (event.getSource() == anonB)
+			 showConfigDialog(JAPConf.ANON_TAB);*/
+		}
+		else if (event.getSource() == m_bttnAnonConf)
+		{
+			showConfigDialog(JAPConf.ANON_TAB);
+		}
+		else if (event.getSource() == m_bttnInfo)
+		{
+			controller.aboutJAP();
+		}
+		else if (event.getSource() == m_bttnHelp)
+		{
+			showHelpWindow();
+			//else if (event.getSource() == anonCheckBox)
+			//	controller.setAnonMode(anonCheckBox.isSelected());
+		}
+		else if (event.getSource() == m_cbAnon)
+		{
+			controller.setAnonMode(m_cbAnon.isSelected());
 		}
 		else
-		*/ if (event.getSource() == m_bttnAnonConf)
-	   {
-		   showConfigDialog(JAPConf.ANON_TAB);
-	   }
-	   else if (event.getSource() == m_bttnInfo)
-	   {
-		   controller.aboutJAP();
-	   }
-	   else if (event.getSource() == m_bttnHelp)
-	   {
-		   showHelpWindow();
-		   //else if (event.getSource() == anonCheckBox)
-		   //	controller.setAnonMode(anonCheckBox.isSelected());
-	   }
-	   else if (event.getSource() == m_cbAnon)
-	   {
-		   controller.setAnonMode(m_cbAnon.isSelected());
-	   }
-	   else
-	   {
-		   LogHolder.log(LogLevel.DEBUG, LogType.GUI, "Event ?????: " + event.getSource());
-	   }
+		{
+			LogHolder.log(LogLevel.DEBUG, LogType.GUI, "Event ?????: " + event.getSource());
+		}
 	}
 
 	private void showHelpWindow()

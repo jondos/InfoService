@@ -202,12 +202,7 @@ public class HTTPConnectionFactory
 		synchronized (this)
 		{
 			/* get always the current proxy settings */
-			String host = target.getIpString();
-			if (host == null)
-			{
-				host = target.getHostName();
-			}
-			newConnection = new HTTPConnection(host, target.getPort());
+      newConnection = new HTTPConnection(target.getHost(), target.getPort());
 			if (proxyAuthUserName != null)
 			{
 				/* set the proxy authorization if neccessary (only HTTP proxies) */

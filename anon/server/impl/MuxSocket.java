@@ -214,11 +214,7 @@ public final class MuxSocket implements Runnable
 			{
 				try
 				{
-					String host = mixCascade.getListenerInterface(l).getIpString();
-					if (host == null)
-					{
-						host = mixCascade.getListenerInterface(l).getHostName();
-					}
+					String host = mixCascade.getListenerInterface(l).getHost();
 					m_ioSocket = new ProxyConnection(fwType, fwHost, fwPort, fwUserID, fwPasswd, host,
 						mixCascade.getListenerInterface(l).getPort());
 					if (m_ioSocket != null)

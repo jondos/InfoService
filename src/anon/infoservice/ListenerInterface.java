@@ -39,14 +39,9 @@ public class ListenerInterface
 {
 
 	/**
-	 * This is the IP address string for this interface.
-	 */
-	private String ipString;
-
-	/**
-	 * This is the hostname of this interface.
-	 */
-	private String hostName;
+   * This is the host of this interface (hostname or IP).
+   */
+  private String inetHost;
 
 	/**
 	 * This is the representation of the port of the ListenerInterface.
@@ -83,102 +78,31 @@ public class ListenerInterface
 		{
 			throw (new Exception("ListenerInterface: Port is invalid."));
 		}
-		NodeList ipNodes = listenerInterfaceNode.getElementsByTagName("IP");
-		if (ipNodes.getLength() == 0)
-		{
-			throw (new Exception("ListenerInterface: Error in XML structure."));
-		}
-		Element ipNode = (Element) (ipNodes.item(0));
-		String tmpIpString = null;
-		if (ipNode.getFirstChild() != null)
-		{
-			/* it seems to be, that if you add an empty String as an child node, that no child node is
-			 * added
-			 */
-			tmpIpString = ipNode.getFirstChild().getNodeValue();
-		}
 		NodeList hostNodes = listenerInterfaceNode.getElementsByTagName("Host");
 		if (hostNodes.getLength() == 0)
 		{
 			throw (new Exception("ListenerInterface: Error in XML structure."));
 		}
 		Element hostNode = (Element) (hostNodes.item(0));
-		String tmpHostName = hostNode.getFirstChild().getNodeValue();
-		try
-		{
-			if ( (tmpIpString == null) || (tmpIpString.equals("")))
-			{
-				/* if we would use InetAddress.getByName(), we would get the address of the localhost ->
-				 * throw an exception to skip the IP test
-				 */
-				throw (new Exception("ListenerInterface: No IP Address. Skip IP check."));
-			}
-			/* check the validity of the IP address */
-			InetAddress interfaceAddress = InetAddress.getByName(tmpIpString);
-			this.ipString = interfaceAddress.getHostAddress();
-			this.hostName = interfaceAddress.getHostName();
-		}
-		catch (Exception e)
-		{
-			try
-			{
-				/* IP address is invalid -> try the hostname */
-				InetAddress interfaceAddress = InetAddress.getByName(tmpHostName);
-				this.ipString = interfaceAddress.getHostAddress();
-				this.hostName = interfaceAddress.getHostName();
-			}
-			catch (Exception e2)
-			{
-				/* The address could not be resolved, maybe we use a proxy and don't have a DNS server.
-				 * Believe that the hostName is correct.
-				 */
-				if (tmpIpString == "")
-				{
-					/* Can be, if we have stored a user defined interface and now load it again from XML
-					 * file. We only have to do this with the IP because it is the prefered info. JAP tries
-					 * always the IP first, if it is null, it takes the hostname.
-					 */
-					tmpIpString = null;
-				}
-				this.ipString = tmpIpString;
-				this.hostName = tmpHostName;
-			}
-		}
+    inetHost = hostNode.getFirstChild().getNodeValue();
 	}
 
-	/**
-	 * Creates a new ListenerInterface from a hostname / IP address and a port. If you supply a
-	 * hostname, there will be performed a lookup after the IP address. If you supply an IP address,
-	 * there will be performed a lookup after the hostname. If lookup is not successful (because you
-	 * are behind a proxy and don't have DNS), we believe that the hostName is ok (no problem too,
-	 * if it is an IP address) and set the IP address to null.
-	 *
-	 * @param hostName The hostname or the IP address of this interface.
-	 * @param port The port of this interface (1 <= port <= 65535).
-	 */
-	public ListenerInterface(String hostName, int port) throws Exception
-	{
-		if ( (port < 1) || (port > 65535))
-		{
-			throw (new Exception("ListenerInterface: Port is invalid."));
-		}
-		try
-		{
-			InetAddress interfaceAddress = InetAddress.getByName(hostName);
-			this.ipString = interfaceAddress.getHostAddress();
-			this.hostName = interfaceAddress.getHostName();
-		}
-		catch (Exception e)
-		{
-			/* The address could not be resolved, maybe we use a proxy and don't have a DNS server.
-			 * Believe that the hostName is correct.
-			 */
-			this.ipString = null;
-			this.hostName = hostName;
-		}
-		this.inetPort = port;
-		this.protocolType = "unknown";
-	}
+  /**
+   * Creates a new ListenerInterface from a hostname / IP address and a port.
+   *
+   * @param hostName The hostname or the IP address of this interface.
+   * @param port The port of this interface (1 <= port <= 65535).
+   */
+  public ListenerInterface(String host, int port) throws Exception
+  {
+    if ( (port < 1) || (port > 65535))
+    {
+      throw (new Exception("ListenerInterface: Port is invalid."));
+    }
+    inetPort = port;
+    inetHost = host;
+    protocolType = "unknown";
+  }
 
 	/**
 	 * Creates an XML node without signature for this ListenerInterface.
@@ -190,46 +114,28 @@ public class ListenerInterface
 	public Element toXmlNode(Document doc)
 	{
 		Element listenerInterfaceNode = doc.createElement("ListenerInterface");
-		/* Create the child nodes of ListenerInterface (Type, Port, IP, Host) */
-		Element typeNode = doc.createElement("Type");
-		typeNode.appendChild(doc.createTextNode(protocolType));
-		Element portNode = doc.createElement("Port");
-		portNode.appendChild(doc.createTextNode(Integer.toString(inetPort)));
-		Element ipNode = doc.createElement("IP");
-		String tmpIpString = ipString;
-		if (tmpIpString == null)
-		{
-			tmpIpString = "";
-		}
-		ipNode.appendChild(doc.createTextNode(tmpIpString));
-		Element hostNode = doc.createElement("Host");
-		hostNode.appendChild(doc.createTextNode(hostName));
-		listenerInterfaceNode.appendChild(typeNode);
-		listenerInterfaceNode.appendChild(portNode);
-		listenerInterfaceNode.appendChild(ipNode);
-		listenerInterfaceNode.appendChild(hostNode);
-		return listenerInterfaceNode;
-	}
+   /* Create the child nodes of ListenerInterface (Type, Port, Host) */
+    Element typeNode = doc.createElement("Type");
+    typeNode.appendChild(doc.createTextNode(protocolType));
+    Element portNode = doc.createElement("Port");
+    portNode.appendChild(doc.createTextNode(Integer.toString(inetPort)));
+    Element hostNode = doc.createElement("Host");
+    hostNode.appendChild(doc.createTextNode(inetHost));
+    listenerInterfaceNode.appendChild(typeNode);
+    listenerInterfaceNode.appendChild(portNode);
+    listenerInterfaceNode.appendChild(hostNode);
+    return listenerInterfaceNode;
+  }
 
-	/**
-	 * Get the IP address of this interface as a String.
-	 *
-	 * @return The IP address String of this interface.
-	 */
-	public String getIpString()
-	{
-		return ipString;
-	}
-
-	/**
-	 * Get the hostname of this interface as a String.
-	 *
-	 * @return The hostname of this interface.
-	 */
-	public String getHostName()
-	{
-		return hostName;
-	}
+  /**
+   * Get the host (hostname or IP) of this interface as a String.
+   *
+   * @return The host of this interface.
+   */
+  public String getHost()
+  {
+    return inetHost;
+  }
 
 	/**
 	 * Get the port of this interface.
@@ -239,4 +145,36 @@ public class ListenerInterface
 	{
 		return inetPort;
 	}
+  
+  /**
+   * Returns a String equal to getHost(). If getHost() is an IP, we try to find the hostname
+   * and add it in brackets. If getHost() is a hostname, we try to find the IP and add
+   * it in brackets. If we can't resolve getHost() (IP or hostname), only getHost() without
+   * the additional information is returned.
+   *
+   * @return The host of this interface with additional information.
+   */
+  public String getHostAndIp() {
+    String r_HostAndIp = inetHost;
+    try {
+      InetAddress interfaceAddress = InetAddress.getByName(inetHost);
+      String ipString = interfaceAddress.getHostAddress();
+      if (ipString.equals(inetHost)) {
+        /* inetHost is an IP, try to add the hostname */       
+        String hostName = interfaceAddress.getHostName();
+        if ((!hostName.equals(inetHost)) && (!hostName.equals(""))) {
+          /* we got the hostname via DNS, add it */
+          r_HostAndIp = r_HostAndIp + " (" + hostName + ")";
+        }
+      }
+      else {
+        /* inetHost is a hostname, add the IP */
+        r_HostAndIp = r_HostAndIp + " (" + ipString + ")";
+      }
+    }
+    catch (Exception e) {
+      /* can't resolve inetHost, maybe we are behind a proxy, return only inetHost */
+    }
+    return r_HostAndIp;
+  }
 }
