@@ -440,10 +440,11 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 		ownTrafficBytesLabel.setText(NumberFormat.getInstance().format(model.getNrOfBytes())+" Bytes");
     }
 	
-	public void valuesChanged (Object o)
+	public synchronized void valuesChanged (JAPModel m)
 		{
-			//JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPView:view.valuesChanged()");
+			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPView:view.valuesChanged() - start");
 			updateValues();
+			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPView:view.valuesChanged() - end");
 		}
 
 }
