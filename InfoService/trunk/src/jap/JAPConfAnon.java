@@ -118,9 +118,16 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	private JButton m_enterCascadeButton;
 	private JButton m_editCascadeButton;
 	private JButton m_deleteCascadeButton;
+	private JButton m_cancelCascadeButton;
 
 	private JTextField m_manHostField;
 	private JTextField m_manPortField;
+
+	private boolean mb_backSpacePressed;
+	private boolean mb_manualCascadeNew;
+
+	private String m_oldCascadeHost;
+	private String m_oldCascadePort;
 
 	protected JAPConfAnon(IJAPConfSavePoint savePoint)
 	{
@@ -288,7 +295,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		m_rootPanelConstraints.anchor = GridBagConstraints.NORTHWEST;
 		m_rootPanelConstraints.gridx = 0;
 		m_rootPanelConstraints.gridy = 3;
-		m_rootPanelConstraints.weightx = 0;
+		m_rootPanelConstraints.weightx = 1.0;
 		m_rootPanelConstraints.weighty = 0;
 		pRoot.add(m_serverInfoPanel, m_rootPanelConstraints);
 	}
@@ -318,7 +325,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		c.weightx = 1;
 		c.gridx = 1;
 		c.gridy = 0;
-		c.gridwidth = 2;
+		c.gridwidth = 3;
 		m_manualPanel.add(m_manHostField, c);
 		m_manPortField = new JTextField();
 		m_manPortField.setText(a_port);
@@ -332,37 +339,42 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		c.anchor = GridBagConstraints.NORTHEAST;
 		if (a_newCascade)
 		{
-			m_enterCascadeButton = new JButton(JAPMessages.getString("okButton"));
-			m_enterCascadeButton.addActionListener(this);
-			m_manualPanel.add(m_enterCascadeButton, c);
+			/*m_enterCascadeButton = new JButton(JAPMessages.getString("okButton"));
+			 m_enterCascadeButton.addActionListener(this);
+			 m_manualPanel.add(m_enterCascadeButton, c);*/
 			try
 			{
 				MixCascade dummyCascade = new MixCascade(JAPMessages.getString("dummyCascade"), 0);
 				m_Controller.getMixCascadeDatabase().addElement(dummyCascade);
 				this.updateMixCascadeCombo();
-				m_listMixCascade.setSelectedIndex(m_listMixCascade.getModel().getSize()-1);
+				m_listMixCascade.setSelectedIndex(m_listMixCascade.getModel().getSize() - 1);
 				m_manHostField.selectAll();
 			}
 			catch (Exception a_e)
 			{
-				JAPUtil.showMessageBox((JFrame)this.getRootPanel().getParent(), JAPMessages.getString("errorCreateCascadeDesc"),
-					JAPMessages.getString("errorCreateCascade"), JOptionPane.ERROR_MESSAGE);
+				JAPUtil.showMessageBox( (JFrame)this.getRootPanel().getParent(),
+									   JAPMessages.getString("errorCreateCascadeDesc"),
+									   JAPMessages.getString("errorCreateCascade"), JOptionPane.ERROR_MESSAGE);
 			}
 		}
 		else
 		{
 			m_editCascadeButton = new JButton(JAPMessages.getString("okButton"));
 			m_editCascadeButton.addActionListener(this);
-			m_editCascadeButton.setVisible(true);
+			c.gridx = 1;
+			c.weightx = 1;
 			m_manualPanel.add(m_editCascadeButton, c);
 			m_deleteCascadeButton = new JButton(JAPMessages.getString("manualServiceDelete"));
 			m_deleteCascadeButton.addActionListener(this);
-			c.gridx = 1;
-			c.weightx = 1;
+			c.gridx = 3;
+			c.weightx = 0;
 			m_manualPanel.add(m_deleteCascadeButton, c);
+			m_cancelCascadeButton = new JButton(JAPMessages.getString("cancelButton"));
+			m_cancelCascadeButton.addActionListener(this);
+			c.gridx = 2;
+			m_manualPanel.add(m_cancelCascadeButton, c);
 			m_manHostField.addKeyListener(this);
 			m_manPortField.addKeyListener(this);
-
 		}
 		if (m_serverPanel != null)
 		{
@@ -410,36 +422,57 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		c.gridx = 0;
 		c.gridy = 1;
 		c.gridheight = 3;
-		c.gridwidth = 2;
+		c.gridwidth = 1;
+		c.weightx=1.0;
+		c.weighty=1.0;
 		c.fill = GridBagConstraints.BOTH;
+		c.insets = new Insets(5, 5, 0, 5);
 		JScrollPane scroll = new JScrollPane(m_listMixCascade);
 		scroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 		scroll.setMinimumSize(new Dimension(100, 100));
 		m_cascadesPanel.add(scroll, c);
-		c.gridheight = 1;
-		c.gridwidth = 1;
 
-		c.insets = new Insets(2, 5, 0, 5);
+		JPanel panelBttns = new JPanel(new GridBagLayout());
+		GridBagConstraints c1 = new GridBagConstraints();
+		c1.fill = GridBagConstraints.VERTICAL;
+		c1.anchor = GridBagConstraints.WEST;
+		c1.gridheight = 1;
+		c1.gridwidth = 1;
+		c1.gridx = 0;
+		c1.gridy = 0;
+		c1.insets = new Insets(0, 0, 0, 10);
 		m_reloadCascadesButton = new JButton(JAPMessages.getString("reloadCascades"));
 		m_reloadCascadesButton.setIcon(JAPUtil.loadImageIcon(JAPConstants.IMAGE_RELOAD, true));
 		m_reloadCascadesButton.setDisabledIcon(JAPUtil.loadImageIcon(JAPConstants.IMAGE_RELOAD_DISABLED, true));
 		m_reloadCascadesButton.setPressedIcon(JAPUtil.loadImageIcon(JAPConstants.IMAGE_RELOAD_ROLLOVER, true));
 
 		m_reloadCascadesButton.addActionListener(this);
-		c.gridy = 4;
-		m_cascadesPanel.add(m_reloadCascadesButton, c);
+		panelBttns.add(m_reloadCascadesButton, c1);
 
 		m_selectCascadeButton = new JButton(JAPMessages.getString("selectCascade"));
 		/* maybe the button must be disabled (if connect-via-forwarder is selected) */
 		m_selectCascadeButton.setEnabled(!JAPModel.getInstance().getRoutingSettings().isConnectViaForwarder());
 		m_selectCascadeButton.addActionListener(this);
-		c.gridx = 1;
-		m_cascadesPanel.add(m_selectCascadeButton, c);
+		c1.gridx = 1;
+		panelBttns.add(m_selectCascadeButton, c1);
 
 		m_manualCascadeButton = new JButton(JAPMessages.getString("manualCascade"));
 		m_manualCascadeButton.addActionListener(this);
-		c.gridx = 2;
-		m_cascadesPanel.add(m_manualCascadeButton, c);
+		c1.gridx = 2;
+		c1.weightx= 1.0;
+		panelBttns.add(m_manualCascadeButton, c1);
+
+		c.gridx = 0;
+		c.gridy = 5;
+		c.gridheight = 1;
+		c.gridwidth = 4;
+		c.weightx = 1.0;
+		c.weighty=0;
+		c.anchor = GridBagConstraints.NORTHWEST;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.insets = new Insets(0, 5, 0, 0);
+
+		m_cascadesPanel.add(panelBttns, c);
 
 		c.insets = new Insets(5, 20, 0, 5);
 
@@ -447,6 +480,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		c.gridx = 2;
 		c.gridy = 1;
 		c.weightx = 0;
+		c.gridwidth = 1;
 		c.fill = GridBagConstraints.NONE;
 		m_cascadesPanel.add(l, c);
 
@@ -454,7 +488,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		m_numOfUsersLabel = new JLabel("");
 		c.gridx = 3;
 		c.gridy = 1;
-		c.weightx = 1;
+		c.weightx = 0;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		m_cascadesPanel.add(m_numOfUsersLabel, c);
 
@@ -470,7 +504,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		m_reachableLabel = new JAPMultilineLabel("");
 		c.gridx = 3;
 		c.gridy = 2;
-		c.weightx = 1;
+		c.weightx = 0;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		m_cascadesPanel.add(m_reachableLabel, c);
 
@@ -486,15 +520,22 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		m_portsLabel = new JAPMultilineLabel("");
 		c.gridx = 3;
 		c.gridy = 3;
-		c.weightx = 1;
+		c.weightx = 0;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		m_cascadesPanel.add(m_portsLabel, c);
 
+	    c.gridx=3;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridy = 4;
+		m_cascadesPanel.add(new JLabel("                                               "), c);
+
 		m_rootPanelConstraints.gridx = 0;
 		m_rootPanelConstraints.gridy = 0;
-		m_rootPanelConstraints.insets = new Insets(10, 10, 10, 10);
+		m_rootPanelConstraints.insets = new Insets(10, 10, 0, 10);
 		m_rootPanelConstraints.anchor = GridBagConstraints.NORTHWEST;
-		m_rootPanelConstraints.weightx = 1;
+		m_rootPanelConstraints.fill = GridBagConstraints.BOTH;
+		m_rootPanelConstraints.weightx = 1.0;
+		m_rootPanelConstraints.weighty = 1.0;
 
 		pRoot.add(m_cascadesPanel, m_rootPanelConstraints);
 
@@ -518,14 +559,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 		drawCascadesPanel();
 		drawServerInfoPanel("", "", "");
-
-		m_rootPanelConstraints.gridx = 0;
-		m_rootPanelConstraints.gridy = 3;
-		m_rootPanelConstraints.anchor = GridBagConstraints.NORTHWEST;
-		m_rootPanelConstraints.fill = GridBagConstraints.VERTICAL;
-		m_rootPanelConstraints.weighty = 1;
-		JPanel fillPanel = new JPanel();
-		pRoot.add(fillPanel, m_rootPanelConstraints);
 	}
 
 	public void itemStateChanged(ItemEvent e)
@@ -698,7 +731,19 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 	public void actionPerformed(ActionEvent e)
 	{
-		if (e.getSource() == m_reloadCascadesButton)
+		if (e.getSource() == m_cancelCascadeButton)
+		{
+			if (mb_manualCascadeNew)
+			{
+				this.deleteManualCascade();
+			}
+			else
+			{
+				m_manHostField.setText(m_oldCascadeHost);
+				m_manPortField.setText(m_oldCascadePort);
+			}
+		}
+		else if (e.getSource() == m_reloadCascadesButton)
 		{
 			fetchCascades(false);
 		}
@@ -723,6 +768,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		else if (e.getSource() == m_manualCascadeButton)
 		{
 			this.drawManualPanel(null, null, true);
+			mb_manualCascadeNew = true;
+			m_deleteCascadeButton.setEnabled(false);
 		}
 		else if (e.getSource() == m_enterCascadeButton)
 		{
@@ -758,7 +805,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		{
 			LogHolder.log(LogLevel.ERR, LogType.MISC, "Cannot edit cascade");
 			JOptionPane.showMessageDialog(this.getRootPanel(), JAPMessages.getString("errorCreateCascadeDesc"),
-				JAPMessages.getString("errorCreateCascade"), JOptionPane.ERROR_MESSAGE);
+										  JAPMessages.getString("errorCreateCascade"),
+										  JOptionPane.ERROR_MESSAGE);
 		}
 	}
 
@@ -822,18 +870,18 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		  {
 		   if (e.getClickCount() == 2)
 		   {
-			int index = m_listMixCascade.locationToIndex(e.getPoint());
-			MixCascade c;
-			try
-			{
-			 c = (MixCascade) m_listMixCascade.getModel().getElementAt(index);
-			}
-			catch (ClassCastException a_e)
-			{
-			 return;
-			}
-			m_Controller.setCurrentMixCascade(c);
-			m_listMixCascade.repaint();
+		 int index = m_listMixCascade.locationToIndex(e.getPoint());
+		 MixCascade c;
+		 try
+		 {
+		  c = (MixCascade) m_listMixCascade.getModel().getElementAt(index);
+		 }
+		 catch (ClassCastException a_e)
+		 {
+		  return;
+		 }
+		 m_Controller.setCurrentMixCascade(c);
+		 m_listMixCascade.repaint();
 		   }
 		  }*/
 	}
@@ -954,6 +1002,10 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 					this.drawManualPanel(cascade.getListenerInterface(0).getHost(),
 										 String.valueOf(cascade.getListenerInterface(0).getPort()),
 										 false);
+					mb_manualCascadeNew = false;
+					m_deleteCascadeButton.setEnabled(true);
+					m_oldCascadeHost = m_manHostField.getText();
+					m_oldCascadePort = m_manPortField.getText();
 				}
 
 				if (m_Controller.getCurrentMixCascade().getName().equalsIgnoreCase(cascade.getName()))
@@ -976,10 +1028,15 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	 */
 	public void keyTyped(KeyEvent e)
 	{
-		if (e.getSource() == m_manHostField || e.getSource() == m_manPortField)
+		if (e.getSource() == m_manPortField)
 		{
-			m_editCascadeButton.setVisible(true);
+			char theKey = e.getKeyChar();
+			if ( ( (int) theKey < 48 || (int) theKey > 57) && !mb_backSpacePressed)
+			{
+				e.consume();
+			}
 		}
+
 	}
 
 	/**
@@ -989,6 +1046,21 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	 */
 	public void keyPressed(KeyEvent e)
 	{
+		if (e.getSource() == m_manHostField || e.getSource() == m_manPortField)
+		{
+			m_editCascadeButton.setVisible(true);
+		}
+		if (e.getSource() == m_manPortField)
+		{
+			if (e.getKeyCode() == e.VK_BACK_SPACE)
+			{
+				mb_backSpacePressed = true;
+			}
+			else
+			{
+				mb_backSpacePressed = false;
+			}
+		}
 	}
 
 	/**

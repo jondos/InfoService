@@ -209,9 +209,9 @@ final class JAPHelp extends JDialog implements ActionListener, PropertyChangeLis
 	public Dimension getPreferredSize()
 	{
 		Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
-		d.width = Math.min(d.width - 50, 600 /*400*/);
-		d.height = Math.min(d.height - 80, 350 /*300*/);
-		return (d);
+		d.width = Math.min(d.width - 50, 850 /*400*/);
+		d.height = Math.min(d.height - 80, 600 /*300*/);
+		return d;
 	}
 
 	public void actionPerformed(ActionEvent e)
@@ -300,7 +300,7 @@ final class JAPHelp extends JDialog implements ActionListener, PropertyChangeLis
 			m_htmlpaneTheHelpPane.load(helpPath + currentContext + "_" + langShort + ".html");
 			if (!isVisible())
 			{
-				show();
+				setVisible(true);
 			}
 		}
 		catch (Exception e)
