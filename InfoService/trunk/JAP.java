@@ -11,6 +11,7 @@ public class JAP {
         }
 
 		JAPModel model = new JAPModel();
+		model.load();
 		model.addJAPObserver(model);
 
 		//Command line testing
@@ -35,6 +36,6 @@ public class JAP {
 //		JAPDummy d = new JAPDummy(model, view);
 //		Thread dt = new Thread (d);
 //		dt.start();
-    }
+		}
 	
 }
