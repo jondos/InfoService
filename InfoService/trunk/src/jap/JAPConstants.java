@@ -36,7 +36,7 @@ import anon.tor.Tor;
 
 public final class JAPConstants
 {
-	public static final String aktVersion = "00.03.033"; //Never change the layout of this line!
+	public static final String aktVersion = "00.03.034"; //Never change the layout of this line!
 	private static final String CVS_GENERATED_RELEASE_DATE = "$Date$";
 
 	//Warning: This is a little bit tricky,
@@ -203,6 +203,7 @@ public final class JAPConstants
 	public final static String CONFIG_PORT_NUMBER="portNumber";
 	public final static String CONFIG_LISTENER_IS_LOCAL="listenerIsLocal";
 	public final static String CONFIG_NEVER_REMIND_ACTIVE_CONTENT="neverRemindActiveContent";
+	public final static String CONFIG_NEVER_EXPLAIN_FORWARD="neverExplainForward";
 	public final static String CONFIG_DO_NOT_ABUSE_REMINDER="doNotAbuseReminder";
 	public final static String CONFIG_NEVER_REMIND_GOODBYE="neverRemindGoodBye";
 	public final static String CONFIG_INFOSERVICE_DISABLED="infoServiceDisabled";

@@ -441,7 +441,7 @@ public class Tor implements Runnable, AnonService
 		//	}
 
 		} //while
-
+		m_circuitCreator=null;
 		//synchronized (m_oCircuitCreatorSync)
 		//{
 			//m_oCircuitCreatorSync.notify();
