@@ -64,7 +64,7 @@ import anon.JAPAnonServiceListener;
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPModel implements JAPAnonServiceListener{
 
-	public static final String aktVersion = "00.01.016"; // Version of JAP
+	public static final String aktVersion = "00.01.017"; // Version of JAP
 
 	public  Vector            anonServerDatabase = null; // vector of all available mix cascades
 	private AnonServerDBEntry currentAnonService = null; // current anon service data object
@@ -74,22 +74,22 @@ public final class JAPModel implements JAPAnonServiceListener{
 	private JAPDirectProxy proxyDirect    = null;    // service object for direct access (bypass anon service)
 	private JAPAnonService proxyAnon      = null;    // service object for HTTP  listener
 	private JAPAnonService proxyAnonSocks = null;    // service object for SOCKS listener
-	
+
 	private int      portNumber            = 4001;   // port number of HTTP  listener
 	private int      portSocksListener     = 1080;   // port number of SOCKS listener
 	private boolean  mbSocksListener       = false;  // indicates whether JAP should support SOCKS or not
 	private boolean  mblistenerIsLocal     = true;   // indicates whether listeners serve for localhost only or not
 	private boolean  isRunningListener     = false;  // true if a listener is running
-	
+
 	private String   infoServiceHostName   = "infoservice.inf.tu-dresden.de";
 	private int      infoServicePortNumber = 6543;
-	
+
 	private boolean  mbUseProxy            = false;  // indicates whether JAP connects via a proxy or directly
 	private  String  proxyHostName         = "";     // hostname of proxy
 	private  int     proxyPortNumber       = -1;     // portnumber of proxy
 	private boolean  mb_UseProxyAuthentication=false; //indicates whether JAp should use a UserID/Password to authenticat to the proxy
 	private String  m_ProxyAuthenticationUserID=null;   //userid for authentication
-	private String m_ProxyAuthenticationPasswd =null; // password --> will never be saved...	
+	private String m_ProxyAuthenticationPasswd =null; // password --> will never be saved...
 	public  boolean  autoConnect                 = false; // autoconnect after program start
 	private boolean  mbMinimizeOnStartup         = false; // true if programm will start minimized
 	public  boolean  canStartService             = false; // indicates if anon service can be started
@@ -106,7 +106,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 	static private   JAPView           view          = null;
 	static private   JAPViewIconified  iconifiedView = null;
 	static private   JAPInfoService    mInfoService  = null;
-	
+
 // 2000-08-01(HF): the following url is now defined in JAPMessages.properties:
 // usage: model.getString("infoURL")
 //  static final String url_download_version       = "http://www.inf.tu-dresden.de/~hf2/anon/JAP/";
@@ -145,7 +145,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 						};
 
 	private ResourceBundle msg;
-	
+
 	private Locale m_Locale=null;
 	private Vector observerVector=null;
 	private static JAPModel model=null;
@@ -184,7 +184,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 		{
 			if(b)
 				{
-					if(anonServiceRMIServer==null)				
+					if(anonServiceRMIServer==null)
 			/* jh5 */ anonServiceRMIServer = new JAPAnonServiceRMIServer(this);
 				}
 			else
@@ -195,7 +195,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 				}
 			return 0;
 		}
-	
+
 	//---------------
 	public void setIconifiedView(JAPViewIconified v)
 		{
@@ -300,7 +300,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 			setProxy(host,port);
 			String userid=JAPUtil.parseNodeString(n.getNamedItem("proxyAuthUserID"),m_ProxyAuthenticationUserID);
 			setFirewallAuthUserID(userid);
-			
+
 			String anonserviceName = model.getAnonServer().getName();
 			String anonHostName    = model.getAnonServer().getHost();
 			int anonPortNumber     = model.getAnonServer().getPort();
@@ -312,14 +312,14 @@ public final class JAPModel implements JAPAnonServiceListener{
 			model.setAnonServer(new AnonServerDBEntry(anonserviceName,anonHostName,anonPortNumber,anonSSLPortNumber));
 			// force setting the correct name of the selected service
 			model.getAnonServer().setName(anonserviceName);
-			
+
 			autoConnect=JAPUtil.parseNodeBoolean(n.getNamedItem("autoConnect"),false);
 			mbMinimizeOnStartup=JAPUtil.parseNodeBoolean(n.getNamedItem("minimizedStartup"),false);
 
 			//Locale-Settings
 			String locale=JAPUtil.parseNodeString(n.getNamedItem("Locale"),m_Locale.getLanguage());
 			setLocale(new Locale(locale,""));
-			
+
 			//Loading debug settings
 			NodeList nl=root.getElementsByTagName("Debug");
 			if(nl!=null&&nl.getLength()>0)
@@ -363,8 +363,8 @@ public final class JAPModel implements JAPAnonServiceListener{
 
 	public void save() {
 		// Save config to xml file
-		// Achtung!! Fehler im Sun-XML --> NULL-Attributte können hinzugefügt werden, 
-		// beim Abspeichern gibt es dann aber einen Fehler! 
+		// Achtung!! Fehler im Sun-XML --> NULL-Attributte können hinzugefügt werden,
+		// beim Abspeichern gibt es dann aber einen Fehler!
 		boolean error=false;
 		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:try saving configuration to "+XMLCONFFN);
 		try {
@@ -461,7 +461,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 					model.getView().disableSetAnonMode();
 					notifyJAPObservers();
 				}
-			else 
+			else
 				{
 					model.status1 = model.getString("statusRunning");
 					setAnonMode(autoConnect);
@@ -472,11 +472,11 @@ public final class JAPModel implements JAPAnonServiceListener{
 		{
 			return m_Locale;
 		}
-	
+
 	public void setLocale(Locale l)
 		{
 			JAPMessages.init(l);
-			m_Locale=l;	
+			m_Locale=l;
 		}
     public int getCurrentProtectionLevel() {
 		/*
@@ -503,13 +503,13 @@ public final class JAPModel implements JAPAnonServiceListener{
 		return 1;
 	}
 
-	
-	
-	
-	
-	
+
+
+
+
+
 	//---------------------------------------------------------------------
-	
+
 	public synchronized void setAnonServer(AnonServerDBEntry s) {
 	    if (model.getAnonServer().equals(s)) {
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:currentAnonService NOT changed");
@@ -521,11 +521,11 @@ public final class JAPModel implements JAPAnonServiceListener{
 	    }
 		model.notifyJAPObservers();
 	}
-	
+
 	public AnonServerDBEntry getAnonServer() {
 	    return this.currentAnonService;
 	}
-	
+
 	public void setPortNumber (int p) {
 		portNumber = p;
 	}
@@ -533,7 +533,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 	public int getPortNumber() {
 		return portNumber;
 	}
-	
+
 	public void setSocksPortNumber (int p)
 		{
 			portSocksListener = p;
@@ -544,7 +544,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 			return portSocksListener;
 		}
 
-	public static String getString(String key) 
+	public static String getString(String key)
 		{
 			return JAPMessages.getString(key);
 		}
@@ -553,12 +553,12 @@ public final class JAPModel implements JAPAnonServiceListener{
 		{
 			mbSocksListener=b;
 		}
-	
+
 	public boolean getUseSocksPort()
 		{
 			return mbSocksListener;
 		}
-	
+
 	public void channelsChanged(int channels)
 		{
 			nrOfChannels=channels;
@@ -698,7 +698,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 					return true;
 				}
 		}
-	
+
 	public boolean getUseFirewall()
 		{
 			synchronized(this)
@@ -722,7 +722,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 					return proxyPortNumber;
 				}
 		}
-	
+
 	public void setUseFirewallAuthorization(boolean b)
 		{
 			mb_UseProxyAuthentication=b;
@@ -732,7 +732,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 		{
 			return mb_UseProxyAuthentication;
 		}
-	
+
 	public void  setFirewallAuthUserID(String userid)
 		{
 			m_ProxyAuthenticationUserID=userid;
@@ -748,10 +748,10 @@ public final class JAPModel implements JAPAnonServiceListener{
 			if(mb_UseProxyAuthentication)
 				{
 					if(m_ProxyAuthenticationPasswd==null)
-						m_ProxyAuthenticationPasswd=JAPFirewallPasswdDlg.getPasswd();															
+						m_ProxyAuthenticationPasswd=JAPFirewallPasswdDlg.getPasswd();
 					return m_ProxyAuthenticationPasswd;
 				}
-			else 
+			else
 				return null;
 		}
 
@@ -768,15 +768,15 @@ public final class JAPModel implements JAPAnonServiceListener{
 		view.setVisible(true);
 	}
 */
-	
+
 private final class SetAnonModeAsync implements Runnable
 {
 	boolean anonModeSelected=false;
 	public SetAnonModeAsync(boolean b) {
 		anonModeSelected=b;
 	}
-		
-	public void run() {		
+
+	public void run() {
 	//setAnonMode--> async!!
 		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:setAnonMode("+anonModeSelected+")");
 		if ((proxyAnon == null) && (anonModeSelected == true))
@@ -917,7 +917,7 @@ private final class SetAnonModeAsync implements Runnable
 				model.status2 = model.getString("statusNotRunning");
 				proxyDirect=new JAPDirectProxy(m_socketHTTPListener);
 				proxyDirect.startService();
-				
+
 				model.getAnonServer().setMixedPackets(-1);
 				model.getAnonServer().setNrOfActiveUsers(-1);
 				model.getAnonServer().setTrafficSituation(-1);
@@ -1139,7 +1139,7 @@ private final class SetAnonModeAsync implements Runnable
 		System.exit(0);
 	}
 
-	public static void aboutJAP() 
+	public static void aboutJAP()
 		{
 			try
 				{
@@ -1177,7 +1177,7 @@ private final class SetAnonModeAsync implements Runnable
 	public int versionCheck()
 		{
 			JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:Checking for new version of JAP...");
-			try 
+			try
 				{
 					int result = 0;
 					Versionchecker vc = new Versionchecker();
@@ -1188,7 +1188,7 @@ private final class SetAnonModeAsync implements Runnable
 					// temporary changed due to stability.... (sk13)
 					//String s = vc.getNewVersionnumberFromNet("http://anon.inf.tu-dresden.de:80"+aktJAPVersionFN);
 					JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:Version:"+aktVersion);
-					if ( s.compareTo(aktVersion) > 0 ) 
+					if ( s.compareTo(aktVersion) > 0 )
 						{
 							// OK, new version available
 							// ->Ask user if he/she wants to download new version
