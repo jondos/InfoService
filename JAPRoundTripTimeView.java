@@ -42,16 +42,16 @@ public class JAPRoundTripTimeView extends JDialog implements Runnable {
 	private AnonServerDBEntry[] serverList;
 	private	JPanel panelCenter            = new JPanel(true);
 	private JPanel[] progressPanel        = new JPanel[JAPRoundTripTime.MAX_STATIONS + 2];
-	private final JButton startButton     = new JButton("Start");
-	private final JButton stopButton      = new JButton("Stop");
+	private JButton startButton;
+	private JButton stopButton;
 	private final JComboBox mixComboBox   = new JComboBox();
 	private final JComboBox adrComboBox   = new JComboBox();
 	private JLabel[] myProgressBarDesc1   = new JLabel[JAPRoundTripTime.MAX_STATIONS];
 	private JLabel[] myProgressBarDesc2   = new JLabel[JAPRoundTripTime.MAX_STATIONS];
 	private JProgressBar[] myProgressBar1 = new JProgressBar[JAPRoundTripTime.MAX_STATIONS];
 	private JProgressBar[] myProgressBar2 = new JProgressBar[JAPRoundTripTime.MAX_STATIONS];
-	private JLabel sumProgressBarDesc1    = new JLabel("Gesamtzeit:");
-	private JLabel sumProgressBarDesc2    = new JLabel("min - / avg - / max -", JLabel.RIGHT);
+	private JLabel sumProgressBarDesc1;
+	private JLabel sumProgressBarDesc2;
 	private JProgressBar sumProgressBar1  = new JProgressBar();
 	private JProgressBar sumProgressBar2  = new JProgressBar();
 	
@@ -60,9 +60,8 @@ public class JAPRoundTripTimeView extends JDialog implements Runnable {
 	 * The Main Method
 	 */
     public static void main(String[] args) {
-        System.out.println("Starting Application ...\n");
  		AnonServerDBEntry[] initialServerList = new AnonServerDBEntry[2];
-		AnonServerDBEntry myEntry0 = new AnonServerDBEntry("obiwan:4453", "obiwan", 4453);
+		AnonServerDBEntry myEntry0 = new AnonServerDBEntry("192.168.0.11:4453", "192.168.0.11", 4453);
 		AnonServerDBEntry myEntry1 = new AnonServerDBEntry("192.168.0.2:4453", "192.168.0.2", 4453);
 		initialServerList[0] = myEntry0;
 		initialServerList[1] = myEntry1;
@@ -117,14 +116,18 @@ public class JAPRoundTripTimeView extends JDialog implements Runnable {
 	 */
 	private Component createComponents(AnonServerDBEntry[] initialServerList) {
 		JPanel myPanel = new JPanel();
+		startButton     = new JButton(model.getString("startButton"));
+		stopButton      = new JButton(model.getString("stopButton"));
+		sumProgressBarDesc1    = new JLabel(model.getString("rttSumTime"));
+		sumProgressBarDesc2    = new JLabel(model.getString("rttMin") + " - / " + model.getString("rttAvg") + " - / " + model.getString("rttMax") + " -", JLabel.RIGHT);
 		
 		// The Northern Part Definitions
 		GridBagLayout gbLayoutNorth = new GridBagLayout();
 		GridBagConstraints c        = new GridBagConstraints();
 		JPanel panelNorth           = new JPanel(gbLayoutNorth);
-		JLabel myLabel              = new JLabel("Mix Kaskade: ");
-		JRadioButton valueAbsoluteButton   = new JRadioButton("Absolute Werte");
-		JRadioButton valuePercentButton    = new JRadioButton("Werte in Prozent");
+		JLabel myLabel              = new JLabel(model.getString("rttMixCascade"));
+		JRadioButton valueAbsoluteButton   = new JRadioButton(model.getString("rttValAbsolute"));
+		JRadioButton valuePercentButton    = new JRadioButton(model.getString("rttValPercent"));
 		ButtonGroup chooseValueButtonGroup = new ButtonGroup();
 		JPanel panelControlls1 = new JPanel();
 		panelControlls1.setLayout(new BoxLayout(panelControlls1, BoxLayout.Y_AXIS));
@@ -140,7 +143,7 @@ public class JAPRoundTripTimeView extends JDialog implements Runnable {
 		// The Southern Part Definitions
 		JPanel panelSouth   = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
 		// startButton & stopButton are global
-		final JButton closeButton = new JButton("Schlieﬂen");
+		final JButton closeButton = new JButton(model.getString("closeButton"));
 		
 		// Northern part *************************************
 		chooseValueButtonGroup.add(valueAbsoluteButton);
@@ -173,7 +176,7 @@ public class JAPRoundTripTimeView extends JDialog implements Runnable {
 		c.gridx   = 0;
 		c.gridy   = 1;
 		c.insets  = new Insets(0,0,0,0);
-		panelNorth.add(new JLabel("Lokale Adresse: "), c);
+		panelNorth.add(new JLabel(model.getString("rttLocalAddress")), c);
 		c.gridx   = 1;
 		c.gridy   = 1;
 		c.insets  = new Insets(0,10,0,10);
@@ -219,7 +222,7 @@ public class JAPRoundTripTimeView extends JDialog implements Runnable {
 		for (int i = 1; i < (JAPRoundTripTime.MAX_STATIONS - 1); i++){
 			myProgressBarDesc1[i] = new JLabel("Mix " + (i) + " - Mix " + (i + 1));
 			myProgressBarDesc1[i].setIcon(new ImageIcon("Server16.gif"));
-			myProgressBarDesc2[i] = new JLabel("min - / avg - /max -", JLabel.RIGHT);
+			myProgressBarDesc2[i] = new JLabel(model.getString("rttMin") + " - / " + model.getString("rttAvg") + " - / " + model.getString("rttMax") + " -", JLabel.RIGHT);
 			myProgressBar1[i]     = new JProgressBar(0,100);
 			myProgressBar1[i].setString("");
 			myProgressBar1[i].setStringPainted(true);
@@ -378,9 +381,9 @@ public class JAPRoundTripTimeView extends JDialog implements Runnable {
 						myProgressBar2[i].setValue((avgPerConnection[i] * 100 / avgAtAll));
 						myProgressBar2[i].setString((avgPerConnection[i] * 100 / avgAtAll) + " %");
 					}
-					myProgressBarDesc2[i].setText("min " + minPerConnection[i] 
-												  + " / avg " + avgPerConnection[i]  
-												  + " / max " + maxPerConnection[i]);
+					myProgressBarDesc2[i].setText(model.getString("rttMin") + " " + minPerConnection[i] 
+										+ " / " + model.getString("rttAvg") + " " + avgPerConnection[i]  
+										+ " / " + model.getString("rttMax") + " " + maxPerConnection[i]);
 				}
 			}
 		};
@@ -527,7 +530,7 @@ public class JAPRoundTripTimeView extends JDialog implements Runnable {
 		try {
 			port = Integer.parseInt(new String(myString.substring(1 + myString.lastIndexOf(":"), myString.length()).trim()));
 		} catch (NumberFormatException e){}
-		/*DEBUG*/System.out.println("Anfrage an: " + address + ":" + port);
+		/*DEBUG*/System.out.println("request to: " + address + ":" + port);
 				doRequest(address, port, replyAddress[0]);
 				}
 				try {
