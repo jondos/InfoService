@@ -117,6 +117,56 @@ public class XMLUtil
 				return null;
 			}
 
+		// ootte
+		public static Node getFirstChildByNameUsingDeepSearch(Node n,String name)
+			{
+				try
+					{
+						if (n.getNodeName().equals(name)) // found!
+							return n;
+						if (n.hasChildNodes()) // not found, but the Node has children ...
+							{
+								NodeList nl = n.getChildNodes();
+								for (int i = 0; i < nl.getLength(); i++)
+									{
+										Node child = nl.item(i);
+										Node tmp_result = getFirstChildByNameUsingDeepSearch(child,name);
+										if (tmp_result != null)
+											{
+												return tmp_result;
+											}
+									}
+							}
+						else // Node has no children and is not the Node we are looking for
+							{
+								return null;
+							}
+					}
+				catch (Exception e)
+					{
+					}
+				return null;
+			}
+
+		// ootte
+		public static Node getLastChildByName(Node n,String name)
+			{
+				try
+					{
+						Node child=n.getLastChild();
+						while(child!=null)
+							{
+								if(child.getNodeName().equals(name))
+									return child;
+								child=child.getPreviousSibling();
+							}
+						}
+				catch(Exception e)
+					{
+					}
+				return null;
+			}
+
 		public static void setNodeValue(Node n,String text)
 			{
 				n.appendChild(n.getOwnerDocument().createTextNode(text));

@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2000, The JAP-Team
+Copyright (c) 2000 - 2003, The JAP-Team
 All rights reserved.
 Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
@@ -25,21 +25,33 @@ OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABIL
 IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
-package anon;
+package gui;
+import java.io.File;
 
-public final class ErrorCodes
-	{
-		public final static int E_SUCCESS=0;
-		public final static int E_UNKNOWN=-1;
-		public final static int E_ALREADY_CONNECTED=-4;
-		public final static int E_INVALID_SERVICE=-5;
-		public final static int E_CONNECT=-6;
-		public final static int E_NOT_CONNECTED=-9;
-		public final static int E_MIX_PROTOCOL_NOT_SUPPORTED=-10;
-		public final static int E_INVALID_CERTIFICATE=-20;
-		public final static int E_INVALID_KEY=-21;
-		public final static int E_SIGNATURE_CHECK_FIRSTMIX_FAILED=-22;
-		public final static int E_SIGNATURE_CHECK_OTHERMIX_FAILED=-23;
+public class SimpleFileFilter extends javax.swing.filechooser.FileFilter
+		 {
+			 private String m_strDesc;
+			 private String m_strExtension;
+			 private int filterType;
 
+			 public int getFilterType()
+			 {
+					 return filterType;
+			 }
 
-	}
+			 public SimpleFileFilter()
+			 {
+						 m_strDesc="Public X.509 Certificate (*.cer)";
+						 m_strExtension=".cer";
+					 };
+
+			 public boolean accept(File f)
+				 {
+					 return f.isDirectory()||f.getName().endsWith(m_strExtension);
+				 }
+
+			 public String getDescription()
+				 {
+					 return m_strDesc;
+				 }
+		 }

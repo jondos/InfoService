@@ -53,11 +53,20 @@ import javax.swing.border.TitledBorder;
 
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.event.ListSelectionListener;
+import javax.swing.event.ListSelectionEvent;
 import javax.swing.JFrame;
+
 
 import anon.AnonServer;
 import anon.ListenerInterface;
 import update.JAPUpdate;
+
+import java.io.File;
+import anon.crypto.JAPCertificate;
+import anon.crypto.JAPCertificateStore;
+import org.bouncycastle.asn1.x509.X509NameTokenizer;
+
 final class JAPConf extends JDialog
 	{
 
@@ -65,7 +74,8 @@ final class JAPConf extends JDialog
 		final static public int PROXY_TAB = 1;
 		final static public int INFO_TAB = 2;
 		final static public int ANON_TAB = 3;
-		final static public int MISC_TAB = 4;
+		final static public int CERT_TAB = 4;
+		final static public int MISC_TAB = 5;
 
 		private JAPController      m_Controller;
 
@@ -101,6 +111,17 @@ final class JAPConf extends JDialog
 		private JLabel				m_labelSettingsInfoText,m_labelSettingsInfoHost,m_labelSettingsInfoPort;
 		private TitledBorder  m_borderInfoService;
 
+		private DefaultListModel m_dlmCertList;
+		private TitledBorder m_borderCertInfo;
+		private JLabel m_labelDate, m_labelCN, m_labelE, m_labelCSTL, m_labelO,	m_labelOU;
+		private JButton m_bttnCertInsert, m_bttnCertRemove;
+		private JTextField m_tfDate, m_tfCN, m_tfE, m_tfCSTL, m_tfO, m_tfOU;
+		private DefaultListModel m_listmodelCertList;
+		private JList m_listCert;
+		private JScrollPane m_scrpaneList;
+		private Enumeration m_enumCerts;
+		private ListSelectionListener m_listsel;
+
 		private JCheckBox     m_cbDebugGui;
 		private JCheckBox     m_cbDebugNet;
 		private JCheckBox     m_cbDebugThread;
@@ -108,6 +129,7 @@ final class JAPConf extends JDialog
 		private JCheckBox     m_cbShowDebugConsole;
 		private JCheckBox			m_cbInfoServiceDisabled;
 		private JCheckBox			m_cbSaveWindowPositions;
+		private JCheckBox 		m_cbCertCheckDisabled;
 
 		private JSlider				m_sliderDebugLevel;
 
@@ -118,7 +140,7 @@ final class JAPConf extends JDialog
 		private JSlider				m_sliderDummyTrafficIntervall;
 
 		private JTabbedPane		m_Tabs;
-		private JPanel				m_pPort, m_pFirewall, m_pInfo, m_pMix, m_pMisc;
+		private JPanel				m_pPort, m_pFirewall, m_pInfo, m_pMix, m_pCert,m_pMisc;
 		private JButton       m_bttnDefaultConfig,m_bttnCancel;
 
 		private JFrame        m_frmParent;
@@ -126,6 +148,9 @@ final class JAPConf extends JDialog
 		private JAPConf       m_JapConf;
 
 		private Font          m_fontControls;
+
+		private static File m_fileCurrentDir;
+
 		//Einfug
 		private JAPUpdate update;
 
@@ -146,11 +171,13 @@ final class JAPConf extends JDialog
 				m_pFirewall = buildProxyPanel();
 				m_pInfo = buildInfoServicePanel();
 				m_pMix = buildAnonPanel();
+				m_pCert = buildCertPanel();
 				m_pMisc = buildMiscPanel();
 				m_Tabs.addTab( JAPMessages.getString("confListenerTab"), null, m_pPort );
 				m_Tabs.addTab( JAPMessages.getString("confProxyTab"), null, m_pFirewall );
 				m_Tabs.addTab( JAPMessages.getString("confInfoTab"), null, m_pInfo );
 				m_Tabs.addTab( JAPMessages.getString("confAnonTab"), null, m_pMix );
+				m_Tabs.addTab(JAPMessages.getString("confCertTab"), null, m_pCert);
 				if(!JAPModel.isSmallDisplay())
 					m_Tabs.addTab( JAPMessages.getString("confMiscTab"), null, m_pMisc );
 
@@ -684,6 +711,410 @@ final class JAPConf extends JDialog
 				return p;
 			}
 
+		protected JPanel buildCertPanel()
+			{
+					JPanel p = new JPanel();
+					p.setLayout(new BorderLayout());
+
+					JPanel pp1 = new JPanel();
+					GridBagLayout layout1 = new GridBagLayout();
+					pp1.setLayout(layout1);
+					m_borderCertInfo = new TitledBorder(JAPMessages.getString("certBorder"));
+					m_borderCertInfo.setTitleFont(m_fontControls);
+					pp1.setBorder(m_borderCertInfo);
+
+					/*				GridBagConstraints c1=new GridBagConstraints();
+							c1.fill=GridBagConstraints.HORIZONTAL;
+							c1.weightx=1;
+							c1.weighty=1;
+							c1.gridx=0;
+							c1.gridy=0;
+							c1.gridwidth=2;
+							c1.gridheight=2;
+							/* private ListSelectionListener m_listselCertList;
+							 private DefaultListModel m_listmodelCertList;
+							 private JScrollPane m_scrpaneList; */
+
+					m_listmodelCertList = new DefaultListModel();
+
+
+					m_enumCerts = JAPModel.getCertificateStore().elements();
+					while (m_enumCerts.hasMoreElements())
+					{
+						JAPCertificate j = (JAPCertificate) m_enumCerts.nextElement();
+						String issuerCN = (String) j.getIssuer().getValues().elementAt(0);
+						m_listmodelCertList.addElement(issuerCN);
+					}
+
+					m_listCert = new JList(m_listmodelCertList);
+					m_listCert.setSelectedIndex(0);
+					m_listCert.addListSelectionListener(new ListSelectionListener()
+					{
+						public void valueChanged(ListSelectionEvent e)
+						{
+							// System.out.println((String)m_listCert.getSelectedValue());
+							String currIssuerCN = (String) m_listCert.getSelectedValue();
+							m_enumCerts = JAPModel.getCertificateStore().elements();
+							JAPCertificate j;
+							while (m_enumCerts.hasMoreElements())
+							{
+								j = (JAPCertificate) m_enumCerts.nextElement();
+								if (j.getIssuer().getValues().elementAt(0).equals(currIssuerCN))
+								{
+									m_tfDate.setText(j.getStartDate().toGMTString() + " - " +
+																	 j.getEndDate().toGMTString());
+									m_tfCN.setText("");
+									m_tfE.setText("");
+									m_tfCSTL.setText("");
+									m_tfO.setText("");
+									m_tfOU.setText("");
+
+									X509NameTokenizer m_issuerData = new X509NameTokenizer(j.getIssuer().
+										toString());
+									while (m_issuerData.hasMoreTokens())
+									{
+										String m_element = (String) m_issuerData.nextToken();
+										if (m_element.startsWith("CN="))
+											m_tfCN.setText(m_element.substring(3));
+										else if (m_element.startsWith("E="))
+											m_tfE.setText(m_element.substring(2));
+										else if (m_element.startsWith("C="))
+											m_tfCSTL.setText(m_element.substring(2) + m_tfCSTL.getText());
+										else if (m_element.startsWith("ST="))
+											m_tfCSTL.setText(m_element.substring(3) + " / " +
+																			 m_tfCSTL.getText());
+										else if (m_element.startsWith("L="))
+											m_tfCSTL.setText(m_element.substring(2) + " / " +
+																			 m_tfCSTL.getText());
+										else if (m_element.startsWith("O="))
+											m_tfO.setText(m_element.substring(2));
+										else if (m_element.startsWith("OU="))
+											m_tfOU.setText(m_element.substring(3));
+									}
+									// m_tfIssuer.setText(j.getIssuer().toString());
+									m_tfCN.setCaretPosition(0);
+									m_tfE.setCaretPosition(0);
+									m_tfCSTL.setCaretPosition(0);
+									m_tfO.setCaretPosition(0);
+									m_tfOU.setCaretPosition(0);
+			break;
+								}
+							}
+						}
+					});
+					m_scrpaneList = new JScrollPane();
+					m_scrpaneList.getViewport().add(m_listCert, null);
+
+					m_bttnCertInsert = new JButton(JAPMessages.getString("certBttnInsert"));
+					m_bttnCertInsert.setFont(m_fontControls);
+					m_bttnCertInsert.addActionListener(new ActionListener()
+					{
+						public void actionPerformed(ActionEvent e)
+						{
+							JAPCertificate t_cert = JAPUtil.openFile(new JFrame());
+							if(t_cert!=null)
+							{
+							String issuerCN = (String) t_cert.getIssuer().getValues().elementAt(0);
+							m_listmodelCertList.addElement(issuerCN);
+							m_listCert.removeAll();
+							m_listCert.setModel(m_listmodelCertList);
+							m_scrpaneList.getViewport().removeAll();
+							m_scrpaneList.getViewport().add(m_listCert, null);
+							JAPCertificateStore jcs = JAPModel.getCertificateStore();
+							jcs.addCertificate(t_cert);
+							JAPModel.setCertificateStore(jcs);
+							}
+						}
+					});
+
+					m_bttnCertRemove = new JButton(JAPMessages.getString("certBttnRemove"));
+					m_bttnCertRemove.setFont(m_fontControls);
+					m_bttnCertRemove.addActionListener(new ActionListener()
+					{
+						public void actionPerformed(ActionEvent e)
+						{
+							int t_index = m_listCert.getSelectedIndex();
+							String t_issuerCN = (String) m_listCert.getSelectedValue();
+							m_enumCerts = JAPModel.getCertificateStore().elements();
+							while (m_enumCerts.hasMoreElements())
+							{
+								JAPCertificate j = (JAPCertificate) m_enumCerts.nextElement();
+								String issuerCN = (String) j.getIssuer().getValues().elementAt(0);
+								if (issuerCN.equals(t_issuerCN))
+								{
+									JAPCertificateStore jcs = JAPModel.getCertificateStore();
+									jcs.removeCertificate(j);
+									JAPModel.setCertificateStore(jcs);
+									m_listmodelCertList.remove(t_index);
+								}
+							}
+						}
+					});
+
+					GridBagConstraints c = new GridBagConstraints();
+					c.gridx = 0;
+					c.gridy = 0;
+					c.gridwidth = 1;
+					c.gridheight = 2;
+					c.weightx = 1;
+//	 c.weighty = 1;
+					c.fill = GridBagConstraints.HORIZONTAL;
+					c.anchor = GridBagConstraints.CENTER;
+					pp1.add(m_scrpaneList, c);
+
+					c.gridx = 1;
+					c.gridy = 0;
+					c.gridwidth = 1;
+					c.gridheight = 1;
+					c.weightx = 0;
+					c.weighty = 0;
+
+					c.anchor = GridBagConstraints.CENTER;
+					pp1.add(m_bttnCertInsert, c);
+
+					c.gridx = 1;
+					c.gridy = 1;
+					c.gridwidth = 1;
+					c.gridheight = 1;
+					// c.insets = new Insets(0,0,1,0);
+					c.anchor = GridBagConstraints.NORTHEAST;
+					pp1.add(m_bttnCertRemove, c);
+
+					JPanel pp2 = new JPanel();
+					GridBagLayout layout2 = new GridBagLayout();
+					pp2.setLayout(layout2);
+					m_borderCertInfo = new TitledBorder(JAPMessages.getString("certInfoBorder"));
+					m_borderCertInfo.setTitleFont(m_fontControls);
+					pp2.setBorder(m_borderCertInfo);
+
+					/*				GridBagConstraints c2=new GridBagConstraints();
+							c2.fill=GridBagConstraints.HORIZONTAL;
+							c2.weightx=1;
+							c2.weighty=1;
+							c2.gridx=0;
+							c2.gridy=0;
+							c2.gridwidth=2;
+							c2.anchor=GridBagConstraints.NORTHWEST; */
+
+					m_labelDate = new JLabel(JAPMessages.getString("certDate"));
+					m_labelDate.setFont(m_fontControls);
+//				m_labelIssuer = new JLabel(JAPMessages.getString("certIssuer"));
+
+					m_labelCN = new JLabel(JAPMessages.getString("certName"));
+					m_labelCN.setFont(m_fontControls);
+					m_labelE = new JLabel(JAPMessages.getString("certMail"));
+					m_labelE.setFont(m_fontControls);
+					m_labelCSTL = new JLabel(JAPMessages.getString("certLocation"));
+					m_labelCSTL.setFont(m_fontControls);
+					m_labelO = new JLabel(JAPMessages.getString("certOrg"));
+					m_labelO.setFont(m_fontControls);
+					m_labelOU = new JLabel(JAPMessages.getString("certOrgUnit"));
+					m_labelOU.setFont(m_fontControls);
+
+					m_tfDate = new JTextField();
+					m_tfDate.setFont(m_fontControls);
+					m_tfDate.setEditable(false);
+
+					/*				m_tfIssuer = new JTextField();
+							m_tfIssuer.setFont(m_fontControls);
+							m_tfIssuer.setEditable(false);
+							m_tfIssuer.setMaximumSize(new Dimension(80,1)); */
+
+					m_tfCN = new JTextField();
+					m_tfCN.setFont(m_fontControls);
+					m_tfCN.setEditable(false);
+
+					m_tfE = new JTextField();
+					m_tfE.setFont(m_fontControls);
+					m_tfE.setEditable(false);
+
+					m_tfCSTL = new JTextField();
+					m_tfCSTL.setFont(m_fontControls);
+					m_tfCSTL.setEditable(false);
+
+					m_tfO = new JTextField();
+					m_tfO.setFont(m_fontControls);
+					m_tfO.setEditable(false);
+
+					m_tfOU = new JTextField();
+					m_tfOU.setFont(m_fontControls);
+					m_tfOU.setEditable(false);
+
+					// init with first certificate of store
+					JAPCertificateStore csw=JAPModel.getCertificateStore();
+					if(csw!=null&&csw.elements().hasMoreElements())
+					{
+					JAPCertificate j = (JAPCertificate) csw.elements().nextElement();
+					m_tfDate.setText(j.getStartDate().toGMTString() + " - " +
+													 j.getEndDate().toGMTString());
+					m_tfCN.setText("");
+					m_tfE.setText("");
+					m_tfCSTL.setText("");
+					m_tfO.setText("");
+					m_tfOU.setText("");
+
+					X509NameTokenizer m_issuerData = new X509NameTokenizer(j.getIssuer().
+						toString());
+					while (m_issuerData.hasMoreTokens())
+					{
+						String m_element = (String) m_issuerData.nextToken();
+						if (m_element.startsWith("CN="))
+							m_tfCN.setText(m_element.substring(3));
+						else if (m_element.startsWith("E="))
+							m_tfE.setText(m_element.substring(2));
+						else if (m_element.startsWith("C="))
+							m_tfCSTL.setText(m_element.substring(2) + " / " + m_tfCSTL.getText());
+						else if (m_element.startsWith("ST="))
+							m_tfCSTL.setText(m_element.substring(3) + " / " + m_tfCSTL.getText());
+						else if (m_element.startsWith("L="))
+							m_tfCSTL.setText(m_element.substring(2) + " / " + m_tfCSTL.getText());
+						else if (m_element.startsWith("O="))
+							m_tfO.setText(m_element.substring(2));
+						else if (m_element.startsWith("OU="))
+							m_tfOU.setText(m_element.substring(3));
+
+						m_tfCN.setCaretPosition(0);
+						m_tfE.setCaretPosition(0);
+						m_tfCSTL.setCaretPosition(0);
+						m_tfO.setCaretPosition(0);
+						m_tfOU.setCaretPosition(0);
+					}
+					}
+					GridBagConstraints c2 = new GridBagConstraints();
+
+					c2.gridx = 0;
+					c2.gridy = 0;
+					c2.gridheight = 1;
+					c2.gridwidth = 1;
+					c2.weightx = 0;
+					c2.anchor = GridBagConstraints.EAST;
+					c2.fill = GridBagConstraints.HORIZONTAL;
+					c2.insets = new Insets(0, 5, 0, 0);
+					pp2.add(m_labelDate, c2);
+
+					c2.gridx = 1;
+					c2.gridy = 0;
+					c2.gridheight = 1;
+					c2.gridwidth = 1;
+					c2.weightx = 0;
+					c2.anchor = GridBagConstraints.WEST;
+					pp2.add(m_tfDate, c2);
+
+					c2.gridx = 0;
+					c2.gridy = 1;
+					c2.gridheight = 1;
+					c2.gridwidth = 1;
+					c2.weightx = 0;
+					c2.anchor = GridBagConstraints.EAST;
+					pp2.add(m_labelCN, c2);
+
+					c2.gridx = 1;
+					c2.gridy = 1;
+					c2.gridheight = 1;
+					c2.gridwidth = 1;
+					c2.weightx = 0;
+					c2.anchor = GridBagConstraints.WEST;
+					pp2.add(m_tfCN, c2);
+
+					c2.gridx = 0;
+					c2.gridy = 2;
+					c2.gridheight = 1;
+					c2.gridwidth = 1;
+					c2.weightx = 0;
+					c2.anchor = GridBagConstraints.EAST;
+					pp2.add(m_labelE, c2);
+
+					c2.gridx = 1;
+					c2.gridy = 2;
+					c2.gridheight = 1;
+					c2.gridwidth = 1;
+					c2.weightx = 0;
+					c2.anchor = GridBagConstraints.WEST;
+					pp2.add(m_tfE, c2);
+
+					c2.gridx = 0;
+					c2.gridy = 3;
+					c2.gridheight = 1;
+					c2.gridwidth = 1;
+					c2.weightx = 0;
+					c2.anchor = GridBagConstraints.EAST;
+					pp2.add(m_labelCSTL, c2);
+
+					c2.gridx = 1;
+					c2.gridy = 3;
+					c2.gridheight = 1;
+					c2.gridwidth = 1;
+					c2.weightx = 0;
+					c2.anchor = GridBagConstraints.WEST;
+					pp2.add(m_tfCSTL, c2);
+
+			/*
+						c2.gridx = 2; // 0
+						c2.gridy = 4; // 5
+						c2.gridheight = 1;
+						c2.gridwidth = 1;
+						c2.weightx = 0;
+						c2.anchor = GridBagConstraints.EAST;
+						pp2.add(m_labelST, c2);
+						c2.gridx = 3; // 1
+						c2.gridy = 4; // 5
+						c2.gridheight = 1;
+						c2.gridwidth = 1;
+						c2.weightx = 0;
+						c2.anchor = GridBagConstraints.WEST;
+						pp2.add(m_tfST, c2);
+						c2.gridx = 4; // 0
+						 c2.gridy = 4; // 6
+						 c2.gridheight = 1;
+						 c2.gridwidth = 1;
+						 c2.weightx = 0;
+						 c2.anchor = GridBagConstraints.EAST;
+						 pp2.add(m_labelL, c2);
+						 c2.gridx = 5; // 1
+						 c2.gridy = 4; // 6
+						 c2.gridheight = 1;
+						 c2.gridwidth = 1;
+						 c2.weightx = 0;
+						 c2.anchor = GridBagConstraints.WEST;
+						 pp2.add(m_tfL, c2); */
+
+					c2.gridx = 0;
+					c2.gridy = 4;
+					c2.gridheight = 1;
+					c2.gridwidth = 1;
+					c2.weightx = 0;
+					c2.anchor = GridBagConstraints.EAST;
+					pp2.add(m_labelO, c2);
+
+					c2.gridx = 1;
+					c2.gridy = 4;
+					c2.gridheight = 1;
+					c2.gridwidth = 1;
+					c2.weightx = 0;
+					c2.anchor = GridBagConstraints.WEST;
+					pp2.add(m_tfO, c2);
+
+					c2.gridx = 0;
+					c2.gridy = 5;
+					c2.gridheight = 1;
+					c2.gridwidth = 1;
+					c2.weightx = 0;
+					c2.anchor = GridBagConstraints.EAST;
+					pp2.add(m_labelOU, c2);
+
+					c2.gridx = 1;
+					c2.gridy = 5;
+					c2.gridheight = 1;
+					c2.gridwidth = 1;
+					c2.weightx = 0;
+					c2.anchor = GridBagConstraints.WEST;
+					pp2.add(m_tfOU, c2);
+
+					p.add(pp1, BorderLayout.CENTER);
+					p.add(pp2, BorderLayout.SOUTH);
+					return p;
+			}
+
 		protected JPanel buildMiscPanel()
 			{
 				JPanel p=new JPanel();
@@ -780,6 +1211,7 @@ final class JAPConf extends JDialog
 					});
 
 				m_cbInfoServiceDisabled=new JCheckBox("Disable InfoService");
+				m_cbCertCheckDisabled = new JCheckBox("Disable check of certificates");
 				m_cbSaveWindowPositions=new JCheckBox("Remember Location of JAP");
 				JPanel p22 = new JPanel();
 				GridBagLayout gb=new GridBagLayout();
@@ -837,6 +1269,9 @@ final class JAPConf extends JDialog
 			lc.gridy++;
 			gb.setConstraints(m_cbSaveWindowPositions,lc);
 			p22.add(m_cbSaveWindowPositions);
+			lc.gridy++;
+			gb.setConstraints(m_cbCertCheckDisabled,lc);
+			p22.add(m_cbCertCheckDisabled);
 				p2.add(p22, BorderLayout.NORTH);
 
 				// Panel for Debugging Options
@@ -1120,6 +1555,7 @@ final class JAPConf extends JDialog
 				m_cbDebugThread.setSelected(false);
 				m_cbDummyTraffic.setSelected(false);
 				m_cbInfoServiceDisabled.setSelected(false);
+				m_cbCertCheckDisabled.setSelected(false);
 			}
 
 		protected void okPressed()
@@ -1162,6 +1598,9 @@ final class JAPConf extends JDialog
 				// Infoservice settings
 				m_Controller.setInfoService(m_tfInfoHost.getText().trim(),Integer.parseInt(m_tfInfoPortNumber.getText().trim()));
 				m_Controller.setInfoServiceDisabled(m_cbInfoServiceDisabled.isSelected());
+				//Cert seetings
+				m_Controller.setCertCheckDisabled(m_cbCertCheckDisabled.isSelected());
+
 				// Anonservice settings
 				m_Controller.setAutoConnect(m_cbAutoConnect.isSelected());
 				m_Controller.setAutoReConnect(m_cbAutoReConnect.isSelected());
@@ -1212,6 +1651,8 @@ final class JAPConf extends JDialog
 					m_Tabs.setSelectedComponent(m_pInfo);
 				else if (selectedCard == ANON_TAB)
 					m_Tabs.setSelectedComponent(m_pMix);
+				else if (selectedCard == CERT_TAB)
+					m_Tabs.setSelectedComponent(m_pCert);
 				else if (selectedCard == MISC_TAB)
 					m_Tabs.setSelectedComponent(m_pMisc);
 				else
@@ -1311,6 +1752,8 @@ final class JAPConf extends JDialog
 				// infoservice tab
 				m_tfInfoHost.setText(JAPModel.getInfoServiceHost());
 				m_tfInfoPortNumber.setText(String.valueOf(JAPModel.getInfoServicePort()));
+				//cert tab
+				m_cbCertCheckDisabled.setSelected(JAPModel.isCertCheckDisabled());
 				// anon tab
 				AnonServer server = m_Controller.getAnonServer();
 				m_strMixName = server.getName();

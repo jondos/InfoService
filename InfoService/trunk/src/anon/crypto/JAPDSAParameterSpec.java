@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2000, The JAP-Team
+Copyright (c) 2000 - 2003, The JAP-Team
 All rights reserved.
 Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
@@ -25,21 +25,37 @@ OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABIL
 IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
-package anon;
+package anon.crypto;
 
-public final class ErrorCodes
+import java.security.interfaces.DSAParams;
+import java.math.BigInteger;
+
+public class JAPDSAParameterSpec implements DSAParams
+{
+	private BigInteger p = null;
+	private BigInteger q = null;
+	private BigInteger g = null;
+
+	public JAPDSAParameterSpec(BigInteger p, BigInteger q, BigInteger g)
 	{
-		public final static int E_SUCCESS=0;
-		public final static int E_UNKNOWN=-1;
-		public final static int E_ALREADY_CONNECTED=-4;
-		public final static int E_INVALID_SERVICE=-5;
-		public final static int E_CONNECT=-6;
-		public final static int E_NOT_CONNECTED=-9;
-		public final static int E_MIX_PROTOCOL_NOT_SUPPORTED=-10;
-		public final static int E_INVALID_CERTIFICATE=-20;
-		public final static int E_INVALID_KEY=-21;
-		public final static int E_SIGNATURE_CHECK_FIRSTMIX_FAILED=-22;
-		public final static int E_SIGNATURE_CHECK_OTHERMIX_FAILED=-23;
-
-
+		this.p = p;
+		this.q = q;
+		this.g = g;
 	}
+
+	public BigInteger getP()
+	{
+		return this.p;
+	}
+
+	public BigInteger getQ()
+	{
+		return this.q;
+	}
+
+	public BigInteger getG()
+	{
+		return this.g;
+	}
+
+}
