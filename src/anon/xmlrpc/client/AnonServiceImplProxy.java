@@ -36,7 +36,6 @@ import java.net.ConnectException;
 import anon.AnonService;
 import anon.AnonChannel;
 import anon.AnonServiceEventListener;
-import logging.Log;
 
 import anon.infoservice.MixCascade;
 
@@ -88,10 +87,6 @@ public class AnonServiceImplProxy implements AnonService
 			}
 
 		public void removeEventListener(AnonServiceEventListener l)
-			{
-			}
-
-		public void setLogging(Log log)
 			{
 			}
 

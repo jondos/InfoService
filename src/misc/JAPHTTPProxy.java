@@ -29,7 +29,7 @@ package misc;
 import jap.JAPDebug;
 import proxy.DirectProxy;
 import java.net.ServerSocket;
-
+import logging.*;
 final public class JAPHTTPProxy {
 	boolean runFlag;
 	int port = 4008;
@@ -38,9 +38,9 @@ final public class JAPHTTPProxy {
 	public JAPHTTPProxy (int port) {
 		this.port = port;
 		// Create debugger object
-		JAPDebug.create();
-		JAPDebug.setDebugType(JAPDebug.NET+JAPDebug.GUI+JAPDebug.THREAD+JAPDebug.MISC);
-		JAPDebug.setDebugLevel(JAPDebug.DEBUG);
+		LogHolder.setLogInstance(JAPDebug.getInstance());
+		JAPDebug.getInstance().setLogType(LogType.NET+LogType.GUI+LogType.THREAD+LogType.MISC);
+		JAPDebug.getInstance().setLogLevel(LogLevel.DEBUG);
 	}
 
 	public void startService() {
@@ -61,7 +61,7 @@ final public class JAPHTTPProxy {
 				} catch (Exception e2) {
 					;
 				}
-				JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.NET,"Exception: " +e);
+				LogHolder.log(LogLevel.EXCEPTION,LogType.NET,"Exception: " +e);
 			}
 		//}
 		//JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Service on port " + port + " stopped.");

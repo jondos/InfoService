@@ -85,10 +85,10 @@ public final class LogHolder {
 	 *
 	 * @param logInstance The instance of a Log implementation.
 	 */
-	public void setLogInstance(Log logInstance) {
-		m_logInstance = logInstance;
-		if(m_logInstance==null)
-			m_logInstance=new DummyLog();
+	public static void setLogInstance(Log logInstance) {
+		getInstance().m_logInstance = logInstance;
+		if(getInstance().m_logInstance==null)
+			getInstance().m_logInstance=new DummyLog();
 	}
 
 	/**

@@ -34,7 +34,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
 import HTTPClient.HTTPConnection;
 import HTTPClient.HTTPResponse;
-
+import logging.*;
 final class JAPFeedback implements Runnable {
 
 	private JAPController controller;
@@ -44,7 +44,7 @@ final class JAPFeedback implements Runnable {
 
 	public JAPFeedback()
 		{
-			JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPFeedback:initializing...");
+			LogHolder.log(LogLevel.INFO,LogType.MISC,"JAPFeedback:initializing...");
 			controller = JAPController.getController();
 			m_threadRunLoop=null;
 			runFlag=false;

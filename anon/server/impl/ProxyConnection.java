@@ -34,7 +34,7 @@ import java.io.OutputStreamWriter;
 import java.net.SocketException;
 import anon.server.AnonServiceImpl;
 import HTTPClient.Codecs;
-import logging.Log;
+import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 
@@ -47,18 +47,16 @@ final public class ProxyConnection
     private Socket m_ioSocket;
     private InputStream m_In;
     private OutputStream m_Out;
-    private Log m_Log;
-    public ProxyConnection(Log log, int fwType,String fwHost,int fwPort,
+    public ProxyConnection(int fwType,String fwHost,int fwPort,
                             String fwUserID,String fwPasswd,
                             String host, int port)
                             throws Exception
       {
-        m_Log=log;
         if(fwType==AnonServiceImpl.FIREWALL_TYPE_NONE)
           m_ioSocket=new Socket(host,port);
         else
           {
- 			      m_Log.log(LogLevel.DEBUG,LogType.NET,"ProxyConnection: Try to connect via Firewall ("+fwHost+":"+fwPort+") to Server ("+host+":"+port+")");
+ 			      LogHolder.log(LogLevel.DEBUG,LogType.NET,"ProxyConnection: Try to connect via Firewall ("+fwHost+":"+fwPort+") to Server ("+host+":"+port+")");
             m_ioSocket=new Socket(fwHost,fwPort);
           }
         m_ioSocket.setSoTimeout(10000);
@@ -80,11 +78,11 @@ final public class ProxyConnection
                 sendHTTPProxyCommands(FIREWALL_METHOD_HTTP_1_0,writer,host,port,fwUserID,fwPasswd);
               }
             String tmp=readLine(m_In);
-            m_Log.log(LogLevel.DEBUG,LogType.NET,"ProxyConnection: Firewall response is: "+tmp);
+            LogHolder.log(LogLevel.DEBUG,LogType.NET,"ProxyConnection: Firewall response is: "+tmp);
             if(tmp.indexOf("200")!=-1)
               {
                 while(!(tmp=readLine(m_In)).equals(""))
-                  m_Log.log(LogLevel.DEBUG,LogType.NET,"ProxyConnection: Firewall response is: "+tmp);
+                  LogHolder.log(LogLevel.DEBUG,LogType.NET,"ProxyConnection: Firewall response is: "+tmp);
               }
             else
               throw new Exception("HTTP-Proxy response: "+tmp);

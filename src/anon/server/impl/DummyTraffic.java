@@ -27,7 +27,7 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 */
 package anon.server.impl;
 
-import logging.Log;
+import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 
@@ -36,22 +36,15 @@ final class DummyTraffic implements Runnable
 		private MuxSocket m_MuxSocket=null;
 		private volatile boolean m_bRun=false;
 		private Thread m_threadRunLoop=null;
-		private Log m_Log;
 		private int m_Intervall;
 //    private final static long DUMMY_TRAFFIC_INTERVAL=10000; //How long maximum to wait between packets ?
 
-		public DummyTraffic(MuxSocket muxSocket,int intervall,Log log)
+		public DummyTraffic(MuxSocket muxSocket,int intervall)
 			{
-				m_Log=log;
 				m_MuxSocket=muxSocket;
 				m_bRun=false;
 				m_threadRunLoop=null;
 				m_Intervall=intervall;
-			}
-
-		public void setLogging(Log log)
-			{
-				m_Log=log;
 			}
 
 		public void run()
@@ -60,7 +53,7 @@ final class DummyTraffic implements Runnable
 					{
 						if(System.currentTimeMillis()-m_MuxSocket.getTimeLastPacketSend()>m_Intervall)
 							{
-								m_Log.log(LogLevel.DEBUG,LogType.NET,"Sending Dummy!");
+								LogHolder.log(LogLevel.DEBUG,LogType.NET,"Sending Dummy!");
 								m_MuxSocket.sendDummy(); //send a dummy
 							}
 						try

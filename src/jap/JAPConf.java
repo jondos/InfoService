@@ -78,6 +78,7 @@ import anon.infoservice.InfoServiceDatabase;
 import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.MixCascade;
 import update.JAPUpdate;
+import logging.*;
 final class JAPConf extends JDialog
 	{
 
@@ -511,13 +512,13 @@ final class JAPConf extends JDialog
 					m_bttnFetchCascades.setMargin(JAPConstants.SMALL_BUTTON_MARGIN);
 				m_bttnFetchCascades.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
-					JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPConf:m_bttnFetchCascades");
+					LogHolder.log(LogLevel.DEBUG,LogType.GUI,"JAPConf:m_bttnFetchCascades");
 						// fetch available mix cascades from the Internet
 						Cursor c=getCursor();
 						setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 						m_Controller.fetchMixCascades();
 						updateMixCascadeCombo();
-						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPConf: finished updateMixCascadeCombo()");
+						LogHolder.log(LogLevel.DEBUG,LogType.GUI,"JAPConf: finished updateMixCascadeCombo()");
 						if (m_Controller.getMixCascadeDatabase().size() == 0) {
 							setCursor(c);
 							if(!JAPModel.isSmallDisplay())
@@ -532,7 +533,7 @@ final class JAPConf extends JDialog
 							//JAPCascadeMonitorView v=new JAPCascadeMonitorView(m_Controller.getView());
 							// ------ !!!!! die folgenden zwei zeilen auskommentieren, wenn JAPCascadeMonitorView
 							// ------ !!!!! ordentlich geht!!!!
-							JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPConf: setting old cursor()");
+							LogHolder.log(LogLevel.DEBUG,LogType.GUI,"JAPConf: setting old cursor()");
 							setCursor(c);
 								m_rbMixStep2.doClick();
 						}
@@ -545,7 +546,7 @@ final class JAPConf extends JDialog
 				m_comboMixCascade.setEnabled(false);
 				m_comboMixCascade.addActionListener(new ActionListener() {
 							public void actionPerformed(ActionEvent e) {
-						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPConf:Item " + m_comboMixCascade.getSelectedIndex() + " selected");
+						LogHolder.log(LogLevel.DEBUG,LogType.GUI,"JAPConf:Item " + m_comboMixCascade.getSelectedIndex() + " selected");
 						if (m_comboMixCascade.getSelectedIndex() > 0)
 						{
 							MixCascade mixCascadeEntry = (MixCascade)m_comboMixCascade.getSelectedItem();
@@ -560,7 +561,7 @@ final class JAPConf extends JDialog
 				bg.add(m_rbMixStep3);
 				m_rbMixStep1.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
-						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPConf:m_rbMixStep1 selected");
+						LogHolder.log(LogLevel.DEBUG,LogType.GUI,"JAPConf:m_rbMixStep1 selected");
 						m_bttnFetchCascades.setEnabled(true);
 						m_comboMixCascade.setEnabled(false);
 						m_tfMixHost.setEditable(false);
@@ -568,7 +569,7 @@ final class JAPConf extends JDialog
 				}});
 				m_rbMixStep2.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
-						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPConf:m_rbMixStep2 selected");
+						LogHolder.log(LogLevel.DEBUG,LogType.GUI,"JAPConf:m_rbMixStep2 selected");
 						m_bttnFetchCascades.setEnabled(false);
 						m_comboMixCascade.setEnabled(true);
 						m_comboMixCascade.setPopupVisible(true);
@@ -577,7 +578,7 @@ final class JAPConf extends JDialog
 				}});
 				m_rbMixStep3.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
-						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPConf:m_rbMixStep3 selected");
+						LogHolder.log(LogLevel.DEBUG,LogType.GUI,"JAPConf:m_rbMixStep3 selected");
 						m_bttnFetchCascades.setEnabled(false);
 						m_comboMixCascade.setEnabled(false);
 						m_tfMixHost.setEditable(true);
@@ -1538,7 +1539,7 @@ final class JAPConf extends JDialog
 						for(int i=0;i<8;i++)
 							((JLabel)d.get(new Integer(i))).setEnabled(i<=m_sliderDebugLevel.getValue());
 					}});
-				String debugLevels[]=JAPDebug.getDebugLevels();
+				String debugLevels[]=LogLevel.STR_Levels;
 				Hashtable ht=new Hashtable(debugLevels.length,1.0f);
 				for(int i=0;i<debugLevels.length;i++)
 					{
@@ -1714,7 +1715,7 @@ final class JAPConf extends JDialog
 					{
 						i=-1;
 					}
-				if(i<0||i>JAPDebug.DEBUG)
+				if(i<0||i>LogLevel.DEBUG)
 					{
 						showError(JAPMessages.getString("errorDebugLevelWrong"));
 						return false;
@@ -1741,7 +1742,7 @@ final class JAPConf extends JDialog
 				}
 				catch (Exception e) {
 					/* should not happen, if it happens, we can't do anything */
-					JAPDebug.out(JAPDebug.EXCEPTION, JAPDebug.MISC, "JAPConf: resetToDefault: Cannot create the default infoservice.");
+					LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, "JAPConf: resetToDefault: Cannot create the default infoservice.");
 				}
 				/* update the GUI */
 				JAPConfInfoService.getInstance().updateGuiOutput();
@@ -1755,7 +1756,7 @@ final class JAPConf extends JDialog
 				m_cbListenerIsLocal.setSelected(true);
 				//m_cbListenerSocks.setSelected(false);
 				m_cbShowDebugConsole.setSelected(false);
-				m_sliderDebugLevel.setValue(JAPDebug.EMERG);
+				m_sliderDebugLevel.setValue(LogLevel.EMERG);
 				m_cbDebugNet.setSelected(false);
 				m_cbDebugGui.setSelected(false);
 				m_cbDebugMisc.setSelected(false);
@@ -1771,14 +1772,14 @@ final class JAPConf extends JDialog
 					return;
 				setVisible(false);
 				// Misc settings
-				JAPDebug.setDebugType(
-					 (m_cbDebugGui.isSelected()?JAPDebug.GUI:JAPDebug.NUL)+
-					 (m_cbDebugNet.isSelected()?JAPDebug.NET:JAPDebug.NUL)+
-					 (m_cbDebugThread.isSelected()?JAPDebug.THREAD:JAPDebug.NUL)+
-					 (m_cbDebugMisc.isSelected()?JAPDebug.MISC:JAPDebug.NUL)
+				JAPDebug.getInstance().setLogType(
+					 (m_cbDebugGui.isSelected()?LogType.GUI:LogType.NUL)+
+					 (m_cbDebugNet.isSelected()?LogType.NET:LogType.NUL)+
+					 (m_cbDebugThread.isSelected()?LogType.THREAD:LogType.NUL)+
+					 (m_cbDebugMisc.isSelected()?LogType.MISC:LogType.NUL)
 					);
-				JAPDebug.setDebugLevel(m_sliderDebugLevel.getValue());
-				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"m_comboLanguage: "+Integer.toString(m_comboLanguage.getSelectedIndex()));
+				JAPDebug.getInstance().setLogLevel(m_sliderDebugLevel.getValue());
+				LogHolder.log(LogLevel.DEBUG,LogType.GUI,"m_comboLanguage: "+Integer.toString(m_comboLanguage.getSelectedIndex()));
 				if(m_comboLanguage.getSelectedIndex()==0)
 					m_Controller.setLocale(Locale.GERMAN);
 				else if(m_comboLanguage.getSelectedIndex()==1)
@@ -1912,11 +1913,11 @@ final class JAPConf extends JDialog
 				if(iTmp>-1)
 					m_sliderDummyTrafficIntervall.setValue(iTmp/1000);
 				m_cbShowDebugConsole.setSelected(JAPDebug.isShowConsole());
-				m_cbDebugGui.setSelected((((JAPDebug.getDebugType()&JAPDebug.GUI)!=0)?true:false));
-				m_cbDebugNet.setSelected((((JAPDebug.getDebugType()&JAPDebug.NET)!=0)?true:false));
-				m_cbDebugThread.setSelected((((JAPDebug.getDebugType()&JAPDebug.THREAD)!=0)?true:false));
-				m_cbDebugMisc.setSelected((((JAPDebug.getDebugType()&JAPDebug.MISC)!=0)?true:false));
-				m_sliderDebugLevel.setValue(JAPDebug.getDebugLevel());
+				m_cbDebugGui.setSelected((((JAPDebug.getInstance().getLogType()&LogType.GUI)!=0)?true:false));
+				m_cbDebugNet.setSelected((((JAPDebug.getInstance().getLogType()&LogType.NET)!=0)?true:false));
+				m_cbDebugThread.setSelected((((JAPDebug.getInstance().getLogType()&LogType.THREAD)!=0)?true:false));
+				m_cbDebugMisc.setSelected((((JAPDebug.getInstance().getLogType()&LogType.MISC)!=0)?true:false));
+				m_sliderDebugLevel.setValue(JAPDebug.getInstance().getLogLevel());
 				m_cbInfoServiceDisabled.setSelected(JAPModel.isInfoServiceDisabled());
 				m_bIgnoreComboLanguageEvents=true;
 				if(m_Controller.getLocale().equals(Locale.ENGLISH))
@@ -1967,17 +1968,17 @@ final class JAPConf extends JDialog
 
 		private void updateMixCascadeCombo()
 			{
-				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPConf: updateMixCascadeCombo() -start");
+				LogHolder.log(LogLevel.DEBUG,LogType.GUI,"JAPConf: updateMixCascadeCombo() -start");
 				m_comboMixCascade.removeAllItems();
-				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPConf: updateMixCascadeCombo() -all ItemsRemoved");
+				LogHolder.log(LogLevel.DEBUG,LogType.GUI,"JAPConf: updateMixCascadeCombo() -all ItemsRemoved");
 				m_comboMixCascade.addItem(JAPMessages.getString("settingsAnonSelect"));
-				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPConf: updateMixCascadeCombo() -added Default Item");
+				LogHolder.log(LogLevel.DEBUG,LogType.GUI,"JAPConf: updateMixCascadeCombo() -added Default Item");
 				Enumeration it = m_Controller.getMixCascadeDatabase().elements();
 				while (it.hasMoreElements()) {
 					m_comboMixCascade.addItem(it.nextElement());
 				}
-				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPConf: updateMixCascadeCombo() -added All other Items");
+				LogHolder.log(LogLevel.DEBUG,LogType.GUI,"JAPConf: updateMixCascadeCombo() -added All other Items");
 				m_comboMixCascade.setSelectedIndex(0);
-				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPConf: updateMixCascadeCombo() - select First Item -- finished!");
+				LogHolder.log(LogLevel.DEBUG,LogType.GUI,"JAPConf: updateMixCascadeCombo() - select First Item -- finished!");
 			}
 	}

@@ -60,6 +60,8 @@ import anon.infoservice.JAPVersionInfo;
 import anon.infoservice.MixCascade;
 import anon.server.impl.XMLUtil;
 import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 import proxy.AnonProxy;
 import proxy.DirectProxy;
 import proxy.ProxyListener;
@@ -124,7 +126,7 @@ public final class JAPController
 		}
 		catch (Exception e)
 		{
-			JAPDebug.out(JAPDebug.EMERG, JAPDebug.NET, "JAPController: Constructor: " + e.getMessage());
+			LogHolder.log(LogLevel.EMERG, LogType.NET, "JAPController: Constructor: " + e.getMessage());
 		}
 		/* set a default infoservice */
 		try
@@ -135,15 +137,13 @@ public final class JAPController
 		}
 		catch (Exception e)
 		{
-			JAPDebug.out(JAPDebug.EMERG, JAPDebug.NET, "JAPController: Constructor: " + e.getMessage());
+			LogHolder.log(LogLevel.EMERG, LogType.NET, "JAPController: Constructor: " + e.getMessage());
 		}
 
 		mixCascadeDatabase = new Vector();
 		m_proxyDirect = null;
 		m_proxyAnon = null;
 		m_Locale = Locale.getDefault();
-		/* set JAPDebug as Log implementation in LogHolder -> Log of AnonLib visible */
-		LogHolder.getInstance().setLogInstance(JAPDebug.create());
 	}
 
 	/** Creates the Controller - as Singleton.
@@ -166,7 +166,7 @@ public final class JAPController
 	//---------------------------------------------------------------------
 	public void initialRun()
 	{
-		JAPDebug.out(JAPDebug.INFO, JAPDebug.MISC, "JAPModel:initial run of JAP...");
+		LogHolder.log(LogLevel.INFO, LogType.MISC, "JAPModel:initial run of JAP...");
 		// start http listener object
 		if (!startHTTPListener())
 		{ // start was not sucessful
@@ -179,7 +179,7 @@ public final class JAPController
 										  msg,
 										  JAPMessages.getString("errorListenerPortTitle"),
 										  JOptionPane.ERROR_MESSAGE);
-			JAPDebug.out(JAPDebug.EMERG, JAPDebug.NET, "Cannot start listener!");
+			LogHolder.log(LogLevel.EMERG, LogType.NET, "Cannot start listener!");
 			m_Controller.status1 = JAPMessages.getString("statusCannotStartListener");
 			m_Controller.getView().disableSetAnonMode();
 			notifyJAPObservers();
@@ -264,7 +264,7 @@ public final class JAPController
 	public synchronized void loadConfigFile(String strJapConfFile)
 	{
 		// Load config from xml file
-		JAPDebug.out(JAPDebug.INFO, JAPDebug.MISC,
+		LogHolder.log(LogLevel.INFO, LogType.MISC,
 					 "JAPModel:try loading configuration from " + JAPConstants.XMLCONFFN);
 		FileInputStream f = null;
 		if (strJapConfFile == null)
@@ -284,7 +284,7 @@ public final class JAPController
 			}
 			catch (Exception e2)
 			{
-				JAPDebug.out(JAPDebug.INFO, JAPDebug.MISC,
+				LogHolder.log(LogLevel.INFO, LogType.MISC,
 							 "JAPModel:Error loading configuration! " + e2.toString());
 			}
 		}
@@ -296,7 +296,7 @@ public final class JAPController
 			}
 			catch (Exception e2)
 			{
-				JAPDebug.out(JAPDebug.INFO, JAPDebug.MISC,
+				LogHolder.log(LogLevel.INFO, LogType.MISC,
 							 "JAPModel:Error loading configuration! " + e2.toString());
 			}
 		}
@@ -438,7 +438,7 @@ public final class JAPController
 							}
 							catch (Exception lfe)
 							{
-								JAPDebug.out(JAPDebug.WARNING, JAPDebug.GUI,
+								LogHolder.log(LogLevel.WARNING, LogType.GUI,
 											 "JAPModel:Exception while setting look-and-feel");
 							}
 							break;
@@ -473,29 +473,29 @@ public final class JAPController
 					Element elemLevel = (Element) XMLUtil.getFirstChildByName(elemDebug, "Level");
 					if (elemLevel != null)
 					{
-						JAPDebug.setDebugLevel(Integer.parseInt(elemLevel.getFirstChild().getNodeValue().trim()));
+						JAPDebug.getInstance().setLogLevel(Integer.parseInt(elemLevel.getFirstChild().getNodeValue().trim()));
 					}
 					Element elemType = (Element) XMLUtil.getFirstChildByName(elemDebug, "Type");
 					if (elemType != null)
 					{
-						int debugtype = JAPDebug.NUL;
+						int debugtype = LogType.NUL;
 						if (elemType.getAttribute("GUI").equals("true"))
 						{
-							debugtype += JAPDebug.GUI;
+							debugtype += LogType.GUI;
 						}
 						if (elemType.getAttribute("NET").equals("true"))
 						{
-							debugtype += JAPDebug.NET;
+							debugtype += LogType.NET;
 						}
 						if (elemType.getAttribute("THREAD").equals("true"))
 						{
-							debugtype += JAPDebug.THREAD;
+							debugtype += LogType.THREAD;
 						}
 						if (elemType.getAttribute("MISC").equals("true"))
 						{
-							debugtype += JAPDebug.MISC;
+							debugtype += LogType.MISC;
 						}
-						JAPDebug.setDebugType(debugtype);
+						JAPDebug.getInstance().setLogType(debugtype);
 					}
 					Element elemOutput = (Element) XMLUtil.getFirstChildByName(elemDebug, "Output");
 					if (elemOutput != null)
@@ -530,7 +530,7 @@ public final class JAPController
 			}
 			catch (Exception e)
 			{
-				JAPDebug.out(JAPDebug.INFO, JAPDebug.MISC,
+				LogHolder.log(LogLevel.INFO, LogType.MISC,
 							 "JAPModel:Error loading configuration! " + e.toString());
 			}
 		} //end if f!=null
@@ -541,7 +541,7 @@ public final class JAPController
 	public void saveConfigFile()
 	{
 		boolean error = false;
-		JAPDebug.out(JAPDebug.INFO, JAPDebug.MISC,
+		LogHolder.log(LogLevel.INFO, LogType.MISC,
 					 "JAPModel:try saving configuration to " + JAPConstants.XMLCONFFN);
 		try
 		{
@@ -574,7 +574,7 @@ public final class JAPController
 		}
 		if (error)
 		{
-			JAPDebug.out(JAPDebug.ERR, JAPDebug.MISC,
+			LogHolder.log(LogLevel.ERR, LogType.MISC,
 						 "JAPModel:error saving configuration to " + JAPConstants.XMLCONFFN);
 			JOptionPane.showMessageDialog(m_Controller.getView(),
 										  JAPMessages.getString("errorSavingConfig"),
@@ -667,15 +667,15 @@ public final class JAPController
 			Element elemDebug = doc.createElement("Debug");
 			e.appendChild(elemDebug);
 			Element tmp = doc.createElement("Level");
-			Text txt = doc.createTextNode(Integer.toString(JAPDebug.getDebugLevel()));
+			Text txt = doc.createTextNode(Integer.toString(JAPDebug.getInstance().getLogLevel()));
 			tmp.appendChild(txt);
 			elemDebug.appendChild(tmp);
 			tmp = doc.createElement("Type");
-			int debugtype = JAPDebug.getDebugType();
-			tmp.setAttribute("GUI", (debugtype & JAPDebug.GUI) != 0 ? "true" : "false");
-			tmp.setAttribute("NET", (debugtype & JAPDebug.NET) != 0 ? "true" : "false");
-			tmp.setAttribute("THREAD", (debugtype & JAPDebug.THREAD) != 0 ? "true" : "false");
-			tmp.setAttribute("MISC", (debugtype & JAPDebug.MISC) != 0 ? "true" : "false");
+			int debugtype = JAPDebug.getInstance().getLogType();
+			tmp.setAttribute("GUI", (debugtype & LogType.GUI) != 0 ? "true" : "false");
+			tmp.setAttribute("NET", (debugtype & LogType.NET) != 0 ? "true" : "false");
+			tmp.setAttribute("THREAD", (debugtype & LogType.THREAD) != 0 ? "true" : "false");
+			tmp.setAttribute("MISC", (debugtype & LogType.MISC) != 0 ? "true" : "false");
 			elemDebug.appendChild(tmp);
 			if (JAPDebug.isShowConsole())
 			{
@@ -700,7 +700,7 @@ public final class JAPController
 		}
 		catch (Throwable ex)
 		{
-			JAPDebug.out(JAPDebug.EXCEPTION, JAPDebug.MISC, "JAPModel:save() Exception: " + ex.getMessage());
+			LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, "JAPModel:save() Exception: " + ex.getMessage());
 		}
 		return null;
 	}
@@ -757,7 +757,7 @@ public final class JAPController
 					/* we are running in anonymity mode */
 					setAnonMode(false);
 					currentMixCascade = newMixCascade;
-					JAPDebug.out(JAPDebug.DEBUG, JAPDebug.MISC,
+					LogHolder.log(LogLevel.DEBUG, LogType.MISC,
 								 "JAPController: setCurrentMixCascade: MixCascade changed while in anonymity mode.");
 					setAnonMode(true);
 				}
@@ -946,7 +946,7 @@ public final class JAPController
 	   if(m_Controller.m_InfoService==null)
 	 {
 	 m_Controller.m_InfoService=new InfoService(JAPModel.getInfoServiceHost(),JAPModel.getInfoServicePort());
-	  m_Controller.m_InfoService.setLogging(JAPDebug.create());
+	  m_Controller.m_InfoService.setLogging(LogLevel.create());
 	  m_Controller.applyProxySettingsToInfoService();
 	 }
 	  return m_Controller.m_InfoService;
@@ -1015,7 +1015,7 @@ public final class JAPController
 				JAPWaitSplash splash = null;
 				boolean canStartService = true;
 				//setAnonMode--> async!!
-				JAPDebug.out(JAPDebug.DEBUG, JAPDebug.MISC, "JAPModel:setAnonMode(" + anonModeSelected + ")");
+				LogHolder.log(LogLevel.DEBUG, LogType.MISC, "JAPModel:setAnonMode(" + anonModeSelected + ")");
 				if ( (m_proxyAnon == null) && (anonModeSelected == true))
 				{ //start Anon Mode
 					m_View.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
@@ -1115,7 +1115,7 @@ public final class JAPController
 							msg,
 							JAPMessages.getString("errorListenerPortTitle"),
 							JOptionPane.ERROR_MESSAGE);
-						JAPDebug.out(JAPDebug.EMERG, JAPDebug.NET, "Listener could not be started!");
+						LogHolder.log(LogLevel.EMERG, LogType.NET, "Listener could not be started!");
 						m_Controller.getView().disableSetAnonMode();
 					}
 					else if (ret == AnonProxy.E_MIX_PROTOCOL_NOT_SUPPORTED)
@@ -1273,7 +1273,7 @@ public final class JAPController
 			{
 				m_Model.setHttpListenerIsLocal(isLocal);
 			}
-			JAPDebug.out(JAPDebug.DEBUG, JAPDebug.MISC, "JAPModel:HTTP listener settings changed");
+			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "JAPModel:HTTP listener settings changed");
 			if (bShowWarning)
 			{
 				JOptionPane.showMessageDialog(m_Controller.getView(),
@@ -1298,7 +1298,7 @@ public final class JAPController
 	//---------------------------------------------------------------------
 	private boolean startHTTPListener()
 	{
-		JAPDebug.out(JAPDebug.DEBUG, JAPDebug.MISC, "JAPModel:startListener");
+		LogHolder.log(LogLevel.DEBUG, LogType.MISC, "JAPModel:startListener");
 		if (isRunningListener == false)
 		{
 			boolean bindOk = false;
@@ -1310,7 +1310,7 @@ public final class JAPController
 					{
 						//InetAddress[] a=InetAddress.getAllByName("localhost");
 						InetAddress[] a = InetAddress.getAllByName("127.0.0.1");
-						JAPDebug.out(JAPDebug.DEBUG, JAPDebug.NET,
+						LogHolder.log(LogLevel.DEBUG, LogType.NET,
 									 "Try binding Listener on localhost: " + a[0]);
 						m_socketHTTPListener = new ServerSocket(JAPModel.getHttpListenerPortNumber(), 50, a[0]);
 					}
@@ -1318,7 +1318,7 @@ public final class JAPController
 					{
 						m_socketHTTPListener = new ServerSocket(JAPModel.getHttpListenerPortNumber());
 					}
-					JAPDebug.out(JAPDebug.INFO, JAPDebug.NET,
+					LogHolder.log(LogLevel.INFO, LogType.NET,
 								 "Listener on port " + JAPModel.getHttpListenerPortNumber() + " started.");
 					try
 					{
@@ -1326,7 +1326,7 @@ public final class JAPController
 					}
 					catch (Exception e1)
 					{
-						JAPDebug.out(JAPDebug.DEBUG, JAPDebug.NET,
+						LogHolder.log(LogLevel.DEBUG, LogType.NET,
 									 "Could not set listener accept timeout: Exception: " + e1.getMessage());
 					}
 					bindOk = true;
@@ -1334,7 +1334,7 @@ public final class JAPController
 				}
 				catch (Exception e)
 				{
-					JAPDebug.out(JAPDebug.DEBUG, JAPDebug.NET, "Exception: " + e.getMessage());
+					LogHolder.log(LogLevel.DEBUG, LogType.NET, "Exception: " + e.getMessage());
 					m_socketHTTPListener = null;
 				}
 			}
@@ -1345,7 +1345,7 @@ public final class JAPController
 
 	private void stopHTTPListener()
 	{
-		JAPDebug.out(JAPDebug.DEBUG, JAPDebug.MISC, "JAPModel:stopListener");
+		LogHolder.log(LogLevel.DEBUG, LogType.MISC, "JAPModel:stopListener");
 		if (isRunningListener)
 		{
 			setAnonMode(false);
@@ -1419,12 +1419,12 @@ public final class JAPController
 	 */
 	public void fetchMixCascades()
 	{
-		JAPDebug.out(JAPDebug.INFO, JAPDebug.MISC,
+		LogHolder.log(LogLevel.INFO, LogType.MISC,
 					 "JAPController: fetchMixCascades: Trying to fetch mixcascades from infoservice.");
 		Vector newMixCascades = InfoServiceHolder.getInstance().getMixCascades();
 		if (newMixCascades == null)
 		{
-			JAPDebug.out(JAPDebug.ERR, JAPDebug.NET,
+			LogHolder.log(LogLevel.ERR, LogType.NET,
 						 "JAPController: fetchMixCascades: No connection to infoservices.");
 			if (!JAPModel.isSmallDisplay())
 			{
@@ -1435,7 +1435,7 @@ public final class JAPController
 		}
 		else
 		{
-			JAPDebug.out(JAPDebug.DEBUG, JAPDebug.NET, "JAPController: fetchMixCascades: success!");
+			LogHolder.log(LogLevel.DEBUG, LogType.NET, "JAPController: fetchMixCascades: success!");
 			mixCascadeDatabase = newMixCascades;
 			notifyJAPObservers();
 		}
@@ -1450,14 +1450,14 @@ public final class JAPController
 	 */
 	public int versionCheck()
 	{
-		JAPDebug.out(JAPDebug.INFO, JAPDebug.MISC,
+		LogHolder.log(LogLevel.INFO, LogType.MISC,
 					 "JAPController: versionCheck: Checking for new version of JAP...");
 		int result = 0;
 		String currentVersionNumber = InfoServiceHolder.getInstance().getNewVersionNumber();
 		if (currentVersionNumber != null)
 		{
 			currentVersionNumber = currentVersionNumber.trim();
-			JAPDebug.out(JAPDebug.DEBUG, JAPDebug.MISC,
+			LogHolder.log(LogLevel.DEBUG, LogType.MISC,
 						 "JAPController: versionCheck: Local version: " + JAPConstants.aktVersion);
 			if (currentVersionNumber.compareTo(JAPConstants.aktVersion) <= 0)
 			{
@@ -1486,7 +1486,7 @@ public final class JAPController
 					if (wz.getStatus() != wz.UPDATESTATUS_SUCCESS)
 					{
 						/* Download failed -> alert, and reset anon mode to false */
-						JAPDebug.out(JAPDebug.ERR, JAPDebug.MISC,
+						LogHolder.log(LogLevel.ERR, LogType.MISC,
 									 "JAPController: versionCheck: Some update problem.");
 						JOptionPane.showMessageDialog(m_View,
 							JAPMessages.getString("downloadFailed") + JAPMessages.getString("infoURL"),
@@ -1504,7 +1504,7 @@ public final class JAPController
 				/* update was not successful, because we could not get the JAPVersionInfo -> alert, and
 				 * reset anon mode to false
 				 */
-				JAPDebug.out(JAPDebug.ERR, JAPDebug.MISC,
+				LogHolder.log(LogLevel.ERR, LogType.MISC,
 							 "JAPController: versionCheck: Could not get JAPVersionInfo.");
 				JOptionPane.showMessageDialog(m_View,
 											  JAPMessages.getString("downloadFailed") +
@@ -1534,7 +1534,7 @@ public final class JAPController
 			/* can't get the current version number from the infoservices -> Alert, and reset anon
 			 * mode to false
 			 */
-			JAPDebug.out(JAPDebug.ERR, JAPDebug.MISC,
+			LogHolder.log(LogLevel.ERR, LogType.MISC,
 						 "JAPController: versionCheck: Could not get the current JAP version number from infoservice.");
 			JAPUtil.showMessageBox(m_View, "errorConnectingInfoService", "errorConnectingInfoServiceTitle",
 								   JOptionPane.ERROR_MESSAGE);
@@ -1563,7 +1563,7 @@ public final class JAPController
 
 	public void notifyJAPObservers()
 	{
-		JAPDebug.out(JAPDebug.DEBUG, JAPDebug.MISC, "JAPModel:notifyJAPObservers()");
+		LogHolder.log(LogLevel.DEBUG, LogType.MISC, "JAPModel:notifyJAPObservers()");
 		synchronized (observerVector)
 		{
 			try
@@ -1573,18 +1573,18 @@ public final class JAPController
 				while (enum.hasMoreElements())
 				{
 					JAPObserver listener = (JAPObserver) enum.nextElement();
-					JAPDebug.out(JAPDebug.DEBUG, JAPDebug.MISC, "JAPModel:notifyJAPObservers: " + i);
+					LogHolder.log(LogLevel.DEBUG, LogType.MISC, "JAPModel:notifyJAPObservers: " + i);
 					listener.valuesChanged();
 					i++;
 				}
 			}
 			catch (Throwable t)
 			{
-				JAPDebug.out(JAPDebug.EMERG, JAPDebug.MISC,
+				LogHolder.log(LogLevel.EMERG, LogType.MISC,
 							 "JAPModel:notifyJAPObservers - critical exception: " + t.getMessage());
 			}
 		}
-		JAPDebug.out(JAPDebug.DEBUG, JAPDebug.MISC, "JAPModel:notifyJAPObservers()-ended");
+		LogHolder.log(LogLevel.DEBUG, LogType.MISC, "JAPModel:notifyJAPObservers()-ended");
 	}
 
 	//---------------------------------------------------------------------

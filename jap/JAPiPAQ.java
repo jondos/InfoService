@@ -31,7 +31,7 @@ import javax.swing.JPanel;
 import java.awt.Insets;
 import java.util.Enumeration;
 import java.util.Locale;
-
+import logging.*;
 
 final public class JAPiPAQ {
 
@@ -48,9 +48,9 @@ public void startJAP(String strJapConfFile) {
 		// Create the controller object
 		JAPController controller = JAPController.create();
 		// Create debugger object
-		JAPDebug.create();
-		JAPDebug.setDebugType(JAPDebug.NET+JAPDebug.GUI+JAPDebug.THREAD+JAPDebug.MISC);
-		JAPDebug.setDebugLevel(JAPDebug.WARNING);
+		LogHolder.setLogInstance(JAPDebug.getInstance());
+		JAPDebug.getInstance().setLogType(LogType.NET+LogType.GUI+LogType.THREAD+LogType.MISC);
+		JAPDebug.getInstance().setLogLevel(LogLevel.WARNING);
 		// load settings from config file
 		controller.loadConfigFile(strJapConfFile);
 		// Output some information about the system

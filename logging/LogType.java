@@ -29,6 +29,7 @@ package logging;
 
 final public class LogType
   {
+	  public final static int NUL = 1;
     /** Indicates a GUI related message (binary: <code>00000001</code>) */
     public final static int GUI = 1;
     /** Indicates a network related message (binary: <code>00000010</code>) */

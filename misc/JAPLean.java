@@ -33,7 +33,7 @@ import proxy.AnonProxy;
 import java.net.ServerSocket;
 
 import anon.infoservice.MixCascade;
-
+import logging.*;
 
 final class JAPLean implements ProxyListener {
 
@@ -47,9 +47,9 @@ final class JAPLean implements ProxyListener {
 	static int      nrOfBytes         = 0;
 
 	JAPLean() throws Exception {
-		JAPDebug.create();
-		JAPDebug.setDebugType(JAPDebug.NET);
-		JAPDebug.setDebugLevel(JAPDebug.ERR);
+		LogHolder.setLogInstance(JAPDebug.getInstance());
+		JAPDebug.getInstance().setLogType(LogType.NET);
+		JAPDebug.getInstance().setLogLevel(LogLevel.ERR);
 
 		// JAPAnonService.init();
 		ServerSocket listener=null;

@@ -43,7 +43,7 @@ import jap.JAPConstants;
 import jap.JAPMessages;
 import jap.JAPUtil;
 import jap.JAPController;
-import jap.JAPDebug;
+import logging.*;
 
 import anon.infoservice.ListenerInterface;
 import anon.infoservice.HTTPConnectionFactory;
@@ -133,7 +133,7 @@ public final class JAPUpdateWizard extends BasicWizard implements Runnable
 
 		private void startUpdateThread()
 			{
-				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"Start update...");
+				LogHolder.log(LogLevel.DEBUG,LogType.MISC,"Start update...");
 				updateThread = new Thread(this);
 				updateThread.start();
 			}
@@ -329,7 +329,7 @@ public final class JAPUpdateWizard extends BasicWizard implements Runnable
 		 //Step 1
 			private int renameJapJar()
 				{
-					JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"Start to make a copy of old JAP.jar!");
+					LogHolder.log(LogLevel.DEBUG,LogType.MISC,"Start to make a copy of old JAP.jar!");
 					byte[]buffer = new byte[2048];
 					//just copy the File and then rename the copy
 					downloadPage.m_labelIconStep1.setIcon(downloadPage.arrow);
@@ -361,7 +361,7 @@ public final class JAPUpdateWizard extends BasicWizard implements Runnable
 						}
 					catch(Throwable t)
 						{
-							JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"Could not make a copy of old JAP.jar: "+t.getMessage());
+							LogHolder.log(LogLevel.DEBUG,LogType.MISC,"Could not make a copy of old JAP.jar: "+t.getMessage());
 							return -1;
 						}
 				}
