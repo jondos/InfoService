@@ -21,12 +21,12 @@ import sun.security.util.DerInputStream;
 import sun.security.util.DerValue;
 import sun.security.util.BigInt;
 //import cryptix.jce.provider.Cryptix;
-import cryptix.jce.provider.CryptixCrypto;
+//import cryptix.jce.provider.CryptixCrypto;
 import java.security.Security;
-import java.security.interfaces.RSAPublicKey;
-import javax.crypto.Cipher;
-import cryptix.jce.provider.key.RawSecretKey;
-import java.security.cert.CertificateFactory;
+//import java.security.interfaces.RSAPublicKey;
+//import javax.crypto.Cipher;
+//import cryptix.jce.provider.key.RawSecretKey;
+//import java.security.cert.CertificateFactory;
 //import org.logi.crypto.keys.BlowfishKey;
 
 
@@ -135,7 +135,7 @@ final public class JAPTest
 			c.encode(out,JAPCertificate.BASE64);
 			out.close();
 	*/		
-			Security.addProvider(new CryptixCrypto());
+		//	Security.addProvider(new CryptixCrypto());
 		/*	Cipher cipherEnc=Cipher.getInstance("Blowfish/ECB/None");
 			Cipher cipherDec=Cipher.getInstance("Blowfish/ECB/None");
 			byte[]key=new byte[16];
@@ -257,7 +257,7 @@ final public class JAPTest
 	public static void readCertCryptix()
 	{
 		try{
-			java.security.Security.addProvider(new CryptixCrypto());
+			//java.security.Security.addProvider(new CryptixCrypto());
 			//CertificateFactory cf=CertificateFactory.getInstance("X509");
 		}
 		catch(Exception e)
