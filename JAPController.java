@@ -1246,6 +1246,7 @@ private final class SetAnonModeAsync implements Runnable
 		try {
 			new JAPAbout(view);
 		} catch(Throwable t) {
+      t.printStackTrace();
 		}
 	}
 

@@ -53,6 +53,8 @@ import javax.swing.text.html.HTMLDocument;
 import javax.swing.text.html.HTML;
 import javax.swing.text.AttributeSet;
 
+import javax.swing.SwingUtilities;
+
 final class JAPAbout extends JDialog implements Runnable
 	{
 
@@ -170,9 +172,15 @@ final class JAPAbout extends JDialog implements Runnable
 				parent=p;
 				oldCursor=parent.getCursor();
 				parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-				Thread theThread=new Thread(this);
-				theThread.setPriority(Thread.MAX_PRIORITY);
-				theThread.start(); //we have to do all the initalisation in a seperate thread in order
+        try{
+        SwingUtilities.invokeLater(this);}
+        catch(Exception e)
+          {
+            e.printStackTrace();
+          }
+        //Thread theThread=new Thread(this);
+				//theThread.setPriority(Thread.MAX_PRIORITY);
+				//theThread.start(); //we have to do all the initalisation in a seperate thread in order
 				//to not block the Event-Loop Thread !!!
 			}
 
@@ -217,7 +225,7 @@ final class JAPAbout extends JDialog implements Runnable
 				//Finaly we do the same for the 'Version'-Text
 				verstxt.setLocation(x-5-verstxt.getSize().width,y);
 				//Setting the BackgroundImage-Label with the Version-Texts and OK-button
-				setContentPane(labelSplash); 
+				setContentPane(labelSplash);
 
 				labelSplash.setDoubleBuffered(false);
 
