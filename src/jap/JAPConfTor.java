@@ -23,7 +23,6 @@ import anon.tor.ordescription.*;
 
 class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 {
-	JCheckBox m_cbEnableTor;
 	JTable m_tableRouters;
 	JSlider m_sliderMaxPathLen, m_sliderMinPathLen, m_sliderPathSwitchTime;
 	JButton m_bttnFetchRouters;
@@ -43,12 +42,7 @@ class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 		GridBagConstraints c = new GridBagConstraints();
 		c.insets = new Insets(0, 0, 5, 5);
 		c.anchor = c.NORTHWEST;
-		m_cbEnableTor = new JCheckBox(JAPMessages.getString("torEnableTor"));
-		m_cbEnableTor.addActionListener(this);
-		m_cbEnableTor.setActionCommand("enableTor");
 		panelRoot.setLayout(l);
-		c.gridwidth = 5;
-		panelRoot.add(m_cbEnableTor, c);
 		c.gridwidth = 5;
 		c.fill = c.BOTH;
 		c.weightx = 1;
@@ -147,23 +141,15 @@ class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 
 	protected void onOkPressed()
 	{
-		JAPController.getController().setTorEnabled(m_cbEnableTor.isSelected());
 	}
 
 	protected void onUpdateValues()
 	{
-		m_cbEnableTor.setSelected(JAPModel.isTorEnabled());
 		updateGuiOutput();
 	}
 
 	private void updateGuiOutput()
 	{
-		boolean bEnabled = m_cbEnableTor.isSelected();
-		this.m_bttnFetchRouters.setEnabled(bEnabled);
-		this.m_tableRouters.setEnabled(bEnabled);
-		this.m_sliderMaxPathLen.setEnabled(bEnabled);
-		this.m_sliderMinPathLen.setEnabled(bEnabled);
-		this.m_sliderPathSwitchTime.setEnabled(bEnabled);
 
 	}
 

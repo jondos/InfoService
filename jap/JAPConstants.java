@@ -32,7 +32,7 @@ import java.awt.Insets;
 
 public final class JAPConstants
 {
-	public static final String aktVersion = "00.02.090"; //Never change the layout of this line!
+	public static final String aktVersion = "00.02.091"; //Never change the layout of this line!
 	private static final String CVS_GENERATED_RELEASE_DATE = "$Date$";
 
 	//Warning: This is a little bit tricky,
@@ -166,9 +166,6 @@ public final class JAPConstants
 	public final static String TRUSTEDROOTCERT = "japroot.cer";
 	public final static String CERT_JAPCODESIGNING = "japcodesigning.cer";
 	public final static String CERT_JAPINFOSERVICEMESSAGES = "japinfoservicemessages.cer";
-
-	/** Tor related defaults **/
-	public final static boolean TOR_IS_ENABLED = false;
 
 	public final static boolean WITH_BLOCKINGRESISTANCE = true; //Enables or diables Suuport of
 	//blocking reistance functionality

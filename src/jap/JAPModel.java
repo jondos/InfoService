@@ -72,8 +72,6 @@ public final class JAPModel
   private JAPCertificate m_certJAPInfoServiceMessages = null;
   private JAPCertificateStore m_certStore = null;
 
-  /** Tor related info**/
-  private boolean m_bIsTorEnabled = JAPConstants.TOR_IS_ENABLED;
   /**
    * Stores the instance with the routing settings.
    */
@@ -463,17 +461,6 @@ public final class JAPModel
   {
     return ms_TheModel.m_certJAPInfoServiceMessages;
   }
-
-  public static boolean isTorEnabled()
-  {
-    return ms_TheModel.m_bIsTorEnabled;
-  }
-
-  protected void setTorEnabled(boolean b)
-  {
-    m_bIsTorEnabled = b;
-  }
-
   /**
    * Changes the filename of the used config file.
    *

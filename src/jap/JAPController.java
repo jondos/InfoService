@@ -616,12 +616,12 @@ public final class JAPController implements ProxyListener
         }
 
         /*loading Tor seetings*/
-        Element elemTor = (Element) XMLUtil.getFirstChildByName(root, "Tor");
+      /*  Element elemTor = (Element) XMLUtil.getFirstChildByName(root, "Tor");
         boolean bIsTorEnabled = XMLUtil.parseElementAttrBoolean(elemTor, "enabled",
           JAPConstants.TOR_IS_ENABLED);
         //TODO: very bad...
         setTorEnabled(bIsTorEnabled);
-
+*/
 
         /* load Payment settings */
         if(loadPay) {
@@ -811,7 +811,6 @@ public final class JAPController implements ProxyListener
 
       /** add tor*/
       Element elemTor = doc.createElement("Tor");
-      elemTor.setAttribute("enabled", JAPModel.isTorEnabled() ? "true" : "false");
    	  e.appendChild(elemTor);
 
       /* payment configuration */
@@ -1023,11 +1022,6 @@ public final class JAPController implements ProxyListener
   public void setUseFirewallAuthorization(boolean b)
   {
     m_Model.setUseFirewallAuthorization(b);
-  }
-
-  public void setTorEnabled(boolean b)
-  {
-    m_Model.setTorEnabled(b);
   }
 
   public static Font getDialogFont()
