@@ -201,56 +201,58 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
 				 // Start with Step 1 copy
 				if(renameJapJar()!=0)
 					{
-
+						downloadPage.showInformationDialog(JAPMessages.getString("updateInformationMsgStep1"));
+						resetChanges();
 						return;
 					}
 				// Step 2
 				 if(downloadUpdate()!=0)
-				 {
-						return;
-				 }
+					 {
+						 if(!updateAborted)
+							 downloadPage.showInformationDialog(JAPMessages.getString("updateInformationMsgStep2"));
+						 resetChanges();
+						 return;
+					 }
 				//Step 3 or 3'
 				if(incrementalUpdate)
 					{
 						if(applyJARDiffJAPJar()!=0)
-							{
-								return;
-							}
+							return;
 					}
 				else
 					{
 						if( createNewJAPJar()!=0)
 							{
+								downloadPage.showInformationDialog(JAPMessages.getString("updateInformationMsgStep3"));
+								resetChanges();
 								return;
 							}
-					 }
+					}
 				// Step 5
 				if( overwriteJapJar()!=0)
 					{
+						downloadPage.showInformationDialog(JAPMessages.getString("updateInformationMsgStep5"));
 						return;
 					}
-				try {
-							 // if(!aktJapJar.delete()) {downloadPage.showInformationDialog("Deleting original JAP.jar failed");}
-							 // if(!updJapJar.renameTo(new File(path+extension))) {downloadPage.showInformationDialog("Renaming JAP_temp.jar failed.");}
-								if(!m_fileNewJapJar.delete())
-									{
-										downloadPage.showInformationDialog("Deleting of JAP_new.jar failed!");
-										resetChanges();
-										return;
-									}
-									host.setNextEnabled(true);
-									host.setFinishEnabled(false);
-									host.setCancelEnabled(false);
-
-						}
-				catch(Exception e)
-						{
-								e.printStackTrace();
-								downloadPage.showInformationDialog(e.toString());
+				try
+					{
+						if(!m_fileNewJapJar.delete())
+							{
+								downloadPage.showInformationDialog("Deleting of JAP_new.jar failed!");
+								resetChanges();
 								return;
-						}
-
-				}
+							}
+						host.setNextEnabled(true);
+						host.setFinishEnabled(false);
+						host.setCancelEnabled(false);
+					}
+				catch(Exception e)
+					{
+						e.printStackTrace();
+						downloadPage.showInformationDialog(e.toString());
+						return;
+					}
+			}
 
 
 
@@ -418,9 +420,6 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
 						}
 					catch(Exception e)
 						{
-							e.printStackTrace();
-							downloadPage.showInformationDialog(JAPMessages.getString("updateInformationMsgStep1"));
-							resetChanges();
 							return -1;
 						}
 				}
@@ -513,25 +512,21 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
 				try
 					{
 						JapDownloadListener japDownloadListener=new JapDownloadListener();
-//						final Object oSync=new Object();
 						synchronized(japDownloadListener)
 							{
 								infoService.retrieveURL(jarUrl,japDownloadListener);
-							japDownloadListener.wait();
-						if(japDownloadListener.getDownloadState()==-1)
-							{
-								resetChanges();
-								return -1;
+								japDownloadListener.wait();
+								if(japDownloadListener.getDownloadState()==-1)
+									{
+										return -1;
+									}
+								downloadPage.m_labelIconStep2.setIcon(downloadPage.stepfinished);
+								return 0;
 							}
-						downloadPage.m_labelIconStep2.setIcon(downloadPage.stepfinished);
-						return 0;
-					}
-				}
-						catch(Exception e)
+						}
+					catch(Exception e)
 						{
-							resetChanges();
-								e.printStackTrace();
-								return -1;
+							return -1;
 						}
 			}
 
@@ -560,9 +555,6 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
 					}
 				catch(Exception e)
 					{
-						 e.printStackTrace();
-						 downloadPage.showInformationDialog(JAPMessages.getString("updateInformationMsgStep3"));
-						 resetChanges();
 						 return -1;
 					}
 			}
@@ -605,35 +597,32 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
 		 }
 /////////////////////////////////////////////////////////////////////////////////
 		 //Step 5 create the new JAP.jar-File by overwriting the oldFile by the new downloaded file
-		 private int overwriteJapJar()
+		private int overwriteJapJar()
 			{
-				 try
-					 {
-						 downloadPage.m_labelIconStep5.setIcon(downloadPage.arrow);
-						 FileInputStream fis = new FileInputStream(m_fileNewJapJar);
-						 FileOutputStream fos = new FileOutputStream(m_fileAktJapJar);
-						 byte buffer[]= new byte[2048];
-						 int n;
-						 while((n = fis.read(buffer))!=-1)
-								{
-									fos.write(buffer,0,n);
-								}
-								fis.close();
-								fos.flush();
-								fos.close();
-								// the 5th step has the Zone from 490 to 500 in the ProgressBar
-								downloadPage.progressBar.setValue(500);
-								downloadPage.progressBar.repaint();
-								downloadPage.m_labelIconStep5.setIcon(downloadPage.stepfinished);
-								return 0;
-
-		 }catch(Exception e)
-						 {
-								e.printStackTrace();
-								downloadPage.showInformationDialog(JAPMessages.getString("updateInformationMsgStep5"));
-								return -1;
-						 }
-
+				try
+					{
+						downloadPage.m_labelIconStep5.setIcon(downloadPage.arrow);
+						FileInputStream fis = new FileInputStream(m_fileNewJapJar);
+						FileOutputStream fos = new FileOutputStream(m_fileAktJapJar);
+						byte buffer[]= new byte[2048];
+						int n;
+						while((n = fis.read(buffer))!=-1)
+							{
+								fos.write(buffer,0,n);
+							}
+						fis.close();
+						fos.flush();
+						fos.close();
+						// the 5th step has the Zone from 490 to 500 in the ProgressBar
+						downloadPage.progressBar.setValue(500);
+						downloadPage.progressBar.repaint();
+						downloadPage.m_labelIconStep5.setIcon(downloadPage.stepfinished);
+						return 0;
+					}
+				catch(Exception e)
+					{
+						return -1;
+					}
 			}
 
 		// method deletes all Files created new while the updating if there is an abort
