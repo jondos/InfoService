@@ -612,7 +612,7 @@ final class JAPConf extends JDialog
 					MixCascade mixCascadeEntry = (MixCascade) m_comboMixCascade.getSelectedItem();
 					m_strMixName = mixCascadeEntry.getName();
 					m_strOldMixName = m_strMixName;
-					m_tfMixHost.setText(mixCascadeEntry.getListenerInterface(0).getHostName());
+					m_tfMixHost.setText(mixCascadeEntry.getListenerInterface(0).getHost());
 					m_tfMixPortNumber.setText(Integer.toString(mixCascadeEntry.getListenerInterface(0).
 						getPort()));
 				}
@@ -2189,7 +2189,7 @@ final class JAPConf extends JDialog
 		MixCascade mixCascade = m_Controller.getCurrentMixCascade();
 		m_strMixName = mixCascade.getName();
 		m_strOldMixName = m_strMixName;
-		m_tfMixHost.setText(mixCascade.getListenerInterface(0).getHostName());
+		m_tfMixHost.setText(mixCascade.getListenerInterface(0).getHost());
 		m_tfMixPortNumber.setText(Integer.toString(mixCascade.getListenerInterface(0).getPort()));
 		m_cbAutoConnect.setSelected(JAPModel.getAutoConnect());
 		m_cbAutoReConnect.setSelected(JAPModel.getAutoReConnect());

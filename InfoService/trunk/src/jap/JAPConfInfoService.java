@@ -872,17 +872,8 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 			{
 				ListenerInterface currentInterface = (ListenerInterface) (m_currentListenerInterfaces.
 					elementAt(m_selectedListenerInterface));
-				String hostName = currentInterface.getHostName();
-				String ipAddress = currentInterface.getIpString();
-				String hostAndIp = hostName;
-				if (ipAddress != null)
-				{
-					if (!ipAddress.equals(hostName))
-					{
-						hostAndIp = hostAndIp + " (" + ipAddress + ")";
-					}
-				}
-				m_interfaceInfoHostLabel.setText(JAPMessages.getString("settingsInfoInterfaceHostLabel") +
+        String hostAndIp = currentInterface.getHostAndIp();
+ 				m_interfaceInfoHostLabel.setText(JAPMessages.getString("settingsInfoInterfaceHostLabel") +
 												 " " + hostAndIp);
 				m_interfaceInfoPortLabel.setText(JAPMessages.getString("settingsInfoInterfacePortLabel") +
 												 " " + Integer.toString(currentInterface.getPort()));

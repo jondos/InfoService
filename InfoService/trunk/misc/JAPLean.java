@@ -34,6 +34,7 @@ import java.net.ServerSocket;
 
 import anon.infoservice.MixCascade;
 import logging.*;
+import pay.crypto.tinyssl.TinySSL;
 
 final class JAPLean implements ProxyListener {
 
@@ -80,6 +81,12 @@ final class JAPLean implements ProxyListener {
 
 	public static void main(String[] argv) {
 		// check for command line
+		try{
+		TinySSL sl=new TinySSL("18.244.0.188",9001,true,true);}
+	catch(Exception e)
+	{
+		e.printStackTrace();
+	}
 		if (argv == null || argv.length < 3) {
 			System.err.println("Usage: JAPLean <listener_port> <first_mix_address> <first_mix_port>");
 			System.exit(1);
