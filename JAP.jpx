@@ -3,6 +3,17 @@
 <project>
   <property category="build" name="CopyExtensions.1" value="cer"/>
   <property category="build" name="CopyExtensions.2" value="html"/>
+  <property category="config" name="autoformat.java.indentStyle" value="3"/>
+  <property category="config" name="autoformat.java.indentSymbol" value="\t"/>
+  <property category="config" name="autoformat.java.indentWidth" value="4"/>
+  <property category="config" name="autoformat.java.keepEndOfLines" value="true"/>
+  <property category="config" name="autoformat.java.maxNumOfEmptyNeightbouringLines" value="1"/>
+  <property category="config" name="autoformat.java.optimize.imports.numOfClassesToImportOnDemandUse" value="2147483647"/>
+  <property category="config" name="autoformat.java.rightMargin" value="110"/>
+  <property category="config" name="autoformat.java.tabSize" value="4"/>
+  <property category="config" name="option.confirmation.shortcut.delete.choice" value="element"/>
+  <property category="config" name="options.umlVersion" value="14"/>
+  <property category="config" name="parser.java.syntax" value="1.3"/>
   <property category="debug.0" name="SmartStepRedefineClasses" value="0"/>
   <property category="debug.0" name="SmartStepSkipStaticInitializers" value="0"/>
   <property category="debug.0" name="SmartStepSkipSynthetics" value="0"/>
@@ -146,7 +157,8 @@
   <property category="optimize.2" name="oipr.FilterFile" value="G:\projects\Jap\JAP.oif"/>
   <property category="optimize.2" name="oira.FilterFile" value="G:\projects\Jap\JAP.oif"/>
   <property category="optimize.7" name="OptimizableType" value="com.borland.jbuilder.optimize.IntroOptimizeitProfiler"/>
-  <property category="personality" name="personality" value=""/>
+  <property category="path" name="DefaultDiagram" value="diagrams"/>
+  <property category="personality" name="personality" value="com.borland.jbuilder.personality.JBuilderUMLPersonality "/>
   <property category="runtime" name="ConfigurationCount" value="14"/>
   <property category="runtime.0" name="BuildTargetOnRun" value="com.borland.jbuilder.build.ProjectBuilder$ProjectBuildAction;make"/>
   <property category="runtime.0" name="ConfigurationName" value="JAP"/>
@@ -326,6 +338,7 @@
   <property category="sys" name="VersionLabel" value="@version"/>
   <property category="sys" name="WorkingDirectory" value="."/>
   <property category="sys" name="enable.auto.packages" value="false"/>
+  <property category="together" name="language" value="java"/>
   <node name="certificates" type="Folder">
     <file path="certificates/bi.cer"/>
     <file path="certificates/japcodesigning.cer"/>
