@@ -56,6 +56,8 @@ final class JAPDirectProxy implements Runnable
     public JAPDirectProxy (ServerSocket s)
 			{
 				socketListener=s;
+			  warnUser = true;
+				isRunningProxy = false;
 				model=JAPModel.getModel();
 			}
 
