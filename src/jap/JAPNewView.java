@@ -1511,9 +1511,12 @@ northPanel.add(m_flippingpanelOwnTraffic, c);
 	{
 		if (helpWindow == null)
 		{
+			//Register help context
+			JAPController.getInstance().getHelpContext().setContext("index");
 			helpWindow = new JAPHelp(this);
 		}
-		helpWindow.show();
+		helpWindow.loadCurrentContext();
+
 	}
 
 	private void showConfigDialog()

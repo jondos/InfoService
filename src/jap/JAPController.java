@@ -141,6 +141,8 @@ public final class JAPController implements ProxyListener, Observer
 	private static int ms_AnonModeAsyncLastStarted = -1;
 	private static int ms_AnonModeAsyncLastFinished = -1;
 
+	private JAPHelpContext m_helpContext;
+
 	private JAPController()
 	{
 		m_Model = JAPModel.getInstance();
@@ -219,6 +221,9 @@ public final class JAPController implements ProxyListener, Observer
 		JAPModel.getInstance().getRoutingSettings().getServerStatisticsListener().addObserver(this);
 		JAPModel.getInstance().getRoutingSettings().getRegistrationStatusObserver().addObserver(this);
 		m_iStatusPanelMsgIdForwarderServerStatus = -1;
+
+		// Global help context object
+		m_helpContext = new JAPHelpContext();
 	}
 
 	/** Creates the Controller - as Singleton.
@@ -2077,6 +2082,15 @@ public final class JAPController implements ProxyListener, Observer
 		{
 			t.printStackTrace();
 		}
+	}
+
+	/**
+	 * Returns the global help context object
+	 * @return JAPHelpContext
+	 */
+	public JAPHelpContext getHelpContext()
+	{
+		return m_helpContext;
 	}
 
 	/**
