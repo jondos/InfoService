@@ -40,16 +40,18 @@ import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.JToggleButton;
 import jap.JAPUtil;
-
-public class MyPanel extends JPanel
+import java.awt.*;
+public class FlippingPanel extends JPanel
 {
 	JPanel mainPanel;
 	JPanel smallPanel;
 	JPanel fullPanel;
 	JToggleButton bttn;
 	CardLayout l;
-	public MyPanel()
+	Window m_Parent;
+	public FlippingPanel(Window parent)
 	{
+		m_Parent=parent;
 		GridBagLayout gbl = new GridBagLayout();
 		GridBagConstraints c = new GridBagConstraints();
 		setLayout(gbl);
@@ -73,6 +75,7 @@ public class MyPanel extends JPanel
 				{
 					l.first(mainPanel);
 				}
+				m_Parent.pack();
 			}
 		});
 		add(bttn, c);
@@ -108,14 +111,17 @@ public class MyPanel extends JPanel
 
 	public Dimension getPreferredSize()
 	{
+		Dimension d;
 		if (bttn.isSelected())
 		{
-			return fullPanel.getPreferredSize();
+			d=fullPanel.getPreferredSize();
 		}
 		else
 		{
-			return smallPanel.getPreferredSize();
+			d=smallPanel.getPreferredSize();
 		}
+		d.width+=bttn.getSize().width;
+		return d;
 	}
 
 }
