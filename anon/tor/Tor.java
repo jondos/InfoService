@@ -143,6 +143,7 @@ public class Tor implements /*Runnable,*/ AnonService
 						}
 					}
 				}
+
 				if (!helper.isIPAddress(addr))
 				{
 					return null;
