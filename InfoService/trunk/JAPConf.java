@@ -189,6 +189,7 @@ final class JAPConf extends JDialog
 				p1.add(seperator);
 				c.insets=normInsets;
 				c.gridy=4;
+				c.insets=new Insets(10,0,0,0);
 				g.setConstraints(listenerCheckBoxSocks,c);
 				p1.add(listenerCheckBoxSocks);
 				c.gridy=5;
@@ -196,10 +197,11 @@ final class JAPConf extends JDialog
 				p1.add(portnumberTextFieldSocks);
 				c.gridy=6;
 				JSeparator seperator2=new JSeparator();
+				c.insets=new Insets(10,0,0,0);
 				g.setConstraints(seperator2,c);
 				p1.add(seperator2);
 				c.gridy=7;
-				c.insets=new Insets(30,0,0,0);
+				c.insets=new Insets(10,0,0,0);
 				g.setConstraints(listenerCheckBoxIsLocal,c);
 				p1.add(listenerCheckBoxIsLocal);
 				p.add(p1, BorderLayout.NORTH);
