@@ -64,7 +64,6 @@ public final class JAPAnonService implements Runnable
 		private ServerSocket m_socketListener=null;
 		private boolean m_bDontChangeListener=false;
 		private JAPMuxSocket m_MuxSocket=null;
-
 		private static JAPAnonServiceListener m_AnonServiceListener=null;
 
 		public JAPAnonService(){}
@@ -166,6 +165,17 @@ public final class JAPAnonService implements Runnable
 		    m_connectViaFirewall = b;
 		    return E_SUCCESS;
 		}
+
+
+		public static void setEnableDummyTraffic(boolean b)
+			{
+				JAPMuxSocket.setEnableDummyTraffic(b);
+			}
+
+		public static boolean getEnableDummyTraffic()
+			{
+				return JAPMuxSocket.getEnableDummyTraffic();
+			}
 
 		//Starts long time initalisation procedures in the background. Returns imedaly.
 		//You don't need to call these procedure in order to use AnonService

@@ -88,6 +88,10 @@ final class JAPMuxSocket implements Runnable
 
 		private Thread threadRunLoop;
 
+		private long m_TimeLastPacketSend=0;
+		private static boolean m_bDummyTraffic=false;
+		private JAPDummyTraffic m_DummyTraffic=null;
+
 		private final class SocketListEntry
 			{
 				SocketListEntry(JAPSocket s)
@@ -119,6 +123,8 @@ final class JAPMuxSocket implements Runnable
 				threadRunLoop=null;
 				keypool=JAPKeyPool.start(/*20,16*/);
 				m_RunCount=0;
+				m_bDummyTraffic=false;
+				m_TimeLastPacketSend=0;
 				//threadgroupChannels=null;
 			}
 
@@ -134,6 +140,30 @@ final class JAPMuxSocket implements Runnable
 				return (ms_MuxSocket!=null&&ms_MuxSocket.m_bIsConnected);
 			}
 
+		public static void setEnableDummyTraffic(boolean b)
+			{
+				if(b==m_bDummyTraffic)
+					return;
+				if(isConnected())
+					{
+						if(b)
+							{
+								ms_MuxSocket.m_DummyTraffic=new JAPDummyTraffic(ms_MuxSocket);
+								ms_MuxSocket.m_DummyTraffic.start();
+							}
+						else
+							{
+								ms_MuxSocket.m_DummyTraffic.stop();
+								ms_MuxSocket.m_DummyTraffic=null;
+							}
+					}
+				ms_MuxSocket.m_bDummyTraffic=b;
+			}
+
+		public static boolean getEnableDummyTraffic()
+			{
+				return ms_MuxSocket.m_bDummyTraffic;
+			}
 		//2001-02-20(HF)
 		public int connect(String host, int port) {
 			return connectViaFirewall(host,port,null,-1,null,null);
@@ -291,6 +321,7 @@ final class JAPMuxSocket implements Runnable
 								return -1;
 							}
 						m_bIsConnected=true;
+						setEnableDummyTraffic(m_bDummyTraffic);
 						return 0;
 					}
 			}
@@ -346,6 +377,11 @@ final class JAPMuxSocket implements Runnable
 					{
 						if(!m_bIsConnected)
 							return E_NOT_CONNECTED;
+						if(m_bDummyTraffic)
+							{
+								m_DummyTraffic.stop();
+								m_DummyTraffic=null;
+							}
 						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:close() Closing MuxSocket...");
 						m_bRunFlag=false;
 						try
@@ -525,6 +561,7 @@ final class JAPMuxSocket implements Runnable
 						if(!m_bIsConnected)
 							return E_NOT_CONNECTED;
 						short channelMode=CHANNEL_DATA;
+						m_TimeLastPacketSend=System.currentTimeMillis();
 						if(buff==null&&len==0)
 							{
 								outDataStream.writeInt(channel);
@@ -605,4 +642,8 @@ final class JAPMuxSocket implements Runnable
 				return chainlen;
 			}
 
+		public long getTimeLastPacketSend()
+			{
+				return m_TimeLastPacketSend;
+			}
 	}
