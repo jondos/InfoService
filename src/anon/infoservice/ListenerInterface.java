@@ -35,28 +35,29 @@ package anon.infoservice;
 import java.net.InetAddress;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
+import org.w3c.dom.Node;
+import anon.util.XMLUtil;
 
 /**
  * Saves the information about one listener-interface IP / hostname and port.
  */
-public class ListenerInterface
+public final class ListenerInterface
 {
 
 	/**
 	 * This is the host of this interface (hostname or IP).
 	 */
-	private String inetHost;
+	private String m_strInetHost;
 
 	/**
 	 * This is the representation of the port of the ListenerInterface.
 	 */
-	private int inetPort;
+	private int m_iInetPort;
 
 	/**
 	 * This describes the protocol type. It is just a comfort value.
 	 */
-	private String protocolType;
+	private String m_strProtocolType;
 
 	/**
 	 * This describes, whether we can reach this interface or not. If we can't get a connection
@@ -65,7 +66,7 @@ public class ListenerInterface
 	 * interface (causes can be firewalls, another network, ...). This is only meaningful for
 	 * non-local (remote) interfaces.
 	 */
-	private boolean valid;
+	private boolean m_bIsReachable;
 
 	/**
 	 * Creates a new ListenerInterface from XML description (ListenerInterface node).
@@ -74,32 +75,37 @@ public class ListenerInterface
 	 */
 	public ListenerInterface(Element listenerInterfaceNode) throws Exception
 	{
-		NodeList typeNodes = listenerInterfaceNode.getElementsByTagName("Type");
-		if (typeNodes.getLength() == 0)
+		Node typeNode = XMLUtil.getFirstChildByName(listenerInterfaceNode, "Type");
+		m_strProtocolType = XMLUtil.parseNodeString(typeNode, null);
+		if (m_strProtocolType == null)
 		{
-			throw (new Exception("ListenerInterface: Error in XML structure."));
+			throw (new Exception("ListenerInterface: Error in XML structure -- Type not specified"));
 		}
-		Element typeNode = (Element) (typeNodes.item(0));
-		protocolType = typeNode.getFirstChild().getNodeValue();
-		NodeList portNodes = listenerInterfaceNode.getElementsByTagName("Port");
-		if (portNodes.getLength() == 0)
-		{
-			throw (new Exception("ListenerInterface: Error in XML structure."));
-		}
-		Element portNode = (Element) (portNodes.item(0));
-		inetPort = Integer.parseInt(portNode.getFirstChild().getNodeValue());
-		if ( (inetPort < 1) || (inetPort > 65535))
+		Node portNode = XMLUtil.getFirstChildByName(listenerInterfaceNode, "Port");
+		m_iInetPort = XMLUtil.parseNodeInt(portNode, -1);
+		if ( (m_iInetPort < 1) || (m_iInetPort > 65535))
 		{
 			throw (new Exception("ListenerInterface: Port is invalid."));
 		}
-		NodeList hostNodes = listenerInterfaceNode.getElementsByTagName("Host");
-		if (hostNodes.getLength() == 0)
+		Node hostNode = XMLUtil.getFirstChildByName(listenerInterfaceNode, "Host");
+		Node ipNode = XMLUtil.getFirstChildByName(listenerInterfaceNode, "IP");
+		if (hostNode == null && ipNode == null)
 		{
-			throw (new Exception("ListenerInterface: Error in XML structure."));
+			throw (new Exception(
+				"ListenerInterface: Error in XML structure -- Neither Host nor IP are given."));
 		}
-		Element hostNode = (Element) (hostNodes.item(0));
-		inetHost = hostNode.getFirstChild().getNodeValue();
-		valid = true;
+		//The value give in Host supersedes the one given by IP
+		m_strInetHost = XMLUtil.parseNodeString(hostNode, null);
+		if (m_strInetHost == null || m_strInetHost.length() == 0)
+		{
+			m_strInetHost = XMLUtil.parseNodeString(ipNode, null);
+		}
+		if (m_strInetHost == null || m_strInetHost.length() == 0)
+		{
+			throw (new Exception(
+				"ListenerInterface: Error in XML structure -- Neither Host nor IP are given."));
+		}
+		m_bIsReachable = true;
 	}
 
 	/**
@@ -118,10 +124,10 @@ public class ListenerInterface
 		{
 			throw (new Exception("ListenerInterface: Host is invalid."));
 		}
-		inetPort = port;
-		inetHost = host;
-		protocolType = "unknown";
-		valid = true;
+		m_iInetPort = port;
+		m_strInetHost = host;
+		m_strProtocolType = "unknown";
+		m_bIsReachable = true;
 	}
 
 	/**
@@ -136,7 +142,7 @@ public class ListenerInterface
 	public ListenerInterface(String host, int port, String protocol) throws Exception
 	{
 		this(host, port);
-		protocolType = protocol;
+		m_strProtocolType = protocol;
 	}
 
 	/**
@@ -151,11 +157,11 @@ public class ListenerInterface
 		Element listenerInterfaceNode = doc.createElement("ListenerInterface");
 		/* Create the child nodes of ListenerInterface (Type, Port, Host) */
 		Element typeNode = doc.createElement("Type");
-		typeNode.appendChild(doc.createTextNode(protocolType));
+		typeNode.appendChild(doc.createTextNode(m_strProtocolType));
 		Element portNode = doc.createElement("Port");
-		portNode.appendChild(doc.createTextNode(Integer.toString(inetPort)));
+		portNode.appendChild(doc.createTextNode(Integer.toString(m_iInetPort)));
 		Element hostNode = doc.createElement("Host");
-		hostNode.appendChild(doc.createTextNode(inetHost));
+		hostNode.appendChild(doc.createTextNode(m_strInetHost));
 		listenerInterfaceNode.appendChild(typeNode);
 		listenerInterfaceNode.appendChild(portNode);
 		listenerInterfaceNode.appendChild(hostNode);
@@ -176,21 +182,21 @@ public class ListenerInterface
 		Element listenerInterfaceNode = doc.createElement("ListenerInterface");
 		/* Create the child nodes of ListenerInterface (Type, Port, Host) */
 		Element typeNode = doc.createElement("Type");
-		typeNode.appendChild(doc.createTextNode(protocolType));
+		typeNode.appendChild(doc.createTextNode(m_strProtocolType));
 		Element portNode = doc.createElement("Port");
-		portNode.appendChild(doc.createTextNode(Integer.toString(inetPort)));
+		portNode.appendChild(doc.createTextNode(Integer.toString(m_iInetPort)));
 		Element hostNode = doc.createElement("Host");
-		hostNode.appendChild(doc.createTextNode(inetHost));
+		hostNode.appendChild(doc.createTextNode(m_strInetHost));
 		String ipString = null;
 		try
 		{
-			InetAddress interfaceAddress = InetAddress.getByName(inetHost);
+			InetAddress interfaceAddress = InetAddress.getByName(m_strInetHost);
 			ipString = interfaceAddress.getHostAddress();
 		}
 		catch (Exception e)
 		{
 			/* maybe inetHost is a hostname and no IP, but this solution is better than nothing */
-			ipString = inetHost;
+			ipString = m_strInetHost;
 		}
 		Element ipNode = doc.createElement("IP");
 		ipNode.appendChild(doc.createTextNode(ipString));
@@ -208,7 +214,7 @@ public class ListenerInterface
 	 */
 	public String getHost()
 	{
-		return inetHost;
+		return m_strInetHost;
 	}
 
 	/**
@@ -217,7 +223,7 @@ public class ListenerInterface
 	 */
 	public int getPort()
 	{
-		return inetPort;
+		return m_iInetPort;
 	}
 
 	/**
@@ -225,7 +231,7 @@ public class ListenerInterface
 	 */
 	public void invalidate()
 	{
-		valid = false;
+		m_bIsReachable = false;
 	}
 
 	/**
@@ -234,7 +240,7 @@ public class ListenerInterface
 	 */
 	public boolean isValid()
 	{
-		return valid;
+		return m_bIsReachable;
 	}
 
 	/**
@@ -247,16 +253,16 @@ public class ListenerInterface
 	 */
 	public String getHostAndIp()
 	{
-		String r_HostAndIp = inetHost;
+		String r_HostAndIp = m_strInetHost;
 		try
 		{
-			InetAddress interfaceAddress = InetAddress.getByName(inetHost);
+			InetAddress interfaceAddress = InetAddress.getByName(m_strInetHost);
 			String ipString = interfaceAddress.getHostAddress();
-			if (ipString.equals(inetHost))
+			if (ipString.equals(m_strInetHost))
 			{
 				/* inetHost is an IP, try to add the hostname */
 				String hostName = interfaceAddress.getHostName();
-				if ( (!hostName.equals(inetHost)) && (!hostName.equals("")))
+				if ( (!hostName.equals(m_strInetHost)) && (!hostName.equals("")))
 				{
 					/* we got the hostname via DNS, add it */
 					r_HostAndIp = r_HostAndIp + " (" + hostName + ")";
