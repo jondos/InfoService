@@ -143,12 +143,14 @@ public class ORDescription
 	}
 
 	/*Tries to parse an router specification according to the desing document.*/
-	public static ORDescription parse(LineNumberReader reader) throws Exception
+	public static ORDescription parse(LineNumberReader reader)
 	{
-		String ln = reader.readLine();
-		if (!ln.startsWith("router"))
+		try
 		{
-			throw new Exception("Wrong router format - does not start with 'router'");
+		String ln = reader.readLine();
+		if (ln==null||!ln.startsWith("router"))
+		{
+			return null;
 		}
 		StringTokenizer st = new StringTokenizer(ln);
 		st.nextToken(); //skip router
@@ -161,17 +163,18 @@ public class ORDescription
 		byte[] signingkey = null;
 		ORAcl acl = new ORAcl();
 		String strSoftware = "";
-		ln = reader.readLine();
-		if (ln.startsWith("platform"))
-		{
-			st = new StringTokenizer(ln);
-			st.nextToken();
-			strSoftware = st.nextToken() + " " + st.nextToken();
-		}
 		for (; ; )
 		{
 			ln = reader.readLine();
-			if (ln.startsWith("onion-key"))
+			if(ln==null)
+				return null;
+			if (ln.startsWith("platform"))
+			{
+				st = new StringTokenizer(ln);
+				st.nextToken();
+				strSoftware = st.nextToken() + " " + st.nextToken();
+			}
+			else if (ln.startsWith("onion-key"))
 			{
 				StringBuffer buff = new StringBuffer();
 				ln = reader.readLine(); //skip -----begin
@@ -234,6 +237,12 @@ public class ORDescription
 			}
 
 		}
+		}
+		catch(Throwable t)
+		{
+			t.printStackTrace();
+		}
+		return null;
 	}
 
 	public String toString()
