@@ -109,7 +109,7 @@ public class JAPPasswordReader implements ActionListener, IMiscPasswordReader
 										, null, options);
 		dialog = o.createDialog(JAPController.getView(), JAPMessages.getString("passwdDlgTitle"));
 		dialog.toFront();
-		dialog.show();
+		dialog.setVisible(true);
 		return passwd;
 	}
 }

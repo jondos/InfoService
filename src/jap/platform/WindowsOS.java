@@ -78,8 +78,17 @@ public class WindowsOS extends AbstractOS
 
 	public String getConfigPath()
 	{
-		return System.getProperty("user.home", "") + "/" +
-			JAPConstants.XMLCONFFN;
+		String vendor = System.getProperty("java.vendor", "unknown");
+		String dir = "";
+		if (vendor.trim().toLowerCase().startsWith("microsoft"))
+		{
+			dir = System.getProperty("user.dir", ".");
+		}
+		else
+		{
+			dir = System.getProperty("user.home", ".");
+		}
+		return dir + "/" + JAPConstants.XMLCONFFN;
 	}
 
 }

@@ -42,81 +42,90 @@ import logging.LogType;
  * This is the implementation for the infoservice savepoint. It is needed for restoring an old or
  * the default configuration, if the user presses "Cancel" or "Reset to defaults".
  */
-public class JAPConfInfoServiceSavePoint implements IJAPConfSavePoint {
+public class JAPConfInfoServiceSavePoint implements IJAPConfSavePoint
+{
 
-  /**
-   * The Vector of all known infoservices.
-   */
-  private Vector m_knownInfoServices;
+	/**
+	 * The Vector of all known infoservices.
+	 */
+	private Vector m_knownInfoServices;
 
-  /**
-   * The preferred infoservice.
-   */
-  private InfoServiceDBEntry m_preferredInfoService;
+	/**
+	 * The preferred infoservice.
+	 */
+	private InfoServiceDBEntry m_preferredInfoService;
 
-  /**
-   * Whether automatic infoservice requests are disabled or not.
-   */
-  private boolean m_automaticInfoServiceRequestsDisabled;
+	/**
+	 * Whether automatic infoservice requests are disabled or not.
+	 */
+	private boolean m_automaticInfoServiceRequestsDisabled;
 
-  /**
-   * Whether automatic changes of infoservice are enabled (if the default infoservice fails).
-   */
-  private boolean m_automaticInfoServiceChanges;
+	/**
+	 * Whether automatic changes of infoservice are enabled (if the default infoservice fails).
+	 */
+	private boolean m_automaticInfoServiceChanges;
 
+	/**
+	 * This method will store the current infoservice configuration in this savepoint.
+	 */
+	public void createSavePoint()
+	{
+		m_knownInfoServices = Database.getInstance(InfoServiceDBEntry.class).getEntryList();
+		m_preferredInfoService = InfoServiceHolder.getInstance().getPreferredInfoService();
+		m_automaticInfoServiceRequestsDisabled = JAPModel.getInstance().isInfoServiceDisabled();
+		m_automaticInfoServiceChanges = InfoServiceHolder.getInstance().isChangeInfoServices();
+	}
 
-  /**
-   * This method will store the current infoservice configuration in this savepoint.
-   */
-  public void createSavePoint() {
-    m_knownInfoServices = Database.getInstance(InfoServiceDBEntry.class).getEntryList();
-    m_preferredInfoService = InfoServiceHolder.getInstance().getPreferredInfoService();
-    m_automaticInfoServiceRequestsDisabled = JAPModel.getInstance().isInfoServiceDisabled();
-    m_automaticInfoServiceChanges = InfoServiceHolder.getInstance().isChangeInfoServices();
-  }
+	/**
+	 * Restores the old infoservice configuration (stored with the last call of createSavePoint()).
+	 */
+	public void restoreSavePoint()
+	{
+		/* update the database of known infoservices */
+		Enumeration infoServices = m_knownInfoServices.elements();
+		while (infoServices.hasMoreElements())
+		{
+			InfoServiceDBEntry currentInfoService = (InfoServiceDBEntry) (infoServices.nextElement());
+			Database.getInstance(InfoServiceDBEntry.class).update(currentInfoService);
+		}
+		/* now remove all infoservices which were not in the stored list */
+		Enumeration allInfoServices = Database.getInstance(InfoServiceDBEntry.class).getEntryList().elements();
+		while (allInfoServices.hasMoreElements())
+		{
+			InfoServiceDBEntry currentInfoService = (InfoServiceDBEntry) (allInfoServices.nextElement());
+			if (m_knownInfoServices.contains(currentInfoService) == false)
+			{
+				/* the current infoservice is not in the stored list -> remove it from the database */
+				Database.getInstance(InfoServiceDBEntry.class).remove(currentInfoService);
+			}
+		}
+		InfoServiceHolder.getInstance().setPreferredInfoService(m_preferredInfoService);
+		JAPController.getInstance().setInfoServiceDisabled(m_automaticInfoServiceRequestsDisabled);
+		InfoServiceHolder.getInstance().setChangeInfoServices(m_automaticInfoServiceChanges);
+	}
 
-  /**
-   * Restores the old infoservice configuration (stored with the last call of createSavePoint()).
-   */
-  public void restoreSavePoint() {
-    /* update the database of known infoservices */
-    Enumeration infoServices = m_knownInfoServices.elements();
-    while (infoServices.hasMoreElements()) {
-      InfoServiceDBEntry currentInfoService = (InfoServiceDBEntry) (infoServices.nextElement());
-      Database.getInstance(InfoServiceDBEntry.class).update(currentInfoService);
-    }
-    /* now remove all infoservices which were not in the stored list */
-    Enumeration allInfoServices = Database.getInstance(InfoServiceDBEntry.class).getEntryList().elements();
-    while (allInfoServices.hasMoreElements()) {
-      InfoServiceDBEntry currentInfoService = (InfoServiceDBEntry)(allInfoServices.nextElement());
-      if (m_knownInfoServices.contains(currentInfoService) == false) {
-        /* the current infoservice is not in the stored list -> remove it from the database */
-        Database.getInstance(InfoServiceDBEntry.class).remove(currentInfoService);
-      }
-    }
-    InfoServiceHolder.getInstance().setPreferredInfoService(m_preferredInfoService);
-    JAPController.getInstance().setInfoServiceDisabled(m_automaticInfoServiceRequestsDisabled);
-    InfoServiceHolder.getInstance().setChangeInfoServices(m_automaticInfoServiceChanges);
-  }
-
-  /**
-   * Loads the default infoservice configuration.
-   */
-  public void restoreDefaults() {
-    /* remove all infoservices from database and set the default infoservice as preferred
-     * infoservice
-     */
-    Database.getInstance(InfoServiceDBEntry.class).removeAll();
-    try {
-      InfoServiceDBEntry defaultInfoService = new InfoServiceDBEntry(JAPConstants.defaultInfoServiceName, new ListenerInterface(JAPConstants.DEFAULT_INFOSERVICE_HOSTNAME, JAPConstants.DEFAULT_INFOSERVICE_PORT_NUMBER).toVector(), false, true);
-      InfoServiceHolder.getInstance().setPreferredInfoService(defaultInfoService);
-    }
-    catch (Exception e) {
-      /* should not happen, if it happens, we can't do anything */
-      LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, "JAPConfInfoServiceSavePoint: restoreDefaults: Cannot create the default infoservice.");
-    }
-    JAPController.getInstance().setInfoServiceDisabled(JAPConstants.DEFAULT_INFOSERVICE_DISABLED);
-    InfoServiceHolder.getInstance().setChangeInfoServices(JAPConstants.DEFAULT_INFOSERVICE_CHANGES);
-  }
+	/**
+	 * Loads the default infoservice configuration.
+	 */
+	public void restoreDefaults()
+	{
+		/* remove all infoservices from database and set the default infoservice as preferred
+		 * infoservice
+		 */
+		Database.getInstance(InfoServiceDBEntry.class).removeAll();
+		try
+		{
+			InfoServiceDBEntry defaultInfoService = JAPController.createDefaultInfoService();
+			InfoServiceHolder.getInstance().setPreferredInfoService(defaultInfoService);
+		}
+		catch (Exception e)
+		{
+			/* should not happen, if it happens, we can't do anything */
+			LogHolder.log(LogLevel.EXCEPTION, LogType.MISC,
+				"JAPConfInfoServiceSavePoint: restoreDefaults: Cannot create the default infoservice.");
+		}
+		JAPController.getInstance().setInfoServiceDisabled(JAPConstants.DEFAULT_INFOSERVICE_DISABLED);
+		InfoServiceHolder.getInstance().setChangeInfoServices(JAPConstants.DEFAULT_INFOSERVICE_CHANGES);
+	}
 
 }

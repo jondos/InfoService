@@ -206,19 +206,19 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 				else
 				{
 					LogHolder.log(LogLevel.DEBUG, LogType.MISC,
-						"MixCascade: Constructor: No appended certificates in the MixCascade structure.");
+								  "MixCascade: Constructor: No appended certificates in the MixCascade structure.");
 				}
 			}
 			else
 			{
 				LogHolder.log(LogLevel.DEBUG, LogType.MISC,
-					"MixCascade: Constructor: No signature node found while looking for MixCascade certificate.");
+							  "MixCascade: Constructor: No signature node found while looking for MixCascade certificate.");
 			}
 		}
 		catch (Exception e)
 		{
 			LogHolder.log(LogLevel.ERR, LogType.MISC,
-				"MixCascade: Constructor: Error while looking for appended certificates in the MixCascade structure: " +
+						  "MixCascade: Constructor: Error while looking for appended certificates in the MixCascade structure: " +
 						  e.toString());
 		}
 
@@ -282,14 +282,23 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 	 */
 	public MixCascade(String a_name, String a_id, String a_hostName, int a_port) throws Exception
 	{
+		this(a_name, a_id,
+			 new ListenerInterface(a_hostName, a_port, ListenerInterface.PROTOCOL_TYPE_RAW_TCP).toVector());
+	}
+
+	public MixCascade(String a_name, String a_id, Vector a_listenerInterfaces) throws Exception
+	{
 		/* use always the timeout for the infoservice context, because the JAP client currently does
 		 * not have a database of mixcascade entries -> no timeout for the JAP client necessary
 		 */
 		super(System.currentTimeMillis() + Constants.TIMEOUT_MIXCASCADE);
+		ListenerInterface listener = (ListenerInterface) a_listenerInterfaces.elementAt(0);
+		String strHostName = listener.getHost();
+		String strPort = Integer.toString(listener.getPort());
 		/* set a unique ID */
 		if ( (a_id == null) || (a_id.length() == 0))
 		{
-			m_mixCascadeId = "(user)" + a_hostName + "%3A" + Integer.toString(a_port);
+			m_mixCascadeId = "(user)" + strHostName + "%3A" + strPort;
 		}
 		else
 		{
@@ -302,12 +311,9 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 		}
 		else
 		{
-			m_strName = a_hostName + ":" + Integer.toString(a_port);
+			m_strName = strHostName + ":" + strPort;
 		}
-		/* create the ListenerInterface */
-		m_listenerInterfaces = new Vector();
-		m_listenerInterfaces.addElement(new ListenerInterface(a_hostName, a_port,
-			ListenerInterface.PROTOCOL_TYPE_RAW_TCP));
+		m_listenerInterfaces = a_listenerInterfaces;
 		/* set the lastUpdate time */
 		m_lastUpdate = System.currentTimeMillis();
 		/* create the mixIds and set one with the same ID as the mixcascade itself */
@@ -636,10 +642,10 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 	{
 		Document doc = XMLUtil.createDocument();
 		Element mixCascadeNode = doc.createElement("MixCascade");
-		mixCascadeNode.setAttribute("id", getId());
+		XMLUtil.setAttribute(mixCascadeNode, "id", getId());
 		/* Create the child nodes of MixCascade (Name, Network, Mixes, LastUpdate) */
 		Element nameNode = doc.createElement("Name");
-		nameNode.appendChild(doc.createTextNode(getName()));
+		XMLUtil.setValue(nameNode, getName());
 		Element networkNode = doc.createElement("Network");
 		Element listenerInterfacesNode = doc.createElement("ListenerInterfaces");
 		for (int i = 0; i < getNumberOfListenerInterfaces(); i++)
@@ -650,16 +656,16 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 		}
 		networkNode.appendChild(listenerInterfacesNode);
 		Element mixesNode = doc.createElement("Mixes");
-		mixesNode.setAttribute("count", Integer.toString(getNumberOfMixes()));
+		XMLUtil.setAttribute(mixesNode, "count", getNumberOfMixes());
 		Enumeration allMixIds = m_mixIds.elements();
 		while (allMixIds.hasMoreElements())
 		{
 			Element mixNode = doc.createElement("Mix");
-			mixNode.setAttribute("id", (String) (allMixIds.nextElement()));
+			XMLUtil.setAttribute(mixNode, "id", (String) (allMixIds.nextElement()));
 			mixesNode.appendChild(mixNode);
 		}
 		Element lastUpdateNode = doc.createElement("LastUpdate");
-		lastUpdateNode.appendChild(doc.createTextNode(Long.toString(getLastUpdate())));
+		XMLUtil.setValue(lastUpdateNode, getLastUpdate());
 		mixCascadeNode.appendChild(nameNode);
 		mixCascadeNode.appendChild(networkNode);
 		mixCascadeNode.appendChild(mixesNode);
@@ -669,6 +675,7 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 			/* if this is a user-defined MixCascade entry, add the UserDefined node (has no children) */
 			Element userDefinedNode = doc.createElement("UserDefined");
 			mixCascadeNode.appendChild(userDefinedNode);
+			XMLUtil.setAttribute(mixCascadeNode,"userDefined",true);
 		}
 		return mixCascadeNode;
 	}
@@ -709,18 +716,18 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 			i++;
 		}
 		/*String ipString = null;
-		try
-		{
-			InetAddress interfaceAddress = InetAddress.getByName(firstListener.getHost());
-			ipString = interfaceAddress.getHostAddress();
-		}
-		catch (Exception e)
-		{
-			// maybe inetHost is a hostname and no IP, but this solution is better than nothing
-			ipString = firstListener.getHost();
-		}
-		Element ipNode = doc.createElement("IP");
-		ipNode.appendChild(doc.createTextNode(ipString));*/
+		   try
+		   {
+		 InetAddress interfaceAddress = InetAddress.getByName(firstListener.getHost());
+		 ipString = interfaceAddress.getHostAddress();
+		   }
+		   catch (Exception e)
+		   {
+		 // maybe inetHost is a hostname and no IP, but this solution is better than nothing
+		 ipString = firstListener.getHost();
+		   }
+		   Element ipNode = doc.createElement("IP");
+		   ipNode.appendChild(doc.createTextNode(ipString));*/
 		Element hostNode = doc.createElement("Host");
 		hostNode.appendChild(doc.createTextNode(firstListener.getHost()));
 		mixCascadeNode.appendChild(nameNode);

@@ -234,11 +234,11 @@ public class JAPRoutingConnectionClass
 		Element classIdentifierNode = a_doc.createElement("ClassIdentifier");
 		Element maximumBandwidthNode = a_doc.createElement("MaximumBandwidth");
 		Element relativeBandwidthNode = a_doc.createElement("RelativeBandwidth");
-		XMLUtil.setValue(classIdentifierNode, Integer.toString(getIdentifier()));
+		XMLUtil.setValue(classIdentifierNode, getIdentifier());
 		synchronized (this)
 		{
-			XMLUtil.setValue(maximumBandwidthNode, Integer.toString(getMaximumBandwidth()));
-			XMLUtil.setValue(relativeBandwidthNode, Integer.toString(getRelativeBandwidth()));
+			XMLUtil.setValue(maximumBandwidthNode, getMaximumBandwidth());
+			XMLUtil.setValue(relativeBandwidthNode, getRelativeBandwidth());
 		}
 		connectionClassNode.appendChild(classIdentifierNode);
 		connectionClassNode.appendChild(maximumBandwidthNode);

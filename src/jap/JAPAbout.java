@@ -94,7 +94,7 @@ final class JAPAbout extends JDialog
 		//setContentPane(sp);
 		//Now we do a little bit tricky stuff.
 		//String os = System.getProperty("os.name");
-		show(); //now we have to ensure that the window is visible before the
+		setVisible(true); //now we have to ensure that the window is visible before the
 		//	if(os==null||!os.toLowerCase().startsWith("mac"))
 		{
 			//setLocation(-380,-200); //First we move the Dialog to a position were it is not seen on the Screen...

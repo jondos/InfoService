@@ -538,11 +538,11 @@ public class ListenerInterface implements ImmutableListenerInterface, IXMLEncoda
 		Element listenerInterfaceNode = doc.createElement(a_strXmlElementName);
 		/* Create the child nodes of ListenerInterface (Type, Port, Host) */
 		Element typeNode = doc.createElement("Type");
-		typeNode.appendChild(doc.createTextNode(getProtocolAsString()));
+		XMLUtil.setValue(typeNode,getProtocolAsString());
 		Element portNode = doc.createElement("Port");
-		portNode.appendChild(doc.createTextNode(Integer.toString(m_iInetPort)));
+		XMLUtil.setValue(portNode,m_iInetPort);
 		Element hostNode = doc.createElement("Host");
-		hostNode.appendChild(doc.createTextNode(m_strHostname));
+		XMLUtil.setValue(hostNode,m_strHostname);
 		/*String ipString = null;
 		try
 		{

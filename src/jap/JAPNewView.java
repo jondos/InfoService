@@ -1387,7 +1387,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		}
 		m_dlgConfig.updateValues();
 		setEnabled(false);
-		m_dlgConfig.show();
+		m_dlgConfig.showDialog();
 	}
 
 	public JPanel getMainPanel()

@@ -294,17 +294,17 @@ final class JAPConf extends JDialog implements ActionListener
 	}
 
 	/**
-	 * This method overwrites the method show() from java.awt.Dialog. We need it for
-	 * creating the module savepoints. After this, we call the parent show() method.
+	 * This method to show the Dialog We need it for
+	 * creating the module savepoints. After this, we call the parent setVisible(true) method.
 	 */
-	public void show()
+	public void showDialog()
 	{
 		/* every time the configuration is set to visible, we need to create the savepoints for the
 		 * modules for the case that 'Cancel' is pressed later
 		 */
 		m_moduleSystem.createSavePoints();
 		/* call the original method */
-		super.show();
+		super.setVisible(true);
 	}
 
 	public void actionPerformed(ActionEvent e)

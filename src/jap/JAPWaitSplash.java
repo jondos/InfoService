@@ -105,7 +105,7 @@ public final class JAPWaitSplash implements Runnable
 	{
 		if (dlgAbort != null)
 		{
-			dlgAbort.show();
+			dlgAbort.setVisible(true);
 		}
 	}
 }

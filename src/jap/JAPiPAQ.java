@@ -78,7 +78,7 @@ final public class JAPiPAQ
 		view.setSize(240, 300);
 		view.setLocation(0, 0);
 		view.setResizable(false);
-		view.show();
+		view.setVisible(true);
 	}
 
 	public JPanel getMainPanel()

@@ -515,24 +515,14 @@ public class XMLUtil
 	}
 
 	/**
-	 * Inserts a String value into an XML node.
-	 * @param a_node an XML node
-	 * @param a_value a String
-	 * @deprecated use setValue(Node, String); this method has been declared deprecated as its name
-	 * contained an argument type; scheduled for removal on 04/12/3
-	 */
-	public static void setNodeValue(Node a_node, String a_value)
-	{
-		setValue(a_node, a_value);
-	}
-
-	/**
-	 * Inserts a String value into an XML node.
+	 * Inserts a String value into an XML node. If a_value==NULL nothing is done.
 	 * @param a_node an XML node
 	 * @param a_value a String
 	 */
 	public static void setValue(Node a_node, String a_value)
 	{
+		if(a_node==null||a_value==null)
+			return;
 		a_node.appendChild(a_node.getOwnerDocument().createTextNode(a_value));
 	}
 
@@ -543,7 +533,7 @@ public class XMLUtil
 	 */
 	public static void setValue(Node a_node, int a_value)
 	{
-		a_node.appendChild(a_node.getOwnerDocument().createTextNode(a_value + ""));
+		a_node.appendChild(a_node.getOwnerDocument().createTextNode(Integer.toString(a_value)));
 	}
 
 	/**
@@ -553,7 +543,7 @@ public class XMLUtil
 	 */
 	public static void setValue(Node a_node, long a_value)
 	{
-		a_node.appendChild(a_node.getOwnerDocument().createTextNode(a_value + ""));
+		a_node.appendChild(a_node.getOwnerDocument().createTextNode(Long.toString(a_value)));
 	}
 
 	/**
@@ -567,25 +557,16 @@ public class XMLUtil
 	}
 
 	/**
-	 * Inserts a boolean value into an XML node.
-	 * @param node an XML node
-	 * @param b a boolean value
-	 * @deprecated use setValue(Node, boolean); this method has been declared deprecated as its name
-	 * contained an argument type; scheduled for removal on 04/12/3
-	 */
-	public static void setNodeBoolean(Node node, boolean b)
-	{
-		setValue(node, b);
-	}
-
-	/**
-	 * Creates and sets an attribute with a String value to an XML element.
-	 * @param a_element an XML Element
-	 * @param a_attribute an attribute name
-	 * @param a_value a String value for the attribute
+	 * Creates and sets an attribute with a String value to an XML element. If a_attribute or a_value is NULL,
+	 *  than nothing is done!
+	 * @param a_element an XML Element (not NULL)
+	 * @param a_attribute an attribute name (not NULL)
+	 * @param a_value a String value for the attribute (not NULL)
 	 */
 	public static void setAttribute(Element a_element, String a_attribute, String a_value)
 	{
+		if(a_value==null||a_attribute==null||a_element==null)
+			return;
 		a_element.setAttribute(a_attribute, a_value);
 	}
 
@@ -608,7 +589,7 @@ public class XMLUtil
 	 */
 	public static void setAttribute(Element a_element, String a_attribute, int a_value)
 	{
-		setAttribute(a_element, a_attribute, a_value + "");
+		setAttribute(a_element, a_attribute, Integer.toString(a_value));
 	}
 
 	/**
@@ -881,10 +862,12 @@ public class XMLUtil
 				paramClasses[1] = int.class;
 				Method methodCreateWriteContext = classXmlDocument.getMethod("createWriteContext",
 					paramClasses);
+
 				Object params[] = new Object[2];
 				params[0] = w;
 				params[1] = new Integer(2);
 				Object context = methodCreateWriteContext.invoke(doc, params);
+
 				paramClasses = new Class[1];
 				paramClasses[0] = Class.forName("com.sun.xml.tree.XmlWriteContext");
 				Method methodWriteXml = node.getClass().getMethod("writeXml", paramClasses);

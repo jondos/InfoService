@@ -88,32 +88,32 @@ final public class JAPCertificate extends X509CertificateStructure implements IX
 	ICertificate
 {
 
-  /**
-   * This is the certificate type constant for root certificates. Root certificates are used to
-   * verify other certificates (at the moment only one indirection is supported, so root
-   * certificates cannot verify other root certificates).
-   */
-  public static final int CERTIFICATE_TYPE_ROOT = 1;
+	/**
+	 * This is the certificate type constant for root certificates. Root certificates are used to
+	 * verify other certificates (at the moment only one indirection is supported, so root
+	 * certificates cannot verify other root certificates).
+	 */
+	public static final int CERTIFICATE_TYPE_ROOT = 1;
 
-  /**
-   * This is the certificate type constant for mix certificates. Mix certificates are used to
-   * create or verify the signature of mix, mixcascade or cascade-state XML structures.
-   */
-  public static final int CERTIFICATE_TYPE_MIX = 2;
+	/**
+	 * This is the certificate type constant for mix certificates. Mix certificates are used to
+	 * create or verify the signature of mix, mixcascade or cascade-state XML structures.
+	 */
+	public static final int CERTIFICATE_TYPE_MIX = 2;
 
-  /**
-   * This is the certificate type constant for infoservice certificates. InfoService certificates
-   * are used to create or verify the signature of an infoservice XML structure.
-   */
-  public static final int CERTIFICATE_TYPE_INFOSERVICE = 3;
+	/**
+	 * This is the certificate type constant for infoservice certificates. InfoService certificates
+	 * are used to create or verify the signature of an infoservice XML structure.
+	 */
+	public static final int CERTIFICATE_TYPE_INFOSERVICE = 3;
 
-  /**
-   * This is the certificate type constant for update certificates. Update certificates are used
-   * to create or verify the signature of all JAP update related structures like the minimum
-   * required JAP version or the Java WebStart files for the release or development version of
-   * JAP.
-   */
-  public static final int CERTIFICATE_TYPE_UPDATE = 4;
+	/**
+	 * This is the certificate type constant for update certificates. Update certificates are used
+	 * to create or verify the signature of all JAP update related structures like the minimum
+	 * required JAP version or the Java WebStart files for the release or development version of
+	 * JAP.
+	 */
+	public static final int CERTIFICATE_TYPE_UPDATE = 4;
 
 	public static final String XML_ELEMENT_NAME = "X509Certificate";
 	public static final String XML_ELEMENT_CONTAINER_NAME = "X509Data";
@@ -146,8 +146,8 @@ final public class JAPCertificate extends X509CertificateStructure implements IX
 		}
 		catch (Exception a_e)
 		{
-			LogHolder.log(LogLevel.EXCEPTION,LogType.MISC,"Exception in JAOCertifciate():"+a_e.getMessage());
-			LogHolder.log(LogLevel.EXCEPTION,LogType.MISC,a_e);
+			LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, "Exception in JAOCertifciate():" + a_e.getMessage());
+			LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, a_e);
 			throw new IllegalArgumentException(
 				"Certificate structure contains invalid public key! " + a_e);
 		}
@@ -192,7 +192,7 @@ final public class JAPCertificate extends X509CertificateStructure implements IX
 				// Probably a Base64 encoded certificate
 				BufferedReader in =
 					new BufferedReader(
-					new InputStreamReader(new ByteArrayInputStream(a_certificate)));
+						new InputStreamReader(new ByteArrayInputStream(a_certificate)));
 				StringBuffer sbuf = new StringBuffer();
 				String line;
 
@@ -239,9 +239,9 @@ final public class JAPCertificate extends X509CertificateStructure implements IX
 				{
 					return getInstance(X509CertificateStructure.getInstance(
 						new SignedData(
-						ASN1Sequence.getInstance(
-						(ASN1TaggedObject) seq.getObjectAt(1),
-						true)).getCertificates()
+							ASN1Sequence.getInstance(
+								(ASN1TaggedObject) seq.getObjectAt(1),
+								true)).getCertificates()
 						.getObjectAt(0)));
 				}
 				return getInstance(new X509CertificateStructure(seq));
@@ -249,8 +249,9 @@ final public class JAPCertificate extends X509CertificateStructure implements IX
 		}
 		catch (Exception a_e)
 		{
-			LogHolder.log(LogLevel.EXCEPTION,LogType.MISC,"Exception while createing JAPCertifcate: "+a_e.getMessage());
-			LogHolder.log(LogLevel.EXCEPTION,LogType.MISC,a_e);
+			LogHolder.log(LogLevel.EXCEPTION, LogType.MISC,
+						  "Exception while createing JAPCertifcate: " + a_e.getMessage());
+			LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, a_e);
 			return null;
 		}
 	}
@@ -612,20 +613,21 @@ final public class JAPCertificate extends X509CertificateStructure implements IX
 
 	/**
 	 * Checks if a given Certificate could be directly verified against a set of other certificates.
-   * @param a_verifyingCertificates A Vector of JAPCertificates to verify this JAPCertificate.
-   * @return True, if this certificate could be verified.
+	 * @param a_verifyingCertificates A Vector of JAPCertificates to verify this JAPCertificate.
+	 * @return True, if this certificate could be verified.
 	 * @todo do not accept expired certificates?
 	 */
-  public synchronized boolean verify(Vector a_verifyingCertificates)
+	public synchronized boolean verify(Vector a_verifyingCertificates)
 	{
 		if (a_verifyingCertificates == null)
 		{
 			return false;
 		}
 
-    Enumeration certificatesEnumerator = a_verifyingCertificates.elements();
-    while (certificatesEnumerator.hasMoreElements()) {
-      JAPCertificate currentCertificate = (JAPCertificate)(certificatesEnumerator.nextElement());
+		Enumeration certificatesEnumerator = a_verifyingCertificates.elements();
+		while (certificatesEnumerator.hasMoreElements())
+		{
+			JAPCertificate currentCertificate = (JAPCertificate) (certificatesEnumerator.nextElement());
 
 			if (verify(currentCertificate))
 			{
@@ -674,7 +676,7 @@ final public class JAPCertificate extends X509CertificateStructure implements IX
 			(new DEROutputStream(bArrOStream)).writeObject(getTBSCertificate());
 
 			return ByteSignature.verify(bArrOStream.toByteArray(), getSignature().getBytes(),
-											 a_publicKey);
+										a_publicKey);
 		}
 		catch (IOException a_e)
 		{
@@ -713,10 +715,8 @@ final public class JAPCertificate extends X509CertificateStructure implements IX
 	public Element toXmlElement(Document a_doc)
 	{
 		Element elemX509Cert = a_doc.createElement(XML_ELEMENT_NAME);
-		Text t = a_doc.createTextNode(Base64.encode(toByteArray(), true));
 		elemX509Cert.setAttribute("xml:space", "preserve");
-		elemX509Cert.appendChild(t);
-
+		XMLUtil.setValue(elemX509Cert, Base64.encode(toByteArray(), true));
 		return elemX509Cert;
 	}
 
@@ -732,7 +732,7 @@ final public class JAPCertificate extends X509CertificateStructure implements IX
 		{
 			random = new SecureRandom();
 			random.setSeed(58921787);
-			ms_dummyPrivateKey =  DSAKeyPair.getInstance(random, 256, 100).getPrivate();
+			ms_dummyPrivateKey = DSAKeyPair.getInstance(random, 256, 100).getPrivate();
 		}
 
 		return ms_dummyPrivateKey;
@@ -750,7 +750,7 @@ final public class JAPCertificate extends X509CertificateStructure implements IX
 	 * @return an X509 certificate
 	 */
 	private static JAPCertificate getInstance(String a_ownerAlias, IMyPrivateKey a_privateKey,
-	IMyPublicKey a_publicKey,
+											  IMyPublicKey a_publicKey,
 											  Calendar a_validFrom, Calendar a_validTo)
 	{
 		X509CertificateGenerator v3CertGen;
