@@ -14,13 +14,18 @@ import java.io.*;
  * of the program from http://path and stores the received data to file <code>localFilename</code>.
  * 
  */
-public final class Versionchecker {
+public final class Versionchecker implements Runnable {
+
+	private VersioncheckerProgress vcp = null;
+	private URL url;
+	private int result = 0;
+	private String fn;
 
 /*
  * Stefan: Ich musste das hier alles aendern, da der Versionschecker bei mir immer versucht hat,
  * ueber den (lokalen) Proxy zu gehen, d.h. URL geht nicht. Deshalb musste ich es "von Hand" machen.
  */
-	public static String getNewVersionnumberFromNet(String path) throws Exception {
+	public String getNewVersionnumberFromNet(String path) throws Exception {
 		try {
 			byte[] buff=new byte[9];
 			URL url=new URL(path);
@@ -57,9 +62,18 @@ public final class Versionchecker {
 		}
 	}
 	
-	public static void getVersionFromNet(String path, String localFilename) throws Exception {
+	public void getVersionFromNet(String path, String localFilename) throws Exception {
 		try {
-			URL url=new URL(path);
+			this.url = new URL(path);
+			this.fn  = localFilename;
+		}
+		catch (Exception e) {
+			throw e;
+		}
+	}
+	
+	public void run() {
+		try {
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"Versionchecker:"+
 			" Prot: "+url.getProtocol()+
 			" Host: "+url.getHost()+
@@ -73,14 +87,16 @@ public final class Versionchecker {
 			out.flush();
 			DataInputStream in=new DataInputStream(socket.getInputStream());
 			String line = readLine(in);
-			if (line.indexOf("200") == -1)
+			if (line.indexOf("200") == -1) {
 				throw new Exception("Download: Bad response from server: "+line);
+			}
 			// read remaining header lines
 			int len = -1;
 			while (line.length() != 0) {
 				int firstSpacePosition = line.indexOf(' ');
-				if (firstSpacePosition == -1)
+				if (firstSpacePosition == -1) {
 					throw new Exception("Download: Bad header: missing space!");
+				}
 				String headerCommand = line.substring(0,firstSpacePosition);
 				String headerValue   = line.substring(firstSpacePosition + 1).trim();
 				if (headerCommand.equalsIgnoreCase("Content-length:")) {
@@ -90,24 +106,51 @@ public final class Versionchecker {
 			}
 			//
 			if(len==-1) {
-					throw new Exception("Download: Unkown Size!");
+				throw new Exception("Download: Unkown Size!");
 			}
+			
 			byte[] buff=new byte[len];
-			in.readFully(buff);
+//entweder:			
+//			in.readFully(buff);
+//oder:		
+			int progressCounter = 0;
+			int cnt = 0;
+			int onePercent = len/100; // nr of bytes for one percent progress
+			for (int i = 0; i < len; i++) {
+				buff[i]=in.readByte();
+				cnt++;
+				if (cnt == onePercent) {
+					progressCounter++;
+					vcp.progress(progressCounter);
+					cnt = 0;
+				}
+			}
+//			
 			in.close();
 			out.close();
 			socket.close();
-			FileOutputStream f=new FileOutputStream(localFilename);
+			FileOutputStream f=new FileOutputStream(fn);
 			f.write(buff);
 			f.flush();
 			f.close();
+			vcp.progress(100);
 		}
 		catch(Exception e) {
-			throw e;
+			result = -1;
+			JAPDebug.out(JAPDebug.ERR,JAPDebug.MISC,"Download error: "+e);
+//			throw e;
 		}
 	}
 	
-    private static String readLine(DataInputStream inputStream) throws Exception {
+	public int getResult() {
+		return result;
+	}
+	
+	public void registerProgress(Object o) {
+		this.vcp = (VersioncheckerProgress)o;
+	}
+	
+    private String readLine(DataInputStream inputStream) throws Exception {
 		String returnString = "";
 		try{
 			int byteRead = inputStream.read();
@@ -120,4 +163,5 @@ public final class Versionchecker {
 		}
 		return returnString;
     }
+	
 }

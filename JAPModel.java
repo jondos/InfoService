@@ -27,9 +27,9 @@ public final class JAPModel {
 	public  int      proxyPortNumber   = 80;
 	private boolean  proxyMode         = false;  // indicates whether JAP connects via a proxy or directly
 	public  String   infoServiceHostName      = "anon.inf.tu-dresden.de";
-	public  int      infoServicePortNumber    = 6543;
+	public  int      infoServicePortNumber    = 80;
 	public  String   anonHostName      = "anon.inf.tu-dresden.de";
-	public  int      anonPortNumber    = 6544;
+	public  int      anonPortNumber    = 6543;
 	private boolean  anonMode          = false;  // indicates whether user wants to send data via MIXes or not
 	public  boolean  autoConnect       = false;  // autoconnect after program start
 	public  boolean  alreadyCheckedForNewVersion = false; // indicates if check for new version has already been done 
@@ -87,6 +87,7 @@ public final class JAPModel {
 	private JAPProxyServer p;
 	
 	private static JAPModel model=null;
+	public JAPLoading japLoading;
 	
 	public static JAPKeyPool keypool;
 	
@@ -125,8 +126,9 @@ public final class JAPModel {
 		// Load default anon services
 		anonServerDatabase = new Vector();
 		anonServerDatabase.addElement(new AnonServerDBEntry(anonHostName, anonPortNumber));
-		anonServerDatabase.addElement(new AnonServerDBEntry(proxyHostName, proxyPortNumber));
+//		anonServerDatabase.addElement(new AnonServerDBEntry(proxyHostName, proxyPortNumber));
 		anonServerDatabase.addElement(new AnonServerDBEntry("anon.inf.tu-dresden.de", 6543));
+		anonServerDatabase.addElement(new AnonServerDBEntry("passat.mesh.de", 6543));
 		// Load config from xml file
 		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:try loading configuration from "+XMLCONFFN);
 		try {
@@ -148,6 +150,8 @@ public final class JAPModel {
 		}
 		// fire event
 		notifyJAPObservers();
+		// Create the Window for Update
+		japLoading = new JAPLoading(this);
 	}
 
 	public void save() {
@@ -201,15 +205,12 @@ public final class JAPModel {
 		return (int)f;
 	}
 		
-	
 	public void setPortNumber (int p) {
 		portNumber = p;
 	}
 	public int getPortNumber() {
 		return portNumber;
 	}
-
-	
 		
 	public synchronized static String getString(String key) {
 		try {
@@ -330,64 +331,66 @@ public final class JAPModel {
 	public int versionCheck() {
 		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:Checking for new version of JAP...");
 		try {
-			String s = Versionchecker.getNewVersionnumberFromNet("http://"+infoServiceHostName+":"+infoServicePortNumber+aktJAPVersionFN);
+			int result = 0;
+			Versionchecker vc = new Versionchecker();
+			String s = vc.getNewVersionnumberFromNet("http://"+infoServiceHostName+":"+infoServicePortNumber+aktJAPVersionFN);
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:Version:"+s);
 			if ( s.compareTo(aktVersion) > 0 ) {
 				// OK, new version available
 				// ->Ask user if he/she wants to download new version
 				Object[] options = { model.getString("newVersionNo"), model.getString("newVersionYes") };
 				ImageIcon   icon = loadImageIcon(DOWNLOADFN,true);
-				int opt=javax.swing.JOptionPane.showOptionDialog
-					(null,
-					 model.getString("newVersionAvailable"),
-					 model.getString("newVersionAvailableTitle"), 
-					 javax.swing.JOptionPane.DEFAULT_OPTION, 
-					 javax.swing.JOptionPane.PLAIN_MESSAGE,
-					 icon, 
-					 options, 
-					 options[1]
-					);
-				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPModel:opt="+opt);
-				if (opt == 1) {
+				String answer;
+				answer = japLoading.message(model.getString("newVersionAvailableTitle"),
+						   model.getString("newVersionAvailable"),
+						   model.getString("newVersionNo"),
+						   model.getString("newVersionYes"),
+						   true,false);
+				if (answer.equals(model.getString("newVersionYes"))) {
 					// User has elected to download new version of JAP
 					// ->Download, Alert, exit program
 					// To do: show busy message
 					try {
-						Versionchecker.getVersionFromNet("http://"+infoServiceHostName+":"+infoServicePortNumber+urlJAPNewVersionDownload, JAPLocalFilename);
-						// 
-						javax.swing.JOptionPane.showMessageDialog
-							(
-							 null, 
-							 model.getString("newVersionLoaded"),
-							 model.getString("newVersionAvailableTitle"),
-							 javax.swing.JOptionPane.PLAIN_MESSAGE,
-							 icon
-							);
-						goodBye();
-						// next line should never be reached!
-						JAPDebug.out(JAPDebug.EMERG,JAPDebug.MISC,"JAPModel:this line should never be reached!");
+						vc.registerProgress(japLoading);
+						vc.getVersionFromNet("http://"+infoServiceHostName+":"+infoServicePortNumber+urlJAPNewVersionDownload, JAPLocalFilename);
+						Thread t = new Thread(vc);
+						t.start();
+						answer = japLoading.message(model.getString("downloadingProgressTitle"),
+						   model.getString("downloadingProgress"),
+						   null,
+						   null,
+						   true,true);
+						t.join();
+						result = vc.getResult();
+						if (result == 0) {
+							// 
+							answer = japLoading.message(model.getString("newVersionAvailableTitle"),
+							   model.getString("newVersionLoaded"),
+							   null,
+							   "OK",
+							   true,false);
+							goodBye();
+						} else {
+							throw new Exception("Error loading new version");
+						}
 					}
 					catch (Exception e) {
 						// Download failed
 						// Alert, and reset anon mode to false
-						JAPDebug.out(JAPDebug.ERR,JAPDebug.MISC,"JAPModel:checkForNewJAPVersion(): "+e);
+						JAPDebug.out(JAPDebug.ERR,JAPDebug.MISC,"JAPModel:versionCheck(): Exception" + e);
 						javax.swing.JOptionPane.showMessageDialog(null, model.getString("downloadFailed")+model.getString("infoURL"), model.getString("downloadFailedTitle"), javax.swing.JOptionPane.ERROR_MESSAGE); 
 						anonMode = false;
 						notifyJAPObservers();
 						return -1;
 					}
-					
 				} else {
 					// User has elected not to download
 					// ->Alert, we should'nt start the system due to possible compatibility problems
-					javax.swing.JOptionPane.showMessageDialog
-						(
-						 null, 
-						 model.getString("youShouldUpdate")+model.getString("infoURL"),
-						 model.getString("youShouldUpdateTitle"),
-						 javax.swing.JOptionPane.PLAIN_MESSAGE,
-						 icon
-						);
+					answer = japLoading.message(model.getString("youShouldUpdateTitle"),
+						   model.getString("youShouldUpdate")+model.getString("infoURL"),
+						   null,
+						   "OK",
+						   true,false);
 					anonMode = false;
 					notifyJAPObservers();
 					return -1;

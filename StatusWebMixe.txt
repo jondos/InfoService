@@ -12,7 +12,6 @@ Bei Abschalten "anonymer zugriff":
 
 ##TODO
 Versionscheck via Proxy, wenn Proxy-Mode ist aktiviert
-Bei Download einer neuen JAP-Version: Frame mit Fortschrittsanzeige
 JAPDirectConnection ggf. erweitern/aendern, dass direkte beobachtbare
    Verbindung nach Warnung moeglich ist
 ?? bug: Bei Click auf einstellungen label change
@@ -21,6 +20,7 @@ sprache aendern settings implementieren
 !! Hilfetexte
 
 ##ERLEDIGT (= OK)
+OK Bei Download einer neuen JAP-Version: Frame mit Fortschrittsanzeige
 OK Probleme bei Bilder laden (habe hier was geaendert, aber jetzt klappt 
    es nicht mehr, wenn ich das .jar File versuche zu starten. 
    (Mac-PC-Inkompatibilitaet?)
