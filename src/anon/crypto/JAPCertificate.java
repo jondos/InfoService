@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2000 - 2003, The JAP-Team
+ Copyright (c) 2000 - 2004, The JAP-Team
  All rights reserved.
  Redistribution and use in source and binary forms, with or without modification,
  are permitted provided that the following conditions are met:
@@ -59,9 +59,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.Text;
 import anon.util.Base64;
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
+import java.io.*;
 /**
  * A certificate class.
  *
@@ -150,8 +148,6 @@ final public class JAPCertificate
 		}
 		catch (Exception e)
 		{
-			LogHolder.log(LogLevel.ERR, LogType.MISC,
-						  "JAPCertificate:getInstance(Node) failed!");
 		}
 		return null;
 	}
@@ -165,9 +161,10 @@ final public class JAPCertificate
 	{
 		if (a_file != null)
 		{
+			byte[] buff=null;
 			try
 			{
-				byte[] buff = new byte[ (int) a_file.length()];
+				buff = new byte[ (int) a_file.length()];
 				FileInputStream fin = new FileInputStream(a_file);
 				fin.read(buff);
 				fin.close();
@@ -175,21 +172,44 @@ final public class JAPCertificate
 			}
 			catch (JAPCertificateException e)
 			{
-				throw new JAPCertificateException();
-			}
-			catch (FileNotFoundException e)
-			{
-				LogHolder.log(LogLevel.EXCEPTION, LogType.MISC,
-							  "JAPCertificate:getInstance(File) - Certificate file not found!");
-			}
-			catch (Exception e)
-			{
-				LogHolder.log(LogLevel.EXCEPTION, LogType.MISC,
-							  "JAPCertificate:getInstance(File) failed!");
-			}
-		}
-		return null;
-	}
+       /* maybe the file is BASE64 encoded */
+        try {
+          /* data should already be in the buffer */
+          BufferedReader in = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(buff)));
+          StringBuffer sbuf = new StringBuffer();
+          String line = in.readLine();
+          while (line != null) {
+            if (line.equals("-----BEGIN CERTIFICATE-----") || line.equals("-----BEGIN X509 CERTIFICATE-----")) {
+              break;
+            }
+            line = in.readLine();
+          }
+          line = in.readLine();
+          while (line != null) {
+            if (line.equals("-----END CERTIFICATE-----") || line.equals("-----END X509 CERTIFICATE-----")) {
+              break;
+            }
+            sbuf.append(line);
+            line = in.readLine();
+          }
+          return JAPCertificate.getInstance(Base64.decode(sbuf.toString().toCharArray()));
+        }
+        catch (Exception e2) {
+          /* there is another problem */
+          throw new JAPCertificateException();
+        }
+      }
+      catch (FileNotFoundException e)
+      {
+        new FileNotFoundException("Certificate file not found!");
+      }
+      catch (Exception e)
+      {
+        new Exception("Error while processing certificate !");
+      }
+    }
+    return null;
+  }
 
 	/** Creates a certificate instance by using a file name.
 	 *
@@ -346,8 +366,7 @@ final public class JAPCertificate
 		}
 		catch (IOException e)
 		{
-			LogHolder.log(LogLevel.EXCEPTION, LogType.MISC,
-						  "JAPCertificate:getEncoded() failed (IOException)");
+			return null;
 		}
 		return Base64.encode(bArrOStream.toByteArray());
 	}
@@ -403,8 +422,6 @@ final public class JAPCertificate
 		}
 		catch (IOException e)
 		{
-			LogHolder.log(LogLevel.EXCEPTION, LogType.MISC,
-						  "JAPCertificate:verify() failed (IOException)");
 		}
 		return false;
 	}
