@@ -43,6 +43,17 @@ public interface IDistributable
   public String getId();
 
   /**
+   * Returns a measure for the the up-to-dateness of this distributable information and is useful
+   * when comparing two informations with the same ID. If the version of the current information is
+   * greater than that of an earlier information with the same ID, it is newer, otherwise, it is
+   * older. If the two are equal, it is a duplicate.
+   *
+   * @return a criterion if this distributable information is a duplicate of an existing
+   * information with the same ID
+   */
+  public long getVersionNumber();
+
+  /**
    * Returns the filename (InfoService command) to which the data of this entry is posted at the
    * other infoservice.
    *
