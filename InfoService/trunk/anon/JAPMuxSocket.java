@@ -180,7 +180,8 @@ final class JAPMuxSocket implements Runnable
 								oSocketList.put(new Integer(lastChannelId),new SocketListEntry(s));
 
 								JAPAnonService.setNrOfChannels(oSocketList.size());
-								p.start();
+								Thread t2=new Thread(p);
+								t2.start();
 								lastChannelId++;
 								return 0;
 							}
