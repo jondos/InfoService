@@ -49,6 +49,7 @@ import anon.crypto.JAPSignature;
 import anon.crypto.MyRSAPrivateKey;
 import anon.crypto.MyRSAPublicKey;
 import anon.util.Base64;
+import anon.util.ResourceLoader;
 import jap.JAPModel;
 import logging.LogHolder;
 import logging.LogLevel;
@@ -107,7 +108,8 @@ public class Pay
 	private Pay()
 	{
 		// read JPI Certificate from resource file
-		byte[] barCert = JAPUtil.loadRessource(JAPConstants.CERTSPATH + JAPConstants.CERT_BI);
+		byte[] barCert = JAPModel.getInstance().getResourceLoader().loadResource(
+				  JAPConstants.CERTSPATH + JAPConstants.CERT_BI);
 		JAPCertificate cert = JAPCertificate.getInstance(barCert);
 		m_verifyingInstance = new JAPSignature();
 		try

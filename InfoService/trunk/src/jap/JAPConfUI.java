@@ -199,7 +199,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 
 	public String getTabTitle()
 	{
-		return JAPMessages.getString("confTabUI");
+		return JAPMessages.getString("ngUIPanelTitle");
 	}
 
 

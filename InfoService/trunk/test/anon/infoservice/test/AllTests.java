@@ -55,10 +55,11 @@ public class AllTests
 	 */
 	public static Test suite()
 	{
-		TestSuite suite = new TestSuite("All tests of infoservice.");
+		TestSuite suite = new TestSuite(AllTests.class.getPackage().toString());
 		//suite.addTestSuite(DatabaseStaticTest.class);
 		suite.addTestSuite(DatabaseTest.class);
+		suite.addTestSuite(HTTPConnectionFactoryTest.class);
+		suite.addTestSuite(ListenerInterfaceTest.class);
 		return suite;
 	}
-
 }

@@ -288,7 +288,7 @@ class JAPConfUpdate extends AbstractJAPConfModule implements ActionListener, Ite
 		{
 			m_comboType.setEnabled(true);
 			m_taInfo.setText("");
-			m_labelVersion.setText(m_releaseVersion.getVersion());
+			m_labelVersion.setText(m_releaseVersion.getVersionNumber());
 			if (m_releaseVersion.getDate() != null)
 			{
 				m_labelDate.setText(m_DateFormat.format(m_releaseVersion.getDate()));
@@ -329,7 +329,7 @@ if (e.getActionCommand().equals(COMMAND_UPGRADE))
 		{
 			if (m_comboType.getSelectedIndex() == 0) //Release
 			{
-				m_labelVersion.setText(m_releaseVersion.getVersion());
+				m_labelVersion.setText(m_releaseVersion.getVersionNumber());
 				if (m_releaseVersion.getDate() != null)
 				{
 					m_labelDate.setText(m_DateFormat.format(m_releaseVersion.getDate()));
@@ -341,7 +341,7 @@ if (e.getActionCommand().equals(COMMAND_UPGRADE))
 			}
 			else
 			{
-				m_labelVersion.setText(m_devVersion.getVersion());
+				m_labelVersion.setText(m_devVersion.getVersionNumber());
 				if (m_devVersion.getDate() != null)
 				{
 					m_labelDate.setText(m_DateFormat.format(m_devVersion.getDate()));
@@ -356,7 +356,7 @@ if (e.getActionCommand().equals(COMMAND_UPGRADE))
 
 	public String getTabTitle()
 	{
-		return JAPMessages.getString("confTabUpdate");
+		return JAPMessages.getString("ngUpdatePanelTitle");
 	}
 
 }

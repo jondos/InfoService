@@ -32,6 +32,7 @@
 
 package anon.infoservice;
 
+import java.util.StringTokenizer;
 import java.net.InetAddress;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -43,6 +44,20 @@ import anon.util.XMLUtil;
  */
 public final class ListenerInterface
 {
+   /**
+	* The constant for the HTTP protocol.
+	*/
+   final public static String PROTOCOL_TYPE_HTTP = "http";
+
+   /**
+	* The constant for the HTTP protocol.
+	*/
+   final public static String PROTOCOL_TYPE_HTTPS = "https";
+
+   /**
+	* The constant for the HTTP protocol.
+	*/
+   final public static String PROTOCOL_TYPE_SOCKS = "socks";
 
 	/**
 	 * This is the host of this interface (hostname or IP).
@@ -55,7 +70,7 @@ public final class ListenerInterface
 	private int m_iInetPort;
 
 	/**
-	 * This describes the protocol type. It is just a comfort value.
+	 * This describes the protocol type.
 	 */
 	private String m_strProtocolType;
 
@@ -73,60 +88,62 @@ public final class ListenerInterface
 	 *
 	 * @param listenerInterfaceNode The ListenerInterface node from an XML document.
 	 */
-	public ListenerInterface(Element listenerInterfaceNode) throws Exception
+	public ListenerInterface(Element listenerInterfaceNode)
 	{
 		Node typeNode = XMLUtil.getFirstChildByName(listenerInterfaceNode, "Type");
 		m_strProtocolType = XMLUtil.parseNodeString(typeNode, null);
-		if (m_strProtocolType == null)
+		if (!isValidProtocol(m_strProtocolType))
 		{
-			throw (new Exception("ListenerInterface: Error in XML structure -- Type not specified"));
+			throw (new IllegalArgumentException("ListenerInterface: Error in XML structure -- Type not specified"));
 		}
 		Node portNode = XMLUtil.getFirstChildByName(listenerInterfaceNode, "Port");
 		m_iInetPort = XMLUtil.parseNodeInt(portNode, -1);
-		if ( (m_iInetPort < 1) || (m_iInetPort > 65535))
+		if (!isValidPort(m_iInetPort))
 		{
-			throw (new Exception("ListenerInterface: Port is invalid."));
+			throw (new IllegalArgumentException("ListenerInterface: Port is invalid."));
 		}
 		Node hostNode = XMLUtil.getFirstChildByName(listenerInterfaceNode, "Host");
 		Node ipNode = XMLUtil.getFirstChildByName(listenerInterfaceNode, "IP");
 		if (hostNode == null && ipNode == null)
 		{
-			throw (new Exception(
+			throw (new IllegalArgumentException(
 				"ListenerInterface: Error in XML structure -- Neither Host nor IP are given."));
 		}
 		//The value give in Host supersedes the one given by IP
 		m_strInetHost = XMLUtil.parseNodeString(hostNode, null);
-		if (m_strInetHost == null || m_strInetHost.length() == 0)
+		if (!isValidHostname(m_strInetHost))
 		{
 			m_strInetHost = XMLUtil.parseNodeString(ipNode, null);
+			if (!isValidIP(m_strInetHost))
+			{
+				throw (new IllegalArgumentException(
+					"ListenerInterface: Error in XML structure -- Invalid Host and IP."));
+			}
 		}
-		if (m_strInetHost == null || m_strInetHost.length() == 0)
-		{
-			throw (new Exception(
-				"ListenerInterface: Error in XML structure -- Neither Host nor IP are given."));
-		}
+
 		m_bIsReachable = true;
 	}
 
 	/**
 	 * Creates a new ListenerInterface from a hostname / IP address and a port.
 	 *
-	 * @param hostName The hostname or the IP address of this interface.
-	 * @param port The port of this interface (1 <= port <= 65535).
+	 * @param a_hostname The hostname or the IP address of this interface.
+	 * @param a_port The port of this interface (1 <= port <= 65535).
+	 * @exception IllegalArgumentException if an illegal host name or port was given
 	 */
-	public ListenerInterface(String host, int port) throws Exception
+	public ListenerInterface(String a_hostname, int a_port) throws IllegalArgumentException
 	{
-		if ( (port < 1) || (port > 65535))
+		if (!isValidPort(a_port))
 		{
-			throw (new Exception("ListenerInterface: Port is invalid."));
+			throw (new IllegalArgumentException("ListenerInterface: Port is invalid."));
 		}
-		if (host == null)
+		if (!isValidHostname(a_hostname))
 		{
-			throw (new Exception("ListenerInterface: Host is invalid."));
+			throw (new IllegalArgumentException("ListenerInterface: Host is invalid."));
 		}
-		m_iInetPort = port;
-		m_strInetHost = host;
-		m_strProtocolType = "unknown";
+		m_iInetPort = a_port;
+		m_strInetHost = a_hostname;
+		m_strProtocolType = this.PROTOCOL_TYPE_HTTP;
 		m_bIsReachable = true;
 	}
 
@@ -135,49 +152,142 @@ public final class ListenerInterface
 	 * information. The protocol information does not have any function. It is just a bonus
 	 * infromation.
 	 *
-	 * @param hostName The hostname or the IP address of this interface.
-	 * @param port The port of this interface (1 <= port <= 65535).
-	 * @param protocol The protocol information.
+	 * @param a_hostname The hostname or the IP address of this interface.
+	 * @param a_port The port of this interface (1 <= port <= 65535).
+	 * @param a_protocol The protocol information.
+	 * @exception IllegalArgumentException if an illegal host name, port or protocol was given
 	 */
-	public ListenerInterface(String host, int port, String protocol) throws Exception
+	public ListenerInterface(String a_hostname, int a_port, String a_protocol)
+		throws IllegalArgumentException
 	{
-		this(host, port);
-		m_strProtocolType = protocol;
+		this(a_hostname, a_port);
+		if (!isValidProtocol(a_protocol))
+		{
+			throw new IllegalArgumentException("ListenerInterface: Invalid protocol type!");
+		}
+		m_strProtocolType = a_protocol;
+	}
+
+	/**
+	 * Returns if the given port is valid.
+	 * @param a_port a port number
+	 * @return true if the given port is valid; false otherwise
+	 */
+	public static boolean isValidPort(int a_port)
+	{
+		if ((a_port < 1) || (a_port > 65536))
+		{
+			return false;
+		}
+		return true;
+	}
+
+	/**
+	 * Returns if the given protocol is valid web protocol.
+	 * @todo check if all aother than the specified protocols are invalid
+	 * @param a_protocol a web protocol
+	 * @return true if the given protocol is valid web protocol; false otherwise
+	 */
+	public static boolean isValidProtocol(String a_protocol)
+	{
+		return (a_protocol != null);
+		/*
+		return (a_protocol != null &&
+				(a_protocol.equals(PROTOCOL_TYPE_HTTP) ||
+				 a_protocol.equals(PROTOCOL_TYPE_HTTPS) ||
+				 a_protocol.equals(PROTOCOL_TYPE_SOCKS)));*/
+	}
+
+	/**
+	 * Returns if the given host name is valid.
+	 * @param a_hostname a host name
+	 * @return true if the given host name is valid; false otherwise
+	 */
+	public static boolean isValidHostname(String a_hostname)
+	{
+		return ((a_hostname != null) && a_hostname.length() > 0);
+	}
+
+	/**
+	 * Returns if the given IP address is valid.
+	 * @param a_ipAddress an IP address
+	 * @return true if the given IP address is valid; false otherwise
+	 */
+	public static boolean isValidIP(String a_ipAddress)
+	{
+		StringTokenizer tokenizer;
+
+		if ((a_ipAddress == null) || (a_ipAddress.indexOf('-') != -1))
+		{
+			return false;
+		}
+
+		tokenizer = new StringTokenizer(a_ipAddress,".");
+
+		try
+		{
+			// test if the IP could be IPv4 or IPv6
+			if ((tokenizer.countTokens() != 4) && (tokenizer.countTokens() != 16))
+			{
+				throw new NumberFormatException();
+			}
+
+			while (tokenizer.hasMoreTokens())
+			{
+				if (new Integer(tokenizer.nextToken()).intValue() > 255)
+				{
+					throw new NumberFormatException();
+				}
+			}
+		}
+		catch (NumberFormatException a_e)
+		{
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * Gets the protocol of this ListenerInterface.
+	 * @return the protocol of this ListenerInterface
+	 */
+	public String getProtocol()
+	{
+		return m_strProtocolType;
+	}
+
+	/**
+	 * Get the host (hostname or IP) of this interface as a String.
+	 *
+	 * @return The host of this interface.
+	 */
+	public String getHost()
+	{
+		return m_strInetHost;
+	}
+
+	/**
+	 * Get the port of this interface.
+	 * @return The port of this interface.
+	 */
+	public int getPort()
+	{
+		return m_iInetPort;
 	}
 
 	/**
 	 * Creates an XML node without signature for this ListenerInterface.
+	 *
+	 * @todo Remove the parts that contruct the tag <IP> and the ipnode respectivly.
+	 *       They are used by InfoService:MixCascadeDBEntry
+	 *       and are only needed for compatibility with JAP < 00.02.034.
 	 *
 	 * @param doc The XML document, which is the environment for the created XML node.
 	 *
 	 * @return The ListenerInterface XML node.
 	 */
 	public Element toXmlNode(Document doc)
-	{
-		Element listenerInterfaceNode = doc.createElement("ListenerInterface");
-		/* Create the child nodes of ListenerInterface (Type, Port, Host) */
-		Element typeNode = doc.createElement("Type");
-		typeNode.appendChild(doc.createTextNode(m_strProtocolType));
-		Element portNode = doc.createElement("Port");
-		portNode.appendChild(doc.createTextNode(Integer.toString(m_iInetPort)));
-		Element hostNode = doc.createElement("Host");
-		hostNode.appendChild(doc.createTextNode(m_strInetHost));
-		listenerInterfaceNode.appendChild(typeNode);
-		listenerInterfaceNode.appendChild(portNode);
-		listenerInterfaceNode.appendChild(hostNode);
-		return listenerInterfaceNode;
-	}
-
-	/**
-	 * Creates an XML node (old format) without signature for this ListenerInterface.
-	 * This method is used by InfoService:MixCascadeDBEntry.
-	 * @todo Remove this method. It is only needed for compatibility with JAP < 00.02.034.
-	 *
-	 * @param doc The XML document, which is the environment for the created XML node.
-	 *
-	 * @return The ListenerInterface XML node.
-	 */
-	public Element toOldXmlNode(Document doc)
 	{
 		Element listenerInterfaceNode = doc.createElement("ListenerInterface");
 		/* Create the child nodes of ListenerInterface (Type, Port, Host) */
@@ -208,25 +318,6 @@ public final class ListenerInterface
 	}
 
 	/**
-	 * Get the host (hostname or IP) of this interface as a String.
-	 *
-	 * @return The host of this interface.
-	 */
-	public String getHost()
-	{
-		return m_strInetHost;
-	}
-
-	/**
-	 * Get the port of this interface.
-	 * @return The port of this interface.
-	 */
-	public int getPort()
-	{
-		return m_iInetPort;
-	}
-
-	/**
 	 * If we can't reach this interface, we call this function to prevent further connection trys.
 	 */
 	public void invalidate()
@@ -253,32 +344,31 @@ public final class ListenerInterface
 	 */
 	public String getHostAndIp()
 	{
-		String r_HostAndIp = m_strInetHost;
+		String hostAndIp = m_strInetHost;
 		try
 		{
 			InetAddress interfaceAddress = InetAddress.getByName(m_strInetHost);
-			String ipString = interfaceAddress.getHostAddress();
-			if (ipString.equals(m_strInetHost))
+			if (isValidIP(m_strInetHost))
 			{
 				/* inetHost is an IP, try to add the hostname */
 				String hostName = interfaceAddress.getHostName();
-				if ( (!hostName.equals(m_strInetHost)) && (!hostName.equals("")))
+				if ( (!hostName.equals(m_strInetHost)) && (isValidHostname(hostName)))
 				{
 					/* we got the hostname via DNS, add it */
-					r_HostAndIp = r_HostAndIp + " (" + hostName + ")";
+					hostAndIp = hostAndIp + " (" + hostName + ")";
 				}
 			}
 			else
 			{
 				/* inetHost is a hostname, add the IP */
-				r_HostAndIp = r_HostAndIp + " (" + ipString + ")";
+				hostAndIp = hostAndIp + " (" + interfaceAddress.getHostAddress() + ")";
 			}
 		}
-		catch (Exception e)
+		catch (java.net.UnknownHostException e)
 		{
 			/* can't resolve inetHost, maybe we are behind a proxy, return only inetHost */
 		}
-		return r_HostAndIp;
+		return hostAndIp;
 	}
 
 }

@@ -1,19 +1,19 @@
 /*
- Copyright (c) 2000, The JAP-Team
+ Copyright (c) 2000 - 2004, The JAP-Team
  All rights reserved.
  Redistribution and use in source and binary forms, with or without modification,
  are permitted provided that the following conditions are met:
 
- - Redistributions of source code must retain the above copyright notice,
-  this list of conditions and the following disclaimer.
+  - Redistributions of source code must retain the above copyright notice,
+ this list of conditions and the following disclaimer.
 
- - Redistributions in binary form must reproduce the above copyright notice,
-  this list of conditions and the following disclaimer in the documentation and/or
-  other materials provided with the distribution.
+  - Redistributions in binary form must reproduce the above copyright notice,
+ this list of conditions and the following disclaimer in the documentation and/or
+ other materials provided with the distribution.
 
- - Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
-  may be used to endorse or promote products derived from this software without specific
-  prior written permission.
+  - Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
+ may be used to endorse or promote products derived from this software without specific
+ prior written permission.
 
 
  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS
@@ -27,8 +27,19 @@
  */
 package test;
 
+import java.io.IOException;
+import java.io.ByteArrayInputStream;
+
+import org.w3c.dom.Document;
+import javax.xml.parsers.DocumentBuilderFactory;
+import org.w3c.dom.Node;
+import org.w3c.dom.Comment;
+
 import junit.framework.Test;
 import junit.framework.TestSuite;
+
+import anon.util.ResourceLoader;
+import anon.util.XMLUtil;
 
 /**
  * This is the test suite which combines all other JUnit tests of the project.
@@ -38,6 +49,9 @@ import junit.framework.TestSuite;
  */
 public class AllTests
 {
+	private static final String XML_STRUCTURE_PATH = "documentation/xmlStructures/";
+	private static final ResourceLoader ms_resourceLoader = new ResourceLoader(null);
+
 	/**
 	 * The main function.
 	 *
@@ -55,8 +69,50 @@ public class AllTests
 	 */
 	public static Test suite()
 	{
-		TestSuite suite = new TestSuite("All tests.");
+		TestSuite suite = new TestSuite(AllTests.class.getPackage().toString());
 		suite.addTest(anon.test.AllTests.suite());
 		return suite;
+	}
+
+	/**
+	 * Loads an xml structure from the structures directory. If the first
+	 * line holds a comment, it is removed.
+	 * @param a_filename String
+	 * @throws Exception
+	 * @return Node
+	 */
+	public static Node loadXMLNodeFromFile(String a_filename)
+	throws Exception
+	{
+		Document doc = null;
+
+		try
+		{
+			doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(
+				new ByteArrayInputStream(
+				ms_resourceLoader.loadResource(
+				XML_STRUCTURE_PATH + a_filename)));
+			XMLUtil.removeComments(doc);
+		} catch (Exception a_e)
+		{
+		}
+
+		return doc;
+	}
+
+	public static void writeXMLNodeToFile(Node a_node, String a_filename,
+									Class a_createrClass, Class a_testClass)
+		throws IOException, javax.xml.parsers.ParserConfigurationException
+	{
+		Comment comment;
+
+		// set a comment
+		comment = a_node.getOwnerDocument().createComment(
+				  "This xml structure has been created by " + a_createrClass + ".\n" +
+				  "The calling test class was " + a_testClass + ".");
+		a_node.insertBefore(comment, a_node.getFirstChild());
+
+		// write to file
+		XMLUtil.writeXMLNodeToFile(a_node, XML_STRUCTURE_PATH + a_filename);
 	}
 }

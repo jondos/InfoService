@@ -119,7 +119,7 @@ public class JAPRoutingRegistrationInfoServices implements Observer, Runnable {
    *                  at the moment.
    */
   public void update(Observable a_notifier, Object a_message) {
-    if (a_notifier == JAPModel.getModel().getRoutingSettings()) {
+    if (a_notifier == JAPModel.getInstance().getRoutingSettings()) {
       try {
         /* message is from JAPRoutingSettings */
         if (((JAPRoutingMessage)(a_message)).getMessageCode() == JAPRoutingMessage.PROPAGANDA_INSTANCES_ADDED) {
@@ -199,7 +199,7 @@ public class JAPRoutingRegistrationInfoServices implements Observer, Runnable {
                * one, this is only done, if propaganda is running at the moment, so no problem, when
                * no propaganda is running
                */
-              JAPModel.getModel().getRoutingSettings().addPropagandaInstance(currentInfoService);
+              JAPModel.getInstance().getRoutingSettings().addPropagandaInstance(currentInfoService);
               if (m_propagandaIsRunning == true) {
                 /* we can add the new infoservice id to the propaganda list already yet */
                 m_runningInfoServiceRegistrations.addElement(currentInfoService.getId());
@@ -427,7 +427,7 @@ public class JAPRoutingRegistrationInfoServices implements Observer, Runnable {
                    * propaganda is running because this thread only is running, when the
                    * propaganda is running also
                    */
-                  JAPModel.getModel().getRoutingSettings().addPropagandaInstance(currentInfoService);
+                  JAPModel.getInstance().getRoutingSettings().addPropagandaInstance(currentInfoService);
                   m_runningInfoServiceRegistrations.addElement(currentInfoService.getId());
                 }
               }

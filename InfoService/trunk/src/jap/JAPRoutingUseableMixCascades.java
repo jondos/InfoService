@@ -116,12 +116,12 @@ public class JAPRoutingUseableMixCascades implements Observer, Runnable {
    *                  at the moment.
    */
   public void update(Observable a_notifier, Object a_message) {
-    if (a_notifier == JAPModel.getModel().getRoutingSettings()) {
+    if (a_notifier == JAPModel.getInstance().getRoutingSettings()) {
       try {
         /* message is from JAPRoutingSettings */
         if (((JAPRoutingMessage)(a_message)).getMessageCode() == JAPRoutingMessage.ROUTING_MODE_CHANGED) {
           synchronized (this) {
-            if (JAPModel.getModel().getRoutingSettings().getRoutingMode() == JAPRoutingSettings.ROUTING_MODE_SERVER) {
+            if (JAPModel.getInstance().getRoutingSettings().getRoutingMode() == JAPRoutingSettings.ROUTING_MODE_SERVER) {
               /* look, whether the update-thread is running */
               if (m_updateMixCascadesListThread == null) {
                 /* we have to start it */

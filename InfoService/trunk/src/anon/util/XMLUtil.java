@@ -33,11 +33,15 @@ package anon.util;
 
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStreamWriter;
+import java.io.FileOutputStream;
+import java.io.File;
+import java.io.IOException;
 import java.io.Writer;
 import java.lang.reflect.Method;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Text;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -636,4 +640,116 @@ public class XMLUtil
 		return s;
 	}
 
+	/**
+	 * Removes all comments and empty lines from a node. Does nothing if the node
+	 * is a comment node.
+	 * @param a_node a node
+	 */
+	public static void removeComments(Node a_node)
+	{
+		if (a_node.getNodeType() != Document.COMMENT_NODE)
+		{
+			removeCommentsInternal(a_node, a_node);
+		}
+	}
+
+	/**
+	 * Removes all comments and empty lines from a node.
+	 * @param a_node a node
+	 * @param a_parentNode the node`s parent node
+	 * @return the number of children removed (0 or 1)
+	 */
+	private static int removeCommentsInternal(Node a_node, Node a_parentNode)
+	{
+		if (a_node.getNodeType() == Document.COMMENT_NODE)
+		{
+			a_parentNode.removeChild(a_node);
+			return 1;
+		}
+
+
+		if (a_node.getNodeType() == Document.TEXT_NODE)
+		{
+			if (a_node.getNodeValue().trim().length() == 0)
+			{
+				a_parentNode.removeChild(a_node);
+				return 1;
+			}
+		}
+
+		if (a_node.hasChildNodes())
+		{
+			NodeList childNodes = a_node.getChildNodes();
+			for (int i = 0; i < childNodes.getLength(); i++)
+			{
+				i -= removeCommentsInternal(childNodes.item(i), a_node);
+			}
+		}
+		return 0;
+	}
+
+	/**
+	 * Reformats a node into a human readable format.
+	 * @param a_node a node
+	 */
+
+	public static void formatNodeHumanReadable(Node a_node)
+	{
+		formatNodeHumanReadableInternal(a_node, a_node);
+	}
+
+	/**
+	 * Reformats a node into a human readable format.
+	 * @param a_node a node
+	 * @param a_parentNode the node`s parent node
+	 * @return the number of nodes added (0 or 1)
+	 */
+	private static int formatNodeHumanReadableInternal(Node a_node, Node a_parentNode)
+	{
+		if (a_node.getNodeType() != Document.TEXT_NODE && a_node != a_parentNode)
+		{
+			Text newLine = a_node.getOwnerDocument().createTextNode("\n");
+			a_parentNode.insertBefore(newLine, a_node);
+			return 1;
+		}
+
+		if (a_node.getNodeType() == Document.TEXT_NODE && a_node.getNodeValue().trim().length() == 0)
+		{
+			Text newLine = a_node.getOwnerDocument().createTextNode("\n");
+			a_parentNode.replaceChild(newLine, a_node);
+			return 0;
+		}
+
+		if (a_node.hasChildNodes())
+		{
+			NodeList childNodes = a_node.getChildNodes();
+			for (int i = 0; i < childNodes.getLength(); i++)
+			{
+				i += formatNodeHumanReadableInternal(childNodes.item(i), a_node);
+			}
+			Text newLine = a_node.getOwnerDocument().createTextNode("\n");
+			a_node.appendChild(newLine);
+		}
+		return 0;
+	}
+
+	/**
+	 * Writes an XML node to a file.
+	 * @param a_node a node
+	 * @param a_filename a file name
+	 * @throws IOException if an I/O error occurs
+	 */
+	public static void writeXMLNodeToFile(Node a_node, String a_filename)
+		throws IOException
+	{
+		FileOutputStream out;
+
+		// make document human readable
+		XMLUtil.formatNodeHumanReadable(a_node);
+
+		// write to file
+		out = new FileOutputStream(new File(a_filename));
+		out.write(XMLUtil.XMLNodeToString(a_node).getBytes());
+		out.close();
+	}
 }

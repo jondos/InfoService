@@ -56,6 +56,7 @@ class JAP extends Frame
 {
 	// um pay funktionalitaet ein oder auszuschalten
 	private boolean loadPay = false;
+	private JAPController m_controller;
 
 	String[] m_arstrCmdnLnArgs = null;
 	public JAP()
@@ -207,7 +208,7 @@ class JAP extends Frame
 		}
 
 		// Create the controller object
-		JAPController controller = JAPController.create();
+		m_controller = JAPController.getController();
 		String configFileName = null;
 		/* check, whether there is the -config parameter, which means the we use userdefined config
 		 * file
@@ -227,7 +228,7 @@ class JAP extends Frame
 			}
 		}
 		// load settings from config file
-		controller.loadConfigFile(configFileName, loadPay);
+		m_controller.loadConfigFile(configFileName, loadPay);
 		// Output some information about the system
 		LogHolder.log(
 			LogLevel.INFO,
@@ -258,18 +259,18 @@ class JAP extends Frame
 			}
 		}
 		if(view==null)
-			view = new JAPView(JAPConstants.TITLE);
+			view = new JAPView(JAPConstants.TITLE, m_controller);
 		// Create the main frame
 		view.create(loadPay);
 		// Switch Debug Console Parent to MainView
 		JAPDebug.setConsoleParent(view);
 		// Add observer
-		controller.addJAPObserver(view);
+		m_controller.addJAPObserver(view);
 		// Register the Main view where they are needed
-		controller.registerMainView(view);
+		m_controller.registerMainView(view);
 		// Create the iconified view
 		JAPViewIconified viewIconified = new JAPViewIconified();
-		controller.addJAPObserver(viewIconified);
+		m_controller.addJAPObserver(viewIconified);
 		// Register the views where they are needed
 		view.registerViewIconified(viewIconified);
 		//Init Crypto...
@@ -292,7 +293,7 @@ class JAP extends Frame
 		// pre-initalize anon service
 		anon.server.AnonServiceImpl.init();
 		// initially start services
-		controller.initialRun();
+		m_controller.initialRun();
 	}
 
 	public static void main(String[] argv)

@@ -36,40 +36,48 @@ import logging.LogType;
 final public class JAPiPAQ
 {
 
-	static JAPView view = null;
+	private JAPView view;
+	private JAPController m_controller;
+
+
 	public JAPiPAQ()
 	{
 	}
 
 	public void startJAP(String strJapConfFile)
 	{
-		JAPModel.create().setSmallDisplay(true);
+		JAPModel.getInstance().setSmallDisplay(true);
 		// Init Messages....
 		JAPMessages.init();
 		// Test (part 2) for right JVM....
 		// Create the controller object
-		JAPController controller = JAPController.create();
+		m_controller = JAPController.getController();
 		// Create debugger object
 		LogHolder.setLogInstance(JAPDebug.getInstance());
 		JAPDebug.getInstance().setLogType(LogType.NET + LogType.GUI + LogType.THREAD + LogType.MISC);
 		JAPDebug.getInstance().setLogLevel(LogLevel.WARNING);
 		// load settings from config file
-		controller.loadConfigFile(strJapConfFile,false);
+		m_controller.loadConfigFile(strJapConfFile,false);
 		// Output some information about the system
 		// Create the view object
-		view = new JAPView(JAPConstants.TITLE);
+		view = new JAPView(JAPConstants.TITLE, m_controller);
 		// Create the main frame
 		view.create(false);
 		// Switch Debug Console Parent to MainView
 		JAPDebug.setConsoleParent(view);
 		// Add observer
-		controller.addJAPObserver(view);
+		m_controller.addJAPObserver(view);
 		// Register the views where they are needed
-		controller.registerMainView(view);
+		m_controller.registerMainView(view);
 		// pre-initalize anon service
 		anon.server.AnonServiceImpl.init();
 		// initially start services
-		controller.initialRun();
+		m_controller.initialRun();
+
+		view.setSize(240, 300);
+		view.setLocation(0, 0);
+		view.setResizable(false);
+		view.show();
 	}
 
 	public JPanel getMainPanel()
@@ -90,10 +98,6 @@ final public class JAPiPAQ
 		//JFrame frame=new JFrame("JAP");
 		//frame.setIconImage(JAPUtil.);
 		//frame.setContentPane(japOniPAQ.getMainPanel());
-		view.setSize(240, 300);
-		view.setLocation(0, 0);
-		view.setResizable(false);
-		view.show();
 	}
 
 }

@@ -313,7 +313,7 @@ final public class JAPDebug extends WindowAdapter implements ActionListener, Log
 			}
 			catch (Exception e1)
 			{}
-			m_textareaConsole.append(JAPModel.getModel().toString());
+			m_textareaConsole.append(JAPModel.getInstance().toString());
 		}
 		else
 		{

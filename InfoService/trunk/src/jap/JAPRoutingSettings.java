@@ -874,7 +874,7 @@ public class JAPRoutingSettings extends Observable
             boolean stopRegistration = false;
             while ((infoServices.hasMoreElements()) && (stopRegistration == false)) {
               ServerSocketPropagandist currentPropagandist = new ServerSocketPropagandist(m_serverPort, (InfoServiceDBEntry)(infoServices.nextElement()));
-              synchronized (JAPModel.getModel().getRoutingSettings()) {
+              synchronized (JAPModel.getInstance().getRoutingSettings()) {
                 stopRegistration = Thread.interrupted();
                 if (stopRegistration == true) {
                   /* we were interrupted -> all propagandists except the current on were stopped
@@ -893,7 +893,7 @@ public class JAPRoutingSettings extends Observable
                 }
               }
             }
-            synchronized (JAPModel.getModel().getRoutingSettings()) {
+            synchronized (JAPModel.getInstance().getRoutingSettings()) {
               /* remove the pointer to this thread, because we are at the end -> interrupting makes
                * no sense any more
                */
@@ -984,7 +984,7 @@ public class JAPRoutingSettings extends Observable
       public void run() {
         boolean startNewPropagandist = false;
         int serverPort = -1;
-        synchronized (JAPModel.getModel().getRoutingSettings()) {
+        synchronized (JAPModel.getInstance().getRoutingSettings()) {
           /* start only, if the propaganda is running */
           startNewPropagandist = m_propagandaStarted;
           serverPort = m_serverPort;
@@ -992,7 +992,7 @@ public class JAPRoutingSettings extends Observable
         ServerSocketPropagandist newPropagandist = null;
         if (startNewPropagandist == true) {
           newPropagandist = new ServerSocketPropagandist(serverPort, a_registrationInfoService);
-          synchronized (JAPModel.getModel().getRoutingSettings()) {
+          synchronized (JAPModel.getInstance().getRoutingSettings()) {
             if ((m_serverPort == serverPort) && (m_propagandaStarted == true)) {
               /* add the new propagandist to the list and notify the observers */
               m_runningPropagandists.addElement(newPropagandist);
