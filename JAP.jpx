@@ -26,7 +26,7 @@
   <property category="javadoc" name="custom.tags.1" value="todo;a;To Do:"/>
   <property category="optimize.5" name="OptimizableType" value="com.borland.jbuilder.optimize.IntroOptimizeitProfiler"/>
   <property category="personality" name="personality" value=""/>
-  <property category="runtime" name="ConfigurationCount" value="8"/>
+  <property category="runtime" name="ConfigurationCount" value="7"/>
   <property category="runtime.0" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
   <property category="runtime.0" name="application.class" value="JAP"/>
   <property category="runtime.0" name="jsprunner.launchuri" value="/"/>
@@ -74,10 +74,6 @@
   <property category="runtime.7" name="ConfigurationName" value="JUnit Test"/>
   <property category="runtime.7" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
   <property category="runtime.7" name="application.class" value="test.AllTests"/>
-  <property category="runtime.8" name="BuildTargetOnRun" value="com.borland.jbuilder.build.ProjectBuilder$ProjectBuildAction;make"/>
-  <property category="runtime.8" name="ConfigurationName" value="Tor Test"/>
-  <property category="runtime.8" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
-  <property category="runtime.8" name="application.class" value="tor.test.tor2jap"/>
   <property category="serverservices" name="disabled.services" value=""/>
   <property category="serverservices" name="is.single.server" value="0"/>
   <property category="serverservices" name="single.server.name" value=""/>
@@ -99,9 +95,9 @@
   <property category="sys" name="ExcludeClassEnabled" value="0"/>
   <property category="sys" name="IncludeTestPath" value="1"/>
   <property category="sys" name="InstanceVisibility" value="0"/>
-  <property category="sys" name="JDK" value="java version 1.4.2_03-117.1"/>
+  <property category="sys" name="JDK" value="1.1 mit JVM_1.3.1"/>
   <property category="sys" name="LastTag" value="192"/>
-  <property category="sys" name="Libraries" value="http;mac;XML-1.0;XML-1.1;Apache XML-RPC;Swing;BouncyCastleLightForJAP;JUnit;junitx;ApacheFTPClient"/>
+  <property category="sys" name="Libraries" value="http;mac;XML-1.1;Apache XML-RPC;Swing;BouncyCastleLightForJAP;JUnit;junitx;ApacheFTPClient"/>
   <property category="sys" name="MakeStable" value="0"/>
   <property category="sys" name="OutPath" value="classes"/>
   <property category="sys" name="SourcePath" value=".;test"/>
