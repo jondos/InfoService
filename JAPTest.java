@@ -68,8 +68,8 @@ import java.security.spec.InvalidKeySpecException;
 import Rijndael.Rijndael_Algorithm;
 //import com.sun.javaws.jardiff.*;
 import java.util.zip.*;
-import cryptix.asn1.lang.*;
-import cryptix.asn1.encoding.*;
+//import cryptix.asn1.lang.*;
+//import cryptix.asn1.encoding.*;
 final public class JAPTest
 {
 	
@@ -138,6 +138,7 @@ final public class JAPTest
 	//	JAPTest t=new JAPTest();
 	//	t.testJarVerify();
 //		ASN1Test();
+		
 		
 		System.exit(0);
 		}
@@ -781,6 +782,7 @@ public static void testJarDiff()
 		e.printStackTrace();
 	}
 }
+	/*
 	class MyDSAPublicKey implements DSAPublicKey,DSAParams
 	{
 		BigInteger y;
@@ -827,27 +829,6 @@ public static void testJarDiff()
 		
 			//DerValue der=new DerValue(pk);
 			//System.out.println(der);
-		/*	DerValue der=new DerValue(encKey); //PublicKeyInfo
-			System.out.println(der.toString());
-			DerInputStream derin=der.toDerInputStream();
-			der=derin.getDerValue();//AlgoIdentifer
-			DerInputStream derin1=der.toDerInputStream();
-			derin1.getDerValue(); //AloIdentiferOID
-			der=derin1.getDerValue(); //parameters
-			derin1=der.toDerInputStream(); //seeunce of p,q,g
-			der=derin1.getDerValue();
-			p=der.getInteger().toBigInteger();
-			der=derin1.getDerValue();
-			q=der.getInteger().toBigInteger();
-			der=derin1.getDerValue();
-			g=der.getInteger().toBigInteger();
-			
-			
-			der=derin.getDerValue();
-			byte[] pz=der.getBitString();
-			der=new DerValue(der.getBitString());
-			y=der.getInteger().toBigInteger();
-			*/
 			
 			
 			}
@@ -991,5 +972,5 @@ public static void ASN1Test()
 		ex.printStackTrace();
 	}
 
-}
+}*/
 }
