@@ -342,6 +342,7 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 
 	public void actionPerformed(ActionEvent event)
 			{
+				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"GetEvent: "+event.getSource());
 				if (event.getSource() == quitB)
 					exitProgram(); 
 				else if (event.getSource() == portB)
