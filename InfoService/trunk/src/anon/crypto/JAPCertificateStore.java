@@ -59,71 +59,6 @@ final public class JAPCertificateStore
 	}
 
 	/**
-	 * Creates the certificate store by using a given file name (string).
-	 *
-	 * @param a_strCertFileName The file name of the certificate which
-	 * becomes the first entry of the store.
-	 */
-	/*	public JAPCertificateStore(String a_strCertFileName)
-	 {
-	  this();
-	  InputStream in = null;
-	  try
-	  {
-	   // First: Look for the named certificate in JAP.jar
-	   in = Class.forName("JAP").getResourceAsStream(a_strCertFileName);
-	  }
-	  catch (Exception e)
-	  {
-	   try
-	   {
-		// Second: First step failed, so we look for a file named <strCertFileName>
-		in = new FileInputStream(a_strCertFileName);
-	   }
-	   catch (Exception e1)
-	   {
-	   }
-	  }
-	  try
-	  {
-	   addCertificate(JAPCertificate.getInstance(in));
-	  }
-	  catch (Exception e2)
-	  {
-	 */
-	/** @todo This exception handling is about to be removed...
-	 *
-	 */
-
-	/**
-	 *	Second step should never fail; if it happens:
-	 *   Third: We try to find the root certificate via hard coded path
-	 */
-	/*			File file = new File("../certificates/japroot.cer");
-	   try
-	   {
-		addCertificate(JAPCertificate.getInstance(file));
-	   }
-	   catch (Exception e3)
-	   {
-		// Third step also failed, give up
-		LogHolder.log(LogLevel.ERR, LogType.MISC,
-			 "JAPCertificateStore:constructor(String) finally failed!");
-
-	   }
-	  }
-	  try
-	  {
-	   in.close();
-	  }
-	  catch (Throwable t2)
-	  {
-	  }
-	  ;
-
-	 }
-	 */
-	/**
 	 * Creates a certificate store by using a XML nodelist of certificates (including
 	 * the status).
 	 * e.g. retrieved XML structure <CertificateAuthorities>
@@ -155,6 +90,20 @@ final public class JAPCertificateStore
 		{
 			return null;
 		}
+	}
+
+	/* Duplicates this CertificateStore and including duplicates of the Certifcates*/
+	public Object clone()
+	{
+		JAPCertificateStore certs=JAPCertificateStore.getInstance();
+		Enumeration enum=elements();
+		while(enum.hasMoreElements())
+		{
+			JAPCertificate cert=(JAPCertificate)enum.nextElement();
+			cert=(JAPCertificate)cert.clone();
+			certs.m_HTCertStore.put(JAPCertificateStoreId.getId(cert), cert);
+		}
+		return certs;
 	}
 
 	/**
@@ -300,7 +249,11 @@ final public class JAPCertificateStore
 				elemEnabled.appendChild(a_doc.createTextNode("false"));
 
 			}
-			elemCA.appendChild(cert.toXmlNode(a_doc));
+			Element elemKeyInfo=a_doc.createElement("KeyInfo");
+			Element elemX509Data=a_doc.createElement("X509Data");
+			elemCA.appendChild(elemKeyInfo);
+			elemKeyInfo.appendChild(elemX509Data);
+			elemX509Data.appendChild(cert.toXmlNode(a_doc));
 		}
 
 		return r_elemCAs;

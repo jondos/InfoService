@@ -100,7 +100,7 @@ public abstract class AbstractJAPConfModule
 		m_rootPanel = new JPanel();
 		m_rootPanel.addAncestorListener(new RootPanelAncestorListener());
 		m_fontSetting = JAPController.getDialogFont();
-		repaintRootPanel();
+		recreateRootPanel();
 	}
 
 	/**
@@ -113,10 +113,10 @@ public abstract class AbstractJAPConfModule
 
 	/**
 	 * This method must be implemented by the children of AbstractJAPConfModule. It is called every
-	 * time the root panel needs to be repainted (e.g. the language has changed). This method is
+	 * time the root panel needs to be (re)created (e.g. the language has changed). This method is
 	 * also called by the constructor of AbstractJAPConfModule after creating the root panel.
 	 */
-	public abstract void repaintRootPanel();
+	public abstract void recreateRootPanel();
 
 	/**
 	 * This returns the root panel for this configuration module. The children of
@@ -139,7 +139,7 @@ public abstract class AbstractJAPConfModule
 	public void setFontSetting(Font a_newFont)
 	{
 		m_fontSetting = a_newFont;
-		repaintRootPanel();
+		recreateRootPanel();
 	}
 
 	/**
@@ -149,6 +149,12 @@ public abstract class AbstractJAPConfModule
 	public void onRootPanelShown()
 	{
 	}
+
+	/**
+	 * This method must be overwritten by the children of AbstractJAPConfModule. It is called
+	 * every time the values of the model have changed and must be readread by the config panel.
+	 */
+	abstract public void onUpdateValues();
 
 	/**
 	 * This method can be overwritten by the children of AbstractJAPConfModule. It is called

@@ -120,10 +120,15 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 		infoServiceConfigModuleInstance = this;
 	}
 
+//Has to be implemented!!!
+	public void onUpdateValues()
+	{
+	}
+
 	/**
 	 * Creates the infoservice root panel with all child-panels.
 	 */
-	public void repaintRootPanel()
+	public void recreateRootPanel()
 	{
 		JPanel rootPanel = getRootPanel();
 
