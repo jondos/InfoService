@@ -77,7 +77,7 @@ final class JAPAbout extends JDialog implements Runnable
 						t.setPriority(Thread.MAX_PRIORITY);
 				}
 				
-				public void startIt()
+			public void startIt()
 					{
 						t.start();
 					}
@@ -110,18 +110,29 @@ final class JAPAbout extends JDialog implements Runnable
 						while(bRun)
 							{
 							
-//								try{
 								if(i>height)
 									{	
-										i=-dimension.height;
+										i=-dimension.height-5;
+									//	setVisible(false);
+										getViewport().setVisible(false);
+										textArea.setVisible(false);
+										getViewport().getView().setVisible(false);
+										p.y=i;
+										getViewport().setViewPosition(p);
 									}
-								p.y=i;
-								getViewport().setViewPosition(p);
+								else
+									{
+										if(i==-dimension.height)
+											{
+												//setVisible(true);
+												getViewport().setVisible(true);
+												textArea.setVisible(true);
+												getViewport().getView().setVisible(true);
+											}
+										p.y=i;
+										getViewport().setViewPosition(p);
+									}
 								i++;
-//						}
-//								catch(Throwable  to1)
-//									{									 
-//									}
 								try{t.sleep(95);}catch(Exception e){}
 							}									
 					}
@@ -163,6 +174,7 @@ final class JAPAbout extends JDialog implements Runnable
 				   }});
 				labelSplash.setLayout(null); //the BackgroundImage-Label don't nedd a LayoutManager - we use absoult positioning instead
 				labelSplash.setSize(ABOUT_DX,ABOUT_DY); //the set the Label size to the Size of the Image
+			
 				labelSplash.add(version); //the add the Version Number...
 				labelSplash.add(verstxt); //..and text
 				labelSplash.add(bttnOk); //the add the Ok-Button
@@ -180,6 +192,7 @@ final class JAPAbout extends JDialog implements Runnable
 				verstxt.setLocation(225,y);
 				
 				setContentPane(labelSplash); //Setting the BackgroundImage-Label with the Version-Texts and OK-button as
+				
 				labelSplash.setDoubleBuffered(false);
 				
 				sp=new ScrollerPane(210,173-72); //Creating a new scrolling HTML-Pane with the specified size
@@ -189,6 +202,7 @@ final class JAPAbout extends JDialog implements Runnable
 				//Now we do a little bit tricky...
 				
 				//First we move the Dialog to a position were it is not seen on the Screen...
+				
 				setLocation(-380,-200);
 				setVisible(true);   //now we have to ensure that the window is visible before the
 				setResizable(false); //get the insets (the border around the window) - also the window must look like it should
@@ -198,9 +212,11 @@ final class JAPAbout extends JDialog implements Runnable
 				//We do not use pack() because it doesnt work well on Windows!
 				
 				setSize(ABOUT_DX+in.left+in.right,ABOUT_DY+in.bottom+in.top);// so what the background image does exactly fit
+				
+				//pack(); --> Mabe a solution for MAC'S ??
+				
 				setResizable(false); //but the user shouldn't resize the Dialog again
-				//setLocationRelativeTo(parent); //now showing centerd to JAP-Main
-				JAPUtil.centerFrame(this);
+				setLocationRelativeTo(parent); //now showing centerd to JAP-Main
 				toFront();
 				sp.startIt(); //starting the scrolling...
 				parent.setCursor(oldCursor);
