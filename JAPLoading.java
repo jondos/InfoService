@@ -8,8 +8,8 @@ public final class JAPLoading implements ActionListener, VersioncheckerProgress 
     private JLabel head;
     private JProgressBar p;
     private JTextArea pane;
-	private JDialog dialog;
-	private String returnValue;
+		private JDialog dialog;
+		private String returnValue;
 
     public  JAPLoading (JAPModel model,Frame parent) {
 		dialog = new JDialog(parent);

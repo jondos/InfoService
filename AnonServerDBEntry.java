@@ -1,4 +1,4 @@
-final public class AnonServerDBEntry 
+public final class AnonServerDBEntry 
 	{
 		private String host;
 		private int    port;

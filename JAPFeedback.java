@@ -9,7 +9,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.w3c.dom.*;
 import com.sun.xml.tree.XmlDocument;
 
-public class JAPFeedback implements Runnable {
+public final class JAPFeedback implements Runnable {
 	
 	public static final String DP = "%3A"; // Doppelpunkt 
 	boolean runFlag = true;

@@ -8,7 +8,7 @@ import java.util.Date;
  *  This version should be replaced later by a parsing and direct sending of the
  *  request to the server.
  */
-public class JAPDirectConnection extends Thread {
+public final class JAPDirectConnection extends Thread {
 	
 	private JAPModel model;
 	private Socket s;
