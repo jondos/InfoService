@@ -1,28 +1,28 @@
 /*
-Copyright (c) 2000, The JAP-Team 
+Copyright (c) 2000, The JAP-Team
 All rights reserved.
-Redistribution and use in source and binary forms, with or without modification, 
+Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
 
-	- Redistributions of source code must retain the above copyright notice, 
+	- Redistributions of source code must retain the above copyright notice,
 	  this list of conditions and the following disclaimer.
 
-	- Redistributions in binary form must reproduce the above copyright notice, 
-	  this list of conditions and the following disclaimer in the documentation and/or 
+	- Redistributions in binary form must reproduce the above copyright notice,
+	  this list of conditions and the following disclaimer in the documentation and/or
 		other materials provided with the distribution.
 
-	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors 
-	  may be used to endorse or promote products derived from this software without specific 
-		prior written permission. 
+	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
+	  may be used to endorse or promote products derived from this software without specific
+		prior written permission.
 
-	
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS 
-OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY 
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS
+OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
 AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS
 BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, 
-OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER 
-IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY 
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
 package anon;
@@ -47,7 +47,7 @@ final class JAPMuxSocket implements Runnable
 		private Dictionary oSocketList;
 		private DataOutputStream outDataStream;
 		private DataInputStream inDataStream;
-		
+
 		private Socket ioSocket;
 		private	byte[] outBuff;
 		private JAPASymCipher[] arASymCipher;
@@ -55,7 +55,7 @@ final class JAPMuxSocket implements Runnable
 		private int chainlen;
 		private volatile boolean m_bRunFlag;
 		private boolean m_bIsConnected=false;
-		
+
 		public final static int KEY_SIZE=16;
 		public final static int DATA_SIZE=992;
 		private final static int RSA_SIZE=128;
@@ -68,13 +68,13 @@ final class JAPMuxSocket implements Runnable
 	#define	CHANNEL_RESUME	0x04
 	*/	//private final static short CHANNEL_RESUME=1;
 		//private final static short CHANNEL_SUSPEND=1;
-		//public final static int E_CHANNEL_SUSPENDED=-7;	
-		public final static int E_ALREADY_CONNECTED=-8;	
-		public final static int E_NOT_CONNECTED=-8;	
-		
+		//public final static int E_CHANNEL_SUSPENDED=-7;
+		public final static int E_ALREADY_CONNECTED=-8;
+		public final static int E_NOT_CONNECTED=-8;
+
 		private static JAPMuxSocket ms_MuxSocket=null;
 		private int m_RunCount=0;
-		
+
 		private Thread threadRunLoop;
 
 		private final class SocketListEntry
@@ -119,12 +119,12 @@ final class JAPMuxSocket implements Runnable
 					ms_MuxSocket=new JAPMuxSocket();
 				return ms_MuxSocket;
 			}
-		
+
 		public static boolean isConnected()
 			{
 				return (ms_MuxSocket!=null&&ms_MuxSocket.m_bIsConnected);
 			}
-		
+
 		public int connect(String host, int port)
 			{
 				synchronized(this)
@@ -133,15 +133,15 @@ final class JAPMuxSocket implements Runnable
 							return E_ALREADY_CONNECTED;
 						try
 							{
-								JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Try to connect to Mix");														
+								JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Try to connect to Mix");
 								ioSocket=new Socket(host,port);
-								JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Connected to Mix - starting Key-Exchange...");														
+								JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Connected to Mix - starting Key-Exchange...");
 								outDataStream=new DataOutputStream(new BufferedOutputStream(ioSocket.getOutputStream(),DATA_SIZE+6));
 								inDataStream=new DataInputStream(ioSocket.getInputStream());
-								JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Reading len...");														
+								JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Reading len...");
 								ioSocket.setSoTimeout(1000); //Timout 1 second
 								inDataStream.readUnsignedShort(); //len.. unitressteing at the moment
-								JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Reading Mix-Count...");														
+								JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Reading Mix-Count...");
 								chainlen=inDataStream.readByte();
 								arASymCipher=new JAPASymCipher[chainlen];
 								for(int i=chainlen-1;i>=0;i--)
@@ -178,7 +178,7 @@ final class JAPMuxSocket implements Runnable
 							{
 								JAPAnonChannel p=new JAPAnonChannel(s,lastChannelId,type,this);
 								oSocketList.put(new Integer(lastChannelId),new SocketListEntry(s));
-								
+
 								JAPAnonService.setNrOfChannels(oSocketList.size());
 								p.start();
 								lastChannelId++;
@@ -206,9 +206,9 @@ final class JAPMuxSocket implements Runnable
 					{
 						if(!m_bIsConnected)
 							return E_NOT_CONNECTED;
-						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Closing MuxSocket...");														
+						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Closing MuxSocket...");
 						m_bRunFlag=false;
-						try	
+						try
 							{
 								threadRunLoop.join(100);
 							}
@@ -222,13 +222,13 @@ final class JAPMuxSocket implements Runnable
 								try{threadRunLoop.join(2000);}catch(Exception e){e.printStackTrace();}
 								if(threadRunLoop.isAlive())
 									{
-										JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Hm.. still alive");														
+										JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Hm.. still alive");
 										threadRunLoop.stop();
 										runStoped();
 									}
 							}
 						threadRunLoop=null;
-						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"MuxSocket closed!");														
+						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"MuxSocket closed!");
 						return 0;
 					}
 			}
@@ -249,23 +249,23 @@ final class JAPMuxSocket implements Runnable
 						return m_RunCount;
 					}
 			}
-		
+
 		public int stopService()
-			{	
+			{
 				synchronized(this)
 					{
-						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Stopping Service...");														
+						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Stopping Service...");
 						m_RunCount--;
 						if(m_RunCount==0)
 							close();
 						return m_RunCount;
 					}
 			}
-		
-		
+
+
 		private void runStoped()
 			{
-				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"MuxSocket run stoped...");														
+				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"MuxSocket run stoped...");
 				Enumeration e=oSocketList.keys();
 				while(e.hasMoreElements())
 					{
@@ -279,24 +279,24 @@ final class JAPMuxSocket implements Runnable
 						catch(Exception ie){}
 						oSocketList.remove(key);
 					}
-				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"MuxSocket all channels closed...");														
+				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"MuxSocket all channels closed...");
 				m_bRunFlag=false;
 				m_bIsConnected=false;
 				try{inDataStream.close();}catch(Exception e1){}
 				try{outDataStream.close();}catch(Exception e2){}
 				try{ioSocket.close();}catch(Exception e3){}
-				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"MuxSocket socket closed...");														
+				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"MuxSocket socket closed...");
 				inDataStream=null;
 				outDataStream=null;
 				ioSocket=null;
-				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Updating View...");														
+				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Updating View...");
 				JAPAnonService.setNrOfChannels(oSocketList.size());
-				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"All done..");														
+				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"All done..");
 			}
-		
+
 		public void run()
 			{
- 				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"MuxSocket is running...");														
+ 				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"MuxSocket is running...");
 				byte[] buff=new byte[DATA_SIZE];
 				int flags=0;
 				int channel=0;
@@ -335,11 +335,11 @@ final class JAPMuxSocket implements Runnable
 								else if(flags==CHANNEL_DATA)
 									{
 										for(int i=0;i<chainlen;i++)
-												tmpEntry.arCipher[i].encryptAES(buff);									
+												tmpEntry.arCipher[i].encryptAES2(buff);
 										len=(buff[0]<<8)|(buff[1]&0xFF);
 										len&=0x0000FFFF;
 										if(len<0||len>DATA_SIZE)
-											JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Receveived MuxPacket with invalid data size: "+Integer.toString(len));											
+											JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Receveived MuxPacket with invalid data size: "+Integer.toString(len));
 										else
 										{
 											for(int i=0;i<3;i++)
@@ -351,7 +351,7 @@ final class JAPMuxSocket implements Runnable
 														}
 													catch(Exception e)
 														{
-															JAPDebug.out(JAPDebug.WARNING,JAPDebug.NET,"Fehler bei write to browser...retrying..."+e.toString());														
+															JAPDebug.out(JAPDebug.WARNING,JAPDebug.NET,"Fehler bei write to browser...retrying..."+e.toString());
 														}
 												}
 											try{tmpEntry.outStream.flush();}catch(Exception e){e.printStackTrace();};
@@ -364,14 +364,14 @@ final class JAPMuxSocket implements Runnable
 										JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Suspending Channel: "+Integer.toString(channel));
 										}
 								else if(flags==CHANNEL_RESUME)
-									{	
+									{
 										tmpEntry.bIsSuspended=false;
 										JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Resumeing Channel: "+Integer.toString(channel));
 									}*/
 							}
 					}
 				runStoped();
-				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"MuxSocket thread run exited...");														
+				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"MuxSocket thread run exited...");
 			}
 
 		public synchronized int send(int channel,int type,byte[] buff,short len)
@@ -397,12 +397,12 @@ final class JAPMuxSocket implements Runnable
 							{
 								int size=DATA_SIZE-KEY_SIZE;
 								entry.arCipher=new JAPSymCipher[chainlen];
-								
+
 								//Last Mix
 								entry.arCipher[chainlen-1]=new JAPSymCipher();
 								keypool.getKey(outBuff);
 								outBuff[0]&=0x7F; //RSA HACK!! (to ensure what m<n in RSA-Encrypt: c=m^e mod n)
-								
+
 								System.arraycopy(buff,0,outBuff,KEY_SIZE+3,size-3);
 								outBuff[KEY_SIZE]=(byte)(len>>8);
 								outBuff[KEY_SIZE+1]=(byte)(len%256);
@@ -410,7 +410,7 @@ final class JAPMuxSocket implements Runnable
 									outBuff[KEY_SIZE+2]=1;
 								else
 									outBuff[KEY_SIZE+2]=0;
-																
+
 								entry.arCipher[chainlen-1].setEncryptionKeyAES(outBuff);
 								arASymCipher[chainlen-1].encrypt(outBuff,0,buff,0);
 								entry.arCipher[chainlen-1].encryptAES(outBuff,RSA_SIZE,buff,RSA_SIZE,DATA_SIZE-RSA_SIZE);
@@ -425,7 +425,7 @@ final class JAPMuxSocket implements Runnable
 										arASymCipher[i].encrypt(outBuff,0,buff,0);
 										entry.arCipher[i].encryptAES(outBuff,RSA_SIZE,buff,RSA_SIZE,DATA_SIZE-RSA_SIZE);
 										size-=KEY_SIZE;
-									}						
+									}
 							}
 						else
 							{
@@ -435,7 +435,7 @@ final class JAPMuxSocket implements Runnable
 								outBuff[1]=(byte)(len%256);
 								for(int i=chainlen-1;i>0;i--)
 									entry.arCipher[i].encryptAES(outBuff); //something throws a null pointer....
-								entry.arCipher[0].encryptAES(outBuff,0,buff,0,DATA_SIZE); //something throws a null pointer....			
+								entry.arCipher[0].encryptAES(outBuff,0,buff,0,DATA_SIZE); //something throws a null pointer....
 							}
 						outDataStream.writeInt(channel);
 						outDataStream.writeShort(CHANNEL_DATA);
@@ -453,7 +453,7 @@ final class JAPMuxSocket implements Runnable
 					}
 				return 0;
 			}
-		
+
 		public final int getChainLen()
 			{
 				return chainlen;
