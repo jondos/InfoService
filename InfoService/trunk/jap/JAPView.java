@@ -763,6 +763,7 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 		public void registerViewIconified(Window v) {
 			m_ViewIconified = v;
 		}
+
 		public void channelsChanged(int c) {
 			// Nr of Channels
 			//int c=controller.getNrOfChannels();
