@@ -685,8 +685,8 @@ public final class JAPModel implements JAPAnonServiceListener{
 										if(ret==0||mbActCntMessageNeverRemind)
 											mbActCntMessageNotRemind=true;
 									}
-								//proxyAnonSocks=new JAPAnonService(1080,JAPAnonService.PROTO_SOCKS,model.mblistenerIsLocal);
-								//proxyAnonSocks.start();
+								proxyAnonSocks=new JAPAnonService(1080,JAPAnonService.PROTO_SOCKS,model.mblistenerIsLocal);
+								proxyAnonSocks.start();
 								model.status2 = model.getString("statusRunning");
 								proxyAnon.setAnonServiceListener(this);
 								// start feedback thread
@@ -860,24 +860,26 @@ public final class JAPModel implements JAPAnonServiceListener{
 	public int versionCheck()
 		{
 			JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:Checking for new version of JAP...");
-			try {
-				int result = 0;
-				Versionchecker vc = new Versionchecker();
-			String s = vc.getNewVersionnumberFromNet("http://"+infoServiceHostName+":"+infoServicePortNumber+aktJAPVersionFN);
-			if(s==null)
-				return -1;
-			s=s.trim();
-			// temporary changed due to stability.... (sk13)
-//				String s = vc.getNewVersionnumberFromNet("http://anon.inf.tu-dresden.de:80"+aktJAPVersionFN);
-				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:Version:"+aktVersion);
-				if ( s.compareTo(aktVersion) > 0 ) {
-					// OK, new version available
-					// ->Ask user if he/she wants to download new version
-					//	Object[] options = { model.getString("newVersionNo"), model.getString("newVersionYes") };
-					//	ImageIcon   icon = loadImageIcon(DOWNLOADFN,true);
-					String answer;
-					JAPLoading japLoading = new JAPLoading(this,view);
-					answer = japLoading.message(model.getString("newVersionAvailableTitle"),
+			try 
+				{
+					int result = 0;
+					Versionchecker vc = new Versionchecker();
+					String s = vc.getNewVersionnumberFromNet("http://"+infoServiceHostName+":"+infoServicePortNumber+aktJAPVersionFN);
+					if(s==null)
+						return -1;
+					s=s.trim();
+					// temporary changed due to stability.... (sk13)
+					//String s = vc.getNewVersionnumberFromNet("http://anon.inf.tu-dresden.de:80"+aktJAPVersionFN);
+					JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:Version:"+aktVersion);
+					if ( s.compareTo(aktVersion) > 0 ) 
+						{
+							// OK, new version available
+							// ->Ask user if he/she wants to download new version
+							//	Object[] options = { model.getString("newVersionNo"), model.getString("newVersionYes") };
+							//	ImageIcon   icon = loadImageIcon(DOWNLOADFN,true);
+							String answer;
+							JAPLoading japLoading = new JAPLoading(this,view);
+								answer = japLoading.message(model.getString("newVersionAvailableTitle"),
 						   model.getString("newVersionAvailable"),
 						   model.getString("newVersionNo"),
 						   model.getString("newVersionYes"),
