@@ -490,8 +490,8 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 		// Config panel
 		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"Start updateValues");
 		portnumberTextField.setText(String.valueOf(model.getPortNumber()));
-		proxyCheckBox.setSelected(model.getUseProxy());
-		proxyTextField.setText(model.getProxyHost()+":"+String.valueOf(model.getProxyPort()));
+		proxyCheckBox.setSelected(model.getUseFirewall());
+		proxyTextField.setText(model.getFirewallHost()+":"+String.valueOf(model.getFirewallPort()));
 		infoServiceTextField.setText(model.getInfoServiceHost()+":"+String.valueOf(model.getInfoServicePort()));
 		anonCheckBox.setSelected(model.isAnonMode());
 		anonTextField.setText(e.getHost()+":"+String.valueOf(e.getPort())+((e.getSSLPort()==-1)?"":":"+e.getSSLPort()));

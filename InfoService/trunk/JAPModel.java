@@ -46,19 +46,24 @@ import java.awt.Frame;
 import java.awt.Cursor;
 import java.awt.MediaTracker;
 import java.awt.Toolkit;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
 import java.net.ServerSocket;
 import java.net.InetAddress;
 import javax.swing.ImageIcon;
 import javax.swing.JCheckBox;
 import javax.swing.JOptionPane;
 import javax.swing.JDialog;
+import javax.swing.JPanel;
+import javax.swing.JButton;
+import javax.swing.JPasswordField;
 import javax.swing.JLabel;
 import anon.JAPAnonService;
 import anon.JAPAnonServiceListener;
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPModel implements JAPAnonServiceListener{
 
-	public static final String aktVersion = "00.01.013"; // Version of JAP
+	public static final String aktVersion = "00.01.014"; // Version of JAP
 
 	public  Vector            anonServerDatabase = null; // vector of all available mix cascades
 	private AnonServerDBEntry currentAnonService = null; // current anon service data object
@@ -189,9 +194,9 @@ public final class JAPModel implements JAPAnonServiceListener{
 			view=v;
 		}
 
-	public JAPView getView()
+	public static JAPView getView()
 		{
-			return view;
+			return model.view;
 		}
 
 	/** Loads the Configuration.
@@ -206,6 +211,8 @@ public final class JAPModel implements JAPAnonServiceListener{
 	 *		proxyMode="true"/"false"			// Using a HTTP-Proxy??
 	 *		proxyHostName="..."						// the Name of the HTTP-Proxy
 	 *		proxyPortNumber="..."					// port number of the HTTP-proxy
+	 *    proxyAuthorization="true"/"false" //Need authorization to acces the proxy ?
+	 *    porxyAuthUserID="..."         //UserId for the Proxy if Auth is neccesary
 	 *		infoServiceHostName="..."			// hostname of the infoservice
 	 *		infoServicePortnumber=".."		// the portnumber of the info service
 	 *		anonHostName=".."							// the hostname of the anon-service
@@ -257,6 +264,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 			setUseSocksPort(JAPUtil.parseNodeBoolean(n.getNamedItem("supportSocks"),false));
 			setListenerIsLocal(JAPUtil.parseNodeBoolean(n.getNamedItem("listenerIsLocal"),true));
 			setUseProxy(JAPUtil.parseNodeBoolean(n.getNamedItem("proxyMode"),false));
+			setUseFirewallAuthorization(JAPUtil.parseNodeBoolean(n.getNamedItem("proxyAuthorization"),false));
 			mbActCntMessageNeverRemind=JAPUtil.parseNodeBoolean(n.getNamedItem("neverRemindActiveContent"),false);
 			if(mbActCntMessageNeverRemind)
 				mbActCntMessageNotRemind=true;
@@ -271,7 +279,9 @@ public final class JAPModel implements JAPAnonServiceListener{
 			if(host.equalsIgnoreCase("ikt.inf.tu-dresden.de"))
 				host="";
 			setProxy(host,port);
-
+			String userid=JAPUtil.parseNodeString(n.getNamedItem("proxyAuthUserID"),m_ProxyAuthenticationUserID);
+			setFirewallAuthUserID(userid);
+			
 			String anonserviceName = model.getAnonServer().getName();
 			String anonHostName    = model.getAnonServer().getHost();
 			int anonPortNumber     = model.getAnonServer().getPort();
@@ -357,6 +367,8 @@ public final class JAPModel implements JAPAnonServiceListener{
 			e.setAttribute("proxyMode",(mbUseProxy?"true":"false"));
 			e.setAttribute("proxyHostName",((proxyHostName==null)?"":proxyHostName));
 			e.setAttribute("proxyPortNumber",Integer.toString(proxyPortNumber));
+			e.setAttribute("proxyAuthorization",(mb_UseProxyAuthentication?"true":"false"));
+			e.setAttribute("proxyAuthUserID",m_ProxyAuthenticationUserID);
 			e.setAttribute("infoServiceHostName",((infoServiceHostName==null)?"":infoServiceHostName));
 			e.setAttribute("infoServicePortNumber",Integer.toString(infoServicePortNumber));
 			AnonServerDBEntry e1 = model.getAnonServer();
@@ -626,13 +638,6 @@ public final class JAPModel implements JAPAnonServiceListener{
 			notifyJAPObservers();
 		}
 
-	public boolean getUseProxy()
-		{
-			synchronized(this)
-				{
-					return mbUseProxy;
-				}
-		}
 
 	public void setMinimizeOnStartup(boolean b)
 		{
@@ -666,8 +671,16 @@ public final class JAPModel implements JAPAnonServiceListener{
 					return true;
 				}
 		}
+	
+	public boolean getUseFirewall()
+		{
+			synchronized(this)
+				{
+					return mbUseProxy;
+				}
+		}
 
-	public String getProxyHost()
+	public String getFirewallHost()
 		{
 			synchronized(this)
 				{
@@ -675,14 +688,47 @@ public final class JAPModel implements JAPAnonServiceListener{
 				}
 		}
 
-	public int getProxyPort()
+	public int getFirewallPort()
 		{
 			synchronized(this)
 				{
 					return proxyPortNumber;
 				}
 		}
-/*
+	
+	public void setUseFirewallAuthorization(boolean b)
+		{
+			mb_UseProxyAuthentication=b;
+		}
+
+	public boolean getUseFirewallAuthorization()
+		{
+			return mb_UseProxyAuthentication;
+		}
+	
+	public void  setFirewallAuthUserID(String userid)
+		{
+			m_ProxyAuthenticationUserID=userid;
+		}
+
+	public String getFirewallAuthUserID()
+		{
+			return m_ProxyAuthenticationUserID;
+		}
+
+	public String getFirewallAuthPasswd()
+		{
+			if(mb_UseProxyAuthentication)
+				{
+					if(m_ProxyAuthenticationPasswd==null)
+						m_ProxyAuthenticationPasswd=JAPFirewallPasswdDlg.getPasswd();															
+					return m_ProxyAuthenticationPasswd;
+				}
+			else 
+				return null;
+		}
+
+	/*
 	public synchronized void setJAPViewIconified() {
 		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:setJAPViewIconified()");
 		view.setVisible(false);
@@ -733,19 +779,22 @@ private final class SetAnonModeAsync implements Runnable
 						proxyAnon=new JAPAnonService(m_socketHTTPListener,JAPAnonService.PROTO_HTTP);
 						AnonServerDBEntry e = model.getAnonServer();
 						//2001-02-20(HF)
-						if (model.getUseProxy()) {
+						if (model.getUseFirewall()) {
 							// connect vi proxy to first mix (via ssl portnumber)
 							if (e.getSSLPort() == -1) {
 								JOptionPane.showMessageDialog(model.getView(),
 									model.getString("errorFirewallModeNotSupported"),
 									model.getString("errorFirewallModeNotSupportedTitle"),
 									JOptionPane.ERROR_MESSAGE);
-								proxyAnon.setAnonService(e.getHost(),e.getPort());
-								proxyAnon.setFirewall(model.getProxyHost(),model.getProxyPort());
-								proxyAnon.connectViaFirewall(true);
+								return; //TODO: Maybe need to check what to do...--> anonmode=false =?
 							} else {
 								proxyAnon.setAnonService(e.getHost(),e.getSSLPort());
-								proxyAnon.setFirewall(model.getProxyHost(),model.getProxyPort());
+								proxyAnon.setFirewall(model.getFirewallHost(),model.getFirewallPort());
+								if(model.getUseFirewallAuthorization())
+									{
+										proxyAnon.setFirewallAuthorization(model.getFirewallAuthUserID(),
+																												model.getFirewallAuthPasswd());
+									}
 								proxyAnon.connectViaFirewall(true);
 							}
 						} else {

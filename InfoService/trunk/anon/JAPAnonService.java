@@ -149,11 +149,14 @@ public final class JAPAnonService implements Runnable
 		    return E_SUCCESS;
 		}
 		
-		public int setFirewallAuthentication(String userid,String passwd)
+		public int setFirewallAuthorization(String userid,String passwd)
 			{
 				m_FirewallAuthenticationUserID=userid;
 				m_FirewallAuthenticationPasswd=passwd;
-				m_bUseFirewallAuthentication=true;
+				if(userid!=null)
+					m_bUseFirewallAuthentication=true;
+				else
+					m_bUseFirewallAuthentication=false;					
 				return E_SUCCESS;
 			}
 		

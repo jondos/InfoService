@@ -168,6 +168,7 @@ final class JAPMuxSocket implements Runnable
 											{
 												BASE64Encoder enc=new BASE64Encoder();
 												String str=enc.encodeBuffer((fwUserID+":"+fwPasswd).getBytes());
+												str=str.trim();
 												o.write("Proxy-Authorization: Basic "+str+CRLF);
 											}
 									o.write("Connection: Keep-Alive"+CRLF);

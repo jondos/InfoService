@@ -34,8 +34,11 @@ import org.w3c.dom.NamedNodeMap;
 import HTTPClient.HTTPConnection;
 import HTTPClient.HTTPResponse;
 import HTTPClient.NVPair;
+import HTTPClient.AuthorizationInfo;
 
 import java.net.InetAddress;
+
+import sun.misc.BASE64Encoder;
 
 final class JAPInfoService 
 	{
@@ -47,36 +50,73 @@ final class JAPInfoService
 			{
 				model = JAPModel.getModel();
 				setInfoService(model.getInfoServiceHost(),model.getInfoServicePort());
-				if(model.getUseProxy())
-					setProxy(model.getProxyHost(),model.getProxyPort(),null,null);
-				else
-					setProxy(null,0,null,null);
 			}
 			
+		/** This will set the InfoService to use. It also sets the Proxy-Configuration and autorization.
+		 */
 		public int setInfoService(String host,int port)
 			{
-				String proxy=null;
- 				int proxyport=0;
-				if(conInfoService!=null)
-					{ //get the old Proxy....
-						proxy=conInfoService.getProxyHost();
-						proxyport=conInfoService.getProxyPort();
-					}
 				conInfoService=new HTTPConnection(host,port);
-				conInfoService.setProxyServer(proxy,proxyport);
+				if(model.getUseFirewall())
+					setProxy(model.getFirewallHost(),model.getFirewallPort(),
+									 model.getFirewallAuthUserID(),model.getFirewallAuthPasswd());
+				else
+					setProxy(null,0,null,null);
 				conInfoService.setAllowUserInteraction(false);
 				NVPair[] headers=new NVPair[2];
-				headers[0]=new NVPair("Proxy-Connection","");
+				headers[0]=new NVPair("Cache-Control","no-cache");
 				headers[1]=new NVPair("Pragma","no-cache");
-				conInfoService.setDefaultHeaders(headers);
+				replaceHeader(conInfoService,headers[0]);
+				replaceHeader(conInfoService,headers[1]);
 				return 0;
+			}
+		
+		private int replaceHeader(HTTPConnection con,NVPair header)
+			{				
+				NVPair headers[]=con.getDefaultHeaders();
+				if(headers==null||headers.length==0)
+					{
+						headers=new NVPair[1];
+						headers[0]=header;
+						con.setDefaultHeaders(headers);
+						return 0;
+					}
+				else
+					{
+						int len=headers.length;
+						for(int i=0;i<len;i++)
+							{
+								if(headers[i].getName().equalsIgnoreCase(header.getName()))
+									{
+										headers[i]=header;
+										con.setDefaultHeaders(headers);
+										return 0;
+									}
+							}
+						NVPair tmpHeaders[]=new NVPair[len+1];
+						for(int i=0;i<len;i++)
+							tmpHeaders[i]=headers[i];
+						tmpHeaders[len]=header;
+						conInfoService.setDefaultHeaders(tmpHeaders);
+						return 0;
+					}
 			}
 		
 		public int setProxy(String host,int port,String authUserID,String authPasswd)
 			{	
 				if(conInfoService==null)
 					return -1;
+				conInfoService.setProxyServer(host,port);
 				conInfoService.setCurrentProxy(host,port);
+				if(authUserID!=null) //setting Proxy authorization...
+					{
+						String tmpPasswd;
+						BASE64Encoder enc=new BASE64Encoder();
+						tmpPasswd=enc.encodeBuffer((authUserID+":"+authPasswd).getBytes());
+						tmpPasswd=tmpPasswd.trim();
+						NVPair authoHeader=new NVPair("Proxy-Authorization","Basic "+tmpPasswd);
+						replaceHeader(conInfoService,authoHeader);
+					}
 				return 0;
 			}
 		
@@ -198,15 +238,6 @@ final class JAPInfoService
 		{
 			try
 				{
-/*					URL url=new URL(path);
-					JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"Versionchecker:"+
-						" Prot: "+url.getProtocol()+
-						" Host: "+url.getHost()+
-						" Port: "+url.getPort()+
-						" File: "+url.getFile());
-*///					HTTPConnection.setProxyServer(null,0);
-//					HTTPConnection con=new HTTPConnection(url.getHost(),
-//																								url.getPort());
 					HTTPResponse resp=conInfoService.Get(model.aktJAPVersionFN);
 					if (resp==null || resp.getStatusCode()!=200)
 						throw new Exception("Versioncheck bad response from server: "+resp.getReasonLine());
