@@ -70,6 +70,7 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import update.JAPUpdate;
+import pay.view.JAPConfPayAccounts;
 
 final class JAPConf extends JDialog
 {
@@ -87,7 +88,7 @@ final class JAPConf extends JDialog
 
 	private JAPController m_Controller;
 
-	private JAPJIntField m_tfListenerPortNumber,m_tfListenerPortNumberSocks;
+	private JAPJIntField m_tfListenerPortNumber, m_tfListenerPortNumberSocks;
 	private JCheckBox m_cbListenerIsLocal;
 	private JLabel m_labelPortnumber1, m_labelPortnumber2;
 	private JLabel m_labelSocksPortNumber;
@@ -181,7 +182,12 @@ final class JAPConf extends JDialog
 
 		AbstractJAPConfModule infoServiceModule = new JAPConfInfoService();
 		AbstractJAPConfModule certModule = new JAPConfCert();
-		AbstractJAPConfModule torModule=new JAPConfTor();
+		AbstractJAPConfModule torModule = new JAPConfTor();
+		AbstractJAPConfModule accountsModule = null;
+		if (loadPay)
+		{
+			accountsModule = new pay.view.JAPConfPayAccounts();
+		}
 
 		/* there is no need to set the font because it is already set in the constructor but so it is
 		 * save for the future
@@ -193,6 +199,10 @@ final class JAPConf extends JDialog
 		m_confModules.addElement(infoServiceModule);
 		m_confModules.addElement(certModule);
 		m_confModules.addElement(torModule);
+		if (loadPay)
+		{
+			m_confModules.addElement(accountsModule);
+		}
 
 		m_Tabs.addTab(JAPMessages.getString("confListenerTab"), null, m_pPort);
 		m_Tabs.addTab(JAPMessages.getString("confProxyTab"), null, m_pFirewall);
@@ -200,15 +210,15 @@ final class JAPConf extends JDialog
 		m_Tabs.addTab(JAPMessages.getString("confAnonTab"), null, m_pMix);
 		m_Tabs.addTab(certModule.getTabTitle(), null, certModule.getRootPanel());
 		m_Tabs.addTab(torModule.getTabTitle(), null, torModule.getRootPanel());
+		if (loadPay)
+		{
+			m_Tabs.addTab(accountsModule.getTabTitle(), null, accountsModule.getRootPanel());
+		}
+
 		if (!JAPModel.isSmallDisplay())
 		{
 			m_Tabs.addTab(JAPMessages.getString("confMiscTab"), null, m_pMisc);
 
-		}
-		if (loadPay)
-		{
-			m_pKonto = new pay.view.PayView();
-			m_Tabs.addTab(pay.util.PayText.get("confAccountTab"), null, m_pKonto);
 		}
 		JPanel buttonPanel = new JPanel();
 		buttonPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
@@ -243,10 +253,10 @@ final class JAPConf extends JDialog
 				okPressed();
 			}
 		});
-		if (loadPay)
+/*		if (loadPay)
 		{
 			ok.addActionListener( ( (pay.view.PayView) m_pKonto).userPanel);
-		}
+		}*/
 		ok.setFont(m_fontControls);
 		buttonPanel.add(ok);
 		buttonPanel.add(new JLabel("   "));
@@ -271,22 +281,23 @@ final class JAPConf extends JDialog
 		}
 	}
 
-
 	/**
 	 * This method overwrites the method show() from java.awt.Dialog. We need it for
 	 * creating the module savepoints. After this, we call the parent show() method.
 	 */
-	public void show() {
-	  /* Call the create savepoint handler of all configuration modules. Because this is
-	   * a modal dialog, every call of show() from JAPView is equal to the start of the
-	   * configuration by the user.
-	   */
-	  Enumeration confModules = m_confModules.elements();
-	  while (confModules.hasMoreElements()) {
-	    ( (AbstractJAPConfModule) (confModules.nextElement())).createSavePoint();
-	  }
-	  /* call the original method */
-	  super.show();
+	public void show()
+	{
+		/* Call the create savepoint handler of all configuration modules. Because this is
+		 * a modal dialog, every call of show() from JAPView is equal to the start of the
+		 * configuration by the user.
+		 */
+		Enumeration confModules = m_confModules.elements();
+		while (confModules.hasMoreElements())
+		{
+			( (AbstractJAPConfModule) (confModules.nextElement())).createSavePoint();
+		}
+		/* call the original method */
+		super.show();
 	}
 
 	protected JPanel buildPortPanel()
@@ -310,7 +321,7 @@ final class JAPConf extends JDialog
 		m_cbListenerIsLocal.setForeground(m_labelPortnumber1.getForeground());
 
 		//m_tfListenerPortNumberSocks.setEnabled(false);
-		 //}
+		//}
 		m_tfListenerPortNumberSocks = new JAPJIntField();
 		m_tfListenerPortNumberSocks.setFont(m_fontControls);
 
@@ -347,19 +358,19 @@ final class JAPConf extends JDialog
 		g.setConstraints(seperator, c);
 		p1.add(seperator);
 		c.insets = normInsets;
-		c.gridy=4;
-		c.insets=new Insets(10,0,0,0);
-		m_labelSocksPortNumber=new JLabel(JAPMessages.getString("settingsListenerSOCKS"));
+		c.gridy = 4;
+		c.insets = new Insets(10, 0, 0, 0);
+		m_labelSocksPortNumber = new JLabel(JAPMessages.getString("settingsListenerSOCKS"));
 		m_labelSocksPortNumber.setFont(m_fontControls);
-		p1.add(m_labelSocksPortNumber,c);
-		  c.gridy=5;
-		  g.setConstraints(m_tfListenerPortNumberSocks,c);
-		  p1.add(m_tfListenerPortNumberSocks);
-		  c.gridy=6;
-		  JSeparator seperator2=new JSeparator();
-		  c.insets=new Insets(10,0,0,0);
-		  g.setConstraints(seperator2,c);
-		  p1.add(seperator2);
+		p1.add(m_labelSocksPortNumber, c);
+		c.gridy = 5;
+		g.setConstraints(m_tfListenerPortNumberSocks, c);
+		p1.add(m_tfListenerPortNumberSocks);
+		c.gridy = 6;
+		JSeparator seperator2 = new JSeparator();
+		c.insets = new Insets(10, 0, 0, 0);
+		g.setConstraints(seperator2, c);
+		p1.add(seperator2);
 
 		c.gridy = 7;
 		c.insets = new Insets(10, 0, 0, 0);
@@ -1030,7 +1041,7 @@ final class JAPConf extends JDialog
 			try
 			{
 				/* this is only a test for the values */
-				MixCascade newMixCascade = new MixCascade(null,null,host, port);
+				MixCascade newMixCascade = new MixCascade(null, null, host, port);
 			}
 			catch (Exception ex)
 			{
@@ -1072,24 +1083,24 @@ final class JAPConf extends JDialog
 		}
 		iListenerPort = i;
 		//checking Socks Port Number
-		  try
-		   {
-		 i=Integer.parseInt(m_tfListenerPortNumberSocks.getText().trim());
-		   }
-		  catch(Exception e)
-		   {
-		 i=-1;
-		   }
-		  if(!JAPUtil.isPort(i))
-		   {
-		 showError(JAPMessages.getString("errorSocksListenerPortWrong"));
-		 return false;
-		   }
-		  if(i==iListenerPort)
-		   {
-		 showError(JAPMessages.getString("errorListenerPortsAreEqual"));
-		 return false;
-		   }
+		try
+		{
+			i = Integer.parseInt(m_tfListenerPortNumberSocks.getText().trim());
+		}
+		catch (Exception e)
+		{
+			i = -1;
+		}
+		if (!JAPUtil.isPort(i))
+		{
+			showError(JAPMessages.getString("errorSocksListenerPortWrong"));
+			return false;
+		}
+		if (i == iListenerPort)
+		{
+			showError(JAPMessages.getString("errorListenerPortsAreEqual"));
+			return false;
+		}
 		//Checking Firewall Settings (Host + Port)
 		if (m_cbProxy.isSelected())
 		{
@@ -1258,7 +1269,7 @@ final class JAPConf extends JDialog
 			// -- do stuff for manual setting of anon service
 			try
 			{
-				newMixCascade = new MixCascade(null,null,m_tfMixHost.getText().trim(),
+				newMixCascade = new MixCascade(null, null, m_tfMixHost.getText().trim(),
 											   Integer.parseInt(m_tfMixPortNumber.getText().trim()));
 			}
 			catch (Exception ex)
@@ -1380,7 +1391,7 @@ final class JAPConf extends JDialog
 		m_labelProxyAuthUserID.setText(JAPMessages.getString("settingsProxyAuthUserID"));
 	}
 
-/** Updates the shown Values from the Model.*/
+	/** Updates the shown Values from the Model.*/
 	public void updateValues()
 	{
 		/* Call the event handler of all configuration modules. */
@@ -1390,10 +1401,10 @@ final class JAPConf extends JDialog
 			( (AbstractJAPConfModule) (confModules.nextElement())).updateValues();
 		}
 
-		if (loadPay)
+/*		if (loadPay)
 		{
 			( (pay.view.PayView) m_pKonto).userPanel.valuesChanged();
-		}
+		}*/
 		// misc tab
 		int iTmp = JAPModel.getDummyTraffic();
 		m_cbDummyTraffic.setSelected(iTmp > -1);
@@ -1425,7 +1436,7 @@ final class JAPConf extends JDialog
 		m_tfListenerPortNumber.setInt(JAPModel.getHttpListenerPortNumber());
 		m_cbListenerIsLocal.setSelected(JAPModel.getHttpListenerIsLocal());
 		m_tfListenerPortNumberSocks.setInt(JAPModel.getSocksListenerPortNumber());
-		boolean bSocksVisible=JAPModel.isTorEnabled();
+		boolean bSocksVisible = JAPModel.isTorEnabled();
 		m_tfListenerPortNumberSocks.setVisible(bSocksVisible);
 		m_labelSocksPortNumber.setVisible(bSocksVisible);
 		//m_cbListenerSocks.setSelected(m_Controller.getUseSocksPort());

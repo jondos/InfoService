@@ -15,9 +15,9 @@ import tor.util.helper;
  */
 public class PRF {
 	
-	private byte[] secret;
-	private byte[] seed;
-	private byte[] label;
+	private byte[] m_secret;
+	private byte[] m_seed;
+	private byte[] m_label;
 	/**
 	 * Constructor for a Pseudo Random Function
 	 * @param secret a secret
@@ -26,9 +26,9 @@ public class PRF {
 	 */
 	public PRF(byte[] secret,byte[] label, byte[] seed)
 	{
-		this.secret = secret;
-		this.seed = seed;
-		this.label = label;
+		this.m_secret = secret;
+		this.m_seed = seed;
+		this.m_label = label;
 	}
 	
 	/**
@@ -41,16 +41,16 @@ public class PRF {
 		byte[] a;
 		byte[] b;
 		byte[] c = new byte[length];
-		int splitsize = this.secret.length / 2;
-		if((splitsize*2)<this.secret.length)
+		int splitsize = this.m_secret.length / 2;
+		if((splitsize*2)<this.m_secret.length)
 		{
 			splitsize++;
 		}
-		byte[] s1 = helper.copybytes(this.secret,0,splitsize);
-		byte[] s2 = helper.copybytes(this.secret,this.secret.length - splitsize,splitsize);
-		P_Hash phash = new P_Hash(s1,helper.conc(this.label,this.seed),new MD5Digest());
+		byte[] s1 = helper.copybytes(this.m_secret,0,splitsize);
+		byte[] s2 = helper.copybytes(this.m_secret,this.m_secret.length - splitsize,splitsize);
+		P_Hash phash = new P_Hash(s1,helper.conc(this.m_label,this.m_seed),new MD5Digest());
 		a = phash.getHash(length);
-		phash = new P_Hash(s2,helper.conc(this.label,this.seed),new SHA1Digest());
+		phash = new P_Hash(s2,helper.conc(this.m_label,this.m_seed),new SHA1Digest());
 		b = phash.getHash(length);
 		for(int i=0;i<length;i++)
 		{

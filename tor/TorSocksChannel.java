@@ -23,8 +23,8 @@ public class TorSocksChannel extends TorChannel
 	private final static int SOCKS_WAIT_FOR_METHODS = 1;
 	private final static int SOCKS_WAIT_FOR_REQUEST = 2;
 	private final static int DATA_MODE = 3;
-	private int status;
-	private byte[] data; //buffer for socks protocol headers
+	private int m_status;
+	private byte[] m_data; //buffer for socks protocol headers
 
 	/**
 	 * constructor
@@ -37,24 +37,24 @@ public class TorSocksChannel extends TorChannel
 	public TorSocksChannel(int streamID, Circuit circuit) throws IOException
 	{
 		super(streamID, circuit);
-		status = SOCKS_WAIT_FOR_METHODS;
-		data = new byte[0];
+		this.m_status = SOCKS_WAIT_FOR_METHODS;
+		this.m_data = new byte[0];
 	}
 
 	protected void send(byte[] arg0, int len) throws IOException
 	{
-		switch (status)
+		switch (this.m_status)
 		{
 			case SOCKS_WAIT_FOR_METHODS:
 			{
-				this.data = helper.conc(this.data, arg0,len);
-				if (this.data.length > 2)
+				this.m_data = helper.conc(this.m_data, arg0,len);
+				if (this.m_data.length > 2)
 				{
-					int length = (this.data[1] & 0xFF) + 2;
-					if (this.data.length >= length)
+					int length = (this.m_data[1] & 0xFF) + 2;
+					if (this.m_data.length >= length)
 					{
 
-						if (this.data[0] != 5)
+						if (this.m_data[0] != 5)
 						{
 							close();
 							throw new IOException("Wrong Sock Protocol number");
@@ -62,15 +62,15 @@ public class TorSocksChannel extends TorChannel
 
 						boolean methodFound = false;
 						byte[] socksAnswer = null;
-						for (int i = 0; i < (this.data[1] & 0xFF); i++)
+						for (int i = 0; i < (this.m_data[1] & 0xFF); i++)
 						{
-							if ( (this.data[i + 2] == 0) && (!methodFound))
+							if ( (this.m_data[i + 2] == 0) && (!methodFound))
 							{
 								methodFound = true;
 								socksAnswer = new byte[]
 									{
 									0x05, 0x00};
-								this.status = SOCKS_WAIT_FOR_REQUEST;
+								this.m_status = SOCKS_WAIT_FOR_REQUEST;
 							}
 						}
 						if (!methodFound)
@@ -80,9 +80,9 @@ public class TorSocksChannel extends TorChannel
 								0x05, (byte) 0xFF};
 						}
 						recv(socksAnswer, 0, socksAnswer.length);
-						this.data = helper.copybytes(this.data, length, this.data.length - length);
-						if(data.length>0)
-							send(data,0);
+						this.m_data = helper.copybytes(this.m_data, length, this.m_data.length - length);
+						if(this.m_data.length>0)
+							send(this.m_data,0);
 					}
 
 				}
@@ -90,36 +90,36 @@ public class TorSocksChannel extends TorChannel
 			}
 			case SOCKS_WAIT_FOR_REQUEST:
 			{
-				this.data = helper.conc(this.data, arg0,len);
-				if (this.data.length > 6)
+				this.m_data = helper.conc(this.m_data, arg0,len);
+				if (this.m_data.length > 6)
 				{
 					InetAddress addr = null;
 					int port = 0;
-					switch (this.data[3])
+					switch (this.m_data[3])
 					{
 						case 1:
 						{
-							if (this.data.length > 9)
+							if (this.m_data.length > 9)
 							{
-								addr = InetAddress.getByName("" + (this.data[4] & 0xFF) + "." +
-									(this.data[5] & 0xFF) + "." + (this.data[6] & 0xFF) + "." +
-									(this.data[7] & 0xFF));
-								port = ( (this.data[8] & 0xFF) << 8) | (this.data[9] & 0xFF);
+								addr = InetAddress.getByName("" + (this.m_data[4] & 0xFF) + "." +
+									(this.m_data[5] & 0xFF) + "." + (this.m_data[6] & 0xFF) + "." +
+									(this.m_data[7] & 0xFF));
+								port = ( (this.m_data[8] & 0xFF) << 8) | (this.m_data[9] & 0xFF);
 							}
 							break;
 						}
 						case 3:
 						{
-							int length = this.data[4] & 0xFF;
-							if (this.data.length >= (7 + length))
+							int length = this.m_data[4] & 0xFF;
+							if (this.m_data.length >= (7 + length))
 							{
 								String s = "";
 								for (int i = 0; i < length; i++)
 								{
-									s = s + (char)this.data[5+i];
+									s = s + (char)this.m_data[5+i];
 								}
 								addr = InetAddress.getByName(s);
-								port = ( (this.data[5 + length] & 0xFF) << 8) | (this.data[6 + length] & 0xFF);
+								port = ( (this.m_data[5 + length] & 0xFF) << 8) | (this.m_data[6 + length] & 0xFF);
 							}
 							break;
 						}
@@ -128,24 +128,24 @@ public class TorSocksChannel extends TorChannel
 							//addresstype not supportet
 							socksAnswer = helper.conc(new byte[]
 								{0x05, 0x08, 0x00}
-								, helper.copybytes(this.data, 3, this.data.length - 3));
-							this.data = new byte[0];
+								, helper.copybytes(this.m_data, 3, this.m_data.length - 3));
+							this.m_data = new byte[0];
 						}
 					}
 
 					if (addr != null)
 					{
-						if (this.data[0] != 5)
+						if (this.m_data[0] != 5)
 						{
 							socksAnswer = helper.conc(new byte[]
 								{0x05, 0x01, 0x00}
-								, helper.copybytes(this.data, 3, this.data.length - 3));
-							this.data = new byte[0];
+								, helper.copybytes(this.m_data, 3, this.m_data.length - 3));
+							this.m_data = new byte[0];
 						}
 						else
 						{
 							//what command has been send
-							switch (this.data[1])
+							switch (this.m_data[1])
 							{
 								//	connect
 								case 1:
@@ -160,8 +160,8 @@ public class TorSocksChannel extends TorChannel
 									//command not supported
 									socksAnswer = helper.conc(new byte[]
 										{0x05, 0x07, 0x00}
-										, helper.copybytes(this.data, 3, this.data.length - 3));
-									this.data = new byte[0];
+										, helper.copybytes(this.m_data, 3, this.m_data.length - 3));
+									this.m_data = new byte[0];
 								}
 							}
 						}
@@ -186,7 +186,7 @@ public class TorSocksChannel extends TorChannel
 	
 	public void dispatchCell(RelayCell cell)
 	{
-		if(this.status == SOCKS_WAIT_FOR_REQUEST)
+		if(this.m_status == SOCKS_WAIT_FOR_REQUEST)
 		{
 			if(cell!=null)
 			{
@@ -194,25 +194,25 @@ public class TorSocksChannel extends TorChannel
 				{
 					socksAnswer = helper.conc(new byte[]
 						{0x05, 0x00, 0x00}
-						, helper.copybytes(this.data, 3, this.data.length - 3));
+						, helper.copybytes(this.m_data, 3, this.m_data.length - 3));
 					try
 					{
 						recv(socksAnswer,0,socksAnswer.length);
 					} catch (Exception ex)
 					{
-						this.error = true;
+						this.m_error = true;
 						//TODO : Handle Exception
 					}
-					this.data = new byte[0];
-					this.status = DATA_MODE;
-					this.opened = true;
+					this.m_data = new byte[0];
+					this.m_status = DATA_MODE;
+					this.m_opened = true;
 					return;
 				}
 			}
 			socksAnswer = helper.conc(new byte[]
 				{0x05, 0x04, 0x00}
-				, helper.copybytes(this.data, 3, this.data.length - 3));
-			this.data = new byte[0];
+				, helper.copybytes(this.m_data, 3, this.m_data.length - 3));
+			this.m_data = new byte[0];
 			this.close();
 
 			

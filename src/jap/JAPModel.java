@@ -27,11 +27,10 @@
  */
 package jap;
 
-import java.awt.Dimension;
-import java.awt.Point;
-import anon.crypto.JAPCertificateStore;
-import anon.crypto.JAPCertificate;
-import gui.JAPDll;
+import java.awt.*;
+
+import anon.crypto.*;
+import gui.*;
 
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPModel
@@ -41,7 +40,7 @@ public final class JAPModel
 	private int m_biPort = JAPConstants.PIPORT;
 	private int m_HttpListenerPortNumber = JAPConstants.defaultPortNumber; // port number of HTTP  listener
 	private boolean m_bHttpListenerIsLocal = true; // indicates whether listeners serve for localhost only or not
-	private int m_SOCKSListenerPortnumber=JAPConstants.defaultSOCKSPortNumber; //port number for SOCKS requests
+	private int m_SOCKSListenerPortnumber = JAPConstants.defaultSOCKSPortNumber; //port number for SOCKS requests
 	private boolean m_bUseFirewall = false; // indicates whether JAP connects via a proxy or directly
 	private int m_FirewallType = JAPConstants.defaultFirewallType;
 	private String m_FirewallHostName = ""; // hostname of proxy
@@ -73,9 +72,21 @@ public final class JAPModel
 	private JAPCertificateStore m_certStore = null;
 
 	/** Tor related info**/
-	private boolean m_bIsTorEnabled=JAPConstants.TOR_IS_ENABLED;
-	private String m_strTorDirServerHostName=JAPConstants.TOR_DIR_SERVER_ADR;
-	private int m_TorDirServerPortNumber=JAPConstants.TOR_DIR_SERVER_PORT;
+	private boolean m_bIsTorEnabled = JAPConstants.TOR_IS_ENABLED;
+	private String m_strTorDirServerHostName = JAPConstants.TOR_DIR_SERVER_ADR;
+	private int m_TorDirServerPortNumber = JAPConstants.TOR_DIR_SERVER_PORT;
+	private boolean m_PayAccountsFileEncrypted;
+	private String m_PayAccountsFileName;
+
+	public static boolean isPayAccountsFileEncrypted()
+	{
+		return ms_TheModel.m_PayAccountsFileEncrypted;
+	}
+
+	public static String getPayAccountsFileName()
+	{
+		return ms_TheModel.m_PayAccountsFileName;
+	}
 
 	private JAPModel()
 	{
@@ -83,18 +94,18 @@ public final class JAPModel
 		try
 		{
 			m_certJAPCodeSigning = JAPCertificate.getInstance(
-				 JAPUtil.loadRessource(JAPConstants.CERTSPATH+JAPConstants.CERT_JAPCODESIGNING));
+				JAPUtil.loadRessource(JAPConstants.CERTSPATH + JAPConstants.CERT_JAPCODESIGNING));
 		}
-		catch(Throwable t)
+		catch (Throwable t)
 		{
 			m_certJAPCodeSigning = null;
 		}
 		try
 		{
 			m_certJAPInfoServiceMessages = JAPCertificate.getInstance(
-				 JAPUtil.loadRessource(JAPConstants.CERTSPATH+JAPConstants.CERT_JAPINFOSERVICEMESSAGES));
+				JAPUtil.loadRessource(JAPConstants.CERTSPATH + JAPConstants.CERT_JAPINFOSERVICEMESSAGES));
 		}
-		catch(Throwable t)
+		catch (Throwable t)
 		{
 			m_certJAPInfoServiceMessages = null;
 		}
@@ -260,7 +271,7 @@ public final class JAPModel
 
 	protected void setSocksListenerPortNumber(int p)
 	{
-		m_SOCKSListenerPortnumber=p;
+		m_SOCKSListenerPortnumber = p;
 	}
 
 	public static int getSocksListenerPortNumber()
@@ -434,10 +445,14 @@ public final class JAPModel
 
 	protected void setCertificateStore(JAPCertificateStore jcs)
 	{
-		if(jcs!=null)
+		if (jcs != null)
+		{
 			m_certStore = jcs;
+		}
 		else
-			m_certStore=JAPCertificateStore.getInstance();
+		{
+			m_certStore = JAPCertificateStore.getInstance();
+		}
 	}
 
 	public static JAPCertificate getJAPCodeSigningCert()
@@ -457,7 +472,7 @@ public final class JAPModel
 
 	protected void setTorEnabled(boolean b)
 	{
-		m_bIsTorEnabled=b;
+		m_bIsTorEnabled = b;
 	}
 
 	public static String getTorDirServerHostName()
@@ -467,7 +482,7 @@ public final class JAPModel
 
 	protected void setTorDirServerHostName(String hostname)
 	{
-		m_strTorDirServerHostName=hostname;
+		m_strTorDirServerHostName = hostname;
 	}
 
 	public static int getTorDirServerPortNumber()
@@ -477,8 +492,27 @@ public final class JAPModel
 
 	protected void setTorDirServerPortNumber(int port)
 	{
-		m_TorDirServerPortNumber=port;
+		m_TorDirServerPortNumber = port;
 	}
 
+	/**
+	 * setPayAccountsFileEncrypted
+	 *
+	 * @param b boolean
+	 */
+	public void setPayAccountsFileEncrypted(boolean b)
+	{
+		m_PayAccountsFileEncrypted = b;
+	}
+
+	/**
+	 * setPayAccountsFileName
+	 *
+	 * @param string String
+	 */
+	public void setPayAccountsFileName(String string)
+	{
+		m_PayAccountsFileName = string;
+	}
 
 }

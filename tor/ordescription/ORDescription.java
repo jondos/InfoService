@@ -19,19 +19,19 @@ import java.util.StringTokenizer;
  */
 public class ORDescription {
 
-	private String address;
-	private String name;
-	private int port;
-	private boolean running;
+	private String m_address;
+	private String m_name;
+	private int m_port;
+	private boolean m_running;
 	private ORAcl m_acl;
-	private byte[] onionkey;
+	private byte[] m_onionkey;
 
 	public ORDescription(String address, String name, int port, boolean running)
 	{
-		this.address = address;
-		this.name = name;
-		this.port = port;
-		this.running = running;
+		this.m_address = address;
+		this.m_name = name;
+		this.m_port = port;
+		this.m_running = running;
 		m_acl=new ORAcl();
 	}
 
@@ -45,41 +45,41 @@ public class ORDescription {
 	}
 	public void setOnionKey(byte[] onionkey)
 	{
-		this.onionkey = onionkey;
+		this.m_onionkey = onionkey;
 	}
 
 	public byte[] getOnionKey()
 	{
-		return this.onionkey;
+		return this.m_onionkey;
 	}
 
 	public String getAddress()
 	{
-		return this.address;
+		return this.m_address;
 	}
 
 	public String getName()
 	{
-		return this.name;
+		return this.m_name;
 	}
 
 	public int getPort()
 	{
-		return this.port;
+		return this.m_port;
 	}
 
 	public boolean isRunnung()
 	{
-		return this.running;
+		return this.m_running;
 	}
 
 	public boolean equals(ORDescription or)
 	{
-		if(this.address.equals(or.getAddress()))
+		if(this.m_address.equals(or.getAddress()))
 		{
-			if(this.name.equals(or.getName()))
+			if(this.m_name.equals(or.getName()))
 			{
-				if(this.port==or.getPort())
+				if(this.m_port==or.getPort())
 				{
 					return true;
 				}
@@ -144,7 +144,7 @@ public class ORDescription {
 
 	public String toString()
 	{
-		return "ORRouter: "+name+" on "+this.address+":"+this.port;
+		return "ORRouter: "+this.m_name+" on "+this.m_address+":"+this.m_port;
 	}
 
 }

@@ -27,23 +27,24 @@ public class Circuit {
 	//max number of streams over a circuit
 	private final static int MAX_STREAMS_OVER_CIRCUIT = 1000;
 
-	private OnionRouter or;
-	private FirstOnionRouter onionProxy;
-	private Vector onionRouters;
-	private TinyTLS tlssocket;
-	private int circID;
-	private Hashtable streams;
-	private boolean closed;
-	private int streamIDCounter;
-	private int size;
-	private int recvCellCounter;
-	private int sendCellCounter;
-	private Vector cellQueue;
+	private OnionRouter m_or;
+	private FirstOnionRouter m_onionProxy;
+	private Vector m_onionRouters;
+	private TinyTLS m_tlssocket;
+	private int m_circID;
+	private Hashtable m_streams;
+	private boolean m_closed;
+	private int m_streamIDCounter;
+	private int m_size;
+	private int m_recvCellCounter;
+	private int m_sendCellCounter;
+	private Vector m_cellQueue;
 	
 	//if the created or extended cells have arrived an are correct
-	private boolean created;
-	private boolean extended;
-	private boolean extended_correct;
+	private boolean m_created;
+	private boolean m_extended;
+	private boolean m_extended_correct;
+	private boolean m_destroyed;
 
 	/**
 	 * constructor
@@ -57,21 +58,21 @@ public class Circuit {
 	 */
 	public Circuit(int circID,Vector orList,FirstOnionRouter onionProxy) throws IOException
 	{
-		this.onionProxy = onionProxy;
-		this.circID = circID;
-		this.streams = new Hashtable();
-		this.closed = false;
-		this.streamIDCounter = 10;
-		this.onionRouters= (Vector)orList.clone();
-		this.size = orList.size();
-		this.extended_correct = true;
-		if(onionRouters.size()<1)
+		this.m_onionProxy = onionProxy;
+		this.m_circID = circID;
+		this.m_streams = new Hashtable();
+		this.m_closed = false;
+		this.m_streamIDCounter = 10;
+		this.m_onionRouters= (Vector)orList.clone();
+		this.m_size = orList.size();
+		this.m_extended_correct = true;
+		if(this.m_onionRouters.size()<1)
 		{
 			throw new IOException("No Onionrouters defined for this circuit");
 		}
-		this.recvCellCounter = 1000;
-		this.sendCellCounter = 1000;
-		this.cellQueue = new Vector();
+		this.m_recvCellCounter = 1000;
+		this.m_sendCellCounter = 1000;
+		this.m_cellQueue = new Vector();
 	}
 
 	/**
@@ -80,29 +81,38 @@ public class Circuit {
 	 */
 	public void connect() throws IOException
 	{
-		LogHolder.log(LogLevel.DEBUG,LogType.MISC,"[TOR] Creating Circuit '"+this.circID+"'");
-		this.onionProxy.addCircuit(this);
-		this.or = new OnionRouter(circID,(ORDescription)(this.onionRouters.elementAt(0)));
-		InetAddress addr = InetAddress.getByName(this.or.getDescription().getAddress());
-		int port = this.or.getDescription().getPort();
+		this.m_destroyed = false;
+		LogHolder.log(LogLevel.DEBUG,LogType.MISC,"[TOR] Creating Circuit '"+this.m_circID+"'");
+		this.m_onionProxy.addCircuit(this);
+		this.m_or = new OnionRouter(this.m_circID,(ORDescription)(this.m_onionRouters.elementAt(0)));
+		InetAddress addr = InetAddress.getByName(this.m_or.getDescription().getAddress());
+		int port = this.m_or.getDescription().getPort();
 		try
 		{
-			this.created = false;
-			this.onionProxy.send(this.or.createConnection());
+			this.m_created = false;
+			this.m_onionProxy.send(this.m_or.createConnection());
 			//wait until a created cell arrives
-			while(!this.created);
-			for(int i=1;i<onionRouters.size();i++)
+			while(!this.m_created);
+			if(this.m_destroyed)
 			{
-				ORDescription nextOR = (ORDescription)(this.onionRouters.elementAt(i));
-				this.extended = false;
-				this.onionProxy.send(this.or.extendConnection(nextOR));
-				while(!this.extended);
-				if(!this.extended_correct)
+				throw new IOException("DestroyCell recieved");
+			}
+			for(int i=1;i<this.m_onionRouters.size();i++)
+			{
+				ORDescription nextOR = (ORDescription)(this.m_onionRouters.elementAt(i));
+				this.m_extended = false;
+				this.m_onionProxy.send(this.m_or.extendConnection(nextOR));
+				while(!this.m_extended);
+				if(this.m_destroyed)
+				{
+					throw new IOException("DestroyCell recieved");
+				}
+				if(!this.m_extended_correct)
 				{
 					throw new IOException("Cannot Connect to router :"+nextOR.getAddress()+":"+nextOR.getPort());
 				}
 			}
-			LogHolder.log(LogLevel.DEBUG,LogType.MISC,"[TOR] Circuit '"+this.circID+"' ready!!! - Length of this Circuit : "+this.size+" Onionrouters");
+			LogHolder.log(LogLevel.DEBUG,LogType.MISC,"[TOR] Circuit '"+this.m_circID+"' ready!!! - Length of this Circuit : "+this.m_size+" Onionrouters");
 		} catch(Exception ex)
 		{
 			throw new IOException(ex.getLocalizedMessage());
@@ -118,13 +128,13 @@ public class Circuit {
 	 */
 	public void close() throws IOException
 	{
-		if(this.streams.isEmpty())
+		if(this.m_streams.isEmpty())
 		{
-			InetAddress addr = InetAddress.getByName(this.or.getDescription().getAddress());
-			int port = this.or.getDescription().getPort();
-			this.onionProxy.send(new DestroyCell(this.circID));
+			InetAddress addr = InetAddress.getByName(this.m_or.getDescription().getAddress());
+			int port = this.m_or.getDescription().getPort();
+			this.m_onionProxy.send(new DestroyCell(this.m_circID));
 		}
-		this.closed = true;
+		this.m_closed = true;
 	}
 	
 	/**
@@ -134,11 +144,11 @@ public class Circuit {
 	 */
 	public void forceclose() throws Exception
 	{
-		InetAddress addr = InetAddress.getByName(this.or.getDescription().getAddress());
-		int port = this.or.getDescription().getPort();
-		this.onionProxy.send(new DestroyCell(this.circID));
-		this.streams.clear();
-		this.closed = true;
+		InetAddress addr = InetAddress.getByName(this.m_or.getDescription().getAddress());
+		int port = this.m_or.getDescription().getPort();
+		this.m_onionProxy.send(new DestroyCell(this.m_circID));
+		this.m_streams.clear();
+		this.m_closed = true;
 	}
 	
 	/**
@@ -148,7 +158,7 @@ public class Circuit {
 	 */
 	public boolean closed()
 	{
-		if(this.closed&&this.streams.isEmpty())
+		if(this.m_closed&&this.m_streams.isEmpty())
 		{
 			return true;
 		}
@@ -168,32 +178,32 @@ public class Circuit {
 
 			if(cell instanceof RelayCell)
 			{
-				if(!this.extended)
+				if(!this.m_extended)
 				{
 					try
 					{
-						this.or.checkExtendedCell((RelayCell)cell);
+						this.m_or.checkExtendedCell((RelayCell)cell);
 					} catch (Exception ex)
 					{
-						this.extended_correct = false;
+						this.m_extended_correct = false;
 					}
-					this.extended = true;
+					this.m_extended = true;
 				} else
 				{
-					this.recvCellCounter--;
-					if(this.recvCellCounter<900)
+					this.m_recvCellCounter--;
+					if(this.m_recvCellCounter<900)
 					{
-						RelayCell rc=new RelayCell(this.circID,RelayCell.RELAY_SENDME,0,null);
+						RelayCell rc=new RelayCell(this.m_circID,RelayCell.RELAY_SENDME,0,null);
 						this.send(rc);
-						this.recvCellCounter+=100;
+						this.m_recvCellCounter+=100;
 					}
 
-					RelayCell c = this.or.decryptCell((RelayCell)cell);
+					RelayCell c = this.m_or.decryptCell((RelayCell)cell);
 					Integer streamID = new Integer(c.getStreamID());
-					if(this.streams.containsKey(streamID))
+					if(this.m_streams.containsKey(streamID))
 					{
 
-						TorChannel channel = (TorChannel)this.streams.get(streamID);
+						TorChannel channel = (TorChannel)this.m_streams.get(streamID);
 						if(channel!=null)
 						{
 							channel.dispatchCell(c);
@@ -202,19 +212,26 @@ public class Circuit {
 					{
 						if(c.getRelayCommand()==RelayCell.RELAY_SENDME)
 						{
-							this.sendCellCounter+=100;
+							this.m_sendCellCounter+=100;
 							this.send(null);
 						}
 					}
 				}
 			}	else if(cell instanceof CreatedCell)
 			{
-				this.or.checkCreatedCell(cell);
+				this.m_or.checkCreatedCell(cell);
 				LogHolder.log(LogLevel.DEBUG,LogType.MISC,"[TOR] Connected to the first OR");
-				this.created = true;
+				this.m_created = true;
 			}	else if(cell instanceof PaddingCell)
 			{
 			
+			} else if(cell instanceof DestroyCell)
+			{
+				LogHolder.log(LogLevel.DEBUG,LogType.MISC,"[TOR] recieved destroycell - circuit destroyed");
+				this.m_destroyed = true;
+				this.m_created = true;
+				this.m_extended = true;
+				
 			} else
 			{
 				LogHolder.log(LogLevel.DEBUG,LogType.MISC,"tor kein bekannter cell type");
@@ -235,7 +252,7 @@ public class Circuit {
 	{
 		if(cell instanceof RelayCell)
 		{
-			this.cellQueue.addElement(this.or.encryptCell((RelayCell)cell));
+			this.m_cellQueue.addElement(this.m_or.encryptCell((RelayCell)cell));
 			this.deliverCells();
 		} else if(cell==null)
 		{
@@ -249,13 +266,13 @@ public class Circuit {
 	 */
 	public void deliverCells() throws Exception
 	{
-		if(this.sendCellCounter!=0)
+		if(this.m_sendCellCounter!=0)
 		{
-			RelayCell c = (RelayCell)this.cellQueue.elementAt(0);
-			this.cellQueue.removeElementAt(0);
-			this.onionProxy.send(c);
-			this.sendCellCounter--;
-			if(this.cellQueue.size()>0)
+			RelayCell c = (RelayCell)this.m_cellQueue.elementAt(0);
+			this.m_cellQueue.removeElementAt(0);
+			this.m_onionProxy.send(c);
+			this.m_sendCellCounter--;
+			if(this.m_cellQueue.size()>0)
 			{
 				this.deliverCells();
 			}
@@ -271,10 +288,10 @@ public class Circuit {
 	public void close(int streamID) throws Exception
 	{
 		Integer key = new Integer(streamID);
-		if(this.streams.containsKey(key))
+		if(this.m_streams.containsKey(key))
 		{
-			this.streams.remove(key);
-			if(this.closed)
+			this.m_streams.remove(key);
+			if(this.m_closed)
 			{
 				this.close();
 			}
@@ -287,7 +304,7 @@ public class Circuit {
 	 */
 	public int getCircID()
 	{
-		return this.circID;
+		return this.m_circID;
 	}
 
 	/**
@@ -300,18 +317,18 @@ public class Circuit {
 	 */
 	public TorChannel createChannel(int type) throws IOException
 	{
-		if(this.closed)
+		if(this.m_closed)
 		{
 			throw new ConnectException("Circuit Closed - cannot connect");
 		} else
 		{
-			this.streamIDCounter++;
-			TorSocksChannel tsc =  new TorSocksChannel(streamIDCounter,this);
-			this.streams.put(new Integer(this.streamIDCounter),tsc);
+			this.m_streamIDCounter++;
+			TorSocksChannel tsc =  new TorSocksChannel(this.m_streamIDCounter,this);
+			this.m_streams.put(new Integer(this.m_streamIDCounter),tsc);
 
-			if(this.streamIDCounter == MAX_STREAMS_OVER_CIRCUIT)
+			if(this.m_streamIDCounter == MAX_STREAMS_OVER_CIRCUIT)
 			{
-				this.closed = true;
+				this.m_closed = true;
 			}
 			return tsc;
 		}
@@ -329,18 +346,18 @@ public class Circuit {
 	 */
 	public TorChannel createChannel(InetAddress addr, int port) throws IOException
 	{
-		if(this.closed)
+		if(this.m_closed)
 		{
 			throw new ConnectException("Circuit Closed - cannot connect");
 		} else
 		{
-			this.streamIDCounter++;
-			TorChannel channel = new TorChannel(this.streamIDCounter,this);
-			this.streams.put(new Integer(this.streamIDCounter),channel);
+			this.m_streamIDCounter++;
+			TorChannel channel = new TorChannel(this.m_streamIDCounter,this);
+			this.m_streams.put(new Integer(this.m_streamIDCounter),channel);
 
-			if(this.streamIDCounter == MAX_STREAMS_OVER_CIRCUIT)
+			if(this.m_streamIDCounter == MAX_STREAMS_OVER_CIRCUIT)
 			{
-				this.closed = true;
+				this.m_closed = true;
 			}
 			channel.connect(addr,port);
 			return channel;

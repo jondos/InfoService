@@ -17,9 +17,9 @@ import tor.util.helper;
  */
 public class P_Hash {
 
-	private byte[] secret;
-	private byte[] seed;
-	private Digest digest;
+	private byte[] m_secret;
+	private byte[] m_seed;
+	private Digest m_digest;
 
 	/**
 	 * Constructor
@@ -29,9 +29,9 @@ public class P_Hash {
 	 */
 	public P_Hash(byte[] secret, byte[] seed, Digest digest)
 	{
-		this.secret = secret;
-		this.seed = seed;
-		this.digest = digest;
+		this.m_secret = secret;
+		this.m_seed = seed;
+		this.m_digest = digest;
 	}
 
 	/**
@@ -45,10 +45,10 @@ public class P_Hash {
 		byte[] b = null;
 		byte[] c;
 		int counter = 0;
-		HMac hm = new HMac(this.digest);
+		HMac hm = new HMac(this.m_digest);
 		hm.reset();
-		hm.init(new KeyParameter(secret));
-		hm.update(seed,0,seed.length);
+		hm.init(new KeyParameter(this.m_secret));
+		hm.update(this.m_seed,0,this.m_seed.length);
 		a = new byte[hm.getMacSize()];
 		hm.doFinal(a,0);
 
@@ -56,8 +56,8 @@ public class P_Hash {
 		{
 			//HMAC_HASH(secret,a+seed)
 			hm.reset();
-			hm.init(new KeyParameter(secret));
-			hm.update(helper.conc(a,seed),0,a.length+seed.length);
+			hm.init(new KeyParameter(this.m_secret));
+			hm.update(helper.conc(a,this.m_seed),0,a.length+this.m_seed.length);
 			c = new byte[hm.getMacSize()];
 			hm.doFinal(c,0);
 			if(b==null)
@@ -70,7 +70,7 @@ public class P_Hash {
 
 			//compute next a
 			hm.reset();
-			hm.init(new KeyParameter(secret));
+			hm.init(new KeyParameter(this.m_secret));
 			hm.update(a,0,a.length);
 			a = new byte[hm.getMacSize()];
 			hm.doFinal(a,0);

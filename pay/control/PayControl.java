@@ -35,33 +35,19 @@ import jap.JAPConstants;
 import jap.JAPModel;
 import pay.Pay;
 import pay.data.Literals;
+import pay.PayAccountsFile;
 
 /**
  * Diese Klasse stellt stellt zwei init Methoden bereits initPay() sollte dabei immer aufgerufen werden bevor mit der gesammten
  * Pay Api gearbeitet wird. hier werden die wichtigsten Klassen intitialisiert.
  * Au\uFFFDerdem findet heir ein Teil des Benutzerinteraktion statt. Der gr\uFFFD\uFFFDte Teil ist aber innerhalb von den Klassen im pay.view
  * Package und in PayAccountsControl. Es k\uFFFDnnte komplett hierher verschoben werden wenn ein klarere MVC Struktur erreicht werden sollte.
+ *
+ * @todo remove this class
  */
 
 public class PayControl
 {
-
-	/**
-	 * Hier werden die wichtigsten Klassen initialisiert und die aktuelle Balance vom Server abgefragt. Sollte vor dem start der
-	 * view Klassen bzw. dem Methodenaufruf an der pay Klasse aufgerufen werden
-	 */
-
-	public static void initPay() throws Exception
-	{
-		JAPModel model = JAPModel.getModel();
-		Pay pay = Pay.getInstance();
-
-		// TODO: Make the filename configurable (maybe)
-		pay.readJpiCertificate("certificates/bi.cer");
-		pay.setPayInstance(model.getBIHost(), model.getBIPort(), JAPConstants.PI_SSLON);
-		pay.openAccountFile();
-		pay.updateAllBalance();
-	}
 
 	public static void initGui()
 	{
@@ -75,29 +61,4 @@ public class PayControl
 		UIManager.put("ScrollPane.margin", Literals.SMALL_BUTTON_MARGIN);
 	}
 
-	public static class ChangeAccountFilePWListener implements ActionListener
-	{
-		public void actionPerformed(ActionEvent e)
-		{
-			Pay.getInstance().changeAccountFilePassword();
-		}
-	}
-
-	public static class EncryptAccountFileListener implements ActionListener
-	{
-		public void actionPerformed(ActionEvent e)
-		{
-			JCheckBox check;
-			if (e.getSource() instanceof JCheckBox)
-			{
-				check = (JCheckBox) e.getSource();
-				try{
-				Pay.getInstance().changeAccountFileEncryptMode();
-				}
-				catch(Exception e1)
-				{
-				}
-			}
-		}
-	}
 }

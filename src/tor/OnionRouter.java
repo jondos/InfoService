@@ -48,18 +48,18 @@ public class OnionRouter {
 																				    			"302B0A6DF25F14374FE1356D6D51C245E485B576625E7EC6F44C42E9"+
      																							"A637ED6B0BFF5CB6F406B7EDEE386BFB5A899FA5AE9F24117C4B1FE6"+
 																				    			"49286651ECE65381FFFFFFFFFFFFFFFF");
-	private DHParameters dhparams;
-	private ORDescription description;
-	private DHBasicAgreement dhe;
-	private byte[] keyKf;
-	private byte[] keyKb;
-	private CTRBlockCipher encryptionEngine;
-	private CTRBlockCipher decryptionEngine;
-	private OnionRouter nextOR;
-	private int circID;
-	private SHA1Digest digestDf;
-	private SHA1Digest digestDb;
-	private boolean extended;
+	private DHParameters m_dhparams;
+	private ORDescription m_description;
+	private DHBasicAgreement m_dhe;
+	private byte[] m_keyKf;
+	private byte[] m_keyKb;
+	private CTRBlockCipher m_encryptionEngine;
+	private CTRBlockCipher m_decryptionEngine;
+	private OnionRouter m_nextOR;
+	private int m_circID;
+	private SHA1Digest m_digestDf;
+	private SHA1Digest m_digestDb;
+	private boolean m_extended;
 
 	/**
 	 * Constructor
@@ -71,11 +71,11 @@ public class OnionRouter {
 	 */
 	public OnionRouter(int circID,ORDescription description) throws IOException
 	{
-		this.description = description;
-		this.circID = circID;
-		this.dhparams = new DHParameters(new BigInteger(this.SAFEPRIME),new BigInteger(new byte[]{2}));
-		this.nextOR = null;
-		this.extended = false;
+		this.m_description = description;
+		this.m_circID = circID;
+		this.m_dhparams = new DHParameters(new BigInteger(this.SAFEPRIME),new BigInteger(new byte[]{2}));
+		this.m_nextOR = null;
+		this.m_extended = false;
 	}
 
 	/**
@@ -85,7 +85,7 @@ public class OnionRouter {
 	 */
 	public ORDescription getDescription()
 	{
-		return this.description;
+		return this.m_description;
 	}
 
 	/**
@@ -98,15 +98,15 @@ public class OnionRouter {
 	public synchronized RelayCell encryptCell(RelayCell cell)
 	{
 		RelayCell c;;
-		if(this.nextOR != null)
+		if(this.m_nextOR != null)
 		{
-			c = this.nextOR.encryptCell(cell);
+			c = this.m_nextOR.encryptCell(cell);
 		} else
 		{
 			c = cell;
-			c.generateDigest(this.digestDf);
+			c.generateDigest(this.m_digestDf);
 		}
-		c.doCryptography(this.encryptionEngine);
+		c.doCryptography(this.m_encryptionEngine);
 		c = cell;
 		byte[]b=c.getCellData();
 		String s="";
@@ -129,13 +129,13 @@ public class OnionRouter {
 	public synchronized RelayCell decryptCell(RelayCell cell) throws Exception
 	{
 		RelayCell c = cell;
-		c.doCryptography(this.decryptionEngine);
-		if(this.nextOR != null)
+		c.doCryptography(this.m_decryptionEngine);
+		if(this.m_nextOR != null)
 		{
-			c = this.nextOR.decryptCell(c);
+			c = this.m_nextOR.decryptCell(c);
 		} else
 		{
-			c.checkDigest(this.digestDb);
+			c.checkDigest(this.m_digestDb);
 		}
 		return c;
 	}
@@ -151,7 +151,7 @@ public class OnionRouter {
 	 */
 	public CreateCell createConnection() throws Exception
 	{
-		CreateCell cell = new CreateCell(this.circID);
+		CreateCell cell = new CreateCell(this.m_circID);
 		cell.setPayload(this.createExtendPayload());
 		return cell;
 	}
@@ -186,7 +186,7 @@ public class OnionRouter {
 		byte[] payload = InetAddress.getByName(address).getAddress();
 		payload = helper.conc(payload,helper.inttobyte(port,2));
 		payload = helper.conc(payload,this.createExtendPayload());
-		cell = new RelayCell(this.circID,RelayCell.RELAY_EXTEND,0,payload);
+		cell = new RelayCell(this.m_circID,RelayCell.RELAY_EXTEND,0,payload);
 		return cell;
 	}
 
@@ -202,16 +202,16 @@ public class OnionRouter {
 	public RelayCell extendConnection(ORDescription description) throws IOException,InvalidCipherTextException
 	{
 		RelayCell cell;
-		if(this.nextOR==null)
+		if(this.m_nextOR==null)
 		{
-			this.nextOR = new OnionRouter(this.circID,description);
-			cell = this.nextOR.extendConnection(description.getAddress(),description.getPort());
-			cell.generateDigest(this.digestDf);
+			this.m_nextOR = new OnionRouter(this.m_circID,description);
+			cell = this.m_nextOR.extendConnection(description.getAddress(),description.getPort());
+			cell.generateDigest(this.m_digestDf);
 		} else
 		{
-			cell = this.nextOR.extendConnection(description);
+			cell = this.m_nextOR.extendConnection(description);
 		}
-		cell.doCryptography(this.encryptionEngine);
+		cell.doCryptography(this.m_encryptionEngine);
 		return cell;
 	}
 
@@ -223,21 +223,21 @@ public class OnionRouter {
 	 */
 	public void checkExtendedCell(RelayCell cell) throws Exception
 	{
-		if(this.nextOR==null)
+		if(this.m_nextOR==null)
 		{
 			byte[] a = new byte[148];
 			System.arraycopy(cell.getPayload(),11,a,0,148);
 			this.checkExtendParameters(a);
-			LogHolder.log(LogLevel.DEBUG,LogType.MISC,"[TOR] Circuit '"+this.circID+"' Extended");
+			LogHolder.log(LogLevel.DEBUG,LogType.MISC,"[TOR] Circuit '"+this.m_circID+"' Extended");
 		} else
 		{
-			cell.doCryptography(this.decryptionEngine);
-			if(!this.extended)
+			cell.doCryptography(this.m_decryptionEngine);
+			if(!this.m_extended)
 			{
-				cell.checkDigest(this.digestDb);
-				this.extended = true;
+				cell.checkDigest(this.m_digestDb);
+				this.m_extended = true;
 			}
-			this.nextOR.checkExtendedCell(cell);
+			this.m_nextOR.checkExtendedCell(cell);
 		}
 	}
 
@@ -263,14 +263,14 @@ public class OnionRouter {
 		aes.init(true,new ParametersWithIV(new KeyParameter(keyparam),new byte[aes.getBlockSize()]));
 
 		//generate DH Parameters and Agreement
-		DHKeyGenerationParameters params = new DHKeyGenerationParameters(new SecureRandom(), dhparams);
+		DHKeyGenerationParameters params = new DHKeyGenerationParameters(new SecureRandom(), this.m_dhparams);
 		DHKeyPairGenerator kpGen = new DHKeyPairGenerator();
 		kpGen.init(params);
 		AsymmetricCipherKeyPair pair = kpGen.generateKeyPair();
 		DHPublicKeyParameters dhpub = (DHPublicKeyParameters)pair.getPublic();
 		DHPrivateKeyParameters dhpriv = (DHPrivateKeyParameters)pair.getPrivate();
-		this.dhe = new DHBasicAgreement();
-		this.dhe.init(dhpriv);
+		this.m_dhe = new DHBasicAgreement();
+		this.m_dhe.init(dhpriv);
 
 		byte[] dhpubY = dhpub.getY().toByteArray();
 
@@ -286,7 +286,7 @@ public class OnionRouter {
 		byte[] rsaunencrypted = helper.conc(keyparam,a);
 
 		//generate RSA encrypted part
-		DERInputStream dIn = new DERInputStream(new ByteArrayInputStream(this.description.getOnionKey()));
+		DERInputStream dIn = new DERInputStream(new ByteArrayInputStream(this.m_description.getOnionKey()));
 		RSAPublicKeyStructure key = new RSAPublicKeyStructure(ASN1Sequence.getInstance((DERConstructedSequence)dIn.readObject()));
 		AsymmetricBlockCipher rsa = new OAEPEncoding(new RSAEngine());
 		BigInteger modulus = key.getModulus();
@@ -317,8 +317,8 @@ public class OnionRouter {
 		DHPublicKeyParameters dhserverpub;
 		byte[] a = new byte[128];
 		System.arraycopy(param,0,a,0,128);
-		dhserverpub = new DHPublicKeyParameters(new BigInteger(helper.conc(new byte[]{0},a)),dhparams);
-		byte[] agreement = this.dhe.calculateAgreement(dhserverpub).toByteArray();
+		dhserverpub = new DHPublicKeyParameters(new BigInteger(helper.conc(new byte[]{0},a)),this.m_dhparams);
+		byte[] agreement = this.m_dhe.calculateAgreement(dhserverpub).toByteArray();
 		if(agreement[0]==0)
 		{
 			a = new byte[agreement.length-1];
@@ -337,22 +337,22 @@ public class OnionRouter {
 											helper.conc(hash.sha(new byte[][]{agreement,new byte[]{0x02}}),
 											helper.conc(hash.sha(new byte[][]{agreement,new byte[]{0x03}}),
 																	hash.sha(new byte[][]{agreement,new byte[]{0x04}}))));
-		this.digestDf = new SHA1Digest();
-		this.digestDf.reset();
-		this.digestDf.update(keydata,0,20);
-		this.digestDb = new SHA1Digest();
-		this.digestDb.reset();
-		this.digestDb.update(keydata,20,20);
+		this.m_digestDf = new SHA1Digest();
+		this.m_digestDf.reset();
+		this.m_digestDf.update(keydata,0,20);
+		this.m_digestDb = new SHA1Digest();
+		this.m_digestDb.reset();
+		this.m_digestDb.update(keydata,20,20);
 		a = new byte[16];
 		System.arraycopy(keydata,40,a,0,16);
-		this.keyKf = a;
+		this.m_keyKf = a;
 		a = new byte[16];
 		System.arraycopy(keydata,56,a,0,16);
-		this.keyKb = a;
-		this.decryptionEngine = new CTRBlockCipher(new AESFastEngine());
-		this.decryptionEngine.init(true,new ParametersWithIV(new KeyParameter(this.keyKb),new byte[this.decryptionEngine.getBlockSize()]));
-		this.encryptionEngine = new CTRBlockCipher(new AESFastEngine());
-		this.encryptionEngine.init(false,new ParametersWithIV(new KeyParameter(this.keyKf),new byte[this.encryptionEngine.getBlockSize()]));
+		this.m_keyKb = a;
+		this.m_decryptionEngine = new CTRBlockCipher(new AESFastEngine());
+		this.m_decryptionEngine.init(true,new ParametersWithIV(new KeyParameter(this.m_keyKb),new byte[this.m_decryptionEngine.getBlockSize()]));
+		this.m_encryptionEngine = new CTRBlockCipher(new AESFastEngine());
+		this.m_encryptionEngine.init(false,new ParametersWithIV(new KeyParameter(this.m_keyKf),new byte[this.m_encryptionEngine.getBlockSize()]));
 	}
 
 }

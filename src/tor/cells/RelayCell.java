@@ -22,9 +22,9 @@ public class RelayCell extends Cell
 	public final static byte RELAY_TRUNCATED = 9;
 	public final static byte RELAY_DROP = 10;
 
-	private byte relayCommand;
-	private int streamID;
-	private boolean digestGenerated;
+	private byte m_relayCommand;
+	private int m_streamID;
+	private boolean m_digestGenerated;
 
 	/**
 	 * Constructor for a relay cell
@@ -43,7 +43,7 @@ public class RelayCell extends Cell
 	public RelayCell(int circID)
 	{
 		super(3, circID);
-		this.digestGenerated = false;
+		this.m_digestGenerated = false;
 	}
 
 	/**
@@ -57,70 +57,70 @@ public class RelayCell extends Cell
 	public RelayCell(int circID, byte[] payload)
 	{
 		super(3, circID, payload);
-		this.relayCommand = this.payload[0];
-		this.streamID = ( (this.payload[3] & 0xFF) << 8) | (this.payload[4] & 0xFF);
-		this.digestGenerated = false;
+		this.m_relayCommand = payload[0];
+		this.m_streamID = ( (payload[3] & 0xFF) << 8) | (payload[4] & 0xFF);
+		this.m_digestGenerated = false;
 	}
 
 	public RelayCell(int circID, byte relaycommand, int streamid, byte[] data)
 	{
 		super(3, circID, createPayload(relaycommand, streamid, data));
-		this.relayCommand = relaycommand;
-		this.streamID = streamid;
-		this.digestGenerated = false;
+		this.m_relayCommand = relaycommand;
+		this.m_streamID = streamid;
+		this.m_digestGenerated = false;
 	}
 
 	public byte getRelayCommand()
 	{
-		return this.relayCommand;
+		return this.m_relayCommand;
 	}
 
 	public int getStreamID()
 	{
-		return streamID;
+		return this.m_streamID;
 	}
 
 	public void generateDigest(SHA1Digest digest)
 	{
-		if (!this.digestGenerated)
+		if (!this.m_digestGenerated)
 		{
-			digest.update(this.payload, 0, this.payload.length);
+			digest.update(this.m_payload, 0, this.m_payload.length);
 			SHA1Digest sha = new SHA1Digest(digest);
 			byte[] d = new byte[sha.getDigestSize()];
 			sha.doFinal(d, 0);
 			for (int i = 0; i < 4; i++)
 			{
-				this.payload[i + 5] = d[i];
+				this.m_payload[i + 5] = d[i];
 			}
-			this.digestGenerated = true;
+			this.m_digestGenerated = true;
 		}
 	}
 
 	public void checkDigest(SHA1Digest digest) throws Exception
 	{
-		digest.update(this.payload, 0, 5);
+		digest.update(this.m_payload, 0, 5);
 		digest.update(new byte[4], 0, 4);
-		digest.update(this.payload, 9, this.payload.length - 9);
+		digest.update(this.m_payload, 9, this.m_payload.length - 9);
 		SHA1Digest sha = new SHA1Digest(digest);
 		byte[] d = new byte[sha.getDigestSize()];
 		sha.doFinal(d, 0);
 		for (int i = 0; i < 4; i++)
 		{
-			if (this.payload[i + 5] != d[i])
+			if (this.m_payload[i + 5] != d[i])
 			{
 				throw new Exception("Wrong Digest detected");
 			}
 		}
-		this.digestGenerated = true;
+		this.m_digestGenerated = true;
 	}
 
 	public void doCryptography(CTRBlockCipher engine)
 	{
-		byte[] data = new byte[this.payload.length];
-		engine.processBlock(this.payload, 0, data, 0,509);
-		this.payload = helper.copybytes(data, 0, 509);
-		this.relayCommand = this.payload[0];
-		this.streamID = ( (this.payload[3] & 0xFF) << 8) | (this.payload[4] & 0xFF);
+		byte[] data = new byte[this.m_payload.length];
+		engine.processBlock(this.m_payload, 0, data, 0,509);
+		this.m_payload = helper.copybytes(data, 0, 509);
+		this.m_relayCommand = this.m_payload[0];
+		this.m_streamID = ( (this.m_payload[3] & 0xFF) << 8) | (this.m_payload[4] & 0xFF);
 	}
 
 	private static byte[] createPayload(byte relaycommand, int streamid, byte[] data)
@@ -149,7 +149,7 @@ public class RelayCell extends Cell
 
 	public byte[] getCellData()
 	{
-		if (this.digestGenerated)
+		if (this.m_digestGenerated)
 		{
 			return super.getCellData();
 		}

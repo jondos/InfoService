@@ -14,42 +14,42 @@ import anon.crypto.JAPCertificate;
  */
 public abstract class CipherSuite{
 
-	private byte[] ciphersuitecode;
-	private Key_Exchange keyexchangealgorithm = null;
-	private JAPCertificate servercertificate = null;
+	private byte[] m_ciphersuitecode;
+	private Key_Exchange m_keyexchangealgorithm = null;
+	private JAPCertificate m_servercertificate = null;
 
 	/**
 	 * writesequenznumber for packages
 	 */
-	protected int writesequenznumber;
+	protected int m_writesequenznumber;
 	/**
 	 * readsequenznumber for packages
 	 */
-	protected int readsequenznumber;
+	protected int m_readsequenznumber;
 	/**
 	 * client write key
 	 */
-	protected byte[] clientwritekey = null;
+	protected byte[] m_clientwritekey = null;
 	/**
 	 * client write mac secret
 	 */
-	protected byte[] clientmacsecret = null;
+	protected byte[] m_clientmacsecret = null;
 	/**
 	 * client write IV, only used for block ciphers
 	 */
-	protected byte[] clientwriteIV = null;
+	protected byte[] m_clientwriteIV = null;
 	/**
 	 * server write key
 	 */
-	protected byte[] serverwritekey = null;
+	protected byte[] m_serverwritekey = null;
 	/**
 	 * server write mac secret
 	 */
-	protected byte[] servermacsecret = null;
+	protected byte[] m_servermacsecret = null;
 	/**
 	 * server write IV, only used for block ciphers
 	 */
-	protected byte[] serverwriteIV = null;
+	protected byte[] m_serverwriteIV = null;
 
 	/**
 	 * Constructor for a ciphersuite
@@ -62,7 +62,7 @@ public abstract class CipherSuite{
 		{
 			throw new TLSException("wrong CipherSuiteCode ");
 		}
-		this.ciphersuitecode = code;
+		this.m_ciphersuitecode = code;
 	}
 
 	/**
@@ -71,7 +71,7 @@ public abstract class CipherSuite{
 	 */
 	protected void setKeyExchangeAlgorithm(Key_Exchange ke)
 	{
-		this.keyexchangealgorithm = ke;
+		this.m_keyexchangealgorithm = ke;
 	}
 
 	/**
@@ -80,7 +80,7 @@ public abstract class CipherSuite{
 	 */
 	public void setServerCertificate(JAPCertificate cert)
 	{
-		this.servercertificate = cert;
+		this.m_servercertificate = cert;
 	}
 
 	/**
@@ -89,7 +89,7 @@ public abstract class CipherSuite{
 	 */
 	public byte[] getCipherSuiteCode()
 	{
-		return this.ciphersuitecode;
+		return this.m_ciphersuitecode;
 	}
 
 	/**
@@ -101,9 +101,9 @@ public abstract class CipherSuite{
 	 */
 	public void serverKeyExchange(byte[] b, byte[] clientrandom, byte[] serverrandom) throws TLSException
 	{
-		if(this.keyexchangealgorithm!=null)
+		if(this.m_keyexchangealgorithm!=null)
 		{
-			keyexchangealgorithm.serverKeyExchange(b,clientrandom,serverrandom,this.servercertificate);
+			this.m_keyexchangealgorithm.serverKeyExchange(b,clientrandom,serverrandom,this.m_servercertificate);
 		}
 	}
 
@@ -114,10 +114,10 @@ public abstract class CipherSuite{
 	 */
 	public byte[] clientKeyExchange() throws TLSException
 	{
-		byte[] b = keyexchangealgorithm.clientKeyExchange();
-		calculateKeys(this.keyexchangealgorithm.calculateKeys());
-		this.writesequenznumber = 0;
-		this.readsequenznumber = 0;
+		byte[] b = this.m_keyexchangealgorithm.clientKeyExchange();
+		calculateKeys(this.m_keyexchangealgorithm.calculateKeys());
+		this.m_writesequenznumber = 0;
+		this.m_readsequenznumber = 0;
 		return b;
 	}
 
@@ -129,7 +129,7 @@ public abstract class CipherSuite{
 	 */
 	public byte[] clientFinished(byte[] handshakemessages) throws TLSException
 	{
-		return keyexchangealgorithm.clientFinished(handshakemessages);
+		return this.m_keyexchangealgorithm.clientFinished(handshakemessages);
 	}
 	
 	/**
@@ -139,7 +139,7 @@ public abstract class CipherSuite{
 	 */
 	public void serverFinished(byte[] header, byte[] finishedmessage) throws TLSException
 	{
-		keyexchangealgorithm.serverFinished(decode(header, finishedmessage));
+		this.m_keyexchangealgorithm.serverFinished(decode(header, finishedmessage));
 	}
 
 	/**

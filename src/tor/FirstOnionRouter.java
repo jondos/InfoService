@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Hashtable;
-import java.util.Vector;
 
 import logging.LogHolder;
 import logging.LogLevel;
@@ -26,12 +25,12 @@ import tor.tinytls.TinyTLS;
  */
 public class FirstOnionRouter implements Runnable {
 
-	private TinyTLS tinyTLS;
-	private ORDescription description;
-	private Thread readDataLoop; 
-	private InputStream istream;
-	private OutputStream ostream;
-	private Hashtable circuits;
+	private TinyTLS m_tinyTLS;
+	private ORDescription m_description;
+	private Thread m_readDataLoop; 
+	private InputStream m_istream;
+	private OutputStream m_ostream;
+	private Hashtable m_circuits;
 
 	/**
 	 * constructor
@@ -42,8 +41,8 @@ public class FirstOnionRouter implements Runnable {
 	 */
 	public FirstOnionRouter(ORDescription d)
 	{
-		this.readDataLoop = null;
-		this.description = d;
+		this.m_readDataLoop = null;
+		this.m_description = d;
 	}
 
 	/**
@@ -54,7 +53,7 @@ public class FirstOnionRouter implements Runnable {
 	 */
 	public void send(Cell cell) throws IOException
 	{
-		this.ostream.write(cell.getCellData());
+		this.m_ostream.write(cell.getCellData());
 	}
 
 	/**
@@ -71,7 +70,7 @@ public class FirstOnionRouter implements Runnable {
 			while(readPos<512)
 			{
 				//TODO:maybee we can let the thread sleep here for a while
-				readPos+=this.istream.read(b,readPos,512-readPos);
+				readPos+=this.m_istream.read(b,readPos,512-readPos);
 			}
 			int cid = ((b[0] & 0xFF)<<8) | (b[1] & 0xFF);
 			int type = b[2] & 0xFF;
@@ -100,7 +99,7 @@ public class FirstOnionRouter implements Runnable {
 					LogHolder.log(LogLevel.DEBUG,LogType.MISC,"Tor cell read - unbekannter zelltyp");
 				}
 			}
-			Object o = this.circuits.get(new Integer(cid));
+			Object o = this.m_circuits.get(new Integer(cid));
 			if(o instanceof Circuit)
 			{
 				Circuit circ = (Circuit)o;
@@ -121,11 +120,11 @@ public class FirstOnionRouter implements Runnable {
 	 */
 	public void connect() throws Exception
 	{
-		this.tinyTLS = new TinyTLS(this.description.getAddress(),this.description.getPort());
-		this.tinyTLS.startHandshake();
-		this.istream = this.tinyTLS.getInputStream();
-		this.ostream = this.tinyTLS.getOutputStream();
-		this.circuits = new Hashtable();
+		this.m_tinyTLS = new TinyTLS(this.m_description.getAddress(),this.m_description.getPort());
+		this.m_tinyTLS.startHandshake();
+		this.m_istream = this.m_tinyTLS.getInputStream();
+		this.m_ostream = this.m_tinyTLS.getOutputStream();
+		this.m_circuits = new Hashtable();
 	}
 	
 	/**
@@ -134,10 +133,10 @@ public class FirstOnionRouter implements Runnable {
 	 */
 	public synchronized void start()
 	{
-		if(this.readDataLoop== null)
+		if(this.m_readDataLoop== null)
 		{		
-			this.readDataLoop = new Thread(this);
-			this.readDataLoop.start();
+			this.m_readDataLoop = new Thread(this);
+			this.m_readDataLoop.start();
 		}
 	}
 	
@@ -146,7 +145,7 @@ public class FirstOnionRouter implements Runnable {
 	 */
 	public synchronized void run()
 	{
-		while(this.readDataLoop!=null)
+		while(this.m_readDataLoop!=null)
 		{
 			this.dispatchCells();
 		}
@@ -158,9 +157,9 @@ public class FirstOnionRouter implements Runnable {
 	 */
 	public void stop() throws IOException
 	{
-		this.readDataLoop.stop();
+		this.m_readDataLoop.stop();
 		this.close();
-		this.readDataLoop=null;
+		this.m_readDataLoop=null;
 	}
 	
 	/**
@@ -169,7 +168,7 @@ public class FirstOnionRouter implements Runnable {
 	 */
 	public void close() throws IOException
 	{
-		this.tinyTLS.close();
+		this.m_tinyTLS.close();
 	}
 
 	/**
@@ -179,7 +178,7 @@ public class FirstOnionRouter implements Runnable {
 	 */
 	public void addCircuit(Circuit circ)
 	{
-		this.circuits.put(new Integer(circ.getCircID()),circ);
+		this.m_circuits.put(new Integer(circ.getCircID()),circ);
 	}
 
 }

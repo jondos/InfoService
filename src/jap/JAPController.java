@@ -27,47 +27,23 @@
  */
 package jap;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.net.InetAddress;
-import java.net.ServerSocket;
-import java.text.MessageFormat;
-import java.util.Enumeration;
-import java.util.Locale;
-import java.util.Vector;
-import javax.xml.parsers.DocumentBuilderFactory;
-import java.awt.Cursor;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.Point;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JOptionPane;
-import javax.swing.UIManager;
-import javax.swing.UIManager.LookAndFeelInfo;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.w3c.dom.Text;
-import anon.crypto.JAPCertificate;
-import anon.crypto.JAPCertificateStore;
-import anon.infoservice.HTTPConnectionFactory;
-import anon.infoservice.InfoService;
-import anon.infoservice.InfoServiceDatabase;
-import anon.infoservice.InfoServiceHolder;
-import anon.infoservice.JAPVersionInfo;
-import anon.infoservice.MixCascade;
-import anon.util.XMLUtil;
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
-import proxy.AnonProxy;
-import proxy.DirectProxy;
-import proxy.SocksProxy;
-import proxy.ProxyListener;
-import update.JAPUpdateWizard;
+import java.io.*;
+import java.net.*;
+import java.text.*;
+import java.util.*;
+import javax.xml.parsers.*;
+
+import java.awt.*;
+import javax.swing.*;
+import javax.swing.UIManager.*;
+
+import org.w3c.dom.*;
+import anon.crypto.*;
+import anon.infoservice.*;
+import anon.util.*;
+import logging.*;
+import proxy.*;
+import update.*;
 
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPController implements ProxyListener
@@ -84,13 +60,13 @@ public final class JAPController implements ProxyListener
 	private MixCascade currentMixCascade = null;
 
 	private ServerSocket m_socketHTTPListener = null; // listener object for HTTP
-	private ServerSocket m_socketSOCKSListener=null;//listener object for SOCKS
+	private ServerSocket m_socketSOCKSListener = null; //listener object for SOCKS
 	private DirectProxy m_proxyDirect = null; // service object for direct access (bypass anon service)
 	private AnonProxy m_proxyAnon = null; // service object for anon access
-	private SocksProxy m_proxySocks=null; //service object for Socks requests
+	private SocksProxy m_proxySocks = null; //service object for Socks requests
 
 	private boolean isRunningHTTPListener = false; // true if a HTTP listener is running
-	private boolean isRunningSOCKSListener=false; //true if a SOCKS listener is running
+	private boolean isRunningSOCKSListener = false; //true if a SOCKS listener is running
 
 	//private boolean  canStartService             = false; // indicates if anon service can be started
 	private boolean m_bAlreadyCheckedForNewVersion = false; // indicates if check for new version has already been done
@@ -160,7 +136,7 @@ public final class JAPController implements ProxyListener
 		mixCascadeDatabase = new Vector();
 		m_proxyDirect = null;
 		m_proxyAnon = null;
-		m_proxySocks=null;
+		m_proxySocks = null;
 		m_Locale = Locale.getDefault();
 	}
 
@@ -186,8 +162,10 @@ public final class JAPController implements ProxyListener
 	{
 		LogHolder.log(LogLevel.INFO, LogType.MISC, "JAPModel:initial run of JAP...");
 		// start http listener object
-		if(JAPModel.isTorEnabled())
+		if (JAPModel.isTorEnabled())
+		{
 			startSOCKSListener();
+		}
 		if (!startHTTPListener())
 		{ // start was not sucessful
 			Object[] args =
@@ -234,9 +212,11 @@ public final class JAPController implements ProxyListener
 	 *    infoServiceDisabled="true/false"  // disable use of InfoService
 	 *    infoServiceChange="true/false"    // automatic change of infoservice after failure (since config version 0.5)
 	 *    infoServiceTimeout="..."          // timeout (sec) for infoservice and update communication (since config version 0.5)
-	 *    certCheckDisabled="true/false"  // disable checking of certificates
-	 * 		biHost="..." // Host for BI
-	 * 		biPort=".." //Port for BI
+	 *    certCheckDisabled="true/false"    // disable checking of certificates
+	 *    biHost="..."                      // BI's Hostname
+	 *    biPort="..."                      // BI's portnumber
+	 *    payAccountsFileEncrypted="true/false"   // is the accountsfile encrypted
+	 *    payAccountsFileName="..."         // filename and path of the accountsfile
 	 *    autoConnect="true"/"false"    // should we start the anon service immedialy after programm launch ?
 	 *    autoReConnect="true"/"false"    // should we automatically reconnect to mix if connection was lost ?
 	 *    DummyTrafficIntervall=".."    //Time of inactivity in milli seconds after which a dummy is send
@@ -445,6 +425,15 @@ public final class JAPController implements ProxyListener
 				//load settings for Payment
 				setBIHost(XMLUtil.parseNodeString(n.getNamedItem("biHost"), JAPModel.getBIHost()));
 				setBIPort(XMLUtil.parseElementAttrInt(root, "biPort", JAPModel.getBIPort()));
+				setPayAccountsFileEncrypted(XMLUtil.parseElementAttrBoolean(root, "payAccountsFileEncrypted",
+					JAPModel.isPayAccountsFileEncrypted()));
+
+				String accountsFileName = root.getAttribute("payAccountsFileName");
+				if (accountsFileName == null || accountsFileName.equals(""))
+				{
+					accountsFileName = "JAPAccounts.dat";
+				}
+				setPayAccountsFileName(accountsFileName);
 
 				// load settings for proxy
 				String proxyHost = XMLUtil.parseNodeString(n.getNamedItem("proxyHostName"),
@@ -628,6 +617,21 @@ public final class JAPController implements ProxyListener
 		notifyJAPObservers();
 	}
 
+	/**
+	 * setPayAccountsFileName
+	 *
+	 * @param string String
+	 */
+	private void setPayAccountsFileName(String string)
+	{
+		m_Model.setPayAccountsFileName(string);
+	}
+
+	private void setPayAccountsFileEncrypted(boolean b)
+	{
+		m_Model.setPayAccountsFileEncrypted(b);
+	}
+
 	public void saveConfigFile()
 	{
 		boolean error = false;
@@ -699,8 +703,12 @@ public final class JAPController implements ProxyListener
 			e.setAttribute("proxyAuthorization", (JAPModel.getUseFirewallAuthorization() ? "true" : "false"));
 			tmpStr = m_Model.getFirewallAuthUserID();
 			e.setAttribute("proxyAuthUserID", ( (tmpStr == null) ? "" : tmpStr));
+
+			/* payment configuration */
 			e.setAttribute("biHost", JAPModel.getBIHost());
 			e.setAttribute("biPort", Integer.toString(JAPModel.getBIPort()));
+			e.setAttribute("payAccountsFileEncrypted",(JAPModel.isPayAccountsFileEncrypted()?"true":"false"));
+			e.setAttribute("payAccountsFileName", JAPModel.getPayAccountsFileName());
 
 			/* infoservice configuration options */
 			e.setAttribute("infoServiceDisabled", (JAPModel.isInfoServiceDisabled() ? "true" : "false"));
@@ -1158,9 +1166,9 @@ public final class JAPController implements ProxyListener
 					if (canStartService)
 					{
 						//starting SOCKS
-						if(JAPModel.isTorEnabled())
+						if (JAPModel.isTorEnabled())
 						{
-							m_proxySocks=new SocksProxy(m_socketSOCKSListener);
+							m_proxySocks = new SocksProxy(m_socketSOCKSListener);
 							m_proxySocks.start();
 						}
 						// starting MUX --> Success ???
@@ -1193,9 +1201,11 @@ public final class JAPController implements ProxyListener
 						{
 							canStartService = false;
 							m_proxyAnon = null;
-							if(m_proxySocks!=null)
+							if (m_proxySocks != null)
+							{
 								m_proxySocks.stop();
-							m_proxySocks=null;
+							}
+							m_proxySocks = null;
 						}
 						if (ret == AnonProxy.E_SUCCESS)
 						{
@@ -1310,9 +1320,11 @@ public final class JAPController implements ProxyListener
 						m_proxyAnon.stop();
 					}
 					m_proxyAnon = null;
-					if(m_proxySocks!=null)
+					if (m_proxySocks != null)
+					{
 						m_proxySocks.stop();
-					m_proxySocks=null;
+					}
+					m_proxySocks = null;
 					if (feedback != null)
 					{
 						feedback.stopRequests();

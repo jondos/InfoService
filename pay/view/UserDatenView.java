@@ -48,17 +48,16 @@ import logging.LogLevel;
 import logging.LogType;
 import pay.Pay;
 import pay.control.PayControl;
-import pay.event.ModelEvent;
-import pay.event.ModelListener;
 import pay.util.PayText;
+import pay.PayAccountsFile;
 
 /**
- * Klasse zum darstellen der UserDaten Buttons zum Passwort ändern etc.
- * Außerdem dient sie der Benutzerinteraktion bezüglich der genannten Daten.
- * @author Grischan Glänzel
+ * Klasse zum darstellen der UserDaten Buttons zum Passwort \uFFFDndern etc.
+ * Au\uFFFDerdem dient sie der Benutzerinteraktion bez\uFFFDglich der genannten Daten.
+ * @author Grischan Gl\uFFFDnzel
  */
 
-public class UserDatenView extends JPanel implements ModelListener, JAPObserver, ActionListener
+public class UserDatenView extends JPanel implements JAPObserver, ActionListener
 {
 
 	private JAPModel japModel;
@@ -75,7 +74,7 @@ public class UserDatenView extends JPanel implements ModelListener, JAPObserver,
 	JButton changePassword;
 	JButton ausfahren;
 
-// Componenten für Zusatz Menu
+// Componenten f\uFFFDr Zusatz Menu
 	JPanel zusatzMenu;
 	Component platzhalter;
 	KLabel host;
@@ -116,7 +115,7 @@ public class UserDatenView extends JPanel implements ModelListener, JAPObserver,
 		changePassword = new JButton(PayText.get("changePassword"));
 		ausfahren = new JButton("erweitert");
 
-		savePw.setSelected(Pay.getInstance().isAccountFileEncrypted());
+		savePw.setSelected(JAPModel.isPayAccountsFileEncrypted());
 
 		add(changePassword, grid.feld(0, 0).size(1, 1).fill(grid.HORIZONTAL));
 		add(savePw, grid.feld(1, 0));
@@ -181,8 +180,8 @@ public class UserDatenView extends JPanel implements ModelListener, JAPObserver,
 		 }
 		   });
 		 */
-		savePw.addActionListener(new PayControl.EncryptAccountFileListener());
-		changePassword.addActionListener(new PayControl.ChangeAccountFilePWListener());
+/*		savePw.addActionListener(new PayControl.EncryptAccountFileListener());
+		changePassword.addActionListener(new PayControl.ChangeAccountFilePWListener());*/
 
 		importAccountFile.addActionListener(new ActionListener()
 		{
@@ -190,7 +189,22 @@ public class UserDatenView extends JPanel implements ModelListener, JAPObserver,
 			{
 				JFileChooser chooser = new JFileChooser();
 				int returnVal = chooser.showOpenDialog(getParent());
-				Pay.getInstance().importAccountFile(chooser.getSelectedFile().getAbsolutePath());
+				PayAccountsFile accounts = PayAccountsFile.getInstance();
+
+				// TODO: make it possible to import/export encrypted
+				try
+				{
+					accounts.readFromFile(chooser.getSelectedFile().getAbsolutePath(),
+										  false
+										  /* not encrypted */
+										  , null);
+				}
+				catch (Exception ex)
+				{
+					LogHolder.log(LogLevel.ERR, LogType.PAY, "Could not import file " +
+								  chooser.getSelectedFile().getAbsolutePath());
+					ex.printStackTrace();
+				}
 				LogHolder.log(LogLevel.DEBUG, LogType.PAY, " importAccFile");
 			}
 		});
@@ -200,12 +214,17 @@ public class UserDatenView extends JPanel implements ModelListener, JAPObserver,
 			{
 				JFileChooser chooser = new JFileChooser();
 				int returnVal = chooser.showOpenDialog(getParent());
-				try{
-				Pay.getInstance().exportAccountFile(chooser.getSelectedFile().getAbsolutePath());
-				LogHolder.log(LogLevel.DEBUG, LogType.PAY,
-							  "exportAccountFile to " + chooser.getSelectedFile().getAbsolutePath());
+				try
+				{
+					// TODO: make it possible to export encrypted
+					PayAccountsFile.getInstance().saveToFile(
+						chooser.getSelectedFile().getAbsolutePath(),
+						false, null
+						);
+					LogHolder.log(LogLevel.DEBUG, LogType.PAY,
+								  "exportAccountFile to " + chooser.getSelectedFile().getAbsolutePath());
 				}
-				catch(Exception e1)
+				catch (Exception e1)
 				{
 					LogHolder.log(LogLevel.DEBUG, LogType.PAY,
 								  "Error exportAccountFile " + e1.getMessage());
@@ -235,10 +254,10 @@ public class UserDatenView extends JPanel implements ModelListener, JAPObserver,
 
 	}
 
-	public void modelUpdated(ModelEvent me)
-	{
-		savePw.setSelected(Pay.getInstance().isAccountFileEncrypted());
-	}
+	/*		public void modelUpdated(ModelEvent me)
+	  {
+	   savePw.setSelected(Pay.getInstance().isAccountFileEncrypted());
+	  }*/
 
 	public void valuesChanged()
 	{

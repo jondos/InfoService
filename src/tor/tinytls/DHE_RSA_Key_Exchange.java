@@ -42,12 +42,12 @@ public class DHE_RSA_Key_Exchange extends Key_Exchange{
 	private final static byte[] KEYEXPANSION = ("key expansion").getBytes();
 	private final static byte[] MASTERSECRET = ("master secret").getBytes();
 
-	private DHParameters dhparams;
-	private DHPublicKeyParameters dhserverpub;
-	private byte[] premastersecret;
-	private byte[] mastersecret;
-	private byte[] clientrandom;
-	private byte[] serverrandom;
+	private DHParameters m_dhparams;
+	private DHPublicKeyParameters m_dhserverpub;
+	private byte[] m_premastersecret;
+	private byte[] m_mastersecret;
+	private byte[] m_clientrandom;
+	private byte[] m_serverrandom;
 
 	/**
 	 * Decode the server keys and check the certificate
@@ -59,8 +59,8 @@ public class DHE_RSA_Key_Exchange extends Key_Exchange{
 	 */
 	public void serverKeyExchange(byte[] bytes, byte[] clientrandom, byte[] serverrandom,JAPCertificate servercertificate) throws TLSException
 	{
-		this.clientrandom = clientrandom;
-		this.serverrandom = serverrandom;
+		this.m_clientrandom = clientrandom;
+		this.m_serverrandom = serverrandom;
 		int counter  = 0;
 		BigInteger dh_p;
 		BigInteger dh_g;
@@ -90,8 +90,8 @@ public class DHE_RSA_Key_Exchange extends Key_Exchange{
 		dh_ys = new BigInteger(1,dummy);
 		LogHolder.log(LogLevel.DEBUG,LogType.MISC,"[SERVER_KEY_EXCHANGE] DH_Ys = "+dh_ys.toString());
 
-		dhparams = new DHParameters(dh_p,dh_g);
-		dhserverpub = new DHPublicKeyParameters(dh_ys,dhparams);
+		this.m_dhparams = new DHParameters(dh_p,dh_g);
+		this.m_dhserverpub = new DHPublicKeyParameters(dh_ys,this.m_dhparams);
 
 
 		//-----------------------------------------
@@ -145,7 +145,7 @@ public class DHE_RSA_Key_Exchange extends Key_Exchange{
 	 * @throws TLSException
 	 */
 	public byte[] clientKeyExchange() throws TLSException {
-		DHKeyGenerationParameters params = new DHKeyGenerationParameters(new SecureRandom(), dhparams);
+		DHKeyGenerationParameters params = new DHKeyGenerationParameters(new SecureRandom(), this.m_dhparams);
 		DHKeyPairGenerator kpGen = new DHKeyPairGenerator();
 		kpGen.init(params);
 
@@ -155,14 +155,14 @@ public class DHE_RSA_Key_Exchange extends Key_Exchange{
 
 		DHBasicAgreement dha = new DHBasicAgreement();
 		dha.init(dhpriv);
-		this.premastersecret = dha.calculateAgreement(dhserverpub).toByteArray();
-		if(this.premastersecret[0]==0)
+		this.m_premastersecret = dha.calculateAgreement(this.m_dhserverpub).toByteArray();
+		if(this.m_premastersecret[0]==0)
 		{
-			this.premastersecret = helper.copybytes(this.premastersecret,1,this.premastersecret.length-1);
+			this.m_premastersecret = helper.copybytes(this.m_premastersecret,1,this.m_premastersecret.length-1);
 		}
-		PRF prf = new PRF(this.premastersecret,MASTERSECRET,helper.conc(clientrandom,serverrandom));
-		this.mastersecret = prf.calculate(48);
-		this.premastersecret = null;
+		PRF prf = new PRF(this.m_premastersecret,MASTERSECRET,helper.conc(this.m_clientrandom,this.m_serverrandom));
+		this.m_mastersecret = prf.calculate(48);
+		this.m_premastersecret = null;
 		return  dhpub.getY().toByteArray();
 	}
 
@@ -172,7 +172,7 @@ public class DHE_RSA_Key_Exchange extends Key_Exchange{
 	 * @return client finished message
 	 */
 	public byte[] clientFinished(byte[] handshakemessages) throws TLSException {
-		PRF prf = new PRF(this.mastersecret,FINISHEDLABEL,helper.conc(hash.md5(new byte[][]{handshakemessages}),hash.sha(new byte[][]{handshakemessages})));
+		PRF prf = new PRF(this.m_mastersecret,FINISHEDLABEL,helper.conc(hash.md5(new byte[][]{handshakemessages}),hash.sha(new byte[][]{handshakemessages})));
 		return prf.calculate(12);
 	}
 
@@ -181,7 +181,7 @@ public class DHE_RSA_Key_Exchange extends Key_Exchange{
 	 * @return key material
 	 */
 	public byte[] calculateKeys() {
-		PRF prf = new PRF(this.mastersecret,KEYEXPANSION,helper.conc(this.serverrandom,this.clientrandom));
+		PRF prf = new PRF(this.m_mastersecret,KEYEXPANSION,helper.conc(this.m_serverrandom,this.m_clientrandom));
 		return prf.calculate(MAXKEYMATERIALLENGTH);
 	}
 
