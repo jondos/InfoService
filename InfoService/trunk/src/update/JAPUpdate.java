@@ -71,7 +71,7 @@ public class JAPUpdate implements ActionListener,ItemListener,Runnable
 		private Thread m_threadGetVersionInfo;
 		private JAPVersionInfo m_devVersion;
 		private JAPVersionInfo m_releaseVersion;
-    private DateFormat m_DateFormat;
+		private DateFormat m_DateFormat;
 
 		private final String COMMAND_ABORT="ABORT";
 		private final String COMMAND_UPGRADE="UPGRADE";
@@ -119,81 +119,81 @@ public class JAPUpdate implements ActionListener,ItemListener,Runnable
 				//The Installed-Panel
 				gridBagPanel=new GridBagLayout();
 				GridBagConstraints c=new GridBagConstraints();
-        TitledBorder titledBorder = new TitledBorder(" "+JAPMessages.getString("updateTitleBorderInstalled")+" ");
+				TitledBorder titledBorder = new TitledBorder(" "+JAPMessages.getString("updateTitleBorderInstalled")+" ");
 				JPanel installedPanel = new JPanel(gridBagPanel);
 				installedPanel.setBorder(titledBorder);
 				JLabel l=new JLabel("Version: ");
 				c.gridx=0;
-        c.gridy=0;
-        c.anchor=c.NORTHWEST;
-        c.weighty=0.33;
-        c.weightx=0.5;
-        c.fill=c.BOTH;
-        c.insets=new Insets(5,5,5,5);
+				c.gridy=0;
+				c.anchor=c.NORTHWEST;
+				c.weighty=0.33;
+				c.weightx=0.5;
+				c.fill=c.BOTH;
+				c.insets=new Insets(5,5,5,5);
 				gridBagPanel.setConstraints(l,c);
-        installedPanel.add(l);
+				installedPanel.add(l);
 				l=new JLabel(JAPConstants.aktVersion);
 				c.gridx=1;
- 				gridBagPanel.setConstraints(l,c);
-        installedPanel.add(l);
+				gridBagPanel.setConstraints(l,c);
+				installedPanel.add(l);
 				l=new JLabel(JAPMessages.getString("updateLabelDate")+" ");
 				c.gridx=0;
-        c.gridy=1;
-        gridBagPanel.setConstraints(l,c);
+				c.gridy=1;
+				gridBagPanel.setConstraints(l,c);
 				installedPanel.add(l);
-        String strDate=JAPConstants.strReleaseDate;
-        try
-          {
-            DateFormat sdf=new SimpleDateFormat("yyyy/MM/dd HH:mm:ss z");
-            Date d=sdf.parse(strDate+" GMT");
-            m_DateFormat=DateFormat.getDateTimeInstance(DateFormat.MEDIUM,DateFormat.MEDIUM);
-            strDate=m_DateFormat.format(d);
-          }
-        catch(Exception e){e.printStackTrace();}
-        l=new JLabel(strDate);
+				String strDate=JAPConstants.strReleaseDate;
+				try
+					{
+						DateFormat sdf=new SimpleDateFormat("yyyy/MM/dd HH:mm:ss z");
+						Date d=sdf.parse(strDate+" GMT");
+						m_DateFormat=DateFormat.getDateTimeInstance(DateFormat.MEDIUM,DateFormat.MEDIUM);
+						strDate=m_DateFormat.format(d);
+					}
+				catch(Exception e){e.printStackTrace();}
+				l=new JLabel(strDate);
 				c.gridx=1;
-        gridBagPanel.setConstraints(l,c);
+				gridBagPanel.setConstraints(l,c);
 				installedPanel.add(l);
 				l=new JLabel("Type: ");
-        c.gridy=2;
-        c.gridx=0;
-        gridBagPanel.setConstraints(l,c);
-        installedPanel.add(l);
+				c.gridy=2;
+				c.gridx=0;
+				gridBagPanel.setConstraints(l,c);
+				installedPanel.add(l);
 				if(JAPConstants.m_bReleasedVersion)
 					l=new JLabel("Release");
 				else
 					l=new JLabel("Development");
 				c.gridx=1;
-        gridBagPanel.setConstraints(l,c);
+				gridBagPanel.setConstraints(l,c);
 				installedPanel.add(l);
 
 			 //The latestVersion-Panel
 				gridBagPanel=new GridBagLayout();
-        titledBorder = new TitledBorder(" "+JAPMessages.getString("updateTitleBorderLatest")+" ");
+				titledBorder = new TitledBorder(" "+JAPMessages.getString("updateTitleBorderLatest")+" ");
 				JPanel latestPanel = new JPanel(gridBagPanel);
 				latestPanel.setBorder(titledBorder);
 				l=new JLabel("Version: ");
-        c.gridx=0;
-        c.gridy=0;
+				c.gridx=0;
+				c.gridy=0;
 				gridBagPanel.setConstraints(l,c);
 				latestPanel.add(l);
 				m_labelVersion=new JLabel("Unknown");
-        c.gridx=1;
+				c.gridx=1;
 				gridBagPanel.setConstraints(m_labelVersion,c);
 				latestPanel.add(m_labelVersion);
 				l=new JLabel(JAPMessages.getString("updateLabelDate")+" ");
 				c.gridy=1;
-        c.gridx=0;
-        gridBagPanel.setConstraints(l,c);
+				c.gridx=0;
+				gridBagPanel.setConstraints(l,c);
 				latestPanel.add(l);
 				m_labelDate=new JLabel("Unknown");
 				c.gridx=1;
-        gridBagPanel.setConstraints(m_labelDate,c);
+				gridBagPanel.setConstraints(m_labelDate,c);
 				latestPanel.add(m_labelDate);
 				l=new JLabel("Type: ");
 				c.gridy=2;
-        c.gridx=0;
-        gridBagPanel.setConstraints(l,c);
+				c.gridx=0;
+				gridBagPanel.setConstraints(l,c);
 				latestPanel.add(l);
 				m_comboType=new JComboBox();
 				m_comboType.addItem("Release");
@@ -201,7 +201,7 @@ public class JAPUpdate implements ActionListener,ItemListener,Runnable
 				m_comboType.setEnabled(false);
 				m_comboType.addItemListener(this);
 				c.gridx=1;
-        gridBagPanel.setConstraints(m_comboType,c);
+				gridBagPanel.setConstraints(m_comboType,c);
 				latestPanel.add(m_comboType);
 
 				//The Info-Panel
@@ -268,10 +268,13 @@ public class JAPUpdate implements ActionListener,ItemListener,Runnable
 					}
 				else
 					{
-						m_labelVersion.setText(m_releaseVersion.getVersion());
-						m_labelDate.setText(m_DateFormat.format(m_releaseVersion.getDate()));
 						m_comboType.setEnabled(true);
 						m_taInfo.setText("");
+						m_labelVersion.setText(m_releaseVersion.getVersion());
+						if(m_releaseVersion.getDate()!=null)
+							m_labelDate.setText(m_DateFormat.format(m_releaseVersion.getDate()));
+						else
+							m_labelDate.setText("Unknown");
 						m_bttnUpgrade.setEnabled(true);
 					}
 			}
@@ -302,12 +305,18 @@ public class JAPUpdate implements ActionListener,ItemListener,Runnable
 						if(m_comboType.getSelectedIndex()==0)//Release
 							{
 								m_labelVersion.setText(m_releaseVersion.getVersion());
-								m_labelDate.setText(m_DateFormat.format(m_releaseVersion.getDate()));
+								if(m_releaseVersion.getDate()!=null)
+									m_labelDate.setText(m_DateFormat.format(m_releaseVersion.getDate()));
+								else
+									m_labelDate.setText("Unknown");
 							}
 						else
 							{
 								m_labelVersion.setText(m_devVersion.getVersion());
-								m_labelDate.setText(m_DateFormat.format(m_devVersion.getDate()));
+								if(m_devVersion.getDate()!=null)
+									m_labelDate.setText(m_DateFormat.format(m_devVersion.getDate()));
+								else
+									m_labelDate.setText("Unknown");
 							}
 					}
 			}

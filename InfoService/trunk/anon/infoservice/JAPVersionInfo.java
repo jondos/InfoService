@@ -5,14 +5,14 @@ Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
 
 	- Redistributions of source code must retain the above copyright notice,
-	  this list of conditions and the following disclaimer.
+		this list of conditions and the following disclaimer.
 
 	- Redistributions in binary form must reproduce the above copyright notice,
-	  this list of conditions and the following disclaimer in the documentation and/or
+		this list of conditions and the following disclaimer in the documentation and/or
 		other materials provided with the distribution.
 
 	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
-	  may be used to endorse or promote products derived from this software without specific
+		may be used to endorse or promote products derived from this software without specific
 		prior written permission.
 
 
@@ -37,74 +37,81 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 public class JAPVersionInfo
-  {
-    private int m_Type;
-    private String m_Version;
-    private Date m_Date=null;
-    private String m_JAPJarFileName;
-    private URL m_CodeBase;
-    private String m_Description="";
+	{
+		private int m_Type;
+		private String m_Version;
+		private Date m_Date=null;
+		private String m_JAPJarFileName;
+		private URL m_CodeBase;
+		private String m_Description="";
 
-    protected JAPVersionInfo(byte[] xmlJnlp,int type) throws Exception
-      {
-        m_Type=type;
-        parse(xmlJnlp);
-      }
+		protected JAPVersionInfo(byte[] xmlJnlp,int type) throws Exception
+			{
+				m_Type=type;
+				parse(xmlJnlp);
+			}
 
-    private void parse(byte[] xml) throws Exception
-      {
-        try
-          {
-            Document doc=DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(xml));
-            Element root=doc.getDocumentElement();
-            m_Version=root.getAttribute("version"); //the JAP version
-            String strDate=root.getAttribute("releaseDate");
-            m_Date=new SimpleDateFormat().parse(strDate);
-            m_CodeBase=new URL(root.getAttribute("codebase"));
-            NodeList nlResources=root.getElementsByTagName("resources");
-            NodeList nlJars=((Element)nlResources.item(0)).getElementsByTagName("jar");
-            for(int i=0;i<nlJars.getLength();i++)
-              {
-                try
-                  {
-                    Element elemJar=(Element)nlJars.item(i);
-                    String part=elemJar.getAttribute("part");
-                    if(part.equals("jap"))
-                      m_JAPJarFileName=elemJar.getAttribute("href");
-                  }
-                catch(Exception e)
-                  {
-                  }
-              }
-          }
-        catch(Exception ex)
-          {
-            throw ex;
-          }
-      }
+		private void parse(byte[] xml) throws Exception
+			{
+				try
+					{
+						Document doc=DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(xml));
+						Element root=doc.getDocumentElement();
+						m_Version=root.getAttribute("version"); //the JAP version
+						try
+							{
+								String strDate=root.getAttribute("releaseDate");
+								m_Date=new SimpleDateFormat().parse(strDate);
+							}
+						catch(Exception ed)
+							{
+								m_Date=null;
+							}
+						m_CodeBase=new URL(root.getAttribute("codebase"));
+						NodeList nlResources=root.getElementsByTagName("resources");
+						NodeList nlJars=((Element)nlResources.item(0)).getElementsByTagName("jar");
+						for(int i=0;i<nlJars.getLength();i++)
+							{
+								try
+									{
+										Element elemJar=(Element)nlJars.item(i);
+										String part=elemJar.getAttribute("part");
+										if(part.equals("jap"))
+											m_JAPJarFileName=elemJar.getAttribute("href");
+									}
+								catch(Exception e)
+									{
+									}
+							}
+					}
+				catch(Exception ex)
+					{
+						throw ex;
+					}
+			}
 
-      public String getVersion()
-        {
-          return m_Version;
-        }
+			public String getVersion()
+				{
+					return m_Version;
+				}
 
-      public Date getDate()
-        {
-          return m_Date;
-        }
+			public Date getDate()
+				{
+					return m_Date;
+				}
 
-      public String getDescription()
-      {
-         return m_Description;
-      }
+			public String getDescription()
+			{
+				 return m_Description;
+			}
 
-     public URL getCodeBase()
-      {
-        return m_CodeBase;
-      }
+		 public URL getCodeBase()
+			{
+				return m_CodeBase;
+			}
 
-      public String getJAPJarFileName()
-      {
-        return m_JAPJarFileName;
-      }
-  }
+			public String getJAPJarFileName()
+			{
+				return m_JAPJarFileName;
+			}
+	}
