@@ -25,6 +25,8 @@ OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABIL
 IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
+package anon.infoservice;
+
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.DocumentBuilder;
 import javax.swing.JProgressBar;
@@ -50,73 +52,72 @@ import java.lang.Thread;
 import HTTPClient.Codecs;
 import HTTPClient.ModuleException;
 import HTTPClient.ParseException;
-
-final public class JAPInfoService
+import anon.AnonServer;
+import JAPDebug;
+import JAPUtil;
+final public class InfoService
 	{
-		private static final String DP = "%3A"; // Doppelpunkt
-		String proxyHost  = null;
-		int    proxyPort  = 0;
-		String proxyAuthUserID = null;
-		String proxyAuthPasswd = null;
-		HTTPConnection conInfoService=null;
-                private int count =0;
-                public boolean ready = false;
+	//	private static final String DP = "%3A"; // Doppelpunkt
+    final public static int JAP_RELEASE_VERSION=1;
+    final public static int JAP_DEVELOPMENT_VERSION=2;
 
-		public JAPInfoService(String host,int port) {
-			this.setInfoService(host,port);
-		}
-		/** This will set the InfoService to use. It also sets the Proxy-Configuration and autorization.
+    private String    m_proxyHost  = null;
+		private int       m_proxyPort  = 0;
+		private String    m_proxyAuthUserID = null;
+		private String    m_proxyAuthPasswd = null;
+		private HTTPConnection m_conInfoService=null;
+    private int       m_count =0;
+    private boolean   m_ready = false;
+
+		public InfoService(String host,int port)
+      {
+			  setInfoService(host,port);
+		  }
+
+    /** This will set the InfoService to use. It also sets the Proxy-Configuration and autorization.
 		 */
-		public int setInfoService(String host,int port) {
-			//We are doing authorization on our own - so remove....
-			try{conInfoService.removeDefaultModule(Class.forName("HTTPClient.AuthorizationModule"));}
-			catch(Exception e){};
-			conInfoService=new HTTPConnection(host,port);
-			NVPair[] headers=new NVPair[2];
-			headers[0]=new NVPair("Cache-Control","no-cache");
-			headers[1]=new NVPair("Pragma","no-cache");
-			replaceHeader(conInfoService,headers[0]);
-			replaceHeader(conInfoService,headers[1]);
-//				if(model.getUseFirewall())
-//					setProxy(model.getFirewallHost(),model.getFirewallPort(),
-//									 model.getFirewallAuthUserID(),model.getFirewallAuthPasswd());
-//				else
-//					setProxy(null,0,null,null);
-			conInfoService.setAllowUserInteraction(false);
-			conInfoService.setTimeout(10000);
-			return 0;
-		}
-		public void setProxy(String proxyHost,int proxyPort,String proxyAuthUserID,String proxyAuthPasswd) {
-			this.proxyHost  = proxyHost;
-			this.proxyPort  = proxyPort;
-			this.proxyAuthUserID = proxyAuthUserID;
-			this.proxyAuthPasswd = proxyAuthPasswd;
-			setProxyEnabled(true);
-		}
-		public int setProxyEnabled(boolean b) {
-			String tmpProxyHost  = null;
-			int    tmpProxyPort  = 0;
-			String tmpAuthUserID = null;
-			String tmpAuthPasswd = null;
-			if(conInfoService==null)
-				return -1;
-			if(b) {
-				tmpProxyHost  = proxyHost;
-				tmpProxyPort  = proxyPort;
-				tmpAuthUserID = proxyAuthUserID;
-				tmpAuthPasswd = proxyAuthPasswd;
-			}
-			conInfoService.setProxyServer(tmpProxyHost,tmpProxyPort);
-			conInfoService.setCurrentProxy(tmpProxyHost,tmpProxyPort);
-			//setting Proxy authorization...
-			if(tmpAuthUserID!=null) {
-				String tmpPasswd=Codecs.base64Encode(tmpAuthUserID+":"+tmpAuthPasswd);
-				NVPair authoHeader=new NVPair("Proxy-Authorization","Basic "+tmpPasswd);
-				replaceHeader(conInfoService,authoHeader);
-			}
-			return 0;
-		}
-		private int replaceHeader(HTTPConnection con,NVPair header)
+		public int setInfoService(String host,int port)
+      {
+			  //We are doing authorization on our own - so remove....
+			  try{m_conInfoService.removeDefaultModule(Class.forName("HTTPClient.AuthorizationModule"));} //????
+			  catch(Exception e){};
+			  m_conInfoService=new HTTPConnection(host,port);
+			  NVPair[] headers=new NVPair[2];
+			  headers[0]=new NVPair("Cache-Control","no-cache");
+			  headers[1]=new NVPair("Pragma","no-cache");
+			  replaceHeader(m_conInfoService,headers[0]);
+			  replaceHeader(m_conInfoService,headers[1]);
+			  m_conInfoService.setAllowUserInteraction(false);
+			  m_conInfoService.setTimeout(10000);
+			  applyProxySettings();
+        return 0;
+		  }
+
+		public void setProxy(String proxyHost,int proxyPort,String proxyAuthUserID,String proxyAuthPasswd)
+      {
+			  m_proxyHost  = proxyHost;
+			  m_proxyPort  = proxyPort;
+		  	m_proxyAuthUserID = proxyAuthUserID;
+		  	m_proxyAuthPasswd = proxyAuthPasswd;
+			  applyProxySettings();
+		  }
+
+		private void applyProxySettings()
+      {
+			  if(m_conInfoService==null)
+				  return;
+			  m_conInfoService.setProxyServer(m_proxyHost,m_proxyPort);
+			  m_conInfoService.setCurrentProxy(m_proxyHost,m_proxyPort);
+			  //setting Proxy authorization...
+			  if(m_proxyAuthUserID!=null)
+          {
+				    String tmpPasswd=Codecs.base64Encode(m_proxyAuthUserID+":"+m_proxyAuthPasswd);
+				    NVPair authoHeader=new NVPair("Proxy-Authorization","Basic "+tmpPasswd);
+				    replaceHeader(m_conInfoService,authoHeader);
+			    }
+		  }
+
+    private int replaceHeader(HTTPConnection con,NVPair header)
 			{
 				NVPair headers[]=con.getDefaultHeaders();
 				if(headers==null||headers.length==0)
@@ -146,97 +147,101 @@ final public class JAPInfoService
 						return 0;
 					}
 			}
-		public AnonServerDBEntry[] getAvailableAnonServers() throws Exception {
-			Vector v = new Vector();
-			try {
-				HTTPResponse resp=conInfoService.Get("/servers");
-				try {
-					Enumeration enum=resp.listHeaders();
-					JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"HTTPResponse: "+Integer.toString(resp.getStatusCode()));
-					while(enum.hasMoreElements()) {
-						String header=(String)enum.nextElement();
-						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,header+": "+resp.getHeader(header));
-					}
-				} catch(Throwable tor) {
-				}
-				// XML stuff
-				Document doc=DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(resp.getInputStream());
-//				model.anonServerDatabase.clean();
-				NodeList nodelist=doc.getElementsByTagName("MixCascade");
-				for(int i=0;i<nodelist.getLength();i++) {
-					Element elem=(Element)nodelist.item(i);
-					NodeList nl=elem.getElementsByTagName("Name");
-					String name=nl.item(0).getFirstChild().getNodeValue().trim();
-					nl=elem.getElementsByTagName("IP");
-					String ip=nl.item(0).getFirstChild().getNodeValue().trim();
-					nl=elem.getElementsByTagName("Host");
-					String host=null;
-					if(nl!=null&&nl.getLength()>0)
-					  host=nl.item(0).getFirstChild().getNodeValue().trim();
-				  if(host==null) //we have no host --> old mix there host is in <ip>
-						{
-						  host=ip;
-							ip=null;
-						}
-					int port=JAPUtil.parseNodeInt(elem,"Port",-1);
-					int proxyPort=JAPUtil.parseNodeInt(elem,"ProxyPort",-1);
 
-					AnonServerDBEntry e=new AnonServerDBEntry(name,host,ip,port,proxyPort);
+    public AnonServer[] getAvailableAnonServers() throws Exception
+      {
+			  Vector v = new Vector();
+			  try
+          {
+				    HTTPResponse resp=m_conInfoService.Get("/servers");
+				    try
+              {
+					      Enumeration enum=resp.listHeaders();
+					      JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"HTTPResponse: "+Integer.toString(resp.getStatusCode()));
+					      while(enum.hasMoreElements())
+                  {
+						        String header=(String)enum.nextElement();
+						        JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,header+": "+resp.getHeader(header));
+					        }
+				      }
+            catch(Throwable tor)
+              {
+              }
+				    // XML stuff
+				    Document doc=DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(resp.getInputStream());
+				    NodeList nodelist=doc.getElementsByTagName("MixCascade");
+				    for(int i=0;i<nodelist.getLength();i++)
+              {
+					      Element elem=(Element)nodelist.item(i);
+                String id=elem.getAttribute("id");
+					      NodeList nl=elem.getElementsByTagName("Name");
+					      String name=nl.item(0).getFirstChild().getNodeValue().trim();
+					      nl=elem.getElementsByTagName("IP");
+					      String ip=nl.item(0).getFirstChild().getNodeValue().trim();
+					      nl=elem.getElementsByTagName("Host");
+					      String host=null;
+					      if(nl!=null&&nl.getLength()>0)
+					        host=nl.item(0).getFirstChild().getNodeValue().trim();
+				        if(host==null) //we have no host --> old mix there host is in <ip>
+                  {
+						        host=ip;
+							      ip=null;
+						      }
+					      int port=JAPUtil.parseNodeInt(elem,"Port",-1);
+					      int proxyPort=JAPUtil.parseNodeInt(elem,"ProxyPort",-1);
 
-					nl=elem.getElementsByTagName("CurrentStatus");
-					if(nl!=null&&nl.getLength()>0) {
-						Element elem1=(Element)nl.item(0);
-						int nrOfActiveUsers=JAPUtil.parseElementAttrInt(elem1,"ActiveUsers",-1);
-						e.setNrOfActiveUsers(nrOfActiveUsers);
-						int currentRisk=JAPUtil.parseElementAttrInt(elem1,"CurrentRisk",-1);
-						e.setCurrentRisk(currentRisk);
-						int trafficSituation=JAPUtil.parseElementAttrInt(elem1,"TrafficSituation",-1);
-						e.setTrafficSituation(trafficSituation);
-						int mixedPackets=JAPUtil.parseElementAttrInt(elem1,"MixedPackets",-1);
-						e.setMixedPackets(mixedPackets);
-					}
-					v.addElement(e);
-//					model.anonServerDatabase.addEntry(e);
-				}
-			} catch(Exception e) {
-				throw e;
-			}
-			if((v==null)||(v.size()==0)) {
-				return null;
-			} else {
-				AnonServerDBEntry[] db = new AnonServerDBEntry[v.size()];
-				for(int i=0;i<db.length;i++) {
-					db[i]=(AnonServerDBEntry)v.elementAt(i);
-				}
-				return db;
-			}
-		}
+					      AnonServer e=new AnonServer(id,name,host,ip,port,proxyPort);
 
-	public void getFeedback(AnonServerDBEntry service)
-		{
-			int nrOfActiveUsers = -1;
-			int trafficSituation = -1;
-			int currentRisk = -1;
-			int mixedPackets = -1;
-			int iAnonLevel=-1;
-			try
-				{
-					String strIP=service.getIP();
-					byte[] addr=null;
-					if(strIP==null) //try to get it from host
-						{
-							addr=InetAddress.getByName(service.getHost()).getAddress();
-						  strIP=Integer.toString((int)addr[0]&0xFF)+"."+
-																		 Integer.toString((int)addr[1]&0xFF)+"."+
-																		 Integer.toString((int)addr[2]&0xFF)+"."+
-																		 Integer.toString((int)addr[3]&0xFF);
-						}
-					String strGET="/feedback/"+strIP+DP+Integer.toString(service.getPort());
-					HTTPResponse resp=conInfoService.Get(strGET);
-                                        if (resp.getStatusCode()!=200)
-						{
-							JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPInfoService:Bad response from server: "+resp.getReasonLine());
-						}
+					      nl=elem.getElementsByTagName("CurrentStatus");
+					      if(nl!=null&&nl.getLength()>0)
+                  {
+						        Element elem1=(Element)nl.item(0);
+						        int nrOfActiveUsers=JAPUtil.parseElementAttrInt(elem1,"ActiveUsers",-1);
+						        e.setNrOfActiveUsers(nrOfActiveUsers);
+						        int currentRisk=JAPUtil.parseElementAttrInt(elem1,"CurrentRisk",-1);
+						        e.setCurrentRisk(currentRisk);
+						        int trafficSituation=JAPUtil.parseElementAttrInt(elem1,"TrafficSituation",-1);
+						        e.setTrafficSituation(trafficSituation);
+						        int mixedPackets=JAPUtil.parseElementAttrInt(elem1,"MixedPackets",-1);
+						        e.setMixedPackets(mixedPackets);
+					        }
+					      v.addElement(e);
+				      }//End for all Mixes
+			    }
+        catch(Exception e)
+          {
+				    throw e;
+			    }
+			  if((v==null)||(v.size()==0))
+          {
+				    return null;
+		    	}
+        else
+          {
+				    AnonServer[] db = new AnonServer[v.size()];
+				    for(int i=0;i<db.length;i++)
+              {
+					      db[i]=(AnonServer)v.elementAt(i);
+				      }
+				    return db;
+          }
+      }
+
+	  public void getFeedback(AnonServer service)
+		  {
+			  int nrOfActiveUsers = -1;
+			  int trafficSituation = -1;
+			  int currentRisk = -1;
+			  int mixedPackets = -1;
+			  int iAnonLevel=-1;
+			  try
+				  {
+					  String strGET="/feedback/"+service.getID();
+					  HTTPResponse resp=m_conInfoService.Get(strGET);
+            if (resp.getStatusCode()!=200)
+						  {
+							  JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPInfoService:Bad response from server: "+resp.getReasonLine());
+						  }
 					else
 						{
 							// XML stuff
@@ -265,7 +270,7 @@ final public class JAPInfoService
 		{
 			try
 				{
-					HTTPResponse resp=conInfoService.Get("/aktVersion");
+					HTTPResponse resp=m_conInfoService.Get("/aktVersion");
 					if (resp==null || resp.getStatusCode()!=200)
 						throw new Exception("Versioncheck bad response from server: "+resp.getReasonLine());
 					// read remaining header lines
@@ -282,13 +287,37 @@ final public class JAPInfoService
 				}
 		}
 
+  public JAPVersionInfo getJAPVersionInfo(int type)
+    {
+      String strQuery=null;
+      if(type==JAP_RELEASE_VERSION)
+        strQuery="/japRelease.jnlp";
+      else if(type==JAP_DEVELOPMENT_VERSION)
+        strQuery="/japDevelopment.jnlp";
+      else
+        return null;
+			try
+				{
+					HTTPResponse resp=m_conInfoService.Get(strQuery);
+					if (resp==null || resp.getStatusCode()!=200)
+						return null;
+					// read remaining header lines
+					byte[] buff=resp.getData();
+				  return new JAPVersionInfo(buff,type);
+        }
+			catch(Exception e)
+				{
+					return null;
+				}
+    }
+
            /////////////////////////////////////////////////////////////////////
            //connect for JAPUpdate .jnlp-Files
 
-        public HTTPConnection getConInfoService()
+        /*public HTTPConnection getConInfoService()
           {
-             return this.conInfoService;
-          }
+             return m_conInfoService;
+          }*/
 // inner class LoadThread needed for showing Download-Progress using JProgressBar
 
 //public class LoadThread extends Thread{
@@ -323,8 +352,8 @@ final public class JAPInfoService
              is = rsp.getInputStream();
              while((is.read(data))!= -1)
                  {
-                   count ++;
-                   progressBar.setValue(count);
+                   //count ++;
+                   //progressBar.setValue(count);
                    progressBar.repaint();
                  //  System.out.println(count);
                    fos.write(data);
@@ -332,7 +361,7 @@ final public class JAPInfoService
               fos.flush();
               fos.close();
               is.close();
-              ready = true;
+              //ready = true;
             // jnlpRelease = new String(data);
              System.out.println(jnlpRelease);
 
@@ -352,20 +381,20 @@ final public class JAPInfoService
     }
   }
 //}//End LoadThread
-  public int getCount()
+  /*public int getCount()
   {
     return count;
-  }
+  }*/
            /////////////////////////////////////////////////////////////////////
 	public static void main(String[] argv) {
 		JAPDebug.setDebugLevel(JAPDebug.WARNING);
-		JAPInfoService is=new JAPInfoService("infoservice.inf.tu-dresden.de",6543);
+		InfoService is=new InfoService("infoservice.inf.tu-dresden.de",6543);
 //		is.setInfoService("infoservice.inf.tu-dresden.de",6543);
-		is.setProxy("www-proxy.t-online.de",80,null,null);
-		is.setProxyEnabled(false/*true*/);
+		//is.setProxy("www-proxy.t-online.de",80,null,null);
+		//is.setProxyEnabled(false/*true*/);
 		try {
 			System.out.println("Version:"+is.getNewVersionNumber());
-			AnonServerDBEntry[] d = is.getAvailableAnonServers();
+			AnonServer[] d = is.getAvailableAnonServers();
 			if(d!=null) {
 				for(int i=0;i<d.length;i++) {
 					is.getFeedback(d[i]);

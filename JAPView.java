@@ -32,6 +32,7 @@ import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.plaf.basic.BasicProgressBarUI;
 import anon.JAPAnonServiceListener;
+import anon.AnonServer;
 
 final class JAPView extends JFrame implements ActionListener, JAPObserver {
 
@@ -574,7 +575,7 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 	}
 
   private void updateValues() {
-		AnonServerDBEntry e = controller.getAnonServer();
+		AnonServer e = controller.getAnonServer();
 		// Config panel
 		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPView:Start updateValues");
 		m_labelProxyPort.setText(String.valueOf(JAPModel.getHttpListenerPortNumber()));

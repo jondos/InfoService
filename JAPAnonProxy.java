@@ -59,10 +59,11 @@ final class JAPAnonProxy implements Runnable
       m_Anon=AnonServiceFactory.create();
     }
 
-  public void setAnonService(String host,int port)
+  public void setAnonService(AnonServer server)
     {
-      m_AnonServer=new AnonServer(host,port);
+      m_AnonServer=server;
     }
+
   public void setFirewall(String host,int port)
     {
       ((AnonServiceImpl)m_Anon).setFirewall(host,port);

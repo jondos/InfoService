@@ -28,123 +28,191 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 package anon;
 
 import java.io.Serializable;
+import java.net.InetAddress;
+import java.net.UnknownServiceException;
+
 public final class AnonServer implements Serializable
 	{
-		private String  m_strHost  = null; //this may be the hostname or an ip string
+		private String  m_strId    = null; //the ID od this Service
+    private String  m_strHost  = null; //this may be the hostname or an ip string
 		private String  m_strIP    =null; //this MUST be an IP-String, if not null
 		private int     m_iPort  = -1;
 		private String  m_strName  = null;
 		private int     m_iProxyPort = -1;
-		private int     users = -1;
-		private int     traffic = -1;
+		private int     m_iUsers = -1;
+		private int     m_iTraffic = -1;
 		private int     m_iRisk   = -1;
 		private int     m_iAnonLevel =-1;
 		private long    m_lMixedPackets = -1;
-		private String delay  = null;
-		private String status = null;
-		//private JAPAnonService service = null;
+		private String  m_strDelay  = null;
+		private String  m_strStatus = null;
 
-		public AnonServer (String host, int port)
+		public AnonServer (String host, int port) throws UnknownServiceException
 			{
-				this(null,host,null,port,-1);
+				this(null,null,host,null,port,-1);
 			}
 
-		public AnonServer (String name,String host, int port)
+		public AnonServer (String name,String host, int port) throws UnknownServiceException
 			{
-				this(name,host,null,port,-1);
+				this(null,name,host,null,port,-1);
 			}
 
-		public AnonServer (String name,String host,String strip, int port, int proxyport)
+		public AnonServer (String id,String name,String host,String strip, int port, int proxyport) throws UnknownServiceException
 			{
-				if(name==null)
-				  m_strName = host+":"+Integer.toString(port);
-				m_strName = name;
-				m_strHost = host;
-				m_strIP=strip;
-				if(m_strIP!=null&&m_strIP.trim().equals(""))
-					m_strIP=null;
-				m_iPort = port;
-				m_iProxyPort = proxyport;
-
+        if(host==null||(port==-1&&proxyport==-1))
+          throw new UnknownServiceException("Wrong AnonService Info");
+        if(port==-1)
+          port=proxyport;
+        try
+          {
+            if(name==null)
+              m_strName = host+":"+Integer.toString(port);
+            else
+              m_strName = name;
+            m_strHost = host;
+            m_strIP=strip;
+            if(m_strIP!=null&&m_strIP.trim().equals(""))
+              m_strIP=null;
+            m_iPort = port;
+            m_iProxyPort = proxyport;
+            if(id==null)
+              {
+                if(m_strIP==null) //try to get it from host
+                  {
+                    byte[] addr=null;
+                    addr=InetAddress.getByName(m_strHost).getAddress();
+                    String tmp=Integer.toString((int)addr[0]&0xFF)+"."+
+                                              Integer.toString((int)addr[1]&0xFF)+"."+
+                                              Integer.toString((int)addr[2]&0xFF)+"."+
+                                              Integer.toString((int)addr[3]&0xFF);
+                    m_strId=tmp+"%3A"+Integer.toString(m_iPort);
+                  }
+                else
+                  m_strId=m_strIP+"%3A"+Integer.toString(m_iPort);
+              }
+            else
+              m_strId=id;
+          }
+        catch(Exception e)
+          {
+            throw new UnknownServiceException("Wrong AnonService Info "+e.getMessage());
+          }
 			}
 
 		public boolean equals(AnonServer e) //TODO: Buggy!
 			{
-		    if( m_strHost.equalsIgnoreCase(e.getHost()) &&
-					  m_iPort == e.getPort() &&
-					  m_iProxyPort == e.getSSLPort())
-						return true;
-			  return false;
+        if(e==null)
+          return false;
+        return m_strId.equals(e.getID());
 		  }
 
-		public String getName() {
-				return m_strName;
-		}
-		public void setName(String m_strName) {
-				this.m_strName=m_strName;
-		}
-		public int getPort() {
+    public String getID()
+      {
+        return m_strId;
+      }
+
+    public String getName()
+      {
+        return m_strName;
+		  }
+
+    /*public void setName(String m_strName)
+      {
+				m_strName=m_strName;
+      }*/
+
+    public int getPort()
+      {
 				return m_iPort;
-		}
-		public String getHost(){
+		  }
+
+    public String getHost()
+      {
 				return m_strHost;
-		}
+		  }
 
 		public String getIP()
 			{
 				return m_strIP;
 			}
 
-		public int getSSLPort() {
+		public int getSSLPort()
+      {
 				return m_iProxyPort;
-		}
-		public int getNrOfActiveUsers() {
-				return users;
-		}
-		public void setNrOfActiveUsers(int users) {
-				this.users=users;
-		}
-		public int getTrafficSituation() {
-				return traffic;
-		}
-		public void setTrafficSituation(int traffic) {
-				this.traffic=traffic;
-		}
-		public int getAnonLevel() {
-				return m_iAnonLevel;
-		}
-		public void setAnonLevel(int iAnonLevel) {
-				m_iAnonLevel=iAnonLevel;
-		}
+		  }
 
-		public int getCurrentRisk() {
+    public int getNrOfActiveUsers()
+      {
+			  return m_iUsers;
+		  }
+
+    public void setNrOfActiveUsers(int users)
+      {
+				m_iUsers=users;
+		  }
+
+    public int getTrafficSituation()
+      {
+				return m_iTraffic;
+		  }
+
+		public void setTrafficSituation(int traffic)
+      {
+				m_iTraffic=traffic;
+		  }
+
+    public int getAnonLevel()
+      {
+				return m_iAnonLevel;
+		  }
+
+    public void setAnonLevel(int iAnonLevel)
+      {
+				m_iAnonLevel=iAnonLevel;
+		  }
+
+		public int getCurrentRisk()
+      {
 				return m_iRisk;
-		}
-		public void setCurrentRisk(int risk) {
+		  }
+
+    public void setCurrentRisk(int risk)
+      {
 				m_iRisk=risk;
-		}
-		public long getMixedPackets() {
+		  }
+
+    public long getMixedPackets()
+      {
 				return m_lMixedPackets;
-		}
-		public void setMixedPackets(int m_lMixedPackets) {
-				this.m_lMixedPackets=m_lMixedPackets;
-		}
-		public String getDelay() {
-				return delay;
-		}
-		public void setDelay(String delay) {
-				this.delay=delay;
-		}
-		public String getStatus() {
-				return status;
-		}
-		public void setStatus(String status) {
-				this.status=status;
-		}
-/*		public JAPAnonService getAnonService() {
-				return service;
-		}
-		public void setAnonService(JAPAnonService service) {
-				this.service=service;
-		}*/
+		  }
+
+    public void setMixedPackets(int m_lMixedPackets)
+      {
+				m_lMixedPackets=m_lMixedPackets;
+		  }
+
+    public String getDelay()
+      {
+				return m_strDelay;
+		  }
+
+    public void setDelay(String delay)
+      {
+				m_strDelay=delay;
+		  }
+
+		public String getStatus()
+      {
+				return m_strStatus;
+		  }
+
+		public void setStatus(String status)
+      {
+				m_strStatus=status;
+		  }
+
+    public String toString()
+      {
+        return m_strName;
+      }
 	}

@@ -28,50 +28,50 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 
 import java.util.Vector;
 import java.util.Enumeration;
+import anon.AnonServer;
 final public class JAPAnonServerDB
-{
-	private Vector m_Entries;
-
-  public JAPAnonServerDB()
   {
-		m_Entries=new Vector();
+    private Vector m_Entries;
+
+    public JAPAnonServerDB()
+      {
+        m_Entries=new Vector();
+      }
+
+    public void addEntry(AnonServer entry)
+      {
+        String name=entry.getName();
+        if(!m_Entries.isEmpty())
+          {
+            for(int i=0;i<m_Entries.size();i++)
+              {
+                if(((AnonServer)m_Entries.elementAt(i)).getName().compareTo(name)>0)
+                  {
+                    m_Entries.insertElementAt(entry,i);
+                    return;
+                  }
+              }
+          }
+        m_Entries.addElement(entry);
+      }
+
+    public Enumeration elements()
+      {
+        return m_Entries.elements();
+      }
+
+    public int size()
+      {
+        return m_Entries.size();
+      }
+
+    public void clean()
+      {
+        m_Entries.removeAllElements();
+      }
+
+    public AnonServer getEntry(int i)
+      {
+        return (AnonServer)m_Entries.elementAt(i);
+      }
   }
-
-	public void addEntry(AnonServerDBEntry entry)
-		{
-			String name=entry.getName();
-			if(!m_Entries.isEmpty())
-				{
-					for(int i=0;i<m_Entries.size();i++)
-						{
-							if(((AnonServerDBEntry)m_Entries.elementAt(i)).getName().compareTo(name)>0)
-								{
-									m_Entries.insertElementAt(entry,i);
-									return;
-								}
-						}
-				}
-			m_Entries.addElement(entry);
-		}
-
-	public Enumeration elements()
-		{
-			return m_Entries.elements();
-		}
-
-	public int size()
-		{
-			return m_Entries.size();
-		}
-
-	public void clean()
-		{
-			m_Entries.removeAllElements();
-		}
-
-	public AnonServerDBEntry getEntry(int i)
-		{
-			return (AnonServerDBEntry)m_Entries.elementAt(i);
-		}
-
-}

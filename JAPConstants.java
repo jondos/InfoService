@@ -27,7 +27,7 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 */
 
 public final class JAPConstants {
-	static final String aktVersion = "00.01.052"; //Never change the layout of this line!
+	static final String aktVersion = "00.01.054"; //Never change the layout of this line!
 	//static final String buildDate=".."
 	//static final String buildType="..."
         //needed for update.JAPUpdate
@@ -35,6 +35,9 @@ public final class JAPConstants {
         public final static boolean m_bReleasedVersion = false;
 	static final int      defaultPortNumber            = 4001;
 	static final String   defaultAnonHost              = "mix.inf.tu-dresden.de";
+	static final String   defaultAnonIP                = "141.76.1.120"; //only used for fallback,
+                                                                      //if DNS could not get IP for
+                                                                      // defaultAnonHost
 	static final int      defaultAnonPortNumber        = 6544;
 	static final String   defaultInfoServiceHostName   = "infoservice.inf.tu-dresden.de";
 	static final int      defaultInfoServicePortNumber = 6543;
