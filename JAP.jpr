@@ -101,7 +101,6 @@
 #162=images\server16.gif
 #163=images\splash.gif
 #164=images\west.gif
-#165=gui\JAPMultilineLabel.java
 build[0].CopyExtensions.1=html
 debug.0[0].SmartStepRedefineClasses=0
 debug.1[0].SmartStepRedefineClasses=0
@@ -418,4 +417,3 @@ sys[161].Parent=82
 sys[162].Parent=82
 sys[163].Parent=82
 sys[164].Parent=82
-sys[165].Parent=0
