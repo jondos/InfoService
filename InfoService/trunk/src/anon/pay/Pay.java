@@ -30,42 +30,30 @@ package anon.pay;
 import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.Enumeration;
-import org.bouncycastle.asn1.ASN1Sequence;
-import org.bouncycastle.asn1.ASN1TaggedObject;
-import org.bouncycastle.asn1.BERInputStream;
-import org.bouncycastle.asn1.DERInputStream;
-import org.bouncycastle.asn1.DERObjectIdentifier;
-import org.bouncycastle.asn1.DERTaggedObject;
-import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
-import org.bouncycastle.asn1.pkcs.SignedData;
-import org.bouncycastle.asn1.x509.X509CertificateStructure;
+import java.util.Vector;
+
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
+import org.bouncycastle.crypto.generators.DSAKeyPairGenerator;
+import org.bouncycastle.crypto.generators.DSAParametersGenerator;
 import org.bouncycastle.crypto.generators.RSAKeyPairGenerator;
+import org.bouncycastle.crypto.params.DSAKeyGenerationParameters;
+import org.bouncycastle.crypto.params.DSAPrivateKeyParameters;
+import org.bouncycastle.crypto.params.DSAPublicKeyParameters;
 import org.bouncycastle.crypto.params.RSAKeyGenerationParameters;
 import org.bouncycastle.crypto.params.RSAKeyParameters;
 import org.bouncycastle.crypto.params.RSAPrivateCrtKeyParameters;
-import anon.crypto.JAPCertificate;
+import org.w3c.dom.Element;
+import anon.crypto.IMyPrivateKey;
+import anon.crypto.IMyPublicKey;
 import anon.crypto.JAPSignature;
+import anon.crypto.MyDSAPrivateKey;
+import anon.crypto.MyDSAPublicKey;
 import anon.crypto.MyRSAPrivateKey;
 import anon.crypto.MyRSAPublicKey;
-import anon.crypto.MyDSAPublicKey;
-import anon.crypto.MyDSAPrivateKey;
-import anon.crypto.IMyPublicKey;
-import anon.crypto.IMyPrivateKey;
-import anon.util.XMLUtil;
-import anon.util.Base64;
-import anon.util.ResourceLoader;
-import anon.pay.xml.*;
-import org.bouncycastle.crypto.generators.DSAKeyPairGenerator;
-import org.bouncycastle.crypto.params.DSAKeyGenerationParameters;
-import org.bouncycastle.crypto.params.DSAParameters;
-import org.bouncycastle.crypto.generators.DSAParametersGenerator;
-import org.bouncycastle.crypto.params.DSAPublicKeyParameters;
-import org.bouncycastle.crypto.params.DSAPrivateKeyParameters;
-
-import java.security.*;
-import java.util.Vector;
-import org.w3c.dom.Element;
+import anon.pay.xml.XMLAccountCertificate;
+import anon.pay.xml.XMLAccountInfo;
+import anon.pay.xml.XMLJapPublicKey;
+import anon.pay.xml.XMLTransCert;
 
 /**
  * This class is the high-level part of the communication with the BI.
@@ -90,6 +78,8 @@ public class Pay
 
 	/**
 	 * make default constructor private: singleton
+	 * @param thBI BI
+	 * @param accountsData Element the xml account configuration.
 	 */
 	private Pay(BI theBI, Element accountsData) throws
 		Exception
@@ -134,7 +124,7 @@ public class Pay
 		{
 			throw new Exception("Invalid Account Number: " + accountNumber);
 		}
-		BIConnection biConn = new BIConnection((BI)m_KnownBIs.elementAt(0), false /* ssl off*/);
+		BIConnection biConn = new BIConnection( (BI) m_KnownBIs.get(0), false /* ssl off*/);
 		biConn.connect();
 		biConn.authenticate(account.getAccountCertificate(), account.getSigningInstance());
 		XMLTransCert transcert = biConn.charge();
@@ -170,7 +160,7 @@ public class Pay
 		XMLAccountInfo info;
 		PayAccount account = m_AccountsFile.getAccount(accountNumber);
 
-		BIConnection biConn = new BIConnection((BI)m_KnownBIs.elementAt(0),
+		BIConnection biConn = new BIConnection( (BI) m_KnownBIs.get(0),
 											   false
 											   /* ssl off! */
 											   );
@@ -225,7 +215,7 @@ public class Pay
 		signingInstance.initSign(privKey);
 		XMLJapPublicKey xmlKey = new XMLJapPublicKey(pubKey);
 
-		BIConnection biConn = new BIConnection((BI)m_KnownBIs.elementAt(0),
+		BIConnection biConn = new BIConnection( (BI) m_KnownBIs.get(0),
 											   false
 											   /* ssl off! */
 											   );

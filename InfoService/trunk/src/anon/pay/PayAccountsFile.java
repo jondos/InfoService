@@ -32,12 +32,19 @@ import java.util.Vector;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import anon.util.XMLUtil;
 import anon.util.IXMLEncodable;
+import anon.util.XMLUtil;
 
 /**
- * This class contains the accounts configuration .
+ * This class encapsulates a collection of accounts. One of the accounts in the collection
+ * is always active, except when the collection is empty.
  *
+ * GUI classes can register a IPaymentListener with this class to be informed about all
+ * payment specific events.
+ *
+ * The class can be initialized from an
+ * XML structure and can also save all internal information in an XML structure before
+ * shutdown.
  * For saving the accounts information, the following XML structure is used:
  * <pre>
  * &lt;PayAccountsFile version="1.0"&gt;
@@ -91,14 +98,9 @@ public class PayAccountsFile implements IXMLEncodable
 
 	}
 
-
-
 	/**
-	 * Performs the initialization. If necessary, the user will be asked for a
-	 * password to decrypt the accounts data
-	 *
+	 * Performs the initialization.
 	 * @return boolean succeeded?
-	 * @todo cancel-Fall abfangen und vernuenftig behandeln (-> m_bIsEncrypted = true lassen und abbrechen)
 	 */
 	public static boolean init(Element elemAccountsFile)
 	{
@@ -146,82 +148,6 @@ public class PayAccountsFile implements IXMLEncodable
 		}
 		return true;
 	}
-
-	/**
-	 * Reads the accountsfile from disk. (Import Function)
-	 * @param fileName String
-	 */
-	/*	public void readFromFile(String fileName) throws Exception
-	 {
-	  LogHolder.log(LogLevel.DEBUG, LogType.PAY,
-	 "pay.PayAccountsFile.readFromFile: Reading PayAccounts from file " + fileName);
-	  // delete old accountdata
-	  if (m_bIsInitialized)
-	  {
-	   m_Accounts.removeAllElements();
-	   m_ActiveAccount = null;
-	  }
-
-	  // read file from disk
-	  File f = new File(fileName);
-	  FileInputStream inStream = new FileInputStream(f);
-	  m_TheDocument = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(inStream);
-	  inStream.close();
-	  m_bIsInitialized = true;
-
-	  Element elemRoot = m_TheDocument.getDocumentElement();
-	  Element elemAccountsFile = (Element) XMLUtil.getFirstChildByName(elemRoot, "PayAccountsFile");
-	  if (elemAccountsFile == null)
-	  {
-	   elemAccountsFile = (Element) XMLUtil.getFirstChildByName(elemRoot, "EncryptedData");
-	   if (elemAccountsFile == null)
-	   {
-	 throw new Exception("Wrong XML Format");
-	   }
-	   m_bIsEncrypted = true;
-	  }
-	  else
-	  {
-	   m_bIsEncrypted = false;
-	  }
-
-	  m_bFirstTime = true;
-	  doInit();
-	 }
-	 */
-	/**
-	 * Save the accountfile to disk (export function)
-	 *
-	 * @param fileName String
-	 * @param saveEncrypted boolean if true, file will be encrypted
-	 * @param password String can be null if not encrypted
-	 * @throws Exception
-	 */
-	/*	public void saveToFile(String fileName, boolean saveEncrypted, String password) throws Exception
-	 {
-	  LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Saving accountsfile to " + fileName + "...");
-	  Document doc = constructXmlDocument(saveEncrypted, password);
-
-	  // convert it to a bytearray
-	  byte[] xmlByteArray = XMLUtil.XMLDocumentToString(doc).getBytes();
-
-	  // encrypt the ByteArray using the supplied password
-	  if (saveEncrypted)
-	  {
-	   if (password == null)
-	   {
-	 throw new Exception("Cannot encrypt with null password");
-	   }
-	   // TODO: Implement encryption
-	  }
-
-	  // and finally save to disk
-	  FileOutputStream outStream = new FileOutputStream(fileName);
-	  outStream.write(xmlByteArray);
-	  outStream.flush();
-	  outStream.close();
-	  LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Saving Was successful");
-	 }*/
 
 	/**
 	 * constructs the xml structure
@@ -456,8 +382,6 @@ public class PayAccountsFile implements IXMLEncodable
 		return m_bIsInitialized;
 	}
 
-
-
 	public void addPaymentListener(IPaymentListener listener)
 	{
 		synchronized (m_paymentListeners)
@@ -469,15 +393,15 @@ public class PayAccountsFile implements IXMLEncodable
 		}
 	}
 
-/*	private void fireChangeEvent(PayAccount source)
-	{
-	}*/
+	/*	private void fireChangeEvent(PayAccount source)
+	 {
+	 }*/
 
 	private MyAccountListener m_MyChangeListener = new MyAccountListener();
 
 	/**
 	 * Listens to changes
-	 * inside the accounts and forwards the events to our changeListeners
+	 * inside the accounts and forwards the events to our paymentListeners
 	 */
 	private class MyAccountListener implements IAccountListener
 	{
@@ -493,10 +417,10 @@ public class PayAccountsFile implements IXMLEncodable
 			{
 				Enumeration enumListeners = m_paymentListeners.elements();
 				while (enumListeners.hasMoreElements())
-		{
+				{
 					( (IPaymentListener) enumListeners.nextElement()).creditChanged(m_ActiveAccount);
 				}
 			}
 		}
-		}
+	}
 }
