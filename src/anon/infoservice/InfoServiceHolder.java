@@ -29,6 +29,7 @@ package anon.infoservice;
 
 import java.util.Vector;
 import anon.crypto.JAPCertificateStore;
+import anon.crypto.JAPCertificate;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -84,6 +85,12 @@ public class InfoServiceHolder
 	 * value is null, no signature testing is done.
 	 */
 	private JAPCertificateStore m_certificateStore;
+
+	/**
+	 * Stores the certificate against the signatures of the InfoService update messages are tested. If the
+	 * value is null, no signature testing is done.
+	 */
+	private JAPCertificate m_certificateJAPInfoServiceMessages;
 
 	/**
 	 * Stores, whether there is an automatic change of infoservice after failure. If this value is
@@ -173,6 +180,22 @@ public class InfoServiceHolder
 	}
 
 	/**
+	 * Sets the certificate against the signatures of the InfoService documents which are belonging to
+	 * update information are tested. If you
+	 * supply null, no signature testing is done.
+	 *
+	 * @param a_certificate The certificate for testing the signature of Update information or null, if
+	 *                           signature testing shall be disabled.
+	 */
+	public void setUpdateMessagesCertificate(JAPCertificate a_certificate)
+	{
+		synchronized (this)
+		{
+			m_certificateJAPInfoServiceMessages = a_certificate;
+		}
+	}
+
+	/**
 	 * Returns the certificate store against the signatures of the XML documents are tested. A value
 	 * of null means that no signature testing is done.
 	 *
@@ -187,6 +210,18 @@ public class InfoServiceHolder
 			r_certificateStore = m_certificateStore;
 		}
 		return r_certificateStore;
+	}
+
+	/**
+	 * Returns the certificate against the signatures of the InfoService update documents are tested. A value
+	 * of null means that no signature testing is done.
+	 *
+	 * @return The certificate for testing the signatures or null, if signature testing is
+	 * disabled.
+	 */
+	public JAPCertificate getCertificateForUpdateMessages()
+	{
+		return this.m_certificateJAPInfoServiceMessages;
 	}
 
 	/**
