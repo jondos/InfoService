@@ -69,7 +69,7 @@ public class HTTPConnectionFactoryTest extends PrivateTestCase
 	public void testCreateHTTPConnection() throws Exception
 	{
 		ListenerInterface listener =
-			new ListenerInterface("testhost", 1000, ListenerInterface.PROTOCOL_TYPE_HTTPS);
+			new ListenerInterface("testhost", 1000, ListenerInterface.PROTOCOL_TYPE_HTTP);
 		HTTPConnection connection;
 
 		connection = HTTPConnectionFactory.getInstance().createHTTPConnection(listener);
