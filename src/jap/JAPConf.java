@@ -84,6 +84,12 @@ final class JAPConf extends JDialog
 	final static public int MISC_TAB = 6;
 	final static public int KONTO_TAB = 7;
 
+  /**
+   * This constant is a symbolic name for accessing the forwarding tab.
+   */
+  final static public int FORWARD_TAB = 8;
+
+
 	private static JAPConf japConfInstance = null;
 
 	private JAPController m_Controller;
@@ -132,6 +138,12 @@ final class JAPConf extends JDialog
 	private JSlider m_sliderDummyTrafficIntervall;
 
 	private JTabbedPane m_Tabs;
+  
+  /**
+   * Stores the index of the various tabs in the tabbed pane.
+   */
+  private Hashtable m_tabOrder;
+  
 	private JPanel m_pPort, m_pFirewall, m_pMix, m_pCert, m_pMisc;
 	private JButton m_bttnDefaultConfig, m_bttnCancel;
 
@@ -209,25 +221,36 @@ final class JAPConf extends JDialog
 			m_confModules.addElement(accountsModule);
 		}
 
+    /* create the hashtable, which stores the index of the tabs in the tabbed pane */
+    m_tabOrder = new Hashtable();
+
 		m_Tabs.addTab(JAPMessages.getString("confListenerTab"), null, m_pPort);
+    m_tabOrder.put(new Integer(PORT_TAB), new Integer(m_Tabs.getTabCount() - 1));
 		m_Tabs.addTab(JAPMessages.getString("confProxyTab"), null, m_pFirewall);
+    m_tabOrder.put(new Integer(PROXY_TAB), new Integer(m_Tabs.getTabCount() - 1));
 		m_Tabs.addTab(infoServiceModule.getTabTitle(), null, infoServiceModule.getRootPanel());
+    m_tabOrder.put(new Integer(INFO_TAB), new Integer(m_Tabs.getTabCount() - 1));
 		m_Tabs.addTab(JAPMessages.getString("confAnonTab"), null, m_pMix);
+    m_tabOrder.put(new Integer(ANON_TAB), new Integer(m_Tabs.getTabCount() - 1));
 		m_Tabs.addTab(certModule.getTabTitle(), null, certModule.getRootPanel());
+    m_tabOrder.put(new Integer(CERT_TAB), new Integer(m_Tabs.getTabCount() - 1));
 		m_Tabs.addTab(torModule.getTabTitle(), null, torModule.getRootPanel());
+    m_tabOrder.put(new Integer(TOR_TAB), new Integer(m_Tabs.getTabCount() - 1));
 		if (JAPConstants.WITH_BLOCKINGRESISTANCE)
 		{
 			m_Tabs.addTab(routingModule.getTabTitle(), null, routingModule.getRootPanel());
+      m_tabOrder.put(new Integer(FORWARD_TAB), new Integer(m_Tabs.getTabCount() - 1));
 		}
 		if (loadPay)
 		{
 			m_Tabs.addTab(accountsModule.getTabTitle(), null, accountsModule.getRootPanel());
+      m_tabOrder.put(new Integer(KONTO_TAB), new Integer(m_Tabs.getTabCount() - 1));
 		}
 
 		if (!JAPModel.isSmallDisplay())
 		{
 			m_Tabs.addTab(JAPMessages.getString("confMiscTab"), null, m_pMisc);
-
+      m_tabOrder.put(new Integer(MISC_TAB), new Integer(m_Tabs.getTabCount() - 1));
 		}
 		JPanel buttonPanel = new JPanel();
 		buttonPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
@@ -1299,32 +1322,20 @@ final class JAPConf extends JDialog
 		// ... manual settings stuff finished
 	}
 
-	public void selectCard(int selectedCard)
-	{
-		// set selected card to foreground
-		if (selectedCard == PROXY_TAB)
-		{
-			m_Tabs.setSelectedComponent(m_pFirewall);
-		}
-		else if (selectedCard == INFO_TAB)
-		{
-			m_Tabs.setSelectedIndex(INFO_TAB);
-		}
-		else if (selectedCard == ANON_TAB)
-		{
-			m_Tabs.setSelectedComponent(m_pMix);
-		}
-		else if (selectedCard == CERT_TAB)
-		{
-			m_Tabs.setSelectedComponent(m_pCert);
-		}
-		else if (selectedCard == MISC_TAB)
-		{
-			m_Tabs.setSelectedComponent(m_pMisc);
-		}
-		else
-		{
-			m_Tabs.setSelectedComponent(m_pPort);
+  /**
+   * Brings the specified card of the tabbed pane of the configuration window to the foreground.
+   * If there is no card with the specified symbolic name, nothing is done (current foreground
+   * card is not changed).
+   *
+   * @param a_selectedCard The card to bring to the foreground. See the TAB constants in this
+   *                       class.
+   */
+  public void selectCard(int a_selectedCard) {
+    /* try to get the specified card from the tab order table */
+    Integer cardIndex = (Integer)(m_tabOrder.get(new Integer(a_selectedCard)));
+    if (cardIndex != null) {
+      /* a card with the specified symoblic name is available in the hashtable */
+      m_Tabs.setSelectedIndex(cardIndex.intValue());
 		}
 	}
 
@@ -1347,13 +1358,12 @@ final class JAPConf extends JDialog
 		}
 
 		setTitle(JAPMessages.getString("settingsDialog"));
-		m_Tabs.setTitleAt(PORT_TAB, JAPMessages.getString("confListenerTab"));
-		m_Tabs.setTitleAt(PROXY_TAB, JAPMessages.getString("confProxyTab"));
-		m_Tabs.setTitleAt(INFO_TAB, JAPMessages.getString("confInfoTab"));
-		m_Tabs.setTitleAt(ANON_TAB, JAPMessages.getString("confAnonTab"));
+    m_Tabs.setTitleAt(((Integer)(m_tabOrder.get(new Integer(PORT_TAB)))).intValue(), JAPMessages.getString("confListenerTab"));
+    m_Tabs.setTitleAt(((Integer)(m_tabOrder.get(new Integer(PROXY_TAB)))).intValue(), JAPMessages.getString("confProxyTab"));
+    m_Tabs.setTitleAt(((Integer)(m_tabOrder.get(new Integer(ANON_TAB)))).intValue(), JAPMessages.getString("confAnonTab"));
 		if (!JAPModel.isSmallDisplay())
 		{
-			m_Tabs.setTitleAt(MISC_TAB, JAPMessages.getString("confMiscTab"));
+      m_Tabs.setTitleAt(((Integer)(m_tabOrder.get(new Integer(MISC_TAB)))).intValue(), JAPMessages.getString("confMiscTab"));
 		}
 		m_bttnDefaultConfig.setText(JAPMessages.getString("bttnDefaultConfig"));
 		m_bttnCancel.setText(JAPMessages.getString("cancelButton"));

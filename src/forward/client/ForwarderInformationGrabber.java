@@ -42,20 +42,56 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 
+/**
+ * This class provides some tools for the forwarding client to fetch and handle the information
+ * about a forwarder.
+ */
 public class ForwarderInformationGrabber {
-   
+  
+  /**
+   * This is the error code indicating that everything was fine.
+   */ 
   public static final int RETURN_SUCCESS = 0;
   
+  /**
+   * This is the error code indicating that there was an error while fetching the data directly
+   * from the infoservice. This can happen, if we cannot reach any infoservice or if no
+   * infoservice knows any forwarder.
+   */
   public static final int RETURN_INFOSERVICE_ERROR = 1;
   
+  /**
+   * This error code indicates, that there was an unexpected error, maybe the data fetched are
+   * in the wrong format.
+   */
   public static final int RETURN_UNKNOWN_ERROR = 2; 
   
+  /**
+   * This error occurs, if we don't know the captcha format which is used by the fetched
+   * forwarder information structure.
+   */
   public static final int RETURN_NO_CAPTCHA_IMPLEMENTATION = 3;
-   
+
+  
+  /**
+   * This stores the error (if any) which occured, while the information was fetched or parsed.
+   */
   private int m_errorCode; 
   
+  /**
+   * This stores the captcha, if we have successfully parsed the forwarder information.
+   */
   private IImageEncodedCaptcha m_captcha;
+
    
+  /**
+   * Creates a new ForwarderInformationGrabber and tries to fetch the information about a
+   * forwarder from the infoservices. Check the getErrorCode() method after the instance is
+   * constructed to see, if there occured any error. If no error occured, you can get the
+   * fetched information via the getCaptcha() method. The following error codes can occur:
+   * RETURN_SUCCESS, RETURN_INFOSERVICE_ERROR, RETURN_UNKNOWN_ERROR or
+   * RETURN_NO_CAPTCHA_IMPLEMENTATION.
+   */
   public ForwarderInformationGrabber() {
     m_captcha = null;
     Element japForwarderNode = InfoServiceHolder.getInstance().getForwarder();
@@ -81,6 +117,16 @@ public class ForwarderInformationGrabber {
     }     
   }
   
+  /**
+   * Creates a new ForwarderInformationGrabber instance and parses the supplied information
+   * structure. Check the getErrorCode() method after the instance is constructed to see, if
+   * there occured any error. If no error occured, you can get the parsed information via the
+   * getCaptcha() method. The following error codes can occur: RETURN_SUCCESS,
+   * RETURN_UNKNOWN_ERROR or RETURN_NO_CAPTCHA_IMPLEMENTATION.
+   *
+   * @param a_xmlData The XML structure with the JapForwarder node, like it is distribute from
+   *                  the infoservices with the getforwarder command.
+   */
   public ForwarderInformationGrabber(String a_xmlData) {
     m_captcha = null;
     try {
@@ -110,15 +156,43 @@ public class ForwarderInformationGrabber {
       m_errorCode = RETURN_UNKNOWN_ERROR;
     } 
   }
+
   
+  /**
+   * Returns the error code which may occured while creating this instance of
+   * ForwarderInformationGrabber. See the RETURN constants in this class.
+   *
+   * @return The error code of the constructor of this instance.
+   */
   public int getErrorCode() {
     return m_errorCode;
   }
   
+  /**
+   * Returns the structure which includes the captcha with the forwarder information. The value
+   * may be null, if there occured an error while constucting this instance of
+   * ForwarderInformationGrabber. So check getErrorCode() always first.
+   *
+   * @return The structure with the information about a forwarder, secured by a captcha.
+   */
   public IImageEncodedCaptcha getCaptcha() {
     return m_captcha;
   }
 
+  
+  /**
+   * Finds the correct captcha implementation for the supplied captcha. We use the
+   * CaptchaDataFormat node of the supplied structure to search matching local implementations.
+   *
+   * @param a_captchaEncodedNode The CaptchaEncodedNode which holds all needed information.
+   *
+   * @return RETURN_SUCCESS, if we have found a matching implementation. Also the internal
+   *                         storage of the captcha is updated.
+   *         RETURN_NO_CAPTCHA_IMPLEMENTATION, if we could not find a matching captcha
+   *                                           implementation.
+   *         RETURN_UNKNOWN_ERROR, if there occured an unexpected error, maybe because of invalid
+   *                               data in the supplied structure.
+   */ 
   private int findCaptchaImplementation(Element a_captchaEncodedNode) {
     int returnCode = RETURN_UNKNOWN_ERROR;
     /* read the captcha format */

@@ -39,7 +39,6 @@ import anon.infoservice.MixCascade;
 import anon.server.AnonServiceImpl;
 import anon.server.impl.ProxyConnection;
 import forward.ForwardUtils;
-import forward.JAPThread;
 import forward.client.ClientForwardException;
 import forward.client.DefaultClientProtocolHandler;
 import forward.client.ForwardConnectionDescriptor;
@@ -70,6 +69,41 @@ public class JAPRoutingSettings extends Observable
    * This is the mode, when we are a server and provide forwarding for other clients.
    */
   public static final int ROUTING_MODE_SERVER = 2;
+
+  /**
+   * This value means, that there were no known infoservices to register the local forwarding
+   * server.
+   */
+  public static final int REGISTRATION_NO_INFOSERVICES = 1;
+  
+  /**
+   * This value means, that there occured unknown errors while the registration of the local
+   * forwarding server at every infoservice.
+   */
+  public static final int REGISTRATION_UNKNOWN_ERRORS = 2;
+  
+  /**
+   * This value means, that we could not reach any infoservice while the registration of the
+   * local forwarding server.
+   */
+  public static final int REGISTRATION_INFOSERVICE_ERRORS = 3;
+  
+  /**
+   * This value means, that no infoservice could verify the local forwarding server.
+   */
+  public static final int REGISTRATION_VERIFY_ERRORS = 4;
+
+  /**
+   * This value means, that the registration process was interrupted.
+   */
+  public static final int REGISTRATION_INTERRUPTED = 5;
+    
+  /**
+   * This value means, that we have registrated the local forwarding server successful at least
+   * at one infoservice.
+   */
+  public static final int REGISTRATION_SUCCESS = 0;
+  
 
   /**
    * This stores the current routing mode. See the constants in this class.
@@ -135,12 +169,6 @@ public class JAPRoutingSettings extends Observable
   private int m_maxDummyTrafficInterval;
 
   /**
-   * Stores a list of infoservices (with a forwarder list), where the local forwarding server
-   * shall be registered.
-   */
-  private Vector m_infoServiceRegistration;
-
-  /**
    * Stores a list of ServerSocketPropagandists, which are currently running.
    */
   private Vector m_runningPropagandists;
@@ -151,6 +179,31 @@ public class JAPRoutingSettings extends Observable
    */
   private Thread m_startPropagandaThread;
 
+  /**
+   * Stores the instance of the connection class selector. This is only needed for some more
+   * comfort, to make it easier for a user running a forwarding server to choose the correct
+   * values for the bandwidth.
+   */
+  private JAPRoutingConnectionClassSelector m_connectionClassSelector;
+
+  /**
+   * Stores a structure, which contains information about the infoservices to register at
+   * forwarding server startup.
+   */
+  private JAPRoutingRegistrationInfoServices m_registrationInfoServicesStore;
+  
+  /**
+   * Stores, whether the propaganda for the local forwarding server is running (true) or not
+   * (false).
+   */
+  private boolean m_propagandaStarted;
+
+  /**
+   * Stores the structure, which manages the currently useable mixcascades. So the forwarding
+   * clients will always get an up-to-date list of usebale mixcascades.
+   */
+  private JAPRoutingUseableMixCascades m_useableMixCascadesStore;
+  
 
   /**
    * This creates a new instance of JAPRoutingSettings. We are doing some initialization here.
@@ -162,8 +215,10 @@ public class JAPRoutingSettings extends Observable
     m_serverPort = ( (int) (Math.round(Math.abs(Math.random() *
       ( (double) 65535 - (double) 1025 + (double) 1))))) + 1025;
     /* set default values for bandwidth, ... */
-    m_bandwidth = 4096;
-    m_maxBandwidth = 16384;
+    m_connectionClassSelector = new JAPRoutingConnectionClassSelector();
+    JAPRoutingConnectionClass currentConnectionClass = m_connectionClassSelector.getCurrentConnectionClass();
+    m_bandwidth = currentConnectionClass.getCurrentBandwidth();
+    m_maxBandwidth = currentConnectionClass.getMaximumBandwidth();
     m_connections = m_bandwidth / JAPConstants.ROUTING_BANDWIDTH_PER_USER;
     m_forwardedConnection = null;
     m_forwardInfoService = false;
@@ -172,10 +227,17 @@ public class JAPRoutingSettings extends Observable
     m_waitForShutdownCall = false;
     m_protocolHandler = null;
     m_maxDummyTrafficInterval = -1;
-    m_infoServiceRegistration = new Vector();
     m_runningPropagandists = new Vector();
     m_startPropagandaThread = null;
+    m_propagandaStarted = false;
+    m_registrationInfoServicesStore = new JAPRoutingRegistrationInfoServices();
+    /* add the registration infoservices store to the observers of JAPRoutingSettings */
+    addObserver(m_registrationInfoServicesStore);
+    m_useableMixCascadesStore = new JAPRoutingUseableMixCascades();
+    /* add the useable mixcascades store to the observers of JAPRoutingSettings */
+    addObserver(m_useableMixCascadesStore);
   }
+
 
   /**
    * Returns the current routing mode, see the constants in this class.
@@ -347,8 +409,10 @@ public class JAPRoutingSettings extends Observable
             if (success == true)
             {
               m_serverPort = a_serverPort;
-              /* start the new propaganda (the old one is stopped automatically) */
-              startPropaganda(false);
+              /* if the propaganda is running, restart it (the old one is stopped automatically) */
+              if (m_propagandaStarted == true) {
+                startPropaganda(false);
+              }
             }
             else {
               /* reopen the old port */
@@ -781,7 +845,8 @@ public class JAPRoutingSettings extends Observable
    * @param a_blocking Whether to wait until all propaganda instances are started and have tried
    *                   to connect to the infoservice (true) or return immediately (false).
    *
-   * @return Always 0 ath the moment.
+   * @return The status of the registration process. See the REGISTRATION constants in this class.
+   *         If we are not in blocking mode (a_blocking == false), always 0 is returned.
    */
   public int startPropaganda(boolean a_blocking) {
     /* create a lock for synchronizing the startPropaganda thread with the current one */
@@ -791,12 +856,12 @@ public class JAPRoutingSettings extends Observable
         /* we have to be in the server routing mode */
         /* stop the running propaganda instances */
         stopPropaganda();
-        final Vector infoServiceList = (Vector) (m_infoServiceRegistration.clone());
+        final Vector infoServiceList = getRegistrationInfoServicesStore().getRegistrationInfoServicesForStartup();
         final Vector currentPropagandists = new Vector();
         m_runningPropagandists = currentPropagandists;
-        m_startPropagandaThread = new Thread(new JAPThread() {
+        m_startPropagandaThread = new Thread(new Runnable() {
           public void run() {
-            /* this is not synchronized */
+            /* this is not synchronized with JAPRoutingSettings */
             Enumeration infoServices = infoServiceList.elements();
             boolean stopRegistration = false;
             while ((infoServices.hasMoreElements()) && (stopRegistration == false)) {
@@ -808,10 +873,15 @@ public class JAPRoutingSettings extends Observable
                    * -> stop the current one
                    */
                   currentPropagandist.stopPropaganda();
+                  masterThreadLock.registrationWasInterrupted();
                 }
                 else {
                   /* we were not interrupted -> go on */
                   currentPropagandists.addElement(currentPropagandist);
+                  masterThreadLock.updateRegistrationStatus(currentPropagandist);
+                  /* notify the observers, that there is a new propagandist */
+                  setChanged();
+                  notifyObservers(new JAPRoutingMessage(JAPRoutingMessage.PROPAGANDA_INSTANCES_ADDED, currentPropagandists.clone()));
                 }
               }
             }
@@ -820,6 +890,11 @@ public class JAPRoutingSettings extends Observable
                * no sense any more
                */
               m_startPropagandaThread = null;
+              if ((Thread.interrupted() == false) && (stopRegistration == false)) {
+                /* we can notify the observers, thate propaganda was started successfully */
+                setChanged();
+                notifyObservers(new JAPRoutingMessage(JAPRoutingMessage.START_PROPAGANDA_READY, currentPropagandists.clone()));
+              }               
             }
             /* we are at the end -> notify the master thread, if it is waiting at the lock */
             synchronized (masterThreadLock) {
@@ -829,6 +904,7 @@ public class JAPRoutingSettings extends Observable
           }
         });
         m_startPropagandaThread.setDaemon(true);
+        m_propagandaStarted = true;
         m_startPropagandaThread.start();
       }
       else {
@@ -836,6 +912,7 @@ public class JAPRoutingSettings extends Observable
         masterThreadLock.propagandaThreadIsReady();
       }
     }      
+    int registrationStatus = 0;
     synchronized (masterThreadLock) {
       if (a_blocking == true) {
         /* wait for the startPropaganda Thread */
@@ -843,13 +920,14 @@ public class JAPRoutingSettings extends Observable
           /* wait only, if it is not already at the end */
           try {
             masterThreadLock.wait();
+            registrationStatus = masterThreadLock.getRegistrationStatus();
           }
           catch (InterruptedException e) {
           }
         }
-      }
+      }     
     }
-    return 0;
+    return registrationStatus;
   }
 
   /**
@@ -873,22 +951,88 @@ public class JAPRoutingSettings extends Observable
         ((ServerSocketPropagandist)(m_runningPropagandists.firstElement())).stopPropaganda();
         m_runningPropagandists.removeElementAt(0);
       }
+      m_propagandaStarted = false;
+      /* notify the observers */
+      setChanged();
+      notifyObservers(new JAPRoutingMessage(JAPRoutingMessage.STOP_PROPAGANDA_CALLED));      
     }
   }
 
   /**
-   * Changes the infoservices, where we register the local forwarding server. We try to register
-   * at every of those infoservices. The propaganda instances are updated automatically.
+   * This method adds a new single propaganda instance for the forwarding server. It should only
+   * be called from JAPRoutingRegistrationInfoServices because the instance is only added to the
+   * temporarly propaganda instances list, which is only valid until stopPropaganda() is called.
+   * It is not added to the permanent list, which is stored in JAPRoutingRegistrationInfoServices.
+   * If the propaganda doesn't run at the moment, is stopped while the new propaganda instance is
+   * started or the server port is changed while the new propaganda instance is started, nothing
+   * is done. This method only starts a thread, which creates the propagandist and returns
+   * immediately.
    *
-   * @param a_infoServices A Vector of InfoServices with a forwarder list (to infoservices without
-   *                       a forwarder list, the connection is never successful).
+   * @param a_registrationInfoService The infoservice where the new propaganda instance tries to
+   *                                  registrate at.
    */
-  public void setRegistrationInfoServices(Vector a_infoServices) {
-    synchronized (this) {
-      m_infoServiceRegistration = a_infoServices;
-      /* update the propaganda instances */
-      startPropaganda(false);
-    }
+  public void addPropagandaInstance(final InfoService a_registrationInfoService) {
+    Thread addPropagandistThread = new Thread(new Runnable() {
+      public void run() {
+        boolean startNewPropagandist = false;
+        int serverPort = -1;
+        synchronized (JAPModel.getModel().getRoutingSettings()) {
+          /* start only, if the propaganda is running */
+          startNewPropagandist = m_propagandaStarted;
+          serverPort = m_serverPort;
+        }
+        ServerSocketPropagandist newPropagandist = null;
+        if (startNewPropagandist == true) {   
+          newPropagandist = new ServerSocketPropagandist(serverPort, a_registrationInfoService);
+          synchronized (JAPModel.getModel().getRoutingSettings()) {
+            if ((m_serverPort == serverPort) && (m_propagandaStarted == true)) {
+              /* add the new propagandist to the list and notify the observers */
+              m_runningPropagandists.addElement(newPropagandist);
+              setChanged();
+              notifyObservers(new JAPRoutingMessage(JAPRoutingMessage.PROPAGANDA_INSTANCES_ADDED, m_runningPropagandists.clone()));
+            }
+            else {
+              /* stop the new propagandist, because the environment was changed */
+              newPropagandist.stopPropaganda();
+            }
+          }
+        }
+      }
+    });
+    addPropagandistThread.setDaemon(true);
+    addPropagandistThread.start();
+  }        
+  
+  /**
+   * Returns the instance of the connection class selector of the forwarding server. This is
+   * only needed because of some comfort reasons. It makes it easier for a user to configure
+   * the correct values for the forwarding server bandwidth.
+   *
+   * @return The forwarding server connection class selector.
+   */
+  public JAPRoutingConnectionClassSelector getConnectionClassSelector() {
+    return m_connectionClassSelector;
+  }
+  
+  /**
+   * Returns the structure, where the infoservices are stored, used for registration of the
+   * local forwarding server.
+   *
+   * @return The forwarding server registration infoservices store.
+   */
+  public JAPRoutingRegistrationInfoServices getRegistrationInfoServicesStore() {
+    return m_registrationInfoServicesStore;
+  }
+
+  /**
+   * Returns the structure, which stores the currently useable mixcascades for the client
+   * connections and updates the ForwardCascadeDatabase of the forwarding server.
+   *
+   * @return The structure, which manages the currently useable mixcascades for the forwarding
+   *         server.
+   */
+  public JAPRoutingUseableMixCascades getUseableMixCascadesStore() {
+    return m_useableMixCascadesStore;
   }
 
   

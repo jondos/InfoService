@@ -32,7 +32,7 @@ import java.awt.Insets;
 import anon.tor.Circuit;
 public final class JAPConstants
 {
-	public static final String aktVersion = "00.02.092"; //Never change the layout of this line!
+	public static final String aktVersion = "00.02.093"; //Never change the layout of this line!
 	private static final String CVS_GENERATED_RELEASE_DATE = "$Date$";
 
 	//Warning: This is a little bit tricky,
@@ -176,4 +176,9 @@ public final class JAPConstants
 	 * for each user.
 	 */
 	public static final int ROUTING_BANDWIDTH_PER_USER = 2048;
+	
+	/**
+	 * This is the mailaddress of the InfoService mailgateway.
+	 */
+	public static final String MAIL_SYSTEM_ADDRESS = "japmailsystem@infoservice.inf.tu-dresden.de";
 }

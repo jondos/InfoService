@@ -29,8 +29,6 @@ package forward.server;
 
 import java.net.Socket;
 
-import forward.JAPThread;
-
 /**
  * This is the implementation of the forwarding component between client and the protocol
  * handler. The bandwidth limit is implemented here.
@@ -114,7 +112,7 @@ public class ForwardConnection {
     m_closeConnection = false;
 
     /* create the thread for the client -> server transfer direction */
-    m_clientReadThread = new Thread(new JAPThread() {
+    m_clientReadThread = new Thread(new Runnable() {
       public void run() {
         /* this is the transfer thread for the client->server direction */
         while (m_closeConnection == false) {
@@ -192,7 +190,7 @@ public class ForwardConnection {
     m_clientReadThread.setDaemon(true);
 
     /* create the thread for the server -> client transfer direction */
-    m_serverReadThread = new Thread(new JAPThread() {
+    m_serverReadThread = new Thread(new Runnable() {
       public void run() {
         /* this is the transfer thread for the server->client direction */
         while (m_closeConnection == false) {
@@ -263,7 +261,7 @@ public class ForwardConnection {
     m_serverReadThread.setDaemon(true);
     
     /* create the thread, which checks for the timeout */
-    m_timeoutThread = new Thread(new JAPThread() {
+    m_timeoutThread = new Thread(new Runnable() {
       /* this is the client connection timeout thread */
       public void run() {
         while (m_closeConnection == false) {
