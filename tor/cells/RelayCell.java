@@ -75,6 +75,11 @@ public class RelayCell extends Cell
 		return this.relayCommand;
 	}
 
+	public int getStreamID()
+	{
+		return streamID;
+	}
+
 	public void generateDigest(SHA1Digest digest)
 	{
 		if (!this.digestGenerated)
@@ -125,6 +130,10 @@ public class RelayCell extends Cell
 			relaycommand, 0x00, 0x00, }; //relaycommand + 2bytes Recognized
 		b = helper.conc(b, helper.inttobyte(streamid, 2)); //streamid
 		b = helper.conc(b, new byte[4]); //4bytes digest
+		if(data==null)
+		{
+			data=new byte[498];
+		}
 		if (data.length < 499)
 		{
 			b = helper.conc(b, helper.inttobyte(data.length, 2)); //length

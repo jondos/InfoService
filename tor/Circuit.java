@@ -44,6 +44,7 @@ public class Circuit {
 	private boolean closed;
 	private int streamIDCounter;
 	private int size;
+	private int recvCellCounter;
 
 	public Circuit(int circID,Vector orList) throws IOException
 	{
@@ -58,6 +59,7 @@ public class Circuit {
 		{
 			throw new IOException("No Onionrouters defined for this circuit");
 		}
+		recvCellCounter=50;
 	}
 
 	public void connect() throws Exception
@@ -97,7 +99,7 @@ public class Circuit {
 		this.closed = true;
 	}
 
-	public void send(Cell cell) throws Exception
+	public synchronized void send(Cell cell) throws Exception
 	{
 		if(cell instanceof RelayCell)
 		{
@@ -112,12 +114,23 @@ public class Circuit {
 	{
 		InetAddress addr = InetAddress.getByName(this.or.getDescription().getAddress());
 		int port = this.or.getDescription().getPort();
-		Cell cell = this.or.decryptCell((RelayCell)this.op.read(addr,port,this.circID));
+		RelayCell cell = this.or.decryptCell((RelayCell)this.op.read(addr,port,this.circID));
 		byte[] b=cell.getCellData();
 		String s="";
 		for(int i=0;i<b.length;i++)
 		{
 			s+=Integer.toString(b[i])+",";
+		}
+		recvCellCounter--;
+		if(recvCellCounter==0)
+		{
+			RelayCell c=new RelayCell(this.circID,cell.RELAY_SENDME,streamID,null);
+			c=or.encryptCell(c);
+			op.send(addr,port,c);
+			c=new RelayCell(this.circID,cell.RELAY_SENDME,0,null);
+			c=or.encryptCell(c);
+			op.send(addr,port,c);
+			recvCellCounter=50;
 		}
 		LogHolder.log(LogLevel.DEBUG,LogType.MISC,"Circuit read() Tor Cell data gelesen: "+s);
 		return cell;
