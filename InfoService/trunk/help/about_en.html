@@ -1,0 +1,82 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="GENERATOR" content="Mozilla/4.72 [en] (WinNT; I) [Netscape]">
+   <title>About Java Anon Proxy</title>
+<!-- saved from url=(0022)http://internet.e-mail -->
+<link HREF="xhelpfrms.css" REL="stylesheet" TITLE="css" TYPE="text/css">
+</head>
+<body bgcolor="#FFFFFF">
+
+<h2>
+<a href="index_en.html"><img SRC="japback.gif" BORDER=0 height=50 width=65 align=CENTER></a>About
+Java Anon Proxy</h2>
+<b>The Java Anon Proxy (JAP)</b>
+<p>The Java Anon Proxy (JAP) provides the possibility to surf the web without
+being observed. This means that neither the requested server nor any observer
+on the lines get to know which user has viewed which web page.
+<p>The JAP has to be installed on the internet user's computer to allow
+them to surf the internet anonymously and without being observed. This
+is necessary because for the purpose of anononymization all requests and
+also the servers' answers have to be anonymized.
+<p>This function is achieved by sending the communication connection not
+directly to the web server but via a so-called Mix Proxy Cascade. These
+are interposed stations via which all messages are directed.
+<p>Since many users make use of the anon service at the same time, the
+internet connections of each user are hidden between those of all the other
+users: Every user could have been responsible for any connection. Nobody,
+no outstanding person, no other user, not even the operator of the anon
+service can determine which internet connections were requested by a certain
+user.
+<p><b>The anon service</b>
+<p>In general, at least three mix proxies will work at an anon service,
+each of them being operated by an independent institution that has declared
+in a self-obligation statement to neither store log files of the transported
+connections nor exchange sensitive data with the other mix proxy operators.
+<p>However, since none of the interposed stations shall be trusted completely,
+all data to be sent are going to be encrypted several times (once per station).
+<p>The encryption of the requests and the Decipherment of the answers take
+place in the JAP. The user only has to <a href="config_en.html">configure</a>
+their browser in a way that all WWW requests are directed via the JAP.
+<p>The users' anonymization takes place by sending each request in multiply
+encrypted form via a series of in-between stations based on the mix concept
+of David Chaum. Since all users' behavior is the same in the final version
+(sending the same amount of data per time unit via the same series of mixes)
+and assuming that at least one mix is not cooperating with a global attacker,
+a single user's actions can no longer be reconstructed.
+<p>It is our aim to provide a service that really satisfies these demands.
+<p><b>Attention!</b> The current version does not reach this security level,
+because the software is still in the state of development! However, this
+version guarantees a much higher security standard than e.g. systems that
+work as simple proxy servers.
+<p>The given version provides user anonymity protection at least against
+local attackers (e.g. the provider, web server, the boss). In addition,
+it provides protection against us - the mix operators. Dependent on what
+mix we operate, we can only receive information on which participant (IP
+address) uses the service or which requests have been sent to the web,
+but no combination of these two possibilities.
+<p>The current version does not provide protection against attackers who
+observe all internet lines or the first and the last mix, respectively.
+<p>For the following reasons we want to offer the system already now:
+<ul>
+<li>
+We have to gather experience with a running system to get to know still
+included mistakes and problems in practice and to be able to overcome them.</li>
+
+<li>
+For being able to offer a secure service, we need a large and stabile anonymity
+group from the beginning. We hope to gain such a group already now and
+to be able to hold it during the time of further development.</li>
+</ul>
+For achieving this aim, we need your help. We would be very graceful if
+you would use the anon service permanently and tell us about your problems,
+opinions, and suggestions.
+<p>You can contact us at <b>jap@inf.tu-dresden.de</b>.
+<p>For further information please view our project web site:
+<br><b>http://anon.inf.tu-dresden.de/</b>
+<p><a href="index_en.html"><img SRC="back.gif" BORDER=0 height=21 width=65 align=CENTER></a>
+<br><img SRC="bl.gif" BORDER=0 height=1 width=200>
+<br>&copy; 2001 JAP Team
+</body>
+</html>

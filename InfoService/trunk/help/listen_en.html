@@ -1,0 +1,60 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="GENERATOR" content="Mozilla/4.72 [en] (WinNT; I) [Netscape]">
+   <title>Konfiguration: Listener-Portnummer</title>
+<link HREF="xhelpfrms.css" REL="stylesheet" TITLE="css" TYPE="text/css">
+</head>
+<body bgcolor="#FFFFFF">
+
+<h2>
+<a href="config_en.html"><img SRC="japback.gif" BORDER=0 height=50 width=65 align=CENTER></a>
+Listener Port Number</h2>
+To make sure that the JAP is able to anonymize the communication with the
+internet, it has to be interposed between the browser and the server in
+the internet. Such an in-between station is generally called proxy. Most
+applications that communicate with the internet can direct their connections
+via such a proxy. The necessary statements for this are: The name of the
+computer (host) on which the proxy is operated, and the port number via
+which the proxy receives requests. The default port number of the JAP is
+4001. This configuration can be stuck to in nearly all cases.
+<p><b>Essential configurations at the web browser</b>
+<p>For making sure that your web browser sends its requests to the web
+actually via the JAP, you have to configure it in a way that it uses the
+JAP as a proxy. Generally, you use the following procedure:
+<p>&nbsp;&nbsp;&nbsp; 1.&nbsp;&nbsp;&nbsp; Identify the proxy configuration
+in the browser settings.
+<br>&nbsp;&nbsp;&nbsp; 2.&nbsp;&nbsp;&nbsp; Activate the proxy modus (use
+proxy server).
+<br>&nbsp;&nbsp;&nbsp; 3.&nbsp;&nbsp;&nbsp; Enter <b>127.0.0.1</b>&nbsp;
+into the field Host, and then enter the port number configured in the JAP
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (Standard:
+<b>4001</b>) into the field Port.
+<p>Further support concerning the necessary <a href="browser_en.html">Settings
+of the Internet Explorer and the Netscape Navigator.</a>
+<p><b>Changing the port number in the JAP</b>
+<p>In very rare cases it can become necessary to change the port number,
+e.g. if the default port is already being used by another application in
+your system. On the register card C<i>onfiguration</i> the current port
+number of the JAP is being displayed in the top frame, which is called
+<i>Listener
+Port Number</i>. Below this, the current status of usage is being displayed.
+If the port is actually in use, the display shows
+<b>Status: activ</b>.
+<p>For changing the port number, proceed as follows:
+<p>&nbsp;&nbsp;&nbsp; 1.&nbsp;&nbsp;&nbsp; Click <b>Settings</b> next to
+the port number display.
+<br>&nbsp;&nbsp;&nbsp; 2.&nbsp;&nbsp;&nbsp; Enter the desired port number.
+<br>&nbsp;&nbsp;&nbsp; 3.&nbsp;&nbsp;&nbsp; Click <b>OK</b>.
+<br>&nbsp;&nbsp;&nbsp; 4.&nbsp;&nbsp;&nbsp; Check if the desired port number
+can be used (<b>Status: aktiv</b> must be displayed).
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; If this
+is not the case, try another port number.
+<br>&nbsp;&nbsp;&nbsp; 5.&nbsp;&nbsp;&nbsp; Change the configurations of
+your web browser respectively.
+<p><a href="config_en.html"><img SRC="back.gif" BORDER=0 height=21 width=65 align=CENTER></a>
+<br><img SRC="bl.gif" BORDER=0 height=1 width=200>
+<br>&copy; 2001 JAP Team
+</body>
+</html>
