@@ -51,8 +51,8 @@ public class DHE_RSA_WITH_3DES_CBC_SHA extends CipherSuite {
 		m_writesequenznumber++;
 		//TODO : zuf?lliges padding hinzuf?gen
 		//add padding as described in RFC2246 (6.2.3.2)
-		int paddingsize=m_encryptcipher.getBlockSize()-((msg.m_dataLen)%m_encryptcipher.getBlockSize());
-		for(int i=0;i<paddingsize;i++)
+		int paddingsize=m_encryptcipher.getBlockSize()-((msg.m_dataLen+1)%m_encryptcipher.getBlockSize());
+		for(int i=0;i<paddingsize+1;i++)
 		{
 			msg.m_Data[msg.m_dataLen++] = (byte)paddingsize;
 		}
@@ -75,15 +75,16 @@ public class DHE_RSA_WITH_3DES_CBC_SHA extends CipherSuite {
 			m_decryptcipher.processBlock(msg.m_Data,i,msg.m_Data,i);
 		}
 		//remove padding and mac
-		int len=msg.m_dataLen-21;
-		len-=msg.m_Data[len-1];//padding
+		HMac hmac = new HMac(new SHA1Digest());
+		int len=msg.m_dataLen-hmac.getMacSize()-1;
+		len-=msg.m_Data[msg.m_dataLen-1];//padding
+		msg.setLength(len);
 
 		//TODO :auf richtiges padding vergleichen
 
-		HMac hmac = new HMac(new SHA1Digest());
 		hmac.reset();
 		hmac.init(new KeyParameter(m_servermacsecret));
-		hmac.update(helper.inttobyte(this.m_readsequenznumber,8),0,8);
+		hmac.update(helper.inttobyte(m_readsequenznumber,8),0,8);
 		hmac.update(msg.m_Header,0,msg.m_Header.length);
 		hmac.update(msg.m_Data,0,len);
 		byte[] mac = new byte[hmac.getMacSize()];
@@ -97,7 +98,6 @@ public class DHE_RSA_WITH_3DES_CBC_SHA extends CipherSuite {
 				throw new TLSException("Wrong MAC detected!!!");
 			}
 		}
-		msg.setLength(len);
 	}
 
 	/**
