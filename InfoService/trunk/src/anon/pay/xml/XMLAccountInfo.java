@@ -210,6 +210,16 @@ public class XMLAccountInfo implements IXMLEncodable //extends XMLDocument
 	}
 
 	/**
+	 * Returns an enumeration of all the available cost confirmations for
+	 * this account.
+	 * @return Enumeration
+	 */
+	public Enumeration getCCs()
+	{
+		return m_costConfirmations.elements();
+	}
+
+	/**
 	 * setBalance
 	 *
 	 * @param b1 XMLBalance

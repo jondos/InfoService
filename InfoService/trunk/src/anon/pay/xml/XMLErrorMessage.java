@@ -24,6 +24,7 @@ public class XMLErrorMessage implements IXMLEncodable
 	public static final int ERR_NO_ACCOUNTCERT = 7;
 	public static final int ERR_NO_BALANCE = 8;
 	public static final int ERR_NO_CONFIRMATION = 9;
+	public static final int ERR_ACCOUNT_EMPTY = 10;
 
 	private int m_iErrorCode;
 	private String m_strErrMsg;
@@ -33,7 +34,8 @@ public class XMLErrorMessage implements IXMLEncodable
 		{
 		"Success", "Internal Server Error",
 		"Wrong format", "Wrong Data", "Key not found", "Bad Signature", "Bad request",
-		"No account certificate", "No balance", "No cost confirmation"
+		"No account certificate", "No balance", "No cost confirmation",
+		"Account is empty"
 	};
 
 	public static final String XML_ELEMENT_NAME = "ErrorMessage";

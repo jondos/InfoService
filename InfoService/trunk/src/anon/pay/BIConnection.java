@@ -65,15 +65,11 @@ public class BIConnection
 	 * Constructor
 	 *
 	 * @param BI the BI to which we connect
-	 * @param sslOn if true, SSL encryption is used
 	 */
-	public BIConnection(BI theBI,
-						boolean sslOn
-						/*						XMLAccountCertificate accountCert,
-						MyRSAPrivateKey privKey*/
-						)
+	public BIConnection(BI theBI, boolean sslOn)
 	{
 		m_theBI = theBI;
+		m_bIsSslOn = sslOn;
 	}
 
 	/**
@@ -109,40 +105,28 @@ public class BIConnection
 	}
 
 	/**
-	 * Fordert eine Transaktionsnummer bei der BI an.
-	 * Fuehrt erst die Challenge-Response-Authentikation durch und
-	 * fordert dann ein Transaktionsnummer-Zertifikat bei der BI an.
-	 * Die Signatur wird gepr\uFFFDft und bei ung\uFFFDltiger Signatur wird eine
-	 * Exception geworfen.
-	 * Vorher muss {@link connect()} aufgerufen werden.
-	 *
-	 * @param accountcert XMLAccountCertificate Kontozertifikat f\uFFFDr die Anmeldung
-	 * @param privKey MyRSAPrivateKey PrivateKey f\uFFFDr Challenge-Response
-	 * @throws Exception bei ung\uFFFDltiger Signatur oder anderen IO-Fehlern
-	 * @return XMLTransCert das Zertifikat mit der neuen Transaktionsnummer
+	 * Fetches a transfer certificate from the BI.
+	 * @return XMLTransCert the transfer certificate
 	 */
 	public XMLTransCert charge() throws Exception
 	{
 		m_httpClient.writeRequest("GET", "charge", null);
 		String answer = m_httpClient.readAnswer();
 		XMLTransCert xmltrcert = new XMLTransCert(answer);
-		if (xmltrcert.verifySignature(m_theBI.getVerifier()))
+		if (xmltrcert.verifySignature(m_theBI.getVerifier())==true)
 		{
 			return xmltrcert;
 		}
 		else
 		{
-			throw new Exception("invalid signature");
+			throw new Exception("The BI's signature under the transfer certificate is invalid");
 		}
 	}
 
 	/**
-	 * Fordert einen Kontoauszug bei der BI an.
-	 *
-	 *
-	 * @param accountcert Kontozertifikat
-	 * @param privKey geheimer Schl?ssel des Kontos
-	 * @return Guthaben und Kostenbest?tigungen (in XMLBalConf gekapselt)
+	 * Fetches an account statement (balance cert. + costconfirmations)
+	 * from the BI.
+	 * @return the statement in XMLAccountInfo format
 	 * @throws IOException
 	 */
 	public XMLAccountInfo getAccountInfo() throws Exception
@@ -156,11 +140,12 @@ public class BIConnection
 		XMLBalance bal = info.getBalance();
 		if (m_theBI.getVerifier().verifyXML(XMLUtil.toXMLDocument(bal)) == false)
 		{
-			throw new Exception("Invalid Signature");
+			throw new Exception("The BI's signature under the balance certificate is Invalid!");
 		}
 		return info;
 	}
 
+	/** performs challenge-response authentication */
 	public void authenticate(XMLAccountCertificate accountCert, JAPSignature signer) throws Exception
 	{
 		if (accountCert.isSigned() == false)
@@ -182,51 +167,6 @@ public class BIConnection
 		answer = m_httpClient.readAnswer();
 	}
 
-	/*
-	 public AICert connectAI(long accountNumber,RSAKeyParameters pubKey) throws Exception
-	  {
-	  try{
-	  AIHello xmlhello = new AIHello(accountNumber, new XMLJapPublicKey(pubKey));
-	   //PrintWriter pw = new PrintWriter(socket.getOutputStream());
-	 //pw.print(pay.test.PayAITest.head+"hello"); pw.flush();
-	  //httpClient.writeRequest("GET","hello","");//xmlhello.getXMLString(true));
-	  //String answer = httpClient.readAnswer();
-	  }
-	  catch(Exception ex){
-	   System.out.println("PayInstance: Fehler in connectAI");
-	  }
-
-	 XMLChallenge xmlchallenge=new XMLChallenge(answer);
-	 byte[] challenge = xmlchallenge.getChallenge();
-
-	 Signer signer = new Signer();
-	 signer.init(true, privKey);
-	 signer.update(challenge);
-	 byte[] sig = signer.generateSignature();
-
-	 XMLResponse xmlResponse = new XMLResponse(sig);
-	 String response = xmlResponse.getXMLString(true);
-
-	 httpClient.writeRequest("POST","response",response);
-	 answer = httpClient.readAnswer();
-
-	 RootCertificates rootCerts = new RootCertificates();
-	 rootCerts.init();
-	 RSAKeyParameters testkey = rootCerts.getPublicKey("test server");
-
-	 XMLCertificate xmlCert = new XMLCertificate(answer);
-	 XMLSignature xmlSig = new XMLSignature(answer.getBytes());
-	 xmlSig.initVerify(testkey);
-	 if (xmlSig.verifyXML()&&
-	  xmlCert.getPublicKey().getModulus().equals(pubKey.getModulus())&&
-	  xmlCert.getPublicKey().getPublicExponent().equals(pubKey.getExponent()))
-	 {
-	   return xmlCert;
-	 }
-	 else throw new Exception("wrong signatur on accountcertificate or wrong key");
-	  return new AICert();
-	  }
-	 */
 
 	/**
 	 * Registers a new account using the specified keypair.

@@ -233,18 +233,13 @@ public final class ClassUtil
 		try
 		{
 			classDirectory = Class.forName(a_rootClass.getName()).getResource(classResource).toString();
-			classDirectory = URLDecoder.decode(classDirectory, "UTF-8");
+			classDirectory = URLDecoder.decode(classDirectory);
 		}
 		catch (ClassNotFoundException a_e)
 		{
 			// not possible, this class DOES exist
 			classDirectory = null;
 		}
-        catch (UnsupportedEncodingException a_e)
-        {
-          // should not happen
-          classDirectory = null;
-        }
 
 		// check whether it is a jar file or a directory
 		if (classDirectory.startsWith(JAR_FILE))

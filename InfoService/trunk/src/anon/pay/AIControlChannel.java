@@ -13,6 +13,7 @@ import logging.LogType;
 import anon.pay.xml.*;
 import anon.util.*;
 import java.sql.*;
+import java.util.*;
 
 /**
  * This control channel is used for communication with the AI (AccountingInstance or
@@ -114,8 +115,46 @@ public class AIControlChannel extends SyncControlChannel
 		{
 			try
 			{
-				PayAccount currentAccount = PayAccountsFile.getInstance().getAccount(cc.getAccountNumber());
+				// fetch new balance asynchronously
+				LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Fetching new Balance from BI asynchronously");
+				new Thread(new Runnable()
+				{
+					public void run()
+					{
+						PayAccount currentAccount = PayAccountsFile.getInstance().getActiveAccount();
+						try
+						{
+							currentAccount.fetchAccountInfo();
+						}
+						catch (Exception ex)
+						{
+							LogHolder.log(LogLevel.DEBUG, LogType.PAY, ex);
+						}
+					}
+				}).start();
+
+
+				PayAccount currentAccount = PayAccountsFile.getInstance().getActiveAccount();
+				if( (currentAccount==null) || (currentAccount.getAccountNumber()!=cc.getAccountNumber()))
+				{
+					throw new Exception("Received CC with Wrong accountnumber");
+				}
+
 				long newBytes = currentAccount.updateCurrentBytes(m_MuxSocket);
+
+
+	// calculate number of bytes transferred with other cascades
+/*				long transferredWithOtherCascades = 0;
+				XMLAccountInfo info = currentAccount.getAccountInfo();
+				if(info!=null)
+				{
+					Enumeration enu=info.getCCs();
+					while(enu.hasMoreElements())
+					{
+						transferredWithOtherCascades +=
+							((XMLEasyCC)enu.nextElement()).getTransferredBytes();
+					}
+				}*/
 				if ( (newBytes + currentAccount.getSpent()) < cc.getTransferredBytes())
 				{
 					// the AI wants us to sign an unrealistic number of bytes
@@ -130,6 +169,7 @@ public class AIControlChannel extends SyncControlChannel
 			{
 				// the account stated by the AI does not exist or is not currently active
 				// @todo handle this exception
+				LogHolder.log(LogLevel.ERR, LogType.PAY, ex1);
 			}
 		}
 		Timestamp t = request.getBalanceTimestamp();

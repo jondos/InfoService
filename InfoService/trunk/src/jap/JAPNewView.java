@@ -429,18 +429,30 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		{
 			m_flippingPanelPayment = new FlippingPanel(this);
 
-			m_flippingPanelPayment.setFullPanel(new jap.PaymentMainPanel());
+			m_flippingPanelPayment.setFullPanel(new PaymentMainPanel(this));
 
 			gbl1 = new GridBagLayout();
 			c1 = new GridBagConstraints();
 			p = new JPanel(gbl1);
+
+
+	// PAYMENT
 			/** @todo internationalize */
-			m_labelPayment = new JLabel("Payment");
+			m_labelPayment = new JLabel(JAPMessages.getString("ngPayment"));
+			// m_labelPayment.setBorder(new BevelBorder(BevelBorder.RAISED));
+			m_labelPayment.setHorizontalAlignment(SwingConstants.LEFT);
 			c1.insets = new Insets(0, 5, 0, 0);
 			c1.weightx = 0;
 			c1.anchor = GridBagConstraints.WEST;
-			c1.fill = GridBagConstraints.HORIZONTAL;
+			c1.fill = GridBagConstraints.NONE;
 			p.add(m_labelPayment, c1);
+
+			//	c1.insets = new Insets(0, 2, 0, 0);
+			c1.weightx = 1;
+			c1.anchor = GridBagConstraints.EAST;
+			c1.fill = GridBagConstraints.HORIZONTAL;
+			JLabel labelFill = new JLabel();
+			p.add(labelFill, c1);
 			m_flippingPanelPayment.setSmallPanel(p);
 
 			c.fill = GridBagConstraints.HORIZONTAL;
@@ -449,6 +461,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			c.gridy = 6;
 			m_flippingPanelPayment.setFlipped(false);
 			northPanel.add(m_flippingPanelPayment, c);
+//-----------------------------------------------------------
+			// Separator
 			c.gridwidth = 2;
 			c.gridx = 0;
 			c.gridy = 7;
@@ -1264,6 +1278,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_labelOwnTrafficWWW.setText(JAPMessages.getString("ngOwnTrafficWWW"));
 		m_labelOwnTrafficOther.setText(JAPMessages.getString("ngOwnTrafficOther"));
 
+		m_labelPayment.setText(JAPMessages.getString("ngPayment"));
+
 		//m_labelMeterDetailsName.setText(JAPMessages.getString("meterDetailsName") + " ");
 		//m_labelAnonymityUser.setText(JAPMessages.getString("meterDetailsUsers") + " ");
 		//m_labelMeterDetailsTraffic.setText(JAPMessages.getString("meterDetailsTraffic") + " ");
@@ -1421,7 +1437,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		showConfigDialog(null);
 	}
 
-	private void showConfigDialog(String card)
+	protected void showConfigDialog(String card)
 	{
 		if (m_dlgConfig == null)
 		{

@@ -35,6 +35,8 @@ import anon.crypto.JAPSignature;
  */
 public interface IXMLSignable extends IXMLEncodable
 {
+	public static final String SIG_ELEMENT_NAME="Signature";
+
 	/**
 	 * Returns true if the structure is already signed. Does not check the
 	 * validity of the signature

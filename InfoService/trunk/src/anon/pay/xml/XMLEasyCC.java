@@ -87,7 +87,7 @@ public class XMLEasyCC extends AbstractXMLSignable
 
 	public XMLEasyCC(String xml) throws Exception
 	{
-		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(xml);
+		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(xml.getBytes()));
 		setValues(doc.getDocumentElement());
 	}
 
@@ -105,11 +105,27 @@ public class XMLEasyCC extends AbstractXMLSignable
 		}
 
 		Element elem = (Element) XMLUtil.getFirstChildByName(element, "AiID");
-		m_strAiName = XMLUtil.parseNodeString(elem, "");
+		if (elem == null)
+		{
+			m_strAiName = "keinplan1";
+		}
+		else
+		{
+			m_strAiName = XMLUtil.parseValue(elem, "keinplan2");
+		}
 		elem = (Element) XMLUtil.getFirstChildByName(element, "AccountNumber");
 		m_lAccountNumber = XMLUtil.parseNodeLong(elem, 0);
 		elem = (Element) XMLUtil.getFirstChildByName(element, "TransferredBytes");
 		m_lTransferredBytes = XMLUtil.parseNodeLong(elem, 0);
+
+		/** @todo find a better internal representation for the sig */
+		elem = (Element) XMLUtil.getFirstChildByName(element, "Signature");
+		if (elem != null)
+		{
+			m_signature = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+			Element elemSig = (Element) XMLUtil.importNode(m_signature, elem, true);
+			m_signature.appendChild(elemSig);
+		}
 	}
 
 	public Element toXmlElement(Document a_doc)
@@ -127,10 +143,22 @@ public class XMLEasyCC extends AbstractXMLSignable
 		elem = a_doc.createElement("AccountNumber");
 		XMLUtil.setNodeValue(elem, Long.toString(m_lAccountNumber));
 		elemRoot.appendChild(elem);
+
+		if (m_signature != null)
+		{
+			try
+			{
+				elemRoot.appendChild(XMLUtil.importNode(a_doc, m_signature.getDocumentElement(), true));
+			}
+			catch (Exception ex2)
+			{
+				return null;
+			}
+		}
 		return elemRoot;
 	}
 
-	//~ Methods ****************************************************************
+//~ Methods ****************************************************************
 
 	public String getAIName()
 	{
