@@ -31,30 +31,40 @@ package anon.crypto;
  * If you change something - do not forget to add the changes also to the JAP source tree!
  */
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.math.BigInteger;
-import java.security.PrivateKey;
-import java.security.interfaces.DSAPrivateKey;
+import java.io.IOException;
+import java.util.Date;
+
+import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.DERBitString;
 import org.bouncycastle.asn1.DEREncodableVector;
+import org.bouncycastle.asn1.DERInputStream;
 import org.bouncycastle.asn1.DERInteger;
-import org.bouncycastle.asn1.DERObjectIdentifier;
 import org.bouncycastle.asn1.DEROutputStream;
 import org.bouncycastle.asn1.DERSequence;
-import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
+import org.bouncycastle.asn1.DERUTCTime;
+import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 import org.bouncycastle.asn1.x509.TBSCertificateStructure;
 import org.bouncycastle.asn1.x509.V3TBSCertificateGenerator;
 import org.bouncycastle.asn1.x509.X509CertificateStructure;
 import org.bouncycastle.asn1.x509.X509Name;
-import org.bouncycastle.asn1.x9.X9ObjectIdentifiers;
-import org.bouncycastle.crypto.digests.SHA1Digest;
-import org.bouncycastle.crypto.params.DSAPrivateKeyParameters;
-import org.bouncycastle.crypto.signers.DSASigner;
 
-final public class X509CertGenerator extends V3TBSCertificateGenerator
+/**
+ * @deprecated use {@link anon.crypto.JAPCertificate} instead; scheduled for removal on 04/12/13
+ */
+public final class X509CertGenerator extends V3TBSCertificateGenerator
 {
-	public X509CertGenerator()
+	public X509CertGenerator(String a_ownerAlias, Date a_validFrom, Date a_validTo,
+							 IMyPublicKey a_publicKey)
+		throws IOException
 	{
+		setStartDate(new DERUTCTime(a_validFrom));
+		setEndDate(new DERUTCTime(a_validTo));
+		setSerialNumber(new DERInteger(1));
+		setSubject(new X509Name("CN=" + a_ownerAlias));
+		setSubjectPublicKeyInfo(new SubjectPublicKeyInfo( (ASN1Sequence) (new DERInputStream(new
+			ByteArrayInputStream(a_publicKey.getEncoded()))).readObject()));
 	}
 
 	public X509CertGenerator(X509CertificateStructure cert)
@@ -74,79 +84,43 @@ final public class X509CertGenerator extends V3TBSCertificateGenerator
 		setSubjectPublicKeyInfo(tbs.getSubjectPublicKeyInfo());
 	}
 
-	public X509CertificateStructure sign(X509Name issuer, PrivateKey k)
+	public X509CertificateStructure sign(PKCS12 a_pkcs12Certificate)
+	{
+		return sign(a_pkcs12Certificate.getX509Certificate().getSubject(),
+					a_pkcs12Certificate.getPrivateKey());
+	}
+
+
+	public X509CertificateStructure sign(X509Name a_issuer, IMyPrivateKey a_privateKey)
 	{
 		try
 		{
-			boolean bRSA = false;
-			boolean bDSA = false;
-			setIssuer(issuer);
-			if (k instanceof DSAPrivateKey)
-			{
-				bDSA = true;
-			}
-			else if (k instanceof MyRSAPrivateKey)
-			{
-				bRSA = true;
-			}
-			else
-			{
-				return null;
-			}
-			AlgorithmIdentifier algID = null;
-			if (bDSA)
-			{
-				algID = new AlgorithmIdentifier(X9ObjectIdentifiers.id_dsa_with_sha1);
-			}
-			else
-			{
-				algID = new AlgorithmIdentifier(new DERObjectIdentifier("1.2.840.113549.1.1.5")); //RSAwithsha1
-			}
-			setSignature(algID);
+			TBSCertificateStructure tbsCert;
+			DEREncodableVector seqv;
+			ByteArrayOutputStream bOut;
+			byte[] signature;
 
-			//calculate the bytes to sign
-			TBSCertificateStructure tbsCert = generateTBSCertificate();
-			ByteArrayOutputStream bOut = new ByteArrayOutputStream();
+			setIssuer(a_issuer);
+			setSignature(a_privateKey.getSignatureAlgorithm().getIdentifier());
+
+			/* generate signature */
+			bOut = new ByteArrayOutputStream();
+			tbsCert = generateTBSCertificate();
 			(new DEROutputStream(bOut)).writeObject(tbsCert);
-			byte[] bytesToSign = bOut.toByteArray();
-//generate signature
-			DERBitString sig = null;
-			if (bDSA)
-			{ ///@todo check if we can use MyDSASignature directly!
-				SHA1Digest digest = new SHA1Digest();
-				digest.update(bOut.toByteArray(), 0, bOut.size());
-				byte[] hash = new byte[digest.getDigestSize()];
-				digest.doFinal(hash, 0);
-				DSASigner signer = new DSASigner();
-				DSAPrivateKey key = (DSAPrivateKey) k;
-				DSAPrivateKeyParameters signkey = new DSAPrivateKeyParameters(key.getX(), new MyDSAParams(key));
-				signer.init(true, signkey);
-				BigInteger[] r_and_s = signer.generateSignature(hash);
-				DEREncodableVector sigvalue = new DEREncodableVector();
-				sigvalue.add(new DERInteger(r_and_s[0]));
-				sigvalue.add(new DERInteger(r_and_s[1]));
-				sig = new DERBitString(new DERSequence(sigvalue));
+			signature = ByteSignature.sign(bOut.toByteArray(), a_privateKey);
 
-			}
-			else
-			{
-				/** @todo Construct signature... */
-				byte[] sigvalue = new byte[128];
-				sig = new DERBitString(sigvalue);
-			}
-
-//construct cert
-			DEREncodableVector seqv = new DEREncodableVector();
+			/* construct certificate */
+			seqv = new DEREncodableVector();
 			seqv.add(tbsCert);
-			seqv.add(algID);
-			seqv.add(sig);
+			seqv.add(a_privateKey.getSignatureAlgorithm().getIdentifier());
+			seqv.add(new DERBitString(signature));
+
 			return new X509CertificateStructure(new DERSequence(seqv));
 		}
 
 		catch (Throwable t)
-		{
+		{t.printStackTrace();
 			return null;
 		}
 	}
-
 }

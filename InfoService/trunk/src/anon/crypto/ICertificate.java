@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2000, The JAP-Team
+ Copyright (c) 2000 - 2004, The JAP-Team
  All rights reserved.
  Redistribution and use in source and binary forms, with or without modification,
  are permitted provided that the following conditions are met:
@@ -27,41 +27,28 @@
  */
 package anon.crypto;
 
-import java.security.PublicKey;
-
-import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
-
-import anon.util.IXMLEncodable;
-
 /**
- * Represents the public part of an asymmetric cryptographic key pair.
+ * This interface represents the common methods of cryptographic certificates.
+ * @author Rolf Wendolsky
  */
-public interface IMyPublicKey extends PublicKey, IXMLEncodable
+public interface ICertificate
 {
 	/**
-	 * Gets the signature algorithm object that is held and initialised with this key.
-	 * It is ready to verify messages and does not need to be reinitialised by the caller.
-	 * Therefore, this method must make sure that the algorithm is initialised with this key.
-	 * @return the signature algorithm object that is held and initialised by this key
+	 * Returns the public key of this certificate.
+	 * @return the public key of this certificate
 	 */
-	public ISignatureVerificationAlgorithm getSignatureAlgorithm();
+	public IMyPublicKey getPublicKey();
 
 	/**
-	 * Gets the key as a SubjectPublicKeyInfo object.
-	 * @return the key as a SubjectPublicKeyInfo object
+	 * Returns the X509 certificate corresponding to this certificate.
+	 * (This may be the certificate itself.)
+	 * @return the X509 certificate corresponding to this certificate
 	 */
-	public SubjectPublicKeyInfo getAsSubjectPublicKeyInfo();
+	public JAPCertificate getX509Certificate();
 
 	/**
-	 * This method returns if two public keys have the same public key parameters.
-	 * @param a_object an other public key
-	 * @return true if the keys have the same public key parameters; false otherwise
+	 * Converts the certificate to a byte array.
+	 * @return the certificate as a byte array
 	 */
-	public boolean equals(Object a_object);
-
-	/**
-	 * @return the public key`s hash code
-	 * @see java.lang.Object#hashCode()
-	 */
-	public int hashCode();
+	public byte[] toByteArray();
 }

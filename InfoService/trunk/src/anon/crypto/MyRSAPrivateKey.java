@@ -31,28 +31,25 @@ package anon.crypto;
  * If you change something - do not forget to add the changes also to the JAP source tree!
  */
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.math.BigInteger;
-import java.security.PrivateKey;
+import java.security.InvalidKeyException;
+
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.DERObject;
 import org.bouncycastle.asn1.DERObjectIdentifier;
-import org.bouncycastle.asn1.DEROutputStream;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 import org.bouncycastle.asn1.pkcs.RSAPrivateKeyStructure;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.crypto.CipherParameters;
 import org.bouncycastle.crypto.params.RSAPrivateCrtKeyParameters;
-import org.w3c.dom.Element;
 import org.w3c.dom.Document;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
+import org.w3c.dom.Element;
 import anon.util.Base64;
 import anon.util.XMLUtil;
 
-final public class MyRSAPrivateKey implements IMyPrivateKey
+final public class MyRSAPrivateKey extends AbstractPrivateKey implements IMyPrivateKey
 {
+	private MyRSASignature m_algorithm = new MyRSASignature();
 	private RSAPrivateCrtKeyParameters m_Params;
 
 	public MyRSAPrivateKey(CipherParameters cipherparams) throws Exception
@@ -62,6 +59,7 @@ final public class MyRSAPrivateKey implements IMyPrivateKey
 
 	public MyRSAPrivateKey(PrivateKeyInfo privKeyInfo) throws Exception
 	{
+		super(privKeyInfo);
 		DERObject d = privKeyInfo.getPrivateKey();
 		RSAPrivateKeyStructure gh = new RSAPrivateKeyStructure( (ASN1Sequence) d);
 		m_Params = new RSAPrivateCrtKeyParameters(gh.getModulus(), gh.getPublicExponent(),
@@ -85,6 +83,32 @@ final public class MyRSAPrivateKey implements IMyPrivateKey
 		m_Params = new RSAPrivateCrtKeyParameters(modulus, publicExponent, privateExponent,
 												  p, q, dP, dQ, qInv);
 
+	}
+
+	/**
+	 * Gets a signature algorithm object for this key.
+	 * @return a signature algorithm object for this key
+	 */
+	public ISignatureCreationAlgorithm getSignatureAlgorithm()
+	{
+		try
+		{
+			m_algorithm.initSign(this);
+		}
+		catch (InvalidKeyException a_e)
+		{
+			// not possible
+		}
+		return m_algorithm;
+	}
+
+	/**
+	 * Creates the corresponding public key to this private key.
+	 * @return the corresponding public key to this private key
+	 */
+	public IMyPublicKey createPublicKey()
+	{
+		return new MyRSAPublicKey(this.getModulus(), this.getPublicExponent());
 	}
 
 	public CipherParameters getParams()
@@ -142,31 +166,19 @@ final public class MyRSAPrivateKey implements IMyPrivateKey
 		return "PKCS#8";
 	}
 
-	public byte[] getEncoded()
+	public PrivateKeyInfo getAsPrivateKeyInfo()
 	{
-		ByteArrayOutputStream bOut = new ByteArrayOutputStream();
-		DEROutputStream dOut = new DEROutputStream(bOut);
+		PrivateKeyInfo privKey =
+			new PrivateKeyInfo(
+			new AlgorithmIdentifier(
+			new DERObjectIdentifier("1.2.840.113549.1.1.1")
+			),
+			new RSAPrivateKeyStructure(m_Params.getModulus(), m_Params.getPublicExponent(),
+									   m_Params.getExponent(), m_Params.getP(), m_Params.getQ(),
+									   m_Params.getDP(), m_Params.getDQ(), m_Params.getQInv()).
+			getDERObject());
 
-		try
-		{
-			PrivateKeyInfo privKey =
-				new PrivateKeyInfo(
-				new AlgorithmIdentifier(
-				new DERObjectIdentifier("1.2.840.113549.1.1.1")
-				),
-				new RSAPrivateKeyStructure(m_Params.getModulus(), m_Params.getPublicExponent(),
-										   m_Params.getExponent(), m_Params.getP(), m_Params.getQ(),
-										   m_Params.getDP(), m_Params.getDQ(), m_Params.getQInv()).
-				getDERObject());
-			dOut.writeObject(privKey);
-
-			dOut.close();
-		}
-		catch (IOException e)
-		{
-			throw new RuntimeException("IOException while encoding private key");
-		}
-		return bOut.toByteArray();
+		return privKey;
 	}
 
 	public Element toXmlElement(Document a_doc)
@@ -174,28 +186,28 @@ final public class MyRSAPrivateKey implements IMyPrivateKey
 		Element elemPrivKey = a_doc.createElement("RSAPrivateKey");
 		Element elem = a_doc.createElement("Modulus");
 		elemPrivKey.appendChild(elem);
-		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_Params.getModulus().toByteArray()));
+		XMLUtil.setValue(elem, Base64.encodeBytes(m_Params.getModulus().toByteArray()));
 		elem = a_doc.createElement("PublicExponent");
 		elemPrivKey.appendChild(elem);
-		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_Params.getPublicExponent().toByteArray()));
+		XMLUtil.setValue(elem, Base64.encodeBytes(m_Params.getPublicExponent().toByteArray()));
 		elem = a_doc.createElement("PrivateExponent");
 		elemPrivKey.appendChild(elem);
-		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_Params.getExponent().toByteArray()));
+		XMLUtil.setValue(elem, Base64.encodeBytes(m_Params.getExponent().toByteArray()));
 		elem = a_doc.createElement("P");
 		elemPrivKey.appendChild(elem);
-		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_Params.getP().toByteArray()));
+		XMLUtil.setValue(elem, Base64.encodeBytes(m_Params.getP().toByteArray()));
 		elem = a_doc.createElement("Q");
 		elemPrivKey.appendChild(elem);
-		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_Params.getQ().toByteArray()));
+		XMLUtil.setValue(elem, Base64.encodeBytes(m_Params.getQ().toByteArray()));
 		elem = a_doc.createElement("dP");
 		elemPrivKey.appendChild(elem);
-		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_Params.getDP().toByteArray()));
+		XMLUtil.setValue(elem, Base64.encodeBytes(m_Params.getDP().toByteArray()));
 		elem = a_doc.createElement("dQ");
 		elemPrivKey.appendChild(elem);
-		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_Params.getDQ().toByteArray()));
+		XMLUtil.setValue(elem, Base64.encodeBytes(m_Params.getDQ().toByteArray()));
 		elem = a_doc.createElement("QInv");
 		elemPrivKey.appendChild(elem);
-		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_Params.getQInv().toByteArray()));
+		XMLUtil.setValue(elem, Base64.encodeBytes(m_Params.getQInv().toByteArray()));
 
 		return elemPrivKey;
 	}

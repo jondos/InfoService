@@ -30,12 +30,14 @@ package anon.crypto;
 /* Hint: This file may be only a copy of the original file which is always in the JAP source tree!
  * If you change something - do not forget to add the changes also to the JAP source tree!
  */
-import java.security.PublicKey;
 import java.util.Vector;
 import org.w3c.dom.Node;
 import anon.ErrorCodes;
 
-final public class JAPCertPath
+/**
+ * @deprecated use {@link anon.crypto.XMLSignature} instead; scheduled for removal on 04/12/12
+ */
+public abstract class JAPCertPath
 {
 
 	private JAPCertPath()
@@ -44,11 +46,13 @@ final public class JAPCertPath
 
 	/** Validates the XML Signature over root done by nodeSig according to certsTrustedRoots
 	 * If a Certifcate is embedded within the Signature we try to verify also this certifcate chain
-	 * If root is a Document than the Root Element of that Document is taken.
+	 * If root is a Document then the Root Element of that Document is taken.
 	 * ATTENTION: All certificates must include DSAPublicKeys!!!
 	 * @return ErrorCodes.E_SUCCESS if ok
 	 * @return ErrorCodes.E_INVALID_KEY if the provides key does not match to the signature
 	 * @return ErrorCodes.E_UNKNOWN otherwise
+	 * @deprecated use {@link anon.crypto.XMLSignature#verify(Node,JAPCertificateStore)} instead;
+	 *             scheduled for removal on 04/12/12
 	 */
 	public static int validate(Node root, Node nSig, JAPCertificateStore certsTrustedRoots)
 	{
@@ -71,7 +75,7 @@ final public class JAPCertPath
 							/* signature is valid, try to verify the appended certificate against the trusted
 							 * root certificates
 							 */
-							if (validate(appendedCertificate, certsTrustedRoots) == ErrorCodes.E_SUCCESS)
+							if (appendedCertificate.verify(certsTrustedRoots))
 							{
 								return ErrorCodes.E_SUCCESS;
 							}
@@ -97,44 +101,27 @@ final public class JAPCertPath
 	/** Checks if a given Certificate could be directly verified agains a set a trusted Certificates
 	 * @return ErrorCodes.E_SUCCESS if this check was ok
 	 * @return ErrorCodes.E_UNKNOWN otherwise
+	 * @deprecated use {@link anon.crypto.JAPCertificate#verify(JAPCertificateStore)} instead;
+	 *             scheduled for removal on 04/12/12
 	 */
-
 	public static int validate(JAPCertificate cert, JAPCertificateStore certsTrustedRoots)
 	{
-		if (certsTrustedRoots == null)
+		if (cert.verify(certsTrustedRoots))
+		{
+			return ErrorCodes.E_SUCCESS;
+		}
+		else
 		{
 			return ErrorCodes.E_UNKNOWN;
 		}
-		Vector allCertificates = certsTrustedRoots.getAllEnabledCertificates();
-		for (int i = 0; i < allCertificates.size(); i++)
-		{
-			IMyPublicKey currentPublicKey = ( (JAPCertificate) (allCertificates.elementAt(i))).
-				getPublicKey();
-			try
-			{
-				if (currentPublicKey.equals(cert.getPublicKey()) ||
-					(cert.verify(currentPublicKey)))
-				{
-					/* the appended certificate is identical to the current trusted root certificate
-					 * (same public key) or could be derived from it
-					 */
-					return ErrorCodes.E_SUCCESS;
-				}
-			}
-			catch (Exception e)
-			{
-				/* there was an error while comparing the certificate-keys or while checking the
-				 * signature of a certificate -> ignore that certificate
-				 */
-			}
-		}
-		return ErrorCodes.E_UNKNOWN;
 	}
 
 	/* check the signature directly against all public keys from the store of trusted certificates.
 	 * Certs included within the Signature are ignored!
 	 * @return ErrorCodes.E_SUCCESS if ok
 	 * @return ErrorCodes.E_INVALID_KEY if no key matches
+	 * @deprecated use {@link anon.crypto.XMLSignature#verify(Node,JAPCertificateStore)} instead;
+	 *             scheduled for removal on 04/12/12
 	 */
 	public static int validate(Node root, JAPCertificateStore certsTrustedRoots)
 	{

@@ -33,16 +33,70 @@
 package anon.crypto;
 
 import java.security.InvalidKeyException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
 
-interface IMySignature
+/**
+ * This interface represents a signature algorithm.
+ */
+public interface IMySignature extends ISignatureVerificationAlgorithm, ISignatureCreationAlgorithm
 {
-	void initVerify(IMyPublicKey k) throws InvalidKeyException;
+	/**
+	 * Initialises the algorithm for verifying. This must be done before doing the verify operation.
+	 * The general contract of this method is that it must check if the algorithm has previously
+	 * been initialised with the given key. If yes the method does nothing to save resources.
+	 * @param a_publicKey a public key
+	 * @throws InvalidKeyException if the key is invalid
+	 */
+	public void initVerify(IMyPublicKey a_publicKey) throws InvalidKeyException;
 
-	void initSign(IMyPrivateKey ownPrivateKey) throws InvalidKeyException;
+	/**
+	 * Initialises the algorithm for signing. This must be done before doing the sign operation.
+	 * The general contract of this method is that it must check if the algorithm has previously
+	 * been initialised with the given key. If yes the method does nothing to save resources.
+	 * @param a_privateKey a private key
+	 * @throws InvalidKeyException if the key is invalid
+	 */
+	public void initSign(IMyPrivateKey a_privateKey) throws InvalidKeyException;
 
-	boolean verify(byte[] message, byte[] sig);
+	/**
+	 * Tests if the signature of a specified message is valid.
+	 * @param a_message a message
+	 * @param a_signature a signature
+	 * @return true if the signature of a specified message is valid; false otherwiese
+	 */
+	public boolean verify(byte[] a_message, byte[] a_signature);
 
-	byte[] sign(byte[] bytesToSign);
+	/**
+	 * Signs a message and returns the signature.
+	 * @param a_message a message
+	 * @return the signature that was created
+	 */
+	public byte[] sign(byte[] a_message);
+
+	/**
+	 * Encodes a signature in a way it meets the W3C standard for XML signature values.
+	 * Without this encoding, XML signatures cannot be created by this algorithm.
+	 * @param a_signature an non-encoded signature
+	 * @return the encoded signature or null if an error occured
+	 * @see http://www.w3.org/TR/xmldsig-core/#sec-SignatureAlg
+	 */
+	public byte[] encodeForXMLSignature(byte[] a_signature);
+
+	/**
+	 * Tries to decode a signature in a way as it would meet the W3C standard for XML
+	 * signature values.
+	 * Without this decoding, XML signatures cannot be verified by this algorithm.
+	 * @param a_encodedSignature an encoded signature
+	 * @return the decoded signature or null if an error occured
+	 * @see http://www.w3.org/TR/xmldsig-core/#sec-SignatureAlg
+	 */
+	public byte[] decodeForXMLSignature(byte[] a_encodedSignature);
+
+	/**
+	 * Returns a description of the the signature algorithm for XML signatures as defined in
+	 * {@link http://www.w3.org/TR/xmldsig-core/#sec-AlgID}. This description is optional,
+	 * documents may be signed without it.
+	 * @return a description of the the signature algorithm for XML signatures
+	 * @see http://www.w3.org/TR/xmldsig-core/#sec-AlgID
+	 */
+	public String getXMLSignatureAlgorithmReference();
 }

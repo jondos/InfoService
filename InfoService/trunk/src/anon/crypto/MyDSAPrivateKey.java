@@ -31,39 +31,41 @@ package anon.crypto;
  * If you change something - do not forget to add the changes also to the JAP source tree!
  */
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.math.BigInteger;
 import java.security.InvalidKeyException;
 import java.security.interfaces.DSAParams;
 import java.security.interfaces.DSAPrivateKey;
+
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.DERInteger;
 import org.bouncycastle.asn1.DERObject;
-import org.bouncycastle.asn1.DEROutputStream;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.asn1.x509.DSAParameter;
 import org.bouncycastle.asn1.x9.X9ObjectIdentifiers;
+import org.bouncycastle.crypto.params.DSAParameters;
 import org.bouncycastle.crypto.params.DSAPrivateKeyParameters;
+import org.bouncycastle.crypto.params.DSAPublicKeyParameters;
 import org.w3c.dom.Document;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 import org.w3c.dom.Element;
-import anon.util.*;
+import anon.util.Base64;
+import anon.util.XMLUtil;
 
-final public class MyDSAPrivateKey implements DSAPrivateKey, IMyPrivateKey
+final public class MyDSAPrivateKey extends AbstractPrivateKey
+	implements DSAPrivateKey, IMyPrivateKey
 {
+	private MyDSASignature m_algorithm = new MyDSASignature();;
 	private BigInteger m_X;
 	private DSAParams m_params;
 
 	public MyDSAPrivateKey(PrivateKeyInfo privKeyInfo) throws InvalidKeyException
 	{
+		super(privKeyInfo);
 		try
 		{
-			//					ByteArrayInputStream bIn =new ByteArrayInputStream(encoded);
-			//					DERInputStream dIn = new DERInputStream(bIn);
-			//				PrivateKeyInfo privKeyInfo=new PrivateKeyInfo((ASN1Sequence)dIn.readObject());
+			//		ByteArrayInputStream bIn =new ByteArrayInputStream(encoded);
+			//		DERInputStream dIn = new DERInputStream(bIn);
+			//		PrivateKeyInfo privKeyInfo=new PrivateKeyInfo((ASN1Sequence)dIn.readObject());
 			AlgorithmIdentifier algId = privKeyInfo.getAlgorithmId();
 			DERInteger X = (DERInteger) privKeyInfo.getPrivateKey();
 			m_X = X.getValue();
@@ -83,6 +85,22 @@ final public class MyDSAPrivateKey implements DSAPrivateKey, IMyPrivateKey
 		m_params = new MyDSAParams(keyParams.getParameters());
 	}
 
+	/**
+	 * Creates the corresponding public key to this private key.
+	 * @return the corresponding public key to this private key
+	 */
+	public IMyPublicKey createPublicKey()
+	{
+		MyDSAPublicKey key;
+		BigInteger Y;
+
+		Y = getParams().getG().modPow(getX(), getParams().getP());
+		key = new MyDSAPublicKey(new DSAPublicKeyParameters(Y, (DSAParameters)m_params));
+
+		return key;
+	}
+
+
 	public String getAlgorithm()
 	{
 		return "DSA";
@@ -98,33 +116,41 @@ final public class MyDSAPrivateKey implements DSAPrivateKey, IMyPrivateKey
 		return m_X;
 	}
 
-	public byte[] getEncoded()
+	public PrivateKeyInfo getAsPrivateKeyInfo()
 	{
-		ByteArrayOutputStream bOut = new ByteArrayOutputStream();
-		DEROutputStream dOut = new DEROutputStream(bOut);
+		PrivateKeyInfo info;
 
+		DERObject derParam =
+			new DSAParameter(
+			m_params.getP(),
+			m_params.getQ(),
+			m_params.getG())
+			.getDERObject();
+
+		info = new PrivateKeyInfo(
+			new AlgorithmIdentifier(
+			X9ObjectIdentifiers.id_dsa,
+			derParam),
+			new DERInteger(getX()));
+
+		return info;
+	}
+
+	/**
+	 * Gets a signature algorithm object for this key.
+	 * @return a signature algorithm object for this key
+	 */
+	public ISignatureCreationAlgorithm getSignatureAlgorithm()
+	{
 		try
 		{
-			DERObject derParam =
-				new DSAParameter(
-				m_params.getP(),
-				m_params.getQ(),
-				m_params.getG())
-				.getDERObject();
-
-			dOut.writeObject(
-				new PrivateKeyInfo(
-				new AlgorithmIdentifier(
-				X9ObjectIdentifiers.id_dsa,
-				derParam),
-				new DERInteger(getX())));
-			dOut.close();
+			m_algorithm.initSign(this);
 		}
-		catch (IOException e)
+		catch (InvalidKeyException a_e)
 		{
-			throw new RuntimeException("IOException while encoding private key");
+			// not possible
 		}
-		return bOut.toByteArray();
+		return m_algorithm;
 	}
 
 	public DSAParams getParams()
@@ -135,7 +161,7 @@ final public class MyDSAPrivateKey implements DSAPrivateKey, IMyPrivateKey
 
 	/**
 	 * getXmlEncoded
-	 *
+	 * @param a_doc an XML document
 	 * @return Document
 	 */
 	public Element toXmlElement(Document a_doc)
@@ -143,16 +169,16 @@ final public class MyDSAPrivateKey implements DSAPrivateKey, IMyPrivateKey
 		Element elemPrivKey = a_doc.createElement("DSAPrivateKey");
 		Element elem = a_doc.createElement("G");
 		elemPrivKey.appendChild(elem);
-		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_params.getG().toByteArray()));
+		XMLUtil.setValue(elem, Base64.encodeBytes(m_params.getG().toByteArray()));
 		elem = a_doc.createElement("P");
 		elemPrivKey.appendChild(elem);
-		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_params.getP().toByteArray()));
+		XMLUtil.setValue(elem, Base64.encodeBytes(m_params.getP().toByteArray()));
 		elem = a_doc.createElement("Q");
 		elemPrivKey.appendChild(elem);
-		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_params.getQ().toByteArray()));
+		XMLUtil.setValue(elem, Base64.encodeBytes(m_params.getQ().toByteArray()));
 		elem = a_doc.createElement("X");
 		elemPrivKey.appendChild(elem);
-		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_X.toByteArray()));
+		XMLUtil.setValue(elem, Base64.encodeBytes(m_X.toByteArray()));
 		return elemPrivKey;
 	}
 }

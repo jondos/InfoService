@@ -28,8 +28,52 @@
 package anon.crypto;
 
 import java.security.PrivateKey;
+
+import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
+
 import anon.util.IXMLEncodable;
 
-public interface IMyPrivateKey extends PrivateKey,IXMLEncodable
+/**
+ * An interface for a private key for encryption and signing.
+ * All private keys should implement a constructor of the following type:
+ * <Code> public IMyPublicKey(PrivateKeyInfo a_keyInfo) throws java.security.InvalidKeyException; </Code>
+ * It is the only possibility to create them automatically at run time. The big advantage for the
+ * code is that it does not need to "know" that a private key class exists. It can be instantiated
+ * nevertheless! If you implement your own private key outside the AN.ON library, you must call
+ * <Code> anon.util.ClassUtil.loadClasses() </Code> to read your classes into the class cache. Otherwise,
+ * the private key may not be found.
+ * @see anon.crypto.AsymmetricKeyPair
+ * @see anon.util.ClassUtil#loadClasses()
+ * @exception InvalidKeyException if no key can be created from this key info
+ */
+public interface IMyPrivateKey extends PrivateKey, IXMLEncodable
 {
+	/**
+	 * Creates a private key from a private key info. All private keys should implement
+	 * this constructor, as it is the only possibility to create them automatically at
+	 * run time.
+	 * @see anon.crypto.AsymmetricKeyPair
+	 * @exception InvalidKeyException if no key can be created from this key info
+	 */
+	//public IMyPublicKey(PrivateKeyInfo a_keyInfo) throws java.security.InvalidKeyException;
+
+	/**
+	 * Creates the corresponding public key to this private key.
+	 * @return the corresponding public key to this private key
+	 */
+	public IMyPublicKey createPublicKey();
+
+	/**
+	 * Gets the signature algorithm object that is held and initialised with this key.
+	 * It is ready to sign messages and does not need to be reinitialised by the caller.
+	 * Therefore, this method must make sure that the algorithm is initialised with this key.
+	 * @return the signature algorithm object that is held and initialised by this key
+	 */
+	public ISignatureCreationAlgorithm getSignatureAlgorithm();
+
+	/**
+	 * Gets the private key as a PrivateKeyInfo object.
+	 * @return the private key as a PrivateKeyInfo object
+	 */
+	public PrivateKeyInfo getAsPrivateKeyInfo();
 }

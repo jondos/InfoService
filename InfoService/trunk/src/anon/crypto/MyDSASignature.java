@@ -32,15 +32,28 @@
 
 package anon.crypto;
 
-import java.security.InvalidKeyException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.security.Signature;
+import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
+import org.bouncycastle.asn1.x9.X9ObjectIdentifiers;
 
-final class MyDSASignature implements IMySignature
+import java.security.InvalidKeyException;
+import java.security.Signature;
+import java.security.Key;
+
+/**
+ * Implements the DSA algorithm for signatures.
+ */
+public final class MyDSASignature implements IMySignature
 {
-	Signature m_SignatureAlgorithm;
-	MyDSASignature()
+	private static final AlgorithmIdentifier ms_identifier =
+		new AlgorithmIdentifier(X9ObjectIdentifiers.id_dsa_with_sha1);
+
+	private Signature m_SignatureAlgorithm;
+	/**
+	 * The key with that this algorithm has been initialised.
+	 */
+	private Key m_initKey;
+
+	public MyDSASignature()
 	{
 		try
 		{
@@ -54,12 +67,20 @@ final class MyDSASignature implements IMySignature
 
 	synchronized public void initVerify(IMyPublicKey k) throws InvalidKeyException
 	{
-		m_SignatureAlgorithm.initVerify(k);
+		//if (m_initKey == null || m_initKey != k)
+		//{
+			m_SignatureAlgorithm.initVerify(k);
+			m_initKey = k;
+		//}
 	}
 
 	synchronized public void initSign(IMyPrivateKey ownPrivateKey) throws InvalidKeyException
 	{
-		m_SignatureAlgorithm.initSign(ownPrivateKey);
+		//if (m_initKey == null || m_initKey != ownPrivateKey)
+		//{
+			m_SignatureAlgorithm.initSign(ownPrivateKey);
+			m_initKey = ownPrivateKey;
+		//}
 	}
 
 	synchronized public boolean verify(byte[] message, byte[] sig)
@@ -86,6 +107,153 @@ final class MyDSASignature implements IMySignature
 		{
 			return null;
 		}
+	}
+
+	/**
+	 * Returns the algorithm identifier (DSA with SHA1).
+	 * @return the algorithm identifier (DSA with SHA1)
+	 */
+	public AlgorithmIdentifier getIdentifier() {
+		return ms_identifier;
+	}
+
+	/**
+	 * Encodes a signature in a way it meets the W3C standard for DSA XML signature values.
+	 *
+	 * Extracts the ASN.1 encoded values for r and s from a DER encoded byte array.
+	 * ASN.1 Notation:
+	 *   sequence {
+	 *     integer r
+	 *     integer s
+	 *   }
+	 * --> Der-Encoding
+	 * byte   0x30    // Sequence
+	 * byte   44 + x  // len in bytes (x = {0|1|2} depending on r and s
+	 * byte   0x02    // integer
+	 * byte   <= 21   // len of r (21: if first bit of r set, we need a leading 0 --> 20 + 1 bytes)
+	 * byte[] ...     // value of r (with leading zero if necessary)
+	 * byte   0x02    // integer
+	 * byte   <= 21   // len of s (21: if first bit of s set, we need a leading 0 --> 20 + 1 bytes)
+	 * byte[] ...     // value of s (with leading zero if necessary)
+	 *
+	 * @param a_signature an non-encoded signature in DER format
+	 * @return the encoded signature in R-S-encoding or null if an error occured
+	 * @see http://www.w3.org/TR/xmldsig-core/#sec-DSA
+	 */
+	public byte[] encodeForXMLSignature(byte[] a_signature)
+	{
+		byte rLength = a_signature[3];
+		byte sLength = a_signature[3 + rLength + 2];
+		byte[] rsBuff = new byte[40];
+		for (int i = 0; i < 40; i++)
+		{
+			/* be sure that it is zero */
+			rsBuff[i] = 0;
+		}
+		byte rOverLength = 0;
+		if (rLength == 21)
+		{
+			rOverLength = 1;
+			rLength = 20;
+		}
+		System.arraycopy(a_signature, 4 + rOverLength, rsBuff, 20 - rLength, rLength);
+		rLength = (byte) (rLength + rOverLength);
+		byte sOverLength = 0;
+		if (sLength == 21)
+		{
+			sOverLength = 1;
+			sLength = 20;
+		}
+		System.arraycopy(a_signature, 4 + rLength + 2 + sOverLength, rsBuff, 40 - sLength, sLength);
+
+		return rsBuff;
+
+	}
+
+	/**
+	 * Tries to decode a signature in a way as it would meet the W3C standard for DSA XML
+	 * signature values.
+	 *
+	 * Making DER-Encoding of r and s.....
+	 * ASN.1 Notation:
+	 * sequence
+	 * {
+	 *        integer r
+	 *		  integer s
+	 * }
+	 * HINT: Sun JDK 1.4.x needs a leading '0' in the binary representation
+	 * of r (and s) if r[0]>0x7F or s[0]>0x7F
+	 * --> Der-Encoding
+	 * 0x30 //Sequence
+	 * 44 + x // len in bytes (x = {0|1|2} depending on r and s (see above)
+	 * 0x02 // integer
+	 * 20 | 21 // len in bytes of r
+	 * ....   //value of r (with leading zero if necessary)
+	 * 0x02 //integer
+	 * 20 | 21  //len of s
+	 * ... value of s (with leading zero if necessary)
+	 *
+	 * @param a_encodedSignature an encoded signature in R-S format
+	 * @return the decoded signature in DER format or null if an error occured
+	 * @see http://www.w3.org/TR/xmldsig-core/#sec-DSA
+	 */
+	public byte[] decodeForXMLSignature(byte[] a_encodedSignature)
+	{
+		try
+		{
+			int index = 46;
+			if (a_encodedSignature[0] < 0)
+			{
+				index++;
+			}
+			if (a_encodedSignature[20] < 0)
+			{
+				index++;
+			}
+			byte tmpBuff[] = new byte[index];
+			tmpBuff[0] = 0x30;
+			tmpBuff[1] = (byte) (index - 2);
+			tmpBuff[2] = 0x02;
+			if (a_encodedSignature[0] < 0)
+			{
+				index = 5;
+				tmpBuff[3] = 21;
+				tmpBuff[4] = 0;
+			}
+			else
+			{
+				tmpBuff[3] = 20;
+				index = 4;
+			}
+			System.arraycopy(a_encodedSignature, 0, tmpBuff, index, 20);
+			index += 20;
+			tmpBuff[index++] = 0x02;
+			if (a_encodedSignature[20] < 0)
+			{
+				tmpBuff[index++] = 21;
+				tmpBuff[index++] = 0;
+			}
+			else
+			{
+				tmpBuff[index++] = 20;
+			}
+			System.arraycopy(a_encodedSignature, 20, tmpBuff, index, 20);
+			return tmpBuff;
+		}
+		catch (Exception a_e)
+		{
+			return null;
+		}
+
+	}
+
+	/**
+	 * Returns http://www.w3.org/2000/09/xmldsig#dsa-sha1.
+	 * @return http://www.w3.org/2000/09/xmldsig#dsa-sha1
+	 */
+	public String getXMLSignatureAlgorithmReference()
+	{
+		return "http://www.w3.org/2000/09/xmldsig#dsa-sha1";
 	}
 
 }
