@@ -4,7 +4,7 @@ import java.io.InputStream;
 import java.io.DataInputStream;
 import java.io.FileOutputStream;
 
-public class CAVersion
+public class JAPVersion
 	{
 		private static String aktVersion="00.00.008";
 		public static int checkForNewVersion(JAPModel model)
@@ -17,7 +17,6 @@ public class CAVersion
 						in.readFully(buff);
 						in.close();
 						String s=new String(buff);
-						System.out.println("Version: "+s);
 						if(s.compareTo(aktVersion)>0)
 							return 1;
 						return 0;
@@ -37,10 +36,9 @@ public class CAVersion
 						int len=urlconn.getContentLength();
 						if(len==-1)
 							{
-								System.out.println("unkown Size");
+								JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"unkown Size");
 								return -1;
 							}
-						System.out.println("Size: "+Integer.toString(len));
 						byte[] buff=new byte[len];
 						DataInputStream in=new DataInputStream(urlconn.getInputStream());
 						in.readFully(buff);
@@ -49,7 +47,6 @@ public class CAVersion
 						f.write(buff);
 						f.flush();
 						f.close();
-		//				System.out.println(this
 						return 0;
 					}
 				catch(Exception e)

@@ -4,17 +4,17 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.UnknownHostException;
 
-public class CASocket 
+public class JAPSocket 
 	{
 		private volatile boolean bisClosed;
 		private Socket s;
 		
-		public CASocket()
+		public JAPSocket()
 			{
 				bisClosed=false;
 			}
 		
-		public CASocket(Socket so)	
+		public JAPSocket(Socket so)	
 			{
 				s=so;
 				bisClosed=false;

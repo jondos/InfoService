@@ -3,24 +3,24 @@ import java.net.*;
 import java.util.*;
 import java.text.*;
 
-public class SK13ProxyConnection extends Thread {
-	private CASocket inSocket;
+public final class JAPProxyConnection extends Thread
+	{
+		private JAPSocket inSocket;
     
-  private boolean debug = false; 
-  private int threadNumber;
-  private static int threadCount;
+		private int threadNumber;
+		private static int threadCount;
 
-  private BufferedInputStream fromClient;
+		private BufferedInputStream fromClient;
     
-	private int channel;
-	private CAMuxSocket outSocket;
+		private int channel;
+		private JAPMuxSocket outSocket;
 	
-	public SK13ProxyConnection (CASocket s, int channelID,CAMuxSocket muxSocket) 
-		{
-			inSocket = s;
-			channel=channelID;
-			outSocket=muxSocket;
-    }
+		public JAPProxyConnection (JAPSocket s, int channelID,JAPMuxSocket muxSocket) 
+			{
+				inSocket = s;
+				channel=channelID;
+				outSocket=muxSocket;
+			}
     
     
   public void run() 
@@ -63,8 +63,8 @@ public class SK13ProxyConnection extends Thread {
 				}
 			catch (Exception e)
 				{
-					if (debug)
-						System.out.println("ProxyConnection ("+threadNumber+") - Exception while closing: " + e);
+					JAPDebug.out(JAPDebug.DEBUG,JAPDebug.THREAD,
+											 "ProxyConnection ("+threadNumber+") - Exception while closing: " + e);
 				}
     }    
     

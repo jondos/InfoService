@@ -84,8 +84,8 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
 	    });	
 	    
 	    // Check for new version on server
-	    if(CAVersion.checkForNewVersion(model)==1) {
-		CAVersion.getNewVersion(model);
+	    if(JAPVersion.checkForNewVersion(model)==1) {
+		JAPVersion.getNewVersion(model);
 		JOptionPane.showMessageDialog(this, model.getString("newVersion"));
 		exitProgram();
 	    }

@@ -1,5 +1,4 @@
-public interface JAPObserver {
-
- void valuesChanged(Object o);
-
-}
+public interface JAPObserver 
+	{
+		void valuesChanged(Object o);
+	}

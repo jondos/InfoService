@@ -1,4 +1,3 @@
-
 public final class JAP 
 	{
 
@@ -17,28 +16,12 @@ public final class JAP
 				model.load();
 				model.addJAPObserver(model);
 
-	//Command line testing
-	/*
-	if (argv != null && argv.length == 1) {
-		try {
-			model.portNumber = Integer.parseInt(argv[0].trim());
-		} catch (Exception e) {
-			System.err.println("Invalid portnumber in command line,"
-				+ "using default port ("
-				+ model.portNumber + ") ");
-		}
-	}
-	*/
 
-	JAPView view = new JAPView (model, model.TITLE);
-	model.addJAPObserver(view);
-	splash.dispose();
-	view.show();
+				JAPView view = new JAPView (model, model.TITLE);
+				model.addJAPObserver(view);
+				splash.dispose();
+				view.show();
 
-	model.setAnonMode(true);
-	    
-	//	JAPDummy d = new JAPDummy(model, view);
-	//		Thread dt = new Thread (d);
-	//		dt.start();
+				model.setAnonMode(true);
     }
 }
