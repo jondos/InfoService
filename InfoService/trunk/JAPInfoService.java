@@ -89,7 +89,6 @@ public final class JAPInfoService
 			try
 				{
 					HTTPResponse resp=conInfoService.Get("/feedback/"+model.anonHostName+DP+model.anonPortNumber);
-					System.out.println("Feddback-Response: "+resp.getStatusCode()+resp.getReasonLine());
 					if (resp.getStatusCode()!=200)
 						{
 							error=true;
