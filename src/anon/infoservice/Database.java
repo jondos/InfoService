@@ -187,12 +187,10 @@ public final class Database implements Runnable
 				/* we need exclusive access to the database */
 				while ( (m_timeoutList.size() > 0) && (moreOldEntrys))
 				{
-					if (System.currentTimeMillis() >=
-						( (DatabaseEntry) (
-						m_serviceDatabase.get(m_timeoutList.firstElement()))).getExpireTime())
+					DatabaseEntry entry=(DatabaseEntry)m_serviceDatabase.get(m_timeoutList.firstElement());
+					if (System.currentTimeMillis() >=entry.getExpireTime())
 					{
 						/* we remove the old entry now, because it has reached the expire time */
-						DatabaseEntry entry=(DatabaseEntry) m_serviceDatabase.get(m_timeoutList.firstElement());
 						LogHolder.log(LogLevel.INFO, LogType.MISC,
 									  "DatabaseEntry ("+entry.getClass().getName()+")" +
 									  entry.getId() + " has reached the expire time and is removed.");
@@ -300,7 +298,7 @@ public final class Database implements Runnable
 				/* update the timeoutList */
 				boolean timeoutEntryInserted = false;
 				int i = 0;
-				while (timeoutEntryInserted == false)
+				while (!timeoutEntryInserted)
 				{
 					if (i < m_timeoutList.size())
 					{

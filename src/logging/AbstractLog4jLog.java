@@ -62,19 +62,19 @@ public abstract class AbstractLog4jLog implements Log
 		{
 			log4jPriority = Level.DEBUG;
 		}
-		if ( (a_level == LogLevel.INFO) || (a_level == LogLevel.NOTICE))
+		else if ( (a_level == LogLevel.INFO) || (a_level == LogLevel.NOTICE))
 		{
 			log4jPriority = Level.INFO;
 		}
-		if (a_level == LogLevel.WARNING)
+		else if (a_level == LogLevel.WARNING)
 		{
 			log4jPriority = Level.WARN;
 		}
-		if ( (a_level == LogLevel.ERR) || (a_level == LogLevel.EXCEPTION))
+		else if ( (a_level == LogLevel.ERR) || (a_level == LogLevel.EXCEPTION))
 		{
 			log4jPriority = Level.ERROR;
 		}
-		if ( (a_level == LogLevel.ALERT) || (a_level == LogLevel.EMERG))
+		else if ( (a_level == LogLevel.ALERT) || (a_level == LogLevel.EMERG))
 		{
 			log4jPriority = Level.FATAL;
 		}
