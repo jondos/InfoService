@@ -63,7 +63,7 @@ public class KontenTable extends AbstractTableModel implements ModelListener
 
 	public KontenTable()
 	{
-		Pay pay = Pay.create();
+		Pay pay = Pay.getInstance();
 		daten = pay.getAccountVec();
 		pay.addModelListener(this);
 		LogHolder.log(LogLevel.DEBUG, LogType.PAY, "[konstruktor] Rows: " + getRowCount());
@@ -85,7 +85,7 @@ public class KontenTable extends AbstractTableModel implements ModelListener
 		switch (col)
 		{
 			case 0:
-				return new Boolean(ac.getAccountNumber() == Pay.create().getUsedAccount());
+				return new Boolean(ac.getAccountNumber() == Pay.getInstance().getUsedAccount());
 			case 1:
 				return new Long(ac.getAccountNumber());
 				//case 2: return ac.getValidFrom();
@@ -110,7 +110,7 @@ public class KontenTable extends AbstractTableModel implements ModelListener
 		}
 		catch (Exception ex)
 		{
-			return Pay.create().getAccount(Pay.create().getUsedAccount());
+			return Pay.getInstance().getAccount(Pay.getInstance().getUsedAccount());
 		}
 	}
 
@@ -167,7 +167,7 @@ public class KontenTable extends AbstractTableModel implements ModelListener
 					  "setValueAt: col: " + col + " getcolNam: --" + getColumnName(col) + "--  ");
 		if (getColumnName(col).equals(aktuell))
 		{
-			Pay.create().setUsedAccount(getRow(row).getAccountNumber());
+			Pay.getInstance().setUsedAccount(getRow(row).getAccountNumber());
 		}
 	}
 

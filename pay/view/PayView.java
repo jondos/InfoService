@@ -85,7 +85,7 @@ public class PayView extends JPanel
 		gridBag = new MyGridBag();
 
 		//user = UserDaten.create();
-		pay = Pay.create();
+		pay = Pay.getInstance();
 
 		table = createKontenTable(new KontenTable());
 		JScrollPane scroll = new JScrollPane(table);
@@ -178,7 +178,7 @@ public class PayView extends JPanel
 						JOptionPane.OK_CANCEL_OPTION))
 					{
 						PayAccount account = kontenTable.getRow(table.getSelectedRow());
-						boolean del = Pay.create().deleteAccount(account.getAccountNumber());
+						boolean del = Pay.getInstance().deleteAccount(account.getAccountNumber());
 						if (!del)
 						{
 							JOptionPane.showMessageDialog(getParent(), PayText.get("notDeleted"));
@@ -198,7 +198,7 @@ public class PayView extends JPanel
 				URL url = null;
 				try
 				{
-					transNr = Pay.create().chargeAccount(account.getAccountNumber());
+					transNr = Pay.getInstance().chargeAccount(account.getAccountNumber());
 					url = new URL(Literals.PROTOKOLL, Literals.CHARGEHOST, Literals.CHARGEPATH);
 
 				}

@@ -37,6 +37,17 @@ import org.bouncycastle.crypto.generators.RSAKeyPairGenerator;
 import org.bouncycastle.crypto.params.RSAKeyGenerationParameters;
 import org.bouncycastle.crypto.params.RSAKeyParameters;
 import org.bouncycastle.crypto.params.RSAPrivateCrtKeyParameters;
+import org.bouncycastle.asn1.x509.X509CertificateStructure;
+import org.bouncycastle.asn1.BERInputStream;
+import org.bouncycastle.asn1.DERInputStream;
+import org.bouncycastle.asn1.ASN1Sequence;
+import org.bouncycastle.asn1.DERObjectIdentifier;
+import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
+import org.bouncycastle.asn1.pkcs.SignedData;
+import org.bouncycastle.asn1.DERObjectIdentifier;
+import org.bouncycastle.asn1.DERTaggedObject;
+import org.bouncycastle.asn1.ASN1TaggedObject;
+
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -47,13 +58,23 @@ import payxml.XMLCertificate;
 import payxml.XMLEasyCC;
 import payxml.XMLTransCert;
 
+import anon.crypto.JAPSignature;
+import anon.crypto.JAPCertificate;
+
+import anon.util.Base64;
+
+
 /**
- *  Dies ist die Hauptklasse für die Payfunktionaltiät hier werden funktionen zum kommunizieren mit der BI
- *  dem speichern der Konten angeboten.
- *	Pay ist ausserdem ein ModelListener des Pay Bereiches sobald sich etwas an Pay oder den von Pay verwalteten Klassen ändert
- *  wird eine ModelEvent geworfen.
- *	Auf PayAccountFile und PayInstance und PayAccountsControl sollte aus diesem Grund nur über Pay zugegriffen werden.
- *  * @author Andreas Mueller, Grischan Glänzel
+ * Dies ist die Hauptklasse für die Payfunktionaltiät,
+ * hier werden Funktionen zum kommunizieren mit der BI,
+ * und dem Speichern der Konten angeboten.
+ * Pay ist ausserdem ein ModelListener des Pay Bereiches:
+ * sobald sich etwas an Pay oder den von Pay verwalteten Klassen ändert,
+ * wird ein ModelEvent geworfen.
+ * Auf PayAccountFile und PayInstance und PayAccountsControl sollte aus diesem
+ * Grund nur über Pay zugegriffen werden.
+ *
+ * @author Andreas Mueller, Grischan Glänzel, Bastian Voigt
  */
 
 public class Pay
@@ -72,6 +93,11 @@ public class Pay
 	private boolean connectedWithPi = false;
 	private boolean accountFileOpened = false;
 
+	/** for checking the JPI signatures */
+	private JAPSignature m_verifyingInstance;
+	public JAPSignature getVerifyingInstance()
+	{return m_verifyingInstance;}
+
 	private ModelEventFirerer fire = new ModelEventFirerer(this);
 
 	/**
@@ -87,7 +113,7 @@ public class Pay
 	 *
 	 * @return Instanz der Klasse Pay
 	 */
-	public static Pay create()
+	public static Pay getInstance()
 	{
 		if (pay == null)
 		{
@@ -129,14 +155,153 @@ public class Pay
 	 * @param host Hostname der Bezahlinstanz
 	 * @param port Hostport der Bezahlinstanz
 	 * @param sslOn schaltet SSL ein oder aus (Debug-stuff)
+	 * @param jpiCertFileName Name der Datei, die das Public
+	 * X509 Certificate der Bezahlinstanz enthält
 	 * @return -1 wenn noch keine Kontendatei unter filename existiert, 0 sonst
 	 * @throws Exception Wenn ein Fehler beim Dateizugriff oder der
 	 * Entschlüsselung auftrat
+	 *
+	 * NOTE: THIS IS NEVER CALLED. REMOVE???
 	 */
-	public void init(String host, int port, boolean sslOn) throws Exception
+	/* public void init(String host, int port, boolean sslOn, String jpiCertFileName)
+	throws Exception
 	{
+		readJpiCertificate(certFileName); // new by Bastian Voigt
 		setPayInstance(host, port, sslOn);
 		openAccountFile();
+	}*/
+
+	/**
+	* Reads the JPI's X509 certificate from a file
+	* and initializes the signature verifying instance
+	*
+	* @author Bastian Voigt
+	*/
+	public void readJpiCertificate(String fileName)
+	{
+
+		// the following code was copied
+		// from MixConfig.java ( openFile() and readCertificate() )
+		// maybe not a too good solution...
+		// TODO: remove this copied code
+		byte[] cert;
+		java.io.File file = new java.io.File(fileName);
+		try
+		{
+			cert = new byte[ (int) file.length()];
+			java.io.FileInputStream fin = new java.io.FileInputStream(file);
+			fin.read(cert);
+			fin.close();
+		}
+		catch (Exception e) {
+			LogHolder.log(LogLevel.ALERT, LogType.PAY,
+					"Pay.readJpiCertificate(): Error reading certificate file " + fileName
+				);
+			return;
+		}
+
+		java.io.ByteArrayInputStream bin = null;
+		X509CertificateStructure x509 = null;
+
+		try {
+			// start readCertificate(cert[])
+
+			if (cert[0] != (DERInputStream.SEQUENCE | DERInputStream.CONSTRUCTED))
+			{
+				// Probably a Base64 encoded certificate
+				java.io.BufferedReader in =
+					new java.io.BufferedReader(
+					new java.io.InputStreamReader(new java.io.ByteArrayInputStream(cert)));
+				StringBuffer sbuf = new StringBuffer();
+				String line;
+
+				while ( (line = in.readLine()) != null)
+				{
+					if (line.equals("-----BEGIN CERTIFICATE-----")
+						|| line.equals("-----BEGIN X509 CERTIFICATE-----"))
+					{
+						break;
+					}
+				}
+
+				while ( (line = in.readLine()) != null)
+				{
+					if (line.equals("-----END CERTIFICATE-----")
+						|| line.equals("-----END X509 CERTIFICATE-----"))
+					{
+						break;
+					}
+					sbuf.append(line);
+				}
+				bin = new java.io.ByteArrayInputStream(Base64.decode(sbuf.toString()));
+			}
+
+			if (bin == null && cert[1] == 0x80)
+			{
+				// a BER encoded certificate
+				BERInputStream in =
+					new BERInputStream(new java.io.ByteArrayInputStream(cert));
+				ASN1Sequence seq = (ASN1Sequence) in.readObject();
+				DERObjectIdentifier oid = (DERObjectIdentifier) seq.getObjectAt(0);
+				if (oid.equals(PKCSObjectIdentifiers.signedData))
+				{
+					x509 = new X509CertificateStructure(
+						(ASN1Sequence)new SignedData(
+						(ASN1Sequence) ( (DERTaggedObject) seq
+										.getObjectAt(1))
+						.getObject())
+						.getCertificates()
+						.getObjectAt(0));
+				}
+			}
+			else
+			{
+				if (bin == null)
+				{
+					bin = new java.io.ByteArrayInputStream(cert);
+					// DERInputStream
+				}
+				DERInputStream in = new DERInputStream(bin);
+				ASN1Sequence seq = (ASN1Sequence) in.readObject();
+				if (seq.size() > 1
+					&& seq.getObjectAt(1) instanceof DERObjectIdentifier
+					&& seq.getObjectAt(0).equals(PKCSObjectIdentifiers.signedData))
+				{
+					x509 = X509CertificateStructure.getInstance(
+						new SignedData(
+						ASN1Sequence.getInstance(
+						(ASN1TaggedObject) seq.getObjectAt(1),
+						true))
+						.getCertificates()
+						.getObjectAt(0));
+				}
+				else
+					x509 = X509CertificateStructure.getInstance(seq);
+			}
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+			x509=null;
+		}
+
+		if(x509 == null) {
+			LogHolder.log(LogLevel.ALERT, LogType.PAY,
+					"Pay.readJpiCertificate(): Error decoding certificate!"
+				);
+			return;
+		}
+
+		try {
+			LogHolder.log(LogLevel.DEBUG, LogType.PAY,
+					"Pay.readJpiCertificate(): reading JPI Certificate from file '"+fileName+"'."
+				);
+			JAPCertificate japCert = JAPCertificate.getInstance(x509);
+			m_verifyingInstance = new JAPSignature();
+			m_verifyingInstance.initVerify(japCert.getPublicKey());
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	/**
@@ -146,7 +311,6 @@ public class Pay
 	 * @param port Hostport der Bezahlinstanz
 	 * @param sslOn SSL ein / aus (Debug-Stuff)
 	 */
-
 	public void setPayInstance(String host, int port, boolean sslOn)
 	{
 		this.host = host;
@@ -503,7 +667,11 @@ public class Pay
 	 */
 	public void addAccount() throws IllegalStateException
 	{
+		LogHolder.log(LogLevel.DEBUG, LogType.PAY,
+				"Pay.addAccount() called. Generating key.."
+			);
 		RSAKeyPairGenerator pGen = new RSAKeyPairGenerator();
+		//@todo check RSKeyGeneration
 		RSAKeyGenerationParameters genParam = new RSAKeyGenerationParameters(
 			BigInteger.valueOf(0x11), new SecureRandom(), 512, 25);
 		pGen.init(genParam);
@@ -512,6 +680,10 @@ public class Pay
 
 		RSAPrivateCrtKeyParameters rsaprivkey = (RSAPrivateCrtKeyParameters) pair.getPrivate();
 		RSAKeyParameters rsapubkey = (RSAKeyParameters) pair.getPublic();
+		LogHolder.log(LogLevel.DEBUG, LogType.PAY,
+				"Pay.addAccount() Key successfully generated"
+			);
+
 
 		try
 		{

@@ -203,13 +203,6 @@
     <file path="images/splash.gif"/>
     <file path="images/west.gif"/>
   </node>
-  <node name="pay" type="Folder">
-    <node name="res" type="Folder">
-      <file path="pay/res/Account.dat">
-        <property category="build" name="CopyResource" value="1"/>
-      </file>
-    </node>
-  </node>
   <node name="anon" type="Package"/>
   <node name="gui" type="Package"/>
   <node name="jap" type="Package"/>
