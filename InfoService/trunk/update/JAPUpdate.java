@@ -52,7 +52,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.ItemEvent;
 import java.awt.Insets;
-import javax.swing.border.EmptyBorder;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+//import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import java.io.File;
 
@@ -114,62 +117,91 @@ public class JAPUpdate implements ActionListener,ItemListener,Runnable
 				buttonPanel.add(bttnAbort);
 
 				//The Installed-Panel
-				GridLayout gridInstalled = new GridLayout(3,2);
-				gridInstalled.setVgap(0);
-				gridInstalled.setHgap(0);
-				TitledBorder titledBorder = new TitledBorder(" "+JAPMessages.getString("updateTitleBorderInstalled")+" ");
-				JPanel installedPanel = new JPanel(gridInstalled);
+				gridBagPanel=new GridBagLayout();
+				GridBagConstraints c=new GridBagConstraints();
+        TitledBorder titledBorder = new TitledBorder(" "+JAPMessages.getString("updateTitleBorderInstalled")+" ");
+				JPanel installedPanel = new JPanel(gridBagPanel);
 				installedPanel.setBorder(titledBorder);
 				JLabel l=new JLabel("Version: ");
-				EmptyBorder b=new EmptyBorder(10,10,10,10);
-				l.setBorder(b);
-				installedPanel.add(l);
+				c.gridx=0;
+        c.gridy=0;
+        c.anchor=c.NORTHWEST;
+        c.weighty=0.33;
+        c.weightx=0.5;
+        c.fill=c.BOTH;
+        c.insets=new Insets(5,5,5,5);
+				gridBagPanel.setConstraints(l,c);
+        installedPanel.add(l);
 				l=new JLabel(JAPConstants.aktVersion);
-				l.setBorder(b);
-				installedPanel.add(l);
+				c.gridx=1;
+ 				gridBagPanel.setConstraints(l,c);
+        installedPanel.add(l);
 				l=new JLabel(JAPMessages.getString("updateLabelDate")+" ");
-				l.setBorder(b);
+				c.gridx=0;
+        c.gridy=1;
+        gridBagPanel.setConstraints(l,c);
 				installedPanel.add(l);
-				l=new JLabel(JAPConstants.strReleaseDate);
-				l.setBorder(b);
+        String strDate=JAPConstants.strReleaseDate;
+        try
+          {
+            DateFormat sdf=new SimpleDateFormat("yyyy/MM/dd HH:mm:ss z");
+            Date d=sdf.parse(strDate+" GMT");
+            sdf=DateFormat.getDateTimeInstance(DateFormat.MEDIUM,DateFormat.MEDIUM);
+            strDate=sdf.format(d);
+          }
+        catch(Exception e){e.printStackTrace();}
+        l=new JLabel(strDate);
+				c.gridx=1;
+        gridBagPanel.setConstraints(l,c);
 				installedPanel.add(l);
 				l=new JLabel("Type: ");
-				l.setBorder(b);
-				installedPanel.add(l);
+        c.gridy=2;
+        c.gridx=0;
+        gridBagPanel.setConstraints(l,c);
+        installedPanel.add(l);
 				if(JAPConstants.m_bReleasedVersion)
 					l=new JLabel("Release");
 				else
 					l=new JLabel("Development");
-				l.setBorder(b);
+				c.gridx=1;
+        gridBagPanel.setConstraints(l,c);
 				installedPanel.add(l);
 
 			 //The latestVersion-Panel
-				GridLayout gridLatest = new GridLayout(3,2);
-				gridLatest.setVgap(0);
-				gridLatest.setHgap(0);
-				titledBorder = new TitledBorder(" "+JAPMessages.getString("updateTitleBorderLatest")+" ");
-				JPanel latestPanel = new JPanel(gridLatest);
+				gridBagPanel=new GridBagLayout();
+        titledBorder = new TitledBorder(" "+JAPMessages.getString("updateTitleBorderLatest")+" ");
+				JPanel latestPanel = new JPanel(gridBagPanel);
 				latestPanel.setBorder(titledBorder);
 				l=new JLabel("Version: ");
-				l.setBorder(b);
+        c.gridx=0;
+        c.gridy=0;
+				gridBagPanel.setConstraints(l,c);
 				latestPanel.add(l);
 				m_labelVersion=new JLabel("Unknown");
-				m_labelVersion.setBorder(b);
+        c.gridx=1;
+				gridBagPanel.setConstraints(m_labelVersion,c);
 				latestPanel.add(m_labelVersion);
 				l=new JLabel(JAPMessages.getString("updateLabelDate")+" ");
-				l.setBorder(b);
+				c.gridy=1;
+        c.gridx=0;
+        gridBagPanel.setConstraints(l,c);
 				latestPanel.add(l);
 				m_labelDate=new JLabel("Unknown");
-				m_labelDate.setBorder(b);
+				c.gridx=1;
+        gridBagPanel.setConstraints(m_labelDate,c);
 				latestPanel.add(m_labelDate);
 				l=new JLabel("Type: ");
-				l.setBorder(b);
+				c.gridy=2;
+        c.gridx=0;
+        gridBagPanel.setConstraints(l,c);
 				latestPanel.add(l);
 				m_comboType=new JComboBox();
 				m_comboType.addItem("Release");
 				m_comboType.addItem("Development");
 				m_comboType.setEnabled(false);
 				m_comboType.addItemListener(this);
+				c.gridx=1;
+        gridBagPanel.setConstraints(m_comboType,c);
 				latestPanel.add(m_comboType);
 
 				//The Info-Panel
@@ -180,7 +212,6 @@ public class JAPUpdate implements ActionListener,ItemListener,Runnable
 				m_taInfo.setEditable(false);
 				m_taInfo.setHighlighter(null);
 				JScrollPane scrollpane=new JScrollPane(m_taInfo);
-				scrollpane.setBorder(b);
 				infoPanel.add(scrollpane);
 
 				GridBagConstraints cFrame = new GridBagConstraints();

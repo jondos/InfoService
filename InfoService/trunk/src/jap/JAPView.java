@@ -82,7 +82,8 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 	private ImageIcon[]			meterIcons;
 	private JAPHelp 			  helpWindow;
 	private JAPConf 			  m_dlgConfig;
-	private JDialog				  m_ViewIconified;
+	private Window				  m_ViewIconified;
+  private NumberFormat    m_NumberFormat;
 	private Object          oValueUpdateSemaphore;
 	private boolean         m_bIsIconified;
 	private String          m_Title;
@@ -92,6 +93,7 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 		{
 			super(s);
 			m_Title=s;
+      m_NumberFormat=NumberFormat.getInstance();
 			controller = JAPController.getController();
 			helpWindow =  null;//new JAPHelp(this);
 			m_dlgConfig = null;//new JAPConf(this);
@@ -522,7 +524,8 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 			m_borderDetails.setTitle(JAPMessages.getString("meterDetailsBorder")) ;
 			if(m_dlgConfig!=null)
 				m_dlgConfig.localeChanged();
-			updateValues();
+      m_NumberFormat=NumberFormat.getInstance();
+      updateValues();
 			setOptimalSize();
 		}
 
@@ -579,6 +582,7 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 							{
 								setVisible(false);
 								m_ViewIconified.setVisible(true);
+                m_ViewIconified.toFront();
 							}
 					}
 				else if (event.getSource() == m_bttnConf)
@@ -651,7 +655,7 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 				}
 			}
 
-	private void updateValues() {
+	private synchronized void updateValues() {
 		AnonServer e = controller.getAnonServer();
 		// Config panel
 		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPView:Start updateValues");
@@ -751,7 +755,7 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 
 
 		}
-		public void registerViewIconified(JDialog v) {
+		public void registerViewIconified(Window v) {
 			m_ViewIconified = v;
 		}
 		public void channelsChanged(int c) {
@@ -764,7 +768,7 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 		}
 		public void transferedBytes(int c) {
 			// Nr of Bytes transmitted anonymously
-			m_labelOwnTrafficBytes.setText(NumberFormat.getInstance().format(c)+" Bytes");
+			m_labelOwnTrafficBytes.setText(m_NumberFormat.format(c)+" Bytes");
 		}
 		public void valuesChanged ()
 		{

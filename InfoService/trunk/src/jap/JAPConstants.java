@@ -30,7 +30,7 @@ package jap;
 import java.awt.Insets;
 import java.awt.Font;
 public final class JAPConstants {
-	public static final String aktVersion = "00.01.089"; //Never change the layout of this line!
+	public static final String aktVersion = "00.01.090"; //Never change the layout of this line!
 	private static final String CVS_GENAERTED_RELEASE_DATE= "$Date$";
 																													 //Warning: This is a little bit tricky,
 																													 //because CVS will expand the $Date$
@@ -87,10 +87,10 @@ public final class JAPConstants {
 	public static final String   DOWNLOADFN                   = "install.gif";
 	static final String   IICON16FN                    = "icon16.gif";
 	static final String   ICONFN                       = "icon.gif";
-	static final String   JAPTXTFN                     = "japtxt.gif";
+	//static final String   JAPTXTFN                     = "japtxt.gif";
 	static final String   JAPEYEFN                     = "japeye.gif";
 	static final String   JAPICONFN                    = "japi.gif";
-	static final String   CONFIGICONFN                 = "icoc.gif";
+	//static final String   CONFIGICONFN                 = "icoc.gif";
 	static final String   ICONIFYICONFN                = "iconify.gif";
 	static final String   ENLARGEYICONFN               = "enlarge.gif";
 	static final String   METERICONFN                  = "icom.gif";

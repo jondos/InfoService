@@ -502,7 +502,8 @@ public final class JAPController implements ProxyListener {
 			return;
 		JAPMessages.init(l);
 		m_Locale=l;
-		if(m_View!=null)
+		Locale.setDefault(l);
+    if(m_View!=null)
 			m_View.localeChanged();
 	}
 	//---------------------------------------------------------------------
