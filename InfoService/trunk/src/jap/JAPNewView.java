@@ -369,7 +369,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_labelOwnActivity = new JLabel(JAPMessages.getString("ngActivity"), JLabel.RIGHT);
 		c1.weightx = 1;
 		c1.fill = GridBagConstraints.HORIZONTAL;
-		c1.anchor = GridBagConstraints.EAST;
 		c1.gridx = 3;
 		p.add(m_labelOwnActivity, c1);
 		m_progressOwnTrafficActivity = new JProgressBar();
@@ -429,7 +428,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_labelOwnActivitySmall = new JLabel(JAPMessages.getString("ngActivity"), JLabel.RIGHT);
 		c1.weightx = 1;
 		c1.fill = GridBagConstraints.HORIZONTAL;
-		c1.anchor = GridBagConstraints.EAST;
 		c1.gridx = 3;
 		p.add(m_labelOwnActivitySmall, c1);
 		m_progressOwnTrafficActivitySmall = new JProgressBar();
