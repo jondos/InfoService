@@ -2,7 +2,6 @@
 #0=JAP.jpr
 #3=JAP.java
 #21=JAPMacintosh.java
-#36=Rijndael
 #43=gui
 #46=update
 #57=JAP.jar
@@ -209,8 +208,6 @@ sys[0].WorkingDirectory=classes
 sys[0].enable.auto.packages=false
 sys[3].Parent=0
 sys[21].Parent=0
-sys[36].Parent=0
-sys[36].Type=Package
 sys[43].Parent=0
 sys[43].Type=Package
 sys[46].Parent=0
