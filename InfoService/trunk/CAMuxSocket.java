@@ -87,7 +87,7 @@ public class CAMuxSocket extends Thread
 						channel=fromServer.readInt();
 						len=fromServer.readShort();
 						tmp=fromServer.readShort();
-						formServer.readFully(buff);
+						fromServer.readFully(buff);
 //						count=1000;
 //						tmp=0;
 //						do
