@@ -27,6 +27,22 @@
  */
 package pay.anon;
 
+import java.io.DataInputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import anon.AnonChannel;
+import anon.AnonService;
+import anon.infoservice.MixCascade;
+import anon.infoservice.StatusInfo;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
+import pay.Pay;
+import pay.PayAccount;
+import pay.PayAccountsFile;
+import payxml.XMLAccountInfo;
+import payxml.XMLPayRequest;
+
 /**
  * Die gesammt Kommunikation zwischen Pay und AI (welche ja ein Teil der Mix-Kaskade sind). L\uFFFDuft als eigener Thread
  * beim erzeugen wird eine AI Channel ge\uFFFDffnet. Beim starten des Threads wird festgestellt ob die AI bezahlt werden will etc.
@@ -142,7 +158,7 @@ public class AICommunication extends Thread
 	/*	public String getSignedCC(XMLPayRequest request)
 	 {
 	  XMLEasyCC cc = Pay.getInstance().addCosts(request.aiName, Pay.getInstance().getUsedAccount(),
-				  countLastTransferredBytes());
+		 countLastTransferredBytes());
 	  try
 	  {
 	   JAPSignature sig = new JAPSignature();

@@ -28,6 +28,8 @@
 package pay.data;
 
 /** @todo remove this class */
+import java.awt.Color;
+
 public final class Literals
 {
 

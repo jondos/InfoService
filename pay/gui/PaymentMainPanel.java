@@ -33,6 +33,27 @@ package pay.gui;
  * @author Bastian Voigt
  * @version 1.0
  */
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Image;
+import java.awt.MediaTracker;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JProgressBar;
+import javax.swing.border.EtchedBorder;
+import javax.swing.border.TitledBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import jap.JAPConstants;
+import jap.JAPModel;
+import jap.JAPUtil;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
+import pay.PayAccount;
+import pay.PayAccountsFile;
 
 public class PaymentMainPanel extends JPanel
 {

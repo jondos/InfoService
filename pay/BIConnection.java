@@ -37,6 +37,20 @@ package pay;
  *
  * @author Grischan Glaenzel, Bastian Voigt
  */
+import java.io.IOException;
+import java.net.Socket;
+import anon.crypto.JAPSignature;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
+import pay.crypto.tinyssl.TinySSL;
+import pay.util.HttpClient;
+import payxml.XMLAccountCertificate;
+import payxml.XMLAccountInfo;
+import payxml.XMLChallenge;
+import payxml.XMLJapPublicKey;
+import payxml.XMLResponse;
+import payxml.XMLTransCert;
 
 public class BIConnection
 {
@@ -63,7 +77,7 @@ public class BIConnection
 						int biPort,
 						boolean sslOn
 						/*						XMLAccountCertificate accountCert,
-						  MyRSAPrivateKey privKey*/
+						 MyRSAPrivateKey privKey*/
 						)
 	{
 		m_BIHostName = biHostname;

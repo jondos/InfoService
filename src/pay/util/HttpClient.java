@@ -27,6 +27,15 @@
  */
 package pay.util;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.Socket;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
+import payxml.XMLDescription;
+
 final public class HttpClient
 {
 	private final static int MAX_LINE_LENGTH = 100;

@@ -27,6 +27,23 @@
  */
 package pay;
 
+import java.util.Enumeration;
+import java.util.Vector;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.swing.JOptionPane;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import anon.crypto.XMLEncryption;
+import anon.util.XMLUtil;
+import jap.JAPController;
+import jap.JAPView;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
+
 /**
  * This class contains the accounts configuration and the functionality to read
  * and write the configuration file. Because the configuration file contains
@@ -276,7 +293,7 @@ public class PayAccountsFile
 	/*	public void readFromFile(String fileName) throws Exception
 	 {
 	  LogHolder.log(LogLevel.DEBUG, LogType.PAY,
-		   "pay.PayAccountsFile.readFromFile: Reading PayAccounts from file " + fileName);
+		"pay.PayAccountsFile.readFromFile: Reading PayAccounts from file " + fileName);
 	  // delete old accountdata
 	  if (m_bIsInitialized)
 	  {
@@ -298,7 +315,7 @@ public class PayAccountsFile
 	   elemAccountsFile = (Element) XMLUtil.getFirstChildByName(elemRoot, "EncryptedData");
 	   if (elemAccountsFile == null)
 	   {
-		throw new Exception("Wrong XML Format");
+	 throw new Exception("Wrong XML Format");
 	   }
 	   m_bIsEncrypted = true;
 	  }
@@ -332,7 +349,7 @@ public class PayAccountsFile
 	  {
 	   if (password == null)
 	   {
-		throw new Exception("Cannot encrypt with null password");
+	 throw new Exception("Cannot encrypt with null password");
 	   }
 	   // TODO: Implement encryption
 	  }

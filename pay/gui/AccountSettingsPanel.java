@@ -27,6 +27,44 @@
  */
 package pay.gui;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.util.Enumeration;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import java.awt.BorderLayout;
+import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import javax.swing.JButton;
+import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.border.EmptyBorder;
+import javax.swing.filechooser.FileFilter;
+import javax.swing.table.AbstractTableModel;
+import javax.swing.table.JTableHeader;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import anon.crypto.XMLEncryption;
+import anon.util.XMLUtil;
+import jap.AbstractJAPConfModule;
+import jap.JAPConstants;
+import jap.JAPController;
+import jap.JAPMessages;
+import jap.JAPView;
+import jap.JAPWaitSplash;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
+import pay.Pay;
+import pay.PayAccount;
+import pay.PayAccountsFile;
+import payxml.XMLAccountInfo;
+import payxml.XMLTransCert;
+
 /**
  * The Jap Conf Module (Settings Tab Page) for the Accounts and payment Management
  *
