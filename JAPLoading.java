@@ -38,7 +38,7 @@ final class JAPLoading implements ActionListener, VersioncheckerProgress {
 		private JDialog dialog;
 		private String returnValue;
 
-    public  JAPLoading (JAPController controller,Frame parent) {
+    public  JAPLoading (/*JAPController controller,*/Frame parent) {
 		dialog = new JDialog(parent);
 		dialog.setTitle(JAPMessages.getString("Message"));
 
@@ -122,11 +122,12 @@ final class JAPLoading implements ActionListener, VersioncheckerProgress {
 			dialog.setVisible(false);
 		}
 	}
-	/*
-	public static void main() {
+
+	public static void main(String[] argc) {
 		JAPDebug d = JAPDebug.create();
-		JAPModel model = JAPModel.createModel();
-		JAPLoading l = new JAPLoading(model,new Frame());
+		JAPMessages.init();
+    //JAPModel model = JAPModel.createModel();
+		JAPLoading l = new JAPLoading(/*model,*/new Frame());
 		String answer;
 
 		answer = l.message(JAPMessages.getString("newVersionAvailableTitle"),
@@ -162,6 +163,6 @@ final class JAPLoading implements ActionListener, VersioncheckerProgress {
 		System.out.println(answer);
 
 	}
-	*/
+
 }
 

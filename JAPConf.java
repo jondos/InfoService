@@ -667,9 +667,8 @@ final class JAPConf extends JDialog
   Cursor c1=getCursor();
   setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
   CancelPressed();
-//  if (update == null){
-
   update = new JAPUpdate();
+//  if (update == null){
 
   //         }//fi
            //updateValues();
