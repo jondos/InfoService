@@ -27,27 +27,26 @@
  */
 package proxy;
 
-import jap.JAPUtil;
-import jap.JAPModel;
-import jap.JAPConstants;
-import java.io.InputStream;
+import java.io.BufferedWriter;
+import java.io.DataInputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.io.DataInputStream;
-import java.io.BufferedWriter;
-import java.io.IOException;
 import java.net.Socket;
 import java.net.URL;
-import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.StringTokenizer;
-import java.text.SimpleDateFormat;
 import java.text.DateFormat;
 import java.text.NumberFormat;
-import logging.*;
+import java.text.SimpleDateFormat;
+import java.util.StringTokenizer;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import anon.server.impl.ProxyConnection;
+import jap.JAPConstants;
+import jap.JAPModel;
+import jap.JAPUtil;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 
 final class DirectProxyConnection implements Runnable
 {
@@ -79,14 +78,14 @@ final class DirectProxyConnection implements Runnable
 	{
 		m_threadNumber = getThreadNumber();
 		LogHolder.log(LogLevel.DEBUG, LogType.NET,
-					 "C(" + m_threadNumber + ") - New connection handler started.");
+					  "C(" + m_threadNumber + ") - New connection handler started.");
 		try
 		{
 			// open stream from client
 			m_inputStream = new DataInputStream(m_clientSocket.getInputStream());
 			// read first line of request
 			m_requestLine = JAPUtil.readLine(m_inputStream);
-			//LogHolder.log(LogLevel.DEBUG,LogType.NET,"C("+threadNumber+") - RequestLine: >" + requestLine +"<");
+			LogHolder.log(LogLevel.DEBUG,LogType.NET,"C("+m_threadNumber+") - RequestLine: >" + m_requestLine +"<");
 			// Examples:
 			//  CONNECT 192.168.1.2:443 HTTP/1.0
 			//  GET http://192.168.1.2/incl/button.css HTTP/1.0
@@ -182,7 +181,7 @@ final class DirectProxyConnection implements Runnable
 		catch (Exception e)
 		{
 			LogHolder.log(LogLevel.EXCEPTION, LogType.NET,
-						 "C(" + m_threadNumber + ") - Exception while closing socket: " + e);
+						  "C(" + m_threadNumber + ") - Exception while closing socket: " + e);
 		}
 
 	}
@@ -235,12 +234,12 @@ final class DirectProxyConnection implements Runnable
 			// next Header lines
 			String nextLine = JAPUtil.readLine(m_inputStream);
 			LogHolder.log(LogLevel.DEBUG, LogType.NET,
-						 "C(" + m_threadNumber + ") - Header: >" + nextLine + "<");
+						  "C(" + m_threadNumber + ") - Header: >" + nextLine + "<");
 			while (nextLine.length() != 0)
 			{
 				nextLine = JAPUtil.readLine(m_inputStream);
 				LogHolder.log(LogLevel.DEBUG, LogType.NET,
-							 "C(" + m_threadNumber + ") - Header: >" + nextLine + "<");
+							  "C(" + m_threadNumber + ") - Header: >" + nextLine + "<");
 			}
 			// create stream --> server
 			OutputStream outputStream = serverSocket.getOutputStream();
@@ -270,10 +269,10 @@ final class DirectProxyConnection implements Runnable
 			// wait unitl response thread has finished
 			LogHolder.log(LogLevel.DEBUG, LogType.NET, "\n");
 			LogHolder.log(LogLevel.DEBUG, LogType.THREAD,
-						 "C(" + m_threadNumber + ") - Waiting for resonse thread...");
+						  "C(" + m_threadNumber + ") - Waiting for resonse thread...");
 			prt.join();
 			LogHolder.log(LogLevel.DEBUG, LogType.THREAD,
-						 "C(" + m_threadNumber + ") -                           ...finished!");
+						  "C(" + m_threadNumber + ") -                           ...finished!");
 			toClient.close();
 			outputStream.close();
 			m_inputStream.close();
@@ -294,9 +293,9 @@ final class DirectProxyConnection implements Runnable
 			if (JAPModel.getUseFirewall() && JAPModel.getFirewallType() == JAPConstants.FIREWALL_TYPE_SOCKS)
 			{
 				ProxyConnection p = new ProxyConnection(JAPConstants.FIREWALL_TYPE_SOCKS,
-														JAPModel.getFirewallHost(),
-														JAPModel.getFirewallPort(), null, null, m_strHost,
-														m_iPort);
+					JAPModel.getFirewallHost(),
+					JAPModel.getFirewallPort(), null, null, m_strHost,
+					m_iPort);
 				serverSocket = p.getSocket();
 			}
 			else
@@ -311,13 +310,13 @@ final class DirectProxyConnection implements Runnable
 			// protocolString += method+" "+file+ " "+version;
 			protocolString += m_strMethod + " " + m_strFile + " " + "HTTP/1.0";
 			LogHolder.log(LogLevel.DEBUG, LogType.NET,
-						 "C(" + m_threadNumber + ") - ProtocolString: >" + protocolString + "<");
+						  "C(" + m_threadNumber + ") - ProtocolString: >" + protocolString + "<");
 			outputStream.write( (protocolString + "\r\n").getBytes());
 			String nextLine = JAPUtil.readLine(m_inputStream);
 			////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 			LogHolder.log(LogLevel.DEBUG, LogType.NET,
-						 "C(" + m_threadNumber + ") - Header: >" + nextLine + "<");
+						  "C(" + m_threadNumber + ") - Header: >" + nextLine + "<");
 			while (nextLine.length() != 0)
 			{
 				if (!filter(nextLine))
@@ -328,11 +327,11 @@ final class DirectProxyConnection implements Runnable
 				else
 				{
 					LogHolder.log(LogLevel.DEBUG, LogType.NET,
-								 "C(" + m_threadNumber + ") - Header " + nextLine + " filtered");
+								  "C(" + m_threadNumber + ") - Header " + nextLine + " filtered");
 				}
 				nextLine = JAPUtil.readLine(m_inputStream);
 				LogHolder.log(LogLevel.DEBUG, LogType.NET,
-							 "C(" + m_threadNumber + ") - Header: >" + nextLine + "<");
+							  "C(" + m_threadNumber + ") - Header: >" + nextLine + "<");
 			}
 
 			// send final CRLF --> server
@@ -346,7 +345,7 @@ final class DirectProxyConnection implements Runnable
 			prt.start();
 
 			LogHolder.log(LogLevel.DEBUG, LogType.NET,
-						 "C(" + m_threadNumber + ") - Headers sended, POST data may follow");
+						  "C(" + m_threadNumber + ") - Headers sended, POST data may follow");
 			byte[] buff = new byte[1000];
 			int len;
 			while ( (len = m_inputStream.read(buff)) != -1)
@@ -360,10 +359,10 @@ final class DirectProxyConnection implements Runnable
 
 			LogHolder.log(LogLevel.DEBUG, LogType.NET, "\n");
 			LogHolder.log(LogLevel.DEBUG, LogType.THREAD,
-						 "C(" + m_threadNumber + ") - Waiting for resonse thread...");
+						  "C(" + m_threadNumber + ") - Waiting for resonse thread...");
 			prt.join();
 			LogHolder.log(LogLevel.DEBUG, LogType.THREAD,
-						 "C(" + m_threadNumber + ") -                  ...finished!");
+						  "C(" + m_threadNumber + ") -                  ...finished!");
 
 			outputStream.close();
 			m_inputStream.close();
@@ -505,7 +504,7 @@ final class DirectProxyConnection implements Runnable
 		catch (Exception e)
 		{
 			LogHolder.log(LogLevel.NOTICE, LogType.NET,
-						 "C(" + m_threadNumber + ") - Exception in handleFTP(): " + e);
+						  "C(" + m_threadNumber + ") - Exception in handleFTP(): " + e);
 			try
 			{ //TODO generate Error message in Browser.....
 				ftpClient.disconnect();
