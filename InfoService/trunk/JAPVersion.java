@@ -6,7 +6,7 @@ import java.io.FileOutputStream;
 
 public class JAPVersion
 	{
-		private static String aktVersion="00.00.008";
+		private static String aktVersion="00.00.009";
 		public static int checkForNewVersion(JAPModel model)
 			{
 				try

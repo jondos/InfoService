@@ -1,4 +1,5 @@
 import java.util.*;
+import java.text.NumberFormat;
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
@@ -501,8 +502,8 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
 		ownTrafficChannelsProgressBar.setValue(model.getNrOfChannels());
 		//ownTrafficBytesProgressBar.setValue(model.getNrOfBytes());
 		ownTrafficChannelsProgressBar.setString(String.valueOf(model.getNrOfChannels()));
-		ownTrafficBytesProgressBar.setString(String.valueOf(model.getNrOfBytes())+" Byte");
-		
+//		ownTrafficBytesProgressBar.setString(String.valueOf(model.getNrOfBytes())+" Byte");
+		ownTrafficBytesProgressBar.setString(NumberFormat.getInstance().format(model.getNrOfBytes())+" Bytes");
     }
 	
 	public void valuesChanged (Object o)
