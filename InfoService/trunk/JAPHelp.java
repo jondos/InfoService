@@ -10,7 +10,7 @@ import javax.swing.event.*;
 
 /* classes modified from Swing Example "Metalworks" */
 
-public class JAPHelp extends JDialog implements ActionListener {
+final public class JAPHelp extends JDialog implements ActionListener {
     private JAPModel model;
     private String helpPath = " ";
     private String helpLang = " ";
@@ -21,52 +21,49 @@ public class JAPHelp extends JDialog implements ActionListener {
 			{
 				super(f, JAPModel.getString("helpWindow"), false);
 				model = JAPModel.getModel();
-
-				JPanel container = new JPanel();
-				container.setLayout( new BorderLayout() );
+				init();
+			}
+		
+		final private void init()
+			{
+				//JPanel container = new JPanel();
+				//container.setLayout( new BorderLayout() );
+				//getContentPane().setLayout(new BorderLayout());
 	
-				/* works but makes no sens to catch here
-				try { helpPath = model.getString("helpPath"); }
-				catch (Exception e) { helpPath = model.HELPPATH; }
-				*/
-				helpPath = model.getString("helpPath1");
-	
-				html = new HtmlPane(helpPath);
+				html = new HtmlPane(model.getString("helpPath1"));
 
-				JPanel buttonPanel = new JPanel();
-				buttonPanel.setLayout ( new FlowLayout(FlowLayout.RIGHT) );
+				JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 	
 				language = new JComboBox();
-				for (int i = 1; i < model.MAXHELPLANGUAGES; i++) {
-					try { 
-								helpPath = model.getString("helpPath"+String.valueOf(i)); 
-								helpLang = model.getString("lang"+String.valueOf(i));
-								// This checks if the entry exists in the properties file
-								// if yes, the item will be added
-								if (( helpLang.equals("lang"+String.valueOf(i)) )!= true)
-								    language.addItem(helpLang);
-								  }
-	    catch (Exception e) { ; }
-	}
-	language.addActionListener(this);
-	buttonPanel.add( language );
-	buttonPanel.add(new JLabel("   "));
+				buttonPanel.add( language );
+				buttonPanel.add(new JLabel("   "));
 	
-	JButton close = new JButton(model.getString("closeButton"));
-	close.addActionListener(new ActionListener() {
-	                       public void actionPerformed(ActionEvent e) {
-				   ClosePressed();
-			       }});
-	buttonPanel.add( close );
-	getRootPane().setDefaultButton(close);
-	buttonPanel.add(new JLabel("   "));
+				JButton close = new JButton(model.getString("closeButton"));
+				buttonPanel.add( close );
+				buttonPanel.add(new JLabel("   "));
 
-	container.add(html, BorderLayout.CENTER);
-	container.add(buttonPanel, BorderLayout.SOUTH);
-	getContentPane().add(container);
-	pack();
-	JAPModel.centerFrame(this);
-    }
+				
+				getContentPane().add(html, BorderLayout.CENTER);
+				getContentPane().add(buttonPanel, BorderLayout.SOUTH);
+				//getContentPane().add(container);
+				getRootPane().setDefaultButton(close);
+				close.addActionListener(this);
+				language.addActionListener(this);
+				for (int i = 1; i < model.MAXHELPLANGUAGES; i++) {
+					try 
+						{ 
+							helpPath = model.getString("helpPath"+String.valueOf(i)); 
+							helpLang = model.getString("lang"+String.valueOf(i));
+							// This checks if the entry exists in the properties file
+							// if yes, the item will be added
+							if (( helpLang.equals("lang"+String.valueOf(i)) )!= true)
+								language.addItem(helpLang);
+						}
+							catch (Exception e) {}
+					}
+				pack();
+				JAPModel.centerFrame(this);
+			}
 
     
     public Dimension getPreferredSize()
@@ -77,15 +74,20 @@ public class JAPHelp extends JDialog implements ActionListener {
 				return (d);
 			}
     
-    public void actionPerformed(ActionEvent e) {
-	// for Language Combobox only
-	helpPath = model.getString("helpPath"
-		    +String.valueOf(language.getSelectedIndex()+1));
-	html.load(helpPath);
-    }
+    public void actionPerformed(ActionEvent e) 
+			{
+				// for Language Combobox AND Close Burtton only
+				if(e.getSource()==language)
+					{
+						helpPath = model.getString("helpPath"+String.valueOf(language.getSelectedIndex()+1));
+						html.load(helpPath);
+					}
+				else
+					closePressed();
+			}
 
-    public void ClosePressed() {
-        this.setVisible(false);
+    private void closePressed() {
+        setVisible(false);
     }
 }
 
@@ -96,64 +98,55 @@ final class HtmlPane extends JScrollPane implements HyperlinkListener
 		private URL url;
 		private Cursor cursor;
 
-    public HtmlPane(String fn) {
-		// used to find help files within a .jar file
-		try {
-			html = new JEditorPane(getClass().getResource(fn));
-		}
-		catch (Exception e) {
-			html = null;
-		}
-		// ...else
-		if (html == null) {
-			try {
-				File f = new File (fn);
-				String s = f.getAbsolutePath();
-				s = "file:"+s;
-//				URL url = new URL(s);
-				html = new JEditorPane(s);
+    public HtmlPane(String fn) 
+			{
+				html=new JEditorPane();
+				html.setEditable(false);
+				html.addHyperlinkListener(this);
+				try
+					{
+						html.setPage(getUrlFor(fn));
+					}
+				catch(Exception e){}
+				getViewport().add(html);
+				cursor=html.getCursor(); // ??? (hf)
 			}
-			catch (Exception e) {
-				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPHelp:HtmlPane(constructor):Exception: " + e);
-				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"URL was: " + fn);
-			}
-		}
-		if (html != null) {
-			html.setEditable(false);
-			html.addHyperlinkListener(this);
-
-			JViewport vp = getViewport();
-			vp.add(html);
-			cursor=html.getCursor(); // ??? (hf)
-		}
-	}
     
-    public void load(String fn) {
-		URL url = null;
-		// used to find help files within a .jar file
-		try  {
-			url = getClass().getResource(fn);
-		}
-		catch (Exception e) {
-				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPHelp:load:Exception: " + e);
-				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"URL was: " + fn);
-		}
-		// ...else
-		if (url == null) {
-			try {
-				File f = new File (fn);
-				String s = f.getAbsolutePath();
-				s = "file:"+s;
-				url = new URL(s);
+		private URL getUrlFor(String fn)
+			{
+				// used to find help files within a .jar file
+				try  
+					{
+						URL url = getClass().getResource(fn);
+						if(url!=null)
+							return url;
+					}
+				catch (Exception e) {
+						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPHelp:load:Exception: " + e);
+						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"URL was: " + fn);
+					}
+				// ...else
+				try
+					{
+						File f = new File (fn);
+						String s = f.getAbsolutePath();
+						s = "file:"+s;
+						return new URL(s);
+					}
+				catch (Exception e)
+					{
+						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPHelp:HtmlPane(constructor):Exception: " + e);
+						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"URL was: " + fn);
+					}
+				return null;
 			}
-			catch (Exception e) {
-				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPHelp:HtmlPane(constructor):Exception: " + e);
-				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"URL was: " + fn);
+		
+    public void load(String fn)
+			{
+				URL url=getUrlFor(fn);
+				if(url != null)
+					linkActivated(url);
 			}
-		}
-		if (url != null)
-			linkActivated(url);
-	}
 
     public void hyperlinkUpdate(HyperlinkEvent e)
 			{
