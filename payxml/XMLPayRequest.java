@@ -93,7 +93,7 @@ public class XMLPayRequest extends XMLDocument
 	{
 		setDocument(data);
 
-		Element element = domDocument.getDocumentElement();
+		Element element = m_theDocument.getDocumentElement();
 		if (!element.getTagName().equals(docStartTag))
 		{
 			throw new Exception();

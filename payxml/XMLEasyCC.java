@@ -50,6 +50,7 @@ public class XMLEasyCC extends XMLDocument
 	private long accountNumber;
 
 	//~ Constructors ***********************************************************
+	//todo --> lots to do :-)
 	public XMLEasyCC(String aiName, long accountNumber, long transferred) throws Exception
 	{
 
@@ -57,7 +58,7 @@ public class XMLEasyCC extends XMLDocument
 		this.transferredBytes = transferred;
 		this.accountNumber = accountNumber;
 
-		xmlDocument = docStartTag + "<AIName>" + aiName + "</AIName>" +
+		String xmlDocument = docStartTag + "<AIName>" + aiName + "</AIName>" +
 			"<Bytes>" + transferred + "</Bytes>" +
 			"<Number>" + accountNumber + "</Number>" + docEndTag;
 		setDocument(xmlDocument);
@@ -68,7 +69,7 @@ public class XMLEasyCC extends XMLDocument
 	{
 		setDocument(data);
 
-		Element element = domDocument.getDocumentElement();
+		Element element = m_theDocument.getDocumentElement();
 		if (!element.getTagName().equals("CC"))
 		{
 			throw new Exception();

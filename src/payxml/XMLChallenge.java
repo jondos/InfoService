@@ -29,8 +29,8 @@ package payxml;
 
 import org.w3c.dom.CharacterData;
 import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
-import payxml.util.Base64;
+import anon.util.Base64;
+import anon.util.XMLUtil;
 
 public class XMLChallenge extends XMLDocument
 {
@@ -38,33 +38,29 @@ public class XMLChallenge extends XMLDocument
 
 	public XMLChallenge(String xml) throws Exception
 	{
-		xmlDocument = xml;
 		setDocument(xml);
 	}
 
 	public XMLChallenge(byte[] data) throws Exception
 	{
-		xmlDocument = "<Challenge><DontPanic>" +
-			new String(Base64.encode(data)) + "</DontPanic></Challenge>";
-		setDocument(xmlDocument);
+		m_theDocument = getDocumentBuilder().newDocument();
+		Element elemRoot = m_theDocument.createElement("Challenge");
+		m_theDocument.appendChild(elemRoot);
+		Element elemChallenge = m_theDocument.createElement("DontPanic");
+		elemRoot.appendChild(elemChallenge);
+		XMLUtil.setNodeValue(elemChallenge, Base64.encodeBytes(data));
 	}
 
 	//~ Methods ****************************************************************
 
-	public byte[] getChallenge() throws Exception
+	public byte[] getChallengeForSigning() throws Exception
 	{
-		Element element = domDocument.getDocumentElement();
+		Element element = m_theDocument.getDocumentElement();
 		if (!element.getTagName().equals("Challenge"))
 		{
 			throw new Exception();
 		}
-
-		NodeList nl = element.getElementsByTagName("DontPanic");
-		if (nl.getLength() < 1)
-		{
-			throw new Exception();
-		}
-		element = (Element) nl.item(0);
+		element = (Element) XMLUtil.getFirstChildByName(element, "DontPanic");
 
 		CharacterData chdata = (CharacterData) element.getFirstChild();
 		String challenge = "<" + element.getTagName() + ">" + chdata.getData() +

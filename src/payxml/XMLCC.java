@@ -29,8 +29,9 @@ package payxml;
 
 import org.w3c.dom.CharacterData;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import payxml.util.Base64;
+import anon.util.*;
 
 /**
  * XML structure for a cost confirmation which is sent to the AI by the Jap
@@ -47,11 +48,22 @@ public class XMLCC extends XMLDocument
 
 	//~ Constructors ***********************************************************
 
+	public XMLCC(Element elemRoot) throws Exception
+	{
+		m_theDocument=getDocumentBuilder().newDocument();
+		Node n=XMLUtil.importNode(m_theDocument,elemRoot,true);
+		setValues();
+	}
+
 	public XMLCC(byte[] data) throws Exception
 	{
 		setDocument(data);
+		setValues();
+	}
 
-		Element element = domDocument.getDocumentElement();
+	private void setValues() throws Exception
+	{
+		Element element = m_theDocument.getDocumentElement();
 		if (!element.getTagName().equals("CC"))
 		{
 			throw new Exception();
@@ -92,7 +104,7 @@ public class XMLCC extends XMLDocument
 		}
 		element = (Element) nl.item(0);
 		chdata = (CharacterData) element.getFirstChild();
-		hash = Base64.decode(chdata.getData().toCharArray());
+		hash = Base64.decode(chdata.getData());
 
 		nl = element.getElementsByTagName("w");
 		if (nl.getLength() < 1)

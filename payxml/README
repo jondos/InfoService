@@ -1,0 +1,12 @@
+PAYXML Java Klassen
+
+Die payxml.* Java-Klassen werden von der BI sowie von der
+Bezahlfunktionalitaet des JAP benoetigt. Um die payxml-Klassen zu
+benutzen, sind folgende externen Libraries noetig:
+
+unter JDK 1.1.8:
+- xml.jar (org.w3c.dom.* und org.xml.sax.*)
+- jce-jdk-119.zip (org.bouncycastle.*)
+
+In spaeteren Versionen des JDK sind die XML-Klassen bereits enthalten.
+

@@ -30,7 +30,7 @@ package payxml;
 import org.w3c.dom.CharacterData;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
-
+import anon.util.*;
 /**
  * This class contains the functionality for creating and parsing XML balance
  * certificates. It provides access to the public key {@link pubKey}, the
@@ -52,17 +52,13 @@ import org.w3c.dom.NodeList;
  */
 public class XMLBalance extends XMLDocument
 {
-	//~ Public Fields  ******************************************************
-	public static final String docStartTag = "<Balance version=\"1.0\">";
-	public static final String docEndTag = "</Balance>";
-
 	//~ Instance fields ********************************************************
 
-	private java.sql.Timestamp timestamp;
-	private java.sql.Timestamp validTime;
-	private int credit;
-	private long creditMax;
-	private long accountNumber;
+	private java.sql.Timestamp m_Timestamp;
+	private java.sql.Timestamp m_ValidTime;
+	private int m_iCredit;
+	private long m_lCreditMax;
+	private long m_AccountNumber;
 
 	//~ Constructors ***********************************************************
 
@@ -71,102 +67,87 @@ public class XMLBalance extends XMLDocument
 					  long accountNumber
 					  ) throws Exception
 	{
-		this.credit = balance;
-		this.creditMax = maxbalance;
-		this.timestamp = timestamp;
-		this.validTime = validTime;
-		this.accountNumber = accountNumber;
+		m_iCredit = balance;
+		m_lCreditMax = maxbalance;
+		m_Timestamp = timestamp;
+		m_ValidTime = validTime;
+		m_AccountNumber = accountNumber;
 
-		xmlDocument = docStartTag + "\n" + "  <AccountNumber>" +
-			accountNumber + "</AccountNumber>\n" + "  <CreditMax>" +
-			maxbalance + "</CreditMax>\n" + "  <Credit>" + balance +
-			"</Credit>\n" + "  <Timestamp>" + timestamp + "</Timestamp>\n" +
-			"  <Validtime>" + validTime + "</Validtime>\n" + docEndTag;
-
-		setDocument(xmlDocument);
+		m_theDocument=getDocumentBuilder().newDocument();
+		Element elemRoot=m_theDocument.createElement("Balance");
+		elemRoot.setAttribute("version","1.0");
+		Element elem=m_theDocument.createElement("AccountNumber");
+		XMLUtil.setNodeValue(elem,Long.toString(accountNumber));
+		elemRoot.appendChild(elem);
+		elem=m_theDocument.createElement("CreditMax");
+		XMLUtil.setNodeValue(elem,Long.toString(maxbalance));
+		elemRoot.appendChild(elem);
+		elem=m_theDocument.createElement("Credit");
+		XMLUtil.setNodeValue(elem,Integer.toString(balance));
+		elemRoot.appendChild(elem);
+		elem=m_theDocument.createElement("Timestamp");
+		XMLUtil.setNodeValue(elem,timestamp.toString());
+		elemRoot.appendChild(elem);
+		elem=m_theDocument.createElement("Validtime");
+		XMLUtil.setNodeValue(elem,validTime.toString());
+		elemRoot.appendChild(elem);
 	}
 
 	public XMLBalance(String xml) throws Exception
 	{
 		setDocument(xml);
 
-		Element element = domDocument.getDocumentElement();
-		if (!element.getTagName().equals("Balance"))
+		Element elemRoot = m_theDocument.getDocumentElement();
+		if (!elemRoot.getTagName().equals("Balance"))
 		{
 			throw new Exception();
 		}
 
-		NodeList nl = element.getElementsByTagName("AccountNumber");
-		if (nl.getLength() < 1)
-		{
-			throw new Exception();
-		}
+		Element elem=(Element)XMLUtil.getFirstChildByName(elemRoot,"AccountNumber");
+		String str=XMLUtil.parseNodeString(elem,null);
+		m_AccountNumber = Long.parseLong(str);
 
-		Element elementChild = (Element) nl.item(0);
-		CharacterData chdata = (CharacterData) elementChild.getFirstChild();
-		accountNumber = Long.parseLong(chdata.getData());
+		elem=(Element)XMLUtil.getFirstChildByName(elemRoot,"CreditMax");
+		str=XMLUtil.parseNodeString(elem,null);
+		m_lCreditMax = Long.parseLong(str);
 
-		nl = element.getElementsByTagName("CreditMax");
-		if (nl.getLength() < 1)
-		{
-			throw new Exception();
-		}
-		elementChild = (Element) nl.item(0);
-		chdata = (CharacterData) elementChild.getFirstChild();
-		creditMax = Long.parseLong(chdata.getData());
+		elem=(Element)XMLUtil.getFirstChildByName(elemRoot,"Credit");
+		str=XMLUtil.parseNodeString(elem,null);
+		m_iCredit = Integer.parseInt(str);
 
-		nl = element.getElementsByTagName("Credit");
-		if (nl.getLength() < 1)
-		{
-			throw new Exception();
-		}
-		elementChild = (Element) nl.item(0);
-		chdata = (CharacterData) elementChild.getFirstChild();
-		credit = Integer.parseInt(chdata.getData());
+		elem=(Element)XMLUtil.getFirstChildByName(elemRoot,"Timestamp");
+		str=XMLUtil.parseNodeString(elem,null);
+		m_Timestamp = java.sql.Timestamp.valueOf(str);
 
-		nl = element.getElementsByTagName("Timestamp");
-		if (nl.getLength() < 1)
-		{
-			throw new Exception();
-		}
-		elementChild = (Element) nl.item(0);
-		chdata = (CharacterData) elementChild.getFirstChild();
-		timestamp = java.sql.Timestamp.valueOf(chdata.getData());
-
-		nl = element.getElementsByTagName("Validtime");
-		if (nl.getLength() < 1)
-		{
-			throw new Exception();
-		}
-		elementChild = (Element) nl.item(0);
-		chdata = (CharacterData) elementChild.getFirstChild();
-		validTime = java.sql.Timestamp.valueOf(chdata.getData());
+		elem=(Element)XMLUtil.getFirstChildByName(elemRoot,"Validtime");
+		str=XMLUtil.parseNodeString(elem,null);
+		m_ValidTime = java.sql.Timestamp.valueOf(str);
 	}
 
 	//~ Methods ****************************************************************
 
 	public long getAccountNumber()
 	{
-		return accountNumber;
+		return m_AccountNumber;
 	}
 
 	public int getCredit()
 	{
-		return credit;
+		return m_iCredit;
 	}
 
 	public long getCreditMax()
 	{
-		return creditMax;
+		return m_lCreditMax;
 	}
 
 	public java.sql.Timestamp getTimestamp()
 	{
-		return timestamp;
+		return m_Timestamp;
 	}
 
 	public java.sql.Timestamp getValidTime()
 	{
-		return validTime;
+		return m_ValidTime;
 	}
 }

@@ -28,22 +28,25 @@
 package payxml;
 
 import java.math.BigInteger;
-import org.bouncycastle.crypto.params.RSAKeyParameters;
 import org.w3c.dom.CharacterData;
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import payxml.util.Base64;
+import anon.crypto.MyRSAPublicKey;
+import anon.util.Base64;
+import anon.util.XMLUtil;
 
 public class XMLJapPublicKey extends XMLDocument
 {
 	//~ Instance fields ********************************************************
 
 	//    private RSAPublicKey pubkey;
-	private RSAKeyParameters pubkey;
+	private MyRSAPublicKey pubkey;
 
 	//~ Constructors ***********************************************************
 
-	public XMLJapPublicKey(RSAKeyParameters key)
+	public XMLJapPublicKey(MyRSAPublicKey key) throws Exception
 	{
 		pubkey = key;
 		createXmlDocument();
@@ -55,16 +58,24 @@ public class XMLJapPublicKey extends XMLDocument
 		setPubKey();
 	}
 
+	public XMLJapPublicKey(Element elemKey) throws Exception
+	{
+		m_theDocument=getDocumentBuilder().newDocument();
+		Node n=XMLUtil.importNode(m_theDocument,elemKey,true);
+		m_theDocument.appendChild(n);
+		setPubKey();
+	}
+
 	//~ Methods ****************************************************************
 
-	public RSAKeyParameters getRSAPublicKey()
+	public MyRSAPublicKey getRSAPublicKey()
 	{
 		return pubkey;
 	}
 
 	private void setPubKey() throws Exception
 	{
-		Element element = domDocument.getDocumentElement();
+		Element element = m_theDocument.getDocumentElement();
 		if (!element.getTagName().equals("JapPublicKey"))
 		{
 			throw new Exception();
@@ -84,11 +95,10 @@ public class XMLJapPublicKey extends XMLDocument
 		}
 
 		Element exponent = (Element) nl.item(0);
-		CharacterData chdata = (CharacterData) exponent.getFirstChild();
-		BigInteger ExpBigInt = new BigInteger(Base64.decode(
-			chdata.getData().toCharArray()
-			)
-											  );
+		String chdata = ( (CharacterData) exponent.getFirstChild()).getData();
+		BigInteger ExpBigInt = new BigInteger(
+			Base64.decode(chdata)
+			);
 
 		nl = element.getElementsByTagName("Modulus");
 		if (nl.getLength() < 1)
@@ -97,32 +107,35 @@ public class XMLJapPublicKey extends XMLDocument
 		}
 
 		Element modulus = (Element) nl.item(0);
-		chdata = (CharacterData) modulus.getFirstChild();
+		chdata = ( (CharacterData) modulus.getFirstChild()).getData();
 
-		BigInteger ModulusBigInt = new BigInteger(Base64.decode(
-			chdata.getData().toCharArray()
-			)
-												  );
+		BigInteger ModulusBigInt = new BigInteger(
+			Base64.decode(chdata)
+			);
 
 		//KeyFactory keyfactory= KeyFactory.getInstance("RSA");
 		//            pubkey = (RSAPublicKey)keyfactory.generatePublic(
 		//                    new RSAPublicKeySpec(ModulusBigInt, ExpBigInt));
-		pubkey = new RSAKeyParameters(false, ModulusBigInt, ExpBigInt);
+		pubkey = new MyRSAPublicKey(ModulusBigInt, ExpBigInt);
 	}
 
-	private void createXmlDocument()
+	private void createXmlDocument() throws Exception
 	{
-		if (pubkey == null)
-		{
-			return;
-		}
-
-		StringBuffer buffer = new StringBuffer(512);
-		buffer.append("<JapPublicKey version=\"1.0\"><RSAKeyValue><Modulus>");
-		buffer.append(Base64.encode(pubkey.getModulus().toByteArray()));
-		buffer.append("</Modulus><Exponent>");
-		buffer.append(Base64.encode(pubkey.getExponent().toByteArray()));
-		buffer.append("</Exponent></RSAKeyValue></JapPublicKey>");
-		xmlDocument = buffer.toString();
+		m_theDocument = null;
+		Document doc = getDocumentBuilder().newDocument();
+		Element elemRoot = doc.createElement("JapPublicKey");
+		doc.appendChild(elemRoot);
+		elemRoot.setAttribute("version", "1.0");
+		Element elemKey = doc.createElement("RSAKeyValue");
+		elemRoot.appendChild(elemKey);
+		Element elemModulus = doc.createElement("Modulus");
+		elemKey.appendChild(elemModulus);
+		byte[] b = pubkey.getModulus().toByteArray();
+		XMLUtil.setNodeValue(elemModulus, Base64.encodeBytes(b));
+		Element elemExponent = doc.createElement("Exponent");
+		elemKey.appendChild(elemExponent);
+		b = pubkey.getPublicExponent().toByteArray();
+		XMLUtil.setNodeValue(elemExponent, Base64.encodeBytes(b));
+		m_theDocument=doc;
 	}
 }

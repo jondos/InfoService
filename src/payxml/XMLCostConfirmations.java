@@ -155,13 +155,14 @@ public class XMLCostConfirmations extends XMLDocument
 
 	public String getXMLString(boolean withHead)
 	{
+		//TODO: wrong!!!
 		StringBuffer buffer = new StringBuffer();
 		buffer.append(docStartTag + "\n");
 		Enumeration enum = confs.elements();
 		while (enum.hasMoreElements())
 		{
 			XMLEasyCC confirm = (XMLEasyCC) enum.nextElement();
-			buffer.append(confirm.getXMLString(false) + "\n");
+			buffer.append(confirm.getXMLString() + "\n");
 		}
 		buffer.append(docEndTag);
 		if (withHead)

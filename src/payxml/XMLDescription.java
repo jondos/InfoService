@@ -36,13 +36,13 @@ public class XMLDescription extends XMLDocument
 
 	public XMLDescription(byte[] data) throws Exception
 	{
-		xmlDocument = new String(data);
+		String xmlDocument = new String(data);
 		setDocument(xmlDocument);
 	}
 
 	public XMLDescription(String data) throws Exception
 	{
-		xmlDocument = "<Description>" + data + "</Description>";
+		String xmlDocument = "<Description>" + data + "</Description>";
 		setDocument(xmlDocument);
 	}
 
@@ -50,7 +50,7 @@ public class XMLDescription extends XMLDocument
 
 	public String getDescription() throws Exception
 	{
-		Element element = domDocument.getDocumentElement();
+		Element element = m_theDocument.getDocumentElement();
 		if (!element.getTagName().equals("Description"))
 		{
 			throw new Exception();

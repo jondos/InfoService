@@ -27,13 +27,13 @@
  */
 package payxml;
 
-import org.w3c.dom.CharacterData;
 import org.w3c.dom.Element;
-import payxml.util.Base64;
+import anon.util.Base64;
+import anon.util.XMLUtil;
 
 public class XMLResponse extends XMLDocument
 {
-	byte[] response;
+	private byte[] m_arbResponse;
 
 	public XMLResponse(String xml) throws Exception
 	{
@@ -41,34 +41,35 @@ public class XMLResponse extends XMLDocument
 		setResponse();
 	}
 
-	public XMLResponse(byte[] data)
-	{
-		response = data;
-		createXmlDocument();
-	}
-
+	/*
+	 public XMLResponse(byte[] data)
+	 {
+	  response = data;
+	  createXmlDocument();
+	 }
+	 */
 	private void setResponse() throws Exception
 	{
-		Element element = domDocument.getDocumentElement();
+		Element element = m_theDocument.getDocumentElement();
 		if (!element.getTagName().equals("Response"))
 		{
 			throw new Exception();
 		}
-		CharacterData chdata = (CharacterData) element.getFirstChild();
-		response = Base64.decode(chdata.getData().toCharArray());
+		String strBase64Response = XMLUtil.parseNodeString(element, null);
+		m_arbResponse = Base64.decode(strBase64Response);
 	}
 
 	public byte[] getResponse()
 	{
-		return response;
+		return m_arbResponse;
 	}
 
-	private void createXmlDocument()
-	{
-		StringBuffer buffer = new StringBuffer(512);
-		buffer.append("<Response>");
-		buffer.append(Base64.encode(response));
-		buffer.append("</Response>");
-		xmlDocument = buffer.toString();
-	}
+	/*private void createXmlDocument()
+	  {
+	 StringBuffer buffer = new StringBuffer(512);
+	 buffer.append("<Response>");
+	 buffer.append(Base64.encode(response));
+	 buffer.append("</Response>");
+	 xmlDocument = buffer.toString();
+	  }*/
 }

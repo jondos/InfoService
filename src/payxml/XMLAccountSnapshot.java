@@ -43,12 +43,12 @@ package payxml;
 public class XMLAccountSnapshot extends XMLDocument
 {
 	//~ Constructors ***********************************************************
-
+	//TODO: lots to do
 	public XMLAccountSnapshot(String aiName, long accountNumber, long maxCredit,
 							  int credit, long costs, java.sql.Timestamp timestamp
 							  ) throws Exception
 	{
-		xmlDocument = "<AccountSnapshot version=\"1.0\">\n" + "  <ID>" +
+		String xmlDocument = "<AccountSnapshot version=\"1.0\">\n" + "  <ID>" +
 			aiName + "</ID>\n" + "  <AccountNumber>" + accountNumber +
 			"</AccountNumber>\n" + "  <CreditMax>" + maxCredit +
 			"</CreditMax>\n" + "  <Credit>" + credit + "</Credit>\n" +
@@ -59,7 +59,6 @@ public class XMLAccountSnapshot extends XMLDocument
 
 	public XMLAccountSnapshot(String xml) throws Exception
 	{
-		xmlDocument = xml;
 		setDocument(xml);
 	}
 }
