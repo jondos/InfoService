@@ -67,6 +67,9 @@ import anon.infoservice.MixCascade;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import javax.swing.border.EmptyBorder;
+import java.awt.Color;
+import java.awt.GridLayout;
 
 /**
  * This is the configuration GUI for the JAP forwarding server component.
@@ -195,7 +198,8 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 				{
 					/* empty field or port is already in use */
 					JOptionPane.showMessageDialog(configPanel,
-												  JAPMessages.getString("settingsForwardingServerConfigChangeServerPortError"),
+												  JAPMessages.getString(
+						"settingsForwardingServerConfigChangeServerPortError"),
 												  JAPMessages.getString("ERROR"), JOptionPane.ERROR_MESSAGE);
 					/* show the current forwarding server port in the server port field */
 					serverPortField.setText(Integer.toString(JAPModel.getInstance().getRoutingSettings().
@@ -337,12 +341,15 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 					/* empty field or bandwidth value to low */
 					/* the +999 in the following line is only for rounding up the value */
 					JOptionPane.showMessageDialog(configPanel,
-						JAPMessages.getString("settingsForwardingServerConfigChangeMaximumUploadBandwidthErrorPart1") +
+												  JAPMessages.getString(
+						"settingsForwardingServerConfigChangeMaximumUploadBandwidthErrorPart1") +
 												  " " +
-												  Integer.toString( ( (JAPConstants.ROUTING_BANDWIDTH_PER_USER *
+												  Integer.toString( ( (JAPConstants.
+						ROUTING_BANDWIDTH_PER_USER *
 						8) + 999) / 1000) + " " +
-						JAPMessages.getString("settingsForwardingServerConfigChangeMaximumUploadBandwidthErrorPart2"),
-						JAPMessages.getString("ERROR"), JOptionPane.ERROR_MESSAGE);
+												  JAPMessages.getString(
+						"settingsForwardingServerConfigChangeMaximumUploadBandwidthErrorPart2"),
+												  JAPMessages.getString("ERROR"), JOptionPane.ERROR_MESSAGE);
 					/* show the current maximum upload bandwidth in the upload bandwidth field */
 					uploadBandwidthField.setText(Integer.toString( (JAPModel.getInstance().getRoutingSettings().
 						getConnectionClassSelector().getCurrentConnectionClass().getMaximumBandwidth() * 8) /
@@ -435,7 +442,12 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 		relativeBandwidthField.setEnabled(false);
 
 		final JButton increaseRelativeBandwidthButton = new JButton(JAPUtil.loadImageIcon("arrowUp.gif", true));
-		increaseRelativeBandwidthButton.setMargin(new Insets(1, 1, 1, 1));
+		//increaseRelativeBandwidthButton.setMargin(new Insets(1, 1, 1, 1));
+		//increaseRelativeBandwidthButton.setBackground(Color.gray); //this together with the next lines sems to be
+		//increaseRelativeBandwidthButton.setOpaque(false); //stupid but is necessary for JDK 1.5 on Windows XP (and maybe others)
+		increaseRelativeBandwidthButton.setBorder(new EmptyBorder(0, 1, 0, 1));
+		increaseRelativeBandwidthButton.setFocusPainted(false);
+
 		increaseRelativeBandwidthButton.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent event)
@@ -456,7 +468,10 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 		});
 
 		final JButton decreaseRelativeBandwidthButton = new JButton(JAPUtil.loadImageIcon("arrowDown.gif", true));
-		decreaseRelativeBandwidthButton.setMargin(new Insets(1, 1, 1, 1));
+		//decreaseRelativeBandwidthButton.setMargin(new Insets(1, 1, 1, 1));
+		decreaseRelativeBandwidthButton.setBorder(new EmptyBorder(0, 1, 0, 1));
+		decreaseRelativeBandwidthButton.setFocusPainted(false);
+
 		decreaseRelativeBandwidthButton.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent event)
@@ -543,11 +558,14 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 								Integer.
 								toString( (JAPModel.getInstance().getRoutingSettings().getBandwidth() * 8) /
 										 1000) + " " +
-								JAPMessages.getString("settingsForwardingServerConfigCurrentBandwidthLabelPart2") +
+								JAPMessages.getString(
+								"settingsForwardingServerConfigCurrentBandwidthLabelPart2") +
 								" " +
-								Integer.toString(JAPModel.getInstance().getRoutingSettings().getAllowedConnections()) +
+								Integer.toString(JAPModel.getInstance().getRoutingSettings().
+												 getAllowedConnections()) +
 								" " +
-								JAPMessages.getString("settingsForwardingServerConfigCurrentBandwidthLabelPart3"));
+								JAPMessages.getString(
+								"settingsForwardingServerConfigCurrentBandwidthLabelPart3"));
 						}
 					}
 					if (a_notifier == m_messageSystem)
@@ -592,7 +610,7 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 		serverPortPanel.setLayout(serverPortPanelLayout);
 
 		GridBagConstraints serverPortPanelConstraints = new GridBagConstraints();
-		serverPortPanelConstraints.anchor = GridBagConstraints.NORTHWEST;
+		serverPortPanelConstraints.anchor = GridBagConstraints.WEST;
 		serverPortPanelConstraints.fill = GridBagConstraints.NONE;
 		serverPortPanelConstraints.weightx = 0.0;
 		serverPortPanelConstraints.weighty = 1.0;
@@ -659,8 +677,9 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 		configPanelConstraints.gridy = 2;
 		configPanelConstraints.weightx = 0.0;
 		configPanelConstraints.gridwidth = 1;
-		configPanelConstraints.gridheight = 2;
+		configPanelConstraints.gridheight = 1;
 		configPanelConstraints.fill = GridBagConstraints.VERTICAL;
+		configPanelConstraints.anchor = GridBagConstraints.WEST;
 		configPanelConstraints.insets = new Insets(0, 5, 10, 10);
 		configPanelLayout.setConstraints(connectionClassesComboBox, configPanelConstraints);
 		configPanel.add(connectionClassesComboBox);
@@ -679,22 +698,18 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 		configPanelLayout.setConstraints(relativeBandwidthField, configPanelConstraints);
 		configPanel.add(relativeBandwidthField);
 
-		configPanelConstraints.gridx = 3;
-		configPanelConstraints.gridy = 2;
-		configPanelConstraints.gridheight = 1;
-		configPanelConstraints.weightx = 1.0;
-		configPanelConstraints.fill = GridBagConstraints.NONE;
-		configPanelConstraints.anchor = GridBagConstraints.SOUTHWEST;
-		configPanelConstraints.insets = new Insets(0, 0, 0, 5);
-		configPanelLayout.setConstraints(increaseRelativeBandwidthButton, configPanelConstraints);
-		configPanel.add(increaseRelativeBandwidthButton);
+		JPanel pArrowButtons = new JPanel(new GridLayout(2, 1,0,0));
+		pArrowButtons.add(increaseRelativeBandwidthButton);
+		pArrowButtons.add(decreaseRelativeBandwidthButton);
 
 		configPanelConstraints.gridx = 3;
-		configPanelConstraints.gridy = 3;
-		configPanelConstraints.anchor = GridBagConstraints.NORTHWEST;
+		configPanelConstraints.gridy = 2;
+		configPanelConstraints.weightx = 1.0;
+
+		configPanelConstraints.fill = GridBagConstraints.VERTICAL;
+		configPanelConstraints.anchor = GridBagConstraints.SOUTHWEST;
 		configPanelConstraints.insets = new Insets(0, 0, 10, 5);
-		configPanelLayout.setConstraints(decreaseRelativeBandwidthButton, configPanelConstraints);
-		configPanel.add(decreaseRelativeBandwidthButton);
+		configPanel.add(pArrowButtons,configPanelConstraints);
 
 		configPanelConstraints.gridx = 0;
 		configPanelConstraints.gridy = 4;
@@ -808,7 +823,7 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 		final JCheckBox settingsForwardingServerConfigAllowedCascadesAllowAllBox = new JCheckBox(JAPMessages.
 			getString("settingsForwardingServerConfigAllowedCascadesAllowAllBox"),
 			JAPModel.getInstance().getRoutingSettings().getUseableMixCascadesStore().
-						  getAllowAllAvailableMixCascades());
+			getAllowAllAvailableMixCascades());
 		settingsForwardingServerConfigAllowedCascadesAllowAllBox.setFont(getFontSetting());
 		settingsForwardingServerConfigAllowedCascadesAllowAllBox.addActionListener(new ActionListener()
 		{
@@ -1023,11 +1038,11 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 
 		final JLabel settingsForwardingServerConfigRegistrationInfoServicesKnownInfoServicesLabel = new
 			JLabel(JAPMessages.getString(
-			"settingsForwardingServerConfigRegistrationInfoServicesKnownInfoServicesLabel"));
+				"settingsForwardingServerConfigRegistrationInfoServicesKnownInfoServicesLabel"));
 		settingsForwardingServerConfigRegistrationInfoServicesKnownInfoServicesLabel.setFont(getFontSetting());
 		final JLabel settingsForwardingServerConfigRegistrationInfoServicesSelectedInfoServicesLabel = new
 			JLabel(JAPMessages.getString(
-			"settingsForwardingServerConfigRegistrationInfoServicesSelectedInfoServicesLabel"));
+				"settingsForwardingServerConfigRegistrationInfoServicesSelectedInfoServicesLabel"));
 		settingsForwardingServerConfigRegistrationInfoServicesSelectedInfoServicesLabel.setFont(
 			getFontSetting());
 
@@ -1111,7 +1126,7 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 
 		final JCheckBox settingsForwardingServerConfigRegistrationInfoServicesRegisterAtAllBox = new
 			JCheckBox(JAPMessages.getString(
-			"settingsForwardingServerConfigRegistrationInfoServicesRegisterAtAllBox"),
+				"settingsForwardingServerConfigRegistrationInfoServicesRegisterAtAllBox"),
 					  JAPModel.getInstance().getRoutingSettings().getRegistrationInfoServicesStore().
 					  getRegisterAtAllAvailableInfoServices());
 		settingsForwardingServerConfigRegistrationInfoServicesRegisterAtAllBox.setFont(getFontSetting());
@@ -1122,7 +1137,7 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 			{
 				JAPModel.getInstance().getRoutingSettings().getRegistrationInfoServicesStore().
 					setRegisterAtAllAvailableInfoServices(
-					settingsForwardingServerConfigRegistrationInfoServicesRegisterAtAllBox.isSelected());
+						settingsForwardingServerConfigRegistrationInfoServicesRegisterAtAllBox.isSelected());
 			}
 		});
 
@@ -1453,7 +1468,8 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 		if (errorOccured.size() > 0)
 		{
 			JOptionPane.showMessageDialog(a_parentComponent,
-				JAPMessages.getString("settingsForwardingServerConfigAllowedCascadesFetchMixCascadesDialogFetchCascadesError"),
+										  JAPMessages.getString(
+				"settingsForwardingServerConfigAllowedCascadesFetchMixCascadesDialogFetchCascadesError"),
 										  JAPMessages.getString("ERROR"), JOptionPane.ERROR_MESSAGE);
 		}
 
