@@ -31,10 +31,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 public interface AnonChannel
-{
-  public final static int HTTP=1;
-  //public void directOutputTo(OutputStream out);
-  public InputStream getInputStream();
-  public OutputStream getOutputStream();
-  public void close();
-}
+  {
+    public final static int HTTP=1;
+    public InputStream getInputStream();
+    public OutputStream getOutputStream();
+    public void close();
+  }

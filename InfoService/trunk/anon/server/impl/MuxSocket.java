@@ -49,7 +49,7 @@ import JAPDebug;
 
 
 import HTTPClient.Codecs;
-
+import anon.ErrorCodes;
 public final class MuxSocket implements Runnable
 	{
 		private int lastChannelId;
@@ -75,13 +75,11 @@ public final class MuxSocket implements Runnable
 		public final static int KEY_SIZE=16;
 		public final static int DATA_SIZE=992;
 		public final static int PAYLOAD_SIZE=989;
+		private final static int PACKET_SIZE=998;  //DATA_SIZE+6
 		private final static int RSA_SIZE=128;
 		private final static short CHANNEL_DATA=0;
 		private final static short CHANNEL_CLOSE=1;
 		private final static short CHANNEL_OPEN=8;
-
-		public final static int E_ALREADY_CONNECTED=-8;
-		public final static int E_NOT_CONNECTED=-9;
 
 		private static MuxSocket ms_MuxSocket=null;
 		//private int m_RunCount=0;
@@ -94,13 +92,13 @@ public final class MuxSocket implements Runnable
 
 		private final class ChannelListEntry
 			{
-				ChannelListEntry(Channel c)
+				ChannelListEntry(AbstractChannel c)
 					{
 						channel=c;
 						arCipher=null;
 						bIsSuspended=false;
 					}
-				public final Channel channel;
+				public final AbstractChannel channel;
 				public SymCipher[] arCipher;
 				public boolean bIsSuspended;
 			};
@@ -154,11 +152,11 @@ public final class MuxSocket implements Runnable
 			{
 				return ms_MuxSocket.m_bDummyTraffic;
 			}
-		//2001-02-20(HF)
+	/*	//2001-02-20(HF)
 		public int connect(String host, int port) {
 			return connectViaFirewall(host,port,null,-1,null,null);
 		}
-
+*/
 		//Write stuff for connecting over proxy/firewall
 		// should look like this example
 		//   CONNECT www.inf.tu-dresden.de:443 HTTP/1.0
@@ -197,7 +195,7 @@ public final class MuxSocket implements Runnable
 				synchronized(this)
 					{
 						if(m_bIsConnected)
-							return E_ALREADY_CONNECTED;
+							return ErrorCodes.E_ALREADY_CONNECTED;
             try
               {
                 //Connect directly to anon service
@@ -209,7 +207,7 @@ public final class MuxSocket implements Runnable
               }
             catch(Exception e)
               {
-  						  JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"MuxSocket: Error connection to mix: "+e.toString());
+  						  JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"MuxSocket : Error(1) connection to mix: "+e.toString());
                 m_bIsConnected=false;
               }
 						if(!m_bIsConnected)
@@ -219,12 +217,12 @@ public final class MuxSocket implements Runnable
 								try{m_ioSocket.close();}catch(Exception e){};
 								m_inDataStream=null;
 								m_ioSocket=null;
-								return -1;
+								return ErrorCodes.E_CONNECT;
 							}
 						//JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:Connected to Mix! Now starting key exchange...");
 						try
 							{
-								m_outDataStream=new DataOutputStream(new BufferedOutputStream(m_ioSocket.getOutputStream(),DATA_SIZE+6));
+								m_outDataStream=new DataOutputStream(new BufferedOutputStream(m_ioSocket.getOutputStream(),PACKET_SIZE));
 							//	JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:Reading len...");
 								m_inDataStream.readUnsignedShort(); //len.. unitressteing at the moment
 							//	JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:Reading chainlen...");
@@ -249,7 +247,7 @@ public final class MuxSocket implements Runnable
 							}
 						catch(Exception e)
 							{
-								JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.NET,"JAPMuxSocket:Exception during connection: "+e);
+								JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.NET,"MuxSocket:Exception(2) during connection: "+e);
 								m_arASymCipher=null;
 							  try{m_inDataStream.close();}catch(Exception e1){}
 							  try{m_outDataStream.close();}catch(Exception e1){}
@@ -258,11 +256,11 @@ public final class MuxSocket implements Runnable
 								m_outDataStream=null;
 								m_ioSocket=null;
 								m_bIsConnected=false;
-								return -1;
+								return ErrorCodes.E_CONNECT;
 							}
 						m_bIsConnected=true;
      				oChannelList=new Hashtable();
-            return 0;
+            return ErrorCodes.E_SUCCESS;
 					}
 			}
 
@@ -314,33 +312,29 @@ public final class MuxSocket implements Runnable
 					}
 			}
 
-		public int close(int channel)
+		public int close(int channel_id)
 			{
 				synchronized(this)
 					{
-						oChannelList.remove(new Integer(channel));
-						send(channel,0,null,(short)0);
+						oChannelList.remove(new Integer(channel_id));
+						send(channel_id,0,null,(short)0);
 	//					JAPAnonService.setNrOfChannels(oSocketList.size());
 						return 0;
 					}
 			}
 
 
-		public void startService()
+		public int startService()
 			{
 				synchronized(this)
 					{
 						if(!m_bIsConnected)
-							return ;
-//						if(m_RunCount==0)
-							{
-								threadRunLoop=new Thread(this);
-								threadRunLoop.setPriority(Thread.MAX_PRIORITY);
-								threadRunLoop.start();
-							}
-//						m_RunCount++;
-//						return m_RunCount;
+							return ErrorCodes.E_NOT_CONNECTED;
+              threadRunLoop=new Thread(this);
+							threadRunLoop.setPriority(Thread.MAX_PRIORITY);
+              threadRunLoop.start();
 					}
+        return ErrorCodes.E_SUCCESS;
 			}
 
 		public void stopService()
@@ -360,7 +354,7 @@ public final class MuxSocket implements Runnable
 				synchronized(this)
 					{
 						if(!m_bIsConnected)
-							return E_NOT_CONNECTED;
+							return ErrorCodes.E_NOT_CONNECTED;
 						if(m_bDummyTraffic)
 							{
 								m_DummyTraffic.stop();
@@ -488,7 +482,7 @@ public final class MuxSocket implements Runnable
 				try
 					{
  						if(!m_bIsConnected)
-							return E_NOT_CONNECTED;
+							return ErrorCodes.E_NOT_CONNECTED;
 
 					  short channelMode=CHANNEL_DATA;
 						m_TimeLastPacketSend=System.currentTimeMillis();
@@ -569,10 +563,10 @@ public final class MuxSocket implements Runnable
 				return 0;
 			}
 
-		public final int getChainLen()
+	/*	public final int getChainLen()
 			{
 				return chainlen;
-			}
+			}*/
 
 		public long getTimeLastPacketSend()
 			{

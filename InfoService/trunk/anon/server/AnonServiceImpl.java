@@ -30,6 +30,7 @@ package anon.server;
 import anon.AnonService;
 import anon.AnonServer;
 import anon.AnonChannel;
+import anon.ErrorCodes;
 import anon.AnonServiceEventListener;
 
 import anon.server.impl.MuxSocket;
@@ -69,12 +70,14 @@ final public class AnonServiceImpl implements AnonService
         return m_AnonServiceImpl;
       }
 
-    public void connect(AnonServer anonService)
+    public int connect(AnonServer anonService)
       {
-        m_MuxSocket.connectViaFirewall(anonService.getHost(),anonService.getPort(),
+        int ret=m_MuxSocket.connectViaFirewall(anonService.getHost(),anonService.getPort(),
                                         m_FirewallHost,m_FirewallPort,
                                         m_FirewallUserID,m_FirewallPasswd);
-        m_MuxSocket.startService();
+        if(ret!=ErrorCodes.E_SUCCESS)
+          return ret;
+        return m_MuxSocket.startService();
       }
 
     public void disconnect()
