@@ -299,11 +299,11 @@ public class XMLUtil
 					{ ///@todo parsing of Documents which contains quoted chars are wrong under JAXP 1.0
 						if (a_node.getNodeType() == Node.ENTITY_REFERENCE_NODE)
 						{
-							s = s + a_node.getFirstChild().getNodeValue();
+							s += a_node.getFirstChild().getNodeValue();
 						}
 						else
 						{
-							s = s + a_node.getNodeValue();
+							s+=  a_node.getNodeValue();
 						}
 						a_node = a_node.getNextSibling();
 					}
@@ -577,7 +577,7 @@ public class XMLUtil
 		switch (type)
 		{
 
-			case Document.ELEMENT_NODE:
+			case Node.ELEMENT_NODE:
 			{
 				Element newelement = a_doc.createElement(a_source.getNodeName());
 				NamedNodeMap srcattr = a_source.getAttributes();
@@ -593,7 +593,7 @@ public class XMLUtil
 				break;
 			}
 
-			case Document.ATTRIBUTE_NODE:
+			case Node.ATTRIBUTE_NODE:
 			{
 				newnode = a_doc.createAttribute(a_source.getNodeName());
 				newnode.setNodeValue(a_source.getNodeValue());
@@ -601,19 +601,23 @@ public class XMLUtil
 				break;
 			}
 
-			case Document.TEXT_NODE:
+			case Node.TEXT_NODE:
 			{
-				newnode = a_doc.createTextNode(a_source.getNodeValue());
+				Node tmpParent = a_source.getParentNode();
+				if (tmpParent != null && tmpParent.getNodeType() != Node.ATTRIBUTE_NODE)
+				{
+					newnode = a_doc.createTextNode(a_source.getNodeValue());
+				}
 				break;
 			}
 
-			case Document.CDATA_SECTION_NODE:
+			case Node.CDATA_SECTION_NODE:
 			{
 				newnode = a_doc.createCDATASection(a_source.getNodeValue());
 				break;
 			}
 
-			case Document.ENTITY_REFERENCE_NODE:
+			case Node.ENTITY_REFERENCE_NODE:
 			{
 				newnode = a_doc.createEntityReference(a_source.getNodeName());
 				a_bDeep = false; // ????? Right Thing?
@@ -622,7 +626,7 @@ public class XMLUtil
 				break;
 			}
 
-			case Document.ENTITY_NODE:
+			case Node.ENTITY_NODE:
 			{
 				/*Entity srcentity = (Entity) source;
 				  Entity newentity = doc.createEntity(source.getNodeName());
@@ -635,20 +639,20 @@ public class XMLUtil
 				//break;
 			}
 
-			case Document.PROCESSING_INSTRUCTION_NODE:
+			case Node.PROCESSING_INSTRUCTION_NODE:
 			{
 				newnode = a_doc.createProcessingInstruction(a_source.getNodeName(),
 					a_source.getNodeValue());
 				break;
 			}
 
-			case Document.COMMENT_NODE:
+			case Node.COMMENT_NODE:
 			{
 				newnode = a_doc.createComment(a_source.getNodeValue());
 				break;
 			}
 
-			case Document.DOCUMENT_TYPE_NODE:
+			case Node.DOCUMENT_TYPE_NODE:
 			{
 				/*	DocumentType doctype = (DocumentType) source;
 				 DocumentType newdoctype =
@@ -685,14 +689,14 @@ public class XMLUtil
 
 			}
 
-			case Document.DOCUMENT_FRAGMENT_NODE:
+			case Node.DOCUMENT_FRAGMENT_NODE:
 			{
 				newnode = a_doc.createDocumentFragment();
 				// No name, kids carry value
 				break;
 			}
 
-			case Document.NOTATION_NODE:
+			case Node.NOTATION_NODE:
 			{
 				/*
 				   Notation srcnotation = (Notation) source;
@@ -707,7 +711,7 @@ public class XMLUtil
 
 			}
 
-			case Document.DOCUMENT_NODE: // Document can't be child of Document
+			case Node.DOCUMENT_NODE: // Document can't be child of Document
 			default:
 			{ // Unknown node type
 				throw new Exception("HIERARCHY_REQUEST_ERR");
@@ -721,7 +725,15 @@ public class XMLUtil
 				 srckid != null;
 				 srckid = srckid.getNextSibling())
 			{
-				newnode.appendChild(importNode(a_doc, srckid, true));
+				if (newnode != null)
+				{
+					Node n = importNode(a_doc, srckid, true);
+
+					if (n != null)
+					{
+						newnode.appendChild(n);
+					}
+				}
 			}
 		}
 
@@ -882,7 +894,7 @@ public class XMLUtil
 	 */
 	public static void removeComments(Node a_node)
 	{
-		if (a_node.getNodeType() != Document.COMMENT_NODE)
+		if (a_node.getNodeType() != Node.COMMENT_NODE)
 		{
 			removeCommentsInternal(a_node, a_node);
 		}
@@ -1104,7 +1116,7 @@ public class XMLUtil
 		}
 
 		// if this is empty text, remove it!
-		if (a_element.getNodeType() == Document.TEXT_NODE &&
+		if (a_element.getNodeType() == Node.TEXT_NODE &&
 			a_element.getNodeValue().trim().length() == 0)
 		{
 			a_element.getParentNode().removeChild(a_element);
@@ -1113,7 +1125,7 @@ public class XMLUtil
 
 		// do this, if this is not the root element and no text node
 		if ( (a_element.getOwnerDocument().getDocumentElement() != a_element) &&
-			(a_element.getNodeType() != Document.TEXT_NODE))
+			(a_element.getNodeType() != Node.TEXT_NODE))
 		{
 			// insert a new line before this element, if this is the first element
 			if (a_element == a_element.getParentNode().getFirstChild())
@@ -1163,13 +1175,13 @@ public class XMLUtil
 	 */
 	private static int removeCommentsInternal(Node a_node, Node a_parentNode)
 	{
-		if (a_node.getNodeType() == Document.COMMENT_NODE)
+		if (a_node.getNodeType() == Node.COMMENT_NODE)
 		{
 			a_parentNode.removeChild(a_node);
 			return 1;
 		}
 
-		if (a_node.getNodeType() == Document.TEXT_NODE)
+		if (a_node.getNodeType() == Node.TEXT_NODE)
 		{
 			if (a_node.getNodeValue().trim().length() == 0)
 			{
