@@ -37,14 +37,16 @@ class DummyTraffic implements Runnable
 	  private volatile boolean m_bRun=false;
 		private Thread m_threadRunLoop=null;
 		private Log m_Log;
-    private final static long DUMMY_TRAFFIC_INTERVAL=10000; //How long maximum to wait between packets ?
+    private int m_Intervall;
+//    private final static long DUMMY_TRAFFIC_INTERVAL=10000; //How long maximum to wait between packets ?
 
-		public DummyTraffic(MuxSocket muxSocket,Log log)
+		public DummyTraffic(MuxSocket muxSocket,int intervall,Log log)
 			{
         m_Log=log;
 				m_MuxSocket=muxSocket;
 				m_bRun=false;
 				m_threadRunLoop=null;
+        m_Intervall=intervall;
 			}
 
     public void setLogging(Log log)
@@ -56,14 +58,14 @@ class DummyTraffic implements Runnable
 			{
 				while(m_bRun)
 					{
-						if(System.currentTimeMillis()-m_MuxSocket.getTimeLastPacketSend()>DUMMY_TRAFFIC_INTERVAL)
+						if(System.currentTimeMillis()-m_MuxSocket.getTimeLastPacketSend()>m_Intervall)
 							{
 							  m_Log.log(LogLevel.DEBUG,LogType.NET,"Sending Dummy!");
-								m_MuxSocket.send(12345,0,null,(short)0); //this is a channel close for a hopefully non existend channel
+								m_MuxSocket.sendDummy(); //send a dummy
 						  }
 						try
 							{
-								m_threadRunLoop.sleep(10000);
+								m_threadRunLoop.sleep(m_Intervall);
 							}
 						catch(InterruptedException e)
 							{
@@ -71,14 +73,17 @@ class DummyTraffic implements Runnable
 					}
 			}
 
-		public void start()
+		public synchronized void start()
 			{
-				m_threadRunLoop=new Thread(this);
-				m_bRun=true;
-				m_threadRunLoop.start();
+        if(!m_bRun)
+          {
+				    m_threadRunLoop=new Thread(this);
+				    m_bRun=true;
+				    m_threadRunLoop.start();
+          }
 			}
 
-		public void stop()
+		public synchronized void stop()
 			{
 				m_bRun=false;
 				m_threadRunLoop.interrupt();

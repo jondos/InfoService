@@ -84,6 +84,8 @@ public final class MuxSocket implements Runnable
 		private final static short CHANNEL_DATA=0;
 		private final static short CHANNEL_CLOSE=1;
 		private final static short CHANNEL_OPEN=8;
+		private final static short CHANNEL_DUMMY=16;
+
     private final static int CHANNEL_TYPE_HTTP=0;
     private final static int CHANNEL_TYPE_SOCKS=1;
 
@@ -95,7 +97,6 @@ public final class MuxSocket implements Runnable
 		private Thread threadRunLoop;
 
 		private long m_TimeLastPacketSend=0;
-		private static boolean m_bDummyTraffic=false;
 		private DummyTraffic m_DummyTraffic=null;
     private Log m_Log=null;
 		private final class ChannelListEntry
@@ -121,7 +122,7 @@ public final class MuxSocket implements Runnable
 				threadRunLoop=null;
 				keypool=KeyPool.start(log);
 				//m_RunCount=0;
-				m_bDummyTraffic=false;
+				m_DummyTraffic=null;
 				m_TimeLastPacketSend=0;
 				//threadgroupChannels=null;
 			}
@@ -149,31 +150,33 @@ public final class MuxSocket implements Runnable
 				return (ms_MuxSocket!=null&&ms_MuxSocket.m_bIsConnected);
 			}
 
-		public static void setEnableDummyTraffic(boolean b)
+    /**Enables or Disables DummyTraffic.
+     * @param intervall milliseconds of inactivity after which a dummy is send. Set to '-1' to disable Dummy Traffic.
+     *
+     */
+		public void setDummyTraffic(int intervall)
 			{
-				if(b==m_bDummyTraffic)
-					return;
-				if(isConnected())
-					{
-						if(b)
-							{
-								ms_MuxSocket.m_DummyTraffic=new DummyTraffic(ms_MuxSocket,ms_MuxSocket.m_Log);
-								ms_MuxSocket.m_DummyTraffic.start();
-							}
-						else
-							{
-								ms_MuxSocket.m_DummyTraffic.stop();
-								ms_MuxSocket.m_DummyTraffic=null;
-							}
-					}
-				ms_MuxSocket.m_bDummyTraffic=b;
-			}
+				if(intervall==-1)
+          if(ms_MuxSocket.m_DummyTraffic==null)
+					  return;
+          else
+            {
+              ms_MuxSocket.m_DummyTraffic.stop();
+              ms_MuxSocket.m_DummyTraffic=null;
+              return;
+            }
+        if(ms_MuxSocket.m_DummyTraffic!=null)
+          ms_MuxSocket.m_DummyTraffic.stop();
+        ms_MuxSocket.m_DummyTraffic=new DummyTraffic(ms_MuxSocket,intervall,ms_MuxSocket.m_Log);
+        if(isConnected())
+          ms_MuxSocket.m_DummyTraffic.start();
+      }
 
-		public static boolean getEnableDummyTraffic()
+/*		public static boolean getEnableDummyTraffic()
 			{
-				return ms_MuxSocket.m_bDummyTraffic;
+				return ms_MuxSocket.m_DummyTraffic!=null;
 			}
-	/*	//2001-02-20(HF)
+	*//*	//2001-02-20(HF)
 		public int connect(String host, int port) {
 			return connectViaFirewall(host,port,null,-1,null,null);
 		}
@@ -281,6 +284,8 @@ public final class MuxSocket implements Runnable
 							}
 						m_bIsConnected=true;
      				oChannelList=new Hashtable();
+            if(m_DummyTraffic!=null)
+              m_DummyTraffic.start();
             return ErrorCodes.E_SUCCESS;
 					}
 			}
@@ -346,6 +351,25 @@ public final class MuxSocket implements Runnable
 					}
 			}
 
+    protected synchronized void sendDummy()
+			{
+				synchronized(this)
+					{
+            try
+              {
+                m_TimeLastPacketSend=System.currentTimeMillis();
+                m_outDataStream.writeInt(lastChannelId);
+						    m_outDataStream.writeShort(CHANNEL_DUMMY);
+						    m_outDataStream.write(outBuff);
+						    m_outDataStream.flush();
+                lastChannelId++;
+              }
+            catch(Exception e)
+              {
+     						m_Log.log(LogLevel.ERR,LogType.NET,"MuxSocket:sendDummy() Exception!");
+              }
+					}
+			}
 
 		public int startService()
 			{
@@ -378,7 +402,7 @@ public final class MuxSocket implements Runnable
 					{
 						if(!m_bIsConnected)
 							return ErrorCodes.E_NOT_CONNECTED;
-						if(m_bDummyTraffic)
+						if(m_DummyTraffic!=null)
 							{
 								m_DummyTraffic.stop();
 								m_DummyTraffic=null;
@@ -424,12 +448,18 @@ public final class MuxSocket implements Runnable
                 channel=m_inDataStream.readInt();
 								flags=m_inDataStream.readShort();
 								m_inDataStream.readFully(buff);
-							}
+							  m_TimeLastPacketSend=System.currentTimeMillis();
+              }
 						catch(Exception e)
 							{
 								m_Log.log(LogLevel.ERR,LogType.NET,"JAPMuxSocket:run() Exception while receiving!");
 								break;
 							}
+            if(flags==CHANNEL_DUMMY) //Dummies go to /dev/null ...
+              {
+  							m_Log.log(LogLevel.DEBUG,LogType.NET,"MuxSocket:run() Received a Dummy...");
+	              continue;
+              }
 						ChannelListEntry tmpEntry=(ChannelListEntry)oChannelList.get(new Integer(channel));
 						if(tmpEntry!=null)
 							{

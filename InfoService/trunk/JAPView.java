@@ -31,7 +31,6 @@ import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.plaf.basic.BasicProgressBarUI;
-//import anon.JAPAnonServiceListener;
 import anon.AnonServer;
 
 final class JAPView extends JFrame implements ActionListener, JAPObserver {
@@ -65,16 +64,14 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 	private JAPController 			controller;
 	private JLabel				meterLabel;
 	private JLabel	 			m_labelCascadeName;
-	private JLabel				statusTextField1;
-	private JLabel				statusTextField2;
-	private JLabel				m_labelProxyPort;
-	private JLabel				m_labelProxyHost;
-	private JLabel				infoServiceTextField;
-	private JLabel	 			anonTextField;
-	private JLabel              anonNameTextField;
-	private JButton				portB, httpB, isB, anonB, ano1B, infoB, helpB, startB, quitB, iconifyB, confB;
-	private JLabel			proxyMustUseLabel;
-	private JCheckBox			anonCheckBox;
+	//private JLabel				m_labelProxyPort;
+	//private JLabel				m_labelProxyHost;
+	//private JLabel				infoServiceTextField;
+	//private JLabel	 			anonTextField;
+	//private JLabel              anonNameTextField;
+	private JButton				/*portB, httpB,isB, anonB,*/ ano1B, infoB, helpB, quitB, iconifyB, confB;
+	//private JLabel			proxyMustUseLabel;
+	//private JCheckBox			anonCheckBox;
 	private JCheckBox			ano1CheckBox;
 	private JProgressBar 		userProgressBar;
 	private JProgressBar 		trafficProgressBar;
@@ -136,11 +133,10 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 	    JLabel westLabel = new JLabel(westImage);
 
 			// "Center:" tabs
-	    JTabbedPane tabs = new JTabbedPane();
-	    JPanel config = buildConfigPanel();
+	    //JTabbedPane tabs = new JTabbedPane();
+	    //JPanel config = buildConfigPanel();
 	    JPanel level = buildLevelPanel();
-	    tabs.addTab(JAPMessages.getString("mainMeterTab"),JAPUtil.loadImageIcon(JAPConstants.METERICONFN, true), level );
-	    //tabs.addTab(JAPMessages.getString("mainConfTab"), JAPUtil.loadImageIcon(JAPConstants.CONFIGICONFN,true), config );
+	    //tabs.addTab(JAPMessages.getString("mainMeterTab"),JAPUtil.loadImageIcon(JAPConstants.METERICONFN, true), level );
 	    // "South": Buttons
 
 			JPanel buttonPanel = new JPanel();
@@ -176,9 +172,9 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 			getContentPane().add(northPanel, BorderLayout.NORTH);
 			getContentPane().add(westLabel, BorderLayout.WEST);
 			getContentPane().add(new JLabel("  "), BorderLayout.EAST); //Spacer
-			getContentPane().add(tabs, BorderLayout.CENTER);
+			getContentPane().add(/*tabs*/level, BorderLayout.CENTER);
 
-			tabs.setSelectedComponent(level);
+			//tabs.setSelectedComponent(level);
 
 			this.addWindowListener(new WindowAdapter()
 				{
@@ -332,7 +328,7 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 		return levelPanel;
     }
 
-	private JPanel buildConfigPanel() {
+	/*private JPanel buildConfigPanel() {
 		// "Center" Panel
 		JPanel mainPanel = new JPanel();
 		mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS) );
@@ -362,8 +358,6 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 		p12.add(Box.createRigidArea(new Dimension(10,0)) );
 		p12.add(new JLabel(JAPMessages.getString("confStatus1")) );
 		p12.add(Box.createRigidArea(new Dimension(5,0)) );
-		statusTextField1 = new JLabel("unknown");
-		p12.add(statusTextField1);
 		// add to portPanel
 		portPanel.add(p11);
 		portPanel.add(p12);
@@ -453,8 +447,6 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 		p43.add(Box.createRigidArea(new Dimension(10,0)) );
 		p43.add(new JLabel(JAPMessages.getString("confStatus2")) );
 		p43.add(Box.createRigidArea(new Dimension(5,0)) );
-		statusTextField2 = new JLabel("unknown");
-		p43.add(statusTextField2);
 		// Line 4
 		JPanel p44 = new JPanel();
 		p44.setLayout(new BoxLayout(p44, BoxLayout.X_AXIS) );
@@ -473,7 +465,7 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 
 		return mainPanel;
 	}
-
+*/
 	/**
 	 * Used to disable activation on JAP
 	 * Example: Activation of listener failed
@@ -481,7 +473,7 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 	 */
 	public void disableSetAnonMode()
 		{
-			anonCheckBox.setEnabled(false);
+			//anonCheckBox.setEnabled(false);
 			ano1CheckBox.setEnabled(false);
 		}
 
@@ -523,7 +515,7 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 				}
 				else if (event.getSource() == confB)
 					showConfigDialog();
-				else if (event.getSource() == portB)
+				/*else if (event.getSource() == portB)
 					showConfigDialog(JAPConf.PORT_TAB);
 				else if (event.getSource() == httpB)
 					showConfigDialog(JAPConf.HTTP_TAB);
@@ -531,14 +523,14 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 					showConfigDialog(JAPConf.INFO_TAB);
 				else if (event.getSource() == anonB)
 					showConfigDialog(JAPConf.ANON_TAB);
-				else if (event.getSource() == ano1B)
+				*/else if (event.getSource() == ano1B)
 					showConfigDialog(JAPConf.ANON_TAB);
 				else if (event.getSource() == infoB)
 					controller.aboutJAP();
 				else if (event.getSource() == helpB)
 					showHelpWindow();
-				else if (event.getSource() == anonCheckBox)
-					controller.setAnonMode(anonCheckBox.isSelected());
+				//else if (event.getSource() == anonCheckBox)
+				//	controller.setAnonMode(anonCheckBox.isSelected());
 				else if (event.getSource() == ano1CheckBox)
 					controller.setAnonMode(ano1CheckBox.isSelected());
 				else
@@ -578,34 +570,32 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 		AnonServer e = controller.getAnonServer();
 		// Config panel
 		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPView:Start updateValues");
-		m_labelProxyPort.setText(String.valueOf(JAPModel.getHttpListenerPortNumber()));
-		if(JAPModel.getUseFirewall())
-			{
-			  proxyMustUseLabel.setText(JAPMessages.getString("firewallMustUse"));
-			  m_labelProxyHost.setVisible(true);
-				int firewallPort=JAPModel.getFirewallPort();
-				if(firewallPort==-1)
-					m_labelProxyHost.setText(JAPMessages.getString("firewallNotConfigured"));
-				else
-					m_labelProxyHost.setText(JAPMessages.getString("confProxyHost")+" "+JAPModel.getFirewallHost()+":"+String.valueOf(firewallPort));
-			}
-		else
-			{
-			  proxyMustUseLabel.setText(JAPMessages.getString("firewallMustNotUse"));
-			  m_labelProxyHost.setVisible(false);
-			}
-		infoServiceTextField.setText(JAPModel.getInfoServiceHost()+":"+String.valueOf(JAPModel.getInfoServicePort()));
-		anonTextField.setText(e.getHost()+":"+String.valueOf(e.getPort())+((e.getSSLPort()==-1)?"":":"+e.getSSLPort()));
-		anonNameTextField.setText(e.getName());
-		anonNameTextField.setToolTipText(e.getName());
-		statusTextField1.setText(controller.status1);
-		statusTextField2.setText(controller.status2);
-		anonCheckBox.setSelected(controller.getAnonMode());
-		if(controller.getAnonMode()) {
-			anonCheckBox.setForeground(Color.black);
-		} else {
-			anonCheckBox.setForeground(Color.red);
-		}
+		//m_labelProxyPort.setText(String.valueOf(JAPModel.getHttpListenerPortNumber()));
+		//if(JAPModel.getUseFirewall())
+			//{
+			  //proxyMustUseLabel.setText(JAPMessages.getString("firewallMustUse"));
+			  //m_labelProxyHost.setVisible(true);
+				//int firewallPort=JAPModel.getFirewallPort();
+				//if(firewallPort==-1)
+					//m_labelProxyHost.setText(JAPMessages.getString("firewallNotConfigured"));
+				//else
+					//m_labelProxyHost.setText(JAPMessages.getString("confProxyHost")+" "+JAPModel.getFirewallHost()+":"+String.valueOf(firewallPort));
+			//}
+		//else
+			//{
+			  //proxyMustUseLabel.setText(JAPMessages.getString("firewallMustNotUse"));
+			  //m_labelProxyHost.setVisible(false);
+			//}
+		//infoServiceTextField.setText(JAPModel.getInfoServiceHost()+":"+String.valueOf(JAPModel.getInfoServicePort()));
+		//anonTextField.setText(e.getHost()+":"+String.valueOf(e.getPort())+((e.getSSLPort()==-1)?"":":"+e.getSSLPort()));
+		//anonNameTextField.setText(e.getName());
+		//anonNameTextField.setToolTipText(e.getName());
+    //anonCheckBox.setSelected(controller.getAnonMode());
+		//if(controller.getAnonMode()) {
+		//	anonCheckBox.setForeground(Color.black);
+		//} else {
+		//	anonCheckBox.setForeground(Color.red);
+		//}
 
 		// Meter panel
 		ano1CheckBox.setSelected(controller.getAnonMode());

@@ -88,8 +88,6 @@ public final class JAPController implements ProxyListener {
 	private boolean  mbActCntMessageNeverRemind  = false; // indicates if Warning message in setAnonMode has been deactivated forever
 	private boolean  mbDoNotAbuseReminder        = false; // indicates if new warning message in setAnonMode (containing Do no abuse) has been shown
 	private boolean  mbGoodByMessageNeverRemind  = false; // indicates if Warning message before exit has been deactivated forever
-  private boolean m_bUseDummyTraffic           = false; // indicates what Dummy Traffic should be generated or not
-
 
 	private	static final Object oSetAnonModeSyncObject=new Object();
 
@@ -201,7 +199,8 @@ public final class JAPController implements ProxyListener {
 	 *		anonPortNumber=".."						// the portnumber of the anon-service
 	 *    anonSSLPortNumber=".."        /the "proxy" port number of anon-service
 	 *		autoConnect="true"/"false"		// should we start the anon service immedialy after programm launch ?
-	 *		minimizedStartup="true"/"false" // should we start minimized ???
+	 *		DummyTrafficIntervall=".."    //Time of inactivity in milli seconds after which a dummy is send
+   *    minimizedStartup="true"/"false" // should we start minimized ???
 	 *		neverRemindActiveContent="true"/"false" // should we remind the user about active content ?
 	 *    Locale="LOCALE_IDENTIFIER (two letter iso 639 code)" //the Language for the UI to use
 	 *    LookAndFeel="..."             //the LookAndFeel
@@ -286,7 +285,7 @@ public final class JAPController implements ProxyListener {
           server=m_Controller.getAnonServer();
         }
 			m_Controller.setAnonServer(server);
-
+      setDummyTraffic(JAPUtil.parseElementAttrInt(root,"DummyTrafficIntervall",-1));
 			setAutoConnect(JAPUtil.parseNodeBoolean(n.getNamedItem("autoConnect"),false));
 			m_Model.setMinimizeOnStartup(JAPUtil.parseNodeBoolean(n.getNamedItem("minimizedStartup"),false));
 			//Load Locale-Settings
@@ -390,7 +389,7 @@ public final class JAPController implements ProxyListener {
 			e.setAttribute("portNumber",Integer.toString(JAPModel.getHttpListenerPortNumber()));
 			//e.setAttribute("portNumberSocks",Integer.toString(portSocksListener));
 			//e.setAttribute("supportSocks",(getUseSocksPort()?"true":"false"));
-			e.setAttribute("listenerIsLocal",(JAPModel.getHttpListenerIsLocal()?"true":"false"));
+  		e.setAttribute("listenerIsLocal",(JAPModel.getHttpListenerIsLocal()?"true":"false"));
 			e.setAttribute("proxyMode",(JAPModel.getUseFirewall()?"true":"false"));
       String tmpStr=m_Model.getFirewallHost();
       e.setAttribute("proxyHostName",((tmpStr==null)?"":tmpStr));
@@ -410,7 +409,8 @@ public final class JAPController implements ProxyListener {
 			e.setAttribute("anonHostIP",   ((e1.getIP()==null)?"":e1.getIP()));
 			e.setAttribute("anonPortNumber",   Integer.toString(e1.getPort()));
 			e.setAttribute("anonSSLPortNumber",Integer.toString(e1.getSSLPort()));
-			e.setAttribute("autoConnect",(JAPModel.getAutoConnect()?"true":"false"));
+			e.setAttribute("DummyTrafficIntervall",Integer.toString(JAPModel.getDummyTraffic()));
+      e.setAttribute("autoConnect",(JAPModel.getAutoConnect()?"true":"false"));
 			e.setAttribute("minimizedStartup",(JAPModel.getMinimizeOnStartup()?"true":"false"));
 			e.setAttribute("neverRemindActiveContent",(mbActCntMessageNeverRemind?"true":"false"));
 			e.setAttribute("doNotAbuseReminder",(mbDoNotAbuseReminder?"true":"false"));
@@ -902,7 +902,8 @@ private final class SetAnonModeAsync implements Runnable
 									}
 								m_Controller.status2 = JAPMessages.getString("statusRunning");
 								m_proxyAnon.setProxyListener(m_Controller);
-								// start feedback thread
+								m_proxyAnon.setDummyTraffic(m_Model.getDummyTraffic());
+                // start feedback thread
 								feedback=new JAPFeedback();
 								feedback.startRequests();
 								view.setCursor(Cursor.getDefaultCursor());
@@ -986,16 +987,11 @@ private final class SetAnonModeAsync implements Runnable
 		t.start();
 	}
 
-  public boolean getEnableDummyTraffic()
+  public void setDummyTraffic(int msIntervall)
     {
-      return m_bUseDummyTraffic;
-    }
-
-  public void setEnableDummyTraffic(boolean b)
-    {
-      m_bUseDummyTraffic=b;
+      m_Model.setDummyTraffic(msIntervall);
       if(m_proxyAnon!=null)
-        m_proxyAnon.setEnableDummyTraffic(b);
+        m_proxyAnon.setDummyTraffic(msIntervall);
     }
 
   public void setAutoConnect(boolean b)
