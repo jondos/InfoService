@@ -72,6 +72,7 @@ import anon.infoservice.InfoServiceDBEntry;
 import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.MixCascade;
 import anon.infoservice.MixInfo;
+import javax.swing.JScrollPane;
 
 class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, ActionListener,
 	ListSelectionListener, ItemListener, KeyListener
@@ -391,18 +392,16 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		m_listMixCascade.addListSelectionListener(this);
 		m_listMixCascade.addMouseListener(this);
 		m_listMixCascade.setFixedCellWidth(l.getPreferredSize().width);
-
-		m_listMixCascade.setBorder(LineBorder.createBlackLineBorder());
 		m_listMixCascade.addListSelectionListener(this);
 		c.gridx = 0;
 		c.gridy = 1;
-		c.ipady = 70;
 		c.gridheight = 3;
 		c.gridwidth = 2;
 		c.fill = GridBagConstraints.BOTH;
-		m_cascadesPanel.add(m_listMixCascade, c);
-
-		c.ipady = 0;
+		JScrollPane scroll = new JScrollPane(m_listMixCascade);
+		scroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+		scroll.setMinimumSize(new Dimension(100,100));
+		m_cascadesPanel.add(scroll, c);
 		c.gridheight = 1;
 		c.gridwidth = 1;
 
