@@ -35,7 +35,7 @@ import org.w3c.dom.NodeList;
 import anon.crypto.JAPCertificate;
 import anon.crypto.JAPCertificateStore;
 import anon.crypto.JAPSignature;
-
+import anon.util.XMLUtil;
 /**
  * Holds the information for a mixcascade.
  */
@@ -217,11 +217,17 @@ public class MixCascade
   public Element toXmlNode(Document doc)
   {
     if (m_xmlStructure == null) {
-      /* if there is no XML structure yet, create one */
+      // if there is no XML structure yet, create one
       m_xmlStructure = createXmlStructure(doc);
       return m_xmlStructure;
     }
-    return ((Element)(doc.importNode(m_xmlStructure, true)));
+	try{
+    return ((Element)(XMLUtil.importNode(doc,m_xmlStructure, true)));
+	}
+	catch(Exception e)
+	{
+		return null;
+	}
   }
 
   /**

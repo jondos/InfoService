@@ -35,6 +35,10 @@ import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.w3c.dom.Document;
+import org.w3c.dom.DOMException;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.*;
 
 public class XMLUtil
 {
@@ -234,4 +238,176 @@ public class XMLUtil
 	{
 		n.appendChild(n.getOwnerDocument().createTextNode(text));
 	}
+
+	/** Stolen from Apache Xerces-J...*/
+	public static Node importNode(Document doc, Node source, boolean deep) throws Exception
+	{
+
+		Node newnode = null;
+
+		// Sigh. This doesn't work; too many nodes have private data that
+		// would have to be manually tweaked. May be able to add local
+		// shortcuts to each nodetype. Consider ?????
+		// if(source instanceof NodeImpl &&
+		//	!(source instanceof DocumentImpl))
+		// {
+		//  // Can't clone DocumentImpl since it invokes us...
+		//	newnode=(NodeImpl)source.cloneNode(false);
+		//	newnode.ownerDocument=this;
+		//}
+		//else
+		int type = source.getNodeType();
+		switch (type)
+		{
+
+			case Document.ELEMENT_NODE:
+			{
+				Element newelement = doc.createElement(source.getNodeName());
+				NamedNodeMap srcattr = source.getAttributes();
+				if (srcattr != null)
+				{
+					for (int i = 0; i < srcattr.getLength(); i++)
+					{
+						newelement.setAttributeNode(
+							(Attr) importNode(doc,srcattr.item(i), true));
+					}
+				}
+				newnode =  newelement;
+				break;
+			}
+
+			case Document.ATTRIBUTE_NODE:
+			{
+				newnode = doc.createAttribute(source.getNodeName());
+				// Kids carry value
+				break;
+			}
+
+			case Document.TEXT_NODE:
+			{
+				newnode = doc.createTextNode(source.getNodeValue());
+				break;
+			}
+
+			case Document.CDATA_SECTION_NODE:
+			{
+				newnode = doc.createCDATASection(source.getNodeValue());
+				break;
+			}
+
+			case Document.ENTITY_REFERENCE_NODE:
+			{
+				newnode = doc.createEntityReference(source.getNodeName());
+				deep = false; // ????? Right Thing?
+				// Value implied by doctype, so we should not copy it
+				// -- instead, refer to local doctype, if any.
+				break;
+			}
+
+			case Document.ENTITY_NODE:
+			{
+				/*Entity srcentity = (Entity) source;
+				Entity newentity = doc.createEntity(source.getNodeName());
+				newentity.setPublicId(srcentity.getPublicId());
+				newentity.setSystemId(srcentity.getSystemId());
+				newentity.setNotationName(srcentity.getNotationName());
+				// Kids carry additional value
+				newnode = newentity;*/
+		   		throw new Exception("HIERARCHY_REQUEST_ERR");
+				//break;
+			}
+
+			case Document.PROCESSING_INSTRUCTION_NODE:
+			{
+				newnode = doc.createProcessingInstruction(source.getNodeName(),
+					source.getNodeValue());
+				break;
+			}
+
+			case Document.COMMENT_NODE:
+			{
+				newnode = doc.createComment(source.getNodeValue());
+				break;
+			}
+
+			case Document.DOCUMENT_TYPE_NODE:
+			{
+			/*	DocumentType doctype = (DocumentType) source;
+				DocumentType newdoctype =
+					doc.createDocumentType(
+					doctype.getNodeName(),
+					doctype.getPublicID(), doctype.getSystemID());
+				// Values are on NamedNodeMaps
+				NamedNodeMap smap = ( (DocumentType) source).getEntities();
+				NamedNodeMap tmap = newdoctype.getEntities();
+				if (smap != null)
+				{
+					for (int i = 0; i < smap.getLength(); i++)
+					{
+						tmap.setNamedItem( (EntityImpl) importNode(smap.item(i), true));
+					}
+				}
+				smap = ( (DocumentType) source).getNotations();
+				tmap = newdoctype.getNotations();
+				if (smap != null)
+				{
+					for (int i = 0; i < smap.getLength(); i++)
+					{
+						tmap.setNamedItem( (NotationImpl) importNode(smap.item(i), true));
+					}
+				}
+				// NOTE: At this time, the DOM definition of DocumentType
+				// doesn't cover Elements and their Attributes. domimpl's
+				// extentions in that area will not be preserved, even if
+				// copying from domimpl to domimpl. We could special-case
+				// that here. Arguably we should. Consider. ?????
+				newnode = newdoctype;
+				break;*/
+			   throw new Exception("HIERARCHY_REQUEST_ERR");
+
+			}
+
+			case Document.DOCUMENT_FRAGMENT_NODE:
+			{
+				newnode = doc.createDocumentFragment();
+				// No name, kids carry value
+				break;
+			}
+
+			case Document.NOTATION_NODE:
+			{/*
+				Notation srcnotation = (Notation) source;
+				Notation newnotation = (Notation) doc.createNotation(source.getNodeName());
+				newnotation.setPublicId(srcnotation.getPublicId());
+				newnotation.setSystemId(srcnotation.getSystemId());
+				// Kids carry additional value
+				newnode = newnotation;
+				// No name, no value
+				break;*/
+					throw new Exception("HIERARCHY_REQUEST_ERR");
+
+			}
+
+			case Document.DOCUMENT_NODE: // Document can't be child of Document
+			default:
+			{ // Unknown node type
+				throw new Exception("HIERARCHY_REQUEST_ERR");
+			}
+		}
+
+		// If deep, replicate and attach the kids.
+		if (deep)
+		{
+			for (Node srckid = source.getFirstChild();
+				 srckid != null;
+				 srckid = srckid.getNextSibling())
+			{
+				newnode.appendChild(importNode(doc,srckid, true));
+			}
+		}
+
+		return newnode;
+
+	}
+
 }
