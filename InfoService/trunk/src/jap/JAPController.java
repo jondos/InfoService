@@ -75,11 +75,9 @@ import logging.LogType;
 import proxy.AnonProxy;
 import proxy.DirectProxy;
 import proxy.ProxyListener;
-import anon.infoservice.ImmutableProxyInterface;
 import update.JAPUpdateWizard;
 import anon.pay.PayAccountsFile;
 import anon.crypto.XMLEncryption;
-import anon.pay.Pay;
 import anon.pay.BI;
 import gui.JAPHtmlMultiLineLabel;
 
@@ -465,13 +463,13 @@ public final class JAPController implements ProxyListener, Observer
 				NamedNodeMap n = root.getAttributes();
 
 				//
-				String strVersion = XMLUtil.parseNodeString(n.getNamedItem(JAPConstants.CONFIG_VERSION), null);
-				int port = XMLUtil.parseElementAttrInt(root, JAPConstants.CONFIG_PORT_NUMBER,
+				String strVersion = XMLUtil.parseValue(n.getNamedItem(JAPConstants.CONFIG_VERSION), null);
+				int port = XMLUtil.parseAttribute(root, JAPConstants.CONFIG_PORT_NUMBER,
 					JAPModel.getHttpListenerPortNumber());
-				boolean bListenerIsLocal = XMLUtil.parseNodeBoolean(n.getNamedItem(JAPConstants.
+				boolean bListenerIsLocal = XMLUtil.parseValue(n.getNamedItem(JAPConstants.
 					CONFIG_LISTENER_IS_LOCAL), true);
 				setHTTPListener(port, bListenerIsLocal, false);
-				//port = XMLUtil.parseElementAttrInt(root, "portNumberSocks",
+				//port = XMLUtil.parseAttribute(root, "portNumberSocks",
 				//  JAPModel.getSocksListenerPortNumber());
 				//setSocksPortNumber(port);
 				//setUseSocksPort(JAPUtil.parseNodeBoolean(n.getNamedItem("supportSocks"),false));
@@ -479,16 +477,16 @@ public final class JAPController implements ProxyListener, Observer
 				// load settings for the reminder message in setAnonMode
 				try
 				{
-					mbActCntMessageNeverRemind = XMLUtil.parseNodeBoolean(n.getNamedItem(
+					mbActCntMessageNeverRemind = XMLUtil.parseValue(n.getNamedItem(
 						JAPConstants.CONFIG_NEVER_REMIND_ACTIVE_CONTENT), false);
-					mbDoNotAbuseReminder = XMLUtil.parseNodeBoolean(n.getNamedItem(JAPConstants.
+					mbDoNotAbuseReminder = XMLUtil.parseValue(n.getNamedItem(JAPConstants.
 						CONFIG_DO_NOT_ABUSE_REMINDER), false);
 					if (mbActCntMessageNeverRemind && mbDoNotAbuseReminder)
 					{
 						mbActCntMessageNotRemind = true;
 						// load settings for the reminder message before goodBye
 					}
-					mbGoodByMessageNeverRemind = XMLUtil.parseNodeBoolean(n.getNamedItem(JAPConstants.
+					mbGoodByMessageNeverRemind = XMLUtil.parseValue(n.getNamedItem(JAPConstants.
 						CONFIG_NEVER_REMIND_GOODBYE), false);
 
 				}
@@ -498,13 +496,13 @@ public final class JAPController implements ProxyListener, Observer
 								  "JAPController: loadConfigFile: Error loading reminder message ins setAnonMode.");
 				}
 				/* infoservice configuration options */
-				boolean b = XMLUtil.parseNodeBoolean(n.getNamedItem(JAPConstants.CONFIG_INFOSERVICE_DISABLED),
+				boolean b = XMLUtil.parseValue(n.getNamedItem(JAPConstants.CONFIG_INFOSERVICE_DISABLED),
 					JAPModel.isInfoServiceDisabled());
 				setInfoServiceDisabled(b);
-				b = XMLUtil.parseNodeBoolean(n.getNamedItem(JAPConstants.CONFIG_INFOSERVICE_CHANGE),
+				b = XMLUtil.parseValue(n.getNamedItem(JAPConstants.CONFIG_INFOSERVICE_CHANGE),
 											 InfoServiceHolder.getInstance().isChangeInfoServices());
 				InfoServiceHolder.getInstance().setChangeInfoServices(b);
-				int i = XMLUtil.parseNodeInt(n.getNamedItem(JAPConstants.CONFIG_INFOSERVICE_TIMEOUT), -1);
+				int i = XMLUtil.parseValue(n.getNamedItem(JAPConstants.CONFIG_INFOSERVICE_TIMEOUT), -1);
 				try
 				{
 					if ( (i >= 1) && (i <= 60))
@@ -519,13 +517,13 @@ public final class JAPController implements ProxyListener, Observer
 				}
 
 				//settings for Certificates
-				setCertCheckDisabled(XMLUtil.parseNodeBoolean(n.getNamedItem(JAPConstants.
+				setCertCheckDisabled(XMLUtil.parseValue(n.getNamedItem(JAPConstants.
 					CONFIG_CERT_CHECK_DISABLED),
 					JAPModel.isCertCheckDisabled()));
 
 				try
 				{
-					// setCertificateStore(XMLUtil.parseNodeString(n.getNamedItem("acceptedCertList"), ""));
+					// setCertificateStore(XMLUtil.parseValue(n.getNamedItem("acceptedCertList"), ""));
 					// JAPCertificateStore jcs = null;
 					Element elemCAs = (Element) XMLUtil.getFirstChildByName(root,
 						JAPConstants.CONFIG_CERTIFICATE_AUTHORITIES);
@@ -581,14 +579,14 @@ public final class JAPController implements ProxyListener, Observer
 				try
 				{
 					proxyInterface = new ProxyInterface(
-						XMLUtil.parseNodeString(n.getNamedItem(JAPConstants.CONFIG_PROXY_HOST_NAME), null),
-						XMLUtil.parseElementAttrInt(root, JAPConstants.CONFIG_PROXY_PORT_NUMBER, -1),
-						XMLUtil.parseNodeString(n.getNamedItem(JAPConstants.CONFIG_PROXY_TYPE),
+						XMLUtil.parseValue(n.getNamedItem(JAPConstants.CONFIG_PROXY_HOST_NAME), null),
+						XMLUtil.parseAttribute(root, JAPConstants.CONFIG_PROXY_PORT_NUMBER, -1),
+						XMLUtil.parseValue(n.getNamedItem(JAPConstants.CONFIG_PROXY_TYPE),
 												ProxyInterface.PROTOCOL_STR_TYPE_HTTP),
-						XMLUtil.parseNodeString(n.getNamedItem(JAPConstants.CONFIG_PROXY_AUTH_USER_ID), null),
+						XMLUtil.parseValue(n.getNamedItem(JAPConstants.CONFIG_PROXY_AUTH_USER_ID), null),
 						getPasswordReader(),
-						XMLUtil.parseNodeBoolean(n.getNamedItem(JAPConstants.CONFIG_PROXY_AUTHORIZATION), false),
-						XMLUtil.parseNodeBoolean(n.getNamedItem(JAPConstants.CONFIG_PROXY_MODE), false));
+						XMLUtil.parseValue(n.getNamedItem(JAPConstants.CONFIG_PROXY_AUTHORIZATION), false),
+						XMLUtil.parseValue(n.getNamedItem(JAPConstants.CONFIG_PROXY_MODE), false));
 				}
 				catch (Exception a_e)
 				{
@@ -608,7 +606,7 @@ public final class JAPController implements ProxyListener, Observer
 				{
 					defaultMixCascade = new MixCascade( (Element) mixCascadeNode);
 					defaultMixCascade.setIsUserDefined(
-						XMLUtil.parseElementAttrBoolean(mixCascadeNode, JAPConstants.CONFIG_USER_DEFINED, false));
+						XMLUtil.parseAttribute(mixCascadeNode, JAPConstants.CONFIG_USER_DEFINED, false));
 				}
 				catch (Exception e)
 				{
@@ -640,23 +638,23 @@ public final class JAPController implements ProxyListener, Observer
 					}
 				}
 
-				setDummyTraffic(XMLUtil.parseElementAttrInt(root, JAPConstants.CONFIG_DUMMY_TRAFFIC_INTERVALL,
+				setDummyTraffic(XMLUtil.parseAttribute(root, JAPConstants.CONFIG_DUMMY_TRAFFIC_INTERVALL,
 					-1));
-				setAutoConnect(XMLUtil.parseNodeBoolean(n.getNamedItem(JAPConstants.CONFIG_AUTO_CONNECT), false));
-				setAutoReConnect(XMLUtil.parseNodeBoolean(n.getNamedItem(JAPConstants.CONFIG_AUTO_RECONNECT), false));
-				setPreCreateAnonRoutes(XMLUtil.parseNodeBoolean(n.getNamedItem(JAPConstants.
+				setAutoConnect(XMLUtil.parseValue(n.getNamedItem(JAPConstants.CONFIG_AUTO_CONNECT), false));
+				setAutoReConnect(XMLUtil.parseValue(n.getNamedItem(JAPConstants.CONFIG_AUTO_RECONNECT), false));
+				setPreCreateAnonRoutes(XMLUtil.parseValue(n.getNamedItem(JAPConstants.
 					CONFIG_PRECREATE_ANON_ROUTES), true));
-				m_Model.setMinimizeOnStartup(XMLUtil.parseNodeBoolean(n.getNamedItem(JAPConstants.
+				m_Model.setMinimizeOnStartup(XMLUtil.parseValue(n.getNamedItem(JAPConstants.
 					CONFIG_MINIMIZED_STARTUP), false));
 				//Load Locale-Settings
-				String strLocale = XMLUtil.parseNodeString(n.getNamedItem(JAPConstants.CONFIG_LOCALE),
+				String strLocale = XMLUtil.parseValue(n.getNamedItem(JAPConstants.CONFIG_LOCALE),
 					m_Locale.getLanguage());
 				Locale locale = new Locale(strLocale, "");
 				setLocale(locale);
 				//Load look-and-feel settings (not changed if SmmallDisplay!
 				if (!m_Model.isSmallDisplay())
 				{
-					String lf = XMLUtil.parseNodeString(n.getNamedItem(JAPConstants.CONFIG_LOOK_AND_FEEL),
+					String lf = XMLUtil.parseValue(n.getNamedItem(JAPConstants.CONFIG_LOOK_AND_FEEL),
 						JAPConstants.CONFIG_UNKNOWN);
 					LookAndFeelInfo[] lfi = UIManager.getInstalledLookAndFeels();
 					for (i = 0; i < lfi.length; i++)
@@ -690,26 +688,26 @@ public final class JAPController implements ProxyListener, Observer
 						{
 							Element tmp = (Element) XMLUtil.getFirstChildByName(elemMainWindow,
 								JAPConstants.CONFIG_SET_ON_STARTUP);
-							b = XMLUtil.parseNodeBoolean(tmp, false);
+							b = XMLUtil.parseValue(tmp, false);
 							JAPController.setSaveMainWindowPosition(b);
 							if (b)
 							{
 								tmp = (Element) XMLUtil.getFirstChildByName(elemMainWindow,
 									JAPConstants.CONFIG_LOCATION);
 								Point p = new Point();
-								p.x = XMLUtil.parseElementAttrInt(tmp, JAPConstants.CONFIG_X, -1);
-								p.y = XMLUtil.parseElementAttrInt(tmp, JAPConstants.CONFIG_Y, -1);
+								p.x = XMLUtil.parseAttribute(tmp, JAPConstants.CONFIG_X, -1);
+								p.y = XMLUtil.parseAttribute(tmp, JAPConstants.CONFIG_Y, -1);
 								Dimension d = new Dimension();
 								tmp = (Element) XMLUtil.getFirstChildByName(elemMainWindow,
 									JAPConstants.CONFIG_SIZE);
-								d.width = XMLUtil.parseElementAttrInt(tmp, JAPConstants.CONFIG_DX, -1);
-								d.height = XMLUtil.parseElementAttrInt(tmp, JAPConstants.CONFIG_DY, -1);
+								d.width = XMLUtil.parseAttribute(tmp, JAPConstants.CONFIG_DX, -1);
+								d.height = XMLUtil.parseAttribute(tmp, JAPConstants.CONFIG_DY, -1);
 								m_Model.m_OldMainWindowLocation = p;
 								m_Model.m_OldMainWindowSize = d;
 							}
 							tmp = (Element) XMLUtil.getFirstChildByName(elemMainWindow,
 								JAPConstants.CONFIG_MOVE_TO_SYSTRAY);
-							b = XMLUtil.parseNodeBoolean(tmp, false);
+							b = XMLUtil.parseValue(tmp, false);
 							setMoveToSystrayOnStartup(b);
 							if (b)
 							{ ///todo: move to systray
@@ -720,7 +718,7 @@ public final class JAPController implements ProxyListener, Observer
 							}
 							tmp = (Element) XMLUtil.getFirstChildByName(elemMainWindow,
 								JAPConstants.CONFIG_DEFAULT_VIEW);
-							String strDefaultView = XMLUtil.parseNodeString(tmp, JAPConstants.CONFIG_NORMAL);
+							String strDefaultView = XMLUtil.parseValue(tmp, JAPConstants.CONFIG_NORMAL);
 							if (strDefaultView.equals(JAPConstants.CONFIG_SIMPLIFIED))
 							{
 								setDefaultView(JAPConstants.VIEW_SIMPLIFIED);
@@ -744,7 +742,7 @@ public final class JAPController implements ProxyListener, Observer
 							JAPConstants.CONFIG_LEVEL);
 						if (elemLevel != null)
 						{
-							int l = XMLUtil.parseNodeInt(elemLevel, JAPDebug.getInstance().getLogLevel());
+							int l = XMLUtil.parseValue(elemLevel, JAPDebug.getInstance().getLogLevel());
 							JAPDebug.getInstance().setLogLevel(l);
 						}
 						Element elemType = (Element) XMLUtil.getFirstChildByName(elemDebug,
@@ -752,19 +750,19 @@ public final class JAPController implements ProxyListener, Observer
 						if (elemType != null)
 						{
 							int debugtype = LogType.NUL;
-							if (XMLUtil.parseElementAttrBoolean(elemType, JAPConstants.CONFIG_GUI, false))
+							if (XMLUtil.parseAttribute(elemType, JAPConstants.CONFIG_GUI, false))
 							{
 								debugtype += LogType.GUI;
 							}
-							if (XMLUtil.parseElementAttrBoolean(elemType, JAPConstants.CONFIG_NET, false))
+							if (XMLUtil.parseAttribute(elemType, JAPConstants.CONFIG_NET, false))
 							{
 								debugtype += LogType.NET;
 							}
-							if (XMLUtil.parseElementAttrBoolean(elemType, JAPConstants.CONFIG_THREAD, false))
+							if (XMLUtil.parseAttribute(elemType, JAPConstants.CONFIG_THREAD, false))
 							{
 								debugtype += LogType.THREAD;
 							}
-							if (XMLUtil.parseElementAttrBoolean(elemType, JAPConstants.CONFIG_MISC, false))
+							if (XMLUtil.parseAttribute(elemType, JAPConstants.CONFIG_MISC, false))
 							{
 								debugtype += LogType.MISC;
 								debugtype += LogType.PAY;
@@ -832,13 +830,13 @@ public final class JAPController implements ProxyListener, Observer
 					Element elemTor = (Element) XMLUtil.getFirstChildByName(root, JAPConstants.CONFIG_TOR);
 					Element elem = (Element) XMLUtil.getFirstChildByName(elemTor,
 						JAPConstants.CONFIG_MAX_CONNECTIONS_PER_ROUTE);
-					setTorMaxConnectionsPerRoute(XMLUtil.parseNodeInt(elem,
+					setTorMaxConnectionsPerRoute(XMLUtil.parseValue(elem,
 						JAPModel.getTorMaxConnectionsPerRoute()));
 					elem = (Element) XMLUtil.getFirstChildByName(elemTor, JAPConstants.CONFIG_ROUTE_LEN);
 					int min, max;
-					min = XMLUtil.parseElementAttrInt(elem, JAPConstants.CONFIG_MIN,
+					min = XMLUtil.parseAttribute(elem, JAPConstants.CONFIG_MIN,
 						JAPModel.getTorMinRouteLen());
-					max = XMLUtil.parseElementAttrInt(elem, JAPConstants.CONFIG_MAX,
+					max = XMLUtil.parseAttribute(elem, JAPConstants.CONFIG_MAX,
 						JAPModel.getTorMaxRouteLen());
 					setTorRouteLen(min, max);
 				}
@@ -1145,7 +1143,7 @@ public final class JAPController implements ProxyListener, Observer
 			if (JAPModel.getDefaultView() == JAPConstants.VIEW_SIMPLIFIED)
 			{
 				Element tmp = doc.createElement(JAPConstants.CONFIG_DEFAULT_VIEW);
-				XMLUtil.setNodeValue(tmp, JAPConstants.CONFIG_SIMPLIFIED);
+				XMLUtil.setValue(tmp, JAPConstants.CONFIG_SIMPLIFIED);
 				elemMainWindow.appendChild(tmp);
 			}
 			// adding Debug-Element
@@ -1192,7 +1190,7 @@ public final class JAPController implements ProxyListener, Observer
 			/** add tor*/
 			Element elemTor = doc.createElement(JAPConstants.CONFIG_TOR);
 			Element elem = doc.createElement(JAPConstants.CONFIG_MAX_CONNECTIONS_PER_ROUTE);
-			XMLUtil.setNodeValue(elem, Integer.toString(JAPModel.getTorMaxConnectionsPerRoute()));
+			XMLUtil.setValue(elem, Integer.toString(JAPModel.getTorMaxConnectionsPerRoute()));
 			elemTor.appendChild(elem);
 			elem = doc.createElement(JAPConstants.CONFIG_ROUTE_LEN);
 			elem.setAttribute(JAPConstants.CONFIG_MIN, Integer.toString(JAPModel.getTorMinRouteLen()));
