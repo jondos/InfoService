@@ -15,7 +15,7 @@ public class CAMuxSocket extends Thread
 		private DataInputStream fromServer;
 		private Socket outSocket;
 		private	byte[] tmpBuff;
-		
+
 		class SocketListEntry
 			{
 				SocketListEntry(CASocket s)
@@ -32,18 +32,18 @@ public class CAMuxSocket extends Thread
 				public CASocket inSocket;
 				public BufferedOutputStream out;
 			};
-		
+
 		CAMuxSocket()
 			{
 				lastChannelId=0;
 				oSocketList=new Hashtable();
 				tmpBuff=new byte[1000];
 			}
-		
+
 		public int connect(String host, int port)
 			{
 				try
-					{		
+					{
 						outSocket=new Socket(host,port);
 						toServer=new DataOutputStream(new BufferedOutputStream(outSocket.getOutputStream(),1008));
 						fromServer=new DataInputStream(new BufferedInputStream(outSocket.getInputStream(),1008));
@@ -55,7 +55,7 @@ public class CAMuxSocket extends Thread
 					}
 				return 0;
 			}
-		
+
 		public synchronized int newConnection(CASocket s)
 			{
 				oSocketList.put(new Integer(lastChannelId),new SocketListEntry(s));
@@ -64,7 +64,7 @@ public class CAMuxSocket extends Thread
 //				System.out.println("CAMuxSocket - new Connection");
 				return 0;
 			}
-		
+
 		public synchronized int close(int channel)
 			{
 	//			System.out.println("Closing channel: "+Integer.toString(channel));
@@ -72,12 +72,12 @@ public class CAMuxSocket extends Thread
 				oSocketList.remove(new Integer(channel));
 				return 0;
 			}
-		
+
 		public void run()
 			{
- 				byte[] buff=new byte[1000]; 
+ 				byte[] buff=new byte[1000];
 				int len=0;
-				int count=0;
+//				int count=0;
 				int tmp=0;
 				int channel=0;
 				try{
@@ -87,16 +87,17 @@ public class CAMuxSocket extends Thread
 						channel=fromServer.readInt();
 						len=fromServer.readShort();
 						tmp=fromServer.readShort();
-						count=1000;
-						tmp=0;
-						do
-							{
-								tmp=fromServer.read(buff,tmp,count);
-								count-=tmp;
-							}
-						while (tmp!=-1&&count>0);
-						if(tmp==-1)
-							break;
+						formServer.readFully(buff);
+//						count=1000;
+//						tmp=0;
+//						do
+//							{
+//								tmp=fromServer.read(buff,tmp,count);
+//								count-=tmp;
+//							}
+//						while (tmp!=-1&&count>0);
+//						if(tmp==-1)
+//							break;
 //						System.out.println("channel- "+Integer.toString(channel));
 						SocketListEntry tmpEntry=(SocketListEntry)oSocketList.get(new Integer(channel));
 						if(tmpEntry!=null)
@@ -126,7 +127,7 @@ public class CAMuxSocket extends Thread
 					}
 				System.out.println("CAMuxSocket -exiting! "+Integer.toString(len));
 			}
-		
+
 		public synchronized int send(int channel,byte[] buff,short len)
 			{
 				try
@@ -148,5 +149,5 @@ public class CAMuxSocket extends Thread
 					}
 				return 0;
 			}
-		
+
 	}
