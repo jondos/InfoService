@@ -35,7 +35,7 @@ import anon.tor.Tor;
 
 public final class JAPConstants
 {
-	public static final String aktVersion = "00.04.010"; //Never change the layout of this line!
+	public static final String aktVersion = "00.04.011"; //Never change the layout of this line!
 	private static final String CVS_GENERATED_RELEASE_DATE = "$Date$";
 
 
@@ -43,7 +43,7 @@ public final class JAPConstants
 	//because CVS will expand the $Date$
 	//to the date of the last commmit of this file
 
-	public final static boolean m_bReleasedVersion = true; //Set to true if this is a stable (release) Version
+	public final static boolean m_bReleasedVersion = false; //Set to true if this is a stable (release) Version
 	private static final String RELEASE_DATE = "2005/03/31 15:00:0"; // Set only to a Value, if m_bReleaseVersion=true
 
 	public static final String strReleaseDate; //The Release date of this version
