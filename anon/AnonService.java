@@ -38,7 +38,7 @@ import anon.infoservice.MixCascade;
 public interface AnonService
 	{
 		///The version of the AnonLib
-		public final static String ANONLIB_VERSION="00.00.016";
+		public final static String ANONLIB_VERSION="00.01.017";
 		/** Establishes a connection to an AnonServer, which is described through the
 		 *  anonService parameter. This method must be called before any Channels could be created.
 		 *  @param anonService AnonServer to use

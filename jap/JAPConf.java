@@ -33,7 +33,6 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Locale;
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.FlowLayout;
 import java.awt.Font;
@@ -72,11 +71,13 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import org.bouncycastle.asn1.x509.X509NameTokenizer;
 import anon.crypto.JAPCertificate;
+import anon.crypto.JAPCertificateException;
 import anon.crypto.JAPCertificateStore;
 import anon.infoservice.InfoService;
 import anon.infoservice.InfoServiceDatabase;
 import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.MixCascade;
+import gui.CAListCellRenderer;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -128,7 +129,7 @@ final class JAPConf extends JDialog
 	private JLabel m_labelTrust1, m_labelTrust2, m_labelDate, m_labelCN, m_labelE, m_labelCSTL, m_labelO,
 		m_labelOU;
 	private JLabel m_labelDateData, m_labelCNData, m_labelEData, m_labelCSTLData, m_labelOData, m_labelOUData;
-	private JButton m_bttnCertInsert, m_bttnCertRemove, m_bttnCertEnable, m_bttnCertDisable;
+	private JButton m_bttnCertInsert, m_bttnCertRemove, m_bttnCertStatus;
 	private DefaultListModel m_listmodelCertList;
 	private JList m_listCert;
 	private JScrollPane m_scrpaneList;
@@ -292,23 +293,23 @@ final class JAPConf extends JDialog
 		m_cbListenerIsLocal.setForeground(m_labelPortnumber1.getForeground());
 
 		/*m_cbListenerSocks=new JCheckBox(JAPMessages.getString("settingsListenerCheckBoxSOCKS"));
-			 m_cbListenerSocks.setForeground(portnumberLabel1.getForeground());
-			 m_cbListenerSocks.addChangeListener(new ChangeListener(){
+		  m_cbListenerSocks.setForeground(portnumberLabel1.getForeground());
+		  m_cbListenerSocks.addChangeListener(new ChangeListener(){
 
 		 public void stateChanged(ChangeEvent e)
 		  {
 		   if(m_cbListenerSocks.isSelected())
-			{
-			 m_tfListenerPortNumberSocks.setEnabled(true);
-			}
+		 {
+		  m_tfListenerPortNumberSocks.setEnabled(true);
+		 }
 		   else
-			//{
-			 m_tfListenerPortNumberSocks.setEnabled(false);
-			//}
+		 //{
+		  m_tfListenerPortNumberSocks.setEnabled(false);
+		 //}
 		 }});
-			 m_tfListenerPortNumberSocks = new JAPJIntField();
-			 m_tfListenerPortNumberSocks.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
+		  m_tfListenerPortNumberSocks = new JAPJIntField();
+		  m_tfListenerPortNumberSocks.addActionListener(new ActionListener() {
+		 public void actionPerformed(ActionEvent e) {
 		  okPressed();
 		  }});*/
 		JPanel p = new JPanel();
@@ -345,17 +346,17 @@ final class JAPConf extends JDialog
 		p1.add(seperator);
 		c.insets = normInsets;
 		/*c.gridy=4;
-			 c.insets=new Insets(10,0,0,0);
-			 g.setConstraints(m_cbListenerSocks,c);
-			 p1.add(m_cbListenerSocks);
-			 c.gridy=5;
-			 g.setConstraints(m_tfListenerPortNumberSocks,c);
-			 p1.add(m_tfListenerPortNumberSocks);
-			 c.gridy=6;
-			 JSeparator seperator2=new JSeparator();
-			 c.insets=new Insets(10,0,0,0);
-			 g.setConstraints(seperator2,c);
-			 p1.add(seperator2);
+		  c.insets=new Insets(10,0,0,0);
+		  g.setConstraints(m_cbListenerSocks,c);
+		  p1.add(m_cbListenerSocks);
+		  c.gridy=5;
+		  g.setConstraints(m_tfListenerPortNumberSocks,c);
+		  p1.add(m_tfListenerPortNumberSocks);
+		  c.gridy=6;
+		  JSeparator seperator2=new JSeparator();
+		  c.insets=new Insets(10,0,0,0);
+		  g.setConstraints(seperator2,c);
+		  p1.add(seperator2);
 		 */
 		c.gridy = 4;
 		c.insets = new Insets(10, 0, 0, 0);
@@ -731,76 +732,56 @@ final class JAPConf extends JDialog
 	/*
 	 * TODO: updates info panel by list element, ugly, needs fix
 	 */
-	private void updateInfoPanel(String currIssuerCN)
+	private void updateInfoPanel(JAPCertificate j)
 	{
-		m_enumCerts = JAPModel.getCertificateStore().elements();
-		JAPCertificate j;
-		while (m_enumCerts.hasMoreElements())
+		m_labelDateData.setText(j.getStartDate().toGMTString() + " - " + j.getEndDate().toGMTString());
+		m_labelCNData.setText("");
+		m_labelEData.setText("");
+		m_labelCSTLData.setText("");
+		m_labelOData.setText("");
+		m_labelOUData.setText("");
+
+		X509NameTokenizer m_issuerData = new X509NameTokenizer(j.getIssuer().toString());
+		while (m_issuerData.hasMoreTokens())
 		{
-			j = (JAPCertificate) m_enumCerts.nextElement();
-
-			if (j.getIssuer().getValues().elementAt(0).equals(currIssuerCN))
+			String m_element = (String) m_issuerData.nextToken();
+			if (m_element.startsWith("CN="))
 			{
-				m_labelDateData.setText(j.getStartDate().toGMTString() + " - " + j.getEndDate().toGMTString());
-				m_labelCNData.setText("");
-				m_labelEData.setText("");
-				m_labelCSTLData.setText("");
-				m_labelOData.setText("");
-				m_labelOUData.setText("");
-
-				X509NameTokenizer m_issuerData = new X509NameTokenizer(j.getIssuer().toString());
-				while (m_issuerData.hasMoreTokens())
-				{
-					String m_element = (String) m_issuerData.nextToken();
-					if (m_element.startsWith("CN="))
-					{
-						m_labelCNData.setText(m_element.substring(3));
-					}
-					else if (m_element.startsWith("E="))
-					{
-						m_labelEData.setText(m_element.substring(2));
-					}
-					else if (m_element.startsWith("C="))
-					{
-						m_labelCSTLData.setText(m_element.substring(2) + m_labelCSTLData.getText());
-					}
-					else if (m_element.startsWith("ST="))
-					{
-						m_labelCSTLData.setText(m_element.substring(3) + " / " + m_labelCSTLData.getText());
-					}
-					else if (m_element.startsWith("L="))
-					{
-						m_labelCSTLData.setText(m_element.substring(2) + " / " + m_labelCSTLData.getText());
-					}
-					else if (m_element.startsWith("O="))
-					{
-						m_labelOData.setText(m_element.substring(2));
-					}
-					else if (m_element.startsWith("OU="))
-					{
-						m_labelOUData.setText(m_element.substring(3));
-					}
-				}
-
-				if (m_labelCSTLData.getText().trim().endsWith("/"))
-				{
-					String t_label = m_labelCSTLData.getText().trim();
-					int length = t_label.length();
-					t_label = t_label.substring(0, length - 1);
-					m_labelCSTLData.setText(t_label);
-				}
-				if (j.getEnabled())
-				{
-					m_listCert.setSelectionForeground(Color.black);
-				}
-				else
-				{
-					m_listCert.setSelectionForeground(Color.red);
-
-					// m_tfIssuer.setText(j.getIssuer().toString());
-				}
+				m_labelCNData.setText(m_element.substring(3));
 			}
-		} // while
+			else if (m_element.startsWith("E="))
+			{
+				m_labelEData.setText(m_element.substring(2));
+			}
+			else if (m_element.startsWith("C="))
+			{
+				m_labelCSTLData.setText(m_element.substring(2) + m_labelCSTLData.getText());
+			}
+			else if (m_element.startsWith("ST="))
+			{
+				m_labelCSTLData.setText(m_element.substring(3) + " / " + m_labelCSTLData.getText());
+			}
+			else if (m_element.startsWith("L="))
+			{
+				m_labelCSTLData.setText(m_element.substring(2) + " / " + m_labelCSTLData.getText());
+			}
+			else if (m_element.startsWith("O="))
+			{
+				m_labelOData.setText(m_element.substring(2));
+			}
+			else if (m_element.startsWith("OU="))
+			{
+				m_labelOUData.setText(m_element.substring(3));
+			}
+		}
+
+		if (m_labelCSTLData.getText().trim().endsWith("/"))
+		{
+			String t_label = m_labelCSTLData.getText().trim();
+			int length = t_label.length();
+			t_label = t_label.substring(0, length - 1);
+			m_labelCSTLData.setText(t_label);
+		}
 	}
 
 	protected JPanel buildCertPanel()
@@ -850,13 +831,19 @@ final class JAPConf extends JDialog
 		while (m_enumCerts.hasMoreElements())
 		{
 			JAPCertificate j = (JAPCertificate) m_enumCerts.nextElement();
-			String issuerCN = (String) j.getIssuer().getValues().elementAt(0);
-			m_listmodelCertList.addElement(issuerCN);
+			// was: m_listmodelCertList.addElement(issuerCN);
+			m_listmodelCertList.addElement(j);
 		}
 
 		m_listCert = new JList(m_listmodelCertList);
-		m_listCert.setSelectedIndex(0);
-
+		m_listCert.setCellRenderer(new CAListCellRenderer());
+		boolean statusEnabled = false;
+		if (m_listmodelCertList.size() > 0)
+		{
+			m_listCert.setSelectedIndex(0);
+			JAPCertificate t_actual = (JAPCertificate) m_listCert.getSelectedValue();
+			statusEnabled = t_actual.getEnabled();
+		}
 		m_listCert.addListSelectionListener(new ListSelectionListener()
 		{
 
@@ -875,59 +862,19 @@ final class JAPConf extends JDialog
 				}
 				else
 				{
-					String currIssuerCN = (String) m_listCert.getSelectedValue();
-					updateInfoPanel(currIssuerCN);
+					JAPCertificate j = (JAPCertificate) m_listCert.getSelectedValue();
+					// String currIssuerCN = (String) j.getIssuer().getValues().elementAt(0);
+					updateInfoPanel(j);
 
-					/*					m_enumCerts = JAPModel.getCertificateStore().elements();
-						 JAPCertificate j;
-						 while (m_enumCerts.hasMoreElements())
-						 {
-						  j = (JAPCertificate) m_enumCerts.nextElement();
+					if (j.getEnabled())
+					{
+						m_bttnCertStatus.setText(JAPMessages.getString("certBttnDisable"));
+					}
+					else
+					{
+						m_bttnCertStatus.setText(JAPMessages.getString("certBttnEnable"));
 
-						  if (j.getIssuer().getValues().elementAt(0).equals(currIssuerCN))
-						  {
-					 m_labelDateData.setText(j.getStartDate().toGMTString() + " - " + j.getEndDate().toGMTString());
-						   m_labelCNData.setText("");
-						   m_labelEData.setText("");
-						   m_labelCSTLData.setText("");
-						   m_labelOData.setText("");
-						   m_labelOUData.setText("");
-
-						   X509NameTokenizer m_issuerData = new X509NameTokenizer(j.getIssuer().toString());
-						   while (m_issuerData.hasMoreTokens())
-						   {
-							String m_element = (String) m_issuerData.nextToken();
-							if (m_element.startsWith("CN="))
-							 m_labelCNData.setText(m_element.substring(3));
-							else if (m_element.startsWith("E="))
-							 m_labelEData.setText(m_element.substring(2));
-							else if (m_element.startsWith("C="))
-							 m_labelCSTLData.setText(m_element.substring(2) + m_labelCSTLData.getText());
-							else if (m_element.startsWith("ST="))
-					 m_labelCSTLData.setText(m_element.substring(3) + " / " + m_labelCSTLData.getText());
-							else if (m_element.startsWith("L="))
-					 m_labelCSTLData.setText(m_element.substring(2) + " / " + m_labelCSTLData.getText());
-							else if (m_element.startsWith("O="))
-							 m_labelOData.setText(m_element.substring(2));
-							else if (m_element.startsWith("OU="))
-							 m_labelOUData.setText(m_element.substring(3));
-						   }
-
-						   if (m_labelCSTLData.getText().trim().endsWith("/"))
-						   {
-							String t_label = m_labelCSTLData.getText().trim();
-							int length = t_label.length();
-							t_label = t_label.substring(0,length-1);
-							m_labelCSTLData.setText(t_label);
-						   }
-						   if (j.getEnabled())
-							m_listCert.setSelectionForeground(Color.black);
-						   else
-							m_listCert.setSelectionForeground(Color.red);
-
-						   // m_tfIssuer.setText(j.getIssuer().toString());
-						  }
-						 } // while */
+					}
 				} // else
 
 			} // valuechanged
@@ -950,18 +897,28 @@ final class JAPConf extends JDialog
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				JAPCertificate t_cert = JAPUtil.openFile(new JFrame());
+				JAPCertificate t_cert = null;
+				try
+				{
+					t_cert = JAPUtil.openCertificate(new JFrame());
+				}
+				catch (JAPCertificateException ex)
+				{
+					JOptionPane.showMessageDialog(m_Controller.getView(),
+												  JAPMessages.getString("certInputError"),
+												  JAPMessages.getString("certInputErrorTitle"),
+												  JOptionPane.ERROR_MESSAGE);
+					// new JOptionPane(ex.getMessage());
+				}
 				if (t_cert != null)
 				{
-					String issuerCN = (String) t_cert.getIssuer().getValues().elementAt(0);
+					// String issuerCN = (String) t_cert.getIssuer().getValues().elementAt(0);
 
 					JAPCertificateStore jcs = JAPModel.getCertificateStore();
 
 					if (!jcs.checkCertificateExists(t_cert))
 					{
-						System.out.println("zertifikat existiert nicht ...");
-						System.out.println("groesse:  " + jcs.size());
-						m_listmodelCertList.addElement(issuerCN);
+						m_listmodelCertList.addElement(t_cert);
 						// m_listCert.removeAll();
 						// m_listCert.setModel(m_listmodelCertList);
 						// m_scrpaneList.getViewport().removeAll();
@@ -969,6 +926,17 @@ final class JAPConf extends JDialog
 						jcs.addCertificate(t_cert);
 						JAPController.setCertificateStore(jcs);
 						jcs.dumpKeys();
+
+						if (t_cert.getEnabled())
+						{
+							m_bttnCertStatus.setText(JAPMessages.getString("certBttnDisable"));
+						}
+						else
+						{
+							m_bttnCertStatus.setText(JAPMessages.getString("certBttnEnable"));
+
+						}
+
 					}
 					else
 					{
@@ -976,8 +944,7 @@ final class JAPConf extends JDialog
 					}
 				}
 				m_bttnCertRemove.setEnabled(true);
-				m_bttnCertDisable.setEnabled(true);
-				m_bttnCertEnable.setEnabled(true);
+				m_bttnCertStatus.setEnabled(true);
 				if (m_listmodelCertList.getSize() == 1)
 				{
 					m_labelDateData.setText("");
@@ -988,44 +955,55 @@ final class JAPConf extends JDialog
 					m_labelOUData.setText("");
 
 					m_listCert.setSelectedIndex(0);
-					String currIssuerCN = (String) m_listCert.getSelectedValue();
-					updateInfoPanel(currIssuerCN);
 
-					/*								m_enumCerts = JAPModel.getCertificateStore().elements();
-							JAPCertificate j;
-							while (m_enumCerts.hasMoreElements())
+					JAPCertificate j = (JAPCertificate) m_listCert.getSelectedValue();
+					// String currIssuerCN = (String) j.getIssuer().getValues().elementAt(0);
+					updateInfoPanel(j);
+
+					if (j.getEnabled())
+					{
+						m_bttnCertStatus.setText(JAPMessages.getString("certBttnDisable"));
+					}
+					else
+					{
+						m_bttnCertStatus.setText(JAPMessages.getString("certBttnEnable"));
+
+						/*								m_enumCerts = JAPModel.getCertificateStore().elements();
+						  JAPCertificate j;
+						  while (m_enumCerts.hasMoreElements())
+						  {
+						   j = (JAPCertificate) m_enumCerts.nextElement();
+						   if (j.getIssuer().getValues().elementAt(0).equals(currIssuerCN))
+						   {
+						 m_labelDateData.setText(j.getStartDate().toGMTString() + " - " + j.getEndDate().toGMTString());
+							m_labelCNData.setText("");
+							m_labelEData.setText("");
+							m_labelCSTLData.setText("");
+							m_labelOData.setText("");
+							m_labelOUData.setText("");
+
+						 X509NameTokenizer m_issuerData = new X509NameTokenizer(j.getIssuer().toString());
+							while (m_issuerData.hasMoreTokens())
 							{
-							 j = (JAPCertificate) m_enumCerts.nextElement();
-							 if (j.getIssuer().getValues().elementAt(0).equals(currIssuerCN))
-							 {
-					 m_labelDateData.setText(j.getStartDate().toGMTString() + " - " + j.getEndDate().toGMTString());
-							  m_labelCNData.setText("");
-							  m_labelEData.setText("");
-							  m_labelCSTLData.setText("");
-							  m_labelOData.setText("");
-							  m_labelOUData.setText("");
-
-					 X509NameTokenizer m_issuerData = new X509NameTokenizer(j.getIssuer().toString());
-							  while (m_issuerData.hasMoreTokens())
-							  {
-							   String m_element = (String) m_issuerData.nextToken();
-							   if (m_element.startsWith("CN="))
-								m_labelCNData.setText(m_element.substring(3));
-							   else if (m_element.startsWith("E="))
-								m_labelEData.setText(m_element.substring(2));
-							   else if (m_element.startsWith("C="))
-								m_labelCSTLData.setText(m_element.substring(2) + m_labelCSTLData.getText());
-							   else if (m_element.startsWith("ST="))
-					 m_labelCSTLData.setText(m_element.substring(3) + " / " + m_labelCSTLData.getText());
-							   else if (m_element.startsWith("L="))
-					 m_labelCSTLData.setText(m_element.substring(2) + " / " + m_labelCSTLData.getText());
-							   else if (m_element.startsWith("O="))
-								m_labelOData.setText(m_element.substring(2));
-							   else if (m_element.startsWith("OU="))
-								m_labelOUData.setText(m_element.substring(3));
-							  } // while
-							 } // if
-							} // while */
+							 String m_element = (String) m_issuerData.nextToken();
+							 if (m_element.startsWith("CN="))
+						   m_labelCNData.setText(m_element.substring(3));
+							 else if (m_element.startsWith("E="))
+						   m_labelEData.setText(m_element.substring(2));
+							 else if (m_element.startsWith("C="))
+						   m_labelCSTLData.setText(m_element.substring(2) + m_labelCSTLData.getText());
+							 else if (m_element.startsWith("ST="))
+						 m_labelCSTLData.setText(m_element.substring(3) + " / " + m_labelCSTLData.getText());
+							 else if (m_element.startsWith("L="))
+						 m_labelCSTLData.setText(m_element.substring(2) + " / " + m_labelCSTLData.getText());
+							 else if (m_element.startsWith("O="))
+						   m_labelOData.setText(m_element.substring(2));
+							 else if (m_element.startsWith("OU="))
+						   m_labelOUData.setText(m_element.substring(3));
+							} // while
+						   } // if
+						  } // while */
+					}
 				}
 
 			}
@@ -1037,26 +1015,39 @@ final class JAPConf extends JDialog
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				int t_index = m_listCert.getSelectedIndex();
-				String t_issuerCN = (String) m_listCert.getSelectedValue();
-				m_enumCerts = JAPModel.getCertificateStore().elements();
-				while (m_enumCerts.hasMoreElements())
+				if (m_listmodelCertList.getSize() > 0)
 				{
-					JAPCertificate j = (JAPCertificate) m_enumCerts.nextElement();
-					String issuerCN = (String) j.getIssuer().getValues().elementAt(0);
-					if (issuerCN.equals(t_issuerCN))
+					int t_index = m_listCert.getSelectedIndex();
+
+					JAPCertificate t_j = (JAPCertificate) m_listCert.getSelectedValue();
+					String t_issuerCN = (String) t_j.getIssuer().getValues().elementAt(0);
+					m_enumCerts = JAPModel.getCertificateStore().elements();
+					while (m_enumCerts.hasMoreElements())
 					{
-						JAPCertificateStore jcs = JAPModel.getCertificateStore();
-						jcs.removeCertificate(j);
-						m_listmodelCertList.remove(t_index);
-						JAPController.setCertificateStore(jcs);
+						JAPCertificate j = (JAPCertificate) m_enumCerts.nextElement();
+						String issuerCN = (String) j.getIssuer().getValues().elementAt(0);
+						if (issuerCN.equals(t_issuerCN))
+						{
+							JAPCertificateStore jcs = JAPModel.getCertificateStore();
+							jcs.removeCertificate(j);
+							m_listmodelCertList.remove(t_index);
+							JAPController.setCertificateStore(jcs);
+
+							if (j.getEnabled())
+							{
+								m_bttnCertStatus.setText(JAPMessages.getString("certBttnDisable"));
+							}
+							else
+							{
+								m_bttnCertStatus.setText(JAPMessages.getString("certBttnEnable"));
+							}
+						}
 					}
 				}
 				if (m_listmodelCertList.getSize() == 0)
 				{
 					m_bttnCertRemove.setEnabled(false);
-					m_bttnCertDisable.setEnabled(false);
-					m_bttnCertEnable.setEnabled(false);
+					m_bttnCertStatus.setEnabled(false);
 					m_labelDateData.setText("");
 					m_labelCNData.setText("");
 					m_labelEData.setText("");
@@ -1074,109 +1065,98 @@ final class JAPConf extends JDialog
 					m_labelOUData.setText("");
 
 					m_listCert.setSelectedIndex(0);
-					String currIssuerCN = (String) m_listCert.getSelectedValue();
-					updateInfoPanel(currIssuerCN);
+
+					JAPCertificate j = (JAPCertificate) m_listCert.getSelectedValue();
+					// String currIssuerCN = (String) j.getIssuer().getValues().elementAt(0);
+					updateInfoPanel(j);
 
 					/*
-							   m_enumCerts = JAPModel.getCertificateStore().elements();
-							   JAPCertificate j;
-							   while (m_enumCerts.hasMoreElements())
-							   {
-								j = (JAPCertificate) m_enumCerts.nextElement();
-								if (j.getIssuer().getValues().elementAt(0).equals(currIssuerCN))
-								{
+						 m_enumCerts = JAPModel.getCertificateStore().elements();
+						 JAPCertificate j;
+						 while (m_enumCerts.hasMoreElements())
+						 {
+					   j = (JAPCertificate) m_enumCerts.nextElement();
+					   if (j.getIssuer().getValues().elementAt(0).equals(currIssuerCN))
+					   {
 					 m_labelDateData.setText(j.getStartDate().toGMTString() + " - " + j.getEndDate().toGMTString());
-								 m_labelCNData.setText("");
-								 m_labelEData.setText("");
-								 m_labelCSTLData.setText("");
-								 m_labelOData.setText("");
-								 m_labelOUData.setText("");
+						m_labelCNData.setText("");
+						m_labelEData.setText("");
+						m_labelCSTLData.setText("");
+						m_labelOData.setText("");
+						m_labelOUData.setText("");
 
 					 X509NameTokenizer m_issuerData = new X509NameTokenizer(j.getIssuer().toString());
-								 while (m_issuerData.hasMoreTokens())
-								 {
-								  String m_element = (String) m_issuerData.nextToken();
-								  if (m_element.startsWith("CN="))
-								   m_labelCNData.setText(m_element.substring(3));
-								  else if (m_element.startsWith("E="))
-								   m_labelEData.setText(m_element.substring(2));
-								  else if (m_element.startsWith("C="))
+						while (m_issuerData.hasMoreTokens())
+						{
+						 String m_element = (String) m_issuerData.nextToken();
+						 if (m_element.startsWith("CN="))
+						  m_labelCNData.setText(m_element.substring(3));
+						 else if (m_element.startsWith("E="))
+						  m_labelEData.setText(m_element.substring(2));
+						 else if (m_element.startsWith("C="))
 					 m_labelCSTLData.setText(m_element.substring(2) + m_labelCSTLData.getText());
-								  else if (m_element.startsWith("ST="))
+						 else if (m_element.startsWith("ST="))
 					 m_labelCSTLData.setText(m_element.substring(3) + " / " + m_labelCSTLData.getText());
-								  else if (m_element.startsWith("L="))
+						 else if (m_element.startsWith("L="))
 					 m_labelCSTLData.setText(m_element.substring(2) + " / " + m_labelCSTLData.getText());
-								  else if (m_element.startsWith("O="))
-								   m_labelOData.setText(m_element.substring(2));
-								  else if (m_element.startsWith("OU="))
-								   m_labelOUData.setText(m_element.substring(3));
-								 } // while
-								} // if
-							   } // while */
+						 else if (m_element.startsWith("O="))
+						  m_labelOData.setText(m_element.substring(2));
+						 else if (m_element.startsWith("OU="))
+						  m_labelOUData.setText(m_element.substring(3));
+						} // while
+					   } // if
+						 } // while */
 
 				}
 
 			}
 		});
 
-		m_bttnCertEnable = new JButton(JAPMessages.getString("certBttnEnable"));
-		m_bttnCertEnable.setFont(m_fontControls);
-		m_bttnCertEnable.addActionListener(new ActionListener()
+		if (statusEnabled)
 		{
-			public void actionPerformed(ActionEvent e)
-			{
-				int t_index = m_listCert.getSelectedIndex();
-				String t_issuerCN = (String) m_listCert.getSelectedValue();
-				m_enumCerts = JAPModel.getCertificateStore().elements();
-				while (m_enumCerts.hasMoreElements())
-				{
-					JAPCertificate j = (JAPCertificate) m_enumCerts.nextElement();
-					String issuerCN = (String) j.getIssuer().getValues().elementAt(0);
-					if (issuerCN.equals(t_issuerCN))
-					{
-						JAPCertificateStore jcs = JAPModel.getCertificateStore();
-						jcs.enableCertificate(j);
-						m_listCert.setSelectionForeground(Color.black);
-						JAPController.setCertificateStore(jcs);
-					}
-				}
-			}
-		});
+			m_bttnCertStatus = new JButton(JAPMessages.getString("certBttnEnable"));
+		}
+		else
+		{
+			m_bttnCertStatus = new JButton(JAPMessages.getString("certBttnDisable"));
 
-		m_bttnCertDisable = new JButton(JAPMessages.getString("certBttnDisable"));
-		m_bttnCertDisable.setFont(m_fontControls);
-		m_bttnCertDisable.addActionListener(new ActionListener()
+		}
+		m_bttnCertStatus.setFont(m_fontControls);
+		m_bttnCertStatus.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				int t_index = m_listCert.getSelectedIndex();
-				String t_issuerCN = (String) m_listCert.getSelectedValue();
-				m_enumCerts = JAPModel.getCertificateStore().elements();
-				while (m_enumCerts.hasMoreElements())
+				// int t_index = m_listCert.getSelectedIndex();
+
+				JAPCertificateStore jcs = JAPModel.getCertificateStore();
+
+				JAPCertificate t_j = (JAPCertificate) m_listCert.getSelectedValue();
+				boolean enabled = t_j.getEnabled();
+
+				if (enabled)
 				{
-					JAPCertificate j = (JAPCertificate) m_enumCerts.nextElement();
-					String issuerCN = (String) j.getIssuer().getValues().elementAt(0);
-					if (issuerCN.equals(t_issuerCN))
-					{
-						JAPCertificateStore jcs = JAPModel.getCertificateStore();
-						jcs.disableCertificate(j);
-						m_listCert.setSelectionForeground(Color.red);
-						JAPController.setCertificateStore(jcs);
-						break;
-					}
+					jcs.disableCertificate(t_j);
+					m_bttnCertStatus.setText(JAPMessages.getString("certBttnEnable"));
 				}
+				else
+				{
+					jcs.enableCertificate(t_j);
+					m_bttnCertStatus.setText(JAPMessages.getString("certBttnDisable"));
+				}
+				JAPController.setCertificateStore(jcs);
+				m_listCert.repaint();
 			}
 		});
 
 		/*
-			 c.gridx = 0;
-			 c.gridy = 0;
-			 c.gridwidth = 1;
-			 c.gridheight = 2;
-			 c.weightx = 1;
+		  c.gridx = 0;
+		  c.gridy = 0;
+		  c.gridwidth = 1;
+		  c.gridheight = 2;
+		  c.weightx = 1;
 //	 c.weighty = 1;
-			 c.fill = GridBagConstraints.HORIZONTAL;
-			 c.anchor = GridBagConstraints.CENTER;
+		  c.fill = GridBagConstraints.HORIZONTAL;
+		  c.anchor = GridBagConstraints.CENTER;
 		 */
 
 		caPanelConstraints.gridx = 2;
@@ -1184,11 +1164,13 @@ final class JAPConf extends JDialog
 		caPanelConstraints.weightx = 0.0;
 		caPanelConstraints.gridheight = 1;
 		caPanelConstraints.weighty = 0.0;
+		caPanelConstraints.ipadx = 10;
 		caPanelConstraints.fill = GridBagConstraints.BOTH;
 		caPanelConstraints.insets = new Insets(0, 10, 0, 0);
 		caPanelLayout.setConstraints(m_bttnCertInsert, caPanelConstraints);
 		caPanel.add(m_bttnCertInsert);
 
+		caPanelConstraints.ipadx = 0;
 		caPanelConstraints.gridx = 2;
 		caPanelConstraints.gridy = 3;
 		caPanelConstraints.fill = GridBagConstraints.BOTH;
@@ -1198,22 +1180,16 @@ final class JAPConf extends JDialog
 		caPanelConstraints.gridx = 2;
 		caPanelConstraints.gridy = 4;
 		caPanelConstraints.fill = GridBagConstraints.BOTH;
-		caPanelLayout.setConstraints(m_bttnCertEnable, caPanelConstraints);
-		caPanel.add(m_bttnCertEnable);
-
-		caPanelConstraints.gridx = 2;
-		caPanelConstraints.gridy = 5;
-		caPanelConstraints.fill = GridBagConstraints.BOTH;
-		caPanelLayout.setConstraints(m_bttnCertDisable, caPanelConstraints);
-		caPanel.add(m_bttnCertDisable);
+		caPanelLayout.setConstraints(m_bttnCertStatus, caPanelConstraints);
+		caPanel.add(m_bttnCertStatus);
 
 		JPanel infoPanel = new JPanel();
 		GridBagLayout infoPanelLayout = new GridBagLayout();
 		infoPanel.setLayout(infoPanelLayout);
 
 		GridBagConstraints infoPanelConstraints = new GridBagConstraints();
-		infoPanelConstraints.anchor = GridBagConstraints.NORTHWEST;
-		infoPanelConstraints.fill = GridBagConstraints.HORIZONTAL;
+		infoPanelConstraints.anchor = GridBagConstraints.WEST;
+//		infoPanelConstraints.fill = GridBagConstraints.HORIZONTAL;
 		infoPanelConstraints.weightx = 1.0;
 		infoPanelConstraints.insets = new Insets(10, 10, 0, 0);
 
@@ -1298,7 +1274,15 @@ final class JAPConf extends JDialog
 		if (csw != null && csw.elements().hasMoreElements())
 		{
 			JAPCertificate j = (JAPCertificate) csw.elements().nextElement();
+			if (j.getEnabled())
+			{
+				m_bttnCertStatus.setText(JAPMessages.getString("certBttnDisable"));
+			}
+			else
+			{
+				m_bttnCertStatus.setText(JAPMessages.getString("certBttnEnable"));
 
+			}
 			m_labelDateData.setText(j.getStartDate().toGMTString() + " - " + j.getEndDate().toGMTString());
 
 			X509NameTokenizer m_issuerData = new X509NameTokenizer(j.getIssuer().toString());
@@ -1345,7 +1329,7 @@ final class JAPConf extends JDialog
 		}
 
 		/*		    	gridx
-			0:				1:
+		 0:				1:
 		 gridy	0:
 		   1:  labelDate		labelDateData
 		   2:  labelCN			labelCNData
@@ -1359,77 +1343,119 @@ final class JAPConf extends JDialog
 		infoPanelConstraints.ipadx = 5;
 		infoPanelConstraints.ipady = 5;
 
+		infoPanelConstraints.anchor = GridBagConstraints.WEST;
 		infoPanelConstraints.gridx = 0;
 		infoPanelConstraints.gridy = 1;
-		infoPanelConstraints.ipadx = 10;
-		infoPanelConstraints.fill = GridBagConstraints.BOTH;
+		infoPanelConstraints.ipadx = 30;
+//		infoPanelConstraints.fill = GridBagConstraints.WEST;
 		infoPanelConstraints.insets = new Insets(0, 10, 0, 10);
 		infoPanelLayout.setConstraints(m_labelDate, infoPanelConstraints);
 		infoPanel.add(m_labelDate);
 
+		infoPanelConstraints.anchor = GridBagConstraints.EAST;
 		infoPanelConstraints.gridx = 1;
 		infoPanelConstraints.gridy = 1;
+		infoPanelConstraints.ipadx = 0;
+//		infoPanelConstraints.fill = GridBagConstraints.EAST;
+//		infoPanelConstraints.insets = new Insets(0, 0, 0, 0);
 		infoPanelLayout.setConstraints(m_labelDateData, infoPanelConstraints);
 		infoPanel.add(m_labelDateData);
 
+		infoPanelConstraints.anchor = GridBagConstraints.WEST;
 		infoPanelConstraints.gridx = 0;
 		infoPanelConstraints.gridy = 2;
-		infoPanelConstraints.fill = GridBagConstraints.BOTH;
+		infoPanelConstraints.ipadx = 30;
+//		infoPanelConstraints.fill = GridBagConstraints.HORIZONTAL;
+//		infoPanelConstraints.fill = GridBagConstraints.WEST;
 		infoPanelConstraints.insets = new Insets(0, 10, 0, 10);
 		infoPanelLayout.setConstraints(m_labelCN, infoPanelConstraints);
 		infoPanel.add(m_labelCN);
 
+		infoPanelConstraints.anchor = GridBagConstraints.EAST;
 		infoPanelConstraints.gridx = 1;
 		infoPanelConstraints.gridy = 2;
-		infoPanelConstraints.fill = GridBagConstraints.BOTH;
+		infoPanelConstraints.ipadx = 0;
+//		infoPanelConstraints.fill = GridBagConstraints.HORIZONTAL;
+//		infoPanelConstraints.fill = GridBagConstraints.EAST;
+//		infoPanelConstraints.insets = new Insets(0, 0, 0, 0);
 		infoPanelLayout.setConstraints(m_labelCNData, infoPanelConstraints);
 		infoPanel.add(m_labelCNData);
 
+		infoPanelConstraints.anchor = GridBagConstraints.WEST;
 		infoPanelConstraints.gridx = 0;
 		infoPanelConstraints.gridy = 3;
-		infoPanelConstraints.fill = GridBagConstraints.BOTH;
+		infoPanelConstraints.ipadx = 30;
+//		infoPanelConstraints.fill = GridBagConstraints.HORIZONTAL;
+//		infoPanelConstraints.fill = GridBagConstraints.WEST;
 		infoPanelConstraints.insets = new Insets(0, 10, 0, 10);
 		infoPanelLayout.setConstraints(m_labelE, infoPanelConstraints);
 		infoPanel.add(m_labelE);
 
+		infoPanelConstraints.anchor = GridBagConstraints.EAST;
 		infoPanelConstraints.gridx = 1;
 		infoPanelConstraints.gridy = 3;
-		infoPanelConstraints.fill = GridBagConstraints.BOTH;
+		infoPanelConstraints.ipadx = 0;
+//		infoPanelConstraints.fill = GridBagConstraints.HORIZONTAL;
+//		infoPanelConstraints.fill = GridBagConstraints.EAST;
+//		infoPanelConstraints.insets = new Insets(0, 0, 0, 0);
 		infoPanelLayout.setConstraints(m_labelEData, infoPanelConstraints);
 		infoPanel.add(m_labelEData);
 
+		infoPanelConstraints.anchor = GridBagConstraints.WEST;
 		infoPanelConstraints.gridx = 0;
 		infoPanelConstraints.gridy = 4;
-		infoPanelConstraints.fill = GridBagConstraints.BOTH;
+		infoPanelConstraints.ipadx = 30;
+//		infoPanelConstraints.fill = GridBagConstraints.HORIZONTAL;
+//		infoPanelConstraints.fill = GridBagConstraints.WEST;
 		infoPanelConstraints.insets = new Insets(0, 10, 0, 10);
 		infoPanelLayout.setConstraints(m_labelCSTL, infoPanelConstraints);
 		infoPanel.add(m_labelCSTL);
 
+		infoPanelConstraints.anchor = GridBagConstraints.EAST;
 		infoPanelConstraints.gridx = 1;
 		infoPanelConstraints.gridy = 4;
-		infoPanelConstraints.fill = GridBagConstraints.BOTH;
+		infoPanelConstraints.ipadx = 0;
+//		infoPanelConstraints.fill = GridBagConstraints.HORIZONTAL;
+//		infoPanelConstraints.fill = GridBagConstraints.EAST;
+//		infoPanelConstraints.insets = new Insets(0, 0, 0, 0);
 		infoPanelLayout.setConstraints(m_labelCSTLData, infoPanelConstraints);
 		infoPanel.add(m_labelCSTLData);
 
+		infoPanelConstraints.anchor = GridBagConstraints.WEST;
 		infoPanelConstraints.gridx = 0;
 		infoPanelConstraints.gridy = 5;
-		infoPanelConstraints.fill = GridBagConstraints.BOTH;
+		infoPanelConstraints.ipadx = 30;
+//		infoPanelConstraints.fill = GridBagConstraints.HORIZONTAL;
+//		infoPanelConstraints.fill = GridBagConstraints.WEST;
+		infoPanelConstraints.insets = new Insets(0, 10, 0, 10);
 		infoPanelLayout.setConstraints(m_labelO, infoPanelConstraints);
 		infoPanel.add(m_labelO);
 
+		infoPanelConstraints.anchor = GridBagConstraints.EAST;
 		infoPanelConstraints.gridx = 1;
 		infoPanelConstraints.gridy = 5;
+		infoPanelConstraints.ipadx = 0;
+//		infoPanelConstraints.fill = GridBagConstraints.EAST;
+//		infoPanelConstraints.insets = new Insets(0, 0, 0, 0);
 		infoPanelLayout.setConstraints(m_labelOData, infoPanelConstraints);
 		infoPanel.add(m_labelOData);
 
+		infoPanelConstraints.anchor = GridBagConstraints.WEST;
 		infoPanelConstraints.gridx = 0;
 		infoPanelConstraints.gridy = 6;
-		infoPanelConstraints.fill = GridBagConstraints.BOTH;
+		infoPanelConstraints.ipadx = 30;
+//		infoPanelConstraints.fill = GridBagConstraints.HORIZONTAL;
+//		infoPanelConstraints.fill = GridBagConstraints.WEST;
+		infoPanelConstraints.insets = new Insets(0, 10, 0, 10);
 		infoPanelLayout.setConstraints(m_labelOU, infoPanelConstraints);
 		infoPanel.add(m_labelOU);
 
+		infoPanelConstraints.anchor = GridBagConstraints.EAST;
 		infoPanelConstraints.gridx = 1;
 		infoPanelConstraints.gridy = 6;
+		infoPanelConstraints.ipadx = 0;
+//		infoPanelConstraints.fill = GridBagConstraints.EAST;
+//		infoPanelConstraints.insets = new Insets(0, 0, 0, 0);
 		infoPanelLayout.setConstraints(m_labelOUData, infoPanelConstraints);
 		infoPanel.add(m_labelOUData);
 
@@ -1526,16 +1552,16 @@ final class JAPConf extends JDialog
 		p2.setBorder(new TitledBorder(JAPMessages.getString("miscconfigBorder")));
 		JButton bttnPing = new JButton(JAPMessages.getString("bttnPing"));
 		/*				bttnPing.addActionListener(new ActionListener()
-			 {
-			  public void actionPerformed(ActionEvent e)
-			   {
-				AnonServerDBEntry[] a=new AnonServerDBEntry[1];
+		  {
+		   public void actionPerformed(ActionEvent e)
+			{
+		  AnonServerDBEntry[] a=new AnonServerDBEntry[1];
 //								a[0]=new AnonServerDBEntry(m_Controller.anonHostName,m_Controller.anonHostName,m_Controller.anonPortNumber+1);
-				a[0]=new AnonServerDBEntry(m_Controller.getAnonServer().getHost(),m_Controller.getAnonServer().getHost(),m_Controller.getAnonServer().getPort()+1);
-				JAPRoundTripTimeView v=new JAPRoundTripTimeView(m_Controller.getView(),a);
+		  a[0]=new AnonServerDBEntry(m_Controller.getAnonServer().getHost(),m_Controller.getAnonServer().getHost(),m_Controller.getAnonServer().getPort()+1);
+		  JAPRoundTripTimeView v=new JAPRoundTripTimeView(m_Controller.getView(),a);
 //								v.show();
-			   }
-			 });
+			}
+		  });
 		 */
 		JButton bttnMonitor = new JButton(JAPMessages.getString("bttnMonitor"));
 //				bttnMonitor.setEnabled(false);
@@ -1789,21 +1815,21 @@ final class JAPConf extends JDialog
 		 {
 		  try
 		   {
-			i=Integer.parseInt(m_tfListenerPortNumberSocks.getText().trim());
+		 i=Integer.parseInt(m_tfListenerPortNumberSocks.getText().trim());
 		   }
 		  catch(Exception e)
 		   {
-			i=-1;
+		 i=-1;
 		   }
 		  if(!JAPUtil.isPort(i))
 		   {
-			showError(JAPMessages.getString("errorSocksListenerPortWrong"));
-			return false;
+		 showError(JAPMessages.getString("errorSocksListenerPortWrong"));
+		 return false;
 		   }
 		  if(i==iListenerPort)
 		   {
-			showError(JAPMessages.getString("errorListenerPortsAreEqual"));
-			return false;
+		 showError(JAPMessages.getString("errorListenerPortsAreEqual"));
+		 return false;
 		   }
 		 }*/
 		//Checking Firewall Settings (Host + Port)
@@ -1841,16 +1867,16 @@ final class JAPConf extends JDialog
 		//checking Debug-Level
 		/*		try
 		   {
-			i=Integer.parseInt(debugLevelTextField.getText().trim());
+		 i=Integer.parseInt(debugLevelTextField.getText().trim());
 		   }
 		  catch(Exception e)
 		   {
-			i=-1;
+		 i=-1;
 		   }
 		  if(i<0||i>LogLevel.DEBUG)
 		   {
-			showError(JAPMessages.getString("errorDebugLevelWrong"));
-			return false;
+		 showError(JAPMessages.getString("errorDebugLevelWrong"));
+		 return false;
 		   }
 		 */
 
@@ -1902,6 +1928,10 @@ final class JAPConf extends JDialog
 		m_cbDummyTraffic.setSelected(false);
 		m_cbInfoServiceDisabled.setSelected(false);
 		m_cbCertCheckDisabled.setSelected(false);
+
+		JAPController.setCertificateStore(new JAPCertificateStore(JAPConstants.CERTSPATH +
+			JAPConstants.TRUSTEDROOTCERT));
+
 	}
 
 	protected void okPressed()
@@ -1953,7 +1983,8 @@ final class JAPConf extends JDialog
 			port = Integer.parseInt(m_tfProxyPortNumber.getText().trim());
 		}
 		catch (Exception e)
-		{};
+		{}
+		;
 		int firewallType = JAPConstants.FIREWALL_TYPE_HTTP;
 		if (m_comboProxyType.getSelectedIndex() == 1)
 		{

@@ -30,7 +30,7 @@ package jap;
 import java.awt.Insets;
 import java.awt.Font;
 public final class JAPConstants {
-	public static final String aktVersion = "00.02.029"; //Never change the layout of this line!
+	public static final String aktVersion = "00.02.030"; //Never change the layout of this line!
 	private static final String CVS_GENERATED_RELEASE_DATE= "$Date$";
 																													 //Warning: This is a little bit tricky,
 																													 //because CVS will expand the $Date$
@@ -96,6 +96,9 @@ public final class JAPConstants {
 	public static final String   IMAGE_ARROW           = "arrow46.gif";
 	public static final String   IMAGE_BLANK           = "blank.gif";
 	public static final String   IMAGE_STEPFINISHED    = "haken.gif";
+   public static final String   CERTENABLEDICON        ="cenabled.gif";
+   public static final String   CERTDISABLEDICON        ="cdisabled.gif";
+
 	static final String[] METERFNARRAY                 ={
 															"meterD.gif",    // anonymity deactivated
 															"meterNnew.gif", // no measure available

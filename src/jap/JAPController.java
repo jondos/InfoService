@@ -44,7 +44,7 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JOptionPane;
 import javax.swing.UIManager;
-import javax.swing.UIManager$LookAndFeelInfo;
+import javax.swing.UIManager.LookAndFeelInfo;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
@@ -341,15 +341,14 @@ public final class JAPController implements ProxyListener
 					Element xmlCA = (Element) XMLUtil.getFirstChildByName(root, "CertificateAuthorities");
 					if (xmlCA != null)
 					{
-						NodeList nlX509Certs = xmlCA.getElementsByTagName("X509Certificate");
+						// was: NodeList nlX509Certs = xmlCA.getElementsByTagName("X509Certificate");
+						NodeList nlX509Certs = xmlCA.getElementsByTagName("CertificateAuthority");
 						if (
 							(nlX509Certs != null) &&
 							(nlX509Certs.getLength() >= 1)
 							)
 						{
-							System.out.println("<CA> gefunden ...");
 							// certificate store found in jap.conf
-							System.out.println("<X509Cert> gefunden ...");
 							JAPCertificateStore jcs = new JAPCertificateStore(nlX509Certs);
 							try
 							{
@@ -357,14 +356,12 @@ public final class JAPController implements ProxyListener
 							}
 							catch (Exception e)
 							{
-								System.out.println("fehler beim setzen certstore!");
 							}
 
 						}
 					}
 					else
 					{
-						System.out.println("ok, CA aber kein NL oder kein CA");
 						JAPCertificateStore jcs = new JAPCertificateStore(JAPConstants.CERTSPATH +
 							JAPConstants.TRUSTEDROOTCERT);
 						setCertificateStore(jcs);
@@ -376,8 +373,6 @@ public final class JAPController implements ProxyListener
 				}
 				catch (Exception e)
 				{
-					System.out.println("load config file");
-					e.printStackTrace();
 				}
 				//load settings for Payment
 				setBIHost(XMLUtil.parseNodeString(n.getNamedItem("biHost"), JAPModel.getBIHost()));

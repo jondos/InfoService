@@ -3,11 +3,11 @@ package anon.crypto;
 import java.security.PublicKey;
 import java.util.Enumeration;
 import org.w3c.dom.Node;
+import anon.ErrorCodes;
 import anon.server.impl.XMLUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import anon.ErrorCodes;
 
 public class JAPCertPath
 {
@@ -45,12 +45,16 @@ public class JAPCertPath
 			while (certs.hasMoreElements())
 			{
 				JAPCertificate c = (JAPCertificate) certs.nextElement();
-				PublicKey pkc = c.getPublicKey();
-				if (pkc.equals(pk) || cert.verify(pkc))
+				// ignore disabled certificate within the certificate store!
+				if (c.getEnabled())
 				{
-					LogHolder.log(LogLevel.DEBUG, LogType.MISC,
-								  "JAPCertPath: validation of cert paht ok");
-					return ErrorCodes.E_SUCCESS;
+					PublicKey pkc = c.getPublicKey();
+					if (pkc.equals(pk) || cert.verify(pkc))
+					{
+						LogHolder.log(LogLevel.DEBUG, LogType.MISC,
+									  "JAPCertPath: validation of cert paht ok");
+						return ErrorCodes.E_SUCCESS;
+					}
 				}
 			}
 			return ErrorCodes.E_INVALID_CERTIFICATE;

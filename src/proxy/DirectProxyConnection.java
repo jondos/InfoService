@@ -253,7 +253,6 @@ final class DirectProxyConnection implements Runnable
 			DirectProxyResponse pr = new DirectProxyResponse(serverSocket.getInputStream(),
 				m_clientSocket.getOutputStream());
 			Thread prt = new Thread(pr, "JAP - DirectProxyResponse");
-
 			prt.start();
 			// Transfer data client --> server
 			byte[] buff = new byte[1000];
