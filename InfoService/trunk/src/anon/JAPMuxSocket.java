@@ -166,13 +166,14 @@ final class JAPMuxSocket implements Runnable
 									//   CONNECT www.inf.tu-dresden.de:443 HTTP/1.0
 									//   Connection: Keep-Alive
 									//   Proxy-Connection: Keep-Alive
-									o.write("CONNECT "+host+":"+port+" HTTP/1.0"+CRLF);
+									o.write("CONNECT "+host+":"+port+" HTTP/1.1"+CRLF);
 									if(fwUserID!=null) // proxy authentication required...
 											{
 												String str=Codecs.base64Encode(fwUserID+":"+fwPasswd);
 												o.write("Proxy-Authorization: Basic "+str+CRLF);
 											}
 									o.write("Connection: Keep-Alive"+CRLF);
+									o.write("Keep-Alive: "+CRLF);
 									o.write("Proxy-Connection: Keep-Alive"+CRLF);
 									o.write(CRLF);
 									o.flush();
@@ -203,14 +204,60 @@ final class JAPMuxSocket implements Runnable
 										}while (l!=null&&l.length() != 0);
 									if(firstLine.indexOf("200")==-1)
 										{
-											if(firstLine.indexOf("407")!=-1) // proxy authentication required...
+											//try again with HTTP/1.0
+											JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:Try to connect via proxy ("+fwHost+":"+fwPort+") to mix ("+host+":"+port+")");
+											ioSocket=new Socket(fwHost,fwPort);
+											ioSocket.setSoTimeout(10000); //Timout 10 second
+											o=new BufferedWriter(new OutputStreamWriter(ioSocket.getOutputStream()));
+											inDataStream=new DataInputStream(ioSocket.getInputStream());
+											//Write stuff for connecting over proxy/firewall
+											// should look like this example
+											//   CONNECT www.inf.tu-dresden.de:443 HTTP/1.0
+											//   Connection: Keep-Alive
+											//   Proxy-Connection: Keep-Alive
+											o.write("CONNECT "+host+":"+port+" HTTP/1.0"+CRLF);
+											if(fwUserID!=null) // proxy authentication required...
+													{
+														String str=Codecs.base64Encode(fwUserID+":"+fwPasswd);
+														o.write("Proxy-Authorization: Basic "+str+CRLF);
+													}
+											o.write("Connection: Keep-Alive"+CRLF);
+											o.write("Keep-Alive: "+CRLF);
+											o.write("Proxy-Connection: Keep-Alive"+CRLF);
+											o.write(CRLF);
+											o.flush();
+											//o.close();
+
+											//Read response from proxy/firewall
+											// a typical response is
+											//   HTTP/1.0 200 Connection established
+											firstLine = null;
+											try
 												{
-
+													firstLine = this.readLine(inDataStream);
 												}
-											JAPDebug.out(JAPDebug.EMERG,JAPDebug.NET,"JAPMuxSocket:JAP will probably NOT work over this firewall! Sorry.");
-										}
-									}
-
+											catch(InterruptedIOException ei)
+												{ //time out
+													return -1;
+												}
+											catch (Exception e) {
+												JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.NET,"JAPMuxSocket:Exception while reading response from proxy server: "+e);
+											}
+											JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:Response from firewall is <"+firstLine+">");
+											JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:Reading remainig headers...");
+											l=null;
+											do
+												{
+													l = this.readLine(inDataStream);
+													JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket: <"+l+">");
+												}while (l!=null&&l.length() != 0);
+												if(firstLine.indexOf("200")==-1)
+											  {
+													JAPDebug.out(JAPDebug.EMERG,JAPDebug.NET,"JAPMuxSocket:JAP will probably NOT work over this firewall! Sorry.");
+												  return -1;
+												}
+											}
+								  }
 								JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:Connected to Mix! Now starting key exchange...");
 								outDataStream=new DataOutputStream(new BufferedOutputStream(ioSocket.getOutputStream(),DATA_SIZE+6));
 //								inDataStream=new DataInputStream(ioSocket.getInputStream());
