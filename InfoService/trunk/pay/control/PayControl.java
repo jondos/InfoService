@@ -39,8 +39,8 @@ import pay.data.Literals;
 /**
  * Diese Klasse stellt stellt zwei init Methoden bereits initPay() sollte dabei immer aufgerufen werden bevor mit der gesammten
  * Pay Api gearbeitet wird. hier werden die wichtigsten Klassen intitialisiert.
- * Außerdem findet heir ein Teil des Benutzerinteraktion statt. Der größte Teil ist aber innerhalb von den Klassen im pay.view
- * Package und in PayAccountsControl. Es könnte komplett hierher verschoben werden wenn ein klarere MVC Struktur erreicht werden sollte.
+ * Au\uFFFDerdem findet heir ein Teil des Benutzerinteraktion statt. Der gr\uFFFD\uFFFDte Teil ist aber innerhalb von den Klassen im pay.view
+ * Package und in PayAccountsControl. Es k\uFFFDnnte komplett hierher verschoben werden wenn ein klarere MVC Struktur erreicht werden sollte.
  */
 
 public class PayControl
@@ -55,8 +55,9 @@ public class PayControl
 	{
 		JAPModel model = JAPModel.getModel();
 		Pay pay = Pay.getInstance();
-		// TODO: Make the filename configurable
-		pay.readJpiCertificate("public.cer");
+
+		// TODO: Make the filename configurable (maybe)
+		pay.readJpiCertificate("certificates/bi.cer");
 		pay.setPayInstance(model.getBIHost(), model.getBIPort(), JAPConstants.PI_SSLON);
 		pay.openAccountFile();
 		pay.updateAllBalance();

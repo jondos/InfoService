@@ -31,46 +31,55 @@ import java.math.BigInteger;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.Vector;
-import org.bouncycastle.crypto.params.RSAKeyParameters;
-import org.bouncycastle.crypto.params.RSAPrivateCrtKeyParameters;
 import org.w3c.dom.CharacterData;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import payxml.XMLBalance;
+import payxml.XMLAccountInfo;
 import payxml.XMLAccountCertificate;
-import payxml.XMLCostConfirmations;
+import payxml.XMLAccountInfo;
 import payxml.XMLDocument;
 import payxml.XMLTransCert;
 import anon.util.Base64;
 import anon.util.XMLUtil;
 import org.w3c.dom.*;
 import anon.crypto.MyRSAPrivateKey;
+import anon.crypto.MyRSAPublicKey;
+import anon.crypto.JAPSignature;
+import payxml.XMLEasyCC;
+
 /**
- *  Diese Klasse ist für die verwaltung eines Accounts zutändig, sie kapselt eine XML Struktur innerhalb der Klasse
+ *  Diese Klasse ist f?r die verwaltung eines Accounts zut?ndig, sie kapselt eine XML Struktur innerhalb der Klasse
  *	und Mithilfe von Klassen des payxml Packages
  *  Die Struktur ist wie folgend:
  *  <Account version="1.0">
  * 		<AccountCertificate>...</AccountCertificate> // Kontozertiufkat von der BI unterschrieben
- * 		<RSAPrivateKey>...</RSAPrivateKey> //der geheime Schlüssel zum Zugriff auf das Konto
+ * 		<RSAPrivateKey>...</RSAPrivateKey> //der geheime Schl?ssel zum Zugriff auf das Konto
  * 		<TransferCertificates> //offenen Transaktionsummern
  * 			....
  * 		</TransferCertifcates>
- * 		<Balance>...</Balance> //Kontostand (siehe XMLBalance)
- * 		<CostConfirmations>  //Kostenbestätigungen pro AI
- * 		</CostConfirmations>
+ * 		<AccountInfo>...</AccountInfo> //Kontostand (siehe XMLAccountInfo)
  *  </Account>
- *	* @author Andreas Mueller, Grischan Glänzel
+ *	* @author Andreas Mueller, Grischan Gl&auml;nzel, Bastian Voigt
  */
 public class PayAccount extends XMLDocument
 {
-	private XMLAccountCertificate m_AccountCertificate;
-	private XMLBalance m_Balance;
-	private MyRSAPrivateKey m_privateKey;
+	/** contains zero ore more xml transfer certificates as XMLTransCert */
 	private Vector m_transCerts;
-	private XMLCostConfirmations m_costConfirms;
+
+	/** contains the account certificate */
+	private XMLAccountCertificate m_accountCertificate;
+
+	/** contains the current account info (balance and cost confirmations) */
+	private XMLAccountInfo m_accountInfo;
+
+	/** contains the private key associated with this account */
+	private MyRSAPrivateKey m_privateKey;
+
+	/** the signing instance */
+	private JAPSignature m_signingInstance;
 
 	// Exceptions
 	public static class WrongCertificateException extends Exception
@@ -106,38 +115,64 @@ public class PayAccount extends XMLDocument
 
 	private void setValues() throws Exception
 	{
+
+		// fill vector with transfer certificates
 		m_transCerts = new Vector();
-		m_costConfirms = new XMLCostConfirmations();
-		setXMLCertificate();
-		setXMLBalance();
+		Element elemRoot = m_theDocument.getDocumentElement();
+		Element elemTrs = (Element) XMLUtil.getFirstChildByName(elemRoot, "TransferCertfificates");
+		Element elemTr = (Element) elemTrs.getFirstChild();
+		while (elemTr != null)
+		{
+			m_transCerts.add(new XMLTransCert(elemTr));
+			elemTr = (Element) elemTr.getNextSibling();
+		}
+
+		// set account certificate
+		Element elemAccCert = (Element) XMLUtil.getFirstChildByName(elemRoot, "AccountCertificate");
+		m_accountCertificate = new XMLAccountCertificate(elemAccCert);
+
+		// set account info
+		Element elemAccInfo = (Element) XMLUtil.getFirstChildByName(elemRoot, "AccountInfo");
+		m_accountInfo = new XMLAccountInfo(elemAccInfo, null);
+
+		// set private key
 		setRSAPrivateKey();
-		setXMLTransCert();
-		setXMLCostConfirms();
-		LogHolder.log(LogLevel.DEBUG, LogType.PAY,
-					  "PayAccount Object AccountNr." + m_AccountCertificate.getAccountNumber() + " complete");
+
+		// set signing instance
+		m_signingInstance = new JAPSignature();
+		m_signingInstance.initSign(m_privateKey);
 	}
 
-	/**
-	 * Erzeugt ein {@link PayAccount} Objekt aus einem Kontozertifikat und dem
-	 * zugehörigen geheimen Schlüssel.
-	 *
-	 * @param certificate Kontozertifikat
-	 * @param privateKey geheimer Schlüssel
-	 */
-	public PayAccount(XMLAccountCertificate certificate, MyRSAPrivateKey privateKey) throws
-		Exception
+	public void setAccountInfo(XMLAccountInfo info) throws Exception
 	{
-		m_AccountCertificate = certificate;
-		m_privateKey = privateKey;
-		m_transCerts = new Vector();
-		m_costConfirms = new XMLCostConfirmations();
+		m_accountInfo = info;
 		constructXMLDocument();
 	}
 
 	/**
-	 * Liefert die XML-Präsentation des Kontos.
+	 * Erzeugt ein {@link PayAccount} Objekt aus einem Kontozertifikat und dem
+	 * zugeh?rigen geheimen Schl?ssel.
 	 *
-	 * @param withHead Mit XML-Kopf?
+	 * @param certificate Kontozertifikat
+	 * @param privateKey geheimer Schl?ssel
+	 */
+	public PayAccount(XMLAccountCertificate certificate,
+					  MyRSAPrivateKey privateKey,
+					  JAPSignature signingInstance) throws Exception
+	{
+		m_signingInstance = signingInstance;
+		m_privateKey = privateKey;
+
+
+		m_theDocument = getDocumentBuilder().newDocument();
+		Element elemRoot = m_theDocument.createElement("Account");
+		m_theDocument.appendChild(elemRoot);
+
+	}
+
+	/**
+	 * Liefert die XML-Repr&auml;sentation des Kontos.
+	 *
 	 * @return XML-Dokument als String
 	 */
 	private void constructXMLDocument() throws Exception
@@ -146,7 +181,7 @@ public class PayAccount extends XMLDocument
 		Element elemRoot = m_theDocument.createElement("Account");
 		elemRoot.setAttribute("version", "1.0");
 		m_theDocument.appendChild(elemRoot);
-		Document tmpDoc = m_AccountCertificate.getDomDocument();
+		Document tmpDoc = m_accountCertificate.getDomDocument();
 		Node n = XMLUtil.importNode(m_theDocument, tmpDoc.getDocumentElement(), true);
 		elemRoot.appendChild(n);
 
@@ -177,6 +212,7 @@ public class PayAccount extends XMLDocument
 		elemPrivKey.appendChild(elem);
 		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_privateKey.getQInv().toByteArray()));
 
+		// add transfer certificates
 		Element elemTransCerts = m_theDocument.createElement("TransferCertificates");
 		elemRoot.appendChild(elemTransCerts);
 		Enumeration enum = m_transCerts.elements();
@@ -187,17 +223,15 @@ public class PayAccount extends XMLDocument
 			elemTransCerts.appendChild(n1);
 		}
 
-		if (m_Balance != null)
+		if (m_accountInfo != null)
 		{
-			Node n1 = XMLUtil.importNode(m_theDocument, m_Balance.getDomDocument().getDocumentElement(), true);
-			elemRoot.appendChild(n1);
-			n1 = XMLUtil.importNode(m_theDocument, m_costConfirms.getDomDocument().getDocumentElement(), true);
+			Node n1 = XMLUtil.importNode(m_theDocument, m_accountInfo.getDomDocument().getDocumentElement(), true);
 			elemRoot.appendChild(n1);
 		}
 	}
 
 	/**
-	 * Hinzufügen eines Transfer-Zertifikats.
+	 * Hinzuf?gen eines Transfer-Zertifikats.
 	 *
 	 * @param cert Transfer-Zertifikat
 	 */
@@ -212,23 +246,17 @@ public class PayAccount extends XMLDocument
 	 *
 	 * @param balance Kontoguthaben
 	 */
-	public void setBalance(XMLBalance balance) throws Exception
+	public void setBalance(XMLAccountInfo info) throws Exception
 	{
-		m_Balance = balance;
+		m_accountInfo = info;
 		constructXMLDocument();
 	}
 
-	public void setCostConfirms(XMLCostConfirmations costConfirms) throws Exception
-	{
-		m_costConfirms = costConfirms;
-		constructXMLDocument();
-	}
-
-	private void setXMLCertificate() throws Exception
+	private void setXMLAccountCertificate() throws Exception
 	{
 		Element elemRoot = m_theDocument.getDocumentElement();
 		Element elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "AccountCertificate");
-		m_AccountCertificate = new XMLAccountCertificate(elem);
+		m_accountCertificate = new XMLAccountCertificate(elem);
 	}
 
 	private void setXMLBalance()
@@ -237,15 +265,17 @@ public class PayAccount extends XMLDocument
 		{
 			Element elemRoot = m_theDocument.getDocumentElement();
 			Element elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "Balance");
-			m_Balance = new XMLBalance(elem);
+
+			// todo: add signature verifying
+			m_accountInfo = new XMLAccountInfo(elem, null);
 		}
 		catch (Exception e)
 		{
-			m_Balance = null;
+			m_accountInfo = null;
 		}
 	}
 
-	private void setXMLTransCert() throws Exception
+	private void setXMLTransCertificates() throws Exception
 	{
 		try
 		{
@@ -271,59 +301,46 @@ public class PayAccount extends XMLDocument
 		}
 	}
 
-	private void setXMLCostConfirms() throws Exception
-	{
-		try
-		{
-			Element elemRoot = m_theDocument.getDocumentElement();
-			Element elemConfirms = (Element) XMLUtil.getFirstChildByName(elemRoot, "Confirmations");
-			m_costConfirms = new XMLCostConfirmations(elemConfirms);
-		}
-		catch (Exception ex)
-		{
-			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "noch keine CostConfirmations vorhanden");
-			m_costConfirms = new XMLCostConfirmations();
-		}
-	}
-
 	private void setRSAPrivateKey() throws Exception
 	{
 		Element elemRoot = m_theDocument.getDocumentElement();
-		Element elemPrivKey=(Element)XMLUtil.getFirstChildByName(elemRoot,"RSAPrivateKey");
-		Element elem=(Element)XMLUtil.getFirstChildByName(elemPrivKey,"Modulus");
-		String str=XMLUtil.parseNodeString(elem,null);
-		BigInteger modulus =new BigInteger(Base64.decode(str));
+		Element elemPrivKey = (Element) XMLUtil.getFirstChildByName(elemRoot, "RSAPrivateKey");
+		Element elem = (Element) XMLUtil.getFirstChildByName(elemPrivKey, "Modulus");
+		String str = XMLUtil.parseNodeString(elem, null);
+		BigInteger modulus = new BigInteger(Base64.decode(str));
 
-		elem=(Element)XMLUtil.getFirstChildByName(elemPrivKey,"PublicExponent");
-		str=XMLUtil.parseNodeString(elem,null);
-		BigInteger publicExponent =new BigInteger(Base64.decode(str));
+		elem = (Element) XMLUtil.getFirstChildByName(elemPrivKey, "PublicExponent");
+		str = XMLUtil.parseNodeString(elem, null);
+		BigInteger publicExponent = new BigInteger(Base64.decode(str));
 
-		elem=(Element)XMLUtil.getFirstChildByName(elemPrivKey,"PrivateExponent");
-		str=XMLUtil.parseNodeString(elem,null);
-		BigInteger privateExponent =new BigInteger(Base64.decode(str));
+		elem = (Element) XMLUtil.getFirstChildByName(elemPrivKey, "PrivateExponent");
+		str = XMLUtil.parseNodeString(elem, null);
+		BigInteger privateExponent = new BigInteger(Base64.decode(str));
 
-		elem=(Element)XMLUtil.getFirstChildByName(elemPrivKey,"P");
-		str=XMLUtil.parseNodeString(elem,null);
-		BigInteger p =new BigInteger(Base64.decode(str));
+		elem = (Element) XMLUtil.getFirstChildByName(elemPrivKey, "P");
+		str = XMLUtil.parseNodeString(elem, null);
+		BigInteger p = new BigInteger(Base64.decode(str));
 
-		elem=(Element)XMLUtil.getFirstChildByName(elemPrivKey,"Q");
-		str=XMLUtil.parseNodeString(elem,null);
-		BigInteger q =new BigInteger(Base64.decode(str));
+		elem = (Element) XMLUtil.getFirstChildByName(elemPrivKey, "Q");
+		str = XMLUtil.parseNodeString(elem, null);
+		BigInteger q = new BigInteger(Base64.decode(str));
 
-		elem=(Element)XMLUtil.getFirstChildByName(elemPrivKey,"dP");
-		str=XMLUtil.parseNodeString(elem,null);
-		BigInteger dP=new BigInteger(Base64.decode(str));
+		elem = (Element) XMLUtil.getFirstChildByName(elemPrivKey, "dP");
+		str = XMLUtil.parseNodeString(elem, null);
+		BigInteger dP = new BigInteger(Base64.decode(str));
 
-		elem=(Element)XMLUtil.getFirstChildByName(elemPrivKey,"dQ");
-		str=XMLUtil.parseNodeString(elem,null);
-		BigInteger dQ =new BigInteger(Base64.decode(str));
+		elem = (Element) XMLUtil.getFirstChildByName(elemPrivKey, "dQ");
+		str = XMLUtil.parseNodeString(elem, null);
+		BigInteger dQ = new BigInteger(Base64.decode(str));
 
-		elem=(Element)XMLUtil.getFirstChildByName(elemPrivKey,"QInv");
-		str=XMLUtil.parseNodeString(elem,null);
-		BigInteger qInv =new BigInteger(Base64.decode(str));
+		elem = (Element) XMLUtil.getFirstChildByName(elemPrivKey, "QInv");
+		str = XMLUtil.parseNodeString(elem, null);
+		BigInteger qInv = new BigInteger(Base64.decode(str));
 
 		m_privateKey = new MyRSAPrivateKey(modulus, publicExponent, privateExponent, p, q, dP, dQ,
-			qInv);
+										   qInv);
+		m_signingInstance = new JAPSignature();
+		m_signingInstance.initSign(m_privateKey);
 
 	}
 
@@ -334,15 +351,15 @@ public class PayAccount extends XMLDocument
 	 */
 	public long getAccountNumber()
 	{
-		return m_AccountCertificate.getAccountNumber();
+		return m_accountCertificate.getAccountNumber();
 	}
 
 	/**
-	 * gibt an ob überhaupt ein Kontostanddokument existiert
+	 * gibt an ob ?berhaupt ein Kontostanddokument existiert
 	 */
-	public boolean hasBalance()
+	public boolean hasAccountInfo()
 	{
-		return m_Balance != null;
+		return m_accountInfo != null;
 	}
 
 	/**
@@ -352,47 +369,56 @@ public class PayAccount extends XMLDocument
 	 */
 	public XMLAccountCertificate getAccountCertificate()
 	{
-		return m_AccountCertificate;
+		return m_accountCertificate;
 	}
 
 	/**
-	 * Liefert das Gültigkeitsdatum des Kontos.
+	 * Liefert das Erstellungsdatum des Kontos.
 	 *
-	 * @return Gültigkeitsende
+	 * @return Erstellungsdatum
 	 */
-	public Date getValidFrom()
+	public Date getCreationDate()
 	{
-		return m_AccountCertificate.getCreationTime();
-	}
-
-	public Date getValidTo()
-	{
-		if (m_Balance != null)
-		{
-			return m_Balance.getValidTime();
-		}
-		return m_AccountCertificate.getCreationTime();
+		return m_accountCertificate.getCreationTime();
 	}
 
 	/**
-	 * Liefert den geheimen Schlüssel des Kontos.
+	 * liefert zurueck, wann das Guthaben ungueltig wird (bei flatrate modellen)
 	 *
-	 * @return Geheimer Schlüssel
+	 * @return Date Gueltigkeitsdatum
+	 */
+	public Date getBalanceValidTime()
+	{
+		if (m_accountInfo != null)
+		{
+			return m_accountInfo.getValidTime();
+		}
+		return m_accountCertificate.getCreationTime();
+	}
+
+	/**
+	 * Liefert den geheimen Schl?ssel des Kontos.
+	 *
+	 * @return Geheimer Schl?ssel
 	 */
 	public MyRSAPrivateKey getPrivateKey()
 	{
 		return m_privateKey;
 	}
 
-	/**
-	 * Liefert den öffentlichen Schlüssel des Kontos.
-	 *
-	 * @return Öffentlicher Schlüssel
-	 */
-	public RSAKeyParameters getPublicKey()
+	public JAPSignature getSigningInstance()
 	{
-		return new RSAKeyParameters(false, m_AccountCertificate.getPublicKey().getModulus(),
-									m_AccountCertificate.getPublicKey().getPublicExponent());
+		return m_signingInstance;
+	}
+
+	/**
+	 * Liefert den ?ffentlichen Schl?ssel des Kontos.
+	 *
+	 * @return ?ffentlicher Schl?ssel
+	 */
+	public MyRSAPublicKey getPublicKey()
+	{
+		return m_accountCertificate.getPublicKey();
 	}
 
 	/**
@@ -402,9 +428,9 @@ public class PayAccount extends XMLDocument
 	 */
 	public long getCreditMax()
 	{
-		if (m_Balance != null)
+		if (m_accountInfo != null)
 		{
-			return m_Balance.getCreditMax();
+			return m_accountInfo.getCreditMax();
 		}
 		return 0L;
 	}
@@ -416,26 +442,26 @@ public class PayAccount extends XMLDocument
 	 */
 	public long getCredit()
 	{
-		if (m_Balance != null)
+		if (m_accountInfo != null)
 		{
-			return m_Balance.getCredit();
+			return m_accountInfo.getCredit();
 		}
 		return 0L;
 	}
 
 	/**
-	 * Liefert die Kostenbestätigungen.
+	 * Liefert die Kostenbest?tigungen.
 	 *
 	 * @return Vector von CostConfirms
 	 */
-	public XMLCostConfirmations getCostConfirms()
-	{
-		return m_costConfirms;
-	}
+	/* obsolete	public XMLCostConfirmations getCostConfirms()
+	 {
+	  return m_costConfirms;
+	 }*/
 
-	public XMLBalance getBalance()
+	public XMLAccountInfo getAccountInfo()
 	{
-		return m_Balance;
+		return m_accountInfo;
 	}
 
 	/**
@@ -446,5 +472,18 @@ public class PayAccount extends XMLDocument
 	public Vector getTransCerts()
 	{
 		return m_transCerts;
+	}
+
+	/**
+	 * addCostConfirmation
+	 *
+	 * @param aiName String
+	 * @param accountNumber long
+	 * @param plusCosts long
+	 * @return XMLEasyCC
+	 */
+	public XMLEasyCC addCostConfirmation(String aiName, long accountNumber, long plusCosts)
+	{
+		return null;
 	}
 }
