@@ -167,7 +167,6 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 					setResizable(false);
 				}
 			catch(Exception e) {
-				e.printStackTrace();
 				JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.GUI,"JAPView:Hm.. Error by Pack - Has To be fixed!!");
 				}
 			JAPUtil.centerFrame(this);
