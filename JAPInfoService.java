@@ -107,11 +107,19 @@ final class JAPInfoService
 					{
 						throw e;
 					}
-				// fire event
-				model.notifyJAPObservers();
 			}
 	
-	public void getFeedback()
+	public void getFeedback() {
+		AnonServerDBEntry service = new AnonServerDBEntry(null,model.anonHostName,model.anonPortNumber);
+		this.getFeedback(service);
+		model.nrOfActiveUsers  = service.getNrOfActiveUsers();
+		model.trafficSituation = service.getTrafficSituation();
+		model.currentRisk      = service.getCurrentRisk();
+		model.mixedPackets     = service.getMixedPackets();
+	}
+	
+		
+	public void getFeedback(AnonServerDBEntry service)
 		{
 			int nrOfActiveUsers = -1;
 			int trafficSituation = -1;
@@ -120,12 +128,12 @@ final class JAPInfoService
 			boolean error=false;
 			try
 				{
-					byte[] addr=InetAddress.getByName(model.anonHostName).getAddress();
+					byte[] addr=InetAddress.getByName(service.getHost()).getAddress();
 					String strGET="/feedback/"+Integer.toString((int)addr[0]&0xFF)+"."+
 																		 Integer.toString((int)addr[1]&0xFF)+"."+
 																		 Integer.toString((int)addr[2]&0xFF)+"."+
 																		 Integer.toString((int)addr[3]&0xFF)+DP+
-																		 Integer.toString(model.anonPortNumber);
+																		 Integer.toString(service.getPort());
 	//				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"String GET: "+strGET);
 					HTTPResponse resp=conInfoService.Get(strGET);
 					if (resp.getStatusCode()!=200)
@@ -154,20 +162,19 @@ final class JAPInfoService
 				}
 			if (!error)
 				{
-					model.nrOfActiveUsers  = nrOfActiveUsers;
-					model.trafficSituation = trafficSituation;
-					model.currentRisk      = currentRisk;
-					model.mixedPackets     = mixedPackets;
+					service.setNrOfActiveUsers(nrOfActiveUsers);
+					service.setTrafficSituation(trafficSituation);
+					service.setCurrentRisk(currentRisk);
+					service.setMixedPackets(mixedPackets);
 				}
 			else
 				{
-					model.nrOfActiveUsers  = -1;
-					model.trafficSituation = -1;
-					model.currentRisk      = -1;
-					model.mixedPackets     = -1;
+					service.setNrOfActiveUsers(-1);
+					service.setTrafficSituation(-1);
+					service.setCurrentRisk(-1);
+					service.setMixedPackets(-1);
 				}
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPFeedback: "+nrOfActiveUsers+"/"+trafficSituation+"/"+currentRisk+"/"+mixedPackets);
-			// fire event
-			model.notifyJAPObservers();
 		}
+		
 	}

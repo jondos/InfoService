@@ -42,6 +42,9 @@ import java.awt.Dimension;
 import java.awt.MediaTracker;
 import org.w3c.dom.Node;
 import javax.swing.ImageIcon;
+import java.awt.Component;
+import javax.swing.*;
+import javax.swing.table.*;
 
 
 final class JAPUtil
@@ -271,4 +274,48 @@ final class JAPUtil
 		Dimension ownSize = f.getSize();
 		f.setLocation((screenSize.width-ownSize.width ) , 0 );
 	}
+	
+    public static void setPerfectTableSize(JTable table,Dimension maxDimension) {
+
+	TableModel tableModel = table.getModel();
+
+	int perfectWidth = 0;
+	// the Table uses the minimum height to draw itself, weird...
+	// so we set the perfect heigt as the smallest column height
+	int minimunColunmHeight = 0;
+	for (int i = 0; i < tableModel.getColumnCount(); i++) {
+	    int columnHeight = 0;
+
+	    TableColumn column = table.getColumnModel().getColumn(i);
+	    
+	    // look at the header sizes
+	    Component component = column.getHeaderRenderer().getTableCellRendererComponent(null,column.getHeaderValue(), 
+											   false,false,0,0);
+	    int headerWidth = component.getPreferredSize().width;
+	    columnHeight = component.getPreferredSize().height;
+
+	    // look at every entry
+	    TableCellRenderer tableCellRenderer = table.getDefaultRenderer(tableModel.getColumnClass(i));
+	    int cellWidth = 0;
+	    for (int row = 0; row < tableModel.getRowCount(); row++) {
+		Object object = tableModel.getValueAt(row,i);
+		component = tableCellRenderer.getTableCellRendererComponent(table,object,
+									    false,false,row,i);
+		
+		cellWidth = Math.max(cellWidth,component.getPreferredSize().width);
+		columnHeight += component.getPreferredSize().height;
+	    }
+	    int preferredColumnWidth = Math.max(headerWidth,cellWidth);
+	    column.setPreferredWidth(preferredColumnWidth);
+	    perfectWidth += preferredColumnWidth;
+
+	    if (minimunColunmHeight == 0) minimunColunmHeight = columnHeight;
+	    else minimunColunmHeight = Math.min(minimunColunmHeight,columnHeight);
+	}
+	
+	// add some space for scrollbar,... (+ 30)
+	perfectWidth = Math.min(maxDimension.width,perfectWidth + 30);
+	int perfectHeight = Math.min(maxDimension.height,minimunColunmHeight);
+	table.setPreferredScrollableViewportSize(new Dimension(perfectWidth, perfectHeight));
+    }    
 }
