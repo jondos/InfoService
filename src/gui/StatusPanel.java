@@ -60,7 +60,7 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 		Image m_Icon;
 		int m_Id;
 		MsgQueueEntry m_Next;
-		int m_DisplayCount = 10;
+		int m_DisplayCount = -1;
 	}
 
 	private MsgQueueEntry m_Msgs;
@@ -109,13 +109,17 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 	 * @param msg the message to be displayed
 	 * @return an id useful for removing this message from the status panel
 	 */
-	public int addStatusMsg(String msg, int type)
+	public int addStatusMsg(String msg, int type, boolean bAutoRemove)
 	{
 		synchronized (oMsgSync)
 		{
 			MsgQueueEntry entry = new MsgQueueEntry();
 			entry.m_Msg = msg;
 			entry.m_Id = m_Random.nextInt();
+			if (bAutoRemove)
+			{
+				entry.m_DisplayCount = 10;
+			}
 			if (type == JOptionPane.WARNING_MESSAGE)
 			{
 				entry.m_Icon = ms_imageWarning;
@@ -203,7 +207,6 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 			return;
 		}
 		super.paint(g);
-		boolean b;
 		synchronized (oMsgSync)
 		{
 			if (m_Msgs != null)
@@ -211,7 +214,7 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 				g.drawString(m_Msgs.m_Msg, ms_IconWidth + 2, m_aktY - m_idyFont);
 				if (m_Msgs.m_Icon != null)
 				{
-					b = g.drawImage(m_Msgs.m_Icon, 0, m_aktY - ms_IconHeight, this);
+					g.drawImage(m_Msgs.m_Icon, 0, m_aktY - ms_IconHeight, this);
 				}
 			}
 		}
@@ -232,13 +235,15 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 	{
 		try
 		{
-			boolean bInterrupted=false;
+			boolean bInterrupted = false;
 			while (m_bRun)
 			{
 				try
 				{
-					if(!bInterrupted)
+					if (!bInterrupted)
+					{
 						Thread.sleep(10000);
+					}
 				}
 				catch (InterruptedException e)
 				{
@@ -247,13 +252,22 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 						return;
 					}
 				}
-				bInterrupted=false;
+				bInterrupted = false;
 				synchronized (oMsgSync)
 				{
+					if (m_Msgs != null && m_Msgs.m_DisplayCount == 0)
+					{
+						removeStatusMsg(m_Msgs.m_Id);
+					}
+
 					if (m_Msgs == null)
 					{
 						paint(getGraphics());
 						continue;
+					}
+					if (m_Msgs.m_DisplayCount > 0)
+					{
+						m_Msgs.m_DisplayCount--;
 					}
 					m_Msgs = m_Msgs.m_Next;
 					m_aktY = 0;
@@ -263,12 +277,14 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 					paint(getGraphics());
 					try
 					{
-						if(!bInterrupted)
+						if (!bInterrupted)
+						{
 							Thread.sleep(100);
+						}
 					}
 					catch (InterruptedException e)
 					{
-						bInterrupted=true;
+						bInterrupted = true;
 					}
 					m_aktY++;
 				}
