@@ -95,12 +95,12 @@ final public class JAPCertificateStore
 	/* Duplicates this CertificateStore and including duplicates of the Certifcates*/
 	public Object clone()
 	{
-		JAPCertificateStore certs=JAPCertificateStore.getInstance();
-		Enumeration enum=elements();
-		while(enum.hasMoreElements())
+		JAPCertificateStore certs = JAPCertificateStore.getInstance();
+		Enumeration enum = elements();
+		while (enum.hasMoreElements())
 		{
-			JAPCertificate cert=(JAPCertificate)enum.nextElement();
-			cert=(JAPCertificate)cert.clone();
+			JAPCertificate cert = (JAPCertificate) enum.nextElement();
+			cert = (JAPCertificate) cert.clone();
 			certs.m_HTCertStore.put(JAPCertificateStoreId.getId(cert), cert);
 		}
 		return certs;
@@ -200,24 +200,28 @@ final public class JAPCertificateStore
 	{
 		return m_HTCertStore.elements();
 	}
- /**
-   * Returns a Vector with the snapshot of all enabled certificates (JAPCertificate) in this
-   * JAPCertificateStore. The returned Vector is independent from this JAPCertificateStore,
-   * only the certificates are the same.
-   *
-   * @return The Vector with all enabled certificates.
-   */
-  public Vector getAllEnabledCertificates() {
-    Vector r_certificatesVector = new Vector();
-    Enumeration certificatesEnumeration = m_HTCertStore.elements();
-    while (certificatesEnumeration.hasMoreElements()) {
-      JAPCertificate currentCertificate = (JAPCertificate)(certificatesEnumeration.nextElement());
-      if (currentCertificate.getEnabled() == true) {
-        r_certificatesVector.addElement(currentCertificate);
-      }
-    }
-    return r_certificatesVector;
-  }
+
+	/**
+	 * Returns a Vector with the snapshot of all enabled certificates (JAPCertificate) in this
+	 * JAPCertificateStore. The returned Vector is independent from this JAPCertificateStore,
+	 * only the certificates are the same.
+	 *
+	 * @return The Vector with all enabled certificates.
+	 */
+	public Vector getAllEnabledCertificates()
+	{
+		Vector r_certificatesVector = new Vector();
+		Enumeration certificatesEnumeration = m_HTCertStore.elements();
+		while (certificatesEnumeration.hasMoreElements())
+		{
+			JAPCertificate currentCertificate = (JAPCertificate) (certificatesEnumeration.nextElement());
+			if (currentCertificate.getEnabled() == true)
+			{
+				r_certificatesVector.addElement(currentCertificate);
+			}
+		}
+		return r_certificatesVector;
+	}
 
 	/**
 	 * Creates the trusted CA XML node
@@ -249,8 +253,8 @@ final public class JAPCertificateStore
 				elemEnabled.appendChild(a_doc.createTextNode("false"));
 
 			}
-			Element elemKeyInfo=a_doc.createElement("KeyInfo");
-			Element elemX509Data=a_doc.createElement("X509Data");
+			Element elemKeyInfo = a_doc.createElement("KeyInfo");
+			Element elemX509Data = a_doc.createElement("X509Data");
 			elemCA.appendChild(elemKeyInfo);
 			elemKeyInfo.appendChild(elemX509Data);
 			elemX509Data.appendChild(cert.toXmlNode(a_doc));

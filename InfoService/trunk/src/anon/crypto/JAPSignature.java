@@ -246,7 +246,7 @@ public class JAPSignature
 			}
 			//making Reference hash....
 			out.reset();
-			if (makeCanonical(root, out, true, signature) == -1)
+			if (makeCanonical(root, out, false, signature) == -1)
 			{
 				return false;
 			}

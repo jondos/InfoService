@@ -37,7 +37,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -93,7 +92,7 @@ final public class JAPCertificate
 					return null;
 				}
 			}
-			r_japcert.m_x509cert = X509CertificateStructure.getInstance( x509cert);
+			r_japcert.m_x509cert = X509CertificateStructure.getInstance(x509cert);
 			return r_japcert;
 		}
 		catch (Exception e)
@@ -249,9 +248,11 @@ final public class JAPCertificate
 
 	public Object clone()
 	{
-		JAPCertificate cert=JAPCertificate.getInstance(m_x509cert);
-		if(cert==null)
+		JAPCertificate cert = JAPCertificate.getInstance(m_x509cert);
+		if (cert == null)
+		{
 			return null;
+		}
 		cert.setEnabled(getEnabled());
 		return cert;
 	}

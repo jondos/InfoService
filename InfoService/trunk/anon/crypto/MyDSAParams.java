@@ -65,11 +65,15 @@ public class MyDSAParams extends DSAParameters implements DSAParams
 
 	public boolean equals(Object o)
 	{
-		if(o==null)
+		if (o == null)
+		{
 			return false;
-		if(!(o instanceof DSAParams))
+		}
+		if (! (o instanceof DSAParams))
+		{
 			return false;
-		DSAParams p=(DSAParams)o;
-		return p.getG().equals(this.getG())&&p.getP().equals(this.getP())&&p.getQ().equals(this.getQ());
+		}
+		DSAParams p = (DSAParams) o;
+		return p.getG().equals(this.getG()) && p.getP().equals(this.getP()) && p.getQ().equals(this.getQ());
 	}
 }
