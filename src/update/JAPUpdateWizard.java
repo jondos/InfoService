@@ -535,7 +535,7 @@ public final class JAPUpdateWizard extends BasicWizard implements Runnable
 			{
 				jarUrl = new URL(codeBase,
 								 japVersionInfo.getJAPJarFileName() + "?version-id=" +
-								 japVersionInfo.getVersionNumber()
+								 japVersionInfo.getJapVersion()
 								 + "&current-version-id=" +
 								 JAPConstants.aktVersion);
 			}
@@ -543,7 +543,7 @@ public final class JAPUpdateWizard extends BasicWizard implements Runnable
 			{
 				jarUrl = new URL(codeBase,
 								 japVersionInfo.getJAPJarFileName() + "?version-id=" +
-								 japVersionInfo.getVersionNumber());
+								 japVersionInfo.getJapVersion());
 			}
 		}
 		catch (Exception e)
