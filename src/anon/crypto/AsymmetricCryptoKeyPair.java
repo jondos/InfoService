@@ -241,8 +241,13 @@ public class AsymmetricCryptoKeyPair
 	{
 		if (ms_privateKeyClasses == null)
 		{
-			ms_privateKeyClasses = ClassUtil.findSubclasses(IMyPrivateKey.class);
-			ms_privateKeyClasses.removeElement(IMyPrivateKey.class);
+			///@todo removed as ClassUtil.findSubclasses() has Bugs!
+			//ms_privateKeyClasses = ClassUtil.findSubclasses(IMyPrivateKey.class);
+			//ms_privateKeyClasses.removeElement(IMyPrivateKey.class);
+			ms_publicKeyClasses=new Vector(2);
+			ms_publicKeyClasses.addElement(MyDSAPrivateKey.class);
+			ms_publicKeyClasses.addElement(MyRSAPrivateKey.class);
+
 		}
 
 		return ms_privateKeyClasses.elements();
@@ -258,8 +263,12 @@ public class AsymmetricCryptoKeyPair
 	{
 		if (ms_publicKeyClasses == null)
 		{
-			ms_publicKeyClasses = ClassUtil.findSubclasses(IMyPublicKey.class);
-			ms_publicKeyClasses.removeElement(IMyPublicKey.class);
+			/**@todo removed do to bugs in ClassUtil.findSubclasses*/
+			//ms_publicKeyClasses = ClassUtil.findSubclasses(IMyPublicKey.class);
+			//ms_publicKeyClasses.removeElement(IMyPublicKey.class);
+			ms_publicKeyClasses=new Vector(2);
+			ms_publicKeyClasses.addElement(MyDSAPublicKey.class);
+			ms_publicKeyClasses.addElement(MyRSAPublicKey.class);
 		}
 
 		return ms_publicKeyClasses.elements();

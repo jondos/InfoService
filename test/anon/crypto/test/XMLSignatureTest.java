@@ -219,7 +219,7 @@ public class XMLSignatureTest extends XtendedPrivateTestCase
 		certificates = new Vector();
 		for (int i = 0; i < 5; i++)
 		{
-			certificates.add(JAPCertificate.getInstance(
+			certificates.addElement(JAPCertificate.getInstance(
 						 "Owner:" + i, a_keyGen.createKeyPair(), new GregorianCalendar(), 0));
 		}
 
@@ -350,7 +350,7 @@ public class XMLSignatureTest extends XtendedPrivateTestCase
 
 		// initialise the certificate stores
 		trustedCertificates = new Vector();
-		trustedCertificates.add(trustedCertificateGenerator.getX509Certificate());
+		trustedCertificates.addElement(trustedCertificateGenerator.getX509Certificate());
 		collectedCertificates = new Vector();
 
 		/*

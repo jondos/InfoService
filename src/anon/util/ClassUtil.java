@@ -35,6 +35,7 @@ import java.util.Enumeration;
 import java.util.Vector;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import java.net.URL;
 
 /**
  * This class performs some basic operations related to Class objects.
@@ -114,7 +115,7 @@ public final class ClassUtil
 	 * WARNING: this may be slow at the first call, especially for large packages
 	 * @param a_class a Class
 	 * @return all known subclasses of the given class
-	 */
+	 *//*
 	public static Vector findSubclasses(Class a_class)
 	{
 		Enumeration classes;
@@ -136,14 +137,14 @@ public final class ClassUtil
 
 		return subclasses;
 	}
-
+*/
 	/**
 	 * Loads all classes into cache that are in the same file structure as this class
 	 * and as the calling class. Recommended to be called at program start to
 	 * initially fill the cache.
 	 * WARNING: this may be slow at the first call, especially for large packages (like the JRE)
 	 * @return all loaded classes
-	 */
+	 *//*
 	public static Enumeration loadClasses()
 	{
 		Class callingClass;
@@ -155,7 +156,7 @@ public final class ClassUtil
 
 		return ms_loadedClasses.elements();
 	}
-
+*/
 	/**
 	 * Loads all classes into cache that are in the same file structure as
 	 * the given class and as the calling class.
@@ -163,7 +164,7 @@ public final class ClassUtil
 	 * @param a_rootClass the class from that loading is started
 	 * @return all loaded classes
 	 */
-	public static Enumeration loadClasses(Class a_rootClass)
+	/*public static Enumeration loadClasses(Class a_rootClass)
 	{
 		PrintStream syserror;
 		PrintStream dummyStream = new PrintStream(new ByteArrayOutputStream());
@@ -197,7 +198,7 @@ public final class ClassUtil
 
 		return ms_loadedClasses.elements();
 	}
-
+*/
 	/**
 	 * Returns the class directory of the specified class. The class directory is either the
 	 * directory in that the highest package in the package structure of the class is contained,
@@ -206,9 +207,12 @@ public final class ClassUtil
 	 * @param a_class a class
 	 * @return the class directory of the specified class, either a real directory or a Jar-file
 	 *         or null if the directory/jar-file does not exist
+	 * @todo does not work as it depends on the Java Runtime Engine used!!
 	 */
-	public static File getClassDirectory(Class a_class)
+
+	/* public static File getClassDirectory(Class a_class)
 	{
+		System.out.println("getClassDirectroy() for :"+a_class.getName());
 		String classResource;
 		String classDirectory;
 		File file;
@@ -218,7 +222,11 @@ public final class ClassUtil
 		classResource = "/" + classResource;
 		classResource = classResource.replace('.','/');
 		classResource += ".class";
-		classDirectory = URLDecoder.decode(a_class.getResource(classResource).toString());
+		System.out.println("getClassDirectroy() classResource is :"+classResource);
+		URL classUrl=a_class.getResource(classResource);
+		System.out.println("getClassDirectroy() classUrl is :"+classUrl.toString());
+		classDirectory = URLDecoder.decode(classUrl.toString());
+		System.out.println("getClassDirectroy() classDirectory is :"+classDirectory);
 
 		// check whether it is a jar file or a directory
 		if (classDirectory.startsWith(JAR_FILE))
@@ -259,7 +267,7 @@ public final class ClassUtil
 		}
 		return file;
 	}
-
+*/
 	/**
 	 * This small inner class is needed to get information about static classes.
 	 */
@@ -281,6 +289,7 @@ public final class ClassUtil
 	 * WARNING: this may be slow at the first call, especially for large packages (like the JRE)
 	 * @param a_rootClass the class from that loading is started
 	 */
+	/*
 	private static void loadClassesInternal(Class a_rootClass)
 	{
 		System.out.println("loadClassesInternal() for :"+a_rootClass.getName());
@@ -338,7 +347,7 @@ public final class ClassUtil
 			}
 		}
 	}
-
+*/
 	/**
 	 * Returns all classes in a directory as Class objects or the given file itself as a Class,
 	 * if it is a class file.
