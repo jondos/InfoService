@@ -18,7 +18,7 @@ public final class JAPModel {
 // JAPDebug now initialized in JAP in order to use
 // the functions also in JAP.main()
     
-	static final String aktVersion = "00.00.019"; // Version of JAP
+	static final String aktVersion = "00.00.020"; // Version of JAP
 	
 	private int      portNumber        = 4001;
 	private int      runningPortNumber = 0;      // the port where proxy listens
