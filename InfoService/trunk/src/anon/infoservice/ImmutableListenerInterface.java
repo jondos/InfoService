@@ -97,6 +97,6 @@ public interface ImmutableListenerInterface
 	 *
 	 * @return The host of this interface with additional information.
 	 */
-	String getHostAndIp();
+	//String getHostAndIp();
 
 }

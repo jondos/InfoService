@@ -707,7 +707,7 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 			}
 			i++;
 		}
-		String ipString = null;
+		/*String ipString = null;
 		try
 		{
 			InetAddress interfaceAddress = InetAddress.getByName(firstListener.getHost());
@@ -715,11 +715,11 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 		}
 		catch (Exception e)
 		{
-			/* maybe inetHost is a hostname and no IP, but this solution is better than nothing */
+			// maybe inetHost is a hostname and no IP, but this solution is better than nothing
 			ipString = firstListener.getHost();
 		}
 		Element ipNode = doc.createElement("IP");
-		ipNode.appendChild(doc.createTextNode(ipString));
+		ipNode.appendChild(doc.createTextNode(ipString));*/
 		Element hostNode = doc.createElement("Host");
 		hostNode.appendChild(doc.createTextNode(firstListener.getHost()));
 		mixCascadeNode.appendChild(nameNode);
@@ -728,7 +728,7 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 		{
 			mixCascadeNode.appendChild(proxyPortNode);
 		}
-		mixCascadeNode.appendChild(ipNode);
+		//mixCascadeNode.appendChild(ipNode);
 		mixCascadeNode.appendChild(hostNode);
 		/* now do the same with all listener interfaces */
 		Element networkNode = doc.createElement("Network");

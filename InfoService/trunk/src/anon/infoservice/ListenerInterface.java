@@ -47,7 +47,6 @@ import org.w3c.dom.Node;
 import anon.util.IXMLEncodable;
 import anon.util.XMLParseException;
 import anon.util.XMLUtil;
-
 /**
  * Saves the information about a network server.
  */
@@ -360,7 +359,7 @@ public class ListenerInterface implements ImmutableListenerInterface, IXMLEncoda
 	 *
 	 * @return The host of this interface with additional information.
 	 */
-	public String getHostAndIp()
+	/*public String getHostAndIp()
 	{
 		String hostAndIp = m_strHostname;
 		try
@@ -368,26 +367,28 @@ public class ListenerInterface implements ImmutableListenerInterface, IXMLEncoda
 			InetAddress interfaceAddress = InetAddress.getByName(m_strHostname);
 			if (isValidIP(m_strHostname))
 			{
-				/* inetHost is an IP, try to add the hostname */
+				// inetHost is an IP, try to add the hostname
 				String hostName = interfaceAddress.getHostName();
 				if ( (!hostName.equals(m_strHostname)) && (isValidHostname(hostName)))
 				{
-					/* we got the hostname via DNS, add it */
+					// we got the hostname via DNS, add it
 					hostAndIp = hostAndIp + " (" + hostName + ")";
 				}
 			}
 			else
 			{
-				/* inetHost is a hostname, add the IP */
+				// inetHost is a hostname, add the IP
 				hostAndIp = hostAndIp + " (" + interfaceAddress.getHostAddress() + ")";
 			}
 		}
 		catch (java.net.UnknownHostException e)
 		{
-			/* can't resolve inetHost, maybe we are behind a proxy, return only inetHost */
+			// can't resolve inetHost, maybe we are behind a proxy, return only inetHost
 		}
 		return hostAndIp;
 	}
+*/
+
 
 	/**
 	 * Transforms a given protocol into a valid protocol if recognized.
@@ -542,7 +543,7 @@ public class ListenerInterface implements ImmutableListenerInterface, IXMLEncoda
 		portNode.appendChild(doc.createTextNode(Integer.toString(m_iInetPort)));
 		Element hostNode = doc.createElement("Host");
 		hostNode.appendChild(doc.createTextNode(m_strHostname));
-		String ipString = null;
+		/*String ipString = null;
 		try
 		{
 			InetAddress interfaceAddress = InetAddress.getByName(m_strHostname);
@@ -550,15 +551,16 @@ public class ListenerInterface implements ImmutableListenerInterface, IXMLEncoda
 		}
 		catch (Exception e)
 		{
-			/* maybe inetHost is a hostname and no IP, but this solution is better than nothing */
+			// maybe inetHost is a hostname and no IP, but this solution is better than nothing
 			ipString = m_strHostname;
 		}
 		Element ipNode = doc.createElement("IP");
 		ipNode.appendChild(doc.createTextNode(ipString));
-		listenerInterfaceNode.appendChild(typeNode);
+	*/
+	listenerInterfaceNode.appendChild(typeNode);
 		listenerInterfaceNode.appendChild(portNode);
 		listenerInterfaceNode.appendChild(hostNode);
-		listenerInterfaceNode.appendChild(ipNode);
+		//listenerInterfaceNode.appendChild(ipNode);
 		return listenerInterfaceNode;
 	}
 
