@@ -53,7 +53,7 @@ import anon.ToManyOpenChannelsException;
 import anon.crypto.JAPCertPath;
 import anon.crypto.JAPCertificateStore;
 import anon.infoservice.MixCascade;
-import pay.anon.AIChannel;
+//import pay.anon.AIChannel;
 import anon.util.XMLUtil;
 import logging.LogHolder;
 import logging.LogLevel;
@@ -747,10 +747,10 @@ public final class MuxSocket implements Runnable
 		m_outStream.flush();
 	}
 
-	public AIChannel getAIChannel()
+	/*public AIChannel getAIChannel()
 	{
 		return AIChannel.create(this);
-	}
+	}*/
 
 	public synchronized int sendPayPackets(String xmlData)
 	{

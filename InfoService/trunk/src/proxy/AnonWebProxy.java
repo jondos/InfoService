@@ -42,7 +42,7 @@ import anon.NotConnectedToMixException;
 import anon.ToManyOpenChannelsException;
 import anon.crypto.JAPCertificateStore;
 import anon.infoservice.MixCascade;
-import anon.pay.AICommunication;
+import pay.anon.AICommunication;
 import anon.server.AnonServiceImpl;
 import anon.server.impl.ProxyConnection;
 import anon.util.XMLUtil;
