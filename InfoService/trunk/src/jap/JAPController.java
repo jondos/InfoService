@@ -158,7 +158,7 @@ public final class JAPController implements ProxyListener, Observer
 		}
 		catch (Exception e)
 		{
-			LogHolder.log(LogLevel.EMERG, LogType.NET, "JAPController: Constructor: " + e.getMessage());
+			LogHolder.log(LogLevel.EMERG, LogType.NET, "JAPController: Constructor - default mix cascade: " + e.getMessage());
 		}
 		/* set a default infoservice */
 		try
@@ -171,7 +171,8 @@ public final class JAPController implements ProxyListener, Observer
 		}
 		catch (Exception e)
 		{
-			LogHolder.log(LogLevel.EMERG, LogType.NET, "JAPController: Constructor: " + e.getMessage());
+			e.printStackTrace();
+			LogHolder.log(LogLevel.EMERG, LogType.NET, "JAPController: Constructor - default info service: " + e.getMessage());
 		}
 		/* set some default values for infoservice communication */
 		setInfoServiceDisabled(JAPConstants.DEFAULT_INFOSERVICE_DISABLED);

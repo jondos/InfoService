@@ -415,7 +415,7 @@ final class DirectProxyConnection implements Runnable
 				os.write("</title></head><body><h2>FTP directory at ".getBytes());
 				os.write(URL.getBytes());
 				os.write( ("</h2><hr><pre> DIR  | <A HREF=\"" + parentDir + "\">..</A>\n").getBytes());
-				FTPFile remoteFiles[] = ftpClient.listFiles(m_strFile);
+	FTPFile remoteFiles[] = ftpClient.listFiles(m_strFile);
 				if (remoteFiles == null)
 				{
 					os.write( ("No files in Directory!\nServer replied:\n" + ftpClient.getReplyString()).
@@ -491,6 +491,7 @@ final class DirectProxyConnection implements Runnable
 			} // end if Directory
 			else //a file
 			{
+
 				ftpClient.setFileType(FTPClient.IMAGE_FILE_TYPE);
 				FTPFile[] currentResponses = ftpClient.listFiles(m_strFile);
 				long len = currentResponses[0].getSize();
@@ -508,6 +509,8 @@ final class DirectProxyConnection implements Runnable
 		}
 		catch (Exception e)
 		{
+			e.printStackTrace();
+
 			LogHolder.log(LogLevel.NOTICE, LogType.NET,
 						  "C(" + m_threadNumber + ") - Exception in handleFTP(): " + e);
 			try
