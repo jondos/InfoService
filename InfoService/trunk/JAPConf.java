@@ -1016,7 +1016,7 @@ final class JAPConf extends JDialog
 				else
           m_Controller.setDummyTraffic(-1);
         // Listener settings
-				m_Controller.setHTTPListener(Integer.parseInt(m_tfListenerPortNumber.getText().trim()),m_cbListenerIsLocal.isSelected());
+				m_Controller.setHTTPListener(Integer.parseInt(m_tfListenerPortNumber.getText().trim()),m_cbListenerIsLocal.isSelected(),true);
 //				m_Controller.setUseSocksPort(m_cbListenerSocks.isSelected());
 //				m_Controller.setSocksPortNumber(Integer.parseInt(m_tfListenerPortNumberSocks.getText().trim()));
 				// Firewall settings

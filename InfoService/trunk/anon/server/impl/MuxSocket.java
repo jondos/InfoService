@@ -62,7 +62,7 @@ import anon.server.AnonServiceImpl;
 public final class MuxSocket implements Runnable
 	{
 		private int m_iLastChannelId;
-		private Dictionary oChannelList;
+		private Dictionary m_ChannelList;
 		private DataOutputStream m_outDataStream;
 		private DataInputStream m_inDataStream;
 
@@ -246,7 +246,7 @@ public final class MuxSocket implements Runnable
 								return err;
 							}
 						m_bIsConnected=true;
-     				oChannelList=new Hashtable();
+     				m_ChannelList=new Hashtable();
             if(m_DummyTraffic!=null)
               m_DummyTraffic.start();
             return ErrorCodes.E_SUCCESS;
@@ -293,12 +293,12 @@ public final class MuxSocket implements Runnable
 					{
 						if(m_bIsConnected)
 							{
-                if(oChannelList.size()>MAX_CHANNELS_PER_CONNECTION)
+                if(m_ChannelList.size()>MAX_CHANNELS_PER_CONNECTION)
                   throw new ToManyOpenChannelsException();
 								try
 									{
                     Channel c=new Channel(this,m_iLastChannelId,type);
-										oChannelList.put(new Integer(m_iLastChannelId),new ChannelListEntry(c));
+										m_ChannelList.put(new Integer(m_iLastChannelId),new ChannelListEntry(c));
 
 										//JAPAnonService.setNrOfChannels(oSocketList.size());
 										//Thread t2=new Thread(c);
@@ -320,7 +320,7 @@ public final class MuxSocket implements Runnable
 			{
 				synchronized(this)
 					{
-						oChannelList.remove(new Integer(channel_id));
+						m_ChannelList.remove(new Integer(channel_id));
 						send(channel_id,0,null,(short)0);
 	//					JAPAnonService.setNrOfChannels(oSocketList.size());
 						return 0;
@@ -436,12 +436,12 @@ public final class MuxSocket implements Runnable
   							m_Log.log(LogLevel.DEBUG,LogType.NET,"MuxSocket:run() Received a Dummy...");
 	              continue;
               }
-						ChannelListEntry tmpEntry=(ChannelListEntry)oChannelList.get(new Integer(channel));
+						ChannelListEntry tmpEntry=(ChannelListEntry)m_ChannelList.get(new Integer(channel));
 						if(tmpEntry!=null)
 							{
 								if(flags==CHANNEL_CLOSE)
 									{
-										oChannelList.remove(new Integer(channel));
+										m_ChannelList.remove(new Integer(channel));
 										//JAPAnonService.setNrOfChannels(oSocketList.size());
 										tmpEntry.channel.closedByPeer();
                     //try{tmpEntry.outStream.close();}catch(Exception e){}
@@ -486,13 +486,13 @@ public final class MuxSocket implements Runnable
 		private void runStoped()
 			{
 				m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:runStoped()");
-				Enumeration e=oChannelList.elements();
+				Enumeration e=m_ChannelList.elements();
 				while(e.hasMoreElements())
 					{
 						ChannelListEntry entry=(ChannelListEntry)e.nextElement();
             entry.channel.closedByPeer();
 					}
-        oChannelList=null;
+        m_ChannelList=null;
 				m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:MuxSocket all channels closed...");
 				m_bRunFlag=false;
 				m_bIsConnected=false;
@@ -527,7 +527,7 @@ public final class MuxSocket implements Runnable
 							return -1;
 						if(len==0)
 							return 0;
-						ChannelListEntry entry=(ChannelListEntry)oChannelList.get(new Integer(channel));
+						ChannelListEntry entry=(ChannelListEntry)m_ChannelList.get(new Integer(channel));
 						if(entry!=null&&entry.arCipher==null)
 							{
 								int size=PAYLOAD_SIZE-KEY_SIZE;
