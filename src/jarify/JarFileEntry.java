@@ -33,7 +33,7 @@ import java.io.InputStream;
  * This class represents a single file within a JarFile.
  * So, the data exchange is done via this wrapper class.
  */
-public class JarFileEntry
+class JarFileEntry
 {
 	//~ Instance variables ·······························································
 
@@ -109,7 +109,6 @@ public class JarFileEntry
 			}
 			catch (Exception e)
 			{
-				e.printStackTrace();
 				// if there is an exception, return null
 				return null;
 			}

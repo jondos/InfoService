@@ -27,11 +27,10 @@
  */
 package jap;
 
-//import java.io.File;
-//import java.io.FilenameFilter;
 import java.awt.Dimension;
 import java.awt.Point;
 import anon.crypto.JAPCertificateStore;
+import anon.crypto.JAPCertificate;
 import gui.JAPDll;
 
 /* This is the Model of All. It's a Singelton!*/
@@ -68,12 +67,21 @@ public final class JAPModel
 
 	private boolean m_bCertCheckDisabled = true;
 
-//	private JAPCertificate m_rootCertificate = null;
+	private JAPCertificate m_certJAPCodeSigning = null;
 	private JAPCertificateStore m_certStore = null;
 
 	private JAPModel()
 	{
 		m_certStore = JAPCertificateStore.getInstance();
+		try
+		{
+			m_certJAPCodeSigning = JAPCertificate.getInstance(
+				 JAPUtil.loadRessource(JAPConstants.CERTSPATH+JAPConstants.CERT_JAPCODESIGNING));
+		}
+		catch(Throwable t)
+		{
+			m_certJAPCodeSigning = null;
+		}
 	}
 
 	// m_Locale=Locale.getDefault();
@@ -431,6 +439,11 @@ public final class JAPModel
 	protected void setCertificateStore(JAPCertificateStore jcs)
 	{
 		m_certStore = jcs;
+	}
+
+	public static JAPCertificate getJAPCodeSigningCert()
+	{
+		return model.m_certJAPCodeSigning;
 	}
 
 }

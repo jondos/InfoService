@@ -37,7 +37,7 @@ import java.util.Vector;
  *
  * It contains of Manifest Entries.
  */
-public class JarManifest extends JarFileEntry implements JarConstants
+class JarManifest extends JarFileEntry
 {
 	/**
 	 * This is an entry in the manifest.
@@ -59,7 +59,7 @@ public class JarManifest extends JarFileEntry implements JarConstants
 
 	private Hashtable entries = new Hashtable();
 	private Vector fileNameList = new Vector();
-	private Hashtable tmp = new Hashtable();
+	//private Hashtable tmp = new Hashtable();
 
 	//~ Instance variables ·······························································
 
@@ -79,7 +79,7 @@ public class JarManifest extends JarFileEntry implements JarConstants
 	 */
 	public JarManifest(long size, InputStream stream)
 	{
-		super(MANIFEST_FILE, size, stream);
+		super(JarConstants.MANIFEST_FILE, size, stream);
 		init();
 	}
 
@@ -130,7 +130,7 @@ public class JarManifest extends JarFileEntry implements JarConstants
 		EntryData entryData;
 
 		// now parse all entries
-		while ( (startPos = contentStrRaw.indexOf(newLine + MANIFEST_ENTRY, startPos)) != -1)
+		while ( (startPos = contentStrRaw.indexOf(newLine + JarConstants.MANIFEST_ENTRY, startPos)) != -1)
 		{
 			// get the next entry
 			startPos += newLine.length();
@@ -147,7 +147,7 @@ public class JarManifest extends JarFileEntry implements JarConstants
 			}
 
 			// get filename from entry
-			fileName = rawEntry.substring(MANIFEST_ENTRY.length(), rawEntry.indexOf(newLine));
+			fileName = rawEntry.substring(JarConstants.MANIFEST_ENTRY.length(), rawEntry.indexOf(newLine));
 			fileNameList.addElement(fileName);
 			entries.put(fileName, entryData);
 
