@@ -195,7 +195,7 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 			try
 				{
 					pack();  // optimize size
-					setResizable(/*true*/false); //2001-11-12(HF):Changed due to a Mac OS X problem during redraw of the progress bars
+					setResizable(/*true*/true/*false*/); //2001-11-12(HF):Changed due to a Mac OS X problem during redraw of the progress bars
 				}
 			catch(Exception e) {
 				JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.GUI,"JAPView:Hm.. Error by Pack - Has To be fixed!!");
@@ -484,8 +484,18 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 		meterIcons = new ImageIcon [JAPConstants.METERFNARRAY.length];
 //		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPView:METERFNARRAY.length="+JAPConstants.METERFNARRAY.length);
 		for (int i=0; i<JAPConstants.METERFNARRAY.length; i++) {
-			meterIcons[i] = JAPUtil.loadImageIcon(JAPConstants.METERFNARRAY[i],false);
-		}
+      if(JAPModel.isSmallDisplay())
+        {
+          Image tmp=JAPUtil.loadImageIcon(JAPConstants.METERFNARRAY[i],true).getImage();
+          int h=tmp.getHeight(null);
+          int w=tmp.getWidth(null);
+          if(JAPModel.isSmallDisplay())
+          meterIcons[i] = new ImageIcon(tmp.getScaledInstance((int)(w*0.75),(int)(h*0.75),Image.SCALE_SMOOTH));
+		    }
+      else
+          meterIcons[i] = JAPUtil.loadImageIcon(JAPConstants.METERFNARRAY[i],false);
+
+    }
 	}
 
 	 /**Anon Level is >=0 amd <=5. if -1 no measure is available*/

@@ -25,16 +25,45 @@ OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABIL
 IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
-
+import javax.swing.plaf.metal.DefaultMetalTheme;
+import javax.swing.plaf.metal.MetalLookAndFeel;
+import javax.swing.plaf.FontUIResource;
+import javax.swing.UIManager;
+import javax.swing.UIDefaults;
+import java.awt.Insets;
+import java.util.Enumeration;
 public class JAPiPAQ extends JAP {
+
+  private class iPAQTheme extends DefaultMetalTheme
+    {
+      public FontUIResource getControlTextFont()
+        {
+          return new FontUIResource("Dialog",FontUIResource.PLAIN,9);
+        }
+
+      public FontUIResource getUserTextFont()
+        {
+          return new FontUIResource("Dialog",FontUIResource.PLAIN,9);
+        }
+      public FontUIResource getSystemTextFont()
+        {
+          return new FontUIResource("Dialog",FontUIResource.PLAIN,9);
+        }
+    }
 
 	JAPiPAQ(String[] argv) {
 		super(argv);
-	}
+		MetalLookAndFeel.setCurrentTheme(new iPAQTheme());
+	  System.out.println(UIManager.getInsets("Button.margin"));
+    UIManager.put("Button.margin",new Insets(1,1,1,1));
+    //Enumeration enum=def.elements();
+    //while(enum.hasMoreElements())
+      //System.out.println(enum.nextElement());
+  }
 
 
 	public static void main(String[] argv) {
-		JAPiPAQ japOniPAQ = new JAPiPAQ(argv);
+    JAPiPAQ japOniPAQ = new JAPiPAQ(argv);
 		JAPModel.create().setSmallDisplay(true);
     japOniPAQ.startJAP();
 	}
