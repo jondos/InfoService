@@ -27,6 +27,7 @@ class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 	JSlider m_sliderMaxPathLen, m_sliderMinPathLen, m_sliderConnectionsPerPath;
 	JButton m_bttnFetchRouters;
 	TitledBorder m_borderAvailableRouters;
+	long m_lastUpdate;
 	public JAPConfTor()
 	{
 		super(null);
@@ -114,7 +115,7 @@ class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 		c.weighty = 0;
 		c.fill = c.HORIZONTAL;
 		panelRoot.add(p, c);
-
+		m_lastUpdate=0;
 	}
 
 	public String getTabTitle()
@@ -150,6 +151,12 @@ class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 		updateGuiOutput();
 	}
 
+	protected void onRootPanelShown()
+	{
+		if(System.currentTimeMillis()-m_lastUpdate>600000)
+			fetchRouters();
+	}
+
 	private void updateGuiOutput()
 	{
 		m_sliderConnectionsPerPath.setValue(JAPModel.getTorMaxConnectionsPerRoute());
@@ -163,6 +170,7 @@ class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 			JAPConf.showError(JAPMessages.getString("torErrorFetchRouters"));
 			return;
 		}
+		m_lastUpdate=System.currentTimeMillis();
 		DefaultTableModel m = (DefaultTableModel) m_tableRouters.getModel();
 		Vector ors = ol.getList();
 		m.setNumRows(ors.size());

@@ -84,17 +84,16 @@ final class JAPConf extends JDialog
 	final static public int MISC_TAB = 6;
 	final static public int KONTO_TAB = 7;
 
-  /**
-   * This constant is a symbolic name for accessing the forwarding tab.
-   */
-  final static public int FORWARD_TAB = 8;
-
+	/**
+	 * This constant is a symbolic name for accessing the forwarding tab.
+	 */
+	final static public int FORWARD_TAB = 8;
 
 	private static JAPConf japConfInstance = null;
 
 	private JAPController m_Controller;
 
-	private JAPJIntField m_tfListenerPortNumber;//, m_tfListenerPortNumberSocks;
+	private JAPJIntField m_tfListenerPortNumber; //, m_tfListenerPortNumberSocks;
 	private JCheckBox m_cbListenerIsLocal;
 	private JLabel m_labelPortnumber1, m_labelPortnumber2;
 	//private JLabel m_labelSocksPortNumber;
@@ -116,7 +115,7 @@ final class JAPConf extends JDialog
 	private JTextField m_tfMixHost;
 	private String m_strMixName, m_strOldMixName;
 	private JComboBox m_comboMixCascade;
-	private JRadioButton m_rbMixStep1, m_rbMixStep2, m_rbMixStep3;
+	private JCheckBox /*m_rbMixStep1, m_rbMixStep2,*/ m_cbMixStep3;
 	private JButton m_bttnFetchCascades;
 	private TitledBorder m_borderAnonSettings, m_borderAnonSettings2;
 	private JLabel m_labelAnonHost, m_labelAnonPort;
@@ -138,13 +137,13 @@ final class JAPConf extends JDialog
 	private JSlider m_sliderDummyTrafficIntervall;
 
 	private JTabbedPane m_Tabs;
-  
-  /**
-   * Stores the index of the various tabs in the tabbed pane.
-   */
-  private Hashtable m_tabOrder;
-  
-	private JPanel m_pPort, m_pFirewall, m_pMix, m_pCert, m_pMisc;
+
+	/**
+	 * Stores the index of the various tabs in the tabbed pane.
+	 */
+	private Hashtable m_tabOrder;
+
+	private JPanel m_pPort, m_pFirewall, m_pMix, m_pCert, m_pMisc,m_panelManual;
 	private JButton m_bttnDefaultConfig, m_bttnCancel;
 
 	private JFrame m_frmParent;
@@ -221,36 +220,36 @@ final class JAPConf extends JDialog
 			m_confModules.addElement(accountsModule);
 		}
 
-    /* create the hashtable, which stores the index of the tabs in the tabbed pane */
-    m_tabOrder = new Hashtable();
+		/* create the hashtable, which stores the index of the tabs in the tabbed pane */
+		m_tabOrder = new Hashtable();
 
 		m_Tabs.addTab(JAPMessages.getString("confListenerTab"), null, m_pPort);
-    m_tabOrder.put(new Integer(PORT_TAB), new Integer(m_Tabs.getTabCount() - 1));
+		m_tabOrder.put(new Integer(PORT_TAB), new Integer(m_Tabs.getTabCount() - 1));
 		m_Tabs.addTab(JAPMessages.getString("confProxyTab"), null, m_pFirewall);
-    m_tabOrder.put(new Integer(PROXY_TAB), new Integer(m_Tabs.getTabCount() - 1));
+		m_tabOrder.put(new Integer(PROXY_TAB), new Integer(m_Tabs.getTabCount() - 1));
 		m_Tabs.addTab(infoServiceModule.getTabTitle(), null, infoServiceModule.getRootPanel());
-    m_tabOrder.put(new Integer(INFO_TAB), new Integer(m_Tabs.getTabCount() - 1));
+		m_tabOrder.put(new Integer(INFO_TAB), new Integer(m_Tabs.getTabCount() - 1));
 		m_Tabs.addTab(JAPMessages.getString("confAnonTab"), null, m_pMix);
-    m_tabOrder.put(new Integer(ANON_TAB), new Integer(m_Tabs.getTabCount() - 1));
+		m_tabOrder.put(new Integer(ANON_TAB), new Integer(m_Tabs.getTabCount() - 1));
 		m_Tabs.addTab(certModule.getTabTitle(), null, certModule.getRootPanel());
-    m_tabOrder.put(new Integer(CERT_TAB), new Integer(m_Tabs.getTabCount() - 1));
+		m_tabOrder.put(new Integer(CERT_TAB), new Integer(m_Tabs.getTabCount() - 1));
 		m_Tabs.addTab(torModule.getTabTitle(), null, torModule.getRootPanel());
-    m_tabOrder.put(new Integer(TOR_TAB), new Integer(m_Tabs.getTabCount() - 1));
+		m_tabOrder.put(new Integer(TOR_TAB), new Integer(m_Tabs.getTabCount() - 1));
 		if (JAPConstants.WITH_BLOCKINGRESISTANCE)
 		{
 			m_Tabs.addTab(routingModule.getTabTitle(), null, routingModule.getRootPanel());
-      m_tabOrder.put(new Integer(FORWARD_TAB), new Integer(m_Tabs.getTabCount() - 1));
+			m_tabOrder.put(new Integer(FORWARD_TAB), new Integer(m_Tabs.getTabCount() - 1));
 		}
 		if (loadPay)
 		{
 			m_Tabs.addTab(accountsModule.getTabTitle(), null, accountsModule.getRootPanel());
-      m_tabOrder.put(new Integer(KONTO_TAB), new Integer(m_Tabs.getTabCount() - 1));
+			m_tabOrder.put(new Integer(KONTO_TAB), new Integer(m_Tabs.getTabCount() - 1));
 		}
 
 		if (!JAPModel.isSmallDisplay())
 		{
 			m_Tabs.addTab(JAPMessages.getString("confMiscTab"), null, m_pMisc);
-      m_tabOrder.put(new Integer(MISC_TAB), new Integer(m_Tabs.getTabCount() - 1));
+			m_tabOrder.put(new Integer(MISC_TAB), new Integer(m_Tabs.getTabCount() - 1));
 		}
 		JPanel buttonPanel = new JPanel();
 		buttonPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
@@ -585,13 +584,13 @@ final class JAPConf extends JDialog
 				okPressed();
 			}
 		});
-		ButtonGroup bg = new ButtonGroup();
-		m_rbMixStep1 = new JRadioButton(JAPMessages.getString("settingsAnonRadio1"), true);
-		m_rbMixStep1.setFont(m_fontControls);
-		m_rbMixStep2 = new JRadioButton(JAPMessages.getString("settingsAnonRadio2"));
-		m_rbMixStep2.setFont(m_fontControls);
-		m_rbMixStep3 = new JRadioButton(JAPMessages.getString("settingsAnonRadio3"));
-		m_rbMixStep3.setFont(m_fontControls);
+		//ButtonGroup bg = new ButtonGroup();
+		//m_rbMixStep1 = new JRadioButton(JAPMessages.getString("settingsAnonRadio1"), true);
+		//m_rbMixStep1.setFont(m_fontControls);
+		//m_rbMixStep2 = new JRadioButton(JAPMessages.getString("settingsAnonRadio2"));
+		//m_rbMixStep2.setFont(m_fontControls);
+		m_cbMixStep3 = new JCheckBox(JAPMessages.getString("settingsAnonRadio3"));
+		m_cbMixStep3.setFont(m_fontControls);
 		m_bttnFetchCascades = new JButton(JAPMessages.getString("settingsAnonFetch"));
 		m_bttnFetchCascades.setFont(m_fontControls);
 		if (JAPModel.isSmallDisplay())
@@ -628,7 +627,8 @@ final class JAPConf extends JDialog
 					// ------ !!!!! ordentlich geht!!!!
 					LogHolder.log(LogLevel.DEBUG, LogType.GUI, "JAPConf: setting old cursor()");
 					setCursor(c);
-					m_rbMixStep2.doClick();
+					m_comboMixCascade.showPopup();
+					//m_rbMixStep2.doClick();
 				}
 				// ------ !!!!! diese wieder aktivieren!
 				//okPressed();
@@ -637,7 +637,7 @@ final class JAPConf extends JDialog
 		m_comboMixCascade = new JComboBox();
 		m_comboMixCascade.setFont(m_fontControls);
 
-		m_comboMixCascade.setEnabled(false);
+		m_comboMixCascade.setEnabled(true);
 		m_comboMixCascade.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent e)
@@ -655,49 +655,66 @@ final class JAPConf extends JDialog
 				}
 			}
 		});
-		bg.add(m_rbMixStep1);
-		bg.add(m_rbMixStep2);
-		bg.add(m_rbMixStep3);
-		m_rbMixStep1.addActionListener(new ActionListener()
+		m_comboMixCascade.addItemListener(new ItemListener()
 		{
-			public void actionPerformed(ActionEvent e)
+
+			public void itemStateChanged(ItemEvent e)
 			{
-				LogHolder.log(LogLevel.DEBUG, LogType.GUI, "JAPConf:m_rbMixStep1 selected");
-				m_bttnFetchCascades.setEnabled(true);
-				m_comboMixCascade.setEnabled(false);
-				m_tfMixHost.setEditable(false);
-				m_tfMixPortNumber.setEditable(false);
+				int z=4;
 			}
 		});
-		m_rbMixStep2.addActionListener(new ActionListener()
+		//bg.add(m_rbMixStep1);
+		//bg.add(m_rbMixStep2);
+		//bg.add(m_rbMixStep3);
+		/*m_rbMixStep1.addActionListener(new ActionListener()
+		   {
+		 public void actionPerformed(ActionEvent e)
+		 {
+		  LogHolder.log(LogLevel.DEBUG, LogType.GUI, "JAPConf:m_rbMixStep1 selected");
+		  m_bttnFetchCascades.setEnabled(true);
+		  m_comboMixCascade.setEnabled(false);
+		  m_tfMixHost.setEditable(false);
+		  m_tfMixPortNumber.setEditable(false);
+		 }
+		   });
+		   m_rbMixStep2.addActionListener(new ActionListener()
+		   {
+		 public void actionPerformed(ActionEvent e)
+		 {
+		  LogHolder.log(LogLevel.DEBUG, LogType.GUI, "JAPConf:m_rbMixStep2 selected");
+		  m_bttnFetchCascades.setEnabled(false);
+		  m_comboMixCascade.setEnabled(true);
+		  m_comboMixCascade.setPopupVisible(true);
+		  m_tfMixHost.setEditable(false);
+		  m_tfMixPortNumber.setEditable(false);
+		 }
+		   });*/
+		m_cbMixStep3.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				LogHolder.log(LogLevel.DEBUG, LogType.GUI, "JAPConf:m_rbMixStep2 selected");
-				m_bttnFetchCascades.setEnabled(false);
-				m_comboMixCascade.setEnabled(true);
-				m_comboMixCascade.setPopupVisible(true);
-				m_tfMixHost.setEditable(false);
-				m_tfMixPortNumber.setEditable(false);
-			}
-		});
-		m_rbMixStep3.addActionListener(new ActionListener()
-		{
-			public void actionPerformed(ActionEvent e)
-			{
-				LogHolder.log(LogLevel.DEBUG, LogType.GUI, "JAPConf:m_rbMixStep3 selected");
-				m_bttnFetchCascades.setEnabled(false);
-				m_comboMixCascade.setEnabled(false);
-				m_tfMixHost.setEditable(true);
-				m_tfMixPortNumber.setEditable(true);
-				m_strMixName = JAPMessages.getString("manual");
+				if (m_cbMixStep3.isSelected())
+				{
+					LogHolder.log(LogLevel.DEBUG, LogType.GUI, "JAPConf:m_rbMixStep3 selected");
+					m_bttnFetchCascades.setEnabled(false);
+					m_comboMixCascade.setEnabled(false);
+					m_tfMixHost.setEditable(true);
+					m_tfMixPortNumber.setEditable(true);
+					m_strMixName = JAPMessages.getString("manual");
+				}
+				else
+				{
+					m_bttnFetchCascades.setEnabled(true);
+					m_comboMixCascade.setEnabled(true);
+					m_tfMixHost.setEditable(false);
+					m_tfMixPortNumber.setEditable(false);
+				}
 			}
 		});
 
 		// layout stuff
-		JPanel p = new JPanel();
-		p.setLayout(new BorderLayout());
-		// Upper panel
+		//p.setBounds(5,5,5,5);
+// Upper panel
 		//First line
 		JPanel pp1 = new JPanel();
 		GridBagLayout layout = new GridBagLayout();
@@ -707,63 +724,93 @@ final class JAPConf extends JDialog
 		pp1.setBorder(m_borderAnonSettings);
 		GridBagConstraints c = new GridBagConstraints();
 		c.fill = GridBagConstraints.HORIZONTAL;
+		if(!JAPModel.isSmallDisplay())
+			c.insets=new Insets(5,5,5,5);
 		c.weightx = 1;
 		c.weighty = 1;
 		c.gridx = 0;
 		c.gridy = 0;
-		c.gridwidth = 2;
+		c.gridwidth = 1;
 		c.anchor = GridBagConstraints.NORTHWEST;
 		//First line
-		JPanel pl1 = new JPanel(new BorderLayout());
-		pl1.add(m_rbMixStep1, BorderLayout.CENTER);
-		pl1.add(m_bttnFetchCascades, BorderLayout.EAST);
-		layout.setConstraints(pl1, c);
-		pp1.add(pl1);
-		// Second Line
-		c.gridx = 0;
-		c.gridy = 1;
-		c.weightx = 0;
-		c.gridwidth = 1;
-		c.fill = GridBagConstraints.NONE;
-		layout.setConstraints(m_rbMixStep2, c);
-		pp1.add(m_rbMixStep2);
-		c.weightx = 1;
-		c.gridx = 1;
-		c.fill = GridBagConstraints.HORIZONTAL;
-		c.anchor = GridBagConstraints.NORTHEAST;
+		//JPanel pl1 = new JPanel(new BorderLayout());
+		//pl1.add(m_rbMixStep1, BorderLayout.CENTER);
 		layout.setConstraints(m_comboMixCascade, c);
 		pp1.add(m_comboMixCascade);
+		//layout.setConstraints(pl1, c);
+		//pp1.add(pl1);
+		// Second Line
+		c.gridx = 1;
+		//c.gridy = 1;
+		c.weightx = 0;
+		//c.gridwidth = 1;
+		c.fill = GridBagConstraints.NONE;
+		//layout.setConstraints(m_rbMixStep2, c);
+		//pp1.add(m_rbMixStep2);
+		//c.weightx = 1;
+		//c.gridx = 1;
+		//c.fill = GridBagConstraints.HORIZONTAL;
+		//c.anchor = GridBagConstraints.NORTHEAST;
+		layout.setConstraints(m_bttnFetchCascades, c);
+		pp1.add(m_bttnFetchCascades);
 
 		// Lower panel
-		JPanel pp2 = new JPanel();
-		pp2.setLayout(new BorderLayout());
+		m_panelManual = new JPanel();
+		m_panelManual.setLayout(new GridLayout(5, 1));
 		m_borderAnonSettings2 = new TitledBorder(JAPMessages.getString("settingsAnonBorder2"));
 		m_borderAnonSettings2.setTitleFont(m_fontControls);
-		pp2.setBorder(m_borderAnonSettings2);
+		m_panelManual.setBorder(m_borderAnonSettings2);
 		// Upper panel content
 		// Lower Panel content
-		JPanel p2 = new JPanel();
-		p2.setLayout(new GridLayout(9, 1));
+		//JPanel p2 = new JPanel();
+		//p2.setLayout(new GridLayout(5, 1));
 		//p1.setBorder( new EmptyBorder(5,10,10,10) );
 		//
-		p2.add(m_rbMixStep3);
+		m_panelManual.add(m_cbMixStep3);
 		m_labelAnonHost = new JLabel(JAPMessages.getString("settingsAnonHost"));
 		m_labelAnonHost.setFont(m_fontControls);
-		p2.add(m_labelAnonHost);
-		p2.add(m_tfMixHost);
+		m_panelManual.add(m_labelAnonHost);
+		m_panelManual.add(m_tfMixHost);
 		m_labelAnonPort = new JLabel(JAPMessages.getString("settingsAnonPort"));
 		m_labelAnonPort.setFont(m_fontControls);
-		p2.add(m_labelAnonPort);
-		p2.add(m_tfMixPortNumber);
+		m_panelManual.add(m_labelAnonPort);
+		m_panelManual.add(m_tfMixPortNumber);
 		//
-		p2.add(m_cbAutoConnect);
-		p2.add(m_cbAutoReConnect);
 		// Add contents to upper and lower panel
 		//pp1.add(p1);
-		pp2.add(p2);
+		//m_panelManual.add(p2);
 		// Add to main panel
-		p.add(pp1, BorderLayout.NORTH);
-		p.add(pp2, BorderLayout.CENTER);
+		JPanel p = new JPanel();
+		layout=new GridBagLayout();
+		p.setLayout(layout);
+		c.weightx=1;
+		c.weighty=0;
+		c.fill=GridBagConstraints.HORIZONTAL;
+		c.gridx=0;
+		c.gridy=0;
+		if(!JAPModel.isSmallDisplay())
+			c.insets=new Insets(5,5,5,5);
+		layout.setConstraints(pp1,c);
+		p.add(pp1);
+		c.gridy=1;
+		layout.setConstraints(m_panelManual,c);
+		p.add(m_panelManual);
+
+		c.gridy=3;
+		layout.setConstraints(m_cbAutoConnect,c);
+		p.add(m_cbAutoConnect);
+		c.gridy=4;
+		layout.setConstraints(m_cbAutoReConnect,c);
+		p.add(m_cbAutoReConnect);
+
+
+		JLabel label=new JLabel();
+		c.gridy=5;
+		c.weighty=1;
+		c.fill=GridBagConstraints.VERTICAL;
+		layout.setConstraints(label,c);
+		p.add(label);
+
 		return p;
 	}
 
@@ -1047,7 +1094,7 @@ final class JAPConf extends JDialog
 		int iListenerPort, i;
 
 		//Checking First Mix (Host + Port)
-		if (m_rbMixStep3.isSelected())
+		if (m_cbMixStep3.isSelected())
 		{ // -- do stuff for manual setting of anon service
 			String host = m_tfMixHost.getText().trim();
 			if (host == null || host.equals(""))
@@ -1083,12 +1130,12 @@ final class JAPConf extends JDialog
 			int anonSSLPortNumber = -1;
 		}
 		else
-		if (m_rbMixStep2.isSelected())
+//		if (m_rbMixStep2.isSelected())
 		{
 			//AnonService NOT manual selected
 			try
 			{
-				/* check, if something is selected */
+				// check, if something is selected //
 				MixCascade selectedMixCascade = (MixCascade) m_comboMixCascade.getSelectedItem();
 			}
 			catch (Exception e)
@@ -1116,23 +1163,23 @@ final class JAPConf extends JDialog
 		iListenerPort = i;
 		//checking Socks Port Number
 		/*try
-		{
-			i = Integer.parseInt(m_tfListenerPortNumberSocks.getText().trim());
-		}
-		catch (Exception e)
-		{
-			i = -1;
-		}*/
+		   {
+		 i = Integer.parseInt(m_tfListenerPortNumberSocks.getText().trim());
+		   }
+		   catch (Exception e)
+		   {
+		 i = -1;
+		   }*/
 		/*if (!JAPUtil.isPort(i))
-		{
-			showError(JAPMessages.getString("errorSocksListenerPortWrong"));
-			return false;
-		}*/
-/*		if (i == iListenerPort)
-		{
-			showError(JAPMessages.getString("errorListenerPortsAreEqual"));
-			return false;
-		}*/
+		   {
+		 showError(JAPMessages.getString("errorSocksListenerPortWrong"));
+		 return false;
+		   }*/
+		/*		if (i == iListenerPort)
+		  {
+		   showError(JAPMessages.getString("errorListenerPortsAreEqual"));
+		   return false;
+		  }*/
 		//Checking Firewall Settings (Host + Port)
 		if (m_cbProxy.isSelected())
 		{
@@ -1292,7 +1339,7 @@ final class JAPConf extends JDialog
 		//Try to Set AnonService
 
 		MixCascade newMixCascade = null;
-		if (m_rbMixStep3.isSelected())
+		if (m_cbMixStep3.isSelected())
 		{
 			// -- do stuff for manual setting of anon service
 			try
@@ -1308,7 +1355,7 @@ final class JAPConf extends JDialog
 		}
 		else
 		{
-			if (m_rbMixStep2.isSelected())
+			//		if (m_rbMixStep2.isSelected())
 			{
 				newMixCascade = (MixCascade) m_comboMixCascade.getSelectedItem();
 			}
@@ -1322,20 +1369,22 @@ final class JAPConf extends JDialog
 		// ... manual settings stuff finished
 	}
 
-  /**
-   * Brings the specified card of the tabbed pane of the configuration window to the foreground.
-   * If there is no card with the specified symbolic name, nothing is done (current foreground
-   * card is not changed).
-   *
-   * @param a_selectedCard The card to bring to the foreground. See the TAB constants in this
-   *                       class.
-   */
-  public void selectCard(int a_selectedCard) {
-    /* try to get the specified card from the tab order table */
-    Integer cardIndex = (Integer)(m_tabOrder.get(new Integer(a_selectedCard)));
-    if (cardIndex != null) {
-      /* a card with the specified symoblic name is available in the hashtable */
-      m_Tabs.setSelectedIndex(cardIndex.intValue());
+	/**
+	 * Brings the specified card of the tabbed pane of the configuration window to the foreground.
+	 * If there is no card with the specified symbolic name, nothing is done (current foreground
+	 * card is not changed).
+	 *
+	 * @param a_selectedCard The card to bring to the foreground. See the TAB constants in this
+	 *                       class.
+	 */
+	public void selectCard(int a_selectedCard)
+	{
+		/* try to get the specified card from the tab order table */
+		Integer cardIndex = (Integer) (m_tabOrder.get(new Integer(a_selectedCard)));
+		if (cardIndex != null)
+		{
+			/* a card with the specified symoblic name is available in the hashtable */
+			m_Tabs.setSelectedIndex(cardIndex.intValue());
 		}
 	}
 
@@ -1358,12 +1407,16 @@ final class JAPConf extends JDialog
 		}
 
 		setTitle(JAPMessages.getString("settingsDialog"));
-    m_Tabs.setTitleAt(((Integer)(m_tabOrder.get(new Integer(PORT_TAB)))).intValue(), JAPMessages.getString("confListenerTab"));
-    m_Tabs.setTitleAt(((Integer)(m_tabOrder.get(new Integer(PROXY_TAB)))).intValue(), JAPMessages.getString("confProxyTab"));
-    m_Tabs.setTitleAt(((Integer)(m_tabOrder.get(new Integer(ANON_TAB)))).intValue(), JAPMessages.getString("confAnonTab"));
+		m_Tabs.setTitleAt( ( (Integer) (m_tabOrder.get(new Integer(PORT_TAB)))).intValue(),
+						  JAPMessages.getString("confListenerTab"));
+		m_Tabs.setTitleAt( ( (Integer) (m_tabOrder.get(new Integer(PROXY_TAB)))).intValue(),
+						  JAPMessages.getString("confProxyTab"));
+		m_Tabs.setTitleAt( ( (Integer) (m_tabOrder.get(new Integer(ANON_TAB)))).intValue(),
+						  JAPMessages.getString("confAnonTab"));
 		if (!JAPModel.isSmallDisplay())
 		{
-      m_Tabs.setTitleAt(((Integer)(m_tabOrder.get(new Integer(MISC_TAB)))).intValue(), JAPMessages.getString("confMiscTab"));
+			m_Tabs.setTitleAt( ( (Integer) (m_tabOrder.get(new Integer(MISC_TAB)))).intValue(),
+							  JAPMessages.getString("confMiscTab"));
 		}
 		m_bttnDefaultConfig.setText(JAPMessages.getString("bttnDefaultConfig"));
 		m_bttnCancel.setText(JAPMessages.getString("cancelButton"));
@@ -1371,9 +1424,9 @@ final class JAPConf extends JDialog
 		m_cbStartupMinimized.setText(JAPMessages.getString("settingsstartupMinimizeCheckBox"));
 		m_cbAutoConnect.setText(JAPMessages.getString("settingsautoConnectCheckBox"));
 		m_cbAutoReConnect.setText(JAPMessages.getString("settingsautoReConnectCheckBox"));
-		m_rbMixStep1.setText(JAPMessages.getString("settingsAnonRadio1"));
-		m_rbMixStep2.setText(JAPMessages.getString("settingsAnonRadio2"));
-		m_rbMixStep3.setText(JAPMessages.getString("settingsAnonRadio3"));
+		//	m_rbMixStep1.setText(JAPMessages.getString("settingsAnonRadio1"));
+		//	m_rbMixStep2.setText(JAPMessages.getString("settingsAnonRadio2"));
+		m_cbMixStep3.setText(JAPMessages.getString("settingsAnonRadio3"));
 		m_bttnFetchCascades.setText(JAPMessages.getString("settingsAnonFetch"));
 		m_borderAnonSettings.setTitle(JAPMessages.getString("settingsAnonBorder"));
 		m_borderAnonSettings2.setTitle(JAPMessages.getString("settingsAnonBorder2"));
@@ -1482,7 +1535,7 @@ final class JAPConf extends JDialog
 		m_cbStartupMinimized.setSelected(JAPModel.getMinimizeOnStartup());
 		m_cbSaveWindowPositions.setSelected(JAPModel.getSaveMainWindowPosition());
 		updateMixCascadeCombo();
-		if (m_rbMixStep2.isSelected()) //Auswahl is selected
+		if (!m_cbMixStep3.isSelected()) //Auswahl is selected
 		{ //try to select the current MixCascade
 			m_comboMixCascade.setSelectedItem(mixCascade);
 		}
