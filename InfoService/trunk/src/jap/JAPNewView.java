@@ -74,6 +74,7 @@ import javax.swing.*;
 import gui.*;
 import java.awt.event.*;
 import java.util.*;
+
 final public class JAPNewView extends AbstractJAPMainView implements IJAPMainView, ActionListener,
 	JAPObserver
 {
@@ -102,29 +103,37 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private boolean loadPay = false;
 
 	private JComboBox m_comboAnonServices;
-	private JLabel m_labelAnonService,m_labelAnonymity,m_labelAnonymitySmall,m_labelAnonymityOnOff;
+	private JLabel m_labelAnonService, m_labelAnonymity, m_labelAnonymitySmall, m_labelAnonymityOnOff;
 	private JLabel m_labelAnonMeter;
 	private JProgressBar m_progressAnonTraffic;
-	private JLabel m_labelAnonymityUser,m_labelAnonymityUserLabel,m_labelAnonymityTrafficLabel;
+	private JLabel m_labelAnonymityUser, m_labelAnonymityUserLabel, m_labelAnonymityTrafficLabel;
 
-	private JLabel m_labelOwnTraffic,m_labelOwnTrafficSmall;
-	private JLabel m_labelOwnActivity,m_labelForwarderActivity;
-	private JLabel m_labelOwnActivitySmall,m_labelForwarderActivitySmall;
-	private JLabel m_labelOwnTrafficBytes,m_labelOwnTrafficUnit;
-	private JLabel m_labelOwnTrafficBytesSmall,m_labelOwnTrafficUnitSmall;
-	private JLabel m_labelOwnTrafficWWW,m_labelOwnTrafficOther;
-	private JLabel m_labelOwnTrafficBytesWWW,m_labelOwnTrafficUnitWWW;
-	private JProgressBar m_progressOwnTrafficActivity,m_progressOwnTrafficActivitySmall;
+	private JLabel m_labelOwnTraffic, m_labelOwnTrafficSmall;
+	private JLabel m_labelOwnActivity, m_labelForwarderActivity;
+	private JLabel m_labelOwnActivitySmall, m_labelForwarderActivitySmall;
+	private JLabel m_labelOwnTrafficBytes, m_labelOwnTrafficUnit;
+	private JLabel m_labelOwnTrafficBytesSmall, m_labelOwnTrafficUnitSmall;
+	private JLabel m_labelOwnTrafficWWW, m_labelOwnTrafficOther;
+	private JLabel m_labelOwnTrafficBytesWWW, m_labelOwnTrafficUnitWWW;
+	private JLabel m_labelForwardedTrafficBytes,m_labelForwardedTrafficBytesUnit;
+	private JLabel m_labelForwarderCurrentConnections,m_labelForwarderAcceptedConnections;
+	private JLabel m_labelForwarderRejectedConnections;
+	private JLabel m_labelForwardedTraffic;
+	private JLabel m_labelForwarderCurrentConnectionsLabel,m_labelForwarderAcceptedConnectionsLabel;
+	private JLabel m_labelForwarderRejectedConnectionsLabel;
+	private JLabel m_labelForwarderConnections;
+	private JProgressBar m_progressOwnTrafficActivity, m_progressOwnTrafficActivitySmall;
 	private JButton m_bttnAnonDetails;
-	private JRadioButton m_rbAnonOff,m_rbAnonOn;
-	private FlippingPanel m_flippingpanelAnon,m_flippingpanelOwnTraffic,m_flippingpanelForward;
+	private JRadioButton m_rbAnonOff, m_rbAnonOn;
+	private JCheckBox m_cbForwarding,m_cbForwardingSmall;
+	private FlippingPanel m_flippingpanelAnon, m_flippingpanelOwnTraffic, m_flippingpanelForward;
 	private JPanel m_panelAnonService;
 	private int m_iPreferredWidth;
-	private boolean m_bIgnoreAnonComboEvents=false;
+	private boolean m_bIgnoreAnonComboEvents = false;
 
-	public JAPNewView(String s,JAPController a_controller)
+	public JAPNewView(String s, JAPController a_controller)
 	{
-		super(s,a_controller);
+		super(s, a_controller);
 		m_NumberFormat = NumberFormat.getInstance();
 		m_Controller = JAPController.getInstance();
 		helpWindow = null; //new JAPHelp(this);
@@ -167,18 +176,18 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		northPanel.add(northLabel, c);
 		c.gridx = 1;
 		c.anchor = GridBagConstraints.SOUTHEAST;
-		JLabel l = new JLabel("<HTML><BODY><A HREF=\"\">"+JAPConstants.aktVersion+"</A></BODY></HTML>");
+		JLabel l = new JLabel("<HTML><BODY><A HREF=\"\">" + JAPConstants.aktVersion + "</A></BODY></HTML>");
 		l.setFont(new Font(l.getFont().getName(),
 						   l.getFont().getStyle(),
 						   (int) (l.getFont().getSize() * 0.8)));
 		l.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		l.addMouseListener(new MouseAdapter()
+		{
+			public void mouseClicked(MouseEvent e)
 			{
-				public void mouseClicked(MouseEvent e)
-					{
-						m_Controller.aboutJAP();
-					}
-			});
+				m_Controller.aboutJAP();
+			}
+		});
 		c.insets = new Insets(0, 0, 0, 10);
 		northPanel.add(l, c);
 		c.gridwidth = 2;
@@ -195,20 +204,22 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_panelAnonService = new JPanel(gbl1);
 		m_labelAnonService = new JLabel(JAPMessages.getString("ngAnonymisierungsdienst"));
 		c1.insets = new Insets(0, 17, 0, 0);
-		c1.anchor=GridBagConstraints.WEST;
-		c1.weightx=0;
-		c1.fill=GridBagConstraints.NONE;
+		c1.anchor = GridBagConstraints.WEST;
+		c1.weightx = 0;
+		c1.fill = GridBagConstraints.NONE;
 		m_panelAnonService.add(m_labelAnonService, c1);
 		m_comboAnonServices = new JComboBox();
 		m_comboAnonServices.addItemListener(new ItemListener()
-											{
+		{
 			public void itemStateChanged(ItemEvent e)
 			{
-				if(m_bIgnoreAnonComboEvents)
-					return;
-				if(e.getStateChange()==ItemEvent.SELECTED)
+				if (m_bIgnoreAnonComboEvents)
 				{
-					MixCascade cascade=(MixCascade)m_comboAnonServices.getSelectedItem();
+					return;
+				}
+				if (e.getStateChange() == ItemEvent.SELECTED)
+				{
+					MixCascade cascade = (MixCascade) m_comboAnonServices.getSelectedItem();
 					m_Controller.setCurrentMixCascade(cascade);
 				}
 			}
@@ -257,16 +268,16 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_labelAnonymityTrafficLabel = new JLabel(JAPMessages.getString("ngAnonymityTraffic"));
 		c1.gridy = 2;
 		p.add(m_labelAnonymityTrafficLabel, c1);
-		m_labelAnonymityUser = new JLabel("",JLabel.CENTER);
+		m_labelAnonymityUser = new JLabel("", JLabel.CENTER);
 		c1.insets = new Insets(10, 0, 0, 0);
 		c1.anchor = GridBagConstraints.CENTER;
-		c1.weightx=1;
-		c1.fill=GridBagConstraints.HORIZONTAL;
+		c1.weightx = 1;
+		c1.fill = GridBagConstraints.HORIZONTAL;
 		c1.gridy = 1;
 		c1.gridx = 1;
 		p.add(m_labelAnonymityUser, c1);
 		m_progressAnonTraffic = new JProgressBar();
-		MyProgressBarUI ui=new MyProgressBarUI(true);
+		MyProgressBarUI ui = new MyProgressBarUI(true);
 		ui.setFilledBarColor(Color.blue.brighter());
 		m_progressAnonTraffic.setUI(ui);
 		m_progressAnonTraffic.setMinimum(0);
@@ -280,8 +291,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.gridy = 0;
 		c1.gridheight = 3;
 		c1.anchor = GridBagConstraints.WEST;
-		c1.weightx=0;
-		c1.fill=GridBagConstraints.NONE;
+		c1.weightx = 0;
+		c1.fill = GridBagConstraints.NONE;
 		c1.insets = new Insets(0, 10, 0, 10);
 		p.add(m_labelAnonMeter, c1);
 
@@ -375,13 +386,13 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_labelOwnTraffic = new JLabel(JAPMessages.getString("ngOwnTraffic"));
 		c1.insets = new Insets(0, 5, 0, 0);
 		c1.anchor = GridBagConstraints.WEST;
-		c1.weightx=0;
-		c1.fill=GridBagConstraints.NONE;
+		c1.weightx = 0;
+		c1.fill = GridBagConstraints.NONE;
 		p.add(m_labelOwnTraffic, c1);
 		m_labelOwnTrafficBytes = new JLabel("0");
 		c1.gridx = 1;
 		p.add(m_labelOwnTrafficBytes, c1);
-		m_labelOwnTrafficUnit = new JLabel("Byte");
+		m_labelOwnTrafficUnit = new JLabel(JAPMessages.getString("Byte"));
 		c1.gridx = 2;
 		p.add(m_labelOwnTrafficUnit, c1);
 		m_labelOwnActivity = new JLabel(JAPMessages.getString("ngActivity"), JLabel.RIGHT);
@@ -390,7 +401,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.gridx = 3;
 		p.add(m_labelOwnActivity, c1);
 		m_progressOwnTrafficActivity = new JProgressBar();
-		ui=new MyProgressBarUI(true);
+		ui = new MyProgressBarUI(true);
 		ui.setFilledBarColor(Color.blue);
 		m_progressOwnTrafficActivity.setUI(ui);
 		m_progressOwnTrafficActivity.setMinimum(0);
@@ -404,13 +415,13 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.insets = new Insets(10, 20, 0, 0);
 		c1.gridx = 0;
 		c1.gridy = 1;
-		c1.anchor=GridBagConstraints.WEST;
+		c1.anchor = GridBagConstraints.WEST;
 		p.add(m_labelOwnTrafficWWW, c1);
 		m_labelOwnTrafficBytesWWW = new JLabel("0");
 		c1.insets = new Insets(10, 5, 0, 0);
 		c1.gridx = 1;
 		p.add(m_labelOwnTrafficBytesWWW, c1);
-		m_labelOwnTrafficUnitWWW = new JLabel("Byte");
+		m_labelOwnTrafficUnitWWW = new JLabel(JAPMessages.getString("Byte"));
 		c1.gridx = 2;
 		p.add(m_labelOwnTrafficUnitWWW, c1);
 		m_labelOwnTrafficOther = new JLabel(JAPMessages.getString("ngOwnTrafficOther"));
@@ -422,7 +433,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.insets = new Insets(7, 5, 0, 0);
 		c1.gridx = 1;
 		p.add(l, c1);
-		l = new JLabel("kByte");
+		l = new JLabel(JAPMessages.getString("Byte"));
 		c1.gridx = 2;
 		p.add(l, c1);
 		m_flippingpanelOwnTraffic.setFullPanel(p);
@@ -433,14 +444,14 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		p = new JPanel(gbl1);
 		m_labelOwnTrafficSmall = new JLabel(JAPMessages.getString("ngOwnTraffic"));
 		c1.insets = new Insets(0, 5, 0, 0);
-		c1.weightx=0;
-		c1.fill=GridBagConstraints.NONE;
+		c1.weightx = 0;
+		c1.fill = GridBagConstraints.NONE;
 		c1.anchor = GridBagConstraints.WEST;
 		p.add(m_labelOwnTrafficSmall, c1);
 		m_labelOwnTrafficBytesSmall = new JLabel("0");
 		c1.gridx = 1;
 		p.add(m_labelOwnTrafficBytesSmall, c1);
-		m_labelOwnTrafficUnitSmall = new JLabel("Byte");
+		m_labelOwnTrafficUnitSmall = new JLabel(JAPMessages.getString("Byte"));
 		c1.gridx = 2;
 		p.add(m_labelOwnTrafficUnitSmall, c1);
 		m_labelOwnActivitySmall = new JLabel(JAPMessages.getString("ngActivity"), JLabel.RIGHT);
@@ -449,14 +460,14 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.gridx = 3;
 		p.add(m_labelOwnActivitySmall, c1);
 		m_progressOwnTrafficActivitySmall = new JProgressBar();
-		ui=new MyProgressBarUI(true);
+		ui = new MyProgressBarUI(true);
 		ui.setFilledBarColor(Color.blue);
 		m_progressOwnTrafficActivitySmall.setUI(ui);
 		m_progressOwnTrafficActivitySmall.setMinimum(0);
 		m_progressOwnTrafficActivitySmall.setMaximum(5);
 		m_progressOwnTrafficActivitySmall.setBorderPainted(false);
 		c1.weightx = 0;
-		c1.fill=GridBagConstraints.NONE;
+		c1.fill = GridBagConstraints.NONE;
 		c1.gridx = 4;
 		p.add(m_progressOwnTrafficActivitySmall, c1);
 		m_flippingpanelOwnTraffic.setSmallPanel(p);
@@ -488,12 +499,40 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		gbl = new GridBagLayout();
 		c2 = new GridBagConstraints();
 		p2 = new JPanel(gbl2);
-		JCheckBox check = new JCheckBox("Ein");
-		check.setBorder(null);
+		m_cbForwarding = new JCheckBox(JAPMessages.getString("ngForwardingOn"));
+		m_cbForwarding.setBorder(null);
+		ActionListener actionListener=new ActionListener(){
+			public void actionPerformed(ActionEvent e)
+			{
+				/* start or shutdown the forwarding server */
+				JCheckBox source=(JCheckBox)e.getSource();
+				if (source.isSelected())
+				 {
+				   /* start the server by changing the routing mode */
+				   if (JAPModel.getInstance().getRoutingSettings().setRoutingMode(JAPRoutingSettings.
+					 ROUTING_MODE_SERVER) == false)
+				   {
+					 /* there was an error while starting the server */
+					 JOptionPane.showMessageDialog(JAPController.getView(),
+					   JAPMessages.getString("settingsRoutingStartServerError"),
+					   JAPMessages.getString("ERROR"), JOptionPane.ERROR_MESSAGE);
+				   }
+				   JAPModel.getInstance().getRoutingSettings().startPropaganda(false);
+				 }
+				 else
+				 {
+				   /* shutdown the server */
+				   JAPModel.getInstance().getRoutingSettings().setRoutingMode(JAPRoutingSettings.
+					 ROUTING_MODE_DISABLED);
+				 }
+				 valuesChanged();
+			   }
+		};
+		m_cbForwarding.addActionListener(actionListener);
 		c2.gridx = 0;
 		c2.weightx = 1;
 		c2.fill = GridBagConstraints.HORIZONTAL;
-		p2.add(check, c2);
+		p2.add(m_cbForwarding, c2);
 		m_labelForwarderActivity = new JLabel(JAPMessages.getString("ngActivity"));
 		c2.insets = new Insets(0, 5, 0, 0);
 		c2.gridx = 1;
@@ -513,45 +552,45 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.gridwidth = 2;
 		p.add(p2, c1);
 
-		l = new JLabel("Weitergeleitete Verbindungen:");
+		m_labelForwarderConnections = new JLabel(JAPMessages.getString("ngForwardedConnections"));
 		c1.gridx = 0;
 		c1.gridy = 1;
 		c1.fill = GridBagConstraints.NONE;
 		c1.weightx = 0;
 		c1.gridwidth = 1;
 		c1.insets = new Insets(10, 5, 0, 0);
-		p.add(l, c1);
-		l = new JLabel("0");
+		p.add(m_labelForwarderConnections, c1);
+		m_labelForwarderCurrentConnections = new JLabel("0");
 		c1.gridx = 1;
-		p.add(l, c1);
-		l = new JLabel("aktuell");
+		p.add(m_labelForwarderCurrentConnections, c1);
+		m_labelForwarderCurrentConnectionsLabel = new JLabel(JAPMessages.getString("ngForwardedCurrentConnections"));
 		c1.gridx = 2;
-		p.add(l, c1);
-		l = new JLabel("12");
+		p.add(m_labelForwarderCurrentConnectionsLabel, c1);
+		m_labelForwarderAcceptedConnections = new JLabel("0");
 		c1.insets = new Insets(7, 5, 0, 0);
 		c1.gridx = 1;
 		c1.gridy = 2;
-		p.add(l, c1);
-		l = new JLabel("angenommen");
+		p.add(m_labelForwarderAcceptedConnections, c1);
+		m_labelForwarderAcceptedConnectionsLabel = new JLabel(JAPMessages.getString("ngForwardedAcceptedConnections"));
 		c1.gridx = 2;
-		p.add(l, c1);
-		l = new JLabel("1");
+		p.add(m_labelForwarderAcceptedConnectionsLabel, c1);
+		m_labelForwarderRejectedConnections = new JLabel("0");
 		c1.gridx = 1;
 		c1.gridy = 3;
-		p.add(l, c1);
-		l = new JLabel("abgelehnt");
+		p.add(m_labelForwarderRejectedConnections, c1);
+		m_labelForwarderRejectedConnectionsLabel = new JLabel(JAPMessages.getString("ngForwardedRejectedConnections"));
 		c1.gridx = 2;
-		p.add(l, c1);
-		l = new JLabel("Weitergeleitetes Datenvolumen:");
+		p.add(m_labelForwarderRejectedConnectionsLabel, c1);
+		m_labelForwardedTraffic = new JLabel(JAPMessages.getString("ngForwardedTraffic"));
 		c1.gridx = 0;
 		c1.gridy = 4;
-		p.add(l, c1);
-		l = new JLabel("350");
+		p.add(m_labelForwardedTraffic, c1);
+		m_labelForwardedTrafficBytes = new JLabel("0");
 		c1.gridx = 1;
-		p.add(l, c1);
-		l = new JLabel("kByte");
+		p.add(m_labelForwardedTrafficBytes, c1);
+		m_labelForwardedTrafficBytesUnit = new JLabel(JAPMessages.getString("Byte"));
 		c1.gridx = 2;
-		p.add(l, c1);
+		p.add(m_labelForwardedTrafficBytesUnit, c1);
 		l = new JLabel("Genutzte Bandbreite:");
 		c1.gridx = 0;
 		c1.gridy = 5;
@@ -576,9 +615,10 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.gridx = 1;
 		c1.weightx = 1;
 		c1.fill = GridBagConstraints.HORIZONTAL;
-		check = new JCheckBox("Ein");
-		check.setBorder(null);
-		p.add(check, c1);
+		m_cbForwardingSmall = new JCheckBox(JAPMessages.getString("ngForwardingOn"));
+		m_cbForwardingSmall.setBorder(null);
+		m_cbForwardingSmall.addActionListener(actionListener);
+		p.add(m_cbForwardingSmall, c1);
 		m_labelForwarderActivitySmall = new JLabel(JAPMessages.getString("ngActivity"));
 		c1.gridx = 2;
 		c1.weightx = 0;
@@ -597,6 +637,35 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c.weightx = 1;
 		c.anchor = GridBagConstraints.NORTHWEST;
 		c.gridy = 8;
+		Observer observer = new Observer()
+		{
+			public void update(Observable a_notifier, Object a_message)
+			{
+				try
+				{
+					if(a_notifier instanceof JAPRoutingServerStatisticsListener)
+					{
+						JAPRoutingServerStatisticsListener stats=(JAPRoutingServerStatisticsListener)a_notifier;
+						long c=stats.getTransferedBytes();
+						String strUnit=JAPMessages.getString("Byte");
+						if(c>9999)
+						{
+							strUnit=JAPMessages.getString("kByte");
+							c/=1000;
+						}
+						m_labelForwardedTrafficBytes.setText(m_NumberFormat.format(c));
+						m_labelForwardedTrafficBytesUnit.setText(strUnit);
+						m_labelForwarderAcceptedConnections.setText(Integer.toString(stats.getAcceptedConnections()));
+						m_labelForwarderRejectedConnections.setText(Integer.toString(stats.getRejectedConnections()));
+						m_labelForwarderCurrentConnections.setText(Integer.toString(stats.getCurrentlyForwardedConnections()));
+					}
+				}
+				catch (Throwable t)
+				{
+				}
+			}
+		};
+		JAPModel.getInstance().getRoutingSettings().getServerStatisticsListener().addObserver(observer);
 		northPanel.add(m_flippingpanelForward, c);
 
 //-----------------------------------------------------------
@@ -607,19 +676,19 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c.weightx = 1;
 		northPanel.add(new JSeparator(), c);
 //Status
-		c.gridy=10;
-		StatusPanel status=new StatusPanel();
-		northPanel.add(status,c);
-		status.addMsg("Status 1",JOptionPane.WARNING_MESSAGE);
-		status.addMsg("Status 2",JOptionPane.INFORMATION_MESSAGE);
-		status.addMsg("Status 3",JOptionPane.ERROR_MESSAGE);
+		c.gridy = 10;
+		StatusPanel status = new StatusPanel();
+		northPanel.add(status, c);
+		status.addMsg("Status 1", JOptionPane.WARNING_MESSAGE);
+		status.addMsg("Status 2", JOptionPane.INFORMATION_MESSAGE);
+		status.addMsg("Status 3", JOptionPane.ERROR_MESSAGE);
 //-----------------------------------------------------------
 //		c.gridwidth = 2;
 //		c.gridx = 0;
 //		c.gridy = 11;
-	//	c.fill = GridBagConstraints.HORIZONTAL;
-	//	c.weightx = 1;
-	//	northPanel.add(new JSeparator(), c);
+		//	c.fill = GridBagConstraints.HORIZONTAL;
+		//	c.weightx = 1;
+		//	northPanel.add(new JSeparator(), c);
 //---------------------------------------------------------
 
 //Buttons
@@ -713,12 +782,12 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			getContentPane().add(northPanel, BorderLayout.CENTER);
 			m_panelMain = level;
 			/*if (!JAPModel.isSmallDisplay())
-				{
+			 {
 			 getContentPane().add(northPanel, BorderLayout.NORTH);
 			 getContentPane().add(westLabel, BorderLayout.WEST);
 			 getContentPane().add(new JLabel("  "), BorderLayout.EAST); //Spacer
 			 getContentPane().add(buttonPanel, BorderLayout.SOUTH);
-				}*/
+			 }*/
 		}
 		//tabs.setSelectedComponent(level);
 
@@ -746,12 +815,11 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			}
 		});
 
-
-		Dimension d=super.getPreferredSize();
-		m_iPreferredWidth=Math.max(d.width,Math.max(m_flippingpanelOwnTraffic.getPreferredSize().width,
-										  Math.max(
-										  Math.max(m_panelAnonService.getPreferredSize().width,
-													m_flippingpanelForward.getPreferredSize().width),
+		Dimension d = super.getPreferredSize();
+		m_iPreferredWidth = Math.max(d.width, Math.max(m_flippingpanelOwnTraffic.getPreferredSize().width,
+			Math.max(
+			Math.max(m_panelAnonService.getPreferredSize().width,
+					 m_flippingpanelForward.getPreferredSize().width),
 			m_flippingpanelAnon.getPreferredSize().width)));
 
 		m_Controller.fetchMixCascades(false);
@@ -765,7 +833,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			Dimension ds = Toolkit.getDefaultToolkit().getScreenSize();
 			if (m.m_OldMainWindowLocation != null && m.m_OldMainWindowLocation.x >= 0 &&
 				m.m_OldMainWindowLocation.y > 0 /*&&m.m_OldMainWindowLocation.x<ds.width&&
-					  m.m_OldMainWindowLocation.y<ds.height*/
+					   m.m_OldMainWindowLocation.y<ds.height*/
 				)
 			{
 				setLocation(m.m_OldMainWindowLocation);
@@ -807,13 +875,13 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		//	JProgressBar(JProgressBar.HORIZONTAL);
 		//trafficProgressBar.setStringPainted(true);
 		//trafficProgressBar.setBorderPainted(PROGRESSBARBORDER);
-	//	trafficProgressBar.setFont(fontControls);
+		//	trafficProgressBar.setFont(fontControls);
 		//
-	//	protectionProgressBar = new
-	//		JProgressBar(JProgressBar.HORIZONTAL);
-	//	protectionProgressBar.setStringPainted(true);
-	//	protectionProgressBar.setBorderPainted(PROGRESSBARBORDER);
-	//	protectionProgressBar.setFont(fontControls);
+		//	protectionProgressBar = new
+		//		JProgressBar(JProgressBar.HORIZONTAL);
+		//	protectionProgressBar.setStringPainted(true);
+		//	protectionProgressBar.setBorderPainted(PROGRESSBARBORDER);
+		//	protectionProgressBar.setFont(fontControls);
 
 		JPanel ownTrafficPanel = new JPanel();
 		ownTrafficPanel.setLayout(new GridLayout(2, 2, 5, 5));
@@ -848,12 +916,12 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		//m_bttnAnonConf = new JButton(JAPMessages.getString("confActivateButton"));
 		//m_bttnAnonConf.setFont(fontControls);
 		/*if (JAPModel.isSmallDisplay())
-		{
-			m_bttnAnonConf.setMargin(JAPConstants.SMALL_BUTTON_MARGIN);
-		}
-		m_bttnAnonConf.addActionListener(this);
-		p41.add(m_bttnAnonConf);
-*/
+		   {
+		 m_bttnAnonConf.setMargin(JAPConstants.SMALL_BUTTON_MARGIN);
+		   }
+		   m_bttnAnonConf.addActionListener(this);
+		   p41.add(m_bttnAnonConf);
+		 */
 		// "anonym-o-meter"
 		//JPanel meterPanel = new JPanel();
 		//meterPanel.setLayout(new BorderLayout());
@@ -1110,11 +1178,18 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_labelOwnActivitySmall.setText(JAPMessages.getString("ngActivity"));
 		m_labelForwarderActivity.setText(JAPMessages.getString("ngActivity"));
 		m_labelForwarderActivitySmall.setText(JAPMessages.getString("ngActivity"));
+		m_labelForwarderCurrentConnectionsLabel.setText(JAPMessages.getString("ngForwardedCurrentConnections"));
+		m_labelForwarderAcceptedConnectionsLabel.setText(JAPMessages.getString("ngForwardedAcceptedConnections"));
+		m_labelForwarderRejectedConnectionsLabel.setText(JAPMessages.getString("ngForwardedRejectedConnections"));
+		m_labelForwardedTraffic.setText(JAPMessages.getString("ngForwardedTraffic"));
+		m_labelForwarderConnections.setText(JAPMessages.getString("ngForwardedConnections"));
+		m_cbForwarding.setText(JAPMessages.getString("ngForwardingOn"));
+		m_cbForwardingSmall.setText(JAPMessages.getString("ngForwardingOn"));
+
 		m_labelOwnTraffic.setText(JAPMessages.getString("ngOwnTraffic"));
 		m_labelOwnTrafficSmall.setText(JAPMessages.getString("ngOwnTraffic"));
 		m_labelOwnTrafficWWW.setText(JAPMessages.getString("ngOwnTrafficWWW"));
 		m_labelOwnTrafficOther.setText(JAPMessages.getString("ngOwnTrafficOther"));
-
 
 		//m_labelMeterDetailsName.setText(JAPMessages.getString("meterDetailsName") + " ");
 		//m_labelAnonymityUser.setText(JAPMessages.getString("meterDetailsUsers") + " ");
@@ -1133,13 +1208,12 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			m_dlgConfig.localeChanged();
 		}
 		m_NumberFormat = NumberFormat.getInstance();
-		Dimension d=super.getPreferredSize();
-m_iPreferredWidth=Math.max(d.width,Math.max(m_flippingpanelOwnTraffic.getPreferredSize().width,
-								  Math.max(
-								  Math.max(m_panelAnonService.getPreferredSize().width,
-											m_flippingpanelForward.getPreferredSize().width),
-	m_flippingpanelAnon.getPreferredSize().width)));
-
+		Dimension d = super.getPreferredSize();
+		m_iPreferredWidth = Math.max(d.width, Math.max(m_flippingpanelOwnTraffic.getPreferredSize().width,
+			Math.max(
+			Math.max(m_panelAnonService.getPreferredSize().width,
+					 m_flippingpanelForward.getPreferredSize().width),
+			m_flippingpanelAnon.getPreferredSize().width)));
 
 		valuesChanged();
 		setOptimalSize();
@@ -1200,7 +1274,7 @@ m_iPreferredWidth=Math.max(d.width,Math.max(m_flippingpanelOwnTraffic.getPreferr
 	public void actionPerformed(ActionEvent event)
 	{
 		//		LogHolder.log(LogLevel.DEBUG,LogType.MISC,"GetEvent: "+event.getSource());
-		Object source=event.getSource();
+		Object source = event.getSource();
 		if (source == m_bttnQuit)
 		{
 			exitProgram();
@@ -1228,7 +1302,7 @@ m_iPreferredWidth=Math.max(d.width,Math.max(m_flippingpanelOwnTraffic.getPreferr
 		}
 		//else if (source == m_bttnAnonConf)
 		//{
-			//showConfigDialog(JAPConf.ANON_TAB);
+		//showConfigDialog(JAPConf.ANON_TAB);
 		//}
 		else if (source == m_bttnInfo)
 		{
@@ -1240,7 +1314,7 @@ m_iPreferredWidth=Math.max(d.width,Math.max(m_flippingpanelOwnTraffic.getPreferr
 			//else if (event.getSource() == anonCheckBox)
 			//	controller.setAnonMode(anonCheckBox.isSelected());
 		}
-		else if (source == m_rbAnonOn||source==m_rbAnonOff)
+		else if (source == m_rbAnonOn || source == m_rbAnonOff)
 		{
 			m_Controller.setAnonMode(m_rbAnonOn.isSelected());
 		}
@@ -1307,26 +1381,30 @@ m_iPreferredWidth=Math.max(d.width,Math.max(m_flippingpanelOwnTraffic.getPreferr
 		synchronized (m_runnableValueUpdate)
 		{
 			MixCascade currentMixCascade = m_Controller.getCurrentMixCascade();
-			String strCascadeName=currentMixCascade.getName();
-			Vector v=m_Controller.getMixCascadeDatabase();
-			m_bIgnoreAnonComboEvents=true;
-			boolean bMixCascadeAlreadyIncluded=false;
+			String strCascadeName = currentMixCascade.getName();
+			Vector v = m_Controller.getMixCascadeDatabase();
+			m_bIgnoreAnonComboEvents = true;
+			boolean bMixCascadeAlreadyIncluded = false;
 			m_comboAnonServices.removeAllItems();
-			if(v!=null)
+			if (v != null)
 			{
-				Enumeration enumer=v.elements();
-				while(enumer.hasMoreElements())
+				Enumeration enumer = v.elements();
+				while (enumer.hasMoreElements())
 				{
-					MixCascade c=(MixCascade)enumer.nextElement();
+					MixCascade c = (MixCascade) enumer.nextElement();
 					m_comboAnonServices.addItem(c);
-					if(c.equals(currentMixCascade))
-						bMixCascadeAlreadyIncluded=true;
+					if (c.equals(currentMixCascade))
+					{
+						bMixCascadeAlreadyIncluded = true;
+					}
 				}
 			}
-			if(!bMixCascadeAlreadyIncluded)
+			if (!bMixCascadeAlreadyIncluded)
+			{
 				m_comboAnonServices.addItem(currentMixCascade);
+			}
 			m_comboAnonServices.setSelectedItem(currentMixCascade);
-			m_bIgnoreAnonComboEvents=false;
+			m_bIgnoreAnonComboEvents = false;
 			m_comboAnonServices.setToolTipText(currentMixCascade.getName());
 
 			// Config panel
@@ -1364,58 +1442,58 @@ m_iPreferredWidth=Math.max(d.width,Math.max(m_flippingpanelOwnTraffic.getPreferr
 						//userProgressBar.setValue(userProgressBar.getMaximum());
 						//userProgressBar.setString(JAPMessages.getString("meterNA"));
 					}
-				/*	if (currentStatus.getCurrentRisk() > -1)
-					{
-						// Current Risk
-						if (currentStatus.getCurrentRisk() > protectionProgressBar.getMaximum())
-						{
-							protectionProgressBar.setMaximum(currentStatus.getCurrentRisk());
-						}
-						protectionProgressBar.setValue(currentStatus.getCurrentRisk());
-						if (currentStatus.getCurrentRisk() < 80)
-						{
-							protectionProgressBar.setString(String.valueOf(currentStatus.getCurrentRisk()) +
-								" %");
-						}
-						else
-						{
-							protectionProgressBar.setString(JAPMessages.getString("meterRiskVeryHigh"));
-						}
-					}
-					else
-					{
-						protectionProgressBar.setValue(protectionProgressBar.getMaximum());
-						protectionProgressBar.setString(JAPMessages.getString("meterNA"));
-					}*/
+					/*	if (currentStatus.getCurrentRisk() > -1)
+					 {
+					  // Current Risk
+					  if (currentStatus.getCurrentRisk() > protectionProgressBar.getMaximum())
+					  {
+					   protectionProgressBar.setMaximum(currentStatus.getCurrentRisk());
+					  }
+					  protectionProgressBar.setValue(currentStatus.getCurrentRisk());
+					  if (currentStatus.getCurrentRisk() < 80)
+					  {
+					   protectionProgressBar.setString(String.valueOf(currentStatus.getCurrentRisk()) +
+						" %");
+					  }
+					  else
+					  {
+					   protectionProgressBar.setString(JAPMessages.getString("meterRiskVeryHigh"));
+					  }
+					 }
+					 else
+					 {
+					  protectionProgressBar.setValue(protectionProgressBar.getMaximum());
+					  protectionProgressBar.setString(JAPMessages.getString("meterNA"));
+					 }*/
 					int t = currentStatus.getTrafficSituation();
 					if (t > -1)
 					{
 						//Trafic Situation directly from InfoService
 						/*trafficProgressBar.setMaximum(100);
-						trafficProgressBar.setValue(t);
-						if (t < 30)
-						{
-							trafficProgressBar.setString(JAPMessages.getString("meterTrafficLow"));
-						}
-						else
-						{
-							if (t < 60)
-							{
-								trafficProgressBar.setString(JAPMessages.getString("meterTrafficMedium"));
-							}
-							else
-							{
-								trafficProgressBar.setString(JAPMessages.getString("meterTrafficHigh"));
-							}
-						}*/
-				 		//map 0..100 --> 0..5
+							   trafficProgressBar.setValue(t);
+							   if (t < 30)
+							   {
+						 trafficProgressBar.setString(JAPMessages.getString("meterTrafficLow"));
+							   }
+							   else
+							   {
+						 if (t < 60)
+						 {
+						  trafficProgressBar.setString(JAPMessages.getString("meterTrafficMedium"));
+						 }
+						 else
+						 {
+						  trafficProgressBar.setString(JAPMessages.getString("meterTrafficHigh"));
+						 }
+							   }*/
+						//map 0..100 --> 0..5
 						//0 --> 0
 						//1..20 --> 1
 						//21..40 --> 2
 						//41..60 --> 3
 						//61..80 --> 4
 						//81..100 --> 5
-				 		m_progressAnonTraffic.setValue((t+19)/20);
+						m_progressAnonTraffic.setValue( (t + 19) / 20);
 					}
 					else
 					{
@@ -1438,6 +1516,10 @@ m_iPreferredWidth=Math.max(d.width,Math.max(m_flippingpanelOwnTraffic.getPreferr
 					//trafficProgressBar.setString(JAPMessages.getString("meterNA"));
 					LogHolder.log(LogLevel.DEBUG, LogType.GUI, "JAPView:Finished updateValues");
 				}
+				m_cbForwarding.setSelected(JAPModel.getInstance().getRoutingSettings().getRoutingMode()==
+										   JAPRoutingSettings.ROUTING_MODE_SERVER);
+				m_cbForwardingSmall.setSelected(JAPModel.getInstance().getRoutingSettings().getRoutingMode()==
+										   JAPRoutingSettings.ROUTING_MODE_SERVER);
 			}
 			catch (Throwable t)
 			{
@@ -1456,7 +1538,7 @@ m_iPreferredWidth=Math.max(d.width,Math.max(m_flippingpanelOwnTraffic.getPreferr
 	{
 		// Nr of Channels
 		//int c=controller.getNrOfChannels();
-		c=Math.min(c,m_progressOwnTrafficActivity.getMaximum());
+		c = Math.min(c, m_progressOwnTrafficActivity.getMaximum());
 		m_progressOwnTrafficActivity.setValue(c);
 		m_progressOwnTrafficActivitySmall.setValue(c);
 //			ownTrafficChannelsProgressBar.setString(String.valueOf(c));
@@ -1465,13 +1547,13 @@ m_iPreferredWidth=Math.max(d.width,Math.max(m_flippingpanelOwnTraffic.getPreferr
 	public void transferedBytes(int c)
 	{
 		// Nr of Bytes transmitted anonymously
-		String unit="Byte";
-		if(c>9999)
+		String unit = JAPMessages.getString("Byte");
+		if (c > 9999)
 		{
-			c=c/1000;
-			unit="kByte";
+			c = c / 1000;
+			unit = JAPMessages.getString("kByte");
 		}
-		String s=m_NumberFormat.format(c);
+		String s = m_NumberFormat.format(c);
 		m_labelOwnTrafficBytes.setText(s);
 		m_labelOwnTrafficUnit.setText(unit);
 		m_labelOwnTrafficBytesSmall.setText(s);
@@ -1483,8 +1565,8 @@ m_iPreferredWidth=Math.max(d.width,Math.max(m_flippingpanelOwnTraffic.getPreferr
 
 	public Dimension getPreferredSize()
 	{
-		Dimension d=super.getPreferredSize();
-		d.width=m_iPreferredWidth;
+		Dimension d = super.getPreferredSize();
+		d.width = m_iPreferredWidth;
 		return d;
 	}
 }
