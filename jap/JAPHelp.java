@@ -5,14 +5,14 @@ Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
 
 	- Redistributions of source code must retain the above copyright notice,
-	  this list of conditions and the following disclaimer.
+		this list of conditions and the following disclaimer.
 
 	- Redistributions in binary form must reproduce the above copyright notice,
-	  this list of conditions and the following disclaimer in the documentation and/or
+		this list of conditions and the following disclaimer in the documentation and/or
 		other materials provided with the distribution.
 
 	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
-	  may be used to endorse or promote products derived from this software without specific
+		may be used to endorse or promote products derived from this software without specific
 		prior written permission.
 
 
@@ -40,13 +40,13 @@ import javax.swing.event.*;
 /* classes modified from Swing Example "Metalworks" */
 
 final class JAPHelp extends JDialog implements ActionListener {
-    private JAPController controller;
-    private String helpPath = " ";
-    private String helpLang = " ";
-    private JComboBox language;
-    HtmlPane html;
+		private JAPController controller;
+		private String helpPath = " ";
+		private String helpLang = " ";
+		private JComboBox language;
+		HtmlPane html;
 
-    public JAPHelp(JFrame f)
+		public JAPHelp(JFrame f)
 			{
 				super(f, JAPMessages.getString("helpWindow"), false);
 				controller = JAPController.getController();
@@ -95,7 +95,7 @@ final class JAPHelp extends JDialog implements ActionListener {
 			}
 
 
-    public Dimension getPreferredSize()
+		public Dimension getPreferredSize()
 			{
 				Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
 				d.width = Math.min(d.width - 50, 600/*400*/);
@@ -103,7 +103,7 @@ final class JAPHelp extends JDialog implements ActionListener {
 				return (d);
 			}
 
-    public void actionPerformed(ActionEvent e)
+		public void actionPerformed(ActionEvent e)
 			{
 				// for Language Combobox AND Close Burtton only
 				if(e.getSource()==language)
@@ -115,19 +115,19 @@ final class JAPHelp extends JDialog implements ActionListener {
 					closePressed();
 			}
 
-    private void closePressed() {
-        setVisible(false);
-    }
+		private void closePressed() {
+				setVisible(false);
+		}
 }
 
 
 final class HtmlPane extends JScrollPane implements HyperlinkListener
 	{
-    private JEditorPane html;
+		private JEditorPane html;
 		private URL url;
 		private Cursor cursor;
 
-    public HtmlPane(String fn)
+		public HtmlPane(String fn)
 			{
 				html=new JEditorPane();
 				html.setEditable(false);
@@ -146,7 +146,7 @@ final class HtmlPane extends JScrollPane implements HyperlinkListener
 				// used to find help files within a .jar file
 				try
 					{
-						URL url = getClass().getResource(fn);
+						URL url = Class.forName("JAP").getResource(fn);
 						if(url!=null)
 							return url;
 					}
@@ -170,14 +170,14 @@ final class HtmlPane extends JScrollPane implements HyperlinkListener
 				return null;
 			}
 
-    public void load(String fn)
+		public void load(String fn)
 			{
 				URL url=getUrlFor(fn);
 				if(url != null)
 					linkActivated(url);
 			}
 
-    public void hyperlinkUpdate(HyperlinkEvent e)
+		public void hyperlinkUpdate(HyperlinkEvent e)
 			{
 				if (e.getEventType() == HyperlinkEvent.EventType.ACTIVATED)
 					{
@@ -191,21 +191,21 @@ final class HtmlPane extends JScrollPane implements HyperlinkListener
 					html.setCursor(cursor);
 			}
 
-    protected void linkActivated(URL u)
+		protected void linkActivated(URL u)
 			{
 				Cursor waitCursor = Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR);
 				html.setCursor(waitCursor);
 				SwingUtilities.invokeLater(new PageLoader(u));
 			}
 
-    final class PageLoader implements Runnable
+		final class PageLoader implements Runnable
 			{
 				PageLoader(URL u)
 					{
 						url = u;
 					}
 
-        public void run()
+				public void run()
 					{
 						if (url == null)
 							{
