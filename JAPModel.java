@@ -18,7 +18,7 @@ public final class JAPModel {
 // JAPDebug now initialized in JAP in order to use
 // the functions also in JAP.main()
     
-	static final String aktVersion = "00.00.017"; // Version of JAP
+	static final String aktVersion = "00.00.018"; // Version of JAP
 	
 	private int      portNumber        = 4001;
 	private int      runningPortNumber = 0;      // the port where proxy listens
@@ -362,7 +362,9 @@ public final class JAPModel {
 		try {
 			int result = 0;
 			Versionchecker vc = new Versionchecker();
-			String s = vc.getNewVersionnumberFromNet("http://"+infoServiceHostName+":"+infoServicePortNumber+aktJAPVersionFN);
+//			String s = vc.getNewVersionnumberFromNet("http://"+infoServiceHostName+":"+infoServicePortNumber+aktJAPVersionFN);
+// temporary changed due to stability.... (sk13)
+			String s = vc.getNewVersionnumberFromNet("http://anon.inf.tu-dresden.de:80"+aktJAPVersionFN);
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:Version:"+s);
 			if ( s.compareTo(aktVersion) > 0 ) {
 				// OK, new version available
@@ -382,7 +384,8 @@ public final class JAPModel {
 					// To do: show busy message
 					try {
 						vc.registerProgress(japLoading);
-						vc.getVersionFromNet("http://"+infoServiceHostName+":"+infoServicePortNumber+urlJAPNewVersionDownload, JAPLocalFilename);
+//						vc.getVersionFromNet("http://"+infoServiceHostName+":"+infoServicePortNumber+urlJAPNewVersionDownload, JAPLocalFilename);
+						vc.getVersionFromNet("http://anon.inf.tu-dresden.de:80"+urlJAPNewVersionDownload, JAPLocalFilename);
 						Thread t = new Thread(vc);
 						t.start();
 						answer = japLoading.message(model.getString("downloadingProgressTitle"),
