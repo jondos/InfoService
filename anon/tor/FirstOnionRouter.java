@@ -61,7 +61,7 @@ public class FirstOnionRouter implements Runnable {
 	 * dispatches a cell to the circuits if one is recieved
 	 *
 	 */
-	synchronized private void dispatchCells()
+	private void dispatchCells()
 	{
 		Cell cell = null;;
 		byte[] b = new byte[512];
@@ -132,7 +132,7 @@ public class FirstOnionRouter implements Runnable {
 	 * starts the thread that reads from the inputstream and dispatches the cells
 	 *
 	 */
-	public synchronized void start()
+	public void start()
 	{
 		if(this.m_readDataLoop== null)
 		{
@@ -145,7 +145,7 @@ public class FirstOnionRouter implements Runnable {
 	/**
 	 * dispatches cells while the thread, started with start is running
 	 */
-	public synchronized void run()
+	public void run()
 	{
 		while(m_bRun)
 		{
@@ -157,15 +157,14 @@ public class FirstOnionRouter implements Runnable {
 	 * stops the thread that dispatches cells
 	 * @throws IOException
 	 */
-	public void stop() throws IOException,InterruptedException
+	public void stop() throws IOException
 	{
 		m_bRun=false;
 		if(m_readDataLoop!=null)
 		{
-		m_readDataLoop.interrupt();
-		m_readDataLoop.join();
-		this.m_readDataLoop=null;
-		this.close();
+			m_readDataLoop.stop();
+			this.m_readDataLoop=null;
+			this.close();
 		}
 	}
 

@@ -12,6 +12,7 @@ import java.security.SecureRandom;
 import java.util.*;
 
 import anon.tor.tinytls.TinyTLS;
+import anon.tor.util.helper;
 import anon.tor.cells.Cell;
 import anon.tor.cells.CreatedCell;
 import anon.tor.cells.DestroyCell;
@@ -109,6 +110,7 @@ public class Circuit {
 			{
 				this.waitForNotify();
 			}
+			System.out.println("created");
 			if(this.m_destroyed)
 			{
 				throw new IOException("DestroyCell recieved");
@@ -117,6 +119,7 @@ public class Circuit {
 			{
 				ORDescription nextOR = (ORDescription)(this.m_onionRouters.elementAt(i));
 				this.m_extended = false;
+				System.out.println("trying to extend");
 				this.m_onionProxy.send(this.m_or.extendConnection(nextOR));
 				while(!this.m_extended)
 				{
@@ -130,6 +133,7 @@ public class Circuit {
 				{
 					throw new IOException("Cannot Connect to router :"+nextOR.getAddress()+":"+nextOR.getPort());
 				}
+				System.out.println("extended");
 			}
 			LogHolder.log(LogLevel.DEBUG,LogType.MISC,"[TOR] Circuit '"+this.m_circID+"' ready!!! - Length of this Circuit : "+this.m_size+" Onionrouters");
 		} catch(Exception ex)
@@ -245,7 +249,8 @@ public class Circuit {
 						{
 							case RelayCell.RELAY_RESOLVED :
 							{
-								this.m_resolvedData = c.getPayload();
+								byte[] tmp = c.getPayload();
+								this.m_resolvedData = helper.copybytes(tmp,11,((tmp[9]&0xFF)<<8)+(tmp[10]&0xFF));
 								this.m_resolved = true;
 							}
 						}
@@ -265,6 +270,7 @@ public class Circuit {
 				this.m_destroyed = true;
 				this.m_created = true;
 				this.m_extended = true;
+				System.out.println("Destroycell recieved");
 				
 			} else
 			{
@@ -318,7 +324,8 @@ public class Circuit {
      *  Type   (1 octet)
      *  Length (1 octet)
      *  Value  (variable-width)
-     *"Length" is the length of the Value field.  "Type" is one of:
+     *"Length" is the length of the Value field. 
+     * "Type" is one of:
      * 0x04 -- IPv4 address
      * 0x06 -- IPv6 address
      * 0xF0 -- Error, transient

@@ -1,16 +1,10 @@
 package anon.tor;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.security.SecureRandom;
 
-import org.bouncycastle.asn1.ASN1Sequence;
-import org.bouncycastle.asn1.DERConstructedSequence;
-import org.bouncycastle.asn1.DERInputStream;
-
-import org.bouncycastle.asn1.x509.RSAPublicKeyStructure;
 import org.bouncycastle.crypto.AsymmetricBlockCipher;
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 import org.bouncycastle.crypto.InvalidCipherTextException;
@@ -22,14 +16,12 @@ import org.bouncycastle.crypto.engines.RSAEngine;
 import org.bouncycastle.crypto.generators.DHKeyPairGenerator;
 
 import anon.tor.crypto.CTRBlockCipher;
-import org.bouncycastle.crypto.modes.SICBlockCipher;
 import org.bouncycastle.crypto.params.DHKeyGenerationParameters;
 import org.bouncycastle.crypto.params.DHParameters;
 import org.bouncycastle.crypto.params.DHPrivateKeyParameters;
 import org.bouncycastle.crypto.params.DHPublicKeyParameters;
 import org.bouncycastle.crypto.params.KeyParameter;
 import org.bouncycastle.crypto.params.ParametersWithIV;
-import org.bouncycastle.crypto.params.RSAKeyParameters;
 import org.bouncycastle.util.encoders.Hex;
 
 import anon.tor.tinytls.util.hash;
@@ -188,7 +180,7 @@ public class OnionRouter {
 	private RelayCell extendConnection(String address,int port) throws IOException,InvalidCipherTextException
 	{
 		RelayCell cell;
-
+		
 		byte[] payload = InetAddress.getByName(address).getAddress();
 		payload = helper.conc(payload,helper.inttobyte(port,2));
 		payload = helper.conc(payload,this.createExtendPayload());
@@ -198,7 +190,8 @@ public class OnionRouter {
 		DEROutputStream dout=new DEROutputStream(out);
 		dout.writeObject(key.getAsSubjectPublicKeyInfo().getPublicKey());
 		dout.flush();
-		byte[] hash1 = hash.sha(out.toByteArray());
+		byte[] b = out.toByteArray();
+		byte[] hash1 = hash.sha(new byte[][]{b});
 
 		payload = helper.conc(payload,hash1);
 
@@ -271,7 +264,7 @@ public class OnionRouter {
 		byte[] a;
 
 		//generate AES Key and Engine
-		SICBlockCipher aes = new SICBlockCipher(new AESFastEngine());
+		CTRBlockCipher aes = new CTRBlockCipher(new AESFastEngine());
 		SecureRandom random = new SecureRandom();
 		byte[] keyparam = new byte[16];
 		random.nextBytes(keyparam);
@@ -301,25 +294,17 @@ public class OnionRouter {
 		System.arraycopy(dhpubY,0,a,0,70);
 		byte[] rsaunencrypted = helper.conc(keyparam,a);
 
-		//generate RSA encrypted part
-		//DERInputStream dIn = new DERInputStream(new ByteArrayInputStream(this.m_description.getOnionKey()));
-		//ASN1Sequence asn1seq = ASN1Sequence.getInstance((DERConstructedSequence)dIn.readObject());
-		//RSAPublicKeyStructure key = new RSAPublicKeyStructure(asn1seq);
 		AsymmetricBlockCipher rsa = new OAEPEncoding(new RSAEngine());
-		//BigInteger modulus = key.getModulus();
-		//BigInteger exponent = key.getPublicExponent();
 		rsa.init(true,m_description.getOnionKey().getParams());
 
 		rsaencrypted = rsa.processBlock(rsaunencrypted,0,rsaunencrypted.length);
 		a=new byte[dhpubY.length-70];
 		System.arraycopy(dhpubY,70,a,0,a.length);
-		aesencrypted = helper.conc(a,new byte[aes.getBlockSize()- ( (dhpubY.length-70) % aes.getBlockSize())]);
 
-		//gernerate AES encrypted part
-		for(int i=0;i<aesencrypted.length;i+=aes.getBlockSize())
-		{
-			aes.processBlock(aesencrypted,i,aesencrypted,i);
-		}
+		aesencrypted = new byte[a.length];
+
+		//generate AES encrypted part
+		aes.processBlock(a,0,aesencrypted,0,a.length);
 		byte[] temp=helper.conc(rsaencrypted,aesencrypted);
 
 		return temp;
