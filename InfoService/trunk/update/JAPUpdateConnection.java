@@ -138,18 +138,18 @@ public class JAPUpdateConnection
                                    if(nodeInformation.getNodeName().equals("description"))
                                        {
                                                     System.out.println( nodeInformation.getNodeName()+" equals description");
-                                                    if(nodeInformation.hasChildNodes()&&(!nodeInformation.hasAttributes()))
+                                                    if(nodeInformation.hasChildNodes()&&(nodeInformation.getAttributes().getLength()==0))
                                                         {
                                                     //attrInformation = nodeInformation.getAttributes();
                                                             //attrInformation = nodeInformation.getFirstChild().getNodeValue();
                                                             attrInformation = attrInformation.concat(nodeInformation.getFirstChild().getNodeValue()+"\n");
-                                                            System.out.println(nodeInformation.getLocalName()+" has" +attrInformation);
+                                                            System.out.println(nodeInformation.getNodeName()+" has" +attrInformation);
 
                                                         }
                                        }
                                        else if(nodeInformation.getNodeName().equals("resources"))
                                        {
-                                          if(nodeInformation.hasChildNodes()&&(!nodeInformation.hasAttributes()))
+                                          if(nodeInformation.hasChildNodes()&&(nodeInformation.getAttributes().getLength()==0))
                                                         {
                                                            NodeList nlResources = nodeInformation.getChildNodes();
                                                                   for(int k=0; k < nlResources.getLength(); k++)
