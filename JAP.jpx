@@ -141,7 +141,7 @@
   <property category="optimize.1" name="oipr.FilterFile" value="G:\projects\Jap\JAP.oif"/>
   <property category="optimize.1" name="oira.FilterFile" value="G:\projects\Jap\JAP.oif"/>
   <property category="optimize.11" name="OptimizableType" value="com.borland.jbuilder.optimize.IntroOptimizeitProfiler"/>
-  <property category="optimize.2" name="OptimizableType" value="intuitive.ide.borland.jb10.ThreadDBootstrap"/>
+  <property category="optimize.2" name="OptimizableType" value="com.borland.jbuilder.optimize.IntroOptimizeitThreadDebugger"/>
   <property category="optimize.2" name="oicc.FilterFile" value="G:\projects\Jap\JAP.oif"/>
   <property category="optimize.2" name="oipr.FilterFile" value="G:\projects\Jap\JAP.oif"/>
   <property category="optimize.2" name="oira.FilterFile" value="G:\projects\Jap\JAP.oif"/>
@@ -233,8 +233,17 @@
   <property category="runtime.2" name="custom.required.7" value="JUnit"/>
   <property category="runtime.2" name="custom.required.8" value="junitx"/>
   <property category="runtime.2" name="custom.required.9" value="ApacheFTPClient"/>
+  <property category="runtime.2" name="enable.tcpmonitor" value="0"/>
+  <property category="runtime.2" name="enable.wsimonitor" value="0"/>
   <property category="runtime.2" name="jsprunner.launchuri" value="/"/>
+  <property category="runtime.2" name="tcpmonitor.listenport" value=""/>
+  <property category="runtime.2" name="tcpmonitor.targethost" value=""/>
+  <property category="runtime.2" name="tcpmonitor.targetport" value=""/>
   <property category="runtime.2" name="test.harness" value="junit.textui.TestRunner"/>
+  <property category="runtime.2" name="wsimonitor.listenport" value=""/>
+  <property category="runtime.2" name="wsimonitor.logfile" value=""/>
+  <property category="runtime.2" name="wsimonitor.targethost" value=""/>
+  <property category="runtime.2" name="wsimonitor.targetport" value=""/>
   <property category="runtime.3" name="ConfigurationName" value="XMLRPCTestServer"/>
   <property category="runtime.3" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
   <property category="runtime.3" name="application.class" value="misc.XMLRPCTestServer"/>
@@ -303,7 +312,7 @@
   <property category="sys" name="InstanceVisibility" value="0"/>
   <property category="sys" name="JDK" value="1.1 mit JVM_1.4.2"/>
   <property category="sys" name="LastTag" value="192"/>
-  <property category="sys" name="Libraries" value="http;mac;XML-1.1;Apache XML-RPC;BouncyCastleLightForJAP;JUnit;junitx;ApacheFTPClient;Swing;ApacheBzip2;Log4j"/>
+  <property category="sys" name="Libraries" value="http;mac;Apache XML-RPC;BouncyCastleLightForJAP;JUnit;junitx;ApacheFTPClient;Swing;ApacheBzip2;Log4j;XML-1.1"/>
   <property category="sys" name="MakeStable" value="0"/>
   <property category="sys" name="OutPath" value="classes"/>
   <property category="sys" name="SourcePath" value="src;test"/>

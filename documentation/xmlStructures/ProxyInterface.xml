@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<ProxyInterface>
+<?xml version="1.0" encoding="UTF-8"?><ProxyInterface>
   <!--This xml structure has been created by anon.infoservice.ProxyInterface.-->
   <!--The calling test class was anon.infoservice.test.ProxyInterfaceTest.-->
   <Type>HTTP/TCP</Type>

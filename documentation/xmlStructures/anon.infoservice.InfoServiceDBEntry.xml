@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<InfoService id="127.0.0.1%3A50">
+<?xml version="1.0" encoding="UTF-8"?><InfoService id="127.0.0.1%3A50">
   <!--This xml structure has been created by anon.infoservice.InfoServiceDBEntry.-->
   <!--The calling test class was anon.infoservice.test.InfoServiceDBEntryTest.-->
   <Name>127.0.0.1%3A50</Name>
@@ -16,5 +15,6 @@
       </ListenerInterface>
     </ListenerInterfaces>
   </Network>
-  <Expire>1100931839691</Expire>
+  <Expire>1105545573296</Expire>
+  <UserDefined/>
 </InfoService>

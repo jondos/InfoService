@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<ListenerInterface>
+<?xml version="1.0" encoding="UTF-8"?><ListenerInterface>
   <!--This xml structure has been created by anon.infoservice.ListenerInterface.-->
   <!--The calling test class was anon.infoservice.test.ListenerInterfaceTest.-->
   <Type>https</Type>
