@@ -36,22 +36,12 @@ final class JAPDirectProxyResponse implements Runnable /*extends Thread*/
 
     private OutputStream outputStream;
     private InputStream inputStream;
-    private Socket inputSocket,outputSocket;
-  //  private boolean ok = true;
 
-    public JAPDirectProxyResponse (Socket in, Socket out)
-			{
-				this.inputSocket = in;
-				this.outputSocket = out;
-			}
-
-   public JAPDirectProxyResponse(InputStream inputStream, Socket out)
-   {
-   System.out.println("Const");
-  // this.ok = true;
-   this.inputStream = inputStream;
-   this.outputSocket = out;
-   }
+    public JAPDirectProxyResponse(InputStream in, OutputStream out)
+    {
+			inputStream = in;
+      outputStream= out;
+    }
 
     public void run()
 			{
@@ -59,22 +49,12 @@ final class JAPDirectProxyResponse implements Runnable /*extends Thread*/
 				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"R("+threadNumber+") - Response thread started.");
 				try
 					{
-                                      //      if(ok){
-						inputStream  = inputSocket.getInputStream();
-                                                System.out.println("true");
-                                        //           }//fi
-						outputStream = outputSocket.getOutputStream();
-
-						//------------BUFFERED---------------------------
 						byte[] buff=new byte[1000];
 						int len;
 						while((len=inputStream.read(buff))!=-1)
 							{
 								if(len>0)
-									{
-										outputStream.write(buff,0,len);
-                                                                                System.out.println(buff.toString()+" Response");
-									}
+									outputStream.write(buff,0,len);
 							}
 						//-----------------------------------------------
 						outputStream.flush();

@@ -229,7 +229,8 @@ final class JAPDirectProxy implements Runnable
 							// create Socket to Server
 							Socket serverSocket = new Socket(model.getFirewallHost(),model.getFirewallPort());
 							// Response from server is transfered to client in a sepatate thread
-							JAPDirectProxyResponse pr = new JAPDirectProxyResponse(serverSocket, clientSocket);
+							JAPDirectProxyResponse pr = new JAPDirectProxyResponse(serverSocket.getInputStream(),
+																																		 clientSocket.getOutputStream());
 							Thread prt = new Thread(pr);
 							prt.start();
 							// create stream --> server
