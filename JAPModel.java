@@ -18,9 +18,9 @@ public final class JAPModel {
 // JAPDebug now initialized in JAP in order to use
 // the functions also in JAP.main()
     
-	static final String aktVersion = "00.00.012"; // Version of JAP
+	static final String aktVersion = "00.00.013"; // Version of JAP
 	
-	public  int      portNumber        = 4001;
+	private int      portNumber        = 4001;
 	private int      runningPortNumber = 0;      // the port where proxy listens
 	private boolean  isRunningProxy    = false;  // true if a proxy is running
 	public  String   proxyHostName     = "ikt.inf.tu-dresden.de";
@@ -179,13 +179,13 @@ public final class JAPModel {
 	
 	public void initialRun() {
 		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:initial run of JAP...");
-		// start Proxy
-		startProxy();
 		// start keypool thread
 		keypool=new JAPKeyPool(20,16);
 		Thread t = new Thread (keypool);
 		t.setPriority(Thread.MIN_PRIORITY);
 		t.start();
+		// start Proxy
+		startProxy();
 		// start anon service immediately if autoConnect is true
 		setAnonMode(autoConnect);
 	}
@@ -197,18 +197,18 @@ public final class JAPModel {
 		float f;
 		f = trafficSituation / (float)MAXPROGRESSBARVALUE;
 		f = f * (METERFNARRAY.length-3) + 2;
-		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:getCurrentProtectionLevel(): f="+f);
+	//	JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:getCurrentProtectionLevel(): f="+f);
 		return (int)f;
 	}
 		
-	/*
+	
 	public void setPortNumber (int p) {
-		this.portNumber = p;
+		portNumber = p;
 	}
 	public int getPortNumber() {
 		return portNumber;
 	}
-	*/
+
 	
 		
 	public synchronized static String getString(String key) {

@@ -117,7 +117,7 @@ final class HtmlPane extends JScrollPane implements HyperlinkListener
 				File f = new File (fn);
 				String s = f.getAbsolutePath();
 				s = "file:"+s;
-				URL url = new URL(s);
+//				URL url = new URL(s);
 				html = new JEditorPane(s);
 			}
 			catch (Exception e) {
