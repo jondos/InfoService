@@ -1,5 +1,3 @@
-package anonnew.server.impl;
-
 /*
 Copyright (c) 2000, The JAP-Team
 All rights reserved.
@@ -28,6 +26,7 @@ IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISI
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
 
+package anon.server.impl;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
