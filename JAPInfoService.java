@@ -133,25 +133,26 @@ final class JAPInfoService
 								String name=nl.item(0).getFirstChild().getNodeValue().trim();
 								nl=elem.getElementsByTagName("IP");
 								String ip=nl.item(0).getFirstChild().getNodeValue().trim();
-								nl=elem.getElementsByTagName("Port");
-								String port=nl.item(0).getFirstChild().getNodeValue().trim();
-								nl=elem.getElementsByTagName("ProxyPort");
-								String proxyPort=nl.item(0).getFirstChild().getNodeValue().trim();
 								
-								AnonServerDBEntry e=new AnonServerDBEntry(name,ip,Integer.parseInt(port),Integer.parseInt(proxyPort));
+								int port=JAPUtil.parseNodeInt(elem,"Port",-1);
+								int proxyPort=JAPUtil.parseNodeInt(elem,"ProxyPort",-1);							
+								
+								AnonServerDBEntry e=new AnonServerDBEntry(name,ip,port,proxyPort);
 								
 								nl=elem.getElementsByTagName("CurrentStatus");
-								Element elem1=(Element)nl.item(0);
-								String nrOfActiveUsers=elem1.getAttribute("ActiveUsers").trim();
-								e.setNrOfActiveUsers(Integer.parseInt(nrOfActiveUsers));
-								String currentRisk=elem1.getAttribute("CurrentRisk").trim();
-								e.setCurrentRisk(Integer.parseInt(currentRisk));
-								String trafficSituation=elem1.getAttribute("TrafficSituation").trim();
-								e.setTrafficSituation(Integer.parseInt(trafficSituation));
+								if(nl!=null&&nl.getLength()>0)
+									{
+										Element elem1=(Element)nl.item(0);
+										int nrOfActiveUsers=JAPUtil.parseElementAttrInt(elem1,"ActiveUsers",-1);
+										e.setNrOfActiveUsers(nrOfActiveUsers);
+										int currentRisk=JAPUtil.parseElementAttrInt(elem1,"CurrentRisk",-1);
+										e.setCurrentRisk(currentRisk);
+										int trafficSituation=JAPUtil.parseElementAttrInt(elem1,"TrafficSituation",-1);
+										e.setTrafficSituation(trafficSituation);
 								//nl=elem.getElementsByTagName("mixedPackets");
 								//String mixedPackets=nl.item(0).getFirstChild().getNodeValue().trim();
 								//e.setMixedPackets(Integer.parseInt(mixedPackets));
-													 
+									}				 
 								model.anonServerDatabase.addElement(e);
 								
 							}
