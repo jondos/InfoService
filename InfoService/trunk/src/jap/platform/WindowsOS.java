@@ -25,60 +25,58 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package jap;
+package jap.platform;
 
-import javax.swing.JFrame;
-import javax.swing.JTextField;
-import javax.swing.JButton;
-import java.awt.*;
-import javax.swing.*;
-import java.awt.event.*;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 
-public class JAPConfAnonAddManual extends JDialog implements ActionListener
+/**
+ * This class is instantiated by AbstractOS if the current OS is Windows
+ */
+public class WindowsOS extends AbstractOS
 {
-	JTextField m_nameField;
-	JTextField m_addressField;
-
-	JButton m_okButton;
-	JButton m_cancelButton;
-
-	/**
-	 * Constructor
-	 */
-	public JAPConfAnonAddManual()
+	public static final String[] BROWSERLIST =
 	{
-		this.setModal(true);
-		Container root = this.getContentPane();
-		this.setTitle("Dienst manuell eintragen");
-		GridLayout layout = new GridLayout(3, 2);
-		root.setLayout(layout);
-		JLabel l = new JLabel("Name: ");
-		root.add(l);
-		m_nameField = new JTextField();
-		root.add(m_nameField);
-		l = new JLabel("Adresse: ");
-		root.add(l);
-		m_addressField = new JTextField();
-		root.add(m_addressField);
-		m_okButton = new JButton("OK");
-		m_okButton.addActionListener(this);
-		root.add(m_okButton);
-		m_cancelButton = new JButton("Cancel");
-		m_cancelButton.addActionListener(this);
-		root.add(m_cancelButton);
-		this.pack();
+		"firefox", "iexplore", "explorer", "mozilla", "konqueror", "mozilla-firefox",
+		"firebird", "opera"
+	};
+
+	public WindowsOS() throws Exception
+	{
+		String osName = System.getProperty("os.name", "").toLowerCase();
+		if (osName.indexOf("win") == -1)
+		{
+			throw new Exception("Operating system is not Windows");
+		}
 	}
 
-	/**
-	 * Processes ActionEvents
-	 * @param e ActionEvent
-	 */
-	public void actionPerformed(ActionEvent e)
+	public void openURLInBrowser(String a_url) throws Exception
 	{
-		if (e.getSource() == m_cancelButton)
-			this.hide();
+		boolean success = false;
+		try
+		{
+			String[] browser = BROWSERLIST;
+			for (int i = 0; i < browser.length; i++)
+			{
+				try
+				{
+					Runtime.getRuntime().exec(new String[] {browser[i], a_url});
+					success = true;
+					break;
+				}
+				catch (Exception ex)
+				{
+				}
+			}
+			if(!success)
+			{
+				throw new Exception("Cannot open URL in browser");
+			}
+		}
+		catch (Exception ex)
+		{
+			LogHolder.log(LogLevel.ERR, LogType.MISC, "Cannot open URL in browser");
+		}
 	}
-
-
-
 }
