@@ -60,8 +60,8 @@ public class JAPVersionInfo
 						m_Version=root.getAttribute("version"); //the JAP version
 						try
 							{
-								String strDate=root.getAttribute("releaseDate");
-								m_Date=new SimpleDateFormat().parse(strDate);
+								String strDate=root.getAttribute("releaseDate")+" GMT";
+								m_Date=new SimpleDateFormat("yyyy/MM/dd HH:mm:ss z").parse(strDate);
 							}
 						catch(Exception ed)
 							{
