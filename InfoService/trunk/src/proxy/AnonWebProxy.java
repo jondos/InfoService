@@ -31,31 +31,24 @@ import java.io.InterruptedIOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
-import javax.xml.parsers.DocumentBuilderFactory;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 import anon.AnonChannel;
 import anon.AnonService;
+import anon.AnonServiceFactory;
 import anon.ErrorCodes;
 import anon.NotConnectedToMixException;
 import anon.ToManyOpenChannelsException;
 import anon.crypto.JAPCertificateStore;
+import anon.infoservice.ImmutableProxyInterface;
 import anon.infoservice.MixCascade;
 import anon.server.AnonServiceImpl;
 import anon.server.impl.ProxyConnection;
-import anon.util.XMLUtil;
-import jap.JAPConstants;
+import anon.tor.Tor;
+import anon.tor.TorAnonServerDescription;
+import jap.JAPModel;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import anon.pay.PayAccount;
-import anon.pay.PayAccountsFile;
-import anon.pay.xml.XMLAccountInfo;
-import anon.tor.*;
-import java.io.*;
-import jap.*;
-import anon.infoservice.ImmutableProxyInterface;
-import anon.*;
+
 final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 {
 	public static final int E_BIND = -2;
@@ -73,6 +66,7 @@ final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 	private Thread threadRun;
 	private volatile boolean m_bIsRunning;
 	private ServerSocket m_socketListener;
+	private ImmutableProxyInterface m_proxyInterface;
 
 	/**
 	 * Stores the MixCascade we are connected to.
@@ -98,6 +92,7 @@ final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 	public AnonWebProxy(ServerSocket listener, ImmutableProxyInterface a_proxyInterface)
 	{
 		m_socketListener = listener;
+		m_proxyInterface=a_proxyInterface;
 		//HTTP
 		m_Anon = AnonServiceFactory.getAnonServiceInstance("AN.ON");
 		m_Anon.setProxy(a_proxyInterface);
@@ -131,8 +126,6 @@ final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 		m_maxDummyTrafficInterval = a_maxDummyTrafficInterval;
 		setDummyTraffic(a_maxDummyTrafficInterval);
 	}
-
-
 
 	/**
 	 * Sets a new MixCascade.
@@ -203,8 +196,9 @@ final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 		if (USE_TOR)
 		{
 			m_Tor = AnonServiceFactory.getAnonServiceInstance("TOR");
+			m_Tor.setProxy(m_proxyInterface);
 			m_Tor.initialize(new TorAnonServerDescription(true));
-			((Tor)m_Tor).setCircuitLength(JAPModel.getTorMinRouteLen(),JAPModel.getTorMaxRouteLen());
+			( (Tor) m_Tor).setCircuitLength(JAPModel.getTorMinRouteLen(), JAPModel.getTorMaxRouteLen());
 		}
 		else
 		{
@@ -303,7 +297,7 @@ final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 						newChannel = null;
 						if (firstByte == 4 || firstByte == 5) //SOCKS
 						{
-							newChannel=m_Tor.createChannel(AnonChannel.SOCKS);
+							newChannel = m_Tor.createChannel(AnonChannel.SOCKS);
 						}
 						else
 						{
@@ -337,9 +331,11 @@ final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 							Thread.sleep(10000);
 						}
 					}
-					catch(Exception e)
+					catch (Exception e)
 					{
-						LogHolder.log(LogLevel.ERR, LogType.NET, "JAPAnonPrxoy.run() something was wrong with seting up a new channel Exception: " + e);
+						LogHolder.log(LogLevel.ERR, LogType.NET,
+							"JAPAnonPrxoy.run() something was wrong with seting up a new channel Exception: " +
+									  e);
 						break;
 					}
 				}

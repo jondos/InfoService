@@ -64,6 +64,7 @@ public class FirstOnionRouterConnection implements Runnable
 	private MyRandom m_rand;
 	private Object m_oSendSync;
 	private long m_inittimeout;
+	private Tor m_Tor;
 	/**
 	 * constructor
 	 *
@@ -71,7 +72,7 @@ public class FirstOnionRouterConnection implements Runnable
 	 * @param d
 	 * description of the onion router
 	 */
-	public FirstOnionRouterConnection(ORDescription d)
+	public FirstOnionRouterConnection(ORDescription d,Tor a_Tor)
 	{
 		m_inittimeout = 30000;
 		m_readDataLoop = null;
@@ -80,6 +81,7 @@ public class FirstOnionRouterConnection implements Runnable
 		m_description = d;
 		m_rand = new MyRandom(new SecureRandom());
 		m_oSendSync = new Object();
+		m_Tor=a_Tor;
 	}
 
 	public ORDescription getORDescription()
@@ -155,7 +157,11 @@ public class FirstOnionRouterConnection implements Runnable
 	 */
 	public synchronized void connect() throws Exception
 	{
-		FirstOnionRouterConnectionThread forcs = new FirstOnionRouterConnectionThread(m_description.getAddress(), m_description.getPort(),m_inittimeout);
+		FirstOnionRouterConnectionThread forcs =
+			new FirstOnionRouterConnectionThread(m_description.getAddress(),
+												 m_description.getPort(),
+												 m_inittimeout,
+												 m_Tor.getProxy());
 		m_tinyTLS = forcs.getConnection();
 //		m_tinyTLS = new TinyTLS(m_description.getAddress(), m_description.getPort());
 		m_tinyTLS.setRootKey(m_description.getSigningKey());

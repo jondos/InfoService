@@ -14,7 +14,7 @@ public class testtinytls {
 	public static void main(String[] args) throws IOException{
 		LogHolder.setLogInstance(new SystemErrLog());
 		LogHolder.setDetailLevel(LogHolder.DETAIL_LEVEL_HIGHEST);
-		FirstOnionRouterConnectionThread forcs= new FirstOnionRouterConnectionThread("192.168.0.222",443,1000);
+		FirstOnionRouterConnectionThread forcs= new FirstOnionRouterConnectionThread("192.168.0.222",443,1000,null);
 //		TinyTLS s = new TinyTLS("192.168.0.222",443);
 		TinyTLS s = forcs.getConnection();
 		s.startHandshake();

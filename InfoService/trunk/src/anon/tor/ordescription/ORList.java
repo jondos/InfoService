@@ -128,7 +128,7 @@ public class ORList
 	{
 		return (ORDescription) m_onionroutersWithNames.get(name);
 	}
-	
+
 	public synchronized void remove(String name)
 	{
 		m_onionrouters.removeElement(getByName(name));
@@ -199,7 +199,7 @@ public class ORList
 			}
 			//new in version 0.0.9pre5 - added instead of running-routers line
 			else if(aktLine.startsWith("opt router-status")||aktLine.startsWith("router-status"))
-			{			
+			{
 				strRunningOrs = "";
 				StringTokenizer st = new StringTokenizer(aktLine," ");
 				String token = st.nextToken();
@@ -217,7 +217,6 @@ public class ORList
 						if(!token.startsWith("$"))
 						{
 							strRunningOrs +=	(new StringTokenizer(token,"=")).nextToken() +" ";
-							System.out.println(strRunningOrs);			
 						}
 					}
 				}

@@ -117,6 +117,7 @@ public class Tor implements Runnable, AnonService
 	private Thread m_circuitCreator;
 	private boolean m_closeCreator;
 
+	private ImmutableProxyInterface m_proxyInterface;
 	/**
 	 * Constructor
 	 *
@@ -130,7 +131,7 @@ public class Tor implements Runnable, AnonService
 		//create a new circuit every 5 minutes
 		//m_createNewCircuitIntervall = 60000 * 5;
 
-		m_firstORFactory = new FirstOnionRouterConnectionFactory();
+		m_firstORFactory = new FirstOnionRouterConnectionFactory(this);
 		m_allowedORNames = null;
 
 		m_allowedFirstORNames = null;
@@ -150,6 +151,7 @@ public class Tor implements Runnable, AnonService
 		//counts the number of circuits that have been created (-1 : nouse of this variable / 0-m_maxnrofactivecircuits : number of created circuits)
 		m_CircuitsCreated = -1;
 		m_closeCreator = false;
+		m_proxyInterface=null;
 	}
 
 	/**
@@ -408,7 +410,7 @@ public class Tor implements Runnable, AnonService
 			m_activeCircuits[i] = createNewCircuit("141.76.46.90",80);
 			m_CircuitsCreated++;
 		}
-		m_CircuitsCreated = -1; 
+		m_CircuitsCreated = -1;
 	}
 	/*	public void run()
 	 {
@@ -656,10 +658,15 @@ public class Tor implements Runnable, AnonService
 		return ErrorCodes.E_SUCCESS;
 	}
 
-	/** Proxies are not supported at the moment!*/
 	public int setProxy(ImmutableProxyInterface a_Proxy)
 	{
-		return ErrorCodes.E_UNKNOWN;
+		m_proxyInterface=a_Proxy;
+		return ErrorCodes.E_SUCCESS;
+	}
+
+	public ImmutableProxyInterface getProxy()
+	{
+		return m_proxyInterface;
 	}
 
 	public void shutdown()

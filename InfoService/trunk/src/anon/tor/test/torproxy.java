@@ -3,7 +3,7 @@
  */
 package anon.tor.test;
 
-import jap.JAPController;
+//import jap.JAPController;
 
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -24,9 +24,9 @@ public class torproxy {
 	public static void main(String[] args) throws Exception{
 		//LogHolder.setLogInstance(new SystemErrLog());
 
-		JAPController m_controller = JAPController.getInstance();
-		m_controller.loadConfigFile(null, false);
-		m_controller.initialRun();
+	//	JAPController m_controller = JAPController.getInstance();
+	//	m_controller.loadConfigFile(null, false);
+	//	m_controller.initialRun();
 
 		Tor tor = Tor.getInstance();
 		tor.setConnectionsPerRoute(10);
