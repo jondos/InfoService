@@ -99,7 +99,7 @@ final class JAPConfCert extends AbstractJAPConfModule
 		X509NameTokenizer x509TokenIssuer = new X509NameTokenizer(a_cert.getIssuer().toString());
 		while (x509TokenIssuer.hasMoreTokens())
 		{
-			String strElement = (String) x509TokenIssuer.nextToken();
+			String strElement = x509TokenIssuer.nextToken();
 
 			if (strElement.startsWith("CN="))
 			{
