@@ -47,7 +47,8 @@
 #58=JAPController.java
 idl[0].ProcessIDL=false
 runtime.0[0].RunnableType=com.borland.jbuilder.runtime.ApplicationRunner
-runtime.0[0].application.class=JAP
+runtime.0[0].application.class=gui.wizard.BasicWizard
+runtime.0[0].jsprunner.launchuri=/
 runtime.0[0].test.harness=junit.textui.TestRunner
 sys[0].AuthorLabel=@author
 sys[0].BackupPath=.
@@ -56,6 +57,7 @@ sys[0].BraceStyle=1
 sys[0].CheckStable=1
 sys[0].Company=
 sys[0].CompanyLabel=Organisation:
+sys[0].CompileOnDebug=0
 sys[0].Copyright=Copyright (c) 2001
 sys[0].CopyrightLabel=Copyright:
 sys[0].DefaultPath=.

@@ -26,8 +26,8 @@ IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISI
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
 
-public class JAPConstants {
-	static final String aktVersion = "00.01.050"; //Never change the layout of this line!
+public final class JAPConstants {
+	static final String aktVersion = "00.01.052"; //Never change the layout of this line!
 	//static final String buildDate=".."
 	//static final String buildType="..."
         //needed for update.JAPUpdate
@@ -51,7 +51,7 @@ public class JAPConstants {
 	static final String   BUSYFN                       = "busy.gif";
 	static final String   SPLASHFN                     = "splash.gif";
 	static final String   ABOUTFN                      = "info.gif";
-	static final String   DOWNLOADFN                   = "install.gif";
+	public static final String   DOWNLOADFN                   = "install.gif";
 	static final String   IICON16FN                    = "icon16.gif";
 	static final String   ICONFN                       = "icon.gif";
 	static final String   JAPTXTFN                     = "japtxt.gif";

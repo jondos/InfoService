@@ -30,191 +30,132 @@ import javax.swing.Icon;
 import java.awt.Component;
 import java.awt.Dialog;
 
+import java.util.Vector;
 
 import java.net.URL;
 import java.lang.*;
 // this shall become the browser/wizardhost providing class ...
-public class BasicWizardHost implements WizardHost
-{
-
-private JButton okbutton;
-private WizardHost wh;
-private Color color;
-private JPanel panel;// panel2, panel3, panel4;
-private static JFrame browser;
-private JButton cancel, finish;
-public JButton back, next, help;
-private WizardPage japWPage;
-private int totalSteps, indexOfWizardPage;
-private Border etched;
-private Box box;
-final JAPWizardBase japWBase;
-private String language, title;
-private Graphics graphics;
-private JSeparator separator;
-private GridBagLayout gridBagBrowser, gridBagPanel;
-private GridBagConstraints cBrowser, cPanel;
-//private Wizard myWizard;
-
-  public BasicWizardHost(JAPWizardBase japWBase, WizardPage japWPage)
+public class BasicWizardHost implements WizardHost,ActionListener
   {
+    private JDialog m_Dialog;
+    private JButton m_bttnOk;
+    private JButton m_bttnCancel;
+    private JButton m_bttnFinish;
+    private JButton m_bttnBack;
+    private JButton m_bttnNext;
+    private JButton m_bttnHelp;
+    private WizardPage m_currentPage;
+    private int m_TotalSteps;
+    private Wizard m_Wizard;
 
- this.japWBase = japWBase;
- this.japWPage = japWPage;
+    private final static String COMMAND_NEXT="NEXT";
+    private final static String COMMAND_BACK="BACK";
 
- title = "JAP Wizard";
- browser = new JFrame();
-  gridBagBrowser = new GridBagLayout();
-  gridBagPanel = new GridBagLayout();
-  cPanel = new GridBagConstraints();
-  cBrowser = new GridBagConstraints();
-  panel = new JPanel();
-  panel.setLayout(gridBagPanel);
+    public BasicWizardHost(Frame parent,Wizard wizard)
+      {
+        m_Wizard=wizard;
+        m_currentPage=null;
+        m_Dialog = new JDialog(parent,wizard.getWizardTitle());
+        GridBagLayout gridBag= new GridBagLayout();
+        GridBagConstraints c = new GridBagConstraints();
+        m_Dialog.getContentPane().setLayout(gridBag);
 
-  setCancelEnabled(true);
-  setBackEnabled(false);
-  setNextEnabled(true);
-  setFinishEnabled(true);
-  setHelpEnabled(true);
-  browser.setTitle(title);
-  makeIcon();
-  browser.setResizable(false);
-  browser.getContentPane().setLayout(gridBagBrowser);
+        GridBagLayout gridBagPanel=new GridBagLayout();
+        GridBagConstraints cPanel = new GridBagConstraints();
+        JPanel panel = new JPanel();
+        panel.setLayout(gridBagPanel);
 
-  separator = new JSeparator();
-  separator.setVisible(true);
+        m_bttnBack=new JButton("< Back");
+        m_bttnBack.setActionCommand(COMMAND_BACK);
+        m_bttnBack.addActionListener(this);
+        m_bttnNext=new JButton("Next >");
+        m_bttnNext.setActionCommand(COMMAND_NEXT);
+        m_bttnNext.addActionListener(this);
+        m_bttnHelp=new JButton("Help");
+        m_bttnCancel=new JButton("Cancel");
+        m_bttnFinish=new JButton("Finish");
 
-  cPanel.gridx = 0;
-  cPanel.gridy = 0;
+        //setResizable(false);
+        JSeparator separator = new JSeparator();
+        separator.setVisible(true);
 
-  cPanel.anchor = GridBagConstraints.WEST;
-  cPanel.weightx = 1.0;
-  cPanel.weighty = 1.0;
-  cPanel.insets = new Insets(5,5,5,0);
-  gridBagPanel.setConstraints(help,cPanel);
-  panel.add(help,cPanel);
+        JPanel panelPage=new JPanel();
 
-  cPanel.gridx = 1;
-  cPanel.anchor = GridBagConstraints.CENTER;
-  cPanel.weightx = 0.0;
-  cPanel.weighty = 0.0;
-  cPanel.insets = new Insets(5,0,5,20);
-  gridBagPanel.setConstraints(cancel,cPanel);
-  panel.add(cancel,cPanel);
+        cPanel.gridx = 0;
+        cPanel.gridy = 0;
 
-  cPanel.gridx = 2;
-  cPanel.insets = new Insets(5,0,5,5);
-  gridBagPanel.setConstraints(back,cPanel);
-  panel.add(back, cPanel);
-  cPanel.gridx = 3;
-  cPanel.insets = new Insets(5,0,5,5);
-  gridBagPanel.setConstraints(next,cPanel);
-  panel.add(next, cPanel);
+        cPanel.fill=GridBagConstraints.NONE;
+        cPanel.anchor = GridBagConstraints.WEST;
+        cPanel.weightx = 1.0;
+        cPanel.weighty = 1.0;
+        cPanel.insets = new Insets(10,10,10,50);
+        //gridBagPanel.setConstraints(m_bttnBack,cPanel);
+        panel.add(m_bttnHelp,cPanel);
+        cPanel.weightx=0;
+        cPanel.gridx=1;
+        cPanel.insets = new Insets(10,10,10,20);
+        panel.add(m_bttnCancel,cPanel);
+        cPanel.gridx=2;
+        cPanel.insets = new Insets(10,2,10,2);
+        panel.add(m_bttnBack,cPanel);
+        cPanel.gridx=3;
+        panel.add(m_bttnNext,cPanel);
+        cPanel.gridx=4;
+        cPanel.insets = new Insets(10,20,10,10);
+        panel.add(m_bttnFinish,cPanel);
 
-  cPanel.gridx = 4;
-  cPanel.anchor = GridBagConstraints.EAST;
-  cPanel.weightx = 1.0;
-  cPanel.weighty = 1.0;
-  gridBagPanel.setConstraints(finish,cPanel);
-  panel.add(finish,cPanel);
- // needs a ComponentListener?
-  browser.addComponentListener(new ComponentListener(){
-  public void componentHidden(ComponentEvent e) {
-	//System.out.println("componentHidden event from "
-	//	       + e.getComponent().getClass().getName());
+        c.gridx = 0;
+        c.gridy = 0;
+        c.gridwidth = 1;
+        c.gridheight=1;
+        c.fill=GridBagConstraints.BOTH;
+        c.anchor = GridBagConstraints.NORTHWEST;
+        c.insets = new Insets(10,10,10,10);
+        c.weightx = 1.0;
+        c.weighty = 1.0;
+        gridBag.setConstraints(panelPage, c);
+        m_Dialog.getContentPane().add(panelPage,0);
+        c.gridy = 1;
+        c.fill=GridBagConstraints.HORIZONTAL;
+        c.weighty=0;
+        c.insets = new Insets(0,10,0,10);
+        gridBag.setConstraints(separator,c);
+        m_Dialog.getContentPane().add(separator);
+        c.gridy = 2;
+        c.insets = new Insets(0,0,0,0);
+        c.fill = GridBagConstraints.HORIZONTAL;
+        gridBag.setConstraints(panel,c);
+        m_Dialog.getContentPane().add(panel);
+        m_Dialog.pack();
+        m_Dialog.setVisible(false);
     }
 
-    public void componentMoved(ComponentEvent e) {
-	//System.out.println("componentMoved event from "
-	//	       + e.getComponent().getClass().getName());
+  public void setWizardPage(WizardPage page)
+    {
+      GridBagConstraints c=new GridBagConstraints();
+      c.gridx = 0;
+      c.gridy = 0;
+      c.gridwidth = 1;
+      c.gridheight=1;
+      c.fill=GridBagConstraints.BOTH;
+      c.anchor = GridBagConstraints.NORTHWEST;
+      c.insets = new Insets(10,10,10,10);
+      c.weightx = 1.0;
+      c.weighty = 1.0;
+      JComponent panel=page.getPageComponent(this);
+      m_Dialog.getContentPane().remove(0);
+      ((GridBagLayout)m_Dialog.getContentPane().getLayout()).setConstraints(panel, c);
+      m_Dialog.getContentPane().add(panel,0);
+      m_Dialog.setVisible(true);
+      m_Dialog.repaint();
+      if(m_currentPage==null)
+        {
+          m_Dialog.setVisible(true);
+          m_Dialog.pack();
+        }
+      m_currentPage=page;
     }
-
-    public void componentResized(ComponentEvent e) {
-	//System.out.println("componentResized event from "
-	//	       + e.getComponent().getClass().getName());
-    }
-
-  public void componentShown(ComponentEvent e) {
-	//System.out.println("componentShown event from "
-	//	       + e.getComponent().getClass().getName());
-                       //e.getComponent().setEnabled(true);
-                       e.getComponent().setVisible(true);
-    }
-
-  });
-  browser.addWindowListener(new WindowListener(){
-
-  public void windowClosing(WindowEvent e) {
-        e.getWindow().setVisible(false);
-   //     System.out.println("Window closing"+ e.toString());
-   //     System.exit(3);
-    }
-
-    public void windowClosed(WindowEvent e) {
-        //System.out.println("Window closed"+ e.toString());
-    }
-
-    public void windowOpened(WindowEvent e) {
-        //System.out.println("Window opened"+ e.toString());
-    }
-
-    public void windowIconified(WindowEvent e) {
-        //System.out.println("Window iconified"+ e.toString());
-    }
-
-    public void windowDeiconified(WindowEvent e) {
-       // System.out.println("Window deiconified"+ e.toString());
-    }
-
-    public void windowActivated(WindowEvent e) {
-       // System.out.println("Window activated"+ e.toString());
-    }
-
-    public void windowDeactivated(WindowEvent e) {
-       // System.out.println("Window deactivated"+ e.toString());
-    }
-
-
-  });
-  browser.setSize(panel.getSize());
-
-  cBrowser.gridx = 0;
-  cBrowser.gridy = 0;
-  cBrowser.gridwidth = 1;
-  cBrowser.ipadx = 80;
-  cBrowser.anchor = GridBagConstraints.NORTH;
-  cBrowser.insets = new Insets(5,5,1,5);
-  cBrowser.weightx = 1.0;
-  cBrowser.weighty = 0.0;
-  gridBagBrowser.setConstraints((Component)japWPage, cBrowser);
-  browser.getContentPane().add((Component)japWPage , cBrowser);
-  cBrowser.gridy = 1;
-  cBrowser.ipadx = 500;//panel.getSize().width;
-  cBrowser.insets = new Insets(5,0,0,0);
-  gridBagBrowser.setConstraints(separator,cBrowser);
-  browser.getContentPane().add(separator,cBrowser);
-  cBrowser.gridy = 2;
-  cBrowser.weightx = 1.0;
-  cBrowser.weighty = 1.0;
-  cBrowser.gridwidth = 3;
-  cBrowser.insets = new Insets(0,5,1,5);
- // cBrowser.ipady = 20;
-  cBrowser.ipadx = 80;
-  cBrowser.fill = GridBagConstraints.HORIZONTAL;
-  cBrowser.anchor = GridBagConstraints.SOUTH;
-  gridBagBrowser.setConstraints(panel, cBrowser);
-  browser.getContentPane().add(panel, cBrowser);
-  browser.pack();
-  browser.setVisible(false);
-
-  }
-
- private void makeIcon()
- {
- ImageIcon icon = new ImageIcon("images/icon16.gif");
- browser.setIconImage(icon.getImage());
- }
-
+/*
 public void initialize()
 {
 
@@ -242,12 +183,6 @@ public void initialize()
 
 }
 
-public JFrame getBrowser()
-{
-return this.browser;
-}
-
-
 public int getTotalSteps()
 {
 return totalSteps;
@@ -255,97 +190,39 @@ return totalSteps;
  public void setFinishEnabled(boolean enabled){
  makeFinishButton().setEnabled(enabled);
  }
+*/
 
- public void setHelpEnabled(boolean enabled){
- makeHelpButton().setEnabled(enabled);
- }
+  public Dialog getDialogParent()
+    {
+      return m_Dialog;
+    }
+ public void setHelpEnabled(boolean enabled)
+  {
+    m_bttnHelp.setEnabled(enabled);
+  }
 
  public void setNextEnabled(boolean enabled)
-          {
-          makeNextButton().setEnabled(enabled);
-          }
+  {
+    m_bttnNext.setEnabled(enabled);
+  }
 
-
- public void setTotalSteps(int count)
-          {
-          this.totalSteps = count;
-        //  browser.setTitle("JAP Wizard   Step 1 of "+totalSteps);
-          }
- public void setUseSwingThreadEnabled(boolean b){}
-
- public void setBackEnabled(boolean b)
+  public void setBackEnabled(boolean b)
    {
-    makeBackButton().setEnabled(b);
+      m_bttnBack.setEnabled(b);
    }
 
- public void setCancelEnabled(boolean b){
-  makeCancelButton().setEnabled(b);
-  }
+  public void setCancelEnabled(boolean b)
+    {
+      m_bttnCancel.setEnabled(b);
+    }
 
-  public JButton makeFinishButton()
-{
-finish = new JButton();
-finish.setSize(50,30);
-finish.addActionListener(new ActionListener() {
-  public void actionPerformed (ActionEvent e) {
-  doFinish();
-  }
-});
-finish.setVisible(true);
-return finish;
-}
+  public void setFinishEnabled(boolean b)
+    {
+      m_bttnFinish.setEnabled(b);
+    }
 
-public JButton makeCancelButton()
-{
-cancel = new JButton();
-cancel.setSize(50,30);
-cancel.addActionListener(new ActionListener() {
-  public void actionPerformed (ActionEvent e) {
-  doCancel();
-  }
-});
-cancel.setVisible(true);
-return cancel;
-}
 
-public JButton makeNextButton()
-{
-next = new JButton();
-next.setSize(50,30);
-next.addActionListener(new ActionListener() {
-  public void actionPerformed (ActionEvent e) {
-  doNext();
-  }
-});
-next.setVisible(true);
-return next;
-}
-
-public JButton makeBackButton()
-{
-back = new JButton();
-back.setSize(50,30);
-back.addActionListener(new ActionListener() {
-  public void actionPerformed (ActionEvent e) {
-  doBack();
-  }
-});
-back.setVisible(true);
-return back;
-}
-
-public JButton makeHelpButton()
-{
-help = new JButton();
-help.setSize(50,30);
-help.addActionListener(new ActionListener() {
-  public void actionPerformed (ActionEvent e) {
-  doHelp();
-  }
-});
-cancel.setVisible(true);
-return cancel;
-}
+/*
 
 public void doFinish()
 {
@@ -460,5 +337,18 @@ public void setNextWizardPage(WizardPage currentPage, int indexOfWizardPage)
 
 }
 
+*/
 
+  public void actionPerformed(ActionEvent e)
+    {
+      String command=e.getActionCommand();
+      if(command.equals(COMMAND_NEXT))
+        {
+          m_Wizard.next(m_currentPage,this);
+        }
+      else if(command.equals(COMMAND_BACK))
+        {
+          m_Wizard.back(m_currentPage,this);
+        }
+    }
 }

@@ -28,8 +28,6 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 package anon.server.impl;
 
 import anon.AnonChannel;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.IOException;
@@ -66,11 +64,7 @@ class Channel implements AnonChannel
         return m_inputStream;
       }
 
-    /*public void directOutputTo(OutputStream out)
-      {
-        m_outputStream=out;
-      }*/
-    public OutputStream getOutputStream()
+     public OutputStream getOutputStream()
       {
         return m_outputStream;
       }
@@ -91,10 +85,10 @@ class Channel implements AnonChannel
           }
         m_bIsClosed=true;
       }
+
     //called from MuxSocket
     protected /*synchronized*/ void recv(byte[] buff,int pos,int len) throws IOException
       {
- //       m_OutputStream.write(buff,pos,len);
         m_inputStream.recv(buff,pos,len);
       }
 
@@ -115,56 +109,162 @@ class Channel implements AnonChannel
 
   }
 
-class Queue
+final class IOQueue
   {
-    class QueueEntry
+    private byte[] buff;
+    private int readPos;
+    private int writePos;
+    private boolean bWriteClosed;
+    private boolean bReadClosed;
+    private final static int BUFF_SIZE=10000;
+    private boolean bFull;
+
+    public IOQueue()
       {
-        byte[] buff;
-        int len;
-        QueueEntry next;
+        buff=new byte[BUFF_SIZE];
+        readPos=0;
+        writePos=0;
+        bWriteClosed=bReadClosed=false;
+        bFull=false;
       }
 
-    QueueEntry m_first;
-    QueueEntry m_last;
-    public Queue()
+    public synchronized void write(byte[] in,int pos,int len) throws IOException
       {
-        m_first=null;
-      }
-
-    public void add(byte[] in,int pos,int len)
-      {
-        QueueEntry newEntry=new QueueEntry();
-        newEntry.buff=new byte[len];
-        System.arraycopy(newEntry.buff,0,in,pos,len);
-        newEntry.len=len;
-        newEntry.next=null;
-        if(m_last==null)
+        int toCopy;
+        while(len>0)
           {
-            m_first=newEntry;
-            m_last=newEntry;
-          }
-        else
-         m_last.next=newEntry;
+            if(bReadClosed||bWriteClosed)
+              throw new IOException("IOQueue closed");
+            if(bFull)
+              {
+                notify(); //awake readers
+                try{wait();}catch(InterruptedException e){throw new IOException("IOQueue write interrupted");} //wait;
+                continue;
+              }
+            if(readPos<=writePos)
+              toCopy=BUFF_SIZE-writePos;
+            else
+              toCopy=readPos-writePos;
+            if(toCopy>len)
+               toCopy=len;
+            System.arraycopy(in,pos,buff,writePos,toCopy);
+            pos+=toCopy;
+            writePos+=toCopy;
+            len-=toCopy;
+            if(writePos>=BUFF_SIZE)
+              writePos=0;
+            if(readPos==writePos)
+              bFull=true;
+          }//End while
+        notify(); //awake Readers
       }
 
-    public int get(byte[] out,int pos,int len)
+    public synchronized int read() throws IOException
       {
-        return -1;
+        while(true)
+          {
+            if(bReadClosed)
+              throw new IOException("IOQueue closed");
+            if(readPos==writePos&&!bFull) //IOQueue is empty
+              {
+                if(bWriteClosed)
+                  return -1;
+                else
+                  {
+                    notify(); //awake Writers;
+                    try{wait();}catch(InterruptedException e){throw new IOException("IOQueue read() interrupted");}
+                    continue;
+                  }
+              }
+            int i=buff[readPos++]&0xFF;
+            if(readPos>=BUFF_SIZE)
+              readPos=0;
+            if(bFull)
+              {
+                bFull=false;
+                notify(); //awake Writers;
+              }
+            return i;
+          }
+      }
+
+    public synchronized int read(byte[] in,int pos,int len) throws IOException
+      {
+       while(true)
+          {
+            if(bReadClosed)
+              throw new IOException("IOQueue closed");
+            if(readPos==writePos&&!bFull) //IOQueue is empty
+              {
+                if(bWriteClosed)
+                  return -1;
+                else
+                  {
+                    notify(); //awake Writers;
+                    try{wait();}catch(InterruptedException e){throw new IOException("IOQueue read() interrupted");}
+                    continue;
+                  }
+              }
+            int toCopy;
+            if(writePos<=readPos)
+              toCopy=BUFF_SIZE-readPos;
+            else
+              toCopy=writePos-readPos;
+            if(toCopy>len)
+               toCopy=len;
+            System.arraycopy(buff,readPos,in,pos,toCopy);
+            readPos+=toCopy;
+            if(readPos>=BUFF_SIZE)
+              readPos=0;
+            if(bFull)
+              {
+                bFull=false;
+                notify(); //awake Writers;
+              }
+            return toCopy;
+          }
+
+      }
+
+    public synchronized int available()
+      {
+        if(bFull)
+          return BUFF_SIZE;
+        if(writePos>=readPos)
+          return writePos-readPos;
+        return BUFF_SIZE-readPos+writePos;
+      }
+
+    public synchronized void closeWrite()
+      {
+        bWriteClosed=true;
+        notify();
+      }
+
+    public synchronized void closeRead()
+      {
+        bReadClosed=true;
+        notify();
+      }
+
+    public synchronized void finalize()
+      {
+        bReadClosed=bWriteClosed=true;
+        notify();
+        buff=null;
       }
   }
 
-class ChannelInputStream extends InputStream
+final class ChannelInputStream extends InputStream
   {
-    private PipedInputStream m_pipedInputStream;
-    private PipedOutputStream m_pipedOutputStream;
+    private IOQueue m_Queue=null;
     private boolean m_bIsClosedByPeer=false;
     private boolean m_bIsClosed=false;
     private Channel m_channel;
 
     ChannelInputStream(Channel c) throws IOException
       {
-        m_pipedOutputStream=new PipedOutputStream();
-        m_pipedInputStream=new PipedInputStream(m_pipedOutputStream);
+        m_Queue=new IOQueue();
         m_bIsClosedByPeer=false;
         m_bIsClosed=false;
         m_channel=c;
@@ -174,44 +274,44 @@ class ChannelInputStream extends InputStream
       {
         try
           {
-             m_pipedOutputStream.write(buff,pos,len);
+             m_Queue.write(buff,pos,len);
           }
         catch(Exception e)
           {
-            e.printStackTrace();
           }
       }
 
     public synchronized int available() throws IOException
       {
-        return m_pipedInputStream.available();
+        return m_Queue.available();
       }
 
     public int read() throws IOException
       {
-        return m_pipedInputStream.read();
+        return m_Queue.read();
       }
 
     public int read(byte[] out,int pos,int len) throws IOException
       {
-        return m_pipedInputStream.read(out,pos,len);
+        return m_Queue.read(out,pos,len);
       }
 
     protected /*synchronized*/ void closedByPeer()
       {
         m_bIsClosedByPeer=true;
-        try{m_pipedOutputStream.close();}catch(Exception e){}
+       try{m_Queue.closeWrite();}catch(Exception e){}
       }
 
     public /*synchronized*/ void close() throws IOException
       {
         m_bIsClosed=true;
-        try{m_pipedOutputStream.close();}catch(Exception e){}
-        m_pipedInputStream.close();
+        try{m_Queue.closeWrite();}catch(Exception e){}
+        m_Queue.closeRead();
+        m_Queue=null;
       }
   }
 
-class ChannelOutputStream extends OutputStream
+final class ChannelOutputStream extends OutputStream
   {
     boolean m_bIsClosedByPeer=false;
     boolean m_bIsClosed=false;

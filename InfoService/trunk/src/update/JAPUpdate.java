@@ -57,7 +57,7 @@ public class JAPUpdate
  private GridBagLayout gridBagFrame, gridBagPanel, gridBagInstalled, gridBagLatest;
  private GridBagConstraints cFirstPane, cButtonPanel, cInstalledPanel, cLatestPanel;
  private JButton upgrade, close, abort;
- private JAPWizardBase wizardBase;
+ private BasicWizard wizardBase;
  private JTextField textVersionInst, textDateInst, textTypeInst,
  textVersionLate, textDateLate, textTypeLate;
  private JTextArea textDescription;
@@ -186,7 +186,7 @@ public class JAPUpdate
 //user's clicked Upgrade
   private void makeWizardPages()
   {
-  wizardBase = new JAPWizardBase(totalSteps);
+ // wizardBase = new JAPWizardBase(totalSteps);
   parentFrame.setVisible(false);
 
   }
