@@ -49,13 +49,13 @@ final class JarFile
 	 * the path of the jar file
 	 * in case of remote files, it is the path for the local, temporary file
 	 */
-	private String name = "";
+	private String m_FileName;
 
 	/** the jar file */
-	private ZipFile jarFile = null;
+	private ZipFile m_ZipFile;
 
 	/** the manifest related to this jar file */
-	private JarManifest manifest = null;
+	private JarManifest m_Manifest;
 
 	//~ Constructors ·······························································
 
@@ -72,10 +72,10 @@ final class JarFile
 	{
 
 		// open the jar file
-		jarFile = new ZipFile(file);
+		m_ZipFile = new ZipFile(file);
 
 		// get the fully qualified file name
-		this.name = jarFile.getName();
+		m_FileName = m_ZipFile.getName();
 
 		// initialize
 		init();
@@ -88,11 +88,11 @@ final class JarFile
 	 */
 	private void init() throws IOException
 	{
-		ZipEntry mf = jarFile.getEntry(JarConstants.MANIFEST_FILE);
+		ZipEntry mf = m_ZipFile.getEntry(JarConstants.MANIFEST_FILE);
 
 		if (mf != null)
 		{
-			manifest = new JarManifest(mf.getSize(), jarFile.getInputStream(mf));
+			m_Manifest = new JarManifest(mf.getSize(), m_ZipFile.getInputStream(mf));
 		}
 	}
 
@@ -103,7 +103,7 @@ final class JarFile
 	 */
 	public JarManifest getManifest()
 	{
-		return manifest;
+		return m_Manifest;
 	}
 
 	/**
@@ -114,7 +114,7 @@ final class JarFile
 	 */
 	public boolean fileExists(String name)
 	{
-		return (jarFile.getEntry(name) != null);
+		return (m_ZipFile.getEntry(name) != null);
 	}
 
 	/**
@@ -126,14 +126,14 @@ final class JarFile
 	 */
 	public JarSignatureFile getSignatureFile(String alias)
 	{
-		ZipEntry sigFile = jarFile.getEntry(JarConstants.META_INF_DIR + "/" + alias + ".SF");
+		ZipEntry sigFile = m_ZipFile.getEntry(JarConstants.META_INF_DIR + "/" + alias + ".SF");
 
 		try
 		{
 			if (sigFile != null)
 			{
 				return new JarSignatureFile(sigFile.getName(), sigFile.getSize(),
-											jarFile.getInputStream(sigFile));
+											m_ZipFile.getInputStream(sigFile));
 			}
 		}
 		catch (IOException ex)
@@ -151,7 +151,7 @@ final class JarFile
 	 */
 	public JarFileEntry getSignatureBlockFile(String alias)
 	{
-		Enumeration files = jarFile.entries();
+		Enumeration files = m_ZipFile.entries();
 		ZipEntry fileEntry;
 
 		alias = alias.toUpperCase();
@@ -168,7 +168,7 @@ final class JarFile
 				{
 					return new JarFileEntry(fileEntry.getName(),
 											fileEntry.getSize(),
-											jarFile.getInputStream(fileEntry));
+											m_ZipFile.getInputStream(fileEntry));
 				}
 			}
 			catch (IOException ex)
@@ -188,7 +188,7 @@ final class JarFile
 	public Vector getSignatureBlockFiles(String alias)
 	{
 		Vector sigBlockFiles = new Vector();
-		Enumeration files = jarFile.entries();
+		Enumeration files = m_ZipFile.entries();
 		ZipEntry fileEntry;
 
 		// filter the signature files with the given alias
@@ -203,7 +203,7 @@ final class JarFile
 				{
 					sigBlockFiles.addElement(new JarFileEntry(fileEntry.getName(),
 						fileEntry.getSize(),
-						jarFile.getInputStream(fileEntry)));
+						m_ZipFile.getInputStream(fileEntry)));
 				}
 			}
 			catch (IOException ex)
@@ -227,7 +227,7 @@ final class JarFile
 		ZipEntry file = null;
 		try
 		{
-			file = jarFile.getEntry(name);
+			file = m_ZipFile.getEntry(name);
 		}
 		catch (Exception e)
 		{}
@@ -263,7 +263,7 @@ final class JarFile
 		{
 			if (file != null)
 			{
-				return new JarFileEntry(file.getName(), file.getSize(), jarFile.getInputStream(file));
+				return new JarFileEntry(file.getName(), file.getSize(), m_ZipFile.getInputStream(file));
 			}
 		}
 		catch (IOException ex)
@@ -280,7 +280,7 @@ final class JarFile
 	 */
 	public String getName()
 	{
-		return name;
+		return m_FileName;
 	}
 
 	/**
@@ -291,7 +291,7 @@ final class JarFile
 	{
 		Vector alias = new Vector();
 
-		Enumeration files = jarFile.entries();
+		Enumeration files = m_ZipFile.entries();
 
 		while (files.hasMoreElements())
 		{
@@ -324,7 +324,7 @@ final class JarFile
 	{
 		try
 		{
-			jarFile.close();
+			m_ZipFile.close();
 			return true;
 		}
 		catch (IOException ex)

@@ -28,13 +28,17 @@
 package jarify;
 
 import java.io.File;
+import java.io.IOException;
 import java.security.SignatureException;
 import java.util.Hashtable;
 import java.util.Vector;
+import java.util.zip.ZipException;
 import org.bouncycastle.crypto.Digest;
 import org.bouncycastle.util.encoders.Base64;
 import anon.crypto.JAPCertificate;
-import logging.*;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 
 /**
  * Verfies the authencity of a signed jar file.
@@ -42,13 +46,13 @@ import logging.*;
 final public class JarVerifier
 {
 	/** The JarFile to authenticate to */
-	private JarFile jarFile;
+	private JarFile m_jarFile;
 
 	/** The Manifest File of the JarFile */
-	private JarManifest manifest;
+	private JarManifest m_Manifest;
 
 	/** The trusted certificate */
-	private JAPCertificate cer;
+	private JAPCertificate m_certRoot;
 
 	/** Contains all loaded Digest Class objects for caching purposes */
 	private Hashtable digestCache = new Hashtable();
@@ -63,23 +67,17 @@ final public class JarVerifier
 	 *
 	 * @param jarFilePath the JarFile to verify
 	 */
-	private JarVerifier(File jarFile)
+	private JarVerifier(File jarFile) throws ZipException, IOException, SecurityException
 	{
-		cer = null;
-		try
-		{
-			//java.security.Security.addProvider( new BouncyCastleProvider() );
-			this.jarFile = new JarFile(jarFile);
-			manifest = this.jarFile.getManifest();
-		}
-		catch (Exception ex)
-		{
-		}
+		m_certRoot = null;
+		m_jarFile = new JarFile(jarFile);
+		m_Manifest = m_jarFile.getManifest();
+
 	}
 
 	private void close()
 	{
-		jarFile.close();
+		m_jarFile.close();
 	}
 
 	//~ Methods ··········································································
@@ -102,7 +100,7 @@ final public class JarVerifier
 			PKCS7SignedData block = null;
 
 			alias = (String) aliases.elementAt(i);
-			JarFileEntry sbf = jarFile.getSignatureBlockFile(alias);
+			JarFileEntry sbf = m_jarFile.getSignatureBlockFile(alias);
 			if (sbf == null)
 			{
 				continue;
@@ -134,7 +132,7 @@ final public class JarVerifier
 			}
 			try
 			{
-				certs[certs.length - 1].verify(cer.getPublicKey());
+				certs[certs.length - 1].verify(m_certRoot.getPublicKey());
 			}
 			catch (Exception ex)
 			{
@@ -166,10 +164,17 @@ final public class JarVerifier
 
 	public static boolean verify(File file, JAPCertificate cert)
 	{
-		JarVerifier jv = new JarVerifier(file);
-		boolean b = jv.verify(cert);
-		jv.close();
-		return b;
+		try
+		{
+			JarVerifier jv = new JarVerifier(file);
+			boolean b = jv.verify(cert);
+			jv.close();
+			return b;
+		}
+		catch (Throwable t)
+		{
+			return false;
+		}
 	}
 
 	/**
@@ -185,8 +190,8 @@ final public class JarVerifier
 	private boolean verify(JAPCertificate cert)
 	{
 
-		cer = cert;
-		if (cer == null)
+		m_certRoot = cert;
+		if (m_certRoot == null)
 		{
 			return false;
 		}
@@ -216,7 +221,7 @@ final public class JarVerifier
 		}
 		LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Manifest entries verified OK.\n");
 
-		Vector cerAliases = InitAliases(jarFile.getAliasList());
+		Vector cerAliases = InitAliases(m_jarFile.getAliasList());
 		if (cerAliases.size() < 1)
 		{
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC,
@@ -264,12 +269,12 @@ final public class JarVerifier
 	private boolean verifySignature(String alias)
 	{
 		boolean sig_ok = false;
-		JarSignatureFile sf = jarFile.getSignatureFile(alias);
+		JarSignatureFile sf = m_jarFile.getSignatureFile(alias);
 		if (sf == null)
 		{
 			return false;
 		}
-		JarFileEntry sbf = jarFile.getSignatureBlockFile(alias);
+		JarFileEntry sbf = m_jarFile.getSignatureBlockFile(alias);
 		if (sbf == null)
 		{
 			return false;
@@ -363,7 +368,11 @@ final public class JarVerifier
 	 */
 	private boolean isSignedJar()
 	{
-		Vector aliases = jarFile.getAliasList();
+		if (m_jarFile == null)
+		{
+			return false;
+		}
+		Vector aliases = m_jarFile.getAliasList();
 		String[] algs = new String[2];
 		String name;
 		boolean found;
@@ -376,7 +385,7 @@ final public class JarVerifier
 			return false;
 		}
 
-		if (!jarFile.fileExists(JarConstants.MANIFEST_FILE))
+		if (!m_jarFile.fileExists(JarConstants.MANIFEST_FILE))
 		{
 			return false;
 		}
@@ -388,7 +397,7 @@ final public class JarVerifier
 			name = name.toUpperCase();
 			for (int j = 0; j < algs.length; j++)
 			{
-				if (jarFile.fileExists(name + algs[j]))
+				if (m_jarFile.fileExists(name + algs[j]))
 				{
 					found = true;
 					break;
@@ -413,7 +422,7 @@ final public class JarVerifier
 	 */
 	private boolean verifySFDigests(String alias)
 	{
-		JarSignatureFile signatureFile = jarFile.getSignatureFile(alias);
+		JarSignatureFile signatureFile = m_jarFile.getSignatureFile(alias);
 
 		if (signatureFile == null)
 		{
@@ -435,7 +444,7 @@ final public class JarVerifier
 			byte[] hash = new byte[digest.getDigestSize()];
 			try
 			{
-				byte[] manifestContent = manifest.getContent();
+				byte[] manifestContent = m_Manifest.getContent();
 				if (manifestContent == null)
 				{
 					LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Manifest file null.");
@@ -467,12 +476,12 @@ final public class JarVerifier
 		{
 			fileName = (String) listSig.elementAt(i);
 
-			digList = manifest.getDigestList(fileName);
+			digList = m_Manifest.getDigestList(fileName);
 			for (int j = 0; j < digList.size(); j++)
 			{
 				digString = (String) digList.elementAt(j);
 				sigDigest = signatureFile.getDigest(fileName, digString);
-				manEntry = manifest.getEntry(fileName);
+				manEntry = m_Manifest.getEntry(fileName);
 
 				Digest digest = getDigestClass(digString);
 				byte[] sha1 = new byte[digest.getDigestSize()];
@@ -508,7 +517,7 @@ final public class JarVerifier
 	 */
 	private boolean verifyManifestDigests()
 	{
-		Vector fileList = manifest.getFileNames();
+		Vector fileList = m_Manifest.getFileNames();
 		String fileName;
 		String manDigest;
 		JarFileEntry fileEntry;
@@ -519,7 +528,7 @@ final public class JarVerifier
 		for (int i = 0; i < fileList.size(); i++)
 		{
 			fileName = (String) fileList.elementAt(i);
-			fileEntry = jarFile.getFileByName(fileName);
+			fileEntry = m_jarFile.getFileByName(fileName);
 
 			// unexpected error
 			if (fileEntry == null)
@@ -527,12 +536,12 @@ final public class JarVerifier
 				return false;
 			}
 
-			digList = manifest.getDigestList(fileName);
+			digList = m_Manifest.getDigestList(fileName);
 
 			for (int j = 0; j < digList.size(); j++)
 			{
 				digString = (String) digList.elementAt(j);
-				manDigest = manifest.getDigest(fileEntry, digString);
+				manDigest = m_Manifest.getDigest(fileEntry, digString);
 				// compute the digest of the file
 				Digest digest = getDigestClass(digString);
 				byte[] sha1 = new byte[digest.getDigestSize()];
@@ -614,7 +623,5 @@ final public class JarVerifier
 		// in error case
 		return null;
 	}
-
-
 
 }
