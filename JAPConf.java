@@ -480,7 +480,7 @@ public final class JAPConf extends JDialog
 				{
 					i=-1;
 				}
-			if(!model.isPort(i))
+			if(!JAPUtil.isPort(i))
 				{
 					showError(model.getString("errorInfoServicePortWrong"));
 					return false;
@@ -501,7 +501,7 @@ public final class JAPConf extends JDialog
 				{
 					i=-1;
 				}
-			if(!model.isPort(i))
+			if(!JAPUtil.isPort(i))
 				{
 					showError(model.getString("errorAnonServicePortWrong"));
 					return false;
@@ -516,7 +516,7 @@ public final class JAPConf extends JDialog
 				{
 					i=-1;
 				}
-			if(!model.isPort(i))
+			if(!JAPUtil.isPort(i))
 				{
 					showError(model.getString("errorListenerPortWrong"));
 					return false;

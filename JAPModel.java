@@ -205,7 +205,10 @@ public final class JAPModel {
 			return view;
 		}
 	
-	/** Loads the Configuration. This is an XML-File with the following structure:
+	/** Loads the Configuration. 
+	 * First tries to read the configuration file in the users home directory 
+	 * and then in the JAP install directory.
+	 * The configuration is a XML-File with the following structure:
 	 *	<JAP 
 	 *		portNumber=""									// Listener-Portnumber
 	 *    listenerIsLocal="true"/"false"// Listener lasucht nur an localhost ?
@@ -242,35 +245,44 @@ public final class JAPModel {
 		// Load config from xml file
 		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:try loading configuration from "+XMLCONFFN);
 		try {
-			FileInputStream f=new FileInputStream(XMLCONFFN);
+			String dir=System.getProperty("user.home","");
+			FileInputStream f=null;
+			try  //first tries in user.home
+				{
+					f=new FileInputStream(dir+"/"+XMLCONFFN);
+				}
+			catch(Exception e)
+				{
+					f=new FileInputStream(XMLCONFFN); //and then in the current directory
+				};
 			Document doc=DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(f);
 			Element root=doc.getDocumentElement();
 			NamedNodeMap n=root.getAttributes();
 			// 
-			portNumber=parseNodeInt(n.getNamedItem("portNumber"),portNumber);
-			setListenerIsLocal(parseNodeBoolean(n.getNamedItem("isListenerLocal"),true));
-			setUseProxy(parseNodeBoolean(n.getNamedItem("proxyMode"),false));
-			mbActCntMessageNeverRemind=parseNodeBoolean(n.getNamedItem("neverRemindActiveContent"),false);
+			portNumber=JAPUtil.parseNodeInt(n.getNamedItem("portNumber"),portNumber);
+			setListenerIsLocal(JAPUtil.parseNodeBoolean(n.getNamedItem("isListenerLocal"),true));
+			setUseProxy(JAPUtil.parseNodeBoolean(n.getNamedItem("proxyMode"),false));
+			mbActCntMessageNeverRemind=JAPUtil.parseNodeBoolean(n.getNamedItem("neverRemindActiveContent"),false);
 			if(mbActCntMessageNeverRemind)
 				mbActCntMessageNotRemind=true;
 			String host;
 			int port;
-			host=parseNodeString(n.getNamedItem("infoServiceHostName"),infoServiceHostName);
-			port=parseNodeInt(n.getNamedItem("infoServicePortNumber"),infoServicePortNumber);
+			host=JAPUtil.parseNodeString(n.getNamedItem("infoServiceHostName"),infoServiceHostName);
+			port=JAPUtil.parseNodeInt(n.getNamedItem("infoServicePortNumber"),infoServicePortNumber);
 			if(host.equalsIgnoreCase("anon.inf.tu-dresden.de"))
 				host="infoservice.inf.tu-dresden.de";
 			setInfoService(host,port);
 
-			host=parseNodeString(n.getNamedItem("proxyHostName"),proxyHostName);
-			port=parseNodeInt(n.getNamedItem("proxyPortNumber"),proxyPortNumber);
+			host=JAPUtil.parseNodeString(n.getNamedItem("proxyHostName"),proxyHostName);
+			port=JAPUtil.parseNodeInt(n.getNamedItem("proxyPortNumber"),proxyPortNumber);
 			setProxy(host,port);
 
-			anonHostName=parseNodeString(n.getNamedItem("anonHostName"),anonHostName);
+			anonHostName=JAPUtil.parseNodeString(n.getNamedItem("anonHostName"),anonHostName);
 			if(anonHostName.equalsIgnoreCase("anon.inf.tu-dresden.de"))
 				anonHostName="mix.inf.tu-dresden.de";
-			anonPortNumber=parseNodeInt(n.getNamedItem("anonPortNumber"),anonPortNumber);
-			autoConnect=parseNodeBoolean(n.getNamedItem("autoConnect"),false);
-			mbMinimizeOnStartup=parseNodeBoolean(n.getNamedItem("minimizedStartup"),false);
+			anonPortNumber=JAPUtil.parseNodeInt(n.getNamedItem("anonPortNumber"),anonPortNumber);
+			autoConnect=JAPUtil.parseNodeBoolean(n.getNamedItem("autoConnect"),false);
+			mbMinimizeOnStartup=JAPUtil.parseNodeBoolean(n.getNamedItem("minimizedStartup"),false);
 		
 			//Loading debug settings
 			NodeList nl=root.getElementsByTagName("Debug");
@@ -312,7 +324,16 @@ public final class JAPModel {
 		// Save config to xml file
 		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:try saving configuration to "+XMLCONFFN);
 		try {
-			FileOutputStream f=new FileOutputStream(XMLCONFFN);
+			String dir=System.getProperty("user.home","");
+			FileOutputStream f=null;
+			try  //first tries in user.home
+				{
+					f=new FileOutputStream(dir+"/"+XMLCONFFN);
+				}
+			catch(Exception e)
+				{
+					f=new FileOutputStream(XMLCONFFN); //and then in the current directory
+				};
 			Document doc=DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
 			Element e=doc.createElement("JAP");
 			doc.appendChild(e);
@@ -440,7 +461,7 @@ public final class JAPModel {
 
 	public boolean setInfoService(String host,int port)
 		{
-			if(!isPort(port))
+			if(!JAPUtil.isPort(port))
 				return false;
 			if(host==null)
 				return false;
@@ -538,7 +559,7 @@ public final class JAPModel {
 
 	public boolean setProxy(String host,int port)
 		{
-			if(!isPort(port))
+			if(!JAPUtil.isPort(port))
 				return false;
 			if(host==null)
 				return false;
@@ -911,57 +932,5 @@ public final class JAPModel {
 		f.setLocation((screenSize.width-ownSize.width ) , 0 );
 	}
 	
-	public static boolean isPort(int port)
-		{
-			if((port<1)||(port>65536))
-				return false;
-			return true;
-		}
-	
-	public static int parseNodeInt(Node n,int defaultValue)
-		{
-			int i=defaultValue;
-			if(n!=null)
-				try	
-					{
-						i=Integer.parseInt(n.getNodeValue());
-					}
-				catch(Exception e)
-					{
-					}
-			return i;
-		}
-
-	public static boolean parseNodeBoolean(Node n,boolean defaultValue)
-		{
-			boolean b=defaultValue;
-			if(n!=null)
-				try	
-					{
-						String tmpStr=n.getNodeValue();
-						if(tmpStr.equalsIgnoreCase("true"))
-							b=true;
-						else if(tmpStr.equalsIgnoreCase("false"))
-							b=false;
-					}
-				catch(Exception e)
-					{
-					}
-			return b;
-		}
-
-	public static String parseNodeString(Node n,String defaultValue)
-		{
-			String s=defaultValue;
-			if(n!=null)
-				try	
-					{
-						s=n.getNodeValue();
-					}
-				catch(Exception e)
-					{
-					}
-			return s;
-		}
 }
 
