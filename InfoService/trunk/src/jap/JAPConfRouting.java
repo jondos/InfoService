@@ -82,8 +82,6 @@ import forward.client.ClientForwardException;
 import forward.client.ForwardConnectionDescriptor;
 import forward.client.ForwarderInformationGrabber;
 import forward.client.captcha.IImageEncodedCaptcha;
-import forward.server.ForwardSchedulerStatistics;
-import forward.server.ForwardServerManager;
 import gui.JAPHtmlMultiLineLabel;
 import logging.LogHolder;
 import logging.LogLevel;
@@ -107,10 +105,6 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
    */
   private static final int CLIENT_CONNECTION_VIA_MAIL = 2;
 
-  /**
-   * This is the update interval for the server status panel in milliseconds.
-   */
-  private static final long SERVER_STATUS_UPDATE_INTERVAL = (long) 1000;
 
   /**
    * This stores the instance of the server port label.
@@ -144,9 +138,10 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
   private int m_clientConnectionMethod;
 
   /**
-   * Stores the thread, which updates the server status panel.
+   * Stores the observer, which updates the server status panel, if the server statistics listener
+   * has changed.
    */
-  private Thread m_serverStatusThread;
+  private Observer m_serverStatisticsObserver;
 
   /**
    * Stores the data of the infoservice registration table.
@@ -475,10 +470,6 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
    */
   private JPanel createRoutingServerStatusPanel()
   {
-    /* get the statistics instance */
-    final ForwardSchedulerStatistics schedulerStatistics = JAPModel.getInstance().getRoutingSettings().
-      getSchedulerStatistics();
-
     /* get the NumberFormat instance for formating the bandwidth (double) */
     final NumberFormat bandwidthFormat = NumberFormat.getInstance();
     bandwidthFormat.setMinimumFractionDigits(1);
@@ -593,51 +584,28 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
     serverStatusPanelLayout.setConstraints(infoServiceRegistrationTableScrollPane, serverStatusPanelConstraints);
     serverStatusPanel.add(infoServiceRegistrationTableScrollPane);
 
-    /* create the status update thread */
-    m_serverStatusThread = new Thread(new Runnable()
-    {
-      /* this is the implementation for the server status update thread */
-      public void run()
-      {
-        boolean interrupted = false;
-        while (interrupted == false)
-        {
-          settingsRoutingServerStatusBandwidthLabel.setText(JAPMessages.getString(
-            "settingsRoutingServerStatusBandwidthLabel") + " " +
-            bandwidthFormat.format( ( (double) schedulerStatistics.getCurrentBandwidthUsage()) /
-                         (double) 1024) + " " +
-            JAPMessages.getString("settingsRoutingServerStatusBandwidthLabelPart2"));
-          settingsRoutingServerStatusForwardedBytesLabel.setText(JAPMessages.getString(
-            "settingsRoutingServerStatusForwardedBytesLabel") + " " +
-            integerFormat.format(schedulerStatistics.getTransferedBytes()));
-          settingsRoutingServerStatusCurrentConnectionsLabel.setText(JAPMessages.getString(
-            "settingsRoutingServerStatusCurrentConnectionsLabel") + " " +
-            integerFormat.format(JAPModel.getInstance().getRoutingSettings().
-                       getCurrentlyForwardedConnections()));
-          settingsRoutingServerStatusAcceptedConnectionsLabel.setText(JAPMessages.getString(
-            "settingsRoutingServerStatusAcceptedConnectionsLabel") + " " +
-            integerFormat.format(schedulerStatistics.getAcceptedConnections()));
-          settingsRoutingServerStatusRejectedConnectionsLabel.setText(JAPMessages.getString(
-            "settingsRoutingServerStatusRejectedConnectionsLabel") + " " +
-            integerFormat.format(schedulerStatistics.getRejectedConnections()));
-          interrupted = Thread.interrupted();
-          if (interrupted == false)
-          {
-            try
-            {
-              Thread.sleep(SERVER_STATUS_UPDATE_INTERVAL);
-            }
-            catch (Exception e)
-            {
-              interrupted = true;
-            }
-          }
+    /* create the status observer */
+    m_serverStatisticsObserver = new Observer() {
+      /* this is the implementation for the server statistics update */
+      public void update(Observable a_notifier, Object a_message) {
+        if (a_notifier == JAPModel.getInstance().getRoutingSettings().getServerStatisticsListener()) {
+          /* statistics might have been changed */
+          settingsRoutingServerStatusBandwidthLabel.setText(JAPMessages.getString("settingsRoutingServerStatusBandwidthLabel") + " " + bandwidthFormat.format( ( (double) (JAPModel.getInstance().getRoutingSettings().getServerStatisticsListener().getCurrentBandwidthUsage())) / (double) 1024) + " " + JAPMessages.getString("settingsRoutingServerStatusBandwidthLabelPart2"));
+          settingsRoutingServerStatusForwardedBytesLabel.setText(JAPMessages.getString("settingsRoutingServerStatusForwardedBytesLabel") + " " + integerFormat.format(JAPModel.getInstance().getRoutingSettings().getServerStatisticsListener().getTransferedBytes()));
+          settingsRoutingServerStatusCurrentConnectionsLabel.setText(JAPMessages.getString("settingsRoutingServerStatusCurrentConnectionsLabel") + " " + integerFormat.format(JAPModel.getInstance().getRoutingSettings().getServerStatisticsListener().getCurrentlyForwardedConnections()));
+          settingsRoutingServerStatusAcceptedConnectionsLabel.setText(JAPMessages.getString("settingsRoutingServerStatusAcceptedConnectionsLabel") + " " + integerFormat.format(JAPModel.getInstance().getRoutingSettings().getServerStatisticsListener().getAcceptedConnections()));
+          settingsRoutingServerStatusRejectedConnectionsLabel.setText(JAPMessages.getString("settingsRoutingServerStatusRejectedConnectionsLabel") + " " + integerFormat.format(JAPModel.getInstance().getRoutingSettings().getServerStatisticsListener().getRejectedConnections()));
         }
       }
-    });
-    m_serverStatusThread.setDaemon(true);
+    };
+    JAPModel.getInstance().getRoutingSettings().getServerStatisticsListener().addObserver(m_serverStatisticsObserver);
 
-    m_serverStatusThread.start();
+    /* also fetch the initial values */
+    settingsRoutingServerStatusBandwidthLabel.setText(JAPMessages.getString("settingsRoutingServerStatusBandwidthLabel") + " " + bandwidthFormat.format( ( (double) (JAPModel.getInstance().getRoutingSettings().getServerStatisticsListener().getCurrentBandwidthUsage())) / (double) 1024) + " " + JAPMessages.getString("settingsRoutingServerStatusBandwidthLabelPart2"));
+    settingsRoutingServerStatusForwardedBytesLabel.setText(JAPMessages.getString("settingsRoutingServerStatusForwardedBytesLabel") + " " + integerFormat.format(JAPModel.getInstance().getRoutingSettings().getServerStatisticsListener().getTransferedBytes()));
+    settingsRoutingServerStatusCurrentConnectionsLabel.setText(JAPMessages.getString("settingsRoutingServerStatusCurrentConnectionsLabel") + " " + integerFormat.format(JAPModel.getInstance().getRoutingSettings().getServerStatisticsListener().getCurrentlyForwardedConnections()));
+    settingsRoutingServerStatusAcceptedConnectionsLabel.setText(JAPMessages.getString("settingsRoutingServerStatusAcceptedConnectionsLabel") + " " + integerFormat.format(JAPModel.getInstance().getRoutingSettings().getServerStatisticsListener().getAcceptedConnections()));
+    settingsRoutingServerStatusRejectedConnectionsLabel.setText(JAPMessages.getString("settingsRoutingServerStatusRejectedConnectionsLabel") + " " + integerFormat.format(JAPModel.getInstance().getRoutingSettings().getServerStatisticsListener().getRejectedConnections()));
 
     return serverStatusPanel;
   }
@@ -2701,19 +2669,11 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
 
     if (routingMode != JAPRoutingSettings.ROUTING_MODE_SERVER)
     {
-      /* maybe the last routing mode was the server routing mode -> try to close the update
-       * thread
+      /* maybe the last routing mode was the server routing mode -> stop observing the server
+       * statistics listener
        */
-      try
-      {
-        m_serverStatusThread.interrupt();
-        m_serverStatusThread.join();
-      }
-      catch (Exception e)
-      {
-        /* the thread wasn't running (NullPointerException) -> no problem */
-      }
-      m_serverStatusThread = null;
+      JAPModel.getInstance().getRoutingSettings().getServerStatisticsListener().deleteObserver(m_serverStatisticsObserver);
+      m_serverStatisticsObserver = null;
     }
 
     if (routingMode == JAPRoutingSettings.ROUTING_MODE_DISABLED)
