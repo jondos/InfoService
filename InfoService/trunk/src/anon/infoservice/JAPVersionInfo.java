@@ -40,7 +40,7 @@ public class JAPVersionInfo
     private String m_Version;
     private String m_Date="";
     private String m_JAPJarFileName;
-    private String m_CodeBase;
+    private URL m_CodeBase;
     private String m_Description="";
 
     protected JAPVersionInfo(byte[] xmlJnlp,int type) throws Exception
@@ -56,7 +56,7 @@ public class JAPVersionInfo
             Document doc=DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(xml));
             Element root=doc.getDocumentElement();
             m_Version=root.getAttribute("version"); //the JAP version
-            m_CodeBase=root.getAttribute("codebase");
+            m_CodeBase=new URL(root.getAttribute("codebase"));
             NodeList nlResources=root.getElementsByTagName("resources");
             NodeList nlJars=((Element)nlResources.item(0)).getElementsByTagName("jar");
             for(int i=0;i<nlJars.getLength();i++)
@@ -93,7 +93,7 @@ public class JAPVersionInfo
          return m_Description;
       }
 
-     public String getCodeBase()
+     public URL getCodeBase()
       {
         return m_CodeBase;
       }
