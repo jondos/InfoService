@@ -127,9 +127,7 @@ final class JAPConf extends JDialog
 				m_JapConf=this;
 				JPanel pContainer = new JPanel();
   			m_Tabs = new JTabbedPane();
-	      m_fontControls=m_Tabs.getFont();
-        if(JAPModel.isSmallDisplay())
-          m_fontControls=new Font(m_fontControls.getName(),JAPConstants.SMALL_FONT_STYLE,JAPConstants.SMALL_FONT_SIZE);
+	      m_fontControls=JAPController.getDialogFont();
 				pContainer.setLayout( new BorderLayout() );
 				m_Tabs.setFont(m_fontControls);
         m_pPort = buildportPanel();
@@ -192,14 +190,18 @@ final class JAPConf extends JDialog
 		protected JPanel buildportPanel()
 			{
 				JLabel portnumberLabel1 = new JLabel(JAPMessages.getString("settingsPort1"));
-				JLabel portnumberLabel2 = new JLabel(JAPMessages.getString("settingsPort2"));
-				m_tfListenerPortNumber = new JAPJIntField();
-				m_tfListenerPortNumber.addActionListener(new ActionListener() {
+				portnumberLabel1.setFont(m_fontControls);
+        JLabel portnumberLabel2 = new JLabel(JAPMessages.getString("settingsPort2"));
+				portnumberLabel2.setFont(m_fontControls);
+ 				m_tfListenerPortNumber = new JAPJIntField();
+				m_tfListenerPortNumber.setFont(m_fontControls);
+        m_tfListenerPortNumber.addActionListener(new ActionListener() {
 						   public void actionPerformed(ActionEvent e) {
 				   OKPressed();
 				   }});
 				m_cbListenerIsLocal = new JCheckBox(JAPMessages.getString("settingsListenerCheckBox"));
-				// set Font in listenerCheckBox in same color as in portnumberLabel1
+				m_cbListenerIsLocal.setFont(m_fontControls);
+        // set Font in listenerCheckBox in same color as in portnumberLabel1
 				m_cbListenerIsLocal.setForeground(portnumberLabel1.getForeground());
 
 				/*m_cbListenerSocks=new JCheckBox(JAPMessages.getString("settingsListenerCheckBoxSOCKS"));
@@ -224,7 +226,9 @@ final class JAPConf extends JDialog
 				   }});
 				*/JPanel p = new JPanel();
 				p.setLayout( new BorderLayout() );
-				p.setBorder( new TitledBorder(JAPMessages.getString("settingsListenerBorder")) );
+				TitledBorder border=new TitledBorder(JAPMessages.getString("settingsListenerBorder"));
+        border.setTitleFont(m_fontControls);
+        p.setBorder( border );
 				JPanel p1 = new JPanel();
 				GridBagLayout g=new GridBagLayout();
 				p1.setLayout( g );
@@ -277,12 +281,16 @@ final class JAPConf extends JDialog
 	  protected JPanel buildProxyPanel()
 			{
 				m_cbProxy = new JCheckBox(JAPMessages.getString("settingsProxyCheckBox"));
-				m_comboProxyType=new JComboBox();
+				m_cbProxy.setFont(m_fontControls);
+        m_comboProxyType=new JComboBox();
+        m_comboProxyType.setFont(m_fontControls);
         m_comboProxyType.addItem(JAPMessages.getString("settingsProxyTypeHTTP"));
         m_comboProxyType.addItem(JAPMessages.getString("settingsProxyTypeSOCKS"));
         m_tfProxyHost = new JTextField();
-				m_tfProxyPortNumber = new JAPJIntField();
-				m_tfProxyHost.setEnabled(JAPModel.getUseFirewall());
+				m_tfProxyHost.setFont(m_fontControls);
+        m_tfProxyPortNumber = new JAPJIntField();
+				m_tfProxyPortNumber.setFont(m_fontControls);
+        m_tfProxyHost.setEnabled(JAPModel.getUseFirewall());
 				m_tfProxyPortNumber.setEnabled(JAPModel.getUseFirewall());
 				m_cbProxy.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
@@ -302,29 +310,39 @@ final class JAPConf extends JDialog
 				   OKPressed();
 				   }});
 				m_cbProxyAuthentication=new JCheckBox(JAPMessages.getString("settingsProxyAuthenticationCheckBox"));
-				m_tfProxyAuthenticationUserID=new JTextField();
-
+				m_cbProxyAuthentication.setFont(m_fontControls);
+        m_tfProxyAuthenticationUserID=new JTextField();
+        m_tfProxyAuthenticationUserID.setFont(m_fontControls);
 				m_cbProxyAuthentication.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
 						m_tfProxyAuthenticationUserID.setEnabled(m_cbProxyAuthentication.isSelected());
 				}});
 				JLabel proxyHostLabel = new JLabel(JAPMessages.getString("settingsProxyHost"));
-				JLabel proxyPortLabel = new JLabel(JAPMessages.getString("settingsProxyPort"));
-				JLabel proxyTypeLabel =new JLabel(JAPMessages.getString("settingsProxyType"));
+				proxyHostLabel.setFont(m_fontControls);
+        JLabel proxyPortLabel = new JLabel(JAPMessages.getString("settingsProxyPort"));
+				proxyPortLabel.setFont(m_fontControls);
+        JLabel proxyTypeLabel =new JLabel(JAPMessages.getString("settingsProxyType"));
+        proxyTypeLabel.setFont(m_fontControls);
         JLabel proxyAuthUserIDLabel = new JLabel(JAPMessages.getString("settingsProxyAuthUserID"));
-				// set Font in m_cbProxy in same color as in proxyPortLabel
+				proxyAuthUserIDLabel.setFont(m_fontControls);
+        // set Font in m_cbProxy in same color as in proxyPortLabel
 				m_cbProxy.setForeground(proxyPortLabel.getForeground());
 				m_cbProxyAuthentication.setForeground(proxyPortLabel.getForeground());
 
 
 				JPanel p = new JPanel();
 				p.setLayout( new BorderLayout() );
-				p.setBorder( new TitledBorder(JAPMessages.getString("settingsProxyBorder")) );
+        TitledBorder border=new TitledBorder(JAPMessages.getString("settingsProxyBorder"));
+				border.setTitleFont(m_fontControls);
+        p.setBorder( border );
 				JPanel p1 = new JPanel();
 				GridBagLayout g=new GridBagLayout();
 				p1.setLayout( g );
-				p1.setBorder( new EmptyBorder(5,10,10,10) );
-				GridBagConstraints c=new GridBagConstraints();
+				if(JAPModel.isSmallDisplay())
+          p1.setBorder( new EmptyBorder(1,10,1,10) );
+				else
+           p1.setBorder( new EmptyBorder(5,10,10,10) );
+        GridBagConstraints c=new GridBagConstraints();
 				c.anchor=c.NORTHWEST;
 				c.fill=GridBagConstraints.HORIZONTAL;
 				c.gridwidth=1;
@@ -332,7 +350,11 @@ final class JAPConf extends JDialog
 				c.gridy=0;
 				c.weightx=1;
 				c.weighty=0;
-				Insets normInsets=new Insets(0,0,3,0);
+				Insets normInsets;
+        if(JAPModel.isSmallDisplay())
+          normInsets=new Insets(0,0,1,0);
+        else
+          normInsets=new Insets(0,0,3,0);
 				c.insets=normInsets;
 				g.setConstraints(m_cbProxy,c);
 				p1.add(m_cbProxy);
@@ -356,12 +378,15 @@ final class JAPConf extends JDialog
 				p1.add(m_tfProxyPortNumber);
 				JSeparator seperator=new JSeparator();
 				c.gridy=7;
-				c.insets=new Insets(10,0,0,0);
-				g.setConstraints(seperator,c);
+				if(JAPModel.isSmallDisplay())
+          c.insets=new Insets(5,0,1,0);
+				else
+          c.insets=new Insets(10,0,3,0);
+        g.setConstraints(seperator,c);
 				p1.add(seperator);
 				c.insets=normInsets;
 				c.gridy=8;
-				c.insets=new Insets(10,0,0,0);
+				//c.insets=new Insets(10,0,0,0);
 				g.setConstraints(m_cbProxyAuthentication,c);
 				p1.add(m_cbProxyAuthentication);
 				c.gridy=9;
@@ -378,8 +403,10 @@ final class JAPConf extends JDialog
 	  protected JPanel buildinfoPanel()
 			{
 				m_tfInfoHost = new JTextField();
+        m_tfInfoHost.setFont(m_fontControls);
 				m_tfInfoPortNumber = new JAPJIntField();
-				m_tfInfoHost.addActionListener(new ActionListener() {
+				m_tfInfoPortNumber.setFont(m_fontControls);
+        m_tfInfoHost.addActionListener(new ActionListener() {
 									   public void actionPerformed(ActionEvent e) {
 							   OKPressed();
 							   }});
@@ -388,12 +415,16 @@ final class JAPConf extends JDialog
 							   OKPressed();
 							   }});
 				JLabel settingsInfoTextLabel = new JLabel(JAPMessages.getString("settingsInfoText"));
-				JLabel settingsInfoHostLabel = new JLabel(JAPMessages.getString("settingsInfoHost"));
-				JLabel settingsInfoPortLabel = new JLabel(JAPMessages.getString("settingsInfoPort"));
-
+				settingsInfoTextLabel.setFont(m_fontControls);
+        JLabel settingsInfoHostLabel = new JLabel(JAPMessages.getString("settingsInfoHost"));
+				settingsInfoHostLabel.setFont(m_fontControls);
+        JLabel settingsInfoPortLabel = new JLabel(JAPMessages.getString("settingsInfoPort"));
+        settingsInfoPortLabel.setFont(m_fontControls);
 				JPanel p = new JPanel();
 				p.setLayout( new BorderLayout() );
-				p.setBorder( new TitledBorder(JAPMessages.getString("settingsInfoBorder")) );
+        TitledBorder border=new TitledBorder(JAPMessages.getString("settingsInfoBorder"));
+				border.setTitleFont(m_fontControls);
+        p.setBorder( border );
 				JPanel p1 = new JPanel();
 				GridBagLayout g=new GridBagLayout();
 				p1.setLayout( g );

@@ -11,7 +11,7 @@ import logging.Log;
 import logging.LogLevel;
 import logging.LogType;
 
-final class ProxyConnection
+final public class ProxyConnection
   {
  		private final static int FIREWALL_METHOD_HTTP_1_1=11;
 		private final static int FIREWALL_METHOD_HTTP_1_0=10;
@@ -90,6 +90,11 @@ final class ProxyConnection
           }
       }
 
+
+    public Socket getSocket()
+      {
+        return m_ioSocket;
+      }
 
     public InputStream getInputStream()
       {

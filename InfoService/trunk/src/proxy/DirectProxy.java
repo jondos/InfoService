@@ -31,6 +31,7 @@ import JAPModel;
 import JAPController;
 import JAPMessages;
 import JAPUtil;
+import JAPConstants;
 import java.net.InetAddress ;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -100,7 +101,7 @@ final public class DirectProxy implements Runnable
 									}
 								try
 									{
-										socket.setSoTimeout(0); //Ensur socket is in Blocking Mode
+										socket.setSoTimeout(0); //Ensure socket is in Blocking Mode
 									}
 								catch(SocketException soex)
 									{
@@ -111,16 +112,16 @@ final public class DirectProxy implements Runnable
 
 								if (warnUser)
 									{
-										DirectConnection      doIt = new DirectConnection(socket);
+										SendAnonWarning      doIt = new SendAnonWarning(socket);
 										Thread thread = new Thread (threadgroupAll,doIt);
 										thread.start();
 										warnUser=false;
 									}
 								else
 									{
-										if (JAPModel.getUseFirewall())
+										if (JAPModel.getUseFirewall()&&JAPModel.getFirewallType()==JAPConstants.FIREWALL_TYPE_HTTP)
 											{
-												DirectConViaProxy doIt = new DirectConViaProxy (socket);
+												DirectConViaHTTPProxy doIt = new DirectConViaHTTPProxy (socket);
 												Thread thread = new Thread (threadgroupAll,doIt);
 												thread.start();
 											}
@@ -173,11 +174,11 @@ final public class DirectProxy implements Runnable
  *  This class is used to inform the user that he tries to
  *  send requests although anonymity mode is off.
  */
-	private final class DirectConnection implements Runnable {
+	private final class SendAnonWarning implements Runnable {
 			private Socket s;
 		private SimpleDateFormat dateFormatHTTP;
 
-		public DirectConnection(Socket s)
+		public SendAnonWarning(Socket s)
 			{
 				this.s = s;
 				dateFormatHTTP=new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz",Locale.US);
@@ -214,11 +215,11 @@ final public class DirectProxy implements Runnable
 /**
  *  This class is used to transfer requests via the selected proxy
  */
-	private final class DirectConViaProxy implements Runnable
+	private final class DirectConViaHTTPProxy implements Runnable
 		{
 			private Socket clientSocket;
 
-			public DirectConViaProxy(Socket s)
+			public DirectConViaHTTPProxy(Socket s)
 				{
 					this.clientSocket = s;
 				}

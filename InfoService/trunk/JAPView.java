@@ -213,9 +213,7 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 
 		// Own traffic situation: current # of channels
 		ownTrafficChannelsProgressBar = new JProgressBar(JProgressBar.HORIZONTAL,0, 1);
-		Font fontControls=ownTrafficChannelsProgressBar.getFont();
-    if(JAPModel.isSmallDisplay())
-      fontControls=new Font(fontControls.getName(),JAPConstants.SMALL_FONT_STYLE,JAPConstants.SMALL_FONT_SIZE);
+		Font fontControls=JAPController.getDialogFont();
     ownTrafficChannelsProgressBar.setFont(fontControls);
     ownTrafficChannelsProgressBar.setUI(new MyProgressBarUI());
 		ownTrafficChannelsProgressBar.setStringPainted(true);

@@ -41,6 +41,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.awt.Dimension;
 import java.awt.Window;
+import java.awt.Font;
 import java.awt.Frame;
 import java.awt.Cursor;
 import java.awt.MediaTracker;
@@ -106,6 +107,7 @@ public final class JAPController implements ProxyListener {
 	private Vector observerVector=null;
 
 	private static Server anonServiceRMIServer= null;
+  private static Font m_fontControls;
 
 	private JAPController ()
     {
@@ -615,6 +617,15 @@ public final class JAPController implements ProxyListener {
 	public boolean getUseFirewallAuthorization() {
 			return mb_UseProxyAuthentication;
 	}*/
+  public static Font getDialogFont()
+    {
+      if(m_fontControls!=null)
+        return m_fontControls;
+      m_fontControls=new JButton().getFont();
+      if(JAPModel.isSmallDisplay())
+        m_fontControls=new Font(m_fontControls.getName(),JAPConstants.SMALL_FONT_STYLE,JAPConstants.SMALL_FONT_SIZE);
+	    return m_fontControls;
+    }
 
   public static String getFirewallAuthPasswd()
     {
