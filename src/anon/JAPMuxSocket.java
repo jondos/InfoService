@@ -35,6 +35,7 @@ import java.io.OutputStream;
 import java.io.BufferedOutputStream;
 import java.io.DataOutputStream;
 import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.BufferedWriter;
 import java.io.OutputStreamWriter;
@@ -42,6 +43,10 @@ import java.lang.Integer;
 import java.util.Enumeration;
 import java.math.BigInteger;
 import JAPDebug;
+
+
+import sun.misc.BASE64Encoder;
+import sun.misc.BASE64Decoder;
 
 final class JAPMuxSocket implements Runnable
 	{
@@ -130,10 +135,10 @@ final class JAPMuxSocket implements Runnable
 
 		//2001-02-20(HF)
 		public int connect(String host, int port) {
-			return connectViaFirewall(host,port,null,-1);
+			return connectViaFirewall(host,port,null,-1,null,null);
 		}
 		//2001-02-20(HF)
-		public int connectViaFirewall(String host, int port, String fwHost, int fwPort)
+		public int connectViaFirewall(String host, int port, String fwHost, int fwPort,String fwUserID,String fwPasswd)
 			{
 				synchronized(this)
 					{
@@ -159,6 +164,12 @@ final class JAPMuxSocket implements Runnable
 									//   Connection: Keep-Alive
 									//   Proxy-Connection: Keep-Alive
 									o.write("CONNECT "+host+":"+port+" HTTP/1.1"+CRLF);
+									if(fwUserID!=null) // proxy authentication required...
+											{
+												BASE64Encoder enc=new BASE64Encoder();
+												String str=enc.encodeBuffer((fwUserID+":"+fwPasswd).getBytes());
+												o.write("Proxy-Authorization: Basic "+str+CRLF);
+											}
 									o.write("Connection: Keep-Alive"+CRLF);
 									o.write("Proxy-Connection: Keep-Alive"+CRLF);
 									o.write(""+CRLF);
@@ -168,25 +179,31 @@ final class JAPMuxSocket implements Runnable
 									//Read response from proxy/firewall
 									// a typical response is
 									//   HTTP/1.0 200 Connection established
-									String l = null;
+									String firstLine = null;
 									try {
-										l = this.readLine(inDataStream);
+										firstLine = this.readLine(inDataStream);
 									}
 									catch (Exception e) {
 										JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.NET,"JAPMuxSocket:Exception while reading response from proxy server: "+e);
 									}
-									JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:Response from firewall is <"+l+">");
-									if (l.indexOf("200")==-1) {
-										JAPDebug.out(JAPDebug.EMERG,JAPDebug.NET,"JAPMuxSocket:JAP will probably NOT work over this firewall! Sorry.");
-									}
+									JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:Response from firewall is <"+firstLine+">");
 									JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:Reading remainig headers...");
-									l = this.readLine(inDataStream);
-									while (l.length() != 0) {
-										JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket: <"+l+">");
-										l = this.readLine(inDataStream);
+									String l=null;
+									do
+										{
+											l = this.readLine(inDataStream);
+											JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket: <"+l+">");
+										}while (l!=null&&l.length() != 0);
+									if(firstLine.indexOf("200")==-1) 
+										{
+											if(firstLine.indexOf("407")!=-1) // proxy authentication required...
+												{
+													
+												}
+											JAPDebug.out(JAPDebug.EMERG,JAPDebug.NET,"JAPMuxSocket:JAP will probably NOT work over this firewall! Sorry.");
+										}
 									}
 									
-								}
 								JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:Connected to Mix! Now starting key exchange...");
 								outDataStream=new DataOutputStream(new BufferedOutputStream(ioSocket.getOutputStream(),DATA_SIZE+6));
 //								inDataStream=new DataInputStream(ioSocket.getInputStream());
@@ -225,7 +242,7 @@ final class JAPMuxSocket implements Runnable
 					}
 			}
 
-    private String readLine(DataInputStream inputStream) throws Exception {
+ private String readLine(DataInputStream inputStream) throws Exception {
 	String returnString = "";
 	try{
 	    int byteRead = inputStream.read();
