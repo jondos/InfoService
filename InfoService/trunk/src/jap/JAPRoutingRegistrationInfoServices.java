@@ -37,7 +37,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 import anon.infoservice.Database;
-import anon.infoservice.InfoService;
+import anon.infoservice.InfoServiceDBEntry;
 import anon.infoservice.InfoServiceHolder;
 import anon.util.XMLUtil;
 import forward.server.ServerSocketPropagandist;
@@ -127,7 +127,7 @@ public class JAPRoutingRegistrationInfoServices implements Observer, Runnable {
             synchronized (m_runningInfoServiceRegistrations) {
               Enumeration startedPropagandists = ((Vector)(((JAPRoutingMessage)a_message).getMessageData())).elements();
               while (startedPropagandists.hasMoreElements()) {
-                InfoService currentInfoService = (InfoService)(((ServerSocketPropagandist)(startedPropagandists.nextElement())).getInfoService());
+                InfoServiceDBEntry currentInfoService = (InfoServiceDBEntry)(((ServerSocketPropagandist)(startedPropagandists.nextElement())).getInfoService());
                 if (m_runningInfoServiceRegistrations.contains(currentInfoService.getId()) == false) {
                   m_runningInfoServiceRegistrations.addElement(currentInfoService.getId());
                 }
@@ -193,7 +193,7 @@ public class JAPRoutingRegistrationInfoServices implements Observer, Runnable {
            */
           Enumeration newRegistrationInfoServices = m_registrationInfoServices.elements();
           while (newRegistrationInfoServices.hasMoreElements()) {
-            InfoService currentInfoService = (InfoService)(newRegistrationInfoServices.nextElement());
+            InfoServiceDBEntry currentInfoService = (InfoServiceDBEntry)(newRegistrationInfoServices.nextElement());
             if (m_runningInfoServiceRegistrations.contains(currentInfoService.getId()) == false) {
               /* no propaganda instance for the current infoservice is running -> try to start a new
                * one, this is only done, if propaganda is running at the moment, so no problem, when
@@ -315,7 +315,7 @@ public class JAPRoutingRegistrationInfoServices implements Observer, Runnable {
         XMLUtil.setNodeBoolean(useAllPrimaryInfoServicesNode,getRegisterAtAllAvailableInfoServices());
       Enumeration registrationInfoServices = getRegistrationInfoServices().elements();
       while (registrationInfoServices.hasMoreElements()) {
-        registrationInfoServicesNode.appendChild(((InfoService)(registrationInfoServices.nextElement())).toXmlNode(a_doc));
+        registrationInfoServicesNode.appendChild(((InfoServiceDBEntry)(registrationInfoServices.nextElement())).toXmlNode(a_doc));
       }
     }
     infoServiceRegistrationSettingsNode.appendChild(useAllPrimaryInfoServicesNode);
@@ -361,9 +361,9 @@ public class JAPRoutingRegistrationInfoServices implements Observer, Runnable {
       for (int i = 0; i < infoServiceNodes.getLength(); i++) {
         Element infoServiceNode = (Element) (infoServiceNodes.item(i));
         try {
-          InfoService currentInfoService = new InfoService(infoServiceNode);
+          InfoServiceDBEntry currentInfoService = new InfoServiceDBEntry(infoServiceNode);
           /* try to get an updated version of the InfoService from the database of all InfoServices */
-          InfoService updatedInfoService = (InfoService)(Database.getInstance(InfoService.class).getEntryById(currentInfoService.getId()));
+          InfoServiceDBEntry updatedInfoService = (InfoServiceDBEntry)(Database.getInstance(InfoServiceDBEntry.class).getEntryById(currentInfoService.getId()));
           if (updatedInfoService != null) {
             currentInfoService = updatedInfoService;
           }
@@ -417,7 +417,7 @@ public class JAPRoutingRegistrationInfoServices implements Observer, Runnable {
           /* communication was successful */
           Enumeration runningInfoServices = runningInfoServicesList.elements();
           while (runningInfoServices.hasMoreElements()) {
-            InfoService currentInfoService = (InfoService)(runningInfoServices.nextElement());
+            InfoServiceDBEntry currentInfoService = (InfoServiceDBEntry)(runningInfoServices.nextElement());
             if (currentInfoService.hasPrimaryForwarderList()) {
               synchronized (m_runningInfoServiceRegistrations) {
                 /* check, whether we are already registrated at this infoservice */

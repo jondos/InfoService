@@ -74,7 +74,7 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.text.PlainDocument;
 import anon.crypto.JAPCertificateStore;
-import anon.infoservice.InfoService;
+import anon.infoservice.InfoServiceDBEntry;
 import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.ListenerInterface;
 import anon.infoservice.MixCascade;
@@ -1429,12 +1429,12 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
         /* if the Add button is pressed, add the selected known infoservice to the list of
          * registration infoservices, if it is not already in there
          */
-        InfoService selectedInfoService = (InfoService)(knownInfoServicesList.getSelectedValue());
+        InfoServiceDBEntry selectedInfoService = (InfoServiceDBEntry)(knownInfoServicesList.getSelectedValue());
         if (selectedInfoService != null) {
           boolean alreadyFound = false;
           Enumeration alreadyInList = registrationInfoServicesListModel.elements();
           while ((alreadyInList.hasMoreElements()) && (alreadyFound == false)) {
-            if (((InfoService)(alreadyInList.nextElement())).getId().equals(selectedInfoService.getId())) {
+            if (((InfoServiceDBEntry)(alreadyInList.nextElement())).getId().equals(selectedInfoService.getId())) {
               alreadyFound = true;
             }
           }
@@ -1454,7 +1454,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
         /* if the Remove button is pressed, remove the selected infoservice from the list of
          * registration infoservices
          */
-        InfoService selectedInfoService = (InfoService)(registrationInfoServicesList.getSelectedValue());
+        InfoServiceDBEntry selectedInfoService = (InfoServiceDBEntry)(registrationInfoServicesList.getSelectedValue());
         if (selectedInfoService != null) {
           registrationInfoServicesListModel.removeElement(selectedInfoService);
         }

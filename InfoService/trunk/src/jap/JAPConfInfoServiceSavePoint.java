@@ -30,7 +30,7 @@ package jap;
 import java.util.Enumeration;
 import java.util.Vector;
 import anon.infoservice.HTTPConnectionFactory;
-import anon.infoservice.InfoService;
+import anon.infoservice.InfoServiceDBEntry;
 import anon.infoservice.Database;
 import anon.infoservice.InfoServiceHolder;
 import logging.LogHolder;
@@ -52,7 +52,7 @@ public class JAPConfInfoServiceSavePoint implements IJAPConfSavePoint
 	/**
 	 * The prefered infoservice.
 	 */
-	private InfoService m_preferedInfoService;
+	private InfoServiceDBEntry m_preferedInfoService;
 
 	/**
 	 * Whether automatic infoservice requests are disabled or not.
@@ -74,7 +74,7 @@ public class JAPConfInfoServiceSavePoint implements IJAPConfSavePoint
 	 */
 	public void createSavePoint()
 	{
-		m_knownInfoServices = Database.getInstance(InfoService.class).getEntryList();
+		m_knownInfoServices = Database.getInstance(InfoServiceDBEntry.class).getEntryList();
 		m_preferedInfoService = InfoServiceHolder.getInstance().getPreferedInfoService();
 		m_automaticInfoServiceRequestsDisabled = JAPModel.isInfoServiceDisabled();
 		m_automaticInfoServiceChanges = InfoServiceHolder.getInstance().isChangeInfoServices();
@@ -87,11 +87,11 @@ public class JAPConfInfoServiceSavePoint implements IJAPConfSavePoint
 	public void restoreSavePoint()
 	{
 		/* remove all infoservices from database and load the stored ones */
-		Database.getInstance(InfoService.class).removeAll();
+		Database.getInstance(InfoServiceDBEntry.class).removeAll();
 		Enumeration infoServices = m_knownInfoServices.elements();
 		while (infoServices.hasMoreElements())
 		{
-			Database.getInstance(InfoService.class).update( (InfoService) (infoServices.nextElement()));
+			Database.getInstance(InfoServiceDBEntry.class).update( (InfoServiceDBEntry) (infoServices.nextElement()));
 		}
 		InfoServiceHolder.getInstance().setPreferedInfoService(m_preferedInfoService);
 		JAPController.setInfoServiceDisabled(m_automaticInfoServiceRequestsDisabled);
@@ -107,10 +107,10 @@ public class JAPConfInfoServiceSavePoint implements IJAPConfSavePoint
 		/* remove all infoservices from database and set prefered infoservice to the default
 		 * infoservice
 		 */
-		Database.getInstance(InfoService.class).removeAll();
+		Database.getInstance(InfoServiceDBEntry.class).removeAll();
 		try
 		{
-			InfoService defaultInfoService = new InfoService(
+			InfoServiceDBEntry defaultInfoService = new InfoServiceDBEntry(
 				JAPConstants.defaultInfoServiceName,
 				JAPConstants.defaultInfoServiceID,
 				JAPConstants.defaultInfoServiceHostName, JAPConstants.defaultInfoServicePortNumber);
