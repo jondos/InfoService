@@ -25,35 +25,42 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package anon.test;
+package anon.crypto.test;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
+import java.security.SecureRandom;
 
-public class AllTests
+import anon.crypto.AsymmetricCryptoKeyPair;
+
+/**
+ * Instances of this class create random asymmetric cipher key pairs. It is for testing
+ * purposes only.
+ * @author Rolf Wendolsky
+ */
+public abstract class AbstractTestKeyPairGenerator
 {
+	private SecureRandom m_random;
+
 	/**
-	 * The main function.
-	 *
-	 * @param a_Args (no arguments needed)
+	 * Creates a new instance.
+	 * @param a_random a random number generator
 	 */
-	public static void main(String[] a_Args)
+	public AbstractTestKeyPairGenerator(SecureRandom a_random)
 	{
-		junit.swingui.TestRunner.run(AllTests.class);
+		m_random = a_random;
 	}
 
 	/**
-	 * Returns the test suite that combines all other tests of the project.
-	 *
-	 * @return Test The test suite that combines all other tests of the project.
+	 * Creates a random asymmetric cipher key pair.
+	 * @return a random asymmetric cipher key pair
 	 */
-	public static Test suite()
-	{
-		TestSuite suite = new TestSuite(AllTests.class.getName());
-		suite.addTest(anon.infoservice.test.AllTests.suite());
-		suite.addTest(anon.util.test.AllTests.suite());
-		suite.addTest(anon.crypto.test.AllTests.suite());
-		return suite;
-	}
+	public abstract AsymmetricCryptoKeyPair createKeyPair();
 
+	/**
+	 * Returns the random number generator.
+	 * @return the random number generator
+	 */
+	protected SecureRandom getRandom()
+	{
+		return m_random;
+	}
 }

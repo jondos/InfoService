@@ -25,35 +25,49 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package anon.test;
+package anon.crypto.test;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
+import java.security.SecureRandom;
 
-public class AllTests
+import anon.crypto.AsymmetricCryptoKeyPair;
+import anon.crypto.DSAKeyPair;
+import anon.crypto.MyDSASignature;
+
+/**
+ * These are the tests for the dsa signature algorithm class.
+ * @author Rolf Wendolsky
+ */
+public class DSASignatureAlgorithmTest extends AbstractSignatureAlgorithmTest
 {
 	/**
-	 * The main function.
-	 *
-	 * @param a_Args (no arguments needed)
+	 * Creates a new test case.
+	 * @param a_name the name of the test case
 	 */
-	public static void main(String[] a_Args)
+	public DSASignatureAlgorithmTest(String a_name)
 	{
-		junit.swingui.TestRunner.run(AllTests.class);
+		super(a_name);
 	}
 
 	/**
-	 * Returns the test suite that combines all other tests of the project.
-	 *
-	 * @return Test The test suite that combines all other tests of the project.
+	 * This method initialises the keys and the signature algorithm.
 	 */
-	public static Test suite()
+	protected void setUp()
 	{
-		TestSuite suite = new TestSuite(AllTests.class.getName());
-		suite.addTest(anon.infoservice.test.AllTests.suite());
-		suite.addTest(anon.util.test.AllTests.suite());
-		suite.addTest(anon.crypto.test.AllTests.suite());
-		return suite;
-	}
+		SecureRandom random = new SecureRandom();
+		MyDSASignature algorithm = new MyDSASignature();
+		AsymmetricCryptoKeyPair keyPair;
 
+		random.setSeed(355235562);
+
+		// initialise the algorithm
+		setSignatureAlgorithm(algorithm);
+
+		// initialise the keys
+		for (int i = 0; i < NUMBER_OF_KEYS; i++)
+		{
+			keyPair = DSAKeyPair.getInstance(random, 256, 50);
+			getPrivateKeys()[i] = keyPair.getPrivate();
+			getPublicKeys()[i] = keyPair.getPublic();
+		}
+	}
 }
