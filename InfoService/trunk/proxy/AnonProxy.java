@@ -25,9 +25,8 @@ OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABIL
 IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
-
+package proxy;
 import java.net.ServerSocket;
-import anon.JAPAnonServiceListener;
 import anon.ErrorCodes;
 import anon.AnonService;
 import anon.AnonServiceFactory;
@@ -35,14 +34,14 @@ import anon.AnonChannel;
 import anon.AnonServer;
 
 import anon.server.AnonServiceImpl;
-
+import JAPDebug;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.net.Socket;
 import java.net.SocketException;
-final class JAPAnonProxy implements Runnable
+final public class AnonProxy implements Runnable
 {
   public static final int E_SUCCESS=0;
   public static final int E_BIND=-2;
@@ -50,10 +49,10 @@ final class JAPAnonProxy implements Runnable
   private Thread threadRun;
   private volatile boolean m_bIsRunning;
   private ServerSocket m_socketListener;
-  private JAPAnonServiceListener m_AnonServiceListener;
+  private ProxyListener m_ProxyListener;
   private volatile int m_numChannels=0;
   private AnonServer m_AnonServer;
-  public JAPAnonProxy(ServerSocket listener)
+  public AnonProxy(ServerSocket listener)
     {
       m_socketListener=listener;
       m_Anon=AnonServiceFactory.create();
@@ -97,9 +96,9 @@ final class JAPAnonProxy implements Runnable
       try{threadRun.join();}catch(Exception e){}
     }
 
-  public void setAnonServiceListener(JAPAnonServiceListener l)
+  public void setProxyListener(ProxyListener l)
     {
-      m_AnonServiceListener=l;
+      m_ProxyListener=l;
     }
 	public void run()
 			{
@@ -160,18 +159,18 @@ final class JAPAnonProxy implements Runnable
   protected synchronized void incNumChannels()
     {
       m_numChannels++;
-      m_AnonServiceListener.channelsChanged(m_numChannels);
+      m_ProxyListener.channelsChanged(m_numChannels);
     }
 
   protected synchronized void decNumChannels()
     {
       m_numChannels--;
-      m_AnonServiceListener.channelsChanged(m_numChannels);
+      m_ProxyListener.channelsChanged(m_numChannels);
     }
 
   protected synchronized void transferredBytes(int bytes)
     {
-      m_AnonServiceListener.transferedBytes(bytes);
+      m_ProxyListener.transferedBytes(bytes);
     }
 
 final class Request  implements Runnable

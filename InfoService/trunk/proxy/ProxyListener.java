@@ -25,13 +25,10 @@ OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABIL
 IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
-package anon;
+package proxy;
 
-public final class ErrorCodes
-  {
-    public final static int E_SUCCESS=0;
-    public final static int E_ALREADY_CONNECTED=-4;
-    public final static int E_INVALID_SERVICE=-5;
-    public final static int E_CONNECT=-6;
-  	public final static int E_NOT_CONNECTED=-9;
-}
+public interface ProxyListener
+	{
+		public void channelsChanged(int channels);
+		public void transferedBytes(int bytes);
+	}

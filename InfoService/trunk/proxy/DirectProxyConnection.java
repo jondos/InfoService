@@ -25,16 +25,26 @@ OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABIL
 IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
-
-import java.io.*;
-import java.net.*;
+package proxy;
+import JAPDebug;
+import JAPUtil;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.DataInputStream;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.net.Socket;
+import java.net.URL;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.*;
 import java.text.*;
 import java.util.StringTokenizer;
 import kasper.net.ftp.*;
 import kasper.net.*;
 
-final class JAPDirectProxyConnection implements Runnable
+final class DirectProxyConnection implements Runnable
 	{
     private Socket clientSocket;
 
@@ -53,7 +63,7 @@ final class JAPDirectProxyConnection implements Runnable
 	  private String file     = "";
 	  private int    port     = -1;
 
-    public JAPDirectProxyConnection (Socket s)
+    public DirectProxyConnection (Socket s)
 			{
 				clientSocket = s;
       }
@@ -219,7 +229,7 @@ final class JAPDirectProxyConnection implements Runnable
 			toClient.flush();
 
 			// Response from server is transfered to client in a sepatate thread
-			JAPDirectProxyResponse pr = new JAPDirectProxyResponse(serverSocket.getInputStream(),
+			DirectProxyResponse pr = new DirectProxyResponse(serverSocket.getInputStream(),
 																														 clientSocket.getOutputStream());
 			Thread prt = new Thread(pr);
 
@@ -280,7 +290,7 @@ final class JAPDirectProxyConnection implements Runnable
 			outputStream.flush();
 
 			// Response from server is transfered to client in a sepatate thread
- 			JAPDirectProxyResponse pr = new JAPDirectProxyResponse(serverSocket.getInputStream(),
+ 			DirectProxyResponse pr = new DirectProxyResponse(serverSocket.getInputStream(),
 																														 clientSocket.getOutputStream());
 			Thread prt = new Thread(pr);
 			prt.start();

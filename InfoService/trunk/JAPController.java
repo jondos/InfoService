@@ -62,12 +62,14 @@ import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.UIManager;
 
 import anon.AnonServer;
-import anon.JAPAnonServiceListener;
 import anon.infoservice.InfoService;
+import proxy.ProxyListener;
+import proxy.DirectProxy;
+import proxy.AnonProxy;
 /* jh5 */ import anon.xmlrpc.Server;
 
 /* This is the Model of All. It's a Singelton!*/
-public final class JAPController implements JAPAnonServiceListener {
+public final class JAPController implements ProxyListener {
 
 	private JAPAnonServerDB  m_anonServerDatabase   = null; // vector of all available mix cascades (fetched from InfoService)
                                                         //never null, maybe empty
@@ -76,8 +78,8 @@ public final class JAPController implements JAPAnonServiceListener {
                                                       //This would NEVER be null, if JAP is running
 
   private ServerSocket    m_socketHTTPListener    = null; // listener object
-	private JAPDirectProxy  m_proxyDirect           = null; // service object for direct access (bypass anon service)
-	private JAPAnonProxy    m_proxyAnon             = null; // service object for anon access
+	private DirectProxy  m_proxyDirect           = null; // service object for direct access (bypass anon service)
+	private AnonProxy    m_proxyAnon             = null; // service object for anon access
 
 	private boolean  isRunningListener           = false; // true if a listener is running
 	private boolean  canStartService             = false; // indicates if anon service can be started
@@ -99,8 +101,8 @@ public final class JAPController implements JAPAnonServiceListener {
 
 	private static  JAPView           view          = null;
 	private static  InfoService    m_InfoService  = null;
-	private static  JAPController          controller         = null;
-	private static  JAPModel          model         = null;
+	private static  JAPController     m_Controller         = null;
+	private static  JAPModel          m_Model         = null;
 	private static  JAPFeedback       feedback      = null;
 	private Locale m_Locale=null;
 	private Vector observerVector=null;
@@ -109,7 +111,7 @@ public final class JAPController implements JAPAnonServiceListener {
 
 	private JAPController ()
     {
-		  model=JAPModel.create();
+		  m_Model=JAPModel.create();
       // Create observer object
 		  observerVector = new Vector();
 		  try
@@ -140,14 +142,14 @@ public final class JAPController implements JAPAnonServiceListener {
 	 */
 	public static JAPController create()
     {
-		  if(controller==null)
-			  controller=new JAPController();
-		  return controller;
+		  if(m_Controller==null)
+			  m_Controller=new JAPController();
+		  return m_Controller;
 	  }
 
   public static JAPController getController()
     {
-			return controller;
+			return m_Controller;
 	  }
 
   //---------------------------------------------------------------------
@@ -159,18 +161,18 @@ public final class JAPController implements JAPAnonServiceListener {
 				Object[] args={new Integer(JAPModel.getHttpListenerPortNumber())};
 				String msg=MessageFormat.format(JAPMessages.getString("errorListenerPort"),args);
 				// output error message
-				JOptionPane.showMessageDialog(controller.getView(),
+				JOptionPane.showMessageDialog(m_Controller.getView(),
 										msg,
 										JAPMessages.getString("errorListenerPortTitle"),
 										JOptionPane.ERROR_MESSAGE);
 				JAPDebug.out(JAPDebug.EMERG,JAPDebug.NET,"Cannot start listener!");
-				controller.status1 = JAPMessages.getString("statusCannotStartListener");
-				controller.getView().disableSetAnonMode();
+				m_Controller.status1 = JAPMessages.getString("statusCannotStartListener");
+				m_Controller.getView().disableSetAnonMode();
 				notifyJAPObservers();
 			}
 			else
 				{	// listender has started correctly
-					controller.status1 = JAPMessages.getString("statusRunning");
+					m_Controller.status1 = JAPMessages.getString("statusRunning");
 					// initial setting of anonMode
 					setAnonMode(JAPModel.getAutoConnect());
 				}
@@ -258,8 +260,8 @@ public final class JAPController implements JAPAnonServiceListener {
 			port=JAPUtil.parseElementAttrInt(root,"infoServicePortNumber",JAPModel.getInfoServicePort());
 			setInfoService(host,port);
 			// load settings for proxy
-			host=JAPUtil.parseNodeString(n.getNamedItem("proxyHostName"),model.getFirewallHost());
-			port=JAPUtil.parseElementAttrInt(root,"proxyPortNumber",model.getFirewallPort());
+			host=JAPUtil.parseNodeString(n.getNamedItem("proxyHostName"),m_Model.getFirewallHost());
+			port=JAPUtil.parseElementAttrInt(root,"proxyPortNumber",m_Model.getFirewallPort());
 			if(host.equalsIgnoreCase("ikt.inf.tu-dresden.de"))
 				host="";
       boolean bUseProxy=JAPUtil.parseNodeBoolean(n.getNamedItem("proxyMode"),false);
@@ -281,12 +283,12 @@ public final class JAPController implements JAPAnonServiceListener {
       catch(UnknownServiceException e)
         {
           //we could not load enough info for the saved AnonService --> take current (default)
-          server=controller.getAnonServer();
+          server=m_Controller.getAnonServer();
         }
-			controller.setAnonServer(server);
+			m_Controller.setAnonServer(server);
 
 			setAutoConnect(JAPUtil.parseNodeBoolean(n.getNamedItem("autoConnect"),false));
-			model.setMinimizeOnStartup(JAPUtil.parseNodeBoolean(n.getNamedItem("minimizedStartup"),false));
+			m_Model.setMinimizeOnStartup(JAPUtil.parseNodeBoolean(n.getNamedItem("minimizedStartup"),false));
 			//Load Locale-Settings
 			String locale=JAPUtil.parseNodeString(n.getNamedItem("Locale"),m_Locale.getLanguage());
 			setLocale(new Locale(locale,""));
@@ -370,7 +372,7 @@ public final class JAPController implements JAPAnonServiceListener {
 		}
 		if(error) {
 			JAPDebug.out(JAPDebug.ERR,JAPDebug.MISC,"JAPModel:error saving configuration to "+JAPConstants.XMLCONFFN);
-			JOptionPane.showMessageDialog(controller.getView(),
+			JOptionPane.showMessageDialog(m_Controller.getView(),
 											JAPMessages.getString("errorSavingConfig"),
 											JAPMessages.getString("errorSavingConfigTitle"),
 											JOptionPane.ERROR_MESSAGE);
@@ -390,18 +392,18 @@ public final class JAPController implements JAPAnonServiceListener {
 			//e.setAttribute("supportSocks",(getUseSocksPort()?"true":"false"));
 			e.setAttribute("listenerIsLocal",(JAPModel.getHttpListenerIsLocal()?"true":"false"));
 			e.setAttribute("proxyMode",(JAPModel.getUseFirewall()?"true":"false"));
-      String tmpStr=model.getFirewallHost();
+      String tmpStr=m_Model.getFirewallHost();
       e.setAttribute("proxyHostName",((tmpStr==null)?"":tmpStr));
-			int tmpInt=model.getFirewallPort();
+			int tmpInt=m_Model.getFirewallPort();
       e.setAttribute("proxyPortNumber",Integer.toString(tmpInt));
 			e.setAttribute("proxyAuthorization",(JAPModel.getUseFirewallAuthorization()?"true":"false"));
-			tmpStr=model.getFirewallAuthUserID();
+			tmpStr=m_Model.getFirewallAuthUserID();
       e.setAttribute("proxyAuthUserID",((tmpStr==null)?"":tmpStr));
-			tmpStr=model.getInfoServiceHost();
+			tmpStr=m_Model.getInfoServiceHost();
       e.setAttribute("infoServiceHostName",((tmpStr==null)?"":tmpStr));
-      tmpInt=model.getInfoServicePort();
+      tmpInt=m_Model.getInfoServicePort();
 			e.setAttribute("infoServicePortNumber",Integer.toString(tmpInt));
-			AnonServer e1 = controller.getAnonServer();
+			AnonServer e1 = m_Controller.getAnonServer();
 			e.setAttribute("anonserviceID",((e1.getID()==null)?"":e1.getID()));
 			e.setAttribute("anonserviceName",((e1.getName()==null)?"":e1.getName()));
 			e.setAttribute("anonHostName",   ((e1.getHost()==null)?"":e1.getHost()));
@@ -456,7 +458,7 @@ public final class JAPController implements JAPAnonServiceListener {
 	public void setMinimizeOnStartup(boolean b)
     {
 		  synchronized(this) {
-			model.setMinimizeOnStartup(b);
+			m_Model.setMinimizeOnStartup(b);
 		}
 	}
 
@@ -473,7 +475,7 @@ public final class JAPController implements JAPAnonServiceListener {
           setAnonMode(true);
         }
       m_currentAnonService = s;
-		  controller.notifyJAPObservers();
+		  m_Controller.notifyJAPObservers();
 	  }
 
   public AnonServer getAnonServer()
@@ -501,16 +503,16 @@ public final class JAPController implements JAPAnonServiceListener {
       if(host==null)
         host="";
 		  // check if values have changed
-		  if((bUseProxy!=model.getUseFirewall())||(!host.equals(model.getFirewallHost()))||(port!=model.getFirewallPort()))
+		  if((bUseProxy!=m_Model.getUseFirewall())||(!host.equals(m_Model.getFirewallHost()))||(port!=m_Model.getFirewallPort()))
         {
 			    // reset firewall authentication password
-			    model.setFirewallAuthPasswd(null);
+			    m_Model.setFirewallAuthPasswd(null);
 			    // change settings
 			    synchronized(this)
             {
-				      model.setFirewallHost(host);
-				      model.setFirewallPort(port);
-			        model.setUseFirewall(bUseProxy);
+				      m_Model.setFirewallHost(host);
+				      m_Model.setFirewallPort(port);
+			        m_Model.setUseFirewall(bUseProxy);
               applyProxySettingsToInfoService();
               applyProxySettingsToAnonService();
             }
@@ -528,7 +530,7 @@ public final class JAPController implements JAPAnonServiceListener {
 			    // has already done this.
 			    if(!JAPModel.getUseFirewall())
             {
-				      model.setUseFirewall(b);
+				      m_Model.setUseFirewall(b);
 				      // apply changes to infoservice
 				      applyProxySettingsToInfoService();
 				      // apply changes to anonservice
@@ -544,13 +546,13 @@ public final class JAPController implements JAPAnonServiceListener {
 			  if(JAPModel.getUseFirewall())
           {
             if(JAPModel.getUseFirewallAuthorization())
-              m_InfoService.setProxy(model.getFirewallHost(),
-                                    model.getFirewallPort(),
+              m_InfoService.setProxy(m_Model.getFirewallHost(),
+                                    m_Model.getFirewallPort(),
                                     JAPModel.getFirewallAuthUserID(),
                                     getFirewallAuthPasswd());
             else
-              m_InfoService.setProxy(model.getFirewallHost(),
-                                    model.getFirewallPort(),null,null);
+              m_InfoService.setProxy(m_Model.getFirewallHost(),
+                                    m_Model.getFirewallPort(),null,null);
           }
         else //not Proxy should be used....
           m_InfoService.setProxy(null,-1,null,null);
@@ -563,7 +565,7 @@ public final class JAPController implements JAPAnonServiceListener {
         {
           // anon service is running
           Object[] options = { JAPMessages.getString("later"),JAPMessages.getString("reconnect") };
-          int ret = JOptionPane.showOptionDialog(controller.getView(),
+          int ret = JOptionPane.showOptionDialog(m_Controller.getView(),
                                 JAPMessages.getString("reconnectAfterProxyChangeMsg"),
                                 JAPMessages.getString("reconnectAfterProxyChangeTitle"),
                                 JOptionPane.DEFAULT_OPTION,
@@ -582,13 +584,13 @@ public final class JAPController implements JAPAnonServiceListener {
 		  // check if values have changed
 		  if(!userid.equals(JAPModel.getFirewallAuthUserID()))
         {
-          model.setFirewallAuthPasswd(null);   // reset firewall authentication password
-			    model.setFirewallAuthUserID(userid); // change settings
+          m_Model.setFirewallAuthPasswd(null);   // reset firewall authentication password
+			    m_Model.setFirewallAuthUserID(userid); // change settings
 		    }
 	  }
 
 	public void setUseFirewallAuthorization(boolean b) {
-			model.setUseFirewallAuthorization(b);
+			m_Model.setUseFirewallAuthorization(b);
 	}
 	//---------------------------------------------------------------------
 	/*public boolean getUseFirewall() {
@@ -601,12 +603,12 @@ public final class JAPController implements JAPAnonServiceListener {
 			return mb_UseProxyAuthentication;
 	}*/
 
-  public String getFirewallAuthPasswd()
+  public static String getFirewallAuthPasswd()
     {
 		  if(JAPModel.getUseFirewallAuthorization())
         {
 			    if(JAPModel.getFirewallAuthPasswd()==null)
-				    model.setFirewallAuthPasswd(JAPFirewallPasswdDlg.getPasswd());
+				    m_Model.setFirewallAuthPasswd(JAPFirewallPasswdDlg.getPasswd());
 				return JAPModel.getFirewallAuthPasswd();
 			  }
      else
@@ -623,8 +625,8 @@ public final class JAPController implements JAPAnonServiceListener {
         {
 			    if(m_InfoService!=null)
 				    this.getInfoService().setInfoService(host,port); //todo Error check
-			    model.setInfoServiceHost(host);
-			    model.setInfoServicePort(port);
+			    m_Model.setInfoServiceHost(host);
+			    m_Model.setInfoServicePort(port);
 			    notifyJAPObservers();
 			    return true;
 		    }
@@ -701,23 +703,23 @@ private final class SetAnonModeAsync implements Runnable
 						proxyDirect=null;
 						// starting MUX --> Success ???
 						proxyAnon=new JAPAnonService(m_socketHTTPListener,JAPAnonService.PROTO_HTTP);
-						AnonServerDBEntry e = controller.getAnonServer();
+						AnonServerDBEntry e = m_Controller.getAnonServer();
 						//2001-02-20(HF)
-						if (controller.getUseFirewall()) {
+						if (m_Controller.getUseFirewall()) {
 							// connect vi proxy to first mix (via ssl portnumber)
 							if (e.getSSLPort() == -1) {
-								JOptionPane.showMessageDialog(controller.getView(),
+								JOptionPane.showMessageDialog(m_Controller.getView(),
 									JAPMessages.getString("errorFirewallModeNotSupported"),
 									JAPMessages.getString("errorFirewallModeNotSupportedTitle"),
 									JOptionPane.ERROR_MESSAGE);
 								return; //TODO: Maybe need to check what to do...--> anonmode=false =?
 							} else {
 								proxyAnon.setAnonService(e.getHost(),e.getSSLPort());
-								proxyAnon.setFirewall(controller.getFirewallHost(),controller.getFirewallPort());
-								if(controller.getUseFirewallAuthorization())
+								proxyAnon.setFirewall(m_Controller.getFirewallHost(),m_Controller.getFirewallPort());
+								if(m_Controller.getUseFirewallAuthorization())
 									{
-										proxyAnon.setFirewallAuthorization(controller.getFirewallAuthUserID(),
-																												controller.getFirewallAuthPasswd());
+										proxyAnon.setFirewallAuthorization(m_Controller.getFirewallAuthUserID(),
+																												m_Controller.getFirewallAuthPasswd());
 									}
 								proxyAnon.connectViaFirewall(true);
 							}
@@ -735,7 +737,7 @@ private final class SetAnonModeAsync implements Runnable
 								if (!mbActCntMessageNotRemind)
 									{
 										ret=0;
-										ret= JOptionPane.showOptionDialog(controller.getView(),
+										ret= JOptionPane.showOptionDialog(m_Controller.getView(),
 																		(Object)message,
 																		JAPMessages.getString("disableActCntMessageTitle"),
 																		JOptionPane.DEFAULT_OPTION,
@@ -746,8 +748,8 @@ private final class SetAnonModeAsync implements Runnable
 										if(mbActCntMessageNeverRemind)
 											mbActCntMessageNotRemind=true;
 									}
-								controller.status2 = JAPMessages.getString("statusRunning");
-								proxyAnon.setAnonServiceListener(controller);
+								m_Controller.status2 = JAPMessages.getString("statusRunning");
+								proxyAnon.setAnonServiceListener(m_Controller);
 								// start feedback thread
 								feedback=new JAPFeedback();
 								feedback.startRequests();
@@ -760,12 +762,12 @@ private final class SetAnonModeAsync implements Runnable
 							{
 								Object[] args={new Integer(portNumber)};
 								String msg=MessageFormat.format(JAPMessages.getString("errorListenerPort"),args);
-								JOptionPane.showMessageDialog(controller.getView(),
+								JOptionPane.showMessageDialog(m_Controller.getView(),
 																							msg,
 																							JAPMessages.getString("errorListenerPortTitle"),
 																							JOptionPane.ERROR_MESSAGE);
 								JAPDebug.out(JAPDebug.EMERG,JAPDebug.NET,"Listener could not be started!");
-								controller.getView().disableSetAnonMode();
+								m_Controller.getView().disableSetAnonMode();
 							}
 						else
 							{
@@ -780,7 +782,7 @@ private final class SetAnonModeAsync implements Runnable
 						proxyAnon=null;
 						//proxyAnonSocks=null;
 						view.setCursor(Cursor.getDefaultCursor());
-						controller.status2 = JAPMessages.getString("statusNotRunning");
+						m_Controller.status2 = JAPMessages.getString("statusNotRunning");
 						notifyJAPObservers();
 						JAPSetAnonModeSplash.abort();
 						setAnonMode(false);
@@ -807,14 +809,14 @@ private final class SetAnonModeAsync implements Runnable
 						feedback.stopRequests();
 						feedback=null;
 					}
-				controller.status2 = JAPMessages.getString("statusNotRunning");
+				m_Controller.status2 = JAPMessages.getString("statusNotRunning");
 				proxyDirect=new JAPDirectProxy(m_socketHTTPListener);
 				proxyDirect.startService();
 
-				controller.getAnonServer().setMixedPackets(-1);
-				controller.getAnonServer().setNrOfActiveUsers(-1);
-				controller.getAnonServer().setTrafficSituation(-1);
-				controller.getAnonServer().setCurrentRisk(-1);
+				m_Controller.getAnonServer().setMixedPackets(-1);
+				m_Controller.getAnonServer().setNrOfActiveUsers(-1);
+				m_Controller.getAnonServer().setTrafficSituation(-1);
+				m_Controller.getAnonServer().setCurrentRisk(-1);
 				notifyJAPObservers();
 				JAPSetAnonModeSplash.abort();
 			}
@@ -851,24 +853,24 @@ private final class SetAnonModeAsync implements Runnable
 							m_proxyDirect.stopService();
 						m_proxyDirect=null;
 						// starting MUX --> Success ???
-						m_proxyAnon=new JAPAnonProxy(m_socketHTTPListener);
-						AnonServer e = controller.getAnonServer();
+						m_proxyAnon=new AnonProxy(m_socketHTTPListener);
+						AnonServer e = m_Controller.getAnonServer();
 						//2001-02-20(HF)
 						if (JAPModel.getUseFirewall()) {
 							// connect vi proxy to first mix (via ssl portnumber)
 							if (e.getSSLPort() == -1) {
-								JOptionPane.showMessageDialog(controller.getView(),
+								JOptionPane.showMessageDialog(m_Controller.getView(),
 									JAPMessages.getString("errorFirewallModeNotSupported"),
 									JAPMessages.getString("errorFirewallModeNotSupportedTitle"),
 									JOptionPane.ERROR_MESSAGE);
 								return; //TODO: Maybe need to check what to do...--> anonmode=false =?
 							} else {
 								m_proxyAnon.setAnonService(e);
-								m_proxyAnon.setFirewall(model.getFirewallHost(),model.getFirewallPort());
+								m_proxyAnon.setFirewall(m_Model.getFirewallHost(),m_Model.getFirewallPort());
 								if(JAPModel.getUseFirewallAuthorization())
 									{
 										m_proxyAnon.setFirewallAuthorization(JAPModel.getFirewallAuthUserID(),
-																												controller.getFirewallAuthPasswd());
+																												m_Controller.getFirewallAuthPasswd());
 									}
 								//proxyAnon.connectViaFirewall(true);
 							}
@@ -877,7 +879,7 @@ private final class SetAnonModeAsync implements Runnable
 							m_proxyAnon.setAnonService(e);
 						}
 						int ret=m_proxyAnon.start();
-						if(ret==JAPAnonProxy.E_SUCCESS)
+						if(ret==AnonProxy.E_SUCCESS)
 							{
 								// show a Reminder message that active contents should be disabled
 								Object[] options = {  JAPMessages.getString("okButton") };
@@ -886,7 +888,7 @@ private final class SetAnonModeAsync implements Runnable
 								if (!mbActCntMessageNotRemind)
 									{
 										ret=0;
-										ret= JOptionPane.showOptionDialog(controller.getView(),
+										ret= JOptionPane.showOptionDialog(m_Controller.getView(),
 																		(Object)message,
 																		JAPMessages.getString("disableActCntMessageTitle"),
 																		JOptionPane.DEFAULT_OPTION,
@@ -897,8 +899,8 @@ private final class SetAnonModeAsync implements Runnable
 										if(mbActCntMessageNeverRemind)
 											mbActCntMessageNotRemind=true;
 									}
-								controller.status2 = JAPMessages.getString("statusRunning");
-								m_proxyAnon.setAnonServiceListener(controller);
+								m_Controller.status2 = JAPMessages.getString("statusRunning");
+								m_proxyAnon.setProxyListener(m_Controller);
 								// start feedback thread
 								feedback=new JAPFeedback();
 								feedback.startRequests();
@@ -907,16 +909,16 @@ private final class SetAnonModeAsync implements Runnable
 								JAPSetAnonModeSplash.abort();
 								return;
 							}
-						if (ret==JAPAnonProxy.E_BIND)
+						if (ret==AnonProxy.E_BIND)
 							{
 								Object[] args={new Integer(JAPModel.getHttpListenerPortNumber())};
 								String msg=MessageFormat.format(JAPMessages.getString("errorListenerPort"),args);
-								JOptionPane.showMessageDialog(controller.getView(),
+								JOptionPane.showMessageDialog(m_Controller.getView(),
 																							msg,
 																							JAPMessages.getString("errorListenerPortTitle"),
 																							JOptionPane.ERROR_MESSAGE);
 								JAPDebug.out(JAPDebug.EMERG,JAPDebug.NET,"Listener could not be started!");
-								controller.getView().disableSetAnonMode();
+								m_Controller.getView().disableSetAnonMode();
 							}
 						else
 							{
@@ -931,7 +933,7 @@ private final class SetAnonModeAsync implements Runnable
 						m_proxyAnon=null;
 						//proxyAnonSocks=null;
 						view.setCursor(Cursor.getDefaultCursor());
-						controller.status2 = JAPMessages.getString("statusNotRunning");
+						m_Controller.status2 = JAPMessages.getString("statusNotRunning");
 						notifyJAPObservers();
 						JAPSetAnonModeSplash.abort();
 						setAnonMode(false);
@@ -958,14 +960,14 @@ private final class SetAnonModeAsync implements Runnable
 						feedback.stopRequests();
 						feedback=null;
 					}
-				controller.status2 = JAPMessages.getString("statusNotRunning");
-				m_proxyDirect=new JAPDirectProxy(m_socketHTTPListener);
+				m_Controller.status2 = JAPMessages.getString("statusNotRunning");
+				m_proxyDirect=new DirectProxy(m_socketHTTPListener);
 				m_proxyDirect.startService();
 
-				controller.getAnonServer().setMixedPackets(-1);
-				controller.getAnonServer().setNrOfActiveUsers(-1);
-				controller.getAnonServer().setTrafficSituation(-1);
-				controller.getAnonServer().setCurrentRisk(-1);
+				m_Controller.getAnonServer().setMixedPackets(-1);
+				m_Controller.getAnonServer().setNrOfActiveUsers(-1);
+				m_Controller.getAnonServer().setTrafficSituation(-1);
+				m_Controller.getAnonServer().setCurrentRisk(-1);
 				notifyJAPObservers();
 				JAPSetAnonModeSplash.abort();
 			}
@@ -997,7 +999,7 @@ private final class SetAnonModeAsync implements Runnable
 
   public void setAutoConnect(boolean b)
     {
-      model.setAutoConnect(b);
+      m_Model.setAutoConnect(b);
     }
 	/*public synchronized void setAnonMode(boolean anonModeSelected)
 	{
@@ -1030,24 +1032,24 @@ private final class SetAnonModeAsync implements Runnable
 						// starting MUX --> Success ???
 						proxyAnon=new JAPAnonService(m_socketHTTPListener,JAPAnonService.PROTO_HTTP);
 						//2001-02-20(HF)
-						if (controller.getUseProxy()) {
+						if (m_Controller.getUseProxy()) {
 							// connect vi proxy to first mix (via ssl portnumber)
-							if (controller.anonSSLPortNumber == -1) {
-								JOptionPane.showMessageDialog(controller.getView(),
+							if (m_Controller.anonSSLPortNumber == -1) {
+								JOptionPane.showMessageDialog(m_Controller.getView(),
 									JAPMessages.getString("errorFirewallModeNotSupported"),
 									JAPMessages.getString("errorFirewallModeNotSupportedTitle"),
 									JOptionPane.ERROR_MESSAGE);
-								proxyAnon.setAnonService(controller.anonHostName,controller.anonPortNumber);
-								proxyAnon.setFirewall(controller.getProxyHost(),controller.getProxyPort());
+								proxyAnon.setAnonService(m_Controller.anonHostName,m_Controller.anonPortNumber);
+								proxyAnon.setFirewall(m_Controller.getProxyHost(),m_Controller.getProxyPort());
 								proxyAnon.connectViaFirewall(true);
 							} else {
-								proxyAnon.setAnonService(controller.anonHostName,controller.anonSSLPortNumber);
-								proxyAnon.setFirewall(controller.getProxyHost(),controller.getProxyPort());
+								proxyAnon.setAnonService(m_Controller.anonHostName,m_Controller.anonSSLPortNumber);
+								proxyAnon.setFirewall(m_Controller.getProxyHost(),m_Controller.getProxyPort());
 								proxyAnon.connectViaFirewall(true);
 							}
 						} else {
 							// connect directly to first mix
-							proxyAnon.setAnonService(controller.anonHostName,controller.anonPortNumber);
+							proxyAnon.setAnonService(m_Controller.anonHostName,m_Controller.anonPortNumber);
 						}
 						int ret=proxyAnon.start();
 						if(ret==JAPAnonService.E_SUCCESS)
@@ -1059,7 +1061,7 @@ private final class SetAnonModeAsync implements Runnable
 								if (!mbActCntMessageNotRemind)
 									{
 										ret=0;
-										ret= JOptionPane.showOptionDialog(controller.getView(),
+										ret= JOptionPane.showOptionDialog(m_Controller.getView(),
 																		(Object)message,
 																		JAPMessages.getString("disableActCntMessageTitle"),
 																		JOptionPane.DEFAULT_OPTION,
@@ -1071,10 +1073,10 @@ private final class SetAnonModeAsync implements Runnable
 									}
 								if(mbSocksListener)
 									{
-										proxyAnonSocks=new JAPAnonService(1080,JAPAnonService.PROTO_SOCKS,controller.mblistenerIsLocal);
+										proxyAnonSocks=new JAPAnonService(1080,JAPAnonService.PROTO_SOCKS,m_Controller.mblistenerIsLocal);
 										proxyAnonSocks.start();
 									}
-								controller.status2 = JAPMessages.getString("statusRunning");
+								m_Controller.status2 = JAPMessages.getString("statusRunning");
 								proxyAnon.setAnonServiceListener(this);
 								// start feedback thread
 								feedback=new JAPFeedback();
@@ -1087,12 +1089,12 @@ private final class SetAnonModeAsync implements Runnable
 							{
 								Object[] args={new Integer(portNumber)};
 								String msg=MessageFormat.format(JAPMessages.getString("errorListenerPort"),args);
-								JOptionPane.showMessageDialog(controller.getView(),
+								JOptionPane.showMessageDialog(m_Controller.getView(),
 																							msg,
 																							JAPMessages.getString("errorListenerPortTitle"),
 																							JOptionPane.ERROR_MESSAGE);
 								JAPDebug.out(JAPDebug.EMERG,JAPDebug.NET,"Listener could not be started!");
-								controller.getView().disableSetAnonMode();
+								m_Controller.getView().disableSetAnonMode();
 							}
 						else
 							{
@@ -1107,7 +1109,7 @@ private final class SetAnonModeAsync implements Runnable
 						proxyAnon=null;
 						proxyAnonSocks=null;
 						view.setCursor(Cursor.getDefaultCursor());
-						controller.status2 = JAPMessages.getString("statusNotRunning");
+						m_Controller.status2 = JAPMessages.getString("statusNotRunning");
 						notifyJAPObservers();
 						setAnonMode(false);
 					}
@@ -1128,13 +1130,13 @@ private final class SetAnonModeAsync implements Runnable
 						feedback.stopRequests();
 						feedback=null;
 					}
-				controller.status2 = JAPMessages.getString("statusNotRunning");
+				m_Controller.status2 = JAPMessages.getString("statusNotRunning");
 				proxyDirect=new JAPDirectProxy(m_socketHTTPListener);
 				proxyDirect.startService();
-				controller.mixedPackets = -1;
-				controller.nrOfActiveUsers = -1;
-				controller.trafficSituation = -1;
-				controller.currentRisk = -1;
+				m_Controller.mixedPackets = -1;
+				m_Controller.nrOfActiveUsers = -1;
+				m_Controller.trafficSituation = -1;
+				m_Controller.currentRisk = -1;
 				notifyJAPObservers();
 			}
 	}
@@ -1143,13 +1145,13 @@ private final class SetAnonModeAsync implements Runnable
 	public void setHTTPListener(int port, boolean isLocal)
     {
 		if((JAPModel.getHttpListenerPortNumber()!=port)||(JAPModel.getHttpListenerIsLocal()!=isLocal)) {
-			model.setHttpListenerPortNumber(port);
+			m_Model.setHttpListenerPortNumber(port);
 			synchronized(this) {
-				model.setHttpListenerIsLocal(isLocal);
+				m_Model.setHttpListenerIsLocal(isLocal);
 			}
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:HTTP listener settings changed");
-			JOptionPane.showMessageDialog(controller.getView(),JAPMessages.getString("confmessageListernPortChanged"));
-			controller.notifyJAPObservers();
+			JOptionPane.showMessageDialog(m_Controller.getView(),JAPMessages.getString("confmessageListernPortChanged"));
+			m_Controller.notifyJAPObservers();
 		}
 	}
 	/*public int getHTTPListenerPortNumber() {
@@ -1225,7 +1227,7 @@ private final class SetAnonModeAsync implements Runnable
 		JCheckBox checkboxRemindNever=new JCheckBox(JAPMessages.getString("disableGoodByMessageNeverRemind"));
 		Object[] message = { JAPMessages.getString("disableGoodByMessage"),checkboxRemindNever };
 		if (!mbGoodByMessageNeverRemind) {
-				JOptionPane.showOptionDialog(controller.getView(),
+				JOptionPane.showOptionDialog(m_Controller.getView(),
 												(Object)message,
 												JAPMessages.getString("disableGoodByMessageTitle"),
 												JOptionPane.DEFAULT_OPTION,
@@ -1233,7 +1235,7 @@ private final class SetAnonModeAsync implements Runnable
 												null, options, options[0]);
 				mbGoodByMessageNeverRemind = checkboxRemindNever.isSelected();
 		}
-		controller.saveConfigFile();
+		m_Controller.saveConfigFile();
 		System.exit(0);
 	}
 
@@ -1377,7 +1379,7 @@ private final class SetAnonModeAsync implements Runnable
 			view=v;
 	}
 	public static JAPView getView() {
-			return controller.view;
+			return m_Controller.view;
 	}
 	//---------------------------------------------------------------------
 	public void addJAPObserver(JAPObserver o)
