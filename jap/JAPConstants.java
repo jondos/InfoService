@@ -31,7 +31,7 @@ import java.awt.Insets;
 import java.awt.Font;
 public final class JAPConstants {
 	public static final String aktVersion = "00.01.093"; //Never change the layout of this line!
-	private static final String CVS_GENAERTED_RELEASE_DATE= "$Date$";
+	private static final String CVS_GENERATED_RELEASE_DATE= "$Date$";
 																													 //Warning: This is a little bit tricky,
 																													 //because CVS will expand the $Date$
 																													 //to the date of the last commmit of this file
@@ -48,7 +48,7 @@ public final class JAPConstants {
 			if(m_bReleasedVersion)
 				strReleaseDate=RELEASE_DATE;
 			else
-				strReleaseDate=CVS_GENAERTED_RELEASE_DATE.substring(7,26);
+				strReleaseDate=CVS_GENERATED_RELEASE_DATE.substring(7,26);
 		}
 
 	//static final String buildDate=".."
