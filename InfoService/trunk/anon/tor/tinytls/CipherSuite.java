@@ -50,11 +50,11 @@ public abstract class CipherSuite{
 	/**
 	 * writesequenznumber for packages
 	 */
-	protected BigInteger m_writesequenznumber;
+	protected long m_writesequenznumber;
 	/**
 	 * readsequenznumber for packages
 	 */
-	protected BigInteger m_readsequenznumber;
+	protected long m_readsequenznumber;
 	/**
 	 * client write key
 	 */
@@ -147,8 +147,8 @@ public abstract class CipherSuite{
 	{
 		byte[] b = this.m_keyexchangealgorithm.clientKeyExchange();
 		calculateKeys(this.m_keyexchangealgorithm.calculateKeys());
-		this.m_writesequenznumber = new BigInteger(new byte[]{0});
-		this.m_readsequenznumber = new BigInteger(new byte[]{0});
+		this.m_writesequenznumber = 0;
+		this.m_readsequenznumber = 0;
 		return b;
 	}
 

@@ -68,36 +68,10 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import pay.gui.PaymentMainPanel;
+import gui.*;
 
  public class JAPView extends AbstractJAPMainView implements IJAPMainView,ActionListener, JAPObserver
 {
-
-	final private class MyProgressBarUI extends BasicProgressBarUI
-	{
-		public void paint(Graphics g, JComponent c)
-		{
-			JProgressBar pb = (JProgressBar) c;
-			int dx = 13;
-			int max = pb.getMaximum();
-			int anz = pb.getWidth() / dx;
-			int value = pb.getValue() * anz / max;
-			int x = 0;
-			int y = 0;
-			int height = c.getHeight();
-			int width = 9;
-			for (int i = 0; i < value; i++)
-			{
-				g.fill3DRect(x, y, width, height, false);
-				x += dx;
-			}
-			for (int i = value; i < anz; i++)
-			{
-				g.draw3DRect(x, y, width, height, false);
-				x += dx;
-			}
-		}
-	}
-
 
 	private JAPController controller;
 	private JLabel meterLabel;
@@ -304,7 +278,7 @@ import pay.gui.PaymentMainPanel;
 		ownTrafficChannelsProgressBar = new JProgressBar(JProgressBar.HORIZONTAL, 0, 1);
 		Font fontControls = JAPController.getDialogFont();
 		ownTrafficChannelsProgressBar.setFont(fontControls);
-		ownTrafficChannelsProgressBar.setUI(new MyProgressBarUI());
+		ownTrafficChannelsProgressBar.setUI(new MyProgressBarUI(false));
 		ownTrafficChannelsProgressBar.setStringPainted(true);
 		ownTrafficChannelsProgressBar.setBorderPainted(false /*PROGRESSBARBORDER*/);
 		ownTrafficChannelsProgressBar.setString(" ");

@@ -75,33 +75,6 @@ import gui.*;
 final public class JAPNewView extends AbstractJAPMainView implements IJAPMainView,ActionListener, JAPObserver
 {
 
-	final private class MyProgressBarUI extends BasicProgressBarUI
-	{
-		public void paint(Graphics g, JComponent c)
-		{
-			JProgressBar pb = (JProgressBar) c;
-			int dx = 13;
-			int max = pb.getMaximum();
-			int anz = pb.getWidth() / dx;
-			int value = pb.getValue() * anz / max;
-			int x = 0;
-			int y = 0;
-			int height = c.getHeight();
-			int width = 9;
-			for (int i = 0; i < value; i++)
-			{
-				g.fill3DRect(x, y, width, height, false);
-				x += dx;
-			}
-			for (int i = value; i < anz; i++)
-			{
-				g.draw3DRect(x, y, width, height, false);
-				x += dx;
-			}
-		}
-	}
-
-
 	private JAPController controller;
 	private JLabel meterLabel;
 	private JLabel m_labelCascadeName;
@@ -164,36 +137,56 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		GridBagLayout gbl=new GridBagLayout();
 		GridBagConstraints c=new GridBagConstraints();
 		northPanel.setLayout(gbl);
+		c.anchor=GridBagConstraints.NORTHWEST;
+		c.fill=GridBagConstraints.NONE;
+		c.weighty=1;
 		northPanel.add(northLabel,c);
 		c.gridx=1;
 		c.anchor=GridBagConstraints.SOUTHEAST;
 		JLabel l=new JLabel(JAPConstants.aktVersion);
 		l.setFont(new Font(l.getFont().getName(),
 						   l.getFont().getStyle(),
-						   (int)(l.getFont().getSize()*0.7)));
+						   (int)(l.getFont().getSize()*0.8)));
+		c.insets=new Insets(0,0,0,10);
 		northPanel.add(l,c);
 		c.gridwidth=2;
 		c.gridx=0;
 		c.gridy=1;
 		c.fill=GridBagConstraints.HORIZONTAL;
 		c.weightx=1;
+		c.insets=new Insets(5,10,5,10);
 		northPanel.add(new JSeparator(),c);
-		JPanel p=new JPanel();
-		new BoxLayout(p,BoxLayout.X_AXIS);
+
+		GridBagLayout gbl1=new GridBagLayout();
+		GridBagConstraints c1=new GridBagConstraints();
+
+		JPanel p=new JPanel(gbl1);
 		l=new JLabel("Anonymisierungsdienst:");
-		p.add(l);
+		c1.insets=new Insets(0,17,0,0);
+		p.add(l,c1);
 		JComboBox combo=new JComboBox();
 		combo.addItem("Dresden - Dresden");
-		p.add(combo);
+		c1.insets=new Insets(0,5,0,0);
+		c1.fill=GridBagConstraints.HORIZONTAL;
+		c1.weightx=1;
+		p.add(combo,c1);
+		JButton bttn=new JButton("Details");
+		c1.gridx=2;
+		p.add(bttn,c1);
+
+		c.weighty=1;
 		c.gridwidth=2;
 		c.gridy=2;
 		c.gridx=0;
 		c.anchor=GridBagConstraints.WEST;
 		northPanel.add(p,c);
+/*
 		JButton bttn=new JButton("Details");
 		c.gridwidth=1;
 		c.gridx=2;
 		northPanel.add(bttn,c);
+*/
+//------------------------------------------------------
 		c.gridwidth=2;
 		c.gridx=0;
 		c.gridy=3;
@@ -201,47 +194,400 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c.weightx=1;
 		northPanel.add(new JSeparator(),c);
 
+//------------------ Anon Panel
 		FlippingPanel my=new FlippingPanel(this);
+		//the panel with all the deatils....
 		p=new JPanel();
-		GridBagLayout gbl1=new GridBagLayout();
-		GridBagConstraints c1=new GridBagConstraints();
+		gbl1=new GridBagLayout();
+		c1=new GridBagConstraints();
+		c1.anchor=GridBagConstraints.NORTHWEST;
 		p.setLayout(gbl1);
 		l=new JLabel("Anonymitat");
+		c1.insets=new Insets(0,5,0,0);
 		p.add(l,c1);
 		l=new JLabel("Nutzerzahl:");
 		c1.gridy=1;
-		c1.insets=new Insets(10,10,0,0);
+		c1.anchor=GridBagConstraints.WEST;
+		c1.insets=new Insets(10,15,0,0);
 		p.add(l,c1);
 		l=new JLabel("Verkehr:");
 		c1.gridy=2;
 		p.add(l,c1);
 		l=new JLabel("1024");
+		c1.insets=new Insets(10,0,0,0);
+		c1.anchor=GridBagConstraints.CENTER;
 		c1.gridy=1;
 		c1.gridx=1;
 		p.add(l,c1);
+		JProgressBar progress=new JProgressBar();
+		progress.setUI(new MyProgressBarUI(true));
+		progress.setMinimum(0);
+		progress.setMaximum(5);
+		progress.setBorderPainted(false);
+		c1.gridy=2;
+		p.add(progress,c1);
+
 		l = new JLabel(getMeterImage(3));
 		c1.gridx=2;
 		c1.gridy=0;
 		c1.gridheight=3;
+		c1.anchor=GridBagConstraints.WEST;
+		c1.insets=new Insets(0,10,0,10);
 		p.add(l,c1);
 
-		JPanel p2=new JPanel(new GridLayout(3,1));
+		GridBagLayout gbl2=new GridBagLayout();
+		GridBagConstraints c2=new GridBagConstraints();
+		JPanel p2=new JPanel(gbl2);
 		p2.setBorder(LineBorder.createBlackLineBorder());
 		//new BoxLayout(p2,BoxLayout.Y_AXIS);
 		l=new JLabel("Anonymitat");
-		p2.add(l);
-		p2.add(new JRadioButton("Ein"));
-		p2.add(new JRadioButton("Aus"));
+		c2.anchor=GridBagConstraints.NORTHWEST;
+		c2.insets=new Insets(2,2,2,2);
+		p2.add(l,c2);
+		JRadioButton r1=new JRadioButton("Ein");
+		JRadioButton r2=new JRadioButton("Aus");
+		ButtonGroup bg=new ButtonGroup();
+		bg.add(r1);
+		bg.add(r2);
+		r2.setSelected(true);
+		c2.gridy=1;
+		c2.insets=new Insets(0,7,0,0);
+		p2.add(r1,c2);
+		c2.gridy=2;
+		p2.add(r2,c2);
 
 		c1.gridx=3;
+		c1.anchor=GridBagConstraints.WEST;
 		p.add(p2,c1);
 		my.setFullPanel(p);
+		//the small panel
+		gbl1=new GridBagLayout();
+		c1=new GridBagConstraints();
+		p=new JPanel(gbl1);
+		l=new JLabel("Anonymitat");
+		c1.gridx=0;
+		c1.anchor=GridBagConstraints.WEST;
+		c1.weightx=0;
+		c1.insets=new Insets(0,5,0,0);
+		p.add(l,c1);
+		l=new JLabel("gring",JLabel.RIGHT);
+		c1.insets=new Insets(0,20,0,5);
+		c1.gridx=1;
+		c1.weightx=0.5;
+		c1.fill=GridBagConstraints.HORIZONTAL;
+		c1.anchor=GridBagConstraints.EAST;
+		p.add(l,c1);
+		progress=new JProgressBar();
+		progress.setMinimum(0);
+		progress.setMaximum(10);
+		progress.setBorderPainted(false);
+		progress.setUI(new MyProgressBarUI(true));
+		c1.weightx=0.75;
+		c1.fill=GridBagConstraints.HORIZONTAL;
+		c1.anchor=GridBagConstraints.CENTER;
+		c1.insets=new Insets(0,0,0,0);
+		c1.gridx=2;
+		p.add( progress,c1);
+		l=new JLabel("hoch");
+		c1.gridx=3;
+		c1.weightx=0.5;
+		c1.insets=new Insets(0,5,0,20);
+		c1.fill=GridBagConstraints.HORIZONTAL;
+		c1.anchor=GridBagConstraints.WEST;
+		p.add(l,c1);
+		my.setSmallPanel(p);
 
 		c.fill=GridBagConstraints.HORIZONTAL;
 		c.weightx=1;
 		c.anchor=GridBagConstraints.NORTHWEST;
 		c.gridy=4;
 		northPanel.add(my,c);
+
+
+//------------------ Kosten Panel
+
+//-----------------------------------------------------------
+		c.gridwidth=2;
+		c.gridx=0;
+		c.gridy=5;
+		c.fill=GridBagConstraints.HORIZONTAL;
+		c.weightx=1;
+		northPanel.add(new JSeparator(),c);
+
+//------------------ Own Traffic Panel
+		my=new FlippingPanel(this);
+		//full
+		gbl1=new GridBagLayout();
+		c1=new GridBagConstraints();
+		p=new JPanel(gbl1);
+		l=new JLabel("Eigene anonymiserte Daten:");
+		c1.insets=new Insets(0,5,0,0);
+		c1.anchor=GridBagConstraints.WEST;
+		p.add(l,c1);
+		l=new JLabel("350");
+		c1.gridx=1;
+		p.add(l,c1);
+		l=new JLabel("kByte");
+		c1.gridx=2;
+		p.add(l,c1);
+		l=new JLabel("Aktivität:",JLabel.RIGHT);
+		c1.weightx=1;
+		c1.fill=GridBagConstraints.HORIZONTAL;
+		c1.anchor=GridBagConstraints.EAST;
+		c1.gridx=3;
+		p.add(l,c1);
+		progress=new JProgressBar();
+		progress.setUI(new MyProgressBarUI(true));
+		progress.setMinimum(0);
+		progress.setMaximum(5);
+		progress.setBorderPainted(false);
+		c1.gridx=4;
+		c1.weightx=0;
+		p.add(progress,c1);
+		l=new JLabel("davon World Wide Web:");
+		c1.insets=new Insets(10,20,0,0);
+		c1.gridx=0;
+		c1.gridy=1;
+		p.add(l,c1);
+		l=new JLabel("350");
+		c1.insets=new Insets(10,5,0,0);
+		c1.gridx=1;
+		p.add(l,c1);
+		l=new JLabel("kByte");
+		c1.gridx=2;
+		p.add(l,c1);
+		l=new JLabel("andere Internetdienste:");
+		c1.insets=new Insets(7,20,0,0);
+		c1.gridx=0;
+		c1.gridy=2;
+		p.add(l,c1);
+		l=new JLabel("0");
+		c1.insets=new Insets(7,5,0,0);
+		c1.gridx=1;
+		p.add(l,c1);
+		l=new JLabel("kByte");
+		c1.gridx=2;
+		p.add(l,c1);
+
+		my.setFullPanel(p);
+
+		//small
+		gbl1=new GridBagLayout();
+		c1=new GridBagConstraints();
+		p=new JPanel(gbl1);
+		l=new JLabel("Eigene anonymiserte Daten:");
+		c1.insets=new Insets(0,5,0,0);
+		c1.anchor=GridBagConstraints.WEST;
+		p.add(l,c1);
+		l=new JLabel("350");
+		c1.gridx=1;
+		p.add(l,c1);
+		l=new JLabel("kByte");
+		c1.gridx=2;
+		p.add(l,c1);
+		l=new JLabel("Aktivität:",JLabel.RIGHT);
+		c1.weightx=1;
+		c1.fill=GridBagConstraints.HORIZONTAL;
+		c1.anchor=GridBagConstraints.EAST;
+		c1.gridx=3;
+		p.add(l,c1);
+		progress=new JProgressBar();
+		progress.setUI(new MyProgressBarUI(true));
+		progress.setMinimum(0);
+		progress.setMaximum(5);
+		progress.setBorderPainted(false);
+		c1.weightx=0;
+		c1.gridx=4;
+		p.add(progress,c1);
+		my.setSmallPanel(p);
+
+
+		c.fill=GridBagConstraints.HORIZONTAL;
+		c.weightx=1;
+		c.anchor=GridBagConstraints.NORTHWEST;
+		c.gridy=6;
+		northPanel.add(my,c);
+
+
+//-----------------------------------------------------------
+		c.gridwidth=2;
+		c.gridx=0;
+		c.gridy=7;
+		c.fill=GridBagConstraints.HORIZONTAL;
+		c.weightx=1;
+		northPanel.add(new JSeparator(),c);
+
+//------------------ Forwarder Panel
+		my=new FlippingPanel(this);
+		//big view
+		gbl1=new GridBagLayout();
+		c1=new GridBagConstraints();
+		p=new JPanel(gbl1);
+		l=new JLabel("Forwarder (Blockungsresistenz):");
+		c1.insets=new Insets(0,5,0,0);
+		c1.anchor=GridBagConstraints.WEST;
+		p.add(l,c1);
+		gbl=new GridBagLayout();
+		c2=new GridBagConstraints();
+		p2=new JPanel(gbl2);
+		JCheckBox check=new JCheckBox("Ein");
+		check.setBorder(null);
+		c2.gridx=0;
+		c2.weightx=1;
+		c2.fill=GridBagConstraints.HORIZONTAL;
+		p2.add(check,c2);
+		l=new JLabel("Aktivität:");
+		c2.insets=new Insets(0,5,0,0);
+		c2.gridx=1;
+		c2.weightx=0;
+		c2.fill=GridBagConstraints.NONE;
+		p2.add(l,c2);
+		progress=new JProgressBar();
+		progress.setUI(new MyProgressBarUI(true));
+		progress.setMinimum(0);
+		progress.setMaximum(5);
+		progress.setBorderPainted(false);
+		c2.gridx=2;
+		p2.add(progress,c2);
+		c1.fill=GridBagConstraints.HORIZONTAL;
+		c1.weightx=1;
+		c1.gridx=1;
+		c1.gridwidth=2;
+		p.add(p2,c1);
+
+		l=new JLabel("Weitergeleitete Verbindungen:");
+		c1.gridx=0;
+		c1.gridy=1;
+		c1.fill=GridBagConstraints.NONE;
+		c1.weightx=0;
+		c1.gridwidth=1;
+		c1.insets=new Insets(10,5,0,0);
+		p.add(l,c1);
+		l=new JLabel("0");
+		c1.gridx=1;
+		p.add(l,c1);
+		l=new JLabel("aktuell");
+		c1.gridx=2;
+		p.add(l,c1);
+		l=new JLabel("12");
+		c1.insets=new Insets(7,5,0,0);
+		c1.gridx=1;
+		c1.gridy=2;
+		p.add(l,c1);
+		l=new JLabel("angenommen");
+		c1.gridx=2;
+		p.add(l,c1);
+		l=new JLabel("1");
+		c1.gridx=1;
+		c1.gridy=3;
+		p.add(l,c1);
+		l=new JLabel("abgelehnt");
+		c1.gridx=2;
+		p.add(l,c1);
+		l=new JLabel("Weitergeleitetes Datenvolumen:");
+		c1.gridx=0;
+		c1.gridy=4;
+		p.add(l,c1);
+		l=new JLabel("350");
+		c1.gridx=1;
+		p.add(l,c1);
+		l=new JLabel("kByte");
+		c1.gridx=2;
+		p.add(l,c1);
+		l=new JLabel("Genutzte Bandbreite:");
+		c1.gridx=0;
+		c1.gridy=5;
+		p.add(l,c1);
+		l=new JLabel("10");
+		c1.gridx=1;
+		p.add(l,c1);
+		l=new JLabel("kByte/s");
+		c1.gridx=2;
+		p.add(l,c1);
+
+		my.setFullPanel(p);
+
+		//smallview
+		gbl1=new GridBagLayout();
+		c1=new GridBagConstraints();
+		p=new JPanel(gbl1);
+		l=new JLabel("Forwarder (Blockungsresistenz):");
+		c1.insets=new Insets(0,5,0,0);
+		c1.anchor=GridBagConstraints.WEST;
+		p.add(l,c1);
+		c1.gridx=1;
+		c1.weightx=1;
+		c1.fill=GridBagConstraints.HORIZONTAL;
+		check=new JCheckBox("Ein");
+		check.setBorder(null);
+		p.add(check,c1);
+		l=new JLabel("Aktivität:");
+		c1.gridx=2;
+		c1.weightx=0;
+		c1.fill=GridBagConstraints.NONE;
+		p.add(l,c1);
+		progress=new JProgressBar();
+		progress.setUI(new MyProgressBarUI(true));
+		progress.setMinimum(0);
+		progress.setMaximum(5);
+		progress.setBorderPainted(false);
+		c1.gridx=3;
+		p.add(progress,c1);
+		my.setSmallPanel(p);
+
+		c.fill=GridBagConstraints.HORIZONTAL;
+		c.weightx=1;
+		c.anchor=GridBagConstraints.NORTHWEST;
+		c.gridy=8;
+		northPanel.add(my,c);
+
+//-----------------------------------------------------------
+		c.gridwidth=2;
+		c.gridx=0;
+		c.gridy=9;
+		c.fill=GridBagConstraints.HORIZONTAL;
+		c.weightx=1;
+		northPanel.add(new JSeparator(),c);
+//Buttons
+		gbl1=new GridBagLayout();
+		c1=new GridBagConstraints();
+		JPanel buttonPanel = new JPanel(gbl1);
+		m_bttnInfo = new JButton(JAPMessages.getString("infoButton"));
+		m_bttnHelp = new JButton(JAPMessages.getString("helpButton"));
+		m_bttnQuit = new JButton(JAPMessages.getString("quitButton"));
+		m_bttnConf = new JButton(JAPMessages.getString("confButton"));
+		m_bttnIconify = new JButton(JAPUtil.loadImageIcon(JAPConstants.ICONIFYICONFN, true));
+		m_bttnIconify.setToolTipText(JAPMessages.getString("iconifyWindow"));
+
+		// Add real buttons
+		buttonPanel.add(m_bttnIconify,c1);
+		//buttonPanel.add(m_bttnInfo);
+		c1.gridx=1;
+		c1.insets=new Insets(0,10,0,0);
+		buttonPanel.add(m_bttnHelp,c1);
+		c1.gridx=2;
+		buttonPanel.add(m_bttnConf,c1);
+		c1.gridx=3;
+		c1.weightx=1;
+		c1.fill=GridBagConstraints.HORIZONTAL;
+		buttonPanel.add(new JLabel(),c1);
+		c1.gridx=4;
+		c1.weightx=0;
+		buttonPanel.add(m_bttnQuit,c1);
+		m_bttnIconify.addActionListener(this);
+		m_bttnConf.addActionListener(this);
+		m_bttnInfo.addActionListener(this);
+		m_bttnHelp.addActionListener(this);
+		m_bttnQuit.addActionListener(this);
+		JAPUtil.setMnemonic(m_bttnIconify, JAPMessages.getString("iconifyButtonMn"));
+		JAPUtil.setMnemonic(m_bttnConf, JAPMessages.getString("confButtonMn"));
+		JAPUtil.setMnemonic(m_bttnInfo, JAPMessages.getString("infoButtonMn"));
+		JAPUtil.setMnemonic(m_bttnHelp, JAPMessages.getString("helpButtonMn"));
+		JAPUtil.setMnemonic(m_bttnQuit, JAPMessages.getString("quitButtonMn"));
+
+		c.gridy=10;
+		northPanel.add(buttonPanel,c);
+
 
 		// "West": Image
 		ImageIcon westImage = JAPUtil.loadImageIcon(JAPMessages.getString("westPath"), true); ;
@@ -254,31 +600,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		//tabs.addTab(JAPMessages.getString("mainMeterTab"),JAPUtil.loadImageIcon(JAPConstants.METERICONFN, true), level );
 		// "South": Buttons
 
-		JPanel buttonPanel = new JPanel();
-		m_bttnInfo = new JButton(JAPMessages.getString("infoButton"));
-		m_bttnHelp = new JButton(JAPMessages.getString("helpButton"));
-		m_bttnQuit = new JButton(JAPMessages.getString("quitButton"));
-		m_bttnConf = new JButton(JAPMessages.getString("confButton"));
-		m_bttnIconify = new JButton(JAPUtil.loadImageIcon(JAPConstants.ICONIFYICONFN, true));
-		m_bttnIconify.setToolTipText(JAPMessages.getString("iconifyWindow"));
-
-		// Add real buttons
-		buttonPanel.add(m_bttnIconify);
-		buttonPanel.add(m_bttnInfo);
-		buttonPanel.add(m_bttnHelp);
-		buttonPanel.add(m_bttnConf);
-		buttonPanel.add(new JLabel("  "));
-		buttonPanel.add(m_bttnQuit);
-		m_bttnIconify.addActionListener(this);
-		m_bttnConf.addActionListener(this);
-		m_bttnInfo.addActionListener(this);
-		m_bttnHelp.addActionListener(this);
-		m_bttnQuit.addActionListener(this);
-		JAPUtil.setMnemonic(m_bttnIconify, JAPMessages.getString("iconifyButtonMn"));
-		JAPUtil.setMnemonic(m_bttnConf, JAPMessages.getString("confButtonMn"));
-		JAPUtil.setMnemonic(m_bttnInfo, JAPMessages.getString("infoButtonMn"));
-		JAPUtil.setMnemonic(m_bttnHelp, JAPMessages.getString("helpButtonMn"));
-		JAPUtil.setMnemonic(m_bttnQuit, JAPMessages.getString("quitButtonMn"));
 
 		// add Components to Frame
 		// temporary testing of new GUI interface... (Bastian Voigt)
@@ -385,7 +706,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		ownTrafficChannelsProgressBar = new JProgressBar(JProgressBar.HORIZONTAL, 0, 1);
 		Font fontControls = JAPController.getDialogFont();
 		ownTrafficChannelsProgressBar.setFont(fontControls);
-		ownTrafficChannelsProgressBar.setUI(new MyProgressBarUI());
+		ownTrafficChannelsProgressBar.setUI(new MyProgressBarUI(false));
 		ownTrafficChannelsProgressBar.setStringPainted(true);
 		ownTrafficChannelsProgressBar.setBorderPainted(false /*PROGRESSBARBORDER*/);
 		ownTrafficChannelsProgressBar.setString(" ");

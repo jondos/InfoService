@@ -55,7 +55,7 @@ public class DHE_RSA_WITH_AES_128_CBC_SHA extends CipherSuite {
 	 * Constructor
 	 * @throws Exception
 	 */
-	public DHE_RSA_WITH_AES_128_CBC_SHA() throws Exception
+	public DHE_RSA_WITH_AES_128_CBC_SHA() throws TLSException
 	{
 		super(new byte[]{0x00,0x033});
 		this.setKeyExchangeAlgorithm(new DHE_RSA_Key_Exchange());
@@ -66,9 +66,8 @@ public class DHE_RSA_WITH_AES_128_CBC_SHA extends CipherSuite {
 		HMac hmac = new HMac(new SHA1Digest());
 		hmac.reset();
 		hmac.init(new KeyParameter(m_clientmacsecret));
-		byte[]  b = helper.conc(new byte[7],this.m_writesequenznumber.toByteArray());
-		hmac.update(b,b.length-8,8);
-		m_writesequenznumber = m_writesequenznumber.add(new BigInteger("1"));
+		hmac.update(helper.inttobyte(m_writesequenznumber,8),0,8);
+		m_writesequenznumber++;
 		hmac.update(msg.m_Header,0,msg.m_Header.length);
 		hmac.update(msg.m_Data,0,msg.m_dataLen);
 		hmac.doFinal(msg.m_Data,msg.m_dataLen);
@@ -103,13 +102,12 @@ public class DHE_RSA_WITH_AES_128_CBC_SHA extends CipherSuite {
 
 		hmac.reset();
 		hmac.init(new KeyParameter(m_servermacsecret));
-		byte[]  b = helper.conc(new byte[7],this.m_readsequenznumber.toByteArray());
-		hmac.update(b,b.length-8,8);
+		hmac.update(helper.inttobyte(m_readsequenznumber,8),0,8);
+		m_readsequenznumber++;
 		hmac.update(msg.m_Header,0,msg.m_Header.length);
 		hmac.update(msg.m_Data,0,len);
 		byte[] mac = new byte[hmac.getMacSize()];
 		hmac.doFinal(mac,0);
-		m_readsequenznumber = m_readsequenznumber.add(new BigInteger("1"));
 
 		for(int i=0;i<mac.length;i++)
 		{
