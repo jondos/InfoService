@@ -107,7 +107,7 @@ public class ProxyInterfaceTest extends XtendedPrivateTestCase
 	public void testGetProxyAuthorizationHeader()
 	{
 		ProxyInterface proxyInterface =
-			new ProxyInterface("aHost", 952, "http", "Bill", new DummyPasswordReader(), false, true);
+			new ProxyInterface("aHost", 952, "HTTP/TCP", "Bill", new DummyPasswordReader(), false, true);
 
 		try
 		{

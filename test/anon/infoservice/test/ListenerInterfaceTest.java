@@ -66,8 +66,8 @@ public class ListenerInterfaceTest extends XtendedPrivateTestCase
 		assertTrue(!ListenerInterface.isValidProtocol(null));
 		assertTrue(!ListenerInterface.isValidProtocol(""));
 		assertTrue(!ListenerInterface.isValidProtocol("ftp"));
-		assertTrue(ListenerInterface.isValidProtocol("HTTP"));
-		assertTrue(ListenerInterface.isValidProtocol("http"));
+		assertTrue(ListenerInterface.isValidProtocol("HTTP/TCP"));
+		assertFalse(ListenerInterface.isValidProtocol("http"));
 		assertTrue(ListenerInterface.isValidProtocol(ListenerInterface.PROTOCOL_TYPE_HTTP));
 		assertTrue(ListenerInterface.isValidProtocol(ListenerInterface.PROTOCOL_TYPE_HTTPS));
 		assertTrue(ListenerInterface.isValidProtocol(ListenerInterface.PROTOCOL_TYPE_SOCKS));
