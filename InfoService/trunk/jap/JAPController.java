@@ -475,28 +475,29 @@ public final class JAPController implements ProxyListener
 					Element elemLevel = (Element) XMLUtil.getFirstChildByName(elemDebug, "Level");
 					if (elemLevel != null)
 					{
-						JAPDebug.getInstance().setLogLevel(Integer.parseInt(elemLevel.getFirstChild().
-							getNodeValue().trim()));
+						int l = XMLUtil.parseNodeInt(elemLevel, JAPDebug.getInstance().getLogLevel());
+						JAPDebug.getInstance().setLogLevel(l);
 					}
 					Element elemType = (Element) XMLUtil.getFirstChildByName(elemDebug, "Type");
 					if (elemType != null)
 					{
 						int debugtype = LogType.NUL;
-						if (elemType.getAttribute("GUI").equals("true"))
+						if (XMLUtil.parseElementAttrBoolean(elemType, "GUI", false))
 						{
 							debugtype += LogType.GUI;
 						}
-						if (elemType.getAttribute("NET").equals("true"))
+						if (XMLUtil.parseElementAttrBoolean(elemType, "NET", false))
 						{
 							debugtype += LogType.NET;
 						}
-						if (elemType.getAttribute("THREAD").equals("true"))
+						if (XMLUtil.parseElementAttrBoolean(elemType, "THREAD", false))
 						{
 							debugtype += LogType.THREAD;
 						}
-						if (elemType.getAttribute("MISC").equals("true"))
+						if (XMLUtil.parseElementAttrBoolean(elemType, "MISC", false))
 						{
 							debugtype += LogType.MISC;
+							debugtype += LogType.PAY;
 						}
 						JAPDebug.getInstance().setLogType(debugtype);
 					}
