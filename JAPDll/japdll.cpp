@@ -80,8 +80,9 @@ VOID ShowWindowFromTaskbar()
 	nid.uFlags = 0;
 
 	// Window (wieder) anzeigen und Icon aus Taskbar entfernen
-	ShowWindow(g_hWnd, SW_RESTORE);
-	SetWindowPos(g_hWnd, HWND_TOP, 0, 0, 0, 0, SWP_SHOWWINDOW);
+	//ShowWindow(g_hWnd, SW_SHOWNORMAL);
+	SetWindowPos(g_hWnd, HWND_TOP, 0, 0, 0, 0, SWP_NOSIZE|SWP_NOMOVE|SWP_SHOWWINDOW);
+	ShowWindow(g_hWnd, SW_SHOWNORMAL);
 	//ShowWindow(g_hWnd, SW_RESTORE);
 	Shell_NotifyIcon(NIM_DELETE, &nid);
 	g_hWnd=NULL;
