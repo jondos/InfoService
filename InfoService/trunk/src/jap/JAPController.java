@@ -1301,7 +1301,7 @@ private final class SetAnonModeAsync implements Runnable
 		}
 	//---------------------------------------------------------------------
 
-	/** This (and only this!) is the final exit procedure of JAP!
+	/** This (and only this) is the final exit procedure of JAP!
 	 *
 	 */
 	public void goodBye() {
