@@ -1,35 +1,35 @@
 /*
-Copyright (c) 2000, The JAP-Team 
+Copyright (c) 2000, The JAP-Team
 All rights reserved.
-Redistribution and use in source and binary forms, with or without modification, 
+Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
 
-	- Redistributions of source code must retain the above copyright notice, 
+	- Redistributions of source code must retain the above copyright notice,
 	  this list of conditions and the following disclaimer.
 
-	- Redistributions in binary form must reproduce the above copyright notice, 
-	  this list of conditions and the following disclaimer in the documentation and/or 
+	- Redistributions in binary form must reproduce the above copyright notice,
+	  this list of conditions and the following disclaimer in the documentation and/or
 		other materials provided with the distribution.
 
-	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors 
-	  may be used to endorse or promote products derived from this software without specific 
-		prior written permission. 
+	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
+	  may be used to endorse or promote products derived from this software without specific
+		prior written permission.
 
-	
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS 
-OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY 
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS
+OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
 AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS
 BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, 
-OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER 
-IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY 
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
-package anon;
+package anonnew.server.impl;
 import java.security.SecureRandom;
 import JAPDebug;
 
-final class JAPKeyPool implements Runnable
+final public class KeyPool implements Runnable
 	{
 		private SecureRandom sr;
 		private int aktSize;
@@ -41,7 +41,7 @@ final class JAPKeyPool implements Runnable
 		private Object l1;
 		private Object l2;
 		private boolean runflag;
-		private static JAPKeyPool m_KeyPool=null;
+		private static KeyPool m_KeyPool=null;
 		private Thread m_KeyPoolThread=null;
 		private final class KeyList
 			{
@@ -53,10 +53,10 @@ final class JAPKeyPool implements Runnable
 						next=null;
 					}
 			}
-		
-		
-		private JAPKeyPool(int poolsize,int keylength)
-			{	
+
+
+		private KeyPool(int poolsize,int keylength)
+			{
 				//JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPKeyPool:initializing...");
 				keySize=keylength;
 				this.poolSize=poolsize;
@@ -70,16 +70,16 @@ final class JAPKeyPool implements Runnable
 				m_KeyPoolThread.start();
 				//JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPKeyPool:initialization finished!");
 			}
-		
-		public static synchronized JAPKeyPool start(/*int poolsize,int keylength*/)
+
+		public static synchronized KeyPool start(/*int poolsize,int keylength*/)
 			{
 				if(m_KeyPool==null)
-					m_KeyPool=new JAPKeyPool(20,16/*poolsize,keylength*/);
+					m_KeyPool=new KeyPool(20,16/*poolsize,keylength*/);
 				return m_KeyPool;
 			}
-		
+
 		public void run()
-			{	
+			{
 				byte[] seed=null;
 				try
 					{
@@ -113,11 +113,11 @@ final class JAPKeyPool implements Runnable
 										//tmpKey ausketten aus pool
 										tmpKey=pool;
 										pool=pool.next;
-										
+
 										//einketten in keys..
 									//	tmpKey.next=keys;
 									//	keys=tmpKey;
-										
+
 										// aktueller=kopf....
 										tmpKey.next=aktKey;
 										aktKey=tmpKey;
@@ -125,7 +125,7 @@ final class JAPKeyPool implements Runnable
 											{
 												l2.notify();
 											}
-	
+
 									}
 							}
 						else
@@ -142,12 +142,12 @@ final class JAPKeyPool implements Runnable
 								}
 					}
 			}
-		
+
 		public static void getKey(byte[] key)
 			{
 				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPKeyPool:getKey()");
 				if(m_KeyPool.aktKey==null)
-					try	
+					try
 						{
 							synchronized(m_KeyPool.l2)
 							{m_KeyPool.l2.wait();}
@@ -166,10 +166,10 @@ final class JAPKeyPool implements Runnable
 						//else
 						//	aktKey=keys;
 						tmpKey.next=m_KeyPool.pool;
-						 							
+
 						m_KeyPool.pool=tmpKey;
 					}
 				synchronized(m_KeyPool.l1)
-				{m_KeyPool.l1.notify();}				
+				{m_KeyPool.l1.notify();}
 			}
 	}
