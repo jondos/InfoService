@@ -92,7 +92,8 @@ public class BIConnection
 			}
 			else
 			{
-				//m_socket = new TinySSL(m_theBI.getHostName(), m_theBI.getPortNumber());
+//				m_socket = new TinySSL(m_theBI.getHostName(), m_theBI.getPortNumber());
+				m_socket = new anon.tor.tinytls.TinyTLS(m_theBI.getHostName(), m_theBI.getPortNumber());
 			}
 			m_httpClient = new HttpClient(m_socket);
 		}

@@ -9,7 +9,6 @@ import logging.LogHolder;
 import anon.util.XMLUtil;
 import java.sql.Timestamp;
 
-
 /**
  * This control channel is used for communication with the AI (AccountingInstance or
  * Abrechnungsinstanz in German) which lives in the first mix.
@@ -28,7 +27,6 @@ public class AIControlChannel extends SyncControlChannel
 		super(CHAN_ID, true);
 	}
 
-
 	/**
 	 * proccessXMLMessage - this is called when a new request is coming in.
 	 *
@@ -43,21 +41,54 @@ public class AIControlChannel extends SyncControlChannel
 		}
 		catch (Exception ex)
 		{
-			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Error parsing AI request: "+ex.getMessage());
+			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Error parsing AI request: " + ex.getMessage());
 			// report errormessage back to AI..
 			XMLErrorMessage err = new XMLErrorMessage(ex.getMessage());
 			sendMessage(XMLUtil.toXMLDocument(err));
 			return;
 		}
 		XMLEasyCC cc = request.getCC();
-		if(cc!=null)
+		if (cc != null)
 		{
-			// todo process CC
+			try
+		{
+				PayAccount currentAccount = PayAccountsFile.getInstance().getAccount(cc.getAccountNumber());
+				long newBytes = currentAccount.updateCurrentBytes();
+				if ( (newBytes + currentAccount.getSpent()) < cc.getTransferredBytes())
+				{
+					// the AI wants us to sign an unrealistic number of bytes
+					/** @todo warn the user */
+					cc.setTransferredBytes(newBytes + currentAccount.getSpent());
+				}
+				cc.sign(currentAccount.getSigningInstance());
+				this.sendMessage(XMLUtil.toXMLDocument(cc));
+				currentAccount.addCostConfirmation(cc);
+			}
+			catch (Exception ex1)
+			{
+				// the account stated by the AI does not exist or is not currently active
+				/** @todo handle this exception */
+			}
 		}
 		Timestamp t = request.getBalanceTimestamp();
-		if(t!=null)
+		if (t != null)
 		{
-			Pay.getInstance();
+			try
+			{
+				PayAccount currentAccount = PayAccountsFile.getInstance().getActiveAccount();
+				XMLBalance b = currentAccount.getBalance();
+				if ( (b == null) || b.getTimestamp().before(t))
+				{
+					Pay.getInstance().fetchAccountInfo(currentAccount.getAccountNumber());
+					b = currentAccount.getBalance();
+		}
+				this.sendMessage(XMLUtil.toXMLDocument(b));
+			}
+			catch (Exception ex2)
+			{
+				/** @todo handle this exception */
+	}
 		}
 	}
+
 }

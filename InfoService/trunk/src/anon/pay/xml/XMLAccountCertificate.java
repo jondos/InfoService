@@ -37,6 +37,7 @@ import anon.util.IXMLEncodable;
 import anon.util.XMLUtil;
 import anon.crypto.JAPSignature;
 import anon.util.IXMLSignable;
+import anon.util.AbstractXMLSignable;
 
 /**
  * This class contains the functionality for creating and parsing XML account
@@ -72,7 +73,7 @@ import anon.util.IXMLSignable;
  * </li>
  * </ul>
  */
-public class XMLAccountCertificate implements IXMLSignable
+public class XMLAccountCertificate extends AbstractXMLSignable
 {
 
 	//~ Instance fields ********************************************************
@@ -231,10 +232,6 @@ public class XMLAccountCertificate implements IXMLSignable
 		return elemRoot;
 	}
 
-	public boolean isSigned()
-	{
-		return (m_signature != null);
-	}
 
 	//~ Methods ****************************************************************
 
@@ -272,29 +269,6 @@ public class XMLAccountCertificate implements IXMLSignable
 	{
 		m_publicKey = publicKey;
 	}
-
-	public void sign(JAPSignature signer) throws Exception
-	{
-		Document doc = XMLUtil.toXMLDocument(this);
-		signer.signXmlDoc(doc);
-		Element elemSig = (Element) XMLUtil.getFirstChildByName(doc.getDocumentElement(), "Signature");
-		m_signature = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
-		Element elem = (Element) XMLUtil.importNode(m_signature, elemSig, true);
-		m_signature.appendChild(elem);
-	}
-
-	public boolean verifySignature(JAPSignature verifier)
-	{
-		try{
-		Document doc = XMLUtil.toXMLDocument(this);
-		return verifier.verifyXML(doc.getDocumentElement());
-		}
-		catch(Exception e)
-		{
-			return false;
-		}
-	}
-
 
 
 }

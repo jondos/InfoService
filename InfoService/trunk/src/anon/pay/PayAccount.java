@@ -34,8 +34,6 @@ import java.util.Enumeration;
 import java.util.Vector;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-//import javax.swing.event.ChangeEvent;
-//import javax.swing.event.ChangeListener;
 
 import org.bouncycastle.crypto.params.DSAParameters;
 import org.bouncycastle.crypto.params.DSAPrivateKeyParameters;
@@ -53,6 +51,9 @@ import anon.pay.xml.XMLTransCert;
 import anon.util.Base64;
 import anon.util.IXMLEncodable;
 import anon.util.XMLUtil;
+import anon.server.impl.MuxSocket;
+import java.util.Hashtable;
+import anon.pay.xml.XMLBalance;
 
 /**
  *  Diese Klasse ist f?r die verwaltung eines Accounts zut?ndig, sie kapselt eine XML Struktur innerhalb der Klasse
@@ -86,10 +87,23 @@ public class PayAccount implements IXMLEncodable
 	/** the signing instance */
 	private JAPSignature m_signingInstance;
 
+	/** the number of bytes which have been used bot not confirmed yet */
+	private long m_currentBytes;
+
+	private Vector m_accountListeners = new Vector();
+
+	/**
+	 * internal value for spent bytes. Basically this is the same as spent in {@link anon.pay.xml.XMLBalance},
+	 * but the value in XMLBalance is calculated by the BI while this here is calculated
+	 * by the Jap. So the value here might be more up to date in case the XMLBalance
+	 * certificate is old.
+	 */
+	private long m_mySpent;
 
 	public PayAccount(byte[] xmlData) throws Exception
 	{
-		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(xmlData));
+		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new
+			ByteArrayInputStream(xmlData));
 		Element elemRoot = doc.getDocumentElement();
 		setValues(elemRoot);
 	}
@@ -103,6 +117,23 @@ public class PayAccount implements IXMLEncodable
 	{
 		Element elemRoot = doc.getDocumentElement();
 		setValues(elemRoot);
+	}
+
+	/**
+	 * Creates a {@link PayAccount} Objekt from the account certificate and
+	 * the private key.
+	 *
+	 * @param certificate account certificate issued by the BI
+	 * @param privateKey the private key
+	 */
+	public PayAccount(XMLAccountCertificate certificate,
+					  IMyPrivateKey privateKey,
+					  JAPSignature signingInstance) throws Exception
+	{
+		m_accountCertificate = certificate;
+		m_signingInstance = signingInstance;
+		m_privateKey = privateKey;
+		m_transCerts = new Vector();
 	}
 
 	private void setValues(Element elemRoot) throws Exception
@@ -204,28 +235,6 @@ public class PayAccount implements IXMLEncodable
 		m_signingInstance.initSign(m_privateKey);
 	}
 
-	public void setAccountInfo(XMLAccountInfo info)
-	{
-		m_accountInfo = info;
-	}
-
-	/**
-	 * Creates a {@link PayAccount} Objekt from the account certificate and
-	 * the private key.
-	 *
-	 * @param certificate account certificate issued by the BI
-	 * @param privateKey the private key
-	 */
-	public PayAccount(XMLAccountCertificate certificate,
-					  IMyPrivateKey privateKey,
-					  JAPSignature signingInstance) throws Exception
-	{
-		m_accountCertificate = certificate;
-		m_signingInstance = signingInstance;
-		m_privateKey = privateKey;
-		m_transCerts = new Vector();
-	}
-
 	/**
 	 * Returns the xml representation of the account
 	 *
@@ -245,7 +254,6 @@ public class PayAccount implements IXMLEncodable
 		elemTmp = m_privateKey.toXmlElement(a_doc);
 		elemRoot.appendChild(elemTmp);
 
-
 		// add transfer certificates
 		Element elemTransCerts = a_doc.createElement("TransferCertificates");
 		elemRoot.appendChild(elemTransCerts);
@@ -259,7 +267,8 @@ public class PayAccount implements IXMLEncodable
 			}
 		}
 
-		if (m_accountInfo != null) {
+		if (m_accountInfo != null)
+		{
 			elemTmp = m_accountInfo.toXmlElement(a_doc);
 			elemRoot.appendChild(elemTmp);
 		}
@@ -267,36 +276,39 @@ public class PayAccount implements IXMLEncodable
 		return elemRoot;
 	}
 
-	/**
-	 * Hinzuf?gen eines Transfer-Zertifikats.
-	 *
-	 * @param cert Transfer-Zertifikat
-	 */
 	public void addTransCert(XMLTransCert cert) throws Exception
 	{
 		m_transCerts.addElement(cert);
-//		getDomDocument();
 	}
 
 	/**
-	 * Setzen des Kontoguthabens.
-	 *
-	 * @param balance Kontoguthaben
+	 * This is not just a setter method. If an accountInfo is already present,
+	 * only older information is overwritten with newer information.
+	 * @param info XMLAccountInfo
 	 */
-	public void setBalance(XMLAccountInfo info) throws Exception
+	public void setAccountInfo(XMLAccountInfo info)
+	{
+		if (m_accountInfo == null)
 	{
 		m_accountInfo = info;
-//		getDomDocument();
 	}
-
-	private void setRSAPrivateKey() throws Exception
+		else
+		{
+			XMLBalance b1 = info.getBalance();
+			XMLBalance b2 = m_accountInfo.getBalance();
+			if (b1.getTimestamp().after(b2.getTimestamp()))
 	{
+				m_accountInfo.setBalance(b1);
+			}
+
+		}
+
 	}
 
 	/**
-	 * Liefert Kontonummer des Kontos.
+	 * Returns the account's accountnumber
 	 *
-	 * @return Kontonummer
+	 * @return accountnumber
 	 */
 	public long getAccountNumber()
 	{
@@ -304,18 +316,15 @@ public class PayAccount implements IXMLEncodable
 	}
 
 	/**
-	 * gibt an ob ?berhaupt ein Kontostanddokument existiert
+	 * Returns true when an accountInfo object exists.
+	 * New accounts don't have this, it is created when we first
+	 * fetch a balance certificate or sign the first CC.
 	 */
 	public boolean hasAccountInfo()
 	{
 		return m_accountInfo != null;
 	}
 
-	/**
-	 * Liefert das Kontozertifikat.
-	 *
-	 * @return Kontozertifikat
-	 */
 	public XMLAccountCertificate getAccountCertificate()
 	{
 		return m_accountCertificate;
@@ -438,42 +447,76 @@ public class PayAccount implements IXMLEncodable
 	}
 
 	/**
-	 * addCostConfirmation
-	 *
-	 * @param aiName String
-	 * @param accountNumber long
-	 * @param plusCosts long
-	 * @return XMLEasyCC
-	 * @todo implement
+	 * Asks the MuxSocket for the current number of transferred bytes and
+	 * updates the internal value.
+	 * @return the updated currentBytes value
 	 */
-	public XMLEasyCC addCostConfirmation(String aiName, long accountNumber, long plusCosts)
+	public long updateCurrentBytes() throws Exception
 	{
-		return null;
+		// am I the active account?
+		if (PayAccountsFile.getInstance().getActiveAccount() != this)
+		{
+			throw new Exception("Error: Inactive account called to count used bytes!");
+		}
+
+		/** @todo realize this */
+/*		MuxSocket currentMuxSock = new MuxSocket(); //= getCurrentMuxSocket(); oder so..
+		m_currentBytes = currentMuxSock.getTransferredBytes();
+		currentMuxSock.resetTransferredBytes();*/
+		return m_currentBytes;
 	}
 
-	private Vector m_changeListeners = new Vector();
-
-/*	public void addChangeListener(ChangeListener listener)
+	/**
+	 * addCostConfirmation
+	 */
+	public void addCostConfirmation(XMLEasyCC cc) throws Exception
 	{
-		synchronized (m_changeListeners)
+		if (m_accountInfo == null)
+		{
+			m_accountInfo = new XMLAccountInfo();
+	}
+		m_mySpent += m_accountInfo.addCC(cc);
+
+	}
+
+	public void addAccountListener(IAccountListener listener)
+	{
+		synchronized (m_accountListeners)
 		{
 			if (listener != null)
 			{
-				m_changeListeners.addElement(listener);
+				m_accountListeners.addElement(listener);
 			}
 		}
 	}
 
 	private void fireChangeEvent(Object source)
 	{
-		synchronized (m_changeListeners)
+		synchronized (m_accountListeners)
 		{
-			Enumeration enumListeners = m_changeListeners.elements();
+			Enumeration enumListeners = m_accountListeners.elements();
 			ChangeEvent e = new ChangeEvent(source);
 			while (enumListeners.hasMoreElements())
 			{
 				( (ChangeListener) enumListeners.nextElement()).stateChanged(e);
 			}
 		}
-	}*/
+	}
+
+	/**
+	 * getBalance
+	 *
+	 * @return XMLBalance
+	 */
+	public XMLBalance getBalance()
+	{
+		if (m_accountInfo == null)
+		{
+			return null;
+		}
+		else
+		{
+			return m_accountInfo.getBalance();
+		}
+	}
 }
