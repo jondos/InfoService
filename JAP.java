@@ -41,12 +41,22 @@ import java.awt.event.WindowEvent;
 class JAP extends Frame{
 
 	//JAPDebug jdebug;
-	
+	boolean bSupportRMI=false;
 	/** At the moment - just do nothing...
-	 * @param argv The commandline arguments - maybe for future use.
+	 * @param argv The commandline arguments.
+	 *		-rmi   Enable Support for RMI, so that other apllications can control the JAP
 	 */
-	JAP(String[] argv) {
-	}
+	JAP(String[] argv) 
+		{
+			if(argv!=null&&argv.length>0)
+				{
+					for(int i=0;i<argv.length;i++)
+						{
+							if(argv[i].equalsIgnoreCase("-rmi"))
+								 bSupportRMI=true;
+						}
+				}
+		}
 	
 	/** Initialize and starts the JAP.
 	 */
@@ -141,7 +151,9 @@ class JAP extends Frame{
 		//Init Crypto...
 		//java.security.Security.addProvider(new cryptix.jce.provider.CryptixCrypto());
 
-		// Dispose the spash screen and show main frame
+		// Enable RMI if requested
+		model.setRMISupport(bSupportRMI);
+		
 		view.show();
 		view.toFront();		
 		splash.dispose();
