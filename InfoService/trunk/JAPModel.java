@@ -81,16 +81,16 @@ public final class JAPModel {
 						"images/meter6.gif"
 						};
 	
-	private Vector observerVector;
-	public Vector anonServerDatabase;
+	private Vector observerVector=null;
+	public Vector anonServerDatabase=null;
 	
-	private JAPProxyServer p;
+	private JAPProxyServer proxy=null;;
 	
 	private static JAPModel model=null;
 //	public JAPLoading japLoading;
-	public static JAPFeedback feedback=null;
+	private static JAPFeedback feedback=null;
 	
-	public static JAPKeyPool keypool;
+	public static JAPKeyPool keypool=null;
 	
 	private JAPModel ()
 		{
@@ -118,7 +118,7 @@ public final class JAPModel {
 				
 			// Create observer object 
 			observerVector = new Vector();
-
+			anonMode=false;
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:initialization finished!");
 		}
 	
@@ -294,7 +294,7 @@ public final class JAPModel {
 				// -> we can start anonymity
 				anonMode = true;
 				// starting MUX --> Success ???
-				if(p.startMux())
+				if(proxy.startMux())
 					{
 				// start feedback thread
 						feedback=new JAPFeedback();
@@ -307,7 +307,7 @@ public final class JAPModel {
 		} else if ((anonMode == true) && (anonModeSelected == false)) {
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:setAnonMode("+anonModeSelected+")");
 			anonMode = false;
-			p.stopMux();
+			proxy.stopMux();
 			if(feedback==null)
 				{
 					feedback.stopRequests();
@@ -335,21 +335,29 @@ public final class JAPModel {
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:startProxy");
 			if (isRunningProxy == false)
 				{
-					isRunningProxy = true;
 					runningPortNumber = portNumber;
-					p = new JAPProxyServer(portNumber);
-					Thread proxyThread = new Thread (p);
-					proxyThread.start();
+					proxy = new JAPProxyServer(portNumber);
+					if(proxy.create())
+						{
+							Thread proxyThread = new Thread (proxy);
+							proxyThread.start();
+							isRunningProxy = true;
+						}
+					else
+						proxy=null;
 				}
 		}
 	
-	private void stopProxy() {
-		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:stopProxy");
-		if (isRunningProxy) {
-			p.stopService();
-			isRunningProxy = false;
+	private void stopProxy()
+		{
+			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:stopProxy");
+			if (isRunningProxy)
+				{
+					proxy.stopService();
+					proxy=null;
+					isRunningProxy = false;
+				}
 		}
-	}
 	
 	
 	/** This (and only this!) is the final exit procedure of JAP!
