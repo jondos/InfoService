@@ -79,15 +79,15 @@ public final class JAPModel implements JAPAnonServiceListener{
 	private boolean  mbActCntMessageNeverRemind  = false; // indicates if Warning message in setAnonMode has been deactivated forever
 	public  String   status1           = "?";
 	public  String   status2           = " ";
-	
+
 	private int      nrOfChannels      = 0;
 	private int      nrOfBytes         = 0;
-	
+
 	public int       nrOfActiveUsers   = -1;
 	public int       trafficSituation  = -1;
 	public int       currentRisk       = -1;
 	public int       mixedPackets      = -1;
-	
+
 	static final int MAXPROGRESSBARVALUE = 100; // for trafficSituation and currentRisk
 	static private   JAPView           view          = null;
 	static private   JAPViewIconified  iconifiedView = null;
@@ -135,12 +135,12 @@ public final class JAPModel implements JAPAnonServiceListener{
 	private Vector observerVector=null;
 	public Vector anonServerDatabase=null;
 
-	private ServerSocket m_socketHTTPListener; 
+	private ServerSocket m_socketHTTPListener;
 	private JAPDirectProxy proxyDirect=null;
 	private JAPAnonService proxyAnon=null;
 
 	private JAPAnonService proxyAnonSocks=null;
-	
+
 
 	private static JAPModel model=null;
 //	public JAPLoading japLoading;
@@ -450,7 +450,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 	public void setPortNumber (int p) {
 		portNumber = p;
 	}
-	
+
 	public int getPortNumber() {
 		return portNumber;
 	}
@@ -748,8 +748,8 @@ public final class JAPModel implements JAPAnonServiceListener{
 				else
 					view.setCursor(Cursor.getDefaultCursor());
 
-		} 
-		else if ((proxyDirect==null) && (anonModeSelected == false)) 
+		}
+		else if ((proxyDirect==null) && (anonModeSelected == false))
 			{
 				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:setAnonMode("+anonModeSelected+")");
 				if(proxyAnon!=null)
@@ -766,7 +766,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 				model.status2 = model.getString("statusNotRunning");
 				proxyDirect=new JAPDirectProxy(m_socketHTTPListener);
 				proxyDirect.startService();
-				model.mixedPackets = -1; 
+				model.mixedPackets = -1;
 				model.nrOfActiveUsers = -1;
 				model.trafficSituation = -1;
 				model.currentRisk = -1;
@@ -786,7 +786,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 				{
 					boolean bindOk=false;
 					for(int i=0;i<10;i++) //HAck for Mac!!
-						try 
+						try
 							{
 								if(mblistenerIsLocal)
 									{
@@ -830,18 +830,18 @@ public final class JAPModel implements JAPAnonServiceListener{
 					isRunningListener = false;
 				}
 		}
-	
+
 
 	/** This (and only this!) is the final exit procedure of JAP!
 	 *
 	 */
-	public void goodBye() {
+	public static void goodBye() {
 		//stopListener();
-		save();
+		model.save();
 		System.exit(0);
 	}
 
-	public void aboutJAP() { 
+	public static void aboutJAP() {
 		JOptionPane.showMessageDialog
 			(view,
 			 model.TITLE + "\n" +
@@ -852,7 +852,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 			  model.getString("version")+": "+model.aktVersion+"\n\n",
 				model.getString("aboutBox"),
 				JOptionPane.INFORMATION_MESSAGE
-			); 
+			);
 	}
 
 	/** Try to load all available MIX-Cascades form the InfoService...
