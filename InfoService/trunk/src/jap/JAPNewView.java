@@ -252,6 +252,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			}
 		});
 		m_bttnReload.setRolloverEnabled(true);
+		m_bttnReload.setToolTipText(JAPMessages.getString("ngCascadeReloadTooltip"));
 		ImageIcon tmpIcon = JAPUtil.loadImageIcon(JAPConstants.IMAGE_RELOAD_ROLLOVER, true);
 		m_bttnReload.setRolloverIcon(tmpIcon);
 		m_bttnReload.setSelectedIcon(tmpIcon);
@@ -1242,6 +1243,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		JAPUtil.setMnemonic(m_bttnHelp, JAPMessages.getString("helpButtonMn"));
 		JAPUtil.setMnemonic(m_bttnQuit, JAPMessages.getString("quitButtonMn"));
 
+		m_bttnReload.setToolTipText(JAPMessages.getString("ngCascadeReloadTooltip"));
 		m_labelAnonService.setText(JAPMessages.getString("ngAnonymisierungsdienst"));
 		m_bttnAnonDetails.setText(JAPMessages.getString("ngBttnAnonDetails"));
 		m_rbAnonOn.setText(JAPMessages.getString("ngAnonOn"));
@@ -1411,7 +1413,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
       if (m_rbAnonOn.isSelected()) {
         m_Controller.startAnonymousMode(this);
       }
-      else {      
+      else {
         m_Controller.setAnonMode(false);
       }
 		}
@@ -1653,7 +1655,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
          */
         m_cbForwarding.setEnabled(JAPModel.getInstance().getRoutingSettings().getRoutingMode() != JAPRoutingSettings.ROUTING_MODE_CLIENT);
         m_cbForwardingSmall.setEnabled(JAPModel.getInstance().getRoutingSettings().getRoutingMode() != JAPRoutingSettings.ROUTING_MODE_CLIENT);
-        m_comboAnonServices.setEnabled(JAPModel.getInstance().getRoutingSettings().getRoutingMode() != JAPRoutingSettings.ROUTING_MODE_CLIENT);     
+        m_comboAnonServices.setEnabled(JAPModel.getInstance().getRoutingSettings().getRoutingMode() != JAPRoutingSettings.ROUTING_MODE_CLIENT);
 			}
 			catch (Throwable t)
 			{
