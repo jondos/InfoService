@@ -32,19 +32,17 @@
  *  on a Macintosh to register the MRJ Handler.
  *
  */
+import java.awt.Frame;
+import jap.AbstractJAPMainView;
 import jap.JAPAWTMsgBox;
 import jap.JAPConstants;
 import jap.JAPController;
 import jap.JAPDebug;
 import jap.JAPMessages;
-import jap.JAPSplash;
-import jap.JAPView;
 import jap.JAPNewView;
-import jap.AbstractJAPMainView;
+import jap.JAPView;
+import jap.JAPSplash;
 import jap.JAPViewIconified;
-
-import java.awt.Frame;
-
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -161,40 +159,41 @@ class JAP extends Frame
 			}
 		}
 		//deactivate socks proxy settings if given by the os
-/*		try
-		{
-			Properties p = System.getProperties();
-			boolean changed = false;
-			if (p.containsKey("socksProxyHost"))
-			{
-				System.out.println("Found sosckProxyHost");
-				p.remove("socksProxyHost");
-				changed = true;
-			}
-			if (p.containsKey("socksProxyPort"))
-			{
-				p.remove("socksProxyPort");
-				changed = true;
-			}
-			if (changed)
-			{
+		/*		try
+		  {
+		   Properties p = System.getProperties();
+		   boolean changed = false;
+		   if (p.containsKey("socksProxyHost"))
+		   {
+			System.out.println("Found sosckProxyHost");
+			p.remove("socksProxyHost");
+			changed = true;
+		   }
+		   if (p.containsKey("socksProxyPort"))
+		   {
+			p.remove("socksProxyPort");
+			changed = true;
+		   }
+		   if (changed)
+		   {
 
-				p.list(System.out);
-				System.setProperties(p);
-				//System.setProperty("socksProxyHost","hallo");
-				System.out.println("removed socks settings");
-				Socket.setSocketImplFactory(null);
-			}
-		}
-		catch (Throwable t)
-		{
-			t.printStackTrace();
-			LogHolder.log(
-				LogLevel.EXCEPTION,
-				LogType.NET,
-				"JAP:Exception while trying to deactivate SOCKS proxy settings: " + t.getMessage());
-		}
-	*/	// um pay funktionalitaet ein oder auszuschalten
+			p.list(System.out);
+			System.setProperties(p);
+			//System.setProperty("socksProxyHost","hallo");
+			System.out.println("removed socks settings");
+			Socket.setSocketImplFactory(null);
+		   }
+		  }
+		  catch (Throwable t)
+		  {
+		   t.printStackTrace();
+		   LogHolder.log(
+			LogLevel.EXCEPTION,
+			LogType.NET,
+			"JAP:Exception while trying to deactivate SOCKS proxy settings: " + t.getMessage());
+		  }
+		 */
+		// um pay funktionalitaet ein oder auszuschalten
 		if (m_arstrCmdnLnArgs != null)
 		{
 			for (int i = 0; i < m_arstrCmdnLnArgs.length; i++)
@@ -246,7 +245,20 @@ class JAP extends Frame
 				"JAP:MRJ Version is " + mrjVersion + ".");
 			//initalisiere PayInstance
 		}
-		AbstractJAPMainView view = new JAPNewView(JAPConstants.TITLE);
+		AbstractJAPMainView view =null;
+		if (m_arstrCmdnLnArgs != null)
+		{
+			for (int i = 0; i < m_arstrCmdnLnArgs.length; i++)
+			{
+				if (m_arstrCmdnLnArgs[i].equalsIgnoreCase("-newgui"))
+				{
+					view = new JAPNewView(JAPConstants.TITLE);
+					break;
+				}
+			}
+		}
+		if(view==null)
+			view = new JAPView(JAPConstants.TITLE);
 		// Create the main frame
 		view.create(loadPay);
 		// Switch Debug Console Parent to MainView
