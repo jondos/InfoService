@@ -96,7 +96,7 @@ public final class JAPConstants
 	 * This defines the timeout for infoservice communication (connections to the update server
 	 * have also this timeout because of the same HTTPConnectionFactory).
 	 */
-	public static final int DEFAULT_INFOSERVICE_TIMEOUT = 10;
+	public static final int DEFAULT_INFOSERVICE_TIMEOUT = 30;
 
 	public static final int FIREWALL_TYPE_HTTP = 1;
 	public static final int FIREWALL_TYPE_SOCKS = 2;
