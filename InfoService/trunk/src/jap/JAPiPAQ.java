@@ -89,6 +89,7 @@ public void startJAP(String strJapConfFile) {
 		//frame.setContentPane(japOniPAQ.getMainPanel());
 		view.setSize(240,300);
 		view.setLocation(0,0);
+		view.setResizable(false);
 		view.show();
 	}
 
