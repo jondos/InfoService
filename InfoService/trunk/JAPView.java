@@ -200,7 +200,7 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 		p11.add(Box.createRigidArea(new Dimension(10,0)) );
 		p11.add(new JLabel(model.getString("confPort")) );
 		p11.add(Box.createRigidArea(new Dimension(5,0)) );
-		portnumberTextField = new JLabel(String.valueOf(model.portNumber));
+		portnumberTextField = new JLabel(String.valueOf(model.getPortNumber()));
 //		portnumberTextField.setForeground(Color.black);
 		p11.add(portnumberTextField );
 		p11.add(Box.createRigidArea(new Dimension(5,0)) );
@@ -395,7 +395,7 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 	
     private void updateValues() {
 		// Config panel
-		portnumberTextField.setText(String.valueOf(model.portNumber));
+		portnumberTextField.setText(String.valueOf(model.getPortNumber()));
 		proxyCheckBox.setSelected(model.isProxyMode());
 		proxyTextField.setText(model.proxyHostName+":"+String.valueOf(model.proxyPortNumber));
 		infoServiceTextField.setText(model.infoServiceHostName+":"+String.valueOf(model.infoServicePortNumber));

@@ -4,7 +4,7 @@ public final class JAPKeyPool /*extends Thread*/ implements Runnable
 	{
 		private SecureRandom sr;
 		private int aktSize;
-		private KeyList keys;
+		//private KeyList keys;
 		private KeyList pool;
 		private KeyList aktKey;
 		private int keySize;
@@ -26,11 +26,10 @@ public final class JAPKeyPool /*extends Thread*/ implements Runnable
 		
 		public JAPKeyPool(int ps,int keylength)
 			{	JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPKeyPool:initializing...");
-//				setPriority(Thread.MIN_PRIORITY);
 				keySize=keylength;
 				poolSize=ps;
 				pool=null;
-				keys=null;
+			//	keys=null;
 				aktKey=null;
 				l1=new Object();
 				l2=new Object();
@@ -48,6 +47,8 @@ public final class JAPKeyPool /*extends Thread*/ implements Runnable
 						tmpKey.next=pool;
 						pool=tmpKey;
 					}
+				//keys=null;
+				aktKey=null;
 				runflag=true;
 				while(runflag)
 					{
@@ -57,20 +58,31 @@ public final class JAPKeyPool /*extends Thread*/ implements Runnable
 								synchronized(this)
 									{
 										sr.nextBytes(pool.key);
+										//tmpKey ausketten aus pool
 										tmpKey=pool;
 										pool=pool.next;
-										tmpKey.next=keys;
-										keys=tmpKey;
-										aktKey=keys;
-										synchronized(l2)
-										{l2.notify();}
+										
+										//einketten in keys..
+									//	tmpKey.next=keys;
+									//	keys=tmpKey;
+										
+										// aktueller=kopf....
+										tmpKey.next=aktKey;
+										aktKey=tmpKey;
+									synchronized(l2)
+											{
+												l2.notify();
+											}
+	
 									}
 							}
 						else
 							try
 								{
 									synchronized(l1)
-										{l1.wait();}
+										{
+											l1.wait();
+										}
 								}
 							catch(InterruptedException e)
 								{
@@ -97,11 +109,12 @@ public final class JAPKeyPool /*extends Thread*/ implements Runnable
 						KeyList tmpKey;
 						System.arraycopy(aktKey.key,0,key,0,key.length);
 						tmpKey=aktKey;
-						if(aktKey.next!=null)
+						//if(aktKey.next!=null)
 							aktKey=aktKey.next;
-						else
-							aktKey=keys;
+						//else
+						//	aktKey=keys;
 						tmpKey.next=pool;
+						 							
 						pool=tmpKey;
 					}
 				synchronized(l1)
