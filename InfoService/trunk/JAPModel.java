@@ -64,7 +64,7 @@ import anon.JAPAnonServiceListener;
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPModel implements JAPAnonServiceListener{
 
-	public static final String aktVersion = "00.01.033"; // Version of JAP
+	public static final String aktVersion = "00.01.034"; // Version of JAP
 
 	public  JAPAnonServerDB        anonServerDatabase = null; // vector of all available mix cascades
 	public final static String   defaultanonHost   = "mix.inf.tu-dresden.de";
@@ -810,7 +810,7 @@ private final class SetAnonModeAsync implements Runnable
 		if ((proxyAnon == null) && (anonModeSelected == true))
 			{
 				view.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-				JAPSetAnonModeSplash.start(true);
+				//JAPSetAnonModeSplash.start(true);
 	       if (alreadyCheckedForNewVersion == false)
 					{
 						// Check for a new Version of JAP if not already done

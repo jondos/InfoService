@@ -34,8 +34,8 @@ import org.w3c.dom.NamedNodeMap;
 import HTTPClient.HTTPConnection;
 import HTTPClient.HTTPResponse;
 import HTTPClient.NVPair;
-import HTTPClient.AuthorizationInfo;
-
+//import HTTPClient.AuthorizationInfo;
+import java.util.Enumeration;
 import java.net.InetAddress;
 
 import HTTPClient.Codecs;
@@ -56,7 +56,15 @@ final class JAPInfoService
 		 */
 		public int setInfoService(String host,int port)
 			{
+				//We are doing authorization on our own - so remove....
+				try{conInfoService.removeDefaultModule(Class.forName("HTTPClient.AuthorizationModule"));}
+				catch(Exception e){};
 				conInfoService=new HTTPConnection(host,port);
+				NVPair[] headers=new NVPair[2];
+				headers[0]=new NVPair("Cache-Control","no-cache");
+				headers[1]=new NVPair("Pragma","no-cache");
+				replaceHeader(conInfoService,headers[0]);
+			  replaceHeader(conInfoService,headers[1]);
 				if(model.getUseFirewall())
 					setProxy(model.getFirewallHost(),model.getFirewallPort(),
 									 model.getFirewallAuthUserID(),model.getFirewallAuthPasswd());
@@ -64,11 +72,6 @@ final class JAPInfoService
 					setProxy(null,0,null,null);
 				conInfoService.setAllowUserInteraction(false);
 				conInfoService.setTimeout(10000);
-				NVPair[] headers=new NVPair[2];
-				headers[0]=new NVPair("Cache-Control","no-cache");
-				headers[1]=new NVPair("Pragma","no-cache");
-				replaceHeader(conInfoService,headers[0]);
-			  replaceHeader(conInfoService,headers[1]);
 				return 0;
 			}
 
@@ -98,7 +101,7 @@ final class JAPInfoService
 						for(int i=0;i<len;i++)
 							tmpHeaders[i]=headers[i];
 						tmpHeaders[len]=header;
-						conInfoService.setDefaultHeaders(tmpHeaders);
+						con.setDefaultHeaders(tmpHeaders);
 						return 0;
 					}
 			}
@@ -114,7 +117,7 @@ final class JAPInfoService
 						String tmpPasswd=Codecs.base64Encode(authUserID+":"+authPasswd);
 						NVPair authoHeader=new NVPair("Proxy-Authorization","Basic "+tmpPasswd);
 						replaceHeader(conInfoService,authoHeader);
-					}
+						}
 				return 0;
 			}
 
@@ -123,6 +126,14 @@ final class JAPInfoService
 				try
 					{
 						HTTPResponse resp=conInfoService.Get("/servers");
+					  try{
+						Enumeration enum=resp.listHeaders();
+						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"HTTPResponse: "+Integer.toString(resp.getStatusCode()));
+						while(enum.hasMoreElements())
+							{
+								String header=(String)enum.nextElement();
+								JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,header+": "+resp.getHeader(header));
+							}}catch(Throwable tor){}
 					// XML stuff
 						Document doc=DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(resp.getInputStream());
 						model.anonServerDatabase.clean();
