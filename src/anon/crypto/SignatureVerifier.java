@@ -219,8 +219,11 @@ public class SignatureVerifier
 					/* if it is not an update message, we accept also all signatures which can be verified
 					 * against the root certificates
 					 */
+					int rootType=JAPCertificate.CERTIFICATE_TYPE_ROOT_MIX;
+					if(a_documentClass == DOCUMENT_CLASS_INFOSERVICE)
+						rootType=JAPCertificate.CERTIFICATE_TYPE_ROOT_INFOSERVICE;
 					Vector rootCertificateInfoStructures = m_trustedCertificates.
-						getAvailableCertificatesByType(JAPCertificate.CERTIFICATE_TYPE_ROOT);
+						getAvailableCertificatesByType(rootType);
 					Enumeration rootCertificatesEnumerator = rootCertificateInfoStructures.elements();
 					while (rootCertificatesEnumerator.hasMoreElements())
 					{

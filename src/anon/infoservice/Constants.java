@@ -45,10 +45,11 @@ final public class Constants
 
 
   /**
-   * The standard timeout for infoservice database entries in a JAP client. Is only used
-   * if no expire time is received from the infoservice.
+   * The standard timeout for infoservice database entries in a JAP client. This should be an
+   * infinite timeout (1000 years should be infinite enough).
    */
-  public static final long TIMEOUT_INFOSERVICE_JAP = 30 * 24 * 3600 * (long) (1000); // 30 days
+  public static final long TIMEOUT_INFOSERVICE_JAP = 1000 * 365 * 24 * 3600 * 1000L;
+  
   /**
    * The standard timeout for infoservice database entries in an infoservice.
    */

@@ -361,14 +361,11 @@
   <property category="sys" name="WorkingDirectory" value="."/>
   <property category="sys" name="enable.auto.packages" value="false"/>
   <property category="together" name="language" value="java"/>
+  <node name="certificates" type="NavigationDirectory">
+    <property category="directorynode" name="url" value="certificates"/>
+  </node>
   <node name="help" type="NavigationDirectory">
     <property category="directorynode" name="url" value="help"/>
-  </node>
-  <node name="certificates" type="Folder">
-    <file path="certificates/bi.cer"/>
-    <file path="certificates/japcodesigning.cer"/>
-    <file path="certificates/japinfoservicemessages.cer"/>
-    <file path="certificates/japroot.cer"/>
   </node>
   <node name="images" type="Folder">
     <node name="lowcolor" type="Folder">

@@ -372,7 +372,7 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 				{
 
 					SignatureVerifier.getInstance().getVerificationCertificateStore().
-						addCertificateWithoutVerification(cert, JAPCertificate.CERTIFICATE_TYPE_ROOT, true);
+						addCertificateWithoutVerification(cert, JAPCertificate.CERTIFICATE_TYPE_ROOT_MIX, true,false);
 				}
 			}
 		});
@@ -390,7 +390,7 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 					if (certActual != null)
 					{
 						SignatureVerifier.getInstance().getVerificationCertificateStore().removeCertificate(
-							certActual.getCertificate().getId());
+							certActual);
 					}
 				}
 				if (m_listmodelCertList.getSize() == 0)
@@ -421,14 +421,12 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 
 				if (enabled)
 				{
-					SignatureVerifier.getInstance().getVerificationCertificateStore().setEnabled(certActual.
-						getCertificate().getId(), false);
+					SignatureVerifier.getInstance().getVerificationCertificateStore().setEnabled(certActual, false);
 					m_bttnCertStatus.setText(JAPMessages.getString("certBttnEnable"));
 				}
 				else
 				{
-					SignatureVerifier.getInstance().getVerificationCertificateStore().setEnabled(certActual.
-						getCertificate().getId(), true);
+					SignatureVerifier.getInstance().getVerificationCertificateStore().setEnabled(certActual, true);
 					m_bttnCertStatus.setText(JAPMessages.getString("certBttnDisable"));
 				}
 			}
@@ -632,7 +630,7 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 				{
 					CertificateInfoStructure j = (CertificateInfoStructure) m_enumCerts.nextElement();
 					/* we handle only root certificates */
-					if (j.getCertificateType() == JAPCertificate.CERTIFICATE_TYPE_ROOT)
+					if (j.getCertificateType() == JAPCertificate.CERTIFICATE_TYPE_ROOT_MIX)
 					{
 						m_listmodelCertList.addElement(j);
 					}
@@ -667,5 +665,5 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 		//Register help context
 		JAPHelp.getInstance().getContextObj().setContext("cert");
 	}
-	
+
 }
