@@ -26,6 +26,9 @@
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
 package anon.crypto;
+/* Hint: This file may be only a copy of the original file which is always in the JAP source tree!
+ * If you change something - do not forget to add the changes also to the JAP source tree!
+ */
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -40,15 +43,6 @@ import org.bouncycastle.asn1.pkcs.RSAPrivateKeyStructure;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.crypto.CipherParameters;
 import org.bouncycastle.crypto.params.RSAPrivateCrtKeyParameters;
-
-/**
- * <p>Überschrift: </p>
- * <p>Beschreibung: </p>
- * <p>Copyright: Copyright (c) 2002</p>
- * <p>Organisation: </p>
- * @author unbekannt
- * @version 1.0
- */
 
 public class MyRSAPrivateKey implements PrivateKey
 {
