@@ -114,9 +114,9 @@ public final class AnonServer implements Serializable
 					{
 						Element elem=(Element)n;
 						m_strId=elem.getAttribute("id");
-						NodeList nl=elem.getElementsByTagName("Name");
-						m_strName=nl.item(0).getFirstChild().getNodeValue().trim();
-						nl=elem.getElementsByTagName("ListenerInterface");
+						Node nodeName=XMLUtil.getFirstChildByName(elem,"Name");
+						m_strName=XMLUtil.parseNodeString(nodeName,null);
+						NodeList nl=elem.getElementsByTagName("ListenerInterface");
 						Vector listeners=new Vector();
 						for(int i=0;i<nl.getLength();i++)
 							{

@@ -115,4 +115,9 @@ public class XMLUtil
 					}
 				return null;
 			}
+
+		public static void setNodeValue(Node n,String text)
+			{
+				n.appendChild(n.getOwnerDocument().createTextNode(text));
+			}
 	}
