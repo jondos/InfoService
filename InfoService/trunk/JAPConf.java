@@ -734,7 +734,7 @@ final class JAPConf extends JDialog
 					);
 				JAPDebug.setDebugLevel(sliderDebugLevel.getValue());
 				model.setAnonServer(e);
-				model.notifyJAPObservers();
+//				model.notifyJAPObservers();
 			}
 	
 	public void selectCard(int selectedCard)
@@ -776,6 +776,7 @@ final class JAPConf extends JDialog
 		infoportnumberTextField.setText(String.valueOf(model.getInfoServicePort()));
 		// anon tab
 		AnonServerDBEntry e = model.getAnonServer();
+		anonserviceName = e.getName();
 		anonhostTextField.setText(e.getHost());
 		anonportnumberTextField.setText(String.valueOf(e.getPort()));
 		if (e.getSSLPort()==-1)

@@ -448,15 +448,16 @@ public final class JAPModel implements JAPAnonServiceListener{
 	public synchronized void setAnonServer(AnonServerDBEntry s) {
 	    if (model.getAnonServer().equals(s)) {
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:currentAnonService NOT changed");
-			if (!model.getAnonServer().getName().equals(s.getName()))
+			if (!model.getAnonServer().getName().equals(s.getName())) {
 				model.getAnonServer().setName(s.getName());
+			}
 	    } else {
 			// if service has changed --> stop service
 			setAnonMode(false);
 			this.currentAnonService = s;
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:currentAnonService changed");
-			notifyJAPObservers();
 	    }
+		model.notifyJAPObservers();
 	}
 	
 	public AnonServerDBEntry getAnonServer() {
