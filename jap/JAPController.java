@@ -112,7 +112,7 @@ public final class JAPController implements ProxyListener
 	private int nrOfChannels = 0;
 	private int nrOfBytes = 0;
 
-	private static JAPView m_View = null;
+	private static AbstractJAPMainView m_View = null;
 	private static JAPController m_Controller = null;
 	private static JAPModel m_Model = null;
 	private static JAPFeedback feedback = null;
@@ -1776,12 +1776,12 @@ public final class JAPController implements ProxyListener
 	}
 
 	//---------------------------------------------------------------------
-	public void registerMainView(JAPView v)
+	public void registerMainView(AbstractJAPMainView v)
 	{
 		m_View = v;
 	}
 
-	public static JAPView getView()
+	public static AbstractJAPMainView getView()
 	{
 		return m_Controller.m_View;
 	}

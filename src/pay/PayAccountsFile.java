@@ -39,7 +39,7 @@ import org.w3c.dom.Node;
 import anon.crypto.XMLEncryption;
 import anon.util.XMLUtil;
 import jap.JAPController;
-import jap.JAPView;
+import jap.AbstractJAPMainView;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -210,7 +210,7 @@ public class PayAccountsFile
 		// decrypt if necessary
 		if (m_bIsEncrypted)
 		{
-			JAPView mainView = JAPController.getView();
+			AbstractJAPMainView mainView = JAPController.getView();
 			String strPassword = "";
 			String strMessage = "Bitte Passwort f&uuml; die Entschl&uuml;sselung eingeben";
 			Element elemCrypt = (Element) XMLUtil.getFirstChildByName(elemRoot, "EncryptedData");
@@ -610,7 +610,7 @@ public class PayAccountsFile
 			// ask the user for a new password
 			if (m_bFirstTime)
 			{
-				JAPView mainView = JAPController.getView();
+				AbstractJAPMainView mainView = JAPController.getView();
 				int choice = JOptionPane.showOptionDialog(
 					mainView,
 					"<html>Sie haben w&auml;hrend dieser JAP-Sitzung zum ersten Mal<br> " +

@@ -69,7 +69,7 @@ import logging.LogLevel;
 import logging.LogType;
 import pay.gui.PaymentMainPanel;
 
-final public class JAPView extends JFrame implements ActionListener, JAPObserver
+ public class JAPView extends AbstractJAPMainView implements IJAPMainView,ActionListener, JAPObserver
 {
 
 	final private class MyProgressBarUI extends BasicProgressBarUI
@@ -98,13 +98,6 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 		}
 	}
 
-	final private class MyViewUpdate implements Runnable
-	{
-		public void run()
-		{
-			updateValues();
-		}
-	}
 
 	private JAPController controller;
 	private JLabel meterLabel;
@@ -126,9 +119,7 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 	private JAPConf m_dlgConfig;
 	private Window m_ViewIconified;
 	private NumberFormat m_NumberFormat;
-	private MyViewUpdate m_runnableValueUpdate;
 	private boolean m_bIsIconified;
-	private String m_Title;
 	private final static boolean PROGRESSBARBORDER = true;
 	//private GuthabenAnzeige guthaben;
 	private boolean loadPay = false;
@@ -136,13 +127,11 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 	public JAPView(String s)
 	{
 		super(s);
-		m_Title = s;
 		m_NumberFormat = NumberFormat.getInstance();
 		controller = JAPController.getController();
 		helpWindow = null; //new JAPHelp(this);
 		m_dlgConfig = null; //new JAPConf(this);
 		m_bIsIconified = false;
-		m_runnableValueUpdate = new MyViewUpdate();
 	}
 
 	public void create(boolean loadPay)
@@ -804,10 +793,8 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 		}
 	}
 
-	private void updateValues()
+	public void doSynchronizedUpdateValues()
 	{
-		synchronized (m_runnableValueUpdate)
-		{
 			MixCascade currentMixCascade = controller.getCurrentMixCascade();
 			// Config panel
 			LogHolder.log(LogLevel.DEBUG, LogType.GUI, "JAPView:Start updateValues");
@@ -919,7 +906,6 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 				LogHolder.log(LogLevel.EMERG, LogType.GUI,
 							  "JAPVIew: Ooops... Crash in updateValues(): " + t.getMessage());
 			}
-		}
 	}
 
 	public void registerViewIconified(Window v)
@@ -946,28 +932,6 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 		JAPDll.onTraffic();
 	}
 
-	public void valuesChanged()
-	{
-		synchronized (m_runnableValueUpdate)
-		{
-			if (SwingUtilities.isEventDispatchThread())
-			{
-				updateValues();
-			}
-			else
-			{
-				SwingUtilities.invokeLater(m_runnableValueUpdate);
-			}
-		}
-	}
 
-	public void hideWindowInTaskbar()
-	{
-		synchronized (m_runnableValueUpdate) //updateValues may change the Titel of the Window!!
-		{
-			setTitle(Double.toString(Math.random())); //ensure that we have an uinque title
-			JAPDll.hideWindowInTaskbar(getTitle());
-			setTitle(m_Title);
-		}
-	}
+
 }

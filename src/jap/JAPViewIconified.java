@@ -61,7 +61,7 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 	JAPObserver
 {
 	private JAPController m_Controller;
-	private JAPView m_mainView;
+	private AbstractJAPMainView m_mainView;
 	private JLabel m_labelBytes, m_labelUsers, m_labelTraffic;
 	private Point m_startPoint;
 	private boolean m_bIsDragging = false;

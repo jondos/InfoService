@@ -39,6 +39,8 @@ import jap.JAPDebug;
 import jap.JAPMessages;
 import jap.JAPSplash;
 import jap.JAPView;
+import jap.JAPNewView;
+import jap.AbstractJAPMainView;
 import jap.JAPViewIconified;
 
 import java.awt.Frame;
@@ -244,7 +246,7 @@ class JAP extends Frame
 				"JAP:MRJ Version is " + mrjVersion + ".");
 			//initalisiere PayInstance
 		}
-		JAPView view = new JAPView(JAPConstants.TITLE);
+		AbstractJAPMainView view = new JAPNewView(JAPConstants.TITLE);
 		// Create the main frame
 		view.create(loadPay);
 		// Switch Debug Console Parent to MainView
