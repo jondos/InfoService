@@ -101,25 +101,25 @@ final class JAPAbout extends JDialog
 					 }});
 				setBackground(new Color(204,204,204));
 				getContentPane().setLayout(null);
-				getContentPane().add(sp);
+        getContentPane().add(sp);
 				//setContentPane(sp);
 				//Now we do a little bit tricky stuff.
 				String os=System.getProperty("os.name");
 				show();   //now we have to ensure that the window is visible before the
-				if(os==null||!os.toLowerCase().startsWith("mac"))
+			//	if(os==null||!os.toLowerCase().startsWith("mac"))
 					{
 						//setLocation(-380,-200); //First we move the Dialog to a position were it is not seen on the Screen...
 						setVisible(true);   //now we have to ensure that the window is visible before the
 						setResizable(false); //get the insets (the border around the window) - also the window must look like it should
 						Insets in=getInsets(); //so for instance we need the 'NoResizable'-Border
-						setResizable(true); //now we want to resize the whole dialog
+						//setResizable(true); //now we want to resize the whole dialog
 
 						//We do not use pack() because it doesnt work well on Windows!
 						setSize(ABOUT_DX+in.left+in.right,ABOUT_DY+in.bottom+in.top);// so what the background image does exactly fit
 					}
-				else
+			//	else
 					{
-						pack(); //--> Maybe a solution for MAC'S ??
+				//		pack(); //--> Maybe a solution for MAC'S ??
 					}
 				setResizable(false); //but the user shouldn't resize the Dialog again
 				setLocationRelativeTo(parent); //now showing centerd to JAP-Main
