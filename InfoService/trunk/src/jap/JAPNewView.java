@@ -249,7 +249,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.gridx = 2;
 		c1.weightx = 0;
 		c1.fill = GridBagConstraints.NONE;
-		bttnReload.setBorder(null);
+		bttnReload.setBorder(new EmptyBorder(0,0,0,0));
 		bttnReload.setFocusPainted(false);
 		m_panelAnonService.add(bttnReload, c1);
 		m_bttnAnonDetails = new JButton(JAPMessages.getString("ngBttnAnonDetails"));
