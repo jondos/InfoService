@@ -1242,10 +1242,10 @@ public class TinySSL extends Socket
 
 		}
 
-		RootCertificates rootCerts = new RootCertificates();
-		rootCerts.init();
-		trusted_CA_public_keys = rootCerts.trusted_CA_public_keys;
-		trusted_CA_public_key_identifiers = rootCerts.trusted_CA_public_key_identifiers;
+		//RootCertificates rootCerts = new RootCertificates();
+		//rootCerts.init();
+		//trusted_CA_public_keys = rootCerts.trusted_CA_public_keys;
+		//trusted_CA_public_key_identifiers = rootCerts.trusted_CA_public_key_identifiers;
 
 		LogHolder.log(LogLevel.DEBUG, LogType.PAY, "generating entropy...");
 		randpool = new byte[10];

@@ -123,7 +123,7 @@ public class PayAccount extends XMLDocument
 		Element elemTr = (Element) elemTrs.getFirstChild();
 		while (elemTr != null)
 		{
-			m_transCerts.add(new XMLTransCert(elemTr));
+			m_transCerts.addElement(new XMLTransCert(elemTr));
 			elemTr = (Element) elemTr.getNextSibling();
 		}
 

@@ -34,13 +34,13 @@ import javax.swing.JOptionPane;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import pay.event.ActionThread;
+//import pay.event.ActionThread;
 
 /**
  * Diese Klasse dient zum starten eines Browsers in einem eigenen Thread
  **/
 
-public class BrowserStart extends ActionThread
+public class BrowserStart
 {
 	private URL url;
 	private URLSpec spec;
@@ -64,7 +64,7 @@ public class BrowserStart extends ActionThread
 
 	public BrowserStart(Container parent, String[] browserlist, URL url, URLSpec spec, String alternativText)
 	{
-		super(parent);
+		//super(parent);
 		browser = browserlist;
 		this.url = url;
 		this.spec = spec;
@@ -98,7 +98,7 @@ public class BrowserStart extends ActionThread
 		}
 		if (runcode == null)
 		{
-			JOptionPane.showMessageDialog(container, altText + " \n " + url2);
+			//JOptionPane.showMessageDialog(container, altText + " \n " + url2);
 		}
 	}
 }

@@ -164,7 +164,7 @@ public class PayAccountsFile
 		Element elemAccount = (Element) elemAccounts.getFirstChild();
 		while (elemAccount != null)
 		{
-			m_Accounts.add(new PayAccount(elemAccounts));
+			m_Accounts.addElement(new PayAccount(elemAccounts));
 		}
 
 		// find activeAccount

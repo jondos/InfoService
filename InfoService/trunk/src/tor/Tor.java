@@ -6,9 +6,9 @@ package tor;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.Hashtable;
-import java.util.Random;
 import java.util.Vector;
 
+import java.security.SecureRandom;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -50,7 +50,8 @@ public class Tor implements Runnable{
 	private String m_ORListServer;
 	private int m_ORListPort;
 
-	private Random m_rand;
+
+	private MyRandom m_rand;
 
 	/**
 	 * Constructor
@@ -80,7 +81,7 @@ public class Tor implements Runnable{
 		this.m_circuitLengthMin = 3;
 		this.m_circuitLengthMax = 5;
 
-		this.m_rand = new Random();
+		this.m_rand = new MyRandom(new SecureRandom());
 	}
 
 	/**
@@ -99,9 +100,9 @@ public class Tor implements Runnable{
 	private synchronized void createNewCircuit() throws IOException
 	{
 		this.updateORList();
-		int circuitLength = this.m_rand.nextInt(this.m_circuitLengthMax-this.m_circuitLengthMin+1)+this.m_circuitLengthMin;
+		int circuitLength = m_rand.nextInt(this.m_circuitLengthMax-this.m_circuitLengthMin+1)+this.m_circuitLengthMin;
 		Vector orsForNewCircuit = new Vector();
-		Object o = this.m_FORList.elementAt(this.m_rand.nextInt(this.m_FORList.size()));
+		Object o = this.m_FORList.elementAt(m_rand.nextInt(this.m_FORList.size()));
 		if(o instanceof String)
 		{
 			String firstOR = (String)o;
