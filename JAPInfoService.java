@@ -102,20 +102,19 @@ final class JAPInfoService
 								String proxyPort=nl.item(0).getFirstChild().getNodeValue().trim();
 								
 								AnonServerDBEntry e=new AnonServerDBEntry(name,ip,Integer.parseInt(port),Integer.parseInt(proxyPort));
-/*								
-								nl=elem.getElementsByTagName("nrOfActiveUsers");
-								String nrOfActiveUsers=nl.item(0).getFirstChild().getNodeValue().trim();
+								
+								nl=elem.getElementsByTagName("CurrentStatus");
+								Element elem1=(Element)nl.item(0);
+								String nrOfActiveUsers=elem1.getAttribute("ActiveUsers").trim();
 								e.setNrOfActiveUsers(Integer.parseInt(nrOfActiveUsers));
-								nl=elem.getElementsByTagName("currentRisk");
-								String currentRisk=nl.item(0).getFirstChild().getNodeValue().trim();
+								String currentRisk=elem1.getAttribute("CurrentRisk").trim();
 								e.setCurrentRisk(Integer.parseInt(currentRisk));
-								nl=elem.getElementsByTagName("trafficSituation");
-								String trafficSituation=nl.item(0).getFirstChild().getNodeValue().trim();
+								String trafficSituation=elem1.getAttribute("TrafficSituation").trim();
 								e.setTrafficSituation(Integer.parseInt(trafficSituation));
-								nl=elem.getElementsByTagName("mixedPackets");
-								String mixedPackets=nl.item(0).getFirstChild().getNodeValue().trim();
-								e.setMixedPackets(Integer.parseInt(mixedPackets));
-*/													 
+								//nl=elem.getElementsByTagName("mixedPackets");
+								//String mixedPackets=nl.item(0).getFirstChild().getNodeValue().trim();
+								//e.setMixedPackets(Integer.parseInt(mixedPackets));
+													 
 								model.anonServerDatabase.addElement(e);
 								
 							}

@@ -58,7 +58,7 @@ import anon.JAPAnonServiceListener;
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPModel implements JAPAnonServiceListener{
 
-	public static final String aktVersion = "00.01.010"; // Version of JAP
+	public static final String aktVersion = "00.01.011"; // Version of JAP
 
 	public  Vector            anonServerDatabase = null; // vector of all available mix cascades
 	private AnonServerDBEntry currentAnonService = null; // current anon service data object
@@ -392,28 +392,31 @@ public final class JAPModel implements JAPAnonServiceListener{
 	}
 
 
-	public void initialRun() {
-		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:initial run of JAP...");
-		//pre initalize some long time initalizations...
-		JAPAnonService.init();
-		// start Service if autoConnect
-		if(!startHTTPListener()) {
-			Object[] args={new Integer(portNumber)};
-			String msg=MessageFormat.format(model.getString("errorListenerPort"),args);
-			JOptionPane.showMessageDialog(model.getView(),
+	public void initialRun()
+		{
+			JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:initial run of JAP...");
+			//pre initalize some long time initalizations...
+			JAPAnonService.init();
+			// start Service if autoConnect
+			if(!startHTTPListener())
+				{
+					Object[] args={new Integer(portNumber)};
+					String msg=MessageFormat.format(model.getString("errorListenerPort"),args);
+					JOptionPane.showMessageDialog(model.getView(),
 											msg,
 											model.getString("errorListenerPortTitle"),
 											JOptionPane.ERROR_MESSAGE);
-			JAPDebug.out(JAPDebug.EMERG,JAPDebug.NET,"Cannot start listener!");
-			model.status1 = model.getString("statusCannotStartListener");
-			model.getView().disableSetAnonMode();
-			notifyJAPObservers();
-		} else {
-			model.status1 = model.getString("statusRunning");
-			setAnonMode(autoConnect);
+					JAPDebug.out(JAPDebug.EMERG,JAPDebug.NET,"Cannot start listener!");
+					model.status1 = model.getString("statusCannotStartListener");
+					model.getView().disableSetAnonMode();
+					notifyJAPObservers();
+				}
+			else 
+				{
+					model.status1 = model.getString("statusRunning");
+					setAnonMode(autoConnect);
+				}
 		}
-			
-	}
 
     public int getCurrentProtectionLevel() {
 		/*
