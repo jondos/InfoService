@@ -1085,7 +1085,8 @@ final class JAPConf extends JDialog
 		Enumeration confModules = m_confModules.elements();
 		while (confModules.hasMoreElements())
 		{
-			if (! ( (AbstractJAPConfModule) (confModules.nextElement())).okPressed())
+			AbstractJAPConfModule confModule=(AbstractJAPConfModule) (confModules.nextElement());
+			if (! confModule.okPressed())
 			{
 				return;
 			}
@@ -1132,7 +1133,6 @@ final class JAPConf extends JDialog
 		//Cert seetings
 		m_Controller.setCertCheckDisabled(m_cbCertCheckDisabled.isSelected());
 
-//		m_Controller.setSaveMainWindowPosition(m_cbSaveWindowPositions.isSelected());
 
 		// force notifying the observers set the right server name
 		m_Controller.notifyJAPObservers(); // this should be the last line of okPressed() !!!

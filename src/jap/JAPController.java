@@ -968,7 +968,7 @@ public final class JAPController implements ProxyListener
 		{
 			return;
 		}
-		if (m_Controller.m_Locale != null && m_Controller.equals(l))
+		if (m_Controller.m_Locale != null && m_Controller.m_Locale.equals(l))
 		{
 			return;
 		}
