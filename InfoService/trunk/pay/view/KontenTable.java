@@ -37,9 +37,8 @@ import logging.LogLevel;
 import logging.LogType;
 import pay.Pay;
 import pay.PayAccount;
-import pay.event.ModelEvent;
-import pay.event.ModelListener;
 import pay.util.PayText;
+import pay.PayAccountsFile;
 
 /**
  *	KontenTabel ist ein TableModell welches die Daten aus dem PayAcocuntFile
@@ -48,7 +47,7 @@ import pay.util.PayText;
  *	JTable und PayAccountFile
  **/
 
-public class KontenTable extends AbstractTableModel implements ModelListener
+public class KontenTable extends AbstractTableModel /*implements ModelListener*/
 {
 
 	int rowSize = 16;
@@ -64,8 +63,8 @@ public class KontenTable extends AbstractTableModel implements ModelListener
 	public KontenTable()
 	{
 		Pay pay = Pay.getInstance();
-		daten = pay.getAccountVec();
-		pay.addModelListener(this);
+		daten = /*pay.getAccountVec();*/ new Vector();
+//		pay.addModelListener(this);
 		LogHolder.log(LogLevel.DEBUG, LogType.PAY, "[konstruktor] Rows: " + getRowCount());
 	}
 
@@ -85,7 +84,7 @@ public class KontenTable extends AbstractTableModel implements ModelListener
 		switch (col)
 		{
 			case 0:
-				return new Boolean(ac.getAccountNumber() == Pay.getInstance().getUsedAccount());
+				return new Boolean(ac.getAccountNumber() == PayAccountsFile.getInstance().getActiveAccountNumber());
 			case 1:
 				return new Long(ac.getAccountNumber());
 				//case 2: return ac.getValidFrom();
@@ -110,7 +109,7 @@ public class KontenTable extends AbstractTableModel implements ModelListener
 		}
 		catch (Exception ex)
 		{
-			return Pay.getInstance().getAccount(Pay.getInstance().getUsedAccount());
+			return PayAccountsFile.getInstance().getActiveAccount();
 		}
 	}
 
@@ -167,13 +166,16 @@ public class KontenTable extends AbstractTableModel implements ModelListener
 					  "setValueAt: col: " + col + " getcolNam: --" + getColumnName(col) + "--  ");
 		if (getColumnName(col).equals(aktuell))
 		{
-			Pay.getInstance().setUsedAccount(getRow(row).getAccountNumber());
+			try {
+				PayAccountsFile.getInstance().setActiveAccount( ( (PayAccount) getRow(row)).getAccountNumber());
+			}
+			catch(Exception e) {}
 		}
 	}
 
-	public void modelUpdated(ModelEvent me)
+/*	public void modelUpdated(ModelEvent me)
 	{
 		LogHolder.log(LogLevel.DEBUG, LogType.PAY, "modelUpdated");
 		fireTableDataChanged();
-	}
+	}*/
 }

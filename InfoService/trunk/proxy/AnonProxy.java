@@ -53,6 +53,8 @@ import payxml.XMLAccountInfo;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import javax.xml.parsers.DocumentBuilderFactory;
+import pay.PayAccountsFile;
+import pay.PayAccount;
 
 final public class AnonProxy implements Runnable, IAnonProxy
 {
@@ -90,13 +92,15 @@ final public class AnonProxy implements Runnable, IAnonProxy
 	}
 
 	// methode zum senden eines AccountCertifikates und einer balance an die AI - oneway
+	// TODO: move somwhere to anon.impl...
 	public void authenticateForAI()
 	{
 		String toAI = "";
 		try
 		{
-			Pay pay = Pay.getInstance();
-			toAI = pay.getAccount(pay.getUsedAccount()).getAccountCertificate().getXMLString();
+			PayAccountsFile accounts = PayAccountsFile.getInstance();
+			PayAccount mainAccount = accounts.getActiveAccount();
+			toAI = mainAccount.getAccountCertificate().getXMLString();
 			( (AnonServiceImpl) m_Anon).sendPayPackets(toAI);
 		}
 		catch (Exception ex)
@@ -110,13 +114,15 @@ final public class AnonProxy implements Runnable, IAnonProxy
 	}
 
 	// methode zum senden einer balance an die AI - oneway
+	// TODO: move somwhere to anon.impl...
 	public void sendBalanceToAI()
 	{
 		LogHolder.log(LogLevel.DEBUG, LogType.NET, "AnonProxy: sending Balance to AI");
 		try
 		{
-			Pay pay = Pay.getInstance();
-			XMLAccountInfo info = pay.getAccount(pay.getUsedAccount()).getAccountInfo();
+			PayAccountsFile accounts = PayAccountsFile.getInstance();
+			PayAccount mainAccount = accounts.getActiveAccount();
+			XMLAccountInfo info = mainAccount.getAccountInfo();
 
 			// temporary code... TODO: remove DOM functionality from here (Bastian Voigt)
 			Document doc = info.getDomDocument();

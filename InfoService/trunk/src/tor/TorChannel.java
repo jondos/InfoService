@@ -24,13 +24,13 @@ public class TorChannel extends AbstractChannel {
 
 	private final static int MAX_CELL_DATA = 498;
 
-	protected Circuit circuit;
-	protected int streamID;
-	protected boolean opened;
-	protected boolean error;
-	private int recvcellcounter;
-	private int sendcellcounter;
-	private Vector cellQueue;
+	protected Circuit m_circuit;
+	protected int m_streamID;
+	protected boolean m_opened;
+	protected boolean m_error;
+	private int m_recvcellcounter;
+	private int m_sendcellcounter;
+	private Vector m_cellQueue;
 
 	public int getOutputBlockSize()
 	{
@@ -45,15 +45,15 @@ public class TorChannel extends AbstractChannel {
 		{
 			if(len>MAX_CELL_DATA)
 			{
-				cell = new RelayCell(circuit.getCircID(),RelayCell.RELAY_DATA,streamID,helper.copybytes(b,0,MAX_CELL_DATA));
+				cell = new RelayCell(this.m_circuit.getCircID(),RelayCell.RELAY_DATA,this.m_streamID,helper.copybytes(b,0,MAX_CELL_DATA));
 				b = helper.copybytes(b,MAX_CELL_DATA,len-MAX_CELL_DATA);
 				len-=MAX_CELL_DATA;
 			} else
 			{
-				cell = new RelayCell(circuit.getCircID(),RelayCell.RELAY_DATA,streamID,helper.copybytes(b,0,len));
+				cell = new RelayCell(this.m_circuit.getCircID(),RelayCell.RELAY_DATA,this.m_streamID,helper.copybytes(b,0,len));
 				len=0;
 			}
-			this.cellQueue.addElement(cell);
+			this.m_cellQueue.addElement(cell);
 			this.deliverCells();
 		}
 	}
@@ -73,23 +73,23 @@ public class TorChannel extends AbstractChannel {
 	public TorChannel(int streamID,Circuit circuit) throws IOException
 	{
 		super(streamID);
-		this.circuit = circuit;
-		this.streamID = streamID;
-		this.opened = false;
-		this.error = false;
-		this.recvcellcounter = 500;
-		this.sendcellcounter = 500;
-		this.cellQueue = new Vector();
+		this.m_circuit = circuit;
+		this.m_streamID = streamID;
+		this.m_opened = false;
+		this.m_error = false;
+		this.m_recvcellcounter = 500;
+		this.m_sendcellcounter = 500;
+		this.m_cellQueue = new Vector();
 	}
 
 	private synchronized void deliverCells() throws IOException
 	{
-		if(this.cellQueue.size()>0)
+		if(this.m_cellQueue.size()>0)
 		{
 			try
 			{
-				this.circuit.send((RelayCell)this.cellQueue.elementAt(0));
-				this.cellQueue.removeElementAt(0);
+				this.m_circuit.send((RelayCell)this.m_cellQueue.elementAt(0));
+				this.m_cellQueue.removeElementAt(0);
 			} catch(Exception ex)
 			{
 				throw new IOException(ex.getMessage());
@@ -109,18 +109,18 @@ public class TorChannel extends AbstractChannel {
 	{
 		byte[] data = (""+addr.getHostAddress()+":"+port).getBytes();
 		data = helper.conc(data,new byte[1]);
-		RelayCell cell = new RelayCell(this.circuit.getCircID(),RelayCell.RELAY_BEGIN,this.streamID,data);
+		RelayCell cell = new RelayCell(this.m_circuit.getCircID(),RelayCell.RELAY_BEGIN,this.m_streamID,data);
 		try
 		{
-			this.circuit.send(cell);
+			this.m_circuit.send(cell);
 		} catch (Exception ex)
 		{
 			throw new ConnectException(ex.getLocalizedMessage());
 		}
-		while(!this.opened)
+		while(!this.m_opened)
 		{
 		}
-		if(this.error)
+		if(this.m_error)
 		{
 			throw new ConnectException("Cannot connect to "+addr.getHostAddress()+":"+port);
 		}
@@ -140,12 +140,12 @@ public class TorChannel extends AbstractChannel {
 			{
 				case RelayCell.RELAY_CONNECTED :
 				{
-					this.opened = true;
+					this.m_opened = true;
 					break;
 				}
 				case RelayCell.RELAY_SENDME  :
 				{
-					this.sendcellcounter+=50;
+					this.m_sendcellcounter+=50;
 					try
 					{
 						this.deliverCells();
@@ -156,17 +156,17 @@ public class TorChannel extends AbstractChannel {
 				}
 				case RelayCell.RELAY_DATA :
 				{
-					this.recvcellcounter--;
-					if(this.recvcellcounter<250)
+					this.m_recvcellcounter--;
+					if(this.m_recvcellcounter<250)
 					{
-						RelayCell rc=new RelayCell(this.circuit.getCircID(),RelayCell.RELAY_SENDME,0,null);
+						RelayCell rc=new RelayCell(this.m_circuit.getCircID(),RelayCell.RELAY_SENDME,0,null);
 						try
 						{
-							this.circuit.send(rc);
+							this.m_circuit.send(rc);
 						} catch (Exception ex)
 						{
 						}
-						this.recvcellcounter+=50;
+						this.m_recvcellcounter+=50;
 					}
 					try
 					{
@@ -185,16 +185,16 @@ public class TorChannel extends AbstractChannel {
 				}
 				default :
 				{
-					this.error = true;
-					this.opened = true;
+					this.m_error = true;
+					this.m_opened = true;
 					this.closedByPeer();
 				}
 			}
 		} else
 		{
 			LogHolder.log(LogLevel.DEBUG,LogType.MISC,"tor keine relaycell");
-			this.opened = true;
-			this.error = true;
+			this.m_opened = true;
+			this.m_error = true;
 		}
 	}
 

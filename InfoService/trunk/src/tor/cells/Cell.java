@@ -10,21 +10,21 @@ import tor.util.helper;
 public abstract class Cell
 {
 
-	private int circID;
-	private int command;
-	protected byte[] payload;
+	private int m_circID;
+	private int m_command;
+	protected byte[] m_payload;
 
 	protected Cell(int command)
 	{
-		this.circID = 0;
-		this.command = command;
-		this.payload = new byte[509];
+		this.m_circID = 0;
+		this.m_command = command;
+		this.m_payload = new byte[509];
 	}
 
 	protected Cell(int command, int circID)
 	{
 		this(command);
-		this.circID = circID;
+		this.m_circID = circID;
 	}
 
 	protected Cell(int command, int circID, byte[] payload)
@@ -45,8 +45,8 @@ public abstract class Cell
 	 */
 	public byte[] getCellData()
 	{
-		return helper.conc(helper.inttobyte(this.circID, 2),
-						   helper.conc(helper.inttobyte(this.command, 1), this.payload));
+		return helper.conc(helper.inttobyte(this.m_circID, 2),
+						   helper.conc(helper.inttobyte(this.m_command, 1), this.m_payload));
 	}
 
 	/**
@@ -54,23 +54,23 @@ public abstract class Cell
 	 */
 	public int getCommand()
 	{
-		return this.command;
+		return this.m_command;
 	}
 
 	public byte[] getPayload()
 	{
-		return this.payload;
+		return this.m_payload;
 	}
 
 	public void setPayload(byte[] payload)
 	{
 		if (payload.length < 509)
 		{
-			this.payload = helper.conc(payload, (new byte[509 - payload.length]));
+			this.m_payload = helper.conc(payload, (new byte[509 - payload.length]));
 		}
 		else
 		{
-			this.payload = helper.copybytes(payload, 0, 509);
+			this.m_payload = helper.copybytes(payload, 0, 509);
 		}
 	}
 

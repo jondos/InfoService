@@ -351,7 +351,7 @@ public class Pay
 		MyRSAPrivateKey rsaprivkey = new MyRSAPrivateKey( (RSAPrivateCrtKeyParameters) pair.getPrivate());
 		MyRSAPublicKey rsapubkey = new MyRSAPublicKey( (RSAKeyParameters) pair.getPublic());
 
-		JAPRsaSignature signingInstance = new JAPRsaSignature();
+		JAPSignature signingInstance = new JAPSignature();
 		signingInstance.initSign(rsaprivkey);
 
 		XMLJapPublicKey pubKey = new XMLJapPublicKey(rsapubkey);

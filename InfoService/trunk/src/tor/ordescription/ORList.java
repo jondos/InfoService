@@ -17,8 +17,8 @@ import logging.*;
  */
 public class ORList {
 
-	private Vector onionrouters;
-	private Hashtable onionroutersWithNames;
+	private Vector m_onionrouters;
+	private Hashtable m_onionroutersWithNames;
 
 	/**
 	 * constructor
@@ -61,7 +61,7 @@ public class ORList {
 	 */
 	public Vector getList()
 	{
-		return this.onionrouters;
+		return this.m_onionrouters;
 	}
 
 	/**
@@ -73,9 +73,9 @@ public class ORList {
 	 */
 	public ORDescription getORDescription(String name)
 	{
-		if(this.onionroutersWithNames.containsKey(name))
+		if(this.m_onionroutersWithNames.containsKey(name))
 		{
-			return (ORDescription)this.onionroutersWithNames.get(name);
+			return (ORDescription)this.m_onionroutersWithNames.get(name);
 		}
 		return null;
 	}
@@ -108,8 +108,8 @@ public class ORList {
 				}
 			}
 		}
-		this.onionrouters=ors;
-		this.onionroutersWithNames = orswn;
+		this.m_onionrouters=ors;
+		this.m_onionroutersWithNames = orswn;
 	}
 }
 

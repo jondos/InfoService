@@ -12,8 +12,8 @@ import tor.ordescription.ORDescription;
  */
 public class FirstOnionRouterFactory {
 
-	private Vector firstOnionRouters;
-	private Vector firstORDescription;
+	private Vector m_firstOnionRouters;
+	private Vector m_firstORDescription;
 
 	/**
 	 * constructor
@@ -21,8 +21,8 @@ public class FirstOnionRouterFactory {
 	 */
 	public FirstOnionRouterFactory()
 	{
-		this.firstOnionRouters = new Vector();
-		this.firstORDescription = new Vector();
+		this.m_firstOnionRouters = new Vector();
+		this.m_firstORDescription = new Vector();
 	}
 
 	/**
@@ -35,12 +35,12 @@ public class FirstOnionRouterFactory {
 	public FirstOnionRouter createFirstOnionRouter(ORDescription d)
 	{
 		ORDescription ord;
-		for(int i=0;i<this.firstORDescription.size();i++)
+		for(int i=0;i<this.m_firstORDescription.size();i++)
 		{
-			ord = (ORDescription)this.firstORDescription.elementAt(i);
+			ord = (ORDescription)this.m_firstORDescription.elementAt(i);
 			if(ord.getAddress().equals(d.getAddress())&&(ord.getPort()==d.getPort()))
 			{
-				return (FirstOnionRouter)this.firstOnionRouters.elementAt(i);
+				return (FirstOnionRouter)this.m_firstOnionRouters.elementAt(i);
 			}
 		}
 		FirstOnionRouter firstOR = new FirstOnionRouter(d);
@@ -52,8 +52,8 @@ public class FirstOnionRouterFactory {
 			return null;
 		}
 		firstOR.start();
-		this.firstOnionRouters.add(firstOR);
-		this.firstORDescription.add(d);
+		this.m_firstOnionRouters.add(firstOR);
+		this.m_firstORDescription.add(d);
 		return firstOR;
 	}
 

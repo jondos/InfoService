@@ -59,8 +59,9 @@ public final class Literals
 	public static final String CHARGEFILE = "index.php";
 
 	public static final String[] BROWSERLIST =
-		{
-		"konqueror", "explorer", "mozilla", "firebird", "opera"};
+	{
+		"konqueror", "iexplore", "explorer", "mozilla", "firefox", "mozilla-firefox", "firebird", "opera"
+	};
 
 	public static final boolean SAVE_PW = false;
 	public static final String RES_PATH = "pay/res/";

@@ -30,21 +30,24 @@ package anon.pay;
 import java.io.DataInputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+
 import anon.AnonChannel;
 import anon.AnonService;
 import anon.infoservice.MixCascade;
 import anon.infoservice.StatusInfo;
 import anon.server.AnonServiceImpl;
 import pay.Pay;
+import pay.PayAccount;
+import pay.PayAccountsFile;
+import payxml.XMLAccountInfo;
 import payxml.XMLPayRequest;
-import payxml.XMLEasyCC;
-import anon.crypto.JAPSignature;
-import anon.util.XMLUtil;
+
 /**
- * Die gesammt Kommunikation zwischen Pay und AI (welche ja ein Teil der Mix-Kaskade sind). Läuft als eigener Thread
- * beim erzeugen wird eine AI Channel geöffnet. Beim starten des Threads wird festgestellt ob die AI bezahlt werden will etc.
- * danach soll in regelmässigem abstand eine EasyCC gesendet werden wenn gefordert (noch nicht implementiert)
+ * Die gesammt Kommunikation zwischen Pay und AI (welche ja ein Teil der Mix-Kaskade sind). L\uFFFDuft als eigener Thread
+ * beim erzeugen wird eine AI Channel ge\uFFFDffnet. Beim starten des Threads wird festgestellt ob die AI bezahlt werden will etc.
+ * danach soll in regelm\uFFFDssigem abstand eine EasyCC gesendet werden wenn gefordert (noch nicht implementiert)
  *
+ * @author Bastian Voigt
  */
 
 public class AICommunication extends Thread
@@ -122,7 +125,7 @@ public class AICommunication extends Thread
 		{
 			if (anonServer != null && getLastTransferredBytes() > sendCCIntervall)
 			{
-				processCostConfirmation(lastRequest);
+				processCostConfirmationRequest(lastRequest);
 			}
 			lastRequest = processPayRequest(); // blockiert dies solange nichts kommt ?
 			try
@@ -134,23 +137,27 @@ public class AICommunication extends Thread
 		}
 	}
 
-	public void processCostConfirmation(XMLPayRequest request)
+	/**
+	 * Sends a cost confirmation to the AI
+	 *
+	 * @param request XMLPayRequest
+	 */
+	public void processCostConfirmationRequest(XMLPayRequest request)
 	{
 		if (request != null && request.costConfirmsNeeded.equals(XMLPayRequest.TRUE))
 		{
 			;
 		}
 		//XMLEasyCC cc = Pay.create().addCosts(request.aiName,Pay.create().getUsedAccount(),countLastTransferredBytes());
-		send(getSignedCC(request));
+//		send(getSignedCC(request));
 	}
 
-	public String getSignedCC(XMLPayRequest request)
+/*	public String getSignedCC(XMLPayRequest request)
 	{
 		XMLEasyCC cc = Pay.getInstance().addCosts(request.aiName, Pay.getInstance().getUsedAccount(),
-											 countLastTransferredBytes());
+												  countLastTransferredBytes());
 		try
 		{
-
 			JAPSignature sig = new JAPSignature();
 			sig.initSign(Pay.getInstance().getAccount(Pay.getInstance().getUsedAccount()).getPrivateKey());
 			sig.signXmlDoc(cc.getDomDocument());
@@ -165,11 +172,11 @@ public class AICommunication extends Thread
 			e.printStackTrace();
 		}
 		return null;
-	}
+	}*/
 
 	public void end()
 	{
-		processCostConfirmation(lastRequest);
+		processCostConfirmationRequest(lastRequest);
 		running = false;
 		c.close();
 	}
@@ -187,7 +194,7 @@ public class AICommunication extends Thread
 		}
 	}
 
-	public byte[] recive()
+	public byte[] receive()
 	{
 		byte[] bytes;
 		try
@@ -198,7 +205,7 @@ public class AICommunication extends Thread
 		}
 		catch (Exception ex)
 		{
-			System.out.println("AICommunication recive ging nicht");
+			System.out.println("AICommunication receive ging nicht");
 			return null;
 		}
 		return bytes;
@@ -215,7 +222,7 @@ public class AICommunication extends Thread
 		byte[] answer = null;
 		try
 		{
-			answer = recive();
+			answer = receive();
 			request = new XMLPayRequest(answer);
 		}
 		catch (Exception ex)
@@ -226,18 +233,21 @@ public class AICommunication extends Thread
 		}
 		if (request.accounting)
 		{
-			send(Pay.getInstance().getAccount(Pay.getInstance().getUsedAccount()).getAccountCertificate().getXMLString());
+			PayAccountsFile accounts = PayAccountsFile.getInstance();
+			PayAccount activeAccount = accounts.getActiveAccount();
+
+			send(activeAccount.getAccountCertificate().getXMLString());
 
 			if (request.balanceNeeded.equals(XMLPayRequest.TRUE))
 			{
-				///@todo make me work agian
-				//send(Pay.getInstance().getAccount(Pay.getInstance().getUsedAccount()).getBalance().getXMLString()); // hier soll nur aus der lokalen Datei gelesen werden
-
+				send(activeAccount.getAccountInfo().getXMLString());
+				// hier soll nur aus der lokalen Datei gelesen werden
 			}
 			if (request.balanceNeeded.equals(XMLPayRequest.NEW))
 			{
-				///@todo make me work aigain
-				//send(Pay.getInstance().updateBalance(Pay.getInstance().getUsedAccount()).balance.getXMLString()); // hier soll die BI neu kontaktiert werden.
+				XMLAccountInfo info = Pay.getInstance().fetchAccountInfo(activeAccount.getAccountNumber());
+				send(info.getXMLString());
+				// hier soll die BI neu kontaktiert werden.
 			}
 			if (request.costConfirmsNeeded.equals(XMLPayRequest.TRUE))
 			{

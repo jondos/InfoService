@@ -38,18 +38,19 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import pay.Pay;
-import pay.event.ModelEvent;
-import pay.event.ModelListener;
 import pay.util.PayText;
+import pay.PayAccount;
+import pay.PayAccountsFile;
 
 /**
  * Klasse zum darstellen der wichtigsten Informationen eines Kontos. keine BenutzerInteraktion
- * @author Grischan Glänzel
+ * @author Grischan Gl\uFFFDnzel
  */
-public class GuthabenAnzeige extends Box implements ModelListener
+public class GuthabenAnzeige extends Box
 {
 
-	Pay pay = Pay.getInstance();
+	Pay m_Pay = Pay.getInstance();
+	PayAccountsFile m_Accounts = PayAccountsFile.getInstance();
 
 	private JLabel info;
 	private JLabel guthaben;
@@ -61,15 +62,15 @@ public class GuthabenAnzeige extends Box implements ModelListener
 		info = new JLabel(PayText.get("no Account"));
 		guthaben = new JLabel("");
 		options = new JButton(PayText.get("change"));
-		if (pay.accountFileHasUsedAccount())
+		if (m_Accounts.hasActiveAccount())
 		{
-			modelUpdated(null);
+/*			modelUpdated(null);*/
 		}
-		pay.addModelListener(this);
+/*		pay.addModelListener(this);*/
 		makeGuthabenBox(this);
 	}
 
-	public void modelUpdated(ModelEvent event)
+/*	public void modelUpdated(ModelEvent event)
 	{
 		LogHolder.log(LogLevel.DEBUG, LogType.PAY, "modelUpdated");
 		if (pay.accountFileHasUsedAccount())
@@ -77,7 +78,7 @@ public class GuthabenAnzeige extends Box implements ModelListener
 			info.setText("Nr: " + pay.getAccount(pay.getUsedAccount()).getAccountNumber());
 			guthaben.setText("" + pay.getAccount(pay.getUsedAccount()).getCredit() + " Bytes");
 		}
-	}
+	}*/
 
 	private void makeGuthabenBox(Box box)
 	{

@@ -47,13 +47,13 @@ import pay.Pay;
 import pay.PayAccount;
 import pay.control.PayControl;
 import pay.data.Literals;
-import pay.event.ActionThread;
+//import pay.event.ActionThread;
 import pay.util.BrowserStart;
 import pay.util.PayText;
 import pay.util.URLSpec;
 
 /**
- * Dies Klasse bietet eine GUI zum addiern, löschen, aufladen von PayAccounts
+ * Dies Klasse bietet eine GUI zum addiern, l\uFFFDschen, aufladen von PayAccounts
  * Es ist die Haupt GUI Klasse der Pay Anwendung
  **/
 
@@ -121,15 +121,15 @@ public class PayView extends JPanel
 
 	public JTable createKontenTable(KontenTable model)
 	{
-		kontenTable = model;
-		JTable table = new JTable(model);
-		table.getColumnModel().getColumn(0).setPreferredWidth(15);
+/*		kontenTable = model;*/
+		JTable table = new JTable(/* model */);
+/*		table.getColumnModel().getColumn(0).setPreferredWidth(15);
 		table.getColumnModel().getColumn(1).setPreferredWidth(40);
 		table.getColumnModel().getColumn(2).setPreferredWidth(30);
-		table.getColumnModel().getColumn(3).setPreferredWidth(25);
+		table.getColumnModel().getColumn(3).setPreferredWidth(25);*/
 		tableDimension = new Dimension(400, 80);
 		table.setPreferredScrollableViewportSize(tableDimension);
-		return table;
+		return null;
 	}
 
 	public class KontenControlBox extends Box
@@ -167,7 +167,7 @@ public class PayView extends JPanel
 
 	private void addAnonymActions()
 	{
-		loeschen.addActionListener(new ActionThread(getParent(), PayText.get("delete"))
+/*		loeschen.addActionListener(new ActionThread(getParent(), PayText.get("delete"))
 		{
 			public void action(ActionEvent e)
 			{
@@ -221,13 +221,15 @@ public class PayView extends JPanel
 				LogHolder.log(LogLevel.DEBUG, LogType.PAY, "addAccount");
 				if (pay.initDone())
 				{
-					try{
-					pay.addAccount();
-					}
-					catch(Exception e1)
+					try
 					{
+						pay.registerNewAccount();
+					}
+					catch (Exception e1)
+					{
+						e1.printStackTrace();
 						LogHolder.log(LogLevel.DEBUG, LogType.PAY,
-									  "neue Konto erschaffen geht nicht: "+e1.getMessage());
+									  "neue Konto erschaffen geht nicht: " + e1.getMessage());
 					}
 				}
 				else
@@ -246,7 +248,11 @@ public class PayView extends JPanel
 				{
 					if (table.getSelectedRow() != -1)
 					{
+<<<<<<< PayView.java
+						pay.getAccountInfo(kontenTable.getAccountNumber(table.getSelectedRow()));
+=======
 						pay.getAccountInfo(kontenTable.getAccountNumber(table.getSelectedRow())).getBalance();
+>>>>>>> 1.6
 					}
 					else
 					{
@@ -259,7 +265,7 @@ public class PayView extends JPanel
 								  "aktuelles Guthaben anzeigen geht nicht Pay Instance Server ist nicht initialisiert");
 				}
 			}
-		});
+		});*/
 	}
 
 	public void neuMalen()

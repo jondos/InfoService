@@ -21,7 +21,7 @@ public class tor2jap {
 	public static void main(String[] args) throws Exception {
 		Tor tor = Tor.getInstance();
 		tor.start();
-		AnonChannel channel = tor.createChannel("www.google.de",80);
+                AnonChannel channel = tor.createChannel("www.google.de",80);
 		channel.getOutputStream().write(("GET /index.html HTTP/1.0\n\r\n\r").getBytes());
 		for(;;)
 		{

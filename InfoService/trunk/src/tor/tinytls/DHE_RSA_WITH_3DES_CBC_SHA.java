@@ -19,8 +19,8 @@ import tor.util.helper;
  */
 public class DHE_RSA_WITH_3DES_CBC_SHA extends CipherSuite {
 
-	private CBCBlockCipher encryptcipher;
-	private CBCBlockCipher decryptcipher;
+	private CBCBlockCipher m_encryptcipher;
+	private CBCBlockCipher m_decryptcipher;
 
 	/**
 	 * Constuctor
@@ -42,15 +42,15 @@ public class DHE_RSA_WITH_3DES_CBC_SHA extends CipherSuite {
 	{
 		HMac hmac = new HMac(new SHA1Digest());
 		hmac.reset();
-		hmac.init(new KeyParameter(this.clientmacsecret));
-		hmac.update(helper.conc(helper.inttobyte(this.writesequenznumber,8),helper.conc(header,message)),0,message.length+header.length+8);
+		hmac.init(new KeyParameter(this.m_clientmacsecret));
+		hmac.update(helper.conc(helper.inttobyte(this.m_writesequenznumber,8),helper.conc(header,message)),0,message.length+header.length+8);
 		byte[] mac = new byte[hmac.getMacSize()];
 		hmac.doFinal(mac,0);
-		this.writesequenznumber++;
+		this.m_writesequenznumber++;
 		byte[] uncompressed = helper.conc(message,mac);
 		//TODO : zuf?lliges padding hinzuf?gen
 		//add padding as described in RFC2246 (6.2.3.2)
-		int paddingsize=encryptcipher.getBlockSize()-((uncompressed.length+1)%encryptcipher.getBlockSize());
+		int paddingsize=this.m_encryptcipher.getBlockSize()-((uncompressed.length+1)%this.m_encryptcipher.getBlockSize());
 		byte[] padding = new byte[paddingsize];
 		for(int i=0;i<padding.length;i++)
 		{
@@ -59,9 +59,9 @@ public class DHE_RSA_WITH_3DES_CBC_SHA extends CipherSuite {
 		uncompressed = helper.conc(uncompressed,padding);
 		uncompressed = helper.conc(uncompressed,helper.inttobyte(paddingsize,1));
 		byte[] compressed = new byte[uncompressed.length];
-		for(int i=0;i<uncompressed.length;i+=this.encryptcipher.getBlockSize())
+		for(int i=0;i<uncompressed.length;i+=this.m_encryptcipher.getBlockSize())
 		{
-			this.encryptcipher.processBlock(uncompressed,i,compressed,i);
+			this.m_encryptcipher.processBlock(uncompressed,i,compressed,i);
 		}
 		return compressed;
 	}
@@ -74,9 +74,9 @@ public class DHE_RSA_WITH_3DES_CBC_SHA extends CipherSuite {
 	 */
 	public byte[] decode(byte[] header, byte[] message) throws TLSException {
 		byte[] decrypted = new byte[message.length];
-		for(int i=0;i<message.length;i+=this.decryptcipher.getBlockSize())
+		for(int i=0;i<message.length;i+=this.m_decryptcipher.getBlockSize())
 		{
-			this.decryptcipher.processBlock(message,i,decrypted,i);
+			this.m_decryptcipher.processBlock(message,i,decrypted,i);
 		}
 		//remove padding and mac
 		int length = ((header[3] & 0xFF) <<8) |(header[4] & 0xFF);
@@ -91,11 +91,11 @@ public class DHE_RSA_WITH_3DES_CBC_SHA extends CipherSuite {
 		
 		HMac hmac = new HMac(new SHA1Digest());
 		hmac.reset();
-		hmac.init(new KeyParameter(this.servermacsecret));
-		hmac.update(helper.conc(helper.inttobyte(this.readsequenznumber,8),helper.conc(header,uncompressed)),0,uncompressed.length+header.length+8);
+		hmac.init(new KeyParameter(this.m_servermacsecret));
+		hmac.update(helper.conc(helper.inttobyte(this.m_readsequenznumber,8),helper.conc(header,uncompressed)),0,uncompressed.length+header.length+8);
 		byte[] mac = new byte[hmac.getMacSize()];
 		hmac.doFinal(mac,0);
-		this.readsequenznumber++;
+		this.m_readsequenznumber++;
 		
 		for(int i=0;i<mac.length;i++)
 		{
@@ -114,16 +114,16 @@ public class DHE_RSA_WITH_3DES_CBC_SHA extends CipherSuite {
 	 */
 	protected void calculateKeys(byte[] keys)
 	{
-		this.clientmacsecret = helper.copybytes(keys,0,20);
-		this.servermacsecret = helper.copybytes(keys,20,20);
-		this.clientwritekey	 = helper.copybytes(keys,40,24);
-		this.serverwritekey = helper.copybytes(keys,64,24);
-		this.clientwriteIV = helper.copybytes(keys,88,8);
-		this.serverwriteIV = helper.copybytes(keys,96,8);
-		this.encryptcipher = new CBCBlockCipher(new DESedeEngine());
-		this.encryptcipher.init(true,new ParametersWithIV(new KeyParameter(this.clientwritekey),this.clientwriteIV));
-		this.decryptcipher = new CBCBlockCipher(new DESedeEngine());
-		this.decryptcipher.init(false,new ParametersWithIV(new KeyParameter(this.serverwritekey),this.serverwriteIV));
+		this.m_clientmacsecret = helper.copybytes(keys,0,20);
+		this.m_servermacsecret = helper.copybytes(keys,20,20);
+		this.m_clientwritekey	 = helper.copybytes(keys,40,24);
+		this.m_serverwritekey = helper.copybytes(keys,64,24);
+		this.m_clientwriteIV = helper.copybytes(keys,88,8);
+		this.m_serverwriteIV = helper.copybytes(keys,96,8);
+		this.m_encryptcipher = new CBCBlockCipher(new DESedeEngine());
+		this.m_encryptcipher.init(true,new ParametersWithIV(new KeyParameter(this.m_clientwritekey),this.m_clientwriteIV));
+		this.m_decryptcipher = new CBCBlockCipher(new DESedeEngine());
+		this.m_decryptcipher.init(false,new ParametersWithIV(new KeyParameter(this.m_serverwritekey),this.m_serverwriteIV));
 	}
 
 
