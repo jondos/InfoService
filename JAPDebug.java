@@ -388,38 +388,5 @@ final public class JAPDebug extends WindowAdapter implements ActionListener{
 		System.out.println("JAPDebug: debuglevel="+Integer.toString(debug.debuglevel));
 	}
 
-	/** Provides a simle self test of the debugging functions. */
-	public static void main(String argc[]) {
-	JAPDebug.create();
-
-	System.out.println("JAPDebug: Self test");
-
-	System.out.println("JAPDebug: Default settings");
-	JAPDebug.printDebugSettings();
-
-	System.out.println("JAPDebug: Selftest 1: GUI+NET");
-	JAPDebug.setDebugType(JAPDebug.GUI+JAPDebug.NET);
-	JAPDebug.printDebugSettings();
-	JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"This is a GUI related debug message");
-	JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"This is a NET related debug message");
-
-	System.out.println("JAPDebug: Selftest 2: GUI only");
-	JAPDebug.setDebugType(JAPDebug.GUI);
-	JAPDebug.printDebugSettings();
-	JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"This is a GUI related debug message");
-	JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"This is a NET related debug message");
-
-	System.out.println("JAPDebug: Selftest 3: NET");
-	JAPDebug.setDebugType(JAPDebug.NET);
-	JAPDebug.printDebugSettings();
-	JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"This is a GUI related debug message");
-	JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"This is a NET related debug message");
-
-	System.out.println("JAPDebug: Selftest 4: no debugging");
-	JAPDebug.setDebugType(JAPDebug.NUL);
-	JAPDebug.printDebugSettings();
-	JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"This is a GUI related debug message");
-	JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"This is a NET related debug message");
-	System.out.println("JAPDebug: End");
 	}
-}
+
