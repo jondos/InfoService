@@ -64,7 +64,7 @@ import anon.JAPAnonServiceListener;
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPModel implements JAPAnonServiceListener{
 
-	public static final String aktVersion = "00.01.018"; // Version of JAP
+	public static final String aktVersion = "00.01.019"; // Version of JAP
 
 	public  Vector            anonServerDatabase = null; // vector of all available mix cascades
 	private AnonServerDBEntry currentAnonService = null; // current anon service data object
@@ -87,15 +87,16 @@ public final class JAPModel implements JAPAnonServiceListener{
 	private boolean  mbUseProxy            = false;  // indicates whether JAP connects via a proxy or directly
 	private  String  proxyHostName         = "";     // hostname of proxy
 	private  int     proxyPortNumber       = -1;     // portnumber of proxy
-	private boolean  mb_UseProxyAuthentication=false; //indicates whether JAp should use a UserID/Password to authenticat to the proxy
-	private String  m_ProxyAuthenticationUserID=null;   //userid for authentication
-	private String m_ProxyAuthenticationPasswd =null; // password --> will never be saved...
+	private boolean  mb_UseProxyAuthentication   = false; //indicates whether JAp should use a UserID/Password to authenticat to the proxy
+	private String   m_ProxyAuthenticationUserID = null;  //userid for authentication
+	private String   m_ProxyAuthenticationPasswd = null;  // password --> will never be saved...
 	public  boolean  autoConnect                 = false; // autoconnect after program start
 	private boolean  mbMinimizeOnStartup         = false; // true if programm will start minimized
 	public  boolean  canStartService             = false; // indicates if anon service can be started
 	public  boolean  alreadyCheckedForNewVersion = false; // indicates if check for new version has already been done
 	private boolean  mbActCntMessageNotRemind    = false; // indicates if Warning message in setAnonMode has been deactivated for the session
 	private boolean  mbActCntMessageNeverRemind  = false; // indicates if Warning message in setAnonMode has been deactivated forever
+	private boolean  mbDoNotAbuseReminder        = false; // indicates if new warning message in setAnonMide (containing Do no abuse) has been shown
 
 	public  String   status1           = "?";
 	public  String   status2           = " ";
@@ -284,15 +285,18 @@ public final class JAPModel implements JAPAnonServiceListener{
 			setListenerIsLocal(JAPUtil.parseNodeBoolean(n.getNamedItem("listenerIsLocal"),true));
 			setUseProxy(JAPUtil.parseNodeBoolean(n.getNamedItem("proxyMode"),false));
 			setUseFirewallAuthorization(JAPUtil.parseNodeBoolean(n.getNamedItem("proxyAuthorization"),false));
+			// load settings for the reminder message in setAnonMode
 			mbActCntMessageNeverRemind=JAPUtil.parseNodeBoolean(n.getNamedItem("neverRemindActiveContent"),false);
-			if(mbActCntMessageNeverRemind)
+			mbDoNotAbuseReminder      =JAPUtil.parseNodeBoolean(n.getNamedItem("doNotAbuseReminder"),false);
+			if(mbActCntMessageNeverRemind && mbDoNotAbuseReminder)
 				mbActCntMessageNotRemind=true;
+			// load settings for Info Service
 			String host;
 			int port;
 			host=JAPUtil.parseNodeString(n.getNamedItem("infoServiceHostName"),infoServiceHostName);
 			port=JAPUtil.parseElementAttrInt(root,"infoServicePortNumber",infoServicePortNumber);
 			setInfoService(host,port);
-
+			// load settings for proxy
 			host=JAPUtil.parseNodeString(n.getNamedItem("proxyHostName"),proxyHostName);
 			port=JAPUtil.parseElementAttrInt(root,"proxyPortNumber",proxyPortNumber);
 			if(host.equalsIgnoreCase("ikt.inf.tu-dresden.de"))
@@ -401,6 +405,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 			e.setAttribute("autoConnect",(autoConnect?"true":"false"));
 			e.setAttribute("minimizedStartup",(mbMinimizeOnStartup?"true":"false"));
 			e.setAttribute("neverRemindActiveContent",(mbActCntMessageNeverRemind?"true":"false"));
+			e.setAttribute("doNotAbuseReminder",(mbDoNotAbuseReminder?"true":"false"));
 			e.setAttribute("Locale",m_Locale.getLanguage());
 			//
 			// adding Debug-Element
@@ -844,7 +849,8 @@ private final class SetAnonModeAsync implements Runnable
 																		JOptionPane.DEFAULT_OPTION,
 																		JOptionPane.WARNING_MESSAGE,
 																		null, options, options[1]);
-										mbActCntMessageNeverRemind=checkboxRemindNever.isSelected();
+										mbActCntMessageNeverRemind = checkboxRemindNever.isSelected();
+										mbDoNotAbuseReminder       = checkboxRemindNever.isSelected();
 										if(ret==0||mbActCntMessageNeverRemind)
 											mbActCntMessageNotRemind=true;
 									}
