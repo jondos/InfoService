@@ -133,6 +133,9 @@ public final class JAPModel implements JAPAnonServiceListener{
 	private JAPDirectProxy proxyDirect=null;
 	private JAPAnonService proxyAnon=null;
 	
+	private JAPAnonService proxyAnonSocks=null;
+	
+	
 	private static JAPModel model=null;
 //	public JAPLoading japLoading;
 	private static JAPFeedback feedback=null;
@@ -629,63 +632,70 @@ public final class JAPModel implements JAPAnonServiceListener{
 						alreadyCheckedForNewVersion = true;
 						}
 					}
-				if (canStartService) {
-					// -> we can start anonymity
-					if(proxyDirect!=null)
-						proxyDirect.stop();
-					proxyDirect=null;
-					// starting MUX --> Success ???
-					proxyAnon=new JAPAnonService(model.portNumber,JAPAnonService.PROTO_HTTP);
-					proxyAnon.setAnonService(model.anonHostName,model.anonPortNumber);
-					int ret=proxyAnon.start();
-					if(ret==JAPAnonService.E_SUCCESS)
-						{
-							proxyAnon.setAnonServiceListener(this);
-							// start feedback thread
-							feedback=new JAPFeedback();
-							feedback.startRequests();
-							// show a Reminder message that active contents should be disabled
-							Object[] options = { model.getString("disableActCntMessageDontRemind"), model.getString("okButton") };
-							JCheckBox checkboxRemindNever=new JCheckBox(model.getString("disableActCntMessageNeverRemind"));
-							Object[] message={model.getString("disableActCntMessage"),checkboxRemindNever};
-							if (!mbActCntMessageNotRemind) 
-								{
-									ret=0;
-									ret= JOptionPane.showOptionDialog(view, 
-																										message, 
-																										model.getString("disableActCntMessageTitle"), 
-																										JOptionPane.DEFAULT_OPTION,
-																										JOptionPane.WARNING_MESSAGE,
-																										null, options, options[1]);
-									mbActCntMessageNeverRemind=checkboxRemindNever.isSelected();
-									if(ret==0||mbActCntMessageNeverRemind)
-										mbActCntMessageNotRemind=true;
+				if (canStartService)
+					{
+						// -> we can start anonymity
+						if(proxyDirect!=null)
+							proxyDirect.stop();
+						proxyDirect=null;
+						// starting MUX --> Success ???
+						proxyAnon=new JAPAnonService(model.portNumber,JAPAnonService.PROTO_HTTP);
+						proxyAnon.setAnonService(model.anonHostName,model.anonPortNumber);
+						int ret=proxyAnon.start();
+						if(ret==JAPAnonService.E_SUCCESS)
+							{
+								proxyAnon.setAnonServiceListener(this);
+								// start feedback thread
+								feedback=new JAPFeedback();
+								feedback.startRequests();
+								// show a Reminder message that active contents should be disabled
+								Object[] options = { model.getString("disableActCntMessageDontRemind"), model.getString("okButton") };
+								JCheckBox checkboxRemindNever=new JCheckBox(model.getString("disableActCntMessageNeverRemind"));
+								Object[] message={model.getString("disableActCntMessage"),checkboxRemindNever};
+								if (!mbActCntMessageNotRemind) 
+									{
+										ret=0;
+										ret= JOptionPane.showOptionDialog(view, 
+																											message, 
+																											model.getString("disableActCntMessageTitle"), 
+																											JOptionPane.DEFAULT_OPTION,
+																											JOptionPane.WARNING_MESSAGE,
+																											null, options, options[1]);
+										mbActCntMessageNeverRemind=checkboxRemindNever.isSelected();
+										if(ret==0||mbActCntMessageNeverRemind)
+											mbActCntMessageNotRemind=true;
+									}
+								proxyAnonSocks=new JAPAnonService(1080,JAPAnonService.PROTO_SOCKS);
+								proxyAnonSocks.start();
+								view.setCursor(Cursor.getDefaultCursor());
+								notifyJAPObservers();
+								return;
 							}
-						}
-					else if (ret==JAPAnonService.E_BIND){
-										Object[] args={new Integer(portNumber)};
-					String msg=MessageFormat.format(model.getString("errorListenerPort"),
-																					args);
-					JOptionPane.showMessageDialog(model.getView(),
-																				msg,
-																				model.getString("errorListenerPortTitle"),
-																				JOptionPane.ERROR_MESSAGE);
-					JAPDebug.out(JAPDebug.EMERG,JAPDebug.NET,"Listener could not be started!");
-					model.getView().disableSetAnonMode();
-					}
-					else
-						{
-							JOptionPane.showMessageDialog
+						if (ret==JAPAnonService.E_BIND)
+							{
+								Object[] args={new Integer(portNumber)};
+								String msg=MessageFormat.format(model.getString("errorListenerPort"),args);
+								JOptionPane.showMessageDialog(model.getView(),
+																							msg,
+																							model.getString("errorListenerPortTitle"),
+																							JOptionPane.ERROR_MESSAGE);
+								JAPDebug.out(JAPDebug.EMERG,JAPDebug.NET,"Listener could not be started!");
+								model.getView().disableSetAnonMode();
+							}
+						else
+							{
+								JOptionPane.showMessageDialog
 									(
 									 getView(), 
 									 getString("errorConnectingFirstMix")+Integer.toString(ret),
 									 getString("errorConnectingFirstMixTitle"),
 									 JOptionPane.ERROR_MESSAGE
 									);
-						}
-					view.setCursor(Cursor.getDefaultCursor());
-					notifyJAPObservers();
-				}
+							}
+						proxyAnon=null;
+						view.setCursor(Cursor.getDefaultCursor());
+						notifyJAPObservers();
+					}
 		} else if ((proxyDirect==null) && (anonModeSelected == false)) {
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:setAnonMode("+anonModeSelected+")");
 			if(proxyAnon!=null)
