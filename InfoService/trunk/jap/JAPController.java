@@ -51,6 +51,7 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Text;
+import anon.crypto.JAPCertificateStore;
 import anon.infoservice.HTTPConnectionFactory;
 import anon.infoservice.InfoService;
 import anon.infoservice.InfoServiceDatabase;
@@ -197,9 +198,8 @@ public final class JAPController implements ProxyListener {
 	 *    infoServicePortnumber=".."    // the portnumber of the info service
 	 *    infoServiceDisabled="true/false"    // disable use of InfoService
 	 *    certCheckDisabled="true/false"  // disable checking of certificates
-	 *     acceptedCertList="????"          //????
-	* biHost="..." // Host for BI
-	* biPort=".." //Port for BI
+	 * 		biHost="..." // Host for BI
+	 * 		biPort=".." //Port for BI
 	 *    autoConnect="true"/"false"    // should we start the anon service immedialy after programm launch ?
 	 *    autoReConnect="true"/"false"    // should we automatically reconnect to mix if connection was lost ?
 	 *    DummyTrafficIntervall=".."    //Time of inactivity in milli seconds after which a dummy is send
@@ -306,7 +306,51 @@ public final class JAPController implements ProxyListener {
 			setInfoServiceDisabled(XMLUtil.parseNodeBoolean(n.getNamedItem("infoServiceDisabled"),false));
 			//settings for Certificates
 			setCertCheckDisabled(XMLUtil.parseNodeBoolean(n.getNamedItem("certCheckDisabled"),JAPModel.isCertCheckDisabled()));
-			setCertificateStore(XMLUtil.parseNodeString(n.getNamedItem("acceptedCertList"), ""));
+
+		try
+		{
+			// setCertificateStore(XMLUtil.parseNodeString(n.getNamedItem("acceptedCertList"), ""));
+			// JAPCertificateStore jcs = null;
+			Element xmlCA = (Element) XMLUtil.getFirstChildByName(root,"CertificateAuthorities");
+			if (xmlCA != null)
+			{
+				NodeList nlX509Certs = xmlCA.getElementsByTagName("X509Certificate");
+				if (
+					(nlX509Certs != null) &&
+					(nlX509Certs.getLength() >= 1)
+					)
+				{
+					System.out.println("<CA> gefunden ...");
+					// certificate store found in jap.conf
+					System.out.println("<X509Cert> gefunden ...");
+					JAPCertificateStore jcs = new JAPCertificateStore(nlX509Certs);
+					try
+					{
+						setCertificateStore(jcs);
+					}
+					catch (Exception e)
+					{
+						System.out.println("fehler beim setzen certstore!");
+					}
+
+				}
+			}
+			else
+			{
+				System.out.println("ok, CA aber kein NL oder kein CA");
+				JAPCertificateStore jcs = new JAPCertificateStore(JAPConstants.CERTSPATH+JAPConstants.TRUSTEDROOTCERT);
+				setCertificateStore(jcs);
+			}
+		}
+		catch (NullPointerException ex_np)
+		{
+			//
+		}
+		catch (Exception e)
+		{
+			System.out.println("load config file");
+			e.printStackTrace();
+		}
 			//load settings for Payment
 			setBIHost(XMLUtil.parseNodeString(n.getNamedItem("biHost"),JAPModel.getBIHost()));
 			setBIPort(XMLUtil.parseElementAttrInt(root,"biPort",JAPModel.getBIPort()));
@@ -512,7 +556,6 @@ public final class JAPController implements ProxyListener {
 
 			e.setAttribute("infoServiceDisabled",(JAPModel.isInfoServiceDisabled()?"true":"false"));
 			e.setAttribute("certCheckDisabled", (JAPModel.isCertCheckDisabled()?"true":"false"));
-			e.setAttribute("acceptedCertList", (JAPModel.getCertificateStore().dumpStoreData()));
 			e.setAttribute("DummyTrafficIntervall",Integer.toString(JAPModel.getDummyTraffic()));
 			e.setAttribute("autoConnect",(JAPModel.getAutoConnect()?"true":"false"));
 			e.setAttribute("autoReConnect",(JAPModel.getAutoReConnect()?"true":"false"));
@@ -523,6 +566,17 @@ public final class JAPController implements ProxyListener {
 			e.setAttribute("Locale",m_Locale.getLanguage());
 			e.setAttribute("LookAndFeel",UIManager.getLookAndFeel().getClass().getName());
 
+		/* store the trusted CAs */
+		try
+		{
+			JAPCertificateStore jcs = JAPModel.getCertificateStore();
+			// System.out.println("jcs : " + jcs.size());
+			e.appendChild(jcs.toXmlNode(doc));
+		}
+		catch (Exception ex)
+		{
+			ex.printStackTrace();
+		}
 			/* store the current MixCascade */
 			MixCascade defaultMixCascade = getCurrentMixCascade();
 			if (defaultMixCascade != null) {
@@ -798,9 +852,9 @@ public final class JAPController implements ProxyListener {
 				m_proxyAnon.setMixCertificationCheck(!b,m_Model.getCertificateStore());
 		}
 
-	public static void setCertificateStore(String certlist)
+	public static void setCertificateStore(JAPCertificateStore jcs)
 		{
-			m_Model.setCertificateStore(certlist);
+			m_Model.setCertificateStore(jcs);
 		}
 
 	public static void setSaveMainWindowPosition(boolean b)

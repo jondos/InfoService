@@ -76,38 +76,10 @@ public final class JAPModel
 	private boolean m_bCertCheckDisabled           = true;
 	private JAPCertificate m_rootCertificate = null;
 	private JAPCertificateStore m_certStore = null;
-	private String m_acceptedCertList = null;
 
 	private JAPModel ()
 		{
-			m_certStore=new JAPCertificateStore();
-			//try to read default cert (which comes with JAP)
-			String certFilename = JAPConstants.CERTSPATH+JAPConstants.TRUSTEDROOTCERT;
-			InputStream in=null;
-			try
-				{
-					// this is necessary to make shure that the cert  is loaded when contained in a JAP.jar
-					in=Class.forName("JAP").getResourceAsStream(certFilename);
-				}
-			catch (Exception e)
-				{
-					try
-						{
-							//we have to chek, if it exists as file
-							in=new FileInputStream(certFilename);
-						}
-					catch(Exception e1)
-						{
-						}
-				}
-			try
-				{
-					m_certStore.addCertificate(JAPCertificate.getInstance(in));
-				}
-			catch(Exception e2)
-				{
-				}
-			try{in.close();}catch(Throwable t2){};
+			m_certStore = JAPCertificateStore.create();
 		}
 			// m_Locale=Locale.getDefault();
 
@@ -487,50 +459,9 @@ public final class JAPModel
 			return model.m_certStore;
 		}
 
-
-	public static boolean setCertificateStore(String certlist)
+		protected void setCertificateStore(JAPCertificateStore jcs)
 		{
-/*			model.m_acceptedCertList = certlist;
-
-			JAPCertificateStore certstore = new JAPCertificateStore();
-
-			String dir=System.getProperty("user.home","");
-
-			File certdir, t_certfile;
-			JAPCertificate t_cert;
-			String t_certstore[];
-			certdir = new File(dir + File.separator + "certificates");
-			if (!certdir.exists())
-				certdir = new File(".." + File.separator + "certificates");
-
-			if (certdir.canRead())
-			{
-				FilenameFilter fnf = new FilenameFilter()
-				{
-					public boolean accept(File certdir, String name)
-					{
-						return name.endsWith(".cer");
-					}
-				};
-
-				t_certstore = certdir.list(fnf);
-				for (int i = 0; i < t_certstore.length; i++)
-				{
-					t_certfile = new File(certdir + File.separator + t_certstore[i]);
-					t_cert = JAPCertificate.getInstance(t_certfile);
-					if (((model.m_acceptedCertList.indexOf((String)t_cert.getIssuer().getValues().elementAt(0))) != -1) || (certlist == null))
-						certstore.addCertificate(t_cert);
-				}
-				model.m_certStore = certstore;
-				return true;
-			}*/
-			return false;
+				m_certStore = jcs;
 		}
-
-	/*	public static void setCertificateStore(JAPCertificateStore jcs)
-		{
-			model.m_certStore = jcs;
-		}
-*/
 
 }

@@ -47,6 +47,15 @@ import java.security.InvalidKeyException;
 
 import anon.server.impl.Base64;
 import anon.server.impl.XMLUtil;
+
+import anon.ErrorCodes;
+
+import java.util.Enumeration;
+
+import java.io.IOException;
+
+import java.security.NoSuchAlgorithmException;
+
 public class JAPSignature {
 
 	/**
@@ -451,4 +460,80 @@ public class JAPSignature {
 						return -1;
 					}
 			}
-	}
+
+			public boolean check(Node root, Node nodeSig, Node nodeCert, JAPCertificateStore certsTrustedRoots)
+			throws Exception, IOException, NoSuchAlgorithmException, SignatureException, InvalidKeyException, JAPCertificateException
+			{
+					try
+					{
+						JAPCertificate cert = JAPCertificate.getInstance(nodeCert);
+						PublicKey pk = cert.getPublicKey();
+
+						// check certificate
+
+						// selbstzeritifiziert
+						if (cert.getIssuer().equals(cert.getSubject()))
+						{
+
+							if (!cert.verify(pk))
+							{
+								throw new Exception("Certificate cannot be verified with this public key");
+							}
+						}
+						else
+						{
+							// fremdzertifiziert
+							System.out.println("fremdzertifiziert !");
+
+							JAPCertificate j = null;
+							
+							System.out.println("gr: " + certsTrustedRoots.size());
+							
+							Enumeration m_certs = certsTrustedRoots.elements();
+							while (m_certs.hasMoreElements())
+							{
+								System.out.println("hier!!");
+								j = (JAPCertificate) m_certs.nextElement();
+								if (j.getIssuer().equals(cert.getIssuer()))
+									break;
+							}
+
+							if (!cert.verify(j.getPublicKey()))
+								throw new Exception("Certificate cannot be verified with this public key");
+								
+						}
+
+						// try to init sig
+						initVerify(pk);
+
+						// check signature
+						if (!verifyXML(root))
+						{
+							throw new Exception("Signature check failed!");
+						}
+					}
+					catch (IOException ex_io)
+					{
+						throw new IOException(ex_io.getMessage());
+					}
+					catch (NoSuchAlgorithmException ex_nsal)
+					{
+						throw new NoSuchAlgorithmException(ex_nsal.getMessage());
+					}
+					catch (InvalidKeyException ex_ikey)
+					{
+						throw new InvalidKeyException(ex_ikey.getMessage());
+					}
+					catch (SignatureException ex_sig)
+					{
+						throw new SignatureException(ex_sig.getMessage());
+					}
+					catch (JAPCertificateException ex_japcert)
+					{
+						throw new JAPCertificateException(ex_japcert.getMessage());
+					}
+
+					return true;
+			}
+
+}
