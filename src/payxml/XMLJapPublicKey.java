@@ -37,6 +37,16 @@ import anon.crypto.MyRSAPublicKey;
 import anon.util.Base64;
 import anon.util.XMLUtil;
 
+/** This class handels RSA Public Key represented in XML.
+ * The corresponding XML struct is as follows:
+ * <JapPublicKey version="1.0">
+ * 	 <RSAKeyValue>
+ *     <Modulus> Base64 encoded Modulus </Modulus>
+ * 		<Exponent> Base 64 enocded Exponent </Exponent>
+ * 	 </RSAKEyValue>
+ * </JapPublicKey>
+ */
+
 public class XMLJapPublicKey extends XMLDocument
 {
 	//~ Instance fields ********************************************************

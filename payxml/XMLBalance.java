@@ -43,8 +43,8 @@ import anon.util.XMLUtil;
  *   &lt;?xml version="1.0"?&gt;
  *   &lt;Balance verion="1.0"&gt;
  *      &lt;AccountNumber&gt;123456789012&lt;/AccountNumber&gt;
- *      &lt;CreditMax&gt;1234&lt;/CreditMax&gt;  (an integer, number of kbytes)
- *      &lt;Credit&gt;123&lt;/Credit&gt;         (an integer, number of kbytes)
+ *      &lt;Deposit&gt;1234&lt;/CreditMax&gt;  (an integer, number of bytes)
+ *      &lt;Spent&gt;123&lt;/Credit&gt;         (an integer, number of bytes)
  *      &lt;Timestamp&gt;yyyy-mm-dd hh:mm:ss.fffffffff&lt;/Timestamp&gt;
  *      &lt;Validtime&gt;yyyy-mm-dd hh:mm:ss.fffffffff&lt;/Validtime&gt;
  *   &lt;/Balance&gt;
@@ -80,10 +80,10 @@ public class XMLBalance extends XMLDocument
 		Element elem = m_theDocument.createElement("AccountNumber");
 		XMLUtil.setNodeValue(elem, Long.toString(accountNumber));
 		elemRoot.appendChild(elem);
-		elem = m_theDocument.createElement("CreditMax");
+		elem = m_theDocument.createElement("Deposit");
 		XMLUtil.setNodeValue(elem, Long.toString(maxbalance));
 		elemRoot.appendChild(elem);
-		elem = m_theDocument.createElement("Credit");
+		elem = m_theDocument.createElement("Spent");
 		XMLUtil.setNodeValue(elem, Integer.toString(balance));
 		elemRoot.appendChild(elem);
 		elem = m_theDocument.createElement("Timestamp");
@@ -125,11 +125,11 @@ public class XMLBalance extends XMLDocument
 		String str = XMLUtil.parseNodeString(elem, null);
 		m_AccountNumber = Long.parseLong(str);
 
-		elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "CreditMax");
+		elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "Deposit");
 		str = XMLUtil.parseNodeString(elem, null);
 		m_lCreditMax = Long.parseLong(str);
 
-		elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "Credit");
+		elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "Spent");
 		str = XMLUtil.parseNodeString(elem, null);
 		m_iCredit = Integer.parseInt(str);
 

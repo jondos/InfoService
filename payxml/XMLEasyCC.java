@@ -34,6 +34,14 @@ import org.w3c.dom.*;
 import anon.util.XMLUtil;
 /**
  * XML structure for a easy cost confirmation (without mircopayment function) which is sent to the AI by the Jap
+ * <CC version "1.0">
+ *   <AiID> ... </AiID>
+ * 	 <AccountNumber> ... </AccountNumber>
+ * 	 <TransferredBytes>... </TransferredBytes>
+ * 	 <Signature>
+ *    ... Signature des Kontoinhabers
+ *  </Signature>
+ * </CC>
  * @author Grischan Gl&auml;nzel
  */
 public class XMLEasyCC extends XMLDocument
@@ -59,15 +67,15 @@ public class XMLEasyCC extends XMLDocument
 		elemRoot.setAttribute("version","1.0");
 		m_theDocument.appendChild(elemRoot);
 
-		Element elem=m_theDocument.createElement("AIName");
+		Element elem=m_theDocument.createElement("AiID");
 		XMLUtil.setNodeValue(elem,aiName);
 		elemRoot.appendChild(elem);
 
-		elem=m_theDocument.createElement("Bytes");
+		elem=m_theDocument.createElement("TransferredBytes");
 		XMLUtil.setNodeValue(elem,Long.toString(transferred));
 		elemRoot.appendChild(elem);
 
-		elem=m_theDocument.createElement("Number");
+		elem=m_theDocument.createElement("AccountNumber");
 		XMLUtil.setNodeValue(elem,Long.toString(accountNumber));
 		elemRoot.appendChild(elem);
 	}
@@ -99,7 +107,7 @@ public class XMLEasyCC extends XMLDocument
 			throw new Exception();
 		}
 
-		NodeList nl = element.getElementsByTagName("AIName");
+		NodeList nl = element.getElementsByTagName("AiID");
 		if (nl.getLength() < 1)
 		{
 			throw new Exception();
@@ -109,7 +117,7 @@ public class XMLEasyCC extends XMLDocument
 		CharacterData chdata = (CharacterData) element.getFirstChild();
 		m_strAiName = chdata.getData();
 
-		nl = element.getElementsByTagName("Number");
+		nl = element.getElementsByTagName("AccountNumber");
 		if (nl.getLength() < 1)
 		{
 			throw new Exception();
@@ -118,7 +126,7 @@ public class XMLEasyCC extends XMLDocument
 		chdata = (CharacterData) element.getFirstChild();
 		m_lAccountNumber = Long.parseLong(chdata.getData());
 
-		nl = element.getElementsByTagName("Bytes");
+		nl = element.getElementsByTagName("TransferredBytes");
 		if (nl.getLength() < 1)
 		{
 			throw new Exception();
