@@ -20,6 +20,7 @@ import java.io.File;
 
 import JAPUtil;
 import JAPConstants;
+import JAPMessages;
 
 public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListener
   {
@@ -42,7 +43,7 @@ public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListe
       {
         //this.updateWizard = updateWizard;
         setIcon(JAPUtil.loadImageIcon(JAPConstants.DOWNLOADFN,false));
-        setPageTitle("Informationen zum Update");
+        setPageTitle(JAPMessages.getString("updateWelcomeWizardPageTitle"));
 
         GridBagLayout m_panelComponentsLayout = new GridBagLayout();
         GridBagConstraints m_panelConstraints = new GridBagConstraints();
@@ -50,7 +51,7 @@ public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListe
         m_panelComponents.setLayout(m_panelComponentsLayout);
 
 
-        JLabel label = new JLabel("<html>Um das Update auf eine andere Version durchführen zu können,<BR>werden noch einige Informationen benötigt.<BR>Unten sehen Sie, welches JAP-Programm aktualisiert wird.<BR>Bitte überprüfen Sie, dass es sich um die richtige Datei handelt<BR>bzw. ändern Sie dies entsprechend.</html>");
+        JLabel label = new JLabel(JAPMessages.getString("updateIntroductionMessage"));
         m_panelConstraints.weightx = 1.0;
         m_panelConstraints.weighty = 1.0;
         m_panelConstraints.gridx = 0;
@@ -72,7 +73,7 @@ public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListe
         m_tfJapPath.setText(System.getProperty("user.dir",""));
 
 
-        m_chooseFolder_bttn = new JButton("Durchsuchen");
+        m_chooseFolder_bttn = new JButton(JAPMessages.getString("updateM_chooseFolder_bttn"));
         m_panelConstraints.anchor = GridBagConstraints.EAST;
         m_panelConstraints.gridx = 1;
         m_panelConstraints.gridy = 1;
@@ -81,7 +82,7 @@ public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListe
         m_chooseFolder_bttn.addActionListener(this);
         m_chooseFolder_bttn.setActionCommand(COMMAND_SEARCH);
 
-        m_labelClickNext = new JLabel("<html>Nachdem sie die richtige Datei ausgewählt haben, klicken sie auf Next.</html>");
+        m_labelClickNext = new JLabel(JAPMessages.getString("updateM_labelClickNext"));
         m_panelConstraints.anchor = GridBagConstraints.WEST;
         m_panelConstraints.gridx = 0;
         m_panelConstraints.gridy = 2;
@@ -161,8 +162,8 @@ public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListe
           {
 
              //final JFileChooser m_fileChooser = new JFileChooser(System.getProperty("user.dir", ""));
-             m_fileChooser.setDialogTitle("Choose a File");
-             m_fileChooser.setApproveButtonText("Choose");
+             m_fileChooser.setDialogTitle(JAPMessages.getString("updateM_fileChooserTitle"));
+             m_fileChooser.setApproveButtonText(JAPMessages.getString("updateM_fileChooserApprove_bttn"));
              m_fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
              //m_fileChooser.setFileFilter(jarFileFilter);
              m_fileChooser.addChoosableFileFilter(jarFileFilter);
@@ -177,7 +178,7 @@ public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListe
                           {
                             m_fileChooser.cancelSelection();
 
-                            showInformationDialog("That's not a file.");
+                            showInformationDialog(JAPMessages.getString("updateM_fileChooserDialogNotAFile"));
                             m_tfJapPath.setText("");
                             checkPage = false;
 
@@ -186,7 +187,7 @@ public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListe
                            if(m_tfJapPath.getText().equals(""))
                               {
                                   m_fileChooser.cancelSelection();
-                                  showInformationDialog("This File does not exist");
+                                  showInformationDialog(JAPMessages.getString("updateM_fileChooserDialogFileNotExists"));
                                   m_tfJapPath.setText("");
                                   checkPage = false;
                               }else

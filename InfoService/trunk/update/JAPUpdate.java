@@ -35,6 +35,8 @@ import JAPUtil;
 import anon.infoservice.InfoService;
 import anon.infoservice.JAPVersionInfo;
 
+import JAPMessages;
+
 import javax.swing.JPanel;
 import javax.swing.JLabel;
 import javax.swing.JDialog;
@@ -95,7 +97,7 @@ public class JAPUpdate implements ActionListener,ItemListener,Runnable
         cButtons.fill=GridBagConstraints.NONE;
         cButtons.anchor=GridBagConstraints.WEST;
 
-        JButton bttnHelp = new JButton("Help");
+        JButton bttnHelp = new JButton(JAPMessages.getString("updateM_bttnHelp"));
         bttnHelp.addActionListener(this);
         bttnHelp.setActionCommand(COMMAND_HELP);
         gridBagPanel.setConstraints(bttnHelp,cButtons);
@@ -109,7 +111,7 @@ public class JAPUpdate implements ActionListener,ItemListener,Runnable
         m_bttnUpgrade.setEnabled(false);
         buttonPanel.add(m_bttnUpgrade);
 
-        JButton bttnAbort = new JButton("Close");
+        JButton bttnAbort = new JButton(JAPMessages.getString("updateM_bttnCancel"));
         bttnAbort.addActionListener(this);
         bttnAbort.setActionCommand(COMMAND_ABORT);
         cButtons.anchor=GridBagConstraints.EAST;
@@ -226,7 +228,7 @@ public class JAPUpdate implements ActionListener,ItemListener,Runnable
 
     public void run()
       {//Thread Run Loop for getting the Version Infos...
-        m_taInfo.setText("Fetching Version Info - Please wait...");
+        m_taInfo.setText(JAPMessages.getString("updateFetchVersionInfo"));
         InfoService infoService=japController.getInfoService();
         m_releaseVersion=infoService.getJAPVersionInfo(InfoService.JAP_RELEASE_VERSION);
         m_devVersion=infoService.getJAPVersionInfo(InfoService.JAP_DEVELOPMENT_VERSION);
