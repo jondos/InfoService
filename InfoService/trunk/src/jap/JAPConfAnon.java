@@ -508,7 +508,12 @@ class JAPConfAnon extends AbstractJAPConfModule
 		updateMixCascadeCombo();
 		if (!m_cbMixManual.isSelected()) //Auswahl is selected
 		{ //try to select the current MixCascade
+			try{
 			m_listMixCascade.setSelectedValue(mixCascade,true);
+			}
+			catch(Exception e)
+			{///@todo really undone work yet...
+			}
 		}
 	}
 
