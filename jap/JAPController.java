@@ -985,7 +985,7 @@ private final class SetAnonModeAsync implements Runnable
 									JAPSetAnonModeSplash.abort();
 									return;
 								}
-							if (ret==AnonProxy.E_BIND)
+							else if (ret==AnonProxy.E_BIND)
 								{
 									Object[] args={new Integer(JAPModel.getHttpListenerPortNumber())};
 									String msg=MessageFormat.format(JAPMessages.getString("errorListenerPort"),args);
@@ -995,6 +995,16 @@ private final class SetAnonModeAsync implements Runnable
 																								JOptionPane.ERROR_MESSAGE);
 									JAPDebug.out(JAPDebug.EMERG,JAPDebug.NET,"Listener could not be started!");
 									m_Controller.getView().disableSetAnonMode();
+								}
+							else if(ret==AnonProxy.E_MIX_PROTOCOL_NOT_SUPPORTED)
+								{
+									JOptionPane.showMessageDialog
+										(
+											getView(),
+											JAPMessages.getString("errorMixProtocolNotSupported"),
+											JAPMessages.getString("errorMixProtocolNotSupportedTitle"),
+											JOptionPane.ERROR_MESSAGE
+										);
 								}
 							else
 								{
