@@ -27,18 +27,6 @@
  */
 package pay;
 
-import java.util.*;
-import javax.xml.parsers.*;
-
-import javax.swing.*;
-import javax.swing.event.*;
-
-import org.w3c.dom.*;
-import anon.crypto.*;
-import anon.util.*;
-import jap.*;
-import logging.*;
-
 /**
  * This class contains the accounts configuration and the functionality to read
  * and write the configuration file. Because the configuration file contains
@@ -110,7 +98,8 @@ public class PayAccountsFile
 			{
 				if (ms_AccountsFile.m_bIsEncrypted)
 				{
-					LogHolder.log(LogLevel.DEBUG, LogType.PAY, "PayAccountsFile: isEncrypted.. calling doInit()");
+					LogHolder.log(LogLevel.DEBUG, LogType.PAY,
+								  "PayAccountsFile: isEncrypted.. calling doInit()");
 					ms_AccountsFile.doInit();
 				}
 			}
@@ -284,44 +273,44 @@ public class PayAccountsFile
 	 * Reads the accountsfile from disk. (Import Function)
 	 * @param fileName String
 	 */
-/*	public void readFromFile(String fileName) throws Exception
-	{
-		LogHolder.log(LogLevel.DEBUG, LogType.PAY,
-					  "pay.PayAccountsFile.readFromFile: Reading PayAccounts from file " + fileName);
-		// delete old accountdata
-		if (m_bIsInitialized)
-		{
-			m_Accounts.removeAllElements();
-			m_ActiveAccount = null;
-		}
+	/*	public void readFromFile(String fileName) throws Exception
+	 {
+	  LogHolder.log(LogLevel.DEBUG, LogType.PAY,
+		   "pay.PayAccountsFile.readFromFile: Reading PayAccounts from file " + fileName);
+	  // delete old accountdata
+	  if (m_bIsInitialized)
+	  {
+	   m_Accounts.removeAllElements();
+	   m_ActiveAccount = null;
+	  }
 
-		// read file from disk
-		File f = new File(fileName);
-		FileInputStream inStream = new FileInputStream(f);
-		m_TheDocument = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(inStream);
-		inStream.close();
-		m_bIsInitialized = true;
+	  // read file from disk
+	  File f = new File(fileName);
+	  FileInputStream inStream = new FileInputStream(f);
+	  m_TheDocument = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(inStream);
+	  inStream.close();
+	  m_bIsInitialized = true;
 
-		Element elemRoot = m_TheDocument.getDocumentElement();
-		Element elemAccountsFile = (Element) XMLUtil.getFirstChildByName(elemRoot, "PayAccountsFile");
-		if (elemAccountsFile == null)
-		{
-			elemAccountsFile = (Element) XMLUtil.getFirstChildByName(elemRoot, "EncryptedData");
-			if (elemAccountsFile == null)
-			{
-				throw new Exception("Wrong XML Format");
-			}
-			m_bIsEncrypted = true;
-		}
-		else
-		{
-			m_bIsEncrypted = false;
-		}
+	  Element elemRoot = m_TheDocument.getDocumentElement();
+	  Element elemAccountsFile = (Element) XMLUtil.getFirstChildByName(elemRoot, "PayAccountsFile");
+	  if (elemAccountsFile == null)
+	  {
+	   elemAccountsFile = (Element) XMLUtil.getFirstChildByName(elemRoot, "EncryptedData");
+	   if (elemAccountsFile == null)
+	   {
+		throw new Exception("Wrong XML Format");
+	   }
+	   m_bIsEncrypted = true;
+	  }
+	  else
+	  {
+	   m_bIsEncrypted = false;
+	  }
 
-		m_bFirstTime = true;
-		doInit();
-	}
-*/
+	  m_bFirstTime = true;
+	  doInit();
+	 }
+	 */
 	/**
 	 * Save the accountfile to disk (export function)
 	 *
@@ -330,31 +319,31 @@ public class PayAccountsFile
 	 * @param password String can be null if not encrypted
 	 * @throws Exception
 	 */
-/*	public void saveToFile(String fileName, boolean saveEncrypted, String password) throws Exception
-	{
-		LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Saving accountsfile to " + fileName + "...");
-		Document doc = constructXmlDocument(saveEncrypted, password);
+	/*	public void saveToFile(String fileName, boolean saveEncrypted, String password) throws Exception
+	 {
+	  LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Saving accountsfile to " + fileName + "...");
+	  Document doc = constructXmlDocument(saveEncrypted, password);
 
-		// convert it to a bytearray
-		byte[] xmlByteArray = XMLUtil.XMLDocumentToString(doc).getBytes();
+	  // convert it to a bytearray
+	  byte[] xmlByteArray = XMLUtil.XMLDocumentToString(doc).getBytes();
 
-		// encrypt the ByteArray using the supplied password
-		if (saveEncrypted)
-		{
-			if (password == null)
-			{
-				throw new Exception("Cannot encrypt with null password");
-			}
-			// TODO: Implement encryption
-		}
+	  // encrypt the ByteArray using the supplied password
+	  if (saveEncrypted)
+	  {
+	   if (password == null)
+	   {
+		throw new Exception("Cannot encrypt with null password");
+	   }
+	   // TODO: Implement encryption
+	  }
 
-		// and finally save to disk
-		FileOutputStream outStream = new FileOutputStream(fileName);
-		outStream.write(xmlByteArray);
-		outStream.flush();
-		outStream.close();
-		LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Saving Was successful");
-	}*/
+	  // and finally save to disk
+	  FileOutputStream outStream = new FileOutputStream(fileName);
+	  outStream.write(xmlByteArray);
+	  outStream.flush();
+	  outStream.close();
+	  LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Saving Was successful");
+	 }*/
 
 	/**
 	 * constructs the xml structure
@@ -659,10 +648,9 @@ public class PayAccountsFile
 
 	private Vector m_changeListeners = new Vector();
 
-
 	public void addChangeListener(ChangeListener listener)
 	{
-		synchronized(m_changeListeners)
+		synchronized (m_changeListeners)
 		{
 			if (listener != null)
 			{
@@ -673,9 +661,10 @@ public class PayAccountsFile
 
 	private void fireChangeEvent(Object source)
 	{
-		synchronized(m_changeListeners)
+		synchronized (m_changeListeners)
 		{
-			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "PayAccountsFile: FireChangeEvent....................................");
+			LogHolder.log(LogLevel.DEBUG, LogType.PAY,
+						  "PayAccountsFile: FireChangeEvent....................................");
 			Enumeration enumListeners = m_changeListeners.elements();
 			ChangeEvent e = new ChangeEvent(source);
 			while (enumListeners.hasMoreElements())

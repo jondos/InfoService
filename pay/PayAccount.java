@@ -27,18 +27,6 @@
  */
 package pay;
 
-import java.io.*;
-import java.math.*;
-import java.util.*;
-
-import javax.swing.event.*;
-
-import org.w3c.dom.*;
-import anon.crypto.*;
-import anon.util.*;
-import logging.*;
-import payxml.*;
-
 /**
  *  Diese Klasse ist f?r die verwaltung eines Accounts zut?ndig, sie kapselt eine XML Struktur innerhalb der Klasse
  *	und Mithilfe von Klassen des payxml Packages
@@ -70,7 +58,6 @@ public class PayAccount extends XMLDocument
 	/** the signing instance */
 	private JAPSignature m_signingInstance;
 
-
 	public PayAccount(byte[] xmlData) throws Exception
 	{
 		Document doc = getDocumentBuilder().parse(new ByteArrayInputStream(xmlData));
@@ -89,10 +76,9 @@ public class PayAccount extends XMLDocument
 		setValues(elemRoot);
 	}
 
-
 	private void setValues(Element elemRoot) throws Exception
 	{
-		if( !(elemRoot.getTagName().equals("Account") && (elemRoot.getAttribute("version").equals("1.0"))))
+		if (! (elemRoot.getTagName().equals("Account") && (elemRoot.getAttribute("version").equals("1.0"))))
 		{
 			throw new Exception("PayAccount wrong XML format");
 		}
@@ -113,7 +99,7 @@ public class PayAccount extends XMLDocument
 
 		// set account info
 		Element elemAccInfo = (Element) XMLUtil.getFirstChildByName(elemRoot, "AccountInfo");
-		if(elemAccInfo!=null)
+		if (elemAccInfo != null)
 		{
 			m_accountInfo = new XMLAccountInfo(elemAccInfo, null);
 		}
@@ -243,7 +229,8 @@ public class PayAccount extends XMLDocument
 		// add transfer certificates
 		Element elemTransCerts = doc.createElement("TransferCertificates");
 		elemRoot.appendChild(elemTransCerts);
-		if(m_transCerts!=null) {
+		if (m_transCerts != null)
+		{
 			Enumeration enumer = m_transCerts.elements();
 			while (enumer.hasMoreElements())
 			{
@@ -296,9 +283,6 @@ public class PayAccount extends XMLDocument
 		m_accountInfo = info;
 //		getDomDocument();
 	}
-
-
-
 
 	private void setRSAPrivateKey() throws Exception
 	{
@@ -409,7 +393,6 @@ public class PayAccount extends XMLDocument
 		return 0L;
 	}
 
-
 	/**
 	 * Liefert das noch verbleibene Guthaben.
 	 *
@@ -465,10 +448,9 @@ public class PayAccount extends XMLDocument
 
 	private Vector m_changeListeners = new Vector();
 
-
 	public void addChangeListener(ChangeListener listener)
 	{
-		synchronized(m_changeListeners)
+		synchronized (m_changeListeners)
 		{
 			if (listener != null)
 			{
@@ -479,7 +461,7 @@ public class PayAccount extends XMLDocument
 
 	private void fireChangeEvent(Object source)
 	{
-		synchronized(m_changeListeners)
+		synchronized (m_changeListeners)
 		{
 			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "PayAccountsFile: FireChangeEvent..");
 			Enumeration enumListeners = m_changeListeners.elements();

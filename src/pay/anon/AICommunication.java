@@ -27,23 +27,6 @@
  */
 package pay.anon;
 
-import java.io.DataInputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-
-import anon.AnonChannel;
-import anon.AnonService;
-import anon.infoservice.MixCascade;
-import anon.infoservice.StatusInfo;
-import anon.server.AnonServiceImpl;
-import pay.Pay;
-import pay.PayAccount;
-import pay.PayAccountsFile;
-import payxml.XMLAccountInfo;
-import payxml.XMLPayRequest;
-import logging.*;
-
-
 /**
  * Die gesammt Kommunikation zwischen Pay und AI (welche ja ein Teil der Mix-Kaskade sind). L\uFFFDuft als eigener Thread
  * beim erzeugen wird eine AI Channel ge\uFFFDffnet. Beim starten des Threads wird festgestellt ob die AI bezahlt werden will etc.
@@ -156,27 +139,27 @@ public class AICommunication extends Thread
 //		send(getSignedCC(request));
 	}
 
-/*	public String getSignedCC(XMLPayRequest request)
-	{
-		XMLEasyCC cc = Pay.getInstance().addCosts(request.aiName, Pay.getInstance().getUsedAccount(),
-												  countLastTransferredBytes());
-		try
-		{
-			JAPSignature sig = new JAPSignature();
-			sig.initSign(Pay.getInstance().getAccount(Pay.getInstance().getUsedAccount()).getPrivateKey());
-			sig.signXmlDoc(cc.getDomDocument());
-			return XMLUtil.XMLDocumentToString(cc.getDomDocument());
-		}
-		catch (java.security.SignatureException e)
-		{
-			e.printStackTrace();
-		}
-		catch (java.lang.Exception e)
-		{
-			e.printStackTrace();
-		}
-		return null;
-	}*/
+	/*	public String getSignedCC(XMLPayRequest request)
+	 {
+	  XMLEasyCC cc = Pay.getInstance().addCosts(request.aiName, Pay.getInstance().getUsedAccount(),
+				  countLastTransferredBytes());
+	  try
+	  {
+	   JAPSignature sig = new JAPSignature();
+	   sig.initSign(Pay.getInstance().getAccount(Pay.getInstance().getUsedAccount()).getPrivateKey());
+	   sig.signXmlDoc(cc.getDomDocument());
+	   return XMLUtil.XMLDocumentToString(cc.getDomDocument());
+	  }
+	  catch (java.security.SignatureException e)
+	  {
+	   e.printStackTrace();
+	  }
+	  catch (java.lang.Exception e)
+	  {
+	   e.printStackTrace();
+	  }
+	  return null;
+	 }*/
 
 	public void end()
 	{
@@ -251,11 +234,13 @@ public class AICommunication extends Thread
 			}
 			if (request.balanceNeeded.equals(XMLPayRequest.NEW))
 			{
-				XMLAccountInfo info=null;
-				try {
+				XMLAccountInfo info = null;
+				try
+				{
 					info = Pay.getInstance().fetchAccountInfo(activeAccount.getAccountNumber());
 				}
-				catch(Exception e) {}
+				catch (Exception e)
+				{}
 				send(info.getXMLString());
 				// hier soll die BI neu kontaktiert werden.
 			}

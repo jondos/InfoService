@@ -28,8 +28,6 @@
 
 package pay.util;
 
-import jap.JAPMessages;
-
 public final class PayText
 {
 
