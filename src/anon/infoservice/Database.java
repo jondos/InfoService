@@ -192,11 +192,12 @@ public final class Database implements Runnable
 						m_serviceDatabase.get(m_timeoutList.firstElement()))).getExpireTime())
 					{
 						/* we remove the old entry now, because it has reached the expire time */
+						DatabaseEntry entry=(DatabaseEntry)m_timeoutList.firstElement();
 						LogHolder.log(LogLevel.INFO, LogType.MISC,
-									  "DatabaseEntry " +
-									  ( (DatabaseEntry) (m_serviceDatabase.get(m_timeoutList.firstElement()))).
+									  "DatabaseEntry ("+entry.getClass().toString()+")" +
+									  ( (DatabaseEntry) (m_serviceDatabase.get(entry))).
 									  getId() + " has reached the expire time and is removed.");
-						m_serviceDatabase.remove(m_timeoutList.firstElement());
+						m_serviceDatabase.remove(entry);
 						m_timeoutList.removeElementAt(0);
 					}
 					else
