@@ -27,6 +27,7 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 */
 package anon;
 import java.io.InputStream;
+import JAPDebug;
 
 public class JAPAnonChannel extends Thread 
 	{ 
