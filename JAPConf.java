@@ -52,7 +52,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.JFrame;
 import anon.JAPAnonService;
-/*sk13*/import update.*;
+/*sk13*///import update.*;
 final class JAPConf extends JDialog
 	{
 
