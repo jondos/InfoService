@@ -355,24 +355,18 @@ public final class JAPController implements ProxyListener
 				mbGoodByMessageNeverRemind = XMLUtil.parseNodeBoolean(n.getNamedItem("neverRemindGoodBye"), false);
 
 				/* infoservice configuration options */
-				String infoOptionsString = root.getAttribute("infoServiceDisabled");
-				if (!infoOptionsString.equals(""))
-				{
-					setInfoServiceDisabled(Boolean.valueOf(infoOptionsString).booleanValue());
-				}
-				infoOptionsString = root.getAttribute("infoServiceChange");
-				if (!infoOptionsString.equals(""))
-				{
-					InfoServiceHolder.getInstance().setChangeInfoServices(Boolean.valueOf(infoOptionsString).
-						booleanValue());
-				}
-				infoOptionsString = root.getAttribute("infoServiceTimeout");
+				boolean b=XMLUtil.parseNodeBoolean(n.getNamedItem("infoServiceDisabled"),
+					JAPModel.isInfoServiceDisabled());
+				setInfoServiceDisabled(b);
+				b=XMLUtil.parseNodeBoolean(n.getNamedItem("infoServiceChange"),
+					InfoServiceHolder.getInstance().isChangeInfoServices());
+					InfoServiceHolder.getInstance().setChangeInfoServices(b);
+				int i=XMLUtil.parseNodeInt(n.getNamedItem("infoServiceTimeout"),-1);
 				try
 				{
-					int infoServiceTimeout = Integer.parseInt(infoOptionsString);
-					if ( (infoServiceTimeout >= 1) && (infoServiceTimeout <= 60))
+					if ( (i >= 1) && (i <= 60))
 					{
-						HTTPConnectionFactory.getInstance().setTimeout(infoServiceTimeout);
+						HTTPConnectionFactory.getInstance().setTimeout(i);
 					}
 				}
 				catch (Exception e)
@@ -491,7 +485,7 @@ public final class JAPController implements ProxyListener
 				{
 					String lf = XMLUtil.parseNodeString(n.getNamedItem("LookAndFeel"), "unknown");
 					LookAndFeelInfo[] lfi = UIManager.getInstalledLookAndFeels();
-					for (int i = 0; i < lfi.length; i++)
+					for ( i = 0; i < lfi.length; i++)
 					{
 						if (lfi[i].getName().equals(lf) || lfi[i].getClassName().equals(lf))
 						{
