@@ -90,8 +90,8 @@ final class JAPConf extends JDialog
 	final static public int INFO_TAB = 2;
 	final static public int ANON_TAB = 3;
 	final static public int CERT_TAB = 4;
-	final static public int KONTO_TAB = 5;
-	final static public int MISC_TAB = 6;
+	final static public int MISC_TAB = 5;
+	final static public int KONTO_TAB = 6;
 
 	private static JAPConf japConfInstance = null;
 
@@ -194,11 +194,6 @@ final class JAPConf extends JDialog
 		m_pInfo = buildInfoServicePanel();
 		m_pMix = buildAnonPanel();
 		m_pCert = buildCertPanel();
-		if (loadPay)
-		{
-			m_pKonto = new pay.view.PayView();
-			m_Tabs.addTab(pay.util.PayText.get("confAccountTab"), null, m_pKonto);
-		}
 		m_pMisc = buildMiscPanel();
 		m_Tabs.addTab(JAPMessages.getString("confListenerTab"), null, m_pPort);
 		m_Tabs.addTab(JAPMessages.getString("confProxyTab"), null, m_pFirewall);
@@ -209,6 +204,11 @@ final class JAPConf extends JDialog
 		{
 			m_Tabs.addTab(JAPMessages.getString("confMiscTab"), null, m_pMisc);
 
+		}
+		if (loadPay)
+		{
+			m_pKonto = new pay.view.PayView();
+			m_Tabs.addTab(pay.util.PayText.get("confAccountTab"), null, m_pKonto);
 		}
 		JPanel buttonPanel = new JPanel();
 		buttonPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
