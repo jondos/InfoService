@@ -367,13 +367,15 @@ final public class JAPUtil
 			{
 				try
 				{
-					//we have to chek, if the file exist, because new ImageIcon(String) will always success!!!
+					//we have to chek, if the file exist, because new new File will always success!!!
 					File f = new File(strRessource);
 					if (f.canRead())
 					{
 						in = new FileInputStream(f);
 						len = (int) f.length();
 					}
+					else
+						return null;
 				}
 				catch (Exception e1)
 				{

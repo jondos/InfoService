@@ -28,9 +28,7 @@
 package jarify;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Enumeration;
@@ -43,7 +41,7 @@ import java.util.zip.ZipFile;
  * This class warps a jar file. <br>
  * It provides methods for reading the files containing in the jar file.
  */
-public class JarFile implements JarConstants
+final class JarFile
 {
 	//~ Instance variables ·······························································
 
@@ -70,33 +68,11 @@ public class JarFile implements JarConstants
 	 * @throws IOException
 	 * @throws SecurityException
 	 */
-	public JarFile(String name) throws ZipException, IOException, SecurityException
+	public JarFile(File file) throws ZipException, IOException, SecurityException
 	{
-		URL url = null;
 
-		// check if we have an URL
-		try
-		{
-			url = new URL(name);
-		}
-		catch (MalformedURLException e)
-		{} // we have no URL, so try to read a local file
-
-		if (url != null)
-		{
-			readURL(url);
-		}
-		else
-		{
-			// open only jar files
-			if (!name.toLowerCase().endsWith(".jar"))
-			{
-				throw new IOException("Not a JAR File");
-			}
-
-			// open the jar file
-			jarFile = new ZipFile(name);
-		}
+		// open the jar file
+		jarFile = new ZipFile(file);
 
 		// get the fully qualified file name
 		this.name = jarFile.getName();
@@ -106,55 +82,13 @@ public class JarFile implements JarConstants
 	}
 
 	/**
-	 * Constructor-Helper method.
-	 * If an exception occurs, the jar file could not be opened and read.
-	 *
-	 * @param url the url of the jar file
-	 * @throws ZipException
-	 * @throws IOException
-	 * @throws SecurityException
-	 */
-	private void readURL(URL url) throws ZipException, IOException, SecurityException
-	{
-		System.out.print("Downloading file...");
-		InputStream in = url.openStream();
-
-		File f = new File("magictmp.jar");
-
-		if (f.exists())
-		{
-			f.delete();
-
-		}
-		FileOutputStream fout = new FileOutputStream(f);
-
-		byte[] buffer = new byte[65536];
-		int readBytes = 0;
-
-		// read the entire file
-		while ( (readBytes = in.read(buffer, 0, buffer.length)) > 0)
-		{
-			fout.write(buffer, 0, readBytes);
-		}
-
-		fout.close();
-
-		// open the jar file
-		jarFile = new ZipFile(f);
-
-		System.out.println("ready");
-	}
-
-	//~ Methods ·······························································
-
-	/**
 	 * Opens the jar file and read the manifest.
 	 *
 	 * @throws IOException if jar file could not be read
 	 */
 	private void init() throws IOException
 	{
-		ZipEntry mf = jarFile.getEntry(MANIFEST_FILE);
+		ZipEntry mf = jarFile.getEntry(JarConstants.MANIFEST_FILE);
 
 		if (mf != null)
 		{
@@ -192,7 +126,7 @@ public class JarFile implements JarConstants
 	 */
 	public JarSignatureFile getSignatureFile(String alias)
 	{
-		ZipEntry sigFile = jarFile.getEntry(META_INF_DIR + "/" + alias + ".SF");
+		ZipEntry sigFile = jarFile.getEntry(JarConstants.META_INF_DIR + "/" + alias + ".SF");
 
 		try
 		{
@@ -204,7 +138,6 @@ public class JarFile implements JarConstants
 		}
 		catch (IOException ex)
 		{
-			ex.printStackTrace();
 		}
 
 		return null;
@@ -229,7 +162,7 @@ public class JarFile implements JarConstants
 
 			try
 			{ // add a SignaturBlockFile that maps to the filter
-				if (fileEntry.getName().startsWith(META_INF_DIR + "/" + alias)
+				if (fileEntry.getName().startsWith(JarConstants.META_INF_DIR + "/" + alias)
 					&& (fileEntry.getName().toUpperCase().endsWith(alias + ".DSA") ||
 						fileEntry.getName().toUpperCase().endsWith(alias + ".RSA")))
 				{
@@ -240,7 +173,6 @@ public class JarFile implements JarConstants
 			}
 			catch (IOException ex)
 			{
-				ex.printStackTrace();
 			}
 		}
 
@@ -266,7 +198,7 @@ public class JarFile implements JarConstants
 
 			try
 			{ // add a SignaturBlockFile that maps to the filter
-				if (fileEntry.getName().startsWith(META_INF_DIR + "/" + alias) &&
+				if (fileEntry.getName().startsWith(JarConstants.META_INF_DIR + "/" + alias) &&
 					!fileEntry.getName().toLowerCase().endsWith(".sf"))
 				{
 					sigBlockFiles.addElement(new JarFileEntry(fileEntry.getName(),
@@ -276,7 +208,6 @@ public class JarFile implements JarConstants
 			}
 			catch (IOException ex)
 			{
-				ex.printStackTrace();
 			}
 		}
 
@@ -337,7 +268,6 @@ public class JarFile implements JarConstants
 		}
 		catch (IOException ex)
 		{
-			ex.printStackTrace();
 		}
 
 		return null;
@@ -374,7 +304,8 @@ public class JarFile implements JarConstants
 			if (pos != -1)
 			{
 				// find all signature file entries in META-INF directory
-				if (name.substring(0, pos).equals(META_INF_DIR) && name.toLowerCase().endsWith(".sf"))
+				if (name.substring(0, pos).equals(JarConstants.META_INF_DIR) &&
+					name.toLowerCase().endsWith(".sf"))
 				{
 					alias.addElement(name.substring(pos + 1, name.length() - 3));
 				}
@@ -394,17 +325,10 @@ public class JarFile implements JarConstants
 		try
 		{
 			jarFile.close();
-			File f = new File("magictmp.jar");
-			if (f.exists())
-			{
-				f.delete();
-
-			}
 			return true;
 		}
 		catch (IOException ex)
 		{
-			ex.printStackTrace();
 		}
 
 		return false;

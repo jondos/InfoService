@@ -30,7 +30,7 @@ package jarify;
 /**
  * Defines some usefull gloabal constants.
  */
-public interface JarConstants
+final class JarConstants
 {
 	//~ Static variables/initializers ····················································
 
@@ -103,6 +103,6 @@ public interface JarConstants
 	 /**
 	  * Maximum size in bytes of a certificate
 	  *-/
-	   public final static int MAX_CERT_SIZE		= 1048576;
+		public final static int MAX_CERT_SIZE		= 1048576;
 	  */
 }

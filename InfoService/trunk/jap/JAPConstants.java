@@ -150,4 +150,5 @@ public final class JAPConstants
 
 	public final static String CERTSPATH = "certificates/";
 	public final static String TRUSTEDROOTCERT = "japroot.cer";
+	public final static String CERT_JAPCODESIGNING = "japcodesigning.cer";
 }

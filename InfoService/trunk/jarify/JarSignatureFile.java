@@ -32,7 +32,7 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Vector;
 
-public class JarSignatureFile extends JarManifest
+final class JarSignatureFile extends JarManifest
 {
 	private Hashtable manifestdigests = new Hashtable();
 
@@ -58,7 +58,8 @@ public class JarSignatureFile extends JarManifest
 		int contPos;
 
 		// get the manifest digest
-		String header = contentStrRaw.substring(0, contentStrRaw.indexOf(newLine + MANIFEST_ENTRY));
+		String header = contentStrRaw.substring(0,
+												contentStrRaw.indexOf(newLine + JarConstants.MANIFEST_ENTRY));
 
 		while ( (contPos = header.indexOf(newLine + " ")) != -1)
 		{

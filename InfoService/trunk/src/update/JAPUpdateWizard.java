@@ -48,7 +48,8 @@ import jap.JAPUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-
+import jarify.*;
+import jap.*;
 public final class JAPUpdateWizard extends BasicWizard implements Runnable
 {
 	public JAPWelcomeWizardPage welcomePage;
@@ -147,7 +148,7 @@ public final class JAPUpdateWizard extends BasicWizard implements Runnable
 			resetChanges();
 			return;
 		}
-		// Step 2
+		// Step 2 - download (either full or incremental)
 		if (downloadUpdate() != 0)
 		{
 			if (!updateAborted)
@@ -157,11 +158,13 @@ public final class JAPUpdateWizard extends BasicWizard implements Runnable
 			resetChanges();
 			return;
 		}
-		//Step 3 or 3'
+		//Step 3 or 3' save new JAP.jar (probably with incremental changes)
 		if (welcomePage.isIncrementalUpdate())
 		{
 			if (applyJARDiffJAPJar() != 0)
 			{
+				downloadPage.showInformationDialog(JAPMessages.getString("updateInformationMsgStep3"));
+				resetChanges();
 				return;
 			}
 		}
@@ -173,6 +176,13 @@ public final class JAPUpdateWizard extends BasicWizard implements Runnable
 				resetChanges();
 				return;
 			}
+		}
+		//Step 4 - check signature
+		if(checkSignature()!=0)
+		{
+			downloadPage.showInformationDialog(JAPMessages.getString("updateInformationMsgStep4"));
+			resetChanges();
+			return;
 		}
 		// Step 5
 		if (overwriteJapJar() != 0)
@@ -553,8 +563,6 @@ public final class JAPUpdateWizard extends BasicWizard implements Runnable
 			return -1;
 		}
 		downloadPage.m_labelIconStep2.setIcon(downloadPage.arrow);
-		int retDownload = -1;
-		int aktPos = 0;
 		try
 		{
 			JapDownloadManager downloadManager = new JapDownloadManager(jarUrl);
@@ -638,6 +646,15 @@ public final class JAPUpdateWizard extends BasicWizard implements Runnable
 		}
 
 	}
+
+/////////////////////////////////////////////////////////////////////////////////
+//Step 4 check the signature of the downloaded file
+private int checkSignature()
+{
+	if(JarVerifier.verify(m_fileNewJapJar,JAPModel.getJAPCodeSigningCert()))
+		return 0;
+	return -1;
+}
 
 /////////////////////////////////////////////////////////////////////////////////
 	//Step 5 create the new JAP.jar-File by overwriting the oldFile by the new downloaded file

@@ -27,23 +27,19 @@
  */
 package jarify;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.io.File;
 import java.security.SignatureException;
 import java.util.Hashtable;
 import java.util.Vector;
 import org.bouncycastle.crypto.Digest;
 import org.bouncycastle.util.encoders.Base64;
 import anon.crypto.JAPCertificate;
+import logging.*;
 
 /**
  * Verfies the authencity of a signed jar file.
  */
-public class JarVerifier implements JarConstants
+final public class JarVerifier
 {
 	/** The JarFile to authenticate to */
 	private JarFile jarFile;
@@ -60,9 +56,6 @@ public class JarVerifier implements JarConstants
 	/** Contains the signature block file (as PKCS#7) for each alias */
 	private Hashtable aliasSBF = new Hashtable();
 
-	/** Debugging? */
-	private boolean debug = false;
-
 	//~ Constructors ·····································································
 
 	/**
@@ -70,31 +63,26 @@ public class JarVerifier implements JarConstants
 	 *
 	 * @param jarFilePath the JarFile to verify
 	 */
-	public JarVerifier(String jarFilePath)
+	private JarVerifier(File jarFile)
 	{
-		debug = false;
 		cer = null;
 		try
 		{
 			//java.security.Security.addProvider( new BouncyCastleProvider() );
-			this.jarFile = new JarFile(jarFilePath);
+			this.jarFile = new JarFile(jarFile);
 			manifest = this.jarFile.getManifest();
 		}
 		catch (Exception ex)
 		{
-			ex.printStackTrace();
 		}
 	}
 
-	//~ Methods ··········································································
-
-	/**
-	 * Has to be called on finishing the verification in order to remove temporary data.
-	 */
-	public void finish()
+	private void close()
 	{
 		jarFile.close();
 	}
+
+	//~ Methods ··········································································
 
 	/**
 	 * Initializes the aliasSBF Hashtable and removes the aliases which cannot be<br>
@@ -120,10 +108,7 @@ public class JarVerifier implements JarConstants
 				continue;
 			}
 
-			if (debug)
-			{
-				System.out.println("Checking certificate chain for alias: " + alias);
-			}
+			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Checking certificate chain for alias: " + alias);
 
 			try
 			{
@@ -131,18 +116,12 @@ public class JarVerifier implements JarConstants
 			}
 			catch (Exception ex)
 			{
-				if (debug)
-				{
-					ex.printStackTrace();
-				}
+				LogHolder.log(LogLevel.DEBUG, LogType.MISC, ex.getMessage());
 				continue;
 			}
 			if (block == null)
 			{
-				if (debug)
-				{
-					System.out.println("Could not get PKCS#7 data object!");
-				}
+				LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Could not get PKCS#7 data object!");
 				continue;
 			}
 
@@ -159,10 +138,7 @@ public class JarVerifier implements JarConstants
 			}
 			catch (Exception ex)
 			{
-				if (debug)
-				{
-					System.out.println(ex);
-				}
+				LogHolder.log(LogLevel.DEBUG, LogType.MISC, ex.getMessage());
 				continue;
 			}
 
@@ -171,23 +147,14 @@ public class JarVerifier implements JarConstants
 				// Validate the certificate chain
 				for (int j = 0; j < certs.length - 1; j++)
 				{
-					if (debug)
-					{
-						System.out.println("Checking certificate No. : " + j + 1);
-					}
+					LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Checking certificate No. : " + j + 1);
 					certs[j].verify(certs[j + 1].getPublicKey());
-					if (debug)
-					{
-						System.out.println("Certificate No. " + j + 1 + " verified OK.");
-					}
+					LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Certificate No. " + j + 1 + " verified OK.");
 				}
 			}
 			catch (Exception ex)
 			{
-				if (debug)
-				{
-					System.out.println(ex);
-				}
+				LogHolder.log(LogLevel.DEBUG, LogType.MISC, ex.getMessage());
 				continue;
 			}
 
@@ -195,6 +162,14 @@ public class JarVerifier implements JarConstants
 			cerAliases.addElement(alias);
 		}
 		return cerAliases;
+	}
+
+	public static boolean verify(File file, JAPCertificate cert)
+	{
+		JarVerifier jv = new JarVerifier(file);
+		boolean b = jv.verify(cert);
+		jv.close();
+		return b;
 	}
 
 	/**
@@ -207,7 +182,7 @@ public class JarVerifier implements JarConstants
 	 * @param  cert Path to the certificate
 	 * @return True if the JarFile is valid, false otherwise
 	 */
-	public boolean verify(JAPCertificate cert)
+	private boolean verify(JAPCertificate cert)
 	{
 
 		cer = cert;
@@ -223,44 +198,29 @@ public class JarVerifier implements JarConstants
 		  {
 		   if (debug)
 		   {
-			System.out.println(ex.getMessage());
+		 System.out.println(ex.getMessage());
 		   }
 		   return false;
 		  }*/
-		if (debug)
-		{
-			System.out.println("Searching for Signatures...");
-		}
+		LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Searching for Signatures...");
 		if (!isSignedJar())
 		{
 			return false;
 		}
-		if (debug)
-		{
-			System.out.println("This is a signed Jarfile.\n");
-		}
+		LogHolder.log(LogLevel.DEBUG, LogType.MISC, "This is a signed Jarfile.\n");
 
-		if (debug)
-		{
-			System.out.println("Verifying Manifest entries...");
-		}
+		LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Verifying Manifest entries...");
 		if (!verifyManifestDigests())
 		{
 			return false;
 		}
-		if (debug)
-		{
-			System.out.println("Manifest entries verified OK.\n");
-		}
+		LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Manifest entries verified OK.\n");
 
 		Vector cerAliases = InitAliases(jarFile.getAliasList());
 		if (cerAliases.size() < 1)
 		{
-			if (debug)
-			{
-				System.out.println(
-					"\nNo Aliases present that can be validated with the given root certificate!\n");
-			}
+			LogHolder.log(LogLevel.DEBUG, LogType.MISC,
+						  "\nNo Aliases present that can be validated with the given root certificate!\n");
 			return false;
 		}
 
@@ -271,38 +231,24 @@ public class JarVerifier implements JarConstants
 			alias = (String) cerAliases.elementAt(n);
 			if ( (alias == null) || (alias == ""))
 			{
-				if (debug)
-				{
-					System.out.print("\nAlias error");
-				}
+				LogHolder.log(LogLevel.DEBUG, LogType.MISC, "\nAlias error");
 				return false;
 			}
 
-			if (debug)
-			{
-				System.out.println("Verifying Signature File entries for alias \"" + alias + "\"...");
-			}
+			LogHolder.log(LogLevel.DEBUG, LogType.MISC,
+						  "Verifying Signature File entries for alias \"" + alias + "\"...");
 			if (!verifySFDigests(alias))
 			{
 				return false;
 			}
-			if (debug)
-			{
-				System.out.println("Entries verified OK.");
-			}
+			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Entries verified OK.");
 
-			if (debug)
-			{
-				System.out.println("Verifying Signature for alias \"" + alias + "\"...");
-			}
+			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Verifying Signature for alias \"" + alias + "\"...");
 			if (!verifySignature(alias))
 			{
 				return false;
 			}
-			if (debug)
-			{
-				System.out.println("Signature from \"" + alias + "\" is genuine.\n");
-			}
+			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Signature from \"" + alias + "\" is genuine.\n");
 		}
 
 		return true;
@@ -315,7 +261,7 @@ public class JarVerifier implements JarConstants
 	 * @return True if all signatures from this entity could be verified,<br>
 	 * False otherwise
 	 */
-	public boolean verifySignature(String alias)
+	private boolean verifySignature(String alias)
 	{
 		boolean sig_ok = false;
 		JarSignatureFile sf = jarFile.getSignatureFile(alias);
@@ -337,11 +283,10 @@ public class JarVerifier implements JarConstants
 		String sbfName = sbf.getName();
 		if (sbfName.endsWith(".DSA") || sbfName.endsWith(".RSA"))
 		{
-			if (debug)
-			{
-				System.out.println("Found " + sbfName.substring(sbfName.lastIndexOf(".") + 1)
-								   + " signature in : " + sbfName);
-			}
+			LogHolder.log(LogLevel.DEBUG, LogType.MISC,
+						  "Found " + sbfName.substring(sbfName.lastIndexOf(".") + 1)
+						  + " signature in : " + sbfName);
+
 			try
 			{
 				/*
@@ -360,16 +305,12 @@ public class JarVerifier implements JarConstants
 				sig_ok = block.verify(sfBytes);
 				if (!sig_ok)
 				{
-					if (debug)
-					{
-						System.out.println("\nWrong Signature in " + sbfName);
-					}
+					LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Wrong Signature in " + sbfName);
+
 					return false;
 				}
-				if (debug)
-				{
-					System.out.println("Signature in " + sbfName + " verified OK.");
-				}
+				LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Signature in " + sbfName + " verified OK.");
+
 			}
 			catch (SignatureException ex)
 			{
@@ -420,7 +361,7 @@ public class JarVerifier implements JarConstants
 	 * - if at least one Signature Block file for each SF exists
 	 * @return True if this jarFile is signed, False otherwise
 	 */
-	public boolean isSignedJar()
+	private boolean isSignedJar()
 	{
 		Vector aliases = jarFile.getAliasList();
 		String[] algs = new String[2];
@@ -435,7 +376,7 @@ public class JarVerifier implements JarConstants
 			return false;
 		}
 
-		if (!jarFile.fileExists(MANIFEST_FILE))
+		if (!jarFile.fileExists(JarConstants.MANIFEST_FILE))
 		{
 			return false;
 		}
@@ -443,7 +384,7 @@ public class JarVerifier implements JarConstants
 		for (int i = 0; i < aliases.size(); i++)
 		{
 			found = false;
-			name = META_INF_DIR + "/" + aliases.elementAt(i);
+			name = JarConstants.META_INF_DIR + "/" + aliases.elementAt(i);
 			name = name.toUpperCase();
 			for (int j = 0; j < algs.length; j++)
 			{
@@ -470,7 +411,7 @@ public class JarVerifier implements JarConstants
 	 * @param alias Specfies the signature file for the given alias
 	 * @return True if validated
 	 */
-	public boolean verifySFDigests(String alias)
+	private boolean verifySFDigests(String alias)
 	{
 		JarSignatureFile signatureFile = jarFile.getSignatureFile(alias);
 
@@ -497,10 +438,7 @@ public class JarVerifier implements JarConstants
 				byte[] manifestContent = manifest.getContent();
 				if (manifestContent == null)
 				{
-					if (debug)
-					{
-						System.out.println("Manifest file null.");
-					}
+					LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Manifest file null.");
 					return false;
 				}
 				digest.update(manifestContent, 0, manifestContent.length);
@@ -509,16 +447,12 @@ public class JarVerifier implements JarConstants
 				// verify the digest
 				if (!manDigest.equals(new String(Base64.encode(hash))))
 				{
-					if (debug)
-					{
-						System.out.println("Digest verify failed for manifest file.");
-					}
+					LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Digest verify failed for manifest file.");
 					return false;
 				}
 			}
 			catch (Exception e)
 			{
-				e.printStackTrace();
 				return false;
 			}
 		}
@@ -551,18 +485,14 @@ public class JarVerifier implements JarConstants
 					// compare the digests
 					if (!sigDigest.equals(new String(Base64.encode(sha1))))
 					{
-						if (debug)
-						{
-							System.out.println("Digest verify failed for " + fileName);
-							System.out.println(digString);
-							System.out.println(sigDigest);
-							return false;
-						}
+						LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Digest verify failed for " + fileName);
+						LogHolder.log(LogLevel.DEBUG, LogType.MISC, digString);
+						LogHolder.log(LogLevel.DEBUG, LogType.MISC, sigDigest);
+						return false;
 					}
 				}
 				catch (Exception e)
 				{
-					e.printStackTrace();
 					return false;
 				}
 			}
@@ -576,7 +506,7 @@ public class JarVerifier implements JarConstants
 	 *
 	 * @return True is validated, false otherwise
 	 */
-	public boolean verifyManifestDigests()
+	private boolean verifyManifestDigests()
 	{
 		Vector fileList = manifest.getFileNames();
 		String fileName;
@@ -627,7 +557,6 @@ public class JarVerifier implements JarConstants
 				}
 				catch (Exception e)
 				{
-					e.printStackTrace();
 					return false;
 				}
 			}
@@ -646,7 +575,7 @@ public class JarVerifier implements JarConstants
 	 * null if no digest class was found
 	 * @see    JarConstants
 	 */
-	public Digest getDigestClass(String digestID)
+	private Digest getDigestClass(String digestID)
 	{
 		// remove first hyphen from digest name, because bouncycastle classes come without one
 		int hyphen = digestID.indexOf("-");
@@ -686,61 +615,6 @@ public class JarVerifier implements JarConstants
 		return null;
 	}
 
-	/**
-	 * Returns an InputStream for an URL or local file.
-	 *
-	 * @param  path Local file path or URL (http://...)
-	 * @return InputStream if successful, null otherwise.
-	 */
-	private static InputStream getInputStream(String path)
-	{
-		try
-		{
-			URL u = new URL(path);
-			return u.openStream();
-		}
-		catch (MalformedURLException e)
-		{} // Not a http-URL
-		catch (IOException e)
-		{
-			System.out.println(e);
-			return null;
-		}
 
-		try
-		{
-			return new FileInputStream(path);
-		}
-		catch (FileNotFoundException e)
-		{
-			e.printStackTrace();
-			return null;
-		}
-		catch (SecurityException e)
-		{
-			e.printStackTrace();
-			return null;
-		}
-	}
-
-	/**
-	 * For Debugging purposes only.
-	 *
-	 * @return True if in debug mode, false otherwise.
-	 */
-	public boolean isDebug()
-	{
-		return debug;
-	}
-
-	/**
-	 * For Debugging purposes only.
-	 *
-	 * @param dbg Turn debugging on.
-	 */
-	public void setDebug(boolean dbg)
-	{
-		debug = dbg;
-	}
 
 }
