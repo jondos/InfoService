@@ -104,7 +104,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 	private JComboBox m_comboAnonServices;
 	private JLabel m_labelAnonService, m_labelAnonymity, m_labelAnonymitySmall, m_labelAnonymityOnOff;
-	private JLabel m_labelAnonMeter;
+	private JLabel m_labelAnonMeter,m_labelAnonymityLow,m_labelAnonymityHigh;
 	private JProgressBar m_progressAnonTraffic;
 	private JLabel m_labelAnonymityUser, m_labelAnonymityUserLabel, m_labelAnonymityTrafficLabel;
 
@@ -123,8 +123,9 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private JLabel m_labelForwarderCurrentConnectionsLabel,m_labelForwarderAcceptedConnectionsLabel;
 	private JLabel m_labelForwarderRejectedConnectionsLabel,m_labelForwarderUsedBandwidthLabel;
 	private JLabel m_labelForwarderConnections;
-	private JProgressBar m_progressOwnTrafficActivity, m_progressOwnTrafficActivitySmall;
+	private JProgressBar m_progressOwnTrafficActivity, m_progressOwnTrafficActivitySmall,m_progressAnonLevel;
 	private JButton m_bttnAnonDetails;
+	private JCheckBox m_cbAnonymityOn;
 	private JRadioButton m_rbAnonOff, m_rbAnonOn;
 	private JCheckBox m_cbForwarding,m_cbForwardingSmall;
 	private FlippingPanel m_flippingpanelAnon, m_flippingpanelOwnTraffic, m_flippingpanelForward;
@@ -330,41 +331,46 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.anchor = GridBagConstraints.WEST;
 		p.add(p2, c1);
 		m_flippingpanelAnon.setFullPanel(p);
+
 		//the small panel
 		gbl1 = new GridBagLayout();
 		c1 = new GridBagConstraints();
 		p = new JPanel(gbl1);
-		m_labelAnonymitySmall = new JLabel(JAPMessages.getString("ngAnonymitaet"));
+		m_labelAnonymitySmall = new JLabel(JAPMessages.getString("ngAnonymitaet")+":");
 		c1.gridx = 0;
 		c1.anchor = GridBagConstraints.WEST;
 		c1.weightx = 0;
 		c1.insets = new Insets(0, 5, 0, 0);
 		p.add(m_labelAnonymitySmall, c1);
-		l = new JLabel("gring", JLabel.RIGHT);
+		m_cbAnonymityOn=new JCheckBox(JAPMessages.getString("ngAnonOn"));
+		m_cbAnonymityOn.addActionListener(this);
+		c1.gridx=1;
+		p.add(m_cbAnonymityOn);
+		m_labelAnonymityLow = new JLabel(JAPMessages.getString("ngAnonymityLow"), JLabel.RIGHT);
 		c1.insets = new Insets(0, 20, 0, 5);
-		c1.gridx = 1;
+		c1.gridx = 2;
 		c1.weightx = 0.5;
 		c1.fill = GridBagConstraints.HORIZONTAL;
 		c1.anchor = GridBagConstraints.EAST;
-		p.add(l, c1);
-		JProgressBar progress = new JProgressBar();
-		progress.setMinimum(0);
-		progress.setMaximum(10);
-		progress.setBorderPainted(false);
-		progress.setUI(new MyProgressBarUI(true));
+		p.add(m_labelAnonymityLow, c1);
+		m_progressAnonLevel = new JProgressBar();
+		m_progressAnonLevel.setMinimum(0);
+		m_progressAnonLevel.setMaximum(5);
+		m_progressAnonLevel.setBorderPainted(false);
+		m_progressAnonLevel.setUI(new MyProgressBarUI(true));
 		c1.weightx = 0.75;
 		c1.fill = GridBagConstraints.HORIZONTAL;
 		c1.anchor = GridBagConstraints.CENTER;
 		c1.insets = new Insets(0, 0, 0, 0);
-		c1.gridx = 2;
-		p.add(progress, c1);
-		l = new JLabel("hoch");
 		c1.gridx = 3;
+		p.add(m_progressAnonLevel, c1);
+		m_labelAnonymityHigh = new JLabel(JAPMessages.getString("ngAnonymityHigh"));
+		c1.gridx = 4;
 		c1.weightx = 0.5;
-		c1.insets = new Insets(0, 5, 0, 20);
+		c1.insets = new Insets(0, 5, 0, 0);
 		c1.fill = GridBagConstraints.HORIZONTAL;
 		c1.anchor = GridBagConstraints.WEST;
-		p.add(l, c1);
+		p.add(m_labelAnonymityHigh, c1);
 		m_flippingpanelAnon.setSmallPanel(p);
 
 		c.fill = GridBagConstraints.HORIZONTAL;
@@ -558,7 +564,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c2.weightx = 0;
 		c2.fill = GridBagConstraints.NONE;
 		p2.add(m_labelForwarderActivity, c2);
-		progress = new JProgressBar();
+		JProgressBar progress = new JProgressBar();
 		progress.setUI(new MyProgressBarUI(true));
 		progress.setMinimum(0);
 		progress.setMaximum(5);
@@ -1194,6 +1200,9 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_labelAnonymitySmall.setText(JAPMessages.getString("ngAnonymitaet"));
 		m_labelAnonymityUserLabel.setText(JAPMessages.getString("ngNrOfUsers"));
 		m_labelAnonymityTrafficLabel.setText(JAPMessages.getString("ngAnonymityTraffic"));
+		m_labelAnonymityLow.setText(JAPMessages.getString("ngAnonymityLow"));
+		m_labelAnonymityHigh.setText(JAPMessages.getString("ngAnonymityHigh"));
+		m_cbAnonymityOn.setText(JAPMessages.getString("ngAnonOn"));
 		m_labelOwnActivity.setText(JAPMessages.getString("ngActivity"));
 		m_labelOwnActivitySmall.setText(JAPMessages.getString("ngActivity"));
 		m_labelForwarderActivity.setText(JAPMessages.getString("ngActivity"));
@@ -1341,6 +1350,11 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		{
 			m_Controller.setAnonMode(m_rbAnonOn.isSelected());
 		}
+		else if(source==m_cbAnonymityOn)
+		{
+			m_Controller.setAnonMode(m_cbAnonymityOn.isSelected());
+		}
+
 		else
 		{
 			LogHolder.log(LogLevel.DEBUG, LogType.GUI, "Event ?????: " + event.getSource());
@@ -1436,11 +1450,21 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			try
 			{
 				m_rbAnonOn.setSelected(m_Controller.getAnonMode());
+				m_rbAnonOff.setSelected(!m_Controller.getAnonMode());
+				m_cbAnonymityOn.setSelected(m_Controller.getAnonMode());
 				LogHolder.log(LogLevel.DEBUG, LogType.GUI, "JAPView: update CascadeName");
 				m_labelCascadeName.setText(currentMixCascade.getName());
 				m_labelCascadeName.setToolTipText(currentMixCascade.getName());
 				StatusInfo currentStatus = currentMixCascade.getCurrentStatus();
-				m_labelAnonMeter.setIcon(getMeterImage(currentStatus.getAnonLevel()));
+				int anonLevel=currentStatus.getAnonLevel();
+				m_labelAnonMeter.setIcon(getMeterImage(anonLevel));
+				Color color=Color.red;
+				if(anonLevel>3)
+					color=Color.blue;
+				else if(anonLevel>1)
+					color=Color.green;
+				((MyProgressBarUI)m_progressAnonLevel.getUI()).setFilledBarColor(color);
+				m_progressAnonLevel.setValue(anonLevel);
 				if (m_Controller.getAnonMode())
 				{
 					if (currentStatus.getNrOfActiveUsers() > -1)
@@ -1531,6 +1555,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				{
 					/* we are not in anonymity mode */
 					m_progressAnonTraffic.setValue(0);
+					m_labelAnonymityUser.setText("");
+					m_progressAnonLevel.setValue(0);
 					//userProgressBar.setValue(userProgressBar.getMaximum());
 					//userProgressBar.setString(JAPMessages.getString("meterNA"));
 					//protectionProgressBar.setValue(protectionProgressBar.getMaximum());
