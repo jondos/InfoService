@@ -32,7 +32,7 @@ import junitx.framework.PrivateTestCase;
 
 import anon.infoservice.Database;
 import anon.infoservice.DatabaseEntry;
-import anon.infoservice.InfoService;
+import anon.infoservice.InfoServiceDBEntry;
 
 /**
  * These are the tests for the main part of the Database class.
@@ -90,7 +90,7 @@ public class DatabaseTest extends PrivateTestCase
 		try
 		{
 			// this does not work
-			Database.getInstance(InfoService.class).update(dbEntry);
+			Database.getInstance(InfoServiceDBEntry.class).update(dbEntry);
 			fail();
 		} catch (IllegalArgumentException a_e)
 		{
@@ -123,7 +123,7 @@ public class DatabaseTest extends PrivateTestCase
 		database.update(dbEntry);
 		assertEquals(1, database.getNumberofEntries());
 		assertSame(dbEntry, database.getEntryById("123456"));
-		expectedJobs.addElement(dbEntry);
+		expectedJobs.add(dbEntry);
 
 		// test if older entries are dropped
 		database.update(dbEntry_sameID);
@@ -137,12 +137,12 @@ public class DatabaseTest extends PrivateTestCase
 		dbEntry_sameID.setVersionNumber(1);
 		database.update(dbEntry_sameID);
 		assertSame(dbEntry_sameID, database.getEntryById("123456"));
-		expectedJobs.addElement(dbEntry_sameID);
+		expectedJobs.add(dbEntry_sameID);
 
 		// test adding a new entry with an unknown id
 		database.update(dbEntry_otherID);
 		assertEquals(2, database.getNumberofEntries());
-		expectedJobs.addElement(dbEntry_otherID);
+		expectedJobs.add(dbEntry_otherID);
 
 		// test if an old "new" entry is correctly removed by the "run" method
 		dbEntry.setExpireTime(System.currentTimeMillis());
@@ -150,7 +150,7 @@ public class DatabaseTest extends PrivateTestCase
 		database.update(dbEntry);
 		Thread.sleep(50); // could eventually be too short on slow machines
 		assertEquals(1, database.getNumberofEntries());
-		expectedJobs.addElement(dbEntry);
+		expectedJobs.add(dbEntry);
 
 		// test if the database entries are forwarded
 		m_distributor.setExpectedJobs(expectedJobs);

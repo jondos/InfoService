@@ -90,7 +90,7 @@ public class InfoServiceHolder
 	/**
 	 * Stores the prefered InfoService. This InfoService is asked first for every information.
 	 */
-	private InfoService preferedInfoService;
+	private InfoServiceDBEntry preferedInfoService;
 
 	/**
 	 * Stores the certificate store against the signatures of the XML documents are tested. If the
@@ -144,7 +144,7 @@ public class InfoServiceHolder
 	 *
 	 * @param preferedInfoService The prefered InfoService.
 	 */
-	public void setPreferedInfoService(InfoService preferedInfoService)
+	public void setPreferedInfoService(InfoServiceDBEntry preferedInfoService)
 	{
 		if (preferedInfoService != null)
 		{
@@ -166,9 +166,9 @@ public class InfoServiceHolder
 	 *
 	 * @return The prefered InfoService or null, if no prefered InfoService is set.
 	 */
-	public InfoService getPreferedInfoService()
+	public InfoServiceDBEntry getPreferedInfoService()
 	{
-		InfoService preferedInfoService = null;
+		InfoServiceDBEntry preferedInfoService = null;
 		synchronized (this)
 		{
 			preferedInfoService = this.preferedInfoService;
@@ -277,15 +277,15 @@ public class InfoServiceHolder
 	{
 		Vector primaryInfoServices = new Vector();
 		/* check the prefered infoservice */
-		InfoService currentPreferedInfoService = getPreferedInfoService();
+		InfoServiceDBEntry currentPreferedInfoService = getPreferedInfoService();
 		if (currentPreferedInfoService.hasPrimaryForwarderList() == true)
 		{
 			primaryInfoServices.addElement(currentPreferedInfoService);
 		}
-		Enumeration infoservices = Database.getInstance(InfoService.class).getEntryList().elements();
+		Enumeration infoservices = Database.getInstance(InfoServiceDBEntry.class).getEntryList().elements();
 		while (infoservices.hasMoreElements())
 		{
-			InfoService currentInfoService = (InfoService) (infoservices.nextElement());
+			InfoServiceDBEntry currentInfoService = (InfoServiceDBEntry) (infoservices.nextElement());
 			if (currentInfoService.hasPrimaryForwarderList())
 			{
 				if (currentInfoService.getId().equals(currentPreferedInfoService.getId()) == false)
@@ -312,25 +312,25 @@ public class InfoServiceHolder
 	 */
 	private Object fetchInformation(int functionNumber, Vector arguments) throws Exception
 	{
-		InfoService currentInfoService = null;
+		InfoServiceDBEntry currentInfoService = null;
 		currentInfoService = getPreferedInfoService();
 		Vector infoServiceList = null;
 		if (m_changeInfoServices)
 		{
 			/* get the whole infoservice list */
-			infoServiceList = Database.getInstance(InfoService.class).getEntryList();
+			infoServiceList = Database.getInstance(InfoServiceDBEntry.class).getEntryList();
 		}
 		else
 		{
 			/* use an empty list -> only prefered infoservice is used */
 			infoServiceList = new Vector();
 		}
-    while (((infoServiceList.size() > 0) || (currentInfoService != null)) && (Thread.currentThread().isInterrupted() == false))
+		while ( (infoServiceList.size() > 0) || (currentInfoService != null))
 		{
 			if (currentInfoService == null)
 			{
 				/* take a new one from the list */
-				currentInfoService = (InfoService) (infoServiceList.firstElement());
+				currentInfoService = (InfoServiceDBEntry) (infoServiceList.firstElement());
 				LogHolder.log(LogLevel.INFO, LogType.NET,
 							  "InfoServiceHolder: fetchInformation: Trying InfoService: " +
 							  currentInfoService.getName());
@@ -375,7 +375,7 @@ public class InfoServiceHolder
 					result = currentInfoService.getForwarder();
 				}
 				/* no error occured -> success -> update the prefered infoservice and exit */
-				InfoService preferedInfoService = getPreferedInfoService();
+				InfoServiceDBEntry preferedInfoService = getPreferedInfoService();
 				if (preferedInfoService != null)
 				{
 					if (!currentInfoService.getId().equals(preferedInfoService.getId()))
