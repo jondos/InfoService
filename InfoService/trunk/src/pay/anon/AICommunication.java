@@ -42,7 +42,7 @@ import pay.PayAccount;
 import pay.PayAccountsFile;
 import payxml.XMLAccountInfo;
 import payxml.XMLPayRequest;
-
+import anon.util.XMLUtil;
 /**
  * Die gesammt Kommunikation zwischen Pay und AI (welche ja ein Teil der Mix-Kaskade sind). L\uFFFDuft als eigener Thread
  * beim erzeugen wird eine AI Channel ge\uFFFDffnet. Beim starten des Threads wird festgestellt ob die AI bezahlt werden will etc.
@@ -241,7 +241,7 @@ public class AICommunication extends Thread
 			PayAccountsFile accounts = PayAccountsFile.getInstance();
 			PayAccount activeAccount = accounts.getActiveAccount();
 
-			send(activeAccount.getAccountCertificate().getXMLString());
+			send(XMLUtil.XMLDocumentToString(activeAccount.getAccountCertificate().getXmlEncoded()));
 
 			if (request.balanceNeeded.equals(XMLPayRequest.TRUE))
 			{
