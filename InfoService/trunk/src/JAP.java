@@ -115,8 +115,13 @@ class JAP extends Frame{
 			JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAP:MRJ Version is "+mrjVersion+".");
 		// Create the view object
 		JAPView view = new JAPView (model.TITLE);
+		
 		// Create the main frame
 		view.create();
+		
+		//Switching Debug Console Parent to MainView
+		JAPDebug.setConsoleParent(view);
+		
 		model.addJAPObserver(view);
 		// Create the iconified view
 		JAPViewIconified iconifiedView = new JAPViewIconified("JAP");

@@ -111,7 +111,7 @@ final class JAPMuxSocket implements Runnable
 				arASymCipher=null;
 				outBuff=new byte[DATA_SIZE];
 				threadRunLoop=null;
-				keypool=JAPKeyPool.start(20,16);
+				keypool=JAPKeyPool.start(/*20,16*/);
 				m_RunCount=0;
 				//threadgroupChannels=null;
 			}
@@ -379,11 +379,9 @@ final class JAPMuxSocket implements Runnable
 					{
 						try
 							{
-								JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"MuxSocket: try reading next MIX-Packet...");
 								channel=inDataStream.readInt();
 								flags=inDataStream.readShort();
 								inDataStream.readFully(buff);
-								JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"MuxSocket: MIX-Packet read!");
 							}
 						catch(Exception e)
 							{

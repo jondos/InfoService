@@ -189,6 +189,19 @@ final public class JAPDebug extends WindowAdapter{
 			debug.internal_showConsole(b,parent);
 		}
 	
+	public static void setConsoleParent(Frame parent)
+		{
+			if(debug!=null&&debug.m_bConsole&&debug.frameConsole!=null)
+				{
+					JDialog tmpDlg=new JDialog(parent,"Debug-Console");
+					tmpDlg.getContentPane().add(new JScrollPane(debug.textareaConsole));
+					tmpDlg.addWindowListener(debug);
+					tmpDlg.setSize(debug.frameConsole.getSize());
+					tmpDlg.setLocation(debug.frameConsole.getLocation());
+					tmpDlg.setVisible(true);
+					debug.frameConsole.dispose();
+				}
+		}
 	public static boolean isShowConsole()
 		{
 			return debug.m_bConsole;
