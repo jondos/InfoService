@@ -87,6 +87,10 @@ public class MixCascade implements AnonServerDescription
 	private Element m_xmlStructure;
 
 	/**
+	 *	True, if this MixCascade is user defined, false if the Information comes from the InfoService
+	 */
+	private boolean m_bIsUserDefined = false;
+	/**
 	 * Creates a new MixCascade from XML description (MixCascade node).
 	 *
 	 * @param mixCascadeNode The MixCascade node from an XML document.
@@ -191,7 +195,7 @@ public class MixCascade implements AnonServerDescription
 	 */
 	public MixCascade(String hostName, int port) throws Exception
 	{
-		this(null,null,hostName,port);
+		this(null, null, hostName, port);
 	}
 
 	/**
@@ -242,6 +246,7 @@ public class MixCascade implements AnonServerDescription
 		m_xmlStructure = null;
 		/* create a dummy current status */
 		currentStatus = StatusInfo.createDummyStatusInfo(mixCascadeId);
+		m_bIsUserDefined = true;
 	}
 
 	/**
@@ -442,11 +447,15 @@ public class MixCascade implements AnonServerDescription
 	/*** Equals iff it has the same id... */
 	public boolean equals(Object o)
 	{
-		if(o==null)
+		if (o == null)
+		{
 			return false;
-		if(!(o instanceof MixCascade))
+		}
+		if (! (o instanceof MixCascade))
+		{
 			return false;
-		MixCascade c=(MixCascade)o;
+		}
+		MixCascade c = (MixCascade) o;
 		return getId().equals(c.getId());
 	}
 
@@ -471,5 +480,13 @@ public class MixCascade implements AnonServerDescription
 			mixIds.addElement(this.mixIds.elementAt(i));
 		}
 		return mixIds;
+	}
+
+	/***
+	 * Is this a user defined Mix cascade?
+	 */
+	public boolean isUserDefined()
+	{
+		return m_bIsUserDefined;
 	}
 }
