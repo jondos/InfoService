@@ -29,8 +29,12 @@ import logging.Log;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.io.StringWriter;
+import java.io.PrintWriter;
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.Properties;
+import java.util.Enumeration;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.ActionListener;
@@ -333,6 +337,22 @@ final public class JAPDebug extends WindowAdapter implements ActionListener,Log 
 					}
 				else if(e.getActionCommand().equals("insertConfig"))
 					{
+            try
+              {
+                Properties p=System.getProperties();
+                //StringWriter s=new StringWriter();
+                //p.list(new PrintWriter(s));
+                Enumeration enum=p.propertyNames();
+                while(enum.hasMoreElements())
+                  {
+                    String st=(String)enum.nextElement();
+                    String value=p.getProperty(st);
+                    textareaConsole.append(st+": "+value+"\n");
+                  }
+//                textareaConsole.append(s.toString());
+              }
+            catch(Exception e1)
+              {}
             textareaConsole.append(JAPModel.getModel().toString());
 					}
 				else
