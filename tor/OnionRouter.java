@@ -75,7 +75,7 @@ public class OnionRouter {
 		return this.description;
 	}
 
-	public RelayCell encryptCell(RelayCell cell)
+	public synchronized RelayCell encryptCell(RelayCell cell)
 	{
 		RelayCell c;;
 		if(this.nextOR != null)
@@ -85,25 +85,20 @@ public class OnionRouter {
 		{
 			c = cell;
 			c.generateDigest(this.digestDf);
-			System.out.print("gesendet :");
-			for(int i=0;i<c.getCellData().length;i++)
-			{
-				System.out.print(" "+c.getCellData()[i]);
-			}
-			System.out.println();
 		}
 		c.doCryptography(this.encryptionEngine);
 		c = cell;
-		System.out.print("gesendet :");
-		for(int i=0;i<c.getCellData().length;i++)
+		byte[]b=c.getCellData();
+		String s="";
+		for(int i=0;i<b.length;i++)
 		{
-			System.out.print(" "+c.getCellData()[i]);
+			s+=b[i]+",";
 		}
-		System.out.println();
+		LogHolder.log(LogLevel.DEBUG,LogType.MISC,"Tor sent: "+s);
 		return c;
 	}
 
-	public RelayCell decryptCell(RelayCell cell) throws Exception
+	public synchronized RelayCell decryptCell(RelayCell cell) throws Exception
 	{
 		RelayCell c = cell;
 		c.doCryptography(this.decryptionEngine);

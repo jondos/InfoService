@@ -57,6 +57,14 @@ public interface AnonChannel
 	 */
 	public OutputStream getOutputStream();
 
+	/** Returns a value that indicates the current optimum size of data to write.. Because often
+	 *  anon services transport the data splited into packets for optimum performance
+	 *  it may be good to send data according to the packet size to avoid unneccessary overheads.
+	 *
+	 * @return the current optimum size for output data. If 1 is returned the size does not matter.
+	 */
+	public int getOutputBlockSize();
+
 	/** Closes the channel and releases all resources used. */
 	public void close();
 }

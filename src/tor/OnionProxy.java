@@ -17,6 +17,7 @@ import tor.cells.CreatedCell;
 import tor.cells.DestroyCell;
 import tor.cells.RelayCell;
 import tor.util.helper;
+import logging.*;
 
 /**
  * @author stefan
@@ -60,14 +61,20 @@ public class OnionProxy {
 		Vector l;
 		Cell cell = null;;
 
-		while(!this.cells.containsKey(s))
-		{
-			while(is.available()<512);
+//		while(!this.cells.containsKey(s))
+//		{
 			byte[] b = new byte[512];
-			is.read(b);
+			int readPos=0;
+			while(readPos<512)
+			{
+				int ret=is.read(b,readPos,512-readPos);
+				if(ret<0)
+					throw new Exception("Cell.read() TLSInput Stream closed!!");
+				readPos+=ret;
+			}
 			int cid = ((b[0] & 0xFF)<<8) | (b[1] & 0xFF);
 			int type = b[2] & 0xFF;
-			System.out.println("zelltyp : "+type);
+			LogHolder.log(LogLevel.DEBUG,LogType.MISC,"OnionProxy read() Tor Cell - Circuit: "+cid+" Type: "+type);
 			switch(type)
 			{
 				case 2 :
@@ -87,10 +94,10 @@ public class OnionProxy {
 				}
 				default :
 				{
-					System.out.println("unbekannter zelltyp");
+					LogHolder.log(LogLevel.DEBUG,LogType.MISC,"Tor cell read - unbekannter zelltyp");
 				}
 			}
-			String s2 = addr.getHostAddress()+":"+port+":"+cid;
+	/*		String s2 = addr.getHostAddress()+":"+port+":"+cid;
 			if(this.cells.containsKey(s2))
 			{
 				l = (Vector)this.cells.get(s2);
@@ -112,7 +119,7 @@ public class OnionProxy {
 		{
 			this.cells.put(s,l);
 		}
-
+*/
 		return cell;
 	}
 

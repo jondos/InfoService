@@ -116,11 +116,32 @@ final public class ProxyConnection
 		buff[9 + host.length()] = (byte) (port & 0xFF);
 		m_Out.write(buff, 0, 10 + host.length());
 		m_Out.flush();
-		int len = 12;
+		//read OK for Methods...
+		m_In.read();
+		m_In.read();
+		//read ok for connect
+		m_In.read();//Version
+		m_In.read();//SUCCED
+		m_In.read();//reserved==0;
+		int adrType=m_In.read();
+		int len=0;
+		switch(adrType)
+		{
+			case 1:
+				len=4; //IPv4
+			break;
+			case 3:
+				len=m_In.read(); //domainname len
+			break;
+			default: //unknown
+				throw new Exception("Socks: unknow adr type in reply!");
+		}
+		len+=2; //port
 		while (len > 0)
 		{
 			len -= m_In.read(buff, 0, len);
 		}
+
 	}
 
 	public Socket getSocket()

@@ -5,12 +5,14 @@ import javax.swing.border.*;
 import javax.swing.table.*;
 import java.awt.*;
 import java.awt.event.*;
+import tor.ordescription.*;
+import java.util.*;
 
 class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 {
 	JCheckBox m_cbEnableTor;
     JTextField m_tfDirServerAdr;
-	JTextField m_tfDirServerPort;
+	JAPJIntField m_tfDirServerPort;
 	JTable m_tableRouters;
 	JSlider m_sliderMaxPathLen,m_sliderMinPathLen,m_sliderPathSwitchTime;
 	JButton m_bttnFetchRouters;
@@ -71,6 +73,7 @@ class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 		model.setNumRows(3);
 		m_tableRouters=new JTable(model);
 		m_tableRouters.setPreferredScrollableViewportSize(new Dimension(70,70));
+		m_tableRouters.setColumnSelectionAllowed(false);
 		JScrollPane s=new JScrollPane(m_tableRouters);
 		s.setAutoscrolls(true);
 		c2.fill=c2.BOTH;
@@ -78,6 +81,7 @@ class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 		c2.weighty=1;
 		p.add(s,c2);
 		m_bttnFetchRouters=new JButton(JAPMessages.getString("torBttnFetchRouters"));
+		m_bttnFetchRouters.setActionCommand("fetchRouters");
 		m_bttnFetchRouters.addActionListener(this);
 		c2.fill=c2.NONE;
 		c2.weighty=0;
@@ -107,8 +111,13 @@ class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 		p.add(m_sliderMaxPathLen);
 		p.add(new JLabel(JAPMessages.getString("torPrefPathSwitchTime")));
 		m_sliderPathSwitchTime=new JSlider();
-		m_sliderPathSwitchTime.setMinimum(1);
-		m_sliderPathSwitchTime.setMaximum(10);
+		m_sliderPathSwitchTime.setMinimum(10);
+		m_sliderPathSwitchTime.setMaximum(110);
+		m_sliderPathSwitchTime.setMajorTickSpacing(20);
+		m_sliderPathSwitchTime.setMinorTickSpacing(5);
+		m_sliderPathSwitchTime.setPaintLabels(true);
+		m_sliderPathSwitchTime.setPaintTicks(true);
+
 		p.add(m_sliderPathSwitchTime);
 		p.setBorder(new TitledBorder(JAPMessages.getString("torBorderPreferences")));
 		c.gridy=3;
@@ -132,6 +141,24 @@ class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 	{
 		if(actionEvent.getActionCommand().equals("enableTor"))
 			updateGuiOutput();
+		else if(actionEvent.getActionCommand().equals("fetchRouters"))
+			fetchRouters();
+
+	}
+
+	protected void onOkPressed()
+ 	{
+		JAPController.getController().setTorDirServer(m_tfDirServerAdr.getText(),
+													  m_tfDirServerPort.getInt());
+		JAPController.getController().setTorEnabled(m_cbEnableTor.isSelected());
+	}
+
+	protected void onUpdateValues()
+	{
+		m_cbEnableTor.setSelected(JAPModel.isTorEnabled());
+		m_tfDirServerAdr.setText(JAPModel.getTorDirServerHostName());
+		m_tfDirServerPort.setInt(JAPModel.getTorDirServerPortNumber());
+		updateGuiOutput();
 	}
 
 	private void updateGuiOutput()
@@ -145,5 +172,26 @@ class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 		this.m_sliderMinPathLen.setEnabled(bEnabled);
 		this.m_sliderPathSwitchTime.setEnabled(bEnabled);
 
+	}
+
+	private void fetchRouters()
+	{
+		ORList ol=new ORList();
+		if(!ol.updateList(m_tfDirServerAdr.getText(),
+					  m_tfDirServerPort.getInt()))
+		{
+			JAPConf.showError(JAPMessages.getString("torErrorFetchRouters"));
+			return;
+		}
+		DefaultTableModel m=(DefaultTableModel)m_tableRouters.getModel();
+		Vector ors=ol.getList();
+		m.setNumRows(ors.size());
+		for(int i=0;i<ors.size();i++)
+		{
+			ORDescription ord=(ORDescription)ors.elementAt(i);
+			m_tableRouters.setValueAt(ord.getName(),i,0);
+			m_tableRouters.setValueAt(ord.getAddress(),i,1);
+			m_tableRouters.setValueAt(new Integer(ord.getPort()),i,2);
+		}
 	}
 }

@@ -113,12 +113,13 @@ public class Circuit {
 		InetAddress addr = InetAddress.getByName(this.or.getDescription().getAddress());
 		int port = this.or.getDescription().getPort();
 		Cell cell = this.or.decryptCell((RelayCell)this.op.read(addr,port,this.circID));
-		System.out.print("gelesen :");
-		for(int i=0;i<cell.getCellData().length;i++)
+		byte[] b=cell.getCellData();
+		String s="";
+		for(int i=0;i<b.length;i++)
 		{
-			System.out.print(" "+cell.getCellData()[i]);
+			s+=Integer.toString(b[i])+",";
 		}
-		System.out.println();
+		LogHolder.log(LogLevel.DEBUG,LogType.MISC,"Circuit read() Tor Cell data gelesen: "+s);
 		return cell;
 	}
 
@@ -140,27 +141,9 @@ public class Circuit {
 		return this.circID;
 	}
 
-	public TorChannel createChannel(int type) throws ConnectException
+	public TorChannel createChannel(int type) throws IOException
 	{
-		if(this.closed)
-		{
-			throw new ConnectException("Circuit Closed - cannot connect");
-		} else
-		{
-			int streamID = this.streamIDCounter;
-
-			this.streamIDCounter++;
-
-			TorChannel channel = new TorChannel(streamID,this,type);
-			this.streams.put(new Integer(streamID),channel);
-
-			//don't allow a new connection over this circuit if max number of streams is reached
-			if(this.streamIDCounter == MAX_STREAMS_OVER_CIRCUIT)
-			{
-				this.closed = true;
-			}
-			return channel;
-		}
+		return new TorSocksChannel(streamIDCounter++,this);
 	}
 
 	public TorChannel createChannel(InetAddress addr, int port) throws Exception
@@ -194,12 +177,12 @@ public class Circuit {
 					{
 						this.closed = true;
 					}
-
+					channel.start();
 					return channel;
 				}
 			} else
 			{
-				System.out.println("keine relaycell");
+				LogHolder.log(LogLevel.DEBUG,LogType.MISC,"tor keine relaycell");
 			}
 		}
 		return null;

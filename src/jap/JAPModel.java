@@ -41,6 +41,7 @@ public final class JAPModel
 	private int m_biPort = JAPConstants.PIPORT;
 	private int m_HttpListenerPortNumber = JAPConstants.defaultPortNumber; // port number of HTTP  listener
 	private boolean m_bHttpListenerIsLocal = true; // indicates whether listeners serve for localhost only or not
+	private int m_SOCKSListenerPortnumber=JAPConstants.defaultSOCKSPortNumber; //port number for SOCKS requests
 	private boolean m_bUseFirewall = false; // indicates whether JAP connects via a proxy or directly
 	private int m_FirewallType = JAPConstants.defaultFirewallType;
 	private String m_FirewallHostName = ""; // hostname of proxy
@@ -63,13 +64,18 @@ public final class JAPModel
 	private boolean m_bSaveMainWindowPosition = false;
 	public Point m_OldMainWindowLocation = null;
 	public Dimension m_OldMainWindowSize = null;
-	private static JAPModel model = null;
+	private static JAPModel ms_TheModel = null;
 
 	private boolean m_bCertCheckDisabled = true;
 
 	private JAPCertificate m_certJAPCodeSigning = null;
 	private JAPCertificate m_certJAPInfoServiceMessages = null;
 	private JAPCertificateStore m_certStore = null;
+
+	/** Tor related info**/
+	private boolean m_bIsTorEnabled=JAPConstants.TOR_IS_ENABLED;
+	private String m_strTorDirServerHostName=JAPConstants.TOR_DIR_SERVER_ADR;
+	private int m_TorDirServerPortNumber=JAPConstants.TOR_DIR_SERVER_PORT;
 
 	private JAPModel()
 	{
@@ -101,16 +107,16 @@ public final class JAPModel
 	 */
 	public static JAPModel create()
 	{
-		if (model == null)
+		if (ms_TheModel == null)
 		{
-			model = new JAPModel();
+			ms_TheModel = new JAPModel();
 		}
-		return model;
+		return ms_TheModel;
 	}
 
 	public static JAPModel getModel()
 	{
-		return model;
+		return ms_TheModel;
 	}
 
 	protected void setUseFirewall(boolean b)
@@ -120,7 +126,7 @@ public final class JAPModel
 
 	public static boolean getUseFirewall()
 	{
-		return model.m_bUseFirewall;
+		return ms_TheModel.m_bUseFirewall;
 	}
 
 	protected void setFirewallType(int type)
@@ -130,7 +136,7 @@ public final class JAPModel
 
 	public static int getFirewallType()
 	{
-		return model.m_FirewallType;
+		return ms_TheModel.m_FirewallType;
 	}
 
 	protected void setFirewallHost(String host)
@@ -140,7 +146,7 @@ public final class JAPModel
 
 	public static String getFirewallHost()
 	{
-		return model.m_FirewallHostName;
+		return ms_TheModel.m_FirewallHostName;
 	}
 
 	protected void setFirewallPort(int port)
@@ -150,7 +156,7 @@ public final class JAPModel
 
 	public static int getFirewallPort()
 	{
-		return model.m_FirewallPortNumber;
+		return ms_TheModel.m_FirewallPortNumber;
 	}
 
 	protected void setUseFirewallAuthorization(boolean b)
@@ -160,7 +166,7 @@ public final class JAPModel
 
 	public static boolean getUseFirewallAuthorization()
 	{
-		return model.m_bUseFirewallAuthentication;
+		return ms_TheModel.m_bUseFirewallAuthentication;
 	}
 
 	protected void setFirewallAuthUserID(String userid)
@@ -170,7 +176,7 @@ public final class JAPModel
 
 	public static String getFirewallAuthUserID()
 	{
-		return model.m_FirewallAuthenticationUserID;
+		return ms_TheModel.m_FirewallAuthenticationUserID;
 	}
 
 	protected void setFirewallAuthPasswd(String passwd)
@@ -180,7 +186,7 @@ public final class JAPModel
 
 	public static String getFirewallAuthPasswd()
 	{
-		return model.m_FirewallAuthenticationPasswd;
+		return ms_TheModel.m_FirewallAuthenticationPasswd;
 	}
 
 	protected void setAutoConnect(boolean b)
@@ -190,7 +196,7 @@ public final class JAPModel
 
 	public static boolean getAutoConnect()
 	{
-		return model.m_bAutoConnect;
+		return ms_TheModel.m_bAutoConnect;
 	}
 
 	protected void setAutoReConnect(boolean b)
@@ -200,7 +206,7 @@ public final class JAPModel
 
 	public static boolean getAutoReConnect()
 	{
-		return model.m_bAutoReConnect;
+		return ms_TheModel.m_bAutoReConnect;
 	}
 
 	protected void setMinimizeOnStartup(boolean b)
@@ -210,7 +216,7 @@ public final class JAPModel
 
 	public static boolean getMinimizeOnStartup()
 	{
-		return model.m_bMinimizeOnStartup;
+		return ms_TheModel.m_bMinimizeOnStartup;
 	}
 
 	protected void setSaveMainWindowPosition(boolean b)
@@ -220,7 +226,7 @@ public final class JAPModel
 
 	public static boolean getSaveMainWindowPosition()
 	{
-		return model.m_bSaveMainWindowPosition;
+		return ms_TheModel.m_bSaveMainWindowPosition;
 	}
 
 	/*
@@ -239,7 +245,7 @@ public final class JAPModel
 
 	public static int getDummyTraffic()
 	{
-		return model.m_iDummyTrafficIntervall;
+		return ms_TheModel.m_iDummyTrafficIntervall;
 	}
 
 	protected void setHttpListenerPortNumber(int p)
@@ -249,7 +255,17 @@ public final class JAPModel
 
 	public static int getHttpListenerPortNumber()
 	{
-		return model.m_HttpListenerPortNumber;
+		return ms_TheModel.m_HttpListenerPortNumber;
+	}
+
+	protected void setSocksListenerPortNumber(int p)
+	{
+		m_SOCKSListenerPortnumber=p;
+	}
+
+	public static int getSocksListenerPortNumber()
+	{
+		return ms_TheModel.m_SOCKSListenerPortnumber;
 	}
 
 	protected void setHttpListenerIsLocal(boolean b)
@@ -259,7 +275,7 @@ public final class JAPModel
 
 	public static boolean getHttpListenerIsLocal()
 	{
-		return model.m_bHttpListenerIsLocal;
+		return ms_TheModel.m_bHttpListenerIsLocal;
 	}
 
 	public void setSmallDisplay(boolean b)
@@ -269,7 +285,7 @@ public final class JAPModel
 
 	public static boolean isSmallDisplay()
 	{
-		return model.m_bSmallDisplay;
+		return ms_TheModel.m_bSmallDisplay;
 	}
 
 	protected void setInfoServiceDisabled(boolean b)
@@ -279,27 +295,27 @@ public final class JAPModel
 
 	public static boolean isInfoServiceDisabled()
 	{
-		return model.m_bInfoServiceDisabled;
+		return ms_TheModel.m_bInfoServiceDisabled;
 	}
 
 	public static String getBIHost()
 	{
-		return model.m_biHost;
+		return ms_TheModel.m_biHost;
 	}
 
 	public static int getBIPort()
 	{
-		return model.m_biPort;
+		return ms_TheModel.m_biPort;
 	}
 
 	protected static void setBIHost(String host)
 	{
-		model.m_biHost = host;
+		ms_TheModel.m_biHost = host;
 	}
 
 	protected static void setBIPort(int port)
 	{
-		model.m_biPort = port;
+		ms_TheModel.m_biPort = port;
 	}
 
 	public String toString()
@@ -408,12 +424,12 @@ public final class JAPModel
 
 	public static boolean isCertCheckDisabled()
 	{
-		return model.m_bCertCheckDisabled;
+		return ms_TheModel.m_bCertCheckDisabled;
 	}
 
 	public static JAPCertificateStore getCertificateStore()
 	{
-		return model.m_certStore;
+		return ms_TheModel.m_certStore;
 	}
 
 	protected void setCertificateStore(JAPCertificateStore jcs)
@@ -426,12 +442,43 @@ public final class JAPModel
 
 	public static JAPCertificate getJAPCodeSigningCert()
 	{
-		return model.m_certJAPCodeSigning;
+		return ms_TheModel.m_certJAPCodeSigning;
 	}
 
 	public static JAPCertificate getJAPInfoServiceMessagesCert()
 	{
-		return model.m_certJAPInfoServiceMessages;
+		return ms_TheModel.m_certJAPInfoServiceMessages;
 	}
+
+	public static boolean isTorEnabled()
+	{
+		return ms_TheModel.m_bIsTorEnabled;
+	}
+
+	protected void setTorEnabled(boolean b)
+	{
+		m_bIsTorEnabled=b;
+	}
+
+	public static String getTorDirServerHostName()
+	{
+		return ms_TheModel.m_strTorDirServerHostName;
+	}
+
+	protected void setTorDirServerHostName(String hostname)
+	{
+		m_strTorDirServerHostName=hostname;
+	}
+
+	public static int getTorDirServerPortNumber()
+	{
+		return ms_TheModel.m_TorDirServerPortNumber;
+	}
+
+	protected void setTorDirServerPortNumber(int port)
+	{
+		m_TorDirServerPortNumber=port;
+	}
+
 
 }

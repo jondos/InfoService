@@ -87,9 +87,10 @@ final class JAPConf extends JDialog
 
 	private JAPController m_Controller;
 
-	private JAPJIntField m_tfListenerPortNumber;
+	private JAPJIntField m_tfListenerPortNumber,m_tfListenerPortNumberSocks;
 	private JCheckBox m_cbListenerIsLocal;
 	private JLabel m_labelPortnumber1, m_labelPortnumber2;
+	private JLabel m_labelSocksPortNumber;
 	private TitledBorder m_borderSettingsListener;
 
 	private JCheckBox m_cbProxy;
@@ -308,26 +309,11 @@ final class JAPConf extends JDialog
 		// set Font in listenerCheckBox in same color as in portnumberLabel1
 		m_cbListenerIsLocal.setForeground(m_labelPortnumber1.getForeground());
 
-		/*m_cbListenerSocks=new JCheckBox(JAPMessages.getString("settingsListenerCheckBoxSOCKS"));
-		  m_cbListenerSocks.setForeground(portnumberLabel1.getForeground());
-		  m_cbListenerSocks.addChangeListener(new ChangeListener(){
-
-		 public void stateChanged(ChangeEvent e)
-		  {
-		   if(m_cbListenerSocks.isSelected())
-		 {
-		  m_tfListenerPortNumberSocks.setEnabled(true);
-		 }
-		   else
-		 //{
-		  m_tfListenerPortNumberSocks.setEnabled(false);
+		//m_tfListenerPortNumberSocks.setEnabled(false);
 		 //}
-		 }});
-		  m_tfListenerPortNumberSocks = new JAPJIntField();
-		  m_tfListenerPortNumberSocks.addActionListener(new ActionListener() {
-		 public void actionPerformed(ActionEvent e) {
-		  okPressed();
-		  }});*/
+		m_tfListenerPortNumberSocks = new JAPJIntField();
+		m_tfListenerPortNumberSocks.setFont(m_fontControls);
+
 		JPanel p = new JPanel();
 		p.setLayout(new BorderLayout());
 		m_borderSettingsListener = new TitledBorder(JAPMessages.getString("settingsListenerBorder"));
@@ -361,10 +347,11 @@ final class JAPConf extends JDialog
 		g.setConstraints(seperator, c);
 		p1.add(seperator);
 		c.insets = normInsets;
-		/*c.gridy=4;
-		  c.insets=new Insets(10,0,0,0);
-		  g.setConstraints(m_cbListenerSocks,c);
-		  p1.add(m_cbListenerSocks);
+		c.gridy=4;
+		c.insets=new Insets(10,0,0,0);
+		m_labelSocksPortNumber=new JLabel(JAPMessages.getString("settingsListenerSOCKS"));
+		m_labelSocksPortNumber.setFont(m_fontControls);
+		p1.add(m_labelSocksPortNumber,c);
 		  c.gridy=5;
 		  g.setConstraints(m_tfListenerPortNumberSocks,c);
 		  p1.add(m_tfListenerPortNumberSocks);
@@ -373,8 +360,8 @@ final class JAPConf extends JDialog
 		  c.insets=new Insets(10,0,0,0);
 		  g.setConstraints(seperator2,c);
 		  p1.add(seperator2);
-		 */
-		c.gridy = 4;
+
+		c.gridy = 7;
 		c.insets = new Insets(10, 0, 0, 0);
 		g.setConstraints(m_cbListenerIsLocal, c);
 		p1.add(m_cbListenerIsLocal);
@@ -1085,8 +1072,6 @@ final class JAPConf extends JDialog
 		}
 		iListenerPort = i;
 		//checking Socks Port Number
-		/*if(m_cbListenerSocks.isSelected())
-		 {
 		  try
 		   {
 		 i=Integer.parseInt(m_tfListenerPortNumberSocks.getText().trim());
@@ -1105,7 +1090,6 @@ final class JAPConf extends JDialog
 		 showError(JAPMessages.getString("errorListenerPortsAreEqual"));
 		 return false;
 		   }
-		 }*/
 		//Checking Firewall Settings (Host + Port)
 		if (m_cbProxy.isSelected())
 		{
@@ -1171,7 +1155,8 @@ final class JAPConf extends JDialog
 		{
 			( (pay.view.PayView) m_pKonto).userPanel.setUserData(JAPConstants.PIHOST, JAPConstants.PIPORT);
 		}
-		m_tfListenerPortNumber.setText(Integer.toString(JAPConstants.defaultPortNumber));
+		m_tfListenerPortNumber.setInt(JAPConstants.defaultPortNumber);
+		m_tfListenerPortNumberSocks.setInt(JAPConstants.defaultSOCKSPortNumber);
 
 		m_tfMixHost.setText(JAPConstants.defaultAnonHost);
 		m_tfMixPortNumber.setText(Integer.toString(JAPConstants.defaultAnonPortNumber));
@@ -1237,10 +1222,9 @@ final class JAPConf extends JDialog
 			m_Controller.setDummyTraffic( -1);
 			// Listener settings
 		}
-		m_Controller.setHTTPListener(Integer.parseInt(m_tfListenerPortNumber.getText().trim()),
+		m_Controller.setHTTPListener(m_tfListenerPortNumber.getInt(),
 									 m_cbListenerIsLocal.isSelected(), true);
-//				m_Controller.setUseSocksPort(m_cbListenerSocks.isSelected());
-//				m_Controller.setSocksPortNumber(Integer.parseInt(m_tfListenerPortNumberSocks.getText().trim()));
+		m_Controller.setSocksPortNumber(m_tfListenerPortNumberSocks.getInt());
 		// Firewall settings
 		int port = -1;
 		try
@@ -1378,6 +1362,7 @@ final class JAPConf extends JDialog
 		m_labelPortnumber2.setText(JAPMessages.getString("settingsPort2"));
 		m_cbListenerIsLocal.setText(JAPMessages.getString("settingsListenerCheckBox"));
 		m_borderSettingsListener.setTitle(JAPMessages.getString("settingsListenerBorder"));
+		m_labelSocksPortNumber.setText(JAPMessages.getString("settingsListenerSOCKS"));
 		//ProxyPanel
 		m_cbProxy.setText(JAPMessages.getString("settingsProxyCheckBox"));
 		int i = m_comboProxyType.getSelectedIndex();
@@ -1437,9 +1422,12 @@ final class JAPConf extends JDialog
 		}
 		m_bIgnoreComboLanguageEvents = false;
 		// listener tab
-		m_tfListenerPortNumber.setText(String.valueOf(JAPModel.getHttpListenerPortNumber()));
+		m_tfListenerPortNumber.setInt(JAPModel.getHttpListenerPortNumber());
 		m_cbListenerIsLocal.setSelected(JAPModel.getHttpListenerIsLocal());
-		//m_tfListenerPortNumberSocks.setText(String.valueOf(m_Controller.getSocksPortNumber()));
+		m_tfListenerPortNumberSocks.setInt(JAPModel.getSocksListenerPortNumber());
+		boolean bSocksVisible=JAPModel.isTorEnabled();
+		m_tfListenerPortNumberSocks.setVisible(bSocksVisible);
+		m_labelSocksPortNumber.setVisible(bSocksVisible);
 		//m_cbListenerSocks.setSelected(m_Controller.getUseSocksPort());
 		// firewall tab
 		m_cbProxy.setSelected(JAPModel.getUseFirewall());

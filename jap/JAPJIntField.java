@@ -50,6 +50,16 @@ final class JAPJIntField extends JTextField
 		super(string);
 	}
 
+	public void setInt(int i)
+	{
+		setText(Integer.toString(i));
+	}
+
+	public int getInt()
+	{
+		return Integer.parseInt(getText());
+	}
+
 	protected Document createDefaultModel()
 	{
 		return new IntDocument();
