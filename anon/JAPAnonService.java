@@ -176,7 +176,7 @@ public final class JAPAnonService implements Runnable
 								{
 									if(m_bBindToLocalHostOnly)
 										{
-											InetAddress[] a=InetAddress.getAllByName("localhost");
+											InetAddress[] a=InetAddress.getAllByName("127.0.0.1");
 											JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Try binding Listener on localhost: "+a[0]);
 											m_socketListener = new ServerSocket (m_Port,50,a[0]);
 										}
