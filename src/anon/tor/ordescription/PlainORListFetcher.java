@@ -29,12 +29,22 @@ package anon.tor.ordescription;
 
 import HTTPClient.HTTPConnection;
 import HTTPClient.HTTPResponse;
-import logging.*;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
+
 public class PlainORListFetcher implements ORListFetcher
 {
 	private String m_ORListServer;
 	private int m_ORListPort;
 
+	/**
+	 * Constructor
+	 * @param addr
+	 * address of the directory server
+	 * @param port
+	 * port of the directory server
+	 */
 	public PlainORListFetcher(String addr, int port)
 
 	{

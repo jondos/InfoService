@@ -38,9 +38,6 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Vector;
 
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
 import anon.AnonChannel;
 import anon.AnonServerDescription;
 import anon.AnonService;
@@ -55,6 +52,9 @@ import anon.tor.ordescription.ORList;
 import anon.tor.ordescription.PlainORListFetcher;
 import anon.tor.util.DNSCacheEntry;
 import anon.tor.util.helper;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 
 /**
  * @author stefan
@@ -63,13 +63,13 @@ import anon.tor.util.helper;
 public class Tor implements Runnable, AnonService
 {
 
-	//maximal possible length of a circuit
+	///maximal possible length of a circuit
 	public final static int MAX_ROUTE_LEN = 5;
 
-	//minimal onion routers, that are used
+	///minimal onion routers, that are used
 	public final static int MIN_ROUTE_LEN = 2;
 
-	//the time when an entry in the DNS-Cache is no more actuell
+	///the time when an entry in the DNS-Cache is no more actuell
 	public final static int DNS_TIME_OUT = 600000;
 
 	private static Tor ms_theTorInstance = null;
@@ -103,6 +103,7 @@ public class Tor implements Runnable, AnonService
 	private Database m_DNSCache;
 
 	private Hashtable m_CircuitForDestination;
+	private Vector[] m_KeysForCircuit;
 
 	//private long m_createNewCircuitIntervall;
 	//private Thread m_createNewCircuitLoop;
@@ -156,6 +157,7 @@ public class Tor implements Runnable, AnonService
 		m_useDNSCache = true;
 		m_DNSCache = Database.getInstance(DNSCacheEntry.class);
 		m_CircuitForDestination = new Hashtable();
+		m_KeysForCircuit = new Vector[m_MaxNrOfActiveCircuits];
 		//counts the number of circuits that have been created (-1 : nouse of this variable / 0-m_maxnrofactivecircuits : number of created circuits)
 		m_closeCreator = false;
 		m_proxyInterface = null;
@@ -173,9 +175,18 @@ public class Tor implements Runnable, AnonService
 		}
 	}
 
+	/**
+	 * gets a circuit for the given host and port
+	 * @param addr
+	 * host address
+	 * @param port
+	 * host port
+	 * @return
+	 * a circuit that can connect to the destination
+	 */
 	protected synchronized Circuit getCircuitForDestination(String addr, int port)
 	{
-		String key = addr+":"+port;
+		String key = addr + ":" + port;
 		if (!m_bIsStarted)
 		{
 			return null;
@@ -191,13 +202,13 @@ public class Tor implements Runnable, AnonService
 					return null;
 				}
 			}
-			//int maxCircuit;
 			for (int i = 0; i < 3; i++) //Try to get/create a circuit 3 times...
 			{
 				int circstart = m_rand.nextInt(m_MaxNrOfActiveCircuits);
-				if(m_CircuitForDestination.containsKey(key))
+				//check if a reachable destination for this circuit exists
+				if (m_CircuitForDestination.containsKey(key))
 				{
-					circstart = ((Integer)m_CircuitForDestination.get(key)).intValue();
+					circstart = ( (Integer) m_CircuitForDestination.get(key)).intValue();
 				}
 				int j = 0;
 				int circ = 0;
@@ -206,11 +217,24 @@ public class Tor implements Runnable, AnonService
 					circ = circstart % m_MaxNrOfActiveCircuits;
 					if (m_activeCircuits[circ] == null || m_activeCircuits[circ].isShutdown())
 					{
+						if (m_KeysForCircuit[circ] != null)
+						{
+							//remove the destinations for this circuit
+							Enumeration it = m_KeysForCircuit[circ].elements();
+							while (it.hasMoreElements())
+							{
+								Object obj = it.nextElement();
+								m_CircuitForDestination.remove(obj);
+							}
+							m_KeysForCircuit[circ] = null;
+						}
 						m_activeCircuits[circ] = createNewCircuit(addr, port);
 						if (m_activeCircuits[circ] != null && !m_activeCircuits[circ].isShutdown())
 						{
 							//add the destination for this circuit
-							m_CircuitForDestination.put(key,new Integer(circ));
+							m_CircuitForDestination.put(key, new Integer(circ));
+							m_KeysForCircuit[circ] = new Vector();
+							m_KeysForCircuit[circ].addElement(key);
 							return m_activeCircuits[circ];
 						}
 						else
@@ -220,6 +244,11 @@ public class Tor implements Runnable, AnonService
 					}
 					else if (m_activeCircuits[circ].isAllowed(addr, port))
 					{
+						if (!m_KeysForCircuit[circ].contains(key))
+						{
+							m_CircuitForDestination.put(key, new Integer(circ));
+							m_KeysForCircuit[circ].addElement(key);
+						}
 						return m_activeCircuits[circ];
 					}
 					circstart++;
@@ -232,14 +261,21 @@ public class Tor implements Runnable, AnonService
 					circ = circstart % m_MaxNrOfActiveCircuits;
 					m_activeCircuits[circ].shutdown();
 					//remove the destinations for this circuit
-					///@todo definitly WRONG! needs to be something like
+					Enumeration it = m_KeysForCircuit[circ].elements();
+					while (it.hasMoreElements())
+					{
+						Object obj = it.nextElement();
+						m_CircuitForDestination.remove(obj);
+					}
+					m_KeysForCircuit[circ] = null;
 					///m_CircuitForDestination.values().remove(new Integer(circ));
-					m_CircuitForDestination.remove(new Integer(circ));
 					m_activeCircuits[circ] = createNewCircuit(addr, port);
 					if (m_activeCircuits[circ] != null && !m_activeCircuits[circ].isShutdown())
 					{
 						//add the destination for this circuit
-						m_CircuitForDestination.put(key,new Integer(circ));
+						m_CircuitForDestination.put(key, new Integer(circ));
+						m_KeysForCircuit[circ] = new Vector();
+						m_KeysForCircuit[circ].addElement(key);
 						return m_activeCircuits[circ];
 					}
 				}
@@ -304,7 +340,6 @@ public class Tor implements Runnable, AnonService
 				Vector possibleOrs = m_orList.getList();
 				Enumeration enumer = ( (Vector) possibleOrs.clone()).elements();
 				//remove alle ORs which can not connect to our destination
-				boolean bHas0_8 = false;
 				while (enumer.hasMoreElements())
 				{
 					ord = (ORDescription) enumer.nextElement();
@@ -319,26 +354,9 @@ public class Tor implements Runnable, AnonService
 						possibleOrs.removeElement(ord);
 					}
 					//remove the or that is used as first or
-					else if(orsForNewCircuit.contains(ord))
+					else if (orsForNewCircuit.contains(ord))
 					{
 						possibleOrs.removeElement(ord);
-					}
-					else if (!ord.getSoftware().startsWith("Tor 0.0.7"))
-					{
-						bHas0_8 = true;
-					}
-				}
-				//if we found one which is >0.0.7 prefer them
-				if (bHas0_8)
-				{
-					enumer = ( (Vector) possibleOrs.clone()).elements();
-					while (enumer.hasMoreElements())
-					{
-						ord = (ORDescription) enumer.nextElement();
-						if (ord.getSoftware().startsWith("Tor 0.0.7"))
-						{
-							possibleOrs.removeElement(ord);
-						}
 					}
 				}
 				if (possibleOrs.size() <= 0)
@@ -459,51 +477,23 @@ public class Tor implements Runnable, AnonService
 			}
 			errTry = 0;
 			aktCircuit++;
-		//	synchronized (m_oCircuitCreatorSync)
+			//	synchronized (m_oCircuitCreatorSync)
 			//{
-				//m_oCircuitCreatorSync.notifyAll();
-		//	}
+			//m_oCircuitCreatorSync.notifyAll();
+			//	}
 
 		} //while
-		m_circuitCreator=null;
+		m_circuitCreator = null;
 		//synchronized (m_oCircuitCreatorSync)
 		//{
-			//m_oCircuitCreatorSync.notify();
+		//m_oCircuitCreatorSync.notify();
 		//}
 	}
 
-	/*	public void run()
-	 {
-	  while (m_bRun)
-	  {
-	   boolean error = true;
-	   while (error)
-	   {
-	 error = false;
-	 try
-	 {
-	  createNewActiveCircuit(null, -1);
-	 }
-	 catch (IOException ex)
-	 {
-	  LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Error during circuit creation");
-	  error = true;
-	  updateORList();
-	 }
-	   }
-
-	   try
-	   {
-	 Thread.sleep(m_createNewCircuitIntervall);
-	   }
-	   catch (InterruptedException ex)
-	   {
-	   }
-	  }
-	 }*/
-
 	/**
 	 * starts the Tor-Service
+	 * @param startCircuits
+	 * create all circuits at startup
 	 * @throws IOException
 	 */
 	private void start(boolean startCircuits) throws IOException
@@ -618,16 +608,6 @@ public class Tor implements Runnable, AnonService
 	}
 
 	/**
-	 * sets the time after that a new circuit is created
-	 * @param milsek
-	 * time in 1/1000 s
-	 */
-	/*	public void setCreateCircuitTime(long milsek)
-	 {
-	  this.m_createNewCircuitIntervall = milsek;
-	 }
-	 */
-	/**
 	 * sets the server where the onionrouterlist is fetched
 	 * @param name
 	 * address
@@ -648,6 +628,10 @@ public class Tor implements Runnable, AnonService
 		}
 	}
 
+	/**
+	 * active/deactivate the use of the DNS-Cache
+	 * @param usecache
+	 */
 	public void setUseDNSCache(boolean usecache)
 	{
 		m_useDNSCache = usecache;
@@ -749,6 +733,9 @@ public class Tor implements Runnable, AnonService
 		return m_proxyInterface;
 	}
 
+	/**
+	 * shutdown tor
+	 */
 	public void shutdown()
 	{
 		try
@@ -768,6 +755,13 @@ public class Tor implements Runnable, AnonService
 	{
 	}
 
+	/**
+	 * resolves an IP to a given hostname
+	 * @param name
+	 * hostname
+	 * @return
+	 * IP address
+	 */
 	public synchronized String resolveDNS(String name)
 	{
 		DNSCacheEntry entry;
@@ -814,6 +808,10 @@ public class Tor implements Runnable, AnonService
 		return resolvedIP;
 	}
 
+	/**
+	 * test the DNS-resolve mechanism
+	 * @throws Exception
+	 */
 	public void testDNS() throws Exception
 	{
 		LogHolder.log(LogLevel.DEBUG, LogType.TOR,

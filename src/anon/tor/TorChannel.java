@@ -32,12 +32,12 @@ package anon.tor;
 
 import java.io.IOException;
 
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
 import anon.server.impl.AbstractChannel;
 import anon.tor.cells.RelayCell;
 import anon.tor.util.helper;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 
 /**
  * @author stefan
@@ -227,7 +227,7 @@ public class TorChannel extends AbstractChannel
 					closedByPeer();
 					return;
 				}
-				break;
+				break ;
 			}
 			case RelayCell.RELAY_END:
 			{
@@ -242,7 +242,11 @@ public class TorChannel extends AbstractChannel
 			}
 		}
 	}
-	
+
+	/**
+	 * gets if the connection was closed by peer
+	 * @return
+	 */
 	public boolean isClosedByPeer()
 	{
 		return m_bIsClosedByPeer;

@@ -25,7 +25,7 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
- package anon.tor.util;
+package anon.tor.util;
 
 import anon.infoservice.DatabaseEntry;
 
@@ -33,12 +33,22 @@ import anon.infoservice.DatabaseEntry;
  * @author stefan
  *
  */
-public class DNSCacheEntry extends DatabaseEntry {
+public class DNSCacheEntry extends DatabaseEntry
+{
 
 	private String m_Id;
 	private String m_Ip;
 
-	public DNSCacheEntry(String id,String ip,long a_expireTime)
+	/**
+	 * Constructor
+	 * @param id
+	 * id
+	 * @param ip
+	 * ip
+	 * @param a_expireTime
+	 * expire Time
+	 */
+	public DNSCacheEntry(String id, String ip, long a_expireTime)
 	{
 		super(a_expireTime);
 		m_Id = id;
@@ -50,6 +60,11 @@ public class DNSCacheEntry extends DatabaseEntry {
 		return m_Id;
 	}
 
+	/**
+	 * gets the IP of the entry
+	 * @return
+	 * IP
+	 */
 	public String getIp()
 	{
 		return m_Ip;

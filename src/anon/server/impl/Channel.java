@@ -38,9 +38,9 @@ final class Channel extends AbstractChannel
 	Channel(MuxSocket muxSocket, int id, int type) throws IOException
 	{
 		super(id);
-		m_type=type;
+		m_type = type;
 		m_muxSocket = muxSocket;
-		m_bFirstPacket=true;
+		m_bFirstPacket = true;
 	}
 
 	protected void close_impl()
@@ -50,15 +50,24 @@ final class Channel extends AbstractChannel
 
 	protected void send(byte[] buff, int len)
 	{
+		if (len >= 957)
+		{
+			System.out.println("Interessting");
+		}
 		m_muxSocket.send(m_id, m_type, buff, (short) len);
+		m_bFirstPacket = false;
 	}
 
 	public int getOutputBlockSize()
 	{
-		if(m_bFirstPacket)
-			return  MuxSocket.PAYLOAD_SIZE-m_muxSocket.getNumberOfMixes()*MuxSocket.KEY_SIZE;
+		if (m_bFirstPacket)
+		{
+			return MuxSocket.PAYLOAD_SIZE - m_muxSocket.getNumberOfMixes() * MuxSocket.KEY_SIZE;
+		}
 		else
+		{
 			return MuxSocket.PAYLOAD_SIZE;
+		}
 
 	}
 }

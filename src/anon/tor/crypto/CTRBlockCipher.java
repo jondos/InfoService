@@ -25,12 +25,12 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
- /*
-  * this class is a modified version of :
-  *  
-  * org.bouncycastle.crypto.modes.SICBlockCipher
-  * (http://www.bouncycastle.org/)
-  */
+/*
+ * this class is a modified version of :
+ *
+ * org.bouncycastle.crypto.modes.SICBlockCipher
+ * (http://www.bouncycastle.org/)
+ */
 package anon.tor.crypto;
 
 import org.bouncycastle.crypto.BlockCipher;
@@ -102,55 +102,56 @@ public class CTRBlockCipher
 		return cipher.getBlockSize();
 	}
 
-	public void processBlock(byte[] in, int inOff, byte[] out, int outOff, int len) throws DataLengthException,
-		IllegalStateException
-	{
-		while (len > 0)
+	public void processBlock(byte[] in, int inOff, byte[] out, int outOff, int len) throws
+		DataLengthException,
+	IllegalStateException
 		{
+		while (len > 0)
+	{
 
-			if (this.pos == 0)
+		if (this.pos == 0)
+		{
+			cipher.processBlock(counter, 0, counterOut, 0);
+		}
+
+		while (pos < counterOut.length)
+		{
+			out[outOff] = (byte) (counterOut[pos] ^ in[inOff]);
+			outOff++;
+			inOff++;
+			len--;
+			pos++;
+			if (len == 0)
 			{
-				cipher.processBlock(counter, 0, counterOut, 0);
-			}
-
-			while(pos<counterOut.length)
-			{
-				out[outOff] = (byte) (counterOut[pos] ^ in[inOff]);
-				outOff++;
-				inOff++;
-				len--;
-				pos++;
-				if (len == 0)
-				{
-					return;
-				}
-			}
-			this.pos = 0;
-			//
-			// XOR the counterOut with the plaintext producing the cipher text
-			//
-
-			int carry = 1;
-
-			for (int i = counter.length - 1; i >= 0; i--)
-			{
-				int x = (counter[i] & 0xff) + carry;
-
-				if (x > 0xff)
-				{
-					carry = 1;
-				}
-				else
-				{
-					carry = 0;
-				}
-
-				counter[i] = (byte) x;
+				return;
 			}
 		}
+		this.pos = 0;
+		//
+		// XOR the counterOut with the plaintext producing the cipher text
+		//
+
+		int carry = 1;
+
+		for (int i = counter.length - 1; i >= 0; i--)
+		{
+			int x = (counter[i] & 0xff) + carry;
+
+			if (x > 0xff)
+			{
+				carry = 1;
+			}
+			else
+			{
+				carry = 0;
+			}
+
+			counter[i] = (byte) x;
+		}
+	}
 	}
 
-	public void reset()
+		public void reset()
 	{
 		System.arraycopy(IV, 0, counter, 0, counter.length);
 		cipher.reset();

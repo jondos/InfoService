@@ -26,7 +26,9 @@
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
 package anon.tor.ordescription;
-import anon.infoservice.*;
+
+import anon.infoservice.InfoServiceHolder;
+
 final public class InfoServiceORListFetcher implements ORListFetcher
 {
 	public InfoServiceORListFetcher()

@@ -30,85 +30,113 @@
  *
  */
 package anon.tor.util;
+
 import java.util.StringTokenizer;
+
 /**
  * @author stefan
  *
  *some usefull utilities
  */
-public class helper {
+public class helper
+{
 
-
-	public static byte[]  conc(byte[] b1,byte[] b2)
+	/**
+	 * Concatenates bytearrays
+	 * @return
+	 * concatenated array
+	 */
+	public static byte[] conc(byte[] b1, byte[] b2)
 	{
-		return conc(b1,b2,b2.length);
+		return conc(b1, b2, b2.length);
 	}
 
-	public static byte[]  conc(byte[] b1,byte[] b2,byte[] b3)
+	/**
+	 * Concatenates bytearrays
+	 * @return
+	 * concatenated array
+	 */
+	public static byte[] conc(byte[] b1, byte[] b2, byte[] b3)
 	{
-		byte[] ret = new byte[b1.length+b2.length+b3.length];
-		System.arraycopy(b1,0,ret,0,b1.length);
-		System.arraycopy(b2,0,ret,b1.length,b2.length);
-		System.arraycopy(b3,0,ret,b1.length+b2.length,b3.length);
+		byte[] ret = new byte[b1.length + b2.length + b3.length];
+		System.arraycopy(b1, 0, ret, 0, b1.length);
+		System.arraycopy(b2, 0, ret, b1.length, b2.length);
+		System.arraycopy(b3, 0, ret, b1.length + b2.length, b3.length);
 		return ret;
 	}
 
-	public static byte[]  conc(byte[] b1,byte[] b2, byte[] b3, byte[] b4)
+	/**
+	 * Concatenates bytearrays
+	 * @return
+	 * concatenated array
+	 */
+	public static byte[] conc(byte[] b1, byte[] b2, byte[] b3, byte[] b4)
 	{
-		byte[] ret = new byte[b1.length+b2.length+b3.length+b4.length];
-		System.arraycopy(b1,0,ret,0,b1.length);
-		System.arraycopy(b2,0,ret,b1.length,b2.length);
-		int len = b1.length+b2.length;
-		System.arraycopy(b3,0,ret,len,b3.length);
-		len+=b3.length;
-		System.arraycopy(b4,0,ret,len,b4.length);
+		byte[] ret = new byte[b1.length + b2.length + b3.length + b4.length];
+		System.arraycopy(b1, 0, ret, 0, b1.length);
+		System.arraycopy(b2, 0, ret, b1.length, b2.length);
+		int len = b1.length + b2.length;
+		System.arraycopy(b3, 0, ret, len, b3.length);
+		len += b3.length;
+		System.arraycopy(b4, 0, ret, len, b4.length);
 		return ret;
 	}
 
-	public static byte[]  conc(byte[] b1,byte[] b2, byte[] b3, byte[] b4,byte[] b5)
+	/**
+	 * Concatenates bytearrays
+	 * @return
+	 * concatenated array
+	 */
+	public static byte[] conc(byte[] b1, byte[] b2, byte[] b3, byte[] b4, byte[] b5)
 	{
-		byte[] ret = new byte[b1.length+b2.length+b3.length+b4.length+b5.length];
-		System.arraycopy(b1,0,ret,0,b1.length);
-		System.arraycopy(b2,0,ret,b1.length,b2.length);
-		int len = b1.length+b2.length;
-		System.arraycopy(b3,0,ret,len,b3.length);
-		len+=b3.length;
-		System.arraycopy(b4,0,ret,len,b4.length);
-		len+=b4.length;
-		System.arraycopy(b5,0,ret,len,b5.length);
+		byte[] ret = new byte[b1.length + b2.length + b3.length + b4.length + b5.length];
+		System.arraycopy(b1, 0, ret, 0, b1.length);
+		System.arraycopy(b2, 0, ret, b1.length, b2.length);
+		int len = b1.length + b2.length;
+		System.arraycopy(b3, 0, ret, len, b3.length);
+		len += b3.length;
+		System.arraycopy(b4, 0, ret, len, b4.length);
+		len += b4.length;
+		System.arraycopy(b5, 0, ret, len, b5.length);
 		return ret;
 	}
 
-	public static byte[]  conc(byte[] b1,byte[] b2, byte[] b3, byte[] b4, byte[] b5, byte[] b6)
+	/**
+	 * Concatenates bytearrays
+	 * @return
+	 * concatenated array
+	 */
+	public static byte[] conc(byte[] b1, byte[] b2, byte[] b3, byte[] b4, byte[] b5, byte[] b6)
 	{
-		byte[] ret = new byte[b1.length+b2.length+b3.length+b4.length+b5.length+b6.length];
-		System.arraycopy(b1,0,ret,0,b1.length);
-		System.arraycopy(b2,0,ret,b1.length,b2.length);
-		int len = b1.length+b2.length;
-		System.arraycopy(b3,0,ret,len,b3.length);
-		len+=b3.length;
-		System.arraycopy(b4,0,ret,len,b4.length);
-		len+=b4.length;
-		System.arraycopy(b5,0,ret,len,b5.length);
-		len+=b5.length;
-		System.arraycopy(b6,0,ret,len,b6.length);
+		byte[] ret = new byte[b1.length + b2.length + b3.length + b4.length + b5.length + b6.length];
+		System.arraycopy(b1, 0, ret, 0, b1.length);
+		System.arraycopy(b2, 0, ret, b1.length, b2.length);
+		int len = b1.length + b2.length;
+		System.arraycopy(b3, 0, ret, len, b3.length);
+		len += b3.length;
+		System.arraycopy(b4, 0, ret, len, b4.length);
+		len += b4.length;
+		System.arraycopy(b5, 0, ret, len, b5.length);
+		len += b5.length;
+		System.arraycopy(b6, 0, ret, len, b6.length);
 		return ret;
 	}
+
 	/**
 	 * Concatenates two byte arrays
 	 * @param b1
 	 * @param b2
 	 * @return
 	 */
-	public static byte[]  conc(byte[] b1,byte[] b2,int b2_len)
+	public static byte[] conc(byte[] b1, byte[] b2, int b2_len)
 	{
-		if(b1==null||b1.length==0)
+		if (b1 == null || b1.length == 0)
 		{
-			return copybytes(b2,0,b2_len);
+			return copybytes(b2, 0, b2_len);
 		}
-		byte[] b= new byte[b1.length+b2_len];
-		System.arraycopy(b1,0,b,0,b1.length);
-		System.arraycopy(b2,0,b,b1.length,b2_len);
+		byte[] b = new byte[b1.length + b2_len];
+		System.arraycopy(b1, 0, b, 0, b1.length);
+		System.arraycopy(b2, 0, b, b1.length, b2_len);
 		return b;
 	}
 
@@ -118,12 +146,12 @@ public class helper {
 	 * @param length
 	 * @return
 	 */
-	public static byte[] inttobyte(long l,int length)
+	public static byte[] inttobyte(long l, int length)
 	{
-		byte[] b=new byte[length];
-		for(int i=0;i<length;i++)
+		byte[] b = new byte[length];
+		for (int i = 0; i < length; i++)
 		{
-			b[length-i-1]=(byte)( ( l & (0xff << (i*8)) ) >> (i*8));
+			b[length - i - 1] = (byte) ( (l & (0xff << (i * 8))) >> (i * 8));
 		}
 		return b;
 	}
@@ -135,12 +163,19 @@ public class helper {
 	 * @param length length
 	 * @return copied bytes
 	 */
-	public static byte[] copybytes(byte[] bytes,int index,int length)
+	public static byte[] copybytes(byte[] bytes, int index, int length)
 	{
 		byte[] b = new byte[length];
-		System.arraycopy(bytes,index,b,0,length);
+		System.arraycopy(bytes, index, b, 0, length);
 		return b;
 	}
+
+	/**
+	 * checks if the given address is a valid IP address
+	 * @param addr
+	 * address
+	 * @return
+	 */
 	public static boolean isIPAddress(String addr)
 	{
 		StringTokenizer st = new StringTokenizer(addr, ".");

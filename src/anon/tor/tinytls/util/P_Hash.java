@@ -34,7 +34,6 @@ package anon.tor.tinytls.util;
 import org.bouncycastle.crypto.Digest;
 import org.bouncycastle.crypto.macs.HMac;
 import org.bouncycastle.crypto.params.KeyParameter;
-
 import anon.tor.util.helper;
 
 /**
@@ -42,7 +41,8 @@ import anon.tor.util.helper;
  *
  * a P_Hash function as described in RFC2246
  */
-public class P_Hash {
+public class P_Hash
+{
 
 	private byte[] m_secret;
 	private byte[] m_seed;
@@ -75,35 +75,37 @@ public class P_Hash {
 		HMac hm = new HMac(this.m_digest);
 		hm.reset();
 		hm.init(new KeyParameter(this.m_secret));
-		hm.update(this.m_seed,0,this.m_seed.length);
+		hm.update(this.m_seed, 0, this.m_seed.length);
 		a = new byte[hm.getMacSize()];
-		hm.doFinal(a,0);
+		hm.doFinal(a, 0);
 
 		do
 		{
 			//HMAC_HASH(secret,a+seed)
 			hm.reset();
 			hm.init(new KeyParameter(this.m_secret));
-			hm.update(helper.conc(a,this.m_seed),0,a.length+this.m_seed.length);
+			hm.update(helper.conc(a, this.m_seed), 0, a.length + this.m_seed.length);
 			c = new byte[hm.getMacSize()];
-			hm.doFinal(c,0);
-			if(b==null)
+			hm.doFinal(c, 0);
+			if (b == null)
 			{
 				b = c;
-			} else
+			}
+			else
 			{
-				b = helper.conc(b,c);
+				b = helper.conc(b, c);
 			}
 
 			//compute next a
 			hm.reset();
 			hm.init(new KeyParameter(this.m_secret));
-			hm.update(a,0,a.length);
+			hm.update(a, 0, a.length);
 			a = new byte[hm.getMacSize()];
-			hm.doFinal(a,0);
-		}	while(b.length<length);
+			hm.doFinal(a, 0);
+		}
+		while (b.length < length);
 
-		return helper.copybytes(b,0,length);
+		return helper.copybytes(b, 0, length);
 	}
 
 }

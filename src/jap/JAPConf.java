@@ -133,7 +133,8 @@ final class JAPConf extends JDialog
 
 	private Font m_fontControls;
 
-	private boolean loadPay = false;
+	private boolean m_bWithPayment = false;
+	private boolean m_bIsSimpleView;
 
 	private JAPConfModuleSystem m_moduleSystem;
 	private JAPConfServices m_confServices;
@@ -146,7 +147,8 @@ final class JAPConf extends JDialog
 	public JAPConf(JFrame frmParent, boolean loadPay)
 	{
 		super(frmParent);
-		this.loadPay = loadPay;
+		m_bWithPayment = loadPay;
+		m_bIsSimpleView=(JAPModel.getDefaultView()==JAPConstants.VIEW_SIMPLIFIED);
 		/* set the instance pointer */
 		ms_JapConfInstance = this;
 		m_Controller = JAPController.getInstance();
@@ -163,35 +165,42 @@ final class JAPConf extends JDialog
 		m_moduleSystem = new JAPConfModuleSystem();
 		DefaultMutableTreeNode rootNode = m_moduleSystem.getConfigurationTreeRootNode();
 		m_moduleSystem.addConfigurationModule(rootNode, new JAPConfUI(), UI_TAB);
-		if (loadPay)
+		if (m_bWithPayment)
 		{
 			m_moduleSystem.addConfigurationModule(rootNode, new AccountSettingsPanel(), PAYMENT_TAB);
 		}
 		m_moduleSystem.addConfigurationModule(rootNode, new JAPConfUpdate(), UPDATE_TAB);
 		DefaultMutableTreeNode nodeNet = m_moduleSystem.addComponent(rootNode, null, "ngTreeNetwork", null);
-		m_moduleSystem.addComponent(nodeNet, m_pPort, "confListenerTab", PORT_TAB);
+		if (!m_bIsSimpleView)
+		{
+			m_moduleSystem.addComponent(nodeNet, m_pPort, "confListenerTab", PORT_TAB);
+		}
 		m_moduleSystem.addComponent(nodeNet, m_pFirewall, "confProxyTab", PROXY_TAB);
-		if (JAPConstants.WITH_BLOCKINGRESISTANCE)
+		if (!m_bIsSimpleView)
 		{
 			m_moduleSystem.addConfigurationModule(nodeNet, new JAPConfForwardingClient(),
 												  FORWARDING_CLIENT_TAB);
 		}
 		DefaultMutableTreeNode nodeAnon = m_moduleSystem.addComponent(rootNode, null, "ngAnonymitaet", null);
-		m_moduleSystem.addConfigurationModule(nodeAnon, new JAPConfInfoService(), INFOSERVICE_TAB);
+		if (!m_bIsSimpleView)
+		{
+			m_moduleSystem.addConfigurationModule(nodeAnon, new JAPConfInfoService(), INFOSERVICE_TAB);
+		}
 		m_confServices = new JAPConfServices();
 		m_moduleSystem.addConfigurationModule(nodeAnon, m_confServices, ANON_SERVICES_TAB);
-		if (JAPConstants.WITH_BLOCKINGRESISTANCE)
+		if (!m_bIsSimpleView)
 		{
 			m_moduleSystem.addConfigurationModule(nodeAnon, new JAPConfForwardingServer(),
 												  FORWARDING_SERVER_TAB);
-		}
-		m_moduleSystem.addConfigurationModule(nodeAnon, new JAPConfCert(), CERT_TAB);
-		DefaultMutableTreeNode debugNode = m_moduleSystem.addComponent(rootNode, m_pMisc, "ngTreeDebugging",
-			DEBUG_TAB);
-		if ( (JAPConstants.WITH_BLOCKINGRESISTANCE) && (JAPModel.getInstance().isForwardingStateModuleVisible()))
-		{
-			m_moduleSystem.addConfigurationModule(debugNode, new JAPConfForwardingState(),
-												  FORWARDING_STATE_TAB);
+			m_moduleSystem.addConfigurationModule(nodeAnon, new JAPConfCert(), CERT_TAB);
+			DefaultMutableTreeNode debugNode = m_moduleSystem.addComponent(rootNode, m_pMisc,
+				"ngTreeDebugging",
+				DEBUG_TAB);
+			if (JAPModel.getInstance().isForwardingStateModuleVisible())
+			{
+				m_moduleSystem.addConfigurationModule(debugNode, new JAPConfForwardingState(),
+					FORWARDING_STATE_TAB);
+			}
 		}
 		m_moduleSystem.getConfigurationTree().expandPath(new TreePath(nodeNet.getPath()));
 		m_moduleSystem.getConfigurationTree().expandPath(new TreePath(nodeAnon.getPath()));

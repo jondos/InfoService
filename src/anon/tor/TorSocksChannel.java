@@ -252,19 +252,33 @@ public class TorSocksChannel extends TorChannel
 				consumedBytes++;
 				addr = sb.toString();
 			}
+			boolean connected = false;
 			//	connect
-			Circuit circ; 
-			circ = m_Tor.getCircuitForDestination(addr, port);
-			if(circ==null) //connection error
+			while (!connected)
 			{
-				socksAnswer = new byte[]
+				connected = true;
+				try
+				{
+					Circuit circ;
+					circ = m_Tor.getCircuitForDestination(addr, port);
+					if (circ == null) //connection error
 					{
-					0x00, 91, 0x00, 0, 0, 0, 0, 0};
-				super.recv(socksAnswer, 0, socksAnswer.length);
-				this.closedByPeer();
-				return;
-			} 
-			circ.connectChannel(this, addr, port);
+						socksAnswer = new byte[]
+							{
+							0x00, 91, 0x00, 0, 0, 0, 0, 0};
+						super.recv(socksAnswer, 0, socksAnswer.length);
+						this.closedByPeer();
+						return;
+					}
+					circ.connectChannel(this, addr, port);
+				}
+				catch (IOException ex)
+				{
+					connected = false;
+					//circuit seems to be shutdown
+				}
+			}
+
 			socksAnswer = new byte[]
 				{
 				0x00, 90, 0x00, 0, 0, 0, 0, 0};
@@ -344,9 +358,9 @@ public class TorSocksChannel extends TorChannel
 
 			if (addr != null) //we found an address
 			{
-				Circuit circ; 
+				Circuit circ;
 				circ = m_Tor.getCircuitForDestination(addr, port);
-				if(circ==null)  //connection error
+				if (circ == null) //connection error
 				{
 					socksAnswer = helper.conc(new byte[]
 											  {0x05, 0x01, 0x00}
@@ -354,7 +368,7 @@ public class TorSocksChannel extends TorChannel
 					super.recv(socksAnswer, 0, socksAnswer.length);
 					this.closedByPeer();
 					return;
-				} 
+				}
 				//	connect
 				circ.connectChannel(this, addr, port);
 				socksAnswer = helper.conc(new byte[]

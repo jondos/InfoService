@@ -481,6 +481,8 @@ public final class JAPController implements ProxyListener, Observer
 				NamedNodeMap n = root.getAttributes();
 
 				//
+				setDefaultView(JAPConstants.VIEW_NORMAL);
+
 				String strVersion = XMLUtil.parseValue(n.getNamedItem(JAPConstants.CONFIG_VERSION), null);
 				int port = XMLUtil.parseAttribute(root, JAPConstants.CONFIG_PORT_NUMBER,
 												  JAPModel.getHttpListenerPortNumber());
@@ -685,7 +687,6 @@ public final class JAPController implements ProxyListener, Observer
 							if (strDefaultView.equals(JAPConstants.CONFIG_SIMPLIFIED))
 							{
 								setDefaultView(JAPConstants.VIEW_SIMPLIFIED);
-								///todo: set simplified view...
 							}
 						}
 						catch (Exception ex)
@@ -928,8 +929,8 @@ public final class JAPController implements ProxyListener, Observer
 				}
 
 				/* read the settings of the JAP forwarding system, if it is enabled */
-				if (JAPConstants.WITH_BLOCKINGRESISTANCE)
-				{
+//				if (JAPConstants.WITH_BLOCKINGRESISTANCE)
+//				{
 					Element japForwardingSettingsNode = (Element) (XMLUtil.getFirstChildByName(root,
 						JAPConstants.CONFIG_JAP_FORWARDING_SETTINGS));
 					if (japForwardingSettingsNode != null)
@@ -941,7 +942,7 @@ public final class JAPController implements ProxyListener, Observer
 					{
 						LogHolder.log(LogLevel.ERR, LogType.MISC, "JAPController: loadConfigFile: Error in XML structure (JapForwardingSettings node): Using default settings for forwarding.");
 					}
-				}
+//				}
 
 			}
 			catch (Exception e)
@@ -1323,11 +1324,7 @@ public final class JAPController implements ProxyListener, Observer
 				}
 			}
 
-			/* add the settings of the JAP forwarding system, if it is enabled */
-			if (JAPConstants.WITH_BLOCKINGRESISTANCE)
-			{
-				e.appendChild(JAPModel.getInstance().getRoutingSettings().getSettingsAsXml(doc));
-			}
+			e.appendChild(JAPModel.getInstance().getRoutingSettings().getSettingsAsXml(doc));
 
 			return XMLUtil.toString(doc);
 			//((XmlDocument)doc).write(f);

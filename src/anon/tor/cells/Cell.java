@@ -87,28 +87,54 @@ public abstract class Cell
 
 	/**
 	 * returns the command of the cell
+	 * @return
+	 * command
 	 */
 	public int getCommand()
 	{
 		return m_command;
 	}
 
+	/**
+	 * gets the circuit id
+	 * @return
+	 * ID
+	 */
 	public int getCircuitID()
 	{
 		return m_circID;
 	}
 
+	/**
+	 * gets the payload of the cell
+	 * @return
+	 * payload
+	 */
 	public byte[] getPayload()
 	{
 		return m_payload;
 	}
 
+	/**
+	 * sets the payload
+	 * @param payload
+	 * payload
+	 * @param offset
+	 * offset
+	 */
 	public void setPayload(byte[] payload, int offset)
 	{
 		int len = Math.min(CELL_PAYLOAD_SIZE, payload.length);
 		System.arraycopy(payload, offset, m_payload, 0, len);
 	}
 
+	/**
+	 * creates a cell with the given data
+	 * @param cellData
+	 * data
+	 * @return
+	 * a cell
+	 */
 	public static Cell createCell(byte[] cellData)
 	{
 		if (cellData.length != CELL_SIZE)

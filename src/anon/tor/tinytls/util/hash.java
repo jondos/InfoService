@@ -39,7 +39,8 @@ import org.bouncycastle.crypto.digests.SHA1Digest;
  *
  *	this class implements often used hash functions
  */
-public class hash {
+public class hash
+{
 
 	/**
 	 * generates a sha hash
@@ -55,6 +56,15 @@ public class hash {
 		return ret;
 	}
 
+	/**
+	 * generates a sha hash
+	 * @param b1
+	 * input
+	 * @param b2
+	 * input
+	 * @return
+	 * hash
+	 */
 	public static byte[] sha(byte[] b1, byte[] b2)
 	{
 		SHA1Digest master_sha1 = new SHA1Digest();
@@ -66,6 +76,17 @@ public class hash {
 		return ret;
 	}
 
+	/**
+	 * generates a sha hash
+	 * @param b1
+	 * input
+	 * @param b2
+	 * input
+	 * @param b3
+	 * input
+	 * @return
+	 * hash
+	 */
 	public static byte[] sha(byte[] b1, byte[] b2, byte[] b3)
 	{
 		SHA1Digest master_sha1 = new SHA1Digest();
@@ -93,6 +114,15 @@ public class hash {
 		return ret;
 	}
 
+	/**
+	 * generates a md5 hash
+	 * @param b1
+	 * input
+	 * @param b2
+	 * input
+	 * @return
+	 * hash
+	 */
 	public static byte[] md5(byte[] b1, byte[] b2)
 	{
 		MD5Digest master_md5 = new MD5Digest();
@@ -104,6 +134,17 @@ public class hash {
 		return ret;
 	}
 
+	/**
+	 * generates a md5 hash
+	 * @param b1
+	 * input
+	 * @param b2
+	 * input
+	 * @param b3
+	 * input
+	 * @return
+	 * hash
+	 */
 	public static byte[] md5(byte[] b1, byte[] b2, byte[] b3)
 	{
 		MD5Digest master_md5 = new MD5Digest();
@@ -115,6 +156,5 @@ public class hash {
 		master_md5.doFinal(ret, 0);
 		return ret;
 	}
-
 
 }

@@ -36,6 +36,9 @@ public class TorAnonServerDescription implements AnonServerDescription
 	private final boolean m_bUseInfoService;
 	private final boolean m_bStartCircuitsAtStartup;
 
+	/**
+	 * Constructor
+	 */
 	public TorAnonServerDescription()
 	{
 		m_strTorDirServerAddr = Tor.DEFAULT_DIR_SERVER_ADDR;
@@ -44,11 +47,23 @@ public class TorAnonServerDescription implements AnonServerDescription
 		m_bStartCircuitsAtStartup = false;
 	}
 
+	/**
+	 * Constructor
+	 * @param bUseInfoService
+	 * use the info service
+	 */
 	public TorAnonServerDescription(boolean bUseInfoService)
 	{
-		this(bUseInfoService,false);
+		this(bUseInfoService, false);
 	}
 
+	/**
+	 * Constructor
+	 * @param bUseInfoService
+	 * use the info service
+	 * @param bStartCircuitsAtStartup
+	 * start all circuits at startup
+	 */
 	public TorAnonServerDescription(boolean bUseInfoService, boolean bStartCircuitsAtStartup)
 	{
 		if (bUseInfoService)
@@ -66,7 +81,17 @@ public class TorAnonServerDescription implements AnonServerDescription
 		m_bStartCircuitsAtStartup = bStartCircuitsAtStartup;
 	}
 
-	public TorAnonServerDescription(String torDirServerAddr, int torDirServerPort, boolean bStartCircuitsAtStartup)
+	/**
+	 * Constructor
+	 * @param torDirServerAddr
+	 * address of a tor directory server
+	 * @param torDirServerPort
+	 * port of the tor directory server
+	 * @param bStartCircuitsAtStartup
+	 * start all circuits at startup
+	 */
+	public TorAnonServerDescription(String torDirServerAddr, int torDirServerPort,
+									boolean bStartCircuitsAtStartup)
 	{
 		m_strTorDirServerAddr = torDirServerAddr;
 		m_iTorDirServerPort = torDirServerPort;
@@ -74,21 +99,39 @@ public class TorAnonServerDescription implements AnonServerDescription
 		m_bStartCircuitsAtStartup = bStartCircuitsAtStartup;
 	}
 
+	/**
+	 * gets the address of the tor directory server
+	 * @return
+	 * IP address
+	 */
 	public String getTorDirServerAddr()
 	{
 		return m_strTorDirServerAddr;
 	}
 
+	/**
+	 * gets the port of the tor directory server
+	 * @return
+	 * port
+	 */
 	public int getTorDirServerPort()
 	{
 		return m_iTorDirServerPort;
 	}
 
+	/**
+	 * gets if the infoservice is used
+	 * @return
+	 */
 	public boolean useInfoService()
 	{
 		return m_bUseInfoService;
 	}
 
+	/**
+	 * gets if all circuits are created on startup
+	 * @return
+	 */
 	public boolean startCircuitsAtStartup()
 	{
 		return m_bStartCircuitsAtStartup;

@@ -541,7 +541,7 @@ final public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncod
       /* get the next connection descriptor by supplying the last one */
       currentConnectionDescriptor = connectToInfoService(currentConnectionDescriptor);
       final HTTPConnection currentConnection = currentConnectionDescriptor.getConnection();
-      
+
       /* use a Vector as storage for the the result of the communication */
       final Vector responseStorage = new Vector();
       /* we need the possibility to interrupt the infoservice communication, but also we need to
@@ -581,14 +581,14 @@ final public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncod
       try {
         communicationThread.join();
         try {
-          HTTPResponse response = (HTTPResponse)(responseStorage.firstElement());  
+          HTTPResponse response = (HTTPResponse)(responseStorage.firstElement());
           Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(response.getInputStream());
         /* fetching the document was successful, leave this method */
         return doc;
       }
         catch (NoSuchElementException e) {
           /* fetching the information was not successful -> do nothing */
-        }   
+        }
       }
       catch (InterruptedException e) {
         /* operation was interupted from the outside -> set the intterupted flag for the Thread
@@ -683,7 +683,7 @@ final public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncod
       }
       else {
         LogHolder.log(LogLevel.ERR, LogType.MISC, "Cannot verify the signature for InfoService entry: " + XMLUtil.toString(infoServiceNode));
-      }  
+      }
     }
     return infoServices;
   }
@@ -795,7 +795,7 @@ final public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncod
     {
       doc = getXmlDocument(HttpRequestStructure.createGetRequest("/japRelease.jnlp"));
     }
-    if (japVersionType == JAPVersionInfo.JAP_DEVELOPMENT_VERSION)
+    else if (japVersionType == JAPVersionInfo.JAP_DEVELOPMENT_VERSION)
     {
       doc = getXmlDocument(HttpRequestStructure.createGetRequest("/japDevelopment.jnlp"));
     }

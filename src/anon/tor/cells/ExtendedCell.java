@@ -61,9 +61,9 @@ public class ExtendedCell extends RelayCell
 	 * @param payload
 	 * payload
 	 */
-	public ExtendedCell(int circID, byte[] payload,int offset)
+	public ExtendedCell(int circID, byte[] payload, int offset)
 	{
-		super(circID, payload,offset);
+		super(circID, payload, offset);
 	}
 
 }

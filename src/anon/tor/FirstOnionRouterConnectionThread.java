@@ -34,7 +34,8 @@ import java.net.SocketException;
 import anon.infoservice.ImmutableProxyInterface;
 import anon.tor.tinytls.TinyTLS;
 
-public class FirstOnionRouterConnectionThread implements Runnable {
+public class FirstOnionRouterConnectionThread implements Runnable
+{
 
 	private TinyTLS m_tls;
 	private Thread m_thread = null;
@@ -45,37 +46,56 @@ public class FirstOnionRouterConnectionThread implements Runnable {
 	private Object m_oNotifySync = new Object();
 	private ImmutableProxyInterface m_proxyInterface;
 
-	public FirstOnionRouterConnectionThread(String name, int port,long timeout,
+	/**
+	 * Constructor
+	 * @param name
+	 * host
+	 * @param port
+	 * port
+	 * @param timeout
+	 * timeout
+	 * @param a_ProxyInterface
+	 * a proxy interface
+	 */
+	public FirstOnionRouterConnectionThread(String name, int port, long timeout,
 											ImmutableProxyInterface a_ProxyInterface)
 	{
 		m_name = name;
 		m_port = port;
 		m_timeout = timeout;
 		m_exception = null;
-		m_proxyInterface=a_ProxyInterface;
+		m_proxyInterface = a_ProxyInterface;
 	}
 
+	/**
+	 * gets a TinyTLS connection if no timeout is reached
+	 * @return
+	 * on succes : a tinytls connection
+	 * on timeout : null
+	 * @throws IOException
+	 */
 	public TinyTLS getConnection() throws IOException
 	{
-		m_thread = new Thread(this,"FirstOnionRouterConnectionThread");
+		m_thread = new Thread(this, "FirstOnionRouterConnectionThread");
 		m_thread.start();
 		synchronized (m_oNotifySync)
 		{
 			try
 			{
 				m_oNotifySync.wait(m_timeout);
-			} catch (InterruptedException ex)
+			}
+			catch (InterruptedException ex)
 			{
 			}
 		}
 		//if an error occured throw the exception
-		if(m_exception!=null)
+		if (m_exception != null)
 		{
 			throw new IOException(m_exception.getMessage());
 		}
-		if(m_tls==null)
+		if (m_tls == null)
 		{
-			System.out.println("SocketTimeoutException : "+m_name);
+			System.out.println("SocketTimeoutException : " + m_name);
 			throw new SocketException("Connection timed out");
 		}
 		return m_tls;
@@ -86,8 +106,9 @@ public class FirstOnionRouterConnectionThread implements Runnable {
 		TinyTLS tls = null;
 		try
 		{
-			tls = new TinyTLS(m_name,m_port,m_proxyInterface);
-		} catch(Exception ex)
+			tls = new TinyTLS(m_name, m_port, m_proxyInterface);
+		}
+		catch (Exception ex)
 		{
 			m_exception = ex;
 		}

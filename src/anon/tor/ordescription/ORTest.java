@@ -26,16 +26,19 @@
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
 package anon.tor.ordescription;
+
 import java.io.IOException;
 
 /**
  * @author stefan
  *
  */
-public class ORTest {
+public class ORTest
+{
 
-	public static void main(String[] args) throws IOException {
-		ORList orl= new ORList(new PlainORListFetcher("18.244.0.188",9033));
+	public static void main(String[] args) throws IOException
+	{
+		ORList orl = new ORList(new PlainORListFetcher("18.244.0.188", 9033));
 		orl.updateList();
 	}
 }

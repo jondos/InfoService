@@ -36,21 +36,12 @@ import java.util.Hashtable;
 import java.util.StringTokenizer;
 import java.util.TimeZone;
 import java.util.Vector;
+
 import anon.crypto.MyRandom;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 
-/*
- * Created on Mar 25, 2004
- *
- */
-
-/**
- * @author stefan
- *
-
- */
 public class ORList
 {
 
@@ -77,6 +68,11 @@ public class ORList
 		m_rand = new MyRandom();
 	}
 
+	/**
+	 * size of the ORList
+	 * @return
+	 * number of routers in the list
+	 */
 	public synchronized int size()
 	{
 		return m_onionrouters.size();
@@ -95,8 +91,10 @@ public class ORList
 		try
 		{
 			String doc = m_orlistFetcher.getORList();
-			if(doc==null)
+			if (doc == null)
+			{
 				return false;
+			}
 			parseDocument(doc);
 			return true;
 		}
@@ -119,16 +117,33 @@ public class ORList
 		return (Vector) m_onionrouters.clone();
 	}
 
+	/**
+	 * gets the date when the List was pubished
+	 * @return
+	 * date
+	 */
 	public Date getPublished()
 	{
 		return m_datePublished;
 	}
 
+	/**
+	 * gets an onion router by it's name
+	 * @param name
+	 * name of the OR
+	 * @return
+	 * ORDescription of the onion router
+	 */
 	public synchronized ORDescription getByName(String name)
 	{
 		return (ORDescription) m_onionroutersWithNames.get(name);
 	}
 
+	/**
+	 * removes an onion router
+	 * @param name
+	 * name of the OR
+	 */
 	public synchronized void remove(String name)
 	{
 		m_onionrouters.removeElement(getByName(name));
@@ -140,7 +155,6 @@ public class ORList
 	 * @param orlist list of onionrouter names
 	 * @return
 	 */
-
 	public synchronized ORDescription getByRandom(Vector allowedNames)
 	{
 		String orName = (String) allowedNames.elementAt( (m_rand.nextInt(allowedNames.size())));
@@ -182,7 +196,7 @@ public class ORList
 		Vector ors = new Vector();
 		Hashtable orswn = new Hashtable();
 		LineNumberReader reader = new LineNumberReader(new StringReader(strDocument));
-		String strRunningOrs = "";
+		String strRunningOrs = " ";
 		Date published = null;
 		for (; ; )
 		{
@@ -198,25 +212,25 @@ public class ORList
 				strRunningOrs = aktLine + " ";
 			}
 			//new in version 0.0.9pre5 - added instead of running-routers line
-			else if(aktLine.startsWith("opt router-status")||aktLine.startsWith("router-status"))
+			else if (aktLine.startsWith("opt router-status") || aktLine.startsWith("router-status"))
 			{
-				strRunningOrs = "";
-				StringTokenizer st = new StringTokenizer(aktLine," ");
+				strRunningOrs = " ";
+				StringTokenizer st = new StringTokenizer(aktLine, " ");
 				String token = st.nextToken();
-				if(!token.toLowerCase().equals("router-status"))
+				if (!token.toLowerCase().equals("router-status"))
 				{
 					token = st.nextToken();
 				}
-				while(st.hasMoreTokens())
+				while (st.hasMoreTokens())
 				{
 					token = st.nextToken();
 					//check if router is running
-					if(!token.startsWith("!"))
+					if (!token.startsWith("!"))
 					{
 						//check if the router is verified
-						if(!token.startsWith("$"))
+						if (!token.startsWith("$"))
 						{
-							strRunningOrs +=	(new StringTokenizer(token,"=")).nextToken() +" ";
+							strRunningOrs += (new StringTokenizer(token, "=")).nextToken() + " ";
 						}
 					}
 				}
@@ -227,7 +241,7 @@ public class ORList
 				ORDescription ord = ORDescription.parse(reader);
 				if (ord != null)
 				{
-					if ( (strRunningOrs.indexOf(" " + ord.getName() + " ") >
+					if ( (strRunningOrs.indexOf(" " + ord.getName() + " ") >=
 						  0) /*&&(ord.getSoftware().startsWith("Tor 0.0.8"))*/)
 					{
 						ors.addElement(ord);

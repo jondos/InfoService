@@ -69,11 +69,46 @@ final class JAPConfUI extends AbstractJAPConfModule
 
 		/* clear the whole root panel */
 		panelRoot.removeAll();
+		boolean bSimpleView = (JAPModel.getDefaultView() == JAPConstants.VIEW_SIMPLIFIED);
 		GridBagLayout gbl1 = new GridBagLayout();
 		GridBagConstraints c1 = new GridBagConstraints();
 		panelRoot.setLayout(gbl1);
+		c1.insets = new Insets(0, 0, 0, 0);
+		c1.gridx = 0;
+		c1.gridy = 0;
+		c1.anchor = GridBagConstraints.NORTHWEST;
+		c1.fill = GridBagConstraints.HORIZONTAL;
+		c1.weightx = 1;
+		JPanel pLookAndFeel = createLookAndFeelPanel();
+		if (!bSimpleView)
+		{
+			panelRoot.add(pLookAndFeel, c1);
+			c1.insets = new Insets(10, 0, 10, 0);
+		}
+
+		c1.gridy++;
+		panelRoot.add(createViewPanel(), c1);
+
+		c1.insets = new Insets(0, 0, 0, 0);
+		c1.gridy++;
+		JPanel pStartup = createAfterStartupPanel();
+		if (!bSimpleView)
+		{
+			panelRoot.add(pStartup, c1);
+		}
+
+		c1.gridy++;
+		c1.anchor = GridBagConstraints.NORTHWEST;
+		c1.fill = GridBagConstraints.VERTICAL;
+		c1.weighty = 1;
+		panelRoot.add(new JPanel(), c1);
+	}
+
+	private JPanel createLookAndFeelPanel()
+	{
 		GridBagLayout gbl = new GridBagLayout();
 		GridBagConstraints c = new GridBagConstraints();
+
 		m_borderLookAndFeel = new TitledBorder(JAPMessages.getString("settingsLookAndFeelBorder"));
 		JPanel p = new JPanel(gbl);
 		p.setBorder(m_borderLookAndFeel);
@@ -87,12 +122,12 @@ final class JAPConfUI extends AbstractJAPConfModule
 		JComboBox combo = new JComboBox();
 		LookAndFeelInfo[] lf = UIManager.getInstalledLookAndFeels();
 		String currentLf = UIManager.getLookAndFeel().getClass().getName();
-		// add menu items
+// add menu items
 		for (int lfidx = 0; lfidx < lf.length; lfidx++)
 		{
 			combo.addItem(lf[lfidx].getName());
 		}
-		// select the current
+// select the current
 		int lfidx;
 		for (lfidx = 0; lfidx < lf.length; lfidx++)
 		{
@@ -168,36 +203,44 @@ final class JAPConfUI extends AbstractJAPConfModule
 		c.fill = GridBagConstraints.NONE;
 		c.weightx = 0;
 		p.add(m_cbSaveWindowPositions, c);
-		c1.anchor = GridBagConstraints.NORTHWEST;
-		c1.fill = GridBagConstraints.HORIZONTAL;
-		c1.weightx = 1;
-		c1.anchor = GridBagConstraints.NORTHWEST;
-		panelRoot.add(p, c1);
+		return p;
+	}
 
-		gbl = new GridBagLayout();
-		c = new GridBagConstraints();
+	private JPanel createViewPanel()
+	{
+		GridBagLayout gbl = new GridBagLayout();
+		GridBagConstraints c = new GridBagConstraints();
 		m_borderView = new TitledBorder(JAPMessages.getString("ngSettingsViewBorder"));
-		p = new JPanel(gbl);
+		JPanel p = new JPanel(gbl);
 		p.setBorder(m_borderView);
 		m_rbViewNormal = new JRadioButton(JAPMessages.getString("ngSettingsViewNormal"));
 		m_rbViewSimplified = new JRadioButton(JAPMessages.getString("ngSettingsViewSimplified"));
 		ButtonGroup bg = new ButtonGroup();
 		bg.add(m_rbViewNormal);
 		bg.add(m_rbViewSimplified);
+		ActionListener listener=new ActionListener()
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+				JAPConf.showInfo(JAPMessages.getString("confViewChanged"));
+			}
+		};
+		m_rbViewNormal.addActionListener(listener);
+		m_rbViewSimplified.addActionListener(listener);
 		c.insets = new Insets(10, 10, 10, 10);
 		c.weightx = 1;
 		c.anchor = GridBagConstraints.NORTHWEST;
 		p.add(m_rbViewNormal, c);
 		c.gridy = 1;
 		p.add(m_rbViewSimplified, c);
-		c1.gridy = 1;
-		c1.insets = new Insets(10, 0, 10, 0);
-		c1.anchor = GridBagConstraints.NORTHWEST;
-		panelRoot.add(p, c1);
+		return p;
+	}
 
-		gbl = new GridBagLayout();
-		c = new GridBagConstraints();
-		p = new JPanel(gbl);
+	private JPanel createAfterStartupPanel()
+	{
+		GridBagLayout gbl = new GridBagLayout();
+		GridBagConstraints c = new GridBagConstraints();
+		JPanel p = new JPanel(gbl);
 		p.setBorder(new TitledBorder(JAPMessages.getString("ngSettingsStartBorder")));
 		m_cbAfterStart = new JCheckBox(JAPMessages.getString("ngViewAfterStart"));
 		m_cbAfterStart.addActionListener(new ActionListener()
@@ -214,7 +257,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 		p.add(m_cbAfterStart, c);
 		m_rbViewMini = new JRadioButton(JAPMessages.getString("ngViewMini"));
 		m_rbViewSystray = new JRadioButton(JAPMessages.getString("ngViewSystray"));
-		bg = new ButtonGroup();
+		ButtonGroup bg = new ButtonGroup();
 		bg.add(m_rbViewMini);
 		bg.add(m_rbViewSystray);
 		c.gridy = 1;
@@ -222,19 +265,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 		p.add(m_rbViewMini, c);
 		c.gridy = 2;
 		p.add(m_rbViewSystray, c);
-
-		c1.gridy = 2;
-		c1.insets = new Insets(0, 0, 0, 0);
-		c1.anchor = GridBagConstraints.NORTHWEST;
-		panelRoot.add(p, c1);
-
-		c1.gridx = 0;
-		c1.gridy = 3;
-		c1.anchor = GridBagConstraints.NORTHWEST;
-		c1.fill = GridBagConstraints.VERTICAL;
-		c1.weighty = 1;
-		JPanel fillPanel = new JPanel();
-		panelRoot.add(fillPanel, c1);
+		return p;
 	}
 
 	public String getTabTitle()

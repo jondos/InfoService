@@ -27,20 +27,12 @@
  */
 package anon.tor.ordescription;
 
-import anon.util.Base64;
-import java.io.*;
+import java.io.LineNumberReader;
 import java.util.StringTokenizer;
+
 import anon.crypto.MyRSAPublicKey;
+import anon.util.Base64;
 
-/*
- * Created on Mar 25, 2004
- *
- */
-
-/**
- * @author stefan
- *
- */
 public class ORDescription
 {
 
@@ -53,6 +45,17 @@ public class ORDescription
 	private MyRSAPublicKey m_onionkey;
 	private MyRSAPublicKey m_signingkey;
 
+	/**
+	 * Constructor
+	 * @param address
+	 * address of the onion router
+	 * @param name
+	 * name for the onion router
+	 * @param port
+	 * port
+	 * @param strSoftware
+	 * version of the onion router software
+	 */
 	public ORDescription(String address, String name, int port, String strSoftware)
 	{
 		this.m_address = address;
@@ -63,68 +66,138 @@ public class ORDescription
 		m_acl = new ORAcl();
 	}
 
+	/**
+	 * sets the ACL for this onion router
+	 * @param acl
+	 * ACL
+	 */
 	public void setAcl(ORAcl acl)
 	{
 		m_acl = acl;
 	}
 
+	/**
+	 * gets the ACL for this onion router
+	 * @return
+	 * ACL
+	 */
 	public ORAcl getAcl()
 	{
 		return m_acl;
 	}
 
+	/**
+	 * sets the onionkey for this OR
+	 * @param onionkey
+	 * onionkey
+	 * @return
+	 * true if the key is a rsa key
+	 */
 	public boolean setOnionKey(byte[] onionkey)
 	{
 		m_onionkey = MyRSAPublicKey.getInstance(onionkey);
 		return m_onionkey != null;
 	}
 
+	/**
+	 * gets the onionkey
+	 * @return
+	 * onionkey
+	 */
 	public MyRSAPublicKey getOnionKey()
 	{
 		return this.m_onionkey;
 	}
 
+	/**
+	 * sets the signing key
+	 * @param signingkey
+	 * signing key
+	 * @return
+	 * true if the key is a rsa key
+	 */
 	public boolean setSigningKey(byte[] signingkey)
 	{
 		m_signingkey = MyRSAPublicKey.getInstance(signingkey);
 		return m_signingkey != null;
 	}
 
+	/**
+	 * gets the signing key
+	 * @return
+	 * signing key
+	 */
 	public MyRSAPublicKey getSigningKey()
 	{
 		return this.m_signingkey;
 	}
 
+	/**
+	 * gets the address of the OR
+	 * @return
+	 * address
+	 */
 	public String getAddress()
 	{
 		return this.m_address;
 	}
 
+	/**
+	 * gets the name of the OR
+	 * @return
+	 * name
+	 */
 	public String getName()
 	{
 		return this.m_name;
 	}
 
+	/**
+	 * sets the port of the directory server
+	 * @param port
+	 * port
+	 */
 	public void setDirPort(int port)
 	{
 		m_portDir = port;
 	}
 
+	/**
+	 * gets the port
+	 * @return
+	 * port
+	 */
 	public int getPort()
 	{
 		return this.m_port;
 	}
 
+	/**
+	 * gets the port of the directory server
+	 * @return
+	 * port
+	 */
 	public int getDirPort()
 	{
 		return m_portDir;
 	}
 
+	/**
+	 * gets the software version of this OR
+	 * @return
+	 * software version
+	 */
 	public String getSoftware()
 	{
 		return m_strSoftware;
 	}
 
+	/**
+	 * test if two OR's are identical
+	 * @param or
+	 * OR
+	 * @return
+	 */
 	public boolean equals(ORDescription or)
 	{
 		if (or == null)
@@ -136,103 +209,108 @@ public class ORDescription
 			(m_port == or.getPort());
 	}
 
-	/*Tries to parse an router specification according to the desing document.*/
+	/**Tries to parse an router specification according to the desing document.
+	 * @param reader
+	 * reader
+	 */
 	public static ORDescription parse(LineNumberReader reader)
 	{
 		try
 		{
-		String ln = reader.readLine();
-		if (ln==null||!ln.startsWith("router"))
-		{
-			return null;
-		}
-		StringTokenizer st = new StringTokenizer(ln);
-		st.nextToken(); //skip router
-		String nickname = st.nextToken();
-		String adr = st.nextToken();
-		String orport = st.nextToken();
-		String socksport = st.nextToken();
-		String dirport = st.nextToken();
-		byte[] key = null;
-		byte[] signingkey = null;
-		ORAcl acl = new ORAcl();
-		String strSoftware = "";
-		for (; ; )
-		{
-			ln = reader.readLine();
-			if(ln==null)
+			String ln = reader.readLine();
+			if (ln == null || !ln.startsWith("router"))
+			{
 				return null;
-			if (ln.startsWith("platform"))
-			{
-				st = new StringTokenizer(ln);
-				st.nextToken();
-				strSoftware = st.nextToken() + " " + st.nextToken();
 			}
-			else if (ln.startsWith("onion-key"))
+			StringTokenizer st = new StringTokenizer(ln);
+			st.nextToken(); //skip router
+			String nickname = st.nextToken();
+			String adr = st.nextToken();
+			String orport = st.nextToken();
+			String socksport = st.nextToken();
+			String dirport = st.nextToken();
+			byte[] key = null;
+			byte[] signingkey = null;
+			ORAcl acl = new ORAcl();
+			String strSoftware = "";
+			for (; ; )
 			{
-				StringBuffer buff = new StringBuffer();
-				ln = reader.readLine(); //skip -----begin
-				for (; ; )
+				ln = reader.readLine();
+				if (ln == null)
 				{
-					ln = reader.readLine();
-					if (ln.startsWith("-----END"))
-					{
-						key = Base64.decode(buff.toString());
-						break;
-					}
-					buff.append(ln);
+					return null;
 				}
-			}
-			else if (ln.startsWith("signing-key"))
-			{
-				StringBuffer buff = new StringBuffer();
-				ln = reader.readLine(); //skip -----begin
-				for (; ; )
+				if (ln.startsWith("platform"))
 				{
-					ln = reader.readLine();
-					if (ln.startsWith("-----END"))
-					{
-						signingkey = Base64.decode(buff.toString());
-						break;
-					}
-					buff.append(ln);
+					st = new StringTokenizer(ln);
+					st.nextToken();
+					strSoftware = st.nextToken() + " " + st.nextToken();
 				}
-			}
-			else if (ln.startsWith("router-signature"))
-			{
-				for (; ; )
+				else if (ln.startsWith("onion-key"))
 				{
-					ln = reader.readLine(); // skip siganture
-					if (ln.startsWith("-----END"))
+					StringBuffer buff = new StringBuffer();
+					ln = reader.readLine(); //skip -----begin
+					for (; ; )
 					{
-						ORDescription ord = new ORDescription(adr, nickname, Integer.parseInt(orport),
-							strSoftware);
-						if (!ord.setOnionKey(key) || !ord.setSigningKey(signingkey))
+						ln = reader.readLine();
+						if (ln.startsWith("-----END"))
 						{
-							return null;
+							key = Base64.decode(buff.toString());
+							break;
 						}
-						ord.setAcl(acl);
-						try
-						{
-							ord.setDirPort(Integer.parseInt(dirport));
-						}
-						catch (Exception e)
-						{
-						}
-						return ord;
+						buff.append(ln);
 					}
+				}
+				else if (ln.startsWith("signing-key"))
+				{
+					StringBuffer buff = new StringBuffer();
+					ln = reader.readLine(); //skip -----begin
+					for (; ; )
+					{
+						ln = reader.readLine();
+						if (ln.startsWith("-----END"))
+						{
+							signingkey = Base64.decode(buff.toString());
+							break;
+						}
+						buff.append(ln);
+					}
+				}
+				else if (ln.startsWith("router-signature"))
+				{
+					for (; ; )
+					{
+						ln = reader.readLine(); // skip siganture
+						if (ln.startsWith("-----END"))
+						{
+							ORDescription ord = new ORDescription(adr, nickname, Integer.parseInt(orport),
+								strSoftware);
+							if (!ord.setOnionKey(key) || !ord.setSigningKey(signingkey))
+							{
+								return null;
+							}
+							ord.setAcl(acl);
+							try
+							{
+								ord.setDirPort(Integer.parseInt(dirport));
+							}
+							catch (Exception e)
+							{
+							}
+							return ord;
+						}
+					}
+
+				}
+				else if (ln.startsWith("accept") || ln.startsWith("reject"))
+				{
+					acl.add(ln);
+
 				}
 
 			}
-			else if (ln.startsWith("accept") || ln.startsWith("reject"))
-			{
-				acl.add(ln);
-
-			}
-
 		}
-		}
-		catch(Throwable t)
+		catch (Throwable t)
 		{
 			t.printStackTrace();
 		}

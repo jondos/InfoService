@@ -6,12 +6,13 @@ package anon.tor.test;
 import anon.AnonChannel;
 import anon.tor.Tor;
 import anon.tor.TorAnonServerDescription;
-import logging.*;
+import logging.LogHolder;
+import logging.SystemErrLog;
 
 /**
  * @author stefan
  *
-  */
+ */
 public class tor2jap
 {
 
@@ -21,18 +22,18 @@ public class tor2jap
 		Tor tor = Tor.getInstance();
 		tor.initialize(new TorAnonServerDescription());
 		tor.testDNS();
-			AnonChannel channel = tor.createChannel("www.google.de", 80);
-			channel.getOutputStream().write( ("GET /index.html HTTP/1.0\n\r\n\r").getBytes());
-			for (; ; )
+		AnonChannel channel = tor.createChannel("www.google.de", 80);
+		channel.getOutputStream().write( ("GET /index.html HTTP/1.0\n\r\n\r").getBytes());
+		for (; ; )
+		{
+			int b = channel.getInputStream().read();
+			if (b < 0)
 			{
-				int b = channel.getInputStream().read();
-				if (b < 0)
-				{
-					break;
-				}
-				System.out.print( (char) b);
+				break;
 			}
-			tor.shutdown();
+			System.out.print( (char) b);
 		}
+		tor.shutdown();
+	}
 
 }

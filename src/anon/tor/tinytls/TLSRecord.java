@@ -43,27 +43,40 @@ public class TLSRecord
 	public byte[] m_Data;
 	public byte[] m_Header;
 
+	/**
+	 * Constructor
+	 *
+	 */
 	public TLSRecord()
-    {
-		m_Header=new byte[5];
-		m_Header[1]=TinyTLS.PROTOCOLVERSION[0];
-		m_Header[2]=TinyTLS.PROTOCOLVERSION[1];
-		m_Data=new byte[0xFFFF];
-		m_dataLen=0;
-    }
+	{
+		m_Header = new byte[5];
+		m_Header[1] = TinyTLS.PROTOCOLVERSION[0];
+		m_Header[2] = TinyTLS.PROTOCOLVERSION[1];
+		m_Data = new byte[0xFFFF];
+		m_dataLen = 0;
+	}
 
+	/**
+	 * sets the typeof the tls record
+	 * @param type
+	 * type
+	 */
 	public void setType(int type)
 	{
-		m_Type=type;
-		m_Header[0]=(byte)(type&0x00FF);
+		m_Type = type;
+		m_Header[0] = (byte) (type & 0x00FF);
 	}
 
+	/**
+	 * sets the length of the tls record
+	 * @param len
+	 * length
+	 */
 	public void setLength(int len)
 	{
-		m_dataLen=len;
-		m_Header[3]=(byte)((len>>8)&0x00FF);
-		m_Header[4]=(byte)((len)&0x00FF);
+		m_dataLen = len;
+		m_Header[3] = (byte) ( (len >> 8) & 0x00FF);
+		m_Header[4] = (byte) ( (len) & 0x00FF);
 	}
-
 
 }
