@@ -76,7 +76,7 @@ final class JAPHelp extends JDialog implements ActionListener {
 				getRootPane().setDefaultButton(close);
 				close.addActionListener(this);
 				language.addActionListener(this);
-				for (int i = 1; i < model.MAXHELPLANGUAGES; i++) {
+				for (int i = 1; i < JAPConstants.MAXHELPLANGUAGES; i++) {
 					try 
 						{ 
 							helpPath = model.getString("helpPath"+String.valueOf(i)); 

@@ -58,8 +58,6 @@ import HTTPClient.Codecs;
 
 final class JAPUtil
 	{
-	  protected static final String IMGPATHHICOLOR  = "images/";
-	  protected static final String IMGPATHLOWCOLOR = "images/lowcolor/";
 
 		public static int applyJarDiff(String oldJAR, String newJAR, String diffJAR)
 			{
@@ -319,7 +317,7 @@ final class JAPUtil
 			// try loading the lowcolor images
 			if(colordepth<=16)
 				{
-				  imageFilename = IMGPATHLOWCOLOR+strImage;
+				  imageFilename = JAPConstants.IMGPATHLOWCOLOR+strImage;
 				  try
 						{
 							// this is necessary to make shure that the images are loaded when contained in a JAP.jar
@@ -342,7 +340,7 @@ final class JAPUtil
 			//    we have to load the hicolor images
 			if(img==null)
 				{
-				  imageFilename = IMGPATHHICOLOR+strImage;
+				  imageFilename = JAPConstants.IMGPATHHICOLOR+strImage;
 				  try
 						{
 							// this is necessary to make shure that the images are loaded when contained in a JAP.jar

@@ -29,15 +29,16 @@ case "${action}" in
  "l")  action="lean";;
 esac
 if [ "${action}" = "make" ]; then
- javac -classpath ${libs} JAPDebug.java
- javac -classpath ${libs} anon/*.java
- javac -classpath ${libs} rijndael/*.java
+# javac -classpath ${libs} JAPDebug.java
+# javac -classpath ${libs} anon/*.java
+# javac -classpath ${libs} rijndael/*.java
  javac -classpath ${libs} *.java
 fi
 if [ "${action}" = "clean" ]; then
  rm -r *.class
  rm -r anon/*.class
  rm -r rijndael/*.class
+ rm -r rmi/*.class
 fi
 if [ "${action}" = "start" ]; then
  java -classpath ${libs} JAP &

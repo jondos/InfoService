@@ -46,10 +46,20 @@ final class JAPInfoService
 
 		JAPModel model;
 		HTTPConnection conInfoService=null;
-		public JAPInfoService()
-			{
+/*
+		TODO: JAPInfoService sollte unabhaengig von JAPModel werden.
+*/		
+		
+		public JAPInfoService() {
+//		}
+//
+//		public JAPInfoService(String host,int port)
+//			{
+//				setInfoService(host,port);
+//-----------------				
 				model = JAPModel.getModel();
 				setInfoService(model.getInfoServiceHost(),model.getInfoServicePort());
+//-----------------				
 			}
 
 		/** This will set the InfoService to use. It also sets the Proxy-Configuration and autorization.
@@ -173,16 +183,6 @@ final class JAPInfoService
 						throw e;
 					}
 			}
-/*
-	public void getFeedback() {
-		AnonServerDBEntry service = new AnonServerDBEntry(null,model.anonHostName,model.anonPortNumber);
-		this.getFeedback(service);
-		model.nrOfActiveUsers  = service.getNrOfActiveUsers();
-		model.trafficSituation = service.getTrafficSituation();
-		model.currentRisk      = service.getCurrentRisk();
-		model.mixedPackets     = service.getMixedPackets();
-	}
-*/
 
 	public void getFeedback(AnonServerDBEntry service)
 		{
@@ -203,7 +203,7 @@ final class JAPInfoService
 					HTTPResponse resp=conInfoService.Get(strGET);
 					if (resp.getStatusCode()!=200)
 						{
-							JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPFeedback: Bad response from server: "+resp.getReasonLine());
+							JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPInfoService:Bad response from server: "+resp.getReasonLine());
 						}
 					else
 						{
@@ -227,7 +227,7 @@ final class JAPInfoService
 			service.setCurrentRisk(currentRisk);
 			service.setMixedPackets(mixedPackets);
 			service.setAnonLevel(iAnonLevel);
-			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPFeedback: "+nrOfActiveUsers+"/"+trafficSituation+"/"+currentRisk+"/"+mixedPackets+"/"+iAnonLevel);
+			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPInfoService:"+nrOfActiveUsers+"/"+trafficSituation+"/"+currentRisk+"/"+mixedPackets+"/"+iAnonLevel);
 		}
 
 
@@ -235,20 +235,20 @@ final class JAPInfoService
 		{
 			try
 				{
-					HTTPResponse resp=conInfoService.Get(model.aktJAPVersionFN);
+					HTTPResponse resp=conInfoService.Get("/aktVersion");
 					if (resp==null || resp.getStatusCode()!=200)
 						throw new Exception("Versioncheck bad response from server: "+resp.getReasonLine());
 					// read remaining header lines
 					byte[] buff=resp.getData();
 					String s=new String(buff).trim();
-					JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"New Version: "+s);
+					JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPInfoService:New Version: "+s);
 					if ( (s.charAt(2) == '.') && (s.charAt(5) == '.') )
 						return s;
 					throw new Exception("Versionfile has wrong format! Found: \""+s+ "\". Should be \"nn.nn.nnn\"!");
 				}
 			catch(Exception e)
 				{
-					throw new Exception("Versioncheck getNewVersionnumberFromNet() failed: "+e);
+					throw new Exception("Versioncheck failed: "+e);
 				}
 		}
 

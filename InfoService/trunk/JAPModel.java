@@ -66,37 +66,26 @@ import anon.JAPAnonServiceListener;
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPModel implements JAPAnonServiceListener{
 
-	public static final String aktVersion = "00.01.039"; // Version of JAP
+	public  JAPAnonServerDB      anonServerDatabase   = null; // vector of all available mix cascades
+	private AnonServerDBEntry    currentAnonService   = null; // current anon service data object
+	private ServerSocket         m_socketHTTPListener = null; // listener object
+	private JAPDirectProxy       proxyDirect    = null;    // service object for direct access (bypass anon service)
+	private JAPAnonService       proxyAnon      = null;    // service object for HTTP  listener
+//	private JAPAnonService       proxyAnonSocks = null;    // service object for SOCKS listener
 
-	public  JAPAnonServerDB        anonServerDatabase = null; // vector of all available mix cascades
-	public final static String   defaultanonHost   = "mix.inf.tu-dresden.de";
-	public final static int defaultanonPortNumber=6544;
-	private AnonServerDBEntry currentAnonService = null; // current anon service data object
-
-	private ServerSocket   m_socketHTTPListener;     // listener object
-
-	private JAPDirectProxy proxyDirect    = null;    // service object for direct access (bypass anon service)
-	private JAPAnonService proxyAnon      = null;    // service object for HTTP  listener
-	//private JAPAnonService proxyAnonSocks = null;    // service object for SOCKS listener
-
-	public final static int defaultPortNumber=4001;
-	private int      portNumber            = defaultPortNumber;   // port number of HTTP  listener
-	//private int      portSocksListener     = 1080;   // port number of SOCKS listener
-	//private boolean  mbSocksListener       = false;  // indicates whether JAP should support SOCKS or not
-	private boolean  mblistenerIsLocal     = true;   // indicates whether listeners serve for localhost only or not
-	private boolean  isRunningListener     = false;  // true if a listener is running
-
-	public final static String   defaultinfoServiceHostName   = "infoservice.inf.tu-dresden.de";
-	private String   infoServiceHostName   = defaultinfoServiceHostName;
-	public final static int defaultinfoServicePortNumber=6543;
-	private int      infoServicePortNumber = defaultinfoServicePortNumber;
-
-	private boolean  mbUseProxy            = false;  // indicates whether JAP connects via a proxy or directly
+	private String   infoServiceHostName   = JAPConstants.defaultinfoServiceHostName;
+	private int      infoServicePortNumber = JAPConstants.defaultinfoServicePortNumber;
+	private int      portNumber            = JAPConstants.defaultPortNumber;  // port number of HTTP  listener
+//	private int      portSocksListener     = 1080;   // port number of SOCKS listener
+//	private boolean  mbSocksListener       = false;  // indicates whether JAP should support SOCKS or not
 	private  String  proxyHostName         = "";     // hostname of proxy
 	private  int     proxyPortNumber       = -1;     // portnumber of proxy
-	private boolean  mb_UseProxyAuthentication   = false; //indicates whether JAp should use a UserID/Password to authenticat to the proxy
 	private String   m_ProxyAuthenticationUserID = null;  //userid for authentication
 	private String   m_ProxyAuthenticationPasswd = null;  // password --> will never be saved...
+	private boolean  mb_UseProxyAuthentication   = false; //indicates whether JAp should use a UserID/Password to authenticat to the proxy
+	private boolean  mblistenerIsLocal           = true;   // indicates whether listeners serve for localhost only or not
+	private boolean  isRunningListener           = false;  // true if a listener is running
+	private boolean  mbUseProxy                  = false;  // indicates whether JAP connects via a proxy or directly
 	public  boolean  autoConnect                 = false; // autoconnect after program start
 	private boolean  mbMinimizeOnStartup         = false; // true if programm will start minimized
 	public  boolean  canStartService             = false; // indicates if anon service can be started
@@ -114,57 +103,17 @@ public final class JAPModel implements JAPAnonServiceListener{
 	private int      nrOfChannels      = 0;
 	private int      nrOfBytes         = 0;
 
-	static private   JAPView           view          = null;
-	static private   JAPViewIconified  iconifiedView = null;
-	static private   JAPInfoService    mInfoService  = null;
-
-// 2000-08-01(HF): the following url is now defined in JAPMessages.properties:
-// usage: model.getString("infoURL")
-//  static final String url_download_version       = "http://www.inf.tu-dresden.de/~hf2/anon/JAP/";
-//	static final String aktJAPVersionFN            = "/~sk13/anon/jap/aktVersion.txt"; // retrieved from Info Service
-	static final String aktJAPVersionFN            = "/aktVersion"; // retrieved from Info Service
-	static final String urlJAPNewVersionDownload   = "/~sk13/anon/jap/JAP.jar"; // also retrieved from Info Service
-	static final String JAPLocalFilename           = "JAP.jar";
-
-
-	static final int    MAXHELPLANGUAGES = 6;
-	static final String TITLE = "JAP";
-	static final String TITLEOFICONIFIEDVIEW = "JAP";
-	static final String AUTHOR = "(c) 2000 The JAP-Team";
-
-// The following two definitions now in JAPUtil - due to a Henne - Ei problem
-	static final String XMLCONFFN       = "jap.conf";
-	public static final String BUSYFN   = "busy.gif";
-//	public static final String SPLASHFN = "splash.gif";
-	public static final String ABOUTFN  = "info.gif";
-	static final String DOWNLOADFN      = "install.gif";
-	static final String IICON16FN       = "icon16.gif";
-	static final String ICONFN          = "icon.gif";
-	static final String JAPTXTFN        = "japtxt.gif";
-	static final String JAPEYEFN        = "japeye.gif";
-	static final String JAPICONFN       = "japi.gif";
-	static final String CONFIGICONFN    = "icoc.gif";
-	static final String ICONIFYICONFN   = "iconify.gif";
-	static final String ENLARGEYICONFN  = "enlarge.gif";
-	static final String METERICONFN     = "icom.gif";
-	static final String[] METERFNARRAY  = {
-						"meterD.gif",    // anonymity deactivated
-						"meterNnew.gif", // no measure available
-						"meter1.gif",
-						"meter2.gif",
-						"meter3.gif",
-						"meter4.gif",
-						"meter5.gif",
-						"meter6.gif"
-						};
+	private static  JAPView           view          = null;
+	private static  JAPViewIconified  iconifiedView = null;
+	private static  JAPInfoService    mInfoService  = null;
+	private static  JAPModel          model         = null;
+	private static  JAPFeedback       feedback      = null;
 
 	private ResourceBundle msg;
 
 	private Locale m_Locale=null;
 	private Vector observerVector=null;
-	private static JAPModel model=null;
 //	public JAPLoading japLoading;
-	private static JAPFeedback feedback=null;
 
 	/* jh5 */ private static JAPAnonServiceRMIServer anonServiceRMIServer= null;
 
@@ -173,7 +122,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 			//JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:initializing...");
 			// Create observer object
 			observerVector = new Vector();
-			currentAnonService = new AnonServerDBEntry(defaultanonHost,defaultanonPortNumber);
+			currentAnonService = new AnonServerDBEntry(JAPConstants.defaultanonHost,JAPConstants.defaultanonPortNumber);
 			proxyDirect=null;
 			proxyAnon=null;
 			m_Locale=Locale.getDefault();
@@ -276,17 +225,17 @@ public final class JAPModel implements JAPAnonServiceListener{
 //		anonServerDatabase.addElement(new AnonServerDBEntry("anon.inf.tu-dresden.de", 6543));
 //		anonServerDatabase.addElement(new AnonServerDBEntry("passat.mesh.de", 6543));
 		// Load config from xml file
-		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:try loading configuration from "+XMLCONFFN);
+		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:try loading configuration from "+JAPConstants.XMLCONFFN);
 		try {
 			String dir=System.getProperty("user.home","");
 			FileInputStream f=null;
 			try  //first tries in user.home
 				{
-					f=new FileInputStream(dir+"/"+XMLCONFFN);
+					f=new FileInputStream(dir+"/"+JAPConstants.XMLCONFFN);
 				}
 			catch(Exception e)
 				{
-					f=new FileInputStream(XMLCONFFN); //and then in the current directory
+					f=new FileInputStream(JAPConstants.XMLCONFFN); //and then in the current directory
 				};
 			Document doc=DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(f);
 			Element root=doc.getDocumentElement();
@@ -405,17 +354,17 @@ public final class JAPModel implements JAPAnonServiceListener{
 
 	public void save() {
 		boolean error=false;
-		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:try saving configuration to "+XMLCONFFN);
+		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:try saving configuration to "+JAPConstants.XMLCONFFN);
 		try {
 			String dir=System.getProperty("user.home","");
 			FileOutputStream f=null;
 			try  //first tries in user.home
 				{
-					f=new FileOutputStream(dir+"/"+XMLCONFFN);
+					f=new FileOutputStream(dir+"/"+JAPConstants.XMLCONFFN);
 				}
 			catch(Exception e)
 				{
-					f=new FileOutputStream(XMLCONFFN); //and then in the current directory
+					f=new FileOutputStream(JAPConstants.XMLCONFFN); //and then in the current directory
 				};
 		   String sb=getConfigurationAsXML();
 			 if(sb!=null)
@@ -433,7 +382,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 			}
 		if(error)
 			{
-				JAPDebug.out(JAPDebug.ERR,JAPDebug.MISC,"JAPModel:error saving configuration to "+XMLCONFFN);
+				JAPDebug.out(JAPDebug.ERR,JAPDebug.MISC,"JAPModel:error saving configuration to "+JAPConstants.XMLCONFFN);
 				JOptionPane.showMessageDialog(model.getView(),
 											model.getString("errorSavingConfig"),
 											model.getString("errorSavingConfigTitle"),
@@ -1260,8 +1209,8 @@ private final class SetAnonModeAsync implements Runnable
 					s=s.trim();
 					// temporary changed due to stability.... (sk13)
 					//String s = vc.getNewVersionnumberFromNet("http://anon.inf.tu-dresden.de:80"+aktJAPVersionFN);
-					JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:Version:"+aktVersion);
-					if ( s.compareTo(aktVersion) > 0 )
+					JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:Version:"+JAPConstants.aktVersion);
+					if ( s.compareTo(JAPConstants.aktVersion) > 0 )
 						{
 							// OK, new version available
 							// ->Ask user if he/she wants to download new version
@@ -1280,8 +1229,7 @@ private final class SetAnonModeAsync implements Runnable
 						// To do: show busy message
 						try {
 							vc.registerProgress(japLoading);
-//						vc.getVersionFromNet("http://"+infoServiceHostName+":"+infoServicePortNumber+urlJAPNewVersionDownload, JAPLocalFilename);
-							vc.getVersionFromNet("http://anon.inf.tu-dresden.de:80"+urlJAPNewVersionDownload, JAPLocalFilename);
+							vc.getVersionFromNet(JAPConstants.urlJAPNewVersionDownload, JAPConstants.JAPLocalFilename);
 							Thread t = new Thread(vc);
 							t.start();
 							answer = japLoading.message(model.getString("downloadingProgressTitle"),
@@ -1326,7 +1274,7 @@ private final class SetAnonModeAsync implements Runnable
 					return -1;
 				}
 			}
-			//endif ( s.compareTo(aktVersion) > 0 )
+			//endif ( s.compareTo(JAPConstants.aktVersion) > 0 )
 			// --> no new version available, i.e. you are running the newest version of JAP
 			return 0; // meaning: version check says that anonymity service can be started
 		}

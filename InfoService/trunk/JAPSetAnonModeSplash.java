@@ -64,7 +64,7 @@ final class JAPSetAnonModeSplash implements Runnable
 				l.setBorder(new EmptyBorder(10,10,10,10));
 				l.setIconTextGap(10);
 				dlgAbort.getContentPane().add("Center",l);
-				l=new JLabel(JAPUtil.loadImageIcon(JAPModel.BUSYFN,false));
+				l=new JLabel(JAPUtil.loadImageIcon(JAPConstants.BUSYFN,false));
 				l.setBorder(new EmptyBorder(10,10,10,10));
 				dlgAbort.getContentPane().add("South",l);
 				dlgAbort.pack();
