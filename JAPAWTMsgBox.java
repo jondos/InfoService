@@ -75,7 +75,7 @@ final class JAPAWTMsgBox extends WindowAdapter implements ActionListener
 			d.pack();
 			d.setResizable(false);
 			JAPUtil.centerFrame(d);
-			d.toFront();
+			d.show();
 			}
 			catch(Exception e)
 			{

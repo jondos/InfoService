@@ -203,18 +203,23 @@ final class JAPAbout extends JDialog implements Runnable
 				
 				//First we move the Dialog to a position were it is not seen on the Screen...
 				
-				setLocation(-380,-200);
-				setVisible(true);   //now we have to ensure that the window is visible before the
-				setResizable(false); //get the insets (the border around the window) - also the window must look like it should
-				Insets in=getInsets(); //so for instance we need the 'NoResizable'-Border
-				setResizable(true); //now we want to resize the whole dialog
+				String os=System.getProperty("os.name");
+				if(os==null||!os.toLowerCase().startsWith("mac"))
+					{
+						setLocation(-380,-200);
+						setVisible(true);   //now we have to ensure that the window is visible before the
+						setResizable(false); //get the insets (the border around the window) - also the window must look like it should
+						Insets in=getInsets(); //so for instance we need the 'NoResizable'-Border
+						setResizable(true); //now we want to resize the whole dialog
 				
-				//We do not use pack() because it doesnt work well on Windows!
+						//We do not use pack() because it doesnt work well on Windows!
 				
-				setSize(ABOUT_DX+in.left+in.right,ABOUT_DY+in.bottom+in.top);// so what the background image does exactly fit
-				
-				//pack(); --> Mabe a solution for MAC'S ??
-				
+						setSize(ABOUT_DX+in.left+in.right,ABOUT_DY+in.bottom+in.top);// so what the background image does exactly fit
+					}
+				else
+					{
+						pack(); //--> Maybe a solution for MAC'S ??						
+					}
 				setResizable(false); //but the user shouldn't resize the Dialog again
 				setLocationRelativeTo(parent); //now showing centerd to JAP-Main
 				toFront();

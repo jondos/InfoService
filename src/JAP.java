@@ -96,7 +96,7 @@ class JAP extends Frame{
 			}
 		catch(NoClassDefFoundError e)
 			{
-				JAPAWTMsgBox.MsgBox(this,"JAP needs the Swing library to run properly! \nYou will find more information at the JAP webpage!","Error");
+				JAPAWTMsgBox.MsgBox(this,JAPMessages.getString("errorSwingNotInstalled"),JAPMessages.getString("error"));
 				System.exit(0);
 			}
 		// Create the model object
