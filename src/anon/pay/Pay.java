@@ -63,7 +63,7 @@ public class Pay
 
 		// register AI control channel
 		m_MuxSocket = currentMuxSocket;
-		m_AIControlChannel = new AIControlChannel(this, m_MuxSocket);
+		m_AIControlChannel = new AIControlChannel(m_MuxSocket);
 		m_MuxSocket.getControlChannelDispatcher().registerControlChannel(m_AIControlChannel);
 	}
 

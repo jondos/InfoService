@@ -33,8 +33,8 @@ package jap;
  * @author Bastian Voigt
  * @version 1.0
  */
+import java.sql.Timestamp;
 import java.util.Enumeration;
-
 import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -49,7 +49,6 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
-
 import anon.pay.PayAccount;
 import anon.pay.PayAccountsFile;
 import anon.pay.xml.XMLErrorMessage;
@@ -128,14 +127,16 @@ public class PaymentMainPanel extends JPanel
 		c.anchor = GridBagConstraints.CENTER;
 		c.fill = GridBagConstraints.VERTICAL;
 		c.weighty = 1;
+		c.gridheight = 2;
 		c.gridx = 3;
 		c.gridy = 0;
 		this.add(m_AccountIconLabel, c);
 
 		// the JButton on the right
-		m_ConfigButton = new JButton("Aufladen");
+		m_ConfigButton = new JButton(JAPMessages.getString("ngPaymentCharge"));
 		c.insets.left = 0;
 		c.insets.right = 5;
+		c.gridheight = 2;
 		c.gridx = 4;
 		c.gridy = 0;
 		c.anchor = GridBagConstraints.EAST;
@@ -151,6 +152,35 @@ public class PaymentMainPanel extends JPanel
 
 		PayAccountsFile.getInstance().addPaymentListener(m_MyPaymentListener);
 		updateDisplay(null);
+	}
+
+	/** returns a number of bytes in human-readable format (kB, MB, GB, ...) */
+	private String getByteNumberText(long bytes)
+	{
+		long credit = bytes * 100;
+		int log = 1;
+		while ( (credit > 102400) && (log < 4))
+		{
+			credit /= 1024;
+			log++;
+		}
+		String unit;
+		switch (log)
+		{
+			case 1:
+				unit = " Bytes";
+				break;
+			case 2:
+				unit = " KB";
+				break;
+			case 3:
+				unit = " MB";
+				break;
+			case 4:
+			default:
+				unit = " GB";
+		}
+		return (credit / 100) + "." + (credit % 100) + unit;
 	}
 
 	/**
@@ -171,14 +201,16 @@ public class PaymentMainPanel extends JPanel
 			m_BalanceProgressBar.setValue(0);
 			m_BalanceProgressBar.setEnabled(false);
 		}
-		// account is empty :-(
-		else if (activeAccount.getCertifiedCredit() == 0)
+
+		// account is nearly empty :-(
+		else if ( (activeAccount.getCertifiedCredit() <= (activeAccount.getDeposit() / 10)) ||
+				 (activeAccount.getCertifiedCredit() <= (1024 * 1024)))
 		{
 			m_AccountText.setText(JAPMessages.getString("ngPaymentRecharge"));
 			m_AccountText.setForeground(Color.red);
 			m_AccountIconLabel.setIcon(m_accountIcons[2]);
 			m_BalanceText.setEnabled(true);
-			m_BalanceText.setText("0 Bytes");
+			m_BalanceText.setText(getByteNumberText(activeAccount.getCertifiedCredit()));
 			m_BalanceProgressBar.setValue(0);
 			m_BalanceProgressBar.setEnabled(true);
 		}
@@ -186,31 +218,14 @@ public class PaymentMainPanel extends JPanel
 		// we got everything under control, situation normal
 		else
 		{
-			m_AccountText.setText("Auszug vom " + activeAccount.getBalanceValidTime());
+			Timestamp t = activeAccount.getBalanceValidTime();
+			String dateText = t.getDay() + "." + (t.getMonth() + 1) + "." + (t.getYear() + 1900) + " " +
+				t.getHours() + ":" + t.getMinutes();
+			m_AccountText.setText(JAPMessages.getString("ngPaymentBalanceDate") + ": " + dateText);
 			m_AccountText.setForeground(Color.black);
 			m_AccountIconLabel.setIcon(m_accountIcons[1]);
 			m_BalanceText.setEnabled(true);
-			long credit = activeAccount.getCertifiedCredit() * 100;
-			int log = 1;
-			while ( (credit > 102400) && (log < 4))
-			{
-				credit /= 1024;
-				log++;
-			}
-			String unit;
-			switch (log)
-			{
-				case 1:
-					unit = " Bytes";break;
-				case 2:
-					unit = " KB";break;
-				case 3:
-					unit = " MB";break;
-				case 4:
-				default:
-					unit = " GB";
-			}
-			m_BalanceText.setText( (credit / 100) + "." + (credit % 100) + unit);
+			m_BalanceText.setText(getByteNumberText(activeAccount.getCertifiedCredit()));
 			m_BalanceProgressBar.setMaximum( (int) activeAccount.getDeposit());
 			m_BalanceProgressBar.setValue( (int) activeAccount.getCertifiedCredit());
 			m_BalanceProgressBar.setEnabled(true);
@@ -337,8 +352,8 @@ public class PaymentMainPanel extends JPanel
 				PaymentMainPanel.this,
 				JAPMessages.getString("aiErrorMessage") + msg.getErrorDescription(),
 				JAPMessages.getString("error"),
-										 JOptionPane.YES_NO_OPTION, JOptionPane.ERROR_MESSAGE,
-										 null, null, null);
+				JOptionPane.YES_NO_OPTION, JOptionPane.ERROR_MESSAGE,
+				null, null, null);
 		}
 	}
 

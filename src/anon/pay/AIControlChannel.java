@@ -32,10 +32,9 @@ public class AIControlChannel extends SyncControlChannel
 	private MuxSocket m_MuxSocket;
 	private boolean m_bFirstBalance;
 
-	public AIControlChannel(Pay pay, MuxSocket muxSocket)
+	public AIControlChannel(MuxSocket muxSocket)
 	{
 		super(CHAN_ID, true);
-		//m_Pay = pay;
 		m_MuxSocket = muxSocket;
 		m_bFirstBalance = true;
 	}
@@ -72,7 +71,7 @@ public class AIControlChannel extends SyncControlChannel
 		{
 			LogHolder.log(LogLevel.DEBUG, LogType.PAY, ex);
 			PayAccountsFile.getInstance().signalAccountError(
-				new XMLErrorMessage(XMLErrorMessage.ERR_BAD_REQUEST, ex.getMessage())
+				new XMLErrorMessage(XMLErrorMessage.ERR_INTERNAL_SERVER_ERROR, ex.getClass().getName()+": "+ex.getMessage())
 				);
 		}
 	}
@@ -155,11 +154,20 @@ public class AIControlChannel extends SyncControlChannel
 					   ((XMLEasyCC)enu.nextElement()).getTransferredBytes();
 					 }
 					}*/
-				if ( (newBytes + currentAccount.getSpent()) < cc.getTransferredBytes())
+				XMLEasyCC myLastCC = currentAccount.getAccountInfo().getCC(cc.getAIName());
+				long oldSpent = 0;
+				if (myLastCC != null)
+				{
+					oldSpent = myLastCC.getTransferredBytes();
+				}
+				if ( (newBytes + oldSpent) < cc.getTransferredBytes())
 				{
 					// the AI wants us to sign an unrealistic number of bytes
-					// @todo warn the user
-					cc.setTransferredBytes(newBytes + currentAccount.getSpent());
+					// this could be a betraying AI, but it can also be caused
+					// when CostConfirmations get lost during a Jap crash.
+					/** @todo let the user decide what to do.
+					 * If Jap crashed during the last session then we should ask the BI for a current CC */
+					cc.setTransferredBytes(newBytes + oldSpent);
 				}
 				cc.sign(currentAccount.getSigningInstance());
 				this.sendMessage(XMLUtil.toXMLDocument(cc));
@@ -175,11 +183,10 @@ public class AIControlChannel extends SyncControlChannel
 		Timestamp t = request.getBalanceTimestamp();
 		if (t != null || m_bFirstBalance == true)
 		{
-			m_bFirstBalance = false;
 			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "AI requested balance");
 			PayAccount currentAccount = PayAccountsFile.getInstance().getActiveAccount();
 			XMLBalance b = currentAccount.getBalance();
-			if ( (b == null) || b.getTimestamp().before(t))
+			if ( m_bFirstBalance || (b == null) || ((b.getTimestamp()).before(t)))
 			{
 				// balance too old, fetch a new one
 				new Thread(new Runnable()
@@ -205,6 +212,7 @@ public class AIControlChannel extends SyncControlChannel
 				LogHolder.log(LogLevel.DEBUG, LogType.PAY, "sending balance to AI");
 				AIControlChannel.this.sendMessage(XMLUtil.toXMLDocument(b));
 			}
+			m_bFirstBalance = false;
 		}
 		if (request.isAccountRequest())
 		{
