@@ -126,4 +126,14 @@ public class JAPDialog
 	{
 		return m_rootPanel;
 	}
+
+	/**
+	 * Disables the possibility of closing the dialog via the close-button in the dialog's
+	 * title bar.
+	 */
+	public void disableManualClosing()
+	{
+		m_internalDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
+	}
+
 }

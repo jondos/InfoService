@@ -160,4 +160,13 @@ public final class JAPConstants
 	public final static boolean TOR_IS_ENABLED=false;
 	public final static String TOR_DIR_SERVER_ADR="moria.seul.org";
 	public final static int TOR_DIR_SERVER_PORT=9031;
+
+	public final static boolean WITH_BLOCKINGRESISTANCE=true; 	//Enables or diables Suuport of
+																//blocking reistance functionality
+	/**
+	 * The minimum bandwidth per user needed for forwarding. This affects the maximum number
+	 * of users, which can be forwarded with a specified bandwidth. The default is 2 KByte/sec
+	 * for each user.
+	 */
+	public static final int ROUTING_BANDWIDTH_PER_USER = 2048;
 }

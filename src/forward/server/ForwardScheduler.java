@@ -24,7 +24,7 @@
  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
- */ 
+ */
 package forward.server;
 
 import java.net.Socket;
@@ -40,11 +40,11 @@ import logging.LogType;
  * managed here.
  */
 public class ForwardScheduler implements Runnable {
-  
+
   /**
    * This is the time between two allocation rounds in milliseconds.
    */
-  private static final long CYCLE_TIME = (long)100;  
+  private static final long CYCLE_TIME = (long)100;
 
   /**
    * This stores the maximum number of simultaneous connections. If this number is reached,
@@ -52,44 +52,44 @@ public class ForwardScheduler implements Runnable {
    * active connections is closed.
    */
   private int m_nrOfConnections;
-  
+
   /**
    * The maximum bandwidth for all connections together in bytes/second. Because of the forwarding,
    * this is the amount of upstream = amount of downstream data.
    */
   private int m_netBandwidth;
-  
+
   /**
    * This stores all active connections (ForwardConnection).
    * @see ForwardConnection
    */
   private Vector m_connectionHandler;
-    
+
   /**
    * This value is set to true, for signalizing the shutdown of this ForwardScheduler to the
    * internal thread.
    * @see run()
    */
   private boolean m_shutdown;
-  
+
   /**
    * This stores the internal scheduling thread.
    */
   private Thread m_schedulerThread;
-  
+
   /**
    * This stores the associated ServerManagers, which manages the server sockets of this
    * ForwardScheduler.
    * @see ServerManager
    */
   private Vector m_serverManagers;
-  
+
   /**
    * This stores the statistics for the ForwardScheduler.
    */
   private ForwardSchedulerStatistics m_statistics;
-  
-  
+
+
   /**
    * Creates a new ForwardScheduler. Also the internal bandwidth allocation thread is started.
    * The initial number of simultaneously forwarded client connections is set to 0 and the
@@ -106,7 +106,7 @@ public class ForwardScheduler implements Runnable {
     m_schedulerThread.start();
     m_statistics = new ForwardSchedulerStatistics();
   }
-  
+
   /**
    * The associated ServerManager signalize any new connection here. If there are empty slots,
    * we accept this new connection. If we already holds the maximum number of connections, the
@@ -121,7 +121,7 @@ public class ForwardScheduler implements Runnable {
       if ((m_connectionHandler.size() < m_nrOfConnections) && (m_shutdown == false)) {
         try {
           newConnection = new ForwardConnection(a_newConnection, this);
-          m_connectionHandler.add(newConnection);
+          m_connectionHandler.addElement(newConnection);
           connectionAccepted = true;
           LogHolder.log(LogLevel.INFO, LogType.NET, "ForwardScheduler: handleNewConnection: New forwarding connection from " + a_newConnection.getInetAddress().getHostAddress() + ":" + Integer.toString(a_newConnection.getPort()) + " accepted.");
           m_statistics.incrementAcceptedConnections();
@@ -144,7 +144,7 @@ public class ForwardScheduler implements Runnable {
       }
     }
   }
-  
+
   /**
    * This method is called from a ForwardConnection to signalize, that the connection is closed
    * and can be removed from the connection store of all forwarded connections.
@@ -157,13 +157,13 @@ public class ForwardScheduler implements Runnable {
     }
     LogHolder.log(LogLevel.INFO, LogType.NET, "ForwardScheduler: removeConnection: Forwarded connection from " + a_connectionToRemove.toString() + " was closed.");
   }
-  
+
   /**
    * This method must be called, if the ForwardScheduler shall come to an end. All associated
    * ServerSockets and all forward connections are closed and the internal scheduling thread is
    * stopped. This method will block until all ServerSockets and forwarded connections are closed
    * and the internal scheduling thread has come to the end.
-   */  
+   */
   public void shutdown() {
     m_shutdown = true;
     /* close all ServerManagers */
@@ -182,9 +182,9 @@ public class ForwardScheduler implements Runnable {
       m_schedulerThread.join();
     }
     catch (Exception e) {
-    }  
+    }
   }
-  
+
   /**
    * Returns the maximum bandwidth a connection can use in bytes/sec. That is the total bandwidth,
    * because if there are no other connections or they have no bytes to transmit, one connection
@@ -195,7 +195,7 @@ public class ForwardScheduler implements Runnable {
   public int getMaximumBandwidth() {
     return m_netBandwidth;
   }
-  
+
   /**
    * Returns the guaranteed bandwidth for one connection in bytes/sec. If there is no other
    * bottleneck, every connection gets [total bandwidth / maximum number of connections] as
@@ -206,7 +206,7 @@ public class ForwardScheduler implements Runnable {
   public int getGuaranteedBandwidth() {
     return (m_netBandwidth / m_nrOfConnections);
   }
-  
+
   /**
    * Changes the number of simultaneously forwarded client connections. If the new number is less
    * than the old one and there are more forwarded connections at the moment, we closes some
@@ -214,7 +214,7 @@ public class ForwardScheduler implements Runnable {
    *
    * @a_maximumNumberOfConnections The new maximum number of simultaneously forwarded client
    *                               connections.
-   */ 
+   */
   public void setMaximumNumberOfConnections(int a_maximumNumberOfConnections) {
     if (a_maximumNumberOfConnections >= 0) {
       if (a_maximumNumberOfConnections < m_nrOfConnections) {
@@ -240,7 +240,7 @@ public class ForwardScheduler implements Runnable {
       }
     }
   }
-  
+
   /**
    * Changes the maximum bandwidth (net bandwidth, without TCP/IP headers...) which can be used
    * by all client connections together.
@@ -251,7 +251,7 @@ public class ForwardScheduler implements Runnable {
   public void setNetBandwidth(int a_netBandwidth) {
     m_netBandwidth = a_netBandwidth;
   }
-  
+
   /**
    * Adds a ServerManager to the list of associated ServerManagers. Also the ServerManager is
    * started (startServerManager() is called). This call throws an exception, if there was an
@@ -268,7 +268,7 @@ public class ForwardScheduler implements Runnable {
       }
     }
   }
-  
+
   /**
    * Removes all ServerManagers from the list of associated ServerManagers of this
    * ForwardScheduler. The shutdown() method is called on every ServerManager and all
@@ -287,7 +287,7 @@ public class ForwardScheduler implements Runnable {
       m_serverManagers.removeAllElements();
     }
   }
-  
+
   /**
    * Returns the statistics instance for this ForwardScheduler.
    *
@@ -296,7 +296,7 @@ public class ForwardScheduler implements Runnable {
   public ForwardSchedulerStatistics getStatistics() {
     return m_statistics;
   }
-    
+
   /**
    * Returns the number of currently forwarded connections.
    *
@@ -330,7 +330,7 @@ public class ForwardScheduler implements Runnable {
               insertPos++;
             }
           }
-          connectionRanking.insertElementAt(new Integer(i), insertPos); 
+          connectionRanking.insertElementAt(new Integer(i), insertPos);
         }
         int bytesPerRound = (m_netBandwidth * (int)(CYCLE_TIME)) / 1000;
         /* now allocate the transfer capacity to the connections */
@@ -352,12 +352,12 @@ public class ForwardScheduler implements Runnable {
         }
       }
       /* sleep until next round */
-      long nextWakeUp = ((System.currentTimeMillis() / CYCLE_TIME) + 1) * CYCLE_TIME; 
+      long nextWakeUp = ((System.currentTimeMillis() / CYCLE_TIME) + 1) * CYCLE_TIME;
       long currentTime = System.currentTimeMillis();
       /* we need this loop construction, because of the time granularity -> without this, sometimes
        * the thread can wake up to early and would loop the whole thing two or more times
        */
-      while (currentTime < nextWakeUp) {        
+      while (currentTime < nextWakeUp) {
         try {
           Thread.sleep(nextWakeUp - currentTime);
         }
@@ -367,7 +367,7 @@ public class ForwardScheduler implements Runnable {
       }
     }
   }
-  
+
 }
-    
-              
+
+
