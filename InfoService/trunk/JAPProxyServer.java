@@ -25,16 +25,17 @@ OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABIL
 IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY 
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
-import java.net.* ;
-import java.io.*;
+import java.net.InetAddress ;
+import java.net.ServerSocket;
+import java.net.Socket;
 
-public class JAPProxyServer implements Runnable
+public final class JAPProxyServer implements Runnable
 	{
     private boolean runFlag; 
 		private boolean isRunningMux = false;
 		private boolean isRunningProxy = false;
     private int portN;
-    private ServerSocket server;
+    private ServerSocket socketListener;
     private JAPMuxSocket oMuxSocket;
     private JAPModel model;
     
@@ -47,17 +48,24 @@ public class JAPProxyServer implements Runnable
 
 		public boolean create()
 			{
-				server = null;
+				socketListener = null;
 				try 
 					{
-						server = new ServerSocket (portN);
+						if(model.getListenerIsLocal())
+							{
+								InetAddress[] a=InetAddress.getAllByName("localhost");
+								JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Try binding Listener on localhost: "+a[0]);
+								socketListener = new ServerSocket (portN,50,a[0]);
+							}
+						else
+							socketListener = new ServerSocket (portN);
 						JAPDebug.out(JAPDebug.INFO,JAPDebug.NET,"JAPProxyServer:Listener on port " + portN + " started.");
 						isRunningProxy = true;
 						return true;
 					}
 				catch(Exception e)
 					{
-						server=null;
+						socketListener=null;
 						isRunningProxy = false;
 						return false;
 					}
@@ -72,7 +80,7 @@ public class JAPProxyServer implements Runnable
 					{
 						while(runFlag)
 							{
-								Socket socket = server.accept();
+								Socket socket = socketListener.accept();
 								if (isRunningMux)
 									oMuxSocket.newConnection(new JAPSocket(socket));
 								else
@@ -88,7 +96,7 @@ public class JAPProxyServer implements Runnable
 				catch (Exception e)
 					{
 						try {
-						server.close();
+						socketListener.close();
 						} 
 						catch (Exception e2) {
 						}
@@ -161,7 +169,7 @@ public class JAPProxyServer implements Runnable
     public void stopService() {
 		runFlag = false;
 		try {
-			server.close();
+			socketListener.close();
 		}
 		catch(Exception e) { 
 			JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.NET,"JAPProxyServer:stopService() Exception: " +e);
