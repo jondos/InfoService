@@ -93,7 +93,7 @@ final public class JAPCertificate
 					return null;
 				}
 			}
-			r_japcert.m_x509cert = x509cert;
+			r_japcert.m_x509cert = X509CertificateStructure.getInstance( x509cert);
 			return r_japcert;
 		}
 		catch (Exception e)
@@ -247,15 +247,14 @@ final public class JAPCertificate
 		}
 	}
 
-	/*
-	 public static class IllegalCertificateException extends RuntimeException
-	 {
-	  public IllegalCertificateException(String str)
-	  {
-	   super(str);
-	  }
-	 };
-	 */
+	public Object clone()
+	{
+		JAPCertificate cert=JAPCertificate.getInstance(m_x509cert);
+		if(cert==null)
+			return null;
+		cert.setEnabled(getEnabled());
+		return cert;
+	}
 
 	/** Returns the start date of the certificate.
 	 *

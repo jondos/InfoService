@@ -59,7 +59,7 @@ import gui.CAListCellRenderer;
 public class JAPConfCert extends AbstractJAPConfModule
 {
 
-	private DefaultListModel m_dlmCertList;
+//	private DefaultListModel m_dlmCertList;
 	private TitledBorder m_borderCertInfo;
 	private JLabel m_labelTrust1, m_labelTrust2, m_labelDate, m_labelCN, m_labelE, m_labelCSTL, m_labelO,
 		m_labelOU;
@@ -69,14 +69,13 @@ public class JAPConfCert extends AbstractJAPConfModule
 	private JList m_listCert;
 	private JScrollPane m_scrpaneList;
 	private Enumeration m_enumCerts;
-	private ListSelectionListener m_listsel;
-
-	private Hashtable m_HTCertsToInsert, m_HTCertsToRemove, m_HTCertsToStatusChange;
+//	private ListSelectionListener m_listsel;
 
 	private JAPCertificateStore m_jcs;
 
 	public JAPConfCert()
 	{
+		m_jcs=JAPCertificateStore.getInstance();
 	}
 
 	private void updateInfoPanel(JAPCertificate a_cert)
@@ -156,13 +155,8 @@ public class JAPConfCert extends AbstractJAPConfModule
 	/**
 	 * Creates the cert root panel with all child-panels.
 	 */
-	public void repaintRootPanel()
+	public void recreateRootPanel()
 	{
-		m_jcs = JAPModel.getCertificateStore();
-		m_HTCertsToInsert = new Hashtable();
-		m_HTCertsToRemove = new Hashtable();
-		m_HTCertsToStatusChange = new Hashtable();
-
 		JPanel panelRoot = getRootPanel();
 
 		/* clear the whole root panel */
@@ -174,9 +168,6 @@ public class JAPConfCert extends AbstractJAPConfModule
 		panelRoot.setLayout(new BorderLayout());
 		panelRoot.add(caPanel, BorderLayout.CENTER);
 		panelRoot.add(infoPanel, BorderLayout.SOUTH);
-
-		/* insert all components in the root panel */
-		// updateGuiOutput();
 	}
 
 	/**
@@ -193,14 +184,14 @@ public class JAPConfCert extends AbstractJAPConfModule
 	 * This method is called automatically by AbstractJAPConfModule if the cert tab comes to
 	 * foreground. This method calls updateGuiOutput().
 	 */
-	public void onRootPanelShown()
-	{
-		updateGuiOutput();
-	}
+	//public void onRootPanelShown()
+	//{
+		//updateGuiOutput();
+	//}
 
 	public void onResetToDefaultsPressed()
 	{
-		JAPCertificateStore jcsOrg = JAPCertificateStore.getInstance();
+		m_jcs = JAPCertificateStore.getInstance();
 		JAPCertificate cert = null;
 		try
 		{
@@ -212,56 +203,17 @@ public class JAPConfCert extends AbstractJAPConfModule
 		{
 			cert = null;
 		}
-		jcsOrg.addCertificate(cert, true);
-		JAPController.setCertificateStore(jcsOrg);
-		m_jcs = JAPModel.getCertificateStore();
+		m_jcs.addCertificate(cert, true);
 		updateGuiOutput();
 	}
 
 	public void onCancelPressed()
 	{
-
-		/* certificates that were inserted -> REMOVE
-		 *
-		 */
-		Enumeration enumCertsToInsert = m_HTCertsToInsert.elements();
-		while (enumCertsToInsert.hasMoreElements())
-		{
-			JAPCertificate cert = (JAPCertificate) enumCertsToInsert.nextElement();
-			m_jcs.removeCertificate(cert);
-		}
-		m_HTCertsToInsert.clear();
-
-		/* certificates that were removed -> RE-INSERT
-		 *
-		 */
-		Enumeration enumCertsToRemove = m_HTCertsToRemove.elements();
-		while (enumCertsToRemove.hasMoreElements())
-		{
-			JAPCertificate cert = (JAPCertificate) enumCertsToRemove.nextElement();
-			m_jcs.addCertificate(cert, true);
-		}
-		m_HTCertsToRemove.clear();
-
-		/* certificates that were enabled/disabled -> reset status
-		 *
-		 */
-		Enumeration enumCertsToStatusChange = m_HTCertsToStatusChange.elements();
-		while (enumCertsToStatusChange.hasMoreElements())
-		{
-			JAPCertificate cert = (JAPCertificate) enumCertsToStatusChange.nextElement();
-			m_jcs.enableCertificate(cert, !cert.getEnabled());
-		}
-		m_HTCertsToStatusChange.clear();
-
-		JAPController.setCertificateStore(m_jcs);
-		updateGuiOutput();
 	}
 
 	public void onOkPressed()
 	{
 		JAPController.setCertificateStore(m_jcs);
-		updateGuiOutput();
 	}
 
 	private JPanel createCertCAPanel()
@@ -295,25 +247,11 @@ public class JAPConfCert extends AbstractJAPConfModule
 
 		m_listmodelCertList = new DefaultListModel();
 
-		m_enumCerts = m_jcs.elements();
-		while (m_enumCerts.hasMoreElements())
-		{
-			JAPCertificate j = (JAPCertificate) m_enumCerts.nextElement();
-			m_listmodelCertList.addElement(j);
-		}
 
 		m_listCert = new JList(m_listmodelCertList);
 		m_listCert.setCellRenderer(new CAListCellRenderer());
-		boolean bStatusEnabled = false;
-		if (m_listmodelCertList.size() > 0)
-		{
-			m_listCert.setSelectedIndex(0);
-			JAPCertificate actualCert = (JAPCertificate) m_listCert.getSelectedValue();
-			bStatusEnabled = actualCert.getEnabled();
-		}
 		m_listCert.addListSelectionListener(new ListSelectionListener()
 		{
-
 			public void valueChanged(ListSelectionEvent e)
 			{
 
@@ -325,6 +263,9 @@ public class JAPConfCert extends AbstractJAPConfModule
 					m_labelCSTLData.setText("");
 					m_labelOData.setText("");
 					m_labelOUData.setText("");
+					m_bttnCertRemove.setEnabled(false);
+					m_bttnCertStatus.setEnabled(false);
+
 				}
 				else
 				{
@@ -340,6 +281,8 @@ public class JAPConfCert extends AbstractJAPConfModule
 						m_bttnCertStatus.setText(JAPMessages.getString("certBttnEnable"));
 
 					}
+					m_bttnCertStatus.setEnabled(true);
+					m_bttnCertRemove.setEnabled(true);
 				} // else
 
 			} // valuechanged
@@ -389,8 +332,6 @@ public class JAPConfCert extends AbstractJAPConfModule
 						// m_scrpaneList.getViewport().removeAll();
 						// m_scrpaneList.getViewport().add(m_listCert, null);
 						m_jcs.addCertificate(cert, true);
-						m_HTCertsToInsert.put(JAPCertificateStoreId.getId(cert), cert);
-
 						if (cert.getEnabled())
 						{
 							m_bttnCertStatus.setText(JAPMessages.getString("certBttnDisable"));
@@ -407,29 +348,6 @@ public class JAPConfCert extends AbstractJAPConfModule
 				}
 				m_bttnCertRemove.setEnabled(true);
 				m_bttnCertStatus.setEnabled(true);
-				if (m_listmodelCertList.getSize() == 1)
-				{
-					m_labelDateData.setText("");
-					m_labelCNData.setText("");
-					m_labelEData.setText("");
-					m_labelCSTLData.setText("");
-					m_labelOData.setText("");
-					m_labelOUData.setText("");
-
-					m_listCert.setSelectedIndex(0);
-
-					JAPCertificate j = (JAPCertificate) m_listCert.getSelectedValue();
-					updateInfoPanel(j);
-
-					if (j.getEnabled())
-					{
-						m_bttnCertStatus.setText(JAPMessages.getString("certBttnDisable"));
-					}
-					else
-					{
-						m_bttnCertStatus.setText(JAPMessages.getString("certBttnEnable"));
-					}
-				}
 
 			}
 		});
@@ -454,7 +372,6 @@ public class JAPConfCert extends AbstractJAPConfModule
 						if (strIssuerCN.equals(strActualIssuerCN))
 						{
 							m_jcs.removeCertificate(cert);
-							m_HTCertsToRemove.put(JAPCertificateStoreId.getId(cert), cert);
 							m_listmodelCertList.remove(index);
 
 							if (cert.getEnabled())
@@ -496,15 +413,7 @@ public class JAPConfCert extends AbstractJAPConfModule
 			}
 		});
 
-		if (bStatusEnabled)
-		{
-			m_bttnCertStatus = new JButton(JAPMessages.getString("certBttnEnable"));
-		}
-		else
-		{
-			m_bttnCertStatus = new JButton(JAPMessages.getString("certBttnDisable"));
-
-		}
+		m_bttnCertStatus = new JButton(JAPMessages.getString("certBttnEnable"));
 		m_bttnCertStatus.setFont(getFontSetting());
 		m_bttnCertStatus.addActionListener(new ActionListener()
 		{
@@ -516,13 +425,11 @@ public class JAPConfCert extends AbstractJAPConfModule
 				if (enabled)
 				{
 					m_jcs.enableCertificate(certActual, false);
-					m_HTCertsToStatusChange.put(JAPCertificateStoreId.getId(certActual), certActual);
 					m_bttnCertStatus.setText(JAPMessages.getString("certBttnEnable"));
 				}
 				else
 				{
 					m_jcs.enableCertificate(certActual, true);
-					m_HTCertsToStatusChange.put(JAPCertificateStoreId.getId(certActual), certActual);
 					m_bttnCertStatus.setText(JAPMessages.getString("certBttnDisable"));
 				}
 				m_listCert.repaint();
@@ -606,23 +513,6 @@ public class JAPConfCert extends AbstractJAPConfModule
 		m_labelOUData = new JLabel();
 		m_labelOUData.setFont(getFontSetting());
 
-		// init with first certificate of store
-		if (m_jcs != null && m_jcs.elements().hasMoreElements())
-		{
-			JAPCertificate j = (JAPCertificate) m_jcs.elements().nextElement();
-
-			updateInfoPanel(j);
-
-			if (j.getEnabled())
-			{
-				m_bttnCertStatus.setText(JAPMessages.getString("certBttnDisable"));
-			}
-			else
-			{
-				m_bttnCertStatus.setText(JAPMessages.getString("certBttnEnable"));
-
-			}
-		}
 
 		/*		    	gridx
 		 0:				1:
@@ -635,96 +525,88 @@ public class JAPConfCert extends AbstractJAPConfModule
 		   6:	labelOU			labelOUData
 		 */
 
-		panelConstraintsInfo.ipadx = 5;
-		panelConstraintsInfo.ipady = 5;
-
 		panelConstraintsInfo.anchor = GridBagConstraints.WEST;
 		panelConstraintsInfo.gridx = 0;
 		panelConstraintsInfo.gridy = 1;
-		panelConstraintsInfo.ipadx = 30;
-		panelConstraintsInfo.insets = new Insets(0, 10, 0, 10);
+		panelConstraintsInfo.fill=GridBagConstraints.HORIZONTAL;
+		panelConstraintsInfo.weightx=0;
+		panelConstraintsInfo.insets = new Insets(0, 10, 0, 0);
 		panelLayoutInfo.setConstraints(m_labelDate, panelConstraintsInfo);
 		r_panelInfo.add(m_labelDate);
 
-		panelConstraintsInfo.anchor = GridBagConstraints.EAST;
 		panelConstraintsInfo.gridx = 1;
 		panelConstraintsInfo.gridy = 1;
-		panelConstraintsInfo.ipadx = 0;
+		panelConstraintsInfo.weightx=1;
 		panelLayoutInfo.setConstraints(m_labelDateData, panelConstraintsInfo);
 		r_panelInfo.add(m_labelDateData);
 
 		panelConstraintsInfo.anchor = GridBagConstraints.WEST;
 		panelConstraintsInfo.gridx = 0;
 		panelConstraintsInfo.gridy = 2;
-		panelConstraintsInfo.ipadx = 30;
-		panelConstraintsInfo.insets = new Insets(0, 10, 0, 10);
+		panelConstraintsInfo.weightx=0;
+		panelConstraintsInfo.insets = new Insets(0, 10, 0, 0);
 		panelLayoutInfo.setConstraints(m_labelCN, panelConstraintsInfo);
 		r_panelInfo.add(m_labelCN);
 
-		panelConstraintsInfo.anchor = GridBagConstraints.EAST;
 		panelConstraintsInfo.gridx = 1;
 		panelConstraintsInfo.gridy = 2;
-		panelConstraintsInfo.ipadx = 0;
+		panelConstraintsInfo.weightx=1;
 		panelLayoutInfo.setConstraints(m_labelCNData, panelConstraintsInfo);
 		r_panelInfo.add(m_labelCNData);
 
 		panelConstraintsInfo.anchor = GridBagConstraints.WEST;
 		panelConstraintsInfo.gridx = 0;
 		panelConstraintsInfo.gridy = 3;
-		panelConstraintsInfo.ipadx = 30;
-		panelConstraintsInfo.insets = new Insets(0, 10, 0, 10);
+		panelConstraintsInfo.weightx=0;
+		panelConstraintsInfo.insets = new Insets(0, 10, 0, 0);
 		panelLayoutInfo.setConstraints(m_labelE, panelConstraintsInfo);
 		r_panelInfo.add(m_labelE);
 
-		panelConstraintsInfo.anchor = GridBagConstraints.EAST;
 		panelConstraintsInfo.gridx = 1;
 		panelConstraintsInfo.gridy = 3;
-		panelConstraintsInfo.ipadx = 0;
+		panelConstraintsInfo.weightx=1;
 		panelLayoutInfo.setConstraints(m_labelEData, panelConstraintsInfo);
 		r_panelInfo.add(m_labelEData);
 
 		panelConstraintsInfo.anchor = GridBagConstraints.WEST;
 		panelConstraintsInfo.gridx = 0;
 		panelConstraintsInfo.gridy = 4;
-		panelConstraintsInfo.ipadx = 30;
-		panelConstraintsInfo.insets = new Insets(0, 10, 0, 10);
+		panelConstraintsInfo.weightx=0;
+		panelConstraintsInfo.insets = new Insets(0, 10, 0, 0);
 		panelLayoutInfo.setConstraints(m_labelCSTL, panelConstraintsInfo);
 		r_panelInfo.add(m_labelCSTL);
 
-		panelConstraintsInfo.anchor = GridBagConstraints.EAST;
 		panelConstraintsInfo.gridx = 1;
 		panelConstraintsInfo.gridy = 4;
-		panelConstraintsInfo.ipadx = 0;
+		panelConstraintsInfo.weightx=1;
 		panelLayoutInfo.setConstraints(m_labelCSTLData, panelConstraintsInfo);
 		r_panelInfo.add(m_labelCSTLData);
 
 		panelConstraintsInfo.anchor = GridBagConstraints.WEST;
 		panelConstraintsInfo.gridx = 0;
 		panelConstraintsInfo.gridy = 5;
-		panelConstraintsInfo.ipadx = 30;
-		panelConstraintsInfo.insets = new Insets(0, 10, 0, 10);
+		panelConstraintsInfo.weightx=0;
+		panelConstraintsInfo.insets = new Insets(0, 10, 0, 0);
 		panelLayoutInfo.setConstraints(m_labelO, panelConstraintsInfo);
 		r_panelInfo.add(m_labelO);
 
-		panelConstraintsInfo.anchor = GridBagConstraints.EAST;
 		panelConstraintsInfo.gridx = 1;
 		panelConstraintsInfo.gridy = 5;
-		panelConstraintsInfo.ipadx = 0;
+		panelConstraintsInfo.weightx=1;
 		panelLayoutInfo.setConstraints(m_labelOData, panelConstraintsInfo);
 		r_panelInfo.add(m_labelOData);
 
 		panelConstraintsInfo.anchor = GridBagConstraints.WEST;
 		panelConstraintsInfo.gridx = 0;
 		panelConstraintsInfo.gridy = 6;
-		panelConstraintsInfo.ipadx = 30;
-		panelConstraintsInfo.insets = new Insets(0, 10, 0, 10);
+		panelConstraintsInfo.weightx=0;
+		panelConstraintsInfo.insets = new Insets(0, 10, 0, 0);
 		panelLayoutInfo.setConstraints(m_labelOU, panelConstraintsInfo);
 		r_panelInfo.add(m_labelOU);
 
-		panelConstraintsInfo.anchor = GridBagConstraints.EAST;
 		panelConstraintsInfo.gridx = 1;
 		panelConstraintsInfo.gridy = 6;
-		panelConstraintsInfo.ipadx = 0;
+		panelConstraintsInfo.weightx=1;
 		panelLayoutInfo.setConstraints(m_labelOUData, panelConstraintsInfo);
 		r_panelInfo.add(m_labelOUData);
 
@@ -732,14 +614,14 @@ public class JAPConfCert extends AbstractJAPConfModule
 	}
 
 	/**
-	 * Updates the GUI (the list of all known infoservices, the prefered infoservice, ...). This
-	 * method is called automatically, if the infoservice tab comes to foreground.
+	 * Updates the GUI (the list of all Certificates. This
+	 * method is called automatically, if the Certifcate tab comes to foreground.
 	 */
 	private void updateGuiOutput()
 	{
 		synchronized (this)
 		{
-			m_listmodelCertList = new DefaultListModel();
+			m_listmodelCertList.clear();
 
 			// list init, add certificates by issuer name
 			m_enumCerts = m_jcs.elements();
@@ -749,55 +631,24 @@ public class JAPConfCert extends AbstractJAPConfModule
 				// was: m_listmodelCertList.addElement(issuerCN);
 				m_listmodelCertList.addElement(j);
 			}
-
-			m_listCert = new JList(m_listmodelCertList);
-			m_listCert.setCellRenderer(new CAListCellRenderer());
-			boolean bStatusEnabled = false;
 			if (m_listmodelCertList.size() > 0)
 			{
 				m_listCert.setSelectedIndex(0);
-				JAPCertificate certActual = (JAPCertificate) m_listCert.getSelectedValue();
-				bStatusEnabled = certActual.getEnabled();
+
 			}
-
-			m_listCert.addListSelectionListener(new ListSelectionListener()
-			{
-
-				public void valueChanged(ListSelectionEvent e)
-				{
-
-					if (m_listmodelCertList.getSize() == 0)
-					{
-						m_labelDateData.setText("");
-						m_labelCNData.setText("");
-						m_labelEData.setText("");
-						m_labelCSTLData.setText("");
-						m_labelOData.setText("");
-						m_labelOUData.setText("");
-					}
-					else
-					{
-						JAPCertificate j = (JAPCertificate) m_listCert.getSelectedValue();
-						// String currIssuerCN = (String) j.getIssuer().getValues().elementAt(0);
-						updateInfoPanel(j);
-
-						if (j.getEnabled())
-						{
-							m_bttnCertStatus.setText(JAPMessages.getString("certBttnDisable"));
-						}
-						else
-						{
-							m_bttnCertStatus.setText(JAPMessages.getString("certBttnEnable"));
-						}
-					} // else
-
-				} // valuechanged
-			});
-
-			// m_scrpaneList = new JScrollPane();
-			m_scrpaneList.getViewport().removeAll();
-			m_scrpaneList.getViewport().add(m_listCert, null);
 		}
 	}
 
+public void onUpdateValues()
+{
+	JAPCertificateStore modelCerts=JAPModel.getCertificateStore();
+	if(modelCerts!=null)
+		m_jcs=(JAPCertificateStore)JAPModel.getCertificateStore().clone();
+	else
+		m_jcs=JAPCertificateStore.getInstance();
+	updateGuiOutput();
 }
+
+
+}
+

@@ -401,36 +401,6 @@ public final class JAPModel
 		return model.m_bCertCheckDisabled;
 	}
 
-	/*	public static boolean setRootCertificate()
-	 {
-	  String dir=System.getProperty("user.home","");
-	  File file;
-	  try
-	  {
-	   file = new File("certificates" + File.separator + "japroot.cer");
-	  }
-	  catch (Exception e)
-	  {
-	   file=null;
-	  }
-
-	  model.m_rootCertificate = JAPCertificate.getInstance(file);
-	  if (model.m_rootCertificate instanceof JAPCertificate)
-	  {
-	   model.m_certStore.addCertificate(model.m_rootCertificate);
-	   return true;
-	  }
-	  else
-	  {
-	   return false;
-	  }
-	 }
-	 */
-	/*		public static JAPCertificate getRootCertificate()
-	  {
-	   return model.m_rootCertificate;
-	  }
-	 */
 	public static JAPCertificateStore getCertificateStore()
 	{
 		return model.m_certStore;
@@ -438,7 +408,10 @@ public final class JAPModel
 
 	protected void setCertificateStore(JAPCertificateStore jcs)
 	{
-		m_certStore = jcs;
+		if(jcs!=null)
+			m_certStore = jcs;
+		else
+			m_certStore=JAPCertificateStore.getInstance();
 	}
 
 	public static JAPCertificate getJAPCodeSigningCert()

@@ -250,7 +250,7 @@ final class JAPConf extends JDialog
 		pContainer.add(buttonPanel, BorderLayout.SOUTH);
 //				container.add(new JLabel(new ImageIcon(m_Controller.JAPICONFN)), BorderLayout.WEST);
 		getContentPane().add(pContainer);
-		//updateValues();
+		updateValues();
 		// largest tab to front
 		m_Tabs.setSelectedComponent(m_pMix);
 		if (JAPModel.isSmallDisplay())
@@ -1324,7 +1324,7 @@ final class JAPConf extends JDialog
 			catch (Exception e)
 			{
 			}
-			currentModule.repaintRootPanel();
+			currentModule.recreateRootPanel();
 		}
 
 		setTitle(JAPMessages.getString("settingsDialog"));
@@ -1372,8 +1372,16 @@ final class JAPConf extends JDialog
 		m_labelProxyAuthUserID.setText(JAPMessages.getString("settingsProxyAuthUserID"));
 	}
 
+/** Updates the shown Values from the Model.*/
 	public void updateValues()
 	{
+		/* Call the event handler of all configuration modules. */
+		Enumeration confModules = m_confModules.elements();
+		while (confModules.hasMoreElements())
+		{
+			( (AbstractJAPConfModule) (confModules.nextElement())).onUpdateValues();
+		}
+
 		if (loadPay)
 		{
 			( (pay.view.PayView) m_pKonto).userPanel.valuesChanged();
