@@ -143,7 +143,7 @@ public class PaymentMainPanel extends JPanel
 
 		this.add(new JButton("Aufladen"), BorderLayout.EAST);
 		LogHolder.log(LogLevel.DEBUG, LogType.PAY, "PaymentMainPanel: Calling accountsFile()");
-		PayAccountsFile.getInstance().addChangeListener(m_MyChangeListener);
+		//PayAccountsFile.getInstance().addChangeListener(m_MyChangeListener);
 		LogHolder.log(LogLevel.DEBUG, LogType.PAY, "PaymentMainPanel: Calling updateDisplay()");
 		updateDisplay(null);
 	}
