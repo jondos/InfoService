@@ -52,6 +52,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import anon.JAPAnonService;
+import update.*;
 final class JAPConf extends JDialog
 	{
 
@@ -106,6 +107,9 @@ final class JAPConf extends JDialog
 		private JFrame        m_frmParent;
 
 		private JAPConf       m_JapConf;
+
+                //Einfug
+                private JAPUpdate update;
 
 	  public JAPConf (JFrame frmParent)
 			{
@@ -659,6 +663,27 @@ final class JAPConf extends JDialog
 				JPanel p22 = new JPanel();
 				p22.setLayout(new GridLayout(3,1));
 				//p22.add(bttnPing);
+              //////////////////////////////////////////////////////////////////
+              //Einfug
+              JButton testButton = new JButton("Update");
+            testButton.addActionListener(new ActionListener() {
+  public void actionPerformed (ActionEvent e) {
+  Cursor c1=getCursor();
+  setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+//  if (update == null){
+  update = new JAPUpdate();
+ System.out.println(update.toString());
+  //         }//fi
+           updateValues();
+           OKPressed();
+           setCursor(c1);
+  }
+});
+  testButton.setVisible(true);
+  testButton.setEnabled(true);
+   p22.add(testButton);
+              //////////////////////////////////////////////////////////////////
+
 				p22.add(bttnMonitor);
 				p22.add(m_cbDummyTraffic);
 				p2.add(p22, BorderLayout.NORTH);
