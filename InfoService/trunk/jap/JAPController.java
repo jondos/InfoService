@@ -812,9 +812,11 @@ public final class JAPController implements ProxyListener {
 			m_Model.setInfoServiceDisabled(b);
 		}
 
-	public static void setCertCheckDisabled(boolean b)
+	public void setCertCheckDisabled(boolean b)
 		{
 			m_Model.setCertCheckDisabled(b);
+			if(m_proxyAnon!=null)
+				m_proxyAnon.setMixCertificationCheck(!b,m_Model.getCertificateStore());
 		}
 
 	public static void setCertificateStore(String certlist)
@@ -1053,6 +1055,7 @@ private final class SetAnonModeAsync implements Runnable
 										}
 								}
 
+							m_proxyAnon.setMixCertificationCheck(!m_Model.isCertCheckDisabled(),m_Model.getCertificateStore());
 							// -> we can try to start anonymity
 							if(m_proxyDirect!=null)
 								m_proxyDirect.stopService();
