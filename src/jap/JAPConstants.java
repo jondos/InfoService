@@ -162,12 +162,13 @@ public final class JAPConstants
 	};
 	public static final String PIHOST = "anon.inf.tu-dresden.de";
 	public static final int PIPORT = 2342;
-	public static final boolean PI_SSLON = false; // auf true setzten wenn die pay funktionalität fertig gebaut ist.
+	public static final boolean PI_SSLON = false; // auf true setzten wenn die pay funktionalit\uFFFDt fertig gebaut ist.
 
 	public final static String CERTSPATH = "certificates/";
 	public final static String TRUSTEDROOTCERT = "japroot.cer";
 	public final static String CERT_JAPCODESIGNING = "japcodesigning.cer";
 	public final static String CERT_JAPINFOSERVICEMESSAGES = "japinfoservicemessages.cer";
+	public final static String CERT_BI = "bi.cer";
 
 	public final static int TOR_MAX_CONNECTIONS_PER_ROUTE=Circuit.MAX_STREAMS_OVER_CIRCUIT;
 	public final static int TOR_MAX_ROUTE_LEN=Tor.MAX_ROUTE_LEN;

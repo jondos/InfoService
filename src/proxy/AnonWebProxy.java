@@ -146,7 +146,7 @@ final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 			LogHolder.log(LogLevel.DEBUG, LogType.NET, "AnonWebProxy: Calling PayAccountsFile...");
 			PayAccountsFile accounts = PayAccountsFile.getInstance();
 			PayAccount mainAccount = accounts.getActiveAccount();
-			toAI = mainAccount.getAccountCertificate().getXMLString();
+			toAI = XMLUtil.XMLDocumentToString(mainAccount.getAccountCertificate().getXmlEncoded());
 			( (AnonServiceImpl) m_Anon).sendPayPackets(toAI);
 		}
 		catch (Exception ex)

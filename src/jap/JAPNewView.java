@@ -86,9 +86,9 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private JButton m_bttnAnonConf;
 	//private JCheckBox m_cbAnon;
 	//private JProgressBar userProgressBar;
-	private JProgressBar trafficProgressBar;
-	private JProgressBar protectionProgressBar;
-	private JProgressBar ownTrafficChannelsProgressBar;
+	//private JProgressBar trafficProgressBar;
+	//private JProgressBar protectionProgressBar;
+	//private JProgressBar ownTrafficChannelsProgressBar;
 
 	private JLabel m_labelMeterDetailsRisk, m_labelOwnBytes, m_labelOwnChannels;
 	//private TitledBorder m_borderOwnTraffic, m_borderAnonMeter, m_borderDetails;
@@ -98,7 +98,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private Window m_ViewIconified;
 	private NumberFormat m_NumberFormat;
 	private boolean m_bIsIconified;
-	private final static boolean PROGRESSBARBORDER = true;
+	//private final static boolean PROGRESSBARBORDER = true;
 	//private GuthabenAnzeige guthaben;
 	private boolean loadPay = false;
 
@@ -114,6 +114,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private JLabel m_labelOwnTrafficBytes,m_labelOwnTrafficUnit;
 	private JLabel m_labelOwnTrafficBytesSmall,m_labelOwnTrafficUnitSmall;
 	private JLabel m_labelOwnTrafficWWW,m_labelOwnTrafficBytesWWW,m_labelOwnTrafficUnitWWW;
+	private JProgressBar m_progressOwnTrafficActivity,m_progressOwnTrafficActivitySmall;
 	private JButton m_bttnAnonDetails;
 	private JRadioButton m_rbAnonOff,m_rbAnonOn;
 
@@ -371,15 +372,17 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.anchor = GridBagConstraints.EAST;
 		c1.gridx = 3;
 		p.add(m_labelOwnActivity, c1);
-		progress = new JProgressBar();
-		progress.setUI(new MyProgressBarUI(true));
-		progress.setMinimum(0);
-		progress.setMaximum(5);
-		progress.setBorderPainted(false);
+		m_progressOwnTrafficActivity = new JProgressBar();
+		ui=new MyProgressBarUI(true);
+		ui.setFilledBarColor(Color.blue);
+		m_progressOwnTrafficActivity.setUI(ui);
+		m_progressOwnTrafficActivity.setMinimum(0);
+		m_progressOwnTrafficActivity.setMaximum(5);
+		m_progressOwnTrafficActivity.setBorderPainted(false);
 		c1.gridx = 4;
 		c1.weightx = 0;
 		c1.fill = GridBagConstraints.NONE;
-		p.add(progress, c1);
+		p.add(m_progressOwnTrafficActivity, c1);
 		m_labelOwnTrafficWWW = new JLabel(JAPMessages.getString("ngOwnTrafficWWW"));
 		c1.insets = new Insets(10, 20, 0, 0);
 		c1.gridx = 0;
@@ -429,15 +432,17 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.anchor = GridBagConstraints.EAST;
 		c1.gridx = 3;
 		p.add(m_labelOwnActivitySmall, c1);
-		progress = new JProgressBar();
-		progress.setUI(new MyProgressBarUI(true));
-		progress.setMinimum(0);
-		progress.setMaximum(5);
-		progress.setBorderPainted(false);
+		m_progressOwnTrafficActivitySmall = new JProgressBar();
+		ui=new MyProgressBarUI(true);
+		ui.setFilledBarColor(Color.blue);
+		m_progressOwnTrafficActivitySmall.setUI(ui);
+		m_progressOwnTrafficActivitySmall.setMinimum(0);
+		m_progressOwnTrafficActivitySmall.setMaximum(5);
+		m_progressOwnTrafficActivitySmall.setBorderPainted(false);
 		c1.weightx = 0;
 		c1.fill=GridBagConstraints.NONE;
 		c1.gridx = 4;
-		p.add(progress, c1);
+		p.add(m_progressOwnTrafficActivitySmall, c1);
 		my.setSmallPanel(p);
 
 		c.fill = GridBagConstraints.HORIZONTAL;
@@ -739,13 +744,13 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 //		levelPanel.setLayout(new BoxLayout(levelPanel, BoxLayout.Y_AXIS) );
 
 		// Own traffic situation: current # of channels
-		ownTrafficChannelsProgressBar = new JProgressBar(JProgressBar.HORIZONTAL, 0, 1);
+		//ownTrafficChannelsProgressBar = new JProgressBar(JProgressBar.HORIZONTAL, 0, 1);
 		Font fontControls = JAPController.getDialogFont();
-		ownTrafficChannelsProgressBar.setFont(fontControls);
-		ownTrafficChannelsProgressBar.setUI(new MyProgressBarUI(false));
-		ownTrafficChannelsProgressBar.setStringPainted(true);
-		ownTrafficChannelsProgressBar.setBorderPainted(false /*PROGRESSBARBORDER*/);
-		ownTrafficChannelsProgressBar.setString(" ");
+		//wnTrafficChannelsProgressBar.setFont(fontControls);
+		//ownTrafficChannelsProgressBar.setUI(new MyProgressBarUI(false));
+		//ownTrafficChannelsProgressBar.setStringPainted(true);
+		//ownTrafficChannelsProgressBar.setBorderPainted(false /*PROGRESSBARBORDER*/);
+		//ownTrafficChannelsProgressBar.setString(" ");
 
 		// Own traffic situation: # of bytes transmitted
 		//m_labelOwnTrafficBytes = new JLabel("0 Bytes", SwingConstants.RIGHT);
@@ -757,17 +762,17 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		//userProgressBar.setBorderPainted(PROGRESSBARBORDER);
 		//userProgressBar.setFont(fontControls);
 		//
-		trafficProgressBar = new
-			JProgressBar(JProgressBar.HORIZONTAL);
-		trafficProgressBar.setStringPainted(true);
-		trafficProgressBar.setBorderPainted(PROGRESSBARBORDER);
-		trafficProgressBar.setFont(fontControls);
+		//trafficProgressBar = new
+		//	JProgressBar(JProgressBar.HORIZONTAL);
+		//trafficProgressBar.setStringPainted(true);
+		//trafficProgressBar.setBorderPainted(PROGRESSBARBORDER);
+	//	trafficProgressBar.setFont(fontControls);
 		//
-		protectionProgressBar = new
-			JProgressBar(JProgressBar.HORIZONTAL);
-		protectionProgressBar.setStringPainted(true);
-		protectionProgressBar.setBorderPainted(PROGRESSBARBORDER);
-		protectionProgressBar.setFont(fontControls);
+	//	protectionProgressBar = new
+	//		JProgressBar(JProgressBar.HORIZONTAL);
+	//	protectionProgressBar.setStringPainted(true);
+	//	protectionProgressBar.setBorderPainted(PROGRESSBARBORDER);
+	//	protectionProgressBar.setFont(fontControls);
 
 		JPanel ownTrafficPanel = new JPanel();
 		ownTrafficPanel.setLayout(new GridLayout(2, 2, 5, 5));
@@ -777,7 +782,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_labelOwnChannels = new JLabel(JAPMessages.getString("ownTrafficChannels"));
 		m_labelOwnChannels.setFont(fontControls);
 		ownTrafficPanel.add(m_labelOwnChannels);
-		ownTrafficPanel.add(ownTrafficChannelsProgressBar);
+		//ownTrafficPanel.add(ownTrafficChannelsProgressBar);
 		m_labelOwnBytes = new JLabel(JAPMessages.getString("ownTrafficBytes"));
 		m_labelOwnBytes.setFont(fontControls);
 		ownTrafficPanel.add(m_labelOwnBytes);
@@ -867,8 +872,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		//detailsPanel.add(m_labelMeterDetailsTraffic);
 		c.gridx = 1;
 		c.weightx = 1;
-		g.setConstraints(trafficProgressBar, c);
-		detailsPanel.add(trafficProgressBar);
+		//g.setConstraints(trafficProgressBar, c);
+		//detailsPanel.add(trafficProgressBar);
 		normInsets = new Insets(0, 0, 0, 0);
 		c.insets = normInsets;
 		c.gridx = 0;
@@ -876,7 +881,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		g.setConstraints(m_labelMeterDetailsRisk, c);
 //		detailsPanel.add(labelMeterDetailsRisk);
 		c.gridx = 1;
-		g.setConstraints(protectionProgressBar, c);
+		//g.setConstraints(protectionProgressBar, c);
 //		detailsPanel.add(protectionProgressBar);
 
 		// Add all panels to level panel
@@ -1291,7 +1296,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 						//userProgressBar.setValue(userProgressBar.getMaximum());
 						//userProgressBar.setString(JAPMessages.getString("meterNA"));
 					}
-					if (currentStatus.getCurrentRisk() > -1)
+				/*	if (currentStatus.getCurrentRisk() > -1)
 					{
 						// Current Risk
 						if (currentStatus.getCurrentRisk() > protectionProgressBar.getMaximum())
@@ -1313,7 +1318,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					{
 						protectionProgressBar.setValue(protectionProgressBar.getMaximum());
 						protectionProgressBar.setString(JAPMessages.getString("meterNA"));
-					}
+					}*/
 					int t = currentStatus.getTrafficSituation();
 					if (t > -1)
 					{
@@ -1359,10 +1364,10 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					m_progressAnonTraffic.setValue(0);
 					//userProgressBar.setValue(userProgressBar.getMaximum());
 					//userProgressBar.setString(JAPMessages.getString("meterNA"));
-					protectionProgressBar.setValue(protectionProgressBar.getMaximum());
-					protectionProgressBar.setString(JAPMessages.getString("meterNA"));
-					trafficProgressBar.setValue(trafficProgressBar.getMaximum());
-					trafficProgressBar.setString(JAPMessages.getString("meterNA"));
+					//protectionProgressBar.setValue(protectionProgressBar.getMaximum());
+					//protectionProgressBar.setString(JAPMessages.getString("meterNA"));
+					//trafficProgressBar.setValue(trafficProgressBar.getMaximum());
+					//trafficProgressBar.setString(JAPMessages.getString("meterNA"));
 					LogHolder.log(LogLevel.DEBUG, LogType.GUI, "JAPView:Finished updateValues");
 				}
 			}
@@ -1383,11 +1388,9 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	{
 		// Nr of Channels
 		//int c=controller.getNrOfChannels();
-		if (c > ownTrafficChannelsProgressBar.getMaximum())
-		{
-			ownTrafficChannelsProgressBar.setMaximum(c);
-		}
-		ownTrafficChannelsProgressBar.setValue(c);
+		c=Math.min(c,m_progressOwnTrafficActivity.getMaximum());
+		m_progressOwnTrafficActivity.setValue(c);
+		m_progressOwnTrafficActivitySmall.setValue(c);
 //			ownTrafficChannelsProgressBar.setString(String.valueOf(c));
 	}
 
