@@ -36,6 +36,8 @@ public class JAPProxyServer implements Runnable
 								return;
 							}
 						oMuxSocket.start();
+						model.status2 = model.getString("statusRunning");
+						model.notifyJAPObservers();
 						while(runFlag)
 							{
 								socket = server.accept();

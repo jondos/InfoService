@@ -237,7 +237,7 @@ public final class JAPModel implements JAPObserver {
 				    // starting service to make sure that errors will be
 				    // displayed right
 				    status1 = getString("statusRunning");
-				    status2 = getString("statusRunning");
+//				    status2 = getString("statusRunning");
 				    isRunningProxy = true;
 				    runningPortNumber = portNumber;
 				    p = new JAPProxyServer(portNumber);
