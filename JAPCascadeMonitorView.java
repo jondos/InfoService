@@ -179,7 +179,7 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 		tableView.getSelectionModel().addListSelectionListener(this);
 		JAPUtil.setPerfectTableSize(tableView, new Dimension(550,450));
 		//tableView.setPreferredScrollableViewportSize(new Dimension(tableView.getSize().width,Math.min(db.size(),6)*(tableView.getRowHeight()+1)));
-		tableView.setPreferredScrollableViewportSize(new Dimension(550,Math.min(db.size(),6)*(tableView.getRowHeight()+1)));
+		//tableView.setPreferredScrollableViewportSize(new Dimension(550,Math.min(db.size(),6)*(tableView.getRowHeight()+1)));
         return scrollpane;
     }
 	

@@ -46,33 +46,33 @@ final class JAPConf extends JDialog
 	final static public int ANON_TAB = 3;	
 	final static public int MISC_TAB = 4;
 		
-	private JCheckBox guiChB;
-	private JCheckBox netChB;
-	private JCheckBox threadChB;
-	private JCheckBox miscChB;
-	private JCheckBox checkboxShowDebugConsole;
+	private JCheckBox    guiChB;
+	private JCheckBox    netChB;
+	private JCheckBox    threadChB;
+	private JCheckBox    miscChB;
+	private JCheckBox    checkboxShowDebugConsole;
 	//private JAPJIntField debugLevelTextField;
-	private JSlider sliderDebugLevel;
+	private JSlider      sliderDebugLevel;
 	private JAPJIntField portnumberTextField;
 	private JAPJIntField portnumberTextFieldSocks;
-	private JCheckBox	proxyCheckBox;
-	private JCheckBox	listenerCheckBoxSocks;
-	private JCheckBox	listenerCheckBoxIsLocal;
+	private JCheckBox	 proxyCheckBox;
+	private JCheckBox	 listenerCheckBoxSocks;
+	private JCheckBox	 listenerCheckBoxIsLocal;
 	private JAPJIntField proxyportnumberTextField;
 	private JTextField   proxyhostTextField;
-	private JCheckBox	autoConnectCheckBox;
-	private JCheckBox	startupMinimizeCheckBox;
+	private JCheckBox	 autoConnectCheckBox;
+	private JCheckBox	 startupMinimizeCheckBox;
 	private JAPJIntField anonportnumberTextField;
 	private JAPJIntField anonsslportnumberTextField;
-	private String anonserviceName=model.getString("manual");
+	private String       anonServerName,oldAnonServerName;
 	private JTextField   anonhostTextField;
 	private JAPJIntField infoportnumberTextField;
 	private JTextField   infohostTextField;
 	private JRadioButton b1,b2,b3;
-	private JButton fetchB;
-	private JComboBox select;
-	private JTabbedPane tabs;
-	private JPanel portP, httpP, infoP, anonP, miscP;
+	private JButton      fetchB;
+	private JComboBox    select;
+	private JTabbedPane  tabs;
+	private JPanel       portP, httpP, infoP, anonP, miscP;
 	
 	private JFrame  parent;
 	
@@ -310,10 +310,18 @@ final class JAPConf extends JDialog
 						Cursor c=getCursor();
 						setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 						model.fetchAnonServers();
-						// show a window containing all available cascades
-						JAPCascadeMonitorView v=new JAPCascadeMonitorView(model.getView());
+						if (model.anonServerDatabase.size() == 0) {
+							setCursor(c);
+							JOptionPane.showMessageDialog(model.getView(),
+											model.getString("settingsNoServersAvailable"),
+											model.getString("settingsNoServersAvailableTitle"),
+											JOptionPane.INFORMATION_MESSAGE);
+						} else {
+							// show a window containing all available cascades
+							JAPCascadeMonitorView v=new JAPCascadeMonitorView(model.getView());
+							setCursor(c);
+						}
 						OKPressed();
-						setCursor(c);
 				}});
 				select = new JComboBox();
 				// add elements to combobox
@@ -329,7 +337,8 @@ final class JAPConf extends JDialog
 							public void actionPerformed(ActionEvent e) {
 						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPConf:Item " + select.getSelectedIndex() + " selected");
 						if (select.getSelectedIndex() > 0) {
-							anonserviceName = ((AnonServerDBEntry)model.anonServerDatabase.elementAt(select.getSelectedIndex()-1)).getName();
+							anonServerName = ((AnonServerDBEntry)model.anonServerDatabase.elementAt(select.getSelectedIndex()-1)).getName();
+							oldAnonServerName = anonServerName;
 							anonhostTextField.setText( 
 							   ((AnonServerDBEntry)model.anonServerDatabase.elementAt(select.getSelectedIndex()-1)).getHost()   );
 							anonportnumberTextField.setText( String.valueOf(
@@ -372,7 +381,7 @@ final class JAPConf extends JDialog
 						anonhostTextField.setEditable(true);
 						anonportnumberTextField.setEditable(true);
 						anonsslportnumberTextField.setEditable(true);
-						anonserviceName = model.getString("manual");
+						anonServerName = model.getString("manual");
 				}});
 
 				// layout stuff
@@ -719,11 +728,16 @@ final class JAPConf extends JDialog
 				if (!anonsslportnumberTextField.getText().equals(""))
 					anonSSLPortNumber = Integer.parseInt(anonsslportnumberTextField.getText().trim());
 				
+				if (b3.isSelected())
+						anonServerName = model.getString("manual");
 				AnonServerDBEntry e = new AnonServerDBEntry(
-															anonserviceName,
+															anonServerName,
 															anonhostTextField.getText().trim(),
 															Integer.parseInt(anonportnumberTextField.getText().trim()),
 															anonSSLPortNumber);
+				// if (the same server) (re)set the name from "manual" to the correct name
+				if (model.getAnonServer().equals(e))
+					e.setName(oldAnonServerName);
 				model.autoConnect = autoConnectCheckBox.isSelected();
 				model.setMinimizeOnStartup(startupMinimizeCheckBox.isSelected());
 				JAPDebug.setDebugType(
@@ -776,7 +790,8 @@ final class JAPConf extends JDialog
 		infoportnumberTextField.setText(String.valueOf(model.getInfoServicePort()));
 		// anon tab
 		AnonServerDBEntry e = model.getAnonServer();
-		anonserviceName = e.getName();
+		anonServerName = e.getName();
+		oldAnonServerName = anonServerName;
 		anonhostTextField.setText(e.getHost());
 		anonportnumberTextField.setText(String.valueOf(e.getPort()));
 		if (e.getSSLPort()==-1)
