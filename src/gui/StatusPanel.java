@@ -11,7 +11,8 @@ public class StatusPanel extends JPanel implements Runnable
 	final class MsgQueueEntry
 	{
 		String m_Msg;
-		Image m_Icon;
+		//Image m_Icon;
+		Icon m_Icon;
 		MsgQueueEntry m_Next;
 		int m_DisplayCount = 10;
 	}
@@ -68,7 +69,9 @@ public class StatusPanel extends JPanel implements Runnable
 				s="OptionPane.errorIcon";
 			else if(type==JOptionPane.QUESTION_MESSAGE)
 				s="OptionPane.questionIcon";
-			entry.m_Icon=((ImageIcon)UIManager.getDefaults().getIcon(s)).getImage();
+			Icon icon=	UIManager.getDefaults().getIcon(s);
+			entry.m_Icon=icon;
+			//entry.m_Icon=((ImageIcon)icon).getImage();
 			//entry.m_Icon=entry.m_Icon.getScaledInstance(16,16,Image.SCALE_SMOOTH);
 			if (m_lastMsg == null)
 			{
@@ -101,10 +104,10 @@ public class StatusPanel extends JPanel implements Runnable
 			if (m_Msgs != null)
 			{
 				g.drawString(m_Msgs.m_Msg, 18, m_aktY-m_idyFont);
-	if(m_Msgs.m_Icon!=null)
+	//if(m_Msgs.m_Icon!=null)
 				//	b=g.drawImage(m_Msgs.m_Icon,0,m_aktY,this);
-		b=g.drawImage(m_Msgs.m_Icon,0,m_aktY-16,16,m_aktY,0,0,m_Msgs.m_Icon.getWidth(this),
-					 m_Msgs.m_Icon.getHeight(this) ,this);
+		//b=g.drawImage(m_Msgs.m_Icon,0,m_aktY-16,16,m_aktY,0,0,m_Msgs.m_Icon.getWidth(this),
+		//			 m_Msgs.m_Icon.getHeight(this) ,this);
 			}
 		}
 
