@@ -148,6 +148,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 	private long m_lTrafficWWW, m_lTrafficOther;
 
+	private boolean m_bIsSimpleView=true;
+
 	public JAPNewView(String s, JAPController a_controller)
 	{
 		super(s, a_controller);
@@ -427,6 +429,9 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c.anchor = GridBagConstraints.NORTHWEST;
 		c.gridy = 4;
 		m_flippingpanelAnon.setFlipped(true);
+		if(m_bIsSimpleView)
+			northPanel.add(m_flippingpanelAnon.getFullPanel(), c);
+			else
 		northPanel.add(m_flippingpanelAnon, c);
 
 //-----------------------------------------------------------
@@ -621,7 +626,10 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c.weightx = 1;
 		c.anchor = GridBagConstraints.NORTHWEST;
 		c.gridy = 8;
-		northPanel.add(m_flippingpanelOwnTraffic, c);
+		if(m_bIsSimpleView)
+			northPanel.add(m_flippingpanelOwnTraffic.getSmallPanel(), c);
+		else
+northPanel.add(m_flippingpanelOwnTraffic, c);
 
 //-----------------------------------------------------------
 		c.gridwidth = 2;
@@ -637,6 +645,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c.anchor = GridBagConstraints.NORTHWEST;
 		c.gridy = 10;
 		m_flippingpanelForward = buildForwarderPanel();
+	if(!m_bIsSimpleView)
+	{
 		northPanel.add(m_flippingpanelForward, c);
 
 //-----------------------------------------------------------
@@ -645,7 +655,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c.gridy = 11;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.weightx = 1;
-		northPanel.add(new JSeparator(), c);
+		northPanel.add(new JSeparator(), c);}
 //Status
 		c.gridy = 12;
 		m_StatusPanel = new StatusPanel();

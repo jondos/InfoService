@@ -143,10 +143,20 @@ final public class FlippingPanel extends JPanel
 		m_panelFull.add(p);
 	}
 
+	public JPanel getFullPanel()
+	{
+		return (JPanel) m_panelFull.getComponent(0);
+	}
+
 	public void setSmallPanel(JPanel p)
 	{
 		m_panelSmall.removeAll();
 		m_panelSmall.add(p);
+	}
+
+	public JPanel getSmallPanel()
+	{
+		return (JPanel) m_panelSmall.getComponent(0);
 	}
 
 	public Dimension getPreferredSize()

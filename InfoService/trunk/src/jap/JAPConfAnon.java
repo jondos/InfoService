@@ -944,10 +944,15 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			};
 			Thread t = new Thread(doIt);
 			t.start();
-
-			m_listMixCascade.setSelectedValue(m_Controller.getCurrentMixCascade(), true);
-			valueChanged(new ListSelectionEvent(m_listMixCascade, 0,
-												m_listMixCascade.getModel().getSize(), false));
+			try
+			{
+				m_listMixCascade.setSelectedValue(m_Controller.getCurrentMixCascade(), true);
+				valueChanged(new ListSelectionEvent(m_listMixCascade, 0,
+					m_listMixCascade.getModel().getSize(), false));
+			}
+			catch (Exception e)
+			{
+			}
 		}
 	}
 
