@@ -4,7 +4,7 @@ import java.security.PublicKey;
 import java.util.Enumeration;
 import org.w3c.dom.Node;
 import anon.ErrorCodes;
-import anon.server.impl.XMLUtil;
+import anon.util.XMLUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;

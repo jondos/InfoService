@@ -31,6 +31,7 @@ import java.math.BigInteger;
 import org.w3c.dom.Element;
 import org.w3c.dom.Text;
 import anon.ErrorCodes;
+import anon.util.*;
 
 final class ASymCipher
 {

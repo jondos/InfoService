@@ -58,7 +58,7 @@ import anon.infoservice.InfoServiceDatabase;
 import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.JAPVersionInfo;
 import anon.infoservice.MixCascade;
-import anon.server.impl.XMLUtil;
+import anon.util.XMLUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
