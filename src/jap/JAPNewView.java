@@ -525,7 +525,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				   JAPModel.getInstance().getRoutingSettings().setRoutingMode(JAPRoutingSettings.
 					 ROUTING_MODE_DISABLED);
 				 }
-				 valuesChanged();
+				 valuesChanged(false);
 			   }
 		};
 		m_cbForwarding.addActionListener(actionListener);
@@ -811,7 +811,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			{
 				hideWindowInTaskbar();
 				m_bIsIconified = true;
-				valuesChanged();
+				valuesChanged(false);
 			}
 		});
 
@@ -823,7 +823,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			m_flippingpanelAnon.getPreferredSize().width)));
 
 		m_Controller.fetchMixCascades(false);
-		valuesChanged();
+		valuesChanged(true);
 		setOptimalSize();
 		JAPUtil.centerFrame(this);
 		//Change size and location if the user requested to restore the old position/size
@@ -1215,7 +1215,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					 m_flippingpanelForward.getPreferredSize().width),
 			m_flippingpanelAnon.getPreferredSize().width)));
 
-		valuesChanged();
+		valuesChanged(true);
 		setOptimalSize();
 	}
 

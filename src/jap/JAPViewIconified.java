@@ -54,6 +54,7 @@ import gui.JAPDll;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import java.lang.reflect.*;
 
 final public class JAPViewIconified extends JWindow implements ActionListener,
 	MouseMotionListener,
@@ -250,7 +251,7 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 		}
 	}
 
-	public void valuesChanged()
+	public void valuesChanged(boolean bSync)
 	{
 		synchronized (m_runnableValueUpdate)
 		{
@@ -260,6 +261,19 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 			}
 			else
 			{
+				try
+				{
+					if (bSync)
+					{
+						SwingUtilities.invokeAndWait(m_runnableValueUpdate);
+					}
+				}
+				catch (InvocationTargetException ex)
+				{
+				}
+				catch (InterruptedException ex)
+				{
+				}
 				SwingUtilities.invokeLater(m_runnableValueUpdate);
 			}
 		}
