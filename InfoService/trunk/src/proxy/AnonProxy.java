@@ -43,6 +43,7 @@ import anon.crypto.JAPCertificateStore;
 import anon.infoservice.MixCascade;
 import anon.pay.AICommunication;
 import anon.server.AnonServiceImpl;
+import anon.server.impl.ProxyConnection;
 import jap.JAPConstants;
 import logging.LogHolder;
 import logging.LogLevel;
@@ -81,6 +82,22 @@ final public class AnonProxy implements Runnable, IAnonProxy
 	private MixCascade m_currentMixCascade;
 
 	private boolean m_bAutoReconnect = false;
+
+  /**
+   * Stores, whether we use a forwarded connection (already active, when AnonProxy is created) or
+   * not.
+   */
+  private boolean m_forwardedConnection;
+
+  /**
+   * Stores the maximum dummy traffic interval in milliseconds -> we need dummy traffic with at
+   * least that rate. If this value is -1, there is no need for dummy traffic on a forwarded
+   * connection on the server side. Tis value is only meaningful, if m_forwardedConnection is
+   * true.
+   */
+  private int m_maxDummyTrafficInterval;
+
+
 	public AnonProxy(ServerSocket listener)
 	{
 		m_socketListener = listener;
@@ -89,7 +106,33 @@ final public class AnonProxy implements Runnable, IAnonProxy
 		setFirewallAuthorization(null, null);
 		setDummyTraffic( -1);
 		m_AICom = new AICommunication(m_Anon);
+   m_forwardedConnection = false;
+
 	}
+  /**
+   * Creates a new AnonProxy with an already active mix connection.
+   *
+   * @param a_listener A ServerSocket, where the AnonProxy listens for new requests (e.g. from a
+   *                   web browser).
+   * @param a_proxyConnection An already open connection to a mix (but not initialized, like keys
+   *                          exchanged, ...).
+   * @param a_maxDummyTrafficInterval The minimum dummy traffic rate the connection needs. The
+   *                                  value is the maximum dummy traffic interval in milliseconds.
+   *                                  Any call of setDummyTraffic(), will respect this maximum
+   *                                  interval value -> bigger values set with setDummyTraffic
+   *                                  (especially -1) result in that maximum dummy traffic
+   *                                  interval value. If this value is -1, there is no need for
+   *                                  dummy traffic on that connection on the server side.
+   */
+  public AnonProxy(ServerSocket a_listener, ProxyConnection a_proxyConnection, int a_maxDummyTrafficInterval) {
+    m_socketListener = a_listener;
+    m_Anon = new AnonServiceImpl(a_proxyConnection); //uups very nasty....
+    m_AICom = new AICommunication(m_Anon);
+    m_forwardedConnection = true;
+    m_bAutoReconnect = false;
+    m_maxDummyTrafficInterval = a_maxDummyTrafficInterval;
+    setDummyTraffic(a_maxDummyTrafficInterval);
+  }
 
 	// methode zum senden eines AccountCertifikates und einer balance an die AI - oneway
 	// TODO: move somwhere to anon.impl...
@@ -172,15 +215,41 @@ final public class AnonProxy implements Runnable, IAnonProxy
 		( (AnonServiceImpl) m_Anon).setFirewallAuthorization(id, passwd);
 	}
 
-	public void setDummyTraffic(int msIntervall)
-	{
-		( (AnonServiceImpl) m_Anon).setDummyTraffic(msIntervall);
-	}
+ /**
+   * Changes the dummy traffic interval on the connection to the server. This method respects
+   * dummy traffic restrictions on a forwarded connection. If there is a minimum dummy traffic
+   * rate needed by the server, the dummy traffic interval gets never bigger than that needed
+   * rate on a forwarded connection (especially a interval value of -1 is ignored).
+   *
+   * @param a_interval The interval for dummy traffic on the connection to the server in
+   *                   milliseconds.
+   */
+  public void setDummyTraffic(int a_interval)
+  {
+    if ((m_forwardedConnection == false) || (m_maxDummyTrafficInterval < 0)) {
+      /* no dummy traffic restrictions */
+      ((AnonServiceImpl)m_Anon).setDummyTraffic(a_interval);
+    }
+    else {
+      /* there are dummy traffic restrictions */
+      if (a_interval >= 0) {
+        /* take the smaller interval */
+        ((AnonServiceImpl)m_Anon).setDummyTraffic(Math.min(a_interval, m_maxDummyTrafficInterval));
+      }
+      else {
+        /* we need dummy traffic with a minimum rate -> can't disable dummy traffic */
+        ((AnonServiceImpl)m_Anon).setDummyTraffic(m_maxDummyTrafficInterval);
+      }
+    }
+  }
 
-	public void setAutoReConnect(boolean b)
-	{
-		m_bAutoReconnect = b;
-	}
+  public void setAutoReConnect(boolean b)
+  {
+    if (m_forwardedConnection == false) {
+      /* reconnect isn't supported with forwarded connections */
+      m_bAutoReconnect = b;
+    }
+  }
 
 	public void setMixCertificationCheck(boolean enabled, JAPCertificateStore trustedRoots)
 	{

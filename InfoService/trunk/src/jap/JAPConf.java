@@ -188,6 +188,7 @@ final class JAPConf extends JDialog
 		{
 			accountsModule = new pay.view.JAPConfPayAccounts();
 		}
+		AbstractJAPConfModule routingModule = new JAPConfRouting();
 
 		/* there is no need to set the font because it is already set in the constructor but so it is
 		 * save for the future
@@ -199,6 +200,10 @@ final class JAPConf extends JDialog
 		m_confModules.addElement(infoServiceModule);
 		m_confModules.addElement(certModule);
 		m_confModules.addElement(torModule);
+		if (JAPConstants.WITH_BLOCKINGRESISTANCE)
+		{
+			m_confModules.addElement(routingModule);
+		}
 		if (loadPay)
 		{
 			m_confModules.addElement(accountsModule);
@@ -210,6 +215,10 @@ final class JAPConf extends JDialog
 		m_Tabs.addTab(JAPMessages.getString("confAnonTab"), null, m_pMix);
 		m_Tabs.addTab(certModule.getTabTitle(), null, certModule.getRootPanel());
 		m_Tabs.addTab(torModule.getTabTitle(), null, torModule.getRootPanel());
+		if (JAPConstants.WITH_BLOCKINGRESISTANCE)
+		{
+			m_Tabs.addTab(routingModule.getTabTitle(), null, routingModule.getRootPanel());
+		}
 		if (loadPay)
 		{
 			m_Tabs.addTab(accountsModule.getTabTitle(), null, accountsModule.getRootPanel());
@@ -253,10 +262,10 @@ final class JAPConf extends JDialog
 				okPressed();
 			}
 		});
-/*		if (loadPay)
-		{
-			ok.addActionListener( ( (pay.view.PayView) m_pKonto).userPanel);
-		}*/
+		/*		if (loadPay)
+		  {
+		   ok.addActionListener( ( (pay.view.PayView) m_pKonto).userPanel);
+		  }*/
 		ok.setFont(m_fontControls);
 		buttonPanel.add(ok);
 		buttonPanel.add(new JLabel("   "));
@@ -1401,10 +1410,10 @@ final class JAPConf extends JDialog
 			( (AbstractJAPConfModule) (confModules.nextElement())).updateValues();
 		}
 
-/*		if (loadPay)
-		{
-			( (pay.view.PayView) m_pKonto).userPanel.valuesChanged();
-		}*/
+		/*		if (loadPay)
+		  {
+		   ( (pay.view.PayView) m_pKonto).userPanel.valuesChanged();
+		  }*/
 		// misc tab
 		int iTmp = JAPModel.getDummyTraffic();
 		m_cbDummyTraffic.setSelected(iTmp > -1);

@@ -172,8 +172,25 @@ class JAP extends Frame
 
 		// Create the controller object
 		JAPController controller = JAPController.create();
+    String configFileName = null;
+    /* check, whether there is the -config parameter, which means the we use userdefined config
+     * file
+     */
+    if (m_arstrCmdnLnArgs != null)
+    {
+      for (int i = 0; i < m_arstrCmdnLnArgs.length; i++)
+      {
+        if (m_arstrCmdnLnArgs[i].equalsIgnoreCase("-config"))
+        {
+          if (i + 1 < m_arstrCmdnLnArgs.length) {
+            configFileName = m_arstrCmdnLnArgs[i + 1];
+          }
+          break;
+        }
+      }
+    }
 		// load settings from config file
-		controller.loadConfigFile(null);
+		controller.loadConfigFile(configFileName);
 		// Output some information about the system
 		LogHolder.log(
 			LogLevel.INFO,

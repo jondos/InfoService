@@ -95,6 +95,12 @@ public final class JAPController implements ProxyListener
 
 	private static Font m_fontControls;
 
+	/**
+	 * Stores the filename of the config file, we used for loading the settings -> use it for
+	 * storing the settings also.
+	 */
+	private String m_strConfigFile;
+
 	private JAPController()
 	{
 		m_Model = JAPModel.create();
@@ -138,6 +144,7 @@ public final class JAPController implements ProxyListener
 		m_proxyAnon = null;
 		m_proxySocks = null;
 		m_Locale = Locale.getDefault();
+		m_strConfigFile = null;
 	}
 
 	/** Creates the Controller - as Singleton.
@@ -289,10 +296,12 @@ public final class JAPController implements ProxyListener
 				//first tries in user.home
 				try
 				{
-					f = new FileInputStream(dir + "/" + JAPConstants.XMLCONFFN);
+					strJapConfFile = dir + "/" + JAPConstants.XMLCONFFN;
+					f = new FileInputStream(strJapConfFile);
 				}
 				catch (Exception e)
 				{
+					strJapConfFile = JAPConstants.XMLCONFFN;
 					f = new FileInputStream(JAPConstants.XMLCONFFN); //and then in the current directory
 				}
 			}
@@ -321,6 +330,8 @@ public final class JAPController implements ProxyListener
 				Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(f);
 				Element root = doc.getDocumentElement();
 				NamedNodeMap n = root.getAttributes();
+				m_strConfigFile = strJapConfFile;
+
 				//
 				String strVersion = XMLUtil.parseNodeString(n.getNamedItem("version"), null);
 				int port = XMLUtil.parseElementAttrInt(root, "portNumber", JAPModel.getHttpListenerPortNumber());
@@ -441,6 +452,9 @@ public final class JAPController implements ProxyListener
 				int proxyPort = XMLUtil.parseElementAttrInt(root, "proxyPortNumber", m_Model.getFirewallPort());
 				boolean bUseProxy = XMLUtil.parseNodeBoolean(n.getNamedItem("proxyMode"), false);
 				String type = XMLUtil.parseNodeString(n.getNamedItem("proxyType"), "HTTP");
+				String proxyUserId = XMLUtil.parseNodeString(n.getNamedItem("proxyAuthUserID"),
+					JAPModel.getFirewallAuthUserID());
+				setFirewallAuthUserID(proxyUserId);
 				if (type.equalsIgnoreCase("SOCKS"))
 				{
 					setProxy(JAPConstants.FIREWALL_TYPE_SOCKS, proxyHost, proxyPort, bUseProxy);
@@ -449,15 +463,12 @@ public final class JAPController implements ProxyListener
 				{
 					setProxy(JAPConstants.FIREWALL_TYPE_HTTP, proxyHost, proxyPort, bUseProxy);
 				}
-				String proxyUserId = XMLUtil.parseNodeString(n.getNamedItem("proxyAuthUserID"),
-					JAPModel.getFirewallAuthUserID());
-				setFirewallAuthUserID(proxyUserId);
 
 				/* try to get the info from the MixCascade node */
 				MixCascade defaultMixCascade = null;
 				Node mixCascadeNode = XMLUtil.getFirstChildByName(root, "MixCascade");
 				try
-				{ //TODO: Fehlerhaft, falls manuelle Konfiguration abgespeichert wurde!
+				{
 					defaultMixCascade = new MixCascade( (Element) mixCascadeNode);
 				}
 				catch (Exception e)
@@ -636,7 +647,7 @@ public final class JAPController implements ProxyListener
 	{
 		boolean error = false;
 		LogHolder.log(LogLevel.INFO, LogType.MISC,
-					  "JAPModel:try saving configuration to " + JAPConstants.XMLCONFFN);
+					  "JAPModel:try saving configuration.");
 		try
 		{
 			String sb = getConfigurationAsXmlString();
@@ -646,16 +657,30 @@ public final class JAPController implements ProxyListener
 			}
 			else
 			{
-				String dir = System.getProperty("user.home", "");
 				FileOutputStream f = null;
-				//first tries in user.home
-				try
+				if (m_strConfigFile != null)
 				{
-					f = new FileOutputStream(dir + "/" + JAPConstants.XMLCONFFN);
+					try
+					{
+						f = new FileOutputStream(m_strConfigFile);
+					}
+					catch (Exception e)
+					{
+					}
 				}
-				catch (Exception e)
+				if (f == null)
 				{
-					f = new FileOutputStream(JAPConstants.XMLCONFFN); //and then in the current directory
+					/* no config filename in the commandline -> try some default places */
+					//first tries in user.home
+					String dir = System.getProperty("user.home", "");
+					try
+					{
+						f = new FileOutputStream(dir + "/" + JAPConstants.XMLCONFFN);
+					}
+					catch (Exception e)
+					{
+						f = new FileOutputStream(JAPConstants.XMLCONFFN); //and then in the current directory
+					}
 				}
 				f.write(sb.getBytes());
 				f.flush();
@@ -707,7 +732,8 @@ public final class JAPController implements ProxyListener
 			/* payment configuration */
 			e.setAttribute("biHost", JAPModel.getBIHost());
 			e.setAttribute("biPort", Integer.toString(JAPModel.getBIPort()));
-			e.setAttribute("payAccountsFileEncrypted",(JAPModel.isPayAccountsFileEncrypted()?"true":"false"));
+			e.setAttribute("payAccountsFileEncrypted",
+						   (JAPModel.isPayAccountsFileEncrypted() ? "true" : "false"));
 			e.setAttribute("payAccountsFileName", JAPModel.getPayAccountsFileName());
 
 			/* infoservice configuration options */
@@ -952,7 +978,7 @@ public final class JAPController implements ProxyListener
 		return true;
 	}
 
-	private void applyProxySettingsToInfoService()
+	protected void applyProxySettingsToInfoService()
 	{
 		if (JAPModel.getUseFirewall())
 		{
@@ -1149,9 +1175,18 @@ public final class JAPController implements ProxyListener
 					m_View.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 					splash = JAPWaitSplash.start(JAPMessages.getString("setAnonModeSplashConnect"),
 												 JAPMessages.getString("setAnonModeSplashTitle"));
-					if (m_bAlreadyCheckedForNewVersion == false && !JAPModel.isInfoServiceDisabled())
+					if ( (m_bAlreadyCheckedForNewVersion == false) && (!JAPModel.isInfoServiceDisabled()) &&
+						( (JAPModel.getModel().getRoutingSettings().getRoutingMode() !=
+						   JAPRoutingSettings.ROUTING_MODE_CLIENT) ||
+						 (JAPModel.getModel().getRoutingSettings().getForwardInfoService() == false)))
 					{
-						// Check for a new Version of JAP if not already done
+						/* check for a new version of JAP if not already done, automatic infoservice requests
+						 * are allowed and we don't use forwarding with also forwarded infoservice (because
+						 * if the infoservice is also forwarded, we would need a initialized connection to a
+						 * mixcascade, which we don't have at the moment, maybe later versions of the
+						 * forwarding protocol will support direct connections to the infoservice too and not
+						 * via the mixcascade -> we will be able to do the version check here)
+						 */
 						int ok = versionCheck();
 						if (ok != -1)
 						{
@@ -1172,7 +1207,18 @@ public final class JAPController implements ProxyListener
 							m_proxySocks.start();
 						}
 						// starting MUX --> Success ???
-						m_proxyAnon = new AnonProxy(m_socketHTTPListener);
+						if (JAPModel.getModel().getRoutingSettings().getRoutingMode() ==
+							JAPRoutingSettings.ROUTING_MODE_CLIENT)
+						{
+							/* we use a forwarded connection */
+							m_proxyAnon = JAPModel.getModel().getRoutingSettings().getAnonProxyInstance(
+								m_socketHTTPListener);
+						}
+						else
+						{
+							/* we use a direct connection */
+							m_proxyAnon = new AnonProxy(m_socketHTTPListener);
+						}
 						MixCascade currentMixCascade = m_Controller.getCurrentMixCascade();
 						m_proxyAnon.setMixCascade(currentMixCascade);
 						if (JAPModel.getUseFirewall())
@@ -1334,6 +1380,10 @@ public final class JAPController implements ProxyListener
 					m_proxyDirect.startService();
 
 					getCurrentMixCascade().resetCurrentStatus();
+
+					/* notify the forwarding system after! m_proxyAnon is set to null */
+					JAPModel.getModel().getRoutingSettings().anonConnectionClosed();
+
 					notifyJAPObservers();
 					if (splash != null)
 					{
