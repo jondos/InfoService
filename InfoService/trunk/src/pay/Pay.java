@@ -27,24 +27,6 @@
  */
 package pay;
 
-import java.io.*;
-import java.math.*;
-import java.security.*;
-import java.util.*;
-
-import org.bouncycastle.asn1.*;
-import org.bouncycastle.asn1.pkcs.*;
-import org.bouncycastle.asn1.x509.*;
-import org.bouncycastle.crypto.*;
-import org.bouncycastle.crypto.generators.*;
-import org.bouncycastle.crypto.params.*;
-import anon.crypto.*;
-import anon.util.*;
-import logging.*;
-import payxml.*;
-
-import jap.JAPModel;
-
 /**
  * This class is the high-level part of the communication with the BI.
  * It contains functions for creating accounts, charging, etc.
@@ -251,14 +233,14 @@ public class Pay
 		PayAccount account = m_AccountsFile.getAccount(accountNumber);
 		if (account == null)
 		{
-			throw new Exception("Invalid Account Number: "+accountNumber);
+			throw new Exception("Invalid Account Number: " + accountNumber);
 		}
 
 		// TODO: switch SSL on when everything works
 		BIConnection biConn = new BIConnection(
-			  JAPModel.getBIHost(), JAPModel.getBIPort(),
-			  false // ssl off
-			  );
+			JAPModel.getBIHost(), JAPModel.getBIPort(),
+			false // ssl off
+			);
 		biConn.connect();
 		biConn.authenticate(account.getAccountCertificate(), account.getSigningInstance());
 		XMLTransCert transcert = biConn.charge();

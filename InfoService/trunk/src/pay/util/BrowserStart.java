@@ -27,13 +27,6 @@
  */
 package pay.util;
 
-import java.net.URL;
-import java.awt.Container;
-import java.awt.event.ActionEvent;
-import javax.swing.JOptionPane;
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
 //import pay.event.ActionThread;
 
 /**

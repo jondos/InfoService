@@ -27,17 +27,6 @@
  */
 package pay.util;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.net.Socket;
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
-
-
-import payxml.XMLDescription;
-
 final public class HttpClient
 {
 	private final static int MAX_LINE_LENGTH = 100;
@@ -85,15 +74,15 @@ final public class HttpClient
 	public void writeRequest(String method, String url, String data) throws IOException
 	{
 		LogHolder.log(LogLevel.DEBUG, LogType.PAY,
-				"HttpClient.writeRequest(): "+method+" /"+url+ " HTTP/1.1"
-			);
+					  "HttpClient.writeRequest(): " + method + " /" + url + " HTTP/1.1"
+					  );
 
 		m_dataOS.writeBytes(method + " /" + url + " HTTP/1.1\r\n");
 		if (method.equals("POST"))
 		{
 			LogHolder.log(LogLevel.DEBUG, LogType.PAY,
-				"HttpClient.writeRequest(): POSTing data: "+data
-			);
+						  "HttpClient.writeRequest(): POSTing data: " + data
+						  );
 
 			m_dataOS.writeBytes("Content-Length: " + data.length() + "\r\n");
 			m_dataOS.writeBytes("\r\n");
@@ -118,7 +107,6 @@ final public class HttpClient
 		byte[] data = null;
 		int index;
 		String line = readLine(m_dataIS);
-		
 
 		if ( (index = line.indexOf(" ")) == -1)
 		{
@@ -188,8 +176,8 @@ final public class HttpClient
 		}
 
 		LogHolder.log(LogLevel.DEBUG, LogType.PAY,
-				"HttpClient.readAnswer(): received: "+ new String(data)
-			);
+					  "HttpClient.readAnswer(): received: " + new String(data)
+					  );
 
 		return new String(data);
 

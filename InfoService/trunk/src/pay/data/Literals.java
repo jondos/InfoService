@@ -27,10 +27,6 @@
  */
 package pay.data;
 
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.Insets;
-
 /** @todo remove this class */
 public final class Literals
 {
@@ -60,7 +56,7 @@ public final class Literals
 	public static final String CHARGEFILE = "index.php";
 
 	public static final String[] BROWSERLIST =
-	{
+		{
 		"konqueror", "iexplore", "explorer", "mozilla", "firefox", "mozilla-firefox", "firebird", "opera"
 	};
 

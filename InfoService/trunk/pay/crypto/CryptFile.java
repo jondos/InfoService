@@ -27,17 +27,6 @@
  */
 package pay.crypto;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.Random;
-import org.bouncycastle.crypto.BlockCipher;
-import org.bouncycastle.crypto.digests.SHA1Digest;
-import org.bouncycastle.crypto.engines.AESFastEngine;
-import org.bouncycastle.crypto.modes.CBCBlockCipher;
-import org.bouncycastle.crypto.params.KeyParameter;
-import org.bouncycastle.crypto.params.ParametersWithIV;
-
 /**
  * Klasse zum Ver- und Entschlüsseln von Daten mit AES und persistente
  * Speicherung in einer Datei.

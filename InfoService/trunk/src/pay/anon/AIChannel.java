@@ -27,10 +27,6 @@
  */
 package pay.anon;
 
-import java.io.IOException;
-import anon.server.impl.AbstractChannel;
-import anon.server.impl.MuxSocket;
-
 /**
  * Channel mit der Nummer 0xFFFFFFFF der nur für die Kommunikation mit der AI benutzt wird
  * @author Grischan Gl&auml;nzel
@@ -70,6 +66,7 @@ public final class AIChannel extends AbstractChannel
 		System.arraycopy(buff, 0, toSend, 0, len);
 		m_muxSocket.sendPayPackets(toSend);
 	}
+
 	public int getOutputBlockSize()
 	{
 		return 1;

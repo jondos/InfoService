@@ -27,29 +27,8 @@
  */
 package pay;
 
-import java.io.IOException;
-import java.net.Socket;
-import java.util.Date;
-import org.bouncycastle.crypto.params.RSAKeyParameters;
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
 //import pay.crypto.tinyssl.RootCertificates;
-import pay.crypto.tinyssl.TinySSL;
-import pay.util.HttpClient;
-import pay.util.PayText;
 
-import payxml.XMLAccountCertificate;
-import payxml.XMLAccountInfo;
-import payxml.XMLChallenge;
-import payxml.XMLJapPublicKey;
-import payxml.XMLResponse;
-import payxml.XMLTransCert;
-
-import anon.crypto.JAPSignature;
-import java.security.Signature;
-import anon.crypto.*;
-import java.net.*;
 
 /**
  * Diese Klasse kapselt eine Verbindung zur BI, fuehrt die Authentikation durch
@@ -84,7 +63,7 @@ public class BIConnection
 						int biPort,
 						boolean sslOn
 						/*						XMLAccountCertificate accountCert,
-							  MyRSAPrivateKey privKey*/
+						  MyRSAPrivateKey privKey*/
 						)
 	{
 		m_BIHostName = biHostname;
@@ -125,9 +104,6 @@ public class BIConnection
 				" (" + ex.getMessage() + ")");
 		}
 	}
-
-
-
 
 	/**
 	 * Schliesst die Verbindung zur Bezahlinstanz.
@@ -205,7 +181,7 @@ public class BIConnection
 		}
 		catch (IOException ex)
 		{
-			throw new Exception("Error in http communication: "+ex.getMessage());
+			throw new Exception("Error in http communication: " + ex.getMessage());
 		}
 		XMLChallenge xmlchallenge = new XMLChallenge(answer);
 		byte[] challenge = xmlchallenge.getChallengeForSigning();
@@ -220,7 +196,7 @@ public class BIConnection
 		}
 		catch (IOException ex1)
 		{
-			throw new Exception("Error in http communication: "+ex1.getMessage());
+			throw new Exception("Error in http communication: " + ex1.getMessage());
 		}
 	}
 
