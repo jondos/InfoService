@@ -64,7 +64,7 @@ import anon.JAPAnonServiceListener;
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPModel implements JAPAnonServiceListener{
 
-	public static final String aktVersion = "00.01.017"; // Version of JAP
+	public static final String aktVersion = "00.01.018"; // Version of JAP
 
 	public  Vector            anonServerDatabase = null; // vector of all available mix cascades
 	private AnonServerDBEntry currentAnonService = null; // current anon service data object
