@@ -27,11 +27,13 @@
  */
 package anon.util.test;
 
+import java.util.Random;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Attr;
-
-import anon.util.*;
+import anon.util.IXMLEncodable;
+import anon.util.Util;
+import anon.util.XMLParseException;
+import anon.util.XMLUtil;
 
 /**
  * This class provides a dummy implementation of an IXMLEncodable object
@@ -40,13 +42,18 @@ import anon.util.*;
  */
 public class DummyXMLEncodable implements IXMLEncodable
 {
+	public static final String XML_ELEMENT_NAME = "DummyElement";
+	public static final String XML_ELEMENT_CONTAINER_NAME = "DummyElements";
+
 	public static final String NODE_NUMBER = "NumberNode";
 	public static final String NODE_BOOLEAN = "BooleanNode";
 	public static final String NODE_STRING = "TextNode";
 	public static final String NODE_CONTAINER = "ContainerNode";
 	public static final String ATTRIBUTE_BOOLEAN = "BooleanAttribute";
 	public static final String ATTRIBUTE_INT = "IntAttribute";
+	public static final String ATTRIBUTE_ID = "id";
 
+	public String m_id;
 	private int m_valueInt;
 	private long m_valueLong;
 	private boolean m_valueBoolean;
@@ -54,10 +61,9 @@ public class DummyXMLEncodable implements IXMLEncodable
 	private boolean m_attributeBoolean;
 	private int m_attributeInt;
 
-
-
 	/**
 	 * Creates a new dummy.
+	 * @param a_id String
 	 * @param a_valueInt int
 	 * @param a_valueLong long
 	 * @param a_valueBoolean boolean
@@ -65,9 +71,10 @@ public class DummyXMLEncodable implements IXMLEncodable
 	 * @param a_attributeBoolean boolean
 	 * @param a_attributeInt int
 	 */
-	public DummyXMLEncodable(int a_valueInt, long a_valueLong, boolean a_valueBoolean, String a_valueString,
-							 boolean a_attributeBoolean, int a_attributeInt)
+	public DummyXMLEncodable(String a_id, int a_valueInt, long a_valueLong, boolean a_valueBoolean,
+							 String a_valueString, boolean a_attributeBoolean, int a_attributeInt)
 	{
+		m_id = a_id;
 		m_valueInt = a_valueInt;
 		m_valueLong = a_valueLong;
 		m_valueBoolean = a_valueBoolean;
@@ -81,8 +88,24 @@ public class DummyXMLEncodable implements IXMLEncodable
 	 */
 	public DummyXMLEncodable()
 	{
-		this(142, 5721672, true, "dummy", false, 682);
+		this("encodableAK33#3", 142, 5721672, true, "dummy", false, 682);
 	}
+
+	/**
+	 * Creates a new dummy with random dummy values.
+	 * @param a_random a random number generator
+	 */
+	public DummyXMLEncodable(Random a_random)
+	{
+		this(String.valueOf(a_random.nextDouble()),
+			 a_random.nextInt(),
+			 a_random.nextLong(),
+			 (a_random.nextInt() % 2) == 0 ? false : true,
+			 "dummy",
+			 (a_random.nextInt() % 2) == 0 ? false : true,
+			 a_random.nextInt());
+	}
+
 
 	/**
 	 * Creates a new dummy from xml description.
@@ -99,6 +122,7 @@ public class DummyXMLEncodable implements IXMLEncodable
 			element = (Element) XMLUtil.getFirstChildByName(a_element, NODE_STRING);
 			m_valueString = XMLUtil.parseNodeString(element, null);
 			m_attributeBoolean = XMLUtil.parseAttribute(element, ATTRIBUTE_BOOLEAN, false);
+			m_id = XMLUtil.parseAttribute(element, ATTRIBUTE_ID, null);
 
 			element = (Element) XMLUtil.getFirstChildByName(a_element, NODE_CONTAINER);
 			m_attributeInt = XMLUtil.parseAttribute(element, ATTRIBUTE_INT, -1);
@@ -110,12 +134,47 @@ public class DummyXMLEncodable implements IXMLEncodable
 			m_valueLong = XMLUtil.parseNodeLong(element, -1);
 
 			m_valueBoolean =
-				XMLUtil.parseNodeBoolean(XMLUtil.getFirstChildByName(a_element, NODE_BOOLEAN), false);
+				XMLUtil.parseValue(XMLUtil.getFirstChildByName(a_element, NODE_BOOLEAN), false);
 		}
 		catch (Exception a_e)
 		{
 			throw new XMLParseException(null, Util.getStackTrace(a_e));
 		}
+	}
+
+	public String getID()
+	{
+		if (m_id == null)
+		{
+			return "";
+		}
+
+		return m_id;
+	}
+
+	public void setID(String a_id)
+	{
+		m_id = a_id;
+	}
+
+	public int getValueInt()
+	{
+		return m_valueInt;
+	}
+
+	public void setValueInt(int a_value)
+	{
+		m_valueInt = a_value;
+	}
+
+	public long getValueLong()
+	{
+		return m_valueLong;
+	}
+
+	public void setValueLong(long a_value)
+	{
+		m_valueLong = a_value;
 	}
 
 	public boolean equals(DummyXMLEncodable a_dummy)
@@ -144,6 +203,18 @@ public class DummyXMLEncodable implements IXMLEncodable
 		{
 			return false;
 		}
+		else if (!(m_id == null && a_dummy.m_id == null))
+		{
+			if ((m_id == null && a_dummy.m_id != null) ||
+				(m_id != null && a_dummy.m_id == null))
+			{
+				return false;
+			}
+			else if (!m_id.equals(a_dummy.m_id))
+			{
+				return false;
+			}
+		}
 
 		return true;
 	}
@@ -156,22 +227,21 @@ public class DummyXMLEncodable implements IXMLEncodable
 	public Element toXmlElement(Document a_doc)
 	{
 		Element element, element1, element2;
-		Attr attribute;
 
-		element = a_doc.createElement(getXMLElementName());
+		element = a_doc.createElement(XML_ELEMENT_NAME);
+		if (m_id != null && m_id.length() > 0)
+		{
+			XMLUtil.setAttribute(element, ATTRIBUTE_ID, m_id);
+		}
+
 
 		element1 = a_doc.createElement(NODE_STRING);
-		attribute = a_doc.createAttribute(ATTRIBUTE_BOOLEAN);
-		attribute.setValue(String.valueOf(m_attributeBoolean));
-		element1.setAttributeNode(attribute);
+		XMLUtil.setAttribute(element1, ATTRIBUTE_BOOLEAN, m_attributeBoolean);
 		element1.appendChild(a_doc.createTextNode(m_valueString));
 		element.appendChild(element1);
 
-
 		element1 = a_doc.createElement(NODE_CONTAINER);
-		attribute = a_doc.createAttribute(ATTRIBUTE_INT);
-	    attribute.setValue(String.valueOf(m_attributeInt));
-		element1.setAttributeNode(attribute);
+		XMLUtil.setAttribute(element1, ATTRIBUTE_INT, m_attributeInt);
 
 		element2 = a_doc.createElement(NODE_NUMBER);
 		XMLUtil.setValue(element2, String.valueOf(m_valueInt));
@@ -189,15 +259,4 @@ public class DummyXMLEncodable implements IXMLEncodable
 
 		return element;
 	}
-
-	public static String getXMLElementName()
-	{
-		return "DummyElement";
-	}
-
-	public static String getXMLElementContainerName()
-	{
-		return "DummyElements";
-	}
-
 }
