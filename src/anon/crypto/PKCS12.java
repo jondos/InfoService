@@ -33,15 +33,13 @@ package anon.crypto;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.security.InvalidKeyException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.security.SecureRandom;
-import java.security.interfaces.DSAPrivateKey;
 import java.util.Enumeration;
+import java.util.Calendar;
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.ASN1Set;
 import org.bouncycastle.asn1.ASN1TaggedObject;
@@ -92,7 +90,11 @@ import org.bouncycastle.crypto.params.KeyParameter;
 import org.bouncycastle.crypto.params.ParametersWithIV;
 import org.bouncycastle.crypto.params.ParametersWithRandom;
 
-final public class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifiers
+/**
+ * This class creates and handles PKCS12 certificates, that include a private key,
+ * a public key and an X509 certificate.
+ */
+public final class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifiers, ICertificate
 {
 	private static final int SALT_SIZE = 20;
 	private static final int MIN_ITERATIONS = 100;
@@ -112,296 +114,156 @@ final public class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifier
 	//
 	// private static final String MAC_ALGORITHM = "1.3.14.3.2.26";
 
-	protected SecureRandom random = new SecureRandom();
+	private SecureRandom random = new SecureRandom();
+	private String m_ownerAlias;
+	private AsymmetricCryptoKeyPair m_keyPair;
+	private JAPCertificate m_x509certificate;
 
-	private String alias;
-	private IMyPrivateKey m_privKey;
-
-//	private PublicKey pubKey;
-	private X509CertificateStructure x509cert;
-
-	public PKCS12(
-		String al,
-		IMyPrivateKey privkey,
-		X509CertificateStructure cert
-		/*,PublicKey pubkey*/
-		)
+	/**
+	 *
+	 * @param al String
+	 * @param privkey IMyPrivateKey
+	 * @param cert X509CertificateStructure
+	 * @deprecated this constructor is not safe, as the certificate could contain a
+	 *             public key that is incompatible to the private key;
+	 *             scheduled for removal on 04/12/13
+	 */
+	public PKCS12(String al, IMyPrivateKey privkey, X509CertificateStructure cert)
 	{
-		alias = al;
-		m_privKey = privkey;
-		//pubKey = pubkey;
-		x509cert = cert;
+		m_ownerAlias = al;
+		m_keyPair = new AsymmetricCryptoKeyPair(privkey);
+		m_x509certificate = JAPCertificate.getInstance(cert);
+		m_x509certificate.setEnabled(true);
 	}
 
-	private SubjectKeyIdentifier createSubjectKeyId()
+	/**
+	 * Creates a new PKCS12 certificate.
+	 * @param a_ownerAlias The owner of the certificate. The name is set as the common name (CN).
+	 * @param a_keyPair a key pair with a private and a public key
+	 * @param a_validFrom The date from which the certificate is valid.
+	 * @param a_validTo The date until which the certificate is valid.
+	 */
+	public PKCS12(String a_ownerAlias, AsymmetricCryptoKeyPair a_keyPair,
+				  Calendar a_validFrom, Calendar a_validTo)
 	{
-		try
-		{
-			return new SubjectKeyIdentifier(x509cert.getSubjectPublicKeyInfo());
-			/*			ByteArrayInputStream bIn =
-			 new ByteArrayInputStream(pubKey.getEncoded());
-			   SubjectPublicKeyInfo info =
-			 new SubjectPublicKeyInfo(
-			 (ASN1Sequence)new DERInputStream(bIn).readObject());
-			   return new SubjectKeyIdentifier(info);*/
-		}
-		catch (Exception e)
-		{
-			System.out.println(e.toString());
-			e.printStackTrace();
-			throw new RuntimeException("error creating key");
-		}
+		m_ownerAlias = a_ownerAlias;
+		m_keyPair = a_keyPair;
+		m_x509certificate =
+			JAPCertificate.getInstance(a_ownerAlias, a_keyPair, a_validFrom, a_validTo);
+		m_x509certificate.setEnabled(true);
 	}
 
-	static public byte[] codeData(
-		boolean encrypt,
-		byte[] data,
-		PKCS12PBEParams pbeParams,
-		char[] password,
-		BlockCipher cipher,
-		int keySize) throws IOException
+	/**
+	 * Creates a new PKCS12 certificate.
+	 * @param a_ownerAlias The owner of the certificate. The name is set as the common name (CN).
+	 * @param a_keyPair a key pair with a private and a public key
+	 * @param a_validFrom The date from which the certificate is valid.
+	 * @param a_validityInYears the number of years the certificate is valid;
+	 *                          if the amount is 0 or less, the validity will
+	 *                          only be ahead from a_validFrom for a very small amount of time
+	 *                          (some minutes)
+	 */
+	public PKCS12(String a_ownerAlias, AsymmetricCryptoKeyPair a_keyPair,
+				  Calendar a_validFrom, int a_validityInYears)
 	{
-		byte[] my_out;
-
-		try
-		{
-			BufferedBlockCipher my_cipher = new PaddedBufferedBlockCipher(new CBCBlockCipher(cipher));
-			CipherParameters my_param = makePBEParameters(password,
-				pbeParams,
-				my_cipher.getUnderlyingCipher().getAlgorithmName(),
-				keySize,
-				64);
-
-			my_param = new ParametersWithRandom(my_param, new SecureRandom());
-			my_cipher.init(encrypt, my_param);
-
-			byte[] my_input = data;
-			int my_inputlen = my_input.length;
-			int my_len = 0;
-			byte[] my_tmp = new byte[my_cipher.getOutputSize(my_inputlen)];
-
-			if (my_inputlen != 0)
-			{
-				my_len = my_cipher.processBytes(my_input, 0, my_inputlen, my_tmp, 0);
-
-			}
-			try
-			{
-				my_len += my_cipher.doFinal(my_tmp, my_len);
-			}
-			catch (Exception e)
-			{
-			}
-
-			my_out = new byte[my_len];
-			System.arraycopy(my_tmp, 0, my_out, 0, my_len);
-		}
-		catch (Exception e)
-		{
-			throw new IOException(
-				"exception encrypting data - " + e.toString());
-		}
-
-		return my_out;
+		this(a_ownerAlias, a_keyPair, a_validFrom,
+			 JAPCertificate.createValidTo(a_validFrom, a_validityInYears));
 	}
 
-	public void store(OutputStream stream, char[] password) throws IOException
+	/**
+	 * Creates a new PKCS12 certificate. This constructor is not public as is is possible
+	 * that the X509 certificate owner alias and the PKCS12 owner alias differ, what they
+	 * should not!
+	 * @param a_ownerAlias The owner of the certificate. The name is set as the common name (CN).
+	 * @param a_keyPair a key pair with a private and a public key
+	 * @param a_X509certificate an X509 certificate
+	 */
+	private PKCS12(String a_ownerAlias, AsymmetricCryptoKeyPair a_keyPair,
+				   JAPCertificate a_X509certificate)
 	{
-		ByteArrayOutputStream bOut = new ByteArrayOutputStream();
-		DEROutputStream dOut;
-
-		//
-		// handle the key
-		//
-		BERConstructedOctetString keyString;
-		{
-
-			byte[] kSalt = new byte[SALT_SIZE];
-			random.nextBytes(kSalt);
-			PKCS12PBEParams kParams = new PKCS12PBEParams(kSalt, MIN_ITERATIONS);
-			byte[] kBytes = codeData(true,
-									 m_privKey.getEncoded(),
-									 kParams,
-									 password,
-									 new DESedeEngine(),
-									 192);
-			AlgorithmIdentifier kAlgId = new AlgorithmIdentifier(
-				new DERObjectIdentifier(KEY_ALGORITHM),
-				kParams.getDERObject());
-			EncryptedPrivateKeyInfo kInfo = new EncryptedPrivateKeyInfo(kAlgId, kBytes);
-			DERConstructedSet kName = new DERConstructedSet();
-
-			//
-			// set a default friendly name (from the key id) and local id
-			//
-			DEREncodableVector kSeq = new DEREncodableVector();
-			kSeq.add(pkcs_9_at_localKeyId);
-			kSeq.add(new DERSet(createSubjectKeyId()));
-			kName.addObject(new DERSequence(kSeq));
-			kSeq = new DEREncodableVector();
-			kSeq.add(pkcs_9_at_friendlyName);
-			kSeq.add(new DERSet(new DERBMPString(alias)));
-			kName.addObject(new DERSequence(kSeq));
-
-			keyString = new BERConstructedOctetString(new DERSequence(
-				new SafeBag(pkcs8ShroudedKeyBag, kInfo.getDERObject(), kName)));
-		}
-
-		//
-		// certficate processing
-		//
-		EncryptedData cInfo;
-		{
-			byte[] cSalt = new byte[SALT_SIZE];
-			random.nextBytes(cSalt);
-			PKCS12PBEParams cParams = new PKCS12PBEParams(cSalt, MIN_ITERATIONS);
-			AlgorithmIdentifier cAlgId = new AlgorithmIdentifier(new DERObjectIdentifier(CERT_ALGORITHM),
-				cParams);
-			CertBag cBag = new CertBag(x509certType, new DEROctetString(x509cert));
-			DERConstructedSet fName = new DERConstructedSet();
-			DEREncodableVector fSeq = new DEREncodableVector();
-			fSeq.add(pkcs_9_at_localKeyId);
-			fSeq.add(new DERSet(createSubjectKeyId()));
-			fName.addObject(new DERSequence(fSeq));
-
-			fSeq = new DEREncodableVector();
-			fSeq.add(pkcs_9_at_friendlyName);
-			fSeq.add(new DERSet(new DERBMPString(alias)));
-			fName.addObject(new DERSequence(fSeq));
-
-			SafeBag sBag = new SafeBag(certBag, cBag.getDERObject(), fName);
-
-			bOut.reset();
-			dOut = new DEROutputStream(bOut);
-			dOut.writeObject(new DERSequence(sBag));
-			dOut.close();
-
-			byte[] certBytes = codeData(true, bOut.toByteArray(), cParams, password, new RC2Engine(), 40);
-			cInfo = new EncryptedData(data, cAlgId, new BERConstructedOctetString(certBytes));
-		}
-
-		ContentInfo[] c = new ContentInfo[2];
-		c[0] = new ContentInfo(data, keyString);
-		c[1] = new ContentInfo(encryptedData, cInfo);
-
-		/*
-		 bOut.reset();
-		 AuthenticatedSafe auth = new AuthenticatedSafe(c);
-		 BEROutputStream berOut = new BEROutputStream(bOut);
-		 berOut.writeObject(auth);
-		 byte[] pkg = bOut.toByteArray();
-
-		 ContentInfo mainInfo =
-		   new ContentInfo(data, new BERConstructedOctetString(pkg));
-		 */
-		ContentInfo mainInfo = new ContentInfo(data, new BERConstructedOctetString(new AuthenticatedSafe(c)));
-		//
-		// create the mac
-		//
-		byte[] mSalt = new byte[SALT_SIZE];
-		int itCount = MIN_ITERATIONS;
-		random.nextBytes(mSalt);
-		byte[] contentData = ( (DEROctetString) mainInfo.getContent()).getOctets();
-		MacData mData = null;
-
-		try
-		{
-			Mac certMac = new HMac(new SHA1Digest());
-			CipherParameters cParam = makePBEMacParameters(password, new PKCS12PBEParams(mSalt, itCount), 160);
-			certMac.init(cParam);
-			certMac.update(contentData, 0, contentData.length);
-			byte[] my_res = new byte[certMac.getMacSize()];
-			certMac.doFinal(my_res, 0);
-			AlgorithmIdentifier my_algId = new AlgorithmIdentifier(id_SHA1, null);
-			DigestInfo my_dInfo = new DigestInfo(my_algId, my_res);
-
-			mData = new MacData(my_dInfo, mSalt, itCount);
-		}
-		catch (Exception e)
-		{
-			throw new IOException("error constructing MAC: " + e.toString());
-		}
-
-		//
-		// output the Pfx
-		//
-		Pfx pfx = new Pfx(mainInfo, mData);
-		BEROutputStream berOut = new BEROutputStream(stream);
-		berOut.writeObject(pfx);
+		m_ownerAlias = a_ownerAlias;
+		m_keyPair = a_keyPair;
+		m_x509certificate = a_X509certificate;
+		m_x509certificate.setEnabled(true);
 	}
 
-	public static final class IllegalCertificateException extends RuntimeException
+
+	/**
+	 * Loads a PKCS12 certificate from a byte array. The type of the encryption
+	 * algorithm is recognized dynamically.
+	 * @param a_bytes a byte array
+	 * @param a_password a password
+	 * @see anon.crypto.IMyPrivateKey
+	 * @see anon.util.ClassUtil#loadClasses()
+	 * @see anon.crypto.AsymmetricKeyPair
+	 * @return a PKCS12 certificate or null if an error occured
+	 */
+	public static PKCS12 getInstance(byte[] a_bytes, char[] a_password)
 	{
-		public IllegalCertificateException(String str)
-		{
-			super(str);
-		}
-	};
-
-	private static class MyCipher
-	{
-		public BlockCipher cipher;
-		public int keysize;
-		MyCipher(BlockCipher c, int ks)
-		{
-			cipher = c;
-			keysize = ks;
-		}
-	};
-
-	private static MyCipher getCipher(String algId)
-	{
-		if (algId.equals("1.2.840.113549.1.12.1.3"))
-		{
-
-			// PBE with SHA and 3-Key TripleDES-CBC
-			return new MyCipher(new DESedeEngine(), 192);
-		}
-		else if (algId.equals("1.2.840.113549.1.12.1.4"))
-		{
-
-			// PBE with SHA and 2-Key TripleDES-CBC
-			return new MyCipher(new DESedeEngine(), 128);
-		}
-		else if (algId.equals("1.2.840.113549.1.12.1.5"))
-		{
-
-			// PBE with SHA and 128 Bit-RC2-CBC
-			return new MyCipher(new RC2Engine(), 128);
-		}
-		else if (algId.equals("1.2.840.113549.1.12.1.6"))
-		{
-
-			// PBE with SHA and 40 Bit-RC2-CBC
-			return new MyCipher(new RC2Engine(), 40);
-		}
-		else
+		if (a_bytes == null)
 		{
 			return null;
 		}
+
+		return getInstance(new ByteArrayInputStream(a_bytes), a_password);
 	}
 
+	/**
+	 * Loads a PKCS12 certificate from an input stream. The type of the encryption
+	 * algorithm is recognized dynamically.
+	 * @param stream InputStream
+	 * @param password char[]
+	 * @see anon.crypto.IMyPrivateKey
+	 * @see anon.util.ClassUtil#loadClasses()
+	 * @see anon.crypto.AsymmetricKeyPair
+	 * @return PKCS12
+	 * @deprecated use {@link getInstance(InputStream, char[])} instead;
+	 *             scheduled for deletion on 04/12/16
+	 */
 	public static PKCS12 load(InputStream stream, char[] password)
+	{
+		return getInstance(stream, password);
+	}
+
+	/**
+	 * Loads a PKCS12 certificate from an input stream. The type of the encryption
+	 * algorithm is recognized dynamically.
+	 * @param a_stream InputStream
+	 * @param password char[]
+	 * @see anon.crypto.IMyPrivateKey
+	 * @see anon.util.ClassUtil#loadClasses()
+	 * @see anon.crypto.AsymmetricKeyPair
+	 * @return PKCS12
+	 */
+	public static PKCS12 getInstance(InputStream a_stream, char[] password)
 	{
 		try
 		{
+			BufferedInputStream stream = new BufferedInputStream(a_stream);
+
+			stream.mark(1);
+			if (stream.read() != (DERInputStream.SEQUENCE | DERInputStream.CONSTRUCTED))
+			{
+				// this is no a valid PKCS12 stream
+				return null;
+			}
+			stream.reset();
+
 			String alias = null;
 			IMyPrivateKey privKey = null;
 			X509CertificateStructure x509cert = null;
 
 			BERInputStream is = new BERInputStream(stream);
-			ASN1Sequence dcs = (ASN1Sequence) is.readObject();
-			Pfx pfx = new Pfx(dcs);
-			ContentInfo cinfo = pfx.getAuthSafe();
-			// TODO: Check MAC
+			ContentInfo contentInfo = new Pfx((ASN1Sequence) is.readObject()).getAuthSafe();
+			/** @todo Check MAC */
 			// Look at JDKPKCS12KeyStore.engineLoad (starting with bag.getMacData())
 
-			if (!cinfo.getContentType().equals(PKCSObjectIdentifiers.data))
+			if (!contentInfo.getContentType().equals(PKCSObjectIdentifiers.data))
 			{
 				return null;
 			}
 
-			is = new BERInputStream(new ByteArrayInputStream( ( (DEROctetString) cinfo.getContent()).
+			is = new BERInputStream(new ByteArrayInputStream( ( (DEROctetString) contentInfo.getContent()).
 				getOctets()));
 			ContentInfo[] cinfos = (new AuthenticatedSafe( (ASN1Sequence) is.readObject())).getContentInfo();
 
@@ -480,22 +342,13 @@ final public class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifier
 						ByteArrayInputStream bIn = new ByteArrayInputStream(pkData);
 						DERInputStream dIn = new DERInputStream(bIn);
 						PrivateKeyInfo privKeyInfo = new PrivateKeyInfo( (ASN1Sequence) dIn.readObject());
-						/**@todo check for Alg --> now done by try catch */
 						try
 						{
-							privKey = new MyDSAPrivateKey(privKeyInfo);
-
+							privKey = (new AsymmetricCryptoKeyPair(privKeyInfo)).getPrivate();
 						}
-						catch (Exception e)
+						catch (Exception a_e)
 						{
-							try
-							{
-								privKey = new MyRSAPrivateKey(privKeyInfo);
-							}
-							catch (Exception e1)
-							{
-								return null;
-							}
+							return null;
 						}
 					}
 
@@ -517,7 +370,8 @@ final public class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifier
 			}
 			if (alias != null && x509cert != null) //????
 			{
-				return new PKCS12(alias, privKey, x509cert);
+				return new PKCS12(alias, new AsymmetricCryptoKeyPair(privKey),
+								  JAPCertificate.getInstance(x509cert));
 			}
 		}
 		catch (Throwable t)
@@ -526,12 +380,311 @@ final public class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifier
 		return null;
 	}
 
-	static private PBEParametersGenerator makePBEGenerator()
+
+	/**
+	 * Converts the certificate to a byte array.
+	 * @return the certificate as a byte array
+	 */
+	public byte[] toByteArray()
 	{
-		return new PKCS12ParametersGenerator(new SHA1Digest());
+		return toByteArray("".toCharArray());
 	}
 
-	static CipherParameters makePBEMacParameters(char[] password, PKCS12PBEParams pbeParams, int keySize)
+	/**
+	 * Converts the certificate to a (optionally encrypted) byte array.
+	 * @param a_password a password
+	 * @throws IOException
+	 * @return the certificate as a byte array
+	 */
+	public byte[] toByteArray(char[] a_password)
+	{
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		try
+		{
+			store(out, a_password);
+			out.close();
+		}
+		catch (IOException a_e)
+		{
+			// I don`t think this is possible
+		}
+
+		return out.toByteArray();
+	}
+
+
+	public void store(OutputStream stream, char[] password) throws IOException
+	{
+		ByteArrayOutputStream bOut = new ByteArrayOutputStream();
+		DEROutputStream dOut;
+
+		//
+		// handle the key
+		//
+		BERConstructedOctetString keyString;
+		{
+
+			byte[] kSalt = new byte[SALT_SIZE];
+			random.nextBytes(kSalt);
+			PKCS12PBEParams kParams = new PKCS12PBEParams(kSalt, MIN_ITERATIONS);
+			byte[] kBytes = codeData(true,
+									 m_keyPair.getPrivate().getEncoded(),
+									 kParams,
+									 password,
+									 new DESedeEngine(),
+									 192);
+			AlgorithmIdentifier kAlgId = new AlgorithmIdentifier(
+				new DERObjectIdentifier(KEY_ALGORITHM),
+				kParams.getDERObject());
+			EncryptedPrivateKeyInfo kInfo = new EncryptedPrivateKeyInfo(kAlgId, kBytes);
+			DERConstructedSet kName = new DERConstructedSet();
+
+			//
+			// set a default friendly name (from the key id) and local id
+			//
+			DEREncodableVector kSeq = new DEREncodableVector();
+			kSeq.add(pkcs_9_at_localKeyId);
+			kSeq.add(new DERSet(createSubjectKeyId()));
+			kName.addObject(new DERSequence(kSeq));
+			kSeq = new DEREncodableVector();
+			kSeq.add(pkcs_9_at_friendlyName);
+			kSeq.add(new DERSet(new DERBMPString(m_ownerAlias)));
+			kName.addObject(new DERSequence(kSeq));
+
+			keyString = new BERConstructedOctetString(new DERSequence(
+				new SafeBag(pkcs8ShroudedKeyBag, kInfo.getDERObject(), kName)));
+		}
+
+		//
+		// certficate processing
+		//
+		EncryptedData cInfo;
+		{
+			byte[] cSalt = new byte[SALT_SIZE];
+			random.nextBytes(cSalt);
+			PKCS12PBEParams cParams = new PKCS12PBEParams(cSalt, MIN_ITERATIONS);
+			AlgorithmIdentifier cAlgId = new AlgorithmIdentifier(new DERObjectIdentifier(CERT_ALGORITHM),
+				cParams);
+			CertBag cBag = new CertBag(x509certType, new DEROctetString(m_x509certificate));
+			DERConstructedSet fName = new DERConstructedSet();
+			DEREncodableVector fSeq = new DEREncodableVector();
+			fSeq.add(pkcs_9_at_localKeyId);
+			fSeq.add(new DERSet(createSubjectKeyId()));
+			fName.addObject(new DERSequence(fSeq));
+
+			fSeq = new DEREncodableVector();
+			fSeq.add(pkcs_9_at_friendlyName);
+			fSeq.add(new DERSet(new DERBMPString(m_ownerAlias)));
+			fName.addObject(new DERSequence(fSeq));
+
+			SafeBag sBag = new SafeBag(certBag, cBag.getDERObject(), fName);
+
+			bOut.reset();
+			dOut = new DEROutputStream(bOut);
+			dOut.writeObject(new DERSequence(sBag));
+			dOut.close();
+
+			byte[] certBytes = codeData(true, bOut.toByteArray(), cParams, password, new RC2Engine(), 40);
+			cInfo = new EncryptedData(data, cAlgId, new BERConstructedOctetString(certBytes));
+		}
+
+		ContentInfo[] c = new ContentInfo[2];
+		c[0] = new ContentInfo(data, keyString);
+		c[1] = new ContentInfo(encryptedData, cInfo);
+
+		/*
+		 bOut.reset();
+		 AuthenticatedSafe auth = new AuthenticatedSafe(c);
+		 BEROutputStream berOut = new BEROutputStream(bOut);
+		 berOut.writeObject(auth);
+		 byte[] pkg = bOut.toByteArray();
+
+		 ContentInfo mainInfo =
+		   new ContentInfo(data, new BERConstructedOctetString(pkg));
+		 */
+		ContentInfo mainInfo = new ContentInfo(data, new BERConstructedOctetString(new AuthenticatedSafe(c)));
+		//
+		// create the mac
+		//
+		byte[] mSalt = new byte[SALT_SIZE];
+		int itCount = MIN_ITERATIONS;
+		random.nextBytes(mSalt);
+		byte[] contentData = ( (DEROctetString) mainInfo.getContent()).getOctets();
+		MacData mData = null;
+
+		try
+		{
+			Mac certMac = new HMac(new SHA1Digest());
+			CipherParameters cParam = makePBEMacParameters(password, new PKCS12PBEParams(mSalt, itCount), 160);
+			certMac.init(cParam);
+			certMac.update(contentData, 0, contentData.length);
+			byte[] my_res = new byte[certMac.getMacSize()];
+			certMac.doFinal(my_res, 0);
+			AlgorithmIdentifier my_algId = new AlgorithmIdentifier(id_SHA1, null);
+			DigestInfo my_dInfo = new DigestInfo(my_algId, my_res);
+
+			mData = new MacData(my_dInfo, mSalt, itCount);
+		}
+		catch (Exception e)
+		{
+			throw new IOException("error constructing MAC: " + e.toString());
+		}
+
+		//
+		// output the Pfx
+		//
+		Pfx pfx = new Pfx(mainInfo, mData);
+		BEROutputStream berOut = new BEROutputStream(stream);
+		berOut.writeObject(pfx);
+	}
+
+	public String getAlias()
+	{
+		return m_ownerAlias;
+	}
+
+
+	/**
+	 *
+	 * @return IMyPrivateKey
+	 * @deprecated use {@link getPrivateKey()} instead; scheduled for removal on 04/12/13
+	 */
+	public IMyPrivateKey getPrivKey()
+	{
+		return m_keyPair.getPrivate();
+	}
+
+	/**
+	 * Returns the private key of this certificate.
+	 * @return the private key of this certificate
+	 */
+	public IMyPrivateKey getPrivateKey()
+	{
+		return m_keyPair.getPrivate();
+	}
+
+	/**
+	 * Returns the public key of this certificate.
+	 * @return the public key of this certificate
+	 */
+	public IMyPublicKey getPublicKey()
+	{
+		return m_keyPair.getPublic();
+	}
+
+	/**
+	 * Returns the key pair of this certificate.
+	 * @return the key pair of this certificate
+	 */
+	public AsymmetricCryptoKeyPair getKeyPair()
+	{
+		return m_keyPair;
+	}
+
+	/**
+	 * @deprecated use {@link getX509Certificate()} instead;
+	 *             scheduled for removal on 04/12/13
+	 * @return the X509 certificate corresponding to this PKCS12 certificate
+	 */
+	public X509CertificateStructure getX509cert()
+	{
+		return m_x509certificate;
+	}
+
+	/**
+	 * Returns the X509 certificate corresponding to this PKCS12 certificate.
+	 * The certificate is enabled by default
+	 * @return the X509 certificate corresponding to this PKCS12 certificate
+	 */
+	public JAPCertificate getX509Certificate()
+	{
+		return m_x509certificate;
+	}
+
+	/**
+	 * Replaces the current X509 certificate by a clone of the given certificate if the given
+	 * certificate has the same public key as the current certificate.
+	 * @param a_X509certificate JAPCertificate
+	 * @return true if the current X509 certificate has been replaced; false otherwise
+	 */
+	public boolean setX509Certificate(JAPCertificate a_X509certificate)
+	{
+		if (a_X509certificate != null &&
+			m_x509certificate.getPublicKey().equals(a_X509certificate.getPublicKey()))
+		{
+			m_x509certificate = (JAPCertificate)a_X509certificate.clone();
+			m_x509certificate.setEnabled(true);
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * Signs the coresponding X509 certificate with an other pkcs12 certificate.
+	 * Any previous signature is removed. If the signature was self-signed before, it is no
+	 * more (but it can still be verified by this PKCS12 certificate via the public key).
+	 * @param a_pkcs12Certificate a PKCS12 certificate
+	 */
+	public void sign(PKCS12 a_pkcs12Certificate)
+	{
+		m_x509certificate = m_x509certificate.sign(a_pkcs12Certificate);
+	}
+
+	private static byte[] codeData(
+		boolean encrypt,
+		byte[] data,
+		PKCS12PBEParams pbeParams,
+		char[] password,
+		BlockCipher cipher,
+		int keySize) throws IOException
+	{
+		byte[] my_out;
+
+		try
+		{
+			BufferedBlockCipher my_cipher = new PaddedBufferedBlockCipher(new CBCBlockCipher(cipher));
+			CipherParameters my_param = makePBEParameters(password,
+				pbeParams,
+				my_cipher.getUnderlyingCipher().getAlgorithmName(),
+				keySize,
+				64);
+
+			my_param = new ParametersWithRandom(my_param, new SecureRandom());
+			my_cipher.init(encrypt, my_param);
+
+			byte[] my_input = data;
+			int my_inputlen = my_input.length;
+			int my_len = 0;
+			byte[] my_tmp = new byte[my_cipher.getOutputSize(my_inputlen)];
+
+			if (my_inputlen != 0)
+			{
+				my_len = my_cipher.processBytes(my_input, 0, my_inputlen, my_tmp, 0);
+
+			}
+			try
+			{
+				my_len += my_cipher.doFinal(my_tmp, my_len);
+			}
+			catch (Exception e)
+			{
+			}
+
+			my_out = new byte[my_len];
+			System.arraycopy(my_tmp, 0, my_out, 0, my_len);
+		}
+		catch (Exception e)
+		{
+			throw new IOException(
+				"exception encrypting data - " + e.toString());
+		}
+
+		return my_out;
+	}
+
+	private static CipherParameters makePBEMacParameters(char[] password, PKCS12PBEParams pbeParams,
+		int keySize)
 	{
 		PBEParametersGenerator generator = makePBEGenerator();
 		byte[] key = PBEParametersGenerator.PKCS12PasswordToBytes(password);
@@ -549,9 +702,8 @@ final public class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifier
 		return param;
 	}
 
-	static CipherParameters makePBEParameters(char[] password, PKCS12PBEParams pbeParams,
-											  String targetAlgorithm,
-											  int keySize, int ivSize)
+	private static CipherParameters makePBEParameters(char[] password, PKCS12PBEParams pbeParams,
+		String targetAlgorithm, int keySize, int ivSize)
 	{
 		PBEParametersGenerator generator = makePBEGenerator();
 		byte[] key = PBEParametersGenerator.PKCS12PasswordToBytes(password);
@@ -590,44 +742,72 @@ final public class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifier
 		return param;
 	}
 
-	public String getAlias()
+
+	private static PBEParametersGenerator makePBEGenerator()
 	{
-		return alias;
+		return new PKCS12ParametersGenerator(new SHA1Digest());
 	}
 
-	public IMyPrivateKey getPrivKey()
+
+	private static MyCipher getCipher(String algId)
 	{
-		return m_privKey;
+		if (algId.equals("1.2.840.113549.1.12.1.3"))
+		{
+
+			// PBE with SHA and 3-Key TripleDES-CBC
+			return new MyCipher(new DESedeEngine(), 192);
+		}
+		else if (algId.equals("1.2.840.113549.1.12.1.4"))
+		{
+
+			// PBE with SHA and 2-Key TripleDES-CBC
+			return new MyCipher(new DESedeEngine(), 128);
+		}
+		else if (algId.equals("1.2.840.113549.1.12.1.5"))
+		{
+
+			// PBE with SHA and 128 Bit-RC2-CBC
+			return new MyCipher(new RC2Engine(), 128);
+		}
+		else if (algId.equals("1.2.840.113549.1.12.1.6"))
+		{
+
+			// PBE with SHA and 40 Bit-RC2-CBC
+			return new MyCipher(new RC2Engine(), 40);
+		}
+		else
+		{
+			return null;
+		}
 	}
 
-	/*	public PublicKey getPubKey()
-	 {
-	  return pubKey;
-	 }
-	 */
-	public X509CertificateStructure getX509cert()
+	private static class MyCipher
 	{
-		return x509cert;
-	}
+		public BlockCipher cipher;
+		public int keysize;
+		MyCipher(BlockCipher c, int ks)
+		{
+			cipher = c;
+			keysize = ks;
+		}
+	};
 
-	public void setAlias(String string)
+
+	private SubjectKeyIdentifier createSubjectKeyId()
 	{
-		alias = string;
+		try
+		{
+			return new SubjectKeyIdentifier(m_x509certificate.getSubjectPublicKeyInfo());
+			/*			ByteArrayInputStream bIn =
+			 new ByteArrayInputStream(pubKey.getEncoded());
+			   SubjectPublicKeyInfo info =
+			 new SubjectPublicKeyInfo(
+			 (ASN1Sequence)new DERInputStream(bIn).readObject());
+			   return new SubjectKeyIdentifier(info);*/
+		}
+		catch (Exception e)
+		{
+			throw new RuntimeException("error creating key");
+		}
 	}
-
-	public void setPrivKey(IMyPrivateKey key)
-	{
-		m_privKey = key;
-	}
-
-	/*	public void setPubKey(PublicKey key)
-	 {
-	  pubKey = key;
-	 }
-	 */
-	public void setX509cert(X509CertificateStructure structure)
-	{
-		x509cert = structure;
-	}
-
 }

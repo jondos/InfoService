@@ -32,24 +32,39 @@
 
 package anon.crypto;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.security.InvalidKeyException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import org.bouncycastle.crypto.digests.SHA1Digest;
-import org.bouncycastle.crypto.engines.RSAEngine;
-import org.bouncycastle.asn1.x509.DigestInfo;
-import org.bouncycastle.crypto.encodings.PKCS1Encoding;
-import java.io.*;
-import org.bouncycastle.asn1.*;
-import org.bouncycastle.asn1.x509.*;
-/*** SHA1withRSA Signature as descripted in RFC 2313 */
-final class MyRSASignature implements IMySignature
-{
-	private PKCS1Encoding m_SignatureAlgorithm;
-	private SHA1Digest m_Digest;
-	private final static AlgorithmIdentifier ms_AlgID=new AlgorithmIdentifier(X509ObjectIdentifiers.id_SHA1,null);
+import java.security.Key;
 
-	MyRSASignature()
+import org.bouncycastle.asn1.ASN1Null;
+import org.bouncycastle.asn1.ASN1Sequence;
+import org.bouncycastle.asn1.DERInputStream;
+import org.bouncycastle.asn1.DEROutputStream;
+import org.bouncycastle.asn1.DERObjectIdentifier;
+import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
+import org.bouncycastle.asn1.x509.DigestInfo;
+import org.bouncycastle.asn1.x509.X509ObjectIdentifiers;
+import org.bouncycastle.crypto.digests.SHA1Digest;
+import org.bouncycastle.crypto.encodings.PKCS1Encoding;
+import org.bouncycastle.crypto.engines.RSAEngine;
+
+/*** SHA1withRSA Signature as described in RFC 2313 */
+public final class MyRSASignature implements IMySignature
+{
+	private static final AlgorithmIdentifier ms_identifier =
+		new AlgorithmIdentifier(new DERObjectIdentifier("1.2.840.113549.1.1.5"));
+
+	private PKCS1Encoding m_SignatureAlgorithm;
+	/**
+	 * The key with that this algorithm has been initialised.
+	 */
+	private Key m_initKey;
+	private SHA1Digest m_Digest;
+	private final static AlgorithmIdentifier ms_AlgID=
+		new AlgorithmIdentifier(X509ObjectIdentifiers.id_SHA1,null);
+
+	public MyRSASignature()
 	{
 		m_SignatureAlgorithm = new PKCS1Encoding(new RSAEngine());
 		m_Digest=new SHA1Digest();
@@ -57,12 +72,20 @@ final class MyRSASignature implements IMySignature
 
 	synchronized public void initVerify(IMyPublicKey k) throws InvalidKeyException
 	{
-		m_SignatureAlgorithm.init(false, ( (MyRSAPublicKey) k).getParams());
+		//if (m_initKey == null || m_initKey != k)
+		//{
+			m_SignatureAlgorithm.init(false, ( (MyRSAPublicKey) k).getParams());
+			m_initKey = k;
+		//}
 	}
 
 	synchronized public void initSign(IMyPrivateKey k) throws InvalidKeyException
 	{
-		m_SignatureAlgorithm.init(true, ( (MyRSAPrivateKey) k).getParams());
+		//if (m_initKey == null || m_initKey != k)
+		//{
+			m_SignatureAlgorithm.init(true, ( (MyRSAPrivateKey) k).getParams());
+			m_initKey = k;
+		//}
 	}
 
 	synchronized public boolean verify(byte[] message, byte[] sig)
@@ -113,7 +136,7 @@ final class MyRSASignature implements IMySignature
 		}
 	}
 
-	synchronized public byte[] sign(byte[] bytesToSign)
+	public synchronized byte[] sign(byte[] bytesToSign)
 	{
 		try
 		{
@@ -136,4 +159,45 @@ final class MyRSASignature implements IMySignature
 		}
 	}
 
+	/**
+	 * Returns the algorithm identifier (RSA with SHA1).
+	 * @return the algorithm identifier (RSA with SHA1)
+	 */
+	public AlgorithmIdentifier getIdentifier() {
+		return ms_identifier;
+	}
+
+	/**
+	 * Encodes a signature in a way it meets the W3C standard for RSA XML signature values.
+	 * @param a_signature an non-encoded signature
+	 * @return the encoded signature in PKCS1 format or null if an error occured
+	 * @see http://www.w3.org/TR/xmldsig-core/#sec-PKCS1
+	 * @todo not implemented yet
+	 */
+	public byte[] encodeForXMLSignature(byte[] a_signature)
+	{
+		return null;
+	}
+
+	/**
+	 * Tries to decode a signature in a way as it would meet the W3C standard for RSA XML
+	 * signature values.
+	 * @param a_encodedSignature an encoded signature in PKCS1 format
+	 * @return the decoded signature or null if an error occured
+	 * @see http://www.w3.org/TR/xmldsig-core/#sec-PKCS1
+	 * @todo not implemented yet
+	 */
+	public byte[] decodeForXMLSignature(byte[] a_encodedSignature)
+	{
+		return null;
+	}
+
+	/**
+	 * Returns http://www.w3.org/2000/09/xmldsig#rsa-sha1.
+	 * @return http://www.w3.org/2000/09/xmldsig#rsa-sha1
+	 */
+	public String getXMLSignatureAlgorithmReference()
+	{
+		return "http://www.w3.org/2000/09/xmldsig#rsa-sha1";
+	}
 }

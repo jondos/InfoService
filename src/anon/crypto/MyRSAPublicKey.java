@@ -32,29 +32,30 @@ package anon.crypto;
  */
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.security.InvalidKeyException;
 import java.security.PublicKey;
 
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.DERInputStream;
 import org.bouncycastle.asn1.DERObjectIdentifier;
-import org.bouncycastle.asn1.DEROutputStream;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.asn1.x509.RSAPublicKeyStructure;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 import org.bouncycastle.crypto.CipherParameters;
 import org.bouncycastle.crypto.params.RSAKeyParameters;
-import org.w3c.dom.Element;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import anon.util.Base64;
 import anon.util.XMLUtil;
 
-final public class MyRSAPublicKey implements IMyPublicKey
+final public class MyRSAPublicKey extends AbstractPublicKey implements IMyPublicKey
 {
+	private MyRSASignature m_algorithm = new MyRSASignature();
 	private BigInteger m_n;
 	private BigInteger m_e;
+	private long m_hashValue = 0;
 
 	public MyRSAPublicKey(BigInteger modulus, BigInteger exponent)
 	{
@@ -69,7 +70,7 @@ final public class MyRSAPublicKey implements IMyPublicKey
 		m_e = p.getExponent();
 	}
 
-	MyRSAPublicKey(RSAPublicKeyStructure en) throws IllegalArgumentException
+	public MyRSAPublicKey(RSAPublicKeyStructure en) throws IllegalArgumentException
 	{
 		try
 		{
@@ -83,7 +84,7 @@ final public class MyRSAPublicKey implements IMyPublicKey
 
 	}
 
-	MyRSAPublicKey(SubjectPublicKeyInfo info) throws IllegalArgumentException
+	public MyRSAPublicKey(SubjectPublicKeyInfo info) throws IllegalArgumentException
 	{
 		try
 		{
@@ -112,6 +113,25 @@ final public class MyRSAPublicKey implements IMyPublicKey
 			return null;
 		}
 	}
+
+	/**
+	 * Gets the signature algorithm object that is held and initialised by this key.
+	 * It is ready to verify messages and must not be reinitialised.
+	 * @return the signature algorithm object that is held and initialised by this key
+	 */
+	public ISignatureVerificationAlgorithm getSignatureAlgorithm()
+	{
+		try
+		{
+			m_algorithm.initVerify(this);
+		}
+		catch (InvalidKeyException a_e)
+		{
+			// not possible
+		}
+		return m_algorithm;
+	}
+
 
 	public BigInteger getModulus()
 	{
@@ -144,26 +164,10 @@ final public class MyRSAPublicKey implements IMyPublicKey
 		return new RSAKeyParameters(false, m_n, m_e);
 	}
 
-	public byte[] getEncoded()
-	{
-		ByteArrayOutputStream bOut = new ByteArrayOutputStream();
-		DEROutputStream dOut = new DEROutputStream(bOut);
-		try
-		{
-			dOut.writeObject(getAsSubjectPublicKeyInfo());
-			dOut.close();
-		}
-		catch (IOException e)
-		{
-			throw new RuntimeException("IOException while encoding public key");
-		}
-		return bOut.toByteArray();
-	}
-
 	/**
 	 * Builds an XML Node containing the public key data.
 	 * This is compliant to the W3C XML Signature standard
-	 * @param the root document
+	 * @param a_doc the root document
 	 * @return an XML Node
 	 */
 	public Element toXmlElement(Document a_doc)
@@ -172,30 +176,50 @@ final public class MyRSAPublicKey implements IMyPublicKey
 		Element elemModulus = a_doc.createElement("Modulus");
 		elemRoot.appendChild(elemModulus);
 		byte[] b = m_n.toByteArray();
-		XMLUtil.setNodeValue(elemModulus, Base64.encodeBytes(b));
+		XMLUtil.setValue(elemModulus, Base64.encodeBytes(b));
 		Element elemExponent = a_doc.createElement("Exponent");
 		elemRoot.appendChild(elemExponent);
 		b = m_e.toByteArray();
-		XMLUtil.setNodeValue(elemExponent, Base64.encodeBytes(b));
+		XMLUtil.setValue(elemExponent, Base64.encodeBytes(b));
 		return elemRoot;
 	}
 
-	public boolean equals(Object o)
+	/**
+	 * This method returns if two public keys have the same public key parameters.
+	 * @param a_publicKey an other public key
+	 * @return true if the keys have the same public key parameters; false otherwise
+	 */
+	public boolean equals(Object a_publicKey)
 	{
-		if (o == null)
+		if (a_publicKey == null)
 		{
 			return false;
 		}
-		if (! (o instanceof PublicKey))
+		if (! (a_publicKey instanceof PublicKey))
 		{
 			return false;
 		}
-		if (! (o instanceof MyRSAPublicKey))
+		if (! (a_publicKey instanceof MyRSAPublicKey))
 		{
 			return false;
 		}
-		MyRSAPublicKey r = (MyRSAPublicKey) o;
+		MyRSAPublicKey r = (MyRSAPublicKey) a_publicKey;
 		return r.getModulus().equals(m_n) && r.getPublicExponent().equals(m_e);
 	}
+
+	/**
+	 * @return the public key`s hash code
+	 * @see java.lang.Object#hashCode()
+	 */
+	public int hashCode()
+	{
+		if (m_hashValue == 0)
+		{
+			m_hashValue = m_n.longValue() + m_e.longValue();
+		}
+
+		return (int) m_hashValue;
+	}
+
 
 }

@@ -27,43 +27,19 @@
  */
 package anon.crypto;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.security.SecureRandom;
-import java.security.interfaces.DSAPrivateKey;
-import java.security.interfaces.DSAPublicKey;
 import java.util.Date;
-import org.bouncycastle.asn1.ASN1Sequence;
-import org.bouncycastle.asn1.DERInputStream;
-import org.bouncycastle.asn1.DERInteger;
-import org.bouncycastle.asn1.DEROutputStream;
-import org.bouncycastle.asn1.DERUTCTime;
-import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
-import org.bouncycastle.asn1.x509.X509CertificateStructure;
-import org.bouncycastle.asn1.x509.X509Name;
-import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
-import org.bouncycastle.crypto.generators.DSAKeyPairGenerator;
-import org.bouncycastle.crypto.generators.DSAParametersGenerator;
-import org.bouncycastle.crypto.params.DSAKeyGenerationParameters;
-import org.bouncycastle.crypto.params.DSAPrivateKeyParameters;
-import org.bouncycastle.crypto.params.DSAPublicKeyParameters;
+import java.util.GregorianCalendar;
 
 /**
  * This class implements the generation of a DSA key pair.
+ * @deprecated this class is replaced by {@link anon.crypto.DSAKeyPair}
  */
 final public class JAPDsaKeyGenerator
 {
-
-	/**
-	 * Stores the DSA public key.
-	 */
-	private MyDSAPublicKey m_dsaPublicKey;
-
-	/**
-	 * Stores the DSA private key.
-	 */
-	private MyDSAPrivateKey m_dsaPrivateKey;
+	private DSAKeyPair m_keyPair;
 
 	/**
 	 * This creates a new instance of JAPDsaKeyGenerator. It is exactly one DSA key pair generated.
@@ -73,19 +49,14 @@ final public class JAPDsaKeyGenerator
 	 * @param a_keyLength The length of the key in bits. For the current implementation of
 	 *                    bouncycastle it must be a number between 512 and 1024 which is a multiple
 	 *                    of 64.
-	 * @param a_keyParamCertainity Measure of robustness of prime. For FIPS 186-2 compliance this
+	 * @param a_keyParamCertainty Measure of robustness of prime. For FIPS 186-2 compliance this
 	 *                             value should be at least 80.
+	 * @deprecated use {@link anon.crypto.DSAKeyPair#getInstance(SecureRandom,int,int)} instead;
+	 *             scheduled for removal on 04/12/12
 	 */
-	public JAPDsaKeyGenerator(SecureRandom a_secureRandom, int a_keyLength, int a_keyParamCertainity)
+	public JAPDsaKeyGenerator(SecureRandom a_secureRandom, int a_keyLength, int a_keyParamCertainty)
 	{
-		DSAParametersGenerator dsaParametersGenerator = new DSAParametersGenerator();
-		dsaParametersGenerator.init(a_keyLength, a_keyParamCertainity, a_secureRandom);
-		DSAKeyPairGenerator dsaKeyPairGenerator = new DSAKeyPairGenerator();
-		dsaKeyPairGenerator.init(new DSAKeyGenerationParameters(a_secureRandom,
-			dsaParametersGenerator.generateParameters()));
-		AsymmetricCipherKeyPair asymmetricCipherKeyPair = dsaKeyPairGenerator.generateKeyPair();
-		m_dsaPublicKey = new MyDSAPublicKey( (DSAPublicKeyParameters) asymmetricCipherKeyPair.getPublic());
-		m_dsaPrivateKey = new MyDSAPrivateKey( (DSAPrivateKeyParameters) asymmetricCipherKeyPair.getPrivate());
+		m_keyPair = DSAKeyPair.getInstance(a_secureRandom, a_keyLength, a_keyParamCertainty);
 	}
 
 	/**
@@ -93,9 +64,9 @@ final public class JAPDsaKeyGenerator
 	 *
 	 * @return The public key.
 	 */
-	public DSAPublicKey getDsaPublicKey()
+	public MyDSAPublicKey getDsaPublicKey()
 	{
-		return m_dsaPublicKey;
+		return (MyDSAPublicKey)m_keyPair.getPublic();
 	}
 
 	/**
@@ -103,9 +74,9 @@ final public class JAPDsaKeyGenerator
 	 *
 	 * @return The private key.
 	 */
-	public DSAPrivateKey getDsaPrivateKey()
+	public MyDSAPrivateKey getDsaPrivateKey()
 	{
-		return m_dsaPrivateKey;
+		return (MyDSAPrivateKey)m_keyPair.getPrivate();
 	}
 
 	/**
@@ -117,22 +88,27 @@ final public class JAPDsaKeyGenerator
 	 * @param a_ownerAlias The owner of the certificate. The name is set as the common name (CN).
 	 * @param a_validFrom The date from which the certificate is valid.
 	 * @param a_validTo The date until which the certificate is valid.
+	 * @throws IOException if the key could not be written to the output stream
+	 * @deprecated use {@link anon.crypto.DSAKeyPair#getInstance(SecureRandom,int,int)},
+	 * {@link anon.crypto.PKCS12#PKCS12(String,AsymmetricCryptoKeyPair,Calendar,Calendar)},
+	 * {@link anon.crypto.PKCS12#store(OutputStream,char[])}; scheduled for removal on 04/12/12
+     *
 	 */
 	public void storeDsaPrivateKeyAsPkcs12(OutputStream a_outputStream, String a_password,
-										   String a_ownerAlias, Date a_validFrom, Date a_validTo) throws
-		IOException
+										   String a_ownerAlias, Date a_validFrom, Date a_validTo)
+		throws IOException
 	{
-		X509CertGenerator v3CertGen = new X509CertGenerator();
-		v3CertGen.setStartDate(new DERUTCTime(a_validFrom));
-		v3CertGen.setEndDate(new DERUTCTime(a_validTo));
-		v3CertGen.setSerialNumber(new DERInteger(1));
-		v3CertGen.setSubject(new X509Name("CN=" + a_ownerAlias));
-		v3CertGen.setSubjectPublicKeyInfo(new SubjectPublicKeyInfo( (ASN1Sequence) (new DERInputStream(new
-			ByteArrayInputStream(m_dsaPublicKey.getEncoded()))).readObject()));
-		X509CertificateStructure x509Cert = v3CertGen.sign(new X509Name("CN=" + a_ownerAlias),
-			m_dsaPrivateKey);
-		PKCS12 pkcs12 = new PKCS12(a_ownerAlias, m_dsaPrivateKey, x509Cert);
-		pkcs12.store(a_outputStream, a_password.toCharArray());
+		GregorianCalendar validFrom, validTo;
+		PKCS12 privateCertificate;
+
+		validFrom = new GregorianCalendar();
+		validFrom.setTime(a_validFrom);
+
+		validTo = new GregorianCalendar();
+		validTo.setTime(a_validTo);
+
+		privateCertificate = new PKCS12(a_ownerAlias, m_keyPair, validFrom, validTo);
+		privateCertificate.store(a_outputStream, a_password.toCharArray());
 	}
 
 	/**
@@ -142,21 +118,25 @@ final public class JAPDsaKeyGenerator
 	 * @param a_ownerAlias The owner of the certificate. The name is set as the common name (CN).
 	 * @param a_validFrom The date from which the certificate is valid.
 	 * @param a_validTo The date until which the certificate is valid.
+	 * @throws IOException if the key could not be written to the output stream
+	 * @deprecated use {@link anon.crypto.DSAKeyPair#getInstance(SecureRandom,int,int)},
+	 * {@link anon.crypto.JAPCertificate#getInstance(String,AsymmetricCryptoKeyPair,Calendar,Calendar)},
+	 * {@link anon.crypto.JAPCertificate#store(OutputStream)}; scheduled for removal on 04/12/12
 	 */
-	public void storeDsaPublicKeyAsX509(OutputStream a_outputStream, String a_ownerAlias, Date a_validFrom,
-										Date a_validTo) throws IOException
+	public void storeDsaPublicKeyAsX509(OutputStream a_outputStream, String a_ownerAlias,
+										Date a_validFrom, Date a_validTo) throws IOException
 	{
-		X509CertGenerator v3CertGen = new X509CertGenerator();
-		v3CertGen.setStartDate(new DERUTCTime(a_validFrom));
-		v3CertGen.setEndDate(new DERUTCTime(a_validTo));
-		v3CertGen.setSerialNumber(new DERInteger(1));
-		v3CertGen.setSubject(new X509Name("CN=" + a_ownerAlias));
-		v3CertGen.setSubjectPublicKeyInfo(new SubjectPublicKeyInfo( (ASN1Sequence) (new DERInputStream(new
-			ByteArrayInputStream(m_dsaPublicKey.getEncoded()))).readObject()));
-		X509CertificateStructure x509Cert = v3CertGen.sign(new X509Name("CN=" + a_ownerAlias),
-			m_dsaPrivateKey);
-		DEROutputStream derOutputStream = new DEROutputStream(a_outputStream);
-		derOutputStream.writeObject(x509Cert);
+		GregorianCalendar validFrom, validTo;
+		JAPCertificate certificate;
+
+		validFrom = new GregorianCalendar();
+		validFrom.setTime(a_validFrom);
+
+		validTo = new GregorianCalendar();
+		validTo.setTime(a_validTo);
+
+		certificate = JAPCertificate.getInstance(a_ownerAlias, m_keyPair, validFrom, validTo);
+		certificate.store(a_outputStream);
 	}
 
 }

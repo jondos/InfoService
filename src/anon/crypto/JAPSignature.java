@@ -36,8 +36,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
-import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.security.interfaces.DSAPrivateKey;
 import java.security.interfaces.DSAPublicKey;
 import javax.xml.parsers.DocumentBuilder;
@@ -50,6 +48,9 @@ import org.w3c.dom.NodeList;
 import anon.util.Base64;
 import anon.util.XMLUtil;
 
+/**
+ * @deprecated use {@link anon.crypto.XMLSignature} instead; scheduled for removal on 04/12/12
+ */
 final public class JAPSignature
 {
 
@@ -117,6 +118,13 @@ final public class JAPSignature
 		signatureAlgorithm.initSign(ownPrivateKey);
 	}
 
+	/**
+	 *
+	 * @param xmlDoc InputStream
+	 * @return boolean
+	 * @deprecated use {@link anon.crypto.XMLSignature#verify(Node, JAPCertificate)} instead;
+	 *             scheduled for removal on 04/12/12
+	 */
 	public boolean verifyXML(InputStream xmlDoc)
 	{
 		try
@@ -138,6 +146,8 @@ final public class JAPSignature
 	 *  taken.
 	 * @return true if it could be verified
 	 * @return false otherwise
+	 * @deprecated use {@link anon.crypto.XMLSignature#verify(Node, JAPCertificate)} instead;
+	 *             scheduled for removal on 04/12/12
 	 */
 	public boolean verifyXML(Node n)
 	{
@@ -197,7 +207,7 @@ final public class JAPSignature
 
 			//now rsBuff contains r (20 bytes) and s (20 bytes)
 
-			byte[] tmpBuff=transcodeRStoDER(rsbuff);
+			byte[] tmpBuff=new MyDSASignature().decodeForXMLSignature(rsbuff);
 			//testing Signature....
 			byte[] buff = out.toByteArray();
 			if (!verify(buff, tmpBuff))
@@ -233,13 +243,30 @@ final public class JAPSignature
 		}
 	}
 
+	/**
+	 *
+	 * @param message byte[]
+	 * @param sig byte[]
+	 * @param bIsRSEncoded boolean
+	 * @return boolean
+	 * @deprecated use {@link IMySignature#decodeForXMLSignature(byte[])} instead; scheduled for
+	 *             removal on 04/12/12
+	 */
 	synchronized public boolean verify(byte[] message, byte[] sig,boolean bIsRSEncoded)
 	{
 		if(bIsRSEncoded)
-			sig=transcodeRStoDER(sig);
+			sig=new MyDSASignature().decodeForXMLSignature(sig);
 		return verify(message,sig);
 	}
 
+	/**
+	 *
+	 * @param message byte[]
+	 * @param sig byte[]
+	 * @return boolean
+	 * @deprecated use {@link ByteSignature#verify(byte[],byte[], IMyPublicKey)} instead;
+	 *             scheduled for removal on 04/12/12
+	 */
 	synchronized public boolean verify(byte[] message, byte[] sig)
 		{
 		return signatureAlgorithm.verify(message, sig);
@@ -250,6 +277,8 @@ final public class JAPSignature
 	 *
 	 * @param bytesToSign byte[] Bytes to sign
 	 * @return byte[] the signature, or null if something goes wrong
+	 * @deprecated use {@link ByteSignature#sign(byte[], IMyPrivateKey)} instead;
+	 *             scheduled for removal on 04/12/12
 	 */
 	synchronized public byte[] signBytes(byte[] bytesToSign)
 	{
@@ -266,7 +295,8 @@ final public class JAPSignature
 	/** Returns all Certificates which are included in this Signatures <KeyInfo> element
 	 * @return certifcates emmbeded in the Signature Node
 	 * @return null if no certificates could be found or something else goes wrong
-	 * @todo At the moment only returns the first Certifcate found!
+	 * @deprecated use {@link XMLSignature#getCertificates()} instead;
+	 *             scheduled for removal on 04/12/12
 	 */
 	public static JAPCertificate[] getAppendedCertificates(Node nSig)
 	{
@@ -301,17 +331,19 @@ final public class JAPSignature
 	 * already a signature in the document, it is removed.
 	 *
 	 * @param toSign The document you want to sign.
+	 * @deprecated use {@link XMLSignature#sign(Node,IMyPrivateKey)} instead;
+	 *             scheduled for removal on 04/12/12
 	 */
 	public void signXmlDoc(Document toSign) throws Exception
 	{
 		if (toSign == null)
 		{
-			throw new Exception("JAPSignature: signXmlDoc: Nothing to sign!");
+			throw new Exception("Nothing to sign!");
 		}
 		Element rootNode = toSign.getDocumentElement();
 		if (rootNode == null)
 		{
-			throw new Exception("JAPSignature: signXmlDoc: No document root!");
+			throw new Exception("No document root!");
 		}
 		signXmlNode(rootNode);
 	}
@@ -322,6 +354,8 @@ final public class JAPSignature
 	 * the tree under the node, it is removed.
 	 *
 	 * @param toSign The document you want to sign.
+	 * @deprecated use {@link XMLSignature#sign(Node,IMyPrivateKey)} instead;
+	 *             scheduled for removal on 04/12/12
 	 */
 	public void signXmlNode(Element toSign) throws Exception
 	{
@@ -414,6 +448,9 @@ final public class JAPSignature
 	 * it easier for the recipient to check the signature.
 	 *
 	 * @param toSign The document you want to sign.
+	 * @deprecated use {@link XMLSignature#sign(Node,PKCS12)} and
+	 *             {@link XMLSignature#addCertificates(JAPCertificateStore)} instead;
+	 *             scheduled for removal on 04/12/12
 	 */
 	public void signXmlNode(Element toSign, JAPCertificate certsToAdd[]) throws Exception
 	{
@@ -446,6 +483,8 @@ final public class JAPSignature
 	 * it easier for the recipient to check the signature.
 	 *
 	 * @param toSign The document you want to sign.
+	 * @deprecated use {@link XMLSignature#sign(Node,PKCS12)} instead;
+	 *             scheduled for removal on 04/12/12
 	 */
 	public void signXmlNode(Element toSign, JAPCertificate certToAdd) throws Exception
 	{
@@ -469,10 +508,11 @@ final public class JAPSignature
 		 */
 		if (makeCanonical(inputNode, out, true, null) == -1)
 		{
-			throw new Exception("JAPSignature: nodeToCanonical: Could not make the node canonical!");
+			throw new Exception("Could not make the node canonical!");
 		}
 		out.flush();
 		return out;
+
 	}
 
 //Thread safe ?
@@ -550,67 +590,5 @@ final public class JAPSignature
 		{
 			return -1;
 		}
-	}
-
-	/**Making DER-Encoding of r and s.....
-// ASN.1 Notation:
-//  sequence
-//    {
-//          integer r
-//          integer s
-//    }
-// HINT: Sun JDK 1.4.x needs a leading '0' in the binary representation
-// of r (and s) if r[0]>0x7F or s[0]>0x7F
-//--> Der-Encoding
-// 0x30 //Sequence
-// 44 + x // len in bytes (x = {0|1|2} depending on r and s (see above)
-// 0x02 // integer
-// 20 | 21 // len in bytes of r
-// ....   //value of r (with leading zero if necessary)
-// 0x02 //integer
-// 20 | 21  //len of s
-// ... value of s (with leading zero if necessary)
-	 **/
-	private byte[] transcodeRStoDER(byte[] rsbuff)
-	{
-
-		int index = 46;
-		if (rsbuff[0] < 0)
-		{
-			index++;
-		}
-		if (rsbuff[20] < 0)
-		{
-			index++;
-		}
-		byte tmpBuff[] = new byte[index];
-		tmpBuff[0] = 0x30;
-		tmpBuff[1] = (byte) (index - 2);
-		tmpBuff[2] = 0x02;
-		if (rsbuff[0] < 0)
-		{
-			index = 5;
-			tmpBuff[3] = 21;
-			tmpBuff[4] = 0;
-		}
-		else
-		{
-			tmpBuff[3] = 20;
-			index = 4;
-		}
-		System.arraycopy(rsbuff, 0, tmpBuff, index, 20);
-		index += 20;
-		tmpBuff[index++] = 0x02;
-		if (rsbuff[20] < 0)
-		{
-			tmpBuff[index++] = 21;
-			tmpBuff[index++] = 0;
-		}
-		else
-		{
-			tmpBuff[index++] = 20;
-		}
-		System.arraycopy(rsbuff, 20, tmpBuff, index, 20);
-		return tmpBuff;
 	}
 }

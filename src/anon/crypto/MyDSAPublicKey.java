@@ -31,31 +31,31 @@ package anon.crypto;
  * If you change something - do not forget to add the changes also to the JAP source tree!
  */
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.security.InvalidKeyException;
 import java.security.interfaces.DSAParams;
 import java.security.interfaces.DSAPublicKey;
+
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.DERInteger;
 import org.bouncycastle.asn1.DERObject;
-import org.bouncycastle.asn1.DEROutputStream;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.asn1.x509.DSAParameter;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 import org.bouncycastle.asn1.x9.X9ObjectIdentifiers;
 import org.bouncycastle.crypto.params.DSAPublicKeyParameters;
 import org.w3c.dom.Document;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 import org.w3c.dom.Element;
 import anon.util.Base64;
 import anon.util.XMLUtil;
 
-final public class MyDSAPublicKey implements DSAPublicKey,IMyPublicKey
+final public class MyDSAPublicKey extends AbstractPublicKey implements DSAPublicKey,IMyPublicKey
 {
+	private MyDSASignature m_algorithm = new MyDSASignature();
 	private BigInteger m_Y;
 	private DSAParams m_params;
+	private long m_hashValue = 0;
 
 	public MyDSAPublicKey(DSAPublicKeyParameters params)
 	{
@@ -63,7 +63,7 @@ final public class MyDSAPublicKey implements DSAPublicKey,IMyPublicKey
 		m_params = new MyDSAParams(params.getParameters());
 	}
 
-	MyDSAPublicKey(SubjectPublicKeyInfo info) throws IllegalArgumentException
+	public MyDSAPublicKey(SubjectPublicKeyInfo info) throws IllegalArgumentException
 	{
 		try
 		{
@@ -79,6 +79,23 @@ final public class MyDSAPublicKey implements DSAPublicKey,IMyPublicKey
 			throw new IllegalArgumentException("invalid info structure in DSA public key");
 		}
 
+	}
+
+	/**
+	 * Gets a signature algorithm object for this key.
+	 * @return a signature algorithm object for this key
+	 */
+	public ISignatureVerificationAlgorithm getSignatureAlgorithm()
+	{
+		try
+		{
+			m_algorithm.initVerify(this);
+		}
+		catch (InvalidKeyException a_e)
+		{
+			// not possible
+		}
+		return m_algorithm;
 	}
 
 	public BigInteger getY()
@@ -111,58 +128,61 @@ final public class MyDSAPublicKey implements DSAPublicKey,IMyPublicKey
 		return new SubjectPublicKeyInfo(algID, new DERInteger(getY()));
 	}
 
-	public byte[] getEncoded()
-	{
-		ByteArrayOutputStream bOut = new ByteArrayOutputStream();
-		DEROutputStream dOut = new DEROutputStream(bOut);
-		try
-		{
-			dOut.writeObject(getAsSubjectPublicKeyInfo());
-			dOut.close();
-		}
-		catch (IOException e)
-		{
-			throw new RuntimeException("IOException while encoding public key");
-		}
-		return bOut.toByteArray();
-	}
-
 	public Element toXmlElement(Document a_doc)
 	{
 		Element elemRoot = a_doc.createElement("DSAKeyValue");
 		Element elem = null;
 
 		elem = a_doc.createElement("Y");
-		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_Y.toByteArray()));
+		XMLUtil.setValue(elem, Base64.encodeBytes(m_Y.toByteArray()));
 		elemRoot.appendChild(elem);
 
 		elem = a_doc.createElement("P");
-		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_params.getP().toByteArray()));
+		XMLUtil.setValue(elem, Base64.encodeBytes(m_params.getP().toByteArray()));
 		elemRoot.appendChild(elem);
 
 		elem = a_doc.createElement("Q");
-		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_params.getQ().toByteArray()));
+		XMLUtil.setValue(elem, Base64.encodeBytes(m_params.getQ().toByteArray()));
 		elemRoot.appendChild(elem);
 
 		elem = a_doc.createElement("G");
-		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_params.getG().toByteArray()));
+		XMLUtil.setValue(elem, Base64.encodeBytes(m_params.getG().toByteArray()));
 		elemRoot.appendChild(elem);
 
 		return elemRoot;
 	}
 
-	public boolean equals(Object o)
+	/**
+	 * This method returns if two public keys have the same public key parameters.
+	 * @param a_publicKey an other public key
+	 * @return true if the keys have the same public key parameters; false otherwise
+	 */
+	public boolean equals(Object a_publicKey)
 	{
-		if (o == null)
+		if (a_publicKey == null)
 		{
 			return false;
 		}
-		if (! (o instanceof DSAPublicKey))
+		if (! (a_publicKey instanceof DSAPublicKey))
 		{
 			return false;
 		}
-		DSAPublicKey d = (DSAPublicKey) o;
+		DSAPublicKey d = (DSAPublicKey) a_publicKey;
 		return (d.getY().equals(m_Y) && d.getParams().equals(m_params));
 	}
 
+	/**
+	 * @return the public key`s hash code
+	 * @see java.lang.Object#hashCode()
+	 */
+	public int hashCode()
+	{
+		if (m_hashValue == 0)
+		{
+			m_hashValue = (m_Y.longValue() + m_params.getG().longValue() +
+						   m_params.getP().longValue() + m_params.getQ().longValue());
+		}
+
+		return (int)m_hashValue;
+	}
 }

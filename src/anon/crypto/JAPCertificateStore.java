@@ -35,6 +35,9 @@ import org.w3c.dom.NodeList;
 import anon.util.XMLUtil;
 import anon.util.IXMLEncodable;
 import anon.util.XMLParseException;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 
 /**
  * Certificate store class. It contains the (root) certificates in a hashtable structure,
@@ -80,12 +83,12 @@ final public class JAPCertificateStore implements IXMLEncodable
 				Element elemX509Data = (Element) XMLUtil.getFirstChildByName(elemKeyInfo, "X509Data");
 				Element elemX509Cert = (Element) XMLUtil.getFirstChildByName(elemX509Data, "X509Certificate");
 				JAPCertificate cert = JAPCertificate.getInstance(elemX509Cert);
-				cert.setEnabled(XMLUtil.parseNodeBoolean(elemEnabled, false));
+				cert.setEnabled(XMLUtil.parseValue(elemEnabled, false));
 				addCertificate(cert);
 			}
 			catch (Exception a_e)
-		{
-				// adding a certificate does not need to be successful, but it doesn`t matter if it is not
+			{
+				// adding a certificate does not need to be successful
 			}
 		}
 	}
@@ -119,6 +122,7 @@ final public class JAPCertificateStore implements IXMLEncodable
 		try
 		{
 			m_HTCertStore.put(a_cert.getId(), a_cert);
+      LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Added / updated certificate '" + a_cert.getSubject().toString() + "' in the certificate store. Now there are " + Integer.toString(size()) + " certificates stored in this certificate store.");    
 			return true;
 		}
 		catch (Exception e)
