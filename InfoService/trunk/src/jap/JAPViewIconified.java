@@ -70,7 +70,7 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 	private Point m_startPoint;
 	private boolean m_bIsDragging = false;
 	private NumberFormat m_NumberFormat;
-	private static final Font m_fontDlg = new Font("Sans", Font.PLAIN, 9);
+	private static final Font m_fontDlg = new Font("Sans", Font.BOLD, 11);
 	private static final String STR_HIDDEN_WINDOW = Double.toString(Math.random());
 	private static final Frame m_frameParent = new Frame(STR_HIDDEN_WINDOW);
 	private long m_lTrafficWWW, m_lTrafficOther;
@@ -115,8 +115,8 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 		pTop.add(x2);
 		c.weightx = 1;
 		m_lTrafficOther = m_lTrafficWWW = 0;
-		m_labelBytes = new JLabel("00000000  ", JLabel.LEFT);
-		m_labelBytes.setForeground(Color.red);
+		m_labelBytes = new JLabel("000000000000  ", JLabel.LEFT);
+		//m_labelBytes.setForeground(Color.red);
 		m_labelBytes.setFont(m_fontDlg);
 		c.gridx = 1;
 		c.weightx = 0;
@@ -131,7 +131,7 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 		pTop.add(x3);
 
 		m_labelUsers = new JLabel("", JLabel.LEFT);
-		m_labelUsers.setForeground(Color.red);
+		//m_labelUsers.setForeground(Color.red);
 		m_labelUsers.setFont(m_fontDlg);
 		c.gridx = 1;
 		la.setConstraints(m_labelUsers, c);
@@ -144,7 +144,7 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 		la.setConstraints(x4, c);
 		pTop.add(x4);
 		m_labelTraffic = new JLabel("", JLabel.LEFT);
-		m_labelTraffic.setForeground(Color.red);
+		//m_labelTraffic.setForeground(Color.red);
 		m_labelTraffic.setFont(m_fontDlg);
 		c.gridx = 1;
 		la.setConstraints(m_labelTraffic, c);
@@ -156,20 +156,22 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 		bttn.setToolTipText(JAPMessages.getString("enlargeWindow"));
 		JAPUtil.setMnemonic(bttn, JAPMessages.getString("iconifyButtonMn"));
 
-		JLabel l1 = new JLabel(JAPUtil.loadImageIcon(JAPConstants.JAPEYEFN, true));
-		JPanel co = new JPanel();
-		co.add(pTop);
-		JPanel pBottom = new JPanel(new BorderLayout());
-		pBottom.setBackground(new Color(204, 204, 204));
-		pBottom.add(l1, BorderLayout.CENTER);
-		co.add(pBottom);
-		OverlayLayout lo = new OverlayLayout(co);
-		co.setLayout(lo);
+		/*JLabel l1 = new JLabel(JAPUtil.loadImageIcon(JAPConstants.JAPEYEFN, true));
+		   JPanel co = new JPanel();
+		   co.add(pTop);
+		   JPanel pBottom = new JPanel(new BorderLayout());
+		   pBottom.setBackground(new Color(204, 204, 204));
+		   pBottom.add(l1, BorderLayout.CENTER);
+		   co.add(pBottom);
+		   OverlayLayout lo = new OverlayLayout(co);
+		   co.setLayout(lo);
+		 */
 		JPanel p = new JPanel(new BorderLayout());
 		p.setBorder(new LineBorder(Color.black, 1));
-		p.add(co, BorderLayout.CENTER);
+		p.add(pTop, BorderLayout.CENTER);
 		JPanel p2 = new JPanel();
-		p2.setBackground(new Color(204, 204, 204));
+		//p2.setBackground(new Color(204, 204, 204));
+		p2.add(new JLabel(JAPUtil.loadImageIcon(JAPConstants.IICON16FN, true)));
 		p2.add(bttn);
 		p.add(p2, BorderLayout.SOUTH);
 		p.addMouseListener(this);

@@ -1514,7 +1514,7 @@ public final class JAPController implements ProxyListener, Observer
 		m_Model.setInfoServiceDisabled(b);
 	}
 
-	public void setPreCreateAnonRoutes(boolean b)
+	public static void setPreCreateAnonRoutes(boolean b)
 	{
 		m_Model.setPreCreateAnonRoutes(b);
 	}

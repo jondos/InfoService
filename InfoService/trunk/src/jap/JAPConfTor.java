@@ -50,6 +50,7 @@ import javax.swing.table.DefaultTableModel;
 import anon.tor.ordescription.InfoServiceORListFetcher;
 import anon.tor.ordescription.ORDescription;
 import anon.tor.ordescription.ORList;
+import javax.swing.JCheckBox;
 
 final class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 {
@@ -57,6 +58,7 @@ final class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 	JSlider m_sliderMaxPathLen, m_sliderMinPathLen, m_sliderConnectionsPerPath;
 	JButton m_bttnFetchRouters;
 	JLabel m_labelAvailableRouters;
+	JCheckBox m_cbPreCreateRoutes;
 	long m_lastUpdate;
 	public JAPConfTor()
 	{
@@ -186,11 +188,18 @@ final class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 		c3.weightx = 1;
 		c3.fill = GridBagConstraints.HORIZONTAL;
 		p.add(m_sliderConnectionsPerPath, c3);
+		m_cbPreCreateRoutes = new JCheckBox(JAPMessages.getString("ngConfAnonGeneralPreCreateRoutes"));
+		c3.gridy++;
+		c3.gridx = 0;
+		c3.gridwidth = 2;
+		p.add(m_cbPreCreateRoutes, c3);
+
 		p.setBorder(new TitledBorder(JAPMessages.getString("torBorderPreferences")));
 		c.gridy = 3;
 		c.weighty = 0;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		panelRoot.add(p, c);
+
 		m_lastUpdate = 0;
 	}
 
@@ -225,6 +234,7 @@ final class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 			10, 50, 100, 500, 1000};
 		JAPController.setTorMaxConnectionsPerRoute(ar[i - 1]);
 		JAPController.setTorRouteLen(m_sliderMinPathLen.getValue(), m_sliderMaxPathLen.getValue());
+		JAPController.setPreCreateAnonRoutes(m_cbPreCreateRoutes.isSelected());
 		return true;
 	}
 
@@ -267,6 +277,7 @@ final class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 		m_sliderConnectionsPerPath.setValue(i);
 		m_sliderMaxPathLen.setValue(JAPModel.getTorMaxRouteLen());
 		m_sliderMinPathLen.setValue(JAPModel.getTorMinRouteLen());
+		m_cbPreCreateRoutes.setSelected(JAPModel.isPreCreateAnonRoutesEnabled());
 	}
 
 	private void fetchRoutersAsync(final boolean bShowError)
@@ -308,5 +319,10 @@ final class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 		};
 		Thread t = new Thread(doIt);
 		t.start();
+	}
+
+	public void onResetToDefaultsPressed()
+	{
+		m_cbPreCreateRoutes.setSelected(JAPConstants.DEFAULT_TOR_PRECREATE_ROUTES);
 	}
 }

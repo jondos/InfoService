@@ -42,7 +42,7 @@ import anon.crypto.SignatureVerifier;
 
 final class JAPConfAnonGeneral extends AbstractJAPConfModule
 {
-	private JCheckBox m_cbDummyTraffic, m_cbCertCheckDisabled, m_cbPreCreateRoutes;
+	private JCheckBox m_cbDummyTraffic, m_cbCertCheckDisabled;
 	private JCheckBox m_cbAutoConnect;
 	private JCheckBox m_cbAutoReConnect;
 	private JSlider m_sliderDummyTrafficIntervall;
@@ -71,7 +71,6 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		m_sliderDummyTrafficIntervall.setEnabled(iTmp > -1);
 		//cert tab
 		m_cbCertCheckDisabled.setSelected(!SignatureVerifier.getInstance().isCheckSignatures());
-		m_cbPreCreateRoutes.setSelected(JAPModel.isPreCreateAnonRoutesEnabled());
 		m_cbAutoConnect.setSelected(JAPModel.getAutoConnect());
 		m_cbAutoReConnect.setSelected(JAPModel.getAutoReConnect());
 	}
@@ -82,7 +81,6 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 
 		//Cert seetings
 		SignatureVerifier.getInstance().setCheckSignatures(!m_cbCertCheckDisabled.isSelected());
-		m_Controller.setPreCreateAnonRoutes(m_cbPreCreateRoutes.isSelected());
 		if (m_cbDummyTraffic.isSelected())
 		{
 			m_Controller.setDummyTraffic(m_sliderDummyTrafficIntervall.getValue() * 1000);
@@ -146,10 +144,6 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		c.weighty = 0;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		panelRoot.add(m_cbCertCheckDisabled, c);
-		m_cbPreCreateRoutes = new JCheckBox(JAPMessages.getString("ngConfAnonGeneralPreCreateRoutes"));
-		c.gridy++;
-		c.weighty = 1;
-		panelRoot.add(m_cbPreCreateRoutes, c);
 	}
 
 	//defaults
@@ -158,7 +152,6 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		m_cbDummyTraffic.setSelected(false);
 		m_cbCertCheckDisabled.setSelected(false);
 		m_sliderDummyTrafficIntervall.setEnabled(false);
-		m_cbPreCreateRoutes.setSelected(true);
 		m_cbAutoConnect.setSelected(false);
 		m_cbAutoReConnect.setSelected(false);
 	}
