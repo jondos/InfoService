@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2000 - 2004, The JAP-Team
+ Copyright (c) 2000 - 2005, The JAP-Team
  All rights reserved.
  Redistribution and use in source and binary forms, with or without modification,
  are permitted provided that the following conditions are met:
@@ -25,68 +25,40 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package anon.infoservice.test;
+package jap;
 
-import anon.infoservice.AbstractDatabaseEntry;
-import anon.infoservice.IDistributable;
+import anon.util.AbstractMessage;
 
 /**
- * This class is a dummy implementation and for testing purposes only.
- * @author Rolf Wendolsky
+ * This is the message implementation used for JAPController messages. It is used from the
+ * instance of the JAPController class to notify their observers about some events or changes of
+ * settings. The message code identifies the reason of the notification.
  */
-public class DummyDatabaseEntry extends AbstractDatabaseEntry implements IDistributable
-{
-	private String m_id;
-	private long m_versionNumber;
-	private String m_postData;
-	private String m_postFile;
+public class JAPControllerMessage extends AbstractMessage {
 
-	public DummyDatabaseEntry()
-	{
-		super(Long.MAX_VALUE);
-		// do some initializations
-		m_id = "";
-		m_versionNumber = 0;
-	}
+  /**
+   * This message is sent after the automatic infoservice requests policy has been changed.
+   */
+  public static final int INFOSERVICE_POLICY_CHANGED = 1;
 
-	public byte[] getPostData()
-	{
-		return m_postData.getBytes();
-	}
 
-	public void setPostData(String a_postData)
-	{
-		m_postData = a_postData;
-	}
+  /**
+   * This creates a new JAPControllerMessage. The message data is set to null.
+   *
+   * @param a_messageCode The message code. See the constants in this class.
+   */
+  public JAPControllerMessage(int a_messageCode) {
+    super(a_messageCode);
+  }
 
-	public String getPostFile()
-	{
-		return m_postFile;
-	}
-
-	public void setPostFile(String a_postFile)
-	{
-		m_postFile = a_postFile;
-	}
-
-	public String getId()
-	{
-		return m_id;
-	}
-
-	public void setId(String a_id)
-	{
-		m_id = a_id;
-	}
-
-	public long getVersionNumber()
-	{
-		return m_versionNumber;
-	}
-
-	public void setVersionNumber(long a_versionNumber)
-	{
-		m_versionNumber = a_versionNumber;
-	}
+  /**
+   * This creates a new JAPControllerMessage.
+   *
+   * @param a_messageCode The message code. See the constants in this class.
+   * @param a_messageData The data to send with the message.
+   */
+  public JAPControllerMessage(int a_messageCode, Object a_messageData) {
+    super(a_messageCode, a_messageData);
+  }
 
 }

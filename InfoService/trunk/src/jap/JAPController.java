@@ -85,7 +85,7 @@ import proxy.ProxyListener;
 import update.JAPUpdateWizard;
 
 /* This is the Model of All. It's a Singelton!*/
-public final class JAPController implements ProxyListener, Observer
+public final class JAPController extends Observable implements ProxyListener, Observer
 {
 	/**
 	 * Stores all MixCascades we know (information comes from infoservice or was entered by a user).
@@ -156,7 +156,6 @@ public final class JAPController implements ProxyListener, Observer
 												 JAPConstants.defaultAnonID,
 												 JAPConstants.defaultAnonHost,
 												 JAPConstants.defaultAnonPortNumber);
-			m_currentMixCascade.setIsUserDefined(false);
 		}
 		catch (Exception e)
 		{
@@ -165,11 +164,8 @@ public final class JAPController implements ProxyListener, Observer
 		/* set a default infoservice */
 		try
 		{
-			InfoServiceDBEntry defaultInfoService = new InfoServiceDBEntry(JAPConstants.
-				defaultInfoServiceName,
-				new ListenerInterface(JAPConstants.defaultInfoServiceHostName,
-									  JAPConstants.defaultInfoServicePortNumber).toVector(), true);
-			InfoServiceHolder.getInstance().setPreferedInfoService(defaultInfoService);
+			InfoServiceDBEntry defaultInfoService = new InfoServiceDBEntry(JAPConstants.defaultInfoServiceName, new ListenerInterface(JAPConstants.defaultInfoServiceHostName, JAPConstants.defaultInfoServicePortNumber).toVector(), false, true);
+			InfoServiceHolder.getInstance().setPreferredInfoService(defaultInfoService);
 		}
 		catch (Exception e)
 		{
@@ -292,7 +288,7 @@ public final class JAPController implements ProxyListener, Observer
 	 *
 	 * The configuration is a XML-File with the following structure:
 	 *  <JAP
-	 *    version="0.18"                     // version of the xml struct (DTD) used for saving the configuration
+	 *    version="0.19"                     // version of the xml struct (DTD) used for saving the configuration
 	 *    portNumber=""                     // Listener-Portnumber
 	 *    portNumberSocks=""                // Listener-Portnumber for SOCKS
 	 *    supportSocks=""                   // Will we support SOCKS ?
@@ -303,10 +299,7 @@ public final class JAPController implements ProxyListener, Observer
 	 *    proxyPortNumber="..."             // port number of the Proxy
 	 *    proxyAuthorization="true"/"false" // Need authorization to acces the proxy ?
 	 *    porxyAuthUserID="..."             // UserId for the Proxy if Auth is neccessary
-	 *    infoServiceHostName="..."         // hostname of the infoservice (only config version < 0.3)
-	 *    infoServicePortnumber=".."        // the portnumber of the info service (only config version < 0.3)
 	 *    infoServiceDisabled="true/false"  // disable use of InfoService
-	 *    infoServiceChange="true/false"    // automatic change of infoservice after failure (since config version 0.5)
 	 *    infoServiceTimeout="..."          // timeout (sec) for infoservice and update communication (since config version 0.5)
 	 *    preCreateAnonRoutes="true/false"  // Should we setup Anon Routes in the "Background" ? (sinc 0.13)
 	 *    autoConnect="true"/"false"    // should we start the anon service immedialy after programm launch ?
@@ -369,13 +362,16 @@ public final class JAPController implements ProxyListener, Observer
 	 *     ...
 	 *   </TrustedCertificates>
 	 * </SignatureVerification>
-	 * <InfoServices>                                           // info about all known infoservices (since config version 0.3)
+	 * <InfoServiceManagement>                                    // since config version 0.19
+	 *   <InfoServices>                                           // info about all known infoservices
 	 *   <InfoService id="...">...</InfoService>                // the same format as from infoservice, without signature, if expired, it is removed from infoservice list
 	 *   <InfoService id="...">...</InfoService>
 	 * </InfoServices>
-	 * <PreferedInfoService>                                    // info about the prefered infoservice, only one infoservice is supported here (since config version 0.3)
+	 *   <PreferredInfoService>                                   // info about the preferred infoservice, only one infoservice is supported here
 	 *   <InfoService id="...">...</InfoService>                // the same format as from infoservice, without signature, expire time does not matter
 	 * </PreferedInfoService>
+	 *   <ChangeInfoServices>true<ChangeInfoServices>             // whether it is tried to change the infoservice automatically after failure
+	 * </InfoServiceManagement>
 	 * <Tor>    //  Tor related seetings (since Version 0.6)
 	 * 	 <MaxConnectionsPerRoute>...</MaxConnectionsPerRoute>(since Vresion 0.8) //How many connections are allowed before a new circuit is created
 	 * 	 <RouteLen min=" " max=" "/>(since Vresion 0.9) //How long should a route be
@@ -526,9 +522,6 @@ public final class JAPController implements ProxyListener, Observer
 				boolean b = XMLUtil.parseValue(n.getNamedItem(JAPConstants.CONFIG_INFOSERVICE_DISABLED),
 											   JAPModel.isInfoServiceDisabled());
 				setInfoServiceDisabled(b);
-				b = XMLUtil.parseValue(n.getNamedItem(JAPConstants.CONFIG_INFOSERVICE_CHANGE),
-									   InfoServiceHolder.getInstance().isChangeInfoServices());
-				InfoServiceHolder.getInstance().setChangeInfoServices(b);
 				int i = XMLUtil.parseValue(n.getNamedItem(JAPConstants.CONFIG_INFOSERVICE_TIMEOUT), -1);
 				try
 				{
@@ -575,8 +568,6 @@ public final class JAPController implements ProxyListener, Observer
 				try
 				{
 					defaultMixCascade = new MixCascade( (Element) mixCascadeNode);
-					defaultMixCascade.setIsUserDefined(
-						XMLUtil.parseAttribute(mixCascadeNode, JAPConstants.CONFIG_USER_DEFINED, false));
 				}
 				catch (Exception e)
 				{
@@ -597,8 +588,6 @@ public final class JAPController implements ProxyListener, Observer
 							try
 							{
 								MixCascade cascade = new MixCascade( (Element) nodeCascade);
-								cascade.setIsUserDefined(
-									XMLUtil.parseAttribute(nodeCascade, JAPConstants.CONFIG_USER_DEFINED, false));
 								m_vectorMixCascadeDatabase.addElement(cascade);
 							}
 							catch (Exception e)
@@ -779,37 +768,23 @@ public final class JAPController implements ProxyListener, Observer
 					LogHolder.log(LogLevel.ERR, LogType.MISC, e);
 				}
 
-				/* loading infoservice settings */
-				/* infoservice list */
-				NodeList infoServicesNodes = root.getElementsByTagName(JAPConstants.CONFIG_INFOSERVICES);
-				if (infoServicesNodes.getLength() > 0)
-				{
-					Element infoServicesNode = (Element) (infoServicesNodes.item(0));
-					InfoServiceDBEntry.loadFromXml(
-						infoServicesNode, Database.getInstance(InfoServiceDBEntry.class));
-				}
-				/* prefered infoservice */
-				NodeList preferedInfoServiceNodes = root.getElementsByTagName(JAPConstants.
-					CONFIG_PREFERED_INFOSERVICE);
-				if (preferedInfoServiceNodes.getLength() > 0)
-				{
-					Element preferedInfoServiceNode = (Element) (preferedInfoServiceNodes.item(0));
-					NodeList infoServiceNodes = preferedInfoServiceNode.getElementsByTagName(JAPConstants.
-						CONFIG_INFOSERVICE);
-					if (infoServiceNodes.getLength() > 0)
-					{
-						Element infoServiceNode = (Element) (infoServiceNodes.item(0));
+				/* load the infoservice management settings */
 						try
 						{
-							InfoServiceDBEntry preferedInfoService = new InfoServiceDBEntry(infoServiceNode);
-							InfoServiceHolder.getInstance().setPreferedInfoService(preferedInfoService);
+					Element infoserviceManagementNode = (Element) (XMLUtil.getFirstChildByName(root,
+						InfoServiceHolder.getXmlSettingsRootNodeName()));
+					if (infoserviceManagementNode != null)
+					{
+						InfoServiceHolder.getInstance().loadSettingsFromXml(infoserviceManagementNode);
 						}
-						catch (Exception e)
+					else
 						{
-							LogHolder.log(LogLevel.INFO, LogType.MISC,
-										  "JAPController: loadConfigFile: Error loading prefered InfoService.");
+						throw (new Exception("JAPController: loadConfigFile: No InfoServiceManagement node found. Using default settings for infoservice management in InfoServiceHolder."));
 						}
 					}
+				catch (Exception e)
+				{
+					LogHolder.log(LogLevel.ERR, LogType.MISC, e);
 				}
 
 				/*loading Tor settings*/
@@ -1119,7 +1094,7 @@ public final class JAPController implements ProxyListener, Observer
 			Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
 			Element e = doc.createElement("JAP");
 			doc.appendChild(e);
-			XMLUtil.setAttribute(e, JAPConstants.CONFIG_VERSION, "0.18");
+			XMLUtil.setAttribute(e, JAPConstants.CONFIG_VERSION, "0.19");
 			//
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_PORT_NUMBER,
 								 Integer.toString(JAPModel.getHttpListenerPortNumber()));
@@ -1144,8 +1119,6 @@ public final class JAPController implements ProxyListener, Observer
 			}
 			/* infoservice configuration options */
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_INFOSERVICE_DISABLED, JAPModel.isInfoServiceDisabled());
-			XMLUtil.setAttribute(e, JAPConstants.CONFIG_INFOSERVICE_CHANGE,
-								 InfoServiceHolder.getInstance().isChangeInfoServices());
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_INFOSERVICE_TIMEOUT,
 								 Integer.toString(HTTPConnectionFactory.getInstance().getTimeout()));
 
@@ -1175,7 +1148,6 @@ public final class JAPController implements ProxyListener, Observer
 				if (entry.isUserDefined())
 				{
 					Element elem = entry.toXmlNode(doc);
-					XMLUtil.setAttribute(elem, JAPConstants.CONFIG_USER_DEFINED, true);
 					elemCascades.appendChild(elem);
 				}
 			}
@@ -1184,10 +1156,6 @@ public final class JAPController implements ProxyListener, Observer
 			if (defaultMixCascade != null)
 			{
 				Element elem = defaultMixCascade.toXmlNode(doc);
-				if (defaultMixCascade.isUserDefined())
-				{
-					XMLUtil.setAttribute(elem, JAPConstants.CONFIG_USER_DEFINED, true);
-				}
 				e.appendChild(elem);
 			}
 
@@ -1258,16 +1226,7 @@ public final class JAPController implements ProxyListener, Observer
 			e.appendChild(SignatureVerifier.getInstance().getSettingsAsXml(doc));
 
 			/* adding infoservice settings */
-			/* infoservice list */
-			e.appendChild(InfoServiceDBEntry.toXmlElement(doc, Database.getInstance(InfoServiceDBEntry.class)));
-			/* prefered infoservice */
-			InfoServiceDBEntry preferedInfoService = InfoServiceHolder.getInstance().getPreferedInfoService();
-			Element preferedInfoServiceNode = doc.createElement(JAPConstants.CONFIG_PREFERED_INFOSERVICE);
-			if (preferedInfoService != null)
-			{
-				preferedInfoServiceNode.appendChild(preferedInfoService.toXmlElement(doc));
-			}
-			e.appendChild(preferedInfoServiceNode);
+			e.appendChild(InfoServiceHolder.getInstance().getSettingsAsXml(doc));
 
 			/** add tor*/
 			Element elemTor = doc.createElement(JAPConstants.CONFIG_TOR);
@@ -1509,9 +1468,13 @@ public final class JAPController implements ProxyListener, Observer
 		return null;
 	}
 
-	public static void setInfoServiceDisabled(boolean b)
+	public void setInfoServiceDisabled(boolean b)
 	{
 		m_Model.setInfoServiceDisabled(b);
+		synchronized (this) {
+		  setChanged();
+		  notifyObservers(new JAPControllerMessage(JAPControllerMessage.INFOSERVICE_POLICY_CHANGED));
+		}
 	}
 
 	public static void setPreCreateAnonRoutes(boolean b)

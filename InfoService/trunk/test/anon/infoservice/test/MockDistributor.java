@@ -31,14 +31,14 @@ import java.util.Vector;
 import junit.framework.Assert;
 import junitx.framework.extension.IMock;
 
-import anon.infoservice.AbstractDistributor;
+import anon.infoservice.IDistributor;
 import anon.infoservice.IDistributable;
 
 /**
  * This class is a mock implementation and for testing purposes only.
  * @author Rolf Wendolsky
  */
-public class MockDistributor extends AbstractDistributor implements IMock
+public class MockDistributor implements IDistributor, IMock
 {
 	private Vector m_actualJobs;
 	private Vector m_expectedJobs;
