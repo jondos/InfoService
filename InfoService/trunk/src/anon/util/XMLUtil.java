@@ -63,6 +63,70 @@ public class XMLUtil
 	private static DocumentBuilder ms_DocumentBuilder;
 
 	/**
+	 * Throws an XMLParseException if the given XML node is null.
+	 * @param a_node an XML node
+	 * @throws XMLParseException if the given XML node is null
+	 */
+	public static void assertNotNull(Node a_node)
+		throws XMLParseException
+	{
+		if (a_node == null)
+		{
+			throw new XMLParseException(XMLParseException.NODE_NULL_TAG);
+		}
+	}
+
+	/**
+	 * Throws an XMLParseException if the given XML node has not the expected name or if it is null.
+	 * If the given node is an XML document, the document element is returned. Otherwise, the given
+	 * node is returned.
+	 * @param a_node an XML node
+	 * @param a_strExpectedName the node`s expected name
+	 * @return If the given node is an XML document, the document element is returned. Otherwise,
+	 * the given node is returned.
+	 * @throws XMLParseException if the given node has not the expected name or if it is null
+	 */
+	public static Node assertNodeName(Node a_node, String a_strExpectedName)
+		throws XMLParseException
+	{
+		if (a_node == null)
+		{
+			throw new XMLParseException(XMLParseException.NODE_NULL_TAG,
+										"Expected node '" + a_strExpectedName
+										+ "' is NULL!");
+		}
+
+		a_node = getDocumentElement(a_node);
+
+		if (!a_node.getNodeName().equals(a_strExpectedName))
+		{
+			throw new XMLParseException(a_node.getNodeName(),
+										"Node '" + a_node.getNodeName()
+										+ "' has not the expected name: '"
+										+ a_strExpectedName + "'");
+		}
+
+		return a_node;
+	}
+
+	/**
+	 * If the current node is of the type XML document, this method returns the document
+	 * element. Otherwise, the node is returned unchanged.
+	 * @param a_node an XML node
+	 * @return if the current node is of the type XML document, this method returns the document
+	 * element; otherwise, the node is returned unchanged
+	 */
+	public static Node getDocumentElement(Node a_node)
+	{
+		if (a_node instanceof Document)
+		{
+			a_node = ( (Document) a_node).getDocumentElement();
+		}
+
+		return a_node;
+	}
+
+	/**
 	 *
 	 * @param n Node
 	 * @param defaultValue int
@@ -136,17 +200,22 @@ public class XMLUtil
 
 	/**
 	 * Returns the value of the specified attribute of an XML element as String.
-	 * @param a_element an XML element
+	 * @param a_node an XML node
 	 * @param a_attribute an attribute`s name
 	 * @param a_default the default value
 	 * @return the value of the specified attribute as String if the element has this attribute;
 	 *         otherwise, the default value is returned
 	 */
-	public static String parseAttribute(Element a_element, String a_attribute, String a_default)
+	public static String parseAttribute(Node a_node, String a_attribute, String a_default)
 	{
 		try
 		{
-			Attr at = a_element.getAttributeNode(a_attribute);
+			if (a_node instanceof Document)
+			{
+				a_node = ((Document)a_node).getDocumentElement();
+			}
+
+			Attr at = ((Element)a_node).getAttributeNode(a_attribute);
 			return at.getValue().trim();
 		}
 		catch (Exception a_e)
@@ -157,20 +226,19 @@ public class XMLUtil
 
 	/**
 	 * Returns the value of the specified attribute of an XML element as boolean.
-	 * @param a_element an XML element
+	 * @param a_node an XML node
 	 * @param a_attribute an attribute`s name
 	 * @param a_default the default value
 	 * @return the value of the specified attribute as boolean if the element has this attribute;
 	 *         otherwise, the default value is returned
 	 */
-	public static boolean parseAttribute(Element a_element, String a_attribute, boolean a_default)
+	public static boolean parseAttribute(Node a_node, String a_attribute, boolean a_default)
 	{
 		boolean b = a_default;
 
 		try
 		{
-			Attr at = a_element.getAttributeNode(a_attribute);
-			String tmpStr = at.getValue().trim();
+			String tmpStr = parseAttribute(a_node, a_attribute, null);
 			if (tmpStr.equalsIgnoreCase("true"))
 			{
 				b = true;
@@ -189,20 +257,19 @@ public class XMLUtil
 
 	/**
 	 * Returns the value of the specified attribute of an XML element as int.
-	 * @param a_element an XML element
+	 * @param a_node an XML node
 	 * @param a_attribute an attribute`s name
 	 * @param a_default the default value
 	 * @return the value of the specified attribute as int if the element has this attribute;
 	 *         otherwise, the default value is returned
 	 */
-	public static int parseAttribute(Element a_element, String a_attribute, int a_default)
+	public static int parseAttribute(Node a_node, String a_attribute, int a_default)
 	{
 		int i = a_default;
 
 		try
 		{
-			Attr at = a_element.getAttributeNode(a_attribute);
-			i = Integer.parseInt(at.getValue());
+			i = Integer.parseInt(parseAttribute(a_node, a_attribute, null));
 		}
 		catch (Exception ex)
 		{
