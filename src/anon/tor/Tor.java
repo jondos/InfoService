@@ -186,7 +186,6 @@ public class Tor implements Runnable, AnonService
 	 */
 	protected synchronized Circuit getCircuitForDestination(String addr, int port)
 	{
-		String key = addr + ":" + port;
 		if (!m_bIsStarted)
 		{
 			return null;
@@ -202,14 +201,39 @@ public class Tor implements Runnable, AnonService
 					return null;
 				}
 			}
-			for (int i = 0; i < 3; i++) //Try to get/create a circuit 3 times...
+			String key = addr + ":" + port;
+			//try to find an already existing circuit...
+			if (m_CircuitForDestination.containsKey(key))
+			{ //directly
+				int circnr = ( (Integer) m_CircuitForDestination.get(key)).intValue();
+				if (m_activeCircuits[circnr] != null &&
+					!m_activeCircuits[circnr].isShutdown() &&
+					m_activeCircuits[circnr].isAllowed(addr, port))
+				{
+					return m_activeCircuits[circnr];
+				}
+			}
+			//by linear search
+			for (int nr = 0; nr < m_MaxNrOfActiveCircuits; nr++)
+			{
+				if (m_activeCircuits[nr] != null &&
+					!m_activeCircuits[nr].isShutdown() &&
+					m_activeCircuits[nr].isAllowed(addr, port))
+				{
+					m_CircuitForDestination.put(key, new Integer(nr));
+					if (m_KeysForCircuit[nr] == null)
+					{
+						m_KeysForCircuit[nr] = new Vector();
+					}
+					m_KeysForCircuit[nr].addElement(key);
+					return m_activeCircuits[nr];
+				}
+			}
+
+			for (int i = 0; i < 3; i++) //Try to create a new circuit 3 times...
 			{
 				int circstart = m_rand.nextInt(m_MaxNrOfActiveCircuits);
 				//check if a reachable destination for this circuit exists
-				if (m_CircuitForDestination.containsKey(key))
-				{
-					circstart = ( (Integer) m_CircuitForDestination.get(key)).intValue();
-				}
 				int j = 0;
 				int circ = 0;
 				while (j < m_MaxNrOfActiveCircuits) //starting with a random chossen circuit we try all currently availabe circuits...
@@ -442,11 +466,22 @@ public class Tor implements Runnable, AnonService
 	{
 		int errTry = 0;
 		int aktCircuit = 0;
-		while (aktCircuit < m_MaxNrOfActiveCircuits && !m_closeCreator)
+		while (aktCircuit < m_MaxNrOfActiveCircuits && !m_closeCreator&& errTry < 4)
 		{
+			//We do not try to be as fast as possible...
+			try
+			{
+				Thread.sleep(10000);
+			}
+			catch (InterruptedException ex)
+			{
+			}
 			synchronized (m_oActiveCircuitSync)
 			{
 				int index = -1;
+				//find the nex free index --> note that other threads may create new circuits as well
+				//so we have to do this check first
+				//(As we are synchronized on m_oActiveCircuitSync noew other thread can interferr now!
 				for (int i = 0; i < m_MaxNrOfActiveCircuits; i++)
 				{
 					if (m_activeCircuits[i] == null)
@@ -456,38 +491,24 @@ public class Tor implements Runnable, AnonService
 					}
 				}
 				if (index == -1)
-				{
+				{ //we do not found any empty slot -> so we are done...
 					break;
 				}
 
+				//just create a new circuit
 				Circuit circ = createNewCircuit("141.76.46.90", 80);
+				if (circ == null)
 				{
-					//Insert it in the next empty slot....
-					if (circ == null)
-					{
-						errTry++;
-						if (errTry > 4)
-						{
-							break;
-						}
-						continue;
-					}
+					errTry++; //if we get overall more than 4 errors creating circuits we stop it!
+					break;
 				}
+				//Insert it in the next empty slot....
 				m_activeCircuits[index] = circ;
 			}
 			errTry = 0;
 			aktCircuit++;
-			//	synchronized (m_oCircuitCreatorSync)
-			//{
-			//m_oCircuitCreatorSync.notifyAll();
-			//	}
-
 		} //while
 		m_circuitCreator = null;
-		//synchronized (m_oCircuitCreatorSync)
-		//{
-		//m_oCircuitCreatorSync.notify();
-		//}
 	}
 
 	/**

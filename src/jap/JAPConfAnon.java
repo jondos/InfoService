@@ -903,6 +903,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 	protected void onRootPanelShown()
 	{
+		//Register help context
+		JAPController.getInstance().getHelpContext().setContext("anon");
 		if (!m_infoService.isFilled())
 		{
 			m_reloadCascadesButton.setEnabled(false);

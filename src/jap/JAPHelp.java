@@ -132,11 +132,11 @@ final class JAPHelp extends JDialog implements ActionListener, PropertyChangeLis
 		m_backButton.setBorder(new EmptyBorder(0, 0, 0, 0));
 		m_backButton.setFocusPainted(false);
 
-	m_forwardButton = new JButton(JAPUtil.loadImageIcon(JAPConstants.IMAGE_NEXT, true));
-	m_forwardButton.setBackground(Color.gray); //this together with the next lines sems to be
-	m_forwardButton.setOpaque(false); //stupid but is necessary for JDK 1.5 on Windows XP (and maybe others)
-	m_forwardButton.setBorder(new EmptyBorder(0, 0, 0, 0));
-	m_forwardButton.setFocusPainted(false);
+		m_forwardButton = new JButton(JAPUtil.loadImageIcon(JAPConstants.IMAGE_NEXT, true));
+		m_forwardButton.setBackground(Color.gray); //this together with the next lines sems to be
+		m_forwardButton.setOpaque(false); //stupid but is necessary for JDK 1.5 on Windows XP (and maybe others)
+		m_forwardButton.setBorder(new EmptyBorder(0, 0, 0, 0));
+		m_forwardButton.setFocusPainted(false);
 		m_homeButton = new JButton(JAPUtil.loadImageIcon(JAPConstants.IMAGE_HOME, true));
 		m_homeButton.setBackground(Color.gray); //this together with the next lines sems to be
 		m_homeButton.setOpaque(false); //stupid but is necessary for JDK 1.5 on Windows XP (and maybe others)
@@ -209,8 +209,9 @@ final class JAPHelp extends JDialog implements ActionListener, PropertyChangeLis
 		{
 			helpPath = JAPMessages.getString("helpPath" + String.valueOf(language.getSelectedIndex() + 1));
 			langShort = JAPMessages.getString("langshort" + String.valueOf(language.getSelectedIndex() + 1));
-			m_htmlpaneTheHelpPane.load(helpPath + JAPController.getInstance().getHelpContext().getContext() + "_" + langShort +
-					  ".html");
+			m_htmlpaneTheHelpPane.load(helpPath + JAPController.getInstance().getHelpContext().getContext() +
+									   "_" + langShort +
+									   ".html");
 		}
 		else if (e.getSource() == m_closeButton)
 		{
@@ -387,7 +388,10 @@ final class HtmlPane extends JScrollPane implements HyperlinkListener
 	 */
 	private void addToHistory(URL a_url)
 	{
+		if (m_historyPosition == -1 || !a_url.getPath().equalsIgnoreCase( ( (URL) m_history.elementAt(m_historyPosition)).getPath()))
+		{
 		m_history.insertElementAt(a_url, ++m_historyPosition);
+	}
 	}
 
 	private URL getUrlFor(String fn)
