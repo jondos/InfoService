@@ -190,7 +190,8 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 						public void windowIconified(WindowEvent e)
 						{
 							setTitle(Double.toString(Math.random())); //ensure that we have an uinque title
-							JAPDll.hideWindowInTaskbar(getTitle());
+							if(!JAPDll.hideWindowInTaskbar(getTitle()))
+								setTitle(m_Title);
 							m_bIsIconified=true;
 							updateValues();
 						}
