@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2000, The JAP-Team
+ Copyright (c) 2000 - 2005, The JAP-Team
  All rights reserved.
  Redistribution and use in source and binary forms, with or without modification,
  are permitted provided that the following conditions are met:
@@ -29,153 +29,35 @@ package anon.server.impl;
 
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.net.SocketException;
 
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
-import HTTPClient.AuthorizationInfo;
-import HTTPClient.NVPair;
-import HTTPClient.SocksClient;
-import anon.infoservice.ImmutableProxyInterface;
-import anon.infoservice.ProxyInterface;
-import anon.util.SocketFactory;
-
-final public class ProxyConnection
-{
-	private final static int FIREWALL_METHOD_HTTP_1_1 = 11;
-	private final static int FIREWALL_METHOD_HTTP_1_0 = 10;
-	private static final String CRLF = "\r\n";
+final public class ProxyConnection {
 
 	private Socket m_ioSocket;
 	private InputStream m_In;
 	private OutputStream m_Out;
 
-	private ImmutableProxyInterface m_proxyInterface;
 
-	/** @todo use HTTPConnectionFactory */
-	public ProxyConnection(ImmutableProxyInterface a_proxyInterface,
-						   String host, int port) throws Exception
-	{
-		if (a_proxyInterface == null)
-		{ //plain Socket; no Proxy...
-			m_ioSocket = SocketFactory.createSocket(host, port, 0);
+  public ProxyConnection(Socket a_connectedSocket) throws Exception {
+    m_ioSocket = a_connectedSocket;
+    try {
 			m_ioSocket.setSoTimeout(0);
-			m_In = m_ioSocket.getInputStream();
-			m_Out = m_ioSocket.getOutputStream();
-			return;
-		}
-		m_proxyInterface = a_proxyInterface;
-		LogHolder.log(LogLevel.DEBUG, LogType.NET,
-					  "ProxyConnection: Try to connect via Firewall (" +
-					  a_proxyInterface.getHost() + ":" + a_proxyInterface.getPort() +
-					  ") to Server (" + host + ":" + port + ")");
-		if (m_proxyInterface.getProtocol()==ProxyInterface.PROTOCOL_TYPE_HTTP ||
-			m_proxyInterface.getProtocol()==ProxyInterface.PROTOCOL_TYPE_HTTPS)
-		{ //HTTP/HTTPS Proxy
-			m_ioSocket = SocketFactory.createSocket(a_proxyInterface.getHost(), a_proxyInterface.getPort(), 0);
-			m_In = m_ioSocket.getInputStream();
-			m_Out = m_ioSocket.getOutputStream();
-			m_ioSocket.setSoTimeout(60000);
-			OutputStreamWriter writer = new OutputStreamWriter(m_Out);
-			try
-			{
-				sendHTTPProxyCommands(FIREWALL_METHOD_HTTP_1_1, writer, host, port, a_proxyInterface);
 			}
-			catch (Exception e1)
-			{
-				sendHTTPProxyCommands(FIREWALL_METHOD_HTTP_1_0, writer, host, port, a_proxyInterface);
+    catch (Exception e) {
+      /* do nothing */
 			}
-			String tmp = readLine(m_In);
-			LogHolder.log(LogLevel.DEBUG, LogType.NET, "ProxyConnection: Firewall response is: " + tmp);
-			if (tmp.indexOf("200") != -1)
-			{
-				while (! (tmp = readLine(m_In)).equals(""))
-				{
-					LogHolder.log(LogLevel.DEBUG, LogType.NET,
-								  "ProxyConnection: Firewall response is: " + tmp);
-				}
-			}
-			else
-			{
-				throw new Exception("HTTP-Proxy response: " + tmp);
-			}
-			m_ioSocket.setSoTimeout(0);
-			return;
-		}
-		if (m_proxyInterface.getProtocol()==ProxyInterface.PROTOCOL_TYPE_SOCKS)
-		{
-			NVPair[] up = new NVPair[1];
-			up[0] = new NVPair(a_proxyInterface.getAuthenticationUserID(),
-							   a_proxyInterface.getAuthenticationPassword());
-			AuthorizationInfo.addAuthorization(new AuthorizationInfo(a_proxyInterface.getHost(),
-				a_proxyInterface.getPort(),
-				"SOCKS5", "USER/PASS", up, null));
-			SocksClient socksClient = new SocksClient(m_proxyInterface.getHost(),
-				m_proxyInterface.getPort());
-			m_ioSocket = socksClient.getSocket(host, port);
-			m_ioSocket.setSoTimeout(0);
+    try {
 			m_In = m_ioSocket.getInputStream();
 			m_Out = m_ioSocket.getOutputStream();
 		}
+    catch (Exception e) {
+      /* close everything */
+      close();
+      throw (e);
+	}
 	}
 
-	/**
-	 * Returns an immutable proxy interface.
-	 * @return IConstProxyInterface
-	 */
-	public ImmutableProxyInterface getProxyInterface()
-	{
-		return m_proxyInterface;
-	}
-
-	private void doSOCKS(String host, int port) throws Exception
-	{
-		byte[] buff = new byte[10 + host.length()];
-		buff[0] = 5; //SOCKS Version 5
-		buff[1] = 1; //NO Auth
-		buff[2] = 0;
-
-		buff[3] = 5;
-		buff[4] = 1; //CMD=Connect
-		buff[5] = 0; //RSV
-		buff[6] = 3; //Addr=Host-String
-		buff[7] = (byte) host.length();
-
-		System.arraycopy(host.getBytes(), 0, buff, 8, host.length());
-		buff[8 + host.length()] = (byte) (port >> 8);
-		buff[9 + host.length()] = (byte) (port & 0xFF);
-		m_Out.write(buff, 0, 10 + host.length());
-		m_Out.flush();
-		//read OK for Methods...
-		int ret = m_In.read(); //Version=5
-		ret = m_In.read(); //00=No Auth
-		//read ok for connect
-		ret = m_In.read(); //Version=5
-		ret = m_In.read(); //SUCCED=0
-		ret = m_In.read(); //reserved==0;
-		int adrType = m_In.read();
-		int len = 0;
-		switch (adrType)
-		{
-			case 1:
-				len = 4; //IPv4
-				break;
-			case 3:
-				len = m_In.read(); //domainname len
-				break;
-			default: //unknown
-				throw new Exception("Socks: unknow adr type in reply!");
-		}
-		len += 2; //port
-		while (len > 0)
-		{
-			len -= m_In.read(buff, 0, len);
-		}
-
-	}
 
 	public Socket getSocket()
 	{
@@ -219,57 +101,4 @@ final public class ProxyConnection
 		{}
 	}
 
-	/**
-	 *
-	  Write stuff for connecting over proxy/firewall
-	  // should look like this example
-	  //   CONNECT www.inf.tu-dresden.de:443 HTTP/1.0
-	  //   Connection: Keep-Alive
-	  //   Proxy-Connection: Keep-Alive
-	  //differs a little bit for HTTP/1.0 and HTTP/1.1
-	 @todo use HTTPConnectionFactory to create a connection!!
-	 */
-	private void sendHTTPProxyCommands(int httpMethod, OutputStreamWriter out, String host, int port,
-									   ImmutableProxyInterface a_proxyInterface) throws Exception
-	{
-		if (httpMethod == FIREWALL_METHOD_HTTP_1_1)
-		{
-			out.write("CONNECT " + host + ":" + Integer.toString(port) + " HTTP/1.1" + CRLF);
-		}
-		else
-		{
-			out.write("CONNECT " + host + ":" + Integer.toString(port) + " HTTP/1.0" + CRLF);
-		}
-		if (a_proxyInterface.isAuthenticationUsed()) // proxy authentication required...
-		{
-			out.write(a_proxyInterface.getProxyAuthorizationHeaderAsString());
-		}
-		out.write("Connection: Keep-Alive" + CRLF);
-		out.write("Keep-Alive: max=20, timeout=100" + CRLF);
-		out.write("Proxy-Connection: Keep-Alive" + CRLF);
-		out.write(CRLF);
-		out.flush();
-	}
-
-	private String readLine(InputStream inputStream) throws Exception
-	{
-		StringBuffer strBuff = new StringBuffer(256);
-		try
-		{
-			int byteRead = inputStream.read();
-			while (byteRead != 10 && byteRead != -1)
-			{
-				if (byteRead != 13)
-				{
-					strBuff.append( (char) byteRead);
-				}
-				byteRead = inputStream.read();
-			}
-		}
-		catch (Exception e)
-		{
-			throw e;
-		}
-		return strBuff.toString();
-	}
 }

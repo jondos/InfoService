@@ -64,7 +64,7 @@ public class HTTPConnectionFactory
 	/**
 	 * The listener for the proxy used.
 	 */
-	private ProxyInterface m_proxyInterface;
+  private ImmutableProxyInterface m_proxyInterface;
 
 	/**
 	 * This creates a new instance of HTTPConnectionFactory. This is only used for setting some
@@ -110,7 +110,7 @@ public class HTTPConnectionFactory
 	 * @param a_proxyInterface the listener interface of the proxy server; if it is set to null, no
 	 *                        proxy is used
 	 */
-	public synchronized void setNewProxySettings(ProxyInterface a_proxyInterface)
+  public synchronized void setNewProxySettings(ImmutableProxyInterface a_proxyInterface)
 	{
 		m_proxyInterface = a_proxyInterface;
 
@@ -208,6 +208,29 @@ public class HTTPConnectionFactory
 	}
 
 	/**
+   * This method creates a new instance of HTTPConnection using the specified proxy settings
+   * (ignoring the default settings).
+   *
+   * @param target The ListenerInterface of the connection target.
+   * @param a_proxySettings The proxy settings to use for this single connection. If the proxy
+   *                        settings are null, no proxy is used.
+   *
+   * @return A new instance of HTTPConnection with a connection to the specified target and the
+   *         current proxy settings.
+   */
+  public synchronized HTTPConnection createHTTPConnection(ListenerInterface target, ImmutableProxyInterface a_proxySettings)
+  {
+    /* tricky: change the global proxy settings, create the connection and restore the original
+     * proxy settings -> no problem because all methods are synchronized
+     */
+    ImmutableProxyInterface oldProxySettings = m_proxyInterface;
+    setNewProxySettings(a_proxySettings);
+    HTTPConnection createdConnection = createHTTPConnection(target);
+    setNewProxySettings(oldProxySettings);
+    return createdConnection;
+  }
+
+  /**
 	 * An internal helper function to set the header information for the HTTP connection.
 	 *
 	 * @param connection The connection where the new headers are set.
