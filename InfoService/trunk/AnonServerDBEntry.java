@@ -44,26 +44,32 @@ public final class AnonServerDBEntry
 			{
 			}
 			
-		public AnonServerDBEntry (String n,String h, int p)
+		public AnonServerDBEntry (String h, int p)
 			{
+				name = h+":"+Integer.toString(p);
 				host = h;
 				port = p;
-				name=n;
-				port2 = -1;
+			}
+			
+		public AnonServerDBEntry (String n,String h, int p)
+			{
+				name = n;
+				host = h;
+				port = p;
 			}
 			
 		public AnonServerDBEntry (String n,String h, int p, int p2)
 			{
+				name = n;
 				host = h;
 				port = p;
-				name=n;
 				port2 = p2;
 			}
 		
 		public boolean equals(AnonServerDBEntry e) {
 		    if (
-			(port == e.getPort()) &&
 			host.equals(e.getHost()) &&
+			(port == e.getPort()) &&
 			(port2 == e.getSSLPort())
 			)
 		    	return true;
@@ -72,7 +78,7 @@ public final class AnonServerDBEntry
 		}
 		
 		public String getName() {
-				return name;//host+":"+Integer.toString(port);
+				return name;
 		}
 		public void setName(String name) {
 				this.name=name;

@@ -64,7 +64,7 @@ final class JAPConf extends JDialog
 	private JCheckBox	startupMinimizeCheckBox;
 	private JAPJIntField anonportnumberTextField;
 	private JAPJIntField anonsslportnumberTextField;
-	private String anonserviceName=null;
+	private String anonserviceName=model.getString("manual");
 	private JTextField   anonhostTextField;
 	private JAPJIntField infoportnumberTextField;
 	private JTextField   infohostTextField;
@@ -307,10 +307,13 @@ final class JAPConf extends JDialog
 					JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPConf:fetchB");
 //						JOptionPane.showMessageDialog(null,model.getString("notYetImlmplemented"));
 						// fetch available mix cascades from the Internet
+						Cursor c=getCursor();
+						setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 						model.fetchAnonServers();
 						// show a window containing all available cascades
 						JAPCascadeMonitorView v=new JAPCascadeMonitorView(model.getView());
 						OKPressed();
+						setCursor(c);
 				}});
 				select = new JComboBox();
 				// add elements to combobox
@@ -731,7 +734,7 @@ final class JAPConf extends JDialog
 					);
 				JAPDebug.setDebugLevel(sliderDebugLevel.getValue());
 				model.setAnonServer(e);
-//				model.notifyJAPObservers();
+				model.notifyJAPObservers();
 			}
 	
 	public void selectCard(int selectedCard)
