@@ -52,7 +52,7 @@ final class Channel extends AbstractChannel
 	{
 		if (len >= 957)
 		{
-			System.out.println("Interessting");
+			int i=3;
 		}
 		m_muxSocket.send(m_id, m_type, buff, (short) len);
 		m_bFirstPacket = false;
