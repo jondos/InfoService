@@ -120,4 +120,15 @@ public class MyDSAPublicKey implements DSAPublicKey
 		}
 		return bOut.toByteArray();
 	}
+
+	public boolean equals(Object o)
+	{
+		if(o==null)
+			return false;
+		if(!(o instanceof DSAPublicKey))
+			return false;
+		DSAPublicKey d=(DSAPublicKey)o;
+		return(d.getY().equals(m_Y)&&d.getParams().equals(m_params));
+	}
+
 }

@@ -80,7 +80,7 @@ public class JAPCertPath
               PublicKey currentPublicKey = ((JAPCertificate)(allCertificates.firstElement())).getPublicKey();
               allCertificates.removeElementAt(0);
               try {
-                if ((((DSAPublicKey)(currentPublicKey)).getY().equals(((DSAPublicKey)(appendedCertificate.getPublicKey())).getY())) ||
+                if (currentPublicKey.equals(appendedCertificate.getPublicKey()) ||
                     (appendedCertificate.verify(currentPublicKey))) {
                   /* the appended certificate is identical to the current trusted root certificate
                    * (same public key) or could be derived from it
