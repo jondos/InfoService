@@ -281,16 +281,19 @@ public final class JAPAnonService implements Runnable
 										continue;
 									}
 								//2001-04-04(HF)
-								try {
-									m_MuxSocket.newConnection(new JAPSocket(socket),m_Protocol);
-								} catch(Exception e) {
-									JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPAnonService.run() Exception: " +e);
-								}
+								try 
+									{
+										m_MuxSocket.newConnection(new JAPSocket(socket),m_Protocol);
+									}
+								catch(Exception e) 
+									{
+										JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPAnonService.run() Exception: " +e);
+									}
 							}
 					}
 				catch (Exception e)
 					{
-						JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPProxyServer:ProxyServer.run() Exception: " +e);
+						JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPProxyServer:ProxyServer.run1() Exception: " +e);
 					}
 	//			try{m_socketListener.setSoTimeout(oldTimeOut);}catch(Exception e4){}
 				JAPDebug.out(JAPDebug.INFO,JAPDebug.NET,"JAPProxyServer:ProxyServer on port " + m_Port + " stopped.");

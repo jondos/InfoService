@@ -33,6 +33,7 @@ import java.util.Hashtable;
 import java.util.Enumeration;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -44,6 +45,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+import org.w3c.dom.Document;
 import javax.swing.ImageIcon;
 import java.awt.Component;
 import javax.swing.*;
@@ -234,6 +236,42 @@ final class JAPUtil
 					}
 			return s;
 		}
+	
+	/** Writes a XML-Document to an Output-Stream. Since writing was not standardzieds
+	 * since JAXP 1.1 different Methods are tried
+	 */
+	public static boolean saveXMLDocument(Document doc,OutputStream out)
+		{
+			try
+				{
+					try //For JAXP 1.0.1 Referenc Implementation (shipped with JAP)
+						{
+							((com.sun.xml.tree.XmlDocument)doc).write(out);
+						}
+					catch(Throwable t1)
+						{ 
+							try
+								{ //For JAXP 1.1 (for Instance Apache Crimson/Xalan shipped with Java 1.4)
+									javax.xml.transform.Transformer t=
+											javax.xml.transform.TransformerFactory.newInstance().newTransformer();
+									javax.xml.transform.Result r=new javax.xml.transform.stream.StreamResult(out);
+									javax.xml.transform.Source s=new javax.xml.transform.dom.DOMSource(doc);
+									t.transform(s,r);
+								}
+							catch(Throwable t2)
+								{
+									return false;
+								}
+						}
+				}
+			catch(Throwable t2)
+				{
+					return false;
+				}
+			return true;
+		}
+	
+	
 	/** Loads an Image from a File or a Resource.
 	 *	@param strImage the Resource or filename of the Image
 	 *	@param sync true if the loading is synchron, false if it should be asynchron

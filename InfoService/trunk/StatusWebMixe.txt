@@ -24,6 +24,7 @@ Integration von RMI (Beleg) in JAP
 Verbessern der Precompiled Binaries Web Page (Größe, Datum + Version)
 Fehlerbeseitgung: Schnelles Verbindungstrenne; erneutes Verbinden
 !!Verhindern des Blockieren des Mixes, wenn Squid keine Daten mehr entgegennimmt!!
+Zusammenstellen eine RPM-PAckets für Linux
 
 
 
