@@ -25,42 +25,38 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package pay;
+package anon.pay;
 
 import java.io.ByteArrayInputStream;
 import java.math.BigInteger;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.Vector;
+import javax.xml.parsers.DocumentBuilderFactory;
+
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+
+import org.bouncycastle.crypto.params.DSAParameters;
+import org.bouncycastle.crypto.params.DSAPrivateKeyParameters;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import anon.crypto.JAPSignature;
-import anon.crypto.MyRSAPrivateKey;
-import anon.crypto.MyRSAPublicKey;
-import anon.util.Base64;
-import anon.util.XMLUtil;
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
-import payxml.XMLAccountCertificate;
-import payxml.XMLAccountInfo;
-import payxml.XMLDocument;
-import payxml.XMLEasyCC;
-import payxml.XMLTransCert;
-import java.security.PrivateKey;
 import anon.crypto.IMyPrivateKey;
 import anon.crypto.IMyPublicKey;
+import anon.crypto.JAPSignature;
 import anon.crypto.MyDSAPrivateKey;
-import org.bouncycastle.crypto.params.DSAPrivateKeyParameters;
-import org.bouncycastle.crypto.params.DSAParameters;
-import payxml.XMLBalance;
+import anon.crypto.MyRSAPrivateKey;
+import anon.pay.xml.XMLAccountCertificate;
+import anon.pay.xml.XMLAccountInfo;
+import anon.pay.xml.XMLEasyCC;
+import anon.pay.xml.XMLTransCert;
+import anon.util.Base64;
+import anon.util.IXMLEncodable;
+import anon.util.XMLUtil;
 
 /**
  *  Diese Klasse ist f?r die verwaltung eines Accounts zut?ndig, sie kapselt eine XML Struktur innerhalb der Klasse
- *	und Mithilfe von Klassen des payxml Packages
+ *	und Mithilfe von Klassen des anon.pay.xml Packages
  *  Die Struktur ist wie folgend:
  *  <Account version="1.0">
  * 		<AccountCertificate>...</AccountCertificate> // Kontozertiufkat von der BI unterschrieben
@@ -73,7 +69,7 @@ import payxml.XMLBalance;
  *  </Account>
  *	* @author Andreas Mueller, Grischan Gl&auml;nzel, Bastian Voigt
  */
-public class PayAccount extends XMLDocument
+public class PayAccount implements IXMLEncodable
 {
 	/** contains zero ore more xml transfer certificates as XMLTransCert */
 	private Vector m_transCerts;
@@ -90,9 +86,10 @@ public class PayAccount extends XMLDocument
 	/** the signing instance */
 	private JAPSignature m_signingInstance;
 
+
 	public PayAccount(byte[] xmlData) throws Exception
 	{
-		Document doc = getDocumentBuilder().parse(new ByteArrayInputStream(xmlData));
+		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(xmlData));
 		Element elemRoot = doc.getDocumentElement();
 		setValues(elemRoot);
 	}
@@ -234,34 +231,23 @@ public class PayAccount extends XMLDocument
 	 *
 	 * @return XML-Document
 	 */
-	public Document getDomDocument()
+	public Element toXmlElement(Document a_doc)
 	{
-		Document doc = null;
-		try
-		{
-			doc = getDocumentBuilder().newDocument();
-		}
-		catch (Exception ex)
-		{
-			return null;
-		}
-		Element elemRoot = doc.createElement("Account");
+		Element elemRoot = a_doc.createElement("Account");
+		elemRoot.setAttribute("version", "1.0");
 		Element elemTmp;
 
-		elemRoot.setAttribute("version", "1.0");
-		doc.appendChild(elemRoot);
-
 		// import AccountCertificate XML Representation
-		elemTmp = m_accountCertificate.toXmlElement(doc);
+		elemTmp = m_accountCertificate.toXmlElement(a_doc);
 		elemRoot.appendChild(elemTmp);
 
 		// import Private Key XML Representation
-		elemTmp = m_privateKey.toXmlElement(doc);
+		elemTmp = m_privateKey.toXmlElement(a_doc);
 		elemRoot.appendChild(elemTmp);
 
 
 		// add transfer certificates
-		Element elemTransCerts = doc.createElement("TransferCertificates");
+		Element elemTransCerts = a_doc.createElement("TransferCertificates");
 		elemRoot.appendChild(elemTransCerts);
 		if (m_transCerts != null)
 		{
@@ -269,24 +255,16 @@ public class PayAccount extends XMLDocument
 			while (enumer.hasMoreElements())
 			{
 				XMLTransCert cert = (XMLTransCert) enumer.nextElement();
-				Node n1 = null;
-				try
-				{
-					n1 = XMLUtil.importNode(doc, cert.getDomDocument().getDocumentElement(), true);
-					elemTransCerts.appendChild(n1);
-				}
-				catch (Exception ex2)
-				{
-				}
+				elemTransCerts.appendChild(cert.toXmlElement(a_doc));
 			}
 		}
 
 		if (m_accountInfo != null) {
-			elemTmp = m_accountInfo.toXmlElement(doc);
+			elemTmp = m_accountInfo.toXmlElement(a_doc);
 			elemRoot.appendChild(elemTmp);
 		}
 
-		return doc;
+		return elemRoot;
 	}
 
 	/**
@@ -490,7 +468,6 @@ public class PayAccount extends XMLDocument
 	{
 		synchronized (m_changeListeners)
 		{
-			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "PayAccountsFile: FireChangeEvent..");
 			Enumeration enumListeners = m_changeListeners.elements();
 			ChangeEvent e = new ChangeEvent(source);
 			while (enumListeners.hasMoreElements())

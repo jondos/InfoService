@@ -25,77 +25,33 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package payxml;
+package anon.util;
 
-import anon.util.*;
-import org.w3c.dom.*;
+import anon.util.IXMLEncodable;
+import anon.crypto.JAPSignature;
 
 /**
- * This class is probably obsolete... not sure yet
- *
- * <p>\u00DCberschrift: </p>
- * <p>Beschreibung: </p>
- * <p>Copyright: Copyright (c) 2004</p>
- * <p>Organisation: </p>
- * @author not attributable
- * @version 1.0
+ * An interface for signed/signable XML structures.
  */
-public class XMLCostConfirmation extends XMLDocument
+public interface IXMLSignable extends IXMLEncodable
 {
-	//~ Instance fields ********************************************************
-/*
-	private XMLCC cc;
-	private byte[] digest;
+	/**
+	 * Returns true if the structure is already signed. Does not check the
+	 * validity of the signature
+	 */
+	boolean isSigned();
 
-	//~ Constructors ***********************************************************
+	/**
+	 * Checks the signature.
+	 * @param verifyingInstance JAPSignature must be initializes for verifying
+	 * @return boolean true if signature is valid, false otherwise
+	 */
+	boolean verifySignature(JAPSignature verifyingInstance);
 
-	public XMLCostConfirmation(String data) throws Exception
-	{
-		this(data.getBytes());
-	}
+	/**
+	 * Signs the xml structure with the given JAPSignature.
+	 * @param signingInstance JAPSignature must be initialized for signing
+	 */
+	void sign(JAPSignature signingInstance) throws Exception;
 
-	public XMLCostConfirmation(byte[] data) throws Exception
-	{
-		setDocument(data);
-		Element elemRoot = m_theDocument.getDocumentElement();
-		Element elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "CC");
-		cc = new XMLCC(elem);
-
-		elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "Digest");
-		String strdigest = XMLUtil.parseNodeString(elem, null);
-		digest = Base64.decode(strdigest);
-	}
-
-	//~ Methods ****************************************************************
-
-	public String getAIName()
-	{
-		return cc.getAIName();
-	}
-
-	public long getAccountNumber()
-	{
-		return cc.getAccountNumber();
-	}
-
-	public int getCosts()
-	{
-		return cc.getCosts();
-	}
-
-	public byte[] getDigest()
-	{
-		return getDigest();
-	}
-
-	public byte[] getHash()
-	{
-		return cc.getHash();
-	}
-
-	public int getTickPrice()
-	{
-		return cc.getTickPrice();
-	}
-*/
 }

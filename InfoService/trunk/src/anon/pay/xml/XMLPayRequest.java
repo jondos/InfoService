@@ -25,7 +25,7 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package payxml;
+package anon.pay.xml;
 
 import java.io.ByteArrayInputStream;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -69,6 +69,11 @@ public class XMLPayRequest implements IXMLEncodable
 		setValues(doc.getDocumentElement());
 	}
 
+	public XMLPayRequest(Document doc) throws Exception
+	{
+		setValues(doc.getDocumentElement());
+	}
+
 	private void setValues(Element elemRoot) throws Exception
 	{
 		if (!elemRoot.getTagName().equals("PayRequest") ||
@@ -84,6 +89,10 @@ public class XMLPayRequest implements IXMLEncodable
 			Element elemTimestamp = (Element) XMLUtil.getFirstChildByName(elem, "NewerThan");
 			m_balanceNewerThan = java.sql.Timestamp.valueOf(XMLUtil.parseNodeString(elemTimestamp, ""));
 		}
+		else
+		{
+			m_balanceNewerThan = null;
+		}
 
 		// look for a costconfirmation
 		elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "CC");
@@ -91,9 +100,13 @@ public class XMLPayRequest implements IXMLEncodable
 		{
 			m_cc = new XMLEasyCC(elem);
 		}
+		else
+		{
+			m_cc = null;
+		}
 	}
 
-	// todo: implement (not needed atm, only for the interface :-)
+	/** @todo implement (not needed atm, only for the interface */
 	public Element toXmlElement(Document a_doc)
 	{
 		return null;

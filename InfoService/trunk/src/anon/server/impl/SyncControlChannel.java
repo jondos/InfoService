@@ -70,7 +70,7 @@ public abstract class SyncControlChannel extends AbstractControlChannel
 		}
 	}
 
-	abstract void proccessXMLMessage(Document docMsg);
+	public abstract void proccessXMLMessage(Document docMsg);
 
 	void proccessMessageComplete()
 	{

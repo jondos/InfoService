@@ -59,12 +59,12 @@ import jap.JAPWaitSplash;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import pay.Pay;
-import pay.PayAccount;
-import pay.PayAccountsFile;
-import payxml.XMLAccountInfo;
-import payxml.XMLTransCert;
-import payxml.XMLBalance;
+import anon.pay.Pay;
+import anon.pay.PayAccount;
+import anon.pay.PayAccountsFile;
+import anon.pay.xml.XMLAccountInfo;
+import anon.pay.xml.XMLTransCert;
+import anon.pay.xml.XMLBalance;
 
 /**
  * The Jap Conf Module (Settings Tab Page) for the Accounts and payment Management
@@ -72,7 +72,7 @@ import payxml.XMLBalance;
  * @author Bastian Voigt
  * @version 1.0
  */
-public class AccountSettingsPanel extends jap.AbstractJAPConfModule
+public class AccountSettingsPanel extends AbstractJAPConfModule
 {
 	private JTable m_Table;
 	private JButton m_btnCreateAccount;

@@ -1,4 +1,4 @@
-package payxml;
+package anon.pay.xml;
 
 public class XMLAuthenticationSuccess
 {

@@ -44,7 +44,9 @@ public final class JAPModel
 	private ResourceLoader m_resourceLoader;
 
 
+	/** @deprecated */
   private String m_biHost = JAPConstants.PIHOST;
+  /** @deprecated */
   private int m_biPort = JAPConstants.PIPORT;
   private int m_HttpListenerPortNumber = JAPConstants.defaultPortNumber; // port number of HTTP  listener
   private boolean m_bHttpListenerIsLocal = true; // indicates whether listeners serve for localhost only or not
@@ -266,11 +268,12 @@ public final class JAPModel
     return ms_TheModel.m_biPort;
   }
 
+/** @deprecated */
   protected static void setBIHost(String host)
   {
     ms_TheModel.m_biHost = host;
   }
-
+/** @deprecated */
   protected static void setBIPort(int port)
   {
     ms_TheModel.m_biPort = port;

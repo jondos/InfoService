@@ -76,7 +76,10 @@ import proxy.DirectProxy;
 import proxy.ProxyListener;
 import anon.infoservice.ImmutableProxyInterface;
 import update.JAPUpdateWizard;
-import pay.PayAccountsFile;
+import anon.pay.PayAccountsFile;
+import anon.crypto.XMLEncryption;
+import anon.pay.Pay;
+import anon.pay.BI;
 
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPController implements ProxyListener, Observer
@@ -106,6 +109,11 @@ public final class JAPController implements ProxyListener, Observer
 	private boolean mbActCntMessageNeverRemind = false; // indicates if Warning message in setAnonMode has been deactivated forever
 	private boolean mbDoNotAbuseReminder = false; // indicates if new warning message in setAnonMode (containing Do no abuse) has been shown
 	private boolean mbGoodByMessageNeverRemind = false; // indicates if Warning message before exit has been deactivated forever
+
+	private boolean m_bPaymentFirstTime = false; // indicates if encryption dialog should be showed before saving payment configuration data
+
+	/** @todo check is it ok to have the password in memory while Jap is running? if not, user must enter it everytime */
+	private String m_strPayAccountsPassword = null; // password for encrypting the payment data
 
 	private static final Object oSetAnonModeSyncObject = new Object(); //for synchronisation of setAnonMode(true/false)
 	private static final Object oSetAnonModeThreadIDSyncObject = new Object(); //for synchronisation of setAnonMode(true/false)
@@ -704,25 +712,60 @@ public final class JAPController implements ProxyListener, Observer
 				if (loadPay)
 				{
 					Element elemPay = (Element) XMLUtil.getFirstChildByName(root, "Payment");
-					setBIHost(elemPay.getAttribute("biHost"));
-					setBIPort(Integer.parseInt(elemPay.getAttribute("biPort")));
+/*					setBIHost(elemPay.getAttribute("biHost"));
+					setBIPort(Integer.parseInt(elemPay.getAttribute("biPort")));*/
+					BI theBI = new BI(
+						m_Model.getResourceLoader().loadResource(JAPConstants.CERTSPATH + JAPConstants.CERT_BI),
+						elemPay.getAttribute("biName"), elemPay.getAttribute("biHost"),
+						Integer.parseInt(elemPay.getAttribute("biPort")));
+
 
 					Element elemAccounts = (Element) XMLUtil.getFirstChildByName(elemPay, "EncryptedData");
 
 					// test: is account data encrypted?
 					if (elemAccounts != null)
 					{
-						// it is encrypted -> initialize PayAccountsFile with encrypted data
-						LogHolder.log(LogLevel.DEBUG, LogType.PAY,
-									  "JAPController: calling PayAccountsFile...");
-						pay.PayAccountsFile.getInstance().initEncrypted(elemAccounts);
+						// it is encrypted -> ask user for password
+						Element elemPlainTxt;
+						String strMessage =
+							"<html>Please enter password for decrypting your accounts data</html>";
+
+						while (true)
+						{
+							/** @todo handle cancel button properly */
+							/** @todo internationalize msgs */
+							/** @todo use an IPasswordReader dialog here */
+							m_strPayAccountsPassword = JOptionPane.showInputDialog(
+								m_View, strMessage,
+								"Jap Account Data",
+								JOptionPane.QUESTION_MESSAGE | JOptionPane.OK_CANCEL_OPTION
+								);
+
+							try
+							{
+								elemPlainTxt = XMLEncryption.decryptElement(elemAccounts,
+									m_strPayAccountsPassword);
+							}
+							catch (Exception ex)
+							{
+								strMessage = "<html>Wrong password. Please try again</html>";
+								continue;
+							}
+							break;
+						}
+
+						Pay.init(theBI, elemPlainTxt);
+						m_bPaymentFirstTime = false;
 					}
 					else
 					{
-						LogHolder.log(LogLevel.DEBUG, LogType.PAY,
-									  "JAPController: calling PayAccountsFile...");
+						// accounts data is not encrypted
 						elemAccounts = (Element) XMLUtil.getFirstChildByName(elemPay, "PayAccountsFile");
-						pay.PayAccountsFile.getInstance().initPlaintext(elemAccounts);
+						if (elemAccounts != null)
+						{
+							Pay.init(theBI, elemAccounts);
+							m_bPaymentFirstTime = false;
+						}
 					}
 				}
 
@@ -921,19 +964,49 @@ public final class JAPController implements ProxyListener, Observer
 			elemTor.appendChild(elem);
 			e.appendChild(elemTor);
 
-			/* payment configuration */
+			/* save payment configuration */
 			PayAccountsFile accounts = PayAccountsFile.getInstance();
-			if (accounts.isInitialized())
+			if (accounts != null)
 			{
 				Element elemPayment = doc.createElement("Payment");
 				e.appendChild(elemPayment);
 				elemPayment.setAttribute("biHost", JAPModel.getBIHost());
 				elemPayment.setAttribute("biPort", Integer.toString(JAPModel.getBIPort()));
 
-				// returns the configuration data, encrypted or not, as the user wishes.
-				Element elemAccounts = accounts.getConfigurationData();
-				Element myAccounts = (Element) XMLUtil.importNode(doc, elemAccounts, true);
-				elemPayment.appendChild(myAccounts);
+				// get configuration from accountsfile
+				Element elemAccounts = accounts.toXmlElement(doc);
+				elemPayment.appendChild(elemAccounts);
+				if (m_bPaymentFirstTime)
+				{
+					// payment functionality was used for the first time, ask user for password...
+					/** @todo internationalize, maybe check password length/strength?? */
+					int choice = JOptionPane.showOptionDialog(
+						m_View,
+						"<html>Sie haben w&auml;hrend dieser JAP-Sitzung zum ersten Mal<br> " +
+						"Konten angelegt. Zu jedem Konto geh&ouml;rt auch ein<br> " +
+						"privater Schl&uuml;ssel, der sicher verwahrt werden muss.<br> " +
+						"Sie haben deshalb jetzt die M&ouml;glichkeit, Ihre<br> " +
+						"Kontendaten verschl&uuml;sselt zu speichern.<br> " +
+						"Falls Ihre Kontendaten verschl&uuml;sselt sind,<br> " +
+						"m&uuml;ssen Sie von nun an bei jedem JAP-Start das Passwort<br> " +
+						"zum Entschl&uuml;sseln eingeben.<br><br>" +
+						"M&ouml;chten Sie Ihre Kontendaten jetzt verschl&uuml;sseln?</html>",
+						"Verschluesselung der Kontendaten",
+						JOptionPane.YES_NO_OPTION,
+						JOptionPane.QUESTION_MESSAGE,
+						null, null, null
+						);
+					if (choice == JOptionPane.YES_OPTION)
+					{
+						/** @todo use an IPasswordReader dialog here */
+						m_strPayAccountsPassword = JOptionPane.showInputDialog("Geben Sie ein Passwort ein:");
+					}
+				}
+				if (m_strPayAccountsPassword != null && !m_strPayAccountsPassword.equals(""))
+				{
+					// encrypt XML
+					XMLEncryption.encryptElement(elemAccounts, m_strPayAccountsPassword);
+				}
 			}
 
       /* add the settings of the JAP forwarding system, if it is enabled */
@@ -1480,12 +1553,14 @@ public final class JAPController implements ProxyListener, Observer
 		}
 	}
 
+	/** @deprecated to be removed */
 	public static void setBIHost(String host)
 	{
 		m_Model.setBIHost(host);
 		m_Controller.notifyJAPObservers();
 	}
 
+	/** @deprecated to be removed */
 	public static void setBIPort(int port)
 	{
 		m_Model.setBIPort(port);

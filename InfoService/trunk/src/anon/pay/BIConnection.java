@@ -25,7 +25,7 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package pay;
+package anon.pay;
 
 //import pay.crypto.tinyssl.RootCertificates;
 
@@ -39,58 +39,41 @@ package pay;
  */
 import java.io.IOException;
 import java.net.Socket;
+
 import anon.crypto.JAPSignature;
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
-import pay.crypto.tinyssl.TinySSL;
-import pay.util.HttpClient;
-import payxml.XMLAccountCertificate;
-import payxml.XMLAccountInfo;
-import payxml.XMLChallenge;
-import payxml.XMLJapPublicKey;
-import payxml.XMLResponse;
-import payxml.XMLTransCert;
-import java.security.PublicKey;
-import anon.crypto.IMyPublicKey;
+import anon.pay.xml.XMLAccountCertificate;
+import anon.pay.xml.XMLAccountInfo;
+import anon.pay.xml.XMLBalance;
+import anon.pay.xml.XMLChallenge;
+import anon.pay.xml.XMLJapPublicKey;
+import anon.pay.xml.XMLResponse;
+import anon.pay.xml.XMLTransCert;
 import anon.util.XMLUtil;
-import anon.crypto.MyDSAPublicKey;
-import anon.crypto.MyRSAPublicKey;
-import payxml.XMLBalance;
+import pay.crypto.tinyssl.TinySSL;
+
 
 public class BIConnection
 {
-	private String m_BIHostName;
-	private int m_BIUserPort;
+	private BI m_theBI;
+
 	private Socket m_socket;
 	private HttpClient m_httpClient;
 	private boolean m_bIsSslOn;
 
-	/*	private XMLAccountCertificate m_accountCert;
-	 private MyRSAPrivateKey m_privateKey;*/
-
 
 	/**
-	 * Konstruktor
+	 * Constructor
 	 *
-	 * @param host Hostname der Bezahlinstanz
-	 * @param port Port der Bezahlinstanz
-	 * @param privateKey Private Key f\uFFFDr die Challenge-Response-Authentikation
-	 * @param accountCert Kontozertifikat f\uFFFDr die Anmeldung an der BI
-	 * @param sslOn SSL ein?
+	 * @param BI the BI to which we connect
+	 * @param sslOn if true, SSL encryption is used
 	 */
-	public BIConnection(String biHostname,
-						int biPort,
+	public BIConnection(BI theBI,
 						boolean sslOn
 						/*						XMLAccountCertificate accountCert,
 						 MyRSAPrivateKey privKey*/
 						)
 	{
-		m_BIHostName = biHostname;
-		m_BIUserPort = biPort;
-		m_bIsSslOn = sslOn;
-		/*		m_accountCert = accountCert;
-		  m_privateKey =  privKey;*/
+		m_theBI = theBI;
 	}
 
 	/**
@@ -101,26 +84,23 @@ public class BIConnection
 	 */
 	public void connect() throws Exception
 	{
-		LogHolder.log(
-			LogLevel.DEBUG, LogType.PAY,
-			"BIConnection.connect() .. connecting to " + m_BIHostName + ":" + m_BIUserPort
-			);
 		try
 		{
 			if (m_bIsSslOn == false)
 			{
-				m_socket = new Socket(m_BIHostName, m_BIUserPort);
+				m_socket = new Socket(m_theBI.getHostName(), m_theBI.getPortNumber());
 			}
 			else
 			{
-				m_socket = new TinySSL(m_BIHostName, m_BIUserPort);
+				m_socket = new TinySSL(m_theBI.getHostName(), m_theBI.getPortNumber());
 			}
 			m_httpClient = new HttpClient(m_socket);
 		}
 		catch (Exception ex)
 		{
 			throw new Exception(
-				"Could not connect to BI at " + m_BIHostName + ":" + m_BIUserPort +
+				"Could not connect to BI " + m_theBI.getName() + " at " +
+				m_theBI.getHostName() + ":" + m_theBI.getPortNumber() +
 				" (" + ex.getMessage() + ")");
 		}
 	}
@@ -132,9 +112,6 @@ public class BIConnection
 	 */
 	public void disconnect() throws IOException
 	{
-		LogHolder.log(LogLevel.DEBUG, LogType.PAY,
-					  "PayInstance.disconnect() .. closing http connection"
-					  );
 		m_httpClient.close();
 	}
 
@@ -156,7 +133,7 @@ public class BIConnection
 		m_httpClient.writeRequest("GET", "charge", null);
 		String answer = m_httpClient.readAnswer();
 		XMLTransCert xmltrcert = new XMLTransCert(answer);
-		if (Pay.getInstance().getVerifyingInstance().verifyXML(xmltrcert.getDomDocument()))
+		if(xmltrcert.verifySignature(m_theBI.getVerifier()))
 		{
 			return xmltrcert;
 		}
@@ -183,7 +160,7 @@ public class BIConnection
 		answer = m_httpClient.readAnswer();
 		info = new XMLAccountInfo(answer);
 		XMLBalance bal = info.getBalance();
-		if(Pay.getInstance().getVerifyingInstance().verifyXML(XMLUtil.toXMLDocument(bal))==false)
+		if(m_theBI.getVerifier().verifyXML(XMLUtil.toXMLDocument(bal))==false)
 			throw new Exception("Invalid Signature");
 		return info;
 	}
@@ -194,32 +171,19 @@ public class BIConnection
 		{
 			throw new Exception("BIConnection.authenticate: Your account certificate is not signed!");
 		}
-		String answer = null;
-		try
-		{
-			String StrAccountCert = XMLUtil.XMLDocumentToString(XMLUtil.toXMLDocument(accountCert));
-			m_httpClient.writeRequest("POST", "authenticate", StrAccountCert);
-			answer = m_httpClient.readAnswer();
-		}
-		catch (IOException ex)
-		{
-			throw new Exception("Error in http communication: " + ex.getMessage());
-		}
+
+		String StrAccountCert = XMLUtil.XMLDocumentToString(XMLUtil.toXMLDocument(accountCert));
+		m_httpClient.writeRequest("POST", "authenticate", StrAccountCert);
+		String answer = m_httpClient.readAnswer();
+
 		XMLChallenge xmlchallenge = new XMLChallenge(answer);
 		byte[] challenge = xmlchallenge.getChallengeForSigning();
 		byte[] response = signer.signBytes(challenge);
 		XMLResponse xmlResponse = new XMLResponse(response);
-		String strResponse = xmlResponse.getXMLString();
+		String strResponse = XMLUtil.XMLDocumentToString(XMLUtil.toXMLDocument(xmlResponse));
 
-		try
-		{
-			m_httpClient.writeRequest("POST", "response", strResponse);
-			answer = m_httpClient.readAnswer();
-		}
-		catch (IOException ex1)
-		{
-			throw new Exception("Error in http communication: " + ex1.getMessage());
-		}
+		m_httpClient.writeRequest("POST", "response", strResponse);
+		answer = m_httpClient.readAnswer();
 	}
 
 	/*
@@ -270,18 +234,20 @@ public class BIConnection
 
 	/**
 	 * Registers a new account using the specified keypair.
+	 * Checks the signature and the public key of the accountCertificate
+	 * that is received.
 	 *
 	 * @param pubKey public key
 	 * @param privKey private key
 	 * @return XMLAccountCertificate the certificate issued by the BI
-	 * @throws Exception
+	 * @throws Exception if an error occurs or the signature or public key is wrong
 	 */
 	public XMLAccountCertificate register(XMLJapPublicKey pubKey, JAPSignature signKey) throws Exception
 	{
 		// send our public key
 		m_httpClient.writeRequest(
 			"POST", "register",
-			XMLUtil.XMLDocumentToString(pubKey.getXmlDocument())
+			XMLUtil.XMLDocumentToString(XMLUtil.toXMLDocument(pubKey))
 			);
 		String answer = m_httpClient.readAnswer();
 
@@ -290,28 +256,22 @@ public class BIConnection
 		byte[] challenge = xmlchallenge.getChallengeForSigning();
 		byte[] response = signKey.signBytes(challenge);
 		XMLResponse xmlResponse = new XMLResponse(response);
-		String strResponse = xmlResponse.getXMLString();
+		String strResponse = XMLUtil.XMLDocumentToString(XMLUtil.toXMLDocument(xmlResponse));
 		m_httpClient.writeRequest("POST", "response", strResponse);
 		answer = m_httpClient.readAnswer();
-		LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Received cert: "+answer);
+		XMLAccountCertificate xmlCert = new XMLAccountCertificate(answer);
 
 		// check signature
-		boolean sigOK = Pay.getInstance().getVerifyingInstance().verifyXML(
-			new java.io.ByteArrayInputStream(answer.getBytes())
-			);
-
-		XMLAccountCertificate xmlCert = new XMLAccountCertificate(answer);
-		// check if the certificate signed by the BI contains the right
-		// public key
-		if (xmlCert.getPublicKey().equals(pubKey.getPublicKey()))
+		if(!xmlCert.verifySignature(m_theBI.getVerifier()))
 		{
-			return xmlCert;
+			throw new Exception("AccountCertificate: Wrong signature!");
 		}
-		else
+		if (!xmlCert.getPublicKey().equals(pubKey.getPublicKey()))
 		{
 			throw new Exception(
 				"The JPI is evil (sent a valid certificate, but with a wrong publickey)");
 
 		}
+		return xmlCert;
 	}
 }

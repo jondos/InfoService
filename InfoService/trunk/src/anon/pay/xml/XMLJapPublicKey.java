@@ -25,23 +25,23 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package payxml;
+package anon.pay.xml;
 
+import java.io.ByteArrayInputStream;
 import java.math.BigInteger;
-import org.w3c.dom.CharacterData;
+import javax.xml.parsers.DocumentBuilderFactory;
+
+import org.bouncycastle.crypto.params.DSAParameters;
+import org.bouncycastle.crypto.params.DSAPublicKeyParameters;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
+
+import anon.crypto.IMyPublicKey;
+import anon.crypto.MyDSAPublicKey;
 import anon.crypto.MyRSAPublicKey;
 import anon.util.Base64;
+import anon.util.IXMLEncodable;
 import anon.util.XMLUtil;
-import anon.crypto.IMyPublicKey;
-import javax.xml.parsers.DocumentBuilderFactory;
-import java.io.ByteArrayInputStream;
-import anon.crypto.MyDSAPublicKey;
-import org.bouncycastle.crypto.params.DSAPublicKeyParameters;
-import org.bouncycastle.crypto.params.DSAParameters;
 
 /** This class handles RSA and DSA Public Keys represented in XML.
  * It is used mainly for formatting and parsing xml keys
@@ -56,7 +56,7 @@ import org.bouncycastle.crypto.params.DSAParameters;
  *
  */
 
-public class XMLJapPublicKey //extends XMLDocument
+public class XMLJapPublicKey implements IXMLEncodable//extends XMLDocument
 {
 	//~ Instance fields ********************************************************
 
@@ -104,9 +104,8 @@ public class XMLJapPublicKey //extends XMLDocument
 		{
 			Element elemMod = (Element) XMLUtil.getFirstChildByName(elemRsa, "Modulus");
 			Element elemExp = (Element) XMLUtil.getFirstChildByName(elemRsa, "Exponent");
-			// todo add bas64 decode
-			BigInteger modulus = new BigInteger(XMLUtil.parseNodeString(elemMod, ""));
-			BigInteger exponent = new BigInteger(XMLUtil.parseNodeString(elemExp, ""));
+			BigInteger modulus = new BigInteger(Base64.decode(XMLUtil.parseNodeString(elemMod, "")));
+			BigInteger exponent = new BigInteger(Base64.decode(XMLUtil.parseNodeString(elemExp, "")));
 			m_publicKey = new MyRSAPublicKey(modulus, exponent);
 			return;
 		}
@@ -133,26 +132,17 @@ public class XMLJapPublicKey //extends XMLDocument
 		throw new Exception("Wrong key format: Neither RSAKeyValue nor DSAKeyValue found!");
 	}
 
-	public Document getXmlDocument() throws Exception
+	public Element toXmlElement(Document a_doc) //throws Exception
 	{
-		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
-		Element elemRoot = doc.createElement("JapPublicKey");
-		doc.appendChild(elemRoot);
+		//Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+		Element elemRoot = a_doc.createElement("JapPublicKey");
+		a_doc.appendChild(elemRoot);
 		elemRoot.setAttribute("version", "1.0");
-		Element elem = m_publicKey.toXmlElement(doc);
+		Element elem = m_publicKey.toXmlElement(a_doc);
 
 		elemRoot.appendChild(elem);
 
-		return doc;
+		return elemRoot;
 	}
 
-/*	public BigInteger getModulus()
-	{
-		return m_publicKey.getModulus();
-	}
-
-	public BigInteger getPublicExponent()
-	{
-		return m_publicKey.getPublicExponent();
-	}*/
 }

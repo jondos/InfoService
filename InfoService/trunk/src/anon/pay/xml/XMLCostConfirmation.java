@@ -25,73 +25,78 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package payxml;
+package anon.pay.xml;
 
-import java.io.ByteArrayInputStream;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import org.w3c.dom.Document;
-import anon.util.XMLUtil;
+import anon.util.*;
+import org.w3c.dom.*;
+
 /**
- * @todo umstellung auf DocumentFragment
-* @todo ueberpruefung der xmlstrukturen hinzuf\uFFFDgen
+ * This class is probably obsolete... not sure yet
+ *
+ * <p>\u00DCberschrift: </p>
+ * <p>Beschreibung: </p>
+ * <p>Copyright: Copyright (c) 2004</p>
+ * <p>Organisation: </p>
+ * @author not attributable
+ * @version 1.0
+* @todo convert to new IXMLEncodable if needed
  */
-public class XMLDocument
+/*public class XMLCostConfirmation extends XMLDocument
 {
 	//~ Instance fields ********************************************************
 
-	protected Document m_theDocument;
-	//protected String xmlDocument;
+	private XMLCC cc;
+	private byte[] digest;
 
 	//~ Constructors ***********************************************************
 
-	public XMLDocument()
+	public XMLCostConfirmation(String data) throws Exception
 	{
-		m_theDocument = null;
-		//xmlDocument = null;
+		this(data.getBytes());
+	}
+
+	public XMLCostConfirmation(byte[] data) throws Exception
+	{
+		setDocument(data);
+		Element elemRoot = m_theDocument.getDocumentElement();
+		Element elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "CC");
+		cc = new XMLCC(elem);
+
+		elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "Digest");
+		String strdigest = XMLUtil.parseNodeString(elem, null);
+		digest = Base64.decode(strdigest);
 	}
 
 	//~ Methods ****************************************************************
 
-	public byte[] getXMLByteArray()
+	public String getAIName()
 	{
-		return getXMLString().getBytes();
+		return cc.getAIName();
 	}
 
-	public String getXMLString()
+	public long getAccountNumber()
 	{
-		return XMLUtil.XMLDocumentToString(m_theDocument);
+		return cc.getAccountNumber();
 	}
 
-
-	protected DocumentBuilder getDocumentBuilder() throws Exception
+	public int getCosts()
 	{
-		return DocumentBuilderFactory.newInstance().newDocumentBuilder();
+		return cc.getCosts();
 	}
 
-	/**
-	 * Builds the internal DOM tree from xml string data
-	 *
-	 * @param data the xml data as byte array
-	 */
-	protected void setDocument(byte[] data) throws Exception
+	public byte[] getDigest()
 	{
-		ByteArrayInputStream bai = new ByteArrayInputStream(data);
-		m_theDocument = getDocumentBuilder().parse(bai);
+		return getDigest();
 	}
 
-	/**
-	 * Builds the internal DOM tree from xml string data
-	 *
-	 * @param data the xml data as string
-	 */
-	protected void setDocument(String data) throws Exception
+	public byte[] getHash()
 	{
-		setDocument(data.getBytes());
+		return cc.getHash();
 	}
 
-	public Document getDomDocument()
+	public int getTickPrice()
 	{
-		return m_theDocument;
+		return cc.getTickPrice();
 	}
 }
+*/

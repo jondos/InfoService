@@ -25,23 +25,18 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package payxml;
+package anon.pay.xml;
 
-import java.math.BigInteger;
-import org.w3c.dom.CharacterData;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import anon.crypto.MyRSAPublicKey;
-import anon.util.Base64;
-import anon.util.XMLUtil;
-import anon.crypto.IMyPublicKey;
-import org.w3c.dom.Document;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.*;
-import org.w3c.dom.*;
 import java.io.ByteArrayInputStream;
+import javax.xml.parsers.DocumentBuilderFactory;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import anon.crypto.IMyPublicKey;
 import anon.util.IXMLEncodable;
+import anon.util.XMLUtil;
+import anon.crypto.JAPSignature;
+import anon.util.IXMLSignable;
 
 /**
  * This class contains the functionality for creating and parsing XML account
@@ -77,7 +72,7 @@ import anon.util.IXMLEncodable;
  * </li>
  * </ul>
  */
-public class XMLAccountCertificate implements IXMLEncodable
+public class XMLAccountCertificate implements IXMLSignable
 {
 
 	//~ Instance fields ********************************************************
@@ -100,7 +95,6 @@ public class XMLAccountCertificate implements IXMLEncodable
 	 * @param creationTime creation timestamp
 	 * @param biID the signing BI's ID
 	 */
-
 	public XMLAccountCertificate(IMyPublicKey publicKey, long accountNumber,
 								 java.sql.Timestamp creationTime, String biID
 								 ) throws Exception
@@ -112,25 +106,6 @@ public class XMLAccountCertificate implements IXMLEncodable
 		m_signature = null;
 	}
 
-	/*		m_theDocument = getDocumentBuilder().newDocument();
-	  Element elemRoot = m_theDocument.createElement("AccountCertificate");
-	  elemRoot.setAttribute("version", "1.0");
-	  m_theDocument.appendChild(elemRoot);
-	  Element elemAccountNumber = m_theDocument.createElement("AccountNumber");
-	  XMLUtil.setNodeValue(elemAccountNumber, Long.toString(accountNumber));
-	  elemRoot.appendChild(elemAccountNumber);
-	  Node elemJapKey = m_theDocument.createElement("JapPublicKey");
-	  elemRoot.appendChild(elemJapKey);
-	  Node elemKey = XMLUtil.importNode(m_theDocument, publicKey.getXmlEncoded().getDocumentElement(), true);
-	  elemJapKey.appendChild(elemKey);
-	  Element elemTmp = m_theDocument.createElement("CreationTime");
-	  XMLUtil.setNodeValue(elemTmp, creationTime.toString());
-	  elemRoot.appendChild(elemTmp);
-	  elemTmp = m_theDocument.createElement("BiID");
-	  XMLUtil.setNodeValue(elemTmp, biID);
-	  elemRoot.appendChild(elemTmp);
-	 }*/
-
 	/**
 	 * parses an existing XML certificate
 	 *
@@ -140,7 +115,7 @@ public class XMLAccountCertificate implements IXMLEncodable
 	{
 		ByteArrayInputStream in = new ByteArrayInputStream(xml.getBytes());
 		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(in);
-		setValues( doc.getDocumentElement());
+		setValues(doc.getDocumentElement());
 	}
 
 	/**
@@ -202,7 +177,7 @@ public class XMLAccountCertificate implements IXMLEncodable
 
 		// try to parse signature --- well not really parse it but simply store
 		// it as xml document
-		// todo find a better internal representation for the sig
+		/** @todo find a better internal representation for the sig */
 		elem = (Element) XMLUtil.getFirstChildByName(xml, "Signature");
 		if (elem != null)
 		{
@@ -230,9 +205,9 @@ public class XMLAccountCertificate implements IXMLEncodable
 		XMLUtil.setNodeValue(elem, m_biID);
 		elemRoot.appendChild(elem);
 
-
-		/** @todo check timestamp format !! */
+		/** @todo check timestamp format */
 		elem = a_doc.createElement("CreationTime");
+
 		XMLUtil.setNodeValue(elem, m_creationTime.toString());
 		elemRoot.appendChild(elem);
 
@@ -242,7 +217,7 @@ public class XMLAccountCertificate implements IXMLEncodable
 
 		elem.appendChild(m_publicKey.toXmlElement(a_doc));
 
-		if(m_signature!=null)
+		if (m_signature != null)
 		{
 			try
 			{
@@ -297,5 +272,29 @@ public class XMLAccountCertificate implements IXMLEncodable
 	{
 		m_publicKey = publicKey;
 	}
+
+	public void sign(JAPSignature signer) throws Exception
+	{
+		Document doc = XMLUtil.toXMLDocument(this);
+		signer.signXmlDoc(doc);
+		Element elemSig = (Element) XMLUtil.getFirstChildByName(doc.getDocumentElement(), "Signature");
+		m_signature = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+		Element elem = (Element) XMLUtil.importNode(m_signature, elemSig, true);
+		m_signature.appendChild(elem);
+	}
+
+	public boolean verifySignature(JAPSignature verifier)
+	{
+		try{
+		Document doc = XMLUtil.toXMLDocument(this);
+		return verifier.verifyXML(doc.getDocumentElement());
+		}
+		catch(Exception e)
+		{
+			return false;
+		}
+	}
+
+
 
 }
