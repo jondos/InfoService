@@ -38,8 +38,8 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 	public class MyProgressBarUI extends BasicProgressBarUI {
 		public void paint(Graphics g, JComponent c) {
 			JProgressBar pb = (JProgressBar) c;
-			int dx=13;
-			int max=pb.getMaximum(); 
+			int dx     = 13;
+			int max    = pb.getMaximum(); 
 			int anz    = pb.getWidth()/dx;
 			int value  = pb.getValue()*anz/max;
 			int x      = 0;
@@ -53,7 +53,7 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 			for(int i=value;i<anz;i++) {
 				g.draw3DRect(x,y,width,height,false);
 				x+=dx;
-			}			
+			}
 		}
 /*
 		public void update(Graphics g, JComponent c) {
