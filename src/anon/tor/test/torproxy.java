@@ -10,7 +10,9 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 import anon.tor.Tor;
+import anon.tor.TorAnonServerDescription;
 import anon.tor.TorChannel;
+
 
 /**
  * @author stefan
