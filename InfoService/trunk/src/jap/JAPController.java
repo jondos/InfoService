@@ -65,7 +65,6 @@ import forward.server.ForwardServerManager;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import proxy.AnonSocksProxy;
 import proxy.AnonWebProxy;
 import proxy.DirectProxy;
 import proxy.ProxyListener;
