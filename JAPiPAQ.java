@@ -54,11 +54,7 @@ public class JAPiPAQ extends JAP {
 	JAPiPAQ(String[] argv) {
 		super(argv);
 		MetalLookAndFeel.setCurrentTheme(new iPAQTheme());
-	  System.out.println(UIManager.getInsets("Button.margin"));
-    UIManager.put("Button.margin",new Insets(1,1,1,1));
-    //Enumeration enum=def.elements();
-    //while(enum.hasMoreElements())
-      //System.out.println(enum.nextElement());
+	  UIManager.put("Button.margin",new Insets(1,1,1,1));
   }
 
 
