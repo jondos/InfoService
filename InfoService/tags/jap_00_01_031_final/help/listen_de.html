@@ -1,0 +1,68 @@
+<!--#include virtual="/header.html"-->
+
+<H2> <A HREF="config_de.html"><IMG SRC="japback.gif" WIDTH="65" HEIGHT="50" 
+BORDER="0" ALIGN="MIDDLE"></A> Listener-Portnummer </H2>
+
+<P>
+Damit JAP die Kommunikation mit dem Internet anonymisieren kann, mu&szlig; 
+er in die Kommunikation zwischen Browser und Server im Internet 
+zwischengeschaltet werden. Eine solche Zwischenstation wird allgemein als 
+Proxy bezeichnet. Die meisten Programme, die mit dem Internet 
+kommunizieren, k&ouml;nnen ihre Verbindungen &uuml;ber einen solchen Proxy 
+leiten. Die notwendigen Angaben daf&uuml;r sind: Der Name des Rechners 
+(Host), auf dem der Proxy l&auml;uft und die Portnummer, unter der der 
+Proxy Anfragen engegennimmt. Diese Portnummer ist beim JAP auf 4001 
+voreingestellt. Diese Einstellung kann in nahezu allen F&auml;llen auch 
+beibehalten werden.
+
+<P>
+<B>Notwendige Einstellungen im Web-Browser</B>
+
+<P>
+Benutzer eines Apple Macintosh (bis System 9) beachten bitte die 
+Hinweise zur <A HREF="browser_mac_de.html">Konfiguration am Mac...</A>
+
+<P>
+Damit Ihr Web-Browser auch tats&auml;chlich seine Anfragen ins Internet 
+&uuml;ber den JAP leitet, m&uuml;ssen Sie diesen so konfigurieren, 
+da&szlig; er den JAP als Proxy verwendet. Allgemein gehen Sie dabei so vor:
+
+<OL>
+	<LI> Suchen Sie die Proxy-Konfiguration in den Einstellungen Ihres 
+	Browsers.
+	<LI> Aktivieren Sie den Proxy-Modus (Proxyserver verwenden).
+	<LI> Tragen Sie im Feld Host den Wert <B>127.0.0.1</B> ein und im Feld Port 
+	die im JAP konfigurierte Portnummer (Standard: <B>4001</B>)
+</OL>
+
+<P>
+Weitere Hilfe zu den notwendigen <A HREF="browser_de.html">Einstellungen im 
+Internet Explorer und Netscape Navigator.</A>
+
+<P>
+<B>&Auml;ndern der Portnummer im JAP</B>
+
+<P>
+Die &Auml;nderung der Portnummer kann in sehr seltenen F&auml;llen 
+notwendig werden, wenn der voreingestellte Port auf Ihrem System bereits 
+von einem anderen Programm genutzt wird. Auf der Karte <I>Konfiguration</I> 
+wird im obersten Rahmen, der als <I>Listener-Portnummer</I> bezeichnet 
+wird, die aktuell eingestellte Portnummer des JAP angezeigt. Darunter wird 
+angegeben, ob dieser Port tats&auml;chlich verwendet wird. Dies ist der 
+Fall, wenn <B>Status: aktiv</B> angezeigt wird.
+
+<P>
+Zum &Auml;ndern der Portnummer gehen Sie folgenderma&szlig;en vor:
+
+<OL>
+	<LI> Klicken Sie auf die Schaltfl&auml;che <B>Einstellungen</B> neben der 
+	Anzeige der Portnummer.
+	<LI> Geben Sie im Eingabefeld die gew&uuml;schte Portnummer ein.
+	<LI> Klicken Sie <B>OK</B>.
+	<LI> &Uuml;berpr&uuml;fen Sie, da&szlig; die gew&uuml;nschte Portnummer 
+	verwendet werden kann (es mu&szlig; <B>Status: aktiv</B> angezeigt werden). 
+	Ist dies nicht der Fall, versuchen Sie es mit einer anderen Portnummer.
+	<LI> &Auml;ndern Sie die Einstellungen in Ihrem Web-Browser entsprechend.
+</OL>
+
+<!--#include virtual="/footer.html"-->
