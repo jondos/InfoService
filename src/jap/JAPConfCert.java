@@ -55,6 +55,10 @@ import anon.crypto.CertificateInfoStructure;
 import anon.crypto.JAPCertificate;
 import anon.crypto.SignatureVerifier;
 import gui.CAListCellRenderer;
+import javax.swing.JCheckBox;
+import javax.swing.JSeparator;
+import java.awt.event.ItemListener;
+import java.awt.event.ItemEvent;
 
 /**
  * This is the configuration GUI for the cert.
@@ -62,19 +66,16 @@ import gui.CAListCellRenderer;
 
 final class JAPConfCert extends AbstractJAPConfModule implements Observer
 {
-
-//	private DefaultListModel m_dlmCertList;
-	private TitledBorder m_borderCertInfo;
 	private TitledBorder m_borderCert;
-	private JLabel m_labelTrust1, m_labelTrust2, m_labelDate, m_labelCN, m_labelE, m_labelCSTL, m_labelO,
-	m_labelOU;
+	private JLabel m_labelDate, m_labelCN, m_labelE, m_labelCSTL, m_labelO, m_labelOU;
 	private JLabel m_labelDateData, m_labelCNData, m_labelEData, m_labelCSTLData, m_labelOData, m_labelOUData;
 	private JButton m_bttnCertInsert, m_bttnCertRemove, m_bttnCertStatus;
 	private DefaultListModel m_listmodelCertList;
 	private JList m_listCert;
 	private JScrollPane m_scrpaneList;
 	private Enumeration m_enumCerts;
-//	private ListSelectionListener m_listsel;
+	private JCheckBox m_cbCertCheckEnabled;
+	private JPanel m_panelCAInfo, m_panelCAList;
 
 	public JAPConfCert()
 	{
@@ -181,13 +182,30 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 		m_borderCert.setTitleFont(getFontSetting());
 		panelRoot.setBorder(m_borderCert);
 		JPanel caLabel = createCALabel();
-		JPanel caPanel = createCertCAPanel();
-		JPanel infoPanel = createCertInfoPanel();
-		BorderLayout bl = new BorderLayout();
-		panelRoot.setLayout(bl);
-		panelRoot.add(caLabel, BorderLayout.NORTH);
-		panelRoot.add(caPanel);
-		panelRoot.add(infoPanel, BorderLayout.SOUTH);
+		m_panelCAList = createCertCAPanel();
+		m_panelCAInfo = createCertInfoPanel();
+		panelRoot.setLayout(new GridBagLayout());
+		GridBagConstraints c = new GridBagConstraints();
+		c.gridx = 0;
+		c.gridy = 0;
+		c.weightx = 1.0;
+		c.weighty = 0;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		panelRoot.add(caLabel, c);
+		c.gridy++;
+		c.fill = GridBagConstraints.BOTH;
+		c.weighty = 1.0;
+
+		panelRoot.add(m_panelCAList, c);
+		c.gridy++;
+		c.insets = new Insets(20, 10, 20, 10);
+		c.weighty = 0;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		panelRoot.add(new JSeparator(), c);
+
+		c.gridy++;
+		c.insets = new Insets(0, 0, 0, 0);
+		panelRoot.add(m_panelCAInfo, c);
 	}
 
 	/**
@@ -202,48 +220,77 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 
 	private JPanel createCALabel()
 	{
-		final JPanel r_panelCALabel = new JPanel();
+		JPanel r_panelCALabel = new JPanel();
 
 		GridBagLayout panelLayoutCA = new GridBagLayout();
 		r_panelCALabel.setLayout(panelLayoutCA);
 
-		m_labelTrust1 = new JLabel(JAPMessages.getString("certTrust1"));
-		m_labelTrust1.setFont(getFontSetting());
-		m_labelTrust2 = new JLabel(JAPMessages.getString("certTrust2"));
-		m_labelTrust2.setFont(getFontSetting());
+		JLabel labelTrust1 = new JLabel(JAPMessages.getString("certTrust1"));
+		JLabel labelTrust2 = new JLabel(JAPMessages.getString("certTrust2"));
+		labelTrust1.setFont(getFontSetting());
+		labelTrust2 = new JLabel(JAPMessages.getString("certTrust2"));
+		labelTrust2.setFont(getFontSetting());
+
+		m_cbCertCheckEnabled = new JCheckBox();
+		m_cbCertCheckEnabled.addItemListener(new ItemListener()
+		{
+			public void itemStateChanged(ItemEvent e)
+			{
+				boolean b = m_cbCertCheckEnabled.isSelected();
+				m_labelDate.setEnabled(b);
+				m_labelCN.setEnabled(b);
+				m_labelE.setEnabled(b);
+				m_labelCSTL.setEnabled(b);
+				m_labelO.setEnabled(b);
+				m_labelOU.setEnabled(b);
+				m_labelDateData.setEnabled(b);
+				m_labelCNData.setEnabled(b);
+				m_labelEData.setEnabled(b);
+				m_labelCSTLData.setEnabled(b);
+				m_labelOData.setEnabled(b);
+				m_labelOUData.setEnabled(b);
+				m_bttnCertInsert.setEnabled(b);
+				m_bttnCertRemove.setEnabled(b);
+				m_bttnCertStatus.setEnabled(b);
+				m_listCert.setEnabled(b);
+				m_panelCAInfo.setEnabled(b);
+				m_panelCAList.setEnabled(b);
+			}
+		});
 
 		GridBagConstraints panelConstraintsCA = new GridBagConstraints();
-		panelConstraintsCA.anchor = GridBagConstraints.NORTHWEST;
-		panelConstraintsCA.fill = GridBagConstraints.HORIZONTAL;
-		panelConstraintsCA.weightx = 1.0;
+		panelConstraintsCA.anchor = GridBagConstraints.WEST;
+		panelConstraintsCA.fill = GridBagConstraints.NONE;
+		panelConstraintsCA.weightx = 0;
 		panelConstraintsCA.insets = new Insets(10, 10, 0, 0);
 
 		panelConstraintsCA.gridx = 0;
 		panelConstraintsCA.gridy = 0;
-		panelLayoutCA.setConstraints(m_labelTrust1, panelConstraintsCA);
-		r_panelCALabel.add(m_labelTrust1);
 
-		panelConstraintsCA.gridx = 0;
+		r_panelCALabel.add(m_cbCertCheckEnabled, panelConstraintsCA);
+		panelConstraintsCA.gridx = 1;
+		panelConstraintsCA.gridy = 0;
+		panelConstraintsCA.weightx = 1.0;
+		panelConstraintsCA.insets = new Insets(10, 0, 0, 0);
+		r_panelCALabel.add(labelTrust1, panelConstraintsCA);
+
+		panelConstraintsCA.gridx = 1;
 		panelConstraintsCA.gridy = 1;
-		panelConstraintsCA.insets = new Insets(5, 10, 15, 0);
-		panelLayoutCA.setConstraints(m_labelTrust2, panelConstraintsCA);
-		r_panelCALabel.add(m_labelTrust2);
+		panelConstraintsCA.insets = new Insets(0, 0, 10, 0);
+		panelLayoutCA.setConstraints(labelTrust2, panelConstraintsCA);
+		r_panelCALabel.add(labelTrust2);
 
 		return r_panelCALabel;
 	}
 
 	private JPanel createCertCAPanel()
 	{
-		final JPanel r_panelCA = new JPanel();
+		JPanel r_panelCA = new JPanel();
 
 		GridBagLayout panelLayoutCA = new GridBagLayout();
 		r_panelCA.setLayout(panelLayoutCA);
 
 		GridBagConstraints panelConstraintsCA = new GridBagConstraints();
-		panelConstraintsCA.anchor = GridBagConstraints.NORTHWEST;
-		panelConstraintsCA.fill = GridBagConstraints.HORIZONTAL;
-		panelConstraintsCA.weightx = 1.0;
-		panelConstraintsCA.insets = new Insets(10, 10, 0, 0);
 
 		m_listmodelCertList = new DefaultListModel();
 
@@ -287,9 +334,11 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 
 		panelConstraintsCA.gridx = 0;
 		panelConstraintsCA.gridy = 0;
-		panelConstraintsCA.gridheight = 5;
+		panelConstraintsCA.anchor = GridBagConstraints.NORTHWEST;
+		panelConstraintsCA.weightx = 1.0;
 		panelConstraintsCA.weighty = 1.0;
-		panelConstraintsCA.insets = new Insets(0, 10, 20, 0);
+		panelConstraintsCA.gridwidth = 3;
+		panelConstraintsCA.insets = new Insets(0, 10, 10, 10);
 		panelConstraintsCA.fill = GridBagConstraints.BOTH;
 		panelLayoutCA.setConstraints(m_scrpaneList, panelConstraintsCA);
 		r_panelCA.add(m_scrpaneList);
@@ -315,10 +364,12 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 				//if (cert == null)
 				if (cert == null && decode_error)
 				{
-					JOptionPane.showMessageDialog(r_panelCA,
-												  JAPMessages.getString("certInputError"),
-												  JAPMessages.getString("certInputErrorTitle"),
-												  JOptionPane.ERROR_MESSAGE);
+					JAPConf.showError(JAPMessages.getString("certInputErrorTitle"));
+					/*					JOptionPane.showMessageDialog(m_r_panelCA,
+						 JAPMessages.getString("certInputError"),
+						 JAPMessages.getString("certInputErrorTitle"),
+						 JOptionPane.ERROR_MESSAGE);
+					 */
 				}
 				if (cert != null)
 				{
@@ -386,29 +437,23 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 			}
 		});
 
-		panelConstraintsCA.gridx = 1;
-		panelConstraintsCA.gridy = 0;
+		panelConstraintsCA.gridx = 0;
+		panelConstraintsCA.gridy = 1;
 		panelConstraintsCA.weightx = 0.0;
-		panelConstraintsCA.gridheight = 1;
+		panelConstraintsCA.gridwidth = 1;
 		panelConstraintsCA.weighty = 0.0;
-		panelConstraintsCA.ipadx = 10;
-		panelConstraintsCA.fill = GridBagConstraints.BOTH;
-		panelConstraintsCA.insets = new Insets(0, 10, 0, 10);
+		panelConstraintsCA.fill = GridBagConstraints.NONE;
+		panelConstraintsCA.insets = new Insets(0, 10, 0, 0);
 		panelLayoutCA.setConstraints(m_bttnCertInsert, panelConstraintsCA);
 		r_panelCA.add(m_bttnCertInsert);
 
-		panelConstraintsCA.ipadx = 0;
 		panelConstraintsCA.gridx = 1;
 		panelConstraintsCA.gridy = 1;
-		panelConstraintsCA.fill = GridBagConstraints.BOTH;
-		panelConstraintsCA.insets = new Insets(10, 10, 0, 10);
 		panelLayoutCA.setConstraints(m_bttnCertRemove, panelConstraintsCA);
 		r_panelCA.add(m_bttnCertRemove);
 
-		panelConstraintsCA.gridx = 1;
-		panelConstraintsCA.gridy = 2;
-		panelConstraintsCA.fill = GridBagConstraints.BOTH;
-		panelConstraintsCA.insets = new Insets(30, 10, 20, 10);
+		panelConstraintsCA.gridx = 2;
+		panelConstraintsCA.gridy = 1;
 		panelLayoutCA.setConstraints(m_bttnCertStatus, panelConstraintsCA);
 		r_panelCA.add(m_bttnCertStatus);
 
@@ -424,14 +469,13 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 		GridBagConstraints panelConstraintsInfo = new GridBagConstraints();
 		panelConstraintsInfo.anchor = GridBagConstraints.WEST;
 		panelConstraintsInfo.weightx = 1.0;
-		panelConstraintsInfo.insets = new Insets(10, 10, 0, 0);
-
+		panelConstraintsInfo.insets = new Insets(0, 10, 0, 0);
 		panelConstraintsInfo.gridx = 0;
 		panelConstraintsInfo.gridy = 0;
+		panelConstraintsInfo.gridwidth = 2;
 
-		m_borderCertInfo = new TitledBorder(JAPMessages.getString("certInfoBorder"));
-		m_borderCertInfo.setTitleFont(getFontSetting());
-		r_panelInfo.setBorder(m_borderCertInfo);
+		JLabel l = new JLabel(JAPMessages.getString("certInfoBorder"));
+		r_panelInfo.add(l, panelConstraintsInfo);
 
 		m_labelDate = new JLabel(JAPMessages.getString("certDate"));
 		m_labelDate.setFont(getFontSetting());
@@ -478,16 +522,19 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 		 */
 
 		panelConstraintsInfo.anchor = GridBagConstraints.WEST;
+		panelConstraintsInfo.fill = GridBagConstraints.HORIZONTAL;
+		panelConstraintsInfo.gridwidth = 1;
 		panelConstraintsInfo.gridx = 0;
 		panelConstraintsInfo.gridy = 1;
 		panelConstraintsInfo.weightx = 0;
-		panelConstraintsInfo.insets = new Insets(0, 10, 0, 0);
+		panelConstraintsInfo.insets = new Insets(10, 15, 0, 0);
 		panelLayoutInfo.setConstraints(m_labelCN, panelConstraintsInfo);
 		r_panelInfo.add(m_labelCN);
 
 		panelConstraintsInfo.gridx = 1;
 		panelConstraintsInfo.gridy = 1;
 		panelConstraintsInfo.weightx = 1;
+		panelConstraintsInfo.insets = new Insets(10, 10, 0, 10);
 		panelLayoutInfo.setConstraints(m_labelCNData, panelConstraintsInfo);
 		r_panelInfo.add(m_labelCNData);
 
@@ -495,13 +542,14 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 		panelConstraintsInfo.gridx = 0;
 		panelConstraintsInfo.gridy = 2;
 		panelConstraintsInfo.weightx = 0;
-		panelConstraintsInfo.insets = new Insets(0, 10, 0, 0);
+		panelConstraintsInfo.insets = new Insets(10, 15, 0, 0);
 		panelLayoutInfo.setConstraints(m_labelO, panelConstraintsInfo);
 		r_panelInfo.add(m_labelO);
 
 		panelConstraintsInfo.gridx = 1;
 		panelConstraintsInfo.gridy = 2;
 		panelConstraintsInfo.weightx = 1;
+		panelConstraintsInfo.insets = new Insets(10, 10, 0, 10);
 		panelLayoutInfo.setConstraints(m_labelOData, panelConstraintsInfo);
 		r_panelInfo.add(m_labelOData);
 
@@ -509,13 +557,14 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 		panelConstraintsInfo.gridx = 0;
 		panelConstraintsInfo.gridy = 3;
 		panelConstraintsInfo.weightx = 0;
-		panelConstraintsInfo.insets = new Insets(0, 10, 0, 0);
+		panelConstraintsInfo.insets = new Insets(10, 15, 0, 0);
 		panelLayoutInfo.setConstraints(m_labelOU, panelConstraintsInfo);
 		r_panelInfo.add(m_labelOU);
 
 		panelConstraintsInfo.gridx = 1;
 		panelConstraintsInfo.gridy = 3;
 		panelConstraintsInfo.weightx = 1;
+		panelConstraintsInfo.insets = new Insets(10, 10, 0, 10);
 		panelLayoutInfo.setConstraints(m_labelOUData, panelConstraintsInfo);
 		r_panelInfo.add(m_labelOUData);
 
@@ -523,13 +572,14 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 		panelConstraintsInfo.gridx = 0;
 		panelConstraintsInfo.gridy = 4;
 		panelConstraintsInfo.weightx = 0;
-		panelConstraintsInfo.insets = new Insets(0, 10, 0, 0);
+		panelConstraintsInfo.insets = new Insets(10, 15, 0, 0);
 		panelLayoutInfo.setConstraints(m_labelCSTL, panelConstraintsInfo);
 		r_panelInfo.add(m_labelCSTL);
 
 		panelConstraintsInfo.gridx = 1;
 		panelConstraintsInfo.gridy = 4;
 		panelConstraintsInfo.weightx = 1;
+		panelConstraintsInfo.insets = new Insets(10, 10, 0, 10);
 		panelLayoutInfo.setConstraints(m_labelCSTLData, panelConstraintsInfo);
 		r_panelInfo.add(m_labelCSTLData);
 
@@ -537,13 +587,14 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 		panelConstraintsInfo.gridx = 0;
 		panelConstraintsInfo.gridy = 5;
 		panelConstraintsInfo.weightx = 0;
-		panelConstraintsInfo.insets = new Insets(0, 10, 0, 0);
+		panelConstraintsInfo.insets = new Insets(10, 15, 0, 0);
 		panelLayoutInfo.setConstraints(m_labelE, panelConstraintsInfo);
 		r_panelInfo.add(m_labelE);
 
 		panelConstraintsInfo.gridx = 1;
 		panelConstraintsInfo.gridy = 5;
 		panelConstraintsInfo.weightx = 1;
+		panelConstraintsInfo.insets = new Insets(10, 10, 0, 10);
 		panelLayoutInfo.setConstraints(m_labelEData, panelConstraintsInfo);
 		r_panelInfo.add(m_labelEData);
 
@@ -552,13 +603,14 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 		panelConstraintsInfo.gridy = 6;
 		panelConstraintsInfo.fill = GridBagConstraints.HORIZONTAL;
 		panelConstraintsInfo.weightx = 0;
-		panelConstraintsInfo.insets = new Insets(15, 10, 0, 0);
+		panelConstraintsInfo.insets = new Insets(10, 15, 10, 0);
 		panelLayoutInfo.setConstraints(m_labelDate, panelConstraintsInfo);
 		r_panelInfo.add(m_labelDate);
 
 		panelConstraintsInfo.gridx = 1;
 		panelConstraintsInfo.gridy = 6;
 		panelConstraintsInfo.weightx = 1;
+		panelConstraintsInfo.insets = new Insets(10, 10, 10, 10);
 		panelLayoutInfo.setConstraints(m_labelDateData, panelConstraintsInfo);
 		r_panelInfo.add(m_labelDateData);
 		panelConstraintsInfo.anchor = GridBagConstraints.WEST;
@@ -578,14 +630,9 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 		  r_panelInfo.add(m_labelDateData);*/
 
 
-		JPanel panelInfo = new JPanel();
-		panelLayoutInfo = new GridBagLayout();
-		panelInfo.setLayout(panelLayoutInfo);
-		panelConstraintsInfo.insets = new Insets(5, 5, 5, 5);
 
-		panelInfo.add(r_panelInfo, panelConstraintsInfo);
+		return r_panelInfo;
 
-		return panelInfo;
 	}
 
 	public void update(Observable a_notifier, Object a_message)
@@ -609,8 +656,29 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 						m_listmodelCertList.addElement(j);
 					}
 				}
+				if (m_listmodelCertList.getSize() > 0)
+				{
+					m_listCert.setSelectedIndex(0);
+				}
 			}
 		}
 	}
 
+	protected void onUpdateValues()
+	{
+		m_cbCertCheckEnabled.setSelected(SignatureVerifier.getInstance().isCheckSignatures());
+	}
+
+	protected boolean onOkPressed()
+	{
+		//Cert seetings
+		SignatureVerifier.getInstance().setCheckSignatures(m_cbCertCheckEnabled.isSelected());
+		return true;
+	}
+
+	protected void onResetToDefaultsPressed()
+	{
+		super.onResetToDefaultsPressed();
+		m_cbCertCheckEnabled.setSelected(false);
+	}
 }

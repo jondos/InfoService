@@ -12,6 +12,8 @@ import javax.swing.JList;
 import javax.swing.ListCellRenderer;
 
 import anon.crypto.CertificateInfoStructure;
+import org.bouncycastle.asn1.x509.X509Name;
+import java.util.Vector;
 
 final public class CAListCellRenderer extends JLabel implements ListCellRenderer
 {
@@ -24,13 +26,33 @@ final public class CAListCellRenderer extends JLabel implements ListCellRenderer
 	public Component getListCellRendererComponent(
 		JList list,
 		Object value, // value to display
-		int index, // cell index
+		int a_index, // cell index
 		boolean isSelected, // is the cell selected
 		boolean cellHasFocus) // the list and the cell have the focus
 	{
 		CertificateInfoStructure j = (CertificateInfoStructure) value;
-		String issuerCN = (String) j.getCertificate().getIssuer().getValues().elementAt(0);
-		setText(issuerCN);
+		X509Name name = j.getCertificate().getSubject();
+		Vector oids = name.getOIDs();
+		int index = 0;
+		boolean found = false;
+		for (index = 0; index < oids.size(); index++)
+		{
+			if (oids.elementAt(index).equals(X509Name.CN))
+			{
+				found = true;
+				break;
+			}
+		}
+		String subjectCN;
+		if (found)
+		{
+			subjectCN = (String) name.getValues().elementAt(index);
+		}
+		else
+		{
+			subjectCN = name.toString();
+		}
+		setText(subjectCN);
 
 //         setIcon((s.length() > 10) ? longIcon : shortIcon);
 		if (isSelected)

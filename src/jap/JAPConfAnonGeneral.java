@@ -42,7 +42,7 @@ import anon.crypto.SignatureVerifier;
 
 final class JAPConfAnonGeneral extends AbstractJAPConfModule
 {
-	private JCheckBox m_cbDummyTraffic, m_cbCertCheckDisabled;
+	private JCheckBox m_cbDummyTraffic;
 	private JCheckBox m_cbAutoConnect;
 	private JCheckBox m_cbAutoReConnect;
 	private JSlider m_sliderDummyTrafficIntervall;
@@ -69,8 +69,6 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 			m_sliderDummyTrafficIntervall.setValue(iTmp / 1000);
 		}
 		m_sliderDummyTrafficIntervall.setEnabled(iTmp > -1);
-		//cert tab
-		m_cbCertCheckDisabled.setSelected(!SignatureVerifier.getInstance().isCheckSignatures());
 		m_cbAutoConnect.setSelected(JAPModel.getAutoConnect());
 		m_cbAutoReConnect.setSelected(JAPModel.getAutoReConnect());
 	}
@@ -79,8 +77,6 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 	protected boolean onOkPressed()
 	{
 
-		//Cert seetings
-		SignatureVerifier.getInstance().setCheckSignatures(!m_cbCertCheckDisabled.isSelected());
 		if (m_cbDummyTraffic.isSelected())
 		{
 			m_Controller.setDummyTraffic(m_sliderDummyTrafficIntervall.getValue() * 1000);
@@ -114,7 +110,6 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 			}
 		});
 
-		m_cbCertCheckDisabled = new JCheckBox(JAPMessages.getString("ngConfAnonGeneralDisableCertCheck"));
 		GridBagLayout gb = new GridBagLayout();
 		panelRoot.setLayout(gb);
 		GridBagConstraints c = new GridBagConstraints();
@@ -133,6 +128,7 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		c.gridy++;
 		panelRoot.add(m_cbDummyTraffic, c);
 		c.gridy++;
+		c.weighty = 1.0;
 		m_sliderDummyTrafficIntervall = new JSlider(SwingConstants.HORIZONTAL, 10, 60, 30);
 		m_sliderDummyTrafficIntervall.setMajorTickSpacing(10);
 		m_sliderDummyTrafficIntervall.setMinorTickSpacing(5);
@@ -140,17 +136,12 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		m_sliderDummyTrafficIntervall.setPaintTicks(true);
 		m_sliderDummyTrafficIntervall.setSnapToTicks(true);
 		panelRoot.add(m_sliderDummyTrafficIntervall, c);
-		c.gridy++;
-		c.weighty = 0;
-		c.fill = GridBagConstraints.HORIZONTAL;
-		panelRoot.add(m_cbCertCheckDisabled, c);
 	}
 
 	//defaults
 	public void onResetToDefaultsPressed()
 	{
 		m_cbDummyTraffic.setSelected(false);
-		m_cbCertCheckDisabled.setSelected(false);
 		m_sliderDummyTrafficIntervall.setEnabled(false);
 		m_cbAutoConnect.setSelected(false);
 		m_cbAutoReConnect.setSelected(false);

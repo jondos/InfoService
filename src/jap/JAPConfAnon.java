@@ -184,7 +184,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		drawCompleteDialog();
 	}
 
-	private void drawServerPanel(int a_numberOfMixes, String a_strCascadeName,boolean a_enabled)
+	private void drawServerPanel(int a_numberOfMixes, String a_strCascadeName, boolean a_enabled)
 	{
 		if (m_manualPanel != null)
 		{
@@ -200,7 +200,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		c.insets = new Insets(5, 5, 5, 5);
 
 		JAPMultilineLabel l = new JAPMultilineLabel(JAPMessages.getString("infoAboutCascade")
-													+"\n"+a_strCascadeName);
+			+ "\n" + a_strCascadeName);
 
 		if (m_serverPanel != null)
 		{
@@ -418,13 +418,13 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		m_cascadesPanel.add(m_reloadCascadesButton, c);
 
 		m_selectCascadeButton = new JButton(JAPMessages.getString("selectCascade"));
-			/* maybe the button must be disabled (if connect-via-forwarder is selected) */
-			m_selectCascadeButton.setEnabled(!JAPModel.getInstance().getRoutingSettings().isConnectViaForwarder());
-			m_selectCascadeButton.addActionListener(this);
-			c.gridx = 1;
-			m_cascadesPanel.add(m_selectCascadeButton, c);
+		/* maybe the button must be disabled (if connect-via-forwarder is selected) */
+		m_selectCascadeButton.setEnabled(!JAPModel.getInstance().getRoutingSettings().isConnectViaForwarder());
+		m_selectCascadeButton.addActionListener(this);
+		c.gridx = 1;
+		m_cascadesPanel.add(m_selectCascadeButton, c);
 
-	m_manualCascadeButton = new JButton(JAPMessages.getString("manualCascade"));
+		m_manualCascadeButton = new JButton(JAPMessages.getString("manualCascade"));
 		m_manualCascadeButton.addActionListener(this);
 		c.gridx = 2;
 		m_cascadesPanel.add(m_manualCascadeButton, c);
@@ -732,7 +732,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		m_numOfUsersLabel.setText("");
 		m_portsLabel.setText("");
 		m_reachableLabel.setText("");
-		drawServerPanel(3, "",false);
+		drawServerPanel(3, "", false);
 
 		drawServerInfoPanel("", "", "");
 		m_serverInfoPanel.setEnabled(false);
@@ -859,24 +859,24 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				LogHolder.log(LogLevel.ERR, LogType.MISC, "Error opening URL in browser");
 			}
 		}
-/*		else if (e.getSource() == m_listMixCascade)
-		{
-			if (e.getClickCount() == 2)
+		/*		else if (e.getSource() == m_listMixCascade)
+		  {
+		   if (e.getClickCount() == 2)
+		   {
+			int index = m_listMixCascade.locationToIndex(e.getPoint());
+			MixCascade c;
+			try
 			{
-				int index = m_listMixCascade.locationToIndex(e.getPoint());
-				MixCascade c;
-				try
-				{
-					c = (MixCascade) m_listMixCascade.getModel().getElementAt(index);
-				}
-				catch (ClassCastException a_e)
-				{
-					return;
-				}
-				m_Controller.setCurrentMixCascade(c);
-				m_listMixCascade.repaint();
+			 c = (MixCascade) m_listMixCascade.getModel().getElementAt(index);
 			}
-		}*/
+			catch (ClassCastException a_e)
+			{
+			 return;
+			}
+			m_Controller.setCurrentMixCascade(c);
+			m_listMixCascade.repaint();
+		   }
+		  }*/
 	}
 
 	public void mousePressed(MouseEvent e)
@@ -978,11 +978,11 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				{
 					if (m_infoService.getNumOfMixes(cascadeId) == -1)
 					{
-						this.drawServerPanel(3, "",false);
+						this.drawServerPanel(3, "", false);
 					}
 					else
 					{
-						this.drawServerPanel(m_infoService.getNumOfMixes(cascadeId),cascade.getName(), true);
+						this.drawServerPanel(m_infoService.getNumOfMixes(cascadeId), cascade.getName(), true);
 					}
 					m_numOfUsersLabel.setText(m_infoService.getNumOfUsers(cascadeId));
 					m_reachableLabel.setText(m_infoService.getHosts(cascadeId));

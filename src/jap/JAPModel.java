@@ -56,13 +56,14 @@ public final class JAPModel
 
 	private boolean m_bSmallDisplay = false;
 	private boolean m_bInfoServiceDisabled = false;
-	private boolean m_bSaveMainWindowPosition = false;
-	public Point m_OldMainWindowLocation = null;
 	private boolean m_bMinimizeOnStartup = false; // true if programm will start minimized
 	private boolean m_bMoveToSystrayOnStartup = false; // true if programm will start in the systray
 	private int m_iDefaultView = JAPConstants.VIEW_NORMAL; //which view we should start?
 
-	public Dimension m_OldMainWindowSize = null;
+	private boolean m_bSaveMainWindowPosition = false;
+	private Dimension m_OldMainWindowSize = null;
+	private Point m_OldMainWindowLocation = null;
+
 	private static JAPModel ms_TheModel = null;
 
 	private boolean m_bCertCheckDisabled = true;
@@ -189,6 +190,21 @@ public final class JAPModel
 	public static boolean getSaveMainWindowPosition()
 	{
 		return ms_TheModel.m_bSaveMainWindowPosition;
+	}
+
+	protected void setOldMainWindowSize(Dimension size)
+	{
+		m_OldMainWindowSize = size;
+	}
+
+	protected void setOldMainWindowLocation(Point location)
+	{
+		m_OldMainWindowLocation = location;
+	}
+
+	public static Point getOldMainWindowLocation()
+	{
+		return ms_TheModel.m_OldMainWindowLocation;
 	}
 
 	/*
@@ -390,7 +406,6 @@ public final class JAPModel
 	{
 		m_bPreCreateAnonRoutes = b;
 	}
-
 
 	public static JAPCertificate getJAPCodeSigningCert()
 	{
