@@ -48,7 +48,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import anon.infoservice.HTTPConnectionFactory;
 import anon.infoservice.InfoService;
-import anon.infoservice.InfoServiceDatabase;
+import anon.infoservice.Database;
 import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.ListenerInterface;
 
@@ -202,7 +202,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 		JLabel settingsInfoPreferedLabel = new JLabel(JAPMessages.getString("settingsInfoPreferedLabel"));
 		settingsInfoPreferedLabel.setFont(getFontSetting());
 
-		settingsInfoAllList = new JList(InfoServiceDatabase.getInstance().getEntryList());
+		settingsInfoAllList = new JList(Database.getInstance(InfoService.class).getEntryList());
 		settingsInfoAllList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		settingsInfoAllList.addListSelectionListener(new ListSelectionListener()
 		{
@@ -228,13 +228,13 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 				if (infoservices != null)
 				{
 					/* clear the list of all infoservices */
-					InfoServiceDatabase.getInstance().removeAll();
+					Database.getInstance(InfoService.class).removeAll();
 					/* now put the new infoservices in the list */
 					Enumeration it = infoservices.elements();
 					while (it.hasMoreElements())
 					{
             InfoService currentInfoService = (InfoService)(it.nextElement());
-            InfoServiceDatabase.getInstance().update(currentInfoService);
+            Database.getInstance(InfoService.class).update(currentInfoService);
             InfoService preferedInfoService = InfoServiceHolder.getInstance().getPreferedInfoService();
             if (preferedInfoService != null) {
               /* if the current infoservice ID is equal to the ID of the prefered infoservice,
@@ -306,14 +306,14 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 						}
 						else
 						{
-							InfoServiceDatabase.getInstance().remove(selectedInfoService);
+							Database.getInstance(InfoService.class).remove(selectedInfoService);
 							/* update the infoservice list */
 							updateGuiOutput();
 						}
 					}
 					else
 					{
-						InfoServiceDatabase.getInstance().remove(selectedInfoService);
+						Database.getInstance(InfoService.class).remove(selectedInfoService);
 						/* update the infoservice list */
 						updateGuiOutput();
 					}
@@ -570,7 +570,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 					InfoService newInfoService = new InfoService(null, null,
 						settingsInfoHostField.getText().trim(),
 						Integer.parseInt(settingsInfoPortField.getText().trim()));
-					InfoServiceDatabase.getInstance().update(newInfoService);
+					Database.getInstance(InfoService.class).update(newInfoService);
 					addDialog.hide();
 					/* update the infoservice list */
 					updateGuiOutput();
@@ -784,7 +784,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 		synchronized (this)
 		{
 			/* only work on consistent data */
-			Vector knownInfoServices = InfoServiceDatabase.getInstance().getEntryList();
+			Vector knownInfoServices = Database.getInstance(InfoService.class).getEntryList();
 			InfoService preferedInfoService = InfoServiceHolder.getInstance().getPreferedInfoService();
 			if (preferedInfoService != null)
 			{

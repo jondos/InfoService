@@ -31,7 +31,7 @@ import java.util.Enumeration;
 import java.util.Vector;
 import anon.infoservice.HTTPConnectionFactory;
 import anon.infoservice.InfoService;
-import anon.infoservice.InfoServiceDatabase;
+import anon.infoservice.Database;
 import anon.infoservice.InfoServiceHolder;
 import logging.LogHolder;
 import logging.LogLevel;
@@ -74,7 +74,7 @@ public class JAPConfInfoServiceSavePoint implements IJAPConfSavePoint
 	 */
 	public void createSavePoint()
 	{
-		m_knownInfoServices = InfoServiceDatabase.getInstance().getEntryList();
+		m_knownInfoServices = Database.getInstance(InfoService.class).getEntryList();
 		m_preferedInfoService = InfoServiceHolder.getInstance().getPreferedInfoService();
 		m_automaticInfoServiceRequestsDisabled = JAPModel.isInfoServiceDisabled();
 		m_automaticInfoServiceChanges = InfoServiceHolder.getInstance().isChangeInfoServices();
@@ -87,11 +87,11 @@ public class JAPConfInfoServiceSavePoint implements IJAPConfSavePoint
 	public void restoreSavePoint()
 	{
 		/* remove all infoservices from database and load the stored ones */
-		InfoServiceDatabase.getInstance().removeAll();
+		Database.getInstance(InfoService.class).removeAll();
 		Enumeration infoServices = m_knownInfoServices.elements();
 		while (infoServices.hasMoreElements())
 		{
-			InfoServiceDatabase.getInstance().update( (InfoService) (infoServices.nextElement()));
+			Database.getInstance(InfoService.class).update( (InfoService) (infoServices.nextElement()));
 		}
 		InfoServiceHolder.getInstance().setPreferedInfoService(m_preferedInfoService);
 		JAPController.setInfoServiceDisabled(m_automaticInfoServiceRequestsDisabled);
@@ -107,7 +107,7 @@ public class JAPConfInfoServiceSavePoint implements IJAPConfSavePoint
 		/* remove all infoservices from database and set prefered infoservice to the default
 		 * infoservice
 		 */
-		InfoServiceDatabase.getInstance().removeAll();
+		Database.getInstance(InfoService.class).removeAll();
 		try
 		{
 			InfoService defaultInfoService = new InfoService(

@@ -55,8 +55,8 @@ import anon.ErrorCodes;
 import anon.crypto.JAPCertificate;
 import anon.crypto.JAPCertificateStore;
 import anon.infoservice.HTTPConnectionFactory;
+import anon.infoservice.Database;
 import anon.infoservice.InfoService;
-import anon.infoservice.InfoServiceDatabase;
 import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.JAPVersionInfo;
 import anon.infoservice.MixCascade;
@@ -182,6 +182,50 @@ public final class JAPController implements ProxyListener
 	{
 		return m_Controller;
 	}
+
+	/**
+	 * Creates an XML node (InfoServices node) with all infoservices from the database inside.
+	 *
+	 * @param doc The XML document, which is the environment for the created XML node.
+	 *
+	 * @return The InfoServices XML node.
+	 */
+	public Element toXmlNode(Document doc)
+	{
+		Element infoServicesNode = doc.createElement("InfoServices");
+		Vector infoServices = Database.getInstance(InfoService.class).getEntryList();
+		Enumeration it = infoServices.elements();
+		while (it.hasMoreElements())
+		{
+			infoServicesNode.appendChild( ( (InfoService) (it.nextElement())).toXmlNode(doc));
+		}
+		return infoServicesNode;
+	}
+
+	/**
+	 * Adds all infoservices, which are childs of the InfoServices node, to the database.
+	 *
+	 * @param infoServicesNode The InfoServices node.
+	 */
+	private void loadFromXml(Element infoServicesNode)
+	{
+		NodeList infoServiceNodes = infoServicesNode.getElementsByTagName("InfoService");
+		for (int i = 0; i < infoServiceNodes.getLength(); i++)
+		{
+			/* add all childs to the database */
+			try
+			{
+				Database.getInstance(InfoService.class).update(
+								new InfoService( (Element) (infoServiceNodes.item(i))));
+			}
+			catch (Exception e)
+			{
+				/* if there was an error, it does not matter */
+			}
+		}
+	}
+
+
 
 	//---------------------------------------------------------------------
 	public void initialRun()
@@ -615,7 +659,7 @@ public final class JAPController implements ProxyListener
 				if (infoServicesNodes.getLength() > 0)
 				{
 					Element infoServicesNode = (Element) (infoServicesNodes.item(0));
-					InfoServiceDatabase.getInstance().loadFromXml(infoServicesNode);
+					loadFromXml(infoServicesNode);
 				}
 				/* prefered infoservice */
 				NodeList preferedInfoServiceNodes = root.getElementsByTagName("PreferedInfoService");
@@ -819,7 +863,7 @@ public final class JAPController implements ProxyListener
 			}
 			/* adding infoservice settings */
 			/* infoservice list */
-			e.appendChild(InfoServiceDatabase.getInstance().toXmlNode(doc));
+			e.appendChild(toXmlNode(doc));
 			/* prefered infoservice */
 			InfoService preferedInfoService = InfoServiceHolder.getInstance().getPreferedInfoService();
 			Element preferedInfoServiceNode = doc.createElement("PreferedInfoService");

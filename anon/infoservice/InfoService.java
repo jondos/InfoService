@@ -101,7 +101,7 @@ public class InfoService extends DatabaseEntry
 	 */
 	public InfoService(Element infoServiceNode) throws Exception
 	{
-		super(0); //get the expire time from xml
+		super(System.currentTimeMillis() + DEFAULT_EXPIRE_TIME);
 		/* get the ID */
 		infoServiceId = infoServiceNode.getAttribute("id");
 		/* get the name */
@@ -153,7 +153,7 @@ public class InfoService extends DatabaseEntry
 			throw (new Exception("InfoService: Error in XML structure."));
 		}
 		Element expireNode = (Element) (expireNodes.item(0));
-		setExpireTime(Long.parseLong(expireNode.getFirstChild().getNodeValue()));
+		//setExpireTime(Long.parseLong(expireNode.getFirstChild().getNodeValue()));
 		/* get the information, whether this infoservice keeps a list of JAP forwarders */
 		NodeList forwarderListNodes = infoServiceNode.getElementsByTagName("ForwarderList");
 		if (forwarderListNodes.getLength() == 0)
@@ -416,7 +416,6 @@ public class InfoService extends DatabaseEntry
 				}
 				Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(response.
 					getInputStream());
-
 				/* fetching the document was successful, leave this method */
 				return doc;
 			}
@@ -675,7 +674,7 @@ public class InfoService extends DatabaseEntry
 	 *
 	 * @return The raw tor nodes list as it is distributed by the tor directory servers.
 	 */
-	public String getTorNodesList()throws Exception
+	public String getTorNodesList() throws Exception
 	{
 		Document doc = getXmlDocument(HttpRequestStructure.createGetRequest("/tornodes"));
 		Element torNodeList=doc.getDocumentElement();

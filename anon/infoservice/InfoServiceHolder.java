@@ -282,7 +282,7 @@ public class InfoServiceHolder
 		{
 			primaryInfoServices.addElement(currentPreferedInfoService);
 		}
-		Enumeration infoservices = InfoServiceDatabase.getInstance().getEntryList().elements();
+		Enumeration infoservices = Database.getInstance(InfoService.class).getEntryList().elements();
 		while (infoservices.hasMoreElements())
 		{
 			InfoService currentInfoService = (InfoService) (infoservices.nextElement());
@@ -318,7 +318,7 @@ public class InfoServiceHolder
 		if (m_changeInfoServices)
 		{
 			/* get the whole infoservice list */
-			infoServiceList = InfoServiceDatabase.getInstance().getEntryList();
+			infoServiceList = Database.getInstance(InfoService.class).getEntryList();
 		}
 		else
 		{

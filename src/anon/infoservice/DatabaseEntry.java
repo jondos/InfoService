@@ -47,7 +47,7 @@ public abstract class DatabaseEntry
 	 */
 	public DatabaseEntry(long a_expireTime)
 	{
-		setExpireTime(a_expireTime);
+		m_expireTime = a_expireTime;
 	}
 
 	/**
@@ -63,19 +63,8 @@ public abstract class DatabaseEntry
 	 *
 	 * @return The expire time for this DatabaseEntry.
 	 */
-	public long getExpireTime()
+	public final long getExpireTime()
 	{
 		return m_expireTime;
-	}
-
-	/**
-	 * Sets the time (see System.currentTimeMillis()) when this DatabaseEntry will be removed
-	 * from the Database, if it is not updated meanwhile.
-	 *
-	 * @param a_expireTime The expire time for this DatabaseEntry.
-	 */
-	protected void setExpireTime(long a_expireTime)
-	{
-		m_expireTime = a_expireTime;
 	}
 }
