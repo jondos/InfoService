@@ -31,6 +31,7 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 			super(s);
 			JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPView:initializing...");
 			model = JAPModel.getModel();
+			model.setView(this);
 			init();
 			helpWindow =  new JAPHelp(this); 
 			configDialog = new JAPConf(this);

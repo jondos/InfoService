@@ -11,10 +11,10 @@ public final class JAPLoading implements ActionListener, VersioncheckerProgress 
 	private JDialog dialog;
 	private String returnValue;
 
-    public  JAPLoading (JAPModel model) {
-		dialog = new JDialog();
-		dialog.setTitle("Message");
-
+    public  JAPLoading (JAPModel model,Frame parent) {
+		dialog = new JDialog(parent);
+		dialog.setTitle(model.getString("Message"));
+			
 		JPanel iconPanel = new JPanel();
 		iconPanel.setBorder(new EmptyBorder(5,5,0,0));
 		JLabel icnLabel = new JLabel(model.loadImageIcon(model.DOWNLOADFN, true));
@@ -51,6 +51,7 @@ public final class JAPLoading implements ActionListener, VersioncheckerProgress 
 		dialog.getContentPane().add(mainPanel, BorderLayout.CENTER);
 		dialog.pack();
 		model.centerFrame(dialog);
+		dialog.setResizable(false);
 	}
 	
 	public void progress(int percent) {
@@ -98,7 +99,7 @@ public final class JAPLoading implements ActionListener, VersioncheckerProgress 
 	public static void main() {
 		JAPDebug d = new JAPDebug();
 		JAPModel model = new JAPModel(); 
-		JAPLoading l = new JAPLoading(model);
+		JAPLoading l = new JAPLoading(model,new Frame());
 		String answer;
 
 		answer = l.message(model.getString("newVersionAvailableTitle"),

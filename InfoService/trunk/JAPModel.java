@@ -42,7 +42,7 @@ public final class JAPModel {
 	static final int MAXPROGRESSBARVALUE = 100; // for trafficSituation and currentRisk
 	public int       trafficSituation  = -1;
 	public int       currentRisk       = -1;
-
+	static private JAPView view			   = null;
 // 2000-08-01(HF): the following url is now defined in JAPMessages.properties:
 // usage: model.getString("infoURL")
 //static final String url_download_version       = "http://www.inf.tu-dresden.de/~hf2/anon/JAP/";
@@ -83,7 +83,7 @@ public final class JAPModel {
 	private JAPProxyServer p;
 	
 	private static JAPModel model=null;
-	public JAPLoading japLoading;
+//	public JAPLoading japLoading;
 	public static JAPFeedback feedback;
 	
 	public static JAPKeyPool keypool;
@@ -119,6 +119,11 @@ public final class JAPModel {
 			return model;
 	}
 	
+	public void setView(JAPView v)
+		{
+			view=v;	
+		}
+	
 	public void load() {
 		// Load default anon services
 		anonServerDatabase = new Vector();
@@ -148,7 +153,6 @@ public final class JAPModel {
 		// fire event
 		notifyJAPObservers();
 		// Create the Window for Update
-		japLoading = new JAPLoading(this);
 	}
 
 	public void save() {
@@ -366,6 +370,7 @@ public final class JAPModel {
 			//	Object[] options = { model.getString("newVersionNo"), model.getString("newVersionYes") };
 			//	ImageIcon   icon = loadImageIcon(DOWNLOADFN,true);
 				String answer;
+				JAPLoading japLoading = new JAPLoading(this,view);
 				answer = japLoading.message(model.getString("newVersionAvailableTitle"),
 						   model.getString("newVersionAvailable"),
 						   model.getString("newVersionNo"),
