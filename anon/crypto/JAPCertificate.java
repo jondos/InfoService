@@ -73,8 +73,7 @@ final public class JAPCertificate
 	{
 	}
 
-	public static JAPCertificate getInstance(X509CertificateStructure x509cert) throws
-		JAPCertificateException
+	public static JAPCertificate getInstance(X509CertificateStructure x509cert)
 	{
 		try
 		{
@@ -91,16 +90,15 @@ final public class JAPCertificate
 				}
 				catch (Exception e1)
 				{
-					throw new JAPCertificateException();
+					return null;
 				}
 			}
 			r_japcert.m_x509cert = x509cert;
-
 			return r_japcert;
 		}
 		catch (Exception e)
 		{
-			throw new JAPCertificateException();
+			return null;
 		}
 	}
 
@@ -109,7 +107,7 @@ final public class JAPCertificate
 	 * @param a_in Inputstream that holds the certificate
 	 * @return Certificate
 	 */
-	public static JAPCertificate getInstance(InputStream a_in) throws JAPCertificateException
+	public static JAPCertificate getInstance(InputStream a_in)
 	{
 		try
 		{
@@ -120,7 +118,7 @@ final public class JAPCertificate
 		}
 		catch (Exception e)
 		{
-			throw new JAPCertificateException();
+			return null;
 		}
 	}
 
@@ -129,94 +127,89 @@ final public class JAPCertificate
 	 * @param a_NodeRoot <X509Certificate> XML Node
 	 * @return Certificate
 	 */
-	public static JAPCertificate getInstance(Node a_NodeRoot) throws IOException
+	public static JAPCertificate getInstance(Node a_NodeRoot)
 	{
-		if (!a_NodeRoot.getNodeName().equals("X509Certificate"))
-		{
-			return null;
-		}
-
-		Element elemX509Cert = (Element) a_NodeRoot;
-		Text txtX509Cert = (Text) elemX509Cert.getFirstChild();
-		String strValue = txtX509Cert.getNodeValue();
-		byte[] bytecert = Base64.decode(strValue);
-
 		try
 		{
+			if (!a_NodeRoot.getNodeName().equals("X509Certificate"))
+			{
+				return null;
+			}
+			Element elemX509Cert = (Element) a_NodeRoot;
+			Text txtX509Cert = (Text) elemX509Cert.getFirstChild();
+			String strValue = txtX509Cert.getNodeValue();
+			byte[] bytecert = Base64.decode(strValue);
 			return getInstance(bytecert);
 		}
 		catch (Exception e)
 		{
+			return null;
 		}
-		return null;
 	}
 
-	/** Creates a certificate instance by using a file.
+	/** Creates a certificate instance by using a file (either DER encoded or PEM).
 	 *
 	 * @param a_file File that holds the certificate
 	 * @return Certificate
 	 */
-	public static JAPCertificate getInstance(File a_file) throws JAPCertificateException
+	public static JAPCertificate getInstance(File a_file)
 	{
-		if (a_file != null)
+		if (a_file == null)
 		{
-			byte[] buff = null;
-			try
-			{
-				buff = new byte[ (int) a_file.length()];
-				FileInputStream fin = new FileInputStream(a_file);
-				fin.read(buff);
-				fin.close();
-				return JAPCertificate.getInstance(buff);
-			}
-			catch (JAPCertificateException e)
-			{
-				/* maybe the file is BASE64 encoded */
-				try
-				{
-					/* data should already be in the buffer */
-					BufferedReader in = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(
-						buff)));
-					StringBuffer sbuf = new StringBuffer();
-					String line = in.readLine();
-					while (line != null)
-					{
-						if (line.equals("-----BEGIN CERTIFICATE-----") ||
-							line.equals("-----BEGIN X509 CERTIFICATE-----"))
-						{
-							break;
-						}
-						line = in.readLine();
-					}
-					line = in.readLine();
-					while (line != null)
-					{
-						if (line.equals("-----END CERTIFICATE-----") ||
-							line.equals("-----END X509 CERTIFICATE-----"))
-						{
-							break;
-						}
-						sbuf.append(line);
-						line = in.readLine();
-					}
-					return JAPCertificate.getInstance(Base64.decode(sbuf.toString()));
-				}
-				catch (Exception e2)
-				{
-					/* there is another problem */
-					throw new JAPCertificateException();
-				}
-			}
-			catch (FileNotFoundException e)
-			{
-				new FileNotFoundException("Certificate file not found!");
-			}
-			catch (Exception e)
-			{
-				new Exception("Error while processing certificate !");
-			}
+			return null;
 		}
-		return null;
+		byte[] buff = null;
+		try
+		{
+			buff = new byte[ (int) a_file.length()];
+			FileInputStream fin = new FileInputStream(a_file);
+			fin.read(buff);
+			fin.close();
+		}
+		catch (Exception e)
+		{
+			return null;
+		}
+		JAPCertificate cert = JAPCertificate.getInstance(buff);
+		if (cert != null)
+		{
+			return cert;
+		}
+		/* maybe the file is BASE64 encoded */
+		try
+		{
+			/* data should already be in the buffer */
+			BufferedReader in = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(
+				buff)));
+			StringBuffer sbuf = new StringBuffer();
+			String line = in.readLine();
+			while (line != null)
+			{
+				if (line.equals("-----BEGIN CERTIFICATE-----") ||
+					line.equals("-----BEGIN X509 CERTIFICATE-----"))
+				{
+					break;
+				}
+				line = in.readLine();
+			}
+			line = in.readLine();
+			while (line != null)
+			{
+				if (line.equals("-----END CERTIFICATE-----") ||
+					line.equals("-----END X509 CERTIFICATE-----"))
+				{
+					break;
+				}
+				sbuf.append(line);
+				line = in.readLine();
+			}
+			return JAPCertificate.getInstance(Base64.decode(sbuf.toString()));
+		}
+		catch (Exception e2)
+		{
+			/* there is another problem */
+			return null;
+		}
 	}
 
 	/** Creates a certificate instance by using a file name.
@@ -224,9 +217,17 @@ final public class JAPCertificate
 	 * @param a_strFileName Name of File that holds the certificate
 	 * @return Certificate
 	 */
-	public static JAPCertificate getInstance(String a_strFileName) throws JAPCertificateException
+	public static JAPCertificate getInstance(String a_strFileName)
 	{
-		return getInstance(new File(a_strFileName));
+		try
+		{
+
+			return getInstance(new File(a_strFileName));
+		}
+		catch (Exception e)
+		{
+			return null;
+		}
 	}
 
 	/** Creates a certificate instance by using the encoded variant of the certificate
@@ -234,15 +235,11 @@ final public class JAPCertificate
 	 * @param a_encoded Byte Array of the Certificate
 	 * @return Certificate
 	 */
-	public static JAPCertificate getInstance(byte[] a_encoded) throws JAPCertificateException
+	public static JAPCertificate getInstance(byte[] a_encoded)
 	{
 		try
 		{
 			return getInstance(new ByteArrayInputStream(a_encoded));
-		}
-		catch (JAPCertificateException e)
-		{
-			throw new JAPCertificateException();
 		}
 		catch (Exception e)
 		{
