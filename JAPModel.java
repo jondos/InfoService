@@ -116,7 +116,7 @@ public final class JAPModel {
 	static final String METERICONFN  = "images/icom.gif";
 	static final String[] METERFNARRAY = {
 						"images/meterD.gif", // anonymity deactivated
-						"images/meterN.gif", // no measure available
+						"images/meterNnew.gif", // no measure available
 						"images/meter1.gif",
 						"images/meter2.gif",
 						"images/meter3.gif",
@@ -256,6 +256,8 @@ public final class JAPModel {
 			int port;
 			host=parseNodeString(n.getNamedItem("infoServiceHostName"),infoServiceHostName);
 			port=parseNodeInt(n.getNamedItem("infoServicePortNumber"),infoServicePortNumber);
+			if(host.equalsIgnoreCase("anon.inf.tu-dresden.de"))
+				host="infoservice.inf.tu-dresden.de";
 			setInfoService(host,port);
 
 			host=parseNodeString(n.getNamedItem("proxyHostName"),proxyHostName);
@@ -263,6 +265,8 @@ public final class JAPModel {
 			setProxy(host,port);
 
 			anonHostName=parseNodeString(n.getNamedItem("anonHostName"),anonHostName);
+			if(anonHostName.equalsIgnoreCase("anon.inf.tu-dresden.de"))
+				anonHostName="mix.inf.tu-dresden.de";
 			anonPortNumber=parseNodeInt(n.getNamedItem("anonPortNumber"),anonPortNumber);
 			autoConnect=parseNodeBoolean(n.getNamedItem("autoConnect"),false);
 			mbMinimizeOnStartup=parseNodeBoolean(n.getNamedItem("minimizedStartup"),false);

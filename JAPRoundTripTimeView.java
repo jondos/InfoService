@@ -13,7 +13,7 @@ import java.io.IOException;
  * @version 0.1
  * @author  Jens Hillert
  */
-public class JAPRoundTripTimeView implements Runnable {
+public class JAPRoundTripTimeView extends JDialog implements Runnable {
 	
 	private final boolean DEBUG = true;
 	/** Specifies the timeout between 2 connections in milliseconds */
@@ -55,6 +55,7 @@ public class JAPRoundTripTimeView implements Runnable {
 	private JProgressBar sumProgressBar1  = new JProgressBar();
 	private JProgressBar sumProgressBar2  = new JProgressBar();
 	
+	private JAPModel model;
 	/**
 	 * The Main Method
 	 */
@@ -74,7 +75,7 @@ public class JAPRoundTripTimeView implements Runnable {
 	JAPRoundTripTimeView (AnonServerDBEntry[] initialServerList) {
         try {
             UIManager.setLookAndFeel (UIManager.getCrossPlatformLookAndFeelClassName());
-        } catch (Exception e) { }
+       } catch (Exception e) { }
 		
 		// Creating Frame & Components
         JFrame mainFrame = new JFrame("Round Trip Time");
@@ -90,7 +91,26 @@ public class JAPRoundTripTimeView implements Runnable {
 		mainFrame.pack();
 		mainFrame.setVisible(true);
 	}
-	
+
+	//new constructor....
+	JAPRoundTripTimeView (Frame parent,AnonServerDBEntry[] initialServerList) {
+ 		super(parent,"Round Trip Time");
+		model=JAPModel.getModel();
+		// Creating Frame & Components
+   //     JFrame mainFrame = new JFrame("Round Trip Time");
+		Component contents = this.createComponents(initialServerList);
+		getContentPane().add(contents, BorderLayout.CENTER);
+		
+		// Finish setting up the Frame and showing ist
+  //      mainFrame.addWindowListener(new WindowAdapter() {
+    //        public void windowClosing(WindowEvent e) {
+      //          System.exit(0);
+       //     }
+       // });
+		pack();
+		model.upRightFrame(this);
+		setVisible(true);
+	}
 	
 	/**
 	 * This Method is used by the main method to define all of the Windows Components.
@@ -166,7 +186,7 @@ public class JAPRoundTripTimeView implements Runnable {
  		
 		// Center part ***************************************
 		panelCenter.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
-		sumProgressBarDesc1.setIcon(new ImageIcon("Server16.gif"));
+		sumProgressBarDesc1.setIcon(model.loadImageIcon("images/server16.gif",false));
 		sumProgressBar1.setString("");
 		sumProgressBar1.setStringPainted(true);
 		sumProgressBar2.setString("");
@@ -182,7 +202,7 @@ public class JAPRoundTripTimeView implements Runnable {
 		
 		// adding Progress Bars
 		myProgressBarDesc1[0] = new JLabel("lokal - Mix 1");
-		myProgressBarDesc1[0].setIcon(new ImageIcon("Host16.gif"));
+		myProgressBarDesc1[0].setIcon(model.loadImageIcon("images/host16.gif",false));
 		myProgressBar1[0]     = new JProgressBar(0,100);
 		myProgressBar1[0].setString("");
 		myProgressBar1[0].setStringPainted(true);
@@ -250,7 +270,7 @@ public class JAPRoundTripTimeView implements Runnable {
 		closeButton.addActionListener(new ActionListener() {
 		    public void actionPerformed(ActionEvent e) {
 				stopRequest();
-		        System.exit(0);
+		        dispose();
 		    }
 		});
 		
@@ -458,14 +478,7 @@ public class JAPRoundTripTimeView implements Runnable {
 		String[] replyAddress = new String[2];
 		replyAddress[0] = "localhost";
 		replyAddress[1] = "1";
-		String myString = new String(mixComboBox.getSelectedItem().toString());
-		String address  = new String(myString.substring(0, myString.lastIndexOf(":")));
-		int port        = 4453;
-		try {
-			port = Integer.parseInt(new String(myString.substring(1 + myString.lastIndexOf(":"), myString.length()).trim()));
-		} catch (NumberFormatException e){}
-		/*DEBUG*/System.out.println("Anfrage an: " + address + ":" + port);
-
+	
 // LOKALE ANTWORTADRESSE AUS DER LISTBOX LESEN UND ANZAHL DER MIXE MANUELL BESTIMMEN.				 
 		replyAddress[0] = adrComboBox.getSelectedItem().toString();
 				 
@@ -508,7 +521,14 @@ public class JAPRoundTripTimeView implements Runnable {
 				// user defined entry in mixComboBox
 				} else if (mixComboBox.getSelectedIndex() == -1) {
 					/*DEBUGdoRequest(address, port, allMyAddressesStringArray[adrComboBox.getSelectedIndex()]);*/
-					doRequest(address, port, replyAddress[0]);
+		String myString = new String(mixComboBox.getSelectedItem().toString());
+		String address  = new String(myString.substring(0, myString.lastIndexOf(":")));
+		int port        = 4453;
+		try {
+			port = Integer.parseInt(new String(myString.substring(1 + myString.lastIndexOf(":"), myString.length()).trim()));
+		} catch (NumberFormatException e){}
+		/*DEBUG*/System.out.println("Anfrage an: " + address + ":" + port);
+				doRequest(address, port, replyAddress[0]);
 				}
 				try {
 					Thread.sleep(TIMEOUT);

@@ -35,6 +35,8 @@ import HTTPClient.HTTPConnection;
 import HTTPClient.HTTPResponse;
 import HTTPClient.NVPair;
 
+import java.net.InetAddress;
+
 public final class JAPInfoService 
 	{
 		private static final String DP = "%3A"; // Doppelpunkt 
@@ -115,7 +117,10 @@ public final class JAPInfoService
 			boolean error=false;
 			try
 				{
-					HTTPResponse resp=conInfoService.Get("/feedback/"+model.anonHostName+DP+model.anonPortNumber);
+					byte[] addr=InetAddress.getByName(model.anonHostName).getAddress();
+					HTTPResponse resp=conInfoService.Get("/feedback/"+Byte.toString(addr[0])+"."+
+																							 Byte.toString(addr[1])+"."+Byte.toString(addr[2])+"."+
+																							 Byte.toString(addr[3])+DP+model.anonPortNumber);
 					if (resp.getStatusCode()!=200)
 						{
 							error=true;
