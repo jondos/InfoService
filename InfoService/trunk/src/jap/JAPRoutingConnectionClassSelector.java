@@ -254,7 +254,7 @@ public class JAPRoutingConnectionClassSelector extends Observable
 				connectionClassesNode.appendChild( ( (JAPRoutingConnectionClass) (connectionClasses.
 					nextElement())).getSettingsAsXml(a_doc));
 			}
-			XMLUtil.setValue(currentConnectionClassNode, Integer.toString(m_currentConnectionClass));
+			XMLUtil.setValue(currentConnectionClassNode, m_currentConnectionClass);
 		}
 		connectionClassSettingsNode.appendChild(connectionClassesNode);
 		connectionClassSettingsNode.appendChild(currentConnectionClassNode);

@@ -84,7 +84,7 @@ public class JAPDialog
 	 */
 	public void show()
 	{
-		m_internalDialog.show();
+		m_internalDialog.setVisible(true);
 	}
 
 	/**

@@ -84,10 +84,10 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 	private InfoServiceTempLayer m_infoService;
 
-	private JAPJIntField m_tfMixPortNumber;
-	private JTextField m_tfMixHost;
+	//private JAPJIntField m_tfMixPortNumber;
+	//private JTextField m_tfMixHost;
 
-	private JCheckBox m_cbMixManual;
+	//private JCheckBox m_cbMixManual;
 	private JButton m_bttnFetchCascades;
 	private JList m_listMixCascade;
 
@@ -141,14 +141,14 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	public void recreateRootPanel()
 	{
 		Font font = getFontSetting();
-		m_tfMixHost = new JTextField();
-		m_tfMixHost.setFont(font);
-		m_tfMixPortNumber = new JAPJIntField();
-		m_tfMixPortNumber.setFont(font);
-		m_tfMixHost.setEditable(false);
-		m_tfMixPortNumber.setEditable(false);
-		m_cbMixManual = new JCheckBox(JAPMessages.getString("settingsAnonRadio3"));
-		m_cbMixManual.setFont(font);
+		//m_tfMixHost = new JTextField();
+		//m_tfMixHost.setFont(font);
+		//m_tfMixPortNumber = new JAPJIntField();
+		//m_tfMixPortNumber.setFont(font);
+		//m_tfMixHost.setEditable(false);
+		//m_tfMixPortNumber.setEditable(false);
+		//m_cbMixManual = new JCheckBox(JAPMessages.getString("settingsAnonRadio3"));
+		//m_cbMixManual.setFont(font);
 		m_bttnFetchCascades = new JButton(JAPMessages.getString("settingsAnonFetch"));
 		m_bttnFetchCascades.setFont(font);
 		if (JAPModel.isSmallDisplay())
@@ -168,7 +168,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		m_listMixCascade.setFont(font);
 
 		m_listMixCascade.setEnabled(true);
-		m_cbMixManual.addActionListener(new ActionListener()
+		/*m_cbMixManual.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent e)
 			{
@@ -177,18 +177,18 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 					LogHolder.log(LogLevel.DEBUG, LogType.GUI, "JAPConf:m_rbMixStep3 selected");
 					m_bttnFetchCascades.setEnabled(false);
 					m_listMixCascade.setEnabled(false);
-					m_tfMixHost.setEditable(true);
-					m_tfMixPortNumber.setEditable(true);
+					//m_tfMixHost.setEditable(true);
+					//m_tfMixPortNumber.setEditable(true);
 				}
 				else
 				{
 					m_bttnFetchCascades.setEnabled(true);
 					m_listMixCascade.setEnabled(true);
-					m_tfMixHost.setEditable(false);
-					m_tfMixPortNumber.setEditable(false);
+					//m_tfMixHost.setEditable(false);
+					//m_tfMixPortNumber.setEditable(false);
 				}
 			}
-		});
+		});*/
 		drawCompleteDialog();
 	}
 
@@ -628,8 +628,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 	public void onResetToDefaultsPressed()
 	{
-		m_tfMixHost.setText(JAPConstants.DEFAULT_ANON_HOST);
-		m_tfMixPortNumber.setText(Integer.toString(JAPConstants.DEFAULT_ANON_PORT_NUMBER));
+		//m_tfMixHost.setText(JAPConstants.DEFAULT_ANON_HOST);
+		//m_tfMixPortNumber.setText(Integer.toString(JAPConstants.DEFAULT_ANON_PORT_NUMBER));
 
 	}
 
@@ -642,10 +642,10 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	public void onUpdateValues()
 	{
 		MixCascade mixCascade = m_Controller.getCurrentMixCascade();
-		m_tfMixHost.setText(mixCascade.getListenerInterface(0).getHost());
-		m_tfMixPortNumber.setText(Integer.toString(mixCascade.getListenerInterface(0).getPort()));
+		//m_tfMixHost.setText(mixCascade.getListenerInterface(0).getHost());
+		//m_tfMixPortNumber.setText(Integer.toString(mixCascade.getListenerInterface(0).getPort()));
 		updateMixCascadeCombo();
-		if (!m_cbMixManual.isSelected())
+		/*if (!m_cbMixManual.isSelected())
 		{
 			try
 			{
@@ -654,7 +654,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			catch (Exception e)
 			{
 			}
-		}
+		}*/
 	}
 
 	private void fetchCascades(boolean bShowError)

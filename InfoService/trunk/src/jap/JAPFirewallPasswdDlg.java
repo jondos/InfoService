@@ -84,7 +84,7 @@ final class JAPFirewallPasswdDlg implements ActionListener, IPasswordReader
 										, null, options);
 		dialog = o.createDialog(JAPController.getView(), JAPMessages.getString("passwdDlgTitle"));
 		dialog.toFront();
-		dialog.show();
+		dialog.setVisible(true);
 		return passwd;
 	}
 }

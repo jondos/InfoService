@@ -1144,7 +1144,7 @@ public class JAPRoutingSettings extends Observable
 		Element serverRunningNode = a_doc.createElement("ServerRunning");
 		synchronized (this)
 		{
-			XMLUtil.setValue(serverPortNode, Integer.toString(getServerPort()));
+			XMLUtil.setValue(serverPortNode, getServerPort());
 			if (getRoutingMode() == ROUTING_MODE_SERVER)
 			{
 				XMLUtil.setValue(serverRunningNode, true);

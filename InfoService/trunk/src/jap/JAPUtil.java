@@ -315,7 +315,7 @@ final public class JAPUtil
 		JOptionPane pane = new JOptionPane(JAPMessages.getString(messageID), jOptionPaneMessageType);
 		JDialog dialog = pane.createDialog(parent, JAPMessages.getString(titleID));
 		dialog.setFont(JAPController.getDialogFont());
-		dialog.show();
+		dialog.setVisible(true);
 	}
 
 	/** Sets the mnemonic charcter of a component. The character must be set

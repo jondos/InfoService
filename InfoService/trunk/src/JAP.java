@@ -82,7 +82,8 @@ class JAP extends Frame
 		String vendor = System.getProperty("java.vendor");
 		String os = System.getProperty("os.name");
 		String mrjVersion = System.getProperty("mrj.version");
-		System.out.println("Starting up JAP. ("+javaVersion+"/"+vendor+"/"+os+"/"+mrjVersion+")");
+		System.out.println("Starting up JAP. (" + javaVersion + "/" + vendor + "/" + os + "/" + mrjVersion +
+						   ")");
 		//Macintosh Runtime for Java (MRJ) on Mac OS
 		// Test (part 1) for right JVM
 		if (javaVersion.compareTo("1.0.2") <= 0)
@@ -168,32 +169,32 @@ class JAP extends Frame
 		   boolean changed = false;
 		   if (p.containsKey("socksProxyHost"))
 		   {
-			System.out.println("Found sosckProxyHost");
-			p.remove("socksProxyHost");
-			changed = true;
+		 System.out.println("Found sosckProxyHost");
+		 p.remove("socksProxyHost");
+		 changed = true;
 		   }
 		   if (p.containsKey("socksProxyPort"))
 		   {
-			p.remove("socksProxyPort");
-			changed = true;
+		 p.remove("socksProxyPort");
+		 changed = true;
 		   }
 		   if (changed)
 		   {
 
-			p.list(System.out);
-			System.setProperties(p);
-			//System.setProperty("socksProxyHost","hallo");
-			System.out.println("removed socks settings");
-			Socket.setSocketImplFactory(null);
+		 p.list(System.out);
+		 System.setProperties(p);
+		 //System.setProperty("socksProxyHost","hallo");
+		 System.out.println("removed socks settings");
+		 Socket.setSocketImplFactory(null);
 		   }
 		  }
 		  catch (Throwable t)
 		  {
 		   t.printStackTrace();
 		   LogHolder.log(
-			LogLevel.EXCEPTION,
-			LogType.NET,
-			"JAP:Exception while trying to deactivate SOCKS proxy settings: " + t.getMessage());
+		 LogLevel.EXCEPTION,
+		 LogType.NET,
+		 "JAP:Exception while trying to deactivate SOCKS proxy settings: " + t.getMessage());
 		  }
 		 */
 		// um pay funktionalitaet ein oder auszuschalten
@@ -239,8 +240,8 @@ class JAP extends Frame
 			{
 				if (m_arstrCmdnLnArgs[i].equalsIgnoreCase("-forwarding_state"))
 				{
-				  forwardingStateVisible = true;
-				  break;
+					forwardingStateVisible = true;
+					break;
 				}
 			}
 		}
@@ -264,7 +265,7 @@ class JAP extends Frame
 				"JAP:MRJ Version is " + mrjVersion + ".");
 			//initalisiere PayInstance
 		}
-		JAPNewView view =new JAPNewView(JAPConstants.TITLE,m_controller);
+		JAPNewView view = new JAPNewView(JAPConstants.TITLE, m_controller);
 		// Create the main frame
 		view.create(loadPay);
 		// Switch Debug Console Parent to MainView
@@ -281,23 +282,26 @@ class JAP extends Frame
 		//Init Crypto...
 		//		java.security.Security.addProvider(new cryptix.jce.provider.CryptixCrypto());
 		// Show main frame and dispose splash screen
-		view.show();
+		//view.show();
+		view.setVisible(true);
 		view.toFront();
-		boolean bSystray=JAPModel.getMoveToSystrayOnStartup();
-		if (m_arstrCmdnLnArgs != null&&!bSystray)
+		boolean bSystray = JAPModel.getMoveToSystrayOnStartup();
+		if (m_arstrCmdnLnArgs != null && !bSystray)
 		{
 			for (int i = 0; i < m_arstrCmdnLnArgs.length; i++)
 			{
 				if (m_arstrCmdnLnArgs[i].equalsIgnoreCase("-minimized"))
 				{
-					bSystray=true;
+					bSystray = true;
 					break;
 				}
 			}
 		}
-		if(bSystray)
+		if (bSystray)
+		{
 			view.hideWindowInTaskbar();
-		else if(JAPModel.getMinimizeOnStartup())
+		}
+		else if (JAPModel.getMinimizeOnStartup())
 		{
 			view.showIconifiedView();
 		}

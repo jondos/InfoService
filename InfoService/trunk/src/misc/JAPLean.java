@@ -30,7 +30,7 @@ package misc;
 import jap.JAPConstants;
 import jap.JAPDebug;
 import jap.JAPModel;
-
+import jap.JAPController;
 import java.net.ServerSocket;
 import java.util.Properties;
 
@@ -75,10 +75,7 @@ final class JAPLean implements ProxyListener
 		JAPDebug.getInstance().setLogLevel(LogLevel.DEBUG);
 		JAPModel.getInstance();
 		HTTPConnectionFactory.getInstance().setTimeout(JAPConstants.DEFAULT_INFOSERVICE_TIMEOUT);
-		InfoServiceHolder.getInstance().setPreferredInfoService(
-				  new InfoServiceDBEntry("DeafultIS",
-						new ListenerInterface(JAPConstants.DEFAULT_INFOSERVICE_HOSTNAME,
-											  JAPConstants.DEFAULT_INFOSERVICE_PORT_NUMBER).toVector(),true,true));
+		InfoServiceHolder.getInstance().setPreferredInfoService(JAPController.createDefaultInfoService());
 		// JAPAnonService.init();
 		ServerSocket listener = null;
 		try
@@ -115,7 +112,10 @@ final class JAPLean implements ProxyListener
 	public static void main(String[] argv) throws Exception
 	{
 		// check for command line
-		if (argv == null || argv.length < 3)
+
+	System.out.println(System.getProperties().toString());
+
+	if (argv == null || argv.length < 3)
 		{
 			System.err.println("Usage: JAPLean <listener_port> <first_mix_address> <first_mix_port>");
 			System.exit(1);

@@ -423,10 +423,10 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 		Document doc = XMLUtil.createDocument();
 		/* Create the InfoService element */
 		Element infoServiceNode = doc.createElement(getXmlElementName());
-		infoServiceNode.setAttribute("id", m_strInfoServiceId);
+		XMLUtil.setAttribute(infoServiceNode,"id", m_strInfoServiceId);
 		/* Create the child nodes of InfoService */
 		Element nameNode = doc.createElement("Name");
-		nameNode.appendChild(doc.createTextNode(m_strName));
+		XMLUtil.setValue(nameNode,m_strName);
 		Element networkNode = doc.createElement("Network");
 
 		Element listenerInterfacesNode = doc.createElement("ListenerInterfaces");
@@ -438,12 +438,12 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 		}
 		networkNode.appendChild(listenerInterfacesNode);
 		Element lastUpdateNode = doc.createElement("LastUpdate");
-		lastUpdateNode.appendChild(doc.createTextNode(Long.toString(m_creationTimeStamp)));
+		XMLUtil.setValue(lastUpdateNode,m_creationTimeStamp);
 		/** create also an expire node for comptatibility with JAP/InfoService <= 00.03.043/IS.06.040
 		 *  @todo remove it
 		 */
 		Element expireNode = doc.createElement("Expire");
-		expireNode.appendChild(doc.createTextNode(Long.toString(m_creationTimeStamp)));
+		XMLUtil.setValue(expireNode,m_creationTimeStamp);
 		infoServiceNode.appendChild(nameNode);
 		infoServiceNode.appendChild(m_infoserviceSoftware.toXmlElement(doc));
 		infoServiceNode.appendChild(networkNode);

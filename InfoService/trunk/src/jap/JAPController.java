@@ -150,10 +150,16 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 		/* set a default mixcascade */
 		try
 		{
+			Vector listeners = new Vector();
+			for (int i = 0; i < JAPConstants.DEFAULT_ANON_PORT_NUMBERS.length; i++)
+			{
+				listeners.addElement(new ListenerInterface(JAPConstants.DEFAULT_ANON_HOST,
+					JAPConstants.DEFAULT_ANON_PORT_NUMBERS[i],
+					ListenerInterface.PROTOCOL_TYPE_RAW_TCP));
+			}
 			m_currentMixCascade = new MixCascade(JAPConstants.DEFAULT_ANON_NAME,
 												 JAPConstants.DEFAULT_ANON_ID,
-												 JAPConstants.DEFAULT_ANON_HOST,
-												 JAPConstants.DEFAULT_ANON_PORT_NUMBER);
+												 listeners);
 			m_currentMixCascade.setUserDefined(false);
 		}
 		catch (Exception e)
@@ -164,11 +170,7 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 		/* set a default infoservice */
 		try
 		{
-			InfoServiceDBEntry defaultInfoService = new InfoServiceDBEntry(JAPConstants.
-				defaultInfoServiceName,
-				new ListenerInterface(JAPConstants.DEFAULT_INFOSERVICE_HOSTNAME,
-									  JAPConstants.DEFAULT_INFOSERVICE_PORT_NUMBER).toVector(), true, true);
-			defaultInfoService.setUserDefined(false);
+			InfoServiceDBEntry defaultInfoService = JAPController.createDefaultInfoService();
 			InfoServiceHolder.getInstance().setPreferredInfoService(defaultInfoService);
 		}
 		catch (Exception e)
@@ -480,6 +482,8 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 			{
 				FileInputStream f = new FileInputStream(JAPModel.getInstance().getConfigFile());
 				Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(f);
+				try{f.close();}catch(Exception ex2){}
+
 				Element root = doc.getDocumentElement();
 				NamedNodeMap n = root.getAttributes();
 
@@ -950,6 +954,7 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 			FileInputStream f = new FileInputStream(a_configFile);
 			/* if we are successful, use this config file also for storing the configuration */
 			JAPModel.getInstance().setConfigFile(a_configFile);
+			try{f.close();}catch(Exception e1){}
 			return true;
 		}
 		catch (Exception e)
@@ -975,6 +980,7 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 			FileInputStream f = new FileInputStream(japConfFile);
 			/* if we are successful, use this config file also for storing the configuration */
 			JAPModel.getInstance().setConfigFile(japConfFile);
+			try{f.close();}catch(Exception e1){}
 			return true;
 		}
 		catch (Exception e)
@@ -1000,6 +1006,7 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 			FileInputStream f = new FileInputStream(japConfFile);
 			/* if we are successful, use this config file also for storing the configuration */
 			JAPModel.getInstance().setConfigFile(japConfFile);
+			try{f.close();}catch(Exception e1){}
 			return true;
 		}
 		catch (Exception e)
@@ -1026,6 +1033,7 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 			FileInputStream f = new FileInputStream(japConfFile);
 			/* if we are successful, use this config file also for storing the configuration */
 			JAPModel.getInstance().setConfigFile(japConfFile);
+			try{f.close();}catch(Exception e1){}
 			return true;
 		}
 		catch (Exception e)
@@ -1068,6 +1076,8 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 			String sb = getConfigurationAsXmlString();
 			if (sb == null)
 			{
+				LogHolder.log(LogLevel.ERR, LogType.MISC,
+							  "JAPController:could not transform the configuration to a string.");
 				error = true;
 			}
 			else
@@ -1098,8 +1108,7 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 			doc.appendChild(e);
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_VERSION, "0.19");
 			//
-			XMLUtil.setAttribute(e, JAPConstants.CONFIG_PORT_NUMBER,
-								 Integer.toString(JAPModel.getHttpListenerPortNumber()));
+			XMLUtil.setAttribute(e, JAPConstants.CONFIG_PORT_NUMBER,JAPModel.getHttpListenerPortNumber());
 			//XMLUtil.setAttribute(e,"portNumberSocks", Integer.toString(JAPModel.getSocksListenerPortNumber()));
 			//XMLUtil.setAttribute(e,"supportSocks",(getUseSocksPort()?"true":"false"));
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_LISTENER_IS_LOCAL, JAPModel.getHttpListenerIsLocal());
@@ -1113,7 +1122,7 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 				XMLUtil.setAttribute(e, JAPConstants.CONFIG_PROXY_HOST_NAME,
 									 m_Model.getProxyInterface().getHost());
 				XMLUtil.setAttribute(e, JAPConstants.CONFIG_PROXY_PORT_NUMBER,
-									 Integer.toString(m_Model.getProxyInterface().getPort()));
+									 m_Model.getProxyInterface().getPort());
 				XMLUtil.setAttribute(e, JAPConstants.CONFIG_PROXY_AUTHORIZATION,
 									 m_Model.getProxyInterface().isAuthenticationUsed());
 				XMLUtil.setAttribute(e, JAPConstants.CONFIG_PROXY_AUTH_USER_ID,
@@ -1122,10 +1131,10 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 			/* infoservice configuration options */
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_INFOSERVICE_DISABLED, JAPModel.isInfoServiceDisabled());
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_INFOSERVICE_TIMEOUT,
-								 Integer.toString(HTTPConnectionFactory.getInstance().getTimeout()));
+								 HTTPConnectionFactory.getInstance().getTimeout());
 
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_DUMMY_TRAFFIC_INTERVALL,
-								 Integer.toString(JAPModel.getDummyTraffic()));
+								 JAPModel.getDummyTraffic());
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_AUTO_CONNECT, JAPModel.getAutoConnect());
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_AUTO_RECONNECT, JAPModel.getAutoReConnect());
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_PRECREATE_ANON_ROUTES,
@@ -1233,11 +1242,11 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 			/** add tor*/
 			Element elemTor = doc.createElement(JAPConstants.CONFIG_TOR);
 			Element elem = doc.createElement(JAPConstants.CONFIG_MAX_CONNECTIONS_PER_ROUTE);
-			XMLUtil.setValue(elem, Integer.toString(JAPModel.getTorMaxConnectionsPerRoute()));
+			XMLUtil.setValue(elem, JAPModel.getTorMaxConnectionsPerRoute());
 			elemTor.appendChild(elem);
 			elem = doc.createElement(JAPConstants.CONFIG_ROUTE_LEN);
-			elem.setAttribute(JAPConstants.CONFIG_MIN, Integer.toString(JAPModel.getTorMinRouteLen()));
-			elem.setAttribute(JAPConstants.CONFIG_MAX, Integer.toString(JAPModel.getTorMaxRouteLen()));
+			XMLUtil.setAttribute(elem,JAPConstants.CONFIG_MIN, JAPModel.getTorMinRouteLen());
+			XMLUtil.setAttribute(elem,JAPConstants.CONFIG_MAX, JAPModel.getTorMaxRouteLen());
 			elemTor.appendChild(elem);
 			e.appendChild(elemTor);
 
@@ -1994,7 +2003,7 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 				{
 				JAPMessages.getString("okButton")};
 			JCheckBox checkboxRemindNever = new JCheckBox(
-						 JAPMessages.getString("disableGoodByMessageNeverRemind"));
+				JAPMessages.getString("disableGoodByMessageNeverRemind"));
 			Object[] message =
 				{
 				JAPMessages.getString("disableGoodByMessage"), checkboxRemindNever};
@@ -2332,7 +2341,7 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 					{
 					JAPMessages.getString("okButton")};
 				JCheckBox checkboxRemindNever = new JCheckBox(
-								JAPMessages.getString("disableActCntMessageNeverRemind"));
+					JAPMessages.getString("disableActCntMessageNeverRemind"));
 				Object[] message =
 					{
 					JAPMessages.getString("forwardingExplainMessage"), checkboxRemindNever};
@@ -2359,8 +2368,8 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 				if (b)
 				{
 					int msgId = m_View.addStatusMsg(
-									   JAPMessages.getString("controllerStatusMsgRoutingStartServer"),
-									   JOptionPane.INFORMATION_MESSAGE, false);
+						JAPMessages.getString("controllerStatusMsgRoutingStartServer"),
+						JOptionPane.INFORMATION_MESSAGE, false);
 					// start the server //
 					returnValue = JAPModel.getInstance().getRoutingSettings().setRoutingMode(
 						JAPRoutingSettings.
@@ -2374,8 +2383,8 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 						{
 							JOptionPane.showMessageDialog(m_View,
 								new JAPHtmlMultiLineLabel(
-								JAPMessages.getString("settingsRoutingServerRegistrationEmptyListError"),
-								getDialogFont()),
+									JAPMessages.getString("settingsRoutingServerRegistrationEmptyListError"),
+									getDialogFont()),
 								JAPMessages.getString("ERROR"), JOptionPane.ERROR_MESSAGE);
 						}
 						else if (registrationStatus == JAPRoutingSettings.REGISTRATION_UNKNOWN_ERRORS)
@@ -2389,15 +2398,19 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 						{
 							JOptionPane.showMessageDialog(m_View,
 								new JAPHtmlMultiLineLabel(
-								JAPMessages.getString("settingsRoutingServerRegistrationInfoservicesError"),
-								getDialogFont()), JAPMessages.getString("ERROR"), JOptionPane.ERROR_MESSAGE);
+									JAPMessages.getString(
+										"settingsRoutingServerRegistrationInfoservicesError"),
+									getDialogFont()), JAPMessages.getString("ERROR"),
+								JOptionPane.ERROR_MESSAGE);
 						}
 						else if (registrationStatus == JAPRoutingSettings.REGISTRATION_VERIFY_ERRORS)
 						{
 							JOptionPane.showMessageDialog(m_View,
 								new JAPHtmlMultiLineLabel(
-								JAPMessages.getString("settingsRoutingServerRegistrationVerificationError"),
-								getDialogFont()), JAPMessages.getString("ERROR"), JOptionPane.ERROR_MESSAGE);
+									JAPMessages.getString(
+										"settingsRoutingServerRegistrationVerificationError"),
+									getDialogFont()), JAPMessages.getString("ERROR"),
+								JOptionPane.ERROR_MESSAGE);
 						}
 						else if (registrationStatus == JAPRoutingSettings.REGISTRATION_SUCCESS)
 						{
@@ -2411,7 +2424,7 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 					{ //starting 1 stage was not succesfull
 						m_View.removeStatusMsg(msgId);
 						m_iStatusPanelMsgIdForwarderServerStatus = m_View.addStatusMsg(
-						JAPMessages.getString("controllerStatusMsgRoutingStartServerError"),
+							JAPMessages.getString("controllerStatusMsgRoutingStartServerError"),
 							JOptionPane.ERROR_MESSAGE, true);
 						JOptionPane.showMessageDialog
 							(
@@ -2426,15 +2439,15 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 				{
 					// stop the server //
 					int msgId = m_View.addStatusMsg(
-					JAPMessages.getString("controllerStatusMsgRoutingStopServer"),
-					JOptionPane.INFORMATION_MESSAGE, false);
+						JAPMessages.getString("controllerStatusMsgRoutingStopServer"),
+						JOptionPane.INFORMATION_MESSAGE, false);
 					returnValue = JAPModel.getInstance().getRoutingSettings().setRoutingMode(
 						JAPRoutingSettings.
 						ROUTING_MODE_DISABLED);
 					m_View.removeStatusMsg(msgId);
 					m_iStatusPanelMsgIdForwarderServerStatus = m_View.addStatusMsg(
-									   JAPMessages.getString("controllerStatusMsgRoutingServerStopped"),
-									   JOptionPane.INFORMATION_MESSAGE, true);
+						JAPMessages.getString("controllerStatusMsgRoutingServerStopped"),
+						JOptionPane.INFORMATION_MESSAGE, true);
 				}
 
 			}
@@ -2453,6 +2466,21 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 	public synchronized void enableForwardingServer(boolean a_activate)
 	{
 		new SetForwardingServerModeAsync(a_activate);
+	}
+
+	static public InfoServiceDBEntry createDefaultInfoService() throws Exception
+	{
+		Vector listeners = new Vector();
+		for (int i = 0; i < JAPConstants.DEFAULT_INFOSERVICE_PORT_NUMBERS.length; i++)
+		{
+			listeners.addElement(new ListenerInterface(JAPConstants.DEFAULT_INFOSERVICE_HOSTNAME,
+												JAPConstants.DEFAULT_INFOSERVICE_PORT_NUMBERS[i]));
+		}
+
+		InfoServiceDBEntry defaultInfoService = new InfoServiceDBEntry(JAPConstants.
+			DEFAULT_INFOSERVICE_NAME, listeners, true, true);
+		defaultInfoService.setUserDefined(false);
+		return defaultInfoService;
 	}
 
 }
