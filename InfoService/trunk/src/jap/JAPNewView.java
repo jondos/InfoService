@@ -82,6 +82,7 @@ import logging.LogType;
 import proxy.ProxyListener;
 import anon.infoservice.MixCascade;
 import anon.infoservice.StatusInfo;
+import javax.swing.border.EmptyBorder;
 
 final public class JAPNewView extends AbstractJAPMainView implements IJAPMainView, ActionListener,
 	JAPObserver
@@ -212,7 +213,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c.insets = new Insets(0, 0, 0, 10);
 		northPanel.add(l, c);
 
-	c.gridwidth = 2;
+		c.gridwidth = 2;
 		c.gridx = 0;
 		c.gridy = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
@@ -268,14 +269,13 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_bttnReload.setRolloverSelectedIcon(tmpIcon);
 		m_bttnReload.setPressedIcon(tmpIcon);
 		m_bttnReload.setDisabledIcon(JAPUtil.loadImageIcon(JAPConstants.IMAGE_RELOAD_DISABLED, true));
-		m_bttnReload.setBackground(Color.gray);
-		m_bttnReload.setOpaque(false);
-		m_bttnReload.setBorder(null);
+		m_bttnReload.setBackground(Color.gray); //this together with the next lines sems to be
+		m_bttnReload.setOpaque(false); //stupid but is necessary for JDK 1.5 on Windows XP (and maybe others)
+		m_bttnReload.setBorder(new EmptyBorder(0, 0, 0, 0));
 		m_bttnReload.setFocusPainted(false);
 		c1.gridx = 2;
 		c1.weightx = 0;
 		c1.fill = GridBagConstraints.NONE;
-		//m_bttnReload.setBorder(new EmptyBorder(0, 0, 0, 0));
 		m_panelAnonService.add(m_bttnReload, c1);
 		m_bttnAnonDetails = new JButton(JAPMessages.getString("ngBttnAnonDetails"));
 		m_bttnAnonDetails.addActionListener(new ActionListener()
@@ -769,7 +769,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			Dimension ds = Toolkit.getDefaultToolkit().getScreenSize();
 			if (m.m_OldMainWindowLocation != null && m.m_OldMainWindowLocation.x >= 0 &&
 				m.m_OldMainWindowLocation.y > 0 /*&&m.m_OldMainWindowLocation.x<ds.width&&
-						m.m_OldMainWindowLocation.y<ds.height*/
+					   m.m_OldMainWindowLocation.y<ds.height*/
 				)
 			{
 				setLocation(m.m_OldMainWindowLocation);
