@@ -373,12 +373,14 @@ public final class MuxSocket implements Runnable
 				m_bMixProtocolWithTimestamp = false;
 				m_iTimestampSize = 0;
 				m_iMixProtocolVersion = MIX_PROTOCOL_VERSION_0_2;
+				m_cipherFirstMix =null;
 			}
 			else if (strProtocolVersion.equals("0.3"))
 			{
 				m_bMixProtocolWithTimestamp = true;
 				m_iTimestampSize = 2;
 				m_iMixProtocolVersion = MIX_PROTOCOL_VERSION_0_3;
+				m_cipherFirstMix =null;
 			}
 			else if (strProtocolVersion.equalsIgnoreCase("0.4"))
 			{
