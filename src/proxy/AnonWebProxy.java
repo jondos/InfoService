@@ -269,6 +269,7 @@ final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 	public int start()
 	{
 		m_numChannels = 0;
+		JAPModel.getInstance();
 		int ret = m_Anon.initialize(m_currentMixCascade);
 		if (ret != ErrorCodes.E_SUCCESS)
 		{
@@ -309,7 +310,7 @@ final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 		int oldTimeOut = 0;
 		LogHolder.log(LogLevel.DEBUG, LogType.NET, "AnonProxy: AnonProxy is running as Thread");
 
-		m_AICom.start();
+		//m_AICom.start();
 		try
 		{
 			oldTimeOut = m_socketListener.getSoTimeout();
