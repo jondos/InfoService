@@ -44,7 +44,7 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 	private JLabel				infoServiceTextField;
 	private JLabel	 			anonTextField;
 	private JLabel              anonNameTextField;
-	private JButton				portB, httpB, isB, anonB, infoB, helpB, startB, quitB, iconifyB;
+	private JButton				portB, httpB, isB, anonB, ano1B, infoB, helpB, startB, quitB, iconifyB;
 	private JCheckBox			proxyCheckBox;
 	private JCheckBox			anonCheckBox;
 	private JCheckBox			ano1CheckBox;
@@ -194,13 +194,13 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 		userProgressBar.setBorderPainted(true);
 		//
 		trafficProgressBar = new 
-			JProgressBar(JProgressBar.HORIZONTAL, 0, model.MAXPROGRESSBARVALUE);
+			JProgressBar(JProgressBar.HORIZONTAL);
 		trafficProgressBar.setStringPainted(true);
 		trafficProgressBar.setBorderPainted(true);
 		
 		//
 		protectionProgressBar = new 
-			JProgressBar(JProgressBar.HORIZONTAL, 0, model.MAXPROGRESSBARVALUE);
+			JProgressBar(JProgressBar.HORIZONTAL);
 		protectionProgressBar.setStringPainted(true);
 		protectionProgressBar.setBorderPainted(true);
 		
@@ -218,13 +218,24 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 		ano1CheckBox.setMnemonic(model.getString("confActivateCheckBoxMn").charAt(0));
 		ano1CheckBox.addActionListener(this);
 
+		// Line 1
+		JPanel p41 = new JPanel();
+		p41.setLayout(new BoxLayout(p41, BoxLayout.X_AXIS) );
+		//p41.add(Box.createRigidArea(new Dimension(10,0)) );
+		p41.add(ano1CheckBox );
+		p41.add(Box.createRigidArea(new Dimension(5,0)) );
+		p41.add(Box.createHorizontalGlue() );
+		ano1B = new JButton(model.getString("confActivateButton"));
+		ano1B.addActionListener(this);
+		p41.add(ano1B);
+		
 		JPanel meterPanel = new JPanel();
 		meterPanel.setLayout( new BorderLayout() );
 		meterPanel.setBorder( new TitledBorder(model.getString("meterBorder")) );
 		meterLabel = new JLabel(setMeterImage());
-		meterPanel.add(ano1CheckBox,BorderLayout.NORTH);
+		meterPanel.add(p41/*ano1CheckBox*/,BorderLayout.NORTH);
 		meterPanel.add(meterLabel, BorderLayout.CENTER);
-		
+
 		JPanel detailsPanel = new JPanel();
 		detailsPanel.setLayout( new GridLayout(3,2,5,5) );
 		detailsPanel.setBorder( new TitledBorder(model.getString("meterDetailsBorder")) );
@@ -421,8 +432,11 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 		//		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"GetEvent: "+event.getSource());
 				if (event.getSource() == quitB)
 					exitProgram(); 
-				else if (event.getSource() == iconifyB)
-					model.setJAPViewIconified();
+				else if (event.getSource() == iconifyB) {
+					model.getIconifiedView().setVisible(true);
+					this.setVisible(false);
+//					model.setJAPViewIconified();
+				}
 				else if (event.getSource() == portB)
 					showConfigDialog(JAPConf.PORT_TAB);
 				else if (event.getSource() == httpB)
@@ -430,6 +444,8 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 				else if (event.getSource() == isB)
 					showConfigDialog(JAPConf.INFO_TAB);
 				else if (event.getSource() == anonB)
+					showConfigDialog(JAPConf.ANON_TAB);
+				else if (event.getSource() == ano1B)
 					showConfigDialog(JAPConf.ANON_TAB);
 				else if (event.getSource() == infoB)
 					model.aboutJAP();
@@ -470,6 +486,7 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 	}
 	
     private void updateValues() {
+		AnonServerDBEntry e = model.getAnonServer();
 		// Config panel
 		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"Start updateValues");
 		portnumberTextField.setText(String.valueOf(model.getPortNumber()));
@@ -477,55 +494,57 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 		proxyTextField.setText(model.getProxyHost()+":"+String.valueOf(model.getProxyPort()));
 		infoServiceTextField.setText(model.getInfoServiceHost()+":"+String.valueOf(model.getInfoServicePort()));
 		anonCheckBox.setSelected(model.isAnonMode());
-		anonTextField.setText(model.anonHostName+":"+String.valueOf(model.anonPortNumber)+((model.anonSSLPortNumber==-1)?"":":"+model.anonSSLPortNumber));
-		anonNameTextField.setText(model.anonserviceName);
+		anonTextField.setText(e.getHost()+":"+String.valueOf(e.getPort())+((e.getSSLPort()==-1)?"":":"+e.getSSLPort()));
+		anonNameTextField.setText(e.getName());
 		statusTextField1.setText(model.status1);
 		statusTextField2.setText(model.status2);
 		
 		// Meter panel
 		ano1CheckBox.setSelected(model.isAnonMode());
-		nameLabel.setText(model.anonserviceName);
+		nameLabel.setText(e.getName());
 		meterLabel.setIcon(setMeterImage());
 		if (model.isAnonMode()) {
-				if (model.nrOfActiveUsers != -1)
+				if (e.getNrOfActiveUsers() > -1)
 					{
 						// Nr of active users
-						if (model.nrOfActiveUsers > userProgressBar.getMaximum())
-							userProgressBar.setMaximum(model.nrOfActiveUsers);
-						userProgressBar.setValue(model.nrOfActiveUsers);
-						userProgressBar.setString(String.valueOf(model.nrOfActiveUsers));
+						if (e.getNrOfActiveUsers() > userProgressBar.getMaximum())
+							userProgressBar.setMaximum(e.getNrOfActiveUsers());
+						userProgressBar.setValue(e.getNrOfActiveUsers());
+						userProgressBar.setString(String.valueOf(e.getNrOfActiveUsers()));
 						if(m_bIsIconified)
-							setTitle("JAP ("+Integer.toString(model.nrOfActiveUsers)+" "+model.getString("iconifiedviewUsers")+")");
+							setTitle("JAP ("+Integer.toString(e.getNrOfActiveUsers())+" "+model.getString("iconifiedviewUsers")+")");
 					}
 				else
 					{
 							userProgressBar.setValue(userProgressBar.getMaximum());
 							userProgressBar.setString(model.getString("meterNA"));
 					}
-				if (model.currentRisk != -1) {
+				if (e.getCurrentRisk() > -1) {
 					// Current Risk
-					protectionProgressBar.setValue(model.currentRisk);
-					if (model.currentRisk < 80)
-						protectionProgressBar.setString(String.valueOf(model.currentRisk)+" %");
+					if (e.getCurrentRisk() > protectionProgressBar.getMaximum())
+							protectionProgressBar.setMaximum(e.getCurrentRisk());
+					protectionProgressBar.setValue(e.getCurrentRisk());
+					if (e.getCurrentRisk() < 80)
+						protectionProgressBar.setString(String.valueOf(e.getCurrentRisk())+" %");
 					else
 						protectionProgressBar.setString(model.getString("meterRiskVeryHigh"));
 				} else {
 					protectionProgressBar.setValue(protectionProgressBar.getMaximum());
 					protectionProgressBar.setString(model.getString("meterNA"));
 				}
-				if (/*model.trafficSituation != -1*/model.mixedPackets!=-1) {
+				if (e.getMixedPackets() > -1) {
 					// Traffic Situation
 					if (last == -1) { // first value from InfoService
-						last = model.mixedPackets;
+						last = e.getMixedPackets();
 						trafficProgressBar.setValue(trafficProgressBar.getMaximum());
 						trafficProgressBar.setString(model.getString("meterGettingTrafficInfo"));
 					} else { // now we have enough data...
-						diff = model.mixedPackets -last;
+						diff = e.getMixedPackets() -last;
 						if (diff != 0 ) { // do we?
 							sum = sum + diff;
 							cnt = cnt +1;
 							avg = sum/cnt;
-							last = model.mixedPackets;
+							last = e.getMixedPackets();
 							JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"sum="+sum+" avg="+avg+", diff="+diff);
 							trafficProgressBar.setMaximum(2*avg);
 							//if (diff>trafficProgressBar.getMaximum())

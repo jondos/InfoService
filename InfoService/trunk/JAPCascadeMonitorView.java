@@ -31,48 +31,40 @@ import java.awt.event.*;
 import java.util.Vector;
 import java.util.Enumeration;
 import javax.swing.table.*;
-import anon.JAPAnonService;
+import javax.swing.event.ListSelectionListener;
+import javax.swing.event.ListSelectionEvent;
+
 /**
  * User Interface for an Mix-Cascade Monitor.
  * 
  * @author  Hannes Federrath
  */
-class JAPCascadeMonitorView extends JDialog /*implements Runnable*/ {
+class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 	private JAPModel model;
-	
+//	private JAPCascadeMonitor cm = null;
+
 	private JButton startButton;
 	private JButton stopButton;
+	private JButton okButton;
 	private JLabel  statusTextField;
 	private JCheckBox contCheckBox;
 	private JScrollPane tableAggregate,scrollpane;
-	JTable tableView;
-	TableModel dataModel;
-	
-	private Vector db;
+	private JTable tableView;
+	private TableModel dataModel;
+	private int selectedRow = -1;
+	private Vector db = null;
 	private Thread t;
 	private boolean runFlag = true;
 		
-	/**
-	 * The Main Method
-	 */
-    public static void main(String[] args) {
- 		AnonServerDBEntry[] initialServerList = new AnonServerDBEntry[2];
-		AnonServerDBEntry myEntry0 = new AnonServerDBEntry("192.168.0.11:4453", "192.168.0.11", 4453);
-		AnonServerDBEntry myEntry1 = new AnonServerDBEntry("192.168.0.2:4453", "192.168.0.2", 4453);
-		initialServerList[0] = myEntry0;
-		initialServerList[1] = myEntry1;
-		new JAPRoundTripTimeView (null,initialServerList);
-    }
-	
-//	JAPCascadeMonitorView (Frame parent,AnonServerDBEntry[] initialServerList) {
-	JAPCascadeMonitorView (Frame parent, Vector initialServerList) {
- 		super(parent,"Cascade Monitor");
-		this.db = initialServerList;
+	JAPCascadeMonitorView (Frame parent) {
+ 		super(parent);
 		model=JAPModel.getModel();
+		this.db = model.anonServerDatabase;
+		this.setTitle(model.getString("chkAvailableCascades"));
 		Component contents = this.createComponents();
 		getContentPane().add(contents, BorderLayout.CENTER);
 		pack();
-		JAPUtil.upRightFrame(this);
+		JAPUtil.centerFrame(this);
 		setVisible(true);
 	}
 	
@@ -82,22 +74,23 @@ class JAPCascadeMonitorView extends JDialog /*implements Runnable*/ {
 		JPanel statusPanel = new JPanel();
 		statusTextField = new JLabel(model.getString("chkPressStartToCheck"));
 		contCheckBox = new JCheckBox(model.getString("chkChontinouslyCheck"));
-		statusPanel.add(new Label("Status: "));
+//		statusPanel.add(new JLabel("Status: "));
 		statusPanel.add(statusTextField);
 //		statusPanel.add(contCheckBox);
 		// Table
 		tableAggregate = createTable();
 		// Buttons
 		JPanel buttonPanel   = new JPanel();		
-		startButton     = new JButton(model.getString("startButton"));
+		startButton     = new JButton(model.getString("chkBttnTest"));
 		stopButton      = new JButton(model.getString("stopButton"));
+		okButton        = new JButton(model.getString("chkBttnSelect"));
 		stopButton.setEnabled(false);
-		final JButton closeButton = new JButton(model.getString("closeButton"));
+		final JButton closeButton = new JButton(model.getString("cancelButton"));
 		startButton.addActionListener(new ActionListener() {
 		    public void actionPerformed(ActionEvent e) {
 				stopButton.setEnabled(true);
 				startButton.setEnabled(false);
-				startRequest();
+				startTest();
 		    }
 		});
 		stopButton.setEnabled(false);
@@ -105,18 +98,27 @@ class JAPCascadeMonitorView extends JDialog /*implements Runnable*/ {
 		    public void actionPerformed(ActionEvent e) {
 				startButton.setEnabled(true);
 				stopButton.setEnabled(false);
-				stopRequest();
+				stopTest();
 		    }
 		});
 		closeButton.addActionListener(new ActionListener() {
 		    public void actionPerformed(ActionEvent e) {
-				stopRequest();
+				stopTest();
+		        dispose();
+		    }
+		});
+		okButton.setEnabled(false);
+		okButton.addActionListener(new ActionListener() {
+		    public void actionPerformed(ActionEvent e) {
+				model.setAnonServer((AnonServerDBEntry)db.elementAt(tableView.getSelectedRow())); 
+				stopTest();
 		        dispose();
 		    }
 		});
 		buttonPanel.add(startButton);
 		buttonPanel.add(stopButton);
 		buttonPanel.add(closeButton);
+		buttonPanel.add(okButton);
 		// add components to main panel 
 		p.add(statusPanel,BorderLayout.NORTH);
 //	    p.add(new JScrollPane(ta),BorderLayout.CENTER);
@@ -125,16 +127,17 @@ class JAPCascadeMonitorView extends JDialog /*implements Runnable*/ {
 	    return p;
 	}
 	
-    public JScrollPane createTable() {
-
+    private JScrollPane createTable() {
+				
         // Create a model of the data.
         dataModel = new AbstractTableModel() {
-            public int getColumnCount() { return 4; }
+            public int getColumnCount() { return 5; }
             public String getColumnName(int column) { 
 				if (column==0) return model.getString("chkCascade");
 				if (column==1) return model.getString("chkUsers");
 				if (column==2) return model.getString("chkDelay");
 				if (column==3) return model.getString("chkStatus");
+				if (column==4) return model.getString("chkSelect");
 				return " ";
 			}
             public int getRowCount() { return db.size();}
@@ -142,79 +145,48 @@ class JAPCascadeMonitorView extends JDialog /*implements Runnable*/ {
 				AnonServerDBEntry e = (AnonServerDBEntry)db.elementAt(row);
 				if (col==0) return e.getName();
 				if (col==1) return (e.getNrOfActiveUsers()==-1?"n/a":""+e.getNrOfActiveUsers());
-				if (col==2) return (e.getDelay()==-1?"n/a":""+e.getDelay());
-				if (col==3) return e.getStatus();
+				if (col==2) return (e.getDelay()==null?"n/a":""+e.getDelay());
+				if (col==3) return (e.getStatus()==null?"                              ":""+e.getStatus());
+//				if (col==4) return ((e.getHost().equals(model.anonHostName)&&(e.getPort()==model.anonPortNumber))?model.getString("chkSelected"):" ");
+				if (col==4) return (e.equals(model.getAnonServer())?model.getString("chkSelected"):" ");
 				return " ";
 			}
+            public Class getColumnClass(int c) {return getValueAt(0, c).getClass();}
+            public boolean isCellEditable(int row, int col) {return false/*getColumnClass(col) == String.class*/;}
+            public void setValueAt(Object aValue, int row, int column) { ; }
          };
 
 
         // Create the table
         tableView = new JTable(dataModel);
-		tableView.setRowHeight(15);
-		//JAPUtil.setPerfectTableSize(tableView, new Dimension(550,300));
-		tableView.setPreferredScrollableViewportSize(new Dimension(350,47));
         scrollpane = new JScrollPane(tableView);
 		scrollpane.createVerticalScrollBar();
+		tableView.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		tableView.getSelectionModel().addListSelectionListener(this);
+		JAPUtil.setPerfectTableSize(tableView, new Dimension(550,450));
+		//tableView.setPreferredScrollableViewportSize(new Dimension(tableView.getSize().width,Math.min(db.size(),6)*(tableView.getRowHeight()+1)));
+		tableView.setPreferredScrollableViewportSize(new Dimension(550,Math.min(db.size(),6)*(tableView.getRowHeight()+1)));
         return scrollpane;
     }
 	
+    public void valueChanged(ListSelectionEvent e) {
+		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPCascadeMonitorView:valuesChanged() selected row="+tableView.getSelectedRow());
+		okButton.setEnabled(true);
+    }
 	
-private final class CascadeMonitor implements Runnable {
-
-	public void CascadeMonitor() {
-	}
 	
-	public void run() {
-		int nr = db.size();
-		// connect to all Mix cascades (not yet working)
-		for(int i=0;i<nr;i++) {
-			AnonServerDBEntry e = (AnonServerDBEntry)db.elementAt(i);
-			statusTextField.setText("Connecting to Cascade "+e.getName());
-			e.setStatus("Connecting...");
-			tableView.repaint();
-			e.setAnonService(new JAPAnonService());
-			JAPAnonService s = e.getAnonService();
-			s.setAnonService(model.anonHostName,model.anonPortNumber);
-			s.setProtocol(JAPAnonService.PROTO_HTTP);
-			if (model.getUseProxy()) {
-				s.setFirewall(model.getProxyHost(),model.getProxyPort());
-				s.connectViaFirewall(true);
-			}
-			int ret=s.start();
-			if(ret==JAPAnonService.E_SUCCESS)
-				e.setStatus("Connected");
-			if (ret==JAPAnonService.E_BIND) 
-				e.setStatus("Bind error");
-			else
-				e.setStatus("No connection");
-			tableView.repaint();
-		}
-		// get the feedback forever
-		while(runFlag) {			
-			statusTextField.setText("Getting feedback data ...");
-			Enumeration enum = db.elements();
-			while (enum.hasMoreElements()) {
-				model.getInfoService().getFeedback((AnonServerDBEntry)enum.nextElement());
-			}
-			tableView.repaint();
-			statusTextField.setText("Finished");
-			try {
-				t.sleep(30000);
-			} catch (Exception e) {
-			}
-		}
-	}
-}
 
 	
-	private void startRequest() {
-		t = new Thread(new CascadeMonitor());
+	private void startTest() {
+		this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));/*
+		cm = new JAPCascadeMonitor();
+		t = new Thread(cm);
 		t.setPriority(Thread.MIN_PRIORITY);
-		t.start();
+		t.start();*/
 	}
 	
-	private void stopRequest() {
+	private void stopTest() {
+		statusTextField.setText(model.getString("chkCancelled"));/*
 		runFlag=false;
 		try {
 			t.join(3000);
@@ -223,14 +195,9 @@ private final class CascadeMonitor implements Runnable {
 		try {
 			t.stop();
 		} catch (Exception e) {			
-		}
-		int nr = db.size();
-		for(int i=0;i<nr;i++) {
-			AnonServerDBEntry e = (AnonServerDBEntry)db.elementAt(i);
-			JAPAnonService s = e.getAnonService();
-			s.stop();
-		}
-		statusTextField.setText("Cancelled");
+		}*/
+		this.setCursor(Cursor.getDefaultCursor());
+		statusTextField.setText(model.getString("chkPressStartToCheck"));
 	}
 	
 

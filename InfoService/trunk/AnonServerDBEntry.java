@@ -36,10 +36,14 @@ public final class AnonServerDBEntry
 		private int    traffic = -1;
 		private int    risk    = -1;
 		private int    packets = -1;
-		private long   delay = -1;
+		private String delay  = null;
 		private String status = null;
 		private JAPAnonService service = null;
 	
+		public AnonServerDBEntry ()
+			{
+			}
+			
 		public AnonServerDBEntry (String n,String h, int p)
 			{
 				host = h;
@@ -56,6 +60,17 @@ public final class AnonServerDBEntry
 				port2 = p2;
 			}
 		
+		public boolean equals(AnonServerDBEntry e) {
+		    if (
+			(port == e.getPort()) &&
+			host.equals(e.getHost()) &&
+			(port2 == e.getSSLPort())
+			)
+		    	return true;
+		    else
+			return false;
+		}
+		
 		public String getName() {
 				return name;//host+":"+Integer.toString(port);
 		}
@@ -65,21 +80,27 @@ public final class AnonServerDBEntry
 		public int getPort() {
 				return port;
 		}
+/* it's forbidden to change Portnumber
 		public void setPort(int port) {
 				this.port=port;
 		}
+*/
 		public String getHost(){
 				return host;
 		}
+/* it's forbidden to change Hostname
 		public void setHost(String host) {
 				this.host=host;
 		}
+*/
 		public int getSSLPort() {
 				return port2;
 		}
+/* dito.
 		public void setSSLPort(int port) {
 		    		this.port2=port;
 		}
+*/
 		public int getNrOfActiveUsers() {
 				return users;
 		}		
@@ -104,10 +125,10 @@ public final class AnonServerDBEntry
 		public void setMixedPackets(int packets) {
 				this.packets=packets;
 		}
-		public long getDelay() {
+		public String getDelay() {
 				return delay;
 		}
-		public void setDelay(long delay) {
+		public void setDelay(String delay) {
 				this.delay=delay;
 		}
 		public String getStatus() {

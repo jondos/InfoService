@@ -306,20 +306,11 @@ final class JAPConf extends JDialog
 					public void actionPerformed(ActionEvent e) {
 					JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPConf:fetchB");
 //						JOptionPane.showMessageDialog(null,model.getString("notYetImlmplemented"));
-						Cursor c = getCursor();
-						setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+						// fetch available mix cascades from the Internet
 						model.fetchAnonServers();
-						model.notifyJAPObservers();
-		//very ugly!!!!!!!!!!!!!	
-						select.removeAllItems();
-						select.addItem(model.getString("settingsAnonSelect"));
-						Enumeration enum = model.anonServerDatabase.elements();
-						while (enum.hasMoreElements())
-							{
-								select.addItem( ((AnonServerDBEntry)enum.nextElement()).getName() );
-							}
-						b2.doClick();
-						setCursor(c);
+						// show a window containing all available cascades
+						JAPCascadeMonitorView v=new JAPCascadeMonitorView(model.getView());
+						OKPressed();
 				}});
 				select = new JComboBox();
 				// add elements to combobox
@@ -488,7 +479,8 @@ final class JAPConf extends JDialog
 						public void actionPerformed(ActionEvent e)
 							{
 								AnonServerDBEntry[] a=new AnonServerDBEntry[1];
-								a[0]=new AnonServerDBEntry(model.anonHostName,model.anonHostName,model.anonPortNumber+1);
+//								a[0]=new AnonServerDBEntry(model.anonHostName,model.anonHostName,model.anonPortNumber+1);
+								a[0]=new AnonServerDBEntry(model.getAnonServer().getHost(),model.getAnonServer().getHost(),model.getAnonServer().getPort()+1);
 								JAPRoundTripTimeView v=new JAPRoundTripTimeView(model.getView(),a);
 //								v.show();
 							}
@@ -498,7 +490,7 @@ final class JAPConf extends JDialog
 				bttnMonitor.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
 						model.fetchAnonServers();
-						JAPCascadeMonitorView v=new JAPCascadeMonitorView(model.getView(),model.anonServerDatabase);
+						JAPCascadeMonitorView v=new JAPCascadeMonitorView(model.getView());
 //						v.show();
 				}});
 				JPanel p22 = new JPanel();
@@ -715,27 +707,20 @@ final class JAPConf extends JDialog
 					}
 				model.setPortNumber(Integer.parseInt(portnumberTextField.getText().trim()));
 				model.setProxy(proxyhostTextField.getText().trim(),
-											 Integer.parseInt(proxyportnumberTextField.getText().trim()));
-				
+					Integer.parseInt(proxyportnumberTextField.getText().trim()));
+				// infoservice settings
 				model.setInfoService(infohostTextField.getText().trim(),
-														 Integer.parseInt(infoportnumberTextField.getText().trim()));
+					Integer.parseInt(infoportnumberTextField.getText().trim()));
 				// anon settings
-				// if anon values have changed --> stop and restart anon service
 				int anonSSLPortNumber = -1; 
 				if (!anonsslportnumberTextField.getText().equals(""))
 					anonSSLPortNumber = Integer.parseInt(anonsslportnumberTextField.getText().trim());
-				if (!anonhostTextField.getText().trim().equals(model.anonHostName)
-				    || Integer.parseInt(anonportnumberTextField.getText().trim()) != model.anonPortNumber
-					|| anonSSLPortNumber != model.anonSSLPortNumber) 
-					{
-						model.setAnonMode(false);
-				  		model.anonserviceName = anonserviceName;
-						model.anonHostName = anonhostTextField.getText().trim();
-						model.anonPortNumber  = Integer.parseInt(anonportnumberTextField.getText().trim());
-						model.anonSSLPortNumber = anonSSLPortNumber;
-				  		//model.setAnonMode(true); // geht noch nicht
-					}
 				
+				AnonServerDBEntry e = new AnonServerDBEntry(
+															anonserviceName,
+															anonhostTextField.getText().trim(),
+															Integer.parseInt(anonportnumberTextField.getText().trim()),
+															anonSSLPortNumber);
 				model.autoConnect = autoConnectCheckBox.isSelected();
 				model.setMinimizeOnStartup(startupMinimizeCheckBox.isSelected());
 				JAPDebug.setDebugType(
@@ -745,7 +730,8 @@ final class JAPConf extends JDialog
 					 (miscChB.isSelected()?JAPDebug.MISC:JAPDebug.NUL)
 					);
 				JAPDebug.setDebugLevel(sliderDebugLevel.getValue());
-				model.notifyJAPObservers();
+				model.setAnonServer(e);
+//				model.notifyJAPObservers();
 			}
 	
 	public void selectCard(int selectedCard)
@@ -776,8 +762,6 @@ final class JAPConf extends JDialog
 		listenerCheckBoxIsLocal.setSelected(model.getListenerIsLocal());
 		portnumberTextFieldSocks.setText(String.valueOf(model.getSocksPortNumber()));
 		listenerCheckBoxSocks.setSelected(model.getUseSocksPort());
-		
-		
 		// http proxy tab
 		proxyCheckBox.setSelected(model.getUseProxy());
 		proxyhostTextField.setEnabled(proxyCheckBox.isSelected());
@@ -788,15 +772,23 @@ final class JAPConf extends JDialog
 		infohostTextField.setText(model.getInfoServiceHost());
 		infoportnumberTextField.setText(String.valueOf(model.getInfoServicePort()));
 		// anon tab
-		anonhostTextField.setText(model.anonHostName);
-		anonportnumberTextField.setText(String.valueOf(model.anonPortNumber));
-		if (model.anonSSLPortNumber==-1)
+		AnonServerDBEntry e = model.getAnonServer();
+		anonhostTextField.setText(e.getHost());
+		anonportnumberTextField.setText(String.valueOf(e.getPort()));
+		if (e.getSSLPort()==-1)
 			anonsslportnumberTextField.setText("");
 		else
-			anonsslportnumberTextField.setText(String.valueOf(model.anonSSLPortNumber));
+			anonsslportnumberTextField.setText(String.valueOf(e.getSSLPort()));
 		select.setSelectedIndex(0);
 		autoConnectCheckBox.setSelected(model.autoConnect);
 		startupMinimizeCheckBox.setSelected(model.getMinimizeOnStartup());
+						select.removeAllItems();
+						select.addItem(model.getString("settingsAnonSelect"));
+						Enumeration enum = model.anonServerDatabase.elements();
+						while (enum.hasMoreElements())
+							{
+								select.addItem( ((AnonServerDBEntry)enum.nextElement()).getName() );
+							}
 	}
 	
 
