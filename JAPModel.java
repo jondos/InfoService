@@ -57,7 +57,7 @@ public final class JAPModel {
 // usage: model.getString("infoURL")
 //static final String url_download_version       = "http://www.inf.tu-dresden.de/~hf2/anon/JAP/";
 	
-	static final String aktJAPVersionFN            = "/~sk13/anon/jap/aktVersionTest.txt"; // retrieved from Info Service
+	static final String aktJAPVersionFN            = "/~sk13/anon/jap/aktVersion.txt"; // retrieved from Info Service
 	static final String urlJAPNewVersionDownload   = "/~sk13/anon/jap/JAP.jar"; // also retrieved from Info Service
 	static final String JAPLocalFilename           = "JAP.jar";
 
