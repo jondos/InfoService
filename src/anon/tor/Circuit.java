@@ -21,7 +21,7 @@ import anon.tor.util.helper;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-
+import java.util.*;
 /**
  * @author stefan
  *
@@ -216,6 +216,12 @@ public class Circuit
 	 */
 	public synchronized void destroyedByPeer() throws Exception
 	{
+		Enumeration enumer=m_streams.elements();
+		while(enumer.hasMoreElements())
+		{
+			TorChannel c=(TorChannel)enumer.nextElement();
+			c.closedByPeer();
+		}
 		m_streams.clear();
 		m_bClosed = true;
 		m_bShutdown = true;
@@ -350,6 +356,7 @@ public class Circuit
 				this.m_created = false;
 				this.m_extended = true;
 				notifyWaiters();
+				destroyedByPeer();
 			}
 			else
 			{

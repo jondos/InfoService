@@ -53,6 +53,8 @@ import logging.LogType;
 import pay.PayAccount;
 import pay.PayAccountsFile;
 import payxml.XMLAccountInfo;
+import anon.tor.*;
+import java.io.*;
 
 final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 {
@@ -64,8 +66,10 @@ final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 	public final static int E_SIGNATURE_CHECK_OTHERMIX_FAILED = ErrorCodes.E_SIGNATURE_CHECK_OTHERMIX_FAILED;
 
 	// ootte
+	private final static boolean USE_TOR = true;
 
 	private AnonService m_Anon;
+	private AnonService m_Tor;
 	private Thread threadRun;
 	private volatile boolean m_bIsRunning;
 	private ServerSocket m_socketListener;
@@ -95,13 +99,14 @@ final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 	public AnonWebProxy(ServerSocket listener)
 	{
 		m_socketListener = listener;
+		//HTTP
 		m_Anon = AnonServiceFactory.getAnonServiceInstance("AN.ON");
 		setFirewall(JAPConstants.FIREWALL_TYPE_HTTP, null, -1);
 		setFirewallAuthorization(null, null);
 		setDummyTraffic( -1);
 		//m_AICom = new AICommunication(m_Anon);
 		m_forwardedConnection = false;
-
+		//SOCKS´
 	}
 
 	/**
@@ -268,6 +273,15 @@ final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 		{
 			return ret;
 		}
+		if (USE_TOR)
+		{
+			m_Tor = AnonServiceFactory.getAnonServiceInstance("TOR");
+			m_Tor.initialize(new TorAnonServerDescription(true));
+		}
+		else
+		{
+			m_Tor = m_Anon;
+		}
 		threadRun = new Thread(this, "JAP - AnonProxy");
 		threadRun.start();
 		return ErrorCodes.E_SUCCESS;
@@ -277,6 +291,7 @@ final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 	{
 		//m_AICom.end();
 		m_Anon.shutdown();
+		m_Tor.shutdown();
 		m_bIsRunning = false;
 		try
 		{
@@ -333,6 +348,24 @@ final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 								  soex);
 					continue;
 				}
+				//Check for type
+				int firstByte = 0;
+				try
+				{
+					firstByte = socket.getInputStream().read();
+				}
+				catch (Throwable t)
+				{
+					try
+					{
+						socket.close();
+					}
+					catch (Throwable t1)
+					{
+					}
+					continue;
+				}
+				firstByte &= 0x00FF;
 				//2001-04-04(HF)
 				AnonChannel newChannel = null;
 				while (m_bIsRunning)
@@ -340,7 +373,14 @@ final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 					try
 					{
 						newChannel = null;
-						newChannel = m_Anon.createChannel(AnonChannel.HTTP);
+						if (firstByte == 4 || firstByte == 5) //SOCKS
+						{
+							newChannel=m_Tor.createChannel(AnonChannel.SOCKS);
+						}
+						else
+						{
+							newChannel = m_Anon.createChannel(AnonChannel.HTTP);
+						}
 						break;
 					}
 					catch (ToManyOpenChannelsException te)
@@ -374,6 +414,7 @@ final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 				{
 					try
 					{
+						newChannel.getOutputStream().write(firstByte);
 						new AnonProxyRequest(this, socket, newChannel);
 					}
 					catch (Exception e)

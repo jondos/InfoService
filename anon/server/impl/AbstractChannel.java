@@ -111,7 +111,7 @@ abstract public class AbstractChannel implements AnonChannel
 	//called from ChannelOutputStream to send data to the AnonService which belongs to this channel
 	abstract protected /*synchronized*/ void send(byte[] buff, int len) throws IOException;
 
-	protected
+	public
 		/*synchronized*/
 		void closedByPeer()
 	{

@@ -63,7 +63,7 @@ public final class JAPConstants
 	//static final String buildType="..."
 	//needed for update.JAPUpdate
 	static final int defaultPortNumber = 4001;
-	static final int defaultSOCKSPortNumber = 1080;
+	//static final int defaultSOCKSPortNumber = 1080;
 	static final String defaultAnonName = "Dresden-Desden";
 	static final String defaultAnonID = "141.76.1.120%3A6544";
 	static final String defaultAnonHost = "mix.inf.tu-dresden.de";
