@@ -34,7 +34,7 @@ import java.util.StringTokenizer;
 //import sun.net.ftp.FtpClient;
 //import sun.net.ftp.*;
 
-//import com.aecys.net.FtpClient;
+import com.enterprisedt.net.ftp.FTPClient;
 
 final class JAPDirectProxyConnection implements Runnable {
     private Socket clientSocket;
@@ -323,7 +323,7 @@ final class JAPDirectProxyConnection implements Runnable {
 
     try{
   // Array of String[] for the list command
-     String[] list;
+    // String[] list;
      System.out.println("FTP-MODE");
     // Socket serverSocket = new Socket(host,port);
      //write response to client
@@ -337,39 +337,41 @@ final class JAPDirectProxyConnection implements Runnable {
      String nextLine = this.readLine(inputStream);
      System.out.println(nextLine);
      // create an FTP-Client and try to communicate: Browser --> FTP-Client --> FTP-Server
-    // FtpClient ftpClient = new FtpClient (host,"anonymous","heinz@operamail.com");
+     FTPClient ftpClient = new FTPClient (host);
+
      // read next Header lines <-- client
-   /*   FtpClient ftpClient = new FtpClient(host);
+   //   FtpClient ftpClient = new FtpClient(host);
+	 ftpClient.debugResponses(true);
       ftpClient.login("anonymous","heinz@operamail.com");
-      ftpClient.binary();
+   /*   ftpClient.binary();
     */// ftpClient.ascii();-
 
-     File text = new File("test.txt");
+     //File text = new File("test.txt");
      //text.createNewFile();
-     OutputStream fos = new FileOutputStream(text);
+     //OutputStream fos = new FileOutputStream(text);
      String GETString = new String(file);
      // file or directory
      byte[] byt = new byte[1000];
      int len=0;
      if (GETString.endsWith("/"))
      {
-      // list = ftpClient.list(GETString);
+       String list = ftpClient.list(GETString,true);
 
-             /*  for(int i=0; i<list.length;i++)
+  /*             for(int i=0; i<list.length;i++)
                {
                byte[] byt = list[i].getBytes();
                os.write(byt);
-                }//for*/
+                }*///for*/
 //           is = ftpClient.list();
  //          while((len = is.read())!= -1)
            {
             //System.out.println(len+" len");
             //os.write(byt,0,len);
-            os.write((byte)len);
+            os.write(list.getBytes());
            // if(len < 1000)
            // break;
            }
-  //      ftpClient.closeServer();
+        ftpClient.quit();
         os.flush();
         os.close();
     }else{

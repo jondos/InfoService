@@ -179,7 +179,7 @@ final class JAPInfoService
 			int trafficSituation = -1;
 			int currentRisk = -1;
 			int mixedPackets = -1;
-			boolean error=false;
+			int iAnonLevel=-1;
 			try
 				{
 					byte[] addr=InetAddress.getByName(service.getHost()).getAddress();
@@ -192,42 +192,30 @@ final class JAPInfoService
 					HTTPResponse resp=conInfoService.Get(strGET);
 					if (resp.getStatusCode()!=200)
 						{
-							error=true;
 							JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPFeedback: Bad response from server: "+resp.getReasonLine());
 						}
 					else
 						{
 							// XML stuff
 							Document doc=DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(resp.getInputStream());
-							NamedNodeMap n=doc.getDocumentElement().getAttributes();
-
-							//s                = n.getNamedItem("anonServer").getNodeValue();
-							nrOfActiveUsers  = Integer.valueOf(n.getNamedItem("nrOfActiveUsers").getNodeValue()).intValue();
-							trafficSituation = Integer.valueOf(n.getNamedItem("trafficSituation").getNodeValue()).intValue();
-							currentRisk      = Integer.valueOf(n.getNamedItem("currentRisk").getNodeValue()).intValue();
-							mixedPackets     = Integer.valueOf(n.getNamedItem("mixedPackets").getNodeValue()).intValue();
+							Element root=doc.getDocumentElement();
+							nrOfActiveUsers   = JAPUtil.parseElementAttrInt(root,"nrOfActiveUsers",-1);
+							trafficSituation  = JAPUtil.parseElementAttrInt(root,"trafficSituation",-1);
+							currentRisk       = JAPUtil.parseElementAttrInt(root,"currentRisk",-1);
+							mixedPackets      = JAPUtil.parseElementAttrInt(root,"mixedPackets",-1);
+							iAnonLevel        = JAPUtil.parseElementAttrInt(root,"anonLevel",-1);
 						}
 					// close streams and socket
 				}
 			catch(Exception e)
 				{
-					error = true;
 					JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPInfoService - Feedback: "+e);
 				}
-			if (!error)
-				{
-					service.setNrOfActiveUsers(nrOfActiveUsers);
-					service.setTrafficSituation(trafficSituation);
-					service.setCurrentRisk(currentRisk);
-					service.setMixedPackets(mixedPackets);
-				}
-			else
-				{
-					service.setNrOfActiveUsers(-1);
-					service.setTrafficSituation(-1);
-					service.setCurrentRisk(-1);
-					service.setMixedPackets(-1);
-				}
+			service.setNrOfActiveUsers(nrOfActiveUsers);
+			service.setTrafficSituation(trafficSituation);
+			service.setCurrentRisk(currentRisk);
+			service.setMixedPackets(mixedPackets);
+			service.setAnonLevel(iAnonLevel);
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPFeedback: "+nrOfActiveUsers+"/"+trafficSituation+"/"+currentRisk+"/"+mixedPackets);
 		}
 

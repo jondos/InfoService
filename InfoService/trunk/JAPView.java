@@ -59,7 +59,7 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 	private Object oValueUpdateSemaphore;
 	private boolean m_bIsIconified;
 	private String m_Title;
-	private int diff, avg, last=-1, sum=0, cnt=0; // helper variables for calculating traffic situation
+	//private int diff, avg, last=-1, sum=0, cnt=0; // helper variables for calculating traffic situation
 
 	public JAPView (String s)
 		{
@@ -232,7 +232,7 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 		JPanel meterPanel = new JPanel();
 		meterPanel.setLayout( new BorderLayout() );
 		meterPanel.setBorder( new TitledBorder(model.getString("meterBorder")) );
-		meterLabel = new JLabel(setMeterImage());
+		meterLabel = new JLabel(getMeterImage(-1));
 		meterPanel.add(p41/*ano1CheckBox*/,BorderLayout.NORTH);
 		meterPanel.add(meterLabel, BorderLayout.CENTER);
 
@@ -412,11 +412,15 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 		}
 	}
 
-    public ImageIcon setMeterImage()
+	 /**Anon Level is >=0 amd <=5. if -1 no measure is available*/
+    private ImageIcon getMeterImage(int iAnonLevel)
 			{
 				if (model.getAnonMode())
 					{
-						return meterIcons[model.getCurrentProtectionLevel()];
+						if(iAnonLevel>=0&&iAnonLevel<6)
+						  return meterIcons[iAnonLevel+2];
+					  else
+							return meterIcons[1];//No measure available
 					}
 				else
 					{
@@ -510,7 +514,7 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 		// Meter panel
 		ano1CheckBox.setSelected(model.getAnonMode());
 		nameLabel.setText(e.getName());
-		meterLabel.setIcon(setMeterImage());
+		meterLabel.setIcon(getMeterImage(e.getAnonLevel()));
 		if (model.getAnonMode()) {
 				if (e.getNrOfActiveUsers() > -1)
 					{
@@ -552,43 +556,11 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
             else
               trafficProgressBar.setString(model.getString("meterTrafficHigh"));
           }
-        else if (e.getMixedPackets() > -1) { //buggy if one mix-cascade changes form reporting traffic to not
-					//may be buggy at all -> because call frequence of updateValues is not known!!
-
-          // Traffic Situation
-					if (last == -1) { // first value from InfoService
-						last = e.getMixedPackets();
-						trafficProgressBar.setValue(trafficProgressBar.getMaximum());
-						trafficProgressBar.setString(model.getString("meterGettingTrafficInfo"));
-					} else { // now we have enough data...
-						diff = e.getMixedPackets() -last;
-						if (diff != 0 ) { // do we?
-							sum = sum + diff;
-							cnt = cnt +1;
-							avg = sum/cnt;
-							last = e.getMixedPackets();
-							JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"sum="+sum+" avg="+avg+", diff="+diff);
-							trafficProgressBar.setMaximum(2*avg);
-							//if (diff>trafficProgressBar.getMaximum())
-							//	trafficProgressBar.setMaximum(model.trafficSituation);
-							trafficProgressBar.setValue(diff);
-							if      (diff < trafficProgressBar.getMaximum()*30/100)
-								trafficProgressBar.setString(model.getString("meterTrafficLow"));
-							else if (diff < trafficProgressBar.getMaximum()*60/100)
-								trafficProgressBar.setString(model.getString("meterTrafficMedium"));
-							else /* if (diff < trafficProgressBar.getMaximum()*90/100) */
-								trafficProgressBar.setString(model.getString("meterTrafficHigh"));
-							//else
-							//	trafficProgressBar.setString(model.getString("meterTrafficCongestion"));
-						}
-					}
-				} else { // no value from InfoService
-					last = -1;
+        else { // no value from InfoService
 					trafficProgressBar.setValue(trafficProgressBar.getMaximum());
 					trafficProgressBar.setString(model.getString("meterNA"));
 				}
 		} else {
-			last = -1;
 			userProgressBar.setValue(userProgressBar.getMaximum());
 			userProgressBar.setString(model.getString("meterNA"));
 			protectionProgressBar.setValue(protectionProgressBar.getMaximum());

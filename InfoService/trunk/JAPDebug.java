@@ -161,7 +161,10 @@ final public class JAPDebug extends WindowAdapter implements ActionListener{
 					    if(!debug.m_bConsole)
 						    System.err.print(str);
 					    else
-						    debug.textareaConsole.append(str);
+						    {
+									debug.textareaConsole.append(str);
+									debug.textareaConsole.setCaretPosition(debug.textareaConsole.getText().length());
+								}
             }
 				}
 		}
@@ -250,19 +253,22 @@ final public class JAPDebug extends WindowAdapter implements ActionListener{
             textareaConsole.setFont(f);
           JPanel panel=new JPanel();
 					JButton bttnSave=new JButton(JAPMessages.getString("bttnSaveAs")+"...",
-																			 JAPUtil.loadImageIcon("images/saveicon.gif",true));
+																			 JAPUtil.loadImageIcon("saveicon.gif",true));
 					bttnSave.setActionCommand("saveas");
 					bttnSave.addActionListener(debug);
 					JButton bttnCopy=new JButton(JAPMessages.getString("bttnCopy"),
-																			 JAPUtil.loadImageIcon("images/copyicon.gif",true));
+																			 JAPUtil.loadImageIcon("copyicon.gif",true));
 					bttnCopy.setActionCommand("copy");
 					bttnCopy.addActionListener(debug);
+					JButton bttnInsertConfig=new JButton(JAPMessages.getString("bttnInsertConfig"));
+					bttnInsertConfig.setActionCommand("insertConfig");
+					bttnInsertConfig.addActionListener(debug);
 					JButton bttnDelete=new JButton(JAPMessages.getString("bttnDelete"),
-																			 JAPUtil.loadImageIcon("images/deleteicon.gif",true));
+																			 JAPUtil.loadImageIcon("deleteicon.gif",true));
 					bttnDelete.setActionCommand("delete");
 					bttnDelete.addActionListener(debug);
 					JButton bttnClose=new JButton(JAPMessages.getString("bttnClose"),
-																				JAPUtil.loadImageIcon("images/exiticon.gif",true));
+																				JAPUtil.loadImageIcon("exiticon.gif",true));
 					bttnClose.setActionCommand("close");
 					bttnClose.addActionListener(debug);
 					GridBagLayout g=new GridBagLayout();
@@ -278,12 +284,15 @@ final public class JAPDebug extends WindowAdapter implements ActionListener{
 					g.setConstraints(bttnCopy,c);
 					panel.add(bttnCopy);
 					c.gridx=3;
+					g.setConstraints(bttnInsertConfig,c);
+					panel.add(bttnInsertConfig);
+					c.gridx=4;
 					g.setConstraints(bttnDelete,c);
 					panel.add(bttnDelete);
 					c.weightx=1;
 					c.anchor=c.EAST;
 					c.fill=c.NONE;
-					c.gridx=4;
+					c.gridx=5;
 					g.setConstraints(bttnClose,c);
 					panel.add(bttnClose);
 					//panel.add("Center",new Canvas());
@@ -312,7 +321,9 @@ final public class JAPDebug extends WindowAdapter implements ActionListener{
 					}
 				else if(e.getActionCommand().equals("copy"))
 					{
+						textareaConsole.selectAll();
 						textareaConsole.copy();
+						textareaConsole.moveCaretPosition(textareaConsole.getCaretPosition());
 //						PrintJob p=Toolkit.getDefaultToolkit().getPrintJob(JAPModel.getModel().getView(),"Print Log",null);
 //						debug.textareaConsole.print(p.getGraphics());
 //						p.end();
@@ -320,6 +331,14 @@ final public class JAPDebug extends WindowAdapter implements ActionListener{
 				else if(e.getActionCommand().equals("delete"))
 					{
 						textareaConsole.setText("");
+					}
+				else if(e.getActionCommand().equals("insertConfig"))
+					{
+						String s=JAPModel.getModel().getConfigurationAsXML();
+						if(s==null)
+						  textareaConsole.append("Error!! Could not get current configuration!\n");
+						else
+							textareaConsole.append(s+"\n");
 					}
 				else
 					{

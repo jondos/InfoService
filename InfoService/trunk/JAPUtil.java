@@ -33,7 +33,7 @@ import java.util.Hashtable;
 import java.util.Enumeration;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.OutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -245,10 +245,12 @@ final class JAPUtil
 	/** Writes a XML-Document to an Output-Stream. Since writing was not standardzieds
 	 * since JAXP 1.1 different Methods are tried
 	 */
-	public static boolean saveXMLDocument(Document doc,OutputStream out)
+	public static String XMLDocumentToString(Document doc)
 		{
+			ByteArrayOutputStream out=null;
 			try
 				{
+					out=new ByteArrayOutputStream();
 					try //For JAXP 1.0.1 Referenc Implementation (shipped with JAP)
 						{
 							((com.sun.xml.tree.XmlDocument)doc).write(out);
@@ -288,15 +290,15 @@ final class JAPUtil
 								}
 							catch(Throwable t2)
 								{
-									return false;
+									return null;
 								}
 						}
 				}
 			catch(Throwable t2)
 				{
-					return false;
+					return null;
 				}
-			return true;
+			return out.toString();
 		}
 
 

@@ -129,8 +129,6 @@ public final class JAPModel implements JAPAnonServiceListener{
 	static final String AUTHOR = "(c) 2000 The JAP-Team";
 
 // The following two definitions now in JAPUtil - due to a Henne - Ei problem
-//	static final String IMGPATHHICOLOR  = "images/";
-//	static final String IMGPATHLOWCOLOR = "images/lowcolor/";
 	static final String XMLCONFFN       = "jap.conf";
 	public static final String BUSYFN   = "busy.gif";
 //	public static final String SPLASHFN = "splash.gif";
@@ -377,9 +375,6 @@ public final class JAPModel implements JAPAnonServiceListener{
 	}
 
 	public void save() {
-		// Save config to xml file
-		// Achtung!! Fehler im Sun-XML --> NULL-Attributte können hinzugefügt werden,
-		// beim Abspeichern gibt es dann aber einen Fehler!
 		boolean error=false;
 		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:try saving configuration to "+XMLCONFFN);
 		try {
@@ -393,6 +388,36 @@ public final class JAPModel implements JAPAnonServiceListener{
 				{
 					f=new FileOutputStream(XMLCONFFN); //and then in the current directory
 				};
+		   String sb=getConfigurationAsXML();
+			 if(sb!=null)
+				{
+					f.write(sb.getBytes());
+					f.flush();
+					f.close();
+				}
+			else
+				error=true;
+			}
+		catch(Exception e)
+			{
+				error=true;
+			}
+		if(error)
+			{
+				JAPDebug.out(JAPDebug.ERR,JAPDebug.MISC,"JAPModel:error saving configuration to "+XMLCONFFN);
+				JOptionPane.showMessageDialog(model.getView(),
+											model.getString("errorSavingConfig"),
+											model.getString("errorSavingConfigTitle"),
+											JOptionPane.ERROR_MESSAGE);
+			}
+	  }
+	protected String getConfigurationAsXML()
+
+	{
+		// Save config to xml file
+		// Achtung!! Fehler im Sun-XML --> NULL-Attributte können hinzugefügt werden,
+		// beim Abspeichern gibt es dann aber einen Fehler!
+		try {
 			Document doc=DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
 			Element e=doc.createElement("JAP");
 			doc.appendChild(e);
@@ -439,22 +464,14 @@ public final class JAPModel implements JAPAnonServiceListener{
 					tmp.appendChild(txt);
 					elemDebug.appendChild(tmp);
 			}
-			error=!JAPUtil.saveXMLDocument(doc,f);
+			return JAPUtil.XMLDocumentToString(doc);
 			//((XmlDocument)doc).write(f);
 		}
 		catch(Exception ex) {
-			error=true;
 			JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.MISC,"JAPModel:save() Exception: "+ex.getMessage());
 			//ex.printStackTrace();
 		}
-		if(error)
-			{
-				JAPDebug.out(JAPDebug.ERR,JAPDebug.MISC,"JAPModel:error saving configuration to "+XMLCONFFN);
-				JOptionPane.showMessageDialog(model.getView(),
-											model.getString("errorSavingConfig"),
-											model.getString("errorSavingConfigTitle"),
-											JOptionPane.ERROR_MESSAGE);
-			}
+		return null;
 	}
 
 	public void initialRun()
@@ -493,30 +510,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 			JAPMessages.init(l);
 			m_Locale=l;
 		}
-    public int getCurrentProtectionLevel() {
-		/*
-		// Hier eine moeglichst komplizierte Formel einfuegen,
-		// nach der die Anzeige fuer das "Anon Meter" berechnet wird.
-		if ((nrOfActiveUsers  == -1) ||
-			(trafficSituation == -1) ||
-			(currentRisk      == -1)) {
-				return 1;
-		} else {
-			try {
-				float f;
-				f = trafficSituation / (float)MAXPROGRESSBARVALUE;
-				f = f * (METERFNARRAY.length-3) + 2;
-				//JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:getCurrentProtectionLevel(): f="+f);
-				return (int)f;
-			}
-			catch (Exception e) {
-				JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.MISC,"JAPModel:getCurrentProtectionLevel(): "+e);
-				return 1;
-			}
-		}
-		*/
-		return 1;
-	}
+
 
 
 
@@ -956,8 +950,8 @@ private final class SetAnonModeAsync implements Runnable
 				JAPSetAnonModeSplash.abort();
 			}
 	}
-	}
 }
+	}
 	public synchronized void setAnonMode(boolean anonModeSelected)
 		{
 			Thread t=new Thread(new SetAnonModeAsync(anonModeSelected));
