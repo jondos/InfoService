@@ -31,8 +31,10 @@ import java.net.*;
 import java.util.*;
 import java.text.*;
 import java.util.StringTokenizer;
+import sun.net.ftp.FtpClient;
+import sun.net.ftp.*;
 
-import com.aecys.net.FtpClient;
+//import com.aecys.net.FtpClient;
 
 final class JAPDirectProxyConnection implements Runnable {
     private Socket clientSocket;
@@ -121,6 +123,7 @@ final class JAPDirectProxyConnection implements Runnable {
 					handleHTTP();
 				} else if (protocol.equalsIgnoreCase("ftp")){
                                      // unknownProtocol();
+                                     System.out.println("handleftp()");
                                      handleFTP();
                         }
 			} else {
@@ -226,38 +229,69 @@ final class JAPDirectProxyConnection implements Runnable {
 
 			// Response from server is transfered to client in a sepatate thread
                         System.out.println(serverSocket.toString()+" serverSocket");
-			JAPDirectProxyResponse pr = new JAPDirectProxyResponse(serverSocket, clientSocket);
-			Thread prt = new Thread(pr);
-			prt.start();
+			//JAPDirectProxyResponse pr = new JAPDirectProxyResponse(serverSocket, clientSocket);
+			//Thread prt = new Thread(pr);
+			//prt.start();
+                        //write response to client
+                        OutputStream os = clientSocket.getOutputStream();
+                        //read response of the server
+                        InputStream is = serverSocket.getInputStream();
 			// Send request --> server
 			BufferedWriter outputStream = new BufferedWriter(new OutputStreamWriter(serverSocket.getOutputStream()));
-			String protocolString = "";
+                        // Send response --> client
+                        String protocolString = "";
                         // protocolString += method+" "+file+ " "+version;
 			protocolString += method+" "+file+ " "+"HTTP/1.0";
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"C("+threadNumber+") - ProtocolString: >" + protocolString + "<");
 			outputStream.write(protocolString + "\r\n");
-			// read next Header lines <-- client
-			String nextLine = this.readLine(inputStream);
+                        String nextLine = this.readLine(inputStream);
    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                          System.out.println(nextLine+" nextline handleHTTP()");
-   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"C("+threadNumber+") - Header: >" + nextLine + "<");
+
+                         JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"C("+threadNumber+") - Header: >" + nextLine + "<");
 			while (nextLine.length() != 0) {
 				if (! filter(nextLine) ) {
                         // write single lines to server
 					outputStream.write(nextLine+"\r\n");
-                                        System.out.println(nextLine);
+                                        //System.out.println(nextLine);
 				} else {
 					JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"C("+threadNumber+") - Header " + nextLine + " filtered");
 				}
 				nextLine = this.readLine(inputStream);
 				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"C("+threadNumber+") - Header: >" + nextLine + "<");
 			}
+
 			// send final CRLF --> server
 			outputStream.write("\r\n");
 			outputStream.flush();
+
+                        byte[] buff=new byte[1000];
+                        int len=0;
+                                              if (is.toString()!= null)
+                                              {
+
+                                                                while((len = is.read(buff))>0)
+									{
+										os.write(buff,0,len);
+
+									}
+                                                                //}//fi
+                                                                os.flush();
+                                                                JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"R - EOF from Server.");
+
+                                                }//fi
+                                                else
+                                                {
+                                                 System.out.println(" is is null");
+                                                }
+                        // wait unitl response thread has finished
+			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"\n");
+			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.THREAD,"C("+threadNumber+") - Waiting for resonse thread...");
+			//prt.join();
+			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.THREAD,"C("+threadNumber+") -                  ...finished!");
+
 			// transfer rest of request, i.e. POST data or similar --> server
-			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"C("+threadNumber+") - Headers sended, POST data may follow");
+		/*	JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"C("+threadNumber+") - Headers sended, POST data may follow");
 			int byteRead = inputStream.read();
 			while (byteRead != -1) {
 //				System.out.print((char)byteRead);
@@ -272,10 +306,11 @@ final class JAPDirectProxyConnection implements Runnable {
 			// wait unitl response thread has finished
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"\n");
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.THREAD,"C("+threadNumber+") - Waiting for resonse thread...");
-			prt.join();
-			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.THREAD,"C("+threadNumber+") -                           ...finished!");
+			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.THREAD,"C("+threadNumber+") -                         ...finished!");*/
 		    outputStream.close();
 	    	inputStream.close();
+                is.close();
+                os.close();
 	    	serverSocket.close();
 		} catch (Exception e) {
 			throw e;
@@ -290,58 +325,94 @@ final class JAPDirectProxyConnection implements Runnable {
   // Array of String[] for the list command
      String[] list;
      System.out.println("FTP-MODE");
+    // Socket serverSocket = new Socket(host,port);
+     //write response to client
+     OutputStream os = clientSocket.getOutputStream();
+     //read response of the server
+    // InputStream is = serverSocket.getInputStream();
+     InputStream is ;
+     // Send request --> server
+    // BufferedWriter outputStream = new BufferedWriter(new OutputStreamWriter(serverSocket.getOutputStream()));
      // to do parse Input for username and e-mail-adress
      String nextLine = this.readLine(inputStream);
      System.out.println(nextLine);
      // create an FTP-Client and try to communicate: Browser --> FTP-Client --> FTP-Server
-     FtpClient ftpClient = new FtpClient (host,"anonymous","heinz@operamail.com");
+    // FtpClient ftpClient = new FtpClient (host,"anonymous","heinz@operamail.com");
      // read next Header lines <-- client
+      FtpClient ftpClient = new FtpClient(host);
+      ftpClient.login("anonymous","heinz@operamail.com");
+      ftpClient.binary();
+    // ftpClient.ascii();-
 
      File text = new File("test.txt");
      //text.createNewFile();
-     OutputStream os = new FileOutputStream(text);
-     String testFile = new String(file);
+     OutputStream fos = new FileOutputStream(text);
+     String GETString = new String(file);
      // file or directory
-     if (testFile.endsWith("/"))
+     byte[] byt = new byte[1000];
+     int len=0;
+     if (GETString.endsWith("/"))
      {
-       list = ftpClient.list(testFile);
+      // list = ftpClient.list(GETString);
 
-               for(int i=0; i<list.length;i++)
+             /*  for(int i=0; i<list.length;i++)
                {
                byte[] byt = list[i].getBytes();
                os.write(byt);
-                }//for
-
+                }//for*/
+           is = ftpClient.list();
+           while((len = is.read())!= -1)
+           {
+            //System.out.println(len+" len");
+            //os.write(byt,0,len);
+            os.write((byte)len);
+           // if(len < 1000)
+           // break;
+           }
+        ftpClient.closeServer();
         os.flush();
         os.close();
     }else{
-    ftpClient.get(file,os);
-    ftpClient.close();
+    /*ftpClient.get(file,os);
+    ftpClient.close();*/
+    is = ftpClient.get(file);
+    while((len= is.read())!= -1)
+           {
+           //System.out.println(len+" len");
+            os.write((byte) len);
+            //if(len < 1000)
+           // break;
+           }
+           ftpClient.closeServer();
+           os.flush();
+           os.close();
           }//else
  // to do parse the following lines
-     while (nextLine.length()!=0)
-         {
-          nextLine = this.readLine(inputStream);
-          System.out.println(nextLine);
-         }//while
-// Response from server is transfered to client in a sepatate thread through a
+  //   while (nextLine.length()!=0)
+    //     {
+         // nextLine = this.readLine(inputStream);
+      //    System.out.println(nextLine);
+       //  }//while
+// Response from server is transfered to client in a seperate thread through a
 // FileInputStream
-    InputStream is = null;
+/*    InputStream fis = null;
    if (text.exists()&&text.canRead()){
-     is = new FileInputStream(text);
+     fis = new FileInputStream(text);
      System.out.println("ja");
         }else{
                    //text.createNewFile();
-                   is = new FileInputStream(text);
+                   fis = new FileInputStream(text);
                    System.out.println("nein");
              }
-
+      fis.close(); */
             if( clientSocket.toString()!=null)
             {
-     JAPDirectProxyResponse pr = new JAPDirectProxyResponse(is, clientSocket);
-     Thread prt = new Thread(pr);
-     prt.start();
+     //JAPDirectProxyResponse pr = new JAPDirectProxyResponse(is, clientSocket);
+     //Thread prt = new Thread(pr);
+    // prt.start();
      System.out.println("!=null");
+     os.close();
+     ///prt.join();
               }
    System.out.println("FTP-MODE 1");
 
