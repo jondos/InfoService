@@ -179,8 +179,11 @@ public final class JAPModel {
 	
 	public void initialRun() {
 		// start Proxy
-		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:starting listener");
 		startProxy();
+		// start keypool thread
+		keypool=new JAPKeyPool(20,16);
+		Thread t = new Thread (keypool);
+		t.start();
 		// start anon service immediately if autoConnect is true
 		setAnonMode(autoConnect);
 	}
@@ -206,70 +209,52 @@ public final class JAPModel {
 	*/
 	
 		
-	public synchronized static String getString(String key)
-		{
-			try
-				{
-					return model.msg.getString(key);
-				}
-			catch(Exception e)
-				{
-					return key;
-				}
+	public synchronized static String getString(String key) {
+		try {
+			return model.msg.getString(key);
 		}
+		catch(Exception e) {
+			return key;
+		}
+	}
 		
-	public synchronized void setNrOfChannels(int cannels)
-		{
-			nrOfChannels=cannels;
-			notifyJAPObservers();
-		}
+	public synchronized void setNrOfChannels(int cannels) {
+		nrOfChannels=cannels;
+		notifyJAPObservers();
+	}
 	
-	public int getNrOfChannels()
-		{
-			return nrOfChannels;
-		}
+	public int getNrOfChannels() {
+		return nrOfChannels;
+	}
 	
-	public synchronized void increasNrOfBytes(int bytes)
-		{
-			nrOfBytes+=bytes;
-			notifyJAPObservers();
-		}
+	public synchronized void increasNrOfBytes(int bytes) {
+		nrOfBytes+=bytes;
+		notifyJAPObservers();
+	}
 	
-	public int getNrOfBytes()
-		{
-			return nrOfBytes;
-		}
+	public int getNrOfBytes() {
+		return nrOfBytes;
+	}
 
-	public void setAnonMode(boolean anonModeSelected) {
+	public synchronized void setAnonMode(boolean anonModeSelected) {
 		if ((anonMode == false) && (anonModeSelected == true)) {
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:setAnonMode("+anonModeSelected+")");
 			if (alreadyCheckedForNewVersion == false) {
 			// Check for a new Version of JAP if not already done
-				alreadyCheckedForNewVersion = true;
 				int ok = this.versionCheck();
 				if (ok == -1) {
 					// -> at the moment nothing to do
-					canStartService = false;
+					//canStartService = false; // no necessary to set this variable
 				} else {
 					// -> we can start anonymity
 					canStartService = true;
+					alreadyCheckedForNewVersion = true;
 				}
 			}
 			if (canStartService) {
 				// -> we can start anonymity
 				anonMode = true;
-				try {
-					p.startMux();
-				}
-				catch (Exception e) {
-						javax.swing.JOptionPane.showMessageDialog
-							(
-							 null, 
-							 model.getString("errorConnectingFirstMix"),
-							 model.getString("errorConnectingFirstMixTitle"),
-							 javax.swing.JOptionPane.ERROR_MESSAGE
-							);
-				}
+				p.startMux();
 				notifyJAPObservers();
 			}
 		} else if ((anonMode == true) && (anonModeSelected == false)) {
@@ -284,7 +269,7 @@ public final class JAPModel {
 		return anonMode;
 	}
 	
-	public void setProxyMode(boolean b) {
+	public synchronized void setProxyMode(boolean b) {
 		proxyMode=b;
 		notifyJAPObservers();
 	}
