@@ -77,7 +77,10 @@ final public class AnonServiceImpl implements AnonService
         m_MuxSocket.startService();
       }
 
-    public void disconnect(){}
+    public void disconnect()
+      {
+        m_MuxSocket.stopService();
+      }
 
     public AnonChannel createChannel(int type) throws ConnectException
       {
