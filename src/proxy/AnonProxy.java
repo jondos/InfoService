@@ -75,9 +75,9 @@ final public class AnonProxy implements Runnable
       ((AnonServiceImpl)m_Anon).setFirewallAuthorization(id,passwd);
     }
 
-  public void setEnableDummyTraffic(boolean b)
+  public void setDummyTraffic(int msIntervall)
     {
-      ((AnonServiceImpl)m_Anon).setEnableDummyTraffic(b);
+      ((AnonServiceImpl)m_Anon).setDummyTraffic(msIntervall);
     }
 
   public int start()

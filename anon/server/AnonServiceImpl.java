@@ -153,9 +153,9 @@ final public class AnonServiceImpl implements AnonService
          m_MuxSocket.setLogging(m_Log);
       }
     //special local Service functions
-    public void setEnableDummyTraffic(boolean b)
+    public void setDummyTraffic(int intervall)
       {
-        m_MuxSocket.setEnableDummyTraffic(b);
+        m_MuxSocket.setDummyTraffic(intervall);
       }
 
     public void setFirewall(String host,int port)

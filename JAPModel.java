@@ -47,7 +47,7 @@ public final class JAPModel
 	//private boolean  mbActCntMessageNeverRemind  = false; // indicates if Warning message in setAnonMode has been deactivated forever
 	//private boolean  mbDoNotAbuseReminder        = false; // indicates if new warning message in setAnonMode (containing Do no abuse) has been shown
 	//private boolean  mbGoodByMessageNeverRemind  = false; // indicates if Warning message before exit has been deactivated forever
-  //private boolean m_bUseDummyTraffic           = false; // indicates what Dummy Traffic should be generated or not
+  private int m_iDummyTrafficIntervall           = -1; // indicates what Dummy Traffic should be generated or not
 
   private static JAPModel model                  = null;
 
@@ -178,13 +178,18 @@ public final class JAPModel
 	}
 	//---------------------------------------------------------------------
 	//---------------------------------------------------------------------
-
-
-  public boolean getEnableDummyTraffic()
-    {
-      return m_bUseDummyTraffic;
-    }
 */
+
+  protected void setDummyTraffic(int msIntervall)
+    {
+      m_iDummyTrafficIntervall=msIntervall;
+    }
+
+  public static int getDummyTraffic()
+    {
+      return model.m_iDummyTrafficIntervall;
+    }
+
   protected void setHttpListenerPortNumber(int p)
     {
       m_HttpListenerPortNumber=p;

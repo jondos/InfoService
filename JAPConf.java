@@ -101,6 +101,7 @@ final class JAPConf extends JDialog
 		private boolean				m_bIgnoreComboLanguageEvents=false;
 
 		private JCheckBox     m_cbDummyTraffic;
+		private JSlider				m_sliderDummyTrafficIntervall;
 
 		private JTabbedPane		m_Tabs;
 		private JPanel				m_pPort, m_pFirewall, m_pInfo, m_pMix, m_pMisc;
@@ -164,7 +165,7 @@ final class JAPConf extends JDialog
 				pContainer.add(buttonPanel, BorderLayout.SOUTH);
 //				container.add(new JLabel(new ImageIcon(m_Controller.JAPICONFN)), BorderLayout.WEST);
 				getContentPane().add(pContainer);
-				updateValues();
+				//updateValues();
 				// largest tab to front
 				m_Tabs.setSelectedComponent(m_pMix);
 				pack();
@@ -655,9 +656,15 @@ final class JAPConf extends JDialog
 						setCursor(c1);
 
 				}});
-				m_cbDummyTraffic=new JCheckBox("Dummy Traffic");
-				JPanel p22 = new JPanel();
-				p22.setLayout(new GridLayout(3,1));
+				m_cbDummyTraffic=new JCheckBox("Send dummy packet every x seconds:");
+        m_cbDummyTraffic.addItemListener(new ItemListener(){
+					public void itemStateChanged(ItemEvent e){
+            m_sliderDummyTrafficIntervall.setEnabled(e.getStateChange()==e.SELECTED);
+						}
+					});
+
+        JPanel p22 = new JPanel();
+				p22.setLayout(new GridLayout(4,1));
 				//p22.add(bttnPing);
               //////////////////////////////////////////////////////////////////
               //Einfug
@@ -681,8 +688,15 @@ final class JAPConf extends JDialog
               //////////////////////////////////////////////////////////////////
 
 				p22.add(bttnMonitor);
-				p22.add(m_cbDummyTraffic);
-				p2.add(p22, BorderLayout.NORTH);
+        p22.add(m_cbDummyTraffic);
+				m_sliderDummyTrafficIntervall=new JSlider(JSlider.HORIZONTAL,10,60,30);
+        m_sliderDummyTrafficIntervall.setMajorTickSpacing(10);
+        m_sliderDummyTrafficIntervall.setMinorTickSpacing(5);
+        m_sliderDummyTrafficIntervall.setPaintLabels(true);
+        m_sliderDummyTrafficIntervall.setPaintTicks(true);
+        m_sliderDummyTrafficIntervall.setSnapToTicks(true);
+        p22.add(m_sliderDummyTrafficIntervall);
+        p2.add(p22, BorderLayout.NORTH);
 
 				// Panel for Debugging Options
 				JPanel p3=new JPanel();
@@ -982,8 +996,11 @@ final class JAPConf extends JDialog
 					m_Controller.setLocale(Locale.GERMAN);
 				else
 					m_Controller.setLocale(Locale.ENGLISH);
-				m_Controller.setEnableDummyTraffic(m_cbDummyTraffic.isSelected());
-				// Listener settings
+				if(m_cbDummyTraffic.isSelected())
+          m_Controller.setDummyTraffic(m_sliderDummyTrafficIntervall.getValue()*1000);
+				else
+          m_Controller.setDummyTraffic(-1);
+        // Listener settings
 				m_Controller.setHTTPListener(Integer.parseInt(m_tfListenerPortNumber.getText().trim()),m_cbListenerIsLocal.isSelected());
 //				m_Controller.setUseSocksPort(m_cbListenerSocks.isSelected());
 //				m_Controller.setSocksPortNumber(Integer.parseInt(m_tfListenerPortNumberSocks.getText().trim()));
@@ -1052,7 +1069,10 @@ final class JAPConf extends JDialog
 		public void updateValues()
 			{
 				// misc tab
-				m_cbDummyTraffic.setSelected(m_Controller.getEnableDummyTraffic());
+        int iTmp=JAPModel.getDummyTraffic();
+				m_cbDummyTraffic.setSelected(iTmp>-1);
+        if(iTmp>-1)
+          m_sliderDummyTrafficIntervall.setValue(iTmp/1000);
 				m_cbShowDebugConsole.setSelected(JAPDebug.isShowConsole());
 				m_cbDebugGui.setSelected((((JAPDebug.getDebugType()&JAPDebug.GUI)!=0)?true:false));
 				m_cbDebugNet.setSelected((((JAPDebug.getDebugType()&JAPDebug.NET)!=0)?true:false));
