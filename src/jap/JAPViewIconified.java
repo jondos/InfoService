@@ -33,6 +33,7 @@ import java.awt.Insets;
 import java.awt.BorderLayout;
 import java.awt.Point;
 import java.awt.Panel;
+import java.awt.Frame;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.*;
@@ -51,8 +52,10 @@ final public class JAPViewIconified extends JWindow implements ActionListener,Mo
 	private boolean       m_bIsDragging=false;
 	private NumberFormat  m_NumberFormat;
 	private static final Font fnt = new Font("Sans",Font.PLAIN,9);
-	public JAPViewIconified(String s)
+//	static final private Frame m_frameParent=new Frame("HIDDEN JAP2wer2");
+	public JAPViewIconified()
 		{
+//			super(m_frameParent);
 //			super();
 //			super(JAPController.getView());
 			m_mainView=JAPController.getView();
