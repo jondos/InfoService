@@ -60,21 +60,21 @@ public final class AnonServerDBEntry implements Serializable
 				m_strName = name;
 				m_strHost = host;
 				m_strIP=strip;
+				if(m_strIP!=null&&m_strIP.trim().equals(""))
+					m_strIP=null;
 				m_iPort = port;
 				m_iProxyPort = proxyport;
 
 			}
 
-		public boolean equals(AnonServerDBEntry e) {
-		    if (
-			m_strHost.equals(e.getHost()) &&
-			(m_iPort == e.getPort()) &&
-			(m_iProxyPort == e.getSSLPort())
-			)
-		    	return true;
-		    else
-			return false;
-		}
+		public boolean equals(AnonServerDBEntry e) //TODO: Buggy!
+			{
+		    if( m_strHost.equalsIgnoreCase(e.getHost()) &&
+					  m_iPort == e.getPort() &&
+					  m_iProxyPort == e.getSSLPort())
+						return true;
+			  return false;
+		  }
 
 		public String getName() {
 				return m_strName;
