@@ -57,6 +57,11 @@ public class AnonServiceImplProxy implements AnonService
 		return 0;
 	}
 
+	public boolean isConnected()
+	{
+		return true;
+	}
+
 	public int setProxy(ImmutableProxyInterface a_Proxy)
 	{
 		return ErrorCodes.E_UNKNOWN;

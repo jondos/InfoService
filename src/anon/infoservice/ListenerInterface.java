@@ -115,7 +115,8 @@ public class ListenerInterface implements ImmutableListenerInterface, IXMLEncoda
 	}
 
 	/**
-	 * Creates a new ListenerInterface from a hostname / IP address and a port.
+	 * Creates a new ListenerInterface from a hostname / IP address and a port. The
+	 * protocaol is set to HTTP/TCP.
 	 *
 	 * @param a_hostname The hostname or the IP address of this interface.
 	 * @param a_port The port of this interface (1 <= port <= 65535).

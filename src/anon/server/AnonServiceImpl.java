@@ -233,4 +233,9 @@ final public class AnonServiceImpl implements AnonService
 	{
 		KeyPool.start();
 	}
+
+	public boolean isConnected()
+	{
+		return m_MuxSocket!=null&&m_MuxSocket.isConnected();
+	}
 }

@@ -82,6 +82,7 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import javax.swing.SwingConstants;
+import proxy.ProxyListener;
 
 final public class JAPNewView extends AbstractJAPMainView implements IJAPMainView, ActionListener,
 	JAPObserver
@@ -123,6 +124,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private JLabel m_labelOwnTrafficBytesSmall, m_labelOwnTrafficUnitSmall;
 	private JLabel m_labelOwnTrafficWWW, m_labelOwnTrafficOther;
 	private JLabel m_labelOwnTrafficBytesWWW, m_labelOwnTrafficUnitWWW;
+	private JLabel m_labelOwnTrafficBytesOther, m_labelOwnTrafficUnitOther;
 	private JLabel m_labelForwarding, m_labelForwardingSmall;
 	private JLabel m_labelForwardedTrafficBytes, m_labelForwardedTrafficBytesUnit;
 	private JLabel m_labelForwarderCurrentConnections, m_labelForwarderAcceptedConnections;
@@ -144,6 +146,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private FlippingPanel m_flippingPanelPayment;
 	private JLabel m_labelPayment;
 
+	private long m_lTrafficWWW,m_lTrafficOther;
 	public JAPNewView(String s, JAPController a_controller)
 	{
 		super(s, a_controller);
@@ -152,6 +155,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		helpWindow = null; //new JAPHelp(this);
 		m_dlgConfig = null; //new JAPConf(this);
 		m_bIsIconified = false;
+		m_lTrafficWWW=0;
+		m_lTrafficOther=0;
 	}
 
 	public void create(boolean loadPay)
@@ -380,9 +385,11 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.insets = new Insets(0, 5, 0, 0);
 		p.add(m_labelAnonymitySmall, c1);
 		m_cbAnonymityOn = new JCheckBox(JAPMessages.getString("ngAnonOn"));
+		m_cbAnonymityOn.setBorder(null);
 		m_cbAnonymityOn.addActionListener(this);
 		c1.gridx = 1;
-		p.add(m_cbAnonymityOn);
+		c1.insets = new Insets(0, 10, 0, 0);
+		p.add(m_cbAnonymityOn,c1);
 		m_labelAnonymityLow = new JLabel(JAPMessages.getString("ngAnonymityLow"), SwingConstants.RIGHT);
 		c1.insets = new Insets(0, 20, 0, 5);
 		c1.gridx = 2;
@@ -392,7 +399,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		p.add(m_labelAnonymityLow, c1);
 		m_progressAnonLevel = new JProgressBar();
 		m_progressAnonLevel.setMinimum(0);
-		m_progressAnonLevel.setMaximum(5);
+		m_progressAnonLevel.setMaximum(6);
 		m_progressAnonLevel.setBorderPainted(false);
 		m_progressAnonLevel.setUI(new MyProgressBarUI(true));
 		c1.weightx = 0.75;
@@ -404,7 +411,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_labelAnonymityHigh = new JLabel(JAPMessages.getString("ngAnonymityHigh"));
 		c1.gridx = 4;
 		c1.weightx = 0.5;
-		c1.insets = new Insets(0, 5, 0, 0);
+		c1.insets = new Insets(0, 0, 0, 0);
 		c1.fill = GridBagConstraints.HORIZONTAL;
 		c1.anchor = GridBagConstraints.WEST;
 		p.add(m_labelAnonymityHigh, c1);
@@ -492,6 +499,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.weightx = 1;
 		p.add(spacer, c1);
 		m_labelOwnTrafficBytes = new JLabel("0");
+		m_labelOwnTrafficBytes.setHorizontalAlignment(JLabel.RIGHT);
 		c1.insets = new Insets(0, 5, 0, 0);
 		c1.weightx = 0;
 		c1.fill = GridBagConstraints.HORIZONTAL;
@@ -504,6 +512,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.weightx = 0;
 		c1.fill = GridBagConstraints.HORIZONTAL;
 		c1.gridx = 4;
+		c1.insets = new Insets(0, 10, 0, 0);
 		p.add(m_labelOwnActivity, c1);
 		m_progressOwnTrafficActivity = new JProgressBar();
 		ui = new MyProgressBarUI(true);
@@ -515,6 +524,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.gridx = 5;
 		c1.weightx = 0;
 		c1.fill = GridBagConstraints.NONE;
+		c1.insets = new Insets(0, 5, 0, 0);
 		p.add(m_progressOwnTrafficActivity, c1);
 		m_labelOwnTrafficWWW = new JLabel(JAPMessages.getString("ngOwnTrafficWWW"));
 		c1.insets = new Insets(10, 20, 0, 0);
@@ -531,6 +541,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.fill = GridBagConstraints.NONE;
 		p.add(spacer, c1);
 		m_labelOwnTrafficBytesWWW = new JLabel("0");
+		m_labelOwnTrafficBytesWWW.setHorizontalAlignment(JLabel.RIGHT);
 		c1.insets = new Insets(10, 5, 0, 0);
 		c1.gridx = 2;
 		c1.fill = GridBagConstraints.HORIZONTAL;
@@ -551,15 +562,16 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.gridx = 1;
 		c1.fill = GridBagConstraints.NONE;
 		p.add(spacer, c1);
-		l = new JLabel("0");
+		m_labelOwnTrafficBytesOther = new JLabel("0");
+		m_labelOwnTrafficBytesOther.setHorizontalAlignment(JLabel.RIGHT);
 		c1.fill = GridBagConstraints.HORIZONTAL;
 		c1.weightx = 0;
 		c1.insets = new Insets(7, 5, 0, 0);
 		c1.gridx = 2;
-		p.add(l, c1);
-		l = new JLabel(JAPMessages.getString("Byte"));
+		p.add(m_labelOwnTrafficBytesOther, c1);
+		m_labelOwnTrafficUnitOther = new JLabel(JAPMessages.getString("Byte"));
 		c1.gridx = 3;
-		p.add(l, c1);
+		p.add(m_labelOwnTrafficUnitOther, c1);
 		m_flippingpanelOwnTraffic.setFullPanel(p);
 
 		//small
@@ -573,14 +585,18 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.anchor = GridBagConstraints.WEST;
 		p.add(m_labelOwnTrafficSmall, c1);
 		m_labelOwnTrafficBytesSmall = new JLabel("0");
+		m_labelOwnTrafficBytesSmall.setHorizontalAlignment(JLabel.RIGHT);
+		c1.weightx=1;
+		c1.fill=GridBagConstraints.HORIZONTAL;
 		c1.gridx = 1;
 		p.add(m_labelOwnTrafficBytesSmall, c1);
 		m_labelOwnTrafficUnitSmall = new JLabel(JAPMessages.getString("Byte"));
 		c1.gridx = 2;
+		c1.weightx=0;
+		c1.fill=GridBagConstraints.NONE;
 		p.add(m_labelOwnTrafficUnitSmall, c1);
 		m_labelOwnActivitySmall = new JLabel(JAPMessages.getString("ngActivity"), SwingConstants.RIGHT);
-		c1.weightx = 1;
-		c1.fill = GridBagConstraints.HORIZONTAL;
+		c1.insets=new Insets(0,10,0,0);
 		c1.gridx = 3;
 		p.add(m_labelOwnActivitySmall, c1);
 		m_progressOwnTrafficActivitySmall = new JProgressBar();
@@ -591,6 +607,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_progressOwnTrafficActivitySmall.setMaximum(5);
 		m_progressOwnTrafficActivitySmall.setBorderPainted(false);
 		c1.weightx = 0;
+		c1.insets = new Insets(0, 5, 0, 0);
 		c1.fill = GridBagConstraints.NONE;
 		c1.gridx = 4;
 		p.add(m_progressOwnTrafficActivitySmall, c1);
@@ -758,14 +775,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 						JAPRoutingServerStatisticsListener stats = (JAPRoutingServerStatisticsListener)
 							a_notifier;
 						long c = stats.getTransferedBytes();
-						String strUnit = JAPMessages.getString("Byte");
-						if (c > 9999)
-						{
-							strUnit = JAPMessages.getString("kByte");
-							c /= 1000;
-						}
-						m_labelForwardedTrafficBytes.setText(m_NumberFormat.format(c));
-						m_labelForwardedTrafficBytesUnit.setText(strUnit);
+						m_labelForwardedTrafficBytes.setText(JAPUtil.formatBytesValueWithoutUnit(c));
+						m_labelForwardedTrafficBytesUnit.setText(JAPUtil.formatBytesValueOnlyUnit(c));
 						m_labelForwarderAcceptedConnections.setText(Integer.toString(stats.
 							getAcceptedConnections()));
 						m_labelForwarderRejectedConnections.setText(Integer.toString(stats.
@@ -1490,7 +1501,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		synchronized (m_runnableValueUpdate)
 		{
 			MixCascade currentMixCascade = m_Controller.getCurrentMixCascade();
-			String strCascadeName = currentMixCascade.getName();
+			//String strCascadeName = currentMixCascade.getName();
 			Vector v = m_Controller.getMixCascadeDatabase();
 			m_bIgnoreAnonComboEvents = true;
 			boolean bMixCascadeAlreadyIncluded = false;
@@ -1538,14 +1549,14 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				Color color = Color.red;
 				if (anonLevel > 3)
 				{
-					color = Color.blue;
+					color = Color.green;
 				}
 				else if (anonLevel > 1)
 				{
-					color = Color.green;
+					color = Color.yellow;
 				}
 				( (MyProgressBarUI) m_progressAnonLevel.getUI()).setFilledBarColor(color);
-				m_progressAnonLevel.setValue(anonLevel);
+				m_progressAnonLevel.setValue(anonLevel+1);
 				if (m_Controller.getAnonMode())
 				{
 					if (currentStatus.getNrOfActiveUsers() > -1)
@@ -1680,22 +1691,29 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 //			ownTrafficChannelsProgressBar.setString(String.valueOf(c));
 	}
 
-	public void transferedBytes(int c)
+	public void transferedBytes(int c,int protocolType)
 	{
 		// Nr of Bytes transmitted anonymously
-		String unit = JAPMessages.getString("Byte");
-		if (c > 9999)
-		{
-			c /= 1000;
-			unit = JAPMessages.getString("kByte");
-		}
-		String s = m_NumberFormat.format(c);
-		m_labelOwnTrafficBytes.setText(s);
-		m_labelOwnTrafficUnit.setText(unit);
-		m_labelOwnTrafficBytesSmall.setText(s);
-		m_labelOwnTrafficUnitSmall.setText(unit);
-		m_labelOwnTrafficBytesWWW.setText(s);
+		if(protocolType==ProxyListener.PROTOCOL_WWW)
+			m_lTrafficWWW=c;
+		else if(protocolType==ProxyListener.PROTOCOL_OTHER)
+			m_lTrafficOther=c;
+
+		String unit=JAPUtil.formatBytesValueOnlyUnit(m_lTrafficWWW);
 		m_labelOwnTrafficUnitWWW.setText(unit);
+		String s=JAPUtil.formatBytesValueWithoutUnit(m_lTrafficWWW);
+		m_labelOwnTrafficBytesWWW.setText(s);
+		unit=JAPUtil.formatBytesValueOnlyUnit(m_lTrafficOther);
+		m_labelOwnTrafficUnitOther.setText(unit);
+		s=JAPUtil.formatBytesValueWithoutUnit(m_lTrafficOther);
+		m_labelOwnTrafficBytesOther.setText(s);
+		long sum=m_lTrafficWWW+m_lTrafficOther;
+		unit=JAPUtil.formatBytesValueOnlyUnit(sum);
+		m_labelOwnTrafficUnit.setText(unit);
+		m_labelOwnTrafficUnitSmall.setText(unit);
+		s=JAPUtil.formatBytesValueWithoutUnit(sum);
+		m_labelOwnTrafficBytes.setText(s);
+		this.m_labelOwnTrafficBytesSmall.setText(s);
 		JAPDll.onTraffic();
 	}
 

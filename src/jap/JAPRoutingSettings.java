@@ -54,7 +54,7 @@ import forward.server.ServerSocketPropagandist;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import proxy.AnonWebProxy;
+import proxy.AnonProxy;
 import anon.infoservice.*;
 
 /**
@@ -773,14 +773,14 @@ public class JAPRoutingSettings extends Observable
    * @return The anon proxy for the forwarded connection or null, if we are not in the client
    *         routing mode.
    */
-  public AnonWebProxy getAnonProxyInstance(ServerSocket a_listener)
+  public AnonProxy getAnonProxyInstance(ServerSocket a_listener)
   {
-    AnonWebProxy anonProxy = null;
+    AnonProxy anonProxy = null;
     synchronized (this)
     {
       if (getRoutingMode() == ROUTING_MODE_CLIENT)
       {
-        anonProxy = new AnonWebProxy(a_listener, m_forwardedConnection, m_maxDummyTrafficInterval);
+        anonProxy = new AnonProxy(a_listener, m_forwardedConnection, m_maxDummyTrafficInterval);
       }
     }
     return anonProxy;

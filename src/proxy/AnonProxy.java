@@ -49,7 +49,7 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 
-final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
+final public class AnonProxy implements Runnable
 {
 	public static final int E_BIND = -2;
 	public final static int E_MIX_PROTOCOL_NOT_SUPPORTED = ErrorCodes.E_PROTOCOL_NOT_SUPPORTED;
@@ -90,10 +90,10 @@ final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 	 */
 	private int m_maxDummyTrafficInterval;
 
-	public AnonWebProxy(ServerSocket listener, ImmutableProxyInterface a_proxyInterface)
+	public AnonProxy(ServerSocket listener, ImmutableProxyInterface a_proxyInterface)
 	{
 		m_socketListener = listener;
-		m_proxyInterface=a_proxyInterface;
+		m_proxyInterface = a_proxyInterface;
 		//HTTP
 		m_Anon = AnonServiceFactory.getAnonServiceInstance("AN.ON");
 		m_Anon.setProxy(a_proxyInterface);
@@ -117,8 +117,8 @@ final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 	 *                                  interval value. If this value is -1, there is no need for
 	 *                                  dummy traffic on that connection on the server side.
 	 */
-	public AnonWebProxy(ServerSocket a_listener, ProxyConnection a_proxyConnection,
-						int a_maxDummyTrafficInterval)
+	public AnonProxy(ServerSocket a_listener, ProxyConnection a_proxyConnection,
+					 int a_maxDummyTrafficInterval)
 	{
 		m_socketListener = a_listener;
 		m_Anon = new AnonServiceImpl(a_proxyConnection); //uups very nasty....
@@ -182,7 +182,7 @@ final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 
 	public void setPreCreateAnonRoutes(boolean b)
 	{
-		m_bPreCreateAnonRoutes=b;
+		m_bPreCreateAnonRoutes = b;
 	}
 
 	public void setMixCertificationCheck(boolean enabled, JAPCertificateStore trustedRoots)
@@ -203,7 +203,7 @@ final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 		{
 			m_Tor = AnonServiceFactory.getAnonServiceInstance("TOR");
 			m_Tor.setProxy(m_proxyInterface);
-			m_Tor.initialize(new TorAnonServerDescription(true,m_bPreCreateAnonRoutes));
+			m_Tor.initialize(new TorAnonServerDescription(true, m_bPreCreateAnonRoutes));
 			( (Tor) m_Tor).setCircuitLength(JAPModel.getTorMinRouteLen(), JAPModel.getTorMaxRouteLen());
 		}
 		else
@@ -276,86 +276,14 @@ final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 								  soex);
 					continue;
 				}
-				//Check for type
-				int firstByte = 0;
+				//2001-04-04(HF)
 				try
 				{
-					firstByte = socket.getInputStream().read();
+					new AnonProxyRequest(this, socket);
 				}
-				catch (Throwable t)
+				catch (Exception e)
 				{
-					try
-					{
-						socket.close();
-					}
-					catch (Throwable t1)
-					{
-					}
-					continue;
-				}
-				firstByte &= 0x00FF;
-				//2001-04-04(HF)
-				AnonChannel newChannel = null;
-				while (m_bIsRunning)
-				{
-					try
-					{
-						newChannel = null;
-						if (firstByte == 4 || firstByte == 5) //SOCKS
-						{
-							newChannel = m_Tor.createChannel(AnonChannel.SOCKS);
-						}
-						else
-						{
-							newChannel = m_Anon.createChannel(AnonChannel.HTTP);
-						}
-						break;
-					}
-					catch (ToManyOpenChannelsException te)
-					{
-						LogHolder.log(LogLevel.ERR, LogType.NET,
-									  "JAPAnonProxy.run() ToManyOpenChannelsExeption");
-						Thread.sleep(1000);
-					}
-					catch (NotConnectedToMixException ec)
-					{
-						LogHolder.log(LogLevel.ERR, LogType.NET, "JAPAnonProxy.run() Connection to Mix lost");
-						if (!m_bAutoReconnect)
-						{
-							m_bIsRunning = false;
-							break;
-						}
-						while (m_bIsRunning && m_bAutoReconnect)
-						{
-							LogHolder.log(LogLevel.ERR, LogType.NET,
-										  "JAPAnonProxy.run() Try reconnect to Mix");
-							int ret = m_Anon.initialize(m_currentMixCascade);
-							if (ret == ErrorCodes.E_SUCCESS)
-							{
-								break;
-							}
-							Thread.sleep(10000);
-						}
-					}
-					catch (Exception e)
-					{
-						LogHolder.log(LogLevel.ERR, LogType.NET,
-							"JAPAnonPrxoy.run() something was wrong with seting up a new channel Exception: " +
-									  e);
-						break;
-					}
-				}
-				if (newChannel != null)
-				{
-					try
-					{
-						newChannel.getOutputStream().write(firstByte);
-						new AnonProxyRequest(this, socket, newChannel);
-					}
-					catch (Exception e)
-					{
-						LogHolder.log(LogLevel.ERR, LogType.NET, "JAPAnonPrxoy.run() Exception: " + e);
-					}
+					LogHolder.log(LogLevel.ERR, LogType.NET, "JAPAnonPrxoy.run() Exception: " + e);
 				}
 			}
 		}
@@ -371,6 +299,77 @@ final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 		{}
 		LogHolder.log(LogLevel.INFO, LogType.NET, "JAPAnonProxyServer stopped.");
 		m_bIsRunning = false;
+	}
+
+	AnonChannel createChannel(int type) throws ToManyOpenChannelsException,
+		NotConnectedToMixException,
+		Exception
+	{
+		if (type == AnonChannel.SOCKS)
+		{
+			return m_Tor.createChannel(AnonChannel.SOCKS);
+		}
+		else if (type == AnonChannel.HTTP)
+		{
+			return m_Anon.createChannel(AnonChannel.HTTP);
+		}
+		return null;
+	}
+
+	synchronized boolean reconnect()
+	{
+		if (m_Anon.isConnected())
+		{
+			return true;
+		}
+		if (!m_bAutoReconnect)
+		{
+			m_bIsRunning = false;
+			return false;
+		}
+		while (m_bIsRunning && m_bAutoReconnect)
+		{
+			LogHolder.log(LogLevel.ERR, LogType.NET,
+						  "JAPAnonProxy.run() Try reconnect to Mix");
+			int ret = m_Anon.initialize(m_currentMixCascade);
+			if (ret == ErrorCodes.E_SUCCESS)
+			{
+				return true;
+			}
+			try
+			{
+				Thread.sleep(10000);
+			}
+			catch (InterruptedException ex)
+			{
+			}
+		}
+		return false;
+	}
+
+	protected ProxyListener m_ProxyListener;
+	protected volatile int m_numChannels = 0;
+
+	public void setProxyListener(ProxyListener l)
+	{
+		m_ProxyListener = l;
+	}
+
+	public synchronized void decNumChannels()
+	{
+		m_numChannels--;
+		m_ProxyListener.channelsChanged(m_numChannels);
+	}
+
+	public synchronized void incNumChannels()
+	{
+		m_numChannels++;
+		m_ProxyListener.channelsChanged(m_numChannels);
+	}
+
+	public synchronized void transferredBytes(int bytes, int protocolType)
+	{
+		m_ProxyListener.transferedBytes(bytes, protocolType);
 	}
 
 }

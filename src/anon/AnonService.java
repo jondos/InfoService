@@ -37,7 +37,7 @@ import anon.infoservice.ImmutableProxyInterface;
 public interface AnonService
 {
 	///The version of the AnonLib
-	String ANONLIB_VERSION = "00.02.010";
+	String ANONLIB_VERSION = "00.02.011";
 
 	/** Initializes this AnonService. Depending on the AnonService, this may establish a connection to
 	 *  an AnonServer, which is described through the
@@ -61,6 +61,9 @@ public interface AnonService
 
 	/** Disconnects form the server.*/
 	void shutdown();
+
+	/** Returns true if this Anon Service is connected, e.g. initialized and useable*/
+	boolean isConnected();
 
 	/** Creates a new AnonChannel, which could be used for transmitting data. There is a
 	 *  limit of 50 channels per AnonService-connection, in order to prevent Denial of Service-attacks

@@ -35,6 +35,8 @@ import anon.AnonChannel;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.ToManyOpenChannelsException;
+import anon.NotConnectedToMixException;
 
 final class AnonProxyRequest implements Runnable
 {
@@ -46,10 +48,11 @@ final class AnonProxyRequest implements Runnable
 	Thread m_threadResponse;
 	Thread m_threadRequest;
 	AnonChannel m_Channel;
-	IAnonProxy m_Proxy;
+	AnonProxy m_Proxy;
 	volatile boolean m_bRequestIsAlive;
+	int m_iProtocol;
 
-	AnonProxyRequest(IAnonProxy proxy, Socket clientSocket, AnonChannel c)
+	AnonProxyRequest(AnonProxy proxy, Socket clientSocket)
 	{
 		try
 		{
@@ -58,12 +61,7 @@ final class AnonProxyRequest implements Runnable
 			m_clientSocket.setSoTimeout(1000); //just to ensure that threads will stop
 			m_InSocket = clientSocket.getInputStream();
 			m_OutSocket = clientSocket.getOutputStream();
-			m_InChannel = c.getInputStream();
-			m_OutChannel = c.getOutputStream();
-			m_Channel = c;
 			m_threadRequest = new Thread(this, "JAP - AnonProxy Request");
-			m_threadResponse = new Thread(new Response(), "JAP - AnonProxy Response");
-			m_threadResponse.start();
 			m_threadRequest.start();
 		}
 		catch (Exception e)
@@ -74,9 +72,88 @@ final class AnonProxyRequest implements Runnable
 	public void run()
 	{
 		m_bRequestIsAlive = true;
+		AnonChannel newChannel = null;
+		//Check for type
+		int firstByte = 0;
+		try
+		{
+			firstByte = m_InSocket.read();
+		}
+		catch (Throwable t)
+		{
+			try
+			{
+				m_clientSocket.close();
+			}
+			catch (Throwable t1)
+			{
+			}
+			return;
+		}
+		firstByte &= 0x00FF;
+		for (; ; )
+		{
+			try
+			{
+				newChannel = null;
+				if (firstByte == 4 || firstByte == 5) //SOCKS
+				{
+					newChannel = m_Proxy.createChannel(AnonChannel.SOCKS);
+					m_iProtocol = ProxyListener.PROTOCOL_OTHER;
+				}
+				else
+				{
+					newChannel = m_Proxy.createChannel(AnonChannel.HTTP);
+					m_iProtocol = ProxyListener.PROTOCOL_WWW;
+				}
+				break;
+			}
+			catch (ToManyOpenChannelsException te)
+			{
+				LogHolder.log(LogLevel.ERR, LogType.NET,
+							  "AnonProxyRequest - ToManyOpenChannelsExeption");
+				try
+				{
+					Thread.sleep(1000);
+				}
+				catch (InterruptedException ex)
+				{
+				}
+			}
+			catch (NotConnectedToMixException ec)
+			{
+				LogHolder.log(LogLevel.ERR, LogType.NET, "AnonProxyRequest - Connection to Mix lost");
+				if (!m_Proxy.reconnect())
+				{
+					return;
+				}
+			}
+			catch (Exception e)
+			{
+				LogHolder.log(LogLevel.ERR, LogType.NET,
+							  "AnonProxyRequest - something was wrong with seting up a new channel Exception: " +
+							  e);
+				return;
+			}
+
+		}
+		if (newChannel == null)
+		{
+			return;
+		}
+		m_InChannel = newChannel.getInputStream();
+		m_OutChannel = newChannel.getOutputStream();
+		m_Channel = newChannel;
+
+		m_threadResponse = new Thread(new Response(), "JAP - AnonProxy Response");
+		m_threadResponse.start();
+
 		m_Proxy.incNumChannels();
+
 		int len = 0;
 		byte[] buff = new byte[1900];
+		buff[0]=(byte)firstByte;
+		int aktPos=1;
 		try
 		{
 			for (; ; )
@@ -84,7 +161,9 @@ final class AnonProxyRequest implements Runnable
 				try
 				{
 					len = Math.min(m_Channel.getOutputBlockSize(), 1900);
-					len = m_InSocket.read(buff, 0, len);
+					len-=aktPos;
+					len = m_InSocket.read(buff, aktPos, len);
+					len+=aktPos;
 				}
 				catch (InterruptedIOException ioe)
 				{
@@ -95,7 +174,8 @@ final class AnonProxyRequest implements Runnable
 					break;
 				}
 				m_OutChannel.write(buff, 0, len);
-				m_Proxy.transferredBytes(len);
+				m_Proxy.transferredBytes(len, m_iProtocol);
+				aktPos=0;
 			}
 		}
 		catch (Exception e)
@@ -145,7 +225,7 @@ final class AnonProxyRequest implements Runnable
 							throw new Exception("Could not send to Browser...");
 						}
 					}
-					m_Proxy.transferredBytes(len);
+					m_Proxy.transferredBytes(len, m_iProtocol);
 				}
 			}
 			catch (Exception e)

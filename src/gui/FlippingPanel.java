@@ -80,7 +80,7 @@ final public class FlippingPanel extends JPanel
 		c.fill = GridBagConstraints.NONE;
 		c.weightx = 0;
 		c.weighty = 0;
-		c.insets = new Insets(0, 0, 0, 0);
+		c.insets = new Insets(3, 0, 0, 0);
 		c.anchor = GridBagConstraints.NORTHWEST;
 		m_labelBttn.addMouseListener(new MouseListener()
 		{
