@@ -180,8 +180,11 @@ private final class JAPDirectConnection implements Runnable
 			{
 				runFlag = false;
 				try{threadRunLoop.join(5000);}catch(Exception e){}
-				threadgroupAll.stop();
-				threadgroupAll.destroy();
+				if(threadgroupAll!=null)
+					{
+						threadgroupAll.stop();
+						threadgroupAll.destroy();
+					}
 				threadgroupAll=null;
 				threadRunLoop=null;
 			}
