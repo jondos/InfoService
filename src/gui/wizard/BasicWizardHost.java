@@ -50,12 +50,13 @@ public class BasicWizardHost implements WizardHost,ActionListener
 
     private final static String COMMAND_NEXT="NEXT";
     private final static String COMMAND_BACK="BACK";
+    private final static String COMMAND_CANCEL="CANCEL";
 
     public BasicWizardHost(Frame parent,Wizard wizard)
       {
         m_Wizard=wizard;
         m_currentPage=null;
-        m_Dialog = new JDialog(parent,wizard.getWizardTitle());
+        m_Dialog = new JDialog(parent,wizard.getWizardTitle(),true);
         GridBagLayout gridBag= new GridBagLayout();
         GridBagConstraints c = new GridBagConstraints();
         m_Dialog.getContentPane().setLayout(gridBag);
@@ -73,6 +74,8 @@ public class BasicWizardHost implements WizardHost,ActionListener
         m_bttnNext.addActionListener(this);
         m_bttnHelp=new JButton("Help");
         m_bttnCancel=new JButton("Cancel");
+        m_bttnCancel.setActionCommand(COMMAND_CANCEL);
+        m_bttnCancel.addActionListener(this);
         m_bttnFinish=new JButton("Finish");
 
         //setResizable(false);
@@ -126,8 +129,6 @@ public class BasicWizardHost implements WizardHost,ActionListener
         c.fill = GridBagConstraints.HORIZONTAL;
         gridBag.setConstraints(panel,c);
         m_Dialog.getContentPane().add(panel);
-        m_Dialog.pack();
-        m_Dialog.setVisible(false);
     }
 
   public void setWizardPage(WizardPage page)
@@ -143,17 +144,25 @@ public class BasicWizardHost implements WizardHost,ActionListener
       c.weightx = 1.0;
       c.weighty = 1.0;
       JComponent panel=page.getPageComponent(this);
+      Component oldPanel=m_Dialog.getContentPane().getComponent(0);
       m_Dialog.getContentPane().remove(0);
       ((GridBagLayout)m_Dialog.getContentPane().getLayout()).setConstraints(panel, c);
       m_Dialog.getContentPane().add(panel,0);
-      m_Dialog.setVisible(true);
-      m_Dialog.repaint();
       if(m_currentPage==null)
         {
-          m_Dialog.setVisible(true);
+          m_currentPage=page;
           m_Dialog.pack();
+          m_Dialog.show();
         }
-      m_currentPage=page;
+      else
+        {
+          panel.setSize(oldPanel.getSize());
+          //panel.setVisible(true);
+          panel.setBackground(Color.red);
+          //m_Dialog.pack();
+          m_Dialog.repaint();
+          m_currentPage=page;
+        }
     }
 /*
 public void initialize()
@@ -349,6 +358,11 @@ public void setNextWizardPage(WizardPage currentPage, int indexOfWizardPage)
       else if(command.equals(COMMAND_BACK))
         {
           m_Wizard.back(m_currentPage,this);
+        }
+      else if(command.equals(COMMAND_CANCEL))
+        {
+          m_Wizard.wizardCompleted();
+          m_Dialog.dispose();
         }
     }
 }

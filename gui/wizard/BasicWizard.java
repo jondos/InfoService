@@ -31,15 +31,15 @@ import JAPConstants;
 //as flow control and so on ...
 public class BasicWizard implements Wizard
   {
-    private Dialog helpDialog;
+    //private Dialog helpDialog;
     private WizardPage currentWizardPage;
     private BasicWizardHost wizardHost;
-    private JFrame browser;
+    //private JFrame browser;
     private Vector m_Pages;
     private String m_strTitle;
     private int indexOfWizardPage;
-    final String[] german ={"Hilfe","Abbrechen","Zurück","Weiter","Fertig"};
-    final String[] english ={"Help","Cancel","Back","Next","Finish"};
+ //   final String[] german ={"Hilfe","Abbrechen","Zurück","Weiter","Fertig"};
+  //  final String[] english ={"Help","Cancel","Back","Next","Finish"};
 
 //private JAPController japController;
 
@@ -154,7 +154,10 @@ public WizardPage invokeWizard(WizardHost host)
  public WizardPage finish(WizardPage currentPage, WizardHost host){return null;}
 
 
-  public void wizardCompleted(){}
+  public void wizardCompleted()
+    {
+
+    }
 
 /* public JAPWizardBase getWizardBase()
  {
@@ -170,22 +173,5 @@ public WizardPage invokeWizard(WizardHost host)
     {
       return m_strTitle;
     }
-
-  public static void main(String args[])
-    {
-      BasicWizard w=new BasicWizard();
-      BasicWizardHost h=new BasicWizardHost(new JFrame(),w);
-      BasicWizardPage page1=new BasicWizardPage();
-      BasicWizardPage page2=new BasicWizardPage();
-      page1.setIcon(JAPUtil.loadImageIcon(JAPConstants.DOWNLOADFN, true));
-      page1.setPageTitle("Welcome to the Wizard!");
-      w.addWizardPage(0,page1);
-      page2.setIcon(JAPUtil.loadImageIcon(JAPConstants.DOWNLOADFN, true));
-      page2.setPageTitle("Last Page of the Wizard!");
-      w.addWizardPage(1,page2);
-      w.setWizardTitle("A Wizard");
-      w.invokeWizard(h);
-    }
-
 }
 

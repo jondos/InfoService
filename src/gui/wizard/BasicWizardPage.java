@@ -44,7 +44,7 @@ public  class BasicWizardPage extends JPanel implements WizardPage
     private JLabel m_labelTitle;
     private ImageIcon m_Icon;
     private JLabel m_labelIcon;
-    private JPanel m_panelComponents;
+    protected JPanel m_panelComponents;
 
     public BasicWizardPage()
       {
@@ -54,7 +54,6 @@ public  class BasicWizardPage extends JPanel implements WizardPage
         m_labelTitle=new JLabel();
         m_labelIcon=new JLabel();
         m_panelComponents=new JPanel();
-        m_panelComponents.setBackground(Color.red);
         //Add Icon
         c.fill = GridBagConstraints.NONE;
         c.anchor=GridBagConstraints.WEST;
