@@ -204,7 +204,9 @@
     <file path="help/xhelpfrms.css"/>
   </node>
   <node name="images" type="Folder">
+    <file path="images/arrow.gif"/>
     <file path="images/arrow46.gif"/>
+    <file path="images/arrow90.gif"/>
     <file path="images/arrowDown.gif"/>
     <file path="images/arrowUp.gif"/>
     <file path="images/busy.gif"/>

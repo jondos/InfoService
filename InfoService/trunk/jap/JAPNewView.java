@@ -54,6 +54,8 @@ import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.border.*;
+
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JTabbedPane;
@@ -68,8 +70,9 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import pay.gui.PaymentMainPanel;
-
- public class JAPView extends AbstractJAPMainView implements IJAPMainView,ActionListener, JAPObserver
+import javax.swing.*;
+import gui.*;
+final public class JAPNewView extends AbstractJAPMainView implements IJAPMainView,ActionListener, JAPObserver
 {
 
 	final private class MyProgressBarUI extends BasicProgressBarUI
@@ -124,7 +127,7 @@ import pay.gui.PaymentMainPanel;
 	//private GuthabenAnzeige guthaben;
 	private boolean loadPay = false;
 
-	public JAPView(String s)
+	public JAPNewView(String s)
 	{
 		super(s);
 		m_NumberFormat = NumberFormat.getInstance();
@@ -158,9 +161,86 @@ import pay.gui.PaymentMainPanel;
 		ImageIcon northImage = JAPUtil.loadImageIcon(JAPMessages.getString("northPath"), true);
 		JLabel northLabel = new JLabel(northImage);
 		JPanel northPanel = new JPanel();
-		northPanel.setLayout(new BoxLayout(northPanel, BoxLayout.X_AXIS));
-		northPanel.add(northLabel);
-		northPanel.add(Box.createHorizontalGlue());
+		GridBagLayout gbl=new GridBagLayout();
+		GridBagConstraints c=new GridBagConstraints();
+		northPanel.setLayout(gbl);
+		northPanel.add(northLabel,c);
+		c.gridx=1;
+		c.anchor=GridBagConstraints.SOUTHEAST;
+		JLabel l=new JLabel(JAPConstants.aktVersion);
+		l.setFont(new Font(l.getFont().getName(),
+						   l.getFont().getStyle(),
+						   (int)(l.getFont().getSize()*0.7)));
+		northPanel.add(l,c);
+		c.gridwidth=2;
+		c.gridx=0;
+		c.gridy=1;
+		c.fill=GridBagConstraints.HORIZONTAL;
+		c.weightx=1;
+		northPanel.add(new JSeparator(),c);
+		JPanel p=new JPanel();
+		new BoxLayout(p,BoxLayout.X_AXIS);
+		l=new JLabel("Anonymisierungsdienst:");
+		p.add(l);
+		JComboBox combo=new JComboBox();
+		combo.addItem("Dresden - Dresden");
+		p.add(combo);
+		c.gridwidth=2;
+		c.gridy=2;
+		c.gridx=0;
+		c.anchor=GridBagConstraints.WEST;
+		northPanel.add(p,c);
+		JButton bttn=new JButton("Details");
+		c.gridwidth=1;
+		c.gridx=2;
+		northPanel.add(bttn,c);
+		c.gridwidth=2;
+		c.gridx=0;
+		c.gridy=3;
+		c.fill=GridBagConstraints.HORIZONTAL;
+		c.weightx=1;
+		northPanel.add(new JSeparator(),c);
+
+		MyPanel my=new MyPanel();
+		p=new JPanel();
+		GridBagLayout gbl1=new GridBagLayout();
+		GridBagConstraints c1=new GridBagConstraints();
+		p.setLayout(gbl1);
+		l=new JLabel("Anonymität");
+		p.add(l,c1);
+		l=new JLabel("Nutzerzahl:");
+		c1.gridy=1;
+		c1.insets=new Insets(10,10,0,0);
+		p.add(l,c1);
+		l=new JLabel("Verkehr:");
+		c1.gridy=2;
+		p.add(l,c1);
+		l=new JLabel("1024");
+		c1.gridy=1;
+		c1.gridx=1;
+		p.add(l,c1);
+		l = new JLabel(getMeterImage(3));
+		c1.gridx=2;
+		c1.gridy=0;
+		c1.gridheight=3;
+		p.add(l,c1);
+
+		JPanel p2=new JPanel();
+		p2.setBorder(LineBorder.createBlackLineBorder());
+		new BoxLayout(p2,BoxLayout.Y_AXIS);
+		l=new JLabel("Anonymität");
+		p2.add(l);
+		p2.add(new JRadioButton("Ein"));
+		p2.add(new JRadioButton("Aus"));
+
+		c1.gridx=3;
+		p.add(p2,c1);
+		my.setFullPanel(p);
+
+		c.fill=GridBagConstraints.HORIZONTAL;
+		c.anchor=GridBagConstraints.NORTHWEST;
+		c.gridy=4;
+		northPanel.add(my,c);
 
 		// "West": Image
 		ImageIcon westImage = JAPUtil.loadImageIcon(JAPMessages.getString("westPath"), true); ;
@@ -795,6 +875,8 @@ import pay.gui.PaymentMainPanel;
 
 	public void doSynchronizedUpdateValues()
 	{
+		synchronized (m_runnableValueUpdate)
+		{
 			MixCascade currentMixCascade = controller.getCurrentMixCascade();
 			// Config panel
 			LogHolder.log(LogLevel.DEBUG, LogType.GUI, "JAPView:Start updateValues");
@@ -906,6 +988,7 @@ import pay.gui.PaymentMainPanel;
 				LogHolder.log(LogLevel.EMERG, LogType.GUI,
 							  "JAPVIew: Ooops... Crash in updateValues(): " + t.getMessage());
 			}
+		}
 	}
 
 	public void registerViewIconified(Window v)
@@ -931,7 +1014,6 @@ import pay.gui.PaymentMainPanel;
 		m_labelOwnTrafficBytes.setText(m_NumberFormat.format(c) + " Bytes");
 		JAPDll.onTraffic();
 	}
-
 
 
 }
