@@ -279,22 +279,23 @@ final public class JAPDebug extends WindowAdapter implements ActionListener, Log
 			}
 			JPanel panel = new JPanel();
 			JButton bttnSave = new JButton(JAPMessages.getString("bttnSaveAs") + "...",
-										   JAPUtil.loadImageIcon("saveicon.gif", true));
+										   JAPUtil.loadImageIcon(JAPConstants.IMAGE_SAVE, true));
 			bttnSave.setActionCommand("saveas");
 			bttnSave.addActionListener(debug);
 			JButton bttnCopy = new JButton(JAPMessages.getString("bttnCopy"),
-										   JAPUtil.loadImageIcon("copyicon.gif", true));
+										   JAPUtil.loadImageIcon(JAPConstants.IMAGE_COPY, true));
 			bttnCopy.setActionCommand("copy");
 			bttnCopy.addActionListener(debug);
-			JButton bttnInsertConfig = new JButton(JAPMessages.getString("bttnInsertConfig"));
+			JButton bttnInsertConfig = new JButton(JAPMessages.getString("bttnInsertConfig"),
+											 JAPUtil.loadImageIcon(JAPConstants.IMAGE_COPY_CONFIG, true));
 			bttnInsertConfig.setActionCommand("insertConfig");
 			bttnInsertConfig.addActionListener(debug);
 			JButton bttnDelete = new JButton(JAPMessages.getString("bttnDelete"),
-											 JAPUtil.loadImageIcon("deleteicon.gif", true));
+											 JAPUtil.loadImageIcon(JAPConstants.IMAGE_DELETE, true));
 			bttnDelete.setActionCommand("delete");
 			bttnDelete.addActionListener(debug);
 			JButton bttnClose = new JButton(JAPMessages.getString("bttnClose"),
-											JAPUtil.loadImageIcon("exiticon.gif", true));
+											JAPUtil.loadImageIcon(JAPConstants.IMAGE_EXIT, true));
 			bttnClose.setActionCommand("close");
 			bttnClose.addActionListener(debug);
 			GridBagLayout g = new GridBagLayout();
