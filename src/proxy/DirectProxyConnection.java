@@ -5,14 +5,14 @@ Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
 
 	- Redistributions of source code must retain the above copyright notice,
-	  this list of conditions and the following disclaimer.
+		this list of conditions and the following disclaimer.
 
 	- Redistributions in binary form must reproduce the above copyright notice,
-	  this list of conditions and the following disclaimer in the documentation and/or
+		this list of conditions and the following disclaimer in the documentation and/or
 		other materials provided with the distribution.
 
 	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
-	  may be used to endorse or promote products derived from this software without specific
+		may be used to endorse or promote products derived from this software without specific
 		prior written permission.
 
 
@@ -48,38 +48,38 @@ import anon.server.impl.ProxyConnection;
 
 final class DirectProxyConnection implements Runnable
 	{
-    private Socket clientSocket;
+		private Socket clientSocket;
 
-    private int threadNumber;
-    private static int threadCount;
+		private int threadNumber;
+		private static int threadCount;
 
-    private DataInputStream inputStream = null;
+		private DataInputStream inputStream = null;
 
-	  private String requestLine = null;
+		private String requestLine = null;
 
-	  private String method   = "";
-	  private String uri      = "";
-	  private String protocol = "";
-	  private String version  = "";
-	  private String host     = "";
-	  private String file     = "";
-	  private int    port     = -1;
+		private String method   = "";
+		private String uri      = "";
+		private String protocol = "";
+		private String version  = "";
+		private String host     = "";
+		private String file     = "";
+		private int    port     = -1;
 
-    public DirectProxyConnection (Socket s)
+		public DirectProxyConnection (Socket s)
 			{
 				clientSocket = s;
-      }
+			}
 
-    public void run()
+		public void run()
 			{
 				threadNumber = getThreadNumber();
 				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"C("+threadNumber+") - New connection handler started.");
 				try
 					{
-					  // open stream from client
-					  inputStream = new DataInputStream(clientSocket.getInputStream());
-					  // read first line of request
-					  requestLine = JAPUtil.readLine(inputStream);
+						// open stream from client
+						inputStream = new DataInputStream(clientSocket.getInputStream());
+						// read first line of request
+						requestLine = JAPUtil.readLine(inputStream);
 						//JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"C("+threadNumber+") - RequestLine: >" + requestLine +"<");
 						// Examples:
 						//  CONNECT 192.168.1.2:443 HTTP/1.0
@@ -89,42 +89,42 @@ final class DirectProxyConnection implements Runnable
 						uri    = st.nextToken();// Must be always there
 						if(st.hasMoreTokens())
 							version = st.nextToken();
-			    }
-			  catch (Exception e)
-				  {
-				    badRequest();
-			      return;
+					}
+				catch (Exception e)
+					{
+						badRequest();
+						return;
 					}
 				//JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"C("+threadNumber+") - RequestMethod: >" + method +"<");
 				//JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"C("+threadNumber+") - URI: >" + uri +"<");
 				//JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"C("+threadNumber+") - Version: >" + version +"<");
-			  try{
+				try{
 				if (method.equalsIgnoreCase("CONNECT"))
 					{
-					  // Handle CONNECT
+						// Handle CONNECT
 						int idx = uri.indexOf(':');
 						if (idx > 0)
 							{
 								host = uri.substring(0,idx);
 								//JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"C("+threadNumber+") - Host: >" + host +"<");
-							  port = Integer.parseInt(uri.substring(idx+1));
-							  //JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"C("+threadNumber+") - Port: >" + port +"<");
-							  handleCONNECT();
-						  }
+								port = Integer.parseInt(uri.substring(idx+1));
+								//JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"C("+threadNumber+") - Port: >" + port +"<");
+								handleCONNECT();
+							}
 						else
 							{
-							  badRequest();
-						  }
+								badRequest();
+							}
 					}
 				else if ( method.equalsIgnoreCase("GET")     ||
-								  method.equalsIgnoreCase("POST")    ||
-								  method.equalsIgnoreCase("PUT")     ||
-								  method.equalsIgnoreCase("DELETE")  ||
-								  method.equalsIgnoreCase("TRACE")   ||
-								  method.equalsIgnoreCase("OPTIONS") ||
-								  method.equalsIgnoreCase("HEAD"))
+									method.equalsIgnoreCase("POST")    ||
+									method.equalsIgnoreCase("PUT")     ||
+									method.equalsIgnoreCase("DELETE")  ||
+									method.equalsIgnoreCase("TRACE")   ||
+									method.equalsIgnoreCase("OPTIONS") ||
+									method.equalsIgnoreCase("HEAD"))
 					{
-					  // Handle HTTP Connections
+						// Handle HTTP Connections
 						URL url = new URL(uri);
 						protocol = url.getProtocol();
 						//JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"C("+threadNumber+") - Protocol: >" + protocol +"<");
@@ -135,16 +135,16 @@ final class DirectProxyConnection implements Runnable
 							port = 80;
 						//JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"C("+threadNumber+") - Port: >" + port +"<");
 						file = url.getFile();
-					  //JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"C("+threadNumber+") - File: >" + file +"<");
+						//JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"C("+threadNumber+") - File: >" + file +"<");
 
 						if (protocol.equalsIgnoreCase("http"))
 							{
-							  handleHTTP();
-						  }
+								handleHTTP();
+							}
 						else if (protocol.equalsIgnoreCase("ftp"))
 							{
 								handleFTP();
-              }
+							}
 						else
 							{
 								unknownProtocol();
@@ -152,32 +152,32 @@ final class DirectProxyConnection implements Runnable
 					}
 				else
 					{
-					  badRequest();
+						badRequest();
 					}
-		  }//try
+			}//try
 		catch(UnknownHostException uho)
 			{
 				cannotConnect();
 			}
-    catch (Exception ioe)
+		catch (Exception ioe)
 			{
 					JAPDebug.out(JAPDebug.NOTICE,JAPDebug.NET,"C("+threadNumber+") - Exception: " + ioe);
 					badRequest();
 			}
 		try
 			{
-			  clientSocket.close();
-		  }
+				clientSocket.close();
+			}
 		catch (Exception e)
 			{
-			  JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.NET,"C("+threadNumber+") - Exception while closing socket: " + e);
-		  }
+				JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.NET,"C("+threadNumber+") - Exception while closing socket: " + e);
+			}
 
-  }
+	}
 
 	private void responseTemplate(String error, String message)
 		{
-		  try
+			try
 				{
 					BufferedWriter toClient = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
 					toClient.write("HTTP/1.0 "+error+"\r\n");
@@ -195,22 +195,22 @@ final class DirectProxyConnection implements Runnable
 				{
 					JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.NET,"C("+threadNumber+") - Exception: " + e);
 				}
-	  }
+		}
 
 	private void cannotConnect()
 		{
-		  responseTemplate("404 Connection error","Cannot connect to "+host+":"+port+".");
-	  }
+			responseTemplate("404 Connection error","Cannot connect to "+host+":"+port+".");
+		}
 
 	private void unknownProtocol()
 		{
-		  responseTemplate("501 Not implemented","Protocol <B>"+protocol+"</B> not implemented, supported or unknown.");
-	  }
+			responseTemplate("501 Not implemented","Protocol <B>"+protocol+"</B> not implemented, supported or unknown.");
+		}
 
 	private void badRequest()
 		{
-		  responseTemplate("400 Bad Request","Bad request: "+requestLine);
-	  }
+			responseTemplate("400 Bad Request","Bad request: "+requestLine);
+		}
 
 	private void handleCONNECT() throws Exception {
 		try {
@@ -233,7 +233,7 @@ final class DirectProxyConnection implements Runnable
 			// Response from server is transfered to client in a sepatate thread
 			DirectProxyResponse pr = new DirectProxyResponse(serverSocket.getInputStream(),
 																														 clientSocket.getOutputStream());
-			Thread prt = new Thread(pr);
+			Thread prt = new Thread(pr,"JAP - DirectProxyResponse");
 
 			prt.start();
 			// Transfer data client --> server
@@ -243,16 +243,16 @@ final class DirectProxyConnection implements Runnable
 				if(len>0)
 					outputStream.write(buff,0,len);
 			}
-		   outputStream.flush();
+			 outputStream.flush();
 			// wait unitl response thread has finished
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"\n");
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.THREAD,"C("+threadNumber+") - Waiting for resonse thread...");
 			prt.join();
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.THREAD,"C("+threadNumber+") -                           ...finished!");
 			toClient.close();
-		  outputStream.close();
-	    inputStream.close();
-	    serverSocket.close();
+			outputStream.close();
+			inputStream.close();
+			serverSocket.close();
 		} catch (Exception e) {
 			throw e;
 		}
@@ -263,32 +263,32 @@ final class DirectProxyConnection implements Runnable
 		try {
 			// create Socket to Server
 			Socket serverSocket=null;
-      if(JAPModel.getUseFirewall()&&JAPModel.getFirewallType()==JAPConstants.FIREWALL_TYPE_SOCKS)
-        {
-          ProxyConnection p=new ProxyConnection(JAPDebug.create(),JAPConstants.FIREWALL_TYPE_SOCKS,JAPModel.getFirewallHost(),
-                                              JAPModel.getFirewallPort(),null,null,host,port);
-          serverSocket=p.getSocket();
-        }
-      else
-        serverSocket = new Socket(host,port);
+			if(JAPModel.getUseFirewall()&&JAPModel.getFirewallType()==JAPConstants.FIREWALL_TYPE_SOCKS)
+				{
+					ProxyConnection p=new ProxyConnection(JAPDebug.create(),JAPConstants.FIREWALL_TYPE_SOCKS,JAPModel.getFirewallHost(),
+																							JAPModel.getFirewallPort(),null,null,host,port);
+					serverSocket=p.getSocket();
+				}
+			else
+				serverSocket = new Socket(host,port);
 
 			// Send request --> server
 			OutputStream outputStream = serverSocket.getOutputStream();
-      // Send response --> client
-      String protocolString = "";
-      // protocolString += method+" "+file+ " "+version;
+			// Send response --> client
+			String protocolString = "";
+			// protocolString += method+" "+file+ " "+version;
 			protocolString += method+" "+file+ " "+"HTTP/1.0";
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"C("+threadNumber+") - ProtocolString: >" + protocolString + "<");
 			outputStream.write((protocolString + "\r\n").getBytes());
-      String nextLine = JAPUtil.readLine(inputStream);
+			String nextLine = JAPUtil.readLine(inputStream);
 			////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-      JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"C("+threadNumber+") - Header: >" + nextLine + "<");
+			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"C("+threadNumber+") - Header: >" + nextLine + "<");
 			while (nextLine.length() != 0) {
 				if (! filter(nextLine) ) {
-                        // write single lines to server
+												// write single lines to server
 					outputStream.write((nextLine+"\r\n").getBytes());
-   			} else {
+				} else {
 					JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"C("+threadNumber+") - Header " + nextLine + " filtered");
 				}
 				nextLine =JAPUtil.readLine(inputStream);
@@ -300,9 +300,9 @@ final class DirectProxyConnection implements Runnable
 			outputStream.flush();
 
 			// Response from server is transfered to client in a sepatate thread
- 			DirectProxyResponse pr = new DirectProxyResponse(serverSocket.getInputStream(),
+			DirectProxyResponse pr = new DirectProxyResponse(serverSocket.getInputStream(),
 																														 clientSocket.getOutputStream());
-			Thread prt = new Thread(pr);
+			Thread prt = new Thread(pr,"JAP - DirectProxyResponse");
 			prt.start();
 
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"C("+threadNumber+") - Headers sended, POST data may follow");
@@ -310,9 +310,9 @@ final class DirectProxyConnection implements Runnable
 			int len;
 			while((len=inputStream.read(buff))!=-1)
 				{
-				  if(len>0)
-					  outputStream.write(buff,0,len);
-			  }
+					if(len>0)
+						outputStream.write(buff,0,len);
+				}
 			outputStream.flush();
 
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"\n");
@@ -326,7 +326,7 @@ final class DirectProxyConnection implements Runnable
 		} catch (Exception e) {
 			throw e;
 		}
-    }
+		}
 
 		private class MyFTPClient extends FTPClient
 			{
@@ -357,12 +357,12 @@ final class DirectProxyConnection implements Runnable
 							}
 					}
 				public FTPServerResponse connect(String host,
-                                  int port) throws UnknownHostException, IOException
-			  {
+																	int port) throws UnknownHostException, IOException
+				{
 					try{
-					  FTPServerResponse r=super.connect(host,port);
-					  controlConnection.setSoTimeout(30000);
-					  return r;
+						FTPServerResponse r=super.connect(host,port);
+						controlConnection.setSoTimeout(30000);
+						return r;
 					}
 					catch(UnknownHostException uh)
 						{
@@ -376,38 +376,38 @@ final class DirectProxyConnection implements Runnable
 				}
 
 			};
-    private void handleFTP()
-    {
-    //a request as GET ftp://213.244.188.60/pub/jaxp/89h324hruh/jaxp-1_1.zip was started
+		private void handleFTP()
+		{
+		//a request as GET ftp://213.244.188.60/pub/jaxp/89h324hruh/jaxp-1_1.zip was started
 
-    try{
-     String end="</pre></body></html>";
-     String endInfo ="</pre></h4><hr><pre>";
+		try{
+		 String end="</pre></body></html>";
+		 String endInfo ="</pre></h4><hr><pre>";
 
-     OutputStream os = clientSocket.getOutputStream();
+		 OutputStream os = clientSocket.getOutputStream();
 
-     String nextLine = JAPUtil.readLine(inputStream);
-     FTPServerResponse ftpsp = null;
-     MyFTPClient ftpClient = new MyFTPClient();
+		 String nextLine = JAPUtil.readLine(inputStream);
+		 FTPServerResponse ftpsp = null;
+		 MyFTPClient ftpClient = new MyFTPClient();
 			//Login...
-	    ftpsp = ftpClient.connect(host);
+			ftpsp = ftpClient.connect(host);
 
 			//Login +passive Mode
 			ftpsp=ftpClient.user("anonymous");
-      ftpsp=ftpClient.pass("JAP@xxx.com");
-      //todo -> message bie list ausgeben....
-		  String[] arstrMotd=ftpsp.getResponses();
+			ftpsp=ftpClient.pass("JAP@xxx.com");
+			//todo -> message bie list ausgeben....
+			String[] arstrMotd=ftpsp.getResponses();
 
-      ftpsp=ftpClient.pasv();
+			ftpsp=ftpClient.pasv();
 
 
-     //////////////////////////////////////////////////////////////////////////
-     // LIST or GET
-     String GETString = file;
+		 //////////////////////////////////////////////////////////////////////////
+		 // LIST or GET
+		 String GETString = file;
 		 ftpsp=ftpClient.cwd(file); //directory?
 
 		 if(ftpsp.getResponseCode()==250) //was Directory!
-		  {// a directory
+			{// a directory
 				String URL = uri;
 				if(!URL.endsWith("/"))
 					URL+="/";
@@ -434,10 +434,10 @@ final class DirectProxyConnection implements Runnable
 						strLen=strLen.substring(strLen.length()-10);
 						help.append(remoteFiles[i].getProtections());
 						help.append(strLen);
-					  if (remoteFiles[i].isDirectory())
+						if (remoteFiles[i].isDirectory())
 							{
 								help.append(" Directory ");
-							  help.append("<a href=\"");
+								help.append("<a href=\"");
 								help.append(URL);
 								help.append(remoteFiles[i].getName());
 								help.append("/\"><b>");
@@ -447,7 +447,7 @@ final class DirectProxyConnection implements Runnable
 						else
 							{
 								help.append("    File   ");
-							  help.append("<a href=\"");
+								help.append("<a href=\"");
 								help.append(URL);
 								help.append(remoteFiles[i].getName());
 								help.append("\">");
@@ -457,41 +457,41 @@ final class DirectProxyConnection implements Runnable
 					 os.write(help.toString().getBytes());
 					 help.setLength(1);
 					}//for
-        os.write(end.getBytes());
-      }
+				os.write(end.getBytes());
+			}
 		else//a file
-      {
-        FTPServerResponse currentResponses[] = null;
-			  ftpsp=ftpClient.type(FTPClient.IMAGE);
-			  currentResponses=ftpClient.list(file);
-			  long len=currentResponses[0].getRemoteFiles()[0].length();
-			  os.write(("HTTP/1.0 200 Ok\r\nContent-Type: application/octet-stream\r\nContent-Length: "+Long.toString(len)+"\r\n\r\n").getBytes());
-			  ftpsp=ftpClient.pasv();
-			  currentResponses=ftpClient.retr(file,os);
-      }//else
+			{
+				FTPServerResponse currentResponses[] = null;
+				ftpsp=ftpClient.type(FTPClient.IMAGE);
+				currentResponses=ftpClient.list(file);
+				long len=currentResponses[0].getRemoteFiles()[0].length();
+				os.write(("HTTP/1.0 200 Ok\r\nContent-Type: application/octet-stream\r\nContent-Length: "+Long.toString(len)+"\r\n\r\n").getBytes());
+				ftpsp=ftpClient.pasv();
+				currentResponses=ftpClient.retr(file,os);
+			}//else
 
 		//Logout
 		ftpClient.quit();
 
-    os.flush();
-    os.close();
+		os.flush();
+		os.close();
 
-    }
+		}
 		catch (Exception e)
-            {
-            }
-	  }
+						{
+						}
+		}
 
 
-    private boolean filter(String l) {
+		private boolean filter(String l) {
 		String cmp = "Proxy-Connection";
 		if (l.regionMatches(true,0,cmp,0,cmp.length())) return true;
 		return false;
-    }
+		}
 
 
 
-    private synchronized int getThreadNumber() {
+		private synchronized int getThreadNumber() {
 		return threadCount++;
-    }
+		}
 }

@@ -5,14 +5,14 @@ Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
 
 	- Redistributions of source code must retain the above copyright notice,
-	  this list of conditions and the following disclaimer.
+		this list of conditions and the following disclaimer.
 
 	- Redistributions in binary form must reproduce the above copyright notice,
-	  this list of conditions and the following disclaimer in the documentation and/or
+		this list of conditions and the following disclaimer in the documentation and/or
 		other materials provided with the distribution.
 
 	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
-	  may be used to endorse or promote products derived from this software without specific
+		may be used to endorse or promote products derived from this software without specific
 		prior written permission.
 
 
@@ -54,7 +54,7 @@ final class JAPSetAnonModeSplash implements Runnable
 
 		private void start_internal(boolean bSetAnonMode)
 			{
-				t=new Thread(this);
+				t=new Thread(this,"JAP - SetAnonModeSplash");
 				String message;
 				if(bSetAnonMode)
 					message=JAPMessages.getString("setAnonModeSplashConnect");
@@ -64,11 +64,11 @@ final class JAPSetAnonModeSplash implements Runnable
 				dlgAbort.getContentPane().setLayout(new BorderLayout());
 				JLabel l=new JLabel(message,UIManager.getIcon("OptionPane.informationIcon"),SwingConstants.CENTER);
 				if(JAPModel.isSmallDisplay())
-          l.setBorder(new EmptyBorder(3,3,3,3));
+					l.setBorder(new EmptyBorder(3,3,3,3));
 				else
-          l.setBorder(new EmptyBorder(10,10,10,10));
-        l.setFont(JAPController.getDialogFont());
-        l.setIconTextGap(10);
+					l.setBorder(new EmptyBorder(10,10,10,10));
+				l.setFont(JAPController.getDialogFont());
+				l.setIconTextGap(10);
 				dlgAbort.getContentPane().add("Center",l);
 				l=new JLabel(JAPUtil.loadImageIcon(JAPConstants.BUSYFN,true));
 				l.setBorder(new EmptyBorder(10,10,10,10));
@@ -77,10 +77,10 @@ final class JAPSetAnonModeSplash implements Runnable
 				dlgAbort.setResizable(false);
 				dlgAbort.setLocationRelativeTo(JAPController.getController().getView());
 				//On Mac setModel(true) does not seam to work (Dialog is not painted...)
-        String sl=System.getProperty("os.name").substring(0,3);
-        dlgAbort.setModal(!System.getProperty("os.name").substring(0,3).equalsIgnoreCase("mac"));
+				String sl=System.getProperty("os.name").substring(0,3);
+				dlgAbort.setModal(!System.getProperty("os.name").substring(0,3).equalsIgnoreCase("mac"));
 				dlgAbort.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
-        t.start();
+				t.start();
 			}
 
 		static synchronized public void abort()
@@ -99,6 +99,6 @@ final class JAPSetAnonModeSplash implements Runnable
 		public void run()
 			{
 				if(dlgAbort!=null)
-          dlgAbort.show();
+					dlgAbort.show();
 			}
 }

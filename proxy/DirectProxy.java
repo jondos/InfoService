@@ -5,14 +5,14 @@ Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
 
 	- Redistributions of source code must retain the above copyright notice,
-	  this list of conditions and the following disclaimer.
+		this list of conditions and the following disclaimer.
 
 	- Redistributions in binary form must reproduce the above copyright notice,
-	  this list of conditions and the following disclaimer in the documentation and/or
+		this list of conditions and the following disclaimer in the documentation and/or
 		other materials provided with the distribution.
 
 	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
-	  may be used to endorse or promote products derived from this software without specific
+		may be used to endorse or promote products derived from this software without specific
 		prior written permission.
 
 
@@ -53,16 +53,16 @@ final public class DirectProxy implements Runnable
 	{
 		private volatile boolean runFlag;
 		private boolean isRunningProxy = false;
-    private int portN;
-    private ServerSocket m_socketListener;
-    private volatile Thread threadRunLoop;
+		private int portN;
+		private ServerSocket m_socketListener;
+		private volatile Thread threadRunLoop;
 		private ThreadGroup threadgroupAll;
 		private boolean warnUser = true;
 
-    public DirectProxy (ServerSocket s)
+		public DirectProxy (ServerSocket s)
 			{
 				m_socketListener=s;
-			  warnUser = true;
+				warnUser = true;
 				isRunningProxy = false;
 			}
 
@@ -71,15 +71,15 @@ final public class DirectProxy implements Runnable
 				if(m_socketListener==null)
 					return false;
 				threadgroupAll=new ThreadGroup("directproxy");
-				threadRunLoop=new Thread(this);
-        threadRunLoop.setDaemon(true);
+				threadRunLoop=new Thread(this,"JAP - Direct Proxy");
+				threadRunLoop.setDaemon(true);
 				runFlag = true;
 				threadRunLoop.start();
 				isRunningProxy = true;
 				return true;
 			}
 
-    public void run()
+		public void run()
 			{
 				try
 					{
@@ -143,27 +143,27 @@ final public class DirectProxy implements Runnable
 		}
 
 
-    public synchronized void stopService()
+		public synchronized void stopService()
 			{
 				runFlag = false;
 				try
-          {
-            int timeToWait=0;
-            try
-              {
-                timeToWait=m_socketListener.getSoTimeout();
-              }
-            catch(Exception ex)
-              {}
-            if(timeToWait<=0)
-              timeToWait=3000;
-            timeToWait+=1000;
-            threadRunLoop.join(timeToWait);
-          }
-        catch(Exception e)
-          {
-  			    JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPDirect:DirectProxyServer could not be stopped!!!");
-          }
+					{
+						int timeToWait=0;
+						try
+							{
+								timeToWait=m_socketListener.getSoTimeout();
+							}
+						catch(Exception ex)
+							{}
+						if(timeToWait<=0)
+							timeToWait=3000;
+						timeToWait+=1000;
+						threadRunLoop.join(timeToWait);
+					}
+				catch(Exception e)
+					{
+						JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPDirect:DirectProxyServer could not be stopped!!!");
+					}
 				if(threadgroupAll!=null)
 					{
 						try //Hack for kaffe!
@@ -252,7 +252,7 @@ final public class DirectProxy implements Runnable
 							// Response from server is transfered to client in a sepatate thread
 							DirectProxyResponse pr = new DirectProxyResponse(serverSocket.getInputStream(),
 																																		 clientSocket.getOutputStream());
-							Thread prt = new Thread(pr);
+							Thread prt = new Thread(pr,"JAP - DirectProxyResponse");
 							prt.start();
 							// create stream --> server
 							OutputStream outputStream = serverSocket.getOutputStream();
@@ -281,8 +281,8 @@ final public class DirectProxy implements Runnable
 							outputStream.flush();
 							prt.join();
 							outputStream.close();
-	    				inputStream.close();
-	    				serverSocket.close();
+							inputStream.close();
+							serverSocket.close();
 						}
 					catch (IOException ioe)
 						{

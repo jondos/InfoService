@@ -69,7 +69,7 @@ final public class KeyPool implements Runnable
 				aktKey=null;
 				l1=new Object();
 				l2=new Object();
-				m_KeyPoolThread=new Thread(this);
+				m_KeyPoolThread=new Thread(this,"JAP - KeyPool");
 				m_KeyPoolThread.setDaemon(true);
 				m_KeyPoolThread.setPriority(Thread.MIN_PRIORITY);
 				m_KeyPoolThread.start();
