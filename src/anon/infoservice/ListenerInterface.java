@@ -97,6 +97,12 @@ public class ListenerInterface {
     Element hostNode = (Element)(hostNodes.item(0));
     String tmpHostName = hostNode.getFirstChild().getNodeValue(); 
     try {
+      if ((tmpIpString == null) || (tmpIpString.equals(""))) {
+        /* if we would use InetAddress.getByName(), we would get the address of the localhost ->
+         * throw an exception to skip the IP test
+         */
+        throw (new Exception("ListenerInterface: No IP Address. Skip IP check."));
+      }
       /* check the validity of the IP address */
       InetAddress interfaceAddress = InetAddress.getByName(tmpIpString);
       this.ipString = interfaceAddress.getHostAddress();
