@@ -150,17 +150,6 @@ class JAP extends Frame {
 		anon.JAPAnonService.init();
 		// initially start services
 		model.initialRun();
-
-		//Test
-		try{
-		anon.xmlrpc.Client c=new anon.xmlrpc.Client();
-		int p=c.getLocalListeningPort();
-		anon.xmlrpc.MixCascade[] cascades=c.loadMixCascadesFromTheNet();
-		boolean b=c.setMixCascadeCurrentlyUsed(cascades[0]);
-		p=3;}
-		catch(Exception e)
-			{
-			};
 	}
 
 	public static void main(String[] argv) {

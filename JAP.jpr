@@ -35,7 +35,6 @@
 #34=VersioncheckerProgress.java
 #35=anon
 #36=Rijndael
-#37=rmi
 #38=JAPMessages_de.properties
 #39=JAPMessages.properties
 #40=JAPLean.java
@@ -114,8 +113,6 @@ sys[35].Parent=0
 sys[35].Type=Package
 sys[36].Parent=0
 sys[36].Type=Package
-sys[37].Parent=0
-sys[37].Type=Package
 sys[38].Parent=0
 sys[39].Parent=0
 sys[40].Parent=0
