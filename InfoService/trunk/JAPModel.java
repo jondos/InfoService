@@ -18,7 +18,7 @@ public final class JAPModel {
 // JAPDebug now initialized in JAP in order to use
 // the functions also in JAP.main()
     
-	static final String aktVersion = "00.00.013"; // Version of JAP
+	static final String aktVersion = "00.00.014"; // Version of JAP
 	
 	private int      portNumber        = 4001;
 	private int      runningPortNumber = 0;      // the port where proxy listens
@@ -363,8 +363,8 @@ public final class JAPModel {
 			if ( s.compareTo(aktVersion) > 0 ) {
 				// OK, new version available
 				// ->Ask user if he/she wants to download new version
-				Object[] options = { model.getString("newVersionNo"), model.getString("newVersionYes") };
-				ImageIcon   icon = loadImageIcon(DOWNLOADFN,true);
+			//	Object[] options = { model.getString("newVersionNo"), model.getString("newVersionYes") };
+			//	ImageIcon   icon = loadImageIcon(DOWNLOADFN,true);
 				String answer;
 				answer = japLoading.message(model.getString("newVersionAvailableTitle"),
 						   model.getString("newVersionAvailable"),

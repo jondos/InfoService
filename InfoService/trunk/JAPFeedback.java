@@ -21,7 +21,7 @@ public class JAPFeedback implements Runnable {
 	}
 		
 	public void run() {
-		int counter = 0;
+		//int counter = 0;
 		boolean error;
 		runFlag = true;
 		String path = "http://"+model.infoServiceHostName+":"+model.infoServicePortNumber+
