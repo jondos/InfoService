@@ -42,7 +42,7 @@ import anon.util.XMLUtil;
  *    ... Signature des Kontoinhabers
  *  </Signature>
  * </CC>
- * @author Grischan Gl&auml;nzel
+ * @author Grischan Gl&auml;nzel, Bastian Voigt
  */
 public class XMLEasyCC extends XMLDocument
 {
@@ -55,7 +55,6 @@ public class XMLEasyCC extends XMLDocument
 	private long m_lAccountNumber;
 
 	//~ Constructors ***********************************************************
-	//todo --> lots to do :-)
 	public XMLEasyCC(String aiName, long accountNumber, long transferred) throws Exception
 	{
 

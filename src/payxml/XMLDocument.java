@@ -33,7 +33,8 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import org.w3c.dom.Document;
 import anon.util.XMLUtil;
 /**
- * this class is one hell of a shhhhhhhrrrrrrrrrrrrrrrr
+ * @todo umstellung auf DocumentFragment
+* @todo ueberpruefung der xmlstrukturen hinzuf\uFFFDgen
  */
 public class XMLDocument
 {

@@ -30,10 +30,20 @@ package payxml;
 import anon.util.*;
 import org.w3c.dom.*;
 
+/**
+ * This class is probably obsolete... not sure yet
+ *
+ * <p>\u00DCberschrift: </p>
+ * <p>Beschreibung: </p>
+ * <p>Copyright: Copyright (c) 2004</p>
+ * <p>Organisation: </p>
+ * @author not attributable
+ * @version 1.0
+ */
 public class XMLCostConfirmation extends XMLDocument
 {
 	//~ Instance fields ********************************************************
-
+/*
 	private XMLCC cc;
 	private byte[] digest;
 
@@ -47,12 +57,12 @@ public class XMLCostConfirmation extends XMLDocument
 	public XMLCostConfirmation(byte[] data) throws Exception
 	{
 		setDocument(data);
-		Element elemRoot=m_theDocument.getDocumentElement();
-		Element elem=(Element)XMLUtil.getFirstChildByName(elemRoot,"CC");
+		Element elemRoot = m_theDocument.getDocumentElement();
+		Element elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "CC");
 		cc = new XMLCC(elem);
 
-		elem=(Element)XMLUtil.getFirstChildByName(elemRoot,"Digest");
-		String strdigest=XMLUtil.parseNodeString(elem,null);
+		elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "Digest");
+		String strdigest = XMLUtil.parseNodeString(elem, null);
 		digest = Base64.decode(strdigest);
 	}
 
@@ -87,5 +97,5 @@ public class XMLCostConfirmation extends XMLDocument
 	{
 		return cc.getTickPrice();
 	}
-
+*/
 }
