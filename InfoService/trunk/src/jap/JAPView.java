@@ -639,7 +639,7 @@ import gui.*;
 	/**Anon Level is >=0 amd <=5. If -1 no measure is available*/
 	private ImageIcon getMeterImage(int iAnonLevel)
 	{
-		if (controller.getAnonMode())
+		if (m_Controller.getAnonMode())
 		{
 			if (iAnonLevel >= 0 && iAnonLevel < 6)
 			{
@@ -690,7 +690,7 @@ import gui.*;
 		}
 		else if (event.getSource() == m_bttnInfo)
 		{
-			controller.aboutJAP();
+			m_Controller.aboutJAP();
 		}
 		else if (event.getSource() == m_bttnHelp)
 		{
@@ -700,7 +700,7 @@ import gui.*;
 		}
 		else if (event.getSource() == m_cbAnon)
 		{
-			controller.setAnonMode(m_cbAnon.isSelected());
+			m_Controller.setAnonMode(m_cbAnon.isSelected());
 		}
 		else
 		{
@@ -762,14 +762,14 @@ import gui.*;
 
 	public void doSynchronizedUpdateValues()
 	{
-			MixCascade currentMixCascade = controller.getCurrentMixCascade();
+			MixCascade currentMixCascade = m_Controller.getCurrentMixCascade();
 			// Config panel
 			LogHolder.log(LogLevel.DEBUG, LogType.GUI, "JAPView:Start updateValues");
 			// Meter panel
 			try
 			{
-				m_cbAnon.setSelected(controller.getAnonMode());
-				if (controller.getAnonMode())
+				m_cbAnon.setSelected(m_Controller.getAnonMode());
+				if (m_Controller.getAnonMode())
 				{
 					m_cbAnon.setForeground(Color.black);
 				}
@@ -782,7 +782,7 @@ import gui.*;
 				m_labelCascadeName.setToolTipText(currentMixCascade.getName());
 				StatusInfo currentStatus = currentMixCascade.getCurrentStatus();
 				meterLabel.setIcon(getMeterImage(currentStatus.getAnonLevel()));
-				if (controller.getAnonMode())
+				if (m_Controller.getAnonMode())
 				{
 					if (currentStatus.getNrOfActiveUsers() > -1)
 					{

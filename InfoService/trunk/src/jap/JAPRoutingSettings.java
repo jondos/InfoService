@@ -287,9 +287,9 @@ public class JAPRoutingSettings extends Observable
           if (getForwardInfoService() == true)
           {
             /* restore the original proxy settings for the infoservice */
-            JAPController.getController().applyProxySettingsToInfoService();
+            JAPController.getInstance().applyProxySettingsToInfoService();
           }
-          JAPController.getController().setAnonMode(false);
+          JAPController.getInstance().setAnonMode(false);
           /* client was running, close the connection */
           m_forwardedConnection.close();
           m_forwardedConnection = null;
@@ -317,10 +317,10 @@ public class JAPRoutingSettings extends Observable
         if (a_routingMode == ROUTING_MODE_CLIENT)
         {
           /* close an existing anon connection, if there is one */
-          if (JAPController.getController().getAnonMode() == true)
+          if (JAPController.getInstance().getAnonMode() == true)
           {
             m_waitForShutdownCall = true;
-            JAPController.getController().setAnonMode(false);
+            JAPController.getInstance().setAnonMode(false);
             try
             {
               this.wait();
@@ -644,7 +644,7 @@ public class JAPRoutingSettings extends Observable
         if ( (a_forwardInfoService == false) && (getRoutingMode() == ROUTING_MODE_CLIENT))
         {
           /* restore the original proxy settings for the infoservice */
-          JAPController.getController().applyProxySettingsToInfoService();
+          JAPController.getInstance().applyProxySettingsToInfoService();
         }
       }
     }

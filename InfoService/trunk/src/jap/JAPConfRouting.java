@@ -2578,8 +2578,8 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
         {
           JAPModel.getInstance().getRoutingSettings().selectMixCascade(a_selectedMixCascade);
           /* if sending the mixcascade was successful, start the anonymous mode */
-          JAPController.getController().setCurrentMixCascade(a_selectedMixCascade);
-          JAPController.getController().setAnonMode(true);
+          JAPController.getInstance().setCurrentMixCascade(a_selectedMixCascade);
+          JAPController.getInstance().setAnonMode(true);
           /* finish the client configuration dialog */
           announceDialog.dispose();
         }

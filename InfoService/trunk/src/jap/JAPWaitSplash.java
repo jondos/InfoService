@@ -57,7 +57,7 @@ public final class JAPWaitSplash implements Runnable
 	private void start_internal(String message, String titel)
 	{
 		t = new Thread(this, "JAP - WaitSplash - " + titel);
-		dlgAbort = new JDialog(JAPController.getController().getView(), titel);
+		dlgAbort = new JDialog(JAPController.getInstance().getView(), titel);
 		dlgAbort.getContentPane().setLayout(new BorderLayout());
 		JLabel l = new JLabel(message, UIManager.getIcon("OptionPane.informationIcon"), SwingConstants.CENTER);
 		if (JAPModel.isSmallDisplay())
@@ -76,7 +76,7 @@ public final class JAPWaitSplash implements Runnable
 		dlgAbort.getContentPane().add("South", l);
 		dlgAbort.pack();
 		dlgAbort.setResizable(false);
-		dlgAbort.setLocationRelativeTo(JAPController.getController().getView());
+		dlgAbort.setLocationRelativeTo(JAPController.getInstance().getView());
 		//On Mac setModel(true) does not seam to work (Dialog is not painted...)
 		String sl = System.getProperty("os.name").substring(0, 3);
 		dlgAbort.setModal(!System.getProperty("os.name").substring(0, 3).equalsIgnoreCase("mac"));

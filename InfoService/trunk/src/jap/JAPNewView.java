@@ -124,7 +124,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	{
 		super(s,a_controller);
 		m_NumberFormat = NumberFormat.getInstance();
-		controller = JAPController.getController();
+		m_Controller = JAPController.getInstance();
 		helpWindow = null; //new JAPHelp(this);
 		m_dlgConfig = null; //new JAPConf(this);
 		m_bIsIconified = false;
@@ -174,7 +174,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			{
 				public void mouseClicked(MouseEvent e)
 					{
-						controller.aboutJAP();
+						m_Controller.aboutJAP();
 					}
 			});
 		c.insets = new Insets(0, 0, 0, 10);
@@ -1164,7 +1164,7 @@ m_iPreferredWidth=Math.max(d.width,Math.max(m_flippingpanelOwnTraffic.getPreferr
 	/**Anon Level is >=0 amd <=5. If -1 no measure is available*/
 	private ImageIcon getMeterImage(int iAnonLevel)
 	{
-		if (controller.getAnonMode())
+		if (m_Controller.getAnonMode())
 		{
 			if (iAnonLevel >= 0 && iAnonLevel < 6)
 			{
@@ -1216,7 +1216,7 @@ m_iPreferredWidth=Math.max(d.width,Math.max(m_flippingpanelOwnTraffic.getPreferr
 		//}
 		else if (source == m_bttnInfo)
 		{
-			controller.aboutJAP();
+			m_Controller.aboutJAP();
 		}
 		else if (source == m_bttnHelp)
 		{
@@ -1226,7 +1226,7 @@ m_iPreferredWidth=Math.max(d.width,Math.max(m_flippingpanelOwnTraffic.getPreferr
 		}
 		else if (source == m_rbAnonOn||source==m_rbAnonOff)
 		{
-			controller.setAnonMode(m_rbAnonOn.isSelected());
+			m_Controller.setAnonMode(m_rbAnonOn.isSelected());
 		}
 		else
 		{
@@ -1290,13 +1290,13 @@ m_iPreferredWidth=Math.max(d.width,Math.max(m_flippingpanelOwnTraffic.getPreferr
 	{
 		synchronized (m_runnableValueUpdate)
 		{
-			MixCascade currentMixCascade = controller.getCurrentMixCascade();
+			MixCascade currentMixCascade = m_Controller.getCurrentMixCascade();
 			// Config panel
 			LogHolder.log(LogLevel.DEBUG, LogType.GUI, "JAPView:Start updateValues");
 			// Meter panel
 			try
 			{
-				m_rbAnonOn.setSelected(controller.getAnonMode());
+				m_rbAnonOn.setSelected(m_Controller.getAnonMode());
 /*			if (controller.getAnonMode())
 				{
 					m_cbAnon.setForeground(Color.black);
@@ -1310,7 +1310,7 @@ m_iPreferredWidth=Math.max(d.width,Math.max(m_flippingpanelOwnTraffic.getPreferr
 				m_labelCascadeName.setToolTipText(currentMixCascade.getName());
 				StatusInfo currentStatus = currentMixCascade.getCurrentStatus();
 				m_labelAnonMeter.setIcon(getMeterImage(currentStatus.getAnonLevel()));
-				if (controller.getAnonMode())
+				if (m_Controller.getAnonMode())
 				{
 					if (currentStatus.getNrOfActiveUsers() > -1)
 					{

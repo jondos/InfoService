@@ -42,7 +42,7 @@ final class JAPFeedback implements Runnable
 	public JAPFeedback()
 	{
 		LogHolder.log(LogLevel.INFO, LogType.MISC, "JAPFeedback:initializing...");
-		controller = JAPController.getController();
+		controller = JAPController.getInstance();
 		m_threadRunLoop = null;
 		runFlag = false;
 	}
