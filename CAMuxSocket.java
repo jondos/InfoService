@@ -2,31 +2,23 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 import java.net.Socket;
 import java.io.OutputStream;
-import java.io.InputStream;
 import java.io.BufferedOutputStream;
 import java.io.DataOutputStream;
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.lang.Integer;
-import java.io.ByteArrayOutputStream;
-import java.io.ByteArrayInputStream;
 
 public class CAMuxSocket extends Thread
 	{
 		private int lastChannelId;
 		private Dictionary oSocketList;
-		private OutputStream toServer;
-		private ByteArrayOutputStream tmpByteStream;
-		private DataOutputStream tmpDataStream;
-		private	byte[] inBuff;
-		private ByteArrayInputStream inByteStream;
+		private DataOutputStream outDataStream;
 		private DataInputStream inDataStream;
-		private InputStream fromServer;
 		
 		private Socket outSocket;
-		private	byte[] tmpBuff;
+		private	byte[] outBuff;
 		private JASymCipher oSymCipher;
-		
+		private int chainlen;
 		class SocketListEntry
 			{
 				SocketListEntry(CASocket s)
@@ -49,18 +41,13 @@ public class CAMuxSocket extends Thread
 			{
 				lastChannelId=0;
 				oSocketList=new Hashtable();
-				tmpBuff=new byte[1000];
 				oSymCipher=new JASymCipher();
 				byte[] key=new byte[16];
 				for(int i=0;i<16;i++)
 					key[i]=0;
 				oSymCipher.setEncryptionKey(key);
 				oSymCipher.setDecryptionKey(key);
-				tmpByteStream=new ByteArrayOutputStream(1008);
-				tmpDataStream=new DataOutputStream(tmpByteStream);
-				inBuff=new byte[1008];
-				inByteStream=new ByteArrayInputStream(inBuff);
-				inDataStream=new DataInputStream(inByteStream);
+				outBuff=new byte[1000];
 		}
 
 		public int connect(String host, int port)
@@ -68,9 +55,10 @@ public class CAMuxSocket extends Thread
 				try
 					{
 						outSocket=new Socket(host,port);
-						toServer=outSocket.getOutputStream();
-						fromServer=outSocket.getInputStream();
-						System.out.println("CAMuxSocket - Connected!");
+						outDataStream=new DataOutputStream(new BufferedOutputStream(outSocket.getOutputStream(),1008));
+						inDataStream=new DataInputStream(outSocket.getInputStream());
+						chainlen=inDataStream.readByte();
+						System.out.println("CAMuxSocket - Connected! Chain-Len: "+Integer.toString(chainlen));
 					}
 				catch(Exception e)
 					{
@@ -82,6 +70,7 @@ public class CAMuxSocket extends Thread
 		public synchronized int newConnection(CASocket s)
 			{
 				oSocketList.put(new Integer(lastChannelId),new SocketListEntry(s));
+				JAPModel.getModel().setNrOfChannels(oSocketList.size());
 				(new SK13ProxyConnection(s,lastChannelId,this)).start();
 				lastChannelId++;
 //				System.out.println("CAMuxSocket - new Connection");
@@ -93,6 +82,7 @@ public class CAMuxSocket extends Thread
 	//			System.out.println("Closing channel: "+Integer.toString(channel));
 				send(channel,null,(short)0);
 				oSocketList.remove(new Integer(channel));
+				JAPModel.getModel().setNrOfChannels(oSocketList.size());
 				return 0;
 			}
 
@@ -106,18 +96,12 @@ public class CAMuxSocket extends Thread
 					{
 						while(true)
 							{
-								len=inBuff.length;
-								while(len>0)
-									{
-										len-=fromServer.read(inBuff);
-									}
-								oSymCipher.decrypt(inBuff);
-								inByteStream.reset();
 								channel=inDataStream.readInt();
-		//						System.out.println("Receiving channel: "+Integer.toString(channel));
 								len=inDataStream.readShort();
-								tmp=inDataStream.readShort();
+								tmp=inDataStream.readShort();								
 								inDataStream.readFully(buff);
+								for(int i=0;i<chainlen;i++)
+									oSymCipher.encrypt(buff);
 								SocketListEntry tmpEntry=(SocketListEntry)oSocketList.get(new Integer(channel));
 								if(tmpEntry!=null)
 									{
@@ -143,6 +127,7 @@ public class CAMuxSocket extends Thread
 															}
 													}
 												tmpEntry.out.flush();
+												JAPModel.getModel().increasNrOfBytes(len);
 											}
 									}
 							}
@@ -160,17 +145,18 @@ public class CAMuxSocket extends Thread
 				try
 					{
 			//			System.out.println("Sending: channel "+Integer.toString(channel)+"len: "+Integer.toString(len));
-						tmpByteStream.reset();
-						tmpDataStream.writeInt(channel);
-						tmpDataStream.writeShort(len);
-						tmpDataStream.writeShort(0);
+						outDataStream.writeInt(channel);
+						outDataStream.writeShort(len);
+						outDataStream.writeShort(0);
 						if(buff!=null)
-							tmpDataStream.write(buff,0,len);
-						tmpDataStream.write(tmpBuff,0,1000-len);
-						tmpDataStream.flush();
-						byte[] b=tmpByteStream.toByteArray();
-						oSymCipher.encrypt(b);
-						toServer.write(b);
+							{
+								System.arraycopy(buff,0,outBuff,0,len);
+								for(int i=0;i<chainlen;i++)
+									oSymCipher.encrypt(outBuff);
+							}	
+						outDataStream.write(outBuff);
+						outDataStream.flush();
+						JAPModel.getModel().increasNrOfBytes(len);
 					}
 				catch(Exception e)
 					{

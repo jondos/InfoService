@@ -6,7 +6,12 @@ import org.w3c.dom.NamedNodeMap;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-public class JAPModel implements JAPObserver {
+import java.awt.Dimension;
+import java.awt.Window;
+import java.awt.MediaTracker;
+import java.awt.Toolkit;
+import javax.swing.ImageIcon;
+public final class JAPModel implements JAPObserver {
 
 	public boolean		debug =false;
 	
@@ -19,23 +24,32 @@ public class JAPModel implements JAPObserver {
 	public String		anonHostName ="sole.icsi.berkeley.edu";
 	public int			anonPortNumber = 6543;
 	private boolean		anonMode = false;
-	public String 		status1 = "OK";
-	public String 		status2 = "OK";
+	public String 		status1 = "???";
+	public String 		status2 = "???";
 
-	static final String url_info_version="http://anon.inf.tu-dresden.de/~sk13/anon/jap/aktVersion.txt";
-	static final String url_jap_newversion="http://anon.inf.tu-dresden.de/~sk13/anon/jap/JAP.jar";
+	private int nrOfChannels = 0;
+	private int nrOfBytes = 0;
+	static final int MAXCHANNELVALUE = 5; // maximal number of anonymous channels
+	static final int MAXBYTESVALUE = 100000; // maximal bytes of all anonymous channels
+
+	static final String url_download_version = "http://anon.inf.tu-dresden.de/~sk13/anon/jap/download.html";
+	static final String url_info_version     = "http://anon.inf.tu-dresden.de/~sk13/anon/jap/aktVersion.txt";
+	static final String url_jap_newversion   = "http://anon.inf.tu-dresden.de/~sk13/anon/jap/JAP.jar";
 
 	private ResourceBundle msg;
 
 	static final String TITLE = "JAVA ANON PROXY -- JAP";
     static final String AUTHOR = "The JAP-Team\n<jap@inf.tu-dresden.de>\n \n(c) 2000 \n";
 
-	static final String MESSAGESFN = "JAPMessages";
-	static final int	MAXHELPLANGUAGES = 6;
-	static final String SPLASHFN = "images/splash.gif";
-	static final String JAPICONFN = "images/japi.gif";
+	static final int    MAXHELPLANGUAGES = 6;
+	static final String MESSAGESFN   = "JAPMessages";
+	static final String XMLCONFFN    = "jap.conf";
+	static final String SPLASHFN     = "images/splash.gif";
+	static final String BUSYFN       = "images/busy.gif";
+	static final String IICON16FN    = "images/icon16.gif";
+	static final String JAPICONFN    = "images/japi.gif";
 	static final String CONFIGICONFN = "images/icoc.gif";
-	static final String METERICONFN = "images/icom.gif";
+	static final String METERICONFN  = "images/icom.gif";
 	static final String[] METERFNARRAY = {
 						"images/meterN.gif",
 						"images/meterD.gif",
@@ -46,7 +60,7 @@ public class JAPModel implements JAPObserver {
 						"images/meter5.gif",
 						"images/meter6.gif"
 						};
-	static final int 	MAXPROGRESSBARVALUE = 100;
+	static final int MAXPROGRESSBARVALUE = 100;
 	static final boolean NOMEASURE = false;
 	public int 			nrOfActiveUsers = 1;
 	public int 			trafficSituation = 0;
@@ -56,81 +70,82 @@ public class JAPModel implements JAPObserver {
 	public Vector anonServerDatabase;
 	
 	private ProxyServer p;
-
 	
+	private static JAPModel model=null;
 	public JAPModel () {
 		// Load Texts for Messages and Windows
-		try
-			{
-				msg = ResourceBundle.getBundle(MESSAGESFN, Locale.getDefault() );
+		try 
+			{ 
+				msg = ResourceBundle.getBundle(MESSAGESFN, Locale.getDefault() ); 
 			}
-		catch(Exception e)
+		catch(Exception e1)
 			{
-				try
+				try 
 					{
-						msg = ResourceBundle.getBundle(MESSAGESFN, Locale.ENGLISH );
+						msg=ResourceBundle.getBundle(MESSAGESFN,Locale.ENGLISH);
 					}
-				catch(Exception e1)
+				catch(Exception e) 
 					{
-						try
-							{
-								msg = ResourceBundle.getBundle(MESSAGESFN);
-							}
-						catch(Exception e2)
-							{
-								System.out.println("Can't find any Message String - Critical Error - Terminating...");
-								System.exit(-1);
-							}
+						System.out.println("File not found: "+MESSAGESFN+".properties");
+						System.out.println("Your package of JAP may be corrupted.");
+						System.out.println("Try download of the package again. URL:");
+						System.out.println(url_download_version);
+						System.exit(-1);
 					}
 			}
-		//
+
+		// Create observer object 
 		observerVector = new Vector();
-		//
+
+		// Load default anon services
 		anonServerDatabase = new Vector();
 		anonServerDatabase.addElement(new AnonServerDBEntry(anonHostName, anonPortNumber));
 		anonServerDatabase.addElement(new AnonServerDBEntry(proxyHostName, proxyPortNumber));
 		anonServerDatabase.addElement(new AnonServerDBEntry("anon.inf.tu-dresden.de", 6543));
-		anonServerDatabase.addElement(new AnonServerDBEntry("sole.icsi.berkeley.edu", 4007));
-		anonServerDatabase.addElement(new AnonServerDBEntry("localhost", 6543));
-		anonServerDatabase.addElement(new AnonServerDBEntry("192.168.1.1", 4007));
+		model=this;
 	}
 	
-		public boolean load()
-			{
-				try
-					{
-						FileInputStream f=new FileInputStream("jap.conf");
-						Document doc=DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(f);
-						NamedNodeMap n=doc.getFirstChild().getAttributes();
-						anonHostName=n.getNamedItem("host").getNodeValue();
-						anonPortNumber=Integer.valueOf(n.getNamedItem("port").getNodeValue()).intValue();
-						System.out.println(anonHostName);
-						return true;	
-					}
-				catch(Exception e)
-					{
-						return false;
-					}
-			}
+	public static JAPModel getModel()
+		{
+			return model;
+		}
 	
-		public boolean save()
-			{
-				try
-					{
-						FileOutputStream f=new FileOutputStream("jap.conf");
-						Document doc=DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
-						Element e=doc.createElement("anonhost");
-						e.setAttribute("host",anonHostName);
-						e.setAttribute("port",Integer.toString(anonPortNumber));
-						doc.appendChild(e);
-						((XmlDocument)doc).write(f);
-						return true;
-					}
-				catch(Exception e)
-					{
-						return false;
-					}
-			}
+	public boolean load()
+		{
+			try
+				{
+					FileInputStream f=new FileInputStream(XMLCONFFN);
+					Document doc=DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(f);
+					NamedNodeMap n=doc.getFirstChild().getAttributes();
+					anonHostName=n.getNamedItem("host").getNodeValue();
+					anonPortNumber=Integer.valueOf(n.getNamedItem("port").getNodeValue()).intValue();
+					System.out.println(anonHostName);
+					return true;	
+				}
+			catch(Exception e)
+				{
+					return false;
+				}
+		}
+
+	public boolean save()
+		{
+			try
+				{
+					FileOutputStream f=new FileOutputStream(XMLCONFFN);
+					Document doc=DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+					Element e=doc.createElement("anonhost");
+					e.setAttribute("host",anonHostName);
+					e.setAttribute("port",Integer.toString(anonPortNumber));
+					doc.appendChild(e);
+					((XmlDocument)doc).write(f);
+					return true;
+				}
+			catch(Exception e)
+				{
+					return false;
+				}
+		}
 	
     public int getCurrentProtectionLevel() {
 		// Hier eine moeglichst komplizierte Formel einfuegen,
@@ -153,7 +168,7 @@ public class JAPModel implements JAPObserver {
 	*/
 	
 		
-	public String getString(String key)
+	public synchronized String getString(String key)
 		{
 			try
 				{
@@ -165,6 +180,27 @@ public class JAPModel implements JAPObserver {
 				}
 		}
 		
+	public synchronized void setNrOfChannels(int cannels)
+		{
+			nrOfChannels=cannels;
+			notifyJAPObservers();
+		}
+	
+	public int getNrOfChannels()
+		{
+			return nrOfChannels;
+		}
+	public synchronized void increasNrOfBytes(int bytes)
+		{
+			nrOfBytes+=bytes;
+			notifyJAPObservers();
+		}
+	
+	public int getNrOfBytes()
+		{
+			return nrOfBytes;
+		}
+
 	public void setAnonMode(boolean bAnonMode)
 		{
 			anonMode=bAnonMode;
@@ -182,12 +218,17 @@ public class JAPModel implements JAPObserver {
 		{
 			if (isRunningProxy == false)
 				{
-					isRunningProxy = true;
-					runningPortNumber = portNumber;
-					p = new ProxyServer(portNumber, debug,this);
-					Thread proxyThread = new Thread (p);
-					proxyThread.start();
-					status1 = "Listening...";
+				    // Status messages should be set default value _before_
+				    // starting service to make sure that errors will be
+				    // displayed right
+				    status1 = getString("statusRunning");
+				    status2 = getString("statusRunning");
+				    isRunningProxy = true;
+				    runningPortNumber = portNumber;
+				    p = new ProxyServer(portNumber, debug,this);
+				    Thread proxyThread = new Thread (p);
+				    proxyThread.start();
+				    this.notifyJAPObservers();
 				}
 		}
 	
@@ -197,6 +238,9 @@ public class JAPModel implements JAPObserver {
 				{
 					p.stopService();
 					isRunningProxy = false;
+					status1 = getString("statusNotRunning");
+					status2 = getString("statusNotRunning");
+					this.notifyJAPObservers();
 				}
 		}
 		
@@ -210,23 +254,60 @@ public class JAPModel implements JAPObserver {
 		observerVector.addElement(o);
 	}
 	
-	public void notifyJAPObservers() {
-		if (debug) System.out.println("notifyJAPObservers()");
-		Enumeration enum = observerVector.elements();
-	    while (enum.hasMoreElements()){
-			JAPObserver listener = (JAPObserver)enum.nextElement();
-			listener.valuesChanged(this);
+	public synchronized void notifyJAPObservers()
+		{
+			if (debug) System.out.println("notifyJAPObservers()");
+				Enumeration enum = observerVector.elements();
+	    while (enum.hasMoreElements())
+				{
+					JAPObserver listener = (JAPObserver)enum.nextElement();
+					listener.valuesChanged(this);
+				}
 		}
-	}
 	
-	public void valuesChanged (Object o) {
-		if (debug) System.out.println("model.valuesChanged()");
-		if (runningPortNumber != portNumber) {
-			stopProxy();
-			startProxy();
-		}
-	}
+		public void valuesChanged (Object o)
+			{
+				if (debug)
+					System.out.println("model.valuesChanged()");
+				if (runningPortNumber != portNumber)
+					{
+						stopProxy();
+						startProxy();
+					}
+			}
 
+	ImageIcon loadImageIcon(String strImage,boolean sync)
+		{
+			ImageIcon i=null;
+			try
+				{
+					i=new ImageIcon(getClass().getResource(strImage));
+				}
+			catch(Exception e)
+				{
+					return null;
+				}
+			if(sync)
+				{
+					while(true)
+						{
+							int status=i.getImageLoadStatus();
+							if((status&MediaTracker.COMPLETE)!=0)
+								return i;
+							else if(((status&MediaTracker.ABORTED)!=0)||((status&MediaTracker.ERRORED)!=0))
+								return null;
+						}
+				}
+			return i;
+		}
+	
+	public void centerFrame(Window f)
+		{
+			Dimension screenSize = f.getToolkit().getScreenSize();
+			Dimension ownSize = f.getSize();
+			f.setLocation((screenSize.width  - ownSize.width )/2,
+										(screenSize.height - ownSize.height)/2);
+		}
 }
 
 
