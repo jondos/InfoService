@@ -39,21 +39,19 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigInteger;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.SignatureException;
 import java.util.Date;
-
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.BERInputStream;
 import org.bouncycastle.asn1.DERBitString;
-import org.bouncycastle.asn1.DERInteger;
 import org.bouncycastle.asn1.DEROutputStream;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 import org.bouncycastle.asn1.x509.TBSCertificateStructure;
-import org.bouncycastle.asn1.x509.Time;
 import org.bouncycastle.asn1.x509.X509CertificateStructure;
 import org.bouncycastle.asn1.x509.X509Name;
 import org.w3c.dom.Document;
@@ -64,7 +62,6 @@ import anon.util.Base64;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-
 /**
  * A certificate class.
  *
@@ -72,21 +69,42 @@ import logging.LogType;
 final public class JAPCertificate
 {
 	private X509CertificateStructure m_x509cert;
-	private MyDSAPublicKey m_DSAPKpubKey;
-	private Time m_TimeEndDate;
-	private Time m_TimeStartDate;
-	private X509Name m_X509NameIssuer;
-	private X509Name m_X509NameSubject;
-	private DERBitString m_DERBitStringSignature;
-	private DERInteger m_DERIntegerSerialNo;
-	private AlgorithmIdentifier m_AlgIdentSigAlgo;
-	private SubjectPublicKeyInfo m_SubjPubKeyInfo;
-	private TBSCertificateStructure m_TBSCertStruct;
-	private int m_version;
+	private PublicKey m_PubKey;
 	private boolean m_bEnabled;
 
 	private JAPCertificate()
 	{
+	}
+
+	public static JAPCertificate getInstance(X509CertificateStructure x509cert) throws JAPCertificateException
+	{
+		try
+		{
+			JAPCertificate r_japcert = new JAPCertificate();
+
+			try
+			{
+				r_japcert.m_PubKey = new MyDSAPublicKey(x509cert.getSubjectPublicKeyInfo());
+			}
+			catch(Exception e)
+			{
+				try
+				{
+					r_japcert.m_PubKey = new MyRSAPublicKey(x509cert.getSubjectPublicKeyInfo());
+				}
+				catch(Exception e1)
+				{
+					throw new JAPCertificateException();
+				}
+			}
+			r_japcert.m_x509cert = x509cert;
+
+			return r_japcert;
+		}
+		catch (Exception e)
+		{
+			throw new JAPCertificateException();
+		}
 	}
 
 	/** Creates a certificate instance by using an inputstream.
@@ -100,29 +118,15 @@ final public class JAPCertificate
 		{
 			BERInputStream bis = new BERInputStream(a_in);
 			ASN1Sequence seq = (ASN1Sequence) bis.readObject();
-			X509CertificateStructure m_x509cert = new X509CertificateStructure(seq);
-			JAPCertificate r_japcert = new JAPCertificate();
-
-			r_japcert.m_AlgIdentSigAlgo = m_x509cert.getSignatureAlgorithm();
-			r_japcert.m_TimeStartDate = m_x509cert.getStartDate();
-			r_japcert.m_TimeEndDate = m_x509cert.getEndDate();
-			r_japcert.m_X509NameIssuer = m_x509cert.getIssuer();
-			r_japcert.m_X509NameSubject = m_x509cert.getSubject();
-			r_japcert.m_DERBitStringSignature = m_x509cert.getSignature();
-			r_japcert.m_DERIntegerSerialNo = m_x509cert.getSerialNumber();
-			r_japcert.m_SubjPubKeyInfo = m_x509cert.getSubjectPublicKeyInfo();
-			r_japcert.m_TBSCertStruct = m_x509cert.getTBSCertificate();
-			r_japcert.m_version = m_x509cert.getVersion();
-			r_japcert.m_DSAPKpubKey = new MyDSAPublicKey(m_x509cert.getSubjectPublicKeyInfo());
-			r_japcert.m_x509cert = m_x509cert;
-
-			return r_japcert;
+			X509CertificateStructure x509cert = new X509CertificateStructure(seq);
+			return getInstance(x509cert);
 		}
 		catch (Exception e)
 		{
 			throw new JAPCertificateException();
 		}
 	}
+
 
 	/** Creates a certificate instance by using a XML Node as input.
 	 *
@@ -235,7 +239,7 @@ final public class JAPCertificate
 	 */
 	public Date getStartDate()
 	{
-		return m_TimeStartDate.getDate();
+		return m_x509cert.getStartDate().getDate();
 	}
 
 	/** Returns the date when certificate expires.
@@ -244,7 +248,7 @@ final public class JAPCertificate
 	 */
 	public Date getEndDate()
 	{
-		return m_TimeEndDate.getDate();
+		return m_x509cert.getEndDate().getDate();
 	}
 
 	/** Returns the TBS certificate structure of a certificate.
@@ -253,16 +257,16 @@ final public class JAPCertificate
 	 */
 	public TBSCertificateStructure getTBSCertificate()
 	{
-		return m_TBSCertStruct;
+		return m_x509cert.getTBSCertificate();
 	}
 
 	/** Returns the serial number of the certificate.
 	 *
 	 * @return Serial Number
 	 */
-	public DERInteger getSerialNumber()
+	public BigInteger getSerialNumber()
 	{
-		return m_DERIntegerSerialNo;
+		return m_x509cert.getSerialNumber().getPositiveValue();
 	}
 
 	/** Returns the signature of the certificate.
@@ -271,7 +275,7 @@ final public class JAPCertificate
 	 */
 	public DERBitString getSignature()
 	{
-		return m_DERBitStringSignature;
+		return m_x509cert.getSignature();
 	}
 
 	/** Returns the algorithm identifier for the signature algorithm of certificate.
@@ -280,7 +284,7 @@ final public class JAPCertificate
 	 */
 	public AlgorithmIdentifier getSignatureAlgorithm()
 	{
-		return m_AlgIdentSigAlgo;
+		return m_x509cert.getSignatureAlgorithm();
 	}
 
 	/** Returns the subject public key info of the certificate.
@@ -289,7 +293,7 @@ final public class JAPCertificate
 	 */
 	public SubjectPublicKeyInfo getSubjectPublicKeyInfo()
 	{
-		return m_SubjPubKeyInfo;
+		return m_x509cert.getSubjectPublicKeyInfo();
 	}
 
 	/** Returns the issuer of the certificate as an X509Name object.
@@ -298,7 +302,7 @@ final public class JAPCertificate
 	 */
 	public X509Name getIssuer()
 	{
-		return m_X509NameIssuer;
+		return m_x509cert.getIssuer();
 	}
 
 	/** Returns the subject of the certificate as an X509Name object.
@@ -307,7 +311,7 @@ final public class JAPCertificate
 	 */
 	public X509Name getSubject()
 	{
-		return m_X509NameSubject;
+		return m_x509cert.getSubject();
 	}
 
 	/** Returns the version number.
@@ -316,7 +320,7 @@ final public class JAPCertificate
 	 */
 	public int getVersion()
 	{
-		return m_version;
+		return m_x509cert.getVersion();
 	}
 
 	/** Returns the public key of the certificate.
@@ -325,7 +329,7 @@ final public class JAPCertificate
 	 */
 	public PublicKey getPublicKey()
 	{
-		return (PublicKey) m_DSAPKpubKey;
+		return m_PubKey;
 	}
 
 	/** Returns the encoded form of the certificate (char array).

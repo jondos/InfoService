@@ -52,6 +52,21 @@ public class MyRSAPublicKey implements PublicKey
 		m_e = exponent;
 	}
 
+	MyRSAPublicKey(SubjectPublicKeyInfo info) throws IllegalArgumentException
+	{
+		try
+		{
+			RSAPublicKeyStructure en=RSAPublicKeyStructure.getInstance(info.getPublicKey());
+			m_n=en.getModulus();
+			m_e=en.getPublicExponent();
+		}
+		catch (IOException e)
+		{
+			throw new IllegalArgumentException("invalid info structure in DSA public key");
+		}
+
+	}
+
 	public String getAlgorithm()
 	{
 		return "RSA";
