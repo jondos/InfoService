@@ -25,11 +25,13 @@ public class JAPProxyServer implements Runnable
 					{
 						server = new ServerSocket (portN);
 						JAPDebug.out(JAPDebug.INFO,JAPDebug.NET,"JAPProxyServer:Listener on port " + portN + " started.");
+						isRunningProxy = true;
 						return true;
 					}
 				catch(Exception e)
 					{
 						server=null;
+						isRunningProxy = false;
 						return false;
 					}
 			}
@@ -41,7 +43,6 @@ public class JAPProxyServer implements Runnable
 				model.notifyJAPObservers();
 				try 
 					{
-						isRunningProxy = true;
 						while(runFlag)
 							{
 								Socket socket = server.accept();
