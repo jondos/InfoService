@@ -1,28 +1,28 @@
 /*
-Copyright (c) 2000, The JAP-Team 
+Copyright (c) 2000, The JAP-Team
 All rights reserved.
-Redistribution and use in source and binary forms, with or without modification, 
+Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
 
-	- Redistributions of source code must retain the above copyright notice, 
+	- Redistributions of source code must retain the above copyright notice,
 	  this list of conditions and the following disclaimer.
 
-	- Redistributions in binary form must reproduce the above copyright notice, 
-	  this list of conditions and the following disclaimer in the documentation and/or 
+	- Redistributions in binary form must reproduce the above copyright notice,
+	  this list of conditions and the following disclaimer in the documentation and/or
 		other materials provided with the distribution.
 
-	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors 
-	  may be used to endorse or promote products derived from this software without specific 
-		prior written permission. 
+	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
+	  may be used to endorse or promote products derived from this software without specific
+		prior written permission.
 
-	
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS 
-OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY 
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS
+OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
 AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS
 BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, 
-OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER 
-IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY 
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
 import java.awt.Frame;
@@ -55,13 +55,13 @@ import javax.swing.text.AttributeSet;
 
 final class JAPAbout extends JDialog implements Runnable
 	{
-	
+
 		private final static int ABOUT_DY=173;
 		private final static int ABOUT_DX=350;
 		private Cursor oldCursor;
 		private Frame parent;
 		private ScrollerPane sp;
-		
+
 		private final class ScrollerPane extends JScrollPane implements Runnable
 			{
 				private Dimension dimension;
@@ -87,8 +87,8 @@ final class JAPAbout extends JDialog implements Runnable
 						while((len=in.read(buff,aktIndex,1500-aktIndex))>0&&aktIndex<1500)
 								{
 									aktIndex+=len;
-								}}catch(Exception e){};	
-						
+								}}catch(Exception e){};
+
 						textArea=new JEditorPane();
 						textArea.setLayout(null);
 						setOpaque(false);
@@ -103,21 +103,21 @@ final class JAPAbout extends JDialog implements Runnable
 						t=new Thread(this);
 						t.setPriority(Thread.MAX_PRIORITY);
 				}
-				
+
 			public void startIt()
 					{
 						t.start();
 					}
-				
+
 				public void stopIt()
 					{
 						bRun=false;
 						try{t.join();}catch(Exception e){};
 					}
-				
+
 				public void run()
 					{
-	
+
 						int i=0;//;dimension.height;
 						Point p=new Point(0,i);
 						bRun=true;
@@ -136,9 +136,9 @@ final class JAPAbout extends JDialog implements Runnable
 							}
 						while(bRun)
 							{
-							
+
 								if(i>height)
-									{	
+									{
 										i=-dimension.height-5;
 									//	setVisible(false);
 										getViewport().setVisible(false);
@@ -161,7 +161,7 @@ final class JAPAbout extends JDialog implements Runnable
 									}
 								i++;
 								try{t.sleep(95);}catch(Exception e){}
-							}									
+							}
 					}
 			}
 		public JAPAbout(Frame p)
@@ -173,14 +173,14 @@ final class JAPAbout extends JDialog implements Runnable
 				Thread theThread=new Thread(this);
 				theThread.setPriority(Thread.MAX_PRIORITY);
 				theThread.start(); //we have to do all the initalisation in a seperate thread in order
-				//to not block the Event-Loop Thread !!! 
+				//to not block the Event-Loop Thread !!!
 			}
-		
+
 		public void run()
 			{
 				addWindowListener(new WindowAdapter() {
 					public void windowClosing(WindowEvent e) {OKPressed();}
-				});	
+				});
 				setLocation(-380,-200);
 				setVisible(true);   //now we have to ensure that the window is visible before the
 				ImageIcon imageSplash=JAPUtil.loadImageIcon(JAPModel.ABOUTFN,false);//loading the Background Image
@@ -195,13 +195,14 @@ final class JAPAbout extends JDialog implements Runnable
 				version.setSize(version.getPreferredSize()); //resizing the VersionNumber-Label
 				JButton bttnOk=new JButton("Ok");
 				bttnOk.setMnemonic('O');
+
 				bttnOk.addActionListener(new ActionListener() {
 						   public void actionPerformed(ActionEvent e) {
 				   OKPressed();
 				   }});
 				labelSplash.setLayout(null); //the BackgroundImage-Label don't nedd a LayoutManager - we use absoult positioning instead
 				labelSplash.setSize(ABOUT_DX,ABOUT_DY); //the set the Label size to the Size of the Image
-			
+
 				labelSplash.add(version); //the add the Version Number...
 				labelSplash.add(verstxt); //..and text
 				labelSplash.add(bttnOk); //the add the Ok-Button
@@ -217,19 +218,19 @@ final class JAPAbout extends JDialog implements Runnable
 				//...it should appear at the same height as the OK-Button...
 				//...and it should be in a row with the Anonym-O-Meter left border
 				verstxt.setLocation(225,y);
-				
+
 				setContentPane(labelSplash); //Setting the BackgroundImage-Label with the Version-Texts and OK-button as
-				
+
 				labelSplash.setDoubleBuffered(false);
-				
+
 				sp=new ScrollerPane(210,173-72); //Creating a new scrolling HTML-Pane with the specified size
 				getLayeredPane().setLayout(null); //we have to add the HTML-Pane at the LayerdPane, because it
 				getLayeredPane().add(sp);        //should appear over the Background image
 				sp.setLocation(5,62);           //setting the position of the HTML-Pane
 				//Now we do a little bit tricky...
-				
+
 				//First we move the Dialog to a position were it is not seen on the Screen...
-				
+
 				String os=System.getProperty("os.name");
 				if(os==null||!os.toLowerCase().startsWith("mac"))
 					{
@@ -238,22 +239,23 @@ final class JAPAbout extends JDialog implements Runnable
 						setResizable(false); //get the insets (the border around the window) - also the window must look like it should
 						Insets in=getInsets(); //so for instance we need the 'NoResizable'-Border
 						setResizable(true); //now we want to resize the whole dialog
-				
+
 						//We do not use pack() because it doesnt work well on Windows!
-				
+
 						setSize(ABOUT_DX+in.left+in.right,ABOUT_DY+in.bottom+in.top);// so what the background image does exactly fit
 					}
 				else
 					{
-						pack(); //--> Maybe a solution for MAC'S ??						
+						pack(); //--> Maybe a solution for MAC'S ??
 					}
+				getRootPane().setDefaultButton(bttnOk);
 				setResizable(false); //but the user shouldn't resize the Dialog again
 				setLocationRelativeTo(parent); //now showing centerd to JAP-Main
 				toFront();
 				sp.startIt(); //starting the scrolling...
 				parent.setCursor(oldCursor);
 			}
-		
+
 		private void OKPressed()
 			{
 				sp.stopIt();
