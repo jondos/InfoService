@@ -94,13 +94,15 @@ public class JAP extends Frame{
 		// Create the model object
 		model = JAPModel.createModel();
 		JAPSplash splash = new JAPSplash(model);
-	//	splash.show(); // show splash screen as soon as possible
+		
+		view = new JAPView (model.TITLE);
+		
 		
 		// load settings from config file
 		model.load();
 		
 		// Create the main frame
-		view = new JAPView (model.TITLE);
+		view.create();
 		model.addJAPObserver(view);
 		
 		// Create the iconified view
