@@ -73,7 +73,7 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 		model=JAPModel.getModel();
 		view=this;
 		this.db = model.anonServerDatabase;
-				
+		this.setModal(true);
 		this.setTitle(model.getString("chkAvailableCascades"));
 		Component contents = this.createComponents();
 		getContentPane().add(contents, BorderLayout.CENTER);

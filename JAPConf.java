@@ -78,9 +78,11 @@ final class JAPConf extends JDialog
 	
 	public JAPConf (JFrame f)
 			{
-				super(f, JAPModel.getString("settingsDialog"), true);
+				super(f);
 				parent=f;
 				model = JAPModel.getModel();
+				this.setModal(true);
+				this.setTitle(model.getString("settingsDialog"));
 	
 				JPanel container = new JPanel();
 				container.setLayout( new BorderLayout() );
@@ -318,10 +320,16 @@ final class JAPConf extends JDialog
 											JOptionPane.INFORMATION_MESSAGE);
 						} else {
 							// show a window containing all available cascades
-							JAPCascadeMonitorView v=new JAPCascadeMonitorView(model.getView());
+							//JAPCascadeMonitorView v=new JAPCascadeMonitorView(model.getView());
+							// ------ !!!!! die folgenden zwei zeilen auskommentieren, wenn JAPCascadeMonitorView
+							// ------ !!!!! ordentlich geht!!!!
+							updateValues();
+							b2.doClick();
+							
 							setCursor(c);
 						}
-						OKPressed();
+						// ------ !!!!! diese wieder aktivieren!
+						//OKPressed();
 				}});
 				select = new JComboBox();
 				// add elements to combobox
@@ -498,18 +506,22 @@ final class JAPConf extends JDialog
 							}
 					});
 				JButton bttnMonitor=new JButton(model.getString("bttnMonitor"));
-				bttnMonitor.setEnabled(false);
+//				bttnMonitor.setEnabled(false);
 				bttnMonitor.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
+						Cursor c1=getCursor();
+						setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+						model.fetchAnonServers();
 						model.fetchAnonServers();
 						JAPCascadeMonitorView v=new JAPCascadeMonitorView(model.getView());
-//						v.show();
+						OKPressed();
+						setCursor(c1);
+						
 				}});
 				JPanel p22 = new JPanel();
 				p22.setLayout(new GridLayout(2,1));
 				p22.add(bttnPing);
 				p22.add(bttnMonitor);
-//				p2.add(bttnPing, BorderLayout.NORTH);
 				p2.add(p22, BorderLayout.NORTH);
 
 				// Panel for Debugging Options

@@ -100,7 +100,24 @@ final class JAPInfoService
 								String port=nl.item(0).getFirstChild().getNodeValue().trim();
 								nl=elem.getElementsByTagName("ProxyPort");
 								String proxyPort=nl.item(0).getFirstChild().getNodeValue().trim();
-								model.anonServerDatabase.addElement(new AnonServerDBEntry(name,ip,Integer.parseInt(port),Integer.parseInt(proxyPort)));
+								
+								AnonServerDBEntry e=new AnonServerDBEntry(name,ip,Integer.parseInt(port),Integer.parseInt(proxyPort));
+/*								
+								nl=elem.getElementsByTagName("nrOfActiveUsers");
+								String nrOfActiveUsers=nl.item(0).getFirstChild().getNodeValue().trim();
+								e.setNrOfActiveUsers(Integer.parseInt(nrOfActiveUsers));
+								nl=elem.getElementsByTagName("currentRisk");
+								String currentRisk=nl.item(0).getFirstChild().getNodeValue().trim();
+								e.setCurrentRisk(Integer.parseInt(currentRisk));
+								nl=elem.getElementsByTagName("trafficSituation");
+								String trafficSituation=nl.item(0).getFirstChild().getNodeValue().trim();
+								e.setTrafficSituation(Integer.parseInt(trafficSituation));
+								nl=elem.getElementsByTagName("mixedPackets");
+								String mixedPackets=nl.item(0).getFirstChild().getNodeValue().trim();
+								e.setMixedPackets(Integer.parseInt(mixedPackets));
+*/													 
+								model.anonServerDatabase.addElement(e);
+								
 							}
 					}
 				catch(Exception e)
