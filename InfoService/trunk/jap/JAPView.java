@@ -187,18 +187,19 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 
 						public void windowDeiconified(WindowEvent e)
 						{
-							m_bIsIconified=false;
-							setTitle(m_Title);
+							synchronized(m_runnableValueUpdate)//updateValues may change the Titel of the Window!!
+									{
+										m_bIsIconified=false;
+										setTitle(m_Title);
+									}
 						}
 
 						public void windowIconified(WindowEvent e)
-						{
-							setTitle(Double.toString(Math.random())); //ensure that we have an uinque title
-							if(!JAPDll.hideWindowInTaskbar(getTitle()))
-								setTitle(m_Title);
-							m_bIsIconified=true;
-							valuesChanged();
-						}
+							{
+								hideWindowInTaskbar();
+								m_bIsIconified=true;
+								valuesChanged();
+							}
 				});
 
 			setOptimalSize();
@@ -787,6 +788,16 @@ catch(Throwable t)
 						updateValues();
 					else
 						SwingUtilities.invokeLater(m_runnableValueUpdate);
+				}
+		}
+
+	public void hideWindowInTaskbar()
+		{
+			synchronized(m_runnableValueUpdate)//updateValues may change the Titel of the Window!!
+				{
+					setTitle(Double.toString(Math.random())); //ensure that we have an uinque title
+					JAPDll.hideWindowInTaskbar(getTitle());
+					setTitle(m_Title);
 				}
 		}
 }

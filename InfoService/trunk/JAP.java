@@ -51,6 +51,7 @@ import jap.JAPSplash;
  */
 class JAP extends Frame
 {
+	String[] m_arstrCmdnLnArgs=null;
 	public JAP()
 	{
 	}
@@ -59,6 +60,7 @@ class JAP extends Frame
 	 */
 	JAP(String[] argv)
 	{
+		m_arstrCmdnLnArgs=argv;
 	}
 	/** Initializes and starts the JAP.
 	 */
@@ -186,6 +188,15 @@ class JAP extends Frame
 		// Show main frame and dispose splash screen
 		view.show();
 		view.toFront();
+		if(m_arstrCmdnLnArgs!=null)
+			{
+				for(int i=0;i<m_arstrCmdnLnArgs.length;i++)
+					if(m_arstrCmdnLnArgs[i].equalsIgnoreCase("-minimized"))
+						{
+							view.hideWindowInTaskbar();
+							break;
+						}
+			}
 		splash.dispose();
 		// pre-initalize anon service
 		anon.server.AnonServiceImpl.init();
