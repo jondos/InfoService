@@ -512,8 +512,8 @@ final class JAPConf extends JDialog
 						Cursor c1=getCursor();
 						setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 						model.fetchAnonServers();
-						model.fetchAnonServers();
 						JAPCascadeMonitorView v=new JAPCascadeMonitorView(model.getView());
+						updateValues();
 						OKPressed();
 						setCursor(c1);
 						

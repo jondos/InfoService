@@ -34,6 +34,8 @@ import javax.swing.table.*;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.ListSelectionEvent;
 
+import java.net.*;
+import java.io.*;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.URL;
@@ -50,6 +52,7 @@ import anon.JAPAnonService;
  * @author  Hannes Federrath
  */
 class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
+	private int IDLETIME = 90000;
 	private JAPModel model;
 	private JAPCascadeMonitor cm = null;
 	private ServerSocket listener=null;
@@ -65,7 +68,7 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 	private TableModel dataModel;
 	private int selectedRow = -1;
 	private Vector db = null;
-	private Thread t;
+	private Thread idleThread, monitorThread;
 	private boolean runFlag = true;
 		
 	JAPCascadeMonitorView (Frame parent) {
@@ -110,7 +113,7 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 		stopButton.setEnabled(false);
 		stopButton.addActionListener(new ActionListener() {
 		    public void actionPerformed(ActionEvent e) {
-//				startButton.setEnabled(true);
+				startButton.setEnabled(true);
 				stopButton.setEnabled(false);
 				stopTest();
 		    }
@@ -125,7 +128,6 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 		okButton.addActionListener(new ActionListener() {
 		    public void actionPerformed(ActionEvent e) {
 				model.setAnonServer((AnonServerDBEntry)db.elementAt(tableView.getSelectedRow()));
-//				model.notityJAPObservers();
 				stopTest();
 		        dispose();
 		    }
@@ -187,132 +189,7 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPCascadeMonitorView:valuesChanged() selected row="+tableView.getSelectedRow());
 		okButton.setEnabled(true);
     }
-	
-private final class JAPCascadeMonitor implements Runnable {
-	private int IDLETIME = 90000;
 
-	public JAPCascadeMonitor() {
-		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPCascadeMonitor:initializing...");
-	}
-	
-	public synchronized void run() {
-		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPCascadeMonitor:run()");
-		while(runFlag) {
-			// get the feedback from InfoSercive
-			statusTextField.setText(model.getString("chkGettingFeedback"));
-			Enumeration enum = db.elements();
-			while (enum.hasMoreElements()) {
-				model.getInfoService().getFeedback((AnonServerDBEntry)enum.nextElement());
-				tableView.repaint();
-			}
-			statusTextField.setText(model.getString("chkFeedbackReceived"));
-			// connect to all Mix cascades
-			int nr = db.size();
-			if (listener==null) {
-				nr = 0;
-				statusTextField.setText(model.getString("chkListenerError"));
-			}
-			try {
-				t.sleep(2000);
-			} catch (Exception e) {
-			}			
-			for(int i=0;i<nr;i++) {
-				AnonServerDBEntry e = (AnonServerDBEntry)db.elementAt(i);
-				statusTextField.setText(model.getString("chkCnctToCasc")+" "+e.getName());
-				e.setStatus(model.getString("chkConnecting"));
-				tableView.repaint();
-				// create the AnonService
-				JAPAnonService proxyAnon=new JAPAnonService(listener,JAPAnonService.PROTO_HTTP);
-				if (model.getUseProxy()) {
-					// connect vi proxy to first mix (via ssl portnumber)
-					if (e.getSSLPort() == -1) {
-						proxyAnon.setAnonService(e.getHost(),e.getPort());
-						proxyAnon.setFirewall(model.getProxyHost(),model.getProxyPort());
-						proxyAnon.connectViaFirewall(true);
-					} else {
-						proxyAnon.setAnonService(e.getHost(),e.getSSLPort());
-						proxyAnon.setFirewall(model.getProxyHost(),model.getProxyPort());
-						proxyAnon.connectViaFirewall(true);
-					}
-				} else {
-					// connect directly to first mix
-					proxyAnon.setAnonService(e.getHost(),e.getPort());
-				}
-				// start the AnonService
-				long dtConnect  = 0;
-				long dtResponse = 0;
-				long t1 = 0;
-				long t2 = 0;
-				t1 = System.currentTimeMillis();
-				int ret=proxyAnon.start();
-				t2 = System.currentTimeMillis();
-				dtConnect = t2-t1;
-				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"CascadeMonitor:"+t1);
-				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"CascadeMonitor:"+t2);
-				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"CascadeMonitor:"+dtConnect);
-				if(ret==JAPAnonService.E_SUCCESS) {
-					e.setStatus(model.getString("chkConnected"));
-				} else {
-					dtConnect=-1;
-					if (ret==JAPAnonService.E_BIND)  e.setStatus(model.getString("chkBindError"));		
-					else                             e.setStatus(model.getString("chkConnectionError"));
-				}				
-				tableView.repaint();
-				// if sucessfull perform check
-				if (ret==JAPAnonService.E_SUCCESS) {					
-					// send request via AnonService
-					//
-					try {						
-						URL url = new URL("http://"+model.getInfoServiceHost()+":"+model.getInfoServicePort()+model.aktJAPVersionFN); 
-//						URL url = new URL("http://www.inf.tu-dresden.de/cgi-bin/cgiwrap/hf2/img.cgi/monitor"); 
-						HTTPConnection c = new HTTPConnection(url.getHost(),url.getPort());
-						c.setProxyServer(InetAddress.getLocalHost().getHostAddress(),model.getPortNumber()+1);
-						c.setAllowUserInteraction(false);
-						//c.setTimeout(16000);
-						t1 = System.currentTimeMillis();
-						HTTPResponse resp = c.Get(url.getFile());
-						t2 = System.currentTimeMillis();
-						dtResponse = t2-t1;
-				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"CascadeMonitor:"+t1);
-				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"CascadeMonitor:"+t2);
-				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"CascadeMonitor:"+dtResponse);
-						if (resp==null || resp.getStatusCode()!=200) {
-							e.setStatus(model.getString("chkBadResponse"));
-						} else {
-							e.setStatus(model.getString("chkCascResponding"));
-						}
-						tableView.repaint();
-						byte[] buff=resp.getData();
-						String s=new String(buff).trim();
-						if ( (s.charAt(2) == '.') && (s.charAt(5) == '.') )
-							e.setStatus(model.getString("chkOK"));
-						tableView.repaint();
-					}
-					catch (Exception ex) {
-						dtResponse = -1;
-						e.setStatus(model.getString("chkConButError"));
-						tableView.repaint();
-					}					
-				}
-				NumberFormat nf = NumberFormat.getInstance();
-				nf.setMaximumFractionDigits(3);
-				e.setDelay("" + ((dtConnect==-1)?"-":nf.format((float)dtConnect/1000.F)) + "/" + 
-					((dtResponse==-1)?"-":nf.format((float)dtResponse/1000.F)) + " s");
-				tableView.repaint();
-				ret = proxyAnon.stop();
-			}
-			statusTextField.setText(model.getString("chkIdle")+" "+IDLETIME/1000+" s");
-//			view.setCursor(Cursor.getDefaultCursor());
-			// sleep for a while
-			view.setCursor(Cursor.getDefaultCursor());
-			try {
-				t.sleep(IDLETIME);
-			} catch (Exception e) {
-			}
-			view.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-		}
-	}
-}
 	private void startTest() {
 		this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 		try {
@@ -324,14 +201,23 @@ private final class JAPCascadeMonitor implements Runnable {
 		}
 		if (cm == null)
 			cm = new JAPCascadeMonitor();
-		t = new Thread(cm);
-		t.setPriority(Thread.MIN_PRIORITY);
-		t.start();
+		monitorThread = new Thread(cm);
+		monitorThread.setPriority(Thread.MAX_PRIORITY);
+		monitorThread.start();
 	}
 	
 	private void stopTest() {
 		statusTextField.setText(model.getString("chkCancelled"));
 		runFlag=false;
+		try {
+			idleThread.stop();
+		} catch (Exception e) {			
+		}
+		try {
+			monitorThread.stop();
+		} catch (Exception e) {			
+		}
+//		monitorThread=null;
 		try {
 			listener.close();
 		}
@@ -339,19 +225,202 @@ private final class JAPCascadeMonitor implements Runnable {
 			JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPCascadeMonitor:Error closing listener on port "+
 						 Integer.toString(model.getAnonServer().getPort()+1));
 		}
-		try {
-			t.join(3000);
-		} catch (Exception e) {			
-		}
-		try {
-			t.stop();
-		} catch (Exception e) {			
-		}
-		t=null;
 		this.setCursor(Cursor.getDefaultCursor());
 		statusTextField.setText(model.getString("chkPressStartToCheck"));
 	}
 	
 
+	public static void main(String[] args) {
+		JAPMessages.init();
+		JAPModel model = JAPModel.createModel();
+		JAPDebug.create();
+		model.load();
+		model.fetchAnonServers();
+		JAPDebug.setDebugType(JAPDebug.NET+JAPDebug.GUI+JAPDebug.THREAD+JAPDebug.MISC);
+		JAPDebug.setDebugLevel(JAPDebug.DEBUG);
+		new JAPCascadeMonitorView(null);
+	}
+	
+	private final class JAPCascadeMonitorIdle implements Runnable {
+		public void run() {
+			boolean idle = true;
+			long t1 = System.currentTimeMillis();
+			while(idle) {
+				long t2 = System.currentTimeMillis();
+				long milisec = t2 - t1;
+				if (milisec < IDLETIME) {
+					statusTextField.setText(model.getString("chkIdle")+" "+((IDLETIME-milisec)/1000)+" s");
+					try {
+						idleThread.sleep(1000);
+					} catch (Exception e) {
+						;
+					}
+				} else {
+					idle = false;
+				}
+			}
+		}
+	}
 
+	private final class JAPCascadeMonitor implements Runnable {
+
+		public JAPCascadeMonitor() {
+			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPCascadeMonitor:initializing...");
+		}
+
+		public synchronized void run() {
+			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPCascadeMonitor:run()");
+			while(runFlag) {
+				// get the feedback from InfoSercive
+				statusTextField.setText(model.getString("chkGettingFeedback"));
+				Enumeration enum = db.elements();
+				while (enum.hasMoreElements()) {
+					model.getInfoService().getFeedback((AnonServerDBEntry)enum.nextElement());
+					tableView.repaint();
+				}
+				statusTextField.setText(model.getString("chkFeedbackReceived"));
+				// connect to all Mix cascades
+				int nr = db.size();
+				if (listener==null) {
+					nr = 0;
+					statusTextField.setText(model.getString("chkListenerError"));
+				}
+				for(int i=0;i<nr;i++) {
+					AnonServerDBEntry e = (AnonServerDBEntry)db.elementAt(i);
+					statusTextField.setText(model.getString("chkCnctToCasc")+" "+e.getName());
+					e.setStatus(model.getString("chkConnecting"));
+					tableView.repaint();
+					// create the AnonService
+					JAPAnonService proxyAnon=new JAPAnonService(listener,JAPAnonService.PROTO_HTTP);
+					if (model.getUseProxy()) {
+						// connect vi proxy to first mix (via ssl portnumber)
+						if (e.getSSLPort() == -1) {
+							proxyAnon.setAnonService(e.getHost(),e.getPort());
+							proxyAnon.setFirewall(model.getProxyHost(),model.getProxyPort());
+							proxyAnon.connectViaFirewall(true);
+						} else {
+							proxyAnon.setAnonService(e.getHost(),e.getSSLPort());
+							proxyAnon.setFirewall(model.getProxyHost(),model.getProxyPort());
+							proxyAnon.connectViaFirewall(true);
+						}
+					} else {
+						// connect directly to first mix
+						proxyAnon.setAnonService(e.getHost(),e.getPort());
+					}
+					// start the AnonService
+					long dtConnect  = 0;
+					long dtResponse = 0;
+					long t1 = 0;
+					long t2 = 0;
+					t1 = System.currentTimeMillis();
+					int ret=proxyAnon.start();
+					t2 = System.currentTimeMillis();
+					dtConnect = t2-t1;
+					NumberFormat nf = NumberFormat.getInstance();
+					nf.setMaximumFractionDigits(3);
+					e.setDelay("" + ((dtConnect==-1)?"-":nf.format((float)dtConnect/1000.F)) + " s");
+					tableView.repaint();
+					if(ret==JAPAnonService.E_SUCCESS) {
+						e.setStatus(model.getString("chkConnected"));
+					} else {
+						dtConnect=-1;
+						if (ret==JAPAnonService.E_BIND)  e.setStatus(model.getString("chkBindError"));		
+						else                             e.setStatus(model.getString("chkConnectionError"));
+					}				
+					tableView.repaint();
+					// if sucessfull perform check
+					if (ret==JAPAnonService.E_SUCCESS) {					
+						// send request via AnonService
+						//
+						try {
+							String target="http://"+model.getInfoServiceHost()+":"+model.getInfoServicePort()+model.aktJAPVersionFN;
+							// simply get the current version number via the anon service
+							URL url = new URL(target); 
+							
+//							URL url = new URL("http://www.inf.tu-dresden.de/cgi-bin/cgiwrap/hf2/img.cgi/monitor"); 
+//							HTTPConnection c = new HTTPConnection(url.getHost(),url.getPort());
+//							c.setProxyServer(InetAddress.getLocalHost().getHostAddress(),model.getAnonServer().getPort()+1);
+//							c.setAllowUserInteraction(false);
+//							c.setTimeout(8000);
+							
+							Socket socket = new Socket(InetAddress.getLocalHost().getHostAddress(),model.getAnonServer().getPort()+1);
+							socket.setSoTimeout(60000);
+							BufferedWriter outputStream = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+							outputStream.write("GET "+target+" HTTP/1.0\r\n\r\n");
+							outputStream.flush();
+							JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"Sending request: "+target);
+							DataInputStream inputStream = new DataInputStream(socket.getInputStream());
+							
+							t1 = System.currentTimeMillis();
+//							HTTPResponse resp = c.Get(url.getFile());
+							String response = this.readLine(inputStream);
+							JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Response:>" + response + "<");
+//							if (resp==null || resp.getStatusCode()!=200) {
+							if ((response == null) || (response.length() == 0) || (response.indexOf("200")==-1)) {
+								e.setStatus(model.getString("chkBadResponse"));
+								tableView.repaint();
+								dtResponse=-1;
+							} else {
+								String nextLine = this.readLine(inputStream);
+								while (nextLine.length() != 0) {
+									JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,">" + nextLine + "<");
+									nextLine = this.readLine(inputStream);
+								}
+								String data = this.readLine(inputStream);
+								JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Data:>" + data + "<");
+								t2 = System.currentTimeMillis();
+								dtResponse = t2-t1;
+								e.setStatus(model.getString("chkCascResponding"));
+								tableView.repaint();
+//								byte[] buff=resp.getData();
+//								String s=new String(buff).trim();
+								String s=data.trim();
+								if ( (s.charAt(2) == '.') && (s.charAt(5) == '.') ) {									
+									e.setStatus(model.getString("chkOK"));
+									tableView.repaint();
+								}
+							}
+							socket.close();       socket = null;
+							outputStream.close(); outputStream = null;
+							inputStream.close();  inputStream  = null;
+						}
+						catch (Exception ex) {
+							dtResponse = -1;
+							e.setStatus(model.getString("chkConButError"));
+							tableView.repaint();
+							JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"Exception: "+ex);
+						}					
+													
+					}
+					e.setDelay("" + ((dtConnect==-1)?"-":nf.format((float)dtConnect/1000.F)) + "/" + 
+						((dtResponse==-1)?"-":nf.format((float)dtResponse/1000.F)) + " s");
+					tableView.repaint();
+					ret = proxyAnon.stop();
+				}
+				// sleep for a while
+				view.setCursor(Cursor.getDefaultCursor());
+				JAPCascadeMonitorIdle idl = new JAPCascadeMonitorIdle();
+				idleThread = new Thread(idl);
+				idleThread.setPriority(Thread.MIN_PRIORITY);
+				idleThread.start();
+				try { idleThread.join(); } catch (Exception e) { ; }			
+				view.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+			}
+		}
+		
+	    private String readLine(DataInputStream inputStream) throws Exception {
+			String returnString = "";
+			try{
+				int byteRead = inputStream.read();
+				while (byteRead != 10 && byteRead != -1) {
+					if (byteRead != 13) 
+						returnString += (char)byteRead;
+					byteRead = inputStream.read();
+				}
+			} catch (Exception e) {
+				throw e;
+			}
+			return returnString;
+    	}		
+	}
 }
