@@ -81,7 +81,7 @@ public final class JAPConf extends JDialog
 				getContentPane().add(container);
 				updateValues();
 				pack();
-				setResizable(false);
+//				setResizable(false);
 				model.centerFrame(this);
 			}
 
@@ -197,7 +197,13 @@ public final class JAPConf extends JDialog
 				fetchB.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
 					JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPConf:fetchB");
-						JOptionPane.showMessageDialog(null,model.getString("notYetImlmplemented"));
+//						JOptionPane.showMessageDialog(null,model.getString("notYetImlmplemented"));
+						Cursor c = getCursor();
+						setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+						model.fetchAnonServers();
+						model.notifyJAPObservers();
+						b2.doClick();
+						setCursor(c);
 				}});
 				select = new JComboBox();
 				// add elements to combobox
@@ -235,6 +241,7 @@ public final class JAPConf extends JDialog
 						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPConf:b2 selected");
 						fetchB.setEnabled(false);
 						select.setEnabled(true);
+						select.setPopupVisible(true);
 						anonhostTextField.setEditable(false);
 						anonportnumberTextField.setEditable(false);
 									 

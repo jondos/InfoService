@@ -122,10 +122,10 @@ public final class JAPModel {
 	public void load() {
 		// Load default anon services
 		anonServerDatabase = new Vector();
-		anonServerDatabase.addElement(new AnonServerDBEntry(anonHostName, anonPortNumber));
+//		anonServerDatabase.addElement(new AnonServerDBEntry(anonHostName, anonPortNumber));
 //		anonServerDatabase.addElement(new AnonServerDBEntry(proxyHostName, proxyPortNumber));
-		anonServerDatabase.addElement(new AnonServerDBEntry("anon.inf.tu-dresden.de", 6543));
-		anonServerDatabase.addElement(new AnonServerDBEntry("passat.mesh.de", 6543));
+//		anonServerDatabase.addElement(new AnonServerDBEntry("anon.inf.tu-dresden.de", 6543));
+//		anonServerDatabase.addElement(new AnonServerDBEntry("passat.mesh.de", 6543));
 		// Load config from xml file
 		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:try loading configuration from "+XMLCONFFN);
 		try {
@@ -337,6 +337,18 @@ public final class JAPModel {
 			);
 	}
 	
+	public void fetchAnonServers() {
+		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:Trying to fetch Anon Servers from InfoService...");
+		JAPFetchAnonServers f = new JAPFetchAnonServers();
+		try {
+			f.fetch();
+		}
+		catch (Exception e) {
+			JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPModel:fetchAnonServers: "+e);
+			javax.swing.JOptionPane.showMessageDialog(null, model.getString("errorConnectingInfoService"), model.getString("errorConnectingInfoServiceTitle"), javax.swing.JOptionPane.ERROR_MESSAGE); 
+		}
+	}
+	
 	/** Performs the Versioncheck.
 	 *  @return -1, if version check says that anonymity mode should not be enabled.
 	 *          Reasons can be: new version found, version check failed 
@@ -417,7 +429,7 @@ public final class JAPModel {
 			// Verson check failed
 			// ->Alert, and reset anon mode to false
 			JAPDebug.out(JAPDebug.ERR,JAPDebug.MISC,"JAPModel: "+e);
-			javax.swing.JOptionPane.showMessageDialog(null, model.getString("versionCheckFailed"), model.getString("versionCheckFailedTitle"), javax.swing.JOptionPane.ERROR_MESSAGE); 
+			javax.swing.JOptionPane.showMessageDialog(null, model.getString("errorConnectingInfoService"), model.getString("errorConnectingInfoServiceTitle"), javax.swing.JOptionPane.ERROR_MESSAGE); 
 			anonMode = false;
 			notifyJAPObservers();
 			return -1;
