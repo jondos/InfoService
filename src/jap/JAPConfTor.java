@@ -1,5 +1,6 @@
 package jap;
 
+import java.text.DateFormat;
 import java.util.Vector;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
@@ -9,24 +10,23 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JTable;
-import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
+import anon.tor.ordescription.InfoServiceORListFetcher;
 import anon.tor.ordescription.ORDescription;
-import anon.tor.ordescription.*;
+import anon.tor.ordescription.ORList;
 
 class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 {
 	JTable m_tableRouters;
-	JSlider m_sliderMaxPathLen, m_sliderMinPathLen, m_sliderPathSwitchTime;
+	JSlider m_sliderMaxPathLen, m_sliderMinPathLen, m_sliderConnectionsPerPath;
 	JButton m_bttnFetchRouters;
-
+	TitledBorder m_borderAvailableRouters;
 	public JAPConfTor()
 	{
 		super(null);
@@ -52,13 +52,14 @@ class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 		GridBagLayout g2 = new GridBagLayout();
 		GridBagConstraints c2 = new GridBagConstraints();
 		JPanel p = new JPanel(g2);
-		p.setBorder(new TitledBorder(JAPMessages.getString("torBorderAvailableRouters")));
+		m_borderAvailableRouters = new TitledBorder(JAPMessages.getString("torBorderAvailableRouters"));
+		p.setBorder(m_borderAvailableRouters);
 		//m_tableRouters.setAutoscrolls(true);
 		DefaultTableModel model = new DefaultTableModel();
 		model.addColumn(JAPMessages.getString("torRouterName"));
 		model.addColumn(JAPMessages.getString("torRouterAdr"));
 		model.addColumn(JAPMessages.getString("torRouterPort"));
-		model.addColumn(JAPMessages.getString("torRouterSoftwaret"));
+		model.addColumn(JAPMessages.getString("torRouterSoftware"));
 		model.setNumRows(3);
 		m_tableRouters = new JTable(model);
 		m_tableRouters.setPreferredScrollableViewportSize(new Dimension(70, 70));
@@ -99,15 +100,15 @@ class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 		m_sliderMaxPathLen.setSnapToTicks(true);
 		p.add(m_sliderMaxPathLen);
 		p.add(new JLabel(JAPMessages.getString("torPrefPathSwitchTime")));
-		m_sliderPathSwitchTime = new JSlider();
-		m_sliderPathSwitchTime.setMinimum(10);
-		m_sliderPathSwitchTime.setMaximum(110);
-		m_sliderPathSwitchTime.setMajorTickSpacing(20);
-		m_sliderPathSwitchTime.setMinorTickSpacing(5);
-		m_sliderPathSwitchTime.setPaintLabels(true);
-		m_sliderPathSwitchTime.setPaintTicks(true);
+		m_sliderConnectionsPerPath = new JSlider();
+		m_sliderConnectionsPerPath.setMinimum(1);
+		m_sliderConnectionsPerPath.setMaximum(JAPConstants.TOR_MAX_CONNECTIONS_PER_ROUTE);
+		m_sliderConnectionsPerPath.setMajorTickSpacing(150);
+		m_sliderConnectionsPerPath.setMinorTickSpacing(50);
+		m_sliderConnectionsPerPath.setPaintLabels(true);
+		m_sliderConnectionsPerPath.setPaintTicks(true);
 
-		p.add(m_sliderPathSwitchTime);
+		p.add(m_sliderConnectionsPerPath);
 		p.setBorder(new TitledBorder(JAPMessages.getString("torBorderPreferences")));
 		c.gridy = 3;
 		c.weighty = 0;
@@ -141,6 +142,7 @@ class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 
 	protected void onOkPressed()
 	{
+		JAPController.setTorMaxConnectionsPerRoute(m_sliderConnectionsPerPath.getValue());
 	}
 
 	protected void onUpdateValues()
@@ -150,7 +152,7 @@ class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 
 	private void updateGuiOutput()
 	{
-
+		m_sliderConnectionsPerPath.setValue(JAPModel.getTorMaxConnectionsPerRoute());
 	}
 
 	private void fetchRouters()
@@ -170,7 +172,11 @@ class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 			m_tableRouters.setValueAt(ord.getName(), i, 0);
 			m_tableRouters.setValueAt(ord.getAddress(), i, 1);
 			m_tableRouters.setValueAt(new Integer(ord.getPort()), i, 2);
-			m_tableRouters.setValueAt(ord.getSoftware(),i,3);
+			m_tableRouters.setValueAt(ord.getSoftware(), i, 3);
 		}
+		m_borderAvailableRouters.setTitle(JAPMessages.getString("torBorderAvailableRouters") + " (" +
+										  DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).
+										  format(ol.getPublished()) + ")");
+		getRootPanel().updateUI();
 	}
 }

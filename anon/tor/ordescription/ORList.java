@@ -29,16 +29,18 @@ package anon.tor.ordescription;
 
 import java.io.LineNumberReader;
 import java.io.StringReader;
-import java.util.Hashtable;
-import java.util.Vector;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Hashtable;
+import java.util.StringTokenizer;
+import java.util.TimeZone;
+import java.util.Vector;
+import anon.tor.MyRandom;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import anon.tor.MyRandom;
-import java.util.StringTokenizer;
-import java.util.Calendar;
-import java.text.*;
+
 /*
  * Created on Mar 25, 2004
  *
@@ -57,16 +59,22 @@ public class ORList
 	private MyRandom m_rand;
 	private ORListFetcher m_orlistFetcher;
 	private Date m_datePublished;
+	private final static DateFormat ms_DateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+	static
+	{
+		ms_DateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+	}
+
 	/**
 	 * constructor
 	 *
 	 */
 	public ORList(ORListFetcher fetcher)
 	{
-		m_onionrouters=new Vector();
-		m_onionroutersWithNames=new Hashtable();
-		m_orlistFetcher=fetcher;
-		m_rand=new MyRandom();
+		m_onionrouters = new Vector();
+		m_onionroutersWithNames = new Hashtable();
+		m_orlistFetcher = fetcher;
+		m_rand = new MyRandom();
 	}
 
 	public synchronized int size()
@@ -76,8 +84,9 @@ public class ORList
 
 	public synchronized void setFetcher(ORListFetcher fetcher)
 	{
-		m_orlistFetcher=fetcher;
+		m_orlistFetcher = fetcher;
 	}
+
 	/** Updates the list of available ORRouters.
 	 * @return true if it was ok, false otherwise
 	 */
@@ -85,7 +94,7 @@ public class ORList
 	{
 		try
 		{
-			String doc=m_orlistFetcher.getORList();
+			String doc = m_orlistFetcher.getORList();
 			parseDocument(doc);
 			return true;
 		}
@@ -104,7 +113,7 @@ public class ORList
 	 */
 	public Vector getList()
 	{
-		return  (Vector)m_onionrouters.clone();
+		return (Vector) m_onionrouters.clone();
 	}
 
 	public Date getPublished()
@@ -112,10 +121,10 @@ public class ORList
 		return m_datePublished;
 	}
 
-   	public synchronized ORDescription getByName(String name)
-	   {
-		   return (ORDescription)m_onionroutersWithNames.get(name);
-	   }
+	public synchronized ORDescription getByName(String name)
+	{
+		return (ORDescription) m_onionroutersWithNames.get(name);
+	}
 
 	/**
 	 * selects a OR randomly from a given list of allowed OR names
@@ -135,8 +144,9 @@ public class ORList
 	 */
 	public synchronized ORDescription getByRandom()
 	{
-		return (ORDescription) this.m_onionrouters.elementAt(m_rand.nextInt(m_onionrouters.size()));
+		return (ORDescription)this.m_onionrouters.elementAt(m_rand.nextInt(m_onionrouters.size()));
 	}
+
 	/**
 	 * returns a ORDescription to the given ORName
 	 * @param name
@@ -164,7 +174,7 @@ public class ORList
 		Hashtable orswn = new Hashtable();
 		LineNumberReader reader = new LineNumberReader(new StringReader(strDocument));
 		String strRunningOrs = "";
-		Date published=null;
+		Date published = null;
 		for (; ; )
 		{
 			reader.mark(200);
@@ -175,7 +185,7 @@ public class ORList
 			}
 			if (aktLine.startsWith("running-routers"))
 			{
-				strRunningOrs = aktLine+" ";
+				strRunningOrs = aktLine + " ";
 			}
 			else if (aktLine.startsWith("router"))
 			{
@@ -183,7 +193,8 @@ public class ORList
 				ORDescription ord = ORDescription.parse(reader);
 				if (ord != null)
 				{
-					if ((strRunningOrs.indexOf(" " + ord.getName() + " ") > 0)/*&&(ord.getSoftware().startsWith("Tor 0.0.8"))*/)
+					if ( (strRunningOrs.indexOf(" " + ord.getName() + " ") >
+						  0) /*&&(ord.getSoftware().startsWith("Tor 0.0.8"))*/)
 					{
 						ors.addElement(ord);
 						orswn.put(ord.getName(), ord);
@@ -193,15 +204,15 @@ public class ORList
 			}
 			else if (aktLine.startsWith("published"))
 			{
-				StringTokenizer st=new StringTokenizer(aktLine," ");
+				StringTokenizer st = new StringTokenizer(aktLine, " ");
 				st.nextToken(); //skip "published"
-				String strPublished=st.nextToken(); //day
-				strPublished+=" "+st.nextToken();//time
-				published=DateFormat.getDateTimeInstance(DateFormat.MEDIUM,DateFormat.MEDIUM).parse(strPublished);
+				String strPublished = st.nextToken(); //day
+				strPublished += " " + st.nextToken(); //time
+				published = ms_DateFormat.parse(strPublished);
 			}
 		}
 		m_onionrouters = ors;
 		m_onionroutersWithNames = orswn;
-		m_datePublished=published;
+		m_datePublished = published;
 	}
 }

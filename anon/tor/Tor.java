@@ -96,6 +96,7 @@ public class Tor implements /*Runnable,*/ AnonService
 
 	private int m_circuitLengthMin;
 	private int m_circuitLengthMax;
+	private int m_ConnectionsPerCircuit;
 
 	private MyRandom m_rand;
 
@@ -122,9 +123,9 @@ public class Tor implements /*Runnable,*/ AnonService
 
 		m_allowedExitNodeNames = null;
 
-		m_circuitLengthMin = 3;
+		m_circuitLengthMin = 2;
 		m_circuitLengthMax = 5;
-
+		m_ConnectionsPerCircuit=1000;
 		m_rand = new MyRandom(new SecureRandom());
 		m_bIsStarted = false;
 		m_bIsCreatingCircuit = false;
@@ -245,6 +246,12 @@ public class Tor implements /*Runnable,*/ AnonService
 					m_circuitLengthMin;
 				//check if know about some Onion Routers...
 				Date listPublished = m_orList.getPublished();
+				if(listPublished!=null)
+				{
+				long t1=listPublished.getTime();
+				long t2=System.currentTimeMillis();
+				long t3=t2-t1;
+				}
 				if (m_orList.size() == 0 ||
 					(listPublished != null && listPublished.getTime() < System.currentTimeMillis() - 600000
 					 /*list is older than 10 min*/
@@ -316,6 +323,7 @@ public class Tor implements /*Runnable,*/ AnonService
 				}
 
 				Circuit circuit = firstOR.createCircuit(orsForNewCircuit);
+				circuit.setMaxNrOfStreams(m_ConnectionsPerCircuit);
 				return circuit;
 			}
 		}
@@ -452,11 +460,17 @@ public class Tor implements /*Runnable,*/ AnonService
 	 */
 	public void setCircuitLength(int min, int max)
 	{
-		if ( (max >= min) && (min > 1) && (max < MAX_CIRCUIT_LENGTH))
+		if ( (max >= min) && (min >= MIN_CIRCUIT_LENGTH) && (max <= MAX_CIRCUIT_LENGTH))
 		{
-			this.m_circuitLengthMax = max;
-			this.m_circuitLengthMin = min;
+			m_circuitLengthMax = max;
+			m_circuitLengthMin = min;
 		}
+	}
+
+	/*** Set the total number of allowed different connections per route*/
+	public void setConnectionsPerRoute(int i)
+	{
+		m_ConnectionsPerCircuit=i;
 	}
 
 	/**

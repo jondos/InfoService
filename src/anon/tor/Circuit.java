@@ -58,7 +58,7 @@ public class Circuit
 {
 
 	//max number of streams over a circuit
-	private final static int MAX_STREAMS_OVER_CIRCUIT = 1000;
+	public final static int MAX_STREAMS_OVER_CIRCUIT = 1000;
 
 	private OnionRouter m_FirstOR;
 	private ORDescription m_lastORDescription;
@@ -80,6 +80,7 @@ public class Circuit
 	private final static int STATE_CREATING = 3;
 	private int m_streamCounter;
 	private int m_circuitLength;
+	private int m_MaxStreamsPerCircuit;
 	private int m_recvCellCounter;
 	private int m_sendCellCounter;
 
@@ -119,6 +120,7 @@ public class Circuit
 		this.m_circID = circID;
 		this.m_streams = new Hashtable();
 		m_streamCounter = 0;
+		m_MaxStreamsPerCircuit=MAX_STREAMS_OVER_CIRCUIT;
 		m_onionRouters = (Vector) orList.clone();
 		m_circuitLength = orList.size();
 		m_lastORDescription = (ORDescription) m_onionRouters.elementAt(m_circuitLength - 1);
@@ -663,7 +665,7 @@ public class Circuit
 				throw new ConnectException("Channel could not be created");
 			}
 
-			if (m_streamCounter == MAX_STREAMS_OVER_CIRCUIT)
+			if (m_streamCounter >= MAX_STREAMS_OVER_CIRCUIT)
 			{
 				shutdown();
 			}
@@ -673,6 +675,16 @@ public class Circuit
 	public boolean isAllowed(String adr, int port)
 	{
 		return m_lastORDescription.getAcl().isAllowed(adr, port);
+	}
+
+	public void setMaxNrOfStreams(int i)
+	{
+		if(i>0&&i<=MAX_STREAMS_OVER_CIRCUIT)
+			m_MaxStreamsPerCircuit=i;
+		if (m_streamCounter >= MAX_STREAMS_OVER_CIRCUIT)
+		{
+			shutdown();
+		}
 	}
 
 }
