@@ -22,8 +22,9 @@ import sun.security.util.DerInputStream;
 import sun.security.util.DerValue;
 import sun.security.util.BigInt;
 //import cryptix.jce.provider.Cryptix;
-//import cryptix.jce.provider.CryptixCrypto;
+import cryptix.jce.provider.CryptixCrypto;
 import java.security.Security;
+import cryptix.jce.provider.asn.*;
 //import java.security.interfaces.RSAPublicKey;
 //import javax.crypto.Cipher;
 //import cryptix.jce.provider.key.RawSecretKey;
@@ -32,6 +33,9 @@ import java.security.Security;
 //import iaik.security.provider.IAIK;
 //import java.security.cert.X509Certificate;
 import java.net.*;
+import java.security.interfaces.*;
+import cryptix.jce.provider.rsa.*;
+import java.security.spec.InvalidKeySpecException;
 final public class JAPTest
 {
 	public static void main(String argc[])
@@ -78,9 +82,10 @@ final public class JAPTest
 			{z.printStackTrace();}
 		*/	
 	//	readCertJCE();
-	//	testCert();
+//		testCert();
 //		System.getProperties().list(System.out);
-	networkTest(argc);
+//	networkTest(argc);
+	testRRT();
 		System.exit(0);
 		}
 	
@@ -161,7 +166,7 @@ final public class JAPTest
 			c.encode(out,JAPCertificate.BASE64);
 			out.close();
 	*/		
-		//	Security.addProvider(new CryptixCrypto());
+			Security.addProvider(new CryptixCrypto());
 		/*	Cipher cipherEnc=Cipher.getInstance("Blowfish/ECB/None");
 			Cipher cipherDec=Cipher.getInstance("Blowfish/ECB/None");
 			byte[]key=new byte[16];
@@ -198,7 +203,11 @@ final public class JAPTest
 			X509Cert master=new X509Cert();
 			f=new FileInputStream("jap.cer");
 			master.decode(f);
-			master.verify(cert.getPublicKey());
+			PublicKey k=cert.getPublicKey();
+			RSAPublicKey kp=transformKey(k);
+		//	sun.security.x509.X509Key kx=(sun.security.x509.X509Key)k;
+		
+			master.verify(kp);
 		//	byte[] key=master.getPublicKey().getEncoded();
 
 	/*		for(int i=0;i<key.length;i++)
@@ -471,4 +480,73 @@ final public class JAPTest
 		 System.exit(0);
 	}
 
+	static RSAPublicKey transformKey(PublicKey k) throws InvalidKeySpecException
+	{
+		try {
+            AsnInputStream ais = new AsnInputStream( k.getEncoded() );
+            AsnSequence seq = (AsnSequence)ais.read();
+            if (seq.size() != 2)
+                throw new InvalidKeySpecException(
+                    "First SEQUENCE has " + seq.size() + " elements.");
+
+            // XXX: check for valid AlgOID
+
+           // AsnObject uh = seq.get(0);
+ 
+            AsnBitString bs = (AsnBitString)seq.get(1);
+            ais = new AsnInputStream( bs.toByteArray() );
+
+            seq = (AsnSequence)ais.read();
+            if (seq.size() != 2)
+                throw new InvalidKeySpecException(
+                    "Second SEQUENCE has " + seq.size() + " elements.");
+
+            AsnInteger n = (AsnInteger)seq.get(0);
+            AsnInteger e = (AsnInteger)seq.get(1);
+
+            return new RSAPublicKeyImpl(n.toBigInteger(), e.toBigInteger());
+
+        } catch(ClassCastException e) {
+            throw new InvalidKeySpecException(
+                "Unexpected ASN.1 type detected: " + e.getMessage() );
+            
+        } catch(IOException e) {
+            throw new InvalidKeySpecException("Could not parse key.");
+        }
+    }
+	
+	static void testRRT()
+		{
+			try
+				{
+					DatagramSocket oSocket=new DatagramSocket();
+					byte[] buff=new byte[100];
+					long time=System.currentTimeMillis();
+					BigInteger b=new BigInteger(Long.toString(time));
+					byte[] timebuff=b.toByteArray();
+					System.arraycopy(timebuff,0,buff,4+8-timebuff.length,timebuff.length);
+					buff[0]=(byte)0x80;
+					int localPort=oSocket.getLocalPort();
+					buff[16]=(byte)(localPort>>8);
+					buff[17]=(byte)(localPort&0xFF);
+					InetAddress returnAddr=oSocket.getLocalAddress();
+					
+					System.arraycopy(InetAddress.getLocalHost().getAddress(),0,buff,12,4);
+					DatagramPacket oPacket=new DatagramPacket(buff,4+8+6);
+					InetAddress addr=InetAddress.getLocalHost();	
+					oPacket.setAddress(addr);
+					oPacket.setPort(5000);
+					oSocket.send(oPacket);
+					oSocket.receive(oPacket);
+					byte[] tmpBuff=new byte[8];
+					System.arraycopy(oPacket.getData(),4,tmpBuff,0,8);
+					b=new BigInteger(1,tmpBuff);
+					System.out.println(b.toString(10));
+				}
+			catch(Exception e)
+				{
+					e.printStackTrace();
+				}
+		}
+	
 }
