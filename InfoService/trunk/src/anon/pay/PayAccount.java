@@ -563,7 +563,7 @@ public class PayAccount implements IXMLEncodable
 	 */
 	public XMLBalance getBalance()
 	{
-		if (m_accountInfo == null)
+		if (m_accountInfo == null )
 		{
 			return null;
 		}
