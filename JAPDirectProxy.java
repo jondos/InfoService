@@ -195,7 +195,7 @@ final class JAPDirectProxy implements Runnable
 						toClient.write("Cache-Control: no-cache\r\n\r\n");
 						toClient.write("<HTML><TITLE>JAP</TITLE>\n");
 						toClient.write("<PRE>"+date+"</PRE>\n");
-						toClient.write(model.getString("htmlAnonModeOff"));
+						toClient.write(JAPMessages.getString("htmlAnonModeOff"));
 						toClient.write("</HTML>\n");
 						toClient.flush();
 						toClient.close();

@@ -36,6 +36,7 @@ import HTTPClient.HTTPResponse;
 import HTTPClient.NVPair;
 //import HTTPClient.AuthorizationInfo;
 import java.util.Enumeration;
+import java.util.Vector;
 import java.net.InetAddress;
 
 import HTTPClient.Codecs;
@@ -43,48 +44,65 @@ import HTTPClient.Codecs;
 final class JAPInfoService
 	{
 		private static final String DP = "%3A"; // Doppelpunkt
-
-		JAPModel model;
+		String proxyHost  = null;
+		int    proxyPort  = 0;
+		String proxyAuthUserID = null;
+		String proxyAuthPasswd = null;
 		HTTPConnection conInfoService=null;
-/*
-		TODO: JAPInfoService sollte unabhaengig von JAPModel werden.
-*/		
-		
-		public JAPInfoService() {
-//		}
-//
-//		public JAPInfoService(String host,int port)
-//			{
-//				setInfoService(host,port);
-//-----------------				
-				model = JAPModel.getModel();
-				setInfoService(model.getInfoServiceHost(),model.getInfoServicePort());
-//-----------------				
-			}
-
+		public JAPInfoService(String host,int port) {
+			this.setInfoService(host,port);
+		}
 		/** This will set the InfoService to use. It also sets the Proxy-Configuration and autorization.
 		 */
-		public int setInfoService(String host,int port)
-			{
-				//We are doing authorization on our own - so remove....
-				try{conInfoService.removeDefaultModule(Class.forName("HTTPClient.AuthorizationModule"));}
-				catch(Exception e){};
-				conInfoService=new HTTPConnection(host,port);
-				NVPair[] headers=new NVPair[2];
-				headers[0]=new NVPair("Cache-Control","no-cache");
-				headers[1]=new NVPair("Pragma","no-cache");
-				replaceHeader(conInfoService,headers[0]);
-			  replaceHeader(conInfoService,headers[1]);
-				if(model.getUseFirewall())
-					setProxy(model.getFirewallHost(),model.getFirewallPort(),
-									 model.getFirewallAuthUserID(),model.getFirewallAuthPasswd());
-				else
-					setProxy(null,0,null,null);
-				conInfoService.setAllowUserInteraction(false);
-				conInfoService.setTimeout(10000);
-				return 0;
+		public int setInfoService(String host,int port) {
+			//We are doing authorization on our own - so remove....
+			try{conInfoService.removeDefaultModule(Class.forName("HTTPClient.AuthorizationModule"));}
+			catch(Exception e){};
+			conInfoService=new HTTPConnection(host,port);
+			NVPair[] headers=new NVPair[2];
+			headers[0]=new NVPair("Cache-Control","no-cache");
+			headers[1]=new NVPair("Pragma","no-cache");
+			replaceHeader(conInfoService,headers[0]);
+			replaceHeader(conInfoService,headers[1]);
+//				if(model.getUseFirewall())
+//					setProxy(model.getFirewallHost(),model.getFirewallPort(),
+//									 model.getFirewallAuthUserID(),model.getFirewallAuthPasswd());
+//				else
+//					setProxy(null,0,null,null);
+			conInfoService.setAllowUserInteraction(false);
+			conInfoService.setTimeout(10000);
+			return 0;
+		}
+		public void setProxy(String proxyHost,int proxyPort,String proxyAuthUserID,String proxyAuthPasswd) {
+			this.proxyHost  = proxyHost;
+			this.proxyPort  = proxyPort;
+			this.proxyAuthUserID = proxyAuthUserID;
+			this.proxyAuthPasswd = proxyAuthPasswd;
+			setProxyEnabled(true);
+		}
+		public int setProxyEnabled(boolean b) {
+			String tmpProxyHost  = null;
+			int    tmpProxyPort  = 0;
+			String tmpAuthUserID = null;
+			String tmpAuthPasswd = null;
+			if(conInfoService==null)
+				return -1;
+			if(b) {
+				tmpProxyHost  = proxyHost;
+				tmpProxyPort  = proxyPort;
+				tmpAuthUserID = proxyAuthUserID;
+				tmpAuthPasswd = proxyAuthPasswd;
 			}
-
+			conInfoService.setProxyServer(tmpProxyHost,tmpProxyPort);
+			conInfoService.setCurrentProxy(tmpProxyHost,tmpProxyPort);
+			//setting Proxy authorization...
+			if(tmpAuthUserID!=null) {
+				String tmpPasswd=Codecs.base64Encode(tmpAuthUserID+":"+tmpAuthPasswd);
+				NVPair authoHeader=new NVPair("Proxy-Authorization","Basic "+tmpPasswd);
+				replaceHeader(conInfoService,authoHeader);
+			}
+			return 0;
+		}
 		private int replaceHeader(HTTPConnection con,NVPair header)
 			{
 				NVPair headers[]=con.getDefaultHeaders();
@@ -115,74 +133,63 @@ final class JAPInfoService
 						return 0;
 					}
 			}
-
-		public int setProxy(String host,int port,String authUserID,String authPasswd)
-			{
-				if(conInfoService==null)
-					return -1;
-				conInfoService.setProxyServer(host,port);
-				conInfoService.setCurrentProxy(host,port);
-				if(authUserID!=null) //setting Proxy authorization...
-					{
-						String tmpPasswd=Codecs.base64Encode(authUserID+":"+authPasswd);
-						NVPair authoHeader=new NVPair("Proxy-Authorization","Basic "+tmpPasswd);
-						replaceHeader(conInfoService,authoHeader);
-						}
-				return 0;
-			}
-
-		public void fetchAnonServers() throws Exception
-			{
-				try
-					{
-						HTTPResponse resp=conInfoService.Get("/servers");
-					  try{
-						Enumeration enum=resp.listHeaders();
-						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"HTTPResponse: "+Integer.toString(resp.getStatusCode()));
-						while(enum.hasMoreElements())
-							{
-								String header=(String)enum.nextElement();
-								JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,header+": "+resp.getHeader(header));
-							}}catch(Throwable tor){}
-					// XML stuff
-						Document doc=DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(resp.getInputStream());
-						model.anonServerDatabase.clean();
-						NodeList nodelist=doc.getElementsByTagName("MixCascade");
-						for(int i=0;i<nodelist.getLength();i++)
-							{
-								Element elem=(Element)nodelist.item(i);
-								NodeList nl=elem.getElementsByTagName("Name");
-								String name=nl.item(0).getFirstChild().getNodeValue().trim();
-								nl=elem.getElementsByTagName("IP");
-								String ip=nl.item(0).getFirstChild().getNodeValue().trim();
-
-								int port=JAPUtil.parseNodeInt(elem,"Port",-1);
-								int proxyPort=JAPUtil.parseNodeInt(elem,"ProxyPort",-1);
-
-								AnonServerDBEntry e=new AnonServerDBEntry(name,ip,port,proxyPort);
-
-								nl=elem.getElementsByTagName("CurrentStatus");
-								if(nl!=null&&nl.getLength()>0)
-									{
-										Element elem1=(Element)nl.item(0);
-										int nrOfActiveUsers=JAPUtil.parseElementAttrInt(elem1,"ActiveUsers",-1);
-										e.setNrOfActiveUsers(nrOfActiveUsers);
-										int currentRisk=JAPUtil.parseElementAttrInt(elem1,"CurrentRisk",-1);
-										e.setCurrentRisk(currentRisk);
-										int trafficSituation=JAPUtil.parseElementAttrInt(elem1,"TrafficSituation",-1);
-										e.setTrafficSituation(trafficSituation);
-										int mixedPackets=JAPUtil.parseElementAttrInt(elem1,"MixedPackets",-1);
-										e.setMixedPackets(mixedPackets);
-									}
-								model.anonServerDatabase.addEntry(e);
-
-							}
+		public AnonServerDBEntry[] getAvailableAnonServers() throws Exception {
+			Vector v = new Vector();
+			try {
+				HTTPResponse resp=conInfoService.Get("/servers");
+				try {
+					Enumeration enum=resp.listHeaders();
+					JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"HTTPResponse: "+Integer.toString(resp.getStatusCode()));
+					while(enum.hasMoreElements()) {
+						String header=(String)enum.nextElement();
+						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,header+": "+resp.getHeader(header));
 					}
-				catch(Exception e)
-					{
-						throw e;
+				} catch(Throwable tor) {
+				}
+				// XML stuff
+				Document doc=DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(resp.getInputStream());
+//				model.anonServerDatabase.clean();
+				NodeList nodelist=doc.getElementsByTagName("MixCascade");
+				for(int i=0;i<nodelist.getLength();i++) {
+					Element elem=(Element)nodelist.item(i);
+					NodeList nl=elem.getElementsByTagName("Name");
+					String name=nl.item(0).getFirstChild().getNodeValue().trim();
+					nl=elem.getElementsByTagName("IP");
+					String ip=nl.item(0).getFirstChild().getNodeValue().trim();
+
+					int port=JAPUtil.parseNodeInt(elem,"Port",-1);
+					int proxyPort=JAPUtil.parseNodeInt(elem,"ProxyPort",-1);
+
+					AnonServerDBEntry e=new AnonServerDBEntry(name,ip,port,proxyPort);
+
+					nl=elem.getElementsByTagName("CurrentStatus");
+					if(nl!=null&&nl.getLength()>0) {
+						Element elem1=(Element)nl.item(0);
+						int nrOfActiveUsers=JAPUtil.parseElementAttrInt(elem1,"ActiveUsers",-1);
+						e.setNrOfActiveUsers(nrOfActiveUsers);
+						int currentRisk=JAPUtil.parseElementAttrInt(elem1,"CurrentRisk",-1);
+						e.setCurrentRisk(currentRisk);
+						int trafficSituation=JAPUtil.parseElementAttrInt(elem1,"TrafficSituation",-1);
+						e.setTrafficSituation(trafficSituation);
+						int mixedPackets=JAPUtil.parseElementAttrInt(elem1,"MixedPackets",-1);
+						e.setMixedPackets(mixedPackets);
 					}
+					v.addElement(e);				
+//					model.anonServerDatabase.addEntry(e);
+				}
+			} catch(Exception e) {
+				throw e;
 			}
+			if((v==null)||(v.size()==0)) {
+				return null;
+			} else {
+				AnonServerDBEntry[] db = new AnonServerDBEntry[v.size()];
+				for(int i=0;i<db.length;i++) {
+					db[i]=(AnonServerDBEntry)v.elementAt(i);
+				}
+				return db;
+			}	
+		}
 
 	public void getFeedback(AnonServerDBEntry service)
 		{
@@ -228,9 +235,7 @@ final class JAPInfoService
 			service.setMixedPackets(mixedPackets);
 			service.setAnonLevel(iAnonLevel);
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPInfoService:"+nrOfActiveUsers+"/"+trafficSituation+"/"+currentRisk+"/"+mixedPackets+"/"+iAnonLevel);
-		}
-
-
+		}	
 	public String getNewVersionNumber() throws Exception
 		{
 			try
@@ -251,5 +256,24 @@ final class JAPInfoService
 					throw new Exception("Versioncheck failed: "+e);
 				}
 		}
-
+	public static void main(String[] argv) {
+		JAPDebug.setDebugLevel(JAPDebug.WARNING);
+		JAPInfoService is=new JAPInfoService("infoservice.inf.tu-dresden.de",6543);
+//		is.setInfoService("infoservice.inf.tu-dresden.de",6543);
+		is.setProxy("www-proxy.t-online.de",80,null,null);
+		is.setProxyEnabled(false/*true*/);
+		try {
+			System.out.println("Version:"+is.getNewVersionNumber());
+			AnonServerDBEntry[] d = is.getAvailableAnonServers();
+			if(d!=null) {
+				for(int i=0;i<d.length;i++) {
+					is.getFeedback(d[i]);
+					System.out.println("Service:"+d[i].getName()+" Users:"+d[i].getNrOfActiveUsers());
+				}
+			}
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+		}
 	}
+}

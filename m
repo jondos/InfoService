@@ -20,6 +20,7 @@ if [ "${nocommand}" = "1" ]; then
  echo " (c)lean ... remove all class files"
  echo " (s)tart ... start JAP"
  echo " (l)ean  ... start JAPLean"
+ echo " (t)est  ... test something"
  read  action
 fi
 case "${action}" in
@@ -27,11 +28,13 @@ case "${action}" in
  "c")  action="clean";;
  "s")  action="start";;
  "l")  action="lean";;
+ "t")  action="test";;
 esac
 if [ "${action}" = "make" ]; then
 # javac -classpath ${libs} JAPDebug.java
-# javac -classpath ${libs} anon/*.java
-# javac -classpath ${libs} rijndael/*.java
+ javac -classpath ${libs} anon/*.java
+ javac -classpath ${libs} rijndael/*.java
+ javac -classpath ${libs} rmi/*.java
  javac -classpath ${libs} *.java
 fi
 if [ "${action}" = "clean" ]; then
@@ -49,13 +52,10 @@ fi
 if [ "${nocommand}" = "0" ]; then
  break;
 fi
+if [ "${action}" = "test" ]; then
+ java -classpath ${libs} JAPInfoService
+fi
 done
-
-
-
-
-
-
 
 
 

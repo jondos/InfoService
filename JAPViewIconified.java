@@ -33,6 +33,7 @@ import anon.JAPAnonServiceListener;
 
 final class JAPViewIconified extends JFrame implements ActionListener,JAPObserver {
 	private JAPModel model;
+	private Frame mainView;
 	private JLabel    z1, z2, z3,z4;
 	private JButton   b;
 	private JPanel p1,p2;
@@ -41,12 +42,12 @@ final class JAPViewIconified extends JFrame implements ActionListener,JAPObserve
 		super(s);
 		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPViewIconified:initializing...");
 		model = JAPModel.getModel();
-		model.setIconifiedView(this);
 		init();
 	}
 		
 	public void init() {
-		setIconImage(model.getView().getIconImage());
+		if(mainView!=null)
+			setIconImage(mainView.getIconImage());
 		//setBackground(Color.black);
 		//setForeground(Color.blue);
 		this.setFont(fnt);
@@ -55,33 +56,33 @@ final class JAPViewIconified extends JFrame implements ActionListener,JAPObserve
 		
 		z1 = new JLabel("00000000  ",JLabel.LEFT);
 		z1.setForeground(Color.red); z1.setFont(fnt);
-		JLabel x1 = new JLabel(model.getString("iconifiedviewChannels")+": ",JLabel.RIGHT);
+		JLabel x1 = new JLabel(JAPMessages.getString("iconifiedviewChannels")+": ",JLabel.RIGHT);
 		x1.setFont(fnt); 
 //		p1.add(x1);p1.add(z1);
 
 		z2 = new JLabel("",JLabel.LEFT);
 		z2.setForeground(Color.red); z2.setFont(fnt);
-		JLabel x2 = new JLabel(model.getString("iconifiedviewBytes")+": ",JLabel.RIGHT);
+		JLabel x2 = new JLabel(JAPMessages.getString("iconifiedviewBytes")+": ",JLabel.RIGHT);
 		x2.setFont(fnt); 
 		p1.add(x2);p1.add(z2);
 		
 		z3 = new JLabel("",JLabel.LEFT);
 		z3.setForeground(Color.red); z3.setFont(fnt);
-		JLabel x3 = new JLabel(model.getString("iconifiedviewUsers")+": ",JLabel.RIGHT);
+		JLabel x3 = new JLabel(JAPMessages.getString("iconifiedviewUsers")+": ",JLabel.RIGHT);
 		x3.setFont(fnt); 
 		p1.add(x3);p1.add(z3);
 
 		z4 = new JLabel("",JLabel.LEFT);
 		z4.setForeground(Color.red); z4.setFont(fnt);
-		JLabel x4 = new JLabel(model.getString("iconifiedviewTraffic")+": ",JLabel.RIGHT);
+		JLabel x4 = new JLabel(JAPMessages.getString("iconifiedviewTraffic")+": ",JLabel.RIGHT);
 		x4.setFont(fnt); 
 		p1.add(x4);p1.add(z4);
 				
 		p2 = new JPanel(new FlowLayout() );
 		b = new JButton(JAPUtil.loadImageIcon(JAPConstants.ENLARGEYICONFN,true));
 		b.addActionListener(this);
-		b.setToolTipText(model.getString("enlargeWindow"));
-	    JAPUtil.setMnemonic(b,model.getString("iconifyButtonMn"));
+		b.setToolTipText(JAPMessages.getString("enlargeWindow"));
+	    JAPUtil.setMnemonic(b,JAPMessages.getString("iconifyButtonMn"));
 		p2.add(b);
 		
 //		getContentPane().add(new JLabel(JAPUtil.loadImageIcon(JAPConstants.JAPEYEFN,true)), BorderLayout.NORTH);
@@ -96,16 +97,17 @@ final class JAPViewIconified extends JFrame implements ActionListener,JAPObserve
 		setResizable(false);
 		pack();
 		JAPUtil.upRightFrame(this);
-		z1.setText(model.getString("iconifiedViewZero"));
-		z2.setText(model.getString("iconifiedViewZero"));
-		z3.setText(model.getString("iconifiedViewNA"));
-		z4.setText(model.getString("iconifiedViewNA"));
+		z1.setText(JAPMessages.getString("iconifiedViewZero"));
+		z2.setText(JAPMessages.getString("iconifiedViewZero"));
+		z3.setText(JAPMessages.getString("iconifiedViewNA"));
+		z4.setText(JAPMessages.getString("iconifiedViewNA"));
 	}
 	
 	void switchBackToMainView() {
-//			model.setJAPViewDeIconified();
-			model.getView().setVisible(true);
-			setVisible(false);
+			if(mainView==null)
+				return; 
+			this.setVisible(false);
+			mainView.setVisible(true);
 	}
 	
 	public void actionPerformed(ActionEvent event) {
@@ -114,27 +116,30 @@ final class JAPViewIconified extends JFrame implements ActionListener,JAPObserve
 			switchBackToMainView();
 		}
 	}	
+	public void registerMainView(Frame v) {
+			mainView = v;
+	}
 
-	public void valuesChanged (JAPModel m) {
+	public void valuesChanged () {
 		if (model.getAnonMode()) {
 			AnonServerDBEntry e = model.getAnonServer();
 			if (e.getNrOfActiveUsers() != -1)
 				z3.setText(Integer.toString(model.getAnonServer().getNrOfActiveUsers()));
 			else
-				z3.setText(model.getString("iconifiedViewNA"));
+				z3.setText(JAPMessages.getString("iconifiedViewNA"));
         	int t=e.getTrafficSituation();
 			if(t>-1) {
     	    	if(t < 30)
-        			z4.setText(model.getString("iconifiedViewMeterTrafficLow"));
+        			z4.setText(JAPMessages.getString("iconifiedViewMeterTrafficLow"));
 				else if (t < 60)
-					z4.setText(model.getString("iconifiedViewMeterTrafficMedium"));
+					z4.setText(JAPMessages.getString("iconifiedViewMeterTrafficMedium"));
 				else
-					z4.setText(model.getString("iconifiedViewMeterTrafficHigh"));
+					z4.setText(JAPMessages.getString("iconifiedViewMeterTrafficHigh"));
 			} else
-				z4.setText(model.getString("iconifiedViewNA"));
+				z4.setText(JAPMessages.getString("iconifiedViewNA"));
 		} else {
-			z3.setText(model.getString("iconifiedViewNA"));
-			z4.setText(model.getString("iconifiedViewNA"));
+			z3.setText(JAPMessages.getString("iconifiedViewNA"));
+			z4.setText(JAPMessages.getString("iconifiedViewNA"));
 		}
 	}
 
