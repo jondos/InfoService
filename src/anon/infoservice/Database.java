@@ -33,7 +33,7 @@ package anon.infoservice;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Vector;
-import anon.crypto.*;
+import anon.crypto.MyRandom;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -64,12 +64,12 @@ public final class Database implements Runnable
 	/**
 	 * Stores services we know.
 	 */
-	private Hashtable serviceDatabase;
+	private Hashtable m_serviceDatabase;
 
 	/**
 	 * Chronological order (in relation to timeouts) of all objects in the database.
 	 */
-	private Vector timeoutList;
+	private Vector m_timeoutList;
 
 	/**
 	 * Registers a distributor that forwards new database entries.
@@ -80,24 +80,19 @@ public final class Database implements Runnable
 	}
 
 	/**
-	 * Registers a Database object that contains instances of the specified DatabaseEntry class.
-	 * If a Databasa was previously registered for this DatabaseEntry class, the method does nothing
-	 * and returns the previously registered Database. Otherwise, the argument Database is returned.
+	 * Registers a Database object. If a Database was previously registered for the same
+	 * DatabaseEntry class, the method does nothing and returns the previously registered Database.
+	 * Otherwise, the given Database is returned.
 	 * This method is used for testing purposes and should not be removed.
-	 * @param a_DatabaseEntryClass the DatabaseEntry class for that the corresponding Database
-	 *                             is unregistered
 	 * @param a_Database the registered Database
-	 * @return the actually registered Database instance for the specified DatabaseEntry class or
-	 *         null if the specified class is not a valid DatabaseEntry class
+	 * @return the actually registered Database instance for the specified DatabaseEntry class
 	 */
-	private static Database registerInstance(Class a_DatabaseEntryClass, Database a_Database)
+	private static Database registerInstance(Database a_Database)
 	{
-		Database database = (Database)m_databases.get(a_DatabaseEntryClass.getName());
+		Database database = (Database)m_databases.get(a_Database.getEntryClass());
 
-		if (database == null && a_Database != null &&
-			DatabaseEntry.class.isAssignableFrom(a_DatabaseEntryClass)) {
-
-			m_databases.put(a_DatabaseEntryClass.getName(), a_Database);
+		if (database == null && a_Database != null) {
+			m_databases.put(a_Database.getEntryClass(), a_Database);
 			database = a_Database;
 		}
 
@@ -114,7 +109,7 @@ public final class Database implements Runnable
 	 */
 	private static Database unregisterInstance(Class a_DatabaseEntryClass)
 	{
-		return (Database)m_databases.remove(a_DatabaseEntryClass.getName());
+		return (Database)m_databases.remove(a_DatabaseEntryClass);
 	}
 
 	/**
@@ -131,15 +126,17 @@ public final class Database implements Runnable
 	 * if it does not exist already.
 	 * @param a_DatabaseEntryClass the DatabaseEntry class for that the method returns
 	 * the corresponding Database object
-	 * @return the Database object that contains DatabaseEntries of the specified type or
-	 *         null if the specified DataEntry class was not found
+	 * @return the Database object that contains DatabaseEntries of the specified type
+	 * @exception IllegalArgumentException if the argument is no valid DatabaseEntry class
 	 */
-	public static Database getInstance(Class a_DatabaseEntryClass) {
-		Database database = (Database)m_databases.get(a_DatabaseEntryClass.getName());
+	public static Database getInstance(Class a_DatabaseEntryClass)
+		throws IllegalArgumentException
+	{
+		Database database = (Database)m_databases.get(a_DatabaseEntryClass);
 
-		if (database == null && DatabaseEntry.class.isAssignableFrom(a_DatabaseEntryClass)) {
+		if (database == null) {
 			database = new Database(a_DatabaseEntryClass);
-			m_databases.put(a_DatabaseEntryClass.getName(), database);
+			m_databases.put(a_DatabaseEntryClass, database);
 		}
 
 		return database;
@@ -156,12 +153,20 @@ public final class Database implements Runnable
 	/**
 	 * Creates a new instance of a Database.
 	 * @param a_DatabaseEntryClass the DatabaseEntry class for that this Database is registered
+	 * @exception IllegalArgumentException if the argument is no valid DatabaseEntry class
 	 */
 	private Database(Class a_DatabaseEntryClass)
+		throws IllegalArgumentException
 	{
+		if (!DatabaseEntry.class.isAssignableFrom(a_DatabaseEntryClass)) {
+			throw new IllegalArgumentException(
+				"There is no Database that can store entries of type " +
+				a_DatabaseEntryClass.getName() + "!");
+		}
+
 		m_DatabaseEntryClass = a_DatabaseEntryClass;
-		serviceDatabase = new Hashtable();
-		timeoutList = new Vector();
+		m_serviceDatabase = new Hashtable();
+		m_timeoutList = new Vector();
 
 		Thread dbThread = new Thread(this);
 		dbThread.setDaemon(true);
@@ -177,21 +182,22 @@ public final class Database implements Runnable
 		while (true)
 		{
 			boolean moreOldEntrys = true;
-			synchronized (serviceDatabase)
+			synchronized (m_serviceDatabase)
 			{
 				/* we need exclusive access to the database */
-				while ( (timeoutList.size() > 0) && (moreOldEntrys))
+				while ( (m_timeoutList.size() > 0) && (moreOldEntrys))
 				{
 					if (System.currentTimeMillis() >=
-						( (DatabaseEntry) (serviceDatabase.get(timeoutList.firstElement()))).getExpireTime())
+						( (DatabaseEntry) (
+						m_serviceDatabase.get(m_timeoutList.firstElement()))).getExpireTime())
 					{
 						/* we remove the old entry now, because it has reached the expire time */
 						LogHolder.log(LogLevel.INFO, LogType.MISC,
 									  "Database: run: DatabaseEntry " +
-									  ( (DatabaseEntry) (serviceDatabase.get(timeoutList.firstElement()))).
+									  ( (DatabaseEntry) (m_serviceDatabase.get(m_timeoutList.firstElement()))).
 									  getId() + " has reached the expire time and is removed.");
-						serviceDatabase.remove(timeoutList.firstElement());
-						timeoutList.removeElementAt(0);
+						m_serviceDatabase.remove(m_timeoutList.firstElement());
+						m_timeoutList.removeElementAt(0);
 					}
 					else
 					{
@@ -200,14 +206,14 @@ public final class Database implements Runnable
 					}
 				}
 			}
-			synchronized (serviceDatabase)
+			synchronized (m_serviceDatabase)
 			{
 				/* we need the database in a consistent state */
 				long sleepTime = 0;
-				if (timeoutList.size() > 0)
+				if (m_timeoutList.size() > 0)
 				{
 					/* get time until next timeout */
-					sleepTime = ( (DatabaseEntry) (serviceDatabase.get(timeoutList.firstElement()))).
+					sleepTime = ( (DatabaseEntry) (m_serviceDatabase.get(m_timeoutList.firstElement()))).
 						getExpireTime() - System.currentTimeMillis();
 				}
 				if (sleepTime > 0)
@@ -215,7 +221,7 @@ public final class Database implements Runnable
 					/* there is nothing to do now -> wait until next expire time */
 					try
 					{
-						serviceDatabase.wait(sleepTime);
+						m_serviceDatabase.wait(sleepTime);
 						LogHolder.log(LogLevel.DEBUG, LogType.MISC,
 									  "Database: run: One entry could be expired. Wake up...");
 					}
@@ -223,14 +229,15 @@ public final class Database implements Runnable
 					{
 					}
 				}
-				if (timeoutList.size() == 0)
+				if (m_timeoutList.size() == 0)
 				{
 					/* there are no entries in the database, wait until there are some */
 					try
 					{
-						serviceDatabase.wait();
+						m_serviceDatabase.wait();
 						LogHolder.log(LogLevel.DEBUG, LogType.MISC,
-									  "Database: run: First entry in the database. Look when it expires. Wake up...");
+									  "Database: run: First entry in the database. " +
+									  "Look when it expires. Wake up...");
 					}
 					catch (Exception e)
 					{
@@ -246,7 +253,6 @@ public final class Database implements Runnable
 	 * forwarded to all neighbour infoservices.
 	 *
 	 * @param newEntry The DatabaseEntry to update.
-	 *       throw exception a the wrong class is added
 	 * @exception IllegalArgumentException if the DatabaseEntry is not of the type the Database
 	 * can store
 	 */
@@ -258,63 +264,45 @@ public final class Database implements Runnable
 						 "Database cannot store entries of type " +
 						 newEntry.getClass().getName() + "!");
 		}
-		synchronized (serviceDatabase)
+		synchronized (m_serviceDatabase)
 		{
 			/* we need exclusive access to the database */
-			DatabaseEntry oldEntry = (DatabaseEntry) (serviceDatabase.get(newEntry.getId()));
+			DatabaseEntry oldEntry = (DatabaseEntry) (m_serviceDatabase.get(newEntry.getId()));
 			boolean addEntry = false;
 			if (oldEntry == null)
 			{
 				/* this is a new unknown service */
 				addEntry = true;
-			}
-			else
+			} else if (newEntry.getVersionNumber() > oldEntry.getVersionNumber())
 			{
-				/* we know this service, look whether the entry is newer than the one we have stored */
-				if (newEntry instanceof IDistributable)
-				{
-					if (((IDistributable)newEntry).getVersionNumber() >
-						((IDistributable)oldEntry).getVersionNumber())
-					{
-						addEntry = true;
-					}
-				} else
-				{
-				if (newEntry.getExpireTime() > oldEntry.getExpireTime())
-				{
-						addEntry = true;
-					}
-				}
-				if (addEntry)
-				{
-					/* it is newer */
-					timeoutList.removeElement(oldEntry.getId());
-				}
+				// we know this service, and the entry is newer than the one we have stored
+				addEntry = true;
+				m_timeoutList.removeElement(oldEntry.getId());
 			}
 			if (addEntry)
 			{
 				// add the entry to the database
-				serviceDatabase.put(newEntry.getId(), newEntry);
+				m_serviceDatabase.put(newEntry.getId(), newEntry);
 
 				/* update the timeoutList */
 				boolean timeoutEntryInserted = false;
 				int i = 0;
 				while (timeoutEntryInserted == false)
 				{
-					if (i < timeoutList.size())
+					if (i < m_timeoutList.size())
 					{
-						if ( ( (DatabaseEntry) (serviceDatabase.get(
-											  timeoutList.elementAt(i)))).getExpireTime() >=
-							newEntry.getExpireTime())
+						if ( ( (DatabaseEntry) (m_serviceDatabase.get(
+											  m_timeoutList.elementAt(i)))).getExpireTime() >=
+							 newEntry.getExpireTime())
 						{
-							timeoutList.insertElementAt(newEntry.getId(), i);
+							m_timeoutList.insertElementAt(newEntry.getId(), i);
 							timeoutEntryInserted = true;
 						}
 					}
 					else
 					{
 						/* we are at the last position in the list -> add entry at the end */
-						timeoutList.addElement(newEntry.getId());
+						m_timeoutList.addElement(newEntry.getId());
 						timeoutEntryInserted = true;
 					}
 					i++;
@@ -322,7 +310,7 @@ public final class Database implements Runnable
 				if (i == 1)
 				{
 					/* entry at the first expire position added -> notify the cleanup thread */
-					serviceDatabase.notify();
+					m_serviceDatabase.notify();
 				}
 				if ( (m_distributor != null) && (newEntry instanceof IDistributable))
 				{
@@ -350,12 +338,12 @@ public final class Database implements Runnable
 	{
 		if (deleteEntry != null)
 		{
-			synchronized (serviceDatabase)
+			synchronized (m_serviceDatabase)
 			{
 				/* we need exclusive access to the database */
-				if (serviceDatabase.remove(deleteEntry.getId()) != null)
+				if (m_serviceDatabase.remove(deleteEntry.getId()) != null)
 				{
-					timeoutList.removeElement(deleteEntry.getId());
+					m_timeoutList.removeElement(deleteEntry.getId());
 				}
 			}
 		}
@@ -366,11 +354,11 @@ public final class Database implements Runnable
 	 */
 	public void removeAll()
 	{
-		synchronized (serviceDatabase)
+		synchronized (m_serviceDatabase)
 		{
 			/* we need exclusive access to the database */
-			serviceDatabase.clear();
-			timeoutList.removeAllElements();
+			m_serviceDatabase.clear();
+			m_timeoutList.removeAllElements();
 		}
 	}
 
@@ -382,10 +370,10 @@ public final class Database implements Runnable
 	public Vector getEntryList()
 	{
 		Vector entryList = new Vector();
-		synchronized (serviceDatabase)
+		synchronized (m_serviceDatabase)
 		{
 			/* get the actual values */
-			Enumeration serviceDatabaseElements = serviceDatabase.elements();
+			Enumeration serviceDatabaseElements = m_serviceDatabase.elements();
 			while (serviceDatabaseElements.hasMoreElements())
 			{
 				entryList.addElement(serviceDatabaseElements.nextElement());
@@ -404,10 +392,10 @@ public final class Database implements Runnable
 	public DatabaseEntry getEntryById(String entryId)
 	{
 		DatabaseEntry resultEntry = null;
-		synchronized (serviceDatabase)
+		synchronized (m_serviceDatabase)
 		{
 			/* get the actual value */
-			resultEntry = (DatabaseEntry) (serviceDatabase.get(entryId));
+			resultEntry = (DatabaseEntry) (m_serviceDatabase.get(entryId));
 		}
 		return resultEntry;
 	}
@@ -421,19 +409,19 @@ public final class Database implements Runnable
 	public DatabaseEntry getRandomEntry()
 	{
 		DatabaseEntry resultEntry = null;
-		synchronized (serviceDatabase)
+		synchronized (m_serviceDatabase)
 		{
 			/* all keys of the database are in the timeout list -> select a random key from there and
 			 * get the associated entry from the database
 			 */
-			if (timeoutList.size() > 0)
+			if (m_timeoutList.size() > 0)
 			{
 				try
 				{
 					String entryId =
-						(String) timeoutList.elementAt(
-										  new MyRandom().nextInt(timeoutList.size()));
-					resultEntry = (DatabaseEntry) (serviceDatabase.get(entryId));
+						(String) m_timeoutList.elementAt(
+										  new MyRandom().nextInt(m_timeoutList.size()));
+					resultEntry = (DatabaseEntry) (m_serviceDatabase.get(entryId));
 				}
 				catch (Exception e)
 				{

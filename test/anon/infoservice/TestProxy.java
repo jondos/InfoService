@@ -25,57 +25,16 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-/* Hint: This file may be only a copy of the original file which is always in the JAP source tree!
- * If you change something - do not forget to add the changes also to the JAP source tree!
- */
 package anon.infoservice;
 
-/**
- * This is a generic definition for a database entry. Every database entry
- * must implement this functions.
- */
-public abstract class DatabaseEntry
-{
-	/**
-	 * Stores the time when this entry will be deleted from the database.
-	 */
-	private long m_expireTime;
+import java.lang.reflect.*;
 
-	/**
-	 * Creates a new DatabaseEntry with the specified expireTime.
-	 * @param a_expireTime the time when this entry will be deleted from the database
-	 */
-	public DatabaseEntry(long a_expireTime)
+public class TestProxy extends junitx.framework.extension.TestProxy {
+
+	protected Object createInstance(Constructor a_Constructor, Object[] a_args)
+		throws Exception
 	{
-		m_expireTime = a_expireTime;
-	}
-
-	/**
-	 * Returns a unique ID for a database entry.
-	 *
-	 * @return The ID of this database entry.
-	 */
-	public abstract String getId();
-
-	/**
-	 * Returns the time (see System.currentTimeMillis()) when this DatabaseEntry will be removed
-	 * from the Database, if it is not updated meanwhile.
-	 *
-	 * @return The expire time for this DatabaseEntry.
-	 */
-	public long getExpireTime()
-	{
-		return m_expireTime;
-	}
-
-	/**
-	 * Returns a version number that indicates if a DatabaseEntry is newer than an other
-	 * DatabaseEntry. By default, the expire time is returned.
-	 *
-	 * @return The expire time for this DatabaseEntry.
-	 */
-	public long getVersionNumber()
-	{
-		return getExpireTime();
+		return a_Constructor.newInstance(a_args);
 	}
 }
+
