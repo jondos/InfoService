@@ -36,7 +36,7 @@ public class JAPDebug
 		/** Creates the object. The debug level must be set with 
      *  <code>setDebuglevel(int level)</code>.
      */
-    protected JAPDebug ()
+    public JAPDebug ()
 			{
 				debug=this;
 				debugtype=0;
@@ -53,7 +53,7 @@ public class JAPDebug
      */
     public static void out(int level,int type, String txt)
 			{
-				if(level<0|level>JAPDebug.EMERG|debug.outStreams[level]==null)
+				if(level<0||level>JAPDebug.EMERG||debug.outStreams[level]==null)
 					return;
 				if ( (debug.debugtype & type) !=0 ) 
 					debug.outStreams[level].println("JAPDebug: "+txt);
