@@ -56,9 +56,9 @@ public class MyRSAPublicKey implements PublicKey
 	{
 		try
 		{
-			RSAPublicKeyStructure en=RSAPublicKeyStructure.getInstance(info.getPublicKey());
-			m_n=en.getModulus();
-			m_e=en.getPublicExponent();
+			RSAPublicKeyStructure en = RSAPublicKeyStructure.getInstance(info.getPublicKey());
+			m_n = en.getModulus();
+			m_e = en.getPublicExponent();
 		}
 		catch (IOException e)
 		{
@@ -111,15 +111,20 @@ public class MyRSAPublicKey implements PublicKey
 
 	public boolean equals(Object o)
 	{
-		if(o==null)
+		if (o == null)
+		{
 			return false;
-		if(! (o instanceof PublicKey))
+		}
+		if (! (o instanceof PublicKey))
+		{
 			return false;
-		if(! (o instanceof MyRSAPublicKey))
+		}
+		if (! (o instanceof MyRSAPublicKey))
+		{
 			return false;
-		MyRSAPublicKey r=(MyRSAPublicKey)o;
-		return r.getModulus().equals(m_n)&&r.getPublicExponent().equals(m_e);
+		}
+		MyRSAPublicKey r = (MyRSAPublicKey) o;
+		return r.getModulus().equals(m_n) && r.getPublicExponent().equals(m_e);
 	}
-
 
 }

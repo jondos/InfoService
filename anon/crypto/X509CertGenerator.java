@@ -128,7 +128,8 @@ final public class X509CertGenerator extends V3TBSCertificateGenerator
 
 			}
 			else
-			{ /** @todo Construct signature... */
+			{
+			/** @todo Construct signature... */
 				byte[] sigvalue = new byte[128];
 				sig = new DERBitString(sigvalue);
 			}

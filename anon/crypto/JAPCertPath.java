@@ -86,7 +86,7 @@ public class JAPCertPath
 			/* there was no appended certificate, check the signature against all public keys from
 			 * the store of trusted certificates
 			 */
-			return validate(root,certsTrustedRoots);
+			return validate(root, certsTrustedRoots);
 		}
 		catch (Exception e)
 		{
@@ -138,8 +138,10 @@ public class JAPCertPath
 	 */
 	public static int validate(Node root, JAPCertificateStore certsTrustedRoots)
 	{
-		if(certsTrustedRoots==null)
+		if (certsTrustedRoots == null)
+		{
 			return ErrorCodes.E_INVALID_KEY;
+		}
 		Vector allCertificates = certsTrustedRoots.getAllEnabledCertificates();
 		JAPSignature signatureInstance = new JAPSignature();
 		for (int i = 0; i < allCertificates.size(); i++)

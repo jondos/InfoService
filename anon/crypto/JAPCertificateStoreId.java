@@ -52,7 +52,7 @@ final public class JAPCertificateStoreId
 		Enumeration enum = a_cert.getIssuer().getValues().elements();
 		while (enum.hasMoreElements())
 		{
-			r_strBuffId.append((String) enum.nextElement());
+			r_strBuffId.append( (String) enum.nextElement());
 		}
 		r_strBuffId.append(a_cert.getStartDate().toGMTString() + a_cert.getEndDate().toGMTString());
 		return r_strBuffId.toString();

@@ -123,12 +123,16 @@ public class MyDSAPublicKey implements DSAPublicKey
 
 	public boolean equals(Object o)
 	{
-		if(o==null)
+		if (o == null)
+		{
 			return false;
-		if(!(o instanceof DSAPublicKey))
+		}
+		if (! (o instanceof DSAPublicKey))
+		{
 			return false;
-		DSAPublicKey d=(DSAPublicKey)o;
-		return(d.getY().equals(m_Y)&&d.getParams().equals(m_params));
+		}
+		DSAPublicKey d = (DSAPublicKey) o;
+		return (d.getY().equals(m_Y) && d.getParams().equals(m_params));
 	}
 
 }
