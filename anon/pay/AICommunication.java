@@ -230,12 +230,14 @@ public class AICommunication extends Thread
 
 			if (request.balanceNeeded.equals(XMLPayRequest.TRUE))
 			{
-				send(Pay.getInstance().getAccount(Pay.getInstance().getUsedAccount()).getBalance().getXMLString()); // hier soll nur aus der lokalen Datei gelesen werden
+				///@todo make me work agian
+				//send(Pay.getInstance().getAccount(Pay.getInstance().getUsedAccount()).getBalance().getXMLString()); // hier soll nur aus der lokalen Datei gelesen werden
 
 			}
 			if (request.balanceNeeded.equals(XMLPayRequest.NEW))
 			{
-				send(Pay.getInstance().updateBalance(Pay.getInstance().getUsedAccount()).balance.getXMLString()); // hier soll die BI neu kontaktiert werden.
+				///@todo make me work aigain
+				//send(Pay.getInstance().updateBalance(Pay.getInstance().getUsedAccount()).balance.getXMLString()); // hier soll die BI neu kontaktiert werden.
 			}
 			if (request.costConfirmsNeeded.equals(XMLPayRequest.TRUE))
 			{

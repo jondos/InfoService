@@ -20,14 +20,14 @@ import anon.AnonChannel;
  * Window&gt;Preferences&gt;Java&gt;Code Generation&gt;Code and Comments
  */
 public class proxythread implements Runnable{
-	
+
 	private OutputStream torout;
 	private InputStream torin;
 	private OutputStream out;
 	private InputStream in;
 	private Socket client;
 	private Thread t;
-	
+
 	public proxythread(Socket client,AnonChannel channel) throws IOException
 	{
 		this.torin = channel.getInputStream();
@@ -35,7 +35,7 @@ public class proxythread implements Runnable{
 		this.in = client.getInputStream();
 		this.out = client.getOutputStream();
 		this.client = client;
-		
+
 	}
 
 	public void start()
@@ -43,14 +43,14 @@ public class proxythread implements Runnable{
 		t = new Thread(this);
 		t.start();
 	}
-	
+
 	public void stop()
 	{
 		t.stop();
 	}
 
 	public void run() {
-		while(client.isConnected())
+		while(true)
 		{
 			try
 			{
@@ -72,9 +72,9 @@ public class proxythread implements Runnable{
 				this.stop();
 			}
 		}
-		
+
 	}
 
-	
+
 
 }
