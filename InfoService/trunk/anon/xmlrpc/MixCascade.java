@@ -34,7 +34,7 @@ import java.io.Serializable;
 /** This class had to be made because of bugs in the JAVA RMI Compiler
  *  It provides all features of AnonServerDBEntry
  */
-final public class MixCascade implements Serializer {
+final public class MixCascade implements Serializer, Serializable {
     private String host;
     private int    port;
     private String name;
@@ -44,6 +44,7 @@ final public class MixCascade implements Serializer {
 		public MixCascade()
 			{
 			};
+
 		public MixCascade (String n,String h, int p) {
         host = h;
         port = p;
