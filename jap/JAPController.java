@@ -1016,6 +1016,11 @@ public final class JAPController implements ProxyListener
 			}
 		}
 
+		/** @todo Still very bugy, because mode change is async done but not
+		 * all properties (like currentMixCascade etc.)are synchronized!!
+		 *
+		 */
+
 		public void run()
 		{
 			synchronized (oSetAnonModeSyncObject)
