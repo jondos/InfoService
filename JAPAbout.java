@@ -26,6 +26,10 @@ import javax.swing.text.AttributeSet;
 
 public class JAPAbout extends JDialog
 	{
+	
+		private final static int ABOUT_DY=173;
+		private final static int ABOUT_DX=350;
+																			
 		class ScrollerPane extends JScrollPane implements Runnable
 			{
 				Dimension dimension;
@@ -50,19 +54,17 @@ public class JAPAbout extends JDialog
 								{
 									aktIndex+=len;
 								}}catch(Exception e){};	
-						textArea=new JEditorPane("text/html",new String(buff).trim());
+						
+						textArea=new JEditorPane();
 						setOpaque(false);
 						getViewport().setOpaque(false);
 						getViewport().add(textArea);
 						textArea.setOpaque(false);
-						//textArea.setSize(w,textArea.getPreferredSize().height);
-						//textArea.setMaximumSize(textArea.getSize());
-						//textArea.setMinimumSize(textArea.getSize());
-						//textArea.setPreferredSize(textArea.getSize());
 						textArea.setEditable(false);
 						textArea.setHighlighter(null);
 						textArea.setEnabled(false);
-
+						textArea.setContentType("text/html");
+						textArea.setText(new String(buff).trim());
 						t=new Thread(this);
 						t.setPriority(Thread.MAX_PRIORITY);
 				}
@@ -81,7 +83,7 @@ public class JAPAbout extends JDialog
 				public void run()
 					{
 	
-						int i=100;
+						int i=5;0//;dimension.height;
 						Point p=new Point(0,i);
 						getViewport().setViewPosition(p);
 						try{Thread.sleep(1000);}catch(Exception e){}
@@ -90,20 +92,17 @@ public class JAPAbout extends JDialog
 							{
 							
 								try{
-								if(i>=textArea.getPreferredSize().height/*-dimension.height*/)
+								if(i>=textArea.getPreferredSize().height)
 									{	
 										i=0;
 									}
-								//textArea.scrollRectToVisible(rec);
-								//textArea.getView
 								p.y=i;
 								getViewport().setViewPosition(p);
 								i++;}
 								catch(Throwable  t)
 									{									 
-										//t.printStackTrace();
 									}
-								try{Thread.sleep(75);}catch(Exception e){}
+								try{Thread.sleep(95);}catch(Exception e){}
 							}									
 					}
 			}
@@ -117,7 +116,7 @@ public class JAPAbout extends JDialog
 				addWindowListener(new WindowAdapter() {
 					public void windowClosing(WindowEvent e) {OKPressed();}
 				});	
-				ImageIcon imageSplash=JAPUtil.loadImageIcon("images/info.gif",false);
+				ImageIcon imageSplash=JAPUtil.loadImageIcon(JAPModel.ABOUTFN,false);
 				JLabel labelSplash=new JLabel(imageSplash);
 				JLabel verstxt=new JLabel("Version:");
 				JLabel version=new JLabel(JAPModel.aktVersion);
@@ -134,29 +133,29 @@ public class JAPAbout extends JDialog
 				   OKPressed();
 				   }});
 				labelSplash.setLayout(null);
-				labelSplash.setSize(370,173);
+				labelSplash.setSize(ABOUT_DX,ABOUT_DY);
 				labelSplash.add(version);
 				labelSplash.add(verstxt);
 				labelSplash.add(bttnOk);
 				bttnOk.setSize(bttnOk.getPreferredSize());
-				int x=350-5-bttnOk.getSize().width;
-				int y=173-5-bttnOk.getSize().height;
+				int x=ABOUT_DX-5-bttnOk.getSize().width;
+				int y=ABOUT_DY-5-bttnOk.getSize().height;
 				bttnOk.setLocation(x,y);
 				version.setLocation(x-version.getSize().width-8,y-2+version.getSize().height);
 				verstxt.setLocation(version.getLocation().x, version.getLocation().y-11);
 				
 				setContentPane(labelSplash);
 				
-				sp=new ScrollerPane(220,173-52);
+				sp=new ScrollerPane(210,173-72);
 				getLayeredPane().setLayout(null);
 				getLayeredPane().add(sp);
-				sp.setLocation(4,52);
+				sp.setLocation(5,62);
 				setLocation(-380,-200);
 				setVisible(true);   //we have to ensure that the window is visible before the
 				setResizable(false); //get the insets - also the window must look like it should
 				Insets in=getInsets(); //so for instance we need the 'NoResizable'-Border
 				setResizable(true); //we want to resize
-				setSize(370+in.left+in.right,173+in.bottom+in.top);
+				setSize(ABOUT_DX+in.left+in.right,ABOUT_DY+in.bottom+in.top);
 				setResizable(false); //but the user shouldn't
 				setLocationRelativeTo(parent); //showing centerd to JAP-Main
 				toFront();
