@@ -38,11 +38,10 @@ import java.net.Socket;
 import java.net.URL;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.*;
-import java.text.*;
 import java.util.StringTokenizer;
-import kasper.net.ftp.*;
-import kasper.net.*;
+import kasper.net.ftp.FTPClient;
+import kasper.net.ftp.FTPServerResponse;
+import kasper.net.RemoteFile;
 
 final class DirectProxyConnection implements Runnable
 	{
