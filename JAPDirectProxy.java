@@ -100,7 +100,7 @@ final class JAPDirectProxy implements Runnable
 									}
 								else 
 									{
-										if (model.getUseProxy())
+										if (model.getUseFirewall())
 											{
 												JAPDirectConViaProxy doIt = new JAPDirectConViaProxy (socket);			
 												Thread thread = new Thread (threadgroupAll,doIt);
@@ -216,7 +216,7 @@ final class JAPDirectProxy implements Runnable
 							// open stream from client
 							InputStream inputStream = clientSocket.getInputStream();
 							// create Socket to Server
-							Socket serverSocket = new Socket(model.getProxyHost(),model.getProxyPort());
+							Socket serverSocket = new Socket(model.getFirewallHost(),model.getFirewallPort());
 							// Response from server is transfered to client in a sepatate thread
 							JAPDirectProxyResponse pr = new JAPDirectProxyResponse(serverSocket, clientSocket);
 							Thread prt = new Thread(pr);

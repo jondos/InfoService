@@ -159,6 +159,9 @@ final class JAPUtil
 			return 0;
 		}
 		
+		
+		
+		
 	public static boolean isPort(int port)
 		{
 			if((port<1)||(port>65536))
