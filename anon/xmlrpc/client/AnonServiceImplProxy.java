@@ -29,18 +29,17 @@ package anon.xmlrpc.client;
 
 import java.io.IOException;
 import java.net.ConnectException;
-import java.net.InetAddress;
 import java.util.Vector;
+
 import org.apache.xmlrpc.XmlRpcClientLite;
 import anon.AnonChannel;
+import anon.AnonServerDescription;
 import anon.AnonService;
 import anon.AnonServiceEventListener;
-import anon.infoservice.MixCascade;
-import anon.AnonServerDescription;
 
 public class AnonServiceImplProxy implements AnonService
 {
-	String  m_RpcServerHost;
+	String m_RpcServerHost;
 	int m_RpcServerPort;
 	int m_ClientID;
 
