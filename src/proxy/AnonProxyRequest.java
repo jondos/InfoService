@@ -82,6 +82,7 @@ final class AnonProxyRequest implements Runnable
 		}
 		catch (Throwable t)
 		{
+			m_bRequestIsAlive = false;
 			try
 			{
 				m_clientSocket.close();
@@ -89,7 +90,7 @@ final class AnonProxyRequest implements Runnable
 			catch (Throwable t1)
 			{
 			}
-			return;
+			return ;
 		}
 		firstByte &= 0x00FF;
 		for (; ; )
@@ -126,6 +127,7 @@ final class AnonProxyRequest implements Runnable
 				LogHolder.log(LogLevel.ERR, LogType.NET, "AnonProxyRequest - Connection to Mix lost");
 				if (!m_Proxy.reconnect())
 				{
+					m_bRequestIsAlive = false;
 					return;
 				}
 			}
@@ -134,27 +136,38 @@ final class AnonProxyRequest implements Runnable
 				LogHolder.log(LogLevel.ERR, LogType.NET,
 							  "AnonProxyRequest - something was wrong with seting up a new channel Exception: " +
 							  e);
+				m_bRequestIsAlive = false;
 				return;
 			}
 
 		}
 		if (newChannel == null)
 		{
+			m_bRequestIsAlive = false;
 			return;
 		}
-		m_InChannel = newChannel.getInputStream();
-		m_OutChannel = newChannel.getOutputStream();
-		m_Channel = newChannel;
-
-		m_threadResponse = new Thread(new Response(), "JAP - AnonProxy Response");
-		m_threadResponse.start();
-
-		m_Proxy.incNumChannels();
-
 		int len = 0;
-		byte[] buff = new byte[1900];
-		buff[0]=(byte)firstByte;
-		int aktPos=1;
+		int aktPos = 1;
+		byte[] buff = null;
+		try
+		{
+			m_InChannel = newChannel.getInputStream();
+			m_OutChannel = newChannel.getOutputStream();
+			m_Channel = newChannel;
+
+			m_threadResponse = new Thread(new Response(), "JAP - AnonProxy Response");
+			m_threadResponse.start();
+
+
+			buff = new byte[1900];
+			buff[0] = (byte) firstByte;
+		}
+		catch (Throwable t)
+		{
+			m_bRequestIsAlive = false;
+			return;
+		}
+		m_Proxy.incNumChannels();
 		try
 		{
 			for (; ; )
@@ -162,9 +175,9 @@ final class AnonProxyRequest implements Runnable
 				try
 				{
 					len = Math.min(m_Channel.getOutputBlockSize(), 1900);
-					len-=aktPos;
+					len -= aktPos;
 					len = m_InSocket.read(buff, aktPos, len);
-					len+=aktPos;
+					len += aktPos;
 				}
 				catch (InterruptedIOException ioe)
 				{
@@ -176,7 +189,7 @@ final class AnonProxyRequest implements Runnable
 				}
 				m_OutChannel.write(buff, 0, len);
 				m_Proxy.transferredBytes(len, m_iProtocol);
-				aktPos=0;
+				aktPos = 0;
 			}
 		}
 		catch (Exception e)
