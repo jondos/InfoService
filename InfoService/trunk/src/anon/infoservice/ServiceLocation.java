@@ -28,7 +28,9 @@
 package anon.infoservice;
 
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import anon.util.XMLUtil;
 
 /**
  * Holds the information of the location of a service.
@@ -70,57 +72,27 @@ public class ServiceLocation
 	 */
 	public ServiceLocation(Element locationNode) throws Exception
 	{
+		Node node;
+	
 		/* get the city */
-		NodeList cityNodes = locationNode.getElementsByTagName("City");
-		if (cityNodes.getLength() == 0)
-		{
-			throw (new Exception("ServiceLocation: Error in XML structure."));
-		}
-		Element cityNode = (Element) (cityNodes.item(0));
-		city = cityNode.getFirstChild().getNodeValue();
+		node = XMLUtil.getFirstChildByName(locationNode, "City");
+		city = XMLUtil.parseNodeString(node, "");
+
 		/* get the state */
-		NodeList stateNodes = locationNode.getElementsByTagName("State");
-		if (stateNodes.getLength() == 0)
-		{
-			throw (new Exception("ServiceLocation: Error in XML structure."));
-		}
-		Element stateNode = (Element) (stateNodes.item(0));
-		state = stateNode.getFirstChild().getNodeValue();
+		node = XMLUtil.getFirstChildByName(locationNode, "State");
+		state = XMLUtil.parseNodeString(node, "");
+		
 		/* get the country */
-		NodeList countryNodes = locationNode.getElementsByTagName("Country");
-		if (countryNodes.getLength() == 0)
-		{
-			throw (new Exception("ServiceLocation: Error in XML structure."));
-		}
-		Element countryNode = (Element) (countryNodes.item(0));
-		country = countryNode.getFirstChild().getNodeValue();
+		node = XMLUtil.getFirstChildByName(locationNode, "Country");
+		country = XMLUtil.parseNodeString(node, "");
+
 		/* get the longitude / latitude */
-		NodeList positionNodes = locationNode.getElementsByTagName("Position");
-		if (positionNodes.getLength() == 0)
-		{
-			throw (new Exception("ServiceLocation: Error in XML structure."));
-		}
-		Element positionNode = (Element) (positionNodes.item(0));
-		NodeList geoNodes = positionNode.getElementsByTagName("Geo");
-		if (geoNodes.getLength() == 0)
-		{
-			throw (new Exception("ServiceLocation: Error in XML structure."));
-		}
-		Element geoNode = (Element) (geoNodes.item(0));
-		NodeList longitudeNodes = geoNode.getElementsByTagName("Longitude");
-		if (longitudeNodes.getLength() == 0)
-		{
-			throw (new Exception("ServiceLocation: Error in XML structure."));
-		}
-		Element longitudeNode = (Element) (longitudeNodes.item(0));
-		longitude = longitudeNode.getFirstChild().getNodeValue();
-		NodeList latitudeNodes = geoNode.getElementsByTagName("Latitude");
-		if (latitudeNodes.getLength() == 0)
-		{
-			throw (new Exception("ServiceLocation: Error in XML structure."));
-		}
-		Element latitudeNode = (Element) (latitudeNodes.item(0));
-		latitude = latitudeNode.getFirstChild().getNodeValue();
+		Node positionNode = XMLUtil.getFirstChildByName(locationNode, "Position");
+		positionNode = XMLUtil.getFirstChildByName(positionNode, "Geo");
+		node = XMLUtil.getFirstChildByName(positionNode, "Longitude");
+		longitude = XMLUtil.parseNodeString(node, "");
+		node = XMLUtil.getFirstChildByName(positionNode, "Latitude");
+		latitude = XMLUtil.parseNodeString(node, "");
 	}
 
 	/**

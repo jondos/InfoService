@@ -449,4 +449,27 @@ public class MixCascade implements AnonServerDescription
 		MixCascade c=(MixCascade)o;
 		return getId().equals(c.getId());
 	}
+
+	/**
+	 * Returns the number of mixes in the cascade.
+	 * @return the number of mixes in the cascade
+	 */
+	public int getMixCount()
+	{
+		return mixIds.size();
+	}
+
+	/**
+	 * Returns the IDs of all mixes in the cascade.
+	 * @return the IDs of all mixes in the cascade
+	 */
+	public Vector getMixIds()
+	{
+		Vector mixIds = new Vector();
+		for (int i = 0; i < this.mixIds.size(); i++)
+		{
+			mixIds.addElement(this.mixIds.elementAt(i));
+		}
+		return mixIds;
+	}
 }

@@ -33,16 +33,27 @@ import javax.swing.JPanel;
 import javax.swing.JLabel;
 
 final public class JAPMultilineLabel extends JPanel
-	{
+{
 		public JAPMultilineLabel(String s)
 			{
+		this.setText(s);
+	}
+
+	/**
+	 * Sets the text of this label.
+	 * @param a_strText the text of this label
+	 */
+	public void setText(String a_strText)
+	{
+		this.removeAll();
 				GridLayout g=new GridLayout(0,1,0,0);
 				setLayout(g);
-				StringTokenizer st=new StringTokenizer(s,"\n");
+		StringTokenizer st=new StringTokenizer(a_strText,"\n");
 				while(st.hasMoreElements())
 					{
 						JLabel l=new JLabel(st.nextToken());
 						add(l);
 					}
 			}
-	}
+}
+
