@@ -37,10 +37,6 @@ import anon.util.XMLUtil;
  */
 public class XMLDocument
 {
-	//~ Static fields/initializers *********************************************
-
-	public static final String XML_HEAD = "<?xml version=\"1.0\"?>\n";
-
 	//~ Instance fields ********************************************************
 
 	protected Document m_theDocument;

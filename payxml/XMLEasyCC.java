@@ -30,45 +30,69 @@ package payxml;
 import org.w3c.dom.CharacterData;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
-
+import org.w3c.dom.*;
+import anon.util.XMLUtil;
 /**
  * XML structure for a easy cost confirmation (without mircopayment function) which is sent to the AI by the Jap
  * @author Grischan Gl&auml;nzel
  */
 public class XMLEasyCC extends XMLDocument
 {
-	//~ Public Fields  ******************************************************
-	public static final String docStartTag = "<CC version=\"1.0\">";
-	public static final String docEndTag = "</CC>";
-
 	//~ Instance fields ********************************************************
 
-	private String aiName;
+	private String m_strAiName;
 
 	//private byte[] hash;
-	private long transferredBytes;
-	private long accountNumber;
+	private long m_lTransferredBytes;
+	private long m_lAccountNumber;
 
 	//~ Constructors ***********************************************************
 	//todo --> lots to do :-)
 	public XMLEasyCC(String aiName, long accountNumber, long transferred) throws Exception
 	{
 
-		this.aiName = aiName;
-		this.transferredBytes = transferred;
-		this.accountNumber = accountNumber;
+		m_strAiName = aiName;
+		m_lTransferredBytes = transferred;
+		m_lAccountNumber = accountNumber;
+		m_theDocument=getDocumentBuilder().newDocument();
+		Element elemRoot=m_theDocument.createElement("CC");
+		elemRoot.setAttribute("version","1.0");
+		m_theDocument.appendChild(elemRoot);
 
-		String xmlDocument = docStartTag + "<AIName>" + aiName + "</AIName>" +
-			"<Bytes>" + transferred + "</Bytes>" +
-			"<Number>" + accountNumber + "</Number>" + docEndTag;
-		setDocument(xmlDocument);
+		Element elem=m_theDocument.createElement("AIName");
+		XMLUtil.setNodeValue(elem,aiName);
+		elemRoot.appendChild(elem);
 
+		elem=m_theDocument.createElement("Bytes");
+		XMLUtil.setNodeValue(elem,Long.toString(transferred));
+		elemRoot.appendChild(elem);
+
+		elem=m_theDocument.createElement("Number");
+		XMLUtil.setNodeValue(elem,Long.toString(accountNumber));
+		elemRoot.appendChild(elem);
 	}
 
 	public XMLEasyCC(byte[] data) throws Exception
 	{
 		setDocument(data);
+		setValues();
+	}
 
+	/**
+	 * Creates an EaysCC from  an existing XML docuemnt
+	 *
+	 * @param xml the node that represents the EasyCC
+	 */
+	public XMLEasyCC(Node xml) throws Exception
+	{
+		m_theDocument=getDocumentBuilder().newDocument();
+		Node n=XMLUtil.importNode(m_theDocument,xml,true);
+		m_theDocument.appendChild(n);
+		setValues();
+	}
+
+	private void setValues() throws Exception
+	{
 		Element element = m_theDocument.getDocumentElement();
 		if (!element.getTagName().equals("CC"))
 		{
@@ -83,7 +107,7 @@ public class XMLEasyCC extends XMLDocument
 		element = (Element) nl.item(0);
 
 		CharacterData chdata = (CharacterData) element.getFirstChild();
-		aiName = chdata.getData();
+		m_strAiName = chdata.getData();
 
 		nl = element.getElementsByTagName("Number");
 		if (nl.getLength() < 1)
@@ -92,7 +116,7 @@ public class XMLEasyCC extends XMLDocument
 		}
 		element = (Element) nl.item(0);
 		chdata = (CharacterData) element.getFirstChild();
-		accountNumber = Long.parseLong(chdata.getData());
+		m_lAccountNumber = Long.parseLong(chdata.getData());
 
 		nl = element.getElementsByTagName("Bytes");
 		if (nl.getLength() < 1)
@@ -101,7 +125,7 @@ public class XMLEasyCC extends XMLDocument
 		}
 		element = (Element) nl.item(0);
 		chdata = (CharacterData) element.getFirstChild();
-		transferredBytes = Integer.parseInt(chdata.getData());
+		m_lTransferredBytes = Integer.parseInt(chdata.getData());
 
 	}
 
@@ -109,22 +133,22 @@ public class XMLEasyCC extends XMLDocument
 
 	public String getAIName()
 	{
-		return aiName;
+		return m_strAiName;
 	}
 
 	public long getAccountNumber()
 	{
-		return accountNumber;
+		return m_lAccountNumber;
 	}
 
 	public long getTransferredBytes()
 	{
-		return transferredBytes;
+		return m_lTransferredBytes;
 	}
 
 	public void addTransferredBytes(long plusBytes)
 	{
-		transferredBytes += plusBytes;
+		m_lTransferredBytes += plusBytes;
 	}
 
 }

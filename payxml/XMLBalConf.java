@@ -27,6 +27,10 @@
  */
 package payxml;
 
+import org.w3c.dom.*;
+import javax.xml.parsers.*;
+import anon.util.XMLUtil;
+import java.io.*;
 /**
  * Datencontainer f&uuml;r {@link XMLBalance} und {@link XMLCostConfirmations}
  *
@@ -47,26 +51,22 @@ public class XMLBalConf
 		this.confirmations = confirmations;
 	}
 
-	public XMLBalConf(String data)
+	public XMLBalConf(String data) throws Exception
 	{
-		int index = data.indexOf(XMLCostConfirmations.docStartTag);
-		try
+		DocumentBuilder docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+		Document doc = docBuilder.parse(new ByteArrayInputStream(data.getBytes()));
+		Element elemRoot = doc.getDocumentElement();
+		Element elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "Balance");
+		balance = new XMLBalance(elem);
+		elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "CostConfirmations");
+		if (elem != null)
 		{
-			if (index > 0)
-			{
-				balance = new XMLBalance(data.substring(0, index));
-				confirmations = new XMLCostConfirmations(data.substring(index));
-			}
-			else
-			{
-				balance = new XMLBalance(data);
-				confirmations = new XMLCostConfirmations();
-			}
+			confirmations = new XMLCostConfirmations(elem);
 		}
-		catch (Exception ex)
+		else
 		{
-			ex.printStackTrace();
+			confirmations = new XMLCostConfirmations();
 		}
-
 	}
+
 }

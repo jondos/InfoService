@@ -99,14 +99,14 @@ public class PayAccountsControl
 		}
 	}
 
-	public PayAccountFile open() throws WrongPasswordException, IOException
+	public PayAccountFile open() throws WrongPasswordException, IOException,Exception
 	{
 		return open(this.filename);
 	}
 
-	public PayAccountFile open(String filename) throws WrongPasswordException, IOException
+	public PayAccountFile open(String filename) throws WrongPasswordException, IOException, Exception
 	{
-		LogHolder.log(LogLevel.DEBUG, LogType.PAY, 
+		LogHolder.log(LogLevel.DEBUG, LogType.PAY,
 				"PayAccountsControl.open(): filename='"+filename+"'."
 			);
 		byte[] all = null;
@@ -142,12 +142,10 @@ public class PayAccountsControl
 
 	private PayAccountFile readPlain(byte[] all) throws NoPlainPayAccount
 	{
-		if ( (new String(all).indexOf(PayAccountFile.docStartTag)) != -1)
-		{
-			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "readPlain : accountFile ist NOT decrypted");
-			return new PayAccountFile(all);
+		try{
+				return new PayAccountFile(all);
 		}
-		else
+		catch(Exception e)
 		{
 			throw new NoPlainPayAccount();
 		}
@@ -219,7 +217,7 @@ public class PayAccountsControl
 		return changed;
 	}
 
-	public PayAccountFile changeEncryptMode(PayAccountFile file)
+	public PayAccountFile changeEncryptMode(PayAccountFile file) throws Exception
 	{
 		if (file.getPassword() == null)
 		{
@@ -245,7 +243,7 @@ public class PayAccountsControl
 		return file;
 	}
 
-	public void store(PayAccountFile accounts, String filename) throws IOException
+	public void store(PayAccountFile accounts, String filename) throws Exception
 	{
 		byte[] all = accounts.getXML();
 		String pass = accounts.getPassword();
@@ -264,7 +262,7 @@ public class PayAccountsControl
 		out.close();
 	}
 
-	public void store(PayAccountFile accounts) throws IOException
+	public void store(PayAccountFile accounts) throws Exception
 	{
 		store(accounts, this.filename);
 	}

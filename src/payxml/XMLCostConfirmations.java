@@ -29,7 +29,8 @@ package payxml;
 
 import java.util.Enumeration;
 import java.util.Vector;
-
+import org.w3c.dom.*;
+import anon.util.*;
 /**
  * XML Datencontainer für mehrere XMLEasyCC's (cost confirmation) sowie Methoden diese zu verwalten
  * Die Cost Confirmation wird vom Jap an die Ai geschickt
@@ -38,63 +39,79 @@ import java.util.Vector;
 
 public class XMLCostConfirmations extends XMLDocument
 {
-	//~ Public Fields  ******************************************************
-	public static final String docStartTag = "<Confirmations>";
-	public static final String docEndTag = "</Confirmations>";
-
 	//~ Instance fields ********************************************************
-	private Vector confs;
+	private Vector m_Confs;
 
 	//~ Constructors ***********************************************************
 
 	public XMLCostConfirmations(String data) throws Exception
 	{
-		confs = new Vector();
-		xmlToVector(data);
-		//setDocument(data);
+		setDocument(data);
+		setValues();
+	}
+	/**
+	 * Creates an CostConfirmation from  an existing XML docuemnt
+	 *
+	 * @param xml the node that represents the CostConfirmations
+	 */
+	public XMLCostConfirmations(Node xml) throws Exception
+	{
+		m_theDocument=getDocumentBuilder().newDocument();
+		Node n=XMLUtil.importNode(m_theDocument,xml,true);
+		m_theDocument.appendChild(n);
+		setValues();
 	}
 
-	public XMLCostConfirmations()
+	public XMLCostConfirmations() throws Exception
 	{
-		confs = new Vector();
+		m_Confs = new Vector();
+		constructXMLDocument();
 	}
 
 	//~ Methods ****************************************************************
-	private void xmlToVector(String xml) throws Exception
+	private void setValues() throws Exception
 	{
-		String sub;
-		String tmp = xml;
-		//String tmp = new String(accountsBytes);
-		int first, second, off;
-		off = 0;
-		if (tmp.indexOf(docStartTag) == -1)
+		m_Confs = new Vector();
+		Element elemRoot=m_theDocument.getDocumentElement();
+
+		if (!elemRoot.getNodeName().equals("CostConfirmations"))
 		{
 			throw new Exception("wrong password or corrupt accountfile");
 		}
-		while ( (first = tmp.indexOf(XMLEasyCC.docStartTag, off)) != -1)
+		Node n=elemRoot.getFirstChild();
+		while ( n!=null)
 		{
-			second = tmp.indexOf(XMLEasyCC.docEndTag, off) + XMLEasyCC.docEndTag.length();
-			off = second;
-			sub = tmp.substring(first, second);
 			try
 			{
-				XMLEasyCC easyCC = new XMLEasyCC(sub.getBytes());
-				confs.addElement(easyCC);
+				XMLEasyCC easyCC = new XMLEasyCC(n);
+				m_Confs.addElement(easyCC);
 			}
 			catch (Exception e)
 			{
 				throw new Exception("wrong password or corrupt accountfile");
 			}
+			n=n.getNextSibling();
 		}
 	}
 
+	private void constructXMLDocument() throws Exception
+	{
+		m_theDocument=getDocumentBuilder().newDocument();
+		Element elemRoot=m_theDocument.createElement("CostConfirmations");
+		for(int i=0;i<m_Confs.size();i++)
+		{
+			XMLEasyCC cc=(XMLEasyCC)m_Confs.elementAt(i);
+			Node n=XMLUtil.importNode(m_theDocument,cc.getDomDocument().getDocumentElement(),true);
+			elemRoot.appendChild(n);
+		}
+	}
 	/**
 	 *	gibt die gesuchte KostenBestätigung heraus oder null wenn keine für diesen namen vorhanden ist
 	 */
 	public XMLEasyCC getCC(String ai, long accountNumber)
 	{
 		XMLEasyCC cc;
-		Enumeration en = confs.elements();
+		Enumeration en = m_Confs.elements();
 		while (en.hasMoreElements())
 		{
 			cc = ( (XMLEasyCC) en.nextElement());
@@ -137,41 +154,21 @@ public class XMLCostConfirmations extends XMLDocument
 	 *  oder fügt neu hinzu wenn keine entsprechende CC besteht
 	 *	@param cc hinzuzufügende CostConfirmation
 	 */
-	public void addCC(XMLEasyCC easyCC)
+	public void addCC(XMLEasyCC easyCC) throws Exception
 	{
 		XMLEasyCC cc = getCC(easyCC.getAIName(), easyCC.getAccountNumber());
 		if (cc == null)
 		{
-			confs.addElement(easyCC);
+			m_Confs.addElement(easyCC);
 		}
 		else if (cc.getTransferredBytes() < easyCC.getTransferredBytes())
 		{
 			System.out.println("neu CC ist wirklich neuer");
-			confs.removeElement(cc);
-			confs.addElement(easyCC);
+			m_Confs.removeElement(cc);
+			m_Confs.addElement(easyCC);
 			//cc = easyCC;
 		}
+		constructXMLDocument();
 	}
 
-	public String getXMLString(boolean withHead)
-	{
-		//TODO: wrong!!!
-		StringBuffer buffer = new StringBuffer();
-		buffer.append(docStartTag + "\n");
-		Enumeration enum = confs.elements();
-		while (enum.hasMoreElements())
-		{
-			XMLEasyCC confirm = (XMLEasyCC) enum.nextElement();
-			buffer.append(confirm.getXMLString() + "\n");
-		}
-		buffer.append(docEndTag);
-		if (withHead)
-		{
-			return XML_HEAD + buffer.toString();
-		}
-		else
-		{
-			return buffer.toString();
-		}
-	}
 }

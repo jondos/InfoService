@@ -51,7 +51,7 @@ public class PayControl
 	 * view Klassen bzw. dem Methodenaufruf an der pay Klasse aufgerufen werden
 	 */
 
-	public static void initPay()
+	public static void initPay() throws Exception
 	{
 		JAPModel model = JAPModel.getModel();
 		Pay pay = Pay.getInstance();
@@ -90,7 +90,12 @@ public class PayControl
 			if (e.getSource() instanceof JCheckBox)
 			{
 				check = (JCheckBox) e.getSource();
+				try{
 				Pay.getInstance().changeAccountFileEncryptMode();
+				}
+				catch(Exception e1)
+				{
+				}
 			}
 		}
 	}

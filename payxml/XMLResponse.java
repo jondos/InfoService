@@ -35,19 +35,22 @@ public class XMLResponse extends XMLDocument
 {
 	private byte[] m_arbResponse;
 
+   /** Creates a XMLResponse from the XML representation **/
 	public XMLResponse(String xml) throws Exception
 	{
 		setDocument(xml);
 		setResponse();
 	}
 
-	/*
-	 public XMLResponse(byte[] data)
+	/** Creates an XML Response from the supplied signature bytes
+	 *
+	 */
+	public XMLResponse(byte[] sig) throws Exception
 	 {
-	  response = data;
+	  m_arbResponse = sig;
 	  createXmlDocument();
 	 }
-	 */
+
 	private void setResponse() throws Exception
 	{
 		Element element = m_theDocument.getDocumentElement();
@@ -64,12 +67,11 @@ public class XMLResponse extends XMLDocument
 		return m_arbResponse;
 	}
 
-	/*private void createXmlDocument()
+	private void createXmlDocument() throws Exception
 	  {
-	 StringBuffer buffer = new StringBuffer(512);
-	 buffer.append("<Response>");
-	 buffer.append(Base64.encode(response));
-	 buffer.append("</Response>");
-	 xmlDocument = buffer.toString();
-	  }*/
+		  m_theDocument=getDocumentBuilder().newDocument();
+		  Element elemRoot=m_theDocument.createElement("Response");
+		  XMLUtil.setNodeValue(elemRoot,Base64.encodeBytes(m_arbResponse));
+		  m_theDocument.appendChild(elemRoot);
+	  }
 }
