@@ -428,7 +428,7 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener, Ru
 	public static void main(String[] args)
 	{
 		JAPMessages.init();
-		JAPController controller = JAPController.create();
+		JAPController controller = JAPController.getController();
 		LogHolder.setLogInstance(JAPDebug.getInstance());
 		controller.loadConfigFile(null,false);
 		controller.fetchMixCascades(true);

@@ -60,6 +60,7 @@ import anon.infoservice.InfoServiceDBEntry;
 import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.JAPVersionInfo;
 import anon.infoservice.MixCascade;
+import anon.util.ResourceLoader;
 import anon.util.XMLUtil;
 import forward.server.ForwardServerManager;
 import logging.LogHolder;
@@ -74,7 +75,6 @@ import pay.PayAccountsFile;
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPController implements ProxyListener
 {
-
 	/**
 	 * Stores all MixCascades we know (information comes from infoservice).
 	 */
@@ -123,7 +123,7 @@ public final class JAPController implements ProxyListener
 
 	private JAPController()
 	{
-		m_Model = JAPModel.create();
+		m_Model = JAPModel.getInstance();
 		// Create observer object
 		observerVector = new Vector();
 
@@ -169,7 +169,7 @@ public final class JAPController implements ProxyListener
 	/** Creates the Controller - as Singleton.
 	 *  @return The one and only JAPController
 	 */
-	public static JAPController create()
+	public static JAPController getController()
 	{
 		if (m_Controller == null)
 		{
@@ -177,55 +177,6 @@ public final class JAPController implements ProxyListener
 		}
 		return m_Controller;
 	}
-
-	public static JAPController getController()
-	{
-		return m_Controller;
-	}
-
-	/**
-	 * Creates an XML node (InfoServices node) with all infoservices from the database inside.
-	 *
-	 * @param doc The XML document, which is the environment for the created XML node.
-	 *
-	 * @return The InfoServices XML node.
-	 */
-	public Element toXmlNode(Document doc)
-	{
-		Element infoServicesNode = doc.createElement("InfoServices");
-		Vector infoServices = Database.getInstance(InfoServiceDBEntry.class).getEntryList();
-		Enumeration it = infoServices.elements();
-		while (it.hasMoreElements())
-		{
-			infoServicesNode.appendChild( ( (InfoServiceDBEntry) (it.nextElement())).toXmlNode(doc));
-		}
-		return infoServicesNode;
-	}
-
-	/**
-	 * Adds all infoservices, which are childs of the InfoServices node, to the database.
-	 *
-	 * @param infoServicesNode The InfoServices node.
-	 */
-	private void loadFromXml(Element infoServicesNode)
-	{
-		NodeList infoServiceNodes = infoServicesNode.getElementsByTagName("InfoService");
-		for (int i = 0; i < infoServiceNodes.getLength(); i++)
-		{
-			/* add all childs to the database */
-			try
-			{
-				Database.getInstance(InfoServiceDBEntry.class).update(
-								new InfoServiceDBEntry( (Element) (infoServiceNodes.item(i))));
-			}
-			catch (Exception e)
-			{
-				/* if there was an error, it does not matter */
-			}
-		}
-	}
-
-
 
 	//---------------------------------------------------------------------
 	public void initialRun()
@@ -387,7 +338,7 @@ public final class JAPController implements ProxyListener
 			{
 				f = new FileInputStream(japConfFile);
 				/* if we are successful, use this config file also for storing the configuration */
-				JAPModel.getModel().setConfigFile(japConfFile);
+				JAPModel.getInstance().setConfigFile(japConfFile);
 			}
 			catch (Exception e)
 			{
@@ -406,7 +357,7 @@ public final class JAPController implements ProxyListener
 			{
 				f = new FileInputStream(japConfFile);
 				/* if we are successful, use this config file also for storing the configuration */
-				JAPModel.getModel().setConfigFile(japConfFile);
+				JAPModel.getInstance().setConfigFile(japConfFile);
 			}
 			catch (Exception e)
 			{
@@ -425,7 +376,7 @@ public final class JAPController implements ProxyListener
 			{
 				f = new FileInputStream(japConfFile);
 				/* if we are successful, use this config file also for storing the configuration */
-				JAPModel.getModel().setConfigFile(japConfFile);
+				JAPModel.getInstance().setConfigFile(japConfFile);
 			}
 			catch (Exception e)
 			{
@@ -439,7 +390,7 @@ public final class JAPController implements ProxyListener
 			/* always try to use the config file specified on the command-line for storing the
 			 * configuration
 			 */
-			JAPModel.getModel().setConfigFile(a_strJapConfFile);
+			JAPModel.getInstance().setConfigFile(a_strJapConfFile);
 		}
 		else
 		{
@@ -448,7 +399,7 @@ public final class JAPController implements ProxyListener
 				/* no config file was specified on the command line and the default config files don't
 				 * exist -> store the configuration in the home directory of the user
 				 */
-				JAPModel.getModel().setConfigFile(System.getProperty("user.home", "") + "/" +
+				JAPModel.getInstance().setConfigFile(System.getProperty("user.home", "") + "/" +
 												  JAPConstants.XMLCONFFN);
 			}
 		}
@@ -539,7 +490,7 @@ public final class JAPController implements ProxyListener
 					{
 						JAPCertificateStore jcs = JAPCertificateStore.getInstance();
 						JAPCertificate cert = JAPCertificate.getInstance(
-							JAPUtil.loadRessource(
+							m_Model.getResourceLoader().loadResource(
 							JAPConstants.CERTSPATH +
 							JAPConstants.TRUSTEDROOTCERT));
 						jcs.addCertificate(cert, true);
@@ -689,7 +640,8 @@ public final class JAPController implements ProxyListener
 				if (infoServicesNodes.getLength() > 0)
 				{
 					Element infoServicesNode = (Element) (infoServicesNodes.item(0));
-					loadFromXml(infoServicesNode);
+					InfoServiceDBEntry.loadFromXml(
+									   infoServicesNode, Database.getInstance(InfoServiceDBEntry.class));
 				}
 				/* prefered infoservice */
 				NodeList preferedInfoServiceNodes = root.getElementsByTagName("PreferedInfoService");
@@ -752,7 +704,7 @@ public final class JAPController implements ProxyListener
         if (JAPConstants.WITH_BLOCKINGRESISTANCE == true) {
           Element japForwardingSettingsNode = (Element)(XMLUtil.getFirstChildByName(root, "JapForwardingSettings"));
           if (japForwardingSettingsNode != null) {
-            JAPModel.getModel().getRoutingSettings().loadSettingsFromXml(japForwardingSettingsNode);
+            JAPModel.getInstance().getRoutingSettings().loadSettingsFromXml(japForwardingSettingsNode);
           }
           else {
             LogHolder.log(LogLevel.ERR, LogType.MISC, "JAPController: loadConfigFile: Error in XML structure (JapForwardingSettings node): Using default settings for forwarding.");
@@ -785,7 +737,7 @@ public final class JAPController implements ProxyListener
 			else
 			{
 				/* JAPModel.getModel().getConfigFile() should always point to a valid configuration file */
-				FileOutputStream f = new FileOutputStream(JAPModel.getModel().getConfigFile());
+				FileOutputStream f = new FileOutputStream(JAPModel.getInstance().getConfigFile());
 				f.write(sb.getBytes());
 				f.flush();
 				f.close();
@@ -905,7 +857,7 @@ public final class JAPController implements ProxyListener
 			}
 			/* adding infoservice settings */
 			/* infoservice list */
-			e.appendChild(toXmlNode(doc));
+			e.appendChild(InfoServiceDBEntry.toXmlNode(doc, Database.getInstance(InfoServiceDBEntry.class)));
 			/* prefered infoservice */
 			InfoServiceDBEntry preferedInfoService = InfoServiceHolder.getInstance().getPreferedInfoService();
 			Element preferedInfoServiceNode = doc.createElement("PreferedInfoService");
@@ -943,7 +895,7 @@ public final class JAPController implements ProxyListener
 
       /* add the settings of the JAP forwarding system, if it is enabled */
       if (JAPConstants.WITH_BLOCKINGRESISTANCE == true) {
-        e.appendChild(JAPModel.getModel().getRoutingSettings().getSettingsAsXml(doc));
+        e.appendChild(JAPModel.getInstance().getRoutingSettings().getSettingsAsXml(doc));
       }
 
 			return XMLUtil.XMLDocumentToString(doc);
@@ -980,6 +932,7 @@ public final class JAPController implements ProxyListener
 			m_View.localeChanged();
 		}
 	}
+
 
 	//---------------------------------------------------------------------
 	public void setMinimizeOnStartup(boolean b)
@@ -1268,9 +1221,9 @@ public final class JAPController implements ProxyListener
 					splash = JAPWaitSplash.start(JAPMessages.getString("setAnonModeSplashConnect"),
 												 JAPMessages.getString("setAnonModeSplashTitle"));
 					if ( (m_bAlreadyCheckedForNewVersion == false) && (!JAPModel.isInfoServiceDisabled()) &&
-						( (JAPModel.getModel().getRoutingSettings().getRoutingMode() !=
+						( (JAPModel.getInstance().getRoutingSettings().getRoutingMode() !=
 						   JAPRoutingSettings.ROUTING_MODE_CLIENT) ||
-						 (JAPModel.getModel().getRoutingSettings().getForwardInfoService() == false)))
+						 (JAPModel.getInstance().getRoutingSettings().getForwardInfoService() == false)))
 					{
 						/* check for a new version of JAP if not already done, automatic infoservice requests
 						 * are allowed and we don't use forwarding with also forwarded infoservice (because
@@ -1300,11 +1253,11 @@ public final class JAPController implements ProxyListener
 						  m_proxySocks.start();
 							}*/
 						// starting MUX --> Success ???
-						if (JAPModel.getModel().getRoutingSettings().getRoutingMode() ==
+						if (JAPModel.getInstance().getRoutingSettings().getRoutingMode() ==
 							JAPRoutingSettings.ROUTING_MODE_CLIENT)
 						{
 							/* we use a forwarded connection */
-							m_proxyAnon = JAPModel.getModel().getRoutingSettings().getAnonProxyInstance(
+							m_proxyAnon = JAPModel.getInstance().getRoutingSettings().getAnonProxyInstance(
 								m_socketHTTPListener);
 						}
 						else
@@ -1475,7 +1428,7 @@ public final class JAPController implements ProxyListener
 					getCurrentMixCascade().resetCurrentStatus();
 
 					/* notify the forwarding system after! m_proxyAnon is set to null */
-					JAPModel.getModel().getRoutingSettings().anonConnectionClosed();
+					JAPModel.getInstance().getRoutingSettings().anonConnectionClosed();
 
 					notifyJAPObservers();
 					if (splash != null)
@@ -1705,7 +1658,7 @@ public final class JAPController implements ProxyListener
 			{
 				LogHolder.log(LogLevel.ERR, LogType.MISC,
 							  "JAPController: saveConfigFile: Error saving configuration to: " +
-							  JAPModel.getModel().getConfigFile());
+							  JAPModel.getInstance().getConfigFile());
 				JOptionPane.showMessageDialog(m_Controller.getView(),
 											  JAPMessages.getString("errorSavingConfig"),
 											  JAPMessages.getString("errorSavingConfigTitle"),

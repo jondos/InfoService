@@ -27,6 +27,7 @@
  */
 package anon.infoservice;
 
+import java.util.Vector;
 import HTTPClient.Codecs;
 import HTTPClient.HTTPConnection;
 import HTTPClient.NVPair;
@@ -36,7 +37,6 @@ import HTTPClient.NVPair;
  */
 public class HTTPConnectionFactory
 {
-
 	/**
 	 * This value means, that there is no proxy server to use for the HTTP connection.
 	 */
@@ -53,9 +53,19 @@ public class HTTPConnectionFactory
 	final public static int PROXY_TYPE_SOCKS = 2;
 
 	/**
+	 * Defines the HTTPConnection class for that this factory constructs instances.
+	 */
+	private static Class ms_HTTPConnectionClass = HTTPConnection.class;
+
+	/**
 	 * Stores the instance of HTTPConnectionFactory (Singleton).
 	 */
-	private static HTTPConnectionFactory httpConnectionFactoryInstance;
+	private static HTTPConnectionFactory ms_httpConnectionFactoryInstance;
+
+	/**
+	 * The HTTPConnections that were recently created by this factory object.
+	 */
+	private Vector m_vecHTTPConnections;
 
 	/**
 	 * Stores the username for the proxy authorization.
@@ -92,11 +102,11 @@ public class HTTPConnectionFactory
 	 */
 	public static HTTPConnectionFactory getInstance()
 	{
-		if (httpConnectionFactoryInstance == null)
+		if (ms_httpConnectionFactoryInstance == null)
 		{
-			httpConnectionFactoryInstance = new HTTPConnectionFactory();
+			ms_httpConnectionFactoryInstance = new HTTPConnectionFactory();
 		}
-		return httpConnectionFactoryInstance;
+		return ms_httpConnectionFactoryInstance;
 	}
 
 	/**
@@ -117,14 +127,10 @@ public class HTTPConnectionFactory
 	 *                          need authentication, take null. This value is only meaningful, if
 	 *                          the proxyType is PROXY_TYPE_HTTP and proxyAuthUserName is not null.
 	 */
-	public void setNewProxySettings(int proxyType, String proxyHost, int proxyPort, String proxyAuthUserName,
-									String proxyAuthPassword)
+	public void setNewProxySettings(int proxyType, String proxyHost, int proxyPort,
+									String proxyAuthUserName, String proxyAuthPassword)
 	{
-		if (proxyHost == null)
-		{
-			proxyType = PROXY_TYPE_NONE;
-		}
-		if ( (proxyPort < 1) || (proxyPort > 65535))
+		if (proxyHost == null || !ListenerInterface.isValidPort(proxyPort))
 		{
 			proxyType = PROXY_TYPE_NONE;
 		}
@@ -133,7 +139,7 @@ public class HTTPConnectionFactory
 			/* don't allow to create new connections until we have changed all proxy attributes */
 			if (proxyType == PROXY_TYPE_HTTP)
 			{
-				/* proxy authorization is only with HTTP proxies supported */
+				// proxy authorization is only supported for HTTP proxies
 				this.proxyAuthUserName = proxyAuthUserName;
 				this.proxyAuthPassword = proxyAuthPassword;
 			}
@@ -168,12 +174,9 @@ public class HTTPConnectionFactory
 	 *
 	 * @param a_timeout The new communication timeout.
 	 */
-	public void setTimeout(int a_timeout)
+	public synchronized void setTimeout(int a_timeout)
 	{
-		synchronized (this)
-		{
 			m_timeout = a_timeout;
-		}
 	}
 
 	/**
@@ -182,14 +185,9 @@ public class HTTPConnectionFactory
 	 *
 	 * @return The communication timeout for new connections.
 	 */
-	public int getTimeout()
+	public synchronized int getTimeout()
 	{
-		int r_timeout = 0;
-		synchronized (this)
-		{
-			r_timeout = m_timeout;
-		}
-		return r_timeout;
+		return m_timeout;
 	}
 
 	/**
@@ -198,15 +196,16 @@ public class HTTPConnectionFactory
 	 * @param target The ListenerInterface of the connection target.
 	 *
 	 * @return A new instance of HTTPConnection with a connection to the specified target and the
-	 *         current proxy settings, when the instance is created.
+	 *         current proxy settings.
 	 */
 	public HTTPConnection createHTTPConnection(ListenerInterface target)
 	{
 		HTTPConnection newConnection = null;
 		synchronized (this)
 		{
+			newConnection = createHTTPConnectionInternal(target);
+
 			/* get always the current proxy settings */
-			newConnection = new HTTPConnection(target.getHost(), target.getPort());
 			if (proxyAuthUserName != null)
 			{
 				/* set the proxy authorization if neccessary (only HTTP proxies) */
@@ -219,16 +218,12 @@ public class HTTPConnectionFactory
 				{
 					tmpPassword = Codecs.base64Encode(proxyAuthUserName + ":");
 				}
-				NVPair authorizationHeader = new NVPair("Proxy-Authorization", "Basic " + tmpPassword);
-				replaceHeader(newConnection, authorizationHeader);
+				replaceHeader(newConnection, new NVPair("Proxy-Authorization", "Basic " + tmpPassword));
 			}
 		}
 		/* set some header infos */
-		NVPair[] headers = new NVPair[2];
-		headers[0] = new NVPair("Cache-Control", "no-cache");
-		headers[1] = new NVPair("Pragma", "no-cache");
-		replaceHeader(newConnection, headers[0]);
-		replaceHeader(newConnection, headers[1]);
+		replaceHeader(newConnection, new NVPair("Cache-Control", "no-cache"));
+		replaceHeader(newConnection, new NVPair("Pragma", "no-cache"));
 		newConnection.setAllowUserInteraction(false);
 		/* set the timeout for all network operations */
 		newConnection.setTimeout(getTimeout() * 1000);
@@ -253,8 +248,7 @@ public class HTTPConnectionFactory
 		}
 		else
 		{
-			int len = headers.length;
-			for (int i = 0; i < len; i++)
+			for (int i = 0; i < headers.length; i++)
 			{
 				if (headers[i].getName().equalsIgnoreCase(header.getName()))
 				{
@@ -265,14 +259,83 @@ public class HTTPConnectionFactory
 				}
 			}
 			/* no header with the same name found, add a field and set it */
-			NVPair tmpHeaders[] = new NVPair[len + 1];
-			for (int i = 0; i < len; i++)
-			{
-				tmpHeaders[i] = headers[i];
-			}
-			tmpHeaders[len] = header;
+			NVPair tmpHeaders[] = new NVPair[headers.length + 1];
+			System.arraycopy(headers, 0, tmpHeaders, 0, headers.length);
+			tmpHeaders[headers.length] = header;
 			connection.setDefaultHeaders(tmpHeaders);
 		}
 	}
 
+	/**
+	 * This method is used to change the type of the created HTTPConnections.
+	 * A call of this method deletes the current factory instance and can be used
+	 * as a reset operation, too.
+	 * This method is used for testing purposes. PLEASE DO NOT REMOVE IT!
+	 * @param a_HTTPConnectionClass the class of generated HTTPConnections
+	 */
+	private static void setHTTPConnectionClass(Class a_HTTPConnectionClass)
+	{
+		if (HTTPConnection.class.isAssignableFrom(a_HTTPConnectionClass))
+		{
+			ms_httpConnectionFactoryInstance = null;
+			ms_HTTPConnectionClass = a_HTTPConnectionClass;
+		}
+		else
+		{
+			throw new IllegalArgumentException("This is not a valid HTTPConnection class: "
+											   + a_HTTPConnectionClass);
+		}
+	}
+
+	/**
+	 * Returns the recently created HTTPConnections.
+	 * This method is used for testing purposes. PLEASE DO NOT REMOVE IT!
+	 * @return Vector
+	 */
+	private Vector getCreatedHTTPConnections()
+	{
+		return m_vecHTTPConnections;
+	}
+
+	/**
+	 * Creates an HTTPConnection with the listener settings.
+	 * @param target the basic listener settings for this connection
+	 * @return an HTTPConnection with the listener settings
+	 */
+	private HTTPConnection createHTTPConnectionInternal(ListenerInterface target)
+	{
+		HTTPConnection connection;
+
+		if (ms_HTTPConnectionClass == HTTPConnection.class)
+		{
+			// create standard HTTPConnections the easy way for performance reasons
+			connection = new HTTPConnection(target.getHost(), target.getPort());
+		}
+		else
+		{
+			// create a generic HTTPConnection, for example for testing purposes
+			Class[] paramTypes = new Class[2];
+			Object[] params = new Object[2];
+			paramTypes[0] = String.class;
+			paramTypes[1] = int.class;
+			params[0] = target.getHost();
+			params[1] = new Integer(target.getPort());
+			try
+			{
+				connection = (HTTPConnection) ms_HTTPConnectionClass.getConstructor(
+					paramTypes).newInstance(params);
+			}
+			catch (Exception a_e)
+			{
+				throw new IllegalArgumentException("Could not construct an HTTPConnection! " + a_e);
+			}
+			// save the created connection for testing purposes
+			if (m_vecHTTPConnections == null)
+			{
+				m_vecHTTPConnections = new Vector();
+			}
+			m_vecHTTPConnections.add(connection);
+		}
+		return connection;
+	}
 }

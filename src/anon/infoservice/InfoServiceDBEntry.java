@@ -95,6 +95,58 @@ public class InfoServiceDBEntry extends DatabaseEntry
 	private boolean m_primaryForwarderList;
 
 	/**
+	 * Creates an XML node (InfoServices node) with all infoservices from the database inside.
+	 * The Database does not need to the one registered in the central registry.
+	 *
+	 * @param a_doc The XML document, which is the environment for the created XML node.
+	 * @param a_database the database that contains the InfoServiceDBEntries
+	 *
+	 * @return The InfoServices XML node.
+	 */
+	public static Element toXmlNode(Document a_doc, Database a_database)
+	{
+		Object dbentry;
+
+		Element infoServicesNode = a_doc.createElement("InfoServices");
+		Vector infoServices = a_database.getEntryList();
+		Enumeration it = infoServices.elements();
+		while (it.hasMoreElements())
+		{
+			dbentry = it.nextElement();
+			if (dbentry instanceof InfoServiceDBEntry) {
+				infoServicesNode.appendChild( ( (InfoServiceDBEntry) (dbentry)).toXmlNode(a_doc));
+			}
+		}
+		return infoServicesNode;
+	}
+
+	/**
+	 * Adds all infoservices, which are childs of the InfoServices node, to the database.
+	 *
+	 * @param infoServicesNode The InfoServices node.
+	 * @param a_database the database that contains the InfoServiceDBEntries
+	 */
+	public static void loadFromXml(Element infoServicesNode, Database a_database)
+	{
+		NodeList infoServiceNodes = infoServicesNode.getElementsByTagName("InfoService");
+		for (int i = 0; i < infoServiceNodes.getLength(); i++)
+		{
+			/* add all childs to the database */
+			try
+			{
+				a_database.update(new InfoServiceDBEntry( (Element) (infoServiceNodes.item(i))));
+			}
+			catch (Exception e)
+			{
+				LogHolder.log(LogLevel.WARNING, LogType.MISC, "Could not load db entries from XML! " + e);
+				/* if there was an error, it does not matter */
+			}
+		}
+	}
+
+
+
+	/**
 	 * Creates a new InfoService from XML description (InfoService node).
 	 *
 	 * @param infoServiceNode The InfoService node from an XML document.

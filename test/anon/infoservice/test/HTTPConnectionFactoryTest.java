@@ -25,34 +25,60 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package anon.test;
+package anon.infoservice.test;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
+import HTTPClient.HTTPConnection;
+import junitx.framework.PrivateTestCase;
 
-public class AllTests
+import anon.infoservice.HTTPConnectionFactory;
+import anon.infoservice.ListenerInterface;
+
+/**
+ * These are the tests for the HTTPConnectionFactory class.
+ * @author Wendolsky
+ */
+public class HTTPConnectionFactoryTest extends PrivateTestCase
 {
-	/**
-	 * The main function.
-	 *
-	 * @param a_Args (no arguments needed)
-	 */
-	public static void main(String[] a_Args)
+	public HTTPConnectionFactoryTest(String a_name)
 	{
-		junit.swingui.TestRunner.run(AllTests.class);
+		super(a_name);
 	}
 
 	/**
-	 * Returns the test suite that combines all other tests of the project.
-	 *
-	 * @return Test The test suite that combines all other tests of the project.
+	 * Configures the factory.
+	 * @throws Exception if the HTTPConnection class could no be altered
 	 */
-	public static Test suite()
+	protected void setUp() throws Exception
 	{
-		TestSuite suite = new TestSuite(AllTests.class.getPackage().toString());
-		suite.addTestSuite(SampleTest.class);
-		suite.addTest(anon.infoservice.test.AllTests.suite());
-		return suite;
+		Object[] args = new Object[1];
+
+		args[0] = DummyHTTPConnection.class;
+		// create the factory
+		invoke(HTTPConnectionFactory.getInstance(), "setHTTPConnectionClass", args);
 	}
 
+	/**
+	 * Tests if the timeout is set correctly.
+	 */
+	public void testTimeout()
+	{
+		HTTPConnectionFactory.getInstance().setTimeout(50);
+		this.assertEquals(50, HTTPConnectionFactory.getInstance().getTimeout());
+	}
+
+	public void testCreateHTTPConnection() throws Exception
+	{
+		ListenerInterface listener =
+			new ListenerInterface("testhost", 1000, ListenerInterface.PROTOCOL_TYPE_HTTPS);
+		HTTPConnection connection;
+
+		connection = HTTPConnectionFactory.getInstance().createHTTPConnection(listener);
+
+		assertTrue(connection instanceof DummyHTTPConnection);
+		assertEquals("testhost", connection.getHost());
+		assertEquals(1000, connection.getPort());
+		// protocol is ignored by the factory
+		assertEquals(ListenerInterface.PROTOCOL_TYPE_HTTP, connection.getProtocol());
+		//System.out.println(connection.toString());
+	}
 }

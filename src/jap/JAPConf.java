@@ -208,6 +208,7 @@ final class JAPConf extends JDialog
 		AbstractJAPConfModule certModule = new JAPConfCert();
 		AbstractJAPConfModule torModule = new JAPConfTor();
 		AbstractJAPConfModule anonModule = new JAPConfAnon(null);
+		AbstractJAPConfModule anongeneralModule = new JAPConfAnonGeneral(null);
 		AbstractJAPConfModule accountsModule = null;
 		if (loadPay)
 		{
@@ -230,6 +231,7 @@ final class JAPConf extends JDialog
 		m_confModules.addElement(certModule);
 		m_confModules.addElement(torModule);
 		m_confModules.addElement(anonModule);
+		m_confModules.addElement(anongeneralModule);
 		if (JAPConstants.WITH_BLOCKINGRESISTANCE)
 		{
 			m_confModules.addElement(routingModule);
@@ -254,7 +256,7 @@ final class JAPConf extends JDialog
 		JTabbedPane tabs=new JTabbedPane();
 		tabs.addTab(anonModule.getTabTitle(),anonModule.getRootPanel());
 		tabs.addTab(torModule.getTabTitle(),torModule.getRootPanel());
-		tabs.addTab("Allgemein",new JPanel());
+		tabs.addTab(anongeneralModule.getTabTitle(),anongeneralModule.getRootPanel());
 		m_Tabs.add(tabs,ANON_TAB);
 		//m_tabOrder.put(new Integer(ANON_TAB), new Integer(m_Tabs.getTabCount() - 1));
 		m_Tabs.add(certModule.getRootPanel(),CERT_TAB);
@@ -328,32 +330,32 @@ final class JAPConf extends JDialog
 //new Config select...
 		DefaultMutableTreeNode rootNode=new DefaultMutableTreeNode("root");
 		DefaultTreeModel treeModel=new DefaultTreeModel(rootNode);
-		DefaultMutableTreeNode node=new DefaultMutableTreeNode(new TreeElement("Erscheinungsbild",UI_TAB));
+		DefaultMutableTreeNode node=new DefaultMutableTreeNode(new TreeElement(uiModule.getTabTitle(),UI_TAB));
 		rootNode.add(node);
 		if (loadPay)
 		{
-		node=new DefaultMutableTreeNode("Bezahlung");
+		node=new DefaultMutableTreeNode(accountsModule.getTabTitle());
 		rootNode.add(node);
 		}
-		node=new DefaultMutableTreeNode(new TreeElement("JAP-Update",UPDATE_TAB));
+		node=new DefaultMutableTreeNode(new TreeElement(updateModule.getTabTitle(),UPDATE_TAB));
 		rootNode.add(node);
-		DefaultMutableTreeNode nodeNet=new DefaultMutableTreeNode("Netz");
+		DefaultMutableTreeNode nodeNet=new DefaultMutableTreeNode(JAPMessages.getString("ngTreeNetwork"));
 		rootNode.add(nodeNet);
-		DefaultMutableTreeNode n2=new DefaultMutableTreeNode(new TreeElement("Listener",PORT_TAB));
+		DefaultMutableTreeNode n2=new DefaultMutableTreeNode(new TreeElement(JAPMessages.getString("confListenerTab"),PORT_TAB));
 		nodeNet.add(n2);
-		n2=new DefaultMutableTreeNode(new TreeElement("Firewall",PROXY_TAB));
+		n2=new DefaultMutableTreeNode(new TreeElement(JAPMessages.getString("confProxyTab"),PROXY_TAB));
 		nodeNet.add(n2);
-		DefaultMutableTreeNode nodeAnon=new DefaultMutableTreeNode("Anonymität");
+		DefaultMutableTreeNode nodeAnon=new DefaultMutableTreeNode(JAPMessages.getString("ngAnonymitaet"));
 		rootNode.add(nodeAnon);
-		n2=new DefaultMutableTreeNode(new TreeElement("InfoService",INFOSERVICE_TAB));
+		n2=new DefaultMutableTreeNode(new TreeElement(infoServiceModule.getTabTitle(),INFOSERVICE_TAB));
 		nodeAnon.add(n2);
-		n2=new DefaultMutableTreeNode(new TreeElement("Dienste",ANON_TAB));
+		n2=new DefaultMutableTreeNode(new TreeElement(JAPMessages.getString("ngTreeAnonService"),ANON_TAB));
 		nodeAnon.add(n2);
-		n2=new DefaultMutableTreeNode(new TreeElement("Blockungsresistenz",FORWARD_TAB));
+		n2=new DefaultMutableTreeNode(new TreeElement(routingModule.getTabTitle(),FORWARD_TAB));
 		nodeAnon.add(n2);
-		node=new DefaultMutableTreeNode(new TreeElement("Zertifikate",CERT_TAB));
+		node=new DefaultMutableTreeNode(new TreeElement(certModule.getTabTitle(),CERT_TAB));
 		rootNode.add(node);
-		node=new DefaultMutableTreeNode(new TreeElement("Debugging",DEBUG_TAB));
+		node=new DefaultMutableTreeNode(new TreeElement(JAPMessages.getString("ngTreeDebugging"),DEBUG_TAB));
 		rootNode.add(node);
 		DefaultTreeCellRenderer renderer=new DefaultTreeCellRenderer();
 		renderer.setClosedIcon(JAPUtil.loadImageIcon("arrow.gif", true));

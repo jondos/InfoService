@@ -118,7 +118,7 @@ public class JAPVersionInfo
 		}
 	}
 
-	public String getVersion()
+	public String getVersionNumber()
 	{
 		return m_Version;
 	}

@@ -98,11 +98,11 @@ import gui.*;
 	//private GuthabenAnzeige guthaben;
 	private boolean loadPay = false;
 
-	public JAPView(String s)
+	public JAPView(String s, JAPController a_controller)
 	{
 		super(s);
 		m_NumberFormat = NumberFormat.getInstance();
-		controller = JAPController.getController();
+		controller = a_controller;
 		helpWindow = null; //new JAPHelp(this);
 		m_dlgConfig = null; //new JAPConf(this);
 		m_bIsIconified = false;
@@ -251,7 +251,7 @@ import gui.*;
 		//Change size and location if the user requested to restore the old position/size
 		if (JAPModel.getSaveMainWindowPosition())
 		{
-			JAPModel m = JAPModel.getModel();
+			JAPModel m = JAPModel.getInstance();
 			Dimension ds = Toolkit.getDefaultToolkit().getScreenSize();
 			if (m.m_OldMainWindowLocation != null && m.m_OldMainWindowLocation.x >= 0 &&
 				m.m_OldMainWindowLocation.y > 0 /*&&m.m_OldMainWindowLocation.x<ds.width&&

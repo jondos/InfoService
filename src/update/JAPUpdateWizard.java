@@ -113,7 +113,7 @@ public final class JAPUpdateWizard extends BasicWizard implements Runnable
 		setHost(host);
 		m_Status = UPDATESTATUS_ABORTED;
 		japVersionInfo = info;
-		m_strNewJapVersion = info.getVersion();
+		m_strNewJapVersion = info.getVersionNumber();
 		//updateWizard = this;
 		welcomePage = new JAPWelcomeWizardPage();
 		downloadPage = new JAPDownloadWizardPage();
@@ -547,7 +547,7 @@ public final class JAPUpdateWizard extends BasicWizard implements Runnable
 			{
 				jarUrl = new URL(codeBase,
 								 japVersionInfo.getJAPJarFileName() + "?version-id=" +
-								 japVersionInfo.getVersion()
+								 japVersionInfo.getVersionNumber()
 								 + "&current-version-id=" +
 								 JAPConstants.aktVersion);
 			}
@@ -555,7 +555,7 @@ public final class JAPUpdateWizard extends BasicWizard implements Runnable
 			{
 				jarUrl = new URL(codeBase,
 								 japVersionInfo.getJAPJarFileName() + "?version-id=" +
-								 japVersionInfo.getVersion());
+								 japVersionInfo.getVersionNumber());
 			}
 		}
 		catch (Exception e)

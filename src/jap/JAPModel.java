@@ -29,6 +29,7 @@ package jap;
 
 import java.awt.Dimension;
 import java.awt.Point;
+import anon.util.ResourceLoader;
 import anon.crypto.JAPCertificate;
 import anon.crypto.JAPCertificateStore;
 import gui.JAPDll;
@@ -36,6 +37,11 @@ import gui.JAPDll;
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPModel
 {
+	/**
+	 * Loads resources.
+	 */
+	private ResourceLoader m_resourceLoader;
+
 
   private String m_biHost = JAPConstants.PIHOST;
   private int m_biPort = JAPConstants.PIPORT;
@@ -89,11 +95,12 @@ public final class JAPModel
 
   private JAPModel()
   {
+	  m_resourceLoader = new ResourceLoader("JAP");
     m_certStore = JAPCertificateStore.getInstance();
     try
     {
       m_certJAPCodeSigning = JAPCertificate.getInstance(
-        JAPUtil.loadRessource(JAPConstants.CERTSPATH + JAPConstants.CERT_JAPCODESIGNING));
+        getResourceLoader().loadResource(JAPConstants.CERTSPATH + JAPConstants.CERT_JAPCODESIGNING));
     }
     catch (Throwable t)
     {
@@ -102,7 +109,7 @@ public final class JAPModel
     try
     {
       m_certJAPInfoServiceMessages = JAPCertificate.getInstance(
-        JAPUtil.loadRessource(JAPConstants.CERTSPATH + JAPConstants.CERT_JAPINFOSERVICEMESSAGES));
+        getResourceLoader().loadResource(JAPConstants.CERTSPATH + JAPConstants.CERT_JAPINFOSERVICEMESSAGES));
     }
     catch (Throwable t)
     {
@@ -117,7 +124,7 @@ public final class JAPModel
   /** Creates the Model - as Singleton.
    *  @return The one and only JAPModel
    */
-  public static JAPModel create()
+  public static JAPModel getInstance()
   {
     if (ms_TheModel == null)
     {
@@ -126,9 +133,13 @@ public final class JAPModel
     return ms_TheModel;
   }
 
-  public static JAPModel getModel()
+  /**
+   * Returns the ResourceLoader used to load resources.
+   * @return the ResourceLoader used to load resources
+   */
+  public ResourceLoader getResourceLoader()
   {
-    return ms_TheModel;
+	  return m_resourceLoader;
   }
 
   protected void setUseFirewall(boolean b)

@@ -46,6 +46,7 @@ import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import org.bouncycastle.asn1.x509.X509NameTokenizer;
+import anon.util.ResourceLoader;
 import anon.crypto.JAPCertificate;
 import anon.crypto.JAPCertificateStore;
 import gui.CAListCellRenderer;
@@ -205,7 +206,7 @@ public class JAPConfCert extends AbstractJAPConfModule
 		JAPCertificate cert = null;
 		try
 		{
-			byte[] tmp = JAPUtil.loadRessource(JAPConstants.CERTSPATH +
+			byte[] tmp = JAPModel.getInstance().getResourceLoader().loadResource(JAPConstants.CERTSPATH +
 											   JAPConstants.TRUSTEDROOTCERT);
 			cert = JAPCertificate.getInstance(tmp);
 		}

@@ -161,7 +161,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
   {
     super(null);
     /* we want to be notidfied, if the forwarding settings are changed */
-    JAPModel.getModel().getRoutingSettings().addObserver(this);
+    JAPModel.getInstance().getRoutingSettings().addObserver(this);
   }
 
   /**
@@ -194,7 +194,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
   {
     try
     {
-      if (a_notifier == JAPModel.getModel().getRoutingSettings())
+      if (a_notifier == JAPModel.getInstance().getRoutingSettings())
       {
         /* message is from JAPRoutingSettings */
         if (((JAPRoutingMessage)(a_message)).getMessageCode() == JAPRoutingMessage.ROUTING_MODE_CHANGED) {
@@ -221,7 +221,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
     final JPanel configPanel = new JPanel();
 
     boolean serverRunning = false;
-    if (JAPModel.getModel().getRoutingSettings().getRoutingMode() ==
+    if (JAPModel.getInstance().getRoutingSettings().getRoutingMode() ==
       JAPRoutingSettings.ROUTING_MODE_SERVER)
     {
       serverRunning = true;
@@ -237,7 +237,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
         if (settingsRoutingStartServerBox.isSelected())
         {
           /* start the server by changing the routing mode */
-          if (JAPModel.getModel().getRoutingSettings().setRoutingMode(JAPRoutingSettings.
+          if (JAPModel.getInstance().getRoutingSettings().setRoutingMode(JAPRoutingSettings.
             ROUTING_MODE_SERVER) == false)
           {
             /* there was an error while starting the server */
@@ -254,7 +254,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
         else
         {
           /* shutdown the server */
-          JAPModel.getModel().getRoutingSettings().setRoutingMode(JAPRoutingSettings.
+          JAPModel.getInstance().getRoutingSettings().setRoutingMode(JAPRoutingSettings.
             ROUTING_MODE_DISABLED);
         }
       }
@@ -278,10 +278,10 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
 
     JLabel settingsRoutingServerConfigMyConnectionLabel = new JLabel(JAPMessages.getString("settingsRoutingServerConfigMyConnectionLabel"));
     settingsRoutingServerConfigMyConnectionLabel.setFont(getFontSetting());
-    final JComboBox connectionClassesComboBox = new JComboBox(JAPModel.getModel().getRoutingSettings().getConnectionClassSelector().getConnectionClasses());
+    final JComboBox connectionClassesComboBox = new JComboBox(JAPModel.getInstance().getRoutingSettings().getConnectionClassSelector().getConnectionClasses());
     connectionClassesComboBox.setEditable(false);
-    connectionClassesComboBox.setSelectedItem(JAPModel.getModel().getRoutingSettings().getConnectionClassSelector().getCurrentConnectionClass());
-    final JLabel settingsRoutingServerConfigBandwidthLabel = new JLabel(JAPMessages.getString("settingsRoutingServerConfigBandwidthLabelPart1") + " " + Integer.toString((JAPModel.getModel().getRoutingSettings().getConnectionClassSelector().getCurrentConnectionClass().getCurrentBandwidth() * 8 ) / 1000) + " " + JAPMessages.getString("settingsRoutingServerConfigBandwidthLabelPart2"));
+    connectionClassesComboBox.setSelectedItem(JAPModel.getInstance().getRoutingSettings().getConnectionClassSelector().getCurrentConnectionClass());
+    final JLabel settingsRoutingServerConfigBandwidthLabel = new JLabel(JAPMessages.getString("settingsRoutingServerConfigBandwidthLabelPart1") + " " + Integer.toString((JAPModel.getInstance().getRoutingSettings().getConnectionClassSelector().getCurrentConnectionClass().getCurrentBandwidth() * 8 ) / 1000) + " " + JAPMessages.getString("settingsRoutingServerConfigBandwidthLabelPart2"));
     settingsRoutingServerConfigBandwidthLabel.setFont(getFontSetting());
 
     connectionClassesComboBox.addActionListener(new ActionListener()
@@ -292,9 +292,9 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
          * selector and the routing settings
          */
         JAPRoutingConnectionClass newConnectionClass = (JAPRoutingConnectionClass)(connectionClassesComboBox.getSelectedItem());
-        JAPModel.getModel().getRoutingSettings().getConnectionClassSelector().setCurrentConnectionClass(newConnectionClass.getIdentifier());
+        JAPModel.getInstance().getRoutingSettings().getConnectionClassSelector().setCurrentConnectionClass(newConnectionClass.getIdentifier());
         /* update also the label showing the maximum used bandwidth */
-        settingsRoutingServerConfigBandwidthLabel.setText(JAPMessages.getString("settingsRoutingServerConfigBandwidthLabelPart1") + " " + Integer.toString((JAPModel.getModel().getRoutingSettings().getConnectionClassSelector().getCurrentConnectionClass().getCurrentBandwidth() * 8) / 1000) + " " + JAPMessages.getString("settingsRoutingServerConfigBandwidthLabelPart2"));
+        settingsRoutingServerConfigBandwidthLabel.setText(JAPMessages.getString("settingsRoutingServerConfigBandwidthLabelPart1") + " " + Integer.toString((JAPModel.getInstance().getRoutingSettings().getConnectionClassSelector().getCurrentConnectionClass().getCurrentBandwidth() * 8) / 1000) + " " + JAPMessages.getString("settingsRoutingServerConfigBandwidthLabelPart2"));
       }
     });
 
@@ -398,7 +398,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
         /* if the Cancel button is pressed, stop the server -> the infoservice registration
          * process is also canceled
          */
-        JAPModel.getModel().getRoutingSettings().setRoutingMode(JAPRoutingSettings.ROUTING_MODE_DISABLED);
+        JAPModel.getInstance().getRoutingSettings().setRoutingMode(JAPRoutingSettings.ROUTING_MODE_DISABLED);
         registerDialog.dispose();
       }
     });
@@ -436,7 +436,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
     {
       public void run()
       {
-        int registrationStatus = JAPModel.getModel().getRoutingSettings().startPropaganda(true);
+        int registrationStatus = JAPModel.getInstance().getRoutingSettings().startPropaganda(true);
         if (registrationStatus == JAPRoutingSettings.REGISTRATION_NO_INFOSERVICES) {
           JOptionPane.showMessageDialog(registerPanel, new JAPHtmlMultiLineLabel(JAPMessages.getString("settingsRoutingServerRegistrationEmptyListError"), getFontSetting()), JAPMessages.getString("ERROR"), JOptionPane.ERROR_MESSAGE);
         }
@@ -476,7 +476,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
   private JPanel createRoutingServerStatusPanel()
   {
     /* get the statistics instance */
-    final ForwardSchedulerStatistics schedulerStatistics = JAPModel.getModel().getRoutingSettings().
+    final ForwardSchedulerStatistics schedulerStatistics = JAPModel.getInstance().getRoutingSettings().
       getSchedulerStatistics();
 
     /* get the NumberFormat instance for formating the bandwidth (double) */
@@ -612,7 +612,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
             integerFormat.format(schedulerStatistics.getTransferedBytes()));
           settingsRoutingServerStatusCurrentConnectionsLabel.setText(JAPMessages.getString(
             "settingsRoutingServerStatusCurrentConnectionsLabel") + " " +
-            integerFormat.format(JAPModel.getModel().getRoutingSettings().
+            integerFormat.format(JAPModel.getInstance().getRoutingSettings().
                        getCurrentlyForwardedConnections()));
           settingsRoutingServerStatusAcceptedConnectionsLabel.setText(JAPMessages.getString(
             "settingsRoutingServerStatusAcceptedConnectionsLabel") + " " +
@@ -652,7 +652,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
     JPanel clientPanel = new JPanel();
 
     JButton settingsRoutingClientButton = null;
-    if (JAPModel.getModel().getRoutingSettings().getRoutingMode() !=
+    if (JAPModel.getInstance().getRoutingSettings().getRoutingMode() !=
       JAPRoutingSettings.ROUTING_MODE_CLIENT)
     {
       settingsRoutingClientButton = new JButton(JAPMessages.getString(
@@ -674,7 +674,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
         public void actionPerformed(ActionEvent event)
         {
           /* if the Stop Client button is pressed, disable client forwarding */
-          JAPModel.getModel().getRoutingSettings().setRoutingMode(JAPRoutingSettings.
+          JAPModel.getInstance().getRoutingSettings().setRoutingMode(JAPRoutingSettings.
             ROUTING_MODE_DISABLED);
         }
       });
@@ -711,7 +711,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
       JAPMessages.getString("settingsRoutingChangeDialogTitle"));
     final JPanel changePanel = changeDialog.getRootPanel();
 
-    final JAPJIntField settingsRoutingPortField = new JAPJIntField(Integer.toString(JAPModel.getModel().
+    final JAPJIntField settingsRoutingPortField = new JAPJIntField(Integer.toString(JAPModel.getInstance().
       getRoutingSettings().getServerPort()));
     settingsRoutingPortField.setFont(getFontSetting());
     JButton settingsRoutingChangeDialogChangeButton = new JButton(JAPMessages.getString(
@@ -725,7 +725,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
         try
         {
           int port = Integer.parseInt(settingsRoutingPortField.getText().trim());
-          if (JAPModel.getModel().getRoutingSettings().setServerPort(port) == false)
+          if (JAPModel.getInstance().getRoutingSettings().setServerPort(port) == false)
           {
             throw (new Exception(
               "JAPConfRouting: showChangeServerPortDialog: Error while changing server port."));
@@ -806,7 +806,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
 
     m_settingsRoutingBandwidthLabel = new JLabel();
     m_settingsRoutingBandwidthLabel.setFont(getFontSetting());
-    m_settingsRoutingBandwidthSlider = new JSlider(0, (JAPModel.getModel().getRoutingSettings().getMaxBandwidth() * 8) / 1000, 0);
+    m_settingsRoutingBandwidthSlider = new JSlider(0, (JAPModel.getInstance().getRoutingSettings().getMaxBandwidth() * 8) / 1000, 0);
     m_settingsRoutingBandwidthSlider.setFont(getFontSetting());
     updateBandwidthSlider();
     m_settingsRoutingBandwidthSlider.setSnapToTicks(true);
@@ -817,12 +817,12 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
       public void stateChanged(ChangeEvent event)
       {
         /* update the connection class' current bandwidth */
-        JAPRoutingConnectionClass currentConnectionClass = JAPModel.getModel().getRoutingSettings().getConnectionClassSelector().getCurrentConnectionClass();
+        JAPRoutingConnectionClass currentConnectionClass = JAPModel.getInstance().getRoutingSettings().getConnectionClassSelector().getCurrentConnectionClass();
         currentConnectionClass.setCurrentBandwidth((m_settingsRoutingBandwidthSlider.getValue() * 1000) / 8);
         /* also update the number of simultaneous connections -> set it always to the maximum */
         currentConnectionClass.setSimultaneousConnections(currentConnectionClass.getMaxSimultaneousConnections());
         /* write the values to the routing system */
-        JAPModel.getModel().getRoutingSettings().getConnectionClassSelector().setCurrentConnectionClass(currentConnectionClass.getIdentifier());
+        JAPModel.getInstance().getRoutingSettings().getConnectionClassSelector().setCurrentConnectionClass(currentConnectionClass.getIdentifier());
         updateBandwidthLabel();
         /* update the user slider, maybe the number of allowed connections was influenced */
         updateUserSlider();
@@ -846,7 +846,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
     m_settingsRoutingUserLabel = new JLabel();
     m_settingsRoutingUserLabel.setFont(getFontSetting());
     m_settingsRoutingUserSlider = new JSlider(0,
-                          JAPModel.getModel().getRoutingSettings().getBandwidthMaxConnections(),
+                          JAPModel.getInstance().getRoutingSettings().getBandwidthMaxConnections(),
                           0);
     m_settingsRoutingUserSlider.setFont(getFontSetting());
     updateUserSlider();
@@ -858,10 +858,10 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
       public void stateChanged(ChangeEvent event)
       {
         /* change the number of simultaneously forwarded connections */
-        JAPRoutingConnectionClass currentConnectionClass = JAPModel.getModel().getRoutingSettings().getConnectionClassSelector().getCurrentConnectionClass();
+        JAPRoutingConnectionClass currentConnectionClass = JAPModel.getInstance().getRoutingSettings().getConnectionClassSelector().getCurrentConnectionClass();
         currentConnectionClass.setSimultaneousConnections(m_settingsRoutingUserSlider.getValue());
         /* write the values to the routing system */
-        JAPModel.getModel().getRoutingSettings().getConnectionClassSelector().setCurrentConnectionClass(currentConnectionClass.getIdentifier());
+        JAPModel.getInstance().getRoutingSettings().getConnectionClassSelector().setCurrentConnectionClass(currentConnectionClass.getIdentifier());
         updateUserLabel();
       }
     });
@@ -999,7 +999,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
     final JAPDialog bandwidthDialog = new JAPDialog(a_parentComponent, JAPMessages.getString("settingsRoutingBandwidthDialogTitle"));
     final JPanel bandwidthPanel = bandwidthDialog.getRootPanel();
 
-    final JAPJIntField settingsRoutingBandwidthField = new JAPJIntField(Integer.toString((JAPModel.getModel().getRoutingSettings().getMaxBandwidth() * 8) / 1000));
+    final JAPJIntField settingsRoutingBandwidthField = new JAPJIntField(Integer.toString((JAPModel.getInstance().getRoutingSettings().getMaxBandwidth() * 8) / 1000));
     settingsRoutingBandwidthField.setFont(getFontSetting());
     settingsRoutingBandwidthField.setColumns(5);
     JButton settingsRoutingBandwidthDialogChangeButton = new JButton(JAPMessages.getString(
@@ -1015,8 +1015,8 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
         try
         {
           int maxBandwidth = (Integer.parseInt(settingsRoutingBandwidthField.getText().trim()) * 1000) / 8;
-          JAPModel.getModel().getRoutingSettings().getConnectionClassSelector().changeUserDefinedClass(maxBandwidth, JAPModel.getModel().getRoutingSettings().getBandwidth());
-          JAPModel.getModel().getRoutingSettings().getConnectionClassSelector().setCurrentConnectionClass(JAPRoutingConnectionClassSelector.CONNECTION_CLASS_USER);
+          JAPModel.getInstance().getRoutingSettings().getConnectionClassSelector().changeUserDefinedClass(maxBandwidth, JAPModel.getInstance().getRoutingSettings().getBandwidth());
+          JAPModel.getInstance().getRoutingSettings().getConnectionClassSelector().setCurrentConnectionClass(JAPRoutingConnectionClassSelector.CONNECTION_CLASS_USER);
           bandwidthDialog.dispose();
         }
         catch (Exception e)
@@ -1196,7 +1196,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
     knownCascadesScrollPane.setPreferredSize((new JTextArea(9, 20)).getPreferredSize());
 
     final DefaultListModel allowedCascadesListModel = new DefaultListModel();
-    Enumeration allowedCascades = JAPModel.getModel().getRoutingSettings().getUseableMixCascadesStore().getAllowedMixCascades().elements();
+    Enumeration allowedCascades = JAPModel.getInstance().getRoutingSettings().getUseableMixCascadesStore().getAllowedMixCascades().elements();
     while (allowedCascades.hasMoreElements()) {
       allowedCascadesListModel.addElement(allowedCascades.nextElement());
     }
@@ -1248,7 +1248,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
       }
     });
 
-    final JCheckBox settingsRoutingCascadesDialogAllowAllBox = new JCheckBox(JAPMessages.getString("settingsRoutingCascadesDialogAllowAllBox"), JAPModel.getModel().getRoutingSettings().getUseableMixCascadesStore().getAllowAllAvailableMixCascades());
+    final JCheckBox settingsRoutingCascadesDialogAllowAllBox = new JCheckBox(JAPMessages.getString("settingsRoutingCascadesDialogAllowAllBox"), JAPModel.getInstance().getRoutingSettings().getUseableMixCascadesStore().getAllowAllAvailableMixCascades());
     settingsRoutingCascadesDialogAllowAllBox.setFont(getFontSetting());
     ActionListener comboBoxActionListener = new ActionListener()
     {
@@ -1297,8 +1297,8 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
       public void actionPerformed(ActionEvent event)
       {
         /* if the Ok button is pressed, we leave the dialog and update the system configuration */
-        JAPModel.getModel().getRoutingSettings().getUseableMixCascadesStore().setAllowedMixCascades(allowedCascadesListModel.elements());
-        JAPModel.getModel().getRoutingSettings().getUseableMixCascadesStore().setAllowAllAvailableMixCascades(settingsRoutingCascadesDialogAllowAllBox.isSelected());
+        JAPModel.getInstance().getRoutingSettings().getUseableMixCascadesStore().setAllowedMixCascades(allowedCascadesListModel.elements());
+        JAPModel.getInstance().getRoutingSettings().getUseableMixCascadesStore().setAllowAllAvailableMixCascades(settingsRoutingCascadesDialogAllowAllBox.isSelected());
         cascadesDialog.dispose();
       }
     });
@@ -1409,7 +1409,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
     knownInfoServicesScrollPane.setPreferredSize((new JTextArea(9, 20)).getPreferredSize());
 
     final DefaultListModel registrationInfoServicesListModel = new DefaultListModel();
-    Enumeration registrationInfoServices = JAPModel.getModel().getRoutingSettings().getRegistrationInfoServicesStore().getRegistrationInfoServices().elements();
+    Enumeration registrationInfoServices = JAPModel.getInstance().getRoutingSettings().getRegistrationInfoServicesStore().getRegistrationInfoServices().elements();
     while (registrationInfoServices.hasMoreElements()) {
       registrationInfoServicesListModel.addElement(registrationInfoServices.nextElement());
     }
@@ -1461,7 +1461,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
       }
     });
 
-    final JCheckBox settingsRoutingSelectRegistrationInfoServicesDialogRegisterAtAllBox = new JCheckBox(JAPMessages.getString("settingsRoutingSelectRegistrationInfoServicesDialogRegisterAtAllBox"), JAPModel.getModel().getRoutingSettings().getRegistrationInfoServicesStore().getRegisterAtAllAvailableInfoServices());
+    final JCheckBox settingsRoutingSelectRegistrationInfoServicesDialogRegisterAtAllBox = new JCheckBox(JAPMessages.getString("settingsRoutingSelectRegistrationInfoServicesDialogRegisterAtAllBox"), JAPModel.getInstance().getRoutingSettings().getRegistrationInfoServicesStore().getRegisterAtAllAvailableInfoServices());
     settingsRoutingSelectRegistrationInfoServicesDialogRegisterAtAllBox.setFont(getFontSetting());
     ActionListener comboBoxActionListener = new ActionListener()
     {
@@ -1510,8 +1510,8 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
       public void actionPerformed(ActionEvent event)
       {
         /* if the Ok button is pressed, we leave the dialog and update the system configuration */
-        JAPModel.getModel().getRoutingSettings().getRegistrationInfoServicesStore().setRegisterAtAllAvailableInfoServices(settingsRoutingSelectRegistrationInfoServicesDialogRegisterAtAllBox.isSelected());
-        JAPModel.getModel().getRoutingSettings().getRegistrationInfoServicesStore().setRegistrationInfoServices(registrationInfoServicesListModel.elements());
+        JAPModel.getInstance().getRoutingSettings().getRegistrationInfoServicesStore().setRegisterAtAllAvailableInfoServices(settingsRoutingSelectRegistrationInfoServicesDialogRegisterAtAllBox.isSelected());
+        JAPModel.getInstance().getRoutingSettings().getRegistrationInfoServicesStore().setRegistrationInfoServices(registrationInfoServicesListModel.elements());
         registrationDialog.dispose();
       }
     });
@@ -1712,7 +1712,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
     final JAPRoutingSettingsPropagandaThreadLock lock = new JAPRoutingSettingsPropagandaThreadLock();
 
     /* we can directly connect to the infoservice -> no infoservice forwarding needed */
-    JAPModel.getModel().getRoutingSettings().setForwardInfoService(false);
+    JAPModel.getInstance().getRoutingSettings().setForwardInfoService(false);
 
     final JAPDialog infoserviceDialog = new JAPDialog(getRootPanel(), JAPMessages.getString("settingsRoutingClientConfigDialogInfoServiceTitle"));
     infoserviceDialog.disableManualClosing();
@@ -2048,7 +2048,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
         try
         {
           ListenerInterface forwarder = a_captcha.solveCaptcha(captchaField.getText().trim());
-          JAPModel.getModel().getRoutingSettings().setForwarder(forwarder.getHost(), forwarder.getPort());
+          JAPModel.getInstance().getRoutingSettings().setForwarder(forwarder.getHost(), forwarder.getPort());
           /* forwarder was set, try to connect to the forwarder */
           captchaDialog.dispose();
           showConfigClientDialogConnectToForwarder();
@@ -2142,7 +2142,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
     connectDialog.disableManualClosing();
     final JPanel connectPanel = connectDialog.getRootPanel();
 
-    JLabel settingsRoutingClientConfigDialogConnectToForwarderInfoLabel = new JLabel(JAPMessages.getString("settingsRoutingClientConfigDialogConnectToForwarderInfoLabel") + " " + JAPModel.getModel().getRoutingSettings().getForwarderString());
+    JLabel settingsRoutingClientConfigDialogConnectToForwarderInfoLabel = new JLabel(JAPMessages.getString("settingsRoutingClientConfigDialogConnectToForwarderInfoLabel") + " " + JAPModel.getInstance().getRoutingSettings().getForwarderString());
     settingsRoutingClientConfigDialogConnectToForwarderInfoLabel.setFont(getFontSetting());
     JLabel settingsRoutingClientConfigDialogConnectToForwarderLabel = new JLabel(JAPMessages.getString("settingsRoutingClientConfigDialogConnectToForwarderLabel"));
     settingsRoutingClientConfigDialogConnectToForwarderLabel.setFont(getFontSetting());
@@ -2184,7 +2184,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
       {
         /* this is the connect to forwarder thread */
         /* the forwarder is already set, we only need to connect to */
-        if (JAPModel.getModel().getRoutingSettings().setRoutingMode(JAPRoutingSettings.
+        if (JAPModel.getInstance().getRoutingSettings().setRoutingMode(JAPRoutingSettings.
           ROUTING_MODE_CLIENT) == false)
         {
           /* error while connecting, show a message and go back to step 1 */
@@ -2240,7 +2240,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
         /* if the Cancel button is pressed, stop the connection -> the getConnectionDescriptor()
          * method ends with an exception
          */
-        JAPModel.getModel().getRoutingSettings().setRoutingMode(JAPRoutingSettings.ROUTING_MODE_DISABLED);
+        JAPModel.getInstance().getRoutingSettings().setRoutingMode(JAPRoutingSettings.ROUTING_MODE_DISABLED);
       }
     });
 
@@ -2287,7 +2287,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
           {
             certificateStore = JAPModel.getCertificateStore();
           }
-          connectionDescriptor = JAPModel.getModel().getRoutingSettings().getConnectionDescriptor(
+          connectionDescriptor = JAPModel.getInstance().getRoutingSettings().getConnectionDescriptor(
             certificateStore);
         }
         catch (ClientForwardException e)
@@ -2431,7 +2431,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
       public void actionPerformed(ActionEvent event)
       {
         /* if the Cancel button is pressed, stop routing and close the dialog */
-        JAPModel.getModel().getRoutingSettings().setRoutingMode(JAPRoutingSettings.
+        JAPModel.getInstance().getRoutingSettings().setRoutingMode(JAPRoutingSettings.
           ROUTING_MODE_DISABLED);
         client2Dialog.dispose();
         /* let the user enter another forwarder, maybe he gets a better one */
@@ -2533,7 +2533,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
         /* if the Cancel button is pressed, stop the connection -> the selectMixCascade()
          * method ends with an exception
          */
-        JAPModel.getModel().getRoutingSettings().setRoutingMode(JAPRoutingSettings.
+        JAPModel.getInstance().getRoutingSettings().setRoutingMode(JAPRoutingSettings.
           ROUTING_MODE_DISABLED);
       }
     });
@@ -2576,7 +2576,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
         /* this is the announce mixcascade thread */
         try
         {
-          JAPModel.getModel().getRoutingSettings().selectMixCascade(a_selectedMixCascade);
+          JAPModel.getInstance().getRoutingSettings().selectMixCascade(a_selectedMixCascade);
           /* if sending the mixcascade was successful, start the anonymous mode */
           JAPController.getController().setCurrentMixCascade(a_selectedMixCascade);
           JAPController.getController().setAnonMode(true);
@@ -2626,7 +2626,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
   {
     m_settingsRoutingServerPortLabel.setText(JAPMessages.getString("settingsRoutingServerPortLabel") +
                          " " +
-                         Integer.toString(JAPModel.getModel().getRoutingSettings().
+                         Integer.toString(JAPModel.getInstance().getRoutingSettings().
       getServerPort()));
   }
 
@@ -2636,7 +2636,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
   private void updateBandwidthLabel()
   {
     m_settingsRoutingBandwidthLabel.setText(JAPMessages.getString("settingsRoutingBandwidthLabel") + " " +
-                        Integer.toString((JAPModel.getModel().getRoutingSettings().
+                        Integer.toString((JAPModel.getInstance().getRoutingSettings().
       getBandwidth() * 8) / 1000) + " " + JAPMessages.getString("settingsRoutingBandwidthLabelPart2"));
   }
 
@@ -2646,8 +2646,8 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
    */
   private void updateBandwidthSlider()
   {
-    m_settingsRoutingBandwidthSlider.setMaximum((JAPModel.getModel().getRoutingSettings().getMaxBandwidth() * 8) / 1000);
-    m_settingsRoutingBandwidthSlider.setValue((JAPModel.getModel().getRoutingSettings().getBandwidth() * 8) / 1000);
+    m_settingsRoutingBandwidthSlider.setMaximum((JAPModel.getInstance().getRoutingSettings().getMaxBandwidth() * 8) / 1000);
+    m_settingsRoutingBandwidthSlider.setValue((JAPModel.getInstance().getRoutingSettings().getBandwidth() * 8) / 1000);
     m_settingsRoutingBandwidthSlider.setMajorTickSpacing(Math.max(1,
       m_settingsRoutingBandwidthSlider.getMaximum() / 5));
     m_settingsRoutingBandwidthSlider.setMinorTickSpacing(Math.max(1,
@@ -2664,7 +2664,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
   private void updateUserLabel()
   {
     m_settingsRoutingUserLabel.setText(JAPMessages.getString("settingsRoutingUserLabel") + " " +
-                       JAPModel.getModel().getRoutingSettings().getAllowedConnections());
+                       JAPModel.getInstance().getRoutingSettings().getAllowedConnections());
   }
 
   /**
@@ -2673,9 +2673,9 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
    */
   private void updateUserSlider()
   {
-    m_settingsRoutingUserSlider.setMaximum(JAPModel.getModel().getRoutingSettings().
+    m_settingsRoutingUserSlider.setMaximum(JAPModel.getInstance().getRoutingSettings().
                          getBandwidthMaxConnections());
-    m_settingsRoutingUserSlider.setValue(JAPModel.getModel().getRoutingSettings().getAllowedConnections());
+    m_settingsRoutingUserSlider.setValue(JAPModel.getInstance().getRoutingSettings().getAllowedConnections());
     m_settingsRoutingUserSlider.setMajorTickSpacing(Math.max(1,
       m_settingsRoutingUserSlider.getMaximum() / 5));
     m_settingsRoutingUserSlider.setMinorTickSpacing(Math.max(1,
@@ -2697,7 +2697,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
     rootPanel.removeAll();
 
     /* insert all components in the root panel dependent on the current routing mode */
-    int routingMode = JAPModel.getModel().getRoutingSettings().getRoutingMode();
+    int routingMode = JAPModel.getInstance().getRoutingSettings().getRoutingMode();
 
     if (routingMode != JAPRoutingSettings.ROUTING_MODE_SERVER)
     {
@@ -2805,7 +2805,7 @@ public class JAPConfRouting extends AbstractJAPConfModule implements Observer
       if (m_infoServiceRegistrationData == null) {
         /* create a new table model and bring it up-to-date*/
         m_infoServiceRegistrationData = new JAPRoutingInfoServiceRegistrationTableModel();
-        m_infoServiceRegistrationData.updatePropagandaInstancesList(JAPModel.getModel().getRoutingSettings().getRunningPropagandaInstances());
+        m_infoServiceRegistrationData.updatePropagandaInstancesList(JAPModel.getInstance().getRoutingSettings().getRunningPropagandaInstances());
       }
     }
     return m_infoServiceRegistrationData;

@@ -173,9 +173,9 @@ public class JAPRoutingConnectionClassSelector {
       if (newConnectionClass != null) {
         /* the specified connection class exists */     
         m_currentConnectionClass = a_connectionClass;
-        JAPModel.getModel().getRoutingSettings().setMaxBandwidth(newConnectionClass.getMaximumBandwidth());
-        JAPModel.getModel().getRoutingSettings().setBandwidth(newConnectionClass.getCurrentBandwidth());
-        JAPModel.getModel().getRoutingSettings().setAllowedConnections(newConnectionClass.getSimultaneousConnections());
+        JAPModel.getInstance().getRoutingSettings().setMaxBandwidth(newConnectionClass.getMaximumBandwidth());
+        JAPModel.getInstance().getRoutingSettings().setBandwidth(newConnectionClass.getCurrentBandwidth());
+        JAPModel.getInstance().getRoutingSettings().setAllowedConnections(newConnectionClass.getSimultaneousConnections());
       }
     }
   }
