@@ -344,6 +344,12 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 		return mainPanel;
 	}
 	
+	public void disableSetAnonMode()
+		{	
+			anonCheckBox.setEnabled(false);
+			ano1CheckBox.setEnabled(false);
+		}
+	
 	protected void loadMeterIcons() {
 		// Load Images for "Anonymity Meter"
 		meterIcons = new ImageIcon [model.METERFNARRAY.length];
