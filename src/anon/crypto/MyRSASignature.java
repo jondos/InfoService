@@ -47,12 +47,12 @@ final class MyRSASignature implements IMySignature
 		m_SignatureAlgorithm = new PSSSigner(new RSAEngine(), new SHA1Digest(), 10);
 	}
 
-	synchronized public void initVerify(PublicKey k) throws InvalidKeyException
+	synchronized public void initVerify(IMyPublicKey k) throws InvalidKeyException
 	{
 		m_SignatureAlgorithm.init(false, ( (MyRSAPublicKey) k).getParams());
 	}
 
-	synchronized public void initSign(PrivateKey k) throws InvalidKeyException
+	synchronized public void initSign(IMyPrivateKey k) throws InvalidKeyException
 	{
 		m_SignatureAlgorithm.init(true, ( (MyRSAPrivateKey) k).getParams());
 	}

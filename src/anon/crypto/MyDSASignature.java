@@ -52,12 +52,12 @@ final class MyDSASignature implements IMySignature
 		}
 	}
 
-	synchronized public void initVerify(PublicKey k) throws InvalidKeyException
+	synchronized public void initVerify(IMyPublicKey k) throws InvalidKeyException
 	{
 		m_SignatureAlgorithm.initVerify(k);
 	}
 
-	synchronized public void initSign(PrivateKey ownPrivateKey) throws InvalidKeyException
+	synchronized public void initSign(IMyPrivateKey ownPrivateKey) throws InvalidKeyException
 	{
 		m_SignatureAlgorithm.initSign(ownPrivateKey);
 	}

@@ -108,7 +108,7 @@ final public class JAPCertPath
 		Vector allCertificates = certsTrustedRoots.getAllEnabledCertificates();
 		for (int i = 0; i < allCertificates.size(); i++)
 		{
-			PublicKey currentPublicKey = ( (JAPCertificate) (allCertificates.elementAt(i))).
+			IMyPublicKey currentPublicKey = ( (JAPCertificate) (allCertificates.elementAt(i))).
 				getPublicKey();
 			try
 			{

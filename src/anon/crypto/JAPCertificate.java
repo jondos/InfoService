@@ -66,7 +66,7 @@ import anon.util.XMLUtil;
 final public class JAPCertificate
 {
 	private X509CertificateStructure m_x509cert;
-	private PublicKey m_PubKey;
+	private IMyPublicKey m_PubKey;
 	private boolean m_bEnabled;
 
 	private JAPCertificate()
@@ -351,7 +351,7 @@ final public class JAPCertificate
 	 *
 	 * @return public key
 	 */
-	public PublicKey getPublicKey()
+	public IMyPublicKey getPublicKey()
 	{
 		return m_PubKey;
 	}
@@ -410,7 +410,7 @@ final public class JAPCertificate
 	 * @return true if it could be verified
 	 * @return false if that's not the case
 	 */
-	public boolean verify(PublicKey a_pubkey)
+	public boolean verify(IMyPublicKey a_pubkey)
 	{
 		try
 		{
