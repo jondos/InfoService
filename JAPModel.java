@@ -267,7 +267,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 			NamedNodeMap n=root.getAttributes();
 			// 
 			portNumber=JAPUtil.parseNodeInt(n.getNamedItem("portNumber"),portNumber);
-			setListenerIsLocal(JAPUtil.parseNodeBoolean(n.getNamedItem("isListenerLocal"),true));
+			setListenerIsLocal(JAPUtil.parseNodeBoolean(n.getNamedItem("listenerIsLocal"),true));
 			setUseProxy(JAPUtil.parseNodeBoolean(n.getNamedItem("proxyMode"),false));
 			mbActCntMessageNeverRemind=JAPUtil.parseNodeBoolean(n.getNamedItem("neverRemindActiveContent"),false);
 			if(mbActCntMessageNeverRemind)
@@ -640,7 +640,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 							proxyDirect.stop();
 						proxyDirect=null;
 						// starting MUX --> Success ???
-						proxyAnon=new JAPAnonService(model.portNumber,JAPAnonService.PROTO_HTTP);
+						proxyAnon=new JAPAnonService(model.portNumber,JAPAnonService.PROTO_HTTP,model.mblistenerIsLocal);
 						proxyAnon.setAnonService(model.anonHostName,model.anonPortNumber);
 						int ret=proxyAnon.start();
 						if(ret==JAPAnonService.E_SUCCESS)
@@ -666,7 +666,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 										if(ret==0||mbActCntMessageNeverRemind)
 											mbActCntMessageNotRemind=true;
 									}
-								proxyAnonSocks=new JAPAnonService(1080,JAPAnonService.PROTO_SOCKS);
+								proxyAnonSocks=new JAPAnonService(1080,JAPAnonService.PROTO_SOCKS,model.mblistenerIsLocal);
 								proxyAnonSocks.start();
 								view.setCursor(Cursor.getDefaultCursor());
 								notifyJAPObservers();
