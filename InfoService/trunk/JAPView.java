@@ -485,13 +485,17 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 		model.goodBye(); // call the final exit procedure of JAP
 	}
 	
-    private void updateValues() {
+  private void updateValues() {
 		AnonServerDBEntry e = model.getAnonServer();
 		// Config panel
 		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"Start updateValues");
 		portnumberTextField.setText(String.valueOf(model.getPortNumber()));
 		proxyCheckBox.setSelected(model.getUseFirewall());
-		proxyTextField.setText(model.getFirewallHost()+":"+String.valueOf(model.getFirewallPort()));
+		int firewallPort=model.getFirewallPort();
+		if(firewallPort==-1)
+			proxyTextField.setText(JAPMessages.getString("firewallNotConfigured"));
+		else	
+			proxyTextField.setText(model.getFirewallHost()+":"+String.valueOf(firewallPort));
 		infoServiceTextField.setText(model.getInfoServiceHost()+":"+String.valueOf(model.getInfoServicePort()));
 		anonCheckBox.setSelected(model.isAnonMode());
 		anonTextField.setText(e.getHost()+":"+String.valueOf(e.getPort())+((e.getSSLPort()==-1)?"":":"+e.getSSLPort()));

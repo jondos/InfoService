@@ -45,8 +45,7 @@ import java.math.BigInteger;
 import JAPDebug;
 
 
-import sun.misc.BASE64Encoder;
-import sun.misc.BASE64Decoder;
+import HTTPClient.Codecs;
 
 final class JAPMuxSocket implements Runnable
 	{
@@ -166,9 +165,7 @@ final class JAPMuxSocket implements Runnable
 									o.write("CONNECT "+host+":"+port+" HTTP/1.1"+CRLF);
 									if(fwUserID!=null) // proxy authentication required...
 											{
-												BASE64Encoder enc=new BASE64Encoder();
-												String str=enc.encodeBuffer((fwUserID+":"+fwPasswd).getBytes());
-												str=str.trim();
+												String str=Codecs.base64Encode(fwUserID+":"+fwPasswd);
 												o.write("Proxy-Authorization: Basic "+str+CRLF);
 											}
 									o.write("Connection: Keep-Alive"+CRLF);
