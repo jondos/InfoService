@@ -26,11 +26,18 @@ JNIEXPORT void JNICALL Java_gui_JAPDll_hideWindowInTaskbar_1dll
 /*
  * Class:     gui_JAPDll
  * Method:    onTraffic_dll
- * Signature: V
+ * Signature: ()V
  */
 JNIEXPORT void JNICALL Java_gui_JAPDll_onTraffic_1dll
   (JNIEnv *, jclass);
 
+/*
+ * Class:     gui_JAPDll
+ * Method:    getDllVersion_dll
+ * Signature: ()Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_gui_JAPDll_getDllVersion_1dll
+  (JNIEnv *, jclass);
 
 #ifdef __cplusplus
 }

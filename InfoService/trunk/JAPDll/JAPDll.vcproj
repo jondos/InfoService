@@ -106,7 +106,9 @@
 			<Tool
 				Name="VCPostBuildEventTool"/>
 			<Tool
-				Name="VCPreBuildEventTool"/>
+				Name="VCPreBuildEventTool"
+				Description="Building jni header file"
+				CommandLine="g:\jdk1.1.8\bin\javah -o $(InputDir)japdll_jni.h -jni -classpath g:\projects\jap\classes;g:\jdk1.1.8\lib\classes.zip gui.JAPDll"/>
 			<Tool
 				Name="VCPreLinkEventTool"/>
 			<Tool
