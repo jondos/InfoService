@@ -244,7 +244,7 @@ final class JarFile
 			{
 				return null;
 			}
-			catch (IOException e)
+			catch (Exception e)
 			{
 				return null;
 			}
