@@ -507,6 +507,7 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 	public void setUserDefined(boolean b)
 	{
 		m_userDefined = b;
+		m_xmlStructure = generateXmlRepresentation();
 	}
 
 	/**

@@ -500,7 +500,7 @@ public class Tor implements Runnable, AnonService
 				if (circ == null)
 				{
 					errTry++; //if we get overall more than 4 errors creating circuits we stop it!
-					break;
+					continue;
 				}
 				//Insert it in the next empty slot....
 				m_activeCircuits[index] = circ;
