@@ -67,8 +67,16 @@ final class JAPKeyPool /*extends Thread*/ implements Runnable
 		
 		public void run()
 			{	
-				byte[] seed=SecureRandom.getSeed(20);
-				sr=new SecureRandom(seed);
+				byte[] seed=null;
+				try
+					{
+						seed=SecureRandom.getSeed(20);
+						sr=new SecureRandom(seed);
+					}
+				catch(Throwable e)
+					{
+						sr=new SecureRandom();
+					}
 				seed=null;
 				KeyList tmpKey;
 				pool=new KeyList(keySize);
