@@ -28,33 +28,31 @@
 package gui;
 
 import java.awt.CardLayout;
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.Window;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import javax.swing.Icon;
-import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JTextArea;
 import jap.JAPUtil;
 
 final public class FlippingPanel extends JPanel
 {
 	private JPanel m_panelContainer;
-	private JPanel smallPanel;
-	private JPanel fullPanel;
+	private JPanel m_panelSmall;
+	private JPanel m_panelFull;
 	private CardLayout m_Layout;
 	private Window m_Parent;
 	private boolean m_bIsFlipped;
 	private final static Icon ms_iconUp = JAPUtil.loadImageIcon("arrow.gif", true);
 	private final static Icon ms_iconDown = JAPUtil.loadImageIcon("arrow90.gif", true);
-	private final static int ms_iBttnWidth=ms_iconUp.getIconWidth();
-	private final static int ms_iBttnHeight=ms_iconDown.getIconHeight();
+	private final static int ms_iBttnWidth = ms_iconUp.getIconWidth();
+	private final static int ms_iBttnHeight = ms_iconDown.getIconHeight();
 
 	public FlippingPanel(Window parent)
 	{
@@ -112,29 +110,23 @@ final public class FlippingPanel extends JPanel
 		m_panelContainer.setLayout(m_Layout);
 		add(m_panelContainer, c);
 
-		smallPanel = new JPanel();
-		smallPanel.setBackground(Color.green);
-		smallPanel.add(new JButton("Help"));
-		m_panelContainer.add(smallPanel, "FIRST");
-		fullPanel = new JPanel();
-		fullPanel.add(new JTextArea(10, 10));
-		fullPanel.setBackground(Color.red);
-		m_panelContainer.add(fullPanel, "FULL");
+		m_panelSmall = new JPanel(new GridLayout(1, 1));
+		m_panelContainer.add(m_panelSmall, "SMALL", 0);
+		m_panelFull = new JPanel(new GridLayout(1, 1));
+		m_Layout.addLayoutComponent(m_panelFull, "FULL");
+		m_panelContainer.add(m_panelFull, "FULL", 1);
 	}
 
 	public void setFullPanel(JPanel p)
 	{
-		m_panelContainer.remove(1);
-		fullPanel = p;
-		m_panelContainer.add(fullPanel, "FULL");
+		m_panelFull.removeAll();
+		m_panelFull.add(p);
 	}
 
 	public void setSmallPanel(JPanel p)
 	{
-		m_panelContainer.remove(0);
-		smallPanel = p;
-		m_panelContainer.add(smallPanel, "FIRST",0);
-		m_Layout.first(m_panelContainer);
+		m_panelSmall.removeAll();
+		m_panelSmall.add(p);
 	}
 
 	public Dimension getPreferredSize()
@@ -142,11 +134,11 @@ final public class FlippingPanel extends JPanel
 		Dimension d;
 		if (m_bIsFlipped)
 		{
-			d = fullPanel.getPreferredSize();
+			d = m_panelFull.getPreferredSize();
 		}
 		else
 		{
-			d = smallPanel.getPreferredSize();
+			d = m_panelSmall.getPreferredSize();
 		}
 		d.width += ms_iBttnWidth;
 		return d;
@@ -157,14 +149,14 @@ final public class FlippingPanel extends JPanel
 		Dimension d;
 		if (m_bIsFlipped)
 		{
-			d = fullPanel.getMinimumSize();
+			d = m_panelFull.getMinimumSize();
 		}
 		else
 		{
-			d = smallPanel.getMinimumSize();
+			d = m_panelSmall.getMinimumSize();
 		}
 		d.width += ms_iBttnWidth;
-		d.height=Math.max(d.height,ms_iBttnHeight);
+		d.height = Math.max(d.height, ms_iBttnHeight);
 		return d;
 	}
 
@@ -173,11 +165,11 @@ final public class FlippingPanel extends JPanel
 		Dimension d;
 		if (m_bIsFlipped)
 		{
-			d = fullPanel.getMaximumSize();
+			d = m_panelFull.getMaximumSize();
 		}
 		else
 		{
-			d = smallPanel.getMaximumSize();
+			d = m_panelSmall.getMaximumSize();
 		}
 		d.width += ms_iBttnWidth;
 		return d;
