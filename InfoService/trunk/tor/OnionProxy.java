@@ -46,7 +46,7 @@ public class OnionProxy {
 		return op;
 	}
 
-	public void send(InetAddress addr,int port,Cell cell) throws Exception
+	public synchronized void send(InetAddress addr,int port,Cell cell) throws Exception
 	{
 		TinyTLS tlssocket = getTLSSocket(addr,port);
 		tlssocket.getOutputStream().write(cell.getCellData());
