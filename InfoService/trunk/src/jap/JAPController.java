@@ -182,31 +182,7 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 		setInfoServiceDisabled(JAPConstants.DEFAULT_INFOSERVICE_DISABLED);
 		InfoServiceHolder.getInstance().setChangeInfoServices(JAPConstants.DEFAULT_INFOSERVICE_CHANGES);
 
-		/* load the default certificates */
-		JAPCertificate defaultRootCert = JAPCertificate.getInstance(ResourceLoader.loadResource(JAPConstants.
-			CERTSPATH + JAPConstants.TRUSTEDROOTCERT));
-		if (defaultRootCert != null)
-		{
-			SignatureVerifier.getInstance().getVerificationCertificateStore().
-				addCertificateWithoutVerification(defaultRootCert, JAPCertificate.CERTIFICATE_TYPE_ROOT, true);
-		}
-		else
-		{
-			LogHolder.log(LogLevel.ERR, LogType.MISC,
-						  "JAPController: Constructor: Error loading default root certificate.");
-		}
-		JAPCertificate updateMessagesCert = JAPCertificate.getInstance(ResourceLoader.loadResource(
-			JAPConstants.CERTSPATH + JAPConstants.CERT_JAPINFOSERVICEMESSAGES));
-		if (updateMessagesCert != null)
-		{
-			SignatureVerifier.getInstance().getVerificationCertificateStore().
-				addCertificateWithoutVerification(updateMessagesCert, JAPCertificate.CERTIFICATE_TYPE_UPDATE, true);
-		}
-		else
-		{
-			LogHolder.log(LogLevel.ERR, LogType.MISC,
-						  "JAPController: Constructor: Error loading default update messages certificate.");
-		}
+		addDefaultCertificates();
 		SignatureVerifier.getInstance().setCheckSignatures(JAPConstants.DEFAULT_CERT_CHECK_ENABLED);
 
 		HTTPConnectionFactory.getInstance().setTimeout(JAPConstants.DEFAULT_INFOSERVICE_TIMEOUT);
@@ -482,7 +458,12 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 			{
 				FileInputStream f = new FileInputStream(JAPModel.getInstance().getConfigFile());
 				Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(f);
-				try{f.close();}catch(Exception ex2){}
+				try
+				{
+					f.close();
+				}
+				catch (Exception ex2)
+				{}
 
 				Element root = doc.getDocumentElement();
 				NamedNodeMap n = root.getAttributes();
@@ -954,7 +935,12 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 			FileInputStream f = new FileInputStream(a_configFile);
 			/* if we are successful, use this config file also for storing the configuration */
 			JAPModel.getInstance().setConfigFile(a_configFile);
-			try{f.close();}catch(Exception e1){}
+			try
+			{
+				f.close();
+			}
+			catch (Exception e1)
+			{}
 			return true;
 		}
 		catch (Exception e)
@@ -980,7 +966,12 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 			FileInputStream f = new FileInputStream(japConfFile);
 			/* if we are successful, use this config file also for storing the configuration */
 			JAPModel.getInstance().setConfigFile(japConfFile);
-			try{f.close();}catch(Exception e1){}
+			try
+			{
+				f.close();
+			}
+			catch (Exception e1)
+			{}
 			return true;
 		}
 		catch (Exception e)
@@ -1006,7 +997,12 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 			FileInputStream f = new FileInputStream(japConfFile);
 			/* if we are successful, use this config file also for storing the configuration */
 			JAPModel.getInstance().setConfigFile(japConfFile);
-			try{f.close();}catch(Exception e1){}
+			try
+			{
+				f.close();
+			}
+			catch (Exception e1)
+			{}
 			return true;
 		}
 		catch (Exception e)
@@ -1033,7 +1029,12 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 			FileInputStream f = new FileInputStream(japConfFile);
 			/* if we are successful, use this config file also for storing the configuration */
 			JAPModel.getInstance().setConfigFile(japConfFile);
-			try{f.close();}catch(Exception e1){}
+			try
+			{
+				f.close();
+			}
+			catch (Exception e1)
+			{}
 			return true;
 		}
 		catch (Exception e)
@@ -1108,7 +1109,7 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 			doc.appendChild(e);
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_VERSION, "0.19");
 			//
-			XMLUtil.setAttribute(e, JAPConstants.CONFIG_PORT_NUMBER,JAPModel.getHttpListenerPortNumber());
+			XMLUtil.setAttribute(e, JAPConstants.CONFIG_PORT_NUMBER, JAPModel.getHttpListenerPortNumber());
 			//XMLUtil.setAttribute(e,"portNumberSocks", Integer.toString(JAPModel.getSocksListenerPortNumber()));
 			//XMLUtil.setAttribute(e,"supportSocks",(getUseSocksPort()?"true":"false"));
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_LISTENER_IS_LOCAL, JAPModel.getHttpListenerIsLocal());
@@ -1245,8 +1246,8 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 			XMLUtil.setValue(elem, JAPModel.getTorMaxConnectionsPerRoute());
 			elemTor.appendChild(elem);
 			elem = doc.createElement(JAPConstants.CONFIG_ROUTE_LEN);
-			XMLUtil.setAttribute(elem,JAPConstants.CONFIG_MIN, JAPModel.getTorMinRouteLen());
-			XMLUtil.setAttribute(elem,JAPConstants.CONFIG_MAX, JAPModel.getTorMaxRouteLen());
+			XMLUtil.setAttribute(elem, JAPConstants.CONFIG_MIN, JAPModel.getTorMinRouteLen());
+			XMLUtil.setAttribute(elem, JAPConstants.CONFIG_MAX, JAPModel.getTorMaxRouteLen());
 			elemTor.appendChild(elem);
 			e.appendChild(elemTor);
 
@@ -1412,7 +1413,7 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 
 	void applyProxySettingsToInfoService()
 	{
-		if (m_Model.getProxyInterface()!=null&&m_Model.getProxyInterface().isValid())
+		if (m_Model.getProxyInterface() != null && m_Model.getProxyInterface().isValid())
 		{
 			HTTPConnectionFactory.getInstance().setNewProxySettings(m_Model.getProxyInterface());
 		}
@@ -1425,7 +1426,7 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 
 	private void applyProxySettingsToAnonService()
 	{
-		if (JAPModel.getInstance().getProxyInterface()!=null&&
+		if (JAPModel.getInstance().getProxyInterface() != null &&
 			JAPModel.getInstance().getProxyInterface().isValid() && getAnonMode())
 		{
 			// anon service is running
@@ -1608,7 +1609,7 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 					else
 					{
 						/* we use a direct connection */
-						if (JAPModel.getInstance().getProxyInterface()!=null&&
+						if (JAPModel.getInstance().getProxyInterface() != null &&
 							JAPModel.getInstance().getProxyInterface().isValid())
 						{
 							m_proxyAnon = new AnonProxy(
@@ -2478,7 +2479,7 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 		for (int i = 0; i < JAPConstants.DEFAULT_INFOSERVICE_PORT_NUMBERS.length; i++)
 		{
 			listeners.addElement(new ListenerInterface(JAPConstants.DEFAULT_INFOSERVICE_HOSTNAME,
-												JAPConstants.DEFAULT_INFOSERVICE_PORT_NUMBERS[i]));
+				JAPConstants.DEFAULT_INFOSERVICE_PORT_NUMBERS[i]));
 		}
 
 		InfoServiceDBEntry defaultInfoService = new InfoServiceDBEntry(JAPConstants.
@@ -2487,4 +2488,46 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 		return defaultInfoService;
 	}
 
+	/** load the default certificates */
+	static public void addDefaultCertificates()
+	{
+		JAPCertificate defaultRootCert = JAPCertificate.getInstance(ResourceLoader.loadResource(JAPConstants.
+			CERTSPATH + JAPConstants.TRUSTEDMIXROOTCERT));
+		if (defaultRootCert != null)
+		{
+			SignatureVerifier.getInstance().getVerificationCertificateStore().
+				addCertificateWithoutVerification(defaultRootCert, JAPCertificate.CERTIFICATE_TYPE_ROOT_MIX, true, false);
+		}
+		else
+		{
+			LogHolder.log(LogLevel.ERR, LogType.MISC,
+						  "JAPController: Constructor: Error loading default Mix root certificate.");
+		}
+		defaultRootCert = JAPCertificate.getInstance(ResourceLoader.loadResource(JAPConstants.
+			CERTSPATH + JAPConstants.TRUSTEDINFOSERVICEROOTCERT));
+		if (defaultRootCert != null)
+		{
+			SignatureVerifier.getInstance().getVerificationCertificateStore().
+				addCertificateWithoutVerification(defaultRootCert,
+												  JAPCertificate.CERTIFICATE_TYPE_ROOT_INFOSERVICE, true, true);
+		}
+		else
+		{
+			LogHolder.log(LogLevel.ERR, LogType.MISC,
+						  "JAPController: Constructor: Error loading default InfoService root certificate.");
+		}
+
+		JAPCertificate updateMessagesCert = JAPCertificate.getInstance(ResourceLoader.loadResource(
+			JAPConstants.CERTSPATH + JAPConstants.CERT_JAPINFOSERVICEMESSAGES));
+		if (updateMessagesCert != null)
+		{
+			SignatureVerifier.getInstance().getVerificationCertificateStore().
+				addCertificateWithoutVerification(updateMessagesCert, JAPCertificate.CERTIFICATE_TYPE_UPDATE, true, true);
+		}
+		else
+		{
+			LogHolder.log(LogLevel.ERR, LogType.MISC,
+						  "JAPController: Constructor: Error loading default update messages certificate.");
+		}
+	}
 }
