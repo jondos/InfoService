@@ -783,7 +783,9 @@ private final class SetAnonModeAsync implements Runnable
 			{
 				view.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 				JAPSetAnonModeSplash.start(true);
-				if (alreadyCheckedForNewVersion == false)
+				alreadyCheckedForNewVersion=true;
+        canStartService=true;
+        if (alreadyCheckedForNewVersion == false)
 					{
 						// Check for a new Version of JAP if not already done
 						int ok = versionCheck();

@@ -1,28 +1,28 @@
 /*
-Copyright (c) 2000, The JAP-Team 
+Copyright (c) 2000, The JAP-Team
 All rights reserved.
-Redistribution and use in source and binary forms, with or without modification, 
+Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
 
-	- Redistributions of source code must retain the above copyright notice, 
+	- Redistributions of source code must retain the above copyright notice,
 	  this list of conditions and the following disclaimer.
 
-	- Redistributions in binary form must reproduce the above copyright notice, 
-	  this list of conditions and the following disclaimer in the documentation and/or 
+	- Redistributions in binary form must reproduce the above copyright notice,
+	  this list of conditions and the following disclaimer in the documentation and/or
 		other materials provided with the distribution.
 
-	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors 
-	  may be used to endorse or promote products derived from this software without specific 
-		prior written permission. 
+	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
+	  may be used to endorse or promote products derived from this software without specific
+		prior written permission.
 
-	
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS 
-OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY 
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS
+OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
 AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS
 BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, 
-OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER 
-IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY 
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -40,18 +40,18 @@ import java.net.InetAddress;
 
 import HTTPClient.Codecs;
 
-final class JAPInfoService 
+final class JAPInfoService
 	{
-		private static final String DP = "%3A"; // Doppelpunkt 
+		private static final String DP = "%3A"; // Doppelpunkt
 
 		JAPModel model;
 		HTTPConnection conInfoService=null;
-		public JAPInfoService() 
+		public JAPInfoService()
 			{
 				model = JAPModel.getModel();
 				setInfoService(model.getInfoServiceHost(),model.getInfoServicePort());
 			}
-			
+
 		/** This will set the InfoService to use. It also sets the Proxy-Configuration and autorization.
 		 */
 		public int setInfoService(String host,int port)
@@ -70,9 +70,9 @@ final class JAPInfoService
 			replaceHeader(conInfoService,headers[1]);
 				return 0;
 			}
-		
+
 		private int replaceHeader(HTTPConnection con,NVPair header)
-			{				
+			{
 				NVPair headers[]=con.getDefaultHeaders();
 				if(headers==null||headers.length==0)
 					{
@@ -101,9 +101,9 @@ final class JAPInfoService
 						return 0;
 					}
 			}
-		
+
 		public int setProxy(String host,int port,String authUserID,String authPasswd)
-			{	
+			{
 				if(conInfoService==null)
 					return -1;
 				conInfoService.setProxyServer(host,port);
@@ -116,7 +116,7 @@ final class JAPInfoService
 					}
 				return 0;
 			}
-		
+
 		public void fetchAnonServers() throws Exception
 			{
 				try
@@ -133,12 +133,12 @@ final class JAPInfoService
 								String name=nl.item(0).getFirstChild().getNodeValue().trim();
 								nl=elem.getElementsByTagName("IP");
 								String ip=nl.item(0).getFirstChild().getNodeValue().trim();
-								
+
 								int port=JAPUtil.parseNodeInt(elem,"Port",-1);
-								int proxyPort=JAPUtil.parseNodeInt(elem,"ProxyPort",-1);							
-								
+								int proxyPort=JAPUtil.parseNodeInt(elem,"ProxyPort",-1);
+
 								AnonServerDBEntry e=new AnonServerDBEntry(name,ip,port,proxyPort);
-								
+
 								nl=elem.getElementsByTagName("CurrentStatus");
 								if(nl!=null&&nl.getLength()>0)
 									{
@@ -151,9 +151,9 @@ final class JAPInfoService
 										e.setTrafficSituation(trafficSituation);
 										int mixedPackets=JAPUtil.parseElementAttrInt(elem1,"MixedPackets",-1);
 										e.setMixedPackets(mixedPackets);
-									}				 
+									}
 								model.anonServerDatabase.addElement(e);
-								
+
 							}
 					}
 				catch(Exception e)
@@ -161,7 +161,7 @@ final class JAPInfoService
 						throw e;
 					}
 			}
-/*	
+/*
 	public void getFeedback() {
 		AnonServerDBEntry service = new AnonServerDBEntry(null,model.anonHostName,model.anonPortNumber);
 		this.getFeedback(service);
@@ -170,8 +170,8 @@ final class JAPInfoService
 		model.currentRisk      = service.getCurrentRisk();
 		model.mixedPackets     = service.getMixedPackets();
 	}
-*/	
-		
+*/
+
 	public void getFeedback(AnonServerDBEntry service)
 		{
 			int nrOfActiveUsers = -1;
@@ -199,11 +199,11 @@ final class JAPInfoService
 							// XML stuff
 							Document doc=DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(resp.getInputStream());
 							NamedNodeMap n=doc.getDocumentElement().getAttributes();
-											
+
 							//s                = n.getNamedItem("anonServer").getNodeValue();
 							nrOfActiveUsers  = Integer.valueOf(n.getNamedItem("nrOfActiveUsers").getNodeValue()).intValue();
-							trafficSituation = Integer.valueOf(n.getNamedItem("currentRisk").getNodeValue()).intValue();
-							currentRisk      = Integer.valueOf(n.getNamedItem("trafficSituation").getNodeValue()).intValue();
+							trafficSituation = Integer.valueOf(n.getNamedItem("trafficSituation").getNodeValue()).intValue();
+							currentRisk      = Integer.valueOf(n.getNamedItem("currentRisk").getNodeValue()).intValue();
 							mixedPackets     = Integer.valueOf(n.getNamedItem("mixedPackets").getNodeValue()).intValue();
 						}
 					// close streams and socket
@@ -229,9 +229,9 @@ final class JAPInfoService
 				}
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPFeedback: "+nrOfActiveUsers+"/"+trafficSituation+"/"+currentRisk+"/"+mixedPackets);
 		}
-		
-	
-	public String getNewVersionNumber() throws Exception 
+
+
+	public String getNewVersionNumber() throws Exception
 		{
 			try
 				{
