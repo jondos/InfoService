@@ -120,6 +120,11 @@ public class Configuration {
   private String m_strProxyAddresses;
 
   /**
+   * Stores, whether the Signatures of InfoService Messages are verified.
+   */
+  private boolean m_bCheckInfoServiceSignatures = true;
+
+  /**
    * Stores the date format information for HTTP headers.
    */
   private SimpleDateFormat m_httpDateFormat;
@@ -202,12 +207,12 @@ public class Configuration {
 
       /* load the private key for signing our own infoservice messages */
       String privatePkcs12KeyFile = a_properties.getProperty("privateKeyFile");
-      if ((privatePkcs12KeyFile != null) && (!privatePkcs12KeyFile.trim().equals(""))) { 
-        privatePkcs12KeyFile = privatePkcs12KeyFile.trim();      
+      if ((privatePkcs12KeyFile != null) && (!privatePkcs12KeyFile.trim().equals(""))) {
+        privatePkcs12KeyFile = privatePkcs12KeyFile.trim();
         PKCS12 infoServiceMessagesPrivateKey = null;
         try {
           String lastPassword = "";
-          do {         
+          do {
             infoServiceMessagesPrivateKey = loadPkcs12PrivateKey(privatePkcs12KeyFile, lastPassword);
             if (infoServiceMessagesPrivateKey == null) {
               /* file was found, but the private key could not be loaded -> maybe wrong password */
@@ -228,22 +233,22 @@ public class Configuration {
           System.out.println("Exiting...");
           throw (e);
         }
-      }  
+      }
       else {
         LogHolder.log(LogLevel.WARNING, LogType.MISC, "No private key for signing the own infoservice entry specified. Unsigned messages will be sent.");
       }
-      
+
       /* whether to check signatures or not (default is enabled signature verification) */
-      SignatureVerifier.getInstance().setCheckSignatures(true); 
+      SignatureVerifier.getInstance().setCheckSignatures(true);
       String checkSignatures = a_properties.getProperty("checkSignatures");
       if (checkSignatures != null) {
         if (checkSignatures.equalsIgnoreCase("false")) {
           SignatureVerifier.getInstance().setCheckSignatures(false);
           LogHolder.log(LogLevel.WARNING, LogType.MISC, "Disabling signature verification for all documents.");
         }
-      }   
+      }
       if (SignatureVerifier.getInstance().isCheckSignatures()) {
-        LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Signature verification is enabled, loading certificates...");        
+        LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Signature verification is enabled, loading certificates...");
         /* load the root certificates */
         String trustedRootCertificateFiles = a_properties.getProperty("trustedRootCertificateFiles");
         if ((trustedRootCertificateFiles != null) && (!trustedRootCertificateFiles.trim().equals(""))) {
@@ -320,12 +325,29 @@ public class Configuration {
         else {
           LogHolder.log(LogLevel.WARNING, LogType.MISC, "No trusted update certificates specified.");
         }
+
+		  m_bCheckInfoServiceSignatures = true;
+			  try
+			  {
+				  String b = a_properties.getProperty("checkInfoServiceSignatures").trim();
+				  if (b.equalsIgnoreCase("false"))
+				  {
+					  m_bCheckInfoServiceSignatures = false;
+
+				  }
+			  }
+			  catch (Exception e)
+			  {
+				  LogHolder.log(LogLevel.WARNING, LogType.MISC,
+								"Could not read 'checkInfoServiceSignatures' setting - default to: " +
+								m_bCheckInfoServiceSignatures);
+			}
         /* start the certificate manager, which manages the appended certificates of the
          * MixCascade entries for verification of the StatusInfo entries
          */
-        new CertificateManager(); 
+        new CertificateManager();
       }
-           
+
       /* get the JAP update information persistence settings */
       m_bRootOfUpdateInformation = a_properties.getProperty("rootOfUpdateInformation").trim().
         equalsIgnoreCase("true");
@@ -336,11 +358,11 @@ public class Configuration {
         /* load the private key for signing our own infoservice messages */
         String updatePkcs12KeyFile = a_properties.getProperty("updateInformationPrivateKey");
         if ((updatePkcs12KeyFile != null) && (!updatePkcs12KeyFile.trim().equals(""))) {
-          updatePkcs12KeyFile = updatePkcs12KeyFile.trim();       
+          updatePkcs12KeyFile = updatePkcs12KeyFile.trim();
           PKCS12 updateMessagesPrivateKey = null;
           try {
             String lastPassword = "";
-            do {         
+            do {
               updateMessagesPrivateKey = loadPkcs12PrivateKey(updatePkcs12KeyFile, lastPassword);
               if (updateMessagesPrivateKey == null) {
                 /* file was found, but the private key could not be loaded -> maybe wrong password */
@@ -607,6 +629,15 @@ public class Configuration {
   }
 
   /**
+	   * Returns, whether the Signatures of InfoService Messaegs should be checked.
+	   *
+	   */
+	  public boolean isInfoServiceMessageSignatureCheckEnabled()
+	  {
+		  return m_bCheckInfoServiceSignatures;
+	}
+
+  /**
    * Returns where the japRelease.jnlp is located in the local file system (path + filename).
    *
    * @return The filename (maybe with path) of japRelease.jnlp.
@@ -658,7 +689,7 @@ public class Configuration {
   {
     return m_holdForwarderList;
   }
-  
+
 
   /**
    * Loads a PKCS12 certificate from a file.
@@ -689,7 +720,7 @@ public class Configuration {
     }
     return loadedCertificate;
   }
-  
+
   /**
    * Loads a X509 certificate from a file.
    *
@@ -702,5 +733,5 @@ public class Configuration {
     return JAPCertificate.getInstance(new File(a_x509FileName));
   }
 
-  
+
 }

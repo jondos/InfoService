@@ -481,6 +481,7 @@
     <file path="images/west.gif"/>
   </node>
   <node name="SampleConfiguration" type="Folder">
+    <file path="documentation/SampleConfiguration/InfoService.properties"/>
     <file path="documentation/SampleConfiguration/jap.conf"/>
   </node>
   <node name="anon" type="Package"/>
