@@ -13,7 +13,6 @@ import logging.LogType;
 import anon.pay.xml.*;
 import anon.util.*;
 import java.sql.*;
-import java.util.*;
 
 /**
  * This control channel is used for communication with the AI (AccountingInstance or
@@ -29,13 +28,14 @@ public class AIControlChannel extends SyncControlChannel
 	public static final int CHAN_ID = 2;
 
 	private MuxSocket m_MuxSocket;
-	private Pay m_Pay;
+	private boolean m_bFirstBalance;
 
 	public AIControlChannel(Pay pay, MuxSocket muxSocket)
 	{
 		super(CHAN_ID, true);
 		m_Pay = pay;
 		m_MuxSocket = muxSocket;
+		m_bFirstBalance = true;
 	}
 
 	/**
@@ -133,7 +133,6 @@ public class AIControlChannel extends SyncControlChannel
 					}
 				}).start();
 
-
 				PayAccount currentAccount = PayAccountsFile.getInstance().getActiveAccount();
 				if( (currentAccount==null) || (currentAccount.getAccountNumber()!=cc.getAccountNumber()))
 				{
@@ -173,15 +172,15 @@ public class AIControlChannel extends SyncControlChannel
 			}
 		}
 		Timestamp t = request.getBalanceTimestamp();
-		if (t != null)
+		if (t != null || m_bFirstBalance==true)
 		{
+			m_bFirstBalance=false;
 			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "AI requested balance");
 			PayAccount currentAccount = PayAccountsFile.getInstance().getActiveAccount();
 			XMLBalance b = currentAccount.getBalance();
 			if ( (b == null) || b.getTimestamp().before(t))
 			{
 				// balance too old, fetch a new one
-				LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Fetching new Balance from BI asynchronously");
 				new Thread(new Runnable()
 				{
 					public void run()

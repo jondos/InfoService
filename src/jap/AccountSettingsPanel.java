@@ -98,7 +98,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 	 */
 	public String getTabTitle()
 	{
-		return "Payment";
+		return JAPMessages.getString("ngPaymentTabTitle");
 	}
 
 	/**

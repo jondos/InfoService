@@ -437,9 +437,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 
 	// PAYMENT
-			/** @todo internationalize */
 			m_labelPayment = new JLabel(JAPMessages.getString("ngPayment"));
-			// m_labelPayment.setBorder(new BevelBorder(BevelBorder.RAISED));
 			m_labelPayment.setHorizontalAlignment(SwingConstants.LEFT);
 			c1.insets = new Insets(0, 5, 0, 0);
 			c1.weightx = 0;
