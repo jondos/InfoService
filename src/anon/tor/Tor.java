@@ -53,7 +53,6 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import anon.infoservice.*;
-
 /**
  * @author stefan
  *
@@ -338,11 +337,11 @@ public class Tor implements /*Runnable,*/ AnonService
 				}
 				//establishes or gets an already established SSL-connection to the first OR
 				FirstOnionRouterConnection firstOR;
-				firstOR = m_firstORFactory.createFirstOnionRouterConnection( (ORDescription)
-					orsForNewCircuit.
-					elementAt(0));
+				ORDescription firstORDescription=(ORDescription)orsForNewCircuit.elementAt(0);
+				firstOR = m_firstORFactory.createFirstOnionRouterConnection(firstORDescription);
 				if (firstOR == null)
 				{
+					m_orList.remove(firstORDescription.getName());
 					throw new IOException("Problem with router " + orsForNewCircuit +
 										  ". Cannot connect.");
 				}

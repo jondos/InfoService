@@ -86,14 +86,6 @@ public class ListenerInterface implements ImmutableListenerInterface, IXMLEncoda
 	{
 		String strHostname;
 
-		m_bUseInterface = true;
-
-		setProtocol(XMLUtil.parseNodeString(
-				  XMLUtil.getFirstChildByName(listenerInterfaceNode, "Type"), null));
-
-		setPort(XMLUtil.parseNodeInt(
-				  XMLUtil.getFirstChildByName(listenerInterfaceNode, "Port"), -1));
-
 		Node hostNode = XMLUtil.getFirstChildByName(listenerInterfaceNode, "Host");
 		Node ipNode = XMLUtil.getFirstChildByName(listenerInterfaceNode, "IP");
 		if (hostNode == null && ipNode == null)
@@ -112,6 +104,14 @@ public class ListenerInterface implements ImmutableListenerInterface, IXMLEncoda
 		}
 
 		setHostname(strHostname);
+
+		setProtocol(XMLUtil.parseNodeString(
+				  XMLUtil.getFirstChildByName(listenerInterfaceNode, "Type"), null));
+
+		setPort(XMLUtil.parseNodeInt(
+				  XMLUtil.getFirstChildByName(listenerInterfaceNode, "Port"), -1));
+
+		setUseInterface(true);
 	}
 
 	/**
@@ -138,11 +138,10 @@ public class ListenerInterface implements ImmutableListenerInterface, IXMLEncoda
 	public ListenerInterface(String a_hostname, int a_port, String a_protocol)
 		throws IllegalArgumentException
 	{
-		m_bUseInterface = true;
-
 		setHostname(a_hostname);
 		setPort(a_port);
 		setProtocol(a_protocol);
+		setUseInterface(true);
 	}
 
 	/**
@@ -396,8 +395,11 @@ public class ListenerInterface implements ImmutableListenerInterface, IXMLEncoda
 	{
 		if (!isValidProtocol(a_protocol))
 		{
-			LogHolder.log(LogLevel.NOTICE, LogType.NET, "ListenerInterface: Invalid protocol '" +
-						  a_protocol + "'!");
+			if (isValidHostname(getHost()))
+			{
+				LogHolder.log(LogLevel.NOTICE, LogType.NET, "Host " + getHost() + " has listener with " +
+							  "invalid protocol '" + a_protocol + "'!");
+			}
 			m_strProtocolType = PROTOCOL_TYPE_RAW_TCP;
 		}
 		else
@@ -429,6 +431,7 @@ public class ListenerInterface implements ImmutableListenerInterface, IXMLEncoda
 		if (!isValidHostname(a_strHostname))
 		{
 			//throw (new IllegalArgumentException("ListenerInterface: Host is invalid."));
+			LogHolder.log(LogLevel.NOTICE, LogType.NET, "Invalid host name !");
 			m_strHostname = "";
 		}
 		m_strHostname = a_strHostname;

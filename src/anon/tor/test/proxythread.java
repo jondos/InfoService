@@ -42,6 +42,18 @@ public class proxythread implements Runnable{
 
 	public void stop()
 	{
+		try
+		{
+			while(torin.available()>0)
+			{
+				byte[] b = new byte[torin.available()];
+				int len=torin.read(b);
+				out.write(b,0,len);
+				out.flush();
+			}
+		} catch (IOException ex)
+		{
+		}
 		channel.close();
 		try
 		{
@@ -59,13 +71,6 @@ public class proxythread implements Runnable{
 		{
 			try
 			{
-				while(in.available()>0)
-				{
-					byte[] b = new byte[in.available()];
-					int len=in.read(b);
-					torout.write(b,0,len);
-					torout.flush();
-				}
 				while(torin.available()>0)
 				{
 					byte[] b = new byte[torin.available()];
@@ -73,11 +78,17 @@ public class proxythread implements Runnable{
 					out.write(b,0,len);
 					out.flush();
 				}
-				if(channel.isClosedByPeer())
+				while(in.available()>0)
+				{
+					byte[] b = new byte[in.available()];
+					int len=in.read(b);
+					torout.write(b,0,len);
+					torout.flush();
+				}
+				if(channel.isClosedByPeer()||client.isClosed())
 				{
 					this.stop();
 				}
-				Thread.sleep(50);
 			} catch (Exception ex)
 			{
 				System.out.println("Exception catched : "+ex.getLocalizedMessage());
