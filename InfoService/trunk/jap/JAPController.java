@@ -213,7 +213,7 @@ public final class JAPController implements ProxyListener {
 	 *    minimizedStartup="true"/"false" // should we start minimized ???
 	 *		neverRemindActiveContent="true"/"false" // should we remind the user about active content ?
 	 *    Locale="LOCALE_IDENTIFIER" (two letter iso 639 code) //the Language for the UI to use
-	 *    LookAndFeel="..."             //the LookAndFeel
+	 *    LookAndFeel="..."             //the LookAndFeel class name
 	 *	>
 	 * <MixCascade id=..">                     //info about the used AnonServer (since version 0.1) [equal to the general MixCascade struct]
 	 * 	<Name>..</Name>
@@ -358,7 +358,7 @@ public final class JAPController implements ProxyListener {
 				String lf=XMLUtil.parseNodeString(n.getNamedItem("LookAndFeel"),"unknown");
 				LookAndFeelInfo[] lfi=UIManager.getInstalledLookAndFeels();
 				for(int i=0;i<lfi.length;i++) {
-					if(lfi[i].getName().equals(lf)) {
+					if(lfi[i].getName().equals(lf)||lfi[i].getClassName().equals(lf)) {
 						try {
 							UIManager.setLookAndFeel(lfi[i].getClassName());
 	//				SwingUtilities.updateComponentTreeUI(m_frmParent);
@@ -501,7 +501,7 @@ public final class JAPController implements ProxyListener {
 			e.setAttribute("doNotAbuseReminder",(mbDoNotAbuseReminder?"true":"false"));
 			e.setAttribute("neverRemindGoodBye",(mbGoodByMessageNeverRemind?"true":"false"));
 			e.setAttribute("Locale",m_Locale.getLanguage());
-			e.setAttribute("LookAndFeel",UIManager.getLookAndFeel().getName());
+			e.setAttribute("LookAndFeel",UIManager.getLookAndFeel().getClass().getName());
 			//adding (new) AnonServer description element
 			AnonServer e1 = m_Controller.getAnonServer();
 			e.appendChild(e1.toXmlNode(doc));
