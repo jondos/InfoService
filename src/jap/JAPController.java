@@ -418,7 +418,7 @@ public final class JAPController implements ProxyListener {
 							f.close();
 						}
 				}
-			catch(Exception e)
+			catch(Throwable e)
 				{
 					error=true;
 				}
@@ -431,78 +431,82 @@ public final class JAPController implements ProxyListener {
 											JOptionPane.ERROR_MESSAGE);
 				}
 		}
-	protected String getConfigurationAsXML() {
-		// Save config to xml file
-		// Achtung!! Fehler im Sun-XML --> NULL-Attributte koennen hinzugefuegt werden,
-		// beim Abspeichern gibt es dann aber einen Fehler!
-		try {
-			Document doc=DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
-			Element e=doc.createElement("JAP");
-			doc.appendChild(e);
-			//
-			e.setAttribute("portNumber",Integer.toString(JAPModel.getHttpListenerPortNumber()));
-			//e.setAttribute("portNumberSocks",Integer.toString(portSocksListener));
-			//e.setAttribute("supportSocks",(getUseSocksPort()?"true":"false"));
-			e.setAttribute("listenerIsLocal",(JAPModel.getHttpListenerIsLocal()?"true":"false"));
-			e.setAttribute("proxyMode",(JAPModel.getUseFirewall()?"true":"false"));
-			e.setAttribute("proxyType",(JAPModel.getFirewallType()==JAPConstants.FIREWALL_TYPE_SOCKS?"SOCKS":"HTTP"));
-			String tmpStr=m_Model.getFirewallHost();
-			e.setAttribute("proxyHostName",((tmpStr==null)?"":tmpStr));
-			int tmpInt=m_Model.getFirewallPort();
-			e.setAttribute("proxyPortNumber",Integer.toString(tmpInt));
-			e.setAttribute("proxyAuthorization",(JAPModel.getUseFirewallAuthorization()?"true":"false"));
-			tmpStr=m_Model.getFirewallAuthUserID();
-			e.setAttribute("proxyAuthUserID",((tmpStr==null)?"":tmpStr));
-			tmpStr=m_Model.getInfoServiceHost();
-			e.setAttribute("infoServiceHostName",((tmpStr==null)?"":tmpStr));
-			tmpInt=m_Model.getInfoServicePort();
-			e.setAttribute("infoServicePortNumber",Integer.toString(tmpInt));
-			e.setAttribute("infoServiceDisabled",(JAPModel.isInfoServiceDisabled()?"true":"false"));
-			AnonServer e1 = m_Controller.getAnonServer();
-			e.setAttribute("anonserviceID",((e1.getID()==null)?"":e1.getID()));
-			e.setAttribute("anonserviceName",((e1.getName()==null)?"":e1.getName()));
-			e.setAttribute("anonHostName",   ((e1.getHost()==null)?"":e1.getHost()));
-			e.setAttribute("anonHostIP",   ((e1.getIP()==null)?"":e1.getIP()));
-			e.setAttribute("anonPortNumber",   Integer.toString(e1.getPort()));
-			e.setAttribute("anonSSLPortNumber",Integer.toString(e1.getSSLPort()));
-			e.setAttribute("DummyTrafficIntervall",Integer.toString(JAPModel.getDummyTraffic()));
-			e.setAttribute("autoConnect",(JAPModel.getAutoConnect()?"true":"false"));
-			e.setAttribute("autoReConnect",(JAPModel.getAutoReConnect()?"true":"false"));
-			e.setAttribute("minimizedStartup",(JAPModel.getMinimizeOnStartup()?"true":"false"));
-			e.setAttribute("neverRemindActiveContent",(mbActCntMessageNeverRemind?"true":"false"));
-			e.setAttribute("doNotAbuseReminder",(mbDoNotAbuseReminder?"true":"false"));
-			e.setAttribute("neverRemindGoodBye",(mbGoodByMessageNeverRemind?"true":"false"));
-			e.setAttribute("Locale",m_Locale.getLanguage());
-			e.setAttribute("LookAndFeel",UIManager.getLookAndFeel().getName());
-			// adding Debug-Element
-			Element elemDebug=doc.createElement("Debug");
-			e.appendChild(elemDebug);
-			Element tmp=doc.createElement("Level");
-			Text txt=doc.createTextNode(Integer.toString(JAPDebug.getDebugLevel()));
-			tmp.appendChild(txt);
-			elemDebug.appendChild(tmp);
-			tmp=doc.createElement("Type");
-			int debugtype=JAPDebug.getDebugType();
-			tmp.setAttribute("GUI",(debugtype&JAPDebug.GUI)!=0?"true":"false");
-			tmp.setAttribute("NET",(debugtype&JAPDebug.NET)!=0?"true":"false");
-			tmp.setAttribute("THREAD",(debugtype&JAPDebug.THREAD)!=0?"true":"false");
-			tmp.setAttribute("MISC",(debugtype&JAPDebug.MISC)!=0?"true":"false");
-			elemDebug.appendChild(tmp);
-			if(JAPDebug.isShowConsole()){
-					tmp=doc.createElement("Output");
-					txt=doc.createTextNode("Console");
-					tmp.appendChild(txt);
-					elemDebug.appendChild(tmp);
-			}
-			return JAPUtil.XMLDocumentToString(doc);
-			//((XmlDocument)doc).write(f);
-		}
-		catch(Exception ex) {
-			JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.MISC,"JAPModel:save() Exception: "+ex.getMessage());
-			//ex.printStackTrace();
-		}
-		return null;
-	}
+
+  private String getConfigurationAsXML()
+    {
+		  // Save config to xml file
+		  // Achtung!! Fehler im Sun-XML --> NULL-Attributte koennen hinzugefuegt werden,
+		  // beim Abspeichern gibt es dann aber einen Fehler!
+		  try
+        {
+			    Document doc=DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+			    Element e=doc.createElement("JAP");
+			    doc.appendChild(e);
+			    //
+			    e.setAttribute("portNumber",Integer.toString(JAPModel.getHttpListenerPortNumber()));
+			    //e.setAttribute("portNumberSocks",Integer.toString(portSocksListener));
+			    //e.setAttribute("supportSocks",(getUseSocksPort()?"true":"false"));
+			    e.setAttribute("listenerIsLocal",(JAPModel.getHttpListenerIsLocal()?"true":"false"));
+			    e.setAttribute("proxyMode",(JAPModel.getUseFirewall()?"true":"false"));
+          e.setAttribute("proxyType",(JAPModel.getFirewallType()==JAPConstants.FIREWALL_TYPE_SOCKS?"SOCKS":"HTTP"));
+          String tmpStr=m_Model.getFirewallHost();
+          e.setAttribute("proxyHostName",((tmpStr==null)?"":tmpStr));
+          int tmpInt=m_Model.getFirewallPort();
+          e.setAttribute("proxyPortNumber",Integer.toString(tmpInt));
+          e.setAttribute("proxyAuthorization",(JAPModel.getUseFirewallAuthorization()?"true":"false"));
+          tmpStr=m_Model.getFirewallAuthUserID();
+          e.setAttribute("proxyAuthUserID",((tmpStr==null)?"":tmpStr));
+          tmpStr=m_Model.getInfoServiceHost();
+          e.setAttribute("infoServiceHostName",((tmpStr==null)?"":tmpStr));
+          tmpInt=m_Model.getInfoServicePort();
+          e.setAttribute("infoServicePortNumber",Integer.toString(tmpInt));
+          e.setAttribute("infoServiceDisabled",(JAPModel.isInfoServiceDisabled()?"true":"false"));
+          AnonServer e1 = m_Controller.getAnonServer();
+          e.setAttribute("anonserviceID",((e1.getID()==null)?"":e1.getID()));
+          e.setAttribute("anonserviceName",((e1.getName()==null)?"":e1.getName()));
+          e.setAttribute("anonHostName",   ((e1.getHost()==null)?"":e1.getHost()));
+          e.setAttribute("anonHostIP",   ((e1.getIP()==null)?"":e1.getIP()));
+          e.setAttribute("anonPortNumber",   Integer.toString(e1.getPort()));
+          e.setAttribute("anonSSLPortNumber",Integer.toString(e1.getSSLPort()));
+          e.setAttribute("DummyTrafficIntervall",Integer.toString(JAPModel.getDummyTraffic()));
+          e.setAttribute("autoConnect",(JAPModel.getAutoConnect()?"true":"false"));
+          e.setAttribute("autoReConnect",(JAPModel.getAutoReConnect()?"true":"false"));
+          e.setAttribute("minimizedStartup",(JAPModel.getMinimizeOnStartup()?"true":"false"));
+          e.setAttribute("neverRemindActiveContent",(mbActCntMessageNeverRemind?"true":"false"));
+          e.setAttribute("doNotAbuseReminder",(mbDoNotAbuseReminder?"true":"false"));
+          e.setAttribute("neverRemindGoodBye",(mbGoodByMessageNeverRemind?"true":"false"));
+          e.setAttribute("Locale",m_Locale.getLanguage());
+          e.setAttribute("LookAndFeel",UIManager.getLookAndFeel().getName());
+          // adding Debug-Element
+          Element elemDebug=doc.createElement("Debug");
+          e.appendChild(elemDebug);
+          Element tmp=doc.createElement("Level");
+          Text txt=doc.createTextNode(Integer.toString(JAPDebug.getDebugLevel()));
+          tmp.appendChild(txt);
+          elemDebug.appendChild(tmp);
+          tmp=doc.createElement("Type");
+          int debugtype=JAPDebug.getDebugType();
+          tmp.setAttribute("GUI",(debugtype&JAPDebug.GUI)!=0?"true":"false");
+          tmp.setAttribute("NET",(debugtype&JAPDebug.NET)!=0?"true":"false");
+          tmp.setAttribute("THREAD",(debugtype&JAPDebug.THREAD)!=0?"true":"false");
+          tmp.setAttribute("MISC",(debugtype&JAPDebug.MISC)!=0?"true":"false");
+          elemDebug.appendChild(tmp);
+          if(JAPDebug.isShowConsole())
+            {
+              tmp=doc.createElement("Output");
+              txt=doc.createTextNode("Console");
+              tmp.appendChild(txt);
+              elemDebug.appendChild(tmp);
+            }
+			    return JAPUtil.XMLDocumentToString(doc);
+        }
+		  catch(Throwable ex)
+        {
+			    JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.MISC,"JAPModel:save() Exception: "+ex.getMessage());
+		    }
+		  return null;
+	  }
+
 	//---------------------------------------------------------------------
 	public Locale getLocale() {
 		return m_Locale;
