@@ -29,8 +29,8 @@ public final class JAPModel implements JAPObserver {
 
 	private int nrOfChannels = 0;
 	private int nrOfBytes = 0;
-	static final int MAXCHANNELVALUE = 5; // maximal number of anonymous channels
-	static final int MAXBYTESVALUE = 100000; // maximal bytes of all anonymous channels
+	//static final int MAXCHANNELVALUE = 5; // maximal number of anonymous channels
+	//static final int MAXBYTESVALUE = 100000; // maximal bytes of all anonymous channels
 
 	static final String url_download_version = "http://anon.inf.tu-dresden.de/~sk13/anon/jap/download.html";
 	static final String url_info_version     = "http://anon.inf.tu-dresden.de/~sk13/anon/jap/aktVersion.txt";
