@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2000, The JAP-Team
+Copyright (c) 2000 - 2004, The JAP-Team
 All rights reserved.
 Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
@@ -52,7 +52,7 @@ import jap.JAPMessages;
 import jap.JAPUtil;
 import jap.JAPConstants;
 import jap.JAPController;
-import anon.infoservice.*;
+
 import update.JAPUpdateWizard;
 
 import java.io.File;

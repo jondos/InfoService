@@ -35,9 +35,10 @@ import java.net.InetAddress;
 import java.net.ConnectException;
 import anon.AnonService;
 import anon.AnonChannel;
-import anon.AnonServer;
 import anon.AnonServiceEventListener;
 import logging.Log;
+
+import anon.infoservice.MixCascade;
 
 public class AnonServiceImplProxy implements AnonService
 	{
@@ -53,7 +54,7 @@ public class AnonServiceImplProxy implements AnonService
 				m_ClientID=((Integer)o).intValue();
 			}
 
-		public int connect(AnonServer anonService)
+		public int connect(MixCascade mixCascade)
 			{
 				return 0;
 			}

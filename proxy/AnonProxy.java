@@ -32,10 +32,11 @@ import anon.AnonService;
 import anon.AnonServiceEventListener;
 import anon.AnonServiceFactory;
 import anon.AnonChannel;
-import anon.AnonServer;
+
 import anon.ToManyOpenChannelsException;
 import anon.NotConnectedToMixException;
 
+import anon.infoservice.MixCascade;
 import anon.server.AnonServiceImpl;
 import anon.crypto.JAPCertificateStore;
 import jap.JAPDebug;
@@ -65,7 +66,12 @@ final public class AnonProxy implements Runnable/*,AnonServiceEventListener*/
 	private ServerSocket m_socketListener;
 	private ProxyListener m_ProxyListener;
 	private volatile int m_numChannels=0;
-	private AnonServer m_AnonServer;
+	
+	/**
+   * Stores the MixCascade we are connected to.
+   */
+  private MixCascade currentMixCascade;
+  
 	private boolean m_bAutoReconnect=false;
 	public AnonProxy(ServerSocket listener)
 		{
@@ -77,10 +83,14 @@ final public class AnonProxy implements Runnable/*,AnonServiceEventListener*/
 			setDummyTraffic(-1);
 		}
 
-	public void setAnonService(AnonServer server)
-		{
-			m_AnonServer=server;
-		}
+ /**
+   * Sets a new MixCascade.
+   *
+   * @param newMixCascade The new MixCascade we are connected to.
+   */
+  public void setMixCascade(MixCascade newMixCascade) {
+    currentMixCascade = newMixCascade;
+  }
 
 	public void setFirewall(int type,String host,int port)
 		{
@@ -115,7 +125,7 @@ final public class AnonProxy implements Runnable/*,AnonServiceEventListener*/
 	public int start()
 		{
 			m_numChannels=0;
-			int ret=m_Anon.connect(m_AnonServer);
+			int ret=m_Anon.connect(currentMixCascade);
 			if(ret!=ErrorCodes.E_SUCCESS)
 				return ret;
 			threadRun=new Thread(this,"JAP - AnonProxy");
@@ -197,7 +207,7 @@ final public class AnonProxy implements Runnable/*,AnonServiceEventListener*/
 												while(m_bIsRunning&&m_bAutoReconnect)
 													{
 														JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPAnonProxy.run() Try reconnect to Mix");
-														int ret=m_Anon.connect(m_AnonServer);
+														int ret=m_Anon.connect(currentMixCascade);
 														if(ret==ErrorCodes.E_SUCCESS)
 															break;
 														Thread.sleep(10000);
