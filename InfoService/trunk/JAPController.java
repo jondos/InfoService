@@ -864,7 +864,12 @@ private final class SetAnonModeAsync implements Runnable
 									JAPMessages.getString("errorFirewallModeNotSupported"),
 									JAPMessages.getString("errorFirewallModeNotSupportedTitle"),
 									JOptionPane.ERROR_MESSAGE);
-								return; //TODO: Maybe need to check what to do...--> anonmode=false =?
+
+                  view.setCursor(Cursor.getDefaultCursor());
+						      notifyJAPObservers();
+						      JAPSetAnonModeSplash.abort();
+						      setAnonMode(false);
+								  return; //TODO: Maybe need to check what to do...--> anonmode=false =?
 							} else {
 								m_proxyAnon.setAnonService(e);
 								m_proxyAnon.setFirewall(m_Model.getFirewallHost(),m_Model.getFirewallPort());
@@ -877,7 +882,8 @@ private final class SetAnonModeAsync implements Runnable
 							}
 						} else {
 							// connect directly to first mix
-							m_proxyAnon.setAnonService(e);
+							m_proxyAnon.setFirewall(null,-1);
+              m_proxyAnon.setAnonService(e);
 						}
 						int ret=m_proxyAnon.start();
 						if(ret==AnonProxy.E_SUCCESS)

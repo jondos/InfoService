@@ -78,7 +78,7 @@ final public class AnonServiceImpl implements AnonService
 
     public int connect(AnonServer anonService)
       {
-        int ret=m_MuxSocket.connectViaFirewall(anonService.getHost(),anonService.getPort(),
+        int ret=m_MuxSocket.connectViaFirewall(anonService,
                                         m_FirewallHost,m_FirewallPort,
                                         m_FirewallUserID,m_FirewallPasswd);
         if(ret!=ErrorCodes.E_SUCCESS)
