@@ -35,6 +35,7 @@ public final class JAPSplash extends Window  {
 		pack();
 		m.centerFrame(this);
 		setVisible(true);
+		toFront();
 	}
 }
 

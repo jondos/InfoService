@@ -8,16 +8,20 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.awt.Dimension;
 import java.awt.Window;
+import java.awt.Frame;
 import java.awt.MediaTracker;
 import java.awt.Toolkit;
 import javax.swing.ImageIcon;
 
+/* This is the Model of All. It's a Singelton!*/
 public final class JAPModel {
 
 // 2000-08-01(HF): 
 // JAPDebug now initialized in JAP in order to use
 // the functions also in JAP.main()
     
+	
+	
 	static final String aktVersion = "00.00.020"; // Version of JAP
 	
 	private int      portNumber        = 4001;
@@ -88,32 +92,47 @@ public final class JAPModel {
 	
 	public static JAPKeyPool keypool;
 	
-	public JAPModel () {
-		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:initializing...");
-		// Load Texts for Messages and Windows
-		try { 
-			msg = ResourceBundle.getBundle(MESSAGESFN, Locale.getDefault() ); 
-		} 
-		catch(Exception e1) {
-			try {
-				msg=ResourceBundle.getBundle(MESSAGESFN,Locale.ENGLISH);
-			}
-			catch(Exception e) {
-				System.out.println("File not found: "+MESSAGESFN+".properties");
-				System.out.println("Your package of JAP may be corrupted.");
-				System.out.println("Try again to download or install the package.");
-				System.exit(-1);
-			}
-		}
-		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:properties loaded");
+	private JAPModel ()
+		{
+			JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:initializing...");
+			// Load Texts for Messages and Windows
+			try
+				{ 
+					msg = ResourceBundle.getBundle(MESSAGESFN, Locale.getDefault() ); 
+				}	 
+			catch(Exception e1)
+				{
+					try
+						{
+							msg=ResourceBundle.getBundle(MESSAGESFN);
+						}
+					catch(Exception e) 
+						{
+							JAPAWTMsgBox.MsgBox(new Frame(),
+																	"File not found: "+MESSAGESFN+".properties\nYour package of JAP may be corrupted.\nTry again to download or install the package.",
+																	"Error");
+							System.exit(-1);
+						}
+				}
+			JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:properties loaded");
 				
-		// Create observer object 
-		observerVector = new Vector();
+			// Create observer object 
+			observerVector = new Vector();
 
-		model=this;
-		
-		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:initialization finished!");
-	}
+			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:initialization finished!");
+		}
+	
+	/** Creates the Model - as Singleton.
+	 * @return The one and only JAPModel
+	 */
+	public static JAPModel createModel()
+		{
+			if(model!=null)
+				JAPDebug.out(JAPDebug.ALERT,JAPDebug.MISC,"JAPModel is initialized twice - Bug in Programm!!");
+			else
+				model=new JAPModel();
+			return model;
+		}
 	
 	public static JAPModel getModel() {
 			return model;
@@ -149,6 +168,7 @@ public final class JAPModel {
 			autoConnect=((n.getNamedItem("autoConnect").getNodeValue()).equals("true")?true:false);
 		}
 		catch(Exception e) {
+			JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:Error loading configuration! "+e.toString());
 		}
 		// fire event
 		notifyJAPObservers();
@@ -445,18 +465,21 @@ public final class JAPModel {
 		// this line should never be reached
 	}
 		
-	public void addJAPObserver(Object o) {
-		observerVector.addElement(o);
-	}
-	
-	public synchronized void notifyJAPObservers() {
-		//JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:notifyJAPObservers()");
-		Enumeration enum = observerVector.elements();
-		while (enum.hasMoreElements()) {
-			JAPObserver listener = (JAPObserver)enum.nextElement();
-			listener.valuesChanged(this);
+	public void addJAPObserver(JAPObserver o)
+		{
+			observerVector.addElement(o);
 		}
-	}
+	
+	public synchronized void notifyJAPObservers()
+		{
+			//JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:notifyJAPObservers()");
+			Enumeration enum = observerVector.elements();
+			while (enum.hasMoreElements())
+				{
+					JAPObserver listener = (JAPObserver)enum.nextElement();
+					listener.valuesChanged(this);
+				}
+		}
 	
 	ImageIcon loadImageIcon(String strImage, boolean sync) {
 		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPModel:Image "+strImage+" loading...");

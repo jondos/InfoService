@@ -11,10 +11,11 @@ import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.util.StringTokenizer;
 
+/** This is a simple Message Box. It works with JAVA 1.1 without Swing.*/
 final public class JAPAWTMsgBox extends WindowAdapter implements ActionListener
 {
-	Dialog d;
-	public JAPAWTMsgBox(Frame parent,String msg,String title)
+	private Dialog d;
+	private JAPAWTMsgBox(Frame parent,String msg,String title)
 		{
 			d=new Dialog(parent,title,true);
 			d.addWindowListener(this);
@@ -51,7 +52,12 @@ final public class JAPAWTMsgBox extends WindowAdapter implements ActionListener
 			JAPModel.centerFrame(d);
 		}
 	
-	final static int MsgBox(Frame parent,String msg,String title)
+	/** Shows a Message Box.
+	 * @param parent The owner of the Message Box.
+	 * @param msg The Message to Display. Multiple line can be separate by \n
+	 * @param title The Title of the Message Box (Title of the Window displayed.)
+	 */
+	final static public int MsgBox(Frame parent,String msg,String title)
 		{
 			JAPAWTMsgBox msgbox=new JAPAWTMsgBox(parent,msg,title);
 			msgbox.d.show(/*true*/);
