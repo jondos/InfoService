@@ -31,17 +31,29 @@ import java.awt.Insets;
 import java.awt.Font;
 public final class JAPConstants {
 	public static final String aktVersion = "00.01.088"; //Never change the layout of this line!
-	public static final String strReleaseDate = "$Date$"; //The Release date of this version
-																													 //display in some information dialog and in
-																													 //the update dialog
+	private static final String CVS_GENAERTED_RELEASE_DATE= "$Date$";
 																													 //Warning: This is a little bit tricky,
 																													 //because CVS will expand the $Date$
 																													 //to the date of the last commmit of this file
 
+	public final static boolean m_bReleasedVersion = false; //Set to true if this is a stable (release) Version
+	private static final String RELEASE_DATE= ""; // Set only to a Value, if m_bReleaseVersion=true
+
+	public static final String strReleaseDate ; //The Release date of this version
+																													 //display in some information dialog and in
+																													 //the update dialog
+	static
+		{ //This will set the strRealeaseDate to the correct Value
+			//This is ether the CVS_GENERATED_RELEAS_DATE or the RELEASE_DATE, if m_bReleasedVersion==true;
+			if(m_bReleasedVersion)
+				strReleaseDate=RELEASE_DATE;
+			else
+				strReleaseDate=CVS_GENAERTED_RELEASE_DATE.substring(7,26);
+		}
+
 	//static final String buildDate=".."
 	//static final String buildType="..."
 				//needed for update.JAPUpdate
-	public final static boolean m_bReleasedVersion = false;
 	static final int      defaultPortNumber            = 4001;
 	static final String   defaultAnonHost              = "mix.inf.tu-dresden.de";
 	static final String   defaultAnonIP                = "141.76.1.120"; //only used for fallback,
