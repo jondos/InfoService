@@ -67,13 +67,13 @@ public class XMLCC extends XMLDocument
 		Element element = m_theDocument.getDocumentElement();
 		if (!element.getTagName().equals("CC"))
 		{
-			throw new Exception();
+			throw new Exception("XMLCC wrong xml structure");
 		}
 
 		NodeList nl = element.getElementsByTagName("ID");
 		if (nl.getLength() < 1)
 		{
-			throw new Exception();
+			throw new Exception("XMLCC wrong xml structure");
 		}
 		element = (Element) nl.item(0);
 
@@ -83,7 +83,7 @@ public class XMLCC extends XMLDocument
 		nl = element.getElementsByTagName("AN");
 		if (nl.getLength() < 1)
 		{
-			throw new Exception();
+			throw new Exception("XMLCC wrong xml structure");
 		}
 		element = (Element) nl.item(0);
 		chdata = (CharacterData) element.getFirstChild();
@@ -92,7 +92,7 @@ public class XMLCC extends XMLDocument
 		nl = element.getElementsByTagName("C");
 		if (nl.getLength() < 1)
 		{
-			throw new Exception();
+			throw new Exception("XMLCC wrong xml structure");
 		}
 		element = (Element) nl.item(0);
 		chdata = (CharacterData) element.getFirstChild();
@@ -101,7 +101,7 @@ public class XMLCC extends XMLDocument
 		nl = element.getElementsByTagName("D");
 		if (nl.getLength() < 1)
 		{
-			throw new Exception();
+			throw new Exception("XMLCC wrong xml structure");
 		}
 		element = (Element) nl.item(0);
 		chdata = (CharacterData) element.getFirstChild();
@@ -110,7 +110,7 @@ public class XMLCC extends XMLDocument
 		nl = element.getElementsByTagName("w");
 		if (nl.getLength() < 1)
 		{
-			throw new Exception();
+			throw new Exception("XMLCC wrong xml structure");
 		}
 
 		Element exponent = (Element) nl.item(0);

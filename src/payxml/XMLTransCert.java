@@ -27,9 +27,8 @@
  */
 package payxml;
 
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import anon.util.XMLUtil;
+import org.w3c.dom.*;
+import anon.util.*;
 
 public class XMLTransCert extends XMLDocument
 {
@@ -39,16 +38,16 @@ public class XMLTransCert extends XMLDocument
 	private java.sql.Timestamp m_validTime;
 	private long m_accountNumber;
 	private long m_transferNumber;
-	private long m_maxBalance;
+	private long m_deposit;
 
 	//~ Constructors ***********************************************************
 
 	public XMLTransCert(long accountNumber, long transferNumber,
-						long maxBalance, java.sql.Timestamp validTime) throws Exception
+						long deposit, java.sql.Timestamp validTime) throws Exception
 	{
 		m_accountNumber = accountNumber;
 		m_transferNumber = transferNumber;
-		m_maxBalance = maxBalance;
+		m_deposit = deposit;
 		m_validTime = validTime;
 		m_theDocument = getDocumentBuilder().newDocument();
 		Element elemRoot = m_theDocument.createElement("TransferCertificate");
@@ -60,8 +59,8 @@ public class XMLTransCert extends XMLDocument
 		elem = m_theDocument.createElement("TransferNumber");
 		XMLUtil.setNodeValue(elem, Long.toString(transferNumber));
 		elemRoot.appendChild(elem);
-		elem = m_theDocument.createElement("MaxBalance");
-		XMLUtil.setNodeValue(elem, Long.toString(maxBalance));
+		elem = m_theDocument.createElement("Deposit");
+		XMLUtil.setNodeValue(elem, Long.toString(deposit));
 		elemRoot.appendChild(elem);
 		elem = m_theDocument.createElement("ValidTime");
 		XMLUtil.setNodeValue(elem, validTime.toString());
@@ -117,7 +116,7 @@ public class XMLTransCert extends XMLDocument
 		Element element = m_theDocument.getDocumentElement();
 		if (!element.getTagName().equals("TransferCertificate"))
 		{
-			throw new Exception();
+			throw new Exception("XMLTransCert wrong xml structure");
 		}
 		element = (Element) XMLUtil.getFirstChildByName(element, "AccountNumber");
 		String str = XMLUtil.parseNodeString(element, null);
@@ -136,7 +135,7 @@ public class XMLTransCert extends XMLDocument
 		Element element = m_theDocument.getDocumentElement();
 		if (!element.getTagName().equals("TransferCertificate"))
 		{
-			throw new Exception();
+			throw new Exception("XMLTransCert wrong xml structure");
 		}
 
 		element = (Element) XMLUtil.getFirstChildByName(element, "TransferNumber");
@@ -149,10 +148,21 @@ public class XMLTransCert extends XMLDocument
 		Element element = m_theDocument.getDocumentElement();
 		if (!element.getTagName().equals("TransferCertificate"))
 		{
-			throw new Exception();
+			throw new Exception("XMLTransCert wrong xml structure");
 		}
 		element = (Element) XMLUtil.getFirstChildByName(element, "ValidTime");
 		String str = XMLUtil.parseNodeString(element, null);
 		m_validTime = java.sql.Timestamp.valueOf(str);
+	}
+
+	/**
+	 * getBaseUrl
+	 *
+	 * @return String
+	 * @todo make this more dynamic
+	 */
+	public String getBaseUrl()
+	{
+		return "http://anon.inf.tu-dresden.de/pay/index.php";
 	}
 }

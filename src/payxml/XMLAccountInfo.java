@@ -171,7 +171,7 @@ public class XMLAccountInfo extends XMLDocument
 	 * Creates a Balance from  an existing XML docuemnt
 	 *
 	 * @param xml the node that represents the Balance
-	 * @param verifier JAPSignature must be initialized and ready to verify XML
+	 * @param verifier JAPSignature must be initialized and ready to verify XML (or null)
 	 * @throws Exception on invalid xml format or invalid signature
 	 */
 	public XMLAccountInfo(Node xml, JAPSignature verifier) throws Exception
@@ -180,7 +180,11 @@ public class XMLAccountInfo extends XMLDocument
 		Node n = XMLUtil.importNode(m_theDocument, xml, true);
 		m_theDocument.appendChild(n);
 		setValues();
-		if (!checkBalanceSignature(verifier))
+		if (verifier == null)
+		{
+
+		}
+		else if (!checkBalanceSignature(verifier))
 		{
 			throw new Exception("Invalid Signature");
 		}
@@ -189,28 +193,29 @@ public class XMLAccountInfo extends XMLDocument
 	private void setValues() throws Exception
 	{
 		Element elemRoot = m_theDocument.getDocumentElement();
-		if (!elemRoot.getTagName().equals("Balance"))
+		if (!elemRoot.getTagName().equals("AccountInfo"))
 		{
-			throw new Exception();
+			throw new Exception("XMLAccountInfo wrong xml structure");
 		}
+		Element elemBalance = (Element) XMLUtil.getFirstChildByName(elemRoot, "Balance");
 
-		Element elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "AccountNumber");
+		Element elem = (Element) XMLUtil.getFirstChildByName(elemBalance, "AccountNumber");
 		String str = XMLUtil.parseNodeString(elem, null);
 		m_AccountNumber = Long.parseLong(str);
 
-		elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "Deposit");
+		elem = (Element) XMLUtil.getFirstChildByName(elemBalance, "Deposit");
 		str = XMLUtil.parseNodeString(elem, null);
 		m_lDeposit = Long.parseLong(str);
 
-		elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "Spent");
+		elem = (Element) XMLUtil.getFirstChildByName(elemBalance, "Spent");
 		str = XMLUtil.parseNodeString(elem, null);
 		m_lSpent = Long.parseLong(str);
 
-		elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "Timestamp");
+		elem = (Element) XMLUtil.getFirstChildByName(elemBalance, "Timestamp");
 		str = XMLUtil.parseNodeString(elem, null);
 		m_Timestamp = java.sql.Timestamp.valueOf(str);
 
-		elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "Validtime");
+		elem = (Element) XMLUtil.getFirstChildByName(elemBalance, "Validtime");
 		str = XMLUtil.parseNodeString(elem, null);
 		m_ValidTime = java.sql.Timestamp.valueOf(str);
 	}
@@ -239,7 +244,7 @@ public class XMLAccountInfo extends XMLDocument
 		return m_lDeposit;
 	}
 
-	public long getCreditMax()
+	public long getSpent()
 	{
 		return m_lSpent;
 	}
@@ -259,9 +264,6 @@ public class XMLAccountInfo extends XMLDocument
 		return m_lDeposit - m_lSpent;
 	}
 
-
-
-
 	/**
 	 * Neu: getBalance()..
 	 * extrahiert ein DocumentFragment, das nur die Balance enth\uFFFDlt
@@ -273,5 +275,5 @@ public class XMLAccountInfo extends XMLDocument
 		elem = (Element) XMLUtil.getFirstChildByName(elem, "Balance");
 		fragment.appendChild(elem);
 		return fragment;
-}
+	}
 }

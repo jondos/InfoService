@@ -41,6 +41,8 @@ import pay.PayAccount;
 import pay.PayAccountsFile;
 import payxml.XMLAccountInfo;
 import payxml.XMLPayRequest;
+import logging.*;
+
 
 /**
  * Die gesammt Kommunikation zwischen Pay und AI (welche ja ein Teil der Mix-Kaskade sind). L\uFFFDuft als eigener Thread
@@ -76,7 +78,8 @@ public class AICommunication extends Thread
 		}
 		catch (Exception ex)
 		{
-			System.out.println(" AICommunication Konstruktor getAIChannel wirft fehler");
+			LogHolder.log(LogLevel.DEBUG, LogType.PAY,
+						  "AICommunication Konstruktor getAIChannel wirft fehler");
 		}
 		//in = new DataInputStream(c.getInputStream());
 		//out = c.getOutputStream();
@@ -115,7 +118,8 @@ public class AICommunication extends Thread
 
 		if (anonServer == null)
 		{
-			System.out.println("AnonServer nicht gesetzt bitte zuerst setAnonService aufrufen");
+			LogHolder.log(LogLevel.DEBUG, LogType.PAY,
+						  "AnonServer nicht gesetzt bitte zuerst setAnonService aufrufen");
 			return;
 		}
 		running = true;
@@ -190,7 +194,7 @@ public class AICommunication extends Thread
 		}
 		catch (Exception ex)
 		{
-			System.out.println("AICommunication send ging nicht");
+			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "AICommunication send ging nicht");
 		}
 	}
 
@@ -205,7 +209,7 @@ public class AICommunication extends Thread
 		}
 		catch (Exception ex)
 		{
-			System.out.println("AICommunication receive ging nicht");
+			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "AICommunication receive ging nicht");
 			return null;
 		}
 		return bytes;
@@ -227,12 +231,14 @@ public class AICommunication extends Thread
 		}
 		catch (Exception ex)
 		{
-			System.out.println("AICommunication processPayRequest - da kam was falsches an und zwar: -" +
-							   answer + "-");
+			LogHolder.log(LogLevel.DEBUG, LogType.PAY,
+						  "AICommunication processPayRequest - da kam was falsches an und zwar: -" +
+						  answer + "-");
 			return null;
 		}
 		if (request.accounting)
 		{
+			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "AICommunication: calling AccountsFile...");
 			PayAccountsFile accounts = PayAccountsFile.getInstance();
 			PayAccount activeAccount = accounts.getActiveAccount();
 
@@ -245,7 +251,11 @@ public class AICommunication extends Thread
 			}
 			if (request.balanceNeeded.equals(XMLPayRequest.NEW))
 			{
-				XMLAccountInfo info = Pay.getInstance().fetchAccountInfo(activeAccount.getAccountNumber());
+				XMLAccountInfo info=null;
+				try {
+					info = Pay.getInstance().fetchAccountInfo(activeAccount.getAccountNumber());
+				}
+				catch(Exception e) {}
 				send(info.getXMLString());
 				// hier soll die BI neu kontaktiert werden.
 			}

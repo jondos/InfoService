@@ -31,16 +31,17 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.Insets;
 
+/** @todo remove this class */
 public final class Literals
 {
 
-	public static final int SMALL_FONT_SIZE = 9;
-	public static final int SMALL_FONT_STYLE = Font.PLAIN;
-	public static final Insets SMALL_BUTTON_MARGIN = new Insets(0, 2, 0, 2);
-	public static final Insets SMALL_TEXTFIELD_MARGIN = new Insets(2, 2, 2, 2);
-	public static final int NORM_FONT_SIZE = 12;
-	public static final Font NORM_FONT = new Font("Arial", Font.BOLD, 12);
-	public static final Font NORM_FONT_BOLD = new Font("Arial", Font.BOLD, 12);
+//	public static final int SMALL_FONT_SIZE = 9;
+//	public static final int SMALL_FONT_STYLE = Font.PLAIN;
+//	public static final Insets SMALL_BUTTON_MARGIN = new Insets(0, 2, 0, 2);
+//	public static final Insets SMALL_TEXTFIELD_MARGIN = new Insets(2, 2, 2, 2);
+//	public static final int NORM_FONT_SIZE = 12;
+//	public static final Font NORM_FONT = new Font("Arial", Font.BOLD, 12);
+//	public static final Font NORM_FONT_BOLD = new Font("Arial", Font.BOLD, 12);
 	public static final Color BACKGROUND = new Color(250, 250, 240);
 	public static final Color BUTTON_BACKGROUND = Color.lightGray;
 	public static final String TITLE = "PAY";

@@ -3,7 +3,7 @@ package pay.gui;
 import javax.swing.JDialog;
 
 /**
- * This dialog shows an account statement
+ * This dialog shows an account statement (german kontoauszug)
  * @author Bastian Voigt
  * @version 1.0
  * @todo implement
