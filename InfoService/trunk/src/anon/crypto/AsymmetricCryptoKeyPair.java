@@ -205,9 +205,11 @@ public class AsymmetricCryptoKeyPair
 		parameters = new Object[1];
 		parameterTypes[0] = a_keyInfo.getClass();
 		parameters[0] = a_keyInfo;
+		System.out.println("a_KEyClasses has number of elements: ?");
 
 		while (key == null && a_keyClasses.hasMoreElements())
 		{
+			System.out.println("a_KEyClasses try new element...");
 			keyClass = (Class)a_keyClasses.nextElement();
 			try
 			{
