@@ -30,9 +30,9 @@ private JAPController japController;
 private JAPInfoService infoService;
 private JButton test;
 //private ProgressMonitorInputStream pmis;
-  public JAPWelcomeWizardPage(JAPController japController)
+  public JAPWelcomeWizardPage(/*JAPController japController*/)
   {
-  this.japController = japController;
+  this.japController = JAPController.getController();
   infoService = japController.getInfoService();
   this.createGridBagLayout();
   // this.setIcon(this.getIcon());
