@@ -56,8 +56,7 @@ import HTTPClient.Codecs;
 import HTTPClient.ModuleException;
 import HTTPClient.ParseException;
 import anon.AnonServer;
-//import JAPDebug;
-//import JAPUtil;
+import anon.server.impl.XMLUtil;
 import logging.DummyLog;
 import logging.Log;
 import logging.LogLevel;
@@ -260,41 +259,15 @@ final public class InfoService
 						m_Log.log(LogLevel.DEBUG,LogType.NET,"Found MixCascade");
 						for(int i=0;i<nodelist.getLength();i++)
 							{
-								Element elem=(Element)nodelist.item(i);
-								String id=elem.getAttribute("id");
-								NodeList nl=elem.getElementsByTagName("Name");
-								String name=nl.item(0).getFirstChild().getNodeValue().trim();
-								nl=elem.getElementsByTagName("IP");
-								String ip=nl.item(0).getFirstChild().getNodeValue().trim();
-								nl=elem.getElementsByTagName("Host");
-								String host=null;
-								if(nl!=null&&nl.getLength()>0)
-									host=nl.item(0).getFirstChild().getNodeValue().trim();
-								if(host==null) //we have no host --> old mix there host is in <ip>
+								try
 									{
-										host=ip;
-										ip=null;
+										AnonServer e=new AnonServer(nodelist.item(i));
+										v.addElement(e);
+										m_Log.log(LogLevel.DEBUG,LogType.NET,"Added MixKaskade: "+e.toString());
 									}
-								int port=parseNodeInt(elem,"Port",-1);
-								int proxyPort=parseNodeInt(elem,"ProxyPort",-1);
-
-								AnonServer e=new AnonServer(id,name,host,ip,port,proxyPort);
-
-								nl=elem.getElementsByTagName("CurrentStatus");
-								if(nl!=null&&nl.getLength()>0)
+								catch(Throwable t)
 									{
-										Element elem1=(Element)nl.item(0);
-										int nrOfActiveUsers=parseElementAttrInt(elem1,"ActiveUsers",-1);
-										e.setNrOfActiveUsers(nrOfActiveUsers);
-										int currentRisk=parseElementAttrInt(elem1,"CurrentRisk",-1);
-										e.setCurrentRisk(currentRisk);
-										int trafficSituation=parseElementAttrInt(elem1,"TrafficSituation",-1);
-										e.setTrafficSituation(trafficSituation);
-										int mixedPackets=parseElementAttrInt(elem1,"MixedPackets",-1);
-										e.setMixedPackets(mixedPackets);
 									}
-								v.addElement(e);
-								m_Log.log(LogLevel.DEBUG,LogType.NET,"Added MixKaskade: "+e.toString());
 								}//End for all Mixes
 					}
 				catch(Exception e)
@@ -338,11 +311,11 @@ final public class InfoService
 							// XML stuff
 							Document doc=DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(resp.getInputStream());
 							Element root=doc.getDocumentElement();
-							nrOfActiveUsers   = parseElementAttrInt(root,"nrOfActiveUsers",-1);
-							trafficSituation  = parseElementAttrInt(root,"trafficSituation",-1);
-							currentRisk       = parseElementAttrInt(root,"currentRisk",-1);
-							mixedPackets      = parseElementAttrInt(root,"mixedPackets",-1);
-							iAnonLevel        = parseElementAttrInt(root,"anonLevel",-1);
+							nrOfActiveUsers   = XMLUtil.parseElementAttrInt(root,"nrOfActiveUsers",-1);
+							trafficSituation  = XMLUtil.parseElementAttrInt(root,"trafficSituation",-1);
+							currentRisk       = XMLUtil.parseElementAttrInt(root,"currentRisk",-1);
+							mixedPackets      = XMLUtil.parseElementAttrInt(root,"mixedPackets",-1);
+							iAnonLevel        = XMLUtil.parseElementAttrInt(root,"anonLevel",-1);
 						}
 					// close streams and socket
 				}
@@ -559,34 +532,8 @@ final public class InfoService
 			e.printStackTrace();
 		}
 	}
-	private int parseNodeInt(Element parent,String name,int defaultValue)
-		{
-			int i=defaultValue;
-			if(parent!=null)
-				try
-					{
-						NodeList nl=parent.getElementsByTagName(name);
-						i=Integer.parseInt(nl.item(0).getFirstChild().getNodeValue());
-					}
-				catch(Exception e)
-					{
-					}
-			return i;
-		}
 
-		private int parseElementAttrInt(Element e,String attr,int defaultValue)
-		{
-			int i=defaultValue;
-			if(e!=null)
-				try
-					{
-						Attr at=e.getAttributeNode(attr);
-						i=Integer.parseInt(at.getValue());
-					}
-				catch(Exception ex)
-					{
-					}
-			return i;
-		}
+
+
 
 }

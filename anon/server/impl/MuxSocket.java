@@ -30,6 +30,9 @@ package anon.server.impl;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.TimeZone;
+import java.util.Calendar;
+import java.util.Date;
 import java.net.ConnectException;
 import java.io.BufferedOutputStream;
 import java.io.DataOutputStream;
@@ -58,10 +61,12 @@ import logging.LogType;
 import HTTPClient.Codecs;
 import anon.ErrorCodes;
 import anon.AnonServer;
+import anon.ListenerInterface;
 import anon.AnonChannel;
 import anon.ToManyOpenChannelsException;
 import anon.NotConnectedToMixException;
 import anon.server.AnonServiceImpl;
+
 public final class MuxSocket implements Runnable
 	{
 		private SecureRandom m_SecureRandom;
@@ -73,8 +78,9 @@ public final class MuxSocket implements Runnable
 
 		private ProxyConnection m_ioSocket;
 
-		private	byte[] outBuff;
-		private byte[] outBuff2;
+		private	byte[] m_arOutBuff;
+		private byte[] m_arOutBuff2;
+		private byte[] m_arEmpty;
 		private ASymCipher[] m_arASymCipher;
 		private KeyPool m_KeyPool;
 		private int m_iChainLen;
@@ -105,6 +111,11 @@ public final class MuxSocket implements Runnable
 		private long m_TimeLastPacketSend=0;
 		private DummyTraffic m_DummyTraffic=null;
 		private Log m_Log=null;
+
+		private boolean m_bMixProtocolWithTimestamp;
+		private int m_iTimestampSize;
+		private final static Calendar m_scalendarGMT=Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+
 		private final class ChannelListEntry
 			{
 				ChannelListEntry(AbstractChannel c)
@@ -123,8 +134,11 @@ public final class MuxSocket implements Runnable
 				m_Log=log;
 				//m_iLastChannelId=0;
 				m_arASymCipher=null;
-				outBuff=new byte[DATA_SIZE];
-				outBuff2=new byte[DATA_SIZE];
+				m_arOutBuff=new byte[DATA_SIZE];
+				m_arOutBuff2=new byte[DATA_SIZE];
+				m_arEmpty=new byte[DATA_SIZE];
+				for(int i=0;i<m_arEmpty.length;i++)
+					m_arEmpty[i]=0;
 				m_MixPacketSend=new byte[PACKET_SIZE];
 				m_MixPacketRecv=new byte[PACKET_SIZE];
 				m_cipherIn=new SymCipher();
@@ -136,6 +150,8 @@ public final class MuxSocket implements Runnable
 				m_DummyTraffic=null;
 				m_TimeLastPacketSend=0;
 				m_SecureRandom=new SecureRandom();
+				m_bMixProtocolWithTimestamp=false;
+				m_iTimestampSize=0;
 				//threadgroupChannels=null;
 			}
 
@@ -202,13 +218,25 @@ public final class MuxSocket implements Runnable
 						if(m_bIsConnected)
 							return ErrorCodes.E_ALREADY_CONNECTED;
 						int err=ErrorCodes.E_CONNECT;
+						ListenerInterface[] listeners=anonservice.getListenerInterfaces();
+						//try all possible listeners
+						m_ioSocket=null;
+						for(int l=0;l<listeners.length;l++)
+							try
+								{
+									String host=listeners[l].m_strIP;
+									if(host==null)
+										host=listeners[l].m_strHost;
+									m_ioSocket=new ProxyConnection(m_Log,fwType,fwHost,fwPort,fwUserID,fwPasswd,host,listeners[l].m_iPort);
+									if(m_ioSocket!=null)
+										break;
+								}
+							catch(Throwable t)
+								{
+									m_ioSocket=null;
+								}
 						try
 							{
-							 String host=anonservice.getHost();
-								int port=anonservice.getPort();
-								if(fwType==AnonServiceImpl.FIREWALL_TYPE_HTTP)
-									port=anonservice.getSSLPort();
-								m_ioSocket=new ProxyConnection(m_Log,fwType,fwHost,fwPort,fwUserID,fwPasswd,host,port);
 								m_inDataStream=new DataInputStream(m_ioSocket.getInputStream());
 								m_outStream=new BufferedOutputStream(m_ioSocket.getOutputStream(),PACKET_SIZE);
 								m_bisCrypted=false;
@@ -294,7 +322,18 @@ public final class MuxSocket implements Runnable
 						Node n=elemMixProtocolVersion.getFirstChild();
 						if(n==null||n.getNodeType()!=n.TEXT_NODE)
 							return ErrorCodes.E_MIX_PROTOCOL_NOT_SUPPORTED;
-						if(!n.getNodeValue().trim().equals("0.2"))
+						String strProtocolVersion=n.getNodeValue().trim();
+						if(strProtocolVersion.equals("0.2"))
+							{
+								m_bMixProtocolWithTimestamp=false;
+								m_iTimestampSize=0;
+							}
+						else if(strProtocolVersion.equals("0.3"))
+							{
+								m_bMixProtocolWithTimestamp=true;
+								m_iTimestampSize=2;
+							}
+						else
 							return ErrorCodes.E_MIX_PROTOCOL_NOT_SUPPORTED;
 						Element elemMixes=(Element)root.getElementsByTagName("Mixes").item(0);
 						m_iChainLen=Integer.parseInt(elemMixes.getAttribute("count"));
@@ -392,7 +431,7 @@ public final class MuxSocket implements Runnable
 								m_MixPacketSend[4]=(byte)((CHANNEL_DUMMY>>8)&0xFF);
 								m_MixPacketSend[5]=(byte)((CHANNEL_DUMMY)&0xFF);
 								//and then the payload (data)
-								System.arraycopy(outBuff,0,m_MixPacketSend,6,DATA_SIZE);
+								System.arraycopy(m_arOutBuff,0,m_MixPacketSend,6,DATA_SIZE);
 								//Send it...
 								sendMixPacket();
 							}
@@ -612,7 +651,7 @@ public final class MuxSocket implements Runnable
 								m_MixPacketSend[4]=(byte)((CHANNEL_CLOSE>>8)&0xFF);
 								m_MixPacketSend[5]=(byte)((CHANNEL_CLOSE)&0xFF);
 								//and then the payload (data)
-								System.arraycopy(outBuff,0,m_MixPacketSend,6,DATA_SIZE);
+								System.arraycopy(m_arEmpty,0,m_MixPacketSend,6,DATA_SIZE);
 								//Send it...
 								sendMixPacket();
 								return 0;
@@ -624,53 +663,65 @@ public final class MuxSocket implements Runnable
 						ChannelListEntry entry=(ChannelListEntry)m_ChannelList.get(new Integer(channel));
 						if(entry==null)
 							return ErrorCodes.E_UNKNOWN;
+						System.arraycopy(m_arEmpty,0,m_arOutBuff,0,m_arOutBuff.length);
 						if(entry.arCipher==null)
 							{
-								int size=PAYLOAD_SIZE-KEY_SIZE;
+								int size=PAYLOAD_SIZE-KEY_SIZE-m_iTimestampSize;
 								entry.arCipher=new SymCipher[m_iChainLen];
 
 								//Last Mix
 								entry.arCipher[m_iChainLen-1]=new SymCipher();
-								m_KeyPool.getKey(outBuff);
-								outBuff[0]&=0x7F; //RSA HACK!! (to ensure what m<n in RSA-Encrypt: c=m^e mod n)
+								m_KeyPool.getKey(m_arOutBuff);
+								m_arOutBuff[0]&=0x7F; //RSA HACK!! (to ensure what m<n in RSA-Encrypt: c=m^e mod n)
 
-								outBuff[KEY_SIZE]=(byte)(len>>8);
-								outBuff[KEY_SIZE+1]=(byte)(len%256);
+								int timestamp=getCurrentTimestamp();
+								if(m_bMixProtocolWithTimestamp)
+									{
+										m_arOutBuff[KEY_SIZE]=(byte)(timestamp>>8);
+										m_arOutBuff[KEY_SIZE+1]=(byte)(timestamp%256);
+									}
+								m_arOutBuff[KEY_SIZE+m_iTimestampSize]=(byte)(len>>8);
+								m_arOutBuff[KEY_SIZE+m_iTimestampSize+1]=(byte)(len%256);
 								if(type==AnonChannel.SOCKS)
-									outBuff[KEY_SIZE+2]=CHANNEL_TYPE_SOCKS;
+									m_arOutBuff[KEY_SIZE+m_iTimestampSize+2]=CHANNEL_TYPE_SOCKS;
 								else
-									outBuff[KEY_SIZE+2]=CHANNEL_TYPE_HTTP;
+									m_arOutBuff[KEY_SIZE+m_iTimestampSize+2]=CHANNEL_TYPE_HTTP;
 
-								System.arraycopy(buff,0,outBuff,KEY_SIZE+3,len);
+								System.arraycopy(buff,0,m_arOutBuff,KEY_SIZE+m_iTimestampSize+3,len);
 
-								entry.arCipher[m_iChainLen-1].setEncryptionKeyAES(outBuff);
+								entry.arCipher[m_iChainLen-1].setEncryptionKeyAES(m_arOutBuff);
 //								m_arASymCipher[m_iChainLen-1].encrypt(outBuff,0,buff,0);
 //								entry.arCipher[m_iChainLen-1].encryptAES(outBuff,RSA_SIZE,buff,RSA_SIZE,DATA_SIZE-RSA_SIZE);
-								m_arASymCipher[m_iChainLen-1].encrypt(outBuff,0,outBuff2,0);
-								entry.arCipher[m_iChainLen-1].encryptAES(outBuff,RSA_SIZE,outBuff2,RSA_SIZE,DATA_SIZE-RSA_SIZE);
-								size-=KEY_SIZE;
+								m_arASymCipher[m_iChainLen-1].encrypt(m_arOutBuff,0,m_arOutBuff2,0);
+								entry.arCipher[m_iChainLen-1].encryptAES(m_arOutBuff,RSA_SIZE,m_arOutBuff2,RSA_SIZE,DATA_SIZE-RSA_SIZE);
+								size-=(KEY_SIZE+m_iTimestampSize);
 								for(int i=m_iChainLen-2;i>=0;i--)
 									{
 										entry.arCipher[i]=new SymCipher();
-										m_KeyPool.getKey(outBuff);
-										outBuff[0]&=0x7F; //RSA HACK!! (to ensure what m<n in RSA-Encrypt: c=m^e mod n)
-										entry.arCipher[i].setEncryptionKeyAES(outBuff);
-										System.arraycopy(outBuff2,0,outBuff,KEY_SIZE,size);
-										m_arASymCipher[i].encrypt(outBuff,0,outBuff2,0);
-										entry.arCipher[i].encryptAES(outBuff,RSA_SIZE,outBuff2,RSA_SIZE,DATA_SIZE-RSA_SIZE);
-										size-=KEY_SIZE;
+										m_KeyPool.getKey(m_arOutBuff);
+										m_arOutBuff[0]&=0x7F; //RSA HACK!! (to ensure what m<n in RSA-Encrypt: c=m^e mod n)
+										if(m_bMixProtocolWithTimestamp)
+											{
+												m_arOutBuff[KEY_SIZE]=(byte)(timestamp>>8);
+												m_arOutBuff[KEY_SIZE+1]=(byte)(timestamp%256);
+											}
+										entry.arCipher[i].setEncryptionKeyAES(m_arOutBuff);
+										System.arraycopy(m_arOutBuff2,0,m_arOutBuff,KEY_SIZE+m_iTimestampSize,size);
+										m_arASymCipher[i].encrypt(m_arOutBuff,0,m_arOutBuff2,0);
+										entry.arCipher[i].encryptAES(m_arOutBuff,RSA_SIZE,m_arOutBuff2,RSA_SIZE,DATA_SIZE-RSA_SIZE);
+										size-=(KEY_SIZE+m_iTimestampSize);
 									}
 								channelMode=CHANNEL_OPEN;
 							}
 						else
 							{
-								System.arraycopy(buff,0,outBuff,3,len);
-								outBuff[2]=0;
-								outBuff[0]=(byte)(len>>8);
-								outBuff[1]=(byte)(len%256);
+								System.arraycopy(buff,0,m_arOutBuff,3,len);
+								m_arOutBuff[2]=0;
+								m_arOutBuff[0]=(byte)(len>>8);
+								m_arOutBuff[1]=(byte)(len%256);
 								for(int i=m_iChainLen-1;i>0;i--)
-									entry.arCipher[i].encryptAES(outBuff); //something throws a null pointer....
-								entry.arCipher[0].encryptAES(outBuff,0,outBuff2,0,DATA_SIZE); //something throws a null pointer....
+									entry.arCipher[i].encryptAES(m_arOutBuff); //something throws a null pointer....
+								entry.arCipher[0].encryptAES(m_arOutBuff,0,m_arOutBuff2,0,DATA_SIZE); //something throws a null pointer....
 							}
 						//First the Channel in Network byte order
 						m_MixPacketSend[0]=(byte)((channel>>24)&0xFF);
@@ -681,7 +732,7 @@ public final class MuxSocket implements Runnable
 						m_MixPacketSend[4]=(byte)((channelMode>>8)&0xFF);
 						m_MixPacketSend[5]=(byte)((channelMode)&0xFF);
 						//and then the payload (data)
-						System.arraycopy(outBuff2,0,m_MixPacketSend,6,DATA_SIZE);
+						System.arraycopy(m_arOutBuff2,0,m_MixPacketSend,6,DATA_SIZE);
 						//m_outDataStream.writeInt(channel);
 						//m_outDataStream.writeShort(channelMode);
 						//m_outDataStream.write(outBuff2,0,DATA_SIZE);
@@ -704,5 +755,23 @@ public final class MuxSocket implements Runnable
 		public long getTimeLastPacketSend()
 			{
 				return m_TimeLastPacketSend;
+			}
+
+		private int getCurrentTimestamp()
+			{
+				// Assume 366 days per year to be on the safe side with leap years.
+				long seconds_per_year = 60 * 60 * 24 * 366;
+				long now=System.currentTimeMillis();
+				m_scalendarGMT.setTime(new Date());
+
+				int aktYear=m_scalendarGMT.get(Calendar.YEAR);
+				m_scalendarGMT.clear();
+				m_scalendarGMT.set(aktYear,0,0,1,0,0);
+				long diff=(now-m_scalendarGMT.getTime().getTime())/1000;
+
+				// timestamp = (millis_passed_in_this_year / millis_per_year) * 2^16
+				// That is 0x0000 on January 1, 0:00; 0x0001 on January 1, 0:10; 0xFFFF on December 31, 23:59 (leap year)
+				return (int) ((((double) (diff)) / ((double) seconds_per_year)) * 0xFFFF);
+
 			}
 	}

@@ -10,7 +10,7 @@
 	#pragma once
 #endif // _MSC_VER > 1000
 
-#define JAPDLL_VERSION "00.01.004"
+#define JAPDLL_VERSION "00.01.006"
 
 // Fügen Sie hier Ihre Header-Dateien ein
 #include <windows.h>
@@ -34,6 +34,10 @@ HWND g_hWnd;
 
 // globales Moule Handle
 HINSTANCE hInstance;
+
+//globale Icon Handles...
+HICON g_hiconJAP;
+HICON g_hiconJAPBlink;
 
 // Variable zur Sicherung der "alten" WndProc
 WNDPROC g_lpPrevWndFunc;
@@ -77,6 +81,8 @@ BOOL APIENTRY DllMain( HINSTANCE hModule,
 					hInstance=hModule;
 					g_hThread=NULL;
 					g_hWnd=NULL;
+					g_hiconJAP=(HICON)LoadImage(hInstance,MAKEINTRESOURCE(IDI_JAP),IMAGE_ICON,16,16,LR_DEFAULTCOLOR);
+					g_hiconJAPBlink=(HICON)LoadImage(hInstance,MAKEINTRESOURCE(IDI_JAP_BLINK),IMAGE_ICON,16,16,LR_DEFAULTCOLOR);
 				break;
 				case DLL_THREAD_ATTACH:
 				break;
@@ -137,8 +143,10 @@ bool HideWindowInTaskbar(HWND hWnd)
 	nid.uID = IDI_JAP;
 	nid.uFlags = NIF_MESSAGE | NIF_TIP | NIF_ICON;
 	nid.uCallbackMessage = WM_TASKBAREVENT;
-	strcpy(nid.szTip, "JAP");
-	nid.hIcon = LoadIcon(hInstance,MAKEINTRESOURCE(IDI_JAP));
+	lstrcpy(nid.szTip, "JAP");
+	nid.hIcon = g_hiconJAP;
+
+	//LoadIcon(hInstance,MAKEINTRESOURCE(IDI_JAP));
 	if(nid.hIcon==NULL)
 		return false;
 	// Window verstecken
@@ -177,9 +185,10 @@ BOOL CALLBACK FindWindowByCaption(HWND hWnd, LPARAM lParam)
 	char caption[255];
 	t_find_window_by_name* pFindWindow=(t_find_window_by_name*)lParam;
 	
-	GetWindowText(hWnd, caption, 255);
+	if(GetWindowText(hWnd, caption, 255)==0)
+		return TRUE;
 
-	if (strncmp(caption, pFindWindow->name, 255) == 0) 
+	if (lstrcmp(pFindWindow->name,caption) == 0) 
 		{
 			pFindWindow->hWnd = hWnd;
 			return FALSE;
@@ -198,22 +207,22 @@ DWORD WINAPI BlinkThread( LPVOID lpParam )
 		while (g_isBlinking) 
 			{
 				g_isBlinking = false;
-				nid.hIcon = LoadIcon(hInstance,MAKEINTRESOURCE(IDI_JAP_BLINK));
+				nid.hIcon = g_hiconJAPBlink;
 				Shell_NotifyIcon(NIM_MODIFY, &nid);
 				Sleep(BLINK_RATE);
 				if(g_hWnd==NULL)
 					break;
-				nid.hIcon = LoadIcon(hInstance,MAKEINTRESOURCE(IDI_JAP));
+				nid.hIcon = g_hiconJAP;
 				Shell_NotifyIcon(NIM_MODIFY, &nid);
 				Sleep(BLINK_RATE);
 				if(g_hWnd==NULL)
 					break;
-				nid.hIcon = LoadIcon(hInstance,MAKEINTRESOURCE(IDI_JAP_BLINK));
+				nid.hIcon = g_hiconJAPBlink;
 				Shell_NotifyIcon(NIM_MODIFY, &nid);
 				Sleep(BLINK_RATE);
 				if(g_hWnd==NULL)
 					break;
-				nid.hIcon = LoadIcon(hInstance,MAKEINTRESOURCE(IDI_JAP));
+				nid.hIcon = g_hiconJAP;
 				Shell_NotifyIcon(NIM_MODIFY, &nid);
 				Sleep(BLINK_RATE);
 			}
