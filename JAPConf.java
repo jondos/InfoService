@@ -760,7 +760,10 @@ final class JAPConf extends JDialog
 					);
 				JAPDebug.setDebugLevel(sliderDebugLevel.getValue());
 				model.setAnonServer(e);
-//				model.notifyJAPObservers();
+				// force setting the correct name of the selected server
+				model.getAnonServer().setName(e.getName());
+				// force notifying the observers set the right server name
+				model.notifyJAPObservers();
 			}
 	
 	public void selectCard(int selectedCard)
