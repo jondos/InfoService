@@ -28,11 +28,11 @@ public class JAPConf extends JDialog
     private JPanel portP, httpP, anonP, miscP;
 	
 		private JFrame  parent;
-    public JAPConf (JFrame f, JAPModel m)
+    public JAPConf (JFrame f)
 			{
-				super(f, m.getString("settingsDialog"), true);
+				super(f, JAPModel.getString("settingsDialog"), true);
 				parent=f;
-				model = m;
+				model = JAPModel.getModel();
 	
 				JPanel container = new JPanel();
 				container.setLayout( new BorderLayout() );
