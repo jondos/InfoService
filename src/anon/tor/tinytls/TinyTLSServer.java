@@ -4,8 +4,8 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+import anon.crypto.IMyPrivateKey;
 import anon.crypto.JAPCertificate;
-import anon.crypto.MyRSAPrivateKey;
 
 /**
  * @author stefan
@@ -13,7 +13,7 @@ import anon.crypto.MyRSAPrivateKey;
 public class TinyTLSServer extends ServerSocket {
 
 	private JAPCertificate m_Certificate = null;
-	private MyRSAPrivateKey m_PrivateKey = null;
+	private IMyPrivateKey m_PrivateKey = null;
 
 	public TinyTLSServer(int port) throws IOException {
 		super(port);
@@ -24,7 +24,7 @@ public class TinyTLSServer extends ServerSocket {
 		m_Certificate = cert;
 	}
 	
-	public void setServerPrivateKey(MyRSAPrivateKey key)
+	public void setServerPrivateKey(IMyPrivateKey key)
 	{
 		m_PrivateKey = key;
 	}

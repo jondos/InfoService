@@ -846,7 +846,7 @@ public class TinyTLS extends Socket
 		if(m_supportedciphersuites.isEmpty())
 		{
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[NO_CIPHERSUITE_DEFINED] : using predefined");
-			this.addCipherSuite(new DHE_RSA_WITH_3DES_CBC_SHA());
+			this.addCipherSuite(new DHE_DSS_WITH_3DES_CBC_SHA());
 //			this.addCipherSuite(new DHE_RSA_WITH_AES_128_CBC_SHA());
 		}
 		if(m_trustedRoot == null)

@@ -25,14 +25,12 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-/*
- * Created on Mar 16, 2004
- *
- */
+
 package anon.tor.tinytls;
 
+
 import org.bouncycastle.crypto.digests.SHA1Digest;
-import org.bouncycastle.crypto.engines.AESFastEngine;
+import org.bouncycastle.crypto.engines.DESEngine;
 import org.bouncycastle.crypto.macs.HMac;
 import org.bouncycastle.crypto.modes.CBCBlockCipher;
 import org.bouncycastle.crypto.params.KeyParameter;
@@ -45,21 +43,21 @@ import anon.tor.util.helper;
  * @author stefan
  *
  */
-public class DHE_RSA_WITH_AES_128_CBC_SHA extends CipherSuite {
+public class DHE_DSS_WITH_DES_CBC_SHA extends CipherSuite {
 
 	private CBCBlockCipher m_encryptcipher;
 	private CBCBlockCipher m_decryptcipher;
 	private MyRandom m_rand;
 
 	/**
-	 * Constructor
+	 * Constuctor
 	 * @throws Exception
 	 */
-	public DHE_RSA_WITH_AES_128_CBC_SHA() throws TLSException
+	public DHE_DSS_WITH_DES_CBC_SHA() throws TLSException
 	{
-		super(new byte[]{0x00,0x033});
-		m_ciphersuitename = "TLS_DHE_RSA_WITH_AES_128_CBC_SHA";
-		this.setKeyExchangeAlgorithm(new DHE_RSA_Key_Exchange());
+		super(new byte[]{0x00,0x12});
+		m_ciphersuitename = "TLS_DHE_DSS_WITH_DES_CBC_SHA";
+		this.setKeyExchangeAlgorithm(new DHE_DSS_Key_Exchange());
 		m_rand = new MyRandom();
 	}
 
@@ -88,8 +86,7 @@ public class DHE_RSA_WITH_AES_128_CBC_SHA extends CipherSuite {
 		msg.setLength(msg.m_dataLen);
 	}
 
-	public void decode(TLSRecord msg) throws TLSException
-	{
+	public void decode(TLSRecord msg) throws TLSException {
 		for(int i=0;i<msg.m_dataLen;i+=m_decryptcipher.getBlockSize())
 		{
 			m_decryptcipher.processBlock(msg.m_Data,i,msg.m_Data,i);
@@ -131,28 +128,26 @@ public class DHE_RSA_WITH_AES_128_CBC_SHA extends CipherSuite {
 
 	protected void calculateKeys(byte[] keys,boolean forclient)
 	{
-		this.m_clientwritekey	 = helper.copybytes(keys,40,16);
-		this.m_serverwritekey = helper.copybytes(keys,56,16);
-		this.m_clientwriteIV = helper.copybytes(keys,72,16);
-		this.m_serverwriteIV = helper.copybytes(keys,88,16);
+		this.m_clientmacsecret = helper.copybytes(keys,0,20);
+		this.m_servermacsecret = helper.copybytes(keys,20,20);
+		this.m_clientwritekey	 = helper.copybytes(keys,40,8);
+		this.m_serverwritekey = helper.copybytes(keys,48,8);
+		this.m_clientwriteIV = helper.copybytes(keys,56,8);
+		this.m_serverwriteIV = helper.copybytes(keys,64,8);
 		if(forclient)
 		{
-			this.m_clientmacsecret = helper.copybytes(keys,0,20);
-			this.m_servermacsecret = helper.copybytes(keys,20,20);
-			this.m_encryptcipher = new CBCBlockCipher(new AESFastEngine());
+			this.m_encryptcipher = new CBCBlockCipher(new DESEngine());
 			this.m_encryptcipher.init(true,new ParametersWithIV(new KeyParameter(this.m_clientwritekey),this.m_clientwriteIV));
-			this.m_decryptcipher = new CBCBlockCipher(new AESFastEngine());
+			this.m_decryptcipher = new CBCBlockCipher(new DESEngine());
 			this.m_decryptcipher.init(false,new ParametersWithIV(new KeyParameter(this.m_serverwritekey),this.m_serverwriteIV));
 		} else
 		{
-			this.m_servermacsecret = helper.copybytes(keys,0,20);
-			this.m_clientmacsecret = helper.copybytes(keys,20,20);
-			this.m_encryptcipher = new CBCBlockCipher(new AESFastEngine());
+			this.m_encryptcipher = new CBCBlockCipher(new DESEngine());
 			this.m_encryptcipher.init(true,new ParametersWithIV(new KeyParameter(this.m_serverwritekey),this.m_serverwriteIV));
-			this.m_decryptcipher = new CBCBlockCipher(new AESFastEngine());
+			this.m_decryptcipher = new CBCBlockCipher(new DESEngine());
 			this.m_decryptcipher.init(false,new ParametersWithIV(new KeyParameter(this.m_clientwritekey),this.m_clientwriteIV));
 		}
-
 	}
+
 
 }
