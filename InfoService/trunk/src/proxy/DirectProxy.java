@@ -54,25 +54,26 @@ final public class DirectProxy implements Runnable
 		private volatile boolean runFlag;
 		private boolean isRunningProxy = false;
     private int portN;
-    private ServerSocket socketListener;
-    private Thread threadRunLoop;
+    private ServerSocket m_socketListener;
+    private volatile Thread threadRunLoop;
 		private ThreadGroup threadgroupAll;
 		private boolean warnUser = true;
 
     public DirectProxy (ServerSocket s)
 			{
-				socketListener=s;
+				m_socketListener=s;
 			  warnUser = true;
 				isRunningProxy = false;
 			}
 
-		public boolean startService()
+		public synchronized boolean startService()
 			{
-				if(socketListener==null)
+				if(m_socketListener==null)
 					return false;
 				threadgroupAll=new ThreadGroup("directproxy");
 				threadRunLoop=new Thread(this);
         threadRunLoop.setDaemon(true);
+				runFlag = true;
 				threadRunLoop.start();
 				isRunningProxy = true;
 				return true;
@@ -80,7 +81,6 @@ final public class DirectProxy implements Runnable
 
     public void run()
 			{
-				runFlag = true;
 				try
 					{
 						while(runFlag)
@@ -88,7 +88,7 @@ final public class DirectProxy implements Runnable
 								Socket socket=null;
 								try
 									{
-										socket = socketListener.accept();
+										socket = m_socketListener.accept();
 									}
 								catch(InterruptedIOException e1)
 									{
@@ -143,10 +143,27 @@ final public class DirectProxy implements Runnable
 		}
 
 
-    public void stopService()
+    public synchronized void stopService()
 			{
 				runFlag = false;
-				try{threadRunLoop.join(5000);}catch(Exception e){}
+				try
+          {
+            int timeToWait=0;
+            try
+              {
+                timeToWait=m_socketListener.getSoTimeout();
+              }
+            catch(Exception ex)
+              {}
+            if(timeToWait<=0)
+              timeToWait=3000;
+            timeToWait+=1000;
+            threadRunLoop.join(timeToWait);
+          }
+        catch(Exception e)
+          {
+  			    JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPDirect:DirectProxyServer could not be stopped!!!");
+          }
 				if(threadgroupAll!=null)
 					{
 						try //Hack for kaffe!
