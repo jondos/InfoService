@@ -31,14 +31,14 @@ import java.net.InetAddress;
 import java.net.ConnectException;
 import logging.Log;
 
-/** This class is used for accessing the AnonService. an instance is created
+/** This class is used for accessing the AnonService. An instance is created
  *  via AnonServiceFactory.
  */
 public interface AnonService
 	{
 		///The version of the AnonLib
 		public final static String ANONLIB_VERSION="00.00.007";
-		/** Estabishes a connection to an AnonServer, which is described through the
+		/** Establishes a connection to an AnonServer, which is described through the
 		 *  anonService parameter. This method must be called before any Channels could be created.
 		 *  @param anonService AnonServer to use
 		 *  @return E_SUCCESS, if the connection could be estblished
@@ -68,9 +68,9 @@ public interface AnonService
 		 *  to host:port.
 		 *  @param host Address of the server, which should be contacted
 		 *  @param port Port, to which connect to
-		 *  @return AnonChannel, useful for exchange data with host:port
-		 *  @throws ConnectException, if the Channel could not created
-		 *  @throws ToManyOpenChannels, if there a to many open channels for the AnonService
+		 *  @return AnonChannel useful for exchange data with host:port
+		 *  @throws ConnectException if the Channel could not created
+		 *  @throws ToManyOpenChannels if there a to many open channels for the AnonService
 		 *
 		 */
 		public AnonChannel createChannel(InetAddress host,int port) throws ConnectException;

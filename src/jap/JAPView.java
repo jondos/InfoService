@@ -83,7 +83,7 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 	private JAPHelp 			  helpWindow;
 	private JAPConf 			  m_dlgConfig;
 	private Window				  m_ViewIconified;
-  private NumberFormat    m_NumberFormat;
+	private NumberFormat    m_NumberFormat;
 	private Object          oValueUpdateSemaphore;
 	private boolean         m_bIsIconified;
 	private String          m_Title;
@@ -93,7 +93,7 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 		{
 			super(s);
 			m_Title=s;
-      m_NumberFormat=NumberFormat.getInstance();
+			m_NumberFormat=NumberFormat.getInstance();
 			controller = JAPController.getController();
 			helpWindow =  null;//new JAPHelp(this);
 			m_dlgConfig = null;//new JAPConf(this);
@@ -524,8 +524,8 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 			m_borderDetails.setTitle(JAPMessages.getString("meterDetailsBorder")) ;
 			if(m_dlgConfig!=null)
 				m_dlgConfig.localeChanged();
-      m_NumberFormat=NumberFormat.getInstance();
-      updateValues();
+			m_NumberFormat=NumberFormat.getInstance();
+			updateValues();
 			setOptimalSize();
 		}
 
@@ -555,7 +555,7 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 			}
 	}
 
-	 /**Anon Level is >=0 amd <=5. if -1 no measure is available*/
+	 /**Anon Level is >=0 amd <=5. If -1 no measure is available*/
 		private ImageIcon getMeterImage(int iAnonLevel)
 			{
 				if (controller.getAnonMode())
@@ -582,7 +582,7 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 							{
 								setVisible(false);
 								m_ViewIconified.setVisible(true);
-                m_ViewIconified.toFront();
+								m_ViewIconified.toFront();
 							}
 					}
 				else if (event.getSource() == m_bttnConf)

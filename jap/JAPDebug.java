@@ -5,14 +5,14 @@ Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
 
 	- Redistributions of source code must retain the above copyright notice,
-	  this list of conditions and the following disclaimer.
+		this list of conditions and the following disclaimer.
 
 	- Redistributions in binary form must reproduce the above copyright notice,
-	  this list of conditions and the following disclaimer in the documentation and/or
+		this list of conditions and the following disclaimer in the documentation and/or
 		other materials provided with the distribution.
 
 	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
-	  may be used to endorse or promote products derived from this software without specific
+		may be used to endorse or promote products derived from this software without specific
 		prior written permission.
 
 
@@ -132,11 +132,8 @@ final public class JAPDebug extends WindowAdapter implements ActionListener,Log 
 		debugtype=GUI+NET+THREAD+MISC;
 		debuglevel=DEBUG;
 		m_bConsole=false;
-//		outStreams=new PrintWriter[8];
-//		for(int i=0;i<8;i++)
-//			outStreams[i]=new PrintWriter(System.out);
-//		dateFormatter= new SimpleDateFormat ("yyyy/MM/dd-hh:mm:ss, ");
 	}
+
 	public  static JAPDebug create() {
 		if(debug==null)
 			debug = new JAPDebug();
@@ -165,10 +162,10 @@ final public class JAPDebug extends WindowAdapter implements ActionListener,Log 
 		}
 	}
 
-  public void log(int level,int type,String msg)
-    {
-      out(level,type,msg);
-    }
+	public void log(int level,int type,String msg)
+		{
+			out(level,type,msg);
+		}
 
 	/** Set the debugging type you like to output. To activate more than one type you simly add
 	 *  the types like this <code>setDebugType(JAPDebug.GUI+JAPDebug.NET)</code>.
@@ -191,7 +188,7 @@ final public class JAPDebug extends WindowAdapter implements ActionListener,Log 
 	/** Set the debugging level you would like to output.
 	 *  The possible parameters are (EMERG, ALERT, EXCEPTION, ERR, WARNING, NOTICE, INFO, DEBUG).
 	 *  DEBUG means output all messages, EMERG means only emergency messages.
-	 *  @param type The debug level (EMERG, ALERT, EXCEPTION, ERR, WARNING, NOTICE, INFO, DEBUG)
+	 *  @param level The debug level (EMERG, ALERT, EXCEPTION, ERR, WARNING, NOTICE, INFO, DEBUG)
 	 */
 	public static void setDebugLevel(int level) {
 		if(level<0||level>DEBUG)
@@ -216,6 +213,8 @@ final public class JAPDebug extends WindowAdapter implements ActionListener,Log 
 	}
 
 	/** Shows or hiddes a Debug-Console-Window
+	 * @param b set true to show the debug console or false to hidde them
+	 * @param parent the parent frame of the debug console
 	 */
 	public static void showConsole(boolean b,Frame parent) {
 		debug.internal_showConsole(b,parent);
@@ -253,9 +252,9 @@ final public class JAPDebug extends WindowAdapter implements ActionListener,Log 
 					textareaConsole=new JTextArea(null,20,30);
 					textareaConsole.setEditable(false);
 					Font f=Font.decode("Courier");
-          if(f!=null)
-            textareaConsole.setFont(f);
-          JPanel panel=new JPanel();
+					if(f!=null)
+						textareaConsole.setFont(f);
+					JPanel panel=new JPanel();
 					JButton bttnSave=new JButton(JAPMessages.getString("bttnSaveAs")+"...",
 																			 JAPUtil.loadImageIcon("saveicon.gif",true));
 					bttnSave.setActionCommand("saveas");
@@ -338,23 +337,23 @@ final public class JAPDebug extends WindowAdapter implements ActionListener,Log 
 					}
 				else if(e.getActionCommand().equals("insertConfig"))
 					{
-            try
-              {
-                Properties p=System.getProperties();
-                //StringWriter s=new StringWriter();
-                //p.list(new PrintWriter(s));
-                Enumeration enum=p.propertyNames();
-                while(enum.hasMoreElements())
-                  {
-                    String st=(String)enum.nextElement();
-                    String value=p.getProperty(st);
-                    textareaConsole.append(st+": "+value+"\n");
-                  }
+						try
+							{
+								Properties p=System.getProperties();
+								//StringWriter s=new StringWriter();
+								//p.list(new PrintWriter(s));
+								Enumeration enum=p.propertyNames();
+								while(enum.hasMoreElements())
+									{
+										String st=(String)enum.nextElement();
+										String value=p.getProperty(st);
+										textareaConsole.append(st+": "+value+"\n");
+									}
 //                textareaConsole.append(s.toString());
-              }
-            catch(Exception e1)
-              {}
-            textareaConsole.append(JAPModel.getModel().toString());
+							}
+						catch(Exception e1)
+							{}
+						textareaConsole.append(JAPModel.getModel().toString());
 					}
 				else
 					{
