@@ -29,13 +29,13 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
 	private JAPHelp helpWindow;
 	private JAPConf configDialog;
 
-	public JAPView (JAPModel m, String s)
+	public JAPView (String s)
 		{
 			super(s);
-			model = m;
+			model = JAPModel.getModel();
 			init();
-			helpWindow =  new JAPHelp(this, model); 
-			configDialog = new JAPConf(this, model);
+			helpWindow =  new JAPHelp(this); 
+			configDialog = new JAPConf(this);
 		}
 	
 	public void init() {

@@ -7,7 +7,7 @@ public final class JAP
 				if (vers.compareTo("1.1.2") < 0)
 					{
 							System.out.println("!!!WARNING: JAP must be run with a " +
-			       "										1.1.2 or higher version VM!!!");
+			       "1.1.2 or higher version VM!!!");
 					}
 				new JAPDebug();
 				JAPModel model = new JAPModel();
@@ -17,7 +17,7 @@ public final class JAP
 				model.addJAPObserver(model);
 
 
-				JAPView view = new JAPView (model, model.TITLE);
+				JAPView view = new JAPView (model.TITLE);
 				model.addJAPObserver(view);
 				splash.dispose();
 				view.show();

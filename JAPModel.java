@@ -167,11 +167,11 @@ public final class JAPModel implements JAPObserver {
 	*/
 	
 		
-	public synchronized String getString(String key)
+	public synchronized static String getString(String key)
 		{
 			try
 				{
-					return msg.getString(key);
+					return model.msg.getString(key);
 				}
 			catch(Exception e)
 				{
