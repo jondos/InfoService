@@ -32,6 +32,7 @@ package anon.crypto;
  */
 import java.security.PublicKey;
 import java.util.Enumeration;
+
 import org.w3c.dom.Node;
 import anon.ErrorCodes;
 import anon.util.XMLUtil;
@@ -47,7 +48,7 @@ public class JAPCertPath
 	/** Validates the XML Signature over root done by nodeSig according to certsTrustedRoots
 	 * @return ErrorCodes.E_SUCCESS if ok
 	 * @return ErrorCodes.E_INVALID_KEY if the provides key does not match to the signature
-	 * @return ErrorCodes.E_INVALID_CERTIFICATE if the trustwortyness of the key could not verified
+	 * @return ErrorCodes.E_INVALID_CERTIFICATE if the trustworthyness of the key could not verified
 	 * @return ErrorCodes.E_UNKNOWN otherwise
 	 */
 
@@ -55,7 +56,8 @@ public class JAPCertPath
 	{
 		try
 		{
-			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "JAPCertPath: beginn ok validation");
+			LogHolder.log(LogLevel.DEBUG, LogType.MISC,
+						  "JAPCertPath: begin ok validation");
 			JAPCertificate cert = JAPCertificate.getInstance(XMLUtil.getFirstChildByNameUsingDeepSearch(
 				nodeSig,
 				"X509Certificate"));
@@ -65,12 +67,14 @@ public class JAPCertPath
 			sig.initVerify(pk);
 			if (!sig.verifyXML(root))
 			{
-				LogHolder.log(LogLevel.DEBUG, LogType.MISC, "JAPCertPath: signasture NOT ok!");
+				LogHolder.log(LogLevel.DEBUG, LogType.MISC,
+							  "JAPCertPath: signature NOT ok!");
 				return ErrorCodes.E_INVALID_KEY;
 			}
 
 			// sig is ok --> verify certificate(s)
-			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "JAPCertPath: signasture ok --> checking cert path");
+			LogHolder.log(LogLevel.DEBUG, LogType.MISC,
+						  "JAPCertPath: signature ok --> checking cert path");
 			Enumeration certs = certsTrustedRoots.elements();
 			while (certs.hasMoreElements())
 			{
@@ -82,7 +86,7 @@ public class JAPCertPath
 					if (pkc.equals(pk) || cert.verify(pkc))
 					{
 						LogHolder.log(LogLevel.DEBUG, LogType.MISC,
-									  "JAPCertPath: validation of cert paht ok");
+									  "JAPCertPath: validation of cert path ok");
 						return ErrorCodes.E_SUCCESS;
 					}
 				}

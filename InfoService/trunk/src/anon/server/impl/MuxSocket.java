@@ -31,6 +31,8 @@ package anon.server.impl;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.math.BigInteger;
 import java.net.ConnectException;
 import java.security.SecureRandom;
@@ -52,10 +54,10 @@ import anon.crypto.JAPCertPath;
 import anon.crypto.JAPCertificateStore;
 import anon.infoservice.MixCascade;
 import anon.pay.AIChannel;
+import anon.util.XMLUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import anon.util.*;
 
 public final class MuxSocket implements Runnable
 {
@@ -612,6 +614,12 @@ public final class MuxSocket implements Runnable
 			catch (Exception e)
 			{
 				LogHolder.log(LogLevel.ERR, LogType.NET, "JAPMuxSocket:run() Exception while receiving!");
+				LogHolder.log(LogLevel.DEBUG, LogType.NET,
+							  "JAPMuxSocket:run() Exception was: " + e.getMessage());
+				StringWriter sw = new StringWriter(100);
+				e.printStackTrace(new PrintWriter(sw));
+				LogHolder.log(LogLevel.DEBUG, LogType.NET,
+							  "JAPMuxSocket:run() StackTrace was: " + sw.toString());
 				break;
 			}
 			if (flags == CHANNEL_DUMMY) //Dummies go to /dev/null ...

@@ -41,6 +41,7 @@ import java.security.Signature;
 import java.security.SignatureException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
@@ -134,7 +135,13 @@ public class JAPSignature
 		}
 	}
 
-	//Thread Safe ???
+	/**
+	 * Verifies the XML (signature) structure.
+	 * @param n Root node of the XML structure.
+	 * @return true if it could be verified
+	 * @return false otherwise
+	 * @throws SignatureException
+	 */
 	public boolean verifyXML(Node n) throws SignatureException
 	{
 		try
@@ -312,12 +319,16 @@ public class JAPSignature
 	 */
 	public void signXmlNode(Element toSign) throws Exception
 	{
-		NodeList signatureNodes = toSign.getElementsByTagName("Signature");
-		for (int i = signatureNodes.getLength(); i > 0; i--)
-		{
+          	/* if there are any Signature nodes, remove them --> we create a new one */
+		Node oldSig=XMLUtil.getFirstChildByName(toSign,"Signature");
+  		//NodeList signatureNodes = toSign.getElementsByTagName("Signature");
+		//for (int i = signatureNodes.getLength(); i > 0; i--)
+		//{
 			/* if there are any Signature nodes, remove them --> we create a new one */
-			toSign.removeChild(signatureNodes.item(i - 1));
-		}
+		//	toSign.removeChild(signatureNodes.item(i - 1));
+		//}
+                if(oldSig!=null)
+                  toSign.removeChild(oldSig);
 		ByteArrayOutputStream bytesToSign = nodeToCanonical(toSign);
 		/* now we have a XML bytestream of our toSign node (incl. name + attributes + child tree),
 		 * now use a message digest algorithm with it

@@ -36,12 +36,12 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import HTTPClient.HTTPConnection;
 import HTTPClient.HTTPResponse;
+import anon.ErrorCodes;
+import anon.crypto.JAPCertPath;
+import anon.crypto.JAPCertificateStore;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import anon.crypto.JAPCertPath;
-import anon.crypto.JAPCertificateStore;
-import anon.ErrorCodes;
 
 /**
  * Holds the information for an infoservice.
@@ -155,31 +155,31 @@ public class InfoService extends DatabaseEntry
 
 	/**
 	 * Creates a new InfoService from the hostName / IP and the port. The hostName and port are
-   * directly used for creating the ListenerInterface for this InfoService. The ID is set to a
-   * generic value derived from the hostname, the port and the name (if it is not null). If you
-   * supply a name for the infoservice then it will get the name "(User) name", if you supply null,
-   * the name will be the same as the ID "(User) hostname:port". The expire time is calculated by
-   * using the DEFAULT_EXPIRE_TIME constant. The software info is set to a dummy value.
+	 * directly used for creating the ListenerInterface for this InfoService. The ID is set to a
+	 * generic value derived from the hostname, the port and the name (if it is not null). If you
+	 * supply a name for the infoservice then it will get the name "(User) name", if you supply null,
+	 * the name will be the same as the ID "(User) hostname:port". The expire time is calculated by
+	 * using the DEFAULT_EXPIRE_TIME constant. The software info is set to a dummy value.
 	 *
 	 * @param hostName The hostname or IP address the infoservice is listening on.
 	 * @param port The port the infoservice is listening on.
-   * @param a_strName The name of the infoservice or null, if a generic name (=ID) shall be
-   *                  used.
+	 * @param a_strName The name of the infoservice or null, if a generic name (=ID) shall be
+	 *                  used.
 	 */
-  public InfoService(String hostName, int port, String a_strName) throws Exception
+	public InfoService(String hostName, int port, String a_strName) throws Exception
 	{
 		/* set a unique ID */
-    infoServiceId = "(User) " + hostName + ":" + Integer.toString(port);
-    /* set a name */
-    if (a_strName == null)
-    {
-      name = infoServiceId;
-    }
-    else
-    {
-      infoServiceId = infoServiceId + " " + a_strName;
-      name = "(User) " + a_strName;
-    }
+		infoServiceId = "(User) " + hostName + ":" + Integer.toString(port);
+		/* set a name */
+		if (a_strName == null)
+		{
+			name = infoServiceId;
+		}
+		else
+		{
+			infoServiceId = infoServiceId + " " + a_strName;
+			name = "(User) " + a_strName;
+		}
 		/* create the ListenerInterface and set it as prefered */
 		listenerInterfaces = new Vector();
 		listenerInterfaces.addElement(new ListenerInterface(hostName, port));
@@ -257,22 +257,22 @@ public class InfoService extends DatabaseEntry
 	}
 
 	/**
-   * Returns a snapshot of all listener interfaces of this infoservice.
-   *
-   * @return A Vector with all listener interfaces of this infoservice.
-   */
-  public Vector getListenerInterfaces()
-  {
-    Vector r_listenerInterfacesList = new Vector();
-    Enumeration listenerInterfacesEnumeration = listenerInterfaces.elements();
-    while (listenerInterfacesEnumeration.hasMoreElements())
-    {
-      r_listenerInterfacesList.addElement(listenerInterfacesEnumeration.nextElement());
-    }
-    return r_listenerInterfacesList;
-  }   
+	 * Returns a snapshot of all listener interfaces of this infoservice.
+	 *
+	 * @return A Vector with all listener interfaces of this infoservice.
+	 */
+	public Vector getListenerInterfaces()
+	{
+		Vector r_listenerInterfacesList = new Vector();
+		Enumeration listenerInterfacesEnumeration = listenerInterfaces.elements();
+		while (listenerInterfacesEnumeration.hasMoreElements())
+		{
+			r_listenerInterfacesList.addElement(listenerInterfacesEnumeration.nextElement());
+		}
+		return r_listenerInterfacesList;
+	}
 
-  /**
+	/**
 	 * Returns a String representation for this InfoService object. It's just the name of the
 	 * infoservice.
 	 *
@@ -382,31 +382,31 @@ public class InfoService extends DatabaseEntry
 		Vector mixCascades = new Vector();
 		for (int i = 0; i < mixCascadeNodes.getLength(); i++)
 		{
-      Element mixCascadeNode = (Element)(mixCascadeNodes.item(i));
-      boolean signatureValid = false;
+			Element mixCascadeNode = (Element) (mixCascadeNodes.item(i));
+			boolean signatureValid = false;
 			try
 			{
-        checkSignature(mixCascadeNode);
-        signatureValid = true;
-      }
-      catch (Exception e)
-      {
-        LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, e.getMessage());
-      }  
-      if (signatureValid)
-      {
-        try
-        {
-          mixCascades.addElement(new MixCascade(mixCascadeNode));
+				checkSignature(mixCascadeNode);
+				signatureValid = true;
 			}
 			catch (Exception e)
 			{
-				/* an error while parsing the node occured -> we don't use this mixcascade */
-				LogHolder.log(LogLevel.EXCEPTION, LogType.MISC,
-							  "InfoService: getMixCascades: Error in MixCascade XML node.");
+				LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, e.getMessage());
+			}
+			if (signatureValid)
+			{
+				try
+				{
+					mixCascades.addElement(new MixCascade(mixCascadeNode));
+				}
+				catch (Exception e)
+				{
+					/* an error while parsing the node occured -> we don't use this mixcascade */
+					LogHolder.log(LogLevel.EXCEPTION, LogType.MISC,
+								  "InfoService: getMixCascades: Error in MixCascade XML node.");
+				}
 			}
 		}
-    }
 		return mixCascades;
 	}
 
@@ -429,31 +429,31 @@ public class InfoService extends DatabaseEntry
 		Vector infoServices = new Vector();
 		for (int i = 0; i < infoServiceNodes.getLength(); i++)
 		{
-      Element infoServiceNode = (Element)(infoServiceNodes.item(i));
-      boolean signatureValid = false;
-      try
-      {
-        checkSignature(infoServiceNode);
-        signatureValid = true;
-      }
-      catch (Exception e)
-      {
-        LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, e.getMessage());
-      }  
-      if (signatureValid)
-      {
-        try
-        {
-          infoServices.addElement(new InfoService(infoServiceNode));
+			Element infoServiceNode = (Element) (infoServiceNodes.item(i));
+			boolean signatureValid = false;
+			try
+			{
+				checkSignature(infoServiceNode);
+				signatureValid = true;
 			}
 			catch (Exception e)
 			{
-				/* an error while parsing the node occured -> we don't use this mixcascade */
-				LogHolder.log(LogLevel.EXCEPTION, LogType.MISC,
-							  "InfoService: getInfoServices: Error in InfoService XML node.");
+				LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, e.getMessage());
+			}
+			if (signatureValid)
+			{
+				try
+				{
+					infoServices.addElement(new InfoService(infoServiceNode));
+				}
+				catch (Exception e)
+				{
+					/* an error while parsing the node occured -> we don't use this mixcascade */
+					LogHolder.log(LogLevel.EXCEPTION, LogType.MISC,
+								  "InfoService: getInfoServices: Error in InfoService XML node.");
+				}
 			}
 		}
-    }
 		return infoServices;
 	}
 
@@ -474,8 +474,8 @@ public class InfoService extends DatabaseEntry
 			throw (new Exception("InfoService: getMixInfo: Error in XML structure."));
 		}
 		Element mixNode = (Element) (mixNodes.item(0));
-    /* if signature is invalid, exception is thrown */
-    checkSignature(mixNode);
+		/* if signature is invalid, exception is thrown */
+		checkSignature(mixNode);
 		return (new MixInfo(mixNode));
 	}
 
@@ -498,8 +498,8 @@ public class InfoService extends DatabaseEntry
 			throw (new Exception("InfoService: getStatusInfo: Error in XML structure."));
 		}
 		Element mixCascadeStatusNode = (Element) (mixCascadeStatusNodes.item(0));
-    /* if signature is invalid, exception is thrown */
-    checkSignature(mixCascadeStatusNode);
+		/* if signature is invalid, exception is thrown */
+		checkSignature(mixCascadeStatusNode);
 		return (new StatusInfo(mixCascadeStatusNode, cascadeLength));
 	}
 
@@ -558,35 +558,35 @@ public class InfoService extends DatabaseEntry
 		return (new JAPVersionInfo(doc, japVersionType));
 	}
 
-
-  /**
-   * Checks the signature of an XML node against the certificate store from InfoServiceHolder.
-   * This method returns only if the signature is valid or signature checking is disabled
-   * (certificate store is null). If the signature is invalid, an exception is thrown.
-   *
-   * @param a_nodeToCheck The node to verify.
-   */
-  private void checkSignature(Element a_nodeToCheck) throws Exception
-  {
-    JAPCertificateStore certificateStore = InfoServiceHolder.getInstance().getCertificateStore();
-    if (certificateStore != null)
-    {
-      /* verify the signature */
-      NodeList signatureNodes = a_nodeToCheck.getElementsByTagName("Signature");
-      if (signatureNodes.getLength() == 0)
-      {
-        throw (new Exception("InfoService: signatureCheck: Signature node missing."));          
-      }
-      else
-      {
-        Element signatureNode = (Element)(signatureNodes.item(0));
-        int errorCode = JAPCertPath.validate(a_nodeToCheck, signatureNode, certificateStore);
-        if (errorCode != ErrorCodes.E_SUCCESS)
-        {
-          throw (new Exception("InfoService: signatureCheck: Signature is invalid. Errorcode: " + Integer.toString(errorCode)));
-        }
-      }
-    }
-  }
+	/**
+	 * Checks the signature of an XML node against the certificate store from InfoServiceHolder.
+	 * This method returns only if the signature is valid or signature checking is disabled
+	 * (certificate store is null). If the signature is invalid, an exception is thrown.
+	 *
+	 * @param a_nodeToCheck The node to verify.
+	 */
+	private void checkSignature(Element a_nodeToCheck) throws Exception
+	{
+		JAPCertificateStore certificateStore = InfoServiceHolder.getInstance().getCertificateStore();
+		if (certificateStore != null)
+		{
+			/* verify the signature */
+			NodeList signatureNodes = a_nodeToCheck.getElementsByTagName("Signature");
+			if (signatureNodes.getLength() == 0)
+			{
+				throw (new Exception("InfoService: signatureCheck: Signature node missing."));
+			}
+			else
+			{
+				Element signatureNode = (Element) (signatureNodes.item(0));
+				int errorCode = JAPCertPath.validate(a_nodeToCheck, signatureNode, certificateStore);
+				if (errorCode != ErrorCodes.E_SUCCESS)
+				{
+					throw (new Exception("InfoService: signatureCheck: Signature is invalid. Errorcode: " +
+										 Integer.toString(errorCode)));
+				}
+			}
+		}
+	}
 
 }

@@ -39,9 +39,9 @@ public class ListenerInterface
 {
 
 	/**
-   * This is the host of this interface (hostname or IP).
-   */
-  private String inetHost;
+	 * This is the host of this interface (hostname or IP).
+	 */
+	private String inetHost;
 
 	/**
 	 * This is the representation of the port of the ListenerInterface.
@@ -84,25 +84,25 @@ public class ListenerInterface
 			throw (new Exception("ListenerInterface: Error in XML structure."));
 		}
 		Element hostNode = (Element) (hostNodes.item(0));
-    inetHost = hostNode.getFirstChild().getNodeValue();
+		inetHost = hostNode.getFirstChild().getNodeValue();
 	}
 
-  /**
-   * Creates a new ListenerInterface from a hostname / IP address and a port.
-   *
-   * @param hostName The hostname or the IP address of this interface.
-   * @param port The port of this interface (1 <= port <= 65535).
-   */
-  public ListenerInterface(String host, int port) throws Exception
-  {
-    if ( (port < 1) || (port > 65535))
-    {
-      throw (new Exception("ListenerInterface: Port is invalid."));
-    }
-    inetPort = port;
-    inetHost = host;
-    protocolType = "unknown";
-  }
+	/**
+	 * Creates a new ListenerInterface from a hostname / IP address and a port.
+	 *
+	 * @param hostName The hostname or the IP address of this interface.
+	 * @param port The port of this interface (1 <= port <= 65535).
+	 */
+	public ListenerInterface(String host, int port) throws Exception
+	{
+		if ( (port < 1) || (port > 65535))
+		{
+			throw (new Exception("ListenerInterface: Port is invalid."));
+		}
+		inetPort = port;
+		inetHost = host;
+		protocolType = "unknown";
+	}
 
 	/**
 	 * Creates an XML node without signature for this ListenerInterface.
@@ -114,28 +114,28 @@ public class ListenerInterface
 	public Element toXmlNode(Document doc)
 	{
 		Element listenerInterfaceNode = doc.createElement("ListenerInterface");
-   /* Create the child nodes of ListenerInterface (Type, Port, Host) */
-    Element typeNode = doc.createElement("Type");
-    typeNode.appendChild(doc.createTextNode(protocolType));
-    Element portNode = doc.createElement("Port");
-    portNode.appendChild(doc.createTextNode(Integer.toString(inetPort)));
-    Element hostNode = doc.createElement("Host");
-    hostNode.appendChild(doc.createTextNode(inetHost));
-    listenerInterfaceNode.appendChild(typeNode);
-    listenerInterfaceNode.appendChild(portNode);
-    listenerInterfaceNode.appendChild(hostNode);
-    return listenerInterfaceNode;
-  }
+		/* Create the child nodes of ListenerInterface (Type, Port, Host) */
+		Element typeNode = doc.createElement("Type");
+		typeNode.appendChild(doc.createTextNode(protocolType));
+		Element portNode = doc.createElement("Port");
+		portNode.appendChild(doc.createTextNode(Integer.toString(inetPort)));
+		Element hostNode = doc.createElement("Host");
+		hostNode.appendChild(doc.createTextNode(inetHost));
+		listenerInterfaceNode.appendChild(typeNode);
+		listenerInterfaceNode.appendChild(portNode);
+		listenerInterfaceNode.appendChild(hostNode);
+		return listenerInterfaceNode;
+	}
 
-  /**
-   * Get the host (hostname or IP) of this interface as a String.
-   *
-   * @return The host of this interface.
-   */
-  public String getHost()
-  {
-    return inetHost;
-  }
+	/**
+	 * Get the host (hostname or IP) of this interface as a String.
+	 *
+	 * @return The host of this interface.
+	 */
+	public String getHost()
+	{
+		return inetHost;
+	}
 
 	/**
 	 * Get the port of this interface.
@@ -145,36 +145,42 @@ public class ListenerInterface
 	{
 		return inetPort;
 	}
-  
-  /**
-   * Returns a String equal to getHost(). If getHost() is an IP, we try to find the hostname
-   * and add it in brackets. If getHost() is a hostname, we try to find the IP and add
-   * it in brackets. If we can't resolve getHost() (IP or hostname), only getHost() without
-   * the additional information is returned.
-   *
-   * @return The host of this interface with additional information.
-   */
-  public String getHostAndIp() {
-    String r_HostAndIp = inetHost;
-    try {
-      InetAddress interfaceAddress = InetAddress.getByName(inetHost);
-      String ipString = interfaceAddress.getHostAddress();
-      if (ipString.equals(inetHost)) {
-        /* inetHost is an IP, try to add the hostname */       
-        String hostName = interfaceAddress.getHostName();
-        if ((!hostName.equals(inetHost)) && (!hostName.equals(""))) {
-          /* we got the hostname via DNS, add it */
-          r_HostAndIp = r_HostAndIp + " (" + hostName + ")";
-        }
-      }
-      else {
-        /* inetHost is a hostname, add the IP */
-        r_HostAndIp = r_HostAndIp + " (" + ipString + ")";
-      }
-    }
-    catch (Exception e) {
-      /* can't resolve inetHost, maybe we are behind a proxy, return only inetHost */
-    }
-    return r_HostAndIp;
-  }
+
+	/**
+	 * Returns a String equal to getHost(). If getHost() is an IP, we try to find the hostname
+	 * and add it in brackets. If getHost() is a hostname, we try to find the IP and add
+	 * it in brackets. If we can't resolve getHost() (IP or hostname), only getHost() without
+	 * the additional information is returned.
+	 *
+	 * @return The host of this interface with additional information.
+	 */
+	public String getHostAndIp()
+	{
+		String r_HostAndIp = inetHost;
+		try
+		{
+			InetAddress interfaceAddress = InetAddress.getByName(inetHost);
+			String ipString = interfaceAddress.getHostAddress();
+			if (ipString.equals(inetHost))
+			{
+				/* inetHost is an IP, try to add the hostname */
+				String hostName = interfaceAddress.getHostName();
+				if ( (!hostName.equals(inetHost)) && (!hostName.equals("")))
+				{
+					/* we got the hostname via DNS, add it */
+					r_HostAndIp = r_HostAndIp + " (" + hostName + ")";
+				}
+			}
+			else
+			{
+				/* inetHost is a hostname, add the IP */
+				r_HostAndIp = r_HostAndIp + " (" + ipString + ")";
+			}
+		}
+		catch (Exception e)
+		{
+			/* can't resolve inetHost, maybe we are behind a proxy, return only inetHost */
+		}
+		return r_HostAndIp;
+	}
 }

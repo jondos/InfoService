@@ -30,22 +30,33 @@ package anon.crypto;
 /* Hint: This file may be only a copy of the original file which is always in the JAP source tree!
  * If you change something - do not forget to add the changes also to the JAP source tree!
  */
+
 import java.util.Enumeration;
 
-public class JAPCertificateStoreId
+/**
+ * Purpose of class: Returning an id for a given certificate.
+ *
+ */
+final public class JAPCertificateStoreId
 {
-	private String id; // using signature, hashcode of the certificate leads nowhere ...
+	// private String strId; // using signature, hashcode of the certificate leads nowhere ...
 
-	public static String getId(JAPCertificate cert)
+	/**
+	 * Returns the unique id for a certificate within the certificate store
+	 *
+	 * @param a_cert The certificate of which an id is requested.
+	 * @return id
+	 */
+	final public static String getId(JAPCertificate a_cert)
 	{
-		String issuer = "";
-		Enumeration enum = cert.getIssuer().getValues().elements();
+		StringBuffer r_strBuffId = new StringBuffer();
+		Enumeration enum = a_cert.getIssuer().getValues().elements();
 		while (enum.hasMoreElements())
 		{
-			issuer = issuer + (String) enum.nextElement();
+			r_strBuffId.append((String) enum.nextElement());
 		}
-		return issuer + cert.getStartDate().toGMTString() + cert.getEndDate().toGMTString();
-		// return cert.getSignature();
+		r_strBuffId.append(a_cert.getStartDate().toGMTString() + a_cert.getEndDate().toGMTString());
+		return r_strBuffId.toString();
 	}
 
 }

@@ -31,7 +31,7 @@ import java.math.BigInteger;
 import org.w3c.dom.Element;
 import org.w3c.dom.Text;
 import anon.ErrorCodes;
-import anon.util.*;
+import anon.util.Base64;
 
 final class ASymCipher
 {
@@ -125,45 +125,45 @@ final class ASymCipher
 //END My Hack CRYPT */
 
    /* Cryptix...
-	private Cipher cipherEnc=null;
-	public JAPASymCipher()
+	  private Cipher cipherEnc=null;
+	  public JAPASymCipher()
+	 {
+	  try
 	   {
-	try
-	 {
-	  cipherEnc=Cipher.getInstance("RSA/ECB/NONE");
-	 }
-	catch(Exception e)
-	 {
-	  JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.MISC,"Init Asym-Cipher: "+e.toString());
-	 }
+	cipherEnc=Cipher.getInstance("RSA/ECB/NONE");
 	   }
+	  catch(Exception e)
+	   {
+	JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.MISC,"Init Asym-Cipher: "+e.toString());
+	   }
+	 }
 
-	public int encrypt(byte[] from,int ifrom,byte[] to,int ito)
+	  public int encrypt(byte[] from,int ifrom,byte[] to,int ito)
+	 {
+	  try
 	   {
-	try
-	 {
-	  cipherEnc.update(from,ifrom,128,to,ito);
-	  return 128;
-	 }
-	catch(Exception e)
-	 {
-	  JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.MISC,"encrypt ASym-Cipher: "+e.toString());
-	  return -1;
-	 }
+	cipherEnc.update(from,ifrom,128,to,ito);
+	return 128;
 	   }
+	  catch(Exception e)
+	   {
+	JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.MISC,"encrypt ASym-Cipher: "+e.toString());
+	return -1;
+	   }
+	 }
 
-	public int setPublicKey(BigInteger modulus,BigInteger exponent)
+	  public int setPublicKey(BigInteger modulus,BigInteger exponent)
+	 {
+	  try
 	   {
-	try
-	 {
-	  cipherEnc.init(Cipher.ENCRYPT_MODE,(Key)new RSAPrivateKeySpec(modulus,exponent));
-	  return 0;
-	 }
-	catch(Exception e)
-	 {
-	  JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.MISC,"setPublicKey ASym-Cipher: "+e.toString());
-	  return -1;
-	 }
+	cipherEnc.init(Cipher.ENCRYPT_MODE,(Key)new RSAPrivateKeySpec(modulus,exponent));
+	return 0;
 	   }
+	  catch(Exception e)
+	   {
+	JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.MISC,"setPublicKey ASym-Cipher: "+e.toString());
+	return -1;
+	   }
+	 }
 	*/
 }

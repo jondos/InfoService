@@ -59,6 +59,7 @@ import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.JAPVersionInfo;
 import anon.infoservice.MixCascade;
 import anon.util.XMLUtil;
+import anon.crypto.*;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -370,32 +371,36 @@ public final class JAPController implements ProxyListener
 				{
 					// setCertificateStore(XMLUtil.parseNodeString(n.getNamedItem("acceptedCertList"), ""));
 					// JAPCertificateStore jcs = null;
-					Element xmlCA = (Element) XMLUtil.getFirstChildByName(root, "CertificateAuthorities");
-					if (xmlCA != null)
+					Element elemCAs = (Element) XMLUtil.getFirstChildByName(root, "CertificateAuthorities");
+					if (elemCAs != null)
 					{
 						// was: NodeList nlX509Certs = xmlCA.getElementsByTagName("X509Certificate");
-						NodeList nlX509Certs = xmlCA.getElementsByTagName("CertificateAuthority");
+						NodeList nlX509Certs = elemCAs.getElementsByTagName("CertificateAuthority");
 						if (
 							(nlX509Certs != null) &&
 							(nlX509Certs.getLength() >= 1)
 							)
 						{
 							// certificate store found in jap.conf
-							JAPCertificateStore jcs = new JAPCertificateStore(nlX509Certs);
+							JAPCertificateStore jcs = JAPCertificateStore.getInstance(nlX509Certs);
+
 							try
 							{
 								setCertificateStore(jcs);
 							}
 							catch (Exception e)
 							{
+								LogHolder.log(LogLevel.WARNING, LogType.MISC,
+								   "JAPModel:Could not set certificate store!");
 							}
-
 						}
 					}
 					else
 					{
-						JAPCertificateStore jcs = new JAPCertificateStore(JAPConstants.CERTSPATH +
-							JAPConstants.TRUSTEDROOTCERT);
+						JAPCertificateStore jcs = JAPCertificateStore.getInstance();
+						JAPCertificate cert=JAPCertificate.getInstance(	JAPConstants.CERTSPATH +
+																		JAPConstants.TRUSTEDROOTCERT);
+						jcs.addCertificate(cert,true);
 						setCertificateStore(jcs);
 					}
 				}
@@ -405,6 +410,8 @@ public final class JAPController implements ProxyListener
 				}
 				catch (Exception e)
 				{
+					LogHolder.log(LogLevel.ERR, LogType.MISC,
+								  "JAPModel:Could not set certificate store! No input data?");
 				}
 				//load settings for Payment
 				setBIHost(XMLUtil.parseNodeString(n.getNamedItem("biHost"), JAPModel.getBIHost()));
@@ -672,9 +679,9 @@ public final class JAPController implements ProxyListener
 			/* store the trusted CAs */
 			try
 			{
-				JAPCertificateStore jcs = JAPModel.getCertificateStore();
+				JAPCertificateStore jcsCurrent = JAPModel.getCertificateStore();
 				// System.out.println("jcs : " + jcs.size());
-				e.appendChild(jcs.toXmlNode(doc));
+				e.appendChild(jcsCurrent.toXmlNode(doc));
 			}
 			catch (Exception ex)
 			{

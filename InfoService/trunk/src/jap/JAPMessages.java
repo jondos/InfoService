@@ -67,7 +67,7 @@ public final class JAPMessages
 			{
 				JAPAWTMsgBox.MsgBox(new Frame(),
 									"File not found: " + JAPConstants.MESSAGESFN +
-					".properties\nYour package of JAP may be corrupted.\nTry again to download or install the package.",
+									".properties\nYour package of JAP may be corrupted.\nTry again to download or install the package.",
 									"Error");
 				System.exit( -1);
 			}

@@ -68,12 +68,12 @@ public final class JAPModel
 	private static JAPModel model = null;
 
 	private boolean m_bCertCheckDisabled = true;
-	private JAPCertificate m_rootCertificate = null;
+//	private JAPCertificate m_rootCertificate = null;
 	private JAPCertificateStore m_certStore = null;
 
 	private JAPModel()
 	{
-		m_certStore = JAPCertificateStore.create();
+		m_certStore = JAPCertificateStore.getInstance();
 	}
 
 	// m_Locale=Locale.getDefault();
@@ -367,10 +367,10 @@ public final class JAPModel
 		  tmp.setAttribute("MISC",(debugtype&JAPDebug.MISC)!=0?"true":"false");
 		  elemDebug.appendChild(tmp);
 		  if(JAPDebug.isShowConsole()){
-			tmp=doc.createElement("Output");
-			txt=doc.createTextNode("Console");
-			tmp.appendChild(txt);
-			elemDebug.appendChild(tmp);
+		 tmp=doc.createElement("Output");
+		 txt=doc.createTextNode("Console");
+		 tmp.appendChild(txt);
+		 elemDebug.appendChild(tmp);
 		  }
 		  return JAPUtil.XMLDocumentToString(doc);
 		  //((XmlDocument)doc).write(f);
