@@ -69,10 +69,9 @@ public class AllTests
 	 */
 	public static Test suite()
 	{
-		//TestSuite suite = new TestSuite(AllTests.class.getPackage().toString());
-		//suite.addTest(anon.test.AllTests.suite());
-		//return suite;
-		return null;
+		TestSuite suite = new TestSuite(AllTests.class.getName());
+		suite.addTest(anon.test.AllTests.suite());
+		return suite;
 	}
 
 	/**

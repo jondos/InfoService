@@ -55,7 +55,7 @@ public class AllTests
 	 */
 	public static Test suite()
 	{
-		TestSuite suite = new TestSuite(AllTests.class.getPackage().toString());
+		TestSuite suite = new TestSuite(AllTests.class.getName());
 		//suite.addTestSuite(DatabaseStaticTest.class);
 		suite.addTestSuite(DatabaseTest.class);
 		suite.addTestSuite(HTTPConnectionFactoryTest.class);
