@@ -183,6 +183,7 @@ final class JAPAbout extends JDialog implements Runnable
 				parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 				try
 					{
+						//new Thread(this).start();
 						SwingUtilities.invokeLater(this);
 					}
 				catch(Exception e)
