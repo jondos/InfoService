@@ -31,6 +31,7 @@ package anon.server.impl;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
+import java.io.InterruptedIOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.math.BigInteger;
@@ -48,20 +49,21 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import anon.AnonChannel;
 import anon.ErrorCodes;
-import anon.util.Base64;
 import anon.NotConnectedToMixException;
 import anon.ToManyOpenChannelsException;
 import anon.crypto.JAPCertPath;
+import anon.crypto.JAPCertificate;
 import anon.crypto.JAPCertificateStore;
+import anon.crypto.JAPSignature;
+import anon.crypto.XMLEncryption;
 import anon.infoservice.MixCascade;
+import anon.util.Base64;
 //import pay.anon.AIChannel;
 import anon.util.XMLUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import anon.crypto.XMLEncryption;
-import anon.crypto.JAPSignature;
-import anon.crypto.JAPCertificate;
+
 public final class MuxSocket implements Runnable
 {
 	private SecureRandom m_SecureRandom;
@@ -215,7 +217,27 @@ public final class MuxSocket implements Runnable
 			{
 				byte[] buff = new byte[len];
 				buff[0] = (byte) m_iChainLen; //we have already read the beginning '<' !!
-				m_inDataStream.readFully(buff, 1, len - 1);
+				int aktIndex = 1;
+				len--;
+				int ret;
+				//We read all teh XML -- but do not use readFully do to "incorrect" timeout handling!
+				while (len > 0)
+				{
+					try
+					{
+						ret = m_inDataStream.read(buff, aktIndex, len);
+					}
+					catch (InterruptedIOException ex)
+					{
+						continue;
+					}
+					if (ret < 1)
+					{
+						return err;
+					}
+					len -= ret;
+					aktIndex += ret;
+				}
 				err = processXmlKeys(buff, a_checkMixCerts, a_certsTrustedRoots);
 				if (err != ErrorCodes.E_SUCCESS)
 				{
@@ -320,18 +342,18 @@ public final class MuxSocket implements Runnable
 		m_bisCrypted = b;
 	}
 
-	private synchronized void setEncryptionKeys(byte[] keys,int len)
+	private synchronized void setEncryptionKeys(byte[] keys, int len)
 	{
-		if(len==32)
-			{
-				m_cipherIn.setEncryptionKeyAES(keys, 0,16);
-				m_cipherOut.setEncryptionKeyAES(keys, 16,16);
-			}
-		else if(len==64)
-			{
-				m_cipherOut.setEncryptionKeyAES(keys,0,32);
-				m_cipherIn.setEncryptionKeyAES(keys,32,32);
-			}
+		if (len == 32)
+		{
+			m_cipherIn.setEncryptionKeyAES(keys, 0, 16);
+			m_cipherOut.setEncryptionKeyAES(keys, 16, 16);
+		}
+		else if (len == 64)
+		{
+			m_cipherOut.setEncryptionKeyAES(keys, 0, 32);
+			m_cipherIn.setEncryptionKeyAES(keys, 32, 32);
+		}
 		/** Ist das hier so ok ???*/
 	}
 
@@ -382,14 +404,14 @@ public final class MuxSocket implements Runnable
 				m_bMixProtocolWithTimestamp = false;
 				m_iTimestampSize = 0;
 				m_iMixProtocolVersion = MIX_PROTOCOL_VERSION_0_2;
-				m_cipherFirstMix =null;
+				m_cipherFirstMix = null;
 			}
 			else if (strProtocolVersion.equals("0.3"))
 			{
 				m_bMixProtocolWithTimestamp = true;
 				m_iTimestampSize = 2;
 				m_iMixProtocolVersion = MIX_PROTOCOL_VERSION_0_3;
-				m_cipherFirstMix =null;
+				m_cipherFirstMix = null;
 			}
 			else if (strProtocolVersion.equalsIgnoreCase("0.4"))
 			{
@@ -447,7 +469,7 @@ public final class MuxSocket implements Runnable
 				System.arraycopy(tmpBuff, 0, m_MixPacketSend, 15, tmpBuff.length);
 				m_arASymCipher[0].encrypt(m_MixPacketSend, 6, m_MixPacketSend, 6);
 				sendMixPacket();
-				setEncryptionKeys(tmpBuff,32);
+				setEncryptionKeys(tmpBuff, 32);
 				setEnableEncryption(true);
 			}
 			else
@@ -456,49 +478,53 @@ public final class MuxSocket implements Runnable
 				Element e = doc.createElement("JAPKeyExchange");
 				doc.appendChild(e);
 				e.setAttribute("version", "0.1");
-				Element elemLinkEnc=doc.createElement("LinkEncryption");
-				byte[] linkKeys=new byte[64];
-				m_KeyPool.getKey(linkKeys,0);
-				m_KeyPool.getKey(linkKeys,16);
-				m_KeyPool.getKey(linkKeys,32);
-				m_KeyPool.getKey(linkKeys,48);
-				XMLUtil.setNodeValue(elemLinkEnc,Base64.encode(linkKeys,true));
+				Element elemLinkEnc = doc.createElement("LinkEncryption");
+				byte[] linkKeys = new byte[64];
+				m_KeyPool.getKey(linkKeys, 0);
+				m_KeyPool.getKey(linkKeys, 16);
+				m_KeyPool.getKey(linkKeys, 32);
+				m_KeyPool.getKey(linkKeys, 48);
+				XMLUtil.setNodeValue(elemLinkEnc, Base64.encode(linkKeys, true));
 				e.appendChild(elemLinkEnc);
-				Element elemMixEnc=doc.createElement("MixEncryption");
-				byte[] mixKeys=new byte[32];
-				m_KeyPool.getKey(mixKeys,0);
-				m_KeyPool.getKey(mixKeys,16);
-				XMLUtil.setNodeValue(elemMixEnc,Base64.encode(mixKeys,true));
+				Element elemMixEnc = doc.createElement("MixEncryption");
+				byte[] mixKeys = new byte[32];
+				m_KeyPool.getKey(mixKeys, 0);
+				m_KeyPool.getKey(mixKeys, 16);
+				XMLUtil.setNodeValue(elemMixEnc, Base64.encode(mixKeys, true));
 				e.appendChild(elemMixEnc);
-				XMLEncryption.encryptElement(e,m_arASymCipher[0].getPublicKey());
-				byte[] xml_buff=XMLUtil.XMLDocumentToString(doc).getBytes();
-				m_outStream.write((xml_buff.length>>8)&0x00FF);
-				m_outStream.write(xml_buff.length&0x00FF);
+				XMLEncryption.encryptElement(e, m_arASymCipher[0].getPublicKey());
+				byte[] xml_buff = XMLUtil.XMLDocumentToString(doc).getBytes();
+				m_outStream.write( (xml_buff.length >> 8) & 0x00FF);
+				m_outStream.write(xml_buff.length & 0x00FF);
 				m_outStream.write(xml_buff);
 				m_outStream.flush();
-				m_cipherFirstMix.setEncryptionKeyAES(mixKeys,0,32);
-				setEncryptionKeys(linkKeys,64);
+				m_cipherFirstMix.setEncryptionKeyAES(mixKeys, 0, 32);
+				setEncryptionKeys(linkKeys, 64);
 				// Checking Signature send from Mix
-				byte[] tmpBuff=new byte[xml_buff.length+2];
-				System.arraycopy(xml_buff,0,tmpBuff,2,xml_buff.length);
-				tmpBuff[0]=(byte)((xml_buff.length>>8)&0x00FF);
-				tmpBuff[1]=(byte)(xml_buff.length&0x00FF);
-				JAPCertificate certs[]=JAPSignature.getAppendedCertificates(nodeSig);
-				JAPSignature sig=new JAPSignature();
+				byte[] tmpBuff = new byte[xml_buff.length + 2];
+				System.arraycopy(xml_buff, 0, tmpBuff, 2, xml_buff.length);
+				tmpBuff[0] = (byte) ( (xml_buff.length >> 8) & 0x00FF);
+				tmpBuff[1] = (byte) (xml_buff.length & 0x00FF);
+				JAPCertificate certs[] = JAPSignature.getAppendedCertificates(nodeSig);
+				JAPSignature sig = new JAPSignature();
 				sig.initVerify(certs[0].getPublicKey());
-				int len=m_inDataStream.readShort();
-				byte[] mixSigBuff=new byte[len];
+				int len = m_inDataStream.readShort();
+				byte[] mixSigBuff = new byte[len];
 				m_inDataStream.readFully(mixSigBuff);
 				doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new
 					ByteArrayInputStream(mixSigBuff));
 				root = doc.getDocumentElement();
-				if(!root.getNodeName().equals("Signature"))
+				if (!root.getNodeName().equals("Signature"))
+				{
 					return ErrorCodes.E_UNKNOWN;
-				Node elemSigValue=XMLUtil.getFirstChildByName(root,"SignatureValue");
-				String strSigValue=XMLUtil.parseNodeString(elemSigValue,null);
-				byte[] sigValue=Base64.decode(strSigValue);
-				if(!sig.verify(tmpBuff,sigValue,true))
+				}
+				Node elemSigValue = XMLUtil.getFirstChildByName(root, "SignatureValue");
+				String strSigValue = XMLUtil.parseNodeString(elemSigValue, null);
+				byte[] sigValue = Base64.decode(strSigValue);
+				if (!sig.verify(tmpBuff, sigValue, true))
+				{
 					return ErrorCodes.E_UNKNOWN;
+				}
 				setEnableEncryption(true);
 			}
 			return ErrorCodes.E_SUCCESS;
@@ -809,7 +835,6 @@ public final class MuxSocket implements Runnable
 		m_outStream.flush();
 	}
 
-
 	/**
 	 * Sends a message to the AI (Accounting Instance).
 	 * This implementation is to be replaced by the new control channels
@@ -821,7 +846,6 @@ public final class MuxSocket implements Runnable
 	{
 		return sendPayPackets(xmlData.getBytes());
 	}
-
 
 	/**
 	 * Sends a message to the AI (Accounting Instance).
@@ -978,8 +1002,10 @@ public final class MuxSocket implements Runnable
 					}
 					else //First Mix uses olny symmetric encryption
 					{
-						for(int j=0;j<16;j++)
-							m_arOutBuff2[j]=(byte)0xFF;
+						for (int j = 0; j < 16; j++)
+						{
+							m_arOutBuff2[j] = (byte) 0xFF;
+						}
 						entry.arCipher[i].setIV2(m_arOutBuff2);
 						m_cipherFirstMix.encryptAES(m_arOutBuff, 0, m_arOutBuff2, 0, KEY_SIZE);
 						entry.arCipher[i].encryptAES(m_arOutBuff, KEY_SIZE, m_arOutBuff2, KEY_SIZE,
