@@ -64,7 +64,7 @@ public class DefaultClientProtocolHandler {
    * This is the version of the current protocol implementation. Interaction is only possible with
    * forwarders, which use the same protocol version.
    */
-  private static final int PROTOCOL_VERSION = 1;
+  private static final int PROTOCOL_VERSION = 2;
 
   /**
    * This is the maximum net size of a protocol message in bytes. Bigger messages are not accepted
@@ -141,7 +141,7 @@ public class DefaultClientProtocolHandler {
     m_connection = a_connection;
     m_state = STATE_INITIALIZE;
   }
-
+  
   
   /**
    * Returns the connection descriptor with the offer from the forwarder. This method must be
@@ -159,9 +159,17 @@ public class DefaultClientProtocolHandler {
   public ForwardConnectionDescriptor getConnectionDescriptor(JAPCertificateStore a_certificateStore) throws ClientForwardException {
     ForwardConnectionDescriptor connectionDescriptor = new ForwardConnectionDescriptor();
     if (m_state == STATE_INITIALIZE) {
-      /* we have the correct state */
+      /* we have the correct state -> send the connection request message */
+      byte[] protocolPacket = null;
+      try {
+        protocolPacket = xmlToProtocolPacket(generateConnectionRequest());
+      }
+      catch (Exception e) {
+        throw (new ClientForwardException(ClientForwardException.ERROR_UNKNOWN_ERROR, "DefaultClientProtocolHandler: getConnectionDescriptor: XML transforming error (" + e.toString() + ")."));
+      }
+      sendProtocolMessage(protocolPacket);
       byte[] message = readProtocolMessage();
-       Document doc = null;
+      Document doc = null;
       try {
         /* all messages are XML documents */
         doc = parseXmlData(message);
@@ -361,6 +369,33 @@ public class DefaultClientProtocolHandler {
     }
   }
 
+  /**
+   * Creates the connection request message. It is sent directly after connecting the forwarding
+   * server to request the connection offer structure.
+   *
+   * @return The connection request XML structure.
+   */
+  private Document generateConnectionRequest() throws ClientForwardException {
+    Document doc = null;
+    try {
+      doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+    }
+    catch (Exception e) {
+      throw (new ClientForwardException(ClientForwardException.ERROR_UNKNOWN_ERROR, "DefaultClientProtocolHandler: generateConnectionRequest: XML DocumentBuilder error (" + e.toString() + ")."));
+    }
+    /* Create the JAPRouting element */
+    Element japRoutingNode = doc.createElement("JAPRouting");
+    /* Create the children of JAPRouting (Protocol, Request) */
+    Element protocolNode = doc.createElement("Protocol");
+    protocolNode.setAttribute("version", Integer.toString(PROTOCOL_VERSION));
+    japRoutingNode.appendChild(protocolNode);    
+    Element requestNode = doc.createElement("Request");
+    requestNode.setAttribute("subject", "connection");
+    requestNode.setAttribute("msg", "request");
+    japRoutingNode.appendChild(requestNode);
+    doc.appendChild(japRoutingNode);
+    return doc;
+  } 
   
   /**
    * Reads a message from the associated network connection. Header and trailer of the protocol

@@ -59,8 +59,8 @@ public class DefaultProtocolHandler implements IProtocolHandler {
    * This is the version of the current protocol implementation. Interaction is only possible with
    * clients, which use the same protocol version.
    */
-  private static final int PROTOCOL_VERSION = 1;
-  
+  private static final int PROTOCOL_VERSION = 2;
+    
   /**
    * This is the maximum net size of a protocol message in bytes. Bigger messages are not accepted
    * and causes an exception.
@@ -78,8 +78,15 @@ public class DefaultProtocolHandler implements IProtocolHandler {
   private static final byte[] MESSAGE_END_SIGNATURE = {(byte)0xFF, (byte)0x00, (byte)0xE1, (byte)0x1E};
   
   /**
-   * This is the state after establishing the connection and sending the connection offer to the
-   * client. In this state the protocol waits for the answer (cascade selection) from the client.
+   * This is the state after establishing the connection. In this state the protocol waits for the
+   * request message from the client (or the infoservice validation request).
+   */
+  private static final int STATE_WAIT_FOR_CLIENT_REQUEST = 0;
+  
+  /**
+   * This is the state after we have gotten the connection request from a forwarding client (not
+   * an infoservice) and sent the connection offer back to the client. In this state the protocol
+   * waits for the answer (cascade selection) from the client.
    */ 
   private static final int STATE_WAIT_FOR_CASCADE_SELECTION = 1;
   
@@ -96,6 +103,16 @@ public class DefaultProtocolHandler implements IProtocolHandler {
    * forwarding scheduler.
    */
   private static final int STATE_CONNECTION_CLOSED = 3;
+
+  /**
+   * This is the state after sending the acknowledgement for the verify message of the
+   * infoservice. We can't close the connection immediately because we have to wait until all
+   * data is sent to the infoservice. The infoservice will close the connection after receiving
+   * the acknowledgement message (no problem if the infoservice doesn't close the connection,
+   * because we are not accepting any more messages, we will close the connection after the
+   * timeout).
+   */
+  private static final int STATE_WAIT_FOR_INFOSERVICE_CLOSE = 4;
 
     
   /**
@@ -150,10 +167,9 @@ public class DefaultProtocolHandler implements IProtocolHandler {
     m_outgoingMessageBuffer = new ByteArrayInputStream(new byte[0]);
     m_parentConnection = a_parentConnection;
     m_serverConnection = null;
-    /* send the connection offer to the client */
-    sendProtocolDataToClient(xmlToProtocolPacket(generateConnectionOfferXml()));
-    m_currentState = STATE_WAIT_FOR_CASCADE_SELECTION;
+    m_currentState = STATE_WAIT_FOR_CLIENT_REQUEST;
   }
+
 
   /**
    * Returns the number of bytes which are ready for sending to the client without blocking by the
@@ -374,60 +390,125 @@ public class DefaultProtocolHandler implements IProtocolHandler {
   }
   
   /**
-   * This method handles the incoming XML messages. It parses the XML tree of that messages and
-   * calls the methods needed for handling the event associated with the received message. This
-   * method throws an exception, if there is something wrong with the received message or if
-   * there is an error while calling method for handling the associated event.
+   * This method handles the incoming XML messages. Dependent of the current prototcol state, it
+   * calls the method needed for handling the expected message. This method throws an exception,
+   * if there is something wrong with the received message or if there is an error while calling
+   * the method for handling the associated event.
    *
    * @param a_japRoutingNode The JAPRouting node, which is the root node of every protocol
    *                         message.
    */
   private void handleProtocol(Element a_japRoutingNode) throws Exception {
-    if (m_currentState == STATE_WAIT_FOR_CASCADE_SELECTION) {
-      /* the only state, where we wait for a message -> work through the answer XML tree */
-      NodeList requestNodes = a_japRoutingNode.getElementsByTagName("Request");
-      if (requestNodes.getLength() == 0) {
-        throw (new Exception("DefaultProtocolHandler: handleProtocol: Error in XML structure (Request node)."));
+    switch (m_currentState) {
+      case STATE_WAIT_FOR_CLIENT_REQUEST: {
+        /* we wait for an initial request message */
+        handleInitialRequestMessage(a_japRoutingNode);
+        break;
       }
-      Element requestNode = (Element)(requestNodes.item(0));
-      String subject = requestNode.getAttribute("subject");
-      if (!subject.equals("cascade")) {
-        throw (new Exception("DefaultProtocolHandler: handleProtocol: Error in XML structure (Request node, wrong subject)."));
+      case STATE_WAIT_FOR_CASCADE_SELECTION: {
+        /* we wait for a cascade select message */
+        handleClientCascadeSelectMessage(a_japRoutingNode);
+        break;
       }
-      String msg = requestNode.getAttribute("msg");
-      if (!msg.equals("select")) {
-        throw (new Exception("DefaultProtocolHandler: handleProtocol: Error in XML structure (Request node, wrong msg)."));
+      default: {
+        /* something is going wrong, we got an unexpected message */
+        throw (new Exception("DefaultProtocolHandler: handleProtocol: Protocol error."));
       }
-      NodeList mixCascadeNodes = requestNode.getElementsByTagName("MixCascade");
-      if (mixCascadeNodes.getLength() == 0) {
-        throw (new Exception("DefaultProtocolHandler: handleProtocol: Error in XML structure (MixCascade node)."));
-      }
-      Element mixCascadeNode = (Element) (mixCascadeNodes.item(0));
-      String selectedCascadeId = mixCascadeNode.getAttribute("id");
-      /* check, whether this is an allowed cascade */
-      MixCascade selectedCascade = ForwardServerManager.getInstance().getAllowedCascadesDatabase().getMixCascadeById(selectedCascadeId);
-      if (selectedCascade == null) {
-        throw (new Exception("DefaultProtocolHandler: handleProtocol: Selected cascade not available."));
-      }
-      /* connect to the cascade */
-      if (connectTo(selectedCascade) == true) {
-        /* maybe there are some bytes already in the buffer */
-        emptyBuffers();
-        m_currentState = STATE_CONNECTED_TO_MIX;
-      }
-      else {
-        /* shut everything down */
-        close();
-        throw (new Exception("DefaultProtocolHandler: handleProtocol: Error connecting the selected cascade."));
-      }
-      /* that's it */
-    }
-    else {
-      /* something is going wrong */
-      throw (new Exception("DefaultProtocolHandler: handleProtocol: Protocol error."));
-    }
+    } 
   }
   
+  /**
+   * This method handles the initial request messages from a client or an infoservice. The request
+   * is parsed and if the request was from a client, we send the connection offer back. I the
+   * request was the verify message from the infoservice, we send an acknowledgement. This method
+   * throws an exception, if there is something wrong with the received message or if there is an
+   * error while creating the answer.
+   *
+   * @param a_japRoutingNode The JAPRouting node of the connection request message.
+   */
+  private void handleInitialRequestMessage(Element a_japRoutingNode) throws Exception {
+    /* we got an initial request message -> work through the XML tree and decide whether it was
+     * from a forwarding client or an infoservice
+     */
+    NodeList requestNodes = a_japRoutingNode.getElementsByTagName("Request");
+    if (requestNodes.getLength() == 0) {
+      throw (new Exception("DefaultProtocolHandler: handleInitialRequestMessage: Error in XML structure (Request node)."));
+    }
+    Element requestNode = (Element)(requestNodes.item(0));
+    String subject = requestNode.getAttribute("subject");
+    if (!subject.equals("connection")) {
+      throw (new Exception("DefaultProtocolHandler: handleInitialRequestMessage: Error in XML structure (Request node, wrong subject)."));
+    }
+    String msg = requestNode.getAttribute("msg");
+    if (msg.equals("request")) {
+      /* we ignore the client protocol version at the moment -> maybe it is useful in the future
+       * for backwards compatibility
+       */
+      /* change the protocol state and send back the connection offer to the client */
+      m_currentState = STATE_WAIT_FOR_CASCADE_SELECTION;      
+      sendProtocolDataToClient(xmlToProtocolPacket(generateConnectionOfferXml()));
+    }
+    else {
+      if (msg.equals("verify")) {
+        /* it's the verify message from the infoservice -> send an acknowledgement */
+        m_currentState = STATE_WAIT_FOR_INFOSERVICE_CLOSE;
+        sendProtocolDataToClient(xmlToProtocolPacket(generateConnectionAcknowledgement()));
+      }            
+      else {
+        /* invalid request message */
+        throw (new Exception("DefaultProtocolHandler: handleInitialRequestMessage: Error in XML structure (Request node, wrong msg)."));
+      }
+    }
+  }  
+  
+  /**
+   * This method handles the cascade select message from a forwarding client. If everything is ok,
+   * it connects to the selected cascade, so forwarding can start. This method throws an exception,
+   * if there is something wrong with the received message or if there is an error while
+   * connecting to the specified mixcascade.
+   *
+   * @param a_japRoutingNode The JAPRouting node of the cascade select message.
+   */
+  private void handleClientCascadeSelectMessage(Element a_japRoutingNode) throws Exception {
+    /* we got the cascade select message from a forwarding client -> work through the XML tree */
+    NodeList requestNodes = a_japRoutingNode.getElementsByTagName("Request");
+    if (requestNodes.getLength() == 0) {
+      throw (new Exception("DefaultProtocolHandler: handleClientCascadeSelectMessage: Error in XML structure (Request node)."));
+    }
+    Element requestNode = (Element)(requestNodes.item(0));
+    String subject = requestNode.getAttribute("subject");
+    if (!subject.equals("cascade")) {
+      throw (new Exception("DefaultProtocolHandler: handleClientCascadeSelectMessage: Error in XML structure (Request node, wrong subject)."));
+    }
+    String msg = requestNode.getAttribute("msg");
+    if (!msg.equals("select")) {
+      throw (new Exception("DefaultProtocolHandler: handleClientCascadeSelectMessage: Error in XML structure (Request node, wrong msg)."));
+    }
+    NodeList mixCascadeNodes = requestNode.getElementsByTagName("MixCascade");
+    if (mixCascadeNodes.getLength() == 0) {
+      throw (new Exception("DefaultProtocolHandler: handleClientCascadeSelectMessage: Error in XML structure (MixCascade node)."));
+    }
+    Element mixCascadeNode = (Element) (mixCascadeNodes.item(0));
+    String selectedCascadeId = mixCascadeNode.getAttribute("id");
+    /* check, whether this is an allowed cascade */
+    MixCascade selectedCascade = ForwardServerManager.getInstance().getAllowedCascadesDatabase().getMixCascadeById(selectedCascadeId);
+    if (selectedCascade == null) {
+      throw (new Exception("DefaultProtocolHandler: handleClientCascadeSelectMessage: Selected cascade not available."));
+    }
+    /* connect to the cascade */
+    if (connectTo(selectedCascade) == true) {
+      /* maybe there are some bytes already in the buffer */
+      emptyBuffers();
+      m_currentState = STATE_CONNECTED_TO_MIX;
+    }
+    else {
+      /* shut everything down */
+      close();
+      throw (new Exception("DefaultProtocolHandler: handleClientCascadeSelectMessage: Error connecting the selected cascade."));
+    }
+    /* that's it */
+  }
+    
   /**
    * This method tries to get a connection to a mixcascade (by probing all ListenerInterfaces).
    * The connection is made by calling the createConnection() method of ForwardUtils,
@@ -477,9 +558,9 @@ public class DefaultProtocolHandler implements IProtocolHandler {
   
   /**
    * Creates the connection offer XML structure. This structure is sent directly after the
-   * connection from the client is established. The client will find information about the
-   * used routing protocol verison, all available MixCascades, our quality of service and
-   * whether we need dummy traffic for holding connections.
+   * connection request from the client. The client will find information about the used routing
+   * protocol verison, all available MixCascades, our quality of service and whether we need
+   * dummy traffic for holding connections.
    *
    * @return The connection offer XML structure.
    */
@@ -509,6 +590,28 @@ public class DefaultProtocolHandler implements IProtocolHandler {
     Element dummyTrafficNode = doc.createElement("DummyTraffic");
     dummyTrafficNode.setAttribute("interval", Integer.toString(ForwardServerManager.getInstance().getDummyTrafficInterval()));
     requestNode.appendChild(dummyTrafficNode);
+    japRoutingNode.appendChild(requestNode);
+    doc.appendChild(japRoutingNode);
+    return doc;
+  }
+
+  /**
+   * Creates an acknowledge message for the verify request of the infoservice. So the infoservice
+   * knows, that verifying the forwarder was successful. The infoservice will close the connection
+   * immediately after receiving this acknowledgement (no problem if the infoservice doesn't close
+   * the connection, because we are not accepting any more messages, we will close the connection
+   * after the timeout).
+   *
+   * @return The verify acknowledge XML structure.
+   */
+  private Document generateConnectionAcknowledgement() throws Exception {
+    Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+    /* Create the JAPRouting element */
+    Element japRoutingNode = doc.createElement("JAPRouting");
+    /* Create the child of JAPRouting (Request) */
+    Element requestNode = doc.createElement("Request");
+    requestNode.setAttribute("subject", "connection");
+    requestNode.setAttribute("msg", "acknowledge");
     japRoutingNode.appendChild(requestNode);
     doc.appendChild(japRoutingNode);
     return doc;

@@ -41,10 +41,10 @@ import anon.crypto.JAPCertPath;
 import anon.crypto.JAPCertificate;
 import anon.crypto.JAPCertificateStore;
 import anon.crypto.JAPSignature;
+import anon.util.XMLUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import anon.util.XMLUtil;
 
 /**
  * Holds the information for an infoservice.
@@ -94,6 +94,11 @@ public class InfoService extends DatabaseEntry
 	 * Some information about the used infoservice software.
 	 */
 	private ServiceSoftware infoServiceSoftware;
+
+	/**
+	 * Stores whether this infoservice has a primary forwarder list (true) or not (false).
+	 */
+	private boolean m_primaryForwarderList;
 
 	/**
 	 * Creates a new InfoService from XML description (InfoService node).
@@ -154,19 +159,33 @@ public class InfoService extends DatabaseEntry
 		}
 		Element expireNode = (Element) (expireNodes.item(0));
 		expire = Long.parseLong(expireNode.getFirstChild().getNodeValue());
+		/* get the information, whether this infoservice keeps a list of JAP forwarders */
+		NodeList forwarderListNodes = infoServiceNode.getElementsByTagName("ForwarderList");
+		if (forwarderListNodes.getLength() == 0)
+		{
+			/* there is no ForwarderList node -> this infoservice doesn't keep a primary forwarder list
+			 */
+			m_primaryForwarderList = false;
+		}
+		else
+		{
+			/* there is a ForwarderList node -> this infoservice keeps a primary forwarder list */
+			m_primaryForwarderList = true;
+		}
 	}
 
 	/**
 	 * Creates a new InfoService from the hostName / IP and the port. The hostName and port are
-	 * directly used for creating the ListenerInterface for this InfoService. The ID (if not given) is set to a
-	 * generic value derived from the hostname and the port. If you
-	 * supply a name for the infoservice then it will get that name, if you supply null,
-	 * the name will be the same as the ID "(User) hostname:port". The expire time is calculated by
-	 * using the DEFAULT_EXPIRE_TIME constant. The software info is set to a dummy value.
+	 * directly used for creating the ListenerInterface for this InfoService. The ID (if not given)
+	 * is set to a generic value derived from the hostname and the port. If you supply a name for
+	 * the infoservice then it will get that name, if you supply null, the name will be of the type
+	 * "hostname:port". The expire time is calculated by using the DEFAULT_EXPIRE_TIME constant.
+	 * The software info is set to a dummy value. The "has forwarder list" value is set to false.
+	 * That's no problem because such a user-defined infoservice shall only be the initial
+	 * infoservice for getting the current list of working infoservices.
 	 *
+	 * @param a_strName The name of the infoservice or null, if a generic name shall be used.
 	 * @param a_strID The ID of that InfoService. If null it is generated
-	 * @param a_strName The name of the infoservice or null, if a generic name shall be
-	 *                  used.
 	 * @param hostName The hostname or IP address the infoservice is listening on.
 	 * @param port The port the infoservice is listening on.
 	 */
@@ -197,6 +216,7 @@ public class InfoService extends DatabaseEntry
 		/* set the Expire time */
 		expire = System.currentTimeMillis() + DEFAULT_EXPIRE_TIME;
 		infoServiceSoftware = new ServiceSoftware("unknown");
+		m_primaryForwarderList = false;
 	}
 
 	/**
@@ -226,6 +246,14 @@ public class InfoService extends DatabaseEntry
 		networkNode.appendChild(listenerInterfacesNode);
 		Element expireNode = doc.createElement("Expire");
 		expireNode.appendChild(doc.createTextNode(Long.toString(expire)));
+		if (m_primaryForwarderList == true)
+		{
+			/* if we hold a forwarder list, also append an ForwarderList node, at the moment this
+			 * node doesn't have any childs
+			 */
+			Element forwarderListNode = doc.createElement("ForwarderList");
+			infoServiceNode.appendChild(forwarderListNode);
+		}
 		infoServiceNode.appendChild(nameNode);
 		infoServiceNode.appendChild(softwareNode);
 		infoServiceNode.appendChild(networkNode);
@@ -264,6 +292,16 @@ public class InfoService extends DatabaseEntry
 	public String getName()
 	{
 		return name;
+	}
+
+	/**
+	 * Returns, whether this infoservice keeps a list of JAP forwarders (true) or not (false).
+	 *
+	 * @return Whethet this infoservice keeps a list of JAP forwarders.
+	 */
+	public boolean hasPrimaryForwarderList()
+	{
+		return m_primaryForwarderList;
 	}
 
 	/**
@@ -331,11 +369,11 @@ public class InfoService extends DatabaseEntry
 	 * reached, automatically a new one is chosen. If we can't reach the infoservice at all, an
 	 * Exception is thrown.
 	 *
-	 * @param infoServiceFile The document which you want to get.
+	 * @param a_httpRequest The structure with the HTTP request.
 	 *
 	 * @return The specified XML document.
 	 */
-	private Document getXmlDocument(String infoServiceFile) throws Exception
+	private Document getXmlDocument(HttpRequestStructure a_httpRequest) throws Exception
 	{
 		/* make sure, that we are connected */
 		int connectionCounter = 0;
@@ -347,12 +385,37 @@ public class InfoService extends DatabaseEntry
 			/* get the next connection descriptor by supplying the last one */
 			currentConnectionDescriptor = connectToInfoService(currentConnectionDescriptor);
 			HTTPConnection currentConnection = currentConnectionDescriptor.getConnection();
-			LogHolder.log(LogLevel.DEBUG, LogType.NET,
-						  "InfoService: getXmlDocument: Get: " + currentConnection.getHost() + ":" +
-						  Integer.toString(currentConnection.getPort()) + infoServiceFile);
 			try
 			{
-				HTTPResponse response = currentConnection.Get(infoServiceFile);
+				HTTPResponse response = null;
+				if (a_httpRequest.getRequestCommand() == HttpRequestStructure.HTTP_COMMAND_GET)
+				{
+					LogHolder.log(LogLevel.DEBUG, LogType.NET,
+								  "InfoService: getXmlDocument: Get: " + currentConnection.getHost() + ":" +
+								  Integer.toString(currentConnection.getPort()) +
+								  a_httpRequest.getRequestFileName());
+					response = currentConnection.Get(a_httpRequest.getRequestFileName());
+				}
+				else
+				{
+					if (a_httpRequest.getRequestCommand() == HttpRequestStructure.HTTP_COMMAND_POST)
+					{
+						LogHolder.log(LogLevel.DEBUG, LogType.NET,
+									  "InfoService: getXmlDocument: Post: " + currentConnection.getHost() +
+									  ":" + Integer.toString(currentConnection.getPort()) +
+									  a_httpRequest.getRequestFileName());
+						String postData = "";
+						if (a_httpRequest.getRequestPostDocument() != null)
+						{
+							postData = XMLUtil.XMLDocumentToString(a_httpRequest.getRequestPostDocument());
+						}
+						response = currentConnection.Post(a_httpRequest.getRequestFileName(), postData);
+					}
+					else
+					{
+						throw (new Exception("InfoService: getXmlDocument: Invalid HTTP command."));
+					}
+				}
 				Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(response.
 					getInputStream());
 				/* fetching the document was successful, leave this method */
@@ -366,7 +429,7 @@ public class InfoService extends DatabaseEntry
 				LogHolder.log(LogLevel.ERR, LogType.NET,
 							  "InfoService: getXmlDocument: Connection to infoservice interface failed: " +
 							  currentConnection.getHost() + ":" + Integer.toString(currentConnection.getPort()) +
-							  infoServiceFile+" Exception: "+e.getMessage());
+							  a_httpRequest.getRequestFileName());
 			}
 		}
 		/* all interfaces tested, we can't find a valid interface */
@@ -381,7 +444,7 @@ public class InfoService extends DatabaseEntry
 	 */
 	public Vector getMixCascades() throws Exception
 	{
-		Document doc = getXmlDocument("/cascades");
+		Document doc = getXmlDocument(HttpRequestStructure.createGetRequest("/cascades"));
 		NodeList mixCascadesNodes = doc.getElementsByTagName("MixCascades");
 		if (mixCascadesNodes.getLength() == 0)
 		{
@@ -428,7 +491,7 @@ public class InfoService extends DatabaseEntry
 	 */
 	public Vector getInfoServices() throws Exception
 	{
-		Document doc = getXmlDocument("/infoservices");
+		Document doc = getXmlDocument(HttpRequestStructure.createGetRequest("/infoservices"));
 		NodeList infoServicesNodes = doc.getElementsByTagName("InfoServices");
 		if (infoServicesNodes.getLength() == 0)
 		{
@@ -477,7 +540,7 @@ public class InfoService extends DatabaseEntry
 	 */
 	public MixInfo getMixInfo(String mixId) throws Exception
 	{
-		Document doc = getXmlDocument("/mixinfo/" + mixId);
+		Document doc = getXmlDocument(HttpRequestStructure.createGetRequest("/mixinfo/" + mixId));
 		NodeList mixNodes = doc.getElementsByTagName("Mix");
 		if (mixNodes.getLength() == 0)
 		{
@@ -507,7 +570,7 @@ public class InfoService extends DatabaseEntry
 	public StatusInfo getStatusInfo(String cascadeId, int cascadeLength,
 									JAPCertificateStore a_additionalCertificates) throws Exception
 	{
-		Document doc = getXmlDocument("/mixcascadestatus/" + cascadeId);
+		Document doc = getXmlDocument(HttpRequestStructure.createGetRequest("/mixcascadestatus/" + cascadeId));
 		NodeList mixCascadeStatusNodes = doc.getElementsByTagName("MixCascadeStatus");
 		if (mixCascadeStatusNodes.getLength() == 0)
 		{
@@ -541,7 +604,7 @@ public class InfoService extends DatabaseEntry
 	 */
 	public String getNewVersionNumber() throws Exception
 	{
-		Document doc = getXmlDocument("/currentjapversion");
+		Document doc = getXmlDocument(HttpRequestStructure.createGetRequest("/currentjapversion"));
 		NodeList japNodes = doc.getElementsByTagName("Jap");
 		if (japNodes.getLength() == 0)
 		{
@@ -597,36 +660,119 @@ public class InfoService extends DatabaseEntry
 		Document doc = null;
 		if (japVersionType == JAPVersionInfo.JAP_RELEASE_VERSION)
 		{
-			doc = getXmlDocument("/japRelease.jnlp");
+			doc = getXmlDocument(HttpRequestStructure.createGetRequest("/japRelease.jnlp"));
 		}
 		if (japVersionType == JAPVersionInfo.JAP_DEVELOPMENT_VERSION)
 		{
-			doc = getXmlDocument("/japDevelopment.jnlp");
+			doc = getXmlDocument(HttpRequestStructure.createGetRequest("/japDevelopment.jnlp"));
 		}
 		return (new JAPVersionInfo(doc, japVersionType));
 	}
 
 	/**
 	 * Get the list with the tor nodes from the infoservice. If we can't get a connection with the
-	 * infoservice null is returned .
+	 * infoservice or the infoservice doesn't support the tor nodes list download, an Exception is
+	 * thrown.
 	 *
-	 * @return The raw tor nodes list as it is distributed by the tor directory servers or null if it
-	 * could not be retrieved.
+	 * @return The raw tor nodes list as it is distributed by the tor directory servers.
 	 */
-	public String getTorNodesList()
+	public String getTorNodesList() throws Exception
 	{
-		try
+		Document doc = getXmlDocument(HttpRequestStructure.createGetRequest("/tornodes"));
+		NodeList torNodesListNodes = doc.getElementsByTagName("TorNodesList");
+		if (torNodesListNodes.getLength() == 0)
 		{
-			Document doc = getXmlDocument("/tornodes");
-			Element elemRoot = doc.getDocumentElement();
-			if (!elemRoot.getNodeName().equals("TorNodesList"))
-				return null;
-			return XMLUtil.parseNodeString(elemRoot,null);
+			throw (new Exception("InfoService: getTorNodesList: Error in XML structure."));
 		}
-		catch (Throwable t)
+		Element torNodesListNode = (Element) (torNodesListNodes.item(0));
+		return (torNodesListNode.getFirstChild().getNodeValue());
+	}
+
+	/**
+	 * Posts a new forwarder to an infoservice with a JAP forwarder list. If we can't reach the
+	 * infoservice or if it has not a forwarder list, an Exception is thrown.
+	 *
+	 * @param a_japForwarderNode The JapForwarder node of the "post forwarder to infoservice"
+	 *                           XML structure.
+	 *
+	 * @return The JapForwarder node of the answer of the infoservice's addforwarder command.
+	 */
+	public Element postNewForwarder(Element a_japForwarderNode) throws Exception
+	{
+		if (hasPrimaryForwarderList() == false)
 		{
-			return null;
+			/* infoservice must have a forwarder list */
+			throw (new Exception("InfoService: postNewForwarder: The InfoService " + getName() +
+								 " has no forwarder list."));
 		}
+		/* infoservice has a forwarder list */
+		Document doc = getXmlDocument(HttpRequestStructure.createPostRequest("/addforwarder",
+			a_japForwarderNode.getOwnerDocument()));
+		NodeList japForwarderNodes = doc.getElementsByTagName("JapForwarder");
+		if (japForwarderNodes.getLength() == 0)
+		{
+			throw (new Exception("InfoService: postNewForwarder: Error in XML structure."));
+		}
+		return ( (Element) (japForwarderNodes.item(0)));
+	}
+
+	/**
+	 * Posts the renew message for a forwarder to an infoservice with a JAP forwarder list. If we
+	 * can't reach the infoservice or if it has not a forwarder list, an Exception is thrown.
+	 *
+	 * @param a_japForwarderNode The JapForwarder node of the "renew forwarder" XML structure.
+	 *
+	 * @return The JapForwarder node of the answer of the infoservice's renewforwarder command.
+	 */
+	public Element postRenewForwarder(Element a_japForwarderNode) throws Exception
+	{
+		if (hasPrimaryForwarderList() == false)
+		{
+			/* infoservice must have a forwarder list */
+			throw (new Exception("InfoService: postRenewForwarder: The InfoService " + getName() +
+								 " has no forwarder list."));
+		}
+		/* infoservice has a forwarder list */
+		Document doc = getXmlDocument(HttpRequestStructure.createPostRequest("/renewforwarder",
+			a_japForwarderNode.getOwnerDocument()));
+		NodeList japForwarderNodes = doc.getElementsByTagName("JapForwarder");
+		if (japForwarderNodes.getLength() == 0)
+		{
+			throw (new Exception("InfoService: postRenewForwarder: Error in XML structure."));
+		}
+		return ( (Element) (japForwarderNodes.item(0)));
+	}
+
+	/**
+	 * Downloads a forwarder entry from the infoservice. If this infoservice has no forwarder list,
+	 * it will ask an infoservice with such a list and returns the answer to us. If we can't reach
+	 * the infoservice or if this infoservice doesn't know a forwarder, an Exception is thrown.
+	 *
+	 * @return The JapForwarder node of the answer of the infoservice's getforwarder command.
+	 */
+	public Element getForwarder() throws Exception
+	{
+		Document doc = getXmlDocument(HttpRequestStructure.createGetRequest("/getforwarder"));
+		NodeList japForwarderNodes = doc.getElementsByTagName("JapForwarder");
+		if (japForwarderNodes.getLength() == 0)
+		{
+			throw (new Exception("InfoService: getForwarder: Error in XML structure."));
+		}
+		Element japForwarderNode = (Element) (japForwarderNodes.item(0));
+		/* look for a ErrorInformation node -> if this node exists, the call was not successful
+		 * -> throw a Exception, so the InfoServiceHolder will try another infoservice, maybe there
+		 * are some forwarders available
+		 */
+		NodeList errorInformationNodes = japForwarderNode.getElementsByTagName("ErrorInformation");
+		if (errorInformationNodes.getLength() > 0)
+		{
+			Element errorInformationNode = (Element) (errorInformationNodes.item(0));
+			throw (new Exception("InfoService: getForwarder: The infoservice returned error " +
+								 errorInformationNode.getAttribute("code") + ": " +
+								 errorInformationNode.getFirstChild().getNodeValue()));
+		}
+		/* no ErrorInformation node -> no error */
+		return japForwarderNode;
 	}
 
 	/**

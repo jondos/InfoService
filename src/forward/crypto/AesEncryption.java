@@ -25,22 +25,49 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
+package forward.crypto;
 
-/* Hint: This file may be only a copy of the original file which is always in the JAP source tree!
- * If you change something - do not forget to add the changes also to the JAP source tree!
- */
-
-package forward;
+import org.bouncycastle.crypto.engines.AESFastEngine;
+import org.bouncycastle.crypto.params.KeyParameter;
 
 /**
- * This is only a dummy class for using threads as anonymous classes.
+ * This class is a wrapper for doing AES encryption stuff.
  */
-public class JAPThread implements Runnable {
+public class AesEncryption {
 
   /**
-   * This method mus be overwritten by the instances of this class.
+   * Stores the used AES encryption algorithm.
    */
-  public void run() {
+  private AESFastEngine m_encryptionInstance;
+
+
+  /**
+   * Creates a new instance of AesEncryption. The size of the key must be 16 bytes (128 bit),
+   * 24 bytes (192 bit) or 32 bytes (256 bit). If the key size doesn't fit, an exception is
+   * thrown.
+   *
+   * @param a_aesKey The 128 bit or 192 bit or 256 bit AES key.
+   */
+  public AesEncryption(byte[] a_aesKey) throws Exception {
+    m_encryptionInstance = new AESFastEngine();
+    m_encryptionInstance.init(true, new KeyParameter(a_aesKey));
+  }
+
+
+  /**
+   * Encrypts one single plain data block and returns the cipher data block. The blocksize is
+   * always 16 bytes (128 bit). If the plain data block is shorter than 16 bytes, an exception
+   * is thrown, if it is longer, only the first 16 bytes are encrypted and returned in the cipher
+   * block.
+   *
+   * @param a_plainData The plain data block.
+   *
+   * @return The cipher data block. The length is always 16 bytes.
+   */
+  public byte[] encrypt(byte[] a_plainData) throws Exception {
+    byte[] cipherBlock = new byte[16];
+    m_encryptionInstance.processBlock(a_plainData, 0, cipherBlock, 0);
+    return cipherBlock;
   }
 
 }

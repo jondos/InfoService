@@ -27,7 +27,9 @@
  */
 package anon.infoservice;
 
+import java.util.Enumeration;
 import java.util.Vector;
+import org.w3c.dom.Element;
 import anon.crypto.JAPCertificate;
 import anon.crypto.JAPCertificateStore;
 import logging.LogHolder;
@@ -71,12 +73,16 @@ public class InfoServiceHolder
 	private static final int GET_JAPVERSIONINFO = 6;
 
 	/**
-   * Function number for fetchInformation() - getTorNodesList()
-   */
-  private static final int GET_TORNODESLIST = 7;
-  
+	 * Function number for fetchInformation() - getTorNodesList().
+	 */
+	private static final int GET_TORNODESLIST = 7;
 
-  /**
+	/**
+	 * Function number for fetchInformation() - getForwarder().
+	 */
+	private static final int GET_FORWARDER = 8;
+
+	/**
 	 * Stores the instance of InfoServiceHolder (Singleton).
 	 */
 	private static InfoServiceHolder infoServiceHolderInstance = null;
@@ -261,6 +267,38 @@ public class InfoServiceHolder
 	}
 
 	/**
+	 * Returns a Vector of InfoServices with all known infoservices (including the prefered
+	 * infoservice), which have a forwarder list.
+	 *
+	 * @return The Vector of all known infoservices with a forwarder list, maybe this Vector is
+	 *         empty.
+	 */
+	public Vector getInfoservicesWithForwarderList()
+	{
+		Vector primaryInfoServices = new Vector();
+		/* check the prefered infoservice */
+		InfoService currentPreferedInfoService = getPreferedInfoService();
+		if (currentPreferedInfoService.hasPrimaryForwarderList() == true)
+		{
+			primaryInfoServices.addElement(currentPreferedInfoService);
+		}
+		Enumeration infoservices = InfoServiceDatabase.getInstance().getInfoServiceList().elements();
+		while (infoservices.hasMoreElements())
+		{
+			InfoService currentInfoService = (InfoService) (infoservices.nextElement());
+			if (currentInfoService.hasPrimaryForwarderList())
+			{
+				if (currentInfoService.getId().equals(currentPreferedInfoService.getId()) == false)
+				{
+					/* we have already the prefered infoservice in the list -> only add other infoservices */
+					primaryInfoServices.addElement(currentInfoService);
+				}
+			}
+		}
+		return primaryInfoServices;
+	}
+
+	/**
 	 * Fetches every information from the infoservices. If we can't get the information from the
 	 * prefered infoservice, all other known infoservices are asked automatically until an
 	 * infoservice has the information. If we can't get the information from any infoservice, an
@@ -305,32 +343,37 @@ public class InfoServiceHolder
 				{
 					result = currentInfoService.getMixCascades();
 				}
-				if (functionNumber == GET_INFOSERVICES)
+				else if (functionNumber == GET_INFOSERVICES)
 				{
 					result = currentInfoService.getInfoServices();
 				}
-				if (functionNumber == GET_MIXINFO)
+				else if (functionNumber == GET_MIXINFO)
 				{
 					result = currentInfoService.getMixInfo( (String) (arguments.elementAt(0)));
 				}
-				if (functionNumber == GET_STATUSINFO)
+				else if (functionNumber == GET_STATUSINFO)
 				{
 					result = currentInfoService.getStatusInfo( (String) (arguments.elementAt(0)),
 						( (Integer) (arguments.elementAt(1))).intValue(),
 						(JAPCertificateStore) (arguments.elementAt(2)));
 				}
-				if (functionNumber == GET_NEWVERSIONNUMBER)
+				else if (functionNumber == GET_NEWVERSIONNUMBER)
 				{
 					result = currentInfoService.getNewVersionNumber();
 				}
-				if (functionNumber == GET_JAPVERSIONINFO)
+				else if (functionNumber == GET_JAPVERSIONINFO)
 				{
 					result = currentInfoService.getJAPVersionInfo( ( (Integer) (arguments.elementAt(0))).
 						intValue());
 				}
-        if (functionNumber == GET_TORNODESLIST) {
-          result = currentInfoService.getTorNodesList();
-        }
+				else if (functionNumber == GET_TORNODESLIST)
+				{
+					result = currentInfoService.getTorNodesList();
+				}
+				else if (functionNumber == GET_FORWARDER)
+				{
+					result = currentInfoService.getForwarder();
+				}
 				/* no error occured -> success -> update the prefered infoservice and exit */
 				InfoService preferedInfoService = getPreferedInfoService();
 				if (preferedInfoService != null)
@@ -519,24 +562,47 @@ public class InfoServiceHolder
 		}
 	}
 
-  /**
-   * Get the list with the tor nodes from the infoservice. If we can't get a the information from
-   * prefered infoservice, another known infoservice is asked. If we can't get the information
-   * from any infoservice, null is returned.
-   *
-   * @return The raw tor nodes list as it is distributed by the tor directory servers. 
-   */
-  public String getTorNodesList() {
-    try
-    {
-      return (String) (fetchInformation(GET_TORNODESLIST, null));
-    }
-    catch (Exception e)
-    {
-      LogHolder.log(LogLevel.ERR, LogType.NET,
-              "InfoServiceHolder: getTorNodesList: No InfoService with the needed information available.");
-      return null;
-    }
-  }
+	/**
+	 * Get the list with the tor nodes from the infoservice. If we can't get a the information from
+	 * prefered infoservice, another known infoservice is asked. If we can't get the information
+	 * from any infoservice, null is returned.
+	 *
+	 * @return The raw tor nodes list as it is distributed by the tor directory servers.
+	 */
+	public String getTorNodesList()
+	{
+		try
+		{
+			return (String) (fetchInformation(GET_TORNODESLIST, null));
+		}
+		catch (Exception e)
+		{
+			LogHolder.log(LogLevel.ERR, LogType.NET,
+						  "InfoServiceHolder: getTorNodesList: No InfoService with the needed information available.");
+			return null;
+		}
+	}
+
+	/**
+	 * Downloads a forwarder entry from a infoservice. If that infoservice has no forwarder list,
+	 * it will ask another infoservice with such a list and returns the answer to us. If we can't
+	 * get the information from prefered infoservice, another known infoservice is asked. If we
+	 * can't get the information from any infoservice, null is returned.
+	 *
+	 * @return The JapForwarder node of the answer of the infoservice's getforwarder command.
+	 */
+	public Element getForwarder()
+	{
+		try
+		{
+			return (Element) (fetchInformation(GET_FORWARDER, null));
+		}
+		catch (Exception e)
+		{
+			LogHolder.log(LogLevel.ERR, LogType.NET,
+				"InfoServiceHolder: getForwarder: No InfoService with the needed information available.");
+			return null;
+		}
+	}
 
 }

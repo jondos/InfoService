@@ -36,7 +36,7 @@ import java.net.InetAddress;
 public interface AnonService
 {
 	///The version of the AnonLib
-	public final static String ANONLIB_VERSION = "00.02.001";
+	public final static String ANONLIB_VERSION = "00.02.002";
 
 	/** Initializes this AnonService. Depending on the AnonService, this may establish a connection to
 	 *  an AnonServer, which is described through the
