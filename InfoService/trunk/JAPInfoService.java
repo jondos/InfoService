@@ -6,6 +6,7 @@ import org.w3c.dom.NodeList;
 import org.w3c.dom.NamedNodeMap;
 import HTTPClient.HTTPConnection;
 import HTTPClient.HTTPResponse;
+import HTTPClient.NVPair;
 
 public final class JAPInfoService 
 	{
@@ -34,6 +35,11 @@ public final class JAPInfoService
 					}
 				conInfoService=new HTTPConnection(host,port);
 				conInfoService.setProxyServer(proxy,proxyport);
+				conInfoService.setAllowUserInteraction(false);
+				NVPair[] headers=new NVPair[2];
+				headers[0]=new NVPair("Proxy-Connection","");
+				headers[1]=new NVPair("Pragma","no-cache");
+				conInfoService.setDefaultHeaders(headers);
 				return 0;
 			}
 		
@@ -83,6 +89,7 @@ public final class JAPInfoService
 			try
 				{
 					HTTPResponse resp=conInfoService.Get("/feedback/"+model.anonHostName+DP+model.anonPortNumber);
+					System.out.println("Feddback-Response: "+resp.getStatusCode()+resp.getReasonLine());
 					if (resp.getStatusCode()!=200)
 						{
 							error=true;
@@ -104,7 +111,7 @@ public final class JAPInfoService
 			catch(Exception e)
 				{
 					error = true;
-					JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPFeedback: "+e);
+					JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPInfoService - Feedback: "+e);
 				}
 			if (!error)
 				{
