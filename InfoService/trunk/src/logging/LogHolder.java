@@ -46,7 +46,7 @@ public final class LogHolder {
 	/**
 	 * If the log messages are detailed or not.
 	 */
-	private static boolean m_bDetailedLog = true;
+	private static boolean m_bDetailedLog = false;
 
 	/**
 	 * Stores the Log instance.

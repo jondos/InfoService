@@ -34,6 +34,8 @@ import java.net.ServerSocket;
 import java.text.MessageFormat;
 import java.util.Enumeration;
 import java.util.Locale;
+import java.util.Observable;
+import java.util.Observer;
 import java.util.Vector;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.awt.Cursor;
@@ -77,7 +79,7 @@ import update.JAPUpdateWizard;
 import pay.PayAccountsFile;
 
 /* This is the Model of All. It's a Singelton!*/
-public final class JAPController implements ProxyListener
+public final class JAPController implements ProxyListener, Observer
 {
 	/**
 	 * Stores all MixCascades we know (information comes from infoservice).
@@ -170,6 +172,10 @@ public final class JAPController implements ProxyListener
 		m_Locale = Locale.getDefault();
 
 		m_passwordReader = new JAPFirewallPasswdDlg();
+    
+    /* we want to observe some objects */
+    JAPModel.getInstance().getRoutingSettings().addObserver(this);
+    JAPModel.getInstance().getRoutingSettings().getServerStatisticsListener().addObserver(this);
 	}
 
 	/** Creates the Controller - as Singleton.
@@ -1852,4 +1858,72 @@ public final class JAPController implements ProxyListener
 		}
 	}
 
+  /**
+   * This is the observer implementation. At the moment only the routing system is observed.
+   * It's just for comfort reasons, so there is no need to registrate the JAPView at all
+   * observable objects. We collect all messages here and send them to the view. But it's also
+   * possible to registrate directly at the observed objects. So every developer can decide,
+   * whether to use the common JAP notification system or the specific ones. Also keep in mind,
+   * that maybe not all messages are forwarded to the common notification system.
+   *
+   * @param a_notifier The observed Object (JAPRoutingSettings or
+   *                   JAPRoutingServerStatisticsListener at the moment).
+   * @param a_message The reason of the notification, e.g. a JAPRoutingMessage.
+   *
+   */
+  public void update(Observable a_notifier, Object a_message) {
+    try {
+      if (a_notifier == JAPModel.getInstance().getRoutingSettings()) {
+        /* message is from JAPRoutingSettings */
+        if (((JAPRoutingMessage)(a_message)).getMessageCode() == JAPRoutingMessage.ROUTING_MODE_CHANGED) {
+          /* routing mode was changed -> notify the observers of JAPController */
+          notifyJAPObservers();
+        }
+      }
+      if (a_notifier == JAPModel.getInstance().getRoutingSettings().getServerStatisticsListener()) {
+        /* there are new routing statistics values available */
+        notifyJAPObservers();
+      }
+    }
+    catch (Exception e) {
+      /* should not happen, but better than throwing a runtime exception */
+    }
+  }
+  
+  /**
+   * Enables or disables the forwarding server. It's only a comfort function for lazy programmers.
+   * Attention: If there is an active forwarding client running, nothing is done and this method
+   * returns always false. Run a forwarding server and a client at the same time is not supported.
+   *
+   * @param a_activate True, if ther server shall be activated or false, if it shall be disabled.
+   *
+   * @return True, if starting/stopping the server was successful. Attention: Because the call of
+   *         this method is not blocking while the server registrates at the infoservices, it is
+   *         possible, that the registration of the local server at the infoservices failed. This
+   *         method returns also true in that case, but no client will find the server, until the
+   *         registration instances can registrate at least at one infoservice. If you need a
+   *         feedback of the initial registration process, you have to call the methods for
+   *         starting the server directly on JAPRoutingSettings and cannot use this shortcut
+   *         method.
+   */
+  public boolean enableForwardingServer(boolean a_activate) {
+    boolean returnValue = false;
+    /* don't allow to interrupt the client routing mode */
+    if (JAPModel.getInstance().getRoutingSettings().getRoutingMode() != JAPRoutingSettings.ROUTING_MODE_CLIENT) {
+      if (a_activate == true) {
+        /* start the server */
+        returnValue = JAPModel.getInstance().getRoutingSettings().setRoutingMode(JAPRoutingSettings.ROUTING_MODE_SERVER);
+        if (returnValue == true) {
+          /* starting the server was successful -> start propaganda without blocking */
+          JAPModel.getInstance().getRoutingSettings().startPropaganda(false);
+        }
+      }
+      else {
+        /* stop the server */
+        returnValue = JAPModel.getInstance().getRoutingSettings().setRoutingMode(JAPRoutingSettings.ROUTING_MODE_DISABLED);
+      }  
+    }
+    return returnValue;
+  }  
+  
 }

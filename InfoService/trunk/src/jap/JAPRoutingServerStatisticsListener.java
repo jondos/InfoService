@@ -187,20 +187,33 @@ public class JAPRoutingServerStatisticsListener extends Observable implements Ob
   public void run() {
     boolean interrupted = false;
     while (interrupted == false) {
+      boolean somethingHasChanged = false;
       synchronized (this) {
         interrupted = Thread.interrupted();
         if (interrupted == false) {
+          /* backup all values for determining, whether something has changed */
+          int oldRejectedConnections = m_rejectedConnections;
+          int oldAcceptedConnections = m_acceptedConnections;
+          int oldForwardedConnections = m_currentlyForwardedConnections;
+          long oldTransferedBytes = m_transferedBytes;
+          int oldBandwidthUsage = m_currentBandwidthUsage;
+          /* get the current values */
           m_rejectedConnections = m_currentStatisticsInstance.getRejectedConnections();
           m_acceptedConnections = m_currentStatisticsInstance.getAcceptedConnections();
           m_currentlyForwardedConnections = JAPModel.getInstance().getRoutingSettings().getCurrentlyForwardedConnections();
           m_transferedBytes = m_currentStatisticsInstance.getTransferedBytes();
           m_currentBandwidthUsage = m_currentStatisticsInstance.getCurrentBandwidthUsage();
+          if ((oldRejectedConnections != m_rejectedConnections) || (oldAcceptedConnections != m_acceptedConnections) || (oldForwardedConnections != m_currentlyForwardedConnections) || (oldTransferedBytes != m_transferedBytes) || (oldBandwidthUsage != m_currentBandwidthUsage)) {
+            somethingHasChanged = true;
+          }
         }
       }
       if (interrupted == false) {
-        /* notify the observers because the values might have changed */
+        if (somethingHasChanged == true) {
+          /* notify the observers if something has changed */
         setChanged();
         notifyObservers();
+        }
         try {
           Thread.sleep(SERVER_STATISTICS_UPDATE_INTERVAL);
         }
@@ -232,7 +245,7 @@ public class JAPRoutingServerStatisticsListener extends Observable implements Ob
   }
   
   /**
-   * This stops the fetch thread of the forwarding server statistics. If there is no thrad
+   * This stops the fetch thread of the forwarding server statistics. If there is no thread
    * currently running, nothing is done.
    */  
   private void stopStatistics() {
@@ -241,15 +254,23 @@ public class JAPRoutingServerStatisticsListener extends Observable implements Ob
         m_statisticsThread.interrupt();
         m_statisticsThread = null;
       }
+      int oldRejectedConnections = m_rejectedConnections;
+      int oldAcceptedConnections = m_acceptedConnections;
+      int oldForwardedConnections = m_currentlyForwardedConnections;
+      long oldTransferedBytes = m_transferedBytes;
+      int oldBandwidthUsage = m_currentBandwidthUsage;
       m_currentStatisticsInstance = null;
       m_rejectedConnections = 0;
       m_acceptedConnections = 0;
+      m_currentlyForwardedConnections = 0;
       m_transferedBytes = 0;
       m_currentBandwidthUsage = 0;
-      /* notify the observers */
+      if ((oldRejectedConnections != m_rejectedConnections) || (oldAcceptedConnections != m_acceptedConnections) || (oldForwardedConnections != m_currentlyForwardedConnections) || (oldTransferedBytes != m_transferedBytes) || (oldBandwidthUsage != m_currentBandwidthUsage)) {      
+        /* something has changed -> notify the observers */
       setChanged();
       notifyObservers();
     }
+  }
   }
  
 }           
