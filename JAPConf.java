@@ -54,57 +54,57 @@ import javax.swing.event.ChangeListener;
 final class JAPConf extends JDialog
 	{
 
-	final static public int PORT_TAB = 0;
-	final static public int HTTP_TAB = 1;
-	final static public int INFO_TAB = 2;
-	final static public int ANON_TAB = 3;
-	final static public int MISC_TAB = 4;
+		final static public int PORT_TAB = 0;
+		final static public int HTTP_TAB = 1;
+		final static public int INFO_TAB = 2;
+		final static public int ANON_TAB = 3;
+		final static public int MISC_TAB = 4;
 
-	private JAPModel      m_Model;
+		private JAPModel      m_Model;
 
-	private JAPJIntField	m_tfListenerPortNumber;
-	private JAPJIntField	m_tfListenerPortNumberSocks;
-	private JCheckBox			m_cbListenerSocks;
-	private JCheckBox			m_cbListenerIsLocal;
+		private JAPJIntField	m_tfListenerPortNumber;
+		private JAPJIntField	m_tfListenerPortNumberSocks;
+		private JCheckBox			m_cbListenerSocks;
+		private JCheckBox			m_cbListenerIsLocal;
 
-	private JCheckBox			m_cbProxy;
-	private JAPJIntField	m_tfProxyPortNumber;
-	private JTextField		m_tfProxyHost;
-	private JCheckBox			m_cbProxyAuthentication;
-	private JTextField		m_tfProxyAuthenticationUserID;
+		private JCheckBox			m_cbProxy;
+		private JAPJIntField	m_tfProxyPortNumber;
+		private JTextField		m_tfProxyHost;
+		private JCheckBox			m_cbProxyAuthentication;
+		private JTextField		m_tfProxyAuthenticationUserID;
 
-	private JCheckBox			m_cbAutoConnect;
-	private JCheckBox			m_cbStartupMinimized;
+		private JCheckBox			m_cbAutoConnect;
+		private JCheckBox			m_cbStartupMinimized;
 
-	private JAPJIntField	m_tfMixPortNumber;
-	private JAPJIntField	m_tfMixPortNumberSSL;
-	private JTextField		m_tfMixHost;
-	private String				m_strMixName,m_strOldMixName;
-	private JComboBox			m_comboMixCascade;
-	private JRadioButton	m_rbMixStep1,m_rbMixStep2,m_rbMixStep3;
-	private JButton				m_bttnFetchCascades;
+		private JAPJIntField	m_tfMixPortNumber;
+		private JAPJIntField	m_tfMixPortNumberSSL;
+		private JTextField		m_tfMixHost;
+		private String				m_strMixName,m_strOldMixName;
+		private JComboBox			m_comboMixCascade;
+		private JRadioButton	m_rbMixStep1,m_rbMixStep2,m_rbMixStep3;
+		private JButton				m_bttnFetchCascades;
 
-	private JAPJIntField	m_tfInfoPortNumber;
-	private JTextField		m_tfInfoHost;
+		private JAPJIntField	m_tfInfoPortNumber;
+		private JTextField		m_tfInfoHost;
 
-	private JCheckBox     m_cbDebugGui;
-	private JCheckBox     m_cbDebugNet;
-	private JCheckBox     m_cbDebugThread;
-	private JCheckBox     m_cbDebugMisc;
-	private JCheckBox     m_cbShowDebugConsole;
-	private JSlider				m_sliderDebugLevel;
+		private JCheckBox     m_cbDebugGui;
+		private JCheckBox     m_cbDebugNet;
+		private JCheckBox     m_cbDebugThread;
+		private JCheckBox     m_cbDebugMisc;
+		private JCheckBox     m_cbShowDebugConsole;
+		private JSlider				m_sliderDebugLevel;
 
-	private JComboBox			m_comboLanguage;
-	private boolean				m_bIgnoreComboLanguageEvents=false;
+		private JComboBox			m_comboLanguage;
+		private boolean				m_bIgnoreComboLanguageEvents=false;
 
-	private JTabbedPane		m_Tabs;
-	private JPanel				m_pPort, m_pFirewall, m_pInfo, m_pMix, m_pMisc;
+		private JTabbedPane		m_Tabs;
+		private JPanel				m_pPort, m_pFirewall, m_pInfo, m_pMix, m_pMisc;
 
-	private JFrame        m_frmParent;
+		private JFrame        m_frmParent;
 
-	private JAPConf       m_JapConf;
+		private JAPConf       m_JapConf;
 
-	public JAPConf (JFrame frmParent)
+	  public JAPConf (JFrame frmParent)
 			{
 				super(frmParent);
 				m_frmParent=frmParent;
@@ -241,7 +241,7 @@ final class JAPConf extends JDialog
 				return p;
 			}
 
-	protected JPanel buildhttpPanel()
+	  protected JPanel buildhttpPanel()
 			{
 				m_cbProxy = new JCheckBox(m_Model.getString("settingsProxyCheckBox"));
 				m_tfProxyHost = new JTextField();
@@ -294,7 +294,8 @@ final class JAPConf extends JDialog
 				return p;
 			}
 
-	protected JPanel buildinfoPanel() {
+	  protected JPanel buildinfoPanel()
+			{
 				m_tfInfoHost = new JTextField();
 				m_tfInfoPortNumber = new JAPJIntField();
 				m_tfInfoHost.addActionListener(new ActionListener() {
@@ -322,9 +323,9 @@ final class JAPConf extends JDialog
 				//
 				p.add(p1, BorderLayout.NORTH);
 				return p;
-	}
+			}
 
-	protected JPanel buildanonPanel()
+	  protected JPanel buildanonPanel()
 			{
 				m_cbStartupMinimized=new JCheckBox(m_Model.getString("settingsstartupMinimizeCheckBox"));
 				m_cbAutoConnect = new JCheckBox(m_Model.getString("settingsautoConnectCheckBox"));
@@ -652,192 +653,192 @@ final class JAPConf extends JDialog
 				return p;
 			}
 
-	protected void CancelPressed()
+	  protected void CancelPressed()
 			{
 				setVisible(false);
-		}
+		  }
 
-	/**Shows a Dialog about whats going wrong
-	 */
-	private void showError(String msg)
-		{
-			JOptionPane.showMessageDialog(this,msg,m_Model.getString("ERROR"),JOptionPane.ERROR_MESSAGE);
-		}
-
-	/** Checks if all Input in all Fiels make sense. Displays InfoBoxes about what is wrong.
-	 * @return true if all is ok
-	 *					false otherwise
-	 */
-	private boolean checkValues()
-		{
-			String s=null;
-			int iListenerPort,i;
-			//Checking InfoService (Host + Port)
-			s=m_tfInfoHost.getText().trim();
-			if(s==null||s.equals(""))
-				{
-					showError(m_Model.getString("errorInfoServiceHostNotNull"));
-					return false;
-				}
-			try
-				{
-					i=Integer.parseInt(m_tfInfoPortNumber.getText().trim());
-				}
-			catch(Exception e)
-				{
-					i=-1;
-				}
-			if(!JAPUtil.isPort(i))
-				{
-					showError(m_Model.getString("errorInfoServicePortWrong"));
-					return false;
-				}
-
-			//Checking First Mix (Host + Port)
-			s=m_tfMixHost.getText().trim();
-			if(s==null||s.equals(""))
-				{
-					showError(m_Model.getString("errorAnonHostNotNull"));
-					return false;
-				}
-			try
-				{
-					i=Integer.parseInt(m_tfMixPortNumber.getText().trim());
-				}
-			catch(Exception e)
-				{
-					i=-1;
-				}
-			if(!JAPUtil.isPort(i))
-				{
-					showError(m_Model.getString("errorAnonServicePortWrong"));
-					return false;
-				}
-			//--------------
-			if (m_tfMixPortNumberSSL.getText().trim().equals("")) {
-				;
-			} else {
-				try {
-					i=Integer.parseInt(m_tfMixPortNumberSSL.getText().trim());
-				}
-				catch(Exception e) {
-					i=-1;
-				}
-				if(!JAPUtil.isPort(i)) {
-					showError(m_Model.getString("errorAnonServicePortWrong"));
-					return false;
-				}
+		/**Shows a Dialog about whats going wrong
+		 */
+		private void showError(String msg)
+			{
+				JOptionPane.showMessageDialog(this,msg,m_Model.getString("ERROR"),JOptionPane.ERROR_MESSAGE);
 			}
-			//checking Listener Port Number
-			try
-				{
-					i=Integer.parseInt(m_tfListenerPortNumber.getText().trim());
-				}
-			catch(Exception e)
-				{
-					i=-1;
-				}
-			if(!JAPUtil.isPort(i))
-				{
-					showError(m_Model.getString("errorListenerPortWrong"));
-					return false;
-				}
-			iListenerPort=i;
-			//checking Socks Port Number
-			if(m_cbListenerSocks.isSelected())
-				{
-					try
-						{
-							i=Integer.parseInt(m_tfListenerPortNumberSocks.getText().trim());
-						}
-					catch(Exception e)
-						{
-							i=-1;
-						}
-					if(!JAPUtil.isPort(i))
-						{
-							showError(m_Model.getString("errorSocksListenerPortWrong"));
-							return false;
-						}
-					if(i==iListenerPort)
-						{
-							showError(m_Model.getString("errorListenerPortsAreEqual"));
-							return false;
-						}
-				}
-			//Checking Firewall Settings (Host + Port)
-			if(m_cbProxy.isSelected())
-				{
-					s=m_tfProxyHost.getText().trim();
-					if(s==null||s.equals(""))
-						{
-							showError(m_Model.getString("errorFirewallHostNotNull"));
-							return false;
-						}
-					try
-						{
-							i=Integer.parseInt(m_tfProxyPortNumber.getText().trim());
-						}
-					catch(Exception e)
-						{
-							i=-1;
-						}
-					if(!JAPUtil.isPort(i))
-						{
-							showError(m_Model.getString("errorFirewallServicePortWrong"));
-							return false;
-						}
-					if(m_cbProxyAuthentication.isSelected())
-						{
-							s=m_tfProxyAuthenticationUserID.getText().trim();
-							if(s==null||s.equals(""))
-								{
-									showError(m_Model.getString("errorFirewallAuthUserIDNotNull"));
-									return false;
-								}
-						}
-				}
-			//checking Debug-Level
-	/*		try
-				{
-					i=Integer.parseInt(debugLevelTextField.getText().trim());
-				}
-			catch(Exception e)
-				{
-					i=-1;
-				}
-			if(i<0||i>JAPDebug.DEBUG)
-				{
-					showError(m_Model.getString("errorDebugLevelWrong"));
-					return false;
-				}
-		*/
 
-			return true;
-		}
+		/** Checks if all Input in all Fiels make sense. Displays InfoBoxes about what is wrong.
+		 * @return true if all is ok
+		 *					false otherwise
+		 */
+		private boolean checkValues()
+			{
+				String s=null;
+				int iListenerPort,i;
+				//Checking InfoService (Host + Port)
+				s=m_tfInfoHost.getText().trim();
+				if(s==null||s.equals(""))
+					{
+						showError(m_Model.getString("errorInfoServiceHostNotNull"));
+						return false;
+					}
+				try
+					{
+						i=Integer.parseInt(m_tfInfoPortNumber.getText().trim());
+					}
+				catch(Exception e)
+					{
+						i=-1;
+					}
+				if(!JAPUtil.isPort(i))
+					{
+						showError(m_Model.getString("errorInfoServicePortWrong"));
+						return false;
+					}
 
-/** Resets the Configuration to the Default values*/
-	private void resetToDefault()
-		{
-			m_tfListenerPortNumber.setText(Integer.toString(JAPModel.defaultPortNumber));
-		  m_tfInfoHost.setText(JAPModel.defaultinfoServiceHostName);
-		  m_tfInfoPortNumber.setText(Integer.toString(JAPModel.defaultinfoServicePortNumber));
-			m_tfMixHost.setText(JAPModel.defaultanonHost);
-			m_tfMixPortNumber.setText(Integer.toString(JAPModel.defaultanonPortNumber));
-			m_cbProxy.setSelected(false);
-			m_cbStartupMinimized.setSelected(false);
-		  m_cbAutoConnect.setSelected(false);
-			m_cbListenerIsLocal.setSelected(true);
-			m_cbListenerSocks.setSelected(false);
-			m_cbShowDebugConsole.setSelected(false);
-			m_sliderDebugLevel.setValue(JAPDebug.EMERG);
-			m_cbDebugNet.setSelected(false);
-			m_cbDebugGui.setSelected(false);
-			m_cbDebugMisc.setSelected(false);
-			m_cbDebugThread.setSelected(false);
-		}
+				//Checking First Mix (Host + Port)
+				s=m_tfMixHost.getText().trim();
+				if(s==null||s.equals(""))
+					{
+						showError(m_Model.getString("errorAnonHostNotNull"));
+						return false;
+					}
+				try
+					{
+						i=Integer.parseInt(m_tfMixPortNumber.getText().trim());
+					}
+				catch(Exception e)
+					{
+						i=-1;
+					}
+				if(!JAPUtil.isPort(i))
+					{
+						showError(m_Model.getString("errorAnonServicePortWrong"));
+						return false;
+					}
+				//--------------
+				if (m_tfMixPortNumberSSL.getText().trim().equals("")) {
+					;
+				} else {
+					try {
+						i=Integer.parseInt(m_tfMixPortNumberSSL.getText().trim());
+					}
+					catch(Exception e) {
+						i=-1;
+					}
+					if(!JAPUtil.isPort(i)) {
+						showError(m_Model.getString("errorAnonServicePortWrong"));
+						return false;
+					}
+				}
+				//checking Listener Port Number
+				try
+					{
+						i=Integer.parseInt(m_tfListenerPortNumber.getText().trim());
+					}
+				catch(Exception e)
+					{
+						i=-1;
+					}
+				if(!JAPUtil.isPort(i))
+					{
+						showError(m_Model.getString("errorListenerPortWrong"));
+						return false;
+					}
+				iListenerPort=i;
+				//checking Socks Port Number
+				if(m_cbListenerSocks.isSelected())
+					{
+						try
+							{
+								i=Integer.parseInt(m_tfListenerPortNumberSocks.getText().trim());
+							}
+						catch(Exception e)
+							{
+								i=-1;
+							}
+						if(!JAPUtil.isPort(i))
+							{
+								showError(m_Model.getString("errorSocksListenerPortWrong"));
+								return false;
+							}
+						if(i==iListenerPort)
+							{
+								showError(m_Model.getString("errorListenerPortsAreEqual"));
+								return false;
+							}
+					}
+				//Checking Firewall Settings (Host + Port)
+				if(m_cbProxy.isSelected())
+					{
+						s=m_tfProxyHost.getText().trim();
+						if(s==null||s.equals(""))
+							{
+								showError(m_Model.getString("errorFirewallHostNotNull"));
+								return false;
+							}
+						try
+							{
+								i=Integer.parseInt(m_tfProxyPortNumber.getText().trim());
+							}
+						catch(Exception e)
+							{
+								i=-1;
+							}
+						if(!JAPUtil.isPort(i))
+							{
+								showError(m_Model.getString("errorFirewallServicePortWrong"));
+								return false;
+							}
+						if(m_cbProxyAuthentication.isSelected())
+							{
+								s=m_tfProxyAuthenticationUserID.getText().trim();
+								if(s==null||s.equals(""))
+									{
+										showError(m_Model.getString("errorFirewallAuthUserIDNotNull"));
+										return false;
+									}
+							}
+					}
+				//checking Debug-Level
+		/*		try
+					{
+						i=Integer.parseInt(debugLevelTextField.getText().trim());
+					}
+				catch(Exception e)
+					{
+						i=-1;
+					}
+				if(i<0||i>JAPDebug.DEBUG)
+					{
+						showError(m_Model.getString("errorDebugLevelWrong"));
+						return false;
+					}
+			*/
 
-	protected void OKPressed()
+				return true;
+			}
+
+		/** Resets the Configuration to the Default values*/
+		private void resetToDefault()
+			{
+				m_tfListenerPortNumber.setText(Integer.toString(JAPModel.defaultPortNumber));
+				m_tfInfoHost.setText(JAPModel.defaultinfoServiceHostName);
+				m_tfInfoPortNumber.setText(Integer.toString(JAPModel.defaultinfoServicePortNumber));
+				m_tfMixHost.setText(JAPModel.defaultanonHost);
+				m_tfMixPortNumber.setText(Integer.toString(JAPModel.defaultanonPortNumber));
+				m_cbProxy.setSelected(false);
+				m_cbStartupMinimized.setSelected(false);
+				m_cbAutoConnect.setSelected(false);
+				m_cbListenerIsLocal.setSelected(true);
+				m_cbListenerSocks.setSelected(false);
+				m_cbShowDebugConsole.setSelected(false);
+				m_sliderDebugLevel.setValue(JAPDebug.EMERG);
+				m_cbDebugNet.setSelected(false);
+				m_cbDebugGui.setSelected(false);
+				m_cbDebugMisc.setSelected(false);
+				m_cbDebugThread.setSelected(false);
+			}
+
+	  protected void OKPressed()
 			{
 				if(!checkValues())
 					return;
@@ -896,7 +897,7 @@ final class JAPConf extends JDialog
 				m_Model.notifyJAPObservers();
 			}
 
-	public void selectCard(int selectedCard)
+	  public void selectCard(int selectedCard)
 			{
 				// set selected card to foreground
 				if (selectedCard == HTTP_TAB)
@@ -911,59 +912,59 @@ final class JAPConf extends JDialog
 					m_Tabs.setSelectedComponent(m_pPort);
 			}
 
-	public void updateValues() {
-		// misc tab
-		m_cbShowDebugConsole.setSelected(JAPDebug.isShowConsole());
-		m_cbDebugGui.setSelected((((JAPDebug.getDebugType()&JAPDebug.GUI)!=0)?true:false));
-		m_cbDebugNet.setSelected((((JAPDebug.getDebugType()&JAPDebug.NET)!=0)?true:false));
-		m_cbDebugThread.setSelected((((JAPDebug.getDebugType()&JAPDebug.THREAD)!=0)?true:false));
-		m_cbDebugMisc.setSelected((((JAPDebug.getDebugType()&JAPDebug.MISC)!=0)?true:false));
-		m_sliderDebugLevel.setValue(JAPDebug.getDebugLevel());
-		m_bIgnoreComboLanguageEvents=true;
-		if(m_Model.getLocale().equals(Locale.ENGLISH))
-			m_comboLanguage.setSelectedIndex(1);
-		else
-			m_comboLanguage.setSelectedIndex(0);
-		m_bIgnoreComboLanguageEvents=false;
-		// listener tab
-		m_tfListenerPortNumber.setText(String.valueOf(m_Model.getPortNumber()));
-		m_cbListenerIsLocal.setSelected(m_Model.getListenerIsLocal());
-		m_tfListenerPortNumberSocks.setText(String.valueOf(m_Model.getSocksPortNumber()));
-		m_cbListenerSocks.setSelected(m_Model.getUseSocksPort());
-		// http proxy tab
-		m_cbProxy.setSelected(m_Model.getUseFirewall());
-		m_tfProxyHost.setEnabled(m_cbProxy.isSelected());
-		m_tfProxyPortNumber.setEnabled(m_cbProxy.isSelected());
-		m_tfProxyHost.setText(m_Model.getFirewallHost());
-		m_tfProxyPortNumber.setText(String.valueOf(m_Model.getFirewallPort()));
-		m_tfProxyAuthenticationUserID.setText(m_Model.getFirewallAuthUserID());
-		m_cbProxyAuthentication.setSelected(m_Model.getUseFirewallAuthorization());
+		public void updateValues()
+			{
+				// misc tab
+				m_cbShowDebugConsole.setSelected(JAPDebug.isShowConsole());
+				m_cbDebugGui.setSelected((((JAPDebug.getDebugType()&JAPDebug.GUI)!=0)?true:false));
+				m_cbDebugNet.setSelected((((JAPDebug.getDebugType()&JAPDebug.NET)!=0)?true:false));
+				m_cbDebugThread.setSelected((((JAPDebug.getDebugType()&JAPDebug.THREAD)!=0)?true:false));
+				m_cbDebugMisc.setSelected((((JAPDebug.getDebugType()&JAPDebug.MISC)!=0)?true:false));
+				m_sliderDebugLevel.setValue(JAPDebug.getDebugLevel());
+				m_bIgnoreComboLanguageEvents=true;
+				if(m_Model.getLocale().equals(Locale.ENGLISH))
+					m_comboLanguage.setSelectedIndex(1);
+				else
+					m_comboLanguage.setSelectedIndex(0);
+				m_bIgnoreComboLanguageEvents=false;
+				// listener tab
+				m_tfListenerPortNumber.setText(String.valueOf(m_Model.getPortNumber()));
+				m_cbListenerIsLocal.setSelected(m_Model.getListenerIsLocal());
+				m_tfListenerPortNumberSocks.setText(String.valueOf(m_Model.getSocksPortNumber()));
+				m_cbListenerSocks.setSelected(m_Model.getUseSocksPort());
+				// http proxy tab
+				m_cbProxy.setSelected(m_Model.getUseFirewall());
+				m_tfProxyHost.setEnabled(m_cbProxy.isSelected());
+				m_tfProxyPortNumber.setEnabled(m_cbProxy.isSelected());
+				m_tfProxyHost.setText(m_Model.getFirewallHost());
+				m_tfProxyPortNumber.setText(String.valueOf(m_Model.getFirewallPort()));
+				m_tfProxyAuthenticationUserID.setText(m_Model.getFirewallAuthUserID());
+				m_cbProxyAuthentication.setSelected(m_Model.getUseFirewallAuthorization());
 
-		// info tab
-		m_tfInfoHost.setText(m_Model.getInfoServiceHost());
-		m_tfInfoPortNumber.setText(String.valueOf(m_Model.getInfoServicePort()));
-		// anon tab
-		AnonServerDBEntry e = m_Model.getAnonServer();
-		m_strMixName = e.getName();
-		m_strOldMixName = m_strMixName;
-		m_tfMixHost.setText(e.getHost());
-		m_tfMixPortNumber.setText(String.valueOf(e.getPort()));
-		if (e.getSSLPort()==-1)
-			m_tfMixPortNumberSSL.setText("");
-		else
-			m_tfMixPortNumberSSL.setText(String.valueOf(e.getSSLPort()));
-		m_comboMixCascade.setSelectedIndex(0);
-		m_cbAutoConnect.setSelected(m_Model.autoConnect);
-		m_cbStartupMinimized.setSelected(m_Model.getMinimizeOnStartup());
-						m_comboMixCascade.removeAllItems();
-						m_comboMixCascade.addItem(m_Model.getString("settingsAnonSelect"));
-						Enumeration enum = m_Model.anonServerDatabase.elements();
-						while (enum.hasMoreElements())
-							{
-								m_comboMixCascade.addItem( ((AnonServerDBEntry)enum.nextElement()).getName() );
-							}
+				// info tab
+				m_tfInfoHost.setText(m_Model.getInfoServiceHost());
+				m_tfInfoPortNumber.setText(String.valueOf(m_Model.getInfoServicePort()));
+				// anon tab
+				AnonServerDBEntry e = m_Model.getAnonServer();
+				m_strMixName = e.getName();
+				m_strOldMixName = m_strMixName;
+				m_tfMixHost.setText(e.getHost());
+				m_tfMixPortNumber.setText(String.valueOf(e.getPort()));
+				if (e.getSSLPort()==-1)
+					m_tfMixPortNumberSSL.setText("");
+				else
+					m_tfMixPortNumberSSL.setText(String.valueOf(e.getSSLPort()));
+				m_comboMixCascade.setSelectedIndex(0);
+				m_cbAutoConnect.setSelected(m_Model.autoConnect);
+				m_cbStartupMinimized.setSelected(m_Model.getMinimizeOnStartup());
+				m_comboMixCascade.removeAllItems();
+				m_comboMixCascade.addItem(m_Model.getString("settingsAnonSelect"));
+				Enumeration enum = m_Model.anonServerDatabase.elements();
+				while (enum.hasMoreElements())
+					{
+						m_comboMixCascade.addItem( ((AnonServerDBEntry)enum.nextElement()).getName() );
+					}
+		  }
+
 	}
-
-
-}
 
