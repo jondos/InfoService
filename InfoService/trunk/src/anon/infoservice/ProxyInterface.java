@@ -250,8 +250,7 @@ public final class ProxyInterface extends ListenerInterface
 			}
 			if (exception != null)
 			{
-				throw new IllegalStateException(Util.getShortClassName(getClass()) +
-												": Cannot set proxy authentication! " + exception);
+				throw new IllegalStateException(": Cannot set proxy authentication! " + exception);
 			}
 		}
 
@@ -272,8 +271,7 @@ public final class ProxyInterface extends ListenerInterface
 	{
 		if (m_passwordReader == null)
 		{
-			throw new IllegalStateException(Util.getShortClassName(getClass()) +
-											": No password reader!");
+			throw new IllegalStateException("No password reader!");
 		}
 
 		if (m_authenticationPassword == null || m_authenticationPassword.length() == 0)
@@ -334,8 +332,7 @@ public final class ProxyInterface extends ListenerInterface
 	{
 		if (!isAuthenticationUsed())
 		{
-			throw new IllegalStateException(Util.getShortClassName(getClass()) + ": " +
-											"Authentication mode is not activated! Unknown state!");
+			throw new IllegalStateException("Authentication mode is not activated! Unknown state!");
 		}
 
 		return "Proxy-Authorization: Basic " +
@@ -354,8 +351,7 @@ public final class ProxyInterface extends ListenerInterface
 	{
 		if (!isAuthenticationUsed())
 		{
-			throw new IllegalStateException(Util.getShortClassName(getClass()) + ": " +
-											"Authentication mode is not activated! Unknown state!");
+			throw new IllegalStateException("Authentication mode is not activated! Unknown state!");
 		}
 
 		return new NVPair("Proxy-Authorization", "Basic " +
