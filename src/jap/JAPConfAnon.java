@@ -113,6 +113,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	private JButton m_selectCascadeButton;
 	private JButton m_enterCascadeButton;
 	private JButton m_editCascadeButton;
+	private JButton m_deleteCascadeButton;
 
 	private JTextField m_manHostField;
 	private JTextField m_manPortField;
@@ -126,7 +127,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	public void recreateRootPanel()
 	{
 		Font font = getFontSetting();
-
+		//Update the temporary infoservice database
+		m_infoService = new InfoServiceTempLayer();
 		m_tfMixHost = new JTextField();
 		m_tfMixHost.setFont(font);
 		m_tfMixPortNumber = new JAPJIntField();
@@ -303,15 +305,16 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		c.weightx = 1;
 		c.gridx = 1;
 		c.gridy = 0;
+		c.gridwidth = 2;
 		m_manualPanel.add(m_manHostField, c);
 		m_manPortField = new JTextField();
 		m_manPortField.setText(a_port);
 		c.gridy = 1;
-		c.gridwidth = 1;
 		m_manualPanel.add(m_manPortField, c);
 		c.weightx = 0;
 		c.gridy = 2;
-		c.gridx = 1;
+		c.gridx = 2;
+		c.gridwidth = 1;
 		c.fill=c.NONE;
 		c.anchor = c.NORTHEAST;
 		if (a_newCascade)
@@ -326,8 +329,14 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			m_editCascadeButton.addActionListener(this);
 			m_editCascadeButton.setVisible(true);
 			m_manualPanel.add(m_editCascadeButton, c);
+			m_deleteCascadeButton = new JButton(JAPMessages.getString("manualServiceDelete"));
+			m_deleteCascadeButton.addActionListener(this);
+			c.gridx = 1;
+			c.weightx = 1;
+			m_manualPanel.add(m_deleteCascadeButton, c);
 			m_manHostField.addKeyListener(this);
 			m_manPortField.addKeyListener(this);
+
 		}
 		if (m_serverPanel != null)
 		{
@@ -500,9 +509,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		String selectedMixId = (String) cascade.getMixIds().elementAt(server);
 			try
 			{
-		MixInfo selectedMixInfo =
-			InfoServiceHolder.getInstance().getMixInfo(selectedMixId);
-
 				m_operatorLabel.setText(m_infoService.getOperator(selectedMixId));
 				m_operatorLabel.setToolTipText(m_infoService.getOperator(selectedMixId));
 				m_locationLabel.setText(m_infoService.getLocation(selectedMixId));
@@ -523,8 +529,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 	private void updateMixCascadeCombo()
 	{
-		//Update the temporary infoservice database
-		m_infoService = new InfoServiceTempLayer();
 		LogHolder.log(LogLevel.DEBUG, LogType.GUI, "-start");
 		Enumeration it = m_Controller.getMixCascadeDatabase().elements();
 		DefaultListModel listModel = new DefaultListModel();
@@ -661,8 +665,9 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		Cursor c = getRootPanel().getCursor();
 		getRootPanel().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 
-				m_Controller.fetchMixCascades(bErr);
-
+		m_Controller.fetchMixCascades(bErr);
+		//Update the temporary infoservice database
+		m_infoService = new InfoServiceTempLayer();
 		updateMixCascadeCombo();
 
 		LogHolder.log(LogLevel.DEBUG, LogType.GUI, "JAPConf: finished updateMixCascadeCombo()");
@@ -753,6 +758,11 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		{
 			this.editManualCascade();
 		}
+		else if (e.getSource() == m_deleteCascadeButton)
+		{
+			this.deleteManualCascade();
+		}
+
 	}
 
 
@@ -776,6 +786,25 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			LogHolder.log(LogLevel.ERR, LogType.MISC, "Cannot edit cascade");
 		}
 	}
+
+	/**
+	 * Deletes a manually configured cascade
+	 */
+	private void deleteManualCascade()
+	{
+		try
+		{
+			MixCascade cascade = (MixCascade) m_listMixCascade.getSelectedValue();
+			m_Controller.getMixCascadeDatabase().removeElement(cascade);
+			this.updateMixCascadeCombo();
+		}
+		catch (Exception a_e)
+		{
+			LogHolder.log(LogLevel.ERR, LogType.MISC, "Cannot delete cascade");
+		}
+
+	}
+
 
 	/**
 	 * Adds a manually entered cascade to the cascade database
@@ -878,7 +907,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				MixCascade cascade = (MixCascade) m_listMixCascade.getSelectedValue();
 				String cascadeId = cascade.getId();
 
-				this.drawServerPanel(cascade.getMixCount(), true);
+				this.drawServerPanel(m_infoService.getNumOfMixes(cascadeId), true);
 				this.drawServerInfoPanel(null, null, null);
 				m_numOfUsersLabel.setText(m_infoService.getNumOfUsers(cascadeId));
 
@@ -1008,6 +1037,8 @@ class InfoServiceTempLayer
 				MixCascade cascade = (MixCascade)c.elementAt(j);
 				//Get cascade id
 				String id = cascade.getId();
+				//Get number of mixes in cascade
+				int numOfMixes = cascade.getMixCount();
 				// Get the number of users on the cascade
 				String numOfUsers = Integer.toString(entry.getStatusInfo(cascade.getId(), cascade.getMixCount(),
 						InfoServiceHolder.getInstance()
@@ -1055,7 +1086,7 @@ class InfoServiceTempLayer
 					}
 
 				}
-				m_Cascades.addElement(new TempCascade(id, numOfUsers, interfaces, ports));
+				m_Cascades.addElement(new TempCascade(id, numOfUsers, interfaces, ports, numOfMixes));
 				//Get mixes in cascade
 				Vector mixIds = cascade.getMixIds();
 				for(int k=0;k<mixIds.size();k++)
@@ -1074,6 +1105,24 @@ class InfoServiceTempLayer
 		catch(Exception a_e)
 		{
 		}
+	}
+
+	/**
+     * Get the number of mixes in a cascade.
+     * @param a_cascadeId String
+     * @return int
+     */
+	public int getNumOfMixes(String a_cascadeId)
+	{
+		for(int i=0;i<m_Cascades.size();i++)
+		{
+			if (((TempCascade)m_Cascades.elementAt(i)).getId().equalsIgnoreCase(a_cascadeId))
+			{
+				return ((TempCascade)m_Cascades.elementAt(i)).getNumOfMixes();
+			}
+		}
+		return -1;
+
 	}
 
 	/**
@@ -1176,11 +1225,6 @@ class InfoServiceTempLayer
 		}
 		return "N/A";
 	}
-
-
-
-
-
 }
 
 /**
@@ -1193,18 +1237,25 @@ class TempCascade
 	private String m_users;
 	private String m_ports;
 	private String m_hosts;
+	int m_numOfMixes;
 
-	public TempCascade(String a_id, String a_numOfUsers, String a_hosts, String a_ports)
+	public TempCascade(String a_id, String a_numOfUsers, String a_hosts, String a_ports, int a_numOfMixes)
 	{
 		m_id = a_id;
 		m_users = a_numOfUsers;
 		m_hosts = a_hosts;
 		m_ports = a_ports;
+		m_numOfMixes = a_numOfMixes;
 	}
 
 	public String getId()
 	{
 		return m_id;
+	}
+
+	public int getNumOfMixes()
+	{
+		return m_numOfMixes;
 	}
 
 	public String getNumOfUsers()

@@ -31,7 +31,6 @@ import java.io.File;
 import java.io.PrintStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.Enumeration;
 import java.util.Vector;
 import java.util.zip.ZipFile;
@@ -200,6 +199,61 @@ public final class ClassUtil
 	}
 
 	/**
+	 * Returns the class directory of the specified class. The class directory is either the
+	 * directory in that the highest package in the package structure of the class is contained, 
+	 * or the jar-File in that the class is contained. For extracting the contents of a jar-File, 
+	 * see {@link java.util.zip.ZipFile}.
+	 * @param a_class a class
+	 * @return the class directory of the specified class, either a real directory or a Jar-file
+	 *         or null if the directory/jar-file does not exist
+	 */
+	public static File getClassDirectory(Class a_class)
+	{
+		String classResource;
+		String classDirectory;
+		File file;
+
+		// generate a url with this class as resource
+		classResource = a_class.getName();
+		classResource = "/" + classResource;
+		classResource = classResource.replace('.','/');
+		classResource += ".class";
+		classDirectory = URLDecoder.decode(a_class.getResource(classResource).toString());
+
+		// check whether it is a jar file or a directory
+		if (classDirectory.startsWith(JAR_FILE))
+		{
+			classDirectory = classDirectory.substring(
+				JAR_FILE.length(), classDirectory.indexOf(classResource) - 1);
+			if (classDirectory.charAt(2) == ':')
+			{
+				// this is a windows file of the format /C:/...
+				classDirectory = classDirectory.substring(1, classDirectory.length());
+			}
+			classDirectory = toSystemSpecificFileName(classDirectory);
+			file = new File(classDirectory);
+		}
+		else if (classDirectory.startsWith(FILE))
+		{
+			classDirectory =
+				classDirectory.substring(FILE.length(), classDirectory.indexOf(classResource));
+			file = new File(classDirectory);
+		}
+		else
+		{
+			// we cannot read from this source; it is neither a jar-file nor a directory
+			file = null;
+		}
+
+		if (file == null || !file.exists())
+		{
+			return null;
+		}
+
+		return file;
+	}
+
+	/**
 	 * This small inner class is needed to get information about static classes.
 	 */
 	private static class ClassGetter extends SecurityManager
@@ -222,94 +276,52 @@ public final class ClassUtil
 	 */
 	private static void loadClassesInternal(Class a_rootClass)
 	{
-		String classResource;
-		String classDirectory;
+		File file;
+		Enumeration entries;
 
-		// generate a url with this class as resource
-		classResource = a_rootClass.getName();
-		classResource = "/" + classResource;
-		classResource = classResource.replace('.','/');
-		classResource += ".class";
-		try
+		if ((file = getClassDirectory(a_rootClass)) == null)
 		{
-			classDirectory = Class.forName(a_rootClass.getName()).getResource(classResource).toString();
-			classDirectory = URLDecoder.decode(classDirectory);
-		}
-		catch (ClassNotFoundException a_e)
-		{
-			// not possible, this class DOES exist
-			classDirectory = null;
+			return;
 		}
 
-		// check whether it is a jar file or a directory
-		if (classDirectory.startsWith(JAR_FILE))
+		// look in the cache if the class directory has already been read
+		if (ms_loadedDirectories.contains(file.getAbsolutePath()))
 		{
-			ZipFile file;
-			Enumeration entries;
+			// do not load the classes again
+			return;
+		}
+		ms_loadedDirectories.addElement(file.getAbsolutePath());
 
-			classDirectory = classDirectory.substring(
-						 JAR_FILE.length(), classDirectory.indexOf(classResource) - 1);
-
-			// look in the cache if the class directory has already been read
-			if (ms_loadedDirectories.contains(classDirectory))
+		if (file.isDirectory())
+		{
+			// fetch the classes
+			entries = getClasses(file, file).elements();
+			while (entries.hasMoreElements())
 			{
-				// do not load the classes again
-				return;
+				ms_loadedClasses.addElement(entries.nextElement());
 			}
-			ms_loadedDirectories.addElement(classDirectory);
-
-            classDirectory = toSystemSpecificFileName(classDirectory);
-
+		}
+		else
+		{
 			try
 			{
-				file = new ZipFile(classDirectory);
-			}
-			catch (IOException a_e)
-			{
-				// this zip file DOES exist, but we cannot read it
-				file = null;
-			}
-
-			// fetch the classes
-			if (file != null)
-			{
-				entries = file.entries();
+				// fetch the classes
+				Class classObject;
+				entries = new ZipFile(file).entries();
 				while (entries.hasMoreElements())
 				{
-					Class classObject;
 					classObject = toClass(new File((((ZipEntry) entries.nextElement())).toString()),
 										  (File)null);
-
 					if (classObject != null)
 					{
 						ms_loadedClasses.addElement(classObject);
 					}
 				}
 			}
-		}
-		else if (classDirectory.startsWith(FILE))
-		{
-			Enumeration newClasses;
-			classDirectory = classDirectory.substring(FILE.length(), classDirectory.indexOf(classResource));
-
-			// look in the cache if the class directory has already been read
-			if (ms_loadedDirectories.contains(classDirectory))
+			catch (IOException a_e)
 			{
-				// do not load the classes again
-				return;
+				// this zip file DOES exist, but we cannot read it; should not happen
 			}
-			ms_loadedDirectories.addElement(classDirectory);
-
-			// fetch the classes
-			newClasses = getClasses(new File(classDirectory), new File(classDirectory)).elements();
-			while (newClasses.hasMoreElements())
-			{
-				ms_loadedClasses.addElement(newClasses.nextElement());
-			}
-		}
-		else
-		{
-			// we cannot read from this source; it is neither a jar-file nor a directory
 		}
 	}
 
@@ -409,13 +421,14 @@ public final class ClassUtil
 	 * @return a system specific file name
 	 */
 	private static String toSystemSpecificFileName(String a_filename)
-    {
-      if (a_filename.charAt(2) == ':') {
-        a_filename = a_filename.substring(1, a_filename.length());
-      }
+	{
+		if (a_filename == null)
+		{
+			return null;
+		}
+		a_filename = a_filename.replace('/', File.separatorChar);
+		a_filename = a_filename.replace('\\', File.separatorChar);
 
-      a_filename = a_filename.replace('/', File.separatorChar);
-
-      return a_filename;
-    }
+		return a_filename;
+	}
 }

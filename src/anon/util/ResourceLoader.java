@@ -28,76 +28,57 @@
 package anon.util;
 
 import java.io.DataInputStream;
-import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 
 /**
- * This class loads resources.
+ * This class loads resources from the file system.
  */
 final public class ResourceLoader
 {
-	private String m_unpackagedClass;
 
-	/**
-	 * Creates a new ResourceLoader.
-	 * @param a_unpackagedClass a class in the default package path
-	 */
-	public ResourceLoader(String a_unpackagedClass)
+	private ResourceLoader()
 	{
-		m_unpackagedClass = a_unpackagedClass;
 	}
 
-	/** Loads an resource from a file or an archive resource.
-	 *	@param strResource the resource name or filename
-	 *  @return null if Resource could not be loaded
-	 *  @return contents of the resource otherwise
+	/**
+	 * Loads a resource from the classpath or the current directory.
+	 * The resource may be contained in an archive (JAR) or a directory structure. If the resource
+	 * could not be found in the classpath, it is loaded from the current directory.
+	 * @param a_strRelativeResourcePath a relative filename for the resource
+	 * @return the contents of the resource or null if resource could not be loaded
 	 */
-	public byte[] loadResource(String strResource)
+	public static byte[] loadResource(String a_strRelativeResourcePath)
 	{
-		try
-		{
-			InputStream in = null;
-			int len = 0;
-			try
-			{
-				// this is necessary to make sure that the resources are loaded when contained in a jar-file
-				in = Class.forName(m_unpackagedClass).getResourceAsStream(strResource);
-				len = in.available();
-			}
-			catch (Exception e)
-			{
-				in = null;
-			}
-			if (in == null || len == 0)
-			{
-				try
-				{
-					//we have to check if the file does exist because a new file will always succeed!!!
-					File f = new File(strResource);
-					if (f.canRead())
-					{
-						in = new FileInputStream(f);
-						len = (int) f.length();
-					}
-					else
-					{
-						return null;
-					}
-				}
-				catch (Exception e1)
-				{
-					return null;
-				}
-			}
-			byte[] tmp = new byte[len];
-			new DataInputStream(in).readFully(tmp);
-			return tmp;
-		}
-		catch (Throwable t)
+		InputStream in;
+		byte[] resource = null;
+
+		if (a_strRelativeResourcePath == null)
 		{
 			return null;
 		}
+
+		// load images from the local classpath or jar-file
+		in = Object.class.getResourceAsStream("/" + a_strRelativeResourcePath);
+		try
+		{
+			if (in == null)
+			{
+				// load resource from the current directory
+				in = new FileInputStream(a_strRelativeResourcePath);
+			}
+			resource = new byte[in.available()];
+			new DataInputStream(in).readFully(resource);
+			in.close();
+		}
+		catch (IOException a_e)
+		{
+			resource =  null;
+		}
+
+		return resource;
 	}
+
 
 }

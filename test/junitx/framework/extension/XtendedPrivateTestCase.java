@@ -36,7 +36,6 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import anon.util.ClassUtil;
 import anon.util.IXMLEncodable;
-import anon.util.ResourceLoader;
 import anon.util.XMLUtil;
 import junitx.framework.PrivateTestCase;
 
@@ -53,7 +52,6 @@ public class XtendedPrivateTestCase extends PrivateTestCase
 	public static final File TEST_FILE = new File("documentation/~testfile~");
 
 	private static final String XML_STRUCTURE_PATH = "documentation/xmlStructures/";
-	private static final ResourceLoader ms_resourceLoader = new ResourceLoader(null);
 
 	/**
 	 * Creates a new test case.
