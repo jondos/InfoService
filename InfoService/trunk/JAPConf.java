@@ -383,7 +383,18 @@ public final class JAPConf extends JDialog
 				JPanel p2=new JPanel();
 				p2.setLayout(new BorderLayout());
 				p2.setBorder( new TitledBorder(model.getString("miscconfigBorder")) );
-				p2.add(new JLabel(model.getString("noOptions")), BorderLayout.NORTH);
+				JButton bttnPing=new JButton(model.getString("bttnPing"));
+				bttnPing.addActionListener(new ActionListener()
+					{
+						public void actionPerformed(ActionEvent e)
+							{
+								AnonServerDBEntry[] a=new AnonServerDBEntry[1];
+								a[0]=new AnonServerDBEntry(model.anonHostName,model.anonHostName,model.anonPortNumber+1);
+								JAPRoundTripTimeView v=new JAPRoundTripTimeView(model.getView(),a);
+//								v.show();
+							}
+					});
+				p2.add(bttnPing, BorderLayout.NORTH);
 
 				// Panel for Debugging Option
 				JPanel p3=new JPanel();

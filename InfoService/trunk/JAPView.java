@@ -166,11 +166,13 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 			JProgressBar(JProgressBar.HORIZONTAL, 0, model.MAXPROGRESSBARVALUE);
 		trafficProgressBar.setStringPainted(true);
 		trafficProgressBar.setBorderPainted(true);
+		
 		//
 		protectionProgressBar = new 
 			JProgressBar(JProgressBar.HORIZONTAL, 0, model.MAXPROGRESSBARVALUE);
 		protectionProgressBar.setStringPainted(true);
 		protectionProgressBar.setBorderPainted(true);
+		
 		
 		JPanel ownTrafficPanel = new JPanel();
 		ownTrafficPanel.setLayout( new GridLayout(2,2,5,5) );
@@ -197,10 +199,10 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 		detailsPanel.setBorder( new TitledBorder(model.getString("meterDetailsBorder")) );
 		detailsPanel.add(new JLabel(model.getString("meterDetailsUsers")) );
 		detailsPanel.add(userProgressBar);
-		detailsPanel.add(new JLabel(model.getString("meterDetailsTraffic")) );
-		detailsPanel.add(trafficProgressBar);
-		detailsPanel.add(new JLabel(model.getString("meterDetailsRisk")) );
-		detailsPanel.add(protectionProgressBar);
+//		detailsPanel.add(new JLabel(model.getString("meterDetailsTraffic")) );
+//		detailsPanel.add(trafficProgressBar);
+//		detailsPanel.add(new JLabel(model.getString("meterDetailsRisk")) );
+//		detailsPanel.add(protectionProgressBar);
 
 		levelPanel.add(ownTrafficPanel, BorderLayout.NORTH);
 		levelPanel.add(meterPanel, BorderLayout.CENTER);
@@ -409,7 +411,12 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 
 	private void showConfigDialog(int card) {
 		if(configDialog==null)
-			configDialog=new JAPConf(this);
+			{
+				Cursor c=getCursor();
+				setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+				configDialog=new JAPConf(this);
+				setCursor(c);
+			}
 		configDialog.selectCard(card);
 		configDialog.updateValues();
 		configDialog.show();
