@@ -58,7 +58,6 @@ public class CAMuxSocket extends Thread
 						outDataStream=new DataOutputStream(new BufferedOutputStream(outSocket.getOutputStream(),1008));
 						inDataStream=new DataInputStream(outSocket.getInputStream());
 						chainlen=inDataStream.readByte();
-						System.out.println("CAMuxSocket - Connected! Chain-Len: "+Integer.toString(chainlen));
 					}
 				catch(Exception e)
 					{

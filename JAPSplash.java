@@ -2,15 +2,14 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Window;
 import java.awt.Frame;
-import javax.swing.JFrame;
+//import javax.swing.JFrame;
 import javax.swing.JLabel;
 
 public final class JAPSplash extends Window 
 	{
-    public  JAPSplash (JAPModel m, String s)
+    public  JAPSplash (JAPModel m)
 			{
 				super(new Frame());
-				//super(s);
 				JLabel waitLabel = new JLabel(m.getString("loading"), JLabel.CENTER);
 				waitLabel.setBackground(Color.black);
 				waitLabel.setForeground(Color.white);

@@ -119,7 +119,6 @@ public final class JAPModel implements JAPObserver {
 					NamedNodeMap n=doc.getFirstChild().getAttributes();
 					anonHostName=n.getNamedItem("host").getNodeValue();
 					anonPortNumber=Integer.valueOf(n.getNamedItem("port").getNodeValue()).intValue();
-					System.out.println(anonHostName);
 					return true;	
 				}
 			catch(Exception e)
