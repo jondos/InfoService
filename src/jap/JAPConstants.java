@@ -147,6 +147,12 @@ public final class JAPConstants
 		"meter5.gif",
 		"meter6.gif"
 	};
+// Bastian Voigt: Icons for the account meter
+	public static final String[] ACCOUNTICONFNARRAY =
+		{
+		"accountDisabled.gif", "accountOk.gif", "accountBroken.gif"
+	};
+
 	public static final String PIHOST = "anon.inf.tu-dresden.de";
 	public static final int PIPORT = 2342;
 	public static final boolean PI_SSLON = false; // auf true setzten wenn die pay funktionalität fertig gebaut ist.

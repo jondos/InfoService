@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry including="anon/|forward/|gui/|jap/|jarify/|logging/|pay/|payxml/|proxy/|update/" excluding="*/*.*~*~|*/CVS" kind="src" path=""/>
+	<classpathentry including="*.java|*.properties|anon/|forward/|gui/|jap/|jarify/|logging/|pay/|payxml/|proxy/|update/" excluding="*/*.*~*~|*/CVS" kind="src" path=""/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="G:/jdk1.1.8/mac/MRJClasses.zip"/>
 	<classpathentry kind="lib" path="G:/jdk1.1.8/HTTPClient/http.jar"/>
