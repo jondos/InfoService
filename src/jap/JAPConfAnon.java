@@ -52,6 +52,7 @@ import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JFrame;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JList;
@@ -331,13 +332,26 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		c.anchor = GridBagConstraints.NORTHEAST;
 		if (a_newCascade)
 		{
-			m_enterCascadeButton = new JButton(JAPMessages.getString("manualServiceEnter"));
+			m_enterCascadeButton = new JButton(JAPMessages.getString("okButton"));
 			m_enterCascadeButton.addActionListener(this);
 			m_manualPanel.add(m_enterCascadeButton, c);
+			try
+			{
+				MixCascade dummyCascade = new MixCascade(JAPMessages.getString("dummyCascade"), 0);
+				m_Controller.getMixCascadeDatabase().addElement(dummyCascade);
+				this.updateMixCascadeCombo();
+				m_listMixCascade.setSelectedIndex(m_listMixCascade.getModel().getSize()-1);
+				m_manHostField.selectAll();
+			}
+			catch (Exception a_e)
+			{
+				JAPUtil.showMessageBox((JFrame)this.getRootPanel().getParent(), JAPMessages.getString("errorCreateCascadeDesc"),
+					JAPMessages.getString("errorCreateCascade"), JOptionPane.ERROR_MESSAGE);
+			}
 		}
 		else
 		{
-			m_editCascadeButton = new JButton(JAPMessages.getString("manualServiceEdit"));
+			m_editCascadeButton = new JButton(JAPMessages.getString("okButton"));
 			m_editCascadeButton.addActionListener(this);
 			m_editCascadeButton.setVisible(true);
 			m_manualPanel.add(m_editCascadeButton, c);
@@ -392,8 +406,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 		m_listMixCascade = new JList();
 		m_listMixCascade.addListSelectionListener(this);
-		//m_listMixCascade.addMouseListener(this);
-		//m_listMixCascade.setFixedCellWidth(l.getPreferredSize().width);
 		m_listMixCascade.addListSelectionListener(this);
 		c.gridx = 0;
 		c.gridy = 1;
@@ -745,6 +757,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		catch (Exception a_e)
 		{
 			LogHolder.log(LogLevel.ERR, LogType.MISC, "Cannot edit cascade");
+			JOptionPane.showMessageDialog(this.getRootPanel(), JAPMessages.getString("errorCreateCascadeDesc"),
+				JAPMessages.getString("errorCreateCascade"), JOptionPane.ERROR_MESSAGE);
 		}
 	}
 
