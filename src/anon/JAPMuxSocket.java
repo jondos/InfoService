@@ -39,6 +39,8 @@ import java.io.DataInputStream;
 import java.lang.Integer;
 import java.util.Enumeration;
 import java.math.BigInteger;
+import JAPDebug;
+
 final class JAPMuxSocket implements Runnable
 	{
 		private int lastChannelId;
