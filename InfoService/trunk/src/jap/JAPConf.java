@@ -30,9 +30,7 @@ package jap;
 import java.io.File;
 import java.io.IOException;
 import java.util.Dictionary;
-import java.util.Enumeration;
 import java.util.Hashtable;
-import java.util.Vector;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
@@ -72,7 +70,6 @@ import gui.JAPMultilineLabel;
 import logging.LogLevel;
 import logging.LogType;
 
-
 final class JAPConf extends JDialog
 {
 
@@ -89,20 +86,19 @@ final class JAPConf extends JDialog
 	final static public String PAYMENT_TAB = "PAYMENT_TAB";
 
 	/**
-   * This constant is a symbolic name for accessing the forwarding client configuration tab.
+	 * This constant is a symbolic name for accessing the forwarding client configuration tab.
 	 */
-  final static public String FORWARDING_CLIENT_TAB = "FORWARDING_CLIENT_TAB";
+	final static public String FORWARDING_CLIENT_TAB = "FORWARDING_CLIENT_TAB";
 
-  /**
-   * This constant is a symbolic name for accessing the forwarding server configuration tab.
-   */
-  final static public String FORWARDING_SERVER_TAB = "FORWARDING_SERVER_TAB";
+	/**
+	 * This constant is a symbolic name for accessing the forwarding server configuration tab.
+	 */
+	final static public String FORWARDING_SERVER_TAB = "FORWARDING_SERVER_TAB";
 
-  /**
-   * This constant is a symbolic name for accessing the forwarding state tab.
-   */
-  final static public String FORWARDING_STATE_TAB = "FORWARDING_STATE_TAB";
-
+	/**
+	 * This constant is a symbolic name for accessing the forwarding state tab.
+	 */
+	final static public String FORWARDING_STATE_TAB = "FORWARDING_STATE_TAB";
 
 	private static JAPConf ms_JapConfInstance = null;
 
@@ -140,9 +136,9 @@ final class JAPConf extends JDialog
 
 	private boolean loadPay = false;
 
-  private JAPConfModuleSystem m_moduleSystem;
-  
-  
+	private JAPConfModuleSystem m_moduleSystem;
+	private JTabbedPane m_tabsAnon;
+
 	public static JAPConf getInstance()
 	{
 		return ms_JapConfInstance;
@@ -165,42 +161,51 @@ final class JAPConf extends JDialog
 		m_pFirewall = buildProxyPanel();
 		m_pMisc = buildMiscPanel();
 
-    m_moduleSystem = new JAPConfModuleSystem();
-    DefaultMutableTreeNode rootNode = m_moduleSystem.getConfigurationTreeRootNode();
-    m_moduleSystem.addConfigurationModule(rootNode, new JAPConfUI(), UI_TAB);
-    if (loadPay) {
-      m_moduleSystem.addConfigurationModule(rootNode, new AccountSettingsPanel(), PAYMENT_TAB);
-    }
-    m_moduleSystem.addConfigurationModule(rootNode, new JAPConfUpdate(), UPDATE_TAB);
-    DefaultMutableTreeNode nodeNet = m_moduleSystem.addComponent(rootNode, null, "ngTreeNetwork", null);
-    m_moduleSystem.addComponent(nodeNet, m_pPort, "confListenerTab", PORT_TAB);
-    m_moduleSystem.addComponent(nodeNet, m_pFirewall, "confProxyTab", PROXY_TAB);   
-    if (JAPConstants.WITH_BLOCKINGRESISTANCE) {
-      m_moduleSystem.addConfigurationModule(nodeNet, new JAPConfForwardingClient(), FORWARDING_CLIENT_TAB);
-    }
-    DefaultMutableTreeNode nodeAnon = m_moduleSystem.addComponent(rootNode, null, "ngAnonymitaet", null);
-    m_moduleSystem.addConfigurationModule(nodeAnon, new JAPConfInfoService(), INFOSERVICE_TAB);    
-    JTabbedPane anonTabs = new JTabbedPane();
-    JAPConfAnon anonModule = new JAPConfAnon(null);
-    anonTabs.addTab(anonModule.getTabTitle(), anonModule.getRootPanel());
-    JAPConfTor torModule = new JAPConfTor();
-    anonTabs.addTab(torModule.getTabTitle(), torModule.getRootPanel());
-    JAPConfAnonGeneral anonGeneralModule = new JAPConfAnonGeneral(null);
-    anonTabs.addTab(anonGeneralModule.getTabTitle(), anonGeneralModule.getRootPanel());
-    m_moduleSystem.addComponent(nodeAnon, anonTabs, "ngTreeAnonService", ANON_TAB);   
-    if (JAPConstants.WITH_BLOCKINGRESISTANCE) {    
-      m_moduleSystem.addConfigurationModule(nodeAnon, new JAPConfForwardingServer(), FORWARDING_SERVER_TAB);
-    }  
-    m_moduleSystem.addConfigurationModule(nodeAnon, new JAPConfCert(), CERT_TAB);    
-    DefaultMutableTreeNode debugNode = m_moduleSystem.addComponent(rootNode, m_pMisc, "ngTreeDebugging", DEBUG_TAB);
-    if ((JAPConstants.WITH_BLOCKINGRESISTANCE) && (JAPModel.getInstance().isForwardingStateModuleVisible())) {        
-      m_moduleSystem.addConfigurationModule(debugNode, new JAPConfForwardingState(), FORWARDING_STATE_TAB);    
-    }
-    m_moduleSystem.getConfigurationTree().expandPath(new TreePath(nodeNet.getPath()));
-    m_moduleSystem.getConfigurationTree().expandPath(new TreePath(nodeAnon.getPath()));
-    m_moduleSystem.getConfigurationTree().setSelectionRow(0);
-    /* after finishing building the tree, it is important to update the tree size */
-    m_moduleSystem.getConfigurationTree().setMinimumSize(m_moduleSystem.getConfigurationTree().getPreferredSize());
+		m_moduleSystem = new JAPConfModuleSystem();
+		DefaultMutableTreeNode rootNode = m_moduleSystem.getConfigurationTreeRootNode();
+		m_moduleSystem.addConfigurationModule(rootNode, new JAPConfUI(), UI_TAB);
+		if (loadPay)
+		{
+			m_moduleSystem.addConfigurationModule(rootNode, new AccountSettingsPanel(), PAYMENT_TAB);
+		}
+		m_moduleSystem.addConfigurationModule(rootNode, new JAPConfUpdate(), UPDATE_TAB);
+		DefaultMutableTreeNode nodeNet = m_moduleSystem.addComponent(rootNode, null, "ngTreeNetwork", null);
+		m_moduleSystem.addComponent(nodeNet, m_pPort, "confListenerTab", PORT_TAB);
+		m_moduleSystem.addComponent(nodeNet, m_pFirewall, "confProxyTab", PROXY_TAB);
+		if (JAPConstants.WITH_BLOCKINGRESISTANCE)
+		{
+			m_moduleSystem.addConfigurationModule(nodeNet, new JAPConfForwardingClient(),
+												  FORWARDING_CLIENT_TAB);
+		}
+		DefaultMutableTreeNode nodeAnon = m_moduleSystem.addComponent(rootNode, null, "ngAnonymitaet", null);
+		m_moduleSystem.addConfigurationModule(nodeAnon, new JAPConfInfoService(), INFOSERVICE_TAB);
+		m_tabsAnon = new JTabbedPane();
+		JAPConfAnon anonModule = new JAPConfAnon(null);
+		m_tabsAnon.addTab(anonModule.getTabTitle(), anonModule.getRootPanel());
+		JAPConfTor torModule = new JAPConfTor();
+		m_tabsAnon.addTab(torModule.getTabTitle(), torModule.getRootPanel());
+		JAPConfAnonGeneral anonGeneralModule = new JAPConfAnonGeneral(null);
+		m_tabsAnon.addTab(anonGeneralModule.getTabTitle(), anonGeneralModule.getRootPanel());
+		m_moduleSystem.addComponent(nodeAnon, m_tabsAnon, "ngTreeAnonService", ANON_SERVICES_TAB);
+		if (JAPConstants.WITH_BLOCKINGRESISTANCE)
+		{
+			m_moduleSystem.addConfigurationModule(nodeAnon, new JAPConfForwardingServer(),
+												  FORWARDING_SERVER_TAB);
+		}
+		m_moduleSystem.addConfigurationModule(nodeAnon, new JAPConfCert(), CERT_TAB);
+		DefaultMutableTreeNode debugNode = m_moduleSystem.addComponent(rootNode, m_pMisc, "ngTreeDebugging",
+			DEBUG_TAB);
+		if ( (JAPConstants.WITH_BLOCKINGRESISTANCE) && (JAPModel.getInstance().isForwardingStateModuleVisible()))
+		{
+			m_moduleSystem.addConfigurationModule(debugNode, new JAPConfForwardingState(),
+												  FORWARDING_STATE_TAB);
+		}
+		m_moduleSystem.getConfigurationTree().expandPath(new TreePath(nodeNet.getPath()));
+		m_moduleSystem.getConfigurationTree().expandPath(new TreePath(nodeAnon.getPath()));
+		m_moduleSystem.getConfigurationTree().setSelectionRow(0);
+		/* after finishing building the tree, it is important to update the tree size */
+		m_moduleSystem.getConfigurationTree().setMinimumSize(m_moduleSystem.getConfigurationTree().
+			getPreferredSize());
 
 		JPanel buttonPanel = new JPanel();
 		buttonPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
@@ -244,27 +249,27 @@ final class JAPConf extends JDialog
 		buttonPanel.add(new JLabel("   "));
 		getRootPane().setDefaultButton(ok);
 
-    JPanel moduleSystemPanel = m_moduleSystem.getRootPanel();
+		JPanel moduleSystemPanel = m_moduleSystem.getRootPanel();
 
-    GridBagLayout configPanelLayout = new GridBagLayout();
-    pContainer.setLayout(configPanelLayout);
+		GridBagLayout configPanelLayout = new GridBagLayout();
+		pContainer.setLayout(configPanelLayout);
 
-    GridBagConstraints configPanelConstraints = new GridBagConstraints();
-    configPanelConstraints.anchor = GridBagConstraints.NORTHWEST;
-    configPanelConstraints.fill = GridBagConstraints.BOTH;
-    configPanelConstraints.weightx = 1.0;
-    configPanelConstraints.weighty = 1.0;
-    configPanelConstraints.gridx = 0;
-    configPanelConstraints.gridy = 0;
-    configPanelLayout.setConstraints(moduleSystemPanel, configPanelConstraints);
-    pContainer.add(moduleSystemPanel);
+		GridBagConstraints configPanelConstraints = new GridBagConstraints();
+		configPanelConstraints.anchor = GridBagConstraints.NORTHWEST;
+		configPanelConstraints.fill = GridBagConstraints.BOTH;
+		configPanelConstraints.weightx = 1.0;
+		configPanelConstraints.weighty = 1.0;
+		configPanelConstraints.gridx = 0;
+		configPanelConstraints.gridy = 0;
+		configPanelLayout.setConstraints(moduleSystemPanel, configPanelConstraints);
+		pContainer.add(moduleSystemPanel);
 
-    configPanelConstraints.weighty = 0.0;
-    configPanelConstraints.gridx = 0;
-    configPanelConstraints.gridy = 1;
-    configPanelConstraints.insets = new Insets(10, 10, 10, 10);
-    configPanelLayout.setConstraints(buttonPanel, configPanelConstraints);
-    pContainer.add(buttonPanel);
+		configPanelConstraints.weighty = 0.0;
+		configPanelConstraints.gridx = 0;
+		configPanelConstraints.gridy = 1;
+		configPanelConstraints.insets = new Insets(10, 10, 10, 10);
+		configPanelLayout.setConstraints(buttonPanel, configPanelConstraints);
+		pContainer.add(buttonPanel);
 
 		setContentPane(pContainer);
 		updateValues();
@@ -287,10 +292,10 @@ final class JAPConf extends JDialog
 	 */
 	public void show()
 	{
-    /* every time the configuration is set to visible, we need to create the savepoints for the
-     * modules for the case that 'Cancel' is pressed later
+		/* every time the configuration is set to visible, we need to create the savepoints for the
+		 * modules for the case that 'Cancel' is pressed later
 		 */
-    m_moduleSystem.createSavePoints();
+		m_moduleSystem.createSavePoints();
 		/* call the original method */
 		super.show();
 	}
@@ -683,7 +688,7 @@ final class JAPConf extends JDialog
 
 	void cancelPressed()
 	{
-    m_moduleSystem.processCancelPressedEvent();
+		m_moduleSystem.processCancelPressedEvent();
 		setVisible(false);
 	}
 
@@ -801,7 +806,7 @@ final class JAPConf extends JDialog
 	/** Resets the Configuration to the Default values*/
 	private void resetToDefault()
 	{
-    m_moduleSystem.processResetToDefaultsPressedEvent();
+		m_moduleSystem.processResetToDefaultsPressedEvent();
 		m_tfListenerPortNumber.setInt(JAPConstants.defaultPortNumber);
 		//m_tfListenerPortNumberSocks.setInt(JAPConstants.defaultSOCKSPortNumber);
 
@@ -822,9 +827,10 @@ final class JAPConf extends JDialog
 		{
 			return;
 		}
-    if (m_moduleSystem.processOkPressedEvent() == false) {
-				return;
-			}
+		if (m_moduleSystem.processOkPressedEvent() == false)
+		{
+			return;
+		}
 		setVisible(false);
 		// Misc settings
 		JAPDebug.getInstance().setLogType(
@@ -881,12 +887,20 @@ final class JAPConf extends JDialog
 	 */
 	public void selectCard(String a_strSelectedCard)
 	{
-    m_moduleSystem.selectNode(a_strSelectedCard);
+		if (a_strSelectedCard.equals(JAPConf.ANON_TAB))
+		{
+			m_moduleSystem.selectNode(JAPConf.ANON_SERVICES_TAB);
+			m_tabsAnon.setSelectedIndex(0);
+		}
+		else
+		{
+			m_moduleSystem.selectNode(a_strSelectedCard);
+		}
 	}
 
 	public void localeChanged()
 	{
-    m_moduleSystem.repaintEverything();
+		m_moduleSystem.repaintEverything();
 		setTitle(JAPMessages.getString("settingsDialog"));
 		m_bttnDefaultConfig.setText(JAPMessages.getString("bttnDefaultConfig"));
 		m_bttnCancel.setText(JAPMessages.getString("cancelButton"));
@@ -927,7 +941,7 @@ final class JAPConf extends JDialog
 	/** Updates the shown Values from the Model.*/
 	public void updateValues()
 	{
-    m_moduleSystem.processUpdateValuesEvent();
+		m_moduleSystem.processUpdateValuesEvent();
 		/*		if (loadPay)
 		  {
 		   ( (pay.view.PayView) m_pKonto).userPanel.valuesChanged();
