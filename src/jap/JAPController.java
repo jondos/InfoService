@@ -1465,14 +1465,21 @@ private final class SetAnonModeAsync implements Runnable
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:notifyJAPObservers()");
 			synchronized(observerVector)
 				{
-					Enumeration enum = observerVector.elements();
-					int i=0;
-					while (enum.hasMoreElements())
+					try
 						{
-							JAPObserver listener = (JAPObserver)enum.nextElement();
-							JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:notifyJAPObservers: "+i);
-							listener.valuesChanged();
-							i++;
+							Enumeration enum = observerVector.elements();
+							int i=0;
+							while (enum.hasMoreElements())
+								{
+									JAPObserver listener = (JAPObserver)enum.nextElement();
+									JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:notifyJAPObservers: "+i);
+									listener.valuesChanged();
+									i++;
+								}
+						}
+					catch(Throwable t)
+						{
+							JAPDebug.out(JAPDebug.EMERG,JAPDebug.MISC,"JAPModel:notifyJAPObservers - critical exception: "+t.getMessage());
 						}
 				}
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:notifyJAPObservers()-ended");
