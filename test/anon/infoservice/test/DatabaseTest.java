@@ -82,11 +82,10 @@ public class DatabaseTest extends PrivateTestCase
 		{
 		}
 
-		Database.getInstance(InfoService.class);
-		Database.getInstance(DummyDatabaseEntry.class);
 		dbEntry = new DummyDatabaseEntry();
 
 		//this works
+		Database.getInstance(DatabaseEntry.class).update(dbEntry); // generic Database!
 		Database.getInstance(DummyDatabaseEntry.class).update(dbEntry);
 		try
 		{
@@ -100,10 +99,16 @@ public class DatabaseTest extends PrivateTestCase
 
 	/**
 	 * Tests the update method.
+	 * @throws Exception
 	 */
 	public void testUpdate()
+		throws Exception
 	{
+		Vector expectedJobs = new Vector();
 		DummyDatabaseEntry dbEntry, dbEntry_sameID, dbEntry_otherID;
+		Database database = Database.getInstance(DummyDatabaseEntry.class);
+		database.registerDistributor(m_distributor);
+		if (m_distributor == null) fail();
 
 		dbEntry = new DummyDatabaseEntry();
 		dbEntry.setId("123456");
@@ -114,6 +119,41 @@ public class DatabaseTest extends PrivateTestCase
 		dbEntry_otherID = new DummyDatabaseEntry();
 		dbEntry_otherID.setId("66666");
 
-		//Database.
+		// test if it is possible to add an entry
+		database.update(dbEntry);
+		assertEquals(1, database.getNumberofEntries());
+		assertSame(dbEntry, database.getEntryById("123456"));
+		expectedJobs.addElement(dbEntry);
+
+		// test if older entries are dropped
+		database.update(dbEntry_sameID);
+		assertEquals(1, database.getNumberofEntries());
+		dbEntry_sameID.setVersionNumber(-1);
+		database.update(dbEntry_sameID);
+		assertEquals(1, database.getNumberofEntries());
+		assertSame(dbEntry, database.getEntryById("123456"));
+
+		// test if newer entries overwrite older ones
+		dbEntry_sameID.setVersionNumber(1);
+		database.update(dbEntry_sameID);
+		assertSame(dbEntry_sameID, database.getEntryById("123456"));
+		expectedJobs.addElement(dbEntry_sameID);
+
+		// test adding a new entry with an unknown id
+		database.update(dbEntry_otherID);
+		assertEquals(2, database.getNumberofEntries());
+		expectedJobs.addElement(dbEntry_otherID);
+
+		// test if an old "new" entry is correctly removed by the "run" method
+		dbEntry.setExpireTime(System.currentTimeMillis());
+		dbEntry.setVersionNumber(2);
+		database.update(dbEntry);
+		Thread.sleep(50); // could eventually be too short on slow machines
+		assertEquals(1, database.getNumberofEntries());
+		expectedJobs.addElement(dbEntry);
+
+		// test if the database entries are forwarded
+		m_distributor.setExpectedJobs(expectedJobs);
+		m_distributor.verify();
 	}
 }

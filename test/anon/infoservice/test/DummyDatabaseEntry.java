@@ -47,7 +47,7 @@ public class DummyDatabaseEntry extends DatabaseEntry implements IDistributable
 		super(0);
 		// do some initializations
 		m_id = "";
-		m_expireTime = 0;
+		m_expireTime = Long.MAX_VALUE;
 		m_versionNumber = 0;
 	}
 
