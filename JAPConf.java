@@ -627,7 +627,7 @@ final class JAPConf extends JDialog
 				p2.setLayout(new BorderLayout());
 				p2.setBorder( new TitledBorder(m_Model.getString("miscconfigBorder")) );
 				JButton bttnPing=new JButton(m_Model.getString("bttnPing"));
-				bttnPing.addActionListener(new ActionListener()
+/*				bttnPing.addActionListener(new ActionListener()
 					{
 						public void actionPerformed(ActionEvent e)
 							{
@@ -638,7 +638,7 @@ final class JAPConf extends JDialog
 //								v.show();
 							}
 					});
-				JButton bttnMonitor=new JButton(m_Model.getString("bttnMonitor"));
+*/				JButton bttnMonitor=new JButton(m_Model.getString("bttnMonitor"));
 //				bttnMonitor.setEnabled(false);
 				bttnMonitor.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
