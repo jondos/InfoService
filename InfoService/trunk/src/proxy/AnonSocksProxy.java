@@ -50,7 +50,7 @@ final public class AnonSocksProxy extends AbstractAnonProxy implements Runnable
 	private volatile boolean m_bIsRunning;
 	private ServerSocket m_socketListener;
 	private Thread m_threadRunLoop;
-	private final static boolean USE_TOR = false;
+	private final static boolean USE_TOR = true;
 
 	public AnonSocksProxy(ServerSocket listener)
 	{

@@ -22,16 +22,15 @@ public class ORDescription {
 	private String m_address;
 	private String m_name;
 	private int m_port;
-	private boolean m_running;
+	//private boolean m_running;
 	private ORAcl m_acl;
 	private byte[] m_onionkey;
 
-	public ORDescription(String address, String name, int port, boolean running)
+	public ORDescription(String address, String name, int port)
 	{
 		this.m_address = address;
 		this.m_name = name;
 		this.m_port = port;
-		this.m_running = running;
 		m_acl=new ORAcl();
 	}
 
@@ -66,11 +65,6 @@ public class ORDescription {
 	public int getPort()
 	{
 		return this.m_port;
-	}
-
-	public boolean isRunnung()
-	{
-		return this.m_running;
 	}
 
 	public boolean equals(ORDescription or)
@@ -127,7 +121,7 @@ public class ORDescription {
 						ln = reader.readLine(); // skip siganture
 						if (ln.startsWith("-----END"))
 						{
-							ORDescription ord=new ORDescription(adr,nickname,Integer.parseInt(orport),true);
+							ORDescription ord=new ORDescription(adr,nickname,Integer.parseInt(orport));
 							ord.setOnionKey(key);
 							ord.setAcl(acl);
 							return ord;
