@@ -1,9 +1,13 @@
 import java.util.Enumeration;
+import java.util.Dictionary;
+import java.util.Hashtable;
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.border.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 public final class JAPConf extends JDialog 
 	{
@@ -19,13 +23,14 @@ public final class JAPConf extends JDialog
 	private JCheckBox netChB;
 	private JCheckBox threadChB;
 	private JCheckBox miscChB;
-	private JAPJIntField debugLevelTextField;
-
+	//private JAPJIntField debugLevelTextField;
+	private JSlider sliderDebugLevel;
 	private JAPJIntField portnumberTextField;
 	private JCheckBox	proxyCheckBox;
 	private JAPJIntField proxyportnumberTextField;
 	private JTextField   proxyhostTextField;
 	private JCheckBox	autoConnectCheckBox;
+	private JCheckBox	startupMinimizeCheckBox;
 	private JAPJIntField anonportnumberTextField;
 	private JTextField   anonhostTextField;
 	private JAPJIntField infoportnumberTextField;
@@ -174,6 +179,7 @@ public final class JAPConf extends JDialog
 
 	protected JPanel buildanonPanel() 
 			{
+				startupMinimizeCheckBox=new JCheckBox(model.getString("settingsstartupMinimizeCheckBox"));
 				autoConnectCheckBox = new JCheckBox(model.getString("settingsautoConnectCheckBox"));
 				anonhostTextField = new JTextField();
 				anonportnumberTextField = new JAPJIntField();
@@ -286,13 +292,14 @@ public final class JAPConf extends JDialog
 				p12.add(Box.createHorizontalGlue() );
 				p12.add(select);
 				p1.add(p12);
-				// 3-8
+				// 3-9
 				p1.add(b3);
 				p1.add(new JLabel(model.getString("settingsAnonHost")));
 				p1.add(anonhostTextField);
 				p1.add(new JLabel(model.getString("settingsAnonPort")));
 				p1.add(anonportnumberTextField);
 				p1.add(autoConnectCheckBox);
+				//p1.add(startupMinimizeCheckBox);
 				//
 				p.add(p1, BorderLayout.NORTH);
 				return p;
@@ -344,23 +351,42 @@ public final class JAPConf extends JDialog
 
 				// Panel for Debugging Option
 				JPanel p3=new JPanel();
-				p3.setLayout( new GridLayout(6,1));
+				p3.setLayout( new GridLayout(1,2));
 				p3.setBorder( new TitledBorder("Debugging") );
+				JPanel p31=new JPanel(new GridLayout(0,1));
 				guiChB = new JCheckBox("GUI");
 				netChB = new JCheckBox("NET");
 				threadChB = new JCheckBox("THREAD");
 				miscChB = new JCheckBox("MISC");
-				debugLevelTextField = new JAPJIntField();
-				debugLevelTextField.addActionListener(new ActionListener() {
-									   public void actionPerformed(ActionEvent e) {
-							   OKPressed();
-							   }});
-				p3.add(guiChB);
-				p3.add(netChB);
-				p3.add(threadChB);
-				p3.add(miscChB);
-				p3.add(new JLabel("Level ("+JAPDebug.DEBUG+".."+JAPDebug.EMERG+")"));
-				p3.add(debugLevelTextField);
+				p31.add(guiChB);
+				p31.add(netChB);
+				p31.add(threadChB);
+				p31.add(miscChB);
+				p3.add(p31);
+				JPanel p32=new JPanel();
+				sliderDebugLevel=new JSlider(JSlider.VERTICAL,0,7,0);
+				sliderDebugLevel.addChangeListener(new ChangeListener()
+					{public void stateChanged(ChangeEvent e)
+					 {Dictionary d=sliderDebugLevel.getLabelTable();
+						for(int i=0;i<8;i++)
+							((JLabel)d.get(new Integer(i))).setEnabled(i<=sliderDebugLevel.getValue());
+					}});
+				String debugLevels[]=JAPDebug.getDebugLevels();
+				Hashtable ht=new Hashtable(debugLevels.length,1.0f);
+				for(int i=0;i<debugLevels.length;i++)
+					{
+						ht.put(new Integer(i),new JLabel(" "+debugLevels[i]));
+					}
+				sliderDebugLevel.setLabelTable(ht);
+				sliderDebugLevel.setPaintLabels(true);
+				sliderDebugLevel.setMajorTickSpacing(1);
+				sliderDebugLevel.setMinorTickSpacing(1);
+				sliderDebugLevel.setSnapToTicks(true);
+				sliderDebugLevel.setPaintTrack(true);
+				sliderDebugLevel.setPaintTicks(false);
+				
+				p32.add(sliderDebugLevel);
+				p3.add(p32);
 				
 				p.add(p1, BorderLayout.NORTH);
 				p.add(p2, BorderLayout.CENTER);
@@ -446,7 +472,7 @@ public final class JAPConf extends JDialog
 				}
 			
 			//checking Debug-Level
-			try
+	/*		try
 				{
 					i=Integer.parseInt(debugLevelTextField.getText().trim());
 				}
@@ -459,7 +485,7 @@ public final class JAPConf extends JDialog
 					showError(model.getString("errorDebugLevelWrong"));
 					return false;
 				}
-			
+		*/	
 			
 			return true;
 		}
@@ -479,13 +505,14 @@ public final class JAPConf extends JDialog
 				model.anonHostName = anonhostTextField.getText().trim();
 				model.anonPortNumber  = Integer.parseInt(anonportnumberTextField.getText().trim());
 				model.autoConnect = autoConnectCheckBox.isSelected();
+				model.setMinimizeOnStartup(startupMinimizeCheckBox.isSelected());
 				JAPDebug.setDebugType(
 					 (guiChB.isSelected()?JAPDebug.GUI:JAPDebug.NUL)+
 					 (netChB.isSelected()?JAPDebug.NET:JAPDebug.NUL)+
 					 (threadChB.isSelected()?JAPDebug.THREAD:JAPDebug.NUL)+
 					 (miscChB.isSelected()?JAPDebug.MISC:JAPDebug.NUL)
 					);
-				JAPDebug.setDebugLevel(Integer.parseInt(debugLevelTextField.getText().trim()));
+				JAPDebug.setDebugLevel(sliderDebugLevel.getValue());
 				model.notifyJAPObservers();
 			}
 	
@@ -510,7 +537,7 @@ public final class JAPConf extends JDialog
 		netChB.setSelected((((JAPDebug.getDebugType()&JAPDebug.NET)!=0)?true:false));
 		threadChB.setSelected((((JAPDebug.getDebugType()&JAPDebug.THREAD)!=0)?true:false));
 		miscChB.setSelected((((JAPDebug.getDebugType()&JAPDebug.MISC)!=0)?true:false));
-		debugLevelTextField.setText(String.valueOf(JAPDebug.getDebugLevel()));
+		sliderDebugLevel.setValue(JAPDebug.getDebugLevel());
 		// listener tab
 		portnumberTextField.setText(String.valueOf(model.getPortNumber()));
 		// http proxy tab
@@ -527,7 +554,7 @@ public final class JAPConf extends JDialog
 		anonportnumberTextField.setText(String.valueOf(model.anonPortNumber));
 		select.setSelectedIndex(0);
 		autoConnectCheckBox.setSelected(model.autoConnect);
-		
+		startupMinimizeCheckBox.setSelected(model.getMinimizeOnStartup());
 	}
 	
 

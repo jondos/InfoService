@@ -229,7 +229,7 @@ public final class JAPMuxSocket extends Thread /*implements Runnable*/
 									{
 										System.arraycopy(buff,0,outBuff,0,len);
 										for(int i=chainlen-1;i>=0;i--)
-											entry.arCipher[i].encrypt(outBuff);
+											entry.arCipher[i].encrypt(outBuff); //something throws a null pointer....
 									}	
 							}
 						outDataStream.writeInt(channel);

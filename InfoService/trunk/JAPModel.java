@@ -41,6 +41,7 @@ public final class JAPModel {
 	public  int      anonPortNumber    = 6544;
 	private boolean  anonMode          = false;  // indicates whether user wants to send data via MIXes or not
 	public  boolean  autoConnect       = false;  // autoconnect after program start
+	private boolean  mbMinimizeOnStartup =false; //true if programm should be started minimized...
 	public  boolean  alreadyCheckedForNewVersion = false; // indicates if check for new version has already been done 
 	public  boolean  canStartService   = false;  // indicates if Anon service can be started
 	public  String   status1           = "?";
@@ -165,6 +166,7 @@ public final class JAPModel {
 	 *		anonHostName=".."							// the hostname of the anon-service
 	 *		anonPortNumber=".."						// the portnumber of the anon-service
 	 *		autoConnect="true"/"false"		// should we start the anon service immedialy after programm launch ?
+	 *		minimizedStartup="true"/"false" // should we start minimized ???
 	 *	>
 	 *	<Debug>
 	 *		<Level>..</Level>							// the amount of output (0 means less.. 7 means max)
@@ -209,6 +211,7 @@ public final class JAPModel {
 			anonHostName=n.getNamedItem("anonHostName").getNodeValue();
 			anonPortNumber=Integer.valueOf(n.getNamedItem("anonPortNumber").getNodeValue()).intValue();
 			autoConnect=((n.getNamedItem("autoConnect").getNodeValue()).equals("true")?true:false);
+			mbMinimizeOnStartup=((n.getNamedItem("minimizedStartup").getNodeValue()).equals("true")?true:false);
 		
 			//Loading debug settings
 			NodeList nl=root.getElementsByTagName("Debug");
@@ -264,6 +267,7 @@ public final class JAPModel {
 			e.setAttribute("anonHostName",anonHostName);
 			e.setAttribute("anonPortNumber",Integer.toString(anonPortNumber));
 			e.setAttribute("autoConnect",(autoConnect?"true":"false"));
+			e.setAttribute("minimizedStartup",(mbMinimizeOnStartup?"true":"false"));
 			//
 			// adding Debug-Element
 			Element elemDebug=doc.createElement("Debug");
@@ -423,6 +427,22 @@ public final class JAPModel {
 			synchronized(this)
 				{
 					return mbUseProxy;
+				}
+		}
+
+	public void setMinimizeOnStartup(boolean b)
+		{
+			synchronized(this)
+				{
+					mbMinimizeOnStartup=b;
+				}
+		}
+	
+	public boolean getMinimizeOnStartup()
+		{
+			synchronized(this)
+				{
+					return mbMinimizeOnStartup;
 				}
 		}
 
