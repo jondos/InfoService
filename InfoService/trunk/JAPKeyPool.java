@@ -25,7 +25,7 @@ public final class JAPKeyPool extends Thread
 			}
 		
 		public JAPKeyPool(int ps,int keylength)
-			{
+			{	JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPKeyPool:initializing...");
 				setPriority(Thread.MIN_PRIORITY);
 				keySize=keylength;
 				poolSize=ps;
@@ -34,10 +34,11 @@ public final class JAPKeyPool extends Thread
 				aktKey=null;
 				l1=new Object();
 				l2=new Object();
+				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPKeyPool:initialization finished!");
 			}
 		
 		public void run()
-			{
+			{	
 				sr=new SecureRandom(SecureRandom.getSeed(20));
 				KeyList tmpKey;
 				pool=new KeyList(keySize);

@@ -28,7 +28,7 @@ public class JAPProxyServer implements Runnable
 				
 				model.status1 = model.getString("statusRunning");
 				model.notifyJAPObservers();
-				JAPDebug.out(JAPDebug.INFO,JAPDebug.NET,"ProxyServer on port " + portN + " started.");
+				JAPDebug.out(JAPDebug.INFO,JAPDebug.NET,"JAPProxyServer:Listener on port " + portN + " started.");
 				try {
 					server = new ServerSocket (portN);
 					isRunningProxy = true;
@@ -51,25 +51,31 @@ public class JAPProxyServer implements Runnable
 					} 
 					catch (Exception e2) {
 					}
-					JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"ProxyServer.run() Exception: " +e);
+					JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPProxyServer:ProxyServer.run() Exception: " +e);
 				}
 				stopMux();
 				isRunningProxy = false;
-				JAPDebug.out(JAPDebug.INFO,JAPDebug.NET,"ProxyServer on port " + portN + " stopped.");
+				JAPDebug.out(JAPDebug.INFO,JAPDebug.NET,"JAPProxyServer:ProxyServer on port " + portN + " stopped.");
 				model.status1 = model.getString("statusNotRunning");
 				model.notifyJAPObservers();
     }
 	
-	public void startMux() throws Exception {
+	public void startMux() {
 		if (isRunningProxy && (isRunningMux == false)) {
 			try {
-				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Mux starting...");
+				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPProxyServer:Mux starting...");
 				oMuxSocket=new JAPMuxSocket();
 				if(oMuxSocket.connect(model.anonHostName,model.anonPortNumber)==-1) {
 					model.setAnonMode(false);
 					model.status2 = model.getString("statusCannotConnect");
 					model.notifyJAPObservers();
-					throw new Exception("ProxyServer.startMux() Exception: Cannot connect to first Mix.");
+						javax.swing.JOptionPane.showMessageDialog
+							(
+							 null, 
+							 model.getString("errorConnectingFirstMix"),
+							 model.getString("errorConnectingFirstMixTitle"),
+							 javax.swing.JOptionPane.ERROR_MESSAGE
+							);
 				}
 				oMuxSocket.start();
 				model.status2 = model.getString("statusRunning");
@@ -77,22 +83,28 @@ public class JAPProxyServer implements Runnable
 				isRunningMux = true;
 			}
 			catch (Exception e) {
-				JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.NET,"ProxyServer.startMux() Exception: " +e);
+				JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.NET,"JAPProxyServer:startMux() Exception: " +e);
 				model.setAnonMode(false);
 				model.status2 = model.getString("statusCannotConnect");
 				model.notifyJAPObservers();
-				throw new Exception("ProxyServer.startMux() Exception: " +e);
+						javax.swing.JOptionPane.showMessageDialog
+							(
+							 null, 
+							 model.getString("errorConnectingFirstMix"),
+							 model.getString("errorConnectingFirstMixTitle"),
+							 javax.swing.JOptionPane.ERROR_MESSAGE
+							);
 			}
 		}
 	}
 	
 	public void stopMux() {
-		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Mux stopping...");
+		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPProxyServer:Mux stopping...");
 		try {
 			oMuxSocket.close();
 		}
 		catch(Exception e){ 
-				JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.NET,"ProxyServer.stopMux() Exception: " +e);
+				JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.NET,"JAPProxyServer:stopMux() Exception: " +e);
 		}
 		isRunningMux = false;
 		model.status2 = model.getString("statusNotRunning");
@@ -105,7 +117,7 @@ public class JAPProxyServer implements Runnable
 			server.close();
 		}
 		catch(Exception e) { 
-			JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.NET,"ProxyServer.stopService() Exception: " +e);
+			JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.NET,"JAPProxyServer:stopService() Exception: " +e);
 		}
 		stopMux();
 		model.status1 = model.getString("statusNotRunning");

@@ -45,12 +45,11 @@ public final class JAP {
 		splash.dispose();
 		view.show();
 		
+		// Keypool stuff now in model.initialRun();
+		
 		// initially start services
-		// keypool first!!
-		model.keypool=new JAPKeyPool(20,16);
-		model.keypool.run();
-
 		model.initialRun();
+
 		
 	}
 }
