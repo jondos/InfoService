@@ -70,19 +70,20 @@ public class InfoServiceCommands implements JWSInternalCommands {
     try {
       LogHolder.log(LogLevel.DEBUG, LogType.NET, "Infoserver received: XML: " + (new String(a_postData)));
       Element infoServiceNode = (Element)(XMLUtil.getFirstChildByName(XMLUtil.toXMLDocument(a_postData), InfoServiceDBEntry.getXmlElementName()));
-      /* verify the signature */
-      if (SignatureVerifier.getInstance().verifyXml(infoServiceNode, SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE) == true) {      
+      /* verify the signature --> if requested */
+      if (!Configuration.getInstance().isInfoServiceMessageSignatureCheckEnabled()||
+		  SignatureVerifier.getInstance().verifyXml(infoServiceNode, SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE) == true) {
         InfoServiceDBEntry newEntry = new InfoServiceDBEntry(infoServiceNode, false);
         Database.getInstance(InfoServiceDBEntry.class).update(newEntry);
       }
       else {
         LogHolder.log(LogLevel.WARNING, LogType.NET, "Signature check failed for infoservice entry! XML: " + (new String(a_postData)));
         httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_INTERNAL_SERVER_ERROR);
-      }  
+      }
     }
     catch (Exception e) {
       LogHolder.log(LogLevel.ERR, LogType.NET, e);
-      httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_BAD_REQUEST);    
+      httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_BAD_REQUEST);
     }
     return httpResponse;
   }
@@ -129,23 +130,23 @@ public class InfoServiceCommands implements JWSInternalCommands {
    * @return The HTTP response for the client.
    */
   private HttpResponseStructure cascadePostHelo(byte[] a_postData) {
-    HttpResponseStructure httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_OK);    
+    HttpResponseStructure httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_OK);
     try {
       LogHolder.log(LogLevel.DEBUG, LogType.NET, "MixCascade HELO received: XML: " + (new String(a_postData)));
       Element mixCascadeNode = (Element)(XMLUtil.getFirstChildByName(XMLUtil.toXMLDocument(a_postData), MixCascade.getXmlElementName()));
       /* verify the signature */
-      if (SignatureVerifier.getInstance().verifyXml(mixCascadeNode, SignatureVerifier.DOCUMENT_CLASS_MIX) == true) {      
+      if (SignatureVerifier.getInstance().verifyXml(mixCascadeNode, SignatureVerifier.DOCUMENT_CLASS_MIX) == true) {
         MixCascade mixCascadeEntry = new MixCascade(mixCascadeNode);
         Database.getInstance(MixCascade.class).update(mixCascadeEntry);
       }
       else {
         LogHolder.log(LogLevel.WARNING, LogType.NET, "Signature check failed for MixCascade entry! XML: " + (new String(a_postData)));
         httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_INTERNAL_SERVER_ERROR);
-      }       
+      }
     }
     catch (Exception e) {
       LogHolder.log(LogLevel.ERR, LogType.NET, e);
-      httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_BAD_REQUEST);    
+      httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_BAD_REQUEST);
     }
     return httpResponse;
   }
@@ -194,18 +195,18 @@ public class InfoServiceCommands implements JWSInternalCommands {
       LogHolder.log(LogLevel.DEBUG, LogType.NET, "Mix HELO received: XML: " + (new String(a_postData)));
       Element mixNode = (Element)(XMLUtil.getFirstChildByName(XMLUtil.toXMLDocument(a_postData), MixInfo.getXmlElementName()));
       /* verify the signature */
-      if (SignatureVerifier.getInstance().verifyXml(mixNode, SignatureVerifier.DOCUMENT_CLASS_MIX) == true) {      
+      if (SignatureVerifier.getInstance().verifyXml(mixNode, SignatureVerifier.DOCUMENT_CLASS_MIX) == true) {
         MixInfo mixEntry = new MixInfo(mixNode);
         Database.getInstance(MixInfo.class).update(mixEntry);
       }
       else {
         LogHolder.log(LogLevel.WARNING, LogType.NET, "Signature check failed for Mix entry! XML: " + (new String(a_postData)));
         httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_INTERNAL_SERVER_ERROR);
-      }       
+      }
     }
     catch (Exception e) {
       LogHolder.log(LogLevel.ERR, LogType.NET, e);
-      httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_BAD_REQUEST);    
+      httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_BAD_REQUEST);
     }
     return httpResponse;
   }
@@ -226,7 +227,7 @@ public class InfoServiceCommands implements JWSInternalCommands {
       LogHolder.log(LogLevel.DEBUG, LogType.NET, "Mix Configure received: XML: " + (new String(a_postData)));
       Element mixNode = (Element)(XMLUtil.getFirstChildByName(XMLUtil.toXMLDocument(a_postData), MixInfo.getXmlElementName()));
       /* verify the signature */
-      if (SignatureVerifier.getInstance().verifyXml(mixNode, SignatureVerifier.DOCUMENT_CLASS_MIX) == true) {      
+      if (SignatureVerifier.getInstance().verifyXml(mixNode, SignatureVerifier.DOCUMENT_CLASS_MIX) == true) {
         MixInfo mixEntry = new MixInfo(mixNode);
         /* check whether the mix is already assigned to a mixcascade */
         Enumeration knownMixCascades = Database.getInstance(MixCascade.class).getEntryList().elements();
@@ -253,11 +254,11 @@ public class InfoServiceCommands implements JWSInternalCommands {
       else {
         LogHolder.log(LogLevel.WARNING, LogType.NET, "Signature check failed for Mix entry! XML: " + (new String(a_postData)));
         httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_INTERNAL_SERVER_ERROR);
-      }       
+      }
     }
     catch (Exception e) {
       LogHolder.log(LogLevel.ERR, LogType.NET, e);
-      httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_BAD_REQUEST);    
+      httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_BAD_REQUEST);
     }
     return httpResponse;
   }
@@ -275,7 +276,7 @@ public class InfoServiceCommands implements JWSInternalCommands {
     try {
       MixInfo mixEntry = (MixInfo)(Database.getInstance(MixInfo.class).getEntryById(a_mixId));
       if (mixEntry == null) {
-        httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_NOT_FOUND);       
+        httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_NOT_FOUND);
       }
       else {
         httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_TYPE_TEXT_XML, XMLUtil.toString(mixEntry.getXmlStructure()));
@@ -302,7 +303,7 @@ public class InfoServiceCommands implements JWSInternalCommands {
       LogHolder.log(LogLevel.DEBUG, LogType.NET, "Status received: XML: " + (new String(a_postData)));
       Element mixCascadeStatusNode = (Element)(XMLUtil.getFirstChildByName(XMLUtil.toXMLDocument(a_postData), StatusInfo.getXmlElementName()));
       /* verify the signature */
-      if (SignatureVerifier.getInstance().verifyXml(mixCascadeStatusNode, SignatureVerifier.DOCUMENT_CLASS_MIX) == true) {      
+      if (SignatureVerifier.getInstance().verifyXml(mixCascadeStatusNode, SignatureVerifier.DOCUMENT_CLASS_MIX) == true) {
         /* the currently required minimum JAP version is only needed for compatibility with JAP
          * < 00.02.016
          * @todo remove it
@@ -323,11 +324,11 @@ public class InfoServiceCommands implements JWSInternalCommands {
       else {
         LogHolder.log(LogLevel.WARNING, LogType.NET, "Signature check failed for mixcascade status entry! XML: " + (new String(a_postData)));
         httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_INTERNAL_SERVER_ERROR);
-      }  
+      }
     }
     catch (Exception e) {
       LogHolder.log(LogLevel.ERR, LogType.NET, e);
-      httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_BAD_REQUEST);    
+      httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_BAD_REQUEST);
     }
     return httpResponse;
   }
@@ -347,7 +348,7 @@ public class InfoServiceCommands implements JWSInternalCommands {
       StatusInfo statusEntry = (StatusInfo) Database.getInstance(StatusInfo.class).getEntryById(a_cascadeId);
       if (statusEntry == null) {
         /* we don't have a status for the given id */
-        httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_NOT_FOUND);               
+        httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_NOT_FOUND);
       }
       else {
         httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_TYPE_TEXT_XML, statusEntry.getStatusXmlData());
@@ -437,7 +438,7 @@ public class InfoServiceCommands implements JWSInternalCommands {
         "  </BODY>\n" +
         "</HTML>\n";
       /* send content */
-      httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_TYPE_TEXT_HTML, htmlData);      
+      httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_TYPE_TEXT_HTML, htmlData);
     }
     catch (Exception e) {
       LogHolder.log(LogLevel.ERR, LogType.MISC, e);
@@ -529,7 +530,7 @@ public class InfoServiceCommands implements JWSInternalCommands {
       else {
         /* send XML-Document */
         httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_TYPE_TEXT_XML, XMLUtil.toString(mixCascadeEntry.getXmlStructure()));
-      }  
+      }
     }
     catch (Exception e) {
       LogHolder.log(LogLevel.ERR, LogType.MISC, e);
@@ -608,7 +609,7 @@ public class InfoServiceCommands implements JWSInternalCommands {
   private HttpResponseStructure renewJapForwarder(byte[] a_postData)
   {
     /* this is only the default, if we don't have a primary forwarder list */
-    HttpResponseStructure httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_BAD_REQUEST);    
+    HttpResponseStructure httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_BAD_REQUEST);
     String answer = JapForwardingTools.renewForwarder(a_postData);
     if (answer != null)
     {
@@ -648,23 +649,23 @@ public class InfoServiceCommands implements JWSInternalCommands {
    * @return The HTTP response for the client.
    */
   private HttpResponseStructure japPostCurrentJapVersion(byte[] a_postData) {
-    HttpResponseStructure httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_OK);    
+    HttpResponseStructure httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_OK);
     try {
       LogHolder.log(LogLevel.DEBUG, LogType.NET, "JAPMinVersion received: XML: " + (new String(a_postData)));
       Element japNode = (Element)(XMLUtil.getFirstChildByName(XMLUtil.toXMLDocument(a_postData), JAPMinVersion.getXmlElementName()));
       /* verify the signature */
-      if (SignatureVerifier.getInstance().verifyXml(japNode, SignatureVerifier.DOCUMENT_CLASS_UPDATE) == true) {      
+      if (SignatureVerifier.getInstance().verifyXml(japNode, SignatureVerifier.DOCUMENT_CLASS_UPDATE) == true) {
         JAPMinVersion minVersionEntry = new JAPMinVersion(japNode);
         Database.getInstance(JAPMinVersion.class).update(minVersionEntry);
       }
       else {
         LogHolder.log(LogLevel.WARNING, LogType.NET, "Signature check failed for JAPMinVersion entry! XML: " + (new String(a_postData)));
         httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_INTERNAL_SERVER_ERROR);
-      }       
+      }
     }
     catch (Exception e) {
       LogHolder.log(LogLevel.ERR, LogType.NET, e);
-      httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_BAD_REQUEST);    
+      httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_BAD_REQUEST);
     }
     return httpResponse;
   }
@@ -695,12 +696,12 @@ public class InfoServiceCommands implements JWSInternalCommands {
    * @return The HTTP response for the client.
    */
   private HttpResponseStructure postJnlpFile(String a_fileName, byte[] a_postData) {
-    HttpResponseStructure httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_OK);    
+    HttpResponseStructure httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_OK);
     try {
       LogHolder.log(LogLevel.DEBUG, LogType.NET, "JNLP file received (" + a_fileName + "): XML: " + (new String(a_postData)));
       Element jnlpNode = (Element)(XMLUtil.getFirstChildByName(XMLUtil.toXMLDocument(a_postData), JAPVersionInfo.getXmlElementName()));
       /* verify the signature */
-      if (SignatureVerifier.getInstance().verifyXml(jnlpNode, SignatureVerifier.DOCUMENT_CLASS_UPDATE) == true) {      
+      if (SignatureVerifier.getInstance().verifyXml(jnlpNode, SignatureVerifier.DOCUMENT_CLASS_UPDATE) == true) {
         JAPVersionInfo jnlpEntry = null;
         if (a_fileName.equals("/japRelease.jnlp")) {
           jnlpEntry = new JAPVersionInfo(jnlpNode, JAPVersionInfo.JAP_RELEASE_VERSION);
@@ -710,17 +711,17 @@ public class InfoServiceCommands implements JWSInternalCommands {
         }
         else {
           throw (new Exception("InfoServiceCommands: postJnlpFile: Invalid filename specified (" + a_fileName + ")."));
-        }   
+        }
         Database.getInstance(JAPVersionInfo.class).update(jnlpEntry);
       }
       else {
         LogHolder.log(LogLevel.WARNING, LogType.NET, "Signature check failed for JNLP file! XML: " + (new String(a_postData)));
         httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_INTERNAL_SERVER_ERROR);
-      }       
+      }
     }
     catch (Exception e) {
       LogHolder.log(LogLevel.ERR, LogType.NET, e);
-      httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_BAD_REQUEST);    
+      httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_BAD_REQUEST);
     }
     return httpResponse;
   }
@@ -750,8 +751,8 @@ public class InfoServiceCommands implements JWSInternalCommands {
         httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_TYPE_APPLICATION_JNLP, XMLUtil.toString(jnlpFile.getXmlStructure()), true);
       }
       else {
-        httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_BAD_REQUEST);   
-      } 
+        httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_BAD_REQUEST);
+      }
     }
     return httpResponse;
   }
@@ -766,7 +767,7 @@ public class InfoServiceCommands implements JWSInternalCommands {
    */
   private HttpResponseStructure japGetAktVersion() {
     /* this is only the default, if we don't know the minimum JAP version */
-    HttpResponseStructure httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_NOT_FOUND);    
+    HttpResponseStructure httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_NOT_FOUND);
     JAPMinVersion minVersionEntry = (JAPMinVersion)(Database.getInstance(JAPMinVersion.class).getEntryById("JAPMinVersion"));
     if (minVersionEntry != null) {
       httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_TYPE_TEXT_PLAIN, minVersionEntry.getJapSoftware().getVersion());
@@ -845,7 +846,7 @@ public class InfoServiceCommands implements JWSInternalCommands {
   private HttpResponseStructure getProxyAddresses()
   {
     /* this is only the default, if we don't know the proxy addresses */
-    HttpResponseStructure httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_NOT_FOUND);    
+    HttpResponseStructure httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_NOT_FOUND);
     if (Configuration.getInstance().getProxyAddresses() != null) {
       httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_TYPE_TEXT_PLAIN, Configuration.getInstance().getProxyAddresses());
     }
