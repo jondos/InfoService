@@ -1,4 +1,6 @@
 // import java.io.PrintWriter;
+import java.util.Dictionary;
+import java.util.Hashtable;
 
 /* 2000-08-01(HF):
 Stefan, ich habe das Zeug mit PrintWriter und so auskommentiert, weil es irgendwie nicht ging.
@@ -128,6 +130,13 @@ public final class JAPDebug {
 	public static int getDebugLevel() {
 		return debug.debuglevel;
 	}
+	
+	/** Returns short words discribing each debug-level.
+	 */
+	public static final String[] getDebugLevels()
+		{
+			return strLevels;
+		}
 		
 //	/** Set the debugging output stream. Each debug level has his on outputstream. This defaults to System.out
 //	 * @param level The debug level

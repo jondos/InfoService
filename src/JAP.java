@@ -8,7 +8,7 @@
 
 import java.lang.NoClassDefFoundError;
 import java.awt.Frame;
-
+import java.awt.event.WindowEvent;
 /** This is the MAIN of all this. It starts everything.
  */
 public class JAP extends Frame{
@@ -77,6 +77,8 @@ public class JAP extends Frame{
 		
 		// Dispose the spash screen and show main frame
 		splash.dispose();
+		//if(model.getMinimizeOnStartup())
+			view.getToolkit().getSystemEventQueue().postEvent(new WindowEvent(view,WindowEvent.WINDOW_ICONIFIED));
 		view.show();
 		view.toFront();		
 		
