@@ -128,10 +128,14 @@ public class JAPAbout extends JDialog
 				addWindowListener(new WindowAdapter() {
 					public void windowClosing(WindowEvent e) {OKPressed();}
 				});	
-				ImageIcon imageSplash=JAPUtil.loadImageIcon("images/splash.gif",false);
+				ImageIcon imageSplash=JAPUtil.loadImageIcon("images/info.gif",false);
 				JLabel labelSplash=new JLabel(imageSplash);
-				JLabel version=new JLabel("Version: "+JAPModel.aktVersion);
-				version.setFont(new Font("Sans",Font.PLAIN,11));
+				JLabel verstxt=new JLabel("Version:");
+				JLabel version=new JLabel(JAPModel.aktVersion);
+				verstxt.setFont(new Font("Sans",Font.PLAIN,9));
+				verstxt.setForeground(Color.black);
+				verstxt.setSize(verstxt.getPreferredSize());
+				version.setFont(new Font("Sans",Font.PLAIN,9));
 				version.setForeground(Color.black);
 				version.setSize(version.getPreferredSize());
 				JButton bttnOk=new JButton("Ok");
@@ -140,22 +144,24 @@ public class JAPAbout extends JDialog
 						   public void actionPerformed(ActionEvent e) {
 				   OKPressed();
 				   }});
-				labelSplash.setSize(350,173);
+				labelSplash.setSize(370,173);
 				labelSplash.add(version);
+				labelSplash.add(verstxt);
 				labelSplash.setLayout(null);
 				labelSplash.add(bttnOk);
 				bttnOk.setSize(bttnOk.getPreferredSize());
 				int x=350-5-bttnOk.getSize().width;
 				int y=173-5-bttnOk.getSize().height;
 				bttnOk.setLocation(x,y);
-				version.setLocation(x-version.getSize().width-10,y+version.getSize().height/2);
+				version.setLocation(x-version.getSize().width-8,y-2+version.getSize().height);
+				verstxt.setLocation(version.getLocation().x, version.getLocation().y-11);
 				
 				setContentPane(labelSplash);
 				
-				sp=new ScrollerPane(180,90);
+				sp=new ScrollerPane(220,173-52);
 				getLayeredPane().setLayout(null);
 				getLayeredPane().add(sp);
-				sp.setLocation(5,70);
+				sp.setLocation(4,52);
 				pack();
 				setLocationRelativeTo(parent);
 				setResizable(false);

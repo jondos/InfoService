@@ -113,7 +113,6 @@ public final class JAPModel implements JAPAnonServiceListener{
 
 	static final int    MAXHELPLANGUAGES = 6;
 	static final String XMLCONFFN    = "jap.conf";
-	static final String SPLASHFN     = "images/splash.gif";
 	public static final String BUSYFN       = "images/busy.gif";
 	static final String DOWNLOADFN   = "images/install.gif";
 	static final String IICON16FN    = "images/icon16.gif";

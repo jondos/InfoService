@@ -110,7 +110,7 @@ final class JAPSplash extends Window
 //				paint(getGraphics());
 				//setSize(350,173);
 				JAPUtil.centerFrame(this);
-				System.out.println("----------------------- SPLASH FINISHED -----------------------");
+//				System.out.println("----------------------- SPLASH FINISHED -----------------------");
 			}
 		
 		public void update(Graphics g)
@@ -128,7 +128,7 @@ final class JAPSplash extends Window
 				if(imageBusy!=null)
 					goff.drawImage(imageBusy,15,150,this);
 				goff.setFont(font);
-				goff.drawString(strLoading,15,140);
+				goff.drawString(strLoading,17,140);
 				goff.drawString(strVersion,xVersion,yVersion);
 				g.drawImage(imageOffScreen,0,0,this);
 			}
