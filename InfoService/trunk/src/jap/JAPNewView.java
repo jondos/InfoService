@@ -73,7 +73,7 @@ import pay.gui.PaymentMainPanel;
 import javax.swing.*;
 import gui.*;
 import java.awt.event.*;
-
+import java.util.*;
 final public class JAPNewView extends AbstractJAPMainView implements IJAPMainView, ActionListener,
 	JAPObserver
 {
@@ -101,18 +101,19 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	//private GuthabenAnzeige guthaben;
 	private boolean loadPay = false;
 
-
+	private JComboBox m_comboAnonServices;
 	private JLabel m_labelAnonService,m_labelAnonymity,m_labelAnonymitySmall,m_labelAnonymityOnOff;
 	private JLabel m_labelAnonMeter;
 	private JProgressBar m_progressAnonTraffic;
-	private JLabel m_labelAnonymityUser,m_labelAnonymityUserLabel;
+	private JLabel m_labelAnonymityUser,m_labelAnonymityUserLabel,m_labelAnonymityTrafficLabel;
 
 	private JLabel m_labelOwnTraffic,m_labelOwnTrafficSmall;
 	private JLabel m_labelOwnActivity,m_labelForwarderActivity;
 	private JLabel m_labelOwnActivitySmall,m_labelForwarderActivitySmall;
 	private JLabel m_labelOwnTrafficBytes,m_labelOwnTrafficUnit;
 	private JLabel m_labelOwnTrafficBytesSmall,m_labelOwnTrafficUnitSmall;
-	private JLabel m_labelOwnTrafficWWW,m_labelOwnTrafficBytesWWW,m_labelOwnTrafficUnitWWW;
+	private JLabel m_labelOwnTrafficWWW,m_labelOwnTrafficOther;
+	private JLabel m_labelOwnTrafficBytesWWW,m_labelOwnTrafficUnitWWW;
 	private JProgressBar m_progressOwnTrafficActivity,m_progressOwnTrafficActivitySmall;
 	private JButton m_bttnAnonDetails;
 	private JRadioButton m_rbAnonOff,m_rbAnonOn;
@@ -197,12 +198,11 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.weightx=0;
 		c1.fill=GridBagConstraints.NONE;
 		m_panelAnonService.add(m_labelAnonService, c1);
-		JComboBox combo = new JComboBox();
-		combo.addItem("Dresden - Dresden");
+		m_comboAnonServices = new JComboBox();
 		c1.insets = new Insets(0, 5, 0, 0);
 		c1.fill = GridBagConstraints.HORIZONTAL;
 		c1.weightx = 1;
-		m_panelAnonService.add(combo, c1);
+		m_panelAnonService.add(m_comboAnonServices, c1);
 		m_bttnAnonDetails = new JButton(JAPMessages.getString("ngBttnAnonDetails"));
 		c1.gridx = 2;
 		c1.weightx = 0;
@@ -238,11 +238,11 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_labelAnonymityUserLabel = new JLabel(JAPMessages.getString("ngNrOfUsers"));
 		c1.gridy = 1;
 		c1.anchor = GridBagConstraints.WEST;
-		c1.insets = new Insets(10, 15, 0, 0);
+		c1.insets = new Insets(10, 15, 0, 10);
 		p.add(m_labelAnonymityUserLabel, c1);
-		l = new JLabel("Verkehr:");
+		m_labelAnonymityTrafficLabel = new JLabel(JAPMessages.getString("ngAnonymityTraffic"));
 		c1.gridy = 2;
-		p.add(l, c1);
+		p.add(m_labelAnonymityTrafficLabel, c1);
 		m_labelAnonymityUser = new JLabel("",JLabel.CENTER);
 		c1.insets = new Insets(10, 0, 0, 0);
 		c1.anchor = GridBagConstraints.CENTER;
@@ -399,11 +399,11 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_labelOwnTrafficUnitWWW = new JLabel("Byte");
 		c1.gridx = 2;
 		p.add(m_labelOwnTrafficUnitWWW, c1);
-		l = new JLabel("andere Internetdienste:");
+		m_labelOwnTrafficOther = new JLabel(JAPMessages.getString("ngOwnTrafficOther"));
 		c1.insets = new Insets(7, 20, 0, 0);
 		c1.gridx = 0;
 		c1.gridy = 2;
-		p.add(l, c1);
+		p.add(m_labelOwnTrafficOther, c1);
 		l = new JLabel("0");
 		c1.insets = new Insets(7, 5, 0, 0);
 		c1.gridx = 1;
@@ -740,9 +740,9 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 													m_flippingpanelForward.getPreferredSize().width),
 			m_flippingpanelAnon.getPreferredSize().width)));
 
-
-		setOptimalSize();
+		m_Controller.fetchMixCascades(false);
 		valuesChanged();
+		setOptimalSize();
 		JAPUtil.centerFrame(this);
 		//Change size and location if the user requested to restore the old position/size
 		if (JAPModel.getSaveMainWindowPosition())
@@ -1091,6 +1091,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_labelAnonymity.setText(JAPMessages.getString("ngAnonymitaet"));
 		m_labelAnonymitySmall.setText(JAPMessages.getString("ngAnonymitaet"));
 		m_labelAnonymityUserLabel.setText(JAPMessages.getString("ngNrOfUsers"));
+		m_labelAnonymityTrafficLabel.setText(JAPMessages.getString("ngAnonymityTraffic"));
 		m_labelOwnActivity.setText(JAPMessages.getString("ngActivity"));
 		m_labelOwnActivitySmall.setText(JAPMessages.getString("ngActivity"));
 		m_labelForwarderActivity.setText(JAPMessages.getString("ngActivity"));
@@ -1098,6 +1099,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_labelOwnTraffic.setText(JAPMessages.getString("ngOwnTraffic"));
 		m_labelOwnTrafficSmall.setText(JAPMessages.getString("ngOwnTraffic"));
 		m_labelOwnTrafficWWW.setText(JAPMessages.getString("ngOwnTrafficWWW"));
+		m_labelOwnTrafficOther.setText(JAPMessages.getString("ngOwnTrafficOther"));
 
 
 		//m_labelMeterDetailsName.setText(JAPMessages.getString("meterDetailsName") + " ");
@@ -1291,21 +1293,28 @@ m_iPreferredWidth=Math.max(d.width,Math.max(m_flippingpanelOwnTraffic.getPreferr
 		synchronized (m_runnableValueUpdate)
 		{
 			MixCascade currentMixCascade = m_Controller.getCurrentMixCascade();
+			String strCascadeName=currentMixCascade.getName();
+			Vector v=m_Controller.getMixCascadeDatabase();
+			m_comboAnonServices.removeAllItems();
+			if(v!=null)
+			{
+				Enumeration enumer=v.elements();
+				while(enumer.hasMoreElements())
+				{
+					MixCascade c=(MixCascade)enumer.nextElement();
+					m_comboAnonServices.addItem(c.getName());
+				}
+			}
+			m_comboAnonServices.setSelectedItem(currentMixCascade.getName());
+			m_comboAnonServices.setToolTipText(currentMixCascade.getName());
+
 			// Config panel
 			LogHolder.log(LogLevel.DEBUG, LogType.GUI, "JAPView:Start updateValues");
 			// Meter panel
 			try
 			{
 				m_rbAnonOn.setSelected(m_Controller.getAnonMode());
-/*			if (controller.getAnonMode())
-				{
-					m_cbAnon.setForeground(Color.black);
-				}
-				else
-				{
-					m_cbAnon.setForeground(Color.red);
-				}
-*/				LogHolder.log(LogLevel.DEBUG, LogType.GUI, "JAPView: update CascadeName");
+				LogHolder.log(LogLevel.DEBUG, LogType.GUI, "JAPView: update CascadeName");
 				m_labelCascadeName.setText(currentMixCascade.getName());
 				m_labelCascadeName.setToolTipText(currentMixCascade.getName());
 				StatusInfo currentStatus = currentMixCascade.getCurrentStatus();
