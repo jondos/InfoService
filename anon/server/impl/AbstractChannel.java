@@ -310,9 +310,12 @@ final class ChannelInputStream extends InputStream
     public /*synchronized*/ void close() throws IOException
       {
         m_bIsClosed=true;
-        try{m_Queue.closeWrite();}catch(Exception e){}
-        m_Queue.closeRead();
-        m_Queue=null;
+        if(!m_bIsClosed)
+          {
+            try{m_Queue.closeWrite();}catch(Exception e){}
+            m_Queue.closeRead();
+            m_Queue=null;
+          }
       }
   }
 
