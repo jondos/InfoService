@@ -72,6 +72,7 @@ public final class JAPModel implements JAPObserver {
 	private JAPProxyServer p;
 	
 	private static JAPModel model=null;
+	private static JAPDebug jdebug=null;
 	public JAPModel () {
 		// Load Texts for Messages and Windows
 		try 
@@ -93,7 +94,8 @@ public final class JAPModel implements JAPObserver {
 						System.exit(-1);
 					}
 			}
-
+		jdebug=new JAPDebug();
+		
 		// Create observer object 
 		observerVector = new Vector();
 

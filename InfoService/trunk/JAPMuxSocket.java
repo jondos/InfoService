@@ -8,6 +8,7 @@ import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.lang.Integer;
 import java.util.Enumeration;
+import java.security.SecureRandom;
 
 public final class JAPMuxSocket extends Thread
 	{
@@ -18,9 +19,15 @@ public final class JAPMuxSocket extends Thread
 		
 		private Socket ioSocket;
 		private	byte[] outBuff;
-		private JAPSymCipher oSymCipher;
+		private JAPASymCipher oRSA;
 		private int chainlen;
 		private volatile boolean runflag;
+		
+		private final static int KEY_SIZE=16;
+		private final static int DATA_SIZE=1000;
+		private final static int RSA_SIZE=128;
+		
+		private SecureRandom rand;
 		private final class SocketListEntry
 			{
 				SocketListEntry(JAPSocket s)
@@ -29,6 +36,7 @@ public final class JAPMuxSocket extends Thread
 						try
 							{
 								outStream=s.getOutputStream();
+								arCipher=null;
 							}
 						catch(Exception e)
 							{
@@ -37,19 +45,18 @@ public final class JAPMuxSocket extends Thread
 					}
 				public JAPSocket inSocket;
 				public OutputStream outStream;
+				public JAPSymCipher[] arCipher;
 			};
 
 		JAPMuxSocket()
 			{
 				lastChannelId=0;
 				oSocketList=new Hashtable();
-				oSymCipher=new JAPSymCipher();
-				byte[] key=new byte[16];
-				for(int i=0;i<16;i++)
-					key[i]=0;
-				oSymCipher.setEncryptionKey(key);
-				oSymCipher.setDecryptionKey(key);
-				outBuff=new byte[1000];
+				oRSA=new JAPASymCipher();
+				outBuff=new byte[DATA_SIZE];
+				System.out.println("Init secur rand");
+				rand=new SecureRandom(SecureRandom.getSeed(20));
+				System.out.println("done");
 		}
 
 		public int connect(String host, int port)
@@ -138,11 +145,11 @@ public final class JAPMuxSocket extends Thread
 								JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"CAMuxSocket-run-Exception: receive");
 								break;
 							}
-						for(int i=0;i<chainlen;i++)
-								oSymCipher.encrypt(buff);
 						SocketListEntry tmpEntry=(SocketListEntry)oSocketList.get(new Integer(channel));
 						if(tmpEntry!=null)
 							{
+								for(int i=0;i<chainlen;i++)
+										tmpEntry.arCipher[i].encrypt(buff);
 								if(len==0)
 									{
 										oSocketList.remove(new Integer(channel));
@@ -182,21 +189,49 @@ public final class JAPMuxSocket extends Thread
 			{
 				try
 					{
+	/*					for(int l=0;l<1000;l++)
+							buff[l]=65;
+						len=512;
+	*/				SocketListEntry entry=(SocketListEntry)oSocketList.get(new Integer(channel));
+						if(entry!=null&&entry.arCipher==null)
+							{
+								int size=DATA_SIZE-16;
+								byte[] key=new byte[KEY_SIZE];		
+								entry.arCipher=new JAPSymCipher[chainlen];
+								for(int i=chainlen-1;i>=0;i--)
+									{
+										entry.arCipher[i]=new JAPSymCipher();
+										rand.nextBytes(key);
+										entry.arCipher[i].setEncryptionKey(key);
+										entry.arCipher[i].setDecryptionKey(key);
+										System.arraycopy(key,0,outBuff,0,KEY_SIZE);
+										System.arraycopy(buff,0,outBuff,KEY_SIZE,size);
+										oRSA.encrypt(outBuff,outBuff);
+										entry.arCipher[i].encrypt(outBuff,RSA_SIZE,outBuff,RSA_SIZE,DATA_SIZE-RSA_SIZE);
+										System.arraycopy(outBuff,0,buff,0,DATA_SIZE);
+										size-=KEY_SIZE;
+										len+=KEY_SIZE;
+									}						
+							}
+						else
+							{
+								if(buff!=null)
+									{
+										System.arraycopy(buff,0,outBuff,0,len);
+										for(int i=chainlen-1;i>=0;i--)
+											entry.arCipher[i].encrypt(outBuff);
+									}	
+							}
 						outDataStream.writeInt(channel);
 						outDataStream.writeShort(len);
 						outDataStream.writeShort(0);
-						if(buff!=null)
-							{
-								System.arraycopy(buff,0,outBuff,0,len);
-								for(int i=0;i<chainlen;i++)
-									oSymCipher.encrypt(outBuff);
-							}	
 						outDataStream.write(outBuff);
 						outDataStream.flush();
 						JAPModel.getModel().increasNrOfBytes(len);
 					}
 				catch(Exception e)
 					{
+						e.printStackTrace();
 						JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"Sending exception!");
 						return -1;
 					}
