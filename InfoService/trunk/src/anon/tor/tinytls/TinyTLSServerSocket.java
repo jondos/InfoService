@@ -140,8 +140,8 @@ public class TinyTLSServerSocket extends Socket
 					ioe.bytesTransferred = 0;
 					throw ioe;
 				}
-				
-				
+
+
 				if (contenttype < 20 || contenttype > 23)
 				{
 					throw new TLSException("SSL Content typeProtocoll not supportet" + contenttype,2,10);
@@ -269,7 +269,7 @@ public class TinyTLSServerSocket extends Socket
 		{
 			return m_aktPendLen;
 		}
-		
+
 		/**
 		 * handle alert message
 		 * @throws IOException
@@ -326,13 +326,13 @@ public class TinyTLSServerSocket extends Socket
 				{
 					//version = 3.1 (TLS) ???
 					if(((m_aktTLSRecord.m_Data[4]<<8) | (m_aktTLSRecord.m_Data[5]))==PROTOCOLVERSION_SHORT)
-					{				
+					{
 						//read client random
 						m_clientrandom = new byte[32];
 						System.arraycopy(m_aktTLSRecord.m_Data,6,m_clientrandom,0,32);
 						//session id is not implemented
 						if(m_aktTLSRecord.m_Data[38] != 0)
-						{	
+						{
 							//maybe we implement it later
 							throw new TLSException("Client wants to reuse another session, but this is not supportet yet",2,40);
 						}
@@ -400,7 +400,7 @@ public class TinyTLSServerSocket extends Socket
 						throw new TLSException("this Protocol is not supported",2,70);
 					}
 				}
-			} 
+			}
 			throw new TLSException("Client hello expected but another message was recieved",2,10);
 		}
 		public void readClientKeyExchange() throws IOException
@@ -428,7 +428,7 @@ public class TinyTLSServerSocket extends Socket
 
 		public void readClientFinished() throws IOException
 		{
-			
+
 			readRecord();
 			if (m_aktTLSRecord.m_Type==20 && m_aktTLSRecord.m_dataLen == 1 && m_aktTLSRecord.m_Data[0] == 1)
 			{
@@ -536,7 +536,7 @@ public class TinyTLSServerSocket extends Socket
 
 		public void sendHandshake(int type, byte[] message) throws IOException
 		{
-			byte[] senddata = helper.conc(new byte[]{ (byte) type} , 
+			byte[] senddata = helper.conc(new byte[]{ (byte) type} ,
 												helper.inttobyte(message.length, 3), message);
 			send(22, senddata, 0, senddata.length);
 			m_handshakemessages = helper.conc(m_handshakemessages, senddata);
@@ -564,28 +564,27 @@ public class TinyTLSServerSocket extends Socket
 
 		public void sendServerCertificate() throws IOException
 		{
-			byte[] cert = m_servercertificate.getEncoded();
-			byte[] decodedcert = Base64.decode(cert,0,cert.length);
-			byte[] length = helper.inttobyte(decodedcert.length,3);
-			byte[] message = helper.conc(length,decodedcert);
+			byte[] cert = m_servercertificate.toByteArray();
+			byte[] length = helper.inttobyte(cert.length,3);
+			byte[] message = helper.conc(length,cert);
 			length = helper.inttobyte(message.length,3);
 			message = helper.conc(length,message);
 			sendHandshake(11,message);
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[SERVER_CERTIFICATE]");
 		}
-		
+
 		public void sendServerKeyExchange() throws IOException
 		{
 			sendHandshake(12,m_selectedciphersuite.getKeyExchangeAlgorithm().generateServerKeyExchange(m_privatekey,m_clientrandom,m_serverrandom));
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[SERVER_KEY_EXCHANGE]");
 		}
-		
+
 		public void sendServerHelloDone() throws IOException
 		{
 			sendHandshake(14,new byte[]{});
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[SERVER_HELLO_DONE]");
 		}
-		
+
 		public void sendServerHandshakes() throws IOException
 		{
 			sendServerHello();
@@ -593,7 +592,7 @@ public class TinyTLSServerSocket extends Socket
 			sendServerKeyExchange();
 			sendServerHelloDone();
 		}
-		
+
 		/**
 		 * send a change cipher spec message
 		 * now all client data will be encrypted
@@ -606,7 +605,7 @@ public class TinyTLSServerSocket extends Socket
 			m_encrypt = true;
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[SERVER_CHANGE_CIPHER_SPEC]");
 		}
-		
+
 		public void sendServerFinished() throws IOException
 		{
 			sendHandshake(20,m_selectedciphersuite.getKeyExchangeAlgorithm().calculateServerFinished(m_handshakemessages));
@@ -724,7 +723,7 @@ public class TinyTLSServerSocket extends Socket
 	{
 		return this.m_ostream;
 	}
-	
+
 	public void close() throws IOException
 	{
 		this.m_ostream.send(21,new byte[]{1,0},0,2);
