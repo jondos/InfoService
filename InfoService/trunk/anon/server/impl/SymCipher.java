@@ -53,22 +53,38 @@ final class SymCipher
 
 	public int setEncryptionKeyAES(byte[] key)
 	{
-		return setEncryptionKeyAES(key, 0);
+		return setEncryptionKeyAES(key, 0,16);
 	}
 
-	public int setEncryptionKeyAES(byte[] key, int offset)
+	/**
+	 *
+	 * @param key byte[]
+	 * @param offset int
+	 * @param len int if len==16 --> only the key is set; if len==32 --> key and IV is set
+	 * @return int
+	 */
+	public int setEncryptionKeyAES(byte[] key, int offset, int len)
 	{
 		try
 		{
 			aesEngine.init(true, new KeyParameter(key, offset, 16));
-			for (int i = 0; i < 16; i++)
+			if (len == 16)
 			{
-				iv[i] = 0;
+				for (int i = 0; i < 16; i++)
+				{
+					iv[i] = 0;
+					iv2[i] = 0;
+				}
 			}
-			for (int i = 0; i < 16; i++)
+			else
 			{
-				iv2[i] = 0;
+				for (int i = 0; i < 16; i++)
+				{
+					iv[i] = key[i + 16 + offset];
+					iv2[i] = key[i + 16 + offset];
+				}
 			}
+
 			return 0;
 		}
 		catch (Exception e)

@@ -197,63 +197,7 @@ final public class JAPSignature
 
 			//now rsBuff contains r (20 bytes) and s (20 bytes)
 
-			//Making DER-Encoding of r and s.....
-			// ASN.1 Notation:
-			//  sequence
-			//    {
-			//          integer r
-			//          integer s
-			//    }
-			// HINT: Sun JDK 1.4.x needs a leading '0' in the binary representation
-			// of r (and s) if r[0]>0x7F or s[0]>0x7F
-			//--> Der-Encoding
-			// 0x30 //Sequence
-			// 44 + x // len in bytes (x = {0|1|2} depending on r and s (see above)
-			// 0x02 // integer
-			// 20 | 21 // len in bytes of r
-			// ....   //value of r (with leading zero if necessary)
-			// 0x02 //integer
-			// 20 | 21  //len of s
-			// ... value of s (with leading zero if necessary)
-
-			int index = 46;
-			if (rsbuff[0] < 0)
-			{
-				index++;
-			}
-			if (rsbuff[20] < 0)
-			{
-				index++;
-			}
-			byte tmpBuff[] = new byte[index];
-			tmpBuff[0] = 0x30;
-			tmpBuff[1] = (byte) (index - 2);
-			tmpBuff[2] = 0x02;
-			if (rsbuff[0] < 0)
-			{
-				index = 5;
-				tmpBuff[3] = 21;
-				tmpBuff[4] = 0;
-			}
-			else
-			{
-				tmpBuff[3] = 20;
-				index = 4;
-			}
-			System.arraycopy(rsbuff, 0, tmpBuff, index, 20);
-			index += 20;
-			tmpBuff[index++] = 0x02;
-			if (rsbuff[20] < 0)
-			{
-				tmpBuff[index++] = 21;
-				tmpBuff[index++] = 0;
-			}
-			else
-			{
-				tmpBuff[index++] = 20;
-			}
-			System.arraycopy(rsbuff, 20, tmpBuff, index, 20);
-
+			byte[] tmpBuff=transcodeRStoDER(rsbuff);
 			//testing Signature....
 			byte[] buff = out.toByteArray();
 			if (!verify(buff, tmpBuff))
@@ -289,8 +233,15 @@ final public class JAPSignature
 		}
 	}
 
-	synchronized public boolean verify(byte[] message, byte[] sig)
+	synchronized public boolean verify(byte[] message, byte[] sig,boolean bIsRSEncoded)
 	{
+		if(bIsRSEncoded)
+			sig=transcodeRStoDER(sig);
+		return verify(message,sig);
+	}
+
+	synchronized public boolean verify(byte[] message, byte[] sig)
+		{
 		return signatureAlgorithm.verify(message, sig);
 	}
 
@@ -607,4 +558,65 @@ final public class JAPSignature
 		}
 	}
 
+	/**Making DER-Encoding of r and s.....
+// ASN.1 Notation:
+//  sequence
+//    {
+//          integer r
+//          integer s
+//    }
+// HINT: Sun JDK 1.4.x needs a leading '0' in the binary representation
+// of r (and s) if r[0]>0x7F or s[0]>0x7F
+//--> Der-Encoding
+// 0x30 //Sequence
+// 44 + x // len in bytes (x = {0|1|2} depending on r and s (see above)
+// 0x02 // integer
+// 20 | 21 // len in bytes of r
+// ....   //value of r (with leading zero if necessary)
+// 0x02 //integer
+// 20 | 21  //len of s
+// ... value of s (with leading zero if necessary)
+	 **/
+	private byte[] transcodeRStoDER(byte[] rsbuff)
+	{
+
+		int index = 46;
+		if (rsbuff[0] < 0)
+		{
+			index++;
+		}
+		if (rsbuff[20] < 0)
+		{
+			index++;
+		}
+		byte tmpBuff[] = new byte[index];
+		tmpBuff[0] = 0x30;
+		tmpBuff[1] = (byte) (index - 2);
+		tmpBuff[2] = 0x02;
+		if (rsbuff[0] < 0)
+		{
+			index = 5;
+			tmpBuff[3] = 21;
+			tmpBuff[4] = 0;
+		}
+		else
+		{
+			tmpBuff[3] = 20;
+			index = 4;
+		}
+		System.arraycopy(rsbuff, 0, tmpBuff, index, 20);
+		index += 20;
+		tmpBuff[index++] = 0x02;
+		if (rsbuff[20] < 0)
+		{
+			tmpBuff[index++] = 21;
+			tmpBuff[index++] = 0;
+		}
+		else
+		{
+			tmpBuff[index++] = 20;
+		}
+		System.arraycopy(rsbuff, 20, tmpBuff, index, 20);
+		return tmpBuff;
+	}
 }
