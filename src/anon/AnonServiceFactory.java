@@ -30,12 +30,18 @@ package anon;
 import java.net.InetAddress;
 import anon.server.AnonServiceImpl;
 
-public class AnonServiceFactory
-
+final public class AnonServiceFactory
   {
+    private static AnonService ms_AnonService=null;
+    private AnonServiceFactory()
+      {
+      }
+
     public static AnonService create()
       {
-        return AnonServiceImpl.create();
+        if(ms_AnonService==null)
+          ms_AnonService=AnonServiceImpl.create();
+        return ms_AnonService;//AnonServiceImpl.create();
       }
 
     public static AnonService create(InetAddress addr,int port)

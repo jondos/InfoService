@@ -92,7 +92,7 @@ public final class MuxSocket implements Runnable
 
     private final static int MAX_CHANNELS_PER_CONNECTION=50;
 
-		private static MuxSocket ms_MuxSocket=null;
+		//private static MuxSocket ms_MuxSocket=null;
 		//private int m_RunCount=0;
 
 		private Thread threadRunLoop;
@@ -130,9 +130,10 @@ public final class MuxSocket implements Runnable
 
 		public static MuxSocket create(Log log)
 			{
-				if(ms_MuxSocket==null)
+				/*if(ms_MuxSocket==null)
 					ms_MuxSocket=new MuxSocket(log);
-				return ms_MuxSocket;
+				*/
+        return new MuxSocket(log);//ms_MuxSocket;
 			}
 
     public void setLogging(Log log)
@@ -146,9 +147,9 @@ public final class MuxSocket implements Runnable
           }
       }
 
-    public static boolean isConnected()
+    public /*static*/ boolean isConnected()
 			{
-				return (ms_MuxSocket!=null&&ms_MuxSocket.m_bIsConnected);
+				return (/*ms_MuxSocket!=null&&ms_MuxSocket.*/m_bIsConnected);
 			}
 
     /**Enables or Disables DummyTraffic.
@@ -158,19 +159,19 @@ public final class MuxSocket implements Runnable
 		public void setDummyTraffic(int intervall)
 			{
 				if(intervall==-1)
-          if(ms_MuxSocket.m_DummyTraffic==null)
+          if(/*ms_MuxSocket.*/m_DummyTraffic==null)
 					  return;
           else
             {
-              ms_MuxSocket.m_DummyTraffic.stop();
-              ms_MuxSocket.m_DummyTraffic=null;
+              /*ms_MuxSocket.*/m_DummyTraffic.stop();
+              /*ms_MuxSocket.*/m_DummyTraffic=null;
               return;
             }
-        if(ms_MuxSocket.m_DummyTraffic!=null)
-          ms_MuxSocket.m_DummyTraffic.stop();
-        ms_MuxSocket.m_DummyTraffic=new DummyTraffic(ms_MuxSocket,intervall,ms_MuxSocket.m_Log);
+        if(/*ms_MuxSocket.*/m_DummyTraffic!=null)
+          /*ms_MuxSocket.*/m_DummyTraffic.stop();
+        /*ms_MuxSocket.*/m_DummyTraffic=new DummyTraffic(this/*ms_MuxSocket*/,intervall,/*ms_MuxSocket.*/m_Log);
         if(isConnected())
-          ms_MuxSocket.m_DummyTraffic.start();
+          /*ms_MuxSocket.*/m_DummyTraffic.start();
       }
 
 /*		public static boolean getEnableDummyTraffic()

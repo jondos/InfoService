@@ -110,7 +110,7 @@ final public class DirectProxy implements Runnable
 										continue;
 									}
 
-								if (warnUser)
+								if (warnUser&&!JAPModel.isSmallDisplay())
 									{
 										SendAnonWarning      doIt = new SendAnonWarning(socket);
 										Thread thread = new Thread (threadgroupAll,doIt);

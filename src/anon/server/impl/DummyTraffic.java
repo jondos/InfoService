@@ -31,7 +31,7 @@ import logging.Log;
 import logging.LogLevel;
 import logging.LogType;
 
-class DummyTraffic implements Runnable
+final class DummyTraffic implements Runnable
 	{
 		private MuxSocket m_MuxSocket=null;
 	  private volatile boolean m_bRun=false;
