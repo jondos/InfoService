@@ -2,21 +2,31 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 import java.net.Socket;
 import java.io.OutputStream;
+import java.io.InputStream;
 import java.io.BufferedOutputStream;
 import java.io.DataOutputStream;
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.lang.Integer;
+import java.io.ByteArrayOutputStream;
+import java.io.ByteArrayInputStream;
 
 public class CAMuxSocket extends Thread
 	{
 		private int lastChannelId;
 		private Dictionary oSocketList;
-		private DataOutputStream toServer;
-		private DataInputStream fromServer;
+		private OutputStream toServer;
+		private ByteArrayOutputStream tmpByteStream;
+		private DataOutputStream tmpDataStream;
+		private	byte[] inBuff;
+		private ByteArrayInputStream inByteStream;
+		private DataInputStream inDataStream;
+		private InputStream fromServer;
+		
 		private Socket outSocket;
 		private	byte[] tmpBuff;
-
+		private JASymCipher oSymCipher;
+		
 		class SocketListEntry
 			{
 				SocketListEntry(CASocket s)
@@ -40,15 +50,26 @@ public class CAMuxSocket extends Thread
 				lastChannelId=0;
 				oSocketList=new Hashtable();
 				tmpBuff=new byte[1000];
-			}
+				oSymCipher=new JASymCipher();
+				byte[] key=new byte[16];
+				for(int i=0;i<16;i++)
+					key[i]=0;
+				oSymCipher.setEncryptionKey(key);
+				oSymCipher.setDecryptionKey(key);
+				tmpByteStream=new ByteArrayOutputStream(1008);
+				tmpDataStream=new DataOutputStream(tmpByteStream);
+				inBuff=new byte[1008];
+				inByteStream=new ByteArrayInputStream(inBuff);
+				inDataStream=new DataInputStream(inByteStream);
+		}
 
 		public int connect(String host, int port)
 			{
 				try
 					{
 						outSocket=new Socket(host,port);
-						toServer=new DataOutputStream(new BufferedOutputStream(outSocket.getOutputStream(),1008));
-						fromServer=new DataInputStream(new BufferedInputStream(outSocket.getInputStream(),1008));
+						toServer=outSocket.getOutputStream();
+						fromServer=outSocket.getInputStream();
 						System.out.println("CAMuxSocket - Connected!");
 					}
 				catch(Exception e)
@@ -85,11 +106,18 @@ public class CAMuxSocket extends Thread
 					{
 						while(true)
 							{
-								channel=fromServer.readInt();
+								len=inBuff.length;
+								while(len>0)
+									{
+										len-=fromServer.read(inBuff);
+									}
+								oSymCipher.decrypt(inBuff);
+								inByteStream.reset();
+								channel=inDataStream.readInt();
 		//						System.out.println("Receiving channel: "+Integer.toString(channel));
-								len=fromServer.readShort();
-								tmp=fromServer.readShort();
-								fromServer.readFully(buff);
+								len=inDataStream.readShort();
+								tmp=inDataStream.readShort();
+								inDataStream.readFully(buff);
 								SocketListEntry tmpEntry=(SocketListEntry)oSocketList.get(new Integer(channel));
 								if(tmpEntry!=null)
 									{
@@ -132,13 +160,17 @@ public class CAMuxSocket extends Thread
 				try
 					{
 			//			System.out.println("Sending: channel "+Integer.toString(channel)+"len: "+Integer.toString(len));
-						toServer.writeInt(channel);
-						toServer.writeShort(len);
-						toServer.writeShort(0);
+						tmpByteStream.reset();
+						tmpDataStream.writeInt(channel);
+						tmpDataStream.writeShort(len);
+						tmpDataStream.writeShort(0);
 						if(buff!=null)
-							toServer.write(buff,0,len);
-						toServer.write(tmpBuff,0,1000-len);
-						toServer.flush();
+							tmpDataStream.write(buff,0,len);
+						tmpDataStream.write(tmpBuff,0,1000-len);
+						tmpDataStream.flush();
+						byte[] b=tmpByteStream.toByteArray();
+						oSymCipher.encrypt(b);
+						toServer.write(b);
 					}
 				catch(Exception e)
 					{
