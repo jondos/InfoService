@@ -34,12 +34,14 @@ public class TorAnonServerDescription implements AnonServerDescription
 	private final int m_iTorDirServerPort;
 	private final String m_strTorDirServerAddr;
 	private final boolean m_bUseInfoService;
+	private final boolean m_bStartCircuitsAtStartup;
 
 	public TorAnonServerDescription()
 	{
 		m_strTorDirServerAddr = Tor.DEFAULT_DIR_SERVER_ADDR;
 		m_iTorDirServerPort = Tor.DEFAULT_DIR_SERVER_PORT;
 		m_bUseInfoService = false;
+		m_bStartCircuitsAtStartup = false;
 	}
 
 	public TorAnonServerDescription(boolean bUseInfoService)
@@ -56,13 +58,32 @@ public class TorAnonServerDescription implements AnonServerDescription
 			m_iTorDirServerPort = Tor.DEFAULT_DIR_SERVER_PORT;
 			m_bUseInfoService = false;
 		}
+		m_bStartCircuitsAtStartup = false;
 	}
 
-	public TorAnonServerDescription(String torDirServerAddr, int torDirServerPort) throws Exception
+	public TorAnonServerDescription(boolean bUseInfoService, boolean bStartCircuitsAtStartup)
+	{
+		if (bUseInfoService)
+		{
+			m_strTorDirServerAddr = null;
+			m_iTorDirServerPort = -1;
+			m_bUseInfoService = true;
+		}
+		else
+		{
+			m_strTorDirServerAddr = Tor.DEFAULT_DIR_SERVER_ADDR;
+			m_iTorDirServerPort = Tor.DEFAULT_DIR_SERVER_PORT;
+			m_bUseInfoService = false;
+		}
+		m_bStartCircuitsAtStartup = bStartCircuitsAtStartup;
+	}
+
+	public TorAnonServerDescription(String torDirServerAddr, int torDirServerPort, boolean bStartCircuitsAtStartup)
 	{
 		m_strTorDirServerAddr = torDirServerAddr;
 		m_iTorDirServerPort = torDirServerPort;
 		m_bUseInfoService = false;
+		m_bStartCircuitsAtStartup = bStartCircuitsAtStartup;
 	}
 
 	public String getTorDirServerAddr()
@@ -78,5 +99,10 @@ public class TorAnonServerDescription implements AnonServerDescription
 	public boolean useInfoService()
 	{
 		return m_bUseInfoService;
+	}
+	
+	public boolean startCircuitsAtStartup()
+	{
+		return m_bStartCircuitsAtStartup;
 	}
 }

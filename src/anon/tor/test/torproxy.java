@@ -30,12 +30,12 @@ public class torproxy {
 
 		Tor tor = Tor.getInstance();
 		tor.setConnectionsPerRoute(10);
-		tor.initialize(new TorAnonServerDescription(true));
+		tor.initialize(new TorAnonServerDescription(true,true));
 //		tor.initialize(new TorAnonServerDescription());
 		ServerSocket server = new ServerSocket(1234);
 		System.out.println("Server läuft");
 		int i=0;
-		while(i<50)
+		while(i<25)
 		{
 			Socket client = server.accept();
 			proxythread t = new proxythread(client,(TorChannel)tor.createChannel(TorChannel.SOCKS));

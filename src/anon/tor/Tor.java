@@ -57,7 +57,7 @@ import anon.infoservice.*;
  * @author stefan
  *
  */
-public class Tor implements /*Runnable,*/ AnonService
+public class Tor implements Runnable, AnonService
 {
 
 	//maximal possible length of a circuit
@@ -88,6 +88,7 @@ public class Tor implements /*Runnable,*/ AnonService
 	//active circuit
 	private Circuit[] m_activeCircuits;
 	private int m_MaxNrOfActiveCircuits;
+	private int m_CircuitsCreated;
 
 	//used for synchronisation on active Circuit operations...
 	private Object m_oActiveCircuitSync;
@@ -111,6 +112,10 @@ public class Tor implements /*Runnable,*/ AnonService
 
 	public final static String DEFAULT_DIR_SERVER_ADDR = "moria.seul.org";
 	public final static int DEFAULT_DIR_SERVER_PORT = 9031;
+
+	//used to create circuits at startup
+	private Thread m_circuitCreator;
+	private boolean m_closeCreator;
 
 	/**
 	 * Constructor
@@ -142,6 +147,9 @@ public class Tor implements /*Runnable,*/ AnonService
 		m_activeCircuits = new Circuit[m_MaxNrOfActiveCircuits];
 		m_useDNSCache = true;
 		m_DNSCache = Database.getInstance(DNSCacheEntry.class);
+		//counts the number of circuits that have been created (-1 : nouse of this variable / 0-m_maxnrofactivecircuits : number of created circuits)
+		m_CircuitsCreated = -1;
+		m_closeCreator = false;
 	}
 
 	/**
@@ -172,14 +180,25 @@ public class Tor implements /*Runnable,*/ AnonService
 					return null;
 				}
 			}
+			int maxCircuit;
+			// todo : remove busy waiting if this line works
+			while(m_CircuitsCreated==0);
+			if(m_CircuitsCreated>0)
+			{
+				maxCircuit = m_CircuitsCreated;
+			} else
+			{
+				maxCircuit = m_MaxNrOfActiveCircuits;
+			}
 			for (int i = 0; i < 3; i++)
 			{
-				int circstart = m_rand.nextInt(m_MaxNrOfActiveCircuits);
+				int circstart = m_rand.nextInt(maxCircuit);
 				int j = 0;
 				int circ = 0;
-				while (j < m_MaxNrOfActiveCircuits)
+				while (j < maxCircuit)
 				{
-					circ = circstart % m_MaxNrOfActiveCircuits;
+					circ = circstart % maxCircuit;
+					System.out.println(circ);
 					if (m_activeCircuits[circ] == null || m_activeCircuits[circ].isShutdown())
 					{
 						m_activeCircuits[circ] = createNewCircuit(addr, port);
@@ -196,6 +215,7 @@ public class Tor implements /*Runnable,*/ AnonService
 					{
 						if (m_activeCircuits[circ].isAllowed(addr, port))
 						{
+							System.out.println("done");
 							return m_activeCircuits[circ];
 						}
 					}
@@ -206,11 +226,12 @@ public class Tor implements /*Runnable,*/ AnonService
 				{
 					//all circuits are active but no one fits...
 					//shutdown one and use them...
-					circ = circstart % m_MaxNrOfActiveCircuits;
+					circ = circstart % maxCircuit;
 					m_activeCircuits[circ].shutdown();
 					m_activeCircuits[circ] = createNewCircuit(addr, port);
 					if (m_activeCircuits[circ] != null && !m_activeCircuits[circ].isShutdown())
 					{
+						System.out.println("done - new circuit created");
 						return m_activeCircuits[circ];
 					}
 				}
@@ -251,8 +272,8 @@ public class Tor implements /*Runnable,*/ AnonService
 					long t3 = t2 - t1;
 				}
 				if (m_orList.size() == 0 ||
-					(listPublished != null && listPublished.getTime() < System.currentTimeMillis() - 600000
-					 /*list is older than 10 min*/
+					(listPublished != null && listPublished.getTime() < System.currentTimeMillis() - 3600000
+					 /*list is older than 1 hour*/
 					 ))
 				{
 					updateORList();
@@ -341,6 +362,8 @@ public class Tor implements /*Runnable,*/ AnonService
 				firstOR = m_firstORFactory.createFirstOnionRouterConnection(firstORDescription);
 				if (firstOR == null)
 				{
+					LogHolder.log(LogLevel.DEBUG, LogType.TOR,
+								  "removed " + firstORDescription.getName());
 					m_orList.remove(firstORDescription.getName());
 					throw new IOException("Problem with router " + orsForNewCircuit +
 										  ". Cannot connect.");
@@ -378,6 +401,15 @@ public class Tor implements /*Runnable,*/ AnonService
 	/**
 	 * creates new circuits
 	 */
+	public void run()
+	{
+		for(int i=0;(i<m_MaxNrOfActiveCircuits)&&(!m_closeCreator);i++)
+		{
+			m_activeCircuits[i] = createNewCircuit("141.76.46.90",80);
+			m_CircuitsCreated++;
+		}
+		m_CircuitsCreated = -1; 
+	}
 	/*	public void run()
 	 {
 	  while (m_bRun)
@@ -412,12 +444,15 @@ public class Tor implements /*Runnable,*/ AnonService
 	 * starts the Tor-Service
 	 * @throws IOException
 	 */
-	private void start() throws IOException
+	private void start(boolean startCuircuits) throws IOException
 	{
 		synchronized (m_oStartStopSync)
 		{
 			m_bIsStarted = true;
 			m_activeCircuits = new Circuit[m_MaxNrOfActiveCircuits];
+			m_circuitCreator = new Thread(this);
+			m_CircuitsCreated = 0;
+			m_circuitCreator.start();
 		}
 	}
 
@@ -430,6 +465,9 @@ public class Tor implements /*Runnable,*/ AnonService
 		synchronized (m_oStartStopSync)
 		{
 			m_bIsStarted = false;
+			m_closeCreator = true;
+			//remove busy waiting if this works
+			while(m_CircuitsCreated!=-1);
 			if (m_bIsCreatingCircuit)
 			{
 				m_firstORFactory.closeAll();
@@ -609,7 +647,7 @@ public class Tor implements /*Runnable,*/ AnonService
 
 		try
 		{
-			start();
+			start(td.startCircuitsAtStartup());
 		}
 		catch (Exception e)
 		{
@@ -661,9 +699,19 @@ public class Tor implements /*Runnable,*/ AnonService
 		//no entry found in Cache
 		synchronized (m_oActiveCircuitSync)
 		{
+			int maxCircuit;
+			//todo : remove busy waiting if this line works
+			while(m_CircuitsCreated==0);
+			if(m_CircuitsCreated>0)
+			{
+				maxCircuit = m_CircuitsCreated;
+			} else
+			{
+				maxCircuit = m_MaxNrOfActiveCircuits;
+			}
 			for (int i = 0; i < 3; i++)
 			{
-				int circ = m_rand.nextInt(m_MaxNrOfActiveCircuits);
+				int circ = m_rand.nextInt(maxCircuit);
 				if (m_activeCircuits[circ] == null || m_activeCircuits[circ].isShutdown())
 				{
 					m_activeCircuits[circ] = createNewCircuit(null, -1);
