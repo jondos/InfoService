@@ -55,7 +55,8 @@ final class JAPMuxSocket implements Runnable
 		private int chainlen;
 		private volatile boolean m_bRunFlag;
 		private boolean m_bIsConnected=false;
-
+		//private ThreadGroup threadgroupChannels;
+		
 		public final static int KEY_SIZE=16;
 		public final static int DATA_SIZE=992;
 		private final static int RSA_SIZE=128;
@@ -106,11 +107,9 @@ final class JAPMuxSocket implements Runnable
 				arASymCipher=null;
 				outBuff=new byte[DATA_SIZE];
 				threadRunLoop=null;
-				keypool=new JAPKeyPool(20,16);
-				Thread t1 = new Thread (keypool);
-				t1.setPriority(Thread.MIN_PRIORITY);
-				t1.start();
+				keypool=JAPKeyPool.start(20,16);
 				m_RunCount=0;
+				//threadgroupChannels=null;
 			}
 
 		public static JAPMuxSocket create()
@@ -158,6 +157,7 @@ final class JAPMuxSocket implements Runnable
 										arASymCipher[i].setPublicKey(n,e);
 									}
 								ioSocket.setSoTimeout(0); //Now we have a unlimit time out...
+								//threadgroupChannels=new ThreadGroup("muxchannels");
 							}
 						catch(Exception e)
 							{
@@ -180,7 +180,7 @@ final class JAPMuxSocket implements Runnable
 								oSocketList.put(new Integer(lastChannelId),new SocketListEntry(s));
 
 								JAPAnonService.setNrOfChannels(oSocketList.size());
-								Thread t2=new Thread(p);
+								Thread t2=new Thread(/*threadgroupChannels,*/p);
 								t2.start();
 								lastChannelId++;
 								return 0;
@@ -211,15 +211,18 @@ final class JAPMuxSocket implements Runnable
 						m_bRunFlag=false;
 						try
 							{
-								threadRunLoop.join(100);
+								threadRunLoop.join(1000);
 							}
 						catch(Exception e)
 							{
-								e.printStackTrace();
+								//e.printStackTrace();
 							}
 						if(threadRunLoop.isAlive())
 							{
+								JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Closing MuxSocket harder...");
 								try{inDataStream.close();}catch(Exception e1){}
+								//try{threadgroupChannels.stop();}catch(Exception e2){}
+								//try{threadgroupChannels.destroy();}catch(Exception e3){}
 								try{threadRunLoop.join(2000);}catch(Exception e){e.printStackTrace();}
 								if(threadRunLoop.isAlive())
 									{
@@ -255,7 +258,7 @@ final class JAPMuxSocket implements Runnable
 			{
 				synchronized(this)
 					{
-						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Stopping Service...");
+						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"MuxSocket: Stopping Service...");
 						m_RunCount--;
 						if(m_RunCount==0)
 							close();
@@ -307,7 +310,7 @@ final class JAPMuxSocket implements Runnable
 					{
 						try
 							{
-							JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"MuxSocket: try reading next MIX-Packet...");
+								JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"MuxSocket: try reading next MIX-Packet...");
 								channel=inDataStream.readInt();
 								flags=inDataStream.readShort();
 								inDataStream.readFully(buff);
@@ -332,7 +335,7 @@ final class JAPMuxSocket implements Runnable
 											}
 										catch(Exception e)
 											{
-												e.printStackTrace();
+												//e.printStackTrace();
 											}
 									}
 								else if(flags==CHANNEL_DATA)
@@ -450,7 +453,7 @@ final class JAPMuxSocket implements Runnable
 					}
 				catch(Exception e)
 					{
-						e.printStackTrace();
+						//e.printStackTrace();
 						JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"Sending exception!");
 						return -1;
 					}

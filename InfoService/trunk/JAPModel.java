@@ -46,6 +46,8 @@ import java.awt.Frame;
 import java.awt.Cursor;
 import java.awt.MediaTracker;
 import java.awt.Toolkit;
+import java.net.ServerSocket;
+import java.net.InetAddress;
 import javax.swing.ImageIcon;
 import javax.swing.JCheckBox;
 import javax.swing.JOptionPane;
@@ -131,11 +133,12 @@ public final class JAPModel implements JAPAnonServiceListener{
 	private Vector observerVector=null;
 	public Vector anonServerDatabase=null;
 
+	private ServerSocket m_socketHTTPListener; 
 	private JAPDirectProxy proxyDirect=null;
 	private JAPAnonService proxyAnon=null;
 
 	private JAPAnonService proxyAnonSocks=null;
-
+	
 
 	private static JAPModel model=null;
 //	public JAPLoading japLoading;
@@ -398,7 +401,22 @@ public final class JAPModel implements JAPAnonServiceListener{
 			JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:initial run of JAP...");
 
 			// start Service if autoConnect
-			setAnonMode(autoConnect);
+			if(!startHTTPListener())
+				{
+								Object[] args={new Integer(portNumber)};
+								String msg=MessageFormat.format(model.getString("errorListenerPort"),args);
+								JOptionPane.showMessageDialog(model.getView(),
+																							msg,
+																							model.getString("errorListenerPortTitle"),
+																							JOptionPane.ERROR_MESSAGE);
+								JAPDebug.out(JAPDebug.EMERG,JAPDebug.NET,"Listener could not be started!");
+								model.getView().disableSetAnonMode();
+				}
+			else
+				{
+					model.status1 = model.getString("statusRunning");
+					setAnonMode(autoConnect);
+				}
 		}
 
     public int getCurrentProtectionLevel() {
@@ -637,10 +655,10 @@ public final class JAPModel implements JAPAnonServiceListener{
 					{
 						// -> we can start anonymity
 						if(proxyDirect!=null)
-							proxyDirect.stop();
+							proxyDirect.stopService();
 						proxyDirect=null;
 						// starting MUX --> Success ???
-						proxyAnon=new JAPAnonService(model.portNumber,JAPAnonService.PROTO_HTTP,model.mblistenerIsLocal);
+						proxyAnon=new JAPAnonService(m_socketHTTPListener,JAPAnonService.PROTO_HTTP);
 						proxyAnon.setAnonService(model.anonHostName,model.anonPortNumber);
 						int ret=proxyAnon.start();
 						if(ret==JAPAnonService.E_SUCCESS)
@@ -668,6 +686,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 									}
 								//proxyAnonSocks=new JAPAnonService(1080,JAPAnonService.PROTO_SOCKS,model.mblistenerIsLocal);
 								//proxyAnonSocks.start();
+								model.status2 = model.getString("statusRunning");
 								view.setCursor(Cursor.getDefaultCursor());
 								notifyJAPObservers();
 								return;
@@ -696,65 +715,91 @@ public final class JAPModel implements JAPAnonServiceListener{
 						proxyAnon=null;
 						proxyAnonSocks=null;
 						view.setCursor(Cursor.getDefaultCursor());
+						model.status2 = model.getString("statusNotRunning");
 						notifyJAPObservers();
+						setAnonMode(false);
 					}
 				else
 						view.setCursor(Cursor.getDefaultCursor());
 
-		} else if ((proxyDirect==null) && (anonModeSelected == false)) {
-			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:setAnonMode("+anonModeSelected+")");
-			if(proxyAnon!=null)
-				proxyAnon.stop();
-			proxyAnon=null;
-			if(proxyAnonSocks!=null)
-				proxyAnonSocks.stop();
-			proxyAnonSocks=null;
-			if(feedback!=null)
-				{
-					feedback.stopRequests();
-					feedback=null;
-				}
-			//proxyDirect=new JAPDirectProxy(model.portNumber);
-			//proxyDirect.start();
-			notifyJAPObservers();
-		}
+		} 
+		else if ((proxyDirect==null) && (anonModeSelected == false)) 
+			{
+				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:setAnonMode("+anonModeSelected+")");
+				if(proxyAnon!=null)
+					proxyAnon.stop();
+				proxyAnon=null;
+				if(proxyAnonSocks!=null)
+					proxyAnonSocks.stop();
+				proxyAnonSocks=null;
+				if(feedback!=null)
+					{
+						feedback.stopRequests();
+						feedback=null;
+					}
+				model.status2 = model.getString("statusNotRunning");
+				proxyDirect=new JAPDirectProxy(m_socketHTTPListener);
+				proxyDirect.startService();
+				notifyJAPObservers();
+			}
 	}
 
 	public boolean isAnonMode() {
 		return proxyAnon!=null;
 	}
 
-/*
-	private boolean startListener()
+
+	private boolean startHTTPListener()
 		{
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:startListener");
 			if (isRunningListener == false)
 				{
-					//runningPortNumber = portNumber;
-					listener = new JAPProxyServer(portNumber);
-					if(listener.create())
-						{
-							Thread listenerThread = new Thread (listener);
-							listenerThread.start();
-							isRunningListener = true;
-						}
-					else
-						listener=null;
+					boolean bindOk=false;
+					for(int i=0;i<10;i++) //HAck for Mac!!
+						try 
+							{
+								if(mblistenerIsLocal)
+									{
+										InetAddress[] a=InetAddress.getAllByName("localhost");
+										JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Try binding Listener on localhost: "+a[0]);
+										m_socketHTTPListener = new ServerSocket (portNumber,50,a[0]);
+									}
+								else
+									m_socketHTTPListener = new ServerSocket (portNumber);
+								JAPDebug.out(JAPDebug.INFO,JAPDebug.NET,"JAPProxyServer:Listener on port " + portNumber + " started.");
+								try
+									{
+										m_socketHTTPListener.setSoTimeout(2000);
+									}
+								catch(Exception e1)
+									{
+										JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Could not set accept time out: Exception: "+e1.getMessage());
+									}
+								bindOk=true;
+								break;
+							}
+						catch(Exception e)
+							{
+								JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"Exception: "+e.getMessage());
+								m_socketHTTPListener=null;
+							}
+						isRunningListener=bindOk;
 				}
 			return isRunningListener;
 		}
 
-	private void stopListener()
+	private void stopHTTPListener()
 		{
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:stopListener");
 			if (isRunningListener)
 				{
-					listener.stopService();
-					listener=null;
+					setAnonMode(false);
+					try{m_socketHTTPListener.close();}catch(Exception e){};
+					m_socketHTTPListener=null;
 					isRunningListener = false;
 				}
 		}
-	*/
+	
 
 	/** This (and only this!) is the final exit procedure of JAP!
 	 *

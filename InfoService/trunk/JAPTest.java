@@ -63,7 +63,7 @@ import sun.security.util.BigInt;
 import java.net.*;
 import java.security.interfaces.*;
 //import cryptix.jce.provider.rsa.*;
-import java.security.spec.InvalidKeySpecException;
+//import java.security.spec.InvalidKeySpecException;
 
 import Rijndael.Rijndael_Algorithm;
 //import com.sun.javaws.jardiff.*;
