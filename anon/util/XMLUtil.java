@@ -32,7 +32,8 @@
 package anon.util;
 
 import java.io.ByteArrayOutputStream;
-import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.lang.reflect.Method;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
@@ -419,6 +420,16 @@ public class XMLUtil
 	 */
 	public static String XMLDocumentToString(Document doc)
 	{
+
+		return XMLNodeToString(doc);
+	}
+
+	/** Writes a XML-Node to an Output-Stream. If node is a Document than the <XML> header is included.
+	 * Since writing was not standardzieds
+	 * until  JAXP 1.1 different Methods are tried
+	 */
+	public static String XMLNodeToString(Node node)
+	{
 		ByteArrayOutputStream out = null;
 		try
 		{
@@ -430,16 +441,42 @@ public class XMLUtil
 		}
 		try //For JAXP 1.0.1 Reference Implementation (shipped with JAP)
 		{
-			Class c = Class.forName("com.sun.xml.tree.XmlDocument");
-			if (c.isInstance(doc))
+			Class c = Class.forName("com.sun.xml.tree.ParentNode");
+			if (c.isInstance(node))
 			{
-				Class[] paramClasses = new Class[1];
-				paramClasses[0] = OutputStream.class;
-				Method m = c.getMethod("write", paramClasses);
-				Object[] params = new Object[1];
-				params[0] = out;
-				m.invoke(doc, params);
-				return out.toString();
+				Document doc = null;
+				if (node instanceof Document)
+				{
+					doc = (Document) node;
+				}
+				else
+				{
+					doc = node.getOwnerDocument();
+				}
+				Writer w = new OutputStreamWriter(out, "UTF8");
+				//What we do here is acutally:
+				//com.sun.xml.tree.XmlWriteContext context=
+				//						((com.sun.xml.tree.XmlDocument)doc).createWriteContext(w,2);
+				//((com.sun.xml.tree.ElementNode)node).writeXml(context);
+				//We do that this way to avoid the need of JAXP1.0 for compilation!
+				Class classXmlDocument = Class.forName("com.sun.xml.tree.XmlDocument");
+				Class[] paramClasses = new Class[2];
+				paramClasses[0] = Writer.class;
+				paramClasses[1] = int.class;
+				Method methodCreateWriteContext = classXmlDocument.getMethod("createWriteContext",
+					paramClasses);
+				Object params[] = new Object[2];
+				params[0] = w;
+				params[1] = new Integer(2);
+				Object context = methodCreateWriteContext.invoke(doc, params);
+				paramClasses = new Class[1];
+				paramClasses[0] = Class.forName("com.sun.xml.tree.XmlWriteContext");
+				Method methodWriteXml = node.getClass().getMethod("writeXml", paramClasses);
+				params = new Object[1];
+				params[0] = context;
+				methodWriteXml.invoke(node, params);
+				w.flush();
+				return out.toString("UTF8");
 			}
 		}
 		catch (Throwable t1)
@@ -455,7 +492,7 @@ public class XMLUtil
 			Object t =
 				javax.xml.transform.TransformerFactory.newInstance().newTransformer();
 			javax.xml.transform.Result r = new javax.xml.transform.stream.StreamResult(out);
-			javax.xml.transform.Source s = new javax.xml.transform.dom.DOMSource(doc);
+			javax.xml.transform.Source s = new javax.xml.transform.dom.DOMSource(node);
 
 			//this is to simply invoke t.transform(s,r)
 			Class c = t.getClass();
