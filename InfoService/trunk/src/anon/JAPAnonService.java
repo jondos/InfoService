@@ -63,12 +63,25 @@ public final class JAPAnonService implements Runnable
 				this();
 				setService(port,protocol);
 			}
+		
+		public JAPAnonService(int port,int protocol,boolean bLocalHostOnly)
+			{
+				this();
+				setService(port,protocol,bLocalHostOnly);
+			}
+
 		public int setService(int port,int protocol)
 			{
 				setPort(port);
 				return setProtocol(protocol);				
 			}
 		
+		public int setService(int port,int protocol,boolean bLocalHostOnly)
+			{
+				setPort(port,bLocalHostOnly);
+				return setProtocol(protocol);				
+			}
+
 		public int setPort(int port)
 			{
 				m_Port=port;
@@ -122,7 +135,7 @@ public final class JAPAnonService implements Runnable
 								socketListener = new ServerSocket (m_Port,50,a[0]);
 							}
 						else
-							socketListener = new ServerSocket (m_Port,50);
+							socketListener = new ServerSocket (m_Port);
 						JAPDebug.out(JAPDebug.INFO,JAPDebug.NET,"JAPProxyServer:Listener on port " + m_Port + " started.");
 					}
 				catch(Exception e)
