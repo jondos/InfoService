@@ -388,7 +388,7 @@ final class HtmlPane extends JScrollPane implements HyperlinkListener
 	 */
 	private void addToHistory(URL a_url)
 	{
-		if (m_historyPosition == -1 || !a_url.getPath().equalsIgnoreCase( ( (URL) m_history.elementAt(m_historyPosition)).getPath()))
+		if (m_historyPosition == -1 || !a_url.getFile().equalsIgnoreCase( ( (URL) m_history.elementAt(m_historyPosition)).getFile()))
 		{
 		m_history.insertElementAt(a_url, ++m_historyPosition);
 	}
