@@ -232,6 +232,8 @@ public class Tor implements Runnable, AnonService
 					circ = circstart % m_MaxNrOfActiveCircuits;
 					m_activeCircuits[circ].shutdown();
 					//remove the destinations for this circuit
+					///@todo definitly WRONG! needs to be something like
+					///m_CircuitForDestination.values().remove(new Integer(circ));
 					m_CircuitForDestination.remove(new Integer(circ));
 					m_activeCircuits[circ] = createNewCircuit(addr, port);
 					if (m_activeCircuits[circ] != null && !m_activeCircuits[circ].isShutdown())

@@ -35,15 +35,25 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.io.OutputStream;
+import java.math.BigInteger;
 import java.security.SecureRandom;
+import java.util.Calendar;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Vector;
 
+import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
+import org.bouncycastle.crypto.generators.RSAKeyPairGenerator;
+import org.bouncycastle.crypto.params.RSAKeyGenerationParameters;
+
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.crypto.AsymmetricCryptoKeyPair;
+import anon.crypto.JAPCertificate;
+import anon.crypto.MyRSAPrivateKey;
 import anon.crypto.MyRandom;
+import anon.crypto.PKCS12;
 import anon.tor.cells.Cell;
 import anon.tor.ordescription.ORDescription;
 import anon.tor.tinytls.TinyTLS;
@@ -157,14 +167,47 @@ public class FirstOnionRouterConnection implements Runnable
 	 */
 	public synchronized void connect() throws Exception
 	{
-		FirstOnionRouterConnectionThread forcs =
+		FirstOnionRouterConnectionThread forct =
 			new FirstOnionRouterConnectionThread(m_description.getAddress(),
 												 m_description.getPort(),
 												 m_inittimeout,
 												 m_Tor.getProxy());
-		m_tinyTLS = forcs.getConnection();
+		m_tinyTLS = forct.getConnection();
 //		m_tinyTLS = new TinyTLS(m_description.getAddress(), m_description.getPort());
 		m_tinyTLS.setRootKey(m_description.getSigningKey());
+
+		//####create client certificate####
+
+		try
+		{
+			RSAKeyPairGenerator kpg = new RSAKeyPairGenerator();
+			kpg.init(new RSAKeyGenerationParameters(new BigInteger(new byte[]{1,0,1}),new SecureRandom(),1024,100));
+			AsymmetricCipherKeyPair kp = kpg.generateKeyPair();
+			MyRSAPrivateKey key = new MyRSAPrivateKey(kp.getPrivate());
+			AsymmetricCryptoKeyPair ackp = new AsymmetricCryptoKeyPair(key);
+			JAPCertificate cert = JAPCertificate.getInstance("JAP",ackp,Calendar.getInstance(),1);
+
+			RSAKeyPairGenerator kpg2 = new RSAKeyPairGenerator();
+			kpg2.init(new RSAKeyGenerationParameters(new BigInteger(new byte[]{1,0,1}),new SecureRandom(),1024,100));
+			AsymmetricCipherKeyPair kp2 = kpg2.generateKeyPair();
+			MyRSAPrivateKey key2 = new MyRSAPrivateKey(kp2.getPrivate());
+			AsymmetricCryptoKeyPair ackp2 = new AsymmetricCryptoKeyPair(key2);
+			PKCS12 pkcs12cert = new PKCS12("JAP User",ackp2,Calendar.getInstance(),1);
+
+			//sign cert with pkcs12cert
+			JAPCertificate cert1 = cert.sign(pkcs12cert);
+
+			JAPCertificate cert2 = JAPCertificate.getInstance(pkcs12cert.getX509Certificate());
+
+			m_tinyTLS.setClientCertificate(new JAPCertificate[]{cert1,cert2},key);
+		} catch (Exception ex)
+		{
+			LogHolder.log(LogLevel.DEBUG, LogType.TOR,
+						  "Error while creating Certificates. Certificates are not used.");
+		}
+
+		//#######################
+
 		m_tinyTLS.startHandshake();
 		m_istream = m_tinyTLS.getInputStream();
 		m_ostream = m_tinyTLS.getOutputStream();
