@@ -38,6 +38,13 @@ public class JAPView extends JFrame implements ActionListener, JAPObserver {
 	}
 	
 	public void init() {
+		try{
+			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+		}
+		catch(Exception e)
+			{
+				e.printStackTrace();
+			}
 		// Show wait message
 		JLabel waitLabel = new JLabel(model.msg.getString("loading"), JLabel.CENTER);
 		//waitLabel.setFont(new Font("Sans", Font.BOLD,14));
