@@ -66,7 +66,7 @@ final public class JAPSignature
 		}
 	}
 
-	synchronized public void initVerify(PublicKey k) throws InvalidKeyException
+	synchronized public void initVerify(IMyPublicKey k) throws InvalidKeyException
 	{
 		if (k == null)
 		{
@@ -96,7 +96,7 @@ final public class JAPSignature
 	 * @param ownPrivateKey The private key of a asymmetric algorithm (DSA at the moment) for
 	 * signing the messages.
 	 */
-	synchronized public void initSign(PrivateKey ownPrivateKey) throws InvalidKeyException
+	synchronized public void initSign(IMyPrivateKey ownPrivateKey) throws InvalidKeyException
 	{
 		if (ownPrivateKey == null)
 		{

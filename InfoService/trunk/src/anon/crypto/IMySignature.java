@@ -38,9 +38,9 @@ import java.security.PublicKey;
 
 interface IMySignature
 {
-	void initVerify(PublicKey k) throws InvalidKeyException;
+	void initVerify(IMyPublicKey k) throws InvalidKeyException;
 
-	void initSign(PrivateKey ownPrivateKey) throws InvalidKeyException;
+	void initSign(IMyPrivateKey ownPrivateKey) throws InvalidKeyException;
 
 	boolean verify(byte[] message, byte[] sig);
 

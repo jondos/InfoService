@@ -115,14 +115,14 @@ final public class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifier
 	protected SecureRandom random = new SecureRandom();
 
 	private String alias;
-	private PrivateKey m_privKey;
+	private IMyPrivateKey m_privKey;
 
 //	private PublicKey pubKey;
 	private X509CertificateStructure x509cert;
 
 	public PKCS12(
 		String al,
-		PrivateKey privkey,
+		IMyPrivateKey privkey,
 		X509CertificateStructure cert
 		/*,PublicKey pubkey*/
 		)
@@ -386,7 +386,7 @@ final public class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifier
 		try
 		{
 			String alias = null;
-			PrivateKey privKey = null;
+			IMyPrivateKey privKey = null;
 			X509CertificateStructure x509cert = null;
 
 			BERInputStream is = new BERInputStream(stream);
@@ -595,7 +595,7 @@ final public class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifier
 		return alias;
 	}
 
-	public PrivateKey getPrivKey()
+	public IMyPrivateKey getPrivKey()
 	{
 		return m_privKey;
 	}
@@ -615,7 +615,7 @@ final public class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifier
 		alias = string;
 	}
 
-	public void setPrivKey(DSAPrivateKey key)
+	public void setPrivKey(IMyPrivateKey key)
 	{
 		m_privKey = key;
 	}
