@@ -130,6 +130,10 @@ final public class AnonServiceImpl implements AnonService
                 len-=in.read(buff,0,len);
               }
           }
+        catch(ConnectException ec)
+          {
+            throw ec;
+          }
         catch(Exception e)
           {
             throw new ConnectException("createChannel(): "+e.getMessage());

@@ -200,6 +200,7 @@ public final class JAPController implements ProxyListener {
 	 *		anonPortNumber=".."						// the portnumber of the anon-service
 	 *    anonSSLPortNumber=".."        /the "proxy" port number of anon-service
 	 *		autoConnect="true"/"false"		// should we start the anon service immedialy after programm launch ?
+	 *		autoReConnect="true"/"false"		// should we automatically reconnect to mix if connection was lost ?
 	 *		DummyTrafficIntervall=".."    //Time of inactivity in milli seconds after which a dummy is send
    *    minimizedStartup="true"/"false" // should we start minimized ???
 	 *		neverRemindActiveContent="true"/"false" // should we remind the user about active content ?
@@ -292,6 +293,7 @@ public final class JAPController implements ProxyListener {
 			m_Controller.setAnonServer(server);
       setDummyTraffic(JAPUtil.parseElementAttrInt(root,"DummyTrafficIntervall",-1));
 			setAutoConnect(JAPUtil.parseNodeBoolean(n.getNamedItem("autoConnect"),false));
+			setAutoReConnect(JAPUtil.parseNodeBoolean(n.getNamedItem("autoReConnect"),false));
 			m_Model.setMinimizeOnStartup(JAPUtil.parseNodeBoolean(n.getNamedItem("minimizedStartup"),false));
 			//Load Locale-Settings
 			String locale=JAPUtil.parseNodeString(n.getNamedItem("Locale"),m_Locale.getLanguage());
@@ -420,6 +422,7 @@ public final class JAPController implements ProxyListener {
 			e.setAttribute("anonSSLPortNumber",Integer.toString(e1.getSSLPort()));
 			e.setAttribute("DummyTrafficIntervall",Integer.toString(JAPModel.getDummyTraffic()));
       e.setAttribute("autoConnect",(JAPModel.getAutoConnect()?"true":"false"));
+      e.setAttribute("autoReConnect",(JAPModel.getAutoReConnect()?"true":"false"));
 			e.setAttribute("minimizedStartup",(JAPModel.getMinimizeOnStartup()?"true":"false"));
 			e.setAttribute("neverRemindActiveContent",(mbActCntMessageNeverRemind?"true":"false"));
 			e.setAttribute("doNotAbuseReminder",(mbDoNotAbuseReminder?"true":"false"));
@@ -918,6 +921,7 @@ private final class SetAnonModeAsync implements Runnable
                     }
                   m_proxyAnon.setProxyListener(m_Controller);
                   m_proxyAnon.setDummyTraffic(m_Model.getDummyTraffic());
+                  m_proxyAnon.setAutoReConnect(m_Model.getAutoReConnect());
                   // start feedback thread
                   feedback=new JAPFeedback();
                   feedback.startRequests();
@@ -1001,6 +1005,13 @@ private final class SetAnonModeAsync implements Runnable
   public void setAutoConnect(boolean b)
     {
       m_Model.setAutoConnect(b);
+    }
+
+  public void setAutoReConnect(boolean b)
+    {
+      m_Model.setAutoReConnect(b);
+      if(m_proxyAnon!=null)
+        m_proxyAnon.setAutoReConnect(b);
     }
 	/*public synchronized void setAnonMode(boolean anonModeSelected)
 	{

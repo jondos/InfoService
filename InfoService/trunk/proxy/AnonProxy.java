@@ -29,10 +29,12 @@ package proxy;
 import java.net.ServerSocket;
 import anon.ErrorCodes;
 import anon.AnonService;
+import anon.AnonServiceEventListener;
 import anon.AnonServiceFactory;
 import anon.AnonChannel;
 import anon.AnonServer;
 import anon.ToManyOpenChannelsException;
+import anon.NotConnectedToMixException;
 
 import anon.server.AnonServiceImpl;
 import JAPDebug;
@@ -43,7 +45,7 @@ import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.net.Socket;
 import java.net.SocketException;
-final public class AnonProxy implements Runnable
+final public class AnonProxy implements Runnable/*,AnonServiceEventListener*/
 {
   public static final int E_SUCCESS=0;
   public static final int E_BIND=-2;
@@ -54,6 +56,7 @@ final public class AnonProxy implements Runnable
   private ProxyListener m_ProxyListener;
   private volatile int m_numChannels=0;
   private AnonServer m_AnonServer;
+  private boolean m_bAutoReconnect=false;
   public AnonProxy(ServerSocket listener)
     {
       m_socketListener=listener;
@@ -86,6 +89,11 @@ final public class AnonProxy implements Runnable
   public void setDummyTraffic(int msIntervall)
     {
       ((AnonServiceImpl)m_Anon).setDummyTraffic(msIntervall);
+    }
+
+  public void setAutoReConnect(boolean b)
+    {
+      m_bAutoReconnect=b;
     }
 
   public int start()
@@ -152,13 +160,31 @@ final public class AnonProxy implements Runnable
                   {
                     try
                       {
+                        newChannel=null;
                         newChannel=m_Anon.createChannel(AnonChannel.HTTP);
                         break;
                       }
                     catch(ToManyOpenChannelsException te)
                       {
-                        JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPAnonPrxy.run() ToMaynOpenChannelsExeption");
+                        JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPAnonProxy.run() ToManyOpenChannelsExeption");
                         Thread.sleep(1000);
+                      }
+                    catch(NotConnectedToMixException ec)
+                      {
+                        JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPAnonProxy.run() Connection to Mix lost");
+                        if(!m_bAutoReconnect)
+                          {
+                            m_bIsRunning=false;
+                            break;
+                          }
+                        while(m_bIsRunning&&m_bAutoReconnect)
+                          {
+                            JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPAnonProxy.run() Try reconnect to Mix");
+                            int ret=m_Anon.connect(m_AnonServer);
+                            if(ret==ErrorCodes.E_SUCCESS)
+                              break;
+                            Thread.sleep(10000);
+                          }
                       }
                   }
                 if(newChannel!=null)
@@ -168,7 +194,7 @@ final public class AnonProxy implements Runnable
                     }
                   catch(Exception e)
                     {
-                      JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPAnonPrxy.run() Exception: " +e);
+                      JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPAnonPrxoy.run() Exception: " +e);
                     }
               }
 					}

@@ -58,6 +58,7 @@ import anon.ErrorCodes;
 import anon.AnonServer;
 import anon.AnonChannel;
 import anon.ToManyOpenChannelsException;
+import anon.NotConnectedToMixException;
 import anon.server.AnonServiceImpl;
 public final class MuxSocket implements Runnable
 	{
@@ -312,7 +313,7 @@ public final class MuxSocket implements Runnable
 									}
 							}
 						else
-							throw new ConnectException("Lost connection to mix or not connected to a mix!");
+							throw new NotConnectedToMixException("Lost connection to mix or not connected to a mix!");
 					}
 			}
 

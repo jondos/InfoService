@@ -43,6 +43,7 @@ public final class JAPModel
 	private String  m_FirewallAuthenticationUserID = null;  //userid for authentication
 	private String  m_FirewallAuthenticationPasswd = null;  // password --> will never be saved...
 	private boolean m_bAutoConnect                 = false; // autoconnect after program start
+	private boolean m_bAutoReConnect               = false; // autoReconnects after loosing connection to mix
 	private boolean m_bMinimizeOnStartup           = false; // true if programm will start minimized
 	//private boolean  mbActCntMessageNotRemind    = false; // indicates if Warning message in setAnonMode has been deactivated for the session
 	//private boolean  mbActCntMessageNeverRemind  = false; // indicates if Warning message in setAnonMode has been deactivated forever
@@ -174,6 +175,16 @@ public final class JAPModel
       return model.m_bAutoConnect;
     }
 
+  protected void setAutoReConnect(boolean b)
+    {
+      m_bAutoReConnect=b;
+    }
+
+  public static boolean getAutoReConnect()
+    {
+      return model.m_bAutoReConnect;
+    }
+
  	protected void setMinimizeOnStartup(boolean b)
     {
 		  m_bMinimizeOnStartup=b;
@@ -223,7 +234,7 @@ public final class JAPModel
 			return model.m_bHttpListenerIsLocal;
 		}
 
-  protected void setSmallDisplay(boolean b)
+  public void setSmallDisplay(boolean b)
     {
       m_bSmallDisplay=b;
     }
@@ -263,6 +274,12 @@ public final class JAPModel
       buff.append("\n");
       buff.append("FirewallPort: ");
       buff.append(m_FirewallPortNumber);
+      buff.append("\n");
+      buff.append("AutoConnect: ");
+      buff.append(m_bAutoConnect);
+      buff.append("\n");
+      buff.append("AutoReConnect: ");
+      buff.append(m_bAutoReConnect);
       buff.append("\n");
 
 /*	private boolean m_bUseFirewallAuthentication   = false; //indicates whether JAP should use a UserID/Password to authenticat to the proxy
