@@ -382,6 +382,7 @@ public final class JAPConf extends JDialog
 		{
 			String s=null;
 			int i;
+			//Checking InfoService (Host + Port)
 			s=infohostTextField.getText().trim();
 			if(s==null||s.equals(""))
 				{
@@ -401,6 +402,24 @@ public final class JAPConf extends JDialog
 					showError(model.getString("inputInfoServicePortWrong"));
 					return false;
 				}
+			
+			//checking Listener Port Number
+			try
+				{
+					i=Integer.parseInt(portnumberTextField.getText().trim());
+				}
+			catch(Exception e)
+				{
+					i=-1;
+				}
+			if(!model.isPort(i))
+				{
+					showError(model.getString("inputListenerPortWrong"));
+					return false;
+				}
+			
+			
+			
 			return true;
 		}
 															

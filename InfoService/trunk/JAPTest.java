@@ -11,29 +11,31 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.*;
 import java.security.*;
 //import au.net.aba.security.cert.*;
-/*import java.math.BigInteger;
+import java.math.BigInteger;
 import sun.security.x509.X509Cert;
 import sun.security.pkcs.PKCS8Key;
 import sun.security.pkcs.PKCS7;
 import sun.security.x509.X509Key;
-*/
+
 import sun.security.util.DerInputStream;
 import sun.security.util.DerValue;
 import sun.security.util.BigInt;
-/*import cryptix.jce.provider.Cryptix;
+//import cryptix.jce.provider.Cryptix;
+import cryptix.jce.provider.CryptixCrypto;
 import java.security.Security;
 import java.security.interfaces.RSAPublicKey;
 import javax.crypto.Cipher;
 import cryptix.jce.provider.key.RawSecretKey;
-import org.logi.crypto.keys.BlowfishKey;
-*/
+import java.security.cert.CertificateFactory;
+//import org.logi.crypto.keys.BlowfishKey;
+
 
 
 final public class JAPTest
 {
 	public static void main(String argc[])
 		{
-		try{FileOutputStream fio=new FileOutputStream("test.test");
+	/*	try{FileOutputStream fio=new FileOutputStream("test.test");
 			fio.write(3);
 			fio.flush();
 			fio.close();
@@ -42,7 +44,7 @@ final public class JAPTest
 											 {
 												e.printStackTrace();
 											 }
-	//		readSig();
+*/	//		readSig();
 	//		readDSAPrivKey();
 		//	testCertAba();
 	//		readCerts();
@@ -73,7 +75,10 @@ final public class JAPTest
 			io.close();}
 			catch(Exception z)
 			{z.printStackTrace();}
-		*/	System.exit(0);
+		*/	
+		//readCertCryptix();
+		testCert();
+		System.exit(0);
 		}
 	
 	public static void testCertAba()
@@ -97,7 +102,7 @@ final public class JAPTest
 	public static void testCert()
 		{
 		try{
-			JAPCertificate master=new JAPCertificate();
+		/*	JAPCertificate master=new JAPCertificate();
 			FileInputStream f=new FileInputStream("ldbsh.cer");
 			master.decode(f);
 			f.close();
@@ -129,9 +134,9 @@ final public class JAPTest
 			FileOutputStream out=new FileOutputStream("base64.cer");
 			c.encode(out,JAPCertificate.BASE64);
 			out.close();
-	/*		
-			Security.addProvider(new Cryptix());
-			Cipher cipherEnc=Cipher.getInstance("Blowfish/ECB/None");
+	*/		
+			Security.addProvider(new CryptixCrypto());
+		/*	Cipher cipherEnc=Cipher.getInstance("Blowfish/ECB/None");
 			Cipher cipherDec=Cipher.getInstance("Blowfish/ECB/None");
 			byte[]key=new byte[16];
 			RawSecretKey k=new RawSecretKey("Blowfish",key);
@@ -150,7 +155,7 @@ final public class JAPTest
 			for(int i=0;i<buff.length;i++)
 				System.out.print(buff[i]+":");
 			
-		*/	/*	FileInputStream f=new FileInputStream("verislave.der.cer");
+		*/		FileInputStream f=new FileInputStream("ldbsh.cer");
 			X509Cert cert=new X509Cert();
 			cert.decode(f);
 			System.out.println(cert.getFormat());
@@ -159,17 +164,18 @@ final public class JAPTest
 			System.out.println(cert.getPublicKey().getAlgorithm());	
 			System.out.println(cert.getPublicKey().getFormat());
 //			f=new FileInputStream("test.p7b");
-*//*			PKCS8Key p8;
+/*			PKCS8Key p8;
 			p8.decode(
 			PKCS7 p7=new PKCS7(f);
 			System.out.println(p7.toString());
 	*/	
-	/*		X509Cert master=new X509Cert();
-			f=new FileInputStream("verimaster.der.cer");
+			X509Cert master=new X509Cert();
+			f=new FileInputStream("jap.cer");
 			master.decode(f);
+			master.verify(cert.getPublicKey());
 			byte[] key=master.getPublicKey().getEncoded();
 
-			for(int i=0;i<key.length;i++)
+	/*		for(int i=0;i<key.length;i++)
 				System.out.print(Integer.toHexString((key[i]&0x00FF))+":");
 	*///		DerInputBuffer derbuff=new DerInputBuffer();
 		//	derbuff.read;
@@ -247,6 +253,19 @@ final public class JAPTest
 		}
 		}
 	
+	
+	public static void readCertCryptix()
+	{
+		try{
+			java.security.Security.addProvider(new CryptixCrypto());
+			CertificateFactory cf=CertificateFactory.getInstance("X509");
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+	
+	}
 	
 	public static void readCerts()
 	{
