@@ -81,6 +81,7 @@ import anon.pay.PayAccountsFile;
 import anon.crypto.XMLEncryption;
 import anon.pay.Pay;
 import anon.pay.BI;
+import gui.JAPHtmlMultiLineLabel;
 
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPController implements ProxyListener, Observer
@@ -115,11 +116,6 @@ public final class JAPController implements ProxyListener, Observer
 	/** @todo check is it ok to have the password in memory while Jap is running? if not, user must enter it everytime */
 	private String m_strPayAccountsPassword = null; // password for encrypting the payment data
 
-	private static final Object oSetAnonModeSyncObject = new Object(); //for synchronisation of setAnonMode(true/false)
-	private static final Object oSetAnonModeThreadIDSyncObject = new Object(); //for synchronisation of setAnonMode(true/false)
-	private static int ms_AnonModeAsyncLastFinished = -1; //number of last finished SetAnonModeThread -> used for execution in order
-	private static int ms_AnonModeAsyncLastStarted = -1; //number of last started SetAnonModeThread
-
 	public String status1 = " ";
 	public String status2 = " ";
 
@@ -137,6 +133,12 @@ public final class JAPController implements ProxyListener, Observer
 	private static Font m_fontControls;
 	/** Holds the MsgID of the status message after the forwaring server was started.*/
 	private int m_iStatusPanelMsgIdForwarderServerStatus;
+
+	private static Object oAnonSyncObject = new Object(); //for synchronisation of setMode(true/false)
+	private static Object oAnonSetThreadIDSyncObject = new Object(); //for synchronisation of setMode(true/false)
+	private static int ms_AnonModeAsyncLastStarted=-1;
+	private static int ms_AnonModeAsyncLastFinished=-1;
+
 
 	private JAPController()
 	{
@@ -1488,259 +1490,273 @@ public final class JAPController implements ProxyListener, Observer
 	//---------------------------------------------------------------------
 	private final class SetAnonModeAsync implements Runnable
 	{
-		private boolean anonModeSelected = false;
-		private int id = 0;
-		public SetAnonModeAsync(boolean b)
-		{
-			synchronized (oSetAnonModeThreadIDSyncObject)
+			private boolean ServerModeSelected = false;
+			private int id = 0;
+
+			public SetAnonModeAsync(boolean b)
 			{
-				anonModeSelected = b;
-				ms_AnonModeAsyncLastStarted++;
-				id = ms_AnonModeAsyncLastStarted;
+				synchronized (oAnonSetThreadIDSyncObject)
+				{
+					ServerModeSelected = b;
+					ms_AnonModeAsyncLastStarted++;
+					id = ms_AnonModeAsyncLastStarted;
+
+					new Thread(this,this.getClass().getName()).start();
+				}
+
 			}
-		}
+
+			/** @todo Still very bugy, because mode change is async done but not
+			 * all properties (like currentMixCascade etc.)are synchronized!!
+			 *
+			 */
+
+			public void run()
+			{
+				synchronized (oAnonSyncObject)
+				{
+					while (id != ms_AnonModeAsyncLastFinished + 1)
+					{
+						try
+						{
+							oAnonSyncObject.wait();
+						}
+						catch (InterruptedException ieo)
+						{
+							LogHolder.log(LogLevel.EXCEPTION, LogType.THREAD,
+										  "Waiting for becoming current SetServerModeAsnyc Thread intterrupted!");
+						}
+					}
+					setServerMode(ServerModeSelected);
+					ms_AnonModeAsyncLastFinished++;
+					oAnonSyncObject.notifyAll();
+				}
+			}
 
 		/** @todo Still very bugy, because mode change is async done but not
 		 * all properties (like currentMixCascade etc.)are synchronized!!
 		 *
 		 */
 
-		public void run()
+		private void setServerMode(boolean anonModeSelected)
 		{
-			synchronized (oSetAnonModeSyncObject)
-			{
-				while (id != ms_AnonModeAsyncLastFinished + 1)
+			//JAPWaitSplash splash = null;
+			int msgIdConnect = 0;
+			boolean canStartService = true;
+			//setAnonMode--> async!!
+			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "JAPModel:setAnonMode(" + anonModeSelected + ")");
+			if ( (m_proxyAnon == null) && (anonModeSelected))
+			{ //start Anon Mode
+				m_View.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+				msgIdConnect = m_View.addStatusMsg(JAPMessages.getString("setAnonModeSplashConnect"),
+					JOptionPane.INFORMATION_MESSAGE, false);
+				//splash = JAPWaitSplash.start(JAPMessages.getString("setAnonModeSplashConnect"),
+				//							 JAPMessages.getString("setAnonModeSplashTitle"));
+				if ( (!m_bAlreadyCheckedForNewVersion) && (!JAPModel.isInfoServiceDisabled()) &&
+					( (JAPModel.getInstance().getRoutingSettings().getRoutingMode() !=
+					   JAPRoutingSettings.ROUTING_MODE_CLIENT) ||
+					 (!JAPModel.getInstance().getRoutingSettings().getForwardInfoService())))
 				{
-					try
+					/* check for a new version of JAP if not already done, automatic infoservice requests
+					 * are allowed and we don't use forwarding with also forwarded infoservice (because
+					 * if the infoservice is also forwarded, we would need a initialized connection to a
+					 * mixcascade, which we don't have at the moment, maybe later versions of the
+					 * forwarding protocol will support direct connections to the infoservice too and not
+					 * via the mixcascade -> we will be able to do the version check here)
+					 */
+					int ok = versionCheck();
+					if (ok != -1)
 					{
-						oSetAnonModeSyncObject.wait();
+						// -> we can start anonymity
+						m_bAlreadyCheckedForNewVersion = true;
 					}
-					catch (InterruptedException ieo)
+					else
 					{
-						LogHolder.log(LogLevel.EXCEPTION, LogType.THREAD,
-									  "Waiting for becoming current SetAnonMode Thread intterrupted!");
+						canStartService = false;
 					}
 				}
-				//JAPWaitSplash splash = null;
-				int msgIdConnect = 0;
-				boolean canStartService = true;
-				//setAnonMode--> async!!
-				LogHolder.log(LogLevel.DEBUG, LogType.MISC, "JAPModel:setAnonMode(" + anonModeSelected + ")");
-				if ( (m_proxyAnon == null) && (anonModeSelected))
-				{ //start Anon Mode
-					m_View.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-					msgIdConnect = m_View.addStatusMsg(JAPMessages.getString("setAnonModeSplashConnect"),
-						JOptionPane.INFORMATION_MESSAGE, false);
-					//splash = JAPWaitSplash.start(JAPMessages.getString("setAnonModeSplashConnect"),
-					//							 JAPMessages.getString("setAnonModeSplashTitle"));
-					if ( (!m_bAlreadyCheckedForNewVersion) && (!JAPModel.isInfoServiceDisabled()) &&
-						( (JAPModel.getInstance().getRoutingSettings().getRoutingMode() !=
-						   JAPRoutingSettings.ROUTING_MODE_CLIENT) ||
-						 (!JAPModel.getInstance().getRoutingSettings().getForwardInfoService())))
+				if (canStartService)
+				{
+					// starting MUX --> Success ???
+					if (JAPModel.getInstance().getRoutingSettings().getRoutingMode() ==
+						JAPRoutingSettings.ROUTING_MODE_CLIENT)
 					{
-						/* check for a new version of JAP if not already done, automatic infoservice requests
-						 * are allowed and we don't use forwarding with also forwarded infoservice (because
-						 * if the infoservice is also forwarded, we would need a initialized connection to a
-						 * mixcascade, which we don't have at the moment, maybe later versions of the
-						 * forwarding protocol will support direct connections to the infoservice too and not
-						 * via the mixcascade -> we will be able to do the version check here)
-						 */
-						int ok = versionCheck();
-						if (ok != -1)
-						{
-							// -> we can start anonymity
-							m_bAlreadyCheckedForNewVersion = true;
-						}
-						else
-						{
-							canStartService = false;
-						}
+						/* we use a forwarded connection */
+						m_proxyAnon = JAPModel.getInstance().getRoutingSettings().getAnonProxyInstance(
+							m_socketHTTPListener);
 					}
-					if (canStartService)
+					else
 					{
-						// starting MUX --> Success ???
-						if (JAPModel.getInstance().getRoutingSettings().getRoutingMode() ==
-							JAPRoutingSettings.ROUTING_MODE_CLIENT)
+						/* we use a direct connection */
+						if (JAPModel.getInstance().getProxyInterface().isValid())
 						{
-							/* we use a forwarded connection */
-							m_proxyAnon = JAPModel.getInstance().getRoutingSettings().getAnonProxyInstance(
-								m_socketHTTPListener);
+							m_proxyAnon = new AnonProxy(
+								m_socketHTTPListener, JAPModel.getInstance().getProxyInterface());
 						}
 						else
 						{
-							/* we use a direct connection */
-							if (JAPModel.getInstance().getProxyInterface().isValid())
-							{
-								m_proxyAnon = new AnonProxy(
-									m_socketHTTPListener, JAPModel.getInstance().getProxyInterface());
-							}
-							else
-							{
-								m_proxyAnon = new AnonProxy(m_socketHTTPListener, null);
-							}
+							m_proxyAnon = new AnonProxy(m_socketHTTPListener, null);
+						}
 
-						}
-						MixCascade currentMixCascade = m_Controller.getCurrentMixCascade();
-						m_proxyAnon.setMixCascade(currentMixCascade);
-						m_proxyAnon.setMixCertificationCheck(!JAPModel.isCertCheckDisabled(),
-							JAPModel.getCertificateStore());
-						// -> we can try to start anonymity
-						if (m_proxyDirect != null)
-						{
-							m_proxyDirect.stopService();
-						}
-						m_proxyDirect = null;
+					}
+					MixCascade currentMixCascade = m_Controller.getCurrentMixCascade();
+					m_proxyAnon.setMixCascade(currentMixCascade);
+					m_proxyAnon.setMixCertificationCheck(!JAPModel.isCertCheckDisabled(),
+						JAPModel.getCertificateStore());
+					// -> we can try to start anonymity
+					if (m_proxyDirect != null)
+					{
+						m_proxyDirect.stopService();
+					}
+					m_proxyDirect = null;
 
-						int ret = m_proxyAnon.start();
-						if (ret != ErrorCodes.E_SUCCESS)
+					int ret = m_proxyAnon.start();
+					if (ret != ErrorCodes.E_SUCCESS)
+					{
+						canStartService = false;
+						m_proxyAnon = null;
+					}
+					if (ret == ErrorCodes.E_SUCCESS)
+					{
+						if (!mbActCntMessageNotRemind && !JAPModel.isSmallDisplay())
 						{
-							canStartService = false;
-							m_proxyAnon = null;
-						}
-						if (ret == ErrorCodes.E_SUCCESS)
-						{
-							if (!mbActCntMessageNotRemind && !JAPModel.isSmallDisplay())
+							// show a Reminder message that active contents should be disabled
+							Object[] options =
+								{
+								JAPMessages.getString("okButton")};
+							JCheckBox checkboxRemindNever = new JCheckBox(JAPMessages.getString(
+								"disableActCntMessageNeverRemind"));
+							Object[] message =
+								{
+								JAPMessages.getString("disableActCntMessage"), checkboxRemindNever};
+							ret = 0;
+							ret = JOptionPane.showOptionDialog(getView(),
+								(Object) message,
+								JAPMessages.getString("disableActCntMessageTitle"),
+								JOptionPane.DEFAULT_OPTION,
+								JOptionPane.WARNING_MESSAGE,
+								null, options, options[0]);
+							mbActCntMessageNeverRemind = checkboxRemindNever.isSelected();
+							mbDoNotAbuseReminder = checkboxRemindNever.isSelected();
+							if (mbActCntMessageNeverRemind)
 							{
-								// show a Reminder message that active contents should be disabled
-								Object[] options =
-									{
-									JAPMessages.getString("okButton")};
-								JCheckBox checkboxRemindNever = new JCheckBox(JAPMessages.getString(
-									"disableActCntMessageNeverRemind"));
-								Object[] message =
-									{
-									JAPMessages.getString("disableActCntMessage"), checkboxRemindNever};
-								ret = 0;
-								ret = JOptionPane.showOptionDialog(getView(),
-									(Object) message,
-									JAPMessages.getString("disableActCntMessageTitle"),
-									JOptionPane.DEFAULT_OPTION,
-									JOptionPane.WARNING_MESSAGE,
-									null, options, options[0]);
-								mbActCntMessageNeverRemind = checkboxRemindNever.isSelected();
-								mbDoNotAbuseReminder = checkboxRemindNever.isSelected();
-								if (mbActCntMessageNeverRemind)
-								{
-									mbActCntMessageNotRemind = true;
-								}
+								mbActCntMessageNotRemind = true;
 							}
-							m_proxyAnon.setProxyListener(m_Controller);
-							m_proxyAnon.setDummyTraffic(JAPModel.getDummyTraffic());
-							m_proxyAnon.setAutoReConnect(JAPModel.getAutoReConnect());
-							m_proxyAnon.setPreCreateAnonRoutes(JAPModel.isPreCreateAnonRoutesEnabled());
-							// start feedback thread
-							feedback = new JAPFeedback();
-							feedback.startRequests();
 						}
-						else if (ret == AnonProxy.E_BIND)
-						{
-							Object[] args =
-								{
-								new Integer(JAPModel.getHttpListenerPortNumber())};
-							String msg = MessageFormat.format(JAPMessages.getString("errorListenerPort"),
-								args);
-							JOptionPane.showMessageDialog(JAPController.getView(),
-								msg,
-								JAPMessages.getString("errorListenerPortTitle"),
-								JOptionPane.ERROR_MESSAGE);
-							LogHolder.log(LogLevel.EMERG, LogType.NET, "Listener could not be started!");
-							JAPController.getView().disableSetAnonMode();
-						}
-						else if (ret == AnonProxy.E_MIX_PROTOCOL_NOT_SUPPORTED)
-						{
-							JOptionPane.showMessageDialog
-								(
-								getView(),
-								JAPMessages.getString("errorMixProtocolNotSupported"),
-								JAPMessages.getString("errorMixProtocolNotSupportedTitle"),
-								JOptionPane.ERROR_MESSAGE
-								);
-						}
+						m_proxyAnon.setProxyListener(m_Controller);
+						m_proxyAnon.setDummyTraffic(JAPModel.getDummyTraffic());
+						m_proxyAnon.setAutoReConnect(JAPModel.getAutoReConnect());
+						m_proxyAnon.setPreCreateAnonRoutes(JAPModel.isPreCreateAnonRoutesEnabled());
+						// start feedback thread
+						feedback = new JAPFeedback();
+						feedback.startRequests();
+					}
+					else if (ret == AnonProxy.E_BIND)
+					{
+						Object[] args =
+							{
+							new Integer(JAPModel.getHttpListenerPortNumber())};
+						String msg = MessageFormat.format(JAPMessages.getString("errorListenerPort"),
+							args);
+						JOptionPane.showMessageDialog(JAPController.getView(),
+							msg,
+							JAPMessages.getString("errorListenerPortTitle"),
+							JOptionPane.ERROR_MESSAGE);
+						LogHolder.log(LogLevel.EMERG, LogType.NET, "Listener could not be started!");
+						JAPController.getView().disableSetAnonMode();
+					}
+					else if (ret == AnonProxy.E_MIX_PROTOCOL_NOT_SUPPORTED)
+					{
+						JOptionPane.showMessageDialog
+							(
+							getView(),
+							JAPMessages.getString("errorMixProtocolNotSupported"),
+							JAPMessages.getString("errorMixProtocolNotSupportedTitle"),
+							JOptionPane.ERROR_MESSAGE
+							);
+					}
 //otte
-						else if (ret == AnonProxy.E_SIGNATURE_CHECK_FIRSTMIX_FAILED)
-						{
-							JOptionPane.showMessageDialog
-								(
-								getView(),
-								JAPMessages.getString("errorMixFirstMixSigCheckFailed"),
-								JAPMessages.getString("errorMixFirstMixSigCheckFailedTitle"),
-								JOptionPane.ERROR_MESSAGE
-								);
-						}
-
-						else if (ret == AnonProxy.E_SIGNATURE_CHECK_OTHERMIX_FAILED)
-						{
-							JOptionPane.showMessageDialog
-								(
-								getView(),
-								JAPMessages.getString("errorMixOtherMixSigCheckFailed"),
-								JAPMessages.getString("errorMixOtherMixSigCheckFailedTitle"),
-								JOptionPane.ERROR_MESSAGE
-								);
-						}
-						// ootte
-						else
-						{
-							if (!JAPModel.isSmallDisplay())
-							{
-								JOptionPane.showMessageDialog
-									(
-									getView(),
-									JAPMessages.getString("errorConnectingFirstMix") + "\n" +
-									JAPMessages.getString("errorCode") + ": " + Integer.toString(ret),
-									JAPMessages.getString("errorConnectingFirstMixTitle"),
-									JOptionPane.ERROR_MESSAGE
-									);
-							}
-						}
-					}
-					m_View.setCursor(Cursor.getDefaultCursor());
-					notifyJAPObservers();
-					//splash.abort();
-					m_View.removeStatusMsg(msgIdConnect);
-					if (!canStartService)
+					else if (ret == AnonProxy.E_SIGNATURE_CHECK_FIRSTMIX_FAILED)
 					{
-						setAnonMode(false);
+						JOptionPane.showMessageDialog
+							(
+							getView(),
+							JAPMessages.getString("errorMixFirstMixSigCheckFailed"),
+							JAPMessages.getString("errorMixFirstMixSigCheckFailedTitle"),
+							JOptionPane.ERROR_MESSAGE
+							);
+					}
+
+					else if (ret == AnonProxy.E_SIGNATURE_CHECK_OTHERMIX_FAILED)
+					{
+						JOptionPane.showMessageDialog
+							(
+							getView(),
+							JAPMessages.getString("errorMixOtherMixSigCheckFailed"),
+							JAPMessages.getString("errorMixOtherMixSigCheckFailedTitle"),
+							JOptionPane.ERROR_MESSAGE
+							);
+					}
+					// ootte
+					else
+					{
+						if (!JAPModel.isSmallDisplay())
+						{
+							JOptionPane.showMessageDialog
+								(
+								getView(),
+								JAPMessages.getString("errorConnectingFirstMix") + "\n" +
+								JAPMessages.getString("errorCode") + ": " + Integer.toString(ret),
+								JAPMessages.getString("errorConnectingFirstMixTitle"),
+								JOptionPane.ERROR_MESSAGE
+								);
+						}
 					}
 				}
-				else if ( (m_proxyDirect == null) && (!anonModeSelected))
+				m_View.setCursor(Cursor.getDefaultCursor());
+				notifyJAPObservers();
+				//splash.abort();
+				m_View.removeStatusMsg(msgIdConnect);
+				if (!canStartService)
 				{
-					if (m_proxyAnon != null)
-					{
-						msgIdConnect = m_View.addStatusMsg(JAPMessages.getString(
-							"setAnonModeSplashDisconnect"),
-							JOptionPane.INFORMATION_MESSAGE, false);
-						//splash = JAPWaitSplash.start(JAPMessages.getString("setAnonModeSplashDisconnect"),
-						//	JAPMessages.getString("setAnonModeSplashTitle"));
-						m_proxyAnon.stop();
-					}
-					m_proxyAnon = null;
-					/* if (m_proxySocks != null)
-					 {
-					   m_proxySocks.stop();
-					 }
-					 m_proxySocks = null;*/
-					if (feedback != null)
-					{
-						feedback.stopRequests();
-						feedback = null;
-					}
-					m_proxyDirect = new DirectProxy(m_socketHTTPListener);
-					m_proxyDirect.startService();
-
-					getCurrentMixCascade().resetCurrentStatus();
-
-					/* notify the forwarding system after! m_proxyAnon is set to null */
-					JAPModel.getInstance().getRoutingSettings().anonConnectionClosed();
-
-					notifyJAPObservers();
-					if (msgIdConnect != 0)
-					{
-						m_View.removeStatusMsg(msgIdConnect);
-					}
+					setAnonMode(false);
 				}
-				ms_AnonModeAsyncLastFinished++;
-				oSetAnonModeSyncObject.notifyAll();
+			}
+			else if ( (m_proxyDirect == null) && (!anonModeSelected))
+			{
+				if (m_proxyAnon != null)
+				{
+					msgIdConnect = m_View.addStatusMsg(JAPMessages.getString(
+						"setAnonModeSplashDisconnect"),
+						JOptionPane.INFORMATION_MESSAGE, false);
+					//splash = JAPWaitSplash.start(JAPMessages.getString("setAnonModeSplashDisconnect"),
+					//	JAPMessages.getString("setAnonModeSplashTitle"));
+					m_proxyAnon.stop();
+				}
+				m_proxyAnon = null;
+				/* if (m_proxySocks != null)
+				 {
+				   m_proxySocks.stop();
+				 }
+				 m_proxySocks = null;*/
+				if (feedback != null)
+				{
+					feedback.stopRequests();
+					feedback = null;
+				}
+				m_proxyDirect = new DirectProxy(m_socketHTTPListener);
+				m_proxyDirect.startService();
+
+				getCurrentMixCascade().resetCurrentStatus();
+
+				/* notify the forwarding system after! m_proxyAnon is set to null */
+				JAPModel.getInstance().getRoutingSettings().anonConnectionClosed();
+
+				notifyJAPObservers();
+				if (msgIdConnect != 0)
+				{
+					m_View.removeStatusMsg(msgIdConnect);
+				}
 			}
 		}
 
@@ -1756,8 +1772,7 @@ public final class JAPController implements ProxyListener, Observer
 
 	public synchronized void setAnonMode(boolean anonModeSelected)
 	{
-		Thread t = new Thread(new SetAnonModeAsync(anonModeSelected), "JAP - SetAnonModeAsync");
-		t.start();
+		new SetAnonModeAsync(anonModeSelected);
 	}
 
 	/**
@@ -2303,78 +2318,121 @@ public final class JAPController implements ProxyListener, Observer
 		}
 	}
 
-	/**
-	 * Enables or disables the forwarding server. It's only a comfort function for lazy programmers.
-	 * Attention: If there is an active forwarding client running, nothing is done and this method
-	 * returns always false. Run a forwarding server and a client at the same time is not supported.
-	 *
-	 * @param a_activate True, if ther server shall be activated or false, if it shall be disabled.
-	 *
-	 * @return True, if starting/stopping the server was successful. Attention: Because the call of
-	 *         this method is not blocking while the server registrates at the infoservices, it is
-	 *         possible, that the registration of the local server at the infoservices failed. This
-	 *         method returns also true in that case, but no client will find the server, until the
-	 *         registration instances can registrate at least at one infoservice. If you need a
-	 *         feedback of the initial registration process, you have to call the methods for
-	 *         starting the server directly on JAPRoutingSettings and cannot use this shortcut
-	 *         method.
-	 */
-	public boolean enableForwardingServer(boolean a_activate)
+/////////////////////////////
+////////////////////////////
+	private final class SetForwardingServerModeAsync extends AbstractJAPSetServerModeAsync
 	{
-
-		if (m_iStatusPanelMsgIdForwarderServerStatus != -1)
+		public SetForwardingServerModeAsync(boolean b)
 		{
-			m_View.removeStatusMsg(m_iStatusPanelMsgIdForwarderServerStatus);
-			m_iStatusPanelMsgIdForwarderServerStatus = -1;
+			super( b);
 		}
 
-		boolean returnValue = false;
-		/* don't allow to interrupt the client routing mode */
-		if (JAPModel.getInstance().getRoutingSettings().getRoutingMode() !=
-			JAPRoutingSettings.ROUTING_MODE_CLIENT)
+		void setServerMode(boolean b)
 		{
-			if (a_activate)
+			if (m_iStatusPanelMsgIdForwarderServerStatus != -1)
 			{
-				int msgId = m_View.addStatusMsg(JAPMessages.getString(
-								"controllerStatusMsgRoutingStartServer"),JOptionPane.INFORMATION_MESSAGE, false);
-				/* start the server */
-				returnValue = JAPModel.getInstance().getRoutingSettings().setRoutingMode(JAPRoutingSettings.
-					ROUTING_MODE_SERVER);
-				m_View.removeStatusMsg(msgId);
-				if (returnValue)
+				m_View.removeStatusMsg(m_iStatusPanelMsgIdForwarderServerStatus);
+				m_iStatusPanelMsgIdForwarderServerStatus = -1;
+			}
+
+			boolean returnValue = false;
+			// don't allow to interrupt the client routing mode //
+			if (JAPModel.getInstance().getRoutingSettings().getRoutingMode() !=
+				JAPRoutingSettings.ROUTING_MODE_CLIENT)
+			{
+				if (b)
 				{
-					m_iStatusPanelMsgIdForwarderServerStatus = m_View.addStatusMsg(JAPMessages.
-						getString("controllerStatusMsgRoutingStartServerSuccess"),
-						JOptionPane.INFORMATION_MESSAGE, true);
-					/* starting the server was successful -> start propaganda without blocking */
-					JAPModel.getInstance().getRoutingSettings().startPropaganda(false);
+					int msgId = m_View.addStatusMsg(JAPMessages.getString(
+						"controllerStatusMsgRoutingStartServer"), JOptionPane.INFORMATION_MESSAGE, false);
+					// start the server //
+					returnValue = JAPModel.getInstance().getRoutingSettings().setRoutingMode(
+						JAPRoutingSettings.
+						ROUTING_MODE_SERVER);
+					if (returnValue)
+					{
+						// starting the server was successful -> start propaganda with blocking //
+						int registrationStatus = JAPModel.getInstance().getRoutingSettings().startPropaganda(true);
+						m_View.removeStatusMsg(msgId);
+						if (registrationStatus == JAPRoutingSettings.REGISTRATION_NO_INFOSERVICES)
+						{
+							JOptionPane.showMessageDialog(m_View,
+								new JAPHtmlMultiLineLabel(JAPMessages.
+								getString("settingsRoutingServerRegistrationEmptyListError"), getDialogFont()),
+								JAPMessages.getString("ERROR"), JOptionPane.ERROR_MESSAGE);
+						}
+						else if (registrationStatus == JAPRoutingSettings.REGISTRATION_UNKNOWN_ERRORS)
+						{
+							JOptionPane.showMessageDialog(m_View,
+								new JAPHtmlMultiLineLabel(JAPMessages.
+								getString("settingsRoutingServerRegistrationUnknownError"), getDialogFont()),
+								JAPMessages.getString("ERROR"), JOptionPane.ERROR_MESSAGE);
+						}
+						else if (registrationStatus == JAPRoutingSettings.REGISTRATION_INFOSERVICE_ERRORS)
+						{
+							JOptionPane.showMessageDialog(m_View,
+								new JAPHtmlMultiLineLabel(JAPMessages.
+								getString("settingsRoutingServerRegistrationInfoservicesError"),
+								getDialogFont()), JAPMessages.getString("ERROR"), JOptionPane.ERROR_MESSAGE);
+						}
+						else if (registrationStatus == JAPRoutingSettings.REGISTRATION_VERIFY_ERRORS)
+						{
+							JOptionPane.showMessageDialog(m_View,
+								new JAPHtmlMultiLineLabel(JAPMessages.
+								getString("settingsRoutingServerRegistrationVerificationError"),
+								getDialogFont()), JAPMessages.getString("ERROR"), JOptionPane.ERROR_MESSAGE);
+						}
+						else if (registrationStatus == JAPRoutingSettings.REGISTRATION_SUCCESS)
+						{
+							m_iStatusPanelMsgIdForwarderServerStatus = m_View.addStatusMsg(JAPMessages.
+								getString("controllerStatusMsgRoutingStartServerSuccess"),
+								JOptionPane.INFORMATION_MESSAGE, true);
+						}
+
+					}
+					else
+					{ //starting 1 stage was not succesfull
+						m_View.removeStatusMsg(msgId);
+						m_iStatusPanelMsgIdForwarderServerStatus = m_View.addStatusMsg(JAPMessages.
+							getString("controllerStatusMsgRoutingStartServerError"),
+							JOptionPane.ERROR_MESSAGE, true);
+						JOptionPane.showMessageDialog
+							(
+							getView(),
+							JAPMessages.getString("settingsRoutingStartServerError"),
+							JAPMessages.getString("settingsRoutingStartServerErrorTitle"),
+							JOptionPane.ERROR_MESSAGE
+							);
+					}
 				}
 				else
 				{
-					m_iStatusPanelMsgIdForwarderServerStatus = m_View.addStatusMsg(JAPMessages.
-						getString("controllerStatusMsgRoutingStartServerError"), JOptionPane.ERROR_MESSAGE, true);
-					JOptionPane.showMessageDialog
-						(
-						getView(),
-						JAPMessages.getString("settingsRoutingStartServerError"),
-						JAPMessages.getString("settingsRoutingStartServerErrorTitle"),
-						JOptionPane.ERROR_MESSAGE
-						);
+					// stop the server //
+					int msgId = m_View.addStatusMsg(JAPMessages.getString(
+						"controllerStatusMsgRoutingStopServer"), JOptionPane.INFORMATION_MESSAGE, false);
+					returnValue = JAPModel.getInstance().getRoutingSettings().setRoutingMode(
+						JAPRoutingSettings.
+						ROUTING_MODE_DISABLED);
+					m_View.removeStatusMsg(msgId);
+					m_iStatusPanelMsgIdForwarderServerStatus = m_View.addStatusMsg(JAPMessages.getString(
+						"controllerStatusMsgRoutingServerStopped"), JOptionPane.INFORMATION_MESSAGE, true);
 				}
+
 			}
-			else
-			{
-				/* stop the server */
-				int msgId = m_View.addStatusMsg(JAPMessages.getString(
-								"controllerStatusMsgRoutingStopServer"), JOptionPane.INFORMATION_MESSAGE, false);
-				returnValue = JAPModel.getInstance().getRoutingSettings().setRoutingMode(JAPRoutingSettings.
-					ROUTING_MODE_DISABLED);
-				m_View.removeStatusMsg(msgId);
-				m_iStatusPanelMsgIdForwarderServerStatus = m_View.addStatusMsg(JAPMessages.getString(
-								"controllerStatusMsgRoutingServerStopped"), JOptionPane.INFORMATION_MESSAGE, true);
-			}
-		}
-		return returnValue;
+
+		} //end of class SetAnonModeAsync
+	}
+
+	/**
+	 * Enables or disables the forwarding server.
+	 * Attention: If there is an active forwarding client running, nothing is done and this method
+	 * returns always false. Run a forwarding server and a client at the same time is not supported.
+	 * This method returns always immedailly and the real job is done in a background thread.
+	 * @param a_activate True, if ther server shall be activated or false, if it shall be disabled.
+	 *
+	 */
+	public synchronized void enableForwardingServer(boolean anonModeSelected)
+	{
+		new SetForwardingServerModeAsync(anonModeSelected);
 	}
 
 }

@@ -83,6 +83,7 @@ import logging.LogLevel;
 import logging.LogType;
 import javax.swing.SwingConstants;
 import proxy.ProxyListener;
+import javax.swing.Icon;
 
 final public class JAPNewView extends AbstractJAPMainView implements IJAPMainView, ActionListener,
 	JAPObserver
@@ -133,6 +134,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private JLabel m_labelForwarderCurrentConnectionsLabel, m_labelForwarderAcceptedConnectionsLabel;
 	private JLabel m_labelForwarderRejectedConnectionsLabel, m_labelForwarderUsedBandwidthLabel;
 	private JLabel m_labelForwarderConnections;
+	private JLabel m_labelForwardingErrorSmall, m_labelForwardingError;
 	private JProgressBar m_progressOwnTrafficActivity, m_progressOwnTrafficActivitySmall, m_progressAnonLevel;
 	private JButton m_bttnAnonDetails, m_bttnReload;
 	private JCheckBox m_cbAnonymityOn;
@@ -764,7 +766,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			Dimension ds = Toolkit.getDefaultToolkit().getScreenSize();
 			if (m.m_OldMainWindowLocation != null && m.m_OldMainWindowLocation.x >= 0 &&
 				m.m_OldMainWindowLocation.y > 0 /*&&m.m_OldMainWindowLocation.x<ds.width&&
-						m.m_OldMainWindowLocation.y<ds.height*/
+					   m.m_OldMainWindowLocation.y<ds.height*/
 				)
 			{
 				setLocation(m.m_OldMainWindowLocation);
@@ -961,13 +963,21 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		};
 		m_cbForwarding.addActionListener(actionListener);
 		c2.gridx = 1;
-		c2.weightx = 1;
+		c2.weightx = 0;
 		c2.fill = GridBagConstraints.NONE;
 		c2.insets = new Insets(0, 5, 0, 0);
 		p2.add(m_cbForwarding, c2);
+
+		m_labelForwardingError = new JLabel();
+		c2.gridx = 2;
+		c2.weightx = 1;
+		c2.fill = GridBagConstraints.NONE;
+		c2.insets = new Insets(0, 15, 0, 0);
+		p2.add(m_labelForwardingError, c2);
+
 		m_labelForwarderActivity = new JLabel(JAPMessages.getString("ngActivity"));
 		c2.insets = new Insets(0, 5, 0, 0);
-		c2.gridx = 2;
+		c2.gridx = 3;
 		c2.weightx = 0;
 		c2.fill = GridBagConstraints.NONE;
 		p2.add(m_labelForwarderActivity, c2);
@@ -976,7 +986,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		progress.setMinimum(0);
 		progress.setMaximum(5);
 		progress.setBorderPainted(false);
-		c2.gridx = 3;
+		c2.gridx = 4;
 		p2.add(progress, c2);
 		c1.fill = GridBagConstraints.HORIZONTAL;
 		c1.weightx = 1;
@@ -1065,23 +1075,31 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.anchor = GridBagConstraints.WEST;
 		p.add(m_labelForwardingSmall, c1);
 		c1.gridx = 1;
-		c1.weightx = 1;
+		c1.weightx = 0;
 		c1.fill = GridBagConstraints.HORIZONTAL;
 		m_cbForwardingSmall = new JCheckBox(JAPMessages.getString("ngForwardingOn"));
 		m_cbForwardingSmall.setBorder(null);
 		m_cbForwardingSmall.addActionListener(actionListener);
 		p.add(m_cbForwardingSmall, c1);
-		m_labelForwarderActivitySmall = new JLabel(JAPMessages.getString("ngActivity"));
+		m_labelForwardingErrorSmall = new JLabel();
 		c1.gridx = 2;
+		c1.weightx = 1;
+		c1.fill = GridBagConstraints.NONE;
+		c1.insets = new Insets(0, 15, 0, 0);
+		p.add(m_labelForwardingErrorSmall, c1);
+
+		m_labelForwarderActivitySmall = new JLabel(JAPMessages.getString("ngActivity"));
+		c1.gridx = 3;
 		c1.weightx = 0;
 		c1.fill = GridBagConstraints.NONE;
+		c1.insets = new Insets(0, 5, 0, 0);
 		p.add(m_labelForwarderActivitySmall, c1);
 		progress = new JProgressBar();
 		progress.setUI(new MyProgressBarUI(true));
 		progress.setMinimum(0);
 		progress.setMaximum(5);
 		progress.setBorderPainted(false);
-		c1.gridx = 3;
+		c1.gridx = 4;
 		p.add(progress, c1);
 		flippingPanel.setSmallPanel(p);
 
@@ -1689,10 +1707,55 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					//trafficProgressBar.setString(JAPMessages.getString("meterNA"));
 					LogHolder.log(LogLevel.DEBUG, LogType.GUI, "JAPView:Finished updateValues");
 				}
-				m_cbForwarding.setSelected(JAPModel.getInstance().getRoutingSettings().getRoutingMode() ==
-										   JAPRoutingSettings.ROUTING_MODE_SERVER);
-				m_cbForwardingSmall.setSelected(JAPModel.getInstance().getRoutingSettings().getRoutingMode() ==
-												JAPRoutingSettings.ROUTING_MODE_SERVER);
+				boolean bForwaringServerOn = JAPModel.getInstance().getRoutingSettings().getRoutingMode() ==
+					JAPRoutingSettings.ROUTING_MODE_SERVER;
+				m_cbForwarding.setSelected(bForwaringServerOn);
+				m_cbForwardingSmall.setSelected(bForwaringServerOn);
+				Icon icon = null;
+				String strError = null;
+				String strText = null;
+				if (bForwaringServerOn)
+				{
+					/* update the server state label and the reason of error, if necessary */
+					int currentRegistrationState = JAPModel.getInstance().getRoutingSettings().
+						getRegistrationStatusObserver().getCurrentState();
+					int currentErrorCode = JAPModel.getInstance().getRoutingSettings().
+						getRegistrationStatusObserver().getCurrentErrorCode();
+					if (currentRegistrationState ==
+						JAPRoutingRegistrationStatusObserver.STATE_NO_REGISTRATION)
+					{
+						icon = JAPUtil.loadImageIcon(JAPConstants.IMAGE_WARNING, true);
+						if (currentErrorCode ==
+							JAPRoutingRegistrationStatusObserver.ERROR_NO_KNOWN_PRIMARY_INFOSERVICES)
+						{
+							strError = "settingsRoutingServerStatusRegistrationErrorLabelNoKnownInfoServices";
+						}
+						else if (currentErrorCode ==
+								 JAPRoutingRegistrationStatusObserver.ERROR_INFOSERVICE_CONNECT_ERROR)
+						{
+							strError = "settingsRoutingServerStatusRegistrationErrorLabelConnectionFailed";
+						}
+						else if (currentErrorCode ==
+								 JAPRoutingRegistrationStatusObserver.ERROR_VERIFICATION_ERROR)
+						{
+							strError = "settingsRoutingServerStatusRegistrationErrorLabelVerificationFailed";
+						}
+						else if (currentErrorCode == JAPRoutingRegistrationStatusObserver.ERROR_UNKNOWN_ERROR)
+						{
+							strError = "settingsRoutingServerStatusRegistrationErrorLabelUnknownReason";
+
+						}
+						if (strError != null)
+						{
+							strError = JAPMessages.getString(strError);
+						}
+					}
+				}
+				m_labelForwardingError.setIcon(icon);
+				m_labelForwardingErrorSmall.setIcon(icon);
+				m_labelForwardingError.setToolTipText(strError);
+				m_labelForwardingErrorSmall.setToolTipText(strError);
+
 				/* if the forwarding client is running, it should not be possible to start the forwarding
 				 * server, also it should not be possible to change the selected mixcascade
 				 */
@@ -1765,7 +1828,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 	public int addStatusMsg(String msg, int type, boolean bAutoRemove)
 	{
-		return m_StatusPanel.addStatusMsg(msg, type,bAutoRemove);
+		return m_StatusPanel.addStatusMsg(msg, type, bAutoRemove);
 	}
 
 	public void removeStatusMsg(int id)
