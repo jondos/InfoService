@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2000, The JAP-Team
+Copyright (c) 2000 - 2004, The JAP-Team
 All rights reserved.
 Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
@@ -34,8 +34,10 @@ import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.plaf.basic.BasicProgressBarUI;
 
-import anon.AnonServer;
 import gui.JAPDll;
+
+import anon.infoservice.MixCascade;
+import anon.infoservice.StatusInfo;
 
 final public class JAPView extends JFrame implements ActionListener, JAPObserver {
 
@@ -679,89 +681,98 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 			}
 
 	private void updateValues() {
-				synchronized(m_runnableValueUpdate)
-{
-		AnonServer e = controller.getAnonServer();
+    synchronized (m_runnableValueUpdate) {
+      MixCascade currentMixCascade = controller.getCurrentMixCascade();
 		// Config panel
 		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPView:Start updateValues");
-
 		// Meter panel
-		try{
+      try {
 		m_cbAnon.setSelected(controller.getAnonMode());
-		if(controller.getAnonMode()) {
+        if (controller.getAnonMode()) {
 			m_cbAnon.setForeground(Color.black);
-		} else {
-			m_cbAnon.setForeground(Color.red);
+        }
+        else {
+          m_cbAnon.setForeground(Color.red);
 		}
 		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPView: update CascadeName");
-
-		m_labelCascadeName.setText(e.getName());
-		m_labelCascadeName.setToolTipText(e.getName());
-		meterLabel.setIcon(getMeterImage(e.getAnonLevel()));
+        m_labelCascadeName.setText(currentMixCascade.getName());
+        m_labelCascadeName.setToolTipText(currentMixCascade.getName());
+        StatusInfo currentStatus = currentMixCascade.getCurrentStatus();
+        meterLabel.setIcon(getMeterImage(currentStatus.getAnonLevel()));
 		if (controller.getAnonMode()) {
-				if (e.getNrOfActiveUsers() > -1)
-					{
+          if (currentStatus.getNrOfActiveUsers() > -1) {
 						// Nr of active users
-						if (e.getNrOfActiveUsers() > userProgressBar.getMaximum())
-							userProgressBar.setMaximum(e.getNrOfActiveUsers());
-						userProgressBar.setValue(e.getNrOfActiveUsers());
-						userProgressBar.setString(String.valueOf(e.getNrOfActiveUsers()));
-						if(m_bIsIconified)
-							setTitle("JAP ("+Integer.toString(e.getNrOfActiveUsers())+" "+JAPMessages.getString("iconifiedviewUsers")+")");
+            if (currentStatus.getNrOfActiveUsers() > userProgressBar.getMaximum()) {
+              userProgressBar.setMaximum(currentStatus.getNrOfActiveUsers());
 					}
-				else
-					{
-							userProgressBar.setValue(userProgressBar.getMaximum());
+            userProgressBar.setValue(currentStatus.getNrOfActiveUsers());
+            userProgressBar.setString(String.valueOf(currentStatus.getNrOfActiveUsers()));
+            if(m_bIsIconified) {
+              setTitle("JAP ("+Integer.toString(currentStatus.getNrOfActiveUsers())+" "+JAPMessages.getString("iconifiedviewUsers")+")");
+            }
+          }
+          else {
+            userProgressBar.setValue(userProgressBar.getMaximum());
 							userProgressBar.setString(JAPMessages.getString("meterNA"));
 					}
-				if (e.getCurrentRisk() > -1) {
+          if (currentStatus.getCurrentRisk() > -1) {
 					// Current Risk
-					if (e.getCurrentRisk() > protectionProgressBar.getMaximum())
-							protectionProgressBar.setMaximum(e.getCurrentRisk());
-					protectionProgressBar.setValue(e.getCurrentRisk());
-					if (e.getCurrentRisk() < 80)
-						protectionProgressBar.setString(String.valueOf(e.getCurrentRisk())+" %");
-					else
-						protectionProgressBar.setString(JAPMessages.getString("meterRiskVeryHigh"));
-				} else {
-					protectionProgressBar.setValue(protectionProgressBar.getMaximum());
+            if (currentStatus.getCurrentRisk() > protectionProgressBar.getMaximum()) {
+              protectionProgressBar.setMaximum(currentStatus.getCurrentRisk());
+            }
+            protectionProgressBar.setValue(currentStatus.getCurrentRisk());
+            if (currentStatus.getCurrentRisk() < 80) {
+              protectionProgressBar.setString(String.valueOf(currentStatus.getCurrentRisk())+" %");
+            }
+            else {
+              protectionProgressBar.setString(JAPMessages.getString("meterRiskVeryHigh"));
+            }
+          }
+          else {
+            protectionProgressBar.setValue(protectionProgressBar.getMaximum());
 					protectionProgressBar.setString(JAPMessages.getString("meterNA"));
 				}
-				int t=e.getTrafficSituation();
-				if(t>-1)
-					{ //Trafic Situation directly form InfoService
+          int t = currentStatus.getTrafficSituation();
+          if (t > -1) { 
+            //Trafic Situation directly from InfoService
 						trafficProgressBar.setMaximum(100);
 						trafficProgressBar.setValue(t);
-						if(t < 30)
+            if (t < 30) {
 							trafficProgressBar.setString(JAPMessages.getString("meterTrafficLow"));
-						else if (t< 60)
-							trafficProgressBar.setString(JAPMessages.getString("meterTrafficMedium"));
-						else
-							trafficProgressBar.setString(JAPMessages.getString("meterTrafficHigh"));
+            }
+            else {
+              if (t < 60) {
+                trafficProgressBar.setString(JAPMessages.getString("meterTrafficMedium"));
+              }
+              else {
+                trafficProgressBar.setString(JAPMessages.getString("meterTrafficHigh"));
 					}
-				else { // no value from InfoService
-					trafficProgressBar.setValue(trafficProgressBar.getMaximum());
+            }
+          }
+          else { 
+            // no value from InfoService
+            trafficProgressBar.setValue(trafficProgressBar.getMaximum());
 					trafficProgressBar.setString(JAPMessages.getString("meterNA"));
 				}
-		} else {
-			userProgressBar.setValue(userProgressBar.getMaximum());
+        }
+        else {
+          /* we are not in anonymity mode */
+          userProgressBar.setValue(userProgressBar.getMaximum());
 			userProgressBar.setString(JAPMessages.getString("meterNA"));
 			protectionProgressBar.setValue(protectionProgressBar.getMaximum());
-			if (controller.getAnonMode())
 				protectionProgressBar.setString(JAPMessages.getString("meterNA"));
-			else
-				protectionProgressBar.setString(JAPMessages.getString("meterRiskVeryHigh"));
 			trafficProgressBar.setValue(trafficProgressBar.getMaximum());
 			trafficProgressBar.setString(JAPMessages.getString("meterNA"));
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPView:Finished updateValues");
 		}
-}
-catch(Throwable t)
-{
+      }
+      catch(Throwable t) {
 			JAPDebug.out(JAPDebug.EMERG,JAPDebug.GUI,"JAPVIew: Ooops... Crash in updateValues(): "+t.getMessage());
-}
-}
 		}
+    }
+  }
+  
+  
 		public void registerViewIconified(Window v) {
 			m_ViewIconified = v;
 		}

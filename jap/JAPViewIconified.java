@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2000, The JAP-Team
+Copyright (c) 2000 - 2004, The JAP-Team
 All rights reserved.
 Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
@@ -42,8 +42,10 @@ import javax.swing.*;
 import javax.swing.border.LineBorder;
 
 
-import anon.AnonServer;
 import gui.JAPDll;
+
+import anon.infoservice.MixCascade;
+import anon.infoservice.StatusInfo;
 
 final public class JAPViewIconified extends     JWindow
                                     implements  ActionListener,
@@ -183,43 +185,46 @@ final public class JAPViewIconified extends     JWindow
 			  switchBackToMainView();
 	    }
 
-	  private void updateValues1 ()
-      {
-        synchronized(m_runnableValueUpdate)
-          {
-            try
-              {
-		            if (m_Controller.getAnonMode())
-                  {
-			              AnonServer e = m_Controller.getAnonServer();
-			              if (e.getNrOfActiveUsers() != -1)
-				              m_labelUsers.setText(m_NumberFormat.format(m_Controller.getAnonServer().getNrOfActiveUsers()));
-			              else
+    private void updateValues1 () {
+      synchronized (m_runnableValueUpdate) {
+        try {
+          if (m_Controller.getAnonMode()) {
+            MixCascade currentMixCascade = m_Controller.getCurrentMixCascade();
+            StatusInfo currentStatus = currentMixCascade.getCurrentStatus();
+            if (currentStatus.getNrOfActiveUsers() != -1) {
+              m_labelUsers.setText(m_NumberFormat.format(currentStatus.getNrOfActiveUsers()));
+            }
+            else {
 				              m_labelUsers.setText(JAPMessages.getString("iconifiedViewNA"));
-					          int t=e.getTrafficSituation();
-			              if(t>-1)
-                      {
-						            if(t < 30)
+            }
+            int t = currentStatus.getTrafficSituation();
+            if (t > -1) {
+              if (t < 30) {
 							            m_labelTraffic.setText(JAPMessages.getString("iconifiedViewMeterTrafficLow"));
-				                else if (t < 60)
-					                m_labelTraffic.setText(JAPMessages.getString("iconifiedViewMeterTrafficMedium"));
-				                else
-					                m_labelTraffic.setText(JAPMessages.getString("iconifiedViewMeterTrafficHigh"));
-			                }
-                    else
-				              m_labelTraffic.setText(JAPMessages.getString("iconifiedViewNA"));
-		              }
-                else
-                  {
-			              m_labelUsers.setText(JAPMessages.getString("iconifiedViewNA"));
-			              m_labelTraffic.setText(JAPMessages.getString("iconifiedViewNA"));
-		              }//if anonmode=true
-              }//try
-            catch(Throwable t)
-              {
               }
-          }//synchronized
-      }//updateValues
+              else {
+                if (t < 60) {
+                  m_labelTraffic.setText(JAPMessages.getString("iconifiedViewMeterTrafficMedium"));
+                }
+                else {
+                  m_labelTraffic.setText(JAPMessages.getString("iconifiedViewMeterTrafficHigh"));
+			                }
+              }
+            }
+            else {
+              m_labelTraffic.setText(JAPMessages.getString("iconifiedViewNA"));
+		              }
+          }
+          else {
+            /* not in anonymity mode */
+            m_labelUsers.setText(JAPMessages.getString("iconifiedViewNA"));
+			              m_labelTraffic.setText(JAPMessages.getString("iconifiedViewNA"));
+              }
+        }
+        catch(Throwable t) {
+        }
+      }
+    }
 
     public void valuesChanged ()
       {
