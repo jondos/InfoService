@@ -94,7 +94,7 @@ public final class MuxSocket implements Runnable
 	private SymCipher m_cipherOutAI;
 
 	public final static int KEY_SIZE = 16;
-	private final static int DATA_SIZE = 992;
+	public final static int DATA_SIZE = 992;
 	public final static int PAYLOAD_SIZE = 989;
 	private final static int PACKET_SIZE = 998; //DATA_SIZE+6
 	private final static int RSA_SIZE = 128;
@@ -108,6 +108,7 @@ public final class MuxSocket implements Runnable
 
 	private final static int MAX_CHANNELS_PER_CONNECTION = 50;
 
+	private final static int MIX_PROTOCOL_VERSION_0_5 = 5;
 	private final static int MIX_PROTOCOL_VERSION_0_4 = 4;
 	private final static int MIX_PROTOCOL_VERSION_0_3 = 3;
 	private final static int MIX_PROTOCOL_VERSION_0_2 = 2;
@@ -116,9 +117,10 @@ public final class MuxSocket implements Runnable
 
 	private DummyTraffic m_DummyTraffic = null;
 
-	private boolean m_bMixProtocolWithTimestamp;
+	private boolean m_bMixProtocolWithTimestamp, m_bMixSupportsControlChannels;
 	private int m_iTimestampSize;
 	private final static Calendar m_scalendarGMT = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+	private ControlChannelDispatcher m_ControlChannelDispatcher;
 
 	private final class ChannelListEntry
 	{
@@ -160,6 +162,8 @@ public final class MuxSocket implements Runnable
 		m_SecureRandom = new SecureRandom();
 		m_bMixProtocolWithTimestamp = false;
 		m_iTimestampSize = 0;
+		m_bMixSupportsControlChannels = false;
+		m_ControlChannelDispatcher = new ControlChannelDispatcher(this);
 		//threadgroupChannels=null;
 	}
 
@@ -399,24 +403,30 @@ public final class MuxSocket implements Runnable
 				return ErrorCodes.E_PROTOCOL_NOT_SUPPORTED;
 			}
 			String strProtocolVersion = n.getNodeValue().trim();
+			m_bMixProtocolWithTimestamp = false;
+			m_iTimestampSize = 0;
+			m_cipherFirstMix = null;
+			m_bMixSupportsControlChannels = false;
+
 			if (strProtocolVersion.equals("0.2"))
 			{
-				m_bMixProtocolWithTimestamp = false;
-				m_iTimestampSize = 0;
 				m_iMixProtocolVersion = MIX_PROTOCOL_VERSION_0_2;
-				m_cipherFirstMix = null;
 			}
 			else if (strProtocolVersion.equals("0.3"))
 			{
 				m_bMixProtocolWithTimestamp = true;
 				m_iTimestampSize = 2;
 				m_iMixProtocolVersion = MIX_PROTOCOL_VERSION_0_3;
-				m_cipherFirstMix = null;
 			}
 			else if (strProtocolVersion.equalsIgnoreCase("0.4"))
 			{
 				m_iMixProtocolVersion = MIX_PROTOCOL_VERSION_0_4;
 				m_cipherFirstMix = new SymCipher();
+			}
+			else if (strProtocolVersion.equalsIgnoreCase("0.5"))
+			{
+				m_iMixProtocolVersion = MIX_PROTOCOL_VERSION_0_5;
+				m_bMixSupportsControlChannels = true;
 			}
 			else
 			{
@@ -548,7 +558,7 @@ public final class MuxSocket implements Runnable
 				try
 				{
 					int channelId = m_SecureRandom.nextInt();
-					while (m_ChannelList.get(new Integer(channelId)) != null)
+					while (channelId<256||m_ChannelList.get(new Integer(channelId)) != null)
 					{
 						channelId = m_SecureRandom.nextInt();
 					}
@@ -581,33 +591,64 @@ public final class MuxSocket implements Runnable
 
 	protected synchronized void sendDummy()
 	{
-		synchronized (this)
+		try
 		{
-			try
+			if (isConnected())
 			{
-				if (isConnected())
+				/* only do anything, if we are connected */
+				//First the Channel in Network byte order
+				int channel = m_SecureRandom.nextInt();
+				while(channel<256)
+					channel = m_SecureRandom.nextInt();
+				m_MixPacketSend[0] = (byte) ( (channel >> 24) & 0xFF);
+				m_MixPacketSend[1] = (byte) ( (channel >> 16) & 0xFF);
+				m_MixPacketSend[2] = (byte) ( (channel >> 8) & 0xFF);
+				m_MixPacketSend[3] = (byte) ( (channel) & 0xFF);
+				//Then the flags...
+				m_MixPacketSend[4] = (byte) ( (CHANNEL_DUMMY >> 8) & 0xFF);
+				m_MixPacketSend[5] = (byte) ( (CHANNEL_DUMMY) & 0xFF);
+				//and then the payload (data)
+				m_SecureRandom.nextBytes(m_arOutBuff);
+				System.arraycopy(m_arOutBuff, 0, m_MixPacketSend, 6, DATA_SIZE);
+				//Send it...
+				sendMixPacket();
+			}
+		}
+		catch (Exception e)
+		{
+			LogHolder.log(LogLevel.ERR, LogType.NET, "MuxSocket:sendDummy() Exception!");
+		}
+	}
+
+	protected synchronized void sendRawMixPacket(int channel,short flags,byte[] data,int off,int data_len)
+	{
+		try
+		{
+			if (isConnected())
+			{
+				/* only do anything, if we are connected */
+				//First the Channel in Network byte order
+				m_MixPacketSend[0] = (byte) ( (channel >> 24) & 0xFF);
+				m_MixPacketSend[1] = (byte) ( (channel >> 16) & 0xFF);
+				m_MixPacketSend[2] = (byte) ( (channel >> 8) & 0xFF);
+				m_MixPacketSend[3] = (byte) ( (channel) & 0xFF);
+				//Then the flags...
+				m_MixPacketSend[4] = (byte) ( (flags >> 8) & 0xFF);
+				m_MixPacketSend[5] = (byte) ( (flags) & 0xFF);
+				//and then the payload (data)
+				System.arraycopy(data, off, m_MixPacketSend, 6, data_len);
+				if(data_len<DATA_SIZE)
 				{
-					/* only do anything, if we are connected */
-					m_DummyTraffic.resetDummyTrafficInterval();
-					//First the Channel in Network byte order
-					int channel = m_SecureRandom.nextInt();
-					m_MixPacketSend[0] = (byte) ( (channel >> 24) & 0xFF);
-					m_MixPacketSend[1] = (byte) ( (channel >> 16) & 0xFF);
-					m_MixPacketSend[2] = (byte) ( (channel >> 8) & 0xFF);
-					m_MixPacketSend[3] = (byte) ( (channel) & 0xFF);
-					//Then the flags...
-					m_MixPacketSend[4] = (byte) ( (CHANNEL_DUMMY >> 8) & 0xFF);
-					m_MixPacketSend[5] = (byte) ( (CHANNEL_DUMMY) & 0xFF);
-					//and then the payload (data)
-					System.arraycopy(m_arOutBuff, 0, m_MixPacketSend, 6, DATA_SIZE);
-					//Send it...
-					sendMixPacket();
+					m_SecureRandom.nextBytes(m_arOutBuff);
+					System.arraycopy(m_arOutBuff, 0, m_MixPacketSend, 6+data_len, DATA_SIZE-data_len);
 				}
+				//Send it...
+				sendMixPacket();
 			}
-			catch (Exception e)
-			{
-				LogHolder.log(LogLevel.ERR, LogType.NET, "MuxSocket:sendDummy() Exception!");
-			}
+		}
+		catch (Exception e)
+		{
+			LogHolder.log(LogLevel.ERR, LogType.NET, "MuxSocket:sendRawMixPacket() Exception!");
 		}
 	}
 
@@ -687,6 +728,10 @@ public final class MuxSocket implements Runnable
 	public void run()
 	{
 		LogHolder.log(LogLevel.DEBUG, LogType.NET, "JAPMuxSocket:run()");
+		//Test for ControlChannel...
+		//if(m_bMixSupportsControlChannels)
+		//	m_ControlChannelDispatcher.registerControlChannel(new ControlChannelTest());
+
 		byte[] buff = new byte[DATA_SIZE];
 		int flags = 0;
 		int channel = 0;
@@ -729,6 +774,12 @@ public final class MuxSocket implements Runnable
 				LogHolder.log(LogLevel.DEBUG, LogType.NET, "MuxSocket:run() Received a Dummy...");
 				continue;
 			}
+			if (m_bMixSupportsControlChannels && channel < 256)
+			{
+				m_ControlChannelDispatcher.proccessMixPacket(channel, flags, buff);
+				continue;
+			}
+
 			ChannelListEntry tmpEntry = (ChannelListEntry) m_ChannelList.get(new Integer(channel));
 			if (tmpEntry != null)
 			{
@@ -827,6 +878,7 @@ public final class MuxSocket implements Runnable
 
 	private void sendMixPacket() throws Exception
 	{
+		m_DummyTraffic.resetDummyTrafficInterval();
 		if (m_bisCrypted)
 		{
 			m_cipherOut.encryptAES(m_MixPacketSend, 0, m_MixPacketSend, 0, 16);
@@ -915,7 +967,6 @@ public final class MuxSocket implements Runnable
 			}
 
 			short channelMode = CHANNEL_DATA;
-			m_DummyTraffic.resetDummyTrafficInterval();
 			if (buff == null && len == 0)
 			{
 				//First the Channel in Network byte order
@@ -1072,5 +1123,10 @@ public final class MuxSocket implements Runnable
 		// That is 0x0000 on January 1, 0:00; 0x0001 on January 1, 0:10; 0xFFFF on December 31, 23:59 (leap year)
 		return (int) ( ( ( (double) (diff)) / ( (double) seconds_per_year)) * 0xFFFF);
 
+	}
+
+	ControlChannelDispatcher getContolChannelDispatcher()
+	{
+		return m_ControlChannelDispatcher;
 	}
 }
