@@ -212,6 +212,12 @@ public class JAPRoutingSettings extends Observable
    */
   private JAPRoutingUseableMixCascades m_useableMixCascadesStore;
 
+  /**
+   * Stores the instance of JAPForwardingServerStatisticsListener, which fetches the statistics
+   * from the running forwarding server.
+   */
+  private JAPRoutingServerStatisticsListener m_serverStatisticsListener;
+
 
   /**
    * This creates a new instance of JAPRoutingSettings. We are doing some initialization here.
@@ -244,6 +250,9 @@ public class JAPRoutingSettings extends Observable
     m_useableMixCascadesStore = new JAPRoutingUseableMixCascades();
     /* add the useable mixcascades store to the observers of JAPRoutingSettings */
     addObserver(m_useableMixCascadesStore);
+    m_serverStatisticsListener = new JAPRoutingServerStatisticsListener();
+    /* add the statistics listener to the observers of JAPRoutingSettings */
+    addObserver(m_serverStatisticsListener);
   }
 
 
@@ -1193,6 +1202,16 @@ public class JAPRoutingSettings extends Observable
     return 0;
   }
 
+  /**
+   * Returns the statistics listener of the forwarding servers. So it's easy to get always the
+   * current server statistics.
+   *
+   * @return The statistics listener for the forwarding servers (this is always the same instance,
+   *         nevertheless a forwarding server is running or not).
+   */ 
+  public JAPRoutingServerStatisticsListener getServerStatisticsListener() {
+    return m_serverStatisticsListener;
+  }
 
   /**
    * If the infoservice needs forwarding, this changes the infoservice proxy settings to the
