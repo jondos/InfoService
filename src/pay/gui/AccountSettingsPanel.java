@@ -38,6 +38,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
+import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -54,7 +55,6 @@ import jap.AbstractJAPConfModule;
 import jap.JAPConstants;
 import jap.JAPController;
 import jap.JAPMessages;
-import jap.JAPView;
 import jap.JAPWaitSplash;
 import logging.LogHolder;
 import logging.LogLevel;
@@ -214,7 +214,7 @@ public class AccountSettingsPanel extends jap.AbstractJAPConfModule
 		{
 			return;
 		}
-		JAPView view = JAPController.getView();
+		JFrame view = JAPController.getView();
 		if (!selectedAccount.hasAccountInfo())
 		{
 			int choice = JOptionPane.showOptionDialog(
@@ -286,7 +286,7 @@ public class AccountSettingsPanel extends jap.AbstractJAPConfModule
 	private PayAccount getSelectedAccount()
 	{
 		PayAccountsFile accounts = PayAccountsFile.getInstance();
-		JAPView view = JAPController.getView();
+		JFrame view = JAPController.getView();
 
 		// try to find the account the user wishes to charge
 		int selectedRow = m_Table.getSelectedRow();
@@ -351,7 +351,7 @@ public class AccountSettingsPanel extends jap.AbstractJAPConfModule
 		{
 			return;
 		}
-		JAPView view = JAPController.getView();
+		JFrame view = JAPController.getView();
 		XMLTransCert transferCertificate = null;
 
 		// TODO: internationalize: JAPMessage.get....()
@@ -443,7 +443,7 @@ public class AccountSettingsPanel extends jap.AbstractJAPConfModule
 
 	private boolean doCreateAccount()
 	{
-		JAPView view = JAPController.getView();
+		JFrame view = JAPController.getView();
 
 		// TODO: JAPMessage.getString()
 		int choice = JOptionPane.showOptionDialog(
@@ -527,7 +527,7 @@ public class AccountSettingsPanel extends jap.AbstractJAPConfModule
 		{
 			return false;
 		}
-		JAPView view = JAPController.getView();
+		JFrame view = JAPController.getView();
 		JAPWaitSplash splash = null;
 		try
 		{
@@ -567,7 +567,7 @@ public class AccountSettingsPanel extends jap.AbstractJAPConfModule
 			return;
 		}
 		PayAccountsFile accounts = PayAccountsFile.getInstance();
-		JAPView view = JAPController.getView();
+		JFrame view = JAPController.getView();
 
 		JFileChooser chooser = new JFileChooser();
 		MyFileFilter filter = new MyFileFilter();
@@ -654,7 +654,7 @@ public class AccountSettingsPanel extends jap.AbstractJAPConfModule
 	 */
 	private void doImportAccount()
 	{
-		JAPView view = JAPController.getView();
+		JFrame view = JAPController.getView();
 		PayAccount importedAccount = null;
 		Element elemAccount = null;
 		JFileChooser chooser = new JFileChooser();
@@ -745,7 +745,7 @@ public class AccountSettingsPanel extends jap.AbstractJAPConfModule
 			return;
 		}
 		PayAccountsFile accounts = PayAccountsFile.getInstance();
-		JAPView view = JAPController.getView();
+		JFrame view = JAPController.getView();
 		boolean reallyDelete = false;
 
 		if (!selectedAccount.hasAccountInfo())

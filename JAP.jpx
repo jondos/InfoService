@@ -7,6 +7,9 @@
   <property category="debug.0" name="SmartStepSkipStaticInitializers" value="0"/>
   <property category="debug.0" name="SmartStepSkipSynthetics" value="0"/>
   <property category="debug.1" name="SmartStepRedefineClasses" value="0"/>
+  <property category="debug.10" name="SmartStepRedefineClasses" value="0"/>
+  <property category="debug.10" name="SmartStepSkipStaticInitializers" value="0"/>
+  <property category="debug.10" name="SmartStepSkipSynthetics" value="0"/>
   <property category="debug.2" name="SmartStepRedefineClasses" value="0"/>
   <property category="debug.3" name="SmartStepRedefineClasses" value="0"/>
   <property category="debug.4" name="SmartStepRedefineClasses" value="0"/>
@@ -31,10 +34,14 @@
   <property category="optimize.0" name="oicc.FilterFile" value="G:\projects\Jap\JAP.oif"/>
   <property category="optimize.0" name="oipr.FilterFile" value="G:\projects\Jap\JAP.oif"/>
   <property category="optimize.0" name="oira.FilterFile" value="G:\projects\Jap\JAP.oif"/>
+  <property category="optimize.10" name="OptimizableType" value="intuitive.ide.borland.jb10.ThreadDBootstrap"/>
+  <property category="optimize.10" name="oicc.FilterFile" value="G:\projects\Jap\JAP.oif"/>
+  <property category="optimize.10" name="oipr.FilterFile" value="G:\projects\Jap\JAP.oif"/>
+  <property category="optimize.10" name="oira.FilterFile" value="G:\projects\Jap\JAP.oif"/>
   <property category="optimize.5" name="OptimizableType" value="com.borland.jbuilder.optimize.IntroOptimizeitProfiler"/>
   <property category="optimize.9" name="OptimizableType" value="com.borland.jbuilder.optimize.IntroOptimizeitProfiler"/>
   <property category="personality" name="personality" value=""/>
-  <property category="runtime" name="ConfigurationCount" value="9"/>
+  <property category="runtime" name="ConfigurationCount" value="10"/>
   <property category="runtime.0" name="BuildTargetOnRun" value="com.borland.jbuilder.build.ProjectBuilder$ProjectBuildAction;make"/>
   <property category="runtime.0" name="ConfigurationName" value="JAP"/>
   <property category="runtime.0" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
@@ -56,6 +63,23 @@
   <property category="runtime.1" name="application.class" value="misc.XMLRPCTestServer"/>
   <property category="runtime.1" name="jsprunner.launchuri" value="/"/>
   <property category="runtime.1" name="test.harness" value="junit.textui.TestRunner"/>
+  <property category="runtime.10" name="BuildTargetOnRun" value="com.borland.jbuilder.build.ProjectBuilder$ProjectBuildAction;make"/>
+  <property category="runtime.10" name="ConfigurationName" value="JAP with new GUI"/>
+  <property category="runtime.10" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
+  <property category="runtime.10" name="application.class" value="JAP"/>
+  <property category="runtime.10" name="application.parameters" value="-newgui"/>
+  <property category="runtime.10" name="custom.init_required" value="0"/>
+  <property category="runtime.10" name="custom.required.1" value="http"/>
+  <property category="runtime.10" name="custom.required.2" value="mac"/>
+  <property category="runtime.10" name="custom.required.3" value="XML-1.1"/>
+  <property category="runtime.10" name="custom.required.4" value="Apache XML-RPC"/>
+  <property category="runtime.10" name="custom.required.5" value="Swing"/>
+  <property category="runtime.10" name="custom.required.6" value="BouncyCastleLightForJAP"/>
+  <property category="runtime.10" name="custom.required.7" value="JUnit"/>
+  <property category="runtime.10" name="custom.required.8" value="junitx"/>
+  <property category="runtime.10" name="custom.required.9" value="ApacheFTPClient"/>
+  <property category="runtime.10" name="jsprunner.launchuri" value="/"/>
+  <property category="runtime.10" name="test.harness" value="junit.textui.TestRunner"/>
   <property category="runtime.2" name="ConfigurationName" value="XMLRPCTestClient"/>
   <property category="runtime.2" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
   <property category="runtime.2" name="application.class" value="misc.XMLRPCTestClient"/>
@@ -135,8 +159,7 @@
   <property category="sys" name="ExcludeClassEnabled" value="0"/>
   <property category="sys" name="IncludeTestPath" value="1"/>
   <property category="sys" name="InstanceVisibility" value="0"/>
-  <property category="sys" name="JDK" value="java version 1.4.2_05-b04"/>
-  <property category="sys" name="JvmVersion" value="1.4"/>
+  <property category="sys" name="JDK" value="1.1 mit JVM_1.3.1"/>
   <property category="sys" name="LastTag" value="192"/>
   <property category="sys" name="Libraries" value="http;mac;XML-1.1;Apache XML-RPC;Swing;BouncyCastleLightForJAP;JUnit;junitx;ApacheFTPClient"/>
   <property category="sys" name="MakeStable" value="0"/>

@@ -235,11 +235,12 @@ public class TorSocksChannel extends TorChannel
 			}
 			case SOCKS4_WAIT_FOR_REQUEST:
 			{ //v4 waiting for a request....
+				//version number is already consumed...
 				if (arg0 != null && len > 0)
 				{
 					m_data = helper.conc(m_data, arg0, len);
 				}
-				if (m_data.length > 8)
+				if (m_data.length >= 8)
 				{
 					byte[] socksAnswer = null;
 					int port = 0;
@@ -264,7 +265,7 @@ public class TorSocksChannel extends TorChannel
 						Integer.toString(m_data[6] & 0xFF);
 					port = ( (m_data[1] & 0xFF) << 8) | (m_data[2] & 0xFF);
 					consumedBytes += 6;
-					//skip userid
+					//skip userid ('0' terminated string)
 					int i = 7;
 					while (i < m_data.length && m_data[i] != 0)
 					{
