@@ -54,9 +54,7 @@ public class JAPDownloadWizardPage extends BasicWizardPage
     private int type;
 
 
-    private Thread observeUpdateThread;
 
-   // private JAPController japController;
 
     private GridBagLayout gridBagDownload;
     private GridBagConstraints constraintsDownload;
@@ -103,10 +101,6 @@ public class JAPDownloadWizardPage extends BasicWizardPage
         constraintsDownload.gridy = 2;
         constraintsDownload.gridheight = 2;
         constraintsDownload.gridwidth = 1 ;
-        ////////////////////////////////////////////////////////////////////////
-        //constraintsDownload.weightx = 1.0;
-        //constraintsDownload.ipadx = arrow.getIconWidth();
-        //constraintsDownload.ipady = arrow.getIconHeight();
 
         constraintsDownload.anchor = GridBagConstraints.WEST;
         gridBagDownload.setConstraints(m_labelIconStep1, constraintsDownload);
@@ -118,9 +112,6 @@ public class JAPDownloadWizardPage extends BasicWizardPage
         constraintsDownload.gridy = 2;
         constraintsDownload.weightx = 0.0;
         constraintsDownload.gridheight =1;
-        ////////////////////////////////////////////////////////////////////////
-        //constraintsDownload.ipadx = 0;
-        //constraintsDownload.ipady = 0;
 
         constraintsDownload.anchor = GridBagConstraints.WEST;
         constraintsDownload.insets = new Insets(1,5,1,5);
@@ -152,7 +143,7 @@ public class JAPDownloadWizardPage extends BasicWizardPage
         constraintsDownload.insets = new Insets(1,5,1,5);
         gridBagDownload.setConstraints(m_labelStep1_2, constraintsDownload);
         m_panelComponents.add(m_labelStep1_2, constraintsDownload);
-                  ///////////////////////////////////////////
+
          tfSaveTo = new JTextField("");
         tfSaveTo.setEditable(false);
         tfSaveTo.setBorder(new EmptyBorder(new Insets(3,0,0,0)));
@@ -166,9 +157,6 @@ public class JAPDownloadWizardPage extends BasicWizardPage
         gridBagDownload.setConstraints(tfSaveTo, constraintsDownload);
         m_panelComponents.add(tfSaveTo, constraintsDownload);
 
-                  ///////////////////////////////////////////
-       /////////////////////////////////////////////////////////////////////////
-
         m_labelIconStep2 = new JLabel();
         m_labelIconStep2.setIcon(blank);
         m_labelIconStep2.setVisible(true);
@@ -179,9 +167,7 @@ public class JAPDownloadWizardPage extends BasicWizardPage
         constraintsDownload.weightx = 0.0;
         constraintsDownload.anchor = GridBagConstraints.WEST;
         constraintsDownload.fill = GridBagConstraints.NONE;
-        ////////////////////////////////////////////////////////////////////////
-        //constraintsDownload.ipadx = arrow.getIconWidth();
-        //constraintsDownload.ipady = arrow.getIconHeight();
+
 
         gridBagDownload.setConstraints(m_labelIconStep2, constraintsDownload);
         m_panelComponents.add(m_labelIconStep2, constraintsDownload);
@@ -190,9 +176,7 @@ public class JAPDownloadWizardPage extends BasicWizardPage
         constraintsDownload.gridx = 1;
         constraintsDownload.gridy = 4;
         constraintsDownload.gridwidth = 2 ;
-        ////////////////////////////////////////////////////////////////////////
-        //constraintsDownload.ipadx = 0;
-        //constraintsDownload.ipady = 0;
+
 
         gridBagDownload.setConstraints(m_labelStep2, constraintsDownload);
         m_panelComponents.add(m_labelStep2, constraintsDownload);
