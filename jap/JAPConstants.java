@@ -30,7 +30,7 @@ package jap;
 import java.awt.Insets;
 import java.awt.Font;
 public final class JAPConstants {
-	public static final String aktVersion = "00.02.025"; //Never change the layout of this line!
+	public static final String aktVersion = "00.02.026"; //Never change the layout of this line!
 	private static final String CVS_GENERATED_RELEASE_DATE= "$Date$";
 																													 //Warning: This is a little bit tricky,
 																													 //because CVS will expand the $Date$

@@ -68,8 +68,7 @@ import proxy.ProxyListener;
 import update.JAPUpdateWizard;
 
 /* This is the Model of All. It's a Singelton!*/
-public final class JAPController
-	implements ProxyListener
+public final class JAPController implements ProxyListener
 {
 
 	/**
@@ -95,7 +94,10 @@ public final class JAPController
 	private boolean mbDoNotAbuseReminder = false; // indicates if new warning message in setAnonMode (containing Do no abuse) has been shown
 	private boolean mbGoodByMessageNeverRemind = false; // indicates if Warning message before exit has been deactivated forever
 
-	private static final Object oSetAnonModeSyncObject = new Object();
+	private static final Object oSetAnonModeSyncObject = new Object(); //for synchronisation of setAnonMode(true/false)
+	private static final Object oSetAnonModeThreadIDSyncObject = new Object(); //for synchronisation of setAnonMode(true/false)
+	private static int ms_AnonModeAsyncLastFinished = -1; //number of last finished SetAnonModeThread -> used for execution in order
+	private static int ms_AnonModeAsyncLastStarted = -1; //number of last started SetAnonModeThread
 
 	public String status1 = " ";
 	public String status2 = " ";
@@ -265,7 +267,7 @@ public final class JAPController
 	{
 		// Load config from xml file
 		LogHolder.log(LogLevel.INFO, LogType.MISC,
-					 "JAPModel:try loading configuration from " + JAPConstants.XMLCONFFN);
+					  "JAPModel:try loading configuration from " + JAPConstants.XMLCONFFN);
 		FileInputStream f = null;
 		if (strJapConfFile == null)
 		{
@@ -285,7 +287,7 @@ public final class JAPController
 			catch (Exception e2)
 			{
 				LogHolder.log(LogLevel.INFO, LogType.MISC,
-							 "JAPModel:Error loading configuration! " + e2.toString());
+							  "JAPModel:Error loading configuration! " + e2.toString());
 			}
 		}
 		else
@@ -297,7 +299,7 @@ public final class JAPController
 			catch (Exception e2)
 			{
 				LogHolder.log(LogLevel.INFO, LogType.MISC,
-							 "JAPModel:Error loading configuration! " + e2.toString());
+							  "JAPModel:Error loading configuration! " + e2.toString());
 			}
 		}
 		if (f != null)
@@ -439,7 +441,7 @@ public final class JAPController
 							catch (Exception lfe)
 							{
 								LogHolder.log(LogLevel.WARNING, LogType.GUI,
-											 "JAPModel:Exception while setting look-and-feel");
+											  "JAPModel:Exception while setting look-and-feel");
 							}
 							break;
 						}
@@ -473,7 +475,8 @@ public final class JAPController
 					Element elemLevel = (Element) XMLUtil.getFirstChildByName(elemDebug, "Level");
 					if (elemLevel != null)
 					{
-						JAPDebug.getInstance().setLogLevel(Integer.parseInt(elemLevel.getFirstChild().getNodeValue().trim()));
+						JAPDebug.getInstance().setLogLevel(Integer.parseInt(elemLevel.getFirstChild().
+							getNodeValue().trim()));
 					}
 					Element elemType = (Element) XMLUtil.getFirstChildByName(elemDebug, "Type");
 					if (elemType != null)
@@ -531,7 +534,7 @@ public final class JAPController
 			catch (Exception e)
 			{
 				LogHolder.log(LogLevel.INFO, LogType.MISC,
-							 "JAPModel:Error loading configuration! " + e.toString());
+							  "JAPModel:Error loading configuration! " + e.toString());
 			}
 		} //end if f!=null
 		// fire event
@@ -542,7 +545,7 @@ public final class JAPController
 	{
 		boolean error = false;
 		LogHolder.log(LogLevel.INFO, LogType.MISC,
-					 "JAPModel:try saving configuration to " + JAPConstants.XMLCONFFN);
+					  "JAPModel:try saving configuration to " + JAPConstants.XMLCONFFN);
 		try
 		{
 			String sb = getConfigurationAsXmlString();
@@ -575,7 +578,7 @@ public final class JAPController
 		if (error)
 		{
 			LogHolder.log(LogLevel.ERR, LogType.MISC,
-						 "JAPModel:error saving configuration to " + JAPConstants.XMLCONFFN);
+						  "JAPModel:error saving configuration to " + JAPConstants.XMLCONFFN);
 			JOptionPane.showMessageDialog(m_Controller.getView(),
 										  JAPMessages.getString("errorSavingConfig"),
 										  JAPMessages.getString("errorSavingConfigTitle"),
@@ -758,7 +761,7 @@ public final class JAPController
 					setAnonMode(false);
 					currentMixCascade = newMixCascade;
 					LogHolder.log(LogLevel.DEBUG, LogType.MISC,
-								 "JAPController: setCurrentMixCascade: MixCascade changed while in anonymity mode.");
+								  "JAPController: setCurrentMixCascade: MixCascade changed while in anonymity mode.");
 					setAnonMode(true);
 				}
 				else
@@ -999,19 +1002,36 @@ public final class JAPController
 	//---------------------------------------------------------------------
 	//---------------------------------------------------------------------
 	//---------------------------------------------------------------------
-	private final class SetAnonModeAsync
-		implements Runnable
+	private final class SetAnonModeAsync implements Runnable
 	{
 		private boolean anonModeSelected = false;
+		private int id = 0;
 		public SetAnonModeAsync(boolean b)
 		{
-			anonModeSelected = b;
+			synchronized (oSetAnonModeThreadIDSyncObject)
+			{
+				anonModeSelected = b;
+				ms_AnonModeAsyncLastStarted++;
+				id = ms_AnonModeAsyncLastStarted;
+			}
 		}
 
 		public void run()
 		{
 			synchronized (oSetAnonModeSyncObject)
 			{
+				while (id != ms_AnonModeAsyncLastFinished + 1)
+				{
+					try
+					{
+						oSetAnonModeSyncObject.wait();
+					}
+					catch (InterruptedException ieo)
+					{
+						LogHolder.log(LogLevel.EXCEPTION, LogType.THREAD,
+									  "Waiting for becoming current SetAnonMode Thread intterrupted!");
+					}
+				}
 				JAPWaitSplash splash = null;
 				boolean canStartService = true;
 				//setAnonMode--> async!!
@@ -1035,163 +1055,164 @@ public final class JAPController
 							canStartService = false;
 						}
 					}
-					if (!canStartService)
+					if (canStartService)
 					{
-						m_View.setCursor(Cursor.getDefaultCursor());
-						splash.abort();
-						return;
-					}
-					// starting MUX --> Success ???
-					m_proxyAnon = new AnonProxy(m_socketHTTPListener);
-					MixCascade currentMixCascade = m_Controller.getCurrentMixCascade();
-					m_proxyAnon.setMixCascade(currentMixCascade);
-					if (JAPModel.getUseFirewall())
-					{
-						//try all possible ListenerInterfaces...
-						m_proxyAnon.setFirewall(m_Model.getFirewallType(), m_Model.getFirewallHost(),
-												m_Model.getFirewallPort());
-						if (JAPModel.getUseFirewallAuthorization())
+						// starting MUX --> Success ???
+						m_proxyAnon = new AnonProxy(m_socketHTTPListener);
+						MixCascade currentMixCascade = m_Controller.getCurrentMixCascade();
+						m_proxyAnon.setMixCascade(currentMixCascade);
+						if (JAPModel.getUseFirewall())
 						{
-							m_proxyAnon.setFirewallAuthorization(JAPModel.getFirewallAuthUserID(),
-								m_Controller.getFirewallAuthPasswd());
-						}
-					}
-
-					m_proxyAnon.setMixCertificationCheck(!m_Model.isCertCheckDisabled(),
-						m_Model.getCertificateStore());
-					// -> we can try to start anonymity
-					if (m_proxyDirect != null)
-					{
-						m_proxyDirect.stopService();
-					}
-					m_proxyDirect = null;
-
-					int ret = m_proxyAnon.start();
-					if (ret == AnonProxy.E_SUCCESS)
-					{
-						if (!mbActCntMessageNotRemind && !JAPModel.isSmallDisplay())
-						{
-							// show a Reminder message that active contents should be disabled
-							Object[] options =
-								{
-								JAPMessages.getString("okButton")};
-							JCheckBox checkboxRemindNever = new JCheckBox(JAPMessages.getString(
-								"disableActCntMessageNeverRemind"));
-							Object[] message =
-								{
-								JAPMessages.getString("disableActCntMessage"), checkboxRemindNever};
-							ret = 0;
-							ret = JOptionPane.showOptionDialog(m_Controller.getView(),
-								(Object) message,
-								JAPMessages.getString("disableActCntMessageTitle"),
-								JOptionPane.DEFAULT_OPTION,
-								JOptionPane.WARNING_MESSAGE,
-								null, options, options[0]);
-							mbActCntMessageNeverRemind = checkboxRemindNever.isSelected();
-							mbDoNotAbuseReminder = checkboxRemindNever.isSelected();
-							if (mbActCntMessageNeverRemind)
+							//try all possible ListenerInterfaces...
+							m_proxyAnon.setFirewall(m_Model.getFirewallType(), m_Model.getFirewallHost(),
+								m_Model.getFirewallPort());
+							if (JAPModel.getUseFirewallAuthorization())
 							{
-								mbActCntMessageNotRemind = true;
+								m_proxyAnon.setFirewallAuthorization(JAPModel.getFirewallAuthUserID(),
+									m_Controller.getFirewallAuthPasswd());
 							}
 						}
-						m_proxyAnon.setProxyListener(m_Controller);
-						m_proxyAnon.setDummyTraffic(m_Model.getDummyTraffic());
-						m_proxyAnon.setAutoReConnect(m_Model.getAutoReConnect());
-						// start feedback thread
-						feedback = new JAPFeedback();
-						feedback.startRequests();
-						m_View.setCursor(Cursor.getDefaultCursor());
-						notifyJAPObservers();
-						splash.abort();
-						return;
-					}
-					else if (ret == AnonProxy.E_BIND)
-					{
-						Object[] args =
+
+						m_proxyAnon.setMixCertificationCheck(!m_Model.isCertCheckDisabled(),
+							m_Model.getCertificateStore());
+						// -> we can try to start anonymity
+						if (m_proxyDirect != null)
+						{
+							m_proxyDirect.stopService();
+						}
+						m_proxyDirect = null;
+
+						int ret = m_proxyAnon.start();
+						if (ret != AnonProxy.E_SUCCESS)
+						{
+							canStartService = false;
+							m_proxyAnon = null;
+						}
+						if (ret == AnonProxy.E_SUCCESS)
+						{
+							if (!mbActCntMessageNotRemind && !JAPModel.isSmallDisplay())
 							{
-							new Integer(JAPModel.getHttpListenerPortNumber())};
-						String msg = MessageFormat.format(JAPMessages.getString("errorListenerPort"), args);
-						JOptionPane.showMessageDialog(m_Controller.getView(),
-							msg,
-							JAPMessages.getString("errorListenerPortTitle"),
-							JOptionPane.ERROR_MESSAGE);
-						LogHolder.log(LogLevel.EMERG, LogType.NET, "Listener could not be started!");
-						m_Controller.getView().disableSetAnonMode();
-					}
-					else if (ret == AnonProxy.E_MIX_PROTOCOL_NOT_SUPPORTED)
-					{
-						JOptionPane.showMessageDialog
-							(
-							getView(),
-							JAPMessages.getString("errorMixProtocolNotSupported"),
-							JAPMessages.getString("errorMixProtocolNotSupportedTitle"),
-							JOptionPane.ERROR_MESSAGE
-							);
-					}
-					// ootte
-					else if (ret == AnonProxy.E_INVALID_KEY)
-					{
-						JOptionPane.showMessageDialog
-							(
-							getView(),
-							JAPMessages.getString("errorMixInvalidKey"),
-							JAPMessages.getString("errorMixInvalidTitle"),
-							JOptionPane.ERROR_MESSAGE
-							);
-					}
-
-					else if (ret == AnonProxy.E_INVALID_CERTIFICATE)
-					{
-						JOptionPane.showMessageDialog
-							(
-							getView(),
-							JAPMessages.getString("errorCertificateInvalid"),
-							JAPMessages.getString("errorCertificateInvalidTitle"),
-							JOptionPane.ERROR_MESSAGE
-							);
-					}
-
-					else if (ret == AnonProxy.E_SIGNATURE_CHECK_FIRSTMIX_FAILED)
-					{
-						JOptionPane.showMessageDialog
-							(
-							getView(),
-							JAPMessages.getString("errorMixFirstMixSigCheckFailed"),
-							JAPMessages.getString("errorMixFirstMixSigCheckFailedTitle"),
-							JOptionPane.ERROR_MESSAGE
-							);
-					}
-
-					else if (ret == AnonProxy.E_SIGNATURE_CHECK_OTHERMIX_FAILED)
-					{
-						JOptionPane.showMessageDialog
-							(
-							getView(),
-							JAPMessages.getString("errorMixOtherMixSigCheckFailed"),
-							JAPMessages.getString("errorMixOtherMixSigCheckFailedTitle"),
-							JOptionPane.ERROR_MESSAGE
-							);
-					}
-					// ootte
-					else
-					{
-						if (!JAPModel.isSmallDisplay())
+								// show a Reminder message that active contents should be disabled
+								Object[] options =
+									{
+									JAPMessages.getString("okButton")};
+								JCheckBox checkboxRemindNever = new JCheckBox(JAPMessages.getString(
+									"disableActCntMessageNeverRemind"));
+								Object[] message =
+									{
+									JAPMessages.getString("disableActCntMessage"), checkboxRemindNever};
+								ret = 0;
+								ret = JOptionPane.showOptionDialog(m_Controller.getView(),
+									(Object) message,
+									JAPMessages.getString("disableActCntMessageTitle"),
+									JOptionPane.DEFAULT_OPTION,
+									JOptionPane.WARNING_MESSAGE,
+									null, options, options[0]);
+								mbActCntMessageNeverRemind = checkboxRemindNever.isSelected();
+								mbDoNotAbuseReminder = checkboxRemindNever.isSelected();
+								if (mbActCntMessageNeverRemind)
+								{
+									mbActCntMessageNotRemind = true;
+								}
+							}
+							m_proxyAnon.setProxyListener(m_Controller);
+							m_proxyAnon.setDummyTraffic(m_Model.getDummyTraffic());
+							m_proxyAnon.setAutoReConnect(m_Model.getAutoReConnect());
+							// start feedback thread
+							feedback = new JAPFeedback();
+							feedback.startRequests();
+						}
+						else if (ret == AnonProxy.E_BIND)
+						{
+							Object[] args =
+								{
+								new Integer(JAPModel.getHttpListenerPortNumber())};
+							String msg = MessageFormat.format(JAPMessages.getString("errorListenerPort"),
+								args);
+							JOptionPane.showMessageDialog(m_Controller.getView(),
+								msg,
+								JAPMessages.getString("errorListenerPortTitle"),
+								JOptionPane.ERROR_MESSAGE);
+							LogHolder.log(LogLevel.EMERG, LogType.NET, "Listener could not be started!");
+							m_Controller.getView().disableSetAnonMode();
+						}
+						else if (ret == AnonProxy.E_MIX_PROTOCOL_NOT_SUPPORTED)
 						{
 							JOptionPane.showMessageDialog
 								(
 								getView(),
-								JAPMessages.getString("errorConnectingFirstMix") + "\n" +
-								JAPMessages.getString("errorCode") + ": " + Integer.toString(ret),
-								JAPMessages.getString("errorConnectingFirstMixTitle"),
+								JAPMessages.getString("errorMixProtocolNotSupported"),
+								JAPMessages.getString("errorMixProtocolNotSupportedTitle"),
 								JOptionPane.ERROR_MESSAGE
 								);
 						}
+						// ootte
+						else if (ret == AnonProxy.E_INVALID_KEY)
+						{
+							JOptionPane.showMessageDialog
+								(
+								getView(),
+								JAPMessages.getString("errorMixInvalidKey"),
+								JAPMessages.getString("errorMixInvalidTitle"),
+								JOptionPane.ERROR_MESSAGE
+								);
+						}
+
+						else if (ret == AnonProxy.E_INVALID_CERTIFICATE)
+						{
+							JOptionPane.showMessageDialog
+								(
+								getView(),
+								JAPMessages.getString("errorCertificateInvalid"),
+								JAPMessages.getString("errorCertificateInvalidTitle"),
+								JOptionPane.ERROR_MESSAGE
+								);
+						}
+
+						else if (ret == AnonProxy.E_SIGNATURE_CHECK_FIRSTMIX_FAILED)
+						{
+							JOptionPane.showMessageDialog
+								(
+								getView(),
+								JAPMessages.getString("errorMixFirstMixSigCheckFailed"),
+								JAPMessages.getString("errorMixFirstMixSigCheckFailedTitle"),
+								JOptionPane.ERROR_MESSAGE
+								);
+						}
+
+						else if (ret == AnonProxy.E_SIGNATURE_CHECK_OTHERMIX_FAILED)
+						{
+							JOptionPane.showMessageDialog
+								(
+								getView(),
+								JAPMessages.getString("errorMixOtherMixSigCheckFailed"),
+								JAPMessages.getString("errorMixOtherMixSigCheckFailedTitle"),
+								JOptionPane.ERROR_MESSAGE
+								);
+						}
+						// ootte
+						else
+						{
+							if (!JAPModel.isSmallDisplay())
+							{
+								JOptionPane.showMessageDialog
+									(
+									getView(),
+									JAPMessages.getString("errorConnectingFirstMix") + "\n" +
+									JAPMessages.getString("errorCode") + ": " + Integer.toString(ret),
+									JAPMessages.getString("errorConnectingFirstMixTitle"),
+									JOptionPane.ERROR_MESSAGE
+									);
+							}
+						}
 					}
-					m_proxyAnon = null;
 					m_View.setCursor(Cursor.getDefaultCursor());
 					notifyJAPObservers();
 					splash.abort();
-					setAnonMode(false);
+					if (!canStartService)
+					{
+						setAnonMode(false);
+					}
 				}
 				else if ( (m_proxyDirect == null) && (anonModeSelected == false))
 				{
@@ -1217,6 +1238,8 @@ public final class JAPController
 						splash.abort();
 					}
 				}
+				ms_AnonModeAsyncLastFinished++;
+				oSetAnonModeSyncObject.notifyAll();
 			}
 		}
 
@@ -1266,7 +1289,8 @@ public final class JAPController
 		{
 			bShowWarning = false;
 		}
-		if ( (JAPModel.getHttpListenerPortNumber() != port) || (JAPModel.getHttpListenerIsLocal() != isLocal))
+		if ( (JAPModel.getHttpListenerPortNumber() != port) ||
+			(JAPModel.getHttpListenerIsLocal() != isLocal))
 		{
 			m_Model.setHttpListenerPortNumber(port);
 			synchronized (this)
@@ -1311,15 +1335,17 @@ public final class JAPController
 						//InetAddress[] a=InetAddress.getAllByName("localhost");
 						InetAddress[] a = InetAddress.getAllByName("127.0.0.1");
 						LogHolder.log(LogLevel.DEBUG, LogType.NET,
-									 "Try binding Listener on localhost: " + a[0]);
-						m_socketHTTPListener = new ServerSocket(JAPModel.getHttpListenerPortNumber(), 50, a[0]);
+									  "Try binding Listener on localhost: " + a[0]);
+						m_socketHTTPListener = new ServerSocket(JAPModel.getHttpListenerPortNumber(), 50,
+							a[0]);
 					}
 					else
 					{
 						m_socketHTTPListener = new ServerSocket(JAPModel.getHttpListenerPortNumber());
 					}
 					LogHolder.log(LogLevel.INFO, LogType.NET,
-								 "Listener on port " + JAPModel.getHttpListenerPortNumber() + " started.");
+								  "Listener on port " + JAPModel.getHttpListenerPortNumber() +
+								  " started.");
 					try
 					{
 						m_socketHTTPListener.setSoTimeout(2000);
@@ -1327,7 +1353,8 @@ public final class JAPController
 					catch (Exception e1)
 					{
 						LogHolder.log(LogLevel.DEBUG, LogType.NET,
-									 "Could not set listener accept timeout: Exception: " + e1.getMessage());
+									  "Could not set listener accept timeout: Exception: " +
+									  e1.getMessage());
 					}
 					bindOk = true;
 					break;
@@ -1420,12 +1447,12 @@ public final class JAPController
 	public void fetchMixCascades()
 	{
 		LogHolder.log(LogLevel.INFO, LogType.MISC,
-					 "JAPController: fetchMixCascades: Trying to fetch mixcascades from infoservice.");
+					  "JAPController: fetchMixCascades: Trying to fetch mixcascades from infoservice.");
 		Vector newMixCascades = InfoServiceHolder.getInstance().getMixCascades();
 		if (newMixCascades == null)
 		{
 			LogHolder.log(LogLevel.ERR, LogType.NET,
-						 "JAPController: fetchMixCascades: No connection to infoservices.");
+						  "JAPController: fetchMixCascades: No connection to infoservices.");
 			if (!JAPModel.isSmallDisplay())
 			{
 				JOptionPane.showMessageDialog(m_View, JAPMessages.getString("errorConnectingInfoService"),
@@ -1451,14 +1478,14 @@ public final class JAPController
 	public int versionCheck()
 	{
 		LogHolder.log(LogLevel.INFO, LogType.MISC,
-					 "JAPController: versionCheck: Checking for new version of JAP...");
+					  "JAPController: versionCheck: Checking for new version of JAP...");
 		int result = 0;
 		String currentVersionNumber = InfoServiceHolder.getInstance().getNewVersionNumber();
 		if (currentVersionNumber != null)
 		{
 			currentVersionNumber = currentVersionNumber.trim();
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC,
-						 "JAPController: versionCheck: Local version: " + JAPConstants.aktVersion);
+						  "JAPController: versionCheck: Local version: " + JAPConstants.aktVersion);
 			if (currentVersionNumber.compareTo(JAPConstants.aktVersion) <= 0)
 			{
 				/* the local JAP version is up to date -> exit */
@@ -1467,7 +1494,8 @@ public final class JAPController
 			/* local version is not up to date, new version is available -> ask the user whether to
 			 * download the new version or not
 			 */
-			int answer = JOptionPane.showConfirmDialog(m_View, JAPMessages.getString("newVersionAvailable"),
+			int answer = JOptionPane.showConfirmDialog(m_View,
+				JAPMessages.getString("newVersionAvailable"),
 				JAPMessages.getString("newVersionAvailableTitle"),
 				JOptionPane.YES_NO_OPTION);
 			if (answer == JOptionPane.YES_OPTION)
@@ -1487,7 +1515,7 @@ public final class JAPController
 					{
 						/* Download failed -> alert, and reset anon mode to false */
 						LogHolder.log(LogLevel.ERR, LogType.MISC,
-									 "JAPController: versionCheck: Some update problem.");
+									  "JAPController: versionCheck: Some update problem.");
 						JOptionPane.showMessageDialog(m_View,
 							JAPMessages.getString("downloadFailed") + JAPMessages.getString("infoURL"),
 							JAPMessages.getString("downloadFailedTitle"), JOptionPane.ERROR_MESSAGE);
@@ -1505,7 +1533,7 @@ public final class JAPController
 				 * reset anon mode to false
 				 */
 				LogHolder.log(LogLevel.ERR, LogType.MISC,
-							 "JAPController: versionCheck: Could not get JAPVersionInfo.");
+							  "JAPController: versionCheck: Could not get JAPVersionInfo.");
 				JOptionPane.showMessageDialog(m_View,
 											  JAPMessages.getString("downloadFailed") +
 											  JAPMessages.getString("infoURL"),
@@ -1535,8 +1563,9 @@ public final class JAPController
 			 * mode to false
 			 */
 			LogHolder.log(LogLevel.ERR, LogType.MISC,
-						 "JAPController: versionCheck: Could not get the current JAP version number from infoservice.");
-			JAPUtil.showMessageBox(m_View, "errorConnectingInfoService", "errorConnectingInfoServiceTitle",
+						  "JAPController: versionCheck: Could not get the current JAP version number from infoservice.");
+			JAPUtil.showMessageBox(m_View, "errorConnectingInfoService",
+								   "errorConnectingInfoServiceTitle",
 								   JOptionPane.ERROR_MESSAGE);
 			notifyJAPObservers();
 			return -1;
@@ -1581,7 +1610,7 @@ public final class JAPController
 			catch (Throwable t)
 			{
 				LogHolder.log(LogLevel.EMERG, LogType.MISC,
-							 "JAPModel:notifyJAPObservers - critical exception: " + t.getMessage());
+							  "JAPModel:notifyJAPObservers - critical exception: " + t.getMessage());
 			}
 		}
 		LogHolder.log(LogLevel.DEBUG, LogType.MISC, "JAPModel:notifyJAPObservers()-ended");
