@@ -32,34 +32,39 @@ import java.util.Vector;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import pay.util.EasyXMLParser;
 import pay.util.PayText;
-
+import org.w3c.dom.*;
+import javax.xml.parsers.*;
+import anon.util.*;
+import java.io.*;
 /**
  *  Diese Klasse ist für die verwaltung aller Accounts zutändig, Dazu benutzt sie PayAcount's
+ *  Die zugehörige XML Struktur zum speichern der Accounts ist wie folgend:
+ * 	<PayAccount>
+ * 		<UsedAccount>...</UseAccount> //Kontonummer desd aktiven Kontos
+ * 		<Accounts>
+ * 			<...>   //Konten gemaes PayAccount XML Struktur
+ * 		</Accounts>
+ * </PayAccount>
  *	* @author Andreas Mueller, Grischan Glänzel
  */
 
 public class PayAccountFile
 {
-	protected byte[] accountsBytes;
-	protected Vector accounts;
+	//protected byte[] accountsBytes;
+	protected Vector m_Accounts;
 
-	protected String password = null;
-	protected PayAccount mainAccount = null;
-
-	public static final String docStartTag = "<PayAccount>";
-	public static final String docEndTag = "</PayAccount>";
+	protected String m_strPasswd = null;
+	protected PayAccount m_MainAccount = null;
 
 	public PayAccountFile(byte[] accountsBytes, String password)
 	{
-		this.password = password;
-		accounts = new Vector();
-		this.accountsBytes = accountsBytes;
+		m_strPasswd = password;
+		m_Accounts = new Vector();
+	//	this.accountsBytes = accountsBytes;
 		try
 		{
-			xmlToVector();
-			setUsedAccount(Long.parseLong(EasyXMLParser.getFirst(new String(accountsBytes), "UsedAccount")));
+			setValues(accountsBytes);
 			LogHolder.log(LogLevel.DEBUG, LogType.PAY,
 						  "PayAccountFile erfolgreich initialisiert+ mainAccountNr : " + getUsedAccount());
 		}
@@ -79,24 +84,25 @@ public class PayAccountFile
 	// Achtung diese Methode legt nur den wert des Passwortes fest ohne das speicher des payAccountFiles kann es zu Wiederspüchen kommen
 	public PayAccountFile(String password)
 	{
-		this.password = password;
-		accounts = new Vector();
+		m_strPasswd = password;
+		m_Accounts = new Vector();
 	}
 
 	public PayAccountFile()
 	{
-		accounts = new Vector();
+		m_Accounts = new Vector();
 	}
 
-	// Achtung diese Methode ändert nur die Passwort Variable ohne das speicher des payAccountFiles kann es zu Wiederspüchen kommen
+	// Achtung diese Methode ändert nur die Passwort Variable ohne das
+	// speicher des payAccountFiles kann es zu Wiederspüchen kommen
 	public void setPassword(String password)
 	{
-		this.password = password;
+		m_strPasswd = password;
 	}
 
 	public String getPassword()
 	{
-		return password;
+		return m_strPasswd;
 	}
 
 	/**
@@ -112,37 +118,37 @@ public class PayAccountFile
 
 	public boolean hasUsedAccount()
 	{
-		return mainAccount != null;
+		return m_MainAccount != null;
 	}
 
 	public PayAccount getMainAccount()
 	{
-		return mainAccount;
+		return m_MainAccount;
 	}
 
 	protected void setNewMainAccount()
 	{
 		if (getAccounts().hasMoreElements())
 		{
-			mainAccount = (PayAccount) getAccounts().nextElement();
+			m_MainAccount = (PayAccount) getAccounts().nextElement();
 		}
 		else
 		{
-			mainAccount = null;
+			m_MainAccount = null;
 		}
 	}
 
 	public void setUsedAccount(long accountNumber) throws Exception
 	{
-		mainAccount = getAccount(accountNumber);
+		m_MainAccount = getAccount(accountNumber);
 		//store();
 	}
 
 	public long getUsedAccount()
 	{
-		if (mainAccount != null)
+		if (m_MainAccount != null)
 		{
-			return mainAccount.getAccountNumber();
+			return m_MainAccount.getAccountNumber();
 		}
 		else
 		{
@@ -160,7 +166,7 @@ public class PayAccountFile
 	public PayAccount getAccount(long accountNumber)
 	{
 		PayAccount tmp;
-		Enumeration enum = accounts.elements();
+		Enumeration enum = m_Accounts.elements();
 		while (enum.hasMoreElements())
 		{
 			tmp = (PayAccount) enum.nextElement();
@@ -188,18 +194,18 @@ public class PayAccountFile
 		{
 			return false;
 		}
-		for (int i = 0; i < accounts.size(); i++)
+		for (int i = 0; i < m_Accounts.size(); i++)
 		{
-			tmp = (PayAccount) accounts.elementAt(i);
+			tmp = (PayAccount) m_Accounts.elementAt(i);
 			if (tmp.getAccountNumber() == accountNumber)
 			{
-				accounts.removeElementAt(i);
-				if (mainAccount == tmp)
+				m_Accounts.removeElementAt(i);
+				if (m_MainAccount == tmp)
 				{
 					setNewMainAccount();
 					LogHolder.log(LogLevel.DEBUG, LogType.PAY, "mainAccount==tmp");
 				}
-				LogHolder.log(LogLevel.DEBUG, LogType.PAY, "mainAccount : " + mainAccount);
+				LogHolder.log(LogLevel.DEBUG, LogType.PAY, "mainAccount : " + m_MainAccount);
 			}
 		}
 		return true;
@@ -214,7 +220,7 @@ public class PayAccountFile
 	{
 		PayAccount tmpAccount;
 		Vector tmp = new Vector();
-		Enumeration enum = accounts.elements();
+		Enumeration enum = m_Accounts.elements();
 		while (enum.hasMoreElements())
 		{
 			tmpAccount = (PayAccount) enum.nextElement();
@@ -230,7 +236,7 @@ public class PayAccountFile
 	 */
 	public Vector getAccountVec()
 	{
-		return accounts;
+		return m_Accounts;
 	}
 
 	/**
@@ -240,7 +246,7 @@ public class PayAccountFile
 	 */
 	public Enumeration getAccounts()
 	{
-		return accounts.elements();
+		return m_Accounts.elements();
 	}
 
 	/**
@@ -253,7 +259,7 @@ public class PayAccountFile
 	public PayAccountFile makeNewAccount(PayAccount account) throws Exception
 	{
 		PayAccount tmp;
-		Enumeration enum = accounts.elements();
+		Enumeration enum = m_Accounts.elements();
 		while (enum.hasMoreElements())
 		{
 			tmp = (PayAccount) enum.nextElement();
@@ -262,10 +268,10 @@ public class PayAccountFile
 				throw new IllegalArgumentException();
 			}
 		}
-		accounts.addElement(account);
-		if (mainAccount == null)
+		m_Accounts.addElement(account);
+		if (m_MainAccount == null)
 		{
-			mainAccount = account;
+			m_MainAccount = account;
 		}
 		return this;
 	}
@@ -279,12 +285,12 @@ public class PayAccountFile
 	public PayAccountFile modifyAccount(PayAccount account)
 	{
 		PayAccount tmp;
-		for (int i = 0; i < accounts.size(); i++)
+		for (int i = 0; i < m_Accounts.size(); i++)
 		{
-			tmp = (PayAccount) accounts.elementAt(i);
+			tmp = (PayAccount) m_Accounts.elementAt(i);
 			if (tmp.getAccountNumber() == account.getAccountNumber())
 			{
-				accounts.setElementAt(account, i);
+				m_Accounts.setElementAt(account, i);
 			}
 		}
 		return this;
@@ -303,29 +309,26 @@ public class PayAccountFile
 	 * @throws Exception Wenn ein Dateizugriffsfehler auftrat.
 	 */
 
-	public byte[] getXML()
+	public byte[] getXML() throws Exception
 	{
-		byte[] all;
-		StringBuffer tmp = new StringBuffer();
-		tmp.append(docStartTag);
-		tmp.append("<UsedAccount>" + getUsedAccount() + "</UsedAccount>");
-		tmp.append("<Accounts>");
-		appendBody(tmp);
-		tmp.append("</Accounts>" + docEndTag);
-		all = tmp.toString().getBytes();
-		return all;
+		Document doc=DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+		Element elemRoot=doc.createElement("PayAccount");
+		doc.appendChild(elemRoot);
+		elemRoot.setAttribute("version","1.0");
+		Element elem=doc.createElement("UsedAccount");
+		XMLUtil.setNodeValue(elem,Long.toString(getUsedAccount()));
+		elemRoot.appendChild(elem);
+		elem=doc.createElement("Accounts");
+		elemRoot.appendChild(elem);
+		for(int i=0;i<m_Accounts.size();i++)
+		{
+			PayAccount account=(PayAccount)m_Accounts.elementAt(i);
+			Node n=XMLUtil.importNode(doc,account.getDomDocument().getDocumentElement(),true);
+			elem.appendChild(n);
+		}
+		return XMLUtil.XMLDocumentToString(doc).getBytes();
 	}
 
-	private void appendBody(StringBuffer tmp)
-	{
-		Enumeration enum = accounts.elements();
-		PayAccount account;
-		while (enum.hasMoreElements())
-		{
-			account = (PayAccount) enum.nextElement();
-			tmp.append(account.getXMLString(false));
-		}
-	}
 
 	/**
 	 * Liest das in accountsBytes gespeicherte XML-Dokument und erzeugt ein
@@ -335,25 +338,25 @@ public class PayAccountFile
 	 * enthält. Wahrscheinliche Ursachen: Beim Entschlüsseln der Kontendatei
 	 * ein falsches Passwort verwendet oder die Kontendatei ist fehlerhaft.
 	 */
-	private void xmlToVector() throws Exception
+	private void setValues(byte[] xml) throws Exception
 	{
-		String sub;
-		String tmp = new String(accountsBytes);
-		int first, second, off;
-		off = 0;
-		if (tmp.indexOf("<Accounts>") == -1)
+		DocumentBuilder docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+		Document doc = docBuilder.parse(new ByteArrayInputStream(xml));
+		Element elemRoot = doc.getDocumentElement();
+
+		if(!elemRoot.getNodeName().equals("PayAccount"))
 		{
-			throw new Exception("Pay AccountFile: xmltoVector(): no <Accounts>");
+			throw new Exception("Pay AccountFile: xmltoVector(): no <PayAccount>");
 		}
-		while ( (first = tmp.indexOf("<Account>", off)) != -1)
+		Element elem=(Element)XMLUtil.getFirstChildByName(elemRoot,"Accounts");
+		Node n=elem.getFirstChild();
+		while(n!=null)
 		{
-			second = tmp.indexOf("</Account>", off) + 10;
-			off = second;
-			sub = tmp.substring(first, second);
 			PayAccount xmlAccount;
 			try
 			{
-				xmlAccount = new PayAccount(sub.getBytes());
+				xmlAccount = new PayAccount(n);
+				m_Accounts.addElement(xmlAccount);
 
 			}
 			catch (Exception e)
@@ -362,7 +365,9 @@ public class PayAccountFile
 				e.printStackTrace();
 				throw new Exception("wrong password or corrupt accountfile");
 			}
-			accounts.addElement(xmlAccount);
+			n=n.getNextSibling();
 		}
+		Element elemUsedAccount=(Element)XMLUtil.getFirstChildByName(elemRoot,"UsedAccount");
+		setUsedAccount(Long.parseLong(XMLUtil.parseNodeString(elemUsedAccount,null)));
 	}
 }

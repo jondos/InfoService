@@ -43,11 +43,11 @@ import payxml.XMLAccountCertificate;
 import payxml.XMLChallenge;
 import payxml.XMLJapPublicKey;
 import payxml.XMLResponse;
-import payxml.XMLSignature;
 import payxml.XMLTransCert;
 import payxml.util.Signer;
 
 import anon.crypto.JAPSignature;
+import anon.crypto.*;
 
 /**
  * Hauptklasse für die Verbindung von Pay zur BI kümmert sich inhaltlich um die Kommunikation
@@ -131,11 +131,11 @@ public class PayInstance
 	 * @return Transfer-Zertifikat
 	 * @throws IOException
 	 */
-	public XMLTransCert chargeBankTransfer(String accountcert, RSAKeyParameters privKey) throws IOException
+	/*public XMLTransCert chargeBankTransfer(String accountcert, RSAKeyParameters privKey) throws IOException
 	{
 		String type = "<ChargeMethod>Banktransfer</ChargeMethod>";
 		return charge(accountcert, privKey, type);
-	}
+	}*/
 
 	/**
 	 * Aufladen des Kontos mit Kreditkarte.
@@ -148,7 +148,7 @@ public class PayInstance
 	 * @return Transfer-Zertifikat
 	 * @throws IOException
 	 */
-	public XMLTransCert chargeCreditCard(String accountcert, RSAKeyParameters privKey, int amount,
+/*	public XMLTransCert chargeCreditCard(XMLAccountCertificate accountcert, RSAKeyParameters privKey, int amount,
 										 String number, Date valid) throws IOException
 	{
 		String type = "<ChargeMethod>Creditcard<CreditCard><Number>" +
@@ -156,8 +156,8 @@ public class PayInstance
 			"</CreditCard><Amount>" + amount + "</Amount></ChargeMethod>";
 		return charge(accountcert, privKey, type);
 	}
-
-	private XMLTransCert charge(String accountcert, RSAKeyParameters privKey, String type) throws IOException
+*/
+	private XMLTransCert charge(XMLAccountCertificate accountcert, RSAKeyParameters privKey, String type) throws IOException
 	{
 		try
 		{
@@ -165,14 +165,9 @@ public class PayInstance
 			httpClient.writeRequest("POST", "charge", type);
 			String answer = httpClient.readAnswer();
 
-			XMLTransCert xmltrcert = new XMLTransCert(answer.getBytes());
+			XMLTransCert xmltrcert = new XMLTransCert(answer);
 
-			RootCertificates rootCerts = new RootCertificates();
-			rootCerts.init();
-			RSAKeyParameters testkey = rootCerts.getPublicKey("test server");
-			XMLSignature xmlSig = new XMLSignature(xmltrcert.getXMLString(false).getBytes());
-			xmlSig.initVerify(testkey);
-			if (xmlSig.verifyXML())
+			if (Pay.getInstance().getVerifyingInstance().verifyXML(xmltrcert.getDomDocument()))
 			{
 				return xmltrcert;
 			}
@@ -195,7 +190,7 @@ public class PayInstance
 	 * @return Guthaben und Kostenbestätigungen (in XMLBalConf gekapselt)
 	 * @throws IOException
 	 */
-	public XMLBalConf getBalance(String accountcert, RSAKeyParameters privKey) throws IOException
+	public XMLBalConf getBalance(XMLAccountCertificate accountcert, RSAKeyParameters privKey) throws IOException
 	{
 		//XMLBalance xmlBalance;
 		//XMLCostConfirmation[] xmlConfirms;
@@ -208,40 +203,8 @@ public class PayInstance
 			answer = httpClient.readAnswer();
 			conf = new XMLBalConf(answer);
 
-			// passiert jetzt in XMLBalConf
-			/*
-				   int index = answer.indexOf(CostConfirmations.docStartTag);
-				   if (index>0)
-				   {
-			  xmlBalance = new XMLBalance(answer.substring(0,index));
 
-			  String confirms=answer.substring(index);
-			  int begin, end;
-			  Vector vector = new Vector();
-			  while((begin=confirms.indexOf("<CostConfirmation>"))!=-1)
-			  {
-				if((end=confirms.indexOf("</CostConfirmation>"))>begin)
-				{
-				  vector.add(new XMLCostConfirmation(confirms.substring(begin,end+19)));
-				}
-			  }
-			  if(vector.isEmpty()) xmlConfirms=null;
-			  else xmlConfirms = (XMLCostConfirmation[]) vector.toArray();
-				   }
-				   else
-				   {
-			  xmlBalance = new XMLBalance(answer);
-			  xmlConfirms=null;
-				   }
-			 */
-
-			RootCertificates rootCerts = new RootCertificates();
-			rootCerts.init();
-			RSAKeyParameters testkey = rootCerts.getPublicKey("test server");
-
-			XMLSignature sig = new XMLSignature(conf.balance.getXMLString(false).getBytes());
-			sig.initVerify(testkey);
-			if (!sig.verifyXML())
+			if (!Pay.getInstance().getVerifyingInstance().verifyXML(conf.balance.getDomDocument()))
 			{
 				throw new Exception("invalid signature");
 			}
@@ -253,15 +216,15 @@ public class PayInstance
 		return conf;
 	}
 
-	private void authenticate(String accountcert, RSAKeyParameters privKey) throws Exception
+	private void authenticate(XMLAccountCertificate accountcert, RSAKeyParameters privKey) throws Exception
 	{
 		try
 		{
 			//Log.log(this,accountcert,Log.TEST);
-			httpClient.writeRequest("POST", "authenticate", accountcert);
+			httpClient.writeRequest("POST", "authenticate", accountcert.getXMLString());
 			String answer = httpClient.readAnswer();
 			XMLChallenge xmlchallenge = new XMLChallenge(answer);
-			byte[] challenge = xmlchallenge.getChallenge();
+			byte[] challenge = xmlchallenge.getChallengeForSigning();
 
 			Signer signer = new Signer();
 			signer.init(true, privKey);
@@ -269,7 +232,7 @@ public class PayInstance
 			byte[] sig = signer.generateSignature();
 
 			XMLResponse xmlResponse = new XMLResponse(sig);
-			String response = xmlResponse.getXMLString(true);
+			String response = xmlResponse.getXMLString();
 
 			httpClient.writeRequest("POST", "response", response);
 			answer = httpClient.readAnswer();
@@ -335,10 +298,10 @@ public class PayInstance
 	 * @return Kontozertifikat
 	 * @throws Exception
 	 */
-	public XMLCertificate register(RSAKeyParameters pubKey, RSAKeyParameters privKey) throws Exception
+	public XMLAccountCertificate register(RSAKeyParameters pubKey, RSAKeyParameters privKey) throws Exception
 	{
-		XMLJapPublicKey xmlPubKey = new XMLJapPublicKey(pubKey);
-		String xmlkey = xmlPubKey.getXMLString(true);
+		XMLJapPublicKey xmlPubKey = new XMLJapPublicKey(new MyRSAPublicKey(pubKey));
+		String xmlkey = xmlPubKey.getXMLString();
 		if (xmlkey == null)
 		{
 			return null;
@@ -348,7 +311,7 @@ public class PayInstance
 		String answer = httpClient.readAnswer();
 
 		XMLChallenge xmlchallenge = new XMLChallenge(answer);
-		byte[] challenge = xmlchallenge.getChallenge();
+		byte[] challenge = xmlchallenge.getChallengeForSigning();
 
 		Signer signer = new Signer();
 		signer.init(true, privKey);
@@ -356,7 +319,7 @@ public class PayInstance
 		byte[] sig = signer.generateSignature();
 
 		XMLResponse xmlResponse = new XMLResponse(sig);
-		String response = xmlResponse.getXMLString(true);
+		String response = xmlResponse.getXMLString();
 
 		httpClient.writeRequest("POST", "response", response);
 		answer = httpClient.readAnswer();
@@ -370,9 +333,9 @@ public class PayInstance
 		boolean sigOK = Pay.getInstance().getVerifyingInstance().verifyXML(
 				new java.io.ByteArrayInputStream(answer.getBytes())
 			);
-		XMLCertificate xmlCert = new XMLCertificate(answer);
+		XMLAccountCertificate xmlCert = new XMLAccountCertificate(answer);
 		boolean modOK = xmlCert.getPublicKey().getModulus().equals(pubKey.getModulus());
-		boolean expOK = xmlCert.getPublicKey().getExponent().equals(pubKey.getExponent());
+		boolean expOK = xmlCert.getPublicKey().getPublicExponent().equals(pubKey.getExponent());
 		if(sigOK && modOK && expOK) return xmlCert;
 		else throw new Exception("wrong signature on accountCertificate or wrong key");
 	}

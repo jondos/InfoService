@@ -48,10 +48,11 @@ public class XMLCC extends XMLDocument
 
 	//~ Constructors ***********************************************************
 
-	public XMLCC(Element elemRoot) throws Exception
+	public XMLCC(Element xml) throws Exception
 	{
 		m_theDocument=getDocumentBuilder().newDocument();
-		Node n=XMLUtil.importNode(m_theDocument,elemRoot,true);
+		Node n=XMLUtil.importNode(m_theDocument,xml,true);
+		m_theDocument.appendChild(n);
 		setValues();
 	}
 

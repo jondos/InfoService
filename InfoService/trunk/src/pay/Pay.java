@@ -328,7 +328,7 @@ public class Pay
 	 * Kontendatei geöffnet wurde. -1 Wenn ein Fehler beim Dateizugriff oder der
 	 * Entschlüsselung auftrat. 2 wenn dieses AccountFile bereits geöffnet ist
 	 */
-	public void openAccountFile()
+	public void openAccountFile() throws Exception
 	{
 		if ( (accountFile == null))
 		{
@@ -368,7 +368,7 @@ public class Pay
 		}
 	}
 
-	public void changeAccountFileEncryptMode()
+	public void changeAccountFileEncryptMode() throws Exception
 	{
 		fire.fireModelEvent();
 		accountsControl.changeEncryptMode(accountFile);
@@ -379,7 +379,7 @@ public class Pay
 		return accountFile.getPassword() != null;
 	}
 
-	public void exportAccountFile(String filename)
+	public void exportAccountFile(String filename) throws Exception
 	{
 		try
 		{
@@ -555,7 +555,7 @@ public class Pay
 	 * @throws IllegalStateException Wenn die Kontendatei oder die
 	 * Bezahlinstanz nicht gesetzt sind.
 	 */
-	public long chargeAccount(long accountNumber) throws IllegalStateException, IOException
+/*	public long chargeAccount(long accountNumber) throws IllegalStateException, IOException
 	{
 		try
 		{
@@ -576,7 +576,7 @@ public class Pay
 			return -1;
 		}
 	}
-
+*/
 	/**
 	 * Für jede in der aktuelle KontoDatei gespeichert Konten wird getBalance aufgerufen
 	 */
@@ -689,7 +689,7 @@ public class Pay
 		{
 			payInstance = new PayInstance(host, port, sslOn);
 			payInstance.connect();
-			XMLCertificate xmlCert = payInstance.register(rsapubkey, rsaprivkey);
+			XMLAccountCertificate xmlCert = payInstance.register(rsapubkey, rsaprivkey);
 			payInstance.disconnect();
 
 			PayAccount newAccount = new PayAccount(xmlCert, rsaprivkey);

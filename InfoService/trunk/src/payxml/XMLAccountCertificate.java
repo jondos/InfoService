@@ -137,6 +137,24 @@ public class XMLAccountCertificate extends XMLDocument
 	public XMLAccountCertificate(String xml) throws Exception
 	{
 		setDocument(xml);
+		setValues();
+	}
+
+	/**
+	 * Creates an AccountCertifcate from  an existing XML docuemnt
+	 *
+	 * @param xml the node that represents the AccountCertifcate
+	 */
+	public XMLAccountCertificate(Node xml) throws Exception
+	{
+		m_theDocument=getDocumentBuilder().newDocument();
+		Node n=XMLUtil.importNode(m_theDocument,xml,true);
+		m_theDocument.appendChild(n);
+		setValues();
+	}
+
+	private void setValues() throws Exception
+	{
 		setAccountNumber();
 		setCreationTime();
 		setHostAndPorts();

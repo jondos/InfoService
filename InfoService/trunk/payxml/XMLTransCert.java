@@ -28,6 +28,7 @@
 package payxml;
 
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import anon.util.XMLUtil;
 
 public class XMLTransCert extends XMLDocument
@@ -69,6 +70,24 @@ public class XMLTransCert extends XMLDocument
 	public XMLTransCert(String xml) throws Exception
 	{
 		setDocument(xml);
+		setValues();
+	}
+
+	/**
+	 * Creates an TransCert from  an existing XML docuemnt
+	 *
+	 * @param xml the node that represents the TransCert
+	 */
+	public XMLTransCert(Node xml) throws Exception
+	{
+		m_theDocument=getDocumentBuilder().newDocument();
+		Node n=XMLUtil.importNode(m_theDocument,xml,true);
+		m_theDocument.appendChild(n);
+		setValues();
+	}
+
+	private void setValues() throws Exception
+	{
 		setAccountNumber();
 		setTransferNumber();
 		setValidTime();
@@ -107,8 +126,8 @@ public class XMLTransCert extends XMLDocument
 	/*private void setSignature()
 	  {
 	 signature = xmlDocument.substring(xmlDocument.indexOf("<Signature"),
-			   xmlDocument.indexOf("</Signature>") + 12
-			   );
+		 xmlDocument.indexOf("</Signature>") + 12
+		 );
 	  }*/
 
 	private void setTransferNumber() throws Exception

@@ -193,7 +193,14 @@ class JAP extends Frame
 		}
 		if (loadPay)
 		{
+			try
+			{
 			PayControl.initPay();
+			}
+			catch(Exception e1)
+			{
+				LogHolder.log(LogLevel.ERR,LogType.PAY,"Uups --> erro in initalizing Pay: "+e1.getMessage());
+			}
 			// Create the view object
 		}
 		JAPView view = new JAPView(JAPConstants.TITLE);
