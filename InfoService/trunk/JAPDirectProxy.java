@@ -135,7 +135,7 @@ final class JAPDirectProxy implements Runnable
 								threadgroupAll.stop();
 								threadgroupAll.destroy();
 							}
-						catch(NullPointerException e)
+						catch(Exception e)
 							{
 							}
 					}
