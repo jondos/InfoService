@@ -780,7 +780,7 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 
 	private void exitProgram()
 	{
-		controller.goodBye(); // call the final exit procedure of JAP
+		controller.goodBye(true); // call the final exit procedure of JAP
 	}
 
 	public JPanel getMainPanel()
