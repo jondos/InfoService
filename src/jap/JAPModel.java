@@ -44,7 +44,7 @@ public final class JAPModel
 	private int m_biPort = JAPConstants.PIPORT;
 	private int m_HttpListenerPortNumber = JAPConstants.DEFAULT_PORT_NUMBER; // port number of HTTP  listener
 	private boolean m_bHttpListenerIsLocal = JAPConstants.DEFAULT_LISTENER_IS_LOCAL; // indicates whether listeners serve for localhost only or not
-	private ProxyInterface m_proxyInterface;
+	private ProxyInterface m_proxyInterface = null;
 	private boolean m_bAutoConnect = false; // autoconnect after program start
 	private boolean m_bAutoReConnect = false; // autoReconnects after loosing connection to mix
 
@@ -314,17 +314,21 @@ public final class JAPModel
 		buff.append(m_bHttpListenerIsLocal);
 		buff.append("\n");
 		buff.append("UseFirewall: ");
-		buff.append(m_proxyInterface.isValid());
+		boolean bFirewall = m_proxyInterface != null && m_proxyInterface.isValid();
+		buff.append(bFirewall);
 		buff.append("\n");
-		buff.append("FirewallType: ");
-		buff.append(m_proxyInterface.getProtocol());
-		buff.append("\n");
-		buff.append("FirewallHost: ");
-		buff.append(m_proxyInterface.getHost());
-		buff.append("\n");
-		buff.append("FirewallPort: ");
-		buff.append(m_proxyInterface.getPort());
-		buff.append("\n");
+		if (bFirewall)
+		{
+			buff.append("FirewallType: ");
+			buff.append(m_proxyInterface.getProtocol());
+			buff.append("\n");
+			buff.append("FirewallHost: ");
+			buff.append(m_proxyInterface.getHost());
+			buff.append("\n");
+			buff.append("FirewallPort: ");
+			buff.append(m_proxyInterface.getPort());
+			buff.append("\n");
+		}
 		buff.append("AutoConnect: ");
 		buff.append(m_bAutoConnect);
 		buff.append("\n");

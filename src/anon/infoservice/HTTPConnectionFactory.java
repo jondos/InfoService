@@ -64,7 +64,7 @@ public class HTTPConnectionFactory
 	/**
 	 * The listener for the proxy used.
 	 */
-  private ImmutableProxyInterface m_proxyInterface;
+	private ImmutableProxyInterface m_proxyInterface;
 
 	/**
 	 * This creates a new instance of HTTPConnectionFactory. This is only used for setting some
@@ -110,26 +110,26 @@ public class HTTPConnectionFactory
 	 * @param a_proxyInterface the listener interface of the proxy server; if it is set to null, no
 	 *                        proxy is used
 	 */
-  public synchronized void setNewProxySettings(ImmutableProxyInterface a_proxyInterface)
+	public synchronized void setNewProxySettings(ImmutableProxyInterface a_proxyInterface)
 	{
 		m_proxyInterface = a_proxyInterface;
 
 		if (a_proxyInterface == null || !a_proxyInterface.isValid())
 		{
-			m_proxyInterface=null;
+			m_proxyInterface = null;
 			HTTPConnection.setProxyServer(null, -1);
 			HTTPConnection.setSocksServer(null, -1);
 			return;
 		}
 
 		/* don't allow to create new connections until we have changed all proxy attributes */
-		if (a_proxyInterface.getProtocol()==ImmutableListenerInterface.PROTOCOL_TYPE_HTTP)
+		if (a_proxyInterface.getProtocol() == ImmutableListenerInterface.PROTOCOL_TYPE_HTTP)
 		{
 			/* set the new values for the proxy */
 			HTTPConnection.setProxyServer(a_proxyInterface.getHost(), a_proxyInterface.getPort());
 			HTTPConnection.setSocksServer(null, -1);
 		}
-		else if (a_proxyInterface.getProtocol()==ImmutableListenerInterface.PROTOCOL_TYPE_SOCKS)
+		else if (a_proxyInterface.getProtocol() == ImmutableListenerInterface.PROTOCOL_TYPE_SOCKS)
 		{
 			/** @todo check why this code is not used! */
 			HTTPConnection.setProxyServer(null, -1);
@@ -185,7 +185,7 @@ public class HTTPConnectionFactory
 		synchronized (this)
 		{
 			newConnection = createHTTPConnectionInternal(target);
-			if (m_proxyInterface!=null&&m_proxyInterface.isAuthenticationUsed())
+			if (m_proxyInterface != null && m_proxyInterface.isAuthenticationUsed())
 			{
 				DefaultAuthHandler.setAuthorizationPrompter(new AuthorizationPrompter()
 				{
@@ -208,29 +208,30 @@ public class HTTPConnectionFactory
 	}
 
 	/**
-   * This method creates a new instance of HTTPConnection using the specified proxy settings
-   * (ignoring the default settings).
-   *
-   * @param target The ListenerInterface of the connection target.
-   * @param a_proxySettings The proxy settings to use for this single connection. If the proxy
-   *                        settings are null, no proxy is used.
-   *
-   * @return A new instance of HTTPConnection with a connection to the specified target and the
-   *         current proxy settings.
-   */
-  public synchronized HTTPConnection createHTTPConnection(ListenerInterface target, ImmutableProxyInterface a_proxySettings)
-  {
-    /* tricky: change the global proxy settings, create the connection and restore the original
-     * proxy settings -> no problem because all methods are synchronized
-     */
-    ImmutableProxyInterface oldProxySettings = m_proxyInterface;
-    setNewProxySettings(a_proxySettings);
-    HTTPConnection createdConnection = createHTTPConnection(target);
-    setNewProxySettings(oldProxySettings);
-    return createdConnection;
-  }
+	 * This method creates a new instance of HTTPConnection using the specified proxy settings
+	 * (ignoring the default settings).
+	 *
+	 * @param target The ListenerInterface of the connection target.
+	 * @param a_proxySettings The proxy settings to use for this single connection. If the proxy
+	 *                        settings are null, no proxy is used.
+	 *
+	 * @return A new instance of HTTPConnection with a connection to the specified target and the
+	 *         current proxy settings.
+	 */
+	public synchronized HTTPConnection createHTTPConnection(ListenerInterface target,
+		ImmutableProxyInterface a_proxySettings)
+	{
+		/* tricky: change the global proxy settings, create the connection and restore the original
+		 * proxy settings -> no problem because all methods are synchronized
+		 */
+		ImmutableProxyInterface oldProxySettings = m_proxyInterface;
+		setNewProxySettings(a_proxySettings);
+		HTTPConnection createdConnection = createHTTPConnection(target);
+		setNewProxySettings(oldProxySettings);
+		return createdConnection;
+	}
 
-  /**
+	/**
 	 * An internal helper function to set the header information for the HTTP connection.
 	 *
 	 * @param connection The connection where the new headers are set.
