@@ -158,6 +158,7 @@
   <property category="optimize.2" name="oira.FilterFile" value="G:\projects\Jap\JAP.oif"/>
   <property category="optimize.7" name="OptimizableType" value="com.borland.jbuilder.optimize.IntroOptimizeitProfiler"/>
   <property category="path" name="DefaultDiagram" value="diagrams"/>
+  <property category="path" name="Diagram" value="diagrams"/>
   <property category="personality" name="personality" value="com.borland.jbuilder.personality.JBuilderUMLPersonality "/>
   <property category="runtime" name="ConfigurationCount" value="14"/>
   <property category="runtime.0" name="BuildTargetOnRun" value="com.borland.jbuilder.build.ProjectBuilder$ProjectBuildAction;make"/>
@@ -325,7 +326,7 @@
   <property category="sys" name="ExcludeClassEnabled" value="0"/>
   <property category="sys" name="IncludeTestPath" value="1"/>
   <property category="sys" name="InstanceVisibility" value="0"/>
-  <property category="sys" name="JDK" value="1.1 mit JVM_1.4.2"/>
+  <property category="sys" name="JDK" value="java version 1.4.2_05-b04"/>
   <property category="sys" name="LastTag" value="192"/>
   <property category="sys" name="Libraries" value="http;mac;Apache XML-RPC;BouncyCastleLightForJAP;JUnit;junitx;ApacheFTPClient;Swing;ApacheBzip2;Log4j;XML-1.1"/>
   <property category="sys" name="MakeStable" value="0"/>

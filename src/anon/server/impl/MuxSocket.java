@@ -114,6 +114,7 @@ public final class MuxSocket implements Runnable
 
 	private final static int MAX_CHANNELS_PER_CONNECTION = 50;
 
+	private final static int MIX_PROTOCOL_VERSION_0_6 = 5;
 	private final static int MIX_PROTOCOL_VERSION_0_5 = 5;
 	private final static int MIX_PROTOCOL_VERSION_0_4 = 4;
 	private final static int MIX_PROTOCOL_VERSION_0_3 = 3;
@@ -434,6 +435,12 @@ public final class MuxSocket implements Runnable
 			{
 				m_iMixProtocolVersion = MIX_PROTOCOL_VERSION_0_5;
 				m_bMixSupportsControlChannels = true;
+			}
+			else if (strProtocolVersion.equalsIgnoreCase("0.6"))
+			{
+				m_iMixProtocolVersion = MIX_PROTOCOL_VERSION_0_6;
+				m_bMixSupportsControlChannels = true;
+				m_cipherFirstMix = new SymCipher();
 			}
 			else
 			{

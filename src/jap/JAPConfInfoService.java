@@ -27,6 +27,9 @@
  */
 package jap;
 
+import java.util.Enumeration;
+import java.util.Vector;
+
 import java.awt.Component;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
@@ -36,9 +39,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
-import java.util.Enumeration;
-import java.util.Vector;
-
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
@@ -80,6 +80,7 @@ final class JAPConfInfoService extends AbstractJAPConfModule
 	 * Stores the listmodel with the data of all known InfoServices.
 	 */
 	private JAPInfoServiceListModel m_infoServiceListModel;
+
 
 	/**
 	 * Constructor for JAPConfInfoService. We do some initializing here.
@@ -213,7 +214,6 @@ final class JAPConfInfoService extends AbstractJAPConfModule
 
 		JButton settingsInfoGetListButton = new JButton(JAPMessages.getString("settingsInfoGetListButton"));
 		settingsInfoGetListButton.setFont(getFontSetting());
-		settingsInfoGetListButton.setOpaque(false);
 		settingsInfoGetListButton.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent event)
@@ -259,7 +259,6 @@ final class JAPConfInfoService extends AbstractJAPConfModule
 		JButton settingsInfoSetPreferedButton = new JButton(JAPMessages.getString(
 			"settingsInfoSetPreferedButton"));
 		settingsInfoSetPreferedButton.setFont(getFontSetting());
-		settingsInfoSetPreferedButton.setOpaque(false);
 		settingsInfoSetPreferedButton.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent event)
@@ -277,7 +276,6 @@ final class JAPConfInfoService extends AbstractJAPConfModule
 		});
 		JButton settingsInfoAddButton = new JButton(JAPMessages.getString("settingsInfoAddButton"));
 		settingsInfoAddButton.setFont(getFontSetting());
-		settingsInfoAddButton.setOpaque(false);
 		settingsInfoAddButton.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent event)
@@ -288,7 +286,6 @@ final class JAPConfInfoService extends AbstractJAPConfModule
 		});
 		JButton settingsInfoRemoveButton = new JButton(JAPMessages.getString("settingsInfoRemoveButton"));
 		settingsInfoRemoveButton.setFont(getFontSetting());
-		settingsInfoRemoveButton.setOpaque(false);
 		settingsInfoRemoveButton.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent event)
@@ -333,7 +330,6 @@ final class JAPConfInfoService extends AbstractJAPConfModule
 		TitledBorder settingsInfoConfigBorder = new TitledBorder(JAPMessages.getString(
 			"settingsInfoConfigBorder"));
 		settingsInfoConfigBorder.setTitleFont(getFontSetting());
-		configPanel.setOpaque(false);
 		configPanel.setBorder(settingsInfoConfigBorder);
 
 		GridBagLayout configPanelLayout = new GridBagLayout();
@@ -539,7 +535,6 @@ final class JAPConfInfoService extends AbstractJAPConfModule
 	private JPanel createInfoServiceAdvancedPanel()
 	{
 		JPanel expertPanel = new JPanel();
-
 		final JCheckBox disableInfoServiceBox = new JCheckBox(JAPMessages.getString(
 			"settingsInfoDisableInfoService"), JAPModel.isInfoServiceDisabled());
 		disableInfoServiceBox.setFont(getFontSetting());
