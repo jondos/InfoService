@@ -159,18 +159,23 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 		}
 		catch (Exception e)
 		{
-			LogHolder.log(LogLevel.EMERG, LogType.NET, "JAPController: Constructor - default mix cascade: " + e.getMessage());
+			LogHolder.log(LogLevel.EMERG, LogType.NET,
+						  "JAPController: Constructor - default mix cascade: " + e.getMessage());
 		}
 		/* set a default infoservice */
 		try
 		{
-			InfoServiceDBEntry defaultInfoService = new InfoServiceDBEntry(JAPConstants.defaultInfoServiceName, new ListenerInterface(JAPConstants.defaultInfoServiceHostName, JAPConstants.defaultInfoServicePortNumber).toVector(), false, true);
+			InfoServiceDBEntry defaultInfoService = new InfoServiceDBEntry(JAPConstants.
+				defaultInfoServiceName,
+				new ListenerInterface(JAPConstants.defaultInfoServiceHostName,
+									  JAPConstants.defaultInfoServicePortNumber).toVector(), false, true);
 			InfoServiceHolder.getInstance().setPreferredInfoService(defaultInfoService);
 		}
 		catch (Exception e)
 		{
 			e.printStackTrace();
-			LogHolder.log(LogLevel.EMERG, LogType.NET, "JAPController: Constructor - default info service: " + e.getMessage());
+			LogHolder.log(LogLevel.EMERG, LogType.NET,
+						  "JAPController: Constructor - default info service: " + e.getMessage());
 		}
 		/* set some default values for infoservice communication */
 		setInfoServiceDisabled(JAPConstants.DEFAULT_INFOSERVICE_DISABLED);
@@ -661,8 +666,8 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 									JAPConstants.CONFIG_SIZE);
 								d.width = XMLUtil.parseAttribute(tmp, JAPConstants.CONFIG_DX, -1);
 								d.height = XMLUtil.parseAttribute(tmp, JAPConstants.CONFIG_DY, -1);
-								m_Model.m_OldMainWindowLocation = p;
-								m_Model.m_OldMainWindowSize = d;
+								m_Model.setOldMainWindowLocation(p);
+								m_Model.setOldMainWindowSize(d);
 							}
 							tmp = (Element) XMLUtil.getFirstChildByName(elemMainWindow,
 								JAPConstants.CONFIG_MOVE_TO_SYSTRAY);
@@ -769,19 +774,19 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 				}
 
 				/* load the infoservice management settings */
-						try
-						{
+				try
+				{
 					Element infoserviceManagementNode = (Element) (XMLUtil.getFirstChildByName(root,
 						InfoServiceHolder.getXmlSettingsRootNodeName()));
 					if (infoserviceManagementNode != null)
 					{
 						InfoServiceHolder.getInstance().loadSettingsFromXml(infoserviceManagementNode);
-						}
-					else
-						{
-						throw (new Exception("JAPController: loadConfigFile: No InfoServiceManagement node found. Using default settings for infoservice management in InfoServiceHolder."));
-						}
 					}
+					else
+					{
+						throw (new Exception("JAPController: loadConfigFile: No InfoServiceManagement node found. Using default settings for infoservice management in InfoServiceHolder."));
+					}
+				}
 				catch (Exception e)
 				{
 					LogHolder.log(LogLevel.ERR, LogType.MISC, e);
@@ -911,17 +916,17 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 				/* read the settings of the JAP forwarding system, if it is enabled */
 //				if (JAPConstants.WITH_BLOCKINGRESISTANCE)
 //				{
-					Element japForwardingSettingsNode = (Element) (XMLUtil.getFirstChildByName(root,
-						JAPConstants.CONFIG_JAP_FORWARDING_SETTINGS));
-					if (japForwardingSettingsNode != null)
-					{
-						JAPModel.getInstance().getRoutingSettings().loadSettingsFromXml(
-							japForwardingSettingsNode);
-					}
-					else
-					{
-						LogHolder.log(LogLevel.ERR, LogType.MISC, "JAPController: loadConfigFile: Error in XML structure (JapForwardingSettings node): Using default settings for forwarding.");
-					}
+				Element japForwardingSettingsNode = (Element) (XMLUtil.getFirstChildByName(root,
+					JAPConstants.CONFIG_JAP_FORWARDING_SETTINGS));
+				if (japForwardingSettingsNode != null)
+				{
+					JAPModel.getInstance().getRoutingSettings().loadSettingsFromXml(
+						japForwardingSettingsNode);
+				}
+				else
+				{
+					LogHolder.log(LogLevel.ERR, LogType.MISC, "JAPController: loadConfigFile: Error in XML structure (JapForwardingSettings node): Using default settings for forwarding.");
+				}
 //				}
 
 			}
@@ -1471,9 +1476,10 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 	public void setInfoServiceDisabled(boolean b)
 	{
 		m_Model.setInfoServiceDisabled(b);
-		synchronized (this) {
-		  setChanged();
-		  notifyObservers(new JAPControllerMessage(JAPControllerMessage.INFOSERVICE_POLICY_CHANGED));
+		synchronized (this)
+		{
+			setChanged();
+			notifyObservers(new JAPControllerMessage(JAPControllerMessage.INFOSERVICE_POLICY_CHANGED));
 		}
 	}
 

@@ -478,7 +478,7 @@ final public class JAPCertificate extends X509CertificateStructure implements IX
 		MessageDigest sha1;
 
 		StringBuffer r_strBuffId = new StringBuffer();
-		Enumeration enumer = getIssuer().getValues().elements();
+		Enumeration enumer = getSubject().getValues().elements();
 		while (enumer.hasMoreElements())
 		{
 			r_strBuffId.append( (String) enumer.nextElement());
@@ -486,7 +486,6 @@ final public class JAPCertificate extends X509CertificateStructure implements IX
 		r_strBuffId.append(getStartDate().getDate().getTime());
 		r_strBuffId.append(getEndDate().getDate().getTime());
 		r_strBuffId.append(new String(getPublicKey().getEncoded()));
-
 		digest = r_strBuffId.toString().getBytes();
 		try
 		{

@@ -44,10 +44,13 @@ import java.awt.GridLayout;
 import java.awt.Image;
 import java.awt.Insets;
 import java.awt.MediaTracker;
+import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.MouseAdapter;
@@ -82,9 +85,6 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import proxy.ProxyListener;
-import java.awt.event.WindowListener;
-import java.awt.event.ComponentListener;
-import java.awt.event.ComponentEvent;
 
 final public class JAPNewView extends AbstractJAPMainView implements IJAPMainView, ActionListener,
 	JAPObserver
@@ -155,8 +155,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	public JAPNewView(String s, JAPController a_controller)
 	{
 		super(s, a_controller);
-	m_bIsSimpleView=(JAPModel.getDefaultView()==JAPConstants.VIEW_SIMPLIFIED);
-	m_NumberFormat = NumberFormat.getInstance();
+		m_bIsSimpleView = (JAPModel.getDefaultView() == JAPConstants.VIEW_SIMPLIFIED);
+		m_NumberFormat = NumberFormat.getInstance();
 		m_Controller = JAPController.getInstance();
 		m_dlgConfig = null; //new JAPConf(this);
 		m_bIsIconified = false;
@@ -431,10 +431,14 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c.anchor = GridBagConstraints.NORTHWEST;
 		c.gridy = 4;
 		m_flippingpanelAnon.setFlipped(true);
-		if(m_bIsSimpleView)
+		if (m_bIsSimpleView)
+		{
 			northPanel.add(m_flippingpanelAnon.getFullPanel(), c);
-			else
-		northPanel.add(m_flippingpanelAnon, c);
+		}
+		else
+		{
+			northPanel.add(m_flippingpanelAnon, c);
+		}
 
 //-----------------------------------------------------------
 		c.gridwidth = 2;
@@ -628,10 +632,14 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c.weightx = 1;
 		c.anchor = GridBagConstraints.NORTHWEST;
 		c.gridy = 8;
-		if(m_bIsSimpleView)
+		if (m_bIsSimpleView)
+		{
 			northPanel.add(m_flippingpanelOwnTraffic.getSmallPanel(), c);
+		}
 		else
-northPanel.add(m_flippingpanelOwnTraffic, c);
+		{
+			northPanel.add(m_flippingpanelOwnTraffic, c);
+		}
 
 //-----------------------------------------------------------
 		c.gridwidth = 2;
@@ -647,17 +655,18 @@ northPanel.add(m_flippingpanelOwnTraffic, c);
 		c.anchor = GridBagConstraints.NORTHWEST;
 		c.gridy = 10;
 		m_flippingpanelForward = buildForwarderPanel();
-	if(!m_bIsSimpleView)
-	{
-		northPanel.add(m_flippingpanelForward, c);
+		if (!m_bIsSimpleView)
+		{
+			northPanel.add(m_flippingpanelForward, c);
 
 //-----------------------------------------------------------
-		c.gridwidth = 2;
-		c.gridx = 0;
-		c.gridy = 11;
-		c.fill = GridBagConstraints.HORIZONTAL;
-		c.weightx = 1;
-		northPanel.add(new JSeparator(), c);}
+			c.gridwidth = 2;
+			c.gridx = 0;
+			c.gridy = 11;
+			c.fill = GridBagConstraints.HORIZONTAL;
+			c.weightx = 1;
+			northPanel.add(new JSeparator(), c);
+		}
 //Status
 		c.gridy = 12;
 		m_StatusPanel = new StatusPanel();
@@ -778,18 +787,19 @@ northPanel.add(m_flippingpanelOwnTraffic, c);
 		{
 			JAPModel m = JAPModel.getInstance();
 			Dimension ds = Toolkit.getDefaultToolkit().getScreenSize();
-			if (m.m_OldMainWindowLocation != null && m.m_OldMainWindowLocation.x >= 0 &&
-				m.m_OldMainWindowLocation.y > 0 /*&&m.m_OldMainWindowLocation.x<ds.width&&
-						 m.m_OldMainWindowLocation.y<ds.height*/
+			Point oldLocation = m.getOldMainWindowLocation();
+			if (oldLocation != null && oldLocation.x >= 0 &&
+				oldLocation.y >= 0 /*&&m.m_OldMainWindowLocation.x<ds.width&&
+					   m.m_OldMainWindowLocation.y<ds.height*/
 				)
 			{
-				setLocation(m.m_OldMainWindowLocation);
+				setLocation(oldLocation);
 			}
-			if (m.m_OldMainWindowSize != null && m.m_OldMainWindowSize.height > 0 &&
-				m.m_OldMainWindowSize.width > 0)
-			{
-				setSize(m.m_OldMainWindowSize);
-			}
+			/*		if (m.m_OldMainWindowSize != null && m.m_OldMainWindowSize.height > 0 &&
+			   m.m_OldMainWindowSize.width > 0)
+			  {
+			   setSize(m.m_OldMainWindowSize);
+			  }*/
 		}
 	}
 
@@ -1526,7 +1536,8 @@ northPanel.add(m_flippingpanelOwnTraffic, c);
 			Cursor c = getCursor();
 			setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 			m_dlgConfig = new JAPConf(this, m_bWithPayment);
-			m_dlgConfig.addComponentListener(new ComponentListener(){
+			m_dlgConfig.addComponentListener(new ComponentListener()
+			{
 				public void componentResized(ComponentEvent e)
 				{
 				}

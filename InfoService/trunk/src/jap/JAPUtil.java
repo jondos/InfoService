@@ -422,7 +422,7 @@ final public class JAPUtil
 	}
 
 	/** Shows a file open dialog and tries to read a certificate. Returns null, if the user canceld
-	 * the open request. Throws IOException if certificte could not be readed or decoded.
+	 * the open request. Throws IOException if certificate could not be readed or decoded.
 	 */
 
 	public static JAPCertificate openCertificate(Window jf) throws IOException
