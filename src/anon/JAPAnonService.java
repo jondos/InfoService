@@ -266,7 +266,12 @@ public final class JAPAnonService implements Runnable
 									{
 										continue;
 									}
-								m_MuxSocket.newConnection(new JAPSocket(socket),m_Protocol);
+								//2001-04-04(HF)
+								try {
+									m_MuxSocket.newConnection(new JAPSocket(socket),m_Protocol);
+								} catch(Exception e) {
+									JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPAnonService.run() Exception: " +e);
+								}
 							}
 					}
 				catch (Exception e)
