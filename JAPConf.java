@@ -29,17 +29,30 @@ import java.util.Enumeration;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Locale;
-import java.awt.*;
+
+import java.awt.BorderLayout;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
+import java.awt.Insets;
+
 import java.awt.event.*;
+
 import javax.swing.*;
+
 import javax.swing.UIManager.LookAndFeelInfo;
-import javax.swing.border.*;
+
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.TitledBorder;
+
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 final class JAPConf extends JDialog
 	{
-	private JAPModel model;
 
 	final static public int PORT_TAB = 0;
 	final static public int HTTP_TAB = 1;
@@ -47,72 +60,84 @@ final class JAPConf extends JDialog
 	final static public int ANON_TAB = 3;
 	final static public int MISC_TAB = 4;
 
-	private JCheckBox    guiChB;
-	private JCheckBox    netChB;
-	private JCheckBox    threadChB;
-	private JCheckBox    miscChB;
-	private JCheckBox    checkboxShowDebugConsole;
-	//private JAPJIntField debugLevelTextField;
-	private JSlider				sliderDebugLevel;
-	private JAPJIntField	portnumberTextField;
-	private JAPJIntField	portnumberTextFieldSocks;
-	private JCheckBox			proxyCheckBox;
-	private JCheckBox			listenerCheckBoxSocks;
-	private JCheckBox			listenerCheckBoxIsLocal;
-	private JAPJIntField	proxyportnumberTextField;
-	private JTextField		proxyhostTextField;
-	private JCheckBox			proxyAuthenticationCheckBox;
-	private JTextField		proxyAuthenticationUserID;
-	private JCheckBox			autoConnectCheckBox;
-	private JCheckBox			startupMinimizeCheckBox;
-	private JAPJIntField	anonportnumberTextField;
-	private JAPJIntField	anonsslportnumberTextField;
-	private String				anonServerName,oldAnonServerName;
-	private JTextField		anonhostTextField;
-	private JAPJIntField	infoportnumberTextField;
-	private JTextField		infohostTextField;
-	private JRadioButton	b1,b2,b3;
-	private JButton				fetchB;
-	private JComboBox			select;
-	private JComboBox			comboLanguage;
-	private boolean				bIgnoreComboLanguageEvents=false;
-	private JTabbedPane		tabs;
-	private JPanel				portP, httpP, infoP, anonP, miscP;
+	private JAPModel      m_Model;
 
-	private JFrame  parent;
-	private JAPConf japconf;
+	private JAPJIntField	m_tfListenerPortNumber;
+	private JAPJIntField	m_tfListenerPortNumberSocks;
+	private JCheckBox			m_cbListenerSocks;
+	private JCheckBox			m_cbListenerIsLocal;
 
-	public JAPConf (JFrame f)
+	private JCheckBox			m_cbProxy;
+	private JAPJIntField	m_tfProxyPortNumber;
+	private JTextField		m_tfProxyHost;
+	private JCheckBox			m_cbProxyAuthentication;
+	private JTextField		m_tfProxyAuthenticationUserID;
+
+	private JCheckBox			m_cbAutoConnect;
+	private JCheckBox			m_cbStartupMinimized;
+
+	private JAPJIntField	m_tfMixPortNumber;
+	private JAPJIntField	m_tfMixPortNumberSSL;
+	private JTextField		m_tfMixHost;
+	private String				m_strMixName,m_strOldMixName;
+	private JComboBox			m_comboMixCascade;
+	private JRadioButton	m_rbMixStep1,m_rbMixStep2,m_rbMixStep3;
+	private JButton				m_bttnFetchCascades;
+
+	private JAPJIntField	m_tfInfoPortNumber;
+	private JTextField		m_tfInfoHost;
+
+	private JCheckBox     m_cbDebugGui;
+	private JCheckBox     m_cbDebugNet;
+	private JCheckBox     m_cbDebugThread;
+	private JCheckBox     m_cbDebugMisc;
+	private JCheckBox     m_cbShowDebugConsole;
+	private JSlider				m_sliderDebugLevel;
+
+	private JComboBox			m_comboLanguage;
+	private boolean				m_bIgnoreComboLanguageEvents=false;
+
+	private JTabbedPane		m_Tabs;
+	private JPanel				m_pPort, m_pFirewall, m_pInfo, m_pMix, m_pMisc;
+
+	private JFrame        m_frmParent;
+
+	private JAPConf       m_JapConf;
+
+	public JAPConf (JFrame frmParent)
 			{
-				super(f);
-				parent=f;
-				model = JAPModel.getModel();
+				super(frmParent);
+				m_frmParent=frmParent;
+				m_Model = JAPModel.getModel();
 				this.setModal(true);
-				this.setTitle(model.getString("settingsDialog"));
-				japconf=this;
-				JPanel container = new JPanel();
-				container.setLayout( new BorderLayout() );
-				tabs = new JTabbedPane();
-				portP = buildportPanel();
-				httpP = buildhttpPanel();
-				infoP = buildinfoPanel();
-				anonP = buildanonPanel();
-				miscP = buildmiscPanel();
-				tabs.addTab( model.getString("confListenerTab"), null, portP );
-				tabs.addTab( model.getString("confProxyTab"), null, httpP );
-				tabs.addTab( model.getString("confInfoTab"), null, infoP );
-				tabs.addTab( model.getString("confAnonTab"), null, anonP );
-				tabs.addTab( model.getString("confMiscTab"), null, miscP );
+				this.setTitle(m_Model.getString("settingsDialog"));
+				m_JapConf=this;
+				JPanel pContainer = new JPanel();
+				pContainer.setLayout( new BorderLayout() );
+				m_Tabs = new JTabbedPane();
+				m_pPort = buildportPanel();
+				m_pFirewall = buildhttpPanel();
+				m_pInfo = buildinfoPanel();
+				m_pMix = buildanonPanel();
+				m_pMisc = buildmiscPanel();
+				m_Tabs.addTab( m_Model.getString("confListenerTab"), null, m_pPort );
+				m_Tabs.addTab( m_Model.getString("confProxyTab"), null, m_pFirewall );
+				m_Tabs.addTab( m_Model.getString("confInfoTab"), null, m_pInfo );
+				m_Tabs.addTab( m_Model.getString("confAnonTab"), null, m_pMix );
+				m_Tabs.addTab( m_Model.getString("confMiscTab"), null, m_pMisc );
 
 				JPanel buttonPanel = new JPanel();
 				buttonPanel.setLayout ( new FlowLayout(FlowLayout.RIGHT) );
-				JButton cancel = new JButton(model.getString("cancelButton"));
-				cancel.addActionListener(new ActionListener() {
-						   public void actionPerformed(ActionEvent e) {
-				   CancelPressed();
-				   }});
-				buttonPanel.add( cancel );
-				JButton ok = new JButton(model.getString("okButton"));
+				JButton bttnCancel = new JButton(m_Model.getString("cancelButton"));
+				bttnCancel.addActionListener(new ActionListener()
+					{
+						public void actionPerformed(ActionEvent e)
+							{
+							  CancelPressed();
+							}
+					});
+				buttonPanel.add(bttnCancel );
+				JButton ok = new JButton(m_Model.getString("okButton"));
 				ok.addActionListener(new ActionListener() {
 						   public void actionPerformed(ActionEvent e) {
 				   OKPressed();
@@ -121,13 +146,13 @@ final class JAPConf extends JDialog
 				buttonPanel.add(new JLabel("   "));
 				getRootPane().setDefaultButton(ok);
 
-				container.add(tabs, BorderLayout.CENTER);
-				container.add(buttonPanel, BorderLayout.SOUTH);
-//				container.add(new JLabel(new ImageIcon(model.JAPICONFN)), BorderLayout.WEST);
-				getContentPane().add(container);
+				pContainer.add(m_Tabs, BorderLayout.CENTER);
+				pContainer.add(buttonPanel, BorderLayout.SOUTH);
+//				container.add(new JLabel(new ImageIcon(m_Model.JAPICONFN)), BorderLayout.WEST);
+				getContentPane().add(pContainer);
 				updateValues();
 				// largest tab to front
-				tabs.setSelectedComponent(anonP);
+				m_Tabs.setSelectedComponent(m_pMix);
 				pack();
 //				setResizable(false);
 				JAPUtil.centerFrame(this);
@@ -135,39 +160,39 @@ final class JAPConf extends JDialog
 
 		protected JPanel buildportPanel()
 			{
-				JLabel portnumberLabel1 = new JLabel(model.getString("settingsPort1"));
-				JLabel portnumberLabel2 = new JLabel(model.getString("settingsPort2"));
-				portnumberTextField = new JAPJIntField();
-				portnumberTextField.addActionListener(new ActionListener() {
+				JLabel portnumberLabel1 = new JLabel(m_Model.getString("settingsPort1"));
+				JLabel portnumberLabel2 = new JLabel(m_Model.getString("settingsPort2"));
+				m_tfListenerPortNumber = new JAPJIntField();
+				m_tfListenerPortNumber.addActionListener(new ActionListener() {
 						   public void actionPerformed(ActionEvent e) {
 				   OKPressed();
 				   }});
-				listenerCheckBoxIsLocal = new JCheckBox(model.getString("settingsListenerCheckBox"));
+				m_cbListenerIsLocal = new JCheckBox(m_Model.getString("settingsListenerCheckBox"));
 				// set Font in listenerCheckBox in same color as in portnumberLabel1
-				listenerCheckBoxIsLocal.setForeground(portnumberLabel1.getForeground());
+				m_cbListenerIsLocal.setForeground(portnumberLabel1.getForeground());
 
-				listenerCheckBoxSocks=new JCheckBox(model.getString("settingsListenerCheckBoxSOCKS"));
-				listenerCheckBoxSocks.setForeground(portnumberLabel1.getForeground());
-				listenerCheckBoxSocks.addChangeListener(new ChangeListener(){
+				m_cbListenerSocks=new JCheckBox(m_Model.getString("settingsListenerCheckBoxSOCKS"));
+				m_cbListenerSocks.setForeground(portnumberLabel1.getForeground());
+				m_cbListenerSocks.addChangeListener(new ChangeListener(){
 					public void stateChanged(ChangeEvent e)
 						{
-							if(listenerCheckBoxSocks.isSelected())
+							if(m_cbListenerSocks.isSelected())
 								{
-									portnumberTextFieldSocks.setEnabled(true);
+									m_tfListenerPortNumberSocks.setEnabled(true);
 								}
 							else
 								{
-									portnumberTextFieldSocks.setEnabled(false);
+									m_tfListenerPortNumberSocks.setEnabled(false);
 								}
 					}});
-				portnumberTextFieldSocks = new JAPJIntField();
-				portnumberTextFieldSocks.addActionListener(new ActionListener() {
+				m_tfListenerPortNumberSocks = new JAPJIntField();
+				m_tfListenerPortNumberSocks.addActionListener(new ActionListener() {
 						   public void actionPerformed(ActionEvent e) {
 				   OKPressed();
 				   }});
 				JPanel p = new JPanel();
 				p.setLayout( new BorderLayout() );
-				p.setBorder( new TitledBorder(model.getString("settingsListenerBorder")) );
+				p.setBorder( new TitledBorder(m_Model.getString("settingsListenerBorder")) );
 				JPanel p1 = new JPanel();
 				GridBagLayout g=new GridBagLayout();
 				p1.setLayout( g );
@@ -188,8 +213,8 @@ final class JAPConf extends JDialog
 				g.setConstraints(portnumberLabel2,c);
 				p1.add(portnumberLabel2);
 				c.gridy=2;
-				g.setConstraints(portnumberTextField,c);
-				p1.add(portnumberTextField);
+				g.setConstraints(m_tfListenerPortNumber,c);
+				p1.add(m_tfListenerPortNumber);
 				JSeparator seperator=new JSeparator();
 				c.gridy=3;
 				c.insets=new Insets(10,0,0,0);
@@ -198,11 +223,11 @@ final class JAPConf extends JDialog
 				c.insets=normInsets;
 				c.gridy=4;
 				c.insets=new Insets(10,0,0,0);
-				g.setConstraints(listenerCheckBoxSocks,c);
-				p1.add(listenerCheckBoxSocks);
+				g.setConstraints(m_cbListenerSocks,c);
+				p1.add(m_cbListenerSocks);
 				c.gridy=5;
-				g.setConstraints(portnumberTextFieldSocks,c);
-				p1.add(portnumberTextFieldSocks);
+				g.setConstraints(m_tfListenerPortNumberSocks,c);
+				p1.add(m_tfListenerPortNumberSocks);
 				c.gridy=6;
 				JSeparator seperator2=new JSeparator();
 				c.insets=new Insets(10,0,0,0);
@@ -210,90 +235,90 @@ final class JAPConf extends JDialog
 				p1.add(seperator2);
 				c.gridy=7;
 				c.insets=new Insets(10,0,0,0);
-				g.setConstraints(listenerCheckBoxIsLocal,c);
-				p1.add(listenerCheckBoxIsLocal);
+				g.setConstraints(m_cbListenerIsLocal,c);
+				p1.add(m_cbListenerIsLocal);
 				p.add(p1, BorderLayout.NORTH);
 				return p;
 			}
 
 	protected JPanel buildhttpPanel()
 			{
-				proxyCheckBox = new JCheckBox(model.getString("settingsProxyCheckBox"));
-				proxyhostTextField = new JTextField();
-				proxyportnumberTextField = new JAPJIntField();
-				proxyhostTextField.setEnabled(model.getUseFirewall());
-				proxyportnumberTextField.setEnabled(model.getUseFirewall());
-				proxyCheckBox.addActionListener(new ActionListener() {
+				m_cbProxy = new JCheckBox(m_Model.getString("settingsProxyCheckBox"));
+				m_tfProxyHost = new JTextField();
+				m_tfProxyPortNumber = new JAPJIntField();
+				m_tfProxyHost.setEnabled(m_Model.getUseFirewall());
+				m_tfProxyPortNumber.setEnabled(m_Model.getUseFirewall());
+				m_cbProxy.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
-						boolean b=proxyCheckBox.isSelected();
-						proxyhostTextField.setEnabled(b);
-						proxyportnumberTextField.setEnabled(b);
-						proxyAuthenticationCheckBox.setEnabled(b);
-						proxyAuthenticationUserID.setEnabled(b);
+						boolean b=m_cbProxy.isSelected();
+						m_tfProxyHost.setEnabled(b);
+						m_tfProxyPortNumber.setEnabled(b);
+						m_cbProxyAuthentication.setEnabled(b);
+						m_tfProxyAuthenticationUserID.setEnabled(b);
 				}});
-				proxyhostTextField.addActionListener(new ActionListener() {
+				m_tfProxyHost.addActionListener(new ActionListener() {
 						   public void actionPerformed(ActionEvent e) {
 				   OKPressed();
 				   }});
-				proxyportnumberTextField.addActionListener(new ActionListener() {
+				m_tfProxyPortNumber.addActionListener(new ActionListener() {
 						   public void actionPerformed(ActionEvent e) {
 				   OKPressed();
 				   }});
-				proxyAuthenticationCheckBox=new JCheckBox(model.getString("settingsProxyAuthenticationCheckBox"));
-				proxyAuthenticationUserID=new JTextField();
+				m_cbProxyAuthentication=new JCheckBox(m_Model.getString("settingsProxyAuthenticationCheckBox"));
+				m_tfProxyAuthenticationUserID=new JTextField();
 
-				proxyAuthenticationCheckBox.addActionListener(new ActionListener() {
+				m_cbProxyAuthentication.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
-						proxyAuthenticationUserID.setEnabled(proxyAuthenticationCheckBox.isSelected());
+						m_tfProxyAuthenticationUserID.setEnabled(m_cbProxyAuthentication.isSelected());
 				}});
 
 
 				JPanel p = new JPanel();
 				p.setLayout( new BorderLayout() );
-				p.setBorder( new TitledBorder(model.getString("settingsProxyBorder")) );
+				p.setBorder( new TitledBorder(m_Model.getString("settingsProxyBorder")) );
 				JPanel p1 = new JPanel();
 				p1.setLayout( new GridLayout(7,1) );
 				p1.setBorder( new EmptyBorder(5,10,10,10) );
-				p1.add(proxyCheckBox);
-				p1.add(proxyhostTextField);
-				JLabel proxyPortLabel = new JLabel(model.getString("settingsProxyPort"));
-				// set Font in proxyCheckBox in same color as in proxyPortLabel
-				proxyCheckBox.setForeground(proxyPortLabel.getForeground());
-				proxyAuthenticationCheckBox.setForeground(proxyPortLabel.getForeground());
+				p1.add(m_cbProxy);
+				p1.add(m_tfProxyHost);
+				JLabel proxyPortLabel = new JLabel(m_Model.getString("settingsProxyPort"));
+				// set Font in m_cbProxy in same color as in proxyPortLabel
+				m_cbProxy.setForeground(proxyPortLabel.getForeground());
+				m_cbProxyAuthentication.setForeground(proxyPortLabel.getForeground());
 				p1.add(proxyPortLabel);
-				p1.add(proxyportnumberTextField);
-				p1.add(proxyAuthenticationCheckBox);
+				p1.add(m_tfProxyPortNumber);
+				p1.add(m_cbProxyAuthentication);
 				p1.add(new JLabel(JAPMessages.getString("settingsProxyAuthUserID")));
-				p1.add(proxyAuthenticationUserID);
+				p1.add(m_tfProxyAuthenticationUserID);
 				p.add(p1, BorderLayout.NORTH);
 				return p;
 			}
 
 	protected JPanel buildinfoPanel() {
-				infohostTextField = new JTextField();
-				infoportnumberTextField = new JAPJIntField();
-				infohostTextField.addActionListener(new ActionListener() {
+				m_tfInfoHost = new JTextField();
+				m_tfInfoPortNumber = new JAPJIntField();
+				m_tfInfoHost.addActionListener(new ActionListener() {
 									   public void actionPerformed(ActionEvent e) {
 							   OKPressed();
 							   }});
-				infoportnumberTextField.addActionListener(new ActionListener() {
+				m_tfInfoPortNumber.addActionListener(new ActionListener() {
 									   public void actionPerformed(ActionEvent e) {
 							   OKPressed();
 							   }});
 				// InfoServer settings
 				JPanel p = new JPanel();
 				p.setLayout( new BorderLayout() );
-				p.setBorder( new TitledBorder(model.getString("settingsInfoBorder")) );
+				p.setBorder( new TitledBorder(m_Model.getString("settingsInfoBorder")) );
 				JPanel p1 = new JPanel();
 				p1.setLayout( new GridLayout(5,1) );
 				p1.setBorder( new EmptyBorder(5,10,10,10) );
 				// lines
-				p1.add(new JLabel(model.getString("settingsInfoText")));
+				p1.add(new JLabel(m_Model.getString("settingsInfoText")));
 				//p1.add(new JLabel(" ")); //vertical spacer
-				p1.add(new JLabel(model.getString("settingsInfoHost")));
-				p1.add(infohostTextField);
-				p1.add(new JLabel(model.getString("settingsInfoPort")));
-				p1.add(infoportnumberTextField);
+				p1.add(new JLabel(m_Model.getString("settingsInfoHost")));
+				p1.add(m_tfInfoHost);
+				p1.add(new JLabel(m_Model.getString("settingsInfoPort")));
+				p1.add(m_tfInfoPortNumber);
 				//
 				p.add(p1, BorderLayout.NORTH);
 				return p;
@@ -301,117 +326,117 @@ final class JAPConf extends JDialog
 
 	protected JPanel buildanonPanel()
 			{
-				startupMinimizeCheckBox=new JCheckBox(model.getString("settingsstartupMinimizeCheckBox"));
-				autoConnectCheckBox = new JCheckBox(model.getString("settingsautoConnectCheckBox"));
-				anonhostTextField = new JTextField();
-				anonportnumberTextField = new JAPJIntField();
-				anonsslportnumberTextField = new JAPJIntField();
-				anonhostTextField.setEditable(false);
-				anonportnumberTextField.setEditable(false);
-				anonsslportnumberTextField.setEditable(false);
-				anonhostTextField.addActionListener(new ActionListener() {
+				m_cbStartupMinimized=new JCheckBox(m_Model.getString("settingsstartupMinimizeCheckBox"));
+				m_cbAutoConnect = new JCheckBox(m_Model.getString("settingsautoConnectCheckBox"));
+				m_tfMixHost = new JTextField();
+				m_tfMixPortNumber = new JAPJIntField();
+				m_tfMixPortNumberSSL = new JAPJIntField();
+				m_tfMixHost.setEditable(false);
+				m_tfMixPortNumber.setEditable(false);
+				m_tfMixPortNumberSSL.setEditable(false);
+				m_tfMixHost.addActionListener(new ActionListener() {
 									   public void actionPerformed(ActionEvent e) {
 							   OKPressed();
 							   }});
-				anonportnumberTextField.addActionListener(new ActionListener() {
+				m_tfMixPortNumber.addActionListener(new ActionListener() {
 									   public void actionPerformed(ActionEvent e) {
 							   OKPressed();
 							   }});
-				anonsslportnumberTextField.addActionListener(new ActionListener() {
+				m_tfMixPortNumberSSL.addActionListener(new ActionListener() {
 									   public void actionPerformed(ActionEvent e) {
 							   OKPressed();
 							   }});
 				ButtonGroup bg = new ButtonGroup();
-				b1 = new JRadioButton(model.getString("settingsAnonRadio1"), true);
-				b2 = new JRadioButton(model.getString("settingsAnonRadio2"));
-				b3 = new JRadioButton(model.getString("settingsAnonRadio3"));
-				fetchB = new JButton(model.getString("settingsAnonFetch"));
-				fetchB.addActionListener(new ActionListener() {
+				m_rbMixStep1 = new JRadioButton(m_Model.getString("settingsAnonRadio1"), true);
+				m_rbMixStep2 = new JRadioButton(m_Model.getString("settingsAnonRadio2"));
+				m_rbMixStep3 = new JRadioButton(m_Model.getString("settingsAnonRadio3"));
+				m_bttnFetchCascades = new JButton(m_Model.getString("settingsAnonFetch"));
+				m_bttnFetchCascades.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
-					JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPConf:fetchB");
-//						JOptionPane.showMessageDialog(null,model.getString("notYetImlmplemented"));
+					JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPConf:m_bttnFetchCascades");
+//						JOptionPane.showMessageDialog(null,m_Model.getString("notYetImlmplemented"));
 						// fetch available mix cascades from the Internet
 						Cursor c=getCursor();
 						setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-						model.fetchAnonServers();
-						if (model.anonServerDatabase.size() == 0) {
+						m_Model.fetchAnonServers();
+						if (m_Model.anonServerDatabase.size() == 0) {
 							setCursor(c);
-							JOptionPane.showMessageDialog(model.getView(),
-											model.getString("settingsNoServersAvailable"),
-											model.getString("settingsNoServersAvailableTitle"),
+							JOptionPane.showMessageDialog(m_Model.getView(),
+											m_Model.getString("settingsNoServersAvailable"),
+											m_Model.getString("settingsNoServersAvailableTitle"),
 											JOptionPane.INFORMATION_MESSAGE);
 						} else {
 							// show a window containing all available cascades
-							//JAPCascadeMonitorView v=new JAPCascadeMonitorView(model.getView());
+							//JAPCascadeMonitorView v=new JAPCascadeMonitorView(m_Model.getView());
 							// ------ !!!!! die folgenden zwei zeilen auskommentieren, wenn JAPCascadeMonitorView
 							// ------ !!!!! ordentlich geht!!!!
 							updateValues();
-							b2.doClick();
+							m_rbMixStep2.doClick();
 
 							setCursor(c);
 						}
 						// ------ !!!!! diese wieder aktivieren!
 						//OKPressed();
 				}});
-				select = new JComboBox();
+				m_comboMixCascade = new JComboBox();
 				// add elements to combobox
-				select.addItem(model.getString("settingsAnonSelect"));
-				Enumeration enum = model.anonServerDatabase.elements();
+				m_comboMixCascade.addItem(m_Model.getString("settingsAnonSelect"));
+				Enumeration enum = m_Model.anonServerDatabase.elements();
 				while (enum.hasMoreElements())
 					{
-						select.addItem( ((AnonServerDBEntry)enum.nextElement()).getName() );
+						m_comboMixCascade.addItem( ((AnonServerDBEntry)enum.nextElement()).getName() );
 					}
 
-				select.setEnabled(false);
-				select.addActionListener(new ActionListener() {
+				m_comboMixCascade.setEnabled(false);
+				m_comboMixCascade.addActionListener(new ActionListener() {
 							public void actionPerformed(ActionEvent e) {
-						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPConf:Item " + select.getSelectedIndex() + " selected");
-						if (select.getSelectedIndex() > 0) {
-							anonServerName = ((AnonServerDBEntry)model.anonServerDatabase.elementAt(select.getSelectedIndex()-1)).getName();
-							oldAnonServerName = anonServerName;
-							anonhostTextField.setText(
-							   ((AnonServerDBEntry)model.anonServerDatabase.elementAt(select.getSelectedIndex()-1)).getHost()   );
-							anonportnumberTextField.setText( String.valueOf(
-							   ((AnonServerDBEntry)model.anonServerDatabase.elementAt(select.getSelectedIndex()-1)).getPort() ) );
-							int i = ((AnonServerDBEntry)model.anonServerDatabase.elementAt(select.getSelectedIndex()-1)).getSSLPort();
+						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPConf:Item " + m_comboMixCascade.getSelectedIndex() + " selected");
+						if (m_comboMixCascade.getSelectedIndex() > 0) {
+							m_strMixName = ((AnonServerDBEntry)m_Model.anonServerDatabase.elementAt(m_comboMixCascade.getSelectedIndex()-1)).getName();
+							m_strOldMixName = m_strMixName;
+							m_tfMixHost.setText(
+							   ((AnonServerDBEntry)m_Model.anonServerDatabase.elementAt(m_comboMixCascade.getSelectedIndex()-1)).getHost()   );
+							m_tfMixPortNumber.setText( String.valueOf(
+							   ((AnonServerDBEntry)m_Model.anonServerDatabase.elementAt(m_comboMixCascade.getSelectedIndex()-1)).getPort() ) );
+							int i = ((AnonServerDBEntry)m_Model.anonServerDatabase.elementAt(m_comboMixCascade.getSelectedIndex()-1)).getSSLPort();
 							if (i == -1)
-								anonsslportnumberTextField.setText("");
+								m_tfMixPortNumberSSL.setText("");
 							else
-								anonsslportnumberTextField.setText( String.valueOf(i) );
+								m_tfMixPortNumberSSL.setText( String.valueOf(i) );
 						}
 				}});
-				bg.add(b1);
-				bg.add(b2);
-				bg.add(b3);
-				b1.addActionListener(new ActionListener() {
+				bg.add(m_rbMixStep1);
+				bg.add(m_rbMixStep2);
+				bg.add(m_rbMixStep3);
+				m_rbMixStep1.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
-						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPConf:b1 selected");
-						fetchB.setEnabled(true);
-						select.setEnabled(false);
-						anonhostTextField.setEditable(false);
-						anonportnumberTextField.setEditable(false);
-						anonsslportnumberTextField.setEditable(false);
+						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPConf:m_rbMixStep1 selected");
+						m_bttnFetchCascades.setEnabled(true);
+						m_comboMixCascade.setEnabled(false);
+						m_tfMixHost.setEditable(false);
+						m_tfMixPortNumber.setEditable(false);
+						m_tfMixPortNumberSSL.setEditable(false);
 				}});
-				b2.addActionListener(new ActionListener() {
+				m_rbMixStep2.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
-						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPConf:b2 selected");
-						fetchB.setEnabled(false);
-						select.setEnabled(true);
-						select.setPopupVisible(true);
-						anonhostTextField.setEditable(false);
-						anonportnumberTextField.setEditable(false);
-						anonsslportnumberTextField.setEditable(false);
+						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPConf:m_rbMixStep2 selected");
+						m_bttnFetchCascades.setEnabled(false);
+						m_comboMixCascade.setEnabled(true);
+						m_comboMixCascade.setPopupVisible(true);
+						m_tfMixHost.setEditable(false);
+						m_tfMixPortNumber.setEditable(false);
+						m_tfMixPortNumberSSL.setEditable(false);
 
 				}});
-				b3.addActionListener(new ActionListener() {
+				m_rbMixStep3.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
-						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPConf:b3 selected");
-						fetchB.setEnabled(false);
-						select.setEnabled(false);
-						anonhostTextField.setEditable(true);
-						anonportnumberTextField.setEditable(true);
-						anonsslportnumberTextField.setEditable(true);
-						anonServerName = model.getString("manual");
+						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPConf:m_rbMixStep3 selected");
+						m_bttnFetchCascades.setEnabled(false);
+						m_comboMixCascade.setEnabled(false);
+						m_tfMixHost.setEditable(true);
+						m_tfMixPortNumber.setEditable(true);
+						m_tfMixPortNumberSSL.setEditable(true);
+						m_strMixName = m_Model.getString("manual");
 				}});
 
 				// layout stuff
@@ -420,11 +445,11 @@ final class JAPConf extends JDialog
 				// Upper panel
 				JPanel pp1 = new JPanel();
 				pp1.setLayout( new BorderLayout() );
-				pp1.setBorder( new TitledBorder(model.getString("settingsAnonBorder")) );
+				pp1.setBorder( new TitledBorder(m_Model.getString("settingsAnonBorder")) );
 				// Lower panel
 				JPanel pp2 = new JPanel();
 				pp2.setLayout( new BorderLayout() );
-				pp2.setBorder( new TitledBorder(model.getString("settingsAnonBorder2")) );
+				pp2.setBorder( new TitledBorder(m_Model.getString("settingsAnonBorder2")) );
 				// Upper panel content
 				JPanel p1 = new JPanel();
 				p1.setLayout( new GridLayout(2,1) );
@@ -432,34 +457,34 @@ final class JAPConf extends JDialog
 				// 1
 				JPanel p11 = new JPanel();
 				p11.setLayout(new BoxLayout(p11, BoxLayout.X_AXIS));
-				p11.add(b1);
+				p11.add(m_rbMixStep1);
 				p11.add(Box.createRigidArea(new Dimension(5,0)) );
 				p11.add(Box.createHorizontalGlue() );
-				p11.add(fetchB);
+				p11.add(m_bttnFetchCascades);
 				p1.add(p11);
 				// 2
 				JPanel p12 = new JPanel();
 				p12.setLayout(new BoxLayout(p12, BoxLayout.X_AXIS));
-				p12.add(b2);
+				p12.add(m_rbMixStep2);
 				p12.add(Box.createRigidArea(new Dimension(5,0)) );
 				p12.add(Box.createHorizontalGlue() );
-				p12.add(select);
+				p12.add(m_comboMixCascade);
 				p1.add(p12);
 				// Lower Panel content
 				JPanel p2 = new JPanel();
 				p2.setLayout( new GridLayout(8,1) );
 				//p1.setBorder( new EmptyBorder(5,10,10,10) );
 				//
-				p2.add(b3);
-				p2.add(new JLabel(model.getString("settingsAnonHost")));
-				p2.add(anonhostTextField);
-				p2.add(new JLabel(model.getString("settingsAnonPort")));
-				p2.add(anonportnumberTextField);
-				p2.add(new JLabel(model.getString("settingsAnonSSLPort")));
-				p2.add(anonsslportnumberTextField);
+				p2.add(m_rbMixStep3);
+				p2.add(new JLabel(m_Model.getString("settingsAnonHost")));
+				p2.add(m_tfMixHost);
+				p2.add(new JLabel(m_Model.getString("settingsAnonPort")));
+				p2.add(m_tfMixPortNumber);
+				p2.add(new JLabel(m_Model.getString("settingsAnonSSLPort")));
+				p2.add(m_tfMixPortNumberSSL);
 				//
-				p2.add(autoConnectCheckBox);
-				//p2.add(startupMinimizeCheckBox);
+				p2.add(m_cbAutoConnect);
+				//p2.add(m_cbStartupMinimized);
 				// Add contents to upper and lower panel
 				pp1.add(p1);
 				pp2.add(p2);
@@ -477,8 +502,8 @@ final class JAPConf extends JDialog
 				// Panel for Look and Feel Options
 				JPanel p1=new JPanel();
 				p1.setLayout(new GridLayout(2,2));
-				p1.setBorder( new TitledBorder(model.getString("settingsLookAndFeelBorder")) );
-				p1.add(new JLabel(model.getString("settingsLookAndFeel")));
+				p1.setBorder( new TitledBorder(m_Model.getString("settingsLookAndFeelBorder")) );
+				p1.add(new JLabel(m_Model.getString("settingsLookAndFeel")));
 				JComboBox c=new JComboBox();
 				// not yet implemented, or doesn't work very well on my Mac --> disable it
 				c.setEnabled(false);
@@ -494,7 +519,7 @@ final class JAPConf extends JDialog
 								try
 									{
 										UIManager.setLookAndFeel(UIManager.getInstalledLookAndFeels()[((JComboBox)e.getItemSelectable()).getSelectedIndex()].getClassName());
-										SwingUtilities.updateComponentTreeUI(parent);
+										SwingUtilities.updateComponentTreeUI(m_frmParent);
 										SwingUtilities.updateComponentTreeUI(SwingUtilities.getRoot(((JComboBox)e.getItemSelectable())));
 									}
 								catch(Exception ie)
@@ -503,20 +528,20 @@ final class JAPConf extends JDialog
 							}
 					}});
 				p1.add(c);
-				p1.add(new JLabel(model.getString("settingsLanguage")));
-				comboLanguage=new JComboBox();
-				comboLanguage.addItem("Deutsch");
-				comboLanguage.addItem("English");
+				p1.add(new JLabel(m_Model.getString("settingsLanguage")));
+				m_comboLanguage=new JComboBox();
+				m_comboLanguage.addItem("Deutsch");
+				m_comboLanguage.addItem("English");
 				// yet implemented !!
 				//c.setEnabled(false);
-				comboLanguage.addItemListener(new ItemListener(){
+				m_comboLanguage.addItemListener(new ItemListener(){
 					public void itemStateChanged(ItemEvent e){
-						if(!bIgnoreComboLanguageEvents&&e.getStateChange()==e.SELECTED)
+						if(!m_bIgnoreComboLanguageEvents&&e.getStateChange()==e.SELECTED)
 							{
 								try
 									{
 
-										JOptionPane.showMessageDialog(japconf,JAPMessages.getString("confLanguageChanged"),JAPMessages.getString("information"),JOptionPane.INFORMATION_MESSAGE);
+										JOptionPane.showMessageDialog(m_JapConf,JAPMessages.getString("confLanguageChanged"),JAPMessages.getString("information"),JOptionPane.INFORMATION_MESSAGE);
 									}
 								catch(Exception ie)
 								{
@@ -524,38 +549,38 @@ final class JAPConf extends JDialog
 							}
 					}});
 
-				p1.add(comboLanguage);
+				p1.add(m_comboLanguage);
 
 				// Panel for Misc Options
 				JPanel p2=new JPanel();
 				p2.setLayout(new BorderLayout());
-				p2.setBorder( new TitledBorder(model.getString("miscconfigBorder")) );
-				JButton bttnPing=new JButton(model.getString("bttnPing"));
+				p2.setBorder( new TitledBorder(m_Model.getString("miscconfigBorder")) );
+				JButton bttnPing=new JButton(m_Model.getString("bttnPing"));
 				bttnPing.addActionListener(new ActionListener()
 					{
 						public void actionPerformed(ActionEvent e)
 							{
 								AnonServerDBEntry[] a=new AnonServerDBEntry[1];
-//								a[0]=new AnonServerDBEntry(model.anonHostName,model.anonHostName,model.anonPortNumber+1);
-								a[0]=new AnonServerDBEntry(model.getAnonServer().getHost(),model.getAnonServer().getHost(),model.getAnonServer().getPort()+1);
-								JAPRoundTripTimeView v=new JAPRoundTripTimeView(model.getView(),a);
+//								a[0]=new AnonServerDBEntry(m_Model.anonHostName,m_Model.anonHostName,m_Model.anonPortNumber+1);
+								a[0]=new AnonServerDBEntry(m_Model.getAnonServer().getHost(),m_Model.getAnonServer().getHost(),m_Model.getAnonServer().getPort()+1);
+								JAPRoundTripTimeView v=new JAPRoundTripTimeView(m_Model.getView(),a);
 //								v.show();
 							}
 					});
-				JButton bttnMonitor=new JButton(model.getString("bttnMonitor"));
+				JButton bttnMonitor=new JButton(m_Model.getString("bttnMonitor"));
 //				bttnMonitor.setEnabled(false);
 				bttnMonitor.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
 						Cursor c1=getCursor();
 						setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-						model.fetchAnonServers();
-						JAPCascadeMonitorView v=new JAPCascadeMonitorView(model.getView());
+						m_Model.fetchAnonServers();
+						JAPCascadeMonitorView v=new JAPCascadeMonitorView(m_Model.getView());
 						updateValues();
 						OKPressed();
 						setCursor(c1);
 
 				}});
-				JButton bttnDefaultConfig=new JButton(model.getString("bttnDefaultConfig"));
+				JButton bttnDefaultConfig=new JButton(m_Model.getString("bttnDefaultConfig"));
 //				bttnMonitor.setEnabled(false);
 				bttnDefaultConfig.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
@@ -573,32 +598,32 @@ final class JAPConf extends JDialog
 				p3.setLayout( new GridLayout(1,2));
 				p3.setBorder( new TitledBorder("Debugging") );
 				JPanel p31=new JPanel(new GridLayout(0,1));
-				guiChB = new JCheckBox("GUI");
-				netChB = new JCheckBox("NET");
-				threadChB = new JCheckBox("THREAD");
-				miscChB = new JCheckBox("MISC");
-				p31.add(guiChB);
-				p31.add(netChB);
-				p31.add(threadChB);
-				p31.add(miscChB);
+				m_cbDebugGui = new JCheckBox("GUI");
+				m_cbDebugNet = new JCheckBox("NET");
+				m_cbDebugThread = new JCheckBox("THREAD");
+				m_cbDebugMisc = new JCheckBox("MISC");
+				p31.add(m_cbDebugGui);
+				p31.add(m_cbDebugNet);
+				p31.add(m_cbDebugThread);
+				p31.add(m_cbDebugMisc);
 
-				checkboxShowDebugConsole=new JCheckBox("Show Console");
-				checkboxShowDebugConsole.setSelected(JAPDebug.isShowConsole());
-				checkboxShowDebugConsole.addItemListener(new ItemListener()
+				m_cbShowDebugConsole=new JCheckBox("Show Console");
+				m_cbShowDebugConsole.setSelected(JAPDebug.isShowConsole());
+				m_cbShowDebugConsole.addItemListener(new ItemListener()
 					{public void itemStateChanged(ItemEvent e)
 					 {
-						 JAPDebug.showConsole(e.getStateChange()==e.SELECTED,model.getView());
+						 JAPDebug.showConsole(e.getStateChange()==e.SELECTED,m_Model.getView());
 					}});
-				p31.add(checkboxShowDebugConsole);
+				p31.add(m_cbShowDebugConsole);
 
 				p3.add(p31);
 				JPanel p32=new JPanel();
-				sliderDebugLevel=new JSlider(JSlider.VERTICAL,0,7,0);
-				sliderDebugLevel.addChangeListener(new ChangeListener()
+				m_sliderDebugLevel=new JSlider(JSlider.VERTICAL,0,7,0);
+				m_sliderDebugLevel.addChangeListener(new ChangeListener()
 					{public void stateChanged(ChangeEvent e)
-					 {Dictionary d=sliderDebugLevel.getLabelTable();
+					 {Dictionary d=m_sliderDebugLevel.getLabelTable();
 						for(int i=0;i<8;i++)
-							((JLabel)d.get(new Integer(i))).setEnabled(i<=sliderDebugLevel.getValue());
+							((JLabel)d.get(new Integer(i))).setEnabled(i<=m_sliderDebugLevel.getValue());
 					}});
 				String debugLevels[]=JAPDebug.getDebugLevels();
 				Hashtable ht=new Hashtable(debugLevels.length,1.0f);
@@ -606,15 +631,15 @@ final class JAPConf extends JDialog
 					{
 						ht.put(new Integer(i),new JLabel(" "+debugLevels[i]));
 					}
-				sliderDebugLevel.setLabelTable(ht);
-				sliderDebugLevel.setPaintLabels(true);
-				sliderDebugLevel.setMajorTickSpacing(1);
-				sliderDebugLevel.setMinorTickSpacing(1);
-				sliderDebugLevel.setSnapToTicks(true);
-				sliderDebugLevel.setPaintTrack(true);
-				sliderDebugLevel.setPaintTicks(false);
+				m_sliderDebugLevel.setLabelTable(ht);
+				m_sliderDebugLevel.setPaintLabels(true);
+				m_sliderDebugLevel.setMajorTickSpacing(1);
+				m_sliderDebugLevel.setMinorTickSpacing(1);
+				m_sliderDebugLevel.setSnapToTicks(true);
+				m_sliderDebugLevel.setPaintTrack(true);
+				m_sliderDebugLevel.setPaintTicks(false);
 
-				p32.add(sliderDebugLevel);
+				p32.add(m_sliderDebugLevel);
 				p3.add(p32);
 
 				JPanel pp = new JPanel( new BorderLayout() );
@@ -636,7 +661,7 @@ final class JAPConf extends JDialog
 	 */
 	private void showError(String msg)
 		{
-			JOptionPane.showMessageDialog(this,msg,model.getString("ERROR"),JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(this,msg,m_Model.getString("ERROR"),JOptionPane.ERROR_MESSAGE);
 		}
 
 	/** Checks if all Input in all Fiels make sense. Displays InfoBoxes about what is wrong.
@@ -648,15 +673,15 @@ final class JAPConf extends JDialog
 			String s=null;
 			int iListenerPort,i;
 			//Checking InfoService (Host + Port)
-			s=infohostTextField.getText().trim();
+			s=m_tfInfoHost.getText().trim();
 			if(s==null||s.equals(""))
 				{
-					showError(model.getString("errorInfoServiceHostNotNull"));
+					showError(m_Model.getString("errorInfoServiceHostNotNull"));
 					return false;
 				}
 			try
 				{
-					i=Integer.parseInt(infoportnumberTextField.getText().trim());
+					i=Integer.parseInt(m_tfInfoPortNumber.getText().trim());
 				}
 			catch(Exception e)
 				{
@@ -664,20 +689,20 @@ final class JAPConf extends JDialog
 				}
 			if(!JAPUtil.isPort(i))
 				{
-					showError(model.getString("errorInfoServicePortWrong"));
+					showError(m_Model.getString("errorInfoServicePortWrong"));
 					return false;
 				}
 
 			//Checking First Mix (Host + Port)
-			s=anonhostTextField.getText().trim();
+			s=m_tfMixHost.getText().trim();
 			if(s==null||s.equals(""))
 				{
-					showError(model.getString("errorAnonHostNotNull"));
+					showError(m_Model.getString("errorAnonHostNotNull"));
 					return false;
 				}
 			try
 				{
-					i=Integer.parseInt(anonportnumberTextField.getText().trim());
+					i=Integer.parseInt(m_tfMixPortNumber.getText().trim());
 				}
 			catch(Exception e)
 				{
@@ -685,28 +710,28 @@ final class JAPConf extends JDialog
 				}
 			if(!JAPUtil.isPort(i))
 				{
-					showError(model.getString("errorAnonServicePortWrong"));
+					showError(m_Model.getString("errorAnonServicePortWrong"));
 					return false;
 				}
 			//--------------
-			if (anonsslportnumberTextField.getText().trim().equals("")) {
+			if (m_tfMixPortNumberSSL.getText().trim().equals("")) {
 				;
 			} else {
 				try {
-					i=Integer.parseInt(anonsslportnumberTextField.getText().trim());
+					i=Integer.parseInt(m_tfMixPortNumberSSL.getText().trim());
 				}
 				catch(Exception e) {
 					i=-1;
 				}
 				if(!JAPUtil.isPort(i)) {
-					showError(model.getString("errorAnonServicePortWrong"));
+					showError(m_Model.getString("errorAnonServicePortWrong"));
 					return false;
 				}
 			}
 			//checking Listener Port Number
 			try
 				{
-					i=Integer.parseInt(portnumberTextField.getText().trim());
+					i=Integer.parseInt(m_tfListenerPortNumber.getText().trim());
 				}
 			catch(Exception e)
 				{
@@ -714,16 +739,16 @@ final class JAPConf extends JDialog
 				}
 			if(!JAPUtil.isPort(i))
 				{
-					showError(model.getString("errorListenerPortWrong"));
+					showError(m_Model.getString("errorListenerPortWrong"));
 					return false;
 				}
 			iListenerPort=i;
 			//checking Socks Port Number
-			if(listenerCheckBoxSocks.isSelected())
+			if(m_cbListenerSocks.isSelected())
 				{
 					try
 						{
-							i=Integer.parseInt(portnumberTextFieldSocks.getText().trim());
+							i=Integer.parseInt(m_tfListenerPortNumberSocks.getText().trim());
 						}
 					catch(Exception e)
 						{
@@ -731,27 +756,27 @@ final class JAPConf extends JDialog
 						}
 					if(!JAPUtil.isPort(i))
 						{
-							showError(model.getString("errorSocksListenerPortWrong"));
+							showError(m_Model.getString("errorSocksListenerPortWrong"));
 							return false;
 						}
 					if(i==iListenerPort)
 						{
-							showError(model.getString("errorListenerPortsAreEqual"));
+							showError(m_Model.getString("errorListenerPortsAreEqual"));
 							return false;
 						}
 				}
 			//Checking Firewall Settings (Host + Port)
-			if(proxyCheckBox.isSelected())
+			if(m_cbProxy.isSelected())
 				{
-					s=proxyhostTextField.getText().trim();
+					s=m_tfProxyHost.getText().trim();
 					if(s==null||s.equals(""))
 						{
-							showError(model.getString("errorFirewallHostNotNull"));
+							showError(m_Model.getString("errorFirewallHostNotNull"));
 							return false;
 						}
 					try
 						{
-							i=Integer.parseInt(proxyportnumberTextField.getText().trim());
+							i=Integer.parseInt(m_tfProxyPortNumber.getText().trim());
 						}
 					catch(Exception e)
 						{
@@ -759,15 +784,15 @@ final class JAPConf extends JDialog
 						}
 					if(!JAPUtil.isPort(i))
 						{
-							showError(model.getString("errorFirewallServicePortWrong"));
+							showError(m_Model.getString("errorFirewallServicePortWrong"));
 							return false;
 						}
-					if(proxyAuthenticationCheckBox.isSelected())
+					if(m_cbProxyAuthentication.isSelected())
 						{
-							s=proxyAuthenticationUserID.getText().trim();
+							s=m_tfProxyAuthenticationUserID.getText().trim();
 							if(s==null||s.equals(""))
 								{
-									showError(model.getString("errorFirewallAuthUserIDNotNull"));
+									showError(m_Model.getString("errorFirewallAuthUserIDNotNull"));
 									return false;
 								}
 						}
@@ -783,7 +808,7 @@ final class JAPConf extends JDialog
 				}
 			if(i<0||i>JAPDebug.DEBUG)
 				{
-					showError(model.getString("errorDebugLevelWrong"));
+					showError(m_Model.getString("errorDebugLevelWrong"));
 					return false;
 				}
 		*/
@@ -794,22 +819,22 @@ final class JAPConf extends JDialog
 /** Resets the Configuration to the Default values*/
 	private void resetToDefault()
 		{
-			portnumberTextField.setText(Integer.toString(JAPModel.defaultPortNumber));
-		  infohostTextField.setText(JAPModel.defaultinfoServiceHostName);
-		  infoportnumberTextField.setText(Integer.toString(JAPModel.defaultinfoServicePortNumber));
-			anonhostTextField.setText(JAPModel.defaultanonHost);
-			anonportnumberTextField.setText(Integer.toString(JAPModel.defaultanonPortNumber));
-			proxyCheckBox.setSelected(false);
-			startupMinimizeCheckBox.setSelected(false);
-		  autoConnectCheckBox.setSelected(false);
-			listenerCheckBoxIsLocal.setSelected(true);
-			listenerCheckBoxSocks.setSelected(false);
-			checkboxShowDebugConsole.setSelected(false);
-			sliderDebugLevel.setValue(JAPDebug.EMERG);
-			netChB.setSelected(false);
-			guiChB.setSelected(false);
-			miscChB.setSelected(false);
-			threadChB.setSelected(false);
+			m_tfListenerPortNumber.setText(Integer.toString(JAPModel.defaultPortNumber));
+		  m_tfInfoHost.setText(JAPModel.defaultinfoServiceHostName);
+		  m_tfInfoPortNumber.setText(Integer.toString(JAPModel.defaultinfoServicePortNumber));
+			m_tfMixHost.setText(JAPModel.defaultanonHost);
+			m_tfMixPortNumber.setText(Integer.toString(JAPModel.defaultanonPortNumber));
+			m_cbProxy.setSelected(false);
+			m_cbStartupMinimized.setSelected(false);
+		  m_cbAutoConnect.setSelected(false);
+			m_cbListenerIsLocal.setSelected(true);
+			m_cbListenerSocks.setSelected(false);
+			m_cbShowDebugConsole.setSelected(false);
+			m_sliderDebugLevel.setValue(JAPDebug.EMERG);
+			m_cbDebugNet.setSelected(false);
+			m_cbDebugGui.setSelected(false);
+			m_cbDebugMisc.setSelected(false);
+			m_cbDebugThread.setSelected(false);
 		}
 
 	protected void OKPressed()
@@ -817,125 +842,125 @@ final class JAPConf extends JDialog
 				if(!checkValues())
 					return;
 				setVisible(false);
-				model.setUseSocksPort(listenerCheckBoxSocks.isSelected());
-				model.setSocksPortNumber(Integer.parseInt(portnumberTextFieldSocks.getText().trim()));
-				model.setListenerIsLocal(listenerCheckBoxIsLocal.isSelected());
-				model.setUseProxy(proxyCheckBox.isSelected());
-				model.setUseFirewallAuthorization(proxyAuthenticationCheckBox.isSelected());
-				int newPort=Integer.parseInt(portnumberTextField.getText().trim());
-				if(newPort!=model.getPortNumber())
+				m_Model.setUseSocksPort(m_cbListenerSocks.isSelected());
+				m_Model.setSocksPortNumber(Integer.parseInt(m_tfListenerPortNumberSocks.getText().trim()));
+				m_Model.setListenerIsLocal(m_cbListenerIsLocal.isSelected());
+				m_Model.setUseProxy(m_cbProxy.isSelected());
+				m_Model.setUseFirewallAuthorization(m_cbProxyAuthentication.isSelected());
+				int newPort=Integer.parseInt(m_tfListenerPortNumber.getText().trim());
+				if(newPort!=m_Model.getPortNumber())
 					{
-						JOptionPane.showMessageDialog(this,model.getString("confmessageListernPortChanged"));
+						JOptionPane.showMessageDialog(this,m_Model.getString("confmessageListernPortChanged"));
 					}
-				model.setPortNumber(Integer.parseInt(portnumberTextField.getText().trim()));
+				m_Model.setPortNumber(Integer.parseInt(m_tfListenerPortNumber.getText().trim()));
 				int port=-1;
-				try{port=Integer.parseInt(proxyportnumberTextField.getText().trim());}catch(Exception e){};
-				model.setProxy(proxyhostTextField.getText().trim(),port);
-				model.setFirewallAuthUserID(proxyAuthenticationUserID.getText().trim());
+				try{port=Integer.parseInt(m_tfProxyPortNumber.getText().trim());}catch(Exception e){};
+				m_Model.setProxy(m_tfProxyHost.getText().trim(),port);
+				m_Model.setFirewallAuthUserID(m_tfProxyAuthenticationUserID.getText().trim());
 				// infoservice settings
-				model.setInfoService(infohostTextField.getText().trim(),
-					Integer.parseInt(infoportnumberTextField.getText().trim()));
+				m_Model.setInfoService(m_tfInfoHost.getText().trim(),
+					Integer.parseInt(m_tfInfoPortNumber.getText().trim()));
 				// anon settings
 				int anonSSLPortNumber = -1;
-				if (!anonsslportnumberTextField.getText().equals(""))
-					anonSSLPortNumber = Integer.parseInt(anonsslportnumberTextField.getText().trim());
+				if (!m_tfMixPortNumberSSL.getText().equals(""))
+					anonSSLPortNumber = Integer.parseInt(m_tfMixPortNumberSSL.getText().trim());
 
-				if (b3.isSelected())
-						anonServerName = model.getString("manual");
+				if (m_rbMixStep3.isSelected())
+						m_strMixName = m_Model.getString("manual");
 				AnonServerDBEntry e = new AnonServerDBEntry(
-															anonServerName,
-															anonhostTextField.getText().trim(),
-															Integer.parseInt(anonportnumberTextField.getText().trim()),
+															m_strMixName,
+															m_tfMixHost.getText().trim(),
+															Integer.parseInt(m_tfMixPortNumber.getText().trim()),
 															anonSSLPortNumber);
 				// if (the same server) (re)set the name from "manual" to the correct name
-				if (model.getAnonServer().equals(e))
-					e.setName(oldAnonServerName);
-				model.autoConnect = autoConnectCheckBox.isSelected();
-				model.setMinimizeOnStartup(startupMinimizeCheckBox.isSelected());
+				if (m_Model.getAnonServer().equals(e))
+					e.setName(m_strOldMixName);
+				m_Model.autoConnect = m_cbAutoConnect.isSelected();
+				m_Model.setMinimizeOnStartup(m_cbStartupMinimized.isSelected());
 				JAPDebug.setDebugType(
-					 (guiChB.isSelected()?JAPDebug.GUI:JAPDebug.NUL)+
-					 (netChB.isSelected()?JAPDebug.NET:JAPDebug.NUL)+
-					 (threadChB.isSelected()?JAPDebug.THREAD:JAPDebug.NUL)+
-					 (miscChB.isSelected()?JAPDebug.MISC:JAPDebug.NUL)
+					 (m_cbDebugGui.isSelected()?JAPDebug.GUI:JAPDebug.NUL)+
+					 (m_cbDebugNet.isSelected()?JAPDebug.NET:JAPDebug.NUL)+
+					 (m_cbDebugThread.isSelected()?JAPDebug.THREAD:JAPDebug.NUL)+
+					 (m_cbDebugMisc.isSelected()?JAPDebug.MISC:JAPDebug.NUL)
 					);
-				JAPDebug.setDebugLevel(sliderDebugLevel.getValue());
-				model.setAnonServer(e);
+				JAPDebug.setDebugLevel(m_sliderDebugLevel.getValue());
+				m_Model.setAnonServer(e);
 				// force setting the correct name of the selected server
-				model.getAnonServer().setName(e.getName());
+				m_Model.getAnonServer().setName(e.getName());
 				// force notifying the observers set the right server name
-				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"comboLanguage: "+Integer.toString(comboLanguage.getSelectedIndex()));
-				if(comboLanguage.getSelectedIndex()==0)
-					model.setLocale(Locale.GERMAN);
+				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"m_comboLanguage: "+Integer.toString(m_comboLanguage.getSelectedIndex()));
+				if(m_comboLanguage.getSelectedIndex()==0)
+					m_Model.setLocale(Locale.GERMAN);
 				else
-					model.setLocale(Locale.ENGLISH);
-				model.notifyJAPObservers();
+					m_Model.setLocale(Locale.ENGLISH);
+				m_Model.notifyJAPObservers();
 			}
 
 	public void selectCard(int selectedCard)
 			{
 				// set selected card to foreground
 				if (selectedCard == HTTP_TAB)
-					tabs.setSelectedComponent(httpP);
+					m_Tabs.setSelectedComponent(m_pFirewall);
 				else if (selectedCard == INFO_TAB)
-					tabs.setSelectedComponent(infoP);
+					m_Tabs.setSelectedComponent(m_pInfo);
 				else if (selectedCard == ANON_TAB)
-					tabs.setSelectedComponent(anonP);
+					m_Tabs.setSelectedComponent(m_pMix);
 				else if (selectedCard == MISC_TAB)
-					tabs.setSelectedComponent(miscP);
+					m_Tabs.setSelectedComponent(m_pMisc);
 				else
-					tabs.setSelectedComponent(portP);
+					m_Tabs.setSelectedComponent(m_pPort);
 			}
 
 	public void updateValues() {
 		// misc tab
-		checkboxShowDebugConsole.setSelected(JAPDebug.isShowConsole());
-		guiChB.setSelected((((JAPDebug.getDebugType()&JAPDebug.GUI)!=0)?true:false));
-		netChB.setSelected((((JAPDebug.getDebugType()&JAPDebug.NET)!=0)?true:false));
-		threadChB.setSelected((((JAPDebug.getDebugType()&JAPDebug.THREAD)!=0)?true:false));
-		miscChB.setSelected((((JAPDebug.getDebugType()&JAPDebug.MISC)!=0)?true:false));
-		sliderDebugLevel.setValue(JAPDebug.getDebugLevel());
-		bIgnoreComboLanguageEvents=true;
-		if(model.getLocale().equals(Locale.ENGLISH))
-			comboLanguage.setSelectedIndex(1);
+		m_cbShowDebugConsole.setSelected(JAPDebug.isShowConsole());
+		m_cbDebugGui.setSelected((((JAPDebug.getDebugType()&JAPDebug.GUI)!=0)?true:false));
+		m_cbDebugNet.setSelected((((JAPDebug.getDebugType()&JAPDebug.NET)!=0)?true:false));
+		m_cbDebugThread.setSelected((((JAPDebug.getDebugType()&JAPDebug.THREAD)!=0)?true:false));
+		m_cbDebugMisc.setSelected((((JAPDebug.getDebugType()&JAPDebug.MISC)!=0)?true:false));
+		m_sliderDebugLevel.setValue(JAPDebug.getDebugLevel());
+		m_bIgnoreComboLanguageEvents=true;
+		if(m_Model.getLocale().equals(Locale.ENGLISH))
+			m_comboLanguage.setSelectedIndex(1);
 		else
-			comboLanguage.setSelectedIndex(0);
-		bIgnoreComboLanguageEvents=false;
+			m_comboLanguage.setSelectedIndex(0);
+		m_bIgnoreComboLanguageEvents=false;
 		// listener tab
-		portnumberTextField.setText(String.valueOf(model.getPortNumber()));
-		listenerCheckBoxIsLocal.setSelected(model.getListenerIsLocal());
-		portnumberTextFieldSocks.setText(String.valueOf(model.getSocksPortNumber()));
-		listenerCheckBoxSocks.setSelected(model.getUseSocksPort());
+		m_tfListenerPortNumber.setText(String.valueOf(m_Model.getPortNumber()));
+		m_cbListenerIsLocal.setSelected(m_Model.getListenerIsLocal());
+		m_tfListenerPortNumberSocks.setText(String.valueOf(m_Model.getSocksPortNumber()));
+		m_cbListenerSocks.setSelected(m_Model.getUseSocksPort());
 		// http proxy tab
-		proxyCheckBox.setSelected(model.getUseFirewall());
-		proxyhostTextField.setEnabled(proxyCheckBox.isSelected());
-		proxyportnumberTextField.setEnabled(proxyCheckBox.isSelected());
-		proxyhostTextField.setText(model.getFirewallHost());
-		proxyportnumberTextField.setText(String.valueOf(model.getFirewallPort()));
-		proxyAuthenticationUserID.setText(model.getFirewallAuthUserID());
-		proxyAuthenticationCheckBox.setSelected(model.getUseFirewallAuthorization());
+		m_cbProxy.setSelected(m_Model.getUseFirewall());
+		m_tfProxyHost.setEnabled(m_cbProxy.isSelected());
+		m_tfProxyPortNumber.setEnabled(m_cbProxy.isSelected());
+		m_tfProxyHost.setText(m_Model.getFirewallHost());
+		m_tfProxyPortNumber.setText(String.valueOf(m_Model.getFirewallPort()));
+		m_tfProxyAuthenticationUserID.setText(m_Model.getFirewallAuthUserID());
+		m_cbProxyAuthentication.setSelected(m_Model.getUseFirewallAuthorization());
 
 		// info tab
-		infohostTextField.setText(model.getInfoServiceHost());
-		infoportnumberTextField.setText(String.valueOf(model.getInfoServicePort()));
+		m_tfInfoHost.setText(m_Model.getInfoServiceHost());
+		m_tfInfoPortNumber.setText(String.valueOf(m_Model.getInfoServicePort()));
 		// anon tab
-		AnonServerDBEntry e = model.getAnonServer();
-		anonServerName = e.getName();
-		oldAnonServerName = anonServerName;
-		anonhostTextField.setText(e.getHost());
-		anonportnumberTextField.setText(String.valueOf(e.getPort()));
+		AnonServerDBEntry e = m_Model.getAnonServer();
+		m_strMixName = e.getName();
+		m_strOldMixName = m_strMixName;
+		m_tfMixHost.setText(e.getHost());
+		m_tfMixPortNumber.setText(String.valueOf(e.getPort()));
 		if (e.getSSLPort()==-1)
-			anonsslportnumberTextField.setText("");
+			m_tfMixPortNumberSSL.setText("");
 		else
-			anonsslportnumberTextField.setText(String.valueOf(e.getSSLPort()));
-		select.setSelectedIndex(0);
-		autoConnectCheckBox.setSelected(model.autoConnect);
-		startupMinimizeCheckBox.setSelected(model.getMinimizeOnStartup());
-						select.removeAllItems();
-						select.addItem(model.getString("settingsAnonSelect"));
-						Enumeration enum = model.anonServerDatabase.elements();
+			m_tfMixPortNumberSSL.setText(String.valueOf(e.getSSLPort()));
+		m_comboMixCascade.setSelectedIndex(0);
+		m_cbAutoConnect.setSelected(m_Model.autoConnect);
+		m_cbStartupMinimized.setSelected(m_Model.getMinimizeOnStartup());
+						m_comboMixCascade.removeAllItems();
+						m_comboMixCascade.addItem(m_Model.getString("settingsAnonSelect"));
+						Enumeration enum = m_Model.anonServerDatabase.elements();
 						while (enum.hasMoreElements())
 							{
-								select.addItem( ((AnonServerDBEntry)enum.nextElement()).getName() );
+								m_comboMixCascade.addItem( ((AnonServerDBEntry)enum.nextElement()).getName() );
 							}
 	}
 
