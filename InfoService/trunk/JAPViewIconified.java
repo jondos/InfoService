@@ -63,12 +63,12 @@ public final class JAPViewIconified extends JFrame implements ActionListener, JA
 		p1.add(z3);
 		
 		JPanel p2 = new JPanel(new FlowLayout() );
-		b = new JButton(model.loadImageIcon(model.ENLARGEYICONFN,true));
+		b = new JButton(JAPUtil.loadImageIcon(model.ENLARGEYICONFN,true));
 		b.addActionListener(this);
 		b.setToolTipText(model.getString("enlargeWindow"));
 		p2.add(b);
 		
-		getContentPane().add(new JLabel(model.loadImageIcon(model.ICONFN,true)), BorderLayout.NORTH);
+		getContentPane().add(new JLabel(JAPUtil.loadImageIcon(model.ICONFN,true)), BorderLayout.NORTH);
 		getContentPane().add(p1, BorderLayout.CENTER);
 //		getContentPane().add(new JLabel(" "), BorderLayout.EAST);
 //		getContentPane().add(new JLabel(" "), BorderLayout.WEST);
@@ -80,7 +80,7 @@ public final class JAPViewIconified extends JFrame implements ActionListener, JA
 			});	
 		setResizable(false);
 		pack();
-		model.upRightFrame(this);
+		JAPUtil.upRightFrame(this);
 		
 	}
 	

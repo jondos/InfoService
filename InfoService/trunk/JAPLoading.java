@@ -44,7 +44,7 @@ public final class JAPLoading implements ActionListener, VersioncheckerProgress 
 			
 		JPanel iconPanel = new JPanel();
 		iconPanel.setBorder(new EmptyBorder(5,5,0,0));
-		JLabel icnLabel = new JLabel(model.loadImageIcon(model.DOWNLOADFN, true));
+		JLabel icnLabel = new JLabel(JAPUtil.loadImageIcon(model.DOWNLOADFN, true));
 		iconPanel.add(icnLabel);
 		
 		JPanel buttonPanel = new JPanel();
@@ -77,7 +77,7 @@ public final class JAPLoading implements ActionListener, VersioncheckerProgress 
 		dialog.getContentPane().add(buttonPanel, BorderLayout.SOUTH);
 		dialog.getContentPane().add(mainPanel, BorderLayout.CENTER);
 		dialog.pack();
-		model.centerFrame(dialog);
+		JAPUtil.centerFrame(dialog);
 		dialog.setResizable(false);
 	}
 	

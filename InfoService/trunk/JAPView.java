@@ -82,7 +82,7 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 					JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.GUI,"JAPView: "+e);
 				}
 	    // Load Icon in upper left corner of the frame window
-	    ImageIcon ii=model.loadImageIcon(model.IICON16FN,true);
+	    ImageIcon ii=JAPUtil.loadImageIcon(model.IICON16FN,true);
 	    if(ii!=null)
 				setIconImage(ii.getImage());
 	    
@@ -94,24 +94,24 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 			// Load Images for "Anonymity Meter"
 	    loadMeterIcons();
 	    // "NORTH": Image
-	    ImageIcon northImage = model.loadImageIcon(model.getString("northPath"),true);
+	    ImageIcon northImage = JAPUtil.loadImageIcon(model.getString("northPath"),true);
 	    JLabel northLabel = new JLabel(northImage);
 	    // "West": Image
-	    ImageIcon westImage = model.loadImageIcon(model.getString("westPath"),true);;
+	    ImageIcon westImage = JAPUtil.loadImageIcon(model.getString("westPath"),true);;
 	    JLabel westLabel = new JLabel(westImage);
 	    // "Center:" tabs
 	    JTabbedPane tabs = new JTabbedPane();
 	    JPanel config = buildConfigPanel();
 	    JPanel level = buildLevelPanel();
-	    tabs.addTab(model.getString("mainConfTab"), model.loadImageIcon(model.CONFIGICONFN,true), config );
-	    tabs.addTab(model.getString("mainMeterTab"), model.loadImageIcon(model.METERICONFN,true), level );
+	    tabs.addTab(model.getString("mainConfTab"), JAPUtil.loadImageIcon(model.CONFIGICONFN,true), config );
+	    tabs.addTab(model.getString("mainMeterTab"),JAPUtil.loadImageIcon(model.METERICONFN,true), level );
 	    // "South": Buttons
 	   
 			JPanel buttonPanel = new JPanel();
 	    infoB = new JButton(model.getString("infoButton"));
 	    helpB = new JButton(model.getString("helpButton"));
 	    quitB = new JButton(model.getString("quitButton"));
-			iconifyB = new JButton(model.loadImageIcon(model.ICONIFYICONFN,true));
+			iconifyB = new JButton(JAPUtil.loadImageIcon(model.ICONIFYICONFN,true));
 			iconifyB.setToolTipText(model.getString("iconifyWindow"));
 			
 	    // Add real buttons
@@ -161,7 +161,7 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 				e.printStackTrace();
 				JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.GUI,"JAPView:Hm.. Error by Pack - Has To be fixed!!");
 				}
-			model.centerFrame(this);
+			JAPUtil.centerFrame(this);
 	}
 
     public JPanel buildLevelPanel() {
@@ -377,7 +377,7 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 		meterIcons = new ImageIcon [model.METERFNARRAY.length];
 		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPView:METERFNARRAY.length="+model.METERFNARRAY.length);
 		for (int i=0; i<model.METERFNARRAY.length; i++) {
-			meterIcons[i] = model.loadImageIcon(model.METERFNARRAY[i],false);
+			meterIcons[i] = JAPUtil.loadImageIcon(model.METERFNARRAY[i],false);
 		}
 	}
 	

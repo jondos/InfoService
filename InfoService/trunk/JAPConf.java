@@ -115,7 +115,7 @@ public final class JAPConf extends JDialog
 				updateValues();
 				pack();
 //				setResizable(false);
-				model.centerFrame(this);
+				JAPUtil.centerFrame(this);
 			}
 
 		protected JPanel buildportPanel()
