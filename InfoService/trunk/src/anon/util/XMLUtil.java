@@ -32,6 +32,7 @@
 package anon.util;
 
 import java.io.ByteArrayOutputStream;
+import java.io.OutputStream;
 import java.lang.reflect.Method;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
@@ -42,6 +43,7 @@ import org.w3c.dom.NodeList;
 
 public class XMLUtil
 {
+
 	public static int parseElementAttrInt(Element e, String attr, int defaultValue)
 	{
 		int i = defaultValue;
@@ -307,12 +309,12 @@ public class XMLUtil
 			case Document.ENTITY_NODE:
 			{
 				/*Entity srcentity = (Entity) source;
-					 Entity newentity = doc.createEntity(source.getNodeName());
-					 newentity.setPublicId(srcentity.getPublicId());
-					 newentity.setSystemId(srcentity.getSystemId());
-					 newentity.setNotationName(srcentity.getNotationName());
-					 // Kids carry additional value
-					 newnode = newentity;*/
+				  Entity newentity = doc.createEntity(source.getNodeName());
+				  newentity.setPublicId(srcentity.getPublicId());
+				  newentity.setSystemId(srcentity.getSystemId());
+				  newentity.setNotationName(srcentity.getNotationName());
+				  // Kids carry additional value
+				  newnode = newentity;*/
 				throw new Exception("HIERARCHY_REQUEST_ERR");
 				//break;
 			}
@@ -376,18 +378,18 @@ public class XMLUtil
 
 			case Document.NOTATION_NODE:
 			{
-			/*
-					 Notation srcnotation = (Notation) source;
-					 Notation newnotation = (Notation) doc.createNotation(source.getNodeName());
-					 newnotation.setPublicId(srcnotation.getPublicId());
-					 newnotation.setSystemId(srcnotation.getSystemId());
-					 // Kids carry additional value
-					 newnode = newnotation;
-					 // No name, no value
-					 break;*/
+				/*
+				   Notation srcnotation = (Notation) source;
+				   Notation newnotation = (Notation) doc.createNotation(source.getNodeName());
+				   newnotation.setPublicId(srcnotation.getPublicId());
+				   newnotation.setSystemId(srcnotation.getSystemId());
+				   // Kids carry additional value
+				   newnode = newnotation;
+				   // No name, no value
+				   break;*/
 				throw new Exception("HIERARCHY_REQUEST_ERR");
 
-			 }
+			}
 
 			case Document.DOCUMENT_NODE: // Document can't be child of Document
 			default:
@@ -420,56 +422,66 @@ public class XMLUtil
 		try
 		{
 			out = new ByteArrayOutputStream();
-			try //For JAXP 1.0.1 Referenc Implementation (shipped with JAP)
+		}
+		catch (Throwable t3)
+		{
+			return null;
+		}
+		try //For JAXP 1.0.1 Reference Implementation (shipped with JAP)
+		{
+			Class c = Class.forName("com.sun.xml.tree.XmlDocument");
+			if (c.isInstance(doc))
 			{
-				( (com.sun.xml.tree.XmlDocument) doc).write(out);
+				Class[] paramClasses = new Class[1];
+				paramClasses[0] = OutputStream.class;
+				Method m = c.getMethod("write", paramClasses);
+				Object[] params = new Object[1];
+				params[0] = out;
+				m.invoke(doc, params);
+				return out.toString();
 			}
-			catch (Throwable t1)
-			{
-				try
-				{ //For JAXP 1.1 (for Instance Apache Crimson/Xalan shipped with Java 1.4)
-					//This seams to be realy stupid and compliecated...
-					//But if the do a simple t.transform(), a NoClassDefError is thrown, if
-					//the new JAXP1.1 is not present, even if we NOT call saveXMLDocument, but
-					//calling any other method within JAPUtil.
-					//Dont no why --> maybe this has something to to with Just in Time compiling ?
-					Object t =
-						javax.xml.transform.TransformerFactory.newInstance().newTransformer();
-					javax.xml.transform.Result r = new javax.xml.transform.stream.StreamResult(out);
-					javax.xml.transform.Source s = new javax.xml.transform.dom.DOMSource(doc);
+		}
+		catch (Throwable t1)
+		{
+		}
+		try
+		{ //For JAXP 1.1 (for Instance Apache Crimson/Xalan shipped with Java 1.4)
+			//This seams to be realy stupid and compliecated...
+			//But if the do a simple t.transform(), a NoClassDefError is thrown, if
+			//the new JAXP1.1 is not present, even if we NOT call saveXMLDocument, but
+			//calling any other method within JAPUtil.
+			//Dont no why --> maybe this has something to to with Just in Time compiling ?
+			Object t =
+				javax.xml.transform.TransformerFactory.newInstance().newTransformer();
+			javax.xml.transform.Result r = new javax.xml.transform.stream.StreamResult(out);
+			javax.xml.transform.Source s = new javax.xml.transform.dom.DOMSource(doc);
 
-					//this is to simply invoke t.transform(s,r)
-					Class c = t.getClass();
-					Method m = null;
-					Method[] ms = c.getMethods();
-					for (int i = 0; i < ms.length; i++)
-					{
-						if (ms[i].getName().equals("transform"))
-						{
-							m = ms[i];
-							Class[] params = m.getParameterTypes();
-							if (params.length == 2)
-							{
-								break;
-							}
-						}
-					}
-					Object[] p = new Object[2];
-					p[0] = s;
-					p[1] = r;
-					m.invoke(t, p);
-				}
-				catch (Throwable t2)
+			//this is to simply invoke t.transform(s,r)
+			Class c = t.getClass();
+			Method m = null;
+			Method[] ms = c.getMethods();
+			for (int i = 0; i < ms.length; i++)
+			{
+				if (ms[i].getName().equals("transform"))
 				{
-					return null;
+					m = ms[i];
+					Class[] params = m.getParameterTypes();
+					if (params.length == 2)
+					{
+						break;
+					}
 				}
 			}
+			Object[] p = new Object[2];
+			p[0] = s;
+			p[1] = r;
+			m.invoke(t, p);
+			return out.toString();
 		}
 		catch (Throwable t2)
 		{
 			return null;
 		}
-		return out.toString();
 	}
 
 }
