@@ -111,7 +111,8 @@ public class JAPProxyServer implements Runnable
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPProxyServer:Mux stopping...");
 			try
 				{
-					oMuxSocket.close();
+					if(oMuxSocket!=null)
+						oMuxSocket.close();
 				}
 			catch(Exception e)
 				{ 
