@@ -1573,7 +1573,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			}
 			else
 			{
-
 				m_comboAnonServices.setNoDataAvailable();
 			}
 			if (!bMixCascadeAlreadyIncluded)
