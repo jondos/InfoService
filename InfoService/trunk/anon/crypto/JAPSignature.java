@@ -130,13 +130,19 @@ public class JAPSignature
 			{
 				return false;
 			}
-			Element root=null;
-			if(n instanceof Document)
-				root=((Document)n).getDocumentElement();
-			else if(n instanceof Element)
+			Element root = null;
+			if (n instanceof Document)
+			{
+				root = ( (Document) n).getDocumentElement();
+			}
+			else if (n instanceof Element)
+			{
 				root = (Element) n;
+			}
 			else
+			{
 				return false;
+			}
 			Element signature = (Element) XMLUtil.getFirstChildByName(root, "Signature");
 			NodeList nl = signature.getElementsByTagName("SignedInfo");
 			if (nl.getLength() < 1)
@@ -271,14 +277,54 @@ public class JAPSignature
 
 	public boolean verify(byte[] message, byte[] sig)
 	{
-		try{
+		try
+		{
 			signatureAlgorithm.update(message);
 			return signatureAlgorithm.verify(sig);
-		}catch(Exception e)
+		}
+		catch (Exception e)
 		{
 			return false;
 		}
 
+	}
+
+	/** Returns all Certificates which are included in this Signatures <KeyInfo> element
+	 * @return certifcates emmbeded in the Signature Node
+	 * @return null if no certificates could be found or something else goes wrong
+	 * @todo At the moment only returns the first Certifcate found!
+	 */
+	public static JAPCertificate[] getAppendedCertificates(Node nSig)
+	{
+		if (! (nSig instanceof Element))
+		{
+			return null;
+		}
+		Element nodeSig = (Element) nSig;
+		Element elemKeyInfo = (Element) XMLUtil.getFirstChildByName(nodeSig, "KeyInfo");
+		if (elemKeyInfo == null)
+		{
+			return null;
+		}
+		/* there is a certificate appended */
+		Element elemX509Data = (Element) XMLUtil.getFirstChildByName(elemKeyInfo, "X509Data");
+		Element elemX509Certificate = (Element) XMLUtil.getFirstChildByName(elemX509Data,
+			"X509Certificate");
+		JAPCertificate appendedCertificate = null;
+		try
+		{
+			appendedCertificate = JAPCertificate.getInstance(elemX509Certificate);
+		}
+		catch (Throwable to)
+		{
+		}
+		if (appendedCertificate != null)
+		{
+			JAPCertificate[] t = new JAPCertificate[1];
+			t[0] = appendedCertificate;
+			return t;
+		}
+		return null;
 	}
 
 	/**
@@ -334,7 +380,7 @@ public class JAPSignature
 		Element referenceNode = doc.createElement("Reference");
 		referenceNode.setAttribute("URI", "");
 		Element digestValueNode = doc.createElement("DigestValue");
-		digestValueNode.appendChild(doc.createTextNode(new String(Base64.encode(digest,false))));
+		digestValueNode.appendChild(doc.createTextNode(new String(Base64.encode(digest, false))));
 		referenceNode.appendChild(digestValueNode);
 		signedInfoNode.appendChild(referenceNode);
 		/* now we sign the SignedInfo node tree, first we need the XML bytestream */
@@ -390,7 +436,7 @@ public class JAPSignature
 		System.arraycopy(signatureAsn1, 4 + rLength + 2 + sOverLength, signature, 40 - sLength, sLength);
 		/* create the SignatureValue node and build the Signature tree */
 		Element signatureValueNode = doc.createElement("SignatureValue");
-		signatureValueNode.appendChild(doc.createTextNode(new String(Base64.encode(signature,false))));
+		signatureValueNode.appendChild(doc.createTextNode(new String(Base64.encode(signature, false))));
 		Element signatureNode = doc.createElement("Signature");
 		signatureNode.appendChild(signedInfoNode);
 		signatureNode.appendChild(signatureValueNode);
@@ -412,7 +458,7 @@ public class JAPSignature
 		if (certsToAdd != null)
 		{
 			/* now add X509 certificates */
-			Element signatureNode = (Element)XMLUtil.getFirstChildByName(toSign, "Signature");
+			Element signatureNode = (Element) XMLUtil.getFirstChildByName(toSign, "Signature");
 			if (signatureNode == null)
 			{
 				throw (new Exception("Error in XML structure."));
@@ -440,107 +486,107 @@ public class JAPSignature
 	 */
 	public void signXmlNode(Element toSign, JAPCertificate certToAdd) throws Exception
 	{
-		JAPCertificate tmp[]=new JAPCertificate[1];
-		tmp[0]=certToAdd;
-		signXmlNode(toSign,tmp);
-}
-
-/**
- * Creates a bytestream out of the abstract tree of the node.
- *
- * @param inputNode The node (incl. the whole tree) which is flattened to a bytestream.
- *
- * @return The bytestream of the node (incl. the whole tree).
- */
-private ByteArrayOutputStream nodeToCanonical(Node inputNode) throws Exception
-{
-	ByteArrayOutputStream out = new ByteArrayOutputStream();
-	/* TODO: find a better way to get the data of the node as a bytestream, for
-	 * compatibility reasons we use this now
-	 */
-	if (makeCanonical(inputNode, out, true, null) == -1)
-	{
-		throw new Exception("JAPSignature: nodeToCanonical: Could not make the node canonical!");
+		JAPCertificate tmp[] = new JAPCertificate[1];
+		tmp[0] = certToAdd;
+		signXmlNode(toSign, tmp);
 	}
-	out.flush();
-	return out;
-}
+
+	/**
+	 * Creates a bytestream out of the abstract tree of the node.
+	 *
+	 * @param inputNode The node (incl. the whole tree) which is flattened to a bytestream.
+	 *
+	 * @return The bytestream of the node (incl. the whole tree).
+	 */
+	private ByteArrayOutputStream nodeToCanonical(Node inputNode) throws Exception
+	{
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		/* TODO: find a better way to get the data of the node as a bytestream, for
+		 * compatibility reasons we use this now
+		 */
+		if (makeCanonical(inputNode, out, true, null) == -1)
+		{
+			throw new Exception("JAPSignature: nodeToCanonical: Could not make the node canonical!");
+		}
+		out.flush();
+		return out;
+	}
 
 //Thread safe ?
-private int makeCanonical(Node node, OutputStream o, boolean bSiblings, Node excludeNode)
-{
-	try
+	private int makeCanonical(Node node, OutputStream o, boolean bSiblings, Node excludeNode)
 	{
-		if (node == null)
+		try
 		{
-			return 0;
-		}
-		if (node.equals(excludeNode))
-		{
-			return 0;
-		}
-		if (node.getNodeType() == node.ELEMENT_NODE)
-		{
-			Element elem = (Element) node;
-			o.write('<');
-			o.write(elem.getNodeName().getBytes());
-			NamedNodeMap attr = elem.getAttributes();
-			if (attr.getLength() > 0)
+			if (node == null)
 			{
-				for (int i = 0; i < attr.getLength(); i++)
-				{
-					o.write(' ');
-					o.write(attr.item(i).getNodeName().getBytes());
-					o.write('=');
-					o.write('\"');
-					o.write(attr.item(i).getNodeValue().getBytes());
-					o.write('\"');
-				}
+				return 0;
 			}
-			o.write('>');
-			if (elem.hasChildNodes())
+			if (node.equals(excludeNode))
 			{
-				if (makeCanonical(elem.getFirstChild(), o, true, excludeNode) == -1)
+				return 0;
+			}
+			if (node.getNodeType() == node.ELEMENT_NODE)
+			{
+				Element elem = (Element) node;
+				o.write('<');
+				o.write(elem.getNodeName().getBytes());
+				NamedNodeMap attr = elem.getAttributes();
+				if (attr.getLength() > 0)
+				{
+					for (int i = 0; i < attr.getLength(); i++)
+					{
+						o.write(' ');
+						o.write(attr.item(i).getNodeName().getBytes());
+						o.write('=');
+						o.write('\"');
+						o.write(attr.item(i).getNodeValue().getBytes());
+						o.write('\"');
+					}
+				}
+				o.write('>');
+				if (elem.hasChildNodes())
+				{
+					if (makeCanonical(elem.getFirstChild(), o, true, excludeNode) == -1)
+					{
+						return -1;
+					}
+				}
+				o.write('<');
+				o.write('/');
+				o.write(elem.getNodeName().getBytes());
+				o.write('>');
+				if (bSiblings && makeCanonical(elem.getNextSibling(), o, true, excludeNode) == -1)
 				{
 					return -1;
 				}
 			}
-			o.write('<');
-			o.write('/');
-			o.write(elem.getNodeName().getBytes());
-			o.write('>');
-			if (bSiblings && makeCanonical(elem.getNextSibling(), o, true, excludeNode) == -1)
+			else if (node.getNodeType() == node.TEXT_NODE)
 			{
-				return -1;
+				o.write(node.getNodeValue().trim().getBytes());
+				if (makeCanonical(node.getNextSibling(), o, true, excludeNode) == -1)
+				{
+					return -1;
+				}
+				return 0;
 			}
-		}
-		else if (node.getNodeType() == node.TEXT_NODE)
-		{
-			o.write(node.getNodeValue().trim().getBytes());
-			if (makeCanonical(node.getNextSibling(), o, true, excludeNode) == -1)
+			else if (node.getNodeType() == node.COMMENT_NODE)
+			{
+				if (makeCanonical(node.getNextSibling(), o, true, excludeNode) == -1)
+				{
+					return -1;
+				}
+				return 0;
+			}
+			else
 			{
 				return -1;
 			}
 			return 0;
 		}
-		else if (node.getNodeType() == node.COMMENT_NODE)
-		{
-			if (makeCanonical(node.getNextSibling(), o, true, excludeNode) == -1)
-			{
-				return -1;
-			}
-			return 0;
-		}
-		else
+		catch (Exception e)
 		{
 			return -1;
 		}
-		return 0;
 	}
-	catch (Exception e)
-	{
-		return -1;
-	}
-}
 
 }

@@ -322,7 +322,7 @@ public class JAPConfCert extends AbstractJAPConfModule
 				if (cert != null)
 				{
 
-					if (!m_jcs.checkCertificateExists(cert))
+					if (!m_jcs.contains(cert))
 					{
 						m_listmodelCertList.addElement(cert);
 						// m_listCert.removeAll();

@@ -482,7 +482,7 @@ public class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifiers
 					ByteArrayInputStream bIn = new ByteArrayInputStream(pkData);
 					DERInputStream dIn = new DERInputStream(bIn);
 					PrivateKeyInfo privKeyInfo = new PrivateKeyInfo( (ASN1Sequence) dIn.readObject());
-					//@todo check for Alg --> now done by try catch
+					/**@todo check for Alg --> now done by try catch */
 					try
 					{
 						privKey = new MyDSAPrivateKey(privKeyInfo);

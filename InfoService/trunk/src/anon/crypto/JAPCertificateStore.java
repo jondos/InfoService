@@ -166,7 +166,7 @@ final public class JAPCertificateStore
 	 * @return true if the certificate exists
 	 * @return false otherwise
 	 */
-	public boolean checkCertificateExists(JAPCertificate a_cert)
+	public boolean contains(JAPCertificate a_cert)
 	{
 		return m_HTCertStore.containsKey(JAPCertificateStoreId.getId(a_cert));
 	}
