@@ -198,7 +198,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		c.anchor = GridBagConstraints.NORTHWEST;
 		c.insets = new Insets(5, 5, 5, 5);
 
-		JLabel l = new JLabel(JAPMessages.getString("infoAboutCascade")+" "+a_strCascadeName);
+		JAPMultilineLabel l = new JAPMultilineLabel(JAPMessages.getString("infoAboutCascade")
+													+"\n"+a_strCascadeName);
 
 		if (m_serverPanel != null)
 		{
