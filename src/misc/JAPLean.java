@@ -28,6 +28,7 @@
 package misc;
 
 import java.net.ServerSocket;
+import java.util.Properties;
 import anon.ErrorCodes;
 import anon.infoservice.InfoServiceDBEntry;
 import anon.infoservice.InfoServiceHolder;
@@ -39,7 +40,6 @@ import logging.LogLevel;
 import logging.LogType;
 import proxy.AnonWebProxy;
 import proxy.ProxyListener;
-import java.util.*;
 
 final class JAPLean implements ProxyListener
 {

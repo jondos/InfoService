@@ -205,7 +205,8 @@ public class AICommunication extends Thread
 	{
 //		processCostConfirmationRequest(m_lastRequest);
 		m_bRunning = false;
-		c.close();
+		if(c!=null)
+			c.close();
 	}
 
 	public void send(String st)

@@ -120,6 +120,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private FlippingPanel m_flippingpanelAnon,m_flippingpanelOwnTraffic,m_flippingpanelForward;
 	private JPanel m_panelAnonService;
 	private int m_iPreferredWidth;
+	private boolean m_bIgnoreAnonComboEvents=false;
 
 	public JAPNewView(String s,JAPController a_controller)
 	{
@@ -199,6 +200,19 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.fill=GridBagConstraints.NONE;
 		m_panelAnonService.add(m_labelAnonService, c1);
 		m_comboAnonServices = new JComboBox();
+		m_comboAnonServices.addItemListener(new ItemListener()
+											{
+			public void itemStateChanged(ItemEvent e)
+			{
+				if(m_bIgnoreAnonComboEvents)
+					return;
+				if(e.getStateChange()==ItemEvent.SELECTED)
+				{
+					MixCascade cascade=(MixCascade)m_comboAnonServices.getSelectedItem();
+					m_Controller.setCurrentMixCascade(cascade);
+				}
+			}
+		});
 		c1.insets = new Insets(0, 5, 0, 0);
 		c1.fill = GridBagConstraints.HORIZONTAL;
 		c1.weightx = 1;
@@ -1295,6 +1309,8 @@ m_iPreferredWidth=Math.max(d.width,Math.max(m_flippingpanelOwnTraffic.getPreferr
 			MixCascade currentMixCascade = m_Controller.getCurrentMixCascade();
 			String strCascadeName=currentMixCascade.getName();
 			Vector v=m_Controller.getMixCascadeDatabase();
+			m_bIgnoreAnonComboEvents=true;
+			boolean bMixCascadeAlreadyIncluded=false;
 			m_comboAnonServices.removeAllItems();
 			if(v!=null)
 			{
@@ -1302,10 +1318,15 @@ m_iPreferredWidth=Math.max(d.width,Math.max(m_flippingpanelOwnTraffic.getPreferr
 				while(enumer.hasMoreElements())
 				{
 					MixCascade c=(MixCascade)enumer.nextElement();
-					m_comboAnonServices.addItem(c.getName());
+					m_comboAnonServices.addItem(c);
+					if(c.equals(currentMixCascade))
+						bMixCascadeAlreadyIncluded=true;
 				}
 			}
-			m_comboAnonServices.setSelectedItem(currentMixCascade.getName());
+			if(!bMixCascadeAlreadyIncluded)
+				m_comboAnonServices.addItem(currentMixCascade);
+			m_comboAnonServices.setSelectedItem(currentMixCascade);
+			m_bIgnoreAnonComboEvents=false;
 			m_comboAnonServices.setToolTipText(currentMixCascade.getName());
 
 			// Config panel
