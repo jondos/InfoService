@@ -6,7 +6,7 @@ import javax.swing.border.*;
 
 
 public final class JAPView extends JFrame implements ActionListener, JAPObserver {
-	private JAPModel model;
+	private JAPModel 			model;
 	private JLabel				meterLabel;
 	private JLabel				statusTextField1;
 	private JLabel				statusTextField2;
@@ -22,13 +22,12 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 	private JProgressBar 		trafficProgressBar;
 	private JProgressBar 		protectionProgressBar;
 	private JProgressBar 		ownTrafficChannelsProgressBar;
-	private JLabel 					ownTrafficBytesLabel;
+	private JLabel 				ownTrafficBytesLabel;
 	private ImageIcon[]			meterIcons;
-	private JAPHelp helpWindow;
-	private JAPConf configDialog;
+	private JAPHelp 			helpWindow;
+	private JAPConf 			configDialog;
 
-	public JAPView (String s)
-		{
+	public JAPView (String s) {
 			super(s);
 			JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPView:initializing...");
 			model = JAPModel.getModel();
@@ -36,7 +35,7 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 			helpWindow =  new JAPHelp(this); 
 			configDialog = new JAPConf(this);
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPView:initialization finished!");
-		}
+	}
 	
 	public void init() {
 	    try {
@@ -89,11 +88,7 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 	    quitB.setMnemonic(model.getString("quitButtonMn").charAt(0));
 
 		// add Components to Frame
-		setVisible(false);
-		//setResizable(true);
-//		setBackground(buttonPanel.getBackground());
 		getContentPane().setBackground(buttonPanel.getBackground());
-//		getContentPane().removeAll();
 		getContentPane().add(buttonPanel, BorderLayout.SOUTH);
 		getContentPane().add(northLabel, BorderLayout.NORTH);
 		getContentPane().add(westLabel, BorderLayout.WEST);
@@ -102,7 +97,7 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 
 		updateValues();
 		getContentPane().invalidate();
-	    setResizable(false);
+//	    setResizable(false);
 		try	{
 			pack();  // optimize size
 		}
@@ -381,7 +376,6 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 	}
 	
 	private void exitProgram() {
-		// * requestListener.stop();
 		model.goodBye(); // call the final exit procedure of JAP
 	}
 	
