@@ -507,7 +507,7 @@ public final class MuxSocket implements Runnable
 				XMLUtil.setNodeValue(elemMixEnc, Base64.encode(mixKeys, true));
 				e.appendChild(elemMixEnc);
 				XMLEncryption.encryptElement(e, m_arASymCipher[0].getPublicKey());
-				byte[] xml_buff = XMLUtil.XMLDocumentToString(doc).getBytes();
+				byte[] xml_buff = XMLUtil.toString(doc).getBytes();
 				m_outStream.write( (xml_buff.length >> 8) & 0x00FF);
 				m_outStream.write(xml_buff.length & 0x00FF);
 				m_outStream.write(xml_buff);

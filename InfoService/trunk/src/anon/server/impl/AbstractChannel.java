@@ -111,7 +111,7 @@ abstract public class AbstractChannel implements AnonChannel
 	//called from ChannelOutputStream to send data to the AnonService which belongs to this channel
 	abstract protected /*synchronized*/ void send(byte[] buff, int len) throws IOException;
 
-	public	void closedByPeer()
+	public void closedByPeer()
 	{
 		try
 		{
@@ -146,7 +146,17 @@ final class IOQueue
 	}
 
 	public synchronized void write(byte[] in, int pos, int len) throws IOException
-	{
+	{//RingBuffer: (Start)
+	 //	--------------------------------------------
+	//	^
+	//  |Writepos
+	//  |RreadPos
+	//
+	//After some Write
+	//	--------------------------------------------
+   //	^                ^
+   //                    |Writepos
+   //  |ReadPos
 		int toCopy;
 		while (len > 0)
 		{
@@ -304,11 +314,18 @@ final class IOQueue
 		{
 			return BUFF_SIZE;
 		}
-		if (writePos >= readPos)
+		if (readPos == writePos && !bFull) //IOQueue is empty
+		{
+			return 0;
+		}
+		if (writePos <= readPos)
+		{
+			return BUFF_SIZE - readPos;
+		}
+		else
 		{
 			return writePos - readPos;
 		}
-		return BUFF_SIZE - readPos + writePos;
 	}
 
 	public synchronized void closeWrite()
@@ -346,12 +363,15 @@ final class ChannelInputStream extends InputStream
 		m_channel = c;
 	}
 
-	protected
-		void recv(byte[] buff, int pos, int len)
+	protected void recv(byte[] buff, int pos, int len) throws IOException
 	{
 		try
 		{
 			m_Queue.write(buff, pos, len);
+		}
+		catch (IOException ioe)
+		{
+			throw ioe;
 		}
 		catch (Exception e)
 		{

@@ -498,7 +498,7 @@ public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncodable
 						String postData = "";
 						if (a_httpRequest.getRequestPostDocument() != null)
 						{
-							postData = XMLUtil.XMLDocumentToString(a_httpRequest.getRequestPostDocument());
+							postData = XMLUtil.toString(a_httpRequest.getRequestPostDocument());
 						}
 						response = currentConnection.Post(a_httpRequest.getRequestFileName(), postData);
 					}
@@ -892,7 +892,7 @@ public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncodable
 			NodeList signatureNodes = a_nodeToCheck.getElementsByTagName("Signature");
 			if (signatureNodes.getLength() == 0)
 			{
-				throw (new Exception("InfoService: signatureCheck: Signature node missing."));
+				throw (new Exception("Signature node missing."));
 			}
 			else
 			{
@@ -900,7 +900,7 @@ public class InfoServiceDBEntry extends DatabaseEntry implements IXMLEncodable
 				int errorCode = JAPCertPath.validate(a_nodeToCheck, signatureNode, a_trustedCertificates);
 				if (errorCode != ErrorCodes.E_SUCCESS)
 				{
-					throw (new Exception("InfoService: signatureCheck: Signature is invalid. Errorcode: " +
+					throw (new Exception("Signature is invalid. Errorcode: " +
 										 Integer.toString(errorCode)));
 				}
 			}

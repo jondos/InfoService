@@ -55,7 +55,7 @@
   <property category="optimize.12" name="oira.FilterFile" value="G:\projects\Jap\JAP.oif"/>
   <property category="optimize.6" name="OptimizableType" value="com.borland.jbuilder.optimize.IntroOptimizeitProfiler"/>
   <property category="personality" name="personality" value=""/>
-  <property category="runtime" name="ConfigurationCount" value="12"/>
+  <property category="runtime" name="ConfigurationCount" value="14"/>
   <property category="runtime.0" name="BuildTargetOnRun" value="com.borland.jbuilder.build.ProjectBuilder$ProjectBuildAction;make"/>
   <property category="runtime.0" name="ConfigurationName" value="JAP"/>
   <property category="runtime.0" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
@@ -139,6 +139,14 @@
   <property category="runtime.12" name="custom.required.9" value="ApacheFTPClient"/>
   <property category="runtime.12" name="jsprunner.launchuri" value="/"/>
   <property category="runtime.12" name="test.harness" value="junit.textui.TestRunner"/>
+  <property category="runtime.13" name="BuildTargetOnRun" value="com.borland.jbuilder.build.ProjectBuilder$ProjectBuildAction;make"/>
+  <property category="runtime.13" name="ConfigurationName" value="torproxy"/>
+  <property category="runtime.13" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
+  <property category="runtime.13" name="application.class" value="anon.tor.test.torproxy"/>
+  <property category="runtime.14" name="BuildTargetOnRun" value="com.borland.jbuilder.build.ProjectBuilder$ProjectBuildAction;make"/>
+  <property category="runtime.14" name="ConfigurationName" value="IOQueueTest"/>
+  <property category="runtime.14" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
+  <property category="runtime.14" name="application.class" value="anon.server.impl.IOQueueTest"/>
   <property category="runtime.2" name="ConfigurationName" value="XMLRPCTestServer"/>
   <property category="runtime.2" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
   <property category="runtime.2" name="application.class" value="misc.XMLRPCTestServer"/>

@@ -54,7 +54,8 @@ final public class Constants
   public static final String HTML_NOTFOUND = "<HTML><TITLE>404 File Not Found</TITLE><H1>404 File Not Found</H1><P>File not found on this server.</P></HTML>";
   public static final String HTML_INVALID_REQUEST = "<HTML><TITLE>400 Bad Request</TITLE><H1>400 Bad Request</H1><P>Your request has been rejected by the server.</P></HTML>";
   public static final String HTML_HASMOVED = "<HTML><TITLE>301 Moved Permanently</TITLE><H1>301 Moved Permanently</H1><P>The document has moved <A HREF=\"%\">here</A>.</P></HTML>";
-  public static final String UPDATE_MESSAGES_CERT = "certificates/japinfoservicemessages.cer";
+  public static final String CERTSPATH = "certificates/";
+  public static final String CERT_JAPINFOSERVICEMESSAGES = "japinfoservicemessages.cer";;
   public static final int MAX_REQUEST_HEADER_SIZE = 10000;
   public static final int REQUEST_METHOD_UNKNOWN = -1;
   public static final int REQUEST_METHOD_GET = 1;
@@ -111,7 +112,7 @@ final public class Constants
   /**
    * This is the version number of the infoservice software.
    */
-  public static final String INFOSERVICE_VERSION = "IS.06.026_experimental"; //never change the layout of this line!
+  public static final String INFOSERVICE_VERSION = "IS.06.031"; //never change the layout of this line!
 
 
 }

@@ -123,7 +123,7 @@ public class XtendedPrivateTestCase extends PrivateTestCase
 		doc.appendChild(element);
 
 		// write to file
-		XMLUtil.writeXMLDocumentToFile(doc, XML_STRUCTURE_PATH + filename + ".xml");
+		XMLUtil.writeToFile(doc, XML_STRUCTURE_PATH + filename + ".xml");
 
 	}
 

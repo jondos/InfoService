@@ -51,7 +51,7 @@ public abstract class AbstractControlChannel
 
 	public void sendMessage(Document docMsg)
 	{
-		byte[] msg=XMLUtil.XMLDocumentToString(docMsg).getBytes();
+		byte[] msg=XMLUtil.toString(docMsg).getBytes();
 		byte[] msglen=new byte[2];
 		msglen[0]=(byte)((msg.length>>8)&0x00FF);
 		msglen[1]=(byte)((msg.length)&0x00FF);

@@ -173,7 +173,7 @@ public class BIConnection
 			throw new Exception("BIConnection.authenticate: Your account certificate is not signed!");
 		}
 
-		String StrAccountCert = XMLUtil.XMLDocumentToString(XMLUtil.toXMLDocument(accountCert));
+		String StrAccountCert = XMLUtil.toString(XMLUtil.toXMLDocument(accountCert));
 		m_httpClient.writeRequest("POST", "authenticate", StrAccountCert);
 		String answer = m_httpClient.readAnswer();
 
@@ -181,7 +181,7 @@ public class BIConnection
 		byte[] challenge = xmlchallenge.getChallengeForSigning();
 		byte[] response = signer.signBytes(challenge);
 		XMLResponse xmlResponse = new XMLResponse(response);
-		String strResponse = XMLUtil.XMLDocumentToString(XMLUtil.toXMLDocument(xmlResponse));
+		String strResponse = XMLUtil.toString(XMLUtil.toXMLDocument(xmlResponse));
 
 		m_httpClient.writeRequest("POST", "response", strResponse);
 		answer = m_httpClient.readAnswer();
@@ -248,7 +248,7 @@ public class BIConnection
 		// send our public key
 		m_httpClient.writeRequest(
 			"POST", "register",
-			XMLUtil.XMLDocumentToString(XMLUtil.toXMLDocument(pubKey))
+			XMLUtil.toString(XMLUtil.toXMLDocument(pubKey))
 			);
 		String answer = m_httpClient.readAnswer();
 
@@ -257,7 +257,7 @@ public class BIConnection
 		byte[] challenge = xmlchallenge.getChallengeForSigning();
 		byte[] response = signKey.signBytes(challenge);
 		XMLResponse xmlResponse = new XMLResponse(response);
-		String strResponse = XMLUtil.XMLDocumentToString(XMLUtil.toXMLDocument(xmlResponse));
+		String strResponse = XMLUtil.toString(XMLUtil.toXMLDocument(xmlResponse));
 		m_httpClient.writeRequest("POST", "response", strResponse);
 		answer = m_httpClient.readAnswer();
 		XMLAccountCertificate xmlCert = new XMLAccountCertificate(answer);

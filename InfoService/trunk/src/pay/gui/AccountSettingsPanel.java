@@ -604,7 +604,7 @@ public class AccountSettingsPanel extends jap.AbstractJAPConfModule
 					String strPassword = JOptionPane.showInputDialog(view, "Bitte Passwort eingeben:");
 					XMLEncryption.encryptElement(elemAccount, strPassword);
 				}
-				String strOutput = XMLUtil.XMLDocumentToString(doc);
+				String strOutput = XMLUtil.toString(doc);
 				FileOutputStream outStream = new FileOutputStream(f);
 				outStream.write(strOutput.getBytes());
 				outStream.close();

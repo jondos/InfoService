@@ -38,10 +38,11 @@ import java.io.StringWriter;
  */
 public final class LogHolder {
 
-	//The possible detail levels of the log messages.
-	private static final int DETAIL_LEVEL_LOW = 0;
-	private static final int DETAIL_LEVEL_HIGH = 1;
-	private static final int DETAIL_LEVEL_HIGHEST = 2;
+	/// the lowest detail level that is possible
+	public static final int DETAIL_LEVEL_LOWEST = 0;
+	public static final int DETAIL_LEVEL_HIGH = 1;
+	/// the highest detail level that is possible
+	public static final int DETAIL_LEVEL_HIGHEST = 2;
 
 	/**
 	 * Stores the instance of LogHolder (Singleton).
@@ -51,7 +52,7 @@ public final class LogHolder {
 	/**
 	 * The current detail level of all log messages.
 	 */
-	private static int m_messageDetailLevel = DETAIL_LEVEL_LOW;
+	private static int m_messageDetailLevel = DETAIL_LEVEL_LOWEST;
 
 	/**
 	 * Stores the Log instance.
@@ -68,22 +69,56 @@ public final class LogHolder {
 
 	/**
 	 * Sets the detail level of all log messages. Use one of the class constants to set it.
-	 * @param a_detailLevel the detail level of all log messages
+	 * @param a_messageDetailLevel the detail level of all log messages
 	 */
 	public static void setDetailLevel(int a_messageDetailLevel)
 	{
-		m_messageDetailLevel = a_messageDetailLevel;
+		if (a_messageDetailLevel < DETAIL_LEVEL_LOWEST)
+		{
+			m_messageDetailLevel = DETAIL_LEVEL_LOWEST;
+		}
+		else if (a_messageDetailLevel > DETAIL_LEVEL_HIGHEST)
+		{
+			m_messageDetailLevel = DETAIL_LEVEL_HIGHEST;
+		}
+		else
+		{
+			m_messageDetailLevel = a_messageDetailLevel;
+		}
 	}
 
 	/**
-	 * Write the log data for an exception to the Log instance.
+	 * Gets the detail level of all log messages.
+	 * @return a_messageDetailLevel the detail level of all log messages
+	 */
+	public static int getDetailLevel()
+	{
+		return m_messageDetailLevel;
+	}
+
+	/**
+	 * Write the log data for a Throwable to the Log instance.
 	 *
 	 * @param logLevel The log level (see constants in class LogLevel).
 	 * @param logType The log type (see constants in class LogType).
-	 * @param a_exception an exception to log
+	 * @param a_throwable a Throwable to log
 	 */
-	public static void log(int logLevel, int logType, Exception a_exception) {
-		log(logLevel, logType, a_exception.toString());
+	public static void log(int logLevel, int logType, Throwable a_throwable) {
+		if (isLogged(logLevel, logType))
+		{
+			if (m_messageDetailLevel == DETAIL_LEVEL_LOWEST)
+			{
+				getInstance().getLogInstance().log(logLevel, logType, a_throwable.getMessage());
+			}
+			else if (m_messageDetailLevel == DETAIL_LEVEL_HIGH)
+			{
+				getInstance().getLogInstance().log(logLevel, logType, a_throwable.toString());
+			}
+			else
+			{
+				getInstance().getLogInstance().log(logLevel, logType, Util.getStackTrace(a_throwable));
+			}
+		}
 	}
 
 	/**
@@ -94,11 +129,9 @@ public final class LogHolder {
 	 * @param message The message to log.
 	 */
 	public static void log(int logLevel, int logType, String message) {
-		// test the log status before calling the log method; otherwise it could be very time consuming!
-		if (logLevel <= getInstance().getLogInstance().getLogLevel() &&
-			(logType & getInstance().getLogInstance().getLogType()) == logType)
+		if (isLogged(logLevel, logType))
 		{
-			if (m_messageDetailLevel <= DETAIL_LEVEL_LOW)
+			if (m_messageDetailLevel == DETAIL_LEVEL_LOWEST)
 			{
 				getInstance().getLogInstance().log(logLevel, logType, message);
 			}
@@ -147,6 +180,12 @@ public final class LogHolder {
 	 */
 	private Log getLogInstance() {
 		return m_logInstance;
+	}
+
+	private static boolean isLogged(int a_logLevel, int a_logType)
+	{
+		return (a_logLevel <= getInstance().getLogInstance().getLogLevel()) &&
+			((a_logType & getInstance().getLogInstance().getLogType()) == a_logType);
 	}
 
 	/**

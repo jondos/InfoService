@@ -1014,7 +1014,7 @@ public final class JAPController implements ProxyListener, Observer
         e.appendChild(JAPModel.getInstance().getRoutingSettings().getSettingsAsXml(doc));
       }
 
-			return XMLUtil.XMLDocumentToString(doc);
+			return XMLUtil.toString(doc);
 			//((XmlDocument)doc).write(f);
 		}
 		catch (Throwable ex)
