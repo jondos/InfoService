@@ -67,18 +67,19 @@ public class XMLUtil
 		public static boolean parseNodeBoolean(Node n,boolean defaultValue)
 				{
 					boolean b=defaultValue;
-					if(n!=null)
-						try
-							{
-								String tmpStr=n.getNodeValue();
-								if(tmpStr.equalsIgnoreCase("true"))
+					try
+						{
+							String tmpStr=parseNodeString(n,null);
+							if(tmpStr==null)
+								return b;
+							if(tmpStr.equalsIgnoreCase("true"))
 									b=true;
-								else if(tmpStr.equalsIgnoreCase("false"))
-									b=false;
-							}
-						catch(Exception e)
-							{
-							}
+							else if(tmpStr.equalsIgnoreCase("false"))
+								b=false;
+						}
+					catch(Exception e)
+						{
+						}
 					return b;
 				}
 

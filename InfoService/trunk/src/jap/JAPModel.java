@@ -26,6 +26,8 @@ IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISI
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
 package jap;
+import java.awt.Point;
+import java.awt.Dimension;
 import gui.JAPDll;
 
 /* This is the Model of All. It's a Singelton!*/
@@ -55,7 +57,9 @@ public final class JAPModel
 
 	private boolean m_bSmallDisplay                = false;
 	private boolean m_bInfoServiceDisabled         = false;
-
+	private boolean m_bSaveMainWindowPosition			 = false;
+	public Point m_OldMainWindowLocation					 = null;
+	public Dimension m_OldMainWindowSize			 		 = null;
 	private static JAPModel model                  = null;
 
 	private JAPModel ()
@@ -197,6 +201,17 @@ public final class JAPModel
 		{
 			return model.m_bMinimizeOnStartup;
 		}
+
+	protected void setSaveMainWindowPosition(boolean b)
+		{
+			m_bSaveMainWindowPosition=b;
+		}
+
+	public static boolean getSaveMainWindowPosition()
+		{
+			return model.m_bSaveMainWindowPosition;
+		}
+
 
 /*
 	//---------------------------------------------------------------------
