@@ -186,13 +186,13 @@ public final class JAPController implements ProxyListener {
 	 *		portNumber=""									// Listener-Portnumber
 	 *		portNumberSocks=""						// Listener-Portnumber for SOCKS
 	 *		supportSocks=""								// Will we support SOCKS ?
-	 *    listenerIsLocal="true"/"false"// Listener lasucht nur an localhost ?
+	 *    listenerIsLocal="true"/"false"// Listener lauscht nur an localhost ?
 	 *		proxyMode="true"/"false"			// Using a HTTP-Proxy??
    *    proxyType="SOCKS"/"HTTP"      // which kind of proxy
-	 *		proxyHostName="..."						// the Name of the HTTP-Proxy
-	 *		proxyPortNumber="..."					// port number of the HTTP-proxy
+	 *		proxyHostName="..."						// the Hostname of the Proxy
+	 *		proxyPortNumber="..."					// port number of the Proxy
 	 *    proxyAuthorization="true"/"false" //Need authorization to acces the proxy ?
-	 *    porxyAuthUserID="..."         //UserId for the Proxy if Auth is neccesary
+	 *    porxyAuthUserID="..."         //UserId for the Proxy if Auth is neccessary
 	 *		infoServiceHostName="..."			// hostname of the infoservice
 	 *		infoServicePortnumber=".."		// the portnumber of the info service
    *		infoServiceDisabled="true/false"		// disable use of InfoService
@@ -207,7 +207,7 @@ public final class JAPController implements ProxyListener {
 	 *		DummyTrafficIntervall=".."    //Time of inactivity in milli seconds after which a dummy is send
    *    minimizedStartup="true"/"false" // should we start minimized ???
 	 *		neverRemindActiveContent="true"/"false" // should we remind the user about active content ?
-	 *    Locale="LOCALE_IDENTIFIER (two letter iso 639 code)" //the Language for the UI to use
+	 *    Locale="LOCALE_IDENTIFIER" (two letter iso 639 code) //the Language for the UI to use
 	 *    LookAndFeel="..."             //the LookAndFeel
 	 *	>
 	 *	<Debug>
@@ -922,12 +922,12 @@ private final class SetAnonModeAsync implements Runnable
               int ret=m_proxyAnon.start();
               if(ret==AnonProxy.E_SUCCESS)
                 {
-                  // show a Reminder message that active contents should be disabled
-                  Object[] options = {  JAPMessages.getString("okButton") };
-                  JCheckBox checkboxRemindNever=new JCheckBox(JAPMessages.getString("disableActCntMessageNeverRemind"));
-                  Object[] message={JAPMessages.getString("disableActCntMessage"),checkboxRemindNever};
-                  if (!mbActCntMessageNotRemind)
+                  if (!mbActCntMessageNotRemind&&!JAPModel.isSmallDisplay())
                     {
+                      // show a Reminder message that active contents should be disabled
+                      Object[] options = {  JAPMessages.getString("okButton") };
+                      JCheckBox checkboxRemindNever=new JCheckBox(JAPMessages.getString("disableActCntMessageNeverRemind"));
+                      Object[] message={JAPMessages.getString("disableActCntMessage"),checkboxRemindNever};
                       ret=0;
                       ret= JOptionPane.showOptionDialog(m_Controller.getView(),
                                       (Object)message,
@@ -964,13 +964,16 @@ private final class SetAnonModeAsync implements Runnable
                 }
               else
                 {
-                  JOptionPane.showMessageDialog
-                    (
-                      getView(),
-                      JAPMessages.getString("errorConnectingFirstMix")+"\n"+JAPMessages.getString("errorCode")+": "+Integer.toString(ret),
-                      JAPMessages.getString("errorConnectingFirstMixTitle"),
-                      JOptionPane.ERROR_MESSAGE
-                    );
+                  if(!JAPModel.isSmallDisplay())
+                    {
+                      JOptionPane.showMessageDialog
+                        (
+                          getView(),
+                          JAPMessages.getString("errorConnectingFirstMix")+"\n"+JAPMessages.getString("errorCode")+": "+Integer.toString(ret),
+                          JAPMessages.getString("errorConnectingFirstMixTitle"),
+                          JOptionPane.ERROR_MESSAGE
+                        );
+                    }
                 }
               m_proxyAnon=null;
               view.setCursor(Cursor.getDefaultCursor());
@@ -1298,10 +1301,13 @@ private final class SetAnonModeAsync implements Runnable
       catch (Exception e)
         {
 			    JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPModel:fetchAnonServers: "+e);
-			    JOptionPane.showMessageDialog(view,
+			    if(!JAPModel.isSmallDisplay())
+            {
+              JOptionPane.showMessageDialog(view,
                       JAPMessages.getString("errorConnectingInfoService"),
 											JAPMessages.getString("errorConnectingInfoServiceTitle"),
 											JOptionPane.ERROR_MESSAGE);
+            }
 		    }
 		  if((db!=null)&&(db.length>=1))
         {
@@ -1402,10 +1408,11 @@ private final class SetAnonModeAsync implements Runnable
 			// Verson check failed
 			// ->Alert, and reset anon mode to false
 			JAPDebug.out(JAPDebug.ERR,JAPDebug.MISC,"JAPModel: "+e);
-			JOptionPane.showMessageDialog(view,
-																		JAPMessages.getString("errorConnectingInfoService"),
-																		JAPMessages.getString("errorConnectingInfoServiceTitle"),
-																		JOptionPane.ERROR_MESSAGE);
+			JAPUtil.showMessageBox(view,"errorConnectingInfoService","errorConnectingInfoServiceTitle",JOptionPane.ERROR_MESSAGE);
+      //JOptionPane.showMessageDialog(view,
+			//															JAPMessages.getString("errorConnectingInfoService"),
+			//															JAPMessages.getString("errorConnectingInfoServiceTitle"),
+			//															JOptionPane.ERROR_MESSAGE);
 			notifyJAPObservers();
 			return -1;
 		}

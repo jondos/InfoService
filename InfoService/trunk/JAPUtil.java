@@ -395,6 +395,13 @@ final public class JAPUtil
 				f.setLocation((screenSize.width-ownSize.width ) , 0 );
 			}
 
+  public static void showMessageBox(JFrame parent,String messageID,String titleID,int jOptionPaneMessageType)
+    {
+			JOptionPane pane=new JOptionPane(JAPMessages.getString(messageID),jOptionPaneMessageType);
+      JDialog dialog=pane.createDialog(parent,JAPMessages.getString(titleID));
+      dialog.setFont(JAPController.getDialogFont());
+      dialog.show();
+    }
 
 	/** Sets the mnemonic charcter of a component. The character must be set
 	 *  in the properties file under a name that is given in mnPropertyString.
