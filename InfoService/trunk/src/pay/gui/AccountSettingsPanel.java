@@ -897,6 +897,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 	protected void onUpdateValues()
 	{
 		PayAccountsFile accounts = PayAccountsFile.getInstance();
+		if(accounts==null)
+			return;
 		Enumeration enumAccounts = accounts.getAccounts();
 		while (enumAccounts.hasMoreElements())
 		{
@@ -930,6 +932,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 
 		public int getRowCount()
 		{
+			if(m_accounts==null)
+				return 0;
 			return m_accounts.getNumAccounts();
 		}
 

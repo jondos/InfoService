@@ -337,7 +337,7 @@ final class JAPConf extends JDialog
 		rootNode.add(node);
 		if (loadPay)
 		{
-		node=new DefaultMutableTreeNode(accountsModule.getTabTitle());
+		node=new DefaultMutableTreeNode(new TreeElement(accountsModule.getTabTitle(),PAYMENT_TAB));
 		rootNode.add(node);
 		}
 		node=new DefaultMutableTreeNode(new TreeElement(updateModule.getTabTitle(),UPDATE_TAB));
