@@ -46,12 +46,11 @@ import anon.pay.xml.XMLAccountInfo;
 import anon.pay.xml.XMLBalance;
 import anon.pay.xml.XMLChallenge;
 import anon.pay.xml.XMLJapPublicKey;
-import anon.pay.xml.XMLResponse;
 import anon.pay.xml.XMLTransCert;
 import anon.util.XMLUtil;
 import logging.*;
 import anon.tor.tinytls.*;
-//import pay.crypto.tinyssl.TinySSL;
+import anon.pay.xml.*;
 
 
 public class BIConnection
@@ -62,7 +61,6 @@ public class BIConnection
 	private HttpClient m_httpClient;
 	private boolean m_bIsSslOn;
 
-
 	/**
 	 * Constructor
 	 *
@@ -72,7 +70,7 @@ public class BIConnection
 	public BIConnection(BI theBI,
 						boolean sslOn
 						/*						XMLAccountCertificate accountCert,
-						 MyRSAPrivateKey privKey*/
+						MyRSAPrivateKey privKey*/
 						)
 	{
 		m_theBI = theBI;
@@ -86,28 +84,18 @@ public class BIConnection
 	 */
 	public void connect() throws Exception
 	{
-		try
+		if (m_bIsSslOn == false)
 		{
-			if (m_bIsSslOn == false)
-			{
-				m_socket = new Socket(m_theBI.getHostName(), m_theBI.getPortNumber());
-			}
-			else
-			{
-				TinyTLS tls = new TinyTLS(m_theBI.getHostName(), m_theBI.getPortNumber());
-				tls.setRootKey(m_theBI.getCertificate());
-				tls.startHandshake();
-				m_socket = tls.getSocket();
-			}
-			m_httpClient = new HttpClient(m_socket);
+			m_socket = new Socket(m_theBI.getHostName(), m_theBI.getPortNumber());
 		}
-		catch (Exception ex)
+		else
 		{
-			throw new Exception(
-				"Could not connect to BI " + m_theBI.getName() + " at " +
-				m_theBI.getHostName() + ":" + m_theBI.getPortNumber() +
-				" (" + ex.getMessage() + ")");
+			TinyTLS tls = new TinyTLS(m_theBI.getHostName(), m_theBI.getPortNumber());
+			tls.setRootKey(m_theBI.getCertificate());
+			tls.startHandshake();
+			m_socket = tls;
 		}
+		m_httpClient = new HttpClient(m_socket);
 	}
 
 	/**
@@ -138,7 +126,7 @@ public class BIConnection
 		m_httpClient.writeRequest("GET", "charge", null);
 		String answer = m_httpClient.readAnswer();
 		XMLTransCert xmltrcert = new XMLTransCert(answer);
-		if(xmltrcert.verifySignature(m_theBI.getVerifier()))
+		if (xmltrcert.verifySignature(m_theBI.getVerifier()))
 		{
 			return xmltrcert;
 		}
@@ -163,17 +151,19 @@ public class BIConnection
 		XMLAccountInfo info = null;
 		m_httpClient.writeRequest("GET", "balance", null);
 		answer = m_httpClient.readAnswer();
-		LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Received answer: "+answer);
+		LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Received answer: " + answer);
 		info = new XMLAccountInfo(answer);
 		XMLBalance bal = info.getBalance();
-		if(m_theBI.getVerifier().verifyXML(XMLUtil.toXMLDocument(bal))==false)
+		if (m_theBI.getVerifier().verifyXML(XMLUtil.toXMLDocument(bal)) == false)
+		{
 			throw new Exception("Invalid Signature");
+		}
 		return info;
 	}
 
 	public void authenticate(XMLAccountCertificate accountCert, JAPSignature signer) throws Exception
 	{
-		if(accountCert.isSigned()==false)
+		if (accountCert.isSigned() == false)
 		{
 			throw new Exception("BIConnection.authenticate: Your account certificate is not signed!");
 		}
@@ -265,11 +255,11 @@ public class BIConnection
 		String strResponse = XMLUtil.toString(XMLUtil.toXMLDocument(xmlResponse));
 		m_httpClient.writeRequest("POST", "response", strResponse);
 		answer = m_httpClient.readAnswer();
-		LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Received answer: "+answer);
+		LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Received answer: " + answer);
 		XMLAccountCertificate xmlCert = new XMLAccountCertificate(answer);
 
 		// check signature
-		if(!xmlCert.verifySignature(m_theBI.getVerifier()))
+		if (!xmlCert.verifySignature(m_theBI.getVerifier()))
 		{
 			throw new Exception("AccountCertificate: Wrong signature!");
 		}

@@ -144,7 +144,7 @@ public class XMLAccountCertificate extends AbstractXMLSignable
 
 		// parse accountnumber
 		Element elem = (Element) XMLUtil.getFirstChildByName(xml, "AccountNumber");
-		m_accountNumber = XMLUtil.parseNodeLong(elem, 0l);
+		m_accountNumber = XMLUtil.parseValue(elem, 0l);
 		if (m_accountNumber == 0)
 		{
 			throw new Exception("XMLAccountCertificate: cannot parse accountnumber");

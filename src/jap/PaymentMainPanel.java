@@ -25,7 +25,7 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package pay.gui;
+package jap;
 
 /**
  * This class is the main payment view on JAP's main gui window
@@ -33,29 +33,27 @@ package pay.gui;
  * @author Bastian Voigt
  * @version 1.0
  */
+import java.util.Enumeration;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Image;
+import java.awt.LayoutManager;
 import java.awt.MediaTracker;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.border.EtchedBorder;
-import javax.swing.border.TitledBorder;
 
 import anon.pay.PayAccount;
 import anon.pay.PayAccountsFile;
 import anon.pay.xml.XMLErrorMessage;
-import jap.JAPConstants;
-import jap.JAPModel;
-import jap.JAPUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import javax.swing.*;
-import java.util.*;
 
 public class PaymentMainPanel extends JPanel
 {
@@ -94,7 +92,9 @@ public class PaymentMainPanel extends JPanel
 				m.waitForAll();
 			}
 			catch (Exception e)
-			{}
+			{
+				LogHolder.log(LogLevel.DEBUG, LogType.PAY, e);
+			}
 		}
 	}
 
@@ -115,11 +115,13 @@ public class PaymentMainPanel extends JPanel
 
 	public PaymentMainPanel()
 	{
-		super(new BorderLayout());
-		LogHolder.log(LogLevel.DEBUG, LogType.PAY, "PaymentMainPanel: constructor");
-		loadIcons();
+		super(null);
 
-		setBorder(new TitledBorder("Account information"));
+		loadIcons();
+		/*		GridBagLayout l = new GridBagLayout();
+		  GridBagConstraints c = new GridBagConstraints();*/
+		LayoutManager l = new BorderLayout();
+		this.setLayout(l);
 
 		// show the icon label
 		m_AccountIconLabel = new JLabel(m_accountIcons[1]);
@@ -248,7 +250,7 @@ public class PaymentMainPanel extends JPanel
 			PayAccountsFile accounts = PayAccountsFile.getInstance();
 			if (accounts.getNumAccounts() == 0)
 			{
-				if( JOptionPane.showOptionDialog(
+				if (JOptionPane.showOptionDialog(
 					PaymentMainPanel.this,
 					"The mixcascade you are currently using wants to be payed. " +
 					"Would you like to create an account now?" +
@@ -265,8 +267,8 @@ public class PaymentMainPanel extends JPanel
 					JOptionPane.showMessageDialog(
 						PaymentMainPanel.this,
 						"The mixcascade you are currently using wants to be payed. " +
-						"Your active account with the accountnumber "+
-						accounts.getActiveAccount().getAccountNumber()+
+						"Your active account with the accountnumber " +
+						accounts.getActiveAccount().getAccountNumber() +
 						" will be used for payment.",
 						"JAP Payment", JOptionPane.INFORMATION_MESSAGE
 						);
@@ -290,7 +292,7 @@ public class PaymentMainPanel extends JPanel
 						JOptionPane.showOptionDialog(
 							PaymentMainPanel.this,
 							"The mixcascade you are currently using wants to be payed. " +
-							"You must activate an account to allow Jap using it for payment. "+
+							"You must activate an account to allow Jap using it for payment. " +
 							"Would you like to choose an active account now?",
 							"JAP Payment", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE,
 							null, null, null);

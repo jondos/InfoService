@@ -442,7 +442,6 @@
   <node name="junitx.framework.extension" type="Package"/>
   <node name="logging" type="Package"/>
   <node name="misc" type="Package"/>
-  <node name="pay" type="Package"/>
   <node name="proxy" type="Package"/>
   <node name="test" type="Package"/>
   <node name="update" type="Package"/>

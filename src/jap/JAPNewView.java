@@ -70,6 +70,9 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import anon.infoservice.MixCascade;
 import anon.infoservice.StatusInfo;
+import anon.pay.IPaymentListener;
+import anon.pay.PayAccount;
+import anon.pay.xml.XMLErrorMessage;
 import gui.FlippingPanel;
 import gui.JAPDll;
 import gui.JAPMixCascadeComboBox;
@@ -426,7 +429,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		{
 			m_flippingPanelPayment = new FlippingPanel(this);
 
-			m_flippingPanelPayment.setFullPanel(new pay.gui.PaymentMainPanel());
+			m_flippingPanelPayment.setFullPanel(new jap.PaymentMainPanel());
 
 			gbl1 = new GridBagLayout();
 			c1 = new GridBagConstraints();
@@ -838,43 +841,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		JPanel level = buildLevelPanel();
 		//tabs.addTab(JAPMessages.getString("mainMeterTab"),JAPUtil.loadImageIcon(JAPConstants.METERICONFN, true), level );
 		// "South": Buttons
-
-
-//---------------------------------------------- add Components to Frame
-		// temporary testing of new GUI interface now disabled... (Bastian Voigt)
-		/*		if (loadPay)
-		   {
-		 // add old GUI as a tab
-		 JPanel oldInterfacePanel = new JPanel(new BorderLayout());
-		 oldInterfacePanel.setBackground(buttonPanel.getBackground());
-		 oldInterfacePanel.add(level, BorderLayout.CENTER);
-		 m_panelMain = level;
-		 if (!JAPModel.isSmallDisplay())
-		 {
-		  oldInterfacePanel.add(northPanel, BorderLayout.NORTH);
-		  oldInterfacePanel.add(westLabel, BorderLayout.WEST);
-		  oldInterfacePanel.add(new JLabel("  "), BorderLayout.EAST); //Spacer
-		  oldInterfacePanel.add(buttonPanel, BorderLayout.SOUTH);
-		 }
-
-		 // initialize new Payment GUI
-		 JPanel drumherum = new JPanel(new BorderLayout());
-		 JPanel dummyPanel1 = new JPanel();
-		 dummyPanel1.setBorder(new TitledBorder("Dummy Panel 1"));
-		 JPanel dummyPanel2 = new JPanel();
-		 dummyPanel2.setBorder(new TitledBorder("Dummy Panel 2"));
-		 JPanel newInterfacePanel = new PaymentMainPanel();
-		 JTabbedPane tab = new JTabbedPane();
-		 drumherum.add(dummyPanel2, BorderLayout.NORTH);
-		 drumherum.add(dummyPanel1, BorderLayout.CENTER);
-		 drumherum.add(newInterfacePanel, BorderLayout.SOUTH);
-		 tab.addTab("Old interface", oldInterfacePanel);
-		 tab.addTab("New Payment Interface", drumherum);
-		 getContentPane().add(tab);
-		   PayAccountsFile.getInstance().addPaymentListener(new MyPaymentListener());
-		   }
-		   else
-		  { // if loadPay is off, all stays as usual*/
 
 		getContentPane().setBackground(buttonPanel.getBackground());
 		getContentPane().add(northPanel, BorderLayout.CENTER);

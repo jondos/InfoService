@@ -36,7 +36,7 @@ public class XMLErrorMessage implements IXMLEncodable
 		"No account certificate", "No balance", "No cost confirmation"
 	};
 
-	private static final String XML_ELEMENT_NAME = "ErrorMessage";
+	public static final String XML_ELEMENT_NAME = "ErrorMessage";
 
 	/**
 	 * Parses an XMLErrorMessage object from DOM Document
@@ -48,6 +48,17 @@ public class XMLErrorMessage implements IXMLEncodable
 		Element elemRoot = doc.getDocumentElement();
 		setValues(elemRoot);
 	}
+
+	/**
+	 * XMLErrorMessage
+	 *
+	 * @param element Element
+	 */
+	public XMLErrorMessage(Element element) throws Exception
+	{
+		setValues(element);
+	}
+
 
 	/**
 	 * Creates an errorMessage object. The errorcode should be one of the
@@ -106,5 +117,4 @@ public class XMLErrorMessage implements IXMLEncodable
 		m_strErrMsg = XMLUtil.parseNodeString(elemRoot, "");
 
 	}
-
 }

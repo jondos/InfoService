@@ -760,7 +760,7 @@ public final class JAPController implements ProxyListener, Observer
 				if (loadPay)
 				{
 					Element elemPay = (Element) XMLUtil.getFirstChildByName(root, "Payment");
-					String biName = elemPay.getAttribute("biName");
+					/*					String biName = elemPay.getAttribute("biName");
 					if (biName == null || biName.equals(""))
 					{
 						biName = JAPConstants.PIHOST;
@@ -778,8 +778,20 @@ public final class JAPController implements ProxyListener, Observer
 					BI theBI = new BI(
 						m_Model.getResourceLoader().loadResource(JAPConstants.CERTSPATH +
 						JAPConstants.CERT_BI),
-						biName, biHost, biPort);
-
+					   biName, biHost, biPort);*/
+					Element elemBI = (Element) XMLUtil.getFirstChildByName(elemPay, BI.XML_ELEMENT_NAME);
+					BI theBI = null;
+					if (elemBI == null)
+					{
+						theBI = new BI(
+							m_Model.getResourceLoader().loadResource(JAPConstants.CERTSPATH +
+							JAPConstants.CERT_BI),
+							JAPConstants.PIHOST, JAPConstants.PIHOST, JAPConstants.PIPORT);
+					}
+					else
+					{
+						theBI = new BI(elemBI);
+					}
 					Element elemAccounts = (Element) XMLUtil.getFirstChildByName(elemPay, "EncryptedData");
 
 					// test: is account data encrypted?
@@ -824,11 +836,19 @@ public final class JAPController implements ProxyListener, Observer
 						if (elemAccounts != null)
 						{
 							PayAccountsFile.init(theBI, elemAccounts);
+							if (PayAccountsFile.getInstance().getNumAccounts() == 0)
+							{
+								m_bPaymentFirstTime = true;
+							}
+							else
+							{
 							m_bPaymentFirstTime = false;
+						}
 						}
 						else
 						{
 							PayAccountsFile.init(theBI, null);
+							m_bPaymentFirstTime = true;
 						}
 					}
 				}
@@ -1069,13 +1089,17 @@ public final class JAPController implements ProxyListener, Observer
 			{
 				Element elemPayment = doc.createElement("Payment");
 				e.appendChild(elemPayment);
-				elemPayment.setAttribute("biHost", JAPModel.getBIHost());
-				elemPayment.setAttribute("biPort", Integer.toString(JAPModel.getBIPort()));
+//				elemPayment.setAttribute("biHost", JAPModel.getBIHost());
+//				elemPayment.setAttribute("biPort", Integer.toString(JAPModel.getBIPort()));
+				if (accounts.getBI() != null)
+				{
+					elemPayment.appendChild(accounts.getBI().toXmlElement(doc));
 
 				// get configuration from accountsfile
+				}
 				Element elemAccounts = accounts.toXmlElement(doc);
 				elemPayment.appendChild(elemAccounts);
-				if (m_bPaymentFirstTime)
+				if (m_bPaymentFirstTime && PayAccountsFile.getInstance().getNumAccounts()>0)
 				{
 					// payment functionality was used for the first time, ask user for password...
 					/** @todo internationalize, maybe check password length/strength?? */

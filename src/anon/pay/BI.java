@@ -40,6 +40,8 @@ public class BI implements IXMLEncodable
 	private JAPSignature m_veryfire;
 	private JAPCertificate m_cert;
 
+	public static final String XML_ELEMENT_NAME="BI";
+
 	public BI(String biName, String hostName, int portNumber, JAPCertificate cert) throws Exception
 	{
 		m_cert = cert;
@@ -81,7 +83,8 @@ public class BI implements IXMLEncodable
 
 	private void setValues(Element elemRoot) throws Exception
 	{
-		if (elemRoot.getTagName().equals("BI"))
+		String rootName = elemRoot.getTagName();
+		if (!rootName.equals(XML_ELEMENT_NAME))
 		{
 			throw new Exception("BI wrong XML format");
 		}
@@ -94,13 +97,17 @@ public class BI implements IXMLEncodable
 		elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "PortNumber");
 		m_portNumber = XMLUtil.parseNodeInt(elem, 0);
 
-		elem = (Element) XMLUtil.getFirstChildByName(elemRoot, JAPCertificate.XML_ELEMENT_NAME);
-		if (elem != null)
+		elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "TestCertificate");
+		if(elem != null)
 		{
-			JAPCertificate cert = JAPCertificate.getInstance(elem);
-			if (cert != null)
+			elem = (Element) XMLUtil.getFirstChildByName(elem, JAPCertificate.XML_ELEMENT_NAME);
+			if (elem != null)
 			{
-				m_cert = cert;
+				JAPCertificate cert = JAPCertificate.getInstance(elem);
+				if (cert != null)
+				{
+					m_cert = cert;
+				}
 			}
 		}
 	}
@@ -143,7 +150,7 @@ public class BI implements IXMLEncodable
 	 */
 	public Element toXmlElement(Document a_doc)
 	{
-		Element elemRoot = a_doc.createElement("BI");
+		Element elemRoot = a_doc.createElement(XML_ELEMENT_NAME);
 		elemRoot.setAttribute("version", "1.0");
 
 		Element elem = a_doc.createElement("BIName");
@@ -158,7 +165,9 @@ public class BI implements IXMLEncodable
 		elemRoot.appendChild(elem);
 		XMLUtil.setNodeValue(elem, Integer.toString(m_portNumber));
 
-		elemRoot.appendChild(m_cert.toXmlElement(a_doc));
+		elem = a_doc.createElement("TestCertificate");
+		elemRoot.appendChild(elem);
+		elem.appendChild(m_cert.toXmlElement(a_doc));
 		return elemRoot;
 	}
 

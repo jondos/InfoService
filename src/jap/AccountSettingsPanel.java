@@ -25,13 +25,14 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package pay.gui;
+package jap;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.Enumeration;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
@@ -44,26 +45,23 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.border.EmptyBorder;
-import javax.swing.filechooser.FileFilter;
+import javax.swing.border.TitledBorder;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.JTableHeader;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import anon.crypto.XMLEncryption;
+import anon.pay.PayAccount;
+import anon.pay.PayAccountsFile;
+import anon.pay.xml.XMLAccountInfo;
+import anon.pay.xml.XMLBalance;
+import anon.pay.xml.XMLTransCert;
 import anon.util.XMLUtil;
-import jap.AbstractJAPConfModule;
-import jap.JAPConstants;
-import jap.JAPController;
-import jap.JAPMessages;
-import jap.JAPWaitSplash;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 
-import anon.pay.Pay;
-import anon.pay.PayAccount;
-import anon.pay.PayAccountsFile;
-import anon.pay.xml.*;
 /**
  * The Jap Conf Module (Settings Tab Page) for the Accounts and payment Management
  *
@@ -109,6 +107,7 @@ public class AccountSettingsPanel extends jap.AbstractJAPConfModule
 		/* clear the whole root panel */
 		rootPanel.removeAll();
 		rootPanel.setLayout(new BorderLayout());
+		rootPanel.setBorder(new TitledBorder("Pseudonym Accounts"));
 
 		JPanel centerPanel = new JPanel(new BorderLayout());
 
@@ -118,7 +117,10 @@ public class AccountSettingsPanel extends jap.AbstractJAPConfModule
 		JTableHeader header = m_Table.getTableHeader();
 		centerPanel.add(new JScrollPane(m_Table), BorderLayout.CENTER);
 
-		JPanel eastPanel = new JPanel(new GridLayout(16, 1));
+		GridLayout gl = new GridLayout(16, 1);
+		gl.setVgap(10);
+		JPanel eastPanel = new JPanel(gl);
+
 		ActionListener myActionListener = new MyActionListener();
 		eastPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
 
@@ -271,7 +273,8 @@ public class AccountSettingsPanel extends jap.AbstractJAPConfModule
 			"<tr><td> </td></tr>" +
 			"<tr><td>Eingezahlt</td><td>" + balance.getDeposit() + "</td></tr>" +
 			"<tr><td>Verbraucht</td><td>" + balance.getSpent() + "</td></tr>" +
-			"<tr><td>aktueller Kontostand</td><td>" + (balance.getDeposit()-balance.getSpent()) + "</td></tr>" +
+			"<tr><td>aktueller Kontostand</td><td>" + (balance.getDeposit() - balance.getSpent()) +
+			"</td></tr>" +
 			"<tr><td>Guthaben g&uuml;ltig bis</td><td>" + balance.getValidTime() + "</td></tr>" +
 			"</table></html>",
 			"Detaillierte Kontoinformationen",
@@ -280,7 +283,7 @@ public class AccountSettingsPanel extends jap.AbstractJAPConfModule
 	}
 
 	/**
-	 * Tries to find the right account
+	 * returns the selected (active) account
 	 * @return PayAccount
 	 * @todo internationalize messages
 	 */
@@ -293,50 +296,7 @@ public class AccountSettingsPanel extends jap.AbstractJAPConfModule
 		int selectedRow = m_Table.getSelectedRow();
 		if (selectedRow < 0)
 		{
-			int numAccounts = accounts.getNumAccounts();
-			if (numAccounts == 0)
-			{
-				int choice = JOptionPane.showOptionDialog(
-					view,
-					"<html>Sie haben noch kein Konto.<br>" +
-					"Bevor Sie diese Aktion ausf&uuml;hren k&ouml;nnen, m&uuml;ssen Sie<br>" +
-					"erst ein Konto anlegen.<br>M&ouml;chten Sie das jetzt tun?</html>",
-					"Noch kein Konto vorhanden",
-					JOptionPane.YES_NO_OPTION,
-					JOptionPane.QUESTION_MESSAGE,
-					null, null, null
-					);
-				if (choice == JOptionPane.YES_OPTION)
-				{
-					if (doCreateAccount())
-					{
-						selectedRow = 0;
-					}
-					else
-					{
-						return null;
-					}
-				}
-				else
-				{
-					return null;
-				}
-			}
-			else if (numAccounts == 1)
-			{
-				selectedRow = 0;
-			}
-			else
-			{
-				JOptionPane.showMessageDialog(
-					view,
-					"<html>Sie haben mehrere Konten. Bitte w&auml;hlen Sie eine Zeile<br>" +
-					"in der Tabelle aus.<br>",
-					"Kein Konto ausgewaehlt",
-					JOptionPane.ERROR_MESSAGE
-					);
-				return null;
-			}
+			return null;
 		}
 		return accounts.getAccountAt(selectedRow);
 	}
@@ -476,8 +436,7 @@ public class AccountSettingsPanel extends jap.AbstractJAPConfModule
 			catch (Exception ex)
 			{
 				splash.abort();
-				ex.printStackTrace();
-				LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Exception CreateAccount: " + ex.toString());
+				LogHolder.log(LogLevel.DEBUG, LogType.PAY, ex);
 				JOptionPane.showMessageDialog(
 					view,
 					JAPMessages.getString("Error creating account: ") + ex.getMessage(),
@@ -699,7 +658,7 @@ public class AccountSettingsPanel extends jap.AbstractJAPConfModule
 								strMessage = "Bad password. Please type a password for decryption";
 								continue;
 							}
-							break;
+							break ;
 						}
 					}
 				}
@@ -773,7 +732,8 @@ public class AccountSettingsPanel extends jap.AbstractJAPConfModule
 		if (selectedAccount.hasAccountInfo())
 		{
 			XMLAccountInfo accInfo = selectedAccount.getAccountInfo();
-			if (accInfo.getBalance().getTimestamp().getTime() < (System.currentTimeMillis() - 1000 * 60 * 60 * 24))
+			if (accInfo.getBalance().getTimestamp().getTime() <
+				(System.currentTimeMillis() - 1000 * 60 * 60 * 24))
 			{
 				int choice = JOptionPane.showOptionDialog(
 					view,
