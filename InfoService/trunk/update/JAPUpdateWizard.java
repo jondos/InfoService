@@ -404,10 +404,11 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
 
 
 
-                      infoService = new InfoService("infoservice.inf.tu-dresden.de",6543);
+                      infoService = JAPController.getController().getInfoService();
                       JAPVersionInfo japVersionInfo = infoService.getJAPVersionInfo(type);
                       // ErrorMessage connection with infoservice failed
-                      jarUrl = japVersionInfo.getJarUrl();
+                      jarUrl = new URL(japVersionInfo.getCodeBase());
+                      jarUrl =new URL(jarUrl.getProtocol(),jarUrl.getHost(),jarUrl.getPort(),jarUrl.getFile()+japVersionInfo.getJAPJarFileName());
                       listener.progress(0,0,UpdateListener.DOWNLOAD_START);
                       //System.out.println(jarUrl.getHost()+jarUrl.getFile());
 
