@@ -176,9 +176,10 @@ public class Tor implements /*Runnable,*/ AnonService
 			{
 				int circstart = m_rand.nextInt(m_MaxNrOfActiveCircuits);
 				int j = 0;
+				int circ = 0;
 				while (j < m_MaxNrOfActiveCircuits)
 				{
-					int circ = circstart % m_MaxNrOfActiveCircuits;
+					circ = circstart % m_MaxNrOfActiveCircuits;
 					if (m_activeCircuits[circ] == null || m_activeCircuits[circ].isShutdown())
 					{
 						m_activeCircuits[circ] = createNewCircuit(addr, port);
@@ -201,14 +202,17 @@ public class Tor implements /*Runnable,*/ AnonService
 					circstart++;
 					j++;
 				}
+				if (m_activeCircuits[circ] != null && !m_activeCircuits[circ].isShutdown())
+				{
 				//all circuits are active but no one fits...
 				//shutdown one and use them...
-				int circ = circstart % m_MaxNrOfActiveCircuits;
+					circ = circstart % m_MaxNrOfActiveCircuits;
 				m_activeCircuits[circ].shutdown();
 				m_activeCircuits[circ] = createNewCircuit(addr, port);
 				if (m_activeCircuits[circ] != null && !m_activeCircuits[circ].isShutdown())
 				{
 					return m_activeCircuits[circ];
+				}
 				}
 
 			}
