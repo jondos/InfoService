@@ -173,12 +173,12 @@ final class JAPConfInfoService extends AbstractJAPConfModule
 				if ( ( (InfoServiceDBEntry) a_value).isUserDefined())
 				{
 					returnLabel = new JLabel( ( (InfoServiceDBEntry) a_value).getName(),
-											 JAPUtil.loadImageIcon("servermanuell.gif", true), JLabel.LEFT);
+											 JAPUtil.loadImageIcon(JAPConstants.IMAGE_INFOSERVICE_MANUELL, true), JLabel.LEFT);
 				}
 				else
 				{
 					returnLabel = new JLabel( ( (InfoServiceDBEntry) a_value).getName(),
-											 JAPUtil.loadImageIcon("serverfrominternet.gif", true),
+											 JAPUtil.loadImageIcon(JAPConstants.IMAGE_INFOSERVICE_INTERNET, true),
 											 JLabel.LEFT);
 				}
 				returnLabel.setOpaque(true);
