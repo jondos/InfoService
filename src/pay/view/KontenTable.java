@@ -36,9 +36,8 @@ import pay.Pay;
 import pay.PayAccount;
 import pay.event.ModelEvent;
 import pay.event.ModelListener;
-import pay.util.Log;
 import pay.util.PayText;
-
+import logging.*;
 
 /**
  *	KontenTabel ist ein TableModell welches die Daten aus dem PayAcocuntFile
@@ -63,7 +62,7 @@ public class KontenTable extends AbstractTableModel implements ModelListener{
 			Pay pay = Pay.create();
 			daten = pay.getAccountVec();
 			pay.addModelListener(this);
-			Log.log(this,"[konstruktor] Rows: "+getRowCount(),Log.TEST);
+			LogHolder.log(LogLevel.DEBUG,LogType.PAY,"[konstruktor] Rows: "+getRowCount());
 		}
 
 
@@ -116,13 +115,13 @@ public class KontenTable extends AbstractTableModel implements ModelListener{
 		* in allen anderen Spalten passiert nichts
 		**/
 		public void setValueAt(Object ob ,int row, int col){
-			Log.log(this,"setValueAt: col: "+col+" getcolNam: --"+getColumnName(col)+"--  ",Log.TEST);
+			LogHolder.log(LogLevel.DEBUG,LogType.PAY,"setValueAt: col: "+col+" getcolNam: --"+getColumnName(col)+"--  ");
 			if(getColumnName(col).equals(aktuell)){
 				Pay.create().setUsedAccount(getRow(row).getAccountNumber());
 			}
 		}
 		public void modelUpdated(ModelEvent me){
-			Log.log(this,"modelUpdated",Log.SHORT_DEBUG);
+			LogHolder.log(LogLevel.DEBUG,LogType.PAY,"modelUpdated");
 			fireTableDataChanged();
 		}
 	}

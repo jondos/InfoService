@@ -35,7 +35,6 @@ import jap.JAPConstants;
 import jap.JAPModel;
 import pay.Pay;
 import pay.data.Literals;
-import pay.util.Log;
 
 /**
  * Diese Klasse stellt stellt zwei init Methoden bereits initPay() sollte dabei immer aufgerufen werden bevor mit der gesammten
@@ -53,7 +52,6 @@ public class PayControl{
  */
 
 	public static void initPay(){
-		Log.setDebugModus(Log.TEST);
 		JAPModel model = JAPModel.getModel();
 		Pay pay = Pay.create();
 		pay.setPayInstance(model.getBIHost(),model.getBIPort(),JAPConstants.PI_SSLON);

@@ -32,7 +32,7 @@ import java.awt.Container;
 import java.awt.event.ActionEvent;
 import javax.swing.JOptionPane;
 import pay.event.ActionThread;
-
+import logging.*;
 /**
  * Diese Klasse dient zum starten eines Browsers in einem eigenen Thread
  **/
@@ -80,7 +80,7 @@ public class BrowserStart extends ActionThread{
 				url2 = new URL(url,spec);
 				runcode = Runtime.getRuntime().exec(browser[i]+" \""+url2+"\"");
 				break;
-			} catch (Exception ex) { Log.log(this,"exec "+browser[i]+url2+" geht nicht",Log.SHORT_DEBUG);}
+			} catch (Exception ex) { LogHolder.log(LogLevel.DEBUG,LogType.PAY,"exec "+browser[i]+url2+" geht nicht");}
 		}
 		if(runcode==null)
 		JOptionPane.showMessageDialog(container,altText+" \n "+url2);
