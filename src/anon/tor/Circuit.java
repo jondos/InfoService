@@ -560,7 +560,7 @@ public class Circuit
 		if (m_streams.containsKey(key))
 		{
 			m_streams.remove(key);
-			RelayCell cell = new RelayCell(this.m_circID, RelayCell.RELAY_END, streamID, reason);
+			RelayCell cell = new RelayCell(m_circID, RelayCell.RELAY_END, streamID, reason);
 			send(cell);
 			if (m_State == STATE_SHUTDOWN)
 			{

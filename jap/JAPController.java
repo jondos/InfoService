@@ -222,7 +222,7 @@ public final class JAPController implements ProxyListener
 	 * and then in the JAP install directory.
 	 * The configuration is a XML-File with the following structure:
 	 *  <JAP
-	 *    version="0.8"                     // version of the xml struct (DTD) used for saving the configuration
+	 *    version="0.9"                     // version of the xml struct (DTD) used for saving the configuration
 	 *    portNumber=""                     // Listener-Portnumber
 	 *    portNumberSocks=""                // Listener-Portnumber for SOCKS
 	 *    supportSocks=""                   // Will we support SOCKS ?
@@ -281,7 +281,8 @@ public final class JAPController implements ProxyListener
 	 *   <InfoService id="...">...</InfoService>                // the same format as from infoservice, without signature, expire time does not matter
 	 * </PreferedInfoService>
 	 * <Tor>    //  Tor related seetings (since Version 0.6)
-	 * 	<MaxConnectionsPerRoute>...</MaxConnectionsPerRoute>(since Vresion 0.8) //How many connections are allowed before a new circuit is created
+	 * 	 <MaxConnectionsPerRoute>...</MaxConnectionsPerRoute>(since Vresion 0.8) //How many connections are allowed before a new circuit is created
+	 * 	 <RouteLen min=" " max=" "/>(since Vresion 0.9) //How long should a route be
 	 * </Tor>
 	 * <Payment //Since version 0.7
 	 *    biHost="..."                      // BI's Hostname
@@ -642,7 +643,11 @@ public final class JAPController implements ProxyListener
 				Element elemTor = (Element) XMLUtil.getFirstChildByName(root, "Tor");
 				Element elem = (Element) XMLUtil.getFirstChildByName(elemTor, "MaxConnectionsPerRoute");
 				setTorMaxConnectionsPerRoute(XMLUtil.parseNodeInt(elem, JAPModel.getTorMaxConnectionsPerRoute()));
-
+				elem = (Element) XMLUtil.getFirstChildByName(elemTor, "RouteLen");
+				int min, max;
+				min = XMLUtil.parseElementAttrInt(elem, "min", JAPModel.getTorMinRouteLen());
+				max = XMLUtil.parseElementAttrInt(elem, "max", JAPModel.getTorMaxRouteLen());
+				setTorRouteLen(min, max);
 				/* load Payment settings */
 				if (loadPay)
 				{
@@ -717,7 +722,7 @@ public final class JAPController implements ProxyListener
 			Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
 			Element e = doc.createElement("JAP");
 			doc.appendChild(e);
-			e.setAttribute("version", "0.6");
+			e.setAttribute("version", "0.9");
 			//
 			e.setAttribute("portNumber", Integer.toString(JAPModel.getHttpListenerPortNumber()));
 			//e.setAttribute("portNumberSocks", Integer.toString(JAPModel.getSocksListenerPortNumber()));
@@ -828,6 +833,10 @@ public final class JAPController implements ProxyListener
 			Element elemTor = doc.createElement("Tor");
 			Element elem = doc.createElement("MaxConnectionsPerRoute");
 			XMLUtil.setNodeValue(elem, Integer.toString(JAPModel.getTorMaxConnectionsPerRoute()));
+			elemTor.appendChild(elem);
+			elem = doc.createElement("RouteLen");
+			elem.setAttribute("min", Integer.toString(JAPModel.getTorMinRouteLen()));
+			elem.setAttribute("max", Integer.toString(JAPModel.getTorMaxRouteLen()));
 			elemTor.appendChild(elem);
 			e.appendChild(elemTor);
 
@@ -1194,11 +1203,11 @@ public final class JAPController implements ProxyListener
 					{
 						//starting SOCKS
 						/*if (JAPModel.isTorEnabled())
-									 {
+							{
 						  m_proxySocks = new AnonSocksProxy(m_socketSOCKSListener);
 						  m_proxySocks.setProxyListener(m_Controller);
 						  m_proxySocks.start();
-									 }*/
+							}*/
 						// starting MUX --> Success ???
 						if (JAPModel.getModel().getRoutingSettings().getRoutingMode() ==
 							JAPRoutingSettings.ROUTING_MODE_CLIENT)
@@ -1241,10 +1250,10 @@ public final class JAPController implements ProxyListener
 							canStartService = false;
 							m_proxyAnon = null;
 							/*if (m_proxySocks != null)
-										   {
+								  {
 							  m_proxySocks.stop();
-										   }
-										   m_proxySocks = null;*/
+								  }
+								  m_proxySocks = null;*/
 						}
 						if (ret == ErrorCodes.E_SUCCESS)
 						{
@@ -1470,6 +1479,12 @@ public final class JAPController implements ProxyListener
 		m_Model.setTorMaxConnectionsPerRoute(i);
 	}
 
+	public static void setTorRouteLen(int min, int max)
+	{
+		m_Model.setTorMaxRouteLen(max);
+		m_Model.setTorMinRouteLen(min);
+	}
+
 	//---------------------------------------------------------------------
 	private ServerSocket intern_startListener(int port, boolean bLocal)
 	{
@@ -1554,12 +1569,12 @@ public final class JAPController implements ProxyListener
 	   LogHolder.log(LogLevel.DEBUG, LogType.MISC, "JAPModel:start SOCKS Listener");
 	   if (isRunningSOCKSListener == false)
 	   {
-		 m_socketSOCKSListener = intern_startListener(JAPModel.getSocksListenerPortNumber(),
-		   JAPModel.getHttpListenerIsLocal());
-		 if (m_socketSOCKSListener != null)
-		 {
-		   isRunningSOCKSListener = true;
-		 }
+	  m_socketSOCKSListener = intern_startListener(JAPModel.getSocksListenerPortNumber(),
+		JAPModel.getHttpListenerIsLocal());
+	  if (m_socketSOCKSListener != null)
+	  {
+		isRunningSOCKSListener = true;
+	  }
 	   }
 	   return isRunningSOCKSListener;
 	 }
@@ -1595,7 +1610,7 @@ public final class JAPController implements ProxyListener
 				mbGoodByMessageNeverRemind = checkboxRemindNever.isSelected();
 			}
 			boolean error = m_Controller.saveConfigFile();
-			if (error&&bShowConfigSaveErrorMsg)
+			if (error && bShowConfigSaveErrorMsg)
 			{
 				LogHolder.log(LogLevel.ERR, LogType.MISC,
 							  "JAPController: saveConfigFile: Error saving configuration to: " +
@@ -1638,7 +1653,7 @@ public final class JAPController implements ProxyListener
 		{
 			LogHolder.log(LogLevel.ERR, LogType.NET,
 						  "JAPController: fetchMixCascades: No connection to infoservices.");
-			if (!JAPModel.isSmallDisplay()&&bShowError)
+			if (!JAPModel.isSmallDisplay() && bShowError)
 			{
 				JOptionPane.showMessageDialog(m_View, JAPMessages.getString("errorConnectingInfoService"),
 											  JAPMessages.getString("errorConnectingInfoServiceTitle"),

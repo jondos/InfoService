@@ -49,6 +49,7 @@ import anon.tor.util.helper;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import java.util.*;
 
 /**
  * @author stefan
@@ -58,10 +59,10 @@ public class Tor implements /*Runnable,*/ AnonService
 {
 
 	//maximal possible length of a circuit
-	private final static int MAX_CIRCUIT_LENGTH = 5;
+	public final static int MAX_ROUTE_LEN = 5;
 
 	//minimal onion routers, that are used
-	private final static int MIN_CIRCUIT_LENGTH = 2;
+	public final static int MIN_ROUTE_LEN = 2;
 
 	private static Tor ms_theTorInstance = null;
 
@@ -123,9 +124,9 @@ public class Tor implements /*Runnable,*/ AnonService
 
 		m_allowedExitNodeNames = null;
 
-		m_circuitLengthMin = 2;
-		m_circuitLengthMax = 5;
-		m_ConnectionsPerCircuit=1000;
+		m_circuitLengthMin = MIN_ROUTE_LEN;
+		m_circuitLengthMax = MAX_ROUTE_LEN;
+		m_ConnectionsPerCircuit = Circuit.MAX_STREAMS_OVER_CIRCUIT;
 		m_rand = new MyRandom(new SecureRandom());
 		m_bIsStarted = false;
 		m_bIsCreatingCircuit = false;
@@ -246,11 +247,11 @@ public class Tor implements /*Runnable,*/ AnonService
 					m_circuitLengthMin;
 				//check if know about some Onion Routers...
 				Date listPublished = m_orList.getPublished();
-				if(listPublished!=null)
+				if (listPublished != null)
 				{
-				long t1=listPublished.getTime();
-				long t2=System.currentTimeMillis();
-				long t3=t2-t1;
+					long t1 = listPublished.getTime();
+					long t2 = System.currentTimeMillis();
+					long t3 = t2 - t1;
 				}
 				if (m_orList.size() == 0 ||
 					(listPublished != null && listPublished.getTime() < System.currentTimeMillis() - 600000
@@ -273,25 +274,49 @@ public class Tor implements /*Runnable,*/ AnonService
 					ord = m_orList.getByRandom();
 				}
 				LogHolder.log(LogLevel.DEBUG, LogType.TOR,
-							  "added " + ord.getName() + " " + ord.getSoftware());
+							  "added as first: " + ord.getName() + " " + ord.getSoftware());
 				orsForNewCircuit.addElement(ord);
 				//get last OR
-				do
+				Vector possibleOrs = m_orList.getList();
+				Enumeration enumer = possibleOrs.elements();
+				//remove alle ORs which can not connect to our destination
+				boolean bHas0_8 = false;
+				while (enumer.hasMoreElements())
 				{
-					if (m_allowedExitNodeNames != null)
+					ord = (ORDescription) enumer.nextElement();
+					if(m_allowedExitNodeNames!=null&&!m_allowedExitNodeNames.contains(ord.getName()))
 					{
-						ord = m_orList.getByRandom(m_allowedExitNodeNames);
+						possibleOrs.remove(ord);
 					}
-					else
+					else if (addr != null && !ord.getAcl().isAllowed(addr, port))
 					{
-						ord = m_orList.getByRandom();
+						possibleOrs.remove(ord);
+					}
+					else if (!ord.getSoftware().startsWith("Tor 0.0.7"))
+					{
+						bHas0_8 = true;
 					}
 				}
-				while (orsForNewCircuit.contains(ord) ||
-					   (addr != null && !ord.getAcl().isAllowed(addr, port)));
+				//if we found one which is >0.0.7 prefer them
+				if (bHas0_8)
+				{
+					enumer = possibleOrs.elements();
+					while (enumer.hasMoreElements())
+					{
+						ord = (ORDescription) enumer.nextElement();
+						if (ord.getSoftware().startsWith("Tor 0.0.7"))
+						{
+							possibleOrs.remove(ord);
+						}
+					}
+				}
+				if(possibleOrs.size()<=0)
+					return null;
+				//select one randomly...
+				ord=(ORDescription)possibleOrs.elementAt(m_rand.nextInt(possibleOrs.size()));
 				orsForNewCircuit.addElement(ord);
 				LogHolder.log(LogLevel.DEBUG, LogType.TOR,
-							  "added " + ord.getName() + " " + ord.getSoftware());
+							  "added as last: " + ord.getName() + " " + ord.getSoftware());
 				//get middle ORs
 				for (int i = 2; i < circuitLength; i++)
 				{
@@ -460,7 +485,7 @@ public class Tor implements /*Runnable,*/ AnonService
 	 */
 	public void setCircuitLength(int min, int max)
 	{
-		if ( (max >= min) && (min >= MIN_CIRCUIT_LENGTH) && (max <= MAX_CIRCUIT_LENGTH))
+		if ( (max >= min) && (min >= MIN_ROUTE_LEN) && (max <= MAX_ROUTE_LEN))
 		{
 			m_circuitLengthMax = max;
 			m_circuitLengthMin = min;
@@ -470,7 +495,7 @@ public class Tor implements /*Runnable,*/ AnonService
 	/*** Set the total number of allowed different connections per route*/
 	public void setConnectionsPerRoute(int i)
 	{
-		m_ConnectionsPerCircuit=i;
+		m_ConnectionsPerCircuit = i;
 	}
 
 	/**

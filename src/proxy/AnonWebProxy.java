@@ -55,7 +55,7 @@ import pay.PayAccountsFile;
 import payxml.XMLAccountInfo;
 import anon.tor.*;
 import java.io.*;
-
+import jap.*;
 final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 {
 	public static final int E_BIND = -2;
@@ -261,7 +261,7 @@ final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 
 	public void setMixCertificationCheck(boolean enabled, JAPCertificateStore trustedRoots)
 	{
-		( (AnonServiceImpl) m_Anon).seteMixCertificationAuthorities(trustedRoots);
+		( (AnonServiceImpl) m_Anon).setMixCertificationAuthorities(trustedRoots);
 		( (AnonServiceImpl) m_Anon).setEnableMixCertificationCheck(enabled);
 	}
 
@@ -277,6 +277,7 @@ final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 		{
 			m_Tor = AnonServiceFactory.getAnonServiceInstance("TOR");
 			m_Tor.initialize(new TorAnonServerDescription(true));
+			((Tor)m_Tor).setCircuitLength(JAPModel.getTorMinRouteLen(),JAPModel.getTorMaxRouteLen());
 		}
 		else
 		{
