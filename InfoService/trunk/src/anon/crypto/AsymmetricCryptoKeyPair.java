@@ -205,11 +205,9 @@ public class AsymmetricCryptoKeyPair
 		parameters = new Object[1];
 		parameterTypes[0] = a_keyInfo.getClass();
 		parameters[0] = a_keyInfo;
-		System.out.println("a_KEyClasses has number of elements: ?");
 
 		while (key == null && a_keyClasses.hasMoreElements())
 		{
-			System.out.println("a_KEyClasses try new element...");
 			keyClass = (Class)a_keyClasses.nextElement();
 			try
 			{
@@ -217,8 +215,6 @@ public class AsymmetricCryptoKeyPair
 			}
 			catch (Throwable a_e)
 			{
-				System.out.println("Try to initialize key...");
-				a_e.printStackTrace();
 				// this is not the right key for this key info; ignore this error
 			}
 		}
@@ -241,13 +237,8 @@ public class AsymmetricCryptoKeyPair
 	{
 		if (ms_privateKeyClasses == null)
 		{
-			///@todo removed as ClassUtil.findSubclasses() has Bugs!
-			//ms_privateKeyClasses = ClassUtil.findSubclasses(IMyPrivateKey.class);
-			//ms_privateKeyClasses.removeElement(IMyPrivateKey.class);
-			ms_publicKeyClasses=new Vector(2);
-			ms_publicKeyClasses.addElement(MyDSAPrivateKey.class);
-			ms_publicKeyClasses.addElement(MyRSAPrivateKey.class);
-
+			ms_privateKeyClasses = ClassUtil.findSubclasses(IMyPrivateKey.class);
+			ms_privateKeyClasses.removeElement(IMyPrivateKey.class);
 		}
 
 		return ms_privateKeyClasses.elements();
@@ -263,12 +254,8 @@ public class AsymmetricCryptoKeyPair
 	{
 		if (ms_publicKeyClasses == null)
 		{
-			/**@todo removed do to bugs in ClassUtil.findSubclasses*/
-			//ms_publicKeyClasses = ClassUtil.findSubclasses(IMyPublicKey.class);
-			//ms_publicKeyClasses.removeElement(IMyPublicKey.class);
-			ms_publicKeyClasses=new Vector(2);
-			ms_publicKeyClasses.addElement(MyDSAPublicKey.class);
-			ms_publicKeyClasses.addElement(MyRSAPublicKey.class);
+			ms_publicKeyClasses = ClassUtil.findSubclasses(IMyPublicKey.class);
+			ms_publicKeyClasses.removeElement(IMyPublicKey.class);
 		}
 
 		return ms_publicKeyClasses.elements();
