@@ -366,7 +366,7 @@ public class InfoService extends DatabaseEntry
 				LogHolder.log(LogLevel.ERR, LogType.NET,
 							  "InfoService: getXmlDocument: Connection to infoservice interface failed: " +
 							  currentConnection.getHost() + ":" + Integer.toString(currentConnection.getPort()) +
-							  infoServiceFile);
+							  infoServiceFile+" Exception: "+e.getMessage());
 			}
 		}
 		/* all interfaces tested, we can't find a valid interface */

@@ -45,6 +45,7 @@ import jap.JAPViewIconified;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import java.net.*;
 
 /** This is the main class of the JAP project. It starts everything. It can be inherited by another
  *  class that wants to initialize platform dependend features, e.g. see
@@ -158,34 +159,40 @@ class JAP extends Frame
 			}
 		}
 		//deactivate socks proxy settings if given by the os
-		try
+/*		try
 		{
 			Properties p = System.getProperties();
 			boolean changed = false;
 			if (p.containsKey("socksProxyHost"))
 			{
-				p.remove(p.get("socksProxyHost"));
+				System.out.println("Found sosckProxyHost");
+				p.remove("socksProxyHost");
 				changed = true;
 			}
 			if (p.containsKey("socksProxyPort"))
 			{
-				p.remove(p.get("socksProxyPort"));
+				p.remove("socksProxyPort");
 				changed = true;
 			}
 			if (changed)
 			{
-				System.setProperties(p);
 
+				p.list(System.out);
+				System.setProperties(p);
+				//System.setProperty("socksProxyHost","hallo");
+				System.out.println("removed socks settings");
+				Socket.setSocketImplFactory(null);
 			}
 		}
 		catch (Throwable t)
 		{
+			t.printStackTrace();
 			LogHolder.log(
 				LogLevel.EXCEPTION,
 				LogType.NET,
 				"JAP:Exception while trying to deactivate SOCKS proxy settings: " + t.getMessage());
 		}
-		// um pay funktionalitaet ein oder auszuschalten
+	*/	// um pay funktionalitaet ein oder auszuschalten
 		if (m_arstrCmdnLnArgs != null)
 		{
 			for (int i = 0; i < m_arstrCmdnLnArgs.length; i++)
