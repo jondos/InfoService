@@ -97,8 +97,8 @@ public final class JAPLoading implements ActionListener, VersioncheckerProgress 
 	}
 		
 	public static void main() {
-		JAPDebug d = new JAPDebug();
-		JAPModel model = new JAPModel(); 
+		JAPDebug d = JAPDebug.create();
+		JAPModel model = JAPModel.createModel(); 
 		JAPLoading l = new JAPLoading(model,new Frame());
 		String answer;
 

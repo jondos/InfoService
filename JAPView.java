@@ -27,7 +27,8 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 	private JAPHelp 			helpWindow;
 	private JAPConf 			configDialog;
 
-	public JAPView (String s) {
+	public JAPView (String s)
+		{
 			super(s);
 			JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPView:initializing...");
 			model = JAPModel.getModel();
@@ -36,23 +37,28 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 			helpWindow =  new JAPHelp(this); 
 			configDialog = new JAPConf(this);
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPView:initialization finished!");
-	}
-	
-	public void init() {
-	    try {
-			UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName()); 
-		} 
-		catch (Exception e) {
-			JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.GUI,"JAPView: "+e);
 		}
+	
+	public void init()
+		{
+			try
+				{
+					UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName()); 
+				} 
+			catch (Exception e)
+				{
+					JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.GUI,"JAPView: "+e);
+				}
 	    // Load Icon in upper left corner of the frame window
 	    ImageIcon ii=model.loadImageIcon(model.IICON16FN,true);
 	    if(ii!=null) setIconImage(ii.getImage());
-	    // listen for events from outside the frame
+	    
+			// listen for events from outside the frame
 	    addWindowListener(new WindowAdapter() {
 		    public void windowClosing(WindowEvent e) {exitProgram();}
 	    });	
-	    // Load Images for "Anonymity Meter"
+	    
+			// Load Images for "Anonymity Meter"
 	    loadMeterIcons();
 	    // "NORTH": Image
 	    ImageIcon northImage = model.loadImageIcon(model.getString("northPath"),true);
@@ -60,7 +66,6 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 	    // "West": Image
 	    ImageIcon westImage = model.loadImageIcon(model.getString("westPath"),true);;
 	    JLabel westLabel = new JLabel(westImage);
-//		westLabel.setOpaque(false);
 	    // "Center:" tabs
 	    JTabbedPane tabs = new JTabbedPane();
 	    JPanel config = buildConfigPanel();
@@ -69,7 +74,6 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 	    tabs.addTab(model.getString("mainMeterTab"), model.loadImageIcon(model.METERICONFN,true), level );
 	    // "South": Buttons
 	    JPanel buttonPanel = new JPanel();
-//		buttonPanel.setOpaque(false);
 	    infoB = new JButton(model.getString("infoButton"));
 	    helpB = new JButton(model.getString("helpButton"));
 //		startB = new JButton(model.msg.getString("startButton"));
@@ -77,37 +81,35 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 	    // Add real buttons
 	    buttonPanel.add(infoB);
 	    buttonPanel.add(helpB);
-//		buttonPanel.add(startB);
 	    buttonPanel.add(quitB);
 	    infoB.addActionListener(this);
 	    helpB.addActionListener(this);
-//		startB.addActionListener(this);
 	    quitB.addActionListener(this);
 	    infoB.setMnemonic(model.getString("infoButtonMn").charAt(0));
 	    helpB.setMnemonic(model.getString("helpButtonMn").charAt(0));
-//		startB.setMnemonic(model.msg.getString("startButtonMn").charAt(0));
 	    quitB.setMnemonic(model.getString("quitButtonMn").charAt(0));
 
-		// add Components to Frame
-		getContentPane().setBackground(buttonPanel.getBackground());
-		getContentPane().add(buttonPanel, BorderLayout.SOUTH);
-		getContentPane().add(northLabel, BorderLayout.NORTH);
-		getContentPane().add(westLabel, BorderLayout.WEST);
-		getContentPane().add(new JLabel("  "), BorderLayout.EAST); //Spacer
-		getContentPane().add(tabs, BorderLayout.CENTER);
+			// add Components to Frame
+			getContentPane().setBackground(buttonPanel.getBackground());
+			getContentPane().add(buttonPanel, BorderLayout.SOUTH);
+			getContentPane().add(northLabel, BorderLayout.NORTH);
+			getContentPane().add(westLabel, BorderLayout.WEST);
+			getContentPane().add(new JLabel("  "), BorderLayout.EAST); //Spacer
+			getContentPane().add(tabs, BorderLayout.CENTER);
 
-		updateValues();
-		getContentPane().invalidate();
+			updateValues();
+			getContentPane().invalidate();
 //	    setResizable(false);
-		try	{
-			pack();  // optimize size
-		}
-		catch(Exception e) {
-			JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.GUI,"JAPView:Hm.. Error by Pack - Has To be fixed!!");
-		}
-		model.centerFrame(this);
-		toFront();
-		getContentPane().validate();
+			try
+				{
+					pack();  // optimize size
+				}
+			catch(Exception e) {
+				JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.GUI,"JAPView:Hm.. Error by Pack - Has To be fixed!!");
+				}
+			model.centerFrame(this);
+	//		toFront();
+			getContentPane().validate();
 //		setVisible(true);
 	}
 

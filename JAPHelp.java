@@ -17,27 +17,28 @@ public class JAPHelp extends JDialog implements ActionListener {
     private JComboBox language;
     HtmlPane html;
 
-    public JAPHelp(JFrame f) {
-	super(f, JAPModel.getString("helpWindow"), false);
-	model = JAPModel.getModel();
+    public JAPHelp(JFrame f) 
+			{
+				super(f, JAPModel.getString("helpWindow"), false);
+				model = JAPModel.getModel();
 
-	JPanel container = new JPanel();
-	container.setLayout( new BorderLayout() );
+				JPanel container = new JPanel();
+				container.setLayout( new BorderLayout() );
 	
-	/* works but makes no sens to catch here
-	try { helpPath = model.getString("helpPath"); }
-	catch (Exception e) { helpPath = model.HELPPATH; }
-	*/
-	helpPath = model.getString("helpPath1");
+				/* works but makes no sens to catch here
+				try { helpPath = model.getString("helpPath"); }
+				catch (Exception e) { helpPath = model.HELPPATH; }
+				*/
+				helpPath = model.getString("helpPath1");
 	
-	html = new HtmlPane(helpPath);
+				html = new HtmlPane(helpPath);
 
-	JPanel buttonPanel = new JPanel();
-	buttonPanel.setLayout ( new FlowLayout(FlowLayout.RIGHT) );
+				JPanel buttonPanel = new JPanel();
+				buttonPanel.setLayout ( new FlowLayout(FlowLayout.RIGHT) );
 	
-	language = new JComboBox();
-	for (int i = 1; i < model.MAXHELPLANGUAGES; i++) {
-	    try { 
+				language = new JComboBox();
+				for (int i = 1; i < model.MAXHELPLANGUAGES; i++) {
+					try { 
 		helpPath = model.getString("helpPath"+String.valueOf(i)); 
 		helpLang = model.getString("lang"+String.valueOf(i));
 		// This checks if the entry exists in the properties file
@@ -64,25 +65,17 @@ public class JAPHelp extends JDialog implements ActionListener {
 	container.add(buttonPanel, BorderLayout.SOUTH);
 	getContentPane().add(container);
 	pack();
-	centerDialog();
+	JAPModel.centerFrame(this);
     }
 
-    protected void centerDialog() {
-        Dimension screenSize = this.getToolkit().getScreenSize();
-	Dimension ownSize = this.getSize();
-	this.setLocation(
-		(screenSize.width  - ownSize.width )/2,
-		(screenSize.height - ownSize.height)/2
-	);
-    }
     
     public Dimension getPreferredSize()
-    {
-	Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
-	d.width = Math.min(d.width - 50, 400);
-	d.height = Math.min(d.height - 80, 300);
-	return (d);
-    }
+			{
+				Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
+				d.width = Math.min(d.width - 50, 400);
+				d.height = Math.min(d.height - 80, 300);
+				return (d);
+			}
     
     public void actionPerformed(ActionEvent e) {
 	// for Language Combobox only

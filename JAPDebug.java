@@ -17,6 +17,7 @@ Koenntest Du es im Self test (main()) evtl. im Beispielcode angeben?
  * <P>
  * To output a debug message use
  * <code>JAPDebug.out(int level, int type, String txt)</code>
+ * This is a Singleton!
  */
 public final class JAPDebug {
 
@@ -55,8 +56,7 @@ public final class JAPDebug {
 		
 	private static JAPDebug debug; 
 
-	public JAPDebug () {
-		debug=this;
+	private JAPDebug () {
 		debugtype=GUI+NET+THREAD+MISC;
 		debuglevel=DEBUG;
 //		outStreams=new PrintWriter[8];
@@ -64,7 +64,15 @@ public final class JAPDebug {
 //			outStreams[i]=new PrintWriter(System.out);
 		}
 	
-		
+	public static JAPDebug create()
+		{
+			if(debug!=null)
+				out(debug.ALERT,debug.INFO,"Debug inialized twice - Big Bug!");
+			else
+				debug=new JAPDebug();
+			return debug;
+		}
+	
 	/** Output a debug message.
 	 *  @param level The level of the debugging message (EMERG,ALERT,CRIT,ERR,WARNING,NOTICE,INFO,DEBUG)
 	 *  @param type The type of the debugging message (GUI, NET, THREAD, MISC)
