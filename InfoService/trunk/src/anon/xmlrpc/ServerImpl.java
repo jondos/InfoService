@@ -4,7 +4,7 @@ import com.tm.xmlrpc.CallManager;
 import com.tm.xmlrpc.TCPServer;
 import com.tm.xmlrpc.SerializerFactory;
 import java.net.InetAddress;
-import JAPModel;
+import JAPController;
 import JAPInfoService;
 import AnonServerDBEntry;
 /**
@@ -59,13 +59,13 @@ public class ServerImpl extends Server
 
 	public int getLocalListeningPort()
 		{
-			JAPModel m=JAPModel.getModel();
+			JAPController m=JAPController.getController();
 			return m.getHTTPListenerPortNumber();
 		}
 
 	public MixCascade[] loadMixCascadesFromTheNet() throws Exception
 		{
-			JAPModel m=JAPModel.getModel();
+			JAPController m=JAPController.getController();
 			JAPInfoService info=m.getInfoService();
 			AnonServerDBEntry[] servers=info.getAvailableAnonServers();
 			MixCascade[] cascades=new MixCascade[servers.length];
@@ -76,14 +76,14 @@ public class ServerImpl extends Server
 
 	public MixCascade getMixCascadeCurrentlyUsed() throws Exception
 		{
-			JAPModel m=JAPModel.getModel();
+			JAPController m=JAPController.getController();
 		  AnonServerDBEntry server=m.getAnonServer();
 			return new MixCascade(server.getName(),server.getHost(),server.getPort());
 		}
 
 	public boolean setMixCascadeCurrentlyUsed(MixCascade cascade) throws Exception
 		{
-			JAPModel m=JAPModel.getModel();
+			JAPController m=JAPController.getController();
 		  AnonServerDBEntry server=new AnonServerDBEntry(cascade.getName(),cascade.getHost(),cascade.getPort());
 		  m.setAnonServer(server);
 			if(!m.getAnonMode())
