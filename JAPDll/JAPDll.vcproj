@@ -19,7 +19,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="G:\jdk1.1.8\include;G:\jdk1.1.8\include\win32"
+				AdditionalIncludeDirectories="G:\jdk1.1.8\include;G:\jdk1.1.8\include\win32;C:\Programme\JBuilder8\jdk1.4\include\win32;C:\Programme\JBuilder8\jdk1.4\include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;JAPDLL_EXPORTS"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
@@ -32,7 +32,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="l:\win2000\system32\JAPDll.dll"
+				OutputFile="$(OutDir)/JAPDll.dll"
 				LinkIncremental="2"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile="$(OutDir)/JAPDll.pdb"
@@ -46,7 +46,8 @@
 			<Tool
 				Name="VCPreBuildEventTool"
 				Description="Building jni header file"
-				CommandLine="g:\jdk1.1.8\bin\javah -o $(InputDir)japdll_jni.h -jni -classpath g:\projects\jap\classes;g:\jdk1.1.8\lib\classes.zip gui.JAPDll"/>
+				CommandLine="g:\jdk1.1.8\bin\javah -o $(InputDir)japdll_jni.h -jni -classpath g:\projects\jap\classes;g:\jdk1.1.8\lib\classes.zip gui.JAPDll"
+				ExcludedFromBuild="TRUE"/>
 			<Tool
 				Name="VCPreLinkEventTool"/>
 			<Tool
@@ -106,6 +107,59 @@
 				Name="VCPostBuildEventTool"/>
 			<Tool
 				Name="VCPreBuildEventTool"/>
+			<Tool
+				Name="VCPreLinkEventTool"/>
+			<Tool
+				Name="VCResourceCompilerTool"/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"/>
+			<Tool
+				Name="VCWebDeploymentTool"/>
+			<Tool
+				Name="VCManagedWrapperGeneratorTool"/>
+			<Tool
+				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
+		</Configuration>
+		<Configuration
+			Name="Debug_JDK1.4|Win32"
+			OutputDirectory="$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
+			ConfigurationType="2"
+			CharacterSet="0">
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="0"
+				AdditionalIncludeDirectories="G:\jdk1.1.8\include;G:\jdk1.1.8\include\win32;C:\Programme\JBuilder8\jdk1.4\include\win32;C:\Programme\JBuilder8\jdk1.4\include"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;JAPDLL_EXPORTS"
+				MinimalRebuild="TRUE"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="1"
+				UsePrecompiledHeader="0"
+				WarningLevel="3"
+				Detect64BitPortabilityProblems="TRUE"
+				DebugInformationFormat="4"/>
+			<Tool
+				Name="VCCustomBuildTool"/>
+			<Tool
+				Name="VCLinkerTool"
+				OutputFile="$(OutDir)/JAPDll.dll"
+				LinkIncremental="2"
+				GenerateDebugInformation="TRUE"
+				ProgramDatabaseFile="$(OutDir)/JAPDll.pdb"
+				SubSystem="2"
+				ImportLibrary="$(OutDir)/JAPDll.lib"
+				TargetMachine="1"/>
+			<Tool
+				Name="VCMIDLTool"/>
+			<Tool
+				Name="VCPostBuildEventTool"/>
+			<Tool
+				Name="VCPreBuildEventTool"
+				Description="Building jni header file"
+				CommandLine="g:\jdk1.1.8\bin\javah -o $(InputDir)japdll_jni.h -jni -classpath g:\projects\jap\classes;g:\jdk1.1.8\lib\classes.zip gui.JAPDll"
+				ExcludedFromBuild="TRUE"/>
 			<Tool
 				Name="VCPreLinkEventTool"/>
 			<Tool
