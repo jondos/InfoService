@@ -45,34 +45,32 @@ public class JAPFinishWizardPage extends BasicWizardPage
 
 public JLabel m_labelBackupOfJapJar;
 
-  public JAPFinishWizardPage(String name)
-  {
-    setIcon(JAPUtil.loadImageIcon(JAPConstants.DOWNLOADFN,false));
-    setPageTitle("Update-Wizard beenden");
-    GridBagLayout gridBagFinish=new GridBagLayout();
-    GridBagConstraints constraintsFinish=new GridBagConstraints();
+	public JAPFinishWizardPage(String name)
+	{
+		setIcon(JAPUtil.loadImageIcon(JAPConstants.DOWNLOADFN,false));
+		setPageTitle("Update-Wizard beenden");
+		GridBagLayout gridBagFinish=new GridBagLayout();
+		GridBagConstraints constraintsFinish=new GridBagConstraints();
 
-    m_panelComponents.setLayout(gridBagFinish);
-    JLabel labelFinish = new JLabel(JAPMessages.getString("updateFinishMessage"));
-    constraintsFinish.gridx = 0;
-    constraintsFinish.gridy = 0;
-    constraintsFinish.weightx=1;
-    constraintsFinish.fill=GridBagConstraints.HORIZONTAL;
-    constraintsFinish.anchor = GridBagConstraints.NORTHWEST;
-    gridBagFinish.setConstraints(labelFinish,constraintsFinish);
-    m_panelComponents.add(labelFinish, constraintsFinish);
+		m_panelComponents.setLayout(gridBagFinish);
+		JLabel labelFinish = new JLabel(JAPMessages.getString("updateFinishMessage"));
+		constraintsFinish.gridx = 0;
+		constraintsFinish.gridy = 0;
+		constraintsFinish.weightx=1;
+		constraintsFinish.fill=GridBagConstraints.HORIZONTAL;
+		constraintsFinish.anchor = GridBagConstraints.NORTHWEST;
+		gridBagFinish.setConstraints(labelFinish,constraintsFinish);
+		m_panelComponents.add(labelFinish, constraintsFinish);
 
-    m_labelBackupOfJapJar = new JLabel();
-    constraintsFinish.gridx = 0;
-    constraintsFinish.gridy = 1;
-    constraintsFinish.gridwidth = 2;
-    constraintsFinish.anchor = GridBagConstraints.WEST;
-    constraintsFinish.fill = GridBagConstraints.HORIZONTAL;
-    gridBagFinish.setConstraints(m_labelBackupOfJapJar,constraintsFinish);
-    m_panelComponents.add(m_labelBackupOfJapJar);
+		m_labelBackupOfJapJar = new JLabel();
+		constraintsFinish.gridx = 0;
+		constraintsFinish.gridy = 1;
+		constraintsFinish.gridwidth = 2;
+		constraintsFinish.anchor = GridBagConstraints.WEST;
+		constraintsFinish.fill = GridBagConstraints.HORIZONTAL;
+		gridBagFinish.setConstraints(m_labelBackupOfJapJar,constraintsFinish);
+		m_panelComponents.add(m_labelBackupOfJapJar);
 //    setVisible(true);
-  }
-
-
+	}
 
 }

@@ -316,9 +316,9 @@ public class JAPUpdate implements ActionListener,ItemListener,Runnable
 						m_Dialog.dispose();
 						// User' wants to Update --> give the version Info and the jnlp-file
 						if(m_comboType.getSelectedIndex()==0)
-							new JAPUpdateWizard(m_labelVersion.getText(), m_releaseVersion);
+							new JAPUpdateWizard(m_releaseVersion);
 						else
-							new JAPUpdateWizard(m_labelVersion.getText(), m_devVersion);
+							new JAPUpdateWizard(m_devVersion);
 					}
 			}
 

@@ -72,7 +72,7 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
 		private boolean updateAborted = false;
 		private boolean incrementalUpdate = false; // should be true by default
 		//which version chose the user
-		private String version;
+		private String m_strNewJapVersion;
 		//which type dev or rel?
 		private JAPVersionInfo japVersionInfo;
 
@@ -94,14 +94,20 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
 		private Thread updateThread;
 		//private UpdateListener updateListener;
 
-		public JAPUpdateWizard(String version, JAPVersionInfo info)
+		private int m_Status;
+		public final static int UPDATESTATUS_SUCCESS=0;
+		public final static int UPDATESTATUS_ABORTED=1;
+		public final static int UPDATESTATUS_ERROR=-1;
+
+		public JAPUpdateWizard(JAPVersionInfo info)
 			{
-				this.version = version;
+				m_Status=UPDATESTATUS_ABORTED;
 				japVersionInfo = info;
+				m_strNewJapVersion=info.getVersion();
 				//updateWizard = this;
 				setWizardTitle("JAP Update Wizard");
 				welcomePage = new JAPWelcomeWizardPage();
-				downloadPage = new JAPDownloadWizardPage(version);
+				downloadPage = new JAPDownloadWizardPage(m_strNewJapVersion);
 				finishPage = new JAPFinishWizardPage("");
 
 				addWizardPage(0,welcomePage);
@@ -110,6 +116,11 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
 				m_Pages = getPageVector();
 				host = new BasicWizardHost(JAPController.getView(),this);
 				invokeWizard(host);
+			}
+
+		public int getStatus()
+			{
+				return m_Status;
 			}
 
 		private void startUpdateThread()
@@ -198,6 +209,7 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
 
 		public void run()
 				{
+					m_Status=UPDATESTATUS_SUCCESS;
 				 // Start with Step 1 copy
 				if(renameJapJar()!=0)
 					{
@@ -239,7 +251,6 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
 						if(!m_fileNewJapJar.delete())
 							{
 								downloadPage.showInformationDialog("Deleting of JAP_new.jar failed!");
-								resetChanges();
 								return;
 							}
 						host.setNextEnabled(true);
@@ -268,7 +279,7 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
 				downloadPage.m_labelStep1_2.setText(JAPMessages.getString("updateM_labelStep1Part2"));
 				downloadPage.m_labelSaveTo.setText(strFileNameJapJarBackup);
 				downloadPage.m_labelStep3.setText(JAPMessages.getString("updateM_labelStep3Part1")+" "+
-																					m_strAktJapJarFileName+version+EXTENSION_NEW+
+																					m_strAktJapJarFileName+m_strNewJapVersion+EXTENSION_NEW+
 																					m_strAktJapJarExtension+
 																					JAPMessages.getString("updateM_labelStep3Part2"));
 				finishPage.m_labelBackupOfJapJar.setText(strFileNameJapJarBackup);
@@ -328,8 +339,7 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
 
 	 public WizardPage finish(WizardPage currentPage, WizardHost host)
 	 {
-			//super.finish(currentPage,host);
-			System.exit(0);
+			JAPController.getController().goodBye();
 			return null;
 	 }
 
@@ -465,7 +475,7 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
 						else if(state == DownloadListener.STATE_ABORTED)
 							{
 								m_retDownload=-1;
-                synchronized(this)
+								synchronized(this)
 									{
 										this.notify();
 									}
@@ -534,7 +544,7 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
 			{
 				try
 					{
-						 m_fileNewJapJar = new File(m_strAktJapJarPath+m_strAktJapJarFileName+version+EXTENSION_NEW+m_strAktJapJarExtension);
+						 m_fileNewJapJar = new File(m_strAktJapJarPath+m_strAktJapJarFileName+m_strNewJapVersion+EXTENSION_NEW+m_strAktJapJarExtension);
 						 FileOutputStream fos = new FileOutputStream(m_fileNewJapJar);
 						 if(m_arBufferNewJapJar == null)
 								{
@@ -627,6 +637,10 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
 		// by the system
 		private void resetChanges()
 			{
+				if(!this.updateAborted)
+					m_Status=UPDATESTATUS_ERROR;
+				else
+					m_Status=UPDATESTATUS_ABORTED;
 				if(m_fileJapJarCopy!=null)
 					{
 						m_fileJapJarCopy.delete();

@@ -66,9 +66,11 @@ import javax.swing.UIManager;
 
 import anon.AnonServer;
 import anon.infoservice.InfoService;
+import anon.infoservice.JAPVersionInfo;
 import proxy.ProxyListener;
 import proxy.DirectProxy;
 import proxy.AnonProxy;
+import update.JAPUpdateWizard;
 
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPController implements ProxyListener {
@@ -503,7 +505,7 @@ public final class JAPController implements ProxyListener {
 		JAPMessages.init(l);
 		m_Locale=l;
 		Locale.setDefault(l);
-    if(m_View!=null)
+		if(m_View!=null)
 			m_View.localeChanged();
 	}
 	//---------------------------------------------------------------------
@@ -1373,7 +1375,6 @@ private final class SetAnonModeAsync implements Runnable
 			try
 				{
 					int result = 0;
-					Versionchecker vc = new Versionchecker();
 					String s = getInfoService().getNewVersionNumber();
 					if(s==null)
 						return -1;
@@ -1381,74 +1382,53 @@ private final class SetAnonModeAsync implements Runnable
 					// temporary changed due to stability.... (sk13)
 					//String s = vc.getNewVersionnumberFromNet("http://anon.inf.tu-dresden.de:80"+aktJAPVersionFN);
 					JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:Version:"+JAPConstants.aktVersion);
-					if ( s.compareTo(JAPConstants.aktVersion) > 0 )
+					if ( s.compareTo(JAPConstants.aktVersion) <= 0 )
+						return 0; //ok --> no new version available
+					// OK, new version available
+					// ->Ask user if he/she wants to download new version
+					//	Object[] options = { JAPMessages.getString("newVersionNo"), JAPMessages.getString("newVersionYes") };
+					//	ImageIcon   icon = loadImageIcon(DOWNLOADFN,true);
+					int answer;
+					answer=JOptionPane.showConfirmDialog( m_View,
+																							JAPMessages.getString("newVersionAvailable"),
+																							JAPMessages.getString("newVersionAvailableTitle"),
+																							JOptionPane.YES_NO_OPTION);
+					if (answer==JOptionPane.YES_OPTION)
 						{
-							// OK, new version available
-							// ->Ask user if he/she wants to download new version
-							//	Object[] options = { JAPMessages.getString("newVersionNo"), JAPMessages.getString("newVersionYes") };
-							//	ImageIcon   icon = loadImageIcon(DOWNLOADFN,true);
-							String answer;
-							JAPLoading japLoading = new JAPLoading(m_View);
-								answer = japLoading.message(JAPMessages.getString("newVersionAvailableTitle"),
-							 JAPMessages.getString("newVersionAvailable"),
-							 JAPMessages.getString("newVersionNo"),
-							 JAPMessages.getString("newVersionYes"),
-							 true,false);
-					if (answer.equals(JAPMessages.getString("newVersionYes"))) {
-						// User has elected to download new version of JAP
-						// ->Download, Alert, exit program
-						// To do: show busy message
-						try {
-							vc.registerProgress(japLoading);
-							vc.getVersionFromNet(JAPConstants.urlJAPNewVersionDownload,JAPConstants.JAPLocalFilename);
-							Thread t = new Thread(vc);
-							t.start();
-							answer = japLoading.message(JAPMessages.getString("downloadingProgressTitle"),
-							JAPMessages.getString("downloadingProgress"),
-							 null,
-							 null,
-							 true,true);
-							t.join();
-							result = vc.getResult();
-							if (result == 0) {
-							//
-								answer = japLoading.message(JAPMessages.getString("newVersionAvailableTitle"),
-								JAPMessages.getString("newVersionLoaded"),
-								null,
-								"OK",
-								true,false);
-								goodBye();
-						} else {
-							throw new Exception("Error loading new version");
-						}
-					}
-					catch (Exception e) {
-						// Download failed
-						// Alert, and reset anon mode to false
-						JAPDebug.out(JAPDebug.ERR,JAPDebug.MISC,"JAPModel:versionCheck(): Exception" + e);
-						JOptionPane.showMessageDialog(m_View,
+							// User has elected to download new version of JAP
+							// ->Download, Alert, exit program
+							JAPVersionInfo vi=getInfoService().getJAPVersionInfo(InfoService.JAP_RELEASE_VERSION);
+							JAPUpdateWizard wz=new JAPUpdateWizard(vi);
+							//Assumption: If we are here, the download failed for some resaons
+							//otherwise the programm would quit
+							//TODO: Do this in a better way!!
+							if(wz.getStatus()!=wz.UPDATESTATUS_SUCCESS)
+								{
+									// Download failed
+									// Alert, and reset anon mode to false
+									JAPDebug.out(JAPDebug.ERR,JAPDebug.MISC,"JAPModel:versionCheck(): Some update problem");
+									JOptionPane.showMessageDialog(m_View,
 																					JAPMessages.getString("downloadFailed")+JAPMessages.getString("infoURL"),
 																					JAPMessages.getString("downloadFailedTitle"),
 																					JOptionPane.ERROR_MESSAGE);
-						notifyJAPObservers();
-						return -1;
-					}
-				} else {
-					// User has elected not to download
-					// ->Alert, we should'nt start the system due to possible compatibility problems
-					answer = japLoading.message(JAPMessages.getString("youShouldUpdateTitle"),
-							 JAPMessages.getString("youShouldUpdate")+JAPMessages.getString("infoURL"),
-							 null,
-							 "OK",
-							 true,false);
-					notifyJAPObservers();
-					return -1;
+									notifyJAPObservers();
+									return -1;
+								}
+							goodBye(); //restart JAP after Update
+							return 0;
+						}
+					else
+						{
+							// User has elected not to download
+							// ->Alert, we should'nt start the system due to possible compatibility problems
+							JOptionPane.showMessageDialog(m_View,
+																					JAPMessages.getString("youShouldUpdate")+JAPMessages.getString("infoURL"),
+																					JAPMessages.getString("youShouldUpdateTitle"),
+																					JOptionPane.WARNING_MESSAGE);
+							notifyJAPObservers();
+							return -1;
+						}
 				}
-			}
-			//endif ( s.compareTo(JAPConstants.aktVersion) > 0 )
-			// --> no new version available, i.e. you are running the newest version of JAP
-			return 0; // meaning: version check says that anonymity service can be started
-		}
 		catch (Exception e) {
 			// Verson check failed
 			// ->Alert, and reset anon mode to false
@@ -1463,6 +1443,7 @@ private final class SetAnonModeAsync implements Runnable
 		}
 		// this line should never be reached
 	}
+
 	//---------------------------------------------------------------------
 	public void registerMainView(JAPView v) {
 			m_View=v;
