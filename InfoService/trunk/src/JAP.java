@@ -134,8 +134,7 @@ class JAP extends Frame
 		}
 		// Create debugger object and set the LogHolder to JAPDebug
 		LogHolder.setLogInstance(JAPDebug.getInstance());
-		JAPDebug.getInstance().setLogType(
-			LogType.NET + LogType.GUI + LogType.THREAD + LogType.MISC);
+		JAPDebug.getInstance().setLogType(LogType.ALL);
 		JAPDebug.getInstance().setLogLevel(LogLevel.WARNING);
 
 		// Set the default Look-And-Feel

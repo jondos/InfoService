@@ -37,5 +37,9 @@ final public class LogType
     /** Indicates a thread related message (binary: <code>00000100</code>) */
     public final static int THREAD = 4;
     /** Indicates a misc message (binary: <code>00001000</code>) */
-    public final static int MISC = 8;
+	public final static int MISC = 8;
+	/** Indicates a pay message (binary: <code>00001000</code>) */
+    public final static int PAY = 16;
+	/** Indicates all messagea*/
+	public final static int ALL=GUI+NET+THREAD+MISC+PAY;
   }

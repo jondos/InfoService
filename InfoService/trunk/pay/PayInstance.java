@@ -34,7 +34,6 @@ import org.bouncycastle.crypto.params.RSAKeyParameters;
 import pay.crypto.tinyssl.RootCertificates;
 import pay.crypto.tinyssl.TinySSL;
 import pay.util.HttpClient;
-import pay.util.Log;
 import pay.util.PayText;
 import payxml.XMLBalConf;
 import payxml.XMLCertificate;
@@ -44,7 +43,7 @@ import payxml.XMLResponse;
 import payxml.XMLSignature;
 import payxml.XMLTransCert;
 import payxml.util.Signer;
-
+import logging.*;
 /**
  * Hauptklasse für die Verbindung von Pay zur BI kümmert sich inhaltlich um die Kommunikation
  * also In welcher Reihenfolge Die Challenge-Response abläuft etc.
@@ -85,7 +84,7 @@ public class PayInstance
 					else socket = new TinySSL(host,port);
 					httpClient=new HttpClient(socket);
 		}catch(Exception ex){
-			Log.log(this,PayText.get("piServerError"),Log.INFO);
+			LogHolder.log(LogLevel.DEBUG,LogType.PAY,PayText.get("piServerError"));
 		}
 		}
 
@@ -330,7 +329,7 @@ public class PayInstance
 				rootCerts.init();
 				RSAKeyParameters testkey = rootCerts.getPublicKey("test server");
 
-		Log.log(this,answer,Log.SHORT_DEBUG);
+		LogHolder.log(LogLevel.DEBUG,LogType.PAY,answer);
 				XMLCertificate xmlCert = new XMLCertificate(answer);
 				XMLSignature xmlSig = new XMLSignature(answer.getBytes());
 				xmlSig.initVerify(testkey);
