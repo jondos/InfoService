@@ -68,7 +68,7 @@ class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 		model.addColumn(JAPMessages.getString("torRouterName"));
 		model.addColumn(JAPMessages.getString("torRouterAdr"));
 		model.addColumn(JAPMessages.getString("torRouterPort"));
-		model.setRowCount(3);
+		model.setNumRows(3);
 		m_tableRouters=new JTable(model);
 		m_tableRouters.setPreferredScrollableViewportSize(new Dimension(70,70));
 		JScrollPane s=new JScrollPane(m_tableRouters);
