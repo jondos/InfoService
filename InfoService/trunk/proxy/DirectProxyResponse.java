@@ -34,6 +34,7 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 
+//import jap.JAPUtil;
 final class DirectProxyResponse implements Runnable
 {
 	private int m_threadNumber;
@@ -54,6 +55,27 @@ final class DirectProxyResponse implements Runnable
 		LogHolder.log(LogLevel.DEBUG, LogType.NET, "R(" + m_threadNumber + ") - Response thread started.");
 		try
 		{
+//---to be removed!!!
+/*			String nextLine = JAPUtil.readLine(m_inputStream);
+				////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+				LogHolder.log(LogLevel.DEBUG, LogType.NET,
+							  "R(" + m_threadNumber + ") - Header: >" + nextLine + "<");
+				while (nextLine.length() != 0)
+				{
+						// write single lines to server
+						m_outputStream.write( (nextLine + "\r\n").getBytes());
+					nextLine = JAPUtil.readLine(m_inputStream);
+					LogHolder.log(LogLevel.DEBUG, LogType.NET,
+								  "R(" + m_threadNumber + ") - Header: >" + nextLine + "<");
+				}
+
+				// send final CRLF --> server
+				m_outputStream.write("\r\n".getBytes());
+				m_outputStream.flush();
+*/
+//TO be removed end
+
 			byte[] buff = new byte[1000];
 			int len;
 			while ( (len = m_inputStream.read(buff)) != -1)
@@ -61,10 +83,10 @@ final class DirectProxyResponse implements Runnable
 				if (len > 0)
 				{
 					m_outputStream.write(buff, 0, len);
+					m_outputStream.flush();
 				}
 			}
 			//-----------------------------------------------
-			m_outputStream.flush();
 			LogHolder.log(LogLevel.DEBUG, LogType.NET, "R(" + m_threadNumber + ") - EOF from Server.");
 		}
 		catch (IOException ioe)

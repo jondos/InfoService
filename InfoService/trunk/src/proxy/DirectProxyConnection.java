@@ -263,9 +263,9 @@ final class DirectProxyConnection implements Runnable
 				if (len > 0)
 				{
 					outputStream.write(buff, 0, len);
+					outputStream.flush();
 				}
 			}
-			outputStream.flush();
 			// wait unitl response thread has finished
 			LogHolder.log(LogLevel.DEBUG, LogType.NET, "\n");
 			LogHolder.log(LogLevel.DEBUG, LogType.THREAD,
@@ -353,9 +353,9 @@ final class DirectProxyConnection implements Runnable
 				if (len > 0)
 				{
 					outputStream.write(buff, 0, len);
+					outputStream.flush();
 				}
 			}
-			outputStream.flush();
 
 			LogHolder.log(LogLevel.DEBUG, LogType.NET, "\n");
 			LogHolder.log(LogLevel.DEBUG, LogType.THREAD,
@@ -494,10 +494,10 @@ final class DirectProxyConnection implements Runnable
 				ftpClient.retrieveFile(m_strFile, os);
 			} //else
 
+			os.flush();
 			//Logout
 			ftpClient.disconnect();
 
-			os.flush();
 			os.close();
 			os = null;
 		}
@@ -519,11 +519,12 @@ final class DirectProxyConnection implements Runnable
 
 	private boolean filter(String l)
 	{
-		String cmp = "Proxy-Connection";
-		if (l.regionMatches(true, 0, cmp, 0, cmp.length()))
-		{
-			return true;
-		}
+		String[] cmp = {"Proxy-Connection","Pragma"};
+		for(int i=0;i<cmp.length;i++)
+			if (l.regionMatches(true, 0, cmp[i], 0, cmp[i].length()))
+			{
+				return true;
+			}
 		return false;
 	}
 
