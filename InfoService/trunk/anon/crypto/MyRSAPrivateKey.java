@@ -45,9 +45,15 @@ import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.crypto.CipherParameters;
 import org.bouncycastle.crypto.params.RSAPrivateCrtKeyParameters;
 
-public class MyRSAPrivateKey implements PrivateKey
+final public class MyRSAPrivateKey implements PrivateKey
 {
-	RSAPrivateCrtKeyParameters m_Params;
+	private RSAPrivateCrtKeyParameters m_Params;
+
+	public MyRSAPrivateKey(CipherParameters cipherparams) throws Exception
+	{
+		m_Params=(RSAPrivateCrtKeyParameters)cipherparams;
+	}
+
 	public MyRSAPrivateKey(PrivateKeyInfo privKeyInfo) throws Exception
 	{
 		DERObject d = privKeyInfo.getPrivateKey();
@@ -78,6 +84,16 @@ public class MyRSAPrivateKey implements PrivateKey
 	public CipherParameters getParams()
 	{
 		return m_Params;
+	}
+
+	public BigInteger getModulus()
+	{
+		return m_Params.getModulus();
+	}
+
+	public BigInteger getPrivateExponent()
+	{
+		return m_Params.getExponent();
 	}
 
 	public String getAlgorithm()
