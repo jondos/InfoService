@@ -145,6 +145,7 @@ public final class JAPController implements ProxyListener
 		/* set some default values for infoservice communication */
 		setInfoServiceDisabled(JAPConstants.DEFAULT_INFOSERVICE_DISABLED);
 		InfoServiceHolder.getInstance().setChangeInfoServices(JAPConstants.DEFAULT_INFOSERVICE_CHANGES);
+		InfoServiceHolder.getInstance().setUpdateMessagesCertificate(m_Model.getJAPInfoServiceMessagesCert());
 		HTTPConnectionFactory.getInstance().setTimeout(JAPConstants.DEFAULT_INFOSERVICE_TIMEOUT);
 
 		mixCascadeDatabase = new Vector();

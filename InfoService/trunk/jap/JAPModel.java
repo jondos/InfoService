@@ -68,6 +68,7 @@ public final class JAPModel
 	private boolean m_bCertCheckDisabled = true;
 
 	private JAPCertificate m_certJAPCodeSigning = null;
+	private JAPCertificate m_certJAPInfoServiceMessages = null;
 	private JAPCertificateStore m_certStore = null;
 
 	private JAPModel()
@@ -81,6 +82,15 @@ public final class JAPModel
 		catch(Throwable t)
 		{
 			m_certJAPCodeSigning = null;
+		}
+		try
+		{
+			m_certJAPInfoServiceMessages = JAPCertificate.getInstance(
+				 JAPUtil.loadRessource(JAPConstants.CERTSPATH+JAPConstants.CERT_JAPINFOSERVICEMESSAGES));
+		}
+		catch(Throwable t)
+		{
+			m_certJAPInfoServiceMessages = null;
 		}
 	}
 
@@ -417,6 +427,11 @@ public final class JAPModel
 	public static JAPCertificate getJAPCodeSigningCert()
 	{
 		return model.m_certJAPCodeSigning;
+	}
+
+	public static JAPCertificate getJAPInfoServiceMessagesCert()
+	{
+		return model.m_certJAPInfoServiceMessages;
 	}
 
 }

@@ -39,6 +39,8 @@ import HTTPClient.HTTPResponse;
 import anon.ErrorCodes;
 import anon.crypto.JAPCertPath;
 import anon.crypto.JAPCertificateStore;
+import anon.crypto.JAPCertificate;
+import anon.crypto.JAPSignature;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -519,74 +521,93 @@ public class InfoService extends DatabaseEntry
 			throw (new Exception("InfoService: getNewVersionNumber: Error in XML structure."));
 		}
 		Element japNode = (Element) (japNodes.item(0));
-		NodeList softwareNodes = japNode.getElementsByTagName("Software");
-		if (softwareNodes.getLength() == 0)
+		//signature check...
+		JAPCertificate cert = InfoServiceHolder.getInstance().getCertificateForUpdateMessages();
+		if (cert != null)
 		{
-			throw (new Exception("InfoService: getNewVersionNumber: Error in XML structure."));
-		}
-		Element softwareNode = (Element) (softwareNodes.item(0));
-		ServiceSoftware currentJapSoftware = new ServiceSoftware(softwareNode);
-		String versionString = currentJapSoftware.getVersion();
-		if ( (versionString.charAt(2) != '.') || (versionString.charAt(5) != '.'))
-		{
-			throw (new Exception("InfoService: getNewVersionNumber: Error in XML structure."));
-		}
-		return versionString;
-	}
-
-	/**
-	 * Returns the JAPVersionInfo for the specified type. The JAPVersionInfo is generated from
-	 * the JNLP files received from the infoservice. If we can't get a connection with the
-	 * infoservice, an Exception is thrown.
-	 *
-	 * @param japVersionType Selects the JAPVersionInfo (release / development). Look at the
-	 *                       Constants in JAPVersionInfo.
-	 *
-	 * @return The JAPVersionInfo of the specified type.
-	 */
-	public JAPVersionInfo getJAPVersionInfo(int japVersionType) throws Exception
-	{
-		Document doc = null;
-		if (japVersionType == JAPVersionInfo.JAP_RELEASE_VERSION)
-		{
-			doc = getXmlDocument("/japRelease.jnlp");
-		}
-		if (japVersionType == JAPVersionInfo.JAP_DEVELOPMENT_VERSION)
-		{
-			doc = getXmlDocument("/japDevelopment.jnlp");
-		}
-		return (new JAPVersionInfo(doc, japVersionType));
-	}
-
-	/**
-	 * Checks the signature of an XML node against the certificate store from InfoServiceHolder.
-	 * This method returns only if the signature is valid or signature checking is disabled
-	 * (certificate store is null). If the signature is invalid, an exception is thrown.
-	 *
-	 * @param a_nodeToCheck The node to verify.
-	 */
-	private void checkSignature(Element a_nodeToCheck) throws Exception
-	{
-		JAPCertificateStore certificateStore = InfoServiceHolder.getInstance().getCertificateStore();
-		if (certificateStore != null)
-		{
-			/* verify the signature */
-			NodeList signatureNodes = a_nodeToCheck.getElementsByTagName("Signature");
-			if (signatureNodes.getLength() == 0)
+			try
 			{
-				throw (new Exception("InfoService: signatureCheck: Signature node missing."));
-			}
-			else
-			{
-				Element signatureNode = (Element) (signatureNodes.item(0));
-				int errorCode = JAPCertPath.validate(a_nodeToCheck, signatureNode, certificateStore);
-				if (errorCode != ErrorCodes.E_SUCCESS)
+				JAPSignature sig = new JAPSignature();
+				sig.initVerify(cert.getPublicKey());
+				if (!sig.verifyXML(japNode))
 				{
-					throw (new Exception("InfoService: signatureCheck: Signature is invalid. Errorcode: " +
-										 Integer.toString(errorCode)));
+					//throw (new Exception("InfoService: getNewVersionNumber: Sginatrue check failed!"));
 				}
+
+			}
+			catch (Exception e)
+			{
+				//throw (new Exception("InfoService: getNewVersionNumber: Sginatrue check failed!"));
+			}
+		}
+	NodeList softwareNodes = japNode.getElementsByTagName("Software");
+	if (softwareNodes.getLength() == 0)
+	{
+		throw (new Exception("InfoService: getNewVersionNumber: Error in XML structure."));
+	}
+	Element softwareNode = (Element) (softwareNodes.item(0));
+	ServiceSoftware currentJapSoftware = new ServiceSoftware(softwareNode);
+	String versionString = currentJapSoftware.getVersion();
+	if ( (versionString.charAt(2) != '.') || (versionString.charAt(5) != '.'))
+	{
+		throw (new Exception("InfoService: getNewVersionNumber: Error in XML structure."));
+	}
+	return versionString;
+}
+
+/**
+ * Returns the JAPVersionInfo for the specified type. The JAPVersionInfo is generated from
+ * the JNLP files received from the infoservice. If we can't get a connection with the
+ * infoservice, an Exception is thrown.
+ *
+ * @param japVersionType Selects the JAPVersionInfo (release / development). Look at the
+ *                       Constants in JAPVersionInfo.
+ *
+ * @return The JAPVersionInfo of the specified type.
+ */
+public JAPVersionInfo getJAPVersionInfo(int japVersionType) throws Exception
+{
+	Document doc = null;
+	if (japVersionType == JAPVersionInfo.JAP_RELEASE_VERSION)
+	{
+		doc = getXmlDocument("/japRelease.jnlp");
+	}
+	if (japVersionType == JAPVersionInfo.JAP_DEVELOPMENT_VERSION)
+	{
+		doc = getXmlDocument("/japDevelopment.jnlp");
+	}
+	return (new JAPVersionInfo(doc, japVersionType));
+}
+
+/**
+ * Checks the signature of an XML node against the certificate store from InfoServiceHolder.
+ * This method returns only if the signature is valid or signature checking is disabled
+ * (certificate store is null). If the signature is invalid, an exception is thrown.
+ *
+ * @param a_nodeToCheck The node to verify.
+ */
+private void checkSignature(Element a_nodeToCheck) throws Exception
+{
+	JAPCertificateStore certificateStore = InfoServiceHolder.getInstance().getCertificateStore();
+	if (certificateStore != null)
+	{
+		/* verify the signature */
+		NodeList signatureNodes = a_nodeToCheck.getElementsByTagName("Signature");
+		if (signatureNodes.getLength() == 0)
+		{
+			throw (new Exception("InfoService: signatureCheck: Signature node missing."));
+		}
+		else
+		{
+			Element signatureNode = (Element) (signatureNodes.item(0));
+			int errorCode = JAPCertPath.validate(a_nodeToCheck, signatureNode, certificateStore);
+			if (errorCode != ErrorCodes.E_SUCCESS)
+			{
+				throw (new Exception("InfoService: signatureCheck: Signature is invalid. Errorcode: " +
+									 Integer.toString(errorCode)));
 			}
 		}
 	}
+}
 
 }
