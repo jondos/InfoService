@@ -129,7 +129,7 @@ public final class JAPAboutAutoScroller extends Canvas/*JPanel*/ implements Runn
 		public synchronized void stopScrolling()
 			{
 				m_bRun=false;
-				try{m_Thread.join();}catch(Exception e){};
+				try{m_Thread.join();}catch(Exception e){}
 			}
 
 
@@ -220,7 +220,7 @@ public final class JAPAboutAutoScroller extends Canvas/*JPanel*/ implements Runn
 							{
 								Thread.sleep(m_msSleep);
 							}
-						catch(Exception e){};
+						catch(Exception e){}
 						if(m_iaktY>m_iTextHeight+m_iScrollAreaHeight)
 							m_iaktY=0;
 					}
