@@ -88,8 +88,8 @@ public class JAPAnonChannel implements Runnable
 					}
 				catch (Exception e)
 					{
-						JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.THREAD,"ProxyConnection - Exception while closing: "+e);
+						JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.THREAD,"JAPAnonChannel:Exception while closing: "+e);
 					}
-				JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.THREAD,"Channel "+Integer.toString(channel)+"closed");
+				JAPDebug.out(JAPDebug.INFO,JAPDebug.THREAD,"JAPAnonChannel:Channel "+Integer.toString(channel)+" closed.");
 			}
 	}
