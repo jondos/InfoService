@@ -36,7 +36,7 @@ import javax.swing.ImageIcon;
 import java.awt.Dialog;
 import java.awt.Insets;
 
-import java.awt.Color;
+//import java.awt.Color;
 
 public  class BasicWizardPage extends JPanel implements WizardPage
   {

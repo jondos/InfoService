@@ -147,6 +147,10 @@ public WizardPage invokeWizard(WizardHost host)
     m_Pages.insertElementAt(wizardPage,index);
   }
 
+  public Vector getPageVector()
+    {
+      return m_Pages;
+    }
 
   public int initTotalSteps()
     {
