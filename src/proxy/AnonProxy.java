@@ -52,10 +52,8 @@ final public class AnonProxy implements Runnable/*,AnonServiceEventListener*/
 	public final static int E_MIX_PROTOCOL_NOT_SUPPORTED=ErrorCodes.E_MIX_PROTOCOL_NOT_SUPPORTED;
 
 	// ootte
-	public final static int E_INVALID_KEY = ErrorCodes.E_INVALID_KEY;
 	public final static int E_SIGNATURE_CHECK_FIRSTMIX_FAILED = ErrorCodes.E_SIGNATURE_CHECK_FIRSTMIX_FAILED;
 	public final static int E_SIGNATURE_CHECK_OTHERMIX_FAILED = ErrorCodes.E_SIGNATURE_CHECK_OTHERMIX_FAILED;
-	public final static int E_INVALID_CERTIFICATE = ErrorCodes.E_INVALID_CERTIFICATE;
 	// ootte
 
 	private AnonService m_Anon;

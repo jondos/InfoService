@@ -58,6 +58,7 @@ import anon.pay.AIChannel;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.crypto.JAPCertPath;
 
 public final class MuxSocket implements Runnable
 {
@@ -158,7 +159,8 @@ public final class MuxSocket implements Runnable
 	}
 
 	public
-	/*static*/ boolean isConnected()
+		/*static*/
+		boolean isConnected()
 	{
 		return ( /*ms_MuxSocket!=null&&ms_MuxSocket.*/m_bIsConnected);
 	}
@@ -249,7 +251,7 @@ public final class MuxSocket implements Runnable
 					err = processXmlKeys(buff, bCheckMixCerts, certsTrustedRoots);
 					if (err != ErrorCodes.E_SUCCESS)
 					{
-						throw new Exception("Error during Xml-Key Exchange");
+						throw new Exception("Error during Xml-Key Exchange: "+err);
 					}
 				}
 				else
@@ -326,7 +328,13 @@ public final class MuxSocket implements Runnable
 		m_cipherOutAI.setEncryptionKeyAES(keys, 48);
 	}
 
-	/*Reads the public key from the Mixes and try to initialize the key array*/
+	/**Reads the public key from the Mixes and try to initialize the key array
+	 * @return E_SUCCESS if all is ok
+	 * @return E_SIGNATURE_CHECK_FIRSTMIX_FAILED if the signature check for the whol XML struct fails
+	 * @return E_SIGNATURE_CHECK_OTHERMIX_FAILED if the signature check for the public keys of Mix 2..n fails
+	 * @return E_MIX_PROTOCOL_NOT_SUPPORTED if the Mix protocol is not supported by this JAP
+	 * @return E_UNKNOWN otherwise
+	 */
 	private int processXmlKeys(byte[] buff, boolean bCheckMixCerts, JAPCertificateStore certsTrustedRoots)
 	{
 		try
@@ -338,16 +346,15 @@ public final class MuxSocket implements Runnable
 			{
 				return ErrorCodes.E_UNKNOWN;
 			}
-			//TODO Check Signautre of whole XML struct
-//---
+			//Check Signature of whole XML struct --> First Mix Check
+			//---
 			Node nodeSig = XMLUtil.getFirstChildByName(root, "Signature");
-			Node nodeCert = XMLUtil.getFirstChildByNameUsingDeepSearch(nodeSig, "X509Certificate");
 			if (bCheckMixCerts)
 			{
-				JAPSignature sig = new JAPSignature();
-				if (!sig.check(root, nodeSig, nodeCert, certsTrustedRoots))
+				int ret = JAPCertPath.validate(root, nodeSig, certsTrustedRoots);
+				if (ret != ErrorCodes.E_SUCCESS)
 				{
-					return ErrorCodes.E_INVALID_CERTIFICATE;
+					return ErrorCodes.E_SIGNATURE_CHECK_FIRSTMIX_FAILED;
 				}
 			}
 
@@ -387,20 +394,16 @@ public final class MuxSocket implements Runnable
 			{
 				if (child.getNodeName().equals("Mix"))
 				{
-					//TODO: Check signatures for Mix 2 .. n (we skip the first Mix because
+					//Check signatures for Mix 2 .. n (we skip the first Mix because
 					//this key is already signed to the Signature below the whole MixCascade struct
 //---
 					if (bCheckMixCerts && !bIsFirst)
 					{
-
 						Node nodeSigChild = XMLUtil.getFirstChildByName(child, "Signature");
-						Node nodeCertChild = XMLUtil.getFirstChildByNameUsingDeepSearch(nodeSigChild,
-							"X509Certificate");
-
-						JAPSignature sig = new JAPSignature();
-						if (!sig.check(child, nodeSigChild, nodeCertChild, certsTrustedRoots))
+						int ret = JAPCertPath.validate(child, nodeSigChild, certsTrustedRoots);
+						if (ret != ErrorCodes.E_SUCCESS)
 						{
-							return ErrorCodes.E_INVALID_CERTIFICATE;
+							return ErrorCodes.E_SIGNATURE_CHECK_OTHERMIX_FAILED;
 						}
 
 					}
@@ -660,12 +663,12 @@ public final class MuxSocket implements Runnable
 				}
 				/*		else if(flags==CHANNEL_SUSPEND)
 				   {
-					tmpEntry.bIsSuspended=true;
+				 tmpEntry.bIsSuspended=true;
 				 LogHolder.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:Suspending Channel: "+Integer.toString(channel));
-					}
+				 }
 				  else if(flags==CHANNEL_RESUME)
 				   {
-					tmpEntry.bIsSuspended=false;
+				 tmpEntry.bIsSuspended=false;
 				 LogHolder.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:Resuming Channel: "+Integer.toString(channel));
 				   }*/
 			}

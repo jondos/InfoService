@@ -1152,29 +1152,7 @@ public final class JAPController implements ProxyListener
 								JOptionPane.ERROR_MESSAGE
 								);
 						}
-						// ootte
-						else if (ret == AnonProxy.E_INVALID_KEY)
-						{
-							JOptionPane.showMessageDialog
-								(
-								getView(),
-								JAPMessages.getString("errorMixInvalidKey"),
-								JAPMessages.getString("errorMixInvalidTitle"),
-								JOptionPane.ERROR_MESSAGE
-								);
-						}
-
-						else if (ret == AnonProxy.E_INVALID_CERTIFICATE)
-						{
-							JOptionPane.showMessageDialog
-								(
-								getView(),
-								JAPMessages.getString("errorCertificateInvalid"),
-								JAPMessages.getString("errorCertificateInvalidTitle"),
-								JOptionPane.ERROR_MESSAGE
-								);
-						}
-
+//otte
 						else if (ret == AnonProxy.E_SIGNATURE_CHECK_FIRSTMIX_FAILED)
 						{
 							JOptionPane.showMessageDialog
