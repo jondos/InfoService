@@ -80,7 +80,7 @@ public class TinyTLSServerSocket extends Socket
 	private byte[] m_serverrandom;
 
 	private JAPCertificate m_servercertificate;
-	private MyRSAPrivateKey m_privatekey;
+	private IMyPrivateKey m_privatekey;
 
 	private byte[] m_handshakemessages;
 	private boolean m_encrypt;
@@ -136,7 +136,8 @@ public class TinyTLSServerSocket extends Socket
 					ioe.bytesTransferred = 0;
 					throw ioe;
 				}
-
+				
+				
 				if (contenttype < 20 || contenttype > 23)
 				{
 					throw new TLSException("SSL Content typeProtocoll not supportet" + contenttype,2,10);
@@ -319,75 +320,68 @@ public class TinyTLSServerSocket extends Socket
 				//client hello???
 				if(m_aktTLSRecord.m_Data[0]==1)
 				{
-					//long enough???
-					if(m_aktTLSRecord.m_dataLen<46)
-					{
-						//version = 3.1 (TLS) ???
-						if(((m_aktTLSRecord.m_Data[4]<<8) | (m_aktTLSRecord.m_Data[5]))==PROTOCOLVERSION_SHORT)
-						{				
-							//read client random
-							m_clientrandom = new byte[32];
-							System.arraycopy(m_aktTLSRecord.m_Data,6,m_clientrandom,0,32);
-							//session id is not implemented
-							if(m_aktTLSRecord.m_Data[38] != 0)
-							{	
-								//maybe we implement it later
-								throw new TLSException("Client wants to reuse another session, but this is not supportet yet",2,40);
-							}
-							try
-							{
-								//read ciphersuites
-								int cslength = ((m_aktTLSRecord.m_Data[39] & 0xFF)<<8) | (m_aktTLSRecord.m_Data[40] & 0xFF);
-								int aktpos = 41;
-								while(((cslength+41)>aktpos) && (m_selectedciphersuite ==null))
-								{
-									for(int i=0;i<m_supportedciphersuites.size();i++)
-									{
-										CipherSuite cs = (CipherSuite)m_supportedciphersuites.elementAt(i);
-										byte[] b = cs.getCipherSuiteCode();
-										if(m_aktTLSRecord.m_Data[aktpos]==b[0]&&m_aktTLSRecord.m_Data[aktpos+1]==b[1])
-										{
-											m_selectedciphersuite = cs;
-											break;
-										}
-									}
-									aktpos+=2;
-								}
-								if(m_selectedciphersuite==null)
-								{
-									throw new TLSException("no supported ciphersuite found",2,40);
-								}
-								//read compression
-								aktpos = cslength+41;
-								int complength = m_aktTLSRecord.m_Data[aktpos];
-								if(complength==0)
-								{
-									throw new TLSException("no compressionalgorithm defined. you need at least one (for example no_compression)",2,50);
-								}
-								while(complength!=0)
-								{
-									aktpos++;
-									//compression method : NO_COMPRESSION found
-									if(m_aktTLSRecord.m_Data[aktpos]==0)
-									{
-										m_handshakemessages = helper.conc(m_handshakemessages,m_aktTLSRecord.m_Data,m_aktTLSRecord.m_dataLen);
-										LogHolder.log(LogLevel.DEBUG,LogType.TOR,"[CLIENT HELLO RECIEVED]");
-										return;
-									}
-									complength--;
-								}
-								throw new TLSException("no supportet compressionalgorithm found",2,40);
-							} catch (ArrayIndexOutOfBoundsException ex)
-							{
-								throw new TLSException("client hello is not long enough",2,50);
-							}
-						} else
+					//version = 3.1 (TLS) ???
+					if(((m_aktTLSRecord.m_Data[4]<<8) | (m_aktTLSRecord.m_Data[5]))==PROTOCOLVERSION_SHORT)
+					{				
+						//read client random
+						m_clientrandom = new byte[32];
+						System.arraycopy(m_aktTLSRecord.m_Data,6,m_clientrandom,0,32);
+						//session id is not implemented
+						if(m_aktTLSRecord.m_Data[38] != 0)
+						{	
+							//maybe we implement it later
+							throw new TLSException("Client wants to reuse another session, but this is not supportet yet",2,40);
+						}
+						try
 						{
-							throw new TLSException("this Protocol is not supported",2,70);
+							//read ciphersuites
+							int cslength = ((m_aktTLSRecord.m_Data[39] & 0xFF)<<8) | (m_aktTLSRecord.m_Data[40] & 0xFF);
+							int aktpos = 41;
+							while(((cslength+41)>aktpos) && (m_selectedciphersuite ==null))
+							{
+								for(int i=0;i<m_supportedciphersuites.size();i++)
+								{
+									CipherSuite cs = (CipherSuite)m_supportedciphersuites.elementAt(i);
+									byte[] b = cs.getCipherSuiteCode();
+									if(m_aktTLSRecord.m_Data[aktpos]==b[0]&&m_aktTLSRecord.m_Data[aktpos+1]==b[1])
+									{
+										m_selectedciphersuite = cs;
+										break;
+									}
+								}
+								aktpos+=2;
+							}
+							if(m_selectedciphersuite==null)
+							{
+								throw new TLSException("no supported ciphersuite found",2,40);
+							}
+							//read compression
+							aktpos = cslength+41;
+							int complength = m_aktTLSRecord.m_Data[aktpos];
+							if(complength==0)
+							{
+								throw new TLSException("no compressionalgorithm defined. you need at least one (for example no_compression)",2,50);
+							}
+							while(complength!=0)
+							{
+								aktpos++;
+								//compression method : NO_COMPRESSION found
+								if(m_aktTLSRecord.m_Data[aktpos]==0)
+								{
+									m_handshakemessages = helper.conc(m_handshakemessages,m_aktTLSRecord.m_Data,m_aktTLSRecord.m_dataLen);
+									LogHolder.log(LogLevel.DEBUG,LogType.TOR,"[CLIENT HELLO RECIEVED]");
+									return;
+								}
+								complength--;
+							}
+							throw new TLSException("no supportet compressionalgorithm found",2,40);
+						} catch (ArrayIndexOutOfBoundsException ex)
+						{
+							throw new TLSException("client hello is not long enough",2,50);
 						}
 					} else
 					{
-						throw new TLSException("client hello message is not long enough",2,50);
+						throw new TLSException("this Protocol is not supported",2,70);
 					}
 				}
 			} 
@@ -618,7 +612,7 @@ public class TinyTLSServerSocket extends Socket
 	 * @param port
 	 * Server's TLS Port
 	 */
-	public TinyTLSServerSocket(Socket socket,JAPCertificate certificate,MyRSAPrivateKey key) throws IOException
+	public TinyTLSServerSocket(Socket socket,JAPCertificate certificate,IMyPrivateKey key) throws IOException
 	{
 		this.socket = socket;
 		this.m_handshakecompleted = false;

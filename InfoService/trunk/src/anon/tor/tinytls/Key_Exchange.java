@@ -33,8 +33,8 @@ package anon.tor.tinytls;
 
 import java.math.BigInteger;
 
+import anon.crypto.IMyPrivateKey;
 import anon.crypto.JAPCertificate;
-import anon.crypto.MyRSAPrivateKey;
 
 /**
  * @author stefan
@@ -51,7 +51,7 @@ public abstract class Key_Exchange{
 	{
 	}
 
-	public abstract byte[] generateServerKeyExchange(MyRSAPrivateKey key,byte[] clientrandom, byte[] serverrandom) throws TLSException;
+	public abstract byte[] generateServerKeyExchange(IMyPrivateKey key,byte[] clientrandom, byte[] serverrandom) throws TLSException;
 
 	/**
 	 * Decode the server keys and check the certificate

@@ -25,10 +25,7 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-/*
- * Created on Mar 16, 2004
- *
- */
+
 package anon.tor.tinytls;
 
 import org.bouncycastle.crypto.digests.SHA1Digest;
@@ -45,7 +42,7 @@ import anon.tor.util.helper;
  * @author stefan
  *
  */
-public class DHE_RSA_WITH_AES_128_CBC_SHA extends CipherSuite {
+public class DHE_DSS_WITH_AES_128_CBC_SHA extends CipherSuite {
 
 	private CBCBlockCipher m_encryptcipher;
 	private CBCBlockCipher m_decryptcipher;
@@ -55,11 +52,11 @@ public class DHE_RSA_WITH_AES_128_CBC_SHA extends CipherSuite {
 	 * Constructor
 	 * @throws Exception
 	 */
-	public DHE_RSA_WITH_AES_128_CBC_SHA() throws TLSException
+	public DHE_DSS_WITH_AES_128_CBC_SHA() throws TLSException
 	{
 		super(new byte[]{0x00,0x033});
-		m_ciphersuitename = "TLS_DHE_RSA_WITH_AES_128_CBC_SHA";
-		this.setKeyExchangeAlgorithm(new DHE_RSA_Key_Exchange());
+		m_ciphersuitename = "TLS_DHE_DSS_WITH_AES_128_CBC_SHA";
+		this.setKeyExchangeAlgorithm(new DHE_DSS_Key_Exchange());
 		m_rand = new MyRandom();
 	}
 
