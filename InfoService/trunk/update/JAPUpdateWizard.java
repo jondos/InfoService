@@ -21,6 +21,7 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
   {
     public JAPWelcomeWizardPage welcomePage;
     public JAPDownloadWizardPage downloadPage;
+    public JAPFinishWizardPage finishPage;
     private BasicWizardHost host;
 
     //same as pathToJapJar
@@ -45,7 +46,6 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
 
     private boolean downloadFinished = false;
     private int countPackages = 0;
-    private int countPackages5 = 0;
     private int countBytes = 0;
     private int value = 0;
     private int totalLength = 0;
@@ -63,8 +63,11 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
         setWizardTitle("JAP Update Wizard");
         welcomePage = new JAPWelcomeWizardPage();
         downloadPage = new JAPDownloadWizardPage(version, type);
+        finishPage = new JAPFinishWizardPage("");
+
         addWizardPage(0,welcomePage);
         addWizardPage(1,downloadPage);
+        addWizardPage(2,finishPage);
         m_Pages = getPageVector();
         host=new BasicWizardHost(JAPController.getView(),this);
         invokeWizard(host);
@@ -79,7 +82,7 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
                       {
                                  //downloadPage.m_labelIconStep1.setText("");
 
-                                 downloadPage.m_labelIconStep1.setVisible(true);
+                                 downloadPage.m_labelIconStep1.setIcon(downloadPage.arrow);
                                  countPackages += lenData;
                                 // the first step has the Zone from 0 to 5 in the ProgressBar
                                  value = (5 * countPackages)/lenTotal;
@@ -93,13 +96,14 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
                                   return -1;
                       }else if(state == 3)
                       {           System.out.println(value+ " value 1st step");
-                                  downloadPage.m_labelIconStep2.setVisible(true);
-                                  downloadPage.m_labelIconStep1.setVisible(false);
+                                  //downloadPage.m_labelIconStep2.setVisible(true);
+                                  downloadPage.m_labelIconStep1.setIcon(downloadPage.blank);
                                   //downloadPage.m_labelIconStep1.setText("Tes");
+                                  downloadPage.m_labelIconStep2.setIcon(downloadPage.arrow);
                                   return 0;
                       }else if(state == 4)//download is going on
                       {
-                                  //downloadPage.m_labelIconStep2.setVisible(true);
+                                  //downloadPage.m_labelIconStep2.setIcon(downloadPage.arrow);
                                   return 0;
                       }else if(state == 5)//download aborted
                       {
@@ -111,8 +115,8 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
                                   return 0;
                       }else if(state == 7)//createNewJapJar()
                       {
-                                  downloadPage.m_labelIconStep3.setVisible(true);
-                                  downloadPage.m_labelIconStep2.setVisible(false);
+                                   downloadPage.m_labelIconStep2.setIcon(downloadPage.blank);
+                                   downloadPage.m_labelIconStep3.setIcon(downloadPage.arrow);
                                    countPackages = 0;
                                    countPackages += lenData;
                                 // the first step has the Zone from 455 to 490 in the ProgressBar
@@ -129,6 +133,9 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
                       }else if(state == 9)// finshed creation of the new JarFile
                       {
                                  // downloadPage.m_labelIconStep3.setVisible(false);
+
+                                 downloadPage.m_labelIconStep3.setIcon(downloadPage.blank);
+                                 downloadPage.m_labelIconStep3.setVisible(false);
                                    return 0;
                       }else if(state == 10)//not needed yet
                       {
@@ -141,25 +148,25 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
                           return 0;
                       }else if(state == 13)//write the new JARFile in the directory
                       {
-                          downloadPage.m_labelIconStep5.setVisible(true);
-                          downloadPage.m_labelIconStep3.setVisible(false);
-                                   countPackages5 += lenData;
+                                   downloadPage.m_labelIconStep3.setIcon(downloadPage.arrow);
+
+                                   countPackages += lenData;
                                 // the 5th step has the Zone from 490 to 500 in the ProgressBar
-                                 value = (10 * countPackages)/lenTotal;
+                                   value = (10 * countPackages)/lenTotal;
                                  //System.out.println(value+ " value 5" +lenData+" lendata "+lenTotal+" lentotal");
-                                 downloadPage.progressBar.setValue((value+490));
-                                 downloadPage.progressBar.repaint();
-                                 return 0;
+                                   downloadPage.progressBar.setValue((value+490));
+                                   downloadPage.progressBar.repaint();
+                                  return 0;
                       }else if(state == 14)
                       {
                                  downloadPage.showInformationDialog(JAPMessages.getString("updateInformationMsgStep5"));
                                  return -1;
                       }else if(state == 15)
-                      {           System.out.println(value+ " value 5st step");
-                                 // downloadPage.m_labelIconStep5.setVisible(false);
-                                 downloadPage.m_labelIconStep5.setEnabled(false);
+                      {
+                                 downloadPage.m_labelIconStep5.setIcon(downloadPage.blank);
                                  host.setNextEnabled(true);
-                                 host.setFinishEnabled(true);
+                                 host.setFinishEnabled(false);
+                                 host.setCancelEnabled(false);
                                   return 0;
                       }else
                       {
@@ -215,18 +222,23 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
       pageIndex++;
       host.setBackEnabled(true);
       //already the last page --> tell the user that Jap exits itself
-      if(pageIndex == m_Pages.size())
+     /* if(pageIndex == m_Pages.size())
       {
           host.setBackEnabled(false);
-          downloadPage.showInformationDialog("Der Update-Vorgang ist abgeschlossen."+"/n"+"Klicken sie auf Finish um JAP zu beenden."+"/n"+"Starten sie Jap anschliessend neu.");
+          //downloadPage.showInformationDialog("Der Update-Vorgang ist abgeschlossen."+"/n"+"Klicken sie auf Finish um JAP zu beenden."+"/n"+"Starten sie Jap anschliessend neu.");
           return null;
-      }
-
+      }*/
+      //next page is FinishWizardPage
       if(pageIndex==m_Pages.size()-1)
         {
           host.setFinishEnabled(true);
           host.setNextEnabled(false);
-
+          try{
+          updateThread.join();
+            }catch(InterruptedException ie)
+            {
+                ie.printStackTrace();
+            }
         }
       ///host.setWizardPage((WizardPage)m_Pages.elementAt(pageIndex));
       //if it is the DownloadWizardPage
@@ -257,6 +269,18 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
       return null;
    }
 
+   public WizardPage back(WizardPage currentPage, WizardHost host)
+   {
+      int pageIndex=m_Pages.indexOf(currentPage);
+      // we are on the Finishpage --> don't go back to the first page
+      if (pageIndex == (m_Pages.size()-1))
+      {
+          host.setBackEnabled(false);
+      }
+
+      super.back(currentPage,host);
+      return null;
+   }
 //-----------------------------------------------------------------------------<<
 //User's clicked next and the path to the right Jar-File is set
      public void setPath(String pathToJapJar)
@@ -301,10 +325,11 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
         suf = pathToJapJar.substring(i);
         //name of the file
         pre = pathToJapJar.substring(0,i);
-        downloadPage.m_labelStep1.setText(JAPMessages.getString("updateM_labelStep1Part1")+" "+pathToJapJar+" "+JAPMessages.getString("updateM_labelStep1Part2")+" "+pre+JAPConstants.aktVersion2+suf+JAPMessages.getString("updateM_labelStep1Part3"));
+        downloadPage.m_labelStep1_1.setText(JAPMessages.getString("updateM_labelStep1Part1"));//+" "+pathToJapJar+" "+JAPMessages.getString("updateM_labelStep1Part2")+" "+pre+JAPConstants.aktVersion2+suf+JAPMessages.getString("updateM_labelStep1Part3"));
+        downloadPage.tfSaveFrom.setText(pathToJapJar);
+        downloadPage.m_labelStep1_2.setText(JAPMessages.getString("updateM_labelStep1Part2"));
+        downloadPage.tfSaveTo.setText(pre+JAPConstants.aktVersion2+suf);
 
-        //renameJapJar(pre, suf);
-       // downloadUpdate();
       }
      //Step 1
       public void renameJapJar(String prefix, String suffix, UpdateListener listener)
@@ -396,7 +421,7 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
                               {
                                   //listener.progress(0,0,UpdateListener.DOWNLOAD_READY);
                                   //updateWizard.createNewJAPJar();
-                                  System.out.println(value+ " value 2st step");
+                                  //System.out.println(value+ " value 2st step");
                                   downloadFinished = true;
                                   synchronized(oSync)
                                   {

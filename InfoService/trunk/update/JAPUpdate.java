@@ -122,7 +122,7 @@ public class JAPUpdate implements ActionListener,ItemListener,Runnable
         GridLayout gridInstalled = new GridLayout(3,2);
         gridInstalled.setVgap(0);
         gridInstalled.setHgap(0);
-        TitledBorder titledBorder = new TitledBorder(" Installed Version ");
+        TitledBorder titledBorder = new TitledBorder(" "+JAPMessages.getString("updateTitleBorderInstalled")+" ");
         JPanel installedPanel = new JPanel(gridInstalled);
         installedPanel.setBorder(titledBorder);
         JLabel l=new JLabel("Version: ");
@@ -132,7 +132,7 @@ public class JAPUpdate implements ActionListener,ItemListener,Runnable
         l=new JLabel(JAPConstants.aktVersion2);
         l.setBorder(b);
         installedPanel.add(l);
-        l=new JLabel("Date: ");
+        l=new JLabel(JAPMessages.getString("updateLabelDate")+" ");
         l.setBorder(b);
         installedPanel.add(l);
         l=new JLabel("22.12.2001");
@@ -149,7 +149,7 @@ public class JAPUpdate implements ActionListener,ItemListener,Runnable
         GridLayout gridLatest = new GridLayout(3,2);
         gridLatest.setVgap(0);
         gridLatest.setHgap(0);
-        titledBorder = new TitledBorder(" Latest Version ");
+        titledBorder = new TitledBorder(" "+JAPMessages.getString("updateTitleBorderLatest")+" ");
         JPanel latestPanel = new JPanel(gridLatest);
         latestPanel.setBorder(titledBorder);
         l=new JLabel("Version: ");
@@ -158,7 +158,7 @@ public class JAPUpdate implements ActionListener,ItemListener,Runnable
         m_labelVersion=new JLabel("Unknown");
         m_labelVersion.setBorder(b);
         latestPanel.add(m_labelVersion);
-        l=new JLabel("Date: ");
+        l=new JLabel(JAPMessages.getString("updateLabelDate")+" ");
         l.setBorder(b);
         latestPanel.add(l);
         m_labelDate=new JLabel("Unknown");
@@ -232,13 +232,10 @@ public class JAPUpdate implements ActionListener,ItemListener,Runnable
         InfoService infoService=japController.getInfoService();
         m_releaseVersion=infoService.getJAPVersionInfo(InfoService.JAP_RELEASE_VERSION);
         m_devVersion=infoService.getJAPVersionInfo(InfoService.JAP_DEVELOPMENT_VERSION);
-        //--> get the jnlp-File
-        //jnlp_dev = infoService.connect("infoservice.inf.tu-dresden.de","/japDevelopment.jnlp","japDevelopment.jnlp");
-        //--> get the jnlp-File
-        //jnlp_rel = infoService.connect("infoservice.inf.tu-dresden.de","/japDevelopment.jnlp","japReleased.jnlp");
+
         if(m_releaseVersion==null||m_devVersion==null)
           {
-            m_taInfo.setText("Fetching Version Info - FAILED!\nPlease check InfoService settings.");
+            m_taInfo.setText(JAPMessages.getString("updateFetchVersionInfoFailed"));
           }
         else
           {

@@ -15,6 +15,9 @@ import javax.*;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JOptionPane;
+import javax.swing.JTextField;
+import javax.swing.border.EmptyBorder;
+import javax.swing.SwingConstants;
 
 import JAPMessages;
 import JAPUtil;
@@ -36,7 +39,9 @@ public class JAPDownloadWizardPage extends BasicWizardPage
   {
     protected JLabel m_labelStatus, m_labelInformation;
     // Labels indicating the Steps of the current Update
-    protected JLabel m_labelStep1;
+    protected JLabel m_labelStep1_1, m_labelStep1_2;
+    protected JTextField tfSaveFrom, tfSaveTo;
+
     protected JLabel m_labelStep2, m_labelStep3, m_labelStep4, m_labelStep5;
     //labels as placeholders for the icon indicating which step is the current job
     protected JLabel m_labelIconStep1;
@@ -67,8 +72,10 @@ public class JAPDownloadWizardPage extends BasicWizardPage
         setIcon(JAPUtil.loadImageIcon(JAPConstants.DOWNLOADFN,false));
         setPageTitle("Download");
 
-        arrow = new ImageIcon("images/arrow.jpg");
-        blank = new ImageIcon();
+        arrow = new ImageIcon("images/arrow46.gif");
+        blank = new ImageIcon("images/blank.jpg");
+
+
 
         gridBagDownload = new GridBagLayout();
         constraintsDownload = new GridBagConstraints();
@@ -79,7 +86,7 @@ public class JAPDownloadWizardPage extends BasicWizardPage
         constraintsDownload.gridx= 0;
         constraintsDownload.gridy = 0;
         constraintsDownload.gridheight = 1;
-        constraintsDownload.gridwidth = 2;
+        constraintsDownload.gridwidth = 3;
         constraintsDownload.anchor = GridBagConstraints.NORTH;
         constraintsDownload.insets = new Insets(0,5,10,5);
         m_labelInformation = new JLabel(JAPMessages.getString("updateDownloadIntroductionMessage"));
@@ -94,7 +101,7 @@ public class JAPDownloadWizardPage extends BasicWizardPage
         m_labelIconStep1.setVisible(true);
         constraintsDownload.gridx = 0;
         constraintsDownload.gridy = 2;
-        constraintsDownload.gridheight = 1;
+        constraintsDownload.gridheight = 2;
         constraintsDownload.gridwidth = 1 ;
         ////////////////////////////////////////////////////////////////////////
         //constraintsDownload.weightx = 1.0;
@@ -105,8 +112,8 @@ public class JAPDownloadWizardPage extends BasicWizardPage
         gridBagDownload.setConstraints(m_labelIconStep1, constraintsDownload);
         m_panelComponents.add(m_labelIconStep1, constraintsDownload);
 
-        m_labelStep1 = new JLabel();
-       // m_labelStep1.setIcon(arrow);
+        m_labelStep1_1 = new JLabel();
+       // m_labelStep1_1.setIcon(arrow);
         constraintsDownload.gridx = 1;
         constraintsDownload.gridy = 2;
         constraintsDownload.weightx = 0.0;
@@ -116,16 +123,62 @@ public class JAPDownloadWizardPage extends BasicWizardPage
         //constraintsDownload.ipady = 0;
 
         constraintsDownload.anchor = GridBagConstraints.WEST;
-        constraintsDownload.insets = new Insets(5,5,5,5);
-        gridBagDownload.setConstraints(m_labelStep1, constraintsDownload);
-        m_panelComponents.add(m_labelStep1, constraintsDownload);
+        constraintsDownload.insets = new Insets(1,5,1,5);
+        gridBagDownload.setConstraints(m_labelStep1_1, constraintsDownload);
+        m_panelComponents.add(m_labelStep1_1, constraintsDownload);
 
-        m_labelIconStep2 = new JLabel();
-        m_labelIconStep2.setIcon(arrow);
-        m_labelIconStep2.setVisible(false);
-        constraintsDownload.gridx = 0;
+        tfSaveFrom = new JTextField("");
+        tfSaveFrom.setEditable(false);
+        tfSaveFrom.setBorder(new EmptyBorder(new Insets(3,0,0,0)));
+
+        constraintsDownload.gridx = 2;
+        constraintsDownload.gridy = 2;
+        constraintsDownload.weightx = 0.0;
+        constraintsDownload.gridheight =1;
+        constraintsDownload.anchor = GridBagConstraints.WEST;
+        constraintsDownload.fill = GridBagConstraints.HORIZONTAL;
+        gridBagDownload.setConstraints(tfSaveFrom, constraintsDownload);
+        m_panelComponents.add(tfSaveFrom, constraintsDownload);
+
+        ///////////////////////////////////////////////////////////////////////
+        m_labelStep1_2 = new JLabel();
+        m_labelStep1_2.setHorizontalAlignment(SwingConstants.RIGHT);
+       // m_labelStep1_1.setIcon(arrow);
+        constraintsDownload.gridx = 1;
         constraintsDownload.gridy = 3;
         constraintsDownload.weightx = 0.0;
+        constraintsDownload.gridheight =1;
+        constraintsDownload.anchor = GridBagConstraints.EAST;
+        constraintsDownload.insets = new Insets(1,5,1,5);
+        gridBagDownload.setConstraints(m_labelStep1_2, constraintsDownload);
+        m_panelComponents.add(m_labelStep1_2, constraintsDownload);
+                  ///////////////////////////////////////////
+         tfSaveTo = new JTextField("");
+        tfSaveTo.setEditable(false);
+        tfSaveTo.setBorder(new EmptyBorder(new Insets(3,0,0,0)));
+
+        constraintsDownload.gridx = 2;
+        constraintsDownload.gridy = 3;
+        constraintsDownload.weightx = 0.0;
+        constraintsDownload.gridheight =1;
+        constraintsDownload.anchor = GridBagConstraints.WEST;
+        constraintsDownload.fill = GridBagConstraints.HORIZONTAL;
+        gridBagDownload.setConstraints(tfSaveTo, constraintsDownload);
+        m_panelComponents.add(tfSaveTo, constraintsDownload);
+
+                  ///////////////////////////////////////////
+       /////////////////////////////////////////////////////////////////////////
+
+        m_labelIconStep2 = new JLabel();
+        m_labelIconStep2.setIcon(blank);
+        m_labelIconStep2.setVisible(true);
+        constraintsDownload.insets = new Insets(5,5,5,5);
+        constraintsDownload.gridx = 0;
+        constraintsDownload.gridy = 4;
+        constraintsDownload.gridwidth = 1 ;
+        constraintsDownload.weightx = 0.0;
+        constraintsDownload.anchor = GridBagConstraints.WEST;
+        constraintsDownload.fill = GridBagConstraints.NONE;
         ////////////////////////////////////////////////////////////////////////
         //constraintsDownload.ipadx = arrow.getIconWidth();
         //constraintsDownload.ipady = arrow.getIconHeight();
@@ -135,7 +188,8 @@ public class JAPDownloadWizardPage extends BasicWizardPage
 
         m_labelStep2 = new JLabel(JAPMessages.getString("updateM_labelStep2"));
         constraintsDownload.gridx = 1;
-        constraintsDownload.gridy = 3;
+        constraintsDownload.gridy = 4;
+        constraintsDownload.gridwidth = 2 ;
         ////////////////////////////////////////////////////////////////////////
         //constraintsDownload.ipadx = 0;
         //constraintsDownload.ipady = 0;
@@ -145,31 +199,35 @@ public class JAPDownloadWizardPage extends BasicWizardPage
 
 
         m_labelIconStep3 = new JLabel();
-        m_labelIconStep3.setIcon(arrow);
-        m_labelIconStep3.setVisible(false);
+        m_labelIconStep3.setIcon(blank);
+        m_labelIconStep3.setVisible(true);
         constraintsDownload.gridx = 0;
-        constraintsDownload.gridy = 4;
+        constraintsDownload.gridy = 5;
+        constraintsDownload.gridwidth = 1 ;
         gridBagDownload.setConstraints(m_labelIconStep3, constraintsDownload);
         m_panelComponents.add(m_labelIconStep3, constraintsDownload);
 
         m_labelStep3 = new JLabel(JAPMessages.getString("updateM_labelStep3Part1")+version+JAPMessages.getString("updateM_labelStep3Part2"));
         constraintsDownload.gridx = 1;
-        constraintsDownload.gridy = 4;
+        constraintsDownload.gridy = 5;
+        constraintsDownload.gridwidth = 2 ;
         gridBagDownload.setConstraints(m_labelStep3, constraintsDownload);
         m_panelComponents.add(m_labelStep3, constraintsDownload);
 
 
         m_labelIconStep5 = new JLabel();
-        m_labelIconStep5.setIcon(arrow);
-        m_labelIconStep5.setVisible(false);
+        m_labelIconStep5.setIcon(blank);
+        m_labelIconStep5.setVisible(true);
         constraintsDownload.gridx = 0;
-        constraintsDownload.gridy = 5;
+        constraintsDownload.gridy = 6;
+        constraintsDownload.gridwidth = 1 ;
         gridBagDownload.setConstraints(m_labelIconStep5, constraintsDownload);
         m_panelComponents.add(m_labelIconStep5, constraintsDownload);
 
         m_labelStep5 = new JLabel(JAPMessages.getString("updateM_labelStep5"));
         constraintsDownload.gridx = 1;
-        constraintsDownload.gridy = 5;
+        constraintsDownload.gridy = 6;
+        constraintsDownload.gridwidth = 2 ;
         gridBagDownload.setConstraints(m_labelStep5, constraintsDownload);
         m_panelComponents.add(m_labelStep5, constraintsDownload);
         // define an own panel for progressBar and its label
@@ -181,6 +239,7 @@ public class JAPDownloadWizardPage extends BasicWizardPage
            m_labelStatus= new JLabel(JAPMessages.getString("updateM_labelStatus"));
            constraintsPanelProgress.gridx = 0;
            constraintsPanelProgress.gridy = 0;
+           constraintsDownload.gridwidth = 1 ;
            constraintsPanelProgress.insets = new Insets(10,25,5,5);
            gridBagLayout.setConstraints(m_labelStatus, constraintsPanelProgress);
            m_panelProgressBar.add(m_labelStatus, constraintsPanelProgress);
@@ -198,8 +257,8 @@ public class JAPDownloadWizardPage extends BasicWizardPage
            m_panelProgressBar.add(progressBar, constraintsPanelProgress);
 
        constraintsDownload.gridx = 0;
-       constraintsDownload.gridy = 6;
-       constraintsDownload.gridwidth = 2;
+       constraintsDownload.gridy = 7;
+       constraintsDownload.gridwidth = 3;
        gridBagDownload.setConstraints(m_panelProgressBar, constraintsDownload);
        m_panelComponents.add(m_panelProgressBar, constraintsDownload);
 
