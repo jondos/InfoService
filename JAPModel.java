@@ -64,9 +64,11 @@ import anon.JAPAnonServiceListener;
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPModel implements JAPAnonServiceListener{
 
-	public static final String aktVersion = "00.01.020"; // Version of JAP
+	public static final String aktVersion = "00.01.021"; // Version of JAP
 
 	public  Vector            anonServerDatabase = null; // vector of all available mix cascades
+	public final static String   defaultanonHost   = "mix.inf.tu-dresden.de";
+	public final static int defaultanonPortNumber=6544;
 	private AnonServerDBEntry currentAnonService = null; // current anon service data object
 
 	private ServerSocket   m_socketHTTPListener;     // listener object
@@ -75,14 +77,17 @@ public final class JAPModel implements JAPAnonServiceListener{
 	private JAPAnonService proxyAnon      = null;    // service object for HTTP  listener
 	private JAPAnonService proxyAnonSocks = null;    // service object for SOCKS listener
 
-	private int      portNumber            = 4001;   // port number of HTTP  listener
+	public final static int defaultPortNumber=4001;
+	private int      portNumber            = defaultPortNumber;   // port number of HTTP  listener
 	private int      portSocksListener     = 1080;   // port number of SOCKS listener
 	private boolean  mbSocksListener       = false;  // indicates whether JAP should support SOCKS or not
 	private boolean  mblistenerIsLocal     = true;   // indicates whether listeners serve for localhost only or not
 	private boolean  isRunningListener     = false;  // true if a listener is running
 
-	private String   infoServiceHostName   = "infoservice.inf.tu-dresden.de";
-	private int      infoServicePortNumber = 6543;
+	public final static String   defaultinfoServiceHostName   = "infoservice.inf.tu-dresden.de";
+	private String   infoServiceHostName   = defaultinfoServiceHostName;
+	public final static int defaultinfoServicePortNumber=6543;
+	private int      infoServicePortNumber = defaultinfoServicePortNumber;
 
 	private boolean  mbUseProxy            = false;  // indicates whether JAP connects via a proxy or directly
 	private  String  proxyHostName         = "";     // hostname of proxy
@@ -120,7 +125,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 
 
 	static final int    MAXHELPLANGUAGES = 6;
-	static final String TITLE = "JAVA ANON PROXY -- JAP";
+	static final String TITLE = "JAP";
 	static final String AUTHOR = "(c) 2000 The JAP-Team";
 	static final String IMGPATHHICOLOR  = "images/";
 	static final String IMGPATHLOWCOLOR = "images/lowcolor/";
@@ -164,7 +169,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 			//JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:initializing...");
 			// Create observer object
 			observerVector = new Vector();
-			currentAnonService = new AnonServerDBEntry("mix.inf.tu-dresden.de",6544);
+			currentAnonService = new AnonServerDBEntry(defaultanonHost,defaultanonPortNumber);
 			proxyDirect=null;
 			proxyAnon=null;
 			m_Locale=Locale.getDefault();
@@ -449,7 +454,6 @@ public final class JAPModel implements JAPAnonServiceListener{
 											JOptionPane.ERROR_MESSAGE);
 			}
 	}
-
 
 	public void initialRun()
 		{

@@ -1,30 +1,30 @@
 /*
-Copyright (c) 2000, The JAP-Team 
+Copyright (c) 2000, The JAP-Team
 All rights reserved.
-Redistribution and use in source and binary forms, with or without modification, 
+Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
 
-	- Redistributions of source code must retain the above copyright notice, 
+	- Redistributions of source code must retain the above copyright notice,
 	  this list of conditions and the following disclaimer.
 
-	- Redistributions in binary form must reproduce the above copyright notice, 
-	  this list of conditions and the following disclaimer in the documentation and/or 
+	- Redistributions in binary form must reproduce the above copyright notice,
+	  this list of conditions and the following disclaimer in the documentation and/or
 		other materials provided with the distribution.
 
-	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors 
-	  may be used to endorse or promote products derived from this software without specific 
-		prior written permission. 
+	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
+	  may be used to endorse or promote products derived from this software without specific
+		prior written permission.
 
-	
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS 
-OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY 
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS
+OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
 AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS
 BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, 
-OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER 
-IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY 
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
-*/ 
+*/
 import java.util.Enumeration;
 import java.util.Dictionary;
 import java.util.Hashtable;
@@ -37,16 +37,16 @@ import javax.swing.border.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-final class JAPConf extends JDialog 
+final class JAPConf extends JDialog
 	{
 	private JAPModel model;
-		
+
 	final static public int PORT_TAB = 0;
 	final static public int HTTP_TAB = 1;
-	final static public int INFO_TAB = 2;	
-	final static public int ANON_TAB = 3;	
+	final static public int INFO_TAB = 2;
+	final static public int ANON_TAB = 3;
 	final static public int MISC_TAB = 4;
-		
+
 	private JCheckBox    guiChB;
 	private JCheckBox    netChB;
 	private JCheckBox    threadChB;
@@ -78,10 +78,10 @@ final class JAPConf extends JDialog
 	private boolean				bIgnoreComboLanguageEvents=false;
 	private JTabbedPane		tabs;
 	private JPanel				portP, httpP, infoP, anonP, miscP;
-	
+
 	private JFrame  parent;
 	private JAPConf japconf;
-	
+
 	public JAPConf (JFrame f)
 			{
 				super(f);
@@ -173,7 +173,7 @@ final class JAPConf extends JDialog
 				p1.setLayout( g );
 				p1.setBorder( new EmptyBorder(5,10,10,10) );
 				GridBagConstraints c=new GridBagConstraints();
-				c.anchor=c.NORTHWEST;					
+				c.anchor=c.NORTHWEST;
 				c.fill=GridBagConstraints.HORIZONTAL;
 				c.gridwidth=1;
 				c.gridx=0;
@@ -241,13 +241,13 @@ final class JAPConf extends JDialog
 				   }});
 				proxyAuthenticationCheckBox=new JCheckBox(model.getString("settingsProxyAuthenticationCheckBox"));
 				proxyAuthenticationUserID=new JTextField();
-	
+
 				proxyAuthenticationCheckBox.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
 						proxyAuthenticationUserID.setEnabled(proxyAuthenticationCheckBox.isSelected());
 				}});
-	
-				
+
+
 				JPanel p = new JPanel();
 				p.setLayout( new BorderLayout() );
 				p.setBorder( new TitledBorder(model.getString("settingsProxyBorder")) );
@@ -268,7 +268,7 @@ final class JAPConf extends JDialog
 				p.add(p1, BorderLayout.NORTH);
 				return p;
 			}
-	
+
 	protected JPanel buildinfoPanel() {
 				infohostTextField = new JTextField();
 				infoportnumberTextField = new JAPJIntField();
@@ -299,7 +299,7 @@ final class JAPConf extends JDialog
 				return p;
 	}
 
-	protected JPanel buildanonPanel() 
+	protected JPanel buildanonPanel()
 			{
 				startupMinimizeCheckBox=new JCheckBox(model.getString("settingsstartupMinimizeCheckBox"));
 				autoConnectCheckBox = new JCheckBox(model.getString("settingsautoConnectCheckBox"));
@@ -347,7 +347,7 @@ final class JAPConf extends JDialog
 							// ------ !!!!! ordentlich geht!!!!
 							updateValues();
 							b2.doClick();
-							
+
 							setCursor(c);
 						}
 						// ------ !!!!! diese wieder aktivieren!
@@ -361,7 +361,7 @@ final class JAPConf extends JDialog
 					{
 						select.addItem( ((AnonServerDBEntry)enum.nextElement()).getName() );
 					}
-					   
+
 				select.setEnabled(false);
 				select.addActionListener(new ActionListener() {
 							public void actionPerformed(ActionEvent e) {
@@ -369,7 +369,7 @@ final class JAPConf extends JDialog
 						if (select.getSelectedIndex() > 0) {
 							anonServerName = ((AnonServerDBEntry)model.anonServerDatabase.elementAt(select.getSelectedIndex()-1)).getName();
 							oldAnonServerName = anonServerName;
-							anonhostTextField.setText( 
+							anonhostTextField.setText(
 							   ((AnonServerDBEntry)model.anonServerDatabase.elementAt(select.getSelectedIndex()-1)).getHost()   );
 							anonportnumberTextField.setText( String.valueOf(
 							   ((AnonServerDBEntry)model.anonServerDatabase.elementAt(select.getSelectedIndex()-1)).getPort() ) );
@@ -401,7 +401,7 @@ final class JAPConf extends JDialog
 						anonhostTextField.setEditable(false);
 						anonportnumberTextField.setEditable(false);
 						anonsslportnumberTextField.setEditable(false);
-									 
+
 				}});
 				b3.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
@@ -468,12 +468,12 @@ final class JAPConf extends JDialog
 				p.add(pp2, BorderLayout.CENTER);
 				return p;
 			}
-		
+
 		protected JPanel buildmiscPanel()
 			{
 				JPanel p=new JPanel();
 				p.setLayout(new BorderLayout() );
-				
+
 				// Panel for Look and Feel Options
 				JPanel p1=new JPanel();
 				p1.setLayout(new GridLayout(2,2));
@@ -482,7 +482,7 @@ final class JAPConf extends JDialog
 				JComboBox c=new JComboBox();
 				// not yet implemented, or doesn't work very well on my Mac --> disable it
 				c.setEnabled(false);
-				LookAndFeelInfo[] lf=UIManager.getInstalledLookAndFeels();	
+				LookAndFeelInfo[] lf=UIManager.getInstalledLookAndFeels();
 				for(int i=0;i<lf.length;i++)
 					{
 						c.addItem(lf[i].getName());
@@ -507,7 +507,7 @@ final class JAPConf extends JDialog
 				comboLanguage=new JComboBox();
 				comboLanguage.addItem("Deutsch");
 				comboLanguage.addItem("English");
-				// yet implemented !! 
+				// yet implemented !!
 				//c.setEnabled(false);
 				comboLanguage.addItemListener(new ItemListener(){
 					public void itemStateChanged(ItemEvent e){
@@ -515,7 +515,7 @@ final class JAPConf extends JDialog
 							{
 								try
 									{
-									
+
 										JOptionPane.showMessageDialog(japconf,JAPMessages.getString("confLanguageChanged"),JAPMessages.getString("information"),JOptionPane.INFORMATION_MESSAGE);
 									}
 								catch(Exception ie)
@@ -525,7 +525,7 @@ final class JAPConf extends JDialog
 					}});
 
 				p1.add(comboLanguage);
-				
+
 				// Panel for Misc Options
 				JPanel p2=new JPanel();
 				p2.setLayout(new BorderLayout());
@@ -553,12 +553,19 @@ final class JAPConf extends JDialog
 						updateValues();
 						OKPressed();
 						setCursor(c1);
-						
+
+				}});
+				JButton bttnDefaultConfig=new JButton(model.getString("bttnDefaultConfig"));
+//				bttnMonitor.setEnabled(false);
+				bttnDefaultConfig.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent e) {
+						resetToDefault();
 				}});
 				JPanel p22 = new JPanel();
-				p22.setLayout(new GridLayout(2,1));
+				p22.setLayout(new GridLayout(3,1));
 				p22.add(bttnPing);
 				p22.add(bttnMonitor);
+				p22.add(bttnDefaultConfig);
 				p2.add(p22, BorderLayout.NORTH);
 
 				// Panel for Debugging Options
@@ -574,7 +581,7 @@ final class JAPConf extends JDialog
 				p31.add(netChB);
 				p31.add(threadChB);
 				p31.add(miscChB);
-				
+
 				checkboxShowDebugConsole=new JCheckBox("Show Console");
 				checkboxShowDebugConsole.setSelected(JAPDebug.isShowConsole());
 				checkboxShowDebugConsole.addItemListener(new ItemListener()
@@ -583,7 +590,7 @@ final class JAPConf extends JDialog
 						 JAPDebug.showConsole(e.getStateChange()==e.SELECTED,model.getView());
 					}});
 				p31.add(checkboxShowDebugConsole);
-				
+
 				p3.add(p31);
 				JPanel p32=new JPanel();
 				sliderDebugLevel=new JSlider(JSlider.VERTICAL,0,7,0);
@@ -606,7 +613,7 @@ final class JAPConf extends JDialog
 				sliderDebugLevel.setSnapToTicks(true);
 				sliderDebugLevel.setPaintTrack(true);
 				sliderDebugLevel.setPaintTicks(false);
-				
+
 				p32.add(sliderDebugLevel);
 				p3.add(p32);
 
@@ -616,7 +623,7 @@ final class JAPConf extends JDialog
 
 				p.add(p3, BorderLayout.WEST);
 				p.add(pp, BorderLayout.CENTER);
-				
+
 				return p;
 			}
 
@@ -624,7 +631,7 @@ final class JAPConf extends JDialog
 			{
 				setVisible(false);
 		}
-	
+
 	/**Shows a Dialog about whats going wrong
 	 */
 	private void showError(String msg)
@@ -660,7 +667,7 @@ final class JAPConf extends JDialog
 					showError(model.getString("errorInfoServicePortWrong"));
 					return false;
 				}
-			
+
 			//Checking First Mix (Host + Port)
 			s=anonhostTextField.getText().trim();
 			if(s==null||s.equals(""))
@@ -687,7 +694,7 @@ final class JAPConf extends JDialog
 			} else {
 				try {
 					i=Integer.parseInt(anonsslportnumberTextField.getText().trim());
-				} 
+				}
 				catch(Exception e) {
 					i=-1;
 				}
@@ -762,9 +769,9 @@ final class JAPConf extends JDialog
 								{
 									showError(model.getString("errorFirewallAuthUserIDNotNull"));
 									return false;
-								}									
+								}
 						}
-				}	
+				}
 			//checking Debug-Level
 	/*		try
 				{
@@ -779,12 +786,33 @@ final class JAPConf extends JDialog
 					showError(model.getString("errorDebugLevelWrong"));
 					return false;
 				}
-		*/	
-			
+		*/
+
 			return true;
 		}
-															
-	protected void OKPressed() 
+
+/** Resets the Configuration to the Default values*/
+	private void resetToDefault()
+		{
+			portnumberTextField.setText(Integer.toString(JAPModel.defaultPortNumber));
+		  infohostTextField.setText(JAPModel.defaultinfoServiceHostName);
+		  infoportnumberTextField.setText(Integer.toString(JAPModel.defaultinfoServicePortNumber));
+			anonhostTextField.setText(JAPModel.defaultanonHost);
+			anonportnumberTextField.setText(Integer.toString(JAPModel.defaultanonPortNumber));
+			proxyCheckBox.setSelected(false);
+			startupMinimizeCheckBox.setSelected(false);
+		  autoConnectCheckBox.setSelected(false);
+			listenerCheckBoxIsLocal.setSelected(true);
+			listenerCheckBoxSocks.setSelected(false);
+			checkboxShowDebugConsole.setSelected(false);
+			sliderDebugLevel.setValue(JAPDebug.EMERG);
+			netChB.setSelected(false);
+			guiChB.setSelected(false);
+			miscChB.setSelected(false);
+			threadChB.setSelected(false);
+		}
+
+	protected void OKPressed()
 			{
 				if(!checkValues())
 					return;
@@ -797,7 +825,7 @@ final class JAPConf extends JDialog
 				int newPort=Integer.parseInt(portnumberTextField.getText().trim());
 				if(newPort!=model.getPortNumber())
 					{
-						JOptionPane.showMessageDialog(this,model.getString("confmessageListernPortChanged"));	
+						JOptionPane.showMessageDialog(this,model.getString("confmessageListernPortChanged"));
 					}
 				model.setPortNumber(Integer.parseInt(portnumberTextField.getText().trim()));
 				int port=-1;
@@ -808,10 +836,10 @@ final class JAPConf extends JDialog
 				model.setInfoService(infohostTextField.getText().trim(),
 					Integer.parseInt(infoportnumberTextField.getText().trim()));
 				// anon settings
-				int anonSSLPortNumber = -1; 
+				int anonSSLPortNumber = -1;
 				if (!anonsslportnumberTextField.getText().equals(""))
 					anonSSLPortNumber = Integer.parseInt(anonsslportnumberTextField.getText().trim());
-				
+
 				if (b3.isSelected())
 						anonServerName = model.getString("manual");
 				AnonServerDBEntry e = new AnonServerDBEntry(
@@ -839,12 +867,12 @@ final class JAPConf extends JDialog
 				if(comboLanguage.getSelectedIndex()==0)
 					model.setLocale(Locale.GERMAN);
 				else
-					model.setLocale(Locale.ENGLISH);				
+					model.setLocale(Locale.ENGLISH);
 				model.notifyJAPObservers();
 			}
-	
+
 	public void selectCard(int selectedCard)
-			{	
+			{
 				// set selected card to foreground
 				if (selectedCard == HTTP_TAB)
 					tabs.setSelectedComponent(httpP);
@@ -883,9 +911,9 @@ final class JAPConf extends JDialog
 		proxyportnumberTextField.setEnabled(proxyCheckBox.isSelected());
 		proxyhostTextField.setText(model.getFirewallHost());
 		proxyportnumberTextField.setText(String.valueOf(model.getFirewallPort()));
-		proxyAuthenticationUserID.setText(model.getFirewallAuthUserID());	
+		proxyAuthenticationUserID.setText(model.getFirewallAuthUserID());
 		proxyAuthenticationCheckBox.setSelected(model.getUseFirewallAuthorization());
-		
+
 		// info tab
 		infohostTextField.setText(model.getInfoServiceHost());
 		infoportnumberTextField.setText(String.valueOf(model.getInfoServicePort()));
@@ -910,7 +938,7 @@ final class JAPConf extends JDialog
 								select.addItem( ((AnonServerDBEntry)enum.nextElement()).getName() );
 							}
 	}
-	
+
 
 }
 
