@@ -187,7 +187,7 @@ final public class FlippingPanel extends JPanel
 			m_labelBttn.dispatchEvent(
 				new MouseEvent(
 				m_labelBttn, MouseEvent.MOUSE_CLICKED,
-				0, 0, 0, 0, 1, false, MouseEvent.BUTTON1));
+				0, 0, 0, 0, 1, false));
 		}
 	}
 }

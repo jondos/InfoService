@@ -50,6 +50,9 @@ import payxml.XMLAccountInfo;
 import payxml.XMLDocument;
 import payxml.XMLEasyCC;
 import payxml.XMLTransCert;
+import java.security.PrivateKey;
+import anon.crypto.IMyPrivateKey;
+import anon.crypto.IMyPublicKey;
 
 /**
  *  Diese Klasse ist f?r die verwaltung eines Accounts zut?ndig, sie kapselt eine XML Struktur innerhalb der Klasse
@@ -57,7 +60,8 @@ import payxml.XMLTransCert;
  *  Die Struktur ist wie folgend:
  *  <Account version="1.0">
  * 		<AccountCertificate>...</AccountCertificate> // Kontozertiufkat von der BI unterschrieben
- * 		<RSAPrivateKey>...</RSAPrivateKey> //der geheime Schl?ssel zum Zugriff auf das Konto
+ * 		<RSAPrivateKey>...</RSAPrivateKey> // der geheime RSA-Schl?ssel zum Zugriff auf das Konto
+*      <DSAPrivateKey>...</DSAPrivateKey> // alternativ: der geheime DSA-Schluessel fuer das Konto
  * 		<TransferCertificates> //offenen Transaktionsummern
  * 			....
  * 		</TransferCertifcates>
@@ -77,7 +81,7 @@ public class PayAccount extends XMLDocument
 	private XMLAccountInfo m_accountInfo;
 
 	/** contains the private key associated with this account */
-	private MyRSAPrivateKey m_privateKey;
+	private IMyPrivateKey m_privateKey;
 
 	/** the signing instance */
 	private JAPSignature m_signingInstance;
@@ -183,7 +187,7 @@ public class PayAccount extends XMLDocument
 	 * @param privateKey the private key
 	 */
 	public PayAccount(XMLAccountCertificate certificate,
-					  MyRSAPrivateKey privateKey,
+					  IMyPrivateKey privateKey,
 					  JAPSignature signingInstance) throws Exception
 	{
 		m_accountCertificate = certificate;
@@ -211,7 +215,9 @@ public class PayAccount extends XMLDocument
 		Element elemRoot = doc.createElement("Account");
 		elemRoot.setAttribute("version", "1.0");
 		doc.appendChild(elemRoot);
-		Document tmpDoc = m_accountCertificate.getDomDocument();
+
+		// import AccountCertificate XML Representation
+		Document tmpDoc = m_accountCertificate.getXmlDocument();
 		Node n = null;
 		try
 		{
@@ -223,32 +229,18 @@ public class PayAccount extends XMLDocument
 		}
 		elemRoot.appendChild(n);
 
-		Element elemPrivKey = doc.createElement("RSAPrivateKey");
-		elemRoot.appendChild(elemPrivKey);
-		Element elem = doc.createElement("Modulus");
-		elemPrivKey.appendChild(elem);
-		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_privateKey.getModulus().toByteArray()));
-		elem = doc.createElement("PublicExponent");
-		elemPrivKey.appendChild(elem);
-		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_privateKey.getPublicExponent().toByteArray()));
-		elem = doc.createElement("PrivateExponent");
-		elemPrivKey.appendChild(elem);
-		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_privateKey.getPrivateExponent().toByteArray()));
-		elem = doc.createElement("P");
-		elemPrivKey.appendChild(elem);
-		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_privateKey.getP().toByteArray()));
-		elem = doc.createElement("Q");
-		elemPrivKey.appendChild(elem);
-		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_privateKey.getQ().toByteArray()));
-		elem = doc.createElement("dP");
-		elemPrivKey.appendChild(elem);
-		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_privateKey.getDP().toByteArray()));
-		elem = doc.createElement("dQ");
-		elemPrivKey.appendChild(elem);
-		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_privateKey.getDQ().toByteArray()));
-		elem = doc.createElement("QInv");
-		elemPrivKey.appendChild(elem);
-		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_privateKey.getQInv().toByteArray()));
+		// import Private Key XML Representation
+		tmpDoc = m_privateKey.getXmlEncoded();
+		try
+		{
+			n = XMLUtil.importNode(doc, tmpDoc.getDocumentElement(), true);
+		}
+		catch (Exception ex4)
+		{
+			return null;
+		}
+		elemRoot.appendChild(n);
+
 
 		// add transfer certificates
 		Element elemTransCerts = doc.createElement("TransferCertificates");
@@ -369,7 +361,7 @@ public class PayAccount extends XMLDocument
 	 *
 	 * @return Geheimer Schl?ssel
 	 */
-	public MyRSAPrivateKey getPrivateKey()
+	public IMyPrivateKey getPrivateKey()
 	{
 		return m_privateKey;
 	}
@@ -384,7 +376,7 @@ public class PayAccount extends XMLDocument
 	 *
 	 * @return ?ffentlicher Schl?ssel
 	 */
-	public MyRSAPublicKey getPublicKey()
+	public IMyPublicKey getPublicKey()
 	{
 		return m_accountCertificate.getPublicKey();
 	}
