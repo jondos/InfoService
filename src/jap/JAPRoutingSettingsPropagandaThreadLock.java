@@ -97,13 +97,13 @@ public class JAPRoutingSettingsPropagandaThreadLock {
     }
     else {
       /* registration was not successful -> find out the reason */
-      if ((a_currentPropagandist.getFirstErrorCode() == ServerSocketPropagandist.RETURN_INFOSERVICE_ERROR) && (m_registrationStatus == JAPRoutingSettings.REGISTRATION_UNKNOWN_ERRORS)) {
+      if ((a_currentPropagandist.getCurrentErrorCode() == ServerSocketPropagandist.RETURN_INFOSERVICE_ERROR) && (m_registrationStatus == JAPRoutingSettings.REGISTRATION_UNKNOWN_ERRORS)) {
         /* we have until yet the unknown error state, but now we have a more concrete error code
          * (problems reaching one infoservice) -> set this error code
          */
         m_registrationStatus = JAPRoutingSettings.REGISTRATION_INFOSERVICE_ERRORS;
       }
-      if ((a_currentPropagandist.getFirstErrorCode() == ServerSocketPropagandist.RETURN_VERIFICATION_ERROR) && ((m_registrationStatus == JAPRoutingSettings.REGISTRATION_UNKNOWN_ERRORS) || (m_registrationStatus == JAPRoutingSettings.REGISTRATION_INFOSERVICE_ERRORS))) {
+      if ((a_currentPropagandist.getCurrentErrorCode() == ServerSocketPropagandist.RETURN_VERIFICATION_ERROR) && ((m_registrationStatus == JAPRoutingSettings.REGISTRATION_UNKNOWN_ERRORS) || (m_registrationStatus == JAPRoutingSettings.REGISTRATION_INFOSERVICE_ERRORS))) {
         /* now we could reach an infoservice successful, but the infoservice could not verify
          * the local forwarding server -> update the error code, if there were only unknown
          * or infoservice communication errors until yet

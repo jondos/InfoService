@@ -34,9 +34,10 @@ import java.math.BigInteger;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
-import forward.crypto.AesDecryption;
+import anon.crypto.AesDecryption;
 import anon.infoservice.ListenerInterface;
 import anon.util.Base64;
+import anon.util.ZLibTools;
 
 /**
  * This is the client implementation for all captchas of the "ZIP_BINARY_IMAGE" format.
@@ -110,11 +111,11 @@ public class ZipBinaryImageCaptchaClient implements IImageEncodedCaptcha {
     }
     Element captchaDataNode = (Element) (captchaDataNodes.item(0));
     byte[] compressedImageData = Base64.decode(captchaDataNode.getFirstChild().getNodeValue());
-    byte[] unCompressedImageData = BinaryImage.unzipBinaryData(compressedImageData);
+    byte[] unCompressedImageData = ZLibTools.decompress(compressedImageData);
     if (unCompressedImageData == null) {
       throw (new Exception("ZipBinaryImageCaptchaClient: Error while decompressing the captcha data."));
     }
-    m_captchaImage = BinaryImage.binaryToImage(unCompressedImageData);
+    m_captchaImage = BinaryImageExtractor.binaryToImage(unCompressedImageData);
     if (m_captchaImage == null) {
       throw (new Exception("ZipBinaryImageCaptchaClient: The image is invalid."));
     }

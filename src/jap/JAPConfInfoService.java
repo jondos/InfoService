@@ -29,11 +29,16 @@ package jap;
 
 import java.util.Enumeration;
 import java.util.Vector;
+import java.awt.Component;
+import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
+
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
@@ -41,11 +46,18 @@ import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
+import javax.swing.ListCellRenderer;
 import javax.swing.ListSelectionModel;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.text.AttributeSet;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.Document;
+import javax.swing.text.PlainDocument;
+
 import anon.infoservice.HTTPConnectionFactory;
 import anon.infoservice.InfoServiceDBEntry;
 import anon.infoservice.Database;
@@ -62,11 +74,6 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 	 * Stores the instance of the infoservice JList.
 	 */
 	private JList settingsInfoAllList;
-
-	/**
-	 * Stores the instance of the prefered infoservice JTextField.
-	 */
-	private JTextField settingsInfoPreferedField;
 
 	/**
 	 * Stores the instance of interface info host label.
@@ -110,6 +117,12 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 	private JAPConfInfoService infoServiceConfigModuleInstance;
 
 	/**
+   * Stores the current prefered InfoService.
+   */
+  private InfoServiceDBEntry m_preferedInfoService;
+  
+
+  /**
 	 * Constructor for JAPConfInfoService. We do some initializing here.
 	 */
 	public JAPConfInfoService()
@@ -129,9 +142,10 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 		rootPanel.removeAll();
 
 		/* insert all components in the root panel */
-		JPanel configPanel = createInfoServiceConfigPanel();
-		JPanel interfacePanel = createInfoServiceInterfacePanel();
-		JPanel advancedPanel = createInfoServiceAdvancedPanel();
+    JTabbedPane infoServiceTabPane = new JTabbedPane();
+    infoServiceTabPane.setFont(getFontSetting());
+    infoServiceTabPane.insertTab(JAPMessages.getString("settingsInfoSettingsTabTitle"), null, createInfoServiceConfigPanel(), null, 0);
+    infoServiceTabPane.insertTab(JAPMessages.getString("settingsInfoAdvancedTabTitle"), null, createInfoServiceAdvancedPanel(), null, 1);
 
 		GridBagLayout rootPanelLayout = new GridBagLayout();
 		rootPanel.setLayout(rootPanelLayout);
@@ -140,23 +154,12 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 		rootPanelConstraints.anchor = GridBagConstraints.NORTHWEST;
 		rootPanelConstraints.fill = GridBagConstraints.BOTH;
 		rootPanelConstraints.weightx = 1.0;
-
-		rootPanelConstraints.gridx = 0;
-		rootPanelConstraints.gridy = 0;
 		rootPanelConstraints.weighty = 1.0;
-		rootPanelLayout.setConstraints(configPanel, rootPanelConstraints);
-		rootPanel.add(configPanel);
-		rootPanelConstraints.weighty = 0.0;
 
 		rootPanelConstraints.gridx = 0;
-		rootPanelConstraints.gridy = 1;
-		rootPanelLayout.setConstraints(interfacePanel, rootPanelConstraints);
-		rootPanel.add(interfacePanel);
-
-		rootPanelConstraints.gridx = 0;
-		rootPanelConstraints.gridy = 2;
-		rootPanelLayout.setConstraints(advancedPanel, rootPanelConstraints);
-		rootPanel.add(advancedPanel);
+    rootPanelConstraints.gridy = 0;
+    rootPanelLayout.setConstraints(infoServiceTabPane, rootPanelConstraints);
+    rootPanel.add(infoServiceTabPane);
 
 		/* set current values */
 		updateGuiOutput();
@@ -196,19 +199,35 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 	{
 		final JPanel configPanel = new JPanel();
 
-		settingsInfoPreferedField = new JTextField();
-		settingsInfoPreferedField.setFont(getFontSetting());
-		settingsInfoPreferedField.setEditable(false);
-		JLabel settingsInfoPreferedLabel = new JLabel(JAPMessages.getString("settingsInfoPreferedLabel"));
-		settingsInfoPreferedLabel.setFont(getFontSetting());
-
 		settingsInfoAllList = new JList(Database.getInstance(InfoServiceDBEntry.class).getEntryList());
 		settingsInfoAllList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		settingsInfoAllList.addListSelectionListener(new ListSelectionListener()
-		{
-			public void valueChanged(ListSelectionEvent event)
-			{
-				updateSelectedInfoService();
+    settingsInfoAllList.setCellRenderer(new ListCellRenderer() {
+      public Component getListCellRendererComponent(JList a_list, Object a_value, int a_index, boolean a_isSelected, boolean a_cellHasFocus) {
+        JLabel returnLabel = null;
+        if (((InfoServiceDBEntry)a_value).isUserDefined()) {
+          returnLabel = new JLabel(((InfoServiceDBEntry)a_value).getName(), JAPUtil.loadImageIcon("servermanuell.gif", true), JLabel.LEFT);
+        }
+        else {
+          returnLabel = new JLabel(((InfoServiceDBEntry)a_value).getName(), JAPUtil.loadImageIcon("serverfrominternet.gif", true), JLabel.LEFT);
+        }
+        returnLabel.setOpaque(true);
+        /* the defualt is a non-bold font */
+        returnLabel.setFont(new Font(getFontSetting().getName(), getFontSetting().getStyle() & (~Font.BOLD), getFontSetting().getSize()));
+        if (m_preferedInfoService != null) {
+          if (m_preferedInfoService.getId().equals(((InfoServiceDBEntry)a_value).getId())) {
+            /* print the prefered InfoService in a bold font */
+            returnLabel.setFont(new Font(getFontSetting().getName(), getFontSetting().getStyle() | Font.BOLD, getFontSetting().getSize()));
+          }
+        }
+        if (a_isSelected == true) {
+          returnLabel.setForeground(a_list.getSelectionForeground());
+          returnLabel.setBackground(a_list.getSelectionBackground());
+        }
+        else {
+          returnLabel.setForeground(a_list.getForeground());
+          returnLabel.setBackground(a_list.getBackground());
+        }
+        return returnLabel;
 			}
 		});
 
@@ -269,7 +288,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 				{
 					/* change the prefered infoservice only, if something is selected */
 					InfoServiceHolder.getInstance().setPreferedInfoService(selectedInfoService);
-					settingsInfoPreferedField.setText(selectedInfoService.getName());
+          updateGuiOutput();
 				}
 			}
 		});
@@ -339,56 +358,47 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 
 		configPanelConstraints.gridx = 0;
 		configPanelConstraints.gridy = 0;
+    configPanelConstraints.gridwidth = 4;
+    configPanelConstraints.insets = new Insets(5, 5, 0, 5);
 		configPanelLayout.setConstraints(settingsInfoListLabel, configPanelConstraints);
 		configPanel.add(settingsInfoListLabel);
 
 		configPanelConstraints.gridx = 0;
 		configPanelConstraints.gridy = 1;
-		configPanelConstraints.gridheight = 4;
 		configPanelConstraints.weighty = 1.0;
-		configPanelConstraints.insets = new Insets(0, 0, 10, 0);
+    configPanelConstraints.insets = new Insets(0, 5, 10, 5);
 		configPanelConstraints.fill = GridBagConstraints.BOTH;
 		configPanelLayout.setConstraints(settingsInfoAllScrollPane, configPanelConstraints);
 		configPanel.add(settingsInfoAllScrollPane);
-		configPanelConstraints.gridheight = 1;
-		configPanelConstraints.weighty = 0.0;
-		configPanelConstraints.insets = new Insets(0, 0, 0, 0);
-		configPanelConstraints.fill = GridBagConstraints.HORIZONTAL;
 
-		configPanelConstraints.gridx = 1;
-		configPanelConstraints.gridy = 1;
+    configPanelConstraints.gridx = 0;
+    configPanelConstraints.gridy = 2;
 		configPanelConstraints.weightx = 0.0;
-		configPanelConstraints.insets = new Insets(0, 10, 5, 0);
+    configPanelConstraints.weighty = 0.0;
+    configPanelConstraints.gridwidth = 1;
+    configPanelConstraints.fill = GridBagConstraints.NONE;
+    configPanelConstraints.insets = new Insets(0, 5, 20, 5);
 		configPanelLayout.setConstraints(settingsInfoGetListButton, configPanelConstraints);
 		configPanel.add(settingsInfoGetListButton);
 
 		configPanelConstraints.gridx = 1;
 		configPanelConstraints.gridy = 2;
+    configPanelConstraints.insets = new Insets(0, 5, 20, 5);
 		configPanelLayout.setConstraints(settingsInfoSetPreferedButton, configPanelConstraints);
 		configPanel.add(settingsInfoSetPreferedButton);
 
-		configPanelConstraints.gridx = 1;
-		configPanelConstraints.gridy = 3;
+    configPanelConstraints.gridx = 2;
+    configPanelConstraints.gridy = 2;
+    configPanelConstraints.insets = new Insets(0, 5, 20, 5);
 		configPanelLayout.setConstraints(settingsInfoAddButton, configPanelConstraints);
 		configPanel.add(settingsInfoAddButton);
 
-		configPanelConstraints.gridx = 1;
-		configPanelConstraints.gridy = 4;
-		configPanelConstraints.insets = new Insets(0, 10, 0, 0);
+    configPanelConstraints.gridx = 3;
+    configPanelConstraints.gridy = 2;
+    configPanelConstraints.weightx = 1.0;
+    configPanelConstraints.insets = new Insets(0, 5, 20, 5);
 		configPanelLayout.setConstraints(settingsInfoRemoveButton, configPanelConstraints);
 		configPanel.add(settingsInfoRemoveButton);
-		configPanelConstraints.weightx = 1.0;
-		configPanelConstraints.insets = new Insets(0, 0, 0, 0);
-
-		configPanelConstraints.gridx = 0;
-		configPanelConstraints.gridy = 5;
-		configPanelLayout.setConstraints(settingsInfoPreferedLabel, configPanelConstraints);
-		configPanel.add(settingsInfoPreferedLabel);
-
-		configPanelConstraints.gridx = 0;
-		configPanelConstraints.gridy = 6;
-		configPanelLayout.setConstraints(settingsInfoPreferedField, configPanelConstraints);
-		configPanel.add(settingsInfoPreferedField);
 
 		return configPanel;
 	}
@@ -501,47 +511,6 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 	}
 
 	/**
-	 * Creates the infoservice advanced configuration panel with all components.
-	 *
-	 * @return The interface advanced configuration panel.
-	 */
-	private JPanel createInfoServiceAdvancedPanel()
-	{
-		JPanel advancedPanel = new JPanel();
-		TitledBorder settingsInfoAdvancedBorder = new TitledBorder(JAPMessages.getString(
-			"settingsInfoAdvancedBorder"));
-		settingsInfoAdvancedBorder.setTitleFont(getFontSetting());
-		advancedPanel.setBorder(settingsInfoAdvancedBorder);
-
-		JButton settingsInfoExpertSettingsButton = new JButton(JAPMessages.getString(
-			"settingsInfoExpertSettingsButton"));
-		settingsInfoExpertSettingsButton.setFont(getFontSetting());
-		settingsInfoExpertSettingsButton.addActionListener(new ActionListener()
-		{
-			public void actionPerformed(ActionEvent event)
-			{
-				/* if the expert settins button is pressed, show the expert settings dialog */
-				showInfoServiceExpertDialog();
-			}
-		});
-
-		GridBagLayout advancedPanelLayout = new GridBagLayout();
-		advancedPanel.setLayout(advancedPanelLayout);
-
-		GridBagConstraints advancedPanelConstraints = new GridBagConstraints();
-		advancedPanelConstraints.anchor = GridBagConstraints.NORTHWEST;
-		advancedPanelConstraints.fill = GridBagConstraints.NONE;
-		advancedPanelConstraints.weightx = 1.0;
-		advancedPanelConstraints.weighty = 1.0;
-		advancedPanelConstraints.gridx = 0;
-		advancedPanelConstraints.gridy = 0;
-		advancedPanelLayout.setConstraints(settingsInfoExpertSettingsButton, advancedPanelConstraints);
-		advancedPanel.add(settingsInfoExpertSettingsButton);
-
-		return advancedPanel;
-	}
-
-	/**
 	 * Shows the infoservice add dialog.
 	 */
 	private void showInfoServiceManualAddDialog()
@@ -555,6 +524,10 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 		settingsInfoHostField.setColumns(30);
 		final JAPJIntField settingsInfoPortField = new JAPJIntField();
 		settingsInfoPortField.setFont(getFontSetting());
+    final JTextField settingsInfoNameField = new JTextField();
+    settingsInfoNameField.setFont(getFontSetting());
+    settingsInfoNameField.setColumns(30);
+    
 		JButton settingsInfoAddDialogAddButton = new JButton(JAPMessages.getString(
 			"settingsInfoAddDialogAddButton"));
 		settingsInfoAddDialogAddButton.setFont(getFontSetting());
@@ -567,12 +540,14 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 				 */
 				try
 				{
-					InfoServiceDBEntry newInfoService = new InfoServiceDBEntry(
-									   new ListenerInterface(
-						settingsInfoHostField.getText().trim(),
-						Integer.parseInt(settingsInfoPortField.getText().trim())).toVector());
+          String infoServiceName = settingsInfoNameField.getText().trim();
+          if (infoServiceName.equals("")) {
+            /* use gernerated default name */
+            infoServiceName = null;
+          }
+          InfoServiceDBEntry newInfoService = new InfoServiceDBEntry(infoServiceName, new ListenerInterface(settingsInfoHostField.getText().trim(), Integer.parseInt(settingsInfoPortField.getText().trim())).toVector(), true);
 					Database.getInstance(InfoServiceDBEntry.class).update(newInfoService);
-					addDialog.hide();
+          addDialog.dispose();
 					/* update the infoservice list */
 					updateGuiOutput();
 				}
@@ -590,13 +565,15 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 			public void actionPerformed(ActionEvent event)
 			{
 				/* if the Cancel button is pressed, close the dialog */
-				addDialog.hide();
+        addDialog.dispose();
 			}
 		});
 		JLabel settingsInfoHostLabel = new JLabel(JAPMessages.getString("settingsInfoHostLabel"));
 		settingsInfoHostLabel.setFont(getFontSetting());
 		JLabel settingsInfoPortLabel = new JLabel(JAPMessages.getString("settingsInfoPortLabel"));
 		settingsInfoPortLabel.setFont(getFontSetting());
+    JLabel settingsInfoNameLabel = new JLabel(JAPMessages.getString("settingsInfoNameLabel"));
+    settingsInfoNameLabel.setFont(getFontSetting());
 
 		TitledBorder settingsInfoManualBorder = new TitledBorder(JAPMessages.getString(
 			"settingsInfoManualBorder"));
@@ -614,40 +591,54 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 
 		manualPanelConstraints.gridx = 0;
 		manualPanelConstraints.gridy = 0;
+    manualPanelConstraints.insets = new Insets(5, 5, 0, 5);
 		manualPanelLayout.setConstraints(settingsInfoHostLabel, manualPanelConstraints);
 		manualPanel.add(settingsInfoHostLabel);
 
 		manualPanelConstraints.gridx = 0;
 		manualPanelConstraints.gridy = 1;
-		manualPanelConstraints.insets = new Insets(0, 0, 3, 0);
+    manualPanelConstraints.insets = new Insets(0, 5, 5, 5);
 		manualPanelLayout.setConstraints(settingsInfoHostField, manualPanelConstraints);
 		manualPanel.add(settingsInfoHostField);
-		manualPanelConstraints.insets = new Insets(0, 0, 0, 0);
 
 		manualPanelConstraints.gridx = 0;
 		manualPanelConstraints.gridy = 2;
+    manualPanelConstraints.insets = new Insets(0, 5, 0, 5);
 		manualPanelLayout.setConstraints(settingsInfoPortLabel, manualPanelConstraints);
 		manualPanel.add(settingsInfoPortLabel);
 
 		manualPanelConstraints.gridx = 0;
 		manualPanelConstraints.gridy = 3;
-		manualPanelConstraints.insets = new Insets(0, 0, 10, 0);
+    manualPanelConstraints.insets = new Insets(0, 5, 5, 5);
 		manualPanelLayout.setConstraints(settingsInfoPortField, manualPanelConstraints);
 		manualPanel.add(settingsInfoPortField);
 
-		manualPanelConstraints.gridwidth = 1;
 		manualPanelConstraints.gridx = 0;
 		manualPanelConstraints.gridy = 4;
+    manualPanelConstraints.insets = new Insets(0, 5, 0, 5);
+    manualPanelLayout.setConstraints(settingsInfoNameLabel, manualPanelConstraints);
+    manualPanel.add(settingsInfoNameLabel);
+
+    manualPanelConstraints.gridx = 0;
+    manualPanelConstraints.gridy = 5;
+    manualPanelConstraints.insets = new Insets(0, 5, 20, 5);
+    manualPanelLayout.setConstraints(settingsInfoNameField, manualPanelConstraints);
+    manualPanel.add(settingsInfoNameField);
+
+    manualPanelConstraints.gridwidth = 1;
+    manualPanelConstraints.gridx = 0;
+    manualPanelConstraints.gridy = 6;
 		manualPanelConstraints.fill = GridBagConstraints.NONE;
 		manualPanelConstraints.weighty = 1.0;
 		manualPanelConstraints.weightx = 0.0;
+    manualPanelConstraints.insets = new Insets(0, 5, 5, 0);
 		manualPanelLayout.setConstraints(settingsInfoAddDialogAddButton, manualPanelConstraints);
 		manualPanel.add(settingsInfoAddDialogAddButton);
 
 		manualPanelConstraints.gridx = 1;
-		manualPanelConstraints.gridy = 4;
+    manualPanelConstraints.gridy = 6;
 		manualPanelConstraints.weightx = 1.0;
-		manualPanelConstraints.insets = new Insets(0, 10, 10, 0);
+    manualPanelConstraints.insets = new Insets(0, 10, 5, 5);
 		manualPanelLayout.setConstraints(settingsInfoAddDialogCancelButton, manualPanelConstraints);
 		manualPanel.add(settingsInfoAddDialogCancelButton);
 
@@ -656,67 +647,72 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 	}
 
 	/**
-	 * Shows the infoservice expert settings dialog.
+   * Creates the infoservice advanced configuration panel with all components.
+   *
+   * @return The ifoservice advanced configuration panel.
 	 */
-	private void showInfoServiceExpertDialog()
+  private JPanel createInfoServiceAdvancedPanel()
 	{
-		final JAPDialog expertDialog = new JAPDialog(getRootPanel(),
-			JAPMessages.getString("settingsInfoExpertDialogTitle"));
-		final JPanel expertPanel = expertDialog.getRootPanel();
+    JPanel expertPanel = new JPanel();
 
-		final JCheckBox disableInfoServiceBox = new JCheckBox(JAPMessages.getString(
-			"settingsInfoDisableInfoService"), JAPModel.isInfoServiceDisabled());
+    final JCheckBox disableInfoServiceBox = new JCheckBox(JAPMessages.getString("settingsInfoDisableInfoService"), JAPModel.isInfoServiceDisabled());
 		disableInfoServiceBox.setFont(getFontSetting());
-		final JCheckBox disableInfoServiceChangeBox = new JCheckBox(JAPMessages.getString(
-			"settingsInfoDisableInfoServiceChange"), !InfoServiceHolder.getInstance().isChangeInfoServices());
-		disableInfoServiceChangeBox.setFont(getFontSetting());
-		final JAPJIntField infoServiceTimeoutField = new JAPJIntField();
-		infoServiceTimeoutField.setText(Integer.toString(HTTPConnectionFactory.getInstance().getTimeout()));
-		infoServiceTimeoutField.setColumns(3);
-		infoServiceTimeoutField.setFont(getFontSetting());
-		JButton okButton = new JButton(JAPMessages.getString("okButton"));
-		okButton.setFont(getFontSetting());
-		okButton.addActionListener(new ActionListener()
-		{
-			public void actionPerformed(ActionEvent event)
-			{
-				/* change the values and close the dialog */
-				try
-				{
-					int infoServiceTimeout = Integer.parseInt(infoServiceTimeoutField.getText());
-					if ( (infoServiceTimeout < 1) || (infoServiceTimeout > 60))
-					{
-						throw (new Exception("Wrong number."));
-					}
+    disableInfoServiceBox.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent event) {
+        /* enable/disable the automatic infoservice requests */
 					JAPController.setInfoServiceDisabled(disableInfoServiceBox.isSelected());
-					InfoServiceHolder.getInstance().setChangeInfoServices(!disableInfoServiceChangeBox.
-						isSelected());
-					HTTPConnectionFactory.getInstance().setTimeout(infoServiceTimeout);
-					expertDialog.hide();
 				}
-				catch (Exception e)
-				{
-					JOptionPane.showMessageDialog(expertPanel,
-												  JAPMessages.getString("settingsInfoExpertTimeoutError"),
-												  JAPMessages.getString("ERROR"), JOptionPane.ERROR_MESSAGE);
+    });
+
+    final JCheckBox disableChangeInfoServiceBox = new JCheckBox(JAPMessages.getString("settingsInfoDisableChangeInfoService"), !InfoServiceHolder.getInstance().isChangeInfoServices());
+    disableChangeInfoServiceBox.setFont(getFontSetting());
+    disableChangeInfoServiceBox.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent event) {
+        /* enable/disable the automatic changes of the infoservices */
+        InfoServiceHolder.getInstance().setChangeInfoServices(!disableChangeInfoServiceBox.isSelected());
+      }
+    });
+
+    final JTextField infoServiceTimeoutField = new JTextField() {
+      protected Document createDefaultModel() {
+        return (new PlainDocument() {
+          public void insertString(int a_position, String a_stringToInsert, AttributeSet a_attributes) throws BadLocationException {
+            try {
+              int timeout = Integer.parseInt(getText(0, getLength()) + a_stringToInsert);
+              if ((timeout >= 1) && (timeout <= 60)) {
+                /* timeout is within the range (1 .. 60 seconds) -> insert the String */
+                super.insertString(a_position, a_stringToInsert, a_attributes);
+              }
+            }
+            catch (NumberFormatException e) {
+              /* do nothing (because of invalid chars) */
 				}
 			}
 		});
-		JButton cancelButton = new JButton(JAPMessages.getString("cancelButton"));
-		cancelButton.setFont(getFontSetting());
-		cancelButton.addActionListener(new ActionListener()
-		{
-			public void actionPerformed(ActionEvent event)
-			{
-				/* if the Cancel button is pressed, close the dialog */
-				expertDialog.hide();
+      }
+    };
+    infoServiceTimeoutField.addFocusListener(new FocusAdapter() {
+      public void focusLost(FocusEvent a_focusEvent) {
+        /* we lost the focus -> try to update the infoservice timeout setting */
+        try {
+          int timeout = Integer.parseInt(infoServiceTimeoutField.getText());
+          HTTPConnectionFactory.getInstance().setTimeout(timeout);
+        }
+        catch (NumberFormatException e) {
+          /* do nothing (empty field) */
+        }
+        /* show the current timeout in the tiemout field */
+        infoServiceTimeoutField.setText(Integer.toString(HTTPConnectionFactory.getInstance().getTimeout()));
 			}
 		});
+    infoServiceTimeoutField.setText(Integer.toString(HTTPConnectionFactory.getInstance().getTimeout()));
+    infoServiceTimeoutField.setColumns(3);
+    infoServiceTimeoutField.setFont(getFontSetting());
+    
 		JLabel settingsInfoTimeoutLabel = new JLabel(JAPMessages.getString("settingsInfoTimeoutLabel"));
 		settingsInfoTimeoutLabel.setFont(getFontSetting());
 
-		TitledBorder settingsInfoExpertBorder = new TitledBorder(JAPMessages.getString(
-			"settingsInfoExpertBorder"));
+    TitledBorder settingsInfoExpertBorder = new TitledBorder(JAPMessages.getString("settingsInfoExpertBorder"));
 		settingsInfoExpertBorder.setTitleFont(getFontSetting());
 		expertPanel.setBorder(settingsInfoExpertBorder);
 
@@ -728,52 +724,36 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 		expertPanelConstraints.fill = GridBagConstraints.NONE;
 
 		expertPanelConstraints.weightx = 0.0;
+    expertPanelConstraints.weighty = 0.0;
 		expertPanelConstraints.gridx = 0;
 		expertPanelConstraints.gridy = 0;
-		expertPanelConstraints.gridwidth = 2;
+    expertPanelConstraints.gridwidth = 1;
 		expertPanelConstraints.insets = new Insets(5, 5, 10, 0);
 		expertPanelLayout.setConstraints(settingsInfoTimeoutLabel, expertPanelConstraints);
 		expertPanel.add(settingsInfoTimeoutLabel);
 
-		expertPanelConstraints.gridx = 2;
+    expertPanelConstraints.gridx = 1;
 		expertPanelConstraints.gridy = 0;
 		expertPanelConstraints.weightx = 1.0;
-		expertPanelConstraints.gridwidth = 1;
-		expertPanelConstraints.insets = new Insets(5, 5, 10, 0);
+    expertPanelConstraints.insets = new Insets(5, 5, 10, 5);
 		expertPanelLayout.setConstraints(infoServiceTimeoutField, expertPanelConstraints);
 		expertPanel.add(infoServiceTimeoutField);
 
 		expertPanelConstraints.gridx = 0;
 		expertPanelConstraints.gridy = 1;
-		expertPanelConstraints.gridwidth = 3;
-		expertPanelConstraints.insets = new Insets(0, 5, 10, 0);
+    expertPanelConstraints.gridwidth = 2;
+    expertPanelConstraints.insets = new Insets(0, 5, 10, 5);
 		expertPanelLayout.setConstraints(disableInfoServiceBox, expertPanelConstraints);
 		expertPanel.add(disableInfoServiceBox);
 
 		expertPanelConstraints.gridx = 0;
 		expertPanelConstraints.gridy = 2;
-		expertPanelConstraints.insets = new Insets(0, 5, 10, 0);
-		expertPanelLayout.setConstraints(disableInfoServiceChangeBox, expertPanelConstraints);
-		expertPanel.add(disableInfoServiceChangeBox);
-
-		expertPanelConstraints.gridwidth = 1;
-		expertPanelConstraints.gridx = 0;
-		expertPanelConstraints.gridy = 3;
 		expertPanelConstraints.weighty = 1.0;
-		expertPanelConstraints.weightx = 0.0;
-		expertPanelLayout.setConstraints(okButton, expertPanelConstraints);
-		expertPanel.add(okButton);
+    expertPanelConstraints.insets = new Insets(0, 5, 10, 5);
+    expertPanelLayout.setConstraints(disableChangeInfoServiceBox, expertPanelConstraints);
+    expertPanel.add(disableChangeInfoServiceBox);
 
-		expertPanelConstraints.gridx = 1;
-		expertPanelConstraints.gridy = 3;
-		expertPanelConstraints.weightx = 1.0;
-		expertPanelConstraints.gridwidth = 2;
-		expertPanelConstraints.insets = new Insets(0, 10, 10, 0);
-		expertPanelLayout.setConstraints(cancelButton, expertPanelConstraints);
-		expertPanel.add(cancelButton);
-
-		expertDialog.align();
-		expertDialog.show();
+    return expertPanel;
 	}
 
 	/**
@@ -786,34 +766,28 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 		{
 			/* only work on consistent data */
 			Vector knownInfoServices = Database.getInstance(InfoServiceDBEntry.class).getEntryList();
-			InfoServiceDBEntry preferedInfoService = InfoServiceHolder.getInstance().getPreferedInfoService();
-			if (preferedInfoService != null)
+      m_preferedInfoService = InfoServiceHolder.getInstance().getPreferedInfoService();
+      if (m_preferedInfoService != null)
 			{
-				settingsInfoPreferedField.setText(preferedInfoService.getName());
 				/* if the prefered InfoService is not in the list (because it is expired), add it */
 				boolean preferedIsInList = false;
 				Enumeration knownInfoServiceEnumeration = knownInfoServices.elements();
 				while (knownInfoServiceEnumeration.hasMoreElements())
 				{
 					InfoServiceDBEntry tempInfoService = (InfoServiceDBEntry) (knownInfoServiceEnumeration.nextElement());
-					if (tempInfoService.getId().equals(preferedInfoService.getId()))
+          if (tempInfoService.getId().equals(m_preferedInfoService.getId()))
 					{
 						preferedIsInList = true;
 					}
 				}
 				if (preferedIsInList == false)
 				{
-					knownInfoServices.addElement(preferedInfoService);
+          knownInfoServices.addElement(m_preferedInfoService);
 				}
-			}
-			else
-			{
-				/* should not happen */
-				settingsInfoPreferedField.setText(JAPMessages.getString("settingsInfoNotAvailableText"));
 			}
 			settingsInfoAllList.setListData(knownInfoServices);
 		}
-		updateSelectedInfoService();
+    //updateSelectedInfoService();
 	}
 
 	/**

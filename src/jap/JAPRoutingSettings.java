@@ -220,6 +220,12 @@ public class JAPRoutingSettings extends Observable
    */
   private JAPRoutingServerStatisticsListener m_serverStatisticsListener;
 
+  /**
+   * Stores the instance of JAPRoutingRegistrationStatusObserver, which holds some information
+   * about the current registration status at the infoservices for the local forwarding server.
+   */
+  private JAPRoutingRegistrationStatusObserver m_registrationStatusObserver;
+  
 
   /**
    * This creates a new instance of JAPRoutingSettings. We are doing some initialization here.
@@ -255,6 +261,9 @@ public class JAPRoutingSettings extends Observable
     m_serverStatisticsListener = new JAPRoutingServerStatisticsListener();
     /* add the statistics listener to the observers of JAPRoutingSettings */
     addObserver(m_serverStatisticsListener);
+    m_registrationStatusObserver = new JAPRoutingRegistrationStatusObserver();
+    /* add the registration status observer to the observers of JAPRoutingSettings */
+    addObserver(m_registrationStatusObserver);   
   }
 
 
@@ -860,6 +869,9 @@ public class JAPRoutingSettings extends Observable
         m_startPropagandaThread = new Thread(new Runnable() {
           public void run() {
             /* this is not synchronized with JAPRoutingSettings */
+            /* notify the observers, that we are starting the propaganda */
+            setChanged();
+            notifyObservers(new JAPRoutingMessage(JAPRoutingMessage.START_PROPAGANDA_BEGIN, null));
             Enumeration infoServices = infoServiceList.elements();
             boolean stopRegistration = false;
             while ((infoServices.hasMoreElements()) && (stopRegistration == false)) {
@@ -889,7 +901,7 @@ public class JAPRoutingSettings extends Observable
                */
               m_startPropagandaThread = null;
               if ((Thread.interrupted() == false) && (stopRegistration == false)) {
-                /* we can notify the observers, thate propaganda was started successfully */
+                /* we can notify the observers, that propaganda was started successfully */
                 setChanged();
                 notifyObservers(new JAPRoutingMessage(JAPRoutingMessage.START_PROPAGANDA_READY, currentPropagandists.clone()));
               }
@@ -1193,6 +1205,18 @@ public class JAPRoutingSettings extends Observable
   public JAPRoutingServerStatisticsListener getServerStatisticsListener() {
     return m_serverStatisticsListener;
   }
+
+  /**
+   * Returns the instance of JAPRoutingRegistrationStatusObserver, which holds some information
+   * about the current registration status at the infoservices for the local forwarding server.
+   *
+   * @return The registration status observer for the infoservice registrations (this is always
+   *         the same instance, nevertheless a forwarding server is running or not).
+   */
+  public JAPRoutingRegistrationStatusObserver getRegistrationStatusObserver() {
+    return m_registrationStatusObserver;
+  }
+
 
   /**
    * If the infoservice needs forwarding, this changes the infoservice proxy settings to the
