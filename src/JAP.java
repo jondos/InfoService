@@ -46,7 +46,10 @@ class JAP extends Frame {
 
 	boolean bSupportRMI=false;
 
-	/** Constructor for the JAP object.
+	public JAP()
+    {
+    }
+  /** Constructor for the JAP object.
 	 * @param argv The commandline arguments.
 	 *        <code>-rmi</code>   Enable Support for RMI, so that other apllications can control the JAP
 	 */

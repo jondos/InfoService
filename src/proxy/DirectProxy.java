@@ -71,6 +71,7 @@ final public class DirectProxy implements Runnable
 					return false;
 				threadgroupAll=new ThreadGroup("directproxy");
 				threadRunLoop=new Thread(this);
+        threadRunLoop.setDaemon(true);
 				threadRunLoop.start();
 				isRunningProxy = true;
 				return true;

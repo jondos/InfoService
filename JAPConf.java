@@ -34,6 +34,7 @@ import java.awt.BorderLayout;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
@@ -78,6 +79,7 @@ final class JAPConf extends JDialog
 		private JTextField		m_tfProxyAuthenticationUserID;
 
 		private JCheckBox			m_cbAutoConnect;
+		private JCheckBox			m_cbAutoReConnect;
 		private JCheckBox			m_cbStartupMinimized;
 
 		private JAPJIntField	m_tfMixPortNumber;
@@ -111,8 +113,9 @@ final class JAPConf extends JDialog
 
 		private JAPConf       m_JapConf;
 
-                //Einfug
-                private JAPUpdate update;
+    private Font          m_fontControls;
+    //Einfug
+    private JAPUpdate update;
 
 	  public JAPConf (JFrame frmParent)
 			{
@@ -123,9 +126,13 @@ final class JAPConf extends JDialog
 				this.setTitle(JAPMessages.getString("settingsDialog"));
 				m_JapConf=this;
 				JPanel pContainer = new JPanel();
+  			m_Tabs = new JTabbedPane();
+	      m_fontControls=m_Tabs.getFont();
+        if(JAPModel.isSmallDisplay())
+          m_fontControls=new Font(m_fontControls.getName(),JAPConstants.SMALL_FONT_STYLE,JAPConstants.SMALL_FONT_SIZE);
 				pContainer.setLayout( new BorderLayout() );
-				m_Tabs = new JTabbedPane();
-				m_pPort = buildportPanel();
+				m_Tabs.setFont(m_fontControls);
+        m_pPort = buildportPanel();
 				m_pFirewall = buildProxyPanel();
 				m_pInfo = buildinfoPanel();
 				m_pMix = buildanonPanel();
@@ -134,18 +141,22 @@ final class JAPConf extends JDialog
 				m_Tabs.addTab( JAPMessages.getString("confProxyTab"), null, m_pFirewall );
 				m_Tabs.addTab( JAPMessages.getString("confInfoTab"), null, m_pInfo );
 				m_Tabs.addTab( JAPMessages.getString("confAnonTab"), null, m_pMix );
-				m_Tabs.addTab( JAPMessages.getString("confMiscTab"), null, m_pMisc );
+				if(!JAPModel.isSmallDisplay())
+          m_Tabs.addTab( JAPMessages.getString("confMiscTab"), null, m_pMisc );
 
 				JPanel buttonPanel = new JPanel();
 				buttonPanel.setLayout ( new FlowLayout(FlowLayout.RIGHT) );
 				JButton bttnDefaultConfig=new JButton(JAPMessages.getString("bttnDefaultConfig"));
-				bttnDefaultConfig.addActionListener(new ActionListener() {
+				bttnDefaultConfig.setFont(m_fontControls);
+        bttnDefaultConfig.addActionListener(new ActionListener() {
 							public void actionPerformed(ActionEvent e) {
 						resetToDefault();
 				}});
-				buttonPanel.add(bttnDefaultConfig);
+				if(!JAPModel.isSmallDisplay())
+          buttonPanel.add(bttnDefaultConfig);
 				JButton bttnCancel = new JButton(JAPMessages.getString("cancelButton"));
-				bttnCancel.addActionListener(new ActionListener()
+				bttnCancel.setFont(m_fontControls);
+        bttnCancel.addActionListener(new ActionListener()
 					{
 						public void actionPerformed(ActionEvent e)
 							{
@@ -158,6 +169,7 @@ final class JAPConf extends JDialog
 						   public void actionPerformed(ActionEvent e) {
 				   OKPressed();
 				   }});
+        ok.setFont(m_fontControls);
 				buttonPanel.add( ok );
 				buttonPanel.add(new JLabel("   "));
 				getRootPane().setDefaultButton(ok);
@@ -419,10 +431,17 @@ final class JAPConf extends JDialog
 	  protected JPanel buildanonPanel()
 			{
 				m_cbStartupMinimized=new JCheckBox(JAPMessages.getString("settingsstartupMinimizeCheckBox"));
-				m_cbAutoConnect = new JCheckBox(JAPMessages.getString("settingsautoConnectCheckBox"));
-				m_tfMixHost = new JTextField();
-				m_tfMixPortNumber = new JAPJIntField();
+				m_cbStartupMinimized.setFont(m_fontControls);
+        m_cbAutoConnect = new JCheckBox(JAPMessages.getString("settingsautoConnectCheckBox"));
+				m_cbAutoConnect.setFont(m_fontControls);
+        m_cbAutoReConnect = new JCheckBox(JAPMessages.getString("settingsautoReConnectCheckBox"));
+				m_cbAutoReConnect.setFont(m_fontControls);
+        m_tfMixHost = new JTextField();
+				m_tfMixHost.setFont(m_fontControls);
+        m_tfMixPortNumber = new JAPJIntField();
+        m_tfMixPortNumber.setFont(m_fontControls);
 				m_tfMixPortNumberSSL = new JAPJIntField();
+        m_tfMixPortNumberSSL.setFont(m_fontControls);
 				m_tfMixHost.setEditable(false);
 				m_tfMixPortNumber.setEditable(false);
 				m_tfMixPortNumberSSL.setEditable(false);
@@ -440,10 +459,16 @@ final class JAPConf extends JDialog
 							   }});
 				ButtonGroup bg = new ButtonGroup();
 				m_rbMixStep1 = new JRadioButton(JAPMessages.getString("settingsAnonRadio1"), true);
-				m_rbMixStep2 = new JRadioButton(JAPMessages.getString("settingsAnonRadio2"));
-				m_rbMixStep3 = new JRadioButton(JAPMessages.getString("settingsAnonRadio3"));
-				m_bttnFetchCascades = new JButton(JAPMessages.getString("settingsAnonFetch"));
-				m_bttnFetchCascades.addActionListener(new ActionListener() {
+				m_rbMixStep1.setFont(m_fontControls);
+        m_rbMixStep2 = new JRadioButton(JAPMessages.getString("settingsAnonRadio2"));
+				m_rbMixStep2.setFont(m_fontControls);
+        m_rbMixStep3 = new JRadioButton(JAPMessages.getString("settingsAnonRadio3"));
+				m_rbMixStep3.setFont(m_fontControls);
+        m_bttnFetchCascades = new JButton(JAPMessages.getString("settingsAnonFetch"));
+        m_bttnFetchCascades.setFont(m_fontControls);
+        if(JAPModel.isSmallDisplay())
+          m_bttnFetchCascades.setMargin(JAPConstants.SMALL_BUTTON_MARGIN);
+        m_bttnFetchCascades.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
 					JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPConf:m_bttnFetchCascades");
 						// fetch available mix cascades from the Internet
@@ -469,6 +494,7 @@ final class JAPConf extends JDialog
 						//OKPressed();
 				}});
 				m_comboMixCascade = new JComboBox();
+        m_comboMixCascade.setFont(m_fontControls);
 				// add elements to combobox
 				//m_comboMixCascade.addItem(JAPMessages.getString("settingsAnonSelect"));
 				//Enumeration enum = m_Controller.anonServerDatabase.elements();
@@ -533,50 +559,72 @@ final class JAPConf extends JDialog
 				JPanel p=new JPanel();
 				p.setLayout(new BorderLayout() );
 				// Upper panel
+        //First line
 				JPanel pp1 = new JPanel();
-				pp1.setLayout( new BorderLayout() );
-				pp1.setBorder( new TitledBorder(JAPMessages.getString("settingsAnonBorder")) );
+        GridBagLayout layout=new GridBagLayout();
+				pp1.setLayout( layout);
+        TitledBorder border=new TitledBorder(JAPMessages.getString("settingsAnonBorder"));
+				border.setTitleFont(m_fontControls);
+        pp1.setBorder( border );
+        GridBagConstraints c=new GridBagConstraints();
+        c.fill=GridBagConstraints.HORIZONTAL;
+        c.weightx=1;
+        c.weighty=1;
+        c.gridx=0;
+        c.gridy=0;
+        c.gridwidth=2;
+        c.anchor=GridBagConstraints.NORTHWEST;
+        //First line
+        JPanel pl1=new JPanel(new BorderLayout());
+				pl1.add(m_rbMixStep1,BorderLayout.CENTER);
+				pl1.add(m_bttnFetchCascades,BorderLayout.EAST);
+        layout.setConstraints(pl1,c);
+        pp1.add(pl1);
+				// Second Line
+				c.gridx=0;
+        c.gridy=1;
+        c.weightx=0;
+        c.gridwidth=1;
+        c.fill=GridBagConstraints.NONE;
+        layout.setConstraints(m_rbMixStep2,c);
+        pp1.add(m_rbMixStep2);
+				c.weightx=1;
+        c.gridx=1;
+        c.fill=GridBagConstraints.HORIZONTAL;
+        c.anchor=GridBagConstraints.NORTHEAST;
+        layout.setConstraints(m_comboMixCascade,c);
+        pp1.add(m_comboMixCascade);
+
 				// Lower panel
 				JPanel pp2 = new JPanel();
 				pp2.setLayout( new BorderLayout() );
-				pp2.setBorder( new TitledBorder(JAPMessages.getString("settingsAnonBorder2")) );
+				border=new TitledBorder(JAPMessages.getString("settingsAnonBorder2"));
+        border.setTitleFont(m_fontControls);
+				pp2.setBorder( border );
 				// Upper panel content
-				JPanel p1 = new JPanel();
-				p1.setLayout( new GridLayout(2,1) );
-				//p1.setBorder( new EmptyBorder(5,10,10,10) );
-				// 1
-				JPanel p11 = new JPanel();
-				p11.setLayout(new BoxLayout(p11, BoxLayout.X_AXIS));
-				p11.add(m_rbMixStep1);
-				p11.add(Box.createRigidArea(new Dimension(5,0)) );
-				p11.add(Box.createHorizontalGlue() );
-				p11.add(m_bttnFetchCascades);
-				p1.add(p11);
-				// 2
-				JPanel p12 = new JPanel();
-				p12.setLayout(new BoxLayout(p12, BoxLayout.X_AXIS));
-				p12.add(m_rbMixStep2);
-				p12.add(Box.createRigidArea(new Dimension(5,0)) );
-				p12.add(Box.createHorizontalGlue() );
-				p12.add(m_comboMixCascade);
-				p1.add(p12);
 				// Lower Panel content
 				JPanel p2 = new JPanel();
-				p2.setLayout( new GridLayout(8,1) );
+				p2.setLayout( new GridLayout(9,1) );
 				//p1.setBorder( new EmptyBorder(5,10,10,10) );
 				//
 				p2.add(m_rbMixStep3);
-				p2.add(new JLabel(JAPMessages.getString("settingsAnonHost")));
+        JLabel l=new JLabel(JAPMessages.getString("settingsAnonHost"));
+        l.setFont(m_fontControls);
+				p2.add(l);
 				p2.add(m_tfMixHost);
-				p2.add(new JLabel(JAPMessages.getString("settingsAnonPort")));
+        l=new JLabel(JAPMessages.getString("settingsAnonPort"));
+        l.setFont(m_fontControls);
+				p2.add(l);
 				p2.add(m_tfMixPortNumber);
-				p2.add(new JLabel(JAPMessages.getString("settingsAnonSSLPort")));
+				l=new JLabel(JAPMessages.getString("settingsAnonSSLPort"));
+        l.setFont(m_fontControls);
+        p2.add(l);
 				p2.add(m_tfMixPortNumberSSL);
 				//
 				p2.add(m_cbAutoConnect);
-				//p2.add(m_cbStartupMinimized);
+				p2.add(m_cbAutoReConnect);
 				// Add contents to upper and lower panel
-				pp1.add(p1);
+				//pp1.add(p1);
 				pp2.add(p2);
 				// Add to main panel
 				p.add(pp1, BorderLayout.NORTH);
@@ -983,6 +1031,7 @@ final class JAPConf extends JDialog
 				m_cbProxy.setSelected(false);
 				m_cbStartupMinimized.setSelected(false);
 				m_cbAutoConnect.setSelected(false);
+				m_cbAutoReConnect.setSelected(false);
 				m_cbListenerIsLocal.setSelected(true);
 				//m_cbListenerSocks.setSelected(false);
 				m_cbShowDebugConsole.setSelected(false);
@@ -1032,6 +1081,7 @@ final class JAPConf extends JDialog
 				m_Controller.setInfoService(m_tfInfoHost.getText().trim(),Integer.parseInt(m_tfInfoPortNumber.getText().trim()));
 				// Anonservice settings
 				m_Controller.setAutoConnect(m_cbAutoConnect.isSelected());
+				m_Controller.setAutoReConnect(m_cbAutoReConnect.isSelected());
 				m_Controller.setMinimizeOnStartup(m_cbStartupMinimized.isSelected());
         //Try to Set AnonService
 
@@ -1136,6 +1186,7 @@ final class JAPConf extends JDialog
 				else
 					m_tfMixPortNumberSSL.setText(String.valueOf(server.getSSLPort()));
 				m_cbAutoConnect.setSelected(JAPModel.getAutoConnect());
+				m_cbAutoReConnect.setSelected(JAPModel.getAutoReConnect());
 				m_cbStartupMinimized.setSelected(JAPModel.getMinimizeOnStartup());
 				updateMixCascadeCombo();
         if(m_rbMixStep2.isSelected()) //Auswahl is selected

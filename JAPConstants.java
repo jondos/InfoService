@@ -25,9 +25,10 @@ OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABIL
 IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
-
+import java.awt.Insets;
+import java.awt.Font;
 public final class JAPConstants {
-	static final String aktVersion = "00.01.070"; //Never change the layout of this line!
+	static final String aktVersion = "00.01.071"; //Never change the layout of this line!
 	//static final String buildDate=".."
 	//static final String buildType="..."
         //needed for update.JAPUpdate
@@ -46,10 +47,14 @@ public final class JAPConstants {
   public static final int FIREWALL_TYPE_SOCKS        = 2;
   static final int      defaultFirewallType          = FIREWALL_TYPE_HTTP;
 
+  static final int      SMALL_FONT_SIZE              = 9;
+  static final int      SMALL_FONT_STYLE             = Font.PLAIN;
+  static final Insets   SMALL_BUTTON_MARGIN          = new Insets(1,1,1,1);
+
   static final String   urlJAPNewVersionDownload     = "http://anon.inf.tu-dresden.de:80/~sk13/anon/jap/JAP.jar";
 	static final String   JAPLocalFilename             = "JAP.jar";
 	static final int      MAXHELPLANGUAGES             = 6;
-	static final String   TITLE                        = "JAP";
+	public static final String   TITLE                 = "JAP";
 	static final String   TITLEOFICONIFIEDVIEW         = "JAP";
 	static final String   AUTHOR                       = "(c) 2000 The JAP-Team";
 	static final String   IMGPATHHICOLOR               = "images/";

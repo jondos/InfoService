@@ -25,16 +25,25 @@ OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABIL
 IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
+package jap;
 import javax.swing.plaf.metal.DefaultMetalTheme;
 import javax.swing.plaf.metal.MetalLookAndFeel;
 import javax.swing.plaf.FontUIResource;
 import javax.swing.UIManager;
 import javax.swing.UIDefaults;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
 import java.awt.Insets;
 import java.util.Enumeration;
-public class JAPiPAQ extends JAP {
+import JAPModel;
+import JAPDebug;
+import JAPController;
+import JAPConstants;
+import JAPView;
+import JAPMessages;
+final public class JAPiPAQ {
 
-  private class iPAQTheme extends DefaultMetalTheme
+ /* private class iPAQTheme extends DefaultMetalTheme
     {
       public FontUIResource getControlTextFont()
         {
@@ -50,18 +59,54 @@ public class JAPiPAQ extends JAP {
           return new FontUIResource("Dialog",FontUIResource.PLAIN,9);
         }
     }
+*/
+  public JAPiPAQ()
+    {
+    }
 
-	JAPiPAQ(String[] argv) {
-		super(argv);
-		MetalLookAndFeel.setCurrentTheme(new iPAQTheme());
-	  UIManager.put("Button.margin",new Insets(1,1,1,1));
-  }
+public void startJAP() {
+		JAPModel.create().setSmallDisplay(true);
+    // Init Messages....
+		JAPMessages.init();
+		// Test (part 2) for right JVM....
+		// Create the controller object
+		JAPController controller = JAPController.create();
+		// Create debugger object
+		JAPDebug.create();
+		JAPDebug.setDebugType(JAPDebug.NET+JAPDebug.GUI+JAPDebug.THREAD+JAPDebug.MISC);
+		JAPDebug.setDebugLevel(JAPDebug.WARNING);
+		// load settings from config file
+		controller.loadConfigFile();
+		// Output some information about the system
+		// Create the view object
+		JAPView view = new JAPView(JAPConstants.TITLE);
+		// Create the main frame
+		view.create();
+		// Switch Debug Console Parent to MainView
+		JAPDebug.setConsoleParent(view);
+		// Add observer
+		controller.addJAPObserver(view);
+		// Register the views where they are needed
+		controller.registerView(view);
+		// pre-initalize anon service
+		anon.server.AnonServiceImpl.init();
+    // initially start services
+		controller.initialRun();
+	}
 
-
+  public JPanel getMainPanel()
+    {
+      return JAPController.getView().getMainPanel();
+    }
 	public static void main(String[] argv) {
-    JAPiPAQ japOniPAQ = new JAPiPAQ(argv);
+    JAPiPAQ japOniPAQ = new JAPiPAQ();
 		JAPModel.create().setSmallDisplay(true);
     japOniPAQ.startJAP();
+    //Test
+    JFrame frame=new JFrame("Test");
+    frame.setContentPane(japOniPAQ.getMainPanel());
+    frame.setSize(240,320);
+    frame.show();
 	}
 
 }
