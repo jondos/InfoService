@@ -34,7 +34,7 @@ import java.util.StringTokenizer;
 //import sun.net.ftp.FtpClient;
 //import sun.net.ftp.*;
 
-import com.enterprisedt.net.ftp.FTPClient;
+//import com.enterprisedt.net.ftp.FTPClient;
 
 final class JAPDirectProxyConnection implements Runnable {
     private Socket clientSocket;
@@ -337,12 +337,12 @@ final class JAPDirectProxyConnection implements Runnable {
      String nextLine = this.readLine(inputStream);
      System.out.println(nextLine);
      // create an FTP-Client and try to communicate: Browser --> FTP-Client --> FTP-Server
-     FTPClient ftpClient = new FTPClient (host);
+   //  FTPClient ftpClient = new FTPClient (host);
 
      // read next Header lines <-- client
    //   FtpClient ftpClient = new FtpClient(host);
-	 ftpClient.debugResponses(true);
-      ftpClient.login("anonymous","heinz@operamail.com");
+	 //ftpClient.debugResponses(true);
+    //  ftpClient.login("anonymous","heinz@operamail.com");
    /*   ftpClient.binary();
     */// ftpClient.ascii();-
 
@@ -355,7 +355,7 @@ final class JAPDirectProxyConnection implements Runnable {
      int len=0;
      if (GETString.endsWith("/"))
      {
-       String list = ftpClient.list(GETString,true);
+      // String list = ftpClient.list(GETString,true);
 
   /*             for(int i=0; i<list.length;i++)
                {
@@ -367,11 +367,11 @@ final class JAPDirectProxyConnection implements Runnable {
            {
             //System.out.println(len+" len");
             //os.write(byt,0,len);
-            os.write(list.getBytes());
+          //  os.write(list.getBytes());
            // if(len < 1000)
            // break;
            }
-        ftpClient.quit();
+        //ftpClient.quit();
         os.flush();
         os.close();
     }else{
