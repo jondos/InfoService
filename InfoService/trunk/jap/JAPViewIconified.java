@@ -129,10 +129,12 @@ final public class JAPViewIconified extends JWindow implements ActionListener,Mo
 			co.add(pBottom);
 			OverlayLayout lo=new OverlayLayout(co);
 			co.setLayout(lo);
+			co.setOpaque(false);
 			JPanel p=new JPanel(new BorderLayout());
 			p.setBorder(new LineBorder(Color.black,1));
 			p.add(co,BorderLayout.CENTER);
 			JPanel p2=new JPanel();
+			p2.setOpaque(false);
 			p2.add(bttn);
 			p.add(p2,BorderLayout.SOUTH);
 			p.addMouseListener(this);
