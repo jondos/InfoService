@@ -216,21 +216,21 @@ public final class MuxSocket implements Runnable
 						if(m_bIsConnected)
 							return ErrorCodes.E_ALREADY_CONNECTED;
 						int err=ErrorCodes.E_CONNECT;
-           //try all possible listeners
-            m_ioSocket=null;
-            for(int l = 0; l < mixCascade.getNumberOfListenerInterfaces(); l++)
-              try
-                {
-                  String host = mixCascade.getListenerInterface(l).getIpString();
-                  if (host==null) {
-                    host = mixCascade.getListenerInterface(l).getHostName();
-                  }
-                  m_ioSocket=new ProxyConnection(m_Log,fwType,fwHost,fwPort,fwUserID,fwPasswd,host,mixCascade.getListenerInterface(l).getPort());
-                  if (m_ioSocket!=null) {
-                    break;
-                  }
-                }
- 							catch(Throwable t)
+					 //try all possible listeners
+						m_ioSocket=null;
+						for(int l = 0; l < mixCascade.getNumberOfListenerInterfaces(); l++)
+							try
+								{
+									String host = mixCascade.getListenerInterface(l).getIpString();
+									if (host==null) {
+										host = mixCascade.getListenerInterface(l).getHostName();
+									}
+									m_ioSocket=new ProxyConnection(m_Log,fwType,fwHost,fwPort,fwUserID,fwPasswd,host,mixCascade.getListenerInterface(l).getPort());
+									if (m_ioSocket!=null) {
+										break;
+									}
+								}
+							catch(Throwable t)
 								{
 									m_ioSocket=null;
 								}
@@ -393,13 +393,15 @@ public final class MuxSocket implements Runnable
 						m_arASymCipher=new ASymCipher[m_iChainLen];
 						int i=0;
 						Node child=elemMixes.getFirstChild();
+						boolean bIsFirst=true;
 						while(child!=null)
 							{
 								if(child.getNodeName().equals("Mix"))
 									{
-										//TODO: Check signatures for Mix 2 .. n
+										//TODO: Check signatures for Mix 2 .. n (we skip the first Mix because
+										//this key is already signed to the Signature below the whole MixCascade struct
 //---
-										if (bCheckMixCerts)
+										if (bCheckMixCerts&&!bIsFirst)
 											{
 												try
 													{
@@ -417,7 +419,7 @@ public final class MuxSocket implements Runnable
 															{
 																return ErrorCodes.E_INVALID_KEY;
 															}
-														if (!m_sign.verifyXML(root))
+														if (!m_sign.verifyXML(child))
 															return ErrorCodes.E_SIGNATURE_CHECK_OTHERMIX_FAILED;
 														//ok now the know that the XML was signed with the included Cert
 														//but lets check if we do trust this cert...
@@ -496,6 +498,7 @@ public final class MuxSocket implements Runnable
 													} catch (Exception e) { e.printStackTrace(); }
 											*/}
 //---
+										bIsFirst=false;
 										m_arASymCipher[i]=new ASymCipher();
 										if(m_arASymCipher[i++].setPublicKey((Element)child)!=ErrorCodes.E_SUCCESS)
 											return ErrorCodes.E_UNKNOWN;
