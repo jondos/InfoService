@@ -775,6 +775,7 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 		public void transferedBytes(int c) {
 			// Nr of Bytes transmitted anonymously
 			m_labelOwnTrafficBytes.setText(m_NumberFormat.format(c)+" Bytes");
+			JAPDll.onTraffic();
 		}
 		public void valuesChanged ()
 		{
