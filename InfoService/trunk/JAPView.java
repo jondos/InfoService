@@ -91,9 +91,9 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 		// add Components to Frame
 		setVisible(false);
 		//setResizable(true);
-		setBackground(buttonPanel.getBackground());
+//		setBackground(buttonPanel.getBackground());
 		getContentPane().setBackground(buttonPanel.getBackground());
-		getContentPane().removeAll();
+//		getContentPane().removeAll();
 		getContentPane().add(buttonPanel, BorderLayout.SOUTH);
 		getContentPane().add(northLabel, BorderLayout.NORTH);
 		getContentPane().add(westLabel, BorderLayout.WEST);
@@ -107,7 +107,7 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 			pack();  // optimize size
 		}
 		catch(Exception e) {
-				JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.GUI,"JAPView:Hm.. Error by Pack - Has To be fixed!!");
+			JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.GUI,"JAPView:Hm.. Error by Pack - Has To be fixed!!");
 		}
 		model.centerFrame(this);
 		toFront();
