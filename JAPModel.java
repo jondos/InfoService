@@ -85,7 +85,7 @@ public class JAPModel implements JAPObserver {
 		anonServerDatabase.addElement(new AnonServerDBEntry(proxyHostName, proxyPortNumber));
 		anonServerDatabase.addElement(new AnonServerDBEntry("anon.inf.tu-dresden.de", 6543));
 		anonServerDatabase.addElement(new AnonServerDBEntry("sole.icsi.berkeley.edu", 4007));
-		anonServerDatabase.addElement(new AnonServerDBEntry("amadeus.icsi.berkeley.edu", 4007));
+		anonServerDatabase.addElement(new AnonServerDBEntry("localhost", 6543));
 		anonServerDatabase.addElement(new AnonServerDBEntry("192.168.1.1", 4007));
 	}
 	

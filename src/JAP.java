@@ -1,7 +1,10 @@
+
 public class JAP {
 
 	public static void main(String[] argv) {
-        String vers = System.getProperty("java.version");
+		
+		
+		String vers = System.getProperty("java.version");
         if (vers.compareTo("1.1.2") < 0) {
             System.out.println("!!!WARNING: JAP must be run with a " +
                                "1.1.2 or higher version VM!!!");
