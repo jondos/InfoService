@@ -232,7 +232,8 @@ public final class JAPModel {
 	 *			MISC="true"/"false"					// all the others
 	 *		>		
 	 *		</Type>
-	 *	</Debug>		
+	 *		<Output>..</Output>						//the kind of Output, at the moment only: Console
+	 * 	</Debug>		
 	 *	</JAP>
 	 */
 	public void load() {
@@ -310,6 +311,12 @@ public final class JAPModel {
 								debugtype+=JAPDebug.MISC;
 							JAPDebug.setDebugType(debugtype);
 						}
+					nl=elemDebug.getElementsByTagName("Output");
+					if(nl!=null&&nl.getLength()>0)
+						{
+							Element elemOutput=(Element)nl.item(0);
+							JAPDebug.showConsole(elemOutput.getFirstChild().getNodeValue().trim().equalsIgnoreCase("Console"));						
+						}
 				}
 		}
 		catch(Exception e) {
@@ -365,7 +372,13 @@ public final class JAPModel {
 			tmp.setAttribute("THREAD",(debugtype&JAPDebug.THREAD)!=0?"true":"false");
 			tmp.setAttribute("MISC",(debugtype&JAPDebug.MISC)!=0?"true":"false");
 			elemDebug.appendChild(tmp);
-						
+			if(JAPDebug.isShowConsole())
+				{
+					tmp=doc.createElement("Output");
+					txt=doc.createTextNode("Console");
+					tmp.appendChild(txt);
+					elemDebug.appendChild(tmp);
+				}		
 			((XmlDocument)doc).write(f);
 		}
 		catch(Exception e) {

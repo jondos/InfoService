@@ -68,8 +68,11 @@ import java.security.spec.InvalidKeySpecException;
 import Rijndael.Rijndael_Algorithm;
 //import com.sun.javaws.jardiff.*;
 import java.util.zip.*;
+import cryptix.asn1.lang.*;
+import cryptix.asn1.encoding.*;
 final public class JAPTest
 {
+	
 	public static void main(String argc[])
 		{
 	/*	try{FileOutputStream fio=new FileOutputStream("test.test");
@@ -131,7 +134,11 @@ final public class JAPTest
 											 }
 	*/	
 		//testJarDiff();
-		testJarVerify();
+//		ASN1Test();
+	//	JAPTest t=new JAPTest();
+	//	t.testJarVerify();
+//		ASN1Test();
+		
 		System.exit(0);
 		}
 	
@@ -774,8 +781,93 @@ public static void testJarDiff()
 		e.printStackTrace();
 	}
 }
+	class MyDSAPublicKey implements DSAPublicKey,DSAParams
+	{
+		BigInteger y;
+		BigInteger p;
+		BigInteger q;
+		BigInteger g;
+		byte [] enc;
+		public MyDSAPublicKey(byte[] encKey)
+		{
+			try{
+			
+			enc=encKey;
+			ByteArrayInputStream bin=new ByteArrayInputStream(encKey);
+			ASNCoder bc=BaseCoder.getInstance("DER");
+			bc.init(bin);
+			ASNInteger P=new ASNInteger(true);
+			ASNInteger Q=new ASNInteger(true);
+			ASNInteger G=new ASNInteger(true);
+	
+			ASNSequence dsaparameters=new ASNSequence(true);
+			dsaparameters.addComponent("p",P);
+			dsaparameters.addComponent("q",Q);
+			dsaparameters.addComponent("g",G);
 
-public static void testJarVerify()
+			ASNSequence algorithmidentifier=new ASNSequence(true);
+			ASNObject algorithmid=new ASNObjectIdentifier(true);
+			algorithmidentifier.addComponent("algorithm",algorithmid);
+			algorithmidentifier.addComponent("parameters",dsaparameters);
+			
+			ASNSequence publickey=new ASNSequence(true);
+			publickey.addComponent("algorithm",algorithmidentifier);
+			publickey.addComponent("publickey",new ASNBitString(true));
+			
+			bc.visit(publickey);
+			byte[] pk=(byte[])publickey.getComponent("publickey").getValue();
+			ASNInteger Y=new ASNInteger(true);
+			bin=new ByteArrayInputStream(pk,1,pk.length-1);
+			bc.init(bin);
+			bc.visit(Y);
+			y=(BigInteger)Y.getValue();
+			p=(BigInteger)P.getValue();
+			q=(BigInteger)Q.getValue();
+			g=(BigInteger)G.getValue();
+		
+			//DerValue der=new DerValue(pk);
+			//System.out.println(der);
+		/*	DerValue der=new DerValue(encKey); //PublicKeyInfo
+			System.out.println(der.toString());
+			DerInputStream derin=der.toDerInputStream();
+			der=derin.getDerValue();//AlgoIdentifer
+			DerInputStream derin1=der.toDerInputStream();
+			derin1.getDerValue(); //AloIdentiferOID
+			der=derin1.getDerValue(); //parameters
+			derin1=der.toDerInputStream(); //seeunce of p,q,g
+			der=derin1.getDerValue();
+			p=der.getInteger().toBigInteger();
+			der=derin1.getDerValue();
+			q=der.getInteger().toBigInteger();
+			der=derin1.getDerValue();
+			g=der.getInteger().toBigInteger();
+			
+			
+			der=derin.getDerValue();
+			byte[] pz=der.getBitString();
+			der=new DerValue(der.getBitString());
+			y=der.getInteger().toBigInteger();
+			*/
+			
+			
+			}
+			catch(Exception e)
+			{
+				e.printStackTrace();
+			}
+		}
+		
+		public BigInteger getY(){return y;}
+		public BigInteger getP(){return p;}
+		public BigInteger getQ(){return q;}
+		public BigInteger getG(){return g;}
+		public byte []getEncoded(){return enc;}
+		public String getAlgorithm(){return "DSA";}
+		public String getFormat(){return "X.509";}
+		public DSAParams getParams(){return this;}
+	}
+
+public void testJarVerify()
 {
 	try
 	{
@@ -783,7 +875,7 @@ public static void testJarVerify()
 		byte[] buff=new byte[50000];
 		int s=-1;
 		int p=0;
-		while((s=f.read(buff,p,50000))!=-1)
+		while((s=f.read(buff,p,50000-p))!=-1)
 		{
 			p+=s;
 		}
@@ -793,15 +885,54 @@ public static void testJarVerify()
 		BASE64Encoder be=new BASE64Encoder();
 		String enc=be.encodeBuffer(dig);
 		System.out.println(enc);
-String st="Name: JAP.class\r\nSHA1-Digest: vqtchNwSD10AjvDir5z98WKio5g=\r\n\r\n";
-byte [] stb=st.getBytes();
+		String st="Name: JAP.class\r\nSHA1-Digest: vqtchNwSD10AjvDir5z98WKio5g=\r\n\r\n";
+		byte [] stb=st.getBytes();
 //String st="vqtchNwSD10AjvDir5z98WKio5g=";
-md.update(stb);
-dig=md.digest();
-BASE64Encoder be1=new BASE64Encoder();
-	enc=be1.encodeBuffer(dig);
-	System.out.println(enc);
-
+		md.update(stb);
+		dig=md.digest();
+		BASE64Encoder be1=new BASE64Encoder();
+		enc=be1.encodeBuffer(dig);
+		System.out.println(enc);
+		ZipFile zold=new ZipFile("h:/JAP.jar");
+		ZipEntry ze=zold.getEntry("META-INF/JAP.SF");
+		InputStream in=zold.getInputStream(ze);
+		byte[] japsf=new byte[50000];
+		int sflen;
+		s=-1;
+		p=0;
+		while((s=in.read(japsf,p,50000-p))!=-1)
+		{
+			p+=s;
+		}
+		sflen=p;
+		in.close();
+		ze=zold.getEntry("META-INF/JAP.DSA");
+		in=zold.getInputStream(ze);
+		s=-1;
+		p=0;
+		byte[] japdsa=new byte[50000];
+		while((s=in.read(japdsa,p,50000-p))!=-1)
+		{
+			p+=s;
+		}
+		JAPCertificate jc=new JAPCertificate();
+		jc.decode(new FileInputStream("H:/jap.cer"));
+		
+		Signature js=Signature.getInstance("DSA");
+		PublicKey ke=jc.getPublicKey();
+		MyDSAPublicKey kd=new MyDSAPublicKey(ke.getEncoded());
+		//	KeyPairGenerator kg=KeyPairGenerator.getInstance("DSA");
+	//	kg.initialize(512);
+	//	ke=kg.generateKeyPair().getPublic();
+	//	System.out.println(ke.getAlgorithm().toString());
+	
+ 		
+		js.initVerify(kd);
+		js.update(japsf,0,sflen);
+		byte[] sig=new byte[46];
+		System.arraycopy(japdsa,p-46,sig,0,46);
+		System.out.println(js.verify(sig));
+		
 	}
 	catch(Exception e)
 	{
@@ -810,4 +941,55 @@ BASE64Encoder be1=new BASE64Encoder();
 	
 }
 
+public static void ASN1Test()
+{
+	try{
+//		Parser parser = new Parser(new FileInputStream("h:/cryptix.asn"));
+ //   parser.Main(true); // without tracing
+    
+    ASNObject x509 = (ASNObject)
+       Class.forName("cryptix.x509.Certificate").newInstance();
+		FileInputStream fis = new FileInputStream("h:/jap.cer");
+    ASNCoder der = BaseCoder.getInstance("DER");
+    der.init(fis);
+    x509.code(der);
+    
+//Obtain the signature's algorithm OID used in the TBSCertificate part of this certificate:
+
+    ASNObject tbsCertificate = x509.getComponent("tbsCertificate");
+    ASNObject signature = tbsCertificate.getComponent("signature");
+    ASNObject algorithm = signature.getComponent("algorithm");
+    String oid = (String) algorithm.getValue();
+
+    System.out.println("Issuer's signature algorithm OID is: "+oid);
+		
+	//	algorithm.setValue("1.3.14.3.2.13");
+	//	oid = (String) algorithm.getValue();
+	//	System.out.println("Issuer's signature algorithm OID is: "+oid);
+
+
+    ASNModule module = (ASNModule)
+        Class.forName("cryptix.x509.PackageProperties").newInstance();
+    System.out.println("OID "+oid+" is assigned to \""+
+        module.getOID(oid)+"\"...");
+    
+
+
+    ASNObject version = tbsCertificate.getComponent("version");
+		System.out.println(version.getValue());
+		version.setValue(new BigInteger("0"));
+		//version.setOptional(true);
+		FileOutputStream fos = new FileOutputStream("h:/test.cer");
+    ASNCoder der1 = BaseCoder.getInstance("DER");
+    der1.init(fos);
+    x509.code(der1);
+    
+
+	}
+	catch(Exception ex)
+	{
+		ex.printStackTrace();
+	}
+
+}
 }

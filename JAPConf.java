@@ -50,6 +50,7 @@ public final class JAPConf extends JDialog
 	private JCheckBox netChB;
 	private JCheckBox threadChB;
 	private JCheckBox miscChB;
+	private JCheckBox checkboxShowDebugConsole;
 	//private JAPJIntField debugLevelTextField;
 	private JSlider sliderDebugLevel;
 	private JAPJIntField portnumberTextField;
@@ -409,6 +410,16 @@ public final class JAPConf extends JDialog
 				p31.add(netChB);
 				p31.add(threadChB);
 				p31.add(miscChB);
+				
+				checkboxShowDebugConsole=new JCheckBox("Show Console");
+				checkboxShowDebugConsole.setSelected(JAPDebug.isShowConsole());
+				checkboxShowDebugConsole.addItemListener(new ItemListener()
+					{public void itemStateChanged(ItemEvent e)
+					 {
+						 JAPDebug.showConsole(e.getStateChange()==e.SELECTED);
+					}});
+				p31.add(checkboxShowDebugConsole);
+				
 				p3.add(p31);
 				JPanel p32=new JPanel();
 				sliderDebugLevel=new JSlider(JSlider.VERTICAL,0,7,0);
@@ -590,6 +601,7 @@ public final class JAPConf extends JDialog
 
 	public void updateValues() {
 		// misc tab
+		checkboxShowDebugConsole.setSelected(JAPDebug.isShowConsole());
 		guiChB.setSelected((((JAPDebug.getDebugType()&JAPDebug.GUI)!=0)?true:false));
 		netChB.setSelected((((JAPDebug.getDebugType()&JAPDebug.NET)!=0)?true:false));
 		threadChB.setSelected((((JAPDebug.getDebugType()&JAPDebug.THREAD)!=0)?true:false));

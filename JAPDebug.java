@@ -28,7 +28,13 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 // import java.io.PrintWriter;
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
+import javax.swing.JDialog;
+import javax.swing.JTextArea;
+import javax.swing.JScrollPane;
+import javax.swing.JScrollBar;
 /* 2000-08-01(HF):
 Stefan, ich habe das Zeug mit PrintWriter und so auskommentiert, weil es irgendwie nicht ging.
 Koenntest Du es im Self test (main()) evtl. im Beispielcode angeben?
@@ -48,7 +54,7 @@ Koenntest Du es im Self test (main()) evtl. im Beispielcode angeben?
  * <code>JAPDebug.out(int level, int type, String txt)</code>
  * This is a Singleton!
  */
-public final class JAPDebug {
+public final class JAPDebug extends WindowAdapter{
 
 	/** No debugging */
 	public final static int NUL = 0; 
@@ -80,6 +86,9 @@ public final class JAPDebug {
 
 	private int debugtype;
 	private int debuglevel;
+	private JTextArea textareaConsole;
+	private JDialog frameConsole;
+	private boolean m_bConsole;
 	
 	private final static String strLevels[]=
 		{
@@ -99,6 +108,7 @@ public final class JAPDebug {
 	private JAPDebug () {
 		debugtype=GUI+NET+THREAD+MISC;
 		debuglevel=DEBUG;
+		m_bConsole=false;
 //		outStreams=new PrintWriter[8];
 //		for(int i=0;i<8;i++)
 //			outStreams[i]=new PrintWriter(System.out);
@@ -123,7 +133,12 @@ public final class JAPDebug {
 //			return;
 		if ( (level <= debug.debuglevel) && (debug.debugtype & type) !=0 ) {
 //			debug.outStreams[level].println("JAPDebug: "+txt);
-			System.err.println("JAPDebug ["+strLevels[level]+"]: "+txt);
+			if(!debug.m_bConsole)
+				System.err.println("JAPDebug ["+strLevels[level]+"]: "+txt);
+			else
+				{
+					debug.textareaConsole.append("["+strLevels[level]+"]: "+txt+"\n");
+				}
 		}
 	}
 	
@@ -164,7 +179,46 @@ public final class JAPDebug {
 		{
 			return strLevels;
 		}
-		
+	
+	/** Shows or hiddes a Debug-Console-Window
+	 */
+	public static void showConsole(boolean b)
+		{
+			debug.internal_showConsole(b);
+		}
+	
+	public static boolean isShowConsole()
+		{
+			return debug.m_bConsole;
+		}
+	
+	public void internal_showConsole(boolean b)
+		{
+			if(!b&&m_bConsole)
+				{
+					frameConsole.dispose();
+					textareaConsole=null;
+					frameConsole=null;
+					m_bConsole=false;
+				}
+			else if(b&&!m_bConsole)
+				{
+					frameConsole=new JDialog(JAPModel.getModel().getView(),"Debug-Console");
+					textareaConsole=new JTextArea(null,20,30);
+					textareaConsole.setEditable(false);
+					frameConsole.getContentPane().add(new JScrollPane(textareaConsole));
+					frameConsole.addWindowListener(this);
+					frameConsole.pack();
+					JAPUtil.upRightFrame(frameConsole);
+					frameConsole.show(true);
+					m_bConsole=true;
+				}
+		}
+	
+		public void windowClosing(WindowEvent e)
+			{
+				m_bConsole=false;
+			}
 //	/** Set the debugging output stream. Each debug level has his on outputstream. This defaults to System.out
 //	 * @param level The debug level
 //	 * @param out The assoziated otuput stream (maybe null)
