@@ -51,7 +51,8 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 				}
 	    // Load Icon in upper left corner of the frame window
 	    ImageIcon ii=model.loadImageIcon(model.IICON16FN,true);
-	    if(ii!=null) setIconImage(ii.getImage());
+	    if(ii!=null)
+				setIconImage(ii.getImage());
 	    
 			// listen for events from outside the frame
 	    addWindowListener(new WindowAdapter() {
@@ -73,13 +74,14 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 	    tabs.addTab(model.getString("mainConfTab"), model.loadImageIcon(model.CONFIGICONFN,true), config );
 	    tabs.addTab(model.getString("mainMeterTab"), model.loadImageIcon(model.METERICONFN,true), level );
 	    // "South": Buttons
-	    JPanel buttonPanel = new JPanel();
+	   
+			JPanel buttonPanel = new JPanel();
 	    infoB = new JButton(model.getString("infoButton"));
 	    helpB = new JButton(model.getString("helpButton"));
 //		startB = new JButton(model.msg.getString("startButton"));
 	    quitB = new JButton(model.getString("quitButton"));
 	    // Add real buttons
-	    buttonPanel.add(infoB);
+			buttonPanel.add(infoB);
 	    buttonPanel.add(helpB);
 	    buttonPanel.add(quitB);
 	    infoB.addActionListener(this);
@@ -98,25 +100,21 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 			getContentPane().add(tabs, BorderLayout.CENTER);
 
 			updateValues();
-	//		getContentPane().invalidate();
-//	    setResizable(false);
+			tabs.setSelectedComponent(level);
 			try
 				{
 					pack();  // optimize size
+					setResizable(false);
 				}
 			catch(Exception e) {
+				e.printStackTrace();
 				JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.GUI,"JAPView:Hm.. Error by Pack - Has To be fixed!!");
 				}
 			model.centerFrame(this);
-			tabs.setSelectedComponent(level);
-	//		toFront();
-//			getContentPane().validate();
-//		setVisible(true);
 	}
 
     public JPanel buildLevelPanel() {
-		JPanel levelPanel = new JPanel();
-		levelPanel.setLayout( new BorderLayout() );
+		JPanel levelPanel = new JPanel(new BorderLayout());
 				
 		// Own traffic situation: current # of channels
 		ownTrafficChannelsProgressBar = new 
@@ -447,7 +445,7 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 	
 	public synchronized void valuesChanged (JAPModel m)
 		{
-			updateValues();
+		//	updateValues();
 		}
 
 }

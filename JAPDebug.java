@@ -22,36 +22,47 @@ Koenntest Du es im Self test (main()) evtl. im Beispielcode angeben?
 public final class JAPDebug {
 
 	/** No debugging */
-	public static int NUL = 0; 
+	public final static int NUL = 0; 
 	/** Indicates a GUI related message (binary: <code>00000001</code>) */
-	public static int GUI = 1;
+	public final static int GUI = 1;
 	/** Indicates a network related message (binary: <code>00000010</code>) */
-	public static int NET = 2; 
+	public final static int NET = 2; 
 	/** Indicates a thread related message (binary: <code>00000100</code>) */
-	public static int THREAD = 4; 
+	public final static int THREAD = 4; 
 	/** Indicates a misc message (binary: <code>00001000</code>) */
-	public static int MISC = 8; 
+	public final static int MISC = 8; 
 
 	/** Indicates level type of message: Emergency message*/
-	public static int EMERG     = 7; 
+	public final static int EMERG     = 0; 
 	/** Indicates level type of message: Alert message */
-	public static int ALERT     = 6; 
+	public final static int ALERT     = 1; 
 	/** Indicates level type of message: For instance to  use when catching Exeption to output a debug message.*/
-	public static int EXCEPTION = 5; //2000-07-31(HF): CRIT zu EXCEPTION geaendert, wegen besserem Verstaendnis
+	public final static int EXCEPTION = 2; //2000-07-31(HF): CRIT zu EXCEPTION geaendert, wegen besserem Verstaendnis
 	/** Indicates level type of message: Error message */
-	public static int ERR       = 4; 
+	public final static int ERR       = 3; 
 	/** Indicates level type of message: Warning */
-	public static int WARNING   = 3; 
+	public final static int WARNING   = 4; 
 	/** Indicates level type of message: Notice */
-	public static int NOTICE    = 2; 
+	public final static int NOTICE    = 5; 
 	/** Indicates level type of message: Information */
-	public static int INFO      = 1; 
+	public final static int INFO      = 6; 
 	/** Indicates level type of message, e.g. a simple debugging message to output something */
-	public static int DEBUG     = 0; 
+	public final static int DEBUG     = 7; 
 
 	private int debugtype;
 	private int debuglevel;
 	
+	private final static String strLevels[]=
+		{
+			"debug",
+			"info",
+			"notice",
+			"warning",
+			"err",
+			"exception",
+			"alert",
+			"emergencie!"
+		};
 //	private PrintWriter[] outStreams;
 		
 	private static JAPDebug debug; 
@@ -81,9 +92,9 @@ public final class JAPDebug {
 	public static void out(int level, int type, String txt) {
 //		if(level<0||level>JAPDebug.EMERG||txt==null||debug==null||debug.outStreams[level]==null)
 //			return;
-		if ( (level >= debug.debuglevel) && (debug.debugtype & type) !=0 ) {
+		if ( (level <= debug.debuglevel) && (debug.debugtype & type) !=0 ) {
 //			debug.outStreams[level].println("JAPDebug: "+txt);
-			System.err.println("JAPDebug: "+txt);
+			System.err.println("JAPDebug ["+strLevels[level]+"]: "+txt);
 		}
 	}
 	
@@ -107,6 +118,8 @@ public final class JAPDebug {
 	 *  @param type The debug level (EMERG, ALERT, EXCEPTION, ERR, WARNING, NOTICE, INFO, DEBUG)
 	 */
 	public static void setDebugLevel(int level) {
+		if(level<0||level>DEBUG)
+			return;
 		debug.debuglevel = level;
 	}
 	
@@ -134,8 +147,8 @@ public final class JAPDebug {
 	}
 	
 	/** Provides a simle self test of the debugging functions. */
-	public static void main() {
-	JAPDebug japdebug = new JAPDebug();
+	public static void main(String argc[]) {
+	JAPDebug.create();
 	
 	System.out.println("JAPDebug: Self test");
 	

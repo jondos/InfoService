@@ -10,6 +10,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.*;
 import java.security.*;
+import java.io.*;
 //import au.net.aba.security.cert.*;
 import java.math.BigInteger;
 import sun.security.x509.X509Cert;
@@ -30,7 +31,7 @@ import java.security.Security;
 //import org.logi.crypto.keys.BlowfishKey;
 //import iaik.security.provider.IAIK;
 //import java.security.cert.X509Certificate;
-
+import java.net.*;
 final public class JAPTest
 {
 	public static void main(String argc[])
@@ -78,8 +79,32 @@ final public class JAPTest
 		*/	
 	//	readCertJCE();
 	//	testCert();
-		System.getProperties().list(System.out);
+//		System.getProperties().list(System.out);
+	networkTest(argc);
 		System.exit(0);
+		}
+	
+	public static void networkTest(String argc[])
+		{
+		try{
+			Socket oSocket=new Socket(argc[0],9000);
+			OutputStream out=oSocket.getOutputStream();
+			byte[] b=new byte[1];
+			b[0]=3;
+			out.write(b);
+			out.flush();
+			System.out.println("Writen one byte");
+			b=new byte[9];
+			System.out.println("Sleeping");
+			Thread.sleep(1000);
+			out.write(b);
+			out.flush();
+			System.out.println("Writen 999 byte");
+			System.out.println("Infinite Sleeping");
+			Thread.sleep(100000);
+			out.close();
+		}
+		catch(Exception e){e.printStackTrace();}
 		}
 	
 	public static void testCertAba()
