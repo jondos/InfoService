@@ -63,10 +63,12 @@ import HTTPClient.Codecs;
 import anon.crypto.JAPCertificate;
 import anon.crypto.JAPCertificateException;
 import gui.SimpleFileFilter;
-import logging.*;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
+
 final public class JAPUtil
 {
-
 	public static int applyJarDiff(File fileOldJAR, File fileNewJAR,
 								   byte[] diffJAR)
 	{
@@ -96,7 +98,7 @@ final public class JAPUtil
 				ZipEntry zeout = new ZipEntry(ze.getName());
 				if (!ze.getName().equalsIgnoreCase("META-INF/INDEX.JD"))
 				{
-					LogHolder.log(LogLevel.DEBUG,LogType.MISC,"JARDiff: "+ze.getName());
+					LogHolder.log(LogLevel.DEBUG, LogType.MISC, "JARDiff: " + ze.getName());
 					oldnames.remove(ze.getName());
 					int s = -1;
 					zeout.setTime(ze.getTime());
@@ -129,17 +131,17 @@ final public class JAPUtil
 						s = st.nextToken();
 						if (s.equalsIgnoreCase("remove"))
 						{
-							s=st.nextToken();
-							LogHolder.log(LogLevel.DEBUG,LogType.MISC,"JARDiff: remove " + s);
+							s = st.nextToken();
+							LogHolder.log(LogLevel.DEBUG, LogType.MISC, "JARDiff: remove " + s);
 							oldnames.remove(s);
 						}
 						else if (s.equalsIgnoreCase("move"))
 						{
-							LogHolder.log(LogLevel.DEBUG,LogType.MISC,"JARDiff: move " + st.nextToken());
+							LogHolder.log(LogLevel.DEBUG, LogType.MISC, "JARDiff: move " + st.nextToken());
 						}
 						else
 						{
-							LogHolder.log(LogLevel.DEBUG,LogType.MISC,"JARDiff: unkown: " + s);
+							LogHolder.log(LogLevel.DEBUG, LogType.MISC, "JARDiff: unkown: " + s);
 						}
 					}
 				}
@@ -149,7 +151,7 @@ final public class JAPUtil
 			while (e.hasMoreElements())
 			{
 				String s = (String) e.nextElement();
-				LogHolder.log(LogLevel.DEBUG,LogType.MISC,s);
+				LogHolder.log(LogLevel.DEBUG, LogType.MISC, s);
 				ze = zold.getEntry(s);
 				ZipEntry zeout = new ZipEntry(ze.getName());
 				zeout.setTime(ze.getTime());
@@ -165,10 +167,10 @@ final public class JAPUtil
 					zeout.setCrc(ze.getCrc());
 				}
 				znew.putNextEntry(zeout);
-				LogHolder.log(LogLevel.DEBUG,LogType.MISC,"JARDiff: Getting in..");
+				LogHolder.log(LogLevel.DEBUG, LogType.MISC, "JARDiff: Getting in..");
 				InputStream in = zold.getInputStream(ze);
 				int l = -1;
-				LogHolder.log(LogLevel.DEBUG,LogType.MISC,"JARDiff: Reading..");
+				LogHolder.log(LogLevel.DEBUG, LogType.MISC, "JARDiff: Reading..");
 				try
 				{
 					while ( (l = in.read(b, 0, 5000)) != -1)
@@ -207,23 +209,6 @@ final public class JAPUtil
 		}
 		return true;
 	}
-
-	/*	public static int parseNodeInt(Element parent,String name,int defaultValue)
-	  {
-	   int i=defaultValue;
-	   if(parent!=null)
-		try
-		 {
-		  NodeList nl=parent.getElementsByTagName(name);
-		  i=Integer.parseInt(nl.item(0).getFirstChild().getNodeValue());
-		 }
-		catch(Exception e)
-		 {
-		 }
-	   return i;
-	  }*/
-
-
 
 	/** Writes a XML-Document to an Output-Stream. Since writing was not standardzieds
 	 * since JAXP 1.1 different Methods are tried
