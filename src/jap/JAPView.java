@@ -65,7 +65,7 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
     {
       public void run()
         {
-          updateValues1();
+          updateValues();
         }
     }
 
@@ -653,15 +653,18 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 			{
 				try
 				{
-					pack();  // optimize size
-					setResizable(/*true*/true/*false*/); //2001-11-12(HF):Changed due to a Mac OS X problem during redraw of the progress bars
+					if(!JAPModel.isSmallDisplay())//only do this on "real" Displays
+						{
+							pack(); // optimize size
+							setResizable( /*true*/true /*false*/); //2001-11-12(HF):Changed due to a Mac OS X problem during redraw of the progress bars
+						}
 				}
 				catch(Exception e) {
 					JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.GUI,"JAPView:Hm.. Error by Pack - Has To be fixed!!");
 				}
 			}
 
-	private void updateValues1() {
+	private void updateValues() {
   			synchronized(m_runnableValueUpdate)
 {
 		AnonServer e = controller.getAnonServer();
@@ -768,7 +771,7 @@ catch(Throwable t)
 			synchronized(m_runnableValueUpdate)
 				{
 					if(SwingUtilities.isEventDispatchThread())
-            updateValues1();
+            updateValues();
           else
             SwingUtilities.invokeLater(m_runnableValueUpdate);
 				}
