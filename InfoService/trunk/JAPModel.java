@@ -79,13 +79,16 @@ public final class JAPModel implements JAPAnonServiceListener{
 	private boolean  mbActCntMessageNeverRemind  = false; // indicates if Warning message in setAnonMode has been deactivated forever
 	public  String   status1           = "?";
 	public  String   status2           = " ";
+	
 	private int      nrOfChannels      = 0;
 	private int      nrOfBytes         = 0;
+	
 	public int       nrOfActiveUsers   = -1;
-	static final int MAXPROGRESSBARVALUE = 100; // for trafficSituation and currentRisk
 	public int       trafficSituation  = -1;
 	public int       currentRisk       = -1;
 	public int       mixedPackets      = -1;
+	
+	static final int MAXPROGRESSBARVALUE = 100; // for trafficSituation and currentRisk
 	static private   JAPView           view          = null;
 	static private   JAPViewIconified  iconifiedView = null;
 	static private   JAPInfoService    mInfoService  = null;
@@ -764,6 +767,10 @@ public final class JAPModel implements JAPAnonServiceListener{
 				model.status2 = model.getString("statusNotRunning");
 				proxyDirect=new JAPDirectProxy(m_socketHTTPListener);
 				proxyDirect.startService();
+				model.mixedPackets = -1; 
+				model.nrOfActiveUsers = -1;
+				model.trafficSituation = -1;
+				model.currentRisk = -1;
 				notifyJAPObservers();
 			}
 	}

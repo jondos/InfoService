@@ -527,7 +527,7 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 							cnt = cnt +1;
 							avg = sum/cnt;
 							last = model.mixedPackets;
-							JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"sum ="+sum+" avg="+avg+", diff="+diff);
+							JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"sum="+sum+" avg="+avg+", diff="+diff);
 							trafficProgressBar.setMaximum(2*avg);
 							//if (diff>trafficProgressBar.getMaximum())
 							//	trafficProgressBar.setMaximum(model.trafficSituation);
