@@ -52,6 +52,7 @@ import java.awt.event.ItemEvent;
 import java.awt.Insets;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
+import java.io.File;
 
 public class JAPUpdate implements ActionListener,ItemListener,Runnable
   {
@@ -71,6 +72,10 @@ public class JAPUpdate implements ActionListener,ItemListener,Runnable
     private final String COMMAND_UPGRADE="UPGRADE";
     private final String COMMAND_HELP="HELP";
 
+    // save the jnlp-Files and give it to JAPUpdateWizard
+    //private File jnlp_dev, jnlp_rel;
+    private boolean user_chose_released;
+
     public JAPUpdate()
       {
         japController = JAPController.getController();
@@ -83,7 +88,7 @@ public class JAPUpdate implements ActionListener,ItemListener,Runnable
         JPanel buttonPanel = new JPanel();
         GridBagLayout gridBagPanel = new GridBagLayout();
         buttonPanel.setLayout(gridBagPanel);
-        GridBagConstraints cButtons=new GridBagConstraints();
+        GridBagConstraints cButtons= new GridBagConstraints();
         cButtons.gridx=GridBagConstraints.RELATIVE;
         cButtons.weightx=1.0;
         cButtons.weighty=1.0;
@@ -122,7 +127,7 @@ public class JAPUpdate implements ActionListener,ItemListener,Runnable
         EmptyBorder b=new EmptyBorder(10,10,10,10);
         l.setBorder(b);
         installedPanel.add(l);
-        l=new JLabel("00.01.053");
+        l=new JLabel(JAPConstants.aktVersion2);
         l.setBorder(b);
         installedPanel.add(l);
         l=new JLabel("Date: ");
@@ -225,6 +230,10 @@ public class JAPUpdate implements ActionListener,ItemListener,Runnable
         InfoService infoService=japController.getInfoService();
         m_releaseVersion=infoService.getJAPVersionInfo(InfoService.JAP_RELEASE_VERSION);
         m_devVersion=infoService.getJAPVersionInfo(InfoService.JAP_DEVELOPMENT_VERSION);
+        //--> get the jnlp-File
+        //jnlp_dev = infoService.connect("infoservice.inf.tu-dresden.de","/japDevelopment.jnlp","japDevelopment.jnlp");
+        //--> get the jnlp-File
+        //jnlp_rel = infoService.connect("infoservice.inf.tu-dresden.de","/japDevelopment.jnlp","japReleased.jnlp");
         if(m_releaseVersion==null||m_devVersion==null)
           {
             m_taInfo.setText("Fetching Version Info - FAILED!\nPlease check InfoService settings.");
@@ -250,7 +259,15 @@ public class JAPUpdate implements ActionListener,ItemListener,Runnable
           {
             try{m_threadGetVersionInfo.join();}catch(Exception ex){}
             m_Dialog.dispose();
-            new JAPUpdateWizard();
+            // User' wants to Update --> give the version Info and the jnlp-file
+                 if(user_chose_released)
+                    {
+                      new JAPUpdateWizard(m_labelVersion.getText());
+                    }
+                 else if (!(user_chose_released))
+                    {
+                      new JAPUpdateWizard(m_labelVersion.getText());
+                    }
           }
       }
 
@@ -262,11 +279,13 @@ public class JAPUpdate implements ActionListener,ItemListener,Runnable
               {
                 m_labelVersion.setText(m_releaseVersion.getVersion());
                 m_labelDate.setText(m_releaseVersion.getDate());
+                user_chose_released = true;
               }
             else
               {
                 m_labelVersion.setText(m_devVersion.getVersion());
                 m_labelDate.setText(m_devVersion.getDate());
+                user_chose_released = false;
               }
           }
       }
