@@ -276,46 +276,37 @@ final class JAPUtil
 	}
 	
     public static void setPerfectTableSize(JTable table,Dimension maxDimension) {
-
-	TableModel tableModel = table.getModel();
-
-	int perfectWidth = 0;
-	// the Table uses the minimum height to draw itself, weird...
-	// so we set the perfect heigt as the smallest column height
-	int minimunColunmHeight = 0;
-	for (int i = 0; i < tableModel.getColumnCount(); i++) {
-	    int columnHeight = 0;
-
-	    TableColumn column = table.getColumnModel().getColumn(i);
-	    
-	    // look at the header sizes
-	    Component component = column.getHeaderRenderer().getTableCellRendererComponent(null,column.getHeaderValue(), 
-											   false,false,0,0);
-	    int headerWidth = component.getPreferredSize().width;
-	    columnHeight = component.getPreferredSize().height;
-
-	    // look at every entry
-	    TableCellRenderer tableCellRenderer = table.getDefaultRenderer(tableModel.getColumnClass(i));
-	    int cellWidth = 0;
-	    for (int row = 0; row < tableModel.getRowCount(); row++) {
-		Object object = tableModel.getValueAt(row,i);
-		component = tableCellRenderer.getTableCellRendererComponent(table,object,
-									    false,false,row,i);
-		
-		cellWidth = Math.max(cellWidth,component.getPreferredSize().width);
-		columnHeight += component.getPreferredSize().height;
-	    }
-	    int preferredColumnWidth = Math.max(headerWidth,cellWidth);
-	    column.setPreferredWidth(preferredColumnWidth);
-	    perfectWidth += preferredColumnWidth;
-
-	    if (minimunColunmHeight == 0) minimunColunmHeight = columnHeight;
-	    else minimunColunmHeight = Math.min(minimunColunmHeight,columnHeight);
-	}
-	
-	// add some space for scrollbar,... (+ 30)
-	perfectWidth = Math.min(maxDimension.width,perfectWidth + 30);
-	int perfectHeight = Math.min(maxDimension.height,minimunColunmHeight);
-	table.setPreferredScrollableViewportSize(new Dimension(perfectWidth, perfectHeight));
+		TableModel tableModel = table.getModel();
+		int perfectWidth  = 0;
+		int perfectHeight = 0;
+		// the Table uses the minimum height to draw itself, weird...
+		// so we set the perfect heigt as the smallest column height
+		int minimunColunmHeight = 0;
+		for (int i = 0; i < tableModel.getColumnCount(); i++) {
+			TableColumn column  = table.getColumnModel().getColumn(i);
+			Component component = column.getHeaderRenderer().getTableCellRendererComponent(null,column.getHeaderValue(),false,false,0,0);
+			int headerWidth     = component.getPreferredSize().width;
+			int columnHeight    = component.getPreferredSize().height;
+			if (tableModel.getRowCount() > 0) {			
+				// look at every entry
+				TableCellRenderer tableCellRenderer = table.getDefaultRenderer(tableModel.getColumnClass(i));
+				int cellWidth = 0;
+				for (int row = 0; row < tableModel.getRowCount(); row++) {
+					Object object        = tableModel.getValueAt(row,i);
+					Component component1 = tableCellRenderer.getTableCellRendererComponent(table,object,false,false,row,i);	
+					cellWidth            = Math.max(cellWidth,component1.getPreferredSize().width);
+					columnHeight        += component1.getPreferredSize().height;
+				}
+				int preferredColumnWidth = Math.max(headerWidth,cellWidth);
+				column.setPreferredWidth(preferredColumnWidth);
+				perfectWidth += preferredColumnWidth;
+		    	if (minimunColunmHeight == 0) minimunColunmHeight = columnHeight;
+		    	else minimunColunmHeight = Math.min(minimunColunmHeight,columnHeight);
+			}
+		}
+		// add some space for scrollbar,... (+ 30)
+		perfectWidth  = Math.min(maxDimension.width ,perfectWidth + 30);
+		perfectHeight = Math.min(maxDimension.height,minimunColunmHeight);
+		table.setPreferredScrollableViewportSize(new Dimension(perfectWidth, perfectHeight));
     }    
 }
