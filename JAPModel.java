@@ -70,8 +70,8 @@ public final class JAPModel implements JAPAnonServiceListener {
 	private AnonServerDBEntry    currentAnonService   = null; // current anon service data object
 	private ServerSocket         m_socketHTTPListener = null; // listener object
 	private JAPDirectProxy       proxyDirect    = null;    // service object for direct access (bypass anon service)
-	private JAPAnonService       proxyAnon      = null;    // service object for HTTP  listener
-//	private JAPAnonService       proxyAnonSocks = null;    // service object for SOCKS listener
+	private JAPAnonProxy       proxyAnon      = null;    // service object for HTTP  listener
+	private JAPAnonService       proxyAnonSocks = null;    // service object for SOCKS listener
 
 	private String   infoServiceHostName   = JAPConstants.defaultinfoServiceHostName;
 	private int      infoServicePortNumber = JAPConstants.defaultinfoServicePortNumber;
