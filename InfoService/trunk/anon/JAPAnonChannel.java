@@ -27,6 +27,7 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 */
 package anon;
 import java.io.InputStream;
+import java.io.InterruptedIOException;
 import JAPDebug;
 
 public class JAPAnonChannel implements Runnable
@@ -51,21 +52,39 @@ public class JAPAnonChannel implements Runnable
 					{
 						fromClient= inSocket.getInputStream();
 						byte[] buff=new byte[JAPMuxSocket.DATA_SIZE];
-						int len=fromClient.read(buff,0,JAPMuxSocket.PAYLOAD_SIZE-outSocket.getChainLen()*JAPMuxSocket.KEY_SIZE*2);//*2 is a HACK!!
-						if(len!=-1)
+						int len=0;
+            while(len==0)
+              {
+                try
+                  {
+                    len=fromClient.read(buff,0,JAPMuxSocket.PAYLOAD_SIZE-outSocket.getChainLen()*JAPMuxSocket.KEY_SIZE*2);//*2 is a HACK!!
+						      }
+                catch(InterruptedIOException e)
+                  {
+                    len=0;
+                  }
+              }
+            if(len!=-1)
 							{
-								outSocket.send(channel,m_Type,buff,(short)len);
-								while((len=fromClient.read(buff,0,JAPMuxSocket.PAYLOAD_SIZE))!=-1)
-									{
-										if(len>0)
-											{
-												int ret=outSocket.send(channel,m_Type,buff,(short)len);
-												if(ret==-1)
-													break;
-												//if(ret==JAPMuxSocket.E_CHANNEL_SUSPENDED)
-												//	sleep(1000);
-											}
-									}
+                int ret=0;
+                do
+                 {
+                    ret=outSocket.send(channel,m_Type,buff,(short)len);
+                    if(ret==-1)
+                      break;
+                     len=0;
+                     while(len==0)
+                        {
+                          try
+                            {
+                              len=fromClient.read(buff,0,JAPMuxSocket.PAYLOAD_SIZE-outSocket.getChainLen()*JAPMuxSocket.KEY_SIZE*2);//*2 is a HACK!!
+                            }
+                          catch(InterruptedIOException e)
+                            {
+                              len=0;
+                            }
+                        }
+                  }while(len>0);
 							}
 					} // if (protocol....)
 				catch(Exception e)

@@ -357,7 +357,7 @@ final class JAPMuxSocket implements Runnable
 							{
 								try
 									{
-										JAPAnonChannel p=new JAPAnonChannel(s,lastChannelId,type,this);
+                    JAPAnonChannel p=new JAPAnonChannel(s,lastChannelId,type,this);
 										oSocketList.put(new Integer(lastChannelId),new SocketListEntry(s));
 
 										JAPAnonService.setNrOfChannels(oSocketList.size());
@@ -467,11 +467,7 @@ final class JAPMuxSocket implements Runnable
 						Integer key=(Integer)e.nextElement();
 						SocketListEntry entry=(SocketListEntry)oSocketList.get(key);
 						close(key.intValue());
-						try
-							{
-								entry.inSocket.close();
-							}
-						catch(Exception ie){}
+						try{entry.inSocket.close();}catch(Exception ie){}
 						oSocketList.remove(key);
 					}
 				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:MuxSocket all channels closed...");
@@ -518,15 +514,8 @@ final class JAPMuxSocket implements Runnable
 									{
 										oSocketList.remove(new Integer(channel));
 										JAPAnonService.setNrOfChannels(oSocketList.size());
-										try
-											{
-												tmpEntry.outStream.close();
-												tmpEntry.inSocket.close();
-											}
-										catch(Exception e)
-											{
-												//e.printStackTrace();
-											}
+										try{tmpEntry.outStream.close();}catch(Exception e){}
+										try{tmpEntry.inSocket.close();}catch(Exception e){}
 									}
 								else if(flags==CHANNEL_DATA)
 									{
