@@ -187,6 +187,7 @@ public final class JAPController implements ProxyListener {
 	 * and then in the JAP install directory.
 	 * The configuration is a XML-File with the following structure:
 	 *	<JAP
+	 * 		version=".."									// version of the xml struct (DTD) used for saving the configuration
 	 *		portNumber=""									// Listener-Portnumber
 	 *		portNumberSocks=""						// Listener-Portnumber for SOCKS
 	 *		supportSocks=""								// Will we support SOCKS ?
@@ -200,12 +201,12 @@ public final class JAPController implements ProxyListener {
 	 *		infoServiceHostName="..."			// hostname of the infoservice
 	 *		infoServicePortnumber=".."		// the portnumber of the info service
 	 *		infoServiceDisabled="true/false"		// disable use of InfoService
-	 *    anonserviceID=".."            //the Id of the anonService
-	 *    anonserviceName=".."          //the name of the anon-service
-	 *		anonHostName=".."							// the hostname of the anon-service
-	 *		anonHostIP=".."							  // the ip of the anon-service
-	 *		anonPortNumber=".."						// the portnumber of the anon-service
-	 *    anonSSLPortNumber=".."        /the "proxy" port number of anon-service
+	 *    anonserviceID=".."            //the Id of the anonService [since version 0.1 in a separate node]
+	 *    anonserviceName=".."          //the name of the anon-service [since version 0.1 in a separate node]
+	 *		anonHostName=".."							// the hostname of the anon-service [since version 0.1 in a separate node]
+	 *		anonHostIP=".."							  // the ip of the anon-service [since version 0.1 in a separate node]
+	 *		anonPortNumber=".."						// the portnumber of the anon-service [since version 0.1 in a separate node]
+	 *    anonSSLPortNumber=".."        /the "proxy" port number of anon-service [since version 0.1 in a separate node]
 	 *		autoConnect="true"/"false"		// should we start the anon service immedialy after programm launch ?
 	 *		autoReConnect="true"/"false"		// should we automatically reconnect to mix if connection was lost ?
 	 *		DummyTrafficIntervall=".."    //Time of inactivity in milli seconds after which a dummy is send
@@ -214,7 +215,15 @@ public final class JAPController implements ProxyListener {
 	 *    Locale="LOCALE_IDENTIFIER" (two letter iso 639 code) //the Language for the UI to use
 	 *    LookAndFeel="..."             //the LookAndFeel
 	 *	>
-	 *	<Debug>
+	 * <MixCascade id=..">                     //info about the used AnonServer (since version 0.1) [equal to the general MixCascade struct]
+	 * 	<Name>..</Name>
+	 * 	<Network>
+	 * 		<ListenerInterfaces>
+	 * 			<ListenerInterface> ... </ListenerInterface>
+	 * 		</ListenerInterfaces>
+	 * 	</Network>
+	 * </MixCascade>
+	 *	<Debug>													//info about debug output
 	 *		<Level>..</Level>							// the amount of output (0 means less.. 7 means max)
 	 *		<Type													// which type of messages should be logged
 	 *			GUI="true"/"false"					// messages related to the user interface
@@ -229,11 +238,6 @@ public final class JAPController implements ProxyListener {
 	 *  @param strJapConfFile - file containing the Configuration. If null $(user.home)/jap.conf or ./jap.conf is used.
 	 */
 	public synchronized void loadConfigFile(String strJapConfFile) {
-		// Load default anon services
-	//		anonServerDatabase.addElement(new AnonServerDBEntry(anonHostName, anonPortNumber));
-//		anonServerDatabase.addElement(new AnonServerDBEntry(proxyHostName, proxyPortNumber));
-//		anonServerDatabase.addElement(new AnonServerDBEntry("anon.inf.tu-dresden.de", 6543));
-//		anonServerDatabase.addElement(new AnonServerDBEntry("passat.mesh.de", 6543));
 		// Load config from xml file
 		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:try loading configuration from "+JAPConstants.XMLCONFFN);
 		FileInputStream f=null;
@@ -274,6 +278,7 @@ public final class JAPController implements ProxyListener {
 			Element root=doc.getDocumentElement();
 			NamedNodeMap n=root.getAttributes();
 			//
+			String strVersion=XMLUtil.parseNodeString(n.getNamedItem("version"),null);
 			int port=XMLUtil.parseElementAttrInt(root,"portNumber",JAPModel.getHttpListenerPortNumber());
 			boolean bListenerIsLocal=XMLUtil.parseNodeBoolean(n.getNamedItem("listenerIsLocal"),true);
 			setHTTPListener(port,bListenerIsLocal,false);
@@ -308,21 +313,35 @@ public final class JAPController implements ProxyListener {
 		 String userid=XMLUtil.parseNodeString(n.getNamedItem("proxyAuthUserID"),JAPModel.getFirewallAuthUserID());
 			setFirewallAuthUserID(userid);
 
-			String anonserviceId  = XMLUtil.parseNodeString(n.getNamedItem("anonserviceID"),null);
-			String anonserviceName   = XMLUtil.parseNodeString(n.getNamedItem("anonserviceName"),null);
-			String anonHostName      = XMLUtil.parseNodeString(n.getNamedItem("anonHostName"),null);
-			String anonHostIP      = XMLUtil.parseNodeString(n.getNamedItem("anonHostIP"),null);
-			int anonPortNumber    = XMLUtil.parseElementAttrInt(root,"anonPortNumber",-1);
-			int anonSSLPortNumber = XMLUtil.parseElementAttrInt(root,"anonSSLPortNumber",-1);
 			AnonServer server=null;
+			//Try to get AnonServer info from MixCascade node
+			Node nodeMixCascade=XMLUtil.getFirstChildByName(root,"MixCascade");
 			try
 				{
-					server=new AnonServer(anonserviceId,anonserviceName,anonHostName,anonHostIP,anonPortNumber,anonSSLPortNumber);
+					server=new AnonServer(nodeMixCascade);
 				}
 			catch(UnknownServiceException e)
 				{
-					//we could not load enough info for the saved AnonService --> take current (default)
-					server=m_Controller.getAnonServer();
+					//we could not load enough info for the saved AnonService
+					server=null;
+				}
+			if(server==null)
+				{
+					String anonserviceId  = XMLUtil.parseNodeString(n.getNamedItem("anonserviceID"),null);
+					String anonserviceName   = XMLUtil.parseNodeString(n.getNamedItem("anonserviceName"),null);
+					String anonHostName      = XMLUtil.parseNodeString(n.getNamedItem("anonHostName"),null);
+					String anonHostIP      = XMLUtil.parseNodeString(n.getNamedItem("anonHostIP"),null);
+					int anonPortNumber    = XMLUtil.parseElementAttrInt(root,"anonPortNumber",-1);
+					int anonSSLPortNumber = XMLUtil.parseElementAttrInt(root,"anonSSLPortNumber",-1);
+					try
+						{
+							server=new AnonServer(anonserviceId,anonserviceName,anonHostName,anonHostIP,anonPortNumber,anonSSLPortNumber);
+						}
+					catch(UnknownServiceException e)
+						{
+							//we could not load enough info for the saved AnonService --> take current (default)
+							server=m_Controller.getAnonServer();
+						}
 				}
 			m_Controller.setAnonServer(server);
 			setDummyTraffic(XMLUtil.parseElementAttrInt(root,"DummyTrafficIntervall",-1));
@@ -399,7 +418,7 @@ public final class JAPController implements ProxyListener {
 			JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:try saving configuration to "+JAPConstants.XMLCONFFN);
 			try
 				{
-					String sb=getConfigurationAsXML();
+					String sb=getConfigurationAsXmlString();
 					if(sb==null)
 						error=true;
 					else
@@ -433,7 +452,8 @@ public final class JAPController implements ProxyListener {
 											JOptionPane.ERROR_MESSAGE);
 				}
 		}
-	protected String getConfigurationAsXML() {
+	protected String getConfigurationAsXmlString()
+		{
 		// Save config to xml file
 		// Achtung!! Fehler im Sun-XML --> NULL-Attributte koennen hinzugefuegt werden,
 		// beim Abspeichern gibt es dann aber einen Fehler!
@@ -441,6 +461,7 @@ public final class JAPController implements ProxyListener {
 			Document doc=DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
 			Element e=doc.createElement("JAP");
 			doc.appendChild(e);
+			e.setAttribute("version","0.1");
 			//
 			e.setAttribute("portNumber",Integer.toString(JAPModel.getHttpListenerPortNumber()));
 			//e.setAttribute("portNumberSocks",Integer.toString(portSocksListener));
@@ -460,19 +481,18 @@ public final class JAPController implements ProxyListener {
 			tmpInt=m_Model.getInfoServicePort();
 			e.setAttribute("infoServicePortNumber",Integer.toString(tmpInt));
 			e.setAttribute("infoServiceDisabled",(JAPModel.isInfoServiceDisabled()?"true":"false"));
-			AnonServer e1 = m_Controller.getAnonServer();
-			e.setAttribute("anonserviceID",((e1.getID()==null)?"":e1.getID()));
-			e.setAttribute("anonserviceName",((e1.getName()==null)?"":e1.getName()));
-			ListenerInterface[] listenerInterfaces=e1.getListenerInterfaces();
-			ListenerInterface defaultListener=listenerInterfaces[0];
-			e.setAttribute("anonHostName",   ((defaultListener.m_strHost==null)?"":defaultListener.m_strHost));
-			e.setAttribute("anonHostIP",   ((defaultListener.m_strIP==null)?"":defaultListener.m_strIP));
-			e.setAttribute("anonPortNumber",   Integer.toString(defaultListener.m_iPort));
-			if(listenerInterfaces.length>1)
-				{
-					ListenerInterface secondListener=listenerInterfaces[1];
-					e.setAttribute("anonSSLPortNumber",Integer.toString(secondListener.m_iPort));
-				}
+			//e.setAttribute("anonserviceID",((e1.getID()==null)?"":e1.getID()));
+			//e.setAttribute("anonserviceName",((e1.getName()==null)?"":e1.getName()));
+			//ListenerInterface[] listenerInterfaces=e1.getListenerInterfaces();
+			//ListenerInterface defaultListener=listenerInterfaces[0];
+			//e.setAttribute("anonHostName",   ((defaultListener.m_strHost==null)?"":defaultListener.m_strHost));
+			//e.setAttribute("anonHostIP",   ((defaultListener.m_strIP==null)?"":defaultListener.m_strIP));
+			//e.setAttribute("anonPortNumber",   Integer.toString(defaultListener.m_iPort));
+			//if(listenerInterfaces.length>1)
+			//	{
+			//		ListenerInterface secondListener=listenerInterfaces[1];
+			//		e.setAttribute("anonSSLPortNumber",Integer.toString(secondListener.m_iPort));
+			//	}
 			e.setAttribute("DummyTrafficIntervall",Integer.toString(JAPModel.getDummyTraffic()));
 			e.setAttribute("autoConnect",(JAPModel.getAutoConnect()?"true":"false"));
 			e.setAttribute("autoReConnect",(JAPModel.getAutoReConnect()?"true":"false"));
@@ -482,6 +502,10 @@ public final class JAPController implements ProxyListener {
 			e.setAttribute("neverRemindGoodBye",(mbGoodByMessageNeverRemind?"true":"false"));
 			e.setAttribute("Locale",m_Locale.getLanguage());
 			e.setAttribute("LookAndFeel",UIManager.getLookAndFeel().getName());
+			//adding (new) AnonServer description element
+			AnonServer e1 = m_Controller.getAnonServer();
+			e.appendChild(e1.toXmlNode(doc));
+
 			// adding Debug-Element
 			Element elemDebug=doc.createElement("Debug");
 			e.appendChild(elemDebug);
