@@ -110,7 +110,7 @@ public final class XMLSignature implements IXMLEncodable
 
 		if (a_element == null || !a_element.getNodeName().equals(XML_ELEMENT_NAME))
 		{
-			throw new XMLParseException(XMLParseException.ROOT_TAG,"This is no signature element!");
+			throw new XMLParseException(XMLParseException.ROOT_TAG, "This is no signature element!");
 		}
 
 		m_elemSignature = a_element;
@@ -132,7 +132,7 @@ public final class XMLSignature implements IXMLEncodable
 		{
 			throw new XMLParseException(ELEM_REFERENCE);
 		}
-		m_referenceURI = XMLUtil.parseAttribute((Element)node, ATTR_URI, "");
+		m_referenceURI = XMLUtil.parseAttribute( (Element) node, ATTR_URI, "");
 
 		/** @todo DIGEST_METHOD is optional due to compatibility reasons; make this mandatory */
 		subnode = XMLUtil.getFirstChildByName(node, ELEM_DIGEST_METHOD);
@@ -144,7 +144,6 @@ public final class XMLSignature implements IXMLEncodable
 			throw new XMLParseException(ELEM_DIGEST_VALUE);
 		}
 		m_digestValue = XMLUtil.parseValue(node, "");
-
 
 		node = XMLUtil.getFirstChildByName(m_elemSignature, ELEM_SIGNATURE_VALUE);
 		if (node == null)
@@ -188,8 +187,7 @@ public final class XMLSignature implements IXMLEncodable
 	 * @exception XMLParseException if the node could not be signed because it could not be
 	 *            properly transformed into bytes
 	 */
-	public static XMLSignature sign(Node a_node, IMyPrivateKey a_privateKey)
-		throws XMLParseException
+	public static XMLSignature sign(Node a_node, IMyPrivateKey a_privateKey) throws XMLParseException
 	{
 		return signInternal(a_node, a_privateKey);
 	}
@@ -204,8 +202,8 @@ public final class XMLSignature implements IXMLEncodable
 	 * @exception XMLParseException if the node could not be signed because it could not be
 	 *            properly transformed into bytes
 	 */
-	private static XMLSignature signInternal(Node a_node, IMyPrivateKey a_privateKey)
-		throws XMLParseException
+	private static XMLSignature signInternal(Node a_node, IMyPrivateKey a_privateKey) throws
+		XMLParseException
 	{
 		byte[] digestValue;
 		byte[] signatureValue;
@@ -219,11 +217,11 @@ public final class XMLSignature implements IXMLEncodable
 		}
 		else if (a_node instanceof Document)
 		{
-			elementToSign = ((Document)a_node).getDocumentElement();
+			elementToSign = ( (Document) a_node).getDocumentElement();
 		}
 		else if (a_node instanceof Element)
 		{
-			elementToSign = (Element)a_node;
+			elementToSign = (Element) a_node;
 		}
 		else
 		{
@@ -342,11 +340,10 @@ public final class XMLSignature implements IXMLEncodable
 	 * @exception XMLParseException if a signature element exists, but the element
 	 *                              has an invalid structure
 	 */
-	public static XMLSignature verify(Node a_node, JAPCertificate a_certificate)
-		throws XMLParseException
+	public static XMLSignature verify(Node a_node, JAPCertificate a_certificate) throws XMLParseException
 	{
-    Vector certificates = new Vector();
-    certificates.addElement(a_certificate);
+		Vector certificates = new Vector();
+		certificates.addElement(a_certificate);
 
 		return verify(a_node, certificates);
 	}
@@ -355,35 +352,36 @@ public final class XMLSignature implements IXMLEncodable
 	 * Verifies the signature of an XML node and creates a new XMLSignature from a valid
 	 * signature.
 	 * @param a_node an XML node
-   * @param a_certificateList certificates to verify the signature
+	 * @param a_certificateList certificates to verify the signature
 	 * @return the XMLSignature of the node; null if the node could not be verified
 	 * @exception XMLParseException if a signature element exists, but the element
 	 *                              has an invalid structure
 	 */
-  public static XMLSignature verify(Node a_node, Vector a_certificateList)
-		throws XMLParseException
+	public static XMLSignature verify(Node a_node, Vector a_certificateList) throws XMLParseException
 	{
-    /* the certificates can be used as root certificates or directly on the signature */
-    return verify(a_node, a_certificateList, a_certificateList);
+		/* the certificates can be used as root certificates or directly on the signature */
+		return verify(a_node, a_certificateList, a_certificateList);
 	}
 
 	/**
-   * Verifies the signature of an XML node.
-   *
-   * @param a_node A signed XML node.
-   * @param a_rootCertificates A Vector of trusted root certificates which is used to verify
-   *                           the certificate maybe appended at the signature.
-   * @param a_directCertificates A Vector of certificates to verify the signature, if it could
-   *                             not be verified by the appended certificates (if there are no
-   *                             appended certificates or the appended certificates could not
-   *                             be verified by the trusted root certificates).
-   *
+	 * Verifies the signature of an XML node.
+	 *
+	 * @param a_node A signed XML node.
+	 * @param a_rootCertificates A Vector of trusted root certificates which is used to verify
+	 *                           the certificate maybe appended at the signature.
+	 * @param a_directCertificates A Vector of certificates to verify the signature, if it could
+	 *                             not be verified by the appended certificates (if there are no
+	 *                             appended certificates or the appended certificates could not
+	 *                             be verified by the trusted root certificates).
+	 *
 	 * @return the XMLSignature of the node; null if the node could not be verified
 	 * @exception XMLParseException if a signature element exists, but the element
 	 *                              has an invalid structure
 	 * @todo do not accept expired certificates?
 	 */
-  public static XMLSignature verify(Node a_node, Vector a_rootCertificates, Vector a_directCertificates) throws XMLParseException {
+	public static XMLSignature verify(Node a_node, Vector a_rootCertificates, Vector a_directCertificates) throws
+		XMLParseException
+	{
 		XMLSignature signature;
 		Enumeration certificates;
 		JAPCertificate currentCertificate;
@@ -397,46 +395,56 @@ public final class XMLSignature implements IXMLEncodable
 		}
 
 		bVerified = false; // this is set to 'true' if the signature could be verified
-    try {
-				// verify the signature against the appended certificates first
-				certificates = signature.getCertificates();
-      while (certificates.hasMoreElements()) {
-					// get the next appended certificate
-					currentCertificate = (JAPCertificate) certificates.nextElement();
-        /* try to verify this appended certificate against the root certificates */
+		try
+		{
+			// verify the signature against the appended certificates first
+			certificates = signature.getCertificates();
+			while (certificates!=null&&certificates.hasMoreElements())
+			{
+				// get the next appended certificate
+				currentCertificate = (JAPCertificate) certificates.nextElement();
+				/* try to verify this appended certificate against the root certificates */
 
-        if (!currentCertificate.verify(a_rootCertificates)) {
-          /* this certificate cannot be verified; therefore, we do not use it here */
-						continue;
-					}
+				if (!currentCertificate.verify(a_rootCertificates))
+				{
+					/* this certificate cannot be verified; therefore, we do not use it here */
+					continue;
+				}
 
-					// check the signature against this certificate if it is not verified yet
-        if (!bVerified && verify(a_node, signature, currentCertificate.getPublicKey())) {
-						// the signature has been verified successfully
+				// check the signature against this certificate if it is not verified yet
+				if (!bVerified && verify(a_node, signature, currentCertificate.getPublicKey()))
+				{
+					// the signature has been verified successfully
+					bVerified = true;
+				}
+			}
+		}
+		catch (Exception a_e)
+		{
+		}
+
+		if (!bVerified)
+		{
+			/* the signature could not be verified against the appended certificates;
+			 * check the signature against the Vector of direct certificates
+			 */
+
+			Enumeration additionalCertificates = a_directCertificates.elements();
+
+			/* try to verify the signature against the direct certificate */
+			while (!bVerified && additionalCertificates.hasMoreElements())
+			{
+				try
+				{
+					if (verify(a_node, signature,
+							   ( (JAPCertificate) (additionalCertificates.nextElement())).getPublicKey()))
+					{
+						/* signature could be verified against one of the direct certificates */
 						bVerified = true;
 					}
 				}
-			}
-    catch (Exception a_e) {
-			}
-
-			if (!bVerified)
-			{
-				/* the signature could not be verified against the appended certificates;
-       * check the signature against the Vector of direct certificates
-				 */
-
-      Enumeration additionalCertificates = a_directCertificates.elements();
-
-      /* try to verify the signature against the direct certificate */
-      while (!bVerified && additionalCertificates.hasMoreElements()) {
-        try {
-          if (verify(a_node, signature, ((JAPCertificate)(additionalCertificates.nextElement())).getPublicKey())) {
-            /* signature could be verified against one of the direct certificates */
-								bVerified = true;
-							}
-						}
-        catch (Exception e) {
+				catch (Exception e)
+				{
 				}
 			}
 		}
@@ -468,7 +476,7 @@ public final class XMLSignature implements IXMLEncodable
 		JAPCertificate certificate;
 
 		// transform the public key into a temporary certificate
-		certificate = JAPCertificate.getInstance(a_publicKey,  new GregorianCalendar());
+		certificate = JAPCertificate.getInstance(a_publicKey, new GregorianCalendar());
 
 		return verify(a_node, certificate);
 	}
@@ -548,7 +556,7 @@ public final class XMLSignature implements IXMLEncodable
 
 		while (certificates.hasMoreElements())
 		{
-			currentElemCertificate = (Element)certificates.nextElement();
+			currentElemCertificate = (Element) certificates.nextElement();
 			parentNode = currentElemCertificate.getParentNode();
 			if (parentNode != null)
 			{
@@ -574,20 +582,20 @@ public final class XMLSignature implements IXMLEncodable
 		return false;
 	}
 
-
 	/**
-   * Adds a certificate to the signature. The certificate is not added if the signature cannot
+	 * Adds a certificate to the signature. The certificate is not added if the signature cannot
 	 * be verified with it, or if the signature already contains the specified certificate.
-   * @param a_certificate JAPCertificate
-   * @return true if the certificate was added; false otherwise
+	 * @param a_certificate JAPCertificate
+	 * @return true if the certificate was added; false otherwise
 	 */
-  public synchronized boolean addCertificate(JAPCertificate a_certificate)
+	public synchronized boolean addCertificate(JAPCertificate a_certificate)
 	{
 		Element elemCertificate;
 		Node nodeKeyInfo;
 		Node nodeCertificateContainer;
 
-    if (a_certificate == null) {
+		if (a_certificate == null)
+		{
 			return false;
 		}
 
@@ -606,27 +614,29 @@ public final class XMLSignature implements IXMLEncodable
 		{
 			nodeCertificateContainer =
 				getSignatureElement().getOwnerDocument().createElement(
-							   JAPCertificate.XML_ELEMENT_CONTAINER_NAME);
+					JAPCertificate.XML_ELEMENT_CONTAINER_NAME);
 			nodeKeyInfo.appendChild(nodeCertificateContainer);
 		}
 
-			/* test if the signature already contains the certificate and
-			 * if the certificate is suitable to verify the signature
-			 */
-    if (m_appendedCertificates.containsKey(a_certificate) || !checkSignature(this, a_certificate.getPublicKey())) {
-      return false;
-			}
+		/* test if the signature already contains the certificate and
+		 * if the certificate is suitable to verify the signature
+		 */
+		if (m_appendedCertificates.containsKey(a_certificate) ||
+			!checkSignature(this, a_certificate.getPublicKey()))
+		{
+			return false;
+		}
 
-			// create a new certificate element
-    elemCertificate = a_certificate.toXmlElement(getSignatureElement().getOwnerDocument());
+		// create a new certificate element
+		elemCertificate = a_certificate.toXmlElement(getSignatureElement().getOwnerDocument());
 
-			// add the certificate to the hashtable
-    m_appendedCertificates.put(a_certificate, elemCertificate);
+		// add the certificate to the hashtable
+		m_appendedCertificates.put(a_certificate, elemCertificate);
 
-			// add the certificate to the signature element
-			nodeCertificateContainer.appendChild(elemCertificate);
+		// add the certificate to the signature element
+		nodeCertificateContainer.appendChild(elemCertificate);
 
-    return true;
+		return true;
 	}
 
 	/**
@@ -646,12 +656,12 @@ public final class XMLSignature implements IXMLEncodable
 
 		if (a_node instanceof Document)
 		{
-			doc = (Document)a_node;
+			doc = (Document) a_node;
 			element = doc.getDocumentElement();
 		}
 		else if (a_node instanceof Element)
 		{
-			element = (Element)a_node;
+			element = (Element) a_node;
 			doc = element.getOwnerDocument();
 		}
 		else
@@ -667,7 +677,7 @@ public final class XMLSignature implements IXMLEncodable
 				return false;
 			}
 		}
-		catch(XMLParseException a_e)
+		catch (XMLParseException a_e)
 		{
 			return false;
 		}
@@ -676,7 +686,7 @@ public final class XMLSignature implements IXMLEncodable
 		elemNewSignature = toXmlElementInternal(doc);
 
 		// remove any existing signatures
-		while ((elemOldSignature = XMLUtil.getFirstChildByName(element, XML_ELEMENT_NAME)) != null)
+		while ( (elemOldSignature = XMLUtil.getFirstChildByName(element, XML_ELEMENT_NAME)) != null)
 		{
 			element.removeChild(elemOldSignature);
 		}
@@ -701,7 +711,7 @@ public final class XMLSignature implements IXMLEncodable
 		if (getSignatureElement() == elemSignature)
 		{
 			// create a new signature element
-			elemSignature = (Element)elemSignature.cloneNode(true);
+			elemSignature = (Element) elemSignature.cloneNode(true);
 		}
 
 		return elemSignature;
@@ -750,7 +760,7 @@ public final class XMLSignature implements IXMLEncodable
 
 		try
 		{
-			return (Element)XMLUtil.importNode(a_doc, m_elemSignature, true);
+			return (Element) XMLUtil.importNode(a_doc, m_elemSignature, true);
 		}
 		catch (Exception a_e)
 		{
@@ -769,14 +779,13 @@ public final class XMLSignature implements IXMLEncodable
 		Node nextRemovedNode;
 		Element element;
 
-
 		if (a_node instanceof Document)
 		{
-			element = ((Document)a_node).getDocumentElement();
+			element = ( (Document) a_node).getDocumentElement();
 		}
 		else if (a_node instanceof Element)
 		{
-			element = (Element)a_node;
+			element = (Element) a_node;
 		}
 		else
 		{
@@ -784,11 +793,11 @@ public final class XMLSignature implements IXMLEncodable
 		}
 
 		// remove any existing signatures
-		while ((nextRemovedNode = XMLUtil.getFirstChildByName(element, XML_ELEMENT_NAME)) != null)
+		while ( (nextRemovedNode = XMLUtil.getFirstChildByName(element, XML_ELEMENT_NAME)) != null)
 		{
 			try
 			{
-				signatureNode = (Element)element.removeChild(nextRemovedNode);
+				signatureNode = (Element) element.removeChild(nextRemovedNode);
 			}
 			catch (ClassCastException a_e)
 			{
@@ -848,7 +857,6 @@ public final class XMLSignature implements IXMLEncodable
 		Element elementVerified;
 		Node signatureNode;
 
-
 		if (a_node == null)
 		{
 			throw new XMLParseException(XMLParseException.NODE_NULL_TAG);
@@ -856,11 +864,11 @@ public final class XMLSignature implements IXMLEncodable
 
 		if (a_node instanceof Document)
 		{
-			elementVerified = ((Document)a_node).getDocumentElement();
+			elementVerified = ( (Document) a_node).getDocumentElement();
 		}
 		else if (a_node instanceof Element)
 		{
-			elementVerified = (Element)a_node;
+			elementVerified = (Element) a_node;
 		}
 		else
 		{
@@ -884,7 +892,6 @@ public final class XMLSignature implements IXMLEncodable
 			// should not happen
 			signature = null;
 		}
-
 
 		return signature;
 	}
@@ -919,7 +926,7 @@ public final class XMLSignature implements IXMLEncodable
 		{
 			try
 			{
-				currentCertificate = JAPCertificate.getInstance((Element)nodeCertificate);
+				currentCertificate = JAPCertificate.getInstance( (Element) nodeCertificate);
 				if (currentCertificate != null)
 				{
 					certificates.put(currentCertificate, nodeCertificate);
@@ -936,8 +943,7 @@ public final class XMLSignature implements IXMLEncodable
 		return certificates;
 	}
 
-	private static byte[] toCanonical(Node a_inputNode, Node a_excludeNode)
-		throws XMLParseException
+	private static byte[] toCanonical(Node a_inputNode, Node a_excludeNode) throws XMLParseException
 	{
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		if (makeCanonical(a_inputNode, out, false, a_excludeNode) == -1)
@@ -965,8 +971,7 @@ public final class XMLSignature implements IXMLEncodable
 	 * @return the node as a byte array (incl. the whole tree).
 	 * @exception XMLParseException if the node could not be properly transformed into bytes
 	 */
-	private static byte[] toCanonical(Node inputNode)
-		throws XMLParseException
+	private static byte[] toCanonical(Node inputNode) throws XMLParseException
 	{
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		if (makeCanonical(inputNode, out, false, null) == -1)
@@ -985,7 +990,6 @@ public final class XMLSignature implements IXMLEncodable
 		return out.toByteArray();
 
 	}
-
 
 	/**
 	 * @todo find a better way to get the data of the node as a bytestream, for
@@ -1009,7 +1013,7 @@ public final class XMLSignature implements IXMLEncodable
 			}
 			if (node instanceof Document)
 			{
-				node = ((Document)node).getDocumentElement();
+				node = ( (Document) node).getDocumentElement();
 			}
 
 			if (node.equals(excludeNode))
@@ -1089,8 +1093,8 @@ public final class XMLSignature implements IXMLEncodable
 	 *                              has an invalid structure
 	 * @return true if the node could be verified with this signature; false otherwise
 	 */
-	private static boolean verify(Node a_node, XMLSignature a_signature, IMyPublicKey a_publicKey)
-		throws XMLParseException
+	private static boolean verify(Node a_node, XMLSignature a_signature, IMyPublicKey a_publicKey) throws
+		XMLParseException
 	{
 
 		if (a_publicKey == null || a_node == null || a_signature == null)
@@ -1098,7 +1102,7 @@ public final class XMLSignature implements IXMLEncodable
 			return false;
 		}
 
-		if(!checkSignature(a_signature, a_publicKey))
+		if (!checkSignature(a_signature, a_publicKey))
 		{
 			return false;
 		}
@@ -1138,9 +1142,7 @@ public final class XMLSignature implements IXMLEncodable
 		return true;
 	}
 
-
-	private static boolean checkMessageDigest(Node a_node, XMLSignature a_signature)
-		throws XMLParseException
+	private static boolean checkMessageDigest(Node a_node, XMLSignature a_signature) throws XMLParseException
 	{
 		MessageDigest sha1;
 		byte[] digest;
@@ -1153,7 +1155,7 @@ public final class XMLSignature implements IXMLEncodable
 		{
 			return false;
 		}
-		byte[] buff=toCanonical(a_node, a_signature.getSignatureElement());
+		byte[] buff = toCanonical(a_node, a_signature.getSignatureElement());
 		digest = sha1.digest(buff);
 		if (!MessageDigest.isEqual(Base64.decode(a_signature.getDigestValue()), digest))
 		{
