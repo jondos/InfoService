@@ -72,7 +72,7 @@ public class AICommunication extends Thread
 	{
 		try
 		{
-			c = ( (AnonServiceImpl) aService).getAIChannel();
+			//c = ( (AnonServiceImpl) aService).getAIChannel();
 		}
 		catch (Exception ex)
 		{
