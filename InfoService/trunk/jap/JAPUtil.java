@@ -63,12 +63,12 @@ import HTTPClient.Codecs;
 import anon.crypto.JAPCertificate;
 import anon.crypto.JAPCertificateException;
 import gui.SimpleFileFilter;
-
+import logging.*;
 final public class JAPUtil
 {
 
-	public static int applyJarDiff(String oldJAR, String newJAR,
-								   byte[] diffJAR /*UpdateListener listener ,String diffJAR*/)
+	public static int applyJarDiff(File fileOldJAR, File fileNewJAR,
+								   byte[] diffJAR)
 	{
 		try
 		{
@@ -77,7 +77,7 @@ final public class JAPUtil
 			ZipOutputStream znew = null;
 			ZipEntry ze = null;
 			// geting old names
-			zold = new ZipFile(oldJAR);
+			zold = new ZipFile(fileOldJAR);
 			Hashtable oldnames = new Hashtable();
 			Enumeration e = zold.entries();
 			while (e.hasMoreElements())
@@ -88,7 +88,7 @@ final public class JAPUtil
 			// it shouldn't be a FileStream but an ByteArrayStream or st like that
 			//zdiff=new ZipInputStream(new FileInputStream(diffJAR));
 			zdiff = new ZipInputStream(new ByteArrayInputStream(diffJAR));
-			znew = new ZipOutputStream(new FileOutputStream(newJAR));
+			znew = new ZipOutputStream(new FileOutputStream(fileNewJAR));
 			znew.setLevel(9);
 			byte[] b = new byte[5000];
 			while ( (ze = zdiff.getNextEntry()) != null)
@@ -96,7 +96,7 @@ final public class JAPUtil
 				ZipEntry zeout = new ZipEntry(ze.getName());
 				if (!ze.getName().equalsIgnoreCase("META-INF/INDEX.JD"))
 				{
-					System.out.println(ze.getName());
+					LogHolder.log(LogLevel.DEBUG,LogType.MISC,"JARDiff: "+ze.getName());
 					oldnames.remove(ze.getName());
 					int s = -1;
 					zeout.setTime(ze.getTime());
@@ -129,15 +129,17 @@ final public class JAPUtil
 						s = st.nextToken();
 						if (s.equalsIgnoreCase("remove"))
 						{
-							oldnames.remove(st.nextToken());
+							s=st.nextToken();
+							LogHolder.log(LogLevel.DEBUG,LogType.MISC,"JARDiff: remove " + s);
+							oldnames.remove(s);
 						}
 						else if (s.equalsIgnoreCase("move"))
 						{
-							System.out.println("move " + st.nextToken());
+							LogHolder.log(LogLevel.DEBUG,LogType.MISC,"JARDiff: move " + st.nextToken());
 						}
 						else
 						{
-							System.out.println("unkown: " + s);
+							LogHolder.log(LogLevel.DEBUG,LogType.MISC,"JARDiff: unkown: " + s);
 						}
 					}
 				}
@@ -147,7 +149,7 @@ final public class JAPUtil
 			while (e.hasMoreElements())
 			{
 				String s = (String) e.nextElement();
-				System.out.println(s);
+				LogHolder.log(LogLevel.DEBUG,LogType.MISC,s);
 				ze = zold.getEntry(s);
 				ZipEntry zeout = new ZipEntry(ze.getName());
 				zeout.setTime(ze.getTime());
@@ -163,10 +165,10 @@ final public class JAPUtil
 					zeout.setCrc(ze.getCrc());
 				}
 				znew.putNextEntry(zeout);
-				System.out.println("Getting in..");
+				LogHolder.log(LogLevel.DEBUG,LogType.MISC,"JARDiff: Getting in..");
 				InputStream in = zold.getInputStream(ze);
 				int l = -1;
-				System.out.println("Reading..");
+				LogHolder.log(LogLevel.DEBUG,LogType.MISC,"JARDiff: Reading..");
 				try
 				{
 					while ( (l = in.read(b, 0, 5000)) != -1)
