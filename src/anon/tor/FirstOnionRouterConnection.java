@@ -8,8 +8,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.io.OutputStream;
+import java.security.SecureRandom;
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.Vector;
 import anon.tor.cells.Cell;
 import anon.tor.ordescription.ORDescription;
 import anon.tor.tinytls.TinyTLS;
@@ -31,7 +33,8 @@ public class FirstOnionRouterConnection implements Runnable
 	private Hashtable m_Circuits;
 	private volatile boolean m_bRun;
 	private boolean m_bIsClosed = true;
-
+	private MyRandom m_rand;
+	private Object m_oSendSync;
 	/**
 	 * constructor
 	 *
@@ -45,6 +48,8 @@ public class FirstOnionRouterConnection implements Runnable
 		m_bRun = false;
 		m_bIsClosed = true;
 		m_description = d;
+		m_rand = new MyRandom(new SecureRandom());
+		m_oSendSync = new Object();
 	}
 
 	public ORDescription getORDescription()
@@ -52,7 +57,7 @@ public class FirstOnionRouterConnection implements Runnable
 		return m_description;
 	}
 
-	public synchronized boolean isClosed()
+	public boolean isClosed()
 	{
 		return m_bIsClosed;
 	}
@@ -63,21 +68,25 @@ public class FirstOnionRouterConnection implements Runnable
 	 * cell with data
 	 * @throws IOException
 	 */
-	public synchronized void send(Cell cell) throws IOException
+	public void send(Cell cell) throws IOException
 	{
-		for (; ; )
+		synchronized (m_oSendSync)
 		{
-			try
+			for (; ; )
 			{
-				m_ostream.write(cell.getCellData());
-				m_ostream.flush();
-				break;
-			}
-			catch (InterruptedIOException ex)
-			{
+				try
+				{
+					m_ostream.write(cell.getCellData());
+					m_ostream.flush();
+					LogHolder.log(LogLevel.DEBUG, LogType.MISC,
+								  "OnionConnection " + m_description.getName() + "Send a cell");
+					break;
+				}
+				catch (InterruptedIOException ex)
+				{
+				}
 			}
 		}
-
 	}
 
 	/**
@@ -92,7 +101,7 @@ public class FirstOnionRouterConnection implements Runnable
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC,
 						  "OnionProxy read() Tor Cell - Circuit: " + cid + " Type: " + cell.getCommand());
 			Circuit circuit = (Circuit) m_Circuits.get(new Integer(cid));
-			if (circuit != null && !circuit.isDestroyed())
+			if (circuit != null)
 			{
 				circuit.dispatchCell(cell);
 			}
@@ -125,6 +134,28 @@ public class FirstOnionRouterConnection implements Runnable
 		m_tinyTLS.setSoTimeout(1000);
 		start();
 		m_bIsClosed = false;
+	}
+
+	public synchronized Circuit createCircuit(Vector onionRouters)
+	{
+		int circid = 0;
+		try
+		{
+			do
+			{
+				circid = m_rand.nextInt(65535);
+			}
+			while (m_Circuits.containsKey(new Integer(circid)) && (circid != 0));
+			Circuit circ = new Circuit(circid, this, onionRouters);
+			m_Circuits.put(new Integer(circid), circ);
+			circ.create();
+			return circ;
+		}
+		catch (Exception e)
+		{
+			m_Circuits.remove(new Integer(circid));
+			return null;
+		}
 	}
 
 	/**
@@ -180,7 +211,14 @@ public class FirstOnionRouterConnection implements Runnable
 				closedByPeer();
 				return;
 			}
+			LogHolder.log(LogLevel.DEBUG, LogType.TOR,
+						  "OnionConnection " + m_description.getName() + " received a Cell!");
 			cell = Cell.createCell(buff);
+			if (cell == null)
+			{
+				LogHolder.log(LogLevel.EMERG, LogType.TOR,
+							  "OnionConnection " + m_description.getName() + " dont know about this Cell!");
+			}
 			if (cell == null || !dispatchCell(cell))
 			{
 				closedByPeer();
@@ -223,6 +261,11 @@ public class FirstOnionRouterConnection implements Runnable
 				m_bIsClosed = true;
 				stop();
 				m_tinyTLS.close();
+				Enumeration enumer = m_Circuits.elements();
+				while (enumer.hasMoreElements())
+				{
+					( (Circuit) enumer.nextElement()).close();
+				}
 				m_Circuits.clear();
 			}
 		}
@@ -235,7 +278,7 @@ public class FirstOnionRouterConnection implements Runnable
 	 * connection was closed by peer
 	 *
 	 */
-	public void closedByPeer()
+	private void closedByPeer()
 	{
 		if (m_bIsClosed)
 		{
@@ -266,9 +309,14 @@ public class FirstOnionRouterConnection implements Runnable
 	 * @param circ
 	 * a circuit
 	 */
-	public synchronized void addCircuit(Circuit circ)
+	/*	public synchronized void addCircuit(Circuit circ)
+	 {
+	  m_Circuits.put(new Integer(circ.getCircID()), circ);
+	 }
+	 */
+	protected void notifyCircuitClosed(Circuit circ)
 	{
-		m_Circuits.put(new Integer(circ.getCircID()), circ);
+		m_Circuits.remove(new Integer(circ.getCircID()));
 	}
 
 }

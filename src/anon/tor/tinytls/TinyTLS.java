@@ -443,6 +443,10 @@ public class TinyTLS extends Socket
 				int type = m_aktTLSRecord.m_Data[0];
 				int length = ( (m_aktTLSRecord.m_Data[1] & 0xFF) << 16) |
 					( (m_aktTLSRecord.m_Data[2] & 0xFF) << 8) | (m_aktTLSRecord.m_Data[3] & 0xFF);
+				if(length!=m_aktTLSRecord.m_dataLen-4&&type!=13)
+				{
+					int h=3;
+				}
 				//b = new byte[length];
 				//this.m_stream.readFully(b);
 				//byte[] recieveddata = helper.conc(helper.inttobyte(type, 1),

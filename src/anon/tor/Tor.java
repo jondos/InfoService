@@ -45,17 +45,19 @@ public class Tor implements /*Runnable,*/ AnonService
 	//list of allowed exitnodes
 	private Vector m_allowedExitNodeNames;
 	//list of circuits
-	private Hashtable m_Circuits;
+	//private Hashtable m_Circuits;
 	//active circuit
 	private Circuit m_activeCircuit;
 	//used for synchronisation on active Circuit operations...
 	private Object m_oActiveCircuitSync;
+	private Object m_oStartStopSync;
 
 	private FirstOnionRouterConnectionFactory m_firstORFactory;
 
 	//private long m_createNewCircuitIntervall;
 	//private Thread m_createNewCircuitLoop;
-	//private volatile boolean m_bRun;
+	private volatile boolean m_bIsStarted;
+	private boolean m_bIsCreatingCircuit;
 
 	private int m_circuitLengthMin;
 	private int m_circuitLengthMax;
@@ -74,6 +76,7 @@ public class Tor implements /*Runnable,*/ AnonService
 	{
 		m_orList = new ORList(new PlainORListFetcher(DEFAULT_DIR_SERVER_ADDR, DEFAULT_DIR_SERVER_PORT));
 		m_oActiveCircuitSync = new Object();
+		m_oStartStopSync = new Object();
 		//create a new circuit every 5 minutes
 		//m_createNewCircuitIntervall = 60000 * 5;
 
@@ -88,6 +91,8 @@ public class Tor implements /*Runnable,*/ AnonService
 		m_circuitLengthMax = 5;
 
 		m_rand = new MyRandom(new SecureRandom());
+		m_bIsStarted = false;
+		m_bIsCreatingCircuit = false;
 	}
 
 	/**
@@ -104,11 +109,15 @@ public class Tor implements /*Runnable,*/ AnonService
 
 	protected synchronized Circuit getCircuit(String addr, int port) throws IOException
 	{
+		if (!m_bIsStarted)
+		{
+			return null;
+		}
 		synchronized (m_oActiveCircuitSync)
 		{
 			if (!helper.isIPAddress(addr))
 			{
-				if (m_activeCircuit == null)
+				if (m_activeCircuit == null || m_activeCircuit.isShutdown())
 				{
 					createNewActiveCircuit(null, -1);
 				}
@@ -130,8 +139,8 @@ public class Tor implements /*Runnable,*/ AnonService
 					return null;
 				}
 			}
-		//	if (m_activeCircuit == null || m_activeCircuit.isAllowed(addr, port) ||
-		//		m_activeCircuit.isDestroyed() || m_activeCircuit.isShutdown())
+				if (m_activeCircuit == null || !m_activeCircuit.isAllowed(addr, port) ||
+					 m_activeCircuit.isShutdown())
 			{
 				createNewActiveCircuit(addr, port);
 			}
@@ -143,88 +152,94 @@ public class Tor implements /*Runnable,*/ AnonService
 	 * creates a new random Circuit
 	 * @throws IOException
 	 */
-	private synchronized Circuit createNewActiveCircuit(String addr, int port) throws IOException
+	private Circuit createNewActiveCircuit(String addr, int port) throws IOException
 	{
-		synchronized (m_orList)
+		synchronized (m_oStartStopSync)
 		{
-			ORDescription ord;
-			Vector orsForNewCircuit = new Vector();
-			int circuitLength = m_rand.nextInt(m_circuitLengthMax - m_circuitLengthMin + 1) +
-				m_circuitLengthMin;
-			//check if know about some Onion Routers...
-			if (m_orList.size() == 0)
+			if (!m_bIsStarted)
 			{
-				updateORList();
+				throw new IOException("tor no running!");
+			}
+			m_bIsCreatingCircuit = true;
+		}
+		try
+		{
+			synchronized (m_orList)
+			{
+				ORDescription ord;
+				Vector orsForNewCircuit = new Vector();
+				int circuitLength = m_rand.nextInt(m_circuitLengthMax - m_circuitLengthMin + 1) +
+					m_circuitLengthMin;
+				//check if know about some Onion Routers...
 				if (m_orList.size() == 0)
 				{
-					return null;
+					updateORList();
+					if (m_orList.size() == 0)
+					{
+						return null;
+					}
 				}
-			}
-			//get first OR
-			if (m_allowedFirstORNames != null)
-			{
-				ord = m_orList.getByRandom(m_allowedFirstORNames);
-			}
-			else
-			{
-				ord = m_orList.getByRandom();
-			}
-			LogHolder.log(LogLevel.DEBUG, LogType.TOR, "added " + ord.getName() + " " + ord.getSoftware());
-			orsForNewCircuit.addElement(ord);
-			//get last OR
-			do
-			{
-				if (m_allowedExitNodeNames != null)
+				//get first OR
+				if (m_allowedFirstORNames != null)
 				{
-					ord = m_orList.getByRandom(m_allowedExitNodeNames);
+					ord = m_orList.getByRandom(m_allowedFirstORNames);
 				}
 				else
 				{
 					ord = m_orList.getByRandom();
 				}
-			}
-			while (orsForNewCircuit.contains(ord) || (addr != null && !ord.getAcl().isAllowed(addr, port)));
-			orsForNewCircuit.addElement(ord);
-			LogHolder.log(LogLevel.DEBUG, LogType.TOR, "added " + ord.getName() + " " + ord.getSoftware());
-			//get middle ORs
-			for (int i = 2; i < circuitLength; i++)
-			{
+				LogHolder.log(LogLevel.DEBUG, LogType.TOR, "added " + ord.getName() + " " + ord.getSoftware());
+				orsForNewCircuit.addElement(ord);
+				//get last OR
 				do
 				{
-					if (m_allowedORNames != null)
+					if (m_allowedExitNodeNames != null)
 					{
-						ord = m_orList.getByRandom(m_allowedORNames);
+						ord = m_orList.getByRandom(m_allowedExitNodeNames);
 					}
 					else
 					{
 						ord = m_orList.getByRandom();
 					}
 				}
-				while (orsForNewCircuit.contains(ord));
+				while (orsForNewCircuit.contains(ord) || (addr != null && !ord.getAcl().isAllowed(addr, port)));
+				orsForNewCircuit.addElement(ord);
 				LogHolder.log(LogLevel.DEBUG, LogType.TOR, "added " + ord.getName() + " " + ord.getSoftware());
-				orsForNewCircuit.insertElementAt(ord, 1);
-			}
-			//get Circuit ID
-			int circid;
-			do
-			{
-				circid = m_rand.nextInt(65535);
-			}
-			while (m_Circuits.containsKey(new Integer(circid)) && (circid != 0));
-			//establishes or gets an already established SSL-connection to the first OR
-			FirstOnionRouterConnection firstOR;
-			firstOR = m_firstORFactory.createFirstOnionRouterConnection( (ORDescription) orsForNewCircuit.
-				elementAt(0));
-			if (firstOR == null)
-			{
-				throw new IOException("Problem with router " + orsForNewCircuit + ". Cannot connect.");
-			}
-			Circuit circuit = new Circuit(circid, orsForNewCircuit, firstOR, this);
-			//creates the circuit
-			circuit.connect();
-			m_Circuits.put(new Integer(circid), circuit);
-			synchronized (m_oActiveCircuitSync)
-			{
+				//get middle ORs
+				for (int i = 2; i < circuitLength; i++)
+				{
+					do
+					{
+						if (m_allowedORNames != null)
+						{
+							ord = m_orList.getByRandom(m_allowedORNames);
+						}
+						else
+						{
+							ord = m_orList.getByRandom();
+						}
+					}
+					while (orsForNewCircuit.contains(ord));
+					LogHolder.log(LogLevel.DEBUG, LogType.TOR,
+								  "added " + ord.getName() + " " + ord.getSoftware());
+					orsForNewCircuit.insertElementAt(ord, 1);
+				}
+				//establishes or gets an already established SSL-connection to the first OR
+				FirstOnionRouterConnection firstOR;
+				firstOR = m_firstORFactory.createFirstOnionRouterConnection( (ORDescription) orsForNewCircuit.
+					elementAt(0));
+				if (firstOR == null)
+				{
+					throw new IOException("Problem with router " + orsForNewCircuit + ". Cannot connect.");
+				}
+
+				Circuit circuit = firstOR.createCircuit(orsForNewCircuit);
+				if (circuit == null)
+				{
+					throw new IOException("Could not create new circuit");
+				}
+				//creates the circuit
+//			m_Circuits.put(new Integer(circid), circuit);
 				if (m_activeCircuit != null)
 				{
 					//if there exists an "old" circuit --> close them --> move this to run()
@@ -236,15 +251,14 @@ public class Tor implements /*Runnable,*/ AnonService
 				{
 					m_activeCircuit = circuit;
 				}
+				return circuit;
 			}
-			return circuit;
 		}
-	}
+		finally
+		{
+			m_bIsCreatingCircuit = false;
+		}
 
-	/** Used by a circuit to notify the Tor instance that a circuit was closed*/
-	protected void notifyCircuitClosed(int circid)
-	{
-		m_Circuits.remove(new Integer(circid));
 	}
 
 	/**
@@ -297,30 +311,34 @@ public class Tor implements /*Runnable,*/ AnonService
 	 * starts the Tor-Service
 	 * @throws IOException
 	 */
-	private synchronized void start() throws IOException
+	private void start() throws IOException
 	{
-		m_Circuits = new Hashtable();
-		m_activeCircuit = null;
-		//m_createNewCircuitLoop = new Thread(this,"Tor");
-		//m_bRun = true;
-		//m_createNewCircuitLoop.start();
+		synchronized (m_oStartStopSync)
+		{
+			m_bIsStarted = true;
+			m_activeCircuit = null;
+		}
 	}
 
 	/**
 	 * stops the Tor-Service and all opended connections
 	 * @throws IOException
 	 */
-	private synchronized void stop() throws IOException, InterruptedException
+	private void stop() throws IOException, InterruptedException
 	{
-		m_firstORFactory.closeAll();
-		/*		m_bRun = false;
-		  if (m_createNewCircuitLoop != null)
-		  {
-		   m_createNewCircuitLoop.interrupt();
-		   m_createNewCircuitLoop.join();
-		   m_firstORFactory.closeAll();
-		  }
-		 */
+		synchronized (m_oStartStopSync)
+		{
+			m_bIsStarted = false;
+			if (m_bIsCreatingCircuit)
+			{
+				m_firstORFactory.closeAll();
+				while (m_bIsCreatingCircuit)
+				{
+					Thread.sleep(100);
+				}
+			}
+			m_firstORFactory.closeAll();
+		}
 	}
 
 	/**
@@ -432,7 +450,7 @@ public class Tor implements /*Runnable,*/ AnonService
 	 * a channel
 	 * @throws IOException
 	 */
-	public synchronized AnonChannel createChannel(int type) throws ConnectException
+	public AnonChannel createChannel(int type) throws ConnectException
 	{
 		try
 		{
@@ -454,15 +472,12 @@ public class Tor implements /*Runnable,*/ AnonService
 	 * a channel
 	 * @throws IOException
 	 */
-	public synchronized AnonChannel createChannel(String addr, int port) throws ConnectException
+	public AnonChannel createChannel(String addr, int port) throws ConnectException
 	{
 		try
 		{
-			synchronized (m_oActiveCircuitSync)
-			{
-				getCircuit(addr, port);
-				return m_activeCircuit.createChannel(addr, port);
-			}
+			Circuit c = getCircuit(addr, port);
+			return c.createChannel(addr, port);
 		}
 		catch (Exception e)
 		{
@@ -491,7 +506,7 @@ public class Tor implements /*Runnable,*/ AnonService
 		return ErrorCodes.E_SUCCESS;
 	}
 
-	public synchronized void shutdown()
+	public void shutdown()
 	{
 		try
 		{
