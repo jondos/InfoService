@@ -31,6 +31,7 @@ import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 import java.util.Hashtable;
 import java.util.Enumeration;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.ByteArrayOutputStream;
@@ -320,12 +321,20 @@ final class JAPUtil
 				  imageFilename = IMGPATHLOWCOLOR+strImage;
 				  try
 						{
-					// this is necessary to make shure that the images are loaded when contained in a JAP.jar
+							// this is necessary to make shure that the images are loaded when contained in a JAP.jar
 							img = new ImageIcon(JAPUtil.class.getResource(imageFilename));
 						}
 					catch (Exception e)
 						{
-							img = new ImageIcon(imageFilename);
+							try
+								{
+									//we have to chek, if the file exist, because new ImageIcon(String) will always success!!!
+									if((new File(imageFilename)).canRead())
+									  img = new ImageIcon(imageFilename);
+								}
+							catch(Exception e1)
+								{
+								}
 						}
 		  	}
 			// if loading of lowcolor images was not successful or
@@ -344,7 +353,7 @@ final class JAPUtil
 						}
 			  }
 
-			if (sync  && img == null)
+			if (sync  && img != null)
 			  {
 					int statusBits=MediaTracker.ABORTED|MediaTracker.ERRORED|MediaTracker.COMPLETE;
 					for(;;)

@@ -1057,7 +1057,7 @@ public static void ASN1Test()
 						  Thread.sleep((int)(Math.random()*1000.0));
 						  Socket s=null;
 							try{
-							s=new Socket("localhost",4002);
+							s=new Socket("localhost",4001);
 							}
 							catch(Exception e){
 							continue;}
