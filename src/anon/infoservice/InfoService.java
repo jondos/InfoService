@@ -254,8 +254,10 @@ final public class InfoService
 							{
 							}
 						// XML stuff
+						m_Log.log(LogLevel.DEBUG,LogType.NET,"Parsing XMl-Doc");
 						Document doc=DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(resp.getInputStream());
 						NodeList nodelist=doc.getElementsByTagName("MixCascade");
+						m_Log.log(LogLevel.DEBUG,LogType.NET,"Found MixCascade");
 						for(int i=0;i<nodelist.getLength();i++)
 							{
 								Element elem=(Element)nodelist.item(i);
@@ -297,6 +299,7 @@ final public class InfoService
 					}
 				catch(Exception e)
 					{
+						m_Log.log(LogLevel.DEBUG,LogType.NET,"Exception in getting AnonServers: "+e.getMessage());
 						throw e;
 					}
 				if((v==null)||(v.size()==0))
