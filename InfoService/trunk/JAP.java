@@ -46,9 +46,11 @@ public final class JAP {
 		view.show();
 		
 		// initially start services
-		model.initialRun();
-		
+		// keypool first!!
 		model.keypool=new JAPKeyPool(20,16);
 		model.keypool.run();
+
+		model.initialRun();
+		
 	}
 }
