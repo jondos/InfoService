@@ -69,6 +69,10 @@ import java.security.PublicKey;
 import java.security.PrivateKey;
 import anon.crypto.IMyPublicKey;
 import anon.crypto.IMyPrivateKey;
+import anon.util.XMLUtil;
+import jap.JAPUtil;
+import jap.JAPConstants;
+import java.security.*;
 
 /**
  * This class is the high-level part of the communication with the BI.
@@ -102,8 +106,19 @@ public class Pay
 	 */
 	private Pay()
 	{
-		// read JPI Certificate from file
-		readJpiCertificate("certificates/bi.cer");
+		// read JPI Certificate from resource file
+		byte[] barCert = JAPUtil.loadRessource(JAPConstants.CERTSPATH + JAPConstants.CERT_BI);
+		JAPCertificate cert = JAPCertificate.getInstance(barCert);
+		m_verifyingInstance = new JAPSignature();
+		try
+		{
+			m_verifyingInstance.initVerify(cert.getPublicKey());
+		}
+		catch (InvalidKeyException ex)
+		{
+			LogHolder.log(LogLevel.ERR, LogType.PAY, "Could not load BI Certificate");
+			m_verifyingInstance = null;
+		}
 
 		// read PayAccountsFile from disk
 		LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Pay(): Calling PayAccountsFile...");
@@ -128,141 +143,140 @@ public class Pay
 	 *
 	 * @author Bastian Voigt
 	 */
-	public void readJpiCertificate(String fileName)
-	{
+	/*	public void readJpiCertificate(String fileName)
+	 {
+	  // the following code was copied
+	  // from MixConfig.java ( openFile() and readCertificate() )
+	  // maybe not a too good solution...
+	  // TODO: remove this copied code
+	  byte[] cert;
+	  java.io.File file = new java.io.File(fileName);
+	  try
+	  {
+	   cert = new byte[ (int) file.length()];
+	   java.io.FileInputStream fin = new java.io.FileInputStream(file);
+	   fin.read(cert);
+	   fin.close();
+	  }
+	  catch (Exception e)
+	  {
+	   LogHolder.log(LogLevel.ALERT, LogType.PAY,
+			"Pay.readJpiCertificate(): Error reading certificate file " + fileName
+			);
+	   e.printStackTrace();
+	   return;
+	  }
 
-		// the following code was copied
-		// from MixConfig.java ( openFile() and readCertificate() )
-		// maybe not a too good solution...
-		// TODO: remove this copied code
-		byte[] cert;
-		java.io.File file = new java.io.File(fileName);
-		try
+	  java.io.ByteArrayInputStream bin = null;
+	  X509CertificateStructure x509 = null;
+
+	  try
+	  {
+	   // start readCertificate(cert[])
+
+	   if (cert[0] != (DERInputStream.SEQUENCE | DERInputStream.CONSTRUCTED))
+	   {
+		// Probably a Base64 encoded certificate
+		java.io.BufferedReader in =
+		 new java.io.BufferedReader(
+		 new java.io.InputStreamReader(new java.io.ByteArrayInputStream(cert)));
+		StringBuffer sbuf = new StringBuffer();
+		String line;
+
+		while ( (line = in.readLine()) != null)
 		{
-			cert = new byte[ (int) file.length()];
-			java.io.FileInputStream fin = new java.io.FileInputStream(file);
-			fin.read(cert);
-			fin.close();
-		}
-		catch (Exception e)
-		{
-			LogHolder.log(LogLevel.ALERT, LogType.PAY,
-						  "Pay.readJpiCertificate(): Error reading certificate file " + fileName
-						  );
-			e.printStackTrace();
-			return;
-		}
-
-		java.io.ByteArrayInputStream bin = null;
-		X509CertificateStructure x509 = null;
-
-		try
-		{
-			// start readCertificate(cert[])
-
-			if (cert[0] != (DERInputStream.SEQUENCE | DERInputStream.CONSTRUCTED))
-			{
-				// Probably a Base64 encoded certificate
-				java.io.BufferedReader in =
-					new java.io.BufferedReader(
-					new java.io.InputStreamReader(new java.io.ByteArrayInputStream(cert)));
-				StringBuffer sbuf = new StringBuffer();
-				String line;
-
-				while ( (line = in.readLine()) != null)
-				{
-					if (line.equals("-----BEGIN CERTIFICATE-----")
-						|| line.equals("-----BEGIN X509 CERTIFICATE-----"))
-					{
-						break;
-					}
-				}
-
-				while ( (line = in.readLine()) != null)
-				{
-					if (line.equals("-----END CERTIFICATE-----")
-						|| line.equals("-----END X509 CERTIFICATE-----"))
-					{
-						break;
-					}
-					sbuf.append(line);
-				}
-				bin = new java.io.ByteArrayInputStream(Base64.decode(sbuf.toString()));
-			}
-
-			if (bin == null && cert[1] == 0x80)
-			{
-				// a BER encoded certificate
-				BERInputStream in =
-					new BERInputStream(new java.io.ByteArrayInputStream(cert));
-				ASN1Sequence seq = (ASN1Sequence) in.readObject();
-				DERObjectIdentifier oid = (DERObjectIdentifier) seq.getObjectAt(0);
-				if (oid.equals(PKCSObjectIdentifiers.signedData))
-				{
-					x509 = new X509CertificateStructure(
-						(ASN1Sequence)new SignedData(
-						(ASN1Sequence) ( (DERTaggedObject) seq
-										.getObjectAt(1))
-						.getObject())
-						.getCertificates()
-						.getObjectAt(0));
-				}
-			}
-			else
-			{
-				if (bin == null)
-				{
-					bin = new java.io.ByteArrayInputStream(cert);
-					// DERInputStream
-				}
-				DERInputStream in = new DERInputStream(bin);
-				ASN1Sequence seq = (ASN1Sequence) in.readObject();
-				if (seq.size() > 1
-					&& seq.getObjectAt(1) instanceof DERObjectIdentifier
-					&& seq.getObjectAt(0).equals(PKCSObjectIdentifiers.signedData))
-				{
-					x509 = X509CertificateStructure.getInstance(
-						new SignedData(
-						ASN1Sequence.getInstance(
-						(ASN1TaggedObject) seq.getObjectAt(1),
-						true))
-						.getCertificates()
-						.getObjectAt(0));
-				}
-				else
-				{
-					x509 = X509CertificateStructure.getInstance(seq);
-				}
-			}
-		}
-		catch (Exception e)
-		{
-			e.printStackTrace();
-			x509 = null;
+		 if (line.equals("-----BEGIN CERTIFICATE-----")
+		  || line.equals("-----BEGIN X509 CERTIFICATE-----"))
+		 {
+		  break;
+		 }
 		}
 
-		if (x509 == null)
+		while ( (line = in.readLine()) != null)
 		{
-			LogHolder.log(LogLevel.ALERT, LogType.PAY,
-						  "Pay.readJpiCertificate(): Error decoding certificate!"
-						  );
-			return;
+		 if (line.equals("-----END CERTIFICATE-----")
+		  || line.equals("-----END X509 CERTIFICATE-----"))
+		 {
+		  break;
+		 }
+		 sbuf.append(line);
 		}
+		bin = new java.io.ByteArrayInputStream(Base64.decode(sbuf.toString()));
+	   }
 
-		try
+	   if (bin == null && cert[1] == 0x80)
+	   {
+		// a BER encoded certificate
+		BERInputStream in =
+		 new BERInputStream(new java.io.ByteArrayInputStream(cert));
+		ASN1Sequence seq = (ASN1Sequence) in.readObject();
+		DERObjectIdentifier oid = (DERObjectIdentifier) seq.getObjectAt(0);
+		if (oid.equals(PKCSObjectIdentifiers.signedData))
 		{
-			LogHolder.log(LogLevel.DEBUG, LogType.PAY,
-						  "Pay.readJpiCertificate(): reading JPI Certificate from file '" + fileName + "'."
-						  );
-			JAPCertificate japCert = JAPCertificate.getInstance(x509);
-			m_verifyingInstance = new JAPSignature();
-			m_verifyingInstance.initVerify(japCert.getPublicKey());
+		 x509 = new X509CertificateStructure(
+		  (ASN1Sequence)new SignedData(
+		  (ASN1Sequence) ( (DERTaggedObject) seq
+			  .getObjectAt(1))
+		  .getObject())
+		  .getCertificates()
+		  .getObjectAt(0));
 		}
-		catch (Exception e)
+	   }
+	   else
+	   {
+		if (bin == null)
 		{
-			e.printStackTrace();
+		 bin = new java.io.ByteArrayInputStream(cert);
+		 // DERInputStream
 		}
-	}
+		DERInputStream in = new DERInputStream(bin);
+		ASN1Sequence seq = (ASN1Sequence) in.readObject();
+		if (seq.size() > 1
+		 && seq.getObjectAt(1) instanceof DERObjectIdentifier
+		 && seq.getObjectAt(0).equals(PKCSObjectIdentifiers.signedData))
+		{
+		 x509 = X509CertificateStructure.getInstance(
+		  new SignedData(
+		  ASN1Sequence.getInstance(
+		  (ASN1TaggedObject) seq.getObjectAt(1),
+		  true))
+		  .getCertificates()
+		  .getObjectAt(0));
+		}
+		else
+		{
+		 x509 = X509CertificateStructure.getInstance(seq);
+		}
+	   }
+	  }
+	  catch (Exception e)
+	  {
+	   e.printStackTrace();
+	   x509 = null;
+	  }
+
+	  if (x509 == null)
+	  {
+	   LogHolder.log(LogLevel.ALERT, LogType.PAY,
+			"Pay.readJpiCertificate(): Error decoding certificate!"
+			);
+	   return;
+	  }
+
+	  try
+	  {
+	   LogHolder.log(LogLevel.DEBUG, LogType.PAY,
+			"Pay.readJpiCertificate(): reading JPI Certificate from file '" + fileName + "'."
+			);
+	   JAPCertificate japCert = JAPCertificate.getInstance(x509);
+	   m_verifyingInstance = new JAPSignature();
+	   m_verifyingInstance.initVerify(japCert.getPublicKey());
+	  }
+	  catch (Exception e)
+	  {
+	   e.printStackTrace();
+	  }
+	 }*/
 
 	/**
 	 * Request a transfer certificate from the BI
@@ -352,7 +366,7 @@ public class Pay
 		IMyPublicKey pubKey = null;
 		IMyPrivateKey privKey = null;
 
-	// generate key pair
+		// generate key pair
 		// TODO: show confirmation dialog before generateing key
 		if (useDSA)
 		{
@@ -379,25 +393,20 @@ public class Pay
 
 		JAPSignature signingInstance = new JAPSignature();
 		signingInstance.initSign(privKey);
-
-//		XMLJapPublicKey pubKey = new XMLJapPublicKey(rsapubkey);
-
-		LogHolder.log(LogLevel.DEBUG, LogType.PAY,
-					  "Pay.createAccount() Key successfully generated"
-					  );
+		XMLJapPublicKey xmlKey = new XMLJapPublicKey(pubKey);
 
 		// send it to the JPI TODO: switch SSL on
 		BIConnection biConn = new BIConnection(JAPModel.getBIHost(),
-			JAPModel.getBIPort(),
-			false
-			/* ssl off! */
-			);
+											   JAPModel.getBIPort(),
+											   false
+											   /* ssl off! */
+											   );
 		biConn.connect();
-		XMLAccountCertificate xmlCert = biConn.register(pubKey, signingInstance);
+		XMLAccountCertificate cert = biConn.register(xmlKey, signingInstance);
 		biConn.disconnect();
 
 		// add the new account to the accountsFile
-		PayAccount newAccount = new PayAccount( xmlCert, privKey, signingInstance);
+		PayAccount newAccount = new PayAccount(cert, privKey, signingInstance);
 		m_AccountsFile.addAccount(newAccount);
 	}
 }

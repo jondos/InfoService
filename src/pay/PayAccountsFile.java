@@ -212,7 +212,7 @@ public class PayAccountsFile
 		{
 			AbstractJAPMainView mainView = JAPController.getView();
 			String strPassword = "";
-			String strMessage = "Bitte Passwort f&uuml; die Entschl&uuml;sselung eingeben";
+			String strMessage = "<html>Bitte geben Sie das Passwort f&uuml;r die<br>Entschl&uuml;sselung der Kontendatei ein:</html>";
 			Element elemCrypt = (Element) XMLUtil.getFirstChildByName(elemRoot, "EncryptedData");
 
 			while (true)
@@ -220,7 +220,7 @@ public class PayAccountsFile
 				// ask for password
 				strPassword = JOptionPane.showInputDialog(
 					mainView, strMessage,
-					"Passwort eingeben",
+					"JAP Bezahlsystem",
 					JOptionPane.QUESTION_MESSAGE | JOptionPane.OK_CANCEL_OPTION
 					);
 

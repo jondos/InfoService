@@ -79,6 +79,24 @@ public class XMLUtil
 		return i;
 	}
 
+	public static long parseNodeLong(Node n, long defaultValue)
+	{
+		long i = defaultValue;
+		String s = parseNodeString(n, null);
+		if (s != null)
+		{
+			try
+			{
+				i = Long.parseLong(s);
+			}
+			catch (Exception e)
+			{
+			}
+		}
+		return i;
+	}
+
+
 	public static boolean parseElementAttrBoolean(Element e, String attr, boolean defaultValue)
 	{
 		boolean b = defaultValue;

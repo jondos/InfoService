@@ -40,6 +40,8 @@ import org.w3c.dom.Document;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.*;
 import org.w3c.dom.*;
+import java.io.ByteArrayInputStream;
+import anon.util.IXMLEncodeable;
 
 /**
  * This class contains the functionality for creating and parsing XML account
@@ -75,7 +77,7 @@ import org.w3c.dom.*;
  * </li>
  * </ul>
  */
-public class XMLAccountCertificate //extends XMLDocument
+public class XMLAccountCertificate implements IXMLEncodeable
 {
 
 	//~ Instance fields ********************************************************
@@ -84,6 +86,9 @@ public class XMLAccountCertificate //extends XMLDocument
 	private java.sql.Timestamp m_creationTime;
 	private long m_accountNumber;
 	private String m_biID;
+
+	// todo find a better representation of the signature..
+	private Document m_signature;
 
 	//~ Constructors ***********************************************************
 
@@ -104,6 +109,7 @@ public class XMLAccountCertificate //extends XMLDocument
 		m_accountNumber = accountNumber;
 		m_creationTime = creationTime;
 		m_biID = biID;
+		m_signature = null;
 	}
 
 	/*		m_theDocument = getDocumentBuilder().newDocument();
@@ -132,8 +138,9 @@ public class XMLAccountCertificate //extends XMLDocument
 	 */
 	public XMLAccountCertificate(String xml) throws Exception
 	{
-		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(xml);
-		setValues( (Node) doc.getDocumentElement());
+		ByteArrayInputStream in = new ByteArrayInputStream(xml.getBytes());
+		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(in);
+		setValues( doc.getDocumentElement());
 	}
 
 	/**
@@ -141,20 +148,44 @@ public class XMLAccountCertificate //extends XMLDocument
 	 *
 	 * @param xml the node that represents the AccountCertifcate
 	 */
-	public XMLAccountCertificate(Node xml) throws Exception
+	public XMLAccountCertificate(Element xml) throws Exception
 	{
 		setValues(xml);
 	}
 
-	private void setValues(Node xml) throws Exception
+	/**
+	 * Parses the XML representation and sets the internal values
+	 *
+	 * @param xml Node
+	 * @throws Exception
+	 */
+	private void setValues(Element xml) throws Exception
 	{
+		if (!xml.getTagName().equals("AccountCertificate"))
+		{
+			throw new Exception("XMLAccountCertificate: cannot parse, wrong xml format!");
+		}
+		if (!xml.getAttribute("version").equals("1.0"))
+		{
+			throw new Exception("XMLAccountCertificate: cannot parse, cert version is " +
+								xml.getAttribute("version") + " but 1.0 was expected.");
+		}
+
 		// parse accountnumber
 		Element elem = (Element) XMLUtil.getFirstChildByName(xml, "AccountNumber");
-		m_accountNumber = XMLUtil.parseNodeInt(elem, 0);
+		m_accountNumber = XMLUtil.parseNodeLong(elem, 0l);
+		if (m_accountNumber == 0)
+		{
+			throw new Exception("XMLAccountCertificate: cannot parse accountnumber");
+		}
 
 		// parse biID
 		elem = (Element) XMLUtil.getFirstChildByName(xml, "BiID");
-		m_biID = XMLUtil.parseNodeString(elem, "UNKNOWN");
+		m_biID = XMLUtil.parseNodeString(elem, "");
+		if (m_biID.equals(""))
+		{
+			throw new Exception("XMLAccountCertificate: cannot parse BiID");
+		}
 
 		// parse creation time
 		elem = (Element) XMLUtil.getFirstChildByName(xml, "CreationTime");
@@ -163,13 +194,30 @@ public class XMLAccountCertificate //extends XMLDocument
 
 		// parse publickey
 		elem = (Element) XMLUtil.getFirstChildByName(xml, "JapPublicKey");
+		if (elem == null)
+		{
+			throw new Exception("XMLAccountCertificate: cannot parse public key");
+		}
+		m_publicKey = new XMLJapPublicKey(elem).getPublicKey();
+
+		// try to parse signature --- well not really parse it but simply store
+		// it as xml document
+		// todo find a better internal representation for the sig
+		elem = (Element) XMLUtil.getFirstChildByName(xml, "Signature");
 		if (elem != null)
 		{
-			m_publicKey = new XMLJapPublicKey(elem).getPublicKey();
+			m_signature = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+			Element elemSig = (Element) XMLUtil.importNode(m_signature, elem, true);
+			m_signature.appendChild(elemSig);
 		}
 	}
 
-	public Document getXmlDocument()
+	/**
+	 * Returns an XML represenation
+	 *
+	 * @return Document
+	 */
+	public Document getXmlEncoded()
 	{
 		Document doc = null;
 		try
@@ -182,6 +230,7 @@ public class XMLAccountCertificate //extends XMLDocument
 		}
 		Element elemRoot = doc.createElement("AccountCertificate");
 		elemRoot.setAttribute("version", "1.0");
+		doc.appendChild(elemRoot);
 
 		Element elem = doc.createElement("AccountNumber");
 		XMLUtil.setNodeValue(elem, Long.toString(m_accountNumber));
@@ -207,18 +256,23 @@ public class XMLAccountCertificate //extends XMLDocument
 		{
 			return null;
 		}
+		if(m_signature!=null)
+		{
+			try
+			{
+				elemRoot.appendChild(XMLUtil.importNode(doc, m_signature.getDocumentElement(), true));
+			}
+			catch (Exception ex2)
+			{
+				return null;
+			}
+		}
 		return doc;
 	}
 
-/** @todo one of these two can be removed :-) */
-	public String getXmlString()
+	public boolean isSigned()
 	{
-		return XMLUtil.XMLDocumentToString(getXmlDocument());
-	}
-
-	public String getXMLString()
-	{
-		return XMLUtil.XMLDocumentToString(getXmlDocument());
+		return (m_signature != null);
 	}
 
 	//~ Methods ****************************************************************
@@ -257,4 +311,5 @@ public class XMLAccountCertificate //extends XMLDocument
 	{
 		m_publicKey = publicKey;
 	}
+
 }
