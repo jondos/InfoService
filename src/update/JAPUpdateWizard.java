@@ -264,14 +264,14 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
 				String strFileNameJapJarBackup=m_strAktJapJarPath+m_strAktJapJarFileName+
 																			JAPConstants.aktVersion+EXTENSION_BACKUP+m_strAktJapJarExtension;
 				downloadPage.m_labelStep1_1.setText(JAPMessages.getString("updateM_labelStep1Part1"));
-				downloadPage.tfSaveFrom.setText(m_fileAktJapJar.getAbsolutePath());
+				downloadPage.m_labelSaveFrom.setText(m_fileAktJapJar.getAbsolutePath());
 				downloadPage.m_labelStep1_2.setText(JAPMessages.getString("updateM_labelStep1Part2"));
-				downloadPage.tfSaveTo.setText(strFileNameJapJarBackup);
+				downloadPage.m_labelSaveTo.setText(strFileNameJapJarBackup);
 				downloadPage.m_labelStep3.setText(JAPMessages.getString("updateM_labelStep3Part1")+" "+
 																					m_strAktJapJarFileName+version+EXTENSION_NEW+
 																					m_strAktJapJarExtension+
 																					JAPMessages.getString("updateM_labelStep3Part2"));
-				finishPage.tf_BackupOfJapJar.setText(strFileNameJapJarBackup);
+				finishPage.m_labelBackupOfJapJar.setText(strFileNameJapJarBackup);
 
 			}
 
@@ -434,15 +434,16 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
 					{
 						return m_retDownload;
 					}
+
 				public int progress(byte[] data,int lenData,int lenTotal,int state)
 					{
 						if(updateAborted)
 							{
+								m_retDownload=-1;
 								synchronized(this)
 									{
 										this.notify();
 									}
-								m_retDownload=-1;
 								return -1;
 							}
 						if(state == DownloadListener.STATE_IN_PROGRESS)
@@ -463,24 +464,21 @@ public final class JAPUpdateWizard extends gui.wizard.BasicWizard implements Run
 							}
 						else if(state == DownloadListener.STATE_ABORTED)
 							{
-								//tell the user that the download aborted
-								downloadPage.showInformationDialog(JAPMessages.getString("updateInformationMsgStep2"));
-								//m_labelIconStep2.setIcon(blank);
-								synchronized(this)
+								m_retDownload=-1;
+                synchronized(this)
 									{
 										this.notify();
 									}
 								//wizardCompleted();
-								m_retDownload=-1;
-								return -1;
+							return -1;
 							}
 						else if(state == DownloadListener.STATE_FINISHED)
 							{
+								m_retDownload=0;
 								synchronized(this)
 									{
 										this.notify();
 									}
-								m_retDownload=0;
 								return 0;
 							}
 						return 0;

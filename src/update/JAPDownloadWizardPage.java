@@ -68,7 +68,7 @@ public class JAPDownloadWizardPage extends BasicWizardPage
 		protected JLabel m_labelStatus, m_labelInformation;
 		// Labels indicating the Steps of the current Update
 		protected JLabel m_labelStep1_1, m_labelStep1_2;
-		protected JTextField tfSaveFrom, tfSaveTo;
+		protected JLabel m_labelSaveFrom, m_labelSaveTo;
 
 		protected JLabel m_labelStep2, m_labelStep3, m_labelStep4, m_labelStep5;
 		//labels as placeholders for the icon indicating which step is the current job
@@ -137,9 +137,7 @@ public class JAPDownloadWizardPage extends BasicWizardPage
 				gridBagDownload.setConstraints(m_labelStep1_1, constraintsDownload);
 				m_panelComponents.add(m_labelStep1_1, constraintsDownload);
 
-				tfSaveFrom = new JTextField("");
-				tfSaveFrom.setEditable(false);
-				tfSaveFrom.setBorder(new EmptyBorder(new Insets(3,0,0,0)));
+				m_labelSaveFrom = new JLabel("");
 
 				constraintsDownload.gridx = 2;
 				constraintsDownload.gridy = 2;
@@ -147,8 +145,8 @@ public class JAPDownloadWizardPage extends BasicWizardPage
 				constraintsDownload.gridheight =1;
 				constraintsDownload.anchor = GridBagConstraints.WEST;
 				constraintsDownload.fill = GridBagConstraints.HORIZONTAL;
-				gridBagDownload.setConstraints(tfSaveFrom, constraintsDownload);
-				m_panelComponents.add(tfSaveFrom, constraintsDownload);
+				gridBagDownload.setConstraints(m_labelSaveFrom, constraintsDownload);
+				m_panelComponents.add(m_labelSaveFrom);
 
 				///////////////////////////////////////////////////////////////////////
 				m_labelStep1_2 = new JLabel();
@@ -163,9 +161,7 @@ public class JAPDownloadWizardPage extends BasicWizardPage
 				gridBagDownload.setConstraints(m_labelStep1_2, constraintsDownload);
 				m_panelComponents.add(m_labelStep1_2, constraintsDownload);
 
-				 tfSaveTo = new JTextField("");
-				tfSaveTo.setEditable(false);
-				tfSaveTo.setBorder(new EmptyBorder(new Insets(3,0,0,0)));
+				m_labelSaveTo = new JLabel("");
 
 				constraintsDownload.gridx = 2;
 				constraintsDownload.gridy = 3;
@@ -173,8 +169,8 @@ public class JAPDownloadWizardPage extends BasicWizardPage
 				constraintsDownload.gridheight =1;
 				constraintsDownload.anchor = GridBagConstraints.WEST;
 				constraintsDownload.fill = GridBagConstraints.HORIZONTAL;
-				gridBagDownload.setConstraints(tfSaveTo, constraintsDownload);
-				m_panelComponents.add(tfSaveTo, constraintsDownload);
+				gridBagDownload.setConstraints(m_labelSaveTo, constraintsDownload);
+				m_panelComponents.add(m_labelSaveTo);
 
 				m_labelIconStep2 = new JLabel();
 				m_labelIconStep2.setIcon(blank);

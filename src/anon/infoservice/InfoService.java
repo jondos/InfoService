@@ -431,14 +431,18 @@ final public class InfoService
 										listener.progress(null,0,0,DownloadListener.STATE_ABORTED);
 										return;
 									}
-								int lenTotal=resp.getHeaderAsInt("Content-Length");
-								InputStream in=resp.getInputStream();
+                int lenTotal=resp.getHeaderAsInt("Content-Length");
+
+              	InputStream in=resp.getInputStream();
 								byte[] buff=new byte[2048];
 								int len=0;
 								while((len=in.read(buff))>0)
 									{
 										if(listener.progress(buff,len,lenTotal,DownloadListener.STATE_IN_PROGRESS)!=0)
-											return;
+											{
+                        in.close();
+                        return;
+                      }
 									}
 							 listener.progress(null,0,lenTotal,DownloadListener.STATE_FINISHED);
 							}
