@@ -1,22 +1,12 @@
-/*
- * Created on Apr 21, 2004
- *
- * To change the template for this generated file go to
- * Window&gt;Preferences&gt;Java&gt;Code Generation&gt;Code and Comments
- */
 package anon.tor.test;
 
-import anon.AnonChannel;
 import anon.tor.Tor;
 import anon.tor.TorAnonServerDescription;
 import logging.*;
-import java.net.InetAddress;
+import java.util.Vector;
 
 /**
  * @author stefan
- *
- * To change the template for this generated type comment go to
- * Window&gt;Preferences&gt;Java&gt;Code Generation&gt;Code and Comments
  */
 public class DNSTest
 {
@@ -25,8 +15,12 @@ public class DNSTest
 	{
 		LogHolder.setLogInstance(new SystemErrLog());
 		Tor tor = Tor.getInstance();
+		Vector v = new Vector();
+		v.addElement("peacetime");
+		tor.setExitNodes(v);
 		tor.initialize(new TorAnonServerDescription());
 		tor.testDNS();
+		tor.shutdown();
 	}
 
 }

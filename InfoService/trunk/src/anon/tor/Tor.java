@@ -32,26 +32,26 @@ package anon.tor;
 
 import java.io.IOException;
 import java.net.ConnectException;
-//import java.net.InetAddress;
 import java.security.SecureRandom;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.Vector;
 import anon.AnonChannel;
 import anon.AnonServerDescription;
 import anon.AnonService;
 import anon.AnonServiceEventListener;
 import anon.ErrorCodes;
+import anon.crypto.MyRandom;
+import anon.infoservice.Database;
 import anon.tor.ordescription.InfoServiceORListFetcher;
 import anon.tor.ordescription.ORDescription;
 import anon.tor.ordescription.ORList;
 import anon.tor.ordescription.PlainORListFetcher;
+import anon.tor.util.DNSCacheEntry;
 import anon.tor.util.helper;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import java.util.*;
-import java.io.OutputStream;
-import anon.crypto.*;
 
 /**
  * @author stefan
@@ -65,6 +65,9 @@ public class Tor implements /*Runnable,*/ AnonService
 
 	//minimal onion routers, that are used
 	public final static int MIN_ROUTE_LEN = 2;
+
+	//the time when an entry in the DNS-Cache is no more actuell
+	public final static int DNS_TIME_OUT = 600000;
 
 	private static Tor ms_theTorInstance = null;
 
@@ -92,10 +95,13 @@ public class Tor implements /*Runnable,*/ AnonService
 
 	private FirstOnionRouterConnectionFactory m_firstORFactory;
 
+	private Database m_DNSCache;
+
 	//private long m_createNewCircuitIntervall;
 	//private Thread m_createNewCircuitLoop;
 	private volatile boolean m_bIsStarted;
 	private boolean m_bIsCreatingCircuit;
+	private boolean m_useDNSCache;
 
 	private int m_circuitLengthMin;
 	private int m_circuitLengthMax;
@@ -134,6 +140,8 @@ public class Tor implements /*Runnable,*/ AnonService
 		m_bIsCreatingCircuit = false;
 		m_MaxNrOfActiveCircuits = 10;
 		m_activeCircuits = new Circuit[m_MaxNrOfActiveCircuits];
+		m_useDNSCache = true;
+		m_DNSCache = Database.getInstance(DNSCacheEntry.class);
 	}
 
 	/**
@@ -158,24 +166,24 @@ public class Tor implements /*Runnable,*/ AnonService
 		{
 			if (!helper.isIPAddress(addr))
 			{
-				for (int i = 0; i < 3; i++)
-				{
-					int circ = m_rand.nextInt(m_MaxNrOfActiveCircuits);
-					if (m_activeCircuits[circ] == null || m_activeCircuits[circ].isShutdown())
-					{
-						m_activeCircuits[circ] = createNewCircuit(null, -1);
-					}
-					if (m_activeCircuits[circ] != null && !m_activeCircuits[circ].isShutdown())
-					{
-						String s = m_activeCircuits[circ].resolveDNS(addr);
-						if (s != null)
-						{
-							addr = s;
-							break;
-						}
-					}
-				}
-
+//				for (int i = 0; i < 3; i++)
+//				{
+//					int circ = m_rand.nextInt(m_MaxNrOfActiveCircuits);
+//					if (m_activeCircuits[circ] == null || m_activeCircuits[circ].isShutdown())
+//					{
+//						m_activeCircuits[circ] = createNewCircuit(null, -1);
+//					}
+//					if (m_activeCircuits[circ] != null && !m_activeCircuits[circ].isShutdown())
+//					{
+//						String s = m_activeCircuits[circ].resolveDNS(addr);
+//						if (s != null)
+//						{
+//							addr = s;
+//							break;
+//						}
+//					}
+//				}
+				addr = resolveDNS(addr);
 				if (!helper.isIPAddress(addr))
 				{
 					return null;
@@ -280,13 +288,13 @@ public class Tor implements /*Runnable,*/ AnonService
 				orsForNewCircuit.addElement(ord);
 				//get last OR
 				Vector possibleOrs = m_orList.getList();
-				Enumeration enumer = possibleOrs.elements();
+				Enumeration enumer = ( (Vector) possibleOrs.clone()).elements();
 				//remove alle ORs which can not connect to our destination
 				boolean bHas0_8 = false;
 				while (enumer.hasMoreElements())
 				{
 					ord = (ORDescription) enumer.nextElement();
-					if(m_allowedExitNodeNames!=null&&!m_allowedExitNodeNames.contains(ord.getName()))
+					if (m_allowedExitNodeNames != null && !m_allowedExitNodeNames.contains(ord.getName()))
 					{
 						possibleOrs.removeElement(ord);
 					}
@@ -302,7 +310,7 @@ public class Tor implements /*Runnable,*/ AnonService
 				//if we found one which is >0.0.7 prefer them
 				if (bHas0_8)
 				{
-					enumer = possibleOrs.elements();
+					enumer = ( (Vector) possibleOrs.clone()).elements();
 					while (enumer.hasMoreElements())
 					{
 						ord = (ORDescription) enumer.nextElement();
@@ -312,10 +320,12 @@ public class Tor implements /*Runnable,*/ AnonService
 						}
 					}
 				}
-				if(possibleOrs.size()<=0)
+				if (possibleOrs.size() <= 0)
+				{
 					return null;
+				}
 				//select one randomly...
-				ord=(ORDescription)possibleOrs.elementAt(m_rand.nextInt(possibleOrs.size()));
+				ord = (ORDescription) possibleOrs.elementAt(m_rand.nextInt(possibleOrs.size()));
 				orsForNewCircuit.addElement(ord);
 				LogHolder.log(LogLevel.DEBUG, LogType.TOR,
 							  "added as last: " + ord.getName() + " " + ord.getSoftware());
@@ -531,6 +541,11 @@ public class Tor implements /*Runnable,*/ AnonService
 		}
 	}
 
+	public void setUseDNSCache(boolean usecache)
+	{
+		m_useDNSCache = usecache;
+	}
+
 	/**
 	 * returns a list of all onionrouters
 	 * @return
@@ -635,19 +650,66 @@ public class Tor implements /*Runnable,*/ AnonService
 	{
 	}
 
-
+	public synchronized String resolveDNS(String name)
+	{
+		DNSCacheEntry entry;
+		String resolvedIP = null;
+		//searching in Cache
+		if (m_useDNSCache)
+		{
+			entry = (DNSCacheEntry) m_DNSCache.getEntryById(name);
+			if (entry != null)
+			{
+				LogHolder.log(LogLevel.DEBUG, LogType.TOR,
+							  "Resolve from Database : " + entry.getId() + " - " + entry.getIp());
+				return entry.getIp();
+			}
+		}
+		//no entry found in Cache
+		synchronized (m_oActiveCircuitSync)
+		{
+			for (int i = 0; i < 3; i++)
+			{
+				int circ = m_rand.nextInt(m_MaxNrOfActiveCircuits);
+				if (m_activeCircuits[circ] == null || m_activeCircuits[circ].isShutdown())
+				{
+					m_activeCircuits[circ] = createNewCircuit(null, -1);
+				}
+				if (m_activeCircuits[circ] != null && !m_activeCircuits[circ].isShutdown())
+				{
+					String s = m_activeCircuits[circ].resolveDNS(name);
+					if (s != null)
+					{
+						resolvedIP = s;
+						break;
+					}
+				}
+			}
+		}
+		if (resolvedIP != null)
+		{
+			entry = new DNSCacheEntry(name, resolvedIP, System.currentTimeMillis() + DNS_TIME_OUT);
+			m_DNSCache.update(entry);
+			LogHolder.log(LogLevel.DEBUG, LogType.TOR,
+						  "Adding to Database : " + entry.getId() + " - " + entry.getIp());
+		}
+		return resolvedIP;
+	}
 
 	public void testDNS() throws Exception
 	{
-		Circuit circ=this.createNewCircuit(null,-1);
-		LogHolder.log(LogLevel.DEBUG,LogType.TOR,"DNS Resolve for www.mircosoft.com returned: "+circ.resolveDNS("www.microsoft.com"));
-		LogHolder.log(LogLevel.DEBUG,LogType.TOR,"DNS Resolve for www.mircosoft.de returned: "+circ.resolveDNS("www.microsoft.de"));
+		LogHolder.log(LogLevel.DEBUG, LogType.TOR,
+					  "DNS Resolve for www.mircosoft.de returned: " + resolveDNS("www.microsoft.de"));
+		LogHolder.log(LogLevel.DEBUG, LogType.TOR,
+					  "DNS Resolve for www.xyzabcdefg.hi returned: " + resolveDNS("www.xyzabcdefg.hi"));
 		//TorChannel c=circ.createChannel("anon.inf.tu-dresden.de",80);
 		//OutputStream out=c.getOutputStream();
 		//out.write("GET /index.html HTTP/1.0\n\n".getBytes());
 		//out.flush();
-		LogHolder.log(LogLevel.DEBUG,LogType.TOR,"DNS Resolve for www.mircosoft.com returned: "+circ.resolveDNS("www.bild.de"));
-		LogHolder.log(LogLevel.DEBUG,LogType.TOR,"DNS Resolve for www.mircosoft.de returned: "+circ.resolveDNS("www.microsoft.de"));
+		LogHolder.log(LogLevel.DEBUG, LogType.TOR,
+					  "DNS Resolve for www.bild.de returned: " + resolveDNS("www.bild.de"));
+		LogHolder.log(LogLevel.DEBUG, LogType.TOR,
+					  "DNS Resolve for www.mircosoft.de returned: " + resolveDNS("www.microsoft.de"));
 	}
 
 }
