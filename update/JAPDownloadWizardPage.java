@@ -14,6 +14,7 @@ import javax.swing.Icon;
 import javax.*;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
+import javax.swing.JOptionPane;
 
 import JAPUtil;
 import JAPConstants;
@@ -22,7 +23,13 @@ import anon.infoservice.*;
 import update.JAPUpdateWizard;
 
 import java.io.File;
+import java.io.OutputStream;
+import java.io.*;
 import java.lang.Thread;
+
+import java.net.URL;
+
+import java.math.BigInteger;
 
 public class JAPDownloadWizardPage extends BasicWizardPage implements Runnable
   {
@@ -41,8 +48,11 @@ public class JAPDownloadWizardPage extends BasicWizardPage implements Runnable
 
     boolean rename = false;
     boolean renameSuccess = false;
-
+    //which version chose the user
     private String version;
+    //which type dev or rel?
+    private int type;
+
     private File jnlpFile;
 
     private Thread observeUpdateThread;
@@ -54,9 +64,17 @@ public class JAPDownloadWizardPage extends BasicWizardPage implements Runnable
 
     private JAPUpdateWizard updateWizard;
 
-    public JAPDownloadWizardPage(String version, JAPUpdateWizard updateWizard)
+    private int countPackages = 0;
+    private int value =0;
+    private byte[] buff;
+    private OutputStream os_jarFile;
+
+    public JAPDownloadWizardPage(){}
+
+    public JAPDownloadWizardPage(String version, int type, JAPUpdateWizard updateWizard)
       {
         this.version = version;
+        this.type = type;
         this.updateWizard = updateWizard;
         setIcon(JAPUtil.loadImageIcon(JAPConstants.DOWNLOADFN,false));
         setPageTitle("Download");
@@ -155,7 +173,7 @@ public class JAPDownloadWizardPage extends BasicWizardPage implements Runnable
            gridBagLayout.setConstraints(m_labelStatus, constraintsPanelProgress);
            m_panelProgressBar.add(m_labelStatus, constraintsPanelProgress);
 
-           progressBar = new JProgressBar(0,10000);
+           progressBar = new JProgressBar(0,500);
            progressBar.setValue(0);
            progressBar.setStringPainted(true);
            progressBar.setPreferredSize(new Dimension(200,20));
@@ -174,7 +192,10 @@ public class JAPDownloadWizardPage extends BasicWizardPage implements Runnable
        m_panelComponents.add(m_panelProgressBar, constraintsDownload);
 
         this.setVisible(true);
+
       }
+
+
 
       //start the Thread's run method
       public void start()
@@ -210,20 +231,39 @@ public class JAPDownloadWizardPage extends BasicWizardPage implements Runnable
         m_labelStep1.setText("<html><b>1. Sichern von "+pathToJapJar+" nach <BR>"+pre+JAPConstants.aktVersion2+suf+"</b></html>");
 
         renameJapJar(pre, suf);
+       // downloadUpdate();
       }
 
-     private void renameJapJar(String prefix, String suffix)
-     {
+     public void renameJapJar(String prefix, String suffix)
+     {  m_labelIconStep1.setIcon(arrow);
         File newfile = new File(prefix+JAPConstants.aktVersion2+suffix);
         File oldfile = new File(pathToJapJar);
-          if( !oldfile.renameTo(newfile)||(newfile == null) )
+        byte[]buffer = new byte[2048];
+        //just copy the File and then rename the copy
+          try
+          {
+             FileInputStream fis = new FileInputStream(oldfile);
+             FileOutputStream fos = new FileOutputStream(newfile);
+             while (fis.read(buffer)!=-1)
+                {
+                    fos.write(buffer);
+                }
+             fis.close();
+             fos.flush();
+             fos.close();
+          }catch(Exception e)
+          {
+          e.printStackTrace();
+          }
+        /*  if( !oldfile.renameTo(newfile)||(newfile == null) )
              {
                System.out.println("Renaming failed!");
                rename = true;
                renameSuccess = false;
              }
         rename = true;
-        renameSuccess = true;
+        renameSuccess = true;*/
+        m_labelIconStep1.setIcon(blank);
      }
     //observe the steps and set the Icon
      public void run()
@@ -245,15 +285,85 @@ public class JAPDownloadWizardPage extends BasicWizardPage implements Runnable
        progressBar.setValue(250);
      }//run
 
+    public synchronized void downloadUpdate()
+      {
+        InfoService infoService;
+        URL jarUrl;
+    //    if(japController.getInfoService()!=null)
+      //          {
+        //              infoService = japController.getInfoService();
+          //      }else
+           //     {
+
+                      infoService = new InfoService("infoservice.inf.tu-dresden.de",6543);
+                      JAPVersionInfo japVersionInfo = infoService.getJAPVersionInfo(type);
+                      jarUrl = japVersionInfo.getJarUrl();
+                      //os_jarFile = new OutputStream();
+                     // m_labelIconStep2.setIcon(arrow);
+             //   }
+            try
+            {
+                infoService.retrieveURL(new URL("http","fg",3,"aktJap"),// jarUrl,
+                new DownloadListener()
+                {
+                    public int progress(byte[] data,int lenData,int lenTotal,int state)
+                        {
+
+                            if(state == 1)
+                              {
+                                 //write data into the RAM
+
+                                 countPackages += lenData;
+                                // the Download has the Zone from 5 to 455 in the ProgressBar
+                                 value = (450 * countPackages)/lenTotal;
+                                 progressBar.setValue(value);
+                                 progressBar.repaint();
+                              }else if(state == 2)
+                              {
+                                  //tell the user that the download aborted
+                                  showInformationDialog("Fehler beim Download des Updates.");
+                                  //m_labelIconStep2.setIcon(blank);
+                                  return 0;
+                              }else if(state == 3)
+                              {
+                                 // m_labelIconStep2.setIcon(blank);
+                                  return 0;
+                              }
+                            //System.out.println(value+" value"+countPackages+" Countpak" +lenTotal+ " Total");
+                            return 0;
+                        }
+                });
+
+            }
+            catch(Exception e)
+            {
+                e.printStackTrace();
+            }
+
+            //m_labelIconStep2.setIcon(blank);
+            //System.out.println("Hallo");
+      }
+
+     public void showInformationDialog(String message)
+        {
+            JOptionPane.showMessageDialog((Component)this, message);
+        }
+
+     public void createNewJAPJar()
+     {
+        //get the buffer where the data is stored
+        //create a new File "Jap_"+newversion+".jar"
+
+     }
 
 
 
      public static void main( String[] args )
      {
        JFrame parent = new JFrame("parent");
-       //JAPDownloadWizardPage jdw = new JAPDownloadWizardPage();
-      // parent.getContentPane().add(jdw);
-       parent.pack();
+       //JAPDownloadWizardPage jdw = new JAPDownloadWizardPage("version",new JAPUpdateWizard("version"));
+       //parent.getContentPane().add(jdw);
+       //parent.pack();
        parent.setVisible(true);
 
      }

@@ -262,11 +262,11 @@ public class JAPUpdate implements ActionListener,ItemListener,Runnable
             // User' wants to Update --> give the version Info and the jnlp-file
                  if(user_chose_released)
                     {
-                      new JAPUpdateWizard(m_labelVersion.getText());
+                      new JAPUpdateWizard(m_labelVersion.getText(), InfoService.JAP_RELEASE_VERSION);
                     }
                  else if (!(user_chose_released))
                     {
-                      new JAPUpdateWizard(m_labelVersion.getText());
+                      new JAPUpdateWizard(m_labelVersion.getText(), InfoService.JAP_DEVELOPMENT_VERSION);
                     }
           }
       }

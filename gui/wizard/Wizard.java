@@ -29,6 +29,7 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 package gui.wizard;
 
 import java.awt.Dialog;
+import java.util.Vector;
 
 public interface Wizard
 {
@@ -55,4 +56,7 @@ public interface Wizard
 
   //Title of Wizard
   public String getWizardTitle();
+
+  //determine the concrete action depending on the individual Pages
+  public Vector getPageVector();
 }
