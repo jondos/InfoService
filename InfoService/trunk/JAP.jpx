@@ -253,6 +253,19 @@
   <node name="proxy" type="Package"/>
   <node name="test" type="Package"/>
   <node name="update" type="Package"/>
+  <node name="anonlib.jar" type="Archive">
+    <property category="archiving" name="buildWithProject" value="0"/>
+    <property category="archiving" name="contentRules.1" value="I:anon/*.*"/>
+    <property category="archiving" name="contentRules.2" value="I:logging/*.*"/>
+    <property category="archiving" name="contentRules.3" value="I:anon/infoservice/*.*"/>
+    <property category="archiving" name="contentRules.4" value="I:anon/crypto/*.*"/>
+    <property category="archiving" name="includeManifest" value="0"/>
+    <property category="archiving" name="libraryStates.1" value="3:http"/>
+    <property category="archiving" name="libraryStates.2" value="3:Apache XML-RPC"/>
+    <property category="archiving" name="targetCompressed" value="1"/>
+    <property category="archiving" name="targetPath" value="anonlib.jar"/>
+    <property category="archiving" name="usingRules" value="1"/>
+  </node>
   <node name="JAP.jar" type="Archive">
     <property category="archiving" name="archiverClass" value="com.borland.jbuilder.wizard.archive.ApplicationArchiver"/>
     <property category="archiving" name="buildWithProject" value="0"/>
