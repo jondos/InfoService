@@ -341,7 +341,7 @@ public final class JAPController implements ProxyListener
 	 * </Payment>
    * <JapForwardingSettings>                                   // since version 0.10, if WITH_BLOCKINGRESISTANCE is enabled
    *   <ForwardingServer>
-   *     <ServerPort>12345</ServerPort>                        // the port number, where the forwarding server is listening 
+   *     <ServerPort>12345</ServerPort>                        // the port number, where the forwarding server is listening
    *     <ServerRunning>false</ServerRunning>                  // whether the forwarding server shall be started, when JAP is starting
    *     <ConnectionClassSettings>
    *       <ConnectionClasses>                                 // list of all connection classes including settings
@@ -957,23 +957,23 @@ public final class JAPController implements ProxyListener
 	}
 
 	//---------------------------------------------------------------------
-	public Locale getLocale()
+	public static Locale getLocale()
 	{
-		return m_Locale;
+		return m_Controller.m_Locale;
 	}
 
-	public void setLocale(Locale l)
+	public static void setLocale(Locale l)
 	{
 		if (l == null)
 		{
 			return;
 		}
-		if (m_Locale != null && m_Locale.equals(l))
+		if (m_Controller.m_Locale != null && m_Controller.equals(l))
 		{
 			return;
 		}
 		JAPMessages.init(l);
-		m_Locale = l;
+		m_Controller.m_Locale = l;
 		Locale.setDefault(l);
 		if (m_View != null)
 		{

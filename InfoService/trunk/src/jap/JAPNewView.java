@@ -83,7 +83,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private JLabel m_labelCascadeName;
 	private JPanel m_panelMain;
 	private JButton m_bttnInfo, m_bttnHelp, m_bttnQuit, m_bttnIconify, m_bttnConf;
-	private JButton m_bttnAnonConf;
+	//private JButton m_bttnAnonConf;
 	//private JCheckBox m_cbAnon;
 	//private JProgressBar userProgressBar;
 	//private JProgressBar trafficProgressBar;
@@ -802,15 +802,15 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			p41.add(Box.createRigidArea(new Dimension(5, 0)));
 		}
 		p41.add(Box.createHorizontalGlue());
-		m_bttnAnonConf = new JButton(JAPMessages.getString("confActivateButton"));
-		m_bttnAnonConf.setFont(fontControls);
-		if (JAPModel.isSmallDisplay())
+		//m_bttnAnonConf = new JButton(JAPMessages.getString("confActivateButton"));
+		//m_bttnAnonConf.setFont(fontControls);
+		/*if (JAPModel.isSmallDisplay())
 		{
 			m_bttnAnonConf.setMargin(JAPConstants.SMALL_BUTTON_MARGIN);
 		}
 		m_bttnAnonConf.addActionListener(this);
 		p41.add(m_bttnAnonConf);
-
+*/
 		// "anonym-o-meter"
 		//JPanel meterPanel = new JPanel();
 		//meterPanel.setLayout(new BorderLayout());
@@ -1078,7 +1078,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		//m_cbAnon.setText(JAPMessages.getString("confActivateCheckBox"));
 		//JAPUtil.setMnemonic(m_cbAnon, JAPMessages.getString("confActivateCheckBoxMn"));
 		//m_borderAnonMeter.setTitle(JAPMessages.getString("meterBorder"));
-		m_bttnAnonConf.setText(JAPMessages.getString("confActivateButton"));
+		//m_bttnAnonConf.setText(JAPMessages.getString("confActivateButton"));
 		//m_borderDetails.setTitle(JAPMessages.getString("meterDetailsBorder"));
 		if (m_dlgConfig != null)
 		{
@@ -1170,10 +1170,10 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			  else if (event.getSource() == anonB)
 			 showConfigDialog(JAPConf.ANON_TAB);*/
 		}
-		else if (source == m_bttnAnonConf)
-		{
-			showConfigDialog(JAPConf.ANON_TAB);
-		}
+		//else if (source == m_bttnAnonConf)
+		//{
+			//showConfigDialog(JAPConf.ANON_TAB);
+		//}
 		else if (source == m_bttnInfo)
 		{
 			controller.aboutJAP();
@@ -1205,10 +1205,10 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 	private void showConfigDialog()
 	{
-		showConfigDialog( -1);
+		showConfigDialog(null);
 	}
 
-	private void showConfigDialog(int card)
+	private void showConfigDialog(String card)
 	{
 		if (m_dlgConfig == null)
 		{
@@ -1217,7 +1217,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			m_dlgConfig = new JAPConf(this, loadPay);
 			setCursor(c);
 		}
-		if (card != -1)
+		if (card != null)
 		{
 			m_dlgConfig.selectCard(card);
 		}

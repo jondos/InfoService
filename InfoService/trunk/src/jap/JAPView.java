@@ -721,10 +721,10 @@ import gui.*;
 
 	private void showConfigDialog()
 	{
-		showConfigDialog( -1);
+		showConfigDialog(null);
 	}
 
-	private void showConfigDialog(int card)
+	private void showConfigDialog(String card)
 	{
 		if (m_dlgConfig == null)
 		{
@@ -733,7 +733,7 @@ import gui.*;
 			m_dlgConfig = new JAPConf(this, loadPay);
 			setCursor(c);
 		}
-		if (card != -1)
+		if (card != null)
 		{
 			m_dlgConfig.selectCard(card);
 		}
