@@ -42,7 +42,7 @@ import anon.ErrorCodes;
 
 public class JAPCertPath
 {
-  
+
   private JAPCertPath() {
   }
 
@@ -53,10 +53,16 @@ public class JAPCertPath
    * @return ErrorCodes.E_INVALID_CERTIFICATE if the trustwortyness of the key could not verified
    * @return ErrorCodes.E_UNKNOWN otherwise
    */
-  public static int validate(Element root, Element nodeSig, JAPCertificateStore certsTrustedRoots) {
+  public static int validate(Node nRoot, Node nSig, JAPCertificateStore certsTrustedRoots) {
     int r_errorCode = ErrorCodes.E_UNKNOWN;
     try {
-      NodeList keyInfoNodes = nodeSig.getElementsByTagName("KeyInfo");
+    	if(!(nRoot instanceof Element)||!(nSig instanceof Element))
+		{
+			return ErrorCodes.E_UNKNOWN;
+		}
+		Element nodeSig=(Element)nSig;
+		Element root=(Element)nRoot;
+		NodeList keyInfoNodes = nodeSig.getElementsByTagName("KeyInfo");
       if (keyInfoNodes.getLength() > 0) {
         /* there is a certificate appended */
         JAPCertificate appendedCertificate = JAPCertificate.getInstance((Element)(keyInfoNodes.item(0)));
@@ -99,7 +105,7 @@ public class JAPCertPath
                * certificates
                */
               r_errorCode = ErrorCodes.E_INVALID_CERTIFICATE;
-            }           
+            }
           }
           else {
             /* signature is invalid -> return E_INVALID_KEY */
@@ -127,7 +133,7 @@ public class JAPCertPath
         if (signatureVerified == true) {
           /* signature could be verified directly against a trusted root */
           r_errorCode = ErrorCodes.E_SUCCESS;
-        }    
+        }
         else {
           /* we could not verify the signature (without certificate) against a trusted root */
           r_errorCode = ErrorCodes.E_INVALID_KEY;
