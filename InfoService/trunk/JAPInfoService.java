@@ -67,7 +67,7 @@ final class JAPInfoService
 				headers[0]=new NVPair("Cache-Control","no-cache");
 				headers[1]=new NVPair("Pragma","no-cache");
 				replaceHeader(conInfoService,headers[0]);
-				replaceHeader(conInfoService,headers[1]);
+			replaceHeader(conInfoService,headers[1]);
 				return 0;
 			}
 		
