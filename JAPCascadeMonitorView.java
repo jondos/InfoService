@@ -296,10 +296,10 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 						// connect vi proxy to first mix (via ssl portnumber)
 						if (e.getSSLPort() == -1) {
 							proxyAnon.setAnonService(e);
-							proxyAnon.setFirewall(JAPModel.getFirewallHost(),JAPModel.getFirewallPort());
+							proxyAnon.setFirewall(JAPModel.getFirewallType(),JAPModel.getFirewallHost(),JAPModel.getFirewallPort());
 						} else {
 							proxyAnon.setAnonService(e);
-							proxyAnon.setFirewall(JAPModel.getFirewallHost(),JAPModel.getFirewallPort());
+							proxyAnon.setFirewall(JAPModel.getFirewallType(),JAPModel.getFirewallHost(),JAPModel.getFirewallPort());
 						}
 					} else {
 						// connect directly to first mix
