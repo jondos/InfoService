@@ -632,7 +632,7 @@ final class JAPConf extends JDialog
 			JOptionPane.showMessageDialog(this,msg,model.getString("ERROR"),JOptionPane.ERROR_MESSAGE);
 		}
 
-	/** Checks if all Input in all Fiels make sense. Dispaly InfoBoxes about what is wrong.
+	/** Checks if all Input in all Fiels make sense. Displays InfoBoxes about what is wrong.
 	 * @return true if all is ok
 	 *					false otherwise
 	 */
@@ -733,6 +733,38 @@ final class JAPConf extends JDialog
 							return false;
 						}
 				}
+			//Checking Firewall Settings (Host + Port)
+			if(proxyCheckBox.isSelected())
+				{
+					s=proxyhostTextField.getText().trim();
+					if(s==null||s.equals(""))
+						{
+							showError(model.getString("errorFirewallHostNotNull"));
+							return false;
+						}
+					try
+						{
+							i=Integer.parseInt(proxyportnumberTextField.getText().trim());
+						}
+					catch(Exception e)
+						{
+							i=-1;
+						}
+					if(!JAPUtil.isPort(i))
+						{
+							showError(model.getString("errorFirewallServicePortWrong"));
+							return false;
+						}
+					if(proxyAuthenticationCheckBox.isSelected())
+						{
+							s=proxyAuthenticationUserID.getText().trim();
+							if(s==null||s.equals(""))
+								{
+									showError(model.getString("errorFirewallAuthUserIDNotNull"));
+									return false;
+								}									
+						}
+				}	
 			//checking Debug-Level
 	/*		try
 				{
