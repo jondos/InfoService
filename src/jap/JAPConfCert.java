@@ -80,16 +80,19 @@ public class JAPConfCert extends AbstractJAPConfModule
 
 	private void updateInfoPanel(JAPCertificate a_cert)
 	{
-		StringBuffer strBuff = new StringBuffer();
-		strBuff.append(a_cert.getStartDate().toGMTString());
-		strBuff.append(" - ");
-		strBuff.append(a_cert.getEndDate().toGMTString());
-		m_labelDateData.setText(strBuff.toString());
 		m_labelCNData.setText("");
 		m_labelEData.setText("");
 		m_labelCSTLData.setText("");
 		m_labelOData.setText("");
 		m_labelOUData.setText("");
+		m_labelDateData.setText("");
+		if(a_cert==null)
+			return;
+		StringBuffer strBuff = new StringBuffer();
+		strBuff.append(a_cert.getStartDate().toGMTString());
+		strBuff.append(" - ");
+		strBuff.append(a_cert.getEndDate().toGMTString());
+		m_labelDateData.setText(strBuff.toString());
 
 		X509NameTokenizer x509TokenIssuer = new X509NameTokenizer(a_cert.getIssuer().toString());
 		while (x509TokenIssuer.hasMoreTokens())
@@ -255,14 +258,9 @@ public class JAPConfCert extends AbstractJAPConfModule
 			public void valueChanged(ListSelectionEvent e)
 			{
 
-				if (m_listmodelCertList.getSize() == 0)
+				if (m_listmodelCertList.getSize() == 0||m_listCert.getSelectedValue()==null)
 				{
-					m_labelDateData.setText("");
-					m_labelCNData.setText("");
-					m_labelEData.setText("");
-					m_labelCSTLData.setText("");
-					m_labelOData.setText("");
-					m_labelOUData.setText("");
+					updateInfoPanel(null);
 					m_bttnCertRemove.setEnabled(false);
 					m_bttnCertStatus.setEnabled(false);
 
@@ -389,22 +387,11 @@ public class JAPConfCert extends AbstractJAPConfModule
 				{
 					m_bttnCertRemove.setEnabled(false);
 					m_bttnCertStatus.setEnabled(false);
-					m_labelDateData.setText("");
-					m_labelCNData.setText("");
-					m_labelEData.setText("");
-					m_labelCSTLData.setText("");
-					m_labelOData.setText("");
-					m_labelOUData.setText("");
+					updateInfoPanel(null);
 				}
 				else
 				{
-					m_labelDateData.setText("");
-					m_labelCNData.setText("");
-					m_labelEData.setText("");
-					m_labelCSTLData.setText("");
-					m_labelOData.setText("");
-					m_labelOUData.setText("");
-
+					updateInfoPanel(null);
 					m_listCert.setSelectedIndex(0);
 
 					JAPCertificate j = (JAPCertificate) m_listCert.getSelectedValue();
