@@ -147,12 +147,12 @@ public final class JAPModel
 	  return m_proxyInterface;
   }
 
-  protected void setProxyListener(ProxyInterface a_proxyInterface)
+  void setProxyListener(ProxyInterface a_proxyInterface)
   {
     m_proxyInterface = a_proxyInterface;
   }
 
-  protected void setAutoConnect(boolean b)
+  void setAutoConnect(boolean b)
   {
     m_bAutoConnect = b;
   }

@@ -124,11 +124,11 @@ public class XMLAccountInfo implements IXMLEncodable //extends XMLDocument
 		// add CCs
 		Element elemCCs = a_doc.createElement("CostConfirmations");
 		elemRoot.appendChild(elemCCs);
-		Enumeration enum = m_costConfirmations.elements();
+		Enumeration enumer = m_costConfirmations.elements();
 		XMLEasyCC cc;
-		while (enum.hasMoreElements())
+		while (enumer.hasMoreElements())
 		{
-			cc = (XMLEasyCC) enum.nextElement();
+			cc = (XMLEasyCC) enumer.nextElement();
 			elem = cc.toXmlElement(a_doc);
 			elemCCs.appendChild(elem);
 		}
@@ -149,11 +149,11 @@ public class XMLAccountInfo implements IXMLEncodable //extends XMLDocument
 	{
 		String aiName = cc.getAIName();
 		long oldBytes = 0;
-		Enumeration enum = m_costConfirmations.elements();
+		Enumeration enumer = m_costConfirmations.elements();
 		XMLEasyCC tmp;
-		while (enum.hasMoreElements())
+		while (enumer.hasMoreElements())
 		{
-			tmp = (XMLEasyCC) enum.nextElement();
+			tmp = (XMLEasyCC) enumer.nextElement();
 			if (tmp.getAIName().equals(aiName))
 			{
 				oldBytes = tmp.getTransferredBytes();
@@ -196,11 +196,11 @@ public class XMLAccountInfo implements IXMLEncodable //extends XMLDocument
 	 */
 	public XMLEasyCC getCC(String aiName)
 	{
-		Enumeration enum = m_costConfirmations.elements();
+		Enumeration enumer = m_costConfirmations.elements();
 		XMLEasyCC current;
-		while (enum.hasMoreElements())
+		while (enumer.hasMoreElements())
 		{
-			current = (XMLEasyCC) enum.nextElement();
+			current = (XMLEasyCC) enumer.nextElement();
 			if (current.getAIName().equals(aiName))
 			{
 				return current;

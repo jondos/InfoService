@@ -41,29 +41,29 @@ public interface ImmutableProxyInterface extends ImmutableListenerInterface, IXM
 	 * Gets if the authentication strings are used.
 	 * @return true if the authentication strings are used; false otherwise
 	 */
-	public boolean isAuthenticationUsed();
+	boolean isAuthenticationUsed();
 
 	/**
 	 * Gets the authentication password of this interface.
 	 * @return the authentication password of this interface
 	 */
-	public String getAuthenticationPassword();
+	String getAuthenticationPassword();
 
 	/**
 	 * Gets the authentication user ID of this interface.
 	 * @return the authentication user ID of this interface
 	 */
-	public String getAuthenticationUserID();
+	String getAuthenticationUserID();
 
 	/**
 	 * Gets the authorization header with the current user id and password as a String.
 	 * @return the authorization header with the current user id and password as a String
 	 */
-	public String getProxyAuthorizationHeaderAsString();
+	String getProxyAuthorizationHeaderAsString();
 
 	/**
 	 * Get the authorization header with the current user id and password.
 	 * @return the authorization header with the current user id and password
 	 */
-	public NVPair getProxyAuthorizationHeader();
+	NVPair getProxyAuthorizationHeader();
 }

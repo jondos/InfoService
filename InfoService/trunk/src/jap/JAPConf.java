@@ -83,10 +83,10 @@ final class JAPConf extends JDialog
 	{
 		final String m_Name;
 		final String m_Value;
-		TreeElement(String name,String value)
+		TreeElement(String name, String value)
 		{
-			m_Name=name;
-			m_Value=value;
+			m_Name = name;
+			m_Value = value;
 		}
 
 		public String toString()
@@ -99,6 +99,7 @@ final class JAPConf extends JDialog
 			return m_Value;
 		}
 	}
+
 	final static public String PORT_TAB = "PORT_TAB";
 	final static public String UI_TAB = "UI_TAB";
 	final static public String UPDATE_TAB = "UPDATE_TAB";
@@ -191,10 +192,10 @@ final class JAPConf extends JDialog
 		setTitle(JAPMessages.getString("settingsDialog"));
 		m_JapConf = this;
 		JPanel pContainer = new JPanel();
-		m_TabsLayout=new CardLayout();
+		m_TabsLayout = new CardLayout();
 		m_Tabs = new JPanel(m_TabsLayout);
 		m_fontControls = JAPController.getDialogFont();
-		GridBagLayout gbl=new GridBagLayout();
+		GridBagLayout gbl = new GridBagLayout();
 		pContainer.setLayout(gbl);
 		m_Tabs.setFont(m_fontControls);
 		m_pPort = buildPortPanel();
@@ -243,40 +244,40 @@ final class JAPConf extends JDialog
 		/* create the hashtable, which stores the index of the tabs in the tabbed pane */
 		//m_tabOrder = new Hashtable();
 
-		m_Tabs.add(m_pPort,PORT_TAB);
+		m_Tabs.add(m_pPort, PORT_TAB);
 		//m_Tabs.addTab(JAPMessages.getString("confListenerTab"), null, m_pPort);
 		//m_tabOrder.put(new Integer(PORT_TAB), new Integer(m_Tabs.getTabCount() - 1));
-		m_Tabs.add(m_pFirewall,PROXY_TAB);
+		m_Tabs.add(m_pFirewall, PROXY_TAB);
 //		m_tabOrder.put(new Integer(PROXY_TAB), new Integer(m_Tabs.getTabCount() - 1));
-		m_Tabs.add(uiModule.getRootPanel(),UI_TAB);
-		m_Tabs.add(updateModule.getRootPanel(),UPDATE_TAB);
-		m_Tabs.add(infoServiceModule.getRootPanel(),INFOSERVICE_TAB);
+		m_Tabs.add(uiModule.getRootPanel(), UI_TAB);
+		m_Tabs.add(updateModule.getRootPanel(), UPDATE_TAB);
+		m_Tabs.add(infoServiceModule.getRootPanel(), INFOSERVICE_TAB);
 		//m_tabOrder.put(new Integer(INFO_TAB), new Integer(m_Tabs.getTabCount() - 1));
-		JTabbedPane tabs=new JTabbedPane();
-		tabs.addTab(anonModule.getTabTitle(),anonModule.getRootPanel());
-		tabs.addTab(torModule.getTabTitle(),torModule.getRootPanel());
-		tabs.addTab(anongeneralModule.getTabTitle(),anongeneralModule.getRootPanel());
-		m_Tabs.add(tabs,ANON_TAB);
+		JTabbedPane tabs = new JTabbedPane();
+		tabs.addTab(anonModule.getTabTitle(), anonModule.getRootPanel());
+		tabs.addTab(torModule.getTabTitle(), torModule.getRootPanel());
+		tabs.addTab(anongeneralModule.getTabTitle(), anongeneralModule.getRootPanel());
+		m_Tabs.add(tabs, ANON_TAB);
 		//m_tabOrder.put(new Integer(ANON_TAB), new Integer(m_Tabs.getTabCount() - 1));
-		m_Tabs.add(certModule.getRootPanel(),CERT_TAB);
+		m_Tabs.add(certModule.getRootPanel(), CERT_TAB);
 		//m_tabOrder.put(new Integer(CERT_TAB), new Integer(m_Tabs.getTabCount() - 1));
 		//m_Tabs.addTab(torModule.getTabTitle(), null, torModule.getRootPanel());
 		//m_tabOrder.put(new Integer(TOR_TAB), new Integer(m_Tabs.getTabCount() - 1));
 		if (JAPConstants.WITH_BLOCKINGRESISTANCE)
 		{
-			m_Tabs.add(routingModule.getRootPanel(),FORWARD_TAB);
+			m_Tabs.add(routingModule.getRootPanel(), FORWARD_TAB);
 			//m_tabOrder.put(new Integer(FORWARD_TAB), new Integer(m_Tabs.getTabCount() - 1));
 		}
 		if (loadPay)
 		{
-			m_Tabs.add(accountsModule.getRootPanel(),PAYMENT_TAB);
+			m_Tabs.add(accountsModule.getRootPanel(), PAYMENT_TAB);
 			//m_tabOrder.put(new Integer(KONTO_TAB), new Integer(m_Tabs.getTabCount() - 1));
 		}
 
 		if (!JAPModel.isSmallDisplay())
 		{
-			m_Tabs.add(m_pMisc,DEBUG_TAB);
-	//		m_tabOrder.put(new Integer(MISC_TAB), new Integer(m_Tabs.getTabCount() - 1));
+			m_Tabs.add(m_pMisc, DEBUG_TAB);
+			//		m_tabOrder.put(new Integer(MISC_TAB), new Integer(m_Tabs.getTabCount() - 1));
 		}
 		JPanel buttonPanel = new JPanel();
 		buttonPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
@@ -324,50 +325,54 @@ final class JAPConf extends JDialog
 		buttonPanel.add(new JLabel("   "));
 		getRootPane().setDefaultButton(ok);
 
-
 //				container.add(new JLabel(new ImageIcon(m_Controller.JAPICONFN)), BorderLayout.WEST);
 //new Config select...
-		DefaultMutableTreeNode rootNode=new DefaultMutableTreeNode("root");
-		DefaultTreeModel treeModel=new DefaultTreeModel(rootNode);
-		DefaultMutableTreeNode node=new DefaultMutableTreeNode(new TreeElement(uiModule.getTabTitle(),UI_TAB));
+		DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode("root");
+		DefaultTreeModel treeModel = new DefaultTreeModel(rootNode);
+		DefaultMutableTreeNode node = new DefaultMutableTreeNode(new TreeElement(uiModule.getTabTitle(),
+			UI_TAB));
 		rootNode.add(node);
 		if (loadPay)
 		{
-		node=new DefaultMutableTreeNode(new TreeElement(accountsModule.getTabTitle(),PAYMENT_TAB));
-		rootNode.add(node);
+			node = new DefaultMutableTreeNode(new TreeElement(accountsModule.getTabTitle(), PAYMENT_TAB));
+			rootNode.add(node);
 		}
-		node=new DefaultMutableTreeNode(new TreeElement(updateModule.getTabTitle(),UPDATE_TAB));
+		node = new DefaultMutableTreeNode(new TreeElement(updateModule.getTabTitle(), UPDATE_TAB));
 		rootNode.add(node);
-		DefaultMutableTreeNode nodeNet=new DefaultMutableTreeNode(JAPMessages.getString("ngTreeNetwork"));
+		DefaultMutableTreeNode nodeNet = new DefaultMutableTreeNode(JAPMessages.getString("ngTreeNetwork"));
 		rootNode.add(nodeNet);
-		DefaultMutableTreeNode n2=new DefaultMutableTreeNode(new TreeElement(JAPMessages.getString("confListenerTab"),PORT_TAB));
+		DefaultMutableTreeNode n2 = new DefaultMutableTreeNode(new TreeElement(JAPMessages.getString(
+			"confListenerTab"), PORT_TAB));
 		nodeNet.add(n2);
-		n2=new DefaultMutableTreeNode(new TreeElement(JAPMessages.getString("confProxyTab"),PROXY_TAB));
+		n2 = new DefaultMutableTreeNode(new TreeElement(JAPMessages.getString("confProxyTab"), PROXY_TAB));
 		nodeNet.add(n2);
-		DefaultMutableTreeNode nodeAnon=new DefaultMutableTreeNode(JAPMessages.getString("ngAnonymitaet"));
+		DefaultMutableTreeNode nodeAnon = new DefaultMutableTreeNode(JAPMessages.getString("ngAnonymitaet"));
 		rootNode.add(nodeAnon);
-		n2=new DefaultMutableTreeNode(new TreeElement(infoServiceModule.getTabTitle(),INFOSERVICE_TAB));
+		n2 = new DefaultMutableTreeNode(new TreeElement(infoServiceModule.getTabTitle(), INFOSERVICE_TAB));
 		nodeAnon.add(n2);
-		n2=new DefaultMutableTreeNode(new TreeElement(JAPMessages.getString("ngTreeAnonService"),ANON_TAB));
+		n2 = new DefaultMutableTreeNode(new TreeElement(JAPMessages.getString("ngTreeAnonService"), ANON_TAB));
 		nodeAnon.add(n2);
-		n2=new DefaultMutableTreeNode(new TreeElement(routingModule.getTabTitle(),FORWARD_TAB));
+		n2 = new DefaultMutableTreeNode(new TreeElement(routingModule.getTabTitle(), FORWARD_TAB));
 		nodeAnon.add(n2);
-		node=new DefaultMutableTreeNode(new TreeElement(certModule.getTabTitle(),CERT_TAB));
+		node = new DefaultMutableTreeNode(new TreeElement(certModule.getTabTitle(), CERT_TAB));
 		rootNode.add(node);
-		node=new DefaultMutableTreeNode(new TreeElement(JAPMessages.getString("ngTreeDebugging"),DEBUG_TAB));
+		node = new DefaultMutableTreeNode(new TreeElement(JAPMessages.getString("ngTreeDebugging"), DEBUG_TAB));
 		rootNode.add(node);
-		DefaultTreeCellRenderer renderer=new DefaultTreeCellRenderer();
+		DefaultTreeCellRenderer renderer = new DefaultTreeCellRenderer();
 		renderer.setClosedIcon(JAPUtil.loadImageIcon("arrow.gif", true));
 		renderer.setOpenIcon(JAPUtil.loadImageIcon("arrow90.gif", true));
 		renderer.setLeafIcon(null);
-		m_Tree=new JTree(treeModel);
-		TreeSelectionModel sm=new DefaultTreeSelectionModel(){
-			public void  setSelectionPath(TreePath t)
+		m_Tree = new JTree(treeModel);
+		TreeSelectionModel sm = new DefaultTreeSelectionModel()
+		{
+			public void setSelectionPath(TreePath t)
+			{
+				if ( ( (TreeNode) t.getLastPathComponent()).isLeaf())
 				{
-					if(((TreeNode)t.getLastPathComponent()).isLeaf())
-						super.setSelectionPath(t);
-					//return false;
+					super.setSelectionPath(t);
 				}
+				//return false;
+			}
 		};
 
 		sm.setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
@@ -375,22 +380,23 @@ final class JAPConf extends JDialog
 		m_Tree.setRootVisible(false);
 		m_Tree.setEditable(false);
 		m_Tree.setCellRenderer(renderer);
-		m_Tree.setBorder(new CompoundBorder(LineBorder.createBlackLineBorder(),new EmptyBorder(5,5,5,5)));
+		m_Tree.setBorder(new CompoundBorder(LineBorder.createBlackLineBorder(), new EmptyBorder(5, 5, 5, 5)));
 		m_Tree.addTreeSelectionListener(new TreeSelectionListener()
-									  {
+		{
 			public void valueChanged(TreeSelectionEvent e)
 			{
-				if(e.isAddedPath())
+				if (e.isAddedPath())
 				{
-					DefaultMutableTreeNode n=(DefaultMutableTreeNode)e.getPath().getLastPathComponent();
-					m_TabsLayout.show(m_Tabs,((TreeElement)n.getUserObject()).getValue());
+					DefaultMutableTreeNode n = (DefaultMutableTreeNode) e.getPath().getLastPathComponent();
+					m_TabsLayout.show(m_Tabs, ( (TreeElement) n.getUserObject()).getValue());
 				}
 			}
 		});
 		m_Tree.expandPath(new TreePath(nodeNet.getPath()));
 		m_Tree.expandPath(new TreePath(nodeAnon.getPath()));
 		m_Tree.setSelectionRow(0);
-		m_Tree.addTreeWillExpandListener(new TreeWillExpandListener(){
+		m_Tree.addTreeWillExpandListener(new TreeWillExpandListener()
+		{
 			public void treeWillCollapse(TreeExpansionEvent event) throws ExpandVetoException
 			{
 				throw new ExpandVetoException(event);
@@ -402,35 +408,35 @@ final class JAPConf extends JDialog
 		});
 
 		/*GridBagConstraints c=new GridBagConstraints();
-		c.weighty=1;
-		c.weightx=1;
-		c.insets=new Insets(20,10,10,10);
-		c.fill=GridBagConstraints.BOTH;
-		pContainer.add(m_Tree,c);
-		c.gridx=1;
-		c.weightx=0;
-		c.fill=GridBagConstraints.BOTH;
-		pContainer.add(m_Tabs,c);
-		c.gridx=0;
-		c.gridwidth=2;
-		c.weightx=1;
-		c.weighty=0;
-		c.fill=GridBagConstraints.HORIZONTAL;
-		c.insets=new Insets(0,10,10,10);
-		pContainer.add(buttonPanel,c);
-		*/
-	   	pContainer.setLayout(new BorderLayout());
-		JPanel treePanel=new JPanel(new GridBagLayout());
-		GridBagConstraints c1=new GridBagConstraints();
-		c1.weighty=1;
-		c1.fill=GridBagConstraints.BOTH;
-		c1.insets=new Insets(10,10,10,10);
-		treePanel.add(m_Tree,c1);
-		pContainer.add(treePanel,BorderLayout.WEST);
-		buttonPanel.setBorder(new EmptyBorder(10,10,10,10));
-		pContainer.add(buttonPanel,BorderLayout.SOUTH);
-		m_Tabs.setBorder(new EmptyBorder(10,10,10,10));
-		pContainer.add(m_Tabs,BorderLayout.CENTER);
+		   c.weighty=1;
+		   c.weightx=1;
+		   c.insets=new Insets(20,10,10,10);
+		   c.fill=GridBagConstraints.BOTH;
+		   pContainer.add(m_Tree,c);
+		   c.gridx=1;
+		   c.weightx=0;
+		   c.fill=GridBagConstraints.BOTH;
+		   pContainer.add(m_Tabs,c);
+		   c.gridx=0;
+		   c.gridwidth=2;
+		   c.weightx=1;
+		   c.weighty=0;
+		   c.fill=GridBagConstraints.HORIZONTAL;
+		   c.insets=new Insets(0,10,10,10);
+		   pContainer.add(buttonPanel,c);
+		 */
+		pContainer.setLayout(new BorderLayout());
+		JPanel treePanel = new JPanel(new GridBagLayout());
+		GridBagConstraints c1 = new GridBagConstraints();
+		c1.weighty = 1;
+		c1.fill = GridBagConstraints.BOTH;
+		c1.insets = new Insets(10, 10, 10, 10);
+		treePanel.add(m_Tree, c1);
+		pContainer.add(treePanel, BorderLayout.WEST);
+		buttonPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+		pContainer.add(buttonPanel, BorderLayout.SOUTH);
+		m_Tabs.setBorder(new EmptyBorder(10, 10, 10, 10));
+		pContainer.add(m_Tabs, BorderLayout.CENTER);
 
 		setContentPane(pContainer);
 		//getContentPane().add(pContainer);
@@ -560,8 +566,10 @@ final class JAPConf extends JDialog
 		m_tfProxyHost.setFont(m_fontControls);
 		m_tfProxyPortNumber = new JAPJIntField();
 		m_tfProxyPortNumber.setFont(m_fontControls);
-		m_tfProxyHost.setEnabled(JAPModel.getInstance().getProxyInterface().isValid());
-		m_tfProxyPortNumber.setEnabled(JAPModel.getInstance().getProxyInterface().isValid());
+		ProxyInterface proxyInterface = JAPModel.getInstance().getProxyInterface();
+		boolean bUseProxy = proxyInterface != null && proxyInterface.isValid();
+		m_tfProxyHost.setEnabled(bUseProxy);
+		m_tfProxyPortNumber.setEnabled(bUseProxy);
 		m_cbProxy.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent e)
@@ -574,8 +582,8 @@ final class JAPConf extends JDialog
 				m_labelProxyHost.setEnabled(b);
 				m_labelProxyPort.setEnabled(b);
 				m_labelProxyType.setEnabled(b);
-				m_labelProxyAuthUserID.setEnabled(m_cbProxyAuthentication.isSelected()&b);
-				m_tfProxyAuthenticationUserID.setEnabled(m_cbProxyAuthentication.isSelected()&b);
+				m_labelProxyAuthUserID.setEnabled(m_cbProxyAuthentication.isSelected() & b);
+				m_tfProxyAuthenticationUserID.setEnabled(m_cbProxyAuthentication.isSelected() & b);
 			}
 		});
 		m_tfProxyHost.addActionListener(new ActionListener()
@@ -709,76 +717,76 @@ final class JAPConf extends JDialog
 		//p1.setBorder(new TitledBorder(JAPMessages.getString("settingsLookAndFeelBorder")));
 		//p1.add(new JLabel(JAPMessages.getString("settingsLookAndFeel")));
 		/*JComboBox c = new JComboBox();
-		LookAndFeelInfo[] lf = UIManager.getInstalledLookAndFeels();
-		String currentLf = UIManager.getLookAndFeel().getClass().getName();
-		// add menu items
-		for (int lfidx = 0; lfidx < lf.length; lfidx++)
-		{
-			c.addItem(lf[lfidx].getName());
-		}
-		// select the current
-		int lfidx;
-		for (lfidx = 0; lfidx < lf.length; lfidx++)
-		{
-			if (lf[lfidx].getClassName().equals(currentLf))
-			{
-				c.setSelectedIndex(lfidx);
-				break;
-			}
-		}
-		if (! (lfidx < lf.length))
-		{
-			c.addItem("(unknown)");
-			c.setSelectedIndex(lfidx);
-		}
-		c.addItemListener(new ItemListener()
-		{
-			public void itemStateChanged(ItemEvent e)
-			{
-				if (e.getStateChange() == e.SELECTED)
-				{
-					try
-					{
-						UIManager.setLookAndFeel(UIManager.getInstalledLookAndFeels()[ ( (JComboBox) e.
-							getItemSelectable()).getSelectedIndex()].getClassName());
+		   LookAndFeelInfo[] lf = UIManager.getInstalledLookAndFeels();
+		   String currentLf = UIManager.getLookAndFeel().getClass().getName();
+		   // add menu items
+		   for (int lfidx = 0; lfidx < lf.length; lfidx++)
+		   {
+		 c.addItem(lf[lfidx].getName());
+		   }
+		   // select the current
+		   int lfidx;
+		   for (lfidx = 0; lfidx < lf.length; lfidx++)
+		   {
+		 if (lf[lfidx].getClassName().equals(currentLf))
+		 {
+		  c.setSelectedIndex(lfidx);
+		  break;
+		 }
+		   }
+		   if (! (lfidx < lf.length))
+		   {
+		 c.addItem("(unknown)");
+		 c.setSelectedIndex(lfidx);
+		   }
+		   c.addItemListener(new ItemListener()
+		   {
+		 public void itemStateChanged(ItemEvent e)
+		 {
+		  if (e.getStateChange() == e.SELECTED)
+		  {
+		   try
+		   {
+		 UIManager.setLookAndFeel(UIManager.getInstalledLookAndFeels()[ ( (JComboBox) e.
+		  getItemSelectable()).getSelectedIndex()].getClassName());
 //									SwingUtilities.updateComponentTreeUI(m_frmParent);
 //									SwingUtilities.updateComponentTreeUI(SwingUtilities.getRoot(((JComboBox)e.getItemSelectable())));
-						JOptionPane.showMessageDialog(m_JapConf,
-							JAPMessages.getString("confLookAndFeelChanged"),
-							JAPMessages.getString("information"), JOptionPane.INFORMATION_MESSAGE);
-					}
-					catch (Exception ie)
-					{
-					}
-				}
-			}
-		});
-		p1.add(c);*/
+		 JOptionPane.showMessageDialog(m_JapConf,
+		  JAPMessages.getString("confLookAndFeelChanged"),
+		  JAPMessages.getString("information"), JOptionPane.INFORMATION_MESSAGE);
+		   }
+		   catch (Exception ie)
+		   {
+		   }
+		  }
+		 }
+		   });
+		   p1.add(c);*/
 		//p1.add(new JLabel(JAPMessages.getString("settingsLanguage")));
 		/*m_comboLanguage = new JComboBox();
-		m_comboLanguage.addItem("Deutsch");
-		m_comboLanguage.addItem("English");
-		m_comboLanguage.addItem("Fran\u00E7ais");
-		m_comboLanguage.addItemListener(new ItemListener()
-		{
-			public void itemStateChanged(ItemEvent e)
-			{
-				if (!m_bIgnoreComboLanguageEvents && e.getStateChange() == e.SELECTED)
-				{
-					try
-					{
-						JOptionPane.showMessageDialog(m_JapConf, JAPMessages.getString("confLanguageChanged"),
-							JAPMessages.getString("information"), JOptionPane.INFORMATION_MESSAGE);
-					}
-					catch (Exception ie)
-					{
-					}
-				}
-			}
-		});
+		   m_comboLanguage.addItem("Deutsch");
+		   m_comboLanguage.addItem("English");
+		   m_comboLanguage.addItem("Fran\u00E7ais");
+		   m_comboLanguage.addItemListener(new ItemListener()
+		   {
+		 public void itemStateChanged(ItemEvent e)
+		 {
+		  if (!m_bIgnoreComboLanguageEvents && e.getStateChange() == e.SELECTED)
+		  {
+		   try
+		   {
+		 JOptionPane.showMessageDialog(m_JapConf, JAPMessages.getString("confLanguageChanged"),
+		  JAPMessages.getString("information"), JOptionPane.INFORMATION_MESSAGE);
+		   }
+		   catch (Exception ie)
+		   {
+		   }
+		  }
+		 }
+		   });
 
-		p1.add(m_comboLanguage);
-*/
+		   p1.add(m_comboLanguage);
+		 */
 		// Panel for Misc Options
 		JPanel p2 = new JPanel();
 		p2.setLayout(new BorderLayout());
@@ -833,21 +841,21 @@ final class JAPConf extends JDialog
 		//JButton testButton = new JButton("Update");
 		//testButton.addActionListener(new ActionListener()
 		//{
-	//		public void actionPerformed(ActionEvent e)
-	//		{
-	//			Cursor c1 = getCursor();
-	//			setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-	//			cancelPressed();
-	//			update = new JAPUpdate();
+		//		public void actionPerformed(ActionEvent e)
+		//		{
+		//			Cursor c1 = getCursor();
+		//			setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+		//			cancelPressed();
+		//			update = new JAPUpdate();
 //  if (update == null){
 
-				//         }//fi
-				//updateValues();
-	//			setCursor(c1);
-	//		}
-	//	});
-	//	testButton.setVisible(true);
-	//	testButton.setEnabled(true);
+		//         }//fi
+		//updateValues();
+		//			setCursor(c1);
+		//		}
+		//	});
+		//	testButton.setVisible(true);
+		//	testButton.setEnabled(true);
 		lc.gridx = 0;
 		lc.gridy = 0;
 		lc.gridheight = 1;
@@ -1104,8 +1112,8 @@ final class JAPConf extends JDialog
 		Enumeration confModules = m_confModules.elements();
 		while (confModules.hasMoreElements())
 		{
-			AbstractJAPConfModule confModule=(AbstractJAPConfModule) (confModules.nextElement());
-			if (! confModule.okPressed())
+			AbstractJAPConfModule confModule = (AbstractJAPConfModule) (confModules.nextElement());
+			if (!confModule.okPressed())
 			{
 				return;
 			}
@@ -1141,23 +1149,22 @@ final class JAPConf extends JDialog
 		catch (Exception e)
 		{}
 		;
-		String firewallType = ProxyInterface.PROTOCOL_TYPE_HTTP;
+		int firewallType = ProxyInterface.PROTOCOL_TYPE_HTTP;
 		if (m_comboProxyType.getSelectedIndex() == 1)
 		{
 			firewallType = ProxyInterface.PROTOCOL_TYPE_SOCKS;
 		}
 		m_Controller.changeProxyInterface(
-				  new ProxyInterface(m_tfProxyHost.getText().trim(),
-									 port,
-									 firewallType,
-									 m_tfProxyAuthenticationUserID.getText().trim(),
-									 m_Controller.getPasswordReader(),
-									 m_cbProxyAuthentication.isSelected(),
-									 m_cbProxy.isSelected()));
+			new ProxyInterface(m_tfProxyHost.getText().trim(),
+							   port,
+							   firewallType,
+							   m_tfProxyAuthenticationUserID.getText().trim(),
+							   m_Controller.getPasswordReader(),
+							   m_cbProxyAuthentication.isSelected(),
+							   m_cbProxy.isSelected()));
 
 		//Cert seetings
 		m_Controller.setCertCheckDisabled(m_cbCertCheckDisabled.isSelected());
-
 
 		// force notifying the observers set the right server name
 		m_Controller.notifyJAPObservers(); // this should be the last line of okPressed() !!!
@@ -1174,36 +1181,42 @@ final class JAPConf extends JDialog
 	 */
 	public void selectCard(String a_strSelectedCard)
 	{
-		DefaultTreeModel model=(DefaultTreeModel)m_Tree.getModel();
-		TreeNode found=findTreeNode((TreeNode)model.getRoot(),a_strSelectedCard);
-		if(found!=null)
+		DefaultTreeModel model = (DefaultTreeModel) m_Tree.getModel();
+		TreeNode found = findTreeNode( (TreeNode) model.getRoot(), a_strSelectedCard);
+		if (found != null)
 		{
 			m_Tree.setSelectionPath(new TreePath(
-				((DefaultMutableTreeNode)found).getPath()));
+				( (DefaultMutableTreeNode) found).getPath()));
 		}
 	}
 
-	private TreeNode findTreeNode(TreeNode parent,String toFind)
+	private TreeNode findTreeNode(TreeNode parent, String toFind)
 	{
-		if(parent==null)
-			return null;
-		if(parent instanceof DefaultMutableTreeNode)
+		if (parent == null)
 		{
-			DefaultMutableTreeNode n=(DefaultMutableTreeNode)parent;
-			Object o=n.getUserObject();
-			if(o!=null&&o instanceof TreeElement)
+			return null;
+		}
+		if (parent instanceof DefaultMutableTreeNode)
+		{
+			DefaultMutableTreeNode n = (DefaultMutableTreeNode) parent;
+			Object o = n.getUserObject();
+			if (o != null && o instanceof TreeElement)
 			{
-				if(((TreeElement)o).getValue().equals(toFind))
+				if ( ( (TreeElement) o).getValue().equals(toFind))
+				{
 					return parent;
+				}
 			}
 		}
-		Enumeration childs=parent.children();
-		while(childs.hasMoreElements())
+		Enumeration childs = parent.children();
+		while (childs.hasMoreElements())
 		{
-			TreeNode child=(TreeNode)childs.nextElement();
-			TreeNode found=findTreeNode(child,toFind);
-			if(found!=null)
+			TreeNode child = (TreeNode) childs.nextElement();
+			TreeNode found = findTreeNode(child, toFind);
+			if (found != null)
+			{
 				return found;
+			}
 		}
 		return null;
 	}
@@ -1226,18 +1239,18 @@ final class JAPConf extends JDialog
 			currentModule.recreateRootPanel();
 		}
 		setTitle(JAPMessages.getString("settingsDialog"));
-/*		m_Tabs.setTitleAt( ( (Integer) (m_tabOrder.get(new Integer(PORT_TAB)))).intValue(),
-						  JAPMessages.getString("confListenerTab"));
-		m_Tabs.setTitleAt( ( (Integer) (m_tabOrder.get(new Integer(PROXY_TAB)))).intValue(),
-						  JAPMessages.getString("confProxyTab"));
-		m_Tabs.setTitleAt( ( (Integer) (m_tabOrder.get(new Integer(ANON_TAB)))).intValue(),
-						  JAPMessages.getString("confAnonTab"));
-		if (!JAPModel.isSmallDisplay())
-		{
-			m_Tabs.setTitleAt( ( (Integer) (m_tabOrder.get(new Integer(MISC_TAB)))).intValue(),
-							  JAPMessages.getString("confMiscTab"));
-		}
-	*/	m_bttnDefaultConfig.setText(JAPMessages.getString("bttnDefaultConfig"));
+		/*		m_Tabs.setTitleAt( ( (Integer) (m_tabOrder.get(new Integer(PORT_TAB)))).intValue(),
+		  JAPMessages.getString("confListenerTab"));
+		  m_Tabs.setTitleAt( ( (Integer) (m_tabOrder.get(new Integer(PROXY_TAB)))).intValue(),
+		  JAPMessages.getString("confProxyTab"));
+		  m_Tabs.setTitleAt( ( (Integer) (m_tabOrder.get(new Integer(ANON_TAB)))).intValue(),
+		  JAPMessages.getString("confAnonTab"));
+		  if (!JAPModel.isSmallDisplay())
+		  {
+		   m_Tabs.setTitleAt( ( (Integer) (m_tabOrder.get(new Integer(MISC_TAB)))).intValue(),
+		   JAPMessages.getString("confMiscTab"));
+		  }*/
+		m_bttnDefaultConfig.setText(JAPMessages.getString("bttnDefaultConfig"));
 		m_bttnCancel.setText(JAPMessages.getString("cancelButton"));
 		//Port Panel
 		m_labelPortnumber1.setText(JAPMessages.getString("settingsPort1"));
@@ -1261,11 +1274,11 @@ final class JAPConf extends JDialog
 		m_labelProxyType.setText(JAPMessages.getString("settingsProxyType"));
 		m_labelProxyAuthUserID.setText(JAPMessages.getString("settingsProxyAuthUserID"));
 		pack();
-	/*	if(!m_Tree.isVisible())
-		{
-			Dimension d=getSize();
-			setSize(d.width+10,d.height);
-		}*/
+		/*	if(!m_Tree.isVisible())
+		 {
+		  Dimension d=getSize();
+		  setSize(d.width+10,d.height);
+		 }*/
 	}
 
 	/** Updates the shown Values from the Model.*/
@@ -1304,7 +1317,9 @@ final class JAPConf extends JDialog
 		//m_labelSocksPortNumber.setVisible(bSocksVisible);
 		//m_cbListenerSocks.setSelected(m_Controller.getUseSocksPort());
 		// firewall tab
-		boolean bEnableProxy=JAPModel.getInstance().getProxyInterface().isValid();
+		ProxyInterface proxyInterface = JAPModel.getInstance().getProxyInterface();
+		boolean bEnableProxy = proxyInterface != null &&
+			proxyInterface.isValid();
 		m_cbProxy.setSelected(bEnableProxy);
 		m_tfProxyHost.setEnabled(bEnableProxy);
 		m_tfProxyPortNumber.setEnabled(bEnableProxy);
@@ -1313,8 +1328,9 @@ final class JAPConf extends JDialog
 		m_labelProxyHost.setEnabled(bEnableProxy);
 		m_labelProxyPort.setEnabled(bEnableProxy);
 		m_labelProxyType.setEnabled(bEnableProxy);
-		if (JAPModel.getInstance().getProxyInterface().getProtocol().equals(
-				  ProxyInterface.PROTOCOL_TYPE_HTTP))
+		if (proxyInterface == null ||
+			proxyInterface.getProtocol() ==
+			ProxyInterface.PROTOCOL_TYPE_HTTP)
 		{
 			m_comboProxyType.setSelectedIndex(0);
 		}
@@ -1323,16 +1339,18 @@ final class JAPConf extends JDialog
 			m_comboProxyType.setSelectedIndex(1);
 		}
 		m_cbProxyAuthentication.setEnabled(bEnableProxy);
-
-		m_tfProxyHost.setText(JAPModel.getInstance().getProxyInterface().getHost());
-		m_tfProxyPortNumber.setText(String.valueOf(
-				  JAPModel.getInstance().getProxyInterface().getPort()));
-		m_tfProxyAuthenticationUserID.setText(
-				  JAPModel.getInstance().getProxyInterface().getAuthenticationUserID());
-		m_cbProxyAuthentication.setSelected(
-				  JAPModel.getInstance().getProxyInterface().isAuthenticationUsed());
-		m_labelProxyAuthUserID.setEnabled(m_cbProxyAuthentication.isSelected()&bEnableProxy);
-		m_tfProxyAuthenticationUserID.setEnabled(m_cbProxyAuthentication.isSelected()&bEnableProxy);
+		if (proxyInterface != null)
+		{
+			m_tfProxyHost.setText(proxyInterface.getHost());
+			m_tfProxyPortNumber.setText(String.valueOf(
+				proxyInterface.getPort()));
+			m_tfProxyAuthenticationUserID.setText(
+				proxyInterface.getAuthenticationUserID());
+			m_cbProxyAuthentication.setSelected(
+				proxyInterface.isAuthenticationUsed());
+		}
+		m_labelProxyAuthUserID.setEnabled(m_cbProxyAuthentication.isSelected() & bEnableProxy);
+		m_tfProxyAuthenticationUserID.setEnabled(m_cbProxyAuthentication.isSelected() & bEnableProxy);
 		//cert tab
 		m_cbCertCheckDisabled.setSelected(JAPModel.isCertCheckDisabled());
 	}

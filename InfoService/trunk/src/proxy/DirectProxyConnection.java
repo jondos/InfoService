@@ -291,9 +291,10 @@ final class DirectProxyConnection implements Runnable
 		{
 			// create Socket to Server
 			Socket serverSocket = null;
-			if (JAPModel.getInstance().getProxyInterface().isValid() &&
-				JAPModel.getInstance().getProxyInterface().getProtocol().equals(
-							ProxyInterface.PROTOCOL_TYPE_SOCKS))
+			if (JAPModel.getInstance().getProxyInterface()!=null&&
+				JAPModel.getInstance().getProxyInterface().isValid() &&
+				JAPModel.getInstance().getProxyInterface().getProtocol()==
+							ProxyInterface.PROTOCOL_TYPE_SOCKS)
 			{
 				ProxyConnection p = new ProxyConnection(
 								JAPModel.getInstance().getProxyInterface(), m_strHost, m_iPort);

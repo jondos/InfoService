@@ -115,19 +115,20 @@ public class HTTPConnectionFactory
 
 		if (a_proxyInterface == null || !a_proxyInterface.isValid())
 		{
+			m_proxyInterface=null;
 			HTTPConnection.setProxyServer(null, -1);
 			HTTPConnection.setSocksServer(null, -1);
 			return;
 		}
 
 		/* don't allow to create new connections until we have changed all proxy attributes */
-		if (a_proxyInterface.getProtocol().equals(ListenerInterface.PROTOCOL_TYPE_HTTP))
+		if (a_proxyInterface.getProtocol()==ImmutableListenerInterface.PROTOCOL_TYPE_HTTP)
 		{
 			/* set the new values for the proxy */
 			HTTPConnection.setProxyServer(a_proxyInterface.getHost(), a_proxyInterface.getPort());
 			HTTPConnection.setSocksServer(null, -1);
 		}
-		else if (a_proxyInterface.getProtocol() == ListenerInterface.PROTOCOL_TYPE_SOCKS)
+		else if (a_proxyInterface.getProtocol()==ImmutableListenerInterface.PROTOCOL_TYPE_SOCKS)
 		{
 			/** @todo check why this code is not used! */
 			HTTPConnection.setProxyServer(null, -1);
@@ -183,7 +184,7 @@ public class HTTPConnectionFactory
 		synchronized (this)
 		{
 			newConnection = createHTTPConnectionInternal(target);
-			if (m_proxyInterface.isAuthenticationUsed())
+			if (m_proxyInterface!=null&&m_proxyInterface.isAuthenticationUsed())
 			{
 				DefaultAuthHandler.setAuthorizationPrompter(new AuthorizationPrompter()
 				{
@@ -211,7 +212,7 @@ public class HTTPConnectionFactory
 	 * @param connection The connection where the new headers are set.
 	 * @param header The header information to set.
 	 */
-	private void replaceHeader(HTTPConnection connection, NVPair header)
+	private static void replaceHeader(HTTPConnection connection, NVPair header)
 	{
 		NVPair headers[] = connection.getDefaultHeaders();
 		if ( (headers == null) || (headers.length == 0))

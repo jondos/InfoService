@@ -38,50 +38,61 @@ import anon.util.IXMLEncodable;
  */
 public interface ImmutableListenerInterface
 {
+
 	/**
-	 * The constant for the HTTP protocol.
+	 * The constant for the 'unknown' protocol.
 	 */
-	final public static String PROTOCOL_TYPE_HTTP = "HTTP/TCP";
+	String PROTOCOL_STR_TYPE_UNKNOWN = "UNKNWON/UNKNOWN";
+	int PROTOCOL_TYPE_UNKNOWN = -1;
 
 	/**
 	 * The constant for the HTTP protocol.
 	 */
-	final public static String PROTOCOL_TYPE_HTTPS = "https";
+	String PROTOCOL_STR_TYPE_HTTP = "HTTP/TCP";
+	int PROTOCOL_TYPE_HTTP = 1;
 
 	/**
 	 * The constant for the HTTP protocol.
 	 */
-	final public static String PROTOCOL_TYPE_SOCKS = "socks";
+	String PROTOCOL_STR_TYPE_HTTPS = "https";
+	int PROTOCOL_TYPE_HTTPS = 4;
+
+	/**
+	 * The constant for the HTTP protocol.
+	 */
+	String PROTOCOL_STR_TYPE_SOCKS = "socks";
+	int PROTOCOL_TYPE_SOCKS = 3;
 
 	/**
 	 * The constant for a custom protocol based on TCP.
 	 */
-	final public static String PROTOCOL_TYPE_RAW_TCP = "RAW/TCP";
+	String PROTOCOL_STR_TYPE_RAW_TCP = "RAW/TCP";
+	int PROTOCOL_TYPE_RAW_TCP = 2;
 
 	/**
 	 * Gets the protocol of this ListenerInterface.
 	 * @return the protocol of this ListenerInterface
 	 */
-	public String getProtocol();
+	int getProtocol();
 
 	/**
 	 * Get the host (hostname or IP) of this interface as a String.
 	 *
 	 * @return The host of this interface.
 	 */
-	public String getHost();
+	String getHost();
 
 	/**
 	 * Get the port of this interface.
 	 * @return The port of this interface.
 	 */
-	public int getPort();
+	int getPort();
 
 	/**
 	 * Get the validity of this interface.
 	 * @return Whether this interface is valid or not.
 	 */
-	public boolean isValid();
+	boolean isValid();
 
 	/**
 	 * Returns a String equal to getHost(). If getHost() is an IP, we try to find the hostname
@@ -91,6 +102,6 @@ public interface ImmutableListenerInterface
 	 *
 	 * @return The host of this interface with additional information.
 	 */
-	public String getHostAndIp();
+	String getHostAndIp();
 
 }

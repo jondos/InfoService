@@ -19,10 +19,108 @@
   <property category="debug.4" name="SmartStepRedefineClasses" value="0"/>
   <property category="debug.5" name="SmartStepRedefineClasses" value="0"/>
   <property category="debug.6" name="SmartStepRedefineClasses" value="0"/>
+  <property category="generalFormatting" name="baseCodeStyle" value="java/JAP.codestyle"/>
   <property category="generalFormatting" name="blockIndent" value="4"/>
   <property category="generalFormatting" name="tabSize" value="4"/>
   <property category="generalFormatting" name="useTabChar" value="1"/>
+  <property category="generalFormatting2" name="blockIndent" value="4"/>
+  <property category="generalFormatting2" name="overrideBasicFormatting" value="1"/>
+  <property category="generalFormatting2" name="tabSize" value="4"/>
+  <property category="generalFormatting2" name="useTabChar" value="1"/>
   <property category="idl" name="ProcessIDL" value="false"/>
+  <property category="java.sapient" name="ACE" value="false"/>
+  <property category="java.sapient" name="AFLV" value="true"/>
+  <property category="java.sapient" name="AFP" value="false"/>
+  <property category="java.sapient" name="ASMDCN" value="true"/>
+  <property category="java.sapient" name="ASMO" value="true"/>
+  <property category="java.sapient" name="BSMC" value="true"/>
+  <property category="java.sapient" name="BTJC" value="false"/>
+  <property category="java.sapient" name="CA" value="false"/>
+  <property category="java.sapient" name="CEV" value="false"/>
+  <property category="java.sapient" name="CFPV" value="false"/>
+  <property category="java.sapient" name="CIUCFL" value="true"/>
+  <property category="java.sapient" name="CQS" value="false"/>
+  <property category="java.sapient" name="CSR" value="true"/>
+  <property category="java.sapient" name="CVSBF" value="true"/>
+  <property category="java.sapient" name="EIAV" value="false"/>
+  <property category="java.sapient" name="EJB_CL" value="false"/>
+  <property category="java.sapient" name="EJB_CONSOLE" value="false"/>
+  <property category="java.sapient" name="EJB_ENTITY" value="false"/>
+  <property category="java.sapient" name="EJB_FDESCR" value="false"/>
+  <property category="java.sapient" name="EJB_FILES" value="false"/>
+  <property category="java.sapient" name="EJB_HOME" value="false"/>
+  <property category="java.sapient" name="EJB_IO" value="false"/>
+  <property category="java.sapient" name="EJB_JDBC" value="false"/>
+  <property category="java.sapient" name="EJB_MESSAGE" value="false"/>
+  <property category="java.sapient" name="EJB_NAMES" value="false"/>
+  <property category="java.sapient" name="EJB_NATIVE" value="false"/>
+  <property category="java.sapient" name="EJB_OBJECT" value="false"/>
+  <property category="java.sapient" name="EJB_REFL" value="false"/>
+  <property category="java.sapient" name="EJB_SEC" value="false"/>
+  <property category="java.sapient" name="EJB_SECOBJ" value="false"/>
+  <property category="java.sapient" name="EJB_SESSION" value="false"/>
+  <property category="java.sapient" name="EJB_SFACT" value="false"/>
+  <property category="java.sapient" name="EJB_SOCKET" value="false"/>
+  <property category="java.sapient" name="EJB_SUBST" value="false"/>
+  <property category="java.sapient" name="EJB_THREADS" value="false"/>
+  <property category="java.sapient" name="EOBA" value="true"/>
+  <property category="java.sapient" name="EVC" value="true"/>
+  <property category="java.sapient" name="HIF" value="true"/>
+  <property category="java.sapient" name="HISM" value="true"/>
+  <property category="java.sapient" name="HN" value="true"/>
+  <property category="java.sapient" name="ICSBF" value="false"/>
+  <property category="java.sapient" name="IFM" value="true"/>
+  <property category="java.sapient" name="ILC" value="false"/>
+  <property category="java.sapient" name="IMCM" value="true"/>
+  <property category="java.sapient" name="IMMD" value="true"/>
+  <property category="java.sapient" name="LF" value="false"/>
+  <property category="java.sapient" name="LMC" value="false"/>
+  <property category="java.sapient" name="LNU" value="true"/>
+  <property category="java.sapient" name="MCP" value="true"/>
+  <property category="java.sapient" name="MCS" value="true"/>
+  <property category="java.sapient" name="MLOWP" value="false"/>
+  <property category="java.sapient" name="MNU" value="true"/>
+  <property category="java.sapient" name="MSOL" value="true"/>
+  <property category="java.sapient" name="MVDSN" value="false"/>
+  <property category="java.sapient" name="NC" value="true"/>
+  <property category="java.sapient" name="NCLS" value="true"/>
+  <property category="java.sapient" name="NFSF" value="false"/>
+  <property category="java.sapient" name="NLC" value="false"/>
+  <property category="java.sapient" name="NOIS" value="false"/>
+  <property category="java.sapient" name="ODCM" value="false"/>
+  <property category="java.sapient" name="OHCE" value="true"/>
+  <property category="java.sapient" name="OIM" value="true"/>
+  <property category="java.sapient" name="ONAMAM" value="true"/>
+  <property category="java.sapient" name="ONE" value="true"/>
+  <property category="java.sapient" name="OPM" value="true"/>
+  <property category="java.sapient" name="OSNBU" value="false"/>
+  <property category="java.sapient" name="OWS" value="false"/>
+  <property category="java.sapient" name="PCO" value="true"/>
+  <property category="java.sapient" name="PDBB" value="false"/>
+  <property category="java.sapient" name="PFC" value="false"/>
+  <property category="java.sapient" name="PIFS" value="false"/>
+  <property category="java.sapient" name="PJDC" value="false"/>
+  <property category="java.sapient" name="PMSNT" value="false"/>
+  <property category="java.sapient" name="PN" value="false"/>
+  <property category="java.sapient" name="PPA" value="false"/>
+  <property category="java.sapient" name="PPCF" value="true"/>
+  <property category="java.sapient" name="PSIB" value="true"/>
+  <property category="java.sapient" name="RIP" value="false"/>
+  <property category="java.sapient" name="SBC" value="true"/>
+  <property category="java.sapient" name="SEB" value="false"/>
+  <property category="java.sapient" name="SL" value="false"/>
+  <property category="java.sapient" name="SSSIDC" value="false"/>
+  <property category="java.sapient" name="SU" value="true"/>
+  <property category="java.sapient" name="TMSSC" value="false"/>
+  <property category="java.sapient" name="UAAO" value="true"/>
+  <property category="java.sapient" name="UC" value="true"/>
+  <property category="java.sapient" name="UCVN" value="false"/>
+  <property category="java.sapient" name="UE" value="true"/>
+  <property category="java.sapient" name="UL" value="true"/>
+  <property category="java.sapient" name="ULVFP" value="true"/>
+  <property category="java.sapient" name="UMM" value="true"/>
+  <property category="java.sapient" name="URSP" value="true"/>
+  <property category="java.sapient" name="enable" value="1"/>
   <property category="javaFormatting" name="EventMatch" value="0"/>
   <property category="javaFormatting" name="alwaysClasses" value="1"/>
   <property category="javaFormatting" name="classBraceNextLine" value="1"/>
@@ -31,9 +129,10 @@
   <property category="javaFormatting" name="implementsOnNewLine" value="0"/>
   <property category="javaFormatting" name="methodBraceNextLine" value="1"/>
   <property category="javaFormatting" name="otherBraceNextLine" value="1"/>
+  <property category="javaFormatting" name="packagePrefixGroups" value="java;javax;BLANK_LINE;java.awt;javax.swing;BLANK_LINE;org;(*)"/>
   <property category="javaFormatting" name="wrapAtColumn" value="110"/>
   <property category="javadoc" name="custom.tags.1" value="todo;a;To Do:"/>
-  <property category="optimize.0" name="OptimizableType" value="intuitive.ide.borland.jb10.ThreadDBootstrap"/>
+  <property category="optimize.0" name="OptimizableType" value="intuitive.ide.borland.jb10.ProfilerBootstrap"/>
   <property category="optimize.0" name="oicc.FilterFile" value="G:\projects\Jap\JAP.oif"/>
   <property category="optimize.0" name="oipr.FilterFile" value="G:\projects\Jap\JAP.oif"/>
   <property category="optimize.0" name="oira.FilterFile" value="G:\projects\Jap\JAP.oif"/>
@@ -63,8 +162,17 @@
   <property category="runtime.0" name="custom.required.7" value="JUnit"/>
   <property category="runtime.0" name="custom.required.8" value="junitx"/>
   <property category="runtime.0" name="custom.required.9" value="ApacheFTPClient"/>
+  <property category="runtime.0" name="enable.tcpmonitor" value="0"/>
+  <property category="runtime.0" name="enable.wsimonitor" value="0"/>
   <property category="runtime.0" name="jsprunner.launchuri" value="/"/>
+  <property category="runtime.0" name="tcpmonitor.listenport" value=""/>
+  <property category="runtime.0" name="tcpmonitor.targethost" value=""/>
+  <property category="runtime.0" name="tcpmonitor.targetport" value=""/>
   <property category="runtime.0" name="test.harness" value="junit.textui.TestRunner"/>
+  <property category="runtime.0" name="wsimonitor.listenport" value=""/>
+  <property category="runtime.0" name="wsimonitor.logfile" value=""/>
+  <property category="runtime.0" name="wsimonitor.targethost" value=""/>
+  <property category="runtime.0" name="wsimonitor.targetport" value=""/>
   <property category="runtime.1" name="BuildTargetOnRun" value="com.borland.jbuilder.build.ProjectBuilder$ProjectBuildAction;make"/>
   <property category="runtime.1" name="ConfigurationName" value="JAP (SampleConfiguration)"/>
   <property category="runtime.1" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
@@ -184,6 +292,7 @@
   <property category="sys" name="Copyright" value="Copyright (c) 2001"/>
   <property category="sys" name="CopyrightLabel" value="Copyright:"/>
   <property category="sys" name="DefaultPath" value="src"/>
+  <property category="sys" name="Deprecations" value="0"/>
   <property category="sys" name="Description" value=""/>
   <property category="sys" name="DescriptionLabel" value="Beschreibung:"/>
   <property category="sys" name="DocPath" value="doc"/>
@@ -192,7 +301,7 @@
   <property category="sys" name="ExcludeClassEnabled" value="0"/>
   <property category="sys" name="IncludeTestPath" value="1"/>
   <property category="sys" name="InstanceVisibility" value="0"/>
-  <property category="sys" name="JDK" value="1.1 mit JVM_1.4.2"/>
+  <property category="sys" name="JDK" value="java version 1.5.0-rc-b63"/>
   <property category="sys" name="LastTag" value="192"/>
   <property category="sys" name="Libraries" value="http;mac;XML-1.1;Apache XML-RPC;BouncyCastleLightForJAP;JUnit;junitx;ApacheFTPClient;Swing"/>
   <property category="sys" name="MakeStable" value="0"/>
