@@ -98,12 +98,13 @@ final public class AnonServiceImpl implements AnonService
 
     public AnonChannel createChannel(InetAddress addr,int port) throws ConnectException
       {
+        byte[]buff=new byte[13];
+        AnonChannel c=null;
         try
           {
-            AnonChannel c=createChannel(AnonChannel.SOCKS);
+            c=createChannel(AnonChannel.SOCKS);
             InputStream in=c.getInputStream();
             OutputStream out=c.getOutputStream();
-            byte[]buff=new byte[13];
             buff[0]=5;
             buff[1]=1;
             buff[2]=0;
@@ -118,12 +119,14 @@ final public class AnonServiceImpl implements AnonService
             out.write(buff,0,13);
             out.flush();
             in.read(buff,0,12);
-            return c;
           }
         catch(Exception e)
           {
             throw new ConnectException("createChannel(): "+e.getMessage());
           }
+        if(buff[3]!=0)// failure!
+          throw new ConnectException("SOCKS Server reports an error!");
+        return c;
       }
 
     public synchronized void addEventListener(AnonServiceEventListener l)
