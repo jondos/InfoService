@@ -226,23 +226,29 @@ final public class AnonProxy implements Runnable/*,AnonServiceEventListener*/
 
 final class Request  implements Runnable
     {
-      InputStream m_In;
-      OutputStream m_Out;
+      InputStream m_InChannel;
+      OutputStream m_OutChannel;
+      InputStream m_InSocket;
+      OutputStream m_OutSocket;
       Socket m_clientSocket;
-      Thread threadResponse;
-      AnonChannel channel;
+      Thread m_threadResponse;
+      Thread m_threadRequest;
+      AnonChannel m_Channel;
+      volatile boolean m_bRequestIsAlive;
+
       Request(Socket clientSocket,AnonChannel c)
         {
           try{
           m_clientSocket=clientSocket;
-          m_In=clientSocket.getInputStream();
-          m_Out=c.getOutputStream();
-          channel=c;
-          //c.directOutputTo(m_clientSocket.getOutputStream());
-          Thread t=new Thread(this);
-          threadResponse=new Thread(new Response(clientSocket.getOutputStream(),c.getInputStream(),t,clientSocket));
-          threadResponse.start();
-          t.start();
+          m_InSocket=clientSocket.getInputStream();
+          m_OutSocket=clientSocket.getOutputStream();
+          m_InChannel=c.getInputStream();
+          m_OutChannel=c.getOutputStream();
+          m_Channel=c;
+          m_threadRequest=new Thread(this);
+          m_threadResponse=new Thread(new Response());
+          m_threadResponse.start();
+          m_threadRequest.start();
            }
           catch(Exception e)
             {
@@ -251,13 +257,14 @@ final class Request  implements Runnable
 
        public void run()
           {
+            m_bRequestIsAlive=true;
             incNumChannels();
             int len=0;
             byte[] buff=new byte[2900];
             try{
-            while((len=m_In.read(buff,0,900))>0)
+            while((len=m_InSocket.read(buff,0,900))>0)
               {
-                m_Out.write(buff,0,len);
+                m_OutChannel.write(buff,0,len);
                 transferredBytes(len);
               }
               }
@@ -265,48 +272,41 @@ final class Request  implements Runnable
              {
               //e.printStackTrace();
              }
-             try{channel.close();}catch(Exception e){}
-
-             try{threadResponse.join(5000);}catch(Exception e){/*e.printStackTrace();*/}
+            m_bRequestIsAlive=false;
+            try{m_Channel.close();}catch(Exception e){}
+            //if(m_bResponseIsAlive)
+            //  {
+            //  }
+            //try{m_threadResponse.interrupt();}catch(Exception e){}
+             //try{threadResponse.join(5000);}catch(Exception e){
+             //e.printStackTrace();}
             decNumChannels();
-
-              //try{m_In.close();}catch(Exception e){}
-              //try{m_Out.close();}catch(Exception e){}
-              //try{m_clientSocket.close();}catch(Exception e){}
-
           }
-}
-final class Response implements Runnable
+    final class Response implements Runnable
         {
-          InputStream m_In1;
-          OutputStream m_Out1;
-          Thread threadConnection;
-          Socket clientSocket;
-          Response(OutputStream out,InputStream in,Thread t,Socket s)
+          Response()
           {
-            m_In1=in;
-            m_Out1=out;
-            threadConnection=t;
-            clientSocket=s;
-             }
+           }
 
           public void run()
             {
               int len=0;
               byte[] buff=new byte[2900];
               try{
-              while((len=m_In1.read(buff,0,1000))>0)
+              while((len=m_InChannel.read(buff,0,1000))>0)
                 {
-                  m_Out1.write(buff,0,len);
+                  m_OutSocket.write(buff,0,len);
                   transferredBytes(len);
                 }
                 }
               catch(Exception e)
                 {}
-              try{clientSocket.close();}catch(Exception e){}
-              try{threadConnection.interrupt();}catch(Exception e){}
+              try{m_clientSocket.close();}catch(Exception e){}
+              try{Thread.sleep(500);}catch(Exception e){}
+              if(m_bRequestIsAlive)
+                try{m_threadRequest.interrupt();}catch(Exception e){}
               }
 
         }
-
+  }
 }

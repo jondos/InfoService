@@ -68,15 +68,16 @@ abstract class AbstractChannel implements AnonChannel
         return m_outputStream;
       }
 
-    public /*synchronized*/ void close()
+    public synchronized void close()
       {
         try
           {
-            if(!m_bIsClosed&&!m_bIsClosedByPeer)
+            if(!m_bIsClosed)
               {
                 m_outputStream.close();
                 m_inputStream.close();
-                close_impl();
+                if(!m_bIsClosedByPeer)
+                  close_impl();
               }
           }
         catch(Exception e)
@@ -306,24 +307,24 @@ final class ChannelInputStream extends InputStream
     protected /*synchronized*/ void closedByPeer()
       {
         m_bIsClosedByPeer=true;
-       try{m_Queue.closeWrite();}catch(Exception e){}
+        try{m_Queue.closeWrite();}catch(Exception e){}
       }
 
-    public /*synchronized*/ void close() throws IOException
+    public synchronized void close() throws IOException
       {
-        m_bIsClosed=true;
         if(!m_bIsClosed)
           {
             try{m_Queue.closeWrite();}catch(Exception e){}
             m_Queue.closeRead();
             m_Queue=null;
+            m_bIsClosed=true;
           }
       }
   }
 
 final class ChannelOutputStream extends OutputStream
   {
-    boolean m_bIsClosedByPeer=false;
+    //boolean m_bIsClosedByPeer=false;
     boolean m_bIsClosed=false;
     AbstractChannel m_channel=null;
 
@@ -335,7 +336,7 @@ final class ChannelOutputStream extends OutputStream
     //OutputStream Methods
     public /*synchronized*/ void write(int i) throws IOException
       {
-        if(m_bIsClosedByPeer||m_bIsClosed)
+        if(/*m_bIsClosedByPeer||*/m_bIsClosed)
           throw new IOException("Channel closed by peer");
         byte[] buff=new byte[1];
         buff[0]=(byte)i;
@@ -344,20 +345,19 @@ final class ChannelOutputStream extends OutputStream
 
     public /*synchronized*/ void write(byte[] buff,int start,int len) throws IOException
       {
-        if(m_bIsClosedByPeer||m_bIsClosed)
+        if(/*m_bIsClosedByPeer||*/m_bIsClosed)
           throw new IOException("Channel closed by peer");
         m_channel.send(buff,(short)len);
       }
 
     public /*synchronized*/ void close()
       {
-        if(m_bIsClosed||m_bIsClosedByPeer)
-          return;
         m_bIsClosed=true;
       }
 
     protected void closedByPeer()
       {
+        m_bIsClosed=true;
       }
   }
 
