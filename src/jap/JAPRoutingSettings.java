@@ -38,7 +38,7 @@ import org.w3c.dom.Element;
 import anon.crypto.JAPCertificateStore;
 import anon.infoservice.HTTPConnectionFactory;
 import anon.infoservice.ListenerInterface;
-import anon.infoservice.InfoService;
+import anon.infoservice.InfoServiceDBEntry;
 import anon.infoservice.MixCascade;
 import anon.server.AnonServiceImpl;
 import anon.server.impl.ProxyConnection;
@@ -873,7 +873,7 @@ public class JAPRoutingSettings extends Observable
             Enumeration infoServices = infoServiceList.elements();
             boolean stopRegistration = false;
             while ((infoServices.hasMoreElements()) && (stopRegistration == false)) {
-              ServerSocketPropagandist currentPropagandist = new ServerSocketPropagandist(m_serverPort, (InfoService)(infoServices.nextElement()));
+              ServerSocketPropagandist currentPropagandist = new ServerSocketPropagandist(m_serverPort, (InfoServiceDBEntry)(infoServices.nextElement()));
               synchronized (JAPModel.getModel().getRoutingSettings()) {
                 stopRegistration = Thread.interrupted();
                 if (stopRegistration == true) {
@@ -979,7 +979,7 @@ public class JAPRoutingSettings extends Observable
    * @param a_registrationInfoService The infoservice where the new propaganda instance tries to
    *                                  registrate at.
    */
-  public void addPropagandaInstance(final InfoService a_registrationInfoService) {
+  public void addPropagandaInstance(final InfoServiceDBEntry a_registrationInfoService) {
     Thread addPropagandistThread = new Thread(new Runnable() {
       public void run() {
         boolean startNewPropagandist = false;

@@ -56,7 +56,7 @@ import anon.crypto.JAPCertificate;
 import anon.crypto.JAPCertificateStore;
 import anon.infoservice.HTTPConnectionFactory;
 import anon.infoservice.Database;
-import anon.infoservice.InfoService;
+import anon.infoservice.InfoServiceDBEntry;
 import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.JAPVersionInfo;
 import anon.infoservice.MixCascade;
@@ -142,7 +142,7 @@ public final class JAPController implements ProxyListener
 		/* set a default infoservice */
 		try
 		{
-			InfoService defaultInfoService = new InfoService(
+			InfoServiceDBEntry defaultInfoService = new InfoServiceDBEntry(
 				JAPConstants.defaultInfoServiceName,
 				JAPConstants.defaultInfoServiceID,
 				JAPConstants.defaultInfoServiceHostName,
@@ -193,11 +193,11 @@ public final class JAPController implements ProxyListener
 	public Element toXmlNode(Document doc)
 	{
 		Element infoServicesNode = doc.createElement("InfoServices");
-		Vector infoServices = Database.getInstance(InfoService.class).getEntryList();
+		Vector infoServices = Database.getInstance(InfoServiceDBEntry.class).getEntryList();
 		Enumeration it = infoServices.elements();
 		while (it.hasMoreElements())
 		{
-			infoServicesNode.appendChild( ( (InfoService) (it.nextElement())).toXmlNode(doc));
+			infoServicesNode.appendChild( ( (InfoServiceDBEntry) (it.nextElement())).toXmlNode(doc));
 		}
 		return infoServicesNode;
 	}
@@ -215,8 +215,8 @@ public final class JAPController implements ProxyListener
 			/* add all childs to the database */
 			try
 			{
-				Database.getInstance(InfoService.class).update(
-								new InfoService( (Element) (infoServiceNodes.item(i))));
+				Database.getInstance(InfoServiceDBEntry.class).update(
+								new InfoServiceDBEntry( (Element) (infoServiceNodes.item(i))));
 			}
 			catch (Exception e)
 			{
@@ -702,7 +702,7 @@ public final class JAPController implements ProxyListener
 						Element infoServiceNode = (Element) (infoServiceNodes.item(0));
 						try
 						{
-							InfoService preferedInfoService = new InfoService(infoServiceNode);
+							InfoServiceDBEntry preferedInfoService = new InfoServiceDBEntry(infoServiceNode);
 							InfoServiceHolder.getInstance().setPreferedInfoService(preferedInfoService);
 						}
 						catch (Exception e)
@@ -907,7 +907,7 @@ public final class JAPController implements ProxyListener
 			/* infoservice list */
 			e.appendChild(toXmlNode(doc));
 			/* prefered infoservice */
-			InfoService preferedInfoService = InfoServiceHolder.getInstance().getPreferedInfoService();
+			InfoServiceDBEntry preferedInfoService = InfoServiceHolder.getInstance().getPreferedInfoService();
 			Element preferedInfoServiceNode = doc.createElement("PreferedInfoService");
 			if (preferedInfoService != null)
 			{

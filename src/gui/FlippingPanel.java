@@ -136,8 +136,8 @@ final public class FlippingPanel extends JPanel
 	public Dimension getPreferredSize()
 	{
 		Dimension d1, d2;
-		d1 = m_panelFull.getMinimumSize();
-		d2 = m_panelSmall.getMinimumSize();
+		d1 = m_panelFull.getPreferredSize();
+		d2 = m_panelSmall.getPreferredSize();
 		d1.width = Math.max(d1.width, d2.width);
 		d1.width += ms_iBttnWidth;
 		if (!m_bIsFlipped)

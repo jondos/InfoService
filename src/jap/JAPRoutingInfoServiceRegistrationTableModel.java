@@ -42,13 +42,13 @@ import forward.server.ServerSocketPropagandist;
  * changed.
  */
 public class JAPRoutingInfoServiceRegistrationTableModel extends AbstractTableModel implements Observer {
-  
+
   /**
    * This is the list of all known propaganda instances, displayed in the table.
    */
   private Vector m_propagandaInstances;
-  
-  
+
+
   /**
    * Creates a new instance of JAPRoutingInfoServiceRegistrationTableModel. We do only some
    * initialization here.
@@ -56,8 +56,8 @@ public class JAPRoutingInfoServiceRegistrationTableModel extends AbstractTableMo
   public JAPRoutingInfoServiceRegistrationTableModel() {
     m_propagandaInstances = new Vector();
   }
-  
-  
+
+
   /**
    * Updates the list of all displayed propaganda instances. We add only new unknown instances
    * here, because removing of the old ones is done automatically, when they are stopped.
@@ -87,7 +87,7 @@ public class JAPRoutingInfoServiceRegistrationTableModel extends AbstractTableMo
           else {
             /* the propagandist was stopped in the meantime -> don't add it and stop observing */
             currentPropagandist.deleteObserver(this);
-          }  
+          }
         }
       }
       if (addedRows > 0) {
@@ -96,7 +96,7 @@ public class JAPRoutingInfoServiceRegistrationTableModel extends AbstractTableMo
       }
     }
   }
-  
+
   /**
    * This is the implementation of the observer of the propaganda instances. So if the instances
    * change the state, the table is updated automatically. If the instances reach the state
@@ -126,7 +126,7 @@ public class JAPRoutingInfoServiceRegistrationTableModel extends AbstractTableMo
       }
     }
   }
-  
+
   /**
    * Returns the number of rows in the infoservice registration table. This is equal to the number
    * of propaganda instances.
@@ -146,7 +146,7 @@ public class JAPRoutingInfoServiceRegistrationTableModel extends AbstractTableMo
   public int getColumnCount() {
     return 2;
   }
-  
+
   /**
    * Returns the name of the specified column. The name is resolved via JAPMessages.
    *
@@ -158,14 +158,14 @@ public class JAPRoutingInfoServiceRegistrationTableModel extends AbstractTableMo
   public String getColumnName(int a_column) {
     String returnValue = null;
     if (a_column == 0) {
-      returnValue = JAPMessages.getString("routingInfoServiceRegistrationTableColumn0Name"); 
+      returnValue = JAPMessages.getString("routingInfoServiceRegistrationTableColumn0Name");
     }
     if (a_column == 1) {
-      returnValue = JAPMessages.getString("routingInfoServiceRegistrationTableColumn1Name"); 
+      returnValue = JAPMessages.getString("routingInfoServiceRegistrationTableColumn1Name");
     }
     return returnValue;
   }
-  
+
   /**
    * Returns a value of a cell in the table. In column 0 always the names of the infoservices
    * and in column 1 always the registration status appear. If the specified values for row
@@ -201,9 +201,9 @@ public class JAPRoutingInfoServiceRegistrationTableModel extends AbstractTableMo
          * HALTED
          */
         returnValue = JAPMessages.getString("routingInfoServiceRegistrationTableStateHalted");
-      }    
+      }
     }
-    return returnValue; 
+    return returnValue;
   }
 
-}       
+}
