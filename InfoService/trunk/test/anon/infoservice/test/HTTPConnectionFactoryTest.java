@@ -69,7 +69,7 @@ public class HTTPConnectionFactoryTest extends PrivateTestCase
 	public void testCreateHTTPConnection() throws Exception
 	{
 		ListenerInterface listener =
-			new ListenerInterface("testhost", 1000, ListenerInterface.PROTOCOL_TYPE_HTTP);
+			new ListenerInterface("testhost", 1000, ListenerInterface.PROTOCOL_TYPE_HTTPS);
 		HTTPConnection connection;
 
 		connection = HTTPConnectionFactory.getInstance().createHTTPConnection(listener);
@@ -78,7 +78,7 @@ public class HTTPConnectionFactoryTest extends PrivateTestCase
 		assertEquals("testhost", connection.getHost());
 		assertEquals(1000, connection.getPort());
 		// protocol is ignored by the factory
-		assertEquals(ListenerInterface.PROTOCOL_TYPE_HTTP, connection.getProtocol());
+		assertEquals("http", connection.getProtocol());
 		//System.out.println(connection.toString());
 	}
 }

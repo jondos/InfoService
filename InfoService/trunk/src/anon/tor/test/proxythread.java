@@ -85,7 +85,7 @@ public class proxythread implements Runnable{
 					torout.write(b,0,len);
 					torout.flush();
 				}
-				if(channel.isClosedByPeer()||client.isClosed())
+				if(channel.isClosedByPeer())
 				{
 					this.stop();
 				}
