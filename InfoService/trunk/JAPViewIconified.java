@@ -69,8 +69,8 @@ final class JAPViewIconified extends JFrame implements ActionListener, JAPObserv
 		x2.setFont(fnt);
 		x3.setFont(fnt);
 		
-		JPanel p1 = new JPanel(new GridLayout(3,2) );
-		p1.add(x1); p1.add(z1);
+		JPanel p1 = new JPanel(new GridLayout(2/*3*/,2) );
+//		p1.add(x1); p1.add(z1);
 		p1.add(x2); p1.add(z2);
 		p1.add(x3); p1.add(z3);
 		
@@ -78,6 +78,7 @@ final class JAPViewIconified extends JFrame implements ActionListener, JAPObserv
 		b = new JButton(JAPUtil.loadImageIcon(model.ENLARGEYICONFN,true));
 		b.addActionListener(this);
 		b.setToolTipText(model.getString("enlargeWindow"));
+	    b.setMnemonic(model.getString("iconifyButtonMn").charAt(0));
 		p2.add(b);
 		
 		getContentPane().add(new JLabel(JAPUtil.loadImageIcon(model.JAPEYEFN,true)), BorderLayout.NORTH);

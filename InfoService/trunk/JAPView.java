@@ -44,7 +44,7 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 	private JLabel				infoServiceTextField;
 	private JLabel	 			anonTextField;
 	private JLabel              anonNameTextField;
-	private JButton				portB, httpB, isB, anonB, ano1B, infoB, helpB, startB, quitB, iconifyB;
+	private JButton				portB, httpB, isB, anonB, ano1B, infoB, helpB, startB, quitB, iconifyB, confB;
 	private JLabel			proxyMustUseLabel;
 	private JCheckBox			anonCheckBox;
 	private JCheckBox			ano1CheckBox;
@@ -59,6 +59,8 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 	private Object oValueUpdateSemaphore;
 	private boolean m_bIsIconified;
 	private String m_Title;
+	private final static boolean PROGRESSBARBORDER = true;
+	
 	//private int diff, avg, last=-1, sum=0, cnt=0; // helper variables for calculating traffic situation
 
 	public JAPView (String s)
@@ -75,9 +77,9 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 
 	public void create()
 		{
-			JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPView:initializing...");
+			JAPDebug.out(JAPDebug.INFO,JAPDebug.GUI,"JAPView:initializing...");
 			init();
-			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPView:initialization finished!");
+			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPView:initialization finished!");
 		}
 
 	private void init()
@@ -112,14 +114,15 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 	    JTabbedPane tabs = new JTabbedPane();
 	    JPanel config = buildConfigPanel();
 	    JPanel level = buildLevelPanel();
+	    tabs.addTab(model.getString("mainMeterTab"),JAPUtil.loadImageIcon(model.METERICONFN, true), level );
 	    tabs.addTab(model.getString("mainConfTab"), JAPUtil.loadImageIcon(model.CONFIGICONFN,true), config );
-	    tabs.addTab(model.getString("mainMeterTab"),JAPUtil.loadImageIcon(model.METERICONFN,true), level );
 	    // "South": Buttons
 
 			JPanel buttonPanel = new JPanel();
 	    infoB = new JButton(model.getString("infoButton"));
 	    helpB = new JButton(model.getString("helpButton"));
 	    quitB = new JButton(model.getString("quitButton"));
+	    confB = new JButton(model.getString("confButton"));
 			iconifyB = new JButton(JAPUtil.loadImageIcon(model.ICONIFYICONFN,true));
 			iconifyB.setToolTipText(model.getString("iconifyWindow"));
 
@@ -127,11 +130,16 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 			buttonPanel.add(iconifyB);
 			buttonPanel.add(infoB);
 	    buttonPanel.add(helpB);
+			buttonPanel.add(confB);
+			buttonPanel.add(new JLabel("  "));
 	    buttonPanel.add(quitB);
 			iconifyB.addActionListener(this);
+			confB.addActionListener(this);
 	    infoB.addActionListener(this);
 	    helpB.addActionListener(this);
 	    quitB.addActionListener(this);
+	    iconifyB.setMnemonic(model.getString("iconifyButtonMn").charAt(0));
+	    confB.setMnemonic(model.getString("confButtonMn").charAt(0));
 	    infoB.setMnemonic(model.getString("infoButtonMn").charAt(0));
 	    helpB.setMnemonic(model.getString("helpButtonMn").charAt(0));
 	    quitB.setMnemonic(model.getString("quitButtonMn").charAt(0));
@@ -181,8 +189,8 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 		ownTrafficChannelsProgressBar = new
 			JProgressBar(JProgressBar.HORIZONTAL,0, 1);
 		ownTrafficChannelsProgressBar.setStringPainted(true);
-		ownTrafficChannelsProgressBar.setBorderPainted(true);
-		ownTrafficChannelsProgressBar.setString("0");
+		ownTrafficChannelsProgressBar.setBorderPainted(PROGRESSBARBORDER);
+		ownTrafficChannelsProgressBar.setString(" ");
 
 		// Own traffic situation: # of bytes transmitted
 		ownTrafficBytesLabel = new JLabel("0 Bytes",SwingConstants.RIGHT);
@@ -191,18 +199,18 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 		userProgressBar = new
 			JProgressBar(JProgressBar.HORIZONTAL,0, 1);
 		userProgressBar.setStringPainted(true);
-		userProgressBar.setBorderPainted(true);
+		userProgressBar.setBorderPainted(PROGRESSBARBORDER);
 		//
 		trafficProgressBar = new
 			JProgressBar(JProgressBar.HORIZONTAL);
 		trafficProgressBar.setStringPainted(true);
-		trafficProgressBar.setBorderPainted(true);
+		trafficProgressBar.setBorderPainted(PROGRESSBARBORDER);
 
 		//
 		protectionProgressBar = new
 			JProgressBar(JProgressBar.HORIZONTAL);
 		protectionProgressBar.setStringPainted(true);
-		protectionProgressBar.setBorderPainted(true);
+		protectionProgressBar.setBorderPainted(PROGRESSBARBORDER);
 
 
 		JPanel ownTrafficPanel = new JPanel();
@@ -214,7 +222,7 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 		ownTrafficPanel.add(ownTrafficBytesLabel);
 
 		ano1CheckBox = new JCheckBox(model.getString("confActivateCheckBox"));
-		ano1CheckBox.setForeground(Color.red);
+//		ano1CheckBox.setForeground(Color.red);		
 		ano1CheckBox.setMnemonic(model.getString("confActivateCheckBoxMn").charAt(0));
 		ano1CheckBox.addActionListener(this);
 
@@ -301,6 +309,7 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 		// Line 1
 		JPanel p21 = new JPanel();
 		p21.setLayout(new BoxLayout(p21, BoxLayout.X_AXIS) );
+		p21.add(Box.createRigidArea(new Dimension(10,0)) );
 		proxyMustUseLabel = new JLabel();
 		p21.add(proxyMustUseLabel);
 		p21.add(Box.createRigidArea(new Dimension(5,0)) );
@@ -353,7 +362,7 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 		p41.setLayout(new BoxLayout(p41, BoxLayout.X_AXIS) );
 		//p41.add(Box.createRigidArea(new Dimension(10,0)) );
 		anonCheckBox = new JCheckBox(model.getString("confActivateCheckBox"));
-		anonCheckBox.setForeground(Color.red);
+//		anonCheckBox.setForeground(Color.red);
 		anonCheckBox.setMnemonic(model.getString("confActivateCheckBoxMn").charAt(0));
 		anonCheckBox.addActionListener(this);
 		p41.add(anonCheckBox );
@@ -397,6 +406,11 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 		return mainPanel;
 	}
 
+	/** 
+	 * Used to disable activation on JAP
+	 * Example: Activation of listener failed
+	 *          --> disable activation checkboxes
+	 */
 	public void disableSetAnonMode()
 		{
 			anonCheckBox.setEnabled(false);
@@ -406,7 +420,7 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 	protected void loadMeterIcons() {
 		// Load Images for "Anonymity Meter"
 		meterIcons = new ImageIcon [model.METERFNARRAY.length];
-		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPView:METERFNARRAY.length="+model.METERFNARRAY.length);
+//		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPView:METERFNARRAY.length="+model.METERFNARRAY.length);
 		for (int i=0; i<model.METERFNARRAY.length; i++) {
 			meterIcons[i] = JAPUtil.loadImageIcon(model.METERFNARRAY[i],false);
 		}
@@ -438,6 +452,8 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 					this.setVisible(false);
 //					model.setJAPViewIconified();
 				}
+				else if (event.getSource() == confB)
+					showConfigDialog();					
 				else if (event.getSource() == portB)
 					showConfigDialog(JAPConf.PORT_TAB);
 				else if (event.getSource() == httpB)
@@ -467,6 +483,10 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 				helpWindow.show();
 			}
 
+	private void showConfigDialog() { 
+		showConfigDialog(-1);
+	}
+	
 	private void showConfigDialog(int card) {
 		if(configDialog==null)
 			{
@@ -475,7 +495,8 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 				configDialog=new JAPConf(this);
 				setCursor(c);
 			}
-		configDialog.selectCard(card);
+		if (card!=-1) 
+			configDialog.selectCard(card);
 		configDialog.updateValues();
 		configDialog.show();
 	}
@@ -505,14 +526,24 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 			  proxyTextField.setVisible(false);
 			}
 		infoServiceTextField.setText(model.getInfoServiceHost()+":"+String.valueOf(model.getInfoServicePort()));
-		anonCheckBox.setSelected(model.getAnonMode());
 		anonTextField.setText(e.getHost()+":"+String.valueOf(e.getPort())+((e.getSSLPort()==-1)?"":":"+e.getSSLPort()));
 		anonNameTextField.setText(e.getName());
 		statusTextField1.setText(model.status1);
 		statusTextField2.setText(model.status2);
+		anonCheckBox.setSelected(model.getAnonMode());
+		if(model.getAnonMode()) {
+			anonCheckBox.setForeground(Color.black);
+		} else {
+			anonCheckBox.setForeground(Color.red);
+		}
 
 		// Meter panel
 		ano1CheckBox.setSelected(model.getAnonMode());
+		if(model.getAnonMode()) {
+			ano1CheckBox.setForeground(Color.black);
+		} else {
+			ano1CheckBox.setForeground(Color.red);
+		}
 		nameLabel.setText(e.getName());
 		meterLabel.setIcon(getMeterImage(e.getAnonLevel()));
 		if (model.getAnonMode()) {
@@ -582,7 +613,7 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 		if (c > ownTrafficChannelsProgressBar.getMaximum())
 			ownTrafficChannelsProgressBar.setMaximum(c);
 		ownTrafficChannelsProgressBar.setValue(c);
-		ownTrafficChannelsProgressBar.setString(String.valueOf(c));
+//		ownTrafficChannelsProgressBar.setString(String.valueOf(c));
 		}
 		public void transferedBytes(int c)
 		{
