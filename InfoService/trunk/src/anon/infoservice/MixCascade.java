@@ -56,7 +56,7 @@ public class MixCascade
   /**
    * The name of the mixcascade.
    */
-  private String name;
+  private String m_strName;
 
   /**
    * Holds the information about the interfaces (IP, Port) the mixcascade (first mix) is listening
@@ -100,7 +100,7 @@ public class MixCascade
       throw (new Exception("MixCascade: Error in XML structure."));
     }
     Element nameNode = (Element) (nameNodes.item(0));
-    name = nameNode.getFirstChild().getNodeValue();
+    m_strName = nameNode.getFirstChild().getNodeValue();
     /* get the listener interfaces */
     NodeList networkNodes = mixCascadeNode.getElementsByTagName("Network");
     if (networkNodes.getLength() == 0)
@@ -174,22 +174,31 @@ public class MixCascade
 
   /**
    * Creates a new MixCascade from the hostName / IP and the port. The hostName and port are
-   * directly used for creating the ListenerInterface for this MixCascade. The ID and the name
-   * are set to a generic value derived from the name and the port. The lastUpdate time is the
+   * directly used for creating the ListenerInterface for this MixCascade. If ID and the name
+   * are not provided, than they are set to a generic value derived from the name and the port. The lastUpdate time is the
    * current system time. One mixId is created, it is the same as the mixCascadeId. The current
    * status is set to dummy value. Cause the infoservice does not know this mixCascadeId and the
    * created mixId, you will never get a StatusInfo or a MixInfo other than the dummy one.
    *
+   * @param name A human readable name of this cascade, which could be display on the UI. If null
+   * 				than it will be constructed from hostName and port.
+   * @param id The id of this cascade. If null than it will be constructed from hostName and port.
    * @param hostName The hostname or IP address the mixcascade (first mix) is listening on.
    * @param port The port the mixcascade (first mix) is listening on.
    */
-  public MixCascade(String hostName, int port) throws Exception
+  public MixCascade(String name,String id,String hostName, int port) throws Exception
   {
     /* set a unique ID */
-    mixCascadeId = "(User) " + hostName + ":" + Integer.toString(port);
-    /* set a name */
-    name = mixCascadeId;
-    /* create the ListenerInterface */
+	if(id==null)
+    	mixCascadeId = "c" + hostName + "%3A" + Integer.toString(port);
+    else
+		mixCascadeId=id;
+	/* set a name */
+	if(name!=null)
+   		m_strName = name;
+    else
+		name=hostName + ":" + Integer.toString(port);
+	/* create the ListenerInterface */
     listenerInterfaces = new Vector();
     listenerInterfaces.addElement(new ListenerInterface(hostName, port));
     /* set the lastUpdate time */
@@ -259,7 +268,7 @@ public class MixCascade
    */
   public String getName()
   {
-    return name;
+    return m_strName;
   }
 
   /**
@@ -270,7 +279,7 @@ public class MixCascade
    */
   public String toString()
   {
-    return name;
+    return m_strName;
   }
 
   /**
@@ -365,7 +374,7 @@ public class MixCascade
     mixCascadeNode.setAttribute("id", mixCascadeId);
     /* Create the child nodes of MixCascade (Name, Network, Mixes, LastUpdate) */
     Element nameNode = doc.createElement("Name");
-    nameNode.appendChild(doc.createTextNode(name));
+    nameNode.appendChild(doc.createTextNode(m_strName));
     Element networkNode = doc.createElement("Network");
     Element listenerInterfacesNode = doc.createElement("ListenerInterfaces");
     Enumeration it = listenerInterfaces.elements();

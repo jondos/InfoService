@@ -560,8 +560,8 @@ public class JAPConfInfoService extends AbstractJAPConfModule
          */
         try
         {
-          InfoService newInfoService = new InfoService(settingsInfoHostField.getText().trim(),
-            Integer.parseInt(settingsInfoPortField.getText().trim()), null);
+          InfoService newInfoService = new InfoService(null,null,settingsInfoHostField.getText().trim(),
+            Integer.parseInt(settingsInfoPortField.getText().trim()));
           InfoServiceDatabase.getInstance().update(newInfoService);
           addDialog.hide();
           /* update the infoservice list */

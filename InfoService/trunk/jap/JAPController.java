@@ -124,7 +124,9 @@ public final class JAPController implements ProxyListener
 		/* set a default mixcascade */
 		try
 		{
-			currentMixCascade = new MixCascade(JAPConstants.defaultAnonHost,
+			currentMixCascade = new MixCascade(JAPConstants.defaultAnonName,
+											   JAPConstants.defaultAnonID,
+											   JAPConstants.defaultAnonHost,
 											   JAPConstants.defaultAnonPortNumber);
 		}
 		catch (Exception e)
@@ -134,8 +136,11 @@ public final class JAPController implements ProxyListener
 		/* set a default infoservice */
 		try
 		{
-			InfoService defaultInfoService = new InfoService(JAPConstants.defaultInfoServiceHostName,
-				JAPConstants.defaultInfoServicePortNumber, JAPConstants.DEFAULT_INFOSERVICE_NAME);
+			InfoService defaultInfoService = new InfoService(
+						 JAPConstants.defaultInfoServiceName,
+						 JAPConstants.defaultInfoServiceID,
+						 JAPConstants.defaultInfoServiceHostName,
+				JAPConstants.defaultInfoServicePortNumber);
 			InfoServiceHolder.getInstance().setPreferedInfoService(defaultInfoService);
 		}
 		catch (Exception e)

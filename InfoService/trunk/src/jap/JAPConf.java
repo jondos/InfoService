@@ -269,7 +269,7 @@ final class JAPConf extends JDialog
 	/**
 	 * This method overwrites the method show() from java.awt.Dialog. We need it for
 	 * creating the module savepoints. After this, we call the parent show() method.
-	 */	 
+	 */
 	public void show() {
 	  /* Call the create savepoint handler of all configuration modules. Because this is
 	   * a modal dialog, every call of show() from JAPView is equal to the start of the
@@ -281,7 +281,7 @@ final class JAPConf extends JDialog
 	  }
 	  /* call the original method */
 	  super.show();
-	}  
+	}
 
 	protected JPanel buildPortPanel()
 	{
@@ -1038,7 +1038,7 @@ final class JAPConf extends JDialog
 			try
 			{
 				/* this is only a test for the values */
-				MixCascade newMixCascade = new MixCascade(host, port);
+				MixCascade newMixCascade = new MixCascade(null,null,host, port);
 			}
 			catch (Exception ex)
 			{
@@ -1269,7 +1269,7 @@ final class JAPConf extends JDialog
 			// -- do stuff for manual setting of anon service
 			try
 			{
-				newMixCascade = new MixCascade(m_tfMixHost.getText().trim(),
+				newMixCascade = new MixCascade(null,null,m_tfMixHost.getText().trim(),
 											   Integer.parseInt(m_tfMixPortNumber.getText().trim()));
 			}
 			catch (Exception ex)
