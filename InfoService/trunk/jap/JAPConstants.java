@@ -30,7 +30,7 @@ package jap;
 import java.awt.Insets;
 import java.awt.Font;
 public final class JAPConstants {
-	public static final String aktVersion = "00.02.021"; //Never change the layout of this line!
+	public static final String aktVersion = "00.02.022"; //Never change the layout of this line!
 	private static final String CVS_GENERATED_RELEASE_DATE= "$Date$";
 																													 //Warning: This is a little bit tricky,
 																													 //because CVS will expand the $Date$
@@ -71,7 +71,6 @@ public final class JAPConstants {
 	static final int      SMALL_FONT_STYLE             = Font.PLAIN;
 	static final Insets   SMALL_BUTTON_MARGIN          = new Insets(1,1,1,1);
 
-	static final String   urlJAPNewVersionDownload     = "http://anon.inf.tu-dresden.de:80/~sk13/anon/jap/JAP.jar";
 	static final String   JAPLocalFilename             = "JAP.jar";
 	static final int      MAXHELPLANGUAGES             = 6;
 	public static final String   TITLE                 = "JAP";

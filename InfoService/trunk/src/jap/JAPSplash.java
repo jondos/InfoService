@@ -31,6 +31,7 @@ import java.awt.Window;
 import java.awt.Frame;
 import java.awt.Font;
 import java.awt.Image;
+import java.awt.Color;
 import java.awt.Toolkit;
 import java.awt.Graphics;
 import java.awt.FontMetrics;
@@ -138,6 +139,7 @@ final public class JAPSplash extends Window
 				if(m_imgBusy!=null)
 					goff.drawImage(m_imgBusy,15,150,this);
 				goff.setFont(m_fntFont);
+				goff.setColor(Color.black);
 				goff.drawString(m_strLoading,17,140);
 				goff.drawString(m_strVersion,m_iXVersion,m_iYVersion);
 				g.drawImage(m_imgOffScreen,0,0,this);

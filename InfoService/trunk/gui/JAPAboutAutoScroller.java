@@ -42,7 +42,7 @@ import jap.JAPConstants;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.Canvas;
-public final class JAPAboutAutoScroller extends Canvas/*JPanel*/ implements Runnable
+public final class JAPAboutAutoScroller extends Canvas implements Runnable
 	{
 		private Image m_imgOffScreen;
 		private Image m_imgBackground;
@@ -70,7 +70,6 @@ public final class JAPAboutAutoScroller extends Canvas/*JPanel*/ implements Runn
 														int scrollareawidth,int scrollareaheight,
 														String htmlText)
 			{
-				//super(null,false);
 				oSync=new Object();
 				isPainting=false;
 				m_iScrollAreaWidth=scrollareawidth;
@@ -80,7 +79,7 @@ public final class JAPAboutAutoScroller extends Canvas/*JPanel*/ implements Runn
 				m_iWidth=width;
 				m_iHeight=height;
 				setSize(width,height);
-				this.addMouseListener(new MouseAdapter()
+				addMouseListener(new MouseAdapter()
 				{
 					public void mouseClicked(MouseEvent e)
 					{
@@ -90,15 +89,14 @@ public final class JAPAboutAutoScroller extends Canvas/*JPanel*/ implements Runn
 				});
 				m_imgBackgroundPicture=background;
 				m_textArea=new JEditorPane();
-				//m_textArea.setOpaque(false);
 				m_textArea.setEditable(false);
 				m_textArea.setHighlighter(null);
 				m_textArea.setEnabled(false);
+				m_textArea.setDoubleBuffered(false);
 				m_textArea.setBackground(new Color(204,204,204));
 				m_textArea.setSize(m_iScrollAreaWidth,10000);
 				m_textArea.setContentType("text/html");
 				m_textArea.setText(htmlText.trim());
-
 				m_iTextHeight=m_textArea.getPreferredSize().height;
 
 				m_bttnOk=new JButton("Ok");
@@ -156,20 +154,23 @@ public final class JAPAboutAutoScroller extends Canvas/*JPanel*/ implements Runn
 					{
 						m_imgOffScreen = createImage(m_iScrollAreaWidth,m_iTextHeight+2*m_iScrollAreaHeight);
 						Graphics graphicsOffScreen = m_imgOffScreen.getGraphics();
-						//graphicsOffScreen.setClip(0,0,m_iScrollAreaWidth,m_iTextHeight);
-						try{
-						m_textArea.paint(graphicsOffScreen);
-						}
+						try
+							{
+								m_textArea.paint(graphicsOffScreen);
+							}
 						catch(Exception e)
 							{
-								System.out.println("Erroe");
-								graphicsOffScreen.dispose();
+								//if(graphicsOffScreen!=null)
+								//	graphicsOffScreen.dispose();
 								m_imgOffScreen=null;
-								isPainting=false;
-								return;
+								//isPainting=false;
+								//return;
 							}
-						graphicsOffScreen.dispose();
-
+						if(graphicsOffScreen!=null)
+							graphicsOffScreen.dispose();
+					}
+				if(m_imgBackground==null)
+					{
 						m_imgBackground=createImage(m_iWidth,m_iHeight);
 						Graphics g2=m_imgBackground.getGraphics();
 						g2.drawImage(m_imgBackgroundPicture,0,0,null);
@@ -192,16 +193,19 @@ public final class JAPAboutAutoScroller extends Canvas/*JPanel*/ implements Runn
 						g2.translate(x,y);
 						m_bttnOk.paint(g2);
 						g2.dispose();
-
 						m_imgDoubleBuffer=createImage(m_iWidth,m_iHeight);
 					}
 
 				Graphics g=m_imgDoubleBuffer.getGraphics();
 				g.drawImage(m_imgBackground,0,0,null);
-				if(m_iaktY<=m_iScrollAreaHeight)
-					g.drawImage(m_imgOffScreen, m_iScrollAreaX,m_iScrollAreaY+m_iScrollAreaHeight-m_iaktY,m_iScrollAreaX+m_iScrollAreaWidth,m_iScrollAreaY+m_iScrollAreaHeight,0,0,m_iScrollAreaWidth,m_iaktY ,null);
-				else
-					g.drawImage(m_imgOffScreen, m_iScrollAreaX, m_iScrollAreaY,m_iScrollAreaWidth+m_iScrollAreaX,m_iScrollAreaHeight+m_iScrollAreaY,0,m_iaktY-m_iScrollAreaHeight,m_iScrollAreaWidth,m_iaktY ,null);
+				if(m_imgOffScreen!=null)
+					{
+						m_iaktY++;
+						if(m_iaktY<=m_iScrollAreaHeight)
+							g.drawImage(m_imgOffScreen, m_iScrollAreaX,m_iScrollAreaY+m_iScrollAreaHeight-m_iaktY,m_iScrollAreaX+m_iScrollAreaWidth,m_iScrollAreaY+m_iScrollAreaHeight,0,0,m_iScrollAreaWidth,m_iaktY ,null);
+						else
+							g.drawImage(m_imgOffScreen, m_iScrollAreaX, m_iScrollAreaY,m_iScrollAreaWidth+m_iScrollAreaX,m_iScrollAreaHeight+m_iScrollAreaY,0,m_iaktY-m_iScrollAreaHeight,m_iScrollAreaWidth,m_iaktY ,null);
+					}
 				g.dispose();
 				g1.drawImage(m_imgDoubleBuffer,0,0,null);
 				isPainting=false;
@@ -213,8 +217,6 @@ public final class JAPAboutAutoScroller extends Canvas/*JPanel*/ implements Runn
 				m_bRun=true;
 				while(m_bRun)
 					{
-						m_iaktY++;
-						//repaint();
 						paint(getGraphics());
 						try
 							{
