@@ -33,9 +33,18 @@ final public class JAPTest
 {
 	public static void main(String argc[])
 		{
+		try{FileOutputStream fio=new FileOutputStream("test.test");
+			fio.write(3);
+			fio.flush();
+			fio.close();
+			}
+		catch(Exception e)
+											 {
+												e.printStackTrace();
+											 }
 	//		readSig();
 	//		readDSAPrivKey();
-			testCertAba();
+		//	testCertAba();
 	//		readCerts();
 		/*
 			int MAX=128000;

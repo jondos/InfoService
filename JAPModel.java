@@ -493,10 +493,18 @@ public final class JAPModel {
 		return img;
 	}
 	
-	public void centerFrame(Window f) {
+	public static void centerFrame(Window f) {
 		Dimension screenSize = f.getToolkit().getScreenSize();
-		Dimension ownSize = f.getSize();
-		f.setLocation((screenSize.width-ownSize.width )/2,(screenSize.height-ownSize.height)/2);
+		try //JAVA 1.1
+			{
+				Dimension ownSize = f.getSize();
+				f.setLocation((screenSize.width-ownSize.width )/2,(screenSize.height-ownSize.height)/2);
+			}
+		catch(Error e) //JAVA 1.0.2
+			{
+				Dimension ownSize = f.size();
+				f.locate((screenSize.width-ownSize.width )/2,(screenSize.height-ownSize.height)/2);
+			}
 	}
 
 }
