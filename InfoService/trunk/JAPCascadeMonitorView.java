@@ -297,7 +297,7 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener,Run
 		JAPMessages.init();
 		JAPController controller = JAPController.create();
 		JAPDebug.create();
-		controller.loadConfigFile();
+		controller.loadConfigFile(null);
 		controller.fetchAnonServers();
 		JAPDebug.setDebugType(JAPDebug.NET+JAPDebug.GUI+JAPDebug.THREAD+JAPDebug.MISC);
 		JAPDebug.setDebugLevel(JAPDebug.DEBUG);
