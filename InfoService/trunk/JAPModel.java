@@ -56,7 +56,7 @@ import anon.JAPAnonServiceListener;
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPModel implements JAPAnonServiceListener{
 
-	static final String aktVersion = "00.00.023"; // Version of JAP
+	public static final String aktVersion = "00.00.023"; // Version of JAP
 
 	private int      portNumber            = 4001;
 	private boolean  mblistenerIsLocal     = true;  // indicates whether the Listener serves for localhost only or not
@@ -149,9 +149,10 @@ public final class JAPModel implements JAPAnonServiceListener{
 
 	private JAPModel ()
 		{
-			JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:initializing...");
+			//JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:initializing...");
 			// Load Texts for Messages and Windows
-			try
+
+		try
 				{
 					msg = ResourceBundle.getBundle(MESSAGESFN, Locale.getDefault() );
 				}
@@ -169,13 +170,13 @@ public final class JAPModel implements JAPAnonServiceListener{
 							System.exit(-1);
 						}
 				}
-			JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:properties loaded");
+			//JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:properties loaded");
 
 			// Create observer object
 			observerVector = new Vector();
 			proxyDirect=null;
 			proxyAnon=null;
-			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:initialization finished!");
+			//JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:initialization finished!");
 		}
 
 	/** Creates the Model - as Singleton.
@@ -183,9 +184,7 @@ public final class JAPModel implements JAPAnonServiceListener{
 	 */
 	public static JAPModel createModel()
 		{
-			if(model!=null)
-				JAPDebug.out(JAPDebug.ALERT,JAPDebug.MISC,"JAPModel is initialized twice - Bug in Programm!!");
-			else
+			if(model==null)
 				model=new JAPModel();
 			return model;
 		}

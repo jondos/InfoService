@@ -41,9 +41,6 @@ import java.awt.event.WindowEvent;
 class JAP extends Frame{
 
 	//JAPDebug jdebug;
-	JAPModel model;
-	JAPView  view;
-	JAPViewIconified iconifiedView;
 	
 	/** At the moment - just do nothing...
 	 * @param argv The commandline arguments - maybe for future use.
@@ -83,6 +80,10 @@ class JAP extends Frame{
 						System.exit(0);
 					}	
 			}
+		
+		// Show splash screen
+		JAPSplash splash = new JAPSplash();
+		
 		//Test for Swing....
 		try
 			{
@@ -94,15 +95,13 @@ class JAP extends Frame{
 				JAPAWTMsgBox.MsgBox(this,"JAP needs the Swing library to run properly! \nYou will find more information at the JAP webpage!","Error");
 				System.exit(0);
 			}
-		
+		// Create the model object
+		JAPModel model = JAPModel.createModel();
+
 		// Create debugger object
 		JAPDebug.create();
 		JAPDebug.setDebugType(JAPDebug.NET+JAPDebug.GUI+JAPDebug.THREAD+JAPDebug.MISC);
 		JAPDebug.setDebugLevel(JAPDebug.WARNING);
-		// Create the model object
-		model = JAPModel.createModel();
-		// Show splash screen
-		JAPSplash splash = new JAPSplash(model);
 		// load settings from config file
 		model.load();
 		// Output some information about the system
@@ -111,22 +110,23 @@ class JAP extends Frame{
 		if (mrjVersion != null)
 			JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAP:MRJ Version is "+mrjVersion+".");
 		// Create the view object
-		view = new JAPView (model.TITLE);
+		JAPView view = new JAPView (model.TITLE);
 		// Create the main frame
 		view.create();
 		model.addJAPObserver(view);
 		// Create the iconified view
-		iconifiedView = new JAPViewIconified("JAP");
+		JAPViewIconified iconifiedView = new JAPViewIconified("JAP");
 		model.addJAPObserver(iconifiedView);
 		
 		//Init Crypto...
 		//java.security.Security.addProvider(new cryptix.jce.provider.CryptixCrypto());
 
 		// Dispose the spash screen and show main frame
-		splash.dispose();
 		view.show();
 		view.toFront();		
-		
+		splash.dispose();
+//		view.show();
+//		view.toFront();		
 		// initially start services
 		model.initialRun();
 	}
