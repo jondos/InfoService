@@ -79,18 +79,18 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 {
 
 	private JAPController controller;
-	private JLabel meterLabel;
+	//private JLabel meterLabel;
 	private JLabel m_labelCascadeName;
 	private JPanel m_panelMain;
 	private JButton m_bttnInfo, m_bttnHelp, m_bttnQuit, m_bttnIconify, m_bttnConf;
 	private JButton m_bttnAnonConf;
 	//private JCheckBox m_cbAnon;
-	private JProgressBar userProgressBar;
+	//private JProgressBar userProgressBar;
 	private JProgressBar trafficProgressBar;
 	private JProgressBar protectionProgressBar;
 	private JProgressBar ownTrafficChannelsProgressBar;
 	private JLabel m_labelOwnTrafficBytes, m_labelMeterDetailsName;
-	private JLabel m_labelAnonymityUser, m_labelMeterDetailsTraffic;
+
 	private JLabel m_labelMeterDetailsRisk, m_labelOwnBytes, m_labelOwnChannels;
 	//private TitledBorder m_borderOwnTraffic, m_borderAnonMeter, m_borderDetails;
 	private ImageIcon[] meterIcons;
@@ -105,6 +105,10 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 
 	private JLabel m_labelAnonService,m_labelAnonymity,m_labelAnonymityOnOff;
+	private JLabel m_labelAnonMeter;
+	private JProgressBar m_progressAnonTraffic;
+	private JLabel m_labelAnonymityUser;
+
 	private JLabel m_labelOwnActivity,m_labelForwarderActivity;
 	private JLabel m_labelOwnActivitySmall,m_labelForwarderActivitySmall;
 	private JButton m_bttnAnonDetails;
@@ -226,27 +230,32 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		l = new JLabel("Verkehr:");
 		c1.gridy = 2;
 		p.add(l, c1);
-		m_labelAnonymityUser = new JLabel("1024");
+		m_labelAnonymityUser = new JLabel("",JLabel.CENTER);
 		c1.insets = new Insets(10, 0, 0, 0);
 		c1.anchor = GridBagConstraints.CENTER;
+		c1.weightx=1;
+		c1.fill=GridBagConstraints.HORIZONTAL;
 		c1.gridy = 1;
 		c1.gridx = 1;
 		p.add(m_labelAnonymityUser, c1);
-		JProgressBar progress = new JProgressBar();
-		progress.setUI(new MyProgressBarUI(true));
-		progress.setMinimum(0);
-		progress.setMaximum(5);
-		progress.setBorderPainted(false);
+		m_progressAnonTraffic = new JProgressBar();
+		MyProgressBarUI ui=new MyProgressBarUI(true);
+		ui.setFilledBarColor(Color.blue.brighter());
+		m_progressAnonTraffic.setUI(ui);
+		m_progressAnonTraffic.setMinimum(0);
+		m_progressAnonTraffic.setMaximum(5);
+		m_progressAnonTraffic.setBorderPainted(false);
 		c1.gridy = 2;
-		p.add(progress, c1);
+		p.add(m_progressAnonTraffic, c1);
 
-		l = new JLabel(getMeterImage(3));
+		m_labelAnonMeter = new JLabel(getMeterImage(3));
 		c1.gridx = 2;
 		c1.gridy = 0;
 		c1.gridheight = 3;
 		c1.anchor = GridBagConstraints.WEST;
+		c1.fill=GridBagConstraints.NONE;
 		c1.insets = new Insets(0, 10, 0, 10);
-		p.add(l, c1);
+		p.add(m_labelAnonMeter, c1);
 
 		GridBagLayout gbl2 = new GridBagLayout();
 		GridBagConstraints c2 = new GridBagConstraints();
@@ -292,7 +301,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.fill = GridBagConstraints.HORIZONTAL;
 		c1.anchor = GridBagConstraints.EAST;
 		p.add(l, c1);
-		progress = new JProgressBar();
+		JProgressBar progress = new JProgressBar();
 		progress.setMinimum(0);
 		progress.setMaximum(10);
 		progress.setBorderPainted(false);
@@ -727,11 +736,11 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_labelOwnTrafficBytes = new JLabel("0 Bytes", SwingConstants.RIGHT);
 		m_labelOwnTrafficBytes.setFont(fontControls);
 		//
-		userProgressBar = new
-			JProgressBar(JProgressBar.HORIZONTAL, 0, 1);
-		userProgressBar.setStringPainted(true);
-		userProgressBar.setBorderPainted(PROGRESSBARBORDER);
-		userProgressBar.setFont(fontControls);
+		//userProgressBar = new
+		//	JProgressBar(JProgressBar.HORIZONTAL, 0, 1);
+		//userProgressBar.setStringPainted(true);
+		//userProgressBar.setBorderPainted(PROGRESSBARBORDER);
+		//userProgressBar.setFont(fontControls);
 		//
 		trafficProgressBar = new
 			JProgressBar(JProgressBar.HORIZONTAL);
@@ -785,14 +794,14 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		p41.add(m_bttnAnonConf);
 
 		// "anonym-o-meter"
-		JPanel meterPanel = new JPanel();
-		meterPanel.setLayout(new BorderLayout());
+		//JPanel meterPanel = new JPanel();
+		//meterPanel.setLayout(new BorderLayout());
 		//m_borderAnonMeter = new TitledBorder(JAPMessages.getString("meterBorder"));
 		//m_borderAnonMeter.setTitleFont(fontControls);
 		//meterPanel.setBorder(m_borderAnonMeter);
-		meterLabel = new JLabel(getMeterImage( -1));
-		meterPanel.add(p41 /*ano1CheckBox*/, BorderLayout.NORTH);
-		meterPanel.add(meterLabel, BorderLayout.CENTER);
+		//meterLabel = new JLabel(getMeterImage( -1));
+		//meterPanel.add(p41 /*ano1CheckBox*/, BorderLayout.NORTH);
+		//meterPanel.add(meterLabel, BorderLayout.CENTER);
 
 		// details panel
 		JPanel detailsPanel = new JPanel();
@@ -800,10 +809,10 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_labelCascadeName.setFont(fontControls);
 		m_labelMeterDetailsName = new JLabel(JAPMessages.getString("meterDetailsName") + " ");
 		m_labelMeterDetailsName.setFont(fontControls);
-		m_labelAnonymityUser = new JLabel(JAPMessages.getString("meterDetailsUsers") + " ");
-		m_labelAnonymityUser.setFont(fontControls);
-		m_labelMeterDetailsTraffic = new JLabel(JAPMessages.getString("meterDetailsTraffic") + " ");
-		m_labelMeterDetailsTraffic.setFont(fontControls);
+		//m_labelAnonymityUser = new JLabel(JAPMessages.getString("meterDetailsUsers") + " ");
+		//m_labelAnonymityUser.setFont(fontControls);
+		//m_labelMeterDetailsTraffic = new JLabel(JAPMessages.getString("meterDetailsTraffic") + " ");
+		//m_labelMeterDetailsTraffic.setFont(fontControls);
 		m_labelMeterDetailsRisk = new JLabel(JAPMessages.getString("meterDetailsRisk") + " ");
 		m_labelMeterDetailsRisk.setFont(fontControls);
 		GridBagLayout g = new GridBagLayout();
@@ -830,17 +839,17 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c.weightx = 0;
 		c.gridx = 0;
 		c.gridy = 1;
-		g.setConstraints(m_labelAnonymityUser, c);
-		detailsPanel.add(m_labelAnonymityUser);
+		//g.setConstraints(m_labelAnonymityUser, c);
+		//detailsPanel.add(m_labelAnonymityUser);
 		c.gridx = 1;
 		c.weightx = 1;
-		g.setConstraints(userProgressBar, c);
-		detailsPanel.add(userProgressBar);
+		//g.setConstraints(userProgressBar, c);
+		//detailsPanel.add(userProgressBar);
 		c.gridx = 0;
 		c.gridy = 2;
 		c.weightx = 0;
-		g.setConstraints(m_labelMeterDetailsTraffic, c);
-		detailsPanel.add(m_labelMeterDetailsTraffic);
+		//g.setConstraints(m_labelMeterDetailsTraffic, c);
+		//detailsPanel.add(m_labelMeterDetailsTraffic);
 		c.gridx = 1;
 		c.weightx = 1;
 		g.setConstraints(trafficProgressBar, c);
@@ -857,7 +866,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 		// Add all panels to level panel
 		levelPanel.add(ownTrafficPanel, BorderLayout.NORTH);
-		levelPanel.add(meterPanel, BorderLayout.CENTER);
+		//levelPanel.add(meterPanel, BorderLayout.CENTER);
 		levelPanel.add(detailsPanel, BorderLayout.SOUTH);
 
 		return levelPanel;
@@ -1039,8 +1048,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 
 		m_labelMeterDetailsName.setText(JAPMessages.getString("meterDetailsName") + " ");
-		m_labelAnonymityUser.setText(JAPMessages.getString("meterDetailsUsers") + " ");
-		m_labelMeterDetailsTraffic.setText(JAPMessages.getString("meterDetailsTraffic") + " ");
+		//m_labelAnonymityUser.setText(JAPMessages.getString("meterDetailsUsers") + " ");
+		//m_labelMeterDetailsTraffic.setText(JAPMessages.getString("meterDetailsTraffic") + " ");
 		m_labelMeterDetailsRisk.setText(JAPMessages.getString("meterDetailsRisk") + " ");
 		//m_borderOwnTraffic.setTitle(JAPMessages.getString("ownTrafficBorder"));
 		m_labelOwnChannels.setText(JAPMessages.getString("ownTrafficChannels"));
@@ -1239,18 +1248,18 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				m_labelCascadeName.setText(currentMixCascade.getName());
 				m_labelCascadeName.setToolTipText(currentMixCascade.getName());
 				StatusInfo currentStatus = currentMixCascade.getCurrentStatus();
-				meterLabel.setIcon(getMeterImage(currentStatus.getAnonLevel()));
+				m_labelAnonMeter.setIcon(getMeterImage(currentStatus.getAnonLevel()));
 				if (controller.getAnonMode())
 				{
 					if (currentStatus.getNrOfActiveUsers() > -1)
 					{
 						// Nr of active users
-						if (currentStatus.getNrOfActiveUsers() > userProgressBar.getMaximum())
-						{
-							userProgressBar.setMaximum(currentStatus.getNrOfActiveUsers());
-						}
-						userProgressBar.setValue(currentStatus.getNrOfActiveUsers());
-						userProgressBar.setString(String.valueOf(currentStatus.getNrOfActiveUsers()));
+						//if (currentStatus.getNrOfActiveUsers() > userProgressBar.getMaximum())
+						//{
+						//	userProgressBar.setMaximum(currentStatus.getNrOfActiveUsers());
+						//}
+						m_labelAnonymityUser.setText(Integer.toString(currentStatus.getNrOfActiveUsers()));
+						//userProgressBar.setString(String.valueOf(currentStatus.getNrOfActiveUsers()));
 						if (m_bIsIconified)
 						{
 							setTitle("JAP (" + Integer.toString(currentStatus.getNrOfActiveUsers()) + " " +
@@ -1259,8 +1268,10 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					}
 					else
 					{
-						userProgressBar.setValue(userProgressBar.getMaximum());
-						userProgressBar.setString(JAPMessages.getString("meterNA"));
+						m_labelAnonymityUser.setText(JAPMessages.getString("meterNA"));
+
+						//userProgressBar.setValue(userProgressBar.getMaximum());
+						//userProgressBar.setString(JAPMessages.getString("meterNA"));
 					}
 					if (currentStatus.getCurrentRisk() > -1)
 					{
@@ -1289,7 +1300,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					if (t > -1)
 					{
 						//Trafic Situation directly from InfoService
-						trafficProgressBar.setMaximum(100);
+						/*trafficProgressBar.setMaximum(100);
 						trafficProgressBar.setValue(t);
 						if (t < 30)
 						{
@@ -1305,20 +1316,31 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 							{
 								trafficProgressBar.setString(JAPMessages.getString("meterTrafficHigh"));
 							}
-						}
+						}*/
+				 		//map 0..100 --> 0..5
+						//0 --> 0
+						//1..20 --> 1
+						//21..40 --> 2
+						//41..60 --> 3
+						//61..80 --> 4
+						//81..100 --> 5
+				 		m_progressAnonTraffic.setValue((t+19)/20);
 					}
 					else
 					{
 						// no value from InfoService
-						trafficProgressBar.setValue(trafficProgressBar.getMaximum());
-						trafficProgressBar.setString(JAPMessages.getString("meterNA"));
+						m_progressAnonTraffic.setValue(0);
+
+						//trafficProgressBar.setValue(trafficProgressBar.getMaximum());
+						//trafficProgressBar.setString(JAPMessages.getString("meterNA"));
 					}
 				}
 				else
 				{
 					/* we are not in anonymity mode */
-					userProgressBar.setValue(userProgressBar.getMaximum());
-					userProgressBar.setString(JAPMessages.getString("meterNA"));
+					m_progressAnonTraffic.setValue(0);
+					//userProgressBar.setValue(userProgressBar.getMaximum());
+					//userProgressBar.setString(JAPMessages.getString("meterNA"));
 					protectionProgressBar.setValue(protectionProgressBar.getMaximum());
 					protectionProgressBar.setString(JAPMessages.getString("meterNA"));
 					trafficProgressBar.setValue(trafficProgressBar.getMaximum());
