@@ -60,16 +60,15 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 
 	// private JAPController japController;
 	private JComboBox m_comboType;
-	private JButton m_bttnUpgrade;
+	private JButton m_bttnUpgrade,m_bttnCheckForUpgrade;
 
 	private Thread m_threadGetVersionInfo;
 	private JAPVersionInfo m_devVersion;
 	private JAPVersionInfo m_releaseVersion;
 	private DateFormat m_DateFormat;
 
-	//private final String COMMAND_ABORT = "ABORT";
 	private final String COMMAND_UPGRADE = "UPGRADE";
-	//private final String COMMAND_HELP = "HELP";
+	private final String COMMAND_CHECKFORUPGRADE = "CHECKFORUPGRADE";
 
 	public JAPConfUpdate()
 	{
@@ -98,9 +97,22 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 		m_bttnUpgrade.addActionListener(this);
 		m_bttnUpgrade.setActionCommand(COMMAND_UPGRADE);
 		cButtons.anchor = GridBagConstraints.CENTER;
+		cButtons.gridx=1;
 		gridBagPanel.setConstraints(m_bttnUpgrade, cButtons);
 		m_bttnUpgrade.setEnabled(false);
 		buttonPanel.add(m_bttnUpgrade);
+
+		m_bttnCheckForUpgrade = new JButton(JAPMessages.getString("confCheckForUpgrade"));
+		m_bttnCheckForUpgrade.setIcon(JAPUtil.loadImageIcon(JAPConstants.IMAGE_RELOAD, true));
+		m_bttnCheckForUpgrade.setDisabledIcon(JAPUtil.loadImageIcon(JAPConstants.IMAGE_RELOAD_DISABLED, true));
+		m_bttnCheckForUpgrade.setPressedIcon(JAPUtil.loadImageIcon(JAPConstants.IMAGE_RELOAD_ROLLOVER, true));
+		m_bttnCheckForUpgrade.addActionListener(this);
+		m_bttnCheckForUpgrade.setActionCommand(COMMAND_CHECKFORUPGRADE);
+		cButtons.anchor = GridBagConstraints.CENTER;
+		cButtons.gridx=0;
+		gridBagPanel.setConstraints(m_bttnCheckForUpgrade, cButtons);
+		m_bttnCheckForUpgrade.setEnabled(true);
+		buttonPanel.add(m_bttnCheckForUpgrade);
 
 		//The Installed-Panel
 		gridBagPanel = new GridBagLayout();
@@ -112,16 +124,16 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 		JLabel l = new JLabel("Version: ");
 		c.gridx = 0;
 		c.gridy = 0;
-		c.anchor = c.NORTHWEST;
+		c.anchor = GridBagConstraints.NORTHWEST;
 		c.weighty = 0.33;
 		c.weightx = 0;
-		c.fill = c.NONE;
+		c.fill = GridBagConstraints.NONE;
 		c.insets = new Insets(5, 5, 5, 5);
 		gridBagPanel.setConstraints(l, c);
 		installedPanel.add(l);
 		l = new JLabel(JAPConstants.aktVersion);
 		c.gridx = 1;
-		c.fill = c.BOTH;
+		c.fill = GridBagConstraints.BOTH;
 		c.weightx = 1;
 		gridBagPanel.setConstraints(l, c);
 		installedPanel.add(l);
@@ -129,7 +141,7 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 		c.gridx = 0;
 		c.gridy = 1;
 		c.weightx = 0;
-		c.fill = c.NONE;
+		c.fill = GridBagConstraints.NONE;
 		gridBagPanel.setConstraints(l, c);
 		installedPanel.add(l);
 		String strDate = JAPConstants.strReleaseDate;
@@ -147,14 +159,14 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 		l = new JLabel(strDate);
 		c.gridx = 1;
 		c.weightx = 1;
-		c.fill = c.BOTH;
+		c.fill = GridBagConstraints.BOTH;
 		gridBagPanel.setConstraints(l, c);
 		installedPanel.add(l);
 		l = new JLabel("Type: ");
 		c.gridy = 2;
 		c.gridx = 0;
 		c.weightx = 0;
-		c.fill = c.NONE;
+		c.fill = GridBagConstraints.NONE;
 		gridBagPanel.setConstraints(l, c);
 		installedPanel.add(l);
 		if (JAPConstants.m_bReleasedVersion)
@@ -167,7 +179,7 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 		}
 		c.gridx = 1;
 		c.weightx = 1;
-		c.fill = c.BOTH;
+		c.fill = GridBagConstraints.BOTH;
 		gridBagPanel.setConstraints(l, c);
 		installedPanel.add(l);
 
@@ -180,33 +192,33 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 		c.gridx = 0;
 		c.gridy = 0;
 		c.weightx = 0;
-		c.fill = c.NONE;
+		c.fill = GridBagConstraints.NONE;
 		gridBagPanel.setConstraints(l, c);
 		latestPanel.add(l);
 		m_labelVersion = new JLabel("Unknown");
 		c.gridx = 1;
 		c.weightx = 1;
-		c.fill = c.BOTH;
+		c.fill = GridBagConstraints.BOTH;
 		gridBagPanel.setConstraints(m_labelVersion, c);
 		latestPanel.add(m_labelVersion);
 		l = new JLabel(JAPMessages.getString("updateLabelDate") + " ");
 		c.gridy = 1;
 		c.gridx = 0;
 		c.weightx = 0;
-		c.fill = c.NONE;
+		c.fill = GridBagConstraints.NONE;
 		gridBagPanel.setConstraints(l, c);
 		latestPanel.add(l);
 		m_labelDate = new JLabel("Unknown");
 		c.gridx = 1;
 		c.weightx = 1;
-		c.fill = c.BOTH;
+		c.fill = GridBagConstraints.BOTH;
 		gridBagPanel.setConstraints(m_labelDate, c);
 		latestPanel.add(m_labelDate);
 		l = new JLabel("Type: ");
 		c.gridy = 2;
 		c.gridx = 0;
 		c.weightx = 0;
-		c.fill = c.NONE;
+		c.fill = GridBagConstraints.NONE;
 		gridBagPanel.setConstraints(l, c);
 		latestPanel.add(l);
 		m_comboType = new JComboBox();
@@ -216,7 +228,7 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 		m_comboType.addItemListener(this);
 		c.gridx = 1;
 		c.weightx = 1;
-		c.fill = c.BOTH;
+		c.fill = GridBagConstraints.BOTH;
 		gridBagPanel.setConstraints(m_comboType, c);
 		latestPanel.add(m_comboType);
 
@@ -265,8 +277,6 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 		cFrame.anchor = GridBagConstraints.SOUTH;
 		gridBagFrame.setConstraints(buttonPanel, cFrame);
 		panelRoot.add(buttonPanel);
-		m_threadGetVersionInfo = new Thread(this);
-		m_threadGetVersionInfo.start();
 	}
 
 	public void run()
@@ -296,6 +306,7 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 			}
 			m_bttnUpgrade.setEnabled(true);
 		}
+		m_bttnCheckForUpgrade.setEnabled(true);
 	}
 
 	public void actionPerformed(ActionEvent e)
@@ -317,6 +328,12 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 			{
 				new JAPUpdateWizard(m_devVersion);
 			}
+		}
+		else if (e.getActionCommand().equals(COMMAND_CHECKFORUPGRADE))
+		{
+			m_bttnCheckForUpgrade.setEnabled(false);
+			m_threadGetVersionInfo = new Thread(this);
+			m_threadGetVersionInfo.start();
 		}
 	}
 
