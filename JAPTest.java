@@ -92,8 +92,10 @@ final public class JAPTest
       OutputStream out=c.getOutputStream();
       out.write("GET /index.html HTTP/1.0\n\r\n\r".getBytes());
       byte[] buff=new byte[1000];
-      in.read(buff,0,buff.length);
-      System.out.println(new String(buff));}
+      int len=0;
+      while((len=in.read(buff,0,buff.length))>0)
+        System.out.println(new String(buff,0,len));
+        }
       catch(Exception e)
         {
           e.printStackTrace();

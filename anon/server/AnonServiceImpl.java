@@ -99,12 +99,21 @@ final public class AnonServiceImpl implements AnonService
             AnonChannel c=createChannel(AnonChannel.SOCKS);
             InputStream in=c.getInputStream();
             OutputStream out=c.getOutputStream();
-            out.write(6);
-            out.write(8);
-            out.write(7);
+            byte[]buff=new byte[13];
+            buff[0]=5;
+            buff[1]=1;
+            buff[2]=0;
+
+            buff[3]=5;
+            buff[4]=1;
+            buff[5]=0;
+            buff[6]=1;
+            System.arraycopy(addr.getAddress(),0,buff,7,4); //7,8,9,10
+            buff[11]=(byte)(port>>8);
+            buff[12]=(byte)(port&0xFF);
+            out.write(buff,0,13);
             out.flush();
-            int i=in.read();
-            i=in.read();
+            in.read(buff,0,12);
             return c;
           }
         catch(Exception e)
