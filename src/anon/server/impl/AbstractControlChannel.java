@@ -49,7 +49,7 @@ public abstract class AbstractControlChannel
 		return m_iChannelID;
 	}
 
-	void sendMessage(Document docMsg)
+	public void sendMessage(Document docMsg)
 	{
 		byte[] msg=XMLUtil.XMLDocumentToString(docMsg).getBytes();
 		byte[] msglen=new byte[2];
