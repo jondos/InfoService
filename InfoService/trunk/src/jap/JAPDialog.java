@@ -35,6 +35,7 @@ import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.WindowConstants;
 
 /**
  * This is the generic implementation for a modal, user resizeable dialog. Use the root panel
@@ -91,17 +92,18 @@ public class JAPDialog
 	 */
 	public void hide()
 	{
-		m_internalDialog.hide();
+		m_internalDialog.setVisible(false);
 	}
 
 	/**
-   * Disposes the dialog (set it to invisible and releases all resources).
-   */
-  public void dispose() {
-    m_internalDialog.dispose();
-  }
-  
-  /**
+	 * Disposes the dialog (set it to invisible and releases all resources).
+	 */
+	public void dispose()
+	{
+		m_internalDialog.dispose();
+	}
+
+	/**
 	 * Set the dialog to the optimal size and center it over the parent component.
 	 */
 	public void align()
@@ -116,10 +118,10 @@ public class JAPDialog
 		JDialog dummyDialog = optionPane.createDialog(m_parentComponent, null);
 		Rectangle dummyBounds = dummyDialog.getBounds();
 		Dimension ownSize = m_internalDialog.getSize();
-		Point ownLocation = new Point( (int) (Math.max(dummyBounds.x +
-			( (dummyBounds.width - ownSize.width) / 2), 0)),
-									  (int) (Math.max(dummyBounds.y +
-			( (dummyBounds.height - ownSize.height) / 2), 0)));
+		Point ownLocation = new Point( (Math.max(dummyBounds.x +
+												 ( (dummyBounds.width - ownSize.width) / 2), 0)),
+									  (Math.max(dummyBounds.y +
+												( (dummyBounds.height - ownSize.height) / 2), 0)));
 		m_internalDialog.setLocation(ownLocation);
 	}
 
@@ -140,16 +142,17 @@ public class JAPDialog
 	 */
 	public void disableManualClosing()
 	{
-		m_internalDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
+		m_internalDialog.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 	}
 
-  /**
-   * Returns the internal used JDialog class.
-   *
-   * @return The internal used JDialog class.
-   */ 
-  public JDialog getInternalDialog() {
-    return m_internalDialog;
-  }
+	/**
+	 * Returns the internal used JDialog class.
+	 *
+	 * @return The internal used JDialog class.
+	 */
+	public JDialog getInternalDialog()
+	{
+		return m_internalDialog;
+	}
 
 }
