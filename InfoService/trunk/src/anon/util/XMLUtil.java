@@ -45,7 +45,6 @@ import java.lang.reflect.Method;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -63,10 +62,29 @@ public class XMLUtil
 	private final static String XML_STR_BOOLEAN_FALSE = "false";
 	private static DocumentBuilder ms_DocumentBuilder;
 
+	/**
+	 *
+	 * @param n Node
+	 * @param defaultValue int
+	 * @return int
+	 * @deprecated use parseValue(); scheduled for removal on 04/12/12
+	 */
 	public static int parseNodeInt(Node n, int defaultValue)
 	{
-		int i = defaultValue;
-		String s = parseNodeString(n, null);
+		return parseValue(n, defaultValue);
+	}
+
+	/**
+	 * Returns the value of the specified XML node as int.
+	 * @param a_node an XML node
+	 * @param a_defaultValue the default value
+	 * @return the value of the specified node as boolean if the element`s value is of
+	 *         type int; otherwise, the default value is returned
+	 */
+	public static int parseValue(Node a_node, int a_defaultValue)
+	{
+		int i = a_defaultValue;
+		String s = parseValue(a_node, null);
 		if (s != null)
 		{
 			try
@@ -80,10 +98,17 @@ public class XMLUtil
 		return i;
 	}
 
-	public static long parseNodeLong(Node n, long defaultValue)
+	/**
+	 * Returns the value of the specified XML node as long.
+	 * @param a_node an XML node
+	 * @param a_defaultValue the default value
+	 * @return the value of the specified node as boolean if the element`s value is of
+	 *         type long; otherwise, the default value is returned
+	 */
+	public static long parseValue(Node a_node, long a_defaultValue)
 	{
-		long i = defaultValue;
-		String s = parseNodeString(n, null);
+		long i = a_defaultValue;
+		String s = parseValue(a_node, null);
 		if (s != null)
 		{
 			try
@@ -95,6 +120,18 @@ public class XMLUtil
 			}
 		}
 		return i;
+	}
+
+	/**
+	 *
+	 * @param n Node
+	 * @param defaultValue long
+	 * @return long
+	 * @deprecated use parseValue(); scheduled for removal on 04/12/12
+	 */
+	public static long parseNodeLong(Node n, long defaultValue)
+	{
+		return parseValue(n, defaultValue);
 	}
 
 	/**
@@ -180,7 +217,7 @@ public class XMLUtil
 	 * @param attr String
 	 * @param defaultValue boolean
 	 * @return boolean
-	 * @deprecated use parseAttribute(); removed on 04/11/3
+	 * @deprecated use parseAttribute(); scheduled for removal on 04/12/3
 	 */
 	public static boolean parseElementAttrBoolean(Element e, String attr, boolean defaultValue)
 	{
@@ -193,19 +230,26 @@ public class XMLUtil
 	 * @param attr String
 	 * @param defaultValue int
 	 * @return int
-	 * @deprecated use parseAtribute(); removed on 04/11/3
+	 * @deprecated use parseAttribute(); scheduled for removal on 04/12/3
 	 */
 	public static int parseElementAttrInt(Element e, String attr, int defaultValue)
 	{
 		return parseAttribute(e, attr, defaultValue);
 	}
 
-	public static boolean parseNodeBoolean(Node n, boolean defaultValue)
+	/**
+	 * Returns the value of the specified XML node as boolean.
+	 * @param a_node an XML node
+	 * @param a_defaultValue the default value
+	 * @return the value of the specified node as boolean if the element`s value is of
+	 *         type boolean; otherwise, the default value is returned
+	 */
+	public static boolean parseValue(Node a_node, boolean a_defaultValue)
 	{
-		boolean b = defaultValue;
+		boolean b = a_defaultValue;
 		try
 		{
-			String tmpStr = parseNodeString(n, null);
+			String tmpStr = parseValue(a_node, null);
 			if (tmpStr == null)
 			{
 				return b;
@@ -223,6 +267,70 @@ public class XMLUtil
 		{
 		}
 		return b;
+
+	}
+
+	/**
+	 * Gets the content of an Element or Text Node. The "content" of an Element Node is
+	 * the text between the opening and closing Element Tag. The content of an attribute node
+	 * is the value of the attribute.
+	 * @param a_node text node, element node or attribute node
+	 * @param a_defaultValue value returned, if an error occured
+	 * @return the "content" of the node or the default value, if the node has no value or an error
+	 *         occured
+	 */
+	public static String parseValue(Node a_node, String a_defaultValue)
+	{
+		String s = a_defaultValue;
+		if (a_node != null)
+		{
+			try
+			{
+				if (a_node.getNodeType() == Node.ELEMENT_NODE)
+				{
+					a_node = a_node.getFirstChild();
+				}
+				if (a_node.getNodeType() == Node.TEXT_NODE)
+				{
+					s = "";
+					while (a_node != null &&
+						   (a_node.getNodeType() == Node.ENTITY_REFERENCE_NODE ||
+							a_node.getNodeType() == Node.TEXT_NODE))
+					{ ///@todo parsing of Documents which contains quoted chars are wrong under JAXP 1.0
+						if (a_node.getNodeType() == Node.ENTITY_REFERENCE_NODE)
+						{
+							s = s + a_node.getFirstChild().getNodeValue();
+						}
+						else
+						{
+							s = s + a_node.getNodeValue();
+						}
+						a_node = a_node.getNextSibling();
+					}
+				}
+				else
+				{
+					s = a_node.getNodeValue();
+				}
+			}
+			catch (Exception e)
+			{
+				return a_defaultValue;
+			}
+		}
+		return s;
+	}
+
+	/**
+	 *
+	 * @param n Node
+	 * @param defaultValue boolean
+	 * @return boolean
+	 * @deprecated use parseValue(); scheduled for removal on 04/12/12
+	 */
+	public static boolean parseNodeBoolean(Node n, boolean defaultValue)
+	{
+		return parseValue(n, defaultValue);
 	}
 
 	/**
@@ -234,47 +342,11 @@ public class XMLUtil
 	 * @return null if this node has no "content"
 	 * @return defaultValue if an error occured
 	 * @return "content" of the node
+	 * @deprecated use parseValue(); scheduled for removal on 04/12/12
 	 */
 	public static String parseNodeString(Node n, String defaultValue)
 	{
-		String s = defaultValue;
-		if (n != null)
-		{
-			try
-			{
-				if (n.getNodeType() == Node.ELEMENT_NODE)
-				{
-					n = n.getFirstChild();
-				}
-				if (n.getNodeType() == Node.TEXT_NODE)
-				{
-					s = "";
-					while (n != null &&
-						   (n.getNodeType() == Node.ENTITY_REFERENCE_NODE ||
-							n.getNodeType() == Node.TEXT_NODE))
-					{ ///@todo parsing of Documents which contains quoted chars are wrong under JAXP 1.0
-						if (n.getNodeType() == Node.ENTITY_REFERENCE_NODE)
-						{
-							s = s + n.getFirstChild().getNodeValue();
-						}
-						else
-						{
-							s = s + n.getNodeValue();
-						}
-						n = n.getNextSibling();
-					}
-				}
-				else
-				{
-					s = n.getNodeValue();
-				}
-			}
-			catch (Exception e)
-			{
-				return defaultValue;
-			}
-		}
-		return s;
+		return parseValue(n, defaultValue);
 	}
 
 	/**
@@ -361,7 +433,7 @@ public class XMLUtil
 	 * @param a_node an XML node
 	 * @param a_value a String
 	 * @deprecated use setValue(Node, String); this method has been declared deprecated as its name
-	 * contained an argument type; removed on 04/11/3
+	 * contained an argument type; scheduled for removal on 04/12/3
 	 */
 	public static void setNodeValue(Node a_node, String a_value)
 	{
@@ -413,7 +485,7 @@ public class XMLUtil
 	 * @param node an XML node
 	 * @param b a boolean value
 	 * @deprecated use setValue(Node, boolean); this method has been declared deprecated as its name
-	 * contained an argument type; removed on 04/11/3
+	 * contained an argument type; scheduled for removal on 04/12/3
 	 */
 	public static void setNodeBoolean(Node node, boolean b)
 	{
