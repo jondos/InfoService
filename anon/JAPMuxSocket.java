@@ -314,7 +314,7 @@ final class JAPMuxSocket implements Runnable
 								try{inDataStream.close();}catch(Exception e1){}
 								//try{threadgroupChannels.stop();}catch(Exception e2){}
 								//try{threadgroupChannels.destroy();}catch(Exception e3){}
-								try{threadRunLoop.join(2000);}catch(Exception e){e.printStackTrace();}
+								try{threadRunLoop.join(2000);}catch(Exception e){}
 								if(threadRunLoop.isAlive())
 									{
 										JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:close() Hm...MuxSocket is still alive...");
@@ -450,7 +450,7 @@ final class JAPMuxSocket implements Runnable
 															JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:Fehler bei write to browser...retrying..."+e.toString());
 														}
 												}
-											try{tmpEntry.outStream.flush();}catch(Exception e){e.printStackTrace();};
+											try{tmpEntry.outStream.flush();}catch(Exception e){}
 											JAPAnonService.increaseNrOfBytes(len);
 										}
 									}
