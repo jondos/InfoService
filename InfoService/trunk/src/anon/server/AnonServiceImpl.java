@@ -136,10 +136,10 @@ final public class AnonServiceImpl implements AnonService
 	  }*/
 
 	/** @deprecated to be removed */
-	public int sendPayPackets(String xmlData) throws ConnectException
+	/*public int sendPayPackets(String xmlData) throws ConnectException
 	{
 		return m_MuxSocket.sendPayPackets(xmlData);
-	}
+	}*/
 
 	public AnonChannel createChannel(int type) throws ConnectException
 	{
