@@ -69,16 +69,9 @@ public class ProxyInterfaceTest extends XtendedPrivateTestCase
 				  null, 1, ProxyInterface.PROTOCOL_TYPE_HTTP, "Jupp",
 				  new DummyPasswordReader(), false, true).isValid()));
 
-		try
-		{
-			// no authentication possible for this protocol type
-			new ProxyInterface("myhost", 1, ProxyInterface.PROTOCOL_TYPE_SOCKS, "Jupp",
+		// no authentication possible for this protocol type
+		new ProxyInterface("myhost", 1, ProxyInterface.PROTOCOL_TYPE_SOCKS, "Jupp",
 						   new DummyPasswordReader(), true, true);
-		    fail();
-		}
-		catch (IllegalStateException a_e)
-		{
-		}
 	}
 
 	/**
