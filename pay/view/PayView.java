@@ -226,7 +226,7 @@ public class PayView extends JPanel
 				else
 				{
 					LogHolder.log(LogLevel.DEBUG, LogType.PAY,
-						"neue Konto erschaffen geht nicht falsche IP-Adresse oder AccountDatei nicht geladen");
+								  "neue Konto erschaffen geht nicht falsche IP-Adresse oder AccountDatei nicht geladen");
 				}
 			}
 		});
@@ -249,7 +249,7 @@ public class PayView extends JPanel
 				else
 				{
 					LogHolder.log(LogLevel.DEBUG, LogType.PAY,
-						"aktuelles Guthaben anzeigen geht nicht Pay Instance Server ist nicht initialisiert");
+								  "aktuelles Guthaben anzeigen geht nicht Pay Instance Server ist nicht initialisiert");
 				}
 			}
 		});

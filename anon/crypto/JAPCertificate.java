@@ -25,6 +25,8 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
+
+
 package anon.crypto;
 
 import java.io.ByteArrayInputStream;
@@ -59,7 +61,7 @@ import anon.server.impl.Base64;
 public class JAPCertificate
 {
 	private X509CertificateStructure x509cert;
-	private JAPDSAPublicKey pubKey;
+	private MyDSAPublicKey pubKey;
 	private Time endDate;
 	private Time startDate;
 	private X509Name issuer;
@@ -94,7 +96,7 @@ public class JAPCertificate
 			m_japcert.pubkeyinfo = m_x509cert.getSubjectPublicKeyInfo();
 			m_japcert.tbscert = m_x509cert.getTBSCertificate();
 			m_japcert.version = m_x509cert.getVersion();
-			m_japcert.pubKey = new JAPDSAPublicKey(m_x509cert.getSubjectPublicKeyInfo());
+			m_japcert.pubKey = new MyDSAPublicKey(m_x509cert.getSubjectPublicKeyInfo());
 			m_japcert.x509cert = m_x509cert;
 			return m_japcert;
 		}

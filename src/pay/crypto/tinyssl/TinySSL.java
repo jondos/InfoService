@@ -55,7 +55,6 @@ import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
 import org.bouncycastle.crypto.params.KeyParameter;
 import org.bouncycastle.crypto.params.RSAKeyParameters;
 //import org.xwt.util.Log;
-
 /**
  TinySSL: a tiny SSL implementation in Java, built on the
  bouncycastle.org lightweight crypto library.
@@ -102,7 +101,9 @@ import org.bouncycastle.crypto.params.RSAKeyParameters;
  http://online.securityfocus.com/archive/1/286290
 
  */
-import logging.*;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 
 public class TinySSL extends Socket
 {
@@ -480,7 +481,7 @@ public class TinySSL extends Socket
 						break;
 
 					case 11: // Server's certificate(s)
-							LogHolder.log(LogLevel.DEBUG,LogType.PAY, "got Server Certificate(s)");
+						LogHolder.log(LogLevel.DEBUG, LogType.PAY, "got Server Certificate(s)");
 						int numcertbytes = ( (rec[4] & 0xff) << 16) | ( (rec[5] & 0xff) << 8) |
 							(rec[6] & 0xff);
 						int numcerts = 0;
@@ -540,7 +541,7 @@ public class TinySSL extends Socket
 
 								// the following idiocy is a result of the brokenness of the GNU Classpath's SimpleDateFormat
 								String s = tbs.getStartDate().getTime();
-								LogHolder.log(LogLevel.DEBUG,LogType.PAY, "startDate: " + s);
+								LogHolder.log(LogLevel.DEBUG, LogType.PAY, "startDate: " + s);
 								/*  s = s.substring(2, 4) + "-" + s.substring(4, 6) + "-" + s.substring(0, 2) + "-" + s.substring(6, 8) + "-" +
 								  s.substring(8, 10) + "-" + s.substring(10, 12) + "-" + s.substring(12);
 								  LogHolder.log(this,"startDate: "+s);
@@ -548,7 +549,7 @@ public class TinySSL extends Socket
 								Date startDate = dateF.parse(s, new ParsePosition(0));
 
 								s = tbs.getEndDate().getTime();
-								LogHolder.log(LogLevel.DEBUG,LogType.PAY, "endDate: " + s);
+								LogHolder.log(LogLevel.DEBUG, LogType.PAY, "endDate: " + s);
 
 								/*                                s = s.substring(2, 4) + "-" + s.substring(4, 6) + "-" + s.substring(0, 2) + "-" + s.substring(6, 8) + "-" +
 								 s.substring(8, 10) + "-" + s.substring(10, 12) + "-" + s.substring(12);
@@ -556,9 +557,9 @@ public class TinySSL extends Socket
 								Date endDate = dateF.parse(s, new ParsePosition(0));
 
 								Date now = new Date();
-								LogHolder.log(LogLevel.DEBUG,LogType.PAY, "now: " + now);
-								LogHolder.log(LogLevel.DEBUG,LogType.PAY, "start: " + startDate);
-								LogHolder.log(LogLevel.DEBUG,LogType.PAY, "end: " + endDate);
+								LogHolder.log(LogLevel.DEBUG, LogType.PAY, "now: " + now);
+								LogHolder.log(LogLevel.DEBUG, LogType.PAY, "start: " + startDate);
+								LogHolder.log(LogLevel.DEBUG, LogType.PAY, "end: " + endDate);
 
 								if (!ignoreUntrustedCert && now.after(endDate))
 								{
@@ -570,7 +571,8 @@ public class TinySSL extends Socket
 										startDate);
 								}
 
-								LogHolder.log(LogLevel.DEBUG,LogType.PAY, "server cert (name, validity dates) checks out okay");
+								LogHolder.log(LogLevel.DEBUG, LogType.PAY,
+											  "server cert (name, validity dates) checks out okay");
 
 							}
 							else
@@ -607,7 +609,8 @@ public class TinySSL extends Socket
 							i += certlen + 3;
 							numcerts++;
 						}
-							LogHolder.log(LogLevel.DEBUG,LogType.PAY, "  Certificate (" + numcerts + " certificates)");
+						LogHolder.log(LogLevel.DEBUG, LogType.PAY,
+									  "  Certificate (" + numcerts + " certificates)");
 
 						if (ignoreUntrustedCert)
 						{
@@ -623,7 +626,8 @@ public class TinySSL extends Socket
 							if (subject.indexOf(trusted_CA_public_key_identifiers[i]) != -1 &&
 								isSignedBy(this_cert, trusted_CA_public_keys[i]))
 							{
-									LogHolder.log(LogLevel.DEBUG,LogType.PAY, "pass 1: server cert was signed by trusted CA " + i);
+								LogHolder.log(LogLevel.DEBUG, LogType.PAY,
+											  "pass 1: server cert was signed by trusted CA " + i);
 								good = true;
 								break;
 							}
@@ -636,8 +640,8 @@ public class TinySSL extends Socket
 							{
 								if (isSignedBy(this_cert, trusted_CA_public_keys[i]))
 								{
-										LogHolder.log(LogLevel.DEBUG,LogType.PAY,
-											"pass 2: server cert was signed by trusted CA " + i);
+									LogHolder.log(LogLevel.DEBUG, LogType.PAY,
+												  "pass 2: server cert was signed by trusted CA " + i);
 									good = true;
 									break;
 								}
@@ -651,17 +655,17 @@ public class TinySSL extends Socket
 						break;
 
 					case 12:
-							LogHolder.log(LogLevel.DEBUG,LogType.PAY, "got ServerKeyExchange");
+						LogHolder.log(LogLevel.DEBUG, LogType.PAY, "got ServerKeyExchange");
 						serverKeyExchange = rec;
 						break;
 
 					case 13:
-							LogHolder.log(LogLevel.DEBUG,LogType.PAY, "got Request for Client Certificates");
+						LogHolder.log(LogLevel.DEBUG, LogType.PAY, "got Request for Client Certificates");
 						cert_requested = true;
 						break;
 
 					case 14:
-							LogHolder.log(LogLevel.DEBUG,LogType.PAY, "  ServerHelloDone");
+						LogHolder.log(LogLevel.DEBUG, LogType.PAY, "  ServerHelloDone");
 						return;
 					default:
 						throw new SSLException("unknown handshake of type " + rec[0]);
@@ -703,7 +707,7 @@ public class TinySSL extends Socket
 				}
 			}
 
-				LogHolder.log(LogLevel.DEBUG,LogType.PAY, "server finished message checked out okay!");
+			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "server finished message checked out okay!");
 		}
 
 	}
@@ -800,10 +804,10 @@ public class TinySSL extends Socket
 		public void sendClientHandshakes() throws IOException
 		{
 
-				LogHolder.log(LogLevel.DEBUG,LogType.PAY, "shaking hands");
+			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "shaking hands");
 			if (cert_requested)
 			{
-					LogHolder.log(LogLevel.DEBUG,LogType.PAY, "telling the server we have no certificates");
+				LogHolder.log(LogLevel.DEBUG, LogType.PAY, "telling the server we have no certificates");
 				writeHandshake(11, new byte[]
 							   {0x0, 0x0, 0x0});
 			}
@@ -862,7 +866,7 @@ public class TinySSL extends Socket
 						}
 					}
 
-						LogHolder.log(LogLevel.DEBUG,LogType.PAY, "ServerKeyExchange successfully processed");
+					LogHolder.log(LogLevel.DEBUG, LogType.PAY, "ServerKeyExchange successfully processed");
 				}
 
 				AsymmetricBlockCipher rsa = new PKCS1(new RSAEngine());
@@ -880,7 +884,7 @@ public class TinySSL extends Socket
 			}
 
 			// ChangeCipherSpec
-				LogHolder.log(LogLevel.DEBUG,LogType.PAY, "Handshake complete; sending ChangeCipherSpec");
+			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Handshake complete; sending ChangeCipherSpec");
 			write(new byte[]
 				  {0x01}
 				  , 0, 1, (byte) 20);

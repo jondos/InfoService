@@ -29,34 +29,28 @@
    LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
    ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
    POSSIBILITY OF SUCH DAMAGE
-*/
+ */
 package payxml;
 
+import java.io.ByteArrayOutputStream;
+import java.security.InvalidKeyException;
+import java.security.MessageDigest;
+import java.security.SignatureException;
 import org.bouncycastle.crypto.DataLengthException;
 import org.bouncycastle.crypto.digests.SHA1Digest;
-import org.bouncycastle.crypto.engines.RSAEngine;
 import org.bouncycastle.crypto.params.RSAKeyParameters;
-
-import org.w3c.dom.*;
-
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import payxml.util.Base64;
 import payxml.util.Signer;
-
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
-
-import java.math.BigInteger;
-
-import java.security.*;
-
 
 /**
  * This class contains the functionality for parsing and verifying XML
  * signatures, and for signing XML documents using the W3C's enveloped
  * signature format. The class XMLSigner is obsolete, its functionality is now
  * included in this class. This class can be used for two main purposes:
- * 
+ *
  * <ol>
  * <li>
  * XML Signature checking:
@@ -84,14 +78,14 @@ import java.security.*;
  * </li>
  * </ol>
  *
- * For usage of this class see the file XMLSignatureTest.java included in the 
+ * For usage of this class see the file XMLSignatureTest.java included in the
  * package payxml.test
  */
 final public class XMLSignature extends XMLDocument
 {
 	//~ Static fields/initializers *********************************************
 
-	static private final String templateSignature1 = 
+	static private final String templateSignature1 =
 		"<Signature xmlns=\"http://www.w3.org/2000/09/xmldsig#\">";
 	static private final String templateSignature2 = "<SignatureValue>";
 	static private final String templateSignature3 = "</SignatureValue></Signature>";
@@ -118,11 +112,14 @@ final public class XMLSignature extends XMLDocument
 	public XMLSignature(byte[] data) throws Exception
 	{
 		setDocument(data);
-		try {
+		try
+		{
 			m_publicKey = null;
 
 			//sig=Signature.getInstance("SHA1withRSA");
-		} catch (Exception e) {
+		}
+		catch (Exception e)
+		{
 			//sig=null;
 		}
 	}
@@ -140,7 +137,6 @@ final public class XMLSignature extends XMLDocument
 		signer.init(true, privKey);
 	}
 
-
 	/**
 	 * Initizalize this instance for checking signatures.
 	 *
@@ -151,7 +147,6 @@ final public class XMLSignature extends XMLDocument
 		signer.init(false, pubKey);
 		m_publicKey = pubKey;
 	}
-
 
 	/**
 	 * Signs the XML document after making it canonical and returns a String
@@ -167,17 +162,18 @@ final public class XMLSignature extends XMLDocument
 		// 3. put the <SignedInfo> envelope around the digest
 		// 4. sign the <SignedInfo> node
 		// 5. put the other templates around the whole thing
-		try {
+		try
+		{
 			// first, make our whole document canonical
 			ByteArrayOutputStream out = new ByteArrayOutputStream();
 			if (makeCanonical(domDocument.getDocumentElement(), out, false) == -1
-			) {
+				)
+			{
 				throw new SignatureException("could not make canonical");
 			}
 			out.flush();
 
 			byte[] hk = out.toByteArray();
-
 
 			// signing implementation using bouncycastle
 			// OK with JDK1.1.8 + Bouncycastle
@@ -188,10 +184,13 @@ final public class XMLSignature extends XMLDocument
 
 			byte[] sigvalue = null;
 			byte[] signedInfo = getSignedInfo(digest).getBytes();
-			try {
+			try
+			{
 				signer.update(signedInfo);
 				sigvalue = signer.generateSignature();
-			} catch (DataLengthException e) {
+			}
+			catch (DataLengthException e)
+			{
 				e.printStackTrace();
 			}
 
@@ -212,20 +211,24 @@ final public class XMLSignature extends XMLDocument
 			signedBuffer.append(xmlDocument.substring(index));
 
 			return signedBuffer.toString();
-		} catch (Exception e) {
+		}
+		catch (Exception e)
+		{
 			throw new SignatureException(e.getMessage());
 		}
 	}
-
 
 	/**
 	 * verifies the Signature contained in this document
 	 */
 	public boolean verifyXML() throws Exception
 	{
-		try {
+		try
+		{
 			return verifyXML(domDocument.getDocumentElement());
-		} catch (Exception e) {
+		}
+		catch (Exception e)
+		{
 			e.printStackTrace();
 			throw e;
 		}
@@ -238,46 +241,50 @@ final public class XMLSignature extends XMLDocument
 	{
 		//FIXME: Thread Safe ???
 		//
-		// Algorithm: 
-		// 1. Make SignedInfo canonical 
-		// 2. Check Signature 
-		// 3. Make reference message digest 
+		// Algorithm:
+		// 1. Make SignedInfo canonical
+		// 2. Check Signature
+		// 3. Make reference message digest
 		// 4. check wether reference digest is ok
 
-		try {
-			if (n == null) {
+		try
+		{
+			if (n == null)
+			{
 				throw new SignatureException("Root Node is null");
 			}
 
 			Element root = (Element) n;
 			NodeList nl = root.getElementsByTagName("Signature");
-			if (nl.getLength() < 1) {
+			if (nl.getLength() < 1)
+			{
 				throw new SignatureException("No <Signature> Tag");
 			}
 
 			Element signature = (Element) nl.item(0);
 			root.removeChild(signature);
 			nl = signature.getElementsByTagName("SignedInfo");
-			if (nl.getLength() < 1) {
+			if (nl.getLength() < 1)
+			{
 				throw new SignatureException("No <SignedInfo> Tag");
 			}
 
 			Element siginfo = (Element) nl.item(0);
 
-
 			// 1. make SignedInfo Canonical....
 			ByteArrayOutputStream out = new ByteArrayOutputStream();
-			if (makeCanonical(siginfo, out, false) == -1) {
+			if (makeCanonical(siginfo, out, false) == -1)
+			{
 				throw new SignatureException(
 					"Could not make <SignedInfo> canonical"
-				);
+					);
 			}
 			out.flush();
 
-
 			// 2. Check Signature
 			nl = signature.getElementsByTagName("SignatureValue");
-			if (nl.getLength() < 1) {
+			if (nl.getLength() < 1)
+			{
 				throw new SignatureException("No <SignatureValue> Tag");
 			}
 
@@ -286,9 +293,11 @@ final public class XMLSignature extends XMLDocument
 			byte[] rsbuff = Base64.decode(strSigValue.toCharArray());
 
 			// check Signature value, using JDK1.1.8+bouncycastle
-			synchronized (signer) {
+			synchronized (signer)
+			{
 				signer.update(out.toByteArray());
-				if (!signer.verify(rsbuff)) {
+				if (!signer.verify(rsbuff))
+				{
 					return false;
 				}
 			}
@@ -303,7 +312,8 @@ final public class XMLSignature extends XMLDocument
 
 			// 3. Signature value ok, now make Reference msg digest....
 			out.reset();
-			if (makeCanonical(root, out, true) == -1) {
+			if (makeCanonical(root, out, true) == -1)
+			{
 				throw new SignatureException("Could not make ROOT canonical");
 			}
 			out.flush();
@@ -313,7 +323,8 @@ final public class XMLSignature extends XMLDocument
 			byte[] digest = sha1.digest(hk);
 
 			nl = siginfo.getElementsByTagName("DigestValue");
-			if (nl.getLength() < 1) {
+			if (nl.getLength() < 1)
+			{
 				throw new SignatureException("No <DigestValue> Tag");
 			}
 
@@ -321,18 +332,19 @@ final public class XMLSignature extends XMLDocument
 			rsbuff = Base64.decode(strDigest.toCharArray());
 
 			return MessageDigest.isEqual(rsbuff, digest);
-		} catch (Exception e) {
+		}
+		catch (Exception e)
+		{
 			e.printStackTrace();
 			throw new SignatureException(e.getMessage());
 		}
 	}
 
-
 	/**
 	 * add the SignedInfo envelope around the digest
 	 *
 	 * @param digest The message digest binary value
-	 * @return SignedInfo xml envelope with the Base64-encoded digest 
+	 * @return SignedInfo xml envelope with the Base64-encoded digest
 	 */
 	private String getSignedInfo(byte[] digest)
 	{

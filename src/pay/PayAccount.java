@@ -145,12 +145,12 @@ public class PayAccount extends XMLDocument
 			// passiert jetzt in XMLCostConfirmations
 
 			/*
-				buffer.append("<Confirmations>");
+			 buffer.append("<Confirmations>");
 			  enum = costConfirms.elements();
 			  while(enum.hasMoreElements())
 			  {
-				XMLCostConfirmation confirm= (XMLCostConfirmation) enum.nextElement();
-				buffer.append(confirm.getXMLString(false));
+			 XMLCostConfirmation confirm= (XMLCostConfirmation) enum.nextElement();
+			 buffer.append(confirm.getXMLString(false));
 			  }
 			  buffer.append("</Confirmations>");
 			 */
