@@ -27,36 +27,60 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 */
 package anon.util;
 
+import java.io.UnsupportedEncodingException;
+
 public class URLDecoder
+{
+	public static String decode(String s)
 	{
-		public static String decode(String s)
+		byte[] enc = new byte[s.length()];
+		int bytes;
+		char c;
+
+	    if( s == null)
+		{
+			return null;
+		}
+		try
+		{
+			StringBuffer output=new StringBuffer();
+			int i = 0;
+			bytes = 0;
+
+			while(i < s.length())
 			{
-				if(s==null)
-					return null;
-				try
-					{
-						StringBuffer output=new StringBuffer();
-						int i=0;
-						while(i<s.length())
-							{
-								char c=s.charAt(i);
-								if(c=='+')
-									output.append(' ');
-								else if(c=='%')
-									{
-										int k=Integer.parseInt(s.substring(i+1,i+3));
-										output.append(k);
-										i+=2;
-									}
-								else
-									output.append(c);
-								i++;
-							}
-						return output.toString();
-					}
-				catch(Exception e)
-					{
-						return null;
-					}
+				c = s.charAt(i);
+				if(c=='+')
+				{
+					output.append(' ');
+				}
+				else if (c=='%')
+				{
+					enc[bytes] = (byte)Integer.parseInt(s.substring(i + 1, i + 3), 16);
+					bytes++;
+					i += 2;
+				}
+				else
+				{
+					output.append(c);
+				}
+				i++;
+
+	            if ((i < s.length() && s.charAt(i) != '%') || i >= s.length())
+				{
+					output.append(new String(enc, 0, bytes, "UTF-8"));
+					bytes = 0;
+				}
 			}
+			return output.toString();
+		}
+		catch (NumberFormatException a_e)
+		{
+			return null;
+		}
+		catch (UnsupportedEncodingException a_e)
+		{
+			return null;
+		}
 	}
+}
