@@ -24,15 +24,6 @@ public final class JAPFeedback implements Runnable {
 	public void run()
 		{
 			boolean error;
-			URL url=null;
-			try{
-				url=new URL("http://"+model.infoServiceHostName+":"+model.infoServicePortNumber+
-		  							"/feedback/"+model.anonHostName+DP+model.anonPortNumber);
-				}
-			catch(Exception e)
-				{
-					return;
-				}
 			
 			runFlag = true;
 			while(runFlag)
@@ -46,6 +37,8 @@ public final class JAPFeedback implements Runnable {
 							try
 								{
 									error = false;
+									URL url=new URL("http://"+model.getInfoServiceHost()+":"+model.getInfoServicePort()+
+		  												"/feedback/"+model.anonHostName+DP+model.anonPortNumber);
 									Socket socket = new Socket(url.getHost(),((url.getPort()==-1)?80:url.getPort()));
 									BufferedWriter out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
 									out.write("GET "+url.getFile()+" HTTP/1.0\r\n\r\n");

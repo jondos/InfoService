@@ -365,17 +365,57 @@ public final class JAPConf extends JDialog
 	protected void CancelPressed()
 			{
 				setVisible(false);
-			}
+		}
+	
+	/**Shows a Dialog about whats going wrong
+	 */
+	private void showError(String msg)
+		{
+			JOptionPane.showMessageDialog(this,msg,model.getString("ERROR"),JOptionPane.ERROR_MESSAGE);
+		}
 
+	/** Checks if all Input in all Fiels make sense. Dispaly InfoBoxes about what is wrong.
+	 * @return true if all is ok
+	 *					false otherwise
+	 */
+	private boolean checkValues()
+		{
+			String s=null;
+			int i;
+			s=infohostTextField.getText().trim();
+			if(s==null||s.equals(""))
+				{
+					showError(model.getString("inputInfoServiceHostNotNull"));
+					return false;
+				}
+			try
+				{
+					i=Integer.parseInt(infoportnumberTextField.getText().trim());
+				}
+			catch(Exception e)
+				{
+					i=-1;
+				}
+			if(!model.isPort(i))
+				{
+					showError(model.getString("inputInfoServicePortWrong"));
+					return false;
+				}
+			return true;
+		}
+															
 	protected void OKPressed() 
 			{
-		setVisible(false);
+				if(!checkValues())
+					return;
+				setVisible(false);
 				model.setProxyMode(proxyCheckBox.isSelected());
 				model.setPortNumber(Integer.parseInt(portnumberTextField.getText().trim()));
 				model.proxyHostName = proxyhostTextField.getText().trim();
 				model.proxyPortNumber = Integer.parseInt(proxyportnumberTextField.getText().trim());
-				model.infoServiceHostName = infohostTextField.getText().trim();
-				model.infoServicePortNumber = Integer.parseInt(infoportnumberTextField.getText().trim());
+				
+				model.setInfoService(infohostTextField.getText().trim(),
+														 Integer.parseInt(infoportnumberTextField.getText().trim()));
 				model.anonHostName = anonhostTextField.getText().trim();
 				model.anonPortNumber  = Integer.parseInt(anonportnumberTextField.getText().trim());
 				model.autoConnect = autoConnectCheckBox.isSelected();
@@ -420,8 +460,8 @@ public final class JAPConf extends JDialog
 		proxyhostTextField.setText(model.proxyHostName);
 		proxyportnumberTextField.setText(String.valueOf(model.proxyPortNumber));
 		// info tab
-		infohostTextField.setText(model.infoServiceHostName);
-		infoportnumberTextField.setText(String.valueOf(model.infoServicePortNumber));
+		infohostTextField.setText(model.getInfoServiceHost());
+		infoportnumberTextField.setText(String.valueOf(model.getInfoServicePort()));
 		// anon tab
 		anonhostTextField.setText(model.anonHostName);
 		anonportnumberTextField.setText(String.valueOf(model.anonPortNumber));

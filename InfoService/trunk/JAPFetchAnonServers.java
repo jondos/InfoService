@@ -9,7 +9,7 @@ public final class JAPFetchAnonServers {
 	}
 	
 	public void fetch() throws Exception {
-		String path = "http://"+model.infoServiceHostName+":"+model.infoServicePortNumber+
+		String path = "http://"+model.getInfoServiceHost()+":"+model.getInfoServicePort()+
 		  			  "/servers";
 		try {
 			URL url=new URL(path);
