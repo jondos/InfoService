@@ -30,6 +30,9 @@ package anon;
 import java.net.InetAddress;
 import org.w3c.dom.Node;
 import org.w3c.dom.Element;
+import org.w3c.dom.DocumentFragment;
+import org.w3c.dom.Document;
+import javax.xml.parsers.DocumentBuilderFactory;
 
 import anon.server.impl.XMLUtil;
 final public class ListenerInterface
@@ -98,4 +101,35 @@ final public class ListenerInterface
 						throw new Exception("Invalid ListenerInterface");
 					}
 			}
+
+		public Node toXmlNode(Document owner)
+			{
+				try
+					{
+						DocumentFragment docFrag=owner.createDocumentFragment();
+						Element elemListener=owner.createElement("ListenerInterface");
+						docFrag.appendChild(elemListener);
+						if(m_strIP!=null)
+							{
+								Element elemIP=owner.createElement("IP");
+								XMLUtil.setNodeValue(elemIP,m_strIP);
+								elemListener.appendChild(elemIP);
+							}
+						if(m_strHost!=null)
+							{
+								Element elemHost=owner.createElement("Host");
+								XMLUtil.setNodeValue(elemHost,m_strHost);
+								elemListener.appendChild(elemHost);
+							}
+						Element elemPort=owner.createElement("Port");
+						XMLUtil.setNodeValue(elemPort,Integer.toString(m_iPort));
+						elemListener.appendChild(elemPort);
+						return docFrag;
+					}
+				catch(Throwable t)
+					{
+						return null;
+					}
+			}
+
 	}

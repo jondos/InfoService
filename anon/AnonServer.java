@@ -35,6 +35,9 @@ import java.util.Vector;
 import org.w3c.dom.Node;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+import org.w3c.dom.DocumentFragment;
+import org.w3c.dom.Document;
+import javax.xml.parsers.DocumentBuilderFactory;
 
 import anon.server.impl.XMLUtil;
 
@@ -260,5 +263,38 @@ public final class AnonServer implements Serializable
 		public String toString()
 			{
 				return m_strName;
+			}
+
+		public Node toXmlNode(Document owner)
+			{
+				try
+					{
+
+						DocumentFragment docFrag=owner.createDocumentFragment();
+						Element elemCascade=owner.createElement("MixCascade");
+						docFrag.appendChild(elemCascade);
+						if(m_strId!=null)
+							elemCascade.setAttribute("id",m_strId);
+						if(m_strName!=null)
+							{
+								Element elemName=owner.createElement("Name");
+								XMLUtil.setNodeValue(elemName,m_strName);
+								elemCascade.appendChild(elemName);
+							}
+						Element elemNetwork=owner.createElement("Network");
+						elemCascade.appendChild(elemNetwork);
+						Element elemListeners=owner.createElement("ListenerInterfaces");
+						elemNetwork.appendChild(elemListeners);
+						if(m_ListenerInterfaces!=null)
+							for(int i=0;i<m_ListenerInterfaces.length;i++)
+								{
+									elemListeners.appendChild(m_ListenerInterfaces[i].toXmlNode(owner));
+								}
+						return docFrag;
+					}
+				catch(Throwable t)
+					{
+						return null;
+					}
 			}
 	}
