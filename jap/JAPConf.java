@@ -1303,13 +1303,18 @@ final class JAPConf extends JDialog
 
 		private void updateMixCascadeCombo()
 			{
+				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPConf: updateMixCascadeCombo() -start");
 				m_comboMixCascade.removeAllItems();
+				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPConf: updateMixCascadeCombo() -all ItemsRemoved");
 				m_comboMixCascade.addItem(JAPMessages.getString("settingsAnonSelect"));
+				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPConf: updateMixCascadeCombo() -added Default Item");
 				Enumeration enum = m_Controller.getAnonServerDB().elements();
 				while (enum.hasMoreElements())
 					{
 						m_comboMixCascade.addItem(enum.nextElement());
 					}
+				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPConf: updateMixCascadeCombo() -added All other Items");
 				m_comboMixCascade.setSelectedIndex(0);
+				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPConf: updateMixCascadeCombo() - select First Item -- finished!");
 			}
 	}
