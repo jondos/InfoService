@@ -60,6 +60,7 @@ import payxml.XMLTransCert;
 
 import anon.crypto.JAPSignature;
 import anon.crypto.JAPCertificate;
+import anon.crypto.*;
 
 import anon.util.Base64;
 
@@ -555,7 +556,7 @@ public class Pay
 	 * @throws IllegalStateException Wenn die Kontendatei oder die
 	 * Bezahlinstanz nicht gesetzt sind.
 	 */
-/*	public long chargeAccount(long accountNumber) throws IllegalStateException, IOException
+	public long chargeAccount(long accountNumber) throws IllegalStateException, IOException
 	{
 		try
 		{
@@ -576,7 +577,7 @@ public class Pay
 			return -1;
 		}
 	}
-*/
+
 	/**
 	 * Für jede in der aktuelle KontoDatei gespeichert Konten wird getBalance aufgerufen
 	 */
@@ -665,7 +666,7 @@ public class Pay
 	 * erhaltene Kontozertifikat wird im neuen Kontodatensatz lokal
 	 * gespeichert.
 	 */
-	public void addAccount() throws IllegalStateException
+	public void addAccount() throws IllegalStateException, Exception
 	{
 		LogHolder.log(LogLevel.DEBUG, LogType.PAY,
 				"Pay.addAccount() called. Generating key.."
@@ -678,7 +679,7 @@ public class Pay
 
 		AsymmetricCipherKeyPair pair = pGen.generateKeyPair();
 
-		RSAPrivateCrtKeyParameters rsaprivkey = (RSAPrivateCrtKeyParameters) pair.getPrivate();
+		MyRSAPrivateKey rsaprivkey =new MyRSAPrivateKey( (RSAPrivateCrtKeyParameters) pair.getPrivate());
 		RSAKeyParameters rsapubkey = (RSAKeyParameters) pair.getPublic();
 		LogHolder.log(LogLevel.DEBUG, LogType.PAY,
 				"Pay.addAccount() Key successfully generated"

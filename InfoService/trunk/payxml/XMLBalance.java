@@ -75,6 +75,7 @@ public class XMLBalance extends XMLDocument
 
 		m_theDocument = getDocumentBuilder().newDocument();
 		Element elemRoot = m_theDocument.createElement("Balance");
+		m_theDocument.appendChild(elemRoot);
 		elemRoot.setAttribute("version", "1.0");
 		Element elem = m_theDocument.createElement("AccountNumber");
 		XMLUtil.setNodeValue(elem, Long.toString(accountNumber));

@@ -47,7 +47,7 @@ import payxml.XMLTransCert;
 import anon.util.Base64;
 import anon.util.XMLUtil;
 import org.w3c.dom.*;
-
+import anon.crypto.MyRSAPrivateKey;
 /**
  *  Diese Klasse ist für die verwaltung eines Accounts zutändig, sie kapselt eine XML Struktur innerhalb der Klasse
  *	und Mithilfe von Klassen des payxml Packages
@@ -68,7 +68,7 @@ public class PayAccount extends XMLDocument
 {
 	private XMLAccountCertificate m_AccountCertificate;
 	private XMLBalance m_Balance;
-	private RSAPrivateCrtKeyParameters m_privateKey;
+	private MyRSAPrivateKey m_privateKey;
 	private Vector m_transCerts;
 	private XMLCostConfirmations m_costConfirms;
 
@@ -124,7 +124,7 @@ public class PayAccount extends XMLDocument
 	 * @param certificate Kontozertifikat
 	 * @param privateKey geheimer Schlüssel
 	 */
-	public PayAccount(XMLAccountCertificate certificate, RSAPrivateCrtKeyParameters privateKey) throws
+	public PayAccount(XMLAccountCertificate certificate, MyRSAPrivateKey privateKey) throws
 		Exception
 	{
 		m_AccountCertificate = certificate;
@@ -160,7 +160,7 @@ public class PayAccount extends XMLDocument
 		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_privateKey.getPublicExponent().toByteArray()));
 		elem = m_theDocument.createElement("PrivateExponent");
 		elemPrivKey.appendChild(elem);
-		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_privateKey.getExponent().toByteArray()));
+		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_privateKey.getPrivateExponent().toByteArray()));
 		elem = m_theDocument.createElement("P");
 		elemPrivKey.appendChild(elem);
 		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_privateKey.getP().toByteArray()));
@@ -322,7 +322,7 @@ public class PayAccount extends XMLDocument
 		str=XMLUtil.parseNodeString(elem,null);
 		BigInteger qInv =new BigInteger(Base64.decode(str));
 
-		m_privateKey = new RSAPrivateCrtKeyParameters(modulus, publicExponent, privateExponent, p, q, dP, dQ,
+		m_privateKey = new MyRSAPrivateKey(modulus, publicExponent, privateExponent, p, q, dP, dQ,
 			qInv);
 
 	}
@@ -379,7 +379,7 @@ public class PayAccount extends XMLDocument
 	 *
 	 * @return Geheimer Schlüssel
 	 */
-	public RSAKeyParameters getPrivateKey()
+	public MyRSAPrivateKey getPrivateKey()
 	{
 		return m_privateKey;
 	}

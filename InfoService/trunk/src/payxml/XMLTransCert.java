@@ -65,6 +65,7 @@ public class XMLTransCert extends XMLDocument
 		elemRoot.appendChild(elem);
 		elem = m_theDocument.createElement("ValidTime");
 		XMLUtil.setNodeValue(elem, validTime.toString());
+		elemRoot.appendChild(elem);
 	}
 
 	public XMLTransCert(String xml) throws Exception

@@ -147,7 +147,7 @@ public final class JAPConstants
 		"meter5.gif",
 		"meter6.gif"
 	};
-	public static final String PIHOST = "itsec2.inf.fu-berlin.de";
+	public static final String PIHOST = "anon.inf.tu-dresden.de";
 	public static final int PIPORT = 2342;
 	public static final boolean PI_SSLON = false; // auf true setzten wenn die pay funktionalität fertig gebaut ist.
 
