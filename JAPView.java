@@ -180,7 +180,6 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 			getContentPane().add(new JLabel("  "), BorderLayout.EAST); //Spacer
 			getContentPane().add(tabs, BorderLayout.CENTER);
 
-			updateValues();
 			tabs.setSelectedComponent(level);
 
 			this.addWindowListener(new WindowAdapter()
@@ -205,6 +204,7 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 			catch(Exception e) {
 				JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.GUI,"JAPView:Hm.. Error by Pack - Has To be fixed!!");
 				}
+			updateValues();
 			JAPUtil.centerFrame(this);
 	}
 

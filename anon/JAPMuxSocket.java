@@ -594,7 +594,7 @@ final class JAPMuxSocket implements Runnable
 						SocketListEntry entry=(SocketListEntry)oSocketList.get(new Integer(channel));
 						if(entry!=null&&entry.arCipher==null)
 							{
-								int size=DATA_SIZE-KEY_SIZE;
+								int size=PAYLOAD_SIZE-KEY_SIZE;
 								entry.arCipher=new JAPSymCipher[chainlen];
 
 								//Last Mix
@@ -602,13 +602,14 @@ final class JAPMuxSocket implements Runnable
 								keypool.getKey(outBuff);
 								outBuff[0]&=0x7F; //RSA HACK!! (to ensure what m<n in RSA-Encrypt: c=m^e mod n)
 
-								System.arraycopy(buff,0,outBuff,KEY_SIZE+3,size-3);
 								outBuff[KEY_SIZE]=(byte)(len>>8);
 								outBuff[KEY_SIZE+1]=(byte)(len%256);
 								if(type==JAPAnonService.PROTO_SOCKS)
 									outBuff[KEY_SIZE+2]=1;
 								else
 									outBuff[KEY_SIZE+2]=0;
+
+								System.arraycopy(buff,0,outBuff,KEY_SIZE+3,size);
 
 								entry.arCipher[chainlen-1].setEncryptionKeyAES(outBuff);
 								m_arASymCipher[chainlen-1].encrypt(outBuff,0,buff,0);
