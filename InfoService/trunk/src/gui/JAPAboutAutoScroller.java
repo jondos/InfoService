@@ -67,22 +67,21 @@ public final class JAPAboutAutoScroller extends Canvas/*JPanel*/ implements Runn
 				m_textArea.setEditable(false);
 				m_textArea.setHighlighter(null);
 				m_textArea.setEnabled(false);
-        m_textArea.setBackground(new Color(204,204,204));
+				m_textArea.setBackground(new Color(204,204,204));
 				m_textArea.setSize(m_iScrollAreaWidth,10000);
 				m_textArea.setContentType("text/html");
 				m_textArea.setText(htmlText.trim());
 
 				m_iTextHeight=m_textArea.getPreferredSize().height;
-				System.out.println(m_iTextHeight);
 
 				m_bttnOk=new JButton("Ok");
 				m_bttnOk.setMnemonic('O');
 				m_bttnOk.setOpaque(false);
 				m_bttnOk.setSelected(true);
 				Dimension d=m_bttnOk.getPreferredSize();
-        if(d.width>76)
-          d.width=76;
-        m_bttnOk.setSize(d); //resizing the OK-Button
+				if(d.width>76)
+					d.width=76;
+				m_bttnOk.setSize(d); //resizing the OK-Button
 				m_Thread=new Thread(this,"JAP - AboutScroller");
 				m_bRun=false;
 			}
