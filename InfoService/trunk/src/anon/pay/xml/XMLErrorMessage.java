@@ -20,6 +20,10 @@ public class XMLErrorMessage implements IXMLEncodable
 	public static final int ERR_WRONG_DATA = 3;
 	public static final int ERR_KEY_NOT_FOUND = 4;
 	public static final int ERR_BAD_SIGNATURE = 5;
+	public static final int ERR_BAD_REQUEST = 6;
+	public static final int ERR_NO_ACCOUNTCERT = 7;
+	public static final int ERR_NO_BALANCE = 8;
+	public static final int ERR_NO_CONFIRMATION = 9;
 
 	private int m_iErrorCode;
 	private String m_strErrMsg;
@@ -28,9 +32,22 @@ public class XMLErrorMessage implements IXMLEncodable
 	private static final String[] m_errStrings =
 		{
 		"Success", "Internal Server Error",
-		"Wrong format", "Wrong Data", "Key not found", "Bad Signature", "Bad request"
+		"Wrong format", "Wrong Data", "Key not found", "Bad Signature", "Bad request",
+		"No account certificate", "No balance", "No cost confirmation"
 	};
-	public static final int ERR_BAD_REQUEST = 6;
+
+	private static final String XML_ELEMENT_NAME = "ErrorMessage";
+
+	/**
+	 * Parses an XMLErrorMessage object from DOM Document
+	 *
+	 * @param document Document
+	 */
+	public XMLErrorMessage(Document doc) throws Exception
+	{
+		Element elemRoot = doc.getDocumentElement();
+		setValues(elemRoot);
+	}
 
 	/**
 	 * Creates an errorMessage object. The errorcode should be one of the
@@ -63,10 +80,31 @@ public class XMLErrorMessage implements IXMLEncodable
 
 	public Element toXmlElement(Document a_doc)
 	{
-		Element elemRoot = a_doc.createElement("ErrorMessage");
+		Element elemRoot = a_doc.createElement(XML_ELEMENT_NAME);
 		elemRoot.setAttribute("code", Integer.toString(m_iErrorCode));
 		XMLUtil.setNodeValue(elemRoot, m_strErrMsg);
 		return elemRoot;
+	}
+
+	public String getErrorDescription()
+	{
+		return m_strErrMsg;
+	}
+
+	public int getErrorCode()
+	{
+		return m_iErrorCode;
+	}
+
+	private void setValues(Element elemRoot) throws Exception
+	{
+		if (! (elemRoot.getTagName().equals(XML_ELEMENT_NAME)))
+		{
+			throw new Exception("Format error: Root element wrong tagname");
+		}
+		m_iErrorCode = Integer.parseInt(elemRoot.getAttribute("code"));
+		m_strErrMsg = XMLUtil.parseNodeString(elemRoot, "");
+
 	}
 
 }

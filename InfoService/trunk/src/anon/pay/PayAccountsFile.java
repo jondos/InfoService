@@ -52,10 +52,10 @@ import anon.crypto.MyDSAPublicKey;
 import anon.crypto.MyRSAPrivateKey;
 import anon.crypto.MyRSAPublicKey;
 import anon.pay.xml.XMLAccountCertificate;
+import anon.pay.xml.XMLErrorMessage;
 import anon.pay.xml.XMLJapPublicKey;
 import anon.util.IXMLEncodable;
 import anon.util.XMLUtil;
-
 
 /**
  * This class encapsulates a collection of accounts. One of the accounts in the collection
@@ -215,13 +215,13 @@ public class PayAccountsFile implements IXMLEncodable
 	public Element toXmlElement(Document a_doc)
 	{
 //		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
-		Element elemRoot = a_doc.createElement("Root");
-		elemRoot.setAttribute("filetype", "JapAccountsFile");
-		elemRoot.setAttribute("version", "1.0");
+//		Element elemRoot = a_doc.createElement("PayAccountsFile");
+//		elemRoot.setAttribute("filetype", "JapAccountsFile");
+//		elemRoot.setAttribute("version", "1.0");
 
 		Element elemAccountsFile = a_doc.createElement("PayAccountsFile");
 		elemAccountsFile.setAttribute("version", "1.0");
-		elemRoot.appendChild(elemAccountsFile);
+//		elemRoot.appendChild(elemAccountsFile);
 
 		Element elem = a_doc.createElement("ActiveAccountNumber");
 		XMLUtil.setNodeValue(elem, Long.toString(getActiveAccountNumber()));
@@ -234,7 +234,7 @@ public class PayAccountsFile implements IXMLEncodable
 			PayAccount account = (PayAccount) m_Accounts.elementAt(i);
 			elem.appendChild(account.toXmlElement(a_doc));
 		}
-		return elemRoot;
+		return elemAccountsFile;
 	}
 
 	public boolean hasActiveAccount()
@@ -247,12 +247,12 @@ public class PayAccountsFile implements IXMLEncodable
 		return m_ActiveAccount;
 	}
 
-	public void setActiveAccount(long accountNumber) throws Exception
+	public void setActiveAccount(long accountNumber)
 	{
 		setActiveAccount(getAccount(accountNumber));
 	}
 
-	public void setActiveAccount(PayAccount account) throws Exception
+	public void setActiveAccount(PayAccount account)
 	{
 		if (account != null)
 		{
@@ -383,6 +383,7 @@ public class PayAccountsFile implements IXMLEncodable
 	public void addAccount(PayAccount account) throws Exception
 	{
 		PayAccount tmp;
+		boolean activeChanged = false;
 		Enumeration enumer = m_Accounts.elements();
 		while (enumer.hasMoreElements())
 		{
@@ -392,19 +393,28 @@ public class PayAccountsFile implements IXMLEncodable
 				throw new Exception("Account with same accountnumber was already added");
 			}
 		}
-		m_Accounts.addElement(account);
 		account.addAccountListener(m_MyChangeListener);
+		m_Accounts.addElement(account);
+
 		if (m_ActiveAccount == null)
 		{
 			m_ActiveAccount = account;
+			activeChanged=true;
 		}
+
 		// fire event
 		synchronized (m_paymentListeners)
 		{
 			Enumeration enumListeners = m_paymentListeners.elements();
+			IPaymentListener pl;
 			while (enumListeners.hasMoreElements())
 			{
-				( (IPaymentListener) enumListeners.nextElement()).accountAdded(m_ActiveAccount);
+				pl = (IPaymentListener) enumListeners.nextElement();
+				pl.accountAdded(account);
+				if(activeChanged==true)
+				{
+					pl.accountActivated(account);
+				}
 			}
 		}
 	}
@@ -544,5 +554,37 @@ public class PayAccountsFile implements IXMLEncodable
 		PayAccount newAccount = new PayAccount(cert, privKey, signingInstance, m_theBI);
 		addAccount(newAccount);
 		return newAccount;
+	}
+
+	/**
+	 * signalAccountRequest
+	 */
+	public void signalAccountRequest()
+	{
+		synchronized (m_paymentListeners)
+		{
+			Enumeration enumListeners = m_paymentListeners.elements();
+			while (enumListeners.hasMoreElements())
+			{
+				( (IPaymentListener) enumListeners.nextElement()).accountCertRequested(false);
+			}
+		}
+	}
+
+	/**
+	 * signalAccountError
+	 *
+	 * @param msg XMLErrorMessage
+	 */
+	public void signalAccountError(XMLErrorMessage msg)
+	{
+		synchronized (m_paymentListeners)
+		{
+			Enumeration enumListeners = m_paymentListeners.elements();
+			while (enumListeners.hasMoreElements())
+			{
+				( (IPaymentListener) enumListeners.nextElement()).accountError(msg);
+			}
+		}
 	}
 }

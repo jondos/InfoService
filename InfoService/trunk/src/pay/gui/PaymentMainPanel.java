@@ -44,16 +44,18 @@ import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
+
+import anon.pay.PayAccount;
+import anon.pay.PayAccountsFile;
+import anon.pay.xml.XMLErrorMessage;
 import jap.JAPConstants;
 import jap.JAPModel;
 import jap.JAPUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import anon.pay.PayAccount;
-import anon.pay.PayAccountsFile;
+import javax.swing.*;
+import java.util.*;
 
 public class PaymentMainPanel extends JPanel
 {
@@ -114,6 +116,7 @@ public class PaymentMainPanel extends JPanel
 	public PaymentMainPanel()
 	{
 		super(new BorderLayout());
+		LogHolder.log(LogLevel.DEBUG, LogType.PAY, "PaymentMainPanel: constructor");
 		loadIcons();
 
 		setBorder(new TitledBorder("Account information"));
@@ -142,9 +145,7 @@ public class PaymentMainPanel extends JPanel
 		this.add(centerPanel, BorderLayout.CENTER);
 
 		this.add(new JButton("Aufladen"), BorderLayout.EAST);
-		LogHolder.log(LogLevel.DEBUG, LogType.PAY, "PaymentMainPanel: Calling accountsFile()");
 		PayAccountsFile.getInstance().addPaymentListener(m_MyChangeListener);
-		LogHolder.log(LogLevel.DEBUG, LogType.PAY, "PaymentMainPanel: Calling updateDisplay()");
 		updateDisplay(null);
 	}
 
@@ -177,7 +178,7 @@ public class PaymentMainPanel extends JPanel
 			m_BalanceProgressBar.setValue(0);
 			m_BalanceProgressBar.setEnabled(true);
 		}
-		
+
 		// we got everything under control, situation normal
 		else
 		{
@@ -200,8 +201,6 @@ public class PaymentMainPanel extends JPanel
 	 */
 	private class MyPaymentListener implements anon.pay.IPaymentListener
 	{
-		private PayAccountsFile accounts = null;
-
 		/**
 		 * accountActivated
 		 *
@@ -237,6 +236,83 @@ public class PaymentMainPanel extends JPanel
 		 */
 		public void creditChanged(PayAccount acc)
 		{
+		}
+
+		/**
+		 * accountCertRequested
+		 *
+		 * @param usingCurrentAccount boolean
+		 */
+		public void accountCertRequested(boolean blubb)
+		{
+			PayAccountsFile accounts = PayAccountsFile.getInstance();
+			if (accounts.getNumAccounts() == 0)
+			{
+				if( JOptionPane.showOptionDialog(
+					PaymentMainPanel.this,
+					"The mixcascade you are currently using wants to be payed. " +
+					"Would you like to create an account now?" +
+					"for you. ", "JAP Payment", JOptionPane.YES_NO_OPTION,
+					JOptionPane.QUESTION_MESSAGE, null, null, null) == JOptionPane.YES_OPTION)
+				{
+					/** @todo show settings view here */
+				}
+			}
+			else
+			{
+				if (accounts.getActiveAccount() != null)
+				{
+					JOptionPane.showMessageDialog(
+						PaymentMainPanel.this,
+						"The mixcascade you are currently using wants to be payed. " +
+						"Your active account with the accountnumber "+
+						accounts.getActiveAccount().getAccountNumber()+
+						" will be used for payment.",
+						"JAP Payment", JOptionPane.INFORMATION_MESSAGE
+						);
+				}
+				else
+				{
+					if (accounts.getNumAccounts() == 1)
+					{
+						JOptionPane.showMessageDialog(
+							PaymentMainPanel.this,
+							"The mixcascade you are currently using wants to be payed. " +
+							"You have created an account, however it is not marked as " +
+							"active. Jap will now automatically activate this account " +
+							"for you. ", "JAP Payment", JOptionPane.INFORMATION_MESSAGE
+							);
+						Enumeration enumE = accounts.getAccounts();
+						accounts.setActiveAccount( (PayAccount) enumE.nextElement());
+					}
+					else
+					{
+						JOptionPane.showOptionDialog(
+							PaymentMainPanel.this,
+							"The mixcascade you are currently using wants to be payed. " +
+							"You must activate an account to allow Jap using it for payment. "+
+							"Would you like to choose an active account now?",
+							"JAP Payment", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE,
+							null, null, null);
+
+					}
+				}
+			}
+		}
+
+		/**
+		 * accountError
+		 *
+		 * @param msg XMLErrorMessage
+		 */
+		public void accountError(XMLErrorMessage msg)
+		{
+			/** @todo internationalize */
+			JOptionPane.showOptionDialog(PaymentMainPanel.this,
+										 "The AI sent an errormessage: " + msg.getErrorDescription(),
+										 "Error message",
+										 JOptionPane.YES_NO_OPTION, JOptionPane.ERROR_MESSAGE,
+										 null, null, null);
 		}
 	}
 

@@ -1,29 +1,31 @@
 package anon.pay;
 
-import anon.crypto.JAPSignature;
-import anon.crypto.JAPCertificate;
 import java.security.InvalidKeyException;
-import anon.util.IXMLEncodable;
-import org.w3c.dom.Element;
+
 import org.w3c.dom.Document;
-import anon.util.XMLUtil;
-import anon.pay.xml.XMLJapPublicKey;
+import org.w3c.dom.Element;
 import anon.crypto.IMyPublicKey;
-import logging.LogType;
+import anon.crypto.JAPCertificate;
+import anon.crypto.JAPSignature;
+import anon.pay.xml.XMLJapPublicKey;
+import anon.util.IXMLEncodable;
+import anon.util.XMLUtil;
 import logging.LogHolder;
 import logging.LogLevel;
+import logging.LogType;
 
 /**
- * This class represents a known BI with its unique name and a public key (verifyer).
+ * This class represents a known BI with its unique name and x509 public
+ * certificate (verifyer).
  * It can be converted to an XML structure, the structure is as follows:
  *
  * <BI version="1.0">
  *   <BIName> unique name </BIName>
  *   <HostName> www.bezahlinstanz.de </HostName>
  *   <PortNumber> 1234 </PortNumber>
- *   <JAPPublicKey>
- *       ... the public key (see XMLJapPublicKey)
- *   </JAPPublicKey>
+ *   <X509Certificate>
+ *       ... the certificate (JAPCertificate)
+ *   </X509Certificate>
  * </BI>
  *
  * @author Bastian Voigt
@@ -34,14 +36,13 @@ public class BI implements IXMLEncodable
 	private String m_biName;
 	private String m_hostName;
 	private int m_portNumber;
-	private IMyPublicKey m_publicKey;
-	private JAPSignature m_veryfire;
 
-	public BI(String biName, String hostName, int portNumber, IMyPublicKey publicKey) throws Exception
+	private JAPSignature m_veryfire;
+	private JAPCertificate m_cert;
+
+	public BI(String biName, String hostName, int portNumber, JAPCertificate cert) throws Exception
 	{
-		m_publicKey = publicKey;
-		m_veryfire = new JAPSignature();
-		m_veryfire.initVerify(publicKey);
+		m_cert = cert;
 		m_biName = biName;
 		m_hostName = hostName;
 		m_portNumber = portNumber;
@@ -58,22 +59,24 @@ public class BI implements IXMLEncodable
 	public BI(byte[] barCert, String biName, String hostName, int portNumber)
 	{
 		JAPCertificate cert = JAPCertificate.getInstance(barCert);
-		LogHolder.log(LogLevel.DEBUG, LogType.PAY, "BI HelloWorld biName="+biName+", Host="+hostName+", Port="+portNumber);
+		m_cert = cert;
+		LogHolder.log(LogLevel.DEBUG, LogType.PAY,
+					  "BI HelloWorld biName=" + biName + ", Host=" + hostName + ", Port=" + portNumber);
 
 		/** @todo does this work? i don't believe it... */
-		m_biName = biName;//cert.getSubject().CN.toString();
+		m_biName = biName; //cert.getSubject().CN.toString();
 		m_hostName = hostName;
 		m_portNumber = portNumber;
 
-		m_veryfire = new JAPSignature();
-		try
-		{
-			m_veryfire.initVerify(cert.getPublicKey());
-		}
-		catch (InvalidKeyException ex)
-		{
-			m_veryfire = null;
-		}
+		/*		m_veryfire = new JAPSignature();
+		  try
+		  {
+		   m_veryfire.initVerify(cert.getPublicKey());
+		  }
+		  catch (InvalidKeyException ex)
+		  {
+		   m_veryfire = null;
+		  }*/
 	}
 
 	private void setValues(Element elemRoot) throws Exception
@@ -91,11 +94,14 @@ public class BI implements IXMLEncodable
 		elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "PortNumber");
 		m_portNumber = XMLUtil.parseNodeInt(elem, 0);
 
-		elem = (Element) XMLUtil.getFirstChildByName(elemRoot, XMLJapPublicKey.getXMLElementName());
+		elem = (Element) XMLUtil.getFirstChildByName(elemRoot, JAPCertificate.XML_ELEMENT_NAME);
 		if (elem != null)
 		{
-			XMLJapPublicKey keyParser = new XMLJapPublicKey(elem);
-			m_publicKey = keyParser.getPublicKey();
+			JAPCertificate cert = JAPCertificate.getInstance(elem);
+			if (cert != null)
+			{
+				m_cert = cert;
+			}
 		}
 	}
 
@@ -106,8 +112,13 @@ public class BI implements IXMLEncodable
 	}
 
 	/** returns a JAPSignature object for veriying this BI's signatures */
-	public JAPSignature getVerifier()
+	public JAPSignature getVerifier() throws InvalidKeyException
 	{
+		if (m_veryfire == null)
+		{
+			m_veryfire = new JAPSignature();
+			m_veryfire.initVerify(m_cert.getPublicKey());
+		}
 		return m_veryfire;
 	}
 
@@ -147,15 +158,17 @@ public class BI implements IXMLEncodable
 		elemRoot.appendChild(elem);
 		XMLUtil.setNodeValue(elem, Integer.toString(m_portNumber));
 
-		try
-		{
-			XMLJapPublicKey keyFormatter = new XMLJapPublicKey(m_publicKey);
-			elemRoot.appendChild(keyFormatter.toXmlElement(a_doc));
-		}
-		catch (Exception ex)
-		{
-		}
-
+		elemRoot.appendChild(m_cert.toXmlElement(a_doc));
 		return elemRoot;
+	}
+
+	/**
+	 * getCertificate
+	 *
+	 * @return IMyPublicKey
+	 */
+	public IMyPublicKey getCertificate()
+	{
+		return null;
 	}
 }
