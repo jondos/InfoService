@@ -5,14 +5,14 @@ Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
 
 	- Redistributions of source code must retain the above copyright notice,
-	  this list of conditions and the following disclaimer.
+		this list of conditions and the following disclaimer.
 
 	- Redistributions in binary form must reproduce the above copyright notice,
-	  this list of conditions and the following disclaimer in the documentation and/or
+		this list of conditions and the following disclaimer in the documentation and/or
 		other materials provided with the distribution.
 
 	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
-	  may be used to endorse or promote products derived from this software without specific
+		may be used to endorse or promote products derived from this software without specific
 		prior written permission.
 
 
@@ -35,59 +35,61 @@ import logging.Log;
  *  via AnonServiceFactory.
  */
 public interface AnonService
-  {
-    ///The version of the AnonLib
-    public final static String ANONLIB_VERSION="00.00.007";
-    /** Estabishes a connection to an AnonServer, which is described through the
-     *  anonService parameter. This method must be called before any Channels could be created.
-     *  @param anonService AnonServer to use
-     *  @return E_SUCCESS, if the connection could be estblished
-     *  @return E_ALREADY_CONNECTED, if this AnonService is already connected to a server
-     *  @return E_INVALID_SERVICE, if anonService is not a valid server
-     *  @return E_CONNECT, if a general connection error occured
-     *
-     */
-    public int connect(AnonServer anonService);
+	{
+		///The version of the AnonLib
+		public final static String ANONLIB_VERSION="00.00.007";
+		/** Estabishes a connection to an AnonServer, which is described through the
+		 *  anonService parameter. This method must be called before any Channels could be created.
+		 *  @param anonService AnonServer to use
+		 *  @return E_SUCCESS, if the connection could be estblished
+		 *  @return E_ALREADY_CONNECTED, if this AnonService is already connected to a server
+		 *  @return E_INVALID_SERVICE, if anonService is not a valid server
+		 *  @return E_MIX_PROTOCOL_NOT_SUPPORTED, if the chosen AnonService uses a MixProtocol, which this version of
+		 *                                        the Anon-Lib does not understand
+		 *  @return E_CONNECT, if a general connection error occured
+		 *
+		 */
+		public int connect(AnonServer anonService);
 
-    /** Disconnects form the server.*/
-    public void disconnect();
+		/** Disconnects form the server.*/
+		public void disconnect();
 
-    /** Creates a new AnonChannel, which could be used for transmitting data. There is a
-     *  limit of 50 channels per AnonService-connection, in order to prevent Denial of Service-attacks
-     *  See {@link AnonChannel AnonChannel} for more information.
-     *  @param type the type of the created channel
-     *  @return AnonChannel, usefull for data transmisson
-     *  @throws ConnectException, if the Channel could not created
-     *  @throws ToManyOpenChannels, if there a to many open channels for this AnonService
-     */
-    public AnonChannel createChannel(int type) throws ConnectException;
+		/** Creates a new AnonChannel, which could be used for transmitting data. There is a
+		 *  limit of 50 channels per AnonService-connection, in order to prevent Denial of Service-attacks
+		 *  See {@link AnonChannel AnonChannel} for more information.
+		 *  @param type the type of the created channel
+		 *  @return AnonChannel, usefull for data transmisson
+		 *  @throws ConnectException, if the Channel could not created
+		 *  @throws ToManyOpenChannels, if there a to many open channels for this AnonService
+		 */
+		public AnonChannel createChannel(int type) throws ConnectException;
 
-    /** Creates a new AnonChannel, which could be used like a normal TCP/IP connection
-     *  to host:port.
-     *  @param host Address of the server, which should be contacted
-     *  @param port Port, to which connect to
-     *  @return AnonChannel, useful for exchange data with host:port
-     *  @throws ConnectException, if the Channel could not created
-     *  @throws ToManyOpenChannels, if there a to many open channels for the AnonService
-     *
-     */
-    public AnonChannel createChannel(InetAddress host,int port) throws ConnectException;
+		/** Creates a new AnonChannel, which could be used like a normal TCP/IP connection
+		 *  to host:port.
+		 *  @param host Address of the server, which should be contacted
+		 *  @param port Port, to which connect to
+		 *  @return AnonChannel, useful for exchange data with host:port
+		 *  @throws ConnectException, if the Channel could not created
+		 *  @throws ToManyOpenChannels, if there a to many open channels for the AnonService
+		 *
+		 */
+		public AnonChannel createChannel(InetAddress host,int port) throws ConnectException;
 
-    /** Adds an AnonServiceEventListener. This listener will receive events like:
-     *  ... For more information see {@link AnonServiceEventListener AnonServiceEventListener}.
-     *  @param l Listener to add
-     */
-    public void addEventListener(AnonServiceEventListener l);
+		/** Adds an AnonServiceEventListener. This listener will receive events like:
+		 *  ... For more information see {@link AnonServiceEventListener AnonServiceEventListener}.
+		 *  @param l Listener to add
+		 */
+		public void addEventListener(AnonServiceEventListener l);
 
-    /** Removes an AnonServiceEventListener. This Listener will not receive any Events anymore.
-     *  @param l Listener, which will be removed
-     */
-    public void removeEventListener(AnonServiceEventListener l);
+		/** Removes an AnonServiceEventListener. This Listener will not receive any Events anymore.
+		 *  @param l Listener, which will be removed
+		 */
+		public void removeEventListener(AnonServiceEventListener l);
 
-    /** Enables or disables logging, which could be used for instance for debugging. The default
-     *  is, that all output goes to a DummyLog.
-     *  @param log Log, which receives all logging messages. Use the value null to disable
-     *  logging.
-     */
-    public void setLogging(Log log);
-  }
+		/** Enables or disables logging, which could be used for instance for debugging. The default
+		 *  is, that all output goes to a DummyLog.
+		 *  @param log Log, which receives all logging messages. Use the value null to disable
+		 *  logging.
+		 */
+		public void setLogging(Log log);
+	}

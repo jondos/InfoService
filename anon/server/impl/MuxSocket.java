@@ -5,14 +5,14 @@ Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
 
 	- Redistributions of source code must retain the above copyright notice,
-	  this list of conditions and the following disclaimer.
+		this list of conditions and the following disclaimer.
 
 	- Redistributions in binary form must reproduce the above copyright notice,
-	  this list of conditions and the following disclaimer in the documentation and/or
+		this list of conditions and the following disclaimer in the documentation and/or
 		other materials provided with the distribution.
 
 	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
-	  may be used to endorse or promote products derived from this software without specific
+		may be used to endorse or promote products derived from this software without specific
 		prior written permission.
 
 
@@ -72,7 +72,7 @@ public final class MuxSocket implements Runnable
 		private ProxyConnection m_ioSocket;
 
 		private	byte[] outBuff;
-    private byte[] outBuff2;
+		private byte[] outBuff2;
 		private ASymCipher[] m_arASymCipher;
 		private KeyPool keypool;
 		private int m_iChainLen;
@@ -89,10 +89,10 @@ public final class MuxSocket implements Runnable
 		private final static short CHANNEL_OPEN=8;
 		private final static short CHANNEL_DUMMY=16;
 
-    private final static int CHANNEL_TYPE_HTTP=0;
-    private final static int CHANNEL_TYPE_SOCKS=1;
+		private final static int CHANNEL_TYPE_HTTP=0;
+		private final static int CHANNEL_TYPE_SOCKS=1;
 
-    private final static int MAX_CHANNELS_PER_CONNECTION=50;
+		private final static int MAX_CHANNELS_PER_CONNECTION=50;
 
 		//private static MuxSocket ms_MuxSocket=null;
 		//private int m_RunCount=0;
@@ -101,7 +101,7 @@ public final class MuxSocket implements Runnable
 
 		private long m_TimeLastPacketSend=0;
 		private DummyTraffic m_DummyTraffic=null;
-    private Log m_Log=null;
+		private Log m_Log=null;
 		private final class ChannelListEntry
 			{
 				ChannelListEntry(AbstractChannel c)
@@ -117,7 +117,7 @@ public final class MuxSocket implements Runnable
 
 		private MuxSocket(Log log)
 			{
-        m_Log=log;
+				m_Log=log;
 				//m_iLastChannelId=0;
 				m_arASymCipher=null;
 				outBuff=new byte[DATA_SIZE];
@@ -127,7 +127,7 @@ public final class MuxSocket implements Runnable
 				//m_RunCount=0;
 				m_DummyTraffic=null;
 				m_TimeLastPacketSend=0;
-        m_SecureRandom=new SecureRandom();
+				m_SecureRandom=new SecureRandom();
 				//threadgroupChannels=null;
 			}
 
@@ -136,46 +136,46 @@ public final class MuxSocket implements Runnable
 				/*if(ms_MuxSocket==null)
 					ms_MuxSocket=new MuxSocket(log);
 				*/
-        return new MuxSocket(log);//ms_MuxSocket;
+				return new MuxSocket(log);//ms_MuxSocket;
 			}
 
-    public void setLogging(Log log)
-      {
-        m_Log=log;
-        if(m_DummyTraffic!=null)
-          m_DummyTraffic.setLogging(log);
-        if(keypool!=null)
-          {
-            keypool.setLogging(log);
-          }
-      }
+		public void setLogging(Log log)
+			{
+				m_Log=log;
+				if(m_DummyTraffic!=null)
+					m_DummyTraffic.setLogging(log);
+				if(keypool!=null)
+					{
+						keypool.setLogging(log);
+					}
+			}
 
-    public /*static*/ boolean isConnected()
+		public /*static*/ boolean isConnected()
 			{
 				return (/*ms_MuxSocket!=null&&ms_MuxSocket.*/m_bIsConnected);
 			}
 
-    /**Enables or Disables DummyTraffic.
-     * @param intervall milliseconds of inactivity after which a dummy is send. Set to '-1' to disable Dummy Traffic.
-     *
-     */
+		/**Enables or Disables DummyTraffic.
+		 * @param intervall milliseconds of inactivity after which a dummy is send. Set to '-1' to disable Dummy Traffic.
+		 *
+		 */
 		public void setDummyTraffic(int intervall)
 			{
 				if(intervall==-1)
-          if(/*ms_MuxSocket.*/m_DummyTraffic==null)
-					  return;
-          else
-            {
-              /*ms_MuxSocket.*/m_DummyTraffic.stop();
-              /*ms_MuxSocket.*/m_DummyTraffic=null;
-              return;
-            }
-        if(/*ms_MuxSocket.*/m_DummyTraffic!=null)
-          /*ms_MuxSocket.*/m_DummyTraffic.stop();
-        /*ms_MuxSocket.*/m_DummyTraffic=new DummyTraffic(this/*ms_MuxSocket*/,intervall,/*ms_MuxSocket.*/m_Log);
-        if(isConnected())
-          /*ms_MuxSocket.*/m_DummyTraffic.start();
-      }
+					if(/*ms_MuxSocket.*/m_DummyTraffic==null)
+						return;
+					else
+						{
+							/*ms_MuxSocket.*/m_DummyTraffic.stop();
+							/*ms_MuxSocket.*/m_DummyTraffic=null;
+							return;
+						}
+				if(/*ms_MuxSocket.*/m_DummyTraffic!=null)
+					/*ms_MuxSocket.*/m_DummyTraffic.stop();
+				/*ms_MuxSocket.*/m_DummyTraffic=new DummyTraffic(this/*ms_MuxSocket*/,intervall,/*ms_MuxSocket.*/m_Log);
+				if(isConnected())
+					/*ms_MuxSocket.*/m_DummyTraffic.start();
+			}
 
 /*		public static boolean getEnableDummyTraffic()
 			{
@@ -191,49 +191,49 @@ public final class MuxSocket implements Runnable
 			{
 				synchronized(this)
 					{
-					  if(m_bIsConnected)
+						if(m_bIsConnected)
 							return ErrorCodes.E_ALREADY_CONNECTED;
-            int err=ErrorCodes.E_CONNECT;
-            try
-              {
-               String host=anonservice.getHost();
-                int port=anonservice.getPort();
-                if(fwType==AnonServiceImpl.FIREWALL_TYPE_HTTP)
-                  port=anonservice.getSSLPort();
-                m_ioSocket=new ProxyConnection(m_Log,fwType,fwHost,fwPort,fwUserID,fwPasswd,host,port);
-                m_inDataStream=new DataInputStream(m_ioSocket.getInputStream());
+						int err=ErrorCodes.E_CONNECT;
+						try
+							{
+							 String host=anonservice.getHost();
+								int port=anonservice.getPort();
+								if(fwType==AnonServiceImpl.FIREWALL_TYPE_HTTP)
+									port=anonservice.getSSLPort();
+								m_ioSocket=new ProxyConnection(m_Log,fwType,fwHost,fwPort,fwUserID,fwPasswd,host,port);
+								m_inDataStream=new DataInputStream(m_ioSocket.getInputStream());
 								m_outDataStream=new DataOutputStream(new BufferedOutputStream(m_ioSocket.getOutputStream(),PACKET_SIZE));
 							//	m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:Reading len...");
 								int len=m_inDataStream.readUnsignedShort(); //len.. unitressteing at the moment
 							//	m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:Reading m_iChainLen...");
 								m_iChainLen=m_inDataStream.readByte();
 								if(m_iChainLen=='<') //assuming XML-Key-Exchange
-                  {
-                    byte[] buff=new byte[len];
-                    buff[0]=(byte)m_iChainLen; //we have already read the beginning '<' !!
-                    m_inDataStream.readFully(buff,1,len-1);
-                    err=processXmlKeys(buff);
-                    if(err!=ErrorCodes.E_SUCCESS)
-                      throw new Exception("Error during Xml-Key Exchange");
-                  }
-                else
-                  {
-                    //m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:m_iChainLen="+m_iChainLen);
-                    m_arASymCipher=new ASymCipher[m_iChainLen];
-                    for(int i=m_iChainLen-1;i>=0;i--)
-                      {
-                        m_arASymCipher[i]=new ASymCipher();
-                        int tmp=m_inDataStream.readUnsignedShort();
-                        byte[] buff=new byte[tmp];
-                        m_inDataStream.readFully(buff);
-                        BigInteger n=new BigInteger(1,buff);
-                        tmp=m_inDataStream.readUnsignedShort();
-                        buff=new byte[tmp];
-                        m_inDataStream.readFully(buff);
-                        BigInteger e=new BigInteger(1,buff);
-                        m_arASymCipher[i].setPublicKey(n,e);
-                      }
-                    }
+									{
+										byte[] buff=new byte[len];
+										buff[0]=(byte)m_iChainLen; //we have already read the beginning '<' !!
+										m_inDataStream.readFully(buff,1,len-1);
+										err=processXmlKeys(buff);
+										if(err!=ErrorCodes.E_SUCCESS)
+											throw new Exception("Error during Xml-Key Exchange");
+									}
+								else
+									{
+										//m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:m_iChainLen="+m_iChainLen);
+										m_arASymCipher=new ASymCipher[m_iChainLen];
+										for(int i=m_iChainLen-1;i>=0;i--)
+											{
+												m_arASymCipher[i]=new ASymCipher();
+												int tmp=m_inDataStream.readUnsignedShort();
+												byte[] buff=new byte[tmp];
+												m_inDataStream.readFully(buff);
+												BigInteger n=new BigInteger(1,buff);
+												tmp=m_inDataStream.readUnsignedShort();
+												buff=new byte[tmp];
+												m_inDataStream.readFully(buff);
+												BigInteger e=new BigInteger(1,buff);
+												m_arASymCipher[i].setPublicKey(n,e);
+											}
+										}
 								m_ioSocket.setSoTimeout(0); //Now we have a unlimited timeout...
 	//							m_ioSocket.setSoTimeout(1000); //Now we have asecond timeout...
 							}
@@ -241,9 +241,9 @@ public final class MuxSocket implements Runnable
 							{
 								m_Log.log(LogLevel.EXCEPTION,LogType.NET,"MuxSocket:Exception(2) during connection: "+e);
 								m_arASymCipher=null;
-							  try{m_inDataStream.close();}catch(Exception e1){}
-							  try{m_outDataStream.close();}catch(Exception e1){}
-							  try{m_ioSocket.close();}catch(Exception e1){}
+								try{m_inDataStream.close();}catch(Exception e1){}
+								try{m_outDataStream.close();}catch(Exception e1){}
+								try{m_ioSocket.close();}catch(Exception e1){}
 								m_inDataStream=null;
 								m_outDataStream=null;
 								m_ioSocket=null;
@@ -251,62 +251,67 @@ public final class MuxSocket implements Runnable
 								return err;
 							}
 						m_bIsConnected=true;
-     				m_ChannelList=new Hashtable();
-            if(m_DummyTraffic!=null)
-              m_DummyTraffic.start();
-            return ErrorCodes.E_SUCCESS;
+						m_ChannelList=new Hashtable();
+						if(m_DummyTraffic!=null)
+							m_DummyTraffic.start();
+						return ErrorCodes.E_SUCCESS;
 					}
 			}
 
-    /*Reads the public key from the Mixes and try to initialize the key array*/
-    private int processXmlKeys(byte[] buff)
-      {
-        try
-          {
-            Document doc=DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(buff));
-            Element root=doc.getDocumentElement();
-            if(!root.getNodeName().equals("MixCascade"))
-              return ErrorCodes.E_UNKNOWN;
-            Element elemMixes=(Element)root.getElementsByTagName("Mixes").item(0);
-            m_iChainLen=Integer.parseInt(elemMixes.getAttribute("count"));
-            m_arASymCipher=new ASymCipher[m_iChainLen];
-            int i=0;
-            Node child=elemMixes.getFirstChild();
-            while(child!=null)
-              {
-                if(child.getNodeName().equals("Mix"))
-                  {
-                    m_arASymCipher[i]=new ASymCipher();
-                    if(m_arASymCipher[i++].setPublicKey((Element)child)!=ErrorCodes.E_SUCCESS)
-                      return ErrorCodes.E_UNKNOWN;
-                   }
-                child=child.getNextSibling();
-              }
-            return ErrorCodes.E_SUCCESS;
-          }
-        catch(Exception e)
-          {
-            return ErrorCodes.E_UNKNOWN;
-          }
-      }
+		/*Reads the public key from the Mixes and try to initialize the key array*/
+		private int processXmlKeys(byte[] buff)
+			{
+				try
+					{
+						Document doc=DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(buff));
+						Element root=doc.getDocumentElement();
+						if(!root.getNodeName().equals("MixCascade"))
+							return ErrorCodes.E_UNKNOWN;
+						Element elemMixProtocolVersion=(Element)root.getElementsByTagName("MixProtocolVersion").item(0);
+						if(elemMixProtocolVersion==null)
+							return ErrorCodes.E_MIX_PROTOCOL_NOT_SUPPORTED;
+						if(!elemMixProtocolVersion.getNodeValue().trim().equals("0.2"))
+							return ErrorCodes.E_MIX_PROTOCOL_NOT_SUPPORTED;
+						Element elemMixes=(Element)root.getElementsByTagName("Mixes").item(0);
+						m_iChainLen=Integer.parseInt(elemMixes.getAttribute("count"));
+						m_arASymCipher=new ASymCipher[m_iChainLen];
+						int i=0;
+						Node child=elemMixes.getFirstChild();
+						while(child!=null)
+							{
+								if(child.getNodeName().equals("Mix"))
+									{
+										m_arASymCipher[i]=new ASymCipher();
+										if(m_arASymCipher[i++].setPublicKey((Element)child)!=ErrorCodes.E_SUCCESS)
+											return ErrorCodes.E_UNKNOWN;
+									 }
+								child=child.getNextSibling();
+							}
+						return ErrorCodes.E_SUCCESS;
+					}
+				catch(Exception e)
+					{
+						return ErrorCodes.E_UNKNOWN;
+					}
+			}
 
 
 
-   public Channel newChannel(int type) throws ConnectException
+	 public Channel newChannel(int type) throws ConnectException
 			{
 				synchronized(this)
 					{
 						if(m_bIsConnected)
 							{
-                if(m_ChannelList.size()>MAX_CHANNELS_PER_CONNECTION)
-                  throw new ToManyOpenChannelsException();
+								if(m_ChannelList.size()>MAX_CHANNELS_PER_CONNECTION)
+									throw new ToManyOpenChannelsException();
 								try
 									{
-                    int channelId=m_SecureRandom.nextInt();
-                    while(m_ChannelList.get(new Integer(channelId))!=null)
-                      channelId=m_SecureRandom.nextInt();
-                    Channel c=new Channel(this,channelId,type);
-                    m_ChannelList.put(new Integer(channelId),new ChannelListEntry(c));
+										int channelId=m_SecureRandom.nextInt();
+										while(m_ChannelList.get(new Integer(channelId))!=null)
+											channelId=m_SecureRandom.nextInt();
+										Channel c=new Channel(this,channelId,type);
+										m_ChannelList.put(new Integer(channelId),new ChannelListEntry(c));
 
 										//JAPAnonService.setNrOfChannels(oSocketList.size());
 										//Thread t2=new Thread(c);
@@ -316,7 +321,7 @@ public final class MuxSocket implements Runnable
 									}
 								catch(Exception e)
 									{
-									  throw new ConnectException("Error trying open a new channel!");
+										throw new ConnectException("Error trying open a new channel!");
 									}
 							}
 						else
@@ -335,23 +340,23 @@ public final class MuxSocket implements Runnable
 					}
 			}
 
-    protected synchronized void sendDummy()
+		protected synchronized void sendDummy()
 			{
 				synchronized(this)
 					{
-            try
-              {
-                m_TimeLastPacketSend=System.currentTimeMillis();
-                m_outDataStream.writeInt(m_SecureRandom.nextInt());
-						    m_outDataStream.writeShort(CHANNEL_DUMMY);
-						    m_outDataStream.write(outBuff);
-						    m_outDataStream.flush();
-                //m_iLastChannelId++;
-              }
-            catch(Exception e)
-              {
-     						m_Log.log(LogLevel.ERR,LogType.NET,"MuxSocket:sendDummy() Exception!");
-              }
+						try
+							{
+								m_TimeLastPacketSend=System.currentTimeMillis();
+								m_outDataStream.writeInt(m_SecureRandom.nextInt());
+								m_outDataStream.writeShort(CHANNEL_DUMMY);
+								m_outDataStream.write(outBuff);
+								m_outDataStream.flush();
+								//m_iLastChannelId++;
+							}
+						catch(Exception e)
+							{
+								m_Log.log(LogLevel.ERR,LogType.NET,"MuxSocket:sendDummy() Exception!");
+							}
 					}
 			}
 
@@ -361,11 +366,11 @@ public final class MuxSocket implements Runnable
 					{
 						if(!m_bIsConnected)
 							return ErrorCodes.E_NOT_CONNECTED;
-              threadRunLoop=new Thread(this);
+							threadRunLoop=new Thread(this);
 							threadRunLoop.setPriority(Thread.MAX_PRIORITY);
-              threadRunLoop.start();
+							threadRunLoop.start();
 					}
-        return ErrorCodes.E_SUCCESS;
+				return ErrorCodes.E_SUCCESS;
 			}
 
 		public void stopService()
@@ -375,7 +380,7 @@ public final class MuxSocket implements Runnable
 						//m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:stopService()");
 						//m_RunCount--;
 						//if(m_RunCount==0)
-            close();
+						close();
 						//return m_RunCount;
 					}
 			}
@@ -393,7 +398,7 @@ public final class MuxSocket implements Runnable
 							}
 						m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:close() Closing MuxSocket...");
 						m_bRunFlag=false;
-					  try{m_inDataStream.close();}catch(Exception e1){}
+						try{m_inDataStream.close();}catch(Exception e1){}
 						try{threadRunLoop.interrupt();}catch(Exception e7){}
 						try
 							{
@@ -404,11 +409,11 @@ public final class MuxSocket implements Runnable
 								//e.printStackTrace();
 							}
 						if(threadRunLoop.isAlive())
-              {
-                  m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:close() Hm...MuxSocket is still alive...");
-                  threadRunLoop.stop();
-                  runStoped();
-              }
+							{
+									m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:close() Hm...MuxSocket is still alive...");
+									threadRunLoop.stop();
+									runStoped();
+							}
 						threadRunLoop=null;
 						m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:close() MuxSocket closed!");
 						return 0;
@@ -419,7 +424,7 @@ public final class MuxSocket implements Runnable
 
 		public void run()
 			{
- 				m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:run()");
+				m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:run()");
 				byte[] buff=new byte[DATA_SIZE];
 				int flags=0;
 				int channel=0;
@@ -429,21 +434,21 @@ public final class MuxSocket implements Runnable
 					{
 						try
 							{
-                channel=m_inDataStream.readInt();
+								channel=m_inDataStream.readInt();
 								flags=m_inDataStream.readShort();
 								m_inDataStream.readFully(buff);
-							  m_TimeLastPacketSend=System.currentTimeMillis();
-              }
+								m_TimeLastPacketSend=System.currentTimeMillis();
+							}
 						catch(Exception e)
 							{
 								m_Log.log(LogLevel.ERR,LogType.NET,"JAPMuxSocket:run() Exception while receiving!");
 								break;
 							}
-            if(flags==CHANNEL_DUMMY) //Dummies go to /dev/null ...
-              {
-  							m_Log.log(LogLevel.DEBUG,LogType.NET,"MuxSocket:run() Received a Dummy...");
-	              continue;
-              }
+						if(flags==CHANNEL_DUMMY) //Dummies go to /dev/null ...
+							{
+								m_Log.log(LogLevel.DEBUG,LogType.NET,"MuxSocket:run() Received a Dummy...");
+								continue;
+							}
 						ChannelListEntry tmpEntry=(ChannelListEntry)m_ChannelList.get(new Integer(channel));
 						if(tmpEntry!=null)
 							{
@@ -452,7 +457,7 @@ public final class MuxSocket implements Runnable
 										m_ChannelList.remove(new Integer(channel));
 										//JAPAnonService.setNrOfChannels(oSocketList.size());
 										tmpEntry.channel.closedByPeer();
-                    //try{tmpEntry.outStream.close();}catch(Exception e){}
+										//try{tmpEntry.outStream.close();}catch(Exception e){}
 										//try{tmpEntry.inSocket.close();}catch(Exception e){}
 									}
 								else if(flags==CHANNEL_DATA)
@@ -465,15 +470,15 @@ public final class MuxSocket implements Runnable
 											m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:Receveived MuxPacket with invalid data size: "+Integer.toString(len));
 										else
 										{
-                      try
-                        {
-												  tmpEntry.channel.recv(buff,3,len);
-                        }
-                      catch(Exception e)
-                        {
-                          m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:Fehler bei write to channel..."+e.toString());
-                        }
- 										}
+											try
+												{
+													tmpEntry.channel.recv(buff,3,len);
+												}
+											catch(Exception e)
+												{
+													m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:Fehler bei write to channel..."+e.toString());
+												}
+										}
 									}
 						/*		else if(flags==CHANNEL_SUSPEND)
 									{
@@ -493,46 +498,46 @@ public final class MuxSocket implements Runnable
 
 		private void runStoped()
 			{
-        synchronized(this)
-          {
-            m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:runStoped()");
-            m_bRunFlag=false;
-            if(m_DummyTraffic!=null)
-              {
-                m_DummyTraffic.stop();
-                m_DummyTraffic=null;
-              }
-            if(m_ChannelList!=null)
-              {
-                Enumeration e=m_ChannelList.elements();
-                while(e.hasMoreElements())
-                  {
-                    ChannelListEntry entry=(ChannelListEntry)e.nextElement();
-                    entry.channel.closedByPeer();
-                  }
-              }
-            m_ChannelList=null;
-            m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:MuxSocket all channels closed...");
-            m_bIsConnected=false;
-            try{m_inDataStream.close();}catch(Exception e1){}
-            try{m_outDataStream.close();}catch(Exception e2){}
-            try{m_ioSocket.close();}catch(Exception e3){}
-            m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:MuxSocket socket closed...");
-            m_inDataStream=null;
-            m_outDataStream=null;
-            m_ioSocket=null;
-            m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:All done..");
-          }
+				synchronized(this)
+					{
+						m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:runStoped()");
+						m_bRunFlag=false;
+						if(m_DummyTraffic!=null)
+							{
+								m_DummyTraffic.stop();
+								m_DummyTraffic=null;
+							}
+						if(m_ChannelList!=null)
+							{
+								Enumeration e=m_ChannelList.elements();
+								while(e.hasMoreElements())
+									{
+										ChannelListEntry entry=(ChannelListEntry)e.nextElement();
+										entry.channel.closedByPeer();
+									}
+							}
+						m_ChannelList=null;
+						m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:MuxSocket all channels closed...");
+						m_bIsConnected=false;
+						try{m_inDataStream.close();}catch(Exception e1){}
+						try{m_outDataStream.close();}catch(Exception e2){}
+						try{m_ioSocket.close();}catch(Exception e3){}
+						m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:MuxSocket socket closed...");
+						m_inDataStream=null;
+						m_outDataStream=null;
+						m_ioSocket=null;
+						m_Log.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:All done..");
+					}
 			}
 
 		public synchronized int send(int channel,int type,byte[] buff,short len)
 			{
 				try
 					{
- 						if(!m_bIsConnected)
+						if(!m_bIsConnected)
 							return ErrorCodes.E_NOT_CONNECTED;
 
-					  short channelMode=CHANNEL_DATA;
+						short channelMode=CHANNEL_DATA;
 						m_TimeLastPacketSend=System.currentTimeMillis();
 						if(buff==null&&len==0)
 							{
@@ -540,7 +545,7 @@ public final class MuxSocket implements Runnable
 								m_outDataStream.writeShort(CHANNEL_CLOSE);
 								m_outDataStream.write(outBuff);
 								m_outDataStream.flush();
-	              return 0;
+								return 0;
 							}
 						if(buff==null)
 							return -1;
@@ -548,8 +553,8 @@ public final class MuxSocket implements Runnable
 							return 0;
 						ChannelListEntry entry=(ChannelListEntry)m_ChannelList.get(new Integer(channel));
 						if(entry==null)
-              return ErrorCodes.E_UNKNOWN;
-            if(entry.arCipher==null)
+							return ErrorCodes.E_UNKNOWN;
+						if(entry.arCipher==null)
 							{
 								int size=PAYLOAD_SIZE-KEY_SIZE;
 								entry.arCipher=new SymCipher[m_iChainLen];
@@ -585,7 +590,7 @@ public final class MuxSocket implements Runnable
 										entry.arCipher[i].encryptAES(outBuff,RSA_SIZE,outBuff2,RSA_SIZE,DATA_SIZE-RSA_SIZE);
 										size-=KEY_SIZE;
 									}
-							  channelMode=CHANNEL_OPEN;
+								channelMode=CHANNEL_OPEN;
 							}
 						else
 							{

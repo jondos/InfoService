@@ -5,14 +5,14 @@ Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
 
 	- Redistributions of source code must retain the above copyright notice,
-	  this list of conditions and the following disclaimer.
+		this list of conditions and the following disclaimer.
 
 	- Redistributions in binary form must reproduce the above copyright notice,
-	  this list of conditions and the following disclaimer in the documentation and/or
+		this list of conditions and the following disclaimer in the documentation and/or
 		other materials provided with the distribution.
 
 	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
-	  may be used to endorse or promote products derived from this software without specific
+		may be used to endorse or promote products derived from this software without specific
 		prior written permission.
 
 
@@ -67,9 +67,9 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 	private JAPController 	controller;
 	private JLabel				  meterLabel;
 	private JLabel	 		  	m_labelCascadeName;
-  private JPanel          m_panelMain;
+	private JPanel          m_panelMain;
 	private JButton				  m_bttnInfo, m_bttnHelp,m_bttnQuit, iconifyB,m_bttnConf;
-  private JButton         m_bttnAnonConf;
+	private JButton         m_bttnAnonConf;
 	private JCheckBox			  m_cbAnon;
 	private JProgressBar 		userProgressBar;
 	private JProgressBar 		trafficProgressBar;
@@ -77,9 +77,9 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 	private JProgressBar 		ownTrafficChannelsProgressBar;
 	private JLabel 				  m_labelOwnTrafficBytes,m_labelMeterDetailsName;
 	private JLabel          m_labelMeterDetailsUser,m_labelMeterDetailsTraffic;
-  private JLabel          m_labelMeterDetailsRisk,m_labelOwnBytes,m_labelOwnChannels;
+	private JLabel          m_labelMeterDetailsRisk,m_labelOwnBytes,m_labelOwnChannels;
 	private TitledBorder    m_borderOwnTraffic,m_borderAnonMeter,m_borderDetails;
-  private ImageIcon[]			meterIcons;
+	private ImageIcon[]			meterIcons;
 	private JAPHelp 			  helpWindow;
 	private JAPConf 			  m_dlgConfig;
 	private Frame				    viewIconified;
@@ -109,74 +109,74 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 	private void init()
 		{
 
-	    // Load Icon in upper left corner of the frame window
-	    ImageIcon ii=JAPUtil.loadImageIcon(JAPConstants.IICON16FN,true);
-	    if(ii!=null)
+			// Load Icon in upper left corner of the frame window
+			ImageIcon ii=JAPUtil.loadImageIcon(JAPConstants.IICON16FN,true);
+			if(ii!=null)
 				setIconImage(ii.getImage());
 
 			// listen for events from outside the frame
-	    addWindowListener(new WindowAdapter() {
-		    public void windowClosing(WindowEvent e) {exitProgram();}
-	    });
+			addWindowListener(new WindowAdapter() {
+				public void windowClosing(WindowEvent e) {exitProgram();}
+			});
 
 			// Load Images for "Anonymity Meter"
-	    loadMeterIcons();
-	    // "NORTH": Image
-	    ImageIcon northImage = JAPUtil.loadImageIcon(JAPMessages.getString("northPath"),true);
-	    JLabel northLabel = new JLabel(northImage);
-		  JPanel northPanel = new JPanel();
-		  northPanel.setLayout(new BoxLayout(northPanel, BoxLayout.X_AXIS) );
-		  northPanel.add(northLabel);
-		  northPanel.add(Box.createHorizontalGlue());
+			loadMeterIcons();
+			// "NORTH": Image
+			ImageIcon northImage = JAPUtil.loadImageIcon(JAPMessages.getString("northPath"),true);
+			JLabel northLabel = new JLabel(northImage);
+			JPanel northPanel = new JPanel();
+			northPanel.setLayout(new BoxLayout(northPanel, BoxLayout.X_AXIS) );
+			northPanel.add(northLabel);
+			northPanel.add(Box.createHorizontalGlue());
 
-	    // "West": Image
-	    ImageIcon westImage = JAPUtil.loadImageIcon(JAPMessages.getString("westPath"),true);;
-	    JLabel westLabel = new JLabel(westImage);
+			// "West": Image
+			ImageIcon westImage = JAPUtil.loadImageIcon(JAPMessages.getString("westPath"),true);;
+			JLabel westLabel = new JLabel(westImage);
 
 			// "Center:" tabs
-	    //JTabbedPane tabs = new JTabbedPane();
-	    //JPanel config = buildConfigPanel();
-	    JPanel level = buildLevelPanel();
-	    //tabs.addTab(JAPMessages.getString("mainMeterTab"),JAPUtil.loadImageIcon(JAPConstants.METERICONFN, true), level );
-	    // "South": Buttons
+			//JTabbedPane tabs = new JTabbedPane();
+			//JPanel config = buildConfigPanel();
+			JPanel level = buildLevelPanel();
+			//tabs.addTab(JAPMessages.getString("mainMeterTab"),JAPUtil.loadImageIcon(JAPConstants.METERICONFN, true), level );
+			// "South": Buttons
 
 			JPanel buttonPanel = new JPanel();
-	    m_bttnInfo = new JButton(JAPMessages.getString("infoButton"));
-	    m_bttnHelp = new JButton(JAPMessages.getString("helpButton"));
-	    m_bttnQuit = new JButton(JAPMessages.getString("quitButton"));
-	    m_bttnConf = new JButton(JAPMessages.getString("confButton"));
+			m_bttnInfo = new JButton(JAPMessages.getString("infoButton"));
+			m_bttnHelp = new JButton(JAPMessages.getString("helpButton"));
+			m_bttnQuit = new JButton(JAPMessages.getString("quitButton"));
+			m_bttnConf = new JButton(JAPMessages.getString("confButton"));
 			iconifyB = new JButton(JAPUtil.loadImageIcon(JAPConstants.ICONIFYICONFN,true));
 			iconifyB.setToolTipText(JAPMessages.getString("iconifyWindow"));
 
-	    // Add real buttons
+			// Add real buttons
 			buttonPanel.add(iconifyB);
 			buttonPanel.add(m_bttnInfo);
-	    buttonPanel.add(m_bttnHelp);
+			buttonPanel.add(m_bttnHelp);
 			buttonPanel.add(m_bttnConf);
 			buttonPanel.add(new JLabel("  "));
-	    buttonPanel.add(m_bttnQuit);
+			buttonPanel.add(m_bttnQuit);
 			iconifyB.addActionListener(this);
 			m_bttnConf.addActionListener(this);
-	    m_bttnInfo.addActionListener(this);
-	    m_bttnHelp.addActionListener(this);
-	    m_bttnQuit.addActionListener(this);
-	    JAPUtil.setMnemonic(iconifyB,JAPMessages.getString("iconifyButtonMn"));
-	    JAPUtil.setMnemonic(m_bttnConf,JAPMessages.getString("confButtonMn"));
-		  JAPUtil.setMnemonic(m_bttnInfo,JAPMessages.getString("infoButtonMn"));
-	    JAPUtil.setMnemonic(m_bttnHelp,JAPMessages.getString("helpButtonMn"));
-	    JAPUtil.setMnemonic(m_bttnQuit,JAPMessages.getString("quitButtonMn"));
+			m_bttnInfo.addActionListener(this);
+			m_bttnHelp.addActionListener(this);
+			m_bttnQuit.addActionListener(this);
+			JAPUtil.setMnemonic(iconifyB,JAPMessages.getString("iconifyButtonMn"));
+			JAPUtil.setMnemonic(m_bttnConf,JAPMessages.getString("confButtonMn"));
+			JAPUtil.setMnemonic(m_bttnInfo,JAPMessages.getString("infoButtonMn"));
+			JAPUtil.setMnemonic(m_bttnHelp,JAPMessages.getString("helpButtonMn"));
+			JAPUtil.setMnemonic(m_bttnQuit,JAPMessages.getString("quitButtonMn"));
 
 			// add Components to Frame
 			getContentPane().setBackground(buttonPanel.getBackground());
 			getContentPane().add(level, BorderLayout.CENTER);
-      m_panelMain=level;
+			m_panelMain=level;
 			if(!JAPModel.isSmallDisplay())
-        {
-          getContentPane().add(northPanel, BorderLayout.NORTH);
-			    getContentPane().add(westLabel, BorderLayout.WEST);
-			    getContentPane().add(new JLabel("  "), BorderLayout.EAST); //Spacer
-			    getContentPane().add(buttonPanel, BorderLayout.SOUTH);
-        }
+				{
+					getContentPane().add(northPanel, BorderLayout.NORTH);
+					getContentPane().add(westLabel, BorderLayout.WEST);
+					getContentPane().add(new JLabel("  "), BorderLayout.EAST); //Spacer
+					getContentPane().add(buttonPanel, BorderLayout.SOUTH);
+				}
 			//tabs.setSelectedComponent(level);
 
 			this.addWindowListener(new WindowAdapter()
@@ -193,19 +193,12 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 						}
 				});
 
-			try
-				{
-					pack();  // optimize size
-					setResizable(/*true*/true/*false*/); //2001-11-12(HF):Changed due to a Mac OS X problem during redraw of the progress bars
-				}
-			catch(Exception e) {
-				JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.GUI,"JAPView:Hm.. Error by Pack - Has To be fixed!!");
-				}
+			setOptimalSize();
 			updateValues();
 			JAPUtil.centerFrame(this);
 	}
 
-    private JPanel buildLevelPanel() {
+		private JPanel buildLevelPanel() {
 		JPanel levelPanel = new JPanel(new BorderLayout());
 //		JPanel levelPanel = new JPanel();
 //		levelPanel.setLayout(new BoxLayout(levelPanel, BoxLayout.Y_AXIS) );
@@ -213,52 +206,52 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 		// Own traffic situation: current # of channels
 		ownTrafficChannelsProgressBar = new JProgressBar(JProgressBar.HORIZONTAL,0, 1);
 		Font fontControls=JAPController.getDialogFont();
-    ownTrafficChannelsProgressBar.setFont(fontControls);
-    ownTrafficChannelsProgressBar.setUI(new MyProgressBarUI());
+		ownTrafficChannelsProgressBar.setFont(fontControls);
+		ownTrafficChannelsProgressBar.setUI(new MyProgressBarUI());
 		ownTrafficChannelsProgressBar.setStringPainted(true);
 		ownTrafficChannelsProgressBar.setBorderPainted(false /*PROGRESSBARBORDER*/);
 		ownTrafficChannelsProgressBar.setString(" ");
 
 		// Own traffic situation: # of bytes transmitted
 		m_labelOwnTrafficBytes = new JLabel("0 Bytes",SwingConstants.RIGHT);
-    m_labelOwnTrafficBytes.setFont(fontControls);
+		m_labelOwnTrafficBytes.setFont(fontControls);
 		//
 		userProgressBar = new
 			JProgressBar(JProgressBar.HORIZONTAL,0, 1);
 		userProgressBar.setStringPainted(true);
 		userProgressBar.setBorderPainted(PROGRESSBARBORDER);
-    userProgressBar.setFont(fontControls);
+		userProgressBar.setFont(fontControls);
 		//
 		trafficProgressBar = new
 			JProgressBar(JProgressBar.HORIZONTAL);
 		trafficProgressBar.setStringPainted(true);
 		trafficProgressBar.setBorderPainted(PROGRESSBARBORDER);
-    trafficProgressBar.setFont(fontControls);
+		trafficProgressBar.setFont(fontControls);
 		//
 		protectionProgressBar = new
 			JProgressBar(JProgressBar.HORIZONTAL);
 		protectionProgressBar.setStringPainted(true);
 		protectionProgressBar.setBorderPainted(PROGRESSBARBORDER);
-    protectionProgressBar.setFont(fontControls);
+		protectionProgressBar.setFont(fontControls);
 
 		JPanel ownTrafficPanel = new JPanel();
 		ownTrafficPanel.setLayout( new GridLayout(2,2,5,5) );
-    m_borderOwnTraffic=new TitledBorder(JAPMessages.getString("ownTrafficBorder"));
-    m_borderOwnTraffic.setTitleFont(fontControls);
+		m_borderOwnTraffic=new TitledBorder(JAPMessages.getString("ownTrafficBorder"));
+		m_borderOwnTraffic.setTitleFont(fontControls);
 		ownTrafficPanel.setBorder(m_borderOwnTraffic);
-    m_labelOwnChannels=new JLabel(JAPMessages.getString("ownTrafficChannels"));
-    m_labelOwnChannels.setFont(fontControls);
+		m_labelOwnChannels=new JLabel(JAPMessages.getString("ownTrafficChannels"));
+		m_labelOwnChannels.setFont(fontControls);
 		ownTrafficPanel.add(m_labelOwnChannels);
 		ownTrafficPanel.add(ownTrafficChannelsProgressBar);
-    m_labelOwnBytes=new JLabel(JAPMessages.getString("ownTrafficBytes"));
-	  m_labelOwnBytes.setFont(fontControls);
+		m_labelOwnBytes=new JLabel(JAPMessages.getString("ownTrafficBytes"));
+		m_labelOwnBytes.setFont(fontControls);
 		ownTrafficPanel.add(m_labelOwnBytes);
 		ownTrafficPanel.add(m_labelOwnTrafficBytes);
 
 		m_cbAnon = new JCheckBox(JAPMessages.getString("confActivateCheckBox"));
 		JAPUtil.setMnemonic(m_cbAnon,JAPMessages.getString("confActivateCheckBoxMn"));
-    m_cbAnon.setFont(fontControls);
-    m_cbAnon.addActionListener(this);
+		m_cbAnon.setFont(fontControls);
+		m_cbAnon.addActionListener(this);
 
 		// Line 1
 		JPanel p41 = new JPanel();
@@ -266,20 +259,20 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 		//p41.add(Box.createRigidArea(new Dimension(10,0)) );
 		p41.add(m_cbAnon );
 		if(!JAPModel.isSmallDisplay())
-      p41.add(Box.createRigidArea(new Dimension(5,0)) );
+			p41.add(Box.createRigidArea(new Dimension(5,0)) );
 		p41.add(Box.createHorizontalGlue() );
 		m_bttnAnonConf = new JButton(JAPMessages.getString("confActivateButton"));
 		m_bttnAnonConf.setFont(fontControls);
-    if(JAPModel.isSmallDisplay())
-      m_bttnAnonConf.setMargin(JAPConstants.SMALL_BUTTON_MARGIN);
-    m_bttnAnonConf.addActionListener(this);
+		if(JAPModel.isSmallDisplay())
+			m_bttnAnonConf.setMargin(JAPConstants.SMALL_BUTTON_MARGIN);
+		m_bttnAnonConf.addActionListener(this);
 		p41.add(m_bttnAnonConf);
 
 		JPanel meterPanel = new JPanel();
 		meterPanel.setLayout( new BorderLayout() );
-    m_borderAnonMeter=new TitledBorder(JAPMessages.getString("meterBorder"));
+		m_borderAnonMeter=new TitledBorder(JAPMessages.getString("meterBorder"));
 		m_borderAnonMeter.setTitleFont(fontControls);
-    meterPanel.setBorder(m_borderAnonMeter);
+		meterPanel.setBorder(m_borderAnonMeter);
 		meterLabel = new JLabel(getMeterImage(-1));
 		meterPanel.add(p41/*ano1CheckBox*/,BorderLayout.NORTH);
 		meterPanel.add(meterLabel, BorderLayout.CENTER);
@@ -287,19 +280,19 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 		// details panel
 		JPanel detailsPanel = new JPanel();
 		m_labelCascadeName = new JLabel();
-    m_labelCascadeName.setFont(fontControls);
+		m_labelCascadeName.setFont(fontControls);
 		m_labelMeterDetailsName    = new JLabel(JAPMessages.getString("meterDetailsName")+" ");
 		m_labelMeterDetailsName.setFont(fontControls);
-    m_labelMeterDetailsUser    = new JLabel(JAPMessages.getString("meterDetailsUsers")+" ");
-	  m_labelMeterDetailsUser.setFont(fontControls);
- 		m_labelMeterDetailsTraffic = new JLabel(JAPMessages.getString("meterDetailsTraffic")+" ");
-	  m_labelMeterDetailsTraffic.setFont(fontControls);
-    m_labelMeterDetailsRisk    = new JLabel(JAPMessages.getString("meterDetailsRisk")+" ");
-	  m_labelMeterDetailsRisk.setFont(fontControls);
- 		GridBagLayout g = new GridBagLayout();
+		m_labelMeterDetailsUser    = new JLabel(JAPMessages.getString("meterDetailsUsers")+" ");
+		m_labelMeterDetailsUser.setFont(fontControls);
+		m_labelMeterDetailsTraffic = new JLabel(JAPMessages.getString("meterDetailsTraffic")+" ");
+		m_labelMeterDetailsTraffic.setFont(fontControls);
+		m_labelMeterDetailsRisk    = new JLabel(JAPMessages.getString("meterDetailsRisk")+" ");
+		m_labelMeterDetailsRisk.setFont(fontControls);
+		GridBagLayout g = new GridBagLayout();
 		detailsPanel.setLayout( g );
-    m_borderDetails=new TitledBorder(JAPMessages.getString("meterDetailsBorder")) ;
-    m_borderDetails.setTitleFont(fontControls);
+		m_borderDetails=new TitledBorder(JAPMessages.getString("meterDetailsBorder")) ;
+		m_borderDetails.setTitleFont(fontControls);
 		detailsPanel.setBorder(m_borderDetails);
 		GridBagConstraints c = new GridBagConstraints();
 		c.anchor=c.WEST;
@@ -351,7 +344,7 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 		levelPanel.add(detailsPanel, BorderLayout.SOUTH);
 
 		return levelPanel;
-    }
+		}
 
 	/*private JPanel buildConfigPanel() {
 		// "Center" Panel
@@ -502,70 +495,71 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 			m_cbAnon.setEnabled(false);
 		}
 
-   /** Used to notice the View, that the locale has Changed.
-    *
-    */
-  public void localeChanged()
-    {
-      m_bttnInfo.setText(JAPMessages.getString("infoButton"));
-	    m_bttnHelp.setText(JAPMessages.getString("helpButton"));
-	    m_bttnQuit.setText(JAPMessages.getString("quitButton"));
-	    m_bttnConf.setText(JAPMessages.getString("confButton"));
-	    JAPUtil.setMnemonic(m_bttnConf,JAPMessages.getString("confButtonMn"));
-		  JAPUtil.setMnemonic(m_bttnInfo,JAPMessages.getString("infoButtonMn"));
-	    JAPUtil.setMnemonic(m_bttnHelp,JAPMessages.getString("helpButtonMn"));
-	    JAPUtil.setMnemonic(m_bttnQuit,JAPMessages.getString("quitButtonMn"));
-		  m_labelMeterDetailsName.setText(JAPMessages.getString("meterDetailsName")+" ");
-      m_labelMeterDetailsUser.setText(JAPMessages.getString("meterDetailsUsers")+" ");
-	 	  m_labelMeterDetailsTraffic.setText(JAPMessages.getString("meterDetailsTraffic")+" ");
-	    m_labelMeterDetailsRisk.setText(JAPMessages.getString("meterDetailsRisk")+" ");
-      m_borderOwnTraffic.setTitle(JAPMessages.getString("ownTrafficBorder"));
-      m_labelOwnChannels.setText(JAPMessages.getString("ownTrafficChannels"));
-      m_labelOwnBytes.setText(JAPMessages.getString("ownTrafficBytes"));
-      m_cbAnon.setText(JAPMessages.getString("confActivateCheckBox"));
-		  JAPUtil.setMnemonic(m_cbAnon,JAPMessages.getString("confActivateCheckBoxMn"));
-      m_borderAnonMeter.setTitle(JAPMessages.getString("meterBorder"));
-  	  m_bttnAnonConf.setText(JAPMessages.getString("confActivateButton"));
-      m_borderDetails.setTitle(JAPMessages.getString("meterDetailsBorder")) ;
-      if(m_dlgConfig!=null)
-        m_dlgConfig.localeChanged();
-      updateValues();
-    }
+	 /** Used to notice the View, that the locale has Changed.
+		*
+		*/
+	public void localeChanged()
+		{
+			m_bttnInfo.setText(JAPMessages.getString("infoButton"));
+			m_bttnHelp.setText(JAPMessages.getString("helpButton"));
+			m_bttnQuit.setText(JAPMessages.getString("quitButton"));
+			m_bttnConf.setText(JAPMessages.getString("confButton"));
+			JAPUtil.setMnemonic(m_bttnConf,JAPMessages.getString("confButtonMn"));
+			JAPUtil.setMnemonic(m_bttnInfo,JAPMessages.getString("infoButtonMn"));
+			JAPUtil.setMnemonic(m_bttnHelp,JAPMessages.getString("helpButtonMn"));
+			JAPUtil.setMnemonic(m_bttnQuit,JAPMessages.getString("quitButtonMn"));
+			m_labelMeterDetailsName.setText(JAPMessages.getString("meterDetailsName")+" ");
+			m_labelMeterDetailsUser.setText(JAPMessages.getString("meterDetailsUsers")+" ");
+			m_labelMeterDetailsTraffic.setText(JAPMessages.getString("meterDetailsTraffic")+" ");
+			m_labelMeterDetailsRisk.setText(JAPMessages.getString("meterDetailsRisk")+" ");
+			m_borderOwnTraffic.setTitle(JAPMessages.getString("ownTrafficBorder"));
+			m_labelOwnChannels.setText(JAPMessages.getString("ownTrafficChannels"));
+			m_labelOwnBytes.setText(JAPMessages.getString("ownTrafficBytes"));
+			m_cbAnon.setText(JAPMessages.getString("confActivateCheckBox"));
+			JAPUtil.setMnemonic(m_cbAnon,JAPMessages.getString("confActivateCheckBoxMn"));
+			m_borderAnonMeter.setTitle(JAPMessages.getString("meterBorder"));
+			m_bttnAnonConf.setText(JAPMessages.getString("confActivateButton"));
+			m_borderDetails.setTitle(JAPMessages.getString("meterDetailsBorder")) ;
+			if(m_dlgConfig!=null)
+				m_dlgConfig.localeChanged();
+			updateValues();
+			setOptimalSize();
+		}
 
 	protected void loadMeterIcons() {
 		// Load Images for "Anonymity Meter"
 		meterIcons = new ImageIcon [JAPConstants.METERFNARRAY.length];
 //		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPView:METERFNARRAY.length="+JAPConstants.METERFNARRAY.length);
-    if(!JAPModel.isSmallDisplay())
-      {
-        for (int i=0; i<JAPConstants.METERFNARRAY.length; i++)
-          {
-            meterIcons[i] = JAPUtil.loadImageIcon(JAPConstants.METERFNARRAY[i],false);
-          }
-      }
-    else
-      {
-        MediaTracker m=new MediaTracker(this);
-        for (int i=0; i<JAPConstants.METERFNARRAY.length; i++)
-          {
-            Image tmp=JAPUtil.loadImageIcon(JAPConstants.METERFNARRAY[i],true).getImage();
-            int w=tmp.getWidth(null);
-            tmp=tmp.getScaledInstance((int)(w*0.75),-1,Image.SCALE_SMOOTH);
-            m.addImage(tmp,i);
-            meterIcons[i] = new ImageIcon(tmp);
-          }
-        try{m.waitForAll();}catch(Exception e){}
-      }
+		if(!JAPModel.isSmallDisplay())
+			{
+				for (int i=0; i<JAPConstants.METERFNARRAY.length; i++)
+					{
+						meterIcons[i] = JAPUtil.loadImageIcon(JAPConstants.METERFNARRAY[i],false);
+					}
+			}
+		else
+			{
+				MediaTracker m=new MediaTracker(this);
+				for (int i=0; i<JAPConstants.METERFNARRAY.length; i++)
+					{
+						Image tmp=JAPUtil.loadImageIcon(JAPConstants.METERFNARRAY[i],true).getImage();
+						int w=tmp.getWidth(null);
+						tmp=tmp.getScaledInstance((int)(w*0.75),-1,Image.SCALE_SMOOTH);
+						m.addImage(tmp,i);
+						meterIcons[i] = new ImageIcon(tmp);
+					}
+				try{m.waitForAll();}catch(Exception e){}
+			}
 	}
 
 	 /**Anon Level is >=0 amd <=5. if -1 no measure is available*/
-    private ImageIcon getMeterImage(int iAnonLevel)
+		private ImageIcon getMeterImage(int iAnonLevel)
 			{
 				if (controller.getAnonMode())
 					{
 						if(iAnonLevel>=0&&iAnonLevel<6)
-						  return meterIcons[iAnonLevel+2];
-					  else
+							return meterIcons[iAnonLevel+2];
+						else
 							return meterIcons[1];//No measure available
 					}
 				else
@@ -609,7 +603,7 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 					JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"Event ?????: "+event.getSource());
 			}
 
-  private void showHelpWindow()
+	private void showHelpWindow()
 			{
 				if(helpWindow==null)
 					helpWindow=new JAPHelp(this);
@@ -638,20 +632,32 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 		controller.goodBye(); // call the final exit procedure of JAP
 	}
 
-  public JPanel getMainPanel()
-    {
-      return m_panelMain;
-    }
+	public JPanel getMainPanel()
+		{
+			return m_panelMain;
+		}
 
-  private void updateValues() {
+		private void setOptimalSize()
+			{
+				try
+				{
+					pack();  // optimize size
+					setResizable(/*true*/true/*false*/); //2001-11-12(HF):Changed due to a Mac OS X problem during redraw of the progress bars
+				}
+				catch(Exception e) {
+					JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.GUI,"JAPView:Hm.. Error by Pack - Has To be fixed!!");
+				}
+			}
+
+	private void updateValues() {
 		AnonServer e = controller.getAnonServer();
 		// Config panel
 		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPView:Start updateValues");
 		//m_labelProxyPort.setText(String.valueOf(JAPModel.getHttpListenerPortNumber()));
 		//if(JAPModel.getUseFirewall())
 			//{
-			  //proxyMustUseLabel.setText(JAPMessages.getString("firewallMustUse"));
-			  //m_labelProxyHost.setVisible(true);
+				//proxyMustUseLabel.setText(JAPMessages.getString("firewallMustUse"));
+				//m_labelProxyHost.setVisible(true);
 				//int firewallPort=JAPModel.getFirewallPort();
 				//if(firewallPort==-1)
 					//m_labelProxyHost.setText(JAPMessages.getString("firewallNotConfigured"));
@@ -660,14 +666,14 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 			//}
 		//else
 			//{
-			  //proxyMustUseLabel.setText(JAPMessages.getString("firewallMustNotUse"));
-			  //m_labelProxyHost.setVisible(false);
+				//proxyMustUseLabel.setText(JAPMessages.getString("firewallMustNotUse"));
+				//m_labelProxyHost.setVisible(false);
 			//}
 		//infoServiceTextField.setText(JAPModel.getInfoServiceHost()+":"+String.valueOf(JAPModel.getInfoServicePort()));
 		//anonTextField.setText(e.getHost()+":"+String.valueOf(e.getPort())+((e.getSSLPort()==-1)?"":":"+e.getSSLPort()));
 		//anonNameTextField.setText(e.getName());
 		//anonNameTextField.setToolTipText(e.getName());
-    //anonCheckBox.setSelected(controller.getAnonMode());
+		//anonCheckBox.setSelected(controller.getAnonMode());
 		//if(controller.getAnonMode()) {
 		//	anonCheckBox.setForeground(Color.black);
 		//} else {
@@ -713,19 +719,19 @@ final public class JAPView extends JFrame implements ActionListener, JAPObserver
 					protectionProgressBar.setValue(protectionProgressBar.getMaximum());
 					protectionProgressBar.setString(JAPMessages.getString("meterNA"));
 				}
-        int t=e.getTrafficSituation();
+				int t=e.getTrafficSituation();
 				if(t>-1)
-          { //Trafic Situation directly form InfoService
-            trafficProgressBar.setMaximum(100);
-            trafficProgressBar.setValue(t);
-            if(t < 30)
-              trafficProgressBar.setString(JAPMessages.getString("meterTrafficLow"));
-            else if (t< 60)
-              trafficProgressBar.setString(JAPMessages.getString("meterTrafficMedium"));
-            else
-              trafficProgressBar.setString(JAPMessages.getString("meterTrafficHigh"));
-          }
-        else { // no value from InfoService
+					{ //Trafic Situation directly form InfoService
+						trafficProgressBar.setMaximum(100);
+						trafficProgressBar.setValue(t);
+						if(t < 30)
+							trafficProgressBar.setString(JAPMessages.getString("meterTrafficLow"));
+						else if (t< 60)
+							trafficProgressBar.setString(JAPMessages.getString("meterTrafficMedium"));
+						else
+							trafficProgressBar.setString(JAPMessages.getString("meterTrafficHigh"));
+					}
+				else { // no value from InfoService
 					trafficProgressBar.setValue(trafficProgressBar.getMaximum());
 					trafficProgressBar.setString(JAPMessages.getString("meterNA"));
 				}
