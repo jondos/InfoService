@@ -12,29 +12,30 @@ import java.awt.MediaTracker;
 import java.awt.Toolkit;
 import javax.swing.ImageIcon;
 
-public final class JAPModel implements JAPObserver {
+public final class JAPModel {
 
-/* 2000-08-01(HF): 
- * JAPDebug now initialized in JAP in order to use
- * the functions also in JAP.main()
-*/
+// 2000-08-01(HF): 
+// JAPDebug now initialized in JAP in order to use
+// the functions also in JAP.main()
     
 	static final String aktVersion = "00.00.012"; // Version of JAP
 	
-    	public  int      portNumber        = 4001;
+	public  int      portNumber        = 4001;
 	private int      runningPortNumber = 0;      // the port where proxy listens
 	private boolean  isRunningProxy    = false;  // true if a proxy is running
 	public  String   proxyHostName     = "ikt.inf.tu-dresden.de";
 	public  int      proxyPortNumber   = 80;
 	private boolean  proxyMode         = false;  // indicates whether JAP connects via a proxy or directly
-	public  String   infoServiceHostName      = "sole.icsi.berkeley.edu";
+	public  String   infoServiceHostName      = "anon.inf.tu-dresden.de";
 	public  int      infoServicePortNumber    = 6543;
-	public  String   anonHostName      = "sole.icsi.berkeley.edu";
-	public  int      anonPortNumber    = 6543;
+	public  String   anonHostName      = "anon.inf.tu-dresden.de";
+	public  int      anonPortNumber    = 6544;
 	private boolean  anonMode          = false;  // indicates whether user wants to send data via MIXes or not
 	public  boolean  autoConnect       = false;  // autoconnect after program start
-	public  String   status1           = "???";
-	public  String   status2           = "???";
+	public  boolean  alreadyCheckedForNewVersion = false; // indicates if check for new version has already been done 
+	public  boolean  canStartService   = false;  // indicates if Anon service can be started
+	public  String   status1           = "?";
+	public  String   status2           = " ";
 
 	private int nrOfChannels = 0;
 	private int nrOfBytes    = 0;
@@ -45,9 +46,8 @@ public final class JAPModel implements JAPObserver {
 // usage: model.getString("infoURL")
 //static final String url_download_version       = "http://www.inf.tu-dresden.de/~hf2/anon/JAP/";
 	
-	static final String aktJAPVersionFN            = "/aktVersion.txt"; // retrieved from Info Service
-	static final String urlJAPNewVersionDownload   = "http://anon.inf.tu-dresden.de/~sk13/anon/jap/JAP.jar";
-//	static final String urlJAPNewVersionDownload   = "http://127.0.0.1:6543/JAP.jar";
+	static final String aktJAPVersionFN            = "/~sk13/anon/jap/aktVersion.txt"; // retrieved from Info Service
+	static final String urlJAPNewVersionDownload   = "/~sk13/anon/jap/JAP.jar"; // also retrieved from Info Service
 	static final String JAPLocalFilename           = "JAP.jar";
 
 	private ResourceBundle msg;
@@ -121,7 +121,7 @@ public final class JAPModel implements JAPObserver {
 			return model;
 	}
 	
-	public boolean load() {
+	public void load() {
 		// Load default anon services
 		anonServerDatabase = new Vector();
 		anonServerDatabase.addElement(new AnonServerDBEntry(anonHostName, anonPortNumber));
@@ -143,17 +143,14 @@ public final class JAPModel implements JAPObserver {
 			anonHostName=n.getNamedItem("anonHostName").getNodeValue();
 			anonPortNumber=Integer.valueOf(n.getNamedItem("anonPortNumber").getNodeValue()).intValue();
 			autoConnect=((n.getNamedItem("autoConnect").getNodeValue()).equals("true")?true:false);
-			//
-			notifyJAPObservers();
-			return true;	
 		}
 		catch(Exception e) {
-			notifyJAPObservers();
-			return false;
 		}
+		// fire event
+		notifyJAPObservers();
 	}
 
-	public boolean save() {
+	public void save() {
 		// Save config to xml file
 		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:try saving configuration to "+XMLCONFFN);
 		try {
@@ -173,11 +170,19 @@ public final class JAPModel implements JAPObserver {
 			//
 			doc.appendChild(e);
 			((XmlDocument)doc).write(f);
-			return true;
 		}
 		catch(Exception e) {
-			return false;
+			JAPDebug.out(JAPDebug.ERR,JAPDebug.MISC,"JAPModel:error saving configuration to "+XMLCONFFN);
 		}
+	}
+	
+	
+	public void initialRun() {
+		// start Proxy
+		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:starting listener");
+		startProxy();
+		// start anon service immediately if autoConnect is true
+		setAnonMode(autoConnect);
 	}
 	
     public int getCurrentProtectionLevel() {
@@ -236,95 +241,43 @@ public final class JAPModel implements JAPObserver {
 		}
 
 	public void setAnonMode(boolean anonModeSelected) {
-		if ((anonMode == false) && anonModeSelected) {
-			// Check for a new Version of JAP
-			// In this version of JAP the check will be performed whenever
-			// the Anon mode is selected.
-			JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:Checking for new version of JAP...");
-			try {
-				String s = Versionchecker.getNewVersionnumberFromNet("http://"+infoServiceHostName+":"+infoServicePortNumber+aktJAPVersionFN);
-				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:Version:"+s);
-				if ( s.compareTo(aktVersion) > 0 ) {
-					// OK, new version available
-					// ->Ask user if he/she wants to download new version
-					Object[] options = { model.getString("newVersionNo"), model.getString("newVersionYes") };
-					ImageIcon   icon = loadImageIcon(DOWNLOADFN,true);
-					int opt=javax.swing.JOptionPane.showOptionDialog
-						(null,
-						 model.getString("newVersionAvailable"),
-						 model.getString("newVersionAvailableTitle"), 
-						 javax.swing.JOptionPane.DEFAULT_OPTION, 
-						 javax.swing.JOptionPane.PLAIN_MESSAGE,
-						 icon, 
-						 options, 
-						 options[1]
-						);
-					JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPModel:opt="+opt);
-					if (opt == 1) {
-						// User has elected to download new version of JAP
-						// ->Download, Alert, exit program
-						// To do: show busy message
-						try {
-							Versionchecker.getVersionFromNet(urlJAPNewVersionDownload, JAPLocalFilename);
-							// 
-							javax.swing.JOptionPane.showMessageDialog
-								(
-								 null, 
-								 model.getString("newVersionLoaded"),
-								 model.getString("newVersionAvailableTitle"),
-								 javax.swing.JOptionPane.PLAIN_MESSAGE,
-								 icon
-								);
-							goodBye();
-							// next line should never be reached!
-							JAPDebug.out(JAPDebug.EMERG,JAPDebug.MISC,"JAPModel:this line should never be reached!");
-						}
-						catch (Exception e) {
-							// Download failed
-							// Alert, and reset anon mode to false
-							JAPDebug.out(JAPDebug.ERR,JAPDebug.MISC,"JAPModel:checkForNewJAPVersion(): "+e);
-							javax.swing.JOptionPane.showMessageDialog(null, model.getString("downloadFailed")+model.getString("infoURL"), model.getString("downloadFailedTitle"), javax.swing.JOptionPane.ERROR_MESSAGE); 
-							anonMode = false;
-							notifyJAPObservers();
-							return;
-						}
-						
-					} else {
-						// User has elected not to download
-						// ->Alert, we should'nt start the system due to possible compatibility problems
+		if ((anonMode == false) && (anonModeSelected == true)) {
+			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:setAnonMode("+anonModeSelected+")");
+			if (alreadyCheckedForNewVersion == false) {
+			// Check for a new Version of JAP if not already done
+				alreadyCheckedForNewVersion = true;
+				int ok = this.versionCheck();
+				if (ok == -1) {
+					// -> at the moment nothing to do
+					canStartService = false;
+				} else {
+					// -> we can start anonymity
+					canStartService = true;
+				}
+			}
+			if (canStartService) {
+				// -> we can start anonymity
+				anonMode = true;
+				try {
+					p.startMux();
+				}
+				catch (Exception e) {
 						javax.swing.JOptionPane.showMessageDialog
 							(
 							 null, 
-							 model.getString("youShouldUpdate")+model.getString("infoURL"),
-							 model.getString("youShouldUpdateTitle"),
-							 javax.swing.JOptionPane.PLAIN_MESSAGE,
-							 icon
+							 model.getString("errorConnectingFirstMix"),
+							 model.getString("errorConnectingFirstMixTitle"),
+							 javax.swing.JOptionPane.ERROR_MESSAGE
 							);
-						anonMode = false;
-						notifyJAPObservers();
-						return;
-					}
-				} //endif ( s.compareTo(aktVersion) > 0 )
-			}
-			catch (Exception e) {
-				// Verson check failed
-				// ->Alert, and reset anon mode to false
-				JAPDebug.out(JAPDebug.ERR,JAPDebug.MISC,"JAPModel: "+e);
-				javax.swing.JOptionPane.showMessageDialog(null, model.getString("versionCheckFailed"), model.getString("versionCheckFailedTitle"), javax.swing.JOptionPane.ERROR_MESSAGE); 
-				anonMode = false;
+				}
 				notifyJAPObservers();
-				return;
 			}
-			// OK, no new version available
-			// ->we can start anonymity
-			p.startMux();
-			}
-			
-		if (anonMode && (anonModeSelected == false)) {
+		} else if ((anonMode == true) && (anonModeSelected == false)) {
+			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:setAnonMode("+anonModeSelected+")");
+			anonMode = false;
 			p.stopMux();
+			notifyJAPObservers();
 		}
-		anonMode = anonModeSelected;
-		notifyJAPObservers();
 	}
 	
 	public boolean isAnonMode() {
@@ -340,7 +293,7 @@ public final class JAPModel implements JAPObserver {
 		return proxyMode;
 	}
 
-	public void startProxy() {
+	private void startProxy() {
 		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:startProxy");
 		if (isRunningProxy == false) {
 			isRunningProxy = true;
@@ -348,18 +301,14 @@ public final class JAPModel implements JAPObserver {
 			p = new JAPProxyServer(portNumber);
 			Thread proxyThread = new Thread (p);
 			proxyThread.start();
-			this.notifyJAPObservers();
 		}
 	}
 	
-	public void stopProxy() {
+	private void stopProxy() {
 		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:stopProxy");
 		if (isRunningProxy) {
 			p.stopService();
 			isRunningProxy = false;
-			status1 = getString("statusNotRunning");
-			status2 = getString("statusNotRunning");
-			this.notifyJAPObservers();
 		}
 	}
 	
@@ -387,6 +336,92 @@ public final class JAPModel implements JAPObserver {
 			);
 	}
 	
+	/** Performs the Versioncheck.
+	 *  @return -1, if version check says that anonymity mode should not be enabled.
+	 *          Reasons can be: new version found, version check failed 
+	 */
+	public int versionCheck() {
+		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:Checking for new version of JAP...");
+		try {
+			String s = Versionchecker.getNewVersionnumberFromNet("http://"+infoServiceHostName+":"+infoServicePortNumber+aktJAPVersionFN);
+			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:Version:"+s);
+			if ( s.compareTo(aktVersion) > 0 ) {
+				// OK, new version available
+				// ->Ask user if he/she wants to download new version
+				Object[] options = { model.getString("newVersionNo"), model.getString("newVersionYes") };
+				ImageIcon   icon = loadImageIcon(DOWNLOADFN,true);
+				int opt=javax.swing.JOptionPane.showOptionDialog
+					(null,
+					 model.getString("newVersionAvailable"),
+					 model.getString("newVersionAvailableTitle"), 
+					 javax.swing.JOptionPane.DEFAULT_OPTION, 
+					 javax.swing.JOptionPane.PLAIN_MESSAGE,
+					 icon, 
+					 options, 
+					 options[1]
+					);
+				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPModel:opt="+opt);
+				if (opt == 1) {
+					// User has elected to download new version of JAP
+					// ->Download, Alert, exit program
+					// To do: show busy message
+					try {
+						Versionchecker.getVersionFromNet("http://"+infoServiceHostName+":"+infoServicePortNumber+urlJAPNewVersionDownload, JAPLocalFilename);
+						// 
+						javax.swing.JOptionPane.showMessageDialog
+							(
+							 null, 
+							 model.getString("newVersionLoaded"),
+							 model.getString("newVersionAvailableTitle"),
+							 javax.swing.JOptionPane.PLAIN_MESSAGE,
+							 icon
+							);
+						goodBye();
+						// next line should never be reached!
+						JAPDebug.out(JAPDebug.EMERG,JAPDebug.MISC,"JAPModel:this line should never be reached!");
+					}
+					catch (Exception e) {
+						// Download failed
+						// Alert, and reset anon mode to false
+						JAPDebug.out(JAPDebug.ERR,JAPDebug.MISC,"JAPModel:checkForNewJAPVersion(): "+e);
+						javax.swing.JOptionPane.showMessageDialog(null, model.getString("downloadFailed")+model.getString("infoURL"), model.getString("downloadFailedTitle"), javax.swing.JOptionPane.ERROR_MESSAGE); 
+						anonMode = false;
+						notifyJAPObservers();
+						return -1;
+					}
+					
+				} else {
+					// User has elected not to download
+					// ->Alert, we should'nt start the system due to possible compatibility problems
+					javax.swing.JOptionPane.showMessageDialog
+						(
+						 null, 
+						 model.getString("youShouldUpdate")+model.getString("infoURL"),
+						 model.getString("youShouldUpdateTitle"),
+						 javax.swing.JOptionPane.PLAIN_MESSAGE,
+						 icon
+						);
+					anonMode = false;
+					notifyJAPObservers();
+					return -1;
+				}
+			} 
+			//endif ( s.compareTo(aktVersion) > 0 )
+			// --> no new version available, i.e. you are running the newest version of JAP
+			return 0; // meaning: version check says that anonymity service can be started
+		}
+		catch (Exception e) {
+			// Verson check failed
+			// ->Alert, and reset anon mode to false
+			JAPDebug.out(JAPDebug.ERR,JAPDebug.MISC,"JAPModel: "+e);
+			javax.swing.JOptionPane.showMessageDialog(null, model.getString("versionCheckFailed"), model.getString("versionCheckFailedTitle"), javax.swing.JOptionPane.ERROR_MESSAGE); 
+			anonMode = false;
+			notifyJAPObservers();
+			return -1;
+		}
+		// this line should never be reached
+	}
+		
 	public void addJAPObserver(Object o) {
 		observerVector.addElement(o);
 	}
@@ -400,43 +435,6 @@ public final class JAPModel implements JAPObserver {
 		}
 	}
 	
-	public void valuesChanged (Object o) {
-		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:model.valuesChanged()");
-		if (isRunningProxy && (runningPortNumber != portNumber)) {
-			stopProxy();
-			startProxy();
-		}
-	}
-
-/*
--->Stefan: Dies hat auf meinem Mac nicht funktioniert.
-Bevor Du es zurueckaenderst, sollten wir darueber reden!
-			
-	ImageIcon loadImageIcon(String strImage,boolean sync)
-		{
-			ImageIcon i=null;
-			try
-				{
-					i=new ImageIcon(getClass().getResource(strImage));
-				}
-			catch(Exception e)
-				{
-					return null;
-				}
-			if(sync)
-				{
-					while(true)
-						{
-							int status=i.getImageLoadStatus();
-							if((status&MediaTracker.COMPLETE)!=0)
-								return i;
-							else if(((status&MediaTracker.ABORTED)!=0)||((status&MediaTracker.ERRORED)!=0))
-								return null;
-						}
-				}
-			return i;
-		}
-*/		
 	ImageIcon loadImageIcon(String strImage, boolean sync) {
 		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPModel:Image "+strImage+" loading...");
 		boolean finished = false;
@@ -471,33 +469,6 @@ Bevor Du es zurueckaenderst, sollten wir darueber reden!
 		}
 		return img;
 	}
-	
-	
-	/* Hannes Version, geht nicht im jar-File
-	
-	ImageIcon loadImageIcon(String strImage, boolean sync) {
-		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPModel:Image "+strImage+" loading...");
-		ImageIcon img = new ImageIcon(strImage);
-		boolean finished = false;
-		if (sync == false) {
-			finished = true;
-		}
-		while(finished!=true) {
-			int status = img.getImageLoadStatus();
-			if ( (status & MediaTracker.ABORTED) != 0 ) {
-				JAPDebug.out(JAPDebug.ERR,JAPDebug.GUI,"JAPModel:Loading of image "+strImage+" aborted!");
-				finished = true;
-			} else if ( (status & MediaTracker.ERRORED) != 0 ) {
-				JAPDebug.out(JAPDebug.ERR,JAPDebug.GUI,"JAPModel:Error loading image "+strImage+"!");
-				finished = true;
-			} else if ( (status & MediaTracker.COMPLETE) != 0) {
-				finished = true;
-			}
-		}
-		return img;
-	}
-	*/
-	
 	
 	public void centerFrame(Window f) {
 		Dimension screenSize = f.getToolkit().getScreenSize();

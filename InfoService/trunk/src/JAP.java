@@ -15,35 +15,38 @@ public final class JAP {
 		}
 		String os = System.getProperty("os.name");
 		
-		// 2000-07-31(HF): JAPDebug now in JAP in order to use
-		// the functions also in main()
-		//private static JAPDebug jdebug = null;
+		// Create debugger object
 		JAPDebug jdebug=new JAPDebug();
 		JAPDebug.setDebugType(JAPDebug.NET+JAPDebug.GUI+JAPDebug.THREAD+JAPDebug.MISC);
-		JAPDebug.setDebugLevel(JAPDebug.DEBUG);
+		JAPDebug.setDebugLevel(JAPDebug.INFO);
 		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAP:Welcome! Java "+vers+" running on "+os+" ...");
 
+		// Create the model object
 		JAPModel model = new JAPModel();
 		JAPSplash splash = new JAPSplash(model);
 		splash.show(); // show splash screen as soon as possible
 
 //		Security.addProvider(new Cryptix());
 		
+		// load settings from config file
 		model.load();
-		model.addJAPObserver(model);
 		
+		// register Handlers if running JAP under Mac OS
 		if (os.equals("Mac OS")) {
 			JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAP:Registering MRJHandlers");
 			model.registerMRJHandlers();
 		}
 
+		// Create the main frame
 		JAPView view = new JAPView (model.TITLE);
 		model.addJAPObserver(view);
 		
+		// Dispose the spash screen and show main frame
 		splash.dispose();
 		view.show();
 		
-		model.startProxy();
+		// initially start services
+		model.initialRun();
 		
 		model.keypool=new JAPKeyPool(20,16);
 		model.keypool.run();
