@@ -8,8 +8,7 @@ import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.lang.Integer;
 import java.util.Enumeration;
-import java.security.SecureRandom;
-
+import java.math.BigInteger;
 public final class JAPMuxSocket extends Thread
 	{
 		private int lastChannelId;
@@ -19,7 +18,8 @@ public final class JAPMuxSocket extends Thread
 		
 		private Socket ioSocket;
 		private	byte[] outBuff;
-		private JAPASymCipher oRSA;
+		private JAPASymCipher[] arASymCipher;
+		private JAPKeyPool keypool;
 		private int chainlen;
 		private volatile boolean runflag;
 		
@@ -27,7 +27,6 @@ public final class JAPMuxSocket extends Thread
 		private final static int DATA_SIZE=1000;
 		private final static int RSA_SIZE=128;
 		
-		private SecureRandom rand;
 		private final class SocketListEntry
 			{
 				SocketListEntry(JAPSocket s)
@@ -52,13 +51,10 @@ public final class JAPMuxSocket extends Thread
 			{
 				lastChannelId=0;
 				oSocketList=new Hashtable();
-				oRSA=new JAPASymCipher();
+				arASymCipher=null;
 				outBuff=new byte[DATA_SIZE];
-				JAPModel model=JAPModel.getModel();
-				model.status2 = model.getString("initSecureRandom");
-				model.notifyJAPObservers();
-				rand=new SecureRandom(SecureRandom.getSeed(20));
-		}
+				keypool=JAPModel.getModel().keypool;
+			}
 
 		public int connect(String host, int port)
 			{
@@ -67,7 +63,22 @@ public final class JAPMuxSocket extends Thread
 						ioSocket=new Socket(host,port);
 						outDataStream=new DataOutputStream(new BufferedOutputStream(ioSocket.getOutputStream(),1008));
 						inDataStream=new DataInputStream(ioSocket.getInputStream());
+						inDataStream.readUnsignedShort(); //len.. unitressteing at the moment
 						chainlen=inDataStream.readByte();
+						arASymCipher=new JAPASymCipher[chainlen];
+						for(int i=chainlen-1;i>=0;i--)
+							{
+								arASymCipher[i]=new JAPASymCipher();
+								int tmp=inDataStream.readUnsignedShort();
+								byte[] buff=new byte[tmp];
+								inDataStream.readFully(buff);
+								BigInteger n=new BigInteger(1,buff);
+								tmp=inDataStream.readUnsignedShort();
+								buff=new byte[tmp];
+								inDataStream.readFully(buff);
+								BigInteger e=new BigInteger(1,buff);
+								arASymCipher[i].setPublicKey(n,e);
+							}
 					}
 				catch(Exception e)
 					{
@@ -202,13 +213,13 @@ public final class JAPMuxSocket extends Thread
 								for(int i=chainlen-1;i>=0;i--)
 									{
 										entry.arCipher[i]=new JAPSymCipher();
-										rand.nextBytes(key);
+										keypool.getKey(key);
 										key[0]=(byte)(key[0]&0x7F); //RSA HACK!! (to ensure what m<n in RSA-Encrypt: c=m^e mod n)
 										entry.arCipher[i].setEncryptionKey(key);
 										entry.arCipher[i].setDecryptionKey(key);
 										System.arraycopy(key,0,outBuff,0,KEY_SIZE);
 										System.arraycopy(buff,0,outBuff,KEY_SIZE,size);
-										oRSA.encrypt(outBuff,0,outBuff,0);
+										arASymCipher[i].encrypt(outBuff,0,outBuff,0);
 										entry.arCipher[i].encrypt(outBuff,RSA_SIZE,outBuff,RSA_SIZE,DATA_SIZE-RSA_SIZE);
 										System.arraycopy(outBuff,0,buff,0,DATA_SIZE);
 										size-=KEY_SIZE;

@@ -73,6 +73,8 @@ public final class JAPModel implements JAPObserver {
 	
 	private static JAPModel model=null;
 	private static JAPDebug jdebug=null;
+	
+	public static JAPKeyPool keypool;
 	public JAPModel () {
 		// Load Texts for Messages and Windows
 		try 
@@ -95,7 +97,6 @@ public final class JAPModel implements JAPObserver {
 					}
 			}
 		jdebug=new JAPDebug();
-		
 		// Create observer object 
 		observerVector = new Vector();
 
