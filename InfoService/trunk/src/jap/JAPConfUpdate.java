@@ -162,7 +162,7 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 		c.fill = GridBagConstraints.BOTH;
 		gridBagPanel.setConstraints(l, c);
 		installedPanel.add(l);
-		l = new JLabel("Type: ");
+		l = new JLabel(JAPMessages.getString("updateType")+": ");
 		c.gridy = 2;
 		c.gridx = 0;
 		c.weightx = 0;
@@ -171,11 +171,11 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 		installedPanel.add(l);
 		if (JAPConstants.m_bReleasedVersion)
 		{
-			l = new JLabel("Release");
+			l = new JLabel(JAPMessages.getString("updateReleaseVersion"));
 		}
 		else
 		{
-			l = new JLabel("Development");
+			l = new JLabel(JAPMessages.getString("updateDevelopmentVersion"));
 		}
 		c.gridx = 1;
 		c.weightx = 1;
@@ -195,7 +195,7 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 		c.fill = GridBagConstraints.NONE;
 		gridBagPanel.setConstraints(l, c);
 		latestPanel.add(l);
-		m_labelVersion = new JLabel("Unknown");
+		m_labelVersion = new JLabel(JAPMessages.getString("updateUnknown"));
 		c.gridx = 1;
 		c.weightx = 1;
 		c.fill = GridBagConstraints.BOTH;
@@ -208,13 +208,13 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 		c.fill = GridBagConstraints.NONE;
 		gridBagPanel.setConstraints(l, c);
 		latestPanel.add(l);
-		m_labelDate = new JLabel("Unknown");
+		m_labelDate = new JLabel(JAPMessages.getString("updateUnknown"));
 		c.gridx = 1;
 		c.weightx = 1;
 		c.fill = GridBagConstraints.BOTH;
 		gridBagPanel.setConstraints(m_labelDate, c);
 		latestPanel.add(m_labelDate);
-		l = new JLabel("Type: ");
+		l = new JLabel(JAPMessages.getString("updateType")+": ");
 		c.gridy = 2;
 		c.gridx = 0;
 		c.weightx = 0;
@@ -222,8 +222,8 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 		gridBagPanel.setConstraints(l, c);
 		latestPanel.add(l);
 		m_comboType = new JComboBox();
-		m_comboType.addItem("Release");
-		m_comboType.addItem("Development");
+		m_comboType.addItem(JAPMessages.getString("updateReleaseVersion"));
+		m_comboType.addItem(JAPMessages.getString("updateDevelopmentVersion"));
 		m_comboType.setEnabled(false);
 		m_comboType.addItemListener(this);
 		c.gridx = 1;
@@ -302,7 +302,7 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 			}
 			else
 			{
-				m_labelDate.setText("Unknown");
+				m_labelDate.setText(JAPMessages.getString("updateUnknown"));
 			}
 			m_bttnUpgrade.setEnabled(true);
 		}
@@ -350,7 +350,7 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 				}
 				else
 				{
-					m_labelDate.setText("Unknown");
+					m_labelDate.setText(JAPMessages.getString("updateUnknown"));
 				}
 			}
 			else
@@ -362,7 +362,7 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 				}
 				else
 				{
-					m_labelDate.setText("Unknown");
+					m_labelDate.setText(JAPMessages.getString("updateUnknown"));
 				}
 			}
 		}
