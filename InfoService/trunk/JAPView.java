@@ -108,6 +108,7 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 				JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.GUI,"JAPView:Hm.. Error by Pack - Has To be fixed!!");
 				}
 			model.centerFrame(this);
+			tabs.setSelectedComponent(level);
 	//		toFront();
 //			getContentPane().validate();
 //		setVisible(true);
