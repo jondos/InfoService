@@ -26,66 +26,76 @@ IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISI
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
 package anon;
+import java.net.Socket;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.UnknownHostException;
 
-final public class JAPAnonChannel extends Thread 
-	{ 
-		private final JAPSocket inSocket; 
-		private final JAPMuxSocket outSocket;
-		private final int channel;
-
-    public JAPAnonChannel (JAPSocket s, int channelID, JAPMuxSocket muxSocket) 
-			{ 
-				inSocket = s;
-				channel=channelID; 
-				outSocket=muxSocket; 
+public final class JAPSocket 
+	{
+		private volatile boolean bisClosed;
+		private Socket s;
+		
+		public JAPSocket()
+			{
+				bisClosed=false;
+			}
+		
+		public JAPSocket(Socket so)	
+			{
+				s=so;
+				bisClosed=false;
+			}
+		
+		public void close() throws IOException
+			{
+				synchronized(this)
+					{
+						if(!bisClosed)
+							{
+								bisClosed=true;
+								try
+									{
+										s.close();
+									}
+								catch (IOException ioe)
+									{
+										throw ioe;
+									}
+							}
+					}
+			}
+		
+		public boolean isClosed()
+			{
+				synchronized(this)
+					{
+						return bisClosed;
+					}
+			}
+		
+		public OutputStream getOutputStream()
+			{
+				try
+					{
+						return s.getOutputStream();
+					}
+				catch(Exception e)
+					{
+						return null;
+					}
 			}
 	
-		public void run()
-			{ 
-				InputStream fromClient=null;
+		public InputStream getInputStream()
+			{
 				try
-					{ 
-						fromClient= inSocket.getInputStream(); 
-						byte[] buff=new byte[JAPMuxSocket.DATA_SIZE]; 
-						int len=fromClient.read(buff,0,JAPMuxSocket.DATA_SIZE-3-outSocket.getChainLen()*JAPMuxSocket.KEY_SIZE);
-						if(len!=-1)
-							{
-								outSocket.send(channel,buff,(short)len);		
-								while((len=fromClient.read(buff,0,JAPMuxSocket.DATA_SIZE-3))!=-1)
-									{
-										if(len>0)
-											{
-												int ret=outSocket.send(channel,buff,(short)len);
-												if(ret==-1)
-													break;
-												if(ret==JAPMuxSocket.E_CHANNEL_SUSPENDED)
-													sleep(1000);
-											}
-									} 
-							}	
-					} // if (protocol....)  
-				catch(Exception e)
 					{
-					}
-				try
-					{ 
-						fromClient.close(); 
+						return s.getInputStream();
 					}
 				catch(Exception e)
 					{
-					} 
-				try
-					{
-						if(!inSocket.isClosed())
-							{ 
-								outSocket.close(channel);
-								inSocket.close(); 
-							} 
+						return null;
 					}
-				catch (Exception e)
-					{
-						JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.THREAD,"ProxyConnection - Exception while closing: "+e); 
-					}	 
-			} 
+			}
 	}

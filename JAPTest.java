@@ -70,6 +70,7 @@ import Rijndael.Rijndael_Algorithm;
 import java.util.zip.*;
 //import cryptix.asn1.lang.*;
 //import cryptix.asn1.encoding.*;
+import anon.JAPSymCipher;
 final public class JAPTest
 {
 	
