@@ -537,6 +537,11 @@ public final class JAPConf extends JDialog
 				setVisible(false);
 				model.setListenerIsLocal(listenerCheckBox.isSelected());
 				model.setUseProxy(proxyCheckBox.isSelected());
+				int newPort=Integer.parseInt(portnumberTextField.getText().trim());
+				if(newPort!=model.getPortNumber())
+					{
+						JOptionPane.showMessageDialog(this,model.getString("confmessageListernPortChanged"));	
+					}
 				model.setPortNumber(Integer.parseInt(portnumberTextField.getText().trim()));
 				model.setProxy(proxyhostTextField.getText().trim(),
 											 Integer.parseInt(proxyportnumberTextField.getText().trim()));

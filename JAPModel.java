@@ -44,7 +44,8 @@ import java.awt.Frame;
 import java.awt.MediaTracker;
 import java.awt.Toolkit;
 import javax.swing.ImageIcon;
-
+import javax.swing.JCheckBox;
+import javax.swing.JOptionPane;
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPModel {
 
@@ -58,8 +59,8 @@ public final class JAPModel {
 	
 	private int      portNumber        = 4001;
 	private boolean  mblistenerIsLocal = true;  // indicates whether the Listener serves for localhost only or not
-	private int      runningPortNumber = 0;      // the port where proxy listens
-	private boolean  isRunningProxy    = false;  // true if a proxy is running
+	//private int      runningPortNumber = 0;      // the port where proxy listens
+	private boolean  isRunningListener= false;  // true if a listener is running
 	private  String   proxyHostName     = "ikt.inf.tu-dresden.de";
 	private  int      proxyPortNumber   = 80;
 	private boolean  mbUseProxy         = false;  // indicates whether JAP connects via a proxy or directly
@@ -72,7 +73,8 @@ public final class JAPModel {
 	private boolean  mbMinimizeOnStartup =false; //true if programm should be started minimized...
 	public  boolean  alreadyCheckedForNewVersion = false; // indicates if check for new version has already been done 
 	public  boolean  canStartService   = false;  // indicates if Anon service can be started
-	public  int      disableActCntMessage = 1;   // indicates if Warning message in setAnonMode has been deactivated (=0)
+	private boolean  mbActCntMessageNotRemind = false;   // indicates if Warning message in setAnonMode has been deactivated for the session 
+	private boolean  mbActCntMessageNeverRemind = false;   // indicates if Warning message in setAnonMode has been deactivated for ever
 	public  String   status1           = "?";
 	public  String   status2           = " ";
 	private int      nrOfChannels      = 0;
@@ -124,7 +126,7 @@ public final class JAPModel {
 	private Vector observerVector=null;
 	public Vector anonServerDatabase=null;
 	
-	private JAPProxyServer proxy=null;;
+	private JAPProxyServer listener=null;;
 	
 	private static JAPModel model=null;
 //	public JAPLoading japLoading;
@@ -213,6 +215,7 @@ public final class JAPModel {
 	 *		anonPortNumber=".."						// the portnumber of the anon-service
 	 *		autoConnect="true"/"false"		// should we start the anon service immedialy after programm launch ?
 	 *		minimizedStartup="true"/"false" // should we start minimized ???
+	 *		neverRemindActiveContent="true"/"false" // should we remind the user about active content ?
 	 *	>
 	 *	<Debug>
 	 *		<Level>..</Level>							// the amount of output (0 means less.. 7 means max)
@@ -244,7 +247,9 @@ public final class JAPModel {
 			portNumber=Integer.valueOf(n.getNamedItem("portNumber").getNodeValue()).intValue();
 			setListenerIsLocal(((n.getNamedItem("listenerIsLocal").getNodeValue()).equals("false")?false:true));
 			setUseProxy(((n.getNamedItem("proxyMode").getNodeValue()).equals("true")?true:false));
-			
+			mbActCntMessageNeverRemind=((n.getNamedItem("neverRemindActiveContent").getNodeValue()).equals("true")?true:false);
+			if(mbActCntMessageNeverRemind)
+				mbActCntMessageNotRemind=true;
 			String host;
 			int port;
 			host=n.getNamedItem("infoServiceHostName").getNodeValue();
@@ -316,6 +321,7 @@ public final class JAPModel {
 			e.setAttribute("anonPortNumber",Integer.toString(anonPortNumber));
 			e.setAttribute("autoConnect",(autoConnect?"true":"false"));
 			e.setAttribute("minimizedStartup",(mbMinimizeOnStartup?"true":"false"));
+			e.setAttribute("neverRemindActiveContent",(mbActCntMessageNeverRemind?"true":"false"));
 			//
 			// adding Debug-Element
 			Element elemDebug=doc.createElement("Debug");
@@ -349,11 +355,21 @@ public final class JAPModel {
 			t1.setPriority(Thread.MIN_PRIORITY);
 			t1.start();
 		
-			// start Proxy
-			startProxy();
-			
-			// start anon service immediately if autoConnect is true
-			setAnonMode(autoConnect);
+			// start Listener
+			if(!startListener())
+				{
+					JOptionPane.showMessageDialog(model.getView(),
+																				model.getString("errorListenerPort"),
+																				model.getString("errorListenerPortTitle"),
+																				JOptionPane.ERROR_MESSAGE);
+					JAPDebug.out(JAPDebug.EMERG,JAPDebug.NET,"Listener could not be started!");
+					model.getView().disableSetAnonMode();
+				}
+			else
+				{
+					// start anon service immediately if autoConnect is true
+					setAnonMode(autoConnect);
+				}	
 		}
 	
     public int getCurrentProtectionLevel() {
@@ -575,7 +591,7 @@ public final class JAPModel {
 				// -> we can start anonymity
 				anonMode = true;
 				// starting MUX --> Success ???
-				if(proxy==null||proxy.startMux())
+				if(listener!=null&&listener.startMux())
 					{
 						// start feedback thread
 						feedback=new JAPFeedback();
@@ -584,21 +600,30 @@ public final class JAPModel {
 						t2.start();
 						// show a Reminder message that active contents should be disabled
 						Object[] options = { model.getString("disableActCntMessageDontRemind"), model.getString("okButton") };
-						if (disableActCntMessage !=0) 
-								disableActCntMessage = javax.swing.JOptionPane.showOptionDialog(view, 
-							 model.getString("disableActCntMessage"), 
-							 model.getString("disableActCntMessageTitle"), 
-							 javax.swing.JOptionPane.DEFAULT_OPTION, javax.swing.JOptionPane.WARNING_MESSAGE,
-							 null, options, options[1]);
+						JCheckBox checkboxRemindNever=new JCheckBox(model.getString("disableActCntMessageNeverRemind"));
+						Object[] message={model.getString("disableActCntMessage"),checkboxRemindNever};
+						if (!mbActCntMessageNotRemind) 
+							{
+								int ret=0;
+								ret= JOptionPane.showOptionDialog(view, 
+																									message, 
+																									model.getString("disableActCntMessageTitle"), 
+																									JOptionPane.DEFAULT_OPTION,
+																									JOptionPane.WARNING_MESSAGE,
+																									null, options, options[1]);
+								mbActCntMessageNeverRemind=checkboxRemindNever.isSelected();
+								if(ret==0||mbActCntMessageNeverRemind)
+									mbActCntMessageNotRemind=true;
+						}
 					}
 				else
 					{
-						javax.swing.JOptionPane.showMessageDialog
+						JOptionPane.showMessageDialog
 								(
 								 getView(), 
 								 getString("errorConnectingFirstMix"),
 								 getString("errorConnectingFirstMixTitle"),
-								 javax.swing.JOptionPane.ERROR_MESSAGE
+								 JOptionPane.ERROR_MESSAGE
 								);
 					}
 				notifyJAPObservers();
@@ -606,7 +631,7 @@ public final class JAPModel {
 		} else if ((anonMode == true) && (anonModeSelected == false)) {
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:setAnonMode("+anonModeSelected+")");
 			anonMode = false;
-			proxy.stopMux();
+			listener.stopMux();
 			if(feedback==null)
 				{
 					feedback.stopRequests();
@@ -621,32 +646,33 @@ public final class JAPModel {
 	}
 
 
-	private void startProxy() 
+	private boolean startListener() 
 		{
-			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:startProxy");
-			if (isRunningProxy == false)
+			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:startListener");
+			if (isRunningListener == false)
 				{
-					runningPortNumber = portNumber;
-					proxy = new JAPProxyServer(portNumber);
-					if(proxy.create())
+					//runningPortNumber = portNumber;
+					listener = new JAPProxyServer(portNumber);
+					if(listener.create())
 						{
-							Thread proxyThread = new Thread (proxy);
-							proxyThread.start();
-							isRunningProxy = true;
+							Thread listenerThread = new Thread (listener);
+							listenerThread.start();
+							isRunningListener = true;
 						}
 					else
-						proxy=null;
+						listener=null;
 				}
+			return isRunningListener;
 		}
 	
-	private void stopProxy()
+	private void stopListener()
 		{
-			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:stopProxy");
-			if (isRunningProxy)
+			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:stopListener");
+			if (isRunningListener)
 				{
-					proxy.stopService();
-					proxy=null;
-					isRunningProxy = false;
+					listener.stopService();
+					listener=null;
+					isRunningListener = false;
 				}
 		}
 	
@@ -655,13 +681,13 @@ public final class JAPModel {
 	 * 
 	 */
 	public void goodBye() {
-		stopProxy();
+		stopListener();
 		save();
 		System.exit(0);
 	}
 	
 	public void aboutJAP() {
-		javax.swing.JOptionPane.showMessageDialog
+		JOptionPane.showMessageDialog
 			(view, 
 			 model.TITLE + "\n" + 
 			  model.getString("infoText") + "\n\n" + 
@@ -669,8 +695,8 @@ public final class JAPModel {
 			  model.getString("infoEMail") + "\n" + 
 			  model.getString("infoURL") + "\n\n" + 
 			  model.getString("version")+": "+model.aktVersion+"\n\n", 
-			 model.getString("aboutBox"),
-			 javax.swing.JOptionPane.INFORMATION_MESSAGE
+				model.getString("aboutBox"),
+				JOptionPane.INFORMATION_MESSAGE
 			);
 	}
 	
@@ -686,7 +712,10 @@ public final class JAPModel {
 			catch (Exception e)
 				{
 					JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPModel:fetchAnonServers: "+e);
-					javax.swing.JOptionPane.showMessageDialog(view, model.getString("errorConnectingInfoService"), model.getString("errorConnectingInfoServiceTitle"), javax.swing.JOptionPane.ERROR_MESSAGE); 
+					JOptionPane.showMessageDialog(view, 
+																				model.getString("errorConnectingInfoService"), 
+																				model.getString("errorConnectingInfoServiceTitle"), 
+																				JOptionPane.ERROR_MESSAGE); 
 				}
 		}
 	
@@ -749,7 +778,10 @@ public final class JAPModel {
 						// Download failed
 						// Alert, and reset anon mode to false
 						JAPDebug.out(JAPDebug.ERR,JAPDebug.MISC,"JAPModel:versionCheck(): Exception" + e);
-						javax.swing.JOptionPane.showMessageDialog(view, model.getString("downloadFailed")+model.getString("infoURL"), model.getString("downloadFailedTitle"), javax.swing.JOptionPane.ERROR_MESSAGE); 
+						JOptionPane.showMessageDialog(view,
+																					model.getString("downloadFailed")+model.getString("infoURL"), 
+																					model.getString("downloadFailedTitle"),
+																					JOptionPane.ERROR_MESSAGE); 
 						anonMode = false;
 						notifyJAPObservers();
 						return -1;
@@ -775,7 +807,10 @@ public final class JAPModel {
 			// Verson check failed
 			// ->Alert, and reset anon mode to false
 			JAPDebug.out(JAPDebug.ERR,JAPDebug.MISC,"JAPModel: "+e);
-			javax.swing.JOptionPane.showMessageDialog(view, model.getString("errorConnectingInfoService"), model.getString("errorConnectingInfoServiceTitle"), javax.swing.JOptionPane.ERROR_MESSAGE); 
+			JOptionPane.showMessageDialog(view,
+																		model.getString("errorConnectingInfoService"),
+																		model.getString("errorConnectingInfoServiceTitle"),
+																		JOptionPane.ERROR_MESSAGE); 
 			anonMode = false;
 			notifyJAPObservers();
 			return -1;
