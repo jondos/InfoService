@@ -84,32 +84,10 @@ public class FirstOnionRouterConnection implements Runnable
 	 * dispatches a cell to the circuits if one is recieved
 	 *
 	 */
-	private boolean dispatchCells()
+	private boolean dispatchCell(Cell cell)
 	{
-		Cell cell = null;
-		byte[] buff = new byte[512];
-		int readPos = 0;
 		try
 		{
-			while (readPos < 512)
-			{
-				//TODO:maybe we can let the thread sleep here for a while
-				int ret=0;
-				try
-				{
-					ret = m_istream.read(buff, readPos, 512 - readPos);
-				}
-				catch (InterruptedIOException ioe)
-				{
-					continue;
-				}
-				if (ret <= 0) //closed
-				{
-					return false;
-				}
-				readPos += ret;
-			}
-			cell = Cell.createCell(buff);
 			int cid = cell.getCircuitID();
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC,
 						  "OnionProxy read() Tor Cell - Circuit: " + cid + " Type: " + cell.getCommand());
@@ -124,7 +102,7 @@ public class FirstOnionRouterConnection implements Runnable
 			}
 			return true;
 		}
-		catch (IOException ex)
+		catch (Exception ex)
 		{
 			ex.printStackTrace();
 			return false;
@@ -144,7 +122,7 @@ public class FirstOnionRouterConnection implements Runnable
 		m_istream = m_tinyTLS.getInputStream();
 		m_ostream = m_tinyTLS.getOutputStream();
 		m_Circuits = new Hashtable();
-		m_tinyTLS.setSoTimeout(0);
+		m_tinyTLS.setSoTimeout(1000);
 		start();
 		m_bIsClosed = false;
 	}
@@ -168,9 +146,42 @@ public class FirstOnionRouterConnection implements Runnable
 	 */
 	public void run()
 	{
+		Cell cell = null;
+		byte[] buff = new byte[512];
+		int readPos = 0;
+
 		while (m_bRun)
 		{
-			if (!dispatchCells())
+			readPos = 0;
+			while (readPos < 512 && m_bRun)
+			{
+				//TODO:maybe we can let the thread sleep here for a while
+				int ret = 0;
+				try
+				{
+					ret = m_istream.read(buff, readPos, 512 - readPos);
+				}
+				catch (InterruptedIOException ioe)
+				{
+					continue;
+				}
+				catch (IOException io)
+				{
+					break;
+				}
+				if (ret <= 0) //closed
+				{
+					break;
+				}
+				readPos += ret;
+			}
+			if (readPos != 512)
+			{
+				closedByPeer();
+				return;
+			}
+			cell = Cell.createCell(buff);
+			if (cell == null || !dispatchCell(cell))
 			{
 				closedByPeer();
 				return;
@@ -207,37 +218,47 @@ public class FirstOnionRouterConnection implements Runnable
 	{
 		try
 		{
-			stop();
-			m_tinyTLS.close();
-			m_Circuits.clear();
+			if (!m_bIsClosed)
+			{
+				m_bIsClosed = true;
+				stop();
+				m_tinyTLS.close();
+				m_Circuits.clear();
+			}
 		}
 		catch (Throwable t)
 		{
 		}
-		m_bIsClosed = true;
 	}
 
 	/**
 	 * connection was closed by peer
 	 *
 	 */
-	public synchronized void closedByPeer()
+	public void closedByPeer()
 	{
-		try
+		if (m_bIsClosed)
 		{
-			stop();
-			m_tinyTLS.close();
-			Enumeration enumer = m_Circuits.elements();
-			while (enumer.hasMoreElements())
+			return;
+		}
+		synchronized (this)
+		{
+			try
 			{
-				( (Circuit) enumer.nextElement()).destroyedByPeer();
+				stop();
+				m_tinyTLS.close();
+				Enumeration enumer = m_Circuits.elements();
+				while (enumer.hasMoreElements())
+				{
+					( (Circuit) enumer.nextElement()).destroyedByPeer();
+				}
+				m_Circuits.clear();
 			}
-			m_Circuits.clear();
+			catch (Throwable t)
+			{
+			}
+			m_bIsClosed = true;
 		}
-		catch (Throwable t)
-		{
-		}
-		m_bIsClosed = true;
 	}
 
 	/**

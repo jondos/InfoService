@@ -112,6 +112,12 @@ public class Circuit
 		}
 	}
 
+	private synchronized void notifyWaiters()
+	{
+			notifyAll();
+	}
+
+
 	/**
 	 * creates a circuit and connects to all onionrouters
 	 * @throws IOException
@@ -258,7 +264,7 @@ public class Circuit
 						m_extended_correct = false;
 					}
 					m_extended = true;
-					notifyAll();
+					notifyWaiters();
 				}
 				else
 				{
@@ -312,7 +318,7 @@ public class Circuit
 								m_resolvedData = helper.copybytes(tmp, 11,
 									( (tmp[9] & 0xFF) << 8) + (tmp[10] & 0xFF));
 								m_resolved = true;
-								notifyAll();
+								notifyWaiters();
 							}
 						}
 					}
@@ -331,7 +337,7 @@ public class Circuit
 					LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[TOR] Connected to the first OR");
 					m_created = true;
 				}
-				notifyAll();
+				notifyWaiters();
 			}
 			else if (cell instanceof PaddingCell)
 			{
@@ -343,7 +349,7 @@ public class Circuit
 				this.m_destroyed = true;
 				this.m_created = false;
 				this.m_extended = true;
-				notifyAll();
+				notifyWaiters();
 			}
 			else
 			{

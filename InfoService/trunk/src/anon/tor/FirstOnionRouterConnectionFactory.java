@@ -46,6 +46,7 @@ public class FirstOnionRouterConnectionFactory
 				else
 					break;
 			}
+			fOR=null;
 		}
 		if(fOR==null)
 			fOR = new FirstOnionRouterConnection(d);
