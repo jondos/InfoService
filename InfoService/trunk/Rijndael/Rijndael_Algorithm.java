@@ -1,6 +1,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.2  2001/10/30 13:04:18  sk13
+// no message
+//
 // Revision 1.1  2000/11/09 16:29:28  sk13
 // This Version now supports Protokoll Version 0.2
 //
@@ -248,9 +251,9 @@ public final class Rijndael_Algorithm // implicit no-argument constructor
      * @param key The 128/192/256-bit user-key to use.
      * @exception  InvalidKeyException  If the key is invalid.
      */
-    public static Object makeKey (byte[] k) throws InvalidKeyException {
-        return makeKey(k,16, BLOCK_SIZE);
-    }
+ //   public static Object makeKey (byte[] k) throws InvalidKeyException {
+  //      return makeKey(k,16, BLOCK_SIZE);
+  //  }
 
     /**
      * Convenience method to encrypt exactly one block of plaintext, assuming
@@ -434,10 +437,12 @@ public final class Rijndael_Algorithm // implicit no-argument constructor
      * @param blockSize  The block size in bytes of this Rijndael.
      * @exception  InvalidKeyException  If the key is invalid.
      */
-    public static synchronized Object makeKey (byte[] ky,int keySize, int blockSize)
+    public static synchronized Object makeKey (byte[] ky,int offset/*keySize, int blockSize*/)
     throws InvalidKeyException {
      	if (ky == null)
             throw new InvalidKeyException("Empty key");
+       int keySize=16;
+       int blockSize=BLOCK_SIZE;
        // if (!(k.length == 16 || k.length == 24 || k.length == 32))
        //      throw new InvalidKeyException("Incorrect key length");
         int ROUNDS = getRounds(keySize, blockSize);
@@ -450,7 +455,7 @@ public final class Rijndael_Algorithm // implicit no-argument constructor
         int i, j;
 
         // copy user material bytes into temporary ints
-        for (i = 0, j = 0; i < KC; )
+        for (i = 0, j = offset; i < KC; )
             tk[i++] = (ky[j++] & 0xFF) << 24 |
                       (ky[j++] & 0xFF) << 16 |
                       (ky[j++] & 0xFF) <<  8 |
