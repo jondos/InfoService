@@ -7,6 +7,7 @@ public class StatusPanel extends JPanel implements Runnable
 {
 	Dimension m_dimensionPreferredSize;
 	int m_Height;
+	Object oMsgSync;
 	final class MsgQueueEntry
 	{
 		String m_Msg;
@@ -22,6 +23,7 @@ public class StatusPanel extends JPanel implements Runnable
 
 	public StatusPanel()
 	{
+		oMsgSync = new Object();
 		m_Height = new JLabel("Status").getFont().getSize();
 		m_dimensionPreferredSize = new Dimension(100, m_Height);
 		setLayout(null);
@@ -29,49 +31,63 @@ public class StatusPanel extends JPanel implements Runnable
 		setSize(m_dimensionPreferredSize);
 		m_Msgs = null;
 		m_lastMsg = null;
-		m_Thread=new Thread(this);
-		m_bRun=true;
+		m_Thread = new Thread(this);
+		m_bRun = true;
 		m_Thread.start();
 	}
 
 	public void finalize()
 	{
-		m_bRun=false;
-		try{
+		m_bRun = false;
+		try
+		{
 			m_Thread.interrupt();
-		m_Thread.join();
+			m_Thread.join();
 		}
-		catch(Exception e)
+		catch (Exception e)
 		{
 		}
 	}
 
-	public synchronized void addMsg(String msg)
+	public void addMsg(String msg)
 	{
-		MsgQueueEntry entry = new MsgQueueEntry();
-		entry.m_Msg = msg;
-		if (m_lastMsg == null)
+		synchronized (oMsgSync)
 		{
-			m_Msgs = entry;
-			m_lastMsg = entry;
-			entry.m_Next = entry;
+			MsgQueueEntry entry = new MsgQueueEntry();
+			entry.m_Msg = msg;
+			if (m_lastMsg == null)
+			{
+				m_Msgs = entry;
+				m_lastMsg = entry;
+				entry.m_Next = entry;
+			}
+			else
+			{
+				entry.m_Next = m_lastMsg.m_Next;
+				m_lastMsg.m_Next = entry;
+				m_Msgs = m_lastMsg;
+				m_lastMsg = entry;
+			}
+			//displayLastMessage....
+			m_Thread.interrupt();
 		}
-		else
-		{
-			entry.m_Next = m_lastMsg.m_Next;
-			m_lastMsg.m_Next = entry;
-		}
-		//m_Msg=
-		//displayLastMessage....
 	}
 
-	public synchronized void paint(Graphics g)
+	public void paint(Graphics g)
 	{
+		if (g == null)
+		{
+			return;
+		}
 		super.paint(g);
-		if (m_Msgs != null)
+		synchronized (oMsgSync)
 		{
-			g.drawString(m_Msgs.m_Msg, 0, m_aktY);
+			if (m_Msgs != null)
+			{
+				g.drawString(m_Msgs.m_Msg, 0, m_aktY);
+			}
 		}
+
 	}
 
 	public Dimension getPreferredSize()
@@ -85,18 +101,39 @@ public class StatusPanel extends JPanel implements Runnable
 		{
 			while (m_bRun)
 			{
-				Thread.sleep(10000);
-				if (m_Msgs != null)
+				try
 				{
+					Thread.sleep(10000);
+				}
+				catch (InterruptedException e)
+				{
+					if (!m_bRun)
+					{
+						return;
+					}
+				}
+				synchronized (oMsgSync)
+				{
+					if (m_Msgs == null)
+					{
+						continue;
+					}
 					m_Msgs = m_Msgs.m_Next;
 					m_aktY = 0;
 				}
-				for (int i = 0; i < m_Height&&m_bRun; i++)
+				for (int i = 0; i < m_Height && m_bRun; i++)
 				{
 					paint(getGraphics());
-					Thread.sleep(100);
+					try
+					{
+						Thread.sleep(100);
+					}
+					catch (InterruptedException e)
+					{
+					}
 					m_aktY++;
 				}
+
 			}
 		}
 		catch (Exception e)
