@@ -301,6 +301,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c.weightx=1;
 		c.anchor=GridBagConstraints.NORTHWEST;
 		c.gridy=4;
+		my.setFlipped(true);
 		northPanel.add(my,c);
 
 

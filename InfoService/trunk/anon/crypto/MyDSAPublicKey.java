@@ -45,8 +45,14 @@ import org.bouncycastle.asn1.x509.DSAParameter;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 import org.bouncycastle.asn1.x9.X9ObjectIdentifiers;
 import org.bouncycastle.crypto.params.DSAPublicKeyParameters;
+import org.w3c.dom.Document;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import org.w3c.dom.Element;
+import anon.util.Base64;
+import anon.util.XMLUtil;
 
-final public class MyDSAPublicKey implements DSAPublicKey
+final public class MyDSAPublicKey implements DSAPublicKey,IMyPublicKey
 {
 	private BigInteger m_Y;
 	private DSAParams m_params;
@@ -119,6 +125,40 @@ final public class MyDSAPublicKey implements DSAPublicKey
 			throw new RuntimeException("IOException while encoding public key");
 		}
 		return bOut.toByteArray();
+	}
+
+	public Document getXmlEncoded()
+	{
+		Document doc = null;
+		try
+		{
+			doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+		}
+		catch (ParserConfigurationException ex)
+		{
+			return null;
+		}
+		Element elemRoot = doc.createElement("DSAKeyValue");
+		doc.appendChild(elemRoot);
+		Element elem = null;
+
+		elem = doc.createElement("Y");
+		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_Y.toByteArray()));
+		elemRoot.appendChild(elem);
+
+		elem = doc.createElement("P");
+		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_params.getP().toByteArray()));
+		elemRoot.appendChild(elem);
+
+		elem = doc.createElement("Q");
+		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_params.getQ().toByteArray()));
+		elemRoot.appendChild(elem);
+
+		elem = doc.createElement("G");
+		XMLUtil.setNodeValue(elem, Base64.encodeBytes(m_params.getG().toByteArray()));
+		elemRoot.appendChild(elem);
+
+		return doc;
 	}
 
 	public boolean equals(Object o)

@@ -51,6 +51,11 @@ import payxml.XMLChallenge;
 import payxml.XMLJapPublicKey;
 import payxml.XMLResponse;
 import payxml.XMLTransCert;
+import java.security.PublicKey;
+import anon.crypto.IMyPublicKey;
+import anon.util.XMLUtil;
+import anon.crypto.MyDSAPublicKey;
+import anon.crypto.MyRSAPublicKey;
 
 public class BIConnection
 {
@@ -77,7 +82,7 @@ public class BIConnection
 						int biPort,
 						boolean sslOn
 						/*						XMLAccountCertificate accountCert,
-						 MyRSAPrivateKey privKey*/
+							  MyRSAPrivateKey privKey*/
 						)
 	{
 		m_BIHostName = biHostname;
@@ -261,44 +266,47 @@ public class BIConnection
 	 */
 
 	/**
-	 * Creates a new account
+	 * Registers a new account using the specified keypair.
 	 *
 	 * @param pubKey public key
 	 * @param privKey private key
 	 * @return XMLAccountCertificate the certificate issued by the BI
 	 * @throws Exception
 	 */
-	public XMLAccountCertificate register(XMLJapPublicKey xmlPubKey, JAPSignature signKey) throws Exception
+	public XMLAccountCertificate register(IMyPublicKey pubKey, JAPSignature signKey) throws Exception
 	{
-		m_httpClient.writeRequest("POST", "register", xmlPubKey.getXMLString());
+		// send our public key
+		m_httpClient.writeRequest(
+			"POST", "register",
+			XMLUtil.XMLDocumentToString(pubKey.getXmlEncoded())
+			);
 		String answer = m_httpClient.readAnswer();
 
+		// perform challenge-response authentication
 		XMLChallenge xmlchallenge = new XMLChallenge(answer);
 		byte[] challenge = xmlchallenge.getChallengeForSigning();
-
 		byte[] response = signKey.signBytes(challenge);
-
 		XMLResponse xmlResponse = new XMLResponse(response);
 		String strResponse = xmlResponse.getXMLString();
-
 		m_httpClient.writeRequest("POST", "response", strResponse);
 		answer = m_httpClient.readAnswer();
-
 		LogHolder.log(LogLevel.DEBUG, LogType.PAY, answer);
 
+		// check signature
 		boolean sigOK = Pay.getInstance().getVerifyingInstance().verifyXML(
 			new java.io.ByteArrayInputStream(answer.getBytes())
 			);
 		XMLAccountCertificate xmlCert = new XMLAccountCertificate(answer);
-		boolean modOK = xmlCert.getPublicKey().getModulus().equals(xmlPubKey.getModulus());
-		boolean expOK = xmlCert.getPublicKey().getPublicExponent().equals(xmlPubKey.getPublicExponent());
-		if (sigOK && modOK && expOK)
+
+		// check if the certificate signed by the BI contains the right
+		// public key
+		if (xmlCert.getPublicKey().equals(pubKey))
 		{
 			return xmlCert;
 		}
 		else
 		{
-			throw new Exception("wrong signature on accountCertificate or wrong key");
+			throw new Exception("The JPI is evil (sent a valid certificate, but with a wrong publickey)");
 		}
 	}
 }

@@ -46,6 +46,7 @@ final public class FlippingPanel extends JPanel
 	private JPanel m_panelContainer;
 	private JPanel m_panelSmall;
 	private JPanel m_panelFull;
+	private JLabel m_labelBttn;
 	private CardLayout m_Layout;
 	private Window m_Parent;
 	private boolean m_bIsFlipped;
@@ -61,10 +62,10 @@ final public class FlippingPanel extends JPanel
 		GridBagLayout gbl = new GridBagLayout();
 		GridBagConstraints c = new GridBagConstraints();
 		setLayout(gbl);
-		final JLabel labelBttn = new JLabel(ms_iconUp);
+		m_labelBttn = new JLabel(ms_iconUp);
 		c.insets = new Insets(0, 0, 0, 0);
 		c.anchor = GridBagConstraints.NORTHWEST;
-		labelBttn.addMouseListener(new MouseListener()
+		m_labelBttn.addMouseListener(new MouseListener()
 		{
 			public void mouseClicked(MouseEvent e)
 			{
@@ -72,12 +73,12 @@ final public class FlippingPanel extends JPanel
 				if (m_bIsFlipped)
 				{
 					m_Layout.last(m_panelContainer);
-					labelBttn.setIcon(ms_iconDown);
+					m_labelBttn.setIcon(ms_iconDown);
 				}
 				else
 				{
 					m_Layout.first(m_panelContainer);
-					labelBttn.setIcon(ms_iconUp);
+					m_labelBttn.setIcon(ms_iconUp);
 				}
 				m_Parent.pack();
 			}
@@ -99,7 +100,7 @@ final public class FlippingPanel extends JPanel
 			}
 		}
 		);
-		add(labelBttn, c);
+		add(m_labelBttn, c);
 		c.gridx = 1;
 		c.fill = GridBagConstraints.BOTH;
 		c.weightx = 1;
@@ -173,5 +174,20 @@ final public class FlippingPanel extends JPanel
 		}
 		d.width += ms_iBttnWidth;
 		return d;
+	}
+
+	public void setFlipped(boolean bFlipped)
+	{
+		if (bFlipped == m_bIsFlipped)
+		{
+			return;
+		}
+		else
+		{
+			m_labelBttn.dispatchEvent(
+				new MouseEvent(
+				m_labelBttn, MouseEvent.MOUSE_CLICKED,
+				0, 0, 0, 0, 1, false, MouseEvent.BUTTON1));
+		}
 	}
 }
