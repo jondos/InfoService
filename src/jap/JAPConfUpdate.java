@@ -295,7 +295,7 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 		{
 			m_comboType.setEnabled(true);
 			m_taInfo.setText("");
-			m_labelVersion.setText(m_releaseVersion.getVersionNumber());
+			m_labelVersion.setText(m_releaseVersion.getJapVersion());
 			if (m_releaseVersion.getDate() != null)
 			{
 				m_labelDate.setText(m_DateFormat.format(m_releaseVersion.getDate()));
@@ -343,7 +343,7 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 		{
 			if (m_comboType.getSelectedIndex() == 0) //Release
 			{
-				m_labelVersion.setText(m_releaseVersion.getVersionNumber());
+				m_labelVersion.setText(m_releaseVersion.getJapVersion());
 				if (m_releaseVersion.getDate() != null)
 				{
 					m_labelDate.setText(m_DateFormat.format(m_releaseVersion.getDate()));
@@ -355,7 +355,7 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 			}
 			else
 			{
-				m_labelVersion.setText(m_devVersion.getVersionNumber());
+				m_labelVersion.setText(m_devVersion.getJapVersion());
 				if (m_devVersion.getDate() != null)
 				{
 					m_labelDate.setText(m_DateFormat.format(m_devVersion.getDate()));

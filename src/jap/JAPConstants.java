@@ -220,7 +220,6 @@ public final class JAPConstants
 	public final static String CONFIG_DO_NOT_ABUSE_REMINDER = "doNotAbuseReminder";
 	public final static String CONFIG_NEVER_REMIND_GOODBYE = "neverRemindGoodBye";
 	public final static String CONFIG_INFOSERVICE_DISABLED = "infoServiceDisabled";
-	public final static String CONFIG_INFOSERVICE_CHANGE = "infoServiceChange";
 	public final static String CONFIG_INFOSERVICE_TIMEOUT = "infoServiceTimeout";
 	public final static String CONFIG_PROXY_HOST_NAME = "proxyHostName";
 	public final static String CONFIG_PROXY_PORT_NUMBER = "proxyPortNumber";
@@ -230,7 +229,6 @@ public final class JAPConstants
 	public final static String CONFIG_PROXY_MODE = "proxyMode";
 	public final static String CONFIG_MIX_CASCADE = "MixCascade";
 	public final static String CONFIG_MIX_CASCADES = "MixCascades";
-	public final static String CONFIG_USER_DEFINED = "userDefined";
 	public final static String CONFIG_DUMMY_TRAFFIC_INTERVALL = "DummyTrafficIntervall";
 	public final static String CONFIG_AUTO_CONNECT = "autoConnect";
 	public final static String CONFIG_AUTO_RECONNECT = "autoReConnect";
@@ -261,9 +259,6 @@ public final class JAPConstants
 	public final static String CONFIG_OUTPUT = "Output";
 	public final static String CONFIG_CONSOLE = "Console";
 	public final static String CONFIG_FILE = "File";
-	public final static String CONFIG_INFOSERVICE = "InfoService";
-	public final static String CONFIG_INFOSERVICES = "InfoServices";
-	public final static String CONFIG_PREFERED_INFOSERVICE = "PreferedInfoService";
 	public final static String CONFIG_TOR = "Tor";
 	public final static String CONFIG_MAX_CONNECTIONS_PER_ROUTE = "MaxConnectionsPerRoute";
 	public final static String CONFIG_ROUTE_LEN = "RouteLen";

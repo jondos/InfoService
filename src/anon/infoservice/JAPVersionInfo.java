@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2000 - 2004, The JAP-Team
+ Copyright (c) 2000 - 2005, The JAP-Team
  All rights reserved.
  Redistribution and use in source and binary forms, with or without modification,
  are permitted provided that the following conditions are met:
@@ -31,15 +31,15 @@ import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
-import anon.crypto.SignatureVerifier;
 import anon.util.XMLUtil;
 
-public class JAPVersionInfo
-{
+/**
+ * This stores the version information about the current JAP release or development version.
+ */
+public class JAPVersionInfo extends AbstractDatabaseEntry implements IDistributable {
 
   /**
    * Describes a JAP release version.
@@ -51,85 +51,201 @@ public class JAPVersionInfo
    */
   public final static int JAP_DEVELOPMENT_VERSION = 2;
 
-  private int versionInfoType;
-  private String m_Version;
-  private Date m_Date = null;
-  private String m_JAPJarFileName;
-  private URL m_CodeBase;
-  private String m_Description = "";
+  
+  /**
+   * The timeout for JAP version information in the database. This should be an infinite timeout
+   * (1000 years are infinite enough).
+   */
+  private static final long DATABASE_TIMEOUT = 1000 * 365 * 24 * 3600 * 1000L;
+
+  
+  /**
+   * Stores whether this is the version info for the development version or the release version.
+   * See the constants in this class.
+   */
+  private int m_versionInfoType;
+  
+  /**
+   * Stores the version number of the described JAP version.
+   */
+  private String m_version;
+  
+  /**
+   * Stores release date of the described JAP version.
+   */
+  private Date m_releaseDate;
+  
+  /**
+   * Stores the filename of the where the corresponding JAP software is available on the server.
+   */
+  private String m_jarFileName;
+  
+  /**
+   * Stores the URL of the server, where the corresponding JAP software can be downloaded from.
+   */
+  private URL m_codeBase;
 
   /**
-   * Creates a new JAP version info out of a JNLP file (is an XML document) and the type of the
-   * JAP versioon.
-   *
-   * @param doc The JNLP XML document.
-   * @param type The type of the JAPVersionInfo (release / development). Look at the constants in
-   *             this class.
+   * Time (see System.currentTimeMillis()) when the root-of-update information infoservice has
+   * propagated this version info.
    */
-  public JAPVersionInfo(Document doc, int type) throws Exception
-  {
-    versionInfoType = type;
-    Element root = doc.getDocumentElement();
-    /* check the signature */
-    if (SignatureVerifier.getInstance().verifyXml(root, SignatureVerifier.DOCUMENT_CLASS_UPDATE) == false) {
-      /* signature is invalid -> throw an exception */
-      throw (new Exception("JAPVersionInfo: Constructor: Cannot verify the signature for Jap version info entry: " + XMLUtil.toString(root)));
-    }
-    /* signature was valid */
+  private long m_lastUpdate;
+  
+  /**
+   * Stores the XML structure of this JAPVersionInfo.
+   */
+  private Element m_xmlStructure;
 
-    m_Version = root.getAttribute("version"); //the JAP version
-    try
-    {
-      String strDate = root.getAttribute("releaseDate") + " GMT";
-      m_Date = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss z").parse(strDate);
+
+  /**
+   * Returns the name of the XML root element used by this class.
+   *
+   * @return The name of the XML root element used by this class ('jnlp').
+   */
+  public static String getXmlElementName() {
+    return "jnlp";
+  }
+
+
+  /**
+   * Creates a new JAP version info out of a JNLP file.
+   *
+   * @param a_jnlpRootNode The root node of the JNLP document.
+   * @param a_versionInfoType The type of the JAPVersionInfo (release / development), see the
+   *                          constants in this class.
+   */
+  public JAPVersionInfo(Element a_jnlpRootNode, int a_versionInfoType) throws Exception {
+    super(System.currentTimeMillis() + DATABASE_TIMEOUT);
+    m_versionInfoType = a_versionInfoType;
+    /* parse the document */
+    m_version = a_jnlpRootNode.getAttribute("version");
+    try {
+      String strDate = a_jnlpRootNode.getAttribute("releaseDate") + " GMT";
+      m_releaseDate = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss z").parse(strDate);
     }
-    catch (Exception ed)
-    {
-      m_Date = null;
+    catch (Exception e) {
+      m_releaseDate = null;
     }
-    m_CodeBase = new URL(root.getAttribute("codebase"));
-    NodeList nlResources = root.getElementsByTagName("resources");
+    m_codeBase = new URL(a_jnlpRootNode.getAttribute("codebase"));
+    NodeList nlResources = a_jnlpRootNode.getElementsByTagName("resources");
     NodeList nlJars = ( (Element) nlResources.item(0)).getElementsByTagName("jar");
-    for (int i = 0; i < nlJars.getLength(); i++)
-    {
-      try
-      {
+    for (int i = 0; i < nlJars.getLength(); i++) {
+      try {
         Element elemJar = (Element) nlJars.item(i);
         String part = elemJar.getAttribute("part");
-        if (part.equals("jap"))
-        {
-          m_JAPJarFileName = elemJar.getAttribute("href");
+        if (part.equals("jap")) {
+          m_jarFileName = elemJar.getAttribute("href");
         }
       }
-      catch (Exception e)
-      {
+      catch (Exception e) {
       }
     }
+    m_lastUpdate = XMLUtil.parseValue(XMLUtil.getFirstChildByName(a_jnlpRootNode, "LastUpdate"), -1L);
+    if (m_lastUpdate == -1) {
+      throw (new Exception("JAPVersionInfo: Constructor: No LastUpdate node found."));
+    }
+    m_xmlStructure = a_jnlpRootNode;
   }
 
-  public String getVersionNumber()
-  {
-    return m_Version;
+
+  /**
+   * Returns the ID of this version information. It's the filename where this version info is
+   * available on the infoservice ('/japRelease.jnlp' or '/japDevelopment.jnlp' depending on the
+   * type of this version info)
+   *
+   * @return The ID of this version info.
+   */
+  public String getId() {
+    String versionInfoId = "/japRelease.jnlp";
+    if (m_versionInfoType == JAP_DEVELOPMENT_VERSION) {
+      versionInfoId = "/japDevelopment.jnlp";
+    }
+    return versionInfoId;
   }
 
-  public Date getDate()
-  {
-    return m_Date;
+  /**
+   * Returns the time when this version information was created by the root-of-update-information
+   * infoservice. That infoservice will update and propagate the version info periodically even
+   * if nothing has changed. Attention: The version number returned here is only necessary for
+   * message exchange between the infoservices and is completely independent from the version
+   * number of the JAP version described in this version info. Don't mix up those two version
+   * numbers.
+   *
+   * @return A version number which is used to determine the more recent version info entry, if
+   *         two entries are compared (higher version number -> more recent entry).
+   */  
+  public long getVersionNumber() {
+    return m_lastUpdate;
+  }
+  
+  /**
+   * Returns the JAP software version described by this version info structure.
+   *
+   * @return The JAP software version described in this JAPVersionInfo.
+   */
+  public String getJapVersion() {
+    return m_version;
   }
 
-  public String getDescription()
-  {
-    return m_Description;
+  /**
+   * Returns the release date of the JAP software described in this version info structure.
+   *
+   * @return The release date of the JAP software described in this JAPVersionInfo.
+   */
+  public Date getDate() {
+    return m_releaseDate;
   }
 
-  public URL getCodeBase()
-  {
-    return m_CodeBase;
+  /**
+   * Returns the URL of the server, where the corresponding JAP software can be downloaded from.
+   *
+   * @return The URL of the download server for the JAP software described in this version info
+   *         structure.
+   */
+  public URL getCodeBase() {
+    return m_codeBase;
   }
 
-  public String getJAPJarFileName()
-  {
-    return m_JAPJarFileName;
+  /**
+   * Returns the filename of the JAP file on the download server.
+   *
+   * @return The filename where the JAP software described in this JAPVersionInfo is available on
+   *         the download server.
+   */
+  public String getJAPJarFileName() {
+    return m_jarFileName;
+  }
+
+  /**
+   * This returns the filename (InfoService command), where this JAPVersionInfo entry is posted at
+   * other InfoServices. Depending on the type of this version info, it's '/japRelease.jnlp' or
+   * 'japDevelopment.jnlp'. This method returns the same value as the getId() method of this
+   * instance.
+   *
+   * @return The filename where this version information is posted at other infoservices when this
+   *         entry is forwarded.
+   */
+  public String getPostFile() {
+    return getId();
+  }
+
+  /**
+   * This returns the data posted when this JAPVersionInfo is forwarded to other infoservices.
+   * It's the XML structure of this version info.
+   *
+   * @return The data posted to other infoservices when this entry is forwarded.
+   */
+  public byte[] getPostData() {
+    return XMLUtil.toString(m_xmlStructure).getBytes();
+  }
+
+  /**
+   * Returns the XML structure for this version info entry.
+   *
+   * @return The XML node of this JAPVersionInfo entry (jnlp node).
+   */
+  public Element getXmlStructure() {
+    return m_xmlStructure;
   }
 
 }

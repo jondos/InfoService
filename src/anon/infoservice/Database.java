@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2000 - 2004, The JAP-Team
+ Copyright (c) 2000 - 2005, The JAP-Team
  All rights reserved.
  Redistribution and use in source and binary forms, with or without modification,
  are permitted provided that the following conditions are met:
@@ -32,6 +32,8 @@ package anon.infoservice;
 
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.Observable;
+import java.util.Observer;
 import java.util.Vector;
 
 import logging.LogHolder;
@@ -42,9 +44,14 @@ import anon.crypto.MyRandom;
 /**
  * This class is the generic implementation of a database. It is used by the database
  * implementations for the different services.
- * It is also a registry for all databases used in the context of this application.
+ * It is also a registry for all databases used in the context of this application. Instances of
+ * this class are observable. Observers of the instances are notified, if an entry is added,
+ * renewed or removed from the database or if the whole database is cleared. The observers will
+ * always get a DatabaseMessage object as the argument of the update() method. The DatabaseMessage
+ * will identify the reason of the notification, see the DatabaseMessage class for more
+ * information.
  */
-public final class Database implements Runnable
+public final class Database extends Observable implements Runnable
 {
 	/**
 	 * The registered databases.
@@ -54,7 +61,7 @@ public final class Database implements Runnable
 	/**
 	 * The distributor that forwards new database entries.
 	 */
-	private static AbstractDistributor m_distributor;
+  private static IDistributor m_distributor;
 
 	/**
 	 * The DatabaseEntry class for that this Database is registered.
@@ -76,7 +83,7 @@ public final class Database implements Runnable
 	 * Registers a distributor that forwards new database entries.
 	 * @param a_distributor a distributor that forwards new database entries
 	 */
-	public static void registerDistributor(AbstractDistributor a_distributor) {
+  public static void registerDistributor(IDistributor a_distributor) {
 		m_distributor = a_distributor;
 	}
 
@@ -130,16 +137,15 @@ public final class Database implements Runnable
 	 * @return the Database object that contains DatabaseEntries of the specified type
 	 * @exception IllegalArgumentException if the argument is no valid DatabaseEntry class
 	 */
-	public static Database getInstance(Class a_DatabaseEntryClass)
-		throws IllegalArgumentException
-	{
-		Database database = (Database)m_databases.get(a_DatabaseEntryClass);
-
+  public static Database getInstance(Class a_DatabaseEntryClass) throws IllegalArgumentException {
+    Database database = null;
+    synchronized (Database.class) {
+      database = (Database)m_databases.get(a_DatabaseEntryClass);
 		if (database == null) {
 			database = new Database(a_DatabaseEntryClass);
 			m_databases.put(a_DatabaseEntryClass, database);
 		}
-
+    }
 		return database;
 	}
 
@@ -159,7 +165,7 @@ public final class Database implements Runnable
 	private Database(Class a_DatabaseEntryClass)
 		throws IllegalArgumentException
 	{
-		if (!DatabaseEntry.class.isAssignableFrom(a_DatabaseEntryClass)) {
+    if (!AbstractDatabaseEntry.class.isAssignableFrom(a_DatabaseEntryClass)) {
 			throw new IllegalArgumentException(
 				"There is no Database that can store entries of type " +
 				a_DatabaseEntryClass.getName() + "!");
@@ -188,7 +194,7 @@ public final class Database implements Runnable
 				/* we need exclusive access to the database */
 				while ( (m_timeoutList.size() > 0) && (moreOldEntrys))
 				{
-					DatabaseEntry entry=(DatabaseEntry)m_serviceDatabase.get(m_timeoutList.firstElement());
+          AbstractDatabaseEntry entry=(AbstractDatabaseEntry)m_serviceDatabase.get(m_timeoutList.firstElement());
 					if (System.currentTimeMillis() >=entry.getExpireTime())
 					{
 						/* we remove the old entry now, because it has reached the expire time */
@@ -197,6 +203,9 @@ public final class Database implements Runnable
 									  entry.getId() + " has reached the expire time and is removed.");
 						m_serviceDatabase.remove(entry.getId());
 						m_timeoutList.removeElementAt(0);
+            /* notify the observers about the removal */
+            setChanged();
+            notifyObservers(new DatabaseMessage(DatabaseMessage.ENTRY_REMOVED, entry));
 					}
 					else
 					{
@@ -214,7 +223,7 @@ public final class Database implements Runnable
 				if (m_timeoutList.size() > 0)
 				{
 					/* get time until next timeout */
-					sleepTime = ( (DatabaseEntry) (m_serviceDatabase.get(m_timeoutList.firstElement()))).
+          sleepTime = ( (AbstractDatabaseEntry) (m_serviceDatabase.get(m_timeoutList.firstElement()))).
 						getExpireTime() - System.currentTimeMillis();
 				}
 				if (sleepTime > 0)
@@ -253,11 +262,11 @@ public final class Database implements Runnable
 	 * one stored in the database for this service, the new entry is stored in the database and
 	 * forwarded to all neighbour infoservices.
 	 *
-	 * @param newEntry The DatabaseEntry to update.
-	 * @exception IllegalArgumentException if the DatabaseEntry is not of the type the Database
+   * @param newEntry The database entry to update.
+   * @exception IllegalArgumentException if the database entry is not of the type the Database
 	 * can store
 	 */
-	public void update(DatabaseEntry newEntry)
+  public void update(AbstractDatabaseEntry newEntry)
 		throws IllegalArgumentException
 	{
 		if (!m_DatabaseEntryClass.isAssignableFrom(newEntry.getClass()))
@@ -269,7 +278,7 @@ public final class Database implements Runnable
 		synchronized (m_serviceDatabase)
 		{
 			/* we need exclusive access to the database */
-			DatabaseEntry oldEntry = (DatabaseEntry) (m_serviceDatabase.get(newEntry.getId()));
+      AbstractDatabaseEntry oldEntry = (AbstractDatabaseEntry) (m_serviceDatabase.get(newEntry.getId()));
 			boolean addEntry = false;
 			if (oldEntry == null)
 			{
@@ -289,7 +298,14 @@ public final class Database implements Runnable
 				{
 					LogHolder.log(LogLevel.INFO, LogType.NET, "Received an expired db entry: '" +
 								  newEntry.getId() + "'. It was dropped immediatly.");
-					m_serviceDatabase.remove(newEntry.getId());
+          Object removedEntry = m_serviceDatabase.remove(newEntry.getId());
+          if (removedEntry != null) {
+            /* There was an entry with a lower version number in the database, which was not
+             * expired yet??? No matter why, now it was removed -> notify the observers.
+             */
+            setChanged();
+            notifyObservers(new DatabaseMessage(DatabaseMessage.ENTRY_REMOVED, removedEntry));
+          }
 					return;
 				}
 
@@ -303,7 +319,7 @@ public final class Database implements Runnable
 				{
 					if (i < m_timeoutList.size())
 					{
-						if ( ( (DatabaseEntry) (m_serviceDatabase.get(
+            if ( ( (AbstractDatabaseEntry) (m_serviceDatabase.get(
 											  m_timeoutList.elementAt(i)))).getExpireTime() >=
 							 newEntry.getExpireTime())
 						{
@@ -338,6 +354,16 @@ public final class Database implements Runnable
 									  "Cannot distribute database entries!");
 					}
 				}
+        /* there was an entry added or renewed in the database -> notify the observers */
+        setChanged();
+        if (oldEntry == null) {
+          /* it was really a new entry */
+          notifyObservers(new DatabaseMessage(DatabaseMessage.ENTRY_ADDED, newEntry));
+        }
+        else {
+          /* there was already an entry with the same ID -> the entry was renewed */
+          notifyObservers(new DatabaseMessage(DatabaseMessage.ENTRY_RENEWED, newEntry));
+        }
 			}
 		}
 	}
@@ -356,16 +382,20 @@ public final class Database implements Runnable
 	 *
 	 * @param deleteEntry The entry to remove. If it is not in the database, nothing is done.
 	 */
-	public void remove(DatabaseEntry deleteEntry)
+  public void remove(AbstractDatabaseEntry deleteEntry)
 	{
 		if (deleteEntry != null)
 		{
 			synchronized (m_serviceDatabase)
 			{
 				/* we need exclusive access to the database */
-				if (m_serviceDatabase.remove(deleteEntry.getId()) != null)
+        Object removedEntry = m_serviceDatabase.remove(deleteEntry.getId());
+        if (removedEntry != null)
 				{
 					m_timeoutList.removeElement(deleteEntry.getId());
+          /* an entry was removed -> notify the observers */
+          setChanged();
+          notifyObservers(new DatabaseMessage(DatabaseMessage.ENTRY_REMOVED, removedEntry));
 				}
 			}
 		}
@@ -381,6 +411,9 @@ public final class Database implements Runnable
 			/* we need exclusive access to the database */
 			m_serviceDatabase.clear();
 			m_timeoutList.removeAllElements();
+      /* database was cleared -> notify the observers */
+      setChanged();
+      notifyObservers(new DatabaseMessage(DatabaseMessage.ALL_ENTRIES_REMOVED)); 
 		}
 	}
 
@@ -427,13 +460,13 @@ public final class Database implements Runnable
 	 * @param entryId The ID of the database entry.
 	 * @return The entry with the specified ID or null, if there is no such entry.
 	 */
-	public DatabaseEntry getEntryById(String entryId)
+  public AbstractDatabaseEntry getEntryById(String entryId)
 	{
-		DatabaseEntry resultEntry = null;
+    AbstractDatabaseEntry resultEntry = null;
 		synchronized (m_serviceDatabase)
 		{
 			/* get the actual value */
-			resultEntry = (DatabaseEntry) (m_serviceDatabase.get(entryId));
+      resultEntry = (AbstractDatabaseEntry) (m_serviceDatabase.get(entryId));
 		}
 		return resultEntry;
 	}
@@ -444,9 +477,9 @@ public final class Database implements Runnable
 	 *
 	 * @return A random entry from the database or null, if the database is empty.
 	 */
-	public DatabaseEntry getRandomEntry()
+  public AbstractDatabaseEntry getRandomEntry()
 	{
-		DatabaseEntry resultEntry = null;
+    AbstractDatabaseEntry resultEntry = null;
 		synchronized (m_serviceDatabase)
 		{
 			/* all keys of the database are in the timeout list -> select a random key from there
@@ -459,7 +492,7 @@ public final class Database implements Runnable
 					String entryId =
 						(String) m_timeoutList.elementAt(
 										  new MyRandom().nextInt(m_timeoutList.size()));
-					resultEntry = (DatabaseEntry) (m_serviceDatabase.get(entryId));
+          resultEntry = (AbstractDatabaseEntry) (m_serviceDatabase.get(entryId));
 				}
 				catch (Exception e)
 				{
@@ -469,6 +502,25 @@ public final class Database implements Runnable
 		}
 		return resultEntry;
 	}
+
+  /**
+   * Adds an observer to this database. The observer will obtain an initial message including a
+   * snapshot of the current database (this message is also sent, if the observer was already
+   * observing the database).
+   *
+   * @param a_observer The observer to add to this database.
+   */
+  public void addObserver(Observer a_observer) {
+    synchronized (m_serviceDatabase) {
+      /* add the observer -> because we have locked m_serviceDatabase, there will be no message
+       * sent to the observers, until we are done -> our message to the new observer will be the
+       * first
+       */
+      super.addObserver(a_observer);
+      /* send the initial message to the new observer */
+      a_observer.update(this, new DatabaseMessage(DatabaseMessage.INITIAL_OBSERVER_MESSAGE, getEntryList()));
+    }
+  }
 
 	public boolean isEntryIdInTimeoutList(String a_entryId)
 	{

@@ -25,36 +25,50 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-/* Hint: This file may be only a copy of the original file which is always in the JAP source tree!
- * If you change something - do not forget to add the changes also to the JAP source tree!
- */
 package anon.infoservice;
 
+import anon.util.AbstractMessage;
+
 /**
- * This is a generic definition of information that is sent to other infoservices.
+ * This is the message implementation used for InfoServiceHolder messages. It is used from the
+ * instance of the InfoServiceHolder class to notify their observers about some events (like 
+ * changes of the preferred infoservice). The message code identifies the reason of the
+ * notification.
  */
-public interface IDistributable
-{
+public class InfoServiceHolderMessage extends AbstractMessage {
 
   /**
-   * Returns a ID for this information. It is used as an identifier for logging status information.
-   * @return The ID of this information.
+   * This message is sent after the preferred infoservice was changed. The appended object is the
+   * InfoServiceDBEntry of the new preferred infoservice.
    */
-  public String getId();
+  public static final int PREFERRED_INFOSERVICE_CHANGED = 1;
 
   /**
-   * Returns the filename (InfoService command) to which the data of this entry is posted at the
-   * other infoservice.
+   * This message is sent after the policy for automatic infoservice changes has been changed. The
+   * appended object is a Boolean with the new change policy (true, if automatic changes of the
+   * infoservices including the preferred infoservice are possible in case of failure or false, if
+   * only the pererred infoservice is used all the time).
+   */
+  public static final int INFOSERVICE_MANAGEMENT_CHANGED = 2;
+
+
+  /**
+   * This creates a new InfoServiceHolderMessage. The message data is set to null.
    *
-   * @return The filename, where the data is posted when this entry is forwarded.
+   * @param a_messageCode The message code. See the constants in this class.
    */
-  public String getPostFile();
+  public InfoServiceHolderMessage(int a_messageCode) {
+    super(a_messageCode);
+  }
 
   /**
-   * Returns the data to post to the other infoservice. In general this should be an XML structure
-   * with the data of this entry.
+   * This creates a new InfoServiceHolderMessage.
    *
-   * @return The data to post to the other infoservice when this entry is forwarded.
+   * @param a_messageCode The message code. See the constants in this class.
+   * @param a_messageData The data to send with the message.
    */
-  public byte[] getPostData();
+  public InfoServiceHolderMessage(int a_messageCode, Object a_messageData) {
+    super(a_messageCode, a_messageData);
+  }
+
 }
