@@ -277,14 +277,39 @@ public class JAPSignature
 	{
 		try
 		{
-			signatureAlgorithm.update(message);
-			return signatureAlgorithm.verify(sig);
+			synchronized (signatureAlgorithm)
+			{
+				signatureAlgorithm.update(message);
+				return signatureAlgorithm.verify(sig);
+			}
 		}
 		catch (Exception e)
 		{
 			return false;
 		}
 
+	}
+
+	/**
+	 * Signs an array of bytes.
+	 *
+	 * @param bytesToSign byte[] Bytes to sign
+	 * @return byte[] the signature, or null if something goes wrong
+	 */
+	public byte[] signBytes(byte[] bytesToSign)
+	{
+		try
+		{
+			synchronized (signatureAlgorithm)
+			{
+				signatureAlgorithm.update(bytesToSign);
+				return signatureAlgorithm.sign();
+			}
+		}
+		catch (Throwable t)
+		{
+			return null;
+		}
 	}
 
 	/** Returns all Certificates which are included in this Signatures <KeyInfo> element
