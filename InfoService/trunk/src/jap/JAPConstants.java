@@ -36,7 +36,7 @@ import anon.tor.Tor;
 
 public final class JAPConstants
 {
-	public static final String aktVersion = "00.03.034"; //Never change the layout of this line!
+	public static final String aktVersion = "00.03.035"; //Never change the layout of this line!
 	private static final String CVS_GENERATED_RELEASE_DATE = "$Date$";
 
 	//Warning: This is a little bit tricky,
@@ -114,7 +114,7 @@ public final class JAPConstants
 	static final String AUTHOR = "(c) 2000 The JAP-Team";
 	static final String IMGPATHHICOLOR = "images/";
 	static final String IMGPATHLOWCOLOR = "images/lowcolor/";
-	static final String XMLCONFFN = "jap.conf";
+	public static final String XMLCONFFN = "jap.conf";
 	static final String MESSAGESFN = "JAPMessages";
 	static final String BUSYFN = "busy.gif";
 	static final String SPLASHFN = "splash.gif";

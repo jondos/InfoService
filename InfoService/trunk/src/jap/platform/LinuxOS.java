@@ -30,6 +30,7 @@ package jap.platform;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import jap.JAPConstants;
 
 /**
  * This class is instantiated by AbstractOS if the current OS is Linux
@@ -76,5 +77,11 @@ public class LinuxOS extends AbstractOS
 		{
 			LogHolder.log(LogLevel.ERR, LogType.MISC, "Cannot open URL in browser");
 		}
+	}
+
+	public String getConfigPath()
+	{
+		//Return path in user's home directory with hidden file (preceded by ".")
+		return System.getProperty("user.home", "") + "/." + JAPConstants.XMLCONFFN;
 	}
 }

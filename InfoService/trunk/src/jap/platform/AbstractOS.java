@@ -82,4 +82,9 @@ public abstract class AbstractOS
 	 */
 	public abstract void openURLInBrowser(String a_url);
 
+	/**
+	 * Implementations must return a valid path to the config file.
+	 */
+	public abstract String getConfigPath();
+
 }
