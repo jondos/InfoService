@@ -136,7 +136,7 @@ public final class JAPModel implements JAPAnonServiceListener {
 	public static JAPModel getModel() {
 			return model;
 	}
-	//---------------------------------------------------------------------	
+	//---------------------------------------------------------------------
 	public void initialRun() {
 		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:initial run of JAP...");
 		// start http listener object
@@ -161,7 +161,7 @@ public final class JAPModel implements JAPAnonServiceListener {
 					setAnonMode(autoConnect);
 				}
 	}
-	//---------------------------------------------------------------------	
+	//---------------------------------------------------------------------
 	/** Loads the Configuration.
 	 * First tries to read the configuration file in the users home directory
 	 * and then in the JAP install directory.
@@ -178,12 +178,16 @@ public final class JAPModel implements JAPAnonServiceListener {
 	 *    porxyAuthUserID="..."         //UserId for the Proxy if Auth is neccesary
 	 *		infoServiceHostName="..."			// hostname of the infoservice
 	 *		infoServicePortnumber=".."		// the portnumber of the info service
+	 *    anonserviceName=".."          //the name of the anon-service
 	 *		anonHostName=".."							// the hostname of the anon-service
+	 *		anonHostIP=".."							  // the ip of the anon-service
 	 *		anonPortNumber=".."						// the portnumber of the anon-service
+	 *    anonSSLPortNumber=".."        /the "proxy" port number of anon-service
 	 *		autoConnect="true"/"false"		// should we start the anon service immedialy after programm launch ?
 	 *		minimizedStartup="true"/"false" // should we start minimized ???
 	 *		neverRemindActiveContent="true"/"false" // should we remind the user about active content ?
 	 *    Locale="LOCALE_IDENTIFIER (two letter iso 639 code)" //the Language for the UI to use
+	 *    LookAndFeel="..."             //the LookAndFeel
 	 *	>
 	 *	<Debug>
 	 *		<Level>..</Level>							// the amount of output (0 means less.. 7 means max)
@@ -250,13 +254,15 @@ public final class JAPModel implements JAPAnonServiceListener {
 
 			String anonserviceName = model.getAnonServer().getName();
 			String anonHostName    = model.getAnonServer().getHost();
+			String anonHostIP       =model.getAnonServer().getIP();
 			int anonPortNumber     = model.getAnonServer().getPort();
 			int anonSSLPortNumber  = model.getAnonServer().getSSLPort();
 			anonserviceName   = JAPUtil.parseNodeString(n.getNamedItem("anonserviceName"),anonserviceName);
 			anonHostName      = JAPUtil.parseNodeString(n.getNamedItem("anonHostName"),anonHostName);
+			anonHostIP      = JAPUtil.parseNodeString(n.getNamedItem("anonHostIP"),anonHostIP);
 			anonPortNumber    = JAPUtil.parseElementAttrInt(root,"anonPortNumber",anonPortNumber);
 			anonSSLPortNumber = JAPUtil.parseElementAttrInt(root,"anonSSLPortNumber",anonSSLPortNumber);
-			model.setAnonServer(new AnonServerDBEntry(anonserviceName,anonHostName,anonPortNumber,anonSSLPortNumber));
+			model.setAnonServer(new AnonServerDBEntry(anonserviceName,anonHostName,anonHostIP,anonPortNumber,anonSSLPortNumber));
 			// force setting the correct name of the selected service
 			model.getAnonServer().setName(anonserviceName);
 
@@ -374,6 +380,7 @@ public final class JAPModel implements JAPAnonServiceListener {
 			AnonServerDBEntry e1 = model.getAnonServer();
 			e.setAttribute("anonserviceName",((e1.getName()==null)?"":e1.getName()));
 			e.setAttribute("anonHostName",   ((e1.getHost()==null)?"":e1.getHost()));
+			e.setAttribute("anonHostIP",   ((e1.getIP()==null)?"":e1.getIP()));
 			e.setAttribute("anonPortNumber",   Integer.toString(e1.getPort()));
 			e.setAttribute("anonSSLPortNumber",Integer.toString(e1.getSSLPort()));
 			e.setAttribute("autoConnect",(autoConnect?"true":"false"));
@@ -382,7 +389,7 @@ public final class JAPModel implements JAPAnonServiceListener {
 			e.setAttribute("doNotAbuseReminder",(mbDoNotAbuseReminder?"true":"false"));
 			e.setAttribute("neverRemindGoodBye",(mbGoodByMessageNeverRemind?"true":"false"));
 			e.setAttribute("Locale",m_Locale.getLanguage());
-			e.setAttribute("LookAndFeel",UIManager.getLookAndFeel().getName());			
+			e.setAttribute("LookAndFeel",UIManager.getLookAndFeel().getName());
 			// adding Debug-Element
 			Element elemDebug=doc.createElement("Debug");
 			e.appendChild(elemDebug);
@@ -451,7 +458,7 @@ public final class JAPModel implements JAPAnonServiceListener {
 	}
 	public AnonServerDBEntry getAnonServer() {
 	    return this.currentAnonService;
-	}		
+	}
 	//---------------------------------------------------------------------
 	public boolean setProxy(String host,int port) {
 		if(!JAPUtil.isPort(port))
@@ -471,7 +478,7 @@ public final class JAPModel implements JAPAnonServiceListener {
 		// apply changes to infoservice
 		applyProxySettingsToInfoService();
 		// apply changes to anonservice
-		applyProxySettingsToAnonService(); 
+		applyProxySettingsToAnonService();
 		notifyJAPObservers();
 		return true;
 	}
@@ -514,7 +521,7 @@ public final class JAPModel implements JAPAnonServiceListener {
 				// reconnect
 				setAnonMode(false);
 				setAnonMode(true);
-			}	 
+			}
 		}
 	}
 	public void setFirewallAuthUserID(String userid) {
@@ -609,9 +616,9 @@ public final class JAPModel implements JAPAnonServiceListener {
 		}
 */
 
-	//---------------------------------------------------------------------	
-	//---------------------------------------------------------------------	
-	//---------------------------------------------------------------------	
+	//---------------------------------------------------------------------
+	//---------------------------------------------------------------------
+	//---------------------------------------------------------------------
 private final class SetAnonModeAsync implements Runnable
 {
 	boolean anonModeSelected=false;
@@ -775,9 +782,9 @@ private final class SetAnonModeAsync implements Runnable
 	}
 }
 	}
-	//---------------------------------------------------------------------	
-	//---------------------------------------------------------------------	
-	//---------------------------------------------------------------------	
+	//---------------------------------------------------------------------
+	//---------------------------------------------------------------------
+	//---------------------------------------------------------------------
 	public boolean getAnonMode() {
 		return proxyAnon!=null;
 	}
@@ -945,7 +952,7 @@ private final class SetAnonModeAsync implements Runnable
 			return mblistenerIsLocal;
 		}
 	}
-	//---------------------------------------------------------------------	
+	//---------------------------------------------------------------------
 	private boolean startHTTPListener()
 		{
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:startListener");
@@ -996,7 +1003,7 @@ private final class SetAnonModeAsync implements Runnable
 					isRunningListener = false;
 				}
 		}
-	//---------------------------------------------------------------------	
+	//---------------------------------------------------------------------
 
 	/** This (and only this!) is the final exit procedure of JAP!
 	 *
@@ -1152,14 +1159,14 @@ private final class SetAnonModeAsync implements Runnable
 		}
 		// this line should never be reached
 	}
-	//---------------------------------------------------------------------	
+	//---------------------------------------------------------------------
 	public void registerView(JAPView v) {
 			view=v;
 	}
 	public static JAPView getView() {
 			return model.view;
 	}
-	//---------------------------------------------------------------------	
+	//---------------------------------------------------------------------
 	public void addJAPObserver(JAPObserver o)
 		{
 			observerVector.addElement(o);
@@ -1178,7 +1185,7 @@ private final class SetAnonModeAsync implements Runnable
 				}
 		//	JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:notifyJAPObservers()-ended");
 		}
-	//---------------------------------------------------------------------	
+	//---------------------------------------------------------------------
 	public void channelsChanged(int channels)
 		{
 			nrOfChannels=channels;
@@ -1199,7 +1206,7 @@ private final class SetAnonModeAsync implements Runnable
 							listener.transferedBytes(nrOfBytes);
 						}
 		}
-	//---------------------------------------------------------------------	
+	//---------------------------------------------------------------------
 	public int setRMISupport(boolean b) {
 		if(b) {
 			if(anonServiceRMIServer==null)

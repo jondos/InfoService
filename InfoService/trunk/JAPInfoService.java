@@ -156,11 +156,19 @@ final class JAPInfoService
 					String name=nl.item(0).getFirstChild().getNodeValue().trim();
 					nl=elem.getElementsByTagName("IP");
 					String ip=nl.item(0).getFirstChild().getNodeValue().trim();
-
+					nl=elem.getElementsByTagName("Host");
+					String host=null;
+					if(nl!=null&&nl.getLength()>0)
+					  host=nl.item(0).getFirstChild().getNodeValue().trim();
+				  if(host==null) //we have no host --> old mix there host is in <ip>
+						{
+						  host=ip;
+							ip=null;
+						}
 					int port=JAPUtil.parseNodeInt(elem,"Port",-1);
 					int proxyPort=JAPUtil.parseNodeInt(elem,"ProxyPort",-1);
 
-					AnonServerDBEntry e=new AnonServerDBEntry(name,ip,port,proxyPort);
+					AnonServerDBEntry e=new AnonServerDBEntry(name,host,ip,port,proxyPort);
 
 					nl=elem.getElementsByTagName("CurrentStatus");
 					if(nl!=null&&nl.getLength()>0) {
@@ -174,7 +182,7 @@ final class JAPInfoService
 						int mixedPackets=JAPUtil.parseElementAttrInt(elem1,"MixedPackets",-1);
 						e.setMixedPackets(mixedPackets);
 					}
-					v.addElement(e);				
+					v.addElement(e);
 //					model.anonServerDatabase.addEntry(e);
 				}
 			} catch(Exception e) {
@@ -188,7 +196,7 @@ final class JAPInfoService
 					db[i]=(AnonServerDBEntry)v.elementAt(i);
 				}
 				return db;
-			}	
+			}
 		}
 
 	public void getFeedback(AnonServerDBEntry service)
@@ -200,13 +208,17 @@ final class JAPInfoService
 			int iAnonLevel=-1;
 			try
 				{
-					byte[] addr=InetAddress.getByName(service.getHost()).getAddress();
-					String strGET="/feedback/"+Integer.toString((int)addr[0]&0xFF)+"."+
+					String strIP=service.getIP();
+					byte[] addr=null;
+					if(strIP==null) //try to get it from host
+						{
+							addr=InetAddress.getByName(service.getHost()).getAddress();
+						  strIP=Integer.toString((int)addr[0]&0xFF)+"."+
 																		 Integer.toString((int)addr[1]&0xFF)+"."+
 																		 Integer.toString((int)addr[2]&0xFF)+"."+
-																		 Integer.toString((int)addr[3]&0xFF)+DP+
-																		 Integer.toString(service.getPort());
-	//				JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"String GET: "+strGET);
+																		 Integer.toString((int)addr[3]&0xFF);
+						}
+					String strGET="/feedback/"+strIP+DP+Integer.toString(service.getPort());
 					HTTPResponse resp=conInfoService.Get(strGET);
 					if (resp.getStatusCode()!=200)
 						{
@@ -235,7 +247,7 @@ final class JAPInfoService
 			service.setMixedPackets(mixedPackets);
 			service.setAnonLevel(iAnonLevel);
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPInfoService:"+nrOfActiveUsers+"/"+trafficSituation+"/"+currentRisk+"/"+mixedPackets+"/"+iAnonLevel);
-		}	
+		}
 	public String getNewVersionNumber() throws Exception
 		{
 			try

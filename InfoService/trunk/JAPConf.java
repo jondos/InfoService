@@ -950,7 +950,7 @@ final class JAPConf extends JDialog
 						m_strMixName = JAPMessages.getString("manual");
 				AnonServerDBEntry e = new AnonServerDBEntry(
 															m_strMixName,
-															m_tfMixHost.getText().trim(),
+															m_tfMixHost.getText().trim(),null,
 															Integer.parseInt(m_tfMixPortNumber.getText().trim()),
 															anonSSLPortNumber);
 				// -- if (the same server) (re)set the name from "manual" to the correct name

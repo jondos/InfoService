@@ -109,7 +109,7 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 
 	private void init()
 		{
-			
+
 	    // Load Icon in upper left corner of the frame window
 	    ImageIcon ii=JAPUtil.loadImageIcon(JAPConstants.IICON16FN,true);
 	    if(ii!=null)
@@ -123,13 +123,13 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 			// Load Images for "Anonymity Meter"
 	    loadMeterIcons();
 	    // "NORTH": Image
-	    ImageIcon northImage = JAPUtil.loadImageIcon(JAPMessages.getString("northPath"),true);		
+	    ImageIcon northImage = JAPUtil.loadImageIcon(JAPMessages.getString("northPath"),true);
 	    JLabel northLabel = new JLabel(northImage);
 		JPanel northPanel = new JPanel();
 		northPanel.setLayout(new BoxLayout(northPanel, BoxLayout.X_AXIS) );
 		northPanel.add(northLabel);
 		northPanel.add(Box.createHorizontalGlue());
-		
+
 	    // "West": Image
 	    ImageIcon westImage = JAPUtil.loadImageIcon(JAPMessages.getString("westPath"),true);;
 	    JLabel westLabel = new JLabel(westImage);
@@ -272,41 +272,45 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 		// details panel
 		JPanel detailsPanel = new JPanel();
 		m_labelCascadeName = new JLabel();
-		JLabel labelMeterDetailsName    = new JLabel(JAPMessages.getString("meterDetailsName"));		
-		JLabel labelMeterDetailsUser    = new JLabel(JAPMessages.getString("meterDetailsUsers"));
-		JLabel labelMeterDetailsTraffic = new JLabel(JAPMessages.getString("meterDetailsTraffic"));
-		JLabel labelMeterDetailsRisk    = new JLabel(JAPMessages.getString("meterDetailsRisk"));
+		JLabel labelMeterDetailsName    = new JLabel(JAPMessages.getString("meterDetailsName")+" ");
+		JLabel labelMeterDetailsUser    = new JLabel(JAPMessages.getString("meterDetailsUsers")+" ");
+		JLabel labelMeterDetailsTraffic = new JLabel(JAPMessages.getString("meterDetailsTraffic")+" ");
+		JLabel labelMeterDetailsRisk    = new JLabel(JAPMessages.getString("meterDetailsRisk")+" ");
 		GridBagLayout g = new GridBagLayout();
 		detailsPanel.setLayout( g );
 		detailsPanel.setBorder( new TitledBorder(JAPMessages.getString("meterDetailsBorder")) );
 		GridBagConstraints c = new GridBagConstraints();
-		c.anchor=c.NORTHWEST;
-		c.anchor=c.NORTHWEST;
+		c.anchor=c.WEST;
 		c.fill=GridBagConstraints.HORIZONTAL;
 		Insets normInsets = new Insets(0,0,8,0);
 		c.insets=normInsets;
 		c.gridwidth=1;
-		c.weightx=1;
-		c.weighty=0;
+		c.weightx=0;
+		c.weighty=1;
 		c.gridx=0;
 		c.gridy=0;
 		g.setConstraints(labelMeterDetailsName,c);
 		detailsPanel.add(labelMeterDetailsName);
 		c.gridx=1;
+		c.weightx=1;
 		g.setConstraints(m_labelCascadeName,c);
 		detailsPanel.add(m_labelCascadeName);
+		c.weightx=0;
 		c.gridx=0;
 		c.gridy=1;
 		g.setConstraints(labelMeterDetailsUser,c);
 		detailsPanel.add(labelMeterDetailsUser);
 		c.gridx=1;
+		c.weightx=1;
 		g.setConstraints(userProgressBar,c);
 		detailsPanel.add(userProgressBar);
 		c.gridx=0;
 		c.gridy=2;
+		c.weightx=0;
 		g.setConstraints(labelMeterDetailsTraffic,c);
 		detailsPanel.add(labelMeterDetailsTraffic);
 		c.gridx=1;
+		c.weightx=1;
 		g.setConstraints(trafficProgressBar,c);
 		detailsPanel.add(trafficProgressBar);
 		normInsets = new Insets(0,0,0,0);
@@ -318,7 +322,7 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 		c.gridx=1;
 		g.setConstraints(protectionProgressBar,c);
 //		detailsPanel.add(protectionProgressBar);
-				
+
 		// Add all panels to level panel
 		levelPanel.add(ownTrafficPanel, BorderLayout.NORTH);
 		levelPanel.add(meterPanel, BorderLayout.CENTER);

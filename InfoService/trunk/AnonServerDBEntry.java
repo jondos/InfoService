@@ -29,10 +29,11 @@ import anon.JAPAnonService;
 import java.io.Serializable;
 public final class AnonServerDBEntry implements Serializable
 	{
-		private String  m_strHost  = null;
+		private String  m_strHost  = null; //this may be the hostname or an ip string
+		private String  m_strIP    =null; //this MUST be an IP-String, if not null
 		private int     m_iPort  = -1;
 		private String  m_strName  = null;
-		private int     port2 = -1;
+		private int     m_iProxyPort = -1;
 		private int     users = -1;
 		private int     traffic = -1;
 		private int     m_iRisk   = -1;
@@ -42,37 +43,33 @@ public final class AnonServerDBEntry implements Serializable
 		private String status = null;
 		private JAPAnonService service = null;
 
-		public AnonServerDBEntry ()
+		public AnonServerDBEntry (String host, int port)
 			{
+				this(null,host,null,port,-1);
 			}
 
-		public AnonServerDBEntry (String h, int p)
+		public AnonServerDBEntry (String name,String host, int port)
 			{
-				m_strName = h+":"+Integer.toString(p);
-				m_strHost = h;
-				m_iPort = p;
+				this(name,host,null,port,-1);
 			}
 
-		public AnonServerDBEntry (String n,String h, int p)
+		public AnonServerDBEntry (String name,String host,String strip, int port, int proxyport)
 			{
-				m_strName = n;
-				m_strHost = h;
-				m_iPort = p;
-			}
+				if(name==null)
+				  m_strName = host+":"+Integer.toString(port);
+				m_strName = name;
+				m_strHost = host;
+				m_strIP=strip;
+				m_iPort = port;
+				m_iProxyPort = proxyport;
 
-		public AnonServerDBEntry (String n,String h, int p, int p2)
-			{
-				m_strName = n;
-				m_strHost = h;
-				m_iPort = p;
-				port2 = p2;
 			}
 
 		public boolean equals(AnonServerDBEntry e) {
 		    if (
 			m_strHost.equals(e.getHost()) &&
 			(m_iPort == e.getPort()) &&
-			(port2 == e.getSSLPort())
+			(m_iProxyPort == e.getSSLPort())
 			)
 		    	return true;
 		    else
@@ -88,27 +85,18 @@ public final class AnonServerDBEntry implements Serializable
 		public int getPort() {
 				return m_iPort;
 		}
-/* it's forbidden to change Portnumber
-		public void setPort(int m_iPort) {
-				this.m_iPort=m_iPort;
-		}
-*/
 		public String getHost(){
 				return m_strHost;
 		}
-/* it's forbidden to change Hostname
-		public void setHost(String m_strHost) {
-				this.m_strHost=m_strHost;
-		}
-*/
+
+		public String getIP()
+			{
+				return m_strIP;
+			}
+
 		public int getSSLPort() {
-				return port2;
+				return m_iProxyPort;
 		}
-/* dito.
-		public void setSSLPort(int m_iPort) {
-		    		this.port2=m_iPort;
-		}
-*/
 		public int getNrOfActiveUsers() {
 				return users;
 		}
