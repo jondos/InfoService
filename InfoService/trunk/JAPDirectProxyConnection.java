@@ -31,8 +31,8 @@ import java.net.*;
 import java.util.*;
 import java.text.*;
 import java.util.StringTokenizer;
-import sun.net.ftp.FtpClient;
-import sun.net.ftp.*;
+//import sun.net.ftp.FtpClient;
+//import sun.net.ftp.*;
 
 //import com.aecys.net.FtpClient;
 
@@ -339,10 +339,10 @@ final class JAPDirectProxyConnection implements Runnable {
      // create an FTP-Client and try to communicate: Browser --> FTP-Client --> FTP-Server
     // FtpClient ftpClient = new FtpClient (host,"anonymous","heinz@operamail.com");
      // read next Header lines <-- client
-      FtpClient ftpClient = new FtpClient(host);
+   /*   FtpClient ftpClient = new FtpClient(host);
       ftpClient.login("anonymous","heinz@operamail.com");
       ftpClient.binary();
-    // ftpClient.ascii();-
+    */// ftpClient.ascii();-
 
      File text = new File("test.txt");
      //text.createNewFile();
@@ -360,8 +360,8 @@ final class JAPDirectProxyConnection implements Runnable {
                byte[] byt = list[i].getBytes();
                os.write(byt);
                 }//for*/
-           is = ftpClient.list();
-           while((len = is.read())!= -1)
+//           is = ftpClient.list();
+ //          while((len = is.read())!= -1)
            {
             //System.out.println(len+" len");
             //os.write(byt,0,len);
@@ -369,21 +369,21 @@ final class JAPDirectProxyConnection implements Runnable {
            // if(len < 1000)
            // break;
            }
-        ftpClient.closeServer();
+  //      ftpClient.closeServer();
         os.flush();
         os.close();
     }else{
     /*ftpClient.get(file,os);
     ftpClient.close();*/
-    is = ftpClient.get(file);
-    while((len= is.read())!= -1)
+    //is = ftpClient.get(file);
+//    while((len= is.read())!= -1)
            {
            //System.out.println(len+" len");
             os.write((byte) len);
             //if(len < 1000)
            // break;
            }
-           ftpClient.closeServer();
+      //     ftpClient.closeServer();
            os.flush();
            os.close();
           }//else
