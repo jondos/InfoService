@@ -36,6 +36,10 @@ import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
+/**
+ * This is the generic implementation for a modal, user resizeable dialog. Use the root panel
+ * (getRootPanel() method) for customization.
+ */
 public class JAPDialog
 {
 

@@ -75,6 +75,7 @@ public class JAPConfCert extends AbstractJAPConfModule
 
 	public JAPConfCert()
 	{
+		super(null);
 		m_jcs=JAPCertificateStore.getInstance();
 	}
 
