@@ -34,12 +34,12 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 			model = JAPModel.getModel();
 			model.setView(this);
 			init();
-			helpWindow =  new JAPHelp(this); 
-			configDialog = new JAPConf(this);
+			helpWindow =  null;//new JAPHelp(this); 
+			configDialog = null;//new JAPConf(this);
 			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPView:initialization finished!");
 		}
 	
-	public void init()
+	private void init()
 		{
 			try
 				{
@@ -368,13 +368,16 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 					JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"Event ?????: "+event.getSource());
 			}
  
-    public void showHelpWindow()
+    private void showHelpWindow()
 			{
+				if(helpWindow==null)
+					helpWindow=new JAPHelp(this);
 				helpWindow.show();
 			}	
 
 	private void showConfigDialog(int card) {
-//		JAPConf d = new JAPConf(this, model);
+		if(configDialog==null)
+			configDialog=new JAPConf(this);
 		configDialog.selectCard(card);
 		configDialog.updateValues();
 		configDialog.show();
