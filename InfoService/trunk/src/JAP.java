@@ -1,28 +1,40 @@
-/** Project Web Mixes
- *  Java Anon Proxy
+/** Project Web Mixes: Java Anon Proxy -- JAP
+ * 
+ *  The class JAP can be inherited by another class
+ *  in order to implement system specific stuff, e.g.
+ *  on a Macintosh to register the MRJ Handler.
+ *  
  */
 
 //import java.security.Security;
 //import cryptix.jce.provider.Cryptix;
-public final class JAP {
 
-	public static void main(String[] argv) {
-		
-		String vers = System.getProperty("java.version");
+public /*final*/ class JAP {
+
+	String   os;
+	String   vers;
+	JAPDebug jdebug;
+	JAPModel model;
+	JAPView  view;
+	
+	JAP(String[] argv) {
+		this.vers = System.getProperty("java.version");
 		if (vers.compareTo("1.1.2") < 0) {
 			System.out.println("!!!WARNING: JAP must be run with a " +
 			 "1.1.2 or higher version VM!!!");
 		}
-		String os = System.getProperty("os.name");
-		
+		this.os = System.getProperty("os.name");
+	}
+	
+	public void startJAP() {
 		// Create debugger object
-		JAPDebug jdebug=new JAPDebug();
+		jdebug = new JAPDebug();
 		JAPDebug.setDebugType(JAPDebug.NET+JAPDebug.GUI+JAPDebug.THREAD+JAPDebug.MISC);
 		JAPDebug.setDebugLevel(JAPDebug.INFO);
 		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAP:Welcome! Java "+vers+" running on "+os+" ...");
 
 		// Create the model object
-		JAPModel model = new JAPModel();
+		model = new JAPModel();
 		JAPSplash splash = new JAPSplash(model);
 		splash.show(); // show splash screen as soon as possible
 
@@ -31,14 +43,8 @@ public final class JAP {
 		// load settings from config file
 		model.load();
 		
-		// register Handlers if running JAP under Mac OS
-	//	if (os.equals("Mac OS")) {
-		//	JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAP:Registering MRJHandlers");
-			//model.registerMRJHandlers();
-		//}
-
 		// Create the main frame
-		JAPView view = new JAPView (model.TITLE);
+		view = new JAPView (model.TITLE);
 		model.addJAPObserver(view);
 		
 		// Dispose the spash screen and show main frame
@@ -49,7 +55,11 @@ public final class JAP {
 		
 		// initially start services
 		model.initialRun();
-
-		
+	}
+	
+	public static void main(String[] argv) {
+		// do NOT change anything in main!
+		JAP jap = new JAP(argv);
+		jap.startJAP();
 	}
 }
