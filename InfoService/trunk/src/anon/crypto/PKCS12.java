@@ -92,7 +92,7 @@ import org.bouncycastle.crypto.params.KeyParameter;
 import org.bouncycastle.crypto.params.ParametersWithIV;
 import org.bouncycastle.crypto.params.ParametersWithRandom;
 
-public class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifiers
+final public class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifiers
 {
 	private static final int SALT_SIZE = 20;
 	private static final int MIN_ITERATIONS = 100;

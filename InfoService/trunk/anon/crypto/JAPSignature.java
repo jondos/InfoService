@@ -38,7 +38,8 @@ import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.security.Signature;
+import java.security.interfaces.DSAPrivateKey;
+import java.security.interfaces.DSAPublicKey;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import org.w3c.dom.Document;
@@ -49,36 +50,41 @@ import org.w3c.dom.NodeList;
 import anon.util.Base64;
 import anon.util.XMLUtil;
 
-public class JAPSignature
+final public class JAPSignature
 {
 
-	private Signature signatureAlgorithm;
-	private PublicKey pubkey;
+	private IMySignature signatureAlgorithm;
 
 	public JAPSignature()
 	{
 		try
 		{
-			pubkey = null;
-			signatureAlgorithm = Signature.getInstance("DSA");
+			signatureAlgorithm = null;
 		}
 		catch (Exception e)
 		{
-			signatureAlgorithm = null;
 		}
 	}
 
-	public void initVerify(PublicKey k) throws InvalidKeyException
+	synchronized public void initVerify(PublicKey k) throws InvalidKeyException
 	{
-		try
+		if (k == null)
 		{
-			signatureAlgorithm.initVerify(k);
-			pubkey = k;
+			throw new InvalidKeyException("Key is NULL");
 		}
-		catch (InvalidKeyException e)
+		if (k instanceof DSAPublicKey)
 		{
-			throw e;
+			signatureAlgorithm = new MyDSASignature();
 		}
+		else if (k instanceof MyRSAPublicKey)
+		{
+			signatureAlgorithm = new MyRSASignature();
+		}
+		else
+		{
+			throw new InvalidKeyException("Unknown algorithm for key");
+		}
+		signatureAlgorithm.initVerify(k);
 	}
 
 	/**
@@ -90,12 +96,25 @@ public class JAPSignature
 	 * @param ownPrivateKey The private key of a asymmetric algorithm (DSA at the moment) for
 	 * signing the messages.
 	 */
-	public void initSign(PrivateKey ownPrivateKey) throws InvalidKeyException
+	synchronized public void initSign(PrivateKey ownPrivateKey) throws InvalidKeyException
 	{
-		synchronized (signatureAlgorithm)
+		if (ownPrivateKey == null)
 		{
-			signatureAlgorithm.initSign(ownPrivateKey);
+			throw new InvalidKeyException("Key is NULL");
 		}
+		if (ownPrivateKey instanceof DSAPrivateKey)
+		{
+			signatureAlgorithm = new MyDSASignature();
+		}
+		else if (ownPrivateKey instanceof MyRSAPrivateKey)
+		{
+			signatureAlgorithm = new MyRSASignature();
+		}
+		else
+		{
+			throw new InvalidKeyException("Unknown algorithm for key");
+		}
+		signatureAlgorithm.initSign(ownPrivateKey);
 	}
 
 	public boolean verifyXML(InputStream xmlDoc)
@@ -236,13 +255,10 @@ public class JAPSignature
 			System.arraycopy(rsbuff, 20, tmpBuff, index, 20);
 
 			//testing Signature....
-			synchronized (signatureAlgorithm)
+			byte[] buff = out.toByteArray();
+			if (!verify(buff, tmpBuff))
 			{
-				byte[] buff = out.toByteArray();
-				if (!verify(buff, tmpBuff))
-				{
-					return false;
-				}
+				return false;
 			}
 			//making Reference hash....
 			out.reset();
@@ -273,21 +289,9 @@ public class JAPSignature
 		}
 	}
 
-	public boolean verify(byte[] message, byte[] sig)
+	synchronized public boolean verify(byte[] message, byte[] sig)
 	{
-		try
-		{
-			synchronized (signatureAlgorithm)
-			{
-				signatureAlgorithm.update(message);
-				return signatureAlgorithm.verify(sig);
-			}
-		}
-		catch (Exception e)
-		{
-			return false;
-		}
-
+		return signatureAlgorithm.verify(message, sig);
 	}
 
 	/**
@@ -296,15 +300,11 @@ public class JAPSignature
 	 * @param bytesToSign byte[] Bytes to sign
 	 * @return byte[] the signature, or null if something goes wrong
 	 */
-	public byte[] signBytes(byte[] bytesToSign)
+	synchronized public byte[] signBytes(byte[] bytesToSign)
 	{
 		try
 		{
-			synchronized (signatureAlgorithm)
-			{
-				signatureAlgorithm.update(bytesToSign);
-				return signatureAlgorithm.sign();
-			}
+			return signatureAlgorithm.sign(bytesToSign);
 		}
 		catch (Throwable t)
 		{
@@ -412,12 +412,7 @@ public class JAPSignature
 		 * SignedInfo tree to create the signature (SHA1 hash is included in the Java implementation
 		 * of DSA)
 		 */
-		byte[] signatureAsn1 = null;
-		synchronized (signatureAlgorithm)
-		{
-			signatureAlgorithm.update(bytesToSign.toByteArray());
-			signatureAsn1 = signatureAlgorithm.sign();
-		}
+		byte[] signatureAsn1 = signBytes(bytesToSign.toByteArray());
 		/* now extract the ASN.1 encoded values for r and s from the signature */
 		/* ASN.1 Notation:
 		 *   sequence {

@@ -52,7 +52,7 @@ import org.bouncycastle.crypto.params.DSAPublicKeyParameters;
 /**
  * This class implements the generation of a DSA key pair.
  */
-public class JAPDsaKeyGenerator
+final public class JAPDsaKeyGenerator
 {
 
 	/**

@@ -27,14 +27,15 @@ public class FirstOnionRouter implements Runnable {
 
 	private TinyTLS m_tinyTLS;
 	private ORDescription m_description;
-	private Thread m_readDataLoop; 
+	private Thread m_readDataLoop;
 	private InputStream m_istream;
 	private OutputStream m_ostream;
 	private Hashtable m_circuits;
+	private volatile boolean m_bRun;
 
 	/**
 	 * constructor
-	 * 
+	 *
 	 * creates a FOR from the description
 	 * @param d
 	 * description of the onion router
@@ -126,7 +127,7 @@ public class FirstOnionRouter implements Runnable {
 		this.m_ostream = this.m_tinyTLS.getOutputStream();
 		this.m_circuits = new Hashtable();
 	}
-	
+
 	/**
 	 * starts the thread that reads from the inputstream and dispatches the cells
 	 *
@@ -134,34 +135,40 @@ public class FirstOnionRouter implements Runnable {
 	public synchronized void start()
 	{
 		if(this.m_readDataLoop== null)
-		{		
+		{
+			m_bRun=true;
 			this.m_readDataLoop = new Thread(this);
 			this.m_readDataLoop.start();
 		}
 	}
-	
+
 	/**
 	 * dispatches cells while the thread, started with start is running
 	 */
 	public synchronized void run()
 	{
-		while(this.m_readDataLoop!=null)
+		while(m_bRun)
 		{
 			this.dispatchCells();
 		}
 	}
-	
+
 	/**
 	 * stops the thread that dispatches cells
 	 * @throws IOException
 	 */
-	public void stop() throws IOException
+	public void stop() throws IOException,InterruptedException
 	{
-		this.m_readDataLoop.stop();
-		this.close();
+		m_bRun=false;
+		if(m_readDataLoop!=null)
+		{
+		m_readDataLoop.interrupt();
+		m_readDataLoop.join();
 		this.m_readDataLoop=null;
+		this.close();
+		}
 	}
-	
+
 	/**
 	 * closes the connection to the onionrouter
 	 * @throws IOException

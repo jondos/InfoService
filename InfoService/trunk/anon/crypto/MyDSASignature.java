@@ -26,31 +26,65 @@
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
 
-package tor;
+/* Hint: This file may be only a copy of the original file which is always in the JAP source tree!
+ * If you change something - do not forget to add the changes also to the JAP source tree!
+ */
 
-import java.util.Random;
+package anon.crypto;
 
-class MyRandom
+import java.security.InvalidKeyException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.Signature;
+
+final class MyDSASignature implements IMySignature
 {
-	Random m_TheRandom;
-	public MyRandom(Random rand)
+	Signature m_SignatureAlgorithm;
+	MyDSASignature()
 	{
-		m_TheRandom = rand;
+		try
+		{
+			m_SignatureAlgorithm = Signature.getInstance("DSA");
+		}
+		catch (Exception e)
+		{
+			m_SignatureAlgorithm = null;
+		}
 	}
 
-	public int nextInt(int max)
+	synchronized public void initVerify(PublicKey k) throws InvalidKeyException
 	{
-		int randMax = Integer.MAX_VALUE;
-		randMax -= randMax % max;
+		m_SignatureAlgorithm.initVerify(k);
+	}
 
-		for (; ; )
+	synchronized public void initSign(PrivateKey ownPrivateKey) throws InvalidKeyException
+	{
+		m_SignatureAlgorithm.initSign(ownPrivateKey);
+	}
+
+	synchronized public boolean verify(byte[] message, byte[] sig)
+	{
+		try
 		{
-			int v = m_TheRandom.nextInt();
-			v&=0x7FFFFFFF;
-			if (v < randMax)
-			{
-				return v % max;
-			}
+			m_SignatureAlgorithm.update(message);
+			return m_SignatureAlgorithm.verify(sig);
+		}
+		catch (Exception e)
+		{
+			return false;
+		}
+	}
+
+	synchronized public byte[] sign(byte[] bytesToSign)
+	{
+		try
+		{
+			m_SignatureAlgorithm.update(bytesToSign);
+			return m_SignatureAlgorithm.sign();
+		}
+		catch (Throwable t)
+		{
+			return null;
 		}
 	}
 

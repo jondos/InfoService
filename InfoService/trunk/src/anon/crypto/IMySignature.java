@@ -26,32 +26,23 @@
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
 
-package tor;
+/* Hint: This file may be only a copy of the original file which is always in the JAP source tree!
+ * If you change something - do not forget to add the changes also to the JAP source tree!
+ */
 
-import java.util.Random;
+package anon.crypto;
 
-class MyRandom
+import java.security.InvalidKeyException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+
+interface IMySignature
 {
-	Random m_TheRandom;
-	public MyRandom(Random rand)
-	{
-		m_TheRandom = rand;
-	}
+	void initVerify(PublicKey k) throws InvalidKeyException;
 
-	public int nextInt(int max)
-	{
-		int randMax = Integer.MAX_VALUE;
-		randMax -= randMax % max;
+	void initSign(PrivateKey ownPrivateKey) throws InvalidKeyException;
 
-		for (; ; )
-		{
-			int v = m_TheRandom.nextInt();
-			v&=0x7FFFFFFF;
-			if (v < randMax)
-			{
-				return v % max;
-			}
-		}
-	}
+	boolean verify(byte[] message, byte[] sig);
 
+	byte[] sign(byte[] bytesToSign);
 }

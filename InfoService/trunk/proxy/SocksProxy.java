@@ -63,6 +63,7 @@ final public class SocksProxy implements Runnable, IAnonProxy
 	private Tor m_Tor;
 	private volatile boolean m_bIsRunning;
 	private ServerSocket m_socketListener;
+	private Thread m_threadRunLoop;
 	//private Circuit m_Circuit;
 
 	public SocksProxy(ServerSocket listener)
@@ -72,7 +73,7 @@ final public class SocksProxy implements Runnable, IAnonProxy
 
 
 
-	public int start()
+	public synchronized int start()
 	{
 		try{
 			m_Tor=Tor.getInstance();
@@ -97,9 +98,10 @@ final public class SocksProxy implements Runnable, IAnonProxy
 		//m_Circuit = new Circuit(10,orsToUse);
 		LogHolder.log(LogLevel.DEBUG,LogType.MISC,"[TOR] Connecting");
 		m_Circuit.connect();
-
-		threadRun = new Thread(this, "JAP - SocksProxy");
-		threadRun.start();*/
+*/
+		m_threadRunLoop = new Thread(this, "JAP - SocksProxy");
+		m_bIsRunning = true;
+		m_threadRunLoop.start();
 		return E_SUCCESS;
 		}
 		catch(Exception e)
@@ -108,11 +110,14 @@ final public class SocksProxy implements Runnable, IAnonProxy
 		}
 	}
 
-	public void stop()
+	public synchronized void stop()
 	{
 		m_bIsRunning = false;
 		try
 		{
+			if(m_threadRunLoop!=null)
+				m_threadRunLoop.join();
+			m_threadRunLoop=null;
 			m_Tor.stop();
 		}
 		catch (Exception e)
@@ -121,7 +126,6 @@ final public class SocksProxy implements Runnable, IAnonProxy
 
 	public void run()
 	{
-		m_bIsRunning = true;
 		int oldTimeOut = 0;
 		LogHolder.log(LogLevel.DEBUG, LogType.NET, "SocksProxy:SocksProxy is running as Thread");
 

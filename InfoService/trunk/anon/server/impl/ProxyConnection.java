@@ -62,7 +62,7 @@ final public class ProxyConnection
 						  ") to Server (" + host + ":" + port + ")");
 			m_ioSocket = new Socket(fwHost, fwPort);
 		}
-		m_ioSocket.setSoTimeout(10000);
+		m_ioSocket.setSoTimeout(100000);
 		m_In = m_ioSocket.getInputStream();
 		m_Out = m_ioSocket.getOutputStream();
 		if (fwType == AnonServiceImpl.FIREWALL_TYPE_SOCKS)
@@ -117,12 +117,12 @@ final public class ProxyConnection
 		m_Out.write(buff, 0, 10 + host.length());
 		m_Out.flush();
 		//read OK for Methods...
-		m_In.read();
-		m_In.read();
+		int ret=m_In.read(); //Version=5
+		ret=m_In.read(); //00=No Auth
 		//read ok for connect
-		m_In.read();//Version
-		m_In.read();//SUCCED
-		m_In.read();//reserved==0;
+		ret=m_In.read();//Version=5
+		ret=m_In.read();//SUCCED=0
+		ret=m_In.read();//reserved==0;
 		int adrType=m_In.read();
 		int len=0;
 		switch(adrType)
