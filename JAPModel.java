@@ -83,7 +83,7 @@ public final class JAPModel
 
   protected void setInfoServicePort(int port)
     {
-			model.m_FirewallPortNumber=port;
+			model.m_InfoServicePortNumber=port;
 		}
 
   public static int getInfoServicePort()
