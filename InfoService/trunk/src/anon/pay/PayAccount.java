@@ -104,6 +104,7 @@ public class PayAccount implements IXMLEncodable
 	 * certificate is old.
 	 */
 	private long m_mySpent;
+	private BI m_theBI;
 
 	public PayAccount(byte[] xmlData) throws Exception
 	{
@@ -133,12 +134,14 @@ public class PayAccount implements IXMLEncodable
 	 */
 	public PayAccount(XMLAccountCertificate certificate,
 					  IMyPrivateKey privateKey,
-					  JAPSignature signingInstance) throws Exception
+					  JAPSignature signingInstance,
+					  BI theBI) throws Exception
 	{
 		m_accountCertificate = certificate;
 		m_signingInstance = signingInstance;
 		m_privateKey = privateKey;
 		m_transCerts = new Vector();
+		m_theBI = theBI;
 	}
 
 	private void setValues(Element elemRoot) throws Exception
@@ -238,6 +241,9 @@ public class PayAccount implements IXMLEncodable
 		// set signing instance
 		m_signingInstance = new JAPSignature();
 		m_signingInstance.initSign(m_privateKey);
+
+		/** @todo add BIName here when multiple BIs are supported */
+		m_theBI = PayAccountsFile.getInstance().getBI();
 	}
 
 	/**
@@ -305,10 +311,9 @@ public class PayAccount implements IXMLEncodable
 			if (b1.getTimestamp().after(b2.getTimestamp()))
 			{
 				m_accountInfo.setBalance(b1);
+				fireChangeEvent();
 			}
-
 		}
-
 	}
 
 	/**
@@ -455,7 +460,7 @@ public class PayAccount implements IXMLEncodable
 	 * updates the internal value.
 	 * @return the updated currentBytes value
 	 */
-	public long updateCurrentBytes() throws Exception
+	public long updateCurrentBytes(MuxSocket currentMuxSock) throws Exception
 	{
 		// am I the active account?
 		if (PayAccountsFile.getInstance().getActiveAccount() != this)
@@ -463,15 +468,12 @@ public class PayAccount implements IXMLEncodable
 			throw new Exception("Error: Inactive account called to count used bytes!");
 		}
 
-		/** @todo realize this */
-		MuxSocket currentMuxSock = null;//getCurrentMuxSocket(); // oder so..
-		long tmp = currentMuxSock.getTransferredBytes();
+		long tmp = currentMuxSock.getAndResetTransferredBytes();
 		if (tmp > 0)
 		{
 			m_currentBytes += tmp;
 			fireChangeEvent();
 		}
-		currentMuxSock.resetTransferredBytes();
 		return m_currentBytes;
 	}
 
@@ -527,4 +529,50 @@ public class PayAccount implements IXMLEncodable
 			return m_accountInfo.getBalance();
 		}
 	}
+
+	/**
+	 * Requests an AccountInfo XML structure from the BI.
+	 *
+	 * @throws Exception
+	 * @return XMLAccountInfo
+	 * @todo switch SSL on
+	 */
+	public XMLAccountInfo fetchAccountInfo() throws Exception
+	{
+		XMLAccountInfo info;
+		BIConnection biConn = new BIConnection( m_theBI,
+											   false
+											   /* ssl off! */
+											   );
+		biConn.connect();
+		biConn.authenticate(m_accountCertificate, m_signingInstance);
+		info = biConn.getAccountInfo();
+		biConn.disconnect();
+
+		// save in the account object
+		setAccountInfo(info); // do not access field directly here!!
+		return info;
+	}
+
+
+	/**
+	 * Request a transfer certificate from the BI
+	 *
+	 * @param accountNumber account number
+	 * @return xml transfer certificate
+	 * @throws Exception
+	 * @todo switch SSL on
+	 */
+	public XMLTransCert charge() throws Exception
+	{
+		BIConnection biConn = new BIConnection( m_theBI, false /* ssl off*/);
+		biConn.connect();
+		biConn.authenticate(m_accountCertificate, m_signingInstance);
+		XMLTransCert transcert = biConn.charge();
+		biConn.disconnect();
+		m_transCerts.addElement(transcert); //addTransCert(transcert);
+		return transcert;
+	}
+
+
 }

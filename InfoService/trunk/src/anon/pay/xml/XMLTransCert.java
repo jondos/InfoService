@@ -27,12 +27,13 @@
  */
 package anon.pay.xml;
 
+import javax.xml.parsers.*;
+
 import org.w3c.dom.*;
 import anon.util.*;
-import javax.xml.parsers.DocumentBuilderFactory;
-import anon.crypto.JAPSignature;
+import java.io.ByteArrayInputStream;
 
-public class XMLTransCert implements IXMLSignable
+public class XMLTransCert extends AbstractXMLSignable
 {
 	//~ Instance fields ********************************************************
 
@@ -41,12 +42,11 @@ public class XMLTransCert implements IXMLSignable
 	private long m_accountNumber;
 	private long m_transferNumber;
 	private long m_deposit;
-	private Document m_signature;
 
 	//~ Constructors ***********************************************************
 
 	public XMLTransCert(long accountNumber, long transferNumber,
-						long deposit, java.sql.Timestamp validTime) throws Exception
+						long deposit, java.sql.Timestamp validTime)
 	{
 		m_accountNumber = accountNumber;
 		m_transferNumber = transferNumber;
@@ -55,11 +55,10 @@ public class XMLTransCert implements IXMLSignable
 		m_signature = null;
 	}
 
-
-
 	public XMLTransCert(String xml) throws Exception
 	{
-		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(xml);
+		ByteArrayInputStream in = new ByteArrayInputStream(xml.getBytes());
+		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(in);
 		Element elemRoot = doc.getDocumentElement();
 		setValues(elemRoot);
 	}
@@ -73,6 +72,7 @@ public class XMLTransCert implements IXMLSignable
 	{
 		setValues(xml);
 	}
+
 	public XMLTransCert(Document xml) throws Exception
 	{
 		Element elemRoot = xml.getDocumentElement();
@@ -96,7 +96,6 @@ public class XMLTransCert implements IXMLSignable
 		return m_validTime;
 	}
 
-
 	private void setValues(Element elemRoot) throws Exception
 	{
 		if (!elemRoot.getTagName().equals("TransferCertificate"))
@@ -112,7 +111,6 @@ public class XMLTransCert implements IXMLSignable
 		str = XMLUtil.parseNodeString(element, null);
 		m_transferNumber = Long.parseLong(str);
 
-
 		element = (Element) XMLUtil.getFirstChildByName(elemRoot, "ValidTime");
 		str = XMLUtil.parseNodeString(element, null);
 		m_validTime = java.sql.Timestamp.valueOf(str);
@@ -125,7 +123,6 @@ public class XMLTransCert implements IXMLSignable
 		}
 
 	}
-
 
 	/**
 	 * getBaseUrl
@@ -149,7 +146,7 @@ public class XMLTransCert implements IXMLSignable
 //		a_doc = getDocumentBuilder().newDocument();
 		Element elemRoot = a_doc.createElement("TransferCertificate");
 		elemRoot.setAttribute("version", "1.0");
-		a_doc.appendChild(elemRoot);
+//		a_doc.appendChild(elemRoot);
 		Element elem = a_doc.createElement("AccountNumber");
 		XMLUtil.setNodeValue(elem, Long.toString(m_accountNumber));
 		elemRoot.appendChild(elem);
@@ -178,36 +175,6 @@ public class XMLTransCert implements IXMLSignable
 		return elemRoot;
 	}
 
-	public void sign(JAPSignature signer) throws Exception
-	{
-		Document doc = XMLUtil.toXMLDocument(this);
-		signer.signXmlDoc(doc);
-		Element elemSig = (Element) XMLUtil.getFirstChildByName(doc.getDocumentElement(), "Signature");
-		m_signature = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
-		Element elem = (Element) XMLUtil.importNode(m_signature, elemSig, true);
-		m_signature.appendChild(elem);
-	}
 
-	public boolean verifySignature(JAPSignature verifier)
-	{
-		try{
-		Document doc = XMLUtil.toXMLDocument(this);
-		return verifier.verifyXML(doc.getDocumentElement());
-		}
-		catch(Exception e)
-		{
-			return false;
-		}
-	}
-
-	/**
-	 * isSigned
-	 *
-	 * @return boolean
-	 */
-	public boolean isSigned()
-	{
-		return (m_signature!=null);
-	}
 
 }

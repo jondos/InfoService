@@ -35,7 +35,6 @@ import org.bouncycastle.crypto.params.DSAParameters;
 import org.bouncycastle.crypto.params.DSAPublicKeyParameters;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-
 import anon.crypto.IMyPublicKey;
 import anon.crypto.MyDSAPublicKey;
 import anon.crypto.MyRSAPublicKey;
@@ -56,11 +55,17 @@ import anon.util.XMLUtil;
  *
  */
 
-public class XMLJapPublicKey implements IXMLEncodable//extends XMLDocument
+public class XMLJapPublicKey implements IXMLEncodable //extends XMLDocument
 {
 	//~ Instance fields ********************************************************
 
 	private IMyPublicKey m_publicKey;
+	private static String ms_elemName = "JapPublicKey";
+
+	public static String getXMLElementName()
+	{
+		return ms_elemName;
+	}
 
 	//~ Constructors ***********************************************************
 
@@ -73,6 +78,13 @@ public class XMLJapPublicKey implements IXMLEncodable//extends XMLDocument
 	{
 		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new
 			ByteArrayInputStream(data));
+		setPubKey(doc.getDocumentElement());
+	}
+
+	public XMLJapPublicKey(String data) throws Exception
+	{
+		ByteArrayInputStream in = new ByteArrayInputStream(data.getBytes());
+		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(in);
 		setPubKey(doc.getDocumentElement());
 	}
 
@@ -95,9 +107,9 @@ public class XMLJapPublicKey implements IXMLEncodable//extends XMLDocument
 	 */
 	private void setPubKey(Element elemKey) throws Exception
 	{
-		if (!elemKey.getTagName().equals("JapPublicKey"))
+		if (!elemKey.getTagName().equals(ms_elemName))
 		{
-			throw new Exception("XMLJapPublicKey wrong xml structure. Tagname is"+elemKey.getTagName());
+			throw new Exception("XMLJapPublicKey wrong xml structure. Tagname is" + elemKey.getTagName());
 		}
 		Element elemRsa = (Element) XMLUtil.getFirstChildByName(elemKey, "RSAKeyValue");
 		if (elemRsa != null)
@@ -135,8 +147,8 @@ public class XMLJapPublicKey implements IXMLEncodable//extends XMLDocument
 	public Element toXmlElement(Document a_doc) //throws Exception
 	{
 		//Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
-		Element elemRoot = a_doc.createElement("JapPublicKey");
-		a_doc.appendChild(elemRoot);
+		Element elemRoot = a_doc.createElement(ms_elemName);
+//		a_doc.appendChild(elemRoot);
 		elemRoot.setAttribute("version", "1.0");
 		Element elem = m_publicKey.toXmlElement(a_doc);
 

@@ -166,7 +166,6 @@ public class PaymentMainPanel extends JPanel
 			m_BalanceProgressBar.setValue(0);
 			m_BalanceProgressBar.setEnabled(false);
 		}
-
 		// account is empty :-(
 		else if (activeAccount.getCertifiedCredit() == 0)
 		{
@@ -178,7 +177,7 @@ public class PaymentMainPanel extends JPanel
 			m_BalanceProgressBar.setValue(0);
 			m_BalanceProgressBar.setEnabled(true);
 		}
-
+		
 		// we got everything under control, situation normal
 		else
 		{

@@ -33,6 +33,7 @@ import anon.util.XMLUtil;
 import anon.util.IXMLEncodable;
 import org.w3c.dom.Document;
 import javax.xml.parsers.DocumentBuilderFactory;
+import java.io.ByteArrayInputStream;
 
 public class XMLResponse implements IXMLEncodable
 {
@@ -41,7 +42,8 @@ public class XMLResponse implements IXMLEncodable
 	/** Creates a XMLResponse from the XML representation **/
 	public XMLResponse(String xml) throws Exception
 	{
-		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(xml);
+		ByteArrayInputStream in = new ByteArrayInputStream(xml.getBytes());
+		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(in);
 		setValues(doc.getDocumentElement());
 	}
 

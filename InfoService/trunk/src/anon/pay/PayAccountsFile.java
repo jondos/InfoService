@@ -27,13 +27,35 @@
  */
 package anon.pay;
 
+import java.math.BigInteger;
+import java.security.SecureRandom;
 import java.util.Enumeration;
 import java.util.Vector;
 
+import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
+import org.bouncycastle.crypto.generators.DSAKeyPairGenerator;
+import org.bouncycastle.crypto.generators.DSAParametersGenerator;
+import org.bouncycastle.crypto.generators.RSAKeyPairGenerator;
+import org.bouncycastle.crypto.params.DSAKeyGenerationParameters;
+import org.bouncycastle.crypto.params.DSAPrivateKeyParameters;
+import org.bouncycastle.crypto.params.DSAPublicKeyParameters;
+import org.bouncycastle.crypto.params.RSAKeyGenerationParameters;
+import org.bouncycastle.crypto.params.RSAKeyParameters;
+import org.bouncycastle.crypto.params.RSAPrivateCrtKeyParameters;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import anon.crypto.IMyPrivateKey;
+import anon.crypto.IMyPublicKey;
+import anon.crypto.JAPSignature;
+import anon.crypto.MyDSAPrivateKey;
+import anon.crypto.MyDSAPublicKey;
+import anon.crypto.MyRSAPrivateKey;
+import anon.crypto.MyRSAPublicKey;
+import anon.pay.xml.XMLAccountCertificate;
+import anon.pay.xml.XMLJapPublicKey;
 import anon.util.IXMLEncodable;
 import anon.util.XMLUtil;
+
 
 /**
  * This class encapsulates a collection of accounts. One of the accounts in the collection
@@ -83,6 +105,23 @@ public class PayAccountsFile implements IXMLEncodable
 
 	private Vector m_paymentListeners = new Vector();
 
+	private MyAccountListener m_MyChangeListener = new MyAccountListener();
+
+	/**
+	 * At this time, the implementation supports only one single BI. In the future
+	 * a feature should be added to have support for multiple BIs, so that the
+	 * AccountCertificate also contains a BIName. The infoservice should then
+	 * publish information about the known BIs and also which MixCascade works
+	 * with which BI.
+	 *
+	 * However, at the moment there is only one static BI which is used for all
+	 * cascades and all accounts. This is the reason why we have this field in
+	 * the singleton class.
+	 */
+	private BI m_theBI;
+
+
+
 	// singleton!
 	private PayAccountsFile()
 	{
@@ -90,62 +129,81 @@ public class PayAccountsFile implements IXMLEncodable
 
 	/**
 	 * returns the one and only accountsfile.
-	 * If it was not yet initialized, null is returned.
+	 * Note: If {@link init(BI, Element)} was not yet called,
+	 * you get an empty instance which is not really useful.
 	 */
 	public static PayAccountsFile getInstance()
 	{
+		if (ms_AccountsFile == null)
+		{
+			ms_AccountsFile = new PayAccountsFile();
+		}
 		return ms_AccountsFile;
-
 	}
 
 	/**
 	 * Performs the initialization.
 	 * @return boolean succeeded?
 	 */
-	public static boolean init(Element elemAccountsFile)
+	public static boolean init(BI theBI, Element elemAccountsFile)
 	{
-		ms_AccountsFile = new PayAccountsFile();
-		// set values
-		Element elemActiveAccount = (Element) XMLUtil.getFirstChildByName(elemAccountsFile,
-			"ActiveAccountNumber");
-		long activeAccountNumber = Long.parseLong(XMLUtil.parseNodeString(elemActiveAccount, "0"));
-
-		Element elemAccounts = (Element) XMLUtil.getFirstChildByName(elemAccountsFile, "Accounts");
-		Element elemAccount = (Element) elemAccounts.getFirstChild();
-		while (elemAccount != null)
+		if (ms_AccountsFile == null)
 		{
-			try
-			{
-				ms_AccountsFile.m_Accounts.addElement(new PayAccount(elemAccount));
-				elemAccount = (Element) elemAccount.getNextSibling();
-			}
-			catch (Exception ex1)
-			{
-				ex1.printStackTrace();
-				return false;
-			}
+			ms_AccountsFile = new PayAccountsFile();
+			// set values
 		}
-
-		// find activeAccount
-		if (activeAccountNumber > 0)
+/*		try
 		{
-			Enumeration e = ms_AccountsFile.m_Accounts.elements();
-			while (e.hasMoreElements())
+			ms_AccountsFile.m_theBI = new BI(elemBI);
+		}
+		catch (Exception ex2)
+		{
+			return false;
+		}*/
+		ms_AccountsFile.m_theBI = theBI;
+		if(elemAccountsFile != null)
+		{
+			Element elemActiveAccount = (Element) XMLUtil.getFirstChildByName(elemAccountsFile,
+				"ActiveAccountNumber");
+			long activeAccountNumber = Long.parseLong(XMLUtil.parseNodeString(elemActiveAccount, "0"));
+
+			Element elemAccounts = (Element) XMLUtil.getFirstChildByName(elemAccountsFile, "Accounts");
+			Element elemAccount = (Element) elemAccounts.getFirstChild();
+			while (elemAccount != null)
 			{
-				PayAccount current = (PayAccount) e.nextElement();
-				if (current.getAccountNumber() == activeAccountNumber)
+				try
 				{
-					try
+					ms_AccountsFile.m_Accounts.addElement(new PayAccount(elemAccount));
+					elemAccount = (Element) elemAccount.getNextSibling();
+				}
+				catch (Exception ex1)
+				{
+					return false;
+				}
+			}
+
+			// find activeAccount
+			if (activeAccountNumber > 0)
+			{
+				Enumeration e = ms_AccountsFile.m_Accounts.elements();
+				while (e.hasMoreElements())
+				{
+					PayAccount current = (PayAccount) e.nextElement();
+					if (current.getAccountNumber() == activeAccountNumber)
 					{
-						ms_AccountsFile.setActiveAccount(current);
+						try
+						{
+							ms_AccountsFile.setActiveAccount(current);
+						}
+						catch (Exception ex)
+						{
+						}
+						break;
 					}
-					catch (Exception ex)
-					{
-					}
-					break;
 				}
 			}
 		}
+		ms_AccountsFile.m_bIsInitialized = true;
 		return true;
 	}
 
@@ -397,7 +455,16 @@ public class PayAccountsFile implements IXMLEncodable
 	 {
 	 }*/
 
-	private MyAccountListener m_MyChangeListener = new MyAccountListener();
+
+	/**
+	 * getBI
+	 *
+	 * @return BI
+	 */
+	public BI getBI()
+	{
+		return m_theBI;
+	}
 
 	/**
 	 * Listens to changes
@@ -422,5 +489,60 @@ public class PayAccountsFile implements IXMLEncodable
 				}
 			}
 		}
+	}
+
+	/**
+	 * Creates a new Account.
+	 * Generates an RSA or DSA key pair and then registers a new account with the BI.
+	 * This can take a while, so the user should be notified before calling this.
+	 *
+	 * At the moment, only DSA should be used, because RSA is not supported by the
+	 * AI implementation
+	 *
+	 * @todo check RSA keygen implementation, switch SSL on
+	 */
+	public PayAccount createAccount(boolean useDSA) throws Exception
+	{
+		IMyPublicKey pubKey = null;
+		IMyPrivateKey privKey = null;
+
+		if (useDSA)
+		{
+			SecureRandom random = new SecureRandom();
+			DSAParametersGenerator pGen = new DSAParametersGenerator();
+			DSAKeyPairGenerator kpGen = new DSAKeyPairGenerator();
+			pGen.init(1024, 20, random);
+			kpGen.init(new DSAKeyGenerationParameters(random, pGen.generateParameters()));
+			AsymmetricCipherKeyPair ackp = kpGen.generateKeyPair();
+			pubKey = new MyDSAPublicKey( (DSAPublicKeyParameters) ackp.getPublic());
+			privKey = new MyDSAPrivateKey( (DSAPrivateKeyParameters) ackp.getPrivate());
+		}
+		else // use RSA (should not be used at the moment)
+		{
+			RSAKeyPairGenerator pGen = new RSAKeyPairGenerator();
+			RSAKeyGenerationParameters genParam = new RSAKeyGenerationParameters(
+				BigInteger.valueOf(0x11), new SecureRandom(), 512, 25);
+			pGen.init(genParam);
+			AsymmetricCipherKeyPair pair = pGen.generateKeyPair();
+			privKey = new MyRSAPrivateKey( (RSAPrivateCrtKeyParameters) pair.getPrivate());
+			pubKey = new MyRSAPublicKey( (RSAKeyParameters) pair.getPublic());
+		}
+
+		JAPSignature signingInstance = new JAPSignature();
+		signingInstance.initSign(privKey);
+		XMLJapPublicKey xmlKey = new XMLJapPublicKey(pubKey);
+
+		BIConnection biConn = new BIConnection( m_theBI,
+											   false
+											   /* ssl off! */
+											   );
+		biConn.connect();
+		XMLAccountCertificate cert = biConn.register(xmlKey, signingInstance);
+		biConn.disconnect();
+
+		// add the new account to the accountsFile
+		PayAccount newAccount = new PayAccount(cert, privKey, signingInstance, m_theBI);
+		addAccount(newAccount);
+		return newAccount;
 	}
 }

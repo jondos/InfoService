@@ -49,6 +49,7 @@ import anon.pay.xml.XMLJapPublicKey;
 import anon.pay.xml.XMLResponse;
 import anon.pay.xml.XMLTransCert;
 import anon.util.XMLUtil;
+import logging.*;
 //import pay.crypto.tinyssl.TinySSL;
 
 
@@ -159,6 +160,7 @@ public class BIConnection
 		XMLAccountInfo info = null;
 		m_httpClient.writeRequest("GET", "balance", null);
 		answer = m_httpClient.readAnswer();
+		LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Received answer: "+answer);
 		info = new XMLAccountInfo(answer);
 		XMLBalance bal = info.getBalance();
 		if(m_theBI.getVerifier().verifyXML(XMLUtil.toXMLDocument(bal))==false)
@@ -260,6 +262,7 @@ public class BIConnection
 		String strResponse = XMLUtil.toString(XMLUtil.toXMLDocument(xmlResponse));
 		m_httpClient.writeRequest("POST", "response", strResponse);
 		answer = m_httpClient.readAnswer();
+		LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Received answer: "+answer);
 		XMLAccountCertificate xmlCert = new XMLAccountCertificate(answer);
 
 		// check signature

@@ -8,6 +8,7 @@ import logging.LogType;
 import logging.LogHolder;
 import anon.util.XMLUtil;
 import java.sql.Timestamp;
+import anon.server.impl.MuxSocket;
 
 /**
  * This control channel is used for communication with the AI (AccountingInstance or
@@ -22,9 +23,14 @@ public class AIControlChannel extends SyncControlChannel
 {
 	public static final int CHAN_ID = 2;
 
-	public AIControlChannel()
+	private MuxSocket m_MuxSocket;
+	private Pay m_Pay;
+
+	public AIControlChannel(Pay pay, MuxSocket muxSocket)
 	{
 		super(CHAN_ID, true);
+		m_Pay = pay;
+		m_MuxSocket = muxSocket;
 	}
 
 	/**
@@ -37,13 +43,13 @@ public class AIControlChannel extends SyncControlChannel
 		XMLPayRequest request;
 		try
 		{
-			 request = new XMLPayRequest(docMsg);
+			request = new XMLPayRequest(docMsg);
 		}
 		catch (Exception ex)
 		{
 			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Error parsing AI request: " + ex.getMessage());
 			// report errormessage back to AI..
-			XMLErrorMessage err = new XMLErrorMessage(ex.getMessage());
+			XMLErrorMessage err = new XMLErrorMessage(XMLErrorMessage.ERR_BAD_REQUEST, ex.getMessage());
 			sendMessage(XMLUtil.toXMLDocument(err));
 			return;
 		}
@@ -51,9 +57,9 @@ public class AIControlChannel extends SyncControlChannel
 		if (cc != null)
 		{
 			try
-		{
+			{
 				PayAccount currentAccount = PayAccountsFile.getInstance().getAccount(cc.getAccountNumber());
-				long newBytes = currentAccount.updateCurrentBytes();
+				long newBytes = currentAccount.updateCurrentBytes(m_MuxSocket);
 				if ( (newBytes + currentAccount.getSpent()) < cc.getTransferredBytes())
 				{
 					// the AI wants us to sign an unrealistic number of bytes
@@ -79,16 +85,25 @@ public class AIControlChannel extends SyncControlChannel
 				XMLBalance b = currentAccount.getBalance();
 				if ( (b == null) || b.getTimestamp().before(t))
 				{
-					Pay.getInstance().fetchAccountInfo(currentAccount.getAccountNumber());
+					// balance too old, fetch a new one
+					currentAccount.fetchAccountInfo();
 					b = currentAccount.getBalance();
-		}
+				}
 				this.sendMessage(XMLUtil.toXMLDocument(b));
 			}
 			catch (Exception ex2)
 			{
 				/** @todo handle this exception */
-	}
+			}
 		}
+	/*	if(request.)
+		{
+			PayAccount currentAccount = PayAccountsFile.getInstance().getActiveAccount();
+			this.sendMessage(XMLUtil.toXMLDocument(currentAccount.getAccountCertificate()));
+		}
+*/
 	}
+
+
 
 }
