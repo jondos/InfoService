@@ -27,9 +27,10 @@
  */
 package gui;
 
-import java.util.Hashtable;
 import java.awt.Image;
 import java.awt.MediaTracker;
+import java.util.Hashtable;
+
 import javax.swing.ImageIcon;
 
 /**

@@ -27,9 +27,11 @@
  */
 package anon.server.impl;
 
+import java.io.ByteArrayInputStream;
+
+import javax.xml.parsers.DocumentBuilderFactory;
+
 import org.w3c.dom.Document;
-import javax.xml.parsers.*;
-import java.io.*;
 
 public abstract class SyncControlChannel extends AbstractControlChannel
 {

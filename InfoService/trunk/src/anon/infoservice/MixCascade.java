@@ -29,13 +29,15 @@ package anon.infoservice;
 
 import java.util.Enumeration;
 import java.util.Vector;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+
 import anon.AnonServerDescription;
 import anon.crypto.JAPCertificate;
 import anon.crypto.JAPCertificateStore;
-import anon.crypto.JAPSignature;
+import anon.crypto.XMLSignature;
 import anon.util.XMLUtil;
 
 /**
@@ -165,14 +167,20 @@ public class MixCascade implements AnonServerDescription
 		if (signatureNodes.getLength() > 0)
 		{
 			Element signatureNode = (Element) (signatureNodes.item(0));
-			JAPCertificate[] certificates = JAPSignature.getAppendedCertificates(signatureNode);
+			XMLSignature sig = XMLSignature.getUnverified(signatureNode);
+			Enumeration certificates = sig.getCertificates();
 			if (certificates != null)
 			{
-				for (int i = 0; i < certificates.length; i++)
+				while(certificates.hasMoreElements())
 				{
 					/* the certificate path have been checked, before this mixcascade node was parsed */
-					certificates[i].setEnabled(true);
-					m_mixCascadeCertificates.addCertificate(certificates[i]);
+					Object obj = certificates.nextElement();
+					if(obj instanceof JAPCertificate)
+					{
+						JAPCertificate certificate = (JAPCertificate)obj; 
+						certificate.setEnabled(true);
+						m_mixCascadeCertificates.addCertificate(certificate);
+					}
 				}
 			}
 		}

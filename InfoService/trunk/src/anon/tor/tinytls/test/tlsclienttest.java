@@ -1,11 +1,10 @@
 package anon.tor.tinytls.test;
 
+import java.io.InputStream;
+
 import logging.LogHolder;
 import logging.SystemErrLog;
-
 import anon.tor.tinytls.TinyTLS;
-import java.io.InputStream;
-import java.io.OutputStream;
 
 public class tlsclienttest {
 

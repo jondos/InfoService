@@ -53,39 +53,74 @@ import javax.swing.tree.ExpandVetoException;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
+/**
+ * This is the implementation for the configuration module system. It manages the configuration
+ * modules and displays the configuration tree and the configuration module content area.
+ */
 public class JAPConfModuleSystem {
   
+  /**
+   * Stores the Font setting for the configuration tree.
+   */
   private Font m_fontSetting;
   
+  /**
+   * Stores the root panel for the whole configuration module system. The configuration tree and
+   * the module cards are created on this panel.
+   */
   private JPanel m_rootPanel;
   
+  /**
+   * Stores the panel where the content of the configuration modules is displayed.
+   */
   private JPanel m_configurationCardsPanel;
   
-  private CardLayout m_configurationCards;
-    
+  /**
+   * Stores the configuration tree.
+   */
   private JTree m_configurationTree;
 
-  private DefaultMutableTreeNode m_configurationTreeRootNode;
-  
+  /**
+   * This table stores all registered instances of AbstractJAPConfModule. The key for each module
+   * in the table is the node of this module within the configuration tree.
+   */
   private Hashtable m_registratedModules;
   
+  /**
+   * This table stores all node names of configuration components which are not included within an
+   * instance of AbstractJAPConfModule. The key for each node name in the table is the node of the
+   * associated node within the configuration tree. This table is only needed for compatibility
+   * with some old configuration structures in JAP. It will be removed as soon as possible.
+   */  
   private Hashtable m_registratedPanelTitleIdentifiers;
   
+  /**
+   * This table stores all associations between the tree nodes of the configuration modules (keys)
+   * and the symbolic names used to access the modules from outside.
+   */
   private Hashtable m_treeNodesToSymbolicNames;
   
+  /**
+   * This table stores all associations between the symbolic names of the configuration modules
+   * used to access the modules from outside (keys) and the nodes of the modules within the
+   * configuration tree. It is the reverse-table of m_treeNodesToSymbolicNames.
+   */  
   private Hashtable m_symbolicNamesToTreeNodes;
   
+  
+  /**
+   * Creates a new instance of JAPConfModuleSystem with an empty configuration tree. A lot of
+   * initialization is done here.
+   */
   public JAPConfModuleSystem() {   
     m_fontSetting = JAPController.getDialogFont();
     m_registratedModules = new Hashtable();
     m_registratedPanelTitleIdentifiers = new Hashtable();
     m_treeNodesToSymbolicNames = new Hashtable();
     m_symbolicNamesToTreeNodes = new Hashtable();
-    m_configurationCards = new CardLayout();
-    m_configurationCardsPanel = new JPanel(m_configurationCards);
+    m_configurationCardsPanel = new JPanel(new CardLayout());
     
-    m_configurationTreeRootNode = new DefaultMutableTreeNode("root");    
-    DefaultTreeModel configurationTreeModel = new DefaultTreeModel(m_configurationTreeRootNode);
+    DefaultTreeModel configurationTreeModel = new DefaultTreeModel(new DefaultMutableTreeNode("root"));
 
     DefaultTreeCellRenderer configurationTreeRenderer = new DefaultTreeCellRenderer();
     configurationTreeRenderer.setClosedIcon(JAPUtil.loadImageIcon("arrow.gif", true));
@@ -120,7 +155,7 @@ public class JAPConfModuleSystem {
     m_configurationTree.addTreeSelectionListener(new TreeSelectionListener() {
       public void valueChanged(TreeSelectionEvent a_event) {
         if (a_event.isAddedPath()) {
-          m_configurationCards.show(m_configurationCardsPanel, (String)(m_treeNodesToSymbolicNames.get(a_event.getPath().getLastPathComponent())));
+          ((CardLayout)(m_configurationCardsPanel.getLayout())).show(m_configurationCardsPanel, (String)(m_treeNodesToSymbolicNames.get(a_event.getPath().getLastPathComponent())));
         }
       }
     });
@@ -153,6 +188,16 @@ public class JAPConfModuleSystem {
   }
 
   
+  /**
+   * Adds a configuration module to the module system and inserts it in the configuration tree.
+   *
+   * @param a_parentNode The parent node of the new module in the configuration tree.
+   * @param a_module The module to insert within the configuration tree.
+   * @param a_symbolicName A unique symbolic name for the new configuration module. This is used
+   *                       when the module shall be selected from the outside.
+   *
+   * @return The node of the inserted module within the configuration tree.
+   */
   public DefaultMutableTreeNode addConfigurationModule(DefaultMutableTreeNode a_parentNode, AbstractJAPConfModule a_module, String a_symbolicName) {
     DefaultMutableTreeNode moduleNode = new DefaultMutableTreeNode(a_module.getTabTitle());
     synchronized (this) {
@@ -165,6 +210,22 @@ public class JAPConfModuleSystem {
     return moduleNode;
   }
   
+  /**
+   * Adds a configuration component to the module system and inserts it in the configuration tree.
+   * This method is only for compatibility with some old structures in JAP and will be removed
+   * soon. Only addConfigurationModule() should be used for the future.
+   *
+   * @param a_parentNode The parent node of the new component in the configuration tree.
+   * @param a_component The component to insert within the configuration tree. If this value is
+   *                    null, an unselectable node will be created.
+   * @param a_nodeNameIdentifier A name (resolvable via JAPMessages.getString()) used as the
+   *                             node name of the new component in the configuration tree.
+   * @param a_symbolicName A unique symbolic name for the new configuration component. This is used
+   *                       when the component shall be selected from the outside. This value is
+   *                       only evaluated, if a_component is not null.
+   *
+   * @return The node of the inserted module within the configuration tree.
+   */  
   public DefaultMutableTreeNode addComponent(DefaultMutableTreeNode a_parentNode, Component a_component, String a_nodeNameIdentifier, String a_symbolicName) {
     DefaultMutableTreeNode componentNode = new DefaultMutableTreeNode(JAPMessages.getString(a_nodeNameIdentifier));
     synchronized (this) {
@@ -180,18 +241,43 @@ public class JAPConfModuleSystem {
     return componentNode;
   }
   
+  /**
+   * Returns the (invisible) root node of the configuration tree.
+   *
+   * @return The root node of the configuration tree.
+   */
   public DefaultMutableTreeNode getConfigurationTreeRootNode() {
-    return m_configurationTreeRootNode;
+    return (DefaultMutableTreeNode)(m_configurationTree.getModel().getRoot());
   } 
 
+  /**
+   * Returns the configuration tree. This can be used for doing some format-operations
+   * on the tree from the outside.
+   *
+   * @return The configuration tree.
+   */
   public JTree getConfigurationTree() {
     return m_configurationTree;
   }
 
+  /**
+   * Returns the root panel of the module system (where the configuration tree and the module
+   * content are displayed on).
+   *
+   * @return The root panel of the module system.
+   */
   public JPanel getRootPanel() {
     return m_rootPanel;
   }
 
+  /**
+   * This method can be used to select a specific module from the outside and bring it to the
+   * front of the configuration dialog.
+   *
+   * @param a_symbolicName The symbolic name of the module (or component) to select. This name
+   *                       was specified when addConfigurationModule() or addComponent() was
+   *                       called.
+   */
   public void selectNode(String a_symbolicName) {
     synchronized (this) {
       DefaultMutableTreeNode treeNodeToSelect = (DefaultMutableTreeNode)(m_symbolicNamesToTreeNodes.get(a_symbolicName));
@@ -202,6 +288,13 @@ public class JAPConfModuleSystem {
     }
   }
   
+  /**
+   * Processes the configuration 'OK' button pressed event on all registered instances of
+   * AbstractJAPConfModule.
+   *
+   * @return True, if everything is ok or false, if one module returned a veto to this
+   *         event.
+   */
   public boolean processOkPressedEvent() { 
     boolean returnValue = true;
     synchronized (this) {
@@ -217,6 +310,10 @@ public class JAPConfModuleSystem {
     return returnValue;
   }
   
+  /**
+   * Processes the configuration 'Cancel' button pressed event on all registered instances of
+   * AbstractJAPConfModule.
+   */
   public void processCancelPressedEvent() {
     synchronized (this) {
       /* Call the event handler of all configuration modules. */
@@ -227,6 +324,10 @@ public class JAPConfModuleSystem {
     }
   }
   
+  /**
+   * Processes the configuration 'Reset to defaults' button pressed event on all registered
+   * instances of AbstractJAPConfModule.
+   */  
   public void processResetToDefaultsPressedEvent() {
     synchronized (this) {
       /* Call the event handler of all configuration modules. */
@@ -237,6 +338,9 @@ public class JAPConfModuleSystem {
     }
   }
   
+  /**
+   * Processes an update values event on all registered instances of AbstractJAPConfModule.
+   */    
   public void processUpdateValuesEvent() {
     synchronized (this) {
       /* Call the event handler of all configuration modules. */
@@ -247,6 +351,10 @@ public class JAPConfModuleSystem {
     }
   }
   
+  /**
+   * Rebuilds the whole configuration tree (e.g. after a change of the language setting) and
+   * processes an recreate event on all registered instances of AbstractJAPConfModule.
+   */      
   public void repaintEverything() {
     synchronized (this) {
       /* update the nodes in the tree */
@@ -268,6 +376,10 @@ public class JAPConfModuleSystem {
     }       
   }
   
+  /**
+   * Processes a create savepoints event on all registered instances of AbstractJAPConfModule.
+   * This method must be called everytime when the configuration dialog is displayed.
+   */
   public void createSavePoints() {
     synchronized (this) {
       /* Call the create savepoint handler of all configuration modules. */

@@ -27,8 +27,8 @@
  */
 package forward.client.captcha;
 
-import java.io.ByteArrayInputStream;
 import java.awt.Image;
+import java.io.ByteArrayInputStream;
 import java.math.BigInteger;
 
 import org.w3c.dom.Element;

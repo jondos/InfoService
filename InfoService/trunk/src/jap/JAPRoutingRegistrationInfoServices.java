@@ -33,6 +33,10 @@ import java.util.Observable;
 import java.util.Observer;
 import java.util.Vector;
 
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -42,9 +46,6 @@ import anon.infoservice.InfoServiceDBEntry;
 import anon.infoservice.InfoServiceHolder;
 import anon.util.XMLUtil;
 import forward.server.ServerSocketPropagandist;
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
 
 /**
  * This class manages the infoservices, where the registration of the local forwarding server is
@@ -400,7 +401,7 @@ public class JAPRoutingRegistrationInfoServices extends Observable implements Ob
     Element useAllPrimaryInfoServicesNode = a_doc.createElement("UseAllPrimaryInfoServices");
     Element registrationInfoServicesNode = a_doc.createElement("RegistrationInfoServices");
     synchronized (this) {
-        XMLUtil.setNodeBoolean(useAllPrimaryInfoServicesNode,getRegisterAtAllAvailableInfoServices());
+        XMLUtil.setValue(useAllPrimaryInfoServicesNode,getRegisterAtAllAvailableInfoServices());
       Enumeration registrationInfoServices = getRegistrationInfoServices().elements();
       while (registrationInfoServices.hasMoreElements()) {
         registrationInfoServicesNode.appendChild(
@@ -434,7 +435,7 @@ public class JAPRoutingRegistrationInfoServices extends Observable implements Ob
       noError = false;
     }
     else {
-      setRegisterAtAllAvailableInfoServices(XMLUtil.parseNodeBoolean(useAllPrimaryInfoServicesNode, getRegisterAtAllAvailableInfoServices()));
+      setRegisterAtAllAvailableInfoServices(XMLUtil.parseValue(useAllPrimaryInfoServicesNode, getRegisterAtAllAvailableInfoServices()));
     }
     /* load the list of used registration infoservices for the case, that not every primary
      * infoservice shall be used

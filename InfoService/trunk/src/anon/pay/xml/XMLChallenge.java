@@ -28,10 +28,12 @@
 package anon.pay.xml;
 
 import java.io.ByteArrayInputStream;
+
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+
 import anon.util.Base64;
 import anon.util.IXMLEncodable;
 import anon.util.XMLUtil;
@@ -83,7 +85,7 @@ public class XMLChallenge implements IXMLEncodable
 			throw new Exception("XMLChallenge wrong XML structure");
 		}
 		Element element = (Element) XMLUtil.getFirstChildByName(elemRoot, "DontPanic");
-		m_arbChallenge = Base64.decode(XMLUtil.parseNodeString(element, ""));
+		m_arbChallenge = Base64.decode(XMLUtil.parseValue(element, ""));
 	}
 
 	public byte[] getChallengeForSigning()
@@ -97,7 +99,7 @@ public class XMLChallenge implements IXMLEncodable
 		Element elemRoot = a_doc.createElement(XML_ELEMENT_NAME);
 		Element elemChallenge = a_doc.createElement("DontPanic");
 		elemRoot.appendChild(elemChallenge);
-		XMLUtil.setNodeValue(elemChallenge, Base64.encodeBytes(m_arbChallenge));
+		XMLUtil.setValue(elemChallenge, Base64.encodeBytes(m_arbChallenge));
 		return elemRoot;
 	}
 

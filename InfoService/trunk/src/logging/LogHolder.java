@@ -27,11 +27,11 @@
  */
 package logging;
 
-import anon.util.Util;
-import java.util.StringTokenizer;
-import java.io.StringWriter;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.StringTokenizer;
+
+import anon.util.Util;
 
 /**
  * This class stores the Log instance.

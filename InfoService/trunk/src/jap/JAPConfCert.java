@@ -27,8 +27,7 @@
  */
 package jap;
 
-import java.text.SimpleDateFormat;
-import java.util.Enumeration;
+import gui.CAListCellRenderer;
 
 import java.awt.BorderLayout;
 import java.awt.GridBagConstraints;
@@ -36,6 +35,9 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.text.SimpleDateFormat;
+import java.util.Enumeration;
+
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -49,10 +51,10 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import org.bouncycastle.asn1.x509.X509NameTokenizer;
+
 import anon.crypto.JAPCertificate;
 import anon.crypto.JAPCertificateStore;
 import anon.util.ResourceLoader;
-import gui.CAListCellRenderer;
 
 /**
  * This is the configuration GUI for the cert.

@@ -28,10 +28,11 @@
 package anon.server.impl;
 
 import java.security.SecureRandom;
-import anon.ErrorCodes;
+
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.ErrorCodes;
 
 final public class KeyPool implements Runnable
 {

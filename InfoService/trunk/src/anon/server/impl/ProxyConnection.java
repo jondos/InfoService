@@ -32,18 +32,16 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.net.SocketException;
-import HTTPClient.Codecs;
-import anon.infoservice.ImmutableProxyInterface;
-import anon.infoservice.ListenerInterface;
-import anon.server.AnonServiceImpl;
-import anon.util.SocketFactory;
+
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import anon.infoservice.*;
-import HTTPClient.SocksClient;
-import HTTPClient.NVPair;
 import HTTPClient.AuthorizationInfo;
+import HTTPClient.NVPair;
+import HTTPClient.SocksClient;
+import anon.infoservice.ImmutableProxyInterface;
+import anon.infoservice.ProxyInterface;
+import anon.util.SocketFactory;
 
 final public class ProxyConnection
 {

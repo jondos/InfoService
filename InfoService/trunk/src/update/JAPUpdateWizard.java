@@ -28,28 +28,30 @@
 
 package update;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.net.URL;
-import HTTPClient.HTTPConnection;
-import HTTPClient.HTTPResponse;
-import anon.infoservice.HTTPConnectionFactory;
-import anon.infoservice.JAPVersionInfo;
-import anon.infoservice.ListenerInterface;
 import gui.wizard.BasicWizard;
 import gui.wizard.BasicWizardHost;
 import gui.wizard.WizardPage;
 import jap.JAPConstants;
 import jap.JAPController;
 import jap.JAPMessages;
+import jap.JAPModel;
 import jap.JAPUtil;
+import jarify.JarVerifier;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.net.URL;
+
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import jarify.*;
-import jap.*;
+import HTTPClient.HTTPConnection;
+import HTTPClient.HTTPResponse;
+import anon.infoservice.HTTPConnectionFactory;
+import anon.infoservice.JAPVersionInfo;
+import anon.infoservice.ListenerInterface;
 public final class JAPUpdateWizard extends BasicWizard implements Runnable
 {
 	public JAPWelcomeWizardPage welcomePage;
@@ -286,7 +288,7 @@ public final class JAPUpdateWizard extends BasicWizard implements Runnable
 
 	public WizardPage finish( /*WizardPage currentPage, WizardHost host*/)
 	{
-		JAPController.getInstance().goodBye(false);
+		JAPController.goodBye(false);
 		return null;
 	}
 

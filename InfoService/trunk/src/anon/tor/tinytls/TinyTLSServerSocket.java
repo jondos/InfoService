@@ -34,22 +34,24 @@ package anon.tor.tinytls;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
-import java.io.InterruptedIOException;
 import java.io.InputStream;
+import java.io.InterruptedIOException;
 import java.io.OutputStream;
 import java.math.BigInteger;
 import java.net.Socket;
 import java.util.Random;
 import java.util.Vector;
-import anon.crypto.JAPCertificate;
-import anon.tor.util.helper;
-import anon.util.Base64;
+
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import java.io.EOFException;
-import anon.crypto.*;
+import anon.crypto.IMyPrivateKey;
+import anon.crypto.JAPCertificate;
+import anon.crypto.MyDSAPrivateKey;
+import anon.crypto.MyRSAPrivateKey;
+import anon.tor.util.helper;
 /**
  * @author stefan
  *

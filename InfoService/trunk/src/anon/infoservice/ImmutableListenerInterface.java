@@ -27,11 +27,6 @@
  */
 package anon.infoservice;
 
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-
-import anon.util.IXMLEncodable;
-
 /**
  * Objects of this type only contain immutable methods.
  * @author Rolf Wendolsky

@@ -27,13 +27,6 @@
  */
 package jap;
 
-import java.io.BufferedWriter;
-import java.io.DataInputStream;
-import java.io.OutputStreamWriter;
-//import java.net.ServerSocket;
-//import java.net.URL;
-import java.text.NumberFormat;
-import java.util.Vector;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Cursor;
@@ -41,6 +34,12 @@ import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedWriter;
+import java.io.DataInputStream;
+import java.io.OutputStreamWriter;
+import java.text.NumberFormat;
+import java.util.Vector;
+
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JDialog;
@@ -54,19 +53,17 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableCellRenderer;
-//import HTTPClient.HTTPConnection;
-//import HTTPClient.HTTPResponse;
+
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 import anon.AnonChannel;
 import anon.ErrorCodes;
 import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.MixCascade;
+import anon.infoservice.ProxyInterface;
 import anon.infoservice.StatusInfo;
 import anon.server.AnonServiceImpl;
-import anon.infoservice.ProxyInterface;
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
-import anon.infoservice.*;
 
 //import proxy.AnonProxy;
 /**

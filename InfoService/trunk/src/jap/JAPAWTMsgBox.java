@@ -27,7 +27,6 @@
  */
 package jap;
 
-import java.util.StringTokenizer;
 import java.awt.Button;
 import java.awt.Dialog;
 import java.awt.Dimension;
@@ -39,6 +38,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.StringTokenizer;
 
 /** This is a simple Message Box. It works with JAVA 1.1 without Swing.*/
 final public class JAPAWTMsgBox extends WindowAdapter implements ActionListener

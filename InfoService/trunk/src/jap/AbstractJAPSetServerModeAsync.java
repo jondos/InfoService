@@ -1,8 +1,8 @@
 package jap;
 
+import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import logging.LogHolder;
 
 abstract class AbstractJAPSetServerModeAsync implements Runnable
 {

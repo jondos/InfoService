@@ -27,9 +27,13 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 */
 package misc;
 import jap.JAPDebug;
-import proxy.DirectProxy;
+
 import java.net.ServerSocket;
-import logging.*;
+
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
+import proxy.DirectProxy;
 final public class JAPHTTPProxy {
 	boolean runFlag;
 	int port = 4008;

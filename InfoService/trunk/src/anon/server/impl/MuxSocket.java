@@ -43,27 +43,30 @@ import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.TimeZone;
+
 import javax.xml.parsers.DocumentBuilderFactory;
+
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
+
 import anon.AnonChannel;
 import anon.ErrorCodes;
 import anon.NotConnectedToMixException;
 import anon.ToManyOpenChannelsException;
-import anon.crypto.JAPCertPath;
 import anon.crypto.JAPCertificate;
 import anon.crypto.JAPCertificateStore;
 import anon.crypto.JAPSignature;
 import anon.crypto.XMLEncryption;
+import anon.crypto.XMLSignature;
 import anon.infoservice.ImmutableProxyInterface;
 import anon.infoservice.MixCascade;
 import anon.util.Base64;
-//import pay.anon.AIChannel;
 import anon.util.XMLUtil;
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
 
 public final class MuxSocket implements Runnable
 {
@@ -388,8 +391,8 @@ public final class MuxSocket implements Runnable
 			Node nodeSig = XMLUtil.getFirstChildByName(root, "Signature");
 			if (bCheckMixCerts)
 			{
-				int ret = JAPCertPath.validate(root, nodeSig, certsTrustedRoots);
-				if (ret != ErrorCodes.E_SUCCESS)
+				//int ret = JAPCertPath.validate(root, nodeSig, certsTrustedRoots);
+				if (XMLSignature.verify(root,certsTrustedRoots)==null)
 				{
 					return ErrorCodes.E_SIGNATURE_CHECK_FIRSTMIX_FAILED;
 				}
@@ -402,7 +405,7 @@ public final class MuxSocket implements Runnable
 				return ErrorCodes.E_PROTOCOL_NOT_SUPPORTED;
 			}
 			Node n = elemMixProtocolVersion.getFirstChild();
-			if (n == null || n.getNodeType() != n.TEXT_NODE)
+			if (n == null || n.getNodeType() != Node.TEXT_NODE)
 			{
 				return ErrorCodes.E_PROTOCOL_NOT_SUPPORTED;
 			}
@@ -451,9 +454,9 @@ public final class MuxSocket implements Runnable
 //---
 					if (bCheckMixCerts && !bIsFirst)
 					{
-						Node nodeSigChild = XMLUtil.getFirstChildByName(child, "Signature");
-						int ret = JAPCertPath.validate(child, nodeSigChild, certsTrustedRoots);
-						if (ret != ErrorCodes.E_SUCCESS)
+						//Node nodeSigChild = XMLUtil.getFirstChildByName(child, "Signature");
+						//int ret = JAPCertPath.validate(child, nodeSigChild, certsTrustedRoots);
+						if (XMLSignature.verify(child,certsTrustedRoots)==null)
 						{
 							return ErrorCodes.E_SIGNATURE_CHECK_OTHERMIX_FAILED;
 						}
@@ -474,11 +477,11 @@ public final class MuxSocket implements Runnable
 			{
 				System.arraycopy("KEYPACKET".getBytes(), 0, m_MixPacketSend, 6, 9);
 				byte[] tmpBuff = new byte[64];
-				m_KeyPool.getKey(tmpBuff, 0);
-				m_KeyPool.getKey(tmpBuff, 16);
+				KeyPool.getKey(tmpBuff, 0);
+				KeyPool.getKey(tmpBuff, 16);
 				// zwei weitere Schl\uFFFDssel f\uFFFDr die AI
-				m_KeyPool.getKey(tmpBuff, 32);
-				m_KeyPool.getKey(tmpBuff, 48);
+				KeyPool.getKey(tmpBuff, 32);
+				KeyPool.getKey(tmpBuff, 48);
 
 				System.arraycopy(tmpBuff, 0, m_MixPacketSend, 15, tmpBuff.length);
 				m_arASymCipher[0].encrypt(m_MixPacketSend, 6, m_MixPacketSend, 6);
@@ -494,17 +497,17 @@ public final class MuxSocket implements Runnable
 				e.setAttribute("version", "0.1");
 				Element elemLinkEnc = doc.createElement("LinkEncryption");
 				byte[] linkKeys = new byte[64];
-				m_KeyPool.getKey(linkKeys, 0);
-				m_KeyPool.getKey(linkKeys, 16);
-				m_KeyPool.getKey(linkKeys, 32);
-				m_KeyPool.getKey(linkKeys, 48);
-				XMLUtil.setNodeValue(elemLinkEnc, Base64.encode(linkKeys, true));
+				KeyPool.getKey(linkKeys, 0);
+				KeyPool.getKey(linkKeys, 16);
+				KeyPool.getKey(linkKeys, 32);
+				KeyPool.getKey(linkKeys, 48);
+				XMLUtil.setValue(elemLinkEnc, Base64.encode(linkKeys, true));
 				e.appendChild(elemLinkEnc);
 				Element elemMixEnc = doc.createElement("MixEncryption");
 				byte[] mixKeys = new byte[32];
-				m_KeyPool.getKey(mixKeys, 0);
-				m_KeyPool.getKey(mixKeys, 16);
-				XMLUtil.setNodeValue(elemMixEnc, Base64.encode(mixKeys, true));
+				KeyPool.getKey(mixKeys, 0);
+				KeyPool.getKey(mixKeys, 16);
+				XMLUtil.setValue(elemMixEnc, Base64.encode(mixKeys, true));
 				e.appendChild(elemMixEnc);
 				XMLEncryption.encryptElement(e, m_arASymCipher[0].getPublicKey());
 				byte[] xml_buff = XMLUtil.toString(doc).getBytes();
@@ -519,9 +522,6 @@ public final class MuxSocket implements Runnable
 				System.arraycopy(xml_buff, 0, tmpBuff, 2, xml_buff.length);
 				tmpBuff[0] = (byte) ( (xml_buff.length >> 8) & 0x00FF);
 				tmpBuff[1] = (byte) (xml_buff.length & 0x00FF);
-				JAPCertificate certs[] = JAPSignature.getAppendedCertificates(nodeSig);
-				JAPSignature sig = new JAPSignature();
-				sig.initVerify(certs[0].getPublicKey());
 				int len = m_inDataStream.readShort();
 				byte[] mixSigBuff = new byte[len];
 				m_inDataStream.readFully(mixSigBuff);
@@ -533,8 +533,11 @@ public final class MuxSocket implements Runnable
 					return ErrorCodes.E_UNKNOWN;
 				}
 				Node elemSigValue = XMLUtil.getFirstChildByName(root, "SignatureValue");
-				String strSigValue = XMLUtil.parseNodeString(elemSigValue, null);
+				String strSigValue = XMLUtil.parseValue(elemSigValue, null);
 				byte[] sigValue = Base64.decode(strSigValue);
+				JAPCertificate certs[] = JAPSignature.getAppendedCertificates(nodeSig);
+				JAPSignature sig = new JAPSignature();
+				sig.initVerify(certs[0].getPublicKey());
 				if (!sig.verify(tmpBuff, sigValue, true))
 				{
 					return ErrorCodes.E_UNKNOWN;
@@ -943,7 +946,7 @@ public final class MuxSocket implements Runnable
 
 				//Last Mix
 				entry.arCipher[m_iChainLen - 1] = new SymCipher();
-				m_KeyPool.getKey(m_arOutBuff);
+				KeyPool.getKey(m_arOutBuff);
 				m_arOutBuff[0] &= 0x7F; //RSA HACK!! (to ensure what m<n in RSA-Encrypt: c=m^e mod n)
 
 				int timestamp = getCurrentTimestamp();
@@ -975,7 +978,7 @@ public final class MuxSocket implements Runnable
 				for (int i = m_iChainLen - 2; i >= 0; i--)
 				{
 					entry.arCipher[i] = new SymCipher();
-					m_KeyPool.getKey(m_arOutBuff);
+					KeyPool.getKey(m_arOutBuff);
 					m_arOutBuff[0] &= 0x7F; //RSA HACK!! (to ensure what m<n in RSA-Encrypt: c=m^e mod n)
 					if (m_bMixProtocolWithTimestamp)
 					{

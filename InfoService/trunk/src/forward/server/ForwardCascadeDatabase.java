@@ -27,18 +27,18 @@
  */
 package forward.server;
 
-import java.util.Hashtable;
 import java.util.Enumeration;
+import java.util.Hashtable;
 import java.util.Vector;
 
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
-
-import anon.infoservice.MixCascade;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
+import anon.infoservice.MixCascade;
 
 /**
  * This class stores all MixCascades, where messages from blockees can be forwarded to.

@@ -2,17 +2,18 @@ package anon.pay;
 
 import java.security.InvalidKeyException;
 
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import anon.crypto.IMyPublicKey;
-import anon.crypto.JAPCertificate;
-import anon.crypto.JAPSignature;
-import anon.pay.xml.XMLJapPublicKey;
-import anon.util.IXMLEncodable;
-import anon.util.XMLUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
+import anon.crypto.IMyPublicKey;
+import anon.crypto.JAPCertificate;
+import anon.crypto.JAPSignature;
+import anon.util.IXMLEncodable;
+import anon.util.XMLUtil;
 
 /**
  * This class represents a known BI with its unique name and x509 public
@@ -89,13 +90,13 @@ public class BI implements IXMLEncodable
 			throw new Exception("BI wrong XML format");
 		}
 		Element elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "BIName");
-		m_biName = XMLUtil.parseNodeString(elem, null);
+		m_biName = XMLUtil.parseValue(elem, null);
 
 		elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "HostName");
-		m_hostName = XMLUtil.parseNodeString(elem, null);
+		m_hostName = XMLUtil.parseValue(elem, null);
 
 		elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "PortNumber");
-		m_portNumber = XMLUtil.parseNodeInt(elem, 0);
+		m_portNumber = XMLUtil.parseValue(elem, 0);
 
 		elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "TestCertificate");
 		if(elem != null)
@@ -155,15 +156,15 @@ public class BI implements IXMLEncodable
 
 		Element elem = a_doc.createElement("BIName");
 		elemRoot.appendChild(elem);
-		XMLUtil.setNodeValue(elem, m_biName);
+		XMLUtil.setValue(elem, m_biName);
 
 		elem = a_doc.createElement("HostName");
 		elemRoot.appendChild(elem);
-		XMLUtil.setNodeValue(elem, m_hostName);
+		XMLUtil.setValue(elem, m_hostName);
 
 		elem = a_doc.createElement("PortNumber");
 		elemRoot.appendChild(elem);
-		XMLUtil.setNodeValue(elem, Integer.toString(m_portNumber));
+		XMLUtil.setValue(elem, Integer.toString(m_portNumber));
 
 		elem = a_doc.createElement("TestCertificate");
 		elemRoot.appendChild(elem);

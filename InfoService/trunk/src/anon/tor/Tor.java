@@ -36,6 +36,10 @@ import java.security.SecureRandom;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.Vector;
+
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 import anon.AnonChannel;
 import anon.AnonServerDescription;
 import anon.AnonService;
@@ -43,16 +47,13 @@ import anon.AnonServiceEventListener;
 import anon.ErrorCodes;
 import anon.crypto.MyRandom;
 import anon.infoservice.Database;
+import anon.infoservice.ImmutableProxyInterface;
 import anon.tor.ordescription.InfoServiceORListFetcher;
 import anon.tor.ordescription.ORDescription;
 import anon.tor.ordescription.ORList;
 import anon.tor.ordescription.PlainORListFetcher;
 import anon.tor.util.DNSCacheEntry;
 import anon.tor.util.helper;
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
-import anon.infoservice.*;
 
 /**
  * @author stefan

@@ -2,6 +2,7 @@ package anon.pay.xml;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+
 import anon.util.IXMLEncodable;
 import anon.util.XMLUtil;
 
@@ -95,7 +96,7 @@ public class XMLErrorMessage implements IXMLEncodable
 	{
 		Element elemRoot = a_doc.createElement(XML_ELEMENT_NAME);
 		elemRoot.setAttribute("code", Integer.toString(m_iErrorCode));
-		XMLUtil.setNodeValue(elemRoot, m_strErrMsg);
+		XMLUtil.setValue(elemRoot, m_strErrMsg);
 		return elemRoot;
 	}
 
@@ -116,7 +117,7 @@ public class XMLErrorMessage implements IXMLEncodable
 			throw new Exception("Format error: Root element wrong tagname");
 		}
 		m_iErrorCode = Integer.parseInt(elemRoot.getAttribute("code"));
-		m_strErrMsg = XMLUtil.parseNodeString(elemRoot, "");
+		m_strErrMsg = XMLUtil.parseValue(elemRoot, "");
 
 	}
 }

@@ -27,14 +27,14 @@
  */
 package gui;
 
+import jap.JAPUtil;
+
 import java.awt.Component;
-import javax.swing.JLabel;
+import java.sql.Timestamp;
+
 import javax.swing.JTable;
 import javax.swing.SwingConstants;
-import javax.swing.table.TableCellRenderer;
-import java.sql.Timestamp;
 import javax.swing.table.DefaultTableCellRenderer;
-import jap.JAPUtil;
 
 /**
  * our own renderer for Date table cells. Shows dates in a not-so-ugly format.

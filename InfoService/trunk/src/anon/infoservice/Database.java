@@ -33,10 +33,11 @@ package anon.infoservice;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Vector;
-import anon.crypto.MyRandom;
+
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.crypto.MyRandom;
 
 /**
  * This class is the generic implementation of a database. It is used by the database

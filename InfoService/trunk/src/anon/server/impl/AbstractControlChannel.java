@@ -28,6 +28,7 @@
 package anon.server.impl;
 
 import org.w3c.dom.Document;
+
 import anon.util.XMLUtil;
 
 public abstract class AbstractControlChannel

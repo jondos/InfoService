@@ -1,8 +1,14 @@
 package anon.pay;
 
 import java.sql.Timestamp;
+
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+
 import anon.pay.xml.XMLBalance;
 import anon.pay.xml.XMLChallenge;
 import anon.pay.xml.XMLEasyCC;
@@ -12,9 +18,6 @@ import anon.pay.xml.XMLResponse;
 import anon.server.impl.MuxSocket;
 import anon.server.impl.SyncControlChannel;
 import anon.util.XMLUtil;
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
 
 /**
  * This control channel is used for communication with the AI (AccountingInstance or

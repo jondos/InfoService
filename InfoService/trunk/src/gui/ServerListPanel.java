@@ -28,21 +28,26 @@
 
 package gui;
 
+import jap.JAPConstants;
+import jap.JAPMessages;
+import jap.JAPUtil;
+
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.util.Enumeration;
+import java.util.Vector;
+
+import javax.swing.AbstractButton;
+import javax.swing.ButtonGroup;
+import javax.swing.ImageIcon;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
-import javax.swing.AbstractButton;
 import javax.swing.JSeparator;
-import javax.swing.ButtonGroup;
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
-import java.awt.GridBagLayout;
-import java.awt.GridBagConstraints;
-import java.awt.Dimension;
-import java.awt.event.*;
-import java.util.*;
-import jap.*;
-import javax.swing.*;
 /**
  * Class for painting a mix cascade in the configuration dialog
  */

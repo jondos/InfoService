@@ -44,6 +44,7 @@ import org.bouncycastle.crypto.params.RSAKeyParameters;
 import org.bouncycastle.crypto.params.RSAPrivateCrtKeyParameters;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+
 import anon.crypto.IMyPrivateKey;
 import anon.crypto.IMyPublicKey;
 import anon.crypto.JAPSignature;
@@ -156,7 +157,7 @@ public class PayAccountsFile implements IXMLEncodable
 		{
 			Element elemActiveAccount = (Element) XMLUtil.getFirstChildByName(elemAccountsFile,
 				"ActiveAccountNumber");
-			long activeAccountNumber = Long.parseLong(XMLUtil.parseNodeString(elemActiveAccount, "0"));
+			long activeAccountNumber = Long.parseLong(XMLUtil.parseValue(elemActiveAccount, "0"));
 
 			Element elemAccounts = (Element) XMLUtil.getFirstChildByName(elemAccountsFile, "Accounts");
 			Element elemAccount = (Element) elemAccounts.getFirstChild();
@@ -218,7 +219,7 @@ public class PayAccountsFile implements IXMLEncodable
 //		elemRoot.appendChild(elemAccountsFile);
 
 		Element elem = a_doc.createElement("ActiveAccountNumber");
-		XMLUtil.setNodeValue(elem, Long.toString(getActiveAccountNumber()));
+		XMLUtil.setValue(elem, Long.toString(getActiveAccountNumber()));
 		elemAccountsFile.appendChild(elem);
 
 		elem = a_doc.createElement("Accounts");

@@ -27,7 +27,6 @@
  */
 package jap;
 
-import java.io.InputStream;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
@@ -37,6 +36,7 @@ import java.awt.Image;
 import java.awt.MediaTracker;
 import java.awt.Toolkit;
 import java.awt.Window;
+import java.io.InputStream;
 
 final public class JAPSplash extends Window
 {

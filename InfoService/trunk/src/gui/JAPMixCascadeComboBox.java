@@ -27,23 +27,21 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 */
 package gui;
 
+import jap.JAPConstants;
+import jap.JAPMessages;
+import jap.JAPUtil;
+
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
+
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JList;
-import javax.swing.JPanel;
-import javax.swing.JSeparator;
 import javax.swing.ListCellRenderer;
 import javax.swing.border.EmptyBorder;
+
 import anon.infoservice.MixCascade;
-import jap.JAPConstants;
-import jap.JAPMessages;
-import jap.JAPUtil;
 
 public class JAPMixCascadeComboBox extends JComboBox
 {

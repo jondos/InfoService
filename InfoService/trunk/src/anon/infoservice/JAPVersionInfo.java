@@ -30,11 +30,13 @@ package anon.infoservice;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+
 import anon.crypto.JAPCertificate;
-import anon.crypto.JAPSignature;
+import anon.crypto.XMLSignature;
 
 public class JAPVersionInfo
 {
@@ -74,9 +76,7 @@ public class JAPVersionInfo
 		{
 			try
 			{
-				JAPSignature sig = new JAPSignature();
-				sig.initVerify(cert.getPublicKey());
-				if (!sig.verifyXML(root))
+				if (XMLSignature.verify(root,cert.getPublicKey())==null)
 				{
 					throw (new Exception("InfoService: new JAPVersionInfo: Signature check failed!"));
 				}

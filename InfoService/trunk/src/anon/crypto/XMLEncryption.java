@@ -30,26 +30,30 @@ package anon.crypto;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.security.SecureRandom;
+
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+
 import org.bouncycastle.asn1.pkcs.PKCS12PBEParams;
 import org.bouncycastle.crypto.BufferedBlockCipher;
-import org.bouncycastle.crypto.paddings.PaddedBufferedBlockCipher;
 import org.bouncycastle.crypto.CipherParameters;
+import org.bouncycastle.crypto.InvalidCipherTextException;
 import org.bouncycastle.crypto.digests.SHA1Digest;
+import org.bouncycastle.crypto.encodings.OAEPEncoding;
 import org.bouncycastle.crypto.engines.AESFastEngine;
+import org.bouncycastle.crypto.engines.RSAEngine;
 import org.bouncycastle.crypto.generators.PKCS12ParametersGenerator;
-import org.bouncycastle.crypto.modes.CTSBlockCipher;
 import org.bouncycastle.crypto.modes.CBCBlockCipher;
+import org.bouncycastle.crypto.modes.CTSBlockCipher;
+import org.bouncycastle.crypto.paddings.PaddedBufferedBlockCipher;
+import org.bouncycastle.crypto.params.KeyParameter;
+import org.bouncycastle.crypto.params.ParametersWithIV;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
+
 import anon.util.Base64;
 import anon.util.XMLUtil;
-import org.bouncycastle.crypto.params.*;
-import org.bouncycastle.crypto.engines.RSAEngine;
-import org.bouncycastle.crypto.encodings.OAEPEncoding;
-import org.bouncycastle.crypto.*;
 
 final public class XMLEncryption
 {
@@ -141,7 +145,7 @@ final public class XMLEncryption
 		PKCS12PBEParams kParams = new PKCS12PBEParams(kSalt, MIN_ITERATIONS);
 		PKCS12ParametersGenerator paramGen =
 			new PKCS12ParametersGenerator(new SHA1Digest());
-		paramGen.init(paramGen.PKCS12PasswordToBytes(password.toCharArray()), // muss das hier auch wieder nachher genullt werden?
+		paramGen.init(PKCS12ParametersGenerator.PKCS12PasswordToBytes(password.toCharArray()), // muss das hier auch wieder nachher genullt werden?
 					  kParams.getIV(), // warum hier IV=Salt? ist in PKCS12.java auch so gemacht, kopiere das einfach ohne es zu verstehen :-)
 					  kParams.getIterations().intValue());
 		return paramGen.generateDerivedParameters(128); // sind diese laengen so richtig und sinnvoll?
@@ -241,12 +245,12 @@ final public class XMLEncryption
 		}
 		Element elemValue = (Element) XMLUtil.getFirstChildByName(elemCrypt, "CipherData");
 		elemValue = (Element) XMLUtil.getFirstChildByName(elemValue, "CipherValue");
-		byte[] barInput = Base64.decode(XMLUtil.parseNodeString(elemValue, null));
+		byte[] barInput = Base64.decode(XMLUtil.parseValue(elemValue, null));
 
 		// get salt from xml KeyInfo structure
 		Element elemKeyInfo = (Element) XMLUtil.getFirstChildByName(elemCrypt, "ds:KeyInfo");
 		Element elemSalt = (Element) XMLUtil.getFirstChildByName(elemKeyInfo, "ds:Salt");
-		byte[] barSalt = Base64.decode(XMLUtil.parseNodeString(elemSalt, null));
+		byte[] barSalt = Base64.decode(XMLUtil.parseValue(elemSalt, null));
 
 		// get plaintext length
 		//elemSalt = (Element) XMLUtil.getFirstChildByName(elemKeyInfo, "ds:Length");

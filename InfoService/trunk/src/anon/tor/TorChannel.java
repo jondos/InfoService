@@ -31,12 +31,13 @@
 package anon.tor;
 
 import java.io.IOException;
-import anon.server.impl.AbstractChannel;
-import anon.tor.cells.RelayCell;
-import anon.tor.util.helper;
+
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.server.impl.AbstractChannel;
+import anon.tor.cells.RelayCell;
+import anon.tor.util.helper;
 
 /**
  * @author stefan

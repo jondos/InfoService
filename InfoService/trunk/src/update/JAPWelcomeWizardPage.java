@@ -28,22 +28,24 @@
 
 package update;
 
-import java.io.File;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import javax.swing.JButton;
-import javax.swing.JFileChooser;
-import javax.swing.JLabel;
-import javax.swing.JTextField;
-import javax.swing.JCheckBox;
 import gui.JAPMultilineLabel;
 import gui.wizard.BasicWizardPage;
 import jap.JAPConstants;
 import jap.JAPMessages;
 import jap.JAPUtil;
+
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.File;
+
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JFileChooser;
+import javax.swing.JLabel;
+import javax.swing.JTextField;
 
 public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListener
 {

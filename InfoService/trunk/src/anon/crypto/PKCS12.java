@@ -31,15 +31,16 @@ package anon.crypto;
  * If you change something - do not forget to add the changes also to the JAP source tree!
  */
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.SecureRandom;
-import java.util.Enumeration;
 import java.util.Calendar;
+import java.util.Enumeration;
+
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.ASN1Set;
 import org.bouncycastle.asn1.ASN1TaggedObject;

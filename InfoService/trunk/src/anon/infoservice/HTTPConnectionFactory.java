@@ -28,11 +28,12 @@
 package anon.infoservice;
 
 import java.util.Vector;
+
 import HTTPClient.AuthorizationInfo;
+import HTTPClient.AuthorizationPrompter;
+import HTTPClient.DefaultAuthHandler;
 import HTTPClient.HTTPConnection;
 import HTTPClient.NVPair;
-import HTTPClient.DefaultAuthHandler;
-import HTTPClient.AuthorizationPrompter;
 
 /**
  * This class creates all instances of HTTPConnection for the JAP client and is a singleton.

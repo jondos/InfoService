@@ -3,7 +3,10 @@ package misc;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
-import anon.*;
+
+import anon.AnonChannel;
+import anon.AnonService;
+import anon.AnonServiceFactory;
 class XMLRPCTestClient
 {
 	public static void main(String[] args)

@@ -32,20 +32,21 @@
 
 package anon.infoservice;
 
+import java.net.InetAddress;
 import java.util.StringTokenizer;
 import java.util.Vector;
-import java.net.InetAddress;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import anon.util.XMLUtil;
-import anon.util.Util;
-import anon.util.IXMLEncodable;
-import anon.util.XMLParseException;
 
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+
+import anon.util.IXMLEncodable;
+import anon.util.XMLParseException;
+import anon.util.XMLUtil;
 
 /**
  * Saves the information about a network server.
@@ -93,10 +94,10 @@ public class ListenerInterface implements ImmutableListenerInterface, IXMLEncoda
 			throw new XMLParseException("Host,IP", "Neither Host nor IP are given.");
 		}
 		//The value give in Host supersedes the one given by IP
-		strHostname = XMLUtil.parseNodeString(hostNode, null);
+		strHostname = XMLUtil.parseValue(hostNode, null);
 		if (!isValidHostname(strHostname))
 		{
-			strHostname = XMLUtil.parseNodeString(ipNode, null);
+			strHostname = XMLUtil.parseValue(ipNode, null);
 			if (!isValidIP(strHostname))
 			{
 				throw new XMLParseException("Host, IP", "Invalid Host and IP.");
@@ -105,10 +106,10 @@ public class ListenerInterface implements ImmutableListenerInterface, IXMLEncoda
 
 		setHostname(strHostname);
 
-		setProtocol(XMLUtil.parseNodeString(
+		setProtocol(XMLUtil.parseValue(
 			XMLUtil.getFirstChildByName(listenerInterfaceNode, "Type"), null));
 
-		setPort(XMLUtil.parseNodeInt(
+		setPort(XMLUtil.parseValue(
 			XMLUtil.getFirstChildByName(listenerInterfaceNode, "Port"), -1));
 
 		setUseInterface(true);

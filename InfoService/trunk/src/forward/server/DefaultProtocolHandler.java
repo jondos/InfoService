@@ -27,17 +27,13 @@
  */
 package forward.server;
 
-import java.net.Socket;
-
-import java.io.InputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.InputStream;
+import java.net.Socket;
 
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.Result;
 import javax.xml.transform.Source;
@@ -46,8 +42,12 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
-import anon.infoservice.MixCascade;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+
 import anon.infoservice.ListenerInterface;
+import anon.infoservice.MixCascade;
 import forward.ForwardUtils;
 
 /**

@@ -1,7 +1,8 @@
 package anon.pay;
 
 import java.util.EventListener;
-import anon.pay.xml.*;
+
+import anon.pay.xml.XMLErrorMessage;
 
 /**
  * GUI classes can implement this interface and register with the Payment library

@@ -31,12 +31,13 @@ import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.io.OutputStream;
 import java.net.Socket;
-import anon.AnonChannel;
+
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import anon.ToManyOpenChannelsException;
+import anon.AnonChannel;
 import anon.NotConnectedToMixException;
+import anon.ToManyOpenChannelsException;
 
 final class AnonProxyRequest implements Runnable
 {

@@ -32,7 +32,6 @@
  *  on a Macintosh to register the MRJ Handler.
  *
  */
-import java.awt.Frame;
 import jap.JAPAWTMsgBox;
 import jap.JAPConstants;
 import jap.JAPController;
@@ -42,6 +41,9 @@ import jap.JAPModel;
 import jap.JAPNewView;
 import jap.JAPSplash;
 import jap.JAPViewIconified;
+
+import java.awt.Frame;
+
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;

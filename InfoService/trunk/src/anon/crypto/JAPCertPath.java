@@ -31,7 +31,9 @@ package anon.crypto;
  * If you change something - do not forget to add the changes also to the JAP source tree!
  */
 import java.util.Vector;
+
 import org.w3c.dom.Node;
+
 import anon.ErrorCodes;
 
 /**

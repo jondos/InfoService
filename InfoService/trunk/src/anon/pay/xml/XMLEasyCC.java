@@ -28,10 +28,12 @@
 package anon.pay.xml;
 
 import java.io.ByteArrayInputStream;
+
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+
 import anon.crypto.JAPSignature;
 import anon.util.AbstractXMLSignable;
 import anon.util.XMLUtil;
@@ -114,9 +116,9 @@ public class XMLEasyCC extends AbstractXMLSignable
 			m_strAiName = XMLUtil.parseValue(elem, "keinplan2");
 		}
 		elem = (Element) XMLUtil.getFirstChildByName(element, "AccountNumber");
-		m_lAccountNumber = XMLUtil.parseNodeLong(elem, 0);
+		m_lAccountNumber = XMLUtil.parseValue(elem, 0);
 		elem = (Element) XMLUtil.getFirstChildByName(element, "TransferredBytes");
-		m_lTransferredBytes = XMLUtil.parseNodeLong(elem, 0);
+		m_lTransferredBytes = XMLUtil.parseValue(elem, 0);
 
 		/** @todo find a better internal representation for the sig */
 		elem = (Element) XMLUtil.getFirstChildByName(element, "Signature");
@@ -133,15 +135,15 @@ public class XMLEasyCC extends AbstractXMLSignable
 		Element elemRoot = a_doc.createElement(ms_strElemName);
 		elemRoot.setAttribute("version", "1.0");
 		Element elem = a_doc.createElement("AiID");
-		XMLUtil.setNodeValue(elem, m_strAiName);
+		XMLUtil.setValue(elem, m_strAiName);
 		elemRoot.appendChild(elem);
 
 		elem = a_doc.createElement("TransferredBytes");
-		XMLUtil.setNodeValue(elem, Long.toString(m_lTransferredBytes));
+		XMLUtil.setValue(elem, Long.toString(m_lTransferredBytes));
 		elemRoot.appendChild(elem);
 
 		elem = a_doc.createElement("AccountNumber");
-		XMLUtil.setNodeValue(elem, Long.toString(m_lAccountNumber));
+		XMLUtil.setValue(elem, Long.toString(m_lAccountNumber));
 		elemRoot.appendChild(elem);
 
 		if (m_signature != null)

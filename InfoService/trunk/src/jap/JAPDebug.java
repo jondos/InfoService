@@ -28,12 +28,6 @@
 
 package jap;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.Properties;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Frame;
@@ -44,6 +38,13 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
+import java.io.FileWriter;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.Properties;
+
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
@@ -51,10 +52,11 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+
+import logging.FileLog;
 import logging.Log;
 import logging.LogLevel;
 import logging.LogType;
-import logging.FileLog;
 
 /**
  * This class serves as a debugging interface.

@@ -27,6 +27,11 @@
  */
 package jap;
 
+import java.awt.Component;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Point;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.net.InetAddress;
@@ -37,18 +42,17 @@ import java.util.Locale;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Vector;
-import javax.xml.parsers.DocumentBuilderFactory;
 
-import java.awt.Component;
-import java.awt.Cursor;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.Point;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
+import javax.xml.parsers.DocumentBuilderFactory;
+
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -56,6 +60,11 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Text;
+
+import proxy.AnonProxy;
+import proxy.DirectProxy;
+import proxy.ProxyListener;
+import update.JAPUpdateWizard;
 import anon.ErrorCodes;
 import anon.crypto.JAPCertificate;
 import anon.crypto.JAPCertificateStore;
@@ -75,13 +84,6 @@ import anon.util.ResourceLoader;
 import anon.util.XMLUtil;
 import forward.server.ForwardServerManager;
 import gui.JAPHtmlMultiLineLabel;
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
-import proxy.AnonProxy;
-import proxy.DirectProxy;
-import proxy.ProxyListener;
-import update.JAPUpdateWizard;
 
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPController implements ProxyListener, Observer
@@ -653,7 +655,7 @@ public final class JAPController implements ProxyListener, Observer
 				Locale locale = new Locale(strLocale, "");
 				setLocale(locale);
 				//Load look-and-feel settings (not changed if SmmallDisplay!
-				if (!m_Model.isSmallDisplay())
+				if (!JAPModel.isSmallDisplay())
 				{
 					String lf = XMLUtil.parseValue(n.getNamedItem(JAPConstants.CONFIG_LOOK_AND_FEEL),
 						JAPConstants.CONFIG_UNKNOWN);

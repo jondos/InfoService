@@ -33,8 +33,6 @@ package jap;
  * @author Bastian Voigt
  * @version 1.0
  */
-import java.sql.Timestamp;
-import java.util.Enumeration;
 import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -43,18 +41,23 @@ import java.awt.Insets;
 import java.awt.MediaTracker;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.util.Enumeration;
+
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
-import anon.pay.PayAccount;
-import anon.pay.PayAccountsFile;
-import anon.pay.xml.XMLErrorMessage;
+
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.pay.PayAccount;
+import anon.pay.PayAccountsFile;
+import anon.pay.xml.XMLErrorMessage;
 
 public class PaymentMainPanel extends JPanel
 {
@@ -191,8 +194,10 @@ public class PaymentMainPanel extends JPanel
 		else
 		{
 			Timestamp t = activeAccount.getBalanceValidTime();
-			String dateText = t.getDay() + "." + (t.getMonth() + 1) + "." + (t.getYear() + 1900) + " " +
-				t.getHours() + ":" + t.getMinutes();
+			SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm");
+			//String dateText = t.getDay() + "." + (t.getMonth() + 1) + "." + (t.getYear() + 1900) + " " +
+			//	t.getHours() + ":" + t.getMinutes();
+			String dateText =sdf.format(t);
 			m_AccountText.setText(JAPMessages.getString("ngPaymentBalanceDate") + ": " + dateText);
 			m_AccountText.setForeground(Color.black);
 			m_AccountIconLabel.setIcon(m_accountIcons[1]);

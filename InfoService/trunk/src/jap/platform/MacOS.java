@@ -27,10 +27,11 @@
  */
 package jap.platform;
 
-import com.apple.mrj.MRJFileUtils;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+
+import com.apple.mrj.MRJFileUtils;
 
 /**
  * This class is instantiated by AbstractOS if the current OS is MacOS

@@ -27,14 +27,25 @@
  */
 package jap;
 
+import gui.ImageIconLoader;
+import gui.SimpleFileFilter;
+
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.MediaTracker;
+import java.awt.Toolkit;
+import java.awt.Window;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.sql.Timestamp;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.StringTokenizer;
@@ -42,11 +53,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.MediaTracker;
-import java.awt.Toolkit;
-import java.awt.Window;
+
 import javax.swing.AbstractButton;
 import javax.swing.ImageIcon;
 import javax.swing.JDialog;
@@ -57,17 +64,11 @@ import javax.swing.JTable;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableModel;
-import HTTPClient.Codecs;
-import anon.crypto.JAPCertificate;
-import gui.SimpleFileFilter;
+
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import java.sql.Timestamp;
-import java.text.NumberFormat;
-import gui.ImageIconLoader;
-import java.text.DecimalFormat;
-import java.io.IOException;
+import anon.crypto.JAPCertificate;
 
 /**
  * This class contains static utility functions for Jap
@@ -456,12 +457,18 @@ final public class JAPUtil
 	 */
 	public static String formatTimestamp(Timestamp date, boolean withTime)
 	{
-		String str = date.getDate() + "." + (date.getMonth() + 1) + "." + (date.getYear() + 1900);
+		SimpleDateFormat sdf;
+		//String str = date.getDate() + "." + (date.getMonth() + 1) + "." + (date.getYear() + 1900);
 		if (withTime)
 		{
-			str += " - " + date.getHours() + ":" + date.getMinutes();
+//			str += " - " + date.getHours() + ":" + date.getMinutes();
+			sdf= new SimpleDateFormat("dd.MM.yyyy - HH:mm");
+		} else
+		{
+			sdf= new SimpleDateFormat("dd.MM.yyyy");
 		}
-		return str;
+		//return str;
+		return sdf.format(date);
 	}
 
 }

@@ -27,16 +27,18 @@
  */
 package gui;
 
-import java.util.Random;
+import jap.JAPConstants;
+import jap.JAPUtil;
+
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Image;
+import java.util.Random;
+
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import jap.JAPConstants;
-import jap.JAPUtil;
 
 /** A panel which display some status messages, one after each other*/
 public class StatusPanel extends JPanel implements Runnable, IStatusLine

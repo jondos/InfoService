@@ -27,11 +27,12 @@
  */
 package jap;
 
-import java.text.NumberFormat;
-import java.util.Enumeration;
-import java.util.Observable;
-import java.util.Observer;
-import java.util.Vector;
+import gui.FlippingPanel;
+import gui.JAPDll;
+import gui.JAPMixCascadeComboBox;
+import gui.MyProgressBarUI;
+import gui.StatusPanel;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Cursor;
@@ -53,9 +54,16 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.text.NumberFormat;
+import java.util.Enumeration;
+import java.util.Observable;
+import java.util.Observer;
+import java.util.Vector;
+
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
+import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -65,25 +73,15 @@ import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JRadioButton;
 import javax.swing.JSeparator;
-import javax.swing.SwingUtilities;
-import javax.swing.border.EmptyBorder;
+import javax.swing.SwingConstants;
 import javax.swing.border.LineBorder;
-import anon.infoservice.MixCascade;
-import anon.infoservice.StatusInfo;
-import anon.pay.IPaymentListener;
-import anon.pay.PayAccount;
-import anon.pay.xml.XMLErrorMessage;
-import gui.FlippingPanel;
-import gui.JAPDll;
-import gui.JAPMixCascadeComboBox;
-import gui.MyProgressBarUI;
-import gui.StatusPanel;
+
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import javax.swing.SwingConstants;
 import proxy.ProxyListener;
-import javax.swing.Icon;
+import anon.infoservice.MixCascade;
+import anon.infoservice.StatusInfo;
 
 final public class JAPNewView extends AbstractJAPMainView implements IJAPMainView, ActionListener,
 	JAPObserver

@@ -29,14 +29,17 @@ package anon.pay;
 
 import java.io.ByteArrayInputStream;
 import java.math.BigInteger;
+import java.sql.Timestamp;
 import java.util.Enumeration;
 import java.util.Vector;
+
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.bouncycastle.crypto.params.DSAParameters;
 import org.bouncycastle.crypto.params.DSAPrivateKeyParameters;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+
 import anon.crypto.IMyPrivateKey;
 import anon.crypto.IMyPublicKey;
 import anon.crypto.JAPSignature;
@@ -47,11 +50,10 @@ import anon.pay.xml.XMLAccountInfo;
 import anon.pay.xml.XMLBalance;
 import anon.pay.xml.XMLEasyCC;
 import anon.pay.xml.XMLTransCert;
+import anon.server.impl.MuxSocket;
 import anon.util.Base64;
 import anon.util.IXMLEncodable;
 import anon.util.XMLUtil;
-import anon.server.impl.MuxSocket;
-import java.sql.Timestamp;
 
 /**
  * This class encapsulates one account and all additional data associated to one
@@ -179,35 +181,35 @@ public class PayAccount implements IXMLEncodable
 		if (elemRsaKey != null)
 		{
 			Element elem = (Element) XMLUtil.getFirstChildByName(elemRsaKey, "Modulus");
-			String str = XMLUtil.parseNodeString(elem, null);
+			String str = XMLUtil.parseValue(elem, null);
 			BigInteger modulus = new BigInteger(Base64.decode(str));
 
 			elem = (Element) XMLUtil.getFirstChildByName(elemRsaKey, "PublicExponent");
-			str = XMLUtil.parseNodeString(elem, null);
+			str = XMLUtil.parseValue(elem, null);
 			BigInteger publicExponent = new BigInteger(Base64.decode(str));
 
 			elem = (Element) XMLUtil.getFirstChildByName(elemRsaKey, "PrivateExponent");
-			str = XMLUtil.parseNodeString(elem, null);
+			str = XMLUtil.parseValue(elem, null);
 			BigInteger privateExponent = new BigInteger(Base64.decode(str));
 
 			elem = (Element) XMLUtil.getFirstChildByName(elemRsaKey, "P");
-			str = XMLUtil.parseNodeString(elem, null);
+			str = XMLUtil.parseValue(elem, null);
 			BigInteger p = new BigInteger(Base64.decode(str));
 
 			elem = (Element) XMLUtil.getFirstChildByName(elemRsaKey, "Q");
-			str = XMLUtil.parseNodeString(elem, null);
+			str = XMLUtil.parseValue(elem, null);
 			BigInteger q = new BigInteger(Base64.decode(str));
 
 			elem = (Element) XMLUtil.getFirstChildByName(elemRsaKey, "dP");
-			str = XMLUtil.parseNodeString(elem, null);
+			str = XMLUtil.parseValue(elem, null);
 			BigInteger dP = new BigInteger(Base64.decode(str));
 
 			elem = (Element) XMLUtil.getFirstChildByName(elemRsaKey, "dQ");
-			str = XMLUtil.parseNodeString(elem, null);
+			str = XMLUtil.parseValue(elem, null);
 			BigInteger dQ = new BigInteger(Base64.decode(str));
 
 			elem = (Element) XMLUtil.getFirstChildByName(elemRsaKey, "QInv");
-			str = XMLUtil.parseNodeString(elem, null);
+			str = XMLUtil.parseValue(elem, null);
 			BigInteger qInv = new BigInteger(Base64.decode(str));
 
 			m_privateKey = new MyRSAPrivateKey(modulus, publicExponent, privateExponent, p, q, dP, dQ,
@@ -216,19 +218,19 @@ public class PayAccount implements IXMLEncodable
 		else if (elemDsaKey != null)
 		{
 			Element elem = (Element) XMLUtil.getFirstChildByName(elemDsaKey, "G");
-			String str = XMLUtil.parseNodeString(elem, null);
+			String str = XMLUtil.parseValue(elem, null);
 			BigInteger g = new BigInteger(Base64.decode(str));
 
 			elem = (Element) XMLUtil.getFirstChildByName(elemDsaKey, "P");
-			str = XMLUtil.parseNodeString(elem, null);
+			str = XMLUtil.parseValue(elem, null);
 			BigInteger p = new BigInteger(Base64.decode(str));
 
 			elem = (Element) XMLUtil.getFirstChildByName(elemDsaKey, "Q");
-			str = XMLUtil.parseNodeString(elem, null);
+			str = XMLUtil.parseValue(elem, null);
 			BigInteger q = new BigInteger(Base64.decode(str));
 
 			elem = (Element) XMLUtil.getFirstChildByName(elemDsaKey, "X");
-			str = XMLUtil.parseNodeString(elem, null);
+			str = XMLUtil.parseValue(elem, null);
 			BigInteger x = new BigInteger(Base64.decode(str));
 			DSAPrivateKeyParameters param = new DSAPrivateKeyParameters(
 				x, new DSAParameters(p, q, g));

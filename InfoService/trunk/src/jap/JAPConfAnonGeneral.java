@@ -33,6 +33,7 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+
 import javax.swing.JCheckBox;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
