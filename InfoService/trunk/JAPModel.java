@@ -64,7 +64,7 @@ import anon.JAPAnonServiceListener;
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPModel implements JAPAnonServiceListener{
 
-	public static final String aktVersion = "00.01.019"; // Version of JAP
+	public static final String aktVersion = "00.01.020"; // Version of JAP
 
 	public  Vector            anonServerDatabase = null; // vector of all available mix cascades
 	private AnonServerDBEntry currentAnonService = null; // current anon service data object
@@ -98,7 +98,9 @@ public final class JAPModel implements JAPAnonServiceListener{
 	private boolean  mbActCntMessageNeverRemind  = false; // indicates if Warning message in setAnonMode has been deactivated forever
 	private boolean  mbDoNotAbuseReminder        = false; // indicates if new warning message in setAnonMide (containing Do no abuse) has been shown
 
-	public  String   status1           = "?";
+	private	static final Object oSetAnonModeSyncObject=new Object();
+
+	public  String   status1           = " ";
 	public  String   status2           = " ";
 
 	private int      nrOfChannels      = 0;
@@ -517,17 +519,28 @@ public final class JAPModel implements JAPAnonServiceListener{
 
 	//---------------------------------------------------------------------
 
-	public synchronized void setAnonServer(AnonServerDBEntry s) {
-	    if (model.getAnonServer().equals(s)) {
-			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:currentAnonService NOT changed");
-	    } else {
-			// if service has changed --> stop service
-			setAnonMode(false);
-			this.currentAnonService = s;
-			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:currentAnonService changed");
-	    }
-		model.notifyJAPObservers();
-	}
+	public synchronized void setAnonServer(AnonServerDBEntry s)
+		{
+			if(s==null)
+				return;
+	    AnonServerDBEntry current=getAnonServer();
+		  if (current!=null&&current.equals(s))
+				{
+					JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:currentAnonService NOT changed");
+				}
+		  else
+				{
+					// if service has changed --> stop service (if running) and restart
+			    this.currentAnonService = s;
+			    if(getAnonMode())
+					  {
+					    setAnonMode(false);
+					    JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:currentAnonService changed");
+					    setAnonMode(true);
+					  }
+			  }
+		  model.notifyJAPObservers();
+	  }
 
 	public AnonServerDBEntry getAnonServer() {
 	    return this.currentAnonService;
@@ -779,11 +792,14 @@ public final class JAPModel implements JAPAnonServiceListener{
 private final class SetAnonModeAsync implements Runnable
 {
 	boolean anonModeSelected=false;
-	public SetAnonModeAsync(boolean b) {
-		anonModeSelected=b;
-	}
+	public SetAnonModeAsync(boolean b)
+		{
+		  anonModeSelected=b;
+	  }
 
 	public void run() {
+		synchronized(oSetAnonModeSyncObject)
+		{
 	//setAnonMode--> async!!
 		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:setAnonMode("+anonModeSelected+")");
 		if ((proxyAnon == null) && (anonModeSelected == true))
@@ -934,6 +950,7 @@ private final class SetAnonModeAsync implements Runnable
 				JAPSetAnonModeSplash.abort();
 			}
 	}
+	}
 }
 	public synchronized void setAnonMode(boolean anonModeSelected)
 		{
@@ -1080,7 +1097,7 @@ private final class SetAnonModeAsync implements Runnable
 			}
 	}
 */
-	public boolean isAnonMode() {
+	public boolean getAnonMode() {
 		return proxyAnon!=null;
 	}
 
@@ -1299,8 +1316,6 @@ private final class SetAnonModeAsync implements Runnable
 				}
 		//	JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:notifyJAPObservers()-ended");
 		}
-
-
 
 }
 

@@ -39,6 +39,7 @@ import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.BufferedWriter;
 import java.io.OutputStreamWriter;
+import java.io.InterruptedIOException;
 import java.lang.Integer;
 import java.util.Enumeration;
 import java.math.BigInteger;
@@ -150,11 +151,13 @@ final class JAPMuxSocket implements Runnable
 									//Connect directly to anon service
 									JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:Try to connect directly to Mix");
 									ioSocket=new Socket(host,port);
+								  ioSocket.setSoTimeout(10000); //Timout 10 second
 									inDataStream=new DataInputStream(ioSocket.getInputStream());
 								} else {
 									//Connect via a firewall betwenn JAP and anon service
 									JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:Try to connect via proxy to Mix");
 									ioSocket=new Socket(fwHost,fwPort);
+								  ioSocket.setSoTimeout(10000); //Timout 10 second
 									BufferedWriter o=new BufferedWriter(new OutputStreamWriter(ioSocket.getOutputStream()));
 									inDataStream=new DataInputStream(ioSocket.getInputStream());
 									//Write stuff for connecting over proxy/firewall
@@ -178,9 +181,14 @@ final class JAPMuxSocket implements Runnable
 									// a typical response is
 									//   HTTP/1.0 200 Connection established
 									String firstLine = null;
-									try {
-										firstLine = this.readLine(inDataStream);
-									}
+									try
+										{
+										  firstLine = this.readLine(inDataStream);
+									  }
+									catch(InterruptedIOException ei)
+										{ //time out
+										  return -1;
+										}
 									catch (Exception e) {
 										JAPDebug.out(JAPDebug.EXCEPTION,JAPDebug.NET,"JAPMuxSocket:Exception while reading response from proxy server: "+e);
 									}
@@ -206,7 +214,6 @@ final class JAPMuxSocket implements Runnable
 								outDataStream=new DataOutputStream(new BufferedOutputStream(ioSocket.getOutputStream(),DATA_SIZE+6));
 //								inDataStream=new DataInputStream(ioSocket.getInputStream());
 								JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:Reading len...");
-								ioSocket.setSoTimeout(10000); //Timout 10 second
 								inDataStream.readUnsignedShort(); //len.. unitressteing at the moment
 								JAPDebug.out(JAPDebug.DEBUG,JAPDebug.NET,"JAPMuxSocket:Reading chainlen...");
 								chainlen=inDataStream.readByte();

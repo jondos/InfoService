@@ -45,7 +45,7 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 	private JLabel	 			anonTextField;
 	private JLabel              anonNameTextField;
 	private JButton				portB, httpB, isB, anonB, ano1B, infoB, helpB, startB, quitB, iconifyB;
-	private JCheckBox			proxyCheckBox;
+	private JLabel			proxyMustUseLabel;
 	private JCheckBox			anonCheckBox;
 	private JCheckBox			ano1CheckBox;
 	private JProgressBar 		userProgressBar;
@@ -301,9 +301,8 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 		// Line 1
 		JPanel p21 = new JPanel();
 		p21.setLayout(new BoxLayout(p21, BoxLayout.X_AXIS) );
-		proxyCheckBox = new JCheckBox(model.getString("confProxyCheckBox"));
-		proxyCheckBox.addActionListener(this);
-		p21.add(proxyCheckBox);
+		proxyMustUseLabel = new JLabel();
+		p21.add(proxyMustUseLabel);
 		p21.add(Box.createRigidArea(new Dimension(5,0)) );
 		p21.add(Box.createHorizontalGlue() );
 		httpB = new JButton(model.getString("confProxyButton"));
@@ -313,12 +312,10 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 		JPanel p22 = new JPanel();
 		p22.setLayout(new BoxLayout(p22, BoxLayout.X_AXIS) );
 		p22.add(Box.createRigidArea(new Dimension(10,0)) );
-		p22.add(new JLabel(model.getString("confProxyHost")) );
-		p22.add(Box.createRigidArea(new Dimension(5,0)) );
+//		p22.add(new JLabel(model.getString("confProxyHost")) );
+//		p22.add(Box.createRigidArea(new Dimension(5,0)) );
 		proxyTextField = new JLabel();
 		p22.add(proxyTextField);
-		// set Font in proxyCheckBox in same color as in proxyTextField
-		proxyCheckBox.setForeground(proxyTextField.getForeground());
 		// add to proxypanel
 		proxyPanel.add(p21);
 		proxyPanel.add(p22);
@@ -417,7 +414,7 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 
     public ImageIcon setMeterImage()
 			{
-				if (model.isAnonMode())
+				if (model.getAnonMode())
 					{
 						return meterIcons[model.getCurrentProtectionLevel()];
 					}
@@ -451,8 +448,6 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 					model.aboutJAP();
 				else if (event.getSource() == helpB)
 					showHelpWindow();
-				else if (event.getSource() == proxyCheckBox)
-					model.setUseProxy(proxyCheckBox.isSelected());
 				else if (event.getSource() == anonCheckBox)
 					model.setAnonMode(anonCheckBox.isSelected());
 				else if (event.getSource() == ano1CheckBox)
@@ -490,24 +485,33 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 		// Config panel
 		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"Start updateValues");
 		portnumberTextField.setText(String.valueOf(model.getPortNumber()));
-		proxyCheckBox.setSelected(model.getUseFirewall());
-		int firewallPort=model.getFirewallPort();
-		if(firewallPort==-1)
-			proxyTextField.setText(JAPMessages.getString("firewallNotConfigured"));
+		if(model.getUseFirewall())
+			{
+			  proxyMustUseLabel.setText(JAPMessages.getString("firewallMustUse"));
+			  proxyTextField.setVisible(true);
+				int firewallPort=model.getFirewallPort();
+				if(firewallPort==-1)
+					proxyTextField.setText(JAPMessages.getString("firewallNotConfigured"));
+				else
+					proxyTextField.setText(model.getString("confProxyHost")+" "+model.getFirewallHost()+":"+String.valueOf(firewallPort));
+			}
 		else
-			proxyTextField.setText(model.getFirewallHost()+":"+String.valueOf(firewallPort));
+			{
+			  proxyMustUseLabel.setText(JAPMessages.getString("firewallMustNotUse"));
+			  proxyTextField.setVisible(false);
+			}
 		infoServiceTextField.setText(model.getInfoServiceHost()+":"+String.valueOf(model.getInfoServicePort()));
-		anonCheckBox.setSelected(model.isAnonMode());
+		anonCheckBox.setSelected(model.getAnonMode());
 		anonTextField.setText(e.getHost()+":"+String.valueOf(e.getPort())+((e.getSSLPort()==-1)?"":":"+e.getSSLPort()));
 		anonNameTextField.setText(e.getName());
 		statusTextField1.setText(model.status1);
 		statusTextField2.setText(model.status2);
 
 		// Meter panel
-		ano1CheckBox.setSelected(model.isAnonMode());
+		ano1CheckBox.setSelected(model.getAnonMode());
 		nameLabel.setText(e.getName());
 		meterLabel.setIcon(setMeterImage());
-		if (model.isAnonMode()) {
+		if (model.getAnonMode()) {
 				if (e.getNrOfActiveUsers() > -1)
 					{
 						// Nr of active users
@@ -588,7 +592,7 @@ final class JAPView extends JFrame implements ActionListener, JAPObserver {
 			userProgressBar.setValue(userProgressBar.getMaximum());
 			userProgressBar.setString(model.getString("meterNA"));
 			protectionProgressBar.setValue(protectionProgressBar.getMaximum());
-			if (model.isAnonMode())
+			if (model.getAnonMode())
 				protectionProgressBar.setString(model.getString("meterNA"));
 			else
 				protectionProgressBar.setString(model.getString("meterRiskVeryHigh"));

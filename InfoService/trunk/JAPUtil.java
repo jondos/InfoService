@@ -303,66 +303,61 @@ final class JAPUtil
 	 */
 	public static ImageIcon loadImageIcon(String strImage, boolean sync)
 		{
-			//JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPModel:Image "+strImage+" loading...");
-			boolean finished = false;
 			ImageIcon img = null;
-			
+
 			// get color depth
-			Toolkit t=Toolkit.getDefaultToolkit();
-			int colordepth = Toolkit.getDefaultToolkit().getColorModel().getPixelSize();			
-			
+			int colordepth = Toolkit.getDefaultToolkit().getColorModel().getPixelSize();
+
 			String imageFilename;
 			// try loading the lowcolor images
-			if(colordepth<=16) {
-				imageFilename = JAPModel.IMGPATHLOWCOLOR+strImage;
-				try {
+			if(colordepth<=16)
+				{
+				  imageFilename = JAPModel.IMGPATHLOWCOLOR+strImage;
+				  try
+						{
 					// this is necessary to make shure that the images are loaded when contained in a JAP.jar
-					img = new ImageIcon(JAPUtil.class.getResource(imageFilename));
-				} catch (Exception e) {	
-					img = null;
-				}
-				if(img==null) {
-					img = new ImageIcon(imageFilename);
-				}
-			}
+							img = new ImageIcon(JAPUtil.class.getResource(imageFilename));
+						}
+					catch (Exception e)
+						{
+							img = new ImageIcon(imageFilename);
+						}
+		  	}
 			// if loading of lowcolor images was not successful or
 			//    we have to load the hicolor images
-			if((img==null)||(img.getIconHeight()<=0)||(img.getIconWidth()<=0)) {
-				imageFilename = JAPModel.IMGPATHHICOLOR+strImage;
-				try {
-					// this is necessary to make shure that the images are loaded when contained in a JAP.jar
-					img = new ImageIcon(JAPUtil.class.getResource(imageFilename));
-				} catch (Exception e) {	
-					img = null;
-				}
-				if(img==null) {
-					img = new ImageIcon(imageFilename);
-				}
-			}
-			
-			if ((sync == false) || (img == null)) {
-				finished = true;
-			}
-			
-			while(finished!=true)
+			if(img==null)
 				{
-					int status = img.getImageLoadStatus();
-					if ( (status & MediaTracker.ABORTED) != 0 ) {
-						//JAPDebug.out(JAPDebug.ERR,JAPDebug.GUI,"JAPModel:Loading of image "+strImage+" aborted!");
-						finished = true;
+				  imageFilename = JAPModel.IMGPATHHICOLOR+strImage;
+				  try
+						{
+							// this is necessary to make shure that the images are loaded when contained in a JAP.jar
+							img = new ImageIcon(JAPUtil.class.getResource(imageFilename));
 						}
-					if ( (status & MediaTracker.ERRORED) != 0 ) {
-						//JAPDebug.out(JAPDebug.ERR,JAPDebug.GUI,"JAPModel:Error loading image "+strImage+"!");
-						finished = true;
-					}
-					if ( (status & MediaTracker.COMPLETE) != 0) {
-						finished = true;
-					}
+					catch (Exception e)
+						{
+							img = new ImageIcon(imageFilename);
+						}
+			  }
+
+			if (sync == false || img == null)
+				{
+				  if(img==null)
+						JAPDebug.out(JAPDebug.ERR,JAPDebug.GUI,"JAPModel:Image "+strImage+" not loaded!");
 				}
-			if((img==null)||(img.getIconHeight()<=0)||(img.getIconWidth()<=0))
-				JAPDebug.out(JAPDebug.ERR,JAPDebug.GUI,"JAPModel:Image "+strImage+" not loaded!");
-		return img;
-	}
+			else
+				{
+					int statusBits=MediaTracker.ABORTED|MediaTracker.ERRORED|MediaTracker.COMPLETE;
+					for(;;)
+						{
+							int status = img.getImageLoadStatus();
+							if ( (status & statusBits) != 0 )
+								break;
+							else
+								Thread.yield();
+						}
+				}
+		  return img;
+		}
 
 	public static void centerFrame(Window f) {
 		Dimension screenSize = f.getToolkit().getScreenSize();
