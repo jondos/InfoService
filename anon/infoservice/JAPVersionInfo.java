@@ -28,6 +28,8 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 package anon.infoservice;
 
 import java.net.URL;
+import java.util.Date;
+import java.text.SimpleDateFormat;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.ByteArrayInputStream;
 import org.w3c.dom.Document;
@@ -38,7 +40,7 @@ public class JAPVersionInfo
   {
     private int m_Type;
     private String m_Version;
-    private String m_Date="";
+    private Date m_Date=null;
     private String m_JAPJarFileName;
     private URL m_CodeBase;
     private String m_Description="";
@@ -56,6 +58,8 @@ public class JAPVersionInfo
             Document doc=DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(xml));
             Element root=doc.getDocumentElement();
             m_Version=root.getAttribute("version"); //the JAP version
+            String strDate=root.getAttribute("releaseDate");
+            m_Date=new SimpleDateFormat().parse(strDate);
             m_CodeBase=new URL(root.getAttribute("codebase"));
             NodeList nlResources=root.getElementsByTagName("resources");
             NodeList nlJars=((Element)nlResources.item(0)).getElementsByTagName("jar");
@@ -84,10 +88,11 @@ public class JAPVersionInfo
           return m_Version;
         }
 
-      public String getDate()
+      public Date getDate()
         {
           return m_Date;
         }
+
       public String getDescription()
       {
          return m_Description;

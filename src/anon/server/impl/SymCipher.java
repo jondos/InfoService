@@ -55,7 +55,7 @@ final class SymCipher
 				{
 					try
 						{
-							oKey=Rijndael_Algorithm.makeKey(key,offset,16);
+							oKey=Rijndael_Algorithm.makeKey(key,offset);
 							for(int i=0;i<16;i++)
 								iv[i]=0;
 							for(int i=0;i<16;i++)

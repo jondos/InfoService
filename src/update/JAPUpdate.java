@@ -55,7 +55,6 @@ import java.awt.Insets;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-//import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import java.io.File;
 
@@ -72,6 +71,7 @@ public class JAPUpdate implements ActionListener,ItemListener,Runnable
 		private Thread m_threadGetVersionInfo;
 		private JAPVersionInfo m_devVersion;
 		private JAPVersionInfo m_releaseVersion;
+    private DateFormat m_DateFormat;
 
 		private final String COMMAND_ABORT="ABORT";
 		private final String COMMAND_UPGRADE="UPGRADE";
@@ -146,8 +146,8 @@ public class JAPUpdate implements ActionListener,ItemListener,Runnable
           {
             DateFormat sdf=new SimpleDateFormat("yyyy/MM/dd HH:mm:ss z");
             Date d=sdf.parse(strDate+" GMT");
-            sdf=DateFormat.getDateTimeInstance(DateFormat.MEDIUM,DateFormat.MEDIUM);
-            strDate=sdf.format(d);
+            m_DateFormat=DateFormat.getDateTimeInstance(DateFormat.MEDIUM,DateFormat.MEDIUM);
+            strDate=m_DateFormat.format(d);
           }
         catch(Exception e){e.printStackTrace();}
         l=new JLabel(strDate);
@@ -269,7 +269,7 @@ public class JAPUpdate implements ActionListener,ItemListener,Runnable
 				else
 					{
 						m_labelVersion.setText(m_releaseVersion.getVersion());
-						m_labelDate.setText(m_releaseVersion.getDate());
+						m_labelDate.setText(m_DateFormat.format(m_releaseVersion.getDate()));
 						m_comboType.setEnabled(true);
 						m_taInfo.setText("");
 						m_bttnUpgrade.setEnabled(true);
@@ -302,12 +302,12 @@ public class JAPUpdate implements ActionListener,ItemListener,Runnable
 						if(m_comboType.getSelectedIndex()==0)//Release
 							{
 								m_labelVersion.setText(m_releaseVersion.getVersion());
-								m_labelDate.setText(m_releaseVersion.getDate());
+								m_labelDate.setText(m_DateFormat.format(m_releaseVersion.getDate()));
 							}
 						else
 							{
 								m_labelVersion.setText(m_devVersion.getVersion());
-								m_labelDate.setText(m_devVersion.getDate());
+								m_labelDate.setText(m_DateFormat.format(m_devVersion.getDate()));
 							}
 					}
 			}
