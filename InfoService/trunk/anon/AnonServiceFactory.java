@@ -5,14 +5,14 @@ Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
 
 	- Redistributions of source code must retain the above copyright notice,
-	  this list of conditions and the following disclaimer.
+		this list of conditions and the following disclaimer.
 
 	- Redistributions in binary form must reproduce the above copyright notice,
-	  this list of conditions and the following disclaimer in the documentation and/or
+		this list of conditions and the following disclaimer in the documentation and/or
 		other materials provided with the distribution.
 
 	- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
-	  may be used to endorse or promote products derived from this software without specific
+		may be used to endorse or promote products derived from this software without specific
 		prior written permission.
 
 
@@ -32,22 +32,29 @@ import anon.server.AnonServiceImpl;
 import anon.xmlrpc.client.AnonServiceImplProxy;
 
 final public class AnonServiceFactory
-  {
-    private static AnonService ms_AnonService=null;
-    private AnonServiceFactory()
-      {
-      }
+	{
+		private static AnonService ms_AnonService=null;
+		private AnonServiceFactory()
+			{
+			}
 
-    public static AnonService create()
-      {
-        if(ms_AnonService==null)
-          ms_AnonService=AnonServiceImpl.create();
-        return ms_AnonService;//AnonServiceImpl.create();
-      }
+		public static AnonService create()
+			{
+				if(ms_AnonService==null)
+					ms_AnonService=AnonServiceImpl.create();
+				return ms_AnonService;//AnonServiceImpl.create();
+			}
 
-    public static AnonService create(InetAddress addr,int port)
-      {
-        return new AnonServiceImplProxy(addr,port);
-      }
+		public static AnonService create(InetAddress addr,int port)
+			{
+				try
+					{
+						return new AnonServiceImplProxy(addr,port);
+					}
+				catch(Exception e)
+					{
+						return null;
+					}
+			}
 
-  }
+	}
