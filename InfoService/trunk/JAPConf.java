@@ -447,6 +447,20 @@ public final class JAPConf extends JDialog
 					return false;
 				}
 			
+			//checking Debug-Level
+			try
+				{
+					i=Integer.parseInt(debugLevelTextField.getText().trim());
+				}
+			catch(Exception e)
+				{
+					i=-1;
+				}
+			if(i<0||i>JAPDebug.DEBUG)
+				{
+					showError(model.getString("errorDebugLevelWrong"));
+					return false;
+				}
 			
 			
 			return true;

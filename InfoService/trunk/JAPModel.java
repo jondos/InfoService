@@ -1,7 +1,12 @@
-import java.util.*;
+import java.util.Enumeration;
+import java.util.Locale;
+import java.util.ResourceBundle;
+import java.util.Vector;
 import com.sun.xml.tree.XmlDocument;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Text;
+import org.w3c.dom.NodeList;
 import org.w3c.dom.NamedNodeMap;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.FileInputStream;
@@ -148,6 +153,30 @@ public final class JAPModel {
 			return view;
 		}
 	
+	/** Loads the Configuration. This is an XML-File with the following structure:
+	 *	<JAP 
+	 *		portNumber=""									// Listener-Portnumber
+	 *		proxyMode="true"/"false"			// Using a HTTP-Proxy??
+	 *		proxyHostName="..."						// the Name of the HTTP-Proxy
+	 *		proxyPortNumber="..."					// port number of the HTTP-proxy
+	 *		infoServiceHostName="..."			// hostname of the infoservice
+	 *		infoServicePortnumber=".."		// the portnumber of the info service
+	 *		anonHostName=".."							// the hostname of the anon-service
+	 *		anonPortNumber=".."						// the portnumber of the anon-service
+	 *		autoConnect="true"/"false"		// should we start the anon service immedialy after programm launch ?
+	 *	>
+	 *	<Debug>
+	 *		<Level>..</Level>							// the amount of output (0 means less.. 7 means max)
+	 *		<Type													// which type of messages should be logged
+	 *			GUI="true"/"false"					// messages related to the user interface
+	 *			NET="true"/"false"					// messages related to the network
+	 *			THREAD="true"/"false"				// messages related to threads
+	 *			MISC="true"/"false"					// all the others
+	 *		>		
+	 *		</Type>
+	 *	</Debug>		
+	 *	</JAP>
+	 */
 	public void load() {
 		// Load default anon services
 		anonServerDatabase = new Vector();
@@ -160,7 +189,8 @@ public final class JAPModel {
 		try {
 			FileInputStream f=new FileInputStream(XMLCONFFN);
 			Document doc=DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(f);
-			NamedNodeMap n=doc.getFirstChild().getAttributes();
+			Element root=doc.getDocumentElement();
+			NamedNodeMap n=root.getAttributes();
 			// 
 			portNumber=Integer.valueOf(n.getNamedItem("portNumber").getNodeValue()).intValue();
 			proxyMode=((n.getNamedItem("proxyMode").getNodeValue()).equals("true")?true:false);
@@ -171,6 +201,34 @@ public final class JAPModel {
 			anonHostName=n.getNamedItem("anonHostName").getNodeValue();
 			anonPortNumber=Integer.valueOf(n.getNamedItem("anonPortNumber").getNodeValue()).intValue();
 			autoConnect=((n.getNamedItem("autoConnect").getNodeValue()).equals("true")?true:false);
+		
+			//Loading debug settings
+			NodeList nl=root.getElementsByTagName("Debug");
+			if(nl!=null&&nl.getLength()>0)
+				{
+					Element elemDebug=(Element)nl.item(0);
+					nl=elemDebug.getElementsByTagName("Level");
+					if(nl!=null&&nl.getLength()>0)
+						{
+							Element elemLevel=(Element)nl.item(0);
+							JAPDebug.setDebugLevel(Integer.parseInt(elemLevel.getFirstChild().getNodeValue().trim()));
+						}
+					nl=elemDebug.getElementsByTagName("Type");
+					if(nl!=null&&nl.getLength()>0)
+						{
+							Element elemType=(Element)nl.item(0);
+							int debugtype=JAPDebug.NUL;
+							if(elemType.getAttribute("GUI").equals("true"))
+								debugtype+=JAPDebug.GUI;
+							if(elemType.getAttribute("NET").equals("true"))
+								debugtype+=JAPDebug.NET;
+							if(elemType.getAttribute("THREAD").equals("true"))
+								debugtype+=JAPDebug.THREAD;
+							if(elemType.getAttribute("MISC").equals("true"))
+								debugtype+=JAPDebug.MISC;
+							JAPDebug.setDebugType(debugtype);
+						}
+				}
 		}
 		catch(Exception e) {
 			JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAPModel:Error loading configuration! "+e.toString());
@@ -187,6 +245,7 @@ public final class JAPModel {
 			FileOutputStream f=new FileOutputStream(XMLCONFFN);
 			Document doc=DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
 			Element e=doc.createElement("JAP");
+			doc.appendChild(e);
 			//
 			e.setAttribute("portNumber",Integer.toString(portNumber));
 			e.setAttribute("proxyMode",(proxyMode?"true":"false"));
@@ -198,7 +257,21 @@ public final class JAPModel {
 			e.setAttribute("anonPortNumber",Integer.toString(anonPortNumber));
 			e.setAttribute("autoConnect",(autoConnect?"true":"false"));
 			//
-			doc.appendChild(e);
+			// adding Debug-Element
+			Element elemDebug=doc.createElement("Debug");
+			e.appendChild(elemDebug);
+			Element tmp=doc.createElement("Level");
+			Text txt=doc.createTextNode(Integer.toString(JAPDebug.getDebugLevel()));
+			tmp.appendChild(txt);
+			elemDebug.appendChild(tmp);
+			tmp=doc.createElement("Type");
+			int debugtype=JAPDebug.getDebugType();
+			tmp.setAttribute("GUI",(debugtype&JAPDebug.GUI)!=0?"true":"false");
+			tmp.setAttribute("NET",(debugtype&JAPDebug.NET)!=0?"true":"false");
+			tmp.setAttribute("THREAD",(debugtype&JAPDebug.THREAD)!=0?"true":"false");
+			tmp.setAttribute("MISC",(debugtype&JAPDebug.MISC)!=0?"true":"false");
+			elemDebug.appendChild(tmp);
+						
 			((XmlDocument)doc).write(f);
 		}
 		catch(Exception e) {
@@ -544,38 +617,47 @@ public final class JAPModel {
 				}
 		}
 	
-	ImageIcon loadImageIcon(String strImage, boolean sync) {
-		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPModel:Image "+strImage+" loading...");
-		boolean finished = false;
-		ImageIcon img = null;
-		// this is necessary to make shure that the images are loaded when contained in a JAP.jar
-		try {
-			img = new ImageIcon(getClass().getResource(strImage));
-		}
-		catch (Exception e) {
-			img = null;
-		}
-		// ...otherwise
-		if (img == null) {
-			img = new ImageIcon(strImage);
-		}
-		if ((sync == false) || (img == null)) {
-			finished = true;
-		}
-		while(finished!=true) {
-			int status = img.getImageLoadStatus();
-			if ( (status & MediaTracker.ABORTED) != 0 ) {
-				JAPDebug.out(JAPDebug.ERR,JAPDebug.GUI,"JAPModel:Loading of image "+strImage+" aborted!");
+	/** Loads an Image from a File or a Resource.
+	 *	@param strImage the Resource or filename of the Image
+	 *	@param sync true if the loading is synchron, false if it should be asynchron
+	 */
+	ImageIcon loadImageIcon(String strImage, boolean sync) 
+		{
+			JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPModel:Image "+strImage+" loading...");
+			boolean finished = false;
+			ImageIcon img = null;
+			// this is necessary to make shure that the images are loaded when contained in a JAP.jar
+			try 
+				{
+					img = new ImageIcon(getClass().getResource(strImage));
+				}
+			catch (Exception e)
+				{
+					img = null;
+				}
+			// ...otherwise
+			if (img == null)
+				{
+					img = new ImageIcon(strImage);
+				}
+			if ((sync == false) || (img == null)) {
 				finished = true;
 			}
-			if ( (status & MediaTracker.ERRORED) != 0 ) {
-				JAPDebug.out(JAPDebug.ERR,JAPDebug.GUI,"JAPModel:Error loading image "+strImage+"!");
-				finished = true;
-			}
-			if ( (status & MediaTracker.COMPLETE) != 0) {
-				finished = true;
-			}
-		}
+			while(finished!=true)
+				{
+					int status = img.getImageLoadStatus();
+					if ( (status & MediaTracker.ABORTED) != 0 ) {
+						JAPDebug.out(JAPDebug.ERR,JAPDebug.GUI,"JAPModel:Loading of image "+strImage+" aborted!");
+						finished = true;
+						}
+					if ( (status & MediaTracker.ERRORED) != 0 ) {
+						JAPDebug.out(JAPDebug.ERR,JAPDebug.GUI,"JAPModel:Error loading image "+strImage+"!");
+						finished = true;
+					}
+					if ( (status & MediaTracker.COMPLETE) != 0) {
+						finished = true;
+					}
+				}
 		return img;
 	}
 	

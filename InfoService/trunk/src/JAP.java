@@ -32,6 +32,7 @@ public class JAP extends Frame{
 		// Test for right VM....
 		if (vers.compareTo("1.0.2") <= 0) 
 			{
+				System.out.println("Your JAVA Version: "+vers);
 				System.out.println("JAP must be run with a 1.1.3 or higher version VM!");
 				System.exit(0);
 			}
@@ -59,13 +60,13 @@ public class JAP extends Frame{
 		// Create debugger object
 		JAPDebug.create();
 		JAPDebug.setDebugType(JAPDebug.NET+JAPDebug.GUI+JAPDebug.THREAD+JAPDebug.MISC);
-		JAPDebug.setDebugLevel(JAPDebug.DEBUG);
+		JAPDebug.setDebugLevel(JAPDebug.WARNING);
 		JAPDebug.out(JAPDebug.INFO,JAPDebug.MISC,"JAP:Welcome! Java "+vers+" running on "+os+" ...");
 
 		// Create the model object
 		model = JAPModel.createModel();
 		JAPSplash splash = new JAPSplash(model);
-		splash.show(); // show splash screen as soon as possible
+	//	splash.show(); // show splash screen as soon as possible
 		
 		// load settings from config file
 		model.load();
