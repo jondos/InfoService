@@ -84,6 +84,34 @@ import anon.util.XMLUtil;
 final public class JAPCertificate extends X509CertificateStructure implements IXMLEncodable, Cloneable,
 	ICertificate
 {
+
+  /**
+   * This is the certificate type constant for root certificates. Root certificates are used to
+   * verify other certificates (at the moment only one indirection is supported, so root
+   * certificates cannot verify other root certificates).
+   */
+  public static final int CERTIFICATE_TYPE_ROOT = 1;
+  
+  /**
+   * This is the certificate type constant for mix certificates. Mix certificates are used to
+   * create or verify the signature of mix, mixcascade or cascade-state XML structures.
+   */
+  public static final int CERTIFICATE_TYPE_MIX = 2;
+  
+  /**
+   * This is the certificate type constant for infoservice certificates. InfoService certificates
+   * are used to create or verify the signature of an infoservice XML structure.
+   */
+  public static final int CERTIFICATE_TYPE_INFOSERVICE = 3;
+  
+  /**
+   * This is the certificate type constant for update certificates. Update certificates are used
+   * to create or verify the signature of all JAP update related structures like the minimum
+   * required JAP version or the Java WebStart files for the release or development version of
+   * JAP.
+   */
+  public static final int CERTIFICATE_TYPE_UPDATE = 4;
+
 	public static final String XML_ELEMENT_NAME = "X509Certificate";
 	public static final String XML_ELEMENT_CONTAINER_NAME = "X509Data";
 
@@ -98,7 +126,6 @@ final public class JAPCertificate extends X509CertificateStructure implements IX
 	private static IMyPrivateKey ms_dummyPrivateKey;
 
 	private IMyPublicKey m_PubKey;
-	private boolean m_bEnabled;
 	private String m_id;
 
 	/**
@@ -109,8 +136,6 @@ final public class JAPCertificate extends X509CertificateStructure implements IX
 	private JAPCertificate(X509CertificateStructure x509cert) throws IllegalArgumentException
 	{
 		super(ASN1Sequence.getInstance(new DERTaggedObject(true, DERTags.BIT_STRING, x509cert), true));
-
-		m_bEnabled = false;
 
 		try
 		{
@@ -433,7 +458,6 @@ final public class JAPCertificate extends X509CertificateStructure implements IX
 		{
 			return null;
 		}
-		cert.setEnabled(getEnabled());
 		return cert;
 	}
 
@@ -580,41 +604,22 @@ final public class JAPCertificate extends X509CertificateStructure implements IX
 		return bValid;
 	}
 
-	/** Changes the status of the certificate.
-	 * @param a_bEnabled (Status)
-	 */
-	public void setEnabled(boolean a_bEnabled)
-	{
-		m_bEnabled = a_bEnabled;
-	}
-
-	/** Returns the status of the certificate.
-	 * @return status
-	 */
-	public boolean getEnabled()
-	{
-		return m_bEnabled;
-	}
-
 	/**
 	 * Checks if a given Certificate could be directly verified against a set of other certificates.
-	 * @param a_verifyingCertificates JAPCertificate
-	 * @return JAPCertificate
+   * @param a_verifyingCertificates A Vector of JAPCertificates to verify this JAPCertificate.
+   * @return True, if this certificate could be verified.
 	 * @todo do not accept expired certificates?
 	 */
-	public synchronized boolean verify(JAPCertificateStore a_verifyingCertificates)
+  public synchronized boolean verify(Vector a_verifyingCertificates)
 	{
 		if (a_verifyingCertificates == null)
 		{
 			return false;
 		}
 
-		Vector verifyingCertificates = a_verifyingCertificates.getAllEnabledCertificates();
-		JAPCertificate currentCertificate;
-
-		for (int i = 0; i < verifyingCertificates.size(); i++)
-		{
-			currentCertificate = ( (JAPCertificate) verifyingCertificates.elementAt(i));
+    Enumeration certificatesEnumerator = a_verifyingCertificates.elements();
+    while (certificatesEnumerator.hasMoreElements()) {
+      JAPCertificate currentCertificate = (JAPCertificate)(certificatesEnumerator.nextElement());
 
 			if (verify(currentCertificate))
 			{
@@ -686,7 +691,6 @@ final public class JAPCertificate extends X509CertificateStructure implements IX
 		X509CertificateGenerator certgen = new X509CertificateGenerator(getTBSCertificate());
 		x509cert = certgen.sign(a_pkcs12Certificate);
 		certificate = getInstance(x509cert);
-		certificate.setEnabled(getEnabled());
 		return certificate;
 	}
 

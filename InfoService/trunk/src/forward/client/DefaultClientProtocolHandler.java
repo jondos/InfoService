@@ -50,8 +50,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
-import anon.crypto.JAPCertificateStore;
-import anon.crypto.XMLSignature;
+import anon.crypto.SignatureVerifier;
 import anon.infoservice.MixCascade;
 import anon.server.impl.ProxyConnection;
 import anon.util.XMLParseException;
@@ -150,14 +149,9 @@ public class DefaultClientProtocolHandler {
    * while receiving the connection offer, an ClientForwardException is thrown with detailed
    * information.
    *
-   * @param a_certificateStore A certificate store with the trusted root certificates for checking
-   *                           the signature of the mixcascades supported by the forwarder. If
-   *                           this value is null, no certificate check is done -> this would
-   *                           result in a serious security problem.
-   *
    * @return The connection descriptor with the connection offer from the forwarder.
    */
-  public ForwardConnectionDescriptor getConnectionDescriptor(JAPCertificateStore a_certificateStore) throws ClientForwardException {
+  public ForwardConnectionDescriptor getConnectionDescriptor() throws ClientForwardException {
     ForwardConnectionDescriptor connectionDescriptor = new ForwardConnectionDescriptor();
     if (m_state == STATE_INITIALIZE) {
       /* we have the correct state -> send the connection request message */
@@ -222,52 +216,19 @@ public class DefaultClientProtocolHandler {
       NodeList mixCascadeNodes = allowedCascadesNode.getElementsByTagName("MixCascade");
       for (int i = 0; i < mixCascadeNodes.getLength(); i++) {
         Element currentMixCascadeNode = (Element)(mixCascadeNodes.item(i));
-        if (a_certificateStore != null) {
-          /* check the signature */
-          NodeList signatureNodes = currentMixCascadeNode.getElementsByTagName("Signature");
-          if (signatureNodes.getLength() > 0) {
-            Element signatureNode = (Element)(signatureNodes.item(0));
-//          int signatureErrorCode = JAPCertPath.validate(currentMixCascadeNode, signatureNode, a_certificateStore);
-//          if (signatureErrorCode == ErrorCodes.E_SUCCESS) {
-			{
-				try
-				{
-					if(XMLSignature.verify(currentMixCascadeNode,a_certificateStore)!=null)
-					{
-              /* signature is valid, try to add that mixcascade to the descriptor mixcascade list */
-              try {
-                connectionDescriptor.addMixCascade(new MixCascade(currentMixCascadeNode));
-              }
-              catch (Exception e) {
-                LogHolder.log(LogLevel.ERR, LogType.MISC, "DefaultClientProtocolHandler: getConnectionDescriptor: Error while parsing MixCascade (" + e.toString() + ").");
-              }
-            }
-            else {
-              /* certificate check failed */
-//					  LogHolder.log(LogLevel.ERR, LogType.MISC, "DefaultClientProtocolHandler: getConnectionDescriptor: Signature check for a MixCascade failed (errorcode: " + Integer.toString(signatureErrorCode) + ").");
-					  LogHolder.log(LogLevel.ERR, LogType.MISC, "DefaultClientProtocolHandler: getConnectionDescriptor: Signature check for a MixCascade failed.");
-					}
-				} catch(XMLParseException ex)
-				{
-					LogHolder.log(LogLevel.ERR, LogType.MISC, "DefaultClientProtocolHandler: getConnectionDescriptor: Signature check for a MixCascade failed.");
-				}
-            }
-          }
-          else {
-            /* no signature node found */
-            LogHolder.log(LogLevel.ERR, LogType.MISC, "DefaultClientProtocolHandler: getConnectionDescriptor: Signature check for a MixCascade failed (no signature node found).");
-          }
-        }
-        else {
-          /* signature check is disabled, try to add that mixcascade to the descriptor mixcascade
-           * list
-           */
+        /* check the signature of the mixcascade structures */
+        if (SignatureVerifier.getInstance().verifyXml(currentMixCascadeNode, SignatureVerifier.DOCUMENT_CLASS_MIX) == true) {
+          /* signature is valid, try to add that mixcascade to the descriptor mixcascade list */
           try {
             connectionDescriptor.addMixCascade(new MixCascade(currentMixCascadeNode));
           }
           catch (Exception e) {
             LogHolder.log(LogLevel.ERR, LogType.MISC, "DefaultClientProtocolHandler: getConnectionDescriptor: Error while parsing MixCascade (" + e.toString() + ").");
           }
+        }
+        else {
+          /* certificate check failed */
+          LogHolder.log(LogLevel.ERR, LogType.MISC, "DefaultClientProtocolHandler: getConnectionDescriptor: Signature check for a MixCascade failed.");
         }
       }
       /* get the quality of service information */

@@ -67,7 +67,7 @@ import proxy.ProxyListener;
 import update.JAPUpdateWizard;
 import anon.ErrorCodes;
 import anon.crypto.JAPCertificate;
-import anon.crypto.JAPCertificateStore;
+import anon.crypto.SignatureVerifier;
 import anon.crypto.XMLEncryption;
 import anon.infoservice.Database;
 import anon.infoservice.HTTPConnectionFactory;
@@ -179,7 +179,23 @@ public final class JAPController implements ProxyListener, Observer
 		/* set some default values for infoservice communication */
 		setInfoServiceDisabled(JAPConstants.DEFAULT_INFOSERVICE_DISABLED);
 		InfoServiceHolder.getInstance().setChangeInfoServices(JAPConstants.DEFAULT_INFOSERVICE_CHANGES);
-		InfoServiceHolder.getInstance().setUpdateMessagesCertificate(JAPModel.getJAPInfoServiceMessagesCert());
+
+    /* load the default certificates */
+    JAPCertificate defaultRootCert = JAPCertificate.getInstance(ResourceLoader.loadResource(JAPConstants.CERTSPATH + JAPConstants.TRUSTEDROOTCERT));
+    if (defaultRootCert != null) {
+      SignatureVerifier.getInstance().getVerificationCertificateStore().addCertificateWithoutVerification(defaultRootCert, JAPCertificate.CERTIFICATE_TYPE_ROOT, true);  
+    }
+    else {
+      LogHolder.log(LogLevel.ERR, LogType.MISC, "JAPController: Constructor: Error loading default root certificate.");
+    }
+    JAPCertificate updateMessagesCert = JAPCertificate.getInstance(ResourceLoader.loadResource(JAPConstants.CERTSPATH + JAPConstants.CERT_JAPINFOSERVICEMESSAGES));
+    if (updateMessagesCert != null) {
+      SignatureVerifier.getInstance().getVerificationCertificateStore().addCertificateWithoutVerification(updateMessagesCert, JAPCertificate.CERTIFICATE_TYPE_UPDATE, true);  
+    }
+    else {
+      LogHolder.log(LogLevel.ERR, LogType.MISC, "JAPController: Constructor: Error loading default update messages certificate.");
+    }
+
 		HTTPConnectionFactory.getInstance().setTimeout(JAPConstants.DEFAULT_INFOSERVICE_TIMEOUT);
 
 		m_vectorMixCascadeDatabase = new Vector();
@@ -262,7 +278,7 @@ public final class JAPController implements ProxyListener, Observer
 	 *
 	 * The configuration is a XML-File with the following structure:
 	 *  <JAP
-	 *    version="0.17"                     // version of the xml struct (DTD) used for saving the configuration
+   *    version="0.18"                     // version of the xml struct (DTD) used for saving the configuration
 	 *    portNumber=""                     // Listener-Portnumber
 	 *    portNumberSocks=""                // Listener-Portnumber for SOCKS
 	 *    supportSocks=""                   // Will we support SOCKS ?
@@ -278,7 +294,6 @@ public final class JAPController implements ProxyListener, Observer
 	 *    infoServiceDisabled="true/false"  // disable use of InfoService
 	 *    infoServiceChange="true/false"    // automatic change of infoservice after failure (since config version 0.5)
 	 *    infoServiceTimeout="..."          // timeout (sec) for infoservice and update communication (since config version 0.5)
-	 *    certCheckDisabled="true/false"    // disable checking of certificates
 	 *    preCreateAnonRoutes="true/false"  // Should we setup Anon Routes in the "Background" ? (sinc 0.13)
 	 *    autoConnect="true"/"false"    // should we start the anon service immedialy after programm launch ?
 	 *    autoReConnect="true"/"false"    // should we automatically reconnect to mix if connection was lost ?
@@ -326,6 +341,20 @@ public final class JAPController implements ProxyListener, Observer
 	 *    </Output>
 	 *
 	 * </Debug>
+   * <SignatureVerification>                                   // since version 0.18
+   *   <CheckSignatures>true</CheckSignatures>                 // whether signature verification of received XML data is enabled or disabled
+   *   <TrustedCertificates>                                   // list of all certificates to uses for signature verification
+   *     <CertificateContainer>
+   *       <CertificateType>1</CertificateType>                              // the type of the stored certificate (until it's stored within the certificate itself), see JAPCertificate.java
+   *       <CertificateNeedsVerification>true<CertificateNeedsVerification>  // whether the certificate has to be verified against an active root certificate from the certificat store in order to get activated itself
+   *       <CertificateEnabled>true<CertificateEnabled>                      // whether the certificate is enabled (available for signature verification) or not
+   *       <CertificateData>
+   *         <X509Certificate>...</X509Certificate>                          // the certificate data, see JAPCertificate.java
+   *       </CertificateData>
+   *     </CertificateContainer>
+   *     ...
+   *   </TrustedCertificates>
+   * </SignatureVerification>  
 	 * <InfoServices>                                           // info about all known infoservices (since config version 0.3)
 	 *   <InfoService id="...">...</InfoService>                // the same format as from infoservice, without signature, if expired, it is removed from infoservice list
 	 *   <InfoService id="...">...</InfoService>
@@ -554,63 +583,6 @@ public final class JAPController implements ProxyListener, Observer
 								  "JAPController: loadConfigFile: Error loading InfoService timeout.");
 				}
 
-				//settings for Certificates
-				setCertCheckDisabled(XMLUtil.parseValue(n.getNamedItem(JAPConstants.
-					CONFIG_CERT_CHECK_DISABLED),
-					JAPModel.isCertCheckDisabled()));
-
-				try
-				{
-					// setCertificateStore(XMLUtil.parseValue(n.getNamedItem("acceptedCertList"), ""));
-					// JAPCertificateStore jcs = null;
-					Element elemCAs = (Element) XMLUtil.getFirstChildByName(root,
-						JAPConstants.CONFIG_CERTIFICATE_AUTHORITIES);
-					if (elemCAs != null)
-					{
-						// was: NodeList nlX509Certs = xmlCA.getElementsByTagName("X509Certificate");
-						NodeList nlX509Certs = elemCAs.getElementsByTagName(JAPConstants.
-							CONFIG_CERTIFICATE_AUTHORITY);
-						if (
-							(nlX509Certs != null) &&
-							(nlX509Certs.getLength() >= 1)
-							)
-						{
-							// certificate store found in jap.conf
-							JAPCertificateStore jcs = new JAPCertificateStore(nlX509Certs);
-
-							try
-							{
-								setCertificateStore(jcs);
-							}
-							catch (Exception e)
-							{
-								LogHolder.log(LogLevel.WARNING, LogType.MISC,
-											  "JAPModel:Could not set certificate store!");
-							}
-						}
-					}
-					else
-					{
-						JAPCertificateStore jcs = new JAPCertificateStore();
-						JAPCertificate cert = JAPCertificate.getInstance(
-							ResourceLoader.loadResource(
-								JAPConstants.CERTSPATH +
-								JAPConstants.TRUSTEDROOTCERT));
-						cert.setEnabled(true);
-						jcs.addCertificate(cert);
-						setCertificateStore(jcs);
-					}
-				}
-				catch (NullPointerException ex_np)
-				{
-					//
-				}
-				catch (Exception e)
-				{
-					LogHolder.log(LogLevel.ERR, LogType.MISC,
-								  "JAPModel:Could not set certificate store! No input data?");
-				}
-
 				// load settings for proxy
 				ProxyInterface proxyInterface = null;
 
@@ -828,6 +800,20 @@ public final class JAPController implements ProxyListener, Observer
 									  "JAPController: loadConfigFile: Error loading Debug Settings.");
 					}
 				}
+
+        /* load the signature verification settings */
+        try {
+          Element signatureVerificationNode = (Element)(XMLUtil.getFirstChildByName(root, SignatureVerifier.getXmlSettingsRootNodeName()));
+          if (signatureVerificationNode != null) {
+            SignatureVerifier.getInstance().loadSettingsFromXml(signatureVerificationNode);
+          }
+          else {
+            throw (new Exception("JAPController: loadConfigFile: No SignatureVerification node found. Using default settings for signature verification."));
+          }
+        }
+        catch (Exception e) {
+          LogHolder.log(LogLevel.ERR, LogType.MISC, e);
+        }
 
 				/* loading infoservice settings */
 				/* infoservice list */
@@ -1068,7 +1054,7 @@ public final class JAPController implements ProxyListener, Observer
 			Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
 			Element e = doc.createElement("JAP");
 			doc.appendChild(e);
-			XMLUtil.setAttribute(e, JAPConstants.CONFIG_VERSION, "0.17");
+      XMLUtil.setAttribute(e, JAPConstants.CONFIG_VERSION, "0.18");
 			//
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_PORT_NUMBER,
 								 Integer.toString(JAPModel.getHttpListenerPortNumber()));
@@ -1098,7 +1084,6 @@ public final class JAPController implements ProxyListener, Observer
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_INFOSERVICE_TIMEOUT,
 								 Integer.toString(HTTPConnectionFactory.getInstance().getTimeout()));
 
-			XMLUtil.setAttribute(e, JAPConstants.CONFIG_CERT_CHECK_DISABLED, JAPModel.isCertCheckDisabled());
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_DUMMY_TRAFFIC_INTERVALL,
 								 Integer.toString(JAPModel.getDummyTraffic()));
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_AUTO_CONNECT, JAPModel.getAutoConnect());
@@ -1115,17 +1100,6 @@ public final class JAPController implements ProxyListener, Observer
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_LOOK_AND_FEEL,
 								 UIManager.getLookAndFeel().getClass().getName());
 
-			/* store the trusted CAs */
-			try
-			{
-				JAPCertificateStore jcsCurrent = JAPModel.getCertificateStore();
-				// System.out.println("jcs : " + jcs.size());
-				e.appendChild(jcsCurrent.toXmlElement(doc));
-			}
-			catch (Exception ex)
-			{
-				//ex.printStackTrace();
-			}
 			/*stores user defined MixCascades*/
 			Element elemCascades = doc.createElement(JAPConstants.CONFIG_MIX_CASCADES);
 			e.appendChild(elemCascades);
@@ -1214,6 +1188,10 @@ public final class JAPController implements ProxyListener, Observer
 					XMLUtil.setValue(elemFile, JAPDebug.getLogFilename());
 				}
 			}
+
+      /* adding signature verification settings */
+      e.appendChild(SignatureVerifier.getInstance().getSettingsAsXml(doc));
+
 			/* adding infoservice settings */
 			/* infoservice list */
 			e.appendChild(InfoServiceDBEntry.toXmlElement(doc, Database.getInstance(InfoServiceDBEntry.class)));
@@ -1475,38 +1453,9 @@ public final class JAPController implements ProxyListener, Observer
 		m_Model.setInfoServiceDisabled(b);
 	}
 
-	public void setCertCheckDisabled(boolean b)
-	{
-		m_Model.setCertCheckDisabled(b);
-		if (m_proxyAnon != null)
-		{
-			m_proxyAnon.setMixCertificationCheck(!b, JAPModel.getCertificateStore());
-		}
-		if (!b)
-		{
-			/* certificate check enabled */
-			InfoServiceHolder.getInstance().setCertificateStore(JAPModel.getCertificateStore());
-		}
-		else
-		{
-			/* certificate check disabled */
-			InfoServiceHolder.getInstance().setCertificateStore(null);
-		}
-	}
-
 	public void setPreCreateAnonRoutes(boolean b)
 	{
 		m_Model.setPreCreateAnonRoutes(b);
-	}
-
-	public static void setCertificateStore(JAPCertificateStore jcs)
-	{
-		m_Model.setCertificateStore(jcs);
-		if (!JAPModel.isCertCheckDisabled())
-		{
-			/* certificate check enabled, don't change certificate store if check is disabled */
-			InfoServiceHolder.getInstance().setCertificateStore(jcs);
-		}
 	}
 
 	public static void setSaveMainWindowPosition(boolean b)
@@ -1637,8 +1586,6 @@ public final class JAPController implements ProxyListener, Observer
 					}
 					MixCascade currentMixCascade = m_Controller.getCurrentMixCascade();
 					m_proxyAnon.setMixCascade(currentMixCascade);
-					m_proxyAnon.setMixCertificationCheck(!JAPModel.isCertCheckDisabled(),
-						JAPModel.getCertificateStore());
 					// -> we can try to start anonymity
 					if (m_proxyDirect != null)
 					{
@@ -2326,17 +2273,12 @@ public final class JAPController implements ProxyListener, Observer
 					/* routing mode was changed -> notify the observers of JAPController */
 					notifyJAPObservers();
 				}
-			}
-			/*if (a_notifier == JAPModel.getInstance().getRoutingSettings().getServerStatisticsListener())
-			 {
-			 // message is from JAPRoutingServerStatisticsListener //
-			 if ( ( (JAPRoutingMessage) (a_message)).getMessageCode() ==
-			  JAPRoutingMessage.SERVER_STATISTICS_UPDATED)
-			 {
-			  // there are new routing statistics values available //
+        if (((JAPRoutingMessage) (a_message)).getMessageCode() == JAPRoutingMessage.CLIENT_SETTINGS_CHANGED) {
+          /* the forwarding-client settings were changed -> notify the observers of JAPController */
 			  notifyJAPObservers();
 			 }
-			 }*/
+
+      }
 			else if (a_notifier == JAPModel.getInstance().getRoutingSettings().getRegistrationStatusObserver())
 			{
 				/* message is from JAPRoutingRegistrationStatusObserver */

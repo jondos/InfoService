@@ -39,7 +39,6 @@ import anon.AnonServerDescription;
 import anon.AnonService;
 import anon.AnonServiceEventListener;
 import anon.ErrorCodes;
-import anon.crypto.JAPCertificateStore;
 import anon.infoservice.ImmutableProxyInterface;
 import anon.infoservice.MixCascade;
 import anon.pay.Pay;
@@ -53,8 +52,6 @@ final public class AnonServiceImpl implements AnonService
 	private MuxSocket m_MuxSocket = null;
 	private Vector m_AnonServiceListener;
 	private ImmutableProxyInterface m_proxyInterface;
-	private boolean m_bMixCertCheckEnabled;
-	private JAPCertificateStore m_certsTrustedRoots;
 
 	/**
 	 * Stores the connection when we use forwarding.
@@ -70,8 +67,6 @@ final public class AnonServiceImpl implements AnonService
 	public AnonServiceImpl(ImmutableProxyInterface a_proxyInterface)
 	{
 		m_AnonServiceListener = new Vector();
-		m_bMixCertCheckEnabled = false;
-		m_certsTrustedRoots = null;
 		m_MuxSocket = MuxSocket.create();
 		m_proxyConnection = null;
 		m_proxyInterface = null;
@@ -119,13 +114,12 @@ final public class AnonServiceImpl implements AnonService
 		int ret = -1;
 		if (m_proxyConnection == null)
 		{
-			ret = m_MuxSocket.connectViaFirewall(mixCascade, m_proxyInterface, m_bMixCertCheckEnabled,
-												 m_certsTrustedRoots);
+			ret = m_MuxSocket.connectViaFirewall(mixCascade, m_proxyInterface);
 		}
 		else
 		{
 			/* the connection already exists */
-			ret = m_MuxSocket.initialize(m_proxyConnection, m_bMixCertCheckEnabled, m_certsTrustedRoots);
+			ret = m_MuxSocket.initialize(m_proxyConnection);
 		}
 		if (ret != ErrorCodes.E_SUCCESS)
 		{
@@ -212,21 +206,6 @@ final public class AnonServiceImpl implements AnonService
 	public void setDummyTraffic(int intervall)
 	{
 		m_MuxSocket.setDummyTraffic(intervall);
-	}
-
-	public void setEnableMixCertificationCheck(boolean b)
-	{
-		m_bMixCertCheckEnabled = b;
-	}
-
-	public boolean isMixCertificationCheckEnabled()
-	{
-		return m_bMixCertCheckEnabled;
-	}
-
-	public void setMixCertificationAuthorities(JAPCertificateStore trustedRoots)
-	{
-		m_certsTrustedRoots = trustedRoots;
 	}
 
 	public static void init()

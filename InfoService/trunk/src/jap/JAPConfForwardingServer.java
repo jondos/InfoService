@@ -84,7 +84,7 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
    * Constructor for JAPConfForwardingServer. We do some initialization here.
    */
   public JAPConfForwardingServer() {
-    super(null);
+    super(new JAPConfForwardingServerSavePoint());
   }
 
   /**
@@ -702,6 +702,8 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
                 settingsForwardingServerConfigAllowedCascadesReloadButton.setEnabled(false);                
                 settingsForwardingServerConfigAllowedCascadesAddButton.setEnabled(false);
                 settingsForwardingServerConfigAllowedCascadesRemoveButton.setEnabled(false);
+                /* select the access-to-all checkbox */
+                settingsForwardingServerConfigAllowedCascadesAllowAllBox.setSelected(true);
               }
               else {
                 /* available mixcascades for forwarding are restricted to a list -> components for
@@ -717,6 +719,8 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
                 settingsForwardingServerConfigAllowedCascadesReloadButton.setEnabled(true);
                 settingsForwardingServerConfigAllowedCascadesAddButton.setEnabled(true);
                 settingsForwardingServerConfigAllowedCascadesRemoveButton.setEnabled(true);
+                /* deselect the access-to-all checkbox */
+                settingsForwardingServerConfigAllowedCascadesAllowAllBox.setSelected(false);
               }
             }
             if (messageCode == JAPRoutingMessage.ALLOWED_MIXCASCADES_LIST_CHANGED) {
@@ -945,6 +949,8 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
                 settingsForwardingServerConfigRegistrationInfoServicesReloadButton.setEnabled(false);
                 settingsForwardingServerConfigRegistrationInfoServicesAddButton.setEnabled(false);
                 settingsForwardingServerConfigRegistrationInfoServicesRemoveButton.setEnabled(false);
+                /* select the register-at-all checkbox */
+                settingsForwardingServerConfigRegistrationInfoServicesRegisterAtAllBox.setSelected(true);
               }
               else {
                 /* register only at the infoservices from the registration list -> components for
@@ -960,6 +966,8 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
                 settingsForwardingServerConfigRegistrationInfoServicesReloadButton.setEnabled(true);
                 settingsForwardingServerConfigRegistrationInfoServicesAddButton.setEnabled(true);
                 settingsForwardingServerConfigRegistrationInfoServicesRemoveButton.setEnabled(true);
+                /* deselect the register-at-all checkbox */
+                settingsForwardingServerConfigRegistrationInfoServicesRegisterAtAllBox.setSelected(false);
               }
             }
             if (messageCode == JAPRoutingMessage.REGISTRATION_INFOSERVICES_LIST_CHANGED) {

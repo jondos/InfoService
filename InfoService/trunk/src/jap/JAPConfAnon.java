@@ -48,6 +48,8 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.Enumeration;
+import java.util.Observable;
+import java.util.Observer;
 import java.util.Vector;
 
 import javax.swing.DefaultListCellRenderer;
@@ -75,7 +77,7 @@ import anon.infoservice.MixInfo;
 import javax.swing.JScrollPane;
 
 class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, ActionListener,
-	ListSelectionListener, ItemListener, KeyListener
+  ListSelectionListener, ItemListener, KeyListener, Observer
 {
 	private static final String URL_BEGIN = "<HTML><font color=blue><u>";
 	private static final String URL_END = "</u></font></HTML>";
@@ -127,6 +129,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		super(null);
 		m_Controller = JAPController.getInstance();
 		m_infoService = new InfoServiceTempLayer(false);
+    /* observe JAPRoutingSettings to get a notification, if connect-via-forwarder is enabled */
+    JAPModel.getInstance().getRoutingSettings().addObserver(this);
 	}
 
 	public void recreateRootPanel()
@@ -421,6 +425,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		m_cascadesPanel.add(m_manualCascadeButton, c);
 
 		m_selectCascadeButton = new JButton(JAPMessages.getString("selectCascade"));
+    /* maybe the button must be disabled (if connect-via-forwarder is selected) */
+    m_selectCascadeButton.setEnabled(!JAPModel.getInstance().getRoutingSettings().isConnectViaForwarder());
 		m_selectCascadeButton.addActionListener(this);
 		c.gridx = 2;
 		m_cascadesPanel.add(m_selectCascadeButton, c);
@@ -1025,12 +1031,44 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			}
 
 	/**
+   * This is the observer implementation. We observe the forwarding system to enabled / disable
+   * the mixselection button. The button has to be disabled, if connect-via-forwarder is enabled
+   * because, selecting a mixcascade is not possible via the "normal" way.
+   *
+   * @param a_notifier The observed Object (JAPRoutingSettings at the moment).
+   * @param a_message The reason of the notification, should be a JAPRoutingMessage.
+   *
+   */
+  public void update(Observable a_notifier, Object a_message)
+  {
+    try
+    {
+      if (a_notifier == JAPModel.getInstance().getRoutingSettings()) {
+        if (((JAPRoutingMessage) (a_message)).getMessageCode() == JAPRoutingMessage.CLIENT_SETTINGS_CHANGED) {
+          /* the forwarding-client settings were changed -> enable or disable the mixcascade
+           * selection button
+           */
+          JButton mixcascadeSelectionButton = m_selectCascadeButton;
+          if (mixcascadeSelectionButton != null) {
+            mixcascadeSelectionButton.setEnabled(!JAPModel.getInstance().getRoutingSettings().isConnectViaForwarder());
+          }         
+        }
+      }
+    }
+    catch (Exception e)
+    {
+      /* should not happen, but better than throwing a runtime exception */
+    }
+  }
+
+  /**
 	 * Refresh the temporary infoservice database
 	 */
 	private void updateFromInfoservice()
 	{
 		m_infoService = new InfoServiceTempLayer(true);
 	}
+  
 }
 
 /*
@@ -1116,21 +1154,20 @@ class InfoServiceTempLayer
 		m_Mixes = new Vector();
 		m_Cascades = new Vector();
 
-		InfoServiceDBEntry entry = InfoServiceHolder.getInstance().getPreferedInfoService();
 		try
 		{
-			Vector c  = entry.getMixCascades();
+      Vector c  = InfoServiceHolder.getInstance().getMixCascades();
 			for(int j=0;j<c.size();j++)
 			{
 				MixCascade cascade = (MixCascade)c.elementAt(j);
+        /* fetch the current cascade state */
+        cascade.fetchCurrentStatus();
 				//Get cascade id
 				String id = cascade.getId();
 				//Get number of mixes in cascade
 				int numOfMixes = cascade.getMixCount();
 				// Get the number of users on the cascade
-				String numOfUsers = Integer.toString(entry.getStatusInfo(cascade.getId(), cascade.getMixCount(),
-						InfoServiceHolder.getInstance()
-						.getCertificateStore()).getNrOfActiveUsers());
+        String numOfUsers = Integer.toString(cascade.getCurrentStatus().getNrOfActiveUsers());
 				// Get hostnames and ports
 				String interfaces = "";
 				String ports = "";

@@ -33,7 +33,6 @@ import java.awt.Dimension;
 import java.awt.Point;
 
 import anon.crypto.JAPCertificate;
-import anon.crypto.JAPCertificateStore;
 import anon.infoservice.ProxyInterface;
 import anon.util.ResourceLoader;
 
@@ -70,8 +69,6 @@ public final class JAPModel
 	private boolean m_bCertCheckDisabled = true;
 
 	private JAPCertificate m_certJAPCodeSigning = null;
-	private JAPCertificate m_certJAPInfoServiceMessages = null;
-	private JAPCertificateStore m_certStore = null;
 
 	private int m_TorMaxConnectionsPerRoute = JAPConstants.TOR_MAX_CONNECTIONS_PER_ROUTE;
 	private int m_TorMaxRouteLen = JAPConstants.TOR_MAX_ROUTE_LEN;
@@ -97,7 +94,6 @@ public final class JAPModel
 
 	private JAPModel()
 	{
-		m_certStore = new JAPCertificateStore();
 		try
 		{
 			m_certJAPCodeSigning = JAPCertificate.getInstance(
@@ -106,16 +102,6 @@ public final class JAPModel
 		catch (Throwable t)
 		{
 			m_certJAPCodeSigning = null;
-		}
-		try
-		{
-			m_certJAPInfoServiceMessages = JAPCertificate.getInstance(
-				ResourceLoader.loadResource(JAPConstants.CERTSPATH +
-												 JAPConstants.CERT_JAPINFOSERVICEMESSAGES));
-		}
-		catch (Throwable t)
-		{
-			m_certJAPInfoServiceMessages = null;
 		}
 		m_routingSettings = new JAPRoutingSettings();
 		m_configFileName = null;
@@ -397,16 +383,6 @@ public final class JAPModel
 		return buff.toString();
 	}
 
-	void setCertCheckDisabled(boolean b)
-	{
-		m_bCertCheckDisabled = b;
-	}
-
-	public static boolean isCertCheckDisabled()
-	{
-		return ms_TheModel.m_bCertCheckDisabled;
-	}
-
 	public static boolean isPreCreateAnonRoutesEnabled()
 	{
 		return ms_TheModel.m_bPreCreateAnonRoutes;
@@ -417,31 +393,9 @@ public final class JAPModel
 		m_bPreCreateAnonRoutes = b;
 	}
 
-	public static JAPCertificateStore getCertificateStore()
-	{
-		return ms_TheModel.m_certStore;
-	}
-
-	protected void setCertificateStore(JAPCertificateStore jcs)
-	{
-		if (jcs != null)
-		{
-			m_certStore = jcs;
-		}
-		else
-		{
-			m_certStore = new JAPCertificateStore();
-		}
-	}
-
 	public static JAPCertificate getJAPCodeSigningCert()
 	{
 		return ms_TheModel.m_certJAPCodeSigning;
-	}
-
-	public static JAPCertificate getJAPInfoServiceMessagesCert()
-	{
-		return ms_TheModel.m_certJAPInfoServiceMessages;
 	}
 
 	/**

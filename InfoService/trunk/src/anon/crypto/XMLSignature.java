@@ -345,8 +345,8 @@ public final class XMLSignature implements IXMLEncodable
 	public static XMLSignature verify(Node a_node, JAPCertificate a_certificate)
 		throws XMLParseException
 	{
-		JAPCertificateStore certificates = new JAPCertificateStore();
-		certificates.addCertificate(a_certificate);
+    Vector certificates = new Vector();
+    certificates.addElement(a_certificate);
 
 		return verify(a_node, certificates);
 	}
@@ -355,63 +355,39 @@ public final class XMLSignature implements IXMLEncodable
 	 * Verifies the signature of an XML node and creates a new XMLSignature from a valid
 	 * signature.
 	 * @param a_node an XML node
-	 * @param a_certificateStore certificates to verify the signature
+   * @param a_certificateList certificates to verify the signature
 	 * @return the XMLSignature of the node; null if the node could not be verified
 	 * @exception XMLParseException if a signature element exists, but the element
 	 *                              has an invalid structure
 	 */
-	public static XMLSignature verify(Node a_node, JAPCertificateStore a_certificateStore)
+  public static XMLSignature verify(Node a_node, Vector a_certificateList)
 		throws XMLParseException
 	{
-		return verify(a_node, a_certificateStore, null);
-	}
-
-
-	/**
-	 * Verifies the signature of an XML node and creates a new XMLSignature from a valid
-	 * signature.
-	 * @param a_node an XML node
-	 * @param a_certManager a manager for the certificates used for verifying the signature
-	 * @return the XMLSignature of the node; null if the node could not be verified
-	 * @exception XMLParseException if a signature element exists, but the element
-	 *                              has an invalid structure
-	 */
-	public static XMLSignature verify(Node a_node, XMLSignatureCertificateManager a_certManager)
-		throws XMLParseException
-	{
-		return verify(a_node, a_certManager.getTrustedCertificates(),
-					  a_certManager.getTrustedCertificates());
+    /* the certificates can be used as root certificates or directly on the signature */
+    return verify(a_node, a_certificateList, a_certificateList);
 	}
 
 	/**
-	 * Verifies the signature of an XML node and creates a new XMLSignature from a valid
-	 * signature.
-	 * @param a_node an XML node
-	 * @param a_trustedCertificates trusted certificates to verify the signature
-	 * @param a_collectedCertificates certificates to verify the signature, if it could not be
-	 *                                verified by the trusted certificates; if the signature could
-	 *                                be verified by a trusted certificate, all verified
-	 *                                certificates appended to this signature are added to the
-	 *                                collected certificates for further use;
-	 *                                if the collected certificates are null, they are not used
+   * Verifies the signature of an XML node.
+   *
+   * @param a_node A signed XML node.
+   * @param a_rootCertificates A Vector of trusted root certificates which is used to verify
+   *                           the certificate maybe appended at the signature.
+   * @param a_directCertificates A Vector of certificates to verify the signature, if it could
+   *                             not be verified by the appended certificates (if there are no
+   *                             appended certificates or the appended certificates could not
+   *                             be verified by the trusted root certificates).
+   *
 	 * @return the XMLSignature of the node; null if the node could not be verified
 	 * @exception XMLParseException if a signature element exists, but the element
 	 *                              has an invalid structure
 	 * @todo do not accept expired certificates?
 	 */
-	public static XMLSignature verify(Node a_node, JAPCertificateStore a_trustedCertificates,
-									  JAPCertificateStore a_collectedCertificates)
-		throws XMLParseException
-	{
+  public static XMLSignature verify(Node a_node, Vector a_rootCertificates, Vector a_directCertificates) throws XMLParseException {
 		XMLSignature signature;
 		Enumeration certificates;
 		JAPCertificate currentCertificate;
 		boolean bVerified;
-
-		if (a_node == null || a_trustedCertificates == null || a_trustedCertificates.size() == 0)
-		{
-			return null;
-		}
 
 		// find the signature; this call could throw an XMLParseException
 		signature = findXMLSignature(a_node);
@@ -421,88 +397,49 @@ public final class XMLSignature implements IXMLEncodable
 		}
 
 		bVerified = false; // this is set to 'true' if the signature could be verified
-		try
-		{
-			try
-			{
+    try {
 				// verify the signature against the appended certificates first
 				certificates = signature.getCertificates();
-				while (certificates.hasMoreElements())
-				{
+      while (certificates.hasMoreElements()) {
 					// get the next appended certificate
 					currentCertificate = (JAPCertificate) certificates.nextElement();
+        /* try to verify this appended certificate against the root certificates */
 
-					// try to verify this appended certificate against the trusted certificates
-					if (currentCertificate.verify(a_trustedCertificates))
-					{
-						// add this certificate to the collected certificates
-						if (a_collectedCertificates != null &&
-							!a_collectedCertificates.contains(currentCertificate))
-						{
-							currentCertificate.setEnabled(true);
-							a_collectedCertificates.addCertificate(currentCertificate);
-						}
-					}
-					else
-					{
-						/* this certificate cannot be verified; therefore, we do not use it here
-						 */
+        if (!currentCertificate.verify(a_rootCertificates)) {
+          /* this certificate cannot be verified; therefore, we do not use it here */
 						continue;
 					}
 
 					// check the signature against this certificate if it is not verified yet
-					if (!bVerified && verify(a_node, signature, currentCertificate.getPublicKey()))
-					{
+        if (!bVerified && verify(a_node, signature, currentCertificate.getPublicKey())) {
 						// the signature has been verified successfully
 						bVerified = true;
 					}
 				}
 			}
-			catch (Exception a_e)
-			{
+    catch (Exception a_e) {
 			}
 
 			if (!bVerified)
 			{
 				/* the signature could not be verified against the appended certificates;
-				 * check the signature against all public keys from the trusted certificates,
-				 * and, if the signature still can`t be verified, against all collected certificates
+       * check the signature against the Vector of direct certificates
 				 */
-				Vector certificateStores = new Vector();
-				certificateStores.addElement(a_trustedCertificates);
-				if (a_collectedCertificates != null)
-				{
-					certificateStores.addElement(a_collectedCertificates);
-				}
 
-				for (int i = 0; !bVerified && i < certificateStores.size(); i++)
-				{
-					certificates =
-						((JAPCertificateStore)certificateStores.elementAt(i)).
-						getAllEnabledCertificates().elements();
-					/* try to verify the signature with every enabled certificate in the store */
-					while (!bVerified && certificates.hasMoreElements())
-					{
-						try
-						{
-							if (verify(a_node, signature,
-									   ( (JAPCertificate) (certificates.nextElement())).getPublicKey()))
-							{
-								/* signature could be verified directly against a trusted root */
+      Enumeration additionalCertificates = a_directCertificates.elements();
+
+      /* try to verify the signature against the direct certificate */
+      while (!bVerified && additionalCertificates.hasMoreElements()) {
+        try {
+          if (verify(a_node, signature, ((JAPCertificate)(additionalCertificates.nextElement())).getPublicKey())) {
+            /* signature could be verified against one of the direct certificates */
 								bVerified = true;
 							}
 						}
-						catch (Exception e)
-						{
-						}
-					}
+        catch (Exception e) {
 				}
 			}
 		}
-		catch (Exception e)
-		{
-		}
-
 
 		if (bVerified)
 		{
@@ -532,7 +469,6 @@ public final class XMLSignature implements IXMLEncodable
 
 		// transform the public key into a temporary certificate
 		certificate = JAPCertificate.getInstance(a_publicKey,  new GregorianCalendar());
-		certificate.setEnabled(true);
 
 		return verify(a_node, certificate);
 	}
@@ -640,22 +576,18 @@ public final class XMLSignature implements IXMLEncodable
 
 
 	/**
-	 * Adds certificates to the signature. A certificate is not added if the signature cannot
+   * Adds a certificate to the signature. The certificate is not added if the signature cannot
 	 * be verified with it, or if the signature already contains the specified certificate.
-	 * @param a_certificates X509 certificates
-	 * @return true if at least one certificate was added; false otherwise
+   * @param a_certificate JAPCertificate
+   * @return true if the certificate was added; false otherwise
 	 */
-	public synchronized boolean addCertificates(JAPCertificateStore a_certificates)
+  public synchronized boolean addCertificate(JAPCertificate a_certificate)
 	{
-		Enumeration certificates;
 		Element elemCertificate;
-		JAPCertificate currentCertificate;
 		Node nodeKeyInfo;
 		Node nodeCertificateContainer;
-		boolean bAdded = false;
 
-		if (a_certificates == null || a_certificates.size() == 0)
-		{
+    if (a_certificate == null) {
 			return false;
 		}
 
@@ -678,51 +610,23 @@ public final class XMLSignature implements IXMLEncodable
 			nodeKeyInfo.appendChild(nodeCertificateContainer);
 		}
 
-		certificates = a_certificates.elements();
-		while (certificates.hasMoreElements())
-		{
-			currentCertificate = (JAPCertificate) certificates.nextElement();
-
 			/* test if the signature already contains the certificate and
 			 * if the certificate is suitable to verify the signature
 			 */
-			if (m_appendedCertificates.containsKey(currentCertificate) ||
-				!checkSignature(this, currentCertificate.getPublicKey()))
-			{
-				continue;
+    if (m_appendedCertificates.containsKey(a_certificate) || !checkSignature(this, a_certificate.getPublicKey())) {
+      return false;
 			}
 
 			// create a new certificate element
-			elemCertificate =
-				currentCertificate.toXmlElement(getSignatureElement().getOwnerDocument());
+    elemCertificate = a_certificate.toXmlElement(getSignatureElement().getOwnerDocument());
 
 			// add the certificate to the hashtable
-			m_appendedCertificates.put(currentCertificate, elemCertificate);
+    m_appendedCertificates.put(a_certificate, elemCertificate);
 
 			// add the certificate to the signature element
 			nodeCertificateContainer.appendChild(elemCertificate);
 
-			bAdded = true;
-		}
-
-		return bAdded;
-
-	}
-
-	/**
-	 * Adds a certificate to the signature. The certificate is not added if the signature cannot
-	 * be verified with it, or if the signature already contains the specified certificate.
-	 * @param a_certificate JAPCertificate
-	 * @return true if the certificate was added; false otherwise
-	 */
-	public synchronized boolean addCertificate(JAPCertificate a_certificate)
-	{
-		JAPCertificateStore certificate;
-
-		certificate = new JAPCertificateStore();
-		certificate.addCertificate(a_certificate);
-
-		return addCertificates(certificate);
+    return true;
 	}
 
 	/**

@@ -35,7 +35,6 @@ import java.util.Vector;
 
 import anon.crypto.AsymmetricCryptoKeyPair;
 import anon.crypto.JAPCertificate;
-import anon.crypto.JAPCertificateStore;
 import anon.crypto.PKCS12;
 import junitx.framework.extension.XtendedPrivateTestCase;
 
@@ -86,7 +85,7 @@ public class JAPCertificateTest extends XtendedPrivateTestCase
 	{
 		AsymmetricCryptoKeyPair keyPair;
 		JAPCertificate certificate = null;
-		JAPCertificateStore certificateStore = new JAPCertificateStore();
+		Vector certificateStore = new Vector();
 		Vector pkcs12Certificates = new Vector();
 		PKCS12 signingCertificate, signingCertificate2;
 		ByteArrayOutputStream testOutput;
@@ -106,13 +105,12 @@ public class JAPCertificateTest extends XtendedPrivateTestCase
 
 			certificate = signingCertificate.getX509Certificate();
 			//certificate.setEnabled(true); // X509 certs derived from PKCS12 must be enabled by default!!
-			certificateStore.addCertificate(certificate);
+			certificateStore.add(certificate);
 			pkcs12Certificates.addElement(signingCertificate);
 		}
 
 		// use the last certificate for testing
-		certificate = certificateStore.removeCertificate(certificate);
-		assertNotNull(certificate);
+		assertTrue(certificateStore.remove(certificate));
 
 		// this certificate cannot be verified
 		assertFalse(certificate.verify(certificateStore));
@@ -125,12 +123,12 @@ public class JAPCertificateTest extends XtendedPrivateTestCase
 		assertTrue(certificate.verify(certificateStore));
 
 		// put the signing certificate at the end of the list; the certificate can still be verified
-		certificateStore.removeCertificate(signingCertificate.getX509Certificate());
-		certificateStore.addCertificate(signingCertificate.getX509Certificate());
+		certificateStore.remove(signingCertificate.getX509Certificate());
+		certificateStore.add(signingCertificate.getX509Certificate());
 		assertTrue(certificate.verify(certificateStore));
 
 		// the signing certificate is removed completely; now the certificate cannot be verified!
-		certificateStore.removeCertificate(signingCertificate.getX509Certificate());
+		certificateStore.remove(signingCertificate.getX509Certificate());
 		assertFalse(certificate.verify(certificateStore));
 
 		// sign with two other pkcs12 certificates and verify the signature
@@ -141,7 +139,7 @@ public class JAPCertificateTest extends XtendedPrivateTestCase
 		assertTrue(certificate.verify(certificateStore));
 
 		// remove the first of the signing certificates (never mind; its signature has been overwritten)
-		certificateStore.removeCertificate(signingCertificate.getX509Certificate());
+		certificateStore.remove(signingCertificate.getX509Certificate());
 		assertTrue(certificate.verify(certificateStore));
 	}
 

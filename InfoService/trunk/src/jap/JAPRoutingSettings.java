@@ -40,7 +40,6 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import proxy.AnonProxy;
-import anon.crypto.JAPCertificateStore;
 import anon.infoservice.HTTPConnectionFactory;
 import anon.infoservice.InfoServiceDBEntry;
 import anon.infoservice.ListenerInterface;
@@ -748,14 +747,9 @@ public class JAPRoutingSettings extends Observable
    * after the connection to the forwarder is created. If there was an error or we are not in
    * client routing mode, an exception is thrown.
    *
-   * @param a_certificateStore A certificate store with the trusted root certificates for checking
-   *                           the signature of the mixcascades supported by the forwarder. If
-   *                           this value is null, no certificate check is done -> this would
-   *                           result in a serious security problem.
-   *
    * @return The connection descriptor with the connection offer from the forwarder.
    */
-  public ForwardConnectionDescriptor getConnectionDescriptor(JAPCertificateStore a_certificateStore) throws
+  public ForwardConnectionDescriptor getConnectionDescriptor() throws
     ClientForwardException
   {
     ForwardConnectionDescriptor connectionDescriptor = null;
@@ -772,7 +766,7 @@ public class JAPRoutingSettings extends Observable
       /* we are in client routing mode */
       try
       {
-        connectionDescriptor = protocolHandler.getConnectionDescriptor(a_certificateStore);
+        connectionDescriptor = protocolHandler.getConnectionDescriptor();
       }
       catch (ClientForwardException e)
       {
