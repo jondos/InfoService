@@ -50,6 +50,7 @@ import anon.pay.xml.XMLResponse;
 import anon.pay.xml.XMLTransCert;
 import anon.util.XMLUtil;
 import logging.*;
+import anon.tor.tinytls.*;
 //import pay.crypto.tinyssl.TinySSL;
 
 
@@ -93,8 +94,10 @@ public class BIConnection
 			}
 			else
 			{
-//				m_socket = new TinySSL(m_theBI.getHostName(), m_theBI.getPortNumber());
-				m_socket = new anon.tor.tinytls.TinyTLS(m_theBI.getHostName(), m_theBI.getPortNumber());
+				TinyTLS tls = new TinyTLS(m_theBI.getHostName(), m_theBI.getPortNumber());
+				tls.setRootKey(m_theBI.getCertificate());
+				tls.startHandshake();
+				m_socket = tls;
 			}
 			m_httpClient = new HttpClient(m_socket);
 		}

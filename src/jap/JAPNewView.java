@@ -134,6 +134,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private JPanel m_panelAnonService;
 	private int m_iPreferredWidth;
 	private boolean m_bIgnoreAnonComboEvents = false;
+	private FlippingPanel m_flippingPanelPayment;
+	private JLabel m_labelPayment;
 
 	public JAPNewView(String s, JAPController a_controller)
 	{
@@ -405,12 +407,46 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_flippingpanelAnon.setFlipped(true);
 		northPanel.add(m_flippingpanelAnon, c);
 
-//------------------ Kosten Panel
-
 //-----------------------------------------------------------
 		c.gridwidth = 2;
 		c.gridx = 0;
 		c.gridy = 5;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.weightx = 1;
+		northPanel.add(new JSeparator(), c);
+
+//------------------ Payment Panel
+		if(loadPay)
+		{
+		m_flippingPanelPayment = new FlippingPanel(this);
+
+		m_flippingPanelPayment.setFullPanel(new pay.gui.PaymentMainPanel());
+
+
+		gbl1 = new GridBagLayout();
+		c1 = new GridBagConstraints();
+		p = new JPanel(gbl1);
+		/** @todo internationalize */
+		m_labelPayment = new JLabel("Payment");
+		c1.insets = new Insets(0, 5, 0, 0);
+		c1.weightx = 0;
+		c1.anchor = GridBagConstraints.WEST;
+		c1.fill = GridBagConstraints.HORIZONTAL;
+		p.add(m_labelPayment, c1);
+		m_flippingPanelPayment.setSmallPanel(p);
+
+
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.weightx = 1;
+		c.anchor = GridBagConstraints.NORTHWEST;
+		c.gridy = 6;
+		m_flippingPanelPayment.setFlipped(false);
+		northPanel.add(m_flippingPanelPayment, c);
+		}
+//-----------------------------------------------------------
+		c.gridwidth = 2;
+		c.gridx = 0;
+		c.gridy = 7;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.weightx = 1;
 		northPanel.add(new JSeparator(), c);
@@ -543,13 +579,13 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.weightx = 1;
 		c.anchor = GridBagConstraints.NORTHWEST;
-		c.gridy = 6;
+		c.gridy = 8;
 		northPanel.add(m_flippingpanelOwnTraffic, c);
 
 //-----------------------------------------------------------
 		c.gridwidth = 2;
 		c.gridx = 0;
-		c.gridy = 7;
+		c.gridy = 9;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.weightx = 1;
 		northPanel.add(new JSeparator(), c);
@@ -690,7 +726,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.weightx = 1;
 		c.anchor = GridBagConstraints.NORTHWEST;
-		c.gridy = 8;
+		c.gridy = 10;
 		Observer observer = new Observer()
 		{
 			public void update(Observable a_notifier, Object a_message)
@@ -730,12 +766,12 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 //-----------------------------------------------------------
 		c.gridwidth = 2;
 		c.gridx = 0;
-		c.gridy = 9;
+		c.gridy = 11;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.weightx = 1;
 		northPanel.add(new JSeparator(), c);
 //Status
-		c.gridy = 10;
+		c.gridy = 12;
 		m_StatusPanel = new StatusPanel();
 		northPanel.add(m_StatusPanel, c);
 
@@ -785,7 +821,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		JAPUtil.setMnemonic(m_bttnHelp, JAPMessages.getString("helpButtonMn"));
 		JAPUtil.setMnemonic(m_bttnQuit, JAPMessages.getString("quitButtonMn"));
 
-		c.gridy = 12;
+		c.gridy = 13;
 		northPanel.add(buttonPanel, c);
 
 		// "West": Image
@@ -800,9 +836,9 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		// "South": Buttons
 
 
-		// add Components to Frame
-		// temporary testing of new GUI interface... (Bastian Voigt)
-		if (loadPay)
+//---------------------------------------------- add Components to Frame
+		// temporary testing of new GUI interface now disabled... (Bastian Voigt)
+		/*		if (loadPay)
 		{
 			// add old GUI as a tab
 			JPanel oldInterfacePanel = new JPanel(new BorderLayout());
@@ -831,21 +867,23 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			tab.addTab("Old interface", oldInterfacePanel);
 			tab.addTab("New Payment Interface", drumherum);
 			getContentPane().add(tab);
+		   PayAccountsFile.getInstance().addPaymentListener(new MyPaymentListener());
 		}
 		else
-		{ // if loadPay is off, all stays as usual
+		  { // if loadPay is off, all stays as usual*/
 
 			getContentPane().setBackground(buttonPanel.getBackground());
 			getContentPane().add(northPanel, BorderLayout.CENTER);
 			m_panelMain = level;
+
 			/*if (!JAPModel.isSmallDisplay())
 			 {
 			 getContentPane().add(northPanel, BorderLayout.NORTH);
 			 getContentPane().add(westLabel, BorderLayout.WEST);
 			 getContentPane().add(new JLabel("  "), BorderLayout.EAST); //Spacer
 			 getContentPane().add(buttonPanel, BorderLayout.SOUTH);
-			 }*/
 		}
+		   }*/
 		//tabs.setSelectedComponent(level);
 
 		addWindowListener(new WindowAdapter()

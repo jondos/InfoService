@@ -33,6 +33,7 @@ import org.w3c.dom.*;
 import anon.util.*;
 import java.io.ByteArrayInputStream;
 
+/** @todo add spent, BiID */
 public class XMLTransCert extends AbstractXMLSignable
 {
 	//~ Instance fields ********************************************************

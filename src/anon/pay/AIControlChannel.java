@@ -47,6 +47,17 @@ public class AIControlChannel extends SyncControlChannel
 		}
 		catch (Exception ex)
 		{
+			// maybe it is a XMLErrorMessage then?
+			try
+			{
+				XMLErrorMessage msg = new XMLErrorMessage(docMsg);
+				PayAccountsFile.getInstance().signalAccountError(msg);
+			}
+			catch (Exception ex3)
+			{
+				// hmm, no error message, no request...
+			}
+
 			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Error parsing AI request: " + ex.getMessage());
 			// report errormessage back to AI..
 			XMLErrorMessage err = new XMLErrorMessage(XMLErrorMessage.ERR_BAD_REQUEST, ex.getMessage());
@@ -99,6 +110,8 @@ public class AIControlChannel extends SyncControlChannel
 		if(request.isAccountRequest())
 		{
 			PayAccount currentAccount = PayAccountsFile.getInstance().getActiveAccount();
+			/** @todo send notification to GUI - especially if currentAccount == null at this point */
+			PayAccountsFile.getInstance().signalAccountRequest();
 			this.sendMessage(XMLUtil.toXMLDocument(currentAccount.getAccountCertificate()));
 		}
 	}

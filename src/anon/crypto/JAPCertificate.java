@@ -73,6 +73,8 @@ final public class JAPCertificate implements IXMLEncodable, Cloneable
 	private boolean m_bEnabled;
 	private String m_id;
 
+	public static final String XML_ELEMENT_NAME = "X509Certificate";
+
 	/**
 	 * Creates a new certificate from a valid X509 certificate structure.
 	 * @param x509cert a valid X509 certificate structure
@@ -161,7 +163,7 @@ final public class JAPCertificate implements IXMLEncodable, Cloneable
 	{
 		try
 		{
-			if (!a_NodeRoot.getNodeName().equals("X509Certificate"))
+			if (!a_NodeRoot.getNodeName().equals(XML_ELEMENT_NAME))
 			{
 				return null;
 			}
@@ -498,11 +500,12 @@ final public class JAPCertificate implements IXMLEncodable, Cloneable
 	 */
 	public Element toXmlElement(Document a_doc)
 	{
-		Element elemX509Cert = a_doc.createElement("X509Certificate");
+		Element elemX509Cert = a_doc.createElement(XML_ELEMENT_NAME);
 		Text t = a_doc.createTextNode(new String(getEncoded()));
 		elemX509Cert.setAttribute("xml:space", "preserve");
 		elemX509Cert.appendChild(t);
 
 		return elemX509Cert;
 	}
+
 }

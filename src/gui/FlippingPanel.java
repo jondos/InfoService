@@ -68,6 +68,20 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import jap.JAPUtil;
 
+/**
+ * This class is used for the various panels on the Jap's
+ * main view (JapNewView).
+ *
+ * It is a panel with two states (normal vs. flipped).
+ * In normal state the contents of the full panel is shown,
+ * in flipped state the contents of the small panel is shown,
+ * which should be much smaller in height.
+ *
+ * The user can toggle the flipped state by clicking an arrow icon on the
+ * left side.
+ *
+ * @author ??
+ */
 final public class FlippingPanel extends JPanel
 {
 	private JPanel m_panelContainer;
