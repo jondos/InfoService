@@ -64,7 +64,7 @@ import anon.JAPAnonServiceListener;
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPModel implements JAPAnonServiceListener{
 
-	public static final String aktVersion = "00.01.026"; // Version of JAP
+	public static final String aktVersion = "00.01.027"; // Version of JAP
 
 	public  Vector            anonServerDatabase = null; // vector of all available mix cascades
 	public final static String   defaultanonHost   = "mix.inf.tu-dresden.de";
@@ -860,7 +860,7 @@ private final class SetAnonModeAsync implements Runnable
 						if(ret==JAPAnonService.E_SUCCESS)
 							{
 								// show a Reminder message that active contents should be disabled
-								Object[] options = { model.getString("disableActCntMessageDontRemind"), model.getString("okButton") };
+								Object[] options = { /*model.getString("disableActCntMessageDontRemind"),*/ model.getString("okButton") };
 								JCheckBox checkboxRemindNever=new JCheckBox(model.getString("disableActCntMessageNeverRemind"));
 								Object[] message={model.getString("disableActCntMessage"),checkboxRemindNever};
 								if (!mbActCntMessageNotRemind)
@@ -871,10 +871,10 @@ private final class SetAnonModeAsync implements Runnable
 																		model.getString("disableActCntMessageTitle"),
 																		JOptionPane.DEFAULT_OPTION,
 																		JOptionPane.WARNING_MESSAGE,
-																		null, options, options[1]);
+																		null, options, options[0]);
 										mbActCntMessageNeverRemind = checkboxRemindNever.isSelected();
 										mbDoNotAbuseReminder       = checkboxRemindNever.isSelected();
-										if(ret==0||mbActCntMessageNeverRemind)
+										if(/*ret==0||*/mbActCntMessageNeverRemind)
 											mbActCntMessageNotRemind=true;
 									}
 								if(mbSocksListener)
