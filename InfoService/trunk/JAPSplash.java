@@ -9,13 +9,13 @@ public final class JAPSplash extends Window
     public  JAPSplash (JAPModel m)
 			{
 				super(new Frame());
+				setBackground(Color.black);
 				JLabel waitLabel = new JLabel(m.getString("loading"), JLabel.CENTER);
-				waitLabel.setBackground(Color.black);
+				waitLabel.setOpaque(false);
 				waitLabel.setForeground(Color.white);
 
-				setBackground(Color.black);
 				add(new JLabel(m.loadImageIcon(m.SPLASHFN, true)), BorderLayout.NORTH);
-				add(new JLabel(m.loadImageIcon(m.BUSYFN, true)), BorderLayout.CENTER);
+	//			add(new JLabel(m.loadImageIcon(m.BUSYFN, true)), BorderLayout.CENTER);
 				add(waitLabel, BorderLayout.SOUTH);
 	
 				pack();
