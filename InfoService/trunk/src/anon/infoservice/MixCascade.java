@@ -157,7 +157,7 @@ public class MixCascade implements AnonServerDescription
 		/* try to get the certificates from the Signature node */
 		NodeList signatureNodes = mixCascadeNode.getElementsByTagName("Signature");
 		/* create an empty certificate store */
-		m_mixCascadeCertificates = JAPCertificateStore.getInstance();
+		m_mixCascadeCertificates = new JAPCertificateStore();
 		if (signatureNodes.getLength() > 0)
 		{
 			Element signatureNode = (Element) (signatureNodes.item(0));
@@ -167,7 +167,8 @@ public class MixCascade implements AnonServerDescription
 				for (int i = 0; i < certificates.length; i++)
 				{
 					/* the certificate path have been checked, before this mixcascade node was parsed */
-					m_mixCascadeCertificates.addCertificate(certificates[i], true);
+					certificates[i].setEnabled(true);
+					m_mixCascadeCertificates.addCertificate(certificates[i]);
 				}
 			}
 		}
@@ -236,7 +237,7 @@ public class MixCascade implements AnonServerDescription
 		mixIds = new Vector();
 		mixIds.addElement(mixCascadeId);
 		/* create an empty certificate store */
-		m_mixCascadeCertificates = JAPCertificateStore.getInstance();
+		m_mixCascadeCertificates = new JAPCertificateStore();
 		/* there is no xml structure yet */
 		m_xmlStructure = null;
 		/* create a dummy current status */

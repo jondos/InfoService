@@ -153,8 +153,7 @@ public class InfoServiceHolder
 				this.preferedInfoService = preferedInfoService;
 			}
 			LogHolder.log(LogLevel.INFO, LogType.NET,
-						  "InfoServiceHolder: setPreferedInfoService: Prefered InfoService is now: " +
-						  preferedInfoService.getName());
+						  "Prefered InfoService is now: " + preferedInfoService.getName());
 		}
 	}
 

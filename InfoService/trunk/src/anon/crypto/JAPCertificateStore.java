@@ -33,29 +33,23 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import anon.util.XMLUtil;
+import anon.util.IXMLEncodable;
+import anon.util.XMLParseException;
 
 /**
  * Certificate store class. It contains the (root) certificates in a hashtable structure,
  * that are used within the verification process.
- *
  */
-final public class JAPCertificateStore
+final public class JAPCertificateStore implements IXMLEncodable
 {
 	private Hashtable m_HTCertStore = null;
 
-	private JAPCertificateStore()
+	/**
+	 * Creates a new certificate store.
+	 */
+	public JAPCertificateStore()
 	{
 		m_HTCertStore = new Hashtable();
-	}
-
-	/**
-	 * Creates any empty certificate store.
-	 *
-	 * @return certificate store
-	 */
-	public static JAPCertificateStore getInstance()
-	{
-		return new JAPCertificateStore();
 	}
 
 	/**
@@ -63,14 +57,22 @@ final public class JAPCertificateStore
 	 * the status).
 	 * e.g. retrieved XML structure <CertificateAuthorities>
 	 * @param a_nlX509CertsPlusStatus The XML nodelist that contains the CAs.
-	 * @return null if not all certificates could be read
+	 * @exception XMLParseException if an error occurs while parsing the XML structure
 	 */
-	public static JAPCertificateStore getInstance(NodeList a_nlX509CertsPlusStatus)
+	public JAPCertificateStore(NodeList a_nlX509CertsPlusStatus)
+		throws XMLParseException
 	{
-		try
+		this();
+
+		// if no certificates are given, return an empty certificate store
+		if (a_nlX509CertsPlusStatus == null)
 		{
-			JAPCertificateStore js = getInstance();
+			return;
+		}
+
 			for (int i = 0; i < a_nlX509CertsPlusStatus.getLength(); i++)
+			{
+			try
 			{
 				Node nodeCertAuth = a_nlX509CertsPlusStatus.item(i);
 				Element elemEnabled = (Element) XMLUtil.getFirstChildByName(nodeCertAuth, "Enabled");
@@ -78,24 +80,20 @@ final public class JAPCertificateStore
 				Element elemX509Data = (Element) XMLUtil.getFirstChildByName(elemKeyInfo, "X509Data");
 				Element elemX509Cert = (Element) XMLUtil.getFirstChildByName(elemX509Data, "X509Certificate");
 				JAPCertificate cert = JAPCertificate.getInstance(elemX509Cert);
-				boolean bEnabled = XMLUtil.parseNodeBoolean(elemEnabled, false);
-				if (!js.addCertificate(cert, bEnabled))
-				{
-					return null;
-				}
+				cert.setEnabled(XMLUtil.parseNodeBoolean(elemEnabled, false));
+				addCertificate(cert);
 			}
-			return js;
-		}
-		catch (Exception e)
+			catch (Exception a_e)
 		{
-			return null;
+				// adding a certificate does not need to be successful, but it doesn`t matter if it is not
+			}
 		}
 	}
 
 	/* Duplicates this CertificateStore and including duplicates of the Certifcates*/
 	public Object clone()
 	{
-		JAPCertificateStore certs = JAPCertificateStore.getInstance();
+		JAPCertificateStore certs = new JAPCertificateStore();
 		Enumeration enumer = elements();
 		while (enumer.hasMoreElements())
 		{
@@ -107,20 +105,17 @@ final public class JAPCertificateStore
 	}
 
 	/**
-	 * Adds a certificate to the store (including status)
+	 * Adds a certificate to the store.
 	 *
 	 * @param a_cert The certificate to be added.
-	 * @param a_bStatus The status that's being set for the certificate.
-	 * @return true if successful
-	 * @return false otherwise
+	 * @return true if successful, false otherwise
 	 */
-	public synchronized boolean addCertificate(JAPCertificate a_cert, boolean a_bStatus)
+	public synchronized boolean addCertificate(JAPCertificate a_cert)
 	{
 		if (a_cert == null)
 		{
 			return false;
 		}
-		a_cert.setEnabled(a_bStatus);
 		try
 		{
 			m_HTCertStore.put(JAPCertificateStoreId.getId(a_cert), a_cert);
@@ -182,7 +177,7 @@ final public class JAPCertificateStore
 	}
 
 	/**
-	 * Returns the keys of the hashtable structure.
+	 * Returns the keys respective the ids of the hashtable structure.
 	 * @see anon.crypto.JAPCertificateStoreId
 	 * @return the ids of the certificates.
 	 */
@@ -193,7 +188,6 @@ final public class JAPCertificateStore
 
 	/**
 	 * Returns the certificates that are stored in the hashtable structure.
-	 *
 	 * @return Certificates
 	 */
 	public Enumeration elements()
@@ -229,7 +223,7 @@ final public class JAPCertificateStore
 	 * @param a_doc The XML document, which is the environment for the created XML node.
 	 * @return The trusted CAs XML node.
 	 */
-	public Element toXmlNode(Document a_doc)
+	public Element toXmlElement(Document a_doc)
 	{
 		Element r_elemCAs = a_doc.createElement("CertificateAuthorities");
 
@@ -257,7 +251,7 @@ final public class JAPCertificateStore
 			Element elemX509Data = a_doc.createElement("X509Data");
 			elemCA.appendChild(elemKeyInfo);
 			elemKeyInfo.appendChild(elemX509Data);
-			elemX509Data.appendChild(cert.toXmlNode(a_doc));
+			elemX509Data.appendChild(cert.toXmlElement(a_doc));
 		}
 
 		return r_elemCAs;
