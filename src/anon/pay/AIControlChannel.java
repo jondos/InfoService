@@ -1,18 +1,20 @@
 package anon.pay;
 
+import java.sql.Timestamp;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import anon.pay.xml.XMLBalance;
 import anon.pay.xml.XMLChallenge;
+import anon.pay.xml.XMLEasyCC;
 import anon.pay.xml.XMLErrorMessage;
 import anon.pay.xml.XMLPayRequest;
+import anon.pay.xml.XMLResponse;
 import anon.server.impl.MuxSocket;
 import anon.server.impl.SyncControlChannel;
+import anon.util.XMLUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import anon.pay.xml.*;
-import anon.util.*;
-import java.sql.*;
 
 /**
  * This control channel is used for communication with the AI (AccountingInstance or
@@ -33,7 +35,7 @@ public class AIControlChannel extends SyncControlChannel
 	public AIControlChannel(Pay pay, MuxSocket muxSocket)
 	{
 		super(CHAN_ID, true);
-		m_Pay = pay;
+		//m_Pay = pay;
 		m_MuxSocket = muxSocket;
 		m_bFirstBalance = true;
 	}
@@ -134,26 +136,25 @@ public class AIControlChannel extends SyncControlChannel
 				}).start();
 
 				PayAccount currentAccount = PayAccountsFile.getInstance().getActiveAccount();
-				if( (currentAccount==null) || (currentAccount.getAccountNumber()!=cc.getAccountNumber()))
+				if ( (currentAccount == null) || (currentAccount.getAccountNumber() != cc.getAccountNumber()))
 				{
 					throw new Exception("Received CC with Wrong accountnumber");
 				}
 
 				long newBytes = currentAccount.updateCurrentBytes(m_MuxSocket);
 
-
-	// calculate number of bytes transferred with other cascades
-/*				long transferredWithOtherCascades = 0;
-				XMLAccountInfo info = currentAccount.getAccountInfo();
-				if(info!=null)
-				{
-					Enumeration enu=info.getCCs();
-					while(enu.hasMoreElements())
+				// calculate number of bytes transferred with other cascades
+				/*				long transferredWithOtherCascades = 0;
+					XMLAccountInfo info = currentAccount.getAccountInfo();
+					if(info!=null)
 					{
-						transferredWithOtherCascades +=
-							((XMLEasyCC)enu.nextElement()).getTransferredBytes();
-					}
-				}*/
+					 Enumeration enu=info.getCCs();
+					 while(enu.hasMoreElements())
+					 {
+					  transferredWithOtherCascades +=
+					   ((XMLEasyCC)enu.nextElement()).getTransferredBytes();
+					 }
+					}*/
 				if ( (newBytes + currentAccount.getSpent()) < cc.getTransferredBytes())
 				{
 					// the AI wants us to sign an unrealistic number of bytes
@@ -172,9 +173,9 @@ public class AIControlChannel extends SyncControlChannel
 			}
 		}
 		Timestamp t = request.getBalanceTimestamp();
-		if (t != null || m_bFirstBalance==true)
+		if (t != null || m_bFirstBalance == true)
 		{
-			m_bFirstBalance=false;
+			m_bFirstBalance = false;
 			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "AI requested balance");
 			PayAccount currentAccount = PayAccountsFile.getInstance().getActiveAccount();
 			XMLBalance b = currentAccount.getBalance();
