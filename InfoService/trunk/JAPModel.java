@@ -143,6 +143,11 @@ public final class JAPModel {
 			view=v;	
 		}
 	
+	public JAPView getView()
+		{
+			return view;
+		}
+	
 	public void load() {
 		// Load default anon services
 		anonServerDatabase = new Vector();
@@ -402,7 +407,7 @@ public final class JAPModel {
 	
 	public void aboutJAP() {
 		javax.swing.JOptionPane.showMessageDialog
-			(null, 
+			(view, 
 			 model.TITLE + "\n" + 
 			  model.getString("infoText") + "\n\n" + 
 			  model.AUTHOR + "\n\n" +
@@ -427,7 +432,7 @@ public final class JAPModel {
 			catch (Exception e)
 				{
 					JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPModel:fetchAnonServers: "+e);
-					javax.swing.JOptionPane.showMessageDialog(null, model.getString("errorConnectingInfoService"), model.getString("errorConnectingInfoServiceTitle"), javax.swing.JOptionPane.ERROR_MESSAGE); 
+					javax.swing.JOptionPane.showMessageDialog(view, model.getString("errorConnectingInfoService"), model.getString("errorConnectingInfoServiceTitle"), javax.swing.JOptionPane.ERROR_MESSAGE); 
 				}
 		}
 	
@@ -489,7 +494,7 @@ public final class JAPModel {
 						// Download failed
 						// Alert, and reset anon mode to false
 						JAPDebug.out(JAPDebug.ERR,JAPDebug.MISC,"JAPModel:versionCheck(): Exception" + e);
-						javax.swing.JOptionPane.showMessageDialog(null, model.getString("downloadFailed")+model.getString("infoURL"), model.getString("downloadFailedTitle"), javax.swing.JOptionPane.ERROR_MESSAGE); 
+						javax.swing.JOptionPane.showMessageDialog(view, model.getString("downloadFailed")+model.getString("infoURL"), model.getString("downloadFailedTitle"), javax.swing.JOptionPane.ERROR_MESSAGE); 
 						anonMode = false;
 						notifyJAPObservers();
 						return -1;
@@ -515,7 +520,7 @@ public final class JAPModel {
 			// Verson check failed
 			// ->Alert, and reset anon mode to false
 			JAPDebug.out(JAPDebug.ERR,JAPDebug.MISC,"JAPModel: "+e);
-			javax.swing.JOptionPane.showMessageDialog(null, model.getString("errorConnectingInfoService"), model.getString("errorConnectingInfoServiceTitle"), javax.swing.JOptionPane.ERROR_MESSAGE); 
+			javax.swing.JOptionPane.showMessageDialog(view, model.getString("errorConnectingInfoService"), model.getString("errorConnectingInfoServiceTitle"), javax.swing.JOptionPane.ERROR_MESSAGE); 
 			anonMode = false;
 			notifyJAPObservers();
 			return -1;

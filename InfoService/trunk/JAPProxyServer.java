@@ -89,7 +89,7 @@ public class JAPProxyServer implements Runnable
 									model.notifyJAPObservers();
 									javax.swing.JOptionPane.showMessageDialog
 																	(
-																	 null, 
+																	 model.getView(), 
 																	 model.getString("errorConnectingFirstMix"),
 																	 model.getString("errorConnectingFirstMixTitle"),
 																	 javax.swing.JOptionPane.ERROR_MESSAGE
@@ -109,7 +109,7 @@ public class JAPProxyServer implements Runnable
 							model.notifyJAPObservers();
 							javax.swing.JOptionPane.showMessageDialog
 								(
-								 null, 
+								 model.getView(), 
 								 model.getString("errorConnectingFirstMix"),
 								 model.getString("errorConnectingFirstMixTitle"),
 								 javax.swing.JOptionPane.ERROR_MESSAGE
