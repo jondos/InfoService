@@ -593,6 +593,22 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.weightx = 1;
 		northPanel.add(new JSeparator(), c);
+//Status
+		c.gridy=10;
+		StatusPanel status=new StatusPanel();
+		northPanel.add(status,c);
+		status.addMsg("Status 1");
+		status.addMsg("Status 2");
+		status.addMsg("Status 3");
+//-----------------------------------------------------------
+		c.gridwidth = 2;
+		c.gridx = 0;
+		c.gridy = 11;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.weightx = 1;
+		northPanel.add(new JSeparator(), c);
+//---------------------------------------------------------
+
 //Buttons
 		gbl1 = new GridBagLayout();
 		c1 = new GridBagConstraints();
@@ -630,7 +646,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		JAPUtil.setMnemonic(m_bttnHelp, JAPMessages.getString("helpButtonMn"));
 		JAPUtil.setMnemonic(m_bttnQuit, JAPMessages.getString("quitButtonMn"));
 
-		c.gridy = 10;
+		c.gridy = 12;
 		northPanel.add(buttonPanel, c);
 
 		// "West": Image
