@@ -682,6 +682,7 @@
     <property category="archiving" name="libraryStates.1" value="3:http"/>
     <property category="archiving" name="libraryStates.2" value="1:mac"/>
     <property category="archiving" name="libraryStates.3" value="3:BouncyCastleLightForJAP"/>
+    <property category="archiving" name="libraryStates.4" value="3:Log4j"/>
     <property category="archiving" name="manifestMainClass" value="JAP"/>
     <property category="archiving" name="outPathState" value="1"/>
     <property category="archiving" name="targetCompressed" value="1"/>
