@@ -438,10 +438,10 @@ public class PayAccountsFile
 	public PayAccount getAccount(long accountNumber)
 	{
 		PayAccount tmp;
-		Enumeration enum = m_Accounts.elements();
-		while (enum.hasMoreElements())
+		Enumeration enumer = m_Accounts.elements();
+		while (enumer.hasMoreElements())
 		{
-			tmp = (PayAccount) enum.nextElement();
+			tmp = (PayAccount) enumer.nextElement();
 			if (tmp.getAccountNumber() == accountNumber)
 			{
 				return tmp;
@@ -492,10 +492,10 @@ public class PayAccountsFile
 	{
 		PayAccount tmpAccount;
 		Vector tmp = new Vector();
-		Enumeration enum = m_Accounts.elements();
-		while (enum.hasMoreElements())
+		Enumeration enumer = m_Accounts.elements();
+		while (enumer.hasMoreElements())
 		{
-			tmpAccount = (PayAccount) enum.nextElement();
+			tmpAccount = (PayAccount) enumer.nextElement();
 			tmp.addElement(new Long(tmpAccount.getAccountNumber()));
 		}
 		return tmp.elements();
@@ -521,10 +521,10 @@ public class PayAccountsFile
 	public void addAccount(PayAccount account) throws Exception
 	{
 		PayAccount tmp;
-		Enumeration enum = m_Accounts.elements();
-		while (enum.hasMoreElements())
+		Enumeration enumer = m_Accounts.elements();
+		while (enumer.hasMoreElements())
 		{
-			tmp = (PayAccount) enum.nextElement();
+			tmp = (PayAccount) enumer.nextElement();
 			if (tmp.getAccountNumber() == account.getAccountNumber())
 			{
 				throw new IllegalArgumentException();

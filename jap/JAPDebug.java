@@ -302,10 +302,10 @@ final public class JAPDebug extends WindowAdapter implements ActionListener, Log
 				Properties p = System.getProperties();
 				//StringWriter s=new StringWriter();
 				//p.list(new PrintWriter(s));
-				Enumeration enum = p.propertyNames();
-				while (enum.hasMoreElements())
+				Enumeration enumer = p.propertyNames();
+				while (enumer.hasMoreElements())
 				{
-					String st = (String) enum.nextElement();
+					String st = (String) enumer.nextElement();
 					String value = p.getProperty(st);
 					m_textareaConsole.append(st + ": " + value + "\n");
 				}

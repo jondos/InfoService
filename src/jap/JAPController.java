@@ -1804,11 +1804,11 @@ public final class JAPController implements ProxyListener
 		{
 			try
 			{
-				Enumeration enum = observerVector.elements();
+				Enumeration enumer = observerVector.elements();
 				int i = 0;
-				while (enum.hasMoreElements())
+				while (enumer.hasMoreElements())
 				{
-					JAPObserver listener = (JAPObserver) enum.nextElement();
+					JAPObserver listener = (JAPObserver) enumer.nextElement();
 					LogHolder.log(LogLevel.DEBUG, LogType.MISC, "JAPModel:notifyJAPObservers: " + i);
 					listener.valuesChanged();
 					i++;
@@ -1827,10 +1827,10 @@ public final class JAPController implements ProxyListener
 	public synchronized void channelsChanged(int channels)
 	{
 		nrOfChannels = channels;
-		Enumeration enum = observerVector.elements();
-		while (enum.hasMoreElements())
+		Enumeration enumer = observerVector.elements();
+		while (enumer.hasMoreElements())
 		{
-			JAPObserver listener = (JAPObserver) enum.nextElement();
+			JAPObserver listener = (JAPObserver) enumer.nextElement();
 			listener.channelsChanged(channels);
 		}
 	}
@@ -1838,10 +1838,10 @@ public final class JAPController implements ProxyListener
 	public synchronized void transferedBytes(int bytes)
 	{
 		nrOfBytes += bytes;
-		Enumeration enum = observerVector.elements();
-		while (enum.hasMoreElements())
+		Enumeration enumer = observerVector.elements();
+		while (enumer.hasMoreElements())
 		{
-			JAPObserver listener = (JAPObserver) enum.nextElement();
+			JAPObserver listener = (JAPObserver) enumer.nextElement();
 			listener.transferedBytes(nrOfBytes);
 		}
 	}

@@ -184,9 +184,9 @@ public class PKCS7SignedData implements PKCSObjectIdentifiers
 		BigInteger serialNumber = isAnds.getCertificateSerialNumber().getValue();
 		X509Principal issuer = new X509Principal(isAnds.getName());
 
-		for (Enumeration enum = certs.elements(); enum.hasMoreElements(); )
+		for (Enumeration enumer = certs.elements(); enumer.hasMoreElements(); )
 		{
-			JAPCertificate cert = (JAPCertificate) enum.nextElement();
+			JAPCertificate cert = (JAPCertificate) enumer.nextElement();
 			boolean bS = serialNumber.equals(cert.getSerialNumber());
 			if (bS && issuer.equals(new X509Principal(cert.getIssuer())))
 			{
