@@ -29,11 +29,14 @@
  * Created on Mar 16, 2004
  *
  */
-package anon.tor.tinytls;
+package anon.tor.tinytls.ciphersuites;
 
 import java.math.BigInteger;
 
 import anon.crypto.JAPCertificate;
+import anon.tor.tinytls.TLSException;
+import anon.tor.tinytls.TLSRecord;
+import anon.tor.tinytls.keyexchange.Key_Exchange;
 
 /**
  * @author stefan
@@ -41,7 +44,8 @@ import anon.crypto.JAPCertificate;
  * A abstract ciphersuite that can used TinyTLS
  * this is the parent class for all ciphersuites
  */
-public abstract class CipherSuite{
+public abstract class CipherSuite
+{
 
 	private byte[] m_ciphersuitecode;
 	protected String m_ciphersuitename = "Name not set";
@@ -88,7 +92,7 @@ public abstract class CipherSuite{
 	 */
 	public CipherSuite(byte[] code) throws TLSException
 	{
-		if(code.length!=2)
+		if (code.length != 2)
 		{
 			throw new TLSException("wrong CipherSuiteCode ");
 		}
@@ -105,7 +109,12 @@ public abstract class CipherSuite{
 	{
 		this.m_keyexchangealgorithm = ke;
 	}
-	
+
+	/**
+	 * gets the key exchange algorithm that is used
+	 * @return
+	 * key exchange algorithm
+	 */
 	public Key_Exchange getKeyExchangeAlgorithm()
 	{
 		return this.m_keyexchangealgorithm;
@@ -129,11 +138,16 @@ public abstract class CipherSuite{
 		return this.m_ciphersuitecode;
 	}
 
+	/**
+	 * processes the client key exchange
+	 * @param dh_y
+	 * diffie hellman parameter
+	 */
 	public void processClientKeyExchange(BigInteger dh_y)
 	{
 		this.m_keyexchangealgorithm.processClientKeyExchange(dh_y);
-		calculateKeys(this.m_keyexchangealgorithm.calculateKeys(),false);
-		
+		calculateKeys(this.m_keyexchangealgorithm.calculateKeys(), false);
+
 	}
 
 	/**
@@ -144,7 +158,7 @@ public abstract class CipherSuite{
 	public byte[] calculateClientKeyExchange() throws TLSException
 	{
 		byte[] b = this.m_keyexchangealgorithm.calculateClientKeyExchange();
-		calculateKeys(this.m_keyexchangealgorithm.calculateKeys(),true);
+		calculateKeys(this.m_keyexchangealgorithm.calculateKeys(), true);
 		return b;
 	}
 
@@ -153,10 +167,10 @@ public abstract class CipherSuite{
 	 * @param finishedmessage the message that have to be valideted
 	 * @throws TLSException
 	 */
-	public void processServerFinished(TLSRecord msg,byte[] handshakemessages) throws TLSException
+	public void processServerFinished(TLSRecord msg, byte[] handshakemessages) throws TLSException
 	{
 		decode(msg);
-		m_keyexchangealgorithm.processServerFinished(msg.m_Data,msg.m_dataLen,handshakemessages);
+		m_keyexchangealgorithm.processServerFinished(msg.m_Data, msg.m_dataLen, handshakemessages);
 	}
 
 	/**
@@ -177,7 +191,7 @@ public abstract class CipherSuite{
 	 * calculate server and client write keys (see RFC2246 TLS Record Protocoll)
 	 * @param keys array of bytes(see RFC how it is calculated)
 	 */
-	protected abstract void calculateKeys(byte[] keys,boolean forclient);
+	protected abstract void calculateKeys(byte[] keys, boolean forclient);
 
 	public String toString()
 	{

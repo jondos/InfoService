@@ -69,7 +69,7 @@ import gui.JAPMultilineLabel;
 import logging.LogLevel;
 import logging.LogType;
 
-final class JAPConf extends JDialog
+final class JAPConf extends JDialog implements ActionListener
 {
 
 	final static public String PORT_TAB = "PORT_TAB";
@@ -129,7 +129,7 @@ final class JAPConf extends JDialog
 	private JSlider m_sliderDebugLevel;
 
 	private JPanel m_pPort, m_pFirewall, m_pMisc;
-	private JButton m_bttnDefaultConfig, m_bttnCancel;
+	private JButton m_bttnDefaultConfig, m_bttnCancel, m_bttnHelp;
 
 	private Font m_fontControls;
 
@@ -211,9 +211,10 @@ final class JAPConf extends JDialog
 
 		JPanel buttonPanel = new JPanel();
 		buttonPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
-		JButton bttnHelp = new JButton(JAPMessages.getString("updateM_bttnHelp"));
-		bttnHelp.setFont(m_fontControls);
-		buttonPanel.add(bttnHelp);
+		m_bttnHelp = new JButton(JAPMessages.getString("updateM_bttnHelp"));
+		m_bttnHelp.setFont(m_fontControls);
+		buttonPanel.add(m_bttnHelp);
+		m_bttnHelp.addActionListener(this);
 
 		m_bttnDefaultConfig = new JButton(JAPMessages.getString("bttnDefaultConfig"));
 		m_bttnDefaultConfig.setFont(m_fontControls);
@@ -300,6 +301,16 @@ final class JAPConf extends JDialog
 		m_moduleSystem.createSavePoints();
 		/* call the original method */
 		super.show();
+	}
+
+	public void actionPerformed(ActionEvent e)
+	{
+		if (e.getSource() == m_bttnHelp)
+		{
+			JFrame main = (JFrame)this.getParent();
+			JAPHelp helpwindow = new JAPHelp(main, this);
+			helpwindow.loadCurrentContext();
+		}
 	}
 
 	JPanel buildPortPanel()

@@ -29,19 +29,21 @@
  * Created on Mar 29, 2004
  *
  */
-package anon.tor.tinytls;
+package anon.tor.tinytls.keyexchange;
 
 import java.math.BigInteger;
 
 import anon.crypto.IMyPrivateKey;
 import anon.crypto.JAPCertificate;
+import anon.tor.tinytls.TLSException;
 
 /**
  * @author stefan
  *
  * Abstract Class which is performs the key exchange
  */
-public abstract class Key_Exchange{
+public abstract class Key_Exchange
+{
 
 	/**
 	 * Constructor
@@ -51,7 +53,8 @@ public abstract class Key_Exchange{
 	{
 	}
 
-	public abstract byte[] generateServerKeyExchange(IMyPrivateKey key,byte[] clientrandom, byte[] serverrandom) throws TLSException;
+	public abstract byte[] generateServerKeyExchange(IMyPrivateKey key, byte[] clientrandom,
+		byte[] serverrandom) throws TLSException;
 
 	/**
 	 * Decode the server keys and check the certificate
@@ -61,9 +64,17 @@ public abstract class Key_Exchange{
 	 * @param servercertificate servercertificate
 	 * @throws TLSException
 	 */
-	public abstract void  processServerKeyExchange(byte[] b,int b_offset,int b_len,
-											byte[] clientrandom, byte[] serverrandom,JAPCertificate cert) throws TLSException;
+	public abstract void processServerKeyExchange(byte[] b, int b_offset, int b_len,
+												  byte[] clientrandom, byte[] serverrandom,
+												  JAPCertificate cert) throws TLSException;
 
+	/**
+	 * calculates server finished message
+	 * @param handshakemessages
+	 * handshakemessages
+	 * @return
+	 * server finished message
+	 */
 	public abstract byte[] calculateServerFinished(byte[] handshakemessages);
 
 	/**
@@ -71,8 +82,14 @@ public abstract class Key_Exchange{
 	 * @param b server finished message
 	 * @throws TLSException
 	 */
-	public abstract void processServerFinished(byte[] b,int len,byte[] handshakemessages) throws TLSException;
+	public abstract void processServerFinished(byte[] b, int len, byte[] handshakemessages) throws
+		TLSException;
 
+	/**
+	 * processes the client key exchange
+	 * @param dh_y
+	 * diffie hellman parameter
+	 */
 	public abstract void processClientKeyExchange(BigInteger dh_y);
 
 	/**
@@ -82,7 +99,16 @@ public abstract class Key_Exchange{
 	 */
 	public abstract byte[] calculateClientKeyExchange() throws TLSException;
 
-	public abstract void processClientFinished(byte[] verify_data,byte[] handshakemessages) throws TLSException;
+	/**
+	 * checks the client finished message
+	 * @param verify_data
+	 * verify data
+	 * @param handshakemessages
+	 * handshakemessages
+	 * @throws TLSException
+	 */
+	public abstract void processClientFinished(byte[] verify_data, byte[] handshakemessages) throws
+		TLSException;
 
 	/**
 	 * generate the client finished message (see RFC2246)
