@@ -28,7 +28,6 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 package anon.crypto;
 
 import java.util.Hashtable;
-import org.bouncycastle.asn1.DERInteger;
 import java.util.Enumeration;
 
 
