@@ -193,7 +193,7 @@ public final class Database implements Runnable
 					{
 						/* we remove the old entry now, because it has reached the expire time */
 						LogHolder.log(LogLevel.INFO, LogType.MISC,
-									  "Database: run: DatabaseEntry " +
+									  "DatabaseEntry " +
 									  ( (DatabaseEntry) (m_serviceDatabase.get(m_timeoutList.firstElement()))).
 									  getId() + " has reached the expire time and is removed.");
 						m_serviceDatabase.remove(m_timeoutList.firstElement());
@@ -225,7 +225,7 @@ public final class Database implements Runnable
 					{
 						m_serviceDatabase.wait(sleepTime);
 						LogHolder.log(LogLevel.DEBUG, LogType.MISC,
-									  "Database: run: One entry could be expired. Wake up...");
+									  "One entry could be expired. Wake up...");
 					}
 					catch (Exception e)
 					{
@@ -238,7 +238,7 @@ public final class Database implements Runnable
 					{
 						m_serviceDatabase.wait();
 						LogHolder.log(LogLevel.DEBUG, LogType.MISC,
-									  "Database: run: First entry in the database. " +
+									  "First entry in the database. " +
 									  "Look when it expires. Wake up...");
 					}
 					catch (Exception e)

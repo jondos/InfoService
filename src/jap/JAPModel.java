@@ -90,7 +90,7 @@ public final class JAPModel
   private JAPModel()
   {
 	  m_resourceLoader = new ResourceLoader("JAP");
-    m_certStore = JAPCertificateStore.getInstance();
+    m_certStore = new JAPCertificateStore();
     try
     {
       m_certJAPCodeSigning = JAPCertificate.getInstance(
@@ -398,7 +398,7 @@ public final class JAPModel
     }
     else
     {
-      m_certStore = JAPCertificateStore.getInstance();
+      m_certStore = new JAPCertificateStore();
     }
   }
 

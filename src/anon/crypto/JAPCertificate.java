@@ -58,12 +58,12 @@ import org.w3c.dom.Node;
 import org.w3c.dom.Text;
 import anon.util.Base64;
 import anon.util.XMLUtil;
-
+import anon.util.IXMLEncodable;
 /**
  * A certificate class.
  *
  */
-final public class JAPCertificate
+final public class JAPCertificate implements IXMLEncodable
 {
 	private X509CertificateStructure m_x509cert;
 	private IMyPublicKey m_PubKey;
@@ -73,6 +73,11 @@ final public class JAPCertificate
 	{
 	}
 
+	/**
+	 * Creates a new certificate from a valid X509 certificate structure.
+	 * @param x509cert a valid X509 certificate structure
+	 * @return null if no certificate could be created from the certificate structure
+	 */
 	public static JAPCertificate getInstance(X509CertificateStructure x509cert)
 	{
 		try
@@ -102,7 +107,7 @@ final public class JAPCertificate
 		}
 	}
 
-	/** Creates a certificate instance by using an inputstream.
+	/** Creates a certificate by using an input stream.
 	 *
 	 * @param a_in Inputstream that holds the certificate
 	 * @return Certificate
@@ -431,17 +436,16 @@ final public class JAPCertificate
 	}
 
 	/**
-	 * Creates XML node of certificate consisting of:
-	 * <X509Certifcate>
+	 * Creates XML element of certificate consisting of:
+	 * <X509Certificate>
 	 *  Base64 encocded cert
 	 * </X509Certificate>
 	 *
-	 * @param doc The XML document, which is the environment for the created XML node.
+	 * @param a_doc The XML document, which is the environment for the created XML element.
 	 *
-	 * @return Certificate as XML node.
+	 * @return Certificate as XML element.
 	 */
-
-	public Element toXmlNode(Document a_doc)
+	public Element toXmlElement(Document a_doc)
 	{
 		Element elemX509Cert = a_doc.createElement("X509Certificate");
 		Text t = a_doc.createTextNode(new String(getEncoded()));
@@ -450,5 +454,4 @@ final public class JAPCertificate
 
 		return elemX509Cert;
 	}
-
 }

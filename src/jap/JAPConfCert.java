@@ -75,7 +75,7 @@ public class JAPConfCert extends AbstractJAPConfModule
 	public JAPConfCert()
 	{
 		super(null);
-		m_jcs = JAPCertificateStore.getInstance();
+		m_jcs = new JAPCertificateStore();
 	}
 
 	private void updateInfoPanel(JAPCertificate a_cert)
@@ -202,7 +202,7 @@ public class JAPConfCert extends AbstractJAPConfModule
 
 	public void onResetToDefaultsPressed()
 	{
-		m_jcs = JAPCertificateStore.getInstance();
+		m_jcs = new JAPCertificateStore();
 		JAPCertificate cert = null;
 		try
 		{
@@ -214,7 +214,8 @@ public class JAPConfCert extends AbstractJAPConfModule
 		{
 			cert = null;
 		}
-		m_jcs.addCertificate(cert, true);
+		cert.setEnabled(true);
+		m_jcs.addCertificate(cert);
 		updateGuiOutput();
 	}
 
@@ -337,7 +338,8 @@ public class JAPConfCert extends AbstractJAPConfModule
 						// m_listCert.setModel(m_listmodelCertList);
 						// m_scrpaneList.getViewport().removeAll();
 						// m_scrpaneList.getViewport().add(m_listCert, null);
-						m_jcs.addCertificate(cert, true);
+						cert.setEnabled(true);
+						m_jcs.addCertificate(cert);
 						if (cert.getEnabled())
 						{
 							m_bttnCertStatus.setText(JAPMessages.getString("certBttnDisable"));
@@ -642,7 +644,7 @@ public class JAPConfCert extends AbstractJAPConfModule
 		}
 		else
 		{
-			m_jcs = JAPCertificateStore.getInstance();
+			m_jcs = new JAPCertificateStore();
 		}
 		updateGuiOutput();
 	}

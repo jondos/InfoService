@@ -285,13 +285,7 @@ final public class JAPSignature
 		Element elemX509Certificate = (Element) XMLUtil.getFirstChildByName(elemX509Data,
 			"X509Certificate");
 		JAPCertificate appendedCertificate = null;
-		try
-		{
-			appendedCertificate = JAPCertificate.getInstance(elemX509Certificate);
-		}
-		catch (Throwable to)
-		{
-		}
+		appendedCertificate = JAPCertificate.getInstance(elemX509Certificate);
 		if (appendedCertificate != null)
 		{
 			JAPCertificate[] t = new JAPCertificate[1];
@@ -439,7 +433,7 @@ final public class JAPSignature
 			elemKeyInfo.appendChild(elemX509Data);
 			for (int i = 0; i < certsToAdd.length; i++)
 			{
-				elemX509Data.appendChild(certsToAdd[i].toXmlNode(doc));
+				elemX509Data.appendChild(certsToAdd[i].toXmlElement(doc));
 
 			}
 		}

@@ -493,7 +493,7 @@ public final class JAPController implements ProxyListener, Observer
 							)
 						{
 							// certificate store found in jap.conf
-							JAPCertificateStore jcs = JAPCertificateStore.getInstance(nlX509Certs);
+							JAPCertificateStore jcs = new JAPCertificateStore(nlX509Certs);
 
 							try
 							{
@@ -508,12 +508,13 @@ public final class JAPController implements ProxyListener, Observer
 					}
 					else
 					{
-						JAPCertificateStore jcs = JAPCertificateStore.getInstance();
+						JAPCertificateStore jcs = new JAPCertificateStore();
 						JAPCertificate cert = JAPCertificate.getInstance(
 							m_Model.getResourceLoader().loadResource(
 							JAPConstants.CERTSPATH +
 							JAPConstants.TRUSTEDROOTCERT));
-						jcs.addCertificate(cert, true);
+						cert.setEnabled(true);
+						jcs.addCertificate(cert);
 						setCertificateStore(jcs);
 					}
 				}
@@ -842,7 +843,7 @@ public final class JAPController implements ProxyListener, Observer
 			{
 				JAPCertificateStore jcsCurrent = JAPModel.getCertificateStore();
 				// System.out.println("jcs : " + jcs.size());
-				e.appendChild(jcsCurrent.toXmlNode(doc));
+				e.appendChild(jcsCurrent.toXmlElement(doc));
 			}
 			catch (Exception ex)
 			{
