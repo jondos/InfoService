@@ -63,10 +63,11 @@ public final class JAPAboutAutoScroller extends Canvas/*JPanel*/ implements Runn
 				});
 				m_imgBackgroundPicture=background;
 				m_textArea=new JEditorPane();
-				m_textArea.setOpaque(false);
+				//m_textArea.setOpaque(false);
 				m_textArea.setEditable(false);
 				m_textArea.setHighlighter(null);
 				m_textArea.setEnabled(false);
+        m_textArea.setBackground(new Color(204,204,204));
 				m_textArea.setSize(m_iScrollAreaWidth,10000);
 				m_textArea.setContentType("text/html");
 				m_textArea.setText(htmlText.trim());
@@ -78,8 +79,10 @@ public final class JAPAboutAutoScroller extends Canvas/*JPanel*/ implements Runn
 				m_bttnOk.setMnemonic('O');
 				m_bttnOk.setOpaque(false);
 				m_bttnOk.setSelected(true);
-				m_bttnOk.setSize(m_bttnOk.getPreferredSize()); //resizing the OK-Button
-
+				Dimension d=m_bttnOk.getPreferredSize();
+        if(d.width>76)
+          d.width=76;
+        m_bttnOk.setSize(d); //resizing the OK-Button
 				m_Thread=new Thread(this);
 				m_bRun=false;
 			}
