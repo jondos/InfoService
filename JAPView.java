@@ -224,8 +224,6 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 		p21.setLayout(new BoxLayout(p21, BoxLayout.X_AXIS) );
 		proxyCheckBox = new JCheckBox(model.getString("confProxyCheckBox"));
 		proxyCheckBox.addActionListener(this);
-		// not yet implemented --> disable it
-		proxyCheckBox.setEnabled(false);
 		p21.add(proxyCheckBox);
 		p21.add(Box.createRigidArea(new Dimension(5,0)) );
 		p21.add(Box.createHorizontalGlue() );
@@ -353,7 +351,7 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 				else if (event.getSource() == helpB)
 					showHelpWindow();
 				else if (event.getSource() == proxyCheckBox) 
-					model.setProxyMode(proxyCheckBox.isSelected());
+					model.setUseProxy(proxyCheckBox.isSelected());
 				else if (event.getSource() == anonCheckBox) 
 					model.setAnonMode(anonCheckBox.isSelected());
 				else if (event.getSource() == ano1CheckBox)
@@ -384,7 +382,7 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
     private void updateValues() {
 		// Config panel
 		portnumberTextField.setText(String.valueOf(model.getPortNumber()));
-		proxyCheckBox.setSelected(model.isProxyMode());
+		proxyCheckBox.setSelected(model.getUseProxy());
 		proxyTextField.setText(model.getProxyHost()+":"+String.valueOf(model.getProxyPort()));
 		infoServiceTextField.setText(model.getInfoServiceHost()+":"+String.valueOf(model.getInfoServicePort()));
 		anonCheckBox.setSelected(model.isAnonMode());

@@ -34,7 +34,7 @@ public final class JAPModel {
 	private boolean  isRunningProxy    = false;  // true if a proxy is running
 	private  String   proxyHostName     = "ikt.inf.tu-dresden.de";
 	private  int      proxyPortNumber   = 80;
-	private boolean  proxyMode         = false;  // indicates whether JAP connects via a proxy or directly
+	private boolean  mbUseProxy         = false;  // indicates whether JAP connects via a proxy or directly
 	private String   infoServiceHostName      = "anon.inf.tu-dresden.de";
 	private int      infoServicePortNumber    = 6543;
 	public  String   anonHostName      = "anon.inf.tu-dresden.de";
@@ -194,7 +194,7 @@ public final class JAPModel {
 			NamedNodeMap n=root.getAttributes();
 			// 
 			portNumber=Integer.valueOf(n.getNamedItem("portNumber").getNodeValue()).intValue();
-			proxyMode=((n.getNamedItem("proxyMode").getNodeValue()).equals("true")?true:false);
+			setUseProxy(((n.getNamedItem("proxyMode").getNodeValue()).equals("true")?true:false));
 			
 			String host;
 			int port;
@@ -256,7 +256,7 @@ public final class JAPModel {
 			doc.appendChild(e);
 			//
 			e.setAttribute("portNumber",Integer.toString(portNumber));
-			e.setAttribute("proxyMode",(proxyMode?"true":"false"));
+			e.setAttribute("proxyMode",(mbUseProxy?"true":"false"));
 			e.setAttribute("proxyHostName",proxyHostName);
 			e.setAttribute("proxyPortNumber",Integer.toString(proxyPortNumber));
 			e.setAttribute("infoServiceHostName",infoServiceHostName);
@@ -372,6 +372,7 @@ public final class JAPModel {
 					infoServicePortNumber=port;
 					if(mInfoService!=null)
 						mInfoService.setInfoService(host,port);
+					notifyJAPObservers();
 					return true;
 				}
 		}
@@ -401,6 +402,30 @@ public final class JAPModel {
 			return mInfoService;
 		}
 	
+	public void setUseProxy(boolean b)
+		{
+			synchronized(this)
+				{
+					mbUseProxy=b;
+					if(mInfoService!=null)
+						{
+							if(mbUseProxy)
+								mInfoService.setProxy(proxyHostName,proxyPortNumber);
+							else
+								mInfoService.setProxy(null,0);
+						}						
+				}
+			notifyJAPObservers();
+		}
+	
+	public boolean getUseProxy()
+		{
+			synchronized(this)
+				{
+					return mbUseProxy;
+				}
+		}
+
 	public boolean setProxy(String host,int port)
 		{
 			if(!isPort(port))
@@ -411,8 +436,9 @@ public final class JAPModel {
 				{
 					proxyHostName=host;
 					proxyPortNumber=port;
-					if(mInfoService!=null)
+					if(mInfoService!=null&&mbUseProxy)
 						mInfoService.setProxy(host,port);
+					notifyJAPObservers();
 					return true;
 				}
 		}
@@ -480,15 +506,7 @@ public final class JAPModel {
 	public boolean isAnonMode() {
 		return anonMode;
 	}
-	
-	public synchronized void setProxyMode(boolean b) {
-		proxyMode=b;
-		notifyJAPObservers();
-	}
-	
-	public boolean isProxyMode() {
-		return proxyMode;
-	}
+
 
 	private void startProxy() 
 		{
