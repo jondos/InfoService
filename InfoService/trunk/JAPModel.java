@@ -11,18 +11,23 @@ import java.awt.Window;
 import java.awt.MediaTracker;
 import java.awt.Toolkit;
 import javax.swing.ImageIcon;
+
 public final class JAPModel implements JAPObserver {
 
-	public boolean		debug =false;
+//	public boolean		debug = true;
+/* July 31, 2000: Der Debuglevel wird ab sofort in JAPDebug festgelegt.
+ * Leider funktioniert die Prozedur dort noch nicht richtig,
+ * weshalb der Debuglevel nur durch Neukompilierung geaendert werden kann. (HF)
+*/
 	
-	public int			portNumber = 4001;
-	private int			runningPortNumber = 0; // the port where proxy listens
+	public int		portNumber = 4001;
+	private int		runningPortNumber = 0; // the port where proxy listens
 	private boolean		isRunningProxy = false; // true if a proxy is running
 	public String 		proxyHostName = "ikt.inf.tu-dresden.de";
-	public int 			proxyPortNumber = 80;
+	public int 		proxyPortNumber = 80;
 	private boolean		proxyMode = false;
 	public String		anonHostName ="sole.icsi.berkeley.edu";
-	public int			anonPortNumber = 6543;
+	public int		anonPortNumber = 6543;
 	private boolean		anonMode = false;
 	public String 		status1 = "???";
 	public String 		status2 = "???";
@@ -39,7 +44,7 @@ public final class JAPModel implements JAPObserver {
 	private ResourceBundle msg;
 
 	static final String TITLE = "JAVA ANON PROXY -- JAP";
-  static final String AUTHOR = "The JAP-Team\n<jap@inf.tu-dresden.de>\n\n(c) 2000\n";
+	static final String AUTHOR = "(c) 2000 The JAP-Team";
 
 	static final int    MAXHELPLANGUAGES = 6;
 	static final String MESSAGESFN   = "JAPMessages";
@@ -51,8 +56,8 @@ public final class JAPModel implements JAPObserver {
 	static final String CONFIGICONFN = "images/icoc.gif";
 	static final String METERICONFN  = "images/icom.gif";
 	static final String[] METERFNARRAY = {
-						"images/meterN.gif",
-						"images/meterD.gif",
+						"images/meterN.gif", // no measure available
+						"images/meterD.gif", // anonymity deactivated
 						"images/meter1.gif",
 						"images/meter2.gif",
 						"images/meter3.gif",
@@ -75,6 +80,7 @@ public final class JAPModel implements JAPObserver {
 	private static JAPDebug jdebug=null;
 	
 	public static JAPKeyPool keypool;
+	
 	public JAPModel () {
 		// Load Texts for Messages and Windows
 		try 
@@ -156,7 +162,7 @@ public final class JAPModel implements JAPObserver {
 		float f;
 		f = trafficSituation / (float)MAXPROGRESSBARVALUE;
 		f = f * (METERFNARRAY.length-3) + 2;
-		if (debug) System.out.println("getCurrentProtectionLevel(): f="+f);
+		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:getCurrentProtectionLevel(): f="+f);
 		return (int)f;
 	}
 		
@@ -270,28 +276,27 @@ public final class JAPModel implements JAPObserver {
 		observerVector.addElement(o);
 	}
 	
-	public synchronized void notifyJAPObservers()
-		{
-			if (debug) System.out.println("notifyJAPObservers()");
-				Enumeration enum = observerVector.elements();
-	    while (enum.hasMoreElements())
-				{
-					JAPObserver listener = (JAPObserver)enum.nextElement();
-					listener.valuesChanged(this);
-				}
+	public synchronized void notifyJAPObservers() {
+		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:notifyJAPObservers()");
+		Enumeration enum = observerVector.elements();
+		while (enum.hasMoreElements()) {
+			JAPObserver listener = (JAPObserver)enum.nextElement();
+			listener.valuesChanged(this);
 		}
+	}
 	
-		public void valuesChanged (Object o)
-			{
-				if (debug)
-					System.out.println("model.valuesChanged()");
-				if (runningPortNumber != portNumber)
-					{
-						stopProxy();
-						startProxy();
-					}
-			}
+	public void valuesChanged (Object o) {
+		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:model.valuesChanged()");
+		if (runningPortNumber != portNumber) {
+			stopProxy();
+			startProxy();
+		}
+	}
 
+/*
+-->Stefan: Dies hat auf meinem Mac nicht funktioniert.
+Bevor Du es zurueckaenderst, sollten wir darueber reden!
+			
 	ImageIcon loadImageIcon(String strImage,boolean sync)
 		{
 			ImageIcon i=null;
@@ -316,13 +321,17 @@ public final class JAPModel implements JAPObserver {
 				}
 			return i;
 		}
+*/		
+	ImageIcon loadImageIcon(String strImage,boolean sync) {
+		return new ImageIcon(strImage);
+	}
+	
 	
 	public void centerFrame(Window f)
 		{
 			Dimension screenSize = f.getToolkit().getScreenSize();
 			Dimension ownSize = f.getSize();
-			f.setLocation((screenSize.width  - ownSize.width )/2,
-										(screenSize.height - ownSize.height)/2);
+			f.setLocation((screenSize.width-ownSize.width )/2,(screenSize.height-ownSize.height)/2);
 		}
 }
 

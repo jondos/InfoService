@@ -40,7 +40,7 @@ public final class JAPConf extends JDialog
 				portP = buildportPanel();
 				httpP = buildhttpPanel();
 				anonP = buildanonPanel();
-				miscP =buildmiscPanel();
+				miscP = buildmiscPanel();
 				tabs.addTab( model.getString("confListenerTab"), null, portP );
 				tabs.addTab( model.getString("confProxyTab"), null, httpP );
 				tabs.addTab( model.getString("confAnonTab"), null, anonP );
@@ -151,7 +151,7 @@ public final class JAPConf extends JDialog
 				fetchB = new JButton(model.getString("settingsAnonFetch"));
 				fetchB.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
-						if (model.debug) System.out.println("fetchB");
+					JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPConf:fetchB");
 				        JOptionPane.showMessageDialog(null,model.getString("notYetImlmplemented"));
 				}});
 				select = new JComboBox();
@@ -166,7 +166,7 @@ public final class JAPConf extends JDialog
 				select.setEnabled(false);
 				select.addActionListener(new ActionListener() {
 							public void actionPerformed(ActionEvent e) {
-						if (model.debug) System.out.println("Item " + select.getSelectedIndex() + " selected");
+						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPConf:Item " + select.getSelectedIndex() + " selected");
 						if (select.getSelectedIndex() > 0) {
 							anonhostTextField.setText( 
 				               ((AnonServerDBEntry)model.anonServerDatabase.elementAt(select.getSelectedIndex()-1)).getHost()   );
@@ -179,7 +179,7 @@ public final class JAPConf extends JDialog
 				bg.add(b3);
 				b1.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
-						if (model.debug) System.out.println("b1 selected");
+						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPConf:b1 selected");
 						fetchB.setEnabled(true);
 						select.setEnabled(false);
 						anonhostTextField.setEditable(false);
@@ -187,7 +187,7 @@ public final class JAPConf extends JDialog
 				}});
 				b2.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
-						if (model.debug) System.out.println("b2 selected");
+						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPConf:b2 selected");
 						fetchB.setEnabled(false);
 						select.setEnabled(true);
 						anonhostTextField.setEditable(false);
@@ -196,7 +196,7 @@ public final class JAPConf extends JDialog
 				}});
 				b3.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
-						if (model.debug) System.out.println("b3 selected");
+						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPConf:b3 selected");
 						fetchB.setEnabled(false);
 						select.setEnabled(false);
 						anonhostTextField.setEditable(true);
@@ -277,7 +277,7 @@ public final class JAPConf extends JDialog
 				JPanel p2=new JPanel();
 				p2.setLayout(new BorderLayout());
 				p2.setBorder( new TitledBorder(model.getString("miscconfigBorder")) );
-				p2.add(new JLabel("Much space for additional settings..."), BorderLayout.NORTH);
+				p2.add(new JLabel(model.getString("noOptions")), BorderLayout.NORTH);
 				p.add(p1, BorderLayout.NORTH);
 				p.add(p2, BorderLayout.CENTER);
 				return p;
