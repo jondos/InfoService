@@ -28,12 +28,15 @@
 package jap;
 
 import java.text.NumberFormat;
+import java.util.Enumeration;
+import java.util.Observable;
+import java.util.Observer;
+import java.util.Vector;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.Graphics;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
@@ -44,37 +47,37 @@ import java.awt.Toolkit;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.border.*;
-
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
-import javax.swing.JTabbedPane;
-import javax.swing.SwingConstants;
+import javax.swing.JRadioButton;
+import javax.swing.JSeparator;
 import javax.swing.SwingUtilities;
-import javax.swing.border.TitledBorder;
-import javax.swing.plaf.basic.BasicProgressBarUI;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
 import anon.infoservice.MixCascade;
 import anon.infoservice.StatusInfo;
+import gui.FlippingPanel;
 import gui.JAPDll;
+import gui.JAPMixCascadeComboBox;
+import gui.MyProgressBarUI;
+import gui.StatusPanel;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import pay.gui.PaymentMainPanel;
-import javax.swing.*;
-import gui.*;
-import java.awt.event.*;
-import java.util.*;
-import java.awt.Component;
 
 final public class JAPNewView extends AbstractJAPMainView implements IJAPMainView, ActionListener,
 	JAPObserver
@@ -125,7 +128,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private JLabel m_labelForwarderRejectedConnectionsLabel, m_labelForwarderUsedBandwidthLabel;
 	private JLabel m_labelForwarderConnections;
 	private JProgressBar m_progressOwnTrafficActivity, m_progressOwnTrafficActivitySmall, m_progressAnonLevel;
-	private JButton m_bttnAnonDetails;
+	private JButton m_bttnAnonDetails, m_bttnReload;
 	private JCheckBox m_cbAnonymityOn;
 	private JRadioButton m_rbAnonOff, m_rbAnonOn;
 	private JCheckBox m_cbForwarding, m_cbForwardingSmall;
@@ -235,27 +238,29 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.fill = GridBagConstraints.HORIZONTAL;
 		c1.weightx = 1;
 		m_panelAnonService.add(m_comboAnonServices, c1);
-		JButton bttnReload = new JButton(JAPUtil.loadImageIcon(JAPConstants.IMAGE_RELOAD, true));
-		bttnReload.addActionListener(new ActionListener()
+		m_bttnReload = new JButton(JAPUtil.loadImageIcon(JAPConstants.IMAGE_RELOAD, true));
+		m_bttnReload.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				m_Controller.fetchMixCascades(false);
+				m_bttnReload.setEnabled(false);
+				fetchMixCascadesAsync();
 			}
 		});
-		bttnReload.setRolloverEnabled(true);
+		m_bttnReload.setRolloverEnabled(true);
 		ImageIcon icon = JAPUtil.loadImageIcon(JAPConstants.IMAGE_RELOAD_ROLLOVER, true);
-		bttnReload.setRolloverIcon(icon);
-		bttnReload.setSelectedIcon(icon);
-		bttnReload.setRolloverSelectedIcon(icon);
-		bttnReload.setPressedIcon(icon);
-		bttnReload.setOpaque(false);
+		m_bttnReload.setRolloverIcon(icon);
+		m_bttnReload.setSelectedIcon(icon);
+		m_bttnReload.setRolloverSelectedIcon(icon);
+		m_bttnReload.setPressedIcon(icon);
+		m_bttnReload.setDisabledIcon(JAPUtil.loadImageIcon(JAPConstants.IMAGE_RELOAD_DISABLED, true));
+		m_bttnReload.setOpaque(false);
 		c1.gridx = 2;
 		c1.weightx = 0;
 		c1.fill = GridBagConstraints.NONE;
-		bttnReload.setBorder(new EmptyBorder(0, 0, 0, 0));
-		bttnReload.setFocusPainted(false);
-		m_panelAnonService.add(bttnReload, c1);
+		m_bttnReload.setBorder(new EmptyBorder(0, 0, 0, 0));
+		m_bttnReload.setFocusPainted(false);
+		m_panelAnonService.add(m_bttnReload, c1);
 		m_bttnAnonDetails = new JButton(JAPMessages.getString("ngBttnAnonDetails"));
 		m_bttnAnonDetails.addActionListener(new ActionListener()
 		{
@@ -416,32 +421,30 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		northPanel.add(new JSeparator(), c);
 
 //------------------ Payment Panel
-		if(loadPay)
+		if (loadPay)
 		{
-		m_flippingPanelPayment = new FlippingPanel(this);
+			m_flippingPanelPayment = new FlippingPanel(this);
 
-		m_flippingPanelPayment.setFullPanel(new pay.gui.PaymentMainPanel());
+			m_flippingPanelPayment.setFullPanel(new pay.gui.PaymentMainPanel());
 
+			gbl1 = new GridBagLayout();
+			c1 = new GridBagConstraints();
+			p = new JPanel(gbl1);
+			/** @todo internationalize */
+			m_labelPayment = new JLabel("Payment");
+			c1.insets = new Insets(0, 5, 0, 0);
+			c1.weightx = 0;
+			c1.anchor = GridBagConstraints.WEST;
+			c1.fill = GridBagConstraints.HORIZONTAL;
+			p.add(m_labelPayment, c1);
+			m_flippingPanelPayment.setSmallPanel(p);
 
-		gbl1 = new GridBagLayout();
-		c1 = new GridBagConstraints();
-		p = new JPanel(gbl1);
-		/** @todo internationalize */
-		m_labelPayment = new JLabel("Payment");
-		c1.insets = new Insets(0, 5, 0, 0);
-		c1.weightx = 0;
-		c1.anchor = GridBagConstraints.WEST;
-		c1.fill = GridBagConstraints.HORIZONTAL;
-		p.add(m_labelPayment, c1);
-		m_flippingPanelPayment.setSmallPanel(p);
-
-
-		c.fill = GridBagConstraints.HORIZONTAL;
-		c.weightx = 1;
-		c.anchor = GridBagConstraints.NORTHWEST;
-		c.gridy = 6;
-		m_flippingPanelPayment.setFlipped(false);
-		northPanel.add(m_flippingPanelPayment, c);
+			c.fill = GridBagConstraints.HORIZONTAL;
+			c.weightx = 1;
+			c.anchor = GridBagConstraints.NORTHWEST;
+			c.gridy = 6;
+			m_flippingPanelPayment.setFlipped(false);
+			northPanel.add(m_flippingPanelPayment, c);
 		}
 //-----------------------------------------------------------
 		c.gridwidth = 2;
@@ -839,51 +842,51 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 //---------------------------------------------- add Components to Frame
 		// temporary testing of new GUI interface now disabled... (Bastian Voigt)
 		/*		if (loadPay)
-		{
-			// add old GUI as a tab
-			JPanel oldInterfacePanel = new JPanel(new BorderLayout());
-			oldInterfacePanel.setBackground(buttonPanel.getBackground());
-			oldInterfacePanel.add(level, BorderLayout.CENTER);
-			m_panelMain = level;
-			if (!JAPModel.isSmallDisplay())
-			{
-				oldInterfacePanel.add(northPanel, BorderLayout.NORTH);
-				oldInterfacePanel.add(westLabel, BorderLayout.WEST);
-				oldInterfacePanel.add(new JLabel("  "), BorderLayout.EAST); //Spacer
-				oldInterfacePanel.add(buttonPanel, BorderLayout.SOUTH);
-			}
+		   {
+		 // add old GUI as a tab
+		 JPanel oldInterfacePanel = new JPanel(new BorderLayout());
+		 oldInterfacePanel.setBackground(buttonPanel.getBackground());
+		 oldInterfacePanel.add(level, BorderLayout.CENTER);
+		 m_panelMain = level;
+		 if (!JAPModel.isSmallDisplay())
+		 {
+		  oldInterfacePanel.add(northPanel, BorderLayout.NORTH);
+		  oldInterfacePanel.add(westLabel, BorderLayout.WEST);
+		  oldInterfacePanel.add(new JLabel("  "), BorderLayout.EAST); //Spacer
+		  oldInterfacePanel.add(buttonPanel, BorderLayout.SOUTH);
+		 }
 
-			// initialize new Payment GUI
-			JPanel drumherum = new JPanel(new BorderLayout());
-			JPanel dummyPanel1 = new JPanel();
-			dummyPanel1.setBorder(new TitledBorder("Dummy Panel 1"));
-			JPanel dummyPanel2 = new JPanel();
-			dummyPanel2.setBorder(new TitledBorder("Dummy Panel 2"));
-			JPanel newInterfacePanel = new PaymentMainPanel();
-			JTabbedPane tab = new JTabbedPane();
-			drumherum.add(dummyPanel2, BorderLayout.NORTH);
-			drumherum.add(dummyPanel1, BorderLayout.CENTER);
-			drumherum.add(newInterfacePanel, BorderLayout.SOUTH);
-			tab.addTab("Old interface", oldInterfacePanel);
-			tab.addTab("New Payment Interface", drumherum);
-			getContentPane().add(tab);
+		 // initialize new Payment GUI
+		 JPanel drumherum = new JPanel(new BorderLayout());
+		 JPanel dummyPanel1 = new JPanel();
+		 dummyPanel1.setBorder(new TitledBorder("Dummy Panel 1"));
+		 JPanel dummyPanel2 = new JPanel();
+		 dummyPanel2.setBorder(new TitledBorder("Dummy Panel 2"));
+		 JPanel newInterfacePanel = new PaymentMainPanel();
+		 JTabbedPane tab = new JTabbedPane();
+		 drumherum.add(dummyPanel2, BorderLayout.NORTH);
+		 drumherum.add(dummyPanel1, BorderLayout.CENTER);
+		 drumherum.add(newInterfacePanel, BorderLayout.SOUTH);
+		 tab.addTab("Old interface", oldInterfacePanel);
+		 tab.addTab("New Payment Interface", drumherum);
+		 getContentPane().add(tab);
 		   PayAccountsFile.getInstance().addPaymentListener(new MyPaymentListener());
-		}
-		else
+		   }
+		   else
 		  { // if loadPay is off, all stays as usual*/
 
-			getContentPane().setBackground(buttonPanel.getBackground());
-			getContentPane().add(northPanel, BorderLayout.CENTER);
-			m_panelMain = level;
+		getContentPane().setBackground(buttonPanel.getBackground());
+		getContentPane().add(northPanel, BorderLayout.CENTER);
+		m_panelMain = level;
 
-			/*if (!JAPModel.isSmallDisplay())
-			 {
-			 getContentPane().add(northPanel, BorderLayout.NORTH);
-			 getContentPane().add(westLabel, BorderLayout.WEST);
-			 getContentPane().add(new JLabel("  "), BorderLayout.EAST); //Spacer
-			 getContentPane().add(buttonPanel, BorderLayout.SOUTH);
-		}
-		   }*/
+		/*if (!JAPModel.isSmallDisplay())
+		 {
+		 getContentPane().add(northPanel, BorderLayout.NORTH);
+		 getContentPane().add(westLabel, BorderLayout.WEST);
+		 getContentPane().add(new JLabel("  "), BorderLayout.EAST); //Spacer
+		 getContentPane().add(buttonPanel, BorderLayout.SOUTH);
+		   }
+		  }*/
 		//tabs.setSelectedComponent(level);
 
 		addWindowListener(new WindowAdapter()
@@ -928,7 +931,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			Dimension ds = Toolkit.getDefaultToolkit().getScreenSize();
 			if (m.m_OldMainWindowLocation != null && m.m_OldMainWindowLocation.x >= 0 &&
 				m.m_OldMainWindowLocation.y > 0 /*&&m.m_OldMainWindowLocation.x<ds.width&&
-						m.m_OldMainWindowLocation.y<ds.height*/
+					   m.m_OldMainWindowLocation.y<ds.height*/
 				)
 			{
 				setLocation(m.m_OldMainWindowLocation);
@@ -1499,7 +1502,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			m_bIgnoreAnonComboEvents = true;
 			boolean bMixCascadeAlreadyIncluded = false;
 			m_comboAnonServices.removeAllItems();
-			if (v != null&&v.size()>0)
+			if (v != null && v.size() > 0)
 			{
 				Enumeration enumer = v.elements();
 				while (enumer.hasMoreElements())
@@ -1712,5 +1715,20 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	public void removeStatusMsg(int id)
 	{
 		m_StatusPanel.removeStatusMsg(id);
+	}
+
+	private synchronized void fetchMixCascadesAsync()
+	{
+		setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+		Runnable doFetchMixCascades = new Runnable()
+		{
+			public void run()
+			{
+				m_Controller.fetchMixCascades(false);
+				setCursor(Cursor.getDefaultCursor());
+				m_bttnReload.setEnabled(true);
+			}
+		};
+		SwingUtilities.invokeLater(doFetchMixCascades);
 	}
 }

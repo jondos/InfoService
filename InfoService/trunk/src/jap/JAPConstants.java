@@ -138,6 +138,7 @@ public final class JAPConstants
 	public static final String IMAGE_SERVER_BLAU = "server_blau.gif";
 	public static final String IMAGE_SERVER_ROT = "server_rot.gif";
 	public static final String IMAGE_RELOAD = "reload.gif";
+	public static final String IMAGE_RELOAD_DISABLED = "reloaddisabled.gif";
 	public static final String IMAGE_RELOAD_ROLLOVER = "reloadrollover.gif";
 	public static final String IMAGE_WARNING = "warning.gif";
 	public static final String IMAGE_INFORMATION = "information.gif";

@@ -489,4 +489,10 @@ public class MixCascade implements AnonServerDescription
 	{
 		return m_bIsUserDefined;
 	}
+
+	/** Sets if this MixCascade was handcrafted by the user*/
+	public void setIsUserDefined(boolean b)
+	{
+		m_bIsUserDefined=b;
+	}
 }
