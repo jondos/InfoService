@@ -39,7 +39,7 @@ public class JAPFinishWizardPage extends BasicWizardPage
 
   public JAPFinishWizardPage(String name)
   {
-   this.createGridBagLayout();
+    createGridBagLayout();
   // this.setIcon(this.getIcon());
    this.setComponentPanel();
    //this.setPageTitle(name);
