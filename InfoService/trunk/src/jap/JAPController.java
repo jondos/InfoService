@@ -180,7 +180,7 @@ public final class JAPController implements ProxyListener, Observer
 		m_Locale = Locale.getDefault();
 
 		m_passwordReader = new JAPFirewallPasswdDlg();
-    
+
     /* we want to observe some objects */
     JAPModel.getInstance().getRoutingSettings().addObserver(this);
     JAPModel.getInstance().getRoutingSettings().getServerStatisticsListener().addObserver(this);
@@ -1898,7 +1898,7 @@ public final class JAPController implements ProxyListener, Observer
 				{
 					JAPObserver listener = (JAPObserver) enumer.nextElement();
 					LogHolder.log(LogLevel.DEBUG, LogType.MISC, "JAPModel:notifyJAPObservers: " + i);
-					listener.valuesChanged();
+					listener.valuesChanged(false);
 					i++;
 				}
 			}
@@ -1965,7 +1965,7 @@ public final class JAPController implements ProxyListener, Observer
       /* should not happen, but better than throwing a runtime exception */
     }
   }
-  
+
   /**
    * Enables or disables the forwarding server. It's only a comfort function for lazy programmers.
    * Attention: If there is an active forwarding client running, nothing is done and this method
@@ -1997,9 +1997,9 @@ public final class JAPController implements ProxyListener, Observer
       else {
         /* stop the server */
         returnValue = JAPModel.getInstance().getRoutingSettings().setRoutingMode(JAPRoutingSettings.ROUTING_MODE_DISABLED);
-      }  
+      }
     }
     return returnValue;
-  }  
-  
+  }
+
 }

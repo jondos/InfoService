@@ -30,6 +30,7 @@ package jap;
 import javax.swing.JFrame;
 import gui.JAPDll;
 import javax.swing.SwingUtilities;
+import java.lang.reflect.*;
 public abstract class AbstractJAPMainView extends JFrame implements IJAPMainView
 {
 	protected String m_Title;
@@ -65,9 +66,9 @@ public abstract class AbstractJAPMainView extends JFrame implements IJAPMainView
 		setTitle(m_Title);
 	}
 }
-public void valuesChanged()
+public void valuesChanged(boolean bSync)
 {
-	synchronized (m_runnableValueUpdate)
+//	synchronized (m_runnableValueUpdate)
 	{
 		if (SwingUtilities.isEventDispatchThread())
 		{
@@ -75,7 +76,19 @@ public void valuesChanged()
 		}
 		else
 		{
-			SwingUtilities.invokeLater(m_runnableValueUpdate);
+			if(bSync)
+				try
+				{
+					SwingUtilities.invokeAndWait(m_runnableValueUpdate);
+				}
+				catch (InvocationTargetException ex)
+				{
+				}
+				catch (InterruptedException ex)
+				{
+				}
+			else
+				SwingUtilities.invokeLater(m_runnableValueUpdate);
 		}
 	}
 }

@@ -31,5 +31,9 @@ import proxy.ProxyListener;
 
 public interface JAPObserver extends ProxyListener
 {
-	void valuesChanged();
+	/** Called if some values in the Model have changed. The GUI should
+	 *  refresh itselves.
+	 * @param bSync Hint, if the update should be processed immedialy
+	 */
+	void valuesChanged(boolean bSync);
 }

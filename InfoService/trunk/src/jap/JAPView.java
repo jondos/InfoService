@@ -239,12 +239,12 @@ import gui.*;
 			{
 				hideWindowInTaskbar();
 				m_bIsIconified = true;
-				valuesChanged();
+				valuesChanged(false);
 			}
 		});
 
+		valuesChanged(true);
 		setOptimalSize();
-		valuesChanged();
 		JAPUtil.centerFrame(this);
 		//Change size and location if the user requested to restore the old position/size
 		if (JAPModel.getSaveMainWindowPosition())
@@ -600,7 +600,7 @@ import gui.*;
 			m_dlgConfig.localeChanged();
 		}
 		m_NumberFormat = NumberFormat.getInstance();
-		valuesChanged();
+		valuesChanged(true);
 		setOptimalSize();
 	}
 
