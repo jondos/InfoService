@@ -41,6 +41,11 @@ import java.io.IOException;
  */
 public class TLSException extends IOException
 {
+	
+	private byte m_AlertLevel;
+	private byte m_AlertDescription;
+	private boolean m_Alert;
+	
 	/**
 	 * Constructor
 	 * @param s message
@@ -48,6 +53,39 @@ public class TLSException extends IOException
 	public TLSException(String s)
 	{
 		super(s);
+		m_Alert = false;
+		m_AlertLevel = 0;
+		m_AlertDescription = 0;
 	}
+	
+	/**
+	 *  Constructor
+	 * @param s message
+	 * @param level errorlevel (1:warning, 2:fatal)
+	 * @param description  description (see RFC2246 -> 7.2 Alert protocol)
+	 */
+	public TLSException(String s, int level, int description)
+	{
+		super(s);
+		m_Alert = true;
+		m_AlertLevel = (byte)(level&0xFF);
+		m_AlertDescription = (byte)(description&0xFF);
+	}
+	
+	public boolean Alert()
+	{
+		return m_Alert;
+	}
+	
+	public byte getAlertLevel()
+	{
+		return m_AlertLevel;
+	}
+	
+	public byte getAlertDescription()
+	{
+		return m_AlertDescription;
+	}
+	
 }
 

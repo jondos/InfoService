@@ -119,10 +119,10 @@ public class DummyXMLEncodable implements IXMLEncodable
 
 		try
 		{
+			m_id = XMLUtil.parseAttribute(a_element, ATTRIBUTE_ID, null);
 			element = (Element) XMLUtil.getFirstChildByName(a_element, NODE_STRING);
 			m_valueString = XMLUtil.parseNodeString(element, null);
 			m_attributeBoolean = XMLUtil.parseAttribute(element, ATTRIBUTE_BOOLEAN, false);
-			m_id = XMLUtil.parseAttribute(element, ATTRIBUTE_ID, null);
 
 			element = (Element) XMLUtil.getFirstChildByName(a_element, NODE_CONTAINER);
 			m_attributeInt = XMLUtil.parseAttribute(element, ATTRIBUTE_INT, -1);
@@ -205,6 +205,9 @@ public class DummyXMLEncodable implements IXMLEncodable
 		}
 		else if (!(m_id == null && a_dummy.m_id == null))
 		{
+			System.out.println(m_id);
+			System.out.println(a_dummy.m_id);
+
 			if ((m_id == null && a_dummy.m_id != null) ||
 				(m_id != null && a_dummy.m_id == null))
 			{

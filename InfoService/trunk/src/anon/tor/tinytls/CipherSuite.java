@@ -31,6 +31,8 @@
  */
 package anon.tor.tinytls;
 
+import java.math.BigInteger;
+
 import anon.crypto.JAPCertificate;
 
 /**
@@ -42,6 +44,7 @@ import anon.crypto.JAPCertificate;
 public abstract class CipherSuite{
 
 	private byte[] m_ciphersuitecode;
+	protected String m_ciphersuitename = "Name not set";
 	private Key_Exchange m_keyexchangealgorithm = null;
 	private JAPCertificate m_servercertificate = null;
 
@@ -90,6 +93,8 @@ public abstract class CipherSuite{
 			throw new TLSException("wrong CipherSuiteCode ");
 		}
 		this.m_ciphersuitecode = code;
+		this.m_writesequenznumber = 0;
+		this.m_readsequenznumber = 0;
 	}
 
 	/**
@@ -99,6 +104,11 @@ public abstract class CipherSuite{
 	protected void setKeyExchangeAlgorithm(Key_Exchange ke)
 	{
 		this.m_keyexchangealgorithm = ke;
+	}
+	
+	public Key_Exchange getKeyExchangeAlgorithm()
+	{
+		return this.m_keyexchangealgorithm;
 	}
 
 	/**
@@ -119,21 +129,11 @@ public abstract class CipherSuite{
 		return this.m_ciphersuitecode;
 	}
 
-	/**
-	 * process the key data that was recieved from the server (see RFC2246 Server Key Exchange)
-	 * @param b key data from the server
-	 * @param clientrandom clientrandom
-	 * @param serverrandom serverrandom
-	 * @throws TLSException
-	 */
-	public void serverKeyExchange(byte[] b,int b_offset,int b_len
-								  , byte[] clientrandom, byte[] serverrandom) throws TLSException
+	public void processClientKeyExchange(BigInteger dh_y)
 	{
-		if(this.m_keyexchangealgorithm!=null)
-		{
-			this.m_keyexchangealgorithm.serverKeyExchange(b,b_offset,b_len,
-				clientrandom,serverrandom,this.m_servercertificate);
-		}
+		this.m_keyexchangealgorithm.processClientKeyExchange(dh_y);
+		calculateKeys(this.m_keyexchangealgorithm.calculateKeys(),false);
+		
 	}
 
 	/**
@@ -141,24 +141,11 @@ public abstract class CipherSuite{
 	 * @return client key exchange message
 	 * @throws TLSException
 	 */
-	public byte[] clientKeyExchange() throws TLSException
+	public byte[] calculateClientKeyExchange() throws TLSException
 	{
-		byte[] b = this.m_keyexchangealgorithm.clientKeyExchange();
-		calculateKeys(this.m_keyexchangealgorithm.calculateKeys());
-		this.m_writesequenznumber = 0;
-		this.m_readsequenznumber = 0;
+		byte[] b = this.m_keyexchangealgorithm.calculateClientKeyExchange();
+		calculateKeys(this.m_keyexchangealgorithm.calculateKeys(),true);
 		return b;
-	}
-
-	/**
-	 * calculate the client finished message (see RFC2246 Client Finished)
-	 * @param handshakemessages all messages, that have been send before this message
-	 * @return client finished message
-	 * @throws TLSException
-	 */
-	public byte[] clientFinished(byte[] handshakemessages) throws TLSException
-	{
-		return this.m_keyexchangealgorithm.clientFinished(handshakemessages);
 	}
 
 	/**
@@ -166,10 +153,10 @@ public abstract class CipherSuite{
 	 * @param finishedmessage the message that have to be valideted
 	 * @throws TLSException
 	 */
-	public void serverFinished(TLSRecord msg,byte[] handshakemessages) throws TLSException
+	public void processServerFinished(TLSRecord msg,byte[] handshakemessages) throws TLSException
 	{
 		decode(msg);
-		m_keyexchangealgorithm.serverFinished(msg.m_Data,msg.m_dataLen,handshakemessages);
+		m_keyexchangealgorithm.processServerFinished(msg.m_Data,msg.m_dataLen,handshakemessages);
 	}
 
 	/**
@@ -190,6 +177,11 @@ public abstract class CipherSuite{
 	 * calculate server and client write keys (see RFC2246 TLS Record Protocoll)
 	 * @param keys array of bytes(see RFC how it is calculated)
 	 */
-	protected abstract void calculateKeys(byte[] keys);
+	protected abstract void calculateKeys(byte[] keys,boolean forclient);
+
+	public String toString()
+	{
+		return m_ciphersuitename;
+	}
 
 }
