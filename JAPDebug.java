@@ -83,14 +83,14 @@ public final class JAPDebug {
 	
 	private final static String strLevels[]=
 		{
-			"emergencie!",
-			"alert",
-			"exception",
-			"err",
-			"warning",
-			"notice",
-			"info",
-			"debug"
+			"Emergency",
+			"Alert",
+			"Exception",
+			"Error",
+			"Warning",
+			"Notice",
+			"Info",
+			"Debug"
 		};
 //	private PrintWriter[] outStreams;
 		

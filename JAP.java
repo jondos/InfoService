@@ -43,16 +43,17 @@ public class JAP extends Frame{
 	//JAPDebug jdebug;
 	JAPModel model;
 	JAPView  view;
+	JAPViewIconified iconifiedView;
 	
 	/** At the moment - just do nothing...
 	 * @param argv The commandline arguments - maybe for future use.
 	 */
-	private JAP(String[] argv) {
+	JAP(String[] argv) {
 	}
 	
 	/** Initialize and starts the JAP.
 	 */
-	private void startJAP() {
+	void startJAP() {
 		String   os;
 		String   vers;
 		vers = System.getProperty("java.version");
@@ -102,12 +103,17 @@ public class JAP extends Frame{
 		view = new JAPView (model.TITLE);
 		model.addJAPObserver(view);
 		
+		// Create the iconified view
+		iconifiedView = new JAPViewIconified("JAP");
+		model.addJAPObserver(iconifiedView);
+		
 		// Dispose the spash screen and show main frame
 		splash.dispose();
 		//if(model.getMinimizeOnStartup())
 			view.getToolkit().getSystemEventQueue().postEvent(new WindowEvent(view,WindowEvent.WINDOW_ICONIFIED));
 		view.show();
 		view.toFront();		
+		
 		
 		// initially start services
 		model.initialRun();

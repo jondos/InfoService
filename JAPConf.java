@@ -54,6 +54,7 @@ public final class JAPConf extends JDialog
 	private JSlider sliderDebugLevel;
 	private JAPJIntField portnumberTextField;
 	private JCheckBox	proxyCheckBox;
+	private JCheckBox	listenerCheckBox;
 	private JAPJIntField proxyportnumberTextField;
 	private JTextField   proxyhostTextField;
 	private JCheckBox	autoConnectCheckBox;
@@ -119,20 +120,26 @@ public final class JAPConf extends JDialog
 
 		protected JPanel buildportPanel()
 			{
+				JLabel portnumberLabel1 = new JLabel(model.getString("settingsPort1"));
+				JLabel portnumberLabel2 = new JLabel(model.getString("settingsPort2"));
 				portnumberTextField = new JAPJIntField();
 				portnumberTextField.addActionListener(new ActionListener() {
 						   public void actionPerformed(ActionEvent e) {
 				   OKPressed();
 				   }});
+				listenerCheckBox = new JCheckBox(model.getString("settingsListenerCheckBox"));
+				// set Font in listenerCheckBox in same color as in portnumberLabel1
+				listenerCheckBox.setForeground(portnumberLabel1.getForeground());
 				JPanel p = new JPanel();
 				p.setLayout( new BorderLayout() );
 				p.setBorder( new TitledBorder(model.getString("settingsListenerBorder")) );
 				JPanel p1 = new JPanel();
-				p1.setLayout( new GridLayout(3,1) );
+				p1.setLayout( new GridLayout(4,1) );
 				p1.setBorder( new EmptyBorder(5,10,10,10) );
-				p1.add(new JLabel(model.getString("settingsPort1")) );
-				p1.add(new JLabel(model.getString("settingsPort2")) );
+				p1.add(portnumberLabel1);
+				p1.add(portnumberLabel2);
 				p1.add(portnumberTextField);
+				p1.add(listenerCheckBox);
 				p.add(p1, BorderLayout.NORTH);
 				return p;
 			}
@@ -166,7 +173,7 @@ public final class JAPConf extends JDialog
 				p1.add(proxyCheckBox);
 				p1.add(proxyhostTextField);
 				JLabel proxyPortLabel = new JLabel(model.getString("settingsProxyPort"));
-	// set Font in proxyCheckBox in same color as in proxyPortLabel
+				// set Font in proxyCheckBox in same color as in proxyPortLabel
 				proxyCheckBox.setForeground(proxyPortLabel.getForeground());
 				p1.add(proxyPortLabel);
 				p1.add(proxyportnumberTextField);
@@ -371,6 +378,8 @@ public final class JAPConf extends JDialog
 				// not yet implemented --> disable it
 				c.setEnabled(false);
 				p1.add(c);
+				
+				//
 				JPanel p2=new JPanel();
 				p2.setLayout(new BorderLayout());
 				p2.setBorder( new TitledBorder(model.getString("miscconfigBorder")) );
@@ -414,10 +423,14 @@ public final class JAPConf extends JDialog
 				
 				p32.add(sliderDebugLevel);
 				p3.add(p32);
-				
-				p.add(p1, BorderLayout.NORTH);
-				p.add(p2, BorderLayout.CENTER);
+
+				JPanel pp = new JPanel( new BorderLayout() );
+				pp.add(p1, BorderLayout.NORTH);
+				pp.add(p2, BorderLayout.CENTER);
+
 				p.add(p3, BorderLayout.WEST);
+				p.add(pp, BorderLayout.CENTER);
+				
 				return p;
 			}
 
@@ -522,6 +535,7 @@ public final class JAPConf extends JDialog
 				if(!checkValues())
 					return;
 				setVisible(false);
+				model.setListenerIsLocal(listenerCheckBox.isSelected());
 				model.setUseProxy(proxyCheckBox.isSelected());
 				model.setPortNumber(Integer.parseInt(portnumberTextField.getText().trim()));
 				model.setProxy(proxyhostTextField.getText().trim(),
@@ -567,6 +581,7 @@ public final class JAPConf extends JDialog
 		sliderDebugLevel.setValue(JAPDebug.getDebugLevel());
 		// listener tab
 		portnumberTextField.setText(String.valueOf(model.getPortNumber()));
+		listenerCheckBox.setSelected(model.getListenerIsLocal());
 		// http proxy tab
 		proxyCheckBox.setSelected(model.getUseProxy());
 		proxyhostTextField.setEnabled(proxyCheckBox.isSelected());
