@@ -52,11 +52,9 @@ import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
-import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.JSlider;
 import javax.swing.JTabbedPane;
@@ -67,15 +65,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
-import org.bouncycastle.asn1.x509.X509NameTokenizer;
-import anon.crypto.JAPCertificate;
-import anon.crypto.JAPCertificateException;
-import anon.crypto.JAPCertificateStore;
-import anon.crypto.JAPCertificateStoreId;
 import anon.infoservice.MixCascade;
-import gui.CAListCellRenderer;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -121,7 +111,6 @@ final class JAPConf extends JDialog
 	private JButton m_bttnFetchCascades;
 	private TitledBorder m_borderAnonSettings, m_borderAnonSettings2;
 	private JLabel m_labelAnonHost, m_labelAnonPort;
-
 
 	private JCheckBox m_cbDebugGui;
 	private JCheckBox m_cbDebugNet;
@@ -725,8 +714,6 @@ final class JAPConf extends JDialog
 		return p;
 	}
 
-
-
 	protected JPanel buildMiscPanel()
 	{
 		JPanel p = new JPanel();
@@ -1179,9 +1166,6 @@ final class JAPConf extends JDialog
 		m_cbDebugThread.setSelected(false);
 		m_cbDummyTraffic.setSelected(false);
 		m_cbCertCheckDisabled.setSelected(false);
-
-//		JAPController.setCertificateStore(new JAPCertificateStore(JAPConstants.CERTSPATH +
-//			JAPConstants.TRUSTEDROOTCERT));
 
 	}
 

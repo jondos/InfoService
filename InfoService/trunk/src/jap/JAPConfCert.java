@@ -5,15 +5,15 @@
  are permitted provided that the following conditions are met:
 
   - Redistributions of source code must retain the above copyright notice,
-	this list of conditions and the following disclaimer.
+ this list of conditions and the following disclaimer.
 
   - Redistributions in binary form must reproduce the above copyright notice,
-	this list of conditions and the following disclaimer in the documentation and/or
-	other materials provided with the distribution.
+ this list of conditions and the following disclaimer in the documentation and/or
+ other materials provided with the distribution.
 
   - Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
-	may be used to endorse or promote products derived from this software without specific
-	prior written permission.
+ may be used to endorse or promote products derived from this software without specific
+ prior written permission.
 
 
  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS
@@ -29,7 +29,6 @@ package jap;
 
 import java.util.Enumeration;
 import java.util.Hashtable;
-
 import java.awt.BorderLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -47,7 +46,6 @@ import javax.swing.JScrollPane;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-
 import org.bouncycastle.asn1.x509.X509NameTokenizer;
 import anon.crypto.JAPCertificate;
 import anon.crypto.JAPCertificateException;
@@ -101,11 +99,15 @@ public class JAPConfCert extends AbstractJAPConfModule
 			String strElement = (String) x509TokenIssuer.nextToken();
 
 			if (strElement.startsWith("CN="))
+			{
 				m_labelCNData.setText(strElement.substring(3));
 
+			}
 			else if (strElement.startsWith("E="))
+			{
 				m_labelEData.setText(strElement.substring(2));
 
+			}
 			else if (strElement.startsWith("C="))
 			{
 				strBuff.setLength(0);
@@ -133,10 +135,14 @@ public class JAPConfCert extends AbstractJAPConfModule
 			}
 
 			else if (strElement.startsWith("O="))
+			{
 				m_labelOData.setText(strElement.substring(2));
 
+			}
 			else if (strElement.startsWith("OU="))
+			{
 				m_labelOUData.setText(strElement.substring(3));
+			}
 		}
 
 		if (m_labelCSTLData.getText().trim().endsWith("/"))
@@ -148,7 +154,7 @@ public class JAPConfCert extends AbstractJAPConfModule
 		}
 	}
 
-/**
+	/**
 	 * Creates the cert root panel with all child-panels.
 	 */
 	public void repaintRootPanel()
@@ -174,7 +180,7 @@ public class JAPConfCert extends AbstractJAPConfModule
 		// updateGuiOutput();
 	}
 
-/**
+	/**
 	 * Returns the title for the cert configuration tab.
 	 *
 	 * @return The title for the cert configuration tab.
@@ -184,7 +190,7 @@ public class JAPConfCert extends AbstractJAPConfModule
 		return JAPMessages.getString("confCertTab");
 	}
 
-/**
+	/**
 	 * This method is called automatically by AbstractJAPConfModule if the cert tab comes to
 	 * foreground. This method calls updateGuiOutput().
 	 */
@@ -196,16 +202,18 @@ public class JAPConfCert extends AbstractJAPConfModule
 	public void onResetToDefaultsPressed()
 	{
 		JAPCertificateStore jcsOrg = JAPCertificateStore.getInstance();
-	JAPCertificate cert=null;
-	try{
-		cert=JAPCertificate.getInstance(JAPConstants.CERTSPATH +
-														JAPConstants.TRUSTEDROOTCERT);}
-		catch(Exception e)
+		JAPCertificate cert = null;
+		try
 		{
-			cert=null;
+			byte[] tmp=JAPUtil.loadRessource(JAPConstants.CERTSPATH +
+											  JAPConstants.TRUSTEDROOTCERT);
+			cert = JAPCertificate.getInstance(tmp);
 		}
-
-		jcsOrg.addCertificate(cert,true);
+		catch (Exception e)
+		{
+			cert = null;
+		}
+		jcsOrg.addCertificate(cert, true);
 		JAPController.setCertificateStore(jcsOrg);
 		m_jcs = JAPModel.getCertificateStore();
 		updateGuiOutput();
@@ -232,7 +240,7 @@ public class JAPConfCert extends AbstractJAPConfModule
 		while (enumCertsToRemove.hasMoreElements())
 		{
 			JAPCertificate cert = (JAPCertificate) enumCertsToRemove.nextElement();
-			m_jcs.addCertificate(cert,true);
+			m_jcs.addCertificate(cert, true);
 		}
 		m_HTCertsToRemove.clear();
 
@@ -243,7 +251,7 @@ public class JAPConfCert extends AbstractJAPConfModule
 		while (enumCertsToStatusChange.hasMoreElements())
 		{
 			JAPCertificate cert = (JAPCertificate) enumCertsToStatusChange.nextElement();
-			m_jcs.enableCertificate(cert,!cert.getEnabled());
+			m_jcs.enableCertificate(cert, !cert.getEnabled());
 		}
 		m_HTCertsToStatusChange.clear();
 
@@ -285,7 +293,6 @@ public class JAPConfCert extends AbstractJAPConfModule
 		panelConstraintsCA.insets = new Insets(0, 10, 10, 0);
 		panelLayoutCA.setConstraints(m_labelTrust2, panelConstraintsCA);
 		r_panelCA.add(m_labelTrust2);
-
 
 		m_listmodelCertList = new DefaultListModel();
 
@@ -378,13 +385,17 @@ public class JAPConfCert extends AbstractJAPConfModule
 						// m_listCert.setModel(m_listmodelCertList);
 						// m_scrpaneList.getViewport().removeAll();
 						// m_scrpaneList.getViewport().add(m_listCert, null);
-						m_jcs.addCertificate(cert,true);
+						m_jcs.addCertificate(cert, true);
 						m_HTCertsToInsert.put(JAPCertificateStoreId.getId(cert), cert);
 
 						if (cert.getEnabled())
+						{
 							m_bttnCertStatus.setText(JAPMessages.getString("certBttnDisable"));
+						}
 						else
+						{
 							m_bttnCertStatus.setText(JAPMessages.getString("certBttnEnable"));
+						}
 					}
 					else
 					{
@@ -408,9 +419,13 @@ public class JAPConfCert extends AbstractJAPConfModule
 					updateInfoPanel(j);
 
 					if (j.getEnabled())
+					{
 						m_bttnCertStatus.setText(JAPMessages.getString("certBttnDisable"));
+					}
 					else
+					{
 						m_bttnCertStatus.setText(JAPMessages.getString("certBttnEnable"));
+					}
 				}
 
 			}
@@ -440,9 +455,13 @@ public class JAPConfCert extends AbstractJAPConfModule
 							m_listmodelCertList.remove(index);
 
 							if (cert.getEnabled())
+							{
 								m_bttnCertStatus.setText(JAPMessages.getString("certBttnDisable"));
+							}
 							else
+							{
 								m_bttnCertStatus.setText(JAPMessages.getString("certBttnEnable"));
+							}
 						}
 					}
 				}
@@ -475,10 +494,14 @@ public class JAPConfCert extends AbstractJAPConfModule
 		});
 
 		if (bStatusEnabled)
+		{
 			m_bttnCertStatus = new JButton(JAPMessages.getString("certBttnEnable"));
+		}
 		else
+		{
 			m_bttnCertStatus = new JButton(JAPMessages.getString("certBttnDisable"));
 
+		}
 		m_bttnCertStatus.setFont(getFontSetting());
 		m_bttnCertStatus.addActionListener(new ActionListener()
 		{
@@ -487,15 +510,15 @@ public class JAPConfCert extends AbstractJAPConfModule
 				JAPCertificate certActual = (JAPCertificate) m_listCert.getSelectedValue();
 				boolean enabled = certActual.getEnabled();
 
-if (enabled)
+				if (enabled)
 				{
-					m_jcs.enableCertificate(certActual,false);
+					m_jcs.enableCertificate(certActual, false);
 					m_HTCertsToStatusChange.put(JAPCertificateStoreId.getId(certActual), certActual);
 					m_bttnCertStatus.setText(JAPMessages.getString("certBttnEnable"));
 				}
 				else
 				{
-					m_jcs.enableCertificate(certActual,true);
+					m_jcs.enableCertificate(certActual, true);
 					m_HTCertsToStatusChange.put(JAPCertificateStoreId.getId(certActual), certActual);
 					m_bttnCertStatus.setText(JAPMessages.getString("certBttnDisable"));
 				}
@@ -588,10 +611,14 @@ if (enabled)
 			updateInfoPanel(j);
 
 			if (j.getEnabled())
+			{
 				m_bttnCertStatus.setText(JAPMessages.getString("certBttnDisable"));
+			}
 			else
+			{
 				m_bttnCertStatus.setText(JAPMessages.getString("certBttnEnable"));
 
+			}
 		}
 
 		/*		    	gridx
@@ -701,7 +728,7 @@ if (enabled)
 		return r_panelInfo;
 	}
 
-/**
+	/**
 	 * Updates the GUI (the list of all known infoservices, the prefered infoservice, ...). This
 	 * method is called automatically, if the infoservice tab comes to foreground.
 	 */
@@ -752,9 +779,13 @@ if (enabled)
 						updateInfoPanel(j);
 
 						if (j.getEnabled())
+						{
 							m_bttnCertStatus.setText(JAPMessages.getString("certBttnDisable"));
+						}
 						else
+						{
 							m_bttnCertStatus.setText(JAPMessages.getString("certBttnEnable"));
+						}
 					} // else
 
 				} // valuechanged

@@ -81,7 +81,6 @@ final public class JAPCertificate
 		try
 		{
 			JAPCertificate r_japcert = new JAPCertificate();
-
 			try
 			{
 				r_japcert.m_PubKey = new MyDSAPublicKey(x509cert.getSubjectPublicKeyInfo());

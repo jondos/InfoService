@@ -342,6 +342,57 @@ final public class JAPUtil
 		return img;
 	}
 
+	/** Loads an Ressource from a File or a Archive-Resource.
+	 *	@param strRessource the Resourcename or Filename
+	 *  @return null if Ressource could not be loaded
+	 *  @return contents of the ressource otherwise
+	 */
+	public static byte[] loadRessource(String strRessource)
+	{
+		try
+		{
+			InputStream in = null;
+			int len = 0;
+			try
+			{
+				// this is necessary to make shure that the images are loaded when contained in a JAP.jar
+				in = Class.forName("JAP").getResourceAsStream(strRessource);
+				len = in.available();
+			}
+			catch (Exception e)
+			{
+				in = null;
+			}
+			if (in == null)
+			{
+				try
+				{
+					//we have to chek, if the file exist, because new ImageIcon(String) will always success!!!
+					File f = new File(strRessource);
+					if (f.canRead())
+					{
+						in = new FileInputStream(f);
+						len = (int) f.length();
+					}
+				}
+				catch (Exception e1)
+				{
+					return null;
+				}
+			}
+			byte[] tmp = new byte[len];
+			if (in.read(tmp) != len)
+			{
+				return null;
+			}
+			return tmp;
+		}
+		catch (Throwable t)
+		{
+			return null;
+		}
+	}
+
 	public static void centerFrame(Window f)
 	{
 		Dimension screenSize = f.getToolkit().getScreenSize();

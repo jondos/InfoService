@@ -31,7 +31,6 @@ package jap;
 //import java.io.FilenameFilter;
 import java.awt.Dimension;
 import java.awt.Point;
-import anon.crypto.JAPCertificate;
 import anon.crypto.JAPCertificateStore;
 import gui.JAPDll;
 
@@ -68,6 +67,7 @@ public final class JAPModel
 	private static JAPModel model = null;
 
 	private boolean m_bCertCheckDisabled = true;
+
 //	private JAPCertificate m_rootCertificate = null;
 	private JAPCertificateStore m_certStore = null;
 
