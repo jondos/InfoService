@@ -182,8 +182,14 @@ private final class JAPDirectConnection implements Runnable
 				try{threadRunLoop.join(5000);}catch(Exception e){}
 				if(threadgroupAll!=null)
 					{
-						threadgroupAll.stop();
-						threadgroupAll.destroy();
+						try //Hack for kaffe!
+							{
+								threadgroupAll.stop();
+								threadgroupAll.destroy();
+							}
+						catch(NullPointerException e)
+							{
+							}
 					}
 				threadgroupAll=null;
 				threadRunLoop=null;
