@@ -154,34 +154,6 @@ public class PaymentMainPanel extends JPanel
 		updateDisplay(null);
 	}
 
-	/** returns a number of bytes in human-readable format (kB, MB, GB, ...) */
-	private String getByteNumberText(long bytes)
-	{
-		long credit = bytes * 100;
-		int log = 1;
-		while ( (credit > 102400) && (log < 4))
-		{
-			credit /= 1024;
-			log++;
-		}
-		String unit;
-		switch (log)
-		{
-			case 1:
-				unit = " Bytes";
-				break;
-			case 2:
-				unit = " KB";
-				break;
-			case 3:
-				unit = " MB";
-				break;
-			case 4:
-			default:
-				unit = " GB";
-		}
-		return (credit / 100) + "." + (credit % 100) + unit;
-	}
 
 	/**
 	 * This should be called by the changelistener whenever the state of the
@@ -210,7 +182,7 @@ public class PaymentMainPanel extends JPanel
 			m_AccountText.setForeground(Color.red);
 			m_AccountIconLabel.setIcon(m_accountIcons[2]);
 			m_BalanceText.setEnabled(true);
-			m_BalanceText.setText(getByteNumberText(activeAccount.getCertifiedCredit()));
+			m_BalanceText.setText(JAPUtil.formatBytesValue(activeAccount.getCertifiedCredit()));
 			m_BalanceProgressBar.setValue(0);
 			m_BalanceProgressBar.setEnabled(true);
 		}
@@ -225,7 +197,7 @@ public class PaymentMainPanel extends JPanel
 			m_AccountText.setForeground(Color.black);
 			m_AccountIconLabel.setIcon(m_accountIcons[1]);
 			m_BalanceText.setEnabled(true);
-			m_BalanceText.setText(getByteNumberText(activeAccount.getCertifiedCredit()));
+			m_BalanceText.setText(JAPUtil.formatBytesValue(activeAccount.getCertifiedCredit()));
 			m_BalanceProgressBar.setMaximum( (int) activeAccount.getDeposit());
 			m_BalanceProgressBar.setValue( (int) activeAccount.getCertifiedCredit());
 			m_BalanceProgressBar.setEnabled(true);

@@ -65,6 +65,9 @@ import javax.swing.*;
 import javax.swing.event.*;
 import gui.TimestampCellRenderer;
 import gui.ByteNumberCellRenderer;
+import jap.platform.AbstractOS;
+import anon.pay.xml.XMLEasyCC;
+import java.sql.Timestamp;
 
 /**
  * The Jap Conf Module (Settings Tab Page) for the Accounts and payment Management
@@ -94,7 +97,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 	 * getTabTitle
 	 *
 	 * @return String
-	 * @todo internationalize
 	 */
 	public String getTabTitle()
 	{
@@ -113,7 +115,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 		/* clear the whole root panel */
 		rootPanel.removeAll();
 		rootPanel.setLayout(new BorderLayout());
-		rootPanel.setBorder(new TitledBorder("Pseudonym Accounts"));
+		rootPanel.setBorder(new TitledBorder(JAPMessages.getString("ngPseudonymAccounts")));
 
 		JPanel centerPanel = new JPanel(new BorderLayout());
 
@@ -121,7 +123,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 		m_MyTableModel = new MyTableModel();
 		m_Table.setModel(m_MyTableModel);
 		m_Table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		m_Table.setDefaultRenderer(java.sql.Timestamp.class, new TimestampCellRenderer());
+		m_Table.setDefaultRenderer(java.sql.Timestamp.class, new TimestampCellRenderer(false));
 		m_Table.setDefaultRenderer(Long.class, new ByteNumberCellRenderer());
 		centerPanel.add(new JScrollPane(m_Table), BorderLayout.CENTER);
 
@@ -130,7 +132,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 		JPanel eastPanel = new JPanel(gl);
 
 		ActionListener myActionListener = new MyActionListener();
-
 
 		//Ask to be notified of selection changes.
 		ListSelectionModel rowSM = m_Table.getSelectionModel();
@@ -144,37 +145,37 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 
 		eastPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
 
-		m_btnCreateAccount = new JButton("Create Account");
+		m_btnCreateAccount = new JButton(JAPMessages.getString("ngCreateAccount"));
 		m_btnCreateAccount.addActionListener(myActionListener);
 		eastPanel.add(m_btnCreateAccount);
 
-		m_btnChargeAccount = new JButton("Charge");
+		m_btnChargeAccount = new JButton(JAPMessages.getString("ngChargeAccount"));
 		m_btnChargeAccount.addActionListener(myActionListener);
 		eastPanel.add(m_btnChargeAccount);
 		m_btnChargeAccount.setEnabled(activeAccount != null);
 
-		m_btnStatement = new JButton("Get Accountstatement");
+		m_btnStatement = new JButton(JAPMessages.getString("ngStatement"));
 		m_btnStatement.addActionListener(myActionListener);
 		eastPanel.add(m_btnStatement);
 		m_btnChargeAccount.setEnabled(activeAccount != null);
 
-		m_btnShowDetails = new JButton("Show Details");
+		m_btnShowDetails = new JButton(JAPMessages.getString("ngAccountDetails"));
 		m_btnShowDetails.addActionListener(myActionListener);
 		eastPanel.add(m_btnShowDetails);
 
-		m_btnDeleteAccount = new JButton("Delete account");
+		m_btnDeleteAccount = new JButton(JAPMessages.getString("ngDeleteAccount"));
 		m_btnDeleteAccount.addActionListener(myActionListener);
 		eastPanel.add(m_btnDeleteAccount);
 
-		m_btnExportAccount = new JButton("Export account");
+		m_btnExportAccount = new JButton(JAPMessages.getString("ngExportAccount"));
 		m_btnExportAccount.addActionListener(myActionListener);
 		eastPanel.add(m_btnExportAccount);
 
-		m_btnImportAccount = new JButton("Import account");
+		m_btnImportAccount = new JButton(JAPMessages.getString("ngImportAccount"));
 		m_btnImportAccount.addActionListener(myActionListener);
 		eastPanel.add(m_btnImportAccount);
 
-		m_btnActivate = new JButton("Activate account");
+		m_btnActivate = new JButton(JAPMessages.getString("ngActivateAccount"));
 		m_btnActivate.addActionListener(myActionListener);
 		eastPanel.add(m_btnActivate);
 
@@ -263,11 +264,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 		if (!selectedAccount.hasAccountInfo())
 		{
 			int choice = JOptionPane.showOptionDialog(
-				view,
-				"<html>Sie haben f&uuml;r dieses Konto noch keinen Auszug geholt.<br>" +
-				"M&ouml;chten Sie jetzt einen Kontoauszug bei der<br>" +
-				"Bezahlinstanz anfordern?</html>",
-				"Kein Kontoauszug vorhanden",
+				view, JAPMessages.getString("ngNoStatement"), JAPMessages.getString("ngNoStatementTitle"),
 				JOptionPane.YES_NO_OPTION,
 				JOptionPane.QUESTION_MESSAGE,
 				null, null, null
@@ -292,10 +289,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 			if (t.getTime() < (System.currentTimeMillis() - 1000 * 60 * 60 * 24))
 			{
 				int choice = JOptionPane.showOptionDialog(
-					view,
-					"<html>Der aktuelle Kontoauszug ist vom " + t + "<br>" +
-					"M&ouml;chten Sie jetzt einen neuen Auszug anfordern?",
-					"Kontoauszug anfordern",
+					view, JAPMessages.getString("ngOldStatement"),
+					JAPMessages.getString("ngOldStatementTitle"),
 					JOptionPane.YES_NO_OPTION,
 					JOptionPane.QUESTION_MESSAGE,
 					null, null, null
@@ -308,20 +303,43 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 		}
 		XMLAccountInfo accountInfo = selectedAccount.getAccountInfo();
 		XMLBalance balance = accountInfo.getBalance();
-		JOptionPane.showMessageDialog(
-			view,
-			"<html><h3>Kontoauszug vom " + balance.getTimestamp() + "</h3>" +
+		String msg =
+			"<html><h2>" + JAPMessages.getString("ngAccountDetailsTxt") + " " +
+			selectedAccount.getAccountNumber() + "</h2>" +
 			"<table>" +
-			"<tr><td>Kontonummer</td><td>" + selectedAccount.getAccountNumber() + "</td></tr>" +
-			"<tr><td>Konto erzeugt am</td><td>" + selectedAccount.getCreationTime() + "</td></tr>" +
+			"<tr><td>" + JAPMessages.getString("creationDate") + "</td><td>" +
+			JAPUtil.formatTimestamp(selectedAccount.getCreationTime(), false) + "</td></tr>" +
+			"<tr><td>" + JAPMessages.getString("ngStatementDate") + "</td><td>" +
+			JAPUtil.formatTimestamp(balance.getTimestamp(), true) + "</td></tr>" +
 			"<tr><td> </td></tr>" +
-			"<tr><td>Eingezahlt</td><td>" + balance.getDeposit() + "</td></tr>" +
-			"<tr><td>Verbraucht</td><td>" + balance.getSpent() + "</td></tr>" +
-			"<tr><td>aktueller Kontostand</td><td>" + (balance.getDeposit() - balance.getSpent()) +
+			"<tr><td>" + JAPMessages.getString("deposit") + "</td><td>" +
+			JAPUtil.formatBytesValue(balance.getDeposit()) + "</td></tr>" +
+			"<tr><td>" + JAPMessages.getString("spent") + "</td><td>" +
+			JAPUtil.formatBytesValue(balance.getSpent()) + "</td></tr>" +
+			"<tr><td>" + JAPMessages.getString("balance") + "</td><td>" +
+			JAPUtil.formatBytesValue(balance.getDeposit() - balance.getSpent()) +
 			"</td></tr>" +
-			"<tr><td>Guthaben g&uuml;ltig bis</td><td>" + balance.getValidTime() + "</td></tr>" +
-			"</table></html>",
-			"Detaillierte Kontoinformationen",
+			"<tr><td>" + JAPMessages.getString("validTo") + "</td><td>" +
+			JAPUtil.formatTimestamp(balance.getValidTime(), true) + "</td></tr>" +
+			"</table>";
+		Enumeration ccs = accountInfo.getCCs();
+		XMLEasyCC cc = null;
+		if (ccs.hasMoreElements())
+		{
+			msg += "<hr><h3>" + JAPMessages.getString("costconfirmations") + "</h3>";
+			do
+			{
+				cc = ( (XMLEasyCC) (ccs.nextElement()));
+				msg += JAPMessages.getString("rttMixCascade") + " " + cc.getAIName() + ": " +
+					JAPUtil.formatBytesValue(cc.getTransferredBytes()) + "<br>";
+			}
+			while (ccs.hasMoreElements());
+		}
+		msg += "</html>";
+
+		JOptionPane.showMessageDialog(
+			view, msg,
+			JAPMessages.getString("ngAccountDetailsTxt") + " " + selectedAccount.getAccountNumber(),
 			JOptionPane.INFORMATION_MESSAGE
 			);
 	}
@@ -329,12 +347,10 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 	/**
 	 * returns the selected (active) account
 	 * @return PayAccount
-	 * @todo internationalize messages
 	 */
 	private PayAccount getSelectedAccount()
 	{
 		PayAccountsFile accounts = PayAccountsFile.getInstance();
-		JFrame view = JAPController.getView();
 
 		// try to find the account the user wishes to charge
 		int selectedRow = m_Table.getSelectedRow();
@@ -347,8 +363,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 
 	/**
 	 * Charges the selected account
-	 * @todo internationalize messages
-	 * @todo add language code to URL when launching browser
+	 * @todo replace splashscreen by rotating icon
 	 */
 	private void doChargeAccount(PayAccount selectedAccount)
 	{
@@ -361,12 +376,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 
 		int choice = JOptionPane.showOptionDialog(
 			view,
-			"<html>Um Ihr Konto aufzuladen, muss JAP zun&auml;chst eine<br>" +
-			"Transaktionsnummer bei der Bezahlinstanz anfordern.<br>" +
-			"JAP wird dann versuchen, Ihren Web-Browser zu starten<br>" +
-			"damit Sie den Rest der Transaktion komfortabel zB &uuml;ber PayPal<br>" +
-			"machen k&ouml;nnen.</html>",
-			"Konto aufladen",
+			JAPMessages.getString("ngFetchTransferNumber"),
+			JAPMessages.getString("ngPaymentCharge"),
 			JOptionPane.YES_NO_OPTION,
 			JOptionPane.QUESTION_MESSAGE,
 			null, null, null
@@ -385,22 +396,37 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 			catch (Exception ex)
 			{
 				splash.abort();
-				ex.printStackTrace();
-				LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Exception ChargeAccount: " + ex.toString());
+				LogHolder.log(LogLevel.DEBUG, LogType.PAY, ex);
 				JOptionPane.showMessageDialog(
 					view,
-					"Error requesting transfer number: " + ex.getMessage(),
-					"Error", JOptionPane.ERROR_MESSAGE
+					"<html>" + JAPMessages.getString("ngTransferNumberError") + "<br>" + ex.getMessage() +
+					"</html>",
+					JAPMessages.getString("error"), JOptionPane.ERROR_MESSAGE
 					);
 				return;
 			}
 
-			// try to launch webbrowser (hack!)
-			splash = JAPWaitSplash.start("Launching browser...", "Please wait");
-			Process runcode = null;
-			String[] browser = JAPConstants.BROWSERLIST;
+			// try to launch webbrowser
+			AbstractOS os = AbstractOS.getInstance();
 			String url = transferCertificate.getBaseUrl();
 			url += "?transfernum=" + transferCertificate.getTransferNumber();
+			try {
+				os.openURLInBrowser(url);
+			}
+			catch(Exception e)
+			{
+				JOptionPane.showMessageDialog(
+					view,
+					"<html>" + JAPMessages.getString("ngCouldNotFindBrowser") + "<br>" +
+					"<h3>" + url + "</h3></html>",
+					JAPMessages.getString("ngCouldNotFindBrowserTitle"),
+					JOptionPane.INFORMATION_MESSAGE
+					);
+			}
+
+/*	old code to launch webbrowser:		splash = JAPWaitSplash.start("Launching browser...", "Please wait");
+			Process runcode = null;
+			String[] browser = JAPConstants.BROWSERLIST;
 			for (int i = 0; i < browser.length; i++)
 			{
 				try
@@ -419,11 +445,9 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 				splash.abort();
 				JOptionPane.showMessageDialog(
 					view,
-					"<html>JAP konnte Ihren Browser leider nicht finden<br>" +
-					"Bitte starten Sie Ihren Browser manuell und geben Sie die folgende<br>" +
-					"Adresse ein:<br><br><h3>" +
-					url + "</h3></html>",
-					"Browserstart fehlgeschlagen",
+					"<html>" + JAPMessages.getString("ngCouldNotFindBrowser") + "<br>" +
+					"<h3>" + url + "</h3></html>",
+					JAPMessages.getString("ngCouldNotFindBrowserTitle"),
 					JOptionPane.INFORMATION_MESSAGE
 					);
 			}
@@ -440,7 +464,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 				LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Browser terminated with exitcode " +
 							  runcode.exitValue());
 				splash.abort();
-			}
+			}*/
 			m_MyTableModel.fireTableDataChanged();
 		}
 	}
@@ -448,20 +472,14 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 	/**
 	 *
 	 * @return boolean
-	 * @todo internationalize messages
 	 */
 	private boolean doCreateAccount()
 	{
 		JFrame view = JAPController.getView();
 
 		int choice = JOptionPane.showOptionDialog(
-			view,
-			"<html>Um ein Konto anzulegen, muss JAP zun&auml;chst ein<br>" +
-			"Schl&uuml;sselpaar erzeugen, das dauert einige Sekunden.<br>" +
-			"Danach wird der &ouml;ffentliche Schl&uuml;ssel an die<br>" +
-			"Bezahlinstanz geschickt, diese er&ouml;ffnet dann das Konto.<br>" +
-			"M&ouml;chten Sie fortfahren?</html>",
-			"Konto anlegen",
+			view, JAPMessages.getString("ngCreateKeyPair"),
+			JAPMessages.getString("ngCreateAccount"),
 			JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE,
 			null, null, null
 			);
@@ -485,7 +503,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 				JOptionPane.showMessageDialog(
 					view,
 					JAPMessages.getString("Error creating account: ") + ex.getMessage(),
-					JAPMessages.getString("Error"), JOptionPane.ERROR_MESSAGE
+					JAPMessages.getString("error"), JOptionPane.ERROR_MESSAGE
 					);
 				return false;
 			}
@@ -520,7 +538,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 				JAPController.getView(),
 				JAPMessages.getString("Could not activate account. Error Code: ") +
 				ex.getMessage(),
-				JAPMessages.getString("Error"),
+				JAPMessages.getString("error"),
 				JOptionPane.ERROR_MESSAGE
 				);
 		}
@@ -567,16 +585,29 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 	 * doExportAccount
 	 *
 	 * @param payAccount PayAccount
-	 * @todo: show only asterisks and input password two times!
 	 */
 	private void doExportAccount(PayAccount selectedAccount)
 	{
+		boolean encrypt = false;
+		String strPassword = null;
+
 		if (selectedAccount == null)
 		{
 			return;
 		}
-		PayAccountsFile accounts = PayAccountsFile.getInstance();
 		JFrame view = JAPController.getView();
+
+		int choice = JOptionPane.showOptionDialog(
+			view,
+			JAPMessages.getString("ngExportAccountEncrypt"),
+			JAPMessages.getString("ngExportAccount"),
+			JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE,
+			null, null, null);
+		if (choice == JOptionPane.YES_OPTION)
+		{
+			strPassword = new JAPPasswordReader(true).readPassword(JAPMessages.getString("choosePassword"));
+			encrypt = true;
+		}
 
 		JFileChooser chooser = new JFileChooser();
 		MyFileFilter filter = new MyFileFilter();
@@ -595,20 +626,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 				doc.appendChild(elemRoot);
 				Element elemAccount = selectedAccount.toXmlElement(doc);
 				elemRoot.appendChild(elemAccount);
-
-				int choice = JOptionPane.showOptionDialog(
-					view,
-					"<html>Die Kontodaten enthalten einen privaten Schl&uuml;ssel,<br>" +
-					"der vor fremden Blicken gesch&uuml;tzt sein sollte. Deshalb haben Sir<br>" +
-					"jetzt die M&ouml;glichkeit Ihre Kontodaten verschl&uuml;sselt zu exportieren.<br>" +
-					"Zugriff auf die Daten ist dann nur noch mit einem Passwort m&ouml;glich.<br><br>" +
-					"M&ouml;chten Sie die Kontodaten verschl&uuml;sseln?",
-					"Konto exportieren",
-					JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE,
-					null, null, null);
-				if (choice == JOptionPane.YES_OPTION)
+				if (encrypt)
 				{
-					String strPassword = JOptionPane.showInputDialog(view, "Bitte Passwort eingeben:");
 					XMLEncryption.encryptElement(elemAccount, strPassword);
 				}
 				String strOutput = XMLUtil.toString(doc);
@@ -618,6 +637,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 			}
 			catch (Exception e)
 			{
+				LogHolder.log(LogLevel.DEBUG, LogType.PAY, e);
 				JOptionPane.showMessageDialog(
 					view,
 					"Could not export account, an error occured: " + e.getMessage(),
@@ -657,7 +677,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 
 	/**
 	 * doImportAccount - imports an account from a file
-	 * @todo handle cancel button properly
 	 */
 	private void doImportAccount()
 	{
@@ -684,23 +703,27 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 					Element elemCrypt = (Element) XMLUtil.getFirstChildByName(elemRoot, "EncryptedData");
 					if (elemCrypt != null)
 					{
-						String strMessage = "Please type a password for decryption";
-						String strPassword = "";
+						String strMessage = JAPMessages.getString("ngPasswordDecrypt");
+						String strPassword = null;
+						JAPPasswordReader pr = new JAPPasswordReader(false);
 						while (true)
 						{
 							// ask for password
-							strPassword = JOptionPane.showInputDialog(
-								view, strMessage,
-								"Password",
-								JOptionPane.QUESTION_MESSAGE | JOptionPane.OK_CANCEL_OPTION
-								);
+							strPassword = pr.readPassword(strMessage);
+
+							if (strPassword == null) // user pressed "cancel"
+							{
+								break;
+							}
 							try
 							{
 								elemAccount = XMLEncryption.decryptElement(elemCrypt, strPassword);
 							}
 							catch (Exception ex)
 							{
-								strMessage = "Bad password. Please type a password for decryption";
+								strMessage = JAPMessages.getString("ngPasswordTryAgain") +
+									JAPMessages.getString("ngPasswordDecrypt");
+								strPassword = null;
 								continue;
 							}
 							break;
@@ -712,8 +735,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 			{
 				JOptionPane.showMessageDialog(
 					view,
-					"Could not import accountfile",
-					"Sorry",
+					JAPMessages.getString("ngImportFailed"),
+					JAPMessages.getString("error"),
 					JOptionPane.ERROR_MESSAGE
 					);
 			}
@@ -731,9 +754,9 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 			{
 				JOptionPane.showMessageDialog(
 					view,
-					"<html>Error importing account:<br>" +
+					"<html>" + JAPMessages.getString("ngImportFailed") + "<br>" +
 					ex.getMessage() + "</html>",
-					"Error",
+					JAPMessages.getString("error"),
 					JOptionPane.ERROR_MESSAGE
 					);
 			}
@@ -744,7 +767,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 	 * doDeleteAccount
 	 *
 	 * @param payAccount PayAccount
-	 * @todo internationalize messages
 	 */
 	private void doDeleteAccount(PayAccount selectedAccount)
 	{
@@ -760,10 +782,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 		{
 			int choice = JOptionPane.showOptionDialog(
 				view,
-				"<html>Sie haben f&uuml;r dieses Konto noch keinen Kontoauszug.<br>" +
-				"M&ouml;chten Sie einen neuen Kontoauszug anfordern, um wirklich sicher zu sein<br>" +
-				"dass sich kein Guthaben mehr auf dem Konto befindet?</html>",
-				"Konto entfernen",
+				JAPMessages.getString("ngDeleteAccountStatement"),
+				JAPMessages.getString("ngDeleteAccount"),
 				JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE,
 				null, null, null);
 			if (choice == JOptionPane.YES_OPTION)
@@ -782,10 +802,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 			{
 				int choice = JOptionPane.showOptionDialog(
 					view,
-					"<html>Der Kontoauszug f&uuml;r dieses Konto ist &auml;lter als einen Tag.<br>" +
-					"M&ouml;chten Sie einen neuen Kontoauszug anfordern, um wirklich sicher zu sein<br>" +
-					"dass sich kein Guthaben mehr auf dem Konto befindet?</html>",
-					"Konto entfernen",
+					JAPMessages.getString("ngDeleteAccountOldStmt"),
+					JAPMessages.getString("ngDeleteAccount"),
 					JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE,
 					null, null, null);
 				if (choice == JOptionPane.YES_OPTION)
@@ -801,12 +819,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 			{
 				int choice = JOptionPane.showOptionDialog(
 					view,
-					"<html>Auf diesem Konto befindet sich noch ein Guthaben von<br>" +
-					accInfo.getBalance().getCredit() + " Bytes<br>" +
-					"Das Guthaben geht beim Entfernen unwiederbringlich verloren, <br>" +
-					"au&szlig;er Sie haben das Konto zuvor exportiert.<br><br>" +
-					"M&ouml;chten Sie dieses Konto wirklich trotzdem entfernen?</html>",
-					"Konto entfernen",
+					JAPMessages.getString("ngDeleteAccountCreditLeft"),
+					JAPMessages.getString("ngDeleteAccount"),
 					JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE,
 					null, null, null);
 				if (choice == JOptionPane.YES_OPTION)
@@ -818,8 +832,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 			{
 				int choice = JOptionPane.showOptionDialog(
 					view,
-					"<html>M&ouml;chten Sie dieses Konto wirklich entfernen?</html>",
-					"Konto entfernen",
+					JAPMessages.getString("ngReallyDeleteAccount"),
+					JAPMessages.getString("ngDeleteAccount"),
 					JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE,
 					null, null, null);
 				if (choice == JOptionPane.YES_OPTION)
@@ -832,8 +846,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 		{
 			int choice = JOptionPane.showOptionDialog(
 				view,
-				"<html>M&ouml;chten Sie dieses Konto wirklich entfernen?</html>",
-				"Konto entfernen",
+				JAPMessages.getString("ngReallyDeleteAccount"),
+				JAPMessages.getString("ngDeleteAccount"),
 				JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE,
 				null, null, null);
 			if (choice == JOptionPane.YES_OPTION)
@@ -853,7 +867,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 				JOptionPane.showMessageDialog(
 					view,
 					"<html>Error while deleting: " + ex.getMessage(),
-					"Sorry", JOptionPane.ERROR_MESSAGE);
+					JAPMessages.getString("error"), JOptionPane.ERROR_MESSAGE);
 			}
 		}
 	}
@@ -869,11 +883,9 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 	/**
 	 * This method can be overwritten by the children of AbstractJAPConfModule. It is called
 	 * every time the user presses "OK" in the configuration dialog.
-	 * @todo savejapconf
 	 */
 	protected boolean onOkPressed()
 	{
-		// call JAPController.saveJapConf() or sth similar;
 		return true;
 	}
 
@@ -961,7 +973,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 					}
 					else
 					{
-						return JAPMessages.getString("unknown");
+						return new Long(0);
 					}
 				case 3:
 					if (account.hasAccountInfo())
@@ -970,7 +982,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 					}
 					else
 					{
-						return JAPMessages.getString("unknown");
+						return new Timestamp(0);
 					}
 				case 4:
 					if (account.equals(m_accounts.getActiveAccount()))
@@ -991,15 +1003,15 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 			switch (col)
 			{
 				case 0:
-					return "Kontonr.";
+					return JAPMessages.getString("accountNr");
 				case 1:
-					return "Erstellt am";
+					return JAPMessages.getString("creationDate");
 				case 2:
-					return "Guthaben";
+					return JAPMessages.getString("credit");
 				case 3:
-					return "Gueltig bis";
+					return JAPMessages.getString("validTo");
 				case 4:
-					return "aktiv?";
+					return JAPMessages.getString("active");
 				default:
 					return "---";
 			}

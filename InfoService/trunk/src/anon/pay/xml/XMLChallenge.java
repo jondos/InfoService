@@ -60,9 +60,14 @@ public class XMLChallenge implements IXMLEncodable
 		setValues(element);
 	}
 
+	public XMLChallenge(Document doc) throws Exception
+	{
+		setValues(doc.getDocumentElement());
+	}
+
 
 	/** Note: this does not parse XML, but sets the challenge byte-array directly... */
-	public XMLChallenge(byte[] data) throws Exception
+	public XMLChallenge(byte[] data)
 	{
 		/*		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(data));
 		  setValues(doc.getDocumentElement());*/

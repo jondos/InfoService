@@ -32,6 +32,10 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import anon.pay.xml.XMLDescription;
+import org.w3c.dom.*;
+import javax.xml.parsers.*;
+import java.io.*;
+import logging.*;
 
 final public class HttpClient
 {
@@ -58,7 +62,7 @@ final public class HttpClient
 	 *
 	 * @throws IOException
 	 */
-	public void close() throws IOException
+	public void close() throws Exception
 	{
 		writeRequest("GET", "close", null);
 		readAnswer();
@@ -96,10 +100,10 @@ final public class HttpClient
 	/**
 	 * Einlesen der Http-Antwort.
 	 *
-	 * @return Die im Body der Antwort enthaltenen Daten als String
+	 * @return Die im Body der Antwort enthaltenen Daten als XMLDocument
 	 * @throws IOException
 	 */
-	public String readAnswer() throws IOException
+	public Document readAnswer() throws Exception
 	{
 		int contentLength = -1;
 		byte[] data = null;
@@ -173,8 +177,10 @@ final public class HttpClient
 			throw new IOException(statusString);
 		}
 
-		return new String(data);
-
+		Document doc = null;
+		doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new
+				ByteArrayInputStream(data));
+		return doc;
 	}
 
 	/**

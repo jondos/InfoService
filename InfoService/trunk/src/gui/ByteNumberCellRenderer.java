@@ -32,56 +32,46 @@ import javax.swing.JLabel;
 import javax.swing.JTable;
 import javax.swing.SwingConstants;
 import javax.swing.table.TableCellRenderer;
+import javax.swing.table.DefaultTableCellRenderer;
+import jap.JAPUtil;
 
 /**
  * A table cell renderer for number-of-bytes values.
- * Renders KByte/MByte/GByte values in an easy human-readable format.
+ * Renders KByte/MByte/GByte values in an easy human-readable format
+ * using the JAPUtil formatBytesValue() function.
  * @author Bastian Voigt
  * @version 1.0
  */
-public class ByteNumberCellRenderer extends JLabel implements TableCellRenderer
+public class ByteNumberCellRenderer extends DefaultTableCellRenderer
 {
 	public ByteNumberCellRenderer()
 	{
-		setOpaque(false);
+		super();
 		setHorizontalAlignment(SwingConstants.RIGHT);
 	}
 
 	public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
 		boolean hasFocus, int row, int column)
 	{
-		if(!(value instanceof Long))
+		if (isSelected)
+		{
+			super.setForeground(table.getSelectionForeground());
+			super.setBackground(table.getSelectionBackground());
+		}
+		else
+		{
+			super.setForeground(table.getForeground());
+			super.setBackground(table.getBackground());
+		}
+		setFont(table.getFont());
+
+		if (! (value instanceof Long))
 		{
 			setText("Error - no Long!");
 			return this;
 		}
-		long l = ( (Long) value).longValue() * 100;
-		int log = 1;
-		while ( (l >= 102400) && (log <= 4))
-		{
-			l /= 1024;
-			log++;
-		}
-		long fract = l % 100;
-		long abs = l / 100;
-		String unit;
-		switch (log)
-		{
-			case 1:
-				unit = " Bytes";
-				break;
-			case 2:
-				unit = " KB";
-				break;
-			case 3:
-				unit = " MB";
-				break;
-			case 4:
-			default:
-				unit = " GB";
-				break;
-		}
-		setText(Long.toString(abs) + "." + Long.toString(fract) + unit);
+
+		setText(JAPUtil.formatBytesValue( ( ( (Long) value).longValue())));
 		return this;
 	}
 }

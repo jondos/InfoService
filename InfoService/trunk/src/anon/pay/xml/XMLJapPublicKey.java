@@ -157,4 +157,33 @@ public class XMLJapPublicKey implements IXMLEncodable //extends XMLDocument
 		return elemRoot;
 	}
 
+	public boolean equals(XMLJapPublicKey k)
+	{
+		if (k == null)
+		{
+			return false;
+		}
+		IMyPublicKey k1 = k.getPublicKey();
+		IMyPublicKey k2 = this.getPublicKey();
+		if (k1 == null)
+		{
+			return (k2 == null);
+		}
+		if (k1 instanceof MyRSAPublicKey)
+		{
+			if (! (k2 instanceof MyRSAPublicKey))
+			{
+				return false;
+			}
+		}
+		if (k1 instanceof MyDSAPublicKey)
+		{
+			if (! (k2 instanceof MyDSAPublicKey))
+			{
+				return false;
+			}
+		}
+		return k1.equals(k2);
+	}
+
 }

@@ -114,6 +114,13 @@ public class XMLAccountCertificate extends AbstractXMLSignable
 		setValues(doc.getDocumentElement());
 	}
 
+	public XMLAccountCertificate(byte[] xmldata) throws Exception
+	{
+		ByteArrayInputStream in = new ByteArrayInputStream(xmldata);
+		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(in);
+		setValues(doc.getDocumentElement());
+	}
+
 	/**
 	 * Creates an AccountCertifcate from  an existing XML docuemnt
 	 *
