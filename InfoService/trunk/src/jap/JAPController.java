@@ -270,7 +270,7 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 	 *
 	 * The configuration is a XML-File with the following structure:
 	 *  <JAP
-	 *    version="0.19"                     // version of the xml struct (DTD) used for saving the configuration
+	 *    version="0.20"                     // version of the xml struct (DTD) used for saving the configuration
 	 *    portNumber=""                     // Listener-Portnumber
 	 *    portNumberSocks=""                // Listener-Portnumber for SOCKS
 	 *    supportSocks=""                   // Will we support SOCKS ?
@@ -756,6 +756,12 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 				{
 					LogHolder.log(LogLevel.ERR, LogType.MISC, e);
 				}
+				/* As some old Versions of JAP have problems with writing the correct values, we include the
+				 * default certs if config version is less than 0.20 */
+				if(strVersion==null||strVersion.compareTo("0.20")<0)
+				{
+					addDefaultCertificates();
+				}
 
 				/* load the infoservice management settings */
 				try
@@ -1109,7 +1115,7 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 			Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
 			Element e = doc.createElement("JAP");
 			doc.appendChild(e);
-			XMLUtil.setAttribute(e, JAPConstants.CONFIG_VERSION, "0.19");
+			XMLUtil.setAttribute(e, JAPConstants.CONFIG_VERSION, "0.20");
 			//
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_PORT_NUMBER, JAPModel.getHttpListenerPortNumber());
 			//XMLUtil.setAttribute(e,"portNumberSocks", Integer.toString(JAPModel.getSocksListenerPortNumber()));
