@@ -51,6 +51,7 @@ import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import anon.JAPAnonService;
 final class JAPConf extends JDialog
 	{
 
@@ -96,6 +97,8 @@ final class JAPConf extends JDialog
 
 		private JComboBox			m_comboLanguage;
 		private boolean				m_bIgnoreComboLanguageEvents=false;
+
+		private JCheckBox     m_cbDummyTraffic;
 
 		private JTabbedPane		m_Tabs;
 		private JPanel				m_pPort, m_pFirewall, m_pInfo, m_pMix, m_pMisc;
@@ -640,7 +643,7 @@ final class JAPConf extends JDialog
 					});
 */				JButton bttnMonitor=new JButton(m_Model.getString("bttnMonitor"));
 //				bttnMonitor.setEnabled(false);
-				bttnMonitor.addActionListener(new ActionListener() {
+				  bttnMonitor.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
 						Cursor c1=getCursor();
 						setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
@@ -651,10 +654,12 @@ final class JAPConf extends JDialog
 						setCursor(c1);
 
 				}});
+				m_cbDummyTraffic=new JCheckBox("Dummy Traffic");
 				JPanel p22 = new JPanel();
-				p22.setLayout(new GridLayout(2,1));
+				p22.setLayout(new GridLayout(3,1));
 				//p22.add(bttnPing);
 				p22.add(bttnMonitor);
+				p22.add(m_cbDummyTraffic);
 				p2.add(p22, BorderLayout.NORTH);
 
 				// Panel for Debugging Options
@@ -957,6 +962,8 @@ final class JAPConf extends JDialog
 					m_Model.setLocale(Locale.GERMAN);
 				else
 					m_Model.setLocale(Locale.ENGLISH);
+
+				JAPAnonService.setEnableDummyTraffic(m_cbDummyTraffic.isSelected());
 				m_Model.notifyJAPObservers();
 			}
 
@@ -978,6 +985,7 @@ final class JAPConf extends JDialog
 		public void updateValues()
 			{
 				// misc tab
+				m_cbDummyTraffic.setSelected(JAPAnonService.getEnableDummyTraffic());
 				m_cbShowDebugConsole.setSelected(JAPDebug.isShowConsole());
 				m_cbDebugGui.setSelected((((JAPDebug.getDebugType()&JAPDebug.GUI)!=0)?true:false));
 				m_cbDebugNet.setSelected((((JAPDebug.getDebugType()&JAPDebug.NET)!=0)?true:false));
