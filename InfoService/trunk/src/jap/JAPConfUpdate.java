@@ -82,7 +82,7 @@ class JAPConfUpdate extends AbstractJAPConfModule implements ActionListener, Ite
 	public void recreateRootPanel()
 {
 	JPanel panelRoot = getRootPanel();
-
+		panelRoot.removeAll();
 		GridBagLayout gridBagFrame = new GridBagLayout();
 		panelRoot.setLayout(gridBagFrame);
 

@@ -103,10 +103,10 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private boolean loadPay = false;
 
 
-	private JLabel m_labelAnonService,m_labelAnonymity,m_labelAnonymityOnOff;
+	private JLabel m_labelAnonService,m_labelAnonymity,m_labelAnonymitySmall,m_labelAnonymityOnOff;
 	private JLabel m_labelAnonMeter;
 	private JProgressBar m_progressAnonTraffic;
-	private JLabel m_labelAnonymityUser;
+	private JLabel m_labelAnonymityUser,m_labelAnonymityUserLabel;
 
 	private JLabel m_labelOwnTraffic,m_labelOwnTrafficSmall;
 	private JLabel m_labelOwnActivity,m_labelForwarderActivity;
@@ -236,11 +236,11 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_labelAnonymity = new JLabel(JAPMessages.getString("ngAnonymitaet"));
 		c1.insets = new Insets(0, 5, 0, 0);
 		p.add(m_labelAnonymity, c1);
-		l = new JLabel("Nutzerzahl:");
+		m_labelAnonymityUserLabel = new JLabel(JAPMessages.getString("ngNrOfUsers"));
 		c1.gridy = 1;
 		c1.anchor = GridBagConstraints.WEST;
 		c1.insets = new Insets(10, 15, 0, 0);
-		p.add(l, c1);
+		p.add(m_labelAnonymityUserLabel, c1);
 		l = new JLabel("Verkehr:");
 		c1.gridy = 2;
 		p.add(l, c1);
@@ -303,12 +303,12 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		gbl1 = new GridBagLayout();
 		c1 = new GridBagConstraints();
 		p = new JPanel(gbl1);
-		l = new JLabel("Anonymitat");
+		m_labelAnonymitySmall = new JLabel(JAPMessages.getString("ngAnonymitaet"));
 		c1.gridx = 0;
 		c1.anchor = GridBagConstraints.WEST;
 		c1.weightx = 0;
 		c1.insets = new Insets(0, 5, 0, 0);
-		p.add(l, c1);
+		p.add(m_labelAnonymitySmall, c1);
 		l = new JLabel("gring", JLabel.RIGHT);
 		c1.insets = new Insets(0, 20, 0, 5);
 		c1.gridx = 1;
@@ -597,16 +597,16 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c.gridy=10;
 		StatusPanel status=new StatusPanel();
 		northPanel.add(status,c);
-		status.addMsg("Status 1");
-		status.addMsg("Status 2");
-		status.addMsg("Status 3");
+		status.addMsg("Status 1",JOptionPane.WARNING_MESSAGE);
+		status.addMsg("Status 2",JOptionPane.INFORMATION_MESSAGE);
+		status.addMsg("Status 3",JOptionPane.ERROR_MESSAGE);
 //-----------------------------------------------------------
-		c.gridwidth = 2;
-		c.gridx = 0;
-		c.gridy = 11;
-		c.fill = GridBagConstraints.HORIZONTAL;
-		c.weightx = 1;
-		northPanel.add(new JSeparator(), c);
+//		c.gridwidth = 2;
+//		c.gridx = 0;
+//		c.gridy = 11;
+	//	c.fill = GridBagConstraints.HORIZONTAL;
+	//	c.weightx = 1;
+	//	northPanel.add(new JSeparator(), c);
 //---------------------------------------------------------
 
 //Buttons
@@ -1089,6 +1089,9 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_rbAnonOn.setText(JAPMessages.getString("ngAnonOn"));
 		m_rbAnonOff.setText(JAPMessages.getString("ngAnonOff"));
 		m_labelAnonymityOnOff.setText(JAPMessages.getString("ngAnonymitaet"));
+		m_labelAnonymity.setText(JAPMessages.getString("ngAnonymitaet"));
+		m_labelAnonymitySmall.setText(JAPMessages.getString("ngAnonymitaet"));
+		m_labelAnonymityUserLabel.setText(JAPMessages.getString("ngNrOfUsers"));
 		m_labelOwnActivity.setText(JAPMessages.getString("ngActivity"));
 		m_labelOwnActivitySmall.setText(JAPMessages.getString("ngActivity"));
 		m_labelForwarderActivity.setText(JAPMessages.getString("ngActivity"));
@@ -1115,6 +1118,14 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			m_dlgConfig.localeChanged();
 		}
 		m_NumberFormat = NumberFormat.getInstance();
+		Dimension d=super.getPreferredSize();
+m_iPreferredWidth=Math.max(d.width,Math.max(m_flippingpanelOwnTraffic.getPreferredSize().width,
+								  Math.max(
+								  Math.max(m_panelAnonService.getPreferredSize().width,
+											m_flippingpanelForward.getPreferredSize().width),
+	m_flippingpanelAnon.getPreferredSize().width)));
+
+
 		valuesChanged();
 		setOptimalSize();
 	}
