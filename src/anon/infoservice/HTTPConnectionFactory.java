@@ -334,7 +334,7 @@ public class HTTPConnectionFactory
 			{
 				m_vecHTTPConnections = new Vector();
 			}
-			m_vecHTTPConnections.add(connection);
+			m_vecHTTPConnections.addElement(connection);
 		}
 		return connection;
 	}

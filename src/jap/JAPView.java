@@ -73,7 +73,6 @@ import gui.*;
  public class JAPView extends AbstractJAPMainView implements IJAPMainView,ActionListener, JAPObserver
 {
 
-	private JAPController controller;
 	private JLabel meterLabel;
 	private JLabel m_labelCascadeName;
 	private JPanel m_panelMain;
@@ -100,9 +99,8 @@ import gui.*;
 
 	public JAPView(String s, JAPController a_controller)
 	{
-		super(s);
+		super(s,a_controller);
 		m_NumberFormat = NumberFormat.getInstance();
-		controller = a_controller;
 		helpWindow = null; //new JAPHelp(this);
 		m_dlgConfig = null; //new JAPConf(this);
 		m_bIsIconified = false;
