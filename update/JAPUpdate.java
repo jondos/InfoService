@@ -186,7 +186,7 @@ public class JAPUpdate
 //user's clicked Upgrade
   private void makeWizardPages()
   {
-  wizardBase = new JAPWizardBase(totalSteps, japController);
+  wizardBase = new JAPWizardBase(totalSteps);
   parentFrame.setVisible(false);
 
   }
