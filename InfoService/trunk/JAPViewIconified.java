@@ -30,6 +30,7 @@ import java.awt.event.*;
 import javax.swing.*;
 
 import anon.JAPAnonServiceListener;
+import anon.AnonServer;
 
 final class JAPViewIconified extends JFrame implements ActionListener,JAPObserver {
 	private JAPController controller;
@@ -122,7 +123,7 @@ final class JAPViewIconified extends JFrame implements ActionListener,JAPObserve
 
 	public void valuesChanged () {
 		if (controller.getAnonMode()) {
-			AnonServerDBEntry e = controller.getAnonServer();
+			AnonServer e = controller.getAnonServer();
 			if (e.getNrOfActiveUsers() != -1)
 				z3.setText(Integer.toString(controller.getAnonServer().getNrOfActiveUsers()));
 			else

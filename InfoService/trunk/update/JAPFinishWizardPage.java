@@ -24,14 +24,7 @@ import javax.swing.JTextField;
 import javax.swing.ProgressMonitor;
 import java.io.*;
 import java.io.FileInputStream;
-/**
- * Überschrift:
- * Beschreibung:
- * Copyright:     Copyright (c) 2001
- * Organisation:
- * @author
- * @version 1.0
- */
+
 
 public class JAPFinishWizardPage extends BasicWizardPage
 {
@@ -48,9 +41,6 @@ public class JAPFinishWizardPage extends BasicWizardPage
 
   }
 
-  public static void getCodeBase()
-  {
-    JAPUpdateConnection.getCodeBase();
-  }
+
 
 }

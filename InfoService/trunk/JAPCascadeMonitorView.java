@@ -44,7 +44,7 @@ import java.text.NumberFormat;
 import HTTPClient.HTTPConnection;
 import HTTPClient.HTTPResponse;
 
-//import anon.JAPAnonService;
+import anon.AnonServer;
 
 /**
  * User Interface for an Mix-Cascade Monitor.
@@ -75,7 +75,7 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
  		super(parent);
 		controller=JAPController.getController();
 		view=this;
-		db = controller.anonServerDatabase;
+		db = controller.getAnonServerDB();
 		this.setModal(true);
 		this.setTitle(JAPMessages.getString("chkAvailableCascades"));
 		Component contents = this.createComponents();
@@ -159,7 +159,7 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 			}
             public int getRowCount() { return db.size();}
             public Object getValueAt(int row, int col) {
-				AnonServerDBEntry e = db.getEntry(row);
+				AnonServer e = db.getEntry(row);
 				if (col==0) return e.getName();
 				if (col==1) return (e.getNrOfActiveUsers()==-1?" ":Integer.toString(e.getNrOfActiveUsers()));
 				if (col==2) return (e.getDelay()==null?" ":e.getDelay());
@@ -275,7 +275,7 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 				statusTextField.setText(JAPMessages.getString("chkGettingFeedback"));
 				Enumeration enum = db.elements();
 				while (enum.hasMoreElements()) {
-					controller.getInfoService().getFeedback((AnonServerDBEntry)enum.nextElement());
+					controller.getInfoService().getFeedback((AnonServer)enum.nextElement());
 					tableView.repaint();
 				}
 				statusTextField.setText(JAPMessages.getString("chkFeedbackReceived"));
@@ -286,7 +286,7 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 					statusTextField.setText(JAPMessages.getString("chkListenerError"));
 				}
 				for(int i=0;i<nr;i++) {
-					AnonServerDBEntry e = db.getEntry(i);
+					AnonServer e = db.getEntry(i);
 					statusTextField.setText(JAPMessages.getString("chkCnctToCasc")+" "+e.getName());
 					e.setStatus(JAPMessages.getString("chkConnecting"));
 					tableView.repaint();
@@ -295,15 +295,15 @@ class JAPCascadeMonitorView extends JDialog implements ListSelectionListener {
 					if (JAPModel.getUseFirewall()) {
 						// connect vi proxy to first mix (via ssl portnumber)
 						if (e.getSSLPort() == -1) {
-							proxyAnon.setAnonService(e.getHost(),e.getPort());
+							proxyAnon.setAnonService(e);
 							proxyAnon.setFirewall(JAPModel.getFirewallHost(),JAPModel.getFirewallPort());
 						} else {
-							proxyAnon.setAnonService(e.getHost(),e.getSSLPort());
+							proxyAnon.setAnonService(e);
 							proxyAnon.setFirewall(JAPModel.getFirewallHost(),JAPModel.getFirewallPort());
 						}
 					} else {
 						// connect directly to first mix
-						proxyAnon.setAnonService(e.getHost(),e.getPort());
+						proxyAnon.setAnonService(e);
 					}
 					// start the AnonService
 					long dtConnect  = 0;

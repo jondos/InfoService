@@ -1,4 +1,4 @@
-//import anon.JAPAnonService;
+import anon.AnonServer;
 import anon.JAPAnonServiceListener;
 import java.net.ServerSocket;
 class JAPLean implements JAPAnonServiceListener {
@@ -12,7 +12,7 @@ class JAPLean implements JAPAnonServiceListener {
 	static int      nrOfChannels      = 0;
 	static int      nrOfBytes         = 0;
 
-	JAPLean ( ) {
+	JAPLean ( ) throws Exception {
 		JAPDebug.create();
 		JAPDebug.setDebugType(JAPDebug.NET);
 		JAPDebug.setDebugLevel(JAPDebug.ERR);
@@ -21,7 +21,7 @@ class JAPLean implements JAPAnonServiceListener {
     ServerSocket listener=null;
     try{listener=new ServerSocket(portNumberHTTPListener);}catch(Exception e){e.printStackTrace();System.exit(0);}
 		japAnonProxy = new JAPAnonProxy(listener);
-		japAnonProxy.setAnonService(hostNameAnonService,portNumberAnonService);
+		japAnonProxy.setAnonService(new AnonServer(hostNameAnonService,portNumberAnonService));
 		int returnCode = japAnonProxy.start();
 		japAnonProxy.setAnonServiceListener(this);
 		if (returnCode == JAPAnonProxy.E_SUCCESS) {
@@ -48,7 +48,11 @@ class JAPLean implements JAPAnonServiceListener {
 		hostNameAnonService    = argv[1];
 		portNumberAnonService  = Integer.parseInt(argv[2]);
 		System.out.println("["+portNumberHTTPListener+"]-->["+hostNameAnonService+":"+portNumberAnonService+"]");
-		new JAPLean();
+		try{new JAPLean();}
+    catch(Exception e)
+      {
+        e.printStackTrace();
+      }
 	}
 
 	/* Implementation of Interface JAPAnonServiceListener */

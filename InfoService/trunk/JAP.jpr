@@ -1,6 +1,5 @@
 ;JBuilder -- PROJECT FILE VERSION {2.00} - do not alter this line!
 #0=JAP.jpr
-#2=AnonServerDBEntry.java
 #3=JAP.java
 #4=JAPAbout.java
 #5=JAPAWTMsgBox.java
@@ -15,7 +14,6 @@
 #14=JAPFirewallPasswdDlg.java
 #15=JAPHelp.java
 #16=JAPHTTPProxy.java
-#17=JAPInfoService.java
 #18=JAPJIntField.java
 #19=JAPLoader.java
 #20=JAPLoading.java
@@ -47,7 +45,7 @@
 #58=JAPController.java
 idl[0].ProcessIDL=false
 runtime.0[0].RunnableType=com.borland.jbuilder.runtime.ApplicationRunner
-runtime.0[0].application.class=gui.wizard.BasicWizard
+runtime.0[0].application.class=JAP
 runtime.0[0].jsprunner.launchuri=/
 runtime.0[0].test.harness=junit.textui.TestRunner
 sys[0].AuthorLabel=@author
@@ -57,7 +55,6 @@ sys[0].BraceStyle=1
 sys[0].CheckStable=1
 sys[0].Company=
 sys[0].CompanyLabel=Organisation:
-sys[0].CompileOnDebug=0
 sys[0].Copyright=Copyright (c) 2001
 sys[0].CopyrightLabel=Copyright:
 sys[0].DefaultPath=.
@@ -82,7 +79,6 @@ sys[0].Version=1.0
 sys[0].VersionLabel=@version
 sys[0].WorkingDirectory=.
 sys[0].enable.auto.packages=false
-sys[2].Parent=0
 sys[3].Parent=0
 sys[4].Parent=0
 sys[5].Parent=0
@@ -97,7 +93,6 @@ sys[13].Parent=0
 sys[14].Parent=0
 sys[15].Parent=0
 sys[16].Parent=0
-sys[17].Parent=0
 sys[18].Parent=0
 sys[19].Parent=0
 sys[20].Parent=0

@@ -9,7 +9,7 @@ import java.awt.*;
 import java.awt.event.*;
 
 import JAPController;
-import JAPInfoService;
+import anon.infoservice.InfoService;
 /**
  * Überschrift:
  * Beschreibung:
@@ -21,13 +21,12 @@ import JAPInfoService;
 // shall download the binaries
 public class JAPWelcomeWizardPage extends BasicWizardPage
 {
-private JAPUpdateConnection juc;
 public JProgressBar progressBar;
 private JTextArea taskOutput;
 private Timer timer;
 private final static int ONE_TENTH_SECOND = 100;
 private JAPController japController;
-private JAPInfoService infoService;
+private InfoService infoService;
 private JButton test;
 //private ProgressMonitorInputStream pmis;
   public JAPWelcomeWizardPage(/*JAPController japController*/)
@@ -46,12 +45,12 @@ private JButton test;
        {
            public void actionPerformed(ActionEvent e)
            {
-                progressBar.setValue(infoService.getCount());
-                System.out.println("setValue() "+ infoService.getCount());
-                if(infoService.ready == true)
-                  {
-                    timer.stop();
-                  }
+                //progressBar.setValue(infoService.getCount());
+                //System.out.println("setValue() "+ infoService.getCount());
+                //if(infoService.ready == true)
+                 // {
+                  //  timer.stop();
+                  //}
               //  taskOutput.append(task.getMessage() + newline);
              //   taskOutput.setCaretPosition(
               //          taskOutput.getDocument().getLength());
@@ -117,8 +116,5 @@ private JButton test;
 
   private void makestatusField(){}
 
-  public static void getCodeBase()
-  {
-    JAPUpdateConnection.getCodeBase();
-  }
+
 }
