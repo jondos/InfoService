@@ -34,34 +34,85 @@ package jap;
 public class JAPRoutingMessage
 {
 
-	/**
-	 * This message is sent after the routing mode was changed.
-	 */
-	public static final int ROUTING_MODE_CHANGED = 1;
+  /**
+   * This message is sent after the routing mode was changed.
+   */
+  public static final int ROUTING_MODE_CHANGED = 1;
 
-	/**
-	 * Stores the message code.
-	 */
-	private int m_messageCode;
+  /**
+   * This message is sent after there was added a new forwarding server propaganda instance.
+   * If this message is sent, the data must be the list of all propagandists.
+   */
+  public static final int PROPAGANDA_INSTANCES_ADDED = 2;
+  
+  /**
+   * This message is sent, when JAPRoutingSettings.startPropaganda() is ready, which means
+   * that all propaganda instances are started. The data must be the list of all started
+   * propaganda instances.
+   */    
+  public static final int START_PROPAGANDA_READY = 3;
 
-	/**
-	 * This creates a new JAPRoutingMessage.
-	 *
-	 * @param a_messageCode The message code. See the constants in this class.
-	 */
-	public JAPRoutingMessage(int a_messageCode)
-	{
-		m_messageCode = a_messageCode;
-	}
+  /**
+   * This message is sent, after JAPRoutingSettings.stopPropaganda() was called. So all
+   * propaganda instances are stopped. Attention: This message can appear without a
+   * prior START_PROPAGANDA_READY message, if the startPropaganda thread was interrupted
+   * while starting all propaganda instances.
+   */
+  public static final int STOP_PROPAGANDA_CALLED = 4;
+  
+          
+  /**
+   * Stores the message code.
+   */
+  private int m_messageCode;
 
-	/**
-	 * This returns the message code of this JAPRoutingMessage. See the constants in this class.
-	 *
-	 * @return The message code.
-	 */
-	public int getMessageCode()
-	{
-		return m_messageCode;
-	}
+  /**
+   * Stores some message data, which maybe was sent with the message.
+   */
+  private Object m_messageData;
+        
+        
+  /**
+   * This creates a new JAPRoutingMessage. The message data is set to null.
+   *
+   * @param a_messageCode The message code. See the constants in this class.
+   */
+  public JAPRoutingMessage(int a_messageCode)
+  {
+    m_messageCode = a_messageCode;
+    m_messageData = null;
+  }
 
+  /**
+   * This creates a new JAPRoutingMessage.
+   *
+   * @param a_messageCode The message code. See the constants in this class.
+   * @param a_messageData The data to send with the message.
+   */
+  public JAPRoutingMessage(int a_messageCode, Object a_messageData) {
+    m_messageCode = a_messageCode;
+    m_messageData = a_messageData;
+  }
+    
+
+  /**
+   * This returns the message code of this JAPRoutingMessage. See the constants in this class.
+   *
+   * @return The message code.
+   */
+  public int getMessageCode()
+  {
+    return m_messageCode;
+  }
+
+  /**
+   * Returns the message data, which was sent with the message. If there was no data sent with
+   * the message, null is returned.
+   *
+   * @return The message data.
+   */
+  public Object getMessageData() {
+    return m_messageData;
+  }
+  
 }

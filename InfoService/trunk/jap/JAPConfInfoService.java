@@ -233,7 +233,17 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 					Enumeration it = infoservices.elements();
 					while (it.hasMoreElements())
 					{
-						InfoServiceDatabase.getInstance().update( (InfoService) (it.nextElement()));
+            InfoService currentInfoService = (InfoService)(it.nextElement());
+            InfoServiceDatabase.getInstance().update(currentInfoService);
+            InfoService preferedInfoService = InfoServiceHolder.getInstance().getPreferedInfoService();
+            if (preferedInfoService != null) {
+              /* if the current infoservice ID is equal to the ID of the prefered infoservice,
+               * update the prefered infoservice also
+               */
+              if (preferedInfoService.getId().equals(currentInfoService.getId())) {
+                InfoServiceHolder.getInstance().setPreferedInfoService(currentInfoService);
+              }
+            }         
 					}
 					/* update the infoservice list */
 					updateGuiOutput();

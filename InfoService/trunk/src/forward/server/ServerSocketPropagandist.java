@@ -48,28 +48,6 @@ import logging.LogType;
  * for more information.
  */
 public class ServerSocketPropagandist extends Observable implements Runnable {
-
-  /**
-   * This value is returned, if announcing or renewing of the forwarder entry at the infoservice
-   * was successful.
-   */
-  public static final int RETURN_SUCCESS = 0;
-
-  /**
-   * This value is returned, if the infoservice could not verify the local forwarding server.
-   */
-  public static final int RETURN_VERIFICATION_ERROR = 1;
-  
-  /**
-   * This value is returned, if we could not reach the infoservice or the infoservice has no
-   * forwarder list.
-   */
-  public static final int RETURN_INFOSERVICE_ERROR = 2;
-  
-  /**
-   * This value is returned, if there was an unexpected error while infoservice communication.
-   */
-  public static final int RETURN_UNKNOWN_ERROR = 3;
   
   /**
    * This is the state, when we are registerd at the infoservice.
@@ -93,6 +71,28 @@ public class ServerSocketPropagandist extends Observable implements Runnable {
    */
   public static final int STATE_HALTED = 3;
   
+  /**
+   * This value is returned, if announcing or renewing of the forwarder entry at the infoservice
+   * was successful.
+   */
+  public static final int RETURN_SUCCESS = 0;
+
+  /**
+   * This value is returned, if the infoservice could not verify the local forwarding server.
+   */
+  public static final int RETURN_VERIFICATION_ERROR = 1;
+  
+  /**
+   * This value is returned, if we could not reach the infoservice or the infoservice has no
+   * forwarder list.
+   */
+  public static final int RETURN_INFOSERVICE_ERROR = 2;
+  
+  /**
+   * This value is returned, if there was an unexpected error while infoservice communication.
+   */
+  public static final int RETURN_UNKNOWN_ERROR = 3;
+
 
   /**
    * This value is returned, if renewing of our forwarding entry fails at the infoservice because
@@ -198,6 +198,39 @@ public class ServerSocketPropagandist extends Observable implements Runnable {
     }
   }
 
+  /**
+   * Returns the current registration state at the infoservice. See the STATE constants in this
+   * class. Observers should call this method, after they have received a update message from this
+   * instance. So they can get the new registration state.
+   *
+   * @return The current infoservice registration state.
+   */
+  public int getCurrentState() {
+    return m_currentConnectionState;
+  }
+
+  /**
+   * Returns the error code of the first announcement try. If there was an error while the first
+   * announcement try, this is normally because of a configuration error. With that error code it
+   * should be easier to find the configuration problem. See the RETURN constants in this class
+   * for a description of the values. Only RETURN_SUCCESS, RETURN_VERIFICATION_ERROR,
+   * RETURN_INFOSERVICE_ERROR or RETURN_UNKNOWN_ERROR are possible here.
+   *
+   * @return The error code of the first announcement try.
+   */
+  public int getFirstErrorCode() {
+    return m_firstErrorCode;
+  }
+  
+  /**
+   * Returns the infoservice, where this propagandist is trying to get registrated.
+   *
+   * @return The infoservice, which is updated by this propagandist.
+   */
+  public InfoService getInfoService() {
+    return m_infoService;
+  }
+  
   /**
    * This is the implementation of the propaganda thread. It will register and (if needed)
    * re-register the local forwarder at the infoservice.

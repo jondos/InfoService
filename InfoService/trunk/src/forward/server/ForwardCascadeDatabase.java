@@ -36,6 +36,9 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 import anon.infoservice.MixCascade;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 
 /**
  * This class stores all MixCascades, where messages from blockees can be forwarded to.
@@ -110,12 +113,17 @@ public class ForwardCascadeDatabase {
   }
   
   /**
-   * Adds a mixcascade to the list of allowed mixcascades for forwarding.
+   * Adds a mixcascade to the list of allowed mixcascades for forwarding. If there is already a
+   * mixcascade with the same ID in the database, the old entry is replaced by this new one.
    *
    * @param a_cascade The mixcascade to add.
    */
   public void addCascade(MixCascade a_cascade) {
     synchronized (m_allowedCascades) {
+      if (m_allowedCascades.containsKey(a_cascade.getId()) == false) {
+        /* only log, if there was a new entry added and not an old one updated */
+        LogHolder.log(LogLevel.INFO, LogType.MISC, "ForwardCascadeDatabase: addCascade: The mixcascade " + a_cascade.getName() + " was added to the list of useable cascades for the clients.");
+      }
       m_allowedCascades.put(a_cascade.getId(), a_cascade);
     }
   }
@@ -127,7 +135,22 @@ public class ForwardCascadeDatabase {
    */
   public void removeCascade(String a_id) {
     synchronized (m_allowedCascades) {
+      MixCascade cascadeToRemove = (MixCascade)(m_allowedCascades.get(a_id));
+      if (cascadeToRemove != null) {
+        LogHolder.log(LogLevel.INFO, LogType.MISC, "ForwardCascadeDatabase: removeCascade: The mixcascade " + cascadeToRemove.getName() + " was removed from the list of useable cascades for the clients.");
+      }
       m_allowedCascades.remove(a_id);
+    }
+  }
+  
+  /**
+   * Removes all mixcascades from the database of allowed cascades. So access to the cascades is
+   * forbidden for all new client connections.
+   */
+  public void removeAllCascades() {
+    synchronized (m_allowedCascades) {
+      LogHolder.log(LogLevel.INFO, LogType.MISC, "ForwardCascadeDatabase: removeAllCascades: All mixcascades were removed from the list of useable cascades for the clients.");      
+      m_allowedCascades.clear();
     }
   }
   
