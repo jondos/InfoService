@@ -6,6 +6,9 @@ package anon.tor.test;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+import logging.LogHolder;
+import logging.SystemErrLog;
+
 import anon.tor.Tor;
 import anon.tor.TorAnonServerDescription;
 import anon.tor.TorChannel;
@@ -17,6 +20,7 @@ import anon.tor.TorChannel;
 public class torproxy {
 
 	public static void main(String[] args) throws Exception{
+//		LogHolder.setLogInstance(new SystemErrLog());
 		Tor tor = Tor.getInstance();
 		tor.initialize(new TorAnonServerDescription());
 
@@ -25,7 +29,7 @@ public class torproxy {
 		while(true)
 		{
 			Socket client = server.accept();
-			proxythread t = new proxythread(client,tor.createChannel(TorChannel.SOCKS));
+			proxythread t = new proxythread(client,(TorChannel)tor.createChannel(TorChannel.SOCKS));
 			System.out.println("verbunden");
 			t.start();
 

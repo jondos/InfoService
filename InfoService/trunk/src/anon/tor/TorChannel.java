@@ -231,13 +231,20 @@ public class TorChannel extends AbstractChannel
 			case RelayCell.RELAY_END:
 			{
 				LogHolder.log(LogLevel.DEBUG, LogType.TOR,
-							  "Relay stream closed with reason: " + cell.getRelayPayload()[0]);
+							  "RELAY_END: Relay stream closed with reason: " + cell.getRelayPayload()[0]);
+				closedByPeer();
+				break;
 			}
 			default:
 			{
 				closedByPeer();
 			}
 		}
+	}
+	
+	public boolean isClosedByPeer()
+	{
+		return m_bIsClosedByPeer;
 	}
 
 }
