@@ -412,6 +412,11 @@ final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 							Thread.sleep(10000);
 						}
 					}
+					catch(Exception e)
+					{
+						LogHolder.log(LogLevel.ERR, LogType.NET, "JAPAnonPrxoy.run() something was wrong with seting up a new channel Exception: " + e);
+						break;
+					}
 				}
 				if (newChannel != null)
 				{

@@ -91,6 +91,13 @@ public class HTTPConnectionFactory
 	{
 		/* default is to use no proxy for all new HTTPConnection instances */
 		setNewProxySettings(PROXY_TYPE_NONE, null, -1, null, null);
+		try
+		{
+			HTTPConnection.removeDefaultModule(Class.forName("HTTPClient.AuthorizationModule"));
+		}
+		catch (Exception e)
+		{
+		}
 		m_timeout = 10;
 	}
 
@@ -176,7 +183,7 @@ public class HTTPConnectionFactory
 	 */
 	public synchronized void setTimeout(int a_timeout)
 	{
-			m_timeout = a_timeout;
+		m_timeout = a_timeout;
 	}
 
 	/**
