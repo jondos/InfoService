@@ -25,21 +25,16 @@ OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABIL
 IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
-package anon;
+package anon.crypto;
 
-public final class ErrorCodes
+public class JAPCertificateException extends Exception
 	{
-		public final static int E_SUCCESS=0;
-		public final static int E_UNKNOWN=-1;
-		public final static int E_ALREADY_CONNECTED=-4;
-		public final static int E_INVALID_SERVICE=-5;
-		public final static int E_CONNECT=-6;
-		public final static int E_NOT_CONNECTED=-9;
-		public final static int E_MIX_PROTOCOL_NOT_SUPPORTED=-10;
-		public final static int E_INVALID_CERTIFICATE=-20;
-		public final static int E_INVALID_KEY=-21;
-		public final static int E_SIGNATURE_CHECK_FIRSTMIX_FAILED=-22;
-		public final static int E_SIGNATURE_CHECK_OTHERMIX_FAILED=-23;
+		public JAPCertificateException()
+			{
+			}
 
-
+		public JAPCertificateException(String msg)
+			{
+				super(msg);
+			}
 	}

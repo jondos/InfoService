@@ -30,6 +30,12 @@ import java.awt.Point;
 import java.awt.Dimension;
 import gui.JAPDll;
 
+import anon.crypto.JAPCertificate;
+import anon.crypto.JAPCertificateStore;
+import anon.crypto.JAPSignature;
+import java.io.File;
+import java.io.FilenameFilter;
+
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPModel
 {
@@ -62,8 +68,15 @@ public final class JAPModel
 	public Dimension m_OldMainWindowSize			 		 = null;
 	private static JAPModel model                  = null;
 
+
+	private boolean m_bCertCheckDisabled           = true;
+	private JAPCertificate m_rootCertificate = null;
+	private JAPCertificateStore m_certStore = null;
+	private String m_acceptedCertList = null;
+
 	private JAPModel ()
 		{
+				m_certStore=new JAPCertificateStore();
 		 // m_Locale=Locale.getDefault();
 		}
 
@@ -376,5 +389,96 @@ public final class JAPModel
 		*/
 		return buff.toString();
 	}
+
+	protected void setCertCheckDisabled(boolean b)
+		{
+			m_bCertCheckDisabled=b;
+		}
+
+		public static boolean isCertCheckDisabled()
+		{
+			return model.m_bCertCheckDisabled;
+		}
+
+
+		public static boolean setRootCertificate()
+		{
+			String dir=System.getProperty("user.home","");
+			File file;
+			try
+			{
+				file = new File("certificates" + File.separator + "japroot.cer");
+			}
+			catch (Exception e)
+			{
+				file=null;
+			}
+
+			model.m_rootCertificate = JAPCertificate.getInstance(file);
+			if (model.m_rootCertificate instanceof JAPCertificate)
+			{
+				model.m_certStore.addCertificate(model.m_rootCertificate);
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+
+		public static JAPCertificate getRootCertificate()
+		{
+			return model.m_rootCertificate;
+		}
+
+		public static JAPCertificateStore getCertificateStore()
+		{
+			return model.m_certStore;
+		}
+
+		public static boolean setCertificateStore(String certlist)
+		{
+			model.m_acceptedCertList = certlist;
+
+			JAPCertificateStore certstore = new JAPCertificateStore();
+
+			String dir=System.getProperty("user.home","");
+
+			File certdir, t_certfile;
+			JAPCertificate t_cert;
+			String t_certstore[];
+			certdir = new File(dir + File.separator + "certificates");
+			if (!certdir.exists())
+				certdir = new File(".." + File.separator + "certificates");
+
+			if (certdir.canRead())
+			{
+				FilenameFilter fnf = new FilenameFilter()
+				{
+					public boolean accept(File certdir, String name)
+					{
+						return name.endsWith(".cer");
+					}
+				};
+
+				t_certstore = certdir.list(fnf);
+				for (int i = 0; i < t_certstore.length; i++)
+				{
+					t_certfile = new File(certdir + File.separator + t_certstore[i]);
+					t_cert = JAPCertificate.getInstance(t_certfile);
+					if (((model.m_acceptedCertList.indexOf((String)t_cert.getIssuer().getValues().elementAt(0))) != -1) || (certlist == null))
+						certstore.addCertificate(t_cert);
+				}
+				model.m_certStore = certstore;
+				return true;
+			}
+			return false;
+		}
+
+		public static void setCertificateStore(JAPCertificateStore jcs)
+		{
+			model.m_certStore = jcs;
+		}
+
 
 }

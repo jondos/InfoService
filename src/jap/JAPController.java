@@ -74,6 +74,7 @@ import proxy.ProxyListener;
 import proxy.DirectProxy;
 import proxy.AnonProxy;
 import update.JAPUpdateWizard;
+import anon.crypto.*;
 
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPController implements ProxyListener {
@@ -178,6 +179,8 @@ public final class JAPController implements ProxyListener {
 			else
 				{	// listender has started correctly
 					m_Controller.status1 = JAPMessages.getString("statusRunning");
+					// read root certificate, if anything goes wrong: just shrug!
+					m_Controller.m_Model.setRootCertificate();
 					// initial setting of anonMode
 					setAnonMode(JAPModel.getAutoConnect());
 				}
@@ -202,7 +205,9 @@ public final class JAPController implements ProxyListener {
 	 *		infoServiceHostName="..."			// hostname of the infoservice
 	 *		infoServicePortnumber=".."		// the portnumber of the info service
 	 *		infoServiceDisabled="true/false"		// disable use of InfoService
-	 *    anonserviceID=".."            //the Id of the anonService [since version 0.1 in a separate node]
+	 *		certCheckDisabled="true/false"  // disable checking of certificates
+	 * 		acceptedCertList="????"					//????
+	 *  	anonserviceID=".."            //the Id of the anonService [since version 0.1 in a separate node]
 	 *    anonserviceName=".."          //the name of the anon-service [since version 0.1 in a separate node]
 	 *		anonHostName=".."							// the hostname of the anon-service [since version 0.1 in a separate node]
 	 *		anonHostIP=".."							  // the ip of the anon-service [since version 0.1 in a separate node]
@@ -307,6 +312,11 @@ public final class JAPController implements ProxyListener {
 			port=XMLUtil.parseElementAttrInt(root,"infoServicePortNumber",JAPModel.getInfoServicePort());
 			setInfoService(host,port);
 			setInfoServiceDisabled(XMLUtil.parseNodeBoolean(n.getNamedItem("infoServiceDisabled"),false));
+			//settings for Certificates
+			setCertCheckDisabled(XMLUtil.parseNodeBoolean(n.getNamedItem("certCheckDisabled"),JAPModel.isCertCheckDisabled()));
+			setCertificateStore(XMLUtil.parseNodeString(n.getNamedItem("acceptedCertList"), ""));
+
+
 			// load settings for proxy
 			host=XMLUtil.parseNodeString(n.getNamedItem("proxyHostName"),m_Model.getFirewallHost());
 			port=XMLUtil.parseElementAttrInt(root,"proxyPortNumber",m_Model.getFirewallPort());
@@ -506,6 +516,8 @@ public final class JAPController implements ProxyListener {
 			tmpInt=m_Model.getInfoServicePort();
 			e.setAttribute("infoServicePortNumber",Integer.toString(tmpInt));
 			e.setAttribute("infoServiceDisabled",(JAPModel.isInfoServiceDisabled()?"true":"false"));
+			e.setAttribute("certCheckDisabled", (JAPModel.isCertCheckDisabled()?"true":"false"));
+			e.setAttribute("acceptedCertList", (JAPModel.getCertificateStore().dumpStoreData()));
 			//e.setAttribute("anonserviceID",((e1.getID()==null)?"":e1.getID()));
 			//e.setAttribute("anonserviceName",((e1.getName()==null)?"":e1.getName()));
 			//ListenerInterface[] listenerInterfaces=e1.getListenerInterfaces();
@@ -800,6 +812,16 @@ public final class JAPController implements ProxyListener {
 			m_Model.setInfoServiceDisabled(b);
 		}
 
+	public static void setCertCheckDisabled(boolean b)
+		{
+			m_Model.setCertCheckDisabled(b);
+		}
+
+	public static void setCertificateStore(String certlist)
+		{
+			m_Model.setCertificateStore(certlist);
+		}
+
 	public static void setSaveMainWindowPosition(boolean b)
 		{
 			m_Model.setSaveMainWindowPosition(b);
@@ -1089,6 +1111,52 @@ private final class SetAnonModeAsync implements Runnable
 											JOptionPane.ERROR_MESSAGE
 										);
 								}
+								// ootte
+							 else if(ret==AnonProxy.E_INVALID_KEY)
+								 {
+									 JOptionPane.showMessageDialog
+										 (
+											 getView(),
+											 JAPMessages.getString("errorMixInvalidKey"),
+											 JAPMessages.getString("errorMixInvalidTitle"),
+											 JOptionPane.ERROR_MESSAGE
+										 );
+								 }
+
+							 else if(ret==AnonProxy.E_INVALID_CERTIFICATE)
+								 {
+									 JOptionPane.showMessageDialog
+										 (
+											 getView(),
+											 JAPMessages.getString("errorCertificateInvalid"),
+											 JAPMessages.getString("errorCertificateInvalidTitle"),
+											 JOptionPane.ERROR_MESSAGE
+										 );
+								 }
+
+
+							 else if(ret==AnonProxy.E_SIGNATURE_CHECK_FIRSTMIX_FAILED)
+								 {
+									 JOptionPane.showMessageDialog
+										 (
+											 getView(),
+											 JAPMessages.getString("errorMixFirstMixSigCheckFailed"),
+											 JAPMessages.getString("errorMixFirstMixSigCheckFailedTitle"),
+											 JOptionPane.ERROR_MESSAGE
+										 );
+								 }
+
+							 else if(ret==AnonProxy.E_SIGNATURE_CHECK_OTHERMIX_FAILED)
+								 {
+									 JOptionPane.showMessageDialog
+										 (
+											 getView(),
+											 JAPMessages.getString("errorMixOtherMixSigCheckFailed"),
+											 JAPMessages.getString("errorMixOtherMixSigCheckFailedTitle"),
+											 JOptionPane.ERROR_MESSAGE
+										 );
+								 }
+								// ootte
 							else
 								{
 									if(!JAPModel.isSmallDisplay())

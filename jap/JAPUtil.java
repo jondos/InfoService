@@ -60,6 +60,8 @@ import javax.swing.table.*;
 
 import HTTPClient.Codecs;
 
+import anon.crypto.JAPCertificate;
+import gui.SimpleFileFilter;
 final public class JAPUtil
 	{
 
@@ -434,5 +436,46 @@ final public class JAPUtil
 			return returnString;
 			}
 
-		}
+				public static JFileChooser showFileDialog(Window jf)
+				{
+					SimpleFileFilter active = null;
+					JFileChooser fd2 = new JFileChooser();
+					fd2.setFileSelectionMode(JFileChooser.FILES_ONLY);
+					fd2.addChoosableFileFilter(active = new SimpleFileFilter());
+					if (active != null)
+					{
+						fd2.setFileFilter(active);
+					}
+					fd2.setFileHidingEnabled(false);
+					fd2.showOpenDialog(jf);
+//										File m_fileCurrentDir = fd2.getCurrentDirectory();
+					return fd2;
+				}
 
+		public static JAPCertificate openFile(Window jf)
+		{
+			File file = showFileDialog(jf).getSelectedFile();
+			JAPCertificate t_cert = null;
+			if (file != null)
+			{
+				try
+				{
+					byte[] buff = new byte[ (int) file.length()];
+					FileInputStream fin = new FileInputStream(file);
+					fin.read(buff);
+					fin.close();
+					String t_filename = ".." + File.separator + "certificates" +
+						File.separator + file.getName();
+					FileOutputStream fout = new FileOutputStream(t_filename);
+					fout.write(buff);
+					fout.close();
+					t_cert = JAPCertificate.getInstance(new File(t_filename));
+				}
+				catch (Exception e)
+				{
+					System.out.println("Error reading: " + file);
+				}
+			}
+			return t_cert;
+		}
+	}

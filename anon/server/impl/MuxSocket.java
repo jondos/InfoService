@@ -47,12 +47,15 @@ import java.util.Enumeration;
 import java.math.BigInteger;
 
 import java.security.SecureRandom;
+import java.security.PublicKey;
+import java.security.InvalidKeyException;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.DocumentBuilder;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import logging.Log;
 import logging.LogLevel;
@@ -66,6 +69,8 @@ import anon.AnonChannel;
 import anon.ToManyOpenChannelsException;
 import anon.NotConnectedToMixException;
 import anon.server.AnonServiceImpl;
+import anon.crypto.JAPSignature;
+import anon.crypto.JAPCertificate;
 
 public final class MuxSocket implements Runnable
 	{
@@ -316,6 +321,60 @@ public final class MuxSocket implements Runnable
 						if(!root.getNodeName().equals("MixCascade"))
 							return ErrorCodes.E_UNKNOWN;
 						//TODO Check Signautre of whole XML struct
+//---
+						if (!JAPModel.isCertCheckDisabled())
+							{
+								// Signature Check First Mix
+								// - check signature
+								// - check if certificate is OK
+								// - extract public key of X509 certificate
+								try
+									{
+										//this should be moved to JAPSignature....
+										Node nodeSig=XMLUtil.getFirstChildByName(root,"Signature");
+										Node mix1_x509cert = XMLUtil.getFirstChildByNameUsingDeepSearch(nodeSig,"X509Certificate");
+										JAPCertificate cert_1 = JAPCertificate.getInstance(mix1_x509cert);
+										PublicKey pk_1 = cert_1.getPublicKey();
+										JAPSignature m_sig1 = new JAPSignature();
+										try
+											{
+												m_sig1.initVerify(pk_1);
+											}
+										catch (InvalidKeyException ex)
+											{
+												return ErrorCodes.E_INVALID_KEY;
+											}
+										if (!m_sig1.verifyXML(root))
+											return ErrorCodes.E_SIGNATURE_CHECK_FIRSTMIX_FAILED;
+										//ok now the know that the XML was signed with the included Cert
+										//but lets check if we do trust this cert...
+										// lets look up the certificate list we trust!
+										JAPCertificate j = null;
+										Enumeration m_certs = JAPModel.getCertificateStore().elements();
+										while (m_certs.hasMoreElements())
+											{
+												j = (JAPCertificate) m_certs.nextElement();
+												if (j.getIssuer().equals(cert_1.getIssuer()))
+													{
+														break;
+													}
+											}
+										try
+											{
+												if(!cert_1.verify(j.getPublicKey()))
+													return ErrorCodes.E_INVALID_CERTIFICATE;
+											}
+										catch (Exception e)
+											{
+												return ErrorCodes.E_INVALID_CERTIFICATE;
+											}
+									}
+								catch (Exception e)
+									{
+										return ErrorCodes.E_SIGNATURE_CHECK_FIRSTMIX_FAILED;
+									}
+							}//end if check Signatures
+//---
 						Element elemMixProtocolVersion=(Element)root.getElementsByTagName("MixProtocolVersion").item(0);
 						if(elemMixProtocolVersion==null)
 							return ErrorCodes.E_MIX_PROTOCOL_NOT_SUPPORTED;
@@ -345,6 +404,104 @@ public final class MuxSocket implements Runnable
 								if(child.getNodeName().equals("Mix"))
 									{
 										//TODO: Check signatures for Mix 2 .. n
+//---
+										if (!JAPModel.isCertCheckDisabled())
+											{
+												try
+													{
+														//this should be moved to JAPSignature....
+														Node nodeSig=XMLUtil.getFirstChildByName(child,"Signature");
+														Node mixn_x509cert = XMLUtil.getFirstChildByNameUsingDeepSearch(nodeSig,"X509Certificate");
+														JAPCertificate cert_n = JAPCertificate.getInstance(mixn_x509cert);
+														PublicKey pk_n = cert_n.getPublicKey();
+														JAPSignature m_sign = new JAPSignature();
+														try
+															{
+																m_sign.initVerify(pk_n);
+															}
+														catch (InvalidKeyException ex)
+															{
+																return ErrorCodes.E_INVALID_KEY;
+															}
+														if (!m_sign.verifyXML(root))
+															return ErrorCodes.E_SIGNATURE_CHECK_OTHERMIX_FAILED;
+														//ok now the know that the XML was signed with the included Cert
+														//but lets check if we do trust this cert...
+														// lets look up the certificate list we trust!
+														JAPCertificate j = null;
+														Enumeration m_certs = JAPModel.getCertificateStore().elements();
+														while (m_certs.hasMoreElements())
+															{
+																j = (JAPCertificate) m_certs.nextElement();
+																if (j.getIssuer().equals(cert_n.getIssuer()))
+																	{
+																		break;
+																	}
+															}
+														try
+															{
+																if(!cert_n.verify(j.getPublicKey()))
+																	return ErrorCodes.E_INVALID_CERTIFICATE;
+															}
+														catch (Exception e)
+															{
+																return ErrorCodes.E_INVALID_CERTIFICATE;
+															}
+													}
+												catch (Exception e)
+													{
+														return ErrorCodes.E_SIGNATURE_CHECK_OTHERMIX_FAILED;
+													}
+/*
+												try
+													{
+														Node mixn_x509cert = XMLUtil.getFirstChildByNameUsingDeepSearch(child, "X509Certificate");
+														if (mixn_x509cert != null)
+															{
+																JAPCertificate cert_n = JAPCertificate.getInstance(mixn_x509cert);
+
+																// the issuer does not match the subject
+																// assumption: the certificate was certified by jap team root certificate
+																if (!(cert_n.getIssuer().equals(cert_n.getSubject())))
+																	{
+																		JAPCertificate j2 = null;
+																		Enumeration m_certs2 = JAPModel.getCertificateStore().elements();
+																		while (m_certs2.hasMoreElements())
+																			{
+																				j2 = (JAPCertificate) m_certs2.nextElement();
+																				if (j2.getIssuer().equals(cert_n.getIssuer()))
+																					{
+																						break;
+																					}
+																			}
+																		try
+																			{
+																				cert_n.verify(j2.getPublicKey());
+																			}
+																		catch (Exception e)
+																			{
+																				e.printStackTrace();
+																				return ErrorCodes.E_INVALID_CERTIFICATE;
+																			}
+																	}
+																PublicKey pk_n = cert_n.getPublicKey();
+																if (!(pk_n instanceof PublicKey))
+																	return ErrorCodes.E_INVALID_KEY;
+																JAPSignature m_sign = new JAPSignature();
+																try
+																	{
+																		m_sign.initVerify(pk_n);
+																	}
+																catch (InvalidKeyException ex)
+																	{
+																		return ErrorCodes.E_INVALID_KEY;
+																	}
+																if (!m_sign.verifyXML(child))
+																	return ErrorCodes.E_SIGNATURE_CHECK_OTHERMIX_FAILED;
+															}
+													} catch (Exception e) { e.printStackTrace(); }
+											*/}
+//---
 										m_arASymCipher[i]=new ASymCipher();
 										if(m_arASymCipher[i++].setPublicKey((Element)child)!=ErrorCodes.E_SUCCESS)
 											return ErrorCodes.E_UNKNOWN;
