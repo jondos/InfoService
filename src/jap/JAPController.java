@@ -60,8 +60,10 @@ import anon.infoservice.InfoServiceDBEntry;
 import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.JAPVersionInfo;
 import anon.infoservice.MixCascade;
+import anon.infoservice.ProxyInterface;
 import anon.util.ResourceLoader;
 import anon.util.XMLUtil;
+import anon.util.IPasswordReader;
 import forward.server.ForwardServerManager;
 import logging.LogHolder;
 import logging.LogLevel;
@@ -69,6 +71,7 @@ import logging.LogType;
 import proxy.AnonWebProxy;
 import proxy.DirectProxy;
 import proxy.ProxyListener;
+import anon.infoservice.ImmutableProxyInterface;
 import update.JAPUpdateWizard;
 import pay.PayAccountsFile;
 
@@ -118,6 +121,7 @@ public final class JAPController implements ProxyListener
 	private static JAPFeedback feedback = null;
 	private Locale m_Locale = null;
 	private Vector observerVector = null;
+	private IPasswordReader m_passwordReader;
 
 	private static Font m_fontControls;
 
@@ -164,6 +168,8 @@ public final class JAPController implements ProxyListener
 		m_proxyAnon = null;
 		//m_proxySocks = null;
 		m_Locale = Locale.getDefault();
+
+		m_passwordReader = new JAPFirewallPasswdDlg();
 	}
 
 	/** Creates the Controller - as Singleton.
@@ -176,6 +182,15 @@ public final class JAPController implements ProxyListener
 			m_Controller = new JAPController();
 		}
 		return m_Controller;
+	}
+
+	/**
+	 * Returns the password reader.
+	 * @return the password reader
+	 */
+	public IPasswordReader getPasswordReader()
+	{
+		return m_passwordReader;
 	}
 
 	//---------------------------------------------------------------------
@@ -421,7 +436,6 @@ public final class JAPController implements ProxyListener
 				//setSocksPortNumber(port);
 				//setUseSocksPort(JAPUtil.parseNodeBoolean(n.getNamedItem("supportSocks"),false));
 				//setUseProxy(JAPUtil.parseNodeBoolean(n.getNamedItem("proxyMode"),false));
-				setUseFirewallAuthorization(XMLUtil.parseNodeBoolean(n.getNamedItem("proxyAuthorization"), false));
 				// load settings for the reminder message in setAnonMode
 				mbActCntMessageNeverRemind = XMLUtil.parseNodeBoolean(n.getNamedItem(
 					"neverRemindActiveContent"), false);
@@ -508,22 +522,27 @@ public final class JAPController implements ProxyListener
 				}
 
 				// load settings for proxy
-				String proxyHost = XMLUtil.parseNodeString(n.getNamedItem("proxyHostName"),
-					m_Model.getFirewallHost());
-				int proxyPort = XMLUtil.parseElementAttrInt(root, "proxyPortNumber", m_Model.getFirewallPort());
-				boolean bUseProxy = XMLUtil.parseNodeBoolean(n.getNamedItem("proxyMode"), false);
-				String type = XMLUtil.parseNodeString(n.getNamedItem("proxyType"), "HTTP");
-				String proxyUserId = XMLUtil.parseNodeString(n.getNamedItem("proxyAuthUserID"),
-					JAPModel.getFirewallAuthUserID());
-				setFirewallAuthUserID(proxyUserId);
-				if (type.equalsIgnoreCase("SOCKS"))
+				ProxyInterface proxyInterface = null;
+
+				try {
+					proxyInterface = new ProxyInterface(
+						XMLUtil.parseNodeString(n.getNamedItem("proxyHostName"), null),
+						XMLUtil.parseElementAttrInt(root, "proxyPortNumber", -1),
+						XMLUtil.parseNodeString(n.getNamedItem("proxyType"),
+												ProxyInterface.PROTOCOL_TYPE_HTTP),
+						XMLUtil.parseNodeString(n.getNamedItem("proxyAuthUserID"), null),
+						getPasswordReader(),
+						XMLUtil.parseNodeBoolean(n.getNamedItem("proxyAuthorization"), false),
+						XMLUtil.parseNodeBoolean(n.getNamedItem("proxyMode"), false));
+				} catch(Exception a_e)
 				{
-					setProxy(JAPConstants.FIREWALL_TYPE_SOCKS, proxyHost, proxyPort, bUseProxy);
+					a_e.printStackTrace();
+					LogHolder.log(LogLevel.NOTICE, LogType.NET,
+								  "JAPController: could not load proxy settings: " + a_e);
 				}
-				else
-				{
-					setProxy(JAPConstants.FIREWALL_TYPE_HTTP, proxyHost, proxyPort, bUseProxy);
-				}
+
+				// check if something has changed
+				changeProxyInterface(proxyInterface);
 
 				/* try to get the info from the MixCascade node */
 				MixCascade defaultMixCascade = null;
@@ -722,6 +741,26 @@ public final class JAPController implements ProxyListener
 		notifyJAPObservers();
 	}
 
+	/**
+	 * Changes the common proxy.
+	 * @param a_proxyInterface a proxy interface
+	 * @param a_bUseProxy if the proxy should be used
+	 */
+	public synchronized void changeProxyInterface(ProxyInterface a_proxyInterface)
+	{
+		if (m_Model.getProxyInterface() == null ||
+			!m_Model.getProxyInterface().equals(a_proxyInterface))
+		{
+			// change settings
+			m_Model.setProxyListener(a_proxyInterface);
+
+			applyProxySettingsToInfoService();
+			applyProxySettingsToAnonService();
+
+			notifyJAPObservers();
+		}
+	}
+
 	public boolean saveConfigFile()
 	{
 		boolean error = false;
@@ -766,16 +805,13 @@ public final class JAPController implements ProxyListener
 			//e.setAttribute("portNumberSocks", Integer.toString(JAPModel.getSocksListenerPortNumber()));
 			//e.setAttribute("supportSocks",(getUseSocksPort()?"true":"false"));
 			e.setAttribute("listenerIsLocal", (JAPModel.getHttpListenerIsLocal() ? "true" : "false"));
-			e.setAttribute("proxyMode", (JAPModel.getUseFirewall() ? "true" : "false"));
-			e.setAttribute("proxyType",
-						   (JAPModel.getFirewallType() == JAPConstants.FIREWALL_TYPE_SOCKS ? "SOCKS" : "HTTP"));
-			String tmpStr = m_Model.getFirewallHost();
-			e.setAttribute("proxyHostName", ( (tmpStr == null) ? "" : tmpStr));
-			int tmpInt = m_Model.getFirewallPort();
-			e.setAttribute("proxyPortNumber", Integer.toString(tmpInt));
-			e.setAttribute("proxyAuthorization", (JAPModel.getUseFirewallAuthorization() ? "true" : "false"));
-			tmpStr = m_Model.getFirewallAuthUserID();
-			e.setAttribute("proxyAuthUserID", ( (tmpStr == null) ? "" : tmpStr));
+			e.setAttribute("proxyMode", (m_Model.getProxyInterface().isValid() ? "true" : "false"));
+			e.setAttribute("proxyType", m_Model.getProxyInterface().getProtocol().toUpperCase());
+			e.setAttribute("proxyHostName", m_Model.getProxyInterface().getHost());
+			e.setAttribute("proxyPortNumber", Integer.toString(m_Model.getProxyInterface().getPort()));
+			e.setAttribute("proxyAuthorization", (
+						 m_Model.getProxyInterface().isAuthenticationUsed() ? "true" : "false"));
+			e.setAttribute("proxyAuthUserID", m_Model.getProxyInterface().getAuthenticationUserID());
 
 			/* infoservice configuration options */
 			e.setAttribute("infoServiceDisabled", (JAPModel.isInfoServiceDisabled() ? "true" : "false"));
@@ -992,74 +1028,22 @@ public final class JAPController implements ProxyListener
 		return mixCascadeDatabase;
 	}
 
-	//---------------------------------------------------------------------
-	//May be the host and port changed - or if we should us it or not
-	// or both....
-	public boolean setProxy(int type, String host, int port, boolean bUseProxy)
-	{
-		if (bUseProxy)
-		{ //only if we want to use this proxy....
-			if (!JAPUtil.isPort(port))
-			{
-				return false;
-			}
-			if (host == null)
-			{
-				return false;
-			}
-		}
-		if (host == null)
-		{
-			host = "";
-			// check if values have changed
-		}
-		if ( (type != m_Model.getFirewallType()) || (bUseProxy != m_Model.getUseFirewall()) ||
-			(!host.equals(m_Model.getFirewallHost())) || (port != m_Model.getFirewallPort()))
-		{
-			// reset firewall authentication password
-			m_Model.setFirewallAuthPasswd(null);
-			// change settings
-			synchronized (this)
-			{
-				m_Model.setFirewallHost(host);
-				m_Model.setFirewallPort(port);
-				m_Model.setUseFirewall(bUseProxy);
-				m_Model.setFirewallType(type);
-				applyProxySettingsToInfoService();
-				applyProxySettingsToAnonService();
-			}
-			notifyJAPObservers();
-		}
-		return true;
-	}
-
 	protected void applyProxySettingsToInfoService()
 	{
-		if (JAPModel.getUseFirewall())
+		if (m_Model.getProxyInterface().isValid())
 		{
-			if (JAPModel.getUseFirewallAuthorization())
-			{
-				HTTPConnectionFactory.getInstance().setNewProxySettings(m_Model.getFirewallType(),
-					m_Model.getFirewallHost(), m_Model.getFirewallPort(), JAPModel.getFirewallAuthUserID(),
-					getFirewallAuthPasswd());
-			}
-			else
-			{
-				HTTPConnectionFactory.getInstance().setNewProxySettings(m_Model.getFirewallType(),
-					m_Model.getFirewallHost(), m_Model.getFirewallPort(), null, null);
-			}
+			HTTPConnectionFactory.getInstance().setNewProxySettings(m_Model.getProxyInterface());
 		}
 		else
 		{
 			//no Proxy should be used....
-			HTTPConnectionFactory.getInstance().setNewProxySettings(HTTPConnectionFactory.PROXY_TYPE_NONE, null,
-				-1, null, null);
+			HTTPConnectionFactory.getInstance().setNewProxySettings(null);
 		}
 	}
 
 	private void applyProxySettingsToAnonService()
 	{
-		if (JAPModel.getUseFirewall() && getAnonMode())
+		if (JAPModel.getInstance().getProxyInterface().isValid() && getAnonMode())
 		{
 			// anon service is running
 			Object[] options =
@@ -1080,21 +1064,6 @@ public final class JAPController implements ProxyListener
 		}
 	}
 
-	public void setFirewallAuthUserID(String userid)
-	{
-		// check if values have changed
-		if (!userid.equals(JAPModel.getFirewallAuthUserID()))
-		{
-			m_Model.setFirewallAuthPasswd(null); // reset firewall authentication password
-			m_Model.setFirewallAuthUserID(userid); // change settings
-		}
-	}
-
-	public void setUseFirewallAuthorization(boolean b)
-	{
-		m_Model.setUseFirewallAuthorization(b);
-	}
-
 	public static Font getDialogFont()
 	{
 		if (m_fontControls != null)
@@ -1110,8 +1079,9 @@ public final class JAPController implements ProxyListener
 		return m_fontControls;
 	}
 
-	public static String getFirewallAuthPasswd()
+	public static String getFirewallAuthPasswd_()
 	{
+		/*
 		if (JAPModel.getUseFirewallAuthorization())
 		{
 			if (JAPModel.getFirewallAuthPasswd() == null)
@@ -1123,7 +1093,7 @@ public final class JAPController implements ProxyListener
 		else
 		{
 			return null;
-		}
+		}*/ return null;
 	}
 
 	public static void setInfoServiceDisabled(boolean b)
@@ -1262,22 +1232,20 @@ public final class JAPController implements ProxyListener
 						else
 						{
 							/* we use a direct connection */
-							m_proxyAnon = new AnonWebProxy(m_socketHTTPListener);
+							if (JAPModel.getInstance().getProxyInterface().isValid())
+						{
+								m_proxyAnon = new AnonWebProxy(
+									m_socketHTTPListener, JAPModel.getInstance().getProxyInterface());
+							}
+							else
+							{
+								m_proxyAnon = new AnonWebProxy(m_socketHTTPListener,null);
+						}
+
+
 						}
 						MixCascade currentMixCascade = m_Controller.getCurrentMixCascade();
 						m_proxyAnon.setMixCascade(currentMixCascade);
-						if (JAPModel.getUseFirewall())
-						{
-							//try all possible ListenerInterfaces...
-							m_proxyAnon.setFirewall(JAPModel.getFirewallType(), m_Model.getFirewallHost(),
-								JAPModel.getFirewallPort());
-							if (JAPModel.getUseFirewallAuthorization())
-							{
-								m_proxyAnon.setFirewallAuthorization(JAPModel.getFirewallAuthUserID(),
-									m_Controller.getFirewallAuthPasswd());
-							}
-						}
-
 						m_proxyAnon.setMixCertificationCheck(!m_Model.isCertCheckDisabled(),
 							m_Model.getCertificateStore());
 						// -> we can try to start anonymity

@@ -56,6 +56,7 @@ import anon.crypto.JAPCertificate;
 import anon.crypto.JAPCertificateStore;
 import anon.crypto.JAPSignature;
 import anon.crypto.XMLEncryption;
+import anon.infoservice.ImmutableProxyInterface;
 import anon.infoservice.MixCascade;
 import anon.util.Base64;
 //import pay.anon.AIChannel;
@@ -303,8 +304,7 @@ public final class MuxSocket implements Runnable
 	}
 
 	//2001-02-20(HF)
-	public int connectViaFirewall(MixCascade mixCascade, int fwType, String fwHost, int fwPort,
-								  String fwUserID, String fwPasswd,
+	public int connectViaFirewall(MixCascade mixCascade, ImmutableProxyInterface a_proxyInterface,
 								  boolean bCheckMixCerts, JAPCertificateStore certsTrustedRoots)
 	{
 		synchronized (this)
@@ -321,7 +321,7 @@ public final class MuxSocket implements Runnable
 				try
 				{
 					String host = mixCascade.getListenerInterface(l).getHost();
-					proxyConnection = new ProxyConnection(fwType, fwHost, fwPort, fwUserID, fwPasswd, host,
+					proxyConnection = new ProxyConnection(a_proxyInterface, host,
 						mixCascade.getListenerInterface(l).getPort());
 					if (proxyConnection != null)
 					{

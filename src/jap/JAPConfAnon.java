@@ -451,7 +451,7 @@ class JAPConfAnon extends AbstractJAPConfModule
 			{
 				port = -1;
 			}
-			if (!JAPUtil.isPort(port))
+			if (!JAPUtil.isValidPort(port))
 			{
 				JAPConf.showError(JAPMessages.getString("errorAnonServicePortWrong"));
 				return false;

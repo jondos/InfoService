@@ -29,6 +29,7 @@ package anon;
 
 import java.net.ConnectException;
 import java.net.InetAddress;
+import anon.infoservice.ImmutableProxyInterface;
 
 /** This class is used for accessing the AnonService. An instance is created
  *  via AnonServiceFactory.
@@ -36,7 +37,7 @@ import java.net.InetAddress;
 public interface AnonService
 {
 	///The version of the AnonLib
-	public final static String ANONLIB_VERSION = "00.02.005";
+	public final static String ANONLIB_VERSION = "00.02.006";
 
 	/** Initializes this AnonService. Depending on the AnonService, this may establish a connection to
 	 *  an AnonServer, which is described through the
@@ -51,6 +52,12 @@ public interface AnonService
 	 *
 	 */
 	public int initialize(AnonServerDescription anonServer);
+
+	/** Sets the settings ofr the proxy, which should be used to establish network connections
+	 * @return E_SUCCESS, if ok
+	 * @return E_UNKNOWN, if an error occured
+	 */
+	public int setProxy(ImmutableProxyInterface a_Proxy);
 
 	/** Disconnects form the server.*/
 	public void shutdown();

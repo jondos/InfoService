@@ -36,10 +36,12 @@ import org.w3c.dom.Node;
 import org.w3c.dom.Comment;
 
 import junit.framework.Test;
+import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 import anon.util.ResourceLoader;
 import anon.util.XMLUtil;
+import anon.util.Util;
 
 /**
  * This is the test suite which combines all other JUnit tests of the project.
@@ -75,11 +77,11 @@ public class AllTests
 	}
 
 	/**
-	 * Loads an xml structure from the structures directory. If the first
-	 * line holds a comment, it is removed.
-	 * @param a_filename String
-	 * @throws Exception
-	 * @return Node
+	 * Loads an xml structure from the structures directory. All comments,
+	 * empty lines and new lines are removed from the structure.
+	 * @param a_filename the name of the xml structure file
+	 * @throws Exception if an error occurs while loading the file
+	 * @return an xml structure from the structures directory
 	 */
 	public static Node loadXMLNodeFromFile(String a_filename)
 	throws Exception
@@ -100,10 +102,22 @@ public class AllTests
 		return doc;
 	}
 
-	public static void writeXMLNodeToFile(Node a_node, String a_filename,
-									Class a_createrClass, Class a_testClass)
-		throws IOException, javax.xml.parsers.ParserConfigurationException
+	/**
+	 * Writes an xml node to a file in the XML_STRUCTURE_PATH with the filename <class>.xml.
+	 * @param a_node a Node
+	 * @param a_filename the file where the xml information is written to
+	 * @param a_createrClass the class that created the node
+	 * @param a_testClass the TestCase class that called this method
+	 * @throws IOException
+	 */
+	public static void writeXMLNodeToFile(Node a_node, Class a_createrClass, Class a_testClass)
+		throws IOException
 	{
+		if (!TestCase.class.isAssignableFrom(a_testClass))
+		{
+			throw new IllegalArgumentException("This method can only be called by a test case!");
+		}
+
 		Comment comment;
 
 		// set a comment
@@ -113,6 +127,7 @@ public class AllTests
 		a_node.insertBefore(comment, a_node.getFirstChild());
 
 		// write to file
-		XMLUtil.writeXMLNodeToFile(a_node, XML_STRUCTURE_PATH + a_filename);
+		XMLUtil.writeXMLNodeToFile(a_node, XML_STRUCTURE_PATH +
+								   Util.getClassNameWithoutPackage(a_createrClass) + ".xml");
 	}
 }

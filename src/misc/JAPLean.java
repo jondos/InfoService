@@ -30,17 +30,18 @@ package misc;
 import java.net.ServerSocket;
 import java.util.Properties;
 import anon.ErrorCodes;
+import anon.infoservice.HTTPConnectionFactory;
 import anon.infoservice.InfoServiceDBEntry;
 import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.MixCascade;
 import jap.JAPConstants;
 import jap.JAPDebug;
+import jap.JAPModel;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import proxy.AnonWebProxy;
 import proxy.ProxyListener;
-import anon.infoservice.*;
 
 final class JAPLean implements ProxyListener
 {
@@ -69,6 +70,7 @@ final class JAPLean implements ProxyListener
 		LogHolder.setLogInstance(JAPDebug.getInstance());
 		JAPDebug.getInstance().setLogType(LogType.ALL);
 		JAPDebug.getInstance().setLogLevel(LogLevel.DEBUG);
+		JAPModel.getInstance();
 		HTTPConnectionFactory.getInstance().setTimeout(JAPConstants.DEFAULT_INFOSERVICE_TIMEOUT);
 		InfoServiceHolder.getInstance().setPreferedInfoService(new InfoServiceDBEntry(JAPConstants.
 			defaultInfoServiceHostName,
@@ -84,7 +86,7 @@ final class JAPLean implements ProxyListener
 			e.printStackTrace();
 			System.exit(0);
 		}
-		japAnonProxy = new AnonWebProxy(listener);
+		japAnonProxy = new AnonWebProxy(listener, null);
 		japAnonProxy.setMixCascade(new MixCascade(null, null, hostNameMixCascade, portNumberMixCascade));
 		int returnCode = japAnonProxy.start();
 		japAnonProxy.setProxyListener(this);

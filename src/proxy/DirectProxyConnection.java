@@ -44,6 +44,7 @@ import anon.server.impl.ProxyConnection;
 import jap.JAPConstants;
 import jap.JAPModel;
 import jap.JAPUtil;
+import anon.infoservice.ProxyInterface;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -290,12 +291,12 @@ final class DirectProxyConnection implements Runnable
 		{
 			// create Socket to Server
 			Socket serverSocket = null;
-			if (JAPModel.getUseFirewall() && JAPModel.getFirewallType() == JAPConstants.FIREWALL_TYPE_SOCKS)
+			if (JAPModel.getInstance().getProxyInterface().isValid() &&
+				JAPModel.getInstance().getProxyInterface().getProtocol().equals(
+							ProxyInterface.PROTOCOL_TYPE_SOCKS))
 			{
-				ProxyConnection p = new ProxyConnection(JAPConstants.FIREWALL_TYPE_SOCKS,
-					JAPModel.getFirewallHost(),
-					JAPModel.getFirewallPort(), null, null, m_strHost,
-					m_iPort);
+				ProxyConnection p = new ProxyConnection(
+								JAPModel.getInstance().getProxyInterface(), m_strHost, m_iPort);
 				serverSocket = p.getSocket();
 			}
 			else

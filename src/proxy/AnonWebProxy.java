@@ -36,7 +36,6 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import anon.AnonChannel;
 import anon.AnonService;
-import anon.AnonServiceFactory;
 import anon.ErrorCodes;
 import anon.NotConnectedToMixException;
 import anon.ToManyOpenChannelsException;
@@ -57,6 +56,8 @@ import anon.tor.*;
 import java.io.*;
 import jap.*;
 import pay.anon.AICommunication;
+import anon.infoservice.ImmutableProxyInterface;
+import anon.*;
 final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 {
 	public static final int E_BIND = -2;
@@ -97,13 +98,12 @@ final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 	 */
 	private int m_maxDummyTrafficInterval;
 
-	public AnonWebProxy(ServerSocket listener)
+	public AnonWebProxy(ServerSocket listener, ImmutableProxyInterface a_proxyInterface)
 	{
 		m_socketListener = listener;
 		//HTTP
 		m_Anon = AnonServiceFactory.getAnonServiceInstance("AN.ON");
-		setFirewall(JAPConstants.FIREWALL_TYPE_HTTP, null, -1);
-		setFirewallAuthorization(null, null);
+		m_Anon.setProxy(a_proxyInterface);
 		setDummyTraffic( -1);
 		m_AICom = new AICommunication(m_Anon);
 		m_forwardedConnection = false;
@@ -137,8 +137,9 @@ final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 		setDummyTraffic(a_maxDummyTrafficInterval);
 	}
 
+	/** @todo translate this into english!! */
 	// methode zum senden eines AccountCertifikates und einer balance an die AI - oneway
-	// TODO: move somwhere to anon.impl...
+	/** @todo move somwhere to anon.impl... */
 	public void authenticateForAI()
 	{
 		String toAI = "";
@@ -152,6 +153,7 @@ final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 		}
 		catch (Exception ex)
 		{
+			/** @todo translate this into english!! */
 			LogHolder.log(LogLevel.DEBUG, LogType.NET,
 						  "AnonProxy: Fehler beim Anfordern des KontoZertifikates und/oder des Kontostandes");
 		}
@@ -161,7 +163,7 @@ final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 	}
 
 	// methode zum senden einer balance an die AI - oneway
-	// TODO: move somwhere to anon.impl...
+	/** @todo move somwhere to anon.impl... */
 	public void sendBalanceToAI()
 	{
 		LogHolder.log(LogLevel.DEBUG, LogType.NET, "AnonProxy: sending Balance to AI");
@@ -171,7 +173,7 @@ final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 			PayAccount mainAccount = accounts.getActiveAccount();
 			XMLAccountInfo info = mainAccount.getAccountInfo();
 
-			// temporary code... TODO: remove DOM functionality from here (Bastian Voigt)
+			/** @todo temporary code... remove DOM functionality from here (Bastian Voigt) */
 			Document doc = info.getXmlEncoded();
 			Element elemRoot = doc.getDocumentElement();
 			Element elemBalance = (Element) XMLUtil.getFirstChildByName(elemRoot, "Balance");
@@ -185,6 +187,7 @@ final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 		}
 		catch (Exception ex)
 		{
+			/** @todo translate this into english!! */
 			LogHolder.log(LogLevel.DEBUG, LogType.NET,
 						  "AnonProxy: Fehler beim Anfordern des KontoZertifikates und/oder des Kontostandes");
 		}
@@ -199,24 +202,6 @@ final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 	{
 		m_currentMixCascade = newMixCascade;
 		m_AICom.setAnonServer(newMixCascade);
-	}
-
-	public void setFirewall(int type, String host, int port)
-	{
-		if (type == JAPConstants.FIREWALL_TYPE_SOCKS)
-		{
-			type = AnonServiceImpl.FIREWALL_TYPE_SOCKS;
-		}
-		else
-		{
-			type = AnonServiceImpl.FIREWALL_TYPE_HTTP;
-		}
-		( (AnonServiceImpl) m_Anon).setFirewall(type, host, port);
-	}
-
-	public void setFirewallAuthorization(String id, String passwd)
-	{
-		( (AnonServiceImpl) m_Anon).setFirewallAuthorization(id, passwd);
 	}
 
 	/**
@@ -269,7 +254,6 @@ final public class AnonWebProxy extends AbstractAnonProxy implements Runnable
 	public int start()
 	{
 		m_numChannels = 0;
-		JAPModel.getInstance();
 		int ret = m_Anon.initialize(m_currentMixCascade);
 		if (ret != ErrorCodes.E_SUCCESS)
 		{

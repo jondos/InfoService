@@ -31,7 +31,7 @@ import java.net.Socket;
 
 import anon.server.AnonServiceImpl;
 import anon.server.impl.ProxyConnection;
-
+import anon.infoservice.ImmutableProxyInterface;
 
 /**
  * This is the implementation of some helper methods for the forwarding client and server. This
@@ -44,36 +44,10 @@ public class ForwardUtils {
    */
   private static ForwardUtils ms_fuInstance = null;
 
-
   /**
-   * Stores the type of the current firewall. See the constants in anon.server.AnonServiceImpl.
-   * The firewall proxy server is used for all new outgoing connections.
-   * @see anon.server.AnonServiceImpl
+   * The current proxy interface.
    */
-  private int m_firewallType;
-  
-  /**
-   * Stores the hostname or IP address of the current firewall. The firewall / proxy server is used
-   * for all new outgoing connections.
-   */
-  private String m_firewallHost;
-  
-  /**
-   * Stores the port number of the current firewall. The firewall / proxy server is used for all
-   * new outgoing connections.
-   */
-  private int m_firewallPort;
-  
-  /**
-   * Stores the username, if the firewall / proxy server requires authentication.
-   */
-  private String m_firewallUserName;
-  
-  /**
-   * Stores the password, if the firewall / proxy server requires authentication.
-   */
-  private String m_firewallPassword;
-
+  ImmutableProxyInterface m_proxyInterface;
 
   /**
    * Returns the instance of ForwardUtils (Singleton). If there is no instance, there is a new
@@ -92,8 +66,8 @@ public class ForwardUtils {
   /**
    * This creates a new instance of ForwardUtils with disabled proxy settings.
    */
-  private ForwardUtils() {
-    m_firewallType = AnonServiceImpl.FIREWALL_TYPE_NONE;
+  private ForwardUtils()
+  {
   }
 
 
@@ -101,21 +75,10 @@ public class ForwardUtils {
    * This changes the proxy settings for all new forwarding connections. Currently active
    * forwarding connections are not concerned.
    *
-   * @param a_fwType The type of the proxy server, see anon.server.AnonServiceImpl.
-   * @param a_fwHost The hostname of the proxy server.
-   * @param a_fwPort The port number of the proxy server.
-   * @param a_fwUserName The user name, if the proxy server requires authentication.
-   * @param a_fwPassword The password, if the proxy server requires authentication.
+   * @param a_proxyInterface the proxy interface
    */
-  public void setProxySettings(int a_fwType, String a_fwHost, int a_fwPort, String a_fwUserName, String a_fwPassword) {
-    synchronized (this) {
-      /* so the proxy data is always consistent */
-      m_firewallType = a_fwType;
-      m_firewallHost = a_fwHost;
-      m_firewallPort = a_fwPort;
-      m_firewallUserName = a_fwUserName;
-      m_firewallPassword = a_fwPassword;
-    }
+  public synchronized void setProxySettings(ImmutableProxyInterface a_proxyInterface) {
+	  m_proxyInterface = a_proxyInterface;
   }
 
   /**
@@ -131,7 +94,7 @@ public class ForwardUtils {
     try {
       synchronized (this) {
         /* get consistent proxy server data */
-        proxyConnection = new ProxyConnection(m_firewallType, m_firewallHost, m_firewallPort, m_firewallUserName, m_firewallPassword, a_host, a_port);
+        proxyConnection = new ProxyConnection(m_proxyInterface, a_host, a_port);
       }
     }
     catch (Exception e) {

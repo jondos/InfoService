@@ -45,6 +45,7 @@ import jap.JAPController;
 import jap.JAPMessages;
 import jap.JAPModel;
 import jap.JAPUtil;
+import anon.infoservice.ProxyInterface;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -124,8 +125,8 @@ final public class DirectProxy implements Runnable
 				}
 				else
 				{
-					if (JAPModel.getUseFirewall() &&
-						JAPModel.getFirewallType() == JAPConstants.FIREWALL_TYPE_HTTP)
+					if (JAPModel.getInstance().getProxyInterface().isValid() &&
+						JAPModel.getInstance().getProxyInterface().equals(ProxyInterface.PROTOCOL_TYPE_HTTP))
 					{
 						DirectConViaHTTPProxy doIt = new DirectConViaHTTPProxy(socket);
 						Thread thread = new Thread(threadgroupAll, doIt);
@@ -257,7 +258,8 @@ final public class DirectProxy implements Runnable
 				// open stream from client
 				InputStream inputStream = m_clientSocket.getInputStream();
 				// create Socket to Server
-				Socket serverSocket = new Socket(JAPModel.getFirewallHost(), JAPModel.getFirewallPort());
+				Socket serverSocket = new Socket(JAPModel.getInstance().getProxyInterface().getHost(),
+												 JAPModel.getInstance().getProxyInterface().getPort());
 				// Response from server is transfered to client in a sepatate thread
 				DirectProxyResponse pr = new DirectProxyResponse(serverSocket.getInputStream(),
 					m_clientSocket.getOutputStream());
@@ -267,15 +269,14 @@ final public class DirectProxy implements Runnable
 				OutputStream outputStream = serverSocket.getOutputStream();
 
 				// Transfer data client --> server
-				//first check if the us authorization for the proxy
-				if (JAPModel.getUseFirewallAuthorization())
+				//first check if we use authorization for the proxy
+				if (JAPModel.getInstance().getProxyInterface().isAuthenticationUsed())
 				{ //we need to insert an authorization line...
 					//read first line and after this insert the authorization
 					String str = JAPUtil.readLine(inputStream);
 					str += "\r\n";
 					outputStream.write(str.getBytes());
-					str = JAPUtil.getProxyAuthorization(JAPModel.getFirewallAuthUserID(),
-						JAPController.getFirewallAuthPasswd());
+					str = JAPModel.getInstance().getProxyInterface().getProxyAuthorizationHeaderAsString();
 					outputStream.write(str.getBytes());
 					outputStream.flush();
 				}

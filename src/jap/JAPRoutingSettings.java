@@ -37,12 +37,13 @@ import org.w3c.dom.Element;
 
 import anon.crypto.JAPCertificateStore;
 import anon.infoservice.HTTPConnectionFactory;
-import anon.infoservice.ListenerInterface;
+import anon.infoservice.ProxyInterface;
 import anon.infoservice.InfoServiceDBEntry;
 import anon.infoservice.MixCascade;
 import anon.server.AnonServiceImpl;
 import anon.server.impl.ProxyConnection;
 import anon.util.XMLUtil;
+import anon.infoservice.ListenerInterface;
 import forward.ForwardUtils;
 import forward.client.ClientForwardException;
 import forward.client.DefaultClientProtocolHandler;
@@ -54,6 +55,7 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import proxy.AnonWebProxy;
+import anon.infoservice.*;
 
 /**
  * This class stores all routing settings. Observers of this class are notified, if the settings
@@ -556,32 +558,11 @@ public class JAPRoutingSettings extends Observable
    * which already exist are not influenced by that call. The default after creating the instance
    * of JAPRoutingSettings is to use no proxy for all new connections.
    *
-   * @param a_proxyType The type of the proxy (see the constants in anon.server.AnonServiceImpl).
-   * @param a_proxyHost IP address or hostname of the proxy server. If no hostname is supplied,
-   *                    the proxyType is set to FIREWALL_TYPE_NONE.
-   * @param a_proxyPort The port of the proxy server. The value must be between 1 and 65535. If it
-   *                    is not, the proxyType is set to FIREWALL_TYPE_NONE.
-   * @param a_proxyAuthUserName The username for the authorization. If the proxy server does not
-   *                            need authentication, take null. This value is only meaningful, if
-   *                            the proxyType is FIREWALL_TYPE_HTTP.
-   * @param a_proxyAuthPassword The password for the authorization. If the proxy server does not
-   *                            need authentication, take null. This value is only meaningful, if
-   *                            the proxyType is FIREWALL_TYPE_HTTP and proxyAuthUserName is not
-   *                            null.
+   * @param a_proxyInterface the proxy interface
    */
-  public void setNewProxySettings(int a_proxyType, String a_proxyHost, int a_proxyPort,
-                  String a_proxyAuthUserName, String a_proxyAuthPassword)
-  {
-    if (a_proxyHost == null)
+  public void setNewProxySettings(ProxyInterface a_proxyInterface)
     {
-      a_proxyType = AnonServiceImpl.FIREWALL_TYPE_NONE;
-    }
-    if ( (a_proxyPort < 1) || (a_proxyPort > 65535))
-    {
-      a_proxyType = AnonServiceImpl.FIREWALL_TYPE_NONE;
-    }
-    ForwardUtils.getInstance().setProxySettings(a_proxyType, a_proxyHost, a_proxyPort,
-      a_proxyAuthUserName, a_proxyAuthPassword);
+    ForwardUtils.getInstance().setProxySettings(a_proxyInterface);
   }
 
   /**
@@ -1226,8 +1207,10 @@ public class JAPRoutingSettings extends Observable
       if (getForwardInfoService() == true)
       {
         /* change the proxy settings for the infoservice */
-        HTTPConnectionFactory.getInstance().setNewProxySettings(HTTPConnectionFactory.PROXY_TYPE_HTTP,
-          "localhost", JAPModel.getHttpListenerPortNumber(), null, null);
+        HTTPConnectionFactory.getInstance().setNewProxySettings(
+			 new ProxyInterface("localhost",
+								JAPModel.getHttpListenerPortNumber(),
+								ProxyInterface.PROTOCOL_TYPE_HTTP, null));
       }
     }
   }

@@ -33,10 +33,13 @@ import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.net.SocketException;
 import HTTPClient.Codecs;
+import anon.infoservice.ImmutableProxyInterface;
+import anon.infoservice.ListenerInterface;
 import anon.server.AnonServiceImpl;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.infoservice.*;
 
 final public class ProxyConnection
 {
@@ -47,38 +50,46 @@ final public class ProxyConnection
 	private Socket m_ioSocket;
 	private InputStream m_In;
 	private OutputStream m_Out;
-	public ProxyConnection(int fwType, String fwHost, int fwPort,
-						   String fwUserID, String fwPasswd,
+
+	private ImmutableProxyInterface m_proxyInterface;
+
+	/** @todo use HTTPConnectionFactory */
+	public ProxyConnection(ImmutableProxyInterface a_proxyInterface,
 						   String host, int port) throws Exception
 	{
-		if (fwType == AnonServiceImpl.FIREWALL_TYPE_NONE)
+		if (a_proxyInterface == null)
 		{
 			m_ioSocket = new Socket(host, port);
 		}
 		else
 		{
+			m_proxyInterface = a_proxyInterface;
 			LogHolder.log(LogLevel.DEBUG, LogType.NET,
-						  "ProxyConnection: Try to connect via Firewall (" + fwHost + ":" + fwPort +
+						  "ProxyConnection: Try to connect via Firewall (" +
+						  a_proxyInterface.getHost() + ":" + a_proxyInterface.getPort() +
 						  ") to Server (" + host + ":" + port + ")");
-			m_ioSocket = new Socket(fwHost, fwPort);
+			m_ioSocket = new Socket(a_proxyInterface.getHost(), a_proxyInterface.getPort());
 		}
-		m_ioSocket.setSoTimeout(60000);
 		m_In = m_ioSocket.getInputStream();
 		m_Out = m_ioSocket.getOutputStream();
-		if (fwType == AnonServiceImpl.FIREWALL_TYPE_SOCKS)
+
+		if (a_proxyInterface != null)
+		{
+			m_ioSocket.setSoTimeout(60000);
+			if (a_proxyInterface.getProtocol().equals(ListenerInterface.PROTOCOL_TYPE_SOCKS))
 		{
 			doSOCKS(host, port);
 		}
-		else if (fwType == AnonServiceImpl.FIREWALL_TYPE_HTTP)
+			else if (a_proxyInterface.getProtocol().equals(ListenerInterface.PROTOCOL_TYPE_HTTP))
 		{
 			OutputStreamWriter writer = new OutputStreamWriter(m_Out);
 			try
 			{
-				sendHTTPProxyCommands(FIREWALL_METHOD_HTTP_1_1, writer, host, port, fwUserID, fwPasswd);
+					sendHTTPProxyCommands(FIREWALL_METHOD_HTTP_1_1, writer, host, port, a_proxyInterface);
 			}
 			catch (Exception e1)
 			{
-				sendHTTPProxyCommands(FIREWALL_METHOD_HTTP_1_0, writer, host, port, fwUserID, fwPasswd);
+					sendHTTPProxyCommands(FIREWALL_METHOD_HTTP_1_0, writer, host, port, a_proxyInterface);
 			}
 			String tmp = readLine(m_In);
 			LogHolder.log(LogLevel.DEBUG, LogType.NET, "ProxyConnection: Firewall response is: " + tmp);
@@ -95,7 +106,17 @@ final public class ProxyConnection
 				throw new Exception("HTTP-Proxy response: " + tmp);
 			}
 		}
+		}
 		m_ioSocket.setSoTimeout(0);
+	}
+
+	/**
+	 * Returns an immutable proxy interface.
+	 * @return IConstProxyInterface
+	 */
+	public ImmutableProxyInterface getProxyInterface()
+	{
+		return m_proxyInterface;
 	}
 
 	private void doSOCKS(String host, int port) throws Exception
@@ -186,14 +207,18 @@ final public class ProxyConnection
 		{}
 	}
 
-	//Write stuff for connecting over proxy/firewall
+	/**
+	 *
+	  Write stuff for connecting over proxy/firewall
 	// should look like this example
 	//   CONNECT www.inf.tu-dresden.de:443 HTTP/1.0
 	//   Connection: Keep-Alive
 	//   Proxy-Connection: Keep-Alive
 	//differs a little bit for HTTP/1.0 and HTTP/1.1
+	 @todo use HTTPConnectionFactory to create a connection!!
+		*/
 	private void sendHTTPProxyCommands(int httpMethod, OutputStreamWriter out, String host, int port,
-									   String user, String passwd) throws Exception
+									   ImmutableProxyInterface a_proxyInterface) throws Exception
 	{
 		if (httpMethod == FIREWALL_METHOD_HTTP_1_1)
 		{
@@ -203,10 +228,9 @@ final public class ProxyConnection
 		{
 			out.write("CONNECT " + host + ":" + Integer.toString(port) + " HTTP/1.0" + CRLF);
 		}
-		if (user != null && passwd != null) // proxy authentication required...
+		if (a_proxyInterface.isAuthenticationUsed()) // proxy authentication required...
 		{
-			String str = Codecs.base64Encode(user + ":" + passwd);
-			out.write("Proxy-Authorization: Basic " + str + CRLF);
+			out.write(a_proxyInterface.getProxyAuthorizationHeaderAsString());
 		}
 		out.write("Connection: Keep-Alive" + CRLF);
 		out.write("Keep-Alive: max=20, timeout=100" + CRLF);

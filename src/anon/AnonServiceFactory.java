@@ -55,7 +55,7 @@ final public class AnonServiceFactory
 		{
 			if (ms_AnonService == null)
 			{
-				ms_AnonService = AnonServiceImpl.create();
+				ms_AnonService = new AnonServiceImpl();
 			}
 			return ms_AnonService; //AnonServiceImpl.create();
 		}

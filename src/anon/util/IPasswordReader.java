@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2000 - 2004 The JAP-Team
+ Copyright (c) 2000 - 2004, The JAP-Team
  All rights reserved.
  Redistribution and use in source and binary forms, with or without modification,
  are permitted provided that the following conditions are met:
@@ -25,42 +25,21 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package anon.infoservice.test;
+package anon.util;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import anon.infoservice.TestProxy;
-import anon.infoservice.ProxyInterfaceTest;
-public class AllTests
+import anon.infoservice.ImmutableProxyInterface;
+
+/**
+ * An object implementing this interface reads passwords for proxy authentication
+ * from a user interface.
+ * @author Wendolsky
+ */
+public interface IPasswordReader
 {
 	/**
-	 * The proxy is not used here, but it must be imported for automatic compilation.
+	 * Reads a password from a user interface.
+	 * @param a_proxyInterface a proxy interface
+	 * @return a password
 	 */
-	TestProxy m_proxy;
-
-	/**
-	 * The main function.
-	 *
-	 * @param a_Args (no arguments needed)
-	 */
-	public static void main(String[] a_Args)
-	{
-		junit.swingui.TestRunner.run(AllTests.class);
-	}
-
-	/**
-	 * Returns the test suite that combines all other tests of the project.
-	 *
-	 * @return Test The test suite that combines all other tests of the project.
-	 */
-	public static Test suite()
-	{
-		TestSuite suite = new TestSuite(AllTests.class.getName());
-		//suite.addTestSuite(DatabaseStaticTest.class);
-		suite.addTestSuite(DatabaseTest.class);
-		suite.addTestSuite(HTTPConnectionFactoryTest.class);
-		suite.addTestSuite(ListenerInterfaceTest.class);
-		suite.addTestSuite(ProxyInterfaceTest.class);
-		return suite;
-	}
+	public String readPassword(ImmutableProxyInterface a_proxyInterface);
 }
