@@ -250,6 +250,61 @@
     <file path="help/xeng.gif"/>
     <file path="help/xhelpfrms.css"/>
   </node>
+  <node name="images" type="Folder">
+    <node name="lowcolor" type="Folder">
+      <file path="images/lowcolor/icon.gif"/>
+      <file path="images/lowcolor/info.gif"/>
+      <file path="images/lowcolor/jap.gif"/>
+      <file path="images/lowcolor/japi.gif"/>
+      <file path="images/lowcolor/north.gif"/>
+      <file path="images/lowcolor/splash.gif"/>
+      <file path="images/lowcolor/west.gif"/>
+    </node>
+    <file path="images/arrow.gif">
+      <property category="build" name="CopyResource" value="1"/>
+    </file>
+    <file path="images/arrow46.gif"/>
+    <file path="images/arrow90.gif"/>
+    <file path="images/arrowDown.gif"/>
+    <file path="images/arrowUp.gif"/>
+    <file path="images/busy.gif"/>
+    <file path="images/cdisabled.gif"/>
+    <file path="images/cenabled.gif"/>
+    <file path="images/copyicon.gif"/>
+    <file path="images/deleteicon.gif"/>
+    <file path="images/enlarge.gif"/>
+    <file path="images/exiticon.gif"/>
+    <file path="images/green.gif"/>
+    <file path="images/haken.gif"/>
+    <file path="images/host16.gif"/>
+    <file path="images/icoc.gif"/>
+    <file path="images/icom.gif"/>
+    <file path="images/icon.gif"/>
+    <file path="images/icon16.gif"/>
+    <file path="images/icon32.gif"/>
+    <file path="images/iconify.gif"/>
+    <file path="images/info.gif"/>
+    <file path="images/install.gif"/>
+    <file path="images/jap.gif"/>
+    <file path="images/japeye.gif"/>
+    <file path="images/japi.gif"/>
+    <file path="images/japtxt.gif"/>
+    <file path="images/meter1.gif"/>
+    <file path="images/meter2.gif"/>
+    <file path="images/meter3.gif"/>
+    <file path="images/meter4.gif"/>
+    <file path="images/meter5.gif"/>
+    <file path="images/meter6.gif"/>
+    <file path="images/meterD.gif"/>
+    <file path="images/meterN.gif"/>
+    <file path="images/meterNnew.gif"/>
+    <file path="images/north.gif"/>
+    <file path="images/red.gif"/>
+    <file path="images/saveicon.gif"/>
+    <file path="images/server16.gif"/>
+    <file path="images/splash.gif"/>
+    <file path="images/west.gif"/>
+  </node>
   <node name="SampleConfiguration" type="Folder">
     <file path="documentation/SampleConfiguration/jap.conf"/>
   </node>
@@ -283,7 +338,20 @@
     <property category="archiving" name="buildWithProject" value="0"/>
     <property category="archiving" name="contentRules.1" value="F:help/about_de.html;help/about_de.html"/>
     <property category="archiving" name="contentRules.10" value="I:images/*.gif"/>
+    <property category="archiving" name="contentRules.100" value="F:images/north.gif;images/north.gif"/>
+    <property category="archiving" name="contentRules.101" value="F:images/red.gif;images/red.gif"/>
+    <property category="archiving" name="contentRules.102" value="F:images/saveicon.gif;images/saveicon.gif"/>
+    <property category="archiving" name="contentRules.103" value="F:images/server16.gif;images/server16.gif"/>
+    <property category="archiving" name="contentRules.104" value="F:images/splash.gif;images/splash.gif"/>
+    <property category="archiving" name="contentRules.105" value="F:images/west.gif;images/west.gif"/>
+    <property category="archiving" name="contentRules.106" value="F:images/lowcolor/icon.gif;images/lowcolor/icon.gif"/>
+    <property category="archiving" name="contentRules.107" value="F:images/lowcolor/info.gif;images/lowcolor/info.gif"/>
+    <property category="archiving" name="contentRules.108" value="F:images/lowcolor/jap.gif;images/lowcolor/jap.gif"/>
+    <property category="archiving" name="contentRules.109" value="F:images/lowcolor/japi.gif;images/lowcolor/japi.gif"/>
     <property category="archiving" name="contentRules.11" value="F:help/browser_mac_en.html;help/browser_mac_en.html"/>
+    <property category="archiving" name="contentRules.110" value="F:images/lowcolor/north.gif;images/lowcolor/north.gif"/>
+    <property category="archiving" name="contentRules.111" value="F:images/lowcolor/splash.gif;images/lowcolor/splash.gif"/>
+    <property category="archiving" name="contentRules.112" value="F:images/lowcolor/west.gif;images/lowcolor/west.gif"/>
     <property category="archiving" name="contentRules.12" value="F:help/config_de.html;help/config_de.html"/>
     <property category="archiving" name="contentRules.13" value="F:help/config_en.html;help/config_en.html"/>
     <property category="archiving" name="contentRules.14" value="F:help/credits_de.html;help/credits_de.html"/>
@@ -323,28 +391,63 @@
     <property category="archiving" name="contentRules.45" value="F:help/xdeu.gif;help/xdeu.gif"/>
     <property category="archiving" name="contentRules.46" value="F:help/xeng.gif;help/xeng.gif"/>
     <property category="archiving" name="contentRules.47" value="F:help/xhelpfrms.css;help/xhelpfrms.css"/>
-    <property category="archiving" name="contentRules.48" value="F:images/icon.ico;images/icon.ico"/>
-    <property category="archiving" name="contentRules.49" value="I:JAP.class"/>
+    <property category="archiving" name="contentRules.48" value="I:JAP.class"/>
+    <property category="archiving" name="contentRules.49" value="I:JAPMacintosh.class"/>
     <property category="archiving" name="contentRules.5" value="F:help/back.gif;help/back.gif"/>
-    <property category="archiving" name="contentRules.50" value="I:JAPMacintosh.class"/>
-    <property category="archiving" name="contentRules.51" value="I:anon/*.*"/>
-    <property category="archiving" name="contentRules.52" value="I:gui/*.*"/>
-    <property category="archiving" name="contentRules.53" value="I:Rijndael/*.*"/>
-    <property category="archiving" name="contentRules.54" value="I:update/*.*"/>
-    <property category="archiving" name="contentRules.55" value="I:jap/*.*"/>
-    <property category="archiving" name="contentRules.56" value="I:proxy/*.*"/>
-    <property category="archiving" name="contentRules.57" value="I:logging/*.*"/>
-    <property category="archiving" name="contentRules.58" value="F:certificates/japcodesigning.cer;certificates/japcodesigning.cer"/>
-    <property category="archiving" name="contentRules.59" value="F:certificates/japinfoservicemessages.cer;certificates/japinfoservicemessages.cer"/>
+    <property category="archiving" name="contentRules.50" value="I:anon/*.*"/>
+    <property category="archiving" name="contentRules.51" value="I:gui/*.*"/>
+    <property category="archiving" name="contentRules.52" value="I:Rijndael/*.*"/>
+    <property category="archiving" name="contentRules.53" value="I:update/*.*"/>
+    <property category="archiving" name="contentRules.54" value="I:jap/*.*"/>
+    <property category="archiving" name="contentRules.55" value="I:proxy/*.*"/>
+    <property category="archiving" name="contentRules.56" value="I:logging/*.*"/>
+    <property category="archiving" name="contentRules.57" value="F:certificates/japcodesigning.cer;certificates/japcodesigning.cer"/>
+    <property category="archiving" name="contentRules.58" value="F:certificates/japinfoservicemessages.cer;certificates/japinfoservicemessages.cer"/>
+    <property category="archiving" name="contentRules.59" value="F:certificates/japroot.cer;certificates/japroot.cer"/>
     <property category="archiving" name="contentRules.6" value="F:help/bl.gif;help/bl.gif"/>
-    <property category="archiving" name="contentRules.60" value="F:certificates/japroot.cer;certificates/japroot.cer"/>
-    <property category="archiving" name="contentRules.61" value="F:src/JAPMessages_de.properties;JAPMessages_de.properties"/>
-    <property category="archiving" name="contentRules.62" value="F:src/JAPMessages_en.properties;JAPMessages_en.properties"/>
-    <property category="archiving" name="contentRules.63" value="F:src/JAPMessages_fr.properties;JAPMessages_fr.properties"/>
-    <property category="archiving" name="contentRules.64" value="F:src/JAPMessages.properties;JAPMessages.properties"/>
+    <property category="archiving" name="contentRules.60" value="F:src/JAPMessages_de.properties;JAPMessages_de.properties"/>
+    <property category="archiving" name="contentRules.61" value="F:src/JAPMessages_en.properties;JAPMessages_en.properties"/>
+    <property category="archiving" name="contentRules.62" value="F:src/JAPMessages_fr.properties;JAPMessages_fr.properties"/>
+    <property category="archiving" name="contentRules.63" value="F:src/JAPMessages.properties;JAPMessages.properties"/>
+    <property category="archiving" name="contentRules.64" value="F:images/arrow.gif;images/arrow.gif"/>
+    <property category="archiving" name="contentRules.65" value="F:images/arrow46.gif;images/arrow46.gif"/>
+    <property category="archiving" name="contentRules.66" value="F:images/arrow90.gif;images/arrow90.gif"/>
+    <property category="archiving" name="contentRules.67" value="F:images/arrowDown.gif;images/arrowDown.gif"/>
+    <property category="archiving" name="contentRules.68" value="F:images/arrowUp.gif;images/arrowUp.gif"/>
+    <property category="archiving" name="contentRules.69" value="F:images/busy.gif;images/busy.gif"/>
     <property category="archiving" name="contentRules.7" value="F:help/browser_de.html;help/browser_de.html"/>
+    <property category="archiving" name="contentRules.70" value="F:images/cdisabled.gif;images/cdisabled.gif"/>
+    <property category="archiving" name="contentRules.71" value="F:images/cenabled.gif;images/cenabled.gif"/>
+    <property category="archiving" name="contentRules.72" value="F:images/copyicon.gif;images/copyicon.gif"/>
+    <property category="archiving" name="contentRules.73" value="F:images/deleteicon.gif;images/deleteicon.gif"/>
+    <property category="archiving" name="contentRules.74" value="F:images/enlarge.gif;images/enlarge.gif"/>
+    <property category="archiving" name="contentRules.75" value="F:images/exiticon.gif;images/exiticon.gif"/>
+    <property category="archiving" name="contentRules.76" value="F:images/green.gif;images/green.gif"/>
+    <property category="archiving" name="contentRules.77" value="F:images/haken.gif;images/haken.gif"/>
+    <property category="archiving" name="contentRules.78" value="F:images/host16.gif;images/host16.gif"/>
+    <property category="archiving" name="contentRules.79" value="F:images/icoc.gif;images/icoc.gif"/>
     <property category="archiving" name="contentRules.8" value="F:help/browser_en.html;help/browser_en.html"/>
+    <property category="archiving" name="contentRules.80" value="F:images/icom.gif;images/icom.gif"/>
+    <property category="archiving" name="contentRules.81" value="F:images/icon.gif;images/icon.gif"/>
+    <property category="archiving" name="contentRules.82" value="F:images/icon16.gif;images/icon16.gif"/>
+    <property category="archiving" name="contentRules.83" value="F:images/icon32.gif;images/icon32.gif"/>
+    <property category="archiving" name="contentRules.84" value="F:images/iconify.gif;images/iconify.gif"/>
+    <property category="archiving" name="contentRules.85" value="F:images/info.gif;images/info.gif"/>
+    <property category="archiving" name="contentRules.86" value="F:images/install.gif;images/install.gif"/>
+    <property category="archiving" name="contentRules.87" value="F:images/jap.gif;images/jap.gif"/>
+    <property category="archiving" name="contentRules.88" value="F:images/japeye.gif;images/japeye.gif"/>
+    <property category="archiving" name="contentRules.89" value="F:images/japi.gif;images/japi.gif"/>
     <property category="archiving" name="contentRules.9" value="F:help/browser_mac_de.html;help/browser_mac_de.html"/>
+    <property category="archiving" name="contentRules.90" value="F:images/japtxt.gif;images/japtxt.gif"/>
+    <property category="archiving" name="contentRules.91" value="F:images/meter1.gif;images/meter1.gif"/>
+    <property category="archiving" name="contentRules.92" value="F:images/meter2.gif;images/meter2.gif"/>
+    <property category="archiving" name="contentRules.93" value="F:images/meter3.gif;images/meter3.gif"/>
+    <property category="archiving" name="contentRules.94" value="F:images/meter4.gif;images/meter4.gif"/>
+    <property category="archiving" name="contentRules.95" value="F:images/meter5.gif;images/meter5.gif"/>
+    <property category="archiving" name="contentRules.96" value="F:images/meter6.gif;images/meter6.gif"/>
+    <property category="archiving" name="contentRules.97" value="F:images/meterD.gif;images/meterD.gif"/>
+    <property category="archiving" name="contentRules.98" value="F:images/meterN.gif;images/meterN.gif"/>
+    <property category="archiving" name="contentRules.99" value="F:images/meterNnew.gif;images/meterNnew.gif"/>
     <property category="archiving" name="extraDeployRoots.1" value="F:help/about_de.html"/>
     <property category="archiving" name="extraDeployRoots.10" value="F:help/browser_mac_en.html"/>
     <property category="archiving" name="extraDeployRoots.11" value="F:help/config_de.html"/>
@@ -439,8 +542,7 @@
     <property category="archiving" name="includeDeps" value="1"/>
     <property category="archiving" name="libraryStates.1" value="3:http"/>
     <property category="archiving" name="libraryStates.2" value="1:mac"/>
-    <property category="archiving" name="libraryStates.3" value="3:XML-1.0"/>
-    <property category="archiving" name="libraryStates.4" value="3:BouncyCastleLightForJAP"/>
+    <property category="archiving" name="libraryStates.3" value="3:BouncyCastleLightForJAP"/>
     <property category="archiving" name="manifestMainClass" value="JAP"/>
     <property category="archiving" name="outPathState" value="1"/>
     <property category="archiving" name="targetCompressed" value="1"/>
