@@ -179,8 +179,6 @@ public final class JAPController implements ProxyListener {
 			else
 				{	// listender has started correctly
 					m_Controller.status1 = JAPMessages.getString("statusRunning");
-					// read root certificate, if anything goes wrong: just shrug!
-					m_Controller.m_Model.setRootCertificate();
 					// initial setting of anonMode
 					setAnonMode(JAPModel.getAutoConnect());
 				}

@@ -107,4 +107,7 @@ public final class JAPConstants {
 															"meter5.gif",
 															"meter6.gif"
 														};
+
+	public final static String CERTSPATH						=	"certificates/";
+	public final static String TRUSTEDROOTCERT 			= "japroot.cer";
 }
