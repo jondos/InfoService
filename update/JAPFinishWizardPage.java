@@ -1,30 +1,5 @@
 package update;
 import gui.wizard.BasicWizardPage;
-import gui.wizard.*;
-import javax.swing.*;
-import javax.swing.JMenuBar;
-import javax.swing.JMenu;
-import javax.swing.JMenuItem;
-import javax.swing.JPanel;
-import java.awt.event.*;
-import java.awt.*;
-import java.awt.Color;
-import javax.swing.JButton;
-import javax.swing.*;
-import java.awt.BorderLayout;
-import javax.swing.border.TitledBorder;
-import java.awt.GridLayout;
-import javax.swing.Icon;
-import java.awt.Component;
-import java.awt.Dialog;
-import java.awt.Dimension;
-import javax.swing.JCheckBox;
-import java.awt.TextField;
-import javax.swing.JTextField;
-import javax.swing.ProgressMonitor;
-import java.io.*;
-import java.io.FileInputStream;
-
 
 public class JAPFinishWizardPage extends BasicWizardPage
 {
