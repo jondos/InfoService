@@ -51,9 +51,9 @@ import java.awt.Insets;
 import java.util.Vector;
 
 import java.net.URL;
-import JAPMessages;
+import jap.JAPMessages;
+import jap.JAPUtil;
 
-import JAPUtil;
 // this shall become the browser/wizardhost providing class ...
 public class BasicWizardHost implements WizardHost,ActionListener
   {
