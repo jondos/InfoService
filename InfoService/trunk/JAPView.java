@@ -41,7 +41,7 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 	private JLabel				proxyTextField;
 	private JLabel				infoServiceTextField;
 	private JLabel	 			anonTextField;
-	private JButton				portB, httpB, isB, anonB, infoB, helpB, startB, quitB;
+	private JButton				portB, httpB, isB, anonB, infoB, helpB, startB, quitB, iconifyB;
 	private JCheckBox			proxyCheckBox;
 	private JCheckBox			anonCheckBox;
 	private JCheckBox			ano1CheckBox;
@@ -106,10 +106,15 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 	    infoB = new JButton(model.getString("infoButton"));
 	    helpB = new JButton(model.getString("helpButton"));
 	    quitB = new JButton(model.getString("quitButton"));
+			iconifyB = new JButton(model.loadImageIcon(model.ICONIFYICONFN,true));
+			iconifyB.setToolTipText(model.getString("iconifyWindow"));
+			
 	    // Add real buttons
+			buttonPanel.add(iconifyB);
 			buttonPanel.add(infoB);
 	    buttonPanel.add(helpB);
 	    buttonPanel.add(quitB);
+			iconifyB.addActionListener(this);
 	    infoB.addActionListener(this);
 	    helpB.addActionListener(this);
 	    quitB.addActionListener(this);
@@ -365,6 +370,8 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 		//		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"GetEvent: "+event.getSource());
 				if (event.getSource() == quitB)
 					exitProgram(); 
+				else if (event.getSource() == iconifyB)
+					model.setJAPViewIconified();
 				else if (event.getSource() == portB)
 					showConfigDialog(JAPConf.PORT_TAB);
 				else if (event.getSource() == httpB)
@@ -384,10 +391,10 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 				else if (event.getSource() == ano1CheckBox)
 					model.setAnonMode(ano1CheckBox.isSelected());
 				else
-					JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"Event ?????: "+event.getSource());
+					JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"Event ?????: "+event.getSource());
 			}
- 
-    private void showHelpWindow()
+	
+  private void showHelpWindow()
 			{
 				if(helpWindow==null)
 					helpWindow=new JAPHelp(this);
@@ -421,28 +428,43 @@ public final class JAPView extends JFrame implements ActionListener, JAPObserver
 		// Meter panel
 		ano1CheckBox.setSelected(model.isAnonMode());
 		meterLabel.setIcon(setMeterImage());
-		if (model.isAnonMode() && (model.nrOfActiveUsers != -1) && (model.currentRisk != -1) && (model.trafficSituation != -1)) {
-				// Nr of active users
-				if (model.nrOfActiveUsers > userProgressBar.getMaximum())
-					userProgressBar.setMaximum(model.nrOfActiveUsers);
-				userProgressBar.setValue(model.nrOfActiveUsers);
-				userProgressBar.setString(String.valueOf(model.nrOfActiveUsers));
-				// Current Risk
-				protectionProgressBar.setValue(model.currentRisk);
-				if (model.currentRisk < 80)
-					protectionProgressBar.setString(String.valueOf(model.currentRisk)+" %");
-				else
-					protectionProgressBar.setString(model.getString("meterRiskVeryHigh"));
-				// Traffic Situation
-				trafficProgressBar.setValue(model.trafficSituation);
-				if      (model.trafficSituation < 30) 
-					trafficProgressBar.setString(model.getString("meterTrafficLow"));
-				else if (model.trafficSituation < 60) 
-					trafficProgressBar.setString(model.getString("meterTrafficMedium")); 
-				else if (model.trafficSituation < 90) 
-					trafficProgressBar.setString(model.getString("meterTrafficHigh"));
-				else                                  
-					trafficProgressBar.setString(model.getString("meterTrafficCongestion")); 
+		if (model.isAnonMode()) {
+				if (model.nrOfActiveUsers != -1) {
+					// Nr of active users
+					if (model.nrOfActiveUsers > userProgressBar.getMaximum())
+						userProgressBar.setMaximum(model.nrOfActiveUsers);
+					userProgressBar.setValue(model.nrOfActiveUsers);
+					userProgressBar.setString(String.valueOf(model.nrOfActiveUsers));
+				} else {
+					userProgressBar.setValue(userProgressBar.getMaximum());
+					userProgressBar.setString(model.getString("meterNA"));
+				}
+				if (model.currentRisk != -1) {
+					// Current Risk
+					protectionProgressBar.setValue(model.currentRisk);
+					if (model.currentRisk < 80)
+						protectionProgressBar.setString(String.valueOf(model.currentRisk)+" %");
+					else
+						protectionProgressBar.setString(model.getString("meterRiskVeryHigh"));
+				} else {
+					protectionProgressBar.setValue(protectionProgressBar.getMaximum());
+					protectionProgressBar.setString(model.getString("meterNA"));
+				}
+				if (model.trafficSituation != -1) {
+					// Traffic Situation
+					trafficProgressBar.setValue(model.trafficSituation);
+					if      (model.trafficSituation < 30) 
+						trafficProgressBar.setString(model.getString("meterTrafficLow"));
+					else if (model.trafficSituation < 60) 
+						trafficProgressBar.setString(model.getString("meterTrafficMedium")); 
+					else if (model.trafficSituation < 90) 
+						trafficProgressBar.setString(model.getString("meterTrafficHigh"));
+					else                                  
+						trafficProgressBar.setString(model.getString("meterTrafficCongestion")); 
+				} else {
+					trafficProgressBar.setValue(trafficProgressBar.getMaximum());
+					trafficProgressBar.setString(model.getString("meterNA"));
+				}
 		} else {
 			userProgressBar.setValue(userProgressBar.getMaximum());
 			userProgressBar.setString(model.getString("meterNA"));

@@ -57,6 +57,7 @@ public final class JAPModel {
 	static final String aktVersion = "00.00.020"; // Version of JAP
 	
 	private int      portNumber        = 4001;
+	private boolean  listenerIsLocal   = false;  // indicates whether the Listener serves for localhost only or not
 	private int      runningPortNumber = 0;      // the port where proxy listens
 	private boolean  isRunningProxy    = false;  // true if a proxy is running
 	private  String   proxyHostName     = "ikt.inf.tu-dresden.de";
@@ -71,6 +72,7 @@ public final class JAPModel {
 	private boolean  mbMinimizeOnStartup =false; //true if programm should be started minimized...
 	public  boolean  alreadyCheckedForNewVersion = false; // indicates if check for new version has already been done 
 	public  boolean  canStartService   = false;  // indicates if Anon service can be started
+	public  int      disableActCntMessage = 1;   // indicates if Warning message in setAnonMode has been deactivated (=0)
 	public  String   status1           = "?";
 	public  String   status2           = " ";
 	private int      nrOfChannels      = 0;
@@ -79,8 +81,9 @@ public final class JAPModel {
 	static final int MAXPROGRESSBARVALUE = 100; // for trafficSituation and currentRisk
 	public int       trafficSituation  = -1;
 	public int       currentRisk       = -1;
-	static private JAPView view			   = null;
-	static private JAPInfoService mInfoService=null;
+	static private   JAPView        view         = null;
+	static private   JAPViewIconified        iconifiedView         = null;
+	static private   JAPInfoService mInfoService = null;
 // 2000-08-01(HF): the following url is now defined in JAPMessages.properties:
 // usage: model.getString("infoURL")
 //static final String url_download_version       = "http://www.inf.tu-dresden.de/~hf2/anon/JAP/";
@@ -101,8 +104,11 @@ public final class JAPModel {
 	static final String BUSYFN       = "images/busy.gif";
 	static final String DOWNLOADFN   = "images/install.gif";
 	static final String IICON16FN    = "images/icon16.gif";
+	static final String ICONFN       = "images/icon.gif";
 	static final String JAPICONFN    = "images/japi.gif";
 	static final String CONFIGICONFN = "images/icoc.gif";
+	static final String ICONIFYICONFN= "images/iconify.gif";
+	static final String ENLARGEYICONFN= "images/enlarge.gif";
 	static final String METERICONFN  = "images/icom.gif";
 	static final String[] METERFNARRAY = {
 						"images/meterD.gif", // anonymity deactivated
@@ -172,6 +178,18 @@ public final class JAPModel {
 			return model;
 	}
 	
+	//---------------
+	public void setIconifiedView(JAPViewIconified v)
+		{
+			iconifiedView=v;	
+		}
+	
+	public JAPViewIconified getIconifiedView()
+		{
+			return iconifiedView;
+		}
+
+	//---------------
 	public void setView(JAPView v)
 		{
 			view=v;	
@@ -223,6 +241,7 @@ public final class JAPModel {
 			NamedNodeMap n=root.getAttributes();
 			// 
 			portNumber=Integer.valueOf(n.getNamedItem("portNumber").getNodeValue()).intValue();
+			setListenerIsLocal(((n.getNamedItem("listenerIsLocal").getNodeValue()).equals("true")?true:false));
 			setUseProxy(((n.getNamedItem("proxyMode").getNodeValue()).equals("true")?true:false));
 			
 			String host;
@@ -286,6 +305,7 @@ public final class JAPModel {
 			doc.appendChild(e);
 			//
 			e.setAttribute("portNumber",Integer.toString(portNumber));
+			e.setAttribute("listenerIsLocal",(getListenerIsLocal()?"true":"false"));
 			e.setAttribute("proxyMode",(mbUseProxy?"true":"false"));
 			e.setAttribute("proxyHostName",proxyHostName);
 			e.setAttribute("proxyPortNumber",Integer.toString(proxyPortNumber));
@@ -433,6 +453,22 @@ public final class JAPModel {
 			return mInfoService;
 		}
 	
+	public void setListenerIsLocal(boolean b)
+		{
+			synchronized(this)
+				{
+					listenerIsLocal=b;
+				}
+		}
+			
+	public boolean getListenerIsLocal()
+		{
+			synchronized(this)
+				{
+					return listenerIsLocal;
+				}
+		}
+		
 	public void setUseProxy(boolean b)
 		{
 			synchronized(this)
@@ -506,6 +542,17 @@ public final class JAPModel {
 				}
 		}
 	
+	public synchronized void setJAPViewIconified() {
+		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:setJAPViewIconified()");
+		view.setVisible(false);
+		iconifiedView.setVisible(true);
+	}
+	
+	public synchronized void setJAPViewDeIconified() {
+		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:setJAPViewDeIconified()");
+		iconifiedView.setVisible(false);
+		view.setVisible(true);
+	}
 	
 	public synchronized void setAnonMode(boolean anonModeSelected)
 	{
@@ -529,12 +576,20 @@ public final class JAPModel {
 				// starting MUX --> Success ???
 				if(proxy.startMux())
 					{
-				// start feedback thread
+						// start feedback thread
 						feedback=new JAPFeedback();
 						Thread t2 = new Thread (feedback);
 						t2.setPriority(Thread.MIN_PRIORITY);
 						t2.start();
 					}
+				// show a Reminder message that active contents should be disabled
+				Object[] options = { model.getString("disableActCntMessageDontRemind"), model.getString("okButton") };
+				if (disableActCntMessage !=0) 
+					disableActCntMessage = javax.swing.JOptionPane.showOptionDialog(view, 
+							 model.getString("disableActCntMessage"), 
+							 model.getString("disableActCntMessageTitle"), 
+							 javax.swing.JOptionPane.DEFAULT_OPTION, javax.swing.JOptionPane.WARNING_MESSAGE,
+							 null, options, options[1]);
 				notifyJAPObservers();
 			}
 		} else if ((anonMode == true) && (anonModeSelected == false)) {
@@ -788,6 +843,20 @@ public final class JAPModel {
 			{
 				Dimension ownSize = f.size();
 				f.locate((screenSize.width-ownSize.width )/2,(screenSize.height-ownSize.height)/2);
+			}
+	}
+
+	public static void upRightFrame(Window f) {
+		Dimension screenSize = f.getToolkit().getScreenSize();
+		try //JAVA 1.1
+			{
+				Dimension ownSize = f.getSize();
+				f.setLocation((screenSize.width-ownSize.width ) , 0 );
+			}
+		catch(Error e) //JAVA 1.0.2
+			{
+				Dimension ownSize = f.size();
+				f.locate((screenSize.width-ownSize.width ) , 0 );
 			}
 	}
 	
