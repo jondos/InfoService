@@ -214,12 +214,10 @@ final class JAPAbout extends JDialog implements Runnable
 				//...it should appear 5 Points above the bottom border (as the OK-Button does)...
 				//...and 5 Points away from the OK-Button
 				version.setLocation(x-5-version.getSize().width, ABOUT_DY-5-version.getSize().height);
-				//Finaly the set the Position of the 'Version'-Text...
-				//...it should appear at the same height as the OK-Button...
-				//...and it should be in a row with the Anonym-O-Meter left border
-				verstxt.setLocation(225,y);
-
-				setContentPane(labelSplash); //Setting the BackgroundImage-Label with the Version-Texts and OK-button as
+				//Finaly we do the same for the 'Version'-Text
+				verstxt.setLocation(x-5-verstxt.getSize().width,y);
+				//Setting the BackgroundImage-Label with the Version-Texts and OK-button
+				setContentPane(labelSplash); 
 
 				labelSplash.setDoubleBuffered(false);
 
@@ -227,14 +225,11 @@ final class JAPAbout extends JDialog implements Runnable
 				getLayeredPane().setLayout(null); //we have to add the HTML-Pane at the LayerdPane, because it
 				getLayeredPane().add(sp);        //should appear over the Background image
 				sp.setLocation(5,62);           //setting the position of the HTML-Pane
-				//Now we do a little bit tricky...
-
-				//First we move the Dialog to a position were it is not seen on the Screen...
-
+				//Now we do a little bit tricky stuff.
 				String os=System.getProperty("os.name");
 				if(os==null||!os.toLowerCase().startsWith("mac"))
 					{
-						setLocation(-380,-200);
+						setLocation(-380,-200); //First we move the Dialog to a position were it is not seen on the Screen...
 						setVisible(true);   //now we have to ensure that the window is visible before the
 						setResizable(false); //get the insets (the border around the window) - also the window must look like it should
 						Insets in=getInsets(); //so for instance we need the 'NoResizable'-Border

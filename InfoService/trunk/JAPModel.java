@@ -57,6 +57,8 @@ import javax.swing.JPanel;
 import javax.swing.JButton;
 import javax.swing.JPasswordField;
 import javax.swing.JLabel;
+import javax.swing.UIManager.LookAndFeelInfo;
+import javax.swing.UIManager;
 import anon.JAPAnonService;
 import anon.JAPAnonServiceListener;
 /* jh5 */ import rmi.JAPAnonServiceRMIServer;
@@ -64,7 +66,7 @@ import anon.JAPAnonServiceListener;
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPModel implements JAPAnonServiceListener{
 
-	public static final String aktVersion = "00.01.038"; // Version of JAP
+	public static final String aktVersion = "00.01.039"; // Version of JAP
 
 	public  JAPAnonServerDB        anonServerDatabase = null; // vector of all available mix cascades
 	public final static String   defaultanonHost   = "mix.inf.tu-dresden.de";
@@ -332,10 +334,33 @@ public final class JAPModel implements JAPAnonServiceListener{
 
 			autoConnect=JAPUtil.parseNodeBoolean(n.getNamedItem("autoConnect"),false);
 			mbMinimizeOnStartup=JAPUtil.parseNodeBoolean(n.getNamedItem("minimizedStartup"),false);
-
-			//Locale-Settings
+			//Load Locale-Settings
 			String locale=JAPUtil.parseNodeString(n.getNamedItem("Locale"),m_Locale.getLanguage());
 			setLocale(new Locale(locale,""));
+			//Load look-and-feel settings
+			String lf=JAPUtil.parseNodeString(n.getNamedItem("LookAndFeel"),"unknown");
+			LookAndFeelInfo[] lfi=UIManager.getInstalledLookAndFeels();
+			for(int i=0;i<lfi.length;i++) {
+				if(lfi[i].getName().equals(lf)) {
+					try {
+						UIManager.setLookAndFeel(lfi[i].getClassName());
+//				SwingUtilities.updateComponentTreeUI(m_frmParent);
+//				SwingUtilities.updateComponentTreeUI(SwingUtilities.getRoot(((JComboBox)e.getItemSelectable())));
+					}
+					catch(Exception lfe) {
+						JAPDebug.out(JAPDebug.WARNING,JAPDebug.GUI,"JAPModel:Exception while setting look-and-feel");
+					}
+					break;
+				}
+			}
+					
+			
+			
+			
+			
+			
+			
+			
 
 			//Loading debug settings
 			NodeList nl=root.getElementsByTagName("Debug");
@@ -448,6 +473,8 @@ public final class JAPModel implements JAPAnonServiceListener{
 			e.setAttribute("doNotAbuseReminder",(mbDoNotAbuseReminder?"true":"false"));
 			e.setAttribute("neverRemindGoodBye",(mbGoodByMessageNeverRemind?"true":"false"));
 			e.setAttribute("Locale",m_Locale.getLanguage());
+			e.setAttribute("LookAndFeel",UIManager.getLookAndFeel().getName());			
+
 			//
 			// adding Debug-Element
 			Element elemDebug=doc.createElement("Debug");
