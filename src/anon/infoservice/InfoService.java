@@ -433,6 +433,7 @@ public class InfoService extends DatabaseEntry
 						throw (new Exception("InfoService: getXmlDocument: Invalid HTTP command."));
 					}
 				}
+				System.out.println(new String(response.getData()));
 				Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(response.
 					getInputStream());
 

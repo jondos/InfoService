@@ -38,6 +38,7 @@ import pay.crypto.tinyssl.TinySSL;
 import java.math.*;
 import org.w3c.dom.*;
 import javax.xml.parsers.*;
+import javax.xml.parsers.DocumentBuilderFactory;
 import anon.util.*;
 import anon.ErrorCodes;
 import org.bouncycastle.crypto.generators.RSAKeyPairGenerator;
@@ -99,6 +100,12 @@ final class JAPLean implements ProxyListener
 
 	public static void main(String[] argv) throws Exception
 	{
+		Document doc=DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+		Element elm=doc.createElement("Test");
+		doc.appendChild(elm);
+		XMLUtil.setNodeValue(elm,"Test&<Test>Test");
+		String s=XMLUtil.XMLDocumentToString(doc);
+		System.out.println(s);
 // check for command line
 		if (argv == null || argv.length < 3)
 		{
