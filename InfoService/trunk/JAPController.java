@@ -667,7 +667,7 @@ public final class JAPController implements ProxyListener {
 	//---------------------------------------------------------------------
 private final class SetAnonModeAsync implements Runnable
 {
-	boolean anonModeSelected=false;
+	private boolean anonModeSelected=false;
 	public SetAnonModeAsync(boolean b)
 		{
 		  anonModeSelected=b;
@@ -825,163 +825,151 @@ private final class SetAnonModeAsync implements Runnable
 }*/
 
 /*new Run!!*/
-	public void run() {
-		synchronized(oSetAnonModeSyncObject)
-		{
-	//setAnonMode--> async!!
-		JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:setAnonMode("+anonModeSelected+")");
-		if ((m_proxyAnon == null) && (anonModeSelected == true))
-			{
-				view.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-				JAPSetAnonModeSplash.start(true);
-	       if (alreadyCheckedForNewVersion == false)
-					{
-						// Check for a new Version of JAP if not already done
-						int ok = versionCheck();
-						if (ok == -1) {
-						// -> at the moment nothing to do
-						//canStartService = false; // no necessary to set this variable
-						} else {
-						// -> we can start anonymity
-						canStartService = true;
-						alreadyCheckedForNewVersion = true;
-						}
-					}
-				if (canStartService)
-					{
-						// -> we can start anonymity
-						if(m_proxyDirect!=null)
-							m_proxyDirect.stopService();
-						m_proxyDirect=null;
-						// starting MUX --> Success ???
-						m_proxyAnon=new AnonProxy(m_socketHTTPListener);
-						AnonServer e = m_Controller.getAnonServer();
-						//2001-02-20(HF)
-						if (JAPModel.getUseFirewall()) {
-							// connect vi proxy to first mix (via ssl portnumber)
-							if (e.getSSLPort() == -1) {
-								JOptionPane.showMessageDialog(m_Controller.getView(),
-									JAPMessages.getString("errorFirewallModeNotSupported"),
-									JAPMessages.getString("errorFirewallModeNotSupportedTitle"),
-									JOptionPane.ERROR_MESSAGE);
-
+	public void run()
+    {
+		  synchronized(oSetAnonModeSyncObject)
+		    {
+	        //setAnonMode--> async!!
+		      JAPDebug.out(JAPDebug.DEBUG,JAPDebug.MISC,"JAPModel:setAnonMode("+anonModeSelected+")");
+		      if ((m_proxyAnon == null) && (anonModeSelected == true))
+			      {//start Anon Mode
+				      view.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+				      JAPSetAnonModeSplash.start(true);
+	            if (alreadyCheckedForNewVersion == false)
+					      {
+						      // Check for a new Version of JAP if not already done
+						      int ok = versionCheck();
+						      if (ok != -1)
+                    {
+						          // -> we can start anonymity
+						          canStartService = true;
+						          alreadyCheckedForNewVersion = true;
+						        }
+					      }
+              if(!canStartService)
+                {
                   view.setCursor(Cursor.getDefaultCursor());
-						      notifyJAPObservers();
 						      JAPSetAnonModeSplash.abort();
-						      setAnonMode(false);
-								  return; //TODO: Maybe need to check what to do...--> anonmode=false =?
-							} else {
-								m_proxyAnon.setAnonService(e);
-								m_proxyAnon.setFirewall(m_Model.getFirewallHost(),m_Model.getFirewallPort());
-								if(JAPModel.getUseFirewallAuthorization())
-									{
-										m_proxyAnon.setFirewallAuthorization(JAPModel.getFirewallAuthUserID(),
-																												m_Controller.getFirewallAuthPasswd());
-									}
-								//proxyAnon.connectViaFirewall(true);
-							}
-						} else {
-							// connect directly to first mix
-							m_proxyAnon.setFirewall(null,-1);
+                  return;
+                }
+              // starting MUX --> Success ???
+              m_proxyAnon=new AnonProxy(m_socketHTTPListener);
+              AnonServer e = m_Controller.getAnonServer();
               m_proxyAnon.setAnonService(e);
-						}
-						int ret=m_proxyAnon.start();
-						if(ret==AnonProxy.E_SUCCESS)
-							{
-								// show a Reminder message that active contents should be disabled
-								Object[] options = {  JAPMessages.getString("okButton") };
-								JCheckBox checkboxRemindNever=new JCheckBox(JAPMessages.getString("disableActCntMessageNeverRemind"));
-								Object[] message={JAPMessages.getString("disableActCntMessage"),checkboxRemindNever};
-								if (!mbActCntMessageNotRemind)
-									{
-										ret=0;
-										ret= JOptionPane.showOptionDialog(m_Controller.getView(),
-																		(Object)message,
-																		JAPMessages.getString("disableActCntMessageTitle"),
-																		JOptionPane.DEFAULT_OPTION,
-																		JOptionPane.WARNING_MESSAGE,
-																		null, options, options[0]);
-										mbActCntMessageNeverRemind = checkboxRemindNever.isSelected();
-										mbDoNotAbuseReminder       = checkboxRemindNever.isSelected();
-										if(mbActCntMessageNeverRemind)
-											mbActCntMessageNotRemind=true;
-									}
-								m_Controller.status2 = JAPMessages.getString("statusRunning");
-								m_proxyAnon.setProxyListener(m_Controller);
-								m_proxyAnon.setDummyTraffic(m_Model.getDummyTraffic());
-                // start feedback thread
-								feedback=new JAPFeedback();
-								feedback.startRequests();
-								view.setCursor(Cursor.getDefaultCursor());
-								notifyJAPObservers();
-								JAPSetAnonModeSplash.abort();
-								return;
-							}
-						if (ret==AnonProxy.E_BIND)
-							{
-								Object[] args={new Integer(JAPModel.getHttpListenerPortNumber())};
-								String msg=MessageFormat.format(JAPMessages.getString("errorListenerPort"),args);
-								JOptionPane.showMessageDialog(m_Controller.getView(),
-																							msg,
-																							JAPMessages.getString("errorListenerPortTitle"),
-																							JOptionPane.ERROR_MESSAGE);
-								JAPDebug.out(JAPDebug.EMERG,JAPDebug.NET,"Listener could not be started!");
-								m_Controller.getView().disableSetAnonMode();
-							}
-						else
-							{
-								JOptionPane.showMessageDialog
-									(
-									 getView(),
-									 JAPMessages.getString("errorConnectingFirstMix")+"\n"+JAPMessages.getString("errorCode")+": "+Integer.toString(ret),
-									 JAPMessages.getString("errorConnectingFirstMixTitle"),
-									 JOptionPane.ERROR_MESSAGE
-									);
-							}
-						m_proxyAnon=null;
-						//proxyAnonSocks=null;
-						view.setCursor(Cursor.getDefaultCursor());
-						m_Controller.status2 = JAPMessages.getString("statusNotRunning");
-						notifyJAPObservers();
-						JAPSetAnonModeSplash.abort();
-						setAnonMode(false);
-					}
-				else
-					{
-						view.setCursor(Cursor.getDefaultCursor());
-						JAPSetAnonModeSplash.abort();
-				}
-		}
-		else if ((m_proxyDirect==null) && (anonModeSelected == false))
-			{
-				if(m_proxyAnon!=null)
-					{
-						JAPSetAnonModeSplash.start(false);
-						m_proxyAnon.stop();
-					}
-				m_proxyAnon=null;
-				//if(proxyAnonSocks!=null)
-				//	proxyAnonSocks.stop();
-				//proxyAnonSocks=null;
-				if(feedback!=null)
-					{
-						feedback.stopRequests();
-						feedback=null;
-					}
-				m_Controller.status2 = JAPMessages.getString("statusNotRunning");
-				m_proxyDirect=new DirectProxy(m_socketHTTPListener);
-				m_proxyDirect.startService();
+              if (JAPModel.getUseFirewall())
+                {
+                  // connect vi proxy to first mix (via ssl portnumber)
+                  if (e.getSSLPort() == -1)
+                    {
+                      JOptionPane.showMessageDialog(m_Controller.getView(),
+                                                    JAPMessages.getString("errorFirewallModeNotSupported"),
+                                                    JAPMessages.getString("errorFirewallModeNotSupportedTitle"),
+                                                    JOptionPane.ERROR_MESSAGE);
+                      view.setCursor(Cursor.getDefaultCursor());
+                      JAPSetAnonModeSplash.abort();
+                      return;
+                    }
+                  else
+                    {
+                      m_proxyAnon.setFirewall(m_Model.getFirewallHost(),m_Model.getFirewallPort());
+                      if(JAPModel.getUseFirewallAuthorization())
+                        {
+                          m_proxyAnon.setFirewallAuthorization(JAPModel.getFirewallAuthUserID(),
+                                                                m_Controller.getFirewallAuthPasswd());
+                        }
+                    }
+                }
 
-				m_Controller.getAnonServer().setMixedPackets(-1);
-				m_Controller.getAnonServer().setNrOfActiveUsers(-1);
-				m_Controller.getAnonServer().setTrafficSituation(-1);
-				m_Controller.getAnonServer().setCurrentRisk(-1);
-				notifyJAPObservers();
-				JAPSetAnonModeSplash.abort();
-			}
-	}
-}
-	}
+              // -> we can try to start anonymity
+              if(m_proxyDirect!=null)
+                m_proxyDirect.stopService();
+              m_proxyDirect=null;
+
+              int ret=m_proxyAnon.start();
+              if(ret==AnonProxy.E_SUCCESS)
+                {
+                  // show a Reminder message that active contents should be disabled
+                  Object[] options = {  JAPMessages.getString("okButton") };
+                  JCheckBox checkboxRemindNever=new JCheckBox(JAPMessages.getString("disableActCntMessageNeverRemind"));
+                  Object[] message={JAPMessages.getString("disableActCntMessage"),checkboxRemindNever};
+                  if (!mbActCntMessageNotRemind)
+                    {
+                      ret=0;
+                      ret= JOptionPane.showOptionDialog(m_Controller.getView(),
+                                      (Object)message,
+                                      JAPMessages.getString("disableActCntMessageTitle"),
+                                      JOptionPane.DEFAULT_OPTION,
+                                      JOptionPane.WARNING_MESSAGE,
+                                      null, options, options[0]);
+                      mbActCntMessageNeverRemind = checkboxRemindNever.isSelected();
+                      mbDoNotAbuseReminder       = checkboxRemindNever.isSelected();
+                      if(mbActCntMessageNeverRemind)
+                        mbActCntMessageNotRemind=true;
+                    }
+                  m_proxyAnon.setProxyListener(m_Controller);
+                  m_proxyAnon.setDummyTraffic(m_Model.getDummyTraffic());
+                  // start feedback thread
+                  feedback=new JAPFeedback();
+                  feedback.startRequests();
+                  view.setCursor(Cursor.getDefaultCursor());
+                  notifyJAPObservers();
+                  JAPSetAnonModeSplash.abort();
+                  return;
+                }
+              if (ret==AnonProxy.E_BIND)
+                {
+                  Object[] args={new Integer(JAPModel.getHttpListenerPortNumber())};
+                  String msg=MessageFormat.format(JAPMessages.getString("errorListenerPort"),args);
+                  JOptionPane.showMessageDialog(m_Controller.getView(),
+                                                msg,
+                                                JAPMessages.getString("errorListenerPortTitle"),
+                                                JOptionPane.ERROR_MESSAGE);
+                  JAPDebug.out(JAPDebug.EMERG,JAPDebug.NET,"Listener could not be started!");
+                  m_Controller.getView().disableSetAnonMode();
+                }
+              else
+                {
+                  JOptionPane.showMessageDialog
+                    (
+                      getView(),
+                      JAPMessages.getString("errorConnectingFirstMix")+"\n"+JAPMessages.getString("errorCode")+": "+Integer.toString(ret),
+                      JAPMessages.getString("errorConnectingFirstMixTitle"),
+                      JOptionPane.ERROR_MESSAGE
+                    );
+                }
+              m_proxyAnon=null;
+              view.setCursor(Cursor.getDefaultCursor());
+              notifyJAPObservers();
+              JAPSetAnonModeSplash.abort();
+              setAnonMode(false);
+		      }
+		    else if ((m_proxyDirect==null) && (anonModeSelected == false))
+			    {
+				    if(m_proxyAnon!=null)
+					    {
+						    JAPSetAnonModeSplash.start(false);
+						    m_proxyAnon.stop();
+					    }
+				    m_proxyAnon=null;
+				    if(feedback!=null)
+					    {
+						    feedback.stopRequests();
+						    feedback=null;
+              }
+				    m_proxyDirect=new DirectProxy(m_socketHTTPListener);
+				    m_proxyDirect.startService();
+
+				    m_Controller.getAnonServer().setMixedPackets(-1);
+				    m_Controller.getAnonServer().setNrOfActiveUsers(-1);
+				    m_Controller.getAnonServer().setTrafficSituation(-1);
+				    m_Controller.getAnonServer().setCurrentRisk(-1);
+				    notifyJAPObservers();
+				    JAPSetAnonModeSplash.abort();
+			    }
+	    }
+  }
+
+}//end of class SetAnonModeAsync
 	//---------------------------------------------------------------------
 	//---------------------------------------------------------------------
 	//---------------------------------------------------------------------
