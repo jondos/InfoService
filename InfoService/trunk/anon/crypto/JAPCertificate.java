@@ -57,6 +57,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.Text;
 import anon.util.Base64;
+import anon.util.XMLUtil;
 
 /**
  * A certificate class.
@@ -135,8 +136,7 @@ final public class JAPCertificate
 				return null;
 			}
 			Element elemX509Cert = (Element) a_NodeRoot;
-			Text txtX509Cert = (Text) elemX509Cert.getFirstChild();
-			String strValue = txtX509Cert.getNodeValue();
+			String strValue=XMLUtil.parseNodeString(elemX509Cert,null);
 			byte[] bytecert = Base64.decode(strValue);
 			return getInstance(bytecert);
 		}

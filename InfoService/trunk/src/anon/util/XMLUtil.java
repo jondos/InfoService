@@ -127,6 +127,15 @@ public class XMLUtil
 		return b;
 	}
 
+	/** Gets the content of an Element or Text Node. The "content" of an Element Node is
+	 * the text between the opening and closing Element Tag. The content of an attribute node
+	 * is the value of the attributte. For all over nodes null is returned.
+	 * @param n text node, element node or attribute node
+	 * @param defaultValue value returned, if an error occured
+	 * @return null if this node has no "content"
+	 * @return defaultValue if an error occured
+	 * @return "content" of the node
+	 */
 	public static String parseNodeString(Node n, String defaultValue)
 	{
 		String s = defaultValue;
