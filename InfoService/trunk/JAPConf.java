@@ -50,9 +50,9 @@ import javax.swing.border.TitledBorder;
 
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-
+import javax.swing.JFrame;
 import anon.JAPAnonService;
-import update.*;
+/*sk13*/import update.*;
 final class JAPConf extends JDialog
 	{
 
@@ -109,7 +109,7 @@ final class JAPConf extends JDialog
 		private JAPConf       m_JapConf;
 
                 //Einfug
-                private JAPUpdate update;
+/*sk13*///                private JAPUpdate update;
 
 	  public JAPConf (JFrame frmParent)
 			{
@@ -665,7 +665,7 @@ final class JAPConf extends JDialog
 				//p22.add(bttnPing);
               //////////////////////////////////////////////////////////////////
               //Einfug
-              JButton testButton = new JButton("Update");
+/*sk13              JButton testButton = new JButton("Update");
             testButton.addActionListener(new ActionListener() {
   public void actionPerformed (ActionEvent e) {
   Cursor c1=getCursor();
@@ -683,7 +683,7 @@ final class JAPConf extends JDialog
   testButton.setEnabled(true);
    p22.add(testButton);
               //////////////////////////////////////////////////////////////////
-
+*/
 				p22.add(bttnMonitor);
 				p22.add(m_cbDummyTraffic);
 				p2.add(p22, BorderLayout.NORTH);
