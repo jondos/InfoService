@@ -5,6 +5,7 @@ import java.awt.Rectangle;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Insets;
+import java.awt.Toolkit;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.ActionListener;
@@ -65,6 +66,8 @@ public class JAPAbout extends JDialog
 						textArea.setEnabled(false);
 						textArea.setContentType("text/html");
 						textArea.setText(new String(buff).trim());
+//						Point p=new Point(0,70);
+//						getViewport().setViewPosition(p);
 						t=new Thread(this);
 						t.setPriority(Thread.MAX_PRIORITY);
 				}
@@ -83,10 +86,12 @@ public class JAPAbout extends JDialog
 				public void run()
 					{
 	
-						int i=5;0//;dimension.height;
+						int i=0;//;dimension.height;
 						Point p=new Point(0,i);
-						getViewport().setViewPosition(p);
-						try{Thread.sleep(1000);}catch(Exception e){}
+					//	getViewport().setViewPosition(p);
+					//	Toolkit.getDefaultToolkit().sync();
+					//	try{t.sleep(2000);}catch(Exception e){}
+					//	try{t.sleep(2000);}catch(Exception e){}
 						bRun=true;
 						while(bRun)
 							{
@@ -94,7 +99,7 @@ public class JAPAbout extends JDialog
 								try{
 								if(i>=textArea.getPreferredSize().height)
 									{	
-										i=0;
+										i=-50;
 									}
 								p.y=i;
 								getViewport().setViewPosition(p);
@@ -102,7 +107,7 @@ public class JAPAbout extends JDialog
 								catch(Throwable  t)
 									{									 
 									}
-								try{Thread.sleep(95);}catch(Exception e){}
+								try{t.sleep(95);}catch(Exception e){}
 							}									
 					}
 			}
