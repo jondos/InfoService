@@ -25,11 +25,15 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
+/* Hint: This file may be only a copy of the original file which is always in the JAP source tree!
+ * If you change something - do not forget to add the changes also to the JAP source tree!
+ */
 package anon.infoservice;
 
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Vector;
+import anon.crypto.*;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -37,9 +41,19 @@ import logging.LogType;
 /**
  * This class is the generic implementation of a database. It is used by the database
  * implementations for the different services.
+ * It is also a registry for all databases used in the context of this application.
  */
-public abstract class Database implements Runnable
+public class Database implements Runnable
 {
+	/**
+	 * The registered databases.
+	 */
+	private static Hashtable m_databases = new Hashtable();
+
+	/**
+	 * The distributor that forwards new database entries.
+	 */
+	private static AbstractDistributor m_distributor;
 
 	/**
 	 * Stores services we know.
@@ -52,6 +66,88 @@ public abstract class Database implements Runnable
 	private Vector timeoutList;
 
 	/**
+	 * Registers a distributor that forwards new database entries.
+	 * @param a_distributor a distributor that forwards new database entries
+	 */
+	public static void registerDistributor(AbstractDistributor a_distributor) {
+		m_distributor = a_distributor;
+	}
+
+	/**
+	 * Registers a Database object that contains instances of the specified DatabaseEntry class.
+	 * If a Databasa was previously registered for this DatabaseEntry class, the method does nothing
+	 * and return the previously registered Database. Otherwise, the argument Database is returned.
+	 * This method is used for testing purposes and should not be removed.
+	 * @param a_DatabaseEntryClass the DatabaseEntry class for that the corresponding Database
+	 *                             is unregistered
+	 * @param a_Database the registered Database
+	 * @return the actually registered Database instance for the specified DatabaseEntry class or
+	 *         null if the specified class is not a valid DatabaseEntry class
+	 */
+	private static Database registerInstance(Class a_DatabaseEntryClass, Database a_Database)
+	{
+		Database database = (Database)m_databases.get(a_DatabaseEntryClass.getName());
+
+		if (database == null && a_Database != null &&
+			DatabaseEntry.class.isAssignableFrom(a_DatabaseEntryClass)) {
+
+			m_databases.put(a_DatabaseEntryClass.getName(), a_Database);
+			database = a_Database;
+		}
+
+		return database;
+	}
+
+	/**
+	 * Unregisters the Database object that contains instances of the specified DatabaseEntry class.
+	 * This method is used for testing purposes and should not be removed.
+	 * @param a_DatabaseEntryClass the DatabaseEntry class for that the corresponding Database
+	 *                             is unregistered
+	 * @return the Database instance for the specified DatabaseEntry class that was unregistered
+	 *         or null if  no corresponding Database could be found
+	 */
+	private static Database unregisterInstance(Class a_DatabaseEntryClass)
+	{
+		return (Database)m_databases.remove(a_DatabaseEntryClass.getName());
+	}
+
+	/**
+	 * Unregisters all Database instances
+	 * This method is used for testing purposes and should not be removed.
+	 */
+	private static void unregisterInstances()
+	{
+		m_databases.clear();
+	}
+
+	/**
+	 * Gets the Database for the specified database entries. Creates the Database
+	 * if it does not exist already.
+	 * @param a_DatabaseEntryClass the DatabaseEntry class for that the method returns
+	 * the corresponding Database object
+	 * @return the Database object that contains DatabaseEntries of the specified type or
+	 *         null if the specified DataEntry class was not found
+	 */
+	public static Database getInstance(Class a_DatabaseEntryClass) {
+		Database database = (Database)m_databases.get(a_DatabaseEntryClass.getName());
+
+		if (database == null && DatabaseEntry.class.isAssignableFrom(a_DatabaseEntryClass)) {
+			database = new Database();
+			m_databases.put(a_DatabaseEntryClass.getName(), database);
+		}
+
+		return database;
+	}
+
+	/**
+	 * Get an Enumeration of all registered Databases.
+	 * @return an Enumeration of all registered Databases
+	 */
+	public static Enumeration getInstances() {
+		return m_databases.elements();
+	}
+
+	/**
 	 * Creates a new instance of a Database.
 	 */
 	protected Database()
@@ -62,7 +158,7 @@ public abstract class Database implements Runnable
 
 	/**
 	 * This is the garbage collector for the database. If an entry becomes
-	 * out dated, it will automaticly removed from the database.
+	 * outdated, it will be automatically removed from the database.
 	 */
 	public void run()
 	{
@@ -109,7 +205,7 @@ public abstract class Database implements Runnable
 					{
 						serviceDatabase.wait(sleepTime);
 						LogHolder.log(LogLevel.DEBUG, LogType.MISC,
-									  "Database: run: One InfoService entry could be expired. Wake up...");
+									  "Database: run: One entry could be expired. Wake up...");
 					}
 					catch (Exception e)
 					{
@@ -122,7 +218,7 @@ public abstract class Database implements Runnable
 					{
 						serviceDatabase.wait();
 						LogHolder.log(LogLevel.DEBUG, LogType.MISC,
-									  "Database: run: First InfoService entry in the database. Look when it expires. Wake up...");
+									  "Database: run: First entry in the database. Look when it expires. Wake up...");
 					}
 					catch (Exception e)
 					{
@@ -135,11 +231,11 @@ public abstract class Database implements Runnable
 	/**
 	 * Updates an entry in the database. If the entry is an unknown or if it is newer then the
 	 * one stored in the database for this service, the new entry is stored in the database and
-	 * forwarded to all neighbour infoservices. This method is called by the childs of Database.
+	 * forwarded to all neighbour infoservices.
 	 *
 	 * @param newEntry The DatabaseEntry to update.
 	 */
-	protected void update(DatabaseEntry newEntry)
+	public void update(DatabaseEntry newEntry)
 	{
 		synchronized (serviceDatabase)
 		{
@@ -154,7 +250,7 @@ public abstract class Database implements Runnable
 			}
 			else
 			{
-				/* we know this service, look whether the entry is newer, then the one we have stored */
+				/* we know this service, look whether the entry is newer than the one we have stored */
 				if (newEntry.getExpireTime() > oldEntry.getExpireTime())
 				{
 					/* it is newer */
@@ -192,6 +288,11 @@ public abstract class Database implements Runnable
 					/* entry at the first expire position added -> notify the cleanup thread */
 					serviceDatabase.notify();
 				}
+				if ( (m_distributor != null) && (newEntry instanceof IDistributable))
+				{
+					// forward new entries
+					m_distributor.addJob( (IDistributable) newEntry);
+				}
 			}
 		}
 	}
@@ -199,9 +300,9 @@ public abstract class Database implements Runnable
 	/**
 	 * Removes an entry from the database.
 	 *
-	 * @deleteEntry The entry to remove. If it is not in the database, nothing is done.
+	 * @param deleteEntry The entry to remove. If it is not in the database, nothing is done.
 	 */
-	protected void remove(DatabaseEntry deleteEntry)
+	public void remove(DatabaseEntry deleteEntry)
 	{
 		if (deleteEntry != null)
 		{
@@ -219,7 +320,7 @@ public abstract class Database implements Runnable
 	/**
 	 * Removes all entries from the database.
 	 */
-	protected void removeAll()
+	public void removeAll()
 	{
 		synchronized (serviceDatabase)
 		{
@@ -234,7 +335,7 @@ public abstract class Database implements Runnable
 	 *
 	 * @return A Vector with all values which are stored in the serviceDatabase.
 	 */
-	protected Vector getEntryList()
+	public Vector getEntryList()
 	{
 		Vector entryList = new Vector();
 		synchronized (serviceDatabase)
@@ -254,8 +355,9 @@ public abstract class Database implements Runnable
 	 * in the database, null is returned.
 	 *
 	 * @param entryId The ID of the database entry.
+	 * @return The entry with the specified ID or null, if there is no such entry.
 	 */
-	protected DatabaseEntry getEntryById(String entryId)
+	public DatabaseEntry getEntryById(String entryId)
 	{
 		DatabaseEntry resultEntry = null;
 		synchronized (serviceDatabase)
@@ -266,4 +368,35 @@ public abstract class Database implements Runnable
 		return resultEntry;
 	}
 
+	/**
+	 * Returns a random entry from the database. If there are no entries in the database, null is
+	 * returned.
+	 *
+	 * @return A random entry from the database or null, if the database is empty.
+	 */
+	public DatabaseEntry getRandomEntry()
+	{
+		DatabaseEntry resultEntry = null;
+		synchronized (serviceDatabase)
+		{
+			/* all keys of the database are in the timeout list -> select a random key from there and
+			 * get the associated entry from the database
+			 */
+			if (timeoutList.size() > 0)
+			{
+				try
+				{
+					String entryId =
+						(String) timeoutList.elementAt(
+										  new MyRandom().nextInt(timeoutList.size()));
+					resultEntry = (DatabaseEntry) (serviceDatabase.get(entryId));
+				}
+				catch (Exception e)
+				{
+					/* should never occur */
+				}
+			}
+		}
+		return resultEntry;
+	}
 }

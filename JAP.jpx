@@ -142,7 +142,7 @@
   <property category="serverservices" name="is.single.server" value="0"/>
   <property category="serverservices" name="single.server.name" value=""/>
   <property category="sys" name="AuthorLabel" value="@author"/>
-  <property category="sys" name="BackupPath" value="."/>
+  <property category="sys" name="BackupPath" value="backup"/>
   <property category="sys" name="BeansInstantiate" value="false"/>
   <property category="sys" name="BraceStyle" value="1"/>
   <property category="sys" name="CheckStable" value="1"/>

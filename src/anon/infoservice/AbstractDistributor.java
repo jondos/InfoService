@@ -30,52 +30,21 @@
  */
 package anon.infoservice;
 
+
+
 /**
- * This is a generic definition for a database entry. Every database entry
- * must implement this functions.
+ * This is an abstract implementation of a forwarding class. It processes all kinds of
+ * distributable information.
+ *
+ * @author Rolf Wendolsky
  */
-public abstract class DatabaseEntry
+public abstract class AbstractDistributor
 {
 	/**
-	 * Stores the time when this entry will be deleted from the database.
-	 */
-	private long m_expireTime;
-
-	/**
-	 * Creates a new DatabaseEntry with the specified expireTime.
-	 * @param a_expireTime the time when this entry will be deleted from the database
-	 */
-	public DatabaseEntry(long a_expireTime)
-	{
-		setExpireTime(a_expireTime);
-	}
-
-	/**
-	 * Returns a unique ID for a database entry.
+	 * Adds a new job to the default job queue. So it is forwarded to all known and running
+	 * neighbour instances.
 	 *
-	 * @return The ID of this database entry.
+	 * @param a_newJob The information to forward.
 	 */
-	public abstract String getId();
-
-	/**
-	 * Returns the time (see System.currentTimeMillis()) when this DatabaseEntry will be removed
-	 * from the Database, if it is not updated meanwhile.
-	 *
-	 * @return The expire time for this DatabaseEntry.
-	 */
-	public long getExpireTime()
-	{
-		return m_expireTime;
-	}
-
-	/**
-	 * Sets the time (see System.currentTimeMillis()) when this DatabaseEntry will be removed
-	 * from the Database, if it is not updated meanwhile.
-	 *
-	 * @param a_expireTime The expire time for this DatabaseEntry.
-	 */
-	protected void setExpireTime(long a_expireTime)
-	{
-		m_expireTime = a_expireTime;
-	}
+	public abstract void addJob(IDistributable a_newJob);
 }

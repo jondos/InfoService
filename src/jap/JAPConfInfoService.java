@@ -202,7 +202,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 		JLabel settingsInfoPreferedLabel = new JLabel(JAPMessages.getString("settingsInfoPreferedLabel"));
 		settingsInfoPreferedLabel.setFont(getFontSetting());
 
-		settingsInfoAllList = new JList(InfoServiceDatabase.getInstance().getInfoServiceList());
+		settingsInfoAllList = new JList(InfoServiceDatabase.getInstance().getEntryList());
 		settingsInfoAllList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		settingsInfoAllList.addListSelectionListener(new ListSelectionListener()
 		{
@@ -784,7 +784,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 		synchronized (this)
 		{
 			/* only work on consistent data */
-			Vector knownInfoServices = InfoServiceDatabase.getInstance().getInfoServiceList();
+			Vector knownInfoServices = InfoServiceDatabase.getInstance().getEntryList();
 			InfoService preferedInfoService = InfoServiceHolder.getInstance().getPreferedInfoService();
 			if (preferedInfoService != null)
 			{

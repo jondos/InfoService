@@ -31,51 +31,30 @@
 package anon.infoservice;
 
 /**
- * This is a generic definition for a database entry. Every database entry
- * must implement this functions.
+ * This is a generic definition of information that is sent to other infoservices.
  */
-public abstract class DatabaseEntry
+public interface IDistributable
 {
-	/**
-	 * Stores the time when this entry will be deleted from the database.
-	 */
-	private long m_expireTime;
 
-	/**
-	 * Creates a new DatabaseEntry with the specified expireTime.
-	 * @param a_expireTime the time when this entry will be deleted from the database
-	 */
-	public DatabaseEntry(long a_expireTime)
-	{
-		setExpireTime(a_expireTime);
-	}
+  /**
+   * Returns a ID for this information. It is used as an identifier for logging status information.
+   * @return The ID of this information.
+   */
+  public String getId();
 
-	/**
-	 * Returns a unique ID for a database entry.
-	 *
-	 * @return The ID of this database entry.
-	 */
-	public abstract String getId();
+  /**
+   * Returns the filename (InfoService command) to which the data of this entry is posted at the
+   * other infoservice.
+   *
+   * @return The filename, where the data is posted when this entry is forwarded.
+   */
+  public String getPostFile();
 
-	/**
-	 * Returns the time (see System.currentTimeMillis()) when this DatabaseEntry will be removed
-	 * from the Database, if it is not updated meanwhile.
-	 *
-	 * @return The expire time for this DatabaseEntry.
-	 */
-	public long getExpireTime()
-	{
-		return m_expireTime;
-	}
-
-	/**
-	 * Sets the time (see System.currentTimeMillis()) when this DatabaseEntry will be removed
-	 * from the Database, if it is not updated meanwhile.
-	 *
-	 * @param a_expireTime The expire time for this DatabaseEntry.
-	 */
-	protected void setExpireTime(long a_expireTime)
-	{
-		m_expireTime = a_expireTime;
-	}
+  /**
+   * Returns the data to post to the other infoservice. In general this should be an XML structure
+   * with the data of this entry.
+   *
+   * @return The data to post to the other infoservice when this entry is forwarded.
+   */
+  public String getPostData();
 }

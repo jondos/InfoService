@@ -63,54 +63,6 @@ public class InfoServiceDatabase extends Database
 	}
 
 	/**
-	 * Creates a new instance of an InfoServiceDatabase.
-	 */
-	private InfoServiceDatabase()
-	{
-		super();
-	}
-
-	/**
-	 * Updates an infoservice entry in the database. If the entry is an unknown or if it is newer
-	 * then the one stored in the database for this infoservice, the new entry is stored in the
-	 * database.
-	 *
-	 * @param newEntry The InfoService to update.
-	 */
-	public void update(InfoService newEntry)
-	{
-		super.update(newEntry);
-	}
-
-	/**
-	 * Removes an infoservice from the database.
-	 *
-	 * @deleteEntry The infoservice to remove. If it is not in the database, nothing is done.
-	 */
-	public void remove(InfoService deleteEntry)
-	{
-		super.remove(deleteEntry);
-	}
-
-	/**
-	 * Removes all infoservices from the database.
-	 */
-	public void removeAll()
-	{
-		super.removeAll();
-	}
-
-	/**
-	 * Returns a snapshot of all infoservices we know.
-	 *
-	 * @return The Vector of all infoservices.
-	 */
-	public Vector getInfoServiceList()
-	{
-		return getEntryList();
-	}
-
-	/**
 	 * Creates an XML node (InfoServices node) with all infoservices from the database inside.
 	 *
 	 * @param doc The XML document, which is the environment for the created XML node.
@@ -120,7 +72,7 @@ public class InfoServiceDatabase extends Database
 	public Element toXmlNode(Document doc)
 	{
 		Element infoServicesNode = doc.createElement("InfoServices");
-		Vector infoServices = getInfoServiceList();
+		Vector infoServices = getEntryList();
 		Enumeration it = infoServices.elements();
 		while (it.hasMoreElements())
 		{

@@ -36,7 +36,7 @@ import java.util.Hashtable;
 import java.util.StringTokenizer;
 import java.util.TimeZone;
 import java.util.Vector;
-import anon.tor.MyRandom;
+import anon.crypto.MyRandom;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
