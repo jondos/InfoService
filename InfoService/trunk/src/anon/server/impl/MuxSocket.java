@@ -52,6 +52,7 @@ import logging.LogType;
 import HTTPClient.Codecs;
 import anon.ErrorCodes;
 import anon.AnonChannel;
+import anon.ToManyOpenChannelsException;
 public final class MuxSocket implements Runnable
 	{
 		private int lastChannelId;
@@ -85,6 +86,8 @@ public final class MuxSocket implements Runnable
 		private final static short CHANNEL_OPEN=8;
     private final static int CHANNEL_TYPE_HTTP=0;
     private final static int CHANNEL_TYPE_SOCKS=1;
+
+    private final static int MAX_CHANNELS_PER_CONNECTION=50;
 
 		private static MuxSocket ms_MuxSocket=null;
 		//private int m_RunCount=0;
@@ -309,6 +312,8 @@ public final class MuxSocket implements Runnable
 					{
 						if(m_bIsConnected)
 							{
+                if(oChannelList.size()>MAX_CHANNELS_PER_CONNECTION)
+                  throw new ToManyOpenChannelsException();
 								try
 									{
                     Channel c=new Channel(this,lastChannelId,type);

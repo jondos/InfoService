@@ -32,6 +32,7 @@ import anon.AnonService;
 import anon.AnonServiceFactory;
 import anon.AnonChannel;
 import anon.AnonServer;
+import anon.ToManyOpenChannelsException;
 
 import anon.server.AnonServiceImpl;
 import JAPDebug;
@@ -138,15 +139,30 @@ final public class AnonProxy implements Runnable
 										continue;
 									}
 								//2001-04-04(HF)
-								try
-									{
-                    new Request(socket,m_Anon.createChannel(AnonChannel.HTTP));
- 									}
-								catch(Exception e)
-									{
-										JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPAnonPrxy.run() Exception: " +e);
-									}
-							}
+								AnonChannel newChannel=null;
+                while(m_bIsRunning)
+                  {
+                    try
+                      {
+                        newChannel=m_Anon.createChannel(AnonChannel.HTTP);
+                        break;
+                      }
+                    catch(ToManyOpenChannelsException te)
+                      {
+                        JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPAnonPrxy.run() ToMaynOpenChannelsExeption");
+                        Thread.sleep(1000);
+                      }
+                  }
+                if(newChannel!=null)
+                  try
+                    {
+                      new Request(socket,newChannel);
+                    }
+                  catch(Exception e)
+                    {
+                      JAPDebug.out(JAPDebug.ERR,JAPDebug.NET,"JAPAnonPrxy.run() Exception: " +e);
+                    }
+              }
 					}
 				catch (Exception e)
 					{
