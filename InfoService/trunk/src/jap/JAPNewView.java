@@ -632,14 +632,17 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		//big view
 		gbl1 = new GridBagLayout();
 		c1 = new GridBagConstraints();
-		p = new JPanel(gbl1);
-		m_labelForwarding = new JLabel(JAPMessages.getString("ngForwarding"));
 		c1.insets = new Insets(0, 5, 0, 0);
 		c1.anchor = GridBagConstraints.WEST;
-		p.add(m_labelForwarding, c1);
+		p = new JPanel(gbl1);
 		gbl = new GridBagLayout();
 		c2 = new GridBagConstraints();
 		p2 = new JPanel(gbl2);
+		m_labelForwarding = new JLabel(JAPMessages.getString("ngForwarding"));
+		c2.insets = new Insets(0, 0, 0, 0);
+		c2.anchor = GridBagConstraints.WEST;
+		p2.add(m_labelForwarding, c2);
+
 		m_cbForwarding = new JCheckBox(JAPMessages.getString("ngForwardingOn"));
 		m_cbForwarding.setBorder(null);
 		ActionListener actionListener = new ActionListener()
@@ -653,13 +656,14 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			}
 		};
 		m_cbForwarding.addActionListener(actionListener);
-		c2.gridx = 0;
+		c2.gridx = 1;
 		c2.weightx = 1;
-		c2.fill = GridBagConstraints.HORIZONTAL;
+		c2.fill = GridBagConstraints.NONE;
+		c2.insets = new Insets(0, 5, 0, 0);
 		p2.add(m_cbForwarding, c2);
 		m_labelForwarderActivity = new JLabel(JAPMessages.getString("ngActivity"));
 		c2.insets = new Insets(0, 5, 0, 0);
-		c2.gridx = 1;
+		c2.gridx = 2;
 		c2.weightx = 0;
 		c2.fill = GridBagConstraints.NONE;
 		p2.add(m_labelForwarderActivity, c2);
@@ -668,12 +672,12 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		progress.setMinimum(0);
 		progress.setMaximum(5);
 		progress.setBorderPainted(false);
-		c2.gridx = 2;
+		c2.gridx = 3;
 		p2.add(progress, c2);
 		c1.fill = GridBagConstraints.HORIZONTAL;
 		c1.weightx = 1;
-		c1.gridx = 1;
-		c1.gridwidth = 2;
+		c1.gridx = 0;
+		c1.gridwidth = 4;
 		p.add(p2, c1);
 
 		m_labelForwarderConnections = new JLabel(JAPMessages.getString("ngForwardedConnections"));
@@ -684,49 +688,65 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.gridwidth = 1;
 		c1.insets = new Insets(10, 5, 0, 0);
 		p.add(m_labelForwarderConnections, c1);
-		m_labelForwarderCurrentConnections = new JLabel("0");
+		spacer = new JPanel();
+		spacerDimension = new Dimension(l.getFontMetrics(l.getFont()).charWidth('9') * 6, 1);
+		spacer.setPreferredSize(spacerDimension);
+		c1.fill=GridBagConstraints.NONE;
+		c1.weightx=0;
 		c1.gridx = 1;
+		c1.insets = new Insets(0, 0, 0, 0);
+		p.add(spacer,c1);
+		m_labelForwarderCurrentConnections = new JLabel("0");
+		m_labelForwarderCurrentConnections.setHorizontalAlignment(JLabel.RIGHT);
+		c1.insets = new Insets(10, 5, 0, 0);
+		c1.fill=GridBagConstraints.HORIZONTAL;
+		c1.weightx=0;
+		c1.gridx = 2;
 		p.add(m_labelForwarderCurrentConnections, c1);
 		m_labelForwarderCurrentConnectionsLabel = new JLabel(JAPMessages.getString(
 			"ngForwardedCurrentConnections"));
-		c1.gridx = 2;
+		c1.gridx = 3;
 		p.add(m_labelForwarderCurrentConnectionsLabel, c1);
 		m_labelForwarderAcceptedConnections = new JLabel("0");
+		m_labelForwarderAcceptedConnections.setHorizontalAlignment(JLabel.RIGHT);
 		c1.insets = new Insets(7, 5, 0, 0);
-		c1.gridx = 1;
+		c1.gridx = 2;
 		c1.gridy = 2;
 		p.add(m_labelForwarderAcceptedConnections, c1);
 		m_labelForwarderAcceptedConnectionsLabel = new JLabel(JAPMessages.getString(
 			"ngForwardedAcceptedConnections"));
-		c1.gridx = 2;
+		c1.gridx = 3;
 		p.add(m_labelForwarderAcceptedConnectionsLabel, c1);
 		m_labelForwarderRejectedConnections = new JLabel("0");
-		c1.gridx = 1;
+		m_labelForwarderRejectedConnections.setHorizontalAlignment(JLabel.RIGHT);
+		c1.gridx = 2;
 		c1.gridy = 3;
 		p.add(m_labelForwarderRejectedConnections, c1);
 		m_labelForwarderRejectedConnectionsLabel = new JLabel(JAPMessages.getString(
 			"ngForwardedRejectedConnections"));
-		c1.gridx = 2;
+		c1.gridx = 3;
 		p.add(m_labelForwarderRejectedConnectionsLabel, c1);
 		m_labelForwardedTraffic = new JLabel(JAPMessages.getString("ngForwardedTraffic"));
 		c1.gridx = 0;
 		c1.gridy = 4;
 		p.add(m_labelForwardedTraffic, c1);
 		m_labelForwardedTrafficBytes = new JLabel("0");
-		c1.gridx = 1;
+		m_labelForwardedTrafficBytes.setHorizontalAlignment(JLabel.RIGHT);
+		c1.gridx = 2;
 		p.add(m_labelForwardedTrafficBytes, c1);
 		m_labelForwardedTrafficBytesUnit = new JLabel(JAPMessages.getString("Byte"));
-		c1.gridx = 2;
+		c1.gridx = 3;
 		p.add(m_labelForwardedTrafficBytesUnit, c1);
 		m_labelForwarderUsedBandwidthLabel = new JLabel(JAPMessages.getString("ngForwardedUsedBandwidth"));
 		c1.gridx = 0;
 		c1.gridy = 5;
 		p.add(m_labelForwarderUsedBandwidthLabel, c1);
 		m_labelForwarderUsedBandwidth = new JLabel("0");
-		c1.gridx = 1;
+		m_labelForwarderUsedBandwidth.setHorizontalAlignment(JLabel.RIGHT);
+		c1.gridx = 2;
 		p.add(m_labelForwarderUsedBandwidth, c1);
 		l = new JLabel("Byte/s");
-		c1.gridx = 2;
+		c1.gridx = 3;
 		p.add(l, c1);
 
 		m_flippingpanelForward.setFullPanel(p);

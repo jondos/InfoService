@@ -329,6 +329,7 @@ final class JAPConfInfoService extends AbstractJAPConfModule
 		TitledBorder settingsInfoConfigBorder = new TitledBorder(JAPMessages.getString(
 			"settingsInfoConfigBorder"));
 		settingsInfoConfigBorder.setTitleFont(getFontSetting());
+		configPanel.setOpaque(false);
 		configPanel.setBorder(settingsInfoConfigBorder);
 
 		GridBagLayout configPanelLayout = new GridBagLayout();
