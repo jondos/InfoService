@@ -61,6 +61,8 @@ final class JAPConf extends JDialog
 	private JCheckBox	autoConnectCheckBox;
 	private JCheckBox	startupMinimizeCheckBox;
 	private JAPJIntField anonportnumberTextField;
+	private JAPJIntField anonsslportnumberTextField;
+	private String anonserviceName=null;
 	private JTextField   anonhostTextField;
 	private JAPJIntField infoportnumberTextField;
 	private JTextField   infohostTextField;
@@ -114,6 +116,8 @@ final class JAPConf extends JDialog
 //				container.add(new JLabel(new ImageIcon(model.JAPICONFN)), BorderLayout.WEST);
 				getContentPane().add(container);
 				updateValues();
+				// largest tab to front
+				tabs.setSelectedComponent(anonP);
 				pack();
 //				setResizable(false);
 				JAPUtil.centerFrame(this);
@@ -218,13 +222,19 @@ final class JAPConf extends JDialog
 				autoConnectCheckBox = new JCheckBox(model.getString("settingsautoConnectCheckBox"));
 				anonhostTextField = new JTextField();
 				anonportnumberTextField = new JAPJIntField();
+				anonsslportnumberTextField = new JAPJIntField();
 				anonhostTextField.setEditable(false);
 				anonportnumberTextField.setEditable(false);
+				anonsslportnumberTextField.setEditable(false);
 				anonhostTextField.addActionListener(new ActionListener() {
 									   public void actionPerformed(ActionEvent e) {
 							   OKPressed();
 							   }});
 				anonportnumberTextField.addActionListener(new ActionListener() {
+									   public void actionPerformed(ActionEvent e) {
+							   OKPressed();
+							   }});
+				anonsslportnumberTextField.addActionListener(new ActionListener() {
 									   public void actionPerformed(ActionEvent e) {
 							   OKPressed();
 							   }});
@@ -266,10 +276,16 @@ final class JAPConf extends JDialog
 							public void actionPerformed(ActionEvent e) {
 						JAPDebug.out(JAPDebug.DEBUG,JAPDebug.GUI,"JAPConf:Item " + select.getSelectedIndex() + " selected");
 						if (select.getSelectedIndex() > 0) {
+							anonserviceName = ((AnonServerDBEntry)model.anonServerDatabase.elementAt(select.getSelectedIndex()-1)).getName();
 							anonhostTextField.setText( 
 							   ((AnonServerDBEntry)model.anonServerDatabase.elementAt(select.getSelectedIndex()-1)).getHost()   );
 							anonportnumberTextField.setText( String.valueOf(
 							   ((AnonServerDBEntry)model.anonServerDatabase.elementAt(select.getSelectedIndex()-1)).getPort() ) );
+							int i = ((AnonServerDBEntry)model.anonServerDatabase.elementAt(select.getSelectedIndex()-1)).getSSLPort();
+							if (i == -1)
+								anonsslportnumberTextField.setText("");
+							else
+								anonsslportnumberTextField.setText( String.valueOf(i) );
 						}
 				}});
 				bg.add(b1);
@@ -282,6 +298,7 @@ final class JAPConf extends JDialog
 						select.setEnabled(false);
 						anonhostTextField.setEditable(false);
 						anonportnumberTextField.setEditable(false);
+						anonsslportnumberTextField.setEditable(false);
 				}});
 				b2.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
@@ -291,6 +308,7 @@ final class JAPConf extends JDialog
 						select.setPopupVisible(true);
 						anonhostTextField.setEditable(false);
 						anonportnumberTextField.setEditable(false);
+						anonsslportnumberTextField.setEditable(false);
 									 
 				}});
 				b3.addActionListener(new ActionListener() {
@@ -300,17 +318,25 @@ final class JAPConf extends JDialog
 						select.setEnabled(false);
 						anonhostTextField.setEditable(true);
 						anonportnumberTextField.setEditable(true);
+						anonsslportnumberTextField.setEditable(true);
+						anonserviceName = model.getString("manual");
 				}});
 
 				// layout stuff
-
-				// AnonServer settings
-				JPanel p = new JPanel();
-				p.setLayout( new BorderLayout() );
-				p.setBorder( new TitledBorder(model.getString("settingsAnonBorder")) );
+				JPanel p=new JPanel();
+				p.setLayout(new BorderLayout() );
+				// Upper panel
+				JPanel pp1 = new JPanel();
+				pp1.setLayout( new BorderLayout() );
+				pp1.setBorder( new TitledBorder(model.getString("settingsAnonBorder")) );
+				// Lower panel
+				JPanel pp2 = new JPanel();
+				pp2.setLayout( new BorderLayout() );
+				pp2.setBorder( new TitledBorder(model.getString("settingsAnonBorder2")) );
+				// Upper panel content
 				JPanel p1 = new JPanel();
-				p1.setLayout( new GridLayout(8,1) );
-				p1.setBorder( new EmptyBorder(5,10,10,10) );
+				p1.setLayout( new GridLayout(2,1) );
+				//p1.setBorder( new EmptyBorder(5,10,10,10) );
 				// 1
 				JPanel p11 = new JPanel();
 				p11.setLayout(new BoxLayout(p11, BoxLayout.X_AXIS));
@@ -327,16 +353,27 @@ final class JAPConf extends JDialog
 				p12.add(Box.createHorizontalGlue() );
 				p12.add(select);
 				p1.add(p12);
-				// 3-9
-				p1.add(b3);
-				p1.add(new JLabel(model.getString("settingsAnonHost")));
-				p1.add(anonhostTextField);
-				p1.add(new JLabel(model.getString("settingsAnonPort")));
-				p1.add(anonportnumberTextField);
-				p1.add(autoConnectCheckBox);
-				//p1.add(startupMinimizeCheckBox);
+				// Lower Panel content
+				JPanel p2 = new JPanel();
+				p2.setLayout( new GridLayout(8,1) );
+				//p1.setBorder( new EmptyBorder(5,10,10,10) );
 				//
-				p.add(p1, BorderLayout.NORTH);
+				p2.add(b3);
+				p2.add(new JLabel(model.getString("settingsAnonHost")));
+				p2.add(anonhostTextField);
+				p2.add(new JLabel(model.getString("settingsAnonPort")));
+				p2.add(anonportnumberTextField);
+				p2.add(new JLabel(model.getString("settingsAnonSSLPort")));
+				p2.add(anonsslportnumberTextField);
+				//
+				p2.add(autoConnectCheckBox);
+				//p2.add(startupMinimizeCheckBox);
+				// Add contents to upper and lower panel
+				pp1.add(p1);
+				pp2.add(p2);
+				// Add to main panel
+				p.add(pp1, BorderLayout.NORTH);
+				p.add(pp2, BorderLayout.CENTER);
 				return p;
 			}
 		
@@ -517,6 +554,22 @@ final class JAPConf extends JDialog
 					showError(model.getString("errorAnonServicePortWrong"));
 					return false;
 				}
+			//--------------
+			if (anonsslportnumberTextField.getText().trim().equals("")) {
+				;
+			}
+			else
+			try {
+				i=Integer.parseInt(anonsslportnumberTextField.getText().trim());
+			} 
+			catch(Exception e) {
+				i=-1;
+			}
+			if(!JAPUtil.isPort(i))
+				{
+					showError(model.getString("errorAnonServicePortWrong"));
+					return false;
+				}
 
 			//checking Listener Port Number
 			try
@@ -570,8 +623,13 @@ final class JAPConf extends JDialog
 				
 				model.setInfoService(infohostTextField.getText().trim(),
 														 Integer.parseInt(infoportnumberTextField.getText().trim()));
+				model.anonserviceName = anonserviceName;
 				model.anonHostName = anonhostTextField.getText().trim();
 				model.anonPortNumber  = Integer.parseInt(anonportnumberTextField.getText().trim());
+				if (anonsslportnumberTextField.getText().equals(""))
+					model.anonSSLPortNumber = -1;
+				else
+					model.anonSSLPortNumber = Integer.parseInt(anonsslportnumberTextField.getText().trim());
 				model.autoConnect = autoConnectCheckBox.isSelected();
 				model.setMinimizeOnStartup(startupMinimizeCheckBox.isSelected());
 				JAPDebug.setDebugType(
@@ -622,6 +680,7 @@ final class JAPConf extends JDialog
 		// anon tab
 		anonhostTextField.setText(model.anonHostName);
 		anonportnumberTextField.setText(String.valueOf(model.anonPortNumber));
+		anonsslportnumberTextField.setText(String.valueOf(model.anonSSLPortNumber));
 		select.setSelectedIndex(0);
 		autoConnectCheckBox.setSelected(model.autoConnect);
 		startupMinimizeCheckBox.setSelected(model.getMinimizeOnStartup());

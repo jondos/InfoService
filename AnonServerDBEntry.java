@@ -30,12 +30,22 @@ public final class AnonServerDBEntry
 		private String host;
 		private int    port;
 		private String name;
+		private int    port2 = -1;
 	
 		public AnonServerDBEntry (String n,String h, int p)
 			{
 				host = h;
 				port = p;
 				name=n;
+				port2 = -1;
+			}
+			
+		public AnonServerDBEntry (String n,String h, int p, int p2)
+			{
+				host = h;
+				port = p;
+				name=n;
+				port2 = p2;
 			}
 		
 		public String getName()
@@ -52,4 +62,10 @@ public final class AnonServerDBEntry
 			{
 				return host;
 			}
+			
+		public int getSSLPort()
+			{
+				return port2;
+			}
+			
 	}
