@@ -93,6 +93,8 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 	private JAPMultilineLabel m_hostLabel;
 	private JAPMultilineLabel m_portLabel;
 
+    private JList knownInfoServicesList;
+
 	public JAPConfInfoService()
 	{
 		super(new JAPConfInfoServiceSavePoint());
@@ -172,7 +174,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 
 		final DefaultListModel knownInfoServicesListModel = new DefaultListModel();
 
-		final JList knownInfoServicesList = new JList(knownInfoServicesListModel);
+		knownInfoServicesList = new JList(knownInfoServicesListModel);
 		knownInfoServicesList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		knownInfoServicesList.setCellRenderer(new ListCellRenderer()
 		{
@@ -225,6 +227,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 		knownInfoServicesListScrollPane.setFont(getFontSetting());
 		knownInfoServicesListScrollPane.setPreferredSize( (new JTextArea(7, 20)).getPreferredSize());
 		knownInfoServicesListScrollPane.setMinimumSize( (new JTextArea(7, 20)).getPreferredSize());
+
 
 	final JButton settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton = new JButton("   " +
 			JAPMessages.getString("settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton"));
@@ -1229,6 +1232,9 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 	{
 		//Register help context
 		JAPHelp.getInstance().getContextObj().setContext("infoservice");
+		//Select the preferred InfoService
+		knownInfoServicesList.setSelectedValue(InfoServiceHolder.getInstance().
+											   getPreferredInfoService(), true);
 	}
 
 }
