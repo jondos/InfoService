@@ -38,7 +38,6 @@ public final class JAPConstants
 	public static final String aktVersion = "00.04.015"; //Never change the layout of this line!
 	private static final String CVS_GENERATED_RELEASE_DATE = "$Date$";
 
-
 	//Warning: This is a little bit tricky,
 	//because CVS will expand the $Date$
 	//to the date of the last commmit of this file
@@ -64,19 +63,23 @@ public final class JAPConstants
 	}
 
 	static final int DEFAULT_PORT_NUMBER = 4001;
-	static final boolean DEFAULT_LISTENER_IS_LOCAL=true;
+	static final boolean DEFAULT_LISTENER_IS_LOCAL = true;
 	static final String DEFAULT_ANON_NAME = "Dresden-Dresden";
 	static final String DEFAULT_ANON_ID = "141.76.1.120%3A6544";
 	static final String DEFAULT_ANON_HOST = "mix.inf.tu-dresden.de";
 	static final String DEFAULT_ANON_IP = "141.76.1.120"; //only used for fallback,
-	static final int DEFAULT_ANON_PORT_NUMBERS[] = {22,80,443,6544};
+	static final int DEFAULT_ANON_PORT_NUMBERS[] =
+		{
+		22, 80, 443, 6544};
 	/**
 	 * The name of the default infoservice.
 	 */
 	public static final String DEFAULT_INFOSERVICE_NAME = "JAP-Team InfoService";
 	public static final String DEFAULT_INFOSERVICE_ID = "infoservice.inf.tu-dresden.de%3A80";
 	public static final String DEFAULT_INFOSERVICE_HOSTNAME = "infoservice.inf.tu-dresden.de";
-	public static final int DEFAULT_INFOSERVICE_PORT_NUMBERS[] = {80,6543};
+	public static final int DEFAULT_INFOSERVICE_PORT_NUMBERS[] =
+		{
+		80, 6543};
 
 	/**
 	 * This defines, whether automatic infoservice request are disabled as default.
@@ -98,14 +101,13 @@ public final class JAPConstants
 	static final int SMALL_FONT_STYLE = Font.PLAIN;
 	static final Insets SMALL_BUTTON_MARGIN = new Insets(1, 1, 1, 1);
 
-
 	static final int VIEW_NORMAL = 1;
 	static final int VIEW_SIMPLIFIED = 2;
 	static final int DEFAULT_VIEW = VIEW_NORMAL;
 
-	static final boolean DEFAULT_SAVE_MAIN_WINDOW_POSITION=false;
-	static final boolean DEFAULT_MOVE_TO_SYSTRAY_ON_STARTUP=false;
-	static final boolean DEFAULT_MINIMIZE_ON_STARTUP=false;
+	static final boolean DEFAULT_SAVE_MAIN_WINDOW_POSITION = false;
+	static final boolean DEFAULT_MOVE_TO_SYSTRAY_ON_STARTUP = false;
+	static final boolean DEFAULT_MINIMIZE_ON_STARTUP = false;
 
 	static final String JAPLocalFilename = "JAP.jar";
 	static final int MAXHELPLANGUAGES = 6;
@@ -196,14 +198,14 @@ public final class JAPConstants
 	public final static String CERT_JAPCODESIGNING = "japcodesigning.cer";
 	public final static String CERT_JAPINFOSERVICEMESSAGES = "japupdatemessages.cer";
 	public final static String CERT_BI = "bi.cer";
-	public static final boolean DEFAULT_CERT_CHECK_ENABLED=true;
+	public static final boolean DEFAULT_CERT_CHECK_ENABLED = true;
 
 	public final static int TOR_MAX_CONNECTIONS_PER_ROUTE = Circuit.MAX_STREAMS_OVER_CIRCUIT;
 	public final static int TOR_MAX_ROUTE_LEN = Tor.MAX_ROUTE_LEN;
 	public final static int TOR_MIN_ROUTE_LEN = Tor.MIN_ROUTE_LEN;
-	public final static boolean DEFAULT_TOR_PRECREATE_ROUTES=false;
-	public final static int DEFAULT_TOR_MIN_ROUTE_LEN=Tor.MIN_ROUTE_LEN;
-	public final static int DEFAULT_TOR_MAX_ROUTE_LEN=Tor.MIN_ROUTE_LEN+1;
+	public final static boolean DEFAULT_TOR_PRECREATE_ROUTES = false;
+	public final static int DEFAULT_TOR_MIN_ROUTE_LEN = Tor.MIN_ROUTE_LEN;
+	public final static int DEFAULT_TOR_MAX_ROUTE_LEN = Tor.MIN_ROUTE_LEN + 1;
 	public final static int DEFAULT_TOR_MAX_CONNECTIONS_PER_ROUTE = Circuit.MAX_STREAMS_OVER_CIRCUIT;
 
 	/**
@@ -276,4 +278,17 @@ public final class JAPConstants
 	public final static String CONFIG_PAY_ACCOUNTS_FILE = "PayAccountsFile";
 	public final static String CONFIG_JAP_FORWARDING_SETTINGS = "JapForwardingSettings";
 
+	public static Class RESOURCES_ROOT_CLASS=null;
+
+	static
+	{
+		try
+		{
+			RESOURCES_ROOT_CLASS = Class.forName("JAP");
+		}
+		catch (Throwable t)
+		{
+			RESOURCES_ROOT_CLASS=null;
+		}
+	}
 }

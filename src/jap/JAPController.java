@@ -833,7 +833,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					{
 						theBI = new BI(
 							ResourceLoader.loadResource(JAPConstants.CERTSPATH +
-							JAPConstants.CERT_BI),
+							JAPConstants.CERT_BI,JAPConstants.RESOURCES_ROOT_CLASS),
 							JAPConstants.PIHOST, JAPConstants.PIHOST, JAPConstants.PIPORT);
 					}
 					else
@@ -2500,7 +2500,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	static public void addDefaultCertificates()
 	{
 		JAPCertificate defaultRootCert = JAPCertificate.getInstance(ResourceLoader.loadResource(JAPConstants.
-			CERTSPATH + JAPConstants.TRUSTEDMIXROOTCERT));
+			CERTSPATH + JAPConstants.TRUSTEDMIXROOTCERT,JAPConstants.RESOURCES_ROOT_CLASS));
 		if (defaultRootCert != null)
 		{
 			SignatureVerifier.getInstance().getVerificationCertificateStore().
@@ -2512,7 +2512,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 						  "JAPController: Constructor: Error loading default Mix root certificate.");
 		}
 		defaultRootCert = JAPCertificate.getInstance(ResourceLoader.loadResource(JAPConstants.
-			CERTSPATH + JAPConstants.TRUSTEDINFOSERVICEROOTCERT));
+			CERTSPATH + JAPConstants.TRUSTEDINFOSERVICEROOTCERT,JAPConstants.RESOURCES_ROOT_CLASS));
 		if (defaultRootCert != null)
 		{
 			SignatureVerifier.getInstance().getVerificationCertificateStore().
@@ -2526,7 +2526,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 		}
 
 		JAPCertificate updateMessagesCert = JAPCertificate.getInstance(ResourceLoader.loadResource(
-			JAPConstants.CERTSPATH + JAPConstants.CERT_JAPINFOSERVICEMESSAGES));
+			JAPConstants.CERTSPATH + JAPConstants.CERT_JAPINFOSERVICEMESSAGES,JAPConstants.RESOURCES_ROOT_CLASS));
 		if (updateMessagesCert != null)
 		{
 			SignatureVerifier.getInstance().getVerificationCertificateStore().

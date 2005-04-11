@@ -53,7 +53,7 @@ import logging.LogType;
  *  <A HREF="JAPMacintosh.html">JAPMacintosh.html</A>
  *  as an example.
  */
-class JAP extends Frame
+public class JAP extends Frame
 {
 	// um pay funktionalitaet ein oder auszuschalten
 	private boolean loadPay = false;
