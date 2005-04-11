@@ -49,7 +49,6 @@ final public class ResourceLoader
 	private static Vector ms_classpathFiles;
 	private static String ms_classpath;
 
-
 	private ResourceLoader()
 	{
 	}
@@ -64,7 +63,7 @@ final public class ResourceLoader
 	 */
 	public static byte[] loadResource(String a_strRelativeResourcePath)
 	{
-		InputStream in;
+		InputStream in=null;
 		byte[] resource = null;
 
 		if (a_strRelativeResourcePath == null)
@@ -73,7 +72,23 @@ final public class ResourceLoader
 		}
 
 		// load images from the local classpath or jar-file
-		in = Object.class.getResourceAsStream("/" + a_strRelativeResourcePath);
+		try
+		{
+			in = Object.class.getResourceAsStream("/" + a_strRelativeResourcePath);
+		}
+		catch (Exception e)
+		{
+		}
+		try
+		{
+			if (in == null)
+			{
+				in = Object.class.getResourceAsStream(a_strRelativeResourcePath);
+			}
+		}
+		catch (Exception e1)
+		{
+		}
 		try
 		{
 			if (in == null)
@@ -87,7 +102,7 @@ final public class ResourceLoader
 		}
 		catch (IOException a_e)
 		{
-			resource =  null;
+			resource = null;
 		}
 
 		return resource;
@@ -116,42 +131,42 @@ final public class ResourceLoader
 	{
 		int endIndex;
 
-	    if (a_systemResource.indexOf(SYSTEM_RESOURCE) != 0)
+		if (a_systemResource.indexOf(SYSTEM_RESOURCE) != 0)
 		{
 			return null;
 		}
 
-	    // find the beginning of the [id] string
+		// find the beginning of the [id] string
 		a_systemResource =
 			a_systemResource.substring(SYSTEM_RESOURCE.length(), a_systemResource.length());
 		if (a_systemResource.toUpperCase().startsWith(SYSTEM_RESOURCE_TYPE_ZIP))
 		{
 			a_systemResource = a_systemResource.substring(
-				 SYSTEM_RESOURCE_TYPE_ZIP.length(), a_systemResource.length());
+				SYSTEM_RESOURCE_TYPE_ZIP.length(), a_systemResource.length());
 		}
 		else if (a_systemResource.toUpperCase().startsWith(SYSTEM_RESOURCE_TYPE_JAR))
 		{
 			a_systemResource = a_systemResource.substring(
-				 SYSTEM_RESOURCE_TYPE_JAR.length(), a_systemResource.length());
+				SYSTEM_RESOURCE_TYPE_JAR.length(), a_systemResource.length());
 		}
 		else if (a_systemResource.toUpperCase().startsWith(SYSTEM_RESOURCE_TYPE_FILE))
 		{
 			a_systemResource = a_systemResource.substring(
-				 SYSTEM_RESOURCE_TYPE_FILE.length(), a_systemResource.length());
+				SYSTEM_RESOURCE_TYPE_FILE.length(), a_systemResource.length());
 		}
 
-	    // now find the end of the [id] string and extract the [id]
+		// now find the end of the [id] string and extract the [id]
 		endIndex = a_systemResource.indexOf(SYSTEM_RESOURCE_ENDSIGN);
 		if (endIndex >= 0)
 		{
 			a_systemResource = a_systemResource.substring(0, endIndex);
 		}
 
-       // try to interpret the [id] as an integer number
-	    try
+		// try to interpret the [id] as an integer number
+		try
 		{
 			readResourcesFromClasspath(); // initialize the vector if necessary
-			return (File)ms_classpathFiles.elementAt(Integer.parseInt(a_systemResource));
+			return (File) ms_classpathFiles.elementAt(Integer.parseInt(a_systemResource));
 		}
 		catch (Exception a_e)
 		{
