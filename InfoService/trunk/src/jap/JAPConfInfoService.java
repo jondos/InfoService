@@ -68,6 +68,7 @@ import gui.JAPMultilineLabel;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import java.awt.FlowLayout;
 
 /**
  * This is the configuration GUI for the infoservice.
@@ -94,6 +95,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 	private JTextField addInfoServiceNameField;
 	private JPanel addInfoServicePanel;
 	private JPanel descriptionPanel;
+	private JButton settingsInfoServiceConfigBasicSettingsRemoveButton;
 
 	private boolean mb_newInfoService = true;
 
@@ -342,6 +344,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 				 * panel
 				 */
 				settingsInfoServiceConfigBasicSettingsAddButton.setEnabled(false);
+				settingsInfoServiceConfigBasicSettingsRemoveButton.setEnabled(false);
 				descriptionPanel.setVisible(false);
 				addInfoServiceHostField.setText("");
 				addInfoServiceNameField.setText("");
@@ -350,29 +353,6 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 				mb_newInfoService = true;
 			}
 		});
-
-		final JButton settingsInfoServiceConfigBasicSettingsRemoveButton = new JButton(JAPMessages.getString(
-			"settingsInfoServiceConfigBasicSettingsRemoveButton"));
-		settingsInfoServiceConfigBasicSettingsRemoveButton.setFont(getFontSetting());
-		settingsInfoServiceConfigBasicSettingsRemoveButton.addActionListener(new ActionListener()
-		{
-			public void actionPerformed(ActionEvent a_event)
-			{
-				/* if the Remove button is pressed, remove the selected infoservice from the list of all
-				 * infoservices
-				 */
-				InfoServiceDBEntry selectedInfoService = (InfoServiceDBEntry) (knownInfoServicesList.
-					getSelectedValue());
-				if (selectedInfoService != null)
-				{
-					Database.getInstance(InfoServiceDBEntry.class).remove(selectedInfoService);
-				}
-				knownInfoServicesList.setSelectedIndex(0);
-				addInfoServicePanel.setVisible(false);
-			}
-		});
-		/* disable the remove button until something is selected in the list */
-		settingsInfoServiceConfigBasicSettingsRemoveButton.setEnabled(false);
 
 		Observer knownInfoServicesListObserver = new Observer()
 		{
@@ -732,6 +712,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 						addInfoServiceNameField.setText(selectedInfoService.getName());
 						descriptionPanel.setVisible(false);
 						addInfoServicePanel.setVisible(true);
+						settingsInfoServiceConfigBasicSettingsRemoveButton.setEnabled(true);
 						mb_newInfoService = false;
 					}
 					else
@@ -770,7 +751,6 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 
 		GridBagConstraints buttonPanelConstraints = new GridBagConstraints();
 		buttonPanelConstraints.anchor = GridBagConstraints.NORTHWEST;
-		buttonPanelConstraints.fill = GridBagConstraints.VERTICAL;
 		buttonPanelConstraints.weighty = 1.0;
 
 		buttonPanelConstraints.gridx = 0;
@@ -790,18 +770,19 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 
 		buttonPanelConstraints.gridx = 2;
 		buttonPanelConstraints.gridy = 0;
+		buttonPanelConstraints.weightx = 1.0;
 		buttonPanelConstraints.insets = new Insets(0, 10, 0, 5);
 		buttonPanelLayout.setConstraints(settingsInfoServiceConfigBasicSettingsAddButton,
 										 buttonPanelConstraints);
 		buttonPanel.add(settingsInfoServiceConfigBasicSettingsAddButton);
 
-		buttonPanelConstraints.gridx = 3;
+/*		buttonPanelConstraints.gridx = 3;
 		buttonPanelConstraints.gridy = 0;
 		buttonPanelConstraints.weightx = 1.0;
 		buttonPanelConstraints.insets = new Insets(0, 5, 0, 5);
 		buttonPanelLayout.setConstraints(settingsInfoServiceConfigBasicSettingsRemoveButton,
 										 buttonPanelConstraints);
-		buttonPanel.add(settingsInfoServiceConfigBasicSettingsRemoveButton);
+		buttonPanel.add(settingsInfoServiceConfigBasicSettingsRemoveButton);*/
 
 		GridBagLayout configPanelLayout = new GridBagLayout();
 		configPanel.setLayout(configPanelLayout);
@@ -872,6 +853,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 		configPanelConstraints.gridwidth = 3;
 		configPanelConstraints.weighty = 0.0;
 		configPanelConstraints.insets = new Insets(10, 0, 5, 0);
+		configPanelConstraints.anchor = GridBagConstraints.NORTHWEST;
 		configPanelConstraints.fill = GridBagConstraints.BOTH;
 		configPanelLayout.setConstraints(buttonPanel, configPanelConstraints);
 		configPanel.add(buttonPanel);
@@ -969,6 +951,27 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 			}
 		});
 
+		settingsInfoServiceConfigBasicSettingsRemoveButton = new JButton(JAPMessages.getString(
+			"settingsInfoServiceConfigBasicSettingsRemoveButton"));
+		settingsInfoServiceConfigBasicSettingsRemoveButton.setFont(getFontSetting());
+		settingsInfoServiceConfigBasicSettingsRemoveButton.addActionListener(new ActionListener()
+		{
+			public void actionPerformed(ActionEvent a_event)
+			{
+				/* if the Remove button is pressed, remove the selected infoservice from the list of all
+				 * infoservices
+				 */
+				InfoServiceDBEntry selectedInfoService = (InfoServiceDBEntry) (knownInfoServicesList.
+					getSelectedValue());
+				if (selectedInfoService != null)
+				{
+					Database.getInstance(InfoServiceDBEntry.class).remove(selectedInfoService);
+				}
+				knownInfoServicesList.setSelectedIndex(0);
+				addInfoServicePanel.setVisible(false);
+			}
+		});
+
 		JLabel settingsInfoServiceConfigBasicSettingsAddInfoServiceHostLabel = new JLabel(JAPMessages.
 			getString("settingsInfoServiceConfigBasicSettingsAddInfoServiceHostLabel"));
 		settingsInfoServiceConfigBasicSettingsAddInfoServiceHostLabel.setFont(getFontSetting());
@@ -978,6 +981,14 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 		JLabel settingsInfoServiceConfigBasicSettingsAddInfoServiceNameLabel = new JLabel(JAPMessages.
 			getString("settingsInfoServiceConfigBasicSettingsAddInfoServiceNameLabel"));
 		settingsInfoServiceConfigBasicSettingsAddInfoServiceNameLabel.setFont(getFontSetting());
+
+		JPanel addButtonsPanel = new JPanel();
+		FlowLayout addButtonsPanelLayout = new FlowLayout();
+		addButtonsPanelLayout.setAlignment(FlowLayout.RIGHT);
+		addButtonsPanel.setLayout(addButtonsPanelLayout);
+		addButtonsPanel.add(settingsInfoServiceConfigBasicSettingsAddInfoServiceAddButton);
+		addButtonsPanel.add(settingsInfoServiceConfigBasicSettingsAddInfoServiceCancelButton);
+		addButtonsPanel.add(settingsInfoServiceConfigBasicSettingsRemoveButton);
 
 		GridBagLayout addInfoServicePanelLayout = new GridBagLayout();
 		addInfoServicePanel.setLayout(addInfoServicePanelLayout);
@@ -995,7 +1006,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 			settingsInfoServiceConfigBasicSettingsAddInfoServiceHostLabel, addInfoServicePanelConstraints);
 		addInfoServicePanel.add(settingsInfoServiceConfigBasicSettingsAddInfoServiceHostLabel);
 
-		addInfoServicePanelConstraints.gridx = 1;
+	/*	addInfoServicePanelConstraints.gridx = 1;
 		addInfoServicePanelConstraints.gridy = 0;
 		addInfoServicePanelConstraints.weightx = 0.0;
 		addInfoServicePanelConstraints.anchor = GridBagConstraints.SOUTHWEST;
@@ -1004,7 +1015,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 		addInfoServicePanelLayout.setConstraints(
 			settingsInfoServiceConfigBasicSettingsAddInfoServiceAddButton, addInfoServicePanelConstraints);
 		addInfoServicePanel.add(settingsInfoServiceConfigBasicSettingsAddInfoServiceAddButton);
-
+*/
 		addInfoServicePanelConstraints.gridx = 0;
 		addInfoServicePanelConstraints.gridy = 1;
 		addInfoServicePanelConstraints.anchor = GridBagConstraints.NORTHWEST;
@@ -1021,7 +1032,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 			settingsInfoServiceConfigBasicSettingsAddInfoServicePortLabel, addInfoServicePanelConstraints);
 		addInfoServicePanel.add(settingsInfoServiceConfigBasicSettingsAddInfoServicePortLabel);
 
-		addInfoServicePanelConstraints.gridx = 1;
+	/*	addInfoServicePanelConstraints.gridx = 1;
 		addInfoServicePanelConstraints.gridy = 2;
 		addInfoServicePanelConstraints.weightx = 0.0;
 		addInfoServicePanelConstraints.anchor = GridBagConstraints.SOUTHWEST;
@@ -1030,7 +1041,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 		addInfoServicePanelLayout.setConstraints(
 			settingsInfoServiceConfigBasicSettingsAddInfoServiceCancelButton, addInfoServicePanelConstraints);
 		addInfoServicePanel.add(settingsInfoServiceConfigBasicSettingsAddInfoServiceCancelButton);
-
+*/
 		addInfoServicePanelConstraints.gridx = 0;
 		addInfoServicePanelConstraints.gridy = 3;
 		addInfoServicePanelConstraints.gridheight = 1;
@@ -1048,10 +1059,18 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 
 		addInfoServicePanelConstraints.gridx = 0;
 		addInfoServicePanelConstraints.gridy = 5;
-		addInfoServicePanelConstraints.weighty = 1.0;
+		addInfoServicePanelConstraints.weighty = 0.0;
 		addInfoServicePanelConstraints.insets = new Insets(0, 10, 10, 10);
 		addInfoServicePanelLayout.setConstraints(addInfoServiceNameField, addInfoServicePanelConstraints);
 		addInfoServicePanel.add(addInfoServiceNameField);
+
+	addInfoServicePanelConstraints.gridx = 0;
+		addInfoServicePanelConstraints.gridy = 6;
+		addInfoServicePanelConstraints.gridwidth = 2;
+		addInfoServicePanelConstraints.weighty = 1.0;
+		addInfoServicePanelConstraints.insets = new Insets(0, 10, 10, 10);
+		addInfoServicePanel.add(addButtonsPanel, addInfoServicePanelConstraints);
+
 
 		GridBagLayout switchPanelLayout = new GridBagLayout();
 		switchPanel.setLayout(switchPanelLayout);
