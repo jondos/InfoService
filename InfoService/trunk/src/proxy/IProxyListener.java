@@ -27,11 +27,16 @@
  */
 package proxy;
 
-public interface ProxyListener
+public interface IProxyListener
 {
 	final static int PROTOCOL_OTHER=0;
 	final static int PROTOCOL_WWW=1;
 
-	public void channelsChanged(int channels);
-	public void transferedBytes(int bytes,int protocolType);
+	void channelsChanged(int channels);
+
+	/** Called if some bytes are transferred.
+	 * @param bytes either total amount or delta of transferred bytes
+	 * @param protocolType the protocol to which the bytes are belonging
+	 */
+	void transferedBytes(long bytes,int protocolType);
 }

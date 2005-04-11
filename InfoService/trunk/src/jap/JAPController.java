@@ -81,11 +81,11 @@ import logging.LogLevel;
 import logging.LogType;
 import proxy.AnonProxy;
 import proxy.DirectProxy;
-import proxy.ProxyListener;
+import proxy.IProxyListener;
 import update.JAPUpdateWizard;
 
 /* This is the Controller of All. It's a Singelton!*/
-public final class JAPController extends Observable implements ProxyListener, Observer
+public final class JAPController extends Observable implements IProxyListener, Observer
 {
 	/**
 	 * Stores all MixCascades we know (information comes from infoservice or was entered by a user).
@@ -121,8 +121,8 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 	public String status1 = " ";
 	public String status2 = " ";
 
-	private int m_nrOfBytesWWW = 0;
-	private int m_nrOfBytesOther = 0;
+	private long m_nrOfBytesWWW = 0;
+	private long m_nrOfBytesOther = 0;
 
 	private static AbstractJAPMainView m_View = null;
 	private static JAPController m_Controller = null;
@@ -2262,15 +2262,15 @@ public final class JAPController extends Observable implements ProxyListener, Ob
 		}
 	}
 
-	public synchronized void transferedBytes(int bytes, int protocolType)
+	public synchronized void transferedBytes(long bytes, int protocolType)
 	{
-		int b;
-		if (protocolType == ProxyListener.PROTOCOL_WWW)
+		long b;
+		if (protocolType == IProxyListener.PROTOCOL_WWW)
 		{
 			m_nrOfBytesWWW += bytes;
 			b = m_nrOfBytesWWW;
 		}
-		else if (protocolType == ProxyListener.PROTOCOL_OTHER)
+		else if (protocolType == IProxyListener.PROTOCOL_OTHER)
 		{
 			m_nrOfBytesOther += bytes;
 			b = m_nrOfBytesOther;

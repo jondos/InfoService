@@ -38,7 +38,7 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import proxy.AnonProxy;
-import proxy.ProxyListener;
+import proxy.IProxyListener;
 import anon.ErrorCodes;
 import anon.infoservice.HTTPConnectionFactory;
 import anon.infoservice.InfoServiceDBEntry;
@@ -46,7 +46,7 @@ import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.ListenerInterface;
 import anon.infoservice.MixCascade;
 
-final class JAPLean implements ProxyListener
+final class JAPLean implements IProxyListener
 {
 
 	static AnonProxy japAnonProxy = null;
@@ -142,7 +142,7 @@ final class JAPLean implements ProxyListener
 	}
 
 	/* Implementation of Interface JAPAnonServiceListener */
-	public void transferedBytes(int bytes,int i)
+	public void transferedBytes(long bytes,int i)
 	{
 		nrOfBytes += bytes;
 	}

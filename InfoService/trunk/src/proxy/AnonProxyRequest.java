@@ -101,12 +101,12 @@ final class AnonProxyRequest implements Runnable
 				if (firstByte == 4 || firstByte == 5) //SOCKS
 				{
 					newChannel = m_Proxy.createChannel(AnonChannel.SOCKS);
-					m_iProtocol = ProxyListener.PROTOCOL_OTHER;
+					m_iProtocol = IProxyListener.PROTOCOL_OTHER;
 				}
 				else
 				{
 					newChannel = m_Proxy.createChannel(AnonChannel.HTTP);
-					m_iProtocol = ProxyListener.PROTOCOL_WWW;
+					m_iProtocol = IProxyListener.PROTOCOL_WWW;
 				}
 				break;
 			}

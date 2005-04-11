@@ -27,6 +27,11 @@
  */
 package jap;
 
+import java.util.Enumeration;
+import java.util.Observable;
+import java.util.Observer;
+import java.util.Vector;
+
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -35,31 +40,20 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.util.Enumeration;
-import java.util.Observable;
-import java.util.Observer;
-import java.util.Vector;
-
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JList;
-import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
+import javax.swing.JSeparator;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.ListCellRenderer;
 import javax.swing.ListSelectionModel;
-import javax.swing.JSeparator;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
@@ -93,7 +87,15 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 	private JAPMultilineLabel m_hostLabel;
 	private JAPMultilineLabel m_portLabel;
 
-    private JList knownInfoServicesList;
+	private JList knownInfoServicesList;
+
+	private JTextField addInfoServiceHostField;
+	private JAPJIntField addInfoServicePortField;
+	private JTextField addInfoServiceNameField;
+	private JPanel addInfoServicePanel;
+	private JPanel descriptionPanel;
+
+	private boolean mb_newInfoService = true;
 
 	public JAPConfInfoService()
 	{
@@ -169,8 +171,8 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 
 		final JPanel configPanel = new JPanel();
 		final JPanel switchPanel = new JPanel();
-		final JPanel descriptionPanel = new JPanel();
-		final JPanel addInfoServicePanel = new JPanel();
+		descriptionPanel = new JPanel();
+		addInfoServicePanel = new JPanel();
 
 		final DefaultListModel knownInfoServicesListModel = new DefaultListModel();
 
@@ -228,8 +230,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 		knownInfoServicesListScrollPane.setPreferredSize( (new JTextArea(7, 20)).getPreferredSize());
 		knownInfoServicesListScrollPane.setMinimumSize( (new JTextArea(7, 20)).getPreferredSize());
 
-
-	final JButton settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton = new JButton("   " +
+		final JButton settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton = new JButton("   " +
 			JAPMessages.getString("settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton"));
 		settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton.setFont(getFontSetting());
 		settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton.setIcon(JAPUtil.loadImageIcon(
@@ -342,7 +343,11 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 				 */
 				settingsInfoServiceConfigBasicSettingsAddButton.setEnabled(false);
 				descriptionPanel.setVisible(false);
+				addInfoServiceHostField.setText("");
+				addInfoServiceNameField.setText("");
+				addInfoServicePortField.setText("");
 				addInfoServicePanel.setVisible(true);
+				mb_newInfoService = true;
 			}
 		});
 
@@ -362,6 +367,8 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 				{
 					Database.getInstance(InfoServiceDBEntry.class).remove(selectedInfoService);
 				}
+				knownInfoServicesList.setSelectedIndex(0);
+				addInfoServicePanel.setVisible(false);
 			}
 		});
 		/* disable the remove button until something is selected in the list */
@@ -592,7 +599,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 												DatabaseMessage(DatabaseMessage.ENTRY_ADDED,
 												newPreferredInfoService));
 										}
-										}
+									}
 									/* also update the remove button (only a user-defined infoservice is removable,
 									 * if it is not currently the perferred infoservice)
 									 */
@@ -655,11 +662,11 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 		  infoServiceInterfaceInfoArea.addMouseListener(new MouseAdapter() {
 		  public void mousePressed(MouseEvent a_event) {
 		 handlePopupEvent(a_event);
-				}
+		  }
 
 		  public void mouseReleased(MouseEvent a_event) {
 		 handlePopupEvent(a_event);
-					}
+		   }
 
 		  private void handlePopupEvent(MouseEvent a_event) {
 		 if (a_event.isPopupTrigger()) {
@@ -668,21 +675,19 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 		   String selectedText = infoServiceInterfaceInfoArea.getSelectedText();
 		   if ((selectedText == null) || (new String("")).equals(selectedText)) {
 		  copyItem.setEnabled(false);
-				}
+		  }
 		   copyItem.addActionListener(new ActionListener() {
 		  public void actionPerformed(ActionEvent a_event) {
 		 infoServiceInterfaceInfoArea.copy();
-				}
+		  }
 		   });
 		   rightButtonMenu.add(copyItem);
 		   rightButtonMenu.show(a_event.getComponent(), a_event.getX(), a_event.getY());
-				}
-			}
+		  }
+		 }
 		  });*/
 
-		/* JScrollPane infoServiceInterfaceInfoAreaScrollPane = new JScrollPane(infoServiceInterfaceInfoArea);
-		 infoServiceInterfaceInfoAreaScrollPane.setFont(getFontSetting());
-		 infoServiceInterfaceInfoAreaScrollPane.setPreferredSize((new JTextArea(7, 20)).getPreferredSize());*/
+
 
 		knownInfoServicesList.addListSelectionListener(new ListSelectionListener()
 		{
@@ -710,28 +715,43 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 							hosts += currentListenerInterface.getHost();
 
 							if (!ports.equals(""))
-						{
+							{
 								ports += ", ";
-						}
+							}
 							ports += Integer.toString(currentListenerInterface.getPort());
+						}
 					}
-				}
 					m_hostLabel.setText(hosts);
 					m_portLabel.setText(ports);
 					m_hostLabel.getRootPane().repaint();
-			}
+
+					if (selectedInfoService.isUserDefined())
+					{
+						addInfoServiceHostField.setText(hosts);
+						addInfoServicePortField.setText(ports);
+						addInfoServiceNameField.setText(selectedInfoService.getName());
+						descriptionPanel.setVisible(false);
+						addInfoServicePanel.setVisible(true);
+						mb_newInfoService = false;
+					}
+					else
+					{
+						addInfoServicePanel.setVisible(false);
+						descriptionPanel.setVisible(true);
+					}
+				}
 
 				synchronized (knownInfoServicesListModel)
-			{
+				{
 					/* also update the remove button (only a user-defined infoservice is removable, if it
 					 * is not currently the perferred infoservice)
 					 */
 					selectedInfoService = (InfoServiceDBEntry) (knownInfoServicesList.
-					getSelectedValue());
-				if (selectedInfoService != null)
-				{
-				InfoServiceDBEntry preferredInfoService = InfoServiceHolder.getInstance().
-					getPreferredInfoService();
+						getSelectedValue());
+					if (selectedInfoService != null)
+					{
+						InfoServiceDBEntry preferredInfoService = InfoServiceHolder.getInstance().
+							getPreferredInfoService();
 						settingsInfoServiceConfigBasicSettingsRemoveButton.setEnabled(selectedInfoService.
 							isUserDefined() && (!selectedInfoService.equals(preferredInfoService)));
 					}
@@ -803,7 +823,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 		   configPanelConstraints.gridwidth = 3;
 		   configPanelConstraints.insets = new Insets(10, 10, 0, 5);
 		   configPanelLayout.setConstraints(settingsInfoServiceConfigBasicSettingsInformationInterfacesLabel,
-										 configPanelConstraints);
+				 configPanelConstraints);
 		   configPanel.add(settingsInfoServiceConfigBasicSettingsInformationInterfacesLabel);
 		   configPanelConstraints.gridwidth = 1;*/
 
@@ -812,7 +832,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 		configPanelConstraints.insets = new Insets(10, 10, 0, 5);
 		configPanel.add(new JLabel(JAPMessages.getString(
 			"settingsInfoServiceConfigBasicSettingsInformationInterfacesHostInfo")),
-										 configPanelConstraints);
+						configPanelConstraints);
 
 		configPanelConstraints.gridx = 2;
 		configPanelConstraints.gridy = 1;
@@ -827,7 +847,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 		configPanelConstraints.insets = new Insets(10, 10, 0, 5);
 		configPanel.add(new JLabel(JAPMessages.getString(
 			"settingsInfoServiceConfigBasicSettingsInformationInterfacesPortInfo")),
-										 configPanelConstraints);
+						configPanelConstraints);
 
 		configPanelConstraints.gridx = 2;
 		configPanelConstraints.gridy = 2;
@@ -876,11 +896,11 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 											  descriptionPanelConstraints);
 		descriptionPanel.add(settingsInfoServiceConfigBasicSettingsDescriptionLabel);
 
-		final JTextField addInfoServiceHostField = new JTextField();
+		addInfoServiceHostField = new JTextField();
 		addInfoServiceHostField.setFont(getFontSetting());
-		final JAPJIntField addInfoServicePortField = new JAPJIntField();
+		addInfoServicePortField = new JAPJIntField();
 		addInfoServicePortField.setFont(getFontSetting());
-		final JTextField addInfoServiceNameField = new JTextField();
+		addInfoServiceNameField = new JTextField();
 		addInfoServiceNameField.setFont(getFontSetting());
 
 		JButton settingsInfoServiceConfigBasicSettingsAddInfoServiceAddButton = new JButton(JAPMessages.
@@ -890,17 +910,23 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 		{
 			public void actionPerformed(ActionEvent event)
 			{
-				/* if the Add button is pressed, we create a new InfoService from host, port (and name),
-				 * add it to the infoservice database and hide the add panel and show the information
-				 * panel
-				 */
+
 				try
 				{
 					String infoServiceName = addInfoServiceNameField.getText().trim();
 					if (infoServiceName.equals(""))
 					{
-						/* use gernerated default name */
+						/* use generated default name */
 						infoServiceName = null;
+					}
+					if (!mb_newInfoService)
+					{
+						InfoServiceDBEntry selectedInfoService = (InfoServiceDBEntry) (knownInfoServicesList.
+							getSelectedValue());
+						if (selectedInfoService != null)
+						{
+							Database.getInstance(InfoServiceDBEntry.class).remove(selectedInfoService);
+						}
 					}
 					InfoServiceDBEntry newInfoService = new InfoServiceDBEntry(infoServiceName,
 						new
@@ -914,6 +940,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 					addInfoServiceNameField.setText("");
 					descriptionPanel.setVisible(true);
 					settingsInfoServiceConfigBasicSettingsAddButton.setEnabled(true);
+					knownInfoServicesList.setSelectedIndex(knownInfoServicesList.getModel().getSize() - 1);
 				}
 				catch (Exception e)
 				{
@@ -1190,17 +1217,13 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 			infoServicePolicyObserver.update(InfoServiceHolder.getInstance(),
 											 new InfoServiceHolderMessage(InfoServiceHolderMessage.
 				INFOSERVICE_MANAGEMENT_CHANGED,
-											 new Boolean(InfoServiceHolder.getInstance().isChangeInfoServices())));
+				new Boolean(InfoServiceHolder.getInstance().isChangeInfoServices())));
 		}
 		JAPController.getInstance().addObserver(infoServicePolicyObserver);
 		/* tricky: initialize the automatic requests policy checkbox by calling the observer */
 		infoServicePolicyObserver.update(JAPController.getInstance(),
 										 new JAPControllerMessage(JAPControllerMessage.
 			INFOSERVICE_POLICY_CHANGED));
-
-		/*TitledBorder settingsInfoServiceConfigAdvancedSettingsBorder = new TitledBorder(JAPMessages.getString("settingsInfoServiceConfigAdvancedSettingsBorder"));
-		settingsInfoServiceConfigAdvancedSettingsBorder.setTitleFont(getFontSetting());
-		  advancedPanel.setBorder(settingsInfoServiceConfigAdvancedSettingsBorder);*/
 
 		GridBagLayout advancedPanelLayout = new GridBagLayout();
 		advancedPanel.setLayout(advancedPanelLayout);

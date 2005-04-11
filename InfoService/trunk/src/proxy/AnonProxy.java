@@ -351,10 +351,10 @@ final public class AnonProxy implements Runnable
 		return false;
 	}
 
-	protected ProxyListener m_ProxyListener;
+	protected IProxyListener m_ProxyListener;
 	protected volatile int m_numChannels = 0;
 
-	public void setProxyListener(ProxyListener l)
+	public void setProxyListener(IProxyListener l)
 	{
 		m_ProxyListener = l;
 	}
@@ -371,7 +371,7 @@ final public class AnonProxy implements Runnable
 		m_ProxyListener.channelsChanged(m_numChannels);
 	}
 
-	public synchronized void transferredBytes(int bytes, int protocolType)
+	public synchronized void transferredBytes(long bytes, int protocolType)
 	{
 		m_ProxyListener.transferedBytes(bytes, protocolType);
 	}

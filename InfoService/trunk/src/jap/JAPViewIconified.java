@@ -57,7 +57,7 @@ import gui.JAPDll;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import proxy.ProxyListener;
+import proxy.IProxyListener;
 
 final public class JAPViewIconified extends JWindow implements ActionListener,
 	MouseMotionListener,
@@ -289,13 +289,13 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 	{
 	}
 
-	public void transferedBytes(int b, int protocolType)
+	public void transferedBytes(long b, int protocolType)
 	{ //TODO: do it the right way --> it must be executed in the EventThread!!!
-		if (protocolType == ProxyListener.PROTOCOL_WWW)
+		if (protocolType == IProxyListener.PROTOCOL_WWW)
 		{
 			m_lTrafficWWW = b;
 		}
-		else if (protocolType == ProxyListener.PROTOCOL_OTHER)
+		else if (protocolType == IProxyListener.PROTOCOL_OTHER)
 		{
 			m_lTrafficOther = b;
 		}

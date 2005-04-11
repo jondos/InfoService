@@ -84,7 +84,7 @@ import gui.StatusPanel;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import proxy.ProxyListener;
+import proxy.IProxyListener;
 import javax.swing.UIManager;
 import javax.swing.LookAndFeel;
 
@@ -1601,14 +1601,14 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 //			ownTrafficChannelsProgressBar.setString(String.valueOf(c));
 	}
 
-	public void transferedBytes(int c, int protocolType)
+	public void transferedBytes(long c, int protocolType)
 	{
 		// Nr of Bytes transmitted anonymously
-		if (protocolType == ProxyListener.PROTOCOL_WWW)
+		if (protocolType == IProxyListener.PROTOCOL_WWW)
 		{
 			m_lTrafficWWW = c;
 		}
-		else if (protocolType == ProxyListener.PROTOCOL_OTHER)
+		else if (protocolType == IProxyListener.PROTOCOL_OTHER)
 		{
 			m_lTrafficOther = c;
 
