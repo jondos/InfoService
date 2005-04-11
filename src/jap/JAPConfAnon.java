@@ -750,6 +750,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			{
 				m_manHostField.setText(m_oldCascadeHost);
 				m_manPortField.setText(m_oldCascadePort);
+				m_cancelCascadeButton.setEnabled(false);
 			}
 		}
 		else if (e.getSource() == m_reloadCascadesButton)
@@ -779,6 +780,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			this.drawManualPanel(null, null, true);
 			mb_manualCascadeNew = true;
 			m_deleteCascadeButton.setEnabled(false);
+			m_cancelCascadeButton.setEnabled(true);
 		}
 		else if (e.getSource() == m_enterCascadeButton)
 		{
@@ -1013,6 +1015,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 										 false);
 					mb_manualCascadeNew = false;
 					m_deleteCascadeButton.setEnabled(true);
+					m_cancelCascadeButton.setEnabled(false);
 					m_oldCascadeHost = m_manHostField.getText();
 					m_oldCascadePort = m_manPortField.getText();
 				}
@@ -1058,6 +1061,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		if (e.getSource() == m_manHostField || e.getSource() == m_manPortField)
 		{
 			m_editCascadeButton.setVisible(true);
+			m_cancelCascadeButton.setEnabled(true);
 		}
 		if (e.getSource() == m_manPortField)
 		{
