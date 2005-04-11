@@ -32,6 +32,7 @@ import java.awt.MediaTracker;
 import java.util.Hashtable;
 
 import javax.swing.ImageIcon;
+import jap.JAPConstants;
 
 /**
  * This class loads resources from the file system.
@@ -44,7 +45,6 @@ final public class ImageIconLoader
 	private ImageIconLoader()
 	{
 	}
-
 
 	/**
 	 * Loads an ImageIcon from the classpath or the current directory.
@@ -82,7 +82,7 @@ final public class ImageIconLoader
 		// try to load the image from the cache
 		if (ms_iconCache.containsKey(a_strRelativeImagePath))
 		{
-			return new ImageIcon((Image)ms_iconCache.get(a_strRelativeImagePath));
+			return new ImageIcon( (Image) ms_iconCache.get(a_strRelativeImagePath));
 		}
 
 		// load image from the local classpath or jar-file
@@ -91,6 +91,17 @@ final public class ImageIconLoader
 			img = new ImageIcon(Object.class.getResource("/" + a_strRelativeImagePath));
 		}
 		catch (NullPointerException a_e)
+		{
+			img = null;
+		}
+		try
+		{
+			if (img == null|| img.getImageLoadStatus() == MediaTracker.ERRORED)
+			{
+				img = new ImageIcon(JAPConstants.RESOURCES_ROOT_CLASS.getResource(a_strRelativeImagePath));
+			}
+		}
+		catch (NullPointerException a_e1)
 		{
 			img = null;
 		}
@@ -103,9 +114,9 @@ final public class ImageIconLoader
 		if (a_bSync)
 		{
 			int statusBits = MediaTracker.ABORTED | MediaTracker.ERRORED | MediaTracker.COMPLETE;
-			while(true)
+			while (true)
 			{
-				if ((img.getImageLoadStatus() & statusBits) != 0)
+				if ( (img.getImageLoadStatus() & statusBits) != 0)
 				{
 					break;
 				}
@@ -117,7 +128,10 @@ final public class ImageIconLoader
 		}
 
 		// write the image to the cache
-		ms_iconCache.put(a_strRelativeImagePath, img.getImage());
+		if ( (img.getImageLoadStatus() & MediaTracker.COMPLETE) != 0)
+		{
+			ms_iconCache.put(a_strRelativeImagePath, img.getImage());
+		}
 
 		return img;
 	}
