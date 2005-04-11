@@ -59,9 +59,11 @@ final public class ResourceLoader
 	 * If the resource could not be found in the classpath, it is loaded from the current
 	 * directory.
 	 * @param a_strRelativeResourcePath a relative filename for the resource
+	 * @param oRoot an Object which path specified the root of a_strRelativeResourcePath
+	 *        if null, than java.lang.Object is used
 	 * @return the contents of the resource or null if resource could not be loaded
 	 */
-	public static byte[] loadResource(String a_strRelativeResourcePath)
+	public static byte[] loadResource(String a_strRelativeResourcePath,Class oRoot)
 	{
 		InputStream in=null;
 		byte[] resource = null;
@@ -81,9 +83,9 @@ final public class ResourceLoader
 		}
 		try
 		{
-			if (in == null)
+			if (in == null&&oRoot!=null)
 			{
-				in = Object.class.getResourceAsStream(a_strRelativeResourcePath);
+				in = oRoot.getResourceAsStream(a_strRelativeResourcePath);
 			}
 		}
 		catch (Exception e1)
