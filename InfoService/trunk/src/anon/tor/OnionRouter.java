@@ -145,7 +145,7 @@ public class OnionRouter
 	{
 		RelayCell c = cell;
 		c.doCryptography(this.m_decryptionEngine);
-		if (m_nextOR != null)
+		if (m_nextOR != null&&m_extended)
 		{
 			c = m_nextOR.decryptCell(c);
 		}
@@ -271,9 +271,16 @@ public class OnionRouter
 				if (!m_extended)
 				{
 					cell.checkDigest(m_digestDb);
-					m_extended = true;
+					m_extended = m_nextOR.checkExtendedCell(cell);
+					if(!m_extended)
+					{
+						m_nextOR = null;
 				}
+					return m_extended;
+				} else
+				{
 				return m_nextOR.checkExtendedCell(cell);
+				}
 			}
 		}
 		catch (Exception e)

@@ -42,6 +42,7 @@ public class ORDescription
 	private int m_portDir;
 	private String m_strSoftware;
 	private ORAcl m_acl;
+	private boolean m_bIsExitNode;
 	private MyRSAPublicKey m_onionkey;
 	private MyRSAPublicKey m_signingkey;
 
@@ -64,6 +65,26 @@ public class ORDescription
 		m_portDir = -1;
 		m_strSoftware = strSoftware;
 		m_acl = new ORAcl();
+		m_bIsExitNode = false;
+	}
+
+	/**
+	 * sets this server as exit node or not
+	 * @param bIsExitNode
+	 * 
+	 */
+	public void setExitNode(boolean bIsExitNode)
+	{
+		m_bIsExitNode = bIsExitNode;
+	}
+
+	/**
+	 * returns if this server is an exit node
+	 * @return
+	 */
+	public boolean isExitNode()
+	{
+		return m_bIsExitNode;
 	}
 
 	/**
@@ -218,6 +239,7 @@ public class ORDescription
 		try
 		{
 			String ln = reader.readLine();
+			boolean bIsExitNode = false;
 			if (ln == null || !ln.startsWith("router"))
 			{
 				return null;
@@ -290,6 +312,7 @@ public class ORDescription
 								return null;
 							}
 							ord.setAcl(acl);
+							ord.setExitNode(bIsExitNode);
 							try
 							{
 								ord.setDirPort(Integer.parseInt(dirport));
@@ -302,8 +325,16 @@ public class ORDescription
 					}
 
 				}
-				else if (ln.startsWith("accept") || ln.startsWith("reject"))
+				else if (ln.startsWith("accept"))
 				{
+					
+					acl.add(ln);
+					bIsExitNode = true;
+
+				}
+				else if (ln.startsWith("reject"))
+				{
+					
 					acl.add(ln);
 
 				}
@@ -319,7 +350,7 @@ public class ORDescription
 
 	public String toString()
 	{
-		return "ORRouter: " + this.m_name + " on " + this.m_address + ":" + this.m_port;
+		return "ORRouter: " + this.m_name + " on " + this.m_address + ":" + this.m_port + " isExitNode:"+this.m_bIsExitNode;
 	}
 
 }

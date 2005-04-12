@@ -190,8 +190,8 @@ public class Tor implements Runnable, AnonService
 		{
 			return null;
 		}
-		synchronized (m_oActiveCircuitSync)
-		{
+		
+		Circuit c = null;
 			//First check if we can resolve the DNS entry...
 			if (!helper.isIPAddress(addr))
 			{
@@ -206,19 +206,21 @@ public class Tor implements Runnable, AnonService
 			if (m_CircuitForDestination.containsKey(key))
 			{ //directly
 				int circnr = ( (Integer) m_CircuitForDestination.get(key)).intValue();
-				if (m_activeCircuits[circnr] != null &&
-					!m_activeCircuits[circnr].isShutdown() &&
-					m_activeCircuits[circnr].isAllowed(addr, port))
+			c = m_activeCircuits[circnr];
+			if (c != null &&
+				!c.isShutdown() &&
+				c.isAllowed(addr, port))
 				{
-					return m_activeCircuits[circnr];
+				return c;
 				}
 			}
 			//by linear search
 			for (int nr = 0; nr < m_MaxNrOfActiveCircuits; nr++)
 			{
-				if (m_activeCircuits[nr] != null &&
-					!m_activeCircuits[nr].isShutdown() &&
-					m_activeCircuits[nr].isAllowed(addr, port))
+			c = m_activeCircuits[nr];
+			if (c != null &&
+				!c.isShutdown() &&
+				c.isAllowed(addr, port))
 				{
 					m_CircuitForDestination.put(key, new Integer(nr));
 					if (m_KeysForCircuit[nr] == null)
@@ -226,11 +228,13 @@ public class Tor implements Runnable, AnonService
 						m_KeysForCircuit[nr] = new Vector();
 					}
 					m_KeysForCircuit[nr].addElement(key);
-					return m_activeCircuits[nr];
+				return c;
 				}
 			}
 
-			for (int i = 0; i < 3; i++) //Try to create a new circuit 3 times...
+		synchronized (m_oActiveCircuitSync)
+		{
+			for (int i = 0; i < 5; i++) //Try to create a new circuit 5 times...
 			{
 				int circstart = m_rand.nextInt(m_MaxNrOfActiveCircuits);
 				//check if a reachable destination for this circuit exists
@@ -355,7 +359,10 @@ public class Tor implements Runnable, AnonService
 				}
 				else
 				{
+					do
+					{
 					ord = m_orList.getByRandom();
+					} while(ord.isExitNode());
 				}
 				LogHolder.log(LogLevel.DEBUG, LogType.TOR,
 							  "added as first: " + ord.getName() + " " + ord.getSoftware());
@@ -406,7 +413,7 @@ public class Tor implements Runnable, AnonService
 							ord = m_orList.getByRandom();
 						}
 					}
-					while (orsForNewCircuit.contains(ord));
+					while (orsForNewCircuit.contains(ord)||ord.isExitNode());
 					LogHolder.log(LogLevel.DEBUG, LogType.TOR,
 								  "added " + ord.getName() + " " + ord.getSoftware());
 					orsForNewCircuit.insertElementAt(ord, 1);
@@ -468,14 +475,6 @@ public class Tor implements Runnable, AnonService
 		int aktCircuit = 0;
 		while (aktCircuit < m_MaxNrOfActiveCircuits && !m_bCloseCreator && errTry < 4)
 		{
-			//We do not try to be as fast as possible...
-			try
-			{
-				Thread.sleep(10000);
-			}
-			catch (InterruptedException ex)
-			{
-			}
 			if (m_bCloseCreator)
 			{
 				break;
@@ -499,7 +498,7 @@ public class Tor implements Runnable, AnonService
 					break;
 				}
 
-				//just create a new circuit
+				//just create a new circuit, that can connect to this address and port
 				Circuit circ = createNewCircuit("141.76.46.90", 80);
 				if (circ == null)
 				{
@@ -511,6 +510,15 @@ public class Tor implements Runnable, AnonService
 			}
 			errTry = 0;
 			aktCircuit++;
+
+			//We do not try to be as fast as possible...
+			try
+			{
+				Thread.sleep(10000);
+			}
+			catch (InterruptedException ex)
+			{
+			}
 		} //while
 		m_circuitCreator = null;
 	}
@@ -541,7 +549,7 @@ public class Tor implements Runnable, AnonService
 	}
 
 	/**
-	 * stops the Tor-Service and all opended connections
+	 * stops the Tor-Service and all opened connections
 	 */
 	private void stop()
 	{
