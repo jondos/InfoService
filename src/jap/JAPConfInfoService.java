@@ -751,6 +751,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 
 		GridBagConstraints buttonPanelConstraints = new GridBagConstraints();
 		buttonPanelConstraints.anchor = GridBagConstraints.NORTHWEST;
+		buttonPanelConstraints.fill = GridBagConstraints.VERTICAL;
 		buttonPanelConstraints.weighty = 1.0;
 
 		buttonPanelConstraints.gridx = 0;
