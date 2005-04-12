@@ -907,14 +907,14 @@ public class JAPRoutingSettings extends Observable
 						notifyObservers(new JAPRoutingMessage(JAPRoutingMessage.START_PROPAGANDA_BEGIN, null));
 						Enumeration infoServices = infoServiceList.elements();
 						boolean stopRegistration = false;
-						while ( (infoServices.hasMoreElements()) && (stopRegistration == false))
+						while ( (infoServices.hasMoreElements()) && !stopRegistration)
 						{
 							ServerSocketPropagandist currentPropagandist = new ServerSocketPropagandist(
 								m_serverPort, (InfoServiceDBEntry) (infoServices.nextElement()));
 							synchronized (JAPModel.getInstance().getRoutingSettings())
 							{
 								stopRegistration = Thread.interrupted();
-								if (stopRegistration == true)
+								if (stopRegistration)
 								{
 									/* we were interrupted -> all propagandists except the current on were stopped
 									 * -> stop the current one
@@ -1211,7 +1211,7 @@ public class JAPRoutingSettings extends Observable
 				if (serverPort == -1)
 				{
 					LogHolder.log(LogLevel.ERR, LogType.MISC,
-						"JAPRoutingSettings: loadSettingsFromXml: Invalid server port in XML structure: Using default server port.");
+								  "JAPRoutingSettings: loadSettingsFromXml: Invalid server port in XML structure: Using default server port.");
 					startServerIsPossible = false;
 				}
 				else
@@ -1220,7 +1220,7 @@ public class JAPRoutingSettings extends Observable
 					if (setServerPort(serverPort) == false)
 					{
 						LogHolder.log(LogLevel.ERR, LogType.MISC,
-							"JAPRoutingSettings: loadSettingsFromXml: Error while setting the server port: Using default server port.");
+									  "JAPRoutingSettings: loadSettingsFromXml: Error while setting the server port: Using default server port.");
 						startServerIsPossible = false;
 					}
 				}
@@ -1282,7 +1282,7 @@ public class JAPRoutingSettings extends Observable
 			if (serverRunningNode == null)
 			{
 				LogHolder.log(LogLevel.ERR, LogType.MISC,
-					"JAPRoutingSettings: loadSettingsFromXml: Error in XML structure (ServerRunning node): Server not started.");
+							  "JAPRoutingSettings: loadSettingsFromXml: Error in XML structure (ServerRunning node): Server not started.");
 			}
 			else
 			{
@@ -1296,12 +1296,12 @@ public class JAPRoutingSettings extends Observable
 							/* start the propaganda */
 							startPropaganda(false);
 							LogHolder.log(LogLevel.INFO, LogType.MISC,
-								"JAPRoutingSettings: loadSettingsFromXml: According to the configuration, the forwarding server was started.");
+										  "JAPRoutingSettings: loadSettingsFromXml: According to the configuration, the forwarding server was started.");
 						}
 						else
 						{
 							LogHolder.log(LogLevel.ERR, LogType.MISC,
-								"JAPRoutingSettings: loadSettingsFromXml: Error while starting the forwarding server.");
+										  "JAPRoutingSettings: loadSettingsFromXml: Error while starting the forwarding server.");
 						}
 					}
 					else
