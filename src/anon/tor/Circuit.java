@@ -33,6 +33,7 @@ package anon.tor;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.security.SecureRandom;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Vector;
@@ -82,6 +83,7 @@ public class Circuit
 	private int m_MaxStreamsPerCircuit;
 	private int m_recvCellCounter;
 	private int m_sendCellCounter;
+	private boolean m_destroyed;
 
 	private CellQueue m_cellQueue;
 
@@ -93,6 +95,11 @@ public class Circuit
 	private volatile boolean m_bReceivedCreatedOrExtendedCell;
 	private Object m_oNotifySync;
 	private MyRandom m_rand;
+
+	//earliest time when the circuit will be destroy
+	private Date m_destroyTime;
+	//minimum lifetime of a circuit (5 minutes=5*60*1000)
+	private static long m_minCircuitLifetime = 300000;
 
 	/**
 	 * constructor
@@ -129,6 +136,7 @@ public class Circuit
 		m_cellQueue = new CellQueue();
 		this.m_rand = new MyRandom(new SecureRandom());
 		m_State = STATE_CREATING;
+		m_destroyed = false;
 	}
 
 	/**
@@ -146,7 +154,7 @@ public class Circuit
 				m_bReceivedCreatedOrExtendedCell = false;
 				m_FirstORConnection.send(m_FirstOR.createConnection());
 				//wait until a created cell arrives or an erro occured or a time out occured
-				m_oNotifySync.wait(20000);
+				m_oNotifySync.wait(15000);
 			}
 			if (m_State != STATE_CREATING || !m_bReceivedCreatedOrExtendedCell) //Error or time out
 			{
@@ -162,7 +170,7 @@ public class Circuit
 					m_bReceivedCreatedOrExtendedCell = false;
 					RelayCell cell = m_FirstOR.extendConnection(nextOR);
 					m_FirstORConnection.send(cell);
-					m_oNotifySync.wait(40000);
+					m_oNotifySync.wait(25000);
 				}
 				if (m_State != STATE_CREATING || !m_bReceivedCreatedOrExtendedCell)
 				{
@@ -174,9 +182,18 @@ public class Circuit
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC,
 						  "[TOR] Circuit '" + this.m_circID + "' ready!!! - Length of this Circuit : " +
 						  this.m_circuitLength + " Onionrouters");
+		
+			Date createTime = new Date();
+			//calculate when the circuit will be destroyed
+			m_destroyTime=new Date(createTime.getTime()+m_minCircuitLifetime);
 		}
 		catch (Exception ex)
 		{
+			//send destroy on error, when circuit wasn't allready destroyed
+			if(!m_destroyed)
+			{
+				this.send(new DestroyCell(this.m_circID));
+			}
 			m_State = STATE_CLOSED;
 			throw new IOException(ex.getLocalizedMessage());
 		}
@@ -235,6 +252,7 @@ public class Circuit
 		try
 		{
 			m_FirstORConnection.send(new DestroyCell(m_circID));
+			LogHolder.log(LogLevel.DEBUG, LogType.TOR, "[TOR] circuit "+m_circID+" destroyed!");
 		}
 		catch (Exception e)
 		{}
@@ -313,8 +331,12 @@ public class Circuit
 				{
 					if (!m_FirstOR.checkExtendedCell( (RelayCell) cell))
 					{
+						//((RelayCell)cell).getRelayCommand()==9 -> truncated
+						//maybe we can handle it better later						
+						this.send(new DestroyCell(this.m_circID));
 						m_State = STATE_CLOSED;
 						destroyedByPeer();
+						m_destroyed = true;
 					}
 					else
 					{
@@ -411,6 +433,7 @@ public class Circuit
 			else if (cell instanceof DestroyCell)
 			{
 				LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[TOR] recieved destroycell - circuit destroyed");
+				m_destroyed=true;
 				destroyedByPeer();
 			}
 			else
@@ -441,8 +464,14 @@ public class Circuit
 		}
 		synchronized (m_oSendSync)
 		{
+			if(cell instanceof RelayCell)
+			{
 			Cell c = m_FirstOR.encryptCell( (RelayCell) cell);
 			m_cellQueue.addElement(c);
+			} else if(cell instanceof DestroyCell)
+			{
+				m_cellQueue.addElement(cell);
+			} //ignoring other cell types
 		}
 		deliverCells();
 
@@ -634,7 +663,10 @@ public class Circuit
 
 			if (m_streamCounter >= m_MaxStreamsPerCircuit)
 			{
+				if((new Date()).after(m_destroyTime))
+				{
 				shutdown();
+				}
 			}
 		}
 	}

@@ -208,6 +208,7 @@ final public class AnonProxy implements Runnable
 			m_Tor.setProxy(m_proxyInterface);
 			m_Tor.initialize(new TorAnonServerDescription(true, m_bPreCreateAnonRoutes));
 			( (Tor) m_Tor).setCircuitLength(JAPModel.getTorMinRouteLen(), JAPModel.getTorMaxRouteLen());
+			( (Tor) m_Tor).setConnectionsPerRoute(JAPModel.getTorMaxConnectionsPerRoute());
 			LogHolder.log(LogLevel.DEBUG, LogType.NET, "AnonProxy.start(): Tor initialized");
 		}
 		else
