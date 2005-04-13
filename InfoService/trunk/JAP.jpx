@@ -165,7 +165,7 @@
   <property category="path" name="DefaultDiagram" value="diagrams"/>
   <property category="path" name="Diagram" value="diagrams"/>
   <property category="personality" name="personality" value="com.borland.jbuilder.personality.JBuilderUMLPersonality "/>
-  <property category="runtime" name="ConfigurationCount" value="15"/>
+  <property category="runtime" name="ConfigurationCount" value="16"/>
   <property category="runtime.0" name="BuildTargetOnRun" value="com.borland.jbuilder.build.ProjectBuilder$ProjectBuildAction;make"/>
   <property category="runtime.0" name="ConfigurationName" value="JAP"/>
   <property category="runtime.0" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
@@ -256,6 +256,10 @@
   <property category="runtime.15" name="custom.required.9" value="ApacheFTPClient"/>
   <property category="runtime.15" name="jsprunner.launchuri" value="/"/>
   <property category="runtime.15" name="test.harness" value="junit.textui.TestRunner"/>
+  <property category="runtime.16" name="BuildTargetOnRun" value="com.borland.jbuilder.build.ProjectBuilder$ProjectBuildAction;make"/>
+  <property category="runtime.16" name="ConfigurationName" value="CacheTest"/>
+  <property category="runtime.16" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
+  <property category="runtime.16" name="application.class" value="misc.CacheTest"/>
   <property category="runtime.2" name="BuildTargetOnRun" value="com.borland.jbuilder.build.ProjectBuilder$ProjectBuildAction;make"/>
   <property category="runtime.2" name="ConfigurationName" value="JAP (alternative config)"/>
   <property category="runtime.2" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
