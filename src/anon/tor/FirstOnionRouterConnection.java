@@ -63,6 +63,8 @@ import logging.LogType;
 public class FirstOnionRouterConnection implements Runnable
 {
 
+	//Name of the onionproxy
+	private static String OP_NAME = "JAP-Client";
 	private TinyTLS m_tinyTLS;
 	private ORDescription m_description;
 	private Thread m_readDataLoop;
@@ -134,7 +136,7 @@ public class FirstOnionRouterConnection implements Runnable
 					m_ostream.write(cell.getCellData());
 					m_ostream.flush();
 					LogHolder.log(LogLevel.DEBUG, LogType.MISC,
-								  "OnionConnection " + m_description.getName() + "Send a cell");
+								  "OnionConnection " + m_description.getName() + " Send a cell");
 					break;
 				}
 				catch (InterruptedIOException ex)
@@ -198,7 +200,7 @@ public class FirstOnionRouterConnection implements Runnable
 			AsymmetricCipherKeyPair kp = kpg.generateKeyPair();
 			MyRSAPrivateKey key = new MyRSAPrivateKey(kp.getPrivate());
 			AsymmetricCryptoKeyPair ackp = new AsymmetricCryptoKeyPair(key);
-			JAPCertificate cert = JAPCertificate.getInstance("JAP", ackp, Calendar.getInstance(), 1);
+			JAPCertificate cert = JAPCertificate.getInstance(OP_NAME, ackp, Calendar.getInstance(), 1);
 
 			RSAKeyPairGenerator kpg2 = new RSAKeyPairGenerator();
 			kpg2.init(new RSAKeyGenerationParameters(new BigInteger(new byte[]
@@ -206,7 +208,7 @@ public class FirstOnionRouterConnection implements Runnable
 			AsymmetricCipherKeyPair kp2 = kpg2.generateKeyPair();
 			MyRSAPrivateKey key2 = new MyRSAPrivateKey(kp2.getPrivate());
 			AsymmetricCryptoKeyPair ackp2 = new AsymmetricCryptoKeyPair(key2);
-			PKCS12 pkcs12cert = new PKCS12("JAP User", ackp2, Calendar.getInstance(), 1);
+			PKCS12 pkcs12cert = new PKCS12(OP_NAME + " <identity>", ackp2, Calendar.getInstance(), 1);
 
 			//sign cert with pkcs12cert
 			JAPCertificate cert1 = cert.sign(pkcs12cert);
