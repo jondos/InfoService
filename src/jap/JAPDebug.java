@@ -124,26 +124,33 @@ final public class JAPDebug extends WindowAdapter implements ActionListener, Log
 	 */
 	public void log(int level, int type, String txt)
 	{
-		if ( (level <= m_debugLevel) && (m_debugType & type) != 0)
+		try
 		{
-			synchronized (this)
+			if ( (level <= m_debugLevel) && (m_debugType & type) != 0)
 			{
-				String str = "[" + dateFormatter.format(new Date()) + LogLevel.STR_Levels[level] + "] " + txt +
-					"\n";
-				if (!m_bConsole)
+				synchronized (this)
 				{
-					System.err.print(str);
-				}
-				else
-				{
-					m_textareaConsole.append(str);
-					m_textareaConsole.setCaretPosition(m_textareaConsole.getText().length());
-				}
-				if (ms_bFile)
-				{
-					ms_FileLog.log(level, type, txt);
+					String str = "[" + dateFormatter.format(new Date()) + LogLevel.STR_Levels[level] + "] " +
+						txt +
+						"\n";
+					if (!m_bConsole)
+					{
+						System.err.print(str);
+					}
+					else
+					{
+						m_textareaConsole.append(str);
+						m_textareaConsole.setCaretPosition(m_textareaConsole.getText().length());
+					}
+					if (ms_bFile)
+					{
+						ms_FileLog.log(level, type, txt);
+					}
 				}
 			}
+		}
+		catch (Throwable t)
+		{
 		}
 	}
 

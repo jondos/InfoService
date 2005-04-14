@@ -120,7 +120,7 @@ public final class LogHolder
 	 * @param logType The log type (see constants in class LogType).
 	 * @param a_throwable a Throwable to log
 	 */
-	public static void log(int logLevel, int logType, Throwable a_throwable)
+	public static synchronized void log(int logLevel, int logType, Throwable a_throwable)
 	{
 		if (isLogged(logLevel, logType))
 		{
@@ -146,7 +146,7 @@ public final class LogHolder
 	 * @param logType The log type (see constants in class LogType).
 	 * @param message The message to log.
 	 */
-	public static void log(int logLevel, int logType, String message)
+	public static synchronized void log(int logLevel, int logType, String message)
 	{
 		if (isLogged(logLevel, logType))
 		{
@@ -172,7 +172,7 @@ public final class LogHolder
 	 *
 	 * @param logInstance The instance of a Log implementation.
 	 */
-	public static void setLogInstance(Log logInstance)
+	public static synchronized void setLogInstance(Log logInstance)
 	{
 		getInstance().m_logInstance = logInstance;
 		if (getInstance().m_logInstance == null)

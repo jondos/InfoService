@@ -38,7 +38,7 @@ public class ChainedLog implements Log
 		m_Log2=log2;
 	}
 
-	public void log(int level, int type, String mesg)
+	public synchronized void log(int level, int type, String mesg)
 	{
 		m_Log1.log(level,type,mesg);
 		m_Log2.log(level,type,mesg);

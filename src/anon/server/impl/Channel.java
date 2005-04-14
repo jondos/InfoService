@@ -50,10 +50,6 @@ final class Channel extends AbstractChannel
 
 	protected void send(byte[] buff, int len)
 	{
-		if (len >= 957)
-		{
-			int i=3;
-		}
 		m_muxSocket.send(m_id, m_type, buff, (short) len);
 		m_bFirstPacket = false;
 	}
@@ -62,7 +58,10 @@ final class Channel extends AbstractChannel
 	{
 		if (m_bFirstPacket)
 		{
-			return MuxSocket.PAYLOAD_SIZE - m_muxSocket.getNumberOfMixes() * MuxSocket.KEY_SIZE;
+			//why an additional "-15" --> seems to be strange but otherwise the channel produces a
+			//decryption error on server side from time to time....
+			///@todo check the strange "-15"
+			return MuxSocket.PAYLOAD_SIZE - m_muxSocket.getNumberOfMixes() * MuxSocket.KEY_SIZE-15;
 		}
 		else
 		{
