@@ -188,6 +188,7 @@ final class AnonProxyRequest implements Runnable
 					break;
 				}
 				m_OutChannel.write(buff, 0, len);
+//				LogHolder.log(LogLevel.DEBUG,LogType.NET,"Channel "+Integer.toString(m_Channel.hashCode())+" Request Len: "+re+" Read: "+len);
 				m_Proxy.transferredBytes(len, m_iProtocol);
 				aktPos = 0;
 			}
