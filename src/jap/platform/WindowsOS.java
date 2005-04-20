@@ -27,6 +27,8 @@
  */
 package jap.platform;
 
+import java.io.File;
+
 import jap.JAPConstants;
 import logging.LogHolder;
 import logging.LogLevel;
@@ -88,7 +90,7 @@ public class WindowsOS extends AbstractOS
 		{
 			dir = System.getProperty("user.home", ".");
 		}
-		return dir + "/" + JAPConstants.XMLCONFFN;
+		return dir + File.separator + JAPConstants.XMLCONFFN;
 	}
 
 }
