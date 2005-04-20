@@ -92,8 +92,7 @@ public final class JAPModel
 		try
 		{
 			m_certJAPCodeSigning = JAPCertificate.getInstance(
-				ResourceLoader.loadResource(JAPConstants.CERTSPATH + JAPConstants.CERT_JAPCODESIGNING,
-	   JAPConstants.RESOURCES_ROOT_CLASS));
+				ResourceLoader.loadResource(JAPConstants.CERTSPATH + JAPConstants.CERT_JAPCODESIGNING));
 		}
 		catch (Throwable t)
 		{

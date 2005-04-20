@@ -27,11 +27,13 @@
  */
 package jap;
 
-import java.io.File;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.net.URL;
-
+import java.util.Vector;
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -48,21 +50,15 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.LookAndFeel;
 import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+import javax.swing.border.EmptyBorder;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
 import javax.swing.text.Document;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.util.Vector;
 
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
-import javax.swing.border.EmptyBorder;
-import java.awt.Color;
-import javax.swing.LookAndFeel;
-import javax.swing.UIManager;
+import anon.util.ResourceLoader;
 
 /* classes modified from Swing Example "Metalworks" */
 /** Help window for the JAP. Thi is a singleton meaning that there exists only one help window all the time.*/
@@ -415,41 +411,9 @@ final class HtmlPane extends JScrollPane implements HyperlinkListener
 		}
 	}
 
-	private URL getUrlFor(String fn)
-	{
-		// used to find help files within a .jar file
-		try
-		{
-			URL url = Class.forName("JAP").getResource(fn);
-			if (url != null)
-			{
-				return url;
-			}
-		}
-		catch (Exception e)
-		{
-			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "JAPHelp:load:Exception: " + e);
-			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "URL was: " + fn);
-		}
-		// ...else
-		try
-		{
-			File f = new File(fn);
-			String s = f.getAbsolutePath();
-			s = "file:" + s;
-			return new URL(s);
-		}
-		catch (Exception e)
-		{
-			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "JAPHelp:HtmlPane(constructor):Exception: " + e);
-			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "URL was: " + fn);
-		}
-		return null;
-	}
-
 	public void load(String fn)
 	{
-		URL url = getUrlFor(fn);
+		URL url = ResourceLoader.getResourceURL(fn);
 		if (url != null)
 		{
 			linkActivated(url);

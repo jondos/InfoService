@@ -35,7 +35,7 @@ import anon.tor.Tor;
 
 public final class JAPConstants
 {
-	public static final String aktVersion = "00.04.021"; //Never change the layout of this line!
+	public static final String aktVersion = "00.04.022"; //Never change the layout of this line!
 	private static final String CVS_GENERATED_RELEASE_DATE = "$Date$";
 
 	//Warning: This is a little bit tricky,
@@ -277,18 +277,4 @@ public final class JAPConstants
 	public final static String CONFIG_ENCRYPTED_DATA = "EncryptedData";
 	public final static String CONFIG_PAY_ACCOUNTS_FILE = "PayAccountsFile";
 	public final static String CONFIG_JAP_FORWARDING_SETTINGS = "JapForwardingSettings";
-
-	public static Class RESOURCES_ROOT_CLASS=null;
-
-	static
-	{
-		try
-		{
-			RESOURCES_ROOT_CLASS = Class.forName("JAP");
-		}
-		catch (Throwable t)
-		{
-			RESOURCES_ROOT_CLASS=null;
-		}
-	}
 }

@@ -145,8 +145,11 @@ public final class LogHolder
 	 * @param logLevel The log level (see constants in class LogLevel).
 	 * @param logType The log type (see constants in class LogType).
 	 * @param message The message to log.
+	 * @param a_bSkipCallingMethod true if not the name of the calling method should be logged but
+	 *                             the name of the method that has called the caller;
+	 *                             false if the name of the calling method should be logged (default)
 	 */
-	public static synchronized void log(int logLevel, int logType, String message)
+	public static synchronized void log(int logLevel, int logType, String message, boolean a_bSkipCallingMethod)
 	{
 		if (isLogged(logLevel, logType))
 		{
@@ -157,14 +160,30 @@ public final class LogHolder
 			else if (m_messageDetailLevel == DETAIL_LEVEL_HIGH)
 			{
 				getInstance().getLogInstance().log(logLevel, logType,
-					Util.normaliseString(getCallingClassFile() + ": ", 40) + message);
+				Util.normaliseString(
+								getCallingClassFile(a_bSkipCallingMethod) + ": ", 40) + message);
 			}
 			else
 			{
 				getInstance().getLogInstance().log(logLevel, logType,
-					Util.normaliseString(getCallingMethod() + ": ", 80) + message);
+					Util.normaliseString(
+							   getCallingMethod(a_bSkipCallingMethod) + ": ", 80) + message);
+			}
 			}
 		}
+
+
+
+	/**
+	 * Write the log data to the Log instance.
+	 *
+	 * @param logLevel The log level (see constants in class LogLevel).
+	 * @param logType The log type (see constants in class LogType).
+	 * @param message The message to log.
+	 */
+	public static void log(int logLevel, int logType, String message)
+	{
+		log(logLevel, logType, message, false);
 	}
 
 	/**
@@ -216,11 +235,16 @@ public final class LogHolder
 	/**
 	 * Returns the filename and line number of the calling method (from outside
 	 * this class) in the form <Code> (class.java:<LineNumber>) </Code>.
+	 * @param a_bSkipCallingMethod if true, the true calling method is skipped and the class file
+	 *                             of the caller of the calling method is returned;
+	 *                             if false, the class file of the calling method is returned
+	 *                             (default)
+	 *
 	 * @return the filename and line number of the calling method
 	 */
-	private static String getCallingClassFile()
+	private static String getCallingClassFile(boolean a_bSkipCallingMethod)
 	{
-		String strClassFile = getCallingMethod();
+		String strClassFile = getCallingMethod(a_bSkipCallingMethod);
 		strClassFile = strClassFile.substring(strClassFile.indexOf('('), strClassFile.indexOf(')') + 1);
 		return strClassFile;
 	}
@@ -229,9 +253,12 @@ public final class LogHolder
 	 * Returns the name, class, file and line number of the calling method (from outside
 	 * this class) in the form <Code> package.class.method(class.java:<LineNumber>) </Code>.
 	 * This method does need some processing time, as an exception with the stack trace is generated.
+	 * @param a_bSkipCallingMethod if true, the true calling method is skipped and the caller of the
+	 *                             calling method is returned; if false, the calling method is
+	 *                             returned (default)
 	 * @return the name, class and line number of the calling method
 	 */
-	private static String getCallingMethod()
+	private static String getCallingMethod(boolean a_bSkipCallingMethod)
 	{
 		StringTokenizer tokenizer;
 		String strCurrentMethod = "";
@@ -246,9 +273,20 @@ public final class LogHolder
 		{
 			tokenizer.nextToken(); // jump over the "at"
 			/* jump over all local class calls */
-			if ( (strCurrentMethod = tokenizer.nextToken()).indexOf(LogHolder.class.getName()) < 0)
+			if (!(strCurrentMethod = tokenizer.nextToken()).replace('/','.') .startsWith(
+				 LogHolder.class.getName()))
 			{
 				// this is the method that called us
+				if (a_bSkipCallingMethod)
+				{
+					// the calling method is skipped
+					if (tokenizer.countTokens() >= 2)
+					{
+						tokenizer.nextToken();
+						strCurrentMethod = tokenizer.nextToken();
+					}
+				}
+
 				break;
 			}
 		}
