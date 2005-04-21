@@ -29,14 +29,9 @@ package anon.crypto.test;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
-import anon.infoservice.TestProxy;
 
 public class AllTests
 {
-	/**
-	 * The proxy is not used here, but it must be imported for automatic compilation.
-	 */
-	TestProxy m_proxy;
 
 	/**
 	 * The main function.
@@ -62,6 +57,7 @@ public class AllTests
 		suite.addTestSuite(ByteSignatureTest.class);
 		suite.addTestSuite(JAPCertificateTest.class);
 		suite.addTestSuite(XMLSignatureTest.class);
+		suite.addTestSuite(PKCS12Test.class);
 		return suite;
 	}
 }
