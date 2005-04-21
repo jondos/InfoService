@@ -27,6 +27,9 @@
  */
 package anon.crypto.test;
 
+import org.bouncycastle.asn1.ASN1OctetString;
+import org.bouncycastle.asn1.x509.SubjectKeyIdentifier;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.security.SecureRandom;
@@ -36,6 +39,7 @@ import java.util.Vector;
 import anon.crypto.AsymmetricCryptoKeyPair;
 import anon.crypto.JAPCertificate;
 import anon.crypto.PKCS12;
+import anon.util.Util;
 import junitx.framework.extension.XtendedPrivateTestCase;
 
 
@@ -47,6 +51,73 @@ public class JAPCertificateTest extends XtendedPrivateTestCase
 	{
 		super(a_name);
 		m_random = new SecureRandom();
+	}
+
+	/**
+	 * Test for the DSA algorithm if the SubjectKeyIdentifier extension correctly holds
+	 * the SHA-1 hashed SubjectPublicKeyInfo of the public key as defined in RFC2459.
+	 * @exception Exception if an error occurs
+	 */
+	public void testSubjectKeyIdentifierExtensionDSA() throws Exception
+	{
+		m_random.setSeed(158943225);
+		testSubjectKeyIdentifierExtension(new DSATestKeyPairGenerator(m_random));
+	}
+
+	/**
+	 * Test for the RSA algorithm if the SubjectKeyIdentifier extension correctly holds
+	 * the SHA-1 hashed SubjectPublicKeyInfo of the public key as defined in RFC2459.
+	 * @exception Exception if an error occurs
+	 */
+	public void testSubjectKeyIdentifierExtensionRSA() throws Exception
+	{
+		m_random.setSeed(355582912);
+		testSubjectKeyIdentifierExtension(new RSATestKeyPairGenerator(m_random));
+	}
+
+	/**
+	 * Test for the Dummy algorithm if the SubjectKeyIdentifier extension correctly holds
+	 * the SHA-1 hashed SubjectPublicKeyInfo of the public key as defined in RFC2459.
+	 * @exception Exception if an error occurs
+	 */
+	public void testSubjectKeyIdentifierExtensionDummy() throws Exception
+	{
+		m_random.setSeed(692981264);
+		testSubjectKeyIdentifierExtension(new DummyTestKeyPairGenerator(m_random));
+	}
+
+
+	/**
+	 * Test if the SubjectKeyIdentifier extension correctly holds the SHA-1 hashed
+	 * SubjectPublicKeyInfo of the public key as defined in RFC2459.
+	 * @param a_keyPairGenerator a key pair generator
+	 * @throws Exception if an error occurs
+	 */
+	private void testSubjectKeyIdentifierExtension(AbstractTestKeyPairGenerator a_keyPairGenerator)
+		throws Exception
+	{
+		PKCS12 privateCertificate;
+		JAPCertificate publicCertificate;
+		byte[] ski_one, ski_two;
+
+		// create a private certificate
+		privateCertificate = new PKCS12(
+				  "DummyOwner", a_keyPairGenerator.createKeyPair(), new GregorianCalendar(), 1);
+
+		/*
+		 * During creation of the private certificate, an X509 certificate has been created, too.
+		 * Test if this certificate contains a correct SubjectKeyIdentifier! (Blackbox-Test)
+		 */
+		publicCertificate = privateCertificate.getX509Certificate();
+
+		ski_one = ASN1OctetString.getInstance(
+				  new SubjectKeyIdentifier(
+						publicCertificate.getSubjectPublicKeyInfo()).getDERObject()).getOctets();
+		ski_two = publicCertificate.getSubjectKeyIdentifier();
+
+		assertNotNull(ski_two);
+		assertTrue(ski_two.length > 0);
+		assertTrue(Util.arraysEqual(ski_one, ski_two));
 	}
 
 	/**
@@ -95,13 +166,13 @@ public class JAPCertificateTest extends XtendedPrivateTestCase
 		for (int i = 0; i < 5; i++)
 		{
 			keyPair = a_keyPairGenerator.createKeyPair();
-			signingCertificate = new PKCS12("DummyOwner" + i, keyPair, new GregorianCalendar(), 0);
+			signingCertificate = new PKCS12("DummyOwner" + i, keyPair, new GregorianCalendar(), 1);
 
 			// test if we can store and load PKCS12 certificates to/from an output stream
 			testOutput = new ByteArrayOutputStream();
 			signingCertificate.store(testOutput, new char[0]);
 			testInput = new ByteArrayInputStream(testOutput.toByteArray());
-			signingCertificate = PKCS12.load(testInput, new char[0]);
+			signingCertificate = PKCS12.getInstance(testInput, new char[0]);
 
 			certificate = signingCertificate.getX509Certificate();
 			//certificate.setEnabled(true); // X509 certs derived from PKCS12 must be enabled by default!!

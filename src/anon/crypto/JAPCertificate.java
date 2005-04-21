@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2000 - 2004, The JAP-Team
+ Copyright (c) 2000 - 2005, The JAP-Team
  All rights reserved.
  Redistribution and use in source and binary forms, with or without modification,
  are permitted provided that the following conditions are met:
@@ -48,8 +48,12 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.Vector;
+import java.util.Hashtable;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 import org.bouncycastle.asn1.ASN1Sequence;
+import org.bouncycastle.asn1.ASN1OctetString;
 import org.bouncycastle.asn1.ASN1TaggedObject;
 import org.bouncycastle.asn1.BERInputStream;
 import org.bouncycastle.asn1.DERBitString;
@@ -65,21 +69,26 @@ import org.bouncycastle.asn1.DERUTCTime;
 import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
 import org.bouncycastle.asn1.pkcs.SignedData;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
+import org.bouncycastle.asn1.x509.SubjectKeyIdentifier;
 import org.bouncycastle.asn1.x509.TBSCertificateStructure;
 import org.bouncycastle.asn1.x509.V3TBSCertificateGenerator;
 import org.bouncycastle.asn1.x509.X509CertificateStructure;
 import org.bouncycastle.asn1.x509.X509Name;
+import org.bouncycastle.asn1.x509.X509Extensions;
+import org.bouncycastle.asn1.x509.X509Extension;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
-import org.w3c.dom.Text;
 
 import anon.util.Base64;
 import anon.util.IXMLEncodable;
 import anon.util.XMLUtil;
+import anon.util.ResourceInstantiator;
+import anon.util.ResourceLoader;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+
 
 /**
  * A certificate class.
@@ -148,7 +157,6 @@ final public class JAPCertificate extends X509CertificateStructure implements IX
 		}
 		catch (Exception a_e)
 		{
-			LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, "Exception in JAOCertifciate():" + a_e.getMessage());
 			LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, a_e);
 			throw new IllegalArgumentException(
 				"Certificate structure contains invalid public key! " + a_e);
@@ -251,11 +259,22 @@ final public class JAPCertificate extends X509CertificateStructure implements IX
 		}
 		catch (Exception a_e)
 		{
-			LogHolder.log(LogLevel.EXCEPTION, LogType.MISC,
-						  "Exception while createing JAPCertifcate: " + a_e.getMessage());
 			LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, a_e);
 			return null;
 		}
+	}
+
+	/**
+	 * Instantiates all certificates found in the specified relative resource path.
+	 * @param a_strResourceSearchPath a relative path to a resource
+	 * @param a_bRecursive if true subdirectories are searched, too
+	 * @return a Hashtable with all instanciated certificates
+	 */
+	public static Hashtable getInstance(String a_strResourceSearchPath, boolean a_bRecursive)
+	{
+		return ResourceLoader.loadResources(a_strResourceSearchPath,
+											new X509CertificateInstantiator(),
+											a_bRecursive);
 	}
 
 	/** Creates a certificate by using an input stream.
@@ -265,23 +284,18 @@ final public class JAPCertificate extends X509CertificateStructure implements IX
 	 */
 	public static JAPCertificate getInstance(InputStream a_in)
 	{
-		StringBuffer sbuf = new StringBuffer();
-		BufferedReader reader = new BufferedReader(new InputStreamReader(a_in));
-		String line;
+		byte[] bytes;
 
 		try
 		{
-			while ( (line = reader.readLine()) != null)
-			{
-				sbuf.append(line);
-			}
+			bytes = ResourceLoader.getStreamAsBytes(a_in);
 		}
 		catch (IOException a_e)
 		{
 			return null;
 		}
 
-		return getInstance(sbuf.toString().getBytes());
+		return getInstance(bytes);
 	}
 
 	/**
@@ -521,6 +535,30 @@ final public class JAPCertificate extends X509CertificateStructure implements IX
 		return m_PubKey;
 	}
 
+	/**
+	 * Returns the SubjectKeyIdentifier that should be calculated using a SHA1 hash over
+	 * the BIT STRING from SubjectPublicKeyInfo as defined in RFC2459.
+	 * @return the SubjectKeyIdentifier or null if it is not present
+	 */
+	public byte[] getSubjectKeyIdentifier()
+	{
+		X509Extension extSubjectKeyIdentifier;
+
+		extSubjectKeyIdentifier =
+			getTBSCertificate().getExtensions().getExtension(X509Extensions.SubjectKeyIdentifier);
+
+		if (extSubjectKeyIdentifier != null)
+		{
+			return extSubjectKeyIdentifier.getValue().getOctets();
+		}
+
+		return null;
+	}
+
+	/**
+	 * Returns a reference to this certificate.
+	 * @return a reference to this certificate
+	 */
 	public JAPCertificate getX509Certificate()
 	{
 		return this;
@@ -776,22 +814,51 @@ final public class JAPCertificate extends X509CertificateStructure implements IX
 	 */
 	private static final class X509CertificateGenerator extends V3TBSCertificateGenerator
 	{
+		/**
+		 * Prepares a new X509 certificate from an owner alias and a public key.
+		 * The SubjectKeyIdentifier extension is added and calculated using a SHA1 hash over
+		 * the BIT STRING from SubjectPublicKeyInfo as defined in RFC2459.
+		 * @param a_ownerAlias the certificate`s common name; an alias to the public key`s owner
+		 * @param a_validFrom the date from which the certificate is valid
+		 * @param a_validTo the date on which the certificate looses validity
+		 * @param a_publicKey the public key that is enclosed in the certificate
+		 * @throws IOException if the public key`s encoding is invalid
+		 */
 		public X509CertificateGenerator(String a_ownerAlias, Date a_validFrom, Date a_validTo,
 										IMyPublicKey a_publicKey) throws IOException
 		{
+			SubjectPublicKeyInfo subjectPublicKeyInfo;
+
 			setStartDate(new DERUTCTime(a_validFrom));
 			setEndDate(new DERUTCTime(a_validTo));
 			setSerialNumber(new DERInteger(1));
 			setSubject(new X509Name("CN=" + a_ownerAlias));
-			setSubjectPublicKeyInfo(new SubjectPublicKeyInfo( (ASN1Sequence) (new DERInputStream(new
-				ByteArrayInputStream(a_publicKey.getEncoded()))).readObject()));
+			subjectPublicKeyInfo =
+				new SubjectPublicKeyInfo( (ASN1Sequence) (new DERInputStream(new
+				ByteArrayInputStream(a_publicKey.getEncoded()))).readObject());
+			setSubjectPublicKeyInfo(subjectPublicKeyInfo);
+			setSubjectKeyIdentifier(subjectPublicKeyInfo);
 		}
 
+		/**
+		 * Prepares a new X509 certificate from an existing X509 certificate.
+		 * Ignores all extensions (!) and adds the critical subject key identifier
+		 * extension which is calculated using a SHA1 hash over the BIT STRING from
+		 * SubjectPublicKeyInfo as defined in RFC2459.
+		 * @param cert X509CertificateStructure
+		 */
 		public X509CertificateGenerator(X509CertificateStructure cert)
 		{
 			this(cert.getTBSCertificate());
 		}
 
+		/**
+		 * Prepares a new X509 certificate from an existing X509 certificate.
+		 * Ignores all extensions (!) and adds the critical subject key identifier
+		 * extension which is calculated using a SHA1 hash over the BIT STRING from
+		 * SubjectPublicKeyInfo as defined in RFC2459.
+		 * @param tbs X509CertificateStructure
+		 */
 		public X509CertificateGenerator(TBSCertificateStructure tbs)
 		{
 			setEndDate(tbs.getEndDate());
@@ -802,6 +869,7 @@ final public class JAPCertificate extends X509CertificateStructure implements IX
 			setStartDate(tbs.getStartDate());
 			setSubject(tbs.getSubject());
 			setSubjectPublicKeyInfo(tbs.getSubjectPublicKeyInfo());
+			setSubjectKeyIdentifier(tbs.getSubjectPublicKeyInfo());
 		}
 
 		public X509CertificateStructure sign(PKCS12 a_pkcs12Certificate)
@@ -839,10 +907,46 @@ final public class JAPCertificate extends X509CertificateStructure implements IX
 
 			catch (Throwable t)
 			{
-				t.printStackTrace();
+				LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, t);
 				return null;
 			}
 		}
+
+		/**
+		 * Deletes all extensions (!) and adds the critical subject key identifier
+		 * extension which is calculated using a SHA1 hash over the BIT STRING from
+		 * SubjectPublicKeyInfo as defined in RFC2459.
+		 * @param a_subjectPublicKeyInfo a SubjectPublicKeyInfo
+		 */
+		private void setSubjectKeyIdentifier(SubjectPublicKeyInfo a_subjectPublicKeyInfo)
+		{
+			Hashtable extensions = new Hashtable();
+			X509Extension extSubjectKeyIdentifier;
+
+			extSubjectKeyIdentifier =
+				new X509Extension(false,
+								  ASN1OctetString.getInstance(
+										new SubjectKeyIdentifier(
+											  a_subjectPublicKeyInfo).getDERObject()));
+
+			extensions.put(X509Extensions.SubjectKeyIdentifier, extSubjectKeyIdentifier);
+			setExtensions(new X509Extensions(extensions));
+		}
 	}
 
+	private static final class X509CertificateInstantiator implements ResourceInstantiator
+	{
+		public Object getInstance(File a_file, File a_topDirectory)
+			throws Exception
+		{
+				return JAPCertificate.getInstance(new FileInputStream(a_file));
+	}
+
+		public Object getInstance(ZipEntry a_entry, ZipFile a_file)
+			throws Exception
+		{
+			return JAPCertificate.getInstance(a_file.getInputStream(a_entry));
+		}
+
+	}
 }
