@@ -116,9 +116,9 @@ public class XMLEasyCC extends AbstractXMLSignable
 			m_strAiName = XMLUtil.parseValue(elem, "keinplan2");
 		}
 		elem = (Element) XMLUtil.getFirstChildByName(element, "AccountNumber");
-		m_lAccountNumber = XMLUtil.parseValue(elem, 0);
+		m_lAccountNumber = XMLUtil.parseValue(elem, 0l);
 		elem = (Element) XMLUtil.getFirstChildByName(element, "TransferredBytes");
-		m_lTransferredBytes = XMLUtil.parseValue(elem, 0);
+		m_lTransferredBytes = XMLUtil.parseValue(elem, 0l);
 
 		/** @todo find a better internal representation for the sig */
 		elem = (Element) XMLUtil.getFirstChildByName(element, "Signature");
