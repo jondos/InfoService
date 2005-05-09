@@ -802,15 +802,51 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	 */
 	private void editManualCascade()
 	{
+		boolean valid = true;
 		try
 		{
 			MixCascade oldCascade = (MixCascade) m_listMixCascade.getSelectedValue();
 			MixCascade c = new MixCascade(m_manHostField.getText(),
 										  Integer.parseInt(m_manPortField.getText()));
-			m_Controller.getMixCascadeDatabase().removeElement(oldCascade);
+			//Check if this cascade already exists
+			Vector db = m_Controller.getMixCascadeDatabase();
+			for (int i = 0; i < db.size(); i++)
+			{
+				MixCascade mc = (MixCascade) db.elementAt(i);
+				if (mc.getListenerInterface(0).getHost().equalsIgnoreCase(
+					c.getListenerInterface(0).getHost()))
+				{
+					if (mc.getListenerInterface(0).getPort() ==
+						c.getListenerInterface(0).getPort())
+					{
+						valid = false;
+					}
+				}
+			}
+
+			if (valid)
+			{
 			m_Controller.getMixCascadeDatabase().addElement(c);
+				if (m_Controller.getCurrentMixCascade().equals(oldCascade))
+				{
+					m_Controller.setCurrentMixCascade(c);
+					JOptionPane.showMessageDialog(this.getRootPanel(), JAPMessages.getString("activeCascadeEdited"),
+											  JAPMessages.getString("information"),
+											  JOptionPane.INFORMATION_MESSAGE);
+
+					//add: message that active cascade cannot be deleted
+				}
+				m_Controller.getMixCascadeDatabase().removeElement(oldCascade);
+
 			this.updateMixCascadeCombo();
 			m_listMixCascade.setSelectedIndex(m_listMixCascade.getModel().getSize() - 1);
+		}
+			else
+			{
+				JOptionPane.showMessageDialog(this.getRootPanel(), JAPMessages.getString("cascadeExistsDesc"),
+											  JAPMessages.getString("errorCreateCascade"),
+											  JOptionPane.ERROR_MESSAGE);
+			}
 		}
 		catch (Exception a_e)
 		{
@@ -818,6 +854,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			JOptionPane.showMessageDialog(this.getRootPanel(), JAPMessages.getString("errorCreateCascadeDesc"),
 										  JAPMessages.getString("errorCreateCascade"),
 										  JOptionPane.ERROR_MESSAGE);
+
 		}
 	}
 
@@ -829,8 +866,17 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		try
 		{
 			MixCascade cascade = (MixCascade) m_listMixCascade.getSelectedValue();
+			if (m_Controller.getCurrentMixCascade().equals(cascade))
+			{
+				JOptionPane.showMessageDialog(this.getRootPanel(), JAPMessages.getString("activeCascadeDelete"),
+											  JAPMessages.getString("errorCreateCascade"),
+											  JOptionPane.ERROR_MESSAGE);
+			}
+			else
+			{
 			m_Controller.getMixCascadeDatabase().removeElement(cascade);
 			this.updateMixCascadeCombo();
+		}
 		}
 		catch (Exception a_e)
 		{
@@ -848,6 +894,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		{
 			MixCascade c = new MixCascade(m_manHostField.getText(),
 										  Integer.parseInt(m_manPortField.getText()));
+
 			m_Controller.getMixCascadeDatabase().addElement(c);
 			this.updateMixCascadeCombo();
 			m_listMixCascade.setSelectedIndex(m_listMixCascade.getModel().getSize() - 1);
