@@ -247,8 +247,10 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				}
 				if (e.getStateChange() == ItemEvent.SELECTED)
 				{
+					boolean reconnect = m_rbAnonOn.isSelected();
 					MixCascade cascade = (MixCascade) m_comboAnonServices.getSelectedItem();
 					m_Controller.setCurrentMixCascade(cascade);
+					m_Controller.setAnonMode(reconnect);
 				}
 			}
 		});

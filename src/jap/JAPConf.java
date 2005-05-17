@@ -426,9 +426,9 @@ final class JAPConf extends JDialog implements ActionListener
 		m_comboProxyType.setFont(m_fontControls);
 		m_comboProxyType.addItem(JAPMessages.getString("settingsProxyTypeHTTP"));
 		m_comboProxyType.addItem(JAPMessages.getString("settingsProxyTypeSOCKS"));
-		m_tfProxyHost = new JTextField();
+		m_tfProxyHost = new JTextField(20);
 		m_tfProxyHost.setFont(m_fontControls);
-		m_tfProxyPortNumber = new JAPJIntField();
+		m_tfProxyPortNumber = new JAPJIntField(5);
 		m_tfProxyPortNumber.setFont(m_fontControls);
 		ProxyInterface proxyInterface = JAPModel.getInstance().getProxyInterface();
 		boolean bUseProxy = (proxyInterface != null && proxyInterface.isValid());
@@ -467,7 +467,7 @@ final class JAPConf extends JDialog implements ActionListener
 		});
 		m_cbProxyAuthentication = new JCheckBox(JAPMessages.getString("settingsProxyAuthenticationCheckBox"));
 		m_cbProxyAuthentication.setFont(m_fontControls);
-		m_tfProxyAuthenticationUserID = new JTextField();
+		m_tfProxyAuthenticationUserID = new JTextField(10);
 		m_tfProxyAuthenticationUserID.setFont(m_fontControls);
 		m_cbProxyAuthentication.addActionListener(new ActionListener()
 		{
@@ -507,7 +507,7 @@ final class JAPConf extends JDialog implements ActionListener
 		}
 		GridBagConstraints c = new GridBagConstraints();
 		c.anchor = GridBagConstraints.NORTHWEST;
-		c.fill = GridBagConstraints.HORIZONTAL;
+		c.fill = GridBagConstraints.NONE;
 		c.gridwidth = 1;
 		c.gridx = 0;
 		c.gridy = 0;
@@ -819,6 +819,7 @@ final class JAPConf extends JDialog implements ActionListener
 			if (s == null || s.equals(""))
 			{
 				showError(JAPMessages.getString("errorFirewallHostNotNull"));
+				this.selectCard(PROXY_TAB);
 				return false;
 			}
 			try
@@ -832,6 +833,7 @@ final class JAPConf extends JDialog implements ActionListener
 			if (!ProxyInterface.isValidPort(i))
 			{
 				showError(JAPMessages.getString("errorFirewallServicePortWrong"));
+				this.selectCard(PROXY_TAB);
 				return false;
 			}
 			if (m_cbProxyAuthentication.isSelected())
@@ -840,6 +842,7 @@ final class JAPConf extends JDialog implements ActionListener
 				if (s == null || s.equals(""))
 				{
 					showError(JAPMessages.getString("errorFirewallAuthUserIDNotNull"));
+					this.selectCard(PROXY_TAB);
 					return false;
 				}
 			}
@@ -1047,6 +1050,10 @@ final class JAPConf extends JDialog implements ActionListener
 		}
 		m_labelProxyAuthUserID.setEnabled(m_cbProxyAuthentication.isSelected() & bEnableProxy);
 		m_tfProxyAuthenticationUserID.setEnabled(m_cbProxyAuthentication.isSelected() & bEnableProxy);
+		if (m_tfProxyPortNumber.getText().trim().equalsIgnoreCase("-1"))
+		{
+			m_tfProxyPortNumber.setText("");
+		}
 	}
 
 }

@@ -879,11 +879,11 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 											  descriptionPanelConstraints);
 		descriptionPanel.add(settingsInfoServiceConfigBasicSettingsDescriptionLabel);
 
-		addInfoServiceHostField = new JTextField();
+		addInfoServiceHostField = new JTextField(20);
 		addInfoServiceHostField.setFont(getFontSetting());
-		addInfoServicePortField = new JAPJIntField();
+		addInfoServicePortField = new JAPJIntField(5);
 		addInfoServicePortField.setFont(getFontSetting());
-		addInfoServiceNameField = new JTextField();
+		addInfoServiceNameField = new JTextField(20);
 		addInfoServiceNameField.setFont(getFontSetting());
 
 		JButton settingsInfoServiceConfigBasicSettingsAddInfoServiceAddButton = new JButton(JAPMessages.
@@ -995,7 +995,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 		addInfoServicePanel.setLayout(addInfoServicePanelLayout);
 
 		GridBagConstraints addInfoServicePanelConstraints = new GridBagConstraints();
-		addInfoServicePanelConstraints.fill = GridBagConstraints.HORIZONTAL;
+		addInfoServicePanelConstraints.fill = GridBagConstraints.NONE;
 		addInfoServicePanelConstraints.weighty = 0.0;
 
 		addInfoServicePanelConstraints.gridx = 0;

@@ -608,7 +608,7 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 							int i = 0;
 							while ( (i < a_stringToInsert.length()) && (invalidCharacters == false))
 							{
-								if (a_captcha.getCharacterSet().indexOf(a_stringToInsert.substring(i, i + 1)) <
+								if (a_captcha.getCharacterSet().indexOf(a_stringToInsert.toUpperCase().substring(i, i + 1)) <
 									0)
 								{
 									/* we have found an invalid character */
@@ -619,7 +619,7 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 							if (invalidCharacters == false)
 							{
 								/* only insert strings, which fit in the box and have no invalid characters */
-								super.insertString(a_position, a_stringToInsert, a_attributes);
+								super.insertString(a_position, a_stringToInsert.toUpperCase(), a_attributes);
 							}
 						}
 					}
