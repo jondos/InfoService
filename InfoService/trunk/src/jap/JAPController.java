@@ -1565,7 +1565,7 @@ public final class JAPController extends Observable implements IProxyListener, O
         try {
           m_waitForThread.join();
         }
-        catch (InterruptedException e) {           
+        catch (InterruptedException e) {
           m_jobWasInterrupted = true;
           LogHolder.log(LogLevel.DEBUG, LogType.MISC, "SetAnonModeAsync: run: Job for changing the anonymity mode to '" + (new Boolean(m_startServer)).toString() + "' was canceled.");
 					}
@@ -1824,7 +1824,7 @@ public final class JAPController extends Observable implements IProxyListener, O
         /* it's a new job -> do something */
         if (((a_anonModeSelected == false) && (m_changeAnonModeJobs.size() >= 2)) || (m_changeAnonModeJobs.size() >= 3)) {
           /* because of enough previous jobs in the queue, we can ignore this job, if we also
-           * interrupt and remove the previous one 
+           * interrupt and remove the previous one
            */
           SetAnonModeAsync previousJob = (SetAnonModeAsync)(m_changeAnonModeJobs.lastElement());
           previousJob.interruptExecution();
@@ -1852,8 +1852,8 @@ public final class JAPController extends Observable implements IProxyListener, O
           currentThread.start();
           LogHolder.log(LogLevel.DEBUG, LogType.MISC, "JAPController: setAnonMode: Added a job for changing the anonymity mode to '" + (new Boolean(a_anonModeSelected)).toString() + "' to the job queue.");
         }
-      } 
-    }    
+      }
+    }
 	}
 
 	/**
@@ -2426,7 +2426,7 @@ public final class JAPController extends Observable implements IProxyListener, O
         if (JAPModel.getInstance().getRoutingSettings().setRoutingMode(JAPRoutingSettings.ROUTING_MODE_SERVER) == true) {
           /* starting the server was successful -> start propaganda with blocking in a separate
            * thread
-           */           
+           */
           Thread startPropagandaThread = new Thread(new Runnable() {
             public void run() {
               int msgId = m_View.addStatusMsg(JAPMessages.getString("controllerStatusMsgRoutingStartServer"), JOptionPane.INFORMATION_MESSAGE, false);
@@ -2463,7 +2463,8 @@ public final class JAPController extends Observable implements IProxyListener, O
         else {
           /* opening the server port was not successful -> show an error message */
           m_iStatusPanelMsgIdForwarderServerStatus = m_View.addStatusMsg(JAPMessages.getString("controllerStatusMsgRoutingStartServerError"), JOptionPane.ERROR_MESSAGE, true);
-          JOptionPane.showMessageDialog(getView(), JAPMessages.getString("settingsRoutingStartServerError"), JAPMessages.getString("settingsRoutingStartServerErrorTitle"), JOptionPane.ERROR_MESSAGE);
+          JOptionPane.showMessageDialog(getView(), JAPMessages.getString("settingsRoutingStartServerError"),
+										JAPMessages.getString("settingsRoutingStartServerErrorTitle"), JOptionPane.ERROR_MESSAGE);
 			}
 	}
       else {
@@ -2473,7 +2474,7 @@ public final class JAPController extends Observable implements IProxyListener, O
         JAPModel.getInstance().getRoutingSettings().setRoutingMode(JAPRoutingSettings.ROUTING_MODE_DISABLED);
         m_iStatusPanelMsgIdForwarderServerStatus = m_View.addStatusMsg(JAPMessages.getString("controllerStatusMsgRoutingServerStopped"), JOptionPane.INFORMATION_MESSAGE, true);
       }
-    }   
+    }
 	}
 
 	static public InfoServiceDBEntry createDefaultInfoService() throws Exception

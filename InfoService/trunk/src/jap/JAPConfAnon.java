@@ -418,6 +418,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 		m_listMixCascade = new JList();
 		m_listMixCascade.addListSelectionListener(this);
+		m_listMixCascade.setFixedCellWidth(30);
 		c.gridx = 0;
 		c.gridy = 1;
 		c.gridheight = 3;
