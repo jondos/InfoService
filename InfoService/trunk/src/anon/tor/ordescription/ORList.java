@@ -46,6 +46,8 @@ public class ORList
 {
 
 	private Vector m_onionrouters;
+	private Vector m_exitnodes;
+	private Vector m_middlenodes;
 	private Hashtable m_onionroutersWithNames;
 	private MyRandom m_rand;
 	private ORListFetcher m_orlistFetcher;
@@ -63,6 +65,8 @@ public class ORList
 	public ORList(ORListFetcher fetcher)
 	{
 		m_onionrouters = new Vector();
+		m_exitnodes = new Vector();
+		m_middlenodes = new Vector();
 		m_onionroutersWithNames = new Hashtable();
 		m_orlistFetcher = fetcher;
 		m_rand = new MyRandom();
@@ -146,7 +150,15 @@ public class ORList
 	 */
 	public synchronized void remove(String name)
 	{
-		m_onionrouters.removeElement(getByName(name));
+		ORDescription ord = getByName(name);
+		m_onionrouters.removeElement(ord);
+		if(ord.isExitNode())
+		{
+			m_exitnodes.removeElement(ord);
+		} else
+		{
+			m_middlenodes.removeElement(ord);
+		}
 		m_onionroutersWithNames.remove(name);
 	}
 
@@ -168,6 +180,36 @@ public class ORList
 	public synchronized ORDescription getByRandom()
 	{
 		return (ORDescription)this.m_onionrouters.elementAt(m_rand.nextInt(m_onionrouters.size()));
+	}
+
+	/**
+	 * selects a OR randomly
+	 * tries to blanace the probability of exit and non-exit nodes
+	 * @param length
+	 * length of the circuit
+	 * @return
+	 */
+	public synchronized ORDescription getByRandom(int length)
+	{
+		//we know that the last node is an exit node, so we have to calculate a new probaility
+		//p(x') = (p(x)-1/length)*(length/(length-1))
+		//p(x) ... probability for exit nodes    p(x') ... new probability for exit nodes
+		//p(x) = exit_nodes/number_of_routers
+		int number_of_routers = m_onionrouters.size();
+		int numerator = length*m_exitnodes.size() - number_of_routers;
+		int denominator = (length-1)*number_of_routers;
+
+		//TODO: line can be removed if tor balance exit nodes and middlerouters in the right way
+		//we double the probability of middlerouters, because original tor doesn't use them so often
+		denominator *=2;
+
+		if(m_rand.nextInt(denominator)>numerator)
+		{
+			return (ORDescription)this.m_middlenodes.elementAt(m_rand.nextInt(m_middlenodes.size()));
+		} else
+		{
+			return (ORDescription)this.m_exitnodes.elementAt(m_rand.nextInt(m_exitnodes.size()));
+		}
 	}
 
 	/**
@@ -194,6 +236,8 @@ public class ORList
 	private void parseDocument(String strDocument) throws Exception
 	{
 		Vector ors = new Vector();
+		Vector exitnodes = new Vector();
+		Vector middlenodes = new Vector();
 		Hashtable orswn = new Hashtable();
 		LineNumberReader reader = new LineNumberReader(new StringReader(strDocument));
 		String strRunningOrs = " ";
@@ -206,21 +250,22 @@ public class ORList
 			{
 				break;
 			}
-			//can be removed when no routers version <0.0.9pre5 are used in tor
+			//remove "opt"(optional) in front of line
+			if(aktLine.startsWith("opt "))
+			{
+				aktLine=aktLine.substring(4,aktLine.length());
+			}
+			//TODO: can be removed when no routers version <0.0.9pre5 are used in tor
 			if (aktLine.startsWith("running-routers"))
 			{
 				strRunningOrs = aktLine + " ";
 			}
 			//new in version 0.0.9pre5 - added instead of running-routers line
-			else if (aktLine.startsWith("opt router-status") || aktLine.startsWith("router-status"))
+			else if (aktLine.startsWith("router-status"))
 			{
 				strRunningOrs = " ";
 				StringTokenizer st = new StringTokenizer(aktLine, " ");
 				String token = st.nextToken();
-				if (!token.toLowerCase().equals("router-status"))
-				{
-					token = st.nextToken();
-				}
 				while (st.hasMoreTokens())
 				{
 					token = st.nextToken();
@@ -244,6 +289,13 @@ public class ORList
 					if ( (strRunningOrs.indexOf(" " + ord.getName() + " ") >=
 						  0) /*&&(ord.getSoftware().startsWith("Tor 0.0.8"))*/)
 					{
+						if(ord.isExitNode())
+						{
+							exitnodes.addElement(ord);
+						} else
+						{
+							middlenodes.addElement(ord);
+						}
 						ors.addElement(ord);
 						orswn.put(ord.getName(), ord);
 						LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Added: " + ord);
@@ -259,6 +311,9 @@ public class ORList
 				published = ms_DateFormat.parse(strPublished);
 			}
 		}
+		m_exitnodes = exitnodes;
+		m_middlenodes = middlenodes;
+		LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Exit Nodes : "+exitnodes.size()+" Non-Exit Nodes : "+middlenodes.size());
 		m_onionrouters = ors;
 		m_onionroutersWithNames = orswn;
 		m_datePublished = published;

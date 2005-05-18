@@ -64,7 +64,7 @@ public class FirstOnionRouterConnection implements Runnable
 {
 
 	//Name of the onionproxy
-	private static String OP_NAME = "JAP-Client";
+	private static String OP_NAME = "JAPClient";
 	private TinyTLS m_tinyTLS;
 	private ORDescription m_description;
 	private Thread m_readDataLoop;
