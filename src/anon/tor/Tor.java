@@ -152,13 +152,13 @@ public class Tor implements Runnable, AnonService
 		m_rand = new MyRandom(new SecureRandom());
 		m_bIsStarted = false;
 		m_bIsCreatingCircuit = false;
-		m_MaxNrOfActiveCircuits = 5;
+		m_MaxNrOfActiveCircuits = 3;
 		m_activeCircuits = new Circuit[m_MaxNrOfActiveCircuits];
 		m_useDNSCache = true;
 		m_DNSCache = Database.getInstance(DNSCacheEntry.class);
 		m_CircuitForDestination = new Hashtable();
 		m_KeysForCircuit = new Vector[m_MaxNrOfActiveCircuits];
-		//counts the number of circuits that have been created (-1 : nouse of this variable / 0-m_maxnrofactivecircuits : number of created circuits)
+		//counts the number of circuits that have been created (-1 : no use of this variable / 0-m_maxnrofactivecircuits : number of created circuits)
 		m_bCloseCreator = false;
 		m_proxyInterface = null;
 	}
@@ -217,8 +217,8 @@ public class Tor implements Runnable, AnonService
 			//by linear search
 			for (int nr = 0; nr < m_MaxNrOfActiveCircuits; nr++)
 			{
-			c = m_activeCircuits[nr];
-			if (c != null &&
+				c = m_activeCircuits[nr];
+				if (c != null &&
 				!c.isShutdown() &&
 				c.isAllowed(addr, port))
 				{
@@ -359,13 +359,10 @@ public class Tor implements Runnable, AnonService
 				}
 				else
 				{
-					do
-					{
-					ord = m_orList.getByRandom();
-					} while(ord.isExitNode());
+					ord = m_orList.getByRandom(circuitLength);
 				}
 				LogHolder.log(LogLevel.DEBUG, LogType.TOR,
-							  "added as first: " + ord.getName() + " " + ord.getSoftware());
+							  "added as first: " + ord);
 				orsForNewCircuit.addElement(ord);
 				//get last OR
 				Vector possibleOrs = m_orList.getList();
@@ -398,7 +395,7 @@ public class Tor implements Runnable, AnonService
 				ord = (ORDescription) possibleOrs.elementAt(m_rand.nextInt(possibleOrs.size()));
 				orsForNewCircuit.addElement(ord);
 				LogHolder.log(LogLevel.DEBUG, LogType.TOR,
-							  "added as last: " + ord.getName() + " " + ord.getSoftware());
+							  "added as last: " + ord);
 				//get middle ORs
 				for (int i = 2; i < circuitLength; i++)
 				{
@@ -410,12 +407,12 @@ public class Tor implements Runnable, AnonService
 						}
 						else
 						{
-							ord = m_orList.getByRandom();
+							ord = m_orList.getByRandom(circuitLength);
 						}
 					}
-					while (orsForNewCircuit.contains(ord)||ord.isExitNode());
+					while (orsForNewCircuit.contains(ord));
 					LogHolder.log(LogLevel.DEBUG, LogType.TOR,
-								  "added " + ord.getName() + " " + ord.getSoftware());
+								  "added " + ord);
 					orsForNewCircuit.insertElementAt(ord, 1);
 				}
 				//establishes or gets an already established SSL-connection to the first OR
@@ -472,8 +469,10 @@ public class Tor implements Runnable, AnonService
 	public void run()
 	{
 		int errTry = 0;
-		int aktCircuit = 0;
-		while (aktCircuit < m_MaxNrOfActiveCircuits && !m_bCloseCreator && errTry < 4)
+		//int aktCircuit = 0;
+		boolean foundemptyslot = false;
+		//while (aktCircuit < m_MaxNrOfActiveCircuits && !m_bCloseCreator && errTry < 10)
+		while (!m_bCloseCreator && errTry < 10)
 		{
 			if (m_bCloseCreator)
 			{
@@ -487,38 +486,51 @@ public class Tor implements Runnable, AnonService
 				//(As we are synchronized on m_oActiveCircuitSync noew other thread can interferr now!
 				for (int i = 0; i < m_MaxNrOfActiveCircuits; i++)
 				{
-					if (m_activeCircuits[i] == null)
+					if (m_activeCircuits[i] == null||m_activeCircuits[i].isShutdown())
 					{
 						index = i;
 						break;
 					}
 				}
-				if (index == -1)
-				{ //we do not found any empty slot -> so we are done...
-					break;
-				}
-
-				//just create a new circuit, that can connect to this address and port
-				Circuit circ = createNewCircuit("141.76.46.90", 80);
-				if (circ == null)
+				if (index != -1)
+				//we found an empty slot
 				{
-					errTry++; //if we get overall more than 4 errors creating circuits we stop it!
-					continue;
+					foundemptyslot = true;
+					//just create a new circuit, that can connect to this address and port
+					Circuit circ = createNewCircuit("141.76.46.90", 80);
+					if (circ == null)
+					{
+						errTry++; //if we get overall more than 10 errors creating circuits we stop it!
+						continue;
+					}
+					//Insert it in the next empty slot....
+					m_activeCircuits[index] = circ;
+
 				}
-				//Insert it in the next empty slot....
-				m_activeCircuits[index] = circ;
+			}
+			if (foundemptyslot)
+			{ //we do not want to be as fast as possible
+				foundemptyslot = false;
+				try
+				{
+					Thread.sleep(10000);
+				}
+				catch (InterruptedException ex)
+				{
+				}
+			} else
+			{ //we do not found any empty slot -> sleep for a while
+				try
+				{
+					Thread.sleep(30000);
+				}
+				catch (InterruptedException ex)
+				{
+				}
 			}
 			errTry = 0;
-			aktCircuit++;
+			//aktCircuit++;
 
-			//We do not try to be as fast as possible...
-			try
-			{
-				Thread.sleep(10000);
-			}
-			catch (InterruptedException ex)
-			{
-			}
 		} //while
 		m_circuitCreator = null;
 	}

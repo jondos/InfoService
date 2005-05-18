@@ -29,6 +29,7 @@ package anon.tor.ordescription;
 
 import java.io.LineNumberReader;
 import java.util.StringTokenizer;
+import java.util.Vector;
 
 import anon.crypto.MyRSAPublicKey;
 import anon.util.Base64;
@@ -45,6 +46,7 @@ public class ORDescription
 	private boolean m_bIsExitNode;
 	private MyRSAPublicKey m_onionkey;
 	private MyRSAPublicKey m_signingkey;
+	private Vector family;
 
 	/**
 	 * Constructor
@@ -66,16 +68,22 @@ public class ORDescription
 		m_strSoftware = strSoftware;
 		m_acl = new ORAcl();
 		m_bIsExitNode = false;
+		family = null;
 	}
 
 	/**
 	 * sets this server as exit node or not
 	 * @param bIsExitNode
-	 * 
+	 *
 	 */
 	public void setExitNode(boolean bIsExitNode)
 	{
 		m_bIsExitNode = bIsExitNode;
+	}
+
+	public void setFamily(Vector fam)
+	{
+		family = fam;
 	}
 
 	/**
@@ -215,19 +223,35 @@ public class ORDescription
 
 	/**
 	 * test if two OR's are identical
+	 * returns also true, if the routers are in the same family
 	 * @param or
 	 * OR
 	 * @return
 	 */
-	public boolean equals(ORDescription or)
+	public boolean isSimilar(Object onionrouter)
 	{
-		if (or == null)
+		if (onionrouter != null)
 		{
-			return false;
+			if(onionrouter instanceof ORDescription)
+			{
+				ORDescription or = (ORDescription)onionrouter;
+				if(m_address.equals(or.getAddress()) &&
+				m_name.equals(or.getName()) &&
+				(m_port == or.getPort()))
+				{
+					return true;
+				}
+				//if the routers are in the same family they are also equal
+				else if(or.family!=null&&family!=null)
+				{
+					if((or.family.contains(m_name)&&family.contains(or.getName())))
+					{
+						return true;
+					}
+				}
+			}
 		}
-		return m_address.equals(or.getAddress()) &&
-			m_name.equals(or.getName()) &&
-			(m_port == or.getPort());
+		return false;
 	}
 
 	/**Tries to parse an router specification according to the desing document.
@@ -251,6 +275,7 @@ public class ORDescription
 			String orport = st.nextToken();
 			String socksport = st.nextToken();
 			String dirport = st.nextToken();
+			Vector fam = null;
 			byte[] key = null;
 			byte[] signingkey = null;
 			ORAcl acl = new ORAcl();
@@ -262,11 +287,29 @@ public class ORDescription
 				{
 					return null;
 				}
+				//remove "opt"(optional) in front of line
+				if(ln.startsWith("opt "))
+				{
+					ln=ln.substring(4,ln.length());
+				}
 				if (ln.startsWith("platform"))
 				{
 					st = new StringTokenizer(ln);
 					st.nextToken();
 					strSoftware = st.nextToken() + " " + st.nextToken();
+				}
+				else if (ln.startsWith("accept"))
+				{
+
+					acl.add(ln);
+					bIsExitNode = true;
+
+				}
+				else if (ln.startsWith("reject"))
+				{
+
+					acl.add(ln);
+
 				}
 				else if (ln.startsWith("onion-key"))
 				{
@@ -313,6 +356,7 @@ public class ORDescription
 							}
 							ord.setAcl(acl);
 							ord.setExitNode(bIsExitNode);
+							ord.setFamily(fam);
 							try
 							{
 								ord.setDirPort(Integer.parseInt(dirport));
@@ -325,18 +369,15 @@ public class ORDescription
 					}
 
 				}
-				else if (ln.startsWith("accept"))
+				else if(ln.startsWith("family"))
 				{
-					
-					acl.add(ln);
-					bIsExitNode = true;
-
-				}
-				else if (ln.startsWith("reject"))
-				{
-					
-					acl.add(ln);
-
+					st = new StringTokenizer(ln);
+					st.nextToken();
+					fam = new Vector();
+					while(st.hasMoreTokens())
+					{
+						fam.addElement(st.nextToken());
+					}
 				}
 
 			}
@@ -350,7 +391,7 @@ public class ORDescription
 
 	public String toString()
 	{
-		return "ORRouter: " + this.m_name + " on " + this.m_address + ":" + this.m_port + " isExitNode:"+this.m_bIsExitNode;
+		return "ORRouter: " + this.m_name + " on " + this.m_address + ":" + this.m_port + " Software : "+this.m_strSoftware+" isExitNode:"+this.m_bIsExitNode;
 	}
 
 }

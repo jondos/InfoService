@@ -71,7 +71,7 @@ public class FirstOnionRouterConnectionFactory
 		{
 			fOR = (FirstOnionRouterConnection) m_firstOnionRouters.elementAt(i);
 			ord = fOR.getORDescription();
-			if (ord.equals(d))
+			if (ord.isSimilar(d))
 			{
 				if (!fOR.isClosed())
 				{
