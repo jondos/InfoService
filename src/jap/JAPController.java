@@ -2463,8 +2463,7 @@ public final class JAPController extends Observable implements IProxyListener, O
         else {
           /* opening the server port was not successful -> show an error message */
           m_iStatusPanelMsgIdForwarderServerStatus = m_View.addStatusMsg(JAPMessages.getString("controllerStatusMsgRoutingStartServerError"), JOptionPane.ERROR_MESSAGE, true);
-          JOptionPane.showMessageDialog(getView(), JAPMessages.getString("settingsRoutingStartServerError"),
-										JAPMessages.getString("settingsRoutingStartServerErrorTitle"), JOptionPane.ERROR_MESSAGE);
+          JOptionPane.showMessageDialog(getView(), JAPMessages.getString("settingsRoutingStartServerError"), JAPMessages.getString("settingsRoutingStartServerErrorTitle"), JOptionPane.ERROR_MESSAGE);
 			}
 	}
       else {

@@ -53,6 +53,7 @@ final class JAPAbout extends JDialog
 	public JAPAbout(Frame p)
 	{
 		super(p, "Info...", false);
+		super.setVisible(false);
 		parent = p;
 		oldCursor = parent.getCursor();
 		parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
@@ -68,6 +69,7 @@ final class JAPAbout extends JDialog
 
 	private void init()
 	{
+		setVisible(false);
 		addWindowListener(new WindowAdapter()
 		{
 			public void windowClosing(WindowEvent e)
