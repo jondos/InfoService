@@ -76,6 +76,10 @@ import java.awt.GridLayout;
  */
 public class JAPConfForwardingServer extends AbstractJAPConfModule
 {
+	private DefaultListModel m_knownCascadesListModel;
+	private DefaultListModel m_knownInfoServicesListModel;
+	private DefaultListModel m_allowedCascadesListModel;
+	private DefaultListModel m_registrationInfoServicesListModel;
 
 	/**
 	 * This is the internal message system of this module.
@@ -152,7 +156,7 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 		final JPanel configPanel = new JPanel();
 
 		JLabel settingsForwardingServerConfigPortLabel = new JLabel(
-			  JAPMessages.getString("settingsForwardingServerConfigPortLabel"));
+			JAPMessages.getString("settingsForwardingServerConfigPortLabel"));
 		settingsForwardingServerConfigPortLabel.setFont(getFontSetting());
 
 		final JTextField serverPortField = new JTextField(5)
@@ -261,7 +265,7 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 								  new JAPRoutingMessage(JAPRoutingMessage.SERVER_PORT_CHANGED));
 
 		JLabel settingsForwardingServerConfigMyConnectionLabel = new JLabel(
-			  JAPMessages.getString("settingsForwardingServerConfigMyConnectionLabel"));
+			JAPMessages.getString("settingsForwardingServerConfigMyConnectionLabel"));
 		settingsForwardingServerConfigMyConnectionLabel.setFont(getFontSetting());
 
 		final JComboBox connectionClassesComboBox = new JComboBox(JAPModel.getInstance().getRoutingSettings().
@@ -599,12 +603,12 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 		JTabbedPane advancedConfigurationTabPane = new JTabbedPane();
 		advancedConfigurationTabPane.setFont(getFontSetting());
 		advancedConfigurationTabPane.insertTab(
-			  JAPMessages.getString("settingsForwardingServerConfigAllowedCascadesTabTitle"), null,
-											   createForwardingServerConfigAllowedCascadesPanel(), null, 0);
+			JAPMessages.getString("settingsForwardingServerConfigAllowedCascadesTabTitle"), null,
+			createForwardingServerConfigAllowedCascadesPanel(), null, 0);
 		advancedConfigurationTabPane.insertTab(
-			  JAPMessages.getString("settingsForwardingServerConfigRegistrationInfoServicesTabTitle"), null,
-											   createForwardingServerConfigRegistrationInfoServicesPanel(), null,
-											   1);
+			JAPMessages.getString("settingsForwardingServerConfigRegistrationInfoServicesTabTitle"), null,
+			createForwardingServerConfigRegistrationInfoServicesPanel(), null,
+			1);
 
 		JPanel serverPortPanel = new JPanel();
 		GridBagLayout serverPortPanelLayout = new GridBagLayout();
@@ -630,7 +634,7 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 		serverPortPanel.add(serverPortField);
 
 		TitledBorder settingsForwardingServerConfigBorder = new TitledBorder(
-			  JAPMessages.getString("settingsForwardingServerConfigBorder"));
+			JAPMessages.getString("settingsForwardingServerConfigBorder"));
 		settingsForwardingServerConfigBorder.setTitleFont(getFontSetting());
 		configPanel.setBorder(settingsForwardingServerConfigBorder);
 
@@ -749,16 +753,19 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 			JAPMessages.getString("settingsForwardingServerConfigAllowedCascadesAllowedCascadesLabel"));
 		settingsForwardingServerConfigAllowedCascadesAllowedCascadesLabel.setFont(getFontSetting());
 
-		final DefaultListModel knownCascadesListModel = new DefaultListModel();
-		final JList knownCascadesList = new JList(knownCascadesListModel);
+		m_knownCascadesListModel = new DefaultListModel();
+		m_knownInfoServicesListModel = new DefaultListModel();
+		this.fillLists();
+
+		final JList knownCascadesList = new JList(m_knownCascadesListModel);
 		knownCascadesList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		final JScrollPane knownCascadesScrollPane = new JScrollPane(knownCascadesList);
 		knownCascadesScrollPane.setFont(getFontSetting());
 		/* set the preferred size of the scrollpane to a 4x20 textarea */
 		knownCascadesScrollPane.setPreferredSize( (new JTextArea(4, 20)).getPreferredSize());
 
-		final DefaultListModel allowedCascadesListModel = new DefaultListModel();
-		final JList allowedCascadesList = new JList(allowedCascadesListModel);
+		m_allowedCascadesListModel = new DefaultListModel();
+		final JList allowedCascadesList = new JList(m_allowedCascadesListModel);
 		allowedCascadesList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		final JScrollPane allowedCascadesScrollPane = new JScrollPane(allowedCascadesList);
 		allowedCascadesScrollPane.setFont(getFontSetting());
@@ -766,26 +773,26 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 		allowedCascadesScrollPane.setPreferredSize( (new JTextArea(4, 20)).getPreferredSize());
 
 		final JButton settingsForwardingServerConfigAllowedCascadesReloadButton = new JButton(
-			  JAPMessages.getString("settingsForwardingServerConfigAllowedCascadesReloadButton"));
+			JAPMessages.getString("settingsForwardingServerConfigAllowedCascadesReloadButton"));
 		settingsForwardingServerConfigAllowedCascadesReloadButton.setFont(getFontSetting());
 		settingsForwardingServerConfigAllowedCascadesReloadButton.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent event)
 			{
-				synchronized (knownCascadesListModel)
+				synchronized (m_knownCascadesListModel)
 				{
-					knownCascadesListModel.clear();
+					m_knownCascadesListModel.clear();
 					Enumeration fetchedCascades = showFetchMixCascadesDialog(allowedCascadesPanel).elements();
 					while (fetchedCascades.hasMoreElements())
 					{
-						knownCascadesListModel.addElement(fetchedCascades.nextElement());
+						m_knownCascadesListModel.addElement(fetchedCascades.nextElement());
 					}
 				}
 			}
 		});
 
 		final JButton settingsForwardingServerConfigAllowedCascadesAddButton = new JButton(
-			  JAPMessages.getString("settingsForwardingServerConfigAllowedCascadesAddButton"));
+			JAPMessages.getString("settingsForwardingServerConfigAllowedCascadesAddButton"));
 		settingsForwardingServerConfigAllowedCascadesAddButton.setFont(getFontSetting());
 		settingsForwardingServerConfigAllowedCascadesAddButton.addActionListener(new ActionListener()
 		{
@@ -799,12 +806,13 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 				{
 					JAPModel.getInstance().getRoutingSettings().getUseableMixCascadesStore().
 						addToAllowedMixCascades(selectedCascade);
+					m_knownCascadesListModel.removeElement(selectedCascade);
 				}
 			}
 		});
 
 		final JButton settingsForwardingServerConfigAllowedCascadesRemoveButton = new JButton(
-			  JAPMessages.getString("settingsForwardingServerConfigAllowedCascadesRemoveButton"));
+			JAPMessages.getString("settingsForwardingServerConfigAllowedCascadesRemoveButton"));
 		settingsForwardingServerConfigAllowedCascadesRemoveButton.setFont(getFontSetting());
 		settingsForwardingServerConfigAllowedCascadesRemoveButton.addActionListener(new ActionListener()
 		{
@@ -818,12 +826,13 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 				{
 					JAPModel.getInstance().getRoutingSettings().getUseableMixCascadesStore().
 						removeFromAllowedMixCascades(selectedCascade.getId());
+					m_knownCascadesListModel.addElement(selectedCascade);
 				}
 			}
 		});
 
 		final JCheckBox settingsForwardingServerConfigAllowedCascadesAllowAllBox = new JCheckBox(
-			  JAPMessages.getString("settingsForwardingServerConfigAllowedCascadesAllowAllBox"),
+			JAPMessages.getString("settingsForwardingServerConfigAllowedCascadesAllowAllBox"),
 			JAPModel.getInstance().getRoutingSettings().getUseableMixCascadesStore().
 			getAllowAllAvailableMixCascades());
 		settingsForwardingServerConfigAllowedCascadesAllowAllBox.setFont(getFontSetting());
@@ -834,21 +843,21 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 				JAPModel.getInstance().getRoutingSettings().getUseableMixCascadesStore().
 					setAllowAllAvailableMixCascades(settingsForwardingServerConfigAllowedCascadesAllowAllBox.
 					isSelected());
-				if (!settingsForwardingServerConfigAllowedCascadesAllowAllBox.
-					isSelected())
-				{
-					synchronized (knownCascadesListModel)
-					{
-						knownCascadesListModel.clear();
-						Enumeration fetchedCascades = showFetchMixCascadesDialog(allowedCascadesPanel).
-							elements();
-						while (fetchedCascades.hasMoreElements())
-						{
-							knownCascadesListModel.addElement(fetchedCascades.nextElement());
-						}
-					}
+				/*if (!settingsForwardingServerConfigAllowedCascadesAllowAllBox.
+				 isSelected())
+				  {
+				 synchronized (m_knownCascadesListModel)
+				 {
+				  m_knownCascadesListModel.clear();
+				  Enumeration fetchedCascades = showFetchMixCascadesDialog(allowedCascadesPanel).
+				   elements();
+				  while (fetchedCascades.hasMoreElements())
+				  {
+				   m_knownCascadesListModel.addElement(fetchedCascades.nextElement());
+				  }
+				 }
 
-				}
+				  }*/
 			}
 		});
 
@@ -907,8 +916,8 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 								settingsForwardingServerConfigAllowedCascadesKnownCascadesLabel.setEnabled(true);
 								settingsForwardingServerConfigAllowedCascadesAllowedCascadesLabel.setEnabled(true);
 								/* restore the original listmodels */
-								knownCascadesList.setModel(knownCascadesListModel);
-								allowedCascadesList.setModel(allowedCascadesListModel);
+								knownCascadesList.setModel(m_knownCascadesListModel);
+								allowedCascadesList.setModel(m_allowedCascadesListModel);
 								knownCascadesList.setEnabled(true);
 								allowedCascadesList.setEnabled(true);
 								settingsForwardingServerConfigAllowedCascadesReloadButton.setEnabled(true);
@@ -920,14 +929,14 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 						}
 						if (messageCode == JAPRoutingMessage.ALLOWED_MIXCASCADES_LIST_CHANGED)
 						{
-							synchronized (allowedCascadesListModel)
+							synchronized (m_allowedCascadesListModel)
 							{
-								allowedCascadesListModel.clear();
+								m_allowedCascadesListModel.clear();
 								Enumeration allowedCascades = JAPModel.getInstance().getRoutingSettings().
 									getUseableMixCascadesStore().getAllowedMixCascades().elements();
 								while (allowedCascades.hasMoreElements())
 								{
-									allowedCascadesListModel.addElement(allowedCascades.nextElement());
+									m_allowedCascadesListModel.addElement(allowedCascades.nextElement());
 								}
 							}
 						}
@@ -964,7 +973,7 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 			ALLOWED_MIXCASCADES_POLICY_CHANGED));
 
 		TitledBorder settingsForwardingServerConfigAllowedCascadesBorder = new TitledBorder(
-			  JAPMessages.getString("settingsForwardingServerConfigAllowedCascadesBorder"));
+			JAPMessages.getString("settingsForwardingServerConfigAllowedCascadesBorder"));
 		settingsForwardingServerConfigAllowedCascadesBorder.setTitleFont(getFontSetting());
 		allowedCascadesPanel.setBorder(settingsForwardingServerConfigAllowedCascadesBorder);
 
@@ -1063,16 +1072,15 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 		settingsForwardingServerConfigRegistrationInfoServicesSelectedInfoServicesLabel.setFont(
 			getFontSetting());
 
-		final DefaultListModel knownInfoServicesListModel = new DefaultListModel();
-		final JList knownInfoServicesList = new JList(knownInfoServicesListModel);
+		final JList knownInfoServicesList = new JList(m_knownInfoServicesListModel);
 		knownInfoServicesList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		final JScrollPane knownInfoServicesScrollPane = new JScrollPane(knownInfoServicesList);
 		knownInfoServicesScrollPane.setFont(getFontSetting());
 		/* set the preferred size of the scrollpane to a 4x20 textarea */
 		knownInfoServicesScrollPane.setPreferredSize( (new JTextArea(4, 20)).getPreferredSize());
 
-		final DefaultListModel registrationInfoServicesListModel = new DefaultListModel();
-		final JList registrationInfoServicesList = new JList(registrationInfoServicesListModel);
+		m_registrationInfoServicesListModel = new DefaultListModel();
+		final JList registrationInfoServicesList = new JList(m_registrationInfoServicesListModel);
 		registrationInfoServicesList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		final JScrollPane registrationInfoServicesScrollPane = new JScrollPane(registrationInfoServicesList);
 		registrationInfoServicesScrollPane.setFont(getFontSetting());
@@ -1087,14 +1095,18 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 		{
 			public void actionPerformed(ActionEvent event)
 			{
-				synchronized (knownInfoServicesListModel)
+				synchronized (m_knownInfoServicesListModel)
 				{
-					knownInfoServicesListModel.clear();
+					m_knownInfoServicesListModel.clear();
 					Enumeration knownInfoServices = InfoServiceHolder.getInstance().
 						getInfoservicesWithForwarderList().elements();
 					while (knownInfoServices.hasMoreElements())
 					{
-						knownInfoServicesListModel.addElement(knownInfoServices.nextElement());
+						InfoServiceDBEntry is = (InfoServiceDBEntry) knownInfoServices.nextElement();
+						if (!m_registrationInfoServicesListModel.contains(is))
+						{
+							m_knownInfoServicesListModel.addElement(is);
+						}
 					}
 				}
 			}
@@ -1103,6 +1115,7 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 		final JButton settingsForwardingServerConfigRegistrationInfoServicesAddButton = new JButton(
 			JAPMessages.getString("settingsForwardingServerConfigRegistrationInfoServicesAddButton"));
 		settingsForwardingServerConfigRegistrationInfoServicesAddButton.setFont(getFontSetting());
+
 		settingsForwardingServerConfigRegistrationInfoServicesAddButton.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent event)
@@ -1116,6 +1129,7 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 				{
 					JAPModel.getInstance().getRoutingSettings().getRegistrationInfoServicesStore().
 						addToRegistrationInfoServices(selectedInfoService);
+					m_knownInfoServicesListModel.removeElement(selectedInfoService);
 				}
 			}
 		});
@@ -1123,6 +1137,7 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 		final JButton settingsForwardingServerConfigRegistrationInfoServicesRemoveButton = new JButton(
 			JAPMessages.getString("settingsForwardingServerConfigRegistrationInfoServicesRemoveButton"));
 		settingsForwardingServerConfigRegistrationInfoServicesRemoveButton.setFont(getFontSetting());
+
 		settingsForwardingServerConfigRegistrationInfoServicesRemoveButton.addActionListener(new
 			ActionListener()
 		{
@@ -1137,6 +1152,7 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 				{
 					JAPModel.getInstance().getRoutingSettings().getRegistrationInfoServicesStore().
 						removeFromRegistrationInfoServices(selectedInfoService.getId());
+					m_knownInfoServicesListModel.addElement(selectedInfoService);
 				}
 			}
 		});
@@ -1147,6 +1163,7 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 					  JAPModel.getInstance().getRoutingSettings().getRegistrationInfoServicesStore().
 					  getRegisterAtAllAvailableInfoServices());
 		settingsForwardingServerConfigRegistrationInfoServicesRegisterAtAllBox.setFont(getFontSetting());
+
 		settingsForwardingServerConfigRegistrationInfoServicesRegisterAtAllBox.addActionListener(new
 			ActionListener()
 		{
@@ -1155,19 +1172,19 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 				JAPModel.getInstance().getRoutingSettings().getRegistrationInfoServicesStore().
 					setRegisterAtAllAvailableInfoServices(
 						settingsForwardingServerConfigRegistrationInfoServicesRegisterAtAllBox.isSelected());
-				if (!settingsForwardingServerConfigRegistrationInfoServicesRegisterAtAllBox.isSelected())
-				{
-					synchronized (knownInfoServicesListModel)
-					{
-						knownInfoServicesListModel.clear();
-						Enumeration knownInfoServices = InfoServiceHolder.getInstance().
-							getInfoservicesWithForwarderList().elements();
-						while (knownInfoServices.hasMoreElements())
-						{
-							knownInfoServicesListModel.addElement(knownInfoServices.nextElement());
-						}
-					}
-				}
+				/*if (!settingsForwardingServerConfigRegistrationInfoServicesRegisterAtAllBox.isSelected())
+				  {
+				 synchronized (m_knownInfoServicesListModel)
+				 {
+				  m_knownInfoServicesListModel.clear();
+				  Enumeration knownInfoServices = InfoServiceHolder.getInstance().
+				   getInfoservicesWithForwarderList().elements();
+				  while (knownInfoServices.hasMoreElements())
+				  {
+				   m_knownInfoServicesListModel.addElement(knownInfoServices.nextElement());
+				  }
+				 }
+				  }*/
 			}
 		});
 
@@ -1232,8 +1249,8 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 								settingsForwardingServerConfigRegistrationInfoServicesSelectedInfoServicesLabel.
 									setEnabled(true);
 								/* restore the original listmodels */
-								knownInfoServicesList.setModel(knownInfoServicesListModel);
-								registrationInfoServicesList.setModel(registrationInfoServicesListModel);
+								knownInfoServicesList.setModel(m_knownInfoServicesListModel);
+								registrationInfoServicesList.setModel(m_registrationInfoServicesListModel);
 								knownInfoServicesList.setEnabled(true);
 								registrationInfoServicesList.setEnabled(true);
 								settingsForwardingServerConfigRegistrationInfoServicesReloadButton.setEnabled(true);
@@ -1246,15 +1263,15 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 						}
 						if (messageCode == JAPRoutingMessage.REGISTRATION_INFOSERVICES_LIST_CHANGED)
 						{
-							synchronized (registrationInfoServicesListModel)
+							synchronized (m_registrationInfoServicesListModel)
 							{
-								registrationInfoServicesListModel.clear();
+								m_registrationInfoServicesListModel.clear();
 								Enumeration registrationInfoServices = JAPModel.getInstance().
 									getRoutingSettings().getRegistrationInfoServicesStore().
 									getRegistrationInfoServices().elements();
 								while (registrationInfoServices.hasMoreElements())
 								{
-									registrationInfoServicesListModel.addElement(registrationInfoServices.
+									m_registrationInfoServicesListModel.addElement(registrationInfoServices.
 										nextElement());
 								}
 							}
@@ -1279,13 +1296,16 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 		};
 		/* registrate the observer also at the internal message system */
 		m_messageSystem.addObserver(registrationInfoServicesObserver);
+
 		JAPModel.getInstance().getRoutingSettings().getRegistrationInfoServicesStore().addObserver(
 			registrationInfoServicesObserver);
+
 		/* tricky: initialize the components by calling the observer (with all possible messages) */
 		registrationInfoServicesObserver.update(JAPModel.getInstance().getRoutingSettings().
 												getRegistrationInfoServicesStore(),
 												new JAPRoutingMessage(JAPRoutingMessage.
 			REGISTRATION_INFOSERVICES_LIST_CHANGED));
+
 		registrationInfoServicesObserver.update(JAPModel.getInstance().getRoutingSettings().
 												getRegistrationInfoServicesStore(),
 												new JAPRoutingMessage(JAPRoutingMessage.
@@ -1294,6 +1314,7 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 		TitledBorder settingsForwardingServerConfigRegistrationInfoServicesBorder = new TitledBorder(
 			JAPMessages.getString("settingsForwardingServerConfigRegistrationInfoServicesBorder"));
 		settingsForwardingServerConfigRegistrationInfoServicesBorder.setTitleFont(getFontSetting());
+
 		registrationInfoServicesPanel.setBorder(settingsForwardingServerConfigRegistrationInfoServicesBorder);
 
 		GridBagLayout registrationInfoServicesPanelLayout = new GridBagLayout();
@@ -1312,6 +1333,7 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 		registrationInfoServicesPanelLayout.setConstraints(
 			settingsForwardingServerConfigRegistrationInfoServicesRegisterAtAllBox,
 			registrationInfoServicesPanelConstraints);
+
 		registrationInfoServicesPanel.add(
 			settingsForwardingServerConfigRegistrationInfoServicesRegisterAtAllBox);
 
@@ -1322,6 +1344,7 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 		registrationInfoServicesPanelLayout.setConstraints(
 			settingsForwardingServerConfigRegistrationInfoServicesKnownInfoServicesLabel,
 			registrationInfoServicesPanelConstraints);
+
 		registrationInfoServicesPanel.add(
 			settingsForwardingServerConfigRegistrationInfoServicesKnownInfoServicesLabel);
 
@@ -1331,6 +1354,7 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 		registrationInfoServicesPanelLayout.setConstraints(
 			settingsForwardingServerConfigRegistrationInfoServicesSelectedInfoServicesLabel,
 			registrationInfoServicesPanelConstraints);
+
 		registrationInfoServicesPanel.add(
 			settingsForwardingServerConfigRegistrationInfoServicesSelectedInfoServicesLabel);
 
@@ -1341,6 +1365,7 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 		registrationInfoServicesPanelLayout.setConstraints(
 			settingsForwardingServerConfigRegistrationInfoServicesReloadButton,
 			registrationInfoServicesPanelConstraints);
+
 		registrationInfoServicesPanel.add(settingsForwardingServerConfigRegistrationInfoServicesReloadButton);
 
 		registrationInfoServicesPanelConstraints.gridx = 0;
@@ -1350,6 +1375,7 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 		registrationInfoServicesPanelConstraints.insets = new Insets(0, 5, 0, 5);
 		registrationInfoServicesPanelLayout.setConstraints(knownInfoServicesScrollPane,
 			registrationInfoServicesPanelConstraints);
+
 		registrationInfoServicesPanel.add(knownInfoServicesScrollPane);
 
 		registrationInfoServicesPanelConstraints.gridx = 1;
@@ -1358,6 +1384,7 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 		registrationInfoServicesPanelConstraints.insets = new Insets(0, 5, 0, 5);
 		registrationInfoServicesPanelLayout.setConstraints(registrationInfoServicesScrollPane,
 			registrationInfoServicesPanelConstraints);
+
 		registrationInfoServicesPanel.add(registrationInfoServicesScrollPane);
 
 		registrationInfoServicesPanelConstraints.gridx = 0;
@@ -1368,6 +1395,7 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 		registrationInfoServicesPanelLayout.setConstraints(
 			settingsForwardingServerConfigRegistrationInfoServicesAddButton,
 			registrationInfoServicesPanelConstraints);
+
 		registrationInfoServicesPanel.add(settingsForwardingServerConfigRegistrationInfoServicesAddButton);
 
 		registrationInfoServicesPanelConstraints.gridx = 1;
@@ -1376,6 +1404,7 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 		registrationInfoServicesPanelLayout.setConstraints(
 			settingsForwardingServerConfigRegistrationInfoServicesRemoveButton,
 			registrationInfoServicesPanelConstraints);
+
 		registrationInfoServicesPanel.add(settingsForwardingServerConfigRegistrationInfoServicesRemoveButton);
 
 		return registrationInfoServicesPanel;
@@ -1424,7 +1453,21 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 				Enumeration cascades = knownMixCascades.elements();
 				while (cascades.hasMoreElements())
 				{
-					fetchedCascades.addElement(cascades.nextElement());
+					MixCascade cascade = (MixCascade) cascades.nextElement();
+					if (m_allowedCascadesListModel != null && !m_allowedCascadesListModel.contains(cascade))
+					{
+						fetchedCascades.addElement(cascade);
+					}
+				}
+				//Add manual cascades
+				cascades = JAPController.getInstance().getMixCascadeDatabase().elements();
+				while (cascades.hasMoreElements())
+				{
+					MixCascade cascade = ( (MixCascade) cascades.nextElement());
+					if (cascade.isUserDefined())
+					{
+						fetchedCascades.addElement(cascade);
+					}
 				}
 			}
 		});
@@ -1512,6 +1555,51 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 	{
 		//Register help context
 		JAPHelp.getInstance().getContextObj().setContext("forwarding_server");
+		//Fill lists
+		this.fillLists();
+	}
+
+	private void fillLists()
+	{
+		//Clear lists first
+		m_knownCascadesListModel.clear();
+		m_knownInfoServicesListModel.clear();
+
+		//Fill cascades-list
+		Enumeration it = JAPController.getInstance().getMixCascadeDatabase().elements();
+		MixCascade currentCascade = JAPController.getInstance().getCurrentMixCascade();
+		boolean bCurrentAlreadyAdded = false;
+		while (it.hasMoreElements())
+		{
+			MixCascade cascade = (MixCascade) it.nextElement();
+			if (m_allowedCascadesListModel != null && !m_allowedCascadesListModel.contains(cascade))
+			{
+				m_knownCascadesListModel.addElement(cascade);
+			}
+			if (cascade.equals(currentCascade))
+			{
+				bCurrentAlreadyAdded = true;
+			}
+
+		}
+		if (!bCurrentAlreadyAdded)
+		{
+			m_knownCascadesListModel.addElement(currentCascade);
+		}
+		//Filling done
+		//Fill infoservices-list
+		it = InfoServiceHolder.getInstance().getInfoServices().elements();
+
+		while (it.hasMoreElements())
+		{
+			InfoServiceDBEntry is = (InfoServiceDBEntry) it.nextElement();
+			if (m_registrationInfoServicesListModel != null &&
+				!m_registrationInfoServicesListModel.contains(is))
+			{
+				m_knownInfoServicesListModel.addElement(is);
+			}
+		}
+		//Filling done
 	}
 
 }
