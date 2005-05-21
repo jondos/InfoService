@@ -57,7 +57,7 @@ final public class MyProgressBarUI extends BasicProgressBarUI
 		int value = pb.getValue() * anz / max;
 		int x = 0;
 		int y = 0;
-		int height = c.getHeight();
+		int height = c.getHeight()-1;
 		Color col = g.getColor();
 		if (m_colFilledBar != null)
 		{
@@ -65,7 +65,7 @@ final public class MyProgressBarUI extends BasicProgressBarUI
 		}
 		for (int i = 0; i < value; i++)
 		{
-			g.fill3DRect(x, y, ms_width, height, false);
+			g.fill3DRect(x, y, ms_width, height+1, false);
 			x += ms_dx;
 		}
 		g.setColor(col);
