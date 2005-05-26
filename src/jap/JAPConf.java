@@ -66,6 +66,7 @@ import javax.swing.tree.TreePath;
 import anon.infoservice.ImmutableListenerInterface;
 import anon.infoservice.ProxyInterface;
 import gui.JAPMultilineLabel;
+import gui.JAPJIntField;
 import logging.LogLevel;
 import logging.LogType;
 import javax.swing.SwingUtilities;
@@ -334,7 +335,7 @@ final class JAPConf extends JDialog implements ActionListener
 		m_labelPortnumber1.setFont(m_fontControls);
 		m_labelPortnumber2 = new JLabel(JAPMessages.getString("settingsPort2"));
 		m_labelPortnumber2.setFont(m_fontControls);
-		m_tfListenerPortNumber = new JAPJIntField();
+		m_tfListenerPortNumber = new JAPJIntField(5, 5);
 		m_tfListenerPortNumber.setFont(m_fontControls);
 		m_tfListenerPortNumber.addActionListener(new ActionListener()
 		{
@@ -378,8 +379,10 @@ final class JAPConf extends JDialog implements ActionListener
 		g.setConstraints(m_labelPortnumber2, c);
 		p1.add(m_labelPortnumber2);
 		c.gridy = 2;
+		c.fill = c.NONE;
 		g.setConstraints(m_tfListenerPortNumber, c);
 		p1.add(m_tfListenerPortNumber);
+		c.fill = c.HORIZONTAL;
 		JSeparator seperator = new JSeparator();
 		c.gridy = 3;
 		c.insets = new Insets(10, 0, 0, 0);
@@ -428,7 +431,7 @@ final class JAPConf extends JDialog implements ActionListener
 		m_comboProxyType.addItem(JAPMessages.getString("settingsProxyTypeSOCKS"));
 		m_tfProxyHost = new JTextField(20);
 		m_tfProxyHost.setFont(m_fontControls);
-		m_tfProxyPortNumber = new JAPJIntField(5);
+		m_tfProxyPortNumber = new JAPJIntField(5, 5);
 		m_tfProxyPortNumber.setFont(m_fontControls);
 		ProxyInterface proxyInterface = JAPModel.getInstance().getProxyInterface();
 		boolean bUseProxy = (proxyInterface != null && proxyInterface.isValid());
