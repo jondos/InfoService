@@ -65,6 +65,7 @@ import anon.infoservice.InfoServiceHolderMessage;
 import anon.infoservice.ListenerInterface;
 import gui.JAPHtmlMultiLineLabel;
 import gui.JAPMultilineLabel;
+import gui.JAPJIntField;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;

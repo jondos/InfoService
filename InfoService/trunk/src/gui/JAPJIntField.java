@@ -25,7 +25,7 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package jap;
+package gui;
 
 import javax.swing.JTextField;
 import javax.swing.text.AttributeSet;
@@ -33,8 +33,9 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.text.PlainDocument;
 
-final class JAPJIntField extends JTextField
+final public class JAPJIntField extends JTextField
 {
+	private static int ms_maxLen = -1;
 
 	public JAPJIntField()
 	{
@@ -43,6 +44,12 @@ final class JAPJIntField extends JTextField
 	public JAPJIntField(int i)
 	{
 		super(i);
+	}
+
+	public JAPJIntField(int i, int a_maxLen)
+	{
+		super(i);
+		ms_maxLen = a_maxLen;
 	}
 
 	public JAPJIntField(String string)
@@ -82,6 +89,14 @@ final class JAPJIntField extends JTextField
 			catch (Exception e)
 			{
 				intError = true;
+			}
+
+			if (ms_maxLen != -1)
+			{
+				if ( (getLength() + string.length()) > ms_maxLen)
+				{
+					intError = true;
+				}
 			}
 			if (!intError)
 			{
