@@ -119,6 +119,8 @@ public final class MuxSocket implements Runnable
 	private final static int MIX_PROTOCOL_VERSION_0_3 = 3;
 	private final static int MIX_PROTOCOL_VERSION_0_2 = 2;
 
+	private final static int LOGIN_TIMEOUT=60000; //How long in ms to wait for messages related to the
+	                                              //login procedure
 	private Thread threadRunLoop;
 
 	private DummyTraffic m_DummyTraffic = null;
@@ -224,6 +226,7 @@ public final class MuxSocket implements Runnable
 			m_inDataStream = new DataInputStream(m_ioSocket.getInputStream());
 			m_outStream = new BufferedOutputStream(m_ioSocket.getOutputStream(), PACKET_SIZE);
 			m_bisCrypted = false;
+			try{m_ioSocket.setSoTimeout(LOGIN_TIMEOUT);}catch(Exception e){}
 			//  LogHolder.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:Reading len...");
 			int len = m_inDataStream.readUnsignedShort(); //len.. unitressteing at the moment
 			//  LogHolder.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:Reading m_iChainLen...");
@@ -279,12 +282,10 @@ public final class MuxSocket implements Runnable
 					m_arASymCipher[i].setPublicKey(n, e);
 				}
 			}
-			m_ioSocket.setSoTimeout(0); //Now we have a unlimited timeout...
-			//              m_ioSocket.setSoTimeout(1000); //Now we have asecond timeout...
+			try{m_ioSocket.setSoTimeout(0);}catch(Exception e){} //Now we have a unlimited timeout...
 		}
 		catch (Exception e)
 		{
-			e.printStackTrace();
 			LogHolder.log(LogLevel.EXCEPTION, LogType.NET,
 						  "MuxSocket:Exception(2) during connection: " + e);
 			m_arASymCipher = null;
