@@ -137,14 +137,14 @@ public final class JAPController extends Observable implements IProxyListener, O
 	/** Holds the MsgID of the status message after the forwaring server was started.*/
 	private int m_iStatusPanelMsgIdForwarderServerStatus;
 
-  /**
-   * Stores the jobs, if we receive new setAnonMode() requests.
-   */
-  private Vector m_changeAnonModeJobs;
+	/**
+	 * Stores the jobs, if we receive new setAnonMode() requests.
+	 */
+	private Vector m_changeAnonModeJobs;
 
 	private JAPController()
 	{
-    m_changeAnonModeJobs = new Vector();
+		m_changeAnonModeJobs = new Vector();
 		m_Model = JAPModel.getInstance();
 		// Create observer object
 		observerVector = new Vector();
@@ -169,7 +169,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 			e.printStackTrace();
 			LogHolder.log(LogLevel.EMERG, LogType.NET,
 						  "JAPController: Constructor - default mix cascade: " + e.getMessage());
-			LogHolder.log(LogLevel.EMERG,LogType.NET,e);
+			LogHolder.log(LogLevel.EMERG, LogType.NET, e);
 		}
 		/* set a default infoservice */
 		try
@@ -760,7 +760,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 				}
 				/* As some old Versions of JAP have problems with writing the correct values, we include the
 				 * default certs if config version is less than 0.20 */
-				if(strVersion==null||strVersion.compareTo("0.20")<0)
+				if (strVersion == null || strVersion.compareTo("0.20") < 0)
 				{
 					addDefaultCertificates();
 				}
@@ -835,7 +835,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					{
 						theBI = new BI(
 							ResourceLoader.loadResource(JAPConstants.CERTSPATH +
-														JAPConstants.CERT_BI),
+							JAPConstants.CERT_BI),
 							JAPConstants.PIHOST, JAPConstants.PIHOST, JAPConstants.PIPORT);
 					}
 					else
@@ -1521,63 +1521,81 @@ public final class JAPController extends Observable implements IProxyListener, O
 	//---------------------------------------------------------------------
 	//---------------------------------------------------------------------
 	//---------------------------------------------------------------------
-  private final class SetAnonModeAsync implements Runnable {
-    private boolean m_startServer;
-    private Thread m_waitForThread;
-    private Thread m_executionThread;
-    private Object m_internalSynchronization;
-    private boolean m_jobWasInterrupted;
+	private final class SetAnonModeAsync implements Runnable
+	{
+		private boolean m_startServer;
+		private Thread m_waitForThread;
+		private Thread m_executionThread;
+		private Object m_internalSynchronization;
+		private boolean m_jobWasInterrupted;
 
-    public SetAnonModeAsync(boolean a_startServer, Thread a_waitForThread) {
-      m_startServer = a_startServer;
-      m_waitForThread = a_waitForThread;
-      m_executionThread = null;
-      m_internalSynchronization = new Object();
-      m_jobWasInterrupted = false;
-    }
+		public SetAnonModeAsync(boolean a_startServer, Thread a_waitForThread)
+		{
+			m_startServer = a_startServer;
+			m_waitForThread = a_waitForThread;
+			m_executionThread = null;
+			m_internalSynchronization = new Object();
+			m_jobWasInterrupted = false;
+		}
 
-    public boolean isStartServerJob() {
-      return m_startServer;
+		public boolean isStartServerJob()
+		{
+			return m_startServer;
+		}
+
+		public void interruptExecution()
+		{
+			synchronized (m_internalSynchronization)
+			{
+				m_jobWasInterrupted = true;
+				if (m_executionThread != null)
+				{
+					m_executionThread.interrupt();
+				}
 			}
+		}
 
-    public void interruptExecution() {
-      synchronized (m_internalSynchronization) {
-        m_jobWasInterrupted = true;
-        if (m_executionThread != null) {
-          m_executionThread.interrupt();
-        }
-      }
-    }
-
-    public Thread getExecutionThread() {
-      return m_executionThread;
+		public Thread getExecutionThread()
+		{
+			return m_executionThread;
 		}
 
 		/** @todo Still very bugy, because mode change is async done but not
 		 * all properties (like currentMixCascade etc.)are synchronized!!
 		 *
 		 */
-    public void run() {
-      synchronized (m_internalSynchronization) {
-        m_executionThread = Thread.currentThread();
-      }
-      if ((m_jobWasInterrupted == false) && (m_waitForThread != null)) {
-        try {
-          m_waitForThread.join();
-        }
-        catch (InterruptedException e) {
-          m_jobWasInterrupted = true;
-          LogHolder.log(LogLevel.DEBUG, LogType.MISC, "SetAnonModeAsync: run: Job for changing the anonymity mode to '" + (new Boolean(m_startServer)).toString() + "' was canceled.");
-					}
-					}
-      if (m_jobWasInterrupted == false) {
-        /* job was not canceled -> we have to do it */
-        setServerMode(m_startServer);
-        synchronized (m_changeAnonModeJobs) {
-          /* remove ourself from the job-queue */
-          m_changeAnonModeJobs.removeElement(this);
+		public void run()
+		{
+			synchronized (m_internalSynchronization)
+			{
+				m_executionThread = Thread.currentThread();
+			}
+			if ( (!m_jobWasInterrupted) && (m_waitForThread != null))
+			{
+				try
+				{
+					m_waitForThread.join();
 				}
-        LogHolder.log(LogLevel.DEBUG, LogType.MISC, "SetAnonModeAsync: run: Job for changing the anonymity mode to '" + (new Boolean(m_startServer)).toString() + "' was executed.");
+				catch (InterruptedException e)
+				{
+					m_jobWasInterrupted = true;
+					LogHolder.log(LogLevel.DEBUG, LogType.MISC,
+								  "SetAnonModeAsync: run: Job for changing the anonymity mode to '" +
+								  (new Boolean(m_startServer)).toString() + "' was canceled.");
+				}
+			}
+			if (!m_jobWasInterrupted )
+			{
+				/* job was not canceled -> we have to do it */
+				setServerMode(m_startServer);
+				synchronized (m_changeAnonModeJobs)
+				{
+					/* remove ourself from the job-queue */
+					m_changeAnonModeJobs.removeElement(this);
+				}
+				LogHolder.log(LogLevel.DEBUG, LogType.MISC,
+							  "SetAnonModeAsync: run: Job for changing the anonymity mode to '" +
+							  (new Boolean(m_startServer)).toString() + "' was executed.");
 			}
 		}
 
@@ -1809,51 +1827,65 @@ public final class JAPController extends Observable implements IProxyListener, O
 		return m_proxyAnon != null;
 	}
 
-  public void setAnonMode(boolean a_anonModeSelected) {
-    synchronized (m_changeAnonModeJobs) {
-      boolean newJob = true;
-      if (m_changeAnonModeJobs.size() > 0) {
-        /* check whether this is job is different to the last one */
-        SetAnonModeAsync lastJob = (SetAnonModeAsync)(m_changeAnonModeJobs.lastElement());
-        if (lastJob.isStartServerJob() == a_anonModeSelected) {
-          /* it's the same (enabling server / disabling server) as the last job */
-          newJob = false;
-        }
-      }
-      if (newJob == true) {
-        /* it's a new job -> do something */
-        if (((a_anonModeSelected == false) && (m_changeAnonModeJobs.size() >= 2)) || (m_changeAnonModeJobs.size() >= 3)) {
-          /* because of enough previous jobs in the queue, we can ignore this job, if we also
-           * interrupt and remove the previous one
-           */
-          SetAnonModeAsync previousJob = (SetAnonModeAsync)(m_changeAnonModeJobs.lastElement());
-          previousJob.interruptExecution();
-          m_changeAnonModeJobs.removeElement(previousJob);
-        }
-        else {
-          /* we have to schedule this job */
-          if ((a_anonModeSelected == false) && (m_changeAnonModeJobs.size() == 1)) {
-            /* there is a start-server job currently running -> try to interrupt it */
-            SetAnonModeAsync previousJob = (SetAnonModeAsync)(m_changeAnonModeJobs.lastElement());
-            previousJob.interruptExecution();
-          }
-          SetAnonModeAsync currentJob = null;
-          if (m_changeAnonModeJobs.size() > 0) {
-            /* wait until the previous job is done */
-            currentJob = new SetAnonModeAsync(a_anonModeSelected, ((SetAnonModeAsync)(m_changeAnonModeJobs.lastElement())).getExecutionThread());
-          }
-          else {
-            /* we don't have to wait for any previous job */
-            currentJob = new SetAnonModeAsync(a_anonModeSelected, null);
-          }
-          Thread currentThread = new Thread(currentJob);
-          currentThread.setDaemon(true);
-          m_changeAnonModeJobs.addElement(currentJob);
-          currentThread.start();
-          LogHolder.log(LogLevel.DEBUG, LogType.MISC, "JAPController: setAnonMode: Added a job for changing the anonymity mode to '" + (new Boolean(a_anonModeSelected)).toString() + "' to the job queue.");
-        }
-      }
-    }
+	public void setAnonMode(boolean a_anonModeSelected)
+	{
+		synchronized (m_changeAnonModeJobs)
+		{
+			boolean newJob = true;
+			if (m_changeAnonModeJobs.size() > 0)
+			{
+				/* check whether this is job is different to the last one */
+				SetAnonModeAsync lastJob = (SetAnonModeAsync) (m_changeAnonModeJobs.lastElement());
+				if (lastJob.isStartServerJob() == a_anonModeSelected)
+				{
+					/* it's the same (enabling server / disabling server) as the last job */
+					newJob = false;
+				}
+			}
+			if (newJob == true)
+			{
+				/* it's a new job -> do something */
+				if ( ( (a_anonModeSelected == false) && (m_changeAnonModeJobs.size() >= 2)) ||
+					(m_changeAnonModeJobs.size() >= 3))
+				{
+					/* because of enough previous jobs in the queue, we can ignore this job, if we also
+					 * interrupt and remove the previous one
+					 */
+					SetAnonModeAsync previousJob = (SetAnonModeAsync) (m_changeAnonModeJobs.lastElement());
+					previousJob.interruptExecution();
+					m_changeAnonModeJobs.removeElement(previousJob);
+				}
+				else
+				{
+					/* we have to schedule this job */
+					if ( (a_anonModeSelected == false) && (m_changeAnonModeJobs.size() == 1))
+					{
+						/* there is a start-server job currently running -> try to interrupt it */
+						SetAnonModeAsync previousJob = (SetAnonModeAsync) (m_changeAnonModeJobs.lastElement());
+						previousJob.interruptExecution();
+					}
+					SetAnonModeAsync currentJob = null;
+					if (m_changeAnonModeJobs.size() > 0)
+					{
+						/* wait until the previous job is done */
+						currentJob = new SetAnonModeAsync(a_anonModeSelected,
+							( (SetAnonModeAsync) (m_changeAnonModeJobs.lastElement())).getExecutionThread());
+					}
+					else
+					{
+						/* we don't have to wait for any previous job */
+						currentJob = new SetAnonModeAsync(a_anonModeSelected, null);
+					}
+					Thread currentThread = new Thread(currentJob);
+					currentThread.setDaemon(true);
+					m_changeAnonModeJobs.addElement(currentJob);
+					currentThread.start();
+					LogHolder.log(LogLevel.DEBUG, LogType.MISC,
+						"JAPController: setAnonMode: Added a job for changing the anonymity mode to '" +
+								  (new Boolean(a_anonModeSelected)).toString() + "' to the job queue.");
+				}
+			}
+		}
 	}
 
 	/**
@@ -2396,84 +2428,134 @@ public final class JAPController extends Observable implements IProxyListener, O
 		}
 	}
 
-
-  /**
-   * Enables or disables the forwarding server.
-   * Attention: If there is an active forwarding client running, nothing is done and this method
-   * returns always false. Run a forwarding server and a client at the same time is not supported.
-   * This method returns always immedailly and the real job is done in a background thread.
-   * @param a_activate True, if ther server shall be activated or false, if it shall be disabled.
-   *
-   */
-  public synchronized void enableForwardingServer(boolean a_activate) {
-    if (!m_bForwarderNotExplain && a_activate) {
-      /* show a message box with the explanation of the forwarding stuff */
-      Object[] options = { JAPMessages.getString("okButton") };
-      JCheckBox checkboxRemindNever = new JCheckBox(JAPMessages.getString("disableActCntMessageNeverRemind"));
-      Object[] message = { JAPMessages.getString("forwardingExplainMessage"), checkboxRemindNever };
-      int ret = JOptionPane.showOptionDialog(getView(), (Object) message, JAPMessages.getString("forwardingExplainMessageTitle"), JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE, null, options, options[0]);
-				m_bForwarderNotExplain = checkboxRemindNever.isSelected();
-			}
-    if (m_iStatusPanelMsgIdForwarderServerStatus != -1) {
-      /* remove old forwarding server messages from the status bar */
-				m_View.removeStatusMsg(m_iStatusPanelMsgIdForwarderServerStatus);
-				m_iStatusPanelMsgIdForwarderServerStatus = -1;
-			}
-    if (JAPModel.getInstance().getRoutingSettings().getRoutingMode() != JAPRoutingSettings.ROUTING_MODE_CLIENT) {
-      /* don't allow to interrupt the client forwarding mode */
-      if (a_activate) {
-        /* start the server */
-        if (JAPModel.getInstance().getRoutingSettings().setRoutingMode(JAPRoutingSettings.ROUTING_MODE_SERVER) == true) {
-          /* starting the server was successful -> start propaganda with blocking in a separate
-           * thread
-           */
-          Thread startPropagandaThread = new Thread(new Runnable() {
-            public void run() {
-              int msgId = m_View.addStatusMsg(JAPMessages.getString("controllerStatusMsgRoutingStartServer"), JOptionPane.INFORMATION_MESSAGE, false);
-						int registrationStatus = JAPModel.getInstance().getRoutingSettings().startPropaganda(true);
-						m_View.removeStatusMsg(msgId);
-              /* if there occured an error while registration, show a message box */
-              switch (registrationStatus) {
-                case JAPRoutingSettings.REGISTRATION_NO_INFOSERVICES: {
-                  JOptionPane.showMessageDialog(m_View, new JAPHtmlMultiLineLabel(JAPMessages.getString("settingsRoutingServerRegistrationEmptyListError"), getDialogFont()), JAPMessages.getString("ERROR"), JOptionPane.ERROR_MESSAGE);
-                  break;
-						}
-                case JAPRoutingSettings.REGISTRATION_UNKNOWN_ERRORS: {
-                  JOptionPane.showMessageDialog(m_View, new JAPHtmlMultiLineLabel(JAPMessages.getString("settingsRoutingServerRegistrationUnknownError"), getDialogFont()), JAPMessages.getString("ERROR"), JOptionPane.ERROR_MESSAGE);
-                  break;
-						}
-                case JAPRoutingSettings.REGISTRATION_INFOSERVICE_ERRORS: {
-                  JOptionPane.showMessageDialog(m_View, new JAPHtmlMultiLineLabel(JAPMessages.getString("settingsRoutingServerRegistrationInfoservicesError"), getDialogFont()), JAPMessages.getString("ERROR"), JOptionPane.ERROR_MESSAGE);
-                  break;
-						}
-                case JAPRoutingSettings.REGISTRATION_VERIFY_ERRORS: {
-                  JOptionPane.showMessageDialog(m_View, new JAPHtmlMultiLineLabel(JAPMessages.getString("settingsRoutingServerRegistrationVerificationError"), getDialogFont()), JAPMessages.getString("ERROR"), JOptionPane.ERROR_MESSAGE);
-                  break;
-						}
-                case JAPRoutingSettings.REGISTRATION_SUCCESS: {
-                  /* show a success message in the status bar */
-                  m_iStatusPanelMsgIdForwarderServerStatus = m_View.addStatusMsg(JAPMessages.getString("controllerStatusMsgRoutingStartServerSuccess"), JOptionPane.INFORMATION_MESSAGE, true);
-					}
-					}
-				}
-          });
-          startPropagandaThread.setDaemon(true);
-          startPropagandaThread.start();
-				}
-        else {
-          /* opening the server port was not successful -> show an error message */
-          m_iStatusPanelMsgIdForwarderServerStatus = m_View.addStatusMsg(JAPMessages.getString("controllerStatusMsgRoutingStartServerError"), JOptionPane.ERROR_MESSAGE, true);
-          JOptionPane.showMessageDialog(getView(), JAPMessages.getString("settingsRoutingStartServerError"), JAPMessages.getString("settingsRoutingStartServerErrorTitle"), JOptionPane.ERROR_MESSAGE);
-			}
-	}
-      else {
-        /* stop the server -> the following call will stop all forwarding server activities
-         * immediately
+	/**
+	 * Enables or disables the forwarding server.
+	 * Attention: If there is an active forwarding client running, nothing is done and this method
+	 * returns always false. Run a forwarding server and a client at the same time is not supported.
+	 * This method returns always immedailly and the real job is done in a background thread.
+	 * @param a_activate True, if ther server shall be activated or false, if it shall be disabled.
+	 *
 	 */
-        JAPModel.getInstance().getRoutingSettings().setRoutingMode(JAPRoutingSettings.ROUTING_MODE_DISABLED);
-        m_iStatusPanelMsgIdForwarderServerStatus = m_View.addStatusMsg(JAPMessages.getString("controllerStatusMsgRoutingServerStopped"), JOptionPane.INFORMATION_MESSAGE, true);
-      }
-    }
+	public synchronized void enableForwardingServer(boolean a_activate)
+	{
+		if (!m_bForwarderNotExplain && a_activate)
+		{
+			/* show a message box with the explanation of the forwarding stuff */
+			Object[] options =
+				{
+				JAPMessages.getString("okButton")};
+			JCheckBox checkboxRemindNever = new JCheckBox(JAPMessages.getString(
+				"disableActCntMessageNeverRemind"));
+			Object[] message =
+				{
+				JAPMessages.getString("forwardingExplainMessage"), checkboxRemindNever};
+			int ret = JOptionPane.showOptionDialog(getView(), (Object) message,
+				JAPMessages.getString("forwardingExplainMessageTitle"), JOptionPane.DEFAULT_OPTION,
+				JOptionPane.WARNING_MESSAGE, null, options, options[0]);
+			m_bForwarderNotExplain = checkboxRemindNever.isSelected();
+		}
+		if (m_iStatusPanelMsgIdForwarderServerStatus != -1)
+		{
+			/* remove old forwarding server messages from the status bar */
+			m_View.removeStatusMsg(m_iStatusPanelMsgIdForwarderServerStatus);
+			m_iStatusPanelMsgIdForwarderServerStatus = -1;
+		}
+		if (JAPModel.getInstance().getRoutingSettings().getRoutingMode() !=
+			JAPRoutingSettings.ROUTING_MODE_CLIENT)
+		{
+			/* don't allow to interrupt the client forwarding mode */
+			if (a_activate)
+			{
+				/* start the server */
+				if (JAPModel.getInstance().getRoutingSettings().setRoutingMode(JAPRoutingSettings.
+					ROUTING_MODE_SERVER) == true)
+				{
+					/* starting the server was successful -> start propaganda with blocking in a separate
+					 * thread
+					 */
+					Thread startPropagandaThread = new Thread(new Runnable()
+					{
+						public void run()
+						{
+							int msgId = m_View.addStatusMsg(JAPMessages.getString(
+								"controllerStatusMsgRoutingStartServer"), JOptionPane.INFORMATION_MESSAGE, false);
+							int registrationStatus = JAPModel.getInstance().getRoutingSettings().
+								startPropaganda(true);
+							m_View.removeStatusMsg(msgId);
+							/* if there occured an error while registration, show a message box */
+							switch (registrationStatus)
+							{
+								case JAPRoutingSettings.REGISTRATION_NO_INFOSERVICES:
+								{
+									JOptionPane.showMessageDialog(m_View,
+										new JAPHtmlMultiLineLabel(
+										JAPMessages.getString("settingsRoutingServerRegistrationEmptyListError"),
+										getDialogFont()), JAPMessages.getString("ERROR"),
+										JOptionPane.ERROR_MESSAGE);
+									break;
+								}
+								case JAPRoutingSettings.REGISTRATION_UNKNOWN_ERRORS:
+								{
+									JOptionPane.showMessageDialog(m_View,
+										new JAPHtmlMultiLineLabel(
+										JAPMessages.getString("settingsRoutingServerRegistrationUnknownError"),
+										getDialogFont()), JAPMessages.getString("ERROR"),
+										JOptionPane.ERROR_MESSAGE);
+									break;
+								}
+								case JAPRoutingSettings.REGISTRATION_INFOSERVICE_ERRORS:
+								{
+									JOptionPane.showMessageDialog(m_View,
+										new JAPHtmlMultiLineLabel(
+										JAPMessages.getString("settingsRoutingServerRegistrationInfoservicesError"),
+										getDialogFont()), JAPMessages.getString("ERROR"),
+										JOptionPane.ERROR_MESSAGE);
+									break;
+								}
+								case JAPRoutingSettings.REGISTRATION_VERIFY_ERRORS:
+								{
+									JOptionPane.showMessageDialog(m_View,
+										new JAPHtmlMultiLineLabel(
+										JAPMessages.getString("settingsRoutingServerRegistrationVerificationError"),
+										getDialogFont()), JAPMessages.getString("ERROR"),
+										JOptionPane.ERROR_MESSAGE);
+									break;
+								}
+								case JAPRoutingSettings.REGISTRATION_SUCCESS:
+								{
+									/* show a success message in the status bar */
+									m_iStatusPanelMsgIdForwarderServerStatus = m_View.addStatusMsg(
+										JAPMessages.getString("controllerStatusMsgRoutingStartServerSuccess"),
+										JOptionPane.INFORMATION_MESSAGE, true);
+								}
+							}
+						}
+					});
+					startPropagandaThread.setDaemon(true);
+					startPropagandaThread.start();
+				}
+				else
+				{
+					/* opening the server port was not successful -> show an error message */
+					m_iStatusPanelMsgIdForwarderServerStatus = m_View.addStatusMsg(JAPMessages.getString(
+						"controllerStatusMsgRoutingStartServerError"), JOptionPane.ERROR_MESSAGE, true);
+					JOptionPane.showMessageDialog(getView(),
+												  JAPMessages.getString("settingsRoutingStartServerError"),
+												  JAPMessages.getString(
+						"settingsRoutingStartServerErrorTitle"), JOptionPane.ERROR_MESSAGE);
+				}
+			}
+			else
+			{
+				/* stop the server -> the following call will stop all forwarding server activities
+				 * immediately
+				 */
+				JAPModel.getInstance().getRoutingSettings().setRoutingMode(JAPRoutingSettings.
+					ROUTING_MODE_DISABLED);
+				m_iStatusPanelMsgIdForwarderServerStatus = m_View.addStatusMsg(JAPMessages.getString(
+					"controllerStatusMsgRoutingServerStopped"), JOptionPane.INFORMATION_MESSAGE, true);
+			}
+		}
 	}
 
 	static public InfoServiceDBEntry createDefaultInfoService() throws Exception

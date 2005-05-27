@@ -32,32 +32,36 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.net.SocketException;
 
-final public class ProxyConnection {
+final public class ProxyConnection
+{
 
 	private Socket m_ioSocket;
 	private InputStream m_In;
 	private OutputStream m_Out;
 
-
-  public ProxyConnection(Socket a_connectedSocket) throws Exception {
-    m_ioSocket = a_connectedSocket;
-    try {
+	public ProxyConnection(Socket a_connectedSocket) throws Exception
+	{
+		m_ioSocket = a_connectedSocket;
+		try
+		{
 			m_ioSocket.setSoTimeout(0);
-			}
-    catch (Exception e) {
-      /* do nothing */
-			}
-    try {
+		}
+		catch (Exception e)
+		{
+			/* do nothing */
+		}
+		try
+		{
 			m_In = m_ioSocket.getInputStream();
 			m_Out = m_ioSocket.getOutputStream();
 		}
-    catch (Exception e) {
-      /* close everything */
-      close();
-      throw (e);
+		catch (Exception e)
+		{
+			/* close everything */
+			close();
+			throw (e);
+		}
 	}
-	}
-
 
 	public Socket getSocket()
 	{
