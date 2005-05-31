@@ -780,9 +780,9 @@ public class TinyTLS extends Socket
 		public void sendClientCertificate() throws IOException
 		{
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[CLIENT_CERTIFICATE]");
-			if (m_certificaterequested && m_clientcertificates != null)
+			if (m_certificaterequested)
 			{
-				if (m_clientcertificatetypes != null)
+				if (m_clientcertificatetypes != null&&m_clientcertificates!=null)
 				{
 					for (int i = 0; i < m_clientcertificatetypes.length; i++)
 					{
@@ -793,7 +793,7 @@ public class TinyTLS extends Socket
 								byte[] b = new byte[0];
 								for (int i2 = 0; i2 < m_clientcertificates.length; i2++)
 								{
-									byte[] cert = m_clientcertificates[i2].toByteArray();
+									byte[] cert = m_clientcertificates[i2].toByteArray(false);
 									b = helper.conc(b, helper.inttobyte(cert.length, 3), cert);
 								}
 								b = helper.conc(helper.inttobyte(b.length, 3), b);
@@ -806,7 +806,7 @@ public class TinyTLS extends Socket
 								byte[] b = new byte[0];
 								for (int i2 = 0; i2 < m_clientcertificates.length; i2++)
 								{
-									byte[] cert = m_clientcertificates[i2].toByteArray();
+									byte[] cert = m_clientcertificates[i2].toByteArray(false);
 									b = helper.conc(b, helper.inttobyte(cert.length, 3), cert);
 								}
 								b = helper.conc(helper.inttobyte(b.length, 3), b);
@@ -825,10 +825,13 @@ public class TinyTLS extends Socket
 						}
 					}
 				}
+				//no certificate available
+				else
+				{
+					sendHandshake(11, new byte[]
+								  {0, 0, 0});
+				}
 			}
-			//no certificate available
-			this.sendHandshake(11, new byte[]
-							   {0, 0, 0});
 		}
 
 		/**
@@ -925,7 +928,7 @@ public class TinyTLS extends Socket
 		{
 			sendHandshake(20,
 						  m_selectedciphersuite.getKeyExchangeAlgorithm().calculateClientFinished(
-				m_handshakemessages));
+							  m_handshakemessages));
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[CLIENT_FINISHED]");
 		}
 	}
@@ -1089,25 +1092,28 @@ public class TinyTLS extends Socket
 	 */
 	public void setClientCertificate(JAPCertificate[] certificates, IMyPrivateKey key) throws IOException
 	{
-		JAPCertificate prevCert = certificates[0];
-		LogHolder.log(LogLevel.DEBUG, LogType.MISC,
-					  "[CLIENT_CERTIFICATE] " + prevCert.getIssuer().toString());
-		LogHolder.log(LogLevel.DEBUG, LogType.MISC,
-					  "[CLIENT_CERTIFICATE] " + prevCert.getSubject().toString());
-		JAPCertificate cert;
-		for (int i = 1; i < certificates.length; i++)
+		if (certificates != null)
 		{
-			cert = certificates[i];
-			if (!prevCert.verify(cert.getPublicKey()))
-			{
-				System.out.println("error");
-				throw new IOException("TLS Server Certs could not be verified!");
-			}
-			prevCert = cert;
+			JAPCertificate prevCert = certificates[0];
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC,
 						  "[CLIENT_CERTIFICATE] " + prevCert.getIssuer().toString());
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC,
 						  "[CLIENT_CERTIFICATE] " + prevCert.getSubject().toString());
+			JAPCertificate cert;
+			for (int i = 1; i < certificates.length; i++)
+			{
+				cert = certificates[i];
+				if (!prevCert.verify(cert.getPublicKey()))
+				{
+					System.out.println("error");
+					throw new IOException("TLS Server Certs could not be verified!");
+				}
+				prevCert = cert;
+				LogHolder.log(LogLevel.DEBUG, LogType.MISC,
+							  "[CLIENT_CERTIFICATE] " + prevCert.getIssuer().toString());
+				LogHolder.log(LogLevel.DEBUG, LogType.MISC,
+							  "[CLIENT_CERTIFICATE] " + prevCert.getSubject().toString());
+			}
 		}
 		m_clientcertificates = certificates;
 		m_clientprivatekey = key;
