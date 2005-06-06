@@ -56,7 +56,6 @@ import anon.tor.tinytls.TinyTLS;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import java.io.FileOutputStream;
 
 /**
  *
@@ -203,11 +202,6 @@ public class FirstOnionRouterConnection implements Runnable
 			AsymmetricCryptoKeyPair ackp = new AsymmetricCryptoKeyPair(key);
 			JAPCertificate cert = JAPCertificate.getInstance(OP_NAME, ackp, Calendar.getInstance(), 1);
 
-			//cert.store(new FileOutputStream("test7.cer",false));
-
-			//RSAKeyPairGenerator kpg2 = new RSAKeyPairGenerator();
-			//kpg2.init(new RSAKeyGenerationParameters(new BigInteger(new byte[]
-			//	{1, 0, 1}), new SecureRandom(), 1024, 100));
 			AsymmetricCipherKeyPair kp2 = kpg.generateKeyPair();
 			MyRSAPrivateKey key2 = new MyRSAPrivateKey(kp2.getPrivate());
 			AsymmetricCryptoKeyPair ackp2 = new AsymmetricCryptoKeyPair(key2);
@@ -215,13 +209,11 @@ public class FirstOnionRouterConnection implements Runnable
 
 			//sign cert with pkcs12cert
 			JAPCertificate cert1 = cert.sign(pkcs12cert);
-			//cert1.store(new FileOutputStream("testcert1.cer",false));
 
 			JAPCertificate cert2 = JAPCertificate.getInstance(pkcs12cert.getX509Certificate());
-			//cert2.store(new FileOutputStream("testcert2.cer",false));
 
-			m_tinyTLS.setClientCertificate(/*new JAPCertificate[]
-										   {cert1, cert2}*/(JAPCertificate[])null, null/*key*/);
+			m_tinyTLS.setClientCertificate(new JAPCertificate[]
+										   {cert1, cert2}, key);
 		}
 		catch (Exception ex)
 		{

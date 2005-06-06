@@ -58,10 +58,7 @@ final class Channel extends AbstractChannel
 	{
 		if (m_bFirstPacket)
 		{
-			//why an additional "-15" --> seems to be strange but otherwise the channel produces a
-			//decryption error on server side from time to time....
-			///@todo check the strange "-15"
-			return MuxSocket.PAYLOAD_SIZE - m_muxSocket.getNumberOfMixes() * MuxSocket.KEY_SIZE-15;
+				return MuxSocket.PAYLOAD_SIZE - m_muxSocket.getNumberOfMixes() * MuxSocket.KEY_SIZE;
 		}
 		else
 		{
