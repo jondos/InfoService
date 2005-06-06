@@ -1588,15 +1588,19 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 		}
 		//Filling done
 		//Fill infoservices-list
-		it = InfoServiceHolder.getInstance().getInfoServices().elements();
-
-		while (it.hasMoreElements())
+		Vector v = InfoServiceHolder.getInstance().getInfoServices();
+		if (v != null)
 		{
-			InfoServiceDBEntry is = (InfoServiceDBEntry) it.nextElement();
-			if (m_registrationInfoServicesListModel != null &&
-				!m_registrationInfoServicesListModel.contains(is))
+			it = v.elements();
+
+			while (it.hasMoreElements())
 			{
-				m_knownInfoServicesListModel.addElement(is);
+				InfoServiceDBEntry is = (InfoServiceDBEntry) it.nextElement();
+				if (m_registrationInfoServicesListModel != null &&
+					!m_registrationInfoServicesListModel.contains(is))
+				{
+					m_knownInfoServicesListModel.addElement(is);
+				}
 			}
 		}
 		//Filling done

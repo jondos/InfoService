@@ -1767,11 +1767,12 @@ public final class JAPController extends Observable implements IProxyListener, O
 					{
 						if (!JAPModel.isSmallDisplay())
 						{
+							LogHolder.log(LogLevel.ERR, LogType.NET,
+										  "Error starting AN.ON service! - ErrorCode: "+Integer.toString(ret));
 							JOptionPane.showMessageDialog
 								(
 									getView(),
-									JAPMessages.getString("errorConnectingFirstMix") + "\n" +
-									JAPMessages.getString("errorCode") + ": " + Integer.toString(ret),
+									JAPMessages.getString("errorConnectingFirstMix") ,
 									JAPMessages.getString("errorConnectingFirstMixTitle"),
 									JOptionPane.ERROR_MESSAGE
 								);

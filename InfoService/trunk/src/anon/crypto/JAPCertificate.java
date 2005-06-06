@@ -918,6 +918,7 @@ final public class JAPCertificate extends X509CertificateStructure implements IX
 		 * SubjectPublicKeyInfo as defined in RFC2459.
 		 * @param a_subjectPublicKeyInfo a SubjectPublicKeyInfo
 		 */
+		///todo: maybe buggy.. ?
 		private void setSubjectKeyIdentifier(SubjectPublicKeyInfo a_subjectPublicKeyInfo)
 		{
 			Hashtable extensions = new Hashtable();
@@ -929,8 +930,10 @@ final public class JAPCertificate extends X509CertificateStructure implements IX
 										new SubjectKeyIdentifier(
 											  a_subjectPublicKeyInfo).getDERObject()));
 
-			extensions.put(X509Extensions.SubjectKeyIdentifier, extSubjectKeyIdentifier);
-			setExtensions(new X509Extensions(extensions));
+	///removed because reported to be buggy...!
+
+	//extensions.put(X509Extensions.SubjectKeyIdentifier, extSubjectKeyIdentifier);
+			//setExtensions(new X509Extensions(extensions));
 		}
 	}
 

@@ -993,7 +993,7 @@ public final class MuxSocket implements Runnable
 			System.arraycopy(m_arEmpty, 0, m_arOutBuff, 0, m_arOutBuff.length);
 			if (entry.arCipher == null)
 			{
-				int size = PAYLOAD_SIZE - KEY_SIZE - m_iTimestampSize;
+//				int size = PAYLOAD_SIZE - KEY_SIZE - m_iTimestampSize;
 				entry.arCipher = new SymCipher[m_iChainLen];
 
 				//Last Mix
@@ -1026,7 +1026,7 @@ public final class MuxSocket implements Runnable
 				m_arASymCipher[m_iChainLen - 1].encrypt(m_arOutBuff, 0, m_arOutBuff2, 0);
 				entry.arCipher[m_iChainLen -
 					1].encryptAES(m_arOutBuff, RSA_SIZE, m_arOutBuff2, RSA_SIZE, DATA_SIZE - RSA_SIZE);
-				size -= (KEY_SIZE + m_iTimestampSize);
+//				size -= (KEY_SIZE + m_iTimestampSize);
 				for (int i = m_iChainLen - 2; i >= 0; i--)
 				{
 					entry.arCipher[i] = new SymCipher();
@@ -1038,7 +1038,7 @@ public final class MuxSocket implements Runnable
 						m_arOutBuff[KEY_SIZE + 1] = (byte) (timestamp % 256);
 					}
 					entry.arCipher[i].setEncryptionKeyAES(m_arOutBuff);
-					System.arraycopy(m_arOutBuff2, 0, m_arOutBuff, KEY_SIZE + m_iTimestampSize, size);
+					System.arraycopy(m_arOutBuff2, 0, m_arOutBuff, KEY_SIZE + m_iTimestampSize, DATA_SIZE-KEY_SIZE);
 					if (i > 0 || m_iMixProtocolVersion != MIX_PROTOCOL_VERSION_0_4)
 					{
 						m_arASymCipher[i].encrypt(m_arOutBuff, 0, m_arOutBuff2, 0);
@@ -1056,7 +1056,7 @@ public final class MuxSocket implements Runnable
 						entry.arCipher[i].encryptAES(m_arOutBuff, KEY_SIZE, m_arOutBuff2, KEY_SIZE,
 							DATA_SIZE - KEY_SIZE);
 					}
-					size -= (KEY_SIZE + m_iTimestampSize);
+//					size -= (KEY_SIZE + m_iTimestampSize);
 				}
 				channelMode = CHANNEL_OPEN;
 			}
