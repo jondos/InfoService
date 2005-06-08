@@ -755,7 +755,7 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 
 		m_knownCascadesListModel = new DefaultListModel();
 		m_knownInfoServicesListModel = new DefaultListModel();
-		this.fillLists();
+		//this.fillLists();
 
 		final JList knownCascadesList = new JList(m_knownCascadesListModel);
 		knownCascadesList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -1556,7 +1556,10 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 		//Register help context
 		JAPHelp.getInstance().getContextObj().setContext("forwarding_server");
 		//Fill lists
+		if (!JAPModel.isInfoServiceDisabled())
+		{
 		this.fillLists();
+	}
 	}
 
 	private void fillLists()
@@ -1588,10 +1591,15 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 		}
 		//Filling done
 		//Fill infoservices-list
+		Runnable doIt = new Runnable()
+		{
+			public void run()
+			{
 		Vector v = InfoServiceHolder.getInstance().getInfoServices();
+
 		if (v != null)
 		{
-			it = v.elements();
+					Enumeration it = v.elements();
 
 			while (it.hasMoreElements())
 			{
@@ -1603,6 +1611,10 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 				}
 			}
 		}
+			}
+		};
+		Thread t = new Thread(doIt);
+		t.start();
 		//Filling done
 	}
 

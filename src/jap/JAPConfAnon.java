@@ -834,7 +834,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				if (m_Controller.getCurrentMixCascade().equals(oldCascade))
 				{
 					m_Controller.setCurrentMixCascade(c);
-					JOptionPane.showMessageDialog(this.getRootPanel(), JAPMessages.getString("activeCascadeEdited"),
+					JOptionPane.showMessageDialog(this.getRootPanel(),
+												  JAPMessages.getString("activeCascadeEdited"),
 											  JAPMessages.getString("information"),
 											  JOptionPane.INFORMATION_MESSAGE);
 
@@ -872,7 +873,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			MixCascade cascade = (MixCascade) m_listMixCascade.getSelectedValue();
 			if (m_Controller.getCurrentMixCascade().equals(cascade))
 			{
-				JOptionPane.showMessageDialog(this.getRootPanel(), JAPMessages.getString("activeCascadeDelete"),
+				JOptionPane.showMessageDialog(this.getRootPanel(),
+											  JAPMessages.getString("activeCascadeDelete"),
 											  JAPMessages.getString("errorCreateCascade"),
 											  JOptionPane.ERROR_MESSAGE);
 			}
@@ -976,6 +978,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	{
 		//Register help context
 		JAPHelp.getInstance().getContextObj().setContext("services");
+		if (!JAPModel.isInfoServiceDisabled())
+		{
 		if (!m_infoService.isFilled())
 		{
 			m_reloadCascadesButton.setEnabled(false);
@@ -1024,6 +1028,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			}
 			catch (Exception e)
 			{
+				}
 			}
 		}
 	}
