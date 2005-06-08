@@ -90,7 +90,7 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 		cButtons.gridx = GridBagConstraints.RELATIVE;
 		cButtons.weightx = 1.0;
 		cButtons.weighty = 1.0;
-		cButtons.fill = GridBagConstraints.NONE;
+		cButtons.fill = GridBagConstraints.VERTICAL;
 		cButtons.anchor = GridBagConstraints.WEST;
 
 		m_bttnUpgrade = new JButton(JAPMessages.getString("confUpgrade"));
