@@ -75,7 +75,7 @@ final public class AnonProxy implements Runnable
 	private MixCascade m_currentMixCascade;
 
 	private boolean m_bAutoReconnect = false;
-	private boolean m_bPreCreateAnonRoutes = true;
+	private boolean m_bPreCreateAnonRoutes = false;
 
 	/**
 	 * Stores, whether we use a forwarded connection (already active, when AnonProxy is created) or

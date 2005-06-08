@@ -35,7 +35,7 @@ import anon.tor.Tor;
 
 public final class JAPConstants
 {
-	public static final String aktVersion = "00.04.032"; //Never change the layout of this line!
+	public static final String aktVersion = "00.04.033"; //Never change the layout of this line!
 	private static final String CVS_GENERATED_RELEASE_DATE = "$Date$";
 
 	//Warning: This is a little bit tricky,
@@ -241,7 +241,6 @@ public final class JAPConstants
 	public final static String CONFIG_DUMMY_TRAFFIC_INTERVALL = "DummyTrafficIntervall";
 	public final static String CONFIG_AUTO_CONNECT = "autoConnect";
 	public final static String CONFIG_AUTO_RECONNECT = "autoReConnect";
-	public final static String CONFIG_PRECREATE_ANON_ROUTES = "preCreateAnonRoutes";
 	public final static String CONFIG_MINIMIZED_STARTUP = "minimizedStartup";
 	public final static String CONFIG_LOCALE = "Locale";
 	public final static String CONFIG_LOOK_AND_FEEL = "LookAndFeel";
@@ -270,6 +269,7 @@ public final class JAPConstants
 	public final static String CONFIG_FILE = "File";
 	public final static String CONFIG_TOR = "Tor";
 	public final static String CONFIG_MAX_CONNECTIONS_PER_ROUTE = "MaxConnectionsPerRoute";
+	public final static String CONFIG_TOR_PRECREATE_ANON_ROUTES = "PreCreateAnonRoutes";
 	public final static String CONFIG_ROUTE_LEN = "RouteLen";
 	public final static String CONFIG_MIN = "min";
 	public final static String CONFIG_MAX = "max";
