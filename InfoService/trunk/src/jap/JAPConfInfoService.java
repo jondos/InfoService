@@ -242,8 +242,8 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 			JAPConstants.IMAGE_RELOAD_DISABLED, true));
 		settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton.setPressedIcon(JAPUtil.loadImageIcon(
 			JAPConstants.IMAGE_RELOAD_ROLLOVER, true));
-		settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton.setMargin(new Insets(1, 1, 1,
-			settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton.getMargin().right));
+		//settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton.setMargin(new Insets(1, 1, 1,
+		//	settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton.getMargin().right));
 		settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent a_event)
