@@ -285,7 +285,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 	 *    porxyAuthUserID="..."             // UserId for the Proxy if Auth is neccessary
 	 *    infoServiceDisabled="true/false"  // disable use of InfoService
 	 *    infoServiceTimeout="..."          // timeout (sec) for infoservice and update communication (since config version 0.5)
-	 *    preCreateAnonRoutes="true/false"  // Should we setup Anon Routes in the "Background" ? (sinc 0.13)
 	 *    autoConnect="true"/"false"    // should we start the anon service immedialy after programm launch ?
 	 *    autoReConnect="true"/"false"    // should we automatically reconnect to mix if connection was lost ?
 	 *    DummyTrafficIntervall=".."    //Time of inactivity in milli seconds after which a dummy is send
@@ -359,6 +358,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	 * <Tor>    //  Tor related seetings (since Version 0.6)
 	 * 	 <MaxConnectionsPerRoute>...</MaxConnectionsPerRoute>(since Vresion 0.8) //How many connections are allowed before a new circuit is created
 	 * 	 <RouteLen min=" " max=" "/>(since Vresion 0.9) //How long should a route be
+	 *   <PreCreateAnonRoutes>True/False</PreCreateAnonRoutes> //Should the routes be created in advance?
 	 * </Tor>
 	 * <Payment //Since version 0.7
 	 *    biHost="..."                      // BI's Hostname
@@ -592,8 +592,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 					-1));
 				setAutoConnect(XMLUtil.parseValue(n.getNamedItem(JAPConstants.CONFIG_AUTO_CONNECT), false));
 				setAutoReConnect(XMLUtil.parseValue(n.getNamedItem(JAPConstants.CONFIG_AUTO_RECONNECT), false));
-				setPreCreateAnonRoutes(XMLUtil.parseValue(n.getNamedItem(JAPConstants.
-					CONFIG_PRECREATE_ANON_ROUTES), true));
 				m_Model.setMinimizeOnStartup(XMLUtil.parseValue(n.getNamedItem(JAPConstants.
 					CONFIG_MINIMIZED_STARTUP), false));
 				//Load Locale-Settings
@@ -799,6 +797,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 					max = XMLUtil.parseAttribute(elem, JAPConstants.CONFIG_MAX,
 												 JAPModel.getTorMaxRouteLen());
 					setTorRouteLen(min, max);
+					elem = (Element) XMLUtil.getFirstChildByName(elemTor,
+						JAPConstants.CONFIG_TOR_PRECREATE_ANON_ROUTES);
+					setPreCreateAnonRoutes(XMLUtil.parseValue(elem, JAPModel.isPreCreateAnonRoutesEnabled()));
+
 				}
 				catch (Exception ex)
 				{
@@ -1148,8 +1150,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 								 JAPModel.getDummyTraffic());
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_AUTO_CONNECT, JAPModel.getAutoConnect());
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_AUTO_RECONNECT, JAPModel.getAutoReConnect());
-			XMLUtil.setAttribute(e, JAPConstants.CONFIG_PRECREATE_ANON_ROUTES,
-								 JAPModel.isPreCreateAnonRoutesEnabled());
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_MINIMIZED_STARTUP, JAPModel.getMinimizeOnStartup());
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_NEVER_REMIND_ACTIVE_CONTENT,
 								 mbActCntMessageNeverRemind);
@@ -1258,6 +1258,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 			elem = doc.createElement(JAPConstants.CONFIG_ROUTE_LEN);
 			XMLUtil.setAttribute(elem, JAPConstants.CONFIG_MIN, JAPModel.getTorMinRouteLen());
 			XMLUtil.setAttribute(elem, JAPConstants.CONFIG_MAX, JAPModel.getTorMaxRouteLen());
+			elemTor.appendChild(elem);
+			elem = doc.createElement(JAPConstants.CONFIG_TOR_PRECREATE_ANON_ROUTES);
+			XMLUtil.setValue(elem, JAPModel.isPreCreateAnonRoutesEnabled());
 			elemTor.appendChild(elem);
 			e.appendChild(elemTor);
 
@@ -1584,7 +1587,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 								  (new Boolean(m_startServer)).toString() + "' was canceled.");
 				}
 			}
-			if (!m_jobWasInterrupted )
+			if (!m_jobWasInterrupted)
 			{
 				/* job was not canceled -> we have to do it */
 				setServerMode(m_startServer);
@@ -1768,11 +1771,12 @@ public final class JAPController extends Observable implements IProxyListener, O
 						if (!JAPModel.isSmallDisplay())
 						{
 							LogHolder.log(LogLevel.ERR, LogType.NET,
-										  "Error starting AN.ON service! - ErrorCode: "+Integer.toString(ret));
+										  "Error starting AN.ON service! - ErrorCode: " +
+										  Integer.toString(ret));
 							JOptionPane.showMessageDialog
 								(
 									getView(),
-									JAPMessages.getString("errorConnectingFirstMix") ,
+									JAPMessages.getString("errorConnectingFirstMix"),
 									JAPMessages.getString("errorConnectingFirstMixTitle"),
 									JOptionPane.ERROR_MESSAGE
 								);
@@ -1882,7 +1886,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					m_changeAnonModeJobs.addElement(currentJob);
 					currentThread.start();
 					LogHolder.log(LogLevel.DEBUG, LogType.MISC,
-						"JAPController: setAnonMode: Added a job for changing the anonymity mode to '" +
+								  "JAPController: setAnonMode: Added a job for changing the anonymity mode to '" +
 								  (new Boolean(a_anonModeSelected)).toString() + "' to the job queue.");
 				}
 			}
@@ -2490,8 +2494,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 								{
 									JOptionPane.showMessageDialog(m_View,
 										new JAPHtmlMultiLineLabel(
-										JAPMessages.getString("settingsRoutingServerRegistrationEmptyListError"),
-										getDialogFont()), JAPMessages.getString("ERROR"),
+											JAPMessages.getString(
+										"settingsRoutingServerRegistrationEmptyListError"),
+											getDialogFont()), JAPMessages.getString("ERROR"),
 										JOptionPane.ERROR_MESSAGE);
 									break;
 								}
@@ -2499,8 +2504,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 								{
 									JOptionPane.showMessageDialog(m_View,
 										new JAPHtmlMultiLineLabel(
-										JAPMessages.getString("settingsRoutingServerRegistrationUnknownError"),
-										getDialogFont()), JAPMessages.getString("ERROR"),
+											JAPMessages.getString(
+										"settingsRoutingServerRegistrationUnknownError"),
+											getDialogFont()), JAPMessages.getString("ERROR"),
 										JOptionPane.ERROR_MESSAGE);
 									break;
 								}
@@ -2508,8 +2514,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 								{
 									JOptionPane.showMessageDialog(m_View,
 										new JAPHtmlMultiLineLabel(
-										JAPMessages.getString("settingsRoutingServerRegistrationInfoservicesError"),
-										getDialogFont()), JAPMessages.getString("ERROR"),
+											JAPMessages.getString(
+										"settingsRoutingServerRegistrationInfoservicesError"),
+											getDialogFont()), JAPMessages.getString("ERROR"),
 										JOptionPane.ERROR_MESSAGE);
 									break;
 								}
@@ -2517,8 +2524,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 								{
 									JOptionPane.showMessageDialog(m_View,
 										new JAPHtmlMultiLineLabel(
-										JAPMessages.getString("settingsRoutingServerRegistrationVerificationError"),
-										getDialogFont()), JAPMessages.getString("ERROR"),
+											JAPMessages.getString(
+										"settingsRoutingServerRegistrationVerificationError"),
+											getDialogFont()), JAPMessages.getString("ERROR"),
 										JOptionPane.ERROR_MESSAGE);
 									break;
 								}
