@@ -55,10 +55,8 @@ import java.util.zip.ZipFile;
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.ASN1OctetString;
 import org.bouncycastle.asn1.ASN1TaggedObject;
-import org.bouncycastle.asn1.BERInputStream;
 import org.bouncycastle.asn1.DERBitString;
 import org.bouncycastle.asn1.DEREncodableVector;
-import org.bouncycastle.asn1.DERInputStream;
 import org.bouncycastle.asn1.DERInteger;
 import org.bouncycastle.asn1.DERObjectIdentifier;
 import org.bouncycastle.asn1.DEROutputStream;
@@ -88,6 +86,7 @@ import anon.util.ResourceLoader;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import org.bouncycastle.asn1.ASN1InputStream;
 
 
 /**
@@ -197,7 +196,7 @@ final public class JAPCertificate extends X509CertificateStructure implements IX
 
 		try
 		{
-			if (a_certificate[0] != (DERInputStream.SEQUENCE | DERInputStream.CONSTRUCTED))
+			if (a_certificate[0] != (DERTags.SEQUENCE | DERTags.CONSTRUCTED))
 			{
 				// Probably a Base64 encoded certificate
 				BufferedReader in =
@@ -227,10 +226,10 @@ final public class JAPCertificate extends X509CertificateStructure implements IX
 				bin = new ByteArrayInputStream(Base64.decode(sbuf.toString()));
 			}
 
-			if (bin == null && a_certificate[1] == 0x80)
+			if ((bin == null) && (a_certificate[1] == 0x80))
 			{
 				// a BER encoded certificate
-				BERInputStream in = new BERInputStream(new ByteArrayInputStream(a_certificate));
+				ASN1InputStream in = new ASN1InputStream(new ByteArrayInputStream(a_certificate));
 				ASN1Sequence seq = (ASN1Sequence) in.readObject();
 				return getInstance(new X509CertificateStructure(seq));
 			}
@@ -239,9 +238,8 @@ final public class JAPCertificate extends X509CertificateStructure implements IX
 				if (bin == null)
 				{
 					bin = new ByteArrayInputStream(a_certificate);
-					// DERInputStream
 				}
-				DERInputStream in = new DERInputStream(bin);
+				ASN1InputStream in = new ASN1InputStream(bin);
 				ASN1Sequence seq = (ASN1Sequence) in.readObject();
 				if (seq.size() > 1
 					&& seq.getObjectAt(1) instanceof DERObjectIdentifier
@@ -437,7 +435,7 @@ final public class JAPCertificate extends X509CertificateStructure implements IX
 	 * @param a_validFrom The date from which the certificate is valid.
 	 * @return JAPCertificate
 	 */
-	public static final JAPCertificate getInstance(IMyPublicKey a_publicKey, Calendar a_validFrom)
+	public static JAPCertificate getInstance(IMyPublicKey a_publicKey, Calendar a_validFrom)
 	{
 		return getInstance("void", getDummyPrivateKey(), a_publicKey,
 						   a_validFrom, createValidTo(a_validFrom, 0));
@@ -690,7 +688,7 @@ final public class JAPCertificate extends X509CertificateStructure implements IX
 		{
 			return false;
 		}
-		return (verify(a_certificate.getPublicKey()));
+		return verify(a_certificate.getPublicKey());
 	}
 
 	/** Verifies the certificate by using the public key.
@@ -827,17 +825,17 @@ final public class JAPCertificate extends X509CertificateStructure implements IX
 		public X509CertificateGenerator(String a_ownerAlias, Date a_validFrom, Date a_validTo,
 										IMyPublicKey a_publicKey) throws IOException
 		{
-			SubjectPublicKeyInfo subjectPublicKeyInfo;
+			SubjectPublicKeyInfo subPublicKeyInfo;
 
 			setStartDate(new DERUTCTime(a_validFrom));
 			setEndDate(new DERUTCTime(a_validTo));
 			setSerialNumber(new DERInteger(1));
 			setSubject(new X509Name("CN=" + a_ownerAlias));
-			subjectPublicKeyInfo =
-				new SubjectPublicKeyInfo( (ASN1Sequence) (new DERInputStream(new
+			subPublicKeyInfo =
+				new SubjectPublicKeyInfo( (ASN1Sequence) (new ASN1InputStream(new
 				ByteArrayInputStream(a_publicKey.getEncoded()))).readObject());
-			setSubjectPublicKeyInfo(subjectPublicKeyInfo);
-			setSubjectKeyIdentifier(subjectPublicKeyInfo);
+			setSubjectPublicKeyInfo(subPublicKeyInfo);
+			setSubjectKeyIdentifier(subPublicKeyInfo);
 		}
 
 		/**
@@ -882,25 +880,25 @@ final public class JAPCertificate extends X509CertificateStructure implements IX
 		{
 			try
 			{
-				TBSCertificateStructure tbsCert;
+				TBSCertificateStructure tbsCer;
 				DEREncodableVector seqv;
 				ByteArrayOutputStream bOut;
-				byte[] signature;
+				byte[] signa;
 
 				setIssuer(a_issuer);
 				setSignature(a_privateKey.getSignatureAlgorithm().getIdentifier());
 
 				/* generate signature */
 				bOut = new ByteArrayOutputStream();
-				tbsCert = generateTBSCertificate();
-				(new DEROutputStream(bOut)).writeObject(tbsCert);
-				signature = ByteSignature.sign(bOut.toByteArray(), a_privateKey);
+				tbsCer = generateTBSCertificate();
+				(new DEROutputStream(bOut)).writeObject(tbsCer);
+				signa = ByteSignature.sign(bOut.toByteArray(), a_privateKey);
 
 				/* construct certificate */
 				seqv = new DEREncodableVector();
-				seqv.add(tbsCert);
+				seqv.add(tbsCer);
 				seqv.add(a_privateKey.getSignatureAlgorithm().getIdentifier());
-				seqv.add(new DERBitString(signature));
+				seqv.add(new DERBitString(signa));
 
 				return new X509CertificateStructure(new DERSequence(seqv));
 			}
@@ -921,7 +919,7 @@ final public class JAPCertificate extends X509CertificateStructure implements IX
 		///todo: maybe buggy.. ?
 		private void setSubjectKeyIdentifier(SubjectPublicKeyInfo a_subjectPublicKeyInfo)
 		{
-			Hashtable extensions = new Hashtable();
+			Hashtable exts = new Hashtable();
 			X509Extension extSubjectKeyIdentifier;
 
 			extSubjectKeyIdentifier =
@@ -932,8 +930,8 @@ final public class JAPCertificate extends X509CertificateStructure implements IX
 
 	///removed because reported to be buggy...!
 
-	//extensions.put(X509Extensions.SubjectKeyIdentifier, extSubjectKeyIdentifier);
-			//setExtensions(new X509Extensions(extensions));
+	//exts.put(X509Extensions.SubjectKeyIdentifier, extSubjectKeyIdentifier);
+			//setExtensions(new X509Extensions(extens));
 		}
 	}
 

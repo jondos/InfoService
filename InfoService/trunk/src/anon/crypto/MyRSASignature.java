@@ -39,7 +39,6 @@ import java.security.Key;
 
 import org.bouncycastle.asn1.ASN1Null;
 import org.bouncycastle.asn1.ASN1Sequence;
-import org.bouncycastle.asn1.DERInputStream;
 import org.bouncycastle.asn1.DERObjectIdentifier;
 import org.bouncycastle.asn1.DEROutputStream;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
@@ -48,6 +47,7 @@ import org.bouncycastle.asn1.x509.X509ObjectIdentifiers;
 import org.bouncycastle.crypto.digests.SHA1Digest;
 import org.bouncycastle.crypto.encodings.PKCS1Encoding;
 import org.bouncycastle.crypto.engines.RSAEngine;
+import org.bouncycastle.asn1.ASN1InputStream;
 
 /*** SHA1withRSA Signature as described in RFC 2313 */
 public final class MyRSASignature implements IMySignature
@@ -99,10 +99,10 @@ public final class MyRSASignature implements IMySignature
 
 			byte[]	 decryptedSig = m_SignatureAlgorithm.processBlock(sig, 0, sig.length);
 			ByteArrayInputStream    bIn = new ByteArrayInputStream(decryptedSig);
- 			DERInputStream          dIn = new DERInputStream(bIn);
+ 			ASN1InputStream          dIn = new ASN1InputStream(bIn);
 
 
-			DigestInfo	 digInfo = new DigestInfo((ASN1Sequence)new DERInputStream(bIn).readObject());
+			DigestInfo	 digInfo = new DigestInfo((ASN1Sequence)new ASN1InputStream(bIn).readObject());
 
 			 if (!digInfo.getAlgorithmId().getObjectId().equals(ms_AlgID.getObjectId()))
 			 {

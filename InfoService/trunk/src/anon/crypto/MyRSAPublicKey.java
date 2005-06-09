@@ -38,7 +38,6 @@ import java.security.InvalidKeyException;
 import java.security.PublicKey;
 
 import org.bouncycastle.asn1.ASN1Sequence;
-import org.bouncycastle.asn1.DERInputStream;
 import org.bouncycastle.asn1.DERObjectIdentifier;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.asn1.x509.RSAPublicKeyStructure;
@@ -50,6 +49,7 @@ import org.w3c.dom.Element;
 
 import anon.util.Base64;
 import anon.util.XMLUtil;
+import org.bouncycastle.asn1.ASN1InputStream;
 
 final public class MyRSAPublicKey extends AbstractPublicKey implements IMyPublicKey
 {
@@ -105,7 +105,7 @@ final public class MyRSAPublicKey extends AbstractPublicKey implements IMyPublic
 		try
 		{
 			return new MyRSAPublicKey(
-				new RSAPublicKeyStructure( (ASN1Sequence)new DERInputStream(new ByteArrayInputStream(encoded)).
+				new RSAPublicKeyStructure( (ASN1Sequence)new ASN1InputStream(new ByteArrayInputStream(encoded)).
 										  readObject())
 				);
 		}

@@ -64,9 +64,6 @@ final public class MyDSAPrivateKey extends AbstractPrivateKey
 		super(privKeyInfo);
 		try
 		{
-			//		ByteArrayInputStream bIn =new ByteArrayInputStream(encoded);
-			//		DERInputStream dIn = new DERInputStream(bIn);
-			//		PrivateKeyInfo privKeyInfo=new PrivateKeyInfo((ASN1Sequence)dIn.readObject());
 			AlgorithmIdentifier algId = privKeyInfo.getAlgorithmId();
 			DERInteger X = (DERInteger) privKeyInfo.getPrivateKey();
 			m_X = X.getValue();

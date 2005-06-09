@@ -39,7 +39,6 @@ import java.util.Date;
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.DERBitString;
 import org.bouncycastle.asn1.DEREncodableVector;
-import org.bouncycastle.asn1.DERInputStream;
 import org.bouncycastle.asn1.DERInteger;
 import org.bouncycastle.asn1.DEROutputStream;
 import org.bouncycastle.asn1.DERSequence;
@@ -49,6 +48,7 @@ import org.bouncycastle.asn1.x509.TBSCertificateStructure;
 import org.bouncycastle.asn1.x509.V3TBSCertificateGenerator;
 import org.bouncycastle.asn1.x509.X509CertificateStructure;
 import org.bouncycastle.asn1.x509.X509Name;
+import org.bouncycastle.asn1.ASN1InputStream;
 
 /**
  * @deprecated use {@link anon.crypto.JAPCertificate} instead; scheduled for removal on 04/12/13
@@ -63,7 +63,7 @@ public final class X509CertGenerator extends V3TBSCertificateGenerator
 		setEndDate(new DERUTCTime(a_validTo));
 		setSerialNumber(new DERInteger(1));
 		setSubject(new X509Name("CN=" + a_ownerAlias));
-		setSubjectPublicKeyInfo(new SubjectPublicKeyInfo( (ASN1Sequence) (new DERInputStream(new
+		setSubjectPublicKeyInfo(new SubjectPublicKeyInfo( (ASN1Sequence) (new ASN1InputStream(new
 			ByteArrayInputStream(a_publicKey.getEncoded()))).readObject()));
 	}
 
@@ -98,7 +98,7 @@ public final class X509CertGenerator extends V3TBSCertificateGenerator
 			TBSCertificateStructure tbsCert;
 			DEREncodableVector seqv;
 			ByteArrayOutputStream bOut;
-			byte[] signature;
+			byte[] signa;
 
 			setIssuer(a_issuer);
 			setSignature(a_privateKey.getSignatureAlgorithm().getIdentifier());
@@ -107,13 +107,13 @@ public final class X509CertGenerator extends V3TBSCertificateGenerator
 			bOut = new ByteArrayOutputStream();
 			tbsCert = generateTBSCertificate();
 			(new DEROutputStream(bOut)).writeObject(tbsCert);
-			signature = ByteSignature.sign(bOut.toByteArray(), a_privateKey);
+			signa = ByteSignature.sign(bOut.toByteArray(), a_privateKey);
 
 			/* construct certificate */
 			seqv = new DEREncodableVector();
 			seqv.add(tbsCert);
 			seqv.add(a_privateKey.getSignatureAlgorithm().getIdentifier());
-			seqv.add(new DERBitString(signature));
+			seqv.add(new DERBitString(signa));
 
 			return new X509CertificateStructure(new DERSequence(seqv));
 		}

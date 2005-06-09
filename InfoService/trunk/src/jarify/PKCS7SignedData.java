@@ -12,7 +12,6 @@ import java.util.Vector;
 
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.ASN1Set;
-import org.bouncycastle.asn1.DERInputStream;
 import org.bouncycastle.asn1.DERObject;
 import org.bouncycastle.asn1.DERObjectIdentifier;
 import org.bouncycastle.asn1.DERTaggedObject;
@@ -26,6 +25,7 @@ import org.bouncycastle.jce.X509Principal;
 
 import anon.crypto.JAPCertificate;
 import anon.crypto.JAPSignature;
+import org.bouncycastle.asn1.ASN1InputStream;
 
 /**
  * This was stolen from BouncyCastle and changed a little bit to get it work without BC provider...
@@ -63,8 +63,8 @@ public class PKCS7SignedData implements PKCSObjectIdentifiers
 
 	//private transient PrivateKey privKey;
 
-	private final String ID_PKCS7_DATA = "1.2.840.113549.1.7.1";
-	private final String ID_PKCS7_SIGNED_DATA = "1.2.840.113549.1.7.2";
+	//private final String ID_PKCS7_DATA = "1.2.840.113549.1.7.1";
+	//private final String ID_PKCS7_SIGNED_DATA = "1.2.840.113549.1.7.2";
 	private final String ID_MD5 = "1.2.840.113549.2.5";
 	private final String ID_MD2 = "1.2.840.113549.2.2";
 	private final String ID_SHA1 = "1.3.14.3.2.26";
@@ -78,7 +78,7 @@ public class PKCS7SignedData implements PKCSObjectIdentifiers
 		byte[] in) throws SecurityException, InvalidKeyException,
 		NoSuchAlgorithmException
 	{
-		DERInputStream din = new DERInputStream(new ByteArrayInputStream(in));
+		ASN1InputStream din = new ASN1InputStream(new ByteArrayInputStream(in));
 
 		//
 		// Basic checks to make sure it's a PKCS#7 SignedData Object
@@ -107,13 +107,13 @@ public class PKCS7SignedData implements PKCSObjectIdentifiers
 										content.getContentType().getId());
 		}
 
-		SignedData data = SignedData.getInstance(content.getContent());
+		SignedData sigdata = SignedData.getInstance(content.getContent());
 
 		certs = new Vector();
 
-		if (data.getCertificates() != null)
+		if (sigdata.getCertificates() != null)
 		{
-			Enumeration ec = ASN1Set.getInstance(data.getCertificates()).getObjects();
+			Enumeration ec = ASN1Set.getInstance(sigdata.getCertificates()).getObjects();
 
 			while (ec.hasMoreElements())
 			{
@@ -142,13 +142,13 @@ public class PKCS7SignedData implements PKCSObjectIdentifiers
 		   }
 		  }
 		 */
-		version = data.getVersion().getValue().intValue();
+		version = sigdata.getVersion().getValue().intValue();
 
 		//
 		// Get the digest algorithm
 		//
 		digestalgos = new Hashtable();
-		Enumeration e = data.getDigestAlgorithms().getObjects();
+		Enumeration e = sigdata.getDigestAlgorithms().getObjects();
 
 		while (e.hasMoreElements())
 		{
@@ -160,7 +160,7 @@ public class PKCS7SignedData implements PKCSObjectIdentifiers
 		//
 		// Get the SignerInfo
 		//
-		ASN1Set signerinfos = data.getSignerInfos();
+		ASN1Set signerinfos = sigdata.getSignerInfos();
 		if (signerinfos.size() != 1)
 		{
 			throw new SecurityException(
@@ -465,7 +465,7 @@ public class PKCS7SignedData implements PKCSObjectIdentifiers
 	{
 		try
 		{
-			DERInputStream in = new DERInputStream(new ByteArrayInputStream(enc));
+			ASN1InputStream in = new ASN1InputStream(new ByteArrayInputStream(enc));
 			ASN1Sequence seq = (ASN1Sequence) in.readObject();
 			return (DERObject) seq.getObjectAt(seq.getObjectAt(0) instanceof DERTaggedObject ? 3 : 2);
 		}
@@ -475,123 +475,4 @@ public class PKCS7SignedData implements PKCSObjectIdentifiers
 		}
 	}
 
-	/**
-	 * return the bytes for the PKCS7SignedData object.
-	 */
-	/** Not needed removed by sk13 */
-	/*
-	  public byte[] getEncoded()
-	   {
-	 try
-	 {
-
-	  digest = sig.sign();
-
-	  // Create the set of Hash algorithms. I've assumed this is the
-	  // set of all hash agorithms used to created the digest in the
-	  // "signerInfo" structure. I may be wrong.
-	  //
-	  ASN1EncodableVector v = new ASN1EncodableVector();
-	  for (Iterator i = digestalgos.iterator(); i.hasNext();)
-	  {
-	   AlgorithmIdentifier a = new AlgorithmIdentifier(
-	   new DERObjectIdentifier((String)i.next()),
-	   null);
-
-	   v.add(a);
-	  }
-
-	  DERSet algos = new DERSet(v);
-
-	  // Create the contentInfo. Empty, I didn't implement this bit
-	  //
-	  DERSequence contentinfo = new DERSequence(
-	   new DERObjectIdentifier(ID_PKCS7_DATA));
-
-	  // Get all the certificates
-	  //
-	  v = new ASN1EncodableVector();
-	  for (Iterator i = certs.iterator();i.hasNext();)
-	  {
-	   DERInputStream tempstream = new DERInputStream(new ByteArrayInputStream(((X509Certificate)i.next()).getEncoded()));
-	   v.add(tempstream.readObject());
-	  }
-
-	  DERSet dercertificates = new DERSet(v);
-
-	  // Create signerinfo structure.
-	  //
-	  ASN1EncodableVector signerinfo = new ASN1EncodableVector();
-
-	  // Add the signerInfo version
-	  //
-	  signerinfo.add(new DERInteger(signerversion));
-
-	  IssuerAndSerialNumber isAnds = new IssuerAndSerialNumber(
-	  new X509Name((ASN1Sequence)getIssuer(signCert.getTBSCertificate())),
-	  new DERInteger(signCert.getSerialNumber()));
-	  signerinfo.add(isAnds);
-
-	  // Add the digestAlgorithm
-	  //
-	  signerinfo.add(new AlgorithmIdentifier(
-		new DERObjectIdentifier(digestAlgorithm),
-		new DERNull()));
-
-	  //
-	  // Add the digestEncryptionAlgorithm
-	  //
-	  signerinfo.add(new AlgorithmIdentifier(
-		new DERObjectIdentifier(digestEncryptionAlgorithm),
-		new DERNull()));
-
-	  //
-	  // Add the digest
-	  //
-	  signerinfo.add(new DEROctetString(digest));
-
-
-	  //
-	  // Finally build the body out of all the components above
-	  //
-	  ASN1EncodableVector body = new ASN1EncodableVector();
-	  body.add(new DERInteger(version));
-	  body.add(algos);
-	  body.add(contentinfo);
-	  body.add(new DERTaggedObject(false, 0, dercertificates));
-
-	  if (crls.size()>0) {
-	   v = new ASN1EncodableVector();
-	   for (Iterator i = crls.iterator();i.hasNext();) {
-	 DERInputStream t = new DERInputStream(new ByteArrayInputStream((((X509CRL)i.next()).getEncoded())));
-		v.add(t.readObject());
-	   }
-	   DERSet dercrls = new DERSet(v);
-	   body.add(new DERTaggedObject(false, 1, dercrls));
-	  }
-
-	  // Only allow one signerInfo
-	  //
-	  body.add(new DERSet(new DERSequence(signerinfo)));
-
-	  // Now we have the body, wrap it in it's PKCS7Signed shell
-	  // and return it
-	  //
-	  ASN1EncodableVector whole = new ASN1EncodableVector();
-	  whole.add(new DERObjectIdentifier(ID_PKCS7_SIGNED_DATA));
-	  whole.add(new DERTaggedObject(0, new DERSequence(body)));
-
-	  ByteArrayOutputStream   bOut = new ByteArrayOutputStream();
-
-	  DEROutputStream dout = new DEROutputStream(bOut);
-	  dout.writeObject(new DERSequence(whole));
-	  dout.close();
-
-	  return bOut.toByteArray();
-	 }
-	 catch (Exception e)
-	 {
-	  throw new RuntimeException(e.toString());
-	 }
-	   }*/
 }
