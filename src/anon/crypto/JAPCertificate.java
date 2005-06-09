@@ -931,7 +931,7 @@ final public class JAPCertificate extends X509CertificateStructure implements IX
 	///removed because reported to be buggy...!
 
 	//exts.put(X509Extensions.SubjectKeyIdentifier, extSubjectKeyIdentifier);
-			//setExtensions(new X509Extensions(extens));
+		//	setExtensions(new X509Extensions(exts));
 		}
 	}
 

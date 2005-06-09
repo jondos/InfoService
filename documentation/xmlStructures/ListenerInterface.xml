@@ -5,5 +5,4 @@
     <Type>https</Type>
     <Port>443</Port>
     <Host>127.0.0.1</Host>
-    <IP>127.0.0.1</IP>
 </ListenerInterface>

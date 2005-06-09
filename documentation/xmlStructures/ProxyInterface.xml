@@ -5,7 +5,6 @@
     <Type>HTTP/TCP</Type>
     <Port>525</Port>
     <Host>localhost</Host>
-    <IP>127.0.0.1</IP>
     <AuthenticationUserID>Bob</AuthenticationUserID>
     <UseAuthentication>false</UseAuthentication>
     <UseProxy>true</UseProxy>
