@@ -80,6 +80,7 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 	private DefaultListModel m_knownInfoServicesListModel;
 	private DefaultListModel m_allowedCascadesListModel;
 	private DefaultListModel m_registrationInfoServicesListModel;
+	private  JCheckBox m_startServerBox;
 
 	/**
 	 * This is the internal message system of this module.
@@ -633,17 +634,19 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 		serverPortPanelLayout.setConstraints(serverPortField, serverPortPanelConstraints);
 		serverPortPanel.add(serverPortField);
 
-		final JCheckBox startServerBox = new JCheckBox(JAPMessages.getString("forwardingServerStart"),
-												 false);
+		m_startServerBox = new JCheckBox(JAPMessages.getString("forwardingServerStart"),
+			(JAPModel.getInstance().getRoutingSettings().getRoutingMode() == JAPRoutingSettings.
+					ROUTING_MODE_SERVER));
+
 		serverPortPanelConstraints.gridx = 2;
 		serverPortPanelConstraints.anchor = GridBagConstraints.NORTHEAST;
-		serverPortPanel.add(startServerBox, serverPortPanelConstraints);
-		startServerBox.addActionListener(new ActionListener()
+		serverPortPanel.add(m_startServerBox, serverPortPanelConstraints);
+		m_startServerBox.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent event)
 			{
 				JAPController.getInstance().enableForwardingServer(
-								startServerBox.isSelected());
+								m_startServerBox.isSelected());
 			}
 		});
 
@@ -772,7 +775,6 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 
 		m_knownCascadesListModel = new DefaultListModel();
 		m_knownInfoServicesListModel = new DefaultListModel();
-		//this.fillLists();
 
 		final JList knownCascadesList = new JList(m_knownCascadesListModel);
 		knownCascadesList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -1564,6 +1566,8 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 		{
 		this.fillLists();
 	}
+		m_startServerBox.setSelected((JAPModel.getInstance().getRoutingSettings().getRoutingMode() == JAPRoutingSettings.
+					ROUTING_MODE_SERVER));
 	}
 
 	private void fillLists()
