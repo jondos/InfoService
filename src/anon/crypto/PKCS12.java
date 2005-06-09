@@ -45,12 +45,9 @@ import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.ASN1Set;
 import org.bouncycastle.asn1.ASN1TaggedObject;
 import org.bouncycastle.asn1.BERConstructedOctetString;
-import org.bouncycastle.asn1.BERInputStream;
 import org.bouncycastle.asn1.BEROutputStream;
 import org.bouncycastle.asn1.DERBMPString;
-import org.bouncycastle.asn1.DERConstructedSet;
 import org.bouncycastle.asn1.DEREncodableVector;
-import org.bouncycastle.asn1.DERInputStream;
 import org.bouncycastle.asn1.DERObject;
 import org.bouncycastle.asn1.DERObjectIdentifier;
 import org.bouncycastle.asn1.DEROctetString;
@@ -90,6 +87,9 @@ import org.bouncycastle.crypto.params.DESParameters;
 import org.bouncycastle.crypto.params.KeyParameter;
 import org.bouncycastle.crypto.params.ParametersWithIV;
 import org.bouncycastle.crypto.params.ParametersWithRandom;
+import org.bouncycastle.asn1.DERTags;
+import org.bouncycastle.asn1.ASN1InputStream;
+import org.bouncycastle.asn1.DERConstructedSet;
 
 /**
  * This class creates and handles PKCS12 certificates, that include a private key,
@@ -240,7 +240,7 @@ public final class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifier
 			BufferedInputStream stream = new BufferedInputStream(a_stream);
 
 			stream.mark(1);
-			if (stream.read() != (DERInputStream.SEQUENCE | DERInputStream.CONSTRUCTED))
+			if (stream.read() != (DERTags.SEQUENCE | DERTags.CONSTRUCTED))
 			{
 				// this is no a valid PKCS12 stream
 				return null;
@@ -251,7 +251,7 @@ public final class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifier
 			IMyPrivateKey privKey = null;
 			X509CertificateStructure x509cert = null;
 
-			BERInputStream is = new BERInputStream(stream);
+			ASN1InputStream is = new ASN1InputStream(stream);
 			ContentInfo contentInfo = new Pfx((ASN1Sequence) is.readObject()).getAuthSafe();
 			/** @todo Check MAC */
 			// Look at JDKPKCS12KeyStore.engineLoad (starting with bag.getMacData())
@@ -261,7 +261,7 @@ public final class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifier
 				return null;
 			}
 
-			is = new BERInputStream(new ByteArrayInputStream( ( (DEROctetString) contentInfo.getContent()).
+			is = new ASN1InputStream(new ByteArrayInputStream( ( (DEROctetString) contentInfo.getContent()).
 				getOctets()));
 			ContentInfo[] cinfos = (new AuthenticatedSafe( (ASN1Sequence) is.readObject())).getContentInfo();
 
@@ -270,7 +270,7 @@ public final class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifier
 				ASN1Sequence cseq;
 				if (cinfos[i].getContentType().equals(PKCSObjectIdentifiers.data))
 				{
-					DERInputStream dis = new DERInputStream(new ByteArrayInputStream(
+					ASN1InputStream dis = new ASN1InputStream(new ByteArrayInputStream(
 						( (DEROctetString) cinfos[i].getContent())
 						.getOctets()));
 					cseq = (ASN1Sequence) dis.readObject();
@@ -286,7 +286,7 @@ public final class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifier
 					}
 					PKCS12PBEParams pbeParams = new PKCS12PBEParams( (ASN1Sequence) ed.getEncryptionAlgorithm()
 						.getParameters());
-					BERInputStream bis = new BERInputStream(new ByteArrayInputStream(
+					ASN1InputStream bis = new ASN1InputStream(new ByteArrayInputStream(
 						PKCS12.codeData(false, ed.getContent().getOctets(), pbeParams, password,
 										cipher.cipher, cipher.keysize)));
 					cseq = (ASN1Sequence) bis.readObject();
@@ -302,7 +302,7 @@ public final class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifier
 
 					if (sb.getBagId().equals(PKCSObjectIdentifiers.certBag))
 					{
-						DERInputStream cin = new BERInputStream(
+						ASN1InputStream cin = new ASN1InputStream(
 							new ByteArrayInputStream( ( (DEROctetString)new CertBag( (ASN1Sequence)
 							sb.getBagValue()).getCertValue()).getOctets()));
 
@@ -338,7 +338,7 @@ public final class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifier
 						byte[] pkData = PKCS12.codeData(false, ePrivKey.getEncryptedData(),
 							pbeParams, password, cipher.cipher, cipher.keysize);
 						ByteArrayInputStream bIn = new ByteArrayInputStream(pkData);
-						DERInputStream dIn = new DERInputStream(bIn);
+						ASN1InputStream dIn = new ASN1InputStream(bIn);
 						PrivateKeyInfo privKeyInfo = new PrivateKeyInfo( (ASN1Sequence) dIn.readObject());
 						try
 						{
