@@ -41,6 +41,7 @@ import anon.infoservice.MixCascade;
 import jap.JAPConstants;
 import jap.JAPMessages;
 import jap.JAPUtil;
+import java.awt.Dimension;
 
 public class JAPMixCascadeComboBox extends JComboBox
 {
@@ -97,6 +98,16 @@ public class JAPMixCascadeComboBox extends JComboBox
 	public void setNoDataAvailable()
 	{
 		super.insertItemAt(ITEM_NO_SERVERS_AVAILABLE, 1);
+	}
+
+	public Dimension getPreferredSize()
+	{
+		Dimension d = super.getPreferredSize();
+		if (d.width > 50)
+		{
+			d.width = 50;
+		}
+		return d;
 	}
 }
 
