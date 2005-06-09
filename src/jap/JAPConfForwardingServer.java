@@ -633,6 +633,23 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 		serverPortPanelLayout.setConstraints(serverPortField, serverPortPanelConstraints);
 		serverPortPanel.add(serverPortField);
 
+		final JCheckBox startServerBox = new JCheckBox(JAPMessages.getString("forwardingServerStart"),
+												 false);
+		serverPortPanelConstraints.gridx = 2;
+		serverPortPanelConstraints.anchor = GridBagConstraints.NORTHEAST;
+		serverPortPanel.add(startServerBox, serverPortPanelConstraints);
+		startServerBox.addActionListener(new ActionListener()
+		{
+			public void actionPerformed(ActionEvent event)
+			{
+				JAPController.getInstance().enableForwardingServer(
+								startServerBox.isSelected());
+			}
+		});
+
+
+		serverPortPanelConstraints.anchor = GridBagConstraints.NORTHWEST;
+
 		TitledBorder settingsForwardingServerConfigBorder = new TitledBorder(
 			JAPMessages.getString("settingsForwardingServerConfigBorder"));
 		settingsForwardingServerConfigBorder.setTitleFont(getFontSetting());
@@ -1095,20 +1112,7 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 		{
 			public void actionPerformed(ActionEvent event)
 			{
-				synchronized (m_knownInfoServicesListModel)
-				{
-					m_knownInfoServicesListModel.clear();
-					Enumeration knownInfoServices = InfoServiceHolder.getInstance().
-						getInfoservicesWithForwarderList().elements();
-					while (knownInfoServices.hasMoreElements())
-					{
-						InfoServiceDBEntry is = (InfoServiceDBEntry) knownInfoServices.nextElement();
-						if (!m_registrationInfoServicesListModel.contains(is))
-						{
-							m_knownInfoServicesListModel.addElement(is);
-						}
-					}
-				}
+				startLoadInfoServicesThread();
 			}
 		});
 
@@ -1590,12 +1594,30 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 			m_knownCascadesListModel.addElement(currentCascade);
 		}
 		//Filling done
-		//Fill infoservices-list
+
+		this.startLoadInfoServicesThread();
+
+	}
+
+	private void startLoadInfoServicesThread()
+	{
 		Runnable doIt = new Runnable()
 		{
 			public void run()
 			{
-		Vector v = InfoServiceHolder.getInstance().getInfoServices();
+				loadInfoServices();
+			}
+
+		};
+		Thread t = new Thread(doIt);
+		t.start();
+	}
+
+	private synchronized void loadInfoServices()
+	{
+		m_knownInfoServicesListModel.clear();
+
+		Vector v = InfoServiceHolder.getInstance().getInfoservicesWithForwarderList();
 
 		if (v != null)
 		{
@@ -1612,10 +1634,4 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 			}
 		}
 			}
-		};
-		Thread t = new Thread(doIt);
-		t.start();
-		//Filling done
-	}
-
 }
