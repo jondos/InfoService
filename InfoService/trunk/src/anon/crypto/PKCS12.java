@@ -89,7 +89,6 @@ import org.bouncycastle.crypto.params.ParametersWithIV;
 import org.bouncycastle.crypto.params.ParametersWithRandom;
 import org.bouncycastle.asn1.DERTags;
 import org.bouncycastle.asn1.ASN1InputStream;
-import org.bouncycastle.asn1.DERConstructedSet;
 
 /**
  * This class creates and handles PKCS12 certificates, that include a private key,
@@ -435,19 +434,22 @@ public final class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifier
 				new DERObjectIdentifier(KEY_ALGORITHM),
 				kParams.getDERObject());
 			EncryptedPrivateKeyInfo kInfo = new EncryptedPrivateKeyInfo(kAlgId, kBytes);
-			DERConstructedSet kName = new DERConstructedSet();
 
 			//
 			// set a default friendly name (from the key id) and local id
 			//
+			DERSequence[] seqs=new DERSequence[2];
 			DEREncodableVector kSeq = new DEREncodableVector();
 			kSeq.add(pkcs_9_at_localKeyId);
 			kSeq.add(new DERSet(createSubjectKeyId()));
-			kName.addObject(new DERSequence(kSeq));
+			seqs[0]=new DERSequence(kSeq);
+			//kName.addObject(new DERSequence(kSeq));
 			kSeq = new DEREncodableVector();
 			kSeq.add(pkcs_9_at_friendlyName);
 			kSeq.add(new DERSet(new DERBMPString(m_ownerAlias)));
-			kName.addObject(new DERSequence(kSeq));
+			seqs[1]=new DERSequence(kSeq);
+			DERSet kName = new DERSet(seqs);
+			//kName.addObject(new DERSequence(kSeq));
 
 			keyString = new BERConstructedOctetString(new DERSequence(
 				new SafeBag(pkcs8ShroudedKeyBag, kInfo.getDERObject(), kName)));
@@ -464,16 +466,17 @@ public final class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifier
 			AlgorithmIdentifier cAlgId = new AlgorithmIdentifier(new DERObjectIdentifier(CERT_ALGORITHM),
 				cParams);
 			CertBag cBag = new CertBag(x509certType, new DEROctetString(m_x509certificate));
-			DERConstructedSet fName = new DERConstructedSet();
 			DEREncodableVector fSeq = new DEREncodableVector();
 			fSeq.add(pkcs_9_at_localKeyId);
 			fSeq.add(new DERSet(createSubjectKeyId()));
-			fName.addObject(new DERSequence(fSeq));
+			DERSequence[] seqs=new DERSequence[2];
+			seqs[0]=new DERSequence(fSeq);
 
 			fSeq = new DEREncodableVector();
 			fSeq.add(pkcs_9_at_friendlyName);
 			fSeq.add(new DERSet(new DERBMPString(m_ownerAlias)));
-			fName.addObject(new DERSequence(fSeq));
+			seqs[1]=new DERSequence(fSeq);
+			DERSet fName = new DERSet(seqs);
 
 			SafeBag sBag = new SafeBag(certBag, cBag.getDERObject(), fName);
 
