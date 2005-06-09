@@ -59,6 +59,7 @@ import javax.swing.event.HyperlinkListener;
 import javax.swing.text.Document;
 
 import anon.util.ResourceLoader;
+import java.io.StringReader;
 
 /* classes modified from Swing Example "Metalworks" */
 /** Help window for the JAP. Thi is a singleton meaning that there exists only one help window all the time.*/
@@ -526,7 +527,7 @@ final class HtmlPane extends JScrollPane implements HyperlinkListener
 				{
 					html.setPage(url);
 				}
-				catch (IOException ioe)
+				catch (Throwable ioe)
 				{
 					html.setDocument(doc);
 					getToolkit().beep();
