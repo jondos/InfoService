@@ -34,7 +34,6 @@ package anon.tor.tinytls.keyexchange;
 import java.math.BigInteger;
 import java.security.SecureRandom;
 
-import org.bouncycastle.asn1.DERConstructedSequence;
 import org.bouncycastle.asn1.x509.RSAPublicKeyStructure;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 import org.bouncycastle.crypto.AsymmetricBlockCipher;
@@ -59,6 +58,8 @@ import anon.tor.util.helper;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import org.bouncycastle.asn1.DERObject;
+import org.bouncycastle.asn1.ASN1Sequence;
 
 /**
  * @author stefan
@@ -196,8 +197,8 @@ public class DHE_RSA_Key_Exchange extends Key_Exchange
 		try
 		{
 			SubjectPublicKeyInfo pki = servercertificate.getSubjectPublicKeyInfo();
-			RSAPublicKeyStructure rsa_pks = new RSAPublicKeyStructure( (DERConstructedSequence) pki.
-				getPublicKey());
+			DERObject o=pki.getPublicKey();
+			RSAPublicKeyStructure rsa_pks = new RSAPublicKeyStructure((ASN1Sequence) o);
 			BigInteger modulus = rsa_pks.getModulus();
 			BigInteger exponent = rsa_pks.getPublicExponent();
 			AsymmetricBlockCipher rsa = new PKCS1Encoding(new RSAEngine());
