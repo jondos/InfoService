@@ -1105,7 +1105,6 @@ public class TinyTLS extends Socket
 				cert = certificates[i];
 				if (!prevCert.verify(cert.getPublicKey()))
 				{
-					System.out.println("error");
 					throw new IOException("TLS Server Certs could not be verified!");
 				}
 				prevCert = cert;

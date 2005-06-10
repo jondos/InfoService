@@ -778,7 +778,7 @@ final class JAPConf extends JDialog implements ActionListener
 	 */
 	public static void showError(String msg)
 	{
-		JOptionPane.showMessageDialog(ms_JapConfInstance, msg, JAPMessages.getString("ERROR"),
+		JOptionPane.showMessageDialog(ms_JapConfInstance, msg, JAPMessages.getString("error"),
 									  JOptionPane.ERROR_MESSAGE);
 	}
 
@@ -954,6 +954,7 @@ final class JAPConf extends JDialog implements ActionListener
 		setTitle(JAPMessages.getString("settingsDialog"));
 		m_bttnDefaultConfig.setText(JAPMessages.getString("bttnDefaultConfig"));
 		m_bttnCancel.setText(JAPMessages.getString("cancelButton"));
+		m_bttnHelp.setText(JAPMessages.getString("helpButton"));
 		//Port Panel
 		m_labelPortnumber1.setText(JAPMessages.getString("settingsPort1"));
 		m_labelPortnumber2.setText(JAPMessages.getString("settingsPort2"));

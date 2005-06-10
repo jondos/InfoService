@@ -205,7 +205,7 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 					JOptionPane.showMessageDialog(configPanel,
 												  JAPMessages.getString(
 						"settingsForwardingServerConfigChangeServerPortError"),
-												  JAPMessages.getString("ERROR"), JOptionPane.ERROR_MESSAGE);
+												  JAPMessages.getString("error"), JOptionPane.ERROR_MESSAGE);
 					/* show the current forwarding server port in the server port field */
 					serverPortField.setText(Integer.toString(JAPModel.getInstance().getRoutingSettings().
 						getServerPort()));
@@ -354,7 +354,7 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 						8) + 999) / 1000) + " " +
 												  JAPMessages.getString(
 						"settingsForwardingServerConfigChangeMaximumUploadBandwidthErrorPart2"),
-												  JAPMessages.getString("ERROR"), JOptionPane.ERROR_MESSAGE);
+												  JAPMessages.getString("error"), JOptionPane.ERROR_MESSAGE);
 					/* show the current maximum upload bandwidth in the upload bandwidth field */
 					uploadBandwidthField.setText(Integer.toString( (JAPModel.getInstance().getRoutingSettings().
 						getConnectionClassSelector().getCurrentConnectionClass().getMaximumBandwidth() * 8) /
@@ -1551,7 +1551,7 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 			JOptionPane.showMessageDialog(a_parentComponent,
 										  JAPMessages.getString(
 											  "settingsForwardingServerConfigAllowedCascadesFetchMixCascadesDialogFetchCascadesError"),
-										  JAPMessages.getString("ERROR"), JOptionPane.ERROR_MESSAGE);
+										  JAPMessages.getString("error"), JOptionPane.ERROR_MESSAGE);
 		}
 
 		return fetchedCascades;

@@ -2496,7 +2496,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 										new JAPHtmlMultiLineLabel(
 											JAPMessages.getString(
 										"settingsRoutingServerRegistrationEmptyListError"),
-											getDialogFont()), JAPMessages.getString("ERROR"),
+											getDialogFont()), JAPMessages.getString("error"),
 										JOptionPane.ERROR_MESSAGE);
 									break;
 								}
@@ -2506,7 +2506,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 										new JAPHtmlMultiLineLabel(
 											JAPMessages.getString(
 										"settingsRoutingServerRegistrationUnknownError"),
-											getDialogFont()), JAPMessages.getString("ERROR"),
+											getDialogFont()), JAPMessages.getString("error"),
 										JOptionPane.ERROR_MESSAGE);
 									break;
 								}
@@ -2516,7 +2516,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 										new JAPHtmlMultiLineLabel(
 											JAPMessages.getString(
 										"settingsRoutingServerRegistrationInfoservicesError"),
-											getDialogFont()), JAPMessages.getString("ERROR"),
+											getDialogFont()), JAPMessages.getString("error"),
 										JOptionPane.ERROR_MESSAGE);
 									break;
 								}
@@ -2526,7 +2526,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 										new JAPHtmlMultiLineLabel(
 											JAPMessages.getString(
 										"settingsRoutingServerRegistrationVerificationError"),
-											getDialogFont()), JAPMessages.getString("ERROR"),
+											getDialogFont()), JAPMessages.getString("error"),
 										JOptionPane.ERROR_MESSAGE);
 									break;
 								}

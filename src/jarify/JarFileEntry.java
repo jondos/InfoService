@@ -115,7 +115,6 @@ class JarFileEntry
 			//if the size differs, return null
 			if (lenRead != size)
 			{
-				System.out.println("size differ " + lenRead + "  " + size);
 				return null;
 			}
 		}

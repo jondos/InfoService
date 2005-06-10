@@ -273,7 +273,6 @@ public final class MuxSocket implements Runnable
 					int tmp = m_inDataStream.readUnsignedShort();
 					byte[] buff = new byte[tmp];
 					m_inDataStream.readFully(buff);
-					System.out.println("Read data: " + new String(buff));
 					BigInteger n = new BigInteger(1, buff);
 					tmp = m_inDataStream.readUnsignedShort();
 					buff = new byte[tmp];

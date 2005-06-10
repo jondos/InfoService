@@ -343,7 +343,7 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 			 * InfoServices
 			 */
 			JOptionPane.showMessageDialog(infoservicePanel, (String) (occuredError.firstElement()),
-										  JAPMessages.getString("ERROR"), JOptionPane.ERROR_MESSAGE);
+										  JAPMessages.getString("error"), JOptionPane.ERROR_MESSAGE);
 		}
 
 		return returnValue;
@@ -443,14 +443,14 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 				{
 					JOptionPane.showMessageDialog(client1MailPanel,
 												  JAPMessages.getString("settingsRoutingClientGrabCapchtaImplementationError"),
-												  JAPMessages.getString("ERROR"), JOptionPane.ERROR_MESSAGE);
+												  JAPMessages.getString("error"), JOptionPane.ERROR_MESSAGE);
 					client1MailDialog.dispose();
 				}
 				if (dataParser.getErrorCode() == ForwarderInformationGrabber.RETURN_UNKNOWN_ERROR)
 				{
 					JOptionPane.showMessageDialog(client1MailPanel,
 												  JAPMessages.getString("settingsRoutingClientConfigDialog1MailParseError"),
-												  JAPMessages.getString("ERROR"), JOptionPane.ERROR_MESSAGE);
+												  JAPMessages.getString("error"), JOptionPane.ERROR_MESSAGE);
 					settingsRoutingAnswerArea.setText("");
 				}
 			}
@@ -685,7 +685,7 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 					/* the inserted key is not valid */
 					JOptionPane.showMessageDialog(captchaPanel,
 												  JAPMessages.getString("settingsRoutingClientConfigDialogCaptchaError"),
-												  JAPMessages.getString("ERROR"), JOptionPane.ERROR_MESSAGE);
+												  JAPMessages.getString("error"), JOptionPane.ERROR_MESSAGE);
 					captchaField.setText("");
 				}
 			}
@@ -918,7 +918,7 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 			 * step 1
 			 */
 			JOptionPane.showMessageDialog(connectPanel, (String) (occuredError.firstElement()),
-										  JAPMessages.getString("ERROR"), JOptionPane.ERROR_MESSAGE);
+										  JAPMessages.getString("error"), JOptionPane.ERROR_MESSAGE);
 		}
 
 		return returnValue;
@@ -1064,7 +1064,7 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 			 * message and go back to step 1
 			 */
 			JOptionPane.showMessageDialog(offerPanel, (String) (occuredError.firstElement()),
-										  JAPMessages.getString("ERROR"), JOptionPane.ERROR_MESSAGE);
+										  JAPMessages.getString("error"), JOptionPane.ERROR_MESSAGE);
 		}
 
 		return returnValue;
@@ -1383,7 +1383,7 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 		{
 			/* there occured an error while announcing the selected mixcascade at the forwarder */
 			JOptionPane.showMessageDialog(announcePanel, (String) (occuredError.firstElement()),
-										  JAPMessages.getString("ERROR"), JOptionPane.ERROR_MESSAGE);
+										  JAPMessages.getString("error"), JOptionPane.ERROR_MESSAGE);
 		}
 
 		return returnValue;
