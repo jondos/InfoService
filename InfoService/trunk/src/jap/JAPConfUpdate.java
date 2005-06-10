@@ -304,13 +304,13 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 			{
 				text = m_devVersion.getJapVersion();
 			}
-			if (JAPConstants.aktVersion.compareTo(text) < 0)
+			if (JAPConstants.aktVersion.compareTo(text) >= 0)
 			{
-				text = "Es ist eine neue JAP Version verfügbar...";
+				text = JAPMessages.getString("japUpdate_YouHaveAlreadyTheNewestVersion");
 			}
 			else
 			{
-				text = "Sie haben bereits die akutelle JAP Version installiert.";
+				text = JAPMessages.getString("japUpdate_NewVersionAvailable");
 			}
 			m_taInfo.setText(text);
 			m_labelVersion.setText(m_releaseVersion.getJapVersion());

@@ -260,7 +260,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 							JOptionPane.showMessageDialog(null,
 								JAPMessages.getString(
 									"settingsInfoServiceConfigBasicSettingsFetchInfoServicesError"),
-								JAPMessages.getString("ERROR"), JOptionPane.ERROR_MESSAGE);
+								JAPMessages.getString("error"), JOptionPane.ERROR_MESSAGE);
 						}
 						else
 						{
@@ -931,7 +931,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 					JOptionPane.showMessageDialog(addInfoServicePanel,
 												  JAPMessages.getString(
 						"settingsInfoServiceConfigBasicSettingsAddInfoServiceAddError"),
-												  JAPMessages.getString("ERROR"), JOptionPane.ERROR_MESSAGE);
+												  JAPMessages.getString("error"), JOptionPane.ERROR_MESSAGE);
 				}
 			}
 		});

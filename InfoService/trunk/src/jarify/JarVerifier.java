@@ -322,7 +322,6 @@ final public class JarVerifier
 			}
 			catch (SignatureException ex)
 			{
-				System.out.println(ex.getMessage());
 				return false;
 			}
 			/*			catch( NoSuchAlgorithmException ex )

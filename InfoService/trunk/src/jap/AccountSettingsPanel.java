@@ -532,7 +532,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 			JOptionPane.showMessageDialog(
 				view,
 				JAPMessages.getString("Error fetching account statement: ") + ex.getMessage(),
-				JAPMessages.getString("Error"),
+				JAPMessages.getString("error"),
 				JOptionPane.ERROR_MESSAGE
 				);
 			return false;

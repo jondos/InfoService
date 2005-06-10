@@ -95,7 +95,6 @@ public class FirstOnionRouterConnectionThread implements Runnable
 		}
 		if (m_tls == null)
 		{
-			System.out.println("SocketTimeoutException : " + m_name);
 			throw new SocketException("Connection timed out");
 		}
 		return m_tls;
