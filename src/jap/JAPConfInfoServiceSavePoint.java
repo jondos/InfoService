@@ -112,20 +112,24 @@ public class JAPConfInfoServiceSavePoint implements IJAPConfSavePoint
 		/* remove all infoservices from database and set the default infoservice as preferred
 		 * infoservice
 		 */
-		Database.getInstance(InfoServiceDBEntry.class).removeAll();
-		try
+		synchronized (InfoServiceHolder.getInstance())
 		{
-			InfoServiceDBEntry defaultInfoService = JAPController.createDefaultInfoService();
-			InfoServiceHolder.getInstance().setPreferredInfoService(defaultInfoService);
+			Database.getInstance(InfoServiceDBEntry.class).removeAll();
+			try
+			{
+				InfoServiceDBEntry defaultInfoService = JAPController.createDefaultInfoService();
+				Database.getInstance(InfoServiceDBEntry.class).update(defaultInfoService);
+				InfoServiceHolder.getInstance().setPreferredInfoService(defaultInfoService);
+			}
+			catch (Exception e)
+			{
+				/* should not happen, if it happens, we can't do anything */
+				LogHolder.log(LogLevel.EXCEPTION, LogType.MISC,
+							  "JAPConfInfoServiceSavePoint: restoreDefaults: Cannot create the default infoservice.");
+			}
+			JAPController.getInstance().setInfoServiceDisabled(JAPConstants.DEFAULT_INFOSERVICE_DISABLED);
+			InfoServiceHolder.getInstance().setChangeInfoServices(JAPConstants.DEFAULT_INFOSERVICE_CHANGES);
 		}
-		catch (Exception e)
-		{
-			/* should not happen, if it happens, we can't do anything */
-			LogHolder.log(LogLevel.EXCEPTION, LogType.MISC,
-				"JAPConfInfoServiceSavePoint: restoreDefaults: Cannot create the default infoservice.");
-		}
-		JAPController.getInstance().setInfoServiceDisabled(JAPConstants.DEFAULT_INFOSERVICE_DISABLED);
-		InfoServiceHolder.getInstance().setChangeInfoServices(JAPConstants.DEFAULT_INFOSERVICE_CHANGES);
 	}
 
 }

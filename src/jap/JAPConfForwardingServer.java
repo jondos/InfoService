@@ -80,7 +80,7 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 	private DefaultListModel m_knownInfoServicesListModel;
 	private DefaultListModel m_allowedCascadesListModel;
 	private DefaultListModel m_registrationInfoServicesListModel;
-	private  JCheckBox m_startServerBox;
+	private JCheckBox m_startServerBox;
 
 	/**
 	 * This is the internal message system of this module.
@@ -635,8 +635,9 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 		serverPortPanel.add(serverPortField);
 
 		m_startServerBox = new JCheckBox(JAPMessages.getString("forwardingServerStart"),
-			(JAPModel.getInstance().getRoutingSettings().getRoutingMode() == JAPRoutingSettings.
-					ROUTING_MODE_SERVER));
+										 (JAPModel.getInstance().getRoutingSettings().getRoutingMode() ==
+										  JAPRoutingSettings.
+										  ROUTING_MODE_SERVER));
 
 		serverPortPanelConstraints.gridx = 2;
 		serverPortPanelConstraints.anchor = GridBagConstraints.NORTHEAST;
@@ -646,10 +647,9 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 			public void actionPerformed(ActionEvent event)
 			{
 				JAPController.getInstance().enableForwardingServer(
-								m_startServerBox.isSelected());
+					m_startServerBox.isSelected());
 			}
 		});
-
 
 		serverPortPanelConstraints.anchor = GridBagConstraints.NORTHWEST;
 
@@ -1564,10 +1564,11 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 		//Fill lists
 		if (!JAPModel.isInfoServiceDisabled())
 		{
-		this.fillLists();
-	}
-		m_startServerBox.setSelected((JAPModel.getInstance().getRoutingSettings().getRoutingMode() == JAPRoutingSettings.
-					ROUTING_MODE_SERVER));
+			this.fillLists();
+		}
+		m_startServerBox.setSelected( (JAPModel.getInstance().getRoutingSettings().getRoutingMode() ==
+									   JAPRoutingSettings.
+									   ROUTING_MODE_SERVER));
 	}
 
 	private void fillLists()
@@ -1619,23 +1620,26 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 
 	private synchronized void loadInfoServices()
 	{
-		m_knownInfoServicesListModel.clear();
-
-		Vector v = InfoServiceHolder.getInstance().getInfoservicesWithForwarderList();
-
-		if (v != null)
+		synchronized (InfoServiceHolder.getInstance())
 		{
-					Enumeration it = v.elements();
+			m_knownInfoServicesListModel.clear();
 
-			while (it.hasMoreElements())
+			Vector v = InfoServiceHolder.getInstance().getInfoservicesWithForwarderList();
+
+			if (v != null)
 			{
-				InfoServiceDBEntry is = (InfoServiceDBEntry) it.nextElement();
-				if (m_registrationInfoServicesListModel != null &&
-					!m_registrationInfoServicesListModel.contains(is))
+				Enumeration it = v.elements();
+
+				while (it.hasMoreElements())
 				{
-					m_knownInfoServicesListModel.addElement(is);
+					InfoServiceDBEntry is = (InfoServiceDBEntry) it.nextElement();
+					if (m_registrationInfoServicesListModel != null &&
+						!m_registrationInfoServicesListModel.contains(is))
+					{
+						m_knownInfoServicesListModel.addElement(is);
+					}
 				}
 			}
 		}
-			}
+	}
 }

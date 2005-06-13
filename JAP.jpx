@@ -100,7 +100,7 @@
   <property category="java.sapient" name="NC" value="true"/>
   <property category="java.sapient" name="NCLS" value="true"/>
   <property category="java.sapient" name="NFSF" value="true"/>
-  <property category="java.sapient" name="NLC" value="true"/>
+  <property category="java.sapient" name="NLC" value="false"/>
   <property category="java.sapient" name="NOIS" value="true"/>
   <property category="java.sapient" name="ODCM" value="true"/>
   <property category="java.sapient" name="OHCE" value="true"/>
@@ -111,7 +111,7 @@
   <property category="java.sapient" name="OSNBU" value="true"/>
   <property category="java.sapient" name="OWS" value="true"/>
   <property category="java.sapient" name="PCO" value="true"/>
-  <property category="java.sapient" name="PDBB" value="true"/>
+  <property category="java.sapient" name="PDBB" value="false"/>
   <property category="java.sapient" name="PFC" value="false"/>
   <property category="java.sapient" name="PIFS" value="true"/>
   <property category="java.sapient" name="PJDC" value="false"/>
@@ -123,7 +123,7 @@
   <property category="java.sapient" name="RIP" value="true"/>
   <property category="java.sapient" name="SBC" value="true"/>
   <property category="java.sapient" name="SEB" value="true"/>
-  <property category="java.sapient" name="SL" value="true"/>
+  <property category="java.sapient" name="SL" value="false"/>
   <property category="java.sapient" name="SSSIDC" value="true"/>
   <property category="java.sapient" name="SU" value="true"/>
   <property category="java.sapient" name="TMSSC" value="true"/>
