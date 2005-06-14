@@ -532,11 +532,21 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 				try
 				{
+					String proxyType = XMLUtil.parseValue(n.getNamedItem(JAPConstants.CONFIG_PROXY_TYPE),
+						ListenerInterface.PROTOCOL_STR_TYPE_HTTP);
+					if (proxyType.equalsIgnoreCase("HTTP"))
+					{
+						proxyType = ListenerInterface.PROTOCOL_STR_TYPE_HTTP;
+					}
+					else if (proxyType.equalsIgnoreCase("SOCKS"))
+					{
+						proxyType = ListenerInterface.PROTOCOL_STR_TYPE_SOCKS;
+					}
+
 					proxyInterface = new ProxyInterface(
 						XMLUtil.parseValue(n.getNamedItem(JAPConstants.CONFIG_PROXY_HOST_NAME), null),
 						XMLUtil.parseAttribute(root, JAPConstants.CONFIG_PROXY_PORT_NUMBER, -1),
-						XMLUtil.parseValue(n.getNamedItem(JAPConstants.CONFIG_PROXY_TYPE),
-										   ProxyInterface.PROTOCOL_STR_TYPE_HTTP),
+						proxyType,
 						XMLUtil.parseValue(n.getNamedItem(JAPConstants.CONFIG_PROXY_AUTH_USER_ID), null),
 						getPasswordReader(),
 						XMLUtil.parseValue(n.getNamedItem(JAPConstants.CONFIG_PROXY_AUTHORIZATION), false),
@@ -2495,7 +2505,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 									JOptionPane.showMessageDialog(m_View,
 										new JAPHtmlMultiLineLabel(
 											JAPMessages.getString(
-										"settingsRoutingServerRegistrationEmptyListError"),
+												"settingsRoutingServerRegistrationEmptyListError"),
 											getDialogFont()), JAPMessages.getString("error"),
 										JOptionPane.ERROR_MESSAGE);
 									break;
@@ -2505,7 +2515,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 									JOptionPane.showMessageDialog(m_View,
 										new JAPHtmlMultiLineLabel(
 											JAPMessages.getString(
-										"settingsRoutingServerRegistrationUnknownError"),
+												"settingsRoutingServerRegistrationUnknownError"),
 											getDialogFont()), JAPMessages.getString("error"),
 										JOptionPane.ERROR_MESSAGE);
 									break;
@@ -2515,7 +2525,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 									JOptionPane.showMessageDialog(m_View,
 										new JAPHtmlMultiLineLabel(
 											JAPMessages.getString(
-										"settingsRoutingServerRegistrationInfoservicesError"),
+												"settingsRoutingServerRegistrationInfoservicesError"),
 											getDialogFont()), JAPMessages.getString("error"),
 										JOptionPane.ERROR_MESSAGE);
 									break;
@@ -2525,7 +2535,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 									JOptionPane.showMessageDialog(m_View,
 										new JAPHtmlMultiLineLabel(
 											JAPMessages.getString(
-										"settingsRoutingServerRegistrationVerificationError"),
+												"settingsRoutingServerRegistrationVerificationError"),
 											getDialogFont()), JAPMessages.getString("error"),
 										JOptionPane.ERROR_MESSAGE);
 									break;
