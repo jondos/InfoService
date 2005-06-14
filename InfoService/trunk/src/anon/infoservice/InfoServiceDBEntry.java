@@ -491,6 +491,16 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 	}
 
 	/**
+		 * Sets the ID of the infoservice. Use with caution!
+		 *
+		 */
+		public void setId(String id)
+		{
+			m_strInfoServiceId=id;
+			m_xmlDescription = generateXmlRepresentation();
+}
+
+	/**
 	 * Returns the name of the infoservice.
 	 *
 	 * @return The name of this infoservice.

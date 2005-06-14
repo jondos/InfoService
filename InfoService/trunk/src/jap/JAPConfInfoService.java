@@ -464,6 +464,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 											}
 
 										}
+
 										if (SwingUtilities.isEventDispatchThread())
 										{
 											knownInfoServicesListModel.add(i, updatedEntry);
@@ -736,6 +737,10 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 								hosts += "\n";
 							}
 							hosts += currentListenerInterface.getHost();
+						}
+						String strPort = Integer.toString(currentListenerInterface.getPort());
+						if (ports.indexOf(strPort) == -1)
+						{
 
 							if (!ports.equals(""))
 							{

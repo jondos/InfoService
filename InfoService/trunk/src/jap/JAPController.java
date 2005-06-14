@@ -2578,6 +2578,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 		InfoServiceDBEntry defaultInfoService = new InfoServiceDBEntry(JAPConstants.
 			DEFAULT_INFOSERVICE_NAME, listeners, true, true);
+		defaultInfoService.setId(JAPConstants.DEFAULT_INFOSERVICE_ID);
 		defaultInfoService.setUserDefined(false);
 		return defaultInfoService;
 	}
