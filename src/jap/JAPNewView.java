@@ -87,6 +87,7 @@ import logging.LogType;
 import proxy.IProxyListener;
 import javax.swing.UIManager;
 import javax.swing.LookAndFeel;
+import javax.swing.SwingUtilities;
 
 final public class JAPNewView extends AbstractJAPMainView implements IJAPMainView, ActionListener,
 	JAPObserver
@@ -247,10 +248,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				}
 				if (e.getStateChange() == ItemEvent.SELECTED)
 				{
-					boolean reconnect = m_rbAnonOn.isSelected();
 					MixCascade cascade = (MixCascade) m_comboAnonServices.getSelectedItem();
 					m_Controller.setCurrentMixCascade(cascade);
-					m_Controller.setAnonMode(reconnect);
 				}
 			}
 		});
@@ -798,7 +797,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			Point oldLocation = m.getOldMainWindowLocation();
 			if (oldLocation != null && oldLocation.x >= 0 &&
 				oldLocation.y >= 0 /*&&m.m_OldMainWindowLocation.x<ds.width&&
-						 m.m_OldMainWindowLocation.y<ds.height*/
+					   m.m_OldMainWindowLocation.y<ds.height*/
 				)
 			{
 				setLocation(oldLocation);
@@ -1659,7 +1658,13 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			{
 				m_Controller.fetchMixCascades(bShowError);
 				setCursor(Cursor.getDefaultCursor());
-				m_bttnReload.setEnabled(true);
+				SwingUtilities.invokeLater(new Runnable()
+				{
+					public void run()
+					{
+						m_bttnReload.setEnabled(true);
+					}
+				});
 			}
 		};
 		Thread t = new Thread(doFetchMixCascades);
