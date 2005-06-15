@@ -1573,6 +1573,11 @@ public final class JAPController extends Observable implements IProxyListener, O
 			return m_executionThread;
 		}
 
+		public void setExecutionThread(Thread t)
+		{
+			m_executionThread=t;
+		}
+
 		/** @todo Still very bugy, because mode change is async done but not
 		 * all properties (like currentMixCascade etc.)are synchronized!!
 		 *
@@ -1857,10 +1862,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 					newJob = false;
 				}
 			}
-			if (newJob == true)
+			if (newJob)
 			{
 				/* it's a new job -> do something */
-				if ( ( (a_anonModeSelected == false) && (m_changeAnonModeJobs.size() >= 2)) ||
+				if ( ( !a_anonModeSelected  && (m_changeAnonModeJobs.size() >= 2)) ||
 					(m_changeAnonModeJobs.size() >= 3))
 				{
 					/* because of enough previous jobs in the queue, we can ignore this job, if we also
@@ -1873,7 +1878,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 				else
 				{
 					/* we have to schedule this job */
-					if ( (a_anonModeSelected == false) && (m_changeAnonModeJobs.size() == 1))
+					if ( !a_anonModeSelected  && (m_changeAnonModeJobs.size() == 1))
 					{
 						/* there is a start-server job currently running -> try to interrupt it */
 						SetAnonModeAsync previousJob = (SetAnonModeAsync) (m_changeAnonModeJobs.lastElement());
@@ -1893,6 +1898,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					}
 					Thread currentThread = new Thread(currentJob);
 					currentThread.setDaemon(true);
+					currentJob.setExecutionThread(currentThread);
 					m_changeAnonModeJobs.addElement(currentJob);
 					currentThread.start();
 					LogHolder.log(LogLevel.DEBUG, LogType.MISC,
