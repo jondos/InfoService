@@ -1,0 +1,75 @@
+<link rel="stylesheet" type="text/css" href="xhelpfrms.css">
+<!--#include virtual="/header_en.html"-->
+
+<H2>InfoService</H2>
+
+<P>
+The Info Service is used to provide JAP with necessary information about
+the anonymity service. At the moment this includes:
+
+<UL>
+    <LI> The current JAP version number to allow automatic updates.
+    <LI> The address of the first mix.
+    <LI> Information on the mix cascade, e.g. the public keys of the
+    mixes.
+    <LI> Information on the service's capacity and the
+     level of anonymity achieved by JAP.
+</UL>
+
+Please note that the correct information for the InfoService is already set by default.  Changes to these settings could cause JAP to no longer find the anonymization service.
+
+<P>
+
+<H3>Configuration</H3>
+<P>
+
+On this page, you can see the InfoServices that are known to your JAP client.  The currently preferred InfoService appears in bold.  You can take the following actions:
+<UL>
+    <LI><B>Download list...</B><BR>
+    Here you can download a new list of InfoServices from the internet.
+    <P>
+    <LI><B>Set as default</B><BR>
+    By clicking this button, the selected InfoService will be chosen as the preferred InfoService
+    <P>
+    <LI><B>Add...</B><BR>
+    When you choose this action, an additional dialog area for manually adding an InfoService appears below.
+    <P>
+    <UL>
+        <LI><B>InfoService host</B><BR>
+        Enter the host name or IP address of the InfoService that you want to add here.
+        <P>
+        <LI><B>InfoService port</B><BR>
+        Enter the port of the new InfoService here.
+        <P>
+        <LI><B>InfoService name</B><BR>
+        If you would like, you can enter a name for the InfoService here.  The new InfoService then appears under this name in the list of known InfoServices.  If this field is left empty, the InfoService is listed as a combination of host name and port.
+        <P>
+        <LI><B>Add</B><BR>
+        Click this button to confirm your entry and insert the new InfoService.
+        <P>
+        <LI><B>Cancel</B><BR>
+        With this button, the entries for the new InfoService will be discarded and you will return to the previous window.
+    </UL>
+    <P>
+    <LI><B>Remove</B><BR>
+    When you click on this button, the selected InfoService will be removed from the list of known InfoServices.
+</UL>
+
+<H3>Advanced Settings</H3>
+<P>
+<UL>
+    <LI><B>Timeout for InfoService and Update Communication</B><BR>
+    Enter a number between 1 and 60 here.  This number indicates the number of seconds that JAP should wait for a response to a request sent to the InfoService.  If a response is not received within the set time, the InfoService will be considered unavailable.
+    <P>
+    <LI><B>Disable automatic InfoService requests</B><BR>
+    JAP occassionally attempts to automatically connect to the InfoService to request information.  If this checkbox is activated, these automatic connections are deactivated.
+    <P>
+    <LI><B>Use only the default InfoService</B><BR>
+    Normally, JAP attempts to obtain information from all known InfoServices if the standard InfoService cannot deliver the information.  When this checkbox is activated, only the standard InfoService will be connected to.
+</UL>
+
+<H3>Information</H3>
+<P>
+Here you can see information about the known InfoServices.  Click on the name of an InfoService to see the information under "Interfaces".
+
+<!--#include virtual="/footer_en.html"-->

@@ -1,0 +1,114 @@
+<link rel="stylesheet" type="text/css" href="xhelpfrms.css">
+<!--#include virtual="/header.html"-->
+
+<H2>Dienste</H2>
+<P>
+<H3>AN.ON</H3>
+<P>
+Hier sehen Sie Informationen &uuml;ber die Anonymisierungsdienste des AN.ON-Projektes.
+<UL>
+    <LI><B>Verf&uuml;gbare Anonymisierungsdienste:</B><BR>
+    In dieser Liste befinden sich die Namen aller Dienste, auf die im Moment zugegriffen werden kann. Der Dienst, der in Ihrem JAP ausgew&auml;hlt ist, erscheint fett gedruckt. Wenn Sie einen Namen anklicken, erhalten Sie weitere Informationen &uuml;ber den Dienst.
+    <P>
+    <UL>
+        <LI><B>Nutzeranzahl:</B><BR>
+        Dieses Feld zeigt die Anzahl der Nutzer, die momentan mit dem markierten Dienst verbunden sind.
+        <P>
+        <LI><B>erreichbar &uuml;ber:</B><BR>
+        Hier sehen Sie den Hostnamen oder die IP-Adresse, &uuml;ber den der Dienst erreicht werden kann. Diese Adresse muss in Ihrer Firewall f&uuml;r ausgehende Verbindungen freigeschaltet sein, wenn Sie diesen Dienst nutzen wollen.
+        <P>
+        <LI><B>Ports:</B><BR>
+        Dies sind die Ports, auf denen der Dienst Verbindungen annimmt. Mindestens einer dieser Ports muss in Verbindung mit der obigen Adresse in Ihrer Firewall freigeschaltet sein.
+    </UL>
+    <P>
+    <LI><B>Neu laden:</B><BR>
+    Ein Klick auf diese Schaltfl&auml;che bewirkt, dass der JAP den InfoService erneut nach verf&uuml;gbaren Diensten abfragt.
+    <P>
+    <LI><B>Ausw&auml;hlen:</B><BR>
+    Dieser Knopf setzt den momentan markierten Dienst als aktiven Dienst. Der JAP wird versuchen, mit diesem Dienst eine Verbindung herzustellen, wenn die Anonymit&auml;t im Hauptfenster auf "Ein" geschaltet wird.
+    <P>
+    <LI><B>Hinzuf&uuml;gen:</B><BR>
+    Hiermit k&ouml;nnen Sie manuell einen Dienst eintragen, dessen Zugangsdaten Sie kennen, der aber nicht vom InfoService als verf&uuml;gbar gemeldet wurde. Nach einem Klick auf diese Schaltfl&auml;che erscheinen im unteren Teil des Fensters folgende Felder:
+    <P>
+    <UL>
+        <LI><B>Host:</B><BR>
+        Tragen Sie hier den Hostnamen oder die IP-Adresse des Dienstes ein.
+        <P>
+        <LI><B>Port:</B><BR>
+        Tragen Sie hier den Port des Dienstes ein.
+        <P>
+        <LI><B>Ok:</B><BR>
+        Wenn Sie die obigen Felder ausgef&uuml;llt haben, tragen Sie den Dienst hiermit in die Liste der verf&uuml;gbaren Dienste ein.
+        <P>
+        <LI><B>Abbrechen:</B><BR>
+        Hiermit machen brechen Sie den Vorgang ab. Der neu angelegte Dienst verschwindet wieder aus der Liste.
+        <P>
+        <LI><B>L&ouml;schen:</B><BR>
+        Dieses Schaltfeld ist nur aktiv, wenn Sie einen bereits angelegten manuellen Dienst in der Liste ausw&auml;hlen. Damit entfernen Sie den gew&auml;hlten Dienst aus der Liste.
+    </UL>
+</UL>
+
+Der untere Teil des Fensters unterscheidet sich je nachdem, ob Sie einen manuell eingetragenen Dienst oder einen vom InfoService als verf&uuml;gbar gemeldeten Dienst markiert haben.
+<P>
+Ist ein manuell angelegter Dienst markiert, so k&ouml;nnen Sie dessen Daten &auml;ndern oder den Dienst aus der Liste l&ouml;schen.
+<P>
+Wenn ein  vom InfoService als verf&uuml;gbar gemeldeter Dienst markiert ist, erhalten Sie folgende Zusatzinformationen zu den einzelnen Servern des Dienstes:
+<UL>
+    <LI><B>Anzahl der Server des Dienstes:</B><BR>
+    Sie sehen eine grafische Darstellung der einzelnen Server des gew&auml;hlten Dienstes. Die Anzahl der Bilder entspricht der Anzahl der Server. Sie k&ouml;nnen die Server anklicken und erhalten dann folgende Informationen:
+    <P>
+    <UL>
+        <LI><B>Betreiber:</B><BR>
+        Hier sehen Sie den Namen der Organisation, die den gew&auml;hlten Server betreibt.
+        <P>
+        <LI><B>URL:</B><BR>
+        Unter der angezeigten Internetadresse k&ouml;nnen Sie mehr &uuml;ber die Betreiberorganisation des Servers erfahren.
+        <P>
+        <LI><B>Standort:</B><BR>
+        Der geographische Standort des Servers wird hier angezeigt.
+    </UL>
+</UL>
+
+<H3>Tor</H3>
+Auf dieser Seite sehen Sie Informationen und Einstellungen die sich auf das Tor-Anonymisierungsnetzwerk beziehen.<BR>
+Wenn Sie den JAP als Zugang zum Tor-Netzwerk nutzen wollen, m&uuml;ssen Sie ihn als Socks-Proxy (nicht als HTTP/HTTPS-Proxy) bei Ihrem Browser eintragen.
+
+<UL>
+    <LI><B>Verf&uuml;gbare Tor Knoten:</B><BR>
+    In diesem Feld werden Ihnen Rechner angezeigt, die eine Verbindung ins Tor-Netzwerk zur Verf&uuml;gung stellen.
+    <P>
+    <LI><B>Liste neu laden:</B><BR>
+    Mit diesem Knopf wird die Liste der verf&uuml;gbaren Knoten aktualisiert.
+    <P>
+    <LI><B>Einstellungen f&uuml;r die anonymen Routen:</B><BR>
+    <P>
+    <UL>
+        <LI><B>Minimale Knoten pro Verbindung:</B><BR>
+        Hier stellen Sie ein, &uuml;ber wie viele Tor-Knoten eine Verbindung mindestens geleitet werden soll, bevor Sie an ihr eigentliches Ziel geschickt wird. Je mehr Knoten genutzt werden, desto zuverl&auml;ssiger ist die Anonymisierung der Verbindung.
+        <P>
+        <LI><B>Maximale Knoten pro Verbindung:</B><BR>
+        Mit diesem Schieberegler stellen Sie die maximale Anzahl von Tor-Knoten f&uuml;r eine Verbindung ein. Je gr&ouml;&szlig;er diese Zahl ist, desto langsamer ist die Verbindung.
+        <P>
+        <LI><B>Wechsel der Route alle x Verbindungen:</B><BR>
+        Hier legen Sie fest, wie oft eine neue Route aufgebaut werden soll. Immer, wenn so viele Verbindungen erstellt wurden, wie die hier eingestellte Zahl, dann wird die alte Route abgebaut und eine neue Route durch das Tor-Netzwerk erzeugt.
+        <P>
+        <LI><B>Anonyme Route im Voraus erstellen:</B><BR>
+        Wenn dieses Feld markiert ist, erstellt der JAP gleich nach dem Start eine Route durch das Tor-Netzwerk. Ist das Feld nicht markiert, wird erst eine Route erstellt, wenn ein Verbindungswunsch vorliegt.
+    </UL>
+</UL>
+
+<H3>Allgemein</H3>
+<UL>
+    <LI><B>Anonymit&auml;tsservice sofort nach Programmstart aktivieren:</B><BR>
+    Ist dieses Feld markiert, so baut der JAP gleich nach dem Start eine Verbindung zum Anonymisierungsdienst auf.
+    <P>
+    <LI><B>Automatisch wieder verbinden nach Verbindungsabbruch:</B><BR>
+    Setzen Sie hier einen Haken, wenn Sie wollen, dass der JAP automatisch die Verbindung zum Anonymiserungsdienst wieder herstellt, wenn diese unterbrochen wurde.
+    <P>
+    <LI><B>Dummy Daten alle x Sekunden senden:</B><BR>
+    Hier k&ouml;nnen Sie festlegen ob und wie h&auml;ufig Pakete ohne Nutzinhalt verschickt werden, um f&uuml;r einen Beobachter eine laufende Kommunikation vorzut&auml;uschen.
+    <P>
+    <LI><B>Nicht zertifizierte Server verwenden:</B><BR>
+    Ist dieses Feld markiert, werden auch Server verwendet, f&uuml;r die kein g&uuml;ltiges Zertifikat existiert. Diese Option sollte aus Sicherheitsgr&uuml;nden nicht aktiviert werden.
+</UL>
+<!--#include virtual="/footer.html"-->
