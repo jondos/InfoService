@@ -33,6 +33,7 @@ import java.awt.MediaTracker;
 import javax.swing.ImageIcon;
 
 import anon.util.ResourceLoader;
+import jap.JAPMessages;
 
 /**
  * This class loads resources from the file system.
@@ -45,7 +46,6 @@ final public class ImageIconLoader
 	private ImageIconLoader()
 	{
 	}
-
 
 	/**
 	 * Loads an ImageIcon from the classpath or the current directory.
@@ -78,12 +78,12 @@ final public class ImageIconLoader
 	 */
 	public static ImageIcon loadImageIcon(String a_strRelativeImagePath, boolean a_bSync)
 	{
-		ImageIcon img;
+		ImageIcon img=null;
 
 		// try to load the image from the cache
 		if (ms_iconCache.containsKey(a_strRelativeImagePath))
 		{
-			return new ImageIcon((Image)ms_iconCache.get(a_strRelativeImagePath));
+			return new ImageIcon( (Image) ms_iconCache.get(a_strRelativeImagePath));
 		}
 
 		// load image from the local classpath or the local directory
@@ -91,30 +91,41 @@ final public class ImageIconLoader
 		{
 			img = new ImageIcon(ResourceLoader.getResourceURL(a_strRelativeImagePath));
 		}
-		catch (NullPointerException a_e)
+		catch (Exception a_e)
 		{
 			img = null;
 		}
-
-		if (img != null)
-		{
-		if (a_bSync)
-		{
-			int statusBits = MediaTracker.ABORTED | MediaTracker.ERRORED | MediaTracker.COMPLETE;
-			while (true)
+		if (img == null)
+		{ //try an other way to load it..
+			try
 			{
-				if ( (img.getImageLoadStatus() & statusBits) != 0)
-				{
-					break;
-				}
-				else
-				{
-					Thread.yield();
-				}
+				byte[] buff = ResourceLoader.loadResource(a_strRelativeImagePath);
+				img = new ImageIcon(buff);
+			}
+			catch (Exception e)
+			{
+				img = null;
 			}
 		}
+		if (img != null)
+		{
+			if (a_bSync)
+			{
+				int statusBits = MediaTracker.ABORTED | MediaTracker.ERRORED | MediaTracker.COMPLETE;
+				while (true)
+				{
+					if ( (img.getImageLoadStatus() & statusBits) != 0)
+					{
+						break;
+					}
+					else
+					{
+						Thread.yield();
+					}
+				}
+			}
 
-		// write the image to the cache
+			// write the image to the cache
 			ms_iconCache.put(a_strRelativeImagePath, img.getImage());
 		}
 
