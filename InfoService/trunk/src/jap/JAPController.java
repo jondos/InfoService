@@ -999,7 +999,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 		catch (Exception e)
 		{
 			LogHolder.log(LogLevel.ERR, LogType.MISC,
-						  "JAPController: loadConfigFile: Configuration file \"" + japConfFile +
+						  "JAPController: loadConfigFileOSdependent: Configuration file \"" + japConfFile +
 						  "\" not found.");
 			return false;
 		}

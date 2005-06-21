@@ -34,7 +34,7 @@ import logging.LogLevel;
 import logging.LogType;
 
 /**
- * This class is instantiated by AbstractOS if the current OS is MacOS
+ * This class is instantiated by AbstractOS if the current OS is MacOS or MacOSX
  */
 public class MacOS extends AbstractOS
 {
@@ -61,6 +61,13 @@ public class MacOS extends AbstractOS
 	public String getConfigPath()
 	{
 		//Return path in users's home/Library/Preferences
-		return System.getProperty("user.home", "") + "/Library/Preferences/" + JAPConstants.XMLCONFFN;
+		if (System.getProperty("os.name").equalsIgnoreCase("Mac OS"))
+		{
+			return System.getProperty("user.home", ".") +"/"+ JAPConstants.XMLCONFFN;
+		}
+		else
+		{
+			return System.getProperty("user.home", "") + "/Library/Preferences/" + JAPConstants.XMLCONFFN;
+		}
 	}
 }

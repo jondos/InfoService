@@ -82,8 +82,12 @@ public class JAP extends Frame
 		String vendor = System.getProperty("java.vendor");
 		String os = System.getProperty("os.name");
 		String mrjVersion = System.getProperty("mrj.version");
-		System.out.println("Starting up JAP. (" + javaVersion + "/" + vendor + "/" + os + "/" + mrjVersion +
-						   ")");
+		if (!JAPConstants.m_bReleasedVersion)
+		{
+			System.out.println("Starting up JAP. (" + javaVersion + "/" + vendor + "/" + os + "/" +
+							   mrjVersion +
+							   ")");
+		}
 		//Macintosh Runtime for Java (MRJ) on Mac OS
 		// Test (part 1) for right JVM
 		if (javaVersion.compareTo("1.0.2") <= 0)
