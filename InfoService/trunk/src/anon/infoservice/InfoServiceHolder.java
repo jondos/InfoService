@@ -157,12 +157,10 @@ public class InfoServiceHolder extends Observable
 	 *
 	 * @param a_preferredInfoService The preferred InfoService.
 	 */
-	public void setPreferredInfoService(InfoServiceDBEntry a_preferredInfoService)
+	public synchronized void setPreferredInfoService(InfoServiceDBEntry a_preferredInfoService)
 	{
 		if (a_preferredInfoService != null)
 		{
-			synchronized (this)
-			{
 				/* also if m_preferredInfoService.equals(a_preferredInfoService), there is the possibility
 				 * that some values of the infoservice, like listener interfaces or the name have been
 				 * changed, so we always update the internal stored pererred infoservice
@@ -171,7 +169,6 @@ public class InfoServiceHolder extends Observable
 				setChanged();
 				notifyObservers(new InfoServiceHolderMessage(InfoServiceHolderMessage.
 					PREFERRED_INFOSERVICE_CHANGED, m_preferredInfoService));
-			}
 			LogHolder.log(LogLevel.INFO, LogType.NET,
 						  "Preferred InfoService is now: " + m_preferredInfoService.getName());
 		}
@@ -185,14 +182,9 @@ public class InfoServiceHolder extends Observable
 	 *
 	 * @return The preferred InfoService or null, if no preferred InfoService is set.
 	 */
-	public InfoServiceDBEntry getPreferredInfoService()
+	public synchronized InfoServiceDBEntry getPreferredInfoService()
 	{
-		InfoServiceDBEntry preferredInfoService = null;
-		synchronized (this)
-		{
-			preferredInfoService = m_preferredInfoService;
-		}
-		return preferredInfoService;
+		return m_preferredInfoService;
 	}
 
 	/**
