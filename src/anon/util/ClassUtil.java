@@ -290,7 +290,7 @@ public final class ClassUtil
 	 * @return the first class that was instnatiated or
 	 *         null if no class could be found and instantiated
 	 */
-	/*	protected static Class getFirstClassFound(File a_file)
+		protected static Class getFirstClassFound(File a_file)
 	 {
 	  Hashtable classInstance = new Hashtable();
 
@@ -305,7 +305,7 @@ public final class ClassUtil
 
 	  return null;
 	 }
-	 */
+
 	/**
 	 * This small inner class is needed to get information about static classes.
 	 */
@@ -356,7 +356,7 @@ public final class ClassUtil
 	 * @param a_classDirectory the directory where all class files and class directories reside
 	 * @return the class file as Class object
 	 */
-	/*private static Class toClass(File a_classFile, File a_classDirectory)
+	private static Class toClass(File a_classFile, File a_classDirectory)
 	{
 		Class classObject = null;
 		String className = null;
@@ -399,8 +399,8 @@ public final class ClassUtil
 
 		return classObject;
 	}
-*/
-	/*private static class ClassInstantiator implements ResourceInstantiator
+
+	private static class ClassInstantiator implements ResourceInstantiator
 	{
 		private int m_invalidAfterFailure;
 		private int m_currentFailure;
@@ -456,5 +456,5 @@ public final class ClassUtil
 				throw new ResourceInstantiator.ResourceInstantiationException();
 			}
 		}
-	}*/
+	}
 }
