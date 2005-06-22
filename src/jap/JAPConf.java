@@ -206,6 +206,7 @@ final class JAPConf extends JDialog implements ActionListener
 					FORWARDING_STATE_TAB);
 			}
 		}
+
 		m_moduleSystem.getConfigurationTree().expandPath(new TreePath(nodeNet.getPath()));
 		m_moduleSystem.getConfigurationTree().expandPath(new TreePath(nodeAnon.getPath()));
 		m_moduleSystem.getConfigurationTree().setSelectionRow(0);

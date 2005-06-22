@@ -30,7 +30,7 @@ package gui;
 import java.awt.Font;
 
 import javax.swing.JLabel;
-
+import javax.swing.JEditorPane;
 /**
  * This class provides support for labels with more than one line which can also display HTML
  * styled text.
@@ -72,14 +72,14 @@ public class JAPHtmlMultiLineLabel extends JLabel
 	{
 		setFont(a_defaultFont);
 		/* set the new font with the HTML default size */
-    String header = "<html><body style=\"font-family:" + a_defaultFont.getFamily() + ";font-size:small\">";
-		String trailer = "</BODY></html>";
+		String header = "<html><body style=\"font-family:" + a_defaultFont.getFamily() + ";font-size:small\">";
+		String trailer = "</body></html>";
 		if (a_defaultFont.isBold())
 		{
 			header = header + "<b>";
 			trailer = "</b>" + trailer;
 		}
-		setText(header + m_rawText + trailer);
+		setText(header+ m_rawText +trailer);
 	}
 
 	/**
