@@ -167,7 +167,7 @@ public final class ClassUtil
 	 * @param a_rootClass the class from that loading is started
 	 * @return all loaded classes
 	 */
-	public static Enumeration loadClasses(Class a_rootClass)
+	/*public static Enumeration loadClasses(Class a_rootClass)
 	{
 		PrintStream syserror=null;
 		PrintStream dummyStream = new PrintStream(new ByteArrayOutputStream());
@@ -198,7 +198,7 @@ public final class ClassUtil
 			System.setErr(syserror);
 			if (a_e instanceof Exception && !(a_e instanceof RuntimeException))
 			{
-				/** @todo throw the exception */
+				// @todo throw the exception //
 				a_e.printStackTrace();
 			}
 		}
@@ -207,7 +207,7 @@ public final class ClassUtil
 
 		return ms_loadedClasses.elements();
 	}
-
+*/
 	/**
 	 * Returns the class directory of the specified class. The class directory is either the
 	 * directory in that the highest package in the package structure of the class is contained,
