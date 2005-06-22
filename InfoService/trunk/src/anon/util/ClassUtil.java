@@ -118,11 +118,11 @@ public final class ClassUtil
 	 * @param a_class a Class
 	 * @return all known subclasses of the given class
 	 */
-	public static Vector findSubclasses(Class a_class)
+	/*public static Vector findSubclasses(Class a_class)
 	{
-		Enumeration classes;
-		Vector subclasses;
-		Class possibleSubclass;
+		Enumeration classes=null;
+		Vector subclasses=null;
+		Class possibleSubclass=null;
 
 		loadClasses(a_class);
 		classes = loadClasses(getCallingClassStatic());
@@ -139,7 +139,7 @@ public final class ClassUtil
 
 		return subclasses;
 	}
-
+*/
 	/**
 	 * Loads all classes into cache that are in the same file structure as this class
 	 * and as the calling class. Recommended to be called at program start to
@@ -168,9 +168,9 @@ public final class ClassUtil
 	 */
 	public static Enumeration loadClasses(Class a_rootClass)
 	{
-		PrintStream syserror;
+		PrintStream syserror=null;
 		PrintStream dummyStream = new PrintStream(new ByteArrayOutputStream());
-		Class thisClass, callingClass;
+		Class thisClass=null, callingClass=null;
 
 		thisClass = getClassStatic();
 		callingClass = getCallingClassStatic();
@@ -331,7 +331,7 @@ public final class ClassUtil
 	 */
 	private static void loadClassesInternal(Class a_rootClass) throws IOException
 	{
-		File file;
+		File file=null;
 
 		if ((file = getClassDirectory(a_rootClass)) == null)
 		{
@@ -359,9 +359,9 @@ public final class ClassUtil
 	 */
 	private static Class toClass(File a_classFile, File a_classDirectory)
 	{
-		Class classObject;
-		String className;
-		String classDirectory;
+		Class classObject=null;
+		String className=null;
+		String classDirectory=null;
 		int startIndex;
 
 		if (a_classFile == null || !a_classFile.getName().endsWith(".class"))
