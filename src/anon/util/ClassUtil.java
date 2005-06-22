@@ -42,8 +42,8 @@ import java.util.zip.ZipFile;
 public final class ClassUtil
 {
 
-	//private static final String JAR_FILE = "jar:file:";
-	//private static final String FILE = "file:";
+	private static final String JAR_FILE = "jar:file:";
+	private static final String FILE = "file:";
 
 	/**
 	 * Stores all loaded classes.
@@ -215,7 +215,7 @@ public final class ClassUtil
 	 * @return the class directory of the specified class, either a real directory or a Jar-file
 	 *         or null if the directory/jar-file does not exist
 	 */
-	/*public static File getClassDirectory(Class a_class)
+	public static File getClassDirectory(Class a_class)
 	{
 		String classResource;
 		String classDirectory;
@@ -266,7 +266,7 @@ public final class ClassUtil
 
 		return file;
 	}
-*/
+
 	/**
 	 * Generates a relative resource path to the given class.
 	 * @param a_class Class
