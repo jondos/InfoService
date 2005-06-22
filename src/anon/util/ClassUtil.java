@@ -42,18 +42,18 @@ import java.util.zip.ZipFile;
 public final class ClassUtil
 {
 
-	private static final String JAR_FILE = "jar:file:";
-	private static final String FILE = "file:";
+	//private static final String JAR_FILE = "jar:file:";
+	//private static final String FILE = "file:";
 
 	/**
 	 * Stores all loaded classes.
 	 */
-	private static Hashtable ms_loadedClasses = new Hashtable();
+	//private static Hashtable ms_loadedClasses = new Hashtable();
 
 	/**
 	 * Stores all loaded directories.
 	 */
-	private static Vector ms_loadedDirectories = new Vector();
+	//private static Vector ms_loadedDirectories = new Vector();
 
 	/**
 	 * This class works without being initialised and is completely static.
@@ -356,7 +356,7 @@ public final class ClassUtil
 	 * @param a_classDirectory the directory where all class files and class directories reside
 	 * @return the class file as Class object
 	 */
-	private static Class toClass(File a_classFile, File a_classDirectory)
+	/*private static Class toClass(File a_classFile, File a_classDirectory)
 	{
 		Class classObject = null;
 		String className = null;
@@ -399,8 +399,8 @@ public final class ClassUtil
 
 		return classObject;
 	}
-
-	private static class ClassInstantiator implements ResourceInstantiator
+*/
+	/*private static class ClassInstantiator implements ResourceInstantiator
 	{
 		private int m_invalidAfterFailure;
 		private int m_currentFailure;
@@ -456,5 +456,5 @@ public final class ClassUtil
 				throw new ResourceInstantiator.ResourceInstantiationException();
 			}
 		}
-	}
+	}*/
 }
