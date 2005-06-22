@@ -1,9 +1,9 @@
 /* Never ever have more than one element definiton per line - because Java can NOT handle this!*/
-h1{color:blue;text-align:center;}
-b { font-weight:bold; color:maroon; }
-h3 { font-weight:bold; color:maroon; }
-h4 { font-weight:bold; color:maroon; }
-h5 { font-weight:bold; color:maroon; }
+h1{color:#0000FF;text-align:center;}
+b { font-weight:bold; color:#800000; }
+h3 { font-weight:bold; color:#800000; }
+h4 { font-weight:bold; color:#800000; }
+h5 { font-weight:bold; color:#800000; }
 body{background-color:white;margin:10;}
 h1 {font-family:geneva,arial,helvetica,sans-serif;}
 h2 {font-family:geneva,arial,helvetica,sans-serif;}
@@ -24,10 +24,10 @@ blockquote {font-family:geneva,arial,helvetica,sans-serif;}
 address{font-style:normal;}
 h2 {font-weight:bold;color:#006699;}
 hr {font-weight:bold;color:#006699;}
-a:link {color:blue;font-weight:bold;}
-a:visited {color:gray;font-weight:bold;}
-a:active {color:red;font-weight:bold;}
-a:hover {color:red;font-weight:bold;}
+a:link {color:#0000FF;font-weight:bold;}
+a:visited {color:#C0C0C0;font-weight:bold;}
+a:active {color:#FF0000;font-weight:bold;}
+a:hover {color:#FF0000;font-weight:bold;}
 th {color:white;background:#006699;font-weight:bold;text-align:left;}
 td.name   {border-bottom-style:solid;border-bottom-width:1pt;border-color:#006699;background:#eeeeff;}
 td.status {border-bottom-style:solid;border-bottom-width:1pt;border-color:#006699;}
