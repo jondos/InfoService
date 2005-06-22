@@ -1,12 +1,11 @@
 /* Never ever have more than one element definiton per line - because Java can NOT handle this!*/
 h1{color:#0000FF;text-align:center;}
-b { font-weight:bold; color:#800000; }
+b {font-weight:bold;color:#800000;}
 h3 { font-weight:bold; color:#800000; }
 h4 { font-weight:bold; color:#800000; }
 h5 { font-weight:bold; color:#800000; }
-body{background-color:white;margin:10;}
 h1 {font-family:geneva,arial,helvetica,sans-serif;}
-h2 {font-family:geneva,arial,helvetica,sans-serif;}
+h2 {font-weight:bold;color:#006699;font-family:geneva,arial,helvetica,sans-serif;}
 h3 {font-family:geneva,arial,helvetica,sans-serif;}
 h4 {font-family:geneva,arial,helvetica,sans-serif;}
 h5 {font-family:geneva,arial,helvetica,sans-serif;}
@@ -17,12 +16,11 @@ ul {font-family:geneva,arial,helvetica,sans-serif;}
 tr {font-family:geneva,arial,helvetica,sans-serif;}
 td {font-family:geneva,arial,helvetica,sans-serif;}
 th {font-family:geneva,arial,helvetica,sans-serif;}
-body {font-family:geneva,arial,helvetica,sans-serif;}
+body {background-color:white;margin:10;font-family:geneva,arial,helvetica,sans-serif;}
 
 blockquote {font-family:geneva,arial,helvetica,sans-serif;}
 
 address{font-style:normal;}
-h2 {font-weight:bold;color:#006699;}
 hr {font-weight:bold;color:#006699;}
 a:link {color:#0000FF;font-weight:bold;}
 a:visited {color:#C0C0C0;font-weight:bold;}
