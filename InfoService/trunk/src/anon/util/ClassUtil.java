@@ -27,16 +27,13 @@
  */
 package anon.util;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintStream;
-import java.util.Enumeration;
-import java.util.Vector;
+import java.net.URL;
 import java.util.Hashtable;
+import java.util.Vector;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-import java.net.URL;
 
 /**
  * This class performs some basic operations related to Class objects.
@@ -78,7 +75,8 @@ public final class ClassUtil
 
 		pointIndex = classname.lastIndexOf('.');
 
-		if (pointIndex >= 0) {
+		if (pointIndex >= 0)
+		{
 			classname = classname.substring(pointIndex + 1, classname.length());
 		}
 
@@ -120,27 +118,27 @@ public final class ClassUtil
 	 */
 	//remove doe to persistent bugs with some JDKs
 	/*public static Vector findSubclasses(Class a_class)
-	{
-		Enumeration classes=null;
-		Vector subclasses=null;
-		Class possibleSubclass=null;
+	  {
+	 Enumeration classes=null;
+	 Vector subclasses=null;
+	 Class possibleSubclass=null;
 
-		loadClasses(a_class);
-		classes = loadClasses(getCallingClassStatic());
-		subclasses = new Vector();
+	 loadClasses(a_class);
+	 classes = loadClasses(getCallingClassStatic());
+	 subclasses = new Vector();
 
-		while (classes.hasMoreElements())
-		{
-			possibleSubclass = (Class) classes.nextElement();
-			if (a_class.isAssignableFrom(possibleSubclass))
-			{
-				subclasses.addElement(possibleSubclass);
-			}
-		}
+	 while (classes.hasMoreElements())
+	 {
+	  possibleSubclass = (Class) classes.nextElement();
+	  if (a_class.isAssignableFrom(possibleSubclass))
+	  {
+	   subclasses.addElement(possibleSubclass);
+	  }
+	 }
 
-		return subclasses;
-	}
-*/
+	 return subclasses;
+	  }
+	 */
 	/**
 	 * Loads all classes into cache that are in the same file structure as this class
 	 * and as the calling class. Recommended to be called at program start to
@@ -149,17 +147,17 @@ public final class ClassUtil
 	 * @return all loaded classes
 	 */
 	/*public static Enumeration loadClasses()
-	{
-		Class callingClass=null;
+	  {
+	 Class callingClass=null;
 
-		callingClass = getCallingClassStatic();
+	 callingClass = getCallingClassStatic();
 
-		// load all classes for this class and the calling class
-		loadClasses(callingClass);
+	 // load all classes for this class and the calling class
+	 loadClasses(callingClass);
 
-		return ms_loadedClasses.elements();
-	}
-*/
+	 return ms_loadedClasses.elements();
+	  }
+	 */
 	/**
 	 * Loads all classes into cache that are in the same file structure as
 	 * the given class and as the calling class.
@@ -168,46 +166,46 @@ public final class ClassUtil
 	 * @return all loaded classes
 	 */
 	/*public static Enumeration loadClasses(Class a_rootClass)
-	{
-		PrintStream syserror=null;
-		PrintStream dummyStream = new PrintStream(new ByteArrayOutputStream());
-		Class thisClass=null, callingClass=null;
+	  {
+	 PrintStream syserror=null;
+	 PrintStream dummyStream = new PrintStream(new ByteArrayOutputStream());
+	 Class thisClass=null, callingClass=null;
 
-		thisClass = getClassStatic();
-		callingClass = getCallingClassStatic();
+	 thisClass = getClassStatic();
+	 callingClass = getCallingClassStatic();
 
-		// temporarily deactivate standard error to suppress printStackStrace() messages
-		syserror = System.err;
-		System.setErr(dummyStream);
-		try
-		{
-			// load all classes for the specified class
-			loadClassesInternal(a_rootClass);
+	 // temporarily deactivate standard error to suppress printStackStrace() messages
+	 syserror = System.err;
+	 System.setErr(dummyStream);
+	 try
+	 {
+	  // load all classes for the specified class
+	  loadClassesInternal(a_rootClass);
 
-			// load all classes for this class
-			loadClassesInternal(thisClass);
+	  // load all classes for this class
+	  loadClassesInternal(thisClass);
 
-			// load all classes for the calling class
-			if (callingClass != a_rootClass && callingClass != thisClass)
-			{
-				loadClassesInternal(callingClass);
-			}
-		}
-		catch (Throwable a_e)
-		{
-			System.setErr(syserror);
-			if (a_e instanceof Exception && !(a_e instanceof RuntimeException))
-			{
-				// @todo throw the exception //
-				a_e.printStackTrace();
-			}
-		}
-		// reactivate standard error
-		System.setErr(syserror);
+	  // load all classes for the calling class
+	  if (callingClass != a_rootClass && callingClass != thisClass)
+	  {
+	   loadClassesInternal(callingClass);
+	  }
+	 }
+	 catch (Throwable a_e)
+	 {
+	  System.setErr(syserror);
+	  if (a_e instanceof Exception && !(a_e instanceof RuntimeException))
+	  {
+	   // @todo throw the exception //
+	   a_e.printStackTrace();
+	  }
+	 }
+	 // reactivate standard error
+	 System.setErr(syserror);
 
-		return ms_loadedClasses.elements();
-	}
-*/
+	 return ms_loadedClasses.elements();
+	  }
+	 */
 	/**
 	 * Returns the class directory of the specified class. The class directory is either the
 	 * directory in that the highest package in the package structure of the class is contained,
@@ -217,7 +215,7 @@ public final class ClassUtil
 	 * @return the class directory of the specified class, either a real directory or a Jar-file
 	 *         or null if the directory/jar-file does not exist
 	 */
-	public static File getClassDirectory(Class a_class)
+	/*public static File getClassDirectory(Class a_class)
 	{
 		String classResource;
 		String classDirectory;
@@ -268,7 +266,7 @@ public final class ClassUtil
 
 		return file;
 	}
-
+*/
 	/**
 	 * Generates a relative resource path to the given class.
 	 * @param a_class Class
@@ -292,22 +290,22 @@ public final class ClassUtil
 	 * @return the first class that was instnatiated or
 	 *         null if no class could be found and instantiated
 	 */
-	protected static Class getFirstClassFound(File a_file)
-	{
-		Hashtable classInstance = new Hashtable();
+	/*	protected static Class getFirstClassFound(File a_file)
+	 {
+	  Hashtable classInstance = new Hashtable();
 
-		ResourceLoader.loadResources("/", a_file, new ClassInstantiator(3), true, true, false,
-									 classInstance);
-		// we choose "3" because after 3 tries it is highly possible this is not a valid classdir
+	  ResourceLoader.loadResources("/", a_file, new ClassInstantiator(3), true, true, false,
+			  classInstance);
+	  // we choose "3" because after 3 tries it is highly possible this is not a valid classdir
 
-		if (classInstance.size() == 1)
-		{
-			return (Class)classInstance.elements().nextElement();
-		}
+	  if (classInstance.size() == 1)
+	  {
+	   return (Class)classInstance.elements().nextElement();
+	  }
 
-		return null;
-	}
-
+	  return null;
+	 }
+	 */
 	/**
 	 * This small inner class is needed to get information about static classes.
 	 */
@@ -330,11 +328,11 @@ public final class ClassUtil
 	 * @param a_rootClass the class from that loading is started
 	 * @throws IOException if an I/O error occurs
 	 */
-	private static void loadClassesInternal(Class a_rootClass) throws IOException
+	/*private static void loadClassesInternal(Class a_rootClass) throws IOException
 	{
-		File file=null;
+		File file = null;
 
-		if ((file = getClassDirectory(a_rootClass)) == null)
+		if ( (file = getClassDirectory(a_rootClass)) == null)
 		{
 			return;
 		}
@@ -351,7 +349,7 @@ public final class ClassUtil
 		ResourceLoader.loadResources("/", file, new ClassInstantiator(),
 									 true, false, false, ms_loadedClasses);
 	}
-
+*/
 	/**
 	 * Turns class files into Class objects.
 	 * @param a_classFile a class file with full directory path
@@ -360,9 +358,9 @@ public final class ClassUtil
 	 */
 	private static Class toClass(File a_classFile, File a_classDirectory)
 	{
-		Class classObject=null;
-		String className=null;
-		String classDirectory=null;
+		Class classObject = null;
+		String className = null;
+		String classDirectory = null;
 		int startIndex;
 
 		if (a_classFile == null || !a_classFile.getName().endsWith(".class"))
@@ -402,14 +400,13 @@ public final class ClassUtil
 		return classObject;
 	}
 
-
 	private static class ClassInstantiator implements ResourceInstantiator
 	{
 		private int m_invalidAfterFailure;
 		private int m_currentFailure;
 
 		public ClassInstantiator()
-	{
+		{
 			m_invalidAfterFailure = 0;
 			m_currentFailure = 0;
 		}
@@ -420,8 +417,8 @@ public final class ClassUtil
 			m_currentFailure = 0;
 		}
 
-		public Object getInstance(File a_file, File a_topDirectory)
-			throws ResourceInstantiator.ResourceInstantiationException
+		public Object getInstance(File a_file, File a_topDirectory) throws ResourceInstantiator.
+			ResourceInstantiationException
 
 		{
 			Class loadedClass = toClass(a_file, a_topDirectory);
@@ -434,8 +431,8 @@ public final class ClassUtil
 			return loadedClass;
 		}
 
-		public Object getInstance(ZipEntry a_entry, ZipFile a_file)
-			throws ResourceInstantiator.ResourceInstantiationException
+		public Object getInstance(ZipEntry a_entry, ZipFile a_file) throws ResourceInstantiator.
+			ResourceInstantiationException
 		{
 			Class loadedClass = toClass(new File( (a_entry).toString()), (File)null);
 
@@ -447,8 +444,8 @@ public final class ClassUtil
 			return loadedClass;
 		}
 
-		private void checkValidity(Class a_loadedClass, String a_filename)
-			throws ResourceInstantiator.ResourceInstantiationException
+		private void checkValidity(Class a_loadedClass, String a_filename) throws ResourceInstantiator.
+			ResourceInstantiationException
 		{
 			if (a_loadedClass == null && a_filename.endsWith(".class"))
 			{
