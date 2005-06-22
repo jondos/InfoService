@@ -36,7 +36,7 @@ import java.util.Vector;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 
-import anon.util.ClassUtil;
+//import anon.util.ClassUtil;
 
 /**
  * A key pair used for signing and encryption with an asymmetric cryptographic algorithm.
@@ -197,9 +197,9 @@ public class AsymmetricCryptoKeyPair
 		throws InvalidKeyException
 	{
 		Key key = null;
-		Class keyClass;
-		Class[] parameterTypes;
-		Object[] parameters;
+		Class keyClass=null;
+		Class[] parameterTypes=null;
+		Object[] parameters=null;
 
 		parameterTypes = new Class[1];
 		parameters = new Object[1];
@@ -215,6 +215,7 @@ public class AsymmetricCryptoKeyPair
 			}
 			catch (Throwable a_e)
 			{
+				a_e.printStackTrace();
 				// this is not the right key for this key info; ignore this error
 			}
 		}
@@ -237,8 +238,11 @@ public class AsymmetricCryptoKeyPair
 	{
 		if (ms_privateKeyClasses == null)
 		{
-			ms_privateKeyClasses = ClassUtil.findSubclasses(IMyPrivateKey.class);
-			ms_privateKeyClasses.removeElement(IMyPrivateKey.class);
+			ms_privateKeyClasses =new Vector();
+			ms_privateKeyClasses.addElement(MyDSAPrivateKey.class);
+			ms_privateKeyClasses.addElement(MyRSAPrivateKey.class);
+			//ClassUtil.findSubclasses(IMyPrivateKey.class);
+			//ms_privateKeyClasses.removeElement(IMyPrivateKey.class);
 		}
 
 		return ms_privateKeyClasses.elements();
@@ -254,8 +258,11 @@ public class AsymmetricCryptoKeyPair
 	{
 		if (ms_publicKeyClasses == null)
 		{
-			ms_publicKeyClasses = ClassUtil.findSubclasses(IMyPublicKey.class);
-			ms_publicKeyClasses.removeElement(IMyPublicKey.class);
+			ms_publicKeyClasses=new Vector();
+			ms_publicKeyClasses.addElement(MyDSAPublicKey.class);
+			ms_publicKeyClasses.addElement(MyRSAPublicKey.class);
+			//ms_publicKeyClasses = ClassUtil.findSubclasses(IMyPublicKey.class);
+			//ms_publicKeyClasses.removeElement(IMyPublicKey.class);
 		}
 
 		return ms_publicKeyClasses.elements();
