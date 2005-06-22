@@ -118,6 +118,7 @@ public final class ClassUtil
 	 * @param a_class a Class
 	 * @return all known subclasses of the given class
 	 */
+	//remove doe to persistent bugs with some JDKs
 	/*public static Vector findSubclasses(Class a_class)
 	{
 		Enumeration classes=null;
@@ -147,9 +148,9 @@ public final class ClassUtil
 	 * WARNING: this may be slow at the first call, especially for large packages (like the JRE)
 	 * @return all loaded classes
 	 */
-	public static Enumeration loadClasses()
+	/*public static Enumeration loadClasses()
 	{
-		Class callingClass;
+		Class callingClass=null;
 
 		callingClass = getCallingClassStatic();
 
@@ -158,7 +159,7 @@ public final class ClassUtil
 
 		return ms_loadedClasses.elements();
 	}
-
+*/
 	/**
 	 * Loads all classes into cache that are in the same file structure as
 	 * the given class and as the calling class.
