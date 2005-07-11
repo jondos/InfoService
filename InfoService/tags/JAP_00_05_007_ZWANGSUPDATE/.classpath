@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="test"/>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/BouncyCastle"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/HTTP"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/XML-RPC"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/FTP"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/MRJ"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/JUnit"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/JUnitX"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/LOG4J"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Bzip2"/>
+	<classpathentry kind="output" path="build"/>
+</classpath>

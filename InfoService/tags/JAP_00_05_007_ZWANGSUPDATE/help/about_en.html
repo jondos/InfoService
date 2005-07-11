@@ -1,0 +1,106 @@
+<html>
+<head>
+<link rel="stylesheet" type="text/css" href="xhelpfrms.css">
+</head>
+<body>
+<!--#include virtual="/header_en.html"-->
+
+<H2>About Java Anon Proxy</H2>
+
+<P>
+<B>Java Anon Proxy (JAP)</B>
+
+<P>
+Java Anon Proxy (JAP) provides the functionality to surf the web without
+being observed. This means that neither the requested server nor any
+observer on the Internet can know which user has viewed which web page.
+
+<P>
+JAP has to be installed on the user's computer to allow him to surf the
+internet anonymously and without being observed. This is necessary since
+all requests and all of the servers' answers have to be sent not directly to
+the web server, rather via a so-called Mix Proxy Cascade. These mixes are
+interposed stations, and all messages are directed through these stations.
+
+<P>
+Since many users make use of the anon service at the same time, the
+internet connections of each user are hidden among those of all the other
+users; Every user could have been responsible for any connection. Nobody,
+no outstanding person, no other user, not even the operator of the anon
+service can determine which internet connections were requested by a
+certain user.
+
+<P>
+<B>The anon service</B>
+
+<P>
+In general, at least two mix proxies will work in an anon service, each
+of them operated by an independent institution that has declared in a
+self-obligation statement to neither store log files of the transported
+connections nor exchange sensitive data with other mix proxy operators.
+
+<P>
+However, since none of the interposed stations should be trusted completely,
+all data to be sent is encrypted several times (once per mix station).
+
+<P>
+The encryption of the requests and the decryption of the answers take place
+in the JAP program. The user only has to <A HREF="browser_en.html">configure</A> the
+browser in a way that all web requests are directed through JAP.
+
+<P>
+The users' anonymization takes place by sending each request in multiply
+encrypted form via a series of in-between stations based on the mix concept
+of David Chaum. Since all users' behavior is the same in the final version
+(sending the same amount of data per time unit via the same cascade of
+mixes) as long as at least one mix is not cooperating with a global
+attacker, a single user's actions cannot be reconstructed.
+
+<P>
+Our goal is to provide a service that truly meets these criteria.
+
+<P>
+<B>Attention!</B> The current version does not yet reach this security level,
+because the software is still under development! However, this version already
+guarantees a much higher security standard than systems that work as simple
+proxy servers.
+
+<P>
+This version of JAP provides protection against local attackers
+(e.g. the provider, web server, your manager or boss). In addition, it
+provides protection against the mix operators. Dependent on what mix an operator
+operates, he can only get information on which IP address uses the service
+<b>or</b> which requests have been sent to the web, but no combination of these
+two possibilities.
+
+<P>
+The current version does not provide protection against attackers who
+observe all Internet lines or controls the first and the last mix.
+
+<P>
+For the following reasons we want to offer the system prior to the final
+version:
+
+<UL>
+    <LI> We want to gather experience with a running system in order to
+    properly improve the system.
+    <LI> For being able to offer a secure service, we need a large and stable
+    anonymity group from the beginning. We hope to gain such a group already
+    now and be able to maintain it during further development.
+</UL>
+
+<P>
+To achieve this aim, we need your help. We would be very grateful if you
+used the anon service regularly and told us about your problems,
+opinions, and suggestions.
+
+<P>
+You can contact us at <B>jap@inf.tu-dresden.de</B>.
+
+<P>
+For further information please view our project web site: <BR>
+<B>http://www.anon-online.de</B>
+
+<!--#include virtual="/footer_en.html"-->
+</body>
+</html>
