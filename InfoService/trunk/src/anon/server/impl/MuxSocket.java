@@ -108,6 +108,9 @@ public final class MuxSocket implements Runnable
 	private final static short CHANNEL_OPEN = 8;
 	private final static short CHANNEL_DUMMY = 16;
 
+	private final static short PAYLOAD_LEN_MASK = 0x03FF;
+	private final static short NEW_FLOW_CONTROL_FLAG = (short) 0x8000;
+
 	private final static int CHANNEL_TYPE_HTTP = 0;
 	private final static int CHANNEL_TYPE_SOCKS = 1;
 
@@ -119,13 +122,14 @@ public final class MuxSocket implements Runnable
 	private final static int MIX_PROTOCOL_VERSION_0_3 = 3;
 	private final static int MIX_PROTOCOL_VERSION_0_2 = 2;
 
-	private final static int LOGIN_TIMEOUT=60000; //How long in ms to wait for messages related to the
-	                                              //login procedure
+	private final static int LOGIN_TIMEOUT = 60000; //How long in ms to wait for messages related to the
+	//login procedure
 	private Thread threadRunLoop;
 
 	private DummyTraffic m_DummyTraffic = null;
 
 	private boolean m_bMixProtocolWithTimestamp, m_bMixSupportsControlChannels;
+	private boolean m_bNewFlowControl;
 	private int m_iTimestampSize;
 	private final static Calendar m_scalendarGMT = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
 	private ControlChannelDispatcher m_ControlChannelDispatcher;
@@ -180,6 +184,7 @@ public final class MuxSocket implements Runnable
 		m_iTimestampSize = 0;
 		m_bMixSupportsControlChannels = false;
 		m_ControlChannelDispatcher = new ControlChannelDispatcher(this);
+		m_bNewFlowControl = false;
 		//threadgroupChannels=null;
 	}
 
@@ -226,7 +231,12 @@ public final class MuxSocket implements Runnable
 			m_inDataStream = new DataInputStream(m_ioSocket.getInputStream());
 			m_outStream = new BufferedOutputStream(m_ioSocket.getOutputStream(), PACKET_SIZE);
 			m_bisCrypted = false;
-			try{m_ioSocket.setSoTimeout(LOGIN_TIMEOUT);}catch(Exception e){}
+			try
+			{
+				m_ioSocket.setSoTimeout(LOGIN_TIMEOUT);
+			}
+			catch (Exception e)
+			{}
 			//  LogHolder.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:Reading len...");
 			int len = m_inDataStream.readUnsignedShort(); //len.. unitressteing at the moment
 			//  LogHolder.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:Reading m_iChainLen...");
@@ -281,7 +291,12 @@ public final class MuxSocket implements Runnable
 					m_arASymCipher[i].setPublicKey(n, e);
 				}
 			}
-			try{m_ioSocket.setSoTimeout(0);}catch(Exception e){} //Now we have a unlimited timeout...
+			try
+			{
+				m_ioSocket.setSoTimeout(0);
+			}
+			catch (Exception e)
+			{} //Now we have a unlimited timeout...
 		}
 		catch (Exception e)
 		{
@@ -428,19 +443,19 @@ public final class MuxSocket implements Runnable
 				{
 					m_mixCascadeCertificateLock = SignatureVerifier.getInstance().
 						getVerificationCertificateStore().addCertificateWithVerification( (JAPCertificate) (
-						appendedCertificates.nextElement()), JAPCertificate.CERTIFICATE_TYPE_MIX, false);
+							appendedCertificates.nextElement()), JAPCertificate.CERTIFICATE_TYPE_MIX, false);
 					LogHolder.log(LogLevel.DEBUG, LogType.MISC, "MuxSocket: processXmlKeys: Added appended certificate from the MixCascade structure to the certificate store.");
 				}
 				else
 				{
 					LogHolder.log(LogLevel.DEBUG, LogType.MISC,
-						"MuxSocket: processXmlKeys: No appended certificates in the MixCascade structure.");
+								  "MuxSocket: processXmlKeys: No appended certificates in the MixCascade structure.");
 				}
 			}
 			catch (Exception e)
 			{
 				LogHolder.log(LogLevel.ERR, LogType.MISC,
-					"MuxSocket: processXmlKeys: Error while looking for appended certificates in the MixCascade structure: " +
+							  "MuxSocket: processXmlKeys: Error while looking for appended certificates in the MixCascade structure: " +
 							  e.toString());
 			}
 			Element elemMixProtocolVersion = (Element) root.getElementsByTagName("MixProtocolVersion").item(0);
@@ -458,6 +473,7 @@ public final class MuxSocket implements Runnable
 			m_iTimestampSize = 0;
 			m_cipherFirstMix = null;
 			m_bMixSupportsControlChannels = false;
+			m_bNewFlowControl = false;
 
 			if (strProtocolVersion.equals("0.2"))
 			{
@@ -504,10 +520,29 @@ public final class MuxSocket implements Runnable
 					//---
 					if (!bIsFirst)
 					{
-						if (SignatureVerifier.getInstance().verifyXml(child,
-							SignatureVerifier.DOCUMENT_CLASS_MIX) == false)
+						if (!SignatureVerifier.getInstance().verifyXml(child,
+							SignatureVerifier.DOCUMENT_CLASS_MIX))
 						{
 							return ErrorCodes.E_SIGNATURE_CHECK_OTHERMIX_FAILED;
+						}
+						if (i == m_iChainLen - 1) //LastMix
+						{
+							Element elemProtocolVersion = (Element) XMLUtil.getFirstChildByName(child,
+								"MixProtocolVersion");
+							String strVersion = XMLUtil.parseValue(elemProtocolVersion, null);
+							if (strVersion == null)
+							{
+								return ErrorCodes.E_PROTOCOL_NOT_SUPPORTED;
+							}
+							else if (strVersion.equals("0.4")) //with new flow control
+							{
+								m_bNewFlowControl = true;
+							}
+							else if (!strVersion.equals("0.3"))
+							{
+								return ErrorCodes.E_PROTOCOL_NOT_SUPPORTED;
+							}
+
 						}
 					}
 					//---
@@ -678,6 +713,7 @@ public final class MuxSocket implements Runnable
 		}
 	}
 
+	/** Sends a 'raw' MixPacket. */
 	protected synchronized void sendRawMixPacket(int channel, short flags, byte[] data, int off, int data_len)
 	{
 		try
@@ -858,6 +894,14 @@ public final class MuxSocket implements Runnable
 					}
 					len = (buff[0] << 8) | (buff[1] & 0xFF);
 					len &= 0x0000FFFF;
+					if (m_bNewFlowControl)
+					{
+						if ( (len & NEW_FLOW_CONTROL_FLAG) != 0)
+						{
+							send(channel, 0, null, NEW_FLOW_CONTROL_FLAG);
+						}
+					}
+					len&=PAYLOAD_LEN_MASK;
 					if (len < 0 || len > DATA_SIZE)
 					{
 						LogHolder.log(LogLevel.DEBUG, LogType.NET,
@@ -950,7 +994,7 @@ public final class MuxSocket implements Runnable
 		m_outStream.flush();
 	}
 
-	public synchronized int send(int channel, int type, byte[] buff, short len)
+	public synchronized int send(int channel, int type, byte[] buff, short len_and_flags)
 	{
 		try
 		{
@@ -958,9 +1002,10 @@ public final class MuxSocket implements Runnable
 			{
 				return ErrorCodes.E_NOT_CONNECTED;
 			}
+			short len = (short) (len_and_flags & PAYLOAD_LEN_MASK);
 
 			short channelMode = CHANNEL_DATA;
-			if (buff == null && len == 0)
+			if (buff == null && len_and_flags == 0)
 			{
 				//First the Channel in Network byte order
 				m_MixPacketSend[0] = (byte) ( (channel >> 24) & 0xFF);
@@ -976,11 +1021,11 @@ public final class MuxSocket implements Runnable
 				sendMixPacket();
 				return 0;
 			}
-			if (buff == null)
+			if (buff == null && len != 0) //we should someting send byte did not get what we should send...
 			{
 				return -1;
 			}
-			if (len == 0)
+			if (len_and_flags == 0) //nothing to do...
 			{
 				return 0;
 			}
@@ -1037,7 +1082,8 @@ public final class MuxSocket implements Runnable
 						m_arOutBuff[KEY_SIZE + 1] = (byte) (timestamp % 256);
 					}
 					entry.arCipher[i].setEncryptionKeyAES(m_arOutBuff);
-					System.arraycopy(m_arOutBuff2, 0, m_arOutBuff, KEY_SIZE + m_iTimestampSize, DATA_SIZE-KEY_SIZE);
+					System.arraycopy(m_arOutBuff2, 0, m_arOutBuff, KEY_SIZE + m_iTimestampSize,
+									 DATA_SIZE - KEY_SIZE);
 					if (i > 0 || m_iMixProtocolVersion != MIX_PROTOCOL_VERSION_0_4)
 					{
 						m_arASymCipher[i].encrypt(m_arOutBuff, 0, m_arOutBuff2, 0);
@@ -1061,10 +1107,13 @@ public final class MuxSocket implements Runnable
 			}
 			else
 			{
-				System.arraycopy(buff, 0, m_arOutBuff, 3, len);
+				if (len > 0)
+				{
+					System.arraycopy(buff, 0, m_arOutBuff, 3, len);
+				}
 				m_arOutBuff[2] = 0;
-				m_arOutBuff[0] = (byte) (len >> 8);
-				m_arOutBuff[1] = (byte) (len % 256);
+				m_arOutBuff[0] = (byte) (len_and_flags >> 8);
+				m_arOutBuff[1] = (byte) (len_and_flags % 256);
 				for (int i = m_iChainLen - 1; i > 0; i--)
 				{
 					entry.arCipher[i].encryptAES(m_arOutBuff); //something throws a null pointer....
