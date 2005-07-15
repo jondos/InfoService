@@ -43,7 +43,7 @@ import java.util.zip.ZipFile;
  */
 final class JarFile
 {
-	//~ Instance variables ·······························································
+	//~ Instance variables
 
 	/**
 	 * the path of the jar file
@@ -57,7 +57,7 @@ final class JarFile
 	/** the manifest related to this jar file */
 	private JarManifest m_Manifest;
 
-	//~ Constructors ·······························································
+	//~ Constructors
 
 	/**
 	 * Constructor

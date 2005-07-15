@@ -67,13 +67,19 @@ public class HTTPConnectionFactory
 	private ImmutableProxyInterface m_proxyInterface;
 
 	/**
+	 * Indicates whether to use proxy authentication
+	 */
+	private boolean m_bUseAuth = false;
+
+
+	/**
 	 * This creates a new instance of HTTPConnectionFactory. This is only used for setting some
 	 * values. Use HTTPConnectionFactory.getInstance() for getting an instance of this class.
 	 */
 	private HTTPConnectionFactory()
 	{
 		/* default is to use no proxy for all new HTTPConnection instances */
-		setNewProxySettings(null);
+		setNewProxySettings(null, false);
 		m_timeout = 10;
 	}
 
@@ -109,10 +115,12 @@ public class HTTPConnectionFactory
 	 *
 	 * @param a_proxyInterface the listener interface of the proxy server; if it is set to null, no
 	 *                        proxy is used
+	 * @param a_bUseAuth indicates whether proxy authentication should be used
 	 */
-	public synchronized void setNewProxySettings(ImmutableProxyInterface a_proxyInterface)
+	public synchronized void setNewProxySettings(ImmutableProxyInterface a_proxyInterface, boolean a_bUseAuth)
 	{
 		m_proxyInterface = a_proxyInterface;
+		m_bUseAuth = a_bUseAuth;
 
 		if (a_proxyInterface == null || !a_proxyInterface.isValid())
 		{
@@ -134,12 +142,15 @@ public class HTTPConnectionFactory
 			/** @todo check why this code is not used! */
 			HTTPConnection.setProxyServer(null, -1);
 			HTTPConnection.setSocksServer(a_proxyInterface.getHost(), a_proxyInterface.getPort());
+			if (m_bUseAuth)
+			{
 			NVPair[] up = new NVPair[1];
 			up[0] = new NVPair(a_proxyInterface.getAuthenticationUserID(),
 							   a_proxyInterface.getAuthenticationPassword());
 			AuthorizationInfo.addAuthorization(new AuthorizationInfo(a_proxyInterface.getHost(),
 				a_proxyInterface.getPort(),
 				"SOCKS5", "USER/PASS", up, null));
+		}
 		}
 
 	}
@@ -225,9 +236,9 @@ public class HTTPConnectionFactory
 		 * proxy settings -> no problem because all methods are synchronized
 		 */
 		ImmutableProxyInterface oldProxySettings = m_proxyInterface;
-		setNewProxySettings(a_proxySettings);
+		setNewProxySettings(a_proxySettings, m_bUseAuth);
 		HTTPConnection createdConnection = createHTTPConnection(target);
-		setNewProxySettings(oldProxySettings);
+		setNewProxySettings(oldProxySettings, m_bUseAuth);
 		return createdConnection;
 	}
 

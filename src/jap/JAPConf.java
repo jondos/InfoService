@@ -328,6 +328,17 @@ final class JAPConf extends JDialog implements ActionListener
 				}
 			});
 		}
+		else if (e.getSource() == m_cbProxyAuthentication)
+		{
+			if (m_cbProxyAuthentication.isSelected())
+			{
+				JAPModel.getInstance().setUseProxyAuthentication(true);
+			}
+			else
+			{
+				JAPModel.getInstance().setUseProxyAuthentication(false);
+			}
+		}
 	}
 
 	JPanel buildPortPanel()
@@ -921,7 +932,8 @@ final class JAPConf extends JDialog implements ActionListener
 							   m_tfProxyAuthenticationUserID.getText().trim(),
 							   m_Controller.getPasswordReader(),
 							   m_cbProxyAuthentication.isSelected(),
-							   m_cbProxy.isSelected()));
+							   m_cbProxy.isSelected()),
+			m_cbProxyAuthentication.isSelected());
 
 		// force notifying the observers set the right server name
 		m_Controller.notifyJAPObservers(); // this should be the last line of okPressed() !!!

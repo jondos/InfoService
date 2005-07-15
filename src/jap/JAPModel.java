@@ -70,6 +70,7 @@ public final class JAPModel
 	private int m_TorMaxRouteLen = JAPConstants.DEFAULT_TOR_MAX_ROUTE_LEN;
 	private int m_TorMinRouteLen = JAPConstants.DEFAULT_TOR_MIN_ROUTE_LEN;
 	private boolean m_bPreCreateAnonRoutes = JAPConstants.DEFAULT_TOR_PRECREATE_ROUTES;
+	private boolean m_bUseProxyAuthentication = false;
 
 	/**
 	 * Stores the instance with the routing settings.
@@ -495,6 +496,16 @@ public final class JAPModel
 	protected void setTorMinRouteLen(int i)
 	{
 		m_TorMinRouteLen = i;
+	}
+
+	protected void setUseProxyAuthentication(boolean a_bUseAuth)
+	{
+		m_bUseProxyAuthentication = a_bUseAuth;
+	}
+
+	public boolean isProxyAuthenticationUsed()
+	{
+		return m_bUseProxyAuthentication;
 	}
 
 }
