@@ -48,10 +48,11 @@ final class Channel extends AbstractChannel
 		m_muxSocket.close(m_id);
 	}
 
-	protected void send(byte[] buff, int len)
+	protected int send(byte[] buff, int len)
 	{
-		m_muxSocket.send(m_id, m_type, buff, (short) len);
+		int ret=m_muxSocket.send(m_id, m_type, buff, (short) len);
 		m_bFirstPacket = false;
+		return ret;
 	}
 
 	public int getOutputBlockSize()

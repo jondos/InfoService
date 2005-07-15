@@ -32,13 +32,13 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 import anon.AnonChannel;
+import anon.ErrorCodes;
 
 abstract public class AbstractChannel implements AnonChannel
 {
 	protected boolean m_bIsClosedByPeer = false;
 	protected boolean m_bIsClosed = false;
 	protected int m_id;
-	//protected int m_type;
 
 	private ChannelInputStream m_inputStream;
 	private ChannelOutputStream m_outputStream;
@@ -51,7 +51,6 @@ abstract public class AbstractChannel implements AnonChannel
 
 	public AbstractChannel()
 	{
-		//m_type = type;
 		m_bIsClosedByPeer = false;
 		m_bIsClosed = false;
 		m_inputStream = new ChannelInputStream(this);
@@ -102,15 +101,13 @@ abstract public class AbstractChannel implements AnonChannel
 	abstract protected void close_impl();
 
 	//called from the AnonService to send data to this channel
-	protected
-		/*synchronized*/
-		void recv(byte[] buff, int pos, int len) throws IOException
+	protected void recv(byte[] buff, int pos, int len) throws IOException
 	{
 		m_inputStream.recv(buff, pos, len);
 	}
 
 	//called from ChannelOutputStream to send data to the AnonService which belongs to this channel
-	abstract protected /*synchronized*/ void send(byte[] buff, int len) throws IOException;
+	abstract protected int send(byte[] buff, int len) throws IOException;
 
 	public void closedByPeer()
 	{
@@ -147,17 +144,17 @@ final class IOQueue
 	}
 
 	public synchronized void write(byte[] in, int pos, int len) throws IOException
-	{//RingBuffer: (Start)
-	 //	--------------------------------------------
-	//	^
-	//  |Writepos
-	//  |RreadPos
-	//
-	//After some Write
-	//	--------------------------------------------
-   //	^                ^
-   //                    |Writepos
-   //  |ReadPos
+	{ //RingBuffer: (Start)
+		//	--------------------------------------------
+		//	^
+		//  |Writepos
+		//  |RreadPos
+		//
+		//After some Write
+		//	--------------------------------------------
+		//	^                ^
+		//                    |Writepos
+		//  |ReadPos
 		int toCopy;
 		while (len > 0)
 		{
@@ -176,7 +173,7 @@ final class IOQueue
 				{
 					throw new IOException("IOQueue write interrupted");
 				} //wait;
-				continue;
+				continue ;
 			}
 			if (readPos <= writePos)
 			{
@@ -231,7 +228,7 @@ final class IOQueue
 					{
 						throw new IOException("IOQueue read() interrupted");
 					}
-					continue;
+					continue ;
 				}
 			}
 			int i = buff[readPos++] & 0xFF;
@@ -277,7 +274,7 @@ final class IOQueue
 					{
 						throw new IOException("IOQueue read() interrupted");
 					}
-					continue;
+					continue ;
 				}
 			}
 			int toCopy;
@@ -376,6 +373,7 @@ final class ChannelInputStream extends InputStream
 		}
 		catch (Exception e)
 		{
+			throw new IOException(e.getMessage());
 		}
 	}
 
@@ -451,28 +449,33 @@ final class ChannelOutputStream extends OutputStream
 		}
 		byte[] buff = new byte[1];
 		buff[0] = (byte) i;
-		m_channel.send(buff, 1);
+		int ret = m_channel.send(buff, 1);
+		if (ret != ErrorCodes.E_SUCCESS)
+		{
+			throw new IOException("Error while sending on Channel - ErrorCode: " + ret);
+		}
+
 	}
 
-	public
-		/*synchronized*/
-		void write(byte[] buff, int start, int len) throws IOException
+	public void write(byte[] buff, int start, int len) throws IOException
 	{
 		if ( /*m_bIsClosedByPeer||*/m_bIsClosed)
 		{
 			throw new IOException("Channel closed by peer");
 		}
-		m_channel.send(buff, (short) len);
+		int ret = m_channel.send(buff, (short) len);
+		if (ret != ErrorCodes.E_SUCCESS)
+		{
+			throw new IOException("Error while sending on Channel - ErrorCode: " + ret);
+		}
 	}
 
-	public
-		/*synchronized*/
-		void close()
+	public void close()
 	{
 		m_bIsClosed = true;
 	}
 
-	protected void closedByPeer()
+	void closedByPeer()
 	{
 		m_bIsClosed = true;
 	}

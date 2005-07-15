@@ -1019,7 +1019,7 @@ public final class MuxSocket implements Runnable
 				System.arraycopy(m_arEmpty, 0, m_MixPacketSend, 6, DATA_SIZE);
 				//Send it...
 				sendMixPacket();
-				return 0;
+				return ErrorCodes.E_SUCCESS;
 			}
 			if (buff == null && len != 0) //we should someting send byte did not get what we should send...
 			{
@@ -1027,7 +1027,7 @@ public final class MuxSocket implements Runnable
 			}
 			if (len_and_flags == 0) //nothing to do...
 			{
-				return 0;
+				return ErrorCodes.E_SUCCESS;
 			}
 			ChannelListEntry entry = (ChannelListEntry) m_ChannelList.get(new Integer(channel));
 			if (entry == null)
@@ -1142,7 +1142,6 @@ public final class MuxSocket implements Runnable
 		}
 		catch (Exception e)
 		{
-			e.printStackTrace();
 			LogHolder.log(LogLevel.ERR, LogType.NET,
 						  "JAPMuxSocket:send() Exception (should never be here...)!: " + e.getMessage());
 			return ErrorCodes.E_UNKNOWN;
