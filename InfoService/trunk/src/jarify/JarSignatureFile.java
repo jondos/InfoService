@@ -36,7 +36,7 @@ final class JarSignatureFile extends JarManifest
 {
 	private Hashtable manifestdigests = new Hashtable();
 
-	//~ Constructors ·······························································
+	//~ Constructors
 
 	/**
 	 * Constructor

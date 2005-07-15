@@ -35,7 +35,7 @@ import java.io.InputStream;
  */
 class JarFileEntry
 {
-	//~ Instance variables ·······························································
+	//~ Instance variables
 
 	/** Name must be the fully qualified path name to this file (as given in the JAR MANIFEST.) */
 	protected String name;
@@ -49,7 +49,7 @@ class JarFileEntry
 	/** the content of the file in a byte array */
 	private byte[] content = null;
 
-	//~ Constructors ·····································································
+	//~ Constructors
 
 	/**
 	 * Create a JarFileEntry to an existing file in a JarFile.
@@ -65,7 +65,7 @@ class JarFileEntry
 		this.stream = stream;
 	}
 
-	//~ Methods ··········································································
+	//~ Methods
 
 	/**
 	 * Returns the fully qualified path of the file.

@@ -542,14 +542,15 @@ public final class JAPController extends Observable implements IProxyListener, O
 					{
 						proxyType = ListenerInterface.PROTOCOL_STR_TYPE_SOCKS;
 					}
-
+					JAPModel.getInstance().setUseProxyAuthentication(XMLUtil.parseValue(n.getNamedItem(
+						JAPConstants.CONFIG_PROXY_AUTHORIZATION), false));
 					proxyInterface = new ProxyInterface(
 						XMLUtil.parseValue(n.getNamedItem(JAPConstants.CONFIG_PROXY_HOST_NAME), null),
 						XMLUtil.parseAttribute(root, JAPConstants.CONFIG_PROXY_PORT_NUMBER, -1),
 						proxyType,
 						XMLUtil.parseValue(n.getNamedItem(JAPConstants.CONFIG_PROXY_AUTH_USER_ID), null),
 						getPasswordReader(),
-						XMLUtil.parseValue(n.getNamedItem(JAPConstants.CONFIG_PROXY_AUTHORIZATION), false),
+						JAPModel.getInstance().isProxyAuthenticationUsed(),
 						XMLUtil.parseValue(n.getNamedItem(JAPConstants.CONFIG_PROXY_MODE), false));
 				}
 				catch (Exception a_e)
@@ -560,7 +561,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 				}
 
 				// check if something has changed
-				changeProxyInterface(proxyInterface);
+				changeProxyInterface(proxyInterface,
+									 XMLUtil.parseValue(n.getNamedItem(JAPConstants.CONFIG_PROXY_AUTHORIZATION), false));
 
 				/* try to get the info from the MixCascade node */
 				MixCascade defaultMixCascade = null;
@@ -1072,8 +1074,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 	/**
 	 * Changes the common proxy.
 	 * @param a_proxyInterface a proxy interface
+	 * @param a_bUseAuth indicates whether porxy authentication should be used
 	 */
-	public synchronized void changeProxyInterface(ProxyInterface a_proxyInterface)
+	public synchronized void changeProxyInterface(ProxyInterface a_proxyInterface, boolean a_bUseAuth)
 	{
 		if (a_proxyInterface != null &&
 			(m_Model.getProxyInterface() == null ||
@@ -1082,7 +1085,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 			// change settings
 			m_Model.setProxyListener(a_proxyInterface);
 
-			applyProxySettingsToInfoService();
+			applyProxySettingsToInfoService(a_bUseAuth);
 			applyProxySettingsToAnonService();
 
 			notifyJAPObservers();
@@ -1434,16 +1437,16 @@ public final class JAPController extends Observable implements IProxyListener, O
 		return m_vectorMixCascadeDatabase;
 	}
 
-	void applyProxySettingsToInfoService()
+	void applyProxySettingsToInfoService(boolean a_bUseAuth)
 	{
 		if (m_Model.getProxyInterface() != null && m_Model.getProxyInterface().isValid())
 		{
-			HTTPConnectionFactory.getInstance().setNewProxySettings(m_Model.getProxyInterface());
+			HTTPConnectionFactory.getInstance().setNewProxySettings(m_Model.getProxyInterface(), a_bUseAuth);
 		}
 		else
 		{
 			//no Proxy should be used....
-			HTTPConnectionFactory.getInstance().setNewProxySettings(null);
+			HTTPConnectionFactory.getInstance().setNewProxySettings(null, false);
 		}
 	}
 

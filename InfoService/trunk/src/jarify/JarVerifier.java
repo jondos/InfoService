@@ -63,7 +63,7 @@ final public class JarVerifier
 	/** Contains the signature block file (as PKCS#7) for each alias */
 	private Hashtable aliasSBF = new Hashtable();
 
-	//~ Constructors ·····································································
+	//~ Constructors
 
 	/**
 	 * Constructor
@@ -83,7 +83,7 @@ final public class JarVerifier
 		m_jarFile.close();
 	}
 
-	//~ Methods ··········································································
+	//~ Methods
 
 	/**
 	 * Initializes the aliasSBF Hashtable and removes the aliases which cannot be<br>

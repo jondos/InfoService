@@ -315,7 +315,7 @@ public class JAPRoutingSettings extends Observable
 					if (getForwardInfoService() == true)
 					{
 						/* restore the original proxy settings for the infoservice */
-						JAPController.getInstance().applyProxySettingsToInfoService();
+						JAPController.getInstance().applyProxySettingsToInfoService(JAPModel.getInstance().isProxyAuthenticationUsed());
 					}
 					JAPController.getInstance().setAnonMode(false);
 					/* client was running, close the connection */
@@ -631,7 +631,7 @@ public class JAPRoutingSettings extends Observable
 				if ( (a_forwardInfoService == false) && (getRoutingMode() == ROUTING_MODE_CLIENT))
 				{
 					/* restore the original proxy settings for the infoservice */
-					JAPController.getInstance().applyProxySettingsToInfoService();
+					JAPController.getInstance().applyProxySettingsToInfoService(JAPModel.getInstance().isProxyAuthenticationUsed());
 				}
 				setChanged();
 				notifyObservers(new JAPRoutingMessage(JAPRoutingMessage.CLIENT_SETTINGS_CHANGED));
@@ -1388,9 +1388,9 @@ public class JAPRoutingSettings extends Observable
 				HTTPConnectionFactory.getInstance().setNewProxySettings(
 					new ProxyInterface("localhost",
 									   JAPModel.getHttpListenerPortNumber(),
-									   ProxyInterface.PROTOCOL_TYPE_HTTP, null));
+									   ProxyInterface.PROTOCOL_TYPE_HTTP, null),
+									   JAPModel.getInstance().isProxyAuthenticationUsed());
 			}
 		}
 	}
-
 }

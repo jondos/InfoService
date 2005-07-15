@@ -61,7 +61,7 @@ class JarManifest extends JarFileEntry
 	private Vector fileNameList = new Vector();
 	//private Hashtable tmp = new Hashtable();
 
-	//~ Instance variables ·······························································
+	//~ Instance variables
 
 	/** the content of the manifest as String */
 	protected String contentStrRaw; //with continuations
@@ -69,7 +69,7 @@ class JarManifest extends JarFileEntry
 	/** the character(s) of the newline used in this file */
 	protected String newLine;
 
-	//~ Constructors ·····································································
+	//~ Constructors
 
 	/**
 	 * Constructor
@@ -83,7 +83,7 @@ class JarManifest extends JarFileEntry
 		init();
 	}
 
-	//~ Methods ··········································································
+	//~ Methods
 
 	/**
 	 * Reads the content of the file into a string variable.
