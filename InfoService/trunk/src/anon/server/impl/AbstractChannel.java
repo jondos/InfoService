@@ -107,7 +107,7 @@ abstract public class AbstractChannel implements AnonChannel
 	}
 
 	//called from ChannelOutputStream to send data to the AnonService which belongs to this channel
-	abstract protected int send(byte[] buff, int len) throws IOException;
+	abstract protected void send(byte[] buff, int len) throws IOException;
 
 	public void closedByPeer()
 	{
@@ -439,9 +439,7 @@ final class ChannelOutputStream extends OutputStream
 	}
 
 	//OutputStream Methods
-	public
-		/*synchronized*/
-		void write(int i) throws IOException
+	public void write(int i) throws IOException
 	{
 		if ( /*m_bIsClosedByPeer||*/m_bIsClosed)
 		{
@@ -449,12 +447,7 @@ final class ChannelOutputStream extends OutputStream
 		}
 		byte[] buff = new byte[1];
 		buff[0] = (byte) i;
-		int ret = m_channel.send(buff, 1);
-		if (ret != ErrorCodes.E_SUCCESS)
-		{
-			throw new IOException("Error while sending on Channel - ErrorCode: " + ret);
-		}
-
+		m_channel.send(buff, 1);
 	}
 
 	public void write(byte[] buff, int start, int len) throws IOException
@@ -463,11 +456,7 @@ final class ChannelOutputStream extends OutputStream
 		{
 			throw new IOException("Channel closed by peer");
 		}
-		int ret = m_channel.send(buff, (short) len);
-		if (ret != ErrorCodes.E_SUCCESS)
-		{
-			throw new IOException("Error while sending on Channel - ErrorCode: " + ret);
-		}
+		m_channel.send(buff, (short) len);
 	}
 
 	public void close()
