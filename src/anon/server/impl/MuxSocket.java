@@ -66,6 +66,7 @@ import anon.util.XMLUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import java.io.IOException;
 
 public final class MuxSocket implements Runnable
 {
@@ -675,7 +676,13 @@ public final class MuxSocket implements Runnable
 		synchronized (this)
 		{
 			m_ChannelList.remove(new Integer(channel_id));
-			send(channel_id, 0, null, (short) 0);
+			try
+			{
+				send(channel_id, 0, null, (short) 0);
+			}
+			catch (Exception e)
+			{
+			}
 			return 0;
 		}
 	}
@@ -898,10 +905,18 @@ public final class MuxSocket implements Runnable
 					{
 						if ( (len & NEW_FLOW_CONTROL_FLAG) != 0)
 						{
-							send(channel, 0, null, NEW_FLOW_CONTROL_FLAG);
+							try
+							{
+								send(channel, 0, null, NEW_FLOW_CONTROL_FLAG);
+							}
+							catch (Exception e)
+							{
+								LogHolder.log(LogLevel.WARNING, LogType.NET,
+											  "Error while trying to send sendme!");
+							}
 						}
 					}
-					len&=PAYLOAD_LEN_MASK;
+					len &= PAYLOAD_LEN_MASK;
 					if (len < 0 || len > DATA_SIZE)
 					{
 						LogHolder.log(LogLevel.DEBUG, LogType.NET,
@@ -994,13 +1009,13 @@ public final class MuxSocket implements Runnable
 		m_outStream.flush();
 	}
 
-	public synchronized int send(int channel, int type, byte[] buff, short len_and_flags)
+	public synchronized void send(int channel, int type, byte[] buff, short len_and_flags) throws IOException
 	{
 		try
 		{
 			if (!m_bIsConnected)
 			{
-				return ErrorCodes.E_NOT_CONNECTED;
+				throw new NotConnectedToMixException("MuxSocket send: not connected");
 			}
 			short len = (short) (len_and_flags & PAYLOAD_LEN_MASK);
 
@@ -1019,20 +1034,20 @@ public final class MuxSocket implements Runnable
 				System.arraycopy(m_arEmpty, 0, m_MixPacketSend, 6, DATA_SIZE);
 				//Send it...
 				sendMixPacket();
-				return ErrorCodes.E_SUCCESS;
+				return;
 			}
 			if (buff == null && len != 0) //we should someting send byte did not get what we should send...
 			{
-				return -1;
+				throw new IOException("buff==null");
 			}
 			if (len_and_flags == 0) //nothing to do...
 			{
-				return ErrorCodes.E_SUCCESS;
+				return;
 			}
 			ChannelListEntry entry = (ChannelListEntry) m_ChannelList.get(new Integer(channel));
 			if (entry == null)
 			{
-				return ErrorCodes.E_UNKNOWN;
+				throw new IOException("Channel not found");
 			}
 			System.arraycopy(m_arEmpty, 0, m_arOutBuff, 0, m_arOutBuff.length);
 			if (entry.arCipher == null)
@@ -1140,13 +1155,16 @@ public final class MuxSocket implements Runnable
 			//if(entry!=null&&entry.bIsSuspended)
 			//	return E_CHANNEL_SUSPENDED;
 		}
+		catch (IOException ioe)
+		{
+			throw ioe;
+		}
 		catch (Exception e)
 		{
 			LogHolder.log(LogLevel.ERR, LogType.NET,
 						  "JAPMuxSocket:send() Exception (should never be here...)!: " + e.getMessage());
-			return ErrorCodes.E_UNKNOWN;
+			throw new IOException(e.getMessage());
 		}
-		return ErrorCodes.E_SUCCESS;
 	}
 
 	private int getCurrentTimestamp()
