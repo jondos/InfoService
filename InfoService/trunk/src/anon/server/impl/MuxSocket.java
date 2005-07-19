@@ -1167,6 +1167,9 @@ public final class MuxSocket implements Runnable
 		}
 	}
 
+	/** Returns the number of 'intervalls' gone since the start of the Year. On intervall is 10 minutes.
+	 * This gives '0' on January 1, 00:00:00-00:09:59; '1' on January 1, 00:10:00-00:19:59; etc.
+	 * */
 	private int getCurrentTimestamp()
 	{
 		// Assume 366 days per year to be on the safe side with leap years.
@@ -1177,11 +1180,11 @@ public final class MuxSocket implements Runnable
 		int aktYear = m_scalendarGMT.get(Calendar.YEAR);
 		m_scalendarGMT.clear();
 		m_scalendarGMT.set(aktYear, 0, 0, 1, 0, 0);
-		long diff = (now - m_scalendarGMT.getTime().getTime()) / 1000;
+		long secondsSinceNewYear = (now - m_scalendarGMT.getTime().getTime()) / 1000; //seconds this year
 
 		// timestamp = (millis_passed_in_this_year / millis_per_year) * 2^16
 		// That is 0x0000 on January 1, 0:00; 0x0001 on January 1, 0:10; 0xFFFF on December 31, 23:59 (leap year)
-		return (int) ( ( ( (double) (diff)) / ( (double) seconds_per_year)) * 0xFFFF);
+		return (int)secondsSinceNewYear/600;
 
 	}
 
