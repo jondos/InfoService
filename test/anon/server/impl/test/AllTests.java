@@ -51,7 +51,7 @@ public class AllTests
 	public static Test suite()
 	{
 		TestSuite suite = new TestSuite(AllTests.class.getName());
-		suite.addTestSuite(MuxSocket.class);
+		suite.addTestSuite(MuxSocketTest.class);
 		return suite;
 	}
 }
