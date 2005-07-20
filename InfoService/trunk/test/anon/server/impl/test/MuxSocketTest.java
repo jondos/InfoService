@@ -35,12 +35,12 @@ import junitx.framework.extension.XtendedPrivateTestCase;
 
 
 /**
- * These are the tests for the Muxsocket class.
+ * These are the tests for the MuxSocket class.
  */
 public class MuxSocketTest extends XtendedPrivateTestCase
 {
 
-	public XMLUtilTest(String a_strName)
+	public MuxSocketTest(String a_strName)
 	{
 		super(a_strName);
 	}
@@ -55,62 +55,4 @@ public class MuxSocketTest extends XtendedPrivateTestCase
 
 	}
 
-	/**
-	 * Test if an xml document can successfully be written to a file.
-	 * @exception Exception if an error occurs
-	 */
-	public void testWriteToFile() throws Exception
-	{
-		// we use the functions from XMLUtil to write to file
-		writeXMLOutputToFile(new DummyXMLEncodable());
-	}
-
-	/**
-	 * Test if the deep search method is successful.
-	 */
-	public void testGetFirstChildByNameUsingDeepSearch()
-	{
-		DummyXMLEncodable dummy = new DummyXMLEncodable();
-		Element element;
-		Node node;
-
-		element = XMLUtil.toXMLElement(dummy);
-
-		node = XMLUtil.getFirstChildByNameUsingDeepSearch(element, "TextNode");
-		assertNotNull(node);
-
-		node = XMLUtil.getFirstChildByNameUsingDeepSearch(element, "ContainerNode");
-		assertNotNull(node);
-
-		node = XMLUtil.getFirstChildByNameUsingDeepSearch(element, "NumberNode");
-		assertNotNull(node);
-	}
-
-	/**
-	 * Test if a node can successfully be transormed to a byte array and back.
-	 * @throws Exception if an error occurs
-	 */
-	public void testToByteArray() throws Exception
-	{
-		DummyXMLEncodable dummyOriginal, dummyCopy;
-		byte[] xml;
-
-		// create a byte array from an xml element
-		dummyOriginal = new DummyXMLEncodable();
-		xml = XMLUtil.toByteArray(XMLUtil.toXMLElement(dummyOriginal));
-
-		// create a new instance from the byte array
-		dummyCopy = new DummyXMLEncodable(XMLUtil.toXMLDocument(xml).getDocumentElement());
-		assertTrue(dummyOriginal.equals(dummyCopy));
-
-		// --
-
-		// create a byte array from an xml document
-		dummyOriginal = new DummyXMLEncodable();
-		xml = XMLUtil.toByteArray(XMLUtil.toXMLDocument(dummyOriginal));
-
-		// create a new instance from the byte array
-		dummyCopy = new DummyXMLEncodable(XMLUtil.toXMLDocument(xml).getDocumentElement());
-		assertTrue(dummyOriginal.equals(dummyCopy));
-	}
 }

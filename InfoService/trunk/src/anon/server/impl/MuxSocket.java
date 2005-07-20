@@ -131,7 +131,6 @@ public final class MuxSocket implements Runnable
 
 	private boolean m_bMixProtocolWithTimestamp, m_bMixSupportsControlChannels;
 	private boolean m_bNewFlowControl;
-	private int m_iTimestampSize;
 	private final static Calendar m_scalendarGMT = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
 	private ControlChannelDispatcher m_ControlChannelDispatcher;
 
@@ -182,7 +181,6 @@ public final class MuxSocket implements Runnable
 		m_DummyTraffic = new DummyTraffic(this);
 		m_SecureRandom = new SecureRandom();
 		m_bMixProtocolWithTimestamp = false;
-		m_iTimestampSize = 0;
 		m_bMixSupportsControlChannels = false;
 		m_ControlChannelDispatcher = new ControlChannelDispatcher(this);
 		m_bNewFlowControl = false;
@@ -471,7 +469,6 @@ public final class MuxSocket implements Runnable
 			}
 			String strProtocolVersion = n.getNodeValue().trim();
 			m_bMixProtocolWithTimestamp = false;
-			m_iTimestampSize = 0;
 			m_cipherFirstMix = null;
 			m_bMixSupportsControlChannels = false;
 			m_bNewFlowControl = false;
@@ -483,7 +480,6 @@ public final class MuxSocket implements Runnable
 			else if (strProtocolVersion.equals("0.3"))
 			{
 				m_bMixProtocolWithTimestamp = true;
-				m_iTimestampSize = 2;
 				m_iMixProtocolVersion = MIX_PROTOCOL_VERSION_0_3;
 			}
 			else if (strProtocolVersion.equalsIgnoreCase("0.4"))
@@ -1063,21 +1059,21 @@ public final class MuxSocket implements Runnable
 				int timestamp = getCurrentTimestamp();
 				if (m_bMixProtocolWithTimestamp)
 				{
-					m_arOutBuff[KEY_SIZE] = (byte) (timestamp >> 8);
-					m_arOutBuff[KEY_SIZE + 1] = (byte) (timestamp % 256);
+					m_arOutBuff[KEY_SIZE-1] = (byte) (timestamp >> 8);
+					m_arOutBuff[KEY_SIZE -2] = (byte) (timestamp % 256);
 				}
-				m_arOutBuff[KEY_SIZE + m_iTimestampSize] = (byte) (len >> 8);
-				m_arOutBuff[KEY_SIZE + m_iTimestampSize + 1] = (byte) (len % 256);
+				m_arOutBuff[KEY_SIZE ] = (byte) (len >> 8);
+				m_arOutBuff[KEY_SIZE  + 1] = (byte) (len % 256);
 				if (type == AnonChannel.SOCKS)
 				{
-					m_arOutBuff[KEY_SIZE + m_iTimestampSize + 2] = CHANNEL_TYPE_SOCKS;
+					m_arOutBuff[KEY_SIZE  + 2] = CHANNEL_TYPE_SOCKS;
 				}
 				else
 				{
-					m_arOutBuff[KEY_SIZE + m_iTimestampSize + 2] = CHANNEL_TYPE_HTTP;
+					m_arOutBuff[KEY_SIZE  + 2] = CHANNEL_TYPE_HTTP;
 
 				}
-				System.arraycopy(buff, 0, m_arOutBuff, KEY_SIZE + m_iTimestampSize + 3, len);
+				System.arraycopy(buff, 0, m_arOutBuff, KEY_SIZE + 3, len);
 
 				entry.arCipher[m_iChainLen - 1].setEncryptionKeyAES(m_arOutBuff);
 //								m_arASymCipher[m_iChainLen-1].encrypt(outBuff,0,buff,0);
@@ -1093,11 +1089,11 @@ public final class MuxSocket implements Runnable
 					m_arOutBuff[0] &= 0x7F; //RSA HACK!! (to ensure what m<n in RSA-Encrypt: c=m^e mod n)
 					if (m_bMixProtocolWithTimestamp)
 					{
-						m_arOutBuff[KEY_SIZE] = (byte) (timestamp >> 8);
-						m_arOutBuff[KEY_SIZE + 1] = (byte) (timestamp % 256);
+						m_arOutBuff[KEY_SIZE-1] = (byte) (timestamp >> 8);
+						m_arOutBuff[KEY_SIZE -2] = (byte) (timestamp % 256);
 					}
 					entry.arCipher[i].setEncryptionKeyAES(m_arOutBuff);
-					System.arraycopy(m_arOutBuff2, 0, m_arOutBuff, KEY_SIZE + m_iTimestampSize,
+					System.arraycopy(m_arOutBuff2, 0, m_arOutBuff, KEY_SIZE,
 									 DATA_SIZE - KEY_SIZE);
 					if (i > 0 || m_iMixProtocolVersion != MIX_PROTOCOL_VERSION_0_4)
 					{
@@ -1173,7 +1169,7 @@ public final class MuxSocket implements Runnable
 	private int getCurrentTimestamp()
 	{
 		// Assume 366 days per year to be on the safe side with leap years.
-		long seconds_per_year = 60 * 60 * 24 * 366;
+		//long seconds_per_year = 60 * 60 * 24 * 366;
 		long now = System.currentTimeMillis();
 		m_scalendarGMT.setTime(new Date());
 
