@@ -131,7 +131,8 @@ public final class MuxSocket implements Runnable
 
 	private boolean m_bMixProtocolWithTimestamp, m_bMixSupportsControlChannels;
 	private boolean m_bNewFlowControl;
-	private final static Calendar m_scalendarGMT = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+	//private final static Calendar m_scalendarGMT = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+	private final long m_refTime;
 	private ControlChannelDispatcher m_ControlChannelDispatcher;
 
 	/**
@@ -185,6 +186,12 @@ public final class MuxSocket implements Runnable
 		m_ControlChannelDispatcher = new ControlChannelDispatcher(this);
 		m_bNewFlowControl = false;
 		//threadgroupChannels=null;
+		Calendar m_scalendarGMT = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+		m_scalendarGMT.setTime(new Date());
+		int aktYear = m_scalendarGMT.get(Calendar.YEAR);
+		m_scalendarGMT.clear();
+		m_scalendarGMT.set(aktYear, 0, 1, 0, 0, 0);
+		m_refTime=m_scalendarGMT.getTimeInMillis()/1000;
 	}
 
 	public static MuxSocket create()
@@ -1059,8 +1066,8 @@ public final class MuxSocket implements Runnable
 				int timestamp = getCurrentTimestamp();
 				if (m_bMixProtocolWithTimestamp)
 				{
-					m_arOutBuff[KEY_SIZE-1] = (byte) (timestamp >> 8);
-					m_arOutBuff[KEY_SIZE -2] = (byte) (timestamp % 256);
+					m_arOutBuff[KEY_SIZE-2] = (byte) (timestamp >> 8);
+					m_arOutBuff[KEY_SIZE -1] = (byte) (timestamp % 256);
 				}
 				m_arOutBuff[KEY_SIZE ] = (byte) (len >> 8);
 				m_arOutBuff[KEY_SIZE  + 1] = (byte) (len % 256);
@@ -1089,8 +1096,8 @@ public final class MuxSocket implements Runnable
 					m_arOutBuff[0] &= 0x7F; //RSA HACK!! (to ensure what m<n in RSA-Encrypt: c=m^e mod n)
 					if (m_bMixProtocolWithTimestamp)
 					{
-						m_arOutBuff[KEY_SIZE-1] = (byte) (timestamp >> 8);
-						m_arOutBuff[KEY_SIZE -2] = (byte) (timestamp % 256);
+						m_arOutBuff[KEY_SIZE-2] = (byte) (timestamp >> 8);
+						m_arOutBuff[KEY_SIZE -1] = (byte) (timestamp % 256);
 					}
 					entry.arCipher[i].setEncryptionKeyAES(m_arOutBuff);
 					System.arraycopy(m_arOutBuff2, 0, m_arOutBuff, KEY_SIZE,
@@ -1170,13 +1177,8 @@ public final class MuxSocket implements Runnable
 	{
 		// Assume 366 days per year to be on the safe side with leap years.
 		//long seconds_per_year = 60 * 60 * 24 * 366;
-		long now = System.currentTimeMillis();
-		m_scalendarGMT.setTime(new Date());
-
-		int aktYear = m_scalendarGMT.get(Calendar.YEAR);
-		m_scalendarGMT.clear();
-		m_scalendarGMT.set(aktYear, 0, 0, 1, 0, 0);
-		long secondsSinceNewYear = (now - m_scalendarGMT.getTime().getTime()) / 1000; //seconds this year
+		long now = System.currentTimeMillis()/1000;
+		long secondsSinceNewYear = now-m_refTime; //seconds this year
 
 		// timestamp = (millis_passed_in_this_year / millis_per_year) * 2^16
 		// That is 0x0000 on January 1, 0:00; 0x0001 on January 1, 0:10; 0xFFFF on December 31, 23:59 (leap year)
