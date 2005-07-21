@@ -191,7 +191,7 @@ public final class MuxSocket implements Runnable
 		int aktYear = m_scalendarGMT.get(Calendar.YEAR);
 		m_scalendarGMT.clear();
 		m_scalendarGMT.set(aktYear, 0, 1, 0, 0, 0);
-		m_refTime=m_scalendarGMT.getTimeInMillis()/1000;
+		m_refTime=m_scalendarGMT.getTime().getTime()/1000;
 	}
 
 	public static MuxSocket create()
