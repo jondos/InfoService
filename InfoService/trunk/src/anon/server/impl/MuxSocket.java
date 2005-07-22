@@ -131,8 +131,8 @@ public final class MuxSocket implements Runnable
 
 	private boolean m_bMixProtocolWithTimestamp, m_bMixSupportsControlChannels;
 	private boolean m_bNewFlowControl;
-	//private final static Calendar m_scalendarGMT = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
-	private final long m_refTime;
+	private long m_refTime;//this is the local time in seconds since epoch, than interval 0 starts;
+	private final static int SECONDS_PER_INTERVAL=600; //seconds per interval for replay detection
 	private ControlChannelDispatcher m_ControlChannelDispatcher;
 
 	/**
@@ -186,13 +186,7 @@ public final class MuxSocket implements Runnable
 		m_ControlChannelDispatcher = new ControlChannelDispatcher(this);
 		m_bNewFlowControl = false;
 		//threadgroupChannels=null;
-		Calendar m_scalendarGMT = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
-		m_scalendarGMT.setTime(new Date());
-		int aktYear = m_scalendarGMT.get(Calendar.YEAR);
-		m_scalendarGMT.clear();
-		m_scalendarGMT.set(aktYear, 0, 1, 0, 0, 0);
-		m_refTime=m_scalendarGMT.getTime().getTime()/1000;
-	}
+		}
 
 	public static MuxSocket create()
 	{
@@ -519,6 +513,16 @@ public final class MuxSocket implements Runnable
 			{
 				if (child.getNodeName().equals("Mix"))
 				{
+					//set the refernece time for interval '0' for the replay detection
+					if(bIsFirst&&m_bMixProtocolWithTimestamp)
+					{
+						Element elemReplay=(Element) XMLUtil.getFirstChildByName(child,"Replay");
+						Element elemReplayTimestamp=(Element) XMLUtil.getFirstChildByName(elemReplay,"ReplayTimestamp");
+						int interval=XMLUtil.parseAttribute(elemReplayTimestamp,"interval",-1);
+						int offset=XMLUtil.parseAttribute(elemReplayTimestamp,"offset",-1);
+						m_refTime=(System.currentTimeMillis()/1000)-interval*SECONDS_PER_INTERVAL-offset;
+
+					}
 					//Check signatures for Mix 2 .. n (we skip the first Mix because
 					//this key is already signed to the Signature below the whole MixCascade struct
 					//---
@@ -1175,14 +1179,9 @@ public final class MuxSocket implements Runnable
 	 * */
 	private int getCurrentTimestamp()
 	{
-		// Assume 366 days per year to be on the safe side with leap years.
-		//long seconds_per_year = 60 * 60 * 24 * 366;
 		long now = System.currentTimeMillis()/1000;
-		long secondsSinceNewYear = now-m_refTime; //seconds this year
-
-		// timestamp = (millis_passed_in_this_year / millis_per_year) * 2^16
-		// That is 0x0000 on January 1, 0:00; 0x0001 on January 1, 0:10; 0xFFFF on December 31, 23:59 (leap year)
-		return (int)secondsSinceNewYear/600;
+		long secondsSinceFirstInterval = now-m_refTime; //seconds since start of interval '0'
+		return (int)secondsSinceFirstInterval/SECONDS_PER_INTERVAL;
 
 	}
 
