@@ -34,6 +34,13 @@ package anon.tor.tinytls.keyexchange;
 import java.math.BigInteger;
 import java.security.SecureRandom;
 
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
+
+import org.bouncycastle.asn1.ASN1Sequence;
+import org.bouncycastle.asn1.DERObject;
+import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.x509.RSAPublicKeyStructure;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 import org.bouncycastle.crypto.AsymmetricBlockCipher;
@@ -48,6 +55,7 @@ import org.bouncycastle.crypto.params.DHParameters;
 import org.bouncycastle.crypto.params.DHPrivateKeyParameters;
 import org.bouncycastle.crypto.params.DHPublicKeyParameters;
 import org.bouncycastle.crypto.params.RSAKeyParameters;
+
 import anon.crypto.IMyPrivateKey;
 import anon.crypto.JAPCertificate;
 import anon.crypto.MyRSAPrivateKey;
@@ -55,11 +63,6 @@ import anon.tor.tinytls.TLSException;
 import anon.tor.tinytls.util.PRF;
 import anon.tor.tinytls.util.hash;
 import anon.tor.util.helper;
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
-import org.bouncycastle.asn1.DERObject;
-import org.bouncycastle.asn1.ASN1Sequence;
 
 /**
  * @author stefan
@@ -141,7 +144,7 @@ public class DHE_RSA_Key_Exchange extends Key_Exchange
 		{
 			throw new TLSException("cannot encrypt signature", 2, 80);
 		}
-		message = helper.conc(message, signature2, helper.inttobyte(signature2.length, 2), signature2);
+		message = helper.conc(message, helper.inttobyte(signature2.length, 2), signature2);
 
 		return message;
 	}

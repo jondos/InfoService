@@ -374,7 +374,7 @@ public class TinyTLSServerSocket extends Socket
 											m_servercertificate = m_DSSCertificate;
 											m_privatekey = m_DSSKey;
 										}
-										else if (cs.getKeyExchangeAlgorithm() instanceof DHE_DSS_Key_Exchange)
+										else if (cs.getKeyExchangeAlgorithm() instanceof DHE_RSA_Key_Exchange)
 										{
 											m_servercertificate = m_RSACertificate;
 											m_privatekey = m_RSAKey;
