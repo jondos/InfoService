@@ -257,7 +257,7 @@ public class Configuration {
             String currentCertificateFile = stTrustedRootCertificates.nextToken().trim();
             JAPCertificate currentCertificate = loadX509Certificate(currentCertificateFile);
             if (currentCertificate != null) {
-              SignatureVerifier.getInstance().getVerificationCertificateStore().addCertificateWithoutVerification(currentCertificate, JAPCertificate.CERTIFICATE_TYPE_ROOT, true);
+              SignatureVerifier.getInstance().getVerificationCertificateStore().addCertificateWithoutVerification(currentCertificate, JAPCertificate.CERTIFICATE_TYPE_ROOT_MIX, true,false);
               LogHolder.log(LogLevel.WARNING, LogType.MISC, "Added the following file to the store of trusted root certificates: " + currentCertificateFile);
             }
             else {
@@ -276,7 +276,7 @@ public class Configuration {
             String currentCertificateFile = stTrustedInfoServiceCertificates.nextToken().trim();
             JAPCertificate currentCertificate = loadX509Certificate(currentCertificateFile);
             if (currentCertificate != null) {
-              SignatureVerifier.getInstance().getVerificationCertificateStore().addCertificateWithoutVerification(currentCertificate, JAPCertificate.CERTIFICATE_TYPE_INFOSERVICE, true);
+              SignatureVerifier.getInstance().getVerificationCertificateStore().addCertificateWithoutVerification(currentCertificate, JAPCertificate.CERTIFICATE_TYPE_INFOSERVICE, true,false);
               LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Added the following file to the store of trusted infoservice certificates: " + currentCertificateFile);
             }
             else {
@@ -295,7 +295,7 @@ public class Configuration {
             String currentCertificateFile = stTrustedMixCertificates.nextToken().trim();
             JAPCertificate currentCertificate = loadX509Certificate(currentCertificateFile);
             if (currentCertificate != null) {
-              SignatureVerifier.getInstance().getVerificationCertificateStore().addCertificateWithoutVerification(currentCertificate, JAPCertificate.CERTIFICATE_TYPE_MIX, true);
+              SignatureVerifier.getInstance().getVerificationCertificateStore().addCertificateWithoutVerification(currentCertificate, JAPCertificate.CERTIFICATE_TYPE_MIX, true,false);
               LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Added the following file to the store of trusted mix certificates: " + currentCertificateFile);
             }
             else {
@@ -314,7 +314,7 @@ public class Configuration {
             String currentCertificateFile = stTrustedUpdateCertificates.nextToken().trim();
             JAPCertificate currentCertificate = loadX509Certificate(currentCertificateFile);
             if (currentCertificate != null) {
-              SignatureVerifier.getInstance().getVerificationCertificateStore().addCertificateWithoutVerification(currentCertificate, JAPCertificate.CERTIFICATE_TYPE_UPDATE, true);
+              SignatureVerifier.getInstance().getVerificationCertificateStore().addCertificateWithoutVerification(currentCertificate, JAPCertificate.CERTIFICATE_TYPE_UPDATE, true,false);
               LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Added the following file to the store of trusted debug certificates: " + currentCertificateFile);
             }
             else {

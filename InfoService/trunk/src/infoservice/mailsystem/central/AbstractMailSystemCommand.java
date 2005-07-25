@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2000 - 2004 The JAP-Team
+ Copyright (c) 2000 - 2005 The JAP-Team
  All rights reserved.
  Redistribution and use in source and binary forms, with or without modification,
  are permitted provided that the following conditions are met:
@@ -25,47 +25,53 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package infoservice.mailsystem;
+package infoservice.mailsystem.central;
 
-import java.io.InputStream;
-
-import javax.mail.MessagingException;
-import javax.mail.Transport;
-import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
 /**
- * This class handles the received mails.
+ * This interface specifies the methods any JAP mailsystem command has to implement.
  */
-public class MailHandler {
+public abstract class AbstractMailSystemCommand {
   
   /**
-   * Stores the received message.
+   * Stores the MailMessages instance used for creating localized versions of the response
+   * messages.
    */
-  private MimeMessage m_receivedMessage;
+  private MailMessages m_localization;
   
   
   /**
-   * Creates a new MailHandler. The message is read and parsed from the specified InputStream.
-   * If the data of the InputStream is not a valid mail message, a MessagingException is thrown.
+   * Initializes a new instance of AbstractMailSystemCommand.
    *
-   * @param a_receivedMail An InputStream, which contains the data of a received e-mail.
+   * @param a_localization The MailMessages instance with the localization to use when creating
+   *                       the response messages.
    */
-  public MailHandler(InputStream a_receivedMail) throws MessagingException {
-    m_receivedMessage = new MimeMessage(MailContext.getInstance().getSession(), a_receivedMail);
-  } 
-  
-  
-  /**
-   * This creates the reply for the received message, depending on the subject and message data.
-   * The reply is sent back to the sender. If there occurs an error while replying to the message,
-   * an Exception is thrown.
-   */
-  public void answerMessage() throws Exception {
-    String subject = m_receivedMessage.getSubject().trim();
-    MimeMessage reply = (MimeMessage)(m_receivedMessage.reply(false));
-    CommandFactory.getCommandImplementation(subject).createAnswerMessage(m_receivedMessage, reply);
-    Transport.send(reply);
+  protected AbstractMailSystemCommand(MailMessages a_localization) {
+    m_localization = a_localization;
   }
 
+    
+  /**
+   * This method shall create the reply message. If there is something wrong with the received
+   * message (maybe invalid data) or while creating the reply, an Exception can be thrown. The
+   * children of the class must implement this method.
+   *
+   * @param a_receivedMessage The message the JAP mailsystem has received from a user.
+   * @param a_replyMessage A pre-initialized message (recipients and subject already set), which
+   *                       shall be filled with the reply.
+   */
+  public abstract void createReplyMessage(MimeMessage a_receivedMessage, MimeMessage a_replyMessage) throws Exception;
+  
+  
+  /**
+   * Returns the MailMessages instance with the localization to use when creating response
+   * messages.
+   *
+   * @return The MailMessages instance creating localized versions of the response messages.
+   */
+  protected MailMessages getLocalization() {
+    return m_localization;
+  }
+  
 }

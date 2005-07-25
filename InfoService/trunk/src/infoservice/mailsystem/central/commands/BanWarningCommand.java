@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2000 - 2004 The JAP-Team
+ Copyright (c) 2000 - 2005 The JAP-Team
  All rights reserved.
  Redistribution and use in source and binary forms, with or without modification,
  are permitted provided that the following conditions are met:
@@ -25,47 +25,38 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package infoservice.mailsystem;
+package infoservice.mailsystem.central.commands;
+
+import javax.mail.internet.MimeMessage;
+
+import infoservice.mailsystem.central.MailMessages;
+import infoservice.mailsystem.central.AbstractMailSystemCommand;
 
 /**
- * This class is the main class for the JAP mail system. It parses the command-line options
- * and initializes the system.
+ * This is the implementation for generating a reply message for the BanWarning command.
  */
-public class MailSystem {
-  
+public class BanWarningCommand extends AbstractMailSystemCommand {
+    
   /**
-   * This is the default name and location of the mailsystem configuration file. We look
-   * in the current path for the "mailsystem.conf" file.
-   */
-  private static final String DEFAULT_CONFIG_FILE = "mailsystem.conf";
-  
-  /**
-   * The main method for the mailsystem. The following command-line options are supported
-   * at the moment: -config FILENAME, which uses the specified filename as configuration
-   * file.
+   * Creates a new instance of BanWarningCommand.
    *
-   * @param a_args The command-line options.
+   * @param a_localization The MailMessages instance with the localization to use when creating
+   *                       the response message.
    */
-  public static void main(String[] a_args) throws Exception {
-    String configFileName = DEFAULT_CONFIG_FILE;
-    /* check, whether there is the -config parameter, which means that we use userdefined config
-     * file
-     */
-    if (a_args != null) {
-      for (int i = 0; i < a_args.length; i++) {
-        if (a_args[i].equalsIgnoreCase("-config")) {
-          if (i + 1 < a_args.length) {
-            configFileName = a_args[i + 1];
-          }
-          break;
-        }
-      }
-    }
-    /* create the mail context */
-    MailContext.createInstance(configFileName);
-    /* parse the input stream and answer the message */
-    MailHandler mailHandler = new MailHandler(System.in);
-    mailHandler.answerMessage();
+  public BanWarningCommand(MailMessages a_localization) {
+    super(a_localization);
   }
 
-}
+  
+  /**
+   * Creates the reply for the BanWarning command.
+   *
+   * @param a_receivedMessage The message we have received (not used).
+   * @param a_replyMessage A pre-initialized message (recipients and subject already set), which
+   *                       shall be filled with the BanWarning reply.
+   */
+  public void createReplyMessage(MimeMessage a_receivedMessage, MimeMessage a_replyMessage) throws Exception {
+    a_replyMessage.setContent(getLocalization().getString("banWarningMessage"), "text/plain");
+  }
+  
+} 

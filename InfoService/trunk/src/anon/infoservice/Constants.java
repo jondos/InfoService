@@ -49,7 +49,7 @@ final public class Constants
    * infinite timeout (1000 years should be infinite enough).
    */
   public static final long TIMEOUT_INFOSERVICE_JAP = 1000 * 365 * 24 * 3600 * 1000L;
-  
+
   /**
    * The standard timeout for infoservice database entries in an infoservice.
    */
@@ -89,7 +89,7 @@ final public class Constants
   /**
    * This is the version number of the infoservice software.
    */
-  public static final String INFOSERVICE_VERSION = "IS.07.002"; //never change the layout of this line!
+  public static final String INFOSERVICE_VERSION = "IS.07.003"; //never change the layout of this line!
 
 
 }

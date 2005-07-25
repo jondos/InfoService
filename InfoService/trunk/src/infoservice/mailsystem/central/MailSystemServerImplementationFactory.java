@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2000 - 2004 The JAP-Team
+ Copyright (c) 2000 - 2005 The JAP-Team
  All rights reserved.
  Redistribution and use in source and binary forms, with or without modification,
  are permitted provided that the following conditions are met:
@@ -25,23 +25,24 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package infoservice.mailsystem;
+package infoservice.mailsystem.central;
 
-import javax.mail.internet.MimeMessage;
+import infoservice.mailsystem.central.server.AbstractServerImplementation;
+import infoservice.mailsystem.central.server.IServerImplementationFactory;
 
 /**
- * This interface specifies the methods any JAP mailsystem command has to implement.
+ * This class creates MailSystemServerImplementation instances everytime the GenericServer accepts
+ * a new connection and the ConnectionHandler uses this factory.
  */
-public interface MailSystemCommand {
-    
+public class MailSystemServerImplementationFactory implements IServerImplementationFactory {
+  
   /**
-   * This method shall create the reply message. If there is something wrong with the received
-   * message (maybe invalid data) or while creating the reply, an Exception can be thrown.
+   * Creates a MailSystemServerImplementation which handles the client request.
    *
-   * @param a_receivedMessage The message the JAP mailsystem has received from a user.
-   * @param a_replyMessage A pre-initialized message (recipients and subject already set), which
-   *                       shall be filled with the reply.
+   * @return The created MailSystemServerImplementation.
    */
-  public void createAnswerMessage(MimeMessage a_receivedMessage, MimeMessage a_replyMessage) throws Exception;
+  public AbstractServerImplementation createServerImplementation() {
+    return (new MailSystemServerImplementation());
+  }
   
 }
