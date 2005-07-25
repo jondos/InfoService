@@ -61,7 +61,7 @@ public abstract class SyncControlChannel extends AbstractControlChannel
 		}
 		else //received some part...
 		{
-			msglen = Math.max(m_MsgBytesLeft, msglen);
+			msglen = Math.min(m_MsgBytesLeft, msglen);
 			System.arraycopy(msg, 0, m_MsgBuff, m_aktIndex, msglen);
 			m_aktIndex += msglen;
 			m_MsgBytesLeft -= msglen;

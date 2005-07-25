@@ -29,5 +29,5 @@ package anon;
 
 public interface AnonServiceEventListener
 {
-	//public void connectionError();
+	public void connectionError();
 }

@@ -30,6 +30,7 @@ package anon.server.impl;
 import org.w3c.dom.Document;
 
 import anon.util.XMLUtil;
+import anon.ErrorCodes;
 
 public abstract class AbstractControlChannel
 {
@@ -37,30 +38,36 @@ public abstract class AbstractControlChannel
 	private ControlChannelDispatcher m_Dispatcher;
 	public AbstractControlChannel(int channelId, boolean bIsEncrypted)
 	{
-		m_iChannelID=channelId;
-		m_Dispatcher=null;
+		m_iChannelID = channelId;
+		m_Dispatcher = null;
 	}
 
 	protected void setDispatcher(ControlChannelDispatcher a_Dispatcher)
 	{
-		m_Dispatcher=a_Dispatcher;
+		m_Dispatcher = a_Dispatcher;
 	}
+
 	public int getID()
 	{
 		return m_iChannelID;
 	}
 
-	public void sendMessage(Document docMsg)
+	public int sendMessage(Document docMsg)
 	{
-		byte[] msg=XMLUtil.toString(docMsg).getBytes();
-		byte[] msglen=new byte[2];
-		msglen[0]=(byte)((msg.length>>8)&0x00FF);
-		msglen[1]=(byte)((msg.length)&0x00FF);
-		m_Dispatcher.sendMessages(m_iChannelID,false,msglen,2);
-		m_Dispatcher.sendMessages(m_iChannelID,false,msg,msg.length);
+		byte[] msg = XMLUtil.toString(docMsg).getBytes();
+		if (msg.length > 0xFFFF)
+		{
+			return ErrorCodes.E_SPACE;
+		}
+		byte[] msglen = new byte[2];
+		msglen[0] = (byte) ( (msg.length >> 8) & 0x00FF);
+		msglen[1] = (byte) ( (msg.length) & 0x00FF);
+		m_Dispatcher.sendMessages(m_iChannelID, false, msglen, 2);
+		m_Dispatcher.sendMessages(m_iChannelID, false, msg, msg.length);
+		return ErrorCodes.E_SUCCESS;
 	}
 
-	abstract void proccessMessage(byte[] msg,int len);
+	abstract void proccessMessage(byte[] msg, int len);
 
 	abstract void proccessMessageComplete();
 }
