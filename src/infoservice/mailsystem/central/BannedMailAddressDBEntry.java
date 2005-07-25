@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2000 - 2004 The JAP-Team
+ Copyright (c) 2000 - 2005 The JAP-Team
  All rights reserved.
  Redistribution and use in source and binary forms, with or without modification,
  are permitted provided that the following conditions are met:
@@ -25,38 +25,54 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package infoservice.mailsystem.commands;
+package infoservice.mailsystem.central;
 
-import javax.mail.internet.MimeMessage;
+import java.util.Vector;
 
-import org.w3c.dom.Element;
+import javax.mail.Address;
 
-import anon.infoservice.InfoServiceHolder;
-import anon.util.XMLUtil;
-import infoservice.mailsystem.MailMessages;
-import infoservice.mailsystem.MailSystemCommand;
+import anon.infoservice.AbstractDatabaseEntry;
 
 /**
- * This is the implementation for generating a reply message for the GetForwarder command.
+ * This class is the implementation of an entry in the list of banned mailaddresses.
  */
-public class GetForwarderCommand implements MailSystemCommand {
-
+public class BannedMailAddressDBEntry extends AbstractDatabaseEntry {
+  
   /**
-   * Creates the reply for the GetForwarder command. We connect to the infoservices in the
-   * InfoServiceDatabase and try to fetch a forwarder.
+   * Stores the banned mailaddress.
+   */
+  private Address m_mailAddress;
+  
+  
+  /**
+   * Creates a new banned mailaddress entry.
    *
-   * @param a_receivedMessage The message we have received (not used).
-   * @param a_replyMessage A pre-initialized message (recipients and subject already set), which
-   *                       shall be filled with the GetForwarder reply.
-   */  
-  public void createAnswerMessage(MimeMessage a_receivedMessage, MimeMessage a_replyMessage) throws Exception {
-    Element forwarderEntry = InfoServiceHolder.getInstance().getForwarder();
-    if (forwarderEntry != null) {
-      a_replyMessage.setContent(MailMessages.getString("getForwarderSuccessMessage") + XMLUtil.toString(forwarderEntry.getOwnerDocument()) + "\n", "text/plain");
-    }
-    else {
-      a_replyMessage.setContent(MailMessages.getString("getForwarderFailureMessage"), "text/plain");
-    }
+   * @param a_mailAddress The mailaddress to ban.
+   */ 
+  public BannedMailAddressDBEntry(Address a_mailAddress) {
+    super(System.currentTimeMillis() + MailContext.BAN_PERIOD);
+    m_mailAddress = a_mailAddress;
   }
   
-} 
+  
+  /**
+   * Returns the ID of this banned mailaddress entry. It's just the string representation of the
+   * banned mailaddress.
+   *
+   * @return The ID of this banned address.
+   */
+  public String getId() {
+    return m_mailAddress.toString();
+  }
+  
+ /**
+   * Returns a version number which is used to determine the more recent entry, if two entries are
+   * compared (higher version number -> more recent entry).
+   *
+   * @return The version number for this entry, it's just the expire time.
+   */
+  public long getVersionNumber() {
+    return getExpireTime();
+  }
+    
+}

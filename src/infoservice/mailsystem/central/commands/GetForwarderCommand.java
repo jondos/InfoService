@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2000 - 2004 The JAP-Team
+ Copyright (c) 2000 - 2005 The JAP-Team
  All rights reserved.
  Redistribution and use in source and binary forms, with or without modification,
  are permitted provided that the following conditions are met:
@@ -25,27 +25,50 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package infoservice.mailsystem.commands;
+package infoservice.mailsystem.central.commands;
 
 import javax.mail.internet.MimeMessage;
 
-import infoservice.mailsystem.MailMessages;
-import infoservice.mailsystem.MailSystemCommand;
+import org.w3c.dom.Element;
+
+import anon.infoservice.InfoServiceHolder;
+import anon.util.XMLUtil;
+import infoservice.mailsystem.central.MailMessages;
+import infoservice.mailsystem.central.AbstractMailSystemCommand;
+import logging.LogHolder;
 
 /**
- * This is the implementation for generating a reply message for the GetHelp command.
+ * This is the implementation for generating a reply message for the GetForwarder command.
  */
-public class HelpCommand implements MailSystemCommand {
-  
+public class GetForwarderCommand extends AbstractMailSystemCommand {
+
   /**
-   * Creates the reply for the GetHelp command.
+   * Creates a new instance of GetForwarderCommand.
+   *
+   * @param a_localization The MailMessages instance with the localization to use when creating
+   *                       the response message.
+   */
+  public GetForwarderCommand(MailMessages a_localization) {
+    super(a_localization);
+  }
+
+
+  /**
+   * Creates the response for the GetForwarder command. We connect to the infoservices in the
+   * InfoServiceDatabase and try to fetch a forwarder.
    *
    * @param a_receivedMessage The message we have received (not used).
    * @param a_replyMessage A pre-initialized message (recipients and subject already set), which
-   *                       shall be filled with the GetHelp reply.
-   */
-  public void createAnswerMessage(MimeMessage a_receivedMessage, MimeMessage a_replyMessage) throws Exception {
-    a_replyMessage.setContent(MailMessages.getString("helpMessage"), "text/plain");
+   *                       shall be filled with the GetForwarder reply.
+   */  
+  public void createReplyMessage(MimeMessage a_receivedMessage, MimeMessage a_replyMessage) throws Exception {
+    Element forwarderEntry = InfoServiceHolder.getInstance().getForwarder();
+    if (forwarderEntry != null) {
+      a_replyMessage.setContent(getLocalization().getString("getForwarderSuccessMessage") + XMLUtil.toString(forwarderEntry.getOwnerDocument()) + "\n", "text/plain");
+    }
+    else {
+      a_replyMessage.setContent(getLocalization().getString("getForwarderFailureMessage"), "text/plain");
+    }
   }
   
 } 
