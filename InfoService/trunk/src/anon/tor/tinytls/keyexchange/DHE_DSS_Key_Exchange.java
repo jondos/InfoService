@@ -30,6 +30,10 @@ package anon.tor.tinytls.keyexchange;
 import java.math.BigInteger;
 import java.security.SecureRandom;
 
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
+
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 import org.bouncycastle.crypto.agreement.DHBasicAgreement;
 import org.bouncycastle.crypto.generators.DHKeyPairGenerator;
@@ -37,6 +41,7 @@ import org.bouncycastle.crypto.params.DHKeyGenerationParameters;
 import org.bouncycastle.crypto.params.DHParameters;
 import org.bouncycastle.crypto.params.DHPrivateKeyParameters;
 import org.bouncycastle.crypto.params.DHPublicKeyParameters;
+
 import anon.crypto.IMyPrivateKey;
 import anon.crypto.JAPCertificate;
 import anon.crypto.MyDSAPrivateKey;
@@ -46,9 +51,6 @@ import anon.tor.tinytls.TLSException;
 import anon.tor.tinytls.util.PRF;
 import anon.tor.tinytls.util.hash;
 import anon.tor.util.helper;
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
 
 public class DHE_DSS_Key_Exchange extends Key_Exchange
 {
@@ -87,7 +89,7 @@ public class DHE_DSS_Key_Exchange extends Key_Exchange
 	{
 		if (! (key instanceof MyDSAPrivateKey))
 		{
-			throw new TLSException("wrong key type (cannot cast to MyRSAPrivateKey)");
+			throw new TLSException("wrong key type (cannot cast to MyDSAPrivateKey)");
 		}
 		MyDSAPrivateKey dsakey = (MyDSAPrivateKey) key;
 		this.m_clientrandom = clientrandom;
@@ -109,7 +111,8 @@ public class DHE_DSS_Key_Exchange extends Key_Exchange
 		dh_y = helper.conc(helper.inttobyte(dh_y.length, 2), dh_y);
 
 		byte[] message = helper.conc(dh_p, dh_g, dh_y);
-		byte[] signature = hash.sha(clientrandom, serverrandom, message);
+		//byte[] signature = hash.sha(clientrandom, serverrandom, message);
+		byte[] signature = helper.conc(clientrandom, serverrandom, message);
 
 		MyDSASignature sig = new MyDSASignature();
 		try
@@ -198,7 +201,7 @@ public class DHE_DSS_Key_Exchange extends Key_Exchange
 		if (!sig.verify(expectedSignature, hash))
 		{
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[SERVER_KEY_EXCHANGE] Signature wrong");
-//			throw new TLSException("wrong Signature",2,21);
+			throw new TLSException("wrong Signature",2,21);
 		}
 		else
 		{
