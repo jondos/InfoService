@@ -442,6 +442,7 @@
     <file path="documentation/SampleConfiguration/jap.conf"/>
   </node>
   <node name="anon" type="Package"/>
+  <node name="anon.server.impl" type="Package"/>
   <node name="forward" type="Package"/>
   <node name="gui" type="Package"/>
   <node name="jap" type="Package"/>

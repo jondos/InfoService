@@ -37,6 +37,8 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import anon.util.XMLUtil;
+import java.util.Random;
+import anon.util.Base64;
 
 final public class ControlChannelTest extends SyncControlChannel implements Runnable
 {
@@ -72,23 +74,28 @@ final public class ControlChannelTest extends SyncControlChannel implements Runn
 			Element elemRoot = doc.createElement("TestControlChannelMessages");
 			doc.appendChild(elemRoot);
 			int count = 1;
+			Random rand=new Random();
 			while (m_bRun)
 			{
 				try
 				{
-					Thread.sleep(60000);
+					Thread.sleep(2000);
 				}
 				catch (InterruptedException e)
 				{
 					continue;
 				}
 				elemRoot.setAttribute("count", Integer.toString(count));
+
+				byte[] buff=new byte[rand.nextInt()&0x01FFF];
+				elemRoot.setAttribute("content",Base64.encodeBytes(buff));
 				count++;
 				sendMessage(doc);
 			}
 		}
 		catch (Exception e)
 		{
+			LogHolder.log(LogLevel.DEBUG,LogType.NET,"Excpetion during sending of ControlChannelTest message: "+e.getMessage());
 		}
 	}
 }
