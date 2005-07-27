@@ -131,8 +131,10 @@ public final class MuxSocket implements Runnable
 
 	private boolean m_bMixProtocolWithTimestamp, m_bMixSupportsControlChannels;
 	private boolean m_bNewFlowControl;
+
 	private long m_refTime;//this is the local time in seconds since epoch, than interval 0 starts;
 	private final static int SECONDS_PER_INTERVAL=600; //seconds per interval for replay detection
+	private ReplayControlChannel m_replayControlChannel;
 	private ControlChannelDispatcher m_ControlChannelDispatcher;
 
 	/**
@@ -331,6 +333,18 @@ public final class MuxSocket implements Runnable
 			removeCascadeCertificateFromCertificateStore();
 			return err;
 		}
+		//set the refernece time for interval '0' for the replay detection
+		if(m_bMixProtocolWithTimestamp)
+		{
+	//we setup a replay msg control channel
+	//and send an initial gettimestamps;
+	m_replayControlChannel=new ReplayControlChannel();
+	m_ControlChannelDispatcher.registerControlChannel(m_replayControlChannel);
+	m_replayControlChannel.getTimestamps();
+	m_refTime=(System.currentTimeMillis()/1000)-interval*SECONDS_PER_INTERVAL-offset;
+
+}
+
 		m_bIsConnected = true;
 		m_ChannelList = new Hashtable();
 		m_transferredBytes = 0;
@@ -481,6 +495,7 @@ public final class MuxSocket implements Runnable
 			else if (strProtocolVersion.equals("0.3"))
 			{
 				m_bMixProtocolWithTimestamp = true;
+				m_bMixSupportsControlChannels = true;
 				m_iMixProtocolVersion = MIX_PROTOCOL_VERSION_0_3;
 			}
 			else if (strProtocolVersion.equalsIgnoreCase("0.4"))
@@ -513,16 +528,6 @@ public final class MuxSocket implements Runnable
 			{
 				if (child.getNodeName().equals("Mix"))
 				{
-					//set the refernece time for interval '0' for the replay detection
-					if(bIsFirst&&m_bMixProtocolWithTimestamp)
-					{
-						Element elemReplay=(Element) XMLUtil.getFirstChildByName(child,"Replay");
-						Element elemReplayTimestamp=(Element) XMLUtil.getFirstChildByName(elemReplay,"ReplayTimestamp");
-						int interval=XMLUtil.parseAttribute(elemReplayTimestamp,"interval",-1);
-						int offset=XMLUtil.parseAttribute(elemReplayTimestamp,"offset",-1);
-						m_refTime=(System.currentTimeMillis()/1000)-interval*SECONDS_PER_INTERVAL-offset;
-
-					}
 					//Check signatures for Mix 2 .. n (we skip the first Mix because
 					//this key is already signed to the Signature below the whole MixCascade struct
 					//---
@@ -636,6 +641,7 @@ public final class MuxSocket implements Runnable
 				}
 				setEnableEncryption(true);
 			}
+
 			return ErrorCodes.E_SUCCESS;
 		}
 		catch (Exception e)
