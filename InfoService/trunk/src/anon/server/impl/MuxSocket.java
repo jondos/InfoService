@@ -67,9 +67,28 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import java.io.IOException;
+import anon.server.impl.ReplayControlChannel.ReplayCtrlChannelMsgListener;
+import anon.server.impl.ReplayControlChannel.ReplayTimestamp;
 
-public final class MuxSocket implements Runnable
+public final class MuxSocket implements Runnable, ReplayCtrlChannelMsgListener
 {
+	///Stores parameters for each mix.
+	class MixParameters
+	{
+		public MixParameters()
+		{
+			m_ASymCipher=null;
+			m_strMixID=null;
+			m_ReplayRefTime=-1;
+		}
+
+		ASymCipher m_ASymCipher;
+		/////this holds the local time in seconds since epoch, than interval 0 starts
+		long m_ReplayRefTime;
+		///the MixID
+		String m_strMixID;
+	}
+
 	private SecureRandom m_SecureRandom;
 	private Dictionary m_ChannelList;
 	private BufferedOutputStream m_outStream;
@@ -82,7 +101,8 @@ public final class MuxSocket implements Runnable
 	private byte[] m_arOutBuff;
 	private byte[] m_arOutBuff2;
 	private byte[] m_arEmpty;
-	private ASymCipher[] m_arASymCipher;
+	/// Stores the parameters for echa mix (public key and replay timestamp etc.)
+	private MixParameters[] m_arMixParameters;
 	private KeyPool m_KeyPool;
 	private int m_iChainLen; //How many Mixes are in the cascade
 	private int m_iMixProtocolVersion;
@@ -117,10 +137,9 @@ public final class MuxSocket implements Runnable
 
 	private final static int MAX_CHANNELS_PER_CONNECTION = 50;
 
-	private final static int MIX_PROTOCOL_VERSION_0_6 = 5;
+	private final static int MIX_PROTOCOL_VERSION_0_7 = 7;
 	private final static int MIX_PROTOCOL_VERSION_0_5 = 5;
 	private final static int MIX_PROTOCOL_VERSION_0_4 = 4;
-	private final static int MIX_PROTOCOL_VERSION_0_3 = 3;
 	private final static int MIX_PROTOCOL_VERSION_0_2 = 2;
 
 	private final static int LOGIN_TIMEOUT = 60000; //How long in ms to wait for messages related to the
@@ -132,8 +151,7 @@ public final class MuxSocket implements Runnable
 	private boolean m_bMixProtocolWithTimestamp, m_bMixSupportsControlChannels;
 	private boolean m_bNewFlowControl;
 
-	private long m_refTime;//this is the local time in seconds since epoch, than interval 0 starts;
-	private final static int SECONDS_PER_INTERVAL=600; //seconds per interval for replay detection
+	private final static int SECONDS_PER_INTERVAL = 600; //seconds per interval for replay detection
 	private ReplayControlChannel m_replayControlChannel;
 	private ControlChannelDispatcher m_ControlChannelDispatcher;
 
@@ -162,7 +180,7 @@ public final class MuxSocket implements Runnable
 	private MuxSocket()
 	{
 		//m_iLastChannelId=0;
-		m_arASymCipher = null;
+		m_arMixParameters = null;
 		m_arOutBuff = new byte[DATA_SIZE];
 		m_arOutBuff2 = new byte[DATA_SIZE];
 		m_arEmpty = new byte[DATA_SIZE];
@@ -188,7 +206,7 @@ public final class MuxSocket implements Runnable
 		m_ControlChannelDispatcher = new ControlChannelDispatcher(this);
 		m_bNewFlowControl = false;
 		//threadgroupChannels=null;
-		}
+	}
 
 	public static MuxSocket create()
 	{
@@ -278,10 +296,11 @@ public final class MuxSocket implements Runnable
 			else
 			{
 				//LogHolder.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:m_iChainLen="+m_iChainLen);
-				m_arASymCipher = new ASymCipher[m_iChainLen];
+				m_arMixParameters = new MixParameters[m_iChainLen];
 				for (int i = m_iChainLen - 1; i >= 0; i--)
 				{
-					m_arASymCipher[i] = new ASymCipher();
+					m_arMixParameters[i] = new MixParameters();
+					m_arMixParameters[i].m_ASymCipher = new ASymCipher();
 					int tmp = m_inDataStream.readUnsignedShort();
 					byte[] buff = new byte[tmp];
 					m_inDataStream.readFully(buff);
@@ -290,7 +309,7 @@ public final class MuxSocket implements Runnable
 					buff = new byte[tmp];
 					m_inDataStream.readFully(buff);
 					BigInteger e = new BigInteger(1, buff);
-					m_arASymCipher[i].setPublicKey(n, e);
+					m_arMixParameters[i].m_ASymCipher.setPublicKey(n, e);
 				}
 			}
 			try
@@ -304,7 +323,7 @@ public final class MuxSocket implements Runnable
 		{
 			LogHolder.log(LogLevel.EXCEPTION, LogType.NET,
 						  "MuxSocket:Exception(2) during connection: " + e);
-			m_arASymCipher = null;
+			m_arMixParameters = null;
 			try
 			{
 				m_inDataStream.close();
@@ -333,17 +352,7 @@ public final class MuxSocket implements Runnable
 			removeCascadeCertificateFromCertificateStore();
 			return err;
 		}
-		//set the refernece time for interval '0' for the replay detection
-		if(m_bMixProtocolWithTimestamp)
-		{
-	//we setup a replay msg control channel
-	//and send an initial gettimestamps;
-	m_replayControlChannel=new ReplayControlChannel();
-	m_ControlChannelDispatcher.registerControlChannel(m_replayControlChannel);
-	m_replayControlChannel.getTimestamps();
-	m_refTime=(System.currentTimeMillis()/1000)-interval*SECONDS_PER_INTERVAL-offset;
 
-}
 
 		m_bIsConnected = true;
 		m_ChannelList = new Hashtable();
@@ -492,12 +501,6 @@ public final class MuxSocket implements Runnable
 			{
 				m_iMixProtocolVersion = MIX_PROTOCOL_VERSION_0_2;
 			}
-			else if (strProtocolVersion.equals("0.3"))
-			{
-				m_bMixProtocolWithTimestamp = true;
-				m_bMixSupportsControlChannels = true;
-				m_iMixProtocolVersion = MIX_PROTOCOL_VERSION_0_3;
-			}
 			else if (strProtocolVersion.equalsIgnoreCase("0.4"))
 			{
 				m_iMixProtocolVersion = MIX_PROTOCOL_VERSION_0_4;
@@ -508,11 +511,11 @@ public final class MuxSocket implements Runnable
 				m_iMixProtocolVersion = MIX_PROTOCOL_VERSION_0_5;
 				m_bMixSupportsControlChannels = true;
 			}
-			else if (strProtocolVersion.equalsIgnoreCase("0.6"))
+			else if (strProtocolVersion.equals("0.7"))
 			{
-				m_iMixProtocolVersion = MIX_PROTOCOL_VERSION_0_6;
+				m_bMixProtocolWithTimestamp = true;
 				m_bMixSupportsControlChannels = true;
-				m_cipherFirstMix = new SymCipher();
+				m_iMixProtocolVersion = MIX_PROTOCOL_VERSION_0_7;
 			}
 			else
 			{
@@ -520,7 +523,7 @@ public final class MuxSocket implements Runnable
 			}
 			Element elemMixes = (Element) root.getElementsByTagName("Mixes").item(0);
 			m_iChainLen = Integer.parseInt(elemMixes.getAttribute("count"));
-			m_arASymCipher = new ASymCipher[m_iChainLen];
+			m_arMixParameters = new MixParameters[m_iChainLen];
 			int i = 0;
 			Element child = (Element) (elemMixes.getFirstChild());
 			boolean bIsFirst = true;
@@ -561,8 +564,12 @@ public final class MuxSocket implements Runnable
 					//---
 
 					bIsFirst = false;
-					m_arASymCipher[i] = new ASymCipher();
-					if (m_arASymCipher[i++].setPublicKey( (Element) child) != ErrorCodes.E_SUCCESS)
+					m_arMixParameters[i] = new MixParameters();
+					m_arMixParameters[i].m_ASymCipher = new ASymCipher();
+					m_arMixParameters[i].m_strMixID=XMLUtil.parseAttribute(child,"id",null);
+					if (m_arMixParameters[i].m_strMixID==null||
+						m_arMixParameters[i++].m_ASymCipher.setPublicKey( (Element) child) !=
+						ErrorCodes.E_SUCCESS)
 					{
 						return ErrorCodes.E_UNKNOWN;
 					}
@@ -581,7 +588,7 @@ public final class MuxSocket implements Runnable
 				KeyPool.getKey(tmpBuff, 48);
 
 				System.arraycopy(tmpBuff, 0, m_MixPacketSend, 15, tmpBuff.length);
-				m_arASymCipher[0].encrypt(m_MixPacketSend, 6, m_MixPacketSend, 6);
+				m_arMixParameters[0].m_ASymCipher.encrypt(m_MixPacketSend, 6, m_MixPacketSend, 6);
 				sendMixPacket();
 				setEncryptionKeys(tmpBuff, 32);
 				setEnableEncryption(true);
@@ -606,7 +613,7 @@ public final class MuxSocket implements Runnable
 				KeyPool.getKey(mixKeys, 16);
 				XMLUtil.setValue(elemMixEnc, Base64.encode(mixKeys, true));
 				e.appendChild(elemMixEnc);
-				XMLEncryption.encryptElement(e, m_arASymCipher[0].getPublicKey());
+				XMLEncryption.encryptElement(e, m_arMixParameters[0].m_ASymCipher.getPublicKey());
 				byte[] xml_buff = XMLUtil.toString(doc).getBytes();
 				m_outStream.write( (xml_buff.length >> 8) & 0x00FF);
 				m_outStream.write(xml_buff.length & 0x00FF);
@@ -778,6 +785,34 @@ public final class MuxSocket implements Runnable
 			threadRunLoop.setDaemon(true);
 			threadRunLoop.setPriority(Thread.MAX_PRIORITY);
 			threadRunLoop.start();
+			//set the refernece time for interval '0' for the replay detection
+			///FIXME Error handling!
+			if (m_bMixProtocolWithTimestamp)
+			{
+				//we setup a replay msg control channel
+				//and send an initial gettimestamps;
+				m_replayControlChannel = new ReplayControlChannel();
+				m_replayControlChannel.setMessageListener(this);
+				m_ControlChannelDispatcher.registerControlChannel(m_replayControlChannel);
+				synchronized (m_arMixParameters)
+				{
+					m_replayControlChannel.getTimestamps();
+					try
+					{
+						m_arMixParameters.wait(LOGIN_TIMEOUT);
+					}
+					catch (InterruptedException ex1)
+					{
+						return ErrorCodes.E_CONNECT;
+					}
+					//Check if we have all timestamps
+					for(int i=0;i<m_arMixParameters.length;i++)
+					{
+						if(m_arMixParameters[i].m_ReplayRefTime<0)
+							return ErrorCodes.E_CONNECT;
+					}
+				}
+			}
 		}
 		return ErrorCodes.E_SUCCESS;
 	}
@@ -1073,21 +1108,21 @@ public final class MuxSocket implements Runnable
 				KeyPool.getKey(m_arOutBuff);
 				m_arOutBuff[0] &= 0x7F; //RSA HACK!! (to ensure what m<n in RSA-Encrypt: c=m^e mod n)
 
-				int timestamp = getCurrentTimestamp();
+				int timestamp = getTimestampForTime(m_arMixParameters[m_iChainLen - 1].m_ReplayRefTime);
 				if (m_bMixProtocolWithTimestamp)
 				{
-					m_arOutBuff[KEY_SIZE-2] = (byte) (timestamp >> 8);
-					m_arOutBuff[KEY_SIZE -1] = (byte) (timestamp % 256);
+					m_arOutBuff[KEY_SIZE - 2] = (byte) (timestamp >> 8);
+					m_arOutBuff[KEY_SIZE - 1] = (byte) (timestamp % 256);
 				}
-				m_arOutBuff[KEY_SIZE ] = (byte) (len >> 8);
-				m_arOutBuff[KEY_SIZE  + 1] = (byte) (len % 256);
+				m_arOutBuff[KEY_SIZE] = (byte) (len >> 8);
+				m_arOutBuff[KEY_SIZE + 1] = (byte) (len % 256);
 				if (type == AnonChannel.SOCKS)
 				{
-					m_arOutBuff[KEY_SIZE  + 2] = CHANNEL_TYPE_SOCKS;
+					m_arOutBuff[KEY_SIZE + 2] = CHANNEL_TYPE_SOCKS;
 				}
 				else
 				{
-					m_arOutBuff[KEY_SIZE  + 2] = CHANNEL_TYPE_HTTP;
+					m_arOutBuff[KEY_SIZE + 2] = CHANNEL_TYPE_HTTP;
 
 				}
 				System.arraycopy(buff, 0, m_arOutBuff, KEY_SIZE + 3, len);
@@ -1095,7 +1130,7 @@ public final class MuxSocket implements Runnable
 				entry.arCipher[m_iChainLen - 1].setEncryptionKeyAES(m_arOutBuff);
 //								m_arASymCipher[m_iChainLen-1].encrypt(outBuff,0,buff,0);
 //								entry.arCipher[m_iChainLen-1].encryptAES(outBuff,RSA_SIZE,buff,RSA_SIZE,DATA_SIZE-RSA_SIZE);
-				m_arASymCipher[m_iChainLen - 1].encrypt(m_arOutBuff, 0, m_arOutBuff2, 0);
+				m_arMixParameters[m_iChainLen - 1].m_ASymCipher.encrypt(m_arOutBuff, 0, m_arOutBuff2, 0);
 				entry.arCipher[m_iChainLen -
 					1].encryptAES(m_arOutBuff, RSA_SIZE, m_arOutBuff2, RSA_SIZE, DATA_SIZE - RSA_SIZE);
 //				size -= (KEY_SIZE + m_iTimestampSize);
@@ -1106,15 +1141,16 @@ public final class MuxSocket implements Runnable
 					m_arOutBuff[0] &= 0x7F; //RSA HACK!! (to ensure what m<n in RSA-Encrypt: c=m^e mod n)
 					if (m_bMixProtocolWithTimestamp)
 					{
-						m_arOutBuff[KEY_SIZE-2] = (byte) (timestamp >> 8);
-						m_arOutBuff[KEY_SIZE -1] = (byte) (timestamp % 256);
+						timestamp = getTimestampForTime(m_arMixParameters[i].m_ReplayRefTime);
+						m_arOutBuff[KEY_SIZE - 2] = (byte) (timestamp >> 8);
+						m_arOutBuff[KEY_SIZE - 1] = (byte) (timestamp % 256);
 					}
 					entry.arCipher[i].setEncryptionKeyAES(m_arOutBuff);
 					System.arraycopy(m_arOutBuff2, 0, m_arOutBuff, KEY_SIZE,
 									 DATA_SIZE - KEY_SIZE);
 					if (i > 0 || m_iMixProtocolVersion != MIX_PROTOCOL_VERSION_0_4)
 					{
-						m_arASymCipher[i].encrypt(m_arOutBuff, 0, m_arOutBuff2, 0);
+						m_arMixParameters[i].m_ASymCipher.encrypt(m_arOutBuff, 0, m_arOutBuff2, 0);
 						entry.arCipher[i].encryptAES(m_arOutBuff, RSA_SIZE, m_arOutBuff2, RSA_SIZE,
 							DATA_SIZE - RSA_SIZE);
 					}
@@ -1180,15 +1216,13 @@ public final class MuxSocket implements Runnable
 		}
 	}
 
-	/** Returns the number of 'intervalls' gone since the start of the Year. On intervall is 10 minutes.
-	 * This gives '0' on January 1, 00:00:00-00:09:59; '1' on January 1, 00:10:00-00:19:59; etc.
+	/** Returns the number of 'intervalls' gone since start of refTime.
 	 * */
-	private int getCurrentTimestamp()
+	private int getTimestampForTime(long refTime)
 	{
-		long now = System.currentTimeMillis()/1000;
-		long secondsSinceFirstInterval = now-m_refTime; //seconds since start of interval '0'
-		return (int)secondsSinceFirstInterval/SECONDS_PER_INTERVAL;
-
+		long now = System.currentTimeMillis() / 1000;
+		long secondsSinceFirstInterval = now - refTime; //seconds since start of interval '0'
+		return (int) secondsSinceFirstInterval / SECONDS_PER_INTERVAL;
 	}
 
 	public ControlChannelDispatcher getControlChannelDispatcher()
@@ -1234,6 +1268,28 @@ public final class MuxSocket implements Runnable
 			SignatureVerifier.getInstance().getVerificationCertificateStore().removeCertificateLock(
 				m_mixCascadeCertificateLock);
 			m_mixCascadeCertificateLock = -1;
+		}
+	}
+
+	/** We got some replay timestamps from mixes of the current cascade. We will adjust the reference times for this mixes.
+	 */
+	public void gotTimestamps(ReplayTimestamp[] theTimestamps)
+	{
+		synchronized (m_arMixParameters)
+		{
+			long now=System.currentTimeMillis() / 1000;
+			for(int i=0;i<theTimestamps.length;i++)
+			{
+				for(int j=0;j<m_arMixParameters.length;j++)
+				{
+					if(m_arMixParameters[j].m_strMixID.equals(theTimestamps[i].m_strMixID))
+					{
+						m_arMixParameters[j].m_ReplayRefTime=now - theTimestamps[i].m_iInterval * SECONDS_PER_INTERVAL - theTimestamps[i].m_iOffset;
+						break;
+					}
+				}
+			}
+			m_arMixParameters.notifyAll();
 		}
 	}
 

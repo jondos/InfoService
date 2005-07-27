@@ -62,6 +62,19 @@ final class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 	JLabel m_labelAvailableRouters;
 	JCheckBox m_cbPreCreateRoutes;
 	long m_lastUpdate;
+	private class MyJTable extends JTable
+		{
+			public MyJTable(DefaultTableModel m)
+			{
+				super(m);
+			}
+			public boolean isCellEditable(int i, int j)
+			{
+				return false;
+			}
+		};
+
+
 	public JAPConfTor()
 	{
 		super(null);
@@ -71,7 +84,7 @@ final class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 	{
 		JPanel panelRoot = getRootPanel();
 
-		/* clear the whole root panel */
+		// clear the whole root panel
 		panelRoot.removeAll();
 		GridBagLayout l = new GridBagLayout();
 		GridBagConstraints c = new GridBagConstraints();
@@ -99,13 +112,7 @@ final class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 		model.addColumn(JAPMessages.getString("torRouterPort"));
 		model.addColumn(JAPMessages.getString("torRouterSoftware"));
 		model.setNumRows(3);
-		m_tableRouters = new JTable(model)
-		{
-			public boolean isCellEditable(int i, int j)
-			{
-				return false;
-			}
-		};
+		m_tableRouters = new MyJTable(model);
 		m_tableRouters.setPreferredScrollableViewportSize(new Dimension(70, m_tableRouters.getRowHeight() * 5));
 		m_tableRouters.setCellSelectionEnabled(false);
 		m_tableRouters.setColumnSelectionAllowed(false);

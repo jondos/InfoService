@@ -90,7 +90,7 @@ final public class ControlChannelTest extends SyncControlChannel implements Runn
 				byte[] buff=new byte[rand.nextInt()&0x01FFF];
 				elemRoot.setAttribute("content",Base64.encodeBytes(buff));
 				count++;
-				sendMessage(doc);
+				sendXMLMessage(doc);
 			}
 		}
 		catch (Exception e)

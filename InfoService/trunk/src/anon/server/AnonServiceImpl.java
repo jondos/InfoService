@@ -143,7 +143,12 @@ final public class AnonServiceImpl implements AnonService
 			{
 				return ret;
 			}
-			return m_MuxSocket.startService();
+			ret = m_MuxSocket.startService();
+			if (ret != ErrorCodes.E_SUCCESS)
+			{
+				m_MuxSocket.stopService();
+			}
+			return ret;
 		}
 		catch (Throwable t)
 		{
