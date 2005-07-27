@@ -32,19 +32,87 @@ import anon.util.XMLUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import java.util.Vector;
+import org.w3c.dom.Node;
 
 final public class ReplayControlChannel extends SyncControlChannel
 {
+	public class ReplayTimestamp
+	{
+		public int m_iInterval;
+		public int m_iOffset;
+		public String m_strMixID;
+
+		public ReplayTimestamp(String strMixID, int offset, int interval)
+		{
+			m_strMixID = strMixID;
+			m_iInterval = interval;
+			m_iOffset = offset;
+		}
+	}
+
+	public interface ReplayCtrlChannelMsgListener
+	{
+		public void gotTimestamps(ReplayTimestamp[] theTimestamps);
+	}
+
+	private ReplayCtrlChannelMsgListener m_MsgListener;
 
 	public ReplayControlChannel()
 	{
 		super(3, false);
+		m_MsgListener = null;
+	}
+
+	public void setMessageListener(ReplayCtrlChannelMsgListener theListener)
+	{
+		m_MsgListener = theListener;
 	}
 
 	public void proccessXMLMessage(Document docMsg)
 	{
 		LogHolder.log(LogLevel.DEBUG, LogType.NET,
-					  "ControlTestChannel received a message: " + XMLUtil.toString(docMsg));
+					  "ReplayControlChannel received a message: " + XMLUtil.toString(docMsg));
+		if (m_MsgListener == null)
+		{
+			return; //nothing todo
+		}
+		Element elemRoot = docMsg.getDocumentElement();
+		if (elemRoot.getNodeName().equals("Mixes"))
+		{
+			Vector v = new Vector();
+			Node elemChild = XMLUtil.getFirstChildByName(elemRoot, "Mix");
+			while (elemChild != null)
+			{
+				String strMixID = XMLUtil.parseAttribute(elemChild, "id", null);
+				Node elemReplay = XMLUtil.getFirstChildByName(elemChild, "Replay");
+				Node elemReplayTimestamp = XMLUtil.getFirstChildByName(elemReplay, "ReplayTimestamp");
+				int offset = XMLUtil.parseAttribute(elemReplayTimestamp, "offset", -1);
+				int interval = XMLUtil.parseAttribute(elemReplayTimestamp, "interval", -1);
+				if (interval != -1 && offset != -1 && strMixID != null)
+				{
+					ReplayTimestamp rt = new ReplayTimestamp(strMixID, interval, offset);
+					v.addElement(rt);
+				}
+				elemChild=elemChild.getNextSibling();
+			}
+			if (v.size() > 0)
+			{
+				ReplayTimestamp[] rts = new ReplayTimestamp[v.size()];
+				v.copyInto(rts);
+				m_MsgListener.gotTimestamps(rts);
+			}
+		}
 	}
 
+	/** Sends a request for the current Replaytimestamps via the replay control channel.
+	 * @return E_SUCCESS if successful, errorcode otherwise
+	 *
+	 */
+	synchronized int getTimestamps()
+	{
+		return sendXMLMessage("<?xml version=\"1.0\" encoding=\"UTF-8\"?><GetTimestamps/>");
+	}
 }

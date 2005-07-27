@@ -52,18 +52,23 @@ public abstract class AbstractControlChannel
 		return m_iChannelID;
 	}
 
-	public int sendMessage(Document docMsg)
+	public int sendXMLMessage(Document docMsg)
 	{
-		byte[] msg = XMLUtil.toString(docMsg).getBytes();
+		return sendXMLMessage(XMLUtil.toString(docMsg));
+	}
+
+	public int sendXMLMessage(String strXMLMsg)
+	{
+		byte[] msg = strXMLMsg.getBytes();
 		if (msg.length > 0xFFFF)
 		{
 			return ErrorCodes.E_SPACE;
 		}
-		byte[] msglen = new byte[2];
-		msglen[0] = (byte) ( (msg.length >> 8) & 0x00FF);
-		msglen[1] = (byte) ( (msg.length) & 0x00FF);
-		m_Dispatcher.sendMessages(m_iChannelID, false, msglen, 2);
-		m_Dispatcher.sendMessages(m_iChannelID, false, msg, msg.length);
+		byte[] buff=new byte[msg.length+2];
+		System.arraycopy(msg,0,buff,2,msg.length);
+		buff[0] = (byte) ( (msg.length >> 8) & 0x00FF);
+		buff[1] = (byte) ( (msg.length) & 0x00FF);
+		m_Dispatcher.sendMessages(m_iChannelID, false, buff, buff.length);
 		return ErrorCodes.E_SUCCESS;
 	}
 

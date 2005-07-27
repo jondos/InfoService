@@ -94,7 +94,7 @@ public class AIControlChannel extends SyncControlChannel
 		}
 		byte[] arbSig = acc.getSigningInstance().signBytes(arbChal);
 		XMLResponse response = new XMLResponse(arbSig);
-		this.sendMessage(XMLUtil.toXMLDocument(response));
+		this.sendXMLMessage(XMLUtil.toXMLDocument(response));
 	}
 
 	/**
@@ -173,7 +173,7 @@ public class AIControlChannel extends SyncControlChannel
 					cc.setTransferredBytes(newBytes + oldSpent);
 				}
 				cc.sign(currentAccount.getSigningInstance());
-				this.sendMessage(XMLUtil.toXMLDocument(cc));
+				this.sendXMLMessage(XMLUtil.toXMLDocument(cc));
 				currentAccount.addCostConfirmation(cc);
 			}
 			catch (Exception ex1)
@@ -201,7 +201,7 @@ public class AIControlChannel extends SyncControlChannel
 						{
 							currentAccount.fetchAccountInfo();
 							XMLBalance b = currentAccount.getBalance();
-							AIControlChannel.this.sendMessage(XMLUtil.toXMLDocument(b));
+							AIControlChannel.this.sendXMLMessage(XMLUtil.toXMLDocument(b));
 						}
 						catch (Exception ex)
 						{
@@ -213,7 +213,7 @@ public class AIControlChannel extends SyncControlChannel
 			else
 			{
 				LogHolder.log(LogLevel.DEBUG, LogType.PAY, "sending balance to AI");
-				AIControlChannel.this.sendMessage(XMLUtil.toXMLDocument(b));
+				AIControlChannel.this.sendXMLMessage(XMLUtil.toXMLDocument(b));
 			}
 			m_bFirstBalance = false;
 		}
@@ -224,7 +224,7 @@ public class AIControlChannel extends SyncControlChannel
 			PayAccountsFile.getInstance().signalAccountRequest();
 			if (currentAccount != null)
 			{
-				this.sendMessage(XMLUtil.toXMLDocument(currentAccount.getAccountCertificate()));
+				this.sendXMLMessage(XMLUtil.toXMLDocument(currentAccount.getAccountCertificate()));
 			}
 		}
 	}
