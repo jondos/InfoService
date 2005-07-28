@@ -870,6 +870,8 @@ public final class MuxSocket implements Runnable, ReplayCtrlChannelMsgListener
 			}
 			threadRunLoop = null;
 			m_bisCrypted = false;
+			m_arMixParameters=null;
+			m_ControlChannelDispatcher=null;
 			removeCascadeCertificateFromCertificateStore();
 			LogHolder.log(LogLevel.DEBUG, LogType.NET, "JAPMuxSocket:close() MuxSocket closed!");
 			return 0;
