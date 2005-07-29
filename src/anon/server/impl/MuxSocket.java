@@ -67,28 +67,9 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import java.io.IOException;
-import anon.server.impl.ReplayControlChannel.ReplayCtrlChannelMsgListener;
-import anon.server.impl.ReplayControlChannel.ReplayTimestamp;
 
-public final class MuxSocket implements Runnable, ReplayCtrlChannelMsgListener
+public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 {
-	///Stores parameters for each mix.
-	class MixParameters
-	{
-		public MixParameters()
-		{
-			m_ASymCipher=null;
-			m_strMixID=null;
-			m_ReplayRefTime=-1;
-		}
-
-		ASymCipher m_ASymCipher;
-		/////this holds the local time in seconds since epoch, than interval 0 starts
-		long m_ReplayRefTime;
-		///the MixID
-		String m_strMixID;
-	}
-
 	private SecureRandom m_SecureRandom;
 	private Dictionary m_ChannelList;
 	private BufferedOutputStream m_outStream;
@@ -163,19 +144,7 @@ public final class MuxSocket implements Runnable, ReplayCtrlChannelMsgListener
 	 */
 	private int m_mixCascadeCertificateLock;
 
-	private final class ChannelListEntry
-	{
-		ChannelListEntry(AbstractChannel c)
-		{
-			channel = c;
-			arCipher = null;
-			bIsSuspended = false;
-		}
 
-		public final AbstractChannel channel;
-		public SymCipher[] arCipher;
-		public boolean bIsSuspended;
-	}
 
 	private MuxSocket()
 	{
@@ -203,7 +172,7 @@ public final class MuxSocket implements Runnable, ReplayCtrlChannelMsgListener
 		m_SecureRandom = new SecureRandom();
 		m_bMixProtocolWithTimestamp = false;
 		m_bMixSupportsControlChannels = false;
-		m_ControlChannelDispatcher = new ControlChannelDispatcher(this);
+		m_ControlChannelDispatcher = null;
 		m_bNewFlowControl = false;
 		//threadgroupChannels=null;
 	}
@@ -356,6 +325,7 @@ public final class MuxSocket implements Runnable, ReplayCtrlChannelMsgListener
 
 		m_bIsConnected = true;
 		m_ChannelList = new Hashtable();
+		m_ControlChannelDispatcher=new ControlChannelDispatcher(this);
 		m_transferredBytes = 0;
 		return ErrorCodes.E_SUCCESS;
 	}
@@ -882,11 +852,11 @@ public final class MuxSocket implements Runnable, ReplayCtrlChannelMsgListener
 	{
 		LogHolder.log(LogLevel.DEBUG, LogType.NET, "JAPMuxSocket:run()");
 		//Test for ControlChannel...
-		if (m_bMixSupportsControlChannels)
+		/*if (m_bMixSupportsControlChannels)
 		{
 			m_ControlChannelDispatcher.registerControlChannel(new ControlChannelTest());
 
-		}
+		}*/
 		byte[] buff = new byte[DATA_SIZE];
 		int flags = 0;
 		int channel = 0;
@@ -1224,8 +1194,8 @@ public final class MuxSocket implements Runnable, ReplayCtrlChannelMsgListener
 	{
 		long now = System.currentTimeMillis() / 1000;
 		long secondsSinceFirstInterval = now - refTime; //seconds since start of interval '0'
-		return (int) secondsSinceFirstInterval / SECONDS_PER_INTERVAL;
-	}
+		return (int) (secondsSinceFirstInterval / SECONDS_PER_INTERVAL);
+}
 
 	public ControlChannelDispatcher getControlChannelDispatcher()
 	{
