@@ -137,6 +137,17 @@ public final class JAPController extends Observable implements IProxyListener, O
 	/** Holds the MsgID of the status message after the forwaring server was started.*/
 	private int m_iStatusPanelMsgIdForwarderServerStatus;
 
+	/** Stores if the user has stopped anonymity manually in order to decide if an error
+	 *  dialog must be showmn because of a connection error.
+	 */
+	private boolean m_bConnectionManuallyStopped = false;
+
+	/** Stores if the connection error dialog was already shown in order to not
+	 *  display the dialog twice because of multiple exceptions resulting from
+	 *  the same connection loss.
+	 */
+	private boolean m_bConnectionErrorShown = false;
+
 	/**
 	 * Stores the jobs, if we receive new setAnonMode() requests.
 	 */
@@ -1856,6 +1867,11 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 	public void setAnonMode(boolean a_anonModeSelected)
 	{
+		if (a_anonModeSelected)
+		{
+			m_bConnectionErrorShown = false;
+		}
+
 		synchronized (m_changeAnonModeJobs)
 		{
 			boolean newJob = true;
@@ -1945,6 +1961,14 @@ public final class JAPController extends Observable implements IProxyListener, O
 			/* simply enable the anonymous mode */
 			setAnonMode(true);
 		}
+		m_bConnectionManuallyStopped = false;
+	}
+
+	/** Stops anonymity without displaying an error dialog*/
+	public void stopAnonymousMode()
+	{
+		m_bConnectionManuallyStopped = true;
+		this.setAnonMode(false);
 	}
 
 	public void setDummyTraffic(int msIntervall)
@@ -2652,12 +2676,15 @@ public final class JAPController extends Observable implements IProxyListener, O
 	public void connectionError()
 	{
 		LogHolder.log(LogLevel.ERR, LogType.NET, "JAPController received connectionError");
+		if (!m_bConnectionManuallyStopped && !m_bConnectionErrorShown)
+		{
 		this.setAnonMode(false);
 		JAPUtil.showMessageBox(getView(),
 							   JAPMessages.getString("cascadeLost"),
 							   JAPMessages.getString("cascadeLostTitle"),
 							   JOptionPane.ERROR_MESSAGE);
-
+			m_bConnectionErrorShown = true;
+		}
 	}
 
 	/** Be able to register as an event listener out of inner classes*/
