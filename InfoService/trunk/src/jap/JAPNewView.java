@@ -1321,7 +1321,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			}
 			else
 			{
-				m_Controller.setAnonMode(false);
+				m_Controller.stopAnonymousMode();
 			}
 		}
 		else if (source == m_cbAnonymityOn)
@@ -1332,7 +1332,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			}
 			else
 			{
-				m_Controller.setAnonMode(false);
+				m_Controller.stopAnonymousMode();
 			}
 		}
 

@@ -396,7 +396,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 
 	public void connectionError()
 	{
-		LogHolder.log(LogLevel.ERR, LogType.NET, "AnonServiceImpl received connectionError");
+		LogHolder.log(LogLevel.ERR, LogType.NET, "AnonProxy received connectionError");
 		this.fireConnectionError();
 	}
 
