@@ -39,26 +39,9 @@ import org.w3c.dom.Node;
 
 final public class ReplayControlChannel extends SyncControlChannel
 {
-	public class ReplayTimestamp
-	{
-		public int m_iInterval;
-		public int m_iOffset;
-		public String m_strMixID;
 
-		public ReplayTimestamp(String strMixID, int offset, int interval)
-		{
-			m_strMixID = strMixID;
-			m_iInterval = interval;
-			m_iOffset = offset;
-		}
-	}
 
-	public interface ReplayCtrlChannelMsgListener
-	{
-		public void gotTimestamps(ReplayTimestamp[] theTimestamps);
-	}
-
-	private ReplayCtrlChannelMsgListener m_MsgListener;
+	private IReplayCtrlChannelMsgListener m_MsgListener;
 
 	public ReplayControlChannel()
 	{
@@ -66,7 +49,7 @@ final public class ReplayControlChannel extends SyncControlChannel
 		m_MsgListener = null;
 	}
 
-	public void setMessageListener(ReplayCtrlChannelMsgListener theListener)
+	public void setMessageListener(IReplayCtrlChannelMsgListener theListener)
 	{
 		m_MsgListener = theListener;
 	}
