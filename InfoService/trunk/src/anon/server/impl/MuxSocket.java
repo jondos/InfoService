@@ -148,6 +148,8 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 
 	private Vector m_anonServiceListener;
 
+	private volatile boolean m_bConnectionStoppedManually = false;
+
 
 	private MuxSocket()
 	{
@@ -755,6 +757,7 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 			{
 				return ErrorCodes.E_NOT_CONNECTED;
 			}
+			m_bConnectionStoppedManually = false;
 			threadRunLoop = new Thread(this, "JAP - MuxSocket");
 			threadRunLoop.setDaemon(true);
 			threadRunLoop.setPriority(Thread.MAX_PRIORITY);
@@ -798,6 +801,7 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 			//LogHolder.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:stopService()");
 			//m_RunCount--;
 			//if(m_RunCount==0)
+			m_bConnectionStoppedManually = true;
 			close();
 			//return m_RunCount;
 		}
@@ -889,7 +893,10 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 			}
 			catch (Exception e)
 			{
+				if (!m_bConnectionStoppedManually)
+				{
 				this.fireConnectionError();
+				}
 				LogHolder.log(LogLevel.ERR, LogType.NET, "JAPMuxSocket:run() Exception while receiving!");
 				LogHolder.log(LogLevel.DEBUG, LogType.NET,
 							  "JAPMuxSocket:run() Exception was: " + e.getMessage());
