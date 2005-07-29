@@ -56,6 +56,22 @@ public final class ClassUtil
 	//private static Vector ms_loadedDirectories = new Vector();
 
 	/**
+	 * This small inner class is needed to get information about static classes.
+	 */
+	private static class ClassGetter extends SecurityManager
+	{
+		public Class getCurrentClassStatic()
+		{
+			return getClassContext()[2];
+		}
+
+		public Class getCallingClassStatic()
+		{
+			return getClassContext()[3];
+		}
+	}
+
+	/**
 	 * This class works without being initialised and is completely static.
 	 * Therefore, the constructor is not needed and private.
 	 */
@@ -98,11 +114,11 @@ public final class ClassUtil
 	 * Object.getClass(), as the caller is not needed to be an argument or an Object either.
 	 * @return the class that called the current method
 	 */
-	public static Class getCallingClassStatic()
+/*	public static Class getCallingClassStatic()
 	{
 		return new ClassGetter().getCallingClassStatic();
 	}
-
+*/
 	/**
 	 * Gets all classes that extend the given class or implement the given
 	 * interface, including the class itself. It is recommended to store this
@@ -290,37 +306,22 @@ public final class ClassUtil
 	 * @return the first class that was instnatiated or
 	 *         null if no class could be found and instantiated
 	 */
-		protected static Class getFirstClassFound(File a_file)
-	 {
-	  Hashtable classInstance = new Hashtable();
-
-	  ResourceLoader.loadResources("/", a_file, new ClassInstantiator(3), true, true, false,
-			  classInstance);
-	  // we choose "3" because after 3 tries it is highly possible this is not a valid classdir
-
-	  if (classInstance.size() == 1)
-	  {
-	   return (Class)classInstance.elements().nextElement();
-	  }
-
-	  return null;
-	 }
-
-	/**
-	 * This small inner class is needed to get information about static classes.
-	 */
-	private static class ClassGetter extends SecurityManager
+	protected static Class getFirstClassFound(File a_file)
 	{
-		public Class getCurrentClassStatic()
+		Hashtable classInstance = new Hashtable();
+
+		ResourceLoader.loadResources("/", a_file, new ClassInstantiator(3), true, true, false,
+									 classInstance);
+		// we choose "3" because after 3 tries it is highly possible this is not a valid classdir
+
+		if (classInstance.size() == 1)
 		{
-			return getClassContext()[2];
+			return (Class) classInstance.elements().nextElement();
 		}
 
-		public Class getCallingClassStatic()
-		{
-			return getClassContext()[3];
-		}
+		return null;
 	}
+
 
 	/**
 	 * Loads all classes into cache that are in the same file structure as the given class.
@@ -329,27 +330,27 @@ public final class ClassUtil
 	 * @throws IOException if an I/O error occurs
 	 */
 	/*private static void loadClassesInternal(Class a_rootClass) throws IOException
-	{
-		File file = null;
+	  {
+	 File file = null;
 
-		if ( (file = getClassDirectory(a_rootClass)) == null)
-		{
-			return;
-		}
+	 if ( (file = getClassDirectory(a_rootClass)) == null)
+	 {
+	  return;
+	 }
 
-		// look in the cache if the class directory has already been read
-		if (ms_loadedDirectories.contains(file.getAbsolutePath()))
-		{
-			// do not load the classes again
-			return;
-		}
-		ms_loadedDirectories.addElement(file.getAbsolutePath());
+	 // look in the cache if the class directory has already been read
+	 if (ms_loadedDirectories.contains(file.getAbsolutePath()))
+	 {
+	  // do not load the classes again
+	  return;
+	 }
+	 ms_loadedDirectories.addElement(file.getAbsolutePath());
 
-		// read all classes in the directory
-		ResourceLoader.loadResources("/", file, new ClassInstantiator(),
-									 true, false, false, ms_loadedClasses);
-	}
-*/
+	 // read all classes in the directory
+	 ResourceLoader.loadResources("/", file, new ClassInstantiator(),
+			 true, false, false, ms_loadedClasses);
+	  }
+	 */
 	/**
 	 * Turns class files into Class objects.
 	 * @param a_classFile a class file with full directory path

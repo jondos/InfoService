@@ -27,9 +27,9 @@
  */
 package jap;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.File;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.text.MessageFormat;
@@ -55,13 +55,12 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 import org.w3c.dom.Text;
+import anon.AnonServiceEventListener;
 import anon.ErrorCodes;
 import anon.crypto.JAPCertificate;
 import anon.crypto.SignatureVerifier;
 import anon.crypto.XMLEncryption;
-import anon.infoservice.Database;
 import anon.infoservice.HTTPConnectionFactory;
 import anon.infoservice.InfoServiceDBEntry;
 import anon.infoservice.InfoServiceHolder;
@@ -86,7 +85,8 @@ import proxy.IProxyListener;
 import update.JAPUpdateWizard;
 
 /* This is the Controller of All. It's a Singelton!*/
-public final class JAPController extends Observable implements IProxyListener, Observer
+public final class JAPController extends Observable implements IProxyListener, Observer,
+	AnonServiceEventListener
 {
 	/**
 	 * Stores all MixCascades we know (information comes from infoservice or was entered by a user).
@@ -562,7 +562,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 				// check if something has changed
 				changeProxyInterface(proxyInterface,
-									 XMLUtil.parseValue(n.getNamedItem(JAPConstants.CONFIG_PROXY_AUTHORIZATION), false));
+									 XMLUtil.parseValue(n.getNamedItem(JAPConstants.
+					CONFIG_PROXY_AUTHORIZATION), false));
 
 				/* try to get the info from the MixCascade node */
 				MixCascade defaultMixCascade = null;
@@ -1578,7 +1579,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 		public void setExecutionThread(Thread t)
 		{
-			m_executionThread=t;
+			m_executionThread = t;
 		}
 
 		/** @todo Still very bugy, because mode change is async done but not
@@ -1669,6 +1670,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 						/* we use a forwarded connection */
 						m_proxyAnon = JAPModel.getInstance().getRoutingSettings().getAnonProxyInstance(
 							m_socketHTTPListener);
+						registerAsAnonListener();
 					}
 					else
 					{
@@ -1678,10 +1680,12 @@ public final class JAPController extends Observable implements IProxyListener, O
 						{
 							m_proxyAnon = new AnonProxy(
 								m_socketHTTPListener, JAPModel.getInstance().getProxyInterface());
+							registerAsAnonListener();
 						}
 						else
 						{
 							m_proxyAnon = new AnonProxy(m_socketHTTPListener, null);
+							registerAsAnonListener();
 						}
 
 					}
@@ -1868,7 +1872,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 			if (newJob)
 			{
 				/* it's a new job -> do something */
-				if ( ( !a_anonModeSelected  && (m_changeAnonModeJobs.size() >= 2)) ||
+				if ( (!a_anonModeSelected && (m_changeAnonModeJobs.size() >= 2)) ||
 					(m_changeAnonModeJobs.size() >= 3))
 				{
 					/* because of enough previous jobs in the queue, we can ignore this job, if we also
@@ -1881,7 +1885,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 				else
 				{
 					/* we have to schedule this job */
-					if ( !a_anonModeSelected  && (m_changeAnonModeJobs.size() == 1))
+					if (!a_anonModeSelected && (m_changeAnonModeJobs.size() == 1))
 					{
 						/* there is a start-server job currently running -> try to interrupt it */
 						SetAnonModeAsync previousJob = (SetAnonModeAsync) (m_changeAnonModeJobs.lastElement());
@@ -2643,5 +2647,22 @@ public final class JAPController extends Observable implements IProxyListener, O
 			LogHolder.log(LogLevel.ERR, LogType.MISC,
 						  "JAPController: Constructor: Error loading default update messages certificate.");
 		}
+	}
+
+	public void connectionError()
+	{
+		LogHolder.log(LogLevel.ERR, LogType.NET, "JAPController received connectionError");
+		this.setAnonMode(false);
+		JAPUtil.showMessageBox(getView(),
+							   JAPMessages.getString("cascadeLost"),
+							   JAPMessages.getString("cascadeLostTitle"),
+							   JOptionPane.ERROR_MESSAGE);
+
+	}
+
+	/** Be able to register as an event listener out of inner classes*/
+	public void registerAsAnonListener()
+	{
+		m_proxyAnon.addEventListener(this);
 	}
 }

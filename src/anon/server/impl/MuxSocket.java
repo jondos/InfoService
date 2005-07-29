@@ -44,12 +44,14 @@ import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.TimeZone;
+import java.util.Vector;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import anon.AnonChannel;
+import anon.AnonServiceEventListener;
 import anon.ErrorCodes;
 import anon.NotConnectedToMixException;
 import anon.ToManyOpenChannelsException;
@@ -144,6 +146,7 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 	 */
 	private int m_mixCascadeCertificateLock;
 
+	private Vector m_anonServiceListener;
 
 
 	private MuxSocket()
@@ -175,6 +178,7 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 		m_ControlChannelDispatcher = null;
 		m_bNewFlowControl = false;
 		//threadgroupChannels=null;
+		m_anonServiceListener = new Vector();
 	}
 
 	public static MuxSocket create()
@@ -885,6 +889,7 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 			}
 			catch (Exception e)
 			{
+				this.fireConnectionError();
 				LogHolder.log(LogLevel.ERR, LogType.NET, "JAPMuxSocket:run() Exception while receiving!");
 				LogHolder.log(LogLevel.DEBUG, LogType.NET,
 							  "JAPMuxSocket:run() Exception was: " + e.getMessage());
@@ -1241,6 +1246,34 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 				m_mixCascadeCertificateLock);
 			m_mixCascadeCertificateLock = -1;
 		}
+	}
+
+	public synchronized void addEventListener(AnonServiceEventListener l)
+	{
+		Enumeration e = m_anonServiceListener.elements();
+		while (e.hasMoreElements())
+		{
+			if (l.equals(e.nextElement()))
+			{
+				return;
+			}
+		}
+		m_anonServiceListener.addElement(l);
+	}
+
+	public synchronized void removeEventListener(AnonServiceEventListener l)
+	{
+		m_anonServiceListener.removeElement(l);
+	}
+
+	private void fireConnectionError()
+	{
+		Enumeration e = m_anonServiceListener.elements();
+		while (e.hasMoreElements())
+		{
+			( (AnonServiceEventListener) e.nextElement()).connectionError();
+		}
+
 	}
 
 	/** We got some replay timestamps from mixes of the current cascade. We will adjust the reference times for this mixes.
