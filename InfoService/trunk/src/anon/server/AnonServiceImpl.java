@@ -49,11 +49,11 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 
-final public class AnonServiceImpl implements AnonService
+final public class AnonServiceImpl implements AnonService, AnonServiceEventListener
 {
 	//private static AnonServiceImpl m_AnonServiceImpl=null;
 	private MuxSocket m_MuxSocket = null;
-	private Vector m_AnonServiceListener;
+	private Vector m_anonServiceListener;
 	private ImmutableProxyInterface m_proxyInterface;
 
 	/**
@@ -69,8 +69,9 @@ final public class AnonServiceImpl implements AnonService
 
 	public AnonServiceImpl(ImmutableProxyInterface a_proxyInterface)
 	{
-		m_AnonServiceListener = new Vector();
+		m_anonServiceListener = new Vector();
 		m_MuxSocket = MuxSocket.create();
+		m_MuxSocket.addEventListener(this);
 		m_proxyConnection = null;
 		m_proxyInterface = null;
 		setProxy(a_proxyInterface);
@@ -218,7 +219,7 @@ final public class AnonServiceImpl implements AnonService
 
 	public synchronized void addEventListener(AnonServiceEventListener l)
 	{
-		Enumeration e = m_AnonServiceListener.elements();
+		Enumeration e = m_anonServiceListener.elements();
 		while (e.hasMoreElements())
 		{
 			if (l.equals(e.nextElement()))
@@ -226,12 +227,12 @@ final public class AnonServiceImpl implements AnonService
 				return;
 			}
 		}
-		m_AnonServiceListener.addElement(l);
+		m_anonServiceListener.addElement(l);
 	}
 
 	public synchronized void removeEventListener(AnonServiceEventListener l)
 	{
-		m_AnonServiceListener.removeElement(l);
+		m_anonServiceListener.removeElement(l);
 	}
 
 	//special local Service functions
@@ -248,5 +249,20 @@ final public class AnonServiceImpl implements AnonService
 	public boolean isConnected()
 	{
 		return m_MuxSocket != null && m_MuxSocket.isConnected();
+	}
+
+	private void fireConnectionError()
+	{
+		Enumeration e = m_anonServiceListener.elements();
+		while (e.hasMoreElements())
+		{
+			((AnonServiceEventListener)e.nextElement()).connectionError();
+		}
+	}
+
+	public void connectionError()
+	{
+		LogHolder.log(LogLevel.ERR, LogType.NET, "AnonServiceImpl received connectionError");
+		this.fireConnectionError();
 	}
 }

@@ -27,18 +27,16 @@
  */
 package proxy;
 
-import jap.JAPModel;
-
 import java.io.InterruptedIOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.Enumeration;
+import java.util.Vector;
 
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
 import anon.AnonChannel;
 import anon.AnonService;
+import anon.AnonServiceEventListener;
 import anon.AnonServiceFactory;
 import anon.ErrorCodes;
 import anon.NotConnectedToMixException;
@@ -49,8 +47,13 @@ import anon.server.AnonServiceImpl;
 import anon.server.impl.ProxyConnection;
 import anon.tor.Tor;
 import anon.tor.TorAnonServerDescription;
+import jap.JAPModel;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 
-final public class AnonProxy implements Runnable
+
+final public class AnonProxy implements Runnable, AnonServiceEventListener
 {
 	public static final int E_BIND = -2;
 	public final static int E_MIX_PROTOCOL_NOT_SUPPORTED = ErrorCodes.E_PROTOCOL_NOT_SUPPORTED;
@@ -64,6 +67,7 @@ final public class AnonProxy implements Runnable
 
 	private AnonService m_Anon;
 	private AnonService m_Tor;
+	private Vector m_anonServiceListener;
 	private Thread threadRun;
 	private volatile boolean m_bIsRunning;
 	private ServerSocket m_socketListener;
@@ -100,6 +104,8 @@ final public class AnonProxy implements Runnable
 		m_Anon.setProxy(a_proxyInterface);
 		setDummyTraffic( -1);
 		m_forwardedConnection = false;
+		m_anonServiceListener = new Vector();
+		m_Anon.addEventListener(this);
 		//SOCKS\uFFFD
 	}
 
@@ -127,6 +133,8 @@ final public class AnonProxy implements Runnable
 		m_bAutoReconnect = false;
 		m_maxDummyTrafficInterval = a_maxDummyTrafficInterval;
 		setDummyTraffic(a_maxDummyTrafficInterval);
+		m_anonServiceListener = new Vector();
+		m_Anon.addEventListener(this);
 	}
 
 	/**
@@ -376,5 +384,39 @@ final public class AnonProxy implements Runnable
 	{
 		m_ProxyListener.transferedBytes(bytes, protocolType);
 	}
+
+	private void fireConnectionError()
+	{
+		Enumeration e = m_anonServiceListener.elements();
+		while (e.hasMoreElements())
+		{
+			((AnonServiceEventListener)e.nextElement()).connectionError();
+		}
+	}
+
+	public void connectionError()
+	{
+		LogHolder.log(LogLevel.ERR, LogType.NET, "AnonServiceImpl received connectionError");
+		this.fireConnectionError();
+	}
+
+	public synchronized void addEventListener(AnonServiceEventListener l)
+{
+	Enumeration e = m_anonServiceListener.elements();
+	while (e.hasMoreElements())
+	{
+		if (l.equals(e.nextElement()))
+		{
+			return;
+		}
+	}
+	m_anonServiceListener.addElement(l);
+}
+
+public synchronized void removeEventListener(AnonServiceEventListener l)
+{
+	m_anonServiceListener.removeElement(l);
+}
+
 
 }
