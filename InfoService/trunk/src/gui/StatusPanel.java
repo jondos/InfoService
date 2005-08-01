@@ -52,8 +52,10 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 	private final static int ms_IconWidth = 16;
 	private final static Image ms_imageWarning = JAPUtil.loadImageIcon(JAPConstants.IMAGE_WARNING, true).
 		getImage();
+
 	private final static Image ms_imageInformation = JAPUtil.loadImageIcon(JAPConstants.IMAGE_INFORMATION, true).
 		getImage();
+
 	private final static Image ms_imageError = JAPUtil.loadImageIcon(JAPConstants.IMAGE_ERROR, true).getImage();
 
 	final class MsgQueueEntry
@@ -113,9 +115,10 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 	 */
 	public int addStatusMsg(String msg, int type, boolean bAutoRemove)
 	{
+		MsgQueueEntry entry = null;
 		synchronized (oMsgSync)
 		{
-			MsgQueueEntry entry = new MsgQueueEntry();
+			entry = new MsgQueueEntry();
 			entry.m_Msg = msg;
 			entry.m_Id = m_Random.nextInt();
 			if (bAutoRemove)
@@ -147,10 +150,11 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 				m_Msgs = m_lastMsg;
 				m_lastMsg = entry;
 			}
-			//displayLastMessage....
-			m_Thread.interrupt();
-			return entry.m_Id;
 		}
+		//displayLastMessage....
+		m_Thread.interrupt();
+		return entry.m_Id;
+
 	}
 
 	/** Removes a message from the ones which are displayed in the status panel
@@ -198,8 +202,8 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 					m_lastMsg = prev;
 				}
 			}
-			m_Thread.interrupt(); //display changes
 		}
+		m_Thread.interrupt(); //display changes
 	}
 
 	public void paint(Graphics g)
@@ -264,7 +268,8 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 
 					if (m_Msgs == null)
 					{
-						paint(getGraphics());
+						//paint(getGraphics());
+						repaint();
 						continue;
 					}
 					if (m_Msgs.m_DisplayCount > 0)

@@ -26,6 +26,9 @@
   <property category="debug.15" name="SmartStepRedefineClasses" value="0"/>
   <property category="debug.15" name="SmartStepSkipStaticInitializers" value="0"/>
   <property category="debug.15" name="SmartStepSkipSynthetics" value="0"/>
+  <property category="debug.17" name="RemoteDebug" value="1"/>
+  <property category="debug.17" name="RemoteDebugLaunch" value="0"/>
+  <property category="debug.17" name="RemoteHost" value="141.76.46.66"/>
   <property category="debug.2" name="SmartStepRedefineClasses" value="0"/>
   <property category="debug.2" name="SmartStepSkipStaticInitializers" value="0"/>
   <property category="debug.2" name="SmartStepSkipSynthetics" value="0"/>
@@ -164,7 +167,7 @@
   <property category="path" name="DefaultDiagram" value="diagrams"/>
   <property category="path" name="Diagram" value="diagrams"/>
   <property category="personality" name="personality" value="com.borland.jbuilder.personality.JBuilderUMLPersonality "/>
-  <property category="runtime" name="ConfigurationCount" value="16"/>
+  <property category="runtime" name="ConfigurationCount" value="17"/>
   <property category="runtime.0" name="BuildTargetOnRun" value="com.borland.jbuilder.build.ProjectBuilder$ProjectBuildAction;make"/>
   <property category="runtime.0" name="ConfigurationName" value="JAP"/>
   <property category="runtime.0" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
@@ -259,6 +262,11 @@
   <property category="runtime.16" name="ConfigurationName" value="CacheTest"/>
   <property category="runtime.16" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
   <property category="runtime.16" name="application.class" value="misc.CacheTest"/>
+  <property category="runtime.17" name="BuildTargetOnRun" value="com.borland.jbuilder.build.ProjectBuilder$ProjectBuildAction;make"/>
+  <property category="runtime.17" name="ConfigurationName" value="Remote Debug"/>
+  <property category="runtime.17" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
+  <property category="runtime.17" name="custom.jdk" value="java version 1.5.0_01-b08"/>
+  <property category="runtime.17" name="custom.override_jdk" value="1"/>
   <property category="runtime.2" name="BuildTargetOnRun" value="com.borland.jbuilder.build.ProjectBuilder$ProjectBuildAction;make"/>
   <property category="runtime.2" name="ConfigurationName" value="JAP (alternative config)"/>
   <property category="runtime.2" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
@@ -350,7 +358,7 @@
   <property category="sys" name="ExcludeClassEnabled" value="0"/>
   <property category="sys" name="IncludeTestPath" value="1"/>
   <property category="sys" name="InstanceVisibility" value="0"/>
-  <property category="sys" name="JDK" value="1.1 mit JVM_1.4.2"/>
+  <property category="sys" name="JDK" value="java version 1.5.0_01-b08"/>
   <property category="sys" name="LastTag" value="192"/>
   <property category="sys" name="Libraries" value="http;mac;Apache XML-RPC;BouncyCastleLightForJAP;JUnit;junitx;Swing;ApacheBzip2;Log4j;ApacheFTPClient;XML-1.1;XML-1.0"/>
   <property category="sys" name="MakeStable" value="0"/>
