@@ -120,6 +120,7 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 
 	private final static int MAX_CHANNELS_PER_CONNECTION = 50;
 
+	private final static int MIX_PROTOCOL_VERSION_0_8 = 8;
 	private final static int MIX_PROTOCOL_VERSION_0_7 = 7;
 	private final static int MIX_PROTOCOL_VERSION_0_5 = 5;
 	private final static int MIX_PROTOCOL_VERSION_0_4 = 4;
@@ -149,7 +150,6 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 	private Vector m_anonServiceListener;
 
 	private volatile boolean m_bConnectionStoppedManually = false;
-
 
 	private MuxSocket()
 	{
@@ -328,10 +328,9 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 			return err;
 		}
 
-
 		m_bIsConnected = true;
 		m_ChannelList = new Hashtable();
-		m_ControlChannelDispatcher=new ControlChannelDispatcher(this);
+		m_ControlChannelDispatcher = new ControlChannelDispatcher(this);
 		m_transferredBytes = 0;
 		return ErrorCodes.E_SUCCESS;
 	}
@@ -487,11 +486,18 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 				m_iMixProtocolVersion = MIX_PROTOCOL_VERSION_0_5;
 				m_bMixSupportsControlChannels = true;
 			}
-			else if (strProtocolVersion.equals("0.7"))
+			else if (strProtocolVersion.equals("0.7")) //obsolete!!
 			{
 				m_bMixProtocolWithTimestamp = true;
 				m_bMixSupportsControlChannels = true;
 				m_iMixProtocolVersion = MIX_PROTOCOL_VERSION_0_7;
+			}
+			else if (strProtocolVersion.equals("0.8"))
+			{
+				m_bMixProtocolWithTimestamp = true;
+				m_bMixSupportsControlChannels = true;
+				m_cipherFirstMix = new SymCipher();
+				m_iMixProtocolVersion = MIX_PROTOCOL_VERSION_0_8;
 			}
 			else
 			{
@@ -542,8 +548,8 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 					bIsFirst = false;
 					m_arMixParameters[i] = new MixParameters();
 					m_arMixParameters[i].m_ASymCipher = new ASymCipher();
-					m_arMixParameters[i].m_strMixID=XMLUtil.parseAttribute(child,"id",null);
-					if (m_arMixParameters[i].m_strMixID==null||
+					m_arMixParameters[i].m_strMixID = XMLUtil.parseAttribute(child, "id", null);
+					if (m_arMixParameters[i].m_strMixID == null ||
 						m_arMixParameters[i++].m_ASymCipher.setPublicKey( (Element) child) !=
 						ErrorCodes.E_SUCCESS)
 					{
@@ -783,10 +789,12 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 						return ErrorCodes.E_CONNECT;
 					}
 					//Check if we have all timestamps
-					for(int i=0;i<m_arMixParameters.length;i++)
+					for (int i = 0; i < m_arMixParameters.length; i++)
 					{
-						if(m_arMixParameters[i].m_ReplayRefTime<0)
+						if (m_arMixParameters[i].m_ReplayRefTime < 0)
+						{
 							return ErrorCodes.E_CONNECT;
+						}
 					}
 				}
 			}
@@ -848,8 +856,8 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 			}
 			threadRunLoop = null;
 			m_bisCrypted = false;
-			m_arMixParameters=null;
-			m_ControlChannelDispatcher=null;
+			m_arMixParameters = null;
+			m_ControlChannelDispatcher = null;
 			removeCascadeCertificateFromCertificateStore();
 			LogHolder.log(LogLevel.DEBUG, LogType.NET, "JAPMuxSocket:close() MuxSocket closed!");
 			return 0;
@@ -861,10 +869,10 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 		LogHolder.log(LogLevel.DEBUG, LogType.NET, "JAPMuxSocket:run()");
 		//Test for ControlChannel...
 		/*if (m_bMixSupportsControlChannels)
-		{
-			m_ControlChannelDispatcher.registerControlChannel(new ControlChannelTest());
+		   {
+		 m_ControlChannelDispatcher.registerControlChannel(new ControlChannelTest());
 
-		}*/
+		   }*/
 		byte[] buff = new byte[DATA_SIZE];
 		int flags = 0;
 		int channel = 0;
@@ -895,7 +903,7 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 			{
 				if (!m_bConnectionStoppedManually)
 				{
-				this.fireConnectionError();
+					this.fireConnectionError();
 				}
 				LogHolder.log(LogLevel.ERR, LogType.NET, "JAPMuxSocket:run() Exception while receiving!");
 				LogHolder.log(LogLevel.DEBUG, LogType.NET,
@@ -1123,7 +1131,7 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 					entry.arCipher[i] = new SymCipher();
 					KeyPool.getKey(m_arOutBuff);
 					m_arOutBuff[0] &= 0x7F; //RSA HACK!! (to ensure what m<n in RSA-Encrypt: c=m^e mod n)
-					if (m_bMixProtocolWithTimestamp)
+					if (m_bMixProtocolWithTimestamp && (i > 0 || m_cipherFirstMix == null))
 					{
 						timestamp = getTimestampForTime(m_arMixParameters[i].m_ReplayRefTime);
 						m_arOutBuff[KEY_SIZE - 2] = (byte) (timestamp >> 8);
@@ -1132,13 +1140,13 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 					entry.arCipher[i].setEncryptionKeyAES(m_arOutBuff);
 					System.arraycopy(m_arOutBuff2, 0, m_arOutBuff, KEY_SIZE,
 									 DATA_SIZE - KEY_SIZE);
-					if (i > 0 || m_iMixProtocolVersion != MIX_PROTOCOL_VERSION_0_4)
+					if (i > 0 || m_cipherFirstMix == null)
 					{
 						m_arMixParameters[i].m_ASymCipher.encrypt(m_arOutBuff, 0, m_arOutBuff2, 0);
 						entry.arCipher[i].encryptAES(m_arOutBuff, RSA_SIZE, m_arOutBuff2, RSA_SIZE,
 							DATA_SIZE - RSA_SIZE);
 					}
-					else //First Mix uses olny symmetric encryption
+					else //First Mix uses only symmetric encryption
 					{
 						for (int j = 0; j < 16; j++)
 						{
@@ -1207,7 +1215,7 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 		long now = System.currentTimeMillis() / 1000;
 		long secondsSinceFirstInterval = now - refTime; //seconds since start of interval '0'
 		return (int) (secondsSinceFirstInterval / SECONDS_PER_INTERVAL);
-}
+	}
 
 	public ControlChannelDispatcher getControlChannelDispatcher()
 	{
@@ -1289,17 +1297,22 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 	{
 		synchronized (m_arMixParameters)
 		{
-			long now=System.currentTimeMillis() / 1000;
-			for(int i=0;i<theTimestamps.length;i++)
+			long now = System.currentTimeMillis() / 1000;
+			for (int i = 0; i < theTimestamps.length; i++)
 			{
-				for(int j=0;j<m_arMixParameters.length;j++)
+				for (int j = 0; j < m_arMixParameters.length; j++)
 				{
-					if(m_arMixParameters[j].m_strMixID.equals(theTimestamps[i].m_strMixID))
+					if (m_arMixParameters[j].m_strMixID.equals(theTimestamps[i].m_strMixID))
 					{
-						m_arMixParameters[j].m_ReplayRefTime=now - theTimestamps[i].m_iInterval * SECONDS_PER_INTERVAL - theTimestamps[i].m_iOffset;
+						m_arMixParameters[j].m_ReplayRefTime = now -
+							theTimestamps[i].m_iInterval * SECONDS_PER_INTERVAL - theTimestamps[i].m_iOffset;
 						break;
 					}
 				}
+			}
+			if (m_cipherFirstMix != null)
+			{
+				m_arMixParameters[0].m_ReplayRefTime = 0;
 			}
 			m_arMixParameters.notifyAll();
 		}

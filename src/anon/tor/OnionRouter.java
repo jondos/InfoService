@@ -36,6 +36,7 @@ import java.security.SecureRandom;
 import org.bouncycastle.asn1.DEROutputStream;
 import org.bouncycastle.crypto.AsymmetricBlockCipher;
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
+import org.bouncycastle.crypto.CryptoException;
 import org.bouncycastle.crypto.InvalidCipherTextException;
 import org.bouncycastle.crypto.agreement.DHBasicAgreement;
 import org.bouncycastle.crypto.digests.SHA1Digest;
@@ -74,6 +75,13 @@ public class OnionRouter
 		"302B0A6DF25F14374FE1356D6D51C245E485B576625E7EC6F44C42E9" +
 		"A637ED6B0BFF5CB6F406B7EDEE386BFB5A899FA5AE9F24117C4B1FE6" +
 		"49286651ECE65381FFFFFFFFFFFFFFFF", 16);
+	
+	//lower boundary for key : 2^24
+	private final static BigInteger MINKEY = new BigInteger(new byte[]{1,0,0,0});
+	
+	//upper boundary for key : p - 2^24
+	private final static BigInteger MAXKEY = SAFEPRIME.subtract(MINKEY);
+	
 	private final static DHParameters DH_PARAMS = new DHParameters(SAFEPRIME, new BigInteger("2"));
 
 	private ORDescription m_description;
@@ -354,7 +362,8 @@ public class OnionRouter
 		byte[] a = new byte[128];
 		System.arraycopy(param, offset, a, 0, 128);
 		dhserverpub = new DHPublicKeyParameters(new BigInteger(1, a), DH_PARAMS);
-		byte[] agreement = m_dhe.calculateAgreement(dhserverpub).toByteArray();
+		BigInteger key = m_dhe.calculateAgreement(dhserverpub);
+		byte[] agreement = key.toByteArray();
 		byte[] buff = new byte[129];
 		if (agreement[0] == 0)
 		{
@@ -373,6 +382,19 @@ public class OnionRouter
 				throw new Exception("wrong derivative key");
 			}
 		}
+		
+		//test, if the calculated key is in range (to prevent attacks)
+		if(key.compareTo(MINKEY)==-1||key.compareTo(MAXKEY)==1)
+		{
+			throw new CryptoException("Calculated DH-Key is not in allowed range (KEY:"+key.doubleValue()+")");
+		}
+		//test, if at least 16 bits are "0" and 16 bits are "1"
+		if(key.bitCount()<16 || (1024 - key.bitCount())<16)
+		{
+			throw new CryptoException("Calculated DH-Key is not valid. Not enough zeros ore ones");
+		}
+		
+		
 		buff[128] = 1;
 		m_digestDf = new SHA1Digest();
 		byte[] keydata = hash.sha(buff);
