@@ -903,7 +903,7 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 			{
 				if (!m_bConnectionStoppedManually)
 				{
-					this.fireConnectionError();
+					fireConnectionError();
 				}
 				LogHolder.log(LogLevel.ERR, LogType.NET, "JAPMuxSocket:run() Exception while receiving!");
 				LogHolder.log(LogLevel.DEBUG, LogType.NET,

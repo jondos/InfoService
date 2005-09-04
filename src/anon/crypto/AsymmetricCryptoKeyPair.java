@@ -215,7 +215,7 @@ public class AsymmetricCryptoKeyPair
 			}
 			catch (Throwable a_e)
 			{
-				a_e.printStackTrace();
+				//a_e.printStackTrace();
 				// this is not the right key for this key info; ignore this error
 			}
 		}

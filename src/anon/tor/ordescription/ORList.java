@@ -106,7 +106,6 @@ public class ORList
 		{
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC,
 						  "There was a problem with fetching the available ORRouters: " + t.getMessage());
-			t.printStackTrace();
 		}
 		return false;
 	}

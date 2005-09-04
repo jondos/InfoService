@@ -53,6 +53,7 @@ import anon.tor.ordescription.ORList;
 import javax.swing.JCheckBox;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.ChangeEvent;
+import java.util.Date;
 
 final class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 {
@@ -62,6 +63,8 @@ final class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 	JLabel m_labelAvailableRouters;
 	JCheckBox m_cbPreCreateRoutes;
 	long m_lastUpdate;
+	DateFormat ms_dateFormat=DateFormat.getDateTimeInstance(DateFormat.MEDIUM,
+					DateFormat.SHORT);
 	private class MyJTable extends JTable
 		{
 			public MyJTable(DefaultTableModel m)
@@ -340,10 +343,14 @@ final class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 					m_tableRouters.setValueAt(new Integer(ord.getPort()), i, 2);
 					m_tableRouters.setValueAt(ord.getSoftware(), i, 3);
 				}
+				Date published=ol.getPublished();
+				String strPublished=JAPMessages.getString("unknown");
+				if(published!=null)
+				{
+					strPublished=ms_dateFormat.format(ol.getPublished());
+				}
 				m_labelAvailableRouters.setText(JAPMessages.getString("torBorderAvailableRouters") + " (" +
-												DateFormat.getDateTimeInstance(DateFormat.MEDIUM,
-					DateFormat.SHORT).
-												format(ol.getPublished()) + "):");
+												strPublished + "):");
 				getRootPanel().updateUI();
 				m_bttnFetchRouters.setEnabled(true);
 			}
