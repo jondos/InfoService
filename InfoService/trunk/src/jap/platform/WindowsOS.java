@@ -59,6 +59,7 @@ public class WindowsOS extends AbstractOS
 		boolean success = false;
 
 		String[] browser = BROWSERLIST;
+		a_url="\""+a_url+"\"";
 		for (int i = 0; i < browser.length; i++)
 		{
 			try

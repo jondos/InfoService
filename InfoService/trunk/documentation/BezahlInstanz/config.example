@@ -1,0 +1,93 @@
+##############################################################################
+# This is the sample JPI configuration file version 0.4
+#
+# (c) 2004 Bastian Voigt
+# last modification 2004-11-16
+#
+##############################################################################
+
+
+##############################################################################
+# Every BI needs a unique ID. It is recommended to use a random String, starting
+# with "bi"
+
+id biMyBiID
+
+
+
+##############################################################################
+# Some network settings
+#
+# hostname: the JPI's hostname
+# japport: TCP Port where the JPI listens for JAP connections
+# aiport: TCP Port where the JPI listens for AI connections
+# tls: use encryption? can be one of "on" or "off"
+
+hostname bezahl.instanz.de
+japport 2342
+aiport 4223
+tls on
+
+
+
+##############################################################################
+# To connect to the PostgreSQL server the JPI needs to know
+# the hostname of the server, the tcp port, the database name,
+# the username and password.
+# Note that the JPI supports only TCP connections to the database.
+# Even if it is running on the same host, UNIX Domain sockets cannot
+# be used at the moment.
+#
+# It is not recommended to store the database password in this file.
+# Please do this only if you absolutely need to start the JPI without
+# user interaction. If you do not specify a password here, the JPI
+# will ask you for the password on startup
+
+dbhost localhost
+dbport 5432
+dbname paydb
+dbusername pay
+# dbpassword password
+
+
+
+##############################################################################
+# keyfile: name of the PKCS#12 file which contains the JPI private signkey
+# keyfilepassword: the password for the signkey file.
+#
+# The keyfile can be generated using the MixConfig tool
+# It is not recommended to store the signkey password in this file.
+# Please do this only if you absolutely need to start the JPI without
+# user interaction. If you do not specify a password here, the JPI
+# will ask you for the password on startup.
+
+keyfile example.pcs
+# keyfilepassword password
+
+
+
+##############################################################################
+# NOTE THAT THE LOGGER CONFIGURATION BELOW IS NON-FUNCTIONAL AT THE MOMENT.
+# FOR NOW, ALL LOGGING WILL GO TO STDERR. THIS IS TO BE REPLACED BY A NEW
+# CONFIGURATION SCHEME SOON
+##############################################################################
+# Logger configuration
+# The BI contains an internal Logger which can send log output to stderr and
+# to a file. The logger supports the LogLevels specified below:
+#
+# LOG_FATAL = 50
+# LOG_CRITICAL = 40
+# LOG_ERROR = 30
+# LOG_WARNING = 20
+# LOG_INFO = 10
+# LOG_DEBUG = 0
+#
+# You can define a threshold, and only messages with a loglevel >= threshold
+# will be logged. So, the smaller you choose the threshold, the more messages
+# will be logged. The default is to send all output including debug information
+# to stderr, and send everything >= LOG_INFO to the logfile.
+#
+#logfilename BI.log
+#logfilethreshold 10
+#logstderrthreshold 0
+

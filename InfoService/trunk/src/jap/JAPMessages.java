@@ -79,7 +79,10 @@ public final class JAPMessages
 	{
 		try
 		{
-			return msg.getString(key);
+			String s=msg.getString(key);
+			if(s==null||s.length()==0)
+				return key;
+			return s;
 		}
 		catch (Exception e)
 		{
