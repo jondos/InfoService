@@ -13,7 +13,7 @@ import logging.*;
 public class Configuration
 {
 	/** Versionsnummer --> Please update if you change anything*/
-	public static final String BEZAHLINSTANZ_VERSION = "BI.01.010";
+	public static final String BEZAHLINSTANZ_VERSION = "BI.01.011";
 	public static IMyPrivateKey getPrivateKey()
 	{
 		return m_privateKey;
@@ -136,19 +136,25 @@ public class Configuration
 		return m_JAPPort;
 	}
 
-/*	private static int m_LogStderrThreshold;
+	private static int m_LogStderrThreshold;
 
 	public static int getLogStderrThreshold()
 	{
 		return m_LogStderrThreshold;
-	}*/
+	}
 
-/*	private static int m_LogFileThreshold;
+	private static int m_LogFileThreshold;
 
 	public static int getLogFileThreshold()
 	{
 		return m_LogFileThreshold;
-	}*/
+	}
+
+        private static String m_LogFileName=null;
+        public static String getLogFileName()
+        {
+                return m_LogFileName;
+        }
 
 	/**
 	 * Load configuration from properties file,
@@ -196,7 +202,7 @@ public class Configuration
 		}
 
 		// parse Logger Configuration
-/*		m_LogFileName = props.getProperty("logfilename");
+		m_LogFileName = props.getProperty("logfilename");
 		try
 		{
 			m_LogStderrThreshold = Integer.parseInt(props.getProperty("logstderrthreshold"));
@@ -206,7 +212,7 @@ public class Configuration
 		{
 			m_LogStderrThreshold = 1;
 			m_LogFileThreshold = 2;
-		}*/
+		}
 
 		// parse database configuration
 		m_dbHostname = props.getProperty("dbhost");

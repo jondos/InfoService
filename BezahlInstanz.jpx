@@ -24,6 +24,7 @@
   <property category="runtime.0" name="ConfigurationName" value="BI"/>
   <property category="runtime.0" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
   <property category="runtime.0" name="application.class" value="jpi.JPIMain"/>
+  <property category="runtime.0" name="application.parameters" value="documentation/BezahlInstanz/config.example"/>
   <property category="serverservices" name="disabled.services" value="jdatastore"/>
   <property category="serverservices" name="single.server.name" value="Tomcat 4.0"/>
   <property category="sys" name="AuthorLabel" value="@author"/>
@@ -43,9 +44,9 @@
   <property category="sys" name="JDK" value="java version 1.4.2_05-b04"/>
   <property category="sys" name="JvmVersion" value="1.2"/>
   <property category="sys" name="LastTag" value="0"/>
-  <property category="sys" name="Libraries" value="BouncyCastleLightForJAP;http;PostgeSql"/>
+  <property category="sys" name="Libraries" value="BouncyCastleLightForJAP;http;PostgeSql;Log4j"/>
   <property category="sys" name="MakeStable" value="0"/>
-  <property category="sys" name="OutPath" value="../JAPclasses"/>
+  <property category="sys" name="OutPath" value="classes"/>
   <property category="sys" name="SourcePath" value="src;test"/>
   <property category="sys" name="TestPath" value="test"/>
   <property category="sys" name="Title" value=""/>
@@ -55,8 +56,22 @@
   <property category="sys" name="WorkingDirectory" value="."/>
   <property category="sys" name="enable.auto.packages" value="false"/>
   <node name="anon.crypto" type="Package"/>
-  <node name="anon.pay" type="Package"/>
+  <node name="anon.pay.xml" type="Package"/>
+  <node name="anon.tor.tinytls" type="Package"/>
   <node name="jpi" type="Package"/>
+  <node name="logging" type="Package"/>
+  <node name="BI.jar" type="Archive">
+    <property category="archiving" name="archiverClass" value="com.borland.jbuilder.wizard.archive.ApplicationArchiver"/>
+    <property category="archiving" name="buildWithProject" value="0"/>
+    <property category="archiving" name="contentRules.1" value="I:jpi/*.*"/>
+    <property category="archiving" name="contentRules.2" value="I:anon/crypto/*.*"/>
+    <property category="archiving" name="includeDeps" value="1"/>
+    <property category="archiving" name="manifestMainClass" value="jpi.JPIMain"/>
+    <property category="archiving" name="obfuscator" value="RetroGuard for J2ME"/>
+    <property category="archiving" name="targetCompressed" value="1"/>
+    <property category="archiving" name="targetPath" value="BI.jar"/>
+    <property category="archiving" name="usingRules" value="1"/>
+  </node>
   <file path="documentation/BezahlInstanz/config.example"/>
   <file path="documentation/BezahlInstanz/README"/>
 </project>

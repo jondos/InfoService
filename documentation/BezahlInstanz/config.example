@@ -75,12 +75,12 @@ keyfile example.pcs
 # The BI contains an internal Logger which can send log output to stderr and
 # to a file. The logger supports the LogLevels specified below:
 #
-# LOG_FATAL = 50
-# LOG_CRITICAL = 40
-# LOG_ERROR = 30
-# LOG_WARNING = 20
-# LOG_INFO = 10
-# LOG_DEBUG = 0
+# LOG_FATAL = 2
+# LOG_CRITICAL = 3
+# LOG_ERROR = 4
+# LOG_WARNING = 5
+# LOG_INFO = 6
+# LOG_DEBUG = 7
 #
 # You can define a threshold, and only messages with a loglevel >= threshold
 # will be logged. So, the smaller you choose the threshold, the more messages
@@ -88,6 +88,6 @@ keyfile example.pcs
 # to stderr, and send everything >= LOG_INFO to the logfile.
 #
 #logfilename BI.log
-#logfilethreshold 10
-#logstderrthreshold 0
+#logfilethreshold 7
+#logstderrthreshold 7
 
