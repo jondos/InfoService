@@ -14,8 +14,9 @@ public class JPIMain
 		}
 
 		// initialize logging
-		/** @todo make this configurable */
-		LogHolder.setLogInstance(new SystemErrLog());
+		SystemErrLog log1=new SystemErrLog();
+                LogHolder.setLogInstance(log1);
+                log1.setLogType(LogType.ALL);
 		LogHolder.setDetailLevel(LogHolder.DETAIL_LEVEL_HIGHEST);
 
 		// read config file
@@ -25,7 +26,15 @@ public class JPIMain
 						  "JPIMain: Error loading configuration, I'm going to die now");
 			System.exit(0);
 		}
-
+                if(Configuration.getLogFileName()!=null)
+                {
+                    FileLog log2=new FileLog(Configuration.getLogFileName(),1000000,10);
+                    log2.setLogType(LogType.ALL);
+                    log2.setLogLevel(Configuration.getLogFileThreshold());
+                    ChainedLog l=new ChainedLog(log1,log2);
+                    LogHolder.setLogInstance(l);
+                }
+                log1.setLogLevel(Configuration.getLogStderrThreshold());
 		// process command line args
 		boolean newdb = false;
 		boolean sslOn = false;
