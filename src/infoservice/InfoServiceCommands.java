@@ -538,6 +538,22 @@ public class InfoServiceCommands implements JWSInternalCommands {
     return httpResponse;
   }
 
+  private HttpResponseStructure echoIP(InetAddress a_sourceAddress)
+  {
+	  HttpResponseStructure httpResponse;
+	  Document docEchoIP = XMLUtil.createDocument();
+	  Node nodeEchoIP = docEchoIP.createElement("EchoIP");
+	  Node nodeIP = docEchoIP.createElement("IP");
+
+	  docEchoIP.appendChild(nodeEchoIP);
+	  nodeEchoIP.appendChild(nodeIP);
+	  XMLUtil.setValue(nodeIP, a_sourceAddress.getHostAddress());
+	  httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_OK,
+											   XMLUtil.toString(docEchoIP));
+
+	  return httpResponse;
+	}
+
   /**
    * Sends the complete list of all known tor nodes to the client. This command is used by the
    * JAP clients with tor integration. If we don't have a current tor nodes list, we return -1
@@ -1028,6 +1044,11 @@ public class InfoServiceCommands implements JWSInternalCommands {
         /** @todo remove it */
         httpResponse = getProxyAddresses();
       }
+	  else if ( command.equals("/echoip") && (method == Constants.REQUEST_METHOD_GET ||
+												  method == Constants.REQUEST_METHOD_HEAD))
+		  {
+			  httpResponse = echoIP(a_sourceAddress);
+		  }
     return httpResponse;
   }
 
