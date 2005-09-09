@@ -170,7 +170,6 @@ public class ORDescription
 	{
 		return this.m_address;
 	}
-
 	/**
 	 * gets the name of the OR
 	 * @return
@@ -198,7 +197,7 @@ public class ORDescription
 	 */
 	public int getPort()
 	{
-		return this.m_port;
+		return m_port;
 	}
 
 	/**

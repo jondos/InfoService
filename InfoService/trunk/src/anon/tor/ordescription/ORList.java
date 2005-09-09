@@ -99,8 +99,7 @@ public class ORList
 			{
 				return false;
 			}
-			parseDocument(doc);
-			return true;
+			return parseDocument(doc);
 		}
 		catch (Throwable t)
 		{
@@ -231,8 +230,9 @@ public class ORList
 	 * parses the document and creates a list with all ORDescriptions
 	 * @param strDocument
 	 * @throws Exception
+	 * @return false if document is not a valid directory, true otherwise
 	 */
-	private void parseDocument(String strDocument) throws Exception
+	private boolean parseDocument(String strDocument) throws Exception
 	{
 		Vector ors = new Vector();
 		Vector exitnodes = new Vector();
@@ -241,10 +241,13 @@ public class ORList
 		LineNumberReader reader = new LineNumberReader(new StringReader(strDocument));
 		String strRunningOrs = " ";
 		Date published = null;
+		String aktLine = reader.readLine();
+		if(aktLine==null||!aktLine.startsWith("signed-directory"))
+			return false;
 		for (; ; )
 		{
 			reader.mark(200);
-			String aktLine = reader.readLine();
+			aktLine = reader.readLine();
 			if (aktLine == null)
 			{
 				break;
@@ -316,5 +319,6 @@ public class ORList
 		m_onionrouters = ors;
 		m_onionroutersWithNames = orswn;
 		m_datePublished = published;
+		return true;
 	}
 }

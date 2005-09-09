@@ -45,6 +45,18 @@ import anon.infoservice.InfoServiceDBEntry;
 import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.ListenerInterface;
 import anon.infoservice.MixCascade;
+import java.net.Socket;
+import java.net.InetSocketAddress;
+import anon.tor.ordescription.PlainORListFetcher;
+import anon.tor.ordescription.ORList;
+import anon.tor.ordescription.ORDescription;
+import anon.tor.Tor;
+import java.util.Vector;
+import java.io.FileOutputStream;
+import java.io.StringWriter;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.net.SocketTimeoutException;
 
 final class JAPLean implements IProxyListener
 {
@@ -112,7 +124,37 @@ final class JAPLean implements IProxyListener
 	public static void main(String[] argv) throws Exception
 	{
 		// check for command line
-
+		ORList ol=new ORList(new PlainORListFetcher(Tor.DEFAULT_DIR_SERVER_ADDR,Tor.DEFAULT_DIR_SERVER_PORT));
+		ol.updateList();
+		Vector v=ol.getList();
+	FileOutputStream fout=new FileOutputStream("tor_performance");
+	Writer sw= new OutputStreamWriter(fout);
+	sw.write("Tor connection performance in micor seconds (-1 = connecte timed out (>1000 ms))\n");
+	for(int i=0;i<v.size();i++)
+		{
+			ORDescription od=(ORDescription)v.elementAt(i);
+			Socket s=new Socket();
+			try{
+				long l=System.nanoTime();
+			s.connect(new InetSocketAddress(od.getAddress(),od.getPort()),1000);
+			long l1=System.nanoTime();
+			sw.write(od.getName()+","+((l1-l)/1000)+"\n");
+				System.out.println(od+" connect takes: "+((l1-l)/1000));
+				s.close();
+			}
+			catch(SocketTimeoutException se)
+			{
+				sw.write(od.getName()+",-1");
+						System.out.println(od+" connect timet out");
+			}
+			catch(Exception e1)
+			{
+				System.out.println("Could not connect to: "+od);
+			}
+		}
+		sw.flush();
+		sw.close();
+	System.exit(0);
 	System.out.println(System.getProperties().toString());
 
 	if (argv == null || argv.length < 3)
