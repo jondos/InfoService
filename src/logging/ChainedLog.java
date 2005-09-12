@@ -50,7 +50,7 @@ public class ChainedLog implements Log
 
 	public int getLogType()
 	{
-		return -1;
+		return LogType.ALL;
 	}
 
 	public void setLogLevel(int level)
@@ -59,6 +59,6 @@ public class ChainedLog implements Log
 
 	public int getLogLevel()
 	{
-		return -1;
+		return LogLevel.DEBUG;
 	}
 }

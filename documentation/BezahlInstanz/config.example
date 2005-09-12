@@ -47,7 +47,7 @@ dbhost localhost
 dbport 5432
 dbname paydb
 dbusername pay
-# dbpassword password
+dbpassword password
 
 
 
@@ -61,8 +61,8 @@ dbusername pay
 # user interaction. If you do not specify a password here, the JPI
 # will ask you for the password on startup.
 
-keyfile example.pcs
-# keyfilepassword password
+keyfile test.pfx
+keyfilepassword
 
 
 
