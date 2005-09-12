@@ -79,7 +79,7 @@ public abstract class AbstractLog4jLog implements Log
 			log4jPriority = Level.FATAL;
 		}
 		/* log the message */
-		m_Log.log(null,log4jPriority, a_message,null);
+		m_Log.log(null, log4jPriority, a_message, null);
 	}
 
 	/**
@@ -103,15 +103,43 @@ public abstract class AbstractLog4jLog implements Log
 		return LogType.ALL;
 	}
 
-	/**
-	 * This method is needed for the implementation of the Log interface, but isn't supported by
-	 * this class. So calls of this method are ignored.
+	/** Set the log level of this log instance.
+	 *                Because we are using log4j, there are done some transformations:
+	 *                LogLevel.DEBUG                        -> Level.DEBUG
+	 *                LogLevel.INFO    , LogLevel.NOTICE    -> Level.INFO
+	 *                LogLevel.WARNING                      -> Level.WARN
+	 *                LogLevel.ERR     , LogLevel.EXCEPTION -> Level.ERROR
+	 *                LogLevel.ALERT   , LogLevel.EMERGENCY -> Level.FATAL
 	 *
 	 * @param a_level Changes the log level. Only messages with a equal or higher priority are
-	 *                logged. This isn't supported by this class.
+	 *                logged.
 	 */
 	public void setLogLevel(int level)
 	{
+		Level l = Level.ALL;
+		switch (level)
+		{
+			case LogLevel.DEBUG:
+				l = Level.DEBUG;
+				break;
+			case LogLevel.INFO:
+			case LogLevel.NOTICE:
+				l = Level.INFO;
+				break;
+			case LogLevel.ALERT:
+			case LogLevel.EMERG:
+				l = Level.FATAL;
+				break;
+			case LogLevel.WARNING:
+				l = Level.WARN;
+				break;
+			case LogLevel.ERR:
+			case LogLevel.EXCEPTION:
+				l = Level.ERROR;
+				break;
+
+		}
+		m_Log.setLevel(l);
 	}
 
 	/**

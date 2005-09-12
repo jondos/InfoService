@@ -1,10 +1,16 @@
 package jpi;
 
-import java.io.*;
-import java.util.*;
-
-import anon.crypto.*;
-import logging.*;
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
+import java.util.Properties;
+import anon.crypto.IMyPrivateKey;
+import anon.crypto.JAPCertificate;
+import anon.crypto.JAPSignature;
+import anon.crypto.PKCS12;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 
 /**
  * Loads and stores all configuration data, keys
@@ -13,7 +19,7 @@ import logging.*;
 public class Configuration
 {
 	/** Versionsnummer --> Please update if you change anything*/
-	public static final String BEZAHLINSTANZ_VERSION = "BI.01.011";
+	public static final String BEZAHLINSTANZ_VERSION = "BI.01.012";
 	public static IMyPrivateKey getPrivateKey()
 	{
 		return m_privateKey;
@@ -150,11 +156,11 @@ public class Configuration
 		return m_LogFileThreshold;
 	}
 
-        private static String m_LogFileName=null;
-        public static String getLogFileName()
-        {
-                return m_LogFileName;
-        }
+	private static String m_LogFileName = null;
+	public static String getLogFileName()
+	{
+		return m_LogFileName;
+	}
 
 	/**
 	 * Load configuration from properties file,
@@ -175,8 +181,9 @@ public class Configuration
 		}
 		catch (java.io.IOException e)
 		{
-			LogHolder.log(LogLevel.ALERT, LogType.PAY,"Could not read config file " + configFileName);
-			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,e);
+			LogHolder.log(LogLevel.ALERT, LogType.PAY,
+						  "Could not read config file " + configFileName);
+			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, e);
 			return false; // Panic!
 		}
 
@@ -189,15 +196,16 @@ public class Configuration
 		{
 			m_AIPort = Integer.parseInt(props.getProperty("aiport"));
 			m_JAPPort = Integer.parseInt(props.getProperty("japport"));
-			m_bIsTLSEnabled = (props.getProperty("tls").equalsIgnoreCase("on")?true:false);
+			m_bIsTLSEnabled = (props.getProperty("tls").equalsIgnoreCase("on") ? true : false);
 		}
 		catch (Exception e)
 		{
-			LogHolder.log(LogLevel.ERR, LogType.PAY,"aiport and japport in configfile '" +
-							configFileName +
-							"' must be specified and must be NUMBERS!"
-							);
-			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,e);
+			LogHolder.log(LogLevel.ERR, LogType.PAY,
+						  "aiport and japport in configfile '" +
+						  configFileName +
+						  "' must be specified and must be NUMBERS!"
+				);
+			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, e);
 			return false;
 		}
 
@@ -205,8 +213,10 @@ public class Configuration
 		m_LogFileName = props.getProperty("logfilename");
 		try
 		{
-			m_LogStderrThreshold = Integer.parseInt(props.getProperty("logstderrthreshold"));
-			m_LogFileThreshold = Integer.parseInt(props.getProperty("logfilethreshold"));
+			m_LogStderrThreshold = Integer.parseInt(props.getProperty(
+				"logstderrthreshold"));
+			m_LogFileThreshold = Integer.parseInt(props.getProperty(
+				"logfilethreshold"));
 		}
 		catch (NumberFormatException e)
 		{
@@ -223,7 +233,9 @@ public class Configuration
 		}
 		catch (NumberFormatException e)
 		{
-			LogHolder.log(LogLevel.ERR, LogType.PAY,"dbport in configfile '" + configFileName + "' should be a NUMBER!");
+			LogHolder.log(LogLevel.ERR, LogType.PAY,
+						  "dbport in configfile '" + configFileName +
+						  "' should be a NUMBER!");
 			return false;
 		}
 		m_dbUsername = props.getProperty("dbusername");
@@ -232,8 +244,9 @@ public class Configuration
 		// If db password was not specified, ask the user
 		if (m_dbPassword == null || m_dbPassword.equals(""))
 		{
-			System.out.println("Please enter the password for connecting to the\n" +
-							   "PostgreSQL server at " + m_dbHostname + ":" + m_dbPort);
+			System.out.println(
+				"Please enter the password for connecting to the\n" +
+				"PostgreSQL server at " + m_dbHostname + ":" + m_dbPort);
 			System.out.print("Password: ");
 			BufferedReader passwordReader = new BufferedReader(
 				new InputStreamReader(System.in)
@@ -244,8 +257,9 @@ public class Configuration
 			}
 			catch (java.io.IOException e)
 			{
-				LogHolder.log(LogLevel.ERR, LogType.PAY,"Error reading password from stdin.. strange!");
-				LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,e);
+				LogHolder.log(LogLevel.ERR, LogType.PAY,
+							  "Error reading password from stdin.. strange!");
+				LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, e);
 			}
 		}
 
@@ -268,29 +282,34 @@ public class Configuration
 			}
 			catch (java.io.IOException e)
 			{
-				LogHolder.log(LogLevel.ERR, LogType.PAY,"Error reading password from stdin.. strange!");
-				LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,e);
+				LogHolder.log(LogLevel.ERR, LogType.PAY,
+							  "Error reading password from stdin.. strange!");
+				LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, e);
 			}
 		}
 
 		try
 		{
 			m_signingInstance = new JAPSignature();
-			LogHolder.log(LogLevel.DEBUG, LogType.PAY,"Trying to load PKCS12 file " + keyFileName + " with password '" + password +
-							"'.");
-			PKCS12 ownPkcs12 = PKCS12.load(
+			LogHolder.log(LogLevel.DEBUG, LogType.PAY,
+						  "Trying to load PKCS12 file " + keyFileName +
+						  " with password '" + password +
+						  "'.");
+			PKCS12 ownPkcs12 = PKCS12.getInstance(
 				new FileInputStream(keyFileName),
 				password.toCharArray()
 				);
-		   m_privateKey = ownPkcs12.getPrivKey();
+			m_privateKey = ownPkcs12.getPrivateKey();
 			m_signingInstance.initSign(m_privateKey);
 			/* get the public certificate */
-			m_ownX509Certificate = JAPCertificate.getInstance(ownPkcs12.getX509cert());
+			m_ownX509Certificate = JAPCertificate.getInstance(ownPkcs12.
+				getX509Certificate());
 		}
 		catch (Exception e)
 		{
-			LogHolder.log(LogLevel.ALERT, LogType.PAY, "Error loading private key file " + keyFileName);
-			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,e);
+			LogHolder.log(LogLevel.ALERT, LogType.PAY,
+						  "Error loading private key file " + keyFileName);
+			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, e);
 			return false;
 		}
 		return true;
@@ -306,11 +325,4 @@ public class Configuration
 	{
 		return m_bIsTLSEnabled;
 	}
-
-	/*	private static String m_LogFileName;
-	public static String getLogFileName()
-	{
-		return m_LogFileName;
-	}*/
-
 }

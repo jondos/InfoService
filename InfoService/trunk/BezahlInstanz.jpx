@@ -3,21 +3,18 @@
 <project>
   <property category="generalFormatting" name="baseCodeStyle" value="java/Java Standard.codestyle"/>
   <property category="generalFormatting2" name="blockIndent" value="4"/>
-  <property category="generalFormatting2" name="continuationIndent" value="8"/>
   <property category="generalFormatting2" name="overrideBasicFormatting" value="1"/>
-  <property category="javaFormatting" name="alignMultilineAssign" value="1"/>
-  <property category="javaFormatting" name="arrayInitDataOnNewLine" value="0"/>
-  <property category="javaFormatting" name="blankLinesAfterClass" value="2"/>
-  <property category="javaFormatting" name="catchOnNewLine" value="0"/>
-  <property category="javaFormatting" name="elseOnNewLine" value="0"/>
+  <property category="generalFormatting2" name="tabSize" value="4"/>
+  <property category="generalFormatting2" name="useTabChar" value="1"/>
+  <property category="javaFormatting" name="EventMatch" value="0"/>
+  <property category="javaFormatting" name="alwaysClasses" value="1"/>
+  <property category="javaFormatting" name="classBraceNextLine" value="1"/>
   <property category="javaFormatting" name="extendsOnNewLine" value="0"/>
-  <property category="javaFormatting" name="finallyOnNewLine" value="0"/>
   <property category="javaFormatting" name="implementsOnNewLine" value="0"/>
-  <property category="javaFormatting" name="indentCase" value="0"/>
-  <property category="javaFormatting" name="packagePrefixGroups" value="java;BLANK_LINE;javax;BLANK_LINE;(*)"/>
-  <property category="javaFormatting" name="preservedBlankLinesInDecl" value="2"/>
-  <property category="javaFormatting" name="spaceBeforeLparen" value="0"/>
-  <property category="javaFormatting" name="whileOnNewLine" value="0"/>
+  <property category="javaFormatting" name="methodBraceNextLine" value="1"/>
+  <property category="javaFormatting" name="otherBraceNextLine" value="1"/>
+  <property category="javaFormatting" name="packagePrefixGroups" value="java;javax;(blank line);java.awt;javax.swing;(blank line);org;(*)"/>
+  <property category="javaFormatting" name="wrapAtColumn" value="110"/>
   <property category="javadoc" name="custom.tags.1" value="todo;a;To Do:"/>
   <property category="runtime" name="DefaultConfiguration" value="-1"/>
   <property category="runtime.0" name="BuildTargetOnRun" value="com.borland.jbuilder.build.ProjectBuilder$ProjectBuildAction;make"/>
@@ -66,6 +63,7 @@
     <property category="archiving" name="contentRules.1" value="I:jpi/*.*"/>
     <property category="archiving" name="contentRules.2" value="I:anon/crypto/*.*"/>
     <property category="archiving" name="includeDeps" value="1"/>
+    <property category="archiving" name="libraryStates.1" value="3:BouncyCastleLightForJAP"/>
     <property category="archiving" name="manifestMainClass" value="jpi.JPIMain"/>
     <property category="archiving" name="obfuscator" value="RetroGuard for J2ME"/>
     <property category="archiving" name="targetCompressed" value="1"/>

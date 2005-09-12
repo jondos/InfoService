@@ -1,7 +1,12 @@
 package jpi;
 
 import jpi.db.DBSupplier;
-import logging.*;
+import logging.ChainedLog;
+import logging.FileLog;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
+import logging.SystemErrLog;
 
 public class JPIMain
 {
@@ -14,9 +19,9 @@ public class JPIMain
 		}
 
 		// initialize logging
-		SystemErrLog log1=new SystemErrLog();
-                LogHolder.setLogInstance(log1);
-                log1.setLogType(LogType.ALL);
+		SystemErrLog log1 = new SystemErrLog();
+		LogHolder.setLogInstance(log1);
+		log1.setLogType(LogType.ALL);
 		LogHolder.setDetailLevel(LogHolder.DETAIL_LEVEL_HIGHEST);
 
 		// read config file
@@ -26,15 +31,15 @@ public class JPIMain
 						  "JPIMain: Error loading configuration, I'm going to die now");
 			System.exit(0);
 		}
-                if(Configuration.getLogFileName()!=null)
-                {
-                    FileLog log2=new FileLog(Configuration.getLogFileName(),1000000,10);
-                    log2.setLogType(LogType.ALL);
-                    log2.setLogLevel(Configuration.getLogFileThreshold());
-                    ChainedLog l=new ChainedLog(log1,log2);
-                    LogHolder.setLogInstance(l);
-                }
-                log1.setLogLevel(Configuration.getLogStderrThreshold());
+		if (Configuration.getLogFileName() != null)
+		{
+			FileLog log2 = new FileLog(Configuration.getLogFileName(), 1000000, 10);
+			log2.setLogType(LogType.ALL);
+			log2.setLogLevel(Configuration.getLogFileThreshold());
+			ChainedLog l = new ChainedLog(log1, log2);
+			LogHolder.setLogInstance(l);
+		}
+		log1.setLogLevel(Configuration.getLogStderrThreshold());
 		// process command line args
 		boolean newdb = false;
 		boolean sslOn = false;
@@ -80,7 +85,7 @@ public class JPIMain
 
 			if (newdb)
 			{ // drop and recreate all tables
-				LogHolder.log(LogLevel.INFO, LogType.PAY,"JPIMain: Recreating database tables...");
+				LogHolder.log(LogLevel.INFO, LogType.PAY, "JPIMain: Recreating database tables...");
 				DBSupplier.getDataBase().dropTables();
 				DBSupplier.getDataBase().createTables();
 			}
@@ -90,24 +95,24 @@ public class JPIMain
 		}
 		catch (Exception e)
 		{
-			LogHolder.log(LogLevel.ERR, LogType.PAY,"Could not connect to PostgreSQL database server");
+			LogHolder.log(LogLevel.ERR, LogType.PAY, "Could not connect to PostgreSQL database server");
 			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, e);
 			System.exit(0);
 		}
 
 		// start PIServer for JAP connections
-		LogHolder.log(LogLevel.INFO, LogType.PAY,"JPIMain: Launching PIServer for JAP connections");
+		LogHolder.log(LogLevel.INFO, LogType.PAY, "JPIMain: Launching PIServer for JAP connections");
 		PIServer userServer = new PIServer(false, sslOn);
 		Thread userThread = new Thread(userServer);
 		userThread.start();
 
 		// start PIServer for AI connections
-		LogHolder.log(LogLevel.INFO, LogType.PAY,"JPIMain: Launching PIServer for AI connections on port ");
+		LogHolder.log(LogLevel.INFO, LogType.PAY, "JPIMain: Launching PIServer for AI connections on port ");
 		PIServer aiServer = new PIServer(true, sslOn);
 		Thread aiThread = new Thread(aiServer);
 		aiThread.start();
 
-		LogHolder.log(LogLevel.INFO, LogType.PAY,"Initialization complete, JPIMain Thread terminating");
+		LogHolder.log(LogLevel.INFO, LogType.PAY, "Initialization complete, JPIMain Thread terminating");
 	}
 
 	private static void usage()
