@@ -27,7 +27,7 @@ public class tor2jap
 		for(int i=0;i<v.size();i++)
 		{
 			ORDescription od=(ORDescription)v.elementAt(i);
-			Socket s=new Socket();
+			//Socket s=new Socket();
 		//	s.connect(new InetSocketAddress(od.getAddress(),od.getPort()),1000);
 		}
 		/*Tor tor = Tor.getInstance();
