@@ -132,7 +132,7 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 
 	private DummyTraffic m_DummyTraffic = null;
 
-	private boolean m_bMixProtocolWithTimestamp, m_bMixSupportsControlChannels;
+	private boolean m_bMixProtocolWithTimestamp;
 	private boolean m_bNewFlowControl;
 
 	private final static int SECONDS_PER_INTERVAL = 600; //seconds per interval for replay detection
@@ -176,7 +176,6 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 		m_DummyTraffic = new DummyTraffic(this);
 		m_SecureRandom = new SecureRandom();
 		m_bMixProtocolWithTimestamp = false;
-		m_bMixSupportsControlChannels = false;
 		m_ControlChannelDispatcher = null;
 		m_bNewFlowControl = false;
 		//threadgroupChannels=null;
@@ -469,8 +468,6 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 			String strProtocolVersion = n.getNodeValue().trim();
 			m_bMixProtocolWithTimestamp = false;
 			m_cipherFirstMix = null;
-			m_bMixSupportsControlChannels = false;
-			m_bNewFlowControl = false;
 
 			if (strProtocolVersion.equals("0.2"))
 			{
@@ -484,18 +481,15 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 			else if (strProtocolVersion.equalsIgnoreCase("0.5"))
 			{
 				m_iMixProtocolVersion = MIX_PROTOCOL_VERSION_0_5;
-				m_bMixSupportsControlChannels = true;
 			}
 			else if (strProtocolVersion.equals("0.7")) //obsolete!!
 			{
 				m_bMixProtocolWithTimestamp = true;
-				m_bMixSupportsControlChannels = true;
 				m_iMixProtocolVersion = MIX_PROTOCOL_VERSION_0_7;
 			}
 			else if (strProtocolVersion.equals("0.8"))
 			{
 				m_bMixProtocolWithTimestamp = true;
-				m_bMixSupportsControlChannels = true;
 				m_cipherFirstMix = new SymCipher();
 				m_iMixProtocolVersion = MIX_PROTOCOL_VERSION_0_8;
 			}
@@ -919,7 +913,7 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 				LogHolder.log(LogLevel.DEBUG, LogType.NET, "MuxSocket:run() Received a Dummy...");
 				continue;
 			}
-			if (m_bMixSupportsControlChannels && channel < 256)
+			if ( channel < 256)
 			{
 				m_ControlChannelDispatcher.proccessMixPacket(channel, flags, buff);
 				continue;
