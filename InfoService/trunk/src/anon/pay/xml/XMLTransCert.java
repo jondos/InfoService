@@ -34,19 +34,21 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-import anon.util.AbstractXMLSignable;
 import anon.util.XMLUtil;
+import anon.util.IXMLEncodable;
+import anon.crypto.XMLSignature;
+import anon.crypto.IMyPrivateKey;
 
 /** @todo add spent, BiID */
-public class XMLTransCert extends AbstractXMLSignable
+public class XMLTransCert implements IXMLEncodable
 {
 	//~ Instance fields ********************************************************
 
-	//private String signature;
 	private java.sql.Timestamp m_validTime;
 	private long m_accountNumber;
 	private long m_transferNumber;
 	private long m_deposit;
+	private Document m_docTheTransCert;
 
 	//~ Constructors ***********************************************************
 
@@ -57,7 +59,8 @@ public class XMLTransCert extends AbstractXMLSignable
 		m_transferNumber = transferNumber;
 		m_deposit = deposit;
 		m_validTime = validTime;
-		m_signature = null;
+		m_docTheTransCert = XMLUtil.createDocument();
+		m_docTheTransCert.appendChild(internal_toXmlElement(m_docTheTransCert));
 	}
 
 	public XMLTransCert(String xml) throws Exception
@@ -66,6 +69,7 @@ public class XMLTransCert extends AbstractXMLSignable
 		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(in);
 		Element elemRoot = doc.getDocumentElement();
 		setValues(elemRoot);
+		m_docTheTransCert = doc;
 	}
 
 	/**
@@ -76,12 +80,15 @@ public class XMLTransCert extends AbstractXMLSignable
 	public XMLTransCert(Element xml) throws Exception
 	{
 		setValues(xml);
+		m_docTheTransCert = XMLUtil.createDocument();
+		m_docTheTransCert.appendChild(XMLUtil.importNode(m_docTheTransCert, xml, true));
 	}
 
 	public XMLTransCert(Document xml) throws Exception
 	{
 		Element elemRoot = xml.getDocumentElement();
 		setValues(elemRoot);
+		m_docTheTransCert = xml;
 	}
 
 	//~ Methods ****************************************************************
@@ -120,13 +127,6 @@ public class XMLTransCert extends AbstractXMLSignable
 		str = XMLUtil.parseValue(element, null);
 		m_validTime = java.sql.Timestamp.valueOf(str);
 
-		element = (Element) XMLUtil.getFirstChildByName(elemRoot, "Signature");
-		if (element != null)
-		{
-			m_signature = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
-			m_signature.appendChild(XMLUtil.importNode(m_signature, element, true));
-		}
-
 	}
 
 	/**
@@ -146,7 +146,7 @@ public class XMLTransCert extends AbstractXMLSignable
 	 * @param a_doc Document
 	 * @return Element
 	 */
-	public Element toXmlElement(Document a_doc)
+	private Element internal_toXmlElement(Document a_doc)
 	{
 //		a_doc = getDocumentBuilder().newDocument();
 		Element elemRoot = a_doc.createElement("TransferCertificate");
@@ -164,22 +164,32 @@ public class XMLTransCert extends AbstractXMLSignable
 		elem = a_doc.createElement("ValidTime");
 		XMLUtil.setValue(elem, m_validTime.toString());
 		elemRoot.appendChild(elem);
-		if (m_signature != null)
-		{
-			Element elemSig = null;
-			try
-			{
-				elemSig = (Element) XMLUtil.importNode(a_doc, m_signature.getDocumentElement(), true);
-				elemRoot.appendChild(elemSig);
-			}
-			catch (Exception ex1)
-			{
-			}
-		}
-
 		return elemRoot;
 	}
 
+	public Element toXmlElement(Document a_doc)
+	{
+		try
+		{
+			return (Element) XMLUtil.importNode(a_doc, m_docTheTransCert.getDocumentElement(), true);
+		}
+		catch (Exception e)
+		{
+			return null;
+		}
+	}
 
+	public boolean sign(IMyPrivateKey key)
+	{
+		try
+		{
+			XMLSignature.sign(m_docTheTransCert, key);
+			return true;
+		}
+		catch (Exception e)
+		{
+			return false;
+		}
+	}
 
 }

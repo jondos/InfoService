@@ -2142,6 +2142,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 		try
 		{
 			// show a Reminder message that active contents should be disabled
+			m_Controller.setAnonMode(false);
 			Object[] options =
 				{
 				JAPMessages.getString("okButton")};

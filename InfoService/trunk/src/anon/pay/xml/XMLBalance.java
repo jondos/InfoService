@@ -7,9 +7,10 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-import anon.crypto.JAPSignature;
-import anon.util.AbstractXMLSignable;
 import anon.util.XMLUtil;
+import anon.util.IXMLEncodable;
+import anon.crypto.IMyPrivateKey;
+import anon.crypto.XMLSignature;
 
 /**
  * This class holds a balance certificate. Can be converted to and from
@@ -17,37 +18,38 @@ import anon.util.XMLUtil;
  *
  * @todo find a better internal representation for the signature
  */
-public class XMLBalance extends AbstractXMLSignable
+public class XMLBalance implements IXMLEncodable
 {
 	private long m_lAccountNumber;
 	private java.sql.Timestamp m_Timestamp;
 	private java.sql.Timestamp m_ValidTime;
 	private long m_lDeposit;
 	private long m_lSpent;
-//	private Document m_signature;
+	private Document m_docTheBalance = null;
 
 	public XMLBalance(long accountNumber,
 					  long deposit, long spent,
 					  java.sql.Timestamp timestamp,
 					  java.sql.Timestamp validTime,
-					  JAPSignature signer) throws Exception
+					  IMyPrivateKey signer) throws Exception
 	{
 		m_lDeposit = deposit;
 		m_lSpent = spent;
 		m_Timestamp = timestamp;
 		m_ValidTime = validTime;
 		m_lAccountNumber = accountNumber;
-		m_signature = null;
-
+		m_docTheBalance = XMLUtil.createDocument();
+		m_docTheBalance.appendChild(internal_toXmlElement(m_docTheBalance));
 		if (signer != null)
 		{
-			sign(signer);
+			XMLSignature.sign(m_docTheBalance, signer);
 		}
 	}
 
 	public XMLBalance(Document doc) throws Exception
 	{
 		setValues(doc.getDocumentElement());
+		m_docTheBalance = doc;
 	}
 
 	public XMLBalance(String xmlDoc) throws Exception
@@ -55,11 +57,14 @@ public class XMLBalance extends AbstractXMLSignable
 		ByteArrayInputStream in = new ByteArrayInputStream(xmlDoc.getBytes());
 		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(xmlDoc);
 		setValues(doc.getDocumentElement());
+		m_docTheBalance = doc;
 	}
 
 	public XMLBalance(Element elemBalance) throws Exception
 	{
 		setValues(elemBalance);
+		m_docTheBalance = XMLUtil.createDocument();
+		m_docTheBalance.appendChild(XMLUtil.importNode(m_docTheBalance, elemBalance, true));
 	}
 
 	private void setValues(Element elemRoot) throws Exception
@@ -89,16 +94,9 @@ public class XMLBalance extends AbstractXMLSignable
 		elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "Validtime");
 		str = XMLUtil.parseValue(elem, null);
 		m_ValidTime = java.sql.Timestamp.valueOf(str);
-
-		elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "Signature");
-		if (elem != null)
-		{
-			m_signature = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
-			m_signature.appendChild(XMLUtil.importNode(m_signature, elem, true));
-		}
 	}
 
-	public Element toXmlElement(Document a_doc)
+	private Element internal_toXmlElement(Document a_doc)
 	{
 		Element elemRoot = a_doc.createElement("Balance");
 		elemRoot.setAttribute("version", "1.0");
@@ -118,18 +116,6 @@ public class XMLBalance extends AbstractXMLSignable
 		elem = a_doc.createElement("Validtime");
 		XMLUtil.setValue(elem, m_ValidTime.toString());
 		elemRoot.appendChild(elem);
-		if (m_signature != null)
-		{
-			Element elemSig = null;
-			try
-			{
-				elemSig = (Element) XMLUtil.importNode(a_doc, m_signature.getDocumentElement(), true);
-				elemRoot.appendChild(elemSig);
-			}
-			catch (Exception ex1)
-			{
-			}
-		}
 		return elemRoot;
 	}
 
@@ -161,6 +147,18 @@ public class XMLBalance extends AbstractXMLSignable
 	public java.sql.Timestamp getValidTime()
 	{
 		return m_ValidTime;
+	}
+
+	public Element toXmlElement(Document a_doc)
+	{
+		try
+		{
+			return (Element) XMLUtil.importNode(a_doc, m_docTheBalance.getDocumentElement(), true);
+		}
+		catch (Exception e)
+		{
+			return null;
+		}
 	}
 
 }
