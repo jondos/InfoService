@@ -177,8 +177,8 @@ public class BI implements IXMLEncodable
 	 *
 	 * @return IMyPublicKey
 	 */
-	public IMyPublicKey getCertificate()
+	public JAPCertificate getCertificate()
 	{
-		return null;
+		return m_cert;
 	}
 }

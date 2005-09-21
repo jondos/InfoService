@@ -327,7 +327,7 @@ public class PayAccount implements IXMLEncodable
 				XMLEasyCC newCC = info.getCC(myCC.getAIName());
 				if ( (newCC != null) && (newCC.getTransferredBytes()>myCC.getTransferredBytes()) )
 				{
-					if(newCC.verifySignature(getVerifyingInstance()))
+					if(newCC.verify(m_accountCertificate.getPublicKey()))
 					{
 						addCostConfirmation(newCC);
 						fire = false; // the event is fired by ^^

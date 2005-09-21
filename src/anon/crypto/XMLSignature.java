@@ -462,24 +462,42 @@ public final class XMLSignature implements IXMLEncodable
 	}
 
 	/**
-	 * Verifies the signature of an XML node and creates a new XMLSignature from a valid
-	 * signature. This method is not as fast as verify(Node, X509Certificate) as a temporary
-	 * certificate has to be created from the public key. Therefore, it is not recommended.
+	 * Only verifies the signature of an XML node.
 	 * @param a_node an XML node
 	 * @param a_publicKey a public key to verify the signature
-	 * @return the XMLSignature of the node; null if the node could not be verified
-	 * @exception XMLParseException if a signature element exists, but the element
-	 *                              has an invalid structure
+	 * @return true if the signatue was ok, false otherwise
 	 */
-	public static XMLSignature verify(Node a_node, IMyPublicKey a_publicKey) throws XMLParseException
+	public static boolean verifyFast(Node a_node, IMyPublicKey a_publicKey)
 	{
-		JAPCertificate certificate;
-
-		// transform the public key into a temporary certificate
-		certificate = JAPCertificate.getInstance(a_publicKey, new GregorianCalendar());
-
-		return verify(a_node, certificate);
+		try
+			{
+				return verify(a_node,findXMLSignature(a_node),a_publicKey) ;
+			}
+		catch(Throwable t)
+		{
+			return false;
+		}
 	}
+
+	/**
+		 * Verifies the signature of an XML node and creates a new XMLSignature from a valid
+		 * signature. This method is not as fast as verify(Node, X509Certificate) as a temporary
+		 * certificate has to be created from the public key. Therefore, it is not recommended.
+		 * @param a_node an XML node
+		 * @param a_publicKey a public key to verify the signature
+		 * @return the XMLSignature of the node; null if the node could not be verified
+		 * @exception XMLParseException if a signature element exists, but the element
+		 *                              has an invalid structure
+		 */
+		public static XMLSignature verify(Node a_node, IMyPublicKey a_publicKey) throws XMLParseException
+		{
+			JAPCertificate certificate;
+
+			// transform the public key into a temporary certificate
+			certificate = JAPCertificate.getInstance(a_publicKey, new GregorianCalendar());
+
+			return verify(a_node, certificate);
+		}
 
 	/**
 	 * Gets the signature from a node if present. The signature is not verified.

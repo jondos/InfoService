@@ -39,7 +39,7 @@ import org.w3c.dom.Document;
 
 import anon.pay.xml.XMLDescription;
 
-final public class HttpClient
+final class HttpClient
 {
 	private final static int MAX_LINE_LENGTH = 100;
 	private DataInputStream m_dataIS;

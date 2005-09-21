@@ -35,8 +35,10 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import anon.crypto.IMyPublicKey;
-import anon.util.AbstractXMLSignable;
 import anon.util.XMLUtil;
+import anon.util.IXMLEncodable;
+import anon.crypto.IMyPrivateKey;
+import anon.crypto.XMLSignature;
 
 /**
  * This class contains the functionality for creating and parsing XML account
@@ -72,7 +74,7 @@ import anon.util.XMLUtil;
  * </li>
  * </ul>
  */
-public class XMLAccountCertificate extends AbstractXMLSignable
+public class XMLAccountCertificate implements IXMLEncodable
 {
 
 	//~ Instance fields ********************************************************
@@ -81,7 +83,7 @@ public class XMLAccountCertificate extends AbstractXMLSignable
 	private java.sql.Timestamp m_creationTime;
 	private long m_accountNumber;
 	private String m_biID;
-
+	private Document m_docTheAccountCert;
 
 	//~ Constructors ***********************************************************
 
@@ -95,13 +97,14 @@ public class XMLAccountCertificate extends AbstractXMLSignable
 	 */
 	public XMLAccountCertificate(IMyPublicKey publicKey, long accountNumber,
 								 java.sql.Timestamp creationTime, String biID
-								 )
+		)
 	{
 		m_publicKey = publicKey;
 		m_accountNumber = accountNumber;
 		m_creationTime = creationTime;
 		m_biID = biID;
-		m_signature = null;
+		m_docTheAccountCert = XMLUtil.createDocument();
+		m_docTheAccountCert.appendChild(internal_toXmlElement(m_docTheAccountCert));
 	}
 
 	/**
@@ -114,6 +117,7 @@ public class XMLAccountCertificate extends AbstractXMLSignable
 		ByteArrayInputStream in = new ByteArrayInputStream(xml.getBytes());
 		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(in);
 		setValues(doc.getDocumentElement());
+		m_docTheAccountCert = doc;
 	}
 
 	public XMLAccountCertificate(byte[] xmldata) throws Exception
@@ -121,6 +125,7 @@ public class XMLAccountCertificate extends AbstractXMLSignable
 		ByteArrayInputStream in = new ByteArrayInputStream(xmldata);
 		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(in);
 		setValues(doc.getDocumentElement());
+		m_docTheAccountCert = doc;
 	}
 
 	/**
@@ -131,6 +136,8 @@ public class XMLAccountCertificate extends AbstractXMLSignable
 	public XMLAccountCertificate(Element xml) throws Exception
 	{
 		setValues(xml);
+		m_docTheAccountCert = XMLUtil.createDocument();
+		m_docTheAccountCert.appendChild(XMLUtil.importNode(m_docTheAccountCert, xml, true));
 	}
 
 	/**
@@ -180,16 +187,6 @@ public class XMLAccountCertificate extends AbstractXMLSignable
 		}
 		m_publicKey = new XMLJapPublicKey(elem).getPublicKey();
 
-		// try to parse signature --- well not really parse it but simply store
-		// it as xml document
-		/** @todo find a better internal representation for the sig */
-		elem = (Element) XMLUtil.getFirstChildByName(xml, "Signature");
-		if (elem != null)
-		{
-			m_signature = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
-			Element elemSig = (Element) XMLUtil.importNode(m_signature, elem, true);
-			m_signature.appendChild(elemSig);
-		}
 	}
 
 	/**
@@ -197,7 +194,7 @@ public class XMLAccountCertificate extends AbstractXMLSignable
 	 *
 	 * @return Document
 	 */
-	public Element toXmlElement(Document a_doc)
+	private Element internal_toXmlElement(Document a_doc)
 	{
 		Element elemRoot = a_doc.createElement("AccountCertificate");
 		elemRoot.setAttribute("version", "1.0");
@@ -222,17 +219,6 @@ public class XMLAccountCertificate extends AbstractXMLSignable
 
 		elem.appendChild(m_publicKey.toXmlElement(a_doc));
 
-		if (m_signature != null)
-		{
-			try
-			{
-				elemRoot.appendChild(XMLUtil.importNode(a_doc, m_signature.getDocumentElement(), true));
-			}
-			catch (Exception ex2)
-			{
-				return null;
-			}
-		}
 		return elemRoot;
 	}
 
@@ -253,24 +239,29 @@ public class XMLAccountCertificate extends AbstractXMLSignable
 		return m_publicKey;
 	}
 
-	private void setAccountNumber(long accountNumber) throws Exception
+	public boolean sign(IMyPrivateKey key)
 	{
-		m_accountNumber = accountNumber;
+		try
+		{
+			XMLSignature.sign(m_docTheAccountCert, key);
+			return true;
+		}
+		catch (Exception e)
+		{
+			return false;
+		}
 	}
 
-	private void setCreationTime(java.sql.Timestamp creationTime) throws Exception
+	public Element toXmlElement(Document a_doc)
 	{
-		m_creationTime = creationTime;
-	}
-
-	private void setID(String biID) throws Exception
-	{
-		m_biID = biID;
-	}
-
-	private void setPublicKey(IMyPublicKey publicKey) throws Exception
-	{
-		m_publicKey = publicKey;
+		try
+		{
+			return (Element) XMLUtil.importNode(a_doc, m_docTheAccountCert.getDocumentElement(), true);
+		}
+		catch (Exception e)
+		{
+			return null;
+		}
 	}
 
 }

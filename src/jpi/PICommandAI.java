@@ -1,16 +1,17 @@
 package jpi;
 
-import java.io.*;
-import java.util.*;
-import javax.xml.parsers.*;
-
-import org.w3c.dom.*;
-import anon.crypto.*;
-import anon.pay.xml.*;
-import jpi.db.*;
+import java.util.Random;
+import anon.pay.xml.XMLCloseAck;
+import anon.pay.xml.XMLEasyCC;
+import anon.pay.xml.XMLErrorMessage;
+import anon.pay.xml.XMLJapPublicKey;
 import anon.util.IXMLEncodable;
-import logging.*;
-import anon.util.*;
+import anon.util.XMLUtil;
+import jpi.db.DBInterface;
+import jpi.db.DBSupplier;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 
 /**
  * This class implements the high-level communication with the AI.
@@ -78,32 +79,33 @@ public class PICommandAI implements PICommand
 		switch (m_iState)
 		{
 			case INIT:
-/*				// authentication for a known account
-				if (request.method.equals("POST") && request.url.equals("/authenticate"))
-				{
-					try
+
+				/*				// authentication for a known account
+					if (request.method.equals("POST") && request.url.equals("/authenticate"))
 					{
-						testCertificate(request.data);
-						reply = new PIAnswer(PIAnswer.TYPE_CHALLENGE_REQUEST,
-											 getChallengeXML()); // send challenge for challenge-response authentication
-						m_iCurrentState = STATE_AUTH_CHA_SENT;
+					 try
+					 {
+					  testCertificate(request.data);
+					  reply = new PIAnswer(PIAnswer.TYPE_CHALLENGE_REQUEST,
+							getChallengeXML()); // send challenge for challenge-response authentication
+					  m_iCurrentState = STATE_AUTH_CHA_SENT;
+					 }
+					 catch (Exception e)
+					 {
+					  LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,e);
+					  reply = PIAnswer.getErrorAnswer(XMLErrorMessage.ERR_INTERNAL_SERVER_ERROR);
+					 }
 					}
-					catch (Exception e)
-					{
-						LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,e);
-						reply = PIAnswer.getErrorAnswer(XMLErrorMessage.ERR_INTERNAL_SERVER_ERROR);
-					}
-				}
-				break;
+					break;
 
-			case CHALLENGE_SENT:
-				break;
+				   case CHALLENGE_SENT:
+					break;
 
-			case AUTHENTICATION_BAD:
-				reply = new PIAnswer(PIAnswer.TYPE_CLOSE, new XMLErrorMessage(XMLErrorMessage.ERR_BAD_REQUEST));
-				break;
+				   case AUTHENTICATION_BAD:
+				 reply = new PIAnswer(PIAnswer.TYPE_CLOSE, new XMLErrorMessage(XMLErrorMessage.ERR_BAD_REQUEST));
+					break;
 
-			case AUTHENTICATION_OK:*/
+				   case AUTHENTICATION_OK:*/
 				if (request.method.equals("POST") && request.url.equals("/settle"))
 				{
 					LogHolder.log(LogLevel.DEBUG, LogType.MISC, "got settle request");
@@ -157,22 +159,23 @@ public class PICommandAI implements PICommand
 		try
 		{
 			cc = new XMLEasyCC(data);
-			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Parsed incoming CC: "+XMLUtil.toString(XMLUtil.toXMLDocument(cc)));
+			LogHolder.log(LogLevel.DEBUG, LogType.MISC,
+						  "Parsed incoming CC: " + XMLUtil.toString(XMLUtil.toXMLDocument(cc)));
 		}
 		catch (Exception ex)
 		{
-			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,ex);
+			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, ex);
 			return new XMLErrorMessage(XMLErrorMessage.ERR_WRONG_FORMAT,
 									   "could not parse CC:" + ex.getMessage());
 		}
-/*		if (! (cc.getAIName().equals(m_aiName)))
-		{
-			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "settle request: wrong AI name '"+cc.getAIName()+"'");
-			return new XMLErrorMessage(XMLErrorMessage.ERR_WRONG_DATA,
-									   "CC for wrong AI '" + cc.getAIName() + "' found, '" + m_aiName +
-									   "' was expected");
-		}*/
-		LogHolder.log(LogLevel.DEBUG, LogType.MISC, "settle request: AI name '"+cc.getAIName()+"'");
+		/*		if (! (cc.getAIName().equals(m_aiName)))
+		  {
+		   LogHolder.log(LogLevel.DEBUG, LogType.MISC, "settle request: wrong AI name '"+cc.getAIName()+"'");
+		   return new XMLErrorMessage(XMLErrorMessage.ERR_WRONG_DATA,
+					"CC for wrong AI '" + cc.getAIName() + "' found, '" + m_aiName +
+					"' was expected");
+		  }*/
+		LogHolder.log(LogLevel.DEBUG, LogType.MISC, "settle request: AI name '" + cc.getAIName() + "'");
 
 		// check CC signature
 		XMLJapPublicKey keyParser = null;
@@ -183,17 +186,16 @@ public class PICommandAI implements PICommand
 		catch (Exception ex2)
 		{
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "settle request: Could not parse key");
-			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,ex2);
+			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, ex2);
 			return new XMLErrorMessage(XMLErrorMessage.ERR_KEY_NOT_FOUND,
 									   "Could not find a key for account " + cc.getAccountNumber() +
 									   " in my DB");
 		}
-		LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Parsed Key: "+XMLUtil.toString(XMLUtil.toXMLDocument(keyParser.getPublicKey())));
+		LogHolder.log(LogLevel.DEBUG, LogType.MISC,
+					  "Parsed Key: " + XMLUtil.toString(XMLUtil.toXMLDocument(keyParser.getPublicKey())));
 		try
 		{
-			JAPSignature verifier = new JAPSignature();
-			verifier.initVerify(keyParser.getPublicKey());
-			if (!cc.verifySignature(verifier))
+			if (!cc.verify(keyParser.getPublicKey()))
 			{
 				// sig was bad
 				LogHolder.log(LogLevel.DEBUG, LogType.MISC, "settle request: Bad signature");
@@ -202,8 +204,8 @@ public class PICommandAI implements PICommand
 		}
 		catch (Exception e)
 		{
-			LogHolder.log(LogLevel.ALERT, LogType.PAY,"settle(): Error while verifying signature");
-			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,e);
+			LogHolder.log(LogLevel.ALERT, LogType.PAY, "settle(): Error while verifying signature");
+			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, e);
 			return new XMLErrorMessage(XMLErrorMessage.ERR_INTERNAL_SERVER_ERROR,
 									   "Error while verifying signature");
 		}
@@ -224,7 +226,7 @@ public class PICommandAI implements PICommand
 		}
 		catch (Exception ex3)
 		{
-			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,ex3);
+			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, ex3);
 			return new XMLErrorMessage(XMLErrorMessage.ERR_INTERNAL_SERVER_ERROR);
 		}
 	}

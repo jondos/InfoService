@@ -6,7 +6,6 @@ import java.io.InputStreamReader;
 import java.util.Properties;
 import anon.crypto.IMyPrivateKey;
 import anon.crypto.JAPCertificate;
-import anon.crypto.JAPSignature;
 import anon.crypto.PKCS12;
 import logging.LogHolder;
 import logging.LogLevel;
@@ -19,7 +18,7 @@ import logging.LogType;
 public class Configuration
 {
 	/** Versionsnummer --> Please update if you change anything*/
-	public static final String BEZAHLINSTANZ_VERSION = "BI.01.012";
+	public static final String BEZAHLINSTANZ_VERSION = "BI.02.001";
 	public static IMyPrivateKey getPrivateKey()
 	{
 		return m_privateKey;
@@ -39,15 +38,6 @@ public class Configuration
 			ms_Instance = new Configuration();
 		}
 		return ms_Instance;
-	}
-
-	/** holds the private signing key */
-	private static JAPSignature m_signingInstance;
-
-	/** returns the private signing key */
-	public static JAPSignature getSigningInstance()
-	{
-		return m_signingInstance;
 	}
 
 	/** holds the public x509 certificate */
@@ -290,7 +280,6 @@ public class Configuration
 
 		try
 		{
-			m_signingInstance = new JAPSignature();
 			LogHolder.log(LogLevel.DEBUG, LogType.PAY,
 						  "Trying to load PKCS12 file " + keyFileName +
 						  " with password '" + password +
@@ -300,7 +289,6 @@ public class Configuration
 				password.toCharArray()
 				);
 			m_privateKey = ownPkcs12.getPrivateKey();
-			m_signingInstance.initSign(m_privateKey);
 			/* get the public certificate */
 			m_ownX509Certificate = JAPCertificate.getInstance(ownPkcs12.
 				getX509Certificate());

@@ -52,6 +52,7 @@ import anon.pay.xml.XMLResponse;
 import anon.pay.xml.XMLTransCert;
 import anon.tor.tinytls.TinyTLS;
 import anon.util.XMLUtil;
+import anon.crypto.XMLSignature;
 
 public class BIConnection
 {
@@ -87,7 +88,7 @@ public class BIConnection
 		else
 		{
 			TinyTLS tls = new TinyTLS(m_theBI.getHostName(), m_theBI.getPortNumber());
-			tls.setRootKey(m_theBI.getCertificate());
+			tls.setRootKey(m_theBI.getCertificate().getPublicKey());
 			tls.startHandshake();
 			m_socket = tls;
 		}
@@ -112,15 +113,12 @@ public class BIConnection
 	{
 		m_httpClient.writeRequest("GET", "charge", null);
 		Document doc = m_httpClient.readAnswer();
-		XMLTransCert xmltrcert = new XMLTransCert(doc);
-		if (xmltrcert.verifySignature(m_theBI.getVerifier()) == true)
-		{
-			return xmltrcert;
-		}
-		else
+		if (!XMLSignature.verifyFast(doc, m_theBI.getCertificate().getPublicKey()))
 		{
 			throw new Exception("The BI's signature under the transfer certificate is invalid");
 		}
+
+		return new XMLTransCert(doc);
 	}
 
 	/**
@@ -146,11 +144,6 @@ public class BIConnection
 	/** performs challenge-response authentication */
 	public void authenticate(XMLAccountCertificate accountCert, JAPSignature signer) throws Exception
 	{
-		if (accountCert.isSigned() == false)
-		{
-			throw new Exception("BIConnection.authenticate: Your account certificate is not signed!");
-		}
-
 		String StrAccountCert = XMLUtil.toString(XMLUtil.toXMLDocument(accountCert));
 		m_httpClient.writeRequest("POST", "authenticate", StrAccountCert);
 		Document doc = m_httpClient.readAnswer();
@@ -168,7 +161,7 @@ public class BIConnection
 		else if (tagname.equals(XMLErrorMessage.XML_ELEMENT_NAME))
 		{
 			/** @todo handle errormessage properly */
-			throw new Exception("The BI sent an errormessage: "+
+			throw new Exception("The BI sent an errormessage: " +
 								new XMLErrorMessage(doc).getErrorDescription());
 		}
 	}
@@ -204,12 +197,10 @@ public class BIConnection
 			String strResponse = XMLUtil.toString(XMLUtil.toXMLDocument(xmlResponse));
 			m_httpClient.writeRequest("POST", "response", strResponse);
 			doc = m_httpClient.readAnswer();
-			xmlCert = new XMLAccountCertificate(doc.getDocumentElement());
 			// check signature
-			if (!xmlCert.verifySignature(m_theBI.getVerifier()))
-			{
+			if(!XMLSignature.verifyFast(doc,m_theBI.getCertificate().getPublicKey()))
 				throw new Exception("AccountCertificate: Wrong signature!");
-			}
+			xmlCert = new XMLAccountCertificate(doc.getDocumentElement());
 			if (!xmlCert.getPublicKey().equals(pubKey.getPublicKey()))
 			{
 				throw new Exception(
@@ -219,8 +210,8 @@ public class BIConnection
 		}
 		else if (tagname.equals(XMLErrorMessage.XML_ELEMENT_NAME))
 		{
-			throw new Exception("The BI sent an errormessage: "+
-								new XMLErrorMessage(doc).getErrorDescription()+
+			throw new Exception("The BI sent an errormessage: " +
+								new XMLErrorMessage(doc).getErrorDescription() +
 								" Authentication failed.");
 		}
 		return xmlCert;

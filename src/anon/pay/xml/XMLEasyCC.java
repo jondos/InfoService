@@ -35,8 +35,11 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import anon.crypto.JAPSignature;
-import anon.util.AbstractXMLSignable;
 import anon.util.XMLUtil;
+import anon.util.IXMLEncodable;
+import anon.crypto.IMyPrivateKey;
+import anon.crypto.XMLSignature;
+import anon.crypto.IMyPublicKey;
 
 /**
  * XML structure for a easy cost confirmation (without mircopayment function) which is sent to the AI by the Jap
@@ -50,7 +53,7 @@ import anon.util.XMLUtil;
  * </CC>
  * @author Grischan Gl&auml;nzel, Bastian Voigt
  */
-public class XMLEasyCC extends AbstractXMLSignable
+public class XMLEasyCC implements IXMLEncodable
 {
 	//~ Instance fields ********************************************************
 
@@ -58,7 +61,7 @@ public class XMLEasyCC extends AbstractXMLSignable
 	private long m_lTransferredBytes;
 	private long m_lAccountNumber;
 	private static final String ms_strElemName = "CC";
-
+	private Document m_docTheEasyCC;
 	//~ Constructors ***********************************************************
 
 	public static String getXMLElementName()
@@ -72,11 +75,12 @@ public class XMLEasyCC extends AbstractXMLSignable
 		m_strAiName = aiName;
 		m_lTransferredBytes = transferred;
 		m_lAccountNumber = accountNumber;
-		m_signature = null;
+		m_docTheEasyCC = XMLUtil.createDocument();
+		m_docTheEasyCC.appendChild(internal_toXmlElement(m_docTheEasyCC));
 
 		if (signer != null)
 		{
-			this.sign(signer);
+			signer.signXmlDoc(m_docTheEasyCC);
 		}
 	}
 
@@ -85,17 +89,22 @@ public class XMLEasyCC extends AbstractXMLSignable
 		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new
 			ByteArrayInputStream(data));
 		setValues(doc.getDocumentElement());
+		m_docTheEasyCC = doc;
 	}
 
 	public XMLEasyCC(String xml) throws Exception
 	{
-		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(xml.getBytes()));
+		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new
+			ByteArrayInputStream(xml.getBytes()));
 		setValues(doc.getDocumentElement());
+		m_docTheEasyCC = doc;
 	}
 
 	public XMLEasyCC(Element xml) throws Exception
 	{
 		setValues(xml);
+		m_docTheEasyCC = XMLUtil.createDocument();
+		m_docTheEasyCC.appendChild(XMLUtil.importNode(m_docTheEasyCC, xml, true));
 	}
 
 	private void setValues(Element element) throws Exception
@@ -120,17 +129,9 @@ public class XMLEasyCC extends AbstractXMLSignable
 		elem = (Element) XMLUtil.getFirstChildByName(element, "TransferredBytes");
 		m_lTransferredBytes = XMLUtil.parseValue(elem, 0l);
 
-		/** @todo find a better internal representation for the sig */
-		elem = (Element) XMLUtil.getFirstChildByName(element, "Signature");
-		if (elem != null)
-		{
-			m_signature = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
-			Element elemSig = (Element) XMLUtil.importNode(m_signature, elem, true);
-			m_signature.appendChild(elemSig);
-		}
 	}
 
-	public Element toXmlElement(Document a_doc)
+	private Element internal_toXmlElement(Document a_doc)
 	{
 		Element elemRoot = a_doc.createElement(ms_strElemName);
 		elemRoot.setAttribute("version", "1.0");
@@ -146,17 +147,6 @@ public class XMLEasyCC extends AbstractXMLSignable
 		XMLUtil.setValue(elem, Long.toString(m_lAccountNumber));
 		elemRoot.appendChild(elem);
 
-		if (m_signature != null)
-		{
-			try
-			{
-				elemRoot.appendChild(XMLUtil.importNode(a_doc, m_signature.getDocumentElement(), true));
-			}
-			catch (Exception ex2)
-			{
-				return null;
-			}
-		}
 		return elemRoot;
 	}
 
@@ -178,19 +168,59 @@ public class XMLEasyCC extends AbstractXMLSignable
 	}
 
 	/** this makes the signature invalid! */
-	public void addTransferredBytes(long plusBytes)
+	public synchronized void addTransferredBytes(long plusBytes)
 	{
 		m_lTransferredBytes += plusBytes;
-		m_signature = null;
+		m_docTheEasyCC = XMLUtil.createDocument();
+		m_docTheEasyCC.appendChild(internal_toXmlElement(m_docTheEasyCC));
 	}
 
 	/**
-	 * setTransferredBytes
+	 * setTransferredBytes. this makes the signature invalid!
 	 *
 	 * @param numBytes long
 	 */
-	public void setTransferredBytes(long numBytes)
+	public synchronized void setTransferredBytes(long numBytes)
 	{
 		m_lTransferredBytes = numBytes;
+		m_docTheEasyCC = XMLUtil.createDocument();
+		m_docTheEasyCC.appendChild(internal_toXmlElement(m_docTheEasyCC));
+	}
+
+	public boolean sign(IMyPrivateKey key)
+	{
+		try
+		{
+			XMLSignature.sign(m_docTheEasyCC, key);
+			return true;
+		}
+		catch (Exception e)
+		{
+			return false;
+		}
+	}
+
+	public boolean verify(IMyPublicKey key)
+	{
+		try
+		{
+			return XMLSignature.verifyFast(m_docTheEasyCC, key);
+		}
+		catch (Throwable t)
+		{
+			return false;
+		}
+	}
+
+	public synchronized Element toXmlElement(Document a_doc)
+	{
+		try
+		{
+			return (Element) XMLUtil.importNode(a_doc, m_docTheEasyCC.getDocumentElement(), true);
+		}
+		catch (Exception e)
+		{
+			return null;
+		}
 	}
 }

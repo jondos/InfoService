@@ -302,7 +302,7 @@ public class PICommandUser implements PICommand
 			m_publicKey, accountNum, creationTime,
 			Configuration.getBiID());
 
-		xmlcert.sign(Configuration.getSigningInstance());
+    	xmlcert.sign(Configuration.getPrivateKey());
 
 		XMLJapPublicKey keyFormatter = new XMLJapPublicKey(m_publicKey);
 		String strXmlKey = XMLUtil.toString(XMLUtil.toXMLDocument(keyFormatter));
@@ -343,7 +343,7 @@ public class PICommandUser implements PICommand
 		// generate xml tranfer cert and sign it
 		XMLTransCert xmlcert =
 			new XMLTransCert(accountNum, transNumber, bal.deposit, validto);
-		xmlcert.sign(Configuration.getSigningInstance());
+		xmlcert.sign(Configuration.getPrivateKey());
 		return xmlcert;
 	}
 
@@ -357,7 +357,7 @@ public class PICommandUser implements PICommand
 		XMLBalance xmlbal = new XMLBalance(
 			accountnumber, bal.deposit, bal.spent,
 			bal.timestamp, bal.validTime,
-			Configuration.getSigningInstance()
+			Configuration.getPrivateKey()
 			);
 		XMLAccountInfo info = new XMLAccountInfo(xmlbal);
 

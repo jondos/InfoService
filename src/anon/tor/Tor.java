@@ -190,7 +190,7 @@ public class Tor implements Runnable, AnonService
 		{
 			return null;
 		}
-		
+
 		Circuit c = null;
 			//First check if we can resolve the DNS entry...
 			if (!helper.isIPAddress(addr))
@@ -576,7 +576,8 @@ public class Tor implements Runnable, AnonService
 					m_circuitCreator.interrupt();
 				}
 				catch (Exception e2)
-				{}
+				{
+				}
 				try
 				{
 					m_circuitCreator.join();
