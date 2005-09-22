@@ -550,7 +550,7 @@ public class Tor implements Runnable, AnonService
 			m_activeCircuits = new Circuit[m_MaxNrOfActiveCircuits];
 			if (startCircuits)
 			{
-				m_circuitCreator = new Thread(this);
+				m_circuitCreator = new Thread(this,"TorCircuitCreator");
 				m_circuitCreator.start();
 			}
 			else

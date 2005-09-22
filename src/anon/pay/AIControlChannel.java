@@ -208,7 +208,7 @@ public class AIControlChannel extends SyncControlChannel
 							LogHolder.log(LogLevel.DEBUG, LogType.PAY, ex);
 						}
 					}
-				}).start();
+				},"FetchAccountInfo").start();
 			}
 			else
 			{

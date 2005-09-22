@@ -90,7 +90,7 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 		setSize(m_dimensionPreferredSize);
 		m_Msgs = null;
 		m_lastMsg = null;
-		m_Thread = new Thread(this);
+		m_Thread = new Thread(this,"StatusPanel");
 		m_bRun = true;
 		m_Thread.start();
 	}
