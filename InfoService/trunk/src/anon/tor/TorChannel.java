@@ -164,7 +164,7 @@ public class TorChannel extends AbstractChannel
 			m_circuit.send(cell);
 			synchronized (m_oWaitForOpen)
 			{
-				m_oWaitForOpen.wait();
+				m_oWaitForOpen.wait(30000);
 			}
 			if (m_bIsClosed || m_bIsClosedByPeer)
 			{
