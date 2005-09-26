@@ -18,7 +18,7 @@ import logging.LogType;
 public class Configuration
 {
 	/** Versionsnummer --> Please update if you change anything*/
-	public static final String BEZAHLINSTANZ_VERSION = "BI.02.001";
+	public static final String BEZAHLINSTANZ_VERSION = "BI.02.002";
 	public static IMyPrivateKey getPrivateKey()
 	{
 		return m_privateKey;
@@ -152,6 +152,12 @@ public class Configuration
 		return m_LogFileName;
 	}
 
+	private static String m_strPayURL = null;
+	public static String getPayUrl()
+	{
+		return m_strPayURL;
+	}
+
 	/**
 	 * Load configuration from properties file,
 	 * initialize keys and certificates,
@@ -197,6 +203,13 @@ public class Configuration
 				);
 			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, e);
 			return false;
+		}
+
+		m_strPayURL = props.getProperty("webpayurl");
+		if (m_strPayURL == null)
+		{
+			LogHolder.log(LogLevel.ERR, LogType.PAY,
+						  "WebPayURL not given configfile!");
 		}
 
 		// parse Logger Configuration

@@ -28,7 +28,14 @@ japport 2342
 aiport 4223
 tls on
 
-
+##############################################################################
+#
+# Web based payment interface
+#
+# This is the url of the web page, where the web based payment interface resists
+# This URL is sent to the JAP with every transfer certifcate, so that we JAP known where
+# he finds the web page for makeing a payment
+webpayurl=http://my.pay.de/
 
 ##############################################################################
 # To connect to the PostgreSQL server the JPI needs to know

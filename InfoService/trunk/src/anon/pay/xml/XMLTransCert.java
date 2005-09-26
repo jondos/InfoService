@@ -48,6 +48,7 @@ public class XMLTransCert implements IXMLEncodable
 	private long m_accountNumber;
 	private long m_transferNumber;
 	private long m_deposit;
+	private String m_strPayURL = null;
 	private Document m_docTheTransCert;
 
 	//~ Constructors ***********************************************************
@@ -59,6 +60,7 @@ public class XMLTransCert implements IXMLEncodable
 		m_transferNumber = transferNumber;
 		m_deposit = deposit;
 		m_validTime = validTime;
+		m_strPayURL = null;
 		m_docTheTransCert = XMLUtil.createDocument();
 		m_docTheTransCert.appendChild(internal_toXmlElement(m_docTheTransCert));
 	}
@@ -125,19 +127,35 @@ public class XMLTransCert implements IXMLEncodable
 
 		element = (Element) XMLUtil.getFirstChildByName(elemRoot, "ValidTime");
 		str = XMLUtil.parseValue(element, null);
+		element = (Element) XMLUtil.getFirstChildByName(elemRoot, "WebPayURL");
+		m_strPayURL = XMLUtil.parseValue(element, null);
 		m_validTime = java.sql.Timestamp.valueOf(str);
 
 	}
 
 	/**
-	 * getBaseUrl
+	 * Returns the URL of the web based payment interface of this trans cert. This url
+	 * could be used together with the "transfernum" query parameter to open a web page where the payment could be done.
 	 *
-	 * @return String
-	 * @todo make this more dynamic
+	 * @return URL of the Web based payment interface for this trans cert
+	 *
 	 */
 	public String getBaseUrl()
 	{
-		return "http://anon.inf.tu-dresden.de/pay/index.php";
+		return m_strPayURL;
+	}
+
+	/**
+	 * Set the URL of the web based payment interface for this trans cert.
+	 * Note: Invalides any signature this document may have!
+	 *
+	 * @param URl of web based payment interface for this trans cert
+	 */
+	public void setBaseUrl(String url)
+	{
+		m_strPayURL = url;
+		m_docTheTransCert = XMLUtil.createDocument();
+		m_docTheTransCert.appendChild(internal_toXmlElement(m_docTheTransCert));
 	}
 
 	/**
@@ -150,7 +168,7 @@ public class XMLTransCert implements IXMLEncodable
 	{
 //		a_doc = getDocumentBuilder().newDocument();
 		Element elemRoot = a_doc.createElement("TransferCertificate");
-		elemRoot.setAttribute("version", "1.0");
+		elemRoot.setAttribute("version", "1.1");
 //		a_doc.appendChild(elemRoot);
 		Element elem = a_doc.createElement("AccountNumber");
 		XMLUtil.setValue(elem, Long.toString(m_accountNumber));
@@ -164,6 +182,12 @@ public class XMLTransCert implements IXMLEncodable
 		elem = a_doc.createElement("ValidTime");
 		XMLUtil.setValue(elem, m_validTime.toString());
 		elemRoot.appendChild(elem);
+		if (m_strPayURL != null)
+		{
+			elem = a_doc.createElement("WebPayURL");
+			XMLUtil.setValue(elem, m_strPayURL);
+			elemRoot.appendChild(elem);
+		}
 		return elemRoot;
 	}
 
