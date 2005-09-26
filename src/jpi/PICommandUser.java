@@ -176,7 +176,7 @@ public class PICommandUser implements PICommand
 							// Response was correct. Send back the signed certificate
 							reply = new PIAnswer(PIAnswer.TYPE_ACCOUNT_CERTIFICATE,
 												 generateAccountCertificate()
-												 );
+								);
 							init(); // registration complete, goto state init again, user can now authenticate
 						}
 						catch (Exception e)
@@ -302,7 +302,7 @@ public class PICommandUser implements PICommand
 			m_publicKey, accountNum, creationTime,
 			Configuration.getBiID());
 
-    	xmlcert.sign(Configuration.getPrivateKey());
+		xmlcert.sign(Configuration.getPrivateKey());
 
 		XMLJapPublicKey keyFormatter = new XMLJapPublicKey(m_publicKey);
 		String strXmlKey = XMLUtil.toString(XMLUtil.toXMLDocument(keyFormatter));
@@ -326,11 +326,11 @@ public class PICommandUser implements PICommand
 	{
 		long accountNum = m_accountCertificate.getAccountNumber();
 		Balance bal = m_Database.getBalance(accountNum);
-		LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Got balance. deposit="+bal.deposit);
+		LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Got balance. deposit=" + bal.deposit);
 
 		// generate a transfer number (TAN)
 		long transNumber = m_Database.getNextTransferNumber();
-		LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Transnumber="+bal.deposit);
+		LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Transnumber=" + bal.deposit);
 
 		// transfer cert is valid for 30 days
 		long time = System.currentTimeMillis() +
@@ -343,6 +343,7 @@ public class PICommandUser implements PICommand
 		// generate xml tranfer cert and sign it
 		XMLTransCert xmlcert =
 			new XMLTransCert(accountNum, transNumber, bal.deposit, validto);
+		xmlcert.setBaseUrl(Configuration.getPayUrl());
 		xmlcert.sign(Configuration.getPrivateKey());
 		return xmlcert;
 	}
