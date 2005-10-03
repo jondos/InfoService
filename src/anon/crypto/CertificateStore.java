@@ -164,14 +164,14 @@ public class CertificateStore extends Observable
 						enableOnlyHardRemovable();
 				}
 				/* notify the observers, only meaningful, if setChanged() was called */
-				notifyObservers(null);
 			}
+			notifyObservers(null);
 		}
 		return lockId;
 	}
 
 	public int addCertificateWithoutVerification(JAPCertificate a_certificate, int a_certificateType,
-												 boolean a_onlyHardRemovable,boolean a_bNotRemovable)
+												 boolean a_onlyHardRemovable, boolean a_bNotRemovable)
 	{
 		int lockId = -1;
 		synchronized (m_trustedCertificates)
@@ -210,14 +210,15 @@ public class CertificateStore extends Observable
 					a_certificateType)))).
 					enableOnlyHardRemovable();
 			}
-			if(a_bNotRemovable)
+			if (a_bNotRemovable)
 			{
 				( (CertificateContainer) (m_trustedCertificates.get(getCertificateId(a_certificate,
 					a_certificateType)))).enableNotRemovable();
 			}
-			/* notify the observers, only meaningful, if setChanged() was called */
-			notifyObservers(null);
 		}
+		/* notify the observers, only meaningful, if setChanged() was called */
+		notifyObservers(null);
+
 		return lockId;
 	}
 
@@ -261,9 +262,10 @@ public class CertificateStore extends Observable
 
 	public void removeCertificate(CertificateInfoStructure a_certificateStructure)
 	{
+		CertificateContainer certificateToRemove = null;
 		synchronized (m_trustedCertificates)
 		{
-			CertificateContainer certificateToRemove = (CertificateContainer) (m_trustedCertificates.get(
+			certificateToRemove = (CertificateContainer) (m_trustedCertificates.get(
 				getCertificateId(a_certificateStructure.getCertificate(),
 								 a_certificateStructure.getCertificateType())));
 			if (certificateToRemove != null)
@@ -287,8 +289,11 @@ public class CertificateStore extends Observable
 					a_certificateStructure.getCertificateType()));
 				/* we have removed one certificate -> notify the observers */
 				setChanged();
-				notifyObservers(null);
 			}
+		}
+		if (certificateToRemove != null)
+		{
+			notifyObservers(null);
 		}
 	}
 
@@ -319,9 +324,9 @@ public class CertificateStore extends Observable
 				/* we have removed some certificates */
 				setChanged();
 			}
-			/* notify the observers, only meaningful, if setChanged() was called */
-			notifyObservers();
 		}
+		/* notify the observers, only meaningful, if setChanged() was called */
+		notifyObservers();
 	}
 
 	public void setEnabled(CertificateInfoStructure a_certificateStructure, boolean a_enabled)
@@ -357,8 +362,8 @@ public class CertificateStore extends Observable
 				}
 			}
 			/* notify the observers, only meaningful, if setChanged() was called */
-			notifyObservers();
 		}
+		notifyObservers();
 	}
 
 	public Element getSettingsAsXml(Document a_doc)
@@ -405,7 +410,7 @@ public class CertificateStore extends Observable
 					else
 					{
 						addCertificateWithoutVerification(currentCertificateContainer.getCertificate(),
-							currentCertificateContainer.getCertificateType(), true,false);
+							currentCertificateContainer.getCertificateType(), true, false);
 					}
 					/* enable or disable the certificate */
 					setEnabled(currentCertificateContainer.getInfoStructure(),

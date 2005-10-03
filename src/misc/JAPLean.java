@@ -135,11 +135,11 @@ final class JAPLean implements IProxyListener
 			ORDescription od=(ORDescription)v.elementAt(i);
 			Socket s=new Socket();
 			try{
-				long l=System.nanoTime();
+				//long l=System.nanoTime();
 			s.connect(new InetSocketAddress(od.getAddress(),od.getPort()),1000);
-			long l1=System.nanoTime();
-			sw.write(od.getName()+","+((l1-l)/1000)+"\n");
-				System.out.println(od+" connect takes: "+((l1-l)/1000));
+			//long l1=System.nanoTime();
+			//sw.write(od.getName()+","+((l1-l)/1000)+"\n");
+				//System.out.println(od+" connect takes: "+((l1-l)/1000));
 				s.close();
 			}
 			catch(SocketTimeoutException se)
