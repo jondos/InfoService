@@ -68,6 +68,7 @@ import jap.platform.AbstractOS;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.pay.BI;
 
 /**
  * The Jap Conf Module (Settings Tab Page) for the Accounts and payment Management
@@ -390,7 +391,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 			{
 				splash = JAPWaitSplash.start("Fetching transfer number...", "Please wait");
 				Thread.sleep(5);
-				transferCertificate = selectedAccount.charge();
+				transferCertificate = selectedAccount.charge(JAPConstants.PI_SSLON);
 				splash.abort();
 			}
 			catch (Exception ex)
@@ -437,6 +438,9 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 	{
 		JFrame view = JAPController.getView();
 
+		//Show a window that contains all known Payment Instances and let the user select one. (tb)
+		//BI theBI = getBIforAccountCreation();
+
 		int choice = JOptionPane.showOptionDialog(
 			view, JAPMessages.getString("ngCreateKeyPair"),
 			JAPMessages.getString("ngCreateAccount"),
@@ -453,7 +457,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 					JAPMessages.getString("Creating new account.."),
 					JAPMessages.getString("Please wait")
 					);
-				PayAccountsFile.getInstance().createAccount(true); // always use DSA keys for now
+				/**@todo Replace null with the selected BI*/
+				PayAccountsFile.getInstance().createAccount(null, true, JAPConstants.PI_SSLON); // always use DSA keys for now
 				splash.abort();
 			}
 			catch (Exception ex)
@@ -475,6 +480,22 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 			return false;
 		}
 	}
+
+	/**
+	 * Shows a window with all known Payment Instances and lets the user select one.
+	 * @return BI
+	 */
+/*	private BI getBIforAccountCreation()
+	{
+		BISelectionDialog d = new BISelectionDialog();
+		d.setModal(true);
+		d.show();
+		BI theBI = d.getSelectedBI();
+		LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Selected Payment Instance is: " +
+					  theBI.getHostName() + ":" + theBI.getPortNumber());
+
+		return theBI;
+	}*/
 
 	/**
 	 * doActivateAccount
@@ -522,7 +543,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 				JAPMessages.getString("Fetching account statement"),
 				JAPMessages.getString("Please wait")
 				);
-			selectedAccount.fetchAccountInfo();
+			selectedAccount.fetchAccountInfo(JAPConstants.PI_SSLON);
 			splash.abort();
 		}
 		catch (Exception ex)

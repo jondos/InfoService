@@ -75,7 +75,7 @@ import anon.util.XMLUtil;
  * 		</TransferCertifcates>
  * 		<AccountInfo>...</AccountInfo> // see anon.pay.xml.XMLAccountInfo
  *  </Account>
- *	@author Andreas Mueller, Grischan Gl&auml;nzel, Bastian Voigt
+ *	@author Andreas Mueller, Grischan Gl&auml;nzel, Bastian Voigt, Tobias Bayer
  */
 public class PayAccount implements IXMLEncodable
 {
@@ -581,13 +581,10 @@ public class PayAccount implements IXMLEncodable
 	 * @return XMLAccountInfo
 	 * @todo switch SSL on
 	 */
-	public XMLAccountInfo fetchAccountInfo() throws Exception
+	public XMLAccountInfo fetchAccountInfo(boolean a_ssl) throws Exception
 	{
 		XMLAccountInfo info;
-		BIConnection biConn = new BIConnection(m_theBI,
-											   false
-											   /* ssl off! */
-											   );
+		BIConnection biConn = new BIConnection(m_theBI, a_ssl);
 		biConn.connect();
 		biConn.authenticate(m_accountCertificate, m_signingInstance);
 		info = biConn.getAccountInfo();
@@ -604,16 +601,15 @@ public class PayAccount implements IXMLEncodable
 	 * @param accountNumber account number
 	 * @return xml transfer certificate
 	 * @throws Exception
-	 * @todo switch SSL on
 	 */
-	public XMLTransCert charge() throws Exception
+	public XMLTransCert charge(boolean a_ssl) throws Exception
 	{
-		BIConnection biConn = new BIConnection(m_theBI, false /* ssl off*/);
+		BIConnection biConn = new BIConnection(m_theBI, a_ssl);
 		biConn.connect();
 		biConn.authenticate(m_accountCertificate, m_signingInstance);
 		XMLTransCert transcert = biConn.charge();
 		biConn.disconnect();
-		m_transCerts.addElement(transcert); //addTransCert(transcert);
+		m_transCerts.addElement(transcert);
 		return transcert;
 	}
 

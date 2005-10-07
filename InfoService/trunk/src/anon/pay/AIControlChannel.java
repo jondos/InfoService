@@ -128,7 +128,7 @@ public class AIControlChannel extends SyncControlChannel
 						PayAccount currentAccount = PayAccountsFile.getInstance().getActiveAccount();
 						try
 						{
-							currentAccount.fetchAccountInfo();
+							currentAccount.fetchAccountInfo(false);
 						}
 						catch (Exception ex)
 						{
@@ -199,7 +199,7 @@ public class AIControlChannel extends SyncControlChannel
 						PayAccount currentAccount = PayAccountsFile.getInstance().getActiveAccount();
 						try
 						{
-							currentAccount.fetchAccountInfo();
+							currentAccount.fetchAccountInfo(false);
 							XMLBalance b = currentAccount.getBalance();
 							AIControlChannel.this.sendXMLMessage(XMLUtil.toXMLDocument(b));
 						}
