@@ -752,7 +752,7 @@ public class JAPRoutingSettings extends Observable
 		{
 			if (getRoutingMode() == ROUTING_MODE_CLIENT)
 			{
-				anonProxy = new AnonProxy(a_listener, m_forwardedConnection, m_maxDummyTrafficInterval);
+				anonProxy = new AnonProxy(a_listener, m_forwardedConnection, m_maxDummyTrafficInterval, JAPConstants.PI_SSLON);
 			}
 		}
 		return anonProxy;
