@@ -95,7 +95,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 	 */
 	private int m_maxDummyTrafficInterval;
 
-	public AnonProxy(ServerSocket listener, ImmutableProxyInterface a_proxyInterface)
+	public AnonProxy(ServerSocket listener, ImmutableProxyInterface a_proxyInterface, boolean a_ssl)
 	{
 		m_socketListener = listener;
 		m_proxyInterface = a_proxyInterface;
@@ -125,10 +125,10 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 	 *                                  dummy traffic on that connection on the server side.
 	 */
 	public AnonProxy(ServerSocket a_listener, ProxyConnection a_proxyConnection,
-					 int a_maxDummyTrafficInterval)
+					 int a_maxDummyTrafficInterval, boolean a_ssl)
 	{
 		m_socketListener = a_listener;
-		m_Anon = new AnonServiceImpl(a_proxyConnection); //uups very nasty....
+		m_Anon = new AnonServiceImpl(a_proxyConnection, a_ssl); //uups very nasty....
 		m_forwardedConnection = true;
 		m_bAutoReconnect = false;
 		m_maxDummyTrafficInterval = a_maxDummyTrafficInterval;
