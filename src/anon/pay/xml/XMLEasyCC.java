@@ -40,6 +40,9 @@ import anon.util.IXMLEncodable;
 import anon.crypto.IMyPrivateKey;
 import anon.crypto.XMLSignature;
 import anon.crypto.IMyPublicKey;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 
 /**
  * XML structure for a easy cost confirmation (without mircopayment function) which is sent to the AI by the Jap
@@ -51,7 +54,7 @@ import anon.crypto.IMyPublicKey;
  *    ... Signature des Kontoinhabers
  *  </Signature>
  * </CC>
- * @author Grischan Gl&auml;nzel, Bastian Voigt
+ * @author Grischan Gl&auml;nzel, Bastian Voigt, Tobias Bayer
  */
 public class XMLEasyCC implements IXMLEncodable
 {
@@ -118,12 +121,20 @@ public class XMLEasyCC implements IXMLEncodable
 		Element elem = (Element) XMLUtil.getFirstChildByName(element, "AiID");
 		if (elem == null)
 		{
-			m_strAiName = "keinplan1";
+			throw new Exception("No AiID field present in cost confirmation");
+			//m_strAiName = "keinplan1";
 		}
 		else
 		{
-			m_strAiName = XMLUtil.parseValue(elem, "keinplan2");
+			m_strAiName = XMLUtil.parseValue(elem, "EMPTY!");
+			if (m_strAiName.equalsIgnoreCase("EMPTY!"))
+			{
+				throw new Exception("AiID field empty in cost confirmation");
 		}
+		}
+		LogHolder.log(LogLevel.DEBUG, LogType.PAY,
+					  "AiID is " + m_strAiName);
+
 		elem = (Element) XMLUtil.getFirstChildByName(element, "AccountNumber");
 		m_lAccountNumber = XMLUtil.parseValue(elem, 0l);
 		elem = (Element) XMLUtil.getFirstChildByName(element, "TransferredBytes");
