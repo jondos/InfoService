@@ -85,7 +85,7 @@ public class Pay
 		while (accounts.hasMoreElements())
 		{
 			PayAccount ac = (PayAccount) accounts.nextElement();
-			ac.fetchAccountInfo();
+			ac.fetchAccountInfo(false);
 		}
 	}
 }

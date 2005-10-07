@@ -57,6 +57,9 @@ import anon.pay.xml.XMLErrorMessage;
 import anon.pay.xml.XMLJapPublicKey;
 import anon.util.IXMLEncodable;
 import anon.util.XMLUtil;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 
 /**
  * This class encapsulates a collection of accounts. One of the accounts in the collection
@@ -88,7 +91,7 @@ import anon.util.XMLUtil;
  * &lt;/PayAccountsFile&gt;
  * </pre>
  *
- * @author Bastian Voigt
+ * @author Bastian Voigt, Tobias Bayer
  * @version 1.0
  */
 public class PayAccountsFile implements IXMLEncodable
@@ -121,8 +124,6 @@ public class PayAccountsFile implements IXMLEncodable
 	 */
 	private BI m_theBI;
 
-
-
 	// singleton!
 	private PayAccountsFile()
 	{
@@ -153,7 +154,7 @@ public class PayAccountsFile implements IXMLEncodable
 			ms_AccountsFile = new PayAccountsFile();
 		}
 		ms_AccountsFile.m_theBI = theBI;
-		if(elemAccountsFile != null)
+		if (elemAccountsFile != null)
 		{
 			Element elemActiveAccount = (Element) XMLUtil.getFirstChildByName(elemAccountsFile,
 				"ActiveAccountNumber");
@@ -167,7 +168,7 @@ public class PayAccountsFile implements IXMLEncodable
 				{
 					PayAccount theAccount = new PayAccount(elemAccount);
 					ms_AccountsFile.addAccount(theAccount);
-/*					theAccount.addAccountListener(ms_AccountsFile.m_MyAccountListener);
+					/*					theAccount.addAccountListener(ms_AccountsFile.m_MyAccountListener);
 					ms_AccountsFile.m_Accounts.addElement(new PayAccount(elemAccount));*/
 					elemAccount = (Element) elemAccount.getNextSibling();
 				}
@@ -193,7 +194,7 @@ public class PayAccountsFile implements IXMLEncodable
 						catch (Exception ex)
 						{
 						}
-						break;
+						break ;
 					}
 				}
 			}
@@ -394,7 +395,7 @@ public class PayAccountsFile implements IXMLEncodable
 		if (m_ActiveAccount == null)
 		{
 			m_ActiveAccount = account;
-			activeChanged=true;
+			activeChanged = true;
 		}
 
 		// fire event
@@ -406,7 +407,7 @@ public class PayAccountsFile implements IXMLEncodable
 			{
 				pl = (IPaymentListener) enumListeners.nextElement();
 				pl.accountAdded(account);
-				if(activeChanged==true)
+				if (activeChanged == true)
 				{
 					pl.accountActivated(account);
 				}
@@ -499,9 +500,9 @@ public class PayAccountsFile implements IXMLEncodable
 	 * At the moment, only DSA should be used, because RSA is not supported by the
 	 * AI implementation
 	 *
-	 * @todo check RSA keygen implementation, switch SSL on
+	 * @todo check RSA keygen implementation
 	 */
-	public PayAccount createAccount(boolean useDSA) throws Exception
+	public PayAccount createAccount(BI a_bi, boolean useDSA, boolean a_ssl) throws Exception
 	{
 		IMyPublicKey pubKey = null;
 		IMyPrivateKey privKey = null;
@@ -532,10 +533,11 @@ public class PayAccountsFile implements IXMLEncodable
 		signingInstance.initSign(privKey);
 		XMLJapPublicKey xmlKey = new XMLJapPublicKey(pubKey);
 
-		BIConnection biConn = new BIConnection( m_theBI,
-											   false
-											   /* ssl off! */
-											   );
+		/*LogHolder.log(LogLevel.DEBUG, LogType.PAY,
+					  "Attempting to create account at PI " + a_bi.getHostName() + ":" +
+					  a_bi.getPortNumber());*/
+
+		BIConnection biConn = new BIConnection(m_theBI, a_ssl);
 		biConn.connect();
 		XMLAccountCertificate cert = biConn.register(xmlKey, signingInstance);
 		biConn.disconnect();
