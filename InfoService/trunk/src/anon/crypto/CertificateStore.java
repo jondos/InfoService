@@ -114,6 +114,7 @@ public class CertificateStore extends Observable
 			(a_certificateType == JAPCertificate.CERTIFICATE_TYPE_INFOSERVICE))
 		{
 			/* only mix and infoservice certificates can be verified at the moment */
+			boolean bChanged = false;
 			synchronized (m_trustedCertificates)
 			{
 				int rootType = JAPCertificate.CERTIFICATE_TYPE_ROOT_MIX;
@@ -144,7 +145,7 @@ public class CertificateStore extends Observable
 						}
 					}
 					/* we have added one certificate */
-					setChanged();
+					bChanged = true;
 				}
 				if (!a_onlyHardRemovable)
 				{
@@ -165,7 +166,11 @@ public class CertificateStore extends Observable
 				}
 				/* notify the observers, only meaningful, if setChanged() was called */
 			}
-			notifyObservers(null);
+			if (bChanged)
+			{
+				setChanged();
+				notifyObservers(null);
+			}
 		}
 		return lockId;
 	}
@@ -174,6 +179,7 @@ public class CertificateStore extends Observable
 												 boolean a_onlyHardRemovable, boolean a_bNotRemovable)
 	{
 		int lockId = -1;
+		boolean bChanged = false;
 		synchronized (m_trustedCertificates)
 		{
 			if (!m_trustedCertificates.containsKey(getCertificateId(a_certificate, a_certificateType)))
@@ -191,7 +197,7 @@ public class CertificateStore extends Observable
 					activateAllDependentCertificates(a_certificate);
 				}
 				/* we have added one certificate */
-				setChanged();
+				bChanged = true;
 			}
 			if (!a_onlyHardRemovable)
 			{
@@ -217,8 +223,11 @@ public class CertificateStore extends Observable
 			}
 		}
 		/* notify the observers, only meaningful, if setChanged() was called */
-		notifyObservers(null);
-
+		if (bChanged)
+		{
+			setChanged();
+			notifyObservers(null);
+		}
 		return lockId;
 	}
 
@@ -287,12 +296,12 @@ public class CertificateStore extends Observable
 				/* remove the specified certificate */
 				m_trustedCertificates.remove(getCertificateId(a_certificateStructure.getCertificate(),
 					a_certificateStructure.getCertificateType()));
-				/* we have removed one certificate -> notify the observers */
-				setChanged();
 			}
 		}
 		if (certificateToRemove != null)
 		{
+			/* we have removed one certificate -> notify the observers */
+			setChanged();
 			notifyObservers(null);
 		}
 	}
