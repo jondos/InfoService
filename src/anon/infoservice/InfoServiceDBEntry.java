@@ -291,11 +291,7 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 												 -1L);
 		if (m_creationTimeStamp == -1)
 		{
-			/** use the old expire value (only needed for compatibility with InfoServices <= IS.06.040
-			 *  @todo remove it and throw an XMLParseException
-			 */
-			m_creationTimeStamp = XMLUtil.parseValue(XMLUtil.getFirstChildByName(a_infoServiceNode, "Expire"),
-				System.currentTimeMillis());
+			throw new XMLParseException("LastUpdate");
 		}
 
 		/* get the information, whether this infoservice keeps a list of JAP forwarders */
