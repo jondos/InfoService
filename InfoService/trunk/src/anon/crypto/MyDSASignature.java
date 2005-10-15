@@ -83,17 +83,23 @@ public final class MyDSASignature implements IMySignature
 		//}
 	}
 
-	synchronized public boolean verify(byte[] message, byte[] sig)
+	synchronized public boolean verify(byte[] a_message, int message_offset, int message_len, byte[] a_signature,
+						  int signature_offset, int signature_len)
 	{
 		try
 		{
-			m_SignatureAlgorithm.update(message);
-			return m_SignatureAlgorithm.verify(sig);
+			m_SignatureAlgorithm.update(a_message,message_offset,message_len);
+			return m_SignatureAlgorithm.verify(a_signature,signature_offset,signature_len);
 		}
 		catch (Exception e)
 		{
 			return false;
 		}
+	}
+
+	synchronized public boolean verify(byte[] a_message, byte[] a_signature)
+	{
+		return verify(a_message,0,a_message.length,a_signature,0,a_signature.length);
 	}
 
 	synchronized public byte[] sign(byte[] bytesToSign)
