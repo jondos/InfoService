@@ -13,6 +13,11 @@
 
 id biMyBiID
 
+##############################################################################
+#Every BI should have a humane readable name, which could for instance
+#be show on a user interface
+name My BI
+
 
 
 ##############################################################################
@@ -27,6 +32,12 @@ hostname bezahl.instanz.de
 japport 2342
 aiport 4223
 tls on
+
+##############################################################################
+# InfoService settings - where to post data about ourselves
+
+infoservicehost infoservice.inf.tu-dresden.de
+infoserviceport 80
 
 ##############################################################################
 #

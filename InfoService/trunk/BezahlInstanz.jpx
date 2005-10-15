@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--JBuilder XML Project-->
 <project>
-  <property category="generalFormatting" name="baseCodeStyle" value="java/Java Standard.codestyle"/>
+  <property category="generalFormatting" name="baseCodeStyle" value="java/JAP.codestyle"/>
   <property category="generalFormatting2" name="blockIndent" value="4"/>
   <property category="generalFormatting2" name="overrideBasicFormatting" value="1"/>
   <property category="generalFormatting2" name="tabSize" value="4"/>
@@ -13,7 +13,7 @@
   <property category="javaFormatting" name="implementsOnNewLine" value="0"/>
   <property category="javaFormatting" name="methodBraceNextLine" value="1"/>
   <property category="javaFormatting" name="otherBraceNextLine" value="1"/>
-  <property category="javaFormatting" name="packagePrefixGroups" value="java;javax;(blank line);java.awt;javax.swing;(blank line);org;(*)"/>
+  <property category="javaFormatting" name="packagePrefixGroups" value="java;javax;BLANK_LINE;java.awt;javax.swing;BLANK_LINE;org;(*)"/>
   <property category="javaFormatting" name="wrapAtColumn" value="110"/>
   <property category="javadoc" name="custom.tags.1" value="todo;a;To Do:"/>
   <property category="runtime" name="DefaultConfiguration" value="-1"/>
@@ -38,7 +38,7 @@
   <property category="sys" name="ExcludeClassEnabled" value="0"/>
   <property category="sys" name="IncludeTestPath" value="1"/>
   <property category="sys" name="InstanceVisibility" value="2"/>
-  <property category="sys" name="JDK" value="java version 1.4.2_05-b04"/>
+  <property category="sys" name="JDK" value="java version 1.5.0_02-56"/>
   <property category="sys" name="JvmVersion" value="1.2"/>
   <property category="sys" name="LastTag" value="0"/>
   <property category="sys" name="Libraries" value="BouncyCastleLightForJAP;http;PostgeSql;Log4j"/>
@@ -52,6 +52,9 @@
   <property category="sys" name="VersionLabel" value="@version"/>
   <property category="sys" name="WorkingDirectory" value="."/>
   <property category="sys" name="enable.auto.packages" value="false"/>
+  <node name="anon.infoservice" type="Folder">
+    <file path="src/anon/infoservice/PaymentInstanceDBEntry.java"/>
+  </node>
   <node name="anon.crypto" type="Package"/>
   <node name="anon.pay.xml" type="Package"/>
   <node name="anon.tor.tinytls" type="Package"/>

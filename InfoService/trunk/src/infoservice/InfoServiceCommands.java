@@ -51,6 +51,7 @@ import infoservice.tor.TorDirectoryAgent;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.infoservice.PaymentInstanceDBEntry;
 
 /**
  * This is the implementation of all commands the InfoService supports.
@@ -99,6 +100,48 @@ public class InfoServiceCommands implements JWSInternalCommands
 	}
 
 	/**
+	 * This method is called, when we receive data from a payment instance or when we receive
+	 * data from a remote infoservice, which posts data about another payment instance.
+	 *
+	 * @param a_postData The data we have received.
+	 *
+	 * @return The HTTP response for the client.
+	 */
+	private HttpResponseStructure paymentInstancePostHelo(byte[] a_postData)
+	{
+		HttpResponseStructure httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_OK);
+		try
+		{
+			LogHolder.log(LogLevel.DEBUG, LogType.NET, "Infoserver received: XML: " + (new String(a_postData)));
+			Element paymentInstanceNode = (Element) (XMLUtil.getFirstChildByName(XMLUtil.toXMLDocument(
+				a_postData),
+				PaymentInstanceDBEntry.getXmlElementName()));
+			/* verify the signature --> if requested */
+			// no signature check at the monent...
+			//	if (!Configuration.getInstance().isInfoServiceMessageSignatureCheckEnabled() ||
+			//	SignatureVerifier.getInstance().verifyXml(infoServiceNode,
+			//SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE) == true)
+			{
+				PaymentInstanceDBEntry newEntry = new PaymentInstanceDBEntry(paymentInstanceNode);
+				Database.getInstance(PaymentInstanceDBEntry.class).update(newEntry);
+			}
+			/*			else
+			   {
+				LogHolder.log(LogLevel.WARNING, LogType.NET,
+					 "Signature check failed for infoservice entry! XML: " + (new String(a_postData)));
+				httpResponse = new HttpResponseStructure(HttpResponseStructure.
+				 HTTP_RETURN_INTERNAL_SERVER_ERROR);
+			   }*/
+		}
+		catch (Exception e)
+		{
+			LogHolder.log(LogLevel.ERR, LogType.NET, e);
+			httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_BAD_REQUEST);
+		}
+		return httpResponse;
+	}
+
+	/**
 	 * Sends the complete list of all known infoservices to the client.
 	 *
 	 * @return The HTTP response for the client.
@@ -124,6 +167,43 @@ public class InfoServiceCommands implements JWSInternalCommands
 				infoServicesNode.appendChild(infoServiceNode);
 			}
 			doc.appendChild(infoServicesNode);
+			/* send the XML document to the client */
+			httpResponse = new HttpResponseStructure(doc);
+		}
+		catch (Exception e)
+		{
+			LogHolder.log(LogLevel.ERR, LogType.NET, e);
+		}
+		return httpResponse;
+	}
+
+	/**
+	 * Sends the complete list of all known payment instances to the client.
+	 *
+	 * @return The HTTP response for the client.
+	 */
+	private HttpResponseStructure japFetchPaymentInstances()
+	{
+		/* this is only the default, if something is going wrong */
+		HttpResponseStructure httpResponse = new HttpResponseStructure(HttpResponseStructure.
+			HTTP_RETURN_INTERNAL_SERVER_ERROR);
+		try
+		{
+			Document doc = XMLUtil.createDocument();
+			/* create the InfoServices element */
+			Element paymentInstances = doc.createElement("PaymentInstances");
+			/* append the nodes of all infoservices we know */
+			Enumeration allPaymentInstances = Database.getInstance(PaymentInstanceDBEntry.class).
+				getEntrySnapshotAsEnumeration();
+			while (allPaymentInstances.hasMoreElements())
+			{
+				/* import the infoservice node in this document */
+				Node paymentInstanceNode = ( (PaymentInstanceDBEntry) (allPaymentInstances.nextElement())).
+					toXmlElement(
+						doc);
+				paymentInstances.appendChild(paymentInstanceNode);
+			}
+			doc.appendChild(paymentInstances);
 			/* send the XML document to the client */
 			httpResponse = new HttpResponseStructure(doc);
 		}
@@ -1222,8 +1302,22 @@ public class InfoServiceCommands implements JWSInternalCommands
 		else if (command.equals("/echoip") && (method == Constants.REQUEST_METHOD_GET ||
 											   method == Constants.REQUEST_METHOD_HEAD))
 		{
+			// just echo the clients ip adresse - for mix autoconfig resons
 			httpResponse = echoIP(a_sourceAddress);
 		}
+		else if ( (command.equals("/paymentinstance")) && (method == Constants.REQUEST_METHOD_POST))
+		{
+			/* message from a payment instance or another infoservice (can be forwared by an infoservice), which includes
+			 * information about that payment instance
+			 */
+			httpResponse = paymentInstancePostHelo(postData);
+		}
+		else if ( (command.equals("/paymentinstances")) && (method == Constants.REQUEST_METHOD_GET))
+		{
+			/* JAP or someone else wants to get information about all payment instacnes we know */
+			httpResponse = japFetchPaymentInstances();
+		}
+
 		return httpResponse;
 	}
 

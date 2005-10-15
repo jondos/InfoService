@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2000 - 2005, The JAP-Team
+ Copyright (c) 2000 - 2004, The JAP-Team
  All rights reserved.
  Redistribution and use in source and binary forms, with or without modification,
  are permitted provided that the following conditions are met:
@@ -25,36 +25,50 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-/* Hint: This file may be only a copy of the original file which is always in the JAP source tree!
- * If you change something - do not forget to add the changes also to the JAP source tree!
- */
-package anon.infoservice;
 
-/**
- * This is a generic definition of information that is sent to other infoservices.
- */
-public interface IDistributable
+package jpi;
+
+import anon.infoservice.HTTPConnectionFactory;
+import anon.infoservice.ListenerInterface;
+import HTTPClient.HTTPConnection;
+import anon.infoservice.PaymentInstanceDBEntry;
+import java.util.Vector;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
+
+class InfoServiceThread implements Runnable
 {
-
-	/**
-	 * Returns a ID for this information. It is used as an identifier for logging status information.
-	 * @return The ID of this information.
-	 */
-	public String getId();
-
-	/**
-	 * Returns the filename (InfoService command) to which the data of this entry is posted at the
-	 * other infoservice.
-	 *
-	 * @return The filename, where the data is posted when this entry is forwarded.
-	 */
-	public String getPostFile();
-
-	/**
-	 * Returns the data to post to the other infoservice. In general this should be an XML structure
-	 * with the data of this entry.
-	 *
-	 * @return The data to post to the other infoservice when this entry is forwarded.
-	 */
-	public byte[] getPostData();
+	public void run()
+	{
+		ListenerInterface is = new ListenerInterface(Configuration.getInfoServiceHost(),
+			Configuration.getInfoServicePort(), ListenerInterface.PROTOCOL_TYPE_HTTP);
+		ListenerInterface li = new ListenerInterface(Configuration.getHostName(),
+			Configuration.getJAPPort(), ListenerInterface.PROTOCOL_TYPE_HTTP);
+		Vector listenerInterfaces = li.toVector();
+		for (; ; )
+		{
+			try
+			{
+				HTTPConnectionFactory factory = HTTPConnectionFactory.getInstance();
+				HTTPConnection con = factory.createHTTPConnection(is);
+				PaymentInstanceDBEntry pi = new PaymentInstanceDBEntry(Configuration.getBiID(),
+					Configuration.getBiName(),
+					listenerInterfaces, System.currentTimeMillis());
+				con.Post(pi.getPostFile(), pi.getPostData());
+			}
+			catch (Throwable e)
+			{
+				LogHolder.log(LogLevel.DEBUG, LogType.NET,
+							  "Could not sent payment instance info to InfoService!");
+			}
+			try
+			{
+				Thread.sleep(600000); //10 min
+			}
+			catch (Throwable t)
+			{
+			}
+		}
+	}
 }

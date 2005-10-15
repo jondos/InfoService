@@ -112,6 +112,11 @@ public class JPIMain
 		Thread aiThread = new Thread(aiServer);
 		aiThread.start();
 
+        // start InfoService thread for InfoService connections
+        LogHolder.log(LogLevel.INFO, LogType.PAY, "JPIMain: Launching InfoService thread for InfoService connections");
+        InfoServiceThread infoServer = new InfoServiceThread();
+        Thread infoServiceThread = new Thread(infoServer);
+        infoServiceThread.start();
 		LogHolder.log(LogLevel.INFO, LogType.PAY, "Initialization complete, JPIMain Thread terminating");
 	}
 

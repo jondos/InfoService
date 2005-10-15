@@ -31,65 +31,65 @@ import java.util.Locale;
 
 final public class Constants
 {
-  public static final String DEFAULT_RESSOURCE_FILENAME = "InfoService.properties";
+	public static final String DEFAULT_RESSOURCE_FILENAME = "InfoService.properties";
 
-  public static final String CERTSPATH = "certificates/";
-  public static final String CERT_JAPINFOSERVICEMESSAGES = "japinfoservicemessages.cer";;
-  public static final int MAX_REQUEST_HEADER_SIZE = 10000;
-  public static final int REQUEST_METHOD_UNKNOWN = -1;
-  public static final int REQUEST_METHOD_GET = 1;
-  public static final int REQUEST_METHOD_POST = 2;
-  public static final int REQUEST_METHOD_HEAD = 3;
+	public static final String CERTSPATH = "certificates/";
+	public static final String CERT_JAPINFOSERVICEMESSAGES = "japinfoservicemessages.cer";
+	;
+	public static final int MAX_REQUEST_HEADER_SIZE = 10000;
+	public static final int REQUEST_METHOD_UNKNOWN = -1;
+	public static final int REQUEST_METHOD_GET = 1;
+	public static final int REQUEST_METHOD_POST = 2;
+	public static final int REQUEST_METHOD_HEAD = 3;
 
-  public static final int MAX_NR_OF_CONCURRENT_CONNECTIONS = 50;
+	public static final int MAX_NR_OF_CONCURRENT_CONNECTIONS = 50;
 
+	/**
+	 * The standard timeout for infoservice database entries in a JAP client. This should be an
+	 * infinite timeout (1000 years should be infinite enough).
+	 */
+	public static final long TIMEOUT_INFOSERVICE_JAP = 1000 * 365 * 24 * 3600 * 1000L;
 
-  /**
-   * The standard timeout for infoservice database entries in a JAP client. This should be an
-   * infinite timeout (1000 years should be infinite enough).
-   */
-  public static final long TIMEOUT_INFOSERVICE_JAP = 1000 * 365 * 24 * 3600 * 1000L;
+	/**
+	 * The standard timeout for infoservice database entries in an infoservice.
+	 */
+	public static final long TIMEOUT_INFOSERVICE = 11 * 60 * 1000L; // 11 minutes
+	public static final long TIMEOUT_MIX = 15 * 60 * 1000L; // 15 minutes
+	public static final long TIMEOUT_MIXCASCADE = 15 * 60 * 1000L; // 15 minutes
+	public static final long TIMEOUT_STATUS = 100 * 1000L; // 100 seconds
+	public static final long TIMEOUT_PAYMENT_INTERFACE = 11 * 60 * 1000L; // 11 minutes
 
-  /**
-   * The standard timeout for infoservice database entries in an infoservice.
-   */
-  public static final long TIMEOUT_INFOSERVICE = 11 * 60 * 1000L; // 11 minutes
-  public static final long TIMEOUT_MIX = 15 * 60 * 1000L; // 15 minutes
- public static final long TIMEOUT_MIXCASCADE = 15 * 60 * 1000L; // 15 minutes
-  public static final long TIMEOUT_STATUS = 100 * 1000L; // 100 seconds
+	/**
+	 * The timeout for all entries in the database of JAP forwarders. If we don't get a new  update
+	 * message from the forwarder within that time, it is removed from the database. The default is
+	 * 11 minutes, so there is no problem, if the forwarder updates the entry every 10 minutes.
+	 */
+	public static final long TIMEOUT_JAP_FORWARDERS = 11 * 60 * (long) 1000;
 
-  /**
-   * The timeout for all entries in the database of JAP forwarders. If we don't get a new  update
-   * message from the forwarder within that time, it is removed from the database. The default is
-   * 11 minutes, so there is no problem, if the forwarder updates the entry every 10 minutes.
-   */
-  public static final long TIMEOUT_JAP_FORWARDERS = 11 * 60 * (long) 1000;
+	/**
+	 * This is the timeout in seconds for verifying a JAP forwarding server (contacting the server
+	 * and getting the acknowledgement, that it is a JAP forwarder). If we can't get the
+	 * verification within that time, the JAP forwarding server is declared as invalid.
+	 */
+	public static final int FORWARDING_SERVER_VERIFY_TIMEOUT = 20;
 
-  /**
-   * This is the timeout in seconds for verifying a JAP forwarding server (contacting the server
-   * and getting the acknowledgement, that it is a JAP forwarder). If we can't get the
-   * verification within that time, the JAP forwarding server is declared as invalid.
-   */
-  public static final int FORWARDING_SERVER_VERIFY_TIMEOUT = 20;
+	/**
+	 * This is the general timeout for the Infoservice socket communication (milli seconds).
+	 */
+	public static final int COMMUNICATION_TIMEOUT = 30000; //30 seconds
 
-  /**
-   * This is the general timeout for the Infoservice socket communication (milli seconds).
-   */
-  public static final int	COMMUNICATION_TIMEOUT=30000; //30 seconds
+	public static final long ANNOUNCE_PERIOD = 10 * 60 * (long) (1000); // 10 minutes
 
-  public static final long ANNOUNCE_PERIOD = 10 * 60 * (long) (1000); // 10 minutes
+	public static final long UPDATE_INFORMATION_ANNOUNCE_PERIOD = 10 * 60 * (long) (1000); // 10 minutes
 
-  public static final long UPDATE_INFORMATION_ANNOUNCE_PERIOD = 10 * 60 * (long) (1000); // 10 minutes
+	/**
+	 * We use this for display some values in the local format.
+	 */
+	public static final Locale LOCAL_FORMAT = Locale.GERMAN;
 
-  /**
-   * We use this for display some values in the local format.
-   */
-  public static final Locale LOCAL_FORMAT = Locale.GERMAN;
-
-  /**
-   * This is the version number of the infoservice software.
-   */
-  public static final String INFOSERVICE_VERSION = "IS.07.004"; //never change the layout of this line!
-
+	/**
+	 * This is the version number of the infoservice software.
+	 */
+	public static final String INFOSERVICE_VERSION = "IS.07.005"; //never change the layout of this line!
 
 }

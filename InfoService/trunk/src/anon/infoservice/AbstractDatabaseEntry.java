@@ -34,46 +34,48 @@ package anon.infoservice;
  * This is a generic definition for a database entry. Every database entry must implement this
  * methods.
  */
-public abstract class AbstractDatabaseEntry {
-  
-  /**
-   * Stores the time when this entry will be deleted from the database.
-   */
-  private long m_expireTime;
+public abstract class AbstractDatabaseEntry
+{
 
+	/**
+	 * Stores the time when this entry will be deleted from the database.
+	 */
+	private long m_expireTime;
 
-  /**
-   * Creates a new AbstractDatabaseEntry with the specified expire time.
-   *
-   * @param a_expireTime The time when this entry will be deleted from the database.
-   */
-  public AbstractDatabaseEntry(long a_expireTime) {
-    m_expireTime = a_expireTime;
-  }
+	/**
+	 * Creates a new AbstractDatabaseEntry with the specified expire time.
+	 *
+	 * @param a_expireTime The time when this entry will be deleted from the database.
+	 */
+	public AbstractDatabaseEntry(long a_expireTime)
+	{
+		m_expireTime = a_expireTime;
+	}
 
-  /**
-   * Returns a unique ID for a database entry.
-   *
-   * @return The ID of this database entry.
-   */
-  public abstract String getId();
+	/**
+	 * Returns a unique ID for a database entry.
+	 *
+	 * @return The ID of this database entry.
+	 */
+	public abstract String getId();
 
-  /**
-   * Returns the time (see System.currentTimeMillis()) when this DatabaseEntry will be removed
-   * from the Database, if it is not updated meanwhile.
-   *
-   * @return The expire time for this DatabaseEntry.
-   */
-  public final long getExpireTime() {
-    return m_expireTime;
-  }
+	/**
+	 * Returns the time (see System.currentTimeMillis()) when this DatabaseEntry will be removed
+	 * from the Database, if it is not updated meanwhile.
+	 *
+	 * @return The expire time for this DatabaseEntry.
+	 */
+	public final long getExpireTime()
+	{
+		return m_expireTime;
+	}
 
-  /**
-   * Returns version number which is used to determine the more recent infoservice entry, if two
-   * entries are compared (higher version number -> more recent entry).
-   *
-   * @return The version number for this entry.
-   */
-  public abstract long getVersionNumber();
+	/**
+	 * Returns version number which is used to determine the more recent infoservice entry, if two
+	 * entries are compared (higher version number -> more recent entry).
+	 *
+	 * @return The version number for this entry.
+	 */
+	public abstract long getVersionNumber();
 
 }
