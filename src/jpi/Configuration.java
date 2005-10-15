@@ -18,7 +18,7 @@ import logging.LogType;
 public class Configuration
 {
 	/** Versionsnummer --> Please update if you change anything*/
-	public static final String BEZAHLINSTANZ_VERSION = "BI.02.002";
+	public static final String BEZAHLINSTANZ_VERSION = "BI.02.003";
 	public static IMyPrivateKey getPrivateKey()
 	{
 		return m_privateKey;
@@ -52,10 +52,23 @@ public class Configuration
 	/** holds the JPI ID */
 	private static String m_ID;
 
-	/** returns the JPI hostname */
+	/** returns the JPI ID */
 	public static String getBiID()
 	{
 		return m_ID;
+	}
+
+	/** holds the JPI Name */
+	private static String m_Name;
+
+	/** returns the JPI Name */
+	public static String getBiName()
+	{
+		if (m_Name == null)
+		{
+			return "Payment Instance " + m_ID;
+		}
+		return m_Name;
 	}
 
 	/** holds the JPI hostname */
@@ -110,6 +123,24 @@ public class Configuration
 	public static int getDatabasePort()
 	{
 		return m_dbPort;
+	}
+
+	/** holds the infoservice hostname */
+	private static String m_isHostname;
+
+	/** returns the infoservice hostname */
+	public static String getInfoServiceHost()
+	{
+		return m_isHostname;
+	}
+
+	/** holds the infoservice portnumber */
+	private static int m_isPort;
+
+	/** returns the info service portnumber */
+	public static int getInfoServicePort()
+	{
+		return m_isPort;
 	}
 
 	/** holds the port where the JPI should listen for AI connections */
@@ -185,6 +216,9 @@ public class Configuration
 
 		// parse ID (the unique BI-Id)
 		m_ID = props.getProperty("id");
+
+		// parse Name (the name of the BI)
+		m_Name = props.getProperty("name");
 
 		// parse network configuration
 		m_hostName = props.getProperty("hostname");
@@ -311,6 +345,19 @@ public class Configuration
 			LogHolder.log(LogLevel.ALERT, LogType.PAY,
 						  "Error loading private key file " + keyFileName);
 			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, e);
+			return false;
+		}
+		// parse infoservice configuration
+		m_isHostname = props.getProperty("infoservicehost");
+		try
+		{
+			m_isPort = Integer.parseInt(props.getProperty("infoserviceport"));
+		}
+		catch (NumberFormatException e)
+		{
+			LogHolder.log(LogLevel.ERR, LogType.PAY,
+						  "infoserviceport in configfile '" + configFileName +
+						  "' should be a NUMBER!");
 			return false;
 		}
 		return true;

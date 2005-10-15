@@ -1,18 +1,22 @@
 Für Betrieb zwingend nötige Kommandos:
 
-  - alle 4 POST-Kommando-Informationen können auch von einem anderen Infoservice forwarded 
+  - alle 4 POST-Kommando-Informationen können auch von einem anderen Infoservice forwarded
     sein
 
   /infoserver: POST: von einem anderen Infoservice mit Informationen über ihn
   /infoservices: GET: XML-Struktur mit allen Infoservices erhalten, welche der Infoservice
                       kennt
 
-  /cascade: POST: 
+  /paymentinstance: POST: von einer Payment Instance oder einem anderen Infoservice mit Informationen über eine Payment Instance
+  /paymentinstances: GET: XML-Struktur mit allen Payment-Instanzen, welche der Infoservice
+                      kennt
+
+  /cascade: POST:
   	 - entweder vom ersten Mix einer Kaskade mit allen Informationen über die Kaskade
 	 - oder vom letzten Mix einer Kaskade mit der Anforderung, eine neue Kaskade zu erstellen
 	 (XML-Format in beiden Fällen identisch; im 2. Fall hat das Wurzelelement das Attribut
 	 'create="true"')
-	 
+
   /cascades: GET: XML-Struktur mit allen Kaskaden erhalten, welche der Infoservice kennt
                   (neues Format)
 
@@ -21,7 +25,7 @@ Für Betrieb zwingend nötige Kommandos:
 
   /feedback: POST: vom ersten Mix einer Kaskade mit Informationen über den derzeitigen
                    Status (Verkehr)
-  /mixcascadestatus/cascadeid: GET: Informationen über den derzeitigen Status der Kaskade 
+  /mixcascadestatus/cascadeid: GET: Informationen über den derzeitigen Status der Kaskade
                                     mit der ID cascadeid erhalten
 
   /configure: POST: Anfrage von einem Mix, die zugehörige Kaskadenkonfiguration zu senden
@@ -73,4 +77,4 @@ Kompatibilitätsfunktionen für alte JAP-Clients:
   /proxyAddresses: GET: liefert Adressen der Proxy-Server am Ende der Kaskaden als
                         Plain-Text (1:1 aus Properties-Datei übernommen), wird von
                         irgendwelchen alten Auswertungsscripten verwendet
-         
+
