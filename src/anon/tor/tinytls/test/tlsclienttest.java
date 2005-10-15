@@ -5,6 +5,7 @@ import java.io.InputStream;
 import anon.tor.tinytls.TinyTLS;
 import logging.LogHolder;
 import logging.SystemErrLog;
+import anon.crypto.JAPCertificate;
 
 public class tlsclienttest
 {
@@ -14,7 +15,8 @@ public class tlsclienttest
 		LogHolder.setLogInstance(new SystemErrLog());
 		TinyTLS tls = new TinyTLS("localhost", 3456);
 //		TinyTLS tls = new TinyTLS("anon.inf.tu-dresden.de",443);
-		tls.checkRootCertificate(false);
+		tls.checkRootCertificate(true);
+		tls.setRootKey(JAPCertificate.getInstance("testkey.cer").getPublicKey());
 		tls.startHandshake();
 //		OutputStream out=tls.getOutputStream();
 //		out.write("GET /index.html HTTP/1.0\r\n\r\n".getBytes());

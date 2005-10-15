@@ -121,11 +121,12 @@ public class DHE_DSS_Key_Exchange extends Key_Exchange
 		}
 		catch (Exception ex)
 		{
+			throw new TLSException("wrong key type (cannot init signature algorithm ("+ex.getMessage()+"))");
 		}
 
 		byte[] signature2 = sig.sign(signature);
 
-		helper.conc(message, helper.inttobyte(signature2.length, 2), signature2);
+		message=helper.conc(message, helper.inttobyte(signature2.length, 2), signature2);
 
 		return message;
 	}
@@ -136,32 +137,29 @@ public class DHE_DSS_Key_Exchange extends Key_Exchange
 	{
 		this.m_clientrandom = clientrandom;
 		this.m_serverrandom = serverrandom;
-		int counter = 0;
-		BigInteger dh_p;
-		BigInteger dh_g;
-		BigInteger dh_ys;
-		byte[] dummy;
-		byte[] b = helper.copybytes(bytes, counter + bytes_offset, 2);
-		counter += 2;
-		int length = ( (b[0] & 0xFF) << 8) | (b[1] & 0xFF);
-		dummy = helper.copybytes(bytes, counter + bytes_offset, length);
-		counter += length;
+		BigInteger dh_p=null;
+		BigInteger dh_g=null;
+		BigInteger dh_ys=null;
+		int start_of_server_params=bytes_offset;
+		byte[] dummy=null;
+		int length = ( (bytes[bytes_offset] & 0xFF) << 8) | (bytes[bytes_offset+1] & 0xFF);
+		bytes_offset += 2;
+		dummy = helper.copybytes(bytes, bytes_offset, length);
+		bytes_offset += length;
 		dh_p = new BigInteger(1, dummy);
 		LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[SERVER_KEY_EXCHANGE] DH_P = " + dh_p.toString());
 
-		b = helper.copybytes(bytes, counter + bytes_offset, 2);
-		counter += 2;
-		length = ( (b[0] & 0xFF) << 8) | (b[1] & 0xFF);
-		dummy = helper.copybytes(bytes, counter + bytes_offset, length);
-		counter += length;
+		length = ( (bytes[bytes_offset] & 0xFF) << 8) | (bytes[bytes_offset+1] & 0xFF);
+		bytes_offset += 2;
+		dummy = helper.copybytes(bytes, bytes_offset, length);
+		bytes_offset += length;
 		dh_g = new BigInteger(1, dummy);
 		LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[SERVER_KEY_EXCHANGE] DH_G = " + dh_g.toString());
 
-		b = helper.copybytes(bytes, counter + bytes_offset, 2);
-		counter += 2;
-		length = ( (b[0] & 0xFF) << 8) | (b[1] & 0xFF);
-		dummy = helper.copybytes(bytes, counter + bytes_offset, length);
-		counter += length;
+		length = ( (bytes[bytes_offset] & 0xFF) << 8) | (bytes[bytes_offset+1] & 0xFF);
+		bytes_offset += 2;
+		dummy = helper.copybytes(bytes, bytes_offset, length);
+		bytes_offset += length;
 		dh_ys = new BigInteger(1, dummy);
 		LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[SERVER_KEY_EXCHANGE] DH_Ys = " + dh_ys.toString());
 
@@ -171,14 +169,12 @@ public class DHE_DSS_Key_Exchange extends Key_Exchange
 		//-----------------------------------------
 
 
-		byte[] serverparams = helper.copybytes(bytes, bytes_offset, counter);
+		byte[] serverparams = helper.copybytes(bytes, start_of_server_params,bytes_offset-start_of_server_params);
 
 		byte[] expectedSignature = /*hash.sha*/ helper.conc(clientrandom, serverrandom, serverparams);
 
-		b = helper.copybytes(bytes, counter + bytes_offset, 2);
-		counter += 2;
-		length = ( (b[0] & 0xFF) << 8) | (b[1] & 0xFF);
-		byte[] hash = helper.copybytes(bytes, counter + bytes_offset, length);
+		length = ( (bytes[bytes_offset] & 0xFF) << 8) | (bytes[bytes_offset+1] & 0xFF);
+		bytes_offset += 2;
 
 		MyDSAPublicKey dsakey;
 		MyDSASignature sig = new MyDSASignature();
@@ -198,7 +194,8 @@ public class DHE_DSS_Key_Exchange extends Key_Exchange
 		{
 		}
 
-		if (!sig.verify(expectedSignature, hash))
+		if (!sig.verify(expectedSignature, 0,expectedSignature.length,
+						bytes,  bytes_offset, length))
 		{
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[SERVER_KEY_EXCHANGE] Signature wrong");
 			throw new TLSException("wrong Signature",2,21);

@@ -61,21 +61,21 @@ public final class MyRSASignature implements IMySignature
 	 */
 	private Key m_initKey;
 	private SHA1Digest m_Digest;
-	private final static AlgorithmIdentifier ms_AlgID=
-		new AlgorithmIdentifier(X509ObjectIdentifiers.id_SHA1,null);
+	private final static AlgorithmIdentifier ms_AlgID =
+		new AlgorithmIdentifier(X509ObjectIdentifiers.id_SHA1, null);
 
 	public MyRSASignature()
 	{
 		m_SignatureAlgorithm = new PKCS1Encoding(new RSAEngine());
-		m_Digest=new SHA1Digest();
+		m_Digest = new SHA1Digest();
 	}
 
 	synchronized public void initVerify(IMyPublicKey k) throws InvalidKeyException
 	{
 		//if (m_initKey == null || m_initKey != k)
 		//{
-			m_SignatureAlgorithm.init(false, ( (MyRSAPublicKey) k).getParams());
-			m_initKey = k;
+		m_SignatureAlgorithm.init(false, ( (MyRSAPublicKey) k).getParams());
+		m_initKey = k;
 		//}
 	}
 
@@ -83,53 +83,60 @@ public final class MyRSASignature implements IMySignature
 	{
 		//if (m_initKey == null || m_initKey != k)
 		//{
-			m_SignatureAlgorithm.init(true, ( (MyRSAPrivateKey) k).getParams());
-			m_initKey = k;
+		m_SignatureAlgorithm.init(true, ( (MyRSAPrivateKey) k).getParams());
+		m_initKey = k;
 		//}
 	}
 
-	synchronized public boolean verify(byte[] message, byte[] sig)
+	synchronized public boolean verify(byte[] a_message, byte[] a_signature)
+	{
+		return verify(a_message, 0, a_message.length, a_signature, 0, a_signature.length);
+	}
+
+	synchronized public boolean verify(byte[] message, int message_offset, int message_len,
+									   byte[] sig, int signature_offset, int signature_len)
 	{
 		try
 		{
 			m_Digest.reset();
-			m_Digest.update(message,0,message.length);
-			byte[]  hash = new byte[m_Digest.getDigestSize()];
+			m_Digest.update(message, message_offset, message_len);
+			byte[] hash = new byte[m_Digest.getDigestSize()];
 			m_Digest.doFinal(hash, 0);
 
-			byte[]	 decryptedSig = m_SignatureAlgorithm.processBlock(sig, 0, sig.length);
-			ByteArrayInputStream    bIn = new ByteArrayInputStream(decryptedSig);
- 			ASN1InputStream          dIn = new ASN1InputStream(bIn);
+			byte[] decryptedSig = m_SignatureAlgorithm.processBlock(sig, signature_offset, signature_len);
+			ByteArrayInputStream bIn = new ByteArrayInputStream(decryptedSig);
+			ASN1InputStream dIn = new ASN1InputStream(bIn);
 
+			DigestInfo digInfo = new DigestInfo( (ASN1Sequence) dIn.readObject());
 
-			DigestInfo	 digInfo = new DigestInfo((ASN1Sequence)new ASN1InputStream(bIn).readObject());
-
-			 if (!digInfo.getAlgorithmId().getObjectId().equals(ms_AlgID.getObjectId()))
-			 {
-				 return false;
-			 }
-
-			Object o=digInfo.getAlgorithmId().getParameters();
-			if(o!=null&&!(o instanceof ASN1Null))
+			if (!digInfo.getAlgorithmId().getObjectId().equals(ms_AlgID.getObjectId()))
+			{
 				return false;
+			}
 
-			 byte[]  sigHash = digInfo.getDigest();
+			Object o = digInfo.getAlgorithmId().getParameters();
+			if (o != null && ! (o instanceof ASN1Null))
+			{
+				return false;
+			}
 
-			 if (hash.length != sigHash.length)
-			 {
-				 return false;
-			 }
+			byte[] sigHash = digInfo.getDigest();
 
-			 for (int i = 0; i < hash.length; i++)
-			 {
-				 if (sigHash[i] != hash[i])
-				 {
-					 return false;
-				 }
-			 }
+			if (hash.length != sigHash.length)
+			{
+				return false;
+			}
 
-			 return true;
-	 		}
+			for (int i = 0; i < hash.length; i++)
+			{
+				if (sigHash[i] != hash[i])
+				{
+					return false;
+				}
+			}
+
+			return true;
+		}
 		catch (Exception e)
 		{
 			return false;
@@ -140,16 +147,16 @@ public final class MyRSASignature implements IMySignature
 	{
 		try
 		{
-			byte[]  hash = new byte[m_Digest.getDigestSize()];
+			byte[] hash = new byte[m_Digest.getDigestSize()];
 			m_Digest.reset();
-			m_Digest.update(bytesToSign,0,bytesToSign.length);
+			m_Digest.update(bytesToSign, 0, bytesToSign.length);
 			m_Digest.doFinal(hash, 0);
 
-			ByteArrayOutputStream   bOut = new ByteArrayOutputStream();
-			DEROutputStream         dOut = new DEROutputStream(bOut);
-			DigestInfo              dInfo = new DigestInfo(ms_AlgID, hash);
-	  	  	dOut.writeObject(dInfo);
-	  		byte[]  bytes= bOut.toByteArray();
+			ByteArrayOutputStream bOut = new ByteArrayOutputStream();
+			DEROutputStream dOut = new DEROutputStream(bOut);
+			DigestInfo dInfo = new DigestInfo(ms_AlgID, hash);
+			dOut.writeObject(dInfo);
+			byte[] bytes = bOut.toByteArray();
 
 			return m_SignatureAlgorithm.processBlock(bytes, 0, bytes.length);
 		}
@@ -163,7 +170,8 @@ public final class MyRSASignature implements IMySignature
 	 * Returns the algorithm identifier (RSA with SHA1).
 	 * @return the algorithm identifier (RSA with SHA1)
 	 */
-	public AlgorithmIdentifier getIdentifier() {
+	public AlgorithmIdentifier getIdentifier()
+	{
 		return ms_identifier;
 	}
 
