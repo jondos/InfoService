@@ -728,6 +728,11 @@ public final class JAPController extends Observable implements IProxyListener, O
 							{
 								debugtype += LogType.THREAD;
 							}
+							if (XMLUtil.parseAttribute(elemType, JAPConstants.CONFIG_PAY, false))
+							{
+								debugtype += LogType.PAY;
+							}
+
 							if (XMLUtil.parseAttribute(elemType, JAPConstants.CONFIG_MISC, false))
 							{
 								debugtype += LogType.MISC;
@@ -1247,6 +1252,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 			XMLUtil.setAttribute(tmp, JAPConstants.CONFIG_NET, ( (debugtype & LogType.NET) != 0));
 			XMLUtil.setAttribute(tmp, JAPConstants.CONFIG_THREAD, ( (debugtype & LogType.THREAD) != 0));
 			XMLUtil.setAttribute(tmp, JAPConstants.CONFIG_MISC, ( (debugtype & LogType.MISC) != 0));
+			XMLUtil.setAttribute(tmp, JAPConstants.CONFIG_PAY, ( (debugtype & LogType.PAY) != 0));
+
 			elemDebug.appendChild(tmp);
 			if (JAPDebug.isShowConsole() || JAPDebug.isLogToFile())
 			{
@@ -1685,7 +1692,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 							JAPModel.getInstance().getProxyInterface().isValid())
 						{
 							m_proxyAnon = new AnonProxy(
-								m_socketHTTPListener, JAPModel.getInstance().getProxyInterface(), JAPConstants.PI_SSLON);
+								m_socketHTTPListener, JAPModel.getInstance().getProxyInterface(),
+								JAPConstants.PI_SSLON);
 							registerAsAnonListener();
 						}
 						else
