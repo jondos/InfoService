@@ -264,6 +264,7 @@ public final class JAPConstants
 	public final static String CONFIG_NET = "NET";
 	public final static String CONFIG_THREAD = "THREAD";
 	public final static String CONFIG_MISC = "MISC";
+	public final static String CONFIG_PAY = "PAY";
 	public final static String CONFIG_OUTPUT = "Output";
 	public final static String CONFIG_CONSOLE = "Console";
 	public final static String CONFIG_FILE = "File";

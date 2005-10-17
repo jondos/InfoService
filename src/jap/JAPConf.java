@@ -125,6 +125,7 @@ final class JAPConf extends JDialog implements ActionListener
 	private JCheckBox m_cbDebugNet;
 	private JCheckBox m_cbDebugThread;
 	private JCheckBox m_cbDebugMisc;
+	private JCheckBox m_cbDebugPay;
 	private JCheckBox m_cbShowDebugConsole, m_cbDebugToFile;
 	private JTextField m_tfDebugFileName;
 	private JButton m_bttnDebugFileNameSearch;
@@ -619,11 +620,16 @@ final class JAPConf extends JDialog implements ActionListener
 		m_cbDebugNet = new JCheckBox("NET");
 		m_cbDebugThread = new JCheckBox("THREAD");
 		m_cbDebugMisc = new JCheckBox("MISC");
+		m_cbDebugPay = new JCheckBox("PAY");
 		panelLogTypes.add(m_cbDebugGui);
 		panelLogTypes.add(m_cbDebugNet);
 		panelLogTypes.add(m_cbDebugThread);
 		panelLogTypes.add(m_cbDebugMisc);
-
+		if (m_bWithPayment)
+		{
+			/**@todo Remove if-statement when Payment is standard*/
+			panelLogTypes.add(m_cbDebugPay);
+		}
 		m_labelConfDebugTypes = new JAPMultilineLabel(JAPMessages.getString("ConfDebugTypes"));
 		p.add(m_labelConfDebugTypes, c);
 		c.gridy = 1;
@@ -879,6 +885,7 @@ final class JAPConf extends JDialog implements ActionListener
 		m_cbDebugNet.setSelected(false);
 		m_cbDebugGui.setSelected(false);
 		m_cbDebugMisc.setSelected(false);
+		m_cbDebugPay.setSelected(false);
 		m_cbDebugThread.setSelected(false);
 		m_cbDebugToFile.setSelected(false);
 	}
@@ -899,6 +906,7 @@ final class JAPConf extends JDialog implements ActionListener
 			(m_cbDebugGui.isSelected() ? LogType.GUI : LogType.NUL) +
 			(m_cbDebugNet.isSelected() ? LogType.NET : LogType.NUL) +
 			(m_cbDebugThread.isSelected() ? LogType.THREAD : LogType.NUL) +
+			(m_cbDebugPay.isSelected() ? LogType.PAY : LogType.NUL) +
 			(m_cbDebugMisc.isSelected() ? LogType.MISC : LogType.NUL)
 			);
 		JAPDebug.getInstance().setLogLevel(m_sliderDebugLevel.getValue());
@@ -1015,6 +1023,7 @@ final class JAPConf extends JDialog implements ActionListener
 		m_cbDebugNet.setSelected( ( ( (JAPDebug.getInstance().getLogType() & LogType.NET) != 0) ? true : false));
 		m_cbDebugThread.setSelected( ( ( (JAPDebug.getInstance().getLogType() & LogType.THREAD) != 0) ? true : false));
 		m_cbDebugMisc.setSelected( ( ( (JAPDebug.getInstance().getLogType() & LogType.MISC) != 0) ? true : false));
+		m_cbDebugPay.setSelected( ( ( (JAPDebug.getInstance().getLogType() & LogType.PAY) != 0) ? true : false));
 		m_sliderDebugLevel.setValue(JAPDebug.getInstance().getLogLevel());
 		boolean b = JAPDebug.isLogToFile();
 		m_tfDebugFileName.setEnabled(b);
