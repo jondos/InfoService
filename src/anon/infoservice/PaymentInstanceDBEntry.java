@@ -91,9 +91,9 @@ public class PaymentInstanceDBEntry extends AbstractDatabaseEntry implements IDi
 			throw new XMLParseException("LastUpdate");
 		}
 
-		m_name = XMLUtil.parseValue(XMLUtil.getFirstChildByName(elemRoot, "Name"), "-INVALID-");
+		m_name = XMLUtil.parseValue(XMLUtil.getFirstChildByName(elemRoot, "Name"),null);
 
-		if (m_name == "-INVALID-")
+		if (m_name ==null)
 		{
 			throw new XMLParseException("Name");
 
@@ -123,7 +123,7 @@ public class PaymentInstanceDBEntry extends AbstractDatabaseEntry implements IDi
 			m_listenerInterfaces.addElement(new ListenerInterface(listenerInterfaceNode));
 		}
 
-		m_cert = JAPCertificate.getInstance(XMLUtil.getFirstChildByName(elemRoot, "TestCertificate"));
+		m_cert = JAPCertificate.getInstance(XMLUtil.getFirstChildByName(elemRoot, "Certificate"));
 
 	}
 
@@ -154,7 +154,7 @@ public class PaymentInstanceDBEntry extends AbstractDatabaseEntry implements IDi
 		Element elemLastUpdate = doc.createElement("LastUpdate");
 		XMLUtil.setValue(elemLastUpdate, m_creationTimeStamp);
 		elemRoot.appendChild(elemLastUpdate);
-		Element elemCert = doc.createElement("TestCertificate");
+		Element elemCert = doc.createElement("Certificate");
 		elemRoot.appendChild(elemCert);
 		elemCert.appendChild(m_cert.toXmlElement(doc));
 		m_xmlDescription = elemRoot;

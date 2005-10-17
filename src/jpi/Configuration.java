@@ -18,7 +18,7 @@ import logging.LogType;
 public class Configuration
 {
 	/** Versionsnummer --> Please update if you change anything*/
-	public static final String BEZAHLINSTANZ_VERSION = "BI.02.003";
+	public static final String BEZAHLINSTANZ_VERSION = "BI.02.005";
 	public static IMyPrivateKey getPrivateKey()
 	{
 		return m_privateKey;
