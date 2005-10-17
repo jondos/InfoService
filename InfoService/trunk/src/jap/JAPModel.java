@@ -34,6 +34,7 @@ import anon.crypto.JAPCertificate;
 import anon.infoservice.ProxyInterface;
 import anon.util.ResourceLoader;
 import gui.JAPDll;
+import jap.forward.JAPRoutingSettings;
 
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPModel

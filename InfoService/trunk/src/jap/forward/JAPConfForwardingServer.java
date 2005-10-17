@@ -25,7 +25,7 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package jap;
+package jap.forward;
 
 import java.util.Enumeration;
 import java.util.Observable;
@@ -70,6 +70,8 @@ import logging.LogType;
 import javax.swing.border.EmptyBorder;
 import java.awt.Color;
 import java.awt.GridLayout;
+
+import jap.*;
 
 /**
  * This is the configuration GUI for the JAP forwarding server component.

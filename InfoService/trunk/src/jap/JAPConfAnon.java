@@ -74,6 +74,7 @@ import jap.platform.AbstractOS;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import jap.forward.*;
 
 class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, ActionListener,
 	ListSelectionListener, ItemListener, KeyListener, Observer

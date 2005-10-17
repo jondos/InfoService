@@ -25,7 +25,9 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package jap;
+package jap.forward;
+
+import jap.*;
 
 /**
  * This is the implementation for the forwarding client savepoint. It is needed for restoring an

@@ -25,7 +25,7 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package jap;
+package jap.forward;
 
 import java.util.Vector;
 
@@ -74,6 +74,7 @@ import gui.JAPHtmlMultiLineLabel;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import jap.*;
 
 /**
  * This is implementation of the dialog shown when starting a forwarded connection. The dialog is

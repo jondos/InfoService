@@ -25,7 +25,7 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package jap;
+package jap.forward;
 
 import anon.util.AbstractMessage;
 
@@ -34,7 +34,7 @@ import anon.util.AbstractMessage;
  * forwarding related classes to notify the observers. The message code identifies the reason of
  * the notification.
  */
-public class JAPRoutingMessage extends AbstractMessage {
+final public class JAPRoutingMessage extends AbstractMessage {
 
 	/**
 	 * This message is sent after the routing mode was changed.

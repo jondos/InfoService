@@ -25,7 +25,7 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package jap;
+package jap.forward;
 
 import java.net.ServerSocket;
 import java.util.Enumeration;
@@ -48,6 +48,9 @@ import forward.client.ForwardConnectionDescriptor;
 import forward.server.ForwardSchedulerStatistics;
 import forward.server.ForwardServerManager;
 import forward.server.ServerSocketPropagandist;
+import jap.JAPConstants;
+import jap.JAPController;
+import jap.JAPModel;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -58,7 +61,7 @@ import proxy.AnonProxy;
  * are changed. They will get an instance of JapRoutingMessage with the detailed message of the
  * notification.
  */
-public class JAPRoutingSettings extends Observable
+final public class JAPRoutingSettings extends Observable
 {
 
 	/**
