@@ -69,8 +69,8 @@ public final class MyDSASignature implements IMySignature
 	{
 		//if (m_initKey == null || m_initKey != k)
 		//{
-			m_SignatureAlgorithm.initVerify(k);
-			m_initKey = k;
+		m_SignatureAlgorithm.initVerify(k);
+		m_initKey = k;
 		//}
 	}
 
@@ -78,18 +78,25 @@ public final class MyDSASignature implements IMySignature
 	{
 		//if (m_initKey == null || m_initKey != ownPrivateKey)
 		//{
-			m_SignatureAlgorithm.initSign(ownPrivateKey);
-			m_initKey = ownPrivateKey;
+		m_SignatureAlgorithm.initSign(ownPrivateKey);
+		m_initKey = ownPrivateKey;
 		//}
 	}
 
-	synchronized public boolean verify(byte[] a_message, int message_offset, int message_len, byte[] a_signature,
-						  int signature_offset, int signature_len)
+	synchronized public boolean verify(byte[] a_message, int message_offset, int message_len,
+									   byte[] a_signature,
+									   int signature_offset, int signature_len)
 	{
 		try
 		{
-			m_SignatureAlgorithm.update(a_message,message_offset,message_len);
-			return m_SignatureAlgorithm.verify(a_signature,signature_offset,signature_len);
+			m_SignatureAlgorithm.update(a_message, message_offset, message_len);
+			if (signature_offset == 0 && signature_len == a_signature.length)
+			{
+				return m_SignatureAlgorithm.verify(a_signature);
+			}
+			byte[] theSig = new byte[signature_len];
+			System.arraycopy(a_signature, signature_offset, theSig, 0, signature_len);
+			return m_SignatureAlgorithm.verify(theSig);
 		}
 		catch (Exception e)
 		{
@@ -99,7 +106,7 @@ public final class MyDSASignature implements IMySignature
 
 	synchronized public boolean verify(byte[] a_message, byte[] a_signature)
 	{
-		return verify(a_message,0,a_message.length,a_signature,0,a_signature.length);
+		return verify(a_message, 0, a_message.length, a_signature, 0, a_signature.length);
 	}
 
 	synchronized public byte[] sign(byte[] bytesToSign)
@@ -119,7 +126,8 @@ public final class MyDSASignature implements IMySignature
 	 * Returns the algorithm identifier (DSA with SHA1).
 	 * @return the algorithm identifier (DSA with SHA1)
 	 */
-	public AlgorithmIdentifier getIdentifier() {
+	public AlgorithmIdentifier getIdentifier()
+	{
 		return ms_identifier;
 	}
 
