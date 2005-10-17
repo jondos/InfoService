@@ -27,25 +27,27 @@
  */
 package jap.pay;
 
+import java.awt.FlowLayout;
 import java.awt.Frame;
-import javax.swing.JDialog;
-import javax.swing.JPanel;
-import anon.pay.BI;
-import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.Insets;
-import javax.swing.JList;
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.DefaultListModel;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import anon.crypto.JAPCertificate;
-import logging.LogHolder;
-import javax.swing.event.ListSelectionListener;
+import javax.swing.DefaultListModel;
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JPanel;
 import javax.swing.event.ListSelectionEvent;
-import java.awt.FlowLayout;
-import jap.*;
+import javax.swing.event.ListSelectionListener;
+
+import anon.crypto.JAPCertificate;
+import anon.pay.BI;
+import jap.JAPConstants;
+import jap.JAPMessages;
+import jap.JAPUtil;
 
 /** This dialog fetches all known Payment Instances from the InfoService and lets
  *  the user select one.
@@ -194,11 +196,11 @@ public class BISelectionDialog extends JDialog implements ActionListener, ListSe
 		if (a_e.getSource() == m_okButton)
 		{
 			m_selectedBI = (BI) m_biList.getSelectedValue();
-			this.hide();
+			dispose();
 		}
 		else if (a_e.getSource() == m_cancelButton)
 		{
-			this.hide();
+			dispose();
 		}
 	}
 
