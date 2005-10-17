@@ -28,13 +28,20 @@
 
 package anon.infoservice;
 
+import java.util.Enumeration;
+import java.util.Vector;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import anon.crypto.JAPCertificate;
+import anon.pay.BI;
 import anon.util.IXMLEncodable;
 import anon.util.XMLParseException;
 import anon.util.XMLUtil;
-import java.util.Vector;
-import java.util.Enumeration;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 
 /** Holds the information of a payment instance for storing in the InfoService.*/
 public class PaymentInstanceDBEntry extends AbstractDatabaseEntry implements IDistributable, IXMLEncodable
@@ -56,10 +63,15 @@ public class PaymentInstanceDBEntry extends AbstractDatabaseEntry implements IDi
 	 */
 	private long m_creationTimeStamp;
 
+	private Vector m_listenerInterfaces;
+	private String m_name;
+	/** @todo: Get this from the infoservice */
+	private JAPCertificate m_cert = JAPCertificate.getInstance("certificates/bi.cer");
+
 	/** Creates a PaymentInstanceDBEntry which represents a payment instance.*/
 	public PaymentInstanceDBEntry(Element elemRoot) throws XMLParseException
 	{
-		super(System.currentTimeMillis()+Constants.TIMEOUT_PAYMENT_INTERFACE);
+		super(System.currentTimeMillis() + Constants.TIMEOUT_PAYMENT_INTERFACE);
 		if (elemRoot == null)
 		{
 			throw new XMLParseException(XMLParseException.NODE_NULL_TAG);
@@ -78,34 +90,74 @@ public class PaymentInstanceDBEntry extends AbstractDatabaseEntry implements IDi
 		{
 			throw new XMLParseException("LastUpdate");
 		}
+
+		m_name = XMLUtil.parseValue(XMLUtil.getFirstChildByName(elemRoot, "Name"), "-INVALID-");
+
+		if (m_name == "-INVALID-")
+		{
+			throw new XMLParseException("Name");
+
+		}
+
+		NodeList networkNodes = elemRoot.getElementsByTagName("Network");
+		if (networkNodes.getLength() == 0)
+		{
+			throw (new XMLParseException("PaymentDBEntry: Error in XML structure."));
+		}
+		Element networkNode = (Element) (networkNodes.item(0));
+		NodeList listenerInterfacesNodes = networkNode.getElementsByTagName("ListenerInterfaces");
+		if (listenerInterfacesNodes.getLength() == 0)
+		{
+			throw (new XMLParseException("PaymentDBEntry: Error in XML structure."));
+		}
+		Element listenerInterfacesNode = (Element) (listenerInterfacesNodes.item(0));
+		NodeList listenerInterfaceNodes = listenerInterfacesNode.getElementsByTagName("ListenerInterface");
+		if (listenerInterfaceNodes.getLength() == 0)
+		{
+			throw (new XMLParseException("PaymentDBEntry: Error in XML structure."));
+		}
+		m_listenerInterfaces = new Vector();
+		for (int i = 0; i < listenerInterfaceNodes.getLength(); i++)
+		{
+			Element listenerInterfaceNode = (Element) (listenerInterfaceNodes.item(i));
+			m_listenerInterfaces.addElement(new ListenerInterface(listenerInterfaceNode));
+		}
+
+		m_cert = JAPCertificate.getInstance(XMLUtil.getFirstChildByName(elemRoot, "TestCertificate"));
+
 	}
 
-	public PaymentInstanceDBEntry(String id,String name,Vector listeners,long creationTime)
+	public PaymentInstanceDBEntry(String id, String name, JAPCertificate a_cert, Vector listeners,
+								  long creationTime)
 	{
-		super(System.currentTimeMillis()+Constants.TIMEOUT_PAYMENT_INTERFACE);
-		m_strPaymentInstanceId=id;
-		m_creationTimeStamp=creationTime;
-		Document doc=XMLUtil.createDocument();
-		Element elemRoot=doc.createElement(getXmlElementName());
+		super(System.currentTimeMillis() + Constants.TIMEOUT_PAYMENT_INTERFACE);
+		m_strPaymentInstanceId = id;
+		m_creationTimeStamp = creationTime;
+		m_cert = a_cert;
+		Document doc = XMLUtil.createDocument();
+		Element elemRoot = doc.createElement(getXmlElementName());
 		doc.appendChild(elemRoot);
-		elemRoot.setAttribute("id",m_strPaymentInstanceId);
-		Element elemName=doc.createElement("Name");
-		XMLUtil.setValue(elemName,name);
+		elemRoot.setAttribute("id", m_strPaymentInstanceId);
+		Element elemName = doc.createElement("Name");
+		XMLUtil.setValue(elemName, name);
 		elemRoot.appendChild(elemName);
-		Element elemNet=doc.createElement("Network");
+		Element elemNet = doc.createElement("Network");
 		elemRoot.appendChild(elemNet);
-		Element elemListeners=doc.createElement("ListenerInterfaces");
+		Element elemListeners = doc.createElement("ListenerInterfaces");
 		elemNet.appendChild(elemListeners);
-		Enumeration enumer=listeners.elements();
-		while(enumer.hasMoreElements())
+		Enumeration enumer = listeners.elements();
+		while (enumer.hasMoreElements())
 		{
-			ListenerInterface li=(ListenerInterface)enumer.nextElement();
+			ListenerInterface li = (ListenerInterface) enumer.nextElement();
 			elemListeners.appendChild(li.toXmlElement(doc));
 		}
-		Element elemLastUpdate=doc.createElement("LastUpdate");
-		XMLUtil.setValue(elemLastUpdate,m_creationTimeStamp);
+		Element elemLastUpdate = doc.createElement("LastUpdate");
+		XMLUtil.setValue(elemLastUpdate, m_creationTimeStamp);
 		elemRoot.appendChild(elemLastUpdate);
-		m_xmlDescription=elemRoot;
+		Element elemCert = doc.createElement("TestCertificate");
+		elemRoot.appendChild(elemCert);
+		elemCert.appendChild(m_cert.toXmlElement(doc));
+		m_xmlDescription = elemRoot;
 	}
 
 	public String getId()
@@ -173,5 +225,26 @@ public class PaymentInstanceDBEntry extends AbstractDatabaseEntry implements IDi
 		{
 		}
 		return returnXmlStructure;
+	}
+
+	public BI toBI()
+	{
+		BI bi;
+
+		/** @todo More than one ListenerInterface possible?*/
+		try
+		{
+			ListenerInterface listener = (ListenerInterface) m_listenerInterfaces.firstElement();
+
+			bi = new BI(m_name, listener.getHost(), listener.getPort(), m_cert);
+		}
+		catch (Exception e)
+		{
+			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
+						  "Cannot create payment instance from PaymentInstanceDBEntry: " + e.getMessage());
+			return null;
+		}
+
+		return bi;
 	}
 }
