@@ -30,7 +30,7 @@ package jap;
 /**
  * This class represents the help context of JAP.
  */
-final class JAPHelpContext
+public final class JAPHelpContext
 {
 	private String m_currentContext;
 

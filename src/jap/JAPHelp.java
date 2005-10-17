@@ -63,7 +63,7 @@ import java.io.StringReader;
 
 /* classes modified from Swing Example "Metalworks" */
 /** Help window for the JAP. Thi is a singleton meaning that there exists only one help window all the time.*/
-final class JAPHelp extends JDialog implements ActionListener, PropertyChangeListener, WindowListener
+public final class JAPHelp extends JDialog implements ActionListener, PropertyChangeListener, WindowListener
 {
 	private String helpPath = " ";
 	private String helpLang = " ";
@@ -89,7 +89,7 @@ final class JAPHelp extends JDialog implements ActionListener, PropertyChangeLis
 		init();
 	}
 
-	static JAPHelp getInstance()
+	public static JAPHelp getInstance()
 	{
 		if (ms_theJAPHelp == null)
 		{

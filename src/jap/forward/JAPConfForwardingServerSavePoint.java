@@ -25,7 +25,7 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package jap;
+package jap.forward;
 
 import java.util.Enumeration;
 import java.util.Vector;
@@ -33,6 +33,8 @@ import java.util.Vector;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import anon.util.XMLUtil;
+
+import jap.*;
 
 /**
  * This is the implementation for the forwarding server savepoint. It is needed for restoring an

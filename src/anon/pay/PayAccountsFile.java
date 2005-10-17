@@ -533,17 +533,17 @@ public class PayAccountsFile implements IXMLEncodable
 		signingInstance.initSign(privKey);
 		XMLJapPublicKey xmlKey = new XMLJapPublicKey(pubKey);
 
-		/*LogHolder.log(LogLevel.DEBUG, LogType.PAY,
+		LogHolder.log(LogLevel.DEBUG, LogType.PAY,
 					  "Attempting to create account at PI " + a_bi.getHostName() + ":" +
-					  a_bi.getPortNumber());*/
+					  a_bi.getPortNumber());
 
-		BIConnection biConn = new BIConnection(m_theBI, a_ssl);
+		BIConnection biConn = new BIConnection(a_bi, a_ssl);
 		biConn.connect();
 		XMLAccountCertificate cert = biConn.register(xmlKey, signingInstance);
 		biConn.disconnect();
 
 		// add the new account to the accountsFile
-		PayAccount newAccount = new PayAccount(cert, privKey, signingInstance, m_theBI);
+		PayAccount newAccount = new PayAccount(cert, privKey, signingInstance, a_bi);
 		addAccount(newAccount);
 		return newAccount;
 	}

@@ -25,7 +25,7 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package jap;
+package jap.forward;
 
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -40,6 +40,7 @@ import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.MixCascade;
 import anon.util.XMLUtil;
 import forward.server.ForwardServerManager;
+import jap.JAPModel;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -48,7 +49,7 @@ import logging.LogType;
  * This class manages the useable mixcascades for the clients of the local forwarding server. So
  * they get always an up-to-date list of running and allowed mixcascades.
  */
-public class JAPRoutingUseableMixCascades extends Observable implements Observer, Runnable
+final public class JAPRoutingUseableMixCascades extends Observable implements Observer, Runnable
 {
 
 	/**

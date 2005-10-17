@@ -25,7 +25,7 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package jap;
+package jap.pay;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -69,14 +69,19 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import anon.pay.BI;
+import javax.swing.event.ChangeListener;
+import javax.swing.event.ChangeEvent;
+import java.awt.Component;
+
+import jap.*;
 
 /**
  * The Jap Conf Module (Settings Tab Page) for the Accounts and payment Management
  *
- * @author Bastian Voigt
+ * @author Bastian Voigt, Tobias Bayer
  * @version 1.0
  */
-public class AccountSettingsPanel extends AbstractJAPConfModule
+public class AccountSettingsPanel extends AbstractJAPConfModule implements ChangeListener
 {
 	private JTable m_Table;
 	private JButton m_btnCreateAccount;
@@ -434,13 +439,15 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 	 *
 	 * @return boolean
 	 */
-	private boolean doCreateAccount()
+	private void doCreateAccount()
 	{
 		JFrame view = JAPController.getView();
 
 		//Show a window that contains all known Payment Instances and let the user select one. (tb)
-		//BI theBI = getBIforAccountCreation();
+		BI theBI = getBIforAccountCreation();
 
+		if (theBI != null)
+		{
 		int choice = JOptionPane.showOptionDialog(
 			view, JAPMessages.getString("ngCreateKeyPair"),
 			JAPMessages.getString("ngCreateAccount"),
@@ -449,35 +456,22 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 			);
 		if (choice == JOptionPane.YES_OPTION)
 		{
-			/** @todo find out why the wait splash screen looks so ugly */
-			JAPWaitSplash splash = null;
 			try
 			{
-				splash = JAPWaitSplash.start(
-					JAPMessages.getString("Creating new account.."),
-					JAPMessages.getString("Please wait")
-					);
-				/**@todo Replace null with the selected BI*/
-				PayAccountsFile.getInstance().createAccount(null, true, JAPConstants.PI_SSLON); // always use DSA keys for now
-				splash.abort();
+					AccountCreator worker = new AccountCreator(theBI, JAPController.getView());
+					worker.addChangeListener(this);
+					worker.start();
 			}
 			catch (Exception ex)
 			{
-				splash.abort();
-				LogHolder.log(LogLevel.DEBUG, LogType.PAY, ex);
+					LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, ex);
 				JOptionPane.showMessageDialog(
 					view,
-					JAPMessages.getString("Error creating account: ") + ex.getMessage(),
+						JAPMessages.getString("Error creating account: ") + ex,
 					JAPMessages.getString("error"), JOptionPane.ERROR_MESSAGE
 					);
-				return false;
 			}
-			m_MyTableModel.fireTableDataChanged();
-			return true;
 		}
-		else
-		{
-			return false;
 		}
 	}
 
@@ -485,17 +479,23 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 	 * Shows a window with all known Payment Instances and lets the user select one.
 	 * @return BI
 	 */
-/*	private BI getBIforAccountCreation()
+	private BI getBIforAccountCreation()
 	{
 		BISelectionDialog d = new BISelectionDialog();
-		d.setModal(true);
-		d.show();
 		BI theBI = d.getSelectedBI();
+
+		if (theBI != null)
+		{
 		LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Selected Payment Instance is: " +
 					  theBI.getHostName() + ":" + theBI.getPortNumber());
+		}
+		else
+		{
+			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Dialog returned no payment instance");
+		}
 
 		return theBI;
-	}*/
+	}
 
 	/**
 	 * doActivateAccount
@@ -900,6 +900,14 @@ public class AccountSettingsPanel extends AbstractJAPConfModule
 		while (enumAccounts.hasMoreElements())
 		{
 			PayAccount a = (PayAccount) enumAccounts.nextElement();
+		}
+	}
+
+	public void stateChanged(ChangeEvent e)
+	{
+		if (e.getSource() instanceof AccountCreator)
+		{
+			m_MyTableModel.fireTableDataChanged();
 		}
 	}
 

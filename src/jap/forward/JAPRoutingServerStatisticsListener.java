@@ -25,12 +25,14 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package jap;
+package jap.forward;
 
 import java.util.Observable;
 import java.util.Observer;
 
 import forward.server.ForwardSchedulerStatistics;
+
+import jap.*;
 
 /**
  * This class is the implementation for the forwarding server statistics update. Every class

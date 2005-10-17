@@ -25,7 +25,7 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package jap;
+package jap.forward;
 
 import java.util.Enumeration;
 import java.util.Observable;
@@ -33,6 +33,8 @@ import java.util.Observer;
 import java.util.Vector;
 
 import forward.server.ServerSocketPropagandist;
+
+import jap.*;
 
 /**
  * This class is the backend of the forwarding server registration visualization. It can be used

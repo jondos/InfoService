@@ -118,7 +118,7 @@ public final class JAPConstants
 	static final String IMGPATHLOWCOLOR = "images/lowcolor/";
 	public static final String XMLCONFFN = "jap.conf";
 	static final String MESSAGESFN = "JAPMessages";
-	static final String BUSYFN = "busy.gif";
+	public static final String BUSYFN = "busy.gif";
 	static final String SPLASHFN = "splash.gif";
 	static final String ABOUTFN = "info.gif";
 	public static final String DOWNLOADFN = "install.gif";

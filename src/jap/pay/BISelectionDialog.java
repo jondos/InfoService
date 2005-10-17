@@ -1,0 +1,213 @@
+/*
+ Copyright (c) 2000 - 2004, The JAP-Team
+ All rights reserved.
+ Redistribution and use in source and binary forms, with or without modification,
+ are permitted provided that the following conditions are met:
+
+ - Redistributions of source code must retain the above copyright notice,
+  this list of conditions and the following disclaimer.
+
+ - Redistributions in binary form must reproduce the above copyright notice,
+  this list of conditions and the following disclaimer in the documentation and/or
+  other materials provided with the distribution.
+
+ - Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
+  may be used to endorse or promote products derived from this software without specific
+  prior written permission.
+
+
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS
+ OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
+ AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS
+ BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+ OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+ IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
+ */
+package jap.pay;
+
+import java.awt.Frame;
+import javax.swing.JDialog;
+import javax.swing.JPanel;
+import anon.pay.BI;
+import java.awt.GridBagLayout;
+import java.awt.GridBagConstraints;
+import java.awt.Insets;
+import javax.swing.JList;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.DefaultListModel;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import anon.crypto.JAPCertificate;
+import logging.LogHolder;
+import javax.swing.event.ListSelectionListener;
+import javax.swing.event.ListSelectionEvent;
+import java.awt.FlowLayout;
+import jap.*;
+
+/** This dialog fetches all known Payment Instances from the InfoService and lets
+ *  the user select one.
+ *
+ *  @author Tobias Bayer
+ */
+public class BISelectionDialog extends JDialog implements ActionListener, ListSelectionListener
+{
+	private JList m_biList;
+	private JButton m_okButton;
+	private JButton m_cancelButton;
+	private JLabel m_biHost;
+	private JLabel m_biPort;
+
+	private BI m_selectedBI;
+
+	public BISelectionDialog(Frame owner, String title, boolean modal)
+	{
+		super(owner, title, modal);
+		try
+		{
+			setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+			jbInit();
+			pack();
+			setModal(true);
+			setSize(400, 300);
+			JAPUtil.centerFrame(this);
+			show();
+		}
+		catch (Exception exception)
+		{
+			exception.printStackTrace();
+		}
+	}
+
+	public BISelectionDialog()
+	{
+		this(new Frame(), JAPMessages.getString("biSelectionDialog"), false);
+	}
+
+	private void jbInit() throws Exception
+	{
+		JPanel panel1 = new JPanel(new GridBagLayout());
+		JPanel bttnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		GridBagConstraints c = new GridBagConstraints();
+		c.anchor = c.NORTHWEST;
+		c.fill = c.NONE;
+		c.insets = new Insets(5, 5, 5, 5);
+
+		//The BI list
+		m_biList = new JList();
+		m_biList.addListSelectionListener(this);
+
+		c.gridx = 0;
+		c.gridy = 0;
+		c.gridwidth = 3;
+		c.gridheight = 5;
+		c.weighty = 1;
+		c.fill = c.BOTH;
+		panel1.add(m_biList, c);
+		c.weightx = 0;
+		c.weighty = 0;
+		c.gridwidth = 1;
+		c.gridheight = 1;
+		c.fill = c.NONE;
+
+		//The information about the selected BI
+		c.gridx = 3;
+		panel1.add(new JLabel(JAPMessages.getString("infoAboutBI")), c);
+
+		c.gridy++;
+		panel1.add(new JLabel(JAPMessages.getString("biInfoHost")), c);
+
+		m_biHost = new JLabel();
+		c.gridx++;
+		panel1.add(m_biHost, c);
+
+		c.gridx--;
+		c.gridy++;
+		panel1.add(new JLabel(JAPMessages.getString("biInfoPort")), c);
+
+		m_biPort = new JLabel();
+		c.gridx++;
+		panel1.add(m_biPort, c);
+
+		//The Cancel button
+		m_cancelButton = new JButton(JAPMessages.getString("bttnCancel"));
+		m_cancelButton.addActionListener(this);
+		bttnPanel.add(m_cancelButton);
+
+		//The Ok button
+		m_okButton = new JButton(JAPMessages.getString("bttnOk"));
+		m_okButton.addActionListener(this);
+		bttnPanel.add(m_okButton);
+
+		//Add the button panel
+		c.gridy = 5;
+		c.gridx = 0;
+		c.weightx = 1;
+		c.gridwidth = 5;
+		c.anchor = c.SOUTHEAST;
+		panel1.add(bttnPanel, c);
+
+		getContentPane().add(panel1);
+
+		//Fetch information about available Payment Instances from the InfoService
+		DefaultListModel model = new DefaultListModel();
+		model.addElement(JAPMessages.getString("loadingBIInfo1"));
+		model.addElement(JAPMessages.getString("loadingBIInfo2"));
+		m_biList.setModel(model);
+		m_biList.setEnabled(false);
+
+		Runnable fillList = new Runnable()
+		{
+			public void run()
+			{
+				/** @todo Query InfoService and fill m_biList*/
+				try
+				{
+					BI testBI = new BI("TestBI", JAPConstants.PIHOST, JAPConstants.PIPORT,
+									   JAPCertificate.getInstance(JAPConstants.CERTSPATH +
+						JAPConstants.CERT_BI));
+					DefaultListModel listModel = new DefaultListModel();
+					listModel.addElement(testBI);
+					m_biList.setEnabled(true);
+					m_biList.setModel(listModel);
+				}
+				catch (Exception e)
+				{
+				}
+
+			}
+		};
+
+		Thread t = new Thread(fillList);
+		t.start();
+	}
+
+	public BI getSelectedBI()
+	{
+		return m_selectedBI;
+	}
+
+	public void actionPerformed(ActionEvent a_e)
+	{
+		if (a_e.getSource() == m_okButton)
+		{
+			m_selectedBI = (BI) m_biList.getSelectedValue();
+			this.hide();
+		}
+		else if (a_e.getSource() == m_cancelButton)
+		{
+			this.hide();
+		}
+	}
+
+	public void valueChanged(ListSelectionEvent e)
+	{
+		if (e.getSource() == m_biList)
+		{
+			m_biHost.setText( ( (BI) m_biList.getSelectedValue()).getHostName());
+			m_biPort.setText(String.valueOf( ( (BI) m_biList.getSelectedValue()).getPortNumber()));
+		}
+	}
+}

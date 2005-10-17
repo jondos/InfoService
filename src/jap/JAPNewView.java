@@ -88,6 +88,8 @@ import proxy.IProxyListener;
 import javax.swing.UIManager;
 import javax.swing.LookAndFeel;
 import javax.swing.SwingUtilities;
+import jap.pay.*;
+import jap.forward.*;
 
 final public class JAPNewView extends AbstractJAPMainView implements IJAPMainView, ActionListener,
 	JAPObserver
@@ -1354,7 +1356,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		showConfigDialog(null);
 	}
 
-	void showConfigDialog(String card)
+	public void showConfigDialog(String card)
 	{
 		if (m_dlgConfig == null)
 		{

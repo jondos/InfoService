@@ -25,9 +25,10 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package jap;
+package jap.forward;
 
 import forward.server.ServerSocketPropagandist;
+
 
 /**
  * This class is used for synchronization between the threads, when startPropaganda() is called.

@@ -72,8 +72,10 @@ import logging.LogType;
 import javax.swing.SwingUtilities;
 import java.awt.event.ComponentListener;
 import java.awt.event.ComponentEvent;
+import jap.pay.*;
+import jap.forward.*;
 
-final class JAPConf extends JDialog implements ActionListener
+final public class JAPConf extends JDialog implements ActionListener
 {
 
 	final static public String PORT_TAB = "PORT_TAB";

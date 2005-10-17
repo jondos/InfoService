@@ -83,6 +83,7 @@ import proxy.AnonProxy;
 import proxy.DirectProxy;
 import proxy.IProxyListener;
 import update.JAPUpdateWizard;
+import jap.forward.*;
 
 /* This is the Controller of All. It's a Singelton!*/
 public final class JAPController extends Observable implements IProxyListener, Observer,
@@ -1451,7 +1452,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 		return m_vectorMixCascadeDatabase;
 	}
 
-	void applyProxySettingsToInfoService(boolean a_bUseAuth)
+	public void applyProxySettingsToInfoService(boolean a_bUseAuth)
 	{
 		if (m_Model.getProxyInterface() != null && m_Model.getProxyInterface().isValid())
 		{
