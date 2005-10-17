@@ -181,4 +181,9 @@ public class BI implements IXMLEncodable
 	{
 		return m_cert;
 	}
+
+	public String toString()
+	{
+		return new String(m_biName);
+	}
 }
