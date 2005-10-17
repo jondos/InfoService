@@ -54,7 +54,9 @@ class InfoServiceThread implements Runnable
 				HTTPConnection con = factory.createHTTPConnection(is);
 				PaymentInstanceDBEntry pi = new PaymentInstanceDBEntry(Configuration.getBiID(),
 					Configuration.getBiName(), Configuration.getOwnCertificate(),
-					listenerInterfaces, System.currentTimeMillis());
+					listenerInterfaces,
+					Configuration.BEZAHLINSTANZ_VERSION,
+					System.currentTimeMillis());
 				con.Post(pi.getPostFile(), pi.getPostData());
 			}
 			catch (Throwable e)
