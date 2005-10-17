@@ -91,9 +91,9 @@ public class PaymentInstanceDBEntry extends AbstractDatabaseEntry implements IDi
 			throw new XMLParseException("LastUpdate");
 		}
 
-		m_name = XMLUtil.parseValue(XMLUtil.getFirstChildByName(elemRoot, "Name"),null);
+		m_name = XMLUtil.parseValue(XMLUtil.getFirstChildByName(elemRoot, "Name"), null);
 
-		if (m_name ==null)
+		if (m_name == null)
 		{
 			throw new XMLParseException("Name");
 
@@ -128,7 +128,7 @@ public class PaymentInstanceDBEntry extends AbstractDatabaseEntry implements IDi
 	}
 
 	public PaymentInstanceDBEntry(String id, String name, JAPCertificate a_cert, Vector listeners,
-								  long creationTime)
+								  String software_version, long creationTime)
 	{
 		super(System.currentTimeMillis() + Constants.TIMEOUT_PAYMENT_INTERFACE);
 		m_strPaymentInstanceId = id;
@@ -141,6 +141,8 @@ public class PaymentInstanceDBEntry extends AbstractDatabaseEntry implements IDi
 		Element elemName = doc.createElement("Name");
 		XMLUtil.setValue(elemName, name);
 		elemRoot.appendChild(elemName);
+		ServiceSoftware software = new ServiceSoftware(software_version);
+		elemRoot.appendChild(software.toXmlElement(doc));
 		Element elemNet = doc.createElement("Network");
 		elemRoot.appendChild(elemNet);
 		Element elemListeners = doc.createElement("ListenerInterfaces");
