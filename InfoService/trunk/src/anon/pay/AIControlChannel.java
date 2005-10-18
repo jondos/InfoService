@@ -34,14 +34,12 @@ public class AIControlChannel extends SyncControlChannel
 
 	private MuxSocket m_MuxSocket;
 	private boolean m_bFirstBalance;
-	private boolean m_ssl;
 
-	public AIControlChannel(MuxSocket muxSocket, boolean a_ssl)
+	public AIControlChannel(MuxSocket muxSocket)
 	{
 		super(CHAN_ID, true);
 		m_MuxSocket = muxSocket;
 		m_bFirstBalance = true;
-		m_ssl = a_ssl;
 	}
 
 	/**
@@ -116,7 +114,6 @@ public class AIControlChannel extends SyncControlChannel
 	 */
 	private void processPayRequest(XMLPayRequest request)
 	{
-		final boolean ssl = m_ssl;
 		XMLEasyCC cc = request.getCC();
 		if (cc != null)
 		{
@@ -131,7 +128,7 @@ public class AIControlChannel extends SyncControlChannel
 						PayAccount currentAccount = PayAccountsFile.getInstance().getActiveAccount();
 						try
 						{
-							currentAccount.fetchAccountInfo(ssl);
+							currentAccount.fetchAccountInfo();
 						}
 						catch (Exception ex)
 						{
@@ -202,7 +199,7 @@ public class AIControlChannel extends SyncControlChannel
 						PayAccount currentAccount = PayAccountsFile.getInstance().getActiveAccount();
 						try
 						{
-							currentAccount.fetchAccountInfo(ssl);
+							currentAccount.fetchAccountInfo();
 							XMLBalance b = currentAccount.getBalance();
 							AIControlChannel.this.sendXMLMessage(XMLUtil.toXMLDocument(b));
 						}
