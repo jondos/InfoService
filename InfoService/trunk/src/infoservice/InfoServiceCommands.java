@@ -178,6 +178,38 @@ public class InfoServiceCommands implements JWSInternalCommands
 	}
 
 	/**
+	 * Sends info about a special payment instance to the client.
+	 *
+	 * @return The HTTP response for the client.
+	 */
+	private HttpResponseStructure japFetchPaymentInstanceInfo(String a_piID)
+	{
+		HttpResponseStructure httpResponse = new HttpResponseStructure(HttpResponseStructure.
+			HTTP_RETURN_INTERNAL_SERVER_ERROR);
+		try
+		{
+			Enumeration en = Database.getInstance(PaymentInstanceDBEntry.class).getEntrySnapshotAsEnumeration();
+			while (en.hasMoreElements())
+			{
+				PaymentInstanceDBEntry entry = (PaymentInstanceDBEntry)en.nextElement();
+				if (entry.getId().equals(a_piID))
+				{
+					Document doc = XMLUtil.createDocument();
+					doc.appendChild(entry.toXmlElement(doc));
+					httpResponse = new HttpResponseStructure(doc);
+				}
+			}
+
+		}
+		catch (Exception e)
+		{
+			LogHolder.log(LogLevel.ERR, LogType.NET, e);
+		}
+
+		return httpResponse;
+	}
+
+	/**
 	 * Sends the complete list of all known payment instances to the client.
 	 *
 	 * @return The HTTP response for the client.
@@ -1316,6 +1348,12 @@ public class InfoServiceCommands implements JWSInternalCommands
 		{
 			/* JAP or someone else wants to get information about all payment instacnes we know */
 			httpResponse = japFetchPaymentInstances();
+		}
+		else if ( (command.startsWith("/paymentinstance/")) && (method == Constants.REQUEST_METHOD_GET))
+		{
+			/* JAP or someone else wants to get information about a special payment instance */
+			String piID = command.substring(17);
+			httpResponse = japFetchPaymentInstanceInfo(piID);
 		}
 
 		return httpResponse;

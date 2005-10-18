@@ -8,6 +8,7 @@ Für Betrieb zwingend nötige Kommandos:
                       kennt
 
   /paymentinstance: POST: von einer Payment Instance oder einem anderen Infoservice mit Informationen über eine Payment Instance
+  /paymentinstance/ID: GET: von JAP - gibt Infos über Payment Instance mit ID zurück
   /paymentinstances: GET: XML-Struktur mit allen Payment-Instanzen, welche der Infoservice
                       kennt
 
