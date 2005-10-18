@@ -48,6 +48,13 @@ import anon.pay.BI;
 import jap.JAPConstants;
 import jap.JAPMessages;
 import jap.JAPUtil;
+import java.util.Vector;
+import java.util.Enumeration;
+import anon.infoservice.InfoServiceHolder;
+import anon.infoservice.PaymentInstanceDBEntry;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 
 /** This dialog fetches all known Payment Instances from the InfoService and lets
  *  the user select one.

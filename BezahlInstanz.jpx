@@ -53,6 +53,7 @@
   <property category="sys" name="WorkingDirectory" value="."/>
   <property category="sys" name="enable.auto.packages" value="false"/>
   <node name="anon.infoservice" type="Folder">
+    <file path="src/anon/infoservice/Constants.java"/>
     <file path="src/anon/infoservice/PaymentInstanceDBEntry.java"/>
   </node>
   <node name="anon.crypto" type="Package"/>

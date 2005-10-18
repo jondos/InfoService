@@ -36,6 +36,7 @@ import anon.tor.tinytls.TinyTLSServer;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import java.net.InetAddress;
 
 /**
  * Serversocket der Bezahlinstanz.
@@ -55,9 +56,8 @@ public class PIServer implements Runnable
 	 * <b>true</b> wird ein Abrechnungsinstanz-Socket erzeugt.
 	 *
 	 * @param typeai Socket f\uFFFDr AI- oder JAP-Verbindungen? (true = AI)
-	 * @param sslOn SSL ein ?
 	 */
-	public PIServer(boolean typeai, boolean sslOn)
+	public PIServer(boolean typeai)
 	{
 		if (typeai)
 		{
@@ -78,18 +78,12 @@ public class PIServer implements Runnable
 	{
 		try
 		{
-			if (Configuration.isTLSEnabled())
-			{
-				LogHolder.log(LogLevel.DEBUG, LogType.PAY, "PIServer starting up on port " + m_listenPort+". TLS is on");
-				TinyTLSServer tlssock = new TinyTLSServer(m_listenPort);
-				tlssock.setDSSParameters(Configuration.getOwnCertificate(), (MyDSAPrivateKey)Configuration.getPrivateKey());
-				m_serverSocket = tlssock;
-			}
-			else
-			{
-				LogHolder.log(LogLevel.DEBUG, LogType.PAY, "PIServer starting up on port " + m_listenPort+". TLS is OFF");
-				m_serverSocket = new ServerSocket(m_listenPort);
-			}
+			LogHolder.log(LogLevel.DEBUG, LogType.PAY,
+						  "PIServer starting up on port " + m_listenPort + ". TLS is on");
+			TinyTLSServer tlssock = new TinyTLSServer(m_listenPort);
+			tlssock.setDSSParameters(Configuration.getOwnCertificate(),
+									 (MyDSAPrivateKey) Configuration.getPrivateKey());
+			m_serverSocket = tlssock;
 		}
 		catch (Exception e)
 		{
@@ -105,8 +99,14 @@ public class PIServer implements Runnable
 			{
 				LogHolder.log(LogLevel.DEBUG, LogType.PAY, "JPIServer: waiting for conn");
 				acceptedSocket = m_serverSocket.accept();
+				InetAddress remote = acceptedSocket.getInetAddress();
+				String strRemote = "unknown";
+				if (remote != null)
+				{
+					strRemote = remote.getHostAddress();
+				}
 				LogHolder.log(LogLevel.DEBUG, LogType.PAY,
-							  "JPIServer: connection from " + acceptedSocket.getInetAddress().toString());
+							  "JPIServer: connection from: " + strRemote);
 
 				con = new JPIConnection(acceptedSocket, m_typeAI);
 				new Thread(con).start();

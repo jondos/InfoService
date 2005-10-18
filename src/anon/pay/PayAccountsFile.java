@@ -502,7 +502,7 @@ public class PayAccountsFile implements IXMLEncodable
 	 *
 	 * @todo check RSA keygen implementation
 	 */
-	public PayAccount createAccount(BI a_bi, boolean useDSA, boolean a_ssl) throws Exception
+	public PayAccount createAccount(BI a_bi, boolean useDSA) throws Exception
 	{
 		IMyPublicKey pubKey = null;
 		IMyPrivateKey privKey = null;
@@ -537,7 +537,7 @@ public class PayAccountsFile implements IXMLEncodable
 					  "Attempting to create account at PI " + a_bi.getHostName() + ":" +
 					  a_bi.getPortNumber());
 
-		BIConnection biConn = new BIConnection(a_bi, a_ssl);
+		BIConnection biConn = new BIConnection(a_bi);
 		biConn.connect();
 		XMLAccountCertificate cert = biConn.register(xmlKey, signingInstance);
 		biConn.disconnect();

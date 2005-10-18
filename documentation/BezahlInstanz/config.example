@@ -26,12 +26,10 @@ name My BI
 # hostname: the JPI's hostname
 # japport: TCP Port where the JPI listens for JAP connections
 # aiport: TCP Port where the JPI listens for AI connections
-# tls: use encryption? can be one of "on" or "off"
 
 hostname bezahl.instanz.de
 japport 2342
 aiport 4223
-tls on
 
 ##############################################################################
 # InfoService settings - where to post data about ourselves

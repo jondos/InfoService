@@ -35,7 +35,7 @@ import anon.tor.Tor;
 
 public final class JAPConstants
 {
-	public static final String aktVersion = "00.05.036"; //Never change the layout of this line!
+	public static final String aktVersion = "00.05.037"; //Never change the layout of this line!
 	private static final String CVS_GENERATED_RELEASE_DATE = "$Date$";
 
 	//Warning: This is a little bit tricky,
@@ -190,7 +190,6 @@ public final class JAPConstants
 	};
 	public static final String PIHOST = "anon.inf.tu-dresden.de";
 	public static final int PIPORT = 2342;
-	public static final boolean PI_SSLON = false; // auf true setzten wenn die pay funktionalit\uFFFDt fertig gebaut ist.
 
 	public final static String CERTSPATH = "certificates/";
 	public final static String TRUSTEDMIXROOTCERT = "japmixroot.cer";

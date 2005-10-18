@@ -27,9 +27,6 @@
  */
 package anon.pay;
 
-//import pay.crypto.tinyssl.RootCertificates;
-
-
 /**
  * Diese Klasse kapselt eine Verbindung zur BI, fuehrt die Authentikation durch
  * und enth\uFFFDlt Methoden, um Kontoaufladungs- und andere Requests an die BI zu
@@ -60,17 +57,15 @@ public class BIConnection
 
 	private Socket m_socket;
 	private HttpClient m_httpClient;
-	private boolean m_bIsSslOn;
 
 	/**
 	 * Constructor
 	 *
 	 * @param BI the BI to which we connect
 	 */
-	public BIConnection(BI theBI, boolean sslOn)
+	public BIConnection(BI theBI)
 	{
 		m_theBI = theBI;
-		m_bIsSslOn = sslOn;
 	}
 
 	/**
@@ -81,17 +76,10 @@ public class BIConnection
 	 */
 	public void connect() throws Exception
 	{
-		if (m_bIsSslOn == false)
-		{
-			m_socket = new Socket(m_theBI.getHostName(), m_theBI.getPortNumber());
-		}
-		else
-		{
-			TinyTLS tls = new TinyTLS(m_theBI.getHostName(), m_theBI.getPortNumber());
-			tls.setRootKey(m_theBI.getCertificate().getPublicKey());
-			tls.startHandshake();
-			m_socket = tls;
-		}
+		TinyTLS tls = new TinyTLS(m_theBI.getHostName(), m_theBI.getPortNumber());
+		tls.setRootKey(m_theBI.getCertificate().getPublicKey());
+		tls.startHandshake();
+		m_socket = tls;
 		m_httpClient = new HttpClient(m_socket);
 	}
 
@@ -198,8 +186,10 @@ public class BIConnection
 			m_httpClient.writeRequest("POST", "response", strResponse);
 			doc = m_httpClient.readAnswer();
 			// check signature
-			if(!XMLSignature.verifyFast(doc,m_theBI.getCertificate().getPublicKey()))
+			if (!XMLSignature.verifyFast(doc, m_theBI.getCertificate().getPublicKey()))
+			{
 				throw new Exception("AccountCertificate: Wrong signature!");
+			}
 			xmlCert = new XMLAccountCertificate(doc.getDocumentElement());
 			if (!xmlCert.getPublicKey().equals(pubKey.getPublicKey()))
 			{

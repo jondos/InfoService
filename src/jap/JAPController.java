@@ -1693,13 +1693,12 @@ public final class JAPController extends Observable implements IProxyListener, O
 							JAPModel.getInstance().getProxyInterface().isValid())
 						{
 							m_proxyAnon = new AnonProxy(
-								m_socketHTTPListener, JAPModel.getInstance().getProxyInterface(),
-								JAPConstants.PI_SSLON);
+								m_socketHTTPListener, JAPModel.getInstance().getProxyInterface());
 							registerAsAnonListener();
 						}
 						else
 						{
-							m_proxyAnon = new AnonProxy(m_socketHTTPListener, null, JAPConstants.PI_SSLON);
+							m_proxyAnon = new AnonProxy(m_socketHTTPListener, null);
 							registerAsAnonListener();
 						}
 
