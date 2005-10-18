@@ -30,27 +30,23 @@ package anon.infoservice;
 import java.util.Enumeration;
 import java.util.NoSuchElementException;
 import java.util.Vector;
-
 import javax.xml.parsers.DocumentBuilderFactory;
-
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-
 import HTTPClient.HTTPConnection;
 import HTTPClient.HTTPResponse;
-
 import anon.crypto.SignatureVerifier;
 import anon.util.BZip2Tools;
 import anon.util.Base64;
 import anon.util.IXMLEncodable;
 import anon.util.XMLParseException;
 import anon.util.XMLUtil;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 
 /**
  * Holds the information for an infoservice.
@@ -345,8 +341,12 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 	 *
 	 * @exception IllegalArgumentException if invalid listener interfaces are given
 	 */
-  public InfoServiceDBEntry(String a_strName, Vector a_listeners, boolean a_primaryForwarderList, boolean a_japClientContext) throws IllegalArgumentException {
-    this(a_strName, a_listeners, a_primaryForwarderList, a_japClientContext, (a_japClientContext ? (System.currentTimeMillis() + Constants.TIMEOUT_INFOSERVICE_JAP) : (System.currentTimeMillis() + Constants.TIMEOUT_INFOSERVICE)));
+	public InfoServiceDBEntry(String a_strName, Vector a_listeners, boolean a_primaryForwarderList,
+							  boolean a_japClientContext) throws IllegalArgumentException
+	{
+		this(a_strName, a_listeners, a_primaryForwarderList, a_japClientContext,
+			 (a_japClientContext ? (System.currentTimeMillis() + Constants.TIMEOUT_INFOSERVICE_JAP) :
+			  (System.currentTimeMillis() + Constants.TIMEOUT_INFOSERVICE)));
   }
 
   /**
@@ -367,7 +367,9 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
    *
    * @exception IllegalArgumentException if invalid listener interfaces are given
    */
-  public InfoServiceDBEntry(String a_strName, Vector a_listeners, boolean a_primaryForwarderList, boolean a_japClientContext, long a_expireTime) throws IllegalArgumentException {
+	public InfoServiceDBEntry(String a_strName, Vector a_listeners, boolean a_primaryForwarderList,
+							  boolean a_japClientContext, long a_expireTime) throws IllegalArgumentException
+	{
     super(a_expireTime);
 
 		if (a_listeners == null)
@@ -438,10 +440,10 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 		Document doc = XMLUtil.createDocument();
 		/* Create the InfoService element */
 		Element infoServiceNode = doc.createElement(getXmlElementName());
-		XMLUtil.setAttribute(infoServiceNode,"id", m_strInfoServiceId);
+		XMLUtil.setAttribute(infoServiceNode, "id", m_strInfoServiceId);
 		/* Create the child nodes of InfoService */
 		Element nameNode = doc.createElement("Name");
-		XMLUtil.setValue(nameNode,m_strName);
+		XMLUtil.setValue(nameNode, m_strName);
 		Element networkNode = doc.createElement("Network");
 
 		Element listenerInterfacesNode = doc.createElement("ListenerInterfaces");
@@ -453,12 +455,12 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 		}
 		networkNode.appendChild(listenerInterfacesNode);
 		Element lastUpdateNode = doc.createElement("LastUpdate");
-		XMLUtil.setValue(lastUpdateNode,m_creationTimeStamp);
+		XMLUtil.setValue(lastUpdateNode, m_creationTimeStamp);
 		/** create also an expire node for comptatibility with JAP/InfoService <= 00.03.043/IS.06.040
 		 *  @todo remove it
 		 */
 		Element expireNode = doc.createElement("Expire");
-		XMLUtil.setValue(expireNode,m_creationTimeStamp);
+		XMLUtil.setValue(expireNode, m_creationTimeStamp);
 		infoServiceNode.appendChild(nameNode);
 		infoServiceNode.appendChild(m_infoserviceSoftware.toXmlElement(doc));
 		infoServiceNode.appendChild(networkNode);
@@ -511,9 +513,9 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 		 */
 		public void setId(String id)
 		{
-			m_strInfoServiceId=id;
+		m_strInfoServiceId = id;
 			m_xmlDescription = generateXmlRepresentation();
-}
+	}
 
 	/**
 	 * Returns the name of the infoservice.
@@ -873,6 +875,42 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 	}
 
 	/**
+	 * Get a Vector of all payment instances the infoservice knows. If we can't get a connection with
+	 * the infoservice, an Exception is thrown.
+	 *
+	 * @return The Vector of all payment instances.
+	 */
+	public Vector getPaymentInstances() throws Exception
+	{
+		Document doc = getXmlDocument(HttpRequestStructure.createGetRequest("/paymentinstances"));
+		NodeList paymentInstancesNodes = doc.getElementsByTagName("PaymentInstances");
+		if (paymentInstancesNodes.getLength() == 0)
+		{
+			throw (new Exception("InfoService: getPaymentInstances: Error in XML structure."));
+		}
+		Element paymentInstancesNode = (Element) (paymentInstancesNodes.item(0));
+		NodeList paymentInstanceNodes = paymentInstancesNode.getElementsByTagName("PaymentInstance");
+		Vector paymentInstances = new Vector();
+		for (int i = 0; i < paymentInstanceNodes.getLength(); i++)
+		{
+			Element paymentInstanceNode = (Element) (paymentInstanceNodes.item(i));
+
+			try
+			{
+				paymentInstances.addElement(new PaymentInstanceDBEntry(paymentInstanceNode));
+			}
+			catch (Exception e)
+			{
+				/* an error while parsing the node occured -> we don't use this payment instance */
+				LogHolder.log(LogLevel.EXCEPTION, LogType.MISC,
+							  "InfoService: getPaymentInstances: Error in PaymentInstance XML node.");
+			}
+
+		}
+		return paymentInstances;
+	}
+
+	/**
 	 * Get a Vector of all infoservices the infoservice knows. If we can't get a connection with
 	 * the infoservice, an Exception is thrown.
 	 *
@@ -894,7 +932,7 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 			Element infoServiceNode = (Element) (infoServiceNodes.item(i));
 			/* check the signature */
 			if (SignatureVerifier.getInstance().verifyXml(infoServiceNode,
-				SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE) )
+				SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE))
 			{
 				/* signature is valid */
 				try
