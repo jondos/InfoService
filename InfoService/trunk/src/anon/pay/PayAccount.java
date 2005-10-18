@@ -581,10 +581,10 @@ public class PayAccount implements IXMLEncodable
 	 * @return XMLAccountInfo
 	 * @todo switch SSL on
 	 */
-	public XMLAccountInfo fetchAccountInfo(boolean a_ssl) throws Exception
+	public XMLAccountInfo fetchAccountInfo() throws Exception
 	{
 		XMLAccountInfo info;
-		BIConnection biConn = new BIConnection(m_theBI, a_ssl);
+		BIConnection biConn = new BIConnection(m_theBI);
 		biConn.connect();
 		biConn.authenticate(m_accountCertificate, m_signingInstance);
 		info = biConn.getAccountInfo();
@@ -602,9 +602,9 @@ public class PayAccount implements IXMLEncodable
 	 * @return xml transfer certificate
 	 * @throws Exception
 	 */
-	public XMLTransCert charge(boolean a_ssl) throws Exception
+	public XMLTransCert charge() throws Exception
 	{
-		BIConnection biConn = new BIConnection(m_theBI, a_ssl);
+		BIConnection biConn = new BIConnection(m_theBI);
 		biConn.connect();
 		biConn.authenticate(m_accountCertificate, m_signingInstance);
 		XMLTransCert transcert = biConn.charge();

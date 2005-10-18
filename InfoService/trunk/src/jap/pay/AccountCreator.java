@@ -73,7 +73,7 @@ public class AccountCreator extends SwingWorker
 	{
 		try
 		{
-			PayAccountsFile.getInstance().createAccount(m_bi, true, JAPConstants.PI_SSLON);
+			PayAccountsFile.getInstance().createAccount(m_bi, true);
 		}
 		catch (Exception e)
 		{

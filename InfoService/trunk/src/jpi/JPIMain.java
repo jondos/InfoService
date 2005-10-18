@@ -69,16 +69,11 @@ public class JPIMain
 		log1.setLogLevel(Configuration.getLogStderrThreshold());
 		// process command line args
 		boolean newdb = false;
-		boolean sslOn = false;
 		if (argv.length == 2)
 		{
 			if (argv[1].equals("new"))
 			{
 				newdb = true;
-			}
-			else if (argv[1].equals("on"))
-			{
-				sslOn = true;
 			}
 			else
 			{
@@ -87,9 +82,8 @@ public class JPIMain
 		}
 		else if (argv.length == 3)
 		{
-			if (argv[1].equals("new") && argv[2].equals("on"))
+			if (argv[1].equals("new"))
 			{
-				sslOn = true;
 				newdb = true;
 			}
 			else
@@ -129,13 +123,13 @@ public class JPIMain
 
 		// start PIServer for JAP connections
 		LogHolder.log(LogLevel.INFO, LogType.PAY, "JPIMain: Launching PIServer for JAP connections");
-		PIServer userServer = new PIServer(false, sslOn);
+		PIServer userServer = new PIServer(false);
 		Thread userThread = new Thread(userServer);
 		userThread.start();
 
 		// start PIServer for AI connections
 		LogHolder.log(LogLevel.INFO, LogType.PAY, "JPIMain: Launching PIServer for AI connections on port ");
-		PIServer aiServer = new PIServer(true, sslOn);
+		PIServer aiServer = new PIServer(true);
 		Thread aiThread = new Thread(aiServer);
 		aiThread.start();
 
@@ -149,7 +143,7 @@ public class JPIMain
 
 	private static void usage()
 	{
-		System.out.println("Usage: java JPIMain <configfile> [new] [on]");
+		System.out.println("Usage: java JPIMain <configfile> [new]");
 		System.exit(0);
 	}
 

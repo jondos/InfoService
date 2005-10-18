@@ -56,9 +56,6 @@ final public class AnonServiceImpl implements AnonService, AnonServiceEventListe
 	private Vector m_anonServiceListener;
 	private ImmutableProxyInterface m_proxyInterface;
 
-	/** determines if to use a SSL/TLS connection to the Payment Instance*/
-	private boolean m_ssl;
-
 	/**
 	 * Stores the connection when we use forwarding.
 	 */
@@ -85,12 +82,11 @@ final public class AnonServiceImpl implements AnonService, AnonServiceEventListe
 	 *
 	 * @param a_proxyConnection An active connection to the first mix of a cascade.
 	 */
-	public AnonServiceImpl(ProxyConnection a_proxyConnection, boolean a_ssl)
+	public AnonServiceImpl(ProxyConnection a_proxyConnection)
 	{
 		/* call the default constructor */
 		this( (ImmutableProxyInterface)null);
 		m_proxyConnection = a_proxyConnection;
-		m_ssl = a_ssl;
 	}
 
 	public int initialize(AnonServerDescription mixCascade)
@@ -106,7 +102,7 @@ final public class AnonServiceImpl implements AnonService, AnonServiceEventListe
 			}
 
 			// start Payment (2004-10-20 Bastian Voigt)
-			m_Pay = new Pay(m_MuxSocket, m_ssl);
+			m_Pay = new Pay(m_MuxSocket);
 			return ErrorCodes.E_SUCCESS;
 		}
 		catch (Throwable e)

@@ -396,7 +396,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 			{
 				splash = JAPWaitSplash.start("Fetching transfer number...", "Please wait");
 				Thread.sleep(5);
-				transferCertificate = selectedAccount.charge(JAPConstants.PI_SSLON);
+				transferCertificate = selectedAccount.charge();
 				splash.abort();
 			}
 			catch (Exception ex)
@@ -543,7 +543,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 				JAPMessages.getString("Fetching account statement"),
 				JAPMessages.getString("Please wait")
 				);
-			selectedAccount.fetchAccountInfo(JAPConstants.PI_SSLON);
+			selectedAccount.fetchAccountInfo();
 			splash.abort();
 		}
 		catch (Exception ex)

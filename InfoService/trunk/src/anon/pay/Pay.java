@@ -49,22 +49,18 @@ public class Pay
 	/** the control channel */
 	private AIControlChannel m_AIControlChannel;
 
-	/** determines if to use a SSL/TLS connection to the Payment Instance*/
-	private boolean m_ssl;
-
 	/**
 	 * make default constructor private: singleton
 	 * @param thBI BI
 	 * @param accountsData Element the xml account configuration.
 	 */
-	public Pay(MuxSocket currentMuxSocket, boolean a_ssl)
+	public Pay(MuxSocket currentMuxSocket)
 	{
-		m_ssl = a_ssl;
 		m_AccountsFile = PayAccountsFile.getInstance();
 
 		// register AI control channel
 		m_MuxSocket = currentMuxSocket;
-		m_AIControlChannel = new AIControlChannel(m_MuxSocket, m_ssl);
+		m_AIControlChannel = new AIControlChannel(m_MuxSocket);
 		m_MuxSocket.getControlChannelDispatcher().registerControlChannel(m_AIControlChannel);
 	}
 
@@ -86,7 +82,7 @@ public class Pay
 		while (accounts.hasMoreElements())
 		{
 			PayAccount ac = (PayAccount) accounts.nextElement();
-			ac.fetchAccountInfo(m_ssl);
+			ac.fetchAccountInfo();
 		}
 	}
 }

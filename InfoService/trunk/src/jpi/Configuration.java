@@ -45,7 +45,7 @@ import logging.LogType;
 public class Configuration
 {
 	/** Versionsnummer --> Please update if you change anything*/
-	public static final String BEZAHLINSTANZ_VERSION = "BI.02.005";
+	public static final String BEZAHLINSTANZ_VERSION = "BI.02.006";
 	public static IMyPrivateKey getPrivateKey()
 	{
 		return m_privateKey;
@@ -182,7 +182,6 @@ public class Configuration
 	/** holds the port where the JPI should listen for JAP connections */
 	private static int m_JAPPort;
 	private static IMyPrivateKey m_privateKey;
-	private static boolean m_bIsTLSEnabled;
 
 	/** returns the port where the JPI should listen for JAP connections */
 	public static int getJAPPort()
@@ -253,7 +252,6 @@ public class Configuration
 		{
 			m_AIPort = Integer.parseInt(props.getProperty("aiport"));
 			m_JAPPort = Integer.parseInt(props.getProperty("japport"));
-			m_bIsTLSEnabled = (props.getProperty("tls").equalsIgnoreCase("on") ? true : false);
 		}
 		catch (Exception e)
 		{
@@ -388,16 +386,5 @@ public class Configuration
 			return false;
 		}
 		return true;
-	}
-
-	/**
-	 * isTLSEnabled
-	 *
-	 * @return boolean
-	 * @todo make this a real config option
-	 */
-	public static boolean isTLSEnabled()
-	{
-		return m_bIsTLSEnabled;
 	}
 }
