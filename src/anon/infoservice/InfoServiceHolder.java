@@ -33,7 +33,6 @@ import java.util.Vector;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-
 import anon.util.XMLUtil;
 import logging.LogHolder;
 import logging.LogLevel;
@@ -87,6 +86,11 @@ public class InfoServiceHolder extends Observable
 	 * Function number for fetchInformation() - getForwarder().
 	 */
 	private static final int GET_FORWARDER = 8;
+
+	/**
+	 * Function number for fetchInformation() - getPaymentInstances().
+	 */
+	private static final int GET_PAYMENT_INSTANCES = 9;
 
 	/**
 	 * Stores the name of the root node of the XML settings for this class.
@@ -331,6 +335,11 @@ public class InfoServiceHolder extends Observable
 				{
 					result = currentInfoService.getForwarder();
 				}
+				else if (functionNumber == GET_PAYMENT_INSTANCES)
+				{
+					result = currentInfoService.getPaymentInstances();
+				}
+
 				/* no error occured -> success -> update the preferred infoservice and exit */
 				InfoServiceDBEntry preferredInfoService = getPreferredInfoService();
 				if (preferredInfoService != null)
@@ -381,6 +390,29 @@ public class InfoServiceHolder extends Observable
 		{
 			LogHolder.log(LogLevel.ERR, LogType.NET,
 						  "InfoServiceHolder: getMixCascades: No InfoService with the needed information available.");
+			return null;
+		}
+	}
+
+	/**
+	 * Get a Vector of all payment instances the preferred infoservice knows. If we can't get a the
+	 * information from preferred infoservice, another known infoservice is asked. If we have gotten
+	 * a list from one infoservice, we stop asking other infoservices, so information is not a
+	 * cumulative list with information from more than one infoservice. If we can't get the
+	 * information from any infoservice, null is returned.
+	 *
+	 * @return The Vector of payment instances.
+	 */
+	public Vector getPaymentInstances()
+	{
+		try
+		{
+			return (Vector) (fetchInformation(GET_PAYMENT_INSTANCES, null));
+		}
+		catch (Exception e)
+		{
+			LogHolder.log(LogLevel.ERR, LogType.NET,
+						  "InfoServiceHolder: getPaymentInstances: No InfoService with the needed information available.");
 			return null;
 		}
 	}

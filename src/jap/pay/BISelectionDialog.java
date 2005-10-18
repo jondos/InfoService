@@ -164,21 +164,23 @@ public class BISelectionDialog extends JDialog implements ActionListener, ListSe
 		{
 			public void run()
 			{
-				/** @todo Query InfoService and fill m_biList*/
+				DefaultListModel listModel = new DefaultListModel();
+
 				try
 				{
-					BI testBI = new BI("TestBI", JAPConstants.PIHOST, JAPConstants.PIPORT,
-									   JAPCertificate.getInstance(JAPConstants.CERTSPATH +
-						JAPConstants.CERT_BI));
-					DefaultListModel listModel = new DefaultListModel();
-					listModel.addElement(testBI);
-					m_biList.setEnabled(true);
-					m_biList.setModel(listModel);
+					Vector paymentInstances = InfoServiceHolder.getInstance().getPaymentInstances();
+					Enumeration en = paymentInstances.elements();
+					while (en.hasMoreElements())
+					{
+						listModel.addElement( ((PaymentInstanceDBEntry) en.nextElement()).toBI());
+					}
 				}
 				catch (Exception e)
 				{
+					LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, e.getMessage());
 				}
-
+				m_biList.setEnabled(true);
+				m_biList.setModel(listModel);
 			}
 		};
 

@@ -71,7 +71,7 @@ public class PaymentInstanceDBEntry extends AbstractDatabaseEntry implements IDi
 	/** Creates a PaymentInstanceDBEntry which represents a payment instance.*/
 	public PaymentInstanceDBEntry(Element elemRoot) throws XMLParseException
 	{
-		super(System.currentTimeMillis() + Constants.TIMEOUT_PAYMENT_INTERFACE);
+		super(System.currentTimeMillis() + Constants.TIMEOUT_PAYMENT_INSTANCE);
 		if (elemRoot == null)
 		{
 			throw new XMLParseException(XMLParseException.NODE_NULL_TAG);
@@ -123,14 +123,26 @@ public class PaymentInstanceDBEntry extends AbstractDatabaseEntry implements IDi
 			m_listenerInterfaces.addElement(new ListenerInterface(listenerInterfaceNode));
 		}
 
-		m_cert = JAPCertificate.getInstance(XMLUtil.getFirstChildByName(elemRoot, "Certificate"));
+		Element elemCert = (Element) XMLUtil.getFirstChildByName(elemRoot, "Certificate");
+		if (elemCert != null)
+		{
+			elemCert = (Element) XMLUtil.getFirstChildByName(elemCert, JAPCertificate.XML_ELEMENT_NAME);
+			if (elemCert != null)
+			{
+				JAPCertificate cert = JAPCertificate.getInstance(elemCert);
+				if (cert != null)
+				{
+					m_cert = cert;
+				}
+			}
+		}
 
 	}
 
 	public PaymentInstanceDBEntry(String id, String name, JAPCertificate a_cert, Vector listeners,
 								  String software_version, long creationTime)
 	{
-		super(System.currentTimeMillis() + Constants.TIMEOUT_PAYMENT_INTERFACE);
+		super(System.currentTimeMillis() + Constants.TIMEOUT_PAYMENT_INSTANCE);
 		m_strPaymentInstanceId = id;
 		m_creationTimeStamp = creationTime;
 		m_cert = a_cert;

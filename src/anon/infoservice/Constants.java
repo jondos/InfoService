@@ -57,7 +57,7 @@ final public class Constants
 	public static final long TIMEOUT_MIX = 15 * 60 * 1000L; // 15 minutes
 	public static final long TIMEOUT_MIXCASCADE = 15 * 60 * 1000L; // 15 minutes
 	public static final long TIMEOUT_STATUS = 100 * 1000L; // 100 seconds
-	public static final long TIMEOUT_PAYMENT_INTERFACE = 11 * 60 * 1000L; // 11 minutes
+	public static final long TIMEOUT_PAYMENT_INSTANCE = 11 * 60 * 1000L; // 11 minutes
 
 	/**
 	 * The timeout for all entries in the database of JAP forwarders. If we don't get a new  update
