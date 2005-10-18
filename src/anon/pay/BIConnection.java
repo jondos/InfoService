@@ -77,6 +77,7 @@ public class BIConnection
 	public void connect() throws Exception
 	{
 		TinyTLS tls = new TinyTLS(m_theBI.getHostName(), m_theBI.getPortNumber());
+		tls.setSoTimeout(30000);
 		tls.setRootKey(m_theBI.getCertificate().getPublicKey());
 		tls.startHandshake();
 		m_socket = tls;
