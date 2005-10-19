@@ -274,6 +274,7 @@ public final class JAPConstants
 	public final static String CONFIG_MIN = "min";
 	public final static String CONFIG_MAX = "max";
 	public final static String CONFIG_PAYMENT = "Payment";
+	public final static String CONFIG_PAYMENT_INSTANCES = "PaymentInstances";
 	public final static String CONFIG_ENCRYPTED_DATA = "EncryptedData";
 	public final static String CONFIG_PAY_ACCOUNTS_FILE = "PayAccountsFile";
 	public final static String CONFIG_JAP_FORWARDING_SETTINGS = "JapForwardingSettings";

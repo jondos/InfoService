@@ -837,41 +837,21 @@ public final class JAPController extends Observable implements IProxyListener, O
 				if (loadPay)
 				{
 					Element elemPay = (Element) XMLUtil.getFirstChildByName(root, JAPConstants.CONFIG_PAYMENT);
-					/*					String biName = elemPay.getAttribute("biName");
-					   if (biName == null || biName.equals(""))
-					   {
-					 biName = JAPConstants.PIHOST;
-					   }
-					   String biHost = elemPay.getAttribute("biHost");
-					   if (biHost == null || biHost.equals(""))
-					   {
-					 biHost = JAPConstants.PIHOST;
-					   }
-					   int biPort = Integer.parseInt(elemPay.getAttribute("biPort"));
-					   if (biPort == 0)
-					   {
-					 biPort = JAPConstants.PIPORT;
-					   }
-					   BI theBI = new BI(
-					 m_Model.getResourceLoader().loadResource(JAPConstants.CERTSPATH +
-					 JAPConstants.CERT_BI),
-					   biName, biHost, biPort);*/
-					Element elemBI = (Element) XMLUtil.getFirstChildByName(elemPay, BI.XML_ELEMENT_NAME);
-					BI theBI = null;
-					if (elemBI == null)
-					{
-						theBI = new BI(
-							ResourceLoader.loadResource(JAPConstants.CERTSPATH +
-							JAPConstants.CERT_BI),
-							JAPConstants.PIHOST, JAPConstants.PIHOST, JAPConstants.PIPORT);
-					}
-					else
-					{
-						theBI = new BI(elemBI);
-					}
+
 					Element elemAccounts = (Element) XMLUtil.getFirstChildByName(elemPay,
 						JAPConstants.CONFIG_ENCRYPTED_DATA);
 
+					//Load known Payment instances
+					Node nodePIs = XMLUtil.getFirstChildByName(elemPay, JAPConstants.CONFIG_PAYMENT_INSTANCES);
+					if (nodePIs != null)
+					   {
+						Node nodePI = nodePIs.getFirstChild();
+						while (nodePI != null)
+					{
+							PayAccountsFile.getInstance().addKnownPI( (Element) nodePI);
+							nodePI = nodePI.getNextSibling();
+					}
+					}
 					// test: is account data encrypted?
 					if (elemAccounts != null)
 					{
@@ -904,7 +884,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 							break ;
 						}
 
-						PayAccountsFile.init(theBI, elemPlainTxt);
+						PayAccountsFile.init(elemPlainTxt);
+
 						m_bPaymentFirstTime = false;
 					}
 					else
@@ -914,7 +895,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 							JAPConstants.CONFIG_PAY_ACCOUNTS_FILE);
 						if (elemAccounts != null)
 						{
-							PayAccountsFile.init(theBI, elemAccounts);
+							PayAccountsFile.init(elemAccounts);
 							if (PayAccountsFile.getInstance().getNumAccounts() == 0)
 							{
 								m_bPaymentFirstTime = true;
@@ -926,7 +907,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 						}
 						else
 						{
-							PayAccountsFile.init(theBI, null);
+							PayAccountsFile.init(null);
 							m_bPaymentFirstTime = true;
 						}
 					}
@@ -1298,13 +1279,14 @@ public final class JAPController extends Observable implements IProxyListener, O
 			{
 				Element elemPayment = doc.createElement(JAPConstants.CONFIG_PAYMENT);
 				e.appendChild(elemPayment);
-//				elemPayment.setAttribute("biHost", JAPModel.getBIHost());
-//				elemPayment.setAttribute("biPort", Integer.toString(JAPModel.getBIPort()));
-				if (accounts.getBI() != null)
-				{
-					elemPayment.appendChild(accounts.getBI().toXmlElement(doc));
 
-					// get configuration from accountsfile
+				//Save the known PIs
+				Element elemPIs = doc.createElement(JAPConstants.CONFIG_PAYMENT_INSTANCES);
+				elemPayment.appendChild(elemPIs);
+				Enumeration pis = accounts.getKnownPIs();
+				while (pis.hasMoreElements())
+				{
+					elemPIs.appendChild( ( (BI) pis.nextElement()).toXmlElement(doc));
 				}
 				Element elemAccounts = accounts.toXmlElement(doc);
 				elemPayment.appendChild(elemAccounts);
