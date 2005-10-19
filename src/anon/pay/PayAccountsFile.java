@@ -60,6 +60,7 @@ import anon.util.XMLUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.crypto.JAPCertificate;
 
 /**
  * This class encapsulates a collection of accounts. One of the accounts in the collection
@@ -108,6 +109,7 @@ public class PayAccountsFile implements IXMLEncodable
 	private static PayAccountsFile ms_AccountsFile = null;
 
 	private Vector m_paymentListeners = new Vector();
+	private Vector m_knownPIs = new Vector();
 
 	private MyAccountListener m_MyAccountListener = new MyAccountListener();
 
@@ -122,7 +124,7 @@ public class PayAccountsFile implements IXMLEncodable
 	 * cascades and all accounts. This is the reason why we have this field in
 	 * the singleton class.
 	 */
-	private BI m_theBI;
+	//private BI m_theBI;
 
 	// singleton!
 	private PayAccountsFile()
@@ -147,13 +149,13 @@ public class PayAccountsFile implements IXMLEncodable
 	 * Performs the initialization.
 	 * @return boolean succeeded?
 	 */
-	public static boolean init(BI theBI, Element elemAccountsFile)
+	public static boolean init(Element elemAccountsFile)
 	{
 		if (ms_AccountsFile == null)
 		{
 			ms_AccountsFile = new PayAccountsFile();
 		}
-		ms_AccountsFile.m_theBI = theBI;
+		//ms_AccountsFile.m_theBI = theBI;
 		if (elemAccountsFile != null)
 		{
 			Element elemActiveAccount = (Element) XMLUtil.getFirstChildByName(elemAccountsFile,
@@ -172,7 +174,7 @@ public class PayAccountsFile implements IXMLEncodable
 					ms_AccountsFile.m_Accounts.addElement(new PayAccount(elemAccount));*/
 					elemAccount = (Element) elemAccount.getNextSibling();
 				}
-				catch (Exception ex1)
+				catch (Exception e)
 				{
 					return false;
 				}
@@ -462,10 +464,10 @@ public class PayAccountsFile implements IXMLEncodable
 	 *
 	 * @return BI
 	 */
-	public BI getBI()
+	/*	public BI getBI()
 	{
 		return m_theBI;
-	}
+	 }*/
 
 	/**
 	 * Listens to changes
@@ -542,6 +544,9 @@ public class PayAccountsFile implements IXMLEncodable
 		XMLAccountCertificate cert = biConn.register(xmlKey, signingInstance);
 		biConn.disconnect();
 
+		//Add PI to the list of known PIs
+		addKnownPI(a_bi);
+
 		// add the new account to the accountsFile
 		PayAccount newAccount = new PayAccount(cert, privKey, signingInstance, a_bi);
 		addAccount(newAccount);
@@ -578,5 +583,98 @@ public class PayAccountsFile implements IXMLEncodable
 				( (IPaymentListener) enumListeners.nextElement()).accountError(msg);
 			}
 		}
+	}
+
+	/**
+	 * Gets the list of known Payment Instances
+	 * @return Enumeration
+	 */
+	public Enumeration getKnownPIs()
+	{
+		return m_knownPIs.elements();
+	}
+
+	/**
+	 * Adds a payment instance to the list of known payment instances
+	 */
+	public void addKnownPI(BI a_bi)
+	{
+		boolean exists = false;
+
+		for (int i = 0; i < m_knownPIs.size(); i++)
+		{
+			if ( ( (BI) m_knownPIs.elementAt(i)).getID().equals(a_bi.getID()))
+			{
+				exists = true;
+			}
+		}
+		if (!exists)
+		{
+			m_knownPIs.addElement(a_bi);
+		}
+	}
+
+	/**
+	 * Adds a payment instance to the list of known payment instances
+	 */
+	public void addKnownPI(Element a_elemPI)
+	{
+		String biID, biName, biHost;
+		int biPort;
+		JAPCertificate biCert;
+
+		Element elem = (Element) XMLUtil.getFirstChildByName(a_elemPI, "BIID");
+		biID = XMLUtil.parseValue(elem, "-1");
+
+		elem = (Element) XMLUtil.getFirstChildByName(a_elemPI, "BIName");
+		biName = XMLUtil.parseValue(elem, "-1");
+
+		elem = (Element) XMLUtil.getFirstChildByName(a_elemPI, "HostName");
+		biHost = XMLUtil.parseValue(elem, "-1");
+
+		elem = (Element) XMLUtil.getFirstChildByName(a_elemPI, "PortNumber");
+		biPort = XMLUtil.parseValue(elem, -1);
+
+		elem = (Element) XMLUtil.getFirstChildByName(a_elemPI, "TestCertificate");
+		elem = (Element) XMLUtil.getFirstChildByName(elem, JAPCertificate.XML_ELEMENT_NAME);
+
+		biCert = JAPCertificate.getInstance(elem);
+
+		BI bi = null;
+		try
+		{
+
+			bi = new BI(biID, biName, biHost, biPort, biCert);
+		}
+		catch (Exception e)
+		{
+			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, "Cannot create PI: " + e.getMessage());
+		}
+
+		addKnownPI(bi);
+	}
+
+	public BI getBI(String a_biID) throws Exception
+	{
+		BI theBI = null;
+		//First, try to get the BI from the Infoservice
+		/** @todo Query InfoService*/
+
+		//If it does not work, get it from the list of known PIs
+		for (int i = 0; i < m_knownPIs.size(); i++)
+		{
+			BI possibleBI = (BI) m_knownPIs.elementAt(i);
+			if (possibleBI.getID().equals(a_biID))
+			{
+				theBI = possibleBI;
+			}
+		}
+
+		if (theBI == null)
+		{
+			throw new Exception("Cannot get payment instance neither from InfoService nor from config file");
+		}
+
+		return theBI;
 	}
 }

@@ -250,7 +250,7 @@ public class PaymentInstanceDBEntry extends AbstractDatabaseEntry implements IDi
 		{
 			ListenerInterface listener = (ListenerInterface) m_listenerInterfaces.firstElement();
 
-			bi = new BI(m_name, listener.getHost(), listener.getPort(), m_cert);
+			bi = new BI(m_strPaymentInstanceId, m_name, listener.getHost(), listener.getPort(), m_cert);
 		}
 		catch (Exception e)
 		{

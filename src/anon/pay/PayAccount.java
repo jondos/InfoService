@@ -245,8 +245,10 @@ public class PayAccount implements IXMLEncodable
 		m_signingInstance = new JAPSignature();
 		m_signingInstance.initSign(m_privateKey);
 
-		/** @todo add BIName here when multiple BIs are supported */
-		m_theBI = PayAccountsFile.getInstance().getBI();
+		/** @todo get BI by supplying a bi-id */
+		Element biid = (Element) XMLUtil.getFirstChildByName(elemAccCert, "BiID");
+		String strBiID = XMLUtil.parseValue(biid, "-1");
+		m_theBI = PayAccountsFile.getInstance().getBI(strBiID);
 	}
 
 	/**

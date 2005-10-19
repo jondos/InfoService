@@ -34,6 +34,7 @@ import anon.util.XMLUtil;
  */
 public class BI implements IXMLEncodable
 {
+	private String m_biID;
 	private String m_biName;
 	private String m_hostName;
 	private int m_portNumber;
@@ -41,14 +42,16 @@ public class BI implements IXMLEncodable
 	private JAPSignature m_veryfire;
 	private JAPCertificate m_cert;
 
-	public static final String XML_ELEMENT_NAME="BI";
+	public static final String XML_ELEMENT_NAME = "BI";
 
-	public BI(String biName, String hostName, int portNumber, JAPCertificate cert) throws Exception
+	public BI(String a_biID, String a_biName, String a_hostName, int a_portNumber, JAPCertificate a_cert) throws
+		Exception
 	{
-		m_cert = cert;
-		m_biName = biName;
-		m_hostName = hostName;
-		m_portNumber = portNumber;
+		m_biID = a_biID;
+		m_cert = a_cert;
+		m_biName = a_biName;
+		m_hostName = a_hostName;
+		m_portNumber = a_portNumber;
 	}
 
 	public BI(Element elemRoot) throws Exception
@@ -64,10 +67,11 @@ public class BI implements IXMLEncodable
 		JAPCertificate cert = JAPCertificate.getInstance(barCert);
 		m_cert = cert;
 		LogHolder.log(LogLevel.DEBUG, LogType.PAY,
-					  "BI HelloWorld biName=" + biName + ", Host=" + hostName + ", Port=" + portNumber);
+					  "BI biName=" + biName + ", Host=" + hostName + ", Port=" + portNumber);
 
 		/** @todo does this work? i don't believe it... */
 		m_biName = biName; //cert.getSubject().CN.toString();
+		//m_biID = biID;
 		m_hostName = hostName;
 		m_portNumber = portNumber;
 
@@ -89,7 +93,10 @@ public class BI implements IXMLEncodable
 		{
 			throw new Exception("BI wrong XML format");
 		}
-		Element elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "BIName");
+		Element elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "BIID");
+		m_biID = XMLUtil.parseValue(elem, null);
+
+		elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "BIName");
 		m_biName = XMLUtil.parseValue(elem, null);
 
 		elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "HostName");
@@ -99,7 +106,7 @@ public class BI implements IXMLEncodable
 		m_portNumber = XMLUtil.parseValue(elem, 0);
 
 		elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "TestCertificate");
-		if(elem != null)
+		if (elem != null)
 		{
 			elem = (Element) XMLUtil.getFirstChildByName(elem, JAPCertificate.XML_ELEMENT_NAME);
 			if (elem != null)
@@ -154,7 +161,11 @@ public class BI implements IXMLEncodable
 		Element elemRoot = a_doc.createElement(XML_ELEMENT_NAME);
 		elemRoot.setAttribute("version", "1.0");
 
-		Element elem = a_doc.createElement("BIName");
+		Element elem = a_doc.createElement("BIID");
+		elemRoot.appendChild(elem);
+		XMLUtil.setValue(elem, m_biID);
+
+		elem = a_doc.createElement("BIName");
 		elemRoot.appendChild(elem);
 		XMLUtil.setValue(elem, m_biName);
 
@@ -185,5 +196,10 @@ public class BI implements IXMLEncodable
 	public String toString()
 	{
 		return new String(m_biName);
+	}
+
+	public String getID()
+	{
+		return m_biID;
 	}
 }
