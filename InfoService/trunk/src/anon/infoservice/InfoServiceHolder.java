@@ -93,6 +93,11 @@ public class InfoServiceHolder extends Observable
 	private static final int GET_PAYMENT_INSTANCES = 9;
 
 	/**
+	 * Function number for fetchInformation() - getPaymentInstance().
+	 */
+	private static final int GET_PAYMENT_INSTANCE = 10;
+
+	/**
 	 * Stores the name of the root node of the XML settings for this class.
 	 */
 	private static final String XML_SETTINGS_ROOT_NODE_NAME = "InfoServiceManagement";
@@ -339,6 +344,10 @@ public class InfoServiceHolder extends Observable
 				{
 					result = currentInfoService.getPaymentInstances();
 				}
+				else if (functionNumber == GET_PAYMENT_INSTANCE)
+				{
+					result = currentInfoService.getPaymentInstance( (String) arguments.firstElement());
+				}
 
 				/* no error occured -> success -> update the preferred infoservice and exit */
 				InfoServiceDBEntry preferredInfoService = getPreferredInfoService();
@@ -415,6 +424,19 @@ public class InfoServiceHolder extends Observable
 						  "InfoServiceHolder: getPaymentInstances: No InfoService with the needed information available.");
 			return null;
 		}
+	}
+
+	/** Get information for a particular payment instance identified by a_piID
+	 *
+	 * @return Payment Instance information
+	 */
+
+	public PaymentInstanceDBEntry getPaymentInstance(String a_piID) throws Exception
+	{
+
+		Vector args = new Vector();
+		args.addElement(a_piID);
+		return (PaymentInstanceDBEntry) (fetchInformation(GET_PAYMENT_INSTANCE, args));
 	}
 
 	/**

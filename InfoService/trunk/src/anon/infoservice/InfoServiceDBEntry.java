@@ -910,6 +910,13 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 		return paymentInstances;
 	}
 
+	public PaymentInstanceDBEntry getPaymentInstance(String a_piID) throws Exception
+	{
+		Document doc = getXmlDocument(HttpRequestStructure.createGetRequest("/paymentinstance/"+ a_piID));
+		Element paymentInstance = (Element)XMLUtil.getFirstChildByName(doc, "PaymentInstance");
+		return new PaymentInstanceDBEntry(paymentInstance);
+	}
+
 	/**
 	 * Get a Vector of all infoservices the infoservice knows. If we can't get a connection with
 	 * the infoservice, an Exception is thrown.
