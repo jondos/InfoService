@@ -61,6 +61,7 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import anon.crypto.JAPCertificate;
+import anon.infoservice.InfoServiceHolder;
 
 /**
  * This class encapsulates a collection of accounts. One of the accounts in the collection
@@ -654,17 +655,36 @@ public class PayAccountsFile implements IXMLEncodable
 		addKnownPI(bi);
 	}
 
-	public BI getBI(String a_biID) throws Exception
+	public BI getBI(String a_piID) throws Exception
 	{
 		BI theBI = null;
 		//First, try to get the BI from the Infoservice
-		/** @todo Query InfoService*/
+		LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Trying to get " + a_piID + " from InfoService");
 
-		//If it does not work, get it from the list of known PIs
+		try
+		{
+			theBI = InfoServiceHolder.getInstance().getPaymentInstance(a_piID).toBI();
+		}
+		catch (Exception e)
+		{
+			LogHolder.log(LogLevel.ERR, LogType.NET,
+						  "InfoServiceHolder: getPaymentInstance: No InfoService with the needed information available.");
+		}
+
+		if (theBI != null)
+		{
+			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Got BI " + theBI.getID() + " from InfoService");
+			return theBI;
+		}
+
+		//If no infoservice could give us information about the PI, get it from the list of known PIs
+		LogHolder.log(LogLevel.DEBUG, LogType.PAY,
+					  "Could not get " + a_piID + " from InfoService, trying config file");
+
 		for (int i = 0; i < m_knownPIs.size(); i++)
 		{
 			BI possibleBI = (BI) m_knownPIs.elementAt(i);
-			if (possibleBI.getID().equals(a_biID))
+			if (possibleBI.getID().equals(a_piID))
 			{
 				theBI = possibleBI;
 			}
