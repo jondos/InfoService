@@ -2,18 +2,15 @@ package anon.pay;
 
 import java.security.InvalidKeyException;
 
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-
-import anon.crypto.IMyPublicKey;
 import anon.crypto.JAPCertificate;
 import anon.crypto.JAPSignature;
 import anon.util.IXMLEncodable;
 import anon.util.XMLUtil;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 
 /**
  * This class represents a known BI with its unique name and x509 public
