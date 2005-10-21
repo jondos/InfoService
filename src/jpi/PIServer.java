@@ -95,10 +95,11 @@ public class PIServer implements Runnable
 		JPIConnection con;
 		while (true)
 		{
+			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "JPIServer: waiting for conn");
 			try
 			{
-				LogHolder.log(LogLevel.DEBUG, LogType.PAY, "JPIServer: waiting for conn");
 				acceptedSocket = m_serverSocket.accept();
+				acceptedSocket.setSoTimeout(30000);
 				InetAddress remote = acceptedSocket.getInetAddress();
 				String strRemote = "unknown";
 				if (remote != null)
@@ -111,11 +112,18 @@ public class PIServer implements Runnable
 				con = new JPIConnection(acceptedSocket, m_typeAI);
 				new Thread(con).start();
 			}
-			catch (IOException e)
+			catch (Exception e)
 			{
-				LogHolder.log(LogLevel.ALERT, LogType.PAY, "Class Server died: " + e.getMessage());
+				LogHolder.log(LogLevel.ALERT, LogType.PAY,
+							  "PIServer accept loop exception: " + e.getMessage());
 				LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, e);
-				return;
+				try
+				{
+					Thread.sleep(10000);
+				}
+				catch (InterruptedException ex)
+				{
+				}
 			}
 		}
 	}

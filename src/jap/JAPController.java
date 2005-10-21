@@ -1997,24 +1997,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 		}
 	}
 
-	/** @deprecated to be removed
-	 *  @param host BI hostname
-	 * */
-	public static void setBIHost(String host)
-	{
-		JAPModel.setBIHost(host);
-		m_Controller.notifyJAPObservers();
-	}
-
-	/** @deprecated to be removed
-	 *  @param port BI port number
-	 * */
-	public static void setBIPort(int port)
-	{
-		JAPModel.setBIPort(port);
-		m_Controller.notifyJAPObservers();
-	}
-
 	public static void setTorMaxConnectionsPerRoute(int i)
 	{
 		m_Model.setTorMaxConnectionsPerRoute(i);
@@ -2669,5 +2651,24 @@ public final class JAPController extends Observable implements IProxyListener, O
 	public void registerAsAnonListener()
 	{
 		m_proxyAnon.addEventListener(this);
+	}
+
+	/**
+	 * Gets the default Payment Instance
+	 * @return BI
+	 */
+	public BI getDefaultPI()
+	{
+		try
+		{
+			return new BI(JAPConstants.PI_ID, JAPConstants.PI_NAME, JAPConstants.PI_HOST,
+						  JAPConstants.PI_PORT,
+						  JAPCertificate.getInstance(JAPConstants.CERTSPATH + JAPConstants.PI_CERT));
+		}
+		catch (Exception e)
+		{
+			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Could not create default PI: " + e.getMessage());
+			return null;
+		}
 	}
 }
