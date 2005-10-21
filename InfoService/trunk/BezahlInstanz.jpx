@@ -57,6 +57,7 @@
     <file path="src/anon/infoservice/PaymentInstanceDBEntry.java"/>
   </node>
   <node name="anon.crypto" type="Package"/>
+  <node name="anon.pay" type="Package"/>
   <node name="anon.pay.xml" type="Package"/>
   <node name="anon.tor.tinytls" type="Package"/>
   <node name="jpi" type="Package"/>
