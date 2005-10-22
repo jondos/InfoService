@@ -98,6 +98,11 @@ public class InfoServiceHolder extends Observable
 	private static final int GET_PAYMENT_INSTANCE = 10;
 
 	/**
+	 * Function number for fetchInformation() - getMixminionNodesList().
+	 */
+	private static final int GET_MIXMINIONNODESLIST = 11;
+
+	/**
 	 * Stores the name of the root node of the XML settings for this class.
 	 */
 	private static final String XML_SETTINGS_ROOT_NODE_NAME = "InfoServiceManagement";
@@ -335,6 +340,10 @@ public class InfoServiceHolder extends Observable
 				else if (functionNumber == GET_TORNODESLIST)
 				{
 					result = currentInfoService.getTorNodesList();
+				}
+				else if (functionNumber == GET_MIXMINIONNODESLIST)
+				{
+					result = currentInfoService.getMixminionNodesList();
 				}
 				else if (functionNumber == GET_FORWARDER)
 				{
@@ -587,6 +596,26 @@ public class InfoServiceHolder extends Observable
 		}
 	}
 
+	/**
+	 * Get the list with the mixminion nodes from the infoservice. If we can't get a the information from
+	 * preferred infoservice, another known infoservice is asked. If we can't get the information
+	 * from any infoservice, null is returned.
+	 *
+	 * @return The raw mixminion nodes list as it is distributed by the mixminion directory servers.
+	 */
+	public String getMixminionNodesList()
+	{
+		try
+		{
+			return (String) (fetchInformation(GET_MIXMINIONNODESLIST, null));
+		}
+		catch (Exception e)
+		{
+			LogHolder.log(LogLevel.ERR, LogType.NET,
+						  "InfoServiceHolder: getMixminionNodesList: No InfoService with the needed information available.");
+			return null;
+		}
+	}
 	/**
 	 * Downloads a forwarder entry from a infoservice. If that infoservice has no forwarder list,
 	 * it will ask another infoservice with such a list and returns the answer to us. If we can't

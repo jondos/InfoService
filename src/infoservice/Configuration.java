@@ -501,12 +501,12 @@ public class Configuration {
 		}
 		/* load the list of known tor directory servers */
 		String mixminionDirectoryServers = a_properties.getProperty("mixminionDirectoryServers").trim();
-		StringTokenizer strMixminionDirectoryServers = new StringTokenizer(mixminionDirectoryServers, ",");
-		while (strMixminionDirectoryServers.hasMoreTokens())
+		StringTokenizer stMixminionDirectoryServers = new StringTokenizer(mixminionDirectoryServers, ",");
+		while (stMixminionDirectoryServers.hasMoreTokens())
 		{
 		  try
 		  {
-			URL mixminionDirectoryServer = new URL(strMixminionDirectoryServers.nextToken().trim());
+			URL mixminionDirectoryServer = new URL(stMixminionDirectoryServers.nextToken().trim());
 			MixminionDirectoryAgent.getInstance().addDirectoryServer(mixminionDirectoryServer);
 		  }
 		  catch (Exception e)
