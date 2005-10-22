@@ -43,6 +43,7 @@ Zusatzkommandos (Komfortfunktionen):
                             in komprimierter Form (BZip2), dekomprimiert ergeben sich die
                             gleichen Nutzdaten wie bei /tornodes
 
+  /compressedmixminionnodes: GET: Liefert Informationen ueber aktive MixMinion-Nodes - komprimiert mit gzip
 
 Zusatzkommandos (JAP forwarding):
 
