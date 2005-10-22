@@ -48,6 +48,7 @@ import logging.LogType;
 import java.net.URL;
 import anon.infoservice.ListenerInterface;
 import anon.infoservice.HTTPConnectionFactory;
+import HTTPClient.HTTPConnection;
 
 /**
  * This class is responsible for fetching the information about the active tor nodes. This class
@@ -105,8 +106,9 @@ public class MixminionDirectoryAgent implements Runnable
 
 	public void addDirectoryServer(URL directoryServer)
 	{
-		m_urlDirectoryServer=directoryServer;
+		m_urlDirectoryServer = directoryServer;
 	}
+
 	/**
 	 * This starts the internal mixminion nodes list update thread. You have to call this method exactly
 	 * once after the creation of this MixminionDirectoryAgent. After the update thread is started once,
@@ -156,11 +158,13 @@ public class MixminionDirectoryAgent implements Runnable
 			Element mixminionNodesListNode = null;
 			try
 			{
-				byte[] mixminionNodesListCompressedData = HTTPConnectionFactory.getInstance().createHTTPConnection(
-								new ListenerInterface(m_urlDirectoryServer.getHost(),
-					m_urlDirectoryServer.getPort())).Get(m_urlDirectoryServer.getFile()).getData();
+				HTTPConnection con = HTTPConnectionFactory.getInstance().createHTTPConnection(
+					new ListenerInterface(m_urlDirectoryServer.getHost(),
+										  m_urlDirectoryServer.getPort()));
+				con.removeModule(Class.forName("HTTPClient.ContentEncodingModule"));
+				byte[] mixminionNodesListCompressedData = con.Get(m_urlDirectoryServer.getFile()).getData();
 
-				String mixminionNodesListInformation=Base64.encode(mixminionNodesListCompressedData,false);
+				String mixminionNodesListInformation = Base64.encode(mixminionNodesListCompressedData, false);
 				/* create the MixminionNodesList XML structure for the clients */
 				mixminionNodesListNode = XMLUtil.createDocument().createElement("MixminionNodesList");
 				mixminionNodesListNode.setAttribute("xml:space", "preserve");

@@ -48,6 +48,8 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 
+import java.util.zip.GZIPInputStream;
+import java.io.ByteArrayInputStream;
 /**
  * Holds the information for an infoservice.
  */
@@ -347,30 +349,30 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 		this(a_strName, a_listeners, a_primaryForwarderList, a_japClientContext,
 			 (a_japClientContext ? (System.currentTimeMillis() + Constants.TIMEOUT_INFOSERVICE_JAP) :
 			  (System.currentTimeMillis() + Constants.TIMEOUT_INFOSERVICE)));
-  }
+	}
 
-  /**
-   * Creates a new InfoServiceDBEntry. The ID is set to a generic value derived from the host and
-   * the port of the first listener interface. If you supply a name for the infoservice then it
-   * will get that name, if you supply null, the name will be of the type "hostname:port". If the
-   * new infoservice entry is created within the context of the JAP client, the software info is
-   * set to a dummy value. If it is created within the context of the infoservice, the software
-   * info is set to the current infoservice version (see Constants.INFOSERVICE_VERSION).
-   *
-   * @param a_strName The name of the infoservice or null, if a generic name shall be used.
-   * @param a_listeners The listeners the infoservice is (virtually) listening on.
-   * @param a_primaryForwarderList Whether the infoservice holds a primary forwarder list.
-   * @param a_japClientContext Whether the new entry will be created within the context of the
-   *                           JAP client (true) or the context of the InfoService (false).
-   * @param a_expireTime The time when this InfoService will be removed from the database of all
-   *                     InfoServices.
-   *
-   * @exception IllegalArgumentException if invalid listener interfaces are given
-   */
+	/**
+	 * Creates a new InfoServiceDBEntry. The ID is set to a generic value derived from the host and
+	 * the port of the first listener interface. If you supply a name for the infoservice then it
+	 * will get that name, if you supply null, the name will be of the type "hostname:port". If the
+	 * new infoservice entry is created within the context of the JAP client, the software info is
+	 * set to a dummy value. If it is created within the context of the infoservice, the software
+	 * info is set to the current infoservice version (see Constants.INFOSERVICE_VERSION).
+	 *
+	 * @param a_strName The name of the infoservice or null, if a generic name shall be used.
+	 * @param a_listeners The listeners the infoservice is (virtually) listening on.
+	 * @param a_primaryForwarderList Whether the infoservice holds a primary forwarder list.
+	 * @param a_japClientContext Whether the new entry will be created within the context of the
+	 *                           JAP client (true) or the context of the InfoService (false).
+	 * @param a_expireTime The time when this InfoService will be removed from the database of all
+	 *                     InfoServices.
+	 *
+	 * @exception IllegalArgumentException if invalid listener interfaces are given
+	 */
 	public InfoServiceDBEntry(String a_strName, Vector a_listeners, boolean a_primaryForwarderList,
 							  boolean a_japClientContext, long a_expireTime) throws IllegalArgumentException
 	{
-    super(a_expireTime);
+		super(a_expireTime);
 
 		if (a_listeners == null)
 		{
@@ -508,13 +510,13 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 	}
 
 	/**
-		 * Sets the ID of the infoservice. Use with caution!
-		 *
-		 */
-		public void setId(String id)
-		{
+	 * Sets the ID of the infoservice. Use with caution!
+	 *
+	 */
+	public void setId(String id)
+	{
 		m_strInfoServiceId = id;
-			m_xmlDescription = generateXmlRepresentation();
+		m_xmlDescription = generateXmlRepresentation();
 	}
 
 	/**
@@ -787,7 +789,7 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 					catch (Exception e)
 					{
 						LogHolder.log(LogLevel.ERR, LogType.NET,
-							"InfoServiceDBEntry: getXmlDocument: Connection to infoservice interface failed: " +
+									  "InfoServiceDBEntry: getXmlDocument: Connection to infoservice interface failed: " +
 									  currentConnection.getHost() + ":" +
 									  Integer.toString(currentConnection.getPort()) +
 									  a_httpRequest.getRequestFileName() + " Reason: " + e.toString());
@@ -912,8 +914,8 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 
 	public PaymentInstanceDBEntry getPaymentInstance(String a_piID) throws Exception
 	{
-		Document doc = getXmlDocument(HttpRequestStructure.createGetRequest("/paymentinstance/"+ a_piID));
-		Element paymentInstance = (Element)XMLUtil.getFirstChildByName(doc, "PaymentInstance");
+		Document doc = getXmlDocument(HttpRequestStructure.createGetRequest("/paymentinstance/" + a_piID));
+		Element paymentInstance = (Element) XMLUtil.getFirstChildByName(doc, "PaymentInstance");
 		return new PaymentInstanceDBEntry(paymentInstance);
 	}
 
@@ -1129,6 +1131,41 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 		{
 			throw (new Exception(
 				"InfoServiceDBEntry: getTorNodesList: Error while parsing the TOR nodes list XML structure."));
+		}
+		return list;
+	}
+
+	/**
+	 * Get the list with the mixminion nodes from the infoservice. If we can't get a connection with the
+	 * infoservice or the infoservice doesn't support the tor nodes list download, an Exception is
+	 * thrown.
+	 *
+	 * @return The raw mixminion nodes list as it is distributed by the tor directory servers.
+	 */
+	public String getMixminionNodesList() throws Exception
+	{
+		String list = null;
+		try
+		{ //Compressed first
+			Document doc = getXmlDocument(HttpRequestStructure.createGetRequest("/compressedmixminionnodes"));
+			Element mixminionNodeList = doc.getDocumentElement();
+			String strCompressedMixminionNodesList = XMLUtil.parseValue(mixminionNodeList, null);
+			String s=new String(Base64.decode(strCompressedMixminionNodesList));
+			ByteArrayInputStream bin=new ByteArrayInputStream( Base64.decode(strCompressedMixminionNodesList));
+			GZIPInputStream gzipIn=new GZIPInputStream(bin);
+			int len=gzipIn.available();
+			byte[] bout=new byte[len];
+			gzipIn.read(bout);
+			list=new String(bout);
+		}
+		catch (Exception e)
+		{
+		}
+
+		if (list == null)
+		{
+			throw (new Exception(
+				"InfoServiceDBEntry: getMixminionNodesList: Error while parsing the TOR nodes list XML structure."));
 		}
 		return list;
 	}

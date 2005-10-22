@@ -39,10 +39,6 @@ import jap.forward.JAPRoutingSettings;
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPModel
 {
-	/** @deprecated */
-	private String m_biHost = JAPConstants.PIHOST;
-	/** @deprecated */
-	private int m_biPort = JAPConstants.PIPORT;
 	private int m_HttpListenerPortNumber = JAPConstants.DEFAULT_PORT_NUMBER; // port number of HTTP  listener
 	private boolean m_bHttpListenerIsLocal = JAPConstants.DEFAULT_LISTENER_IS_LOCAL; // indicates whether listeners serve for localhost only or not
 	private ProxyInterface m_proxyInterface = null;
@@ -274,27 +270,6 @@ public final class JAPModel
 		return ms_TheModel.m_bInfoServiceDisabled;
 	}
 
-	public static String getBIHost()
-	{
-		return ms_TheModel.m_biHost;
-	}
-
-	public static int getBIPort()
-	{
-		return ms_TheModel.m_biPort;
-	}
-
-	/** @deprecated */
-	protected static void setBIHost(String host)
-	{
-		ms_TheModel.m_biHost = host;
-	}
-
-	/** @deprecated */
-	protected static void setBIPort(int port)
-	{
-		ms_TheModel.m_biPort = port;
-	}
 
 	public String toString()
 	{
