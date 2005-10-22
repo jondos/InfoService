@@ -55,6 +55,7 @@ import infoservice.tor.TorDirectoryServerUrl;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import infoservice.tor.MixminionDirectoryAgent;
 
 public class Configuration {
   /**
@@ -483,6 +484,41 @@ public class Configuration {
         TorDirectoryAgent.getInstance().startUpdateThread(fetchTorNodesListInterval);
       }
 
+	  /* get the settings for fetching the tor nodes list */
+	  boolean fetchMixminionNodesList = a_properties.getProperty("fetchMixminionNodesList").trim().equalsIgnoreCase(
+		"enabled");
+	  if (fetchMixminionNodesList == true)
+	  {
+		/* set some default values */
+		long fetchMixminionNodesListInterval = 600 * (long) 1000;
+		/* overwrite the default values */
+		long tempInterval = Long.parseLong(a_properties.getProperty("fetchMixminionNodesListInterval").trim()) *
+		  1000;
+		if (tempInterval > 0)
+		{
+		  /* set only to valid values */
+		  fetchMixminionNodesListInterval = tempInterval;
+		}
+		/* load the list of known tor directory servers */
+		String mixminionDirectoryServers = a_properties.getProperty("mixminionDirectoryServers").trim();
+		StringTokenizer strMixminionDirectoryServers = new StringTokenizer(mixminionDirectoryServers, ",");
+		while (strMixminionDirectoryServers.hasMoreTokens())
+		{
+		  try
+		  {
+			URL mixminionDirectoryServer = new URL(strMixminionDirectoryServers.nextToken().trim());
+			MixminionDirectoryAgent.getInstance().addDirectoryServer(mixminionDirectoryServer);
+		  }
+		  catch (Exception e)
+		  {
+			/* don't add the directory server to the database, because there was an error */
+		  }
+		}
+		/* start the update tor nodes list thread -> if the fetchTorNodesList value was false,
+		 * the thread is never started -> we will never fetch the list
+		 */
+		MixminionDirectoryAgent.getInstance().startUpdateThread(fetchMixminionNodesListInterval);
+	  }
       /* get the JAP forwarder list settings */
       m_holdForwarderList = false;
       try

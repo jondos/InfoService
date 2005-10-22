@@ -52,6 +52,7 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import anon.infoservice.PaymentInstanceDBEntry;
+import infoservice.tor.MixminionDirectoryAgent;
 
 /**
  * This is the implementation of all commands the InfoService supports.
@@ -813,6 +814,39 @@ public class InfoServiceCommands implements JWSInternalCommands
 	}
 
 	/**
+		 * Sends the complete list of all known mixminion nodes to the client. This command is used by the
+		 * JAP clients with mixminion integration. If we don't have a current mixminion nodes list, we return -1
+		 * and the client will get an http error. So the client will ask another infoservice.
+		 *
+		 * @return The HTTP response for the client.
+		 */
+		private HttpResponseStructure getMixminionNodesList()
+		{
+			/* this is only the default, if we don't have a TOR list */
+			HttpResponseStructure httpResponse = new HttpResponseStructure(HttpResponseStructure.
+				HTTP_RETURN_NOT_FOUND);
+			Node mixminionNodesList = null;
+			mixminionNodesList = MixminionDirectoryAgent.getInstance().getMixminionNodesList();
+			if (mixminionNodesList != null)
+			{
+				try
+				{
+					/* create xml document */
+					Document doc = XMLUtil.createDocument();
+					doc.appendChild(XMLUtil.importNode(doc, mixminionNodesList, true));
+					httpResponse = new HttpResponseStructure(doc);
+				}
+				catch (Exception e)
+				{
+					LogHolder.log(LogLevel.ERR, LogType.MISC, e);
+					httpResponse = new HttpResponseStructure(HttpResponseStructure.
+						HTTP_RETURN_INTERNAL_SERVER_ERROR);
+				}
+			}
+			return httpResponse;
+	}
+
+	/**
 	 * Adds a new JAP forwarder to the database of JAP forwarders. But first we verify the
 	 * connection, if this is successful we add the entry and send the forwarder entry ID back
 	 * to the forwarder. So he knows under which ID he can renew the entry.
@@ -1266,6 +1300,11 @@ public class InfoServiceCommands implements JWSInternalCommands
 		{
 			/* get the list with all known tor nodes in an XML structure */
 			httpResponse = getTorNodesList(true);
+		}
+		else if ( (command.equals("/compressedmixminionnodes")) && (method == Constants.REQUEST_METHOD_GET))
+		{
+			/* get the list with all known mixminion nodes in an XML structure */
+			httpResponse = getMixminionNodesList();
 		}
 		else if ( (command.equals("/addforwarder")) && (method == Constants.REQUEST_METHOD_POST))
 		{
