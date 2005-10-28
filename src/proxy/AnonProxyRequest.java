@@ -41,10 +41,10 @@ import anon.ToManyOpenChannelsException;
 
 final class AnonProxyRequest implements Runnable
 {
-	InputStream m_InChannel;
-	OutputStream m_OutChannel;
-	InputStream m_InSocket;
-	OutputStream m_OutSocket;
+	private InputStream m_InChannel;
+	private OutputStream m_OutChannel;
+	private InputStream m_InSocket;
+	private OutputStream m_OutSocket;
 	Socket m_clientSocket;
 	Thread m_threadResponse;
 	Thread m_threadRequest;
@@ -80,6 +80,22 @@ final class AnonProxyRequest implements Runnable
 		{
 			firstByte = m_InSocket.read();
 		}
+		catch (InterruptedIOException ex)
+		{ //no request received so fare - asume SMTP, where we have to sent something first
+			try
+			{
+				newChannel = m_Proxy.createChannel(AnonChannel.SMTP);
+				m_iProtocol = IProxyListener.PROTOCOL_OTHER;
+			}
+			catch (Throwable to)
+			{
+				LogHolder.log(LogLevel.ERR, LogType.NET,
+							  "AnonProxyRequest - something was wrong with seting up a new SMTP channel -- Exception: " +
+							  to);
+				m_bRequestIsAlive = false;
+				return;
+			}
+		}
 		catch (Throwable t)
 		{
 			m_bRequestIsAlive = false;
@@ -92,62 +108,68 @@ final class AnonProxyRequest implements Runnable
 			}
 			return ;
 		}
-		firstByte &= 0x00FF;
-		for (; ; )
+		if (newChannel == null) //no SMTP - maybe HTTP or SOCKS
 		{
-			try
+			firstByte &= 0x00FF;
+			for (; ; )
 			{
-				newChannel = null;
-				if (firstByte == 4 || firstByte == 5) //SOCKS
-				{
-					newChannel = m_Proxy.createChannel(AnonChannel.SOCKS);
-					m_iProtocol = IProxyListener.PROTOCOL_OTHER;
-				}
-				else
-				{
-					newChannel = m_Proxy.createChannel(AnonChannel.HTTP);
-					m_iProtocol = IProxyListener.PROTOCOL_WWW;
-				}
-				break;
-			}
-			catch (ToManyOpenChannelsException te)
-			{
-				LogHolder.log(LogLevel.ERR, LogType.NET,
-							  "AnonProxyRequest - ToManyOpenChannelsExeption");
 				try
 				{
-					Thread.sleep(1000);
+					newChannel = null;
+					if (firstByte == 4 || firstByte == 5) //SOCKS
+					{
+						newChannel = m_Proxy.createChannel(AnonChannel.SOCKS);
+						m_iProtocol = IProxyListener.PROTOCOL_OTHER;
+					}
+					else
+					{
+						newChannel = m_Proxy.createChannel(AnonChannel.HTTP);
+						m_iProtocol = IProxyListener.PROTOCOL_WWW;
+					}
+					break;
 				}
-				catch (InterruptedException ex)
+				catch (ToManyOpenChannelsException te)
 				{
+					LogHolder.log(LogLevel.ERR, LogType.NET,
+								  "AnonProxyRequest - ToManyOpenChannelsExeption");
+					try
+					{
+						Thread.sleep(1000);
+					}
+					catch (InterruptedException ex)
+					{
+					}
 				}
-			}
-			catch (NotConnectedToMixException ec)
-			{
-				LogHolder.log(LogLevel.ERR, LogType.NET, "AnonProxyRequest - Connection to Mix lost");
-				if (!m_Proxy.reconnect())
+				catch (NotConnectedToMixException ec)
 				{
+					LogHolder.log(LogLevel.ERR, LogType.NET, "AnonProxyRequest - Connection to Mix lost");
+					if (!m_Proxy.reconnect())
+					{
+						m_bRequestIsAlive = false;
+						return;
+					}
+				}
+				catch (Exception e)
+				{
+					LogHolder.log(LogLevel.ERR, LogType.NET,
+								  "AnonProxyRequest - something was wrong with seting up a new channel Exception: " +
+								  e);
 					m_bRequestIsAlive = false;
 					return;
 				}
 			}
-			catch (Exception e)
+			if (newChannel == null)
 			{
-				LogHolder.log(LogLevel.ERR, LogType.NET,
-							  "AnonProxyRequest - something was wrong with seting up a new channel Exception: " +
-							  e);
 				m_bRequestIsAlive = false;
 				return;
 			}
-
-		}
-		if (newChannel == null)
-		{
-			m_bRequestIsAlive = false;
-			return;
 		}
 		int len = 0;
-		int aktPos = 1;
+		int aktPos = 0;
+		if (firstByte != 0)//only SOCKS and HTTP will read the first byte - but not SMTP!
+		{
+			aktPos = 1;
+		}
 		byte[] buff = null;
 		try
 		{
@@ -157,7 +179,6 @@ final class AnonProxyRequest implements Runnable
 
 			m_threadResponse = new Thread(new Response(), "JAP - AnonProxy Response");
 			m_threadResponse.start();
-
 
 			buff = new byte[1900];
 			buff[0] = (byte) firstByte;

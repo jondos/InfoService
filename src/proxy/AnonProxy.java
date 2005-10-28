@@ -318,7 +318,12 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		{
 			return m_Anon.createChannel(AnonChannel.HTTP);
 		}
-		return null;
+		else if (type == AnonChannel.SMTP)
+		{
+			return m_Mixminion.createChannel(AnonChannel.SMTP);
+		}
+
+	return null;
 	}
 
 	synchronized boolean reconnect()
