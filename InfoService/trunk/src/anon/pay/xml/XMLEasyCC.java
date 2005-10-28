@@ -46,8 +46,9 @@ import logging.LogType;
 
 /**
  * XML structure for a easy cost confirmation (without mircopayment function) which is sent to the AI by the Jap
- * <CC version "1.0">
+ * <CC version "1.1">
  *   <AiID> ... </AiID>
+ *   <PiID>....</PiID> <!-- since version 1.1 --->
  * 	 <AccountNumber> ... </AccountNumber>
  * 	 <TransferredBytes>... </TransferredBytes>
  * 	 <Signature>
@@ -65,6 +66,9 @@ public class XMLEasyCC implements IXMLEncodable
 	private long m_lAccountNumber;
 	private static final String ms_strElemName = "CC";
 	private Document m_docTheEasyCC;
+
+	/** The Payment Instance ID */
+	private String m_strPIID;
 	//~ Constructors ***********************************************************
 
 	public static String getXMLElementName()
@@ -112,25 +116,29 @@ public class XMLEasyCC implements IXMLEncodable
 
 	private void setValues(Element element) throws Exception
 	{
-		if (!element.getTagName().equals(ms_strElemName) ||
-			!element.getAttribute("version").equals("1.0"))
+		if(!element.getTagName().equals(ms_strElemName))
 		{
-			throw new Exception("XMLEasyCC wrong xml structure or wrong version");
+			throw new Exception("XMLEasyCC wrong xml root element name");
+		}
+		String strVersion=XMLUtil.parseAttribute(element,"version",null);
+		if (strVersion==null ||
+			!(strVersion.equals("1.1")||strVersion.equals("1.0")))
+		{
+			throw new Exception("XMLEasyCC wrong version");
 		}
 
 		Element elem = (Element) XMLUtil.getFirstChildByName(element, "AiID");
 		if (elem == null)
 		{
 			throw new Exception("No AiID field present in cost confirmation");
-			//m_strAiName = "keinplan1";
 		}
 		else
 		{
-			m_strAiName = XMLUtil.parseValue(elem, "EMPTY!");
-			if (m_strAiName.equalsIgnoreCase("EMPTY!"))
+			m_strAiName = XMLUtil.parseValue(elem,null);
+			if (m_strAiName==null)
 			{
 				throw new Exception("AiID field empty in cost confirmation");
-		}
+			}
 		}
 		LogHolder.log(LogLevel.DEBUG, LogType.PAY,
 					  "AiID is " + m_strAiName);
@@ -139,13 +147,15 @@ public class XMLEasyCC implements IXMLEncodable
 		m_lAccountNumber = XMLUtil.parseValue(elem, 0l);
 		elem = (Element) XMLUtil.getFirstChildByName(element, "TransferredBytes");
 		m_lTransferredBytes = XMLUtil.parseValue(elem, 0l);
+		elem = (Element) XMLUtil.getFirstChildByName(element, "PIID");
+		m_strPIID = XMLUtil.parseValue(elem, null);
 
 	}
 
 	private Element internal_toXmlElement(Document a_doc)
 	{
 		Element elemRoot = a_doc.createElement(ms_strElemName);
-		elemRoot.setAttribute("version", "1.0");
+		elemRoot.setAttribute("version", "1.1");
 		Element elem = a_doc.createElement("AiID");
 		XMLUtil.setValue(elem, m_strAiName);
 		elemRoot.appendChild(elem);
@@ -158,6 +168,13 @@ public class XMLEasyCC implements IXMLEncodable
 		XMLUtil.setValue(elem, Long.toString(m_lAccountNumber));
 		elemRoot.appendChild(elem);
 
+		elem = a_doc.createElement("PIID");
+		if (m_strPIID != null)
+		{
+			XMLUtil.setValue(elem, m_strPIID);
+		}
+		elemRoot.appendChild(elem);
+
 		return elemRoot;
 	}
 
@@ -166,6 +183,23 @@ public class XMLEasyCC implements IXMLEncodable
 	public String getAIName()
 	{
 		return m_strAiName;
+	}
+
+	public String getPIID()
+	{
+		return m_strPIID;
+	}
+
+	/**
+	 * sets the PI ID. This makes the signature invalid!
+	 *
+	 * @param Id of the payment instance
+	 */
+	public synchronized void setPIID(String a_piID)
+	{
+		m_strPIID = a_piID;
+		m_docTheEasyCC = XMLUtil.createDocument();
+		m_docTheEasyCC.appendChild(internal_toXmlElement(m_docTheEasyCC));
 	}
 
 	public long getAccountNumber()
