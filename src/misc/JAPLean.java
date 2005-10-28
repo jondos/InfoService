@@ -88,7 +88,6 @@ final class JAPLean implements IProxyListener
 		JAPModel.getInstance();
 		HTTPConnectionFactory.getInstance().setTimeout(JAPConstants.DEFAULT_INFOSERVICE_TIMEOUT);
 		InfoServiceHolder.getInstance().setPreferredInfoService(JAPController.createDefaultInfoService());
-		String mixmin=InfoServiceHolder.getInstance().getMixminionNodesList();
 		// JAPAnonService.init();
 		ServerSocket listener = null;
 		try
