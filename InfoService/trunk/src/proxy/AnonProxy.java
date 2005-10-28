@@ -51,7 +51,7 @@ import jap.JAPModel;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-
+import anon.mixminion.MixminonServiceDescription;
 
 final public class AnonProxy implements Runnable, AnonServiceEventListener
 {
@@ -62,11 +62,9 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 	public final static int E_SIGNATURE_CHECK_FIRSTMIX_FAILED = ErrorCodes.E_SIGNATURE_CHECK_FIRSTMIX_FAILED;
 	public final static int E_SIGNATURE_CHECK_OTHERMIX_FAILED = ErrorCodes.E_SIGNATURE_CHECK_OTHERMIX_FAILED;
 
-	// ootte
-	private final static boolean USE_TOR = true;
-
 	private AnonService m_Anon;
 	private AnonService m_Tor;
+	private AnonService m_Mixminion;
 	private Vector m_anonServiceListener;
 	private Thread threadRun;
 	private volatile boolean m_bIsRunning;
@@ -210,19 +208,15 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 			return ret;
 		}
 		LogHolder.log(LogLevel.DEBUG, LogType.NET, "AnonProxy.start(): AN.ON initialized");
-		if (USE_TOR)
-		{
-			m_Tor = AnonServiceFactory.getAnonServiceInstance("TOR");
-			m_Tor.setProxy(m_proxyInterface);
-			m_Tor.initialize(new TorAnonServerDescription(true, m_bPreCreateAnonRoutes));
-			( (Tor) m_Tor).setCircuitLength(JAPModel.getTorMinRouteLen(), JAPModel.getTorMaxRouteLen());
-			( (Tor) m_Tor).setConnectionsPerRoute(JAPModel.getTorMaxConnectionsPerRoute());
-			LogHolder.log(LogLevel.DEBUG, LogType.NET, "AnonProxy.start(): Tor initialized");
-		}
-		else
-		{
-			m_Tor = m_Anon;
-		}
+		m_Tor = AnonServiceFactory.getAnonServiceInstance("TOR");
+		m_Tor.setProxy(m_proxyInterface);
+		m_Tor.initialize(new TorAnonServerDescription(true, m_bPreCreateAnonRoutes));
+		( (Tor) m_Tor).setCircuitLength(JAPModel.getTorMinRouteLen(), JAPModel.getTorMaxRouteLen());
+		( (Tor) m_Tor).setConnectionsPerRoute(JAPModel.getTorMaxConnectionsPerRoute());
+		LogHolder.log(LogLevel.DEBUG, LogType.NET, "AnonProxy.start(): Tor initialized");
+		m_Mixminion = AnonServiceFactory.getAnonServiceInstance("Mixminion");
+		m_Mixminion.setProxy(m_proxyInterface);
+		m_Mixminion.initialize(new MixminonServiceDescription());
 		threadRun = new Thread(this, "JAP - AnonProxy");
 		threadRun.start();
 		return ErrorCodes.E_SUCCESS;
@@ -230,7 +224,6 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 
 	public void stop()
 	{
-//		m_AICom.end();
 		m_Anon.shutdown();
 		m_Tor.shutdown();
 		m_bIsRunning = false;
@@ -248,7 +241,6 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		int oldTimeOut = 0;
 		LogHolder.log(LogLevel.DEBUG, LogType.NET, "AnonProxy: AnonProxy is running as Thread");
 
-		//m_AICom.start();
 		try
 		{
 			oldTimeOut = m_socketListener.getSoTimeout();
@@ -390,7 +382,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		Enumeration e = m_anonServiceListener.elements();
 		while (e.hasMoreElements())
 		{
-			((AnonServiceEventListener)e.nextElement()).connectionError();
+			( (AnonServiceEventListener) e.nextElement()).connectionError();
 		}
 	}
 
@@ -401,22 +393,21 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 	}
 
 	public synchronized void addEventListener(AnonServiceEventListener l)
-{
-	Enumeration e = m_anonServiceListener.elements();
-	while (e.hasMoreElements())
 	{
-		if (l.equals(e.nextElement()))
+		Enumeration e = m_anonServiceListener.elements();
+		while (e.hasMoreElements())
 		{
-			return;
+			if (l.equals(e.nextElement()))
+			{
+				return;
+			}
 		}
+		m_anonServiceListener.addElement(l);
 	}
-	m_anonServiceListener.addElement(l);
-}
 
-public synchronized void removeEventListener(AnonServiceEventListener l)
-{
-	m_anonServiceListener.removeElement(l);
-}
-
+	public synchronized void removeEventListener(AnonServiceEventListener l)
+	{
+		m_anonServiceListener.removeElement(l);
+	}
 
 }

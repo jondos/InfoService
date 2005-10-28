@@ -47,6 +47,10 @@ public interface AnonChannel
 	/// data which conforms to the SOCKS-Proxy-Protocol
 	public final static int SOCKS = 1;
 
+	/// Constant for the channel type: SMTP-Proxy. Such a channel could be used to transmit
+	/// data which conforms to the SMTP-Protocol
+	public final static int SMTP = 2;
+
 	/** The returned InputStream could be used to receive data.
 	 *  @return InputStream, useful for receiving data
 	 */

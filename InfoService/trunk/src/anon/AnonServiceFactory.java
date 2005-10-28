@@ -30,6 +30,7 @@ package anon;
 import anon.server.AnonServiceImpl;
 import anon.tor.Tor;
 import anon.xmlrpc.client.AnonServiceImplProxy;
+import anon.mixminion.Mixminion;
 
 final public class AnonServiceFactory
 {
@@ -38,11 +39,11 @@ final public class AnonServiceFactory
 	{
 	}
 
-
 	/** Creates an AnonService of the given kind.
 	 * At the moment the following values are defined:
 	 * "AN.ON" -- creates an AnonService which uses the WebMix cascades
 	 * "TOR" -- creates an AnonService which uses Tor nodes
+	 * "Mixminion" -- creates an AnonService which uses Mixminion nodes
 	 */
 
 	public static AnonService getAnonServiceInstance(String kind)
@@ -59,8 +60,14 @@ final public class AnonServiceFactory
 			}
 			return ms_AnonService; //AnonServiceImpl.create();
 		}
-		else if(kind.equals("TOR"))
+		else if (kind.equals("TOR"))
+		{
 			return Tor.getInstance();
+		}
+		else if (kind.equals("Mixminion"))
+		{
+			return Mixminion.getInstance();
+		}
 		return null;
 	}
 
