@@ -105,7 +105,7 @@ public class P_Hash
 		}
 		while (b.length < length);
 
-		return ByteArrayUtil.copybytes(b, 0, length);
+		return ByteArrayUtil.copy(b, 0, length);
 	}
 
 }
