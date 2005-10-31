@@ -46,12 +46,19 @@ public class MyAES
 	 */
 	private AESFastEngine m_AES;
 
+	/** Same variables for CTR mode*/
+	private byte[] counter;
+	private byte[] counterOut;
+	private int m_posCTR;
 	/**
 	 * Creates a new instance of Aes.
 	 */
 	public MyAES()
 	{
 		m_AES = new AESFastEngine();
+		counter = null;
+		counterOut = null;
+		m_posCTR = 0;
 	}
 
 	/**
@@ -61,9 +68,40 @@ public class MyAES
 	 *
 	 * @param a_aesKey The 128 bit or 192 bit or 256 bit AES key.
 	 */
-	public synchronized void init(boolean bEncrypt,byte[] a_aesKey) throws Exception
+	public synchronized void init(boolean bEncrypt, byte[] a_aesKey) throws Exception
 	{
-		m_AES.init(bEncrypt, new KeyParameter(a_aesKey));
+		init(bEncrypt,a_aesKey,0,a_aesKey.length);
+
+	}
+
+    /**
+     * Initialises instance of Aes for encryption or decryption. The size of the key must be 16 bytes (128 bit),
+     * 24 bytes (192 bit) or 32 bytes (256 bit). If the key size doesn't fit, an exception is
+     * thrown.
+     *
+     * @param a_aesKey The 128 bit or 192 bit or 256 bit AES key.
+     */
+    public synchronized void init(boolean bEncrypt, byte[] a_aesKey,int off,int len) throws Exception
+    {
+            m_AES.init(bEncrypt, new KeyParameter(a_aesKey,off,len));
+            counter = null;
+            counterOut = null;
+            m_posCTR = 0;
+
+    }
+	/**
+	 * Encrypts/Decrypts one single plain data block and returns the cipher data block. The blocksize is
+	 * always 16 bytes (128 bit). If the plain data block is shorter than 16 bytes, an exception
+	 * is thrown, if it is longer, only the first 16 bytes are encrypted and returned in the cipher
+	 * block.
+	 *
+	 * @param a_plainData The plain data block.
+	 *
+	 *
+	 */
+	public synchronized void processBlockECB(byte[] a_InData, byte[] a_OutData) throws Exception
+	{
+		m_AES.processBlock(a_InData, 0, a_OutData, 0);
 	}
 
 	/**
@@ -81,6 +119,60 @@ public class MyAES
 		byte[] cipherBlock = new byte[16];
 		m_AES.processBlock(a_plainData, 0, cipherBlock, 0);
 		return cipherBlock;
+	}
+
+	public void processBytesCTR(byte[] in, int inOff, byte[] out, int outOff, int len) throws
+		Exception
+	{
+		if (counterOut == null)
+		{
+			counterOut = new byte[16];
+			m_posCTR = 0;
+			counter = new byte[16];
+		}
+		while (len > 0)
+		{
+
+			if (m_posCTR == 0)
+			{
+				processBlockECB(counter, counterOut);
+			}
+
+			while (m_posCTR < counterOut.length)
+			{
+				out[outOff] = (byte) (counterOut[m_posCTR] ^ in[inOff]);
+				outOff++;
+				inOff++;
+				len--;
+				m_posCTR++;
+				if (len == 0)
+				{
+					return;
+				}
+			}
+			m_posCTR = 0;
+			//
+			// XOR the counterOut with the plaintext producing the cipher text
+			//
+
+			int carry = 1;
+
+			for (int i = counter.length - 1; i >= 0; i--)
+			{
+				int x = (counter[i] & 0xff) + carry;
+
+				if (x > 0xff)
+				{
+					carry = 1;
+				}
+				else
+				{
+					carry = 0;
+				}
+
+				counter[i] = (byte) x;
+			}
+		}
 	}
 
 }

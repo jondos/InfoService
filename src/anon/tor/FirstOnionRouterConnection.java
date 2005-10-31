@@ -42,17 +42,14 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Vector;
 
-import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
-import org.bouncycastle.crypto.generators.RSAKeyPairGenerator;
-import org.bouncycastle.crypto.params.RSAKeyGenerationParameters;
 import anon.crypto.AsymmetricCryptoKeyPair;
 import anon.crypto.JAPCertificate;
-import anon.crypto.MyRSAPrivateKey;
 import anon.crypto.MyRandom;
 import anon.crypto.PKCS12;
+import anon.crypto.RSAKeyPair;
+import anon.crypto.tinytls.TinyTLS;
 import anon.tor.cells.Cell;
 import anon.tor.ordescription.ORDescription;
-import anon.crypto.tinytls.TinyTLS;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -194,26 +191,21 @@ public class FirstOnionRouterConnection implements Runnable
 
 		try
 		{
-			RSAKeyPairGenerator kpg = new RSAKeyPairGenerator();
-			kpg.init(new RSAKeyGenerationParameters(new BigInteger(new byte[]
-				{1, 0, 1}), new SecureRandom(), 1024, 100));
-			AsymmetricCipherKeyPair kp = kpg.generateKeyPair();
-			MyRSAPrivateKey key = new MyRSAPrivateKey(kp.getPrivate());
-			AsymmetricCryptoKeyPair ackp = new AsymmetricCryptoKeyPair(key);
-			JAPCertificate cert = JAPCertificate.getInstance(OP_NAME, ackp, Calendar.getInstance(), 1);
+			RSAKeyPair kp = RSAKeyPair.getInstance(new BigInteger(new byte[]
+				{1, 0, 1}), new SecureRandom(), 1024, 100);
 
-			AsymmetricCipherKeyPair kp2 = kpg.generateKeyPair();
-			MyRSAPrivateKey key2 = new MyRSAPrivateKey(kp2.getPrivate());
-			AsymmetricCryptoKeyPair ackp2 = new AsymmetricCryptoKeyPair(key2);
-			PKCS12 pkcs12cert = new PKCS12(OP_NAME + " <identity>", ackp2, Calendar.getInstance(), 1);
+			JAPCertificate cert = JAPCertificate.getInstance(OP_NAME, kp, Calendar.getInstance(), 1);
+
+			AsymmetricCryptoKeyPair kp2 = RSAKeyPair.getInstance(new BigInteger(new byte[]
+				{1, 0, 1}), new SecureRandom(), 1024, 100);
+			PKCS12 pkcs12cert = new PKCS12(OP_NAME + " <identity>", kp2, Calendar.getInstance(), 1);
 
 			//sign cert with pkcs12cert
 			JAPCertificate cert1 = cert.sign(pkcs12cert);
-
 			JAPCertificate cert2 = JAPCertificate.getInstance(pkcs12cert.getX509Certificate());
 
 			m_tinyTLS.setClientCertificate(new JAPCertificate[]
-										   {cert1, cert2}, key);
+                        {cert1, cert2}, kp.getPrivate());
 		}
 		catch (Exception ex)
 		{

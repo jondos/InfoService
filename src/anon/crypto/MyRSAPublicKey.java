@@ -53,7 +53,6 @@ import org.bouncycastle.asn1.ASN1InputStream;
 
 final public class MyRSAPublicKey extends AbstractPublicKey implements IMyPublicKey
 {
-	private MyRSASignature m_algorithm = new MyRSASignature();
 	private BigInteger m_n;
 	private BigInteger m_e;
 	private long m_hashValue = 0;
@@ -124,15 +123,16 @@ final public class MyRSAPublicKey extends AbstractPublicKey implements IMyPublic
 	{
 		try
 		{
-			m_algorithm.initVerify(this);
+			MyRSASignature algorithm = new MyRSASignature();
+			algorithm.initVerify(this);
+			return algorithm;
 		}
 		catch (InvalidKeyException a_e)
 		{
 			// not possible
 		}
-		return m_algorithm;
+		return null;
 	}
-
 
 	public BigInteger getModulus()
 	{
@@ -172,7 +172,7 @@ final public class MyRSAPublicKey extends AbstractPublicKey implements IMyPublic
 	 * @return an XML Node
 	 */
 	public Element toXmlElement(Document a_doc)
-		{
+	{
 		Element elemRoot = a_doc.createElement("RSAKeyValue");
 		Element elemModulus = a_doc.createElement("Modulus");
 		elemRoot.appendChild(elemModulus);
@@ -221,6 +221,5 @@ final public class MyRSAPublicKey extends AbstractPublicKey implements IMyPublic
 
 		return (int) m_hashValue;
 	}
-
 
 }

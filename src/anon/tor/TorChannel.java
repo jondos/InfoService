@@ -98,7 +98,14 @@ public class TorChannel extends AbstractChannel
 									 ByteArrayUtil.copy(b, 0, len));
 				len = 0;
 			}
-			m_circuit.send(cell);
+			try
+			{
+				m_circuit.send(cell);
+			}
+			catch (Throwable t)
+			{
+				throw new IOException("TorChannel send - error in sending a cell!");
+			}
 			m_sendcellcounter--;
 			if (m_sendcellcounter < 10)
 			{

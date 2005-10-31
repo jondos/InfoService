@@ -8,7 +8,7 @@ public class MyRSA
 {
 	RSAEngine m_RSAEngine;
 	OAEPEncoding m_OAEP;
-	MyRSA()
+	public MyRSA()
 	{
 		m_RSAEngine = new RSAEngine();
 		m_OAEP=new OAEPEncoding(m_RSAEngine);

@@ -185,14 +185,20 @@ public class Circuit
 
 			Date createTime = new Date();
 			//calculate when the circuit will be destroyed
-			m_destroyTime=new Date(createTime.getTime()+m_minCircuitLifetime);
+			m_destroyTime = new Date(createTime.getTime() + m_minCircuitLifetime);
 		}
 		catch (Exception ex)
 		{
 			//send destroy on error, when circuit wasn't allready destroyed
-			if(!m_destroyed)
+			try
 			{
-				this.send(new DestroyCell(this.m_circID));
+				if (!m_destroyed)
+				{
+					this.send(new DestroyCell(this.m_circID));
+				}
+			}
+			catch (Throwable t)
+			{
 			}
 			m_State = STATE_CLOSED;
 			throw new IOException(ex.getLocalizedMessage());
@@ -252,7 +258,7 @@ public class Circuit
 		try
 		{
 			m_FirstORConnection.send(new DestroyCell(m_circID));
-			LogHolder.log(LogLevel.DEBUG, LogType.TOR, "[TOR] circuit "+m_circID+" destroyed!");
+			LogHolder.log(LogLevel.DEBUG, LogType.TOR, "[TOR] circuit " + m_circID + " destroyed!");
 		}
 		catch (Exception e)
 		{}
@@ -433,7 +439,7 @@ public class Circuit
 			else if (cell instanceof DestroyCell)
 			{
 				LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[TOR] recieved destroycell - circuit destroyed");
-				m_destroyed=true;
+				m_destroyed = true;
 				destroyedByPeer();
 			}
 			else
@@ -455,7 +461,7 @@ public class Circuit
 	 * cell to send
 	 * @throws IOException
 	 */
-	public void send(Cell cell) throws IOException
+	public void send(Cell cell) throws IOException, Exception
 	{
 //		if (cell instanceof RelayCell)
 		if (m_State == STATE_CLOSED)
@@ -464,11 +470,12 @@ public class Circuit
 		}
 		synchronized (m_oSendSync)
 		{
-			if(cell instanceof RelayCell)
+			if (cell instanceof RelayCell)
 			{
-			Cell c = m_FirstOR.encryptCell( (RelayCell) cell);
-			m_cellQueue.addElement(c);
-			} else if(cell instanceof DestroyCell)
+				Cell c = m_FirstOR.encryptCell( (RelayCell) cell);
+				m_cellQueue.addElement(c);
+			}
+			else if (cell instanceof DestroyCell)
 			{
 				m_cellQueue.addElement(cell);
 			} //ignoring other cell types
@@ -663,9 +670,9 @@ public class Circuit
 
 			if (m_streamCounter >= m_MaxStreamsPerCircuit)
 			{
-				if((new Date()).after(m_destroyTime))
+				if ( (new Date()).after(m_destroyTime))
 				{
-				shutdown();
+					shutdown();
 				}
 			}
 		}

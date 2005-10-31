@@ -51,7 +51,6 @@ import anon.tor.ordescription.ORDescription;
 import anon.tor.ordescription.ORList;
 import anon.tor.ordescription.PlainORListFetcher;
 import anon.tor.util.DNSCacheEntry;
-import anon.util.ByteArrayUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;

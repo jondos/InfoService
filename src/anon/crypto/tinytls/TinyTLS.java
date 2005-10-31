@@ -49,11 +49,8 @@ import java.util.Vector;
 
 import org.bouncycastle.crypto.AsymmetricBlockCipher;
 import org.bouncycastle.crypto.InvalidCipherTextException;
-import org.bouncycastle.crypto.encodings.PKCS1Encoding;
-import org.bouncycastle.crypto.engines.RSAEngine;
 import org.bouncycastle.crypto.params.DHParameters;
 import org.bouncycastle.crypto.params.DHPublicKeyParameters;
-import org.bouncycastle.crypto.params.RSAKeyParameters;
 import anon.crypto.IMyPrivateKey;
 import anon.crypto.IMyPublicKey;
 import anon.crypto.JAPCertificate;
@@ -865,22 +862,9 @@ public class TinyTLS extends Socket
 					}
 					catch (InvalidKeyException ex)
 					{
+                        throw new TLSException("cannot encrypt signature", 2, 80);
 					}
-					byte[] signature2 = sig.sign(signature);
-
-					MyRSAPrivateKey rsakey = (MyRSAPrivateKey) m_clientprivatekey;
-					BigInteger modulus = rsakey.getModulus();
-					BigInteger exponent = rsakey.getPrivateExponent();
-					AsymmetricBlockCipher rsa = new PKCS1Encoding(new RSAEngine());
-					rsa.init(true, new RSAKeyParameters(true, modulus, exponent));
-					try
-					{
-						signature2 = rsa.processBlock(signature, 0, signature.length);
-					}
-					catch (InvalidCipherTextException ex)
-					{
-						throw new TLSException("cannot encrypt signature", 2, 80);
-					}
+					byte[] signature2 = sig.signPlain(signature);
 
 					signature2 = ByteArrayUtil.conc(ByteArrayUtil.inttobyte(signature2.length, 2), signature2);
 					sendHandshake(15, signature2);

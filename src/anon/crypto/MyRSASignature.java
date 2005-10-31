@@ -59,7 +59,7 @@ public final class MyRSASignature implements IMySignature
 	/**
 	 * The key with that this algorithm has been initialised.
 	 */
-	private Key m_initKey;
+	//private Key m_initKey;
 	private SHA1Digest m_Digest;
 	private final static AlgorithmIdentifier ms_AlgID =
 		new AlgorithmIdentifier(X509ObjectIdentifiers.id_SHA1, null);
@@ -75,7 +75,7 @@ public final class MyRSASignature implements IMySignature
 		//if (m_initKey == null || m_initKey != k)
 		//{
 		m_SignatureAlgorithm.init(false, ( (MyRSAPublicKey) k).getParams());
-		m_initKey = k;
+		//m_initKey = k;
 		//}
 	}
 
@@ -84,7 +84,7 @@ public final class MyRSASignature implements IMySignature
 		//if (m_initKey == null || m_initKey != k)
 		//{
 		m_SignatureAlgorithm.init(true, ( (MyRSAPrivateKey) k).getParams());
-		m_initKey = k;
+		//m_initKey = k;
 		//}
 	}
 
@@ -143,6 +143,35 @@ public final class MyRSASignature implements IMySignature
 		}
 	}
 
+	/** Verifyes a signature for a given hash*/
+	synchronized public boolean verifyPlain(byte[] hash, byte[] sig)
+	{
+		try
+		{
+
+			byte[] sigHash = m_SignatureAlgorithm.processBlock(sig, 0, sig.length);
+
+			if (hash.length != sigHash.length)
+			{
+				return false;
+			}
+
+			for (int i = 0; i < hash.length; i++)
+			{
+				if (sigHash[i] != hash[i])
+				{
+					return false;
+				}
+			}
+
+			return true;
+		}
+		catch (Exception e)
+		{
+			return false;
+		}
+	}
+
 	public synchronized byte[] sign(byte[] bytesToSign)
 	{
 		try
@@ -159,6 +188,20 @@ public final class MyRSASignature implements IMySignature
 			byte[] bytes = bOut.toByteArray();
 
 			return m_SignatureAlgorithm.processBlock(bytes, 0, bytes.length);
+		}
+		catch (Throwable t)
+		{
+			return null;
+		}
+	}
+
+	/** Only does the signature calculation assuming that the input already is a hash*/
+	public synchronized byte[] signPlain(byte[] hash)
+	{
+		try
+		{
+
+			return m_SignatureAlgorithm.processBlock(hash, 0, hash.length);
 		}
 		catch (Throwable t)
 		{
