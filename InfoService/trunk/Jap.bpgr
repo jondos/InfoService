@@ -4,4 +4,5 @@
   <project path="JAP.jpx"/>
   <project path="InfoService.jpx"/>
   <project path="BezahlInstanz.jpx"/>
+  <project path="All.jpx"/>
 </projectgroup>

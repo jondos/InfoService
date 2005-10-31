@@ -172,6 +172,7 @@ public class AIControlChannel extends SyncControlChannel
 					 * If Jap crashed during the last session then we should ask the BI for a current CC */
 					cc.setTransferredBytes(newBytes + oldSpent);
 				}
+				cc.setPIID(currentAccount.getAccountCertificate().getPIID());
 				cc.sign(currentAccount.getPrivateKey());
 				this.sendXMLMessage(XMLUtil.toXMLDocument(cc));
 				currentAccount.addCostConfirmation(cc);
