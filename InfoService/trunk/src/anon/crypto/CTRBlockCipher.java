@@ -31,7 +31,7 @@
  * org.bouncycastle.crypto.modes.SICBlockCipher
  * (http://www.bouncycastle.org/)
  */
-package anon.tor.crypto;
+package anon.crypto;
 
 import org.bouncycastle.crypto.BlockCipher;
 import org.bouncycastle.crypto.CipherParameters;

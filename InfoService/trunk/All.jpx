@@ -37,7 +37,7 @@
   <property category="sys" name="JDK" value="java version 1.4.2_09-232"/>
   <property category="sys" name="JvmVersion" value="1.2"/>
   <property category="sys" name="LastTag" value="0"/>
-  <property category="sys" name="Libraries" value="ApacheBzip2;ApacheFTPClient;http;BouncyCastleLightForJAP;Log4j;mac;XML-1.1;PostgeSql;Apache XML-RPC;junitx;Jama;JavaMail"/>
+  <property category="sys" name="Libraries" value="ApacheBzip2;ApacheFTPClient;http;BouncyCastleLightForJAP;Log4j;mac;XML-1.1;PostgeSql;Apache XML-RPC;junitx;Jama;JavaMail;JUnit"/>
   <property category="sys" name="MakeStable" value="0"/>
   <property category="sys" name="OutPath" value="classes_all"/>
   <property category="sys" name="SourcePath" value="src;test"/>
@@ -49,20 +49,23 @@
   <property category="sys" name="WorkingDirectory" value="."/>
   <property category="sys" name="enable.auto.packages" value="false"/>
   <node name="anon.crypto" type="Package"/>
+  <node name="anon.crypto.test" type="Package"/>
+  <node name="anon.crypto.tinytls" type="Package"/>
+  <node name="anon.crypto.tinytls.ciphersuites" type="Package"/>
+  <node name="anon.crypto.tinytls.keyexchange" type="Package"/>
+  <node name="anon.crypto.tinytls.util" type="Package"/>
   <node name="anon.infoservice" type="Package"/>
+  <node name="anon.infoservice.test" type="Package"/>
   <node name="anon.mixminion" type="Package"/>
   <node name="anon.pay" type="Package"/>
   <node name="anon.pay.xml" type="Package"/>
   <node name="anon.server" type="Package"/>
   <node name="anon.server.impl" type="Package"/>
+  <node name="anon.test" type="Package"/>
   <node name="anon.tor" type="Package"/>
   <node name="anon.tor.cells" type="Package"/>
   <node name="anon.tor.crypto" type="Package"/>
   <node name="anon.tor.ordescription" type="Package"/>
-  <node name="anon.tor.tinytls" type="Package"/>
-  <node name="anon.tor.tinytls.ciphersuites" type="Package"/>
-  <node name="anon.tor.tinytls.keyexchange" type="Package"/>
-  <node name="anon.tor.tinytls.util" type="Package"/>
   <node name="anon.tor.util" type="Package"/>
   <node name="anon.util" type="Package"/>
   <node name="anon.xmlrpc" type="Package"/>
@@ -94,6 +97,7 @@
   <node name="misc" type="Package"/>
   <node name="org" type="Package"/>
   <node name="proxy" type="Package"/>
+  <node name="test" type="Package"/>
   <node name="update" type="Package"/>
   <file path="src/JAP.java"/>
   <file path="src/JAPMacintosh.java"/>

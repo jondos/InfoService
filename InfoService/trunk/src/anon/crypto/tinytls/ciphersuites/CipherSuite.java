@@ -29,14 +29,14 @@
  * Created on Mar 16, 2004
  *
  */
-package anon.tor.tinytls.ciphersuites;
+package anon.crypto.tinytls.ciphersuites;
 
 import java.math.BigInteger;
 
 import anon.crypto.JAPCertificate;
-import anon.tor.tinytls.TLSException;
-import anon.tor.tinytls.TLSRecord;
-import anon.tor.tinytls.keyexchange.Key_Exchange;
+import anon.crypto.tinytls.TLSException;
+import anon.crypto.tinytls.TLSRecord;
+import anon.crypto.tinytls.keyexchange.Key_Exchange;
 
 /**
  * @author stefan

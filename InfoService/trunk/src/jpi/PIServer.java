@@ -32,7 +32,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 import anon.crypto.MyDSAPrivateKey;
-import anon.tor.tinytls.TinyTLSServer;
+import anon.crypto.tinytls.TinyTLSServer;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;

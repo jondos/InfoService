@@ -32,7 +32,7 @@ import java.io.IOException;
 import java.net.SocketException;
 
 import anon.infoservice.ImmutableProxyInterface;
-import anon.tor.tinytls.TinyTLS;
+import anon.crypto.tinytls.TinyTLS;
 
 public class FirstOnionRouterConnectionThread implements Runnable
 {

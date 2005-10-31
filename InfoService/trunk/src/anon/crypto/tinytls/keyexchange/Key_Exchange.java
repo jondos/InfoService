@@ -29,13 +29,13 @@
  * Created on Mar 29, 2004
  *
  */
-package anon.tor.tinytls.keyexchange;
+package anon.crypto.tinytls.keyexchange;
 
 import java.math.BigInteger;
 
 import anon.crypto.IMyPrivateKey;
 import anon.crypto.JAPCertificate;
-import anon.tor.tinytls.TLSException;
+import anon.crypto.tinytls.TLSException;
 
 /**
  * @author stefan

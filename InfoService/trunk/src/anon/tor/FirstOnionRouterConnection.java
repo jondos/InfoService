@@ -52,7 +52,7 @@ import anon.crypto.MyRandom;
 import anon.crypto.PKCS12;
 import anon.tor.cells.Cell;
 import anon.tor.ordescription.ORDescription;
-import anon.tor.tinytls.TinyTLS;
+import anon.crypto.tinytls.TinyTLS;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;

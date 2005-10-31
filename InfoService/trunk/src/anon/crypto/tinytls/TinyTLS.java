@@ -30,7 +30,7 @@
  * (http://www.ritlabs.com/en/products/tinyweb/tinyssl.php)
  *
  */
-package anon.tor.tinytls;
+package anon.crypto.tinytls;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -65,14 +65,14 @@ import anon.infoservice.HTTPConnectionFactory;
 import anon.infoservice.ImmutableProxyInterface;
 import anon.infoservice.ListenerInterface;
 import anon.server.impl.ProxyConnection;
-import anon.tor.tinytls.ciphersuites.CipherSuite;
-import anon.tor.tinytls.ciphersuites.DHE_DSS_WITH_3DES_CBC_SHA;
-import anon.tor.tinytls.ciphersuites.DHE_DSS_WITH_AES_128_CBC_SHA;
-import anon.tor.tinytls.ciphersuites.DHE_DSS_WITH_DES_CBC_SHA;
-import anon.tor.tinytls.ciphersuites.DHE_RSA_WITH_3DES_CBC_SHA;
-import anon.tor.tinytls.ciphersuites.DHE_RSA_WITH_AES_128_CBC_SHA;
-import anon.tor.tinytls.ciphersuites.DHE_RSA_WITH_DES_CBC_SHA;
-import anon.tor.tinytls.util.hash;
+import anon.crypto.tinytls.ciphersuites.CipherSuite;
+import anon.crypto.tinytls.ciphersuites.DHE_DSS_WITH_3DES_CBC_SHA;
+import anon.crypto.tinytls.ciphersuites.DHE_DSS_WITH_AES_128_CBC_SHA;
+import anon.crypto.tinytls.ciphersuites.DHE_DSS_WITH_DES_CBC_SHA;
+import anon.crypto.tinytls.ciphersuites.DHE_RSA_WITH_3DES_CBC_SHA;
+import anon.crypto.tinytls.ciphersuites.DHE_RSA_WITH_AES_128_CBC_SHA;
+import anon.crypto.tinytls.ciphersuites.DHE_RSA_WITH_DES_CBC_SHA;
+import anon.crypto.tinytls.util.hash;
 import anon.util.ByteArrayUtil;
 import logging.LogHolder;
 import logging.LogLevel;

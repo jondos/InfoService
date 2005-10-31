@@ -1,4 +1,4 @@
-package anon.tor.tinytls.test;
+package anon.crypto.tinytls.test;
 
 import java.io.FileInputStream;
 import java.net.Socket;
@@ -6,7 +6,7 @@ import java.net.Socket;
 import anon.crypto.JAPCertificate;
 import anon.crypto.MyDSAPrivateKey;
 import anon.crypto.PKCS12;
-import anon.tor.tinytls.TinyTLSServer;
+import anon.crypto.tinytls.TinyTLSServer;
 import logging.LogHolder;
 import logging.SystemErrLog;
 

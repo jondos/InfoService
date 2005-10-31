@@ -28,8 +28,9 @@
 package anon.tor.cells;
 
 import org.bouncycastle.crypto.digests.SHA1Digest;
-import anon.tor.crypto.CTRBlockCipher;
+
 import anon.util.ByteArrayUtil;
+import anon.crypto.CTRBlockCipher;
 
 /**
  * @author stefan

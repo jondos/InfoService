@@ -1,4 +1,4 @@
-package anon.tor.tinytls;
+package anon.crypto.tinytls;
 
 import java.io.IOException;
 import java.net.ServerSocket;

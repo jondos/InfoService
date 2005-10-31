@@ -33,6 +33,7 @@ import anon.crypto.AsymmetricCryptoKeyPair;
 import anon.crypto.ByteSignature;
 import anon.util.Util;
 import junitx.framework.extension.XtendedPrivateTestCase;
+import anon.util.ByteArrayUtil;
 
 /**
  * These are the tests for the ByteSignature class.
@@ -130,7 +131,7 @@ public class ByteSignatureTest extends XtendedPrivateTestCase
 		signatureTwo = ByteSignature.sign(a_messageOne, keyPairTwo);
 		assertNotNull(signatureOne);
 		assertNotNull(signatureTwo);
-		assertTrue(!Util.arraysEqual(signatureOne, signatureTwo));
+		assertTrue(!ByteArrayUtil.equal(signatureOne, signatureTwo));
 
 		// verify the first message with the first signature and the first key pair
 		assertTrue(ByteSignature.verify(a_messageOne, signatureOne, keyPairOne));
