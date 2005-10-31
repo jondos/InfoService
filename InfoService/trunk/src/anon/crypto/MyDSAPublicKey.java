@@ -51,9 +51,8 @@ import org.w3c.dom.Element;
 import anon.util.Base64;
 import anon.util.XMLUtil;
 
-final public class MyDSAPublicKey extends AbstractPublicKey implements DSAPublicKey,IMyPublicKey
+final public class MyDSAPublicKey extends AbstractPublicKey implements DSAPublicKey, IMyPublicKey
 {
-	private MyDSASignature m_algorithm = new MyDSASignature();
 	private BigInteger m_Y;
 	private DSAParams m_params;
 	private long m_hashValue = 0;
@@ -90,13 +89,15 @@ final public class MyDSAPublicKey extends AbstractPublicKey implements DSAPublic
 	{
 		try
 		{
-			m_algorithm.initVerify(this);
+			MyDSASignature algorithm = new MyDSASignature(); ;
+			algorithm.initVerify(this);
+			return algorithm;
 		}
 		catch (InvalidKeyException a_e)
 		{
 			// not possible
 		}
-		return m_algorithm;
+		return null;
 	}
 
 	public BigInteger getY()
@@ -184,6 +185,6 @@ final public class MyDSAPublicKey extends AbstractPublicKey implements DSAPublic
 						   m_params.getP().longValue() + m_params.getQ().longValue());
 		}
 
-		return (int)m_hashValue;
+		return (int) m_hashValue;
 	}
 }

@@ -30,7 +30,7 @@ package anon.tor.cells;
 import org.bouncycastle.crypto.digests.SHA1Digest;
 
 import anon.util.ByteArrayUtil;
-import anon.crypto.CTRBlockCipher;
+import anon.crypto.MyAES;
 
 /**
  * @author stefan
@@ -184,13 +184,13 @@ public class RelayCell extends Cell
 	 * @param engine
 	 * a cipher
 	 */
-	public void doCryptography(CTRBlockCipher engine)
+	public void doCryptography(MyAES engine) throws Exception
 	{
-		byte[] data = new byte[this.m_payload.length];
-		engine.processBlock(this.m_payload, 0, data, 0, 509);
-		this.m_payload = ByteArrayUtil.copy(data, 0, 509);
-		this.m_relayCommand = this.m_payload[0];
-		this.m_streamID = ( (this.m_payload[3] & 0xFF) << 8) | (this.m_payload[4] & 0xFF);
+		byte[] data = new byte[m_payload.length];
+		engine.processBytesCTR(m_payload, 0, data, 0, CELL_PAYLOAD_SIZE);
+		m_payload = data;
+		m_relayCommand = m_payload[0];
+		m_streamID = ( (m_payload[3] & 0xFF) << 8) | (m_payload[4] & 0xFF);
 	}
 
 	private static byte[] createPayload(byte relaycommand, int streamid, byte[] data)
@@ -216,7 +216,7 @@ public class RelayCell extends Cell
 
 	public byte[] getCellData()
 	{
-		if (this.m_digestGenerated)
+		if (m_digestGenerated)
 		{
 			return super.getCellData();
 		}

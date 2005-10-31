@@ -34,35 +34,24 @@ package anon.crypto.tinytls.keyexchange;
 import java.math.BigInteger;
 import java.security.SecureRandom;
 
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
-
-import org.bouncycastle.asn1.ASN1Sequence;
-import org.bouncycastle.asn1.DERObject;
-import org.bouncycastle.asn1.DERSequence;
-import org.bouncycastle.asn1.x509.RSAPublicKeyStructure;
-import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
-import org.bouncycastle.crypto.AsymmetricBlockCipher;
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
-import org.bouncycastle.crypto.InvalidCipherTextException;
 import org.bouncycastle.crypto.agreement.DHBasicAgreement;
-import org.bouncycastle.crypto.encodings.PKCS1Encoding;
-import org.bouncycastle.crypto.engines.RSAEngine;
 import org.bouncycastle.crypto.generators.DHKeyPairGenerator;
 import org.bouncycastle.crypto.params.DHKeyGenerationParameters;
 import org.bouncycastle.crypto.params.DHParameters;
 import org.bouncycastle.crypto.params.DHPrivateKeyParameters;
 import org.bouncycastle.crypto.params.DHPublicKeyParameters;
-import org.bouncycastle.crypto.params.RSAKeyParameters;
-
 import anon.crypto.IMyPrivateKey;
 import anon.crypto.JAPCertificate;
 import anon.crypto.MyRSAPrivateKey;
+import anon.crypto.MyRSASignature;
 import anon.crypto.tinytls.TLSException;
 import anon.crypto.tinytls.util.PRF;
 import anon.crypto.tinytls.util.hash;
 import anon.util.ByteArrayUtil;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 
 /**
  * @author stefan
@@ -131,16 +120,15 @@ public class DHE_RSA_Key_Exchange extends Key_Exchange
 		byte[] signature = ByteArrayUtil.conc(
 			hash.md5(clientrandom, serverrandom, message),
 			hash.sha(clientrandom, serverrandom, message));
-		BigInteger modulus = rsakey.getModulus();
-		BigInteger exponent = rsakey.getPrivateExponent();
-		AsymmetricBlockCipher rsa = new PKCS1Encoding(new RSAEngine());
-		rsa.init(true, new RSAKeyParameters(true, modulus, exponent));
+		MyRSASignature rsa = new MyRSASignature();
+
 		byte[] signature2;
 		try
 		{
-			signature2 = rsa.processBlock(signature, 0, signature.length);
+			rsa.initSign(rsakey);
+			signature2 = rsa.signPlain(signature);
 		}
-		catch (InvalidCipherTextException ex)
+		catch (Exception ex)
 		{
 			throw new TLSException("cannot encrypt signature", 2, 80);
 		}
@@ -191,35 +179,31 @@ public class DHE_RSA_Key_Exchange extends Key_Exchange
 
 		byte[] serverparams = ByteArrayUtil.copy(bytes, 0 + bytes_offset, counter);
 
-		byte[] expectedSignature = ByteArrayUtil.conc(
+		byte[] theHash = ByteArrayUtil.conc(
 			hash.md5(clientrandom, serverrandom, serverparams),
 			hash.sha(clientrandom, serverrandom, serverparams));
 
-		byte[] recievedSignature;
-
 		try
 		{
-			SubjectPublicKeyInfo pki = servercertificate.getSubjectPublicKeyInfo();
-			DERObject o=pki.getPublicKey();
-			RSAPublicKeyStructure rsa_pks = new RSAPublicKeyStructure((ASN1Sequence) o);
+            MyRSASignature rsa=new MyRSASignature();
+            rsa.initVerify(servercertificate.getPublicKey());
+			/*SubjectPublicKeyInfo pki = servercertificate.getSubjectPublicKeyInfo();
+			DERObject o = pki.getPublicKey();
+			RSAPublicKeyStructure rsa_pks = new RSAPublicKeyStructure( (ASN1Sequence) o);
 			BigInteger modulus = rsa_pks.getModulus();
 			BigInteger exponent = rsa_pks.getPublicExponent();
 			AsymmetricBlockCipher rsa = new PKCS1Encoding(new RSAEngine());
-			rsa.init(false, new RSAKeyParameters(false, modulus, exponent));
-			byte[] hash = ByteArrayUtil.copy(bytes, counter + 2 + bytes_offset, bytes_len - counter - 2);
-			recievedSignature = rsa.processBlock(hash, 0, hash.length);
+			rsa.init(false, new RSAKeyParameters(false, modulus, exponent));*/
+			byte[] recievedSignature = ByteArrayUtil.copy(bytes, counter + 2 + bytes_offset, bytes_len - counter - 2);
+	if(!rsa.verifyPlain(theHash,recievedSignature))
+        throw new TLSException("wrong Signature", 2, 21);
+
 		}
 		catch (Exception e)
 		{
 			throw new TLSException("Cannot decode Signature", 1, 0);
 		}
-		for (int i = 0; i < expectedSignature.length; i++)
-		{
-			if (expectedSignature[i] != recievedSignature[i])
-			{
-				throw new TLSException("wrong Signature", 2, 21);
-			}
-		}
+
 		LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[SERVER_KEY_EXCHANGE] Signature ok");
 	}
 

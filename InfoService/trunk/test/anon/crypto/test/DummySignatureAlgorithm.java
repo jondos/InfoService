@@ -177,4 +177,10 @@ public class DummySignatureAlgorithm implements IMySignature
 		return "Dummy";
 	}
 
+	public boolean verify(byte[] a_message, int message_offset, int message_len, byte[] a_signature,
+						  int signature_offset, int signature_len)
+	{
+		return false;
+	}
+
 }
