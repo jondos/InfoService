@@ -264,4 +264,14 @@ public class XMLAccountCertificate implements IXMLEncodable
 		}
 	}
 
+	/**
+	 * Gets the Payment Instance ID of the Payment Instance where this account
+	 * is residing.
+	 * @return String
+	 */
+	public String getPIID()
+	{
+		return m_biID;
+	}
+
 }
