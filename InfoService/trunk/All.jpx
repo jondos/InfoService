@@ -60,6 +60,9 @@
   <node name="anon.tor.crypto" type="Package"/>
   <node name="anon.tor.ordescription" type="Package"/>
   <node name="anon.tor.tinytls" type="Package"/>
+  <node name="anon.tor.tinytls.ciphersuites" type="Package"/>
+  <node name="anon.tor.tinytls.keyexchange" type="Package"/>
+  <node name="anon.tor.tinytls.util" type="Package"/>
   <node name="anon.tor.util" type="Package"/>
   <node name="anon.util" type="Package"/>
   <node name="anon.xmlrpc" type="Package"/>

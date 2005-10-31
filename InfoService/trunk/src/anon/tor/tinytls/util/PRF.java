@@ -73,8 +73,8 @@ public class PRF
 		{
 			splitsize++;
 		}
-		byte[] s1 = ByteArrayUtil.copybytes(this.m_secret, 0, splitsize);
-		byte[] s2 = ByteArrayUtil.copybytes(this.m_secret, this.m_secret.length - splitsize, splitsize);
+		byte[] s1 = ByteArrayUtil.copy(this.m_secret, 0, splitsize);
+		byte[] s2 = ByteArrayUtil.copy(this.m_secret, this.m_secret.length - splitsize, splitsize);
 		P_Hash phash = new P_Hash(s1, ByteArrayUtil.conc(this.m_label, this.m_seed), new MD5Digest());
 		a = phash.getHash(length);
 		phash = new P_Hash(s2, ByteArrayUtil.conc(this.m_label, this.m_seed), new SHA1Digest());
