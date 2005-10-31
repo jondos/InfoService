@@ -185,18 +185,14 @@ public class DHE_RSA_Key_Exchange extends Key_Exchange
 
 		try
 		{
-            MyRSASignature rsa=new MyRSASignature();
-            rsa.initVerify(servercertificate.getPublicKey());
-			/*SubjectPublicKeyInfo pki = servercertificate.getSubjectPublicKeyInfo();
-			DERObject o = pki.getPublicKey();
-			RSAPublicKeyStructure rsa_pks = new RSAPublicKeyStructure( (ASN1Sequence) o);
-			BigInteger modulus = rsa_pks.getModulus();
-			BigInteger exponent = rsa_pks.getPublicExponent();
-			AsymmetricBlockCipher rsa = new PKCS1Encoding(new RSAEngine());
-			rsa.init(false, new RSAKeyParameters(false, modulus, exponent));*/
-			byte[] recievedSignature = ByteArrayUtil.copy(bytes, counter + 2 + bytes_offset, bytes_len - counter - 2);
-	if(!rsa.verifyPlain(theHash,recievedSignature))
-        throw new TLSException("wrong Signature", 2, 21);
+			MyRSASignature rsa = new MyRSASignature();
+			rsa.initVerify(servercertificate.getPublicKey());
+			byte[] recievedSignature = ByteArrayUtil.copy(bytes, counter + 2 + bytes_offset,
+				bytes_len - counter - 2);
+			if (!rsa.verifyPlain(theHash, recievedSignature))
+			{
+				throw new TLSException("wrong Signature", 2, 21);
+			}
 
 		}
 		catch (Exception e)
