@@ -25,58 +25,66 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package anon.tor.tinytls;
+/*
+ * Created on Mar 25, 2004
+ *
+ */
+package anon.crypto.tinytls.util;
+
+import org.bouncycastle.crypto.digests.MD5Digest;
+import org.bouncycastle.crypto.digests.SHA1Digest;
+import anon.util.ByteArrayUtil;
 
 /**
- * <p>†berschrift: </p>
- * <p>Beschreibung: </p>
- * <p>Copyright: Copyright (c) 2001</p>
- * <p>Organisation: </p>
- * @author not attributable
- * @version 1.0
+ * @author stefan
+ *a Pseudo Radnom Function as described in RFC2246
  */
-
-public class TLSRecord
+public class PRF
 {
-	public int m_Type;
-	public int m_dataLen;
-	public byte[] m_Data;
-	public byte[] m_Header;
 
+	private byte[] m_secret;
+	private byte[] m_seed;
+	private byte[] m_label;
 	/**
-	 * Constructor
-	 *
+	 * Constructor for a Pseudo Random Function
+	 * @param secret a secret
+	 * @param label a label
+	 * @param seed a seed
 	 */
-	public TLSRecord()
+	public PRF(byte[] secret, byte[] label, byte[] seed)
 	{
-		m_Header = new byte[5];
-		m_Header[1] = TinyTLS.PROTOCOLVERSION[0];
-		m_Header[2] = TinyTLS.PROTOCOLVERSION[1];
-		m_Data = new byte[0xFFFF];
-		m_dataLen = 0;
+		this.m_secret = secret;
+		this.m_seed = seed;
+		this.m_label = label;
 	}
 
 	/**
-	 * sets the typeof the tls record
-	 * @param type
-	 * type
+	 * calculates the result of a pseudo random function
+	 * @param length length of the result
+	 * @return result of a PRF with variable length
 	 */
-	public void setType(int type)
+	public byte[] calculate(int length)
 	{
-		m_Type = type;
-		m_Header[0] = (byte) (type & 0x00FF);
-	}
+		byte[] a;
+		byte[] b;
+		byte[] c = new byte[length];
+		int splitsize = this.m_secret.length / 2;
+		if ( (splitsize * 2) < this.m_secret.length)
+		{
+			splitsize++;
+		}
+		byte[] s1 = ByteArrayUtil.copy(this.m_secret, 0, splitsize);
+		byte[] s2 = ByteArrayUtil.copy(this.m_secret, this.m_secret.length - splitsize, splitsize);
+		P_Hash phash = new P_Hash(s1, ByteArrayUtil.conc(this.m_label, this.m_seed), new MD5Digest());
+		a = phash.getHash(length);
+		phash = new P_Hash(s2, ByteArrayUtil.conc(this.m_label, this.m_seed), new SHA1Digest());
+		b = phash.getHash(length);
+		for (int i = 0; i < length; i++)
+		{
+			c[i] = (byte) ( (a[i] ^ b[i]) & 0xFF);
+		}
 
-	/**
-	 * sets the length of the tls record
-	 * @param len
-	 * length
-	 */
-	public void setLength(int len)
-	{
-		m_dataLen = len;
-		m_Header[3] = (byte) ( (len >> 8) & 0x00FF);
-		m_Header[4] = (byte) ( (len) & 0x00FF);
+		return c;
 	}
 
 }

@@ -25,7 +25,11 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package anon.tor.tinytls.ciphersuites;
+/*
+ * Created on Mar 16, 2004
+ *
+ */
+package anon.crypto.tinytls.ciphersuites;
 
 import org.bouncycastle.crypto.digests.SHA1Digest;
 import org.bouncycastle.crypto.engines.DESedeEngine;
@@ -34,24 +38,32 @@ import org.bouncycastle.crypto.modes.CBCBlockCipher;
 import org.bouncycastle.crypto.params.KeyParameter;
 import org.bouncycastle.crypto.params.ParametersWithIV;
 import anon.crypto.MyRandom;
-import anon.tor.tinytls.TLSException;
-import anon.tor.tinytls.TLSRecord;
-import anon.tor.tinytls.keyexchange.DHE_DSS_Key_Exchange;
+import anon.crypto.tinytls.TLSException;
+import anon.crypto.tinytls.TLSRecord;
+import anon.crypto.tinytls.keyexchange.DHE_RSA_Key_Exchange;
 import anon.util.ByteArrayUtil;
 
-public class DHE_DSS_WITH_3DES_CBC_SHA extends CipherSuite
+/**
+ * @author stefan
+ *
+ */
+public class DHE_RSA_WITH_3DES_CBC_SHA extends CipherSuite
 {
 
 	private CBCBlockCipher m_encryptcipher;
 	private CBCBlockCipher m_decryptcipher;
 	private MyRandom m_rand;
 
-	public DHE_DSS_WITH_3DES_CBC_SHA() throws TLSException
+	/**
+	 * Constuctor
+	 * @throws Exception
+	 */
+	public DHE_RSA_WITH_3DES_CBC_SHA() throws TLSException
 	{
 		super(new byte[]
-			  {0x00, 0x13});
-		this.m_ciphersuitename = "TLS_DHE_DSS_WITH_3DES_CBC_SHA";
-		this.setKeyExchangeAlgorithm(new DHE_DSS_Key_Exchange());
+			  {0x00, 0x16});
+		m_ciphersuitename = "TLS_DHE_RSA_WITH_3DES_CBC_SHA";
+		this.setKeyExchangeAlgorithm(new DHE_RSA_Key_Exchange());
 		m_rand = new MyRandom();
 	}
 

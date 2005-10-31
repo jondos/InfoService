@@ -29,7 +29,7 @@
  * Created on Mar 29, 2004
  *
  */
-package anon.tor.tinytls;
+package anon.crypto.tinytls;
 
 import java.io.IOException;
 

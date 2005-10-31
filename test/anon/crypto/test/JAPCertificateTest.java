@@ -41,6 +41,7 @@ import anon.crypto.JAPCertificate;
 import anon.crypto.PKCS12;
 import anon.util.Util;
 import junitx.framework.extension.XtendedPrivateTestCase;
+import anon.util.ByteArrayUtil;
 
 
 public class JAPCertificateTest extends XtendedPrivateTestCase
@@ -117,7 +118,7 @@ public class JAPCertificateTest extends XtendedPrivateTestCase
 
 		assertNotNull(ski_two);
 		assertTrue(ski_two.length > 0);
-		assertTrue(Util.arraysEqual(ski_one, ski_two));
+		assertTrue(ByteArrayUtil.equal(ski_one, ski_two));
 	}
 
 	/**

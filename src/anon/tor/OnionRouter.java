@@ -54,13 +54,14 @@ import anon.crypto.MyRSAPublicKey;
 import anon.tor.cells.Cell;
 import anon.tor.cells.CreateCell;
 import anon.tor.cells.RelayCell;
-import anon.tor.crypto.CTRBlockCipher;
+
 import anon.tor.ordescription.ORDescription;
-import anon.tor.tinytls.util.hash;
+import anon.crypto.tinytls.util.hash;
 import anon.util.ByteArrayUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.crypto.CTRBlockCipher;
 
 /**
  * @author stefan
@@ -75,13 +76,13 @@ public class OnionRouter
 		"302B0A6DF25F14374FE1356D6D51C245E485B576625E7EC6F44C42E9" +
 		"A637ED6B0BFF5CB6F406B7EDEE386BFB5A899FA5AE9F24117C4B1FE6" +
 		"49286651ECE65381FFFFFFFFFFFFFFFF", 16);
-	
+
 	//lower boundary for key : 2^24
 	private final static BigInteger MINKEY = new BigInteger(new byte[]{1,0,0,0});
-	
+
 	//upper boundary for key : p - 2^24
 	private final static BigInteger MAXKEY = SAFEPRIME.subtract(MINKEY);
-	
+
 	private final static DHParameters DH_PARAMS = new DHParameters(SAFEPRIME, new BigInteger("2"));
 
 	private ORDescription m_description;
@@ -382,7 +383,7 @@ public class OnionRouter
 				throw new Exception("wrong derivative key");
 			}
 		}
-		
+
 		//test, if the calculated key is in range (to prevent attacks)
 		if(key.compareTo(MINKEY)==-1||key.compareTo(MAXKEY)==1)
 		{
@@ -393,8 +394,8 @@ public class OnionRouter
 		{
 			throw new CryptoException("Calculated DH-Key is not valid. Not enough zeros ore ones");
 		}
-		
-		
+
+
 		buff[128] = 1;
 		m_digestDf = new SHA1Digest();
 		byte[] keydata = hash.sha(buff);

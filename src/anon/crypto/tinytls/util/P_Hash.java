@@ -29,62 +29,83 @@
  * Created on Mar 25, 2004
  *
  */
-package anon.tor.tinytls.util;
+package anon.crypto.tinytls.util;
 
-import org.bouncycastle.crypto.digests.MD5Digest;
-import org.bouncycastle.crypto.digests.SHA1Digest;
+import org.bouncycastle.crypto.Digest;
+import org.bouncycastle.crypto.macs.HMac;
+import org.bouncycastle.crypto.params.KeyParameter;
 import anon.util.ByteArrayUtil;
 
 /**
  * @author stefan
- *a Pseudo Radnom Function as described in RFC2246
+ *
+ * a P_Hash function as described in RFC2246
  */
-public class PRF
+public class P_Hash
 {
 
 	private byte[] m_secret;
 	private byte[] m_seed;
-	private byte[] m_label;
+	private Digest m_digest;
+
 	/**
-	 * Constructor for a Pseudo Random Function
+	 * Constructor
 	 * @param secret a secret
-	 * @param label a label
 	 * @param seed a seed
+	 * @param digest a digest
 	 */
-	public PRF(byte[] secret, byte[] label, byte[] seed)
+	public P_Hash(byte[] secret, byte[] seed, Digest digest)
 	{
 		this.m_secret = secret;
 		this.m_seed = seed;
-		this.m_label = label;
+		this.m_digest = digest;
 	}
 
 	/**
-	 * calculates the result of a pseudo random function
-	 * @param length length of the result
-	 * @return result of a PRF with variable length
+	 * returns a hash with a variabel length
+	 * @param length length of the hash
+	 * @return hash
 	 */
-	public byte[] calculate(int length)
+	public byte[] getHash(int length)
 	{
 		byte[] a;
-		byte[] b;
-		byte[] c = new byte[length];
-		int splitsize = this.m_secret.length / 2;
-		if ( (splitsize * 2) < this.m_secret.length)
-		{
-			splitsize++;
-		}
-		byte[] s1 = ByteArrayUtil.copy(this.m_secret, 0, splitsize);
-		byte[] s2 = ByteArrayUtil.copy(this.m_secret, this.m_secret.length - splitsize, splitsize);
-		P_Hash phash = new P_Hash(s1, ByteArrayUtil.conc(this.m_label, this.m_seed), new MD5Digest());
-		a = phash.getHash(length);
-		phash = new P_Hash(s2, ByteArrayUtil.conc(this.m_label, this.m_seed), new SHA1Digest());
-		b = phash.getHash(length);
-		for (int i = 0; i < length; i++)
-		{
-			c[i] = (byte) ( (a[i] ^ b[i]) & 0xFF);
-		}
+		byte[] b = null;
+		byte[] c;
+		int counter = 0;
+		HMac hm = new HMac(this.m_digest);
+		hm.reset();
+		hm.init(new KeyParameter(this.m_secret));
+		hm.update(this.m_seed, 0, this.m_seed.length);
+		a = new byte[hm.getMacSize()];
+		hm.doFinal(a, 0);
 
-		return c;
+		do
+		{
+			//HMAC_HASH(secret,a+seed)
+			hm.reset();
+			hm.init(new KeyParameter(this.m_secret));
+			hm.update(ByteArrayUtil.conc(a, this.m_seed), 0, a.length + this.m_seed.length);
+			c = new byte[hm.getMacSize()];
+			hm.doFinal(c, 0);
+			if (b == null)
+			{
+				b = c;
+			}
+			else
+			{
+				b = ByteArrayUtil.conc(b, c);
+			}
+
+			//compute next a
+			hm.reset();
+			hm.init(new KeyParameter(this.m_secret));
+			hm.update(a, 0, a.length);
+			a = new byte[hm.getMacSize()];
+			hm.doFinal(a, 0);
+		}
+		while (b.length < length);
+
+		return ByteArrayUtil.copy(b, 0, length);
 	}
 
 }

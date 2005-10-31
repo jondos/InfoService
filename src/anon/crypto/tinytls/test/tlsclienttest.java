@@ -1,8 +1,8 @@
-package anon.tor.tinytls.test;
+package anon.crypto.tinytls.test;
 
 import java.io.InputStream;
 
-import anon.tor.tinytls.TinyTLS;
+import anon.crypto.tinytls.TinyTLS;
 import logging.LogHolder;
 import logging.SystemErrLog;
 import anon.crypto.JAPCertificate;

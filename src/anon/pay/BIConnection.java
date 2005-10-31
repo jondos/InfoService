@@ -47,7 +47,7 @@ import anon.pay.xml.XMLErrorMessage;
 import anon.pay.xml.XMLJapPublicKey;
 import anon.pay.xml.XMLResponse;
 import anon.pay.xml.XMLTransCert;
-import anon.tor.tinytls.TinyTLS;
+import anon.crypto.tinytls.TinyTLS;
 import anon.util.XMLUtil;
 import anon.crypto.XMLSignature;
 

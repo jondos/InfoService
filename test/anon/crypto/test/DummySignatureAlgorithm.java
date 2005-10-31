@@ -37,6 +37,7 @@ import anon.crypto.IMyPrivateKey;
 import anon.crypto.IMyPublicKey;
 import anon.crypto.IMySignature;
 import anon.util.Util;
+import anon.util.ByteArrayUtil;
 
 
 public class DummySignatureAlgorithm implements IMySignature
@@ -98,7 +99,7 @@ public class DummySignatureAlgorithm implements IMySignature
 		}
 
 		m_bSign = true;
-		bValid = Util.arraysEqual(sign(a_message), a_signature);
+		bValid = ByteArrayUtil.equal(sign(a_message), a_signature);
 		m_bSign = false;
 
 		return bValid;

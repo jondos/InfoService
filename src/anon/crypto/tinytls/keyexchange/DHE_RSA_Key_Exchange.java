@@ -25,7 +25,11 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package anon.tor.tinytls.keyexchange;
+/*
+ * Created on Mar 29, 2004
+ *
+ */
+package anon.crypto.tinytls.keyexchange;
 
 import java.math.BigInteger;
 import java.security.SecureRandom;
@@ -34,25 +38,38 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 
+import org.bouncycastle.asn1.ASN1Sequence;
+import org.bouncycastle.asn1.DERObject;
+import org.bouncycastle.asn1.DERSequence;
+import org.bouncycastle.asn1.x509.RSAPublicKeyStructure;
+import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
+import org.bouncycastle.crypto.AsymmetricBlockCipher;
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
+import org.bouncycastle.crypto.InvalidCipherTextException;
 import org.bouncycastle.crypto.agreement.DHBasicAgreement;
+import org.bouncycastle.crypto.encodings.PKCS1Encoding;
+import org.bouncycastle.crypto.engines.RSAEngine;
 import org.bouncycastle.crypto.generators.DHKeyPairGenerator;
 import org.bouncycastle.crypto.params.DHKeyGenerationParameters;
 import org.bouncycastle.crypto.params.DHParameters;
 import org.bouncycastle.crypto.params.DHPrivateKeyParameters;
 import org.bouncycastle.crypto.params.DHPublicKeyParameters;
+import org.bouncycastle.crypto.params.RSAKeyParameters;
 
 import anon.crypto.IMyPrivateKey;
 import anon.crypto.JAPCertificate;
-import anon.crypto.MyDSAPrivateKey;
-import anon.crypto.MyDSAPublicKey;
-import anon.crypto.MyDSASignature;
-import anon.tor.tinytls.TLSException;
-import anon.tor.tinytls.util.PRF;
-import anon.tor.tinytls.util.hash;
+import anon.crypto.MyRSAPrivateKey;
+import anon.crypto.tinytls.TLSException;
+import anon.crypto.tinytls.util.PRF;
+import anon.crypto.tinytls.util.hash;
 import anon.util.ByteArrayUtil;
 
-public class DHE_DSS_Key_Exchange extends Key_Exchange
+/**
+ * @author stefan
+ *
+ * Diffie Hellman Key Exchange with a RSA signed Certificate
+ */
+public class DHE_RSA_Key_Exchange extends Key_Exchange
 {
 
 	//maximum length for keymaterial (3DES_EDE_CBC_SHA)
@@ -87,11 +104,11 @@ public class DHE_DSS_Key_Exchange extends Key_Exchange
 	public byte[] generateServerKeyExchange(IMyPrivateKey key, byte[] clientrandom, byte[] serverrandom) throws
 		TLSException
 	{
-		if (! (key instanceof MyDSAPrivateKey))
+		if (! (key instanceof MyRSAPrivateKey))
 		{
-			throw new TLSException("wrong key type (cannot cast to MyDSAPrivateKey)");
+			throw new TLSException("wrong key type (cannot cast to MyRSAPrivateKey)");
 		}
-		MyDSAPrivateKey dsakey = (MyDSAPrivateKey) key;
+		MyRSAPrivateKey rsakey = (MyRSAPrivateKey) key;
 		this.m_clientrandom = clientrandom;
 		this.m_serverrandom = serverrandom;
 		DHKeyGenerationParameters params = new DHKeyGenerationParameters(new SecureRandom(), DH_PARAMS);
@@ -109,24 +126,25 @@ public class DHE_DSS_Key_Exchange extends Key_Exchange
 		dh_g = ByteArrayUtil.conc(ByteArrayUtil.inttobyte(dh_g.length, 2), dh_g);
 		byte[] dh_y = dhpub.getY().toByteArray();
 		dh_y = ByteArrayUtil.conc(ByteArrayUtil.inttobyte(dh_y.length, 2), dh_y);
-
 		byte[] message = ByteArrayUtil.conc(dh_p, dh_g, dh_y);
-		//byte[] signature = hash.sha(clientrandom, serverrandom, message);
-		byte[] signature = ByteArrayUtil.conc(clientrandom, serverrandom, message);
 
-		MyDSASignature sig = new MyDSASignature();
+		byte[] signature = ByteArrayUtil.conc(
+			hash.md5(clientrandom, serverrandom, message),
+			hash.sha(clientrandom, serverrandom, message));
+		BigInteger modulus = rsakey.getModulus();
+		BigInteger exponent = rsakey.getPrivateExponent();
+		AsymmetricBlockCipher rsa = new PKCS1Encoding(new RSAEngine());
+		rsa.init(true, new RSAKeyParameters(true, modulus, exponent));
+		byte[] signature2;
 		try
 		{
-			sig.initSign(dsakey);
+			signature2 = rsa.processBlock(signature, 0, signature.length);
 		}
-		catch (Exception ex)
+		catch (InvalidCipherTextException ex)
 		{
-			throw new TLSException("wrong key type (cannot init signature algorithm ("+ex.getMessage()+"))");
+			throw new TLSException("cannot encrypt signature", 2, 80);
 		}
-
-		byte[] signature2 = sig.sign(signature);
-
-		message=ByteArrayUtil.conc(message, ByteArrayUtil.inttobyte(signature2.length, 2), signature2);
+		message = ByteArrayUtil.conc(message, ByteArrayUtil.inttobyte(signature2.length, 2), signature2);
 
 		return message;
 	}
@@ -137,29 +155,32 @@ public class DHE_DSS_Key_Exchange extends Key_Exchange
 	{
 		this.m_clientrandom = clientrandom;
 		this.m_serverrandom = serverrandom;
-		BigInteger dh_p=null;
-		BigInteger dh_g=null;
-		BigInteger dh_ys=null;
-		int start_of_server_params=bytes_offset;
-		byte[] dummy=null;
-		int length = ( (bytes[bytes_offset] & 0xFF) << 8) | (bytes[bytes_offset+1] & 0xFF);
-		bytes_offset += 2;
-		dummy = ByteArrayUtil.copy(bytes, bytes_offset, length);
-		bytes_offset += length;
+		int counter = 0;
+		BigInteger dh_p;
+		BigInteger dh_g;
+		BigInteger dh_ys;
+		byte[] dummy;
+		byte[] b = ByteArrayUtil.copy(bytes, counter + bytes_offset, 2);
+		counter += 2;
+		int length = ( (b[0] & 0xFF) << 8) | (b[1] & 0xFF);
+		dummy = ByteArrayUtil.copy(bytes, counter + bytes_offset, length);
+		counter += length;
 		dh_p = new BigInteger(1, dummy);
 		LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[SERVER_KEY_EXCHANGE] DH_P = " + dh_p.toString());
 
-		length = ( (bytes[bytes_offset] & 0xFF) << 8) | (bytes[bytes_offset+1] & 0xFF);
-		bytes_offset += 2;
-		dummy = ByteArrayUtil.copy(bytes, bytes_offset, length);
-		bytes_offset += length;
+		b = ByteArrayUtil.copy(bytes, counter + bytes_offset, 2);
+		counter += 2;
+		length = ( (b[0] & 0xFF) << 8) | (b[1] & 0xFF);
+		dummy = ByteArrayUtil.copy(bytes, counter + bytes_offset, length);
+		counter += length;
 		dh_g = new BigInteger(1, dummy);
 		LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[SERVER_KEY_EXCHANGE] DH_G = " + dh_g.toString());
 
-		length = ( (bytes[bytes_offset] & 0xFF) << 8) | (bytes[bytes_offset+1] & 0xFF);
-		bytes_offset += 2;
-		dummy = ByteArrayUtil.copy(bytes, bytes_offset, length);
-		bytes_offset += length;
+		b = ByteArrayUtil.copy(bytes, counter + bytes_offset, 2);
+		counter += 2;
+		length = ( (b[0] & 0xFF) << 8) | (b[1] & 0xFF);
+		dummy = ByteArrayUtil.copy(bytes, counter + bytes_offset, length);
+		counter += length;
 		dh_ys = new BigInteger(1, dummy);
 		LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[SERVER_KEY_EXCHANGE] DH_Ys = " + dh_ys.toString());
 
@@ -168,42 +189,38 @@ public class DHE_DSS_Key_Exchange extends Key_Exchange
 
 		//-----------------------------------------
 
+		byte[] serverparams = ByteArrayUtil.copy(bytes, 0 + bytes_offset, counter);
 
-		byte[] serverparams = ByteArrayUtil.copy(bytes, start_of_server_params,bytes_offset-start_of_server_params);
+		byte[] expectedSignature = ByteArrayUtil.conc(
+			hash.md5(clientrandom, serverrandom, serverparams),
+			hash.sha(clientrandom, serverrandom, serverparams));
 
-		byte[] expectedSignature = /*hash.sha*/ ByteArrayUtil.conc(clientrandom, serverrandom, serverparams);
+		byte[] recievedSignature;
 
-		length = ( (bytes[bytes_offset] & 0xFF) << 8) | (bytes[bytes_offset+1] & 0xFF);
-		bytes_offset += 2;
-
-		MyDSAPublicKey dsakey;
-		MyDSASignature sig = new MyDSASignature();
-		if (servercertificate.getPublicKey() instanceof MyDSAPublicKey)
-		{
-			dsakey = (MyDSAPublicKey) servercertificate.getPublicKey();
-		}
-		else
-		{
-			throw new TLSException("cannot decode certificate");
-		}
 		try
 		{
-			sig.initVerify(dsakey);
+			SubjectPublicKeyInfo pki = servercertificate.getSubjectPublicKeyInfo();
+			DERObject o=pki.getPublicKey();
+			RSAPublicKeyStructure rsa_pks = new RSAPublicKeyStructure((ASN1Sequence) o);
+			BigInteger modulus = rsa_pks.getModulus();
+			BigInteger exponent = rsa_pks.getPublicExponent();
+			AsymmetricBlockCipher rsa = new PKCS1Encoding(new RSAEngine());
+			rsa.init(false, new RSAKeyParameters(false, modulus, exponent));
+			byte[] hash = ByteArrayUtil.copy(bytes, counter + 2 + bytes_offset, bytes_len - counter - 2);
+			recievedSignature = rsa.processBlock(hash, 0, hash.length);
 		}
-		catch (Exception ex)
+		catch (Exception e)
 		{
+			throw new TLSException("Cannot decode Signature", 1, 0);
 		}
-
-		if (!sig.verify(expectedSignature, 0,expectedSignature.length,
-						bytes,  bytes_offset, length))
+		for (int i = 0; i < expectedSignature.length; i++)
 		{
-			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[SERVER_KEY_EXCHANGE] Signature wrong");
-			throw new TLSException("wrong Signature",2,21);
+			if (expectedSignature[i] != recievedSignature[i])
+			{
+				throw new TLSException("wrong Signature", 2, 21);
+			}
 		}
-		else
-		{
-			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[SERVER_KEY_EXCHANGE] Signature ok");
-		}
+		LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[SERVER_KEY_EXCHANGE] Signature ok");
 	}
 
 	public byte[] calculateServerFinished(byte[] handshakemessages)
@@ -276,7 +293,6 @@ public class DHE_DSS_Key_Exchange extends Key_Exchange
 	{
 		PRF prf = new PRF(this.m_mastersecret, CLIENTFINISHEDLABEL,
 						  ByteArrayUtil.conc(hash.md5(handshakemessages), hash.sha(handshakemessages)));
-
 	}
 
 	public byte[] calculateClientFinished(byte[] handshakemessages) throws TLSException

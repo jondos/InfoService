@@ -29,7 +29,7 @@
  * Created on Mar 25, 2004
  *
  */
-package anon.tor.tinytls.util;
+package anon.crypto.tinytls.util;
 
 import org.bouncycastle.crypto.digests.MD5Digest;
 import org.bouncycastle.crypto.digests.SHA1Digest;

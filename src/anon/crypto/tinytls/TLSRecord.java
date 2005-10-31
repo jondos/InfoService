@@ -25,87 +25,58 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-/*
- * Created on Mar 25, 2004
- *
- */
-package anon.tor.tinytls.util;
-
-import org.bouncycastle.crypto.Digest;
-import org.bouncycastle.crypto.macs.HMac;
-import org.bouncycastle.crypto.params.KeyParameter;
-import anon.util.ByteArrayUtil;
+package anon.crypto.tinytls;
 
 /**
- * @author stefan
- *
- * a P_Hash function as described in RFC2246
+ * <p>†berschrift: </p>
+ * <p>Beschreibung: </p>
+ * <p>Copyright: Copyright (c) 2001</p>
+ * <p>Organisation: </p>
+ * @author not attributable
+ * @version 1.0
  */
-public class P_Hash
-{
 
-	private byte[] m_secret;
-	private byte[] m_seed;
-	private Digest m_digest;
+public class TLSRecord
+{
+	public int m_Type;
+	public int m_dataLen;
+	public byte[] m_Data;
+	public byte[] m_Header;
 
 	/**
 	 * Constructor
-	 * @param secret a secret
-	 * @param seed a seed
-	 * @param digest a digest
+	 *
 	 */
-	public P_Hash(byte[] secret, byte[] seed, Digest digest)
+	public TLSRecord()
 	{
-		this.m_secret = secret;
-		this.m_seed = seed;
-		this.m_digest = digest;
+		m_Header = new byte[5];
+		m_Header[1] = TinyTLS.PROTOCOLVERSION[0];
+		m_Header[2] = TinyTLS.PROTOCOLVERSION[1];
+		m_Data = new byte[0xFFFF];
+		m_dataLen = 0;
 	}
 
 	/**
-	 * returns a hash with a variabel length
-	 * @param length length of the hash
-	 * @return hash
+	 * sets the typeof the tls record
+	 * @param type
+	 * type
 	 */
-	public byte[] getHash(int length)
+	public void setType(int type)
 	{
-		byte[] a;
-		byte[] b = null;
-		byte[] c;
-		int counter = 0;
-		HMac hm = new HMac(this.m_digest);
-		hm.reset();
-		hm.init(new KeyParameter(this.m_secret));
-		hm.update(this.m_seed, 0, this.m_seed.length);
-		a = new byte[hm.getMacSize()];
-		hm.doFinal(a, 0);
+		m_Type = type;
+		m_Header[0] = (byte) (type & 0x00FF);
+	}
 
-		do
-		{
-			//HMAC_HASH(secret,a+seed)
-			hm.reset();
-			hm.init(new KeyParameter(this.m_secret));
-			hm.update(ByteArrayUtil.conc(a, this.m_seed), 0, a.length + this.m_seed.length);
-			c = new byte[hm.getMacSize()];
-			hm.doFinal(c, 0);
-			if (b == null)
-			{
-				b = c;
-			}
-			else
-			{
-				b = ByteArrayUtil.conc(b, c);
-			}
-
-			//compute next a
-			hm.reset();
-			hm.init(new KeyParameter(this.m_secret));
-			hm.update(a, 0, a.length);
-			a = new byte[hm.getMacSize()];
-			hm.doFinal(a, 0);
-		}
-		while (b.length < length);
-
-		return ByteArrayUtil.copy(b, 0, length);
+	/**
+	 * sets the length of the tls record
+	 * @param len
+	 * length
+	 */
+	public void setLength(int len)
+	{
+		m_dataLen = len;
+		m_Header[3] = (byte) ( (len >> 8) & 0x00FF);
+		m_Header[4] = (byte) ( (len) & 0x00FF);
 	}
 
 }
