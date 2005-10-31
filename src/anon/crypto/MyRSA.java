@@ -7,9 +7,11 @@ import org.bouncycastle.crypto.encodings.OAEPEncoding;
 public class MyRSA
 {
 	RSAEngine m_RSAEngine;
+	OAEPEncoding m_OAEP;
 	MyRSA()
 	{
 		m_RSAEngine = new RSAEngine();
+		m_OAEP=new OAEPEncoding(m_RSAEngine);
 	}
 
 	/** inits the cipher for encryption*/
@@ -18,6 +20,7 @@ public class MyRSA
 		synchronized (m_RSAEngine)
 		{
 			m_RSAEngine.init(true, key.getParams());
+			m_OAEP.init(true,key.getParams());
 		}
 	}
 
@@ -26,8 +29,7 @@ public class MyRSA
 	{
 		synchronized (m_RSAEngine)
 		{
-			OAEPEncoding oaep = new OAEPEncoding(m_RSAEngine);
-			return oaep.encodeBlock(plain, offset, len);
+			return m_OAEP.encodeBlock(plain, offset, len);
 		}
 	}
 

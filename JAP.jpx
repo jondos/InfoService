@@ -454,6 +454,8 @@
   <node name="anon.pay" type="Package"/>
   <node name="anon.pay.xml" type="Package"/>
   <node name="anon.server.impl" type="Package"/>
+  <node name="anon.tor" type="Package"/>
+  <node name="anon.util" type="Package"/>
   <node name="forward" type="Package"/>
   <node name="gui" type="Package"/>
   <node name="jap" type="Package"/>
