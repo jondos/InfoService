@@ -37,11 +37,8 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import org.bouncycastle.asn1.pkcs.PKCS12PBEParams;
 import org.bouncycastle.crypto.BufferedBlockCipher;
 import org.bouncycastle.crypto.CipherParameters;
-import org.bouncycastle.crypto.InvalidCipherTextException;
 import org.bouncycastle.crypto.digests.SHA1Digest;
-import org.bouncycastle.crypto.encodings.OAEPEncoding;
 import org.bouncycastle.crypto.engines.AESFastEngine;
-import org.bouncycastle.crypto.engines.RSAEngine;
 import org.bouncycastle.crypto.generators.PKCS12ParametersGenerator;
 import org.bouncycastle.crypto.modes.CBCBlockCipher;
 import org.bouncycastle.crypto.modes.CTSBlockCipher;
@@ -162,12 +159,12 @@ final public class XMLEncryption
 	 * @author Bastian Voigt
 	 */
 	private static byte[] codeDataCTS(boolean encrypt,
-								   byte[] barInput,
-								   CipherParameters params) throws Exception
+									  byte[] barInput,
+									  CipherParameters params) throws Exception
 	{
 		BufferedBlockCipher cipher =
 			new CTSBlockCipher(
-			new AESFastEngine()
+				new AESFastEngine()
 			);
 		cipher.init(encrypt, params);
 
@@ -194,13 +191,13 @@ final public class XMLEncryption
 	 * @author Bastian Voigt
 	 */
 	private static byte[] codeDataCBCwithHMAC(boolean encrypt,
-								   byte[] barInput,
-								   CipherParameters encKey,
-								   CipherParameters macKey) throws Exception
+											  byte[] barInput,
+											  CipherParameters encKey,
+											  CipherParameters macKey) throws Exception
 	{
-		PaddedBufferedBlockCipher cipher =new PaddedBufferedBlockCipher(
+		PaddedBufferedBlockCipher cipher = new PaddedBufferedBlockCipher(
 			new CBCBlockCipher(
-			new AESFastEngine()
+				new AESFastEngine()
 			));
 		cipher.init(encrypt, encKey);
 
@@ -212,16 +209,15 @@ final public class XMLEncryption
 			len = cipher.processBytes(barInput, 0, barInput.length,
 									  barOutput, 0);
 		}
-		len+=cipher.doFinal(barOutput, len);
-		if(!encrypt&&len!=barOutput.length) //remove padding
-			{
-				byte[] tmp=new byte[len];
-				System.arraycopy(barOutput,0,tmp,0,len);
-				barOutput=tmp;
-			}
+		len += cipher.doFinal(barOutput, len);
+		if (!encrypt && len != barOutput.length) //remove padding
+		{
+			byte[] tmp = new byte[len];
+			System.arraycopy(barOutput, 0, tmp, 0, len);
+			barOutput = tmp;
+		}
 		return barOutput;
 	}
-
 
 	/**
 	 * Decrypts an XML element
@@ -314,21 +310,21 @@ final public class XMLEncryption
 		try
 		{
 			barInput = XMLUtil.toString(elemPlain).getBytes();
-			barOutput = codeDataCBCwithHMAC(true, barInput, params,null);
+			barOutput = codeDataCBCwithHMAC(true, barInput, params, null);
 		}
 		catch (Exception ex1)
 		{
 			return false;
 		}
 		//encrpytiong the sym Key and IV
-		OAEPEncoding rsa=new OAEPEncoding(new RSAEngine());
-		rsa.init(true,publicKey.getParams());
+		MyRSA rsa = new MyRSA();
 		byte[] encryptedKey;
 		try
 		{
-			encryptedKey = rsa.encodeBlock(keyAndIv, 0, keyAndIv.length);
+			rsa.init(publicKey);
+			encryptedKey = rsa.encryptOAEP(keyAndIv, 0, keyAndIv.length);
 		}
-		catch (InvalidCipherTextException ex)
+		catch (Exception ex)
 		{
 			return false;
 		}
@@ -345,9 +341,9 @@ final public class XMLEncryption
 		Element elemKeyInfo = doc.createElement("ds:KeyInfo");
 		elemKeyInfo.setAttribute("xmlns:ds", "http://www.w3.org/2000/09/xmldsig#");
 		elemCrypt.appendChild(elemKeyInfo);
-		Element elemEncKey=doc.createElement("EncryptedKey");
+		Element elemEncKey = doc.createElement("EncryptedKey");
 		elemKeyInfo.appendChild(elemEncKey);
-		elemAlgo=doc.createElement("EncryptionMethod");
+		elemAlgo = doc.createElement("EncryptionMethod");
 		elemAlgo.setAttribute("Algorithm", "http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p");
 		elemEncKey.appendChild(elemAlgo);
 		Element elemCipher = doc.createElement("CipherData");

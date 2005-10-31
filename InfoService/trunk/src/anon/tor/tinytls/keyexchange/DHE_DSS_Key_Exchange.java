@@ -50,7 +50,7 @@ import anon.crypto.MyDSASignature;
 import anon.tor.tinytls.TLSException;
 import anon.tor.tinytls.util.PRF;
 import anon.tor.tinytls.util.hash;
-import anon.tor.util.helper;
+import anon.util.ByteArrayUtil;
 
 public class DHE_DSS_Key_Exchange extends Key_Exchange
 {
@@ -104,15 +104,15 @@ public class DHE_DSS_Key_Exchange extends Key_Exchange
 		m_dhe.init(dhpriv);
 
 		byte[] dh_p = dhpub.getParameters().getP().toByteArray();
-		dh_p = helper.conc(helper.inttobyte(dh_p.length, 2), dh_p);
+		dh_p = ByteArrayUtil.conc(ByteArrayUtil.inttobyte(dh_p.length, 2), dh_p);
 		byte[] dh_g = dhpub.getParameters().getG().toByteArray();
-		dh_g = helper.conc(helper.inttobyte(dh_g.length, 2), dh_g);
+		dh_g = ByteArrayUtil.conc(ByteArrayUtil.inttobyte(dh_g.length, 2), dh_g);
 		byte[] dh_y = dhpub.getY().toByteArray();
-		dh_y = helper.conc(helper.inttobyte(dh_y.length, 2), dh_y);
+		dh_y = ByteArrayUtil.conc(ByteArrayUtil.inttobyte(dh_y.length, 2), dh_y);
 
-		byte[] message = helper.conc(dh_p, dh_g, dh_y);
+		byte[] message = ByteArrayUtil.conc(dh_p, dh_g, dh_y);
 		//byte[] signature = hash.sha(clientrandom, serverrandom, message);
-		byte[] signature = helper.conc(clientrandom, serverrandom, message);
+		byte[] signature = ByteArrayUtil.conc(clientrandom, serverrandom, message);
 
 		MyDSASignature sig = new MyDSASignature();
 		try
@@ -126,7 +126,7 @@ public class DHE_DSS_Key_Exchange extends Key_Exchange
 
 		byte[] signature2 = sig.sign(signature);
 
-		message=helper.conc(message, helper.inttobyte(signature2.length, 2), signature2);
+		message=ByteArrayUtil.conc(message, ByteArrayUtil.inttobyte(signature2.length, 2), signature2);
 
 		return message;
 	}
@@ -144,21 +144,21 @@ public class DHE_DSS_Key_Exchange extends Key_Exchange
 		byte[] dummy=null;
 		int length = ( (bytes[bytes_offset] & 0xFF) << 8) | (bytes[bytes_offset+1] & 0xFF);
 		bytes_offset += 2;
-		dummy = helper.copybytes(bytes, bytes_offset, length);
+		dummy = ByteArrayUtil.copy(bytes, bytes_offset, length);
 		bytes_offset += length;
 		dh_p = new BigInteger(1, dummy);
 		LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[SERVER_KEY_EXCHANGE] DH_P = " + dh_p.toString());
 
 		length = ( (bytes[bytes_offset] & 0xFF) << 8) | (bytes[bytes_offset+1] & 0xFF);
 		bytes_offset += 2;
-		dummy = helper.copybytes(bytes, bytes_offset, length);
+		dummy = ByteArrayUtil.copy(bytes, bytes_offset, length);
 		bytes_offset += length;
 		dh_g = new BigInteger(1, dummy);
 		LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[SERVER_KEY_EXCHANGE] DH_G = " + dh_g.toString());
 
 		length = ( (bytes[bytes_offset] & 0xFF) << 8) | (bytes[bytes_offset+1] & 0xFF);
 		bytes_offset += 2;
-		dummy = helper.copybytes(bytes, bytes_offset, length);
+		dummy = ByteArrayUtil.copy(bytes, bytes_offset, length);
 		bytes_offset += length;
 		dh_ys = new BigInteger(1, dummy);
 		LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[SERVER_KEY_EXCHANGE] DH_Ys = " + dh_ys.toString());
@@ -169,9 +169,9 @@ public class DHE_DSS_Key_Exchange extends Key_Exchange
 		//-----------------------------------------
 
 
-		byte[] serverparams = helper.copybytes(bytes, start_of_server_params,bytes_offset-start_of_server_params);
+		byte[] serverparams = ByteArrayUtil.copy(bytes, start_of_server_params,bytes_offset-start_of_server_params);
 
-		byte[] expectedSignature = /*hash.sha*/ helper.conc(clientrandom, serverrandom, serverparams);
+		byte[] expectedSignature = /*hash.sha*/ ByteArrayUtil.conc(clientrandom, serverrandom, serverparams);
 
 		length = ( (bytes[bytes_offset] & 0xFF) << 8) | (bytes[bytes_offset+1] & 0xFF);
 		bytes_offset += 2;
@@ -209,14 +209,14 @@ public class DHE_DSS_Key_Exchange extends Key_Exchange
 	public byte[] calculateServerFinished(byte[] handshakemessages)
 	{
 		PRF prf = new PRF(this.m_mastersecret, SERVERFINISHEDLABEL,
-						  helper.conc(hash.md5(handshakemessages), hash.sha(handshakemessages)));
+						  ByteArrayUtil.conc(hash.md5(handshakemessages), hash.sha(handshakemessages)));
 		return prf.calculate(12);
 	}
 
 	public void processServerFinished(byte[] b, int len, byte[] handshakemessages) throws TLSException
 	{
 		PRF prf = new PRF(this.m_mastersecret, SERVERFINISHEDLABEL,
-						  helper.conc(hash.md5(handshakemessages), hash.sha(handshakemessages)));
+						  ByteArrayUtil.conc(hash.md5(handshakemessages), hash.sha(handshakemessages)));
 		byte[] c = prf.calculate(12);
 		if (b[0] == 20 && b[1] == 0 && b[2] == 0 && b[3] == 12)
 		{
@@ -238,11 +238,11 @@ public class DHE_DSS_Key_Exchange extends Key_Exchange
 		this.m_premastersecret = m_dhe.calculateAgreement(dhclientpub).toByteArray();
 		if (this.m_premastersecret[0] == 0)
 		{
-			this.m_premastersecret = helper.copybytes(this.m_premastersecret, 1,
+			this.m_premastersecret = ByteArrayUtil.copy(this.m_premastersecret, 1,
 				this.m_premastersecret.length - 1);
 		}
 		PRF prf = new PRF(this.m_premastersecret, MASTERSECRET,
-						  helper.conc(this.m_clientrandom, this.m_serverrandom));
+						  ByteArrayUtil.conc(this.m_clientrandom, this.m_serverrandom));
 		this.m_mastersecret = prf.calculate(48);
 		this.m_premastersecret = null;
 	}
@@ -262,11 +262,11 @@ public class DHE_DSS_Key_Exchange extends Key_Exchange
 		this.m_premastersecret = dha.calculateAgreement(this.m_dhserverpub).toByteArray();
 		if (this.m_premastersecret[0] == 0)
 		{
-			this.m_premastersecret = helper.copybytes(this.m_premastersecret, 1,
+			this.m_premastersecret = ByteArrayUtil.copy(this.m_premastersecret, 1,
 				this.m_premastersecret.length - 1);
 		}
 		PRF prf = new PRF(this.m_premastersecret, MASTERSECRET,
-						  helper.conc(this.m_clientrandom, this.m_serverrandom));
+						  ByteArrayUtil.conc(this.m_clientrandom, this.m_serverrandom));
 		this.m_mastersecret = prf.calculate(48);
 		this.m_premastersecret = null;
 		return dhpub.getY().toByteArray();
@@ -275,21 +275,21 @@ public class DHE_DSS_Key_Exchange extends Key_Exchange
 	public void processClientFinished(byte[] verify_data, byte[] handshakemessages) throws TLSException
 	{
 		PRF prf = new PRF(this.m_mastersecret, CLIENTFINISHEDLABEL,
-						  helper.conc(hash.md5(handshakemessages), hash.sha(handshakemessages)));
+						  ByteArrayUtil.conc(hash.md5(handshakemessages), hash.sha(handshakemessages)));
 
 	}
 
 	public byte[] calculateClientFinished(byte[] handshakemessages) throws TLSException
 	{
 		PRF prf = new PRF(this.m_mastersecret, CLIENTFINISHEDLABEL,
-						  helper.conc(hash.md5(handshakemessages), hash.sha(handshakemessages)));
+						  ByteArrayUtil.conc(hash.md5(handshakemessages), hash.sha(handshakemessages)));
 		return prf.calculate(12);
 	}
 
 	public byte[] calculateKeys()
 	{
 		PRF prf = new PRF(this.m_mastersecret, KEYEXPANSION,
-						  helper.conc(this.m_serverrandom, this.m_clientrandom));
+						  ByteArrayUtil.conc(this.m_serverrandom, this.m_clientrandom));
 		return prf.calculate(MAXKEYMATERIALLENGTH);
 	}
 

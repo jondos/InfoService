@@ -34,7 +34,7 @@ import java.io.IOException;
 
 import anon.server.impl.AbstractChannel;
 import anon.tor.cells.RelayCell;
-import anon.tor.util.helper;
+import anon.util.ByteArrayUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -88,14 +88,14 @@ public class TorChannel extends AbstractChannel
 			if (len > MAX_CELL_DATA)
 			{
 				cell = new RelayCell(m_circuit.getCircID(), RelayCell.RELAY_DATA, m_id,
-									 helper.copybytes(b, 0, MAX_CELL_DATA));
-				b = helper.copybytes(b, MAX_CELL_DATA, len - MAX_CELL_DATA);
+									 ByteArrayUtil.copy(b, 0, MAX_CELL_DATA));
+				b = ByteArrayUtil.copy(b, MAX_CELL_DATA, len - MAX_CELL_DATA);
 				len -= MAX_CELL_DATA;
 			}
 			else
 			{
 				cell = new RelayCell(m_circuit.getCircID(), RelayCell.RELAY_DATA, m_id,
-									 helper.copybytes(b, 0, len));
+									 ByteArrayUtil.copy(b, 0, len));
 				len = 0;
 			}
 			m_circuit.send(cell);
@@ -159,7 +159,7 @@ public class TorChannel extends AbstractChannel
 				return false;
 			}
 			byte[] data = (addr + ":" + Integer.toString(port)).getBytes();
-			data = helper.conc(data, new byte[1]);
+			data = ByteArrayUtil.conc(data, new byte[1]);
 			RelayCell cell = new RelayCell(m_circuit.getCircID(), RelayCell.RELAY_BEGIN, m_id, data);
 			m_circuit.send(cell);
 			synchronized (m_oWaitForOpen)

@@ -29,7 +29,7 @@ package anon.tor.cells;
 
 import org.bouncycastle.crypto.digests.SHA1Digest;
 import anon.tor.crypto.CTRBlockCipher;
-import anon.tor.util.helper;
+import anon.util.ByteArrayUtil;
 
 /**
  * @author stefan
@@ -187,7 +187,7 @@ public class RelayCell extends Cell
 	{
 		byte[] data = new byte[this.m_payload.length];
 		engine.processBlock(this.m_payload, 0, data, 0, 509);
-		this.m_payload = helper.copybytes(data, 0, 509);
+		this.m_payload = ByteArrayUtil.copy(data, 0, 509);
 		this.m_relayCommand = this.m_payload[0];
 		this.m_streamID = ( (this.m_payload[3] & 0xFF) << 8) | (this.m_payload[4] & 0xFF);
 	}
@@ -197,18 +197,18 @@ public class RelayCell extends Cell
 		byte[] b = new byte[]
 			{
 			relaycommand, 0x00, 0x00, }; //relaycommand + 2bytes Recognized
-		b = helper.conc(b, helper.inttobyte(streamid, 2), new byte[4]); //streamid + 4bytes digest
+		b = ByteArrayUtil.conc(b, ByteArrayUtil.inttobyte(streamid, 2), new byte[4]); //streamid + 4bytes digest
 		if (data == null)
 		{
 			data = new byte[498];
 		}
 		if (data.length < 499)
 		{
-			b = helper.conc(b, helper.inttobyte(data.length, 2), data); //length + data
+			b = ByteArrayUtil.conc(b, ByteArrayUtil.inttobyte(data.length, 2), data); //length + data
 		}
 		else //copy only the first 498 bytes into the payload and forget the rest
 		{
-			b = helper.conc(b, helper.inttobyte(498, 2), helper.copybytes(data, 0, 498)); //length+ data
+			b = ByteArrayUtil.conc(b, ByteArrayUtil.inttobyte(498, 2), ByteArrayUtil.copy(data, 0, 498)); //length+ data
 		}
 		return b;
 	}
@@ -235,6 +235,6 @@ public class RelayCell extends Cell
 		int len = (m_payload[9] & 0x00FF);
 		len <<= 8;
 		len |= (m_payload[10] & 0x00FF);
-		return helper.copybytes(m_payload, 11, len);
+		return ByteArrayUtil.copy(m_payload, 11, len);
 	}
 }

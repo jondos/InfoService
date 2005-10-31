@@ -41,7 +41,7 @@ import anon.crypto.MyRandom;
 import anon.tor.tinytls.TLSException;
 import anon.tor.tinytls.TLSRecord;
 import anon.tor.tinytls.keyexchange.DHE_RSA_Key_Exchange;
-import anon.tor.util.helper;
+import anon.util.ByteArrayUtil;
 
 /**
  * @author stefan
@@ -72,7 +72,7 @@ public class DHE_RSA_WITH_3DES_CBC_SHA extends CipherSuite
 		HMac hmac = new HMac(new SHA1Digest());
 		hmac.reset();
 		hmac.init(new KeyParameter(m_clientmacsecret));
-		hmac.update(helper.inttobyte(m_writesequenznumber, 8), 0, 8);
+		hmac.update(ByteArrayUtil.inttobyte(m_writesequenznumber, 8), 0, 8);
 		m_writesequenznumber++;
 		hmac.update(msg.m_Header, 0, msg.m_Header.length);
 		hmac.update(msg.m_Data, 0, msg.m_dataLen);
@@ -119,7 +119,7 @@ public class DHE_RSA_WITH_3DES_CBC_SHA extends CipherSuite
 
 		hmac.reset();
 		hmac.init(new KeyParameter(m_servermacsecret));
-		hmac.update(helper.inttobyte(m_readsequenznumber, 8), 0, 8);
+		hmac.update(ByteArrayUtil.inttobyte(m_readsequenznumber, 8), 0, 8);
 		m_readsequenznumber++;
 		hmac.update(msg.m_Header, 0, msg.m_Header.length);
 		hmac.update(msg.m_Data, 0, len);
@@ -137,14 +137,14 @@ public class DHE_RSA_WITH_3DES_CBC_SHA extends CipherSuite
 
 	protected void calculateKeys(byte[] keys, boolean forclient)
 	{
-		this.m_clientwritekey = helper.copybytes(keys, 40, 24);
-		this.m_serverwritekey = helper.copybytes(keys, 64, 24);
-		this.m_clientwriteIV = helper.copybytes(keys, 88, 8);
-		this.m_serverwriteIV = helper.copybytes(keys, 96, 8);
+		this.m_clientwritekey = ByteArrayUtil.copy(keys, 40, 24);
+		this.m_serverwritekey = ByteArrayUtil.copy(keys, 64, 24);
+		this.m_clientwriteIV = ByteArrayUtil.copy(keys, 88, 8);
+		this.m_serverwriteIV = ByteArrayUtil.copy(keys, 96, 8);
 		if (forclient)
 		{
-			this.m_clientmacsecret = helper.copybytes(keys, 0, 20);
-			this.m_servermacsecret = helper.copybytes(keys, 20, 20);
+			this.m_clientmacsecret = ByteArrayUtil.copy(keys, 0, 20);
+			this.m_servermacsecret = ByteArrayUtil.copy(keys, 20, 20);
 			this.m_encryptcipher = new CBCBlockCipher(new DESedeEngine());
 			this.m_encryptcipher.init(true,
 									  new ParametersWithIV(new KeyParameter(this.m_clientwritekey), this.m_clientwriteIV));
@@ -154,8 +154,8 @@ public class DHE_RSA_WITH_3DES_CBC_SHA extends CipherSuite
 		}
 		else
 		{
-			this.m_servermacsecret = helper.copybytes(keys, 0, 20);
-			this.m_clientmacsecret = helper.copybytes(keys, 20, 20);
+			this.m_servermacsecret = ByteArrayUtil.copy(keys, 0, 20);
+			this.m_clientmacsecret = ByteArrayUtil.copy(keys, 20, 20);
 			this.m_encryptcipher = new CBCBlockCipher(new DESedeEngine());
 			this.m_encryptcipher.init(true,
 									  new ParametersWithIV(new KeyParameter(this.m_serverwritekey), this.m_serverwriteIV));

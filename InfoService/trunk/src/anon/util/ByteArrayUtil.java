@@ -29,7 +29,7 @@
  * Created on Mar 25, 2004
  *
  */
-package anon.tor.util;
+package anon.util;
 
 import java.util.StringTokenizer;
 
@@ -38,7 +38,7 @@ import java.util.StringTokenizer;
  *
  *some usefull utilities
  */
-public class helper
+public class ByteArrayUtil
 {
 
 	/**
@@ -132,7 +132,7 @@ public class helper
 	{
 		if (b1 == null || b1.length == 0)
 		{
-			return copybytes(b2, 0, b2_len);
+			return copy(b2, 0, b2_len);
 		}
 		byte[] b = new byte[b1.length + b2_len];
 		System.arraycopy(b1, 0, b, 0, b1.length);
@@ -157,13 +157,13 @@ public class helper
 	}
 
 	/**
-	 * copy some bytes from a array of bytes
+	 * copy some bytes from an array of bytes
 	 * @param bytes array of bytes
 	 * @param index startposition
 	 * @param length length
 	 * @return copied bytes
 	 */
-	public static byte[] copybytes(byte[] bytes, int index, int length)
+	public static byte[] copy(byte[] bytes, int index, int length)
 	{
 		byte[] b = new byte[length];
 		System.arraycopy(bytes, index, b, 0, length);
@@ -171,38 +171,74 @@ public class helper
 	}
 
 	/**
-	 * checks if the given address is a valid IP address
-	 * @param addr
-	 * address
-	 * @return
+	 * Tests if two byte arrays are equal.
+	 * @param arrayOne a byte array
+	 * @param arrayTwo another byte array
+	 * @return true if the two byte arrays are equal or both arrays are null; false otherwise
 	 */
-	public static boolean isIPAddress(String addr)
+	public static boolean equal(byte[] arrayOne, byte[] arrayTwo)
 	{
-		StringTokenizer st = new StringTokenizer(addr, ".");
-		int i = 0;
-		int c;
-		while (st.hasMoreTokens())
+		if (arrayOne == null && arrayTwo == null)
 		{
-			String s = st.nextToken();
-			try
-			{
-				c = Integer.parseInt(s);
-			}
-			catch (Exception e)
-			{
-				return false;
-			}
-			if (c < 0 || c > 255)
-			{
-				return false;
-			}
-			i++;
-			if (i > 4)
+			return true;
+		}
+
+		if (arrayOne == null || arrayTwo == null)
+		{
+			return false;
+		}
+
+		if (arrayOne.length != arrayTwo.length)
+		{
+			return false;
+		}
+
+		for (int i = 0; i < arrayOne.length; i++)
+		{
+			if (arrayOne[i] != arrayTwo[i])
 			{
 				return false;
 			}
 		}
+
 		return true;
 	}
 
+	/**
+	 * Tests if a_length positions of two arrays are equal.
+	 * @param a_arrayA byte[]
+	 * @param a_APos int
+	 * @param a_arrayB byte[]
+	 * @param a_BPos int
+	 * @param a_length int
+	 * @return boolean
+	 */
+	public static final boolean equal(byte[] a_arrayA, int a_Aoff,
+									  byte[] a_arrayB, int a_Boff,
+									  int a_length)
+	{
+		if (a_length <= 0)
+		{
+			return true;
+		}
+		if (a_arrayA == null || a_arrayB == null || a_Aoff < 0 || a_Boff < 0)
+		{
+			return false;
+		}
+		if (a_Aoff + a_length > a_arrayA.length ||
+			a_Boff + a_length > a_arrayB.length)
+		{
+			return false;
+		}
+
+		for (int i = 0; i < a_length; i++)
+		{
+			if (a_arrayA[a_Aoff + i] != a_arrayB[a_Boff + i])
+			{
+				return false;
+			}
+		}
+
+		return true;
+	}
 }

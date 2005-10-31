@@ -73,7 +73,7 @@ import anon.tor.tinytls.ciphersuites.DHE_RSA_WITH_3DES_CBC_SHA;
 import anon.tor.tinytls.ciphersuites.DHE_RSA_WITH_AES_128_CBC_SHA;
 import anon.tor.tinytls.ciphersuites.DHE_RSA_WITH_DES_CBC_SHA;
 import anon.tor.tinytls.util.hash;
-import anon.tor.util.helper;
+import anon.util.ByteArrayUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -321,19 +321,19 @@ public class TinyTLS extends Socket
 			{
 				throw new TLSException("Server replies with wrong protocoll");
 			}
-			m_serverrandom = helper.copybytes(msg.m_Data, aktIndex + 2, 32);
+			m_serverrandom = ByteArrayUtil.copy(msg.m_Data, aktIndex + 2, 32);
 			byte[] sessionid = new byte[0];
 			int sessionidlength = msg.m_Data[aktIndex + 34];
 			if (sessionidlength > 0)
 			{
-				sessionid = helper.copybytes(msg.m_Data, aktIndex + 35, sessionidlength);
+				sessionid = ByteArrayUtil.copy(msg.m_Data, aktIndex + 35, sessionidlength);
 			}
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC,
 						  "[SERVER_HELLO] Laenge der SessionID : " + sessionidlength);
-			byte[] ciphersuite = helper.copybytes(msg.m_Data, aktIndex + 35 + sessionidlength, 2);
+			byte[] ciphersuite = ByteArrayUtil.copy(msg.m_Data, aktIndex + 35 + sessionidlength, 2);
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC,
 						  "[SERVER_HELLO] Ciphersuite : " + ciphersuite[0] + " " + ciphersuite[1]);
-			byte[] compression = helper.copybytes(msg.m_Data, aktIndex + 37 + sessionidlength, 1);
+			byte[] compression = ByteArrayUtil.copy(msg.m_Data, aktIndex + 37 + sessionidlength, 1);
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[SERVER_HELLO] Kompression : " + compression[0]);
 			CipherSuite cs = null;
 			for (int i = 0; i < m_supportedciphersuites.size(); i++)
@@ -362,13 +362,13 @@ public class TinyTLS extends Socket
 		private void gotCertificate(byte[] bytes, int offset, int len) throws IOException
 		{
 			Vector certificates = new Vector();
-			byte[] b = helper.copybytes(bytes, offset, 3);
+			byte[] b = ByteArrayUtil.copy(bytes, offset, 3);
 			int certificateslength = ( (b[0] & 0xFF) << 16) | ( (b[1] & 0xFF) << 8) | (b[2] & 0xFF);
 			int pos = offset + 3;
-			b = helper.copybytes(bytes, pos, 3);
+			b = ByteArrayUtil.copy(bytes, pos, 3);
 			pos += 3;
 			int certificatelength = ( (b[0] & 0xFF) << 16) | ( (b[1] & 0xFF) << 8) | (b[2] & 0xFF);
-			b = helper.copybytes(bytes, pos, certificatelength);
+			b = ByteArrayUtil.copy(bytes, pos, certificatelength);
 			pos += certificatelength;
 			JAPCertificate japcert = JAPCertificate.getInstance(b);
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC,
@@ -380,10 +380,10 @@ public class TinyTLS extends Socket
 			//certificates.addElement(japcert);
 			while (pos - offset < certificateslength)
 			{
-				b = helper.copybytes(bytes, pos, 3);
+				b = ByteArrayUtil.copy(bytes, pos, 3);
 				pos += 3;
 				certificatelength = ( (b[0] & 0xFF) << 16) | ( (b[1] & 0xFF) << 8) | (b[2] & 0xFF);
-				b = helper.copybytes(bytes, pos, certificatelength);
+				b = ByteArrayUtil.copy(bytes, pos, certificatelength);
 				pos += certificatelength;
 				japcert = JAPCertificate.getInstance(b);
 				LogHolder.log(LogLevel.DEBUG, LogType.MISC,
@@ -436,7 +436,7 @@ public class TinyTLS extends Socket
 			int length = bytes[offset];
 			if (length > 0) //at least one client certificate type
 			{
-				m_clientcertificatetypes = helper.copybytes(bytes, offset + 1, length);
+				m_clientcertificatetypes = ByteArrayUtil.copy(bytes, offset + 1, length);
 				//the rest of this message contains distinguishedNames of certificate authorities
 				//see RFC2246 - 7.4.4 Certificate Request
 			}
@@ -533,7 +533,7 @@ public class TinyTLS extends Socket
 				{
 					int h = 3;
 				}
-				m_handshakemessages = helper.conc(m_handshakemessages, m_aktTLSRecord.m_Data,
+				m_handshakemessages = ByteArrayUtil.conc(m_handshakemessages, m_aktTLSRecord.m_Data,
 												  m_aktTLSRecord.m_dataLen);
 				switch (type)
 				{
@@ -726,11 +726,11 @@ public class TinyTLS extends Socket
 		 */
 		public void sendHandshake(int type, byte[] message) throws IOException
 		{
-			byte[] senddata = helper.conc(new byte[]
+			byte[] senddata = ByteArrayUtil.conc(new byte[]
 										  { (byte) type}
-										  , helper.inttobyte(message.length, 3), message);
+										  , ByteArrayUtil.inttobyte(message.length, 3), message);
 			send(22, senddata, 0, senddata.length);
-			m_handshakemessages = helper.conc(m_handshakemessages, senddata);
+			m_handshakemessages = ByteArrayUtil.conc(m_handshakemessages, senddata);
 		}
 
 		/**
@@ -755,21 +755,21 @@ public class TinyTLS extends Socket
 				counter++;
 
 			}
-			byte[] ciphersuites = helper.conc(helper.inttobyte(m_supportedciphersuites.size() * 2, 2),
+			byte[] ciphersuites = ByteArrayUtil.conc(ByteArrayUtil.inttobyte(m_supportedciphersuites.size() * 2, 2),
 											  ciphers);
 			byte[] compression = new byte[]
 				{
 				0x01, 0x00};
 
-			gmt_unix_time = helper.inttobyte( (System.currentTimeMillis() / (long) 1000), 4);
+			gmt_unix_time = ByteArrayUtil.inttobyte( (System.currentTimeMillis() / (long) 1000), 4);
 			Random rand = new Random(System.currentTimeMillis());
 			rand.nextBytes(random);
 
-			byte[] message = helper.conc(PROTOCOLVERSION, gmt_unix_time, random, sessionid, ciphersuites,
+			byte[] message = ByteArrayUtil.conc(PROTOCOLVERSION, gmt_unix_time, random, sessionid, ciphersuites,
 										 compression);
 
 			sendHandshake(1, message);
-			m_clientrandom = helper.conc(gmt_unix_time, random);
+			m_clientrandom = ByteArrayUtil.conc(gmt_unix_time, random);
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[CLIENT_HELLO]");
 		}
 
@@ -794,9 +794,9 @@ public class TinyTLS extends Socket
 								for (int i2 = 0; i2 < m_clientcertificates.length; i2++)
 								{
 									byte[] cert = m_clientcertificates[i2].toByteArray(false);
-									b = helper.conc(b, helper.inttobyte(cert.length, 3), cert);
+									b = ByteArrayUtil.conc(b, ByteArrayUtil.inttobyte(cert.length, 3), cert);
 								}
-								b = helper.conc(helper.inttobyte(b.length, 3), b);
+								b = ByteArrayUtil.conc(ByteArrayUtil.inttobyte(b.length, 3), b);
 								this.sendHandshake(11, b);
 								m_certificateverify = true;
 								return;
@@ -807,9 +807,9 @@ public class TinyTLS extends Socket
 								for (int i2 = 0; i2 < m_clientcertificates.length; i2++)
 								{
 									byte[] cert = m_clientcertificates[i2].toByteArray(false);
-									b = helper.conc(b, helper.inttobyte(cert.length, 3), cert);
+									b = ByteArrayUtil.conc(b, ByteArrayUtil.inttobyte(cert.length, 3), cert);
 								}
-								b = helper.conc(helper.inttobyte(b.length, 3), b);
+								b = ByteArrayUtil.conc(ByteArrayUtil.inttobyte(b.length, 3), b);
 								this.sendHandshake(11, b);
 								m_certificateverify = true;
 								return;
@@ -841,7 +841,7 @@ public class TinyTLS extends Socket
 		public void sendClientKeyExchange() throws IOException
 		{
 			byte[] message = m_selectedciphersuite.calculateClientKeyExchange();
-			sendHandshake(16, helper.conc(helper.inttobyte(message.length, 2), message));
+			sendHandshake(16, ByteArrayUtil.conc(ByteArrayUtil.inttobyte(message.length, 2), message));
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[CLIENT_KEY_EXCHANGE]");
 		}
 
@@ -855,7 +855,7 @@ public class TinyTLS extends Socket
 			{
 				if (m_clientprivatekey instanceof MyRSAPrivateKey)
 				{
-					byte[] signature = helper.conc(
+					byte[] signature = ByteArrayUtil.conc(
 						hash.md5(m_handshakemessages),
 						hash.sha(m_handshakemessages));
 					MyRSASignature sig = new MyRSASignature();
@@ -882,7 +882,7 @@ public class TinyTLS extends Socket
 						throw new TLSException("cannot encrypt signature", 2, 80);
 					}
 
-					signature2 = helper.conc(helper.inttobyte(signature2.length, 2), signature2);
+					signature2 = ByteArrayUtil.conc(ByteArrayUtil.inttobyte(signature2.length, 2), signature2);
 					sendHandshake(15, signature2);
 					LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[CLIENT_CERTIFICATE_VERIFY_RSA]");
 				}
@@ -898,7 +898,7 @@ public class TinyTLS extends Socket
 					}
 					byte[] signature2 = sig.sign(m_handshakemessages);
 
-					signature2 = helper.conc(helper.inttobyte(signature2.length, 2), signature2);
+					signature2 = ByteArrayUtil.conc(ByteArrayUtil.inttobyte(signature2.length, 2), signature2);
 					sendHandshake(15, signature2);
 					LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[CLIENT_CERTIFICATE_VERIFY_DSA]");
 				}

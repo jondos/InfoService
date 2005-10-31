@@ -33,7 +33,7 @@ package anon.tor.tinytls.util;
 
 import org.bouncycastle.crypto.digests.MD5Digest;
 import org.bouncycastle.crypto.digests.SHA1Digest;
-import anon.tor.util.helper;
+import anon.util.ByteArrayUtil;
 
 /**
  * @author stefan
@@ -73,11 +73,11 @@ public class PRF
 		{
 			splitsize++;
 		}
-		byte[] s1 = helper.copybytes(this.m_secret, 0, splitsize);
-		byte[] s2 = helper.copybytes(this.m_secret, this.m_secret.length - splitsize, splitsize);
-		P_Hash phash = new P_Hash(s1, helper.conc(this.m_label, this.m_seed), new MD5Digest());
+		byte[] s1 = ByteArrayUtil.copybytes(this.m_secret, 0, splitsize);
+		byte[] s2 = ByteArrayUtil.copybytes(this.m_secret, this.m_secret.length - splitsize, splitsize);
+		P_Hash phash = new P_Hash(s1, ByteArrayUtil.conc(this.m_label, this.m_seed), new MD5Digest());
 		a = phash.getHash(length);
-		phash = new P_Hash(s2, helper.conc(this.m_label, this.m_seed), new SHA1Digest());
+		phash = new P_Hash(s2, ByteArrayUtil.conc(this.m_label, this.m_seed), new SHA1Digest());
 		b = phash.getHash(length);
 		for (int i = 0; i < length; i++)
 		{
