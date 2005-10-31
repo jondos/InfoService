@@ -34,7 +34,7 @@ package anon.tor.tinytls.util;
 import org.bouncycastle.crypto.Digest;
 import org.bouncycastle.crypto.macs.HMac;
 import org.bouncycastle.crypto.params.KeyParameter;
-import anon.tor.util.helper;
+import anon.util.ByteArrayUtil;
 
 /**
  * @author stefan
@@ -84,7 +84,7 @@ public class P_Hash
 			//HMAC_HASH(secret,a+seed)
 			hm.reset();
 			hm.init(new KeyParameter(this.m_secret));
-			hm.update(helper.conc(a, this.m_seed), 0, a.length + this.m_seed.length);
+			hm.update(ByteArrayUtil.conc(a, this.m_seed), 0, a.length + this.m_seed.length);
 			c = new byte[hm.getMacSize()];
 			hm.doFinal(c, 0);
 			if (b == null)
@@ -93,7 +93,7 @@ public class P_Hash
 			}
 			else
 			{
-				b = helper.conc(b, c);
+				b = ByteArrayUtil.conc(b, c);
 			}
 
 			//compute next a
@@ -105,7 +105,7 @@ public class P_Hash
 		}
 		while (b.length < length);
 
-		return helper.copybytes(b, 0, length);
+		return ByteArrayUtil.copybytes(b, 0, length);
 	}
 
 }

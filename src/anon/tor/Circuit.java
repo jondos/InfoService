@@ -45,7 +45,7 @@ import anon.tor.cells.DestroyCell;
 import anon.tor.cells.PaddingCell;
 import anon.tor.cells.RelayCell;
 import anon.tor.ordescription.ORDescription;
-import anon.tor.util.helper;
+import anon.util.ByteArrayUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -182,7 +182,7 @@ public class Circuit
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC,
 						  "[TOR] Circuit '" + this.m_circID + "' ready!!! - Length of this Circuit : " +
 						  this.m_circuitLength + " Onionrouters");
-		
+
 			Date createTime = new Date();
 			//calculate when the circuit will be destroyed
 			m_destroyTime=new Date(createTime.getTime()+m_minCircuitLifetime);
@@ -332,7 +332,7 @@ public class Circuit
 					if (!m_FirstOR.checkExtendedCell( (RelayCell) cell))
 					{
 						//((RelayCell)cell).getRelayCommand()==9 -> truncated
-						//maybe we can handle it better later						
+						//maybe we can handle it better later
 						this.send(new DestroyCell(this.m_circID));
 						m_State = STATE_CLOSED;
 						destroyedByPeer();
@@ -380,7 +380,7 @@ public class Circuit
 						if (c.getRelayCommand() == RelayCell.RELAY_RESOLVED)
 						{
 							byte[] tmp = c.getPayload();
-							m_resolvedData = helper.copybytes(tmp, 11,
+							m_resolvedData = ByteArrayUtil.copy(tmp, 11,
 								( (tmp[9] & 0xFF) << 8) + (tmp[10] & 0xFF));
 							synchronized (m_oNotifySync)
 							{

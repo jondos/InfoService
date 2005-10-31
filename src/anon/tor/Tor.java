@@ -51,10 +51,11 @@ import anon.tor.ordescription.ORDescription;
 import anon.tor.ordescription.ORList;
 import anon.tor.ordescription.PlainORListFetcher;
 import anon.tor.util.DNSCacheEntry;
-import anon.tor.util.helper;
+import anon.util.ByteArrayUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.util.Util;
 
 /**
  * @author stefan
@@ -193,10 +194,10 @@ public class Tor implements Runnable, AnonService
 
 		Circuit c = null;
 		//First check if we can resolve the DNS entry...
-		if (!helper.isIPAddress(addr))
+		if (!Util.isIPAddress(addr))
 		{
 			addr = resolveDNS(addr);
-			if (!helper.isIPAddress(addr))
+			if (!Util.isIPAddress(addr))
 			{
 				return null;
 			}

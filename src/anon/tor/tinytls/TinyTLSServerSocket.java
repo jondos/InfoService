@@ -57,7 +57,7 @@ import anon.tor.tinytls.ciphersuites.DHE_RSA_WITH_AES_128_CBC_SHA;
 import anon.tor.tinytls.ciphersuites.DHE_RSA_WITH_DES_CBC_SHA;
 import anon.tor.tinytls.keyexchange.DHE_DSS_Key_Exchange;
 import anon.tor.tinytls.keyexchange.DHE_RSA_Key_Exchange;
-import anon.tor.util.helper;
+import anon.util.ByteArrayUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -408,7 +408,7 @@ public class TinyTLSServerSocket extends Socket
 								//compression method : NO_COMPRESSION found
 								if (m_aktTLSRecord.m_Data[aktpos] == 0)
 								{
-									m_handshakemessages = helper.conc(m_handshakemessages,
+									m_handshakemessages = ByteArrayUtil.conc(m_handshakemessages,
 										m_aktTLSRecord.m_Data, m_aktTLSRecord.m_dataLen);
 									LogHolder.log(LogLevel.DEBUG, LogType.TOR, "[CLIENT HELLO RECIEVED]");
 									return;
@@ -443,13 +443,13 @@ public class TinyTLSServerSocket extends Socket
 				if (m_aktTLSRecord.m_Data[0] == 16)
 				{
 					int length = ( (m_aktTLSRecord.m_Data[4] & 0xFF) << 8) | (m_aktTLSRecord.m_Data[5]);
-					byte[] publickey = helper.copybytes(m_aktTLSRecord.m_Data, 6,
+					byte[] publickey = ByteArrayUtil.copy(m_aktTLSRecord.m_Data, 6,
 						m_aktTLSRecord.m_dataLen - 6);
-					publickey = helper.conc(new byte[]
+					publickey = ByteArrayUtil.conc(new byte[]
 											{0}, publickey);
 					BigInteger dh_y = new BigInteger(publickey);
 					m_selectedciphersuite.processClientKeyExchange(dh_y);
-					m_handshakemessages = helper.conc(m_handshakemessages, m_aktTLSRecord.m_Data,
+					m_handshakemessages = ByteArrayUtil.conc(m_handshakemessages, m_aktTLSRecord.m_Data,
 						m_aktTLSRecord.m_dataLen);
 					LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[CLIENT_KEY_EXCHANGE]");
 					return;
@@ -486,10 +486,10 @@ public class TinyTLSServerSocket extends Socket
 			{
 				if (m_aktTLSRecord.m_Data[0] == 20)
 				{
-					byte[] verify_data = helper.copybytes(m_aktTLSRecord.m_Data, 4, 12);
+					byte[] verify_data = ByteArrayUtil.copy(m_aktTLSRecord.m_Data, 4, 12);
 					m_selectedciphersuite.getKeyExchangeAlgorithm().processClientFinished(verify_data,
 						m_handshakemessages);
-					m_handshakemessages = helper.conc(m_handshakemessages, m_aktTLSRecord.m_Data,
+					m_handshakemessages = ByteArrayUtil.conc(m_handshakemessages, m_aktTLSRecord.m_Data,
 						m_aktTLSRecord.m_dataLen);
 					LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[CLIENT_FINISHED]");
 					return;
@@ -577,11 +577,11 @@ public class TinyTLSServerSocket extends Socket
 		 */
 		public void sendHandshake(int type, byte[] message) throws IOException
 		{
-			byte[] senddata = helper.conc(new byte[]
+			byte[] senddata = ByteArrayUtil.conc(new byte[]
 										  { (byte) type},
-										  helper.inttobyte(message.length, 3), message);
+										  ByteArrayUtil.inttobyte(message.length, 3), message);
 			send(22, senddata, 0, senddata.length);
-			m_handshakemessages = helper.conc(m_handshakemessages, senddata);
+			m_handshakemessages = ByteArrayUtil.conc(m_handshakemessages, senddata);
 		}
 
 		/**
@@ -600,12 +600,12 @@ public class TinyTLSServerSocket extends Socket
 				{
 				0x00};
 
-			gmt_unix_time = helper.inttobyte( (System.currentTimeMillis() / (long) 1000), 4);
+			gmt_unix_time = ByteArrayUtil.inttobyte( (System.currentTimeMillis() / (long) 1000), 4);
 			Random rand = new Random(System.currentTimeMillis());
 			rand.nextBytes(random);
-			m_serverrandom = helper.conc(gmt_unix_time, random);
+			m_serverrandom = ByteArrayUtil.conc(gmt_unix_time, random);
 
-			byte[] message = helper.conc(PROTOCOLVERSION, m_serverrandom, sessionid, ciphersuite, compression);
+			byte[] message = ByteArrayUtil.conc(PROTOCOLVERSION, m_serverrandom, sessionid, ciphersuite, compression);
 
 			sendHandshake(2, message);
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[SERVER_HELLO]");
@@ -618,10 +618,10 @@ public class TinyTLSServerSocket extends Socket
 		public void sendServerCertificate() throws IOException
 		{
 			byte[] cert = m_servercertificate.toByteArray();
-			byte[] length = helper.inttobyte(cert.length, 3);
-			byte[] message = helper.conc(length, cert);
-			length = helper.inttobyte(message.length, 3);
-			message = helper.conc(length, message);
+			byte[] length = ByteArrayUtil.inttobyte(cert.length, 3);
+			byte[] message = ByteArrayUtil.conc(length, cert);
+			length = ByteArrayUtil.inttobyte(message.length, 3);
+			message = ByteArrayUtil.conc(length, message);
 			sendHandshake(11, message);
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[SERVER_CERTIFICATE]");
 		}

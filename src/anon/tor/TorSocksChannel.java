@@ -32,7 +32,7 @@ package anon.tor;
 
 import java.io.IOException;
 
-import anon.tor.util.helper;
+import anon.util.ByteArrayUtil;
 
 /**
  * @author stefan
@@ -109,7 +109,7 @@ public class TorSocksChannel extends TorChannel
 	{
 		if (arg0 != null && len > 0)
 		{
-			m_data = helper.conc(m_data, arg0, len);
+			m_data = ByteArrayUtil.conc(m_data, arg0, len);
 		}
 		if (m_data.length > 1)
 		{
@@ -120,7 +120,7 @@ public class TorSocksChannel extends TorChannel
 				close();
 				throw new IOException("Wrong Sock Protocol number");
 			}
-			m_data = helper.copybytes(m_data, 1, m_data.length - 1);
+			m_data = ByteArrayUtil.copy(m_data, 1, m_data.length - 1);
 			if (m_version == SOCKS_5)
 			{
 				m_state = SOCKS5_WAIT_FOR_METHODS;
@@ -137,7 +137,7 @@ public class TorSocksChannel extends TorChannel
 	{
 		if (arg0 != null && len > 0)
 		{
-			m_data = helper.conc(m_data, arg0, len);
+			m_data = ByteArrayUtil.conc(m_data, arg0, len);
 		}
 		if (m_data.length > 1)
 		{
@@ -173,7 +173,7 @@ public class TorSocksChannel extends TorChannel
 					//todo close this channel
 					return;
 				}
-				m_data = helper.copybytes(m_data, length, m_data.length - length);
+				m_data = ByteArrayUtil.copy(m_data, length, m_data.length - length);
 				if (m_data.length > 0)
 				{
 					send(null, 0);
@@ -187,7 +187,7 @@ public class TorSocksChannel extends TorChannel
 	{
 		if (arg0 != null && len > 0)
 		{
-			m_data = helper.conc(m_data, arg0, len);
+			m_data = ByteArrayUtil.conc(m_data, arg0, len);
 		}
 		int requestType;
 		if (m_data.length > 0)
@@ -283,7 +283,7 @@ public class TorSocksChannel extends TorChannel
 				{
 				0x00, 90, 0x00, 0, 0, 0, 0, 0};
 			super.recv(socksAnswer, 0, socksAnswer.length);
-			m_data = helper.copybytes(m_data, consumedBytes, m_data.length - consumedBytes);
+			m_data = ByteArrayUtil.copy(m_data, consumedBytes, m_data.length - consumedBytes);
 			m_state = DATA_MODE;
 			if (m_data.length > 0)
 			{
@@ -297,7 +297,7 @@ public class TorSocksChannel extends TorChannel
 	{
 		if (arg0 != null && len > 0)
 		{
-			m_data = helper.conc(m_data, arg0, len);
+			m_data = ByteArrayUtil.conc(m_data, arg0, len);
 		}
 		if (m_data.length > 6)
 		{
@@ -311,9 +311,9 @@ public class TorSocksChannel extends TorChannel
 			{
 				//todo: close etc.
 				//command not supported
-				socksAnswer = helper.conc(new byte[]
-										  {0x05, 0x07, 0x00}
-										  , helper.copybytes(this.m_data, 3, this.m_data.length - 3));
+				socksAnswer = ByteArrayUtil.conc(new byte[]
+												 {0x05, 0x07, 0x00}
+												 , ByteArrayUtil.copy(this.m_data, 3, this.m_data.length - 3));
 				m_data = null;
 				super.recv(socksAnswer, 0, socksAnswer.length);
 				return;
@@ -347,9 +347,9 @@ public class TorSocksChannel extends TorChannel
 				default:
 				{
 					//addresstype not supportet
-					socksAnswer = helper.conc(new byte[]
-											  {0x05, 0x08, 0x00}
-											  , helper.copybytes(m_data, 3, m_data.length - 3));
+					socksAnswer = ByteArrayUtil.conc(new byte[]
+						{0x05, 0x08, 0x00}
+						, ByteArrayUtil.copy(m_data, 3, m_data.length - 3));
 					super.recv(socksAnswer, 0, socksAnswer.length);
 					m_data = null;
 					//todo close
@@ -362,20 +362,20 @@ public class TorSocksChannel extends TorChannel
 				circ = m_Tor.getCircuitForDestination(addr, port);
 				if (circ == null) //connection error
 				{
-					socksAnswer = helper.conc(new byte[]
-											  {0x05, 0x01, 0x00}
-											  , helper.copybytes(m_data, 3, consumedBytes - 3));
+					socksAnswer = ByteArrayUtil.conc(new byte[]
+						{0x05, 0x01, 0x00}
+						, ByteArrayUtil.copy(m_data, 3, consumedBytes - 3));
 					super.recv(socksAnswer, 0, socksAnswer.length);
 					this.closedByPeer();
 					return;
 				}
 				//	connect
 				circ.connectChannel(this, addr, port);
-				socksAnswer = helper.conc(new byte[]
-										  {0x05, 0x00, 0x00}
-										  , helper.copybytes(m_data, 3, consumedBytes - 3));
+				socksAnswer = ByteArrayUtil.conc(new byte[]
+												 {0x05, 0x00, 0x00}
+												 , ByteArrayUtil.copy(m_data, 3, consumedBytes - 3));
 				super.recv(socksAnswer, 0, socksAnswer.length);
-				m_data = helper.copybytes(m_data, consumedBytes, m_data.length - consumedBytes);
+				m_data = ByteArrayUtil.copy(m_data, consumedBytes, m_data.length - consumedBytes);
 				m_state = DATA_MODE;
 				if (m_data.length > 0)
 				{

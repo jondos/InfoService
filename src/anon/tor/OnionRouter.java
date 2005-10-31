@@ -57,7 +57,7 @@ import anon.tor.cells.RelayCell;
 import anon.tor.crypto.CTRBlockCipher;
 import anon.tor.ordescription.ORDescription;
 import anon.tor.tinytls.util.hash;
-import anon.tor.util.helper;
+import anon.util.ByteArrayUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -215,8 +215,8 @@ public class OnionRouter
 		{
 		RelayCell cell;
 
-		byte[] payload = helper.conc(InetAddress.getByName(address).getAddress(),
-									 helper.inttobyte(port, 2), createExtendOnionSkin());
+		byte[] payload = ByteArrayUtil.conc(InetAddress.getByName(address).getAddress(),
+									 ByteArrayUtil.inttobyte(port, 2), createExtendOnionSkin());
 
 		MyRSAPublicKey key = m_description.getSigningKey();
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -226,7 +226,7 @@ public class OnionRouter
 		byte[] b = out.toByteArray();
 		byte[] hash1 = hash.sha(b);
 
-		payload = helper.conc(payload, hash1);
+		payload = ByteArrayUtil.conc(payload, hash1);
 
 		cell = new RelayCell(m_circID, RelayCell.RELAY_EXTEND, 0, payload);
 		return cell;
