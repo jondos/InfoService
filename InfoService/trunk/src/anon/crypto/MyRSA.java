@@ -24,8 +24,8 @@ public class MyRSA
 		}
 	}
 
-	/** encrypts one plaintext block using OAEP padding*/
-	public byte[] encryptOAEP(byte[] plain, int offset, int len) throws Exception
+	/** encrypts/decrypts one  block using OAEP padding*/
+	public byte[] processBlockOAEP(byte[] plain, int offset, int len) throws Exception
 	{
 		synchronized (m_RSAEngine)
 		{

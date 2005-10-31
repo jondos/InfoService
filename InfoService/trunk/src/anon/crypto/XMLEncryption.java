@@ -322,7 +322,7 @@ final public class XMLEncryption
 		try
 		{
 			rsa.init(publicKey);
-			encryptedKey = rsa.encryptOAEP(keyAndIv, 0, keyAndIv.length);
+			encryptedKey = rsa.processBlockOAEP(keyAndIv, 0, keyAndIv.length);
 		}
 		catch (Exception ex)
 		{
