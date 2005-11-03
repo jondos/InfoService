@@ -107,3 +107,47 @@ keyfilepassword
 #logfilethreshold 7
 #logstderrthreshold 7
 
+#############################################################################
+## Information about possible payments
+##
+currency1=EUR
+currency2=USD
+
+option1name=MoneyTransfer
+option1type=active
+option1heading1=Zahlung per Ueberweisung
+option1headinglang1=de
+option1heading2=Money transfer
+option1headinglang2=en
+option1detailedinfo1=Bitte bezahlen Sie den Betrag per Ueberweisung
+option1detailedinfolang1=de
+option1detailedinfo2=Please pay the chosen amount by money transfer
+option1detailedinfolang2=en
+option1extrainfo1=Inhaber: JAP-Team, Kontonummer 12345, BLZ 3456778, Sparkasse Hintamberg
+option1extrainfolang1=de
+option1extrainfotype1=text
+option1extrainfo2=Holder: JAP-Team, Account 12345, Bank number 3456778, Sparkasse Hintamberg
+option1extrainfolang2=en
+option1extrainfotype2=text
+option2name=CreditCard
+option2type=passive
+option2heading1=Zahlung per Kreditkarte
+option2headinglang1=de
+option2heading2=Credit card
+option2headinglang2=en
+option2detailedinfo1=Bitte geben Sie die benoetigten Daten ein
+option2detailedinfolang1=de
+option2detailedinfo2=Please enter the necessary data
+option2detailedinfolang2=en
+option2input1=Kreditkartengesellschaft
+option2inputlang1=de
+option2inputref1=company
+option2input2=Credit Card company
+option2inputlang2=en
+option2inputref2=company
+option2input3=Nummer
+option2inputlang3=de
+option2inputref3=number
+option2input3=Number
+option2inputlang3=en
+option2inputref3=number

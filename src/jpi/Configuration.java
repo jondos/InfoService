@@ -37,6 +37,9 @@ import anon.crypto.PKCS12;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import java.util.Vector;
+import anon.pay.xml.XMLPaymentOptions;
+import anon.pay.xml.XMLPaymentOption;
 
 /**
  * Loads and stores all configuration data, keys
@@ -215,6 +218,13 @@ public class Configuration
 		return m_strPayURL;
 	}
 
+	/** Holds the payment options*/
+	private static XMLPaymentOptions ms_paymentOptions = new XMLPaymentOptions();
+	public static XMLPaymentOptions getPaymentOptions()
+	{
+		return ms_paymentOptions;
+	}
+
 	/**
 	 * Load configuration from properties file,
 	 * initialize keys and certificates,
@@ -385,6 +395,108 @@ public class Configuration
 						  "' should be a NUMBER!");
 			return false;
 		}
+
+		//parse payment options
+		//parse currencies
+		int i = 1;
+		while (true)
+		{
+			String currency = props.getProperty("currency" + i++);
+			if (currency == null)
+			{
+				break;
+			}
+			ms_paymentOptions.addCurrency(currency);
+		}
+
+		//parse options
+		i = 1;
+		while (true)
+		{
+			String name = props.getProperty("option" + i + "name");
+			if (name == null)
+			{
+				break;
+			}
+			String type = props.getProperty("option" + i + "type");
+			if (type == null)
+			{
+				break;
+			}
+			XMLPaymentOption option = new XMLPaymentOption(name, type);
+
+			//Add headings
+			String heading;
+			String headingLang;
+			int j = 1;
+			while (true)
+			{
+				heading = props.getProperty("option" + i + "heading" + j);
+				headingLang = props.getProperty("option" + i + "headinglang" + j);
+				if (heading == null || headingLang == null)
+				{
+					break;
+				}
+				option.addHeading(heading, headingLang);
+				j++;
+			}
+
+			//Add detailed infos
+			String info;
+			String infoLang;
+			j = 1;
+			while (true)
+			{
+				info = props.getProperty("option" + i + "detailedinfo" + j);
+				infoLang = props.getProperty("option" + i + "detailedinfolang" + j);
+				if (info == null || infoLang == null)
+				{
+					break;
+				}
+				option.addDetailedInfo(info, infoLang);
+				j++;
+			}
+
+			//Add extra infos
+			String extra;
+			String extraLang;
+			String extraType;
+			j = 1;
+			while (true)
+			{
+				extra = props.getProperty("option" + i + "extrainfo" + j);
+				extraLang = props.getProperty("option" + i + "extrainfolang" + j);
+				extraType = props.getProperty("option" + i + "extrainfotype" + j);
+				if (extra == null || extraLang == null || extraType == null)
+				{
+					break;
+				}
+				option.addExtraInfo(extra, extraType, extraLang);
+				j++;
+			}
+
+			//Add input fields
+			String input;
+			String inputLang;
+			String inputRef;
+			j = 1;
+			while (true)
+			{
+				input = props.getProperty("option" + i + "input" + j);
+				inputLang = props.getProperty("option" + i + "inputlang" + j);
+				inputRef = props.getProperty("option" + i + "inputref" + j);
+				if (input == null || inputLang == null || inputRef == null)
+				{
+					break;
+				}
+				option.addInputField(inputRef, input, inputLang);
+				j++;
+			}
+
+			ms_paymentOptions.addOption(option);
+			i++;
+		}
+
 		return true;
 	}
 }
