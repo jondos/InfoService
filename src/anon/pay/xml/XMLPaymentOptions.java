@@ -35,7 +35,6 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import anon.util.IXMLEncodable;
-import anon.util.XMLUtil;
 
 /**
  * This class represents a XMLPaymentOptions structure.
@@ -67,7 +66,7 @@ public class XMLPaymentOptions implements IXMLEncodable
 		Element elemRoot = a_doc.createElement("PaymentOptions");
 		elemRoot.setAttribute("version", "1.0");
 
-		Element elem;
+		Element elem = null;
 
 		for (int i = 0; i < m_currencies.size(); i++)
 		{
@@ -96,13 +95,13 @@ public class XMLPaymentOptions implements IXMLEncodable
 		NodeList currencies = elemRoot.getElementsByTagName("Currency");
 		for (int i = 0; i < currencies.getLength(); i++)
 		{
-			m_currencies.add(currencies.item(i).getNodeValue());
+			m_currencies.addElement(currencies.item(i).getNodeValue());
 		}
 
 		NodeList options = elemRoot.getElementsByTagName("PaymentOption");
 		for (int i = 0; i < options.getLength(); i++)
 		{
-			m_paymentOptions.add( (Element) options.item(i));
+			m_paymentOptions.addElement( (Element) options.item(i));
 		}
 	}
 
@@ -113,11 +112,11 @@ public class XMLPaymentOptions implements IXMLEncodable
 
 	public void addOption(XMLPaymentOption a_option)
 	{
-		m_paymentOptions.add(a_option);
+		m_paymentOptions.addElement(a_option);
 	}
 
 	public void addCurrency(String a_currency)
 	{
-		m_currencies.add(a_currency);
+		m_currencies.addElement(a_currency);
 	}
 }
