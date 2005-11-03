@@ -223,7 +223,7 @@ public class XMLPaymentOption implements IXMLEncodable
 		{
 			String info = nodesDetailed.item(i).getFirstChild().getNodeValue();
 			String language = ( (Element) nodesDetailed.item(i)).getAttribute("lang");
-			m_detailedInfos.add(new String[]
+			m_detailedInfos.addElement(new String[]
 								{info, language});
 		}
 
@@ -233,7 +233,7 @@ public class XMLPaymentOption implements IXMLEncodable
 			String info = nodesExtra.item(i).getFirstChild().getNodeValue();
 			String language = ( (Element) nodesExtra.item(i)).getAttribute("lang");
 			String type = ( (Element) nodesExtra.item(i)).getAttribute("type");
-			m_extraInfos.add(new String[]
+			m_extraInfos.addElement(new String[]
 							 {info, type, language});
 		}
 
