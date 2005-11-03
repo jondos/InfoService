@@ -268,6 +268,22 @@ public class PICommandUser implements PICommand
 						reply = PIAnswer.getErrorAnswer(XMLErrorMessage.ERR_INTERNAL_SERVER_ERROR);
 					}
 				}
+
+				else if (request.method.equals("GET") && request.url.equals("/paymentoptions"))
+				{
+					try
+					{
+						reply = new PIAnswer(PIAnswer.TYPE_PAYMENT_OPTIONS, getPaymentOptions());
+						// go to state init again, user can authenticate again with different account
+						init();
+					}
+					catch (Exception ex)
+					{
+						LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, ex);
+						reply = PIAnswer.getErrorAnswer(XMLErrorMessage.ERR_INTERNAL_SERVER_ERROR);
+					}
+				}
+
 				break;
 		}
 		if (reply == null)
@@ -275,6 +291,17 @@ public class PICommandUser implements PICommand
 			reply = PIAnswer.getErrorAnswer(XMLErrorMessage.ERR_BAD_REQUEST);
 		}
 		return reply;
+	}
+
+	/**
+	 * Creates a XMLPaymentOptions structure from the config file
+	 * @return IXMLEncodable
+	 */
+	private IXMLEncodable getPaymentOptions()
+	{
+		XMLPaymentOptions paymentOptions = Configuration.getPaymentOptions();
+
+		return paymentOptions;
 	}
 
 	/**
