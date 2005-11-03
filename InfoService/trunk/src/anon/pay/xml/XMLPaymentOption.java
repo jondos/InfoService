@@ -214,7 +214,7 @@ public class XMLPaymentOption implements IXMLEncodable
 		{
 			String heading = nodesHeadings.item(i).getFirstChild().getNodeValue();
 			String language = ( (Element) nodesHeadings.item(i)).getAttribute("lang");
-			m_headings.add(new String[]
+			m_headings.addElement(new String[]
 						   {heading, language});
 		}
 
