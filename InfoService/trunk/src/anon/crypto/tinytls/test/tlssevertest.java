@@ -25,11 +25,19 @@ public class tlssevertest
 
 		TinyTLSServer tlsserver = new TinyTLSServer(3456);
 		tlsserver.setDSSParameters(cert, key);
-		Socket tls = tlsserver.accept();
-		tls.getOutputStream().write('H');
-		tls.getOutputStream().write('I');
-		tls.getOutputStream().write('!');
-		tls.close();
-		tlsserver.close();
+		while (true)
+		{
+			try
+			{
+				Socket tls = tlsserver.accept();
+				tls.getOutputStream().write('H');
+				tls.getOutputStream().write('I');
+				tls.getOutputStream().write('!');
+				tls.close();
+			}
+			catch (Exception e)
+			{
+			}
+		}
 	}
 }

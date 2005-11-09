@@ -245,7 +245,7 @@
   <property category="runtime.15" name="BuildTargetOnRun" value="com.borland.jbuilder.build.ProjectBuilder$ProjectBuildAction;make"/>
   <property category="runtime.15" name="ConfigurationName" value="TLSServerTest"/>
   <property category="runtime.15" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
-  <property category="runtime.15" name="application.class" value="anon.tor.tinytls.test.tlssevertest"/>
+  <property category="runtime.15" name="application.class" value="anon.crypto.tinytls.test.tlssevertest"/>
   <property category="runtime.15" name="custom.init_required" value="0"/>
   <property category="runtime.15" name="custom.required.1" value="http"/>
   <property category="runtime.15" name="custom.required.2" value="mac"/>

@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="test"/>
-	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="G:/jdk1.1.8/castle-light-jdk11-128/BouncyCastleLightForJAP.jar"/>
-	<classpathentry kind="lib" path="G:/jdk1.1.8/ApacheBZIP2/ApacheBzip2.jar"/>
-	<classpathentry kind="lib" path="G:/jdk1.1.8/HTTPCLientv0.4/http.jar"/>
-	<classpathentry kind="lib" path="G:/jdk1.1.8/mac/MRJClasses.zip"/>
-	<classpathentry kind="lib" path="G:/jdk1.1.8/log4j-1.2.9/log4j.jar"/>
-	<classpathentry kind="lib" path="G:/jdk1.1.8/commons-net-1.3.0-src/ApacheFTPClient.jar"/>
-	<classpathentry kind="lib" path="G:/jdk1.1.8/xmlrpc-1.1/apache-xmlrpc-1.1.jar"/>
-	<classpathentry kind="lib" path="G:/jdk1.1.8/Jama/Jama/classes/Jama.jar"/>
-	<classpathentry kind="lib" path="G:/jdk1.1.8/javamail-1.3.1/mail.jar"/>
-	<classpathentry kind="lib" path="G:/jdk1.1.8/JUnitX/junitx-5.1.jar"/>
-	<classpathentry kind="lib" path="S:/JBuilderX/thirdparty/junit3.8/junit.jar"/>
+	<classpathentry including="JAP.java|JAPMacintosh.java|JAPMessages.properties|JAPMessages_de.properties|JAPMessages_en.properties|JAPMessages_fr.properties|anon/|forward/|gui/|jap/|jarify/|logging/|proxy/|update/" excluding="infoservice/|jpi/" kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/HTTP"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/BouncycastleForJAP"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/XML-RPC"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/BZip2"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Log4J"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/FTP"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/JUnit"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Java1.1"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Swing"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/XML"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/XML-1.1"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/MacMRJ"/>
 	<classpathentry kind="output" path="build"/>
 </classpath>
