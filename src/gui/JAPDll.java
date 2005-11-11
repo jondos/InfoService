@@ -27,6 +27,8 @@
  */
 package gui;
 
+import java.awt.Window;
+import java.lang.reflect.Method;
 final public class JAPDll
 {
 	private static boolean m_sbHasOnTraffic = true;
@@ -45,8 +47,21 @@ final public class JAPDll
 		}
 	}
 
-	static public boolean setWindowOnTop(String caption, boolean onTop)
+	static public boolean setWindowOnTop(Window theWindow, String caption, boolean onTop)
 	{
+		try
+		{ //first we try the new setAlwaysOnTop method of Java 1.5
+			Class[] c=new Class[1];
+			c[0]=boolean.class;
+			Method m=Window.class.getMethod("setAlwaysOnTop",c);
+			Object[] args=new Object[1];
+			args[0]=new Boolean(onTop);
+			m.invoke(theWindow,args);
+			return true;
+		}
+		catch (Throwable t)
+		{
+		}
 		try
 		{
 			setWindowOnTop_dll(caption, onTop);
