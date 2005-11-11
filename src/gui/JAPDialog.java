@@ -73,16 +73,28 @@ public class JAPDialog
 		m_internalDialog.setResizable(true);
 	}
 
-	public Container getContentPane()
+	public final Container getContentPane()
 	{
 		return m_internalDialog.getContentPane();
 	}
 
 	/**
-	 * Shows or hides the dialog.
+	 * Shows or hides the dialog. If shown, the dialog is centered over the parent component.
+	 * Subclasses may override this method to change this centering behaviour.
 	 * @param a_bVisible 'true' shows the dialog; 'false' hides it
 	 */
 	public void setVisible(boolean a_bVisible)
+	{
+		setVisible(a_bVisible, true);
+	}
+
+	/**
+	 * Shows or hides the dialog.
+	 * @param a_bVisible 'true' shows the dialog; 'false' hides it
+	 * @param a_bCenterOnParentComponent if true, the dialog is centered on the parent component;
+	 * otherwise, it is centered on the parent window
+	 */
+	public final void setVisible(boolean a_bVisible, boolean a_bCenterOnParentComponent)
 	{
 		if (a_bVisible)
 		{
@@ -92,7 +104,7 @@ public class JAPDialog
 			}
 			else
 			{
-				align();
+				align(a_bCenterOnParentComponent);
 			}
 		}
 		m_internalDialog.setVisible(a_bVisible);
@@ -101,7 +113,7 @@ public class JAPDialog
 	/**
 	 * Disposes the dialog (set it to invisible and releases all resources).
 	 */
-	public void dispose()
+	public final void dispose()
 	{
 		m_internalDialog.dispose();
 	}
@@ -110,7 +122,7 @@ public class JAPDialog
 	 * Returns the size of the dialog window.
 	 * @return the size of the dialog window
 	 */
-	public Dimension getSize()
+	public final Dimension getSize()
 	{
 		return m_internalDialog.getSize();
 	}
@@ -120,7 +132,7 @@ public class JAPDialog
 	 * @param a_width the new window width
 	 * @param a_height the new window height
 	 */
-	public void setSize(int a_width, int a_height)
+	public final void setSize(int a_width, int a_height)
 		{
 			m_internalDialog.setSize(a_width, a_height);
 	}
@@ -129,7 +141,7 @@ public class JAPDialog
 	 * Returns the dialog's location on the screen.
 	 * @return the dialog's location on the screen
 	 */
-	public Point getLocation()
+	public final Point getLocation()
 	{
 		return m_internalDialog.getLocation();
 	}
@@ -139,7 +151,7 @@ public class JAPDialog
 	 * @param a_windowAction insert an element of javax.swing.WindowConstants
 	 * @see javax.swing.WindowConstants
 	 */
-	public void setDefaultCloseOperation(int a_windowAction)
+	public final void setDefaultCloseOperation(int a_windowAction)
 	{
 		m_internalDialog.setDefaultCloseOperation(a_windowAction);
 	}
@@ -149,7 +161,7 @@ public class JAPDialog
 	 * @param a_listener a WindowListener
 	 * @see java.awt.event.WindowListener
 	 */
-	public void addWindowListener(WindowListener a_listener)
+	public final void addWindowListener(WindowListener a_listener)
 	{
 		m_internalDialog.addWindowListener(a_listener);
 	}
@@ -159,7 +171,7 @@ public class JAPDialog
 	 * @param a_listener a WindowListener
 	 * @see java.awt.event.WindowListener
 	 */
-	public void removeWindowListener(WindowListener a_listener)
+	public final void removeWindowListener(WindowListener a_listener)
 	{
 		m_internalDialog.removeWindowListener(a_listener);
 	}
@@ -167,42 +179,60 @@ public class JAPDialog
 	/**
 	 * Sets the dialog to the optimal size.
 	 */
-	public void pack()
+	public final void pack()
 	{
 		m_internalDialog.pack();
 	}
 
 	/**
-	 * Centers the dialog over the parent component.
+	 * Centers the dialog over the parent component or the parent window.
+	 * @param a_bCenterOnParentComponent if true, the dialog is centered on the parent component;
+	 * otherwise, it is centered on the parent window
 	 */
-	private void align()
+	private void align(boolean a_bCenterOnParentComponent)
 	{
-		Component parent = m_parentComponent;
-
-		while (parent != null && !(parent instanceof Window))
+		if (!a_bCenterOnParentComponent)
 		{
-			parent = parent.getParent();
-		}
-		if (parent != null)
-		{
-			GUIUtils.positionWindow(m_internalDialog, (Window)parent);
+			alignOnWindow();
 		}
 		else
 		{
-			/* center the dialog over the parent component, tricky: for getting the absolut position
-			 * values, we create a new Dialog (is centered over the parent) and use it for calculating
-			 * our own location
-			 */
-			   JOptionPane optionPane = new JOptionPane();
-			   JDialog dummyDialog = optionPane.createDialog(m_parentComponent, null);
-			   Rectangle dummyBounds = dummyDialog.getBounds();
-			   Dimension ownSize = m_internalDialog.getSize();
-			   Point ownLocation = new Point( (Math.max(dummyBounds.x +
-					   ( (dummyBounds.width - ownSize.width) / 2), 0)),
-					 (Math.max(dummyBounds.y +
-					  ( (dummyBounds.height - ownSize.height) / 2), 0)));
-			m_internalDialog.setLocation(ownLocation);
+			alignOnComponent();
 		}
+	}
+
+	/**
+	 * Centers the dialog over the parent component.
+	 */
+	private void alignOnComponent()
+	{
+		/* center the dialog over the parent component, tricky: for getting the absolut position
+		 * values, we create a new Dialog (is centered over the parent) and use it for calculating
+		 * our own location
+		 */
+		JOptionPane optionPane = new JOptionPane();
+		JDialog dummyDialog = optionPane.createDialog(m_parentComponent, null);
+		Rectangle dummyBounds = dummyDialog.getBounds();
+		Dimension ownSize = m_internalDialog.getSize();
+		Point ownLocation = new Point( (Math.max(dummyBounds.x +
+												 ( (dummyBounds.width - ownSize.width) / 2), 0)),
+									  (Math.max(dummyBounds.y +
+												( (dummyBounds.height - ownSize.height) / 2), 0)));
+		m_internalDialog.setLocation(ownLocation);
+	}
+
+	/**
+	 * Centers the dialog over the parent window.
+	 */
+	private void alignOnWindow()
+	{
+		Component parent = m_parentComponent;
+		// find the first parent that is a window
+		while (parent != null && ! (parent instanceof Window))
+		{
+			parent = parent.getParent();
+		}
+		GUIUtils.positionWindow(m_internalDialog, (Window) parent);
 	}
 
 }
