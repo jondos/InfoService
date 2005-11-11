@@ -44,6 +44,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.WindowConstants;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -75,6 +76,7 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import jap.*;
+import gui.JAPDialog;
 
 /**
  * This is implementation of the dialog shown when starting a forwarded connection. The dialog is
@@ -214,8 +216,9 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 	{
 		final JAPDialog infoserviceDialog = new JAPDialog(getRootComponent(),
 			JAPMessages.getString("settingsRoutingClientConfigDialogInfoServiceTitle"));
-		infoserviceDialog.disableManualClosing();
-		JPanel infoservicePanel = infoserviceDialog.getRootPanel();
+		infoserviceDialog.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+		JPanel infoservicePanel = new JPanel();
+		infoserviceDialog.getContentPane().add(infoservicePanel);
 
 		JLabel settingsRoutingClientConfigDialogInfoServiceLabel = new JLabel(
 			  JAPMessages.getString("settingsRoutingClientConfigDialogInfoServiceLabel"));
@@ -254,7 +257,7 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 											  infoservicePanelConstraints);
 		infoservicePanel.add(settingsRoutingClientConfigDialogInfoServiceCancelButton);
 
-		infoserviceDialog.align();
+		infoserviceDialog.pack();
 
 		/* this Vector contains a message, if an error occured. */
 		final Vector occuredError = new Vector();
@@ -312,16 +315,16 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 		/* for synchronization purposes, it is necessary to show the dialog first and start the thread
 		 * after that event
 		 */
-		infoserviceDialog.getInternalDialog().addWindowListener(new WindowAdapter()
+		infoserviceDialog.addWindowListener(new WindowAdapter()
 		{
 			public void windowOpened(WindowEvent a_event)
 			{
-				infoserviceDialog.getInternalDialog().removeWindowListener(this);
+				infoserviceDialog.removeWindowListener(this);
 				infoserviceThread.start();
 			}
 		});
 
-		infoserviceDialog.show();
+		infoserviceDialog.setVisible(true);
 
 		/* wait until the fetch-thread is ready */
 		try
@@ -361,7 +364,8 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 	{
 		final JAPDialog client1MailDialog = new JAPDialog(getRootComponent(),
 			JAPMessages.getString("settingsRoutingClientConfigDialog1MailTitle"));
-		final JPanel client1MailPanel = client1MailDialog.getRootPanel();
+		final JPanel client1MailPanel = new JPanel();
+		client1MailDialog.getContentPane().add(client1MailPanel);
 
 		JAPHtmlMultiLineLabel settingsRoutingClientConfigDialog1MailInstructionsLabel = new
 			JAPHtmlMultiLineLabel(JAPMessages.getString("settingsRoutingClientConfigDialog1MailInstructions1") +
@@ -546,8 +550,8 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 											  client1MailPanelConstraints);
 		client1MailPanel.add(settingsRoutingClientConfigDialog1MailNextButton);
 
-		client1MailDialog.align();
-		client1MailDialog.show();
+		client1MailDialog.pack();
+		client1MailDialog.setVisible(true);
 
 		IImageEncodedCaptcha returnValue = null;
 
@@ -572,7 +576,8 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 	{
 		final JAPDialog captchaDialog = new JAPDialog(getRootComponent(),
 			JAPMessages.getString("settingsRoutingClientConfigDialogCaptchaTitle"));
-		final JPanel captchaPanel = captchaDialog.getRootPanel();
+		final JPanel captchaPanel = new JPanel();
+		captchaDialog.getContentPane().add(captchaPanel);
 
 		JLabel captchaImageLabel = new JLabel(new ImageIcon(a_captcha.getImage()));
 
@@ -767,8 +772,8 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 										  captchaPanelConstraints);
 		captchaPanel.add(settingsRoutingClientConfigDialogCaptchaNextButton);
 
-		captchaDialog.align();
-		captchaDialog.show();
+		captchaDialog.pack();
+		captchaDialog.setVisible(true);
 
 		ListenerInterface returnValue = null;
 
@@ -791,8 +796,9 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 	{
 		final JAPDialog connectDialog = new JAPDialog(getRootComponent(),
 			JAPMessages.getString("settingsRoutingClientConfigConnectToForwarderTitle"));
-		connectDialog.disableManualClosing();
-		JPanel connectPanel = connectDialog.getRootPanel();
+		connectDialog.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+		JPanel connectPanel = new JPanel();
+		connectDialog.getContentPane().add(connectPanel);
 
 		/* this Vector contains a message, if an error occured. */
 		final Vector occuredError = new Vector();
@@ -881,21 +887,21 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 										  connectPanelConstraints);
 		connectPanel.add(settingsRoutingClientConfigDialogConnectToForwarderCancelButton);
 
-		connectDialog.align();
+		connectDialog.pack();
 
 		/* for synchronization purposes, it is necessary to show the dialog first and start the thread
 		 * after that event
 		 */
-		connectDialog.getInternalDialog().addWindowListener(new WindowAdapter()
+		connectDialog.addWindowListener(new WindowAdapter()
 		{
 			public void windowOpened(WindowEvent a_event)
 			{
-				connectDialog.getInternalDialog().removeWindowListener(this);
+				connectDialog.removeWindowListener(this);
 				connectThread.start();
 			}
 		});
 
-		connectDialog.show();
+		connectDialog.setVisible(true);
 
 		/* wait until the connect-thread is ready */
 		try
@@ -935,8 +941,9 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 	{
 		final JAPDialog offerDialog = new JAPDialog(getRootComponent(),
 			JAPMessages.getString("settingsRoutingClientConfigGetOfferTitle"));
-		offerDialog.disableManualClosing();
-		JPanel offerPanel = offerDialog.getRootPanel();
+		offerDialog.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+		JPanel offerPanel = new JPanel();
+		offerDialog.getContentPane().add(offerPanel);
 
 		JLabel settingsRoutingClientConfigDialogGetOfferLabel =
 			new JLabel(JAPMessages.getString("settingsRoutingClientConfigDialogGetOfferLabel"));
@@ -985,7 +992,7 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 										offerPanelConstraints);
 		offerPanel.add(settingsRoutingClientConfigDialogGetOfferCancelButton);
 
-		offerDialog.align();
+		offerDialog.pack();
 
 		/* this Vector contains a message, if an error occured */
 		final Vector occuredError = new Vector();
@@ -1032,16 +1039,16 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 		/* for synchronization purposes, it is necessary to show the dialog first and start the thread
 		 * after that event
 		 */
-		offerDialog.getInternalDialog().addWindowListener(new WindowAdapter()
+		offerDialog.addWindowListener(new WindowAdapter()
 		{
 			public void windowOpened(WindowEvent a_event)
 			{
-				offerDialog.getInternalDialog().removeWindowListener(this);
+				offerDialog.removeWindowListener(this);
 				offerThread.start();
 			}
 		});
 
-		offerDialog.show();
+		offerDialog.setVisible(true);
 
 		/* wait until the fetch-offer thread is ready */
 		try
@@ -1082,8 +1089,9 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 	{
 		final JAPDialog client2Dialog = new JAPDialog(getRootComponent(),
 			JAPMessages.getString("settingsRoutingClientConfigDialog2Title"));
-		client2Dialog.disableManualClosing();
-		JPanel client2Panel = client2Dialog.getRootPanel();
+		client2Dialog.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+		JPanel client2Panel = new JPanel();
+		client2Dialog.getContentPane().add(client2Panel);
 
 		JLabel settingsRoutingClientConfigDialog2GuaranteedBandwidthLabel =
 			new JLabel(JAPMessages.getString("settingsRoutingClientConfigDialog2GuaranteedBandwidthLabel") + " " +
@@ -1237,8 +1245,8 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 										  client2PanelConstraints);
 		client2Panel.add(settingsRoutingClientConfigDialog2FinishButton);
 
-		client2Dialog.align();
-		client2Dialog.show();
+		client2Dialog.pack();
+		client2Dialog.setVisible(true);
 
 		MixCascade returnValue = null;
 
@@ -1263,8 +1271,9 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 	{
 		final JAPDialog announceDialog = new JAPDialog(getRootComponent(),
 			JAPMessages.getString("settingsRoutingClientConfigDialogAnnounceCascadeTitle"));
-		announceDialog.disableManualClosing();
-		JPanel announcePanel = announceDialog.getRootPanel();
+		announceDialog.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+		JPanel announcePanel = new JPanel();
+		announceDialog.getContentPane().add(announcePanel);
 
 		JLabel settingsRoutingClientConfigDialogAnnounceCascadeLabel =
 			new JLabel(JAPMessages.getString("settingsRoutingClientConfigDialogAnnounceCascadeLabel"));
@@ -1314,7 +1323,7 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 										   announcePanelConstraints);
 		announcePanel.add(settingsRoutingClientConfigDialogAnnounceCascadeCancelButton);
 
-		announceDialog.align();
+		announceDialog.pack();
 
 		/* this Vector contains a message, if an error occured. */
 		final Vector occuredError = new Vector();
@@ -1351,16 +1360,16 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 		/* for synchronization purposes, it is necessary to show the dialog first and start the thread
 		 * after that event
 		 */
-		announceDialog.getInternalDialog().addWindowListener(new WindowAdapter()
+		announceDialog.addWindowListener(new WindowAdapter()
 		{
 			public void windowOpened(WindowEvent a_event)
 			{
-				announceDialog.getInternalDialog().removeWindowListener(this);
+				announceDialog.removeWindowListener(this);
 				announceThread.start();
 			}
 		});
 
-		announceDialog.show();
+		announceDialog.setVisible(true);
 
 		/* wait until the announce thread is ready */
 		try

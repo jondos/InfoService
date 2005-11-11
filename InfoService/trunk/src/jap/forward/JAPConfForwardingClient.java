@@ -38,6 +38,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.Font;
 import javax.swing.JButton;
+import javax.swing.WindowConstants;
 import javax.swing.JCheckBox;
 import javax.swing.JPanel;
 import javax.swing.border.TitledBorder;
@@ -48,6 +49,7 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import jap.*;
+import gui.JAPDialog;
 
 /**
  * This is the configuration GUI for the JAP forwarding client component.
@@ -294,8 +296,9 @@ public class JAPConfForwardingClient extends AbstractJAPConfModule
 	{
 		final JAPDialog confirmDialog = new JAPDialog(a_parentComponent,
 			JAPMessages.getString("settingsForwardingClientConfigConfirmServerShutdownDialogTitle"));
-		confirmDialog.disableManualClosing();
-		JPanel confirmPanel = confirmDialog.getRootPanel();
+		confirmDialog.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+		JPanel confirmPanel = new JPanel();
+		confirmDialog.getContentPane().add(confirmPanel);
 
 		JAPHtmlMultiLineLabel settingsForwardingClientConfigConfirmServerShutdownLabel = new
 			JAPHtmlMultiLineLabel(
@@ -366,9 +369,8 @@ public class JAPConfForwardingClient extends AbstractJAPConfModule
 										  confirmPanelConstraints);
 		confirmPanel.add(settingsForwardingClientConfigConfirmServerShutdownCancelButton);
 
-		confirmDialog.align();
-
-		confirmDialog.show();
+		confirmDialog.pack();
+		confirmDialog.setVisible(true);
 	}
 
 	protected void onRootPanelShown()
