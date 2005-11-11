@@ -30,7 +30,6 @@ package jap;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -48,8 +47,6 @@ import java.util.zip.ZipOutputStream;
 
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.MediaTracker;
-import java.awt.Toolkit;
 import java.awt.Window;
 import javax.swing.AbstractButton;
 import javax.swing.ImageIcon;
@@ -63,16 +60,16 @@ import javax.swing.table.TableColumn;
 import javax.swing.table.TableModel;
 
 import anon.crypto.JAPCertificate;
-import gui.ImageIconLoader;
 import gui.SimpleFileFilter;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import gui.GUIUtils;
 
 /**
  * This class contains static utility functions for Jap
  */
-final public class JAPUtil
+public final class JAPUtil
 {
 
 	/** Returns the desired unit for this amount of Bytes (Bytes, kBytes, MBytes,GBytes)*/
@@ -267,39 +264,21 @@ final public class JAPUtil
 	/** Loads an Image from a File or a Resource.
 	 *	@param strImage the Resource or filename of the Image
 	 *	@param sync true if the loading is synchron, false if it should be asynchron
+	 * @deprecated use GUIUtils.loadImageIcon instead
 	 */
 	public static ImageIcon loadImageIcon(String strImage, boolean sync)
 	{
-		ImageIcon img = null;
-
-		// try loading the lowcolor images
-		if (Toolkit.getDefaultToolkit().getColorModel().getPixelSize() <= 16)
-		{
-			img = ImageIconLoader.loadImageIcon(JAPConstants.IMGPATHLOWCOLOR + strImage, sync);
-		}
-		// if loading of lowcolor images was not successful or
-		//    we have to load the hicolor images
-		if (img == null || img.getImageLoadStatus() == MediaTracker.ERRORED)
-		{
-			img = ImageIconLoader.loadImageIcon(JAPConstants.IMGPATHHICOLOR + strImage, sync);
-		}
-
-		return img;
+		return GUIUtils.loadImageIcon(strImage, sync);
 	}
 
+	/**
+	 *
+	 * @param f Window
+	 * @deprecated use GUIUtils.centerFrame(Window) instead
+	 */
 	public static void centerFrame(Window f)
 	{
-		Dimension screenSize = f.getToolkit().getScreenSize();
-		try //JAVA 1.1
-		{
-			Dimension ownSize = f.getSize();
-			f.setLocation( (screenSize.width - ownSize.width) / 2, (screenSize.height - ownSize.height) / 2);
-		}
-		catch (Error e) //JAVA 1.0.2
-		{
-			Dimension ownSize = f.size();
-			f.locate( (screenSize.width - ownSize.width) / 2, (screenSize.height - ownSize.height) / 2);
-		}
+		GUIUtils.centerFrame(f);
 	}
 
 	public static void upRightFrame(Window f)
@@ -431,18 +410,7 @@ final public class JAPUtil
 		JAPCertificate t_cert = null;
 		if (file != null)
 		{
-			try
-			{
-				byte[] buff = new byte[ (int) file.length()];
-				FileInputStream fin = new FileInputStream(file);
-				fin.read(buff);
-				fin.close();
-				t_cert = JAPCertificate.getInstance(buff);
-			}
-			catch (Exception e1)
-			{
-				throw new IOException(e1.getMessage());
-			}
+			t_cert = JAPCertificate.getInstance(file);
 			if (t_cert == null)
 			{
 				throw new IOException("Could not create certificate!");

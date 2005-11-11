@@ -34,6 +34,7 @@ import java.util.Vector;
 
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -55,6 +56,8 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
+import javax.swing.WindowConstants;
+import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
@@ -64,14 +67,18 @@ import javax.swing.text.PlainDocument;
 import anon.infoservice.InfoServiceDBEntry;
 import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.MixCascade;
+import gui.JAPDialog;
+import jap.AbstractJAPConfModule;
+import jap.JAPConstants;
+import jap.JAPController;
+import jap.JAPHelp;
+import jap.JAPMessages;
+import jap.JAPModel;
+import jap.JAPUtil;
+import jap.MessageSystem;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import javax.swing.border.EmptyBorder;
-import java.awt.Color;
-import java.awt.GridLayout;
-
-import jap.*;
 
 /**
  * This is the configuration GUI for the JAP forwarding server component.
@@ -1431,8 +1438,9 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 	{
 		final JAPDialog fetchMixCascadesDialog = new JAPDialog(a_parentComponent,
 			JAPMessages.getString("settingsForwardingServerConfigAllowedCascadesFetchMixCascadesDialogTitle"));
-		fetchMixCascadesDialog.disableManualClosing();
-		JPanel fetchMixCascadesPanel = fetchMixCascadesDialog.getRootPanel();
+		fetchMixCascadesDialog.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+		JPanel fetchMixCascadesPanel = new JPanel();
+		fetchMixCascadesDialog.getContentPane().add(fetchMixCascadesPanel);
 
 		JLabel settingsRoutingServerFetchMixCascadesDialogFetchLabel =
 			new JLabel(
@@ -1523,21 +1531,20 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 			fetchMixCascadesPanelConstraints);
 		fetchMixCascadesPanel.add(settingsRoutingFetchMixCascadesDialogCancelButton);
 
-		fetchMixCascadesDialog.align();
-
 		/* for synchronization purposes, it is necessary to show the dialog first and start the thread
 		 * after that event
 		 */
-		fetchMixCascadesDialog.getInternalDialog().addWindowListener(new WindowAdapter()
+		fetchMixCascadesDialog.addWindowListener(new WindowAdapter()
 		{
 			public void windowOpened(WindowEvent a_event)
 			{
-				fetchMixCascadesDialog.getInternalDialog().removeWindowListener(this);
+				fetchMixCascadesDialog.removeWindowListener(this);
 				fetchMixCascadesThread.start();
 			}
 		});
 
-		fetchMixCascadesDialog.show();
+		fetchMixCascadesDialog.pack();
+		fetchMixCascadesDialog.setVisible(true);
 
 		/* wait until the fetch-thread is ready */
 		try
