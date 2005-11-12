@@ -107,9 +107,9 @@ keyfilepassword
 #logfilethreshold 7
 #logstderrthreshold 7
 
-#############################################################################
-## Information about possible payments
-##
+###############################################################################
+# Accepted payment options
+###############################################################################
 currency1=EUR
 currency2=USD
 
@@ -126,9 +126,10 @@ option1detailedinfolang2=en
 option1extrainfo1=Inhaber: JAP-Team, Kontonummer 12345, BLZ 3456778, Sparkasse Hintamberg
 option1extrainfolang1=de
 option1extrainfotype1=text
-option1extrainfo2=Holder: JAP-Team, Account 12345, Bank number 3456778, Sparkasse Hintamberg
+option1extrainfo2=Holder: JAP-Team, Account 12345, Bank number  3456778, Sparkasse Hintamberg
 option1extrainfolang2=en
 option1extrainfotype2=text
+
 option2name=CreditCard
 option2type=passive
 option2heading1=Zahlung per Kreditkarte
@@ -151,3 +152,4 @@ option2inputref3=number
 option2input3=Number
 option2inputlang3=en
 option2inputref3=number
+
