@@ -41,6 +41,7 @@ import java.util.Enumeration;
 import java.util.Vector;
 import javax.swing.JOptionPane;
 import jap.*;
+import anon.pay.PayAccount;
 
 /** This class creates a payment account and shows a busy window meanwhile
  *  @author Tobias Bayer
@@ -73,7 +74,8 @@ public class AccountCreator extends SwingWorker
 	{
 		try
 		{
-			PayAccountsFile.getInstance().createAccount(m_bi, true);
+			PayAccount p = PayAccountsFile.getInstance().createAccount(m_bi, true);
+			p.fetchAccountInfo();
 		}
 		catch (Exception e)
 		{

@@ -74,6 +74,7 @@ import javax.swing.event.ChangeEvent;
 import java.awt.Component;
 
 import jap.*;
+import anon.crypto.JAPCertificate;
 
 /**
  * The Jap Conf Module (Settings Tab Page) for the Accounts and payment Management
@@ -444,34 +445,46 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		JFrame view = JAPController.getView();
 
 		//Show a window that contains all known Payment Instances and let the user select one. (tb)
-		BI theBI = getBIforAccountCreation();
+		/*BI theBI = getBIforAccountCreation();*/
+		//BI for semi-open test cascade
+		BI theBI = null;
+		try
+		{
+			theBI = new BI(JAPConstants.PI_ID, JAPConstants.PI_NAME, JAPConstants.PI_HOST,
+						   JAPConstants.PI_PORT,
+						   JAPCertificate.getInstance(JAPConstants.CERTSPATH + JAPConstants.PI_CERT));
+		}
+		catch (Exception e)
+		{
+			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, "Could not create Test-PI: " + e.getMessage());
+		}
 
 		if (theBI != null)
 		{
-		int choice = JOptionPane.showOptionDialog(
-			view, JAPMessages.getString("ngCreateKeyPair"),
-			JAPMessages.getString("ngCreateAccount"),
-			JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE,
-			null, null, null
-			);
-		if (choice == JOptionPane.YES_OPTION)
-		{
-			try
+			int choice = JOptionPane.showOptionDialog(
+				view, JAPMessages.getString("ngCreateKeyPair"),
+				JAPMessages.getString("ngCreateAccount"),
+				JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE,
+				null, null, null
+				);
+			if (choice == JOptionPane.YES_OPTION)
 			{
+				try
+				{
 					AccountCreator worker = new AccountCreator(theBI, JAPController.getView());
 					worker.addChangeListener(this);
 					worker.start();
-			}
-			catch (Exception ex)
-			{
+				}
+				catch (Exception ex)
+				{
 					LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, ex);
-				JOptionPane.showMessageDialog(
-					view,
+					JOptionPane.showMessageDialog(
+						view,
 						JAPMessages.getString("Error creating account: ") + ex,
-					JAPMessages.getString("error"), JOptionPane.ERROR_MESSAGE
-					);
+						JAPMessages.getString("error"), JOptionPane.ERROR_MESSAGE
+						);
+				}
 			}
-		}
 		}
 	}
 
@@ -486,8 +499,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 
 		if (theBI != null)
 		{
-		LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Selected Payment Instance is: " +
-					  theBI.getHostName() + ":" + theBI.getPortNumber());
+			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Selected Payment Instance is: " +
+						  theBI.getHostName() + ":" + theBI.getPortNumber());
 		}
 		else
 		{
