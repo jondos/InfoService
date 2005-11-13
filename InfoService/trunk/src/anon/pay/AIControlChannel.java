@@ -18,6 +18,8 @@ import anon.pay.xml.XMLResponse;
 import anon.server.impl.MuxSocket;
 import anon.server.impl.SyncControlChannel;
 import anon.util.XMLUtil;
+import java.util.Vector;
+import java.util.Enumeration;
 
 /**
  * This control channel is used for communication with the AI (AccountingInstance or
@@ -25,21 +27,32 @@ import anon.util.XMLUtil;
  * The AI sends a request when it wants a cost confirmation from us. This thread
  * waits for incoming requests and sends the requested confirmations to the AI.
  *
- * @author Bastian Voigt
+ * @author Bastian Voigt, Tobias Bayer
  * @version 1.0
  */
 public class AIControlChannel extends SyncControlChannel
 {
 	public static final int CHAN_ID = 2;
+	private static final int EVENT_UNREAL = 1;
 
 	private MuxSocket m_MuxSocket;
 	private boolean m_bFirstBalance;
+
+	private Vector m_aiListeners = new Vector();
 
 	public AIControlChannel(MuxSocket muxSocket)
 	{
 		super(CHAN_ID, true);
 		m_MuxSocket = muxSocket;
 		m_bFirstBalance = true;
+	}
+
+	public void addAIListener(Object a_aiListener)
+	{
+		if (!m_aiListeners.contains(a_aiListener))
+		{
+			m_aiListeners.addElement(a_aiListener);
+		}
 	}
 
 	/**
@@ -74,7 +87,8 @@ public class AIControlChannel extends SyncControlChannel
 		{
 			LogHolder.log(LogLevel.DEBUG, LogType.PAY, ex);
 			PayAccountsFile.getInstance().signalAccountError(
-				new XMLErrorMessage(XMLErrorMessage.ERR_INTERNAL_SERVER_ERROR, ex.getClass().getName()+": "+ex.getMessage())
+				new XMLErrorMessage(XMLErrorMessage.ERR_INTERNAL_SERVER_ERROR,
+									ex.getClass().getName() + ": " + ex.getMessage())
 				);
 		}
 	}
@@ -140,37 +154,42 @@ public class AIControlChannel extends SyncControlChannel
 				PayAccount currentAccount = PayAccountsFile.getInstance().getActiveAccount();
 				if ( (currentAccount == null) || (currentAccount.getAccountNumber() != cc.getAccountNumber()))
 				{
-					throw new Exception("Received CC with Wrong accountnumber");
+					throw new Exception("Received CC with wrong accountnumber");
 				}
 
 				long newBytes = currentAccount.updateCurrentBytes(m_MuxSocket);
+				LogHolder.log(LogLevel.DEBUG, LogType.PAY,
+							  "AI requests to sign " + newBytes + " transferred bytes");
 
 				// calculate number of bytes transferred with other cascades
 				/*				long transferredWithOtherCascades = 0;
-					XMLAccountInfo info = currentAccount.getAccountInfo();
-					if(info!=null)
-					{
-					 Enumeration enu=info.getCCs();
-					 while(enu.hasMoreElements())
-					 {
-					  transferredWithOtherCascades +=
-					   ((XMLEasyCC)enu.nextElement()).getTransferredBytes();
-					 }
-					}*/
+				 XMLAccountInfo info = currentAccount.getAccountInfo();
+				 if(info!=null)
+				 {
+				  Enumeration enu=info.getCCs();
+				  while(enu.hasMoreElements())
+				  {
+				   transferredWithOtherCascades +=
+					((XMLEasyCC)enu.nextElement()).getTransferredBytes();
+				  }
+				 }*/
 				XMLEasyCC myLastCC = currentAccount.getAccountInfo().getCC(cc.getAIName());
 				long oldSpent = 0;
 				if (myLastCC != null)
 				{
 					oldSpent = myLastCC.getTransferredBytes();
+					LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Transferred bytes of last CC: " + oldSpent);
 				}
 				if ( (newBytes + oldSpent) < cc.getTransferredBytes())
 				{
-					// the AI wants us to sign an unrealistic number of bytes
-					// this could be a betraying AI, but it can also be caused
-					// when CostConfirmations get lost during a Jap crash.
-					/** @todo let the user decide what to do.
-					 * If Jap crashed during the last session then we should ask the BI for a current CC */
-					cc.setTransferredBytes(newBytes + oldSpent);
+					/** If Jap crashed during the last session, CCs may have been lost.*/
+					long toSign = oldSpent + newBytes;
+					LogHolder.log(LogLevel.WARNING, LogType.PAY,
+								  "Unrealistic number of bytes to be signed. Spent bytes: " +
+								  oldSpent + " + new bytes we should sign: " + newBytes + " = " + toSign +
+								  " < bytes in last CC: " + cc.getTransferredBytes()); ;
+					this.fireAIEvent(EVENT_UNREAL, cc.getTransferredBytes()-oldSpent-newBytes);
+					//cc.setTransferredBytes(cc.getTransferredBytes()+newBytes);
 				}
 				cc.setPIID(currentAccount.getAccountCertificate().getPIID());
 				cc.sign(currentAccount.getPrivateKey());
@@ -190,7 +209,7 @@ public class AIControlChannel extends SyncControlChannel
 			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "AI requested balance");
 			PayAccount currentAccount = PayAccountsFile.getInstance().getActiveAccount();
 			XMLBalance b = currentAccount.getBalance();
-			if ( m_bFirstBalance || (b == null) || ((b.getTimestamp()).before(t)))
+			if (m_bFirstBalance || (b == null) || ( (b.getTimestamp()).before(t)))
 			{
 				// balance too old, fetch a new one
 				new Thread(new Runnable()
@@ -209,7 +228,7 @@ public class AIControlChannel extends SyncControlChannel
 							LogHolder.log(LogLevel.DEBUG, LogType.PAY, ex);
 						}
 					}
-				},"FetchAccountInfo").start();
+				}, "FetchAccountInfo").start();
 			}
 			else
 			{
@@ -226,6 +245,19 @@ public class AIControlChannel extends SyncControlChannel
 			if (currentAccount != null)
 			{
 				this.sendXMLMessage(XMLUtil.toXMLDocument(currentAccount.getAccountCertificate()));
+			}
+		}
+	}
+
+	private void fireAIEvent(int a_eventType, long a_additionalInfo)
+	{
+		LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Firing AI event");
+		Enumeration e = m_aiListeners.elements();
+		while (e.hasMoreElements())
+		{
+			if (a_eventType == EVENT_UNREAL)
+			{
+				( (IAIEventListener) e.nextElement()).unrealisticBytes(a_additionalInfo);
 			}
 		}
 	}

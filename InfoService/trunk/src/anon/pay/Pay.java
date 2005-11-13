@@ -64,6 +64,11 @@ public class Pay
 		m_MuxSocket.getControlChannelDispatcher().registerControlChannel(m_AIControlChannel);
 	}
 
+	public AIControlChannel getAIControlChannel()
+	{
+		return m_AIControlChannel;
+	}
+
 	/**
 	 * removes the controlchannel
 	 */
