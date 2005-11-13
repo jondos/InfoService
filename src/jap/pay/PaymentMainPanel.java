@@ -193,7 +193,7 @@ public class PaymentMainPanel extends JPanel
 		// we got everything under control, situation normal
 		else
 		{
-			Timestamp t = activeAccount.getBalanceValidTime();
+			Timestamp t = activeAccount.getBalance().getTimestamp();
 			SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm");
 			//String dateText = t.getDay() + "." + (t.getMonth() + 1) + "." + (t.getYear() + 1900) + " " +
 			//	t.getHours() + ":" + t.getMinutes();
