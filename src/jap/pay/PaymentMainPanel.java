@@ -265,7 +265,6 @@ public class PaymentMainPanel extends JPanel
 			PayAccountsFile accounts = PayAccountsFile.getInstance();
 			if (accounts.getNumAccounts() == 0)
 			{
-				/** @todo internationalize */
 				if (JOptionPane.showOptionDialog(
 					PaymentMainPanel.this,
 					"<html>" + JAPMessages.getString("payCreateAccountQuestion") + "</html>",
@@ -288,6 +287,7 @@ public class PaymentMainPanel extends JPanel
 				{
 					if (accounts.getNumAccounts() == 1)
 					{
+						/** @todo i18n*/
 						JOptionPane.showMessageDialog(
 							PaymentMainPanel.this,
 							"The mixcascade you are currently using wants to be payed. " +
@@ -314,6 +314,10 @@ public class PaymentMainPanel extends JPanel
 						}
 					}
 				}
+			}
+			if (accounts.getActiveAccount() != null)
+			{
+				accounts.getActiveAccount().updated();
 			}
 		}
 
