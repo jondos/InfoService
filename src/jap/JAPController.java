@@ -84,10 +84,11 @@ import proxy.DirectProxy;
 import proxy.IProxyListener;
 import update.JAPUpdateWizard;
 import jap.forward.*;
+import anon.pay.IAIEventListener;
 
 /* This is the Controller of All. It's a Singelton!*/
 public final class JAPController extends Observable implements IProxyListener, Observer,
-	AnonServiceEventListener
+	AnonServiceEventListener, IAIEventListener
 {
 	/**
 	 * Stores all MixCascades we know (information comes from infoservice or was entered by a user).
@@ -844,13 +845,13 @@ public final class JAPController extends Observable implements IProxyListener, O
 					//Load known Payment instances
 					Node nodePIs = XMLUtil.getFirstChildByName(elemPay, JAPConstants.CONFIG_PAYMENT_INSTANCES);
 					if (nodePIs != null)
-					   {
+					{
 						Node nodePI = nodePIs.getFirstChild();
 						while (nodePI != null)
-					{
+						{
 							PayAccountsFile.getInstance().addKnownPI( (Element) nodePI);
 							nodePI = nodePI.getNextSibling();
-					}
+						}
 					}
 					// test: is account data encrypted?
 					if (elemAccounts != null)
@@ -1540,15 +1541,17 @@ public final class JAPController extends Observable implements IProxyListener, O
 		private Thread m_waitForThread;
 		private Thread m_executionThread;
 		private Object m_internalSynchronization;
+		private Object m_caller;
 		private boolean m_jobWasInterrupted;
 
-		public SetAnonModeAsync(boolean a_startServer, Thread a_waitForThread)
+		public SetAnonModeAsync(boolean a_startServer, Thread a_waitForThread, Object a_caller)
 		{
 			m_startServer = a_startServer;
 			m_waitForThread = a_waitForThread;
 			m_executionThread = null;
 			m_internalSynchronization = new Object();
 			m_jobWasInterrupted = false;
+			m_caller = a_caller;
 		}
 
 		public boolean isStartServerJob()
@@ -1708,6 +1711,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 					if (ret == ErrorCodes.E_SUCCESS)
 					{
 						LogHolder.log(LogLevel.DEBUG, LogType.NET, "AN.ON service started successfull");
+						m_proxyAnon.getAnonService().getPay().getAIControlChannel().addAIListener(m_caller);
+
 						if (!mbActCntMessageNotRemind && !JAPModel.isSmallDisplay())
 						{
 							// show a Reminder message that active contents should be disabled
@@ -1897,12 +1902,12 @@ public final class JAPController extends Observable implements IProxyListener, O
 					{
 						/* wait until the previous job is done */
 						currentJob = new SetAnonModeAsync(a_anonModeSelected,
-							( (SetAnonModeAsync) (m_changeAnonModeJobs.lastElement())).getExecutionThread());
+							( (SetAnonModeAsync) (m_changeAnonModeJobs.lastElement())).getExecutionThread(), this);
 					}
 					else
 					{
 						/* we don't have to wait for any previous job */
-						currentJob = new SetAnonModeAsync(a_anonModeSelected, null);
+						currentJob = new SetAnonModeAsync(a_anonModeSelected, null, this);
 					}
 					Thread currentThread = new Thread(currentJob);
 					currentThread.setDaemon(true);
@@ -2638,11 +2643,11 @@ public final class JAPController extends Observable implements IProxyListener, O
 		LogHolder.log(LogLevel.ERR, LogType.NET, "JAPController received connectionError");
 		if (!m_bConnectionErrorShown)
 		{
-		this.setAnonMode(false);
-		JAPUtil.showMessageBox(getView(),
-							   JAPMessages.getString("cascadeLost"),
-							   JAPMessages.getString("cascadeLostTitle"),
-							   JOptionPane.ERROR_MESSAGE);
+			this.setAnonMode(false);
+			JAPUtil.showMessageBox(getView(),
+								   JAPMessages.getString("cascadeLost"),
+								   JAPMessages.getString("cascadeLostTitle"),
+								   JOptionPane.ERROR_MESSAGE);
 			m_bConnectionErrorShown = true;
 		}
 	}
@@ -2669,6 +2674,23 @@ public final class JAPController extends Observable implements IProxyListener, O
 		{
 			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Could not create default PI: " + e.getMessage());
 			return null;
+		}
+	}
+
+	public void unrealisticBytes(long a_bytes)
+	{
+		int choice = JOptionPane.showOptionDialog(
+			getView(),
+			"<html>" + JAPMessages.getString("unrealBytesDesc") + "<p>" +
+			JAPMessages.getString("unrealBytesDifference") + " " + a_bytes + "</html>",
+			JAPMessages.getString("unrealBytesTitle"),
+			JOptionPane.YES_NO_OPTION,
+			JOptionPane.QUESTION_MESSAGE,
+			null, null, null
+			);
+		if (choice == JOptionPane.NO_OPTION)
+		{
+			this.setAnonMode(false);
 		}
 	}
 }

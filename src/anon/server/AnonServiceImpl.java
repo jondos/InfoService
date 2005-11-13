@@ -265,4 +265,9 @@ final public class AnonServiceImpl implements AnonService, AnonServiceEventListe
 		LogHolder.log(LogLevel.ERR, LogType.NET, "AnonServiceImpl received connectionError");
 		this.fireConnectionError();
 	}
+
+	public Pay getPay()
+	{
+		return m_Pay;
+	}
 }

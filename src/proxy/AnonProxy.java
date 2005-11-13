@@ -415,4 +415,9 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		m_anonServiceListener.removeElement(l);
 	}
 
+	public AnonServiceImpl getAnonService()
+	{
+		return (AnonServiceImpl) m_Anon;
+	}
+
 }
