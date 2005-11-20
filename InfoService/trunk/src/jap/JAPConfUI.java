@@ -163,6 +163,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 		m_comboLanguage.addItem("Deutsch");
 		m_comboLanguage.addItem("English");
 		m_comboLanguage.addItem("Fran\u00E7ais");
+		m_comboLanguage.addItem("Portugués");
 		m_comboLanguage.addItemListener(new ItemListener()
 		{
 			public void itemStateChanged(ItemEvent e)
@@ -273,9 +274,13 @@ final class JAPConfUI extends AbstractJAPConfModule
 		{
 			JAPController.setLocale(Locale.ENGLISH);
 		}
-		else
+		else if (m_comboLanguage.getSelectedIndex() == 2)
 		{
 			JAPController.setLocale(Locale.FRENCH);
+		}
+		else
+		{
+			JAPController.setLocale(new Locale("pt",""));
 		}
 		JAPController.setSaveMainWindowPosition(m_cbSaveWindowPositions.isSelected());
 		int defaultView = JAPConstants.VIEW_NORMAL;
@@ -315,9 +320,13 @@ final class JAPConfUI extends AbstractJAPConfModule
 		{
 			m_comboLanguage.setSelectedIndex(2);
 		}
-		else
+		else if (JAPController.getLocale().equals(Locale.GERMAN))
 		{
 			m_comboLanguage.setSelectedIndex(0);
+		}
+		else
+		{
+			m_comboLanguage.setSelectedIndex(3);
 		}
 		m_bIgnoreComboLanguageEvents = false;
 		m_cbSaveWindowPositions.setSelected(JAPModel.getSaveMainWindowPosition());
