@@ -262,6 +262,7 @@ public class PaymentMainPanel extends JPanel
 		 */
 		public void accountCertRequested(boolean blubb)
 		{
+			int option = 0;
 			PayAccountsFile accounts = PayAccountsFile.getInstance();
 			if (accounts.getNumAccounts() == 0)
 			{
@@ -278,23 +279,25 @@ public class PaymentMainPanel extends JPanel
 			{
 				if (accounts.getActiveAccount() != null)
 				{
-					JOptionPane.showMessageDialog(
+					option = JOptionPane.showConfirmDialog(
 						PaymentMainPanel.this,
 						"<html>" + JAPMessages.getString("payUseAccountQuestion") + "</html>",
-						JAPMessages.getString("ngPaymentTabTitle"), JOptionPane.INFORMATION_MESSAGE);
+						JAPMessages.getString("ngPaymentTabTitle"), JOptionPane.YES_NO_OPTION,
+						JOptionPane.QUESTION_MESSAGE);
 				}
 				else
 				{
 					if (accounts.getNumAccounts() == 1)
 					{
 						/** @todo i18n*/
-						JOptionPane.showMessageDialog(
+						option = JOptionPane.showConfirmDialog(
 							PaymentMainPanel.this,
 							"The mixcascade you are currently using wants to be payed. " +
 							"You have created an account, however it is not marked as " +
 							"active. Jap will now automatically activate this account " +
 							"for you. ",
-							JAPMessages.getString("ngPaymentTabTitle"), JOptionPane.INFORMATION_MESSAGE
+							JAPMessages.getString("ngPaymentTabTitle"), JOptionPane.YES_NO_OPTION,
+							JOptionPane.QUESTION_MESSAGE
 							);
 						Enumeration enumE = accounts.getAccounts();
 						accounts.setActiveAccount( (PayAccount) enumE.nextElement());
@@ -312,8 +315,17 @@ public class PaymentMainPanel extends JPanel
 						{
 							m_view.showConfigDialog(JAPConf.PAYMENT_TAB);
 						}
+						else
+						{
+							option = JOptionPane.NO_OPTION;
 					}
 				}
+				}
+			}
+
+			if (option == JOptionPane.NO_OPTION)
+			{
+				JAPController.getInstance().setAnonMode(false);
 			}
 			if (accounts.getActiveAccount() != null)
 			{
