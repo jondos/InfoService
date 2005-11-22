@@ -85,6 +85,7 @@ import proxy.IProxyListener;
 import update.JAPUpdateWizard;
 import jap.forward.*;
 import anon.pay.IAIEventListener;
+import gui.*;
 
 /* This is the Controller of All. It's a Singelton!*/
 public final class JAPController extends Observable implements IProxyListener, Observer,
@@ -1352,7 +1353,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 		{
 			return;
 		}
-		JAPMessages.init(l);
+		JAPMessages.init(l, JAPConstants.MESSAGESFN);
 		m_Controller.m_Locale = l;
 		Locale.setDefault(l);
 		if (m_View != null)

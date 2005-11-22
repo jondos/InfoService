@@ -74,6 +74,7 @@ import java.awt.event.ComponentListener;
 import java.awt.event.ComponentEvent;
 import jap.pay.*;
 import jap.forward.*;
+import gui.*;
 
 final public class JAPConf extends JDialog implements ActionListener
 {

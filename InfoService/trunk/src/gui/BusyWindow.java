@@ -46,7 +46,7 @@ import javax.swing.JPanel;
 import javax.swing.JWindow;
 import jap.JAPConstants;
 import jap.JAPUtil;
-import jap.JAPMessages;
+
 
 public class BusyWindow extends JWindow implements ActionListener
 {

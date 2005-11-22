@@ -32,11 +32,11 @@
  *  on a Macintosh to register the MRJ Handler.
  *
  */
-import jap.JAPAWTMsgBox;
+import gui.JAPAWTMsgBox;
 import jap.JAPConstants;
 import jap.JAPController;
 import jap.JAPDebug;
-import jap.JAPMessages;
+import gui.JAPMessages;
 import jap.JAPModel;
 import jap.JAPNewView;
 import jap.JAPSplash;
@@ -96,7 +96,7 @@ public class JAP extends Frame
 			System.exit(0);
 		}
 		// Init Messages....
-		JAPMessages.init();
+		JAPMessages.init(JAPConstants.MESSAGESFN);
 		// Test (part 2) for right JVM....
 		if (vendor.startsWith("Transvirtual"))
 		{ // Kaffe

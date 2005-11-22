@@ -54,6 +54,7 @@ import javax.swing.JCheckBox;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.ChangeEvent;
 import java.util.Date;
+import gui.*;
 
 final class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 {

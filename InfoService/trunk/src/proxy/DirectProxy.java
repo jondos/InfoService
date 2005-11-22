@@ -27,7 +27,7 @@
  */
 package proxy;
 
-import jap.JAPMessages;
+import gui.JAPMessages;
 import jap.JAPModel;
 import jap.JAPUtil;
 

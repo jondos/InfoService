@@ -77,6 +77,7 @@ import logging.LogLevel;
 import logging.LogType;
 import jap.*;
 import gui.JAPDialog;
+import gui.*;
 
 /**
  * This is implementation of the dialog shown when starting a forwarded connection. The dialog is

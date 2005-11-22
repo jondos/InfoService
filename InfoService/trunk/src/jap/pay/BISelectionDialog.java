@@ -46,7 +46,7 @@ import javax.swing.event.ListSelectionListener;
 import anon.crypto.JAPCertificate;
 import anon.pay.BI;
 import jap.JAPConstants;
-import jap.JAPMessages;
+import gui.JAPMessages;
 import jap.JAPUtil;
 import java.util.Vector;
 import java.util.Enumeration;

@@ -52,6 +52,7 @@ import javax.swing.tree.DefaultTreeSelectionModel;
 import javax.swing.tree.ExpandVetoException;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
+import gui.*;
 
 /**
  * This is the implementation for the configuration module system. It manages the configuration

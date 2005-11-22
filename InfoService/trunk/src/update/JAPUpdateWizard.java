@@ -33,7 +33,7 @@ import gui.wizard.BasicWizardHost;
 import gui.wizard.WizardPage;
 import jap.JAPConstants;
 import jap.JAPController;
-import jap.JAPMessages;
+import gui.JAPMessages;
 import jap.JAPModel;
 import jap.JAPUtil;
 import jarify.JarVerifier;

@@ -59,6 +59,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JSeparator;
 import java.awt.event.ItemListener;
 import java.awt.event.ItemEvent;
+import gui.*;
 
 /**
  * This is the configuration GUI for the cert.

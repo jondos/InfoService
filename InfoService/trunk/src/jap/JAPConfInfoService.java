@@ -72,6 +72,7 @@ import logging.LogType;
 import java.awt.FlowLayout;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
+import gui.*;
 
 /**
  * This is the configuration GUI for the infoservice.

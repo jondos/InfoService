@@ -49,6 +49,7 @@ import javax.swing.border.TitledBorder;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import gui.*;
 
 final class JAPConfUI extends AbstractJAPConfModule
 {

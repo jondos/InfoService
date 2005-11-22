@@ -40,6 +40,7 @@ import javax.swing.JDialog;
 
 import anon.util.ResourceLoader;
 import gui.JAPAboutAutoScroller;
+import gui.*;
 
 final class JAPAbout extends JDialog
 {

@@ -58,6 +58,7 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import proxy.IProxyListener;
+import gui.*;
 
 final public class JAPViewIconified extends JWindow implements ActionListener,
 	MouseMotionListener,

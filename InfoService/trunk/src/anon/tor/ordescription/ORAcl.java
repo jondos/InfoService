@@ -31,8 +31,7 @@ import java.net.InetAddress;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
-import anon.util.ByteArrayUtil;
-import anon.util.Util;
+import anon.infoservice.ListenerInterface;
 
 public class ORAcl
 {
@@ -167,7 +166,7 @@ public class ORAcl
 	 */
 	public boolean isAllowed(String adr, int port)
 	{
-		if (!Util.isIPAddress(adr))
+		if (!ListenerInterface.isValidIP(adr))
 		{
 			return false;
 		}

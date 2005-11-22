@@ -42,6 +42,7 @@ import java.util.Vector;
 import javax.swing.JOptionPane;
 import jap.*;
 import anon.pay.PayAccount;
+import gui.*;
 
 /** This class creates a payment account and shows a busy window meanwhile
  *  @author Tobias Bayer

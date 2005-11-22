@@ -27,7 +27,7 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 */
 package gui.wizard;
 
-import jap.JAPMessages;
+import gui.JAPMessages;
 import jap.JAPUtil;
 
 import java.awt.CardLayout;

@@ -49,6 +49,7 @@ import logging.LogLevel;
 import logging.LogType;
 
 import jap.*;
+import gui.*;
 
 /**
  * This is the configuration GUI for the JAP forwarding state component.

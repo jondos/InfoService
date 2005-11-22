@@ -65,6 +65,7 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import gui.GUIUtils;
+import gui.*;
 
 /**
  * This class contains static utility functions for Jap
