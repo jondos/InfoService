@@ -35,15 +35,32 @@
 
 package jpi;
 
-import java.io.*;
-import java.security.*;
-import java.util.*;
+import java.io.ByteArrayInputStream;
+import java.security.InvalidKeyException;
+import java.util.Enumeration;
+import java.util.Random;
 
-import anon.crypto.*;
-import anon.pay.xml.*;
-import anon.util.*;
-import jpi.db.*;
-import logging.*;
+import anon.crypto.IMyPublicKey;
+import anon.crypto.JAPSignature;
+import anon.pay.xml.XMLAccountCertificate;
+import anon.pay.xml.XMLAccountInfo;
+import anon.pay.xml.XMLBalance;
+import anon.pay.xml.XMLChallenge;
+import anon.pay.xml.XMLCloseAck;
+import anon.pay.xml.XMLEasyCC;
+import anon.pay.xml.XMLErrorMessage;
+import anon.pay.xml.XMLJapPublicKey;
+import anon.pay.xml.XMLPaymentOptions;
+import anon.pay.xml.XMLResponse;
+import anon.pay.xml.XMLTransCert;
+import anon.util.IXMLEncodable;
+import anon.util.XMLUtil;
+import jpi.db.Balance;
+import jpi.db.DBInterface;
+import jpi.db.DBSupplier;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 
 /**
  * This class contains the functionality for talking to a JAP. For

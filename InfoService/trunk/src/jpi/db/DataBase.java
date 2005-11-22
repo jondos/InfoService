@@ -82,8 +82,7 @@ public class DataBase extends DBInterface
 		"SPENT BIGINT," +
 		"CREATION_TIME TIMESTAMP (0)," +
 		"ACCOUNTCERT VARCHAR(2000));",
-
-/*		"CREATE TABLE CASCADENAMES (" +
+		/*		"CREATE TABLE CASCADENAMES (" +
 		"CASCADENUMBER SERIAL PRIMARY KEY," +
 		"NAME VARCHAR(20));",
 
@@ -94,10 +93,10 @@ public class DataBase extends DBInterface
 		"PAYCOSTS INTEGER," +
 		"USERCONFIRM VARCHAR(2000))",*/
 
-		"CREATE TABLE COSTCONFIRMATIONS ("+
-		"AiID VARCHAR(128),"+
-		"ACCOUNTNUMBER BIGINT,"+
-		"TRANSFERREDBYTES BIGINT,"+
+		"CREATE TABLE COSTCONFIRMATIONS (" +
+		"AiID VARCHAR(128)," +
+		"ACCOUNTNUMBER BIGINT," +
+		"TRANSFERREDBYTES BIGINT," +
 		"XMLCC VARCHAR(1024))",
 
 		"CREATE TABLE TRANSFERS (" +
@@ -222,7 +221,7 @@ public class DataBase extends DBInterface
 		}
 		catch (Exception e)
 		{
-			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,e);
+			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, e);
 			throw e;
 		}
 		return bal;
@@ -276,7 +275,7 @@ public class DataBase extends DBInterface
 				catch (SQLException e)
 				{
 					LogHolder.log(LogLevel.ERR, LogType.PAY, "Error occured during database cleanup");
-					LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,e);
+					LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, e);
 				}
 				LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Database.cleanup done.");
 			}
@@ -300,11 +299,13 @@ public class DataBase extends DBInterface
 						   java.sql.Timestamp creationTime,
 						   String accountCert) throws Exception
 	{
-		LogHolder.log(LogLevel.DEBUG, LogType.PAY, "DataBase.addAccount() called for accountnumber " + accountNumber);
+		LogHolder.log(LogLevel.DEBUG, LogType.PAY,
+					  "DataBase.addAccount() called for accountnumber " + accountNumber);
+		/**@todo Replace third argument with 0 when account charging is working*/
 		String statement =
 			"INSERT INTO ACCOUNTS VALUES (" +
 			accountNumber + ",'" + xmlPublicKey +
-			"',0,'" + creationTime + "',0,'" + creationTime + "','"
+			"',100000000,'" + creationTime + "',0,'" + creationTime + "','"
 			+ accountCert + "')";
 		try
 		{
@@ -419,7 +420,7 @@ public class DataBase extends DBInterface
 			LogHolder.log(LogLevel.ERR, LogType.PAY,
 						  "DataBase.storeTransferNumber() Could not add transfer number " + transfer_num +
 						  " to DB");
-			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,e);
+			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, e);
 			throw e;
 		}
 	}
@@ -435,7 +436,7 @@ public class DataBase extends DBInterface
 		}
 		catch (Exception e)
 		{
-			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,e);
+			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, e);
 			throw e;
 		}
 	}
@@ -443,7 +444,8 @@ public class DataBase extends DBInterface
 	// Documentation see DBInterface class
 	public String getXmlPublicKey(long accountnumber) throws Exception
 	{
-		LogHolder.log(LogLevel.DEBUG, LogType.PAY, "DataBase.getPubKey() called for account no. " + accountnumber);
+		LogHolder.log(LogLevel.DEBUG, LogType.PAY,
+					  "DataBase.getPubKey() called for account no. " + accountnumber);
 		String strXmlKey = null;
 		Statement stmt = m_dbConn.createStatement();
 		ResultSet rs = stmt.executeQuery("SELECT XMLPUBLICKEY FROM ACCOUNTS WHERE ACCOUNTNUMBER=" +
@@ -466,9 +468,10 @@ public class DataBase extends DBInterface
 
 		String query =
 			"INSERT INTO COSTCONFIRMATIONS VALUES ('" + cc.getAIName() + "', " +
-			cc.getAccountNumber() + ","+cc.getTransferredBytes()+",'" + XMLUtil.toString(XMLUtil.toXMLDocument(cc)) +
+			cc.getAccountNumber() + "," + cc.getTransferredBytes() + ",'" +
+			XMLUtil.toString(XMLUtil.toXMLDocument(cc)) +
 			"')";
-		LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Executing query: "+query);
+		LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Executing query: " + query);
 		if (stmt.executeUpdate(query) != 1)
 		{
 			// error while updating DB
@@ -606,10 +609,10 @@ public class DataBase extends DBInterface
 		Statement stmt = m_dbConn.createStatement();
 		XMLEasyCC cc = null;
 		ResultSet rs = stmt.executeQuery(
-			  "SELECT XMLCC FROM COSTCONFIRMATIONS "+
+			"SELECT XMLCC FROM COSTCONFIRMATIONS " +
 			  "WHERE ACCOUNTNUMBER=" + accountNumber +
-			  " AND AiID='"+aiName+"'");
-		if(rs.next())
+			" AND AiID='" + aiName + "'");
+		if (rs.next())
 		{
 			cc = new XMLEasyCC(rs.getString(1));
 		}
@@ -689,7 +692,7 @@ public class DataBase extends DBInterface
 			{
 				LogHolder.log(LogLevel.ERR, LogType.PAY,
 							  "DataBase.createTables: Could not create " + db_tables[i]);
-				LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,e);
+				LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, e);
 			}
 		}
 	}
@@ -714,7 +717,7 @@ public class DataBase extends DBInterface
 			{
 				LogHolder.log(LogLevel.ERR, LogType.PAY,
 							  "DataBase.dropTables: Could not drop " + db_tables[i] + "!");
-				LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,e);
+				LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, e);
 			}
 		}
 	}
@@ -730,5 +733,49 @@ public class DataBase extends DBInterface
 	 }
 	 super.finalize();
 	  }*/
+
+	public void chargeAccount(long a_transferNumber, long a_amount)
+	{
+		Statement stmt;
+		long account;
+		boolean used;
+		try
+		{
+			//Get account for transfernumber
+			stmt = m_dbConn.createStatement();
+			ResultSet r = stmt.executeQuery("SELECT ACCOUNTNUMBER, USED FROM TRANSFERS WHERE TRANSFERNUMBER=" +
+											a_transferNumber);
+			if (r.next())
+			{
+				account = r.getLong(1);
+				used = r.getBoolean(2);
+			}
+			else
+			{
+				throw new Exception("Transfer no. " + a_transferNumber + " is not in database");
+			}
+			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Fetched account no. " + account);
+			//Update deposit
+			if (!used)
+			{
+				stmt = m_dbConn.createStatement();
+				stmt.executeUpdate("UPDATE ACCOUNTS SET DEPOSIT=DEPOSIT+" + a_amount + "WHERE ACCOUNTNUMBER=" +
+								   account);
+				//Set transfer number to "used"
+				stmt = m_dbConn.createStatement();
+				stmt.executeUpdate("UPDATE TRANSFERS SET USED=TRUE WHERE TRANSFERNUMBER=" +
+								   a_transferNumber);
+			}
+			else
+			{
+				LogHolder.log(LogLevel.ERR, LogType.PAY, "Transfer number already used.");
+			}
+		}
+		catch (Exception e)
+		{
+			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, "Could not charge account: " + e.getMessage());
+
+		}
+	}
 
 }

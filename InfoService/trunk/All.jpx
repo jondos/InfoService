@@ -34,10 +34,10 @@
   <property category="sys" name="ExcludeClassEnabled" value="0"/>
   <property category="sys" name="IncludeTestPath" value="1"/>
   <property category="sys" name="InstanceVisibility" value="2"/>
-  <property category="sys" name="JDK" value="java version 1.4.2_09-232"/>
+  <property category="sys" name="JDK" value="java version 1.3.1_15-b01"/>
   <property category="sys" name="JvmVersion" value="1.2"/>
   <property category="sys" name="LastTag" value="0"/>
-  <property category="sys" name="Libraries" value="ApacheBzip2;ApacheFTPClient;http;BouncyCastleLightForJAP;Log4j;mac;XML-1.1;PostgeSql;Apache XML-RPC;junitx;Jama;JavaMail;JUnit"/>
+  <property category="sys" name="Libraries" value="ApacheBzip2;ApacheFTPClient;http;BouncyCastleLightForJAP;Log4j;mac;XML-1.1;PostgeSql;Apache XML-RPC;junitx;Jama;JavaMail;JUnit;Swing"/>
   <property category="sys" name="MakeStable" value="0"/>
   <property category="sys" name="OutPath" value="classes_all"/>
   <property category="sys" name="SourcePath" value="src;test"/>
