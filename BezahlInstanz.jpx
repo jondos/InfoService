@@ -38,7 +38,7 @@
   <property category="sys" name="ExcludeClassEnabled" value="0"/>
   <property category="sys" name="IncludeTestPath" value="1"/>
   <property category="sys" name="InstanceVisibility" value="2"/>
-  <property category="sys" name="JDK" value="java version 1.5.0_02-56"/>
+  <property category="sys" name="JDK" value="java version 1.5.0_05-b05"/>
   <property category="sys" name="JvmVersion" value="1.2"/>
   <property category="sys" name="LastTag" value="0"/>
   <property category="sys" name="Libraries" value="BouncyCastleLightForJAP;PostgeSql;Log4j;http"/>
@@ -60,6 +60,7 @@
   <node name="anon.pay.xml" type="Package"/>
   <node name="anon.tor.tinytls" type="Package"/>
   <node name="jpi" type="Package"/>
+  <node name="jpi.db" type="Package"/>
   <node name="logging" type="Package"/>
   <node name="BI.jar" type="Archive">
     <property category="archiving" name="archiverClass" value="com.borland.jbuilder.wizard.archive.ApplicationArchiver"/>

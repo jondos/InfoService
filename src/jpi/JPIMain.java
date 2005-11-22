@@ -28,6 +28,7 @@
 package jpi;
 
 import jpi.db.DBSupplier;
+import jpi.helper.PayPalHelper;
 import logging.ChainedLog;
 import logging.FileLog;
 import logging.LogHolder;
@@ -67,6 +68,11 @@ public class JPIMain
 			LogHolder.setLogInstance(l);
 		}
 		log1.setLogLevel(Configuration.getLogStderrThreshold());
+		log1 = new SystemErrLog();
+		LogHolder.setLogInstance(log1);
+		log1.setLogType(LogType.ALL);
+		LogHolder.setDetailLevel(LogHolder.DETAIL_LEVEL_HIGHEST);
+
 		// process command line args
 		boolean newdb = false;
 		if (argv.length == 2)
@@ -134,10 +140,19 @@ public class JPIMain
 		aiThread.start();
 
         // start InfoService thread for InfoService connections
-        LogHolder.log(LogLevel.INFO, LogType.PAY, "JPIMain: Launching InfoService thread for InfoService connections");
+		LogHolder.log(LogLevel.INFO, LogType.PAY,
+					  "JPIMain: Launching InfoService thread for InfoService connections");
         InfoServiceThread infoServer = new InfoServiceThread();
         Thread infoServiceThread = new Thread(infoServer);
         infoServiceThread.start();
+		LogHolder.log(LogLevel.INFO, LogType.PAY, "Initialization complete, JPIMain Thread terminating");
+
+		// start PayPalHelper thread for IPN acceptance
+		LogHolder.log(LogLevel.INFO, LogType.PAY, "JPIMain: Launching PayPalHelper thread");
+		PayPalHelper payPal = new PayPalHelper(9999);
+		Thread payPalThread = new Thread(payPal);
+		payPalThread.start();
+
 		LogHolder.log(LogLevel.INFO, LogType.PAY, "Initialization complete, JPIMain Thread terminating");
 	}
 

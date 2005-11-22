@@ -29,8 +29,6 @@ package jpi.db;
 
 import anon.pay.xml.XMLEasyCC;
 
-
-
 /**
  * The interface to the database. Implementation for Postgresql see
  * {@link DataBase}. To use other databases, simply rewrite this class
@@ -138,7 +136,9 @@ public abstract class DBInterface
 
 	/** @todo document */
 	public abstract void insertCC(XMLEasyCC cc) throws Exception;
+
 	public abstract void updateCC(XMLEasyCC cc) throws Exception;
+
 	public abstract XMLEasyCC getCC(long accountNumber, String aiName) throws Exception;
 
 	/*
@@ -151,7 +151,7 @@ public abstract class DBInterface
 	 * @return Kontoschnappschuss
 	 * @throws Exception
 	 */
-/*	public abstract void storeCosts(anon.pay.xml.XMLEasyCC cc) throws Exception;*/
+	/*	public abstract void storeCosts(anon.pay.xml.XMLEasyCC cc) throws Exception;*/
 
 	/*
 	 * Liefert den Kontoschnappschuss eines Nutzerkontos f\uFFFDr eine
@@ -162,7 +162,7 @@ public abstract class DBInterface
 	 * @return Kontoschnappschuss
 	 * @throws Exception
 	 */
-/*	public abstract AccountSnapshot getAccountSnapshot(long accountNumber,
+	/*	public abstract AccountSnapshot getAccountSnapshot(long accountNumber,
 		String aiName) throws Exception;*/
 
 	/*
@@ -173,7 +173,7 @@ public abstract class DBInterface
 	 * @return Kostenstand
 	 * @throws Exception
 	 */
-/*	public abstract long getCosts(long accountNumber,
+	/*	public abstract long getCosts(long accountNumber,
 								  String aiName) throws Exception;*/
 
 	/*
@@ -185,7 +185,7 @@ public abstract class DBInterface
 	 * @return augezahlte Kosten
 	 * @throws Exception
 	 */
-/*	public abstract long getPayCosts(long accountNumber,
+	/*	public abstract long getPayCosts(long accountNumber,
 									 String aiName) throws Exception;*/
 
 	/**
@@ -413,4 +413,6 @@ public abstract class DBInterface
 		}
 		return (d == 0);
 	}
+
+	public abstract void chargeAccount(long a_transferNumber, long a_amount);
 }

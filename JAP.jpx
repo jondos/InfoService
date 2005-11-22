@@ -454,6 +454,7 @@
   <node name="anon.mixminion" type="Package"/>
   <node name="anon.pay" type="Package"/>
   <node name="anon.pay.xml" type="Package"/>
+  <node name="anon.server" type="Package"/>
   <node name="anon.server.impl" type="Package"/>
   <node name="anon.tor" type="Package"/>
   <node name="anon.util" type="Package"/>

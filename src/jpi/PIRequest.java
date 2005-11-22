@@ -33,7 +33,7 @@ import java.util.StringTokenizer;
 
 /**
  * Data container for a http request.
- * Used by PIPaypalServer, PIServer, PIUserHttpServer
+ * Used by PIServer, PIUserHttpServer, PayPalHelper
  *
  * @author Andreas Mueller
  */
@@ -57,7 +57,6 @@ public class PIRequest
 	}
 
 	/** stores the request POST parameters names and values in an internal hashtable
-	 * @deprecated this is only needed for paypal and can now be removed
 	 * @author Bastian Voigt
 	 * @date 04 July 2003
 	 */

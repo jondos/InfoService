@@ -38,6 +38,9 @@ import anon.util.Util;
  */
 public final class LogHolder
 {
+	private static final String TRACED_LOG_MESSAGE = "[Traced log Message]:";
+	private static final int LINE_LENGTH_HIGH_DETAIL = 40;
+	private static final int LINE_LENGTH_HIGHEST_DETAIL = 80;
 
 	/// the lowest detail level that is possible
 	public static final int DETAIL_LEVEL_LOWEST = 0;
@@ -145,11 +148,12 @@ public final class LogHolder
 	 * @param logLevel The log level (see constants in class LogLevel).
 	 * @param logType The log type (see constants in class LogType).
 	 * @param message The message to log.
-	 * @param a_bSkipCallingMethod true if not the name of the calling method should be logged but
-	 *                             the name of the method that has called the caller;
-	 *                             false if the name of the calling method should be logged (default)
+	 * @param a_bAddCallingClass true if not only the name and class of the current method should be logged
+	 *                           but also the name of the method in the class that has called this method;
+	 *                           false if only the name of the current method should be logged (default)
 	 */
-	public static synchronized void log(int logLevel, int logType, String message, boolean a_bSkipCallingMethod)
+	public static synchronized void log(int logLevel, int logType, String message,
+										boolean a_bAddCallingClass)
 	{
 		if (isLogged(logLevel, logType))
 		{
@@ -159,20 +163,35 @@ public final class LogHolder
 			}
 			else if (m_messageDetailLevel == DETAIL_LEVEL_HIGH)
 			{
+				if (a_bAddCallingClass)
+				{
+					getInstance().getLogInstance().log(logLevel, logType,
+						Util.normaliseString(
+											  getCallingClassFile(false) + ": ", LINE_LENGTH_HIGH_DETAIL)
+						+ TRACED_LOG_MESSAGE);
+
+				}
 				getInstance().getLogInstance().log(logLevel, logType,
 				Util.normaliseString(
-								getCallingClassFile(a_bSkipCallingMethod) + ": ", 40) + message);
+								getCallingClassFile(a_bAddCallingClass) + ": ", LINE_LENGTH_HIGH_DETAIL)
+			+ message);
 			}
 			else
 			{
+				if (a_bAddCallingClass)
+				{
 				getInstance().getLogInstance().log(logLevel, logType,
 					Util.normaliseString(
-							   getCallingMethod(a_bSkipCallingMethod) + ": ", 80) + message);
+											  getCallingMethod(false) + ": ", LINE_LENGTH_HIGHEST_DETAIL)
+						+ TRACED_LOG_MESSAGE);
+				}
+				getInstance().getLogInstance().log(logLevel, logType,
+					Util.normaliseString(
+							   getCallingMethod(a_bAddCallingClass) + ": ", LINE_LENGTH_HIGHEST_DETAIL)
+			+ message);
 			}
 			}
 		}
-
-
 
 	/**
 	 * Write the log data to the Log instance.
@@ -235,16 +254,16 @@ public final class LogHolder
 	/**
 	 * Returns the filename and line number of the calling method (from outside
 	 * this class) in the form <Code> (class.java:<LineNumber>) </Code>.
-	 * @param a_bSkipCallingMethod if true, the true calling method is skipped and the class file
-	 *                             of the caller of the calling method is returned;
-	 *                             if false, the class file of the calling method is returned
-	 *                             (default)
+	 * @param a_bSkipOwnClass if true, the true calling method is skipped and the class file
+	 *                        of the first method in the stack trace of the calling class
+	 *                        that is in another class than itself is returned;
+	 *                        if false, the class file of the calling method is returned (default)
 	 *
 	 * @return the filename and line number of the calling method
 	 */
-	private static String getCallingClassFile(boolean a_bSkipCallingMethod)
+	private static String getCallingClassFile(boolean a_bSkipOwnClass)
 	{
-		String strClassFile = getCallingMethod(a_bSkipCallingMethod);
+		String strClassFile = getCallingMethod(a_bSkipOwnClass);
 		strClassFile = strClassFile.substring(strClassFile.indexOf('('), strClassFile.indexOf(')') + 1);
 		return strClassFile;
 	}
@@ -253,17 +272,19 @@ public final class LogHolder
 	 * Returns the name, class, file and line number of the calling method (from outside
 	 * this class) in the form <Code> package.class.method(class.java:<LineNumber>) </Code>.
 	 * This method does need some processing time, as an exception with the stack trace is generated.
-	 * @param a_bSkipCallingMethod if true, the true calling method is skipped and the caller of the
-	 *                             calling method is returned; if false, the calling method is
+	 * @param a_bSkipOwnClass if true, the true calling method is skipped and the caller of the
+	 *                        first method in the stack trace of calling method that is in another
+	 *                        class than itself is returned; if false, the calling method is
 	 *                             returned (default)
 	 * @return the name, class and line number of the calling method
 	 */
-	private static String getCallingMethod(boolean a_bSkipCallingMethod)
+	private static String getCallingMethod(boolean a_bSkipOwnClass)
 	{
 		StringTokenizer tokenizer;
 		String strCurrentMethod = "";
-		StringWriter swriter = new java.io.StringWriter();
-		PrintWriter pwriter = new java.io.PrintWriter(swriter);
+		StringWriter swriter = new StringWriter();
+		PrintWriter pwriter = new PrintWriter(swriter);
+		String strOwnClass = "   ";
 
 		new Exception().printStackTrace(pwriter);
 
@@ -274,20 +295,19 @@ public final class LogHolder
 			tokenizer.nextToken(); // jump over the "at"
 			/* jump over all local class calls */
 			if (!(strCurrentMethod = tokenizer.nextToken()).replace('/','.') .startsWith(
-				 LogHolder.class.getName()))
+				 LogHolder.class.getName()) && !strCurrentMethod.startsWith(strOwnClass))
 			{
-				// this is the method that called us
-				if (a_bSkipCallingMethod)
-				{
-					// the calling method is skipped
-					if (tokenizer.countTokens() >= 2)
-					{
-						tokenizer.nextToken();
-						strCurrentMethod = tokenizer.nextToken();
-					}
-				}
 
+				if (a_bSkipOwnClass && strOwnClass.trim().length() == 0)
+				{
+					// get the class name of the calling class
+					strOwnClass = strCurrentMethod.substring(0,strCurrentMethod.indexOf('('));
+					strOwnClass = strOwnClass.substring(0, strOwnClass.lastIndexOf('.'));
+					}
+				else
+				{
 				break;
+				}
 			}
 		}
 		return strCurrentMethod;
