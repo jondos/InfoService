@@ -138,6 +138,15 @@ public class JAPDialog
 	}
 
 	/**
+	 * Allows to set the dialog resizable or fixed-sized.
+	 * @param a_bResizable true if the dialog should become resizable; false otherwise
+	 */
+	public void setResizable(boolean a_bResizable)
+	{
+		m_internalDialog.setResizable(a_bResizable);
+	}
+
+	/**
 	 * Returns the dialog's location on the screen.
 	 * @return the dialog's location on the screen
 	 */
