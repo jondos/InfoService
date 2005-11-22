@@ -39,6 +39,7 @@ import javax.swing.JSlider;
 import javax.swing.SwingConstants;
 
 import anon.crypto.SignatureVerifier;
+import gui.*;
 
 final class JAPConfAnonGeneral extends AbstractJAPConfModule
 {

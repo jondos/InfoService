@@ -33,7 +33,7 @@ import java.awt.MediaTracker;
 import javax.swing.ImageIcon;
 
 import anon.util.ResourceLoader;
-import jap.JAPMessages;
+
 
 /**
  * This class loads resources from the file system.

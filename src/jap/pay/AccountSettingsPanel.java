@@ -75,6 +75,7 @@ import java.awt.Component;
 
 import jap.*;
 import anon.crypto.JAPCertificate;
+import gui.*;
 
 /**
  * The Jap Conf Module (Settings Tab Page) for the Accounts and payment Management

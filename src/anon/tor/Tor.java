@@ -54,7 +54,7 @@ import anon.tor.util.DNSCacheEntry;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import anon.util.Util;
+import anon.infoservice.ListenerInterface;
 
 /**
  * @author stefan
@@ -193,10 +193,10 @@ public class Tor implements Runnable, AnonService
 
 		Circuit c = null;
 		//First check if we can resolve the DNS entry...
-		if (!Util.isIPAddress(addr))
+		if (!ListenerInterface.isValidIP(addr))
 		{
 			addr = resolveDNS(addr);
-			if (!Util.isIPAddress(addr))
+			if (!ListenerInterface.isValidIP(addr))
 			{
 				return null;
 			}

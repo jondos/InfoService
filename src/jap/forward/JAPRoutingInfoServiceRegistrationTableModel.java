@@ -36,6 +36,7 @@ import javax.swing.table.AbstractTableModel;
 
 import forward.server.ServerSocketPropagandist;
 import jap.*;
+import gui.*;
 
 /**
  * This is the implementation of the infoservice registration table data, showed in the server

@@ -34,6 +34,7 @@ import javax.swing.JPanel;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import gui.*;
 
 final public class JAPiPAQ
 {
@@ -49,7 +50,7 @@ final public class JAPiPAQ
 	{
 		JAPModel.getInstance().setSmallDisplay(true);
 		// Init Messages....
-		JAPMessages.init();
+		JAPMessages.init(JAPConstants.MESSAGESFN);
 		// Test (part 2) for right JVM....
 		// Create the controller object
 		m_controller = JAPController.getInstance();

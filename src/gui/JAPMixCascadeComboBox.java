@@ -39,7 +39,7 @@ import javax.swing.border.EmptyBorder;
 
 import anon.infoservice.MixCascade;
 import jap.JAPConstants;
-import jap.JAPMessages;
+
 import jap.JAPUtil;
 import java.awt.Dimension;
 

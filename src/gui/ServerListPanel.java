@@ -29,7 +29,7 @@
 package gui;
 
 import jap.JAPConstants;
-import jap.JAPMessages;
+
 import jap.JAPUtil;
 
 import java.awt.Dimension;

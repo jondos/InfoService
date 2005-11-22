@@ -32,6 +32,7 @@ import java.awt.GridBagLayout;
 
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
+import gui.*;
 
 /**
  * This is only a wrapper class for the configuration classes under the services node. It is only

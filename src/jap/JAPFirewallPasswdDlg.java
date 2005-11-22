@@ -38,6 +38,7 @@ import javax.swing.JPasswordField;
 
 import anon.infoservice.ImmutableProxyInterface;
 import anon.util.IPasswordReader;
+import gui.*;
 
 /**
  * This class shows a dialog window and reads a password from user input.

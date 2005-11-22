@@ -57,6 +57,7 @@ import logging.FileLog;
 import logging.Log;
 import logging.LogLevel;
 import logging.LogType;
+import gui.*;
 
 /**
  * This class serves as a debugging interface.

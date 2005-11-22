@@ -90,6 +90,7 @@ import javax.swing.LookAndFeel;
 import javax.swing.SwingUtilities;
 import jap.pay.*;
 import jap.forward.*;
+import gui.*;
 
 final public class JAPNewView extends AbstractJAPMainView implements IJAPMainView, ActionListener,
 	JAPObserver

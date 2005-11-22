@@ -51,6 +51,7 @@ import javax.swing.border.TitledBorder;
 import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.JAPVersionInfo;
 import update.JAPUpdateWizard;
+import gui.*;
 
 final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListener, ItemListener, Runnable
 {

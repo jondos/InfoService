@@ -72,7 +72,7 @@ import jap.AbstractJAPConfModule;
 import jap.JAPConstants;
 import jap.JAPController;
 import jap.JAPHelp;
-import jap.JAPMessages;
+import gui.JAPMessages;
 import jap.JAPModel;
 import jap.JAPUtil;
 import jap.MessageSystem;

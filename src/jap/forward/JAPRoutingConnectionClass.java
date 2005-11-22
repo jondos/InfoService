@@ -34,6 +34,7 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import jap.*;
+import gui.*;
 
 /**
  * This is the implementation of a structure, which stores the paramters of a connection class,

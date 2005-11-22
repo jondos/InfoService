@@ -60,6 +60,7 @@ import javax.swing.text.Document;
 
 import anon.util.ResourceLoader;
 import java.io.StringReader;
+import gui.*;
 
 /* classes modified from Swing Example "Metalworks" */
 /** Help window for the JAP. Thi is a singleton meaning that there exists only one help window all the time.*/

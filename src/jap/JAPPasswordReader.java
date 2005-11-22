@@ -13,6 +13,7 @@ import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 
 import anon.util.IMiscPasswordReader;
+import gui.*;
 
 /**
  * PasswordReader that displays a dialog window.

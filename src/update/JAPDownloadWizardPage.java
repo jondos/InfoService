@@ -31,7 +31,7 @@ package update;
 import gui.JAPMultilineLabel;
 import gui.wizard.BasicWizardPage;
 import jap.JAPConstants;
-import jap.JAPMessages;
+import gui.JAPMessages;
 import jap.JAPUtil;
 
 import java.awt.Dimension;

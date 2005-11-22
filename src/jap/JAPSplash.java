@@ -38,6 +38,7 @@ import java.awt.Image;
 import java.awt.MediaTracker;
 import java.awt.Toolkit;
 import java.awt.Window;
+import gui.*;
 
 final public class JAPSplash extends Window
 {
