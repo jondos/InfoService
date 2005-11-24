@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2000, The JAP-Team
+ Copyright (c) 2000-2005, The JAP-Team
  All rights reserved.
  Redistribution and use in source and binary forms, with or without modification,
  are permitted provided that the following conditions are met:
@@ -27,28 +27,134 @@
  */
 package logging;
 
-final public class LogType
+/**
+ * This class holds the available log types. Log types may be combined by bitwise or(|).
+ * @see logging.LogHolder
+ */
+public final class LogType
 {
-	public final static int NUL = 0;
+	/** The human readyble names of all log types. New log types must be added here, too. */
+	private static final String[] STR_LOG_TYPES =
+		{"NUL", "GUI", "NET", "THREAD", "MISC", "PAY", "TOR", "CRYPTO", "ALL"};
+
+	/** The concatenation string of the human readable log types. */
+	private static final String STR_ADD_LOG_TYPE = "+";
+
+	/** The integer values of all log types. */
+	private static final int[] LOG_TYPES = getAvailableLogTypes();
+
+	public static final int NUL = LOG_TYPES[0];
 
 	/** Indicates a GUI related message (binary: <code>00000001</code>) */
-	public final static int GUI = 1;
+	public static final int GUI = LOG_TYPES[1];
 
 	/** Indicates a network related message (binary: <code>00000010</code>) */
-	public final static int NET = 2;
+	public static final int NET = LOG_TYPES[2];
 
 	/** Indicates a thread related message (binary: <code>00000100</code>) */
-	public final static int THREAD = 4;
+	public static final int THREAD = LOG_TYPES[3];
 
 	/** Indicates a misc message (binary: <code>00001000</code>) */
-	public final static int MISC = 8;
+	public static final int MISC = LOG_TYPES[4];
 
 	/** Indicates a pay message (binary: <code>00001000</code>) */
-	public final static int PAY = 16;
+	public static final int PAY = LOG_TYPES[5];
 
 	/** Indicates a TOR message (binary: <code>00010000</code>) */
-	public final static int TOR = 32;
+	public static final int TOR = LOG_TYPES[6];
 
-	/** Indicates all messagea*/
-	public final static int ALL = GUI + NET + THREAD + MISC + PAY+TOR;
+	/** Indicates a message related to cryptographic operations (binary: <code>00100000</code>) */
+	public static final int CRYPTO = LOG_TYPES[7];
+
+	/** Indicates all messages*/
+	public static final int ALL = createLogTypeALL();
+
+	/**
+	 * Instances of this class are not allowed.
+	 */
+	private LogType()
+	{
+	}
+
+	/**
+	 * Returns the integer values of all available log types. Log types may be combined by using the
+	 * bitwise or(|)-operation.
+	 * @return the integer values of all available log types
+	 */
+	public static int[] getAvailableLogTypes()
+	{
+		int[] logTypes = new int[STR_LOG_TYPES.length - 1];
+
+		logTypes[0] = 0;
+
+		for (int i = 1, j = 1; i < logTypes.length; i++)
+		{
+			logTypes[i] = j;
+			j <<= 1;
+		}
+
+		return logTypes;
+	}
+
+	/**
+	 * Returns the number of all available log types.
+	 * @return the number of all available log types
+	 */
+	public static int getNumberOfLogTypes()
+	{
+		return STR_LOG_TYPES.length - 1;
+	}
+
+	/**
+	 * Returns the name of the given log type as a human readable string. If more than one log type
+	 * is used, the string is concatenated from the used log types.
+	 * @param a_logType a log type (may consist of several log types that have been combined)
+	 * @return the name of the given log type
+	 */
+	public static String getLogTypeName(int a_logType)
+	{
+		String strLogTypeName = "";
+
+		if (a_logType == 0)
+		{
+			strLogTypeName = STR_LOG_TYPES[0];
+		}
+		else if ((a_logType & ALL) == ALL)
+		{
+			strLogTypeName = STR_LOG_TYPES[STR_LOG_TYPES.length - 1];
+		}
+		else
+		{
+			for (int i = 1; i < LOG_TYPES.length; i++)
+			{
+				if ((a_logType & LOG_TYPES[i]) > 0)
+				{
+					strLogTypeName += STR_LOG_TYPES[i] + STR_ADD_LOG_TYPE;
+				}
+			}
+			if (strLogTypeName.length() == 0)
+			{
+				strLogTypeName = STR_LOG_TYPES[0];
+			}
+			else
+			{
+				strLogTypeName = strLogTypeName.substring(0,
+					strLogTypeName.length() - STR_ADD_LOG_TYPE.length());
+			}
+		}
+
+		return strLogTypeName;
+	}
+
+	private static int createLogTypeALL()
+	{
+		int all = 0;
+
+		for (int i = 0; i < LOG_TYPES.length; i++)
+		{
+			all += LOG_TYPES[i];
+		}
+
+		return all;
+	}
 }
