@@ -41,7 +41,10 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 /**
- * This class loads resources from the file system.
+ * This class loads resources from the file system. It allows to specify resource paths
+ * like "dir1/dir2/resource" or "dir1/dir2/" relative to the classpath or the current directory.
+ * It allows also for going up directories like "dir1/dir2/../resource" that would be translated
+ * to "dir1/resource".
  * @author Rolf Wendolsky
  */
 public final class ResourceLoader
@@ -51,6 +54,8 @@ public final class ResourceLoader
 	private static final String SYSTEM_RESOURCE_TYPE_FILE = "FILE";
 	private static final String SYSTEM_RESOURCE = "systemresource:/";
 	private static final String SYSTEM_RESOURCE_ENDSIGN = "/+/";
+	private static final String DIR_UP = "../";
+	private static final String DIR_CURRENT = "./";
 	private static final int READ_BUFFER = 2000;
 
 	private static final String RESOURCE_NO_CLASSES_FOUND = "";
@@ -61,13 +66,28 @@ public final class ResourceLoader
 	private static Vector ms_classpathResourceURLs = new Vector();
 	/// the resource types: either SYSTEM_RESOURCE_TYPE_ZIP or SYSTEM_RESOURCE_TYPE_FILE
 	private static Vector ms_classpathResourceTypes;
-	/// stores the parent directory of jar file that holds this class for caching purposes
-	private static File ms_parentResourceFile =
-		new File(ClassUtil.getClassDirectory(ClassUtil.getClassStatic()).getAbsolutePath());
+	/// stores the parent directory of the jar file that holds this class for caching purposes
+	private static File ms_parentResourceFile;
 	private static String ms_parentResourceFileResourceURL;
 	private static String ms_parentResourceFileResourceType;
 	/// the class path at the last state it was read
 	private static String ms_classpath;
+
+	/// static initialisation
+	{
+		try
+		{
+			ms_parentResourceFile =
+				new File(ClassUtil.getClassDirectory(ResourceLoader.class).getAbsolutePath());
+		}
+		catch (Exception a_e)
+		{
+			/**
+			 * @todo for some unknown reason, this fails when used as an applet; try to solve this later...
+			 */
+			ms_parentResourceFile = null;
+		}
+	}
 
 	private ResourceLoader()
 	{
@@ -89,7 +109,7 @@ public final class ResourceLoader
 
 		data = new byte[0];
 		// if readDataLength >= 0 there are more bytes available to read
-		while(readDataLength >= 0)
+		while (readDataLength >= 0)
 		{
 			// initialize the buffer
 			if (a_iStream.available() > 0)
@@ -112,7 +132,8 @@ public final class ResourceLoader
 
 	/**
 	 * Gets the absolute URL to a requested resource if the resource is found in the class path or
-	 * in the local directory.
+	 * in the local directory. Loads a single resource only, therefore directory specifications like
+	 * "home/dir/" are not allowed.
 	 * @param a_strRelativeResourcePath the relative path to a resource
 	 * @return the absolute URL to the requested resource
 	 */
@@ -123,6 +144,12 @@ public final class ResourceLoader
 		Vector parentResourceFileType;
 		File localFile;
 		URL resourceURL = null;
+
+		if ( (a_strRelativeResourcePath = formatResourcePath(a_strRelativeResourcePath)) == null ||
+			a_strRelativeResourcePath.endsWith("/"))
+		{
+			return null;
+		}
 
 		// this is the standard method for getting a resource URL from the class path
 		resourceURL = ResourceLoader.class.getResource("/" + a_strRelativeResourcePath);
@@ -143,11 +170,12 @@ public final class ResourceLoader
 			}
 		}
 
-		if (resourceURL == null && !readFilesFromClasspath().contains(ms_parentResourceFile))
+		if (resourceURL == null && ms_parentResourceFile != null &&
+			!readFilesFromClasspath().contains(ms_parentResourceFile))
 		{
 			/**
 			 * The parent resource file is not contained in the class path.
-			 * Try to load the requested resource directly from this file.
+			 * Try to load the requested resource directly from the local file.
 			 */
 			parentResourceFile = new Vector();
 			parentResourceFileURL = new Vector();
@@ -156,14 +184,14 @@ public final class ResourceLoader
 			parentResourceFileURL.addElement(ms_parentResourceFileResourceURL);
 			parentResourceFileType.addElement(ms_parentResourceFileResourceType);
 
-			resourceURL = getResourceURL(a_strRelativeResourcePath,
-										 parentResourceFile,
+			resourceURL = getResourceURL(a_strRelativeResourcePath, parentResourceFile,
 										 parentResourceFileURL, parentResourceFileType);
 			ms_parentResourceFileResourceURL = (String) parentResourceFileURL.firstElement();
 			ms_parentResourceFileResourceType = (String) parentResourceFileType.firstElement();
 		}
 
-		/** This is an other (tricky) implementation that tries to find the resource in the
+		/**
+		 * This is an other (tricky) implementation that tries to find the resource in the
 		 * classpath. It may be used if class.getResource(..) does not work properly.
 		 * Please do not remove as this could be important for testing purposes.
 
@@ -172,8 +200,7 @@ public final class ResourceLoader
 			// classPathFiles and classPathResources must be synchronized!
 			synchronized (ms_classpathResourceURLs)
 			{
-				resourceURL = getResourceURL(a_strRelativeResourceSearchPath,
-											 readFilesFromClasspath(),
+		  resourceURL = getResourceURL(a_strRelativeResourcePath, readFilesFromClasspath(),
 											 ms_classpathResourceURLs, ms_classpathResourceTypes);
 			}
 		}*/
@@ -185,7 +212,8 @@ public final class ResourceLoader
 	 * Loads a resource from the classpath or the current directory.
 	 * The resource may be contained in an archive (ZIP,JAR) or a directory structure.
 	 * If the resource could not be found in the classpath, it is loaded from the current
-	 * directory.
+	 * directory. Loads a single resource only, therefore directory specifications like
+	 * "home/dir/" are not allowed.
 	 * @param a_strRelativeResourcePath a relative filename for the resource
 	 * @return the contents of the resource or null if resource could not be loaded
 	 */
@@ -193,7 +221,8 @@ public final class ResourceLoader
 	{
 		InputStream in;
 
-		if (a_strRelativeResourcePath == null || a_strRelativeResourcePath.endsWith("/"))
+		if ( (a_strRelativeResourcePath = formatResourcePath(a_strRelativeResourcePath)) == null ||
+			a_strRelativeResourcePath.endsWith("/"))
 		{
 			return null;
 		}
@@ -203,7 +232,8 @@ public final class ResourceLoader
 
 		try
 		{
-			if (in == null && !readFilesFromClasspath().contains(ms_parentResourceFile))
+			if (in == null && ms_parentResourceFile != null
+				&& !readFilesFromClasspath().contains(ms_parentResourceFile))
 			{
 				/**
 				 * The parent resource file is not contained in the class path. Try to load the
@@ -284,7 +314,7 @@ public final class ResourceLoader
 	 *         could be loaded
 	 */
 	public static Hashtable loadResources(String a_strResourceSearchPath,
-										  ResourceInstantiator a_instantiator,
+										  IResourceInstantiator a_instantiator,
 										  boolean a_bRecursive)
 	{
 		Hashtable resources = new Hashtable();
@@ -292,11 +322,11 @@ public final class ResourceLoader
 
 		while (classPathFiles.hasMoreElements())
 		{
-			loadResources(a_strResourceSearchPath, (File)classPathFiles.nextElement(),
-						  a_instantiator, a_bRecursive, false, false, resources);
+			loadResources(a_strResourceSearchPath, (File) classPathFiles.nextElement(),
+						  a_instantiator, a_bRecursive, false, resources);
 		}
 		loadResources(a_strResourceSearchPath, new File(System.getProperty("user.dir")),
-					  a_instantiator, a_bRecursive, false, false, resources);
+					  a_instantiator, a_bRecursive, false, resources);
 
 		return resources;
 	}
@@ -326,7 +356,7 @@ public final class ResourceLoader
 		Hashtable resources = new Hashtable();
 		loadResources(a_strResourceSearchPath, a_directory,
 					  (new ResourceLoader()).createByteArrayInstantiator(),
-					  a_bRecursive, false, false, resources);
+					  a_bRecursive, false, resources);
 		return resources;
 	}
 
@@ -352,12 +382,12 @@ public final class ResourceLoader
 	 */
 	public static Hashtable loadResources(String a_strResourceSearchPath,
 										  File a_directory,
-										  ResourceInstantiator a_instantiator,
+										  IResourceInstantiator a_instantiator,
 										  boolean a_bRecursive)
 	{
 		Hashtable resources = new Hashtable();
 		loadResources(a_strResourceSearchPath, a_directory,
-					  a_instantiator, a_bRecursive, false, false, resources);
+					  a_instantiator, a_bRecursive, false, resources);
 		return resources;
 	}
 
@@ -436,7 +466,7 @@ public final class ResourceLoader
 		// try to interpret the [id] as an integer number
 		try
 		{
-			return (File)readFilesFromClasspath().elementAt(Integer.parseInt(a_systemResource));
+			return (File) readFilesFromClasspath().elementAt(Integer.parseInt(a_systemResource));
 		}
 		catch (Exception a_e)
 		{
@@ -462,26 +492,20 @@ public final class ResourceLoader
 	 *                     false otherwise (has an effect only for resource paths ending with "/")
 	 * @param a_bStopAtFirstResource true if the search should stop with the first loaded resource;
 	 *                               false otherwise
-	 * @param a_bStoreFileTypeOnly if set to true, the resources are not loaded and instantiated;
-	 *                             instead of containing the instantiated resources, the Hashtable
-	 *                             contains the type of the resource that may either be
-	 *                             SYSTEM_RESOURCE_TYPE_ZIP or SYSTEM_RESOURCE_TYPE_FILE
 	 * @param a_loadedResources a Hashtable where the loaded and instantiated resources are stored
 	 */
 	protected static void loadResources(String a_strResourceSearchPath,
 										File a_Directory,
-										ResourceInstantiator a_instantiator,
+										IResourceInstantiator a_instantiator,
 										boolean a_bRecursive,
 										boolean a_bStopAtFirstResource,
-										boolean a_bStoreFileTypeOnly,
 										Hashtable a_loadedResources)
 	{
 		Enumeration entries;
 
-		if (a_strResourceSearchPath == null || a_strResourceSearchPath.trim().length() == 0 ||
-			a_loadedResources == null ||
-			a_Directory == null || a_instantiator == null || !a_Directory.exists() ||
-			!a_Directory.canRead())
+		if ( (a_strResourceSearchPath = formatResourcePath(a_strResourceSearchPath)) == null ||
+			a_loadedResources == null || a_Directory == null || a_instantiator == null ||
+			!a_Directory.exists() || !a_Directory.canRead())
 		{
 			return;
 		}
@@ -506,7 +530,7 @@ public final class ResourceLoader
 				zipentry = zipfile.getEntry(a_strResourceSearchPath);
 				if (zipentry == null)
 				{
-					throw new IOException ("Requested entry not found.");
+					throw new IOException("Requested entry not found.");
 				}
 				// we have found the requested entry
 				Vector temp = new Vector();
@@ -532,16 +556,10 @@ public final class ResourceLoader
 				object = null;
 				try
 				{
-					if (a_bStoreFileTypeOnly)
-					{
-						object = SYSTEM_RESOURCE_TYPE_ZIP;
-					}
-					else
-					{
 						object = a_instantiator.getInstance(zipentry, zipfile);
+
 					}
-				}
-				catch (ResourceInstantiator.ResourceInstantiationException a_e)
+				catch (IResourceInstantiator.ResourceInstantiationException a_e)
 				{
 					return;
 				}
@@ -570,9 +588,9 @@ public final class ResourceLoader
 			{
 				loadResourcesFromFile(a_strResourceSearchPath, a_Directory, a_Directory,
 									  a_instantiator, a_loadedResources,
-									  a_bRecursive, a_bStopAtFirstResource, a_bStoreFileTypeOnly);
+									  a_bRecursive, a_bStopAtFirstResource);
 			}
-			catch (ResourceInstantiator.ResourceInstantiationException a_ex)
+			catch (IResourceInstantiator.ResourceInstantiationException a_ex)
 			{
 				return;
 			}
@@ -590,26 +608,21 @@ public final class ResourceLoader
 	 * @param a_bRecursive true if subdirectories should be visited; false otherwise
 	 * @param a_bStopAtFirstResource true if the search should stop with the first loaded resource;
 	 *                               false otherwise
-	 * @param a_bStoreFileTypeOnly if set to true, the resources are not loaded and instantiated;
-	 *                             instead of containing the instantiated resources, the Hashtable
-	 *                             contains the type of the resource that may either be
-	 *                             SYSTEM_RESOURCE_TYPE_ZIP or SYSTEM_RESOURCE_TYPE_FILE
 	 * @throws ResourceInstantiator.ResourceInstantiationException if the ResourceInstantiator
 	 *         has become invalid because of too many errors
 	 */
 	private static void loadResourcesFromFile(String a_strResourceSearchPath,
 											  File a_file, File a_topDirectory,
-											  ResourceInstantiator a_instantiator,
+											  IResourceInstantiator a_instantiator,
 											  Hashtable a_loadedResources,
 											  boolean a_bRecursive,
-											  boolean a_bStopAtFirstResource,
-											  boolean a_bStoreFileTypeOnly)
-		throws ResourceInstantiator.ResourceInstantiationException
+											  boolean a_bStopAtFirstResource) throws IResourceInstantiator.
+		ResourceInstantiationException
 	{
 		String[] filesArray;
 		String strCurrentResourcePath;
 
-		if ((!a_strResourceSearchPath.endsWith("/") || a_bStopAtFirstResource)
+		if ( (!a_strResourceSearchPath.endsWith("/") || a_bStopAtFirstResource)
 			&& a_loadedResources.size() > 0)
 		{
 			// the requested resource has already been found
@@ -628,7 +641,7 @@ public final class ResourceLoader
 								  replaceFileSeparatorsSystemSpecific(a_strResourceSearchPath));
 				loadResourcesFromFile(a_strResourceSearchPath, a_file, a_topDirectory,
 									  a_instantiator, a_loadedResources,
-									  a_bRecursive, a_bStopAtFirstResource, a_bStoreFileTypeOnly);
+									  a_bRecursive, a_bStopAtFirstResource);
 				return;
 			}
 
@@ -645,17 +658,10 @@ public final class ResourceLoader
 
 				try
 				{
-					if (a_bStoreFileTypeOnly)
-					{
-
-						object = SYSTEM_RESOURCE_TYPE_FILE;
-					}
-					else
-					{
 						object = a_instantiator.getInstance(a_file, a_topDirectory);
+
 					}
-				}
-				catch (ResourceInstantiator.ResourceInstantiationException a_e)
+				catch (IResourceInstantiator.ResourceInstantiationException a_e)
 				{
 					throw a_e;
 				}
@@ -674,7 +680,8 @@ public final class ResourceLoader
 				}
 			}
 			else if (a_file.isDirectory() && isResourceInSearchPath(
-			 strCurrentResourcePath, a_strResourceSearchPath, a_bRecursive)) {
+				strCurrentResourcePath, a_strResourceSearchPath, a_bRecursive))
+			{
 
 				filesArray = a_file.list();
 				for (int i = 0; i < filesArray.length; i++)
@@ -690,7 +697,7 @@ public final class ResourceLoader
 					   a_strResourceSearchPath,
 					   new File(a_file.getAbsolutePath() + separatorChar + filesArray[i]),
 					   a_topDirectory, a_instantiator, a_loadedResources, a_bRecursive,
-					   a_bStopAtFirstResource, a_bStoreFileTypeOnly);
+						a_bStopAtFirstResource);
 				}
 			}
 		}
@@ -718,7 +725,7 @@ public final class ResourceLoader
 		String classPathResourceURL;
 		Enumeration resourceFiles = a_resourceFiles.elements();
 		Class firstClassFound;
-		ByteArrayInstantiator instantiator = (new ResourceLoader()).createByteArrayInstantiator();
+		FileTypeInstantiator instantiator = (new ResourceLoader()).createFileTypeInstantiator();
 		Hashtable resourceType;
 
 		for (int i = 0; resourceFiles.hasMoreElements(); i++)
@@ -740,7 +747,7 @@ public final class ResourceLoader
 				// get the resource type
 				resourceType = new Hashtable();
 				loadResources(strRelativeResourcePath, classPathFile, instantiator,
-							  false, true, true, resourceType);
+							  false, true, resourceType);
 				a_resourceTypes.setElementAt(resourceType.elements().nextElement(), i);
 
 				// extract the URL to the resource directory from the parent class directory
@@ -785,7 +792,7 @@ public final class ResourceLoader
 					{
 						/**
 						 * The requested resource has been found. This contruction might look
-						 * a bit complicated, but it is needed for Sun JDK 1.1.8 under Windows.
+						 * a bit complicated, but it is needed for JView under Windows.
 						 * If we test "==null" followed by "continue", the virtual machine stops
 						 * without any messages.
 						 */
@@ -832,7 +839,7 @@ public final class ResourceLoader
 	private static String getCurrentResourcePath(File a_currentFile, File a_topDirectory)
 	{
 
-		if(	a_currentFile.toString().equals(a_topDirectory.toString()))
+		if (a_currentFile.toString().equals(a_topDirectory.toString()))
 		{
 			return "/";
 		}
@@ -848,7 +855,7 @@ public final class ResourceLoader
 
 		strCurrentFile = a_currentFile.toString().substring(
 				  a_topDirectory.toString().length() + separator, a_currentFile.toString().length());
-		strCurrentFile = strCurrentFile.replace('\\','/');
+		strCurrentFile = strCurrentFile.replace('\\', '/');
 
 		if (a_currentFile.isDirectory() && !strCurrentFile.endsWith("/"))
 		{
@@ -929,6 +936,102 @@ public final class ResourceLoader
 	}
 
 	/**
+	 * Reformats a given resource name in a way it can be easily interpreted by the resource
+	 * loader methods. The resulting paths are either null or of the form
+	 * "dir1/dir2/resource", "dir1/dir2/" or "/". All other cases, including going up directory
+	 * trees by inserting "../", are handled by this method and transformed to one of the four
+	 * defined forms.
+	 * @param a_strRelativeResourcePath the relative path to a resource
+	 * @return the formatted file name or null if the file name is illegal
+	 */
+	private static String formatResourcePath(String a_strRelativeResourcePath)
+	{
+		int index, tempIndex;
+		String temp;
+
+		if (a_strRelativeResourcePath == null)
+		{
+			return null;
+		}
+		// trim leading and ending white spaces and replace file separators as needed
+		a_strRelativeResourcePath = a_strRelativeResourcePath.trim().replace('\\', '/');
+
+		if (a_strRelativeResourcePath.equals("/"))
+		{
+			// this path specifies all resources contained in it
+			return a_strRelativeResourcePath;
+		}
+
+		if (a_strRelativeResourcePath.length() == 0 || a_strRelativeResourcePath.startsWith("/"))
+		{
+			// invalid relative path
+			return null;
+		}
+
+		// interpret all "/../" as going up the tree
+		while ( (index = a_strRelativeResourcePath.indexOf("/" + DIR_UP)) >= 0)
+		{
+			if (a_strRelativeResourcePath.startsWith(DIR_UP))
+			{
+				// invalid relative path
+				return null;
+			}
+
+			temp = a_strRelativeResourcePath.substring(0, index);
+			if ( (tempIndex = temp.lastIndexOf("/")) >= 0)
+			{
+				temp = temp.substring(0, tempIndex + 1);
+			}
+			else
+			{
+				temp = "/";
+			}
+			temp += a_strRelativeResourcePath.substring(index + ("/" + DIR_UP).length(),
+				a_strRelativeResourcePath.length());
+
+			a_strRelativeResourcePath = temp;
+			while (a_strRelativeResourcePath.startsWith("/"))
+			{
+				if (a_strRelativeResourcePath.equals("/"))
+				{
+					break;
+				}
+				a_strRelativeResourcePath = a_strRelativeResourcePath.substring(
+					1, a_strRelativeResourcePath.length());
+			}
+		}
+		if (a_strRelativeResourcePath.startsWith(DIR_UP))
+		{
+			return null;
+		}
+
+		/*
+		   while ((index = a_strRelativeResourcePath.lastIndexOf(DIR_CURRENT)) >= 0)
+		   {
+
+		 if (a_strRelativeResourcePath.equals(DIR_CURRENT))
+		 {
+		  a_strRelativeResourcePath = "";
+		 }
+		 else if (index == 0)
+		 {
+		  a_strRelativeResourcePath =
+		   a_strRelativeResourcePath.substring(index + DIR_CURRENT.length(),
+		   a_strRelativeResourcePath.length());
+		 }
+		 else if (a_strRelativeResourcePath.charAt(index - 1) == '/')
+		 {
+		  temp = a_strRelativeResourcePath.substring(0, index) +
+		   a_strRelativeResourcePath.substring(index + DIR_CURRENT.length(),
+		   a_strRelativeResourcePath.length());
+		  a_strRelativeResourcePath = temp;
+		 }
+		   }*/
+
+		return a_strRelativeResourcePath;
+	}
+
+	/**
 	 * Trims a byte array in a way that all bytes after the given length <code> a_maxLength </code>
 	 * are cut off.
 	 * Afterwards, a new byte array is constructed with the bytes from the given
@@ -994,8 +1097,8 @@ public final class ResourceLoader
 			{
 					ms_classpathFiles.addElement(
 					   new File(new File(tokenizer.nextToken()).getAbsolutePath()));
-					ms_classpathResourceURLs.addElement((Class)null);
-					ms_classpathResourceTypes.addElement((String)null);
+					ms_classpathResourceURLs.addElement( (Class)null);
+					ms_classpathResourceTypes.addElement( (String)null);
 				}
 			}
 		}
@@ -1013,20 +1116,45 @@ public final class ResourceLoader
 			}
 
 	/**
+	 * Returns a new FileTypeInstantiator.
+	 * This method is needed due to static centext restrictions.
+	 * @return a new FileTypeInstantiator
+	 */
+	private FileTypeInstantiator createFileTypeInstantiator()
+	{
+		return new FileTypeInstantiator();
+	}
+
+	/**
 	 * This class is used to get resources as byte arrays.
 	 */
-	private final class ByteArrayInstantiator implements ResourceInstantiator
+	private final class ByteArrayInstantiator implements IResourceInstantiator
 	{
-		public Object getInstance(File a_file, File a_topDirectory)
-			throws Exception
+		public Object getInstance(File a_file, File a_topDirectory) throws Exception
 		{
 				return getStreamAsBytes(new FileInputStream(a_file));
 		}
 
-		public Object getInstance(ZipEntry a_entry, ZipFile a_file)
-			throws Exception
+		public Object getInstance(ZipEntry a_entry, ZipFile a_file) throws Exception
 		{
 			return getStreamAsBytes(a_file.getInputStream(a_entry));
+		}
+	}
+
+	/**
+	 * Does not load or instantiate resources but returns the file type of resources. The file
+	 * type may either be SYSTEM_RESOURCE_TYPE_ZIP or SYSTEM_RESOURCE_TYPE_FILE.
+	 */
+	private final class FileTypeInstantiator implements IResourceInstantiator
+	{
+		public Object getInstance(File a_file, File a_topDirectory)
+		{
+			return SYSTEM_RESOURCE_TYPE_FILE;
+		}
+
+		public Object getInstance(ZipEntry a_entry, ZipFile a_file)
+		{
+			return SYSTEM_RESOURCE_TYPE_ZIP;
 		}
 	}
 }

@@ -32,12 +32,12 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 /**
- * This class is only needed in the context of the ResourceLoader. It loads resources
+ * This interface is only needed in the context of the ResourceLoader. It loads resources
  * and transforms them into concrete objects.
  * @author Rolf Wendolsky
  * @see anon.util.ResourceLoader
  */
-public interface ResourceInstantiator
+public interface IResourceInstantiator
 {
 	/**
 	 * Loads a file and transforms it into a concrete object.
