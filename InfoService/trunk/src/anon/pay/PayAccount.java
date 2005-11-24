@@ -54,6 +54,9 @@ import anon.server.impl.MuxSocket;
 import anon.util.Base64;
 import anon.util.IXMLEncodable;
 import anon.util.XMLUtil;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 
 /**
  * This class encapsulates one account and all additional data associated to one
@@ -623,4 +626,8 @@ public class PayAccount implements IXMLEncodable
 		fireChangeEvent();
 	}
 
+	public BI getBI()
+	{
+		return m_theBI;
+	}
 }
