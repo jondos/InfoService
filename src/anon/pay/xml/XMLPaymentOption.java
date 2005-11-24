@@ -214,7 +214,7 @@ public class XMLPaymentOption implements IXMLEncodable
 		{
 			String heading = nodesHeadings.item(i).getFirstChild().getNodeValue();
 			String language = ( (Element) nodesHeadings.item(i)).getAttribute("lang");
-			m_headings.addElement(new String[]
+			m_headings.add(new String[]
 						   {heading, language});
 		}
 
@@ -223,7 +223,7 @@ public class XMLPaymentOption implements IXMLEncodable
 		{
 			String info = nodesDetailed.item(i).getFirstChild().getNodeValue();
 			String language = ( (Element) nodesDetailed.item(i)).getAttribute("lang");
-			m_detailedInfos.addElement(new String[]
+			m_detailedInfos.add(new String[]
 								{info, language});
 		}
 
@@ -233,21 +233,85 @@ public class XMLPaymentOption implements IXMLEncodable
 			String info = nodesExtra.item(i).getFirstChild().getNodeValue();
 			String language = ( (Element) nodesExtra.item(i)).getAttribute("lang");
 			String type = ( (Element) nodesExtra.item(i)).getAttribute("type");
-			m_extraInfos.addElement(new String[]
+			m_extraInfos.add(new String[]
 							 {info, type, language});
 		}
 
+		try
+		{
 		String imageLink = XMLUtil.parseValue(XMLUtil.getFirstChildByName(elemRoot, "ImageLink").
 											  getFirstChild(), "0");
 		if (!imageLink.equals("0"))
 		{
 			m_imageLink = imageLink;
 		}
-
+		}
+		catch (Exception e)
+		{
+			m_imageLink = null;
+		}
 	}
 
 	public void setType(String a_type)
 	{
 		m_type = a_type;
 	}
+
+	public String getHeading(String a_langShort)
+	{
+		for (int i = 0; i < m_headings.size(); i++)
+		{
+			String[] heading = (String[]) m_headings.elementAt(i);
+			if (heading[1].equalsIgnoreCase(a_langShort))
+			{
+				return heading[0];
+			}
+		}
+		return getHeading("en");
+	}
+
+	public String getDetailedInfo(String a_langShort)
+	{
+		for (int i = 0; i < m_detailedInfos.size(); i++)
+		{
+			String[] detailedInfo = (String[]) m_detailedInfos.elementAt(i);
+			if (detailedInfo[1].equalsIgnoreCase(a_langShort))
+			{
+				return detailedInfo[0];
+			}
+		}
+		return getDetailedInfo("en");
+	}
+
+	public String getExtraInfo(String a_langShort)
+	{
+		for (int i = 0; i < m_extraInfos.size(); i++)
+		{
+			String[] extraInfo = (String[]) m_extraInfos.elementAt(i);
+			if (extraInfo[2].equalsIgnoreCase(a_langShort))
+			{
+				return extraInfo[0];
+			}
+		}
+		return getExtraInfo("en");
+	}
+
+	public String getType()
+	{
+		return m_type;
+	}
+
+	public String getExtraInfoType(String a_langShort)
+	{
+		for (int i = 0; i < m_extraInfos.size(); i++)
+		{
+			String[] extraInfo = (String[]) m_extraInfos.elementAt(i);
+			if (extraInfo[2].equalsIgnoreCase(a_langShort))
+			{
+				return extraInfo[1];
+			}
+		}
+		return getExtraInfoType("en");
+	}
+
 }

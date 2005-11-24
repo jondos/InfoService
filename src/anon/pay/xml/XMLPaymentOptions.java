@@ -35,6 +35,11 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import anon.util.IXMLEncodable;
+import anon.util.XMLUtil;
+import java.util.Enumeration;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 
 /**
  * This class represents a XMLPaymentOptions structure.
@@ -66,7 +71,7 @@ public class XMLPaymentOptions implements IXMLEncodable
 		Element elemRoot = a_doc.createElement("PaymentOptions");
 		elemRoot.setAttribute("version", "1.0");
 
-		Element elem = null;
+		Element elem;
 
 		for (int i = 0; i < m_currencies.size(); i++)
 		{
@@ -95,13 +100,13 @@ public class XMLPaymentOptions implements IXMLEncodable
 		NodeList currencies = elemRoot.getElementsByTagName("Currency");
 		for (int i = 0; i < currencies.getLength(); i++)
 		{
-			m_currencies.addElement(currencies.item(i).getNodeValue());
+			m_currencies.add(currencies.item(i).getFirstChild().getNodeValue());
 		}
 
 		NodeList options = elemRoot.getElementsByTagName("PaymentOption");
 		for (int i = 0; i < options.getLength(); i++)
 		{
-			m_paymentOptions.addElement( (Element) options.item(i));
+			m_paymentOptions.add( (Element) options.item(i));
 		}
 	}
 
@@ -112,11 +117,67 @@ public class XMLPaymentOptions implements IXMLEncodable
 
 	public void addOption(XMLPaymentOption a_option)
 	{
-		m_paymentOptions.addElement(a_option);
+		m_paymentOptions.add(a_option);
 	}
 
 	public void addCurrency(String a_currency)
 	{
-		m_currencies.addElement(a_currency);
+		m_currencies.add(a_currency);
+	}
+
+	public Enumeration getOptionHeadings(String a_language)
+	{
+		Vector optionHeadings = new Vector();
+		for (int i = 0; i < m_paymentOptions.size(); i++)
+		{
+			try
+			{
+				XMLPaymentOption option = new XMLPaymentOption( (Element) m_paymentOptions.elementAt(i));
+				optionHeadings.add(option.getHeading(a_language));
+			}
+			catch (Exception e)
+			{
+				e.printStackTrace();
+				LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
+							  "Could not get payment option heading: " + e.getMessage());
+			}
+		}
+		return optionHeadings.elements();
+	}
+
+	/**
+	 * Gets a XMLPaymentOption object for the provided heading
+	 * @param a_heading String
+	 * @param a_language String
+	 * @return XMLPaymentOption
+	 */
+	public XMLPaymentOption getOption(String a_heading, String a_language)
+	{
+		for (int i = 0; i < m_paymentOptions.size(); i++)
+		{
+			try
+			{
+				XMLPaymentOption option = new XMLPaymentOption( (Element) m_paymentOptions.elementAt(i));
+				String heading = option.getHeading(a_language);
+				if (heading.equalsIgnoreCase(a_heading))
+				{
+					return option;
+				}
+
+			}
+			catch (Exception e)
+			{
+				LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
+							  "Could not get payment option for heading: " + a_heading + " in language " +
+							  a_language);
+			}
+
+		}
+		return null;
+	}
+
+	public Vector getCurrencies()
+	{
+		return new Vector(m_currencies);
 	}
 }

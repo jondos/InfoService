@@ -32,7 +32,7 @@ package anon.pay;
  * und enth\uFFFDlt Methoden, um Kontoaufladungs- und andere Requests an die BI zu
  * schicken.
  *
- * @author Grischan Glaenzel, Bastian Voigt
+ * @author Grischan Glaenzel, Bastian Voigt, Tobias Bayer
  */
 import java.net.Socket;
 
@@ -50,6 +50,7 @@ import anon.pay.xml.XMLTransCert;
 import anon.crypto.tinytls.TinyTLS;
 import anon.util.XMLUtil;
 import anon.crypto.XMLSignature;
+import anon.pay.xml.XMLPaymentOptions;
 
 public class BIConnection
 {
@@ -130,6 +131,20 @@ public class BIConnection
 		return info;
 	}
 
+	/**
+	 * Fetches payment options
+	 * @return XMLPaymentOptions
+	 * @throws Exception
+	 */
+	public XMLPaymentOptions getPaymentOptions() throws Exception
+	{
+		XMLPaymentOptions options;
+		m_httpClient.writeRequest("GET", "paymentoptions", null);
+		Document doc = m_httpClient.readAnswer();
+		options = new XMLPaymentOptions(doc);
+		return options;
+	}
+
 	/** performs challenge-response authentication */
 	public void authenticate(XMLAccountCertificate accountCert, JAPSignature signer) throws Exception
 	{
@@ -206,5 +221,13 @@ public class BIConnection
 								" Authentication failed.");
 		}
 		return xmlCert;
+	}
+
+	public XMLPaymentOptions fetchPaymentOptions() throws Exception
+	{
+		m_httpClient.writeRequest("GET", "paymentoptions", null);
+		Document doc = m_httpClient.readAnswer();
+		XMLPaymentOptions paymentoptions = new XMLPaymentOptions(doc.getDocumentElement());
+		return paymentoptions;
 	}
 }

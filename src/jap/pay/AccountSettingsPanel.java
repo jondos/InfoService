@@ -48,13 +48,17 @@ import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.AbstractTableModel;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import anon.crypto.JAPCertificate;
 import anon.crypto.XMLEncryption;
+import anon.pay.BI;
 import anon.pay.PayAccount;
 import anon.pay.PayAccountsFile;
 import anon.pay.xml.XMLAccountInfo;
@@ -63,19 +67,18 @@ import anon.pay.xml.XMLEasyCC;
 import anon.pay.xml.XMLTransCert;
 import anon.util.XMLUtil;
 import gui.ByteNumberCellRenderer;
+import gui.JAPMessages;
 import gui.TimestampCellRenderer;
-import jap.platform.AbstractOS;
+import jap.AbstractJAPConfModule;
+import jap.JAPConstants;
+import jap.JAPController;
+import jap.JAPPasswordReader;
+import jap.JAPUtil;
+import jap.JAPWaitSplash;
+import jap.pay.wizard.PaymentWizard;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import anon.pay.BI;
-import javax.swing.event.ChangeListener;
-import javax.swing.event.ChangeEvent;
-import java.awt.Component;
-
-import jap.*;
-import anon.crypto.JAPCertificate;
-import gui.*;
 
 /**
  * The Jap Conf Module (Settings Tab Page) for the Accounts and payment Management
@@ -160,11 +163,13 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		m_btnChargeAccount = new JButton(JAPMessages.getString("ngChargeAccount"));
 		m_btnChargeAccount.addActionListener(myActionListener);
 		eastPanel.add(m_btnChargeAccount);
-		m_btnChargeAccount.setEnabled(activeAccount != null);
+		/** @todo Reactivate*/
+		m_btnChargeAccount.setEnabled(true);
 
 		m_btnStatement = new JButton(JAPMessages.getString("ngStatement"));
 		m_btnStatement.addActionListener(myActionListener);
 		eastPanel.add(m_btnStatement);
+		/** @todo Reactivate*/
 		m_btnChargeAccount.setEnabled(activeAccount != null);
 
 		m_btnShowDetails = new JButton(JAPMessages.getString("ngAccountDetails"));
@@ -195,6 +200,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 	private void enableDisableButtons()
 	{
 		boolean enable = (m_Table.getSelectedRow() >= 0);
+		/** @todo Reactivate*/
 		m_btnChargeAccount.setEnabled(enable);
 		m_btnStatement.setEnabled(enable);
 		m_btnShowDetails.setEnabled(enable); ;
@@ -382,7 +388,9 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		JFrame view = JAPController.getView();
 		XMLTransCert transferCertificate = null;
 
-		int choice = JOptionPane.showOptionDialog(
+	PaymentWizard paymentWiz = new PaymentWizard(selectedAccount);
+
+		/*int choice = JOptionPane.showOptionDialog(
 			view,
 			JAPMessages.getString("ngFetchTransferNumber"),
 			JAPMessages.getString("ngPaymentCharge"),
@@ -392,7 +400,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 			);
 		if (choice == JOptionPane.YES_OPTION)
 		{
-			/** @todo find out why the wait splash screen looks so ugly */
+			/** @todo find out why the wait splash screen looks so ugly
 			JAPWaitSplash splash = null;
 			try
 			{
@@ -434,7 +442,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 			}
 
 			m_MyTableModel.fireTableDataChanged();
-		}
+		}*/
 	}
 
 	/**
