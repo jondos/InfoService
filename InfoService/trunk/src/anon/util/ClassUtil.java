@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2000 - 2004, The JAP-Team
+ Copyright (c) 2000 - 2005, The JAP-Team
  All rights reserved.
  Redistribution and use in source and binary forms, with or without modification,
  are permitted provided that the following conditions are met:
@@ -27,13 +27,17 @@
  */
 package anon.util;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
-import java.util.Hashtable;
+import java.io.PrintStream;
+import java.util.Enumeration;
 import java.util.Vector;
+import java.util.Hashtable;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import java.util.StringTokenizer;
+import java.net.URL;
 
 /**
  * This class performs some basic operations related to Class objects.
@@ -48,28 +52,12 @@ public final class ClassUtil
 	/**
 	 * Stores all loaded classes.
 	 */
-	//private static Hashtable ms_loadedClasses = new Hashtable();
+	private static Hashtable ms_loadedClasses = new Hashtable();
 
 	/**
 	 * Stores all loaded directories.
 	 */
-	//private static Vector ms_loadedDirectories = new Vector();
-
-	/**
-	 * This small inner class is needed to get information about static classes.
-	 */
-	private static class ClassGetter extends SecurityManager
-	{
-		public Class getCurrentClassStatic()
-		{
-			return getClassContext()[2];
-		}
-
-		public Class getCallingClassStatic()
-		{
-			return getClassContext()[3];
-		}
-	}
+	private static Vector ms_loadedDirectories = new Vector();
 
 	/**
 	 * This class works without being initialised and is completely static.
@@ -91,8 +79,7 @@ public final class ClassUtil
 
 		pointIndex = classname.lastIndexOf('.');
 
-		if (pointIndex >= 0)
-		{
+		if (pointIndex >= 0) {
 			classname = classname.substring(pointIndex + 1, classname.length());
 		}
 
@@ -110,15 +97,24 @@ public final class ClassUtil
 	}
 
 	/**
+	 * Returns the name, including the package, of the calling method's class.
+	 * @return the name, including the package, of the calling method's class
+	 */
+	public static String getClassNameStatic()
+	{
+		return getCallingClassStatic().getName();
+	}
+
+	/**
 	 * Returns the class that called the current method. This method is an alternative to
 	 * Object.getClass(), as the caller is not needed to be an argument or an Object either.
 	 * @return the class that called the current method
 	 */
-/*	public static Class getCallingClassStatic()
+	public static Class getCallingClassStatic()
 	{
 		return new ClassGetter().getCallingClassStatic();
 	}
-*/
+
 	/**
 	 * Gets all classes that extend the given class or implement the given
 	 * interface, including the class itself. It is recommended to store this
@@ -132,12 +128,11 @@ public final class ClassUtil
 	 * @param a_class a Class
 	 * @return all known subclasses of the given class
 	 */
-	//remove doe to persistent bugs with some JDKs
-	/*public static Vector findSubclasses(Class a_class)
+	public static Vector findSubclasses(Class a_class)
 	  {
-	 Enumeration classes=null;
-	 Vector subclasses=null;
-	 Class possibleSubclass=null;
+		Enumeration classes;
+		Vector subclasses;
+		Class possibleSubclass;
 
 	 loadClasses(a_class);
 	 classes = loadClasses(getCallingClassStatic());
@@ -146,6 +141,7 @@ public final class ClassUtil
 	 while (classes.hasMoreElements())
 	 {
 	  possibleSubclass = (Class) classes.nextElement();
+
 	  if (a_class.isAssignableFrom(possibleSubclass))
 	  {
 	   subclasses.addElement(possibleSubclass);
@@ -154,7 +150,7 @@ public final class ClassUtil
 
 	 return subclasses;
 	  }
-	 */
+
 	/**
 	 * Loads all classes into cache that are in the same file structure as this class
 	 * and as the calling class. Recommended to be called at program start to
@@ -162,9 +158,9 @@ public final class ClassUtil
 	 * WARNING: this may be slow at the first call, especially for large packages (like the JRE)
 	 * @return all loaded classes
 	 */
-	/*public static Enumeration loadClasses()
+	public static Enumeration loadClasses()
 	  {
-	 Class callingClass=null;
+		Class callingClass;
 
 	 callingClass = getCallingClassStatic();
 
@@ -173,7 +169,7 @@ public final class ClassUtil
 
 	 return ms_loadedClasses.elements();
 	  }
-	 */
+
 	/**
 	 * Loads all classes into cache that are in the same file structure as
 	 * the given class and as the calling class.
@@ -181,11 +177,11 @@ public final class ClassUtil
 	 * @param a_rootClass the class from that loading is started
 	 * @return all loaded classes
 	 */
-	/*public static Enumeration loadClasses(Class a_rootClass)
+	public static Enumeration loadClasses(Class a_rootClass)
 	  {
-	 PrintStream syserror=null;
+		PrintStream syserror;
 	 PrintStream dummyStream = new PrintStream(new ByteArrayOutputStream());
-	 Class thisClass=null, callingClass=null;
+		Class thisClass, callingClass;
 
 	 thisClass = getClassStatic();
 	 callingClass = getCallingClassStatic();
@@ -212,7 +208,7 @@ public final class ClassUtil
 	  System.setErr(syserror);
 	  if (a_e instanceof Exception && !(a_e instanceof RuntimeException))
 	  {
-	   // @todo throw the exception //
+				/** @todo throw the exception */
 	   a_e.printStackTrace();
 	  }
 	 }
@@ -221,7 +217,7 @@ public final class ClassUtil
 
 	 return ms_loadedClasses.elements();
 	  }
-	 */
+
 	/**
 	 * Returns the class directory of the specified class. The class directory is either the
 	 * directory in that the highest package in the package structure of the class is contained,
@@ -306,22 +302,37 @@ public final class ClassUtil
 	 * @return the first class that was instnatiated or
 	 *         null if no class could be found and instantiated
 	 */
-	protected static Class getFirstClassFound(File a_file)
+	public static Class getFirstClassFound(File a_file)
 	{
 		Hashtable classInstance = new Hashtable();
 
-		ResourceLoader.loadResources("/", a_file, new ClassInstantiator(3), true, true, false,
+		ResourceLoader.loadResources("/", a_file, new ClassInstantiator(3), true, true,
 									 classInstance);
 		// we choose "3" because after 3 tries it is highly possible this is not a valid classdir
 
 		if (classInstance.size() == 1)
 		{
-			return (Class) classInstance.elements().nextElement();
+			return (Class)classInstance.elements().nextElement();
 		}
 
 		return null;
 	}
 
+	/**
+	 * This small inner class is needed to get information about static classes.
+	 */
+	private static class ClassGetter extends SecurityManager
+	{
+		public Class getCurrentClassStatic()
+		{
+			return getClassContext()[2];
+		}
+
+		public Class getCallingClassStatic()
+		{
+			return getClassContext()[3];
+		}
+	}
 
 	/**
 	 * Loads all classes into cache that are in the same file structure as the given class.
@@ -329,11 +340,11 @@ public final class ClassUtil
 	 * @param a_rootClass the class from that loading is started
 	 * @throws IOException if an I/O error occurs
 	 */
-	/*private static void loadClassesInternal(Class a_rootClass) throws IOException
+	private static void loadClassesInternal(Class a_rootClass) throws IOException
 	  {
-	 File file = null;
+		File file;
 
-	 if ( (file = getClassDirectory(a_rootClass)) == null)
+		if ((file = getClassDirectory(a_rootClass)) == null)
 	 {
 	  return;
 	 }
@@ -348,9 +359,9 @@ public final class ClassUtil
 
 	 // read all classes in the directory
 	 ResourceLoader.loadResources("/", file, new ClassInstantiator(),
-			 true, false, false, ms_loadedClasses);
+									 true, false, ms_loadedClasses);
 	  }
-	 */
+
 	/**
 	 * Turns class files into Class objects.
 	 * @param a_classFile a class file with full directory path
@@ -359,9 +370,9 @@ public final class ClassUtil
 	 */
 	private static Class toClass(File a_classFile, File a_classDirectory)
 	{
-		Class classObject = null;
-		String className = null;
-		String classDirectory = null;
+		Class classObject;
+		String className;
+		String classDirectory;
 		int startIndex;
 
 		if (a_classFile == null || !a_classFile.getName().endsWith(".class"))
@@ -401,7 +412,8 @@ public final class ClassUtil
 		return classObject;
 	}
 
-	private static class ClassInstantiator implements ResourceInstantiator
+
+	private static class ClassInstantiator implements IResourceInstantiator
 	{
 		private int m_invalidAfterFailure;
 		private int m_currentFailure;
@@ -418,8 +430,8 @@ public final class ClassUtil
 			m_currentFailure = 0;
 		}
 
-		public Object getInstance(File a_file, File a_topDirectory) throws ResourceInstantiator.
-			ResourceInstantiationException
+		public Object getInstance(File a_file, File a_topDirectory)
+			throws IResourceInstantiator.ResourceInstantiationException
 
 		{
 			Class loadedClass = toClass(a_file, a_topDirectory);
@@ -432,8 +444,8 @@ public final class ClassUtil
 			return loadedClass;
 		}
 
-		public Object getInstance(ZipEntry a_entry, ZipFile a_file) throws ResourceInstantiator.
-			ResourceInstantiationException
+		public Object getInstance(ZipEntry a_entry, ZipFile a_file)
+			throws IResourceInstantiator.ResourceInstantiationException
 		{
 			Class loadedClass = toClass(new File( (a_entry).toString()), (File)null);
 
@@ -445,8 +457,8 @@ public final class ClassUtil
 			return loadedClass;
 		}
 
-		private void checkValidity(Class a_loadedClass, String a_filename) throws ResourceInstantiator.
-			ResourceInstantiationException
+		private void checkValidity(Class a_loadedClass, String a_filename)
+			throws IResourceInstantiator.ResourceInstantiationException
 		{
 			if (a_loadedClass == null && a_filename.endsWith(".class"))
 			{
@@ -454,7 +466,7 @@ public final class ClassUtil
 			}
 			if (m_currentFailure >= m_invalidAfterFailure)
 			{
-				throw new ResourceInstantiator.ResourceInstantiationException();
+				throw new IResourceInstantiator.ResourceInstantiationException();
 			}
 		}
 	}
