@@ -49,6 +49,9 @@ import jap.platform.AbstractOS;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import java.util.Vector;
+import java.awt.GridLayout;
+import javax.swing.JTextField;
 
 public class PaymentWizardPaymentInfoPage extends BasicWizardPage implements MouseListener
 {
@@ -56,9 +59,10 @@ public class PaymentWizardPaymentInfoPage extends BasicWizardPage implements Mou
 	private XMLTransCert m_transCert;
 	private PayAccount m_payAccount;
 	private JLabel m_fetchingLabel, m_detailedInfoLabel, m_extraInfoLabel;
-	private JPanel m_infoPanel;
+	private JPanel m_infoPanel, m_inputPanel;
 	private String m_language, m_amount, m_currency;
 	private BasicWizardHost m_host;
+	private Vector m_inputFields;
 
 	public PaymentWizardPaymentInfoPage(PayAccount a_payAccount, BasicWizardHost a_host)
 	{
@@ -125,8 +129,16 @@ public class PaymentWizardPaymentInfoPage extends BasicWizardPage implements Mou
 						m_transCert = m_payAccount.charge();
 
 						m_fetchingLabel.setVisible(false);
-						m_infoPanel.setVisible(true);
-						updateExtraInfo();
+						if (m_selectedOption.getType().equalsIgnoreCase(XMLPaymentOption.OPTION_PASSIVE))
+						{
+							createInputPanel();
+							m_panelComponents.add(m_inputPanel);
+						}
+						else
+						{
+							m_infoPanel.setVisible(true);
+							updateExtraInfo();
+						}
 						m_host.setFinishEnabled(true);
 					}
 					catch (Exception e)
@@ -141,6 +153,7 @@ public class PaymentWizardPaymentInfoPage extends BasicWizardPage implements Mou
 			Thread t = new Thread(doIt);
 			t.start();
 		}
+
 	}
 
 	private void updateExtraInfo()
@@ -148,10 +161,10 @@ public class PaymentWizardPaymentInfoPage extends BasicWizardPage implements Mou
 		if (m_transCert != null)
 		{
 			String extraInfo = m_selectedOption.getExtraInfo(m_language);
-//			extraInfo = extraInfo.replaceAll("%t", String.valueOf(m_transCert.getTransferNumber()));
-//			extraInfo = extraInfo.replaceAll("%a", m_amount);
-//			extraInfo = extraInfo.replaceAll("%c", m_currency);
-//			extraInfo = "<html>" + extraInfo + "</html>";
+			extraInfo = JAPUtil.replaceAll(extraInfo, "%t", String.valueOf(m_transCert.getTransferNumber()));
+			extraInfo = JAPUtil.replaceAll(extraInfo, "%a", m_amount);
+			extraInfo = JAPUtil.replaceAll(extraInfo, "%c", m_currency);
+			extraInfo = "<html>" + extraInfo + "</html>";
 			m_extraInfoLabel.setText(extraInfo);
 
 			if (m_selectedOption.getExtraInfoType(m_language).equalsIgnoreCase(XMLPaymentOption.EXTRA_LINK))
@@ -168,8 +181,8 @@ public class PaymentWizardPaymentInfoPage extends BasicWizardPage implements Mou
 		String link = a_label.getText();
 		if (link.indexOf("<html>") != -1)
 		{
-//			link = link.replaceAll("<html>", "<html><font color=blue><u>");
-//			link = link.replaceAll("</html>", "</u></font></html>");
+			link = JAPUtil.replaceAll(link, "<html>", "<html><font color=blue><u>");
+			link = JAPUtil.replaceAll(link, "</html>", "</u></font></html>");
 		}
 		else
 		{
@@ -196,19 +209,41 @@ public class PaymentWizardPaymentInfoPage extends BasicWizardPage implements Mou
 		m_amount = a_amount;
 	}
 
+	public void createInputPanel()
+	{
+		m_inputFields = new Vector();
+		Vector inputFields = null;//m_selectedOption.getInputFields();
+		m_inputPanel = new JPanel(new GridLayout(30,2));
+
+		for (int i = 0;i<inputFields.size();i++)
+		{
+			String[] field = (String[]) inputFields.elementAt(i);
+			if (field[2].equalsIgnoreCase(m_language))
+			{
+				JLabel l = new JLabel(field[1]);
+				JTextField t = new JTextField(15);
+				t.setName(field[0]);
+				m_inputFields.add(t);
+				m_inputPanel.add(l);
+				m_inputPanel.add(t);
+			}
+		}
+
+	}
+
 	public void mouseClicked(MouseEvent e)
 	{
 		if (e.getSource() == m_extraInfoLabel)
 		{
 			AbstractOS os = AbstractOS.getInstance();
 			String link = m_extraInfoLabel.getText();
-//			link = link.replaceAll("<br>", "");
-//			link = link.replaceAll("<p>", "");
-///			link = link.replaceAll("<html>", "");
-//			link = link.replaceAll("</html>", "");
-//			link = link.replaceAll("<font color=blue><u>", "");
-//			link = link.replaceAll("</u></font>", "");
-//			link = link.replaceAll(" ", "");
+			link = JAPUtil.replaceAll(link, "<br>", "");
+			link = JAPUtil.replaceAll(link, "<p>", "");
+			link = JAPUtil.replaceAll(link, "<html>", "");
+			link = JAPUtil.replaceAll(link, "</html>", "");
+			link = JAPUtil.replaceAll(link, "<font color=blue><u>", "");
+			link = JAPUtil.replaceAll(link, "</u></font>", "");
+			link = JAPUtil.replaceAll(link, " ", "");
 
 			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Opening " + link + " in browser.");
 			os.openURLInBrowser(link);

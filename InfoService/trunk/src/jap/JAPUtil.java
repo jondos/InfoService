@@ -442,4 +442,21 @@ public final class JAPUtil
 		return sdf.format(date);
 	}
 
+	/**
+	 * Since JDK 1.1.8 does not provide String.replaceAll(),
+	 * this is an equivalent method.
+	 */
+	public static String replaceAll(String a_source, String a_toReplace, String a_replaceWith)
+	{
+		int position;
+
+		while ((position = a_source.indexOf(a_toReplace)) != -1)
+		{
+			String before = a_source.substring(0, position);
+			String after = a_source.substring(position+a_toReplace.length(), a_source.length());
+			a_source = before + a_replaceWith + after;
+		}
+
+		return a_source;
+	}
 }

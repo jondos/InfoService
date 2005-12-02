@@ -51,6 +51,8 @@ import anon.crypto.tinytls.TinyTLS;
 import anon.util.XMLUtil;
 import anon.crypto.XMLSignature;
 import anon.pay.xml.XMLPaymentOptions;
+import anon.pay.xml.XMLTransactionOverview;
+import java.util.Date;
 
 public class BIConnection
 {
@@ -108,7 +110,9 @@ public class BIConnection
 			throw new Exception("The BI's signature under the transfer certificate is invalid");
 		}
 
-		return new XMLTransCert(doc);
+		XMLTransCert cert = new XMLTransCert(doc);
+		cert.setReceivedDate(new Date());
+		return cert;
 	}
 
 	/**
@@ -223,6 +227,11 @@ public class BIConnection
 		return xmlCert;
 	}
 
+	/**
+	 * Gets the payment options the PI provides.
+	 * @return XMLPaymentOptions
+	 * @throws Exception
+	 */
 	public XMLPaymentOptions fetchPaymentOptions() throws Exception
 	{
 		m_httpClient.writeRequest("GET", "paymentoptions", null);
@@ -230,4 +239,21 @@ public class BIConnection
 		XMLPaymentOptions paymentoptions = new XMLPaymentOptions(doc.getDocumentElement());
 		return paymentoptions;
 	}
+
+	/**
+	 * Asks the PI to fill an XMLTransactionOverview
+	 * @param a_overview XMLTransactionOverview
+	 * @return XMLTransactionOverview
+	 * @throws Exception
+	 */
+	public XMLTransactionOverview fetchTransactionOverview(XMLTransactionOverview a_overview) throws
+		Exception
+	{
+		m_httpClient.writeRequest("POST", "transactionoverview",
+								  XMLUtil.toString(a_overview.toXmlElement(XMLUtil.createDocument())));
+		Document doc = m_httpClient.readAnswer();
+		XMLTransactionOverview overview = new XMLTransactionOverview(doc.getDocumentElement());
+		return overview;
+	}
+
 }
