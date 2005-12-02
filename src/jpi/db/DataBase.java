@@ -83,15 +83,15 @@ public class DataBase extends DBInterface
 		"CREATION_TIME TIMESTAMP (0)," +
 		"ACCOUNTCERT VARCHAR(2000));",
 		/*		"CREATE TABLE CASCADENAMES (" +
-		"CASCADENUMBER SERIAL PRIMARY KEY," +
-		"NAME VARCHAR(20));",
+		   "CASCADENUMBER SERIAL PRIMARY KEY," +
+		   "NAME VARCHAR(20));",
 
-		"CREATE TABLE CASCADES (" +
-		"CASCADENUMBER SERIAL REFERENCES CASCADENAMES ON DELETE CASCADE, " +
-		"ACCOUNTNUMBER BIGINT REFERENCES ACCOUNTS ON DELETE CASCADE," +
-		"COSTS BIGINT," +
-		"PAYCOSTS INTEGER," +
-		"USERCONFIRM VARCHAR(2000))",*/
+		   "CREATE TABLE CASCADES (" +
+		   "CASCADENUMBER SERIAL REFERENCES CASCADENAMES ON DELETE CASCADE, " +
+		   "ACCOUNTNUMBER BIGINT REFERENCES ACCOUNTS ON DELETE CASCADE," +
+		   "COSTS BIGINT," +
+		   "PAYCOSTS INTEGER," +
+		   "USERCONFIRM VARCHAR(2000))",*/
 
 		"CREATE TABLE COSTCONFIRMATIONS (" +
 		"AiID VARCHAR(128)," +
@@ -525,34 +525,34 @@ public class DataBase extends DBInterface
 
 	   // insert CC into the database. Determine if we make an update or insert...
 	   query = "SELECT COUNT(*) FROM COSTCONFIRMATIONS WHERE ACCOUNTNUMBER=" + cc.getAccountNumber() +
-		" AND AiID='" + cc.getAIName() + "'";
+	 " AND AiID='" + cc.getAIName() + "'";
 	   rs = stmt.executeQuery(query);
 	   if (rs.next())
 	   {
-		if (rs.getInt(1) == 1)
-		{
-		}
-		else
-		{
-		}
-		if (stmt.executeUpdate(query) != 1)
-		{
-		 // error while updating DB
-		}
+	 if (rs.getInt(1) == 1)
+	 {
+	 }
+	 else
+	 {
+	 }
+	 if (stmt.executeUpdate(query) != 1)
+	 {
+	  // error while updating DB
+	 }
 	   }
 	   else
 	   {
-		// error
+	 // error
 	   }
 
 	   // Update the SPENT value for the account
 	   query = "UPDATE ACCOUNTS SET SPENT = " +
-		"(SELECT SUM(TRANSFERREDBYTES) FROM COSTCONFIRMATIONS WHERE ACCOUNTNUMBER=" +
-		cc.getAccountNumber() + ")" +
-		"WHERE ACCOUNTNUMBER=" + cc.getAccountNumber();
+	 "(SELECT SUM(TRANSFERREDBYTES) FROM COSTCONFIRMATIONS WHERE ACCOUNTNUMBER=" +
+	 cc.getAccountNumber() + ")" +
+	 "WHERE ACCOUNTNUMBER=" + cc.getAccountNumber();
 	   if (stmt.executeUpdate(query) != 1)
 	   {
-		// error
+	 // error
 	   }
 	  }
 	 }*/
@@ -567,30 +567,30 @@ public class DataBase extends DBInterface
 	   // con.setAutoCommit(false);
 	   Statement stmt = con.createStatement();
 	   ResultSet rs =
-		stmt.executeQuery("SELECT COSTS FROM CASCADES WHERE ACCOUNTNUMBER=" + accountNumber +
-			  " AND CASCADENUMBER=(SELECT CASCADENUMBER FROM CASCADENAMES WHERE NAME='" +
-			  aiName + "')");
+	 stmt.executeQuery("SELECT COSTS FROM CASCADES WHERE ACCOUNTNUMBER=" + accountNumber +
+	 " AND CASCADENUMBER=(SELECT CASCADENUMBER FROM CASCADENAMES WHERE NAME='" +
+	 aiName + "')");
 	   if (rs.next())
 	   {
-		costsAI = rs.getInt(1);
+	 costsAI = rs.getInt(1);
 	   }
 	   else
 	   {
-		costsAI = 0;
+	 costsAI = 0;
 	   }
 	   stmt = con.createStatement(ResultSet.TYPE_FORWARD_ONLY,
-				ResultSet.CONCUR_UPDATABLE);
+	   ResultSet.CONCUR_UPDATABLE);
 	   rs = stmt.executeQuery("SELECT BALANCE, MAXBALANCE FROM ACCOUNTS WHERE ACCOUNTNUMBER=" +
-			   accountNumber);
+	  accountNumber);
 	   if (rs.next())
 	   {
-		credit = rs.getInt(1);
-		creditMax = rs.getInt(2);
+	 credit = rs.getInt(1);
+	 creditMax = rs.getInt(2);
 	   }
 	   else
 	   {
-		credit = 0;
-		creditMax = 0;
+	 credit = 0;
+	 creditMax = 0;
 	   }
 
 	   AccountSnapshot ksa = new AccountSnapshot(creditMax, credit, costsAI);
@@ -610,7 +610,7 @@ public class DataBase extends DBInterface
 		XMLEasyCC cc = null;
 		ResultSet rs = stmt.executeQuery(
 			"SELECT XMLCC FROM COSTCONFIRMATIONS " +
-			  "WHERE ACCOUNTNUMBER=" + accountNumber +
+			"WHERE ACCOUNTNUMBER=" + accountNumber +
 			" AND AiID='" + aiName + "'");
 		if (rs.next())
 		{
@@ -626,16 +626,16 @@ public class DataBase extends DBInterface
 	  {
 	   Statement stmt = m_dbConn.createStatement();
 	   ResultSet rs =
-		stmt.executeQuery("SELECT COSTS FROM CASCADES WHERE ACCOUNTNUMBER=" + accountNumber +
-			  " AND CASCADENUMBER=(SELECT CASCADENUMBER FROM CASCADENAMES WHERE NAME='" +
-			  aiName + "')");
+	 stmt.executeQuery("SELECT COSTS FROM CASCADES WHERE ACCOUNTNUMBER=" + accountNumber +
+	 " AND CASCADENUMBER=(SELECT CASCADENUMBER FROM CASCADENAMES WHERE NAME='" +
+	 aiName + "')");
 	   if (rs.next())
 	   {
-		costs = rs.getInt(1);
+	 costs = rs.getInt(1);
 	   }
 	   else
 	   {
-		costs = 0;
+	 costs = 0;
 	   }
 	   return costs;
 	  }
@@ -653,16 +653,16 @@ public class DataBase extends DBInterface
 	  {
 	   Statement stmt = m_dbConn.createStatement();
 	   ResultSet rs =
-		stmt.executeQuery("SELECT PAYCOSTS FROM CASCADES WHERE ACCOUNTNUMBER=" + accountNumber +
-			  " AND CASCADENUMBER=(SELECT CASCADENUMBER FROM CASCADENAMES WHERE NAME='" +
-			  aiName + "')");
+	 stmt.executeQuery("SELECT PAYCOSTS FROM CASCADES WHERE ACCOUNTNUMBER=" + accountNumber +
+	 " AND CASCADENUMBER=(SELECT CASCADENUMBER FROM CASCADENAMES WHERE NAME='" +
+	 aiName + "')");
 	   if (rs.next())
 	   {
-		costs = rs.getInt(1);
+	 costs = rs.getInt(1);
 	   }
 	   else
 	   {
-		costs = 0;
+	 costs = 0;
 	   }
 	   return costs;
 	  }
@@ -776,6 +776,30 @@ public class DataBase extends DBInterface
 			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, "Could not charge account: " + e.getMessage());
 
 		}
+	}
+
+	public boolean isTanUsed(long a_tan)
+	{
+		boolean used = false;
+		Statement stmt;
+
+		try
+		{
+			stmt = m_dbConn.createStatement();
+			ResultSet r = stmt.executeQuery("SELECT USED FROM TRANSFERS WHERE TRANSFERNUMBER=" +
+											a_tan);
+			if (r.next())
+			{
+				used = r.getBoolean(1);
+			}
+
+		}
+		catch (Exception e)
+		{
+			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
+						  "Could not get used attribute of transfer number. Cause: " + e.getMessage());
+		}
+		return used;
 	}
 
 }

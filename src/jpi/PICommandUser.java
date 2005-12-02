@@ -61,6 +61,7 @@ import jpi.db.DBSupplier;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.pay.xml.XMLTransactionOverview;
 
 /**
  * This class contains the functionality for talking to a JAP. For
@@ -301,6 +302,22 @@ public class PICommandUser implements PICommand
 					}
 				}
 
+				else if (request.method.equals("POST") && request.url.equals("/transactionoverview"))
+				{
+					try
+					{
+						reply = new PIAnswer(PIAnswer.TYPE_TRANSACTION_OVERVIEW,
+											 getTransactionOverview(request.data));
+						// go to state init again, user can authenticate again with different account
+						init();
+					}
+					catch (Exception ex)
+					{
+						LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, ex);
+						reply = PIAnswer.getErrorAnswer(XMLErrorMessage.ERR_INTERNAL_SERVER_ERROR);
+					}
+				}
+
 				break;
 		}
 		if (reply == null)
@@ -319,6 +336,47 @@ public class PICommandUser implements PICommand
 		XMLPaymentOptions paymentOptions = Configuration.getPaymentOptions();
 
 		return paymentOptions;
+	}
+
+	/**
+	 * Fills the transaction overview XML structure with true/false from the database.
+	 * @param a_data byte[]
+	 * @return IXMLEncodable
+	 */
+	private IXMLEncodable getTransactionOverview(byte[] a_data)
+	{
+		XMLTransactionOverview overview = null;
+		try
+		{
+			overview = new XMLTransactionOverview(a_data);
+		}
+		catch (Exception e)
+		{
+			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
+						  "Could not create XMLTransactionOverview from POST data:" + e.getMessage());
+		}
+		Enumeration tans = overview.getTans().elements();
+		while (tans.hasMoreElements())
+		{
+			String tan = (String) tans.nextElement();
+			//Get "used" attribute from database
+			DBInterface db = null;
+			try
+			{
+				db = DBSupplier.getDataBase();
+			}
+			catch (Exception e)
+			{
+				LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
+							  "Could not connect to Database:" + e.getMessage());
+			}
+			if (db != null)
+			{
+				boolean used = db.isTanUsed(Long.parseLong(tan));
+				overview.setUsed(Long.parseLong(tan), used);
+			}
+		}
+		return overview;
 	}
 
 	/**
@@ -414,7 +472,6 @@ public class PICommandUser implements PICommand
 		// generate xml tranfer cert and sign it
 		XMLTransCert xmlcert =
 			new XMLTransCert(accountNum, transNumber, bal.deposit, validto);
-		xmlcert.setBaseUrl(Configuration.getPayUrl());
 		xmlcert.sign(Configuration.getPrivateKey());
 		return xmlcert;
 	}
