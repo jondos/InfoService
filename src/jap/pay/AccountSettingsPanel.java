@@ -79,6 +79,10 @@ import jap.pay.wizard.PaymentWizard;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import java.util.Vector;
+import anon.pay.xml.XMLTransactionOverview;
+import anon.pay.BIConnection;
+import java.util.Date;
 
 /**
  * The Jap Conf Module (Settings Tab Page) for the Accounts and payment Management
@@ -88,6 +92,13 @@ import logging.LogType;
  */
 public class AccountSettingsPanel extends AbstractJAPConfModule implements ChangeListener
 {
+
+	/** Messages */
+	private static final String MSG_TRANSACTION_OVERVIEW_BUTTON = AccountSettingsPanel.class.
+		getName() + "_transaction_overview_button";
+	private static final String MSG_TRANSACTION_OVERVIEW_DIALOG = AccountSettingsPanel.class.
+		getName() + "_transaction_overview_dialog";
+
 	private JTable m_Table;
 	private JButton m_btnCreateAccount;
 	private JButton m_btnChargeAccount;
@@ -97,6 +108,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 	private JButton m_btnDeleteAccount;
 	private JButton m_btnExportAccount;
 	private JButton m_btnImportAccount;
+	private JButton m_btnTransactions;
 	private MyTableModel m_MyTableModel;
 
 	public AccountSettingsPanel()
@@ -192,6 +204,10 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		m_btnActivate.addActionListener(myActionListener);
 		eastPanel.add(m_btnActivate);
 
+		m_btnTransactions = new JButton(JAPMessages.getString(MSG_TRANSACTION_OVERVIEW_BUTTON));
+		m_btnTransactions.addActionListener(myActionListener);
+		eastPanel.add(m_btnTransactions);
+
 		centerPanel.add(eastPanel, BorderLayout.EAST);
 		rootPanel.add(centerPanel, BorderLayout.CENTER);
 		enableDisableButtons();
@@ -203,6 +219,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		/** @todo Reactivate*/
 		m_btnChargeAccount.setEnabled(enable);
 		m_btnStatement.setEnabled(enable);
+		m_btnTransactions.setEnabled(enable);
 		m_btnShowDetails.setEnabled(enable); ;
 		if ( (enable) &&
 			(PayAccountsFile.getInstance().getActiveAccount() !=
@@ -214,9 +231,9 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		{
 			m_btnActivate.setEnabled(false);
 		}
-
 		m_btnDeleteAccount.setEnabled(enable);
 		m_btnExportAccount.setEnabled(enable);
+
 	}
 
 	/**
@@ -261,8 +278,22 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 			{
 				doExportAccount(getSelectedAccount());
 			}
+			else if (source == m_btnTransactions)
+			{
+				doShowTransactions(getSelectedAccount());
+			}
 
 		}
+	}
+
+	/**
+	 * Shows transaction numbers and if they have been used
+	 * @param a_account PayAccount
+	 */
+	private void doShowTransactions(PayAccount a_account)
+	{
+		TransactionOverviewDialog d = new TransactionOverviewDialog(JAPController.getView(),
+			JAPMessages.getString(MSG_TRANSACTION_OVERVIEW_DIALOG), true, a_account);
 	}
 
 	/**
@@ -388,38 +419,38 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		JFrame view = JAPController.getView();
 		XMLTransCert transferCertificate = null;
 
-	PaymentWizard paymentWiz = new PaymentWizard(selectedAccount);
+		PaymentWizard paymentWiz = new PaymentWizard(selectedAccount);
 
 		/*int choice = JOptionPane.showOptionDialog(
-			view,
-			JAPMessages.getString("ngFetchTransferNumber"),
-			JAPMessages.getString("ngPaymentCharge"),
-			JOptionPane.YES_NO_OPTION,
-			JOptionPane.QUESTION_MESSAGE,
-			null, null, null
-			);
-		if (choice == JOptionPane.YES_OPTION)
-		{
-			/** @todo find out why the wait splash screen looks so ugly
+		 view,
+		 JAPMessages.getString("ngFetchTransferNumber"),
+		 JAPMessages.getString("ngPaymentCharge"),
+		 JOptionPane.YES_NO_OPTION,
+		 JOptionPane.QUESTION_MESSAGE,
+		 null, null, null
+		 );
+		   if (choice == JOptionPane.YES_OPTION)
+		   {
+		 /** @todo find out why the wait splash screen looks so ugly
 			JAPWaitSplash splash = null;
 			try
 			{
-				splash = JAPWaitSplash.start("Fetching transfer number...", "Please wait");
-				Thread.sleep(5);
-				transferCertificate = selectedAccount.charge();
-				splash.abort();
+		  splash = JAPWaitSplash.start("Fetching transfer number...", "Please wait");
+		  Thread.sleep(5);
+		  transferCertificate = selectedAccount.charge();
+		  splash.abort();
 			}
 			catch (Exception ex)
 			{
-				splash.abort();
-				LogHolder.log(LogLevel.DEBUG, LogType.PAY, ex);
-				JOptionPane.showMessageDialog(
-					view,
-					"<html>" + JAPMessages.getString("ngTransferNumberError") + "<br>" + ex.getMessage() +
-					"</html>",
-					JAPMessages.getString("error"), JOptionPane.ERROR_MESSAGE
-					);
-				return;
+		  splash.abort();
+		  LogHolder.log(LogLevel.DEBUG, LogType.PAY, ex);
+		  JOptionPane.showMessageDialog(
+		   view,
+		   "<html>" + JAPMessages.getString("ngTransferNumberError") + "<br>" + ex.getMessage() +
+		   "</html>",
+		   JAPMessages.getString("error"), JOptionPane.ERROR_MESSAGE
+		   );
+		  return;
 			}
 
 			// try to launch webbrowser
@@ -428,21 +459,21 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 			url += "?transfernum=" + transferCertificate.getTransferNumber();
 			try
 			{
-				os.openURLInBrowser(url);
+		  os.openURLInBrowser(url);
 			}
 			catch (Exception e)
 			{
-				JOptionPane.showMessageDialog(
-					view,
-					"<html>" + JAPMessages.getString("ngCouldNotFindBrowser") + "<br>" +
-					"<h3>" + url + "</h3></html>",
-					JAPMessages.getString("ngCouldNotFindBrowserTitle"),
-					JOptionPane.INFORMATION_MESSAGE
-					);
+		  JOptionPane.showMessageDialog(
+		   view,
+		   "<html>" + JAPMessages.getString("ngCouldNotFindBrowser") + "<br>" +
+		   "<h3>" + url + "</h3></html>",
+		   JAPMessages.getString("ngCouldNotFindBrowserTitle"),
+		   JOptionPane.INFORMATION_MESSAGE
+		   );
 			}
 
 			m_MyTableModel.fireTableDataChanged();
-		}*/
+		   }*/
 	}
 
 	/**

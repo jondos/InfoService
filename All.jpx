@@ -94,6 +94,9 @@
   <node name="jap.platform" type="Package"/>
   <node name="jarify" type="Package"/>
   <node name="jpi" type="Package"/>
+  <node name="jpi.db" type="Package"/>
+  <node name="jpi.helper" type="Package"/>
+  <node name="jpi.util" type="Package"/>
   <node name="logging" type="Package"/>
   <node name="misc" type="Package"/>
   <node name="org" type="Package"/>

@@ -38,6 +38,7 @@ import anon.util.XMLUtil;
 import anon.util.IXMLEncodable;
 import anon.crypto.XMLSignature;
 import anon.crypto.IMyPrivateKey;
+import java.util.Date;
 
 /** @todo add spent, BiID */
 public class XMLTransCert implements IXMLEncodable
@@ -45,10 +46,11 @@ public class XMLTransCert implements IXMLEncodable
 	//~ Instance fields ********************************************************
 
 	private java.sql.Timestamp m_validTime;
+	private Date m_receivedDate;
+	private Date m_usedDate;
 	private long m_accountNumber;
 	private long m_transferNumber;
 	private long m_deposit;
-	private String m_strPayURL = null;
 	private Document m_docTheTransCert;
 
 	//~ Constructors ***********************************************************
@@ -60,7 +62,6 @@ public class XMLTransCert implements IXMLEncodable
 		m_transferNumber = transferNumber;
 		m_deposit = deposit;
 		m_validTime = validTime;
-		m_strPayURL = null;
 		m_docTheTransCert = XMLUtil.createDocument();
 		m_docTheTransCert.appendChild(internal_toXmlElement(m_docTheTransCert));
 	}
@@ -95,6 +96,30 @@ public class XMLTransCert implements IXMLEncodable
 
 	//~ Methods ****************************************************************
 
+	public void setReceivedDate(Date a_date)
+	{
+		m_receivedDate = a_date;
+		m_docTheTransCert = XMLUtil.createDocument();
+		m_docTheTransCert.appendChild(internal_toXmlElement(m_docTheTransCert));
+	}
+
+	public void setUsedDate(Date a_date)
+	{
+		m_usedDate = a_date;
+		m_docTheTransCert = XMLUtil.createDocument();
+		m_docTheTransCert.appendChild(internal_toXmlElement(m_docTheTransCert));
+	}
+
+	public Date getReceivedDate()
+	{
+		return m_receivedDate;
+	}
+
+	public Date getUsedDate()
+	{
+		return m_usedDate;
+	}
+
 	public long getAccountNumber()
 	{
 		return m_accountNumber;
@@ -127,35 +152,14 @@ public class XMLTransCert implements IXMLEncodable
 
 		element = (Element) XMLUtil.getFirstChildByName(elemRoot, "ValidTime");
 		str = XMLUtil.parseValue(element, null);
-		element = (Element) XMLUtil.getFirstChildByName(elemRoot, "WebPayURL");
-		m_strPayURL = XMLUtil.parseValue(element, null);
 		m_validTime = java.sql.Timestamp.valueOf(str);
 
-	}
-
-	/**
-	 * Returns the URL of the web based payment interface of this trans cert. This url
-	 * could be used together with the "transfernum" query parameter to open a web page where the payment could be done.
-	 *
-	 * @return URL of the Web based payment interface for this trans cert
-	 *
-	 */
-	public String getBaseUrl()
-	{
-		return m_strPayURL;
-	}
-
-	/**
-	 * Set the URL of the web based payment interface for this trans cert.
-	 * Note: Invalides any signature this document may have!
-	 *
-	 * @param URl of web based payment interface for this trans cert
-	 */
-	public void setBaseUrl(String url)
-	{
-		m_strPayURL = url;
-		m_docTheTransCert = XMLUtil.createDocument();
-		m_docTheTransCert.appendChild(internal_toXmlElement(m_docTheTransCert));
+		element = (Element) XMLUtil.getFirstChildByName(elemRoot, "ReceivedDate");
+		str = XMLUtil.parseValue(element, null);
+		if (str != null)
+		{
+			m_receivedDate = new Date(Long.parseLong(str));
+		}
 	}
 
 	/**
@@ -168,7 +172,7 @@ public class XMLTransCert implements IXMLEncodable
 	{
 //		a_doc = getDocumentBuilder().newDocument();
 		Element elemRoot = a_doc.createElement("TransferCertificate");
-		elemRoot.setAttribute("version", "1.1");
+		elemRoot.setAttribute("version", "1.2");
 //		a_doc.appendChild(elemRoot);
 		Element elem = a_doc.createElement("AccountNumber");
 		XMLUtil.setValue(elem, Long.toString(m_accountNumber));
@@ -182,12 +186,10 @@ public class XMLTransCert implements IXMLEncodable
 		elem = a_doc.createElement("ValidTime");
 		XMLUtil.setValue(elem, m_validTime.toString());
 		elemRoot.appendChild(elem);
-		if (m_strPayURL != null)
-		{
-			elem = a_doc.createElement("WebPayURL");
-			XMLUtil.setValue(elem, m_strPayURL);
-			elemRoot.appendChild(elem);
-		}
+		elem = a_doc.createElement("ReceivedDate");
+		XMLUtil.setValue(elem, m_receivedDate.getTime());
+		elemRoot.appendChild(elem);
+
 		return elemRoot;
 	}
 
