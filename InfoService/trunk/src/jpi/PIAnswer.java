@@ -37,19 +37,20 @@ import anon.pay.xml.XMLErrorMessage;
  */
 public class PIAnswer
 {
-    private int m_iStatusCode;
-    private IXMLEncodable m_Content;
+	private int m_iStatusCode;
+	private IXMLEncodable m_Content;
 	private int m_iType;
 	public final static int TYPE_ERROR = -1;
 	public final static int TYPE_CLOSE = 1;
 	public final static int TYPE_CHALLENGE_REQUEST = 2;
 
-   //Bi --> JAP
+	//Bi --> JAP
 	public final static int TYPE_ACCOUNT_CERTIFICATE = 3;
 	public final static int TYPE_AUTHENTICATION_SUCCESS = 4;
 	public final static int TYPE_TRANSFER_CERTIFICATE = 5;
 	public final static int TYPE_BALANCE = 6;
 	public final static int TYPE_PAYMENT_OPTIONS = 11;
+	public final static int TYPE_TRANSACTION_OVERVIEW = 12;
 
 	//Bi --> AI
 	public final static int TYPE_PAYOFF = 7;
@@ -57,11 +58,11 @@ public class PIAnswer
 	public final static int TYPE_CONFIRM = 9;
 	public final static int TYPE_ACCOUNT_SNAPSHOT = 10;
 
-   public PIAnswer(int type, IXMLEncodable content)
-    {
+	public PIAnswer(int type, IXMLEncodable content)
+	{
 		m_Content = content;
 		m_iType = type;
-    }
+	}
 
 	public static PIAnswer getErrorAnswer(int errorCode)
 	{

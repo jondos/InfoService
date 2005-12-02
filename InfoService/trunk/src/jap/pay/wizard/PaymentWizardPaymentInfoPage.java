@@ -223,9 +223,9 @@ public class PaymentWizardPaymentInfoPage extends BasicWizardPage implements Mou
 				JLabel l = new JLabel(field[1]);
 				JTextField t = new JTextField(15);
 				t.setName(field[0]);
-				m_inputFields.add(t);
-				m_inputPanel.add(l);
-				m_inputPanel.add(t);
+				m_inputFields.addElement(t);
+				m_inputPanel.addElement(l);
+				m_inputPanel.addElement(t);
 			}
 		}
 
