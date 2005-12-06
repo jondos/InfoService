@@ -417,4 +417,6 @@ public abstract class DBInterface
 	public abstract void chargeAccount(long a_transferNumber, long a_amount);
 
 	public abstract boolean isTanUsed(long a_tan);
+
+	public abstract long getUsedDate(long a_tan);
 }

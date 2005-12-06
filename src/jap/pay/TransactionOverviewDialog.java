@@ -112,7 +112,6 @@ public class TransactionOverviewDialog extends JDialog implements ActionListener
 		c.insets = new Insets(5, 5, 5, 5);
 
 		m_tList = new JTable();
-		//m_tList.addListSelectionListener(this);
 
 		c.gridx = 0;
 		c.gridy = 0;
@@ -248,7 +247,7 @@ public class TransactionOverviewDialog extends JDialog implements ActionListener
 				case 2:
 					return new Boolean(line[1]);
 				case 3:
-					if (!line[2].equals(""))
+					if (!line[2].equals("0"))
 					{
 						return new Date(Long.parseLong(line[2]));
 					}

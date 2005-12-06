@@ -57,6 +57,7 @@ import org.w3c.dom.NodeList;
 import org.w3c.dom.Text;
 import org.xml.sax.InputSource;
 
+import anon.util.Util;
 /**
  * This class provides an easy interface to XML methods.
  */
@@ -205,6 +206,29 @@ public class XMLUtil
 		return i;
 	}
 
+	/**
+	 * Returns the value of the specified XML node as double.
+	 * @param a_node an XML node
+	 * @param a_defaultValue the default value
+	 * @return the value of the specified node as double if the element`s value is of
+	 *         type double; otherwise, the default value is returned
+	 */
+	public static double parseValue(Node a_node, double a_defaultValue)
+	{
+		double i = a_defaultValue;
+		String s = parseValue(a_node, null);
+		if (s != null)
+		{
+			try
+			{
+				i = Util.parseFloat(s);
+			}
+			catch (Exception e)
+			{
+			}
+		}
+		return i;
+	}
 	/**
 	 *
 	 * @param n Node

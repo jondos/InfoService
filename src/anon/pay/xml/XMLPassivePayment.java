@@ -1,0 +1,273 @@
+/*
+ Copyright (c) 2000, The JAP-Team
+ All rights reserved.
+ Redistribution and use in source and binary forms, with or without modification,
+ are permitted provided that the following conditions are met:
+
+ - Redistributions of source code must retain the above copyright notice,
+  this list of conditions and the following disclaimer.
+
+ - Redistributions in binary form must reproduce the above copyright notice,
+  this list of conditions and the following disclaimer in the documentation and/or
+  other materials provided with the distribution.
+
+ - Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
+  may be used to endorse or promote products derived from this software without specific
+  prior written permission.
+
+
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS
+ OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
+ AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS
+ BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+ OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+ IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
+ */
+package anon.pay.xml;
+
+import java.io.ByteArrayInputStream;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import javax.xml.parsers.DocumentBuilderFactory;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import anon.util.IXMLEncodable;
+import anon.util.XMLUtil;
+import org.w3c.dom.Node;
+import anon.util.XMLParseException;
+
+/**
+ * This class is used by JAP to send information necessary to process a
+ * passive payment to the payment instance.
+ *
+ * <PassivePayment version="1.0">
+ *    <TransferNumber>123456789</TransferNumber>
+ *    <Amount>3</Amount>
+ *    <Currency>EUR</Currency>
+ *    <PaymentData ref="owner">Tobias Bayer</PaymentData>
+ *    <PaymentData ref="company">VISA</PaymentData>
+ *    <PaymentData ref="number">0987654321</PaymentData>
+ *    ...
+ * </PassivePayment>
+ *
+ *
+ * @author Tobias Bayer
+ */
+public class XMLPassivePayment implements IXMLEncodable
+{
+	public static final String XML_ELEMENT_NAME = "PassivePayment";
+	private static final String XML_DOCUMENT_VERSION = "1.0";
+	private static final String VERSION = "version";
+	private static final String TRANSFER_NUM = "TransferNumber";
+	private static final String AMOUNT = "Amount";
+	private static final String CURRENCY = "Currency";
+	private static final String PAYMENT_DATA = "PaymentData";
+	private static final String REF = "ref";
+
+	private Hashtable m_paymentData = new Hashtable();
+	private long m_transferNumber;
+	private String m_currency;
+	private double m_amount;
+
+	/**
+	 * Constructor
+	 */
+	public XMLPassivePayment()
+	{}
+
+	/**
+	 * Constructor. Creates object from an XML string.
+	 * @param xml String
+	 * @throws Exception
+	 */
+	public XMLPassivePayment(String xml) throws XMLParseException
+	{
+		setValues(XMLUtil.toXMLDocument(xml).getDocumentElement());
+	}
+
+	/**
+	 * Constructor. Creates object from an XML bytearray .
+	 * @param xml byte[]
+	 * @throws Exception
+	 */
+	public XMLPassivePayment(byte[] xml) throws XMLParseException
+	{
+		setValues(XMLUtil.toXMLDocument(xml).getDocumentElement());
+	}
+
+	/**
+	 * Constructor. Creates object from an XML document.
+	 * @param doc Document
+	 * @throws Exception
+	 */
+	public XMLPassivePayment(Document doc) throws XMLParseException
+	{
+		setValues(doc.getDocumentElement());
+	}
+
+	/**
+	 * Constructor. Creates object from an XML element.
+	 * @param element Element
+	 * @throws Exception
+	 */
+	public XMLPassivePayment(Element element) throws XMLParseException
+	{
+		setValues(element);
+	}
+
+	/**
+	 * Sets the member values from an XML element.
+	 * @param elemRoot Element
+	 * @throws Exception
+	 */
+	private void setValues(Element elemRoot) throws XMLParseException
+	{
+		String ref;
+		String value;
+
+		if (!elemRoot.getTagName().equals(XML_ELEMENT_NAME) ||
+			!elemRoot.getAttribute(VERSION).equals(XML_DOCUMENT_VERSION))
+		{
+			throw new XMLParseException("PassivePayment wrong format or wrong version number");
+		}
+
+		m_paymentData = new Hashtable();
+
+		NodeList nodesData = elemRoot.getElementsByTagName(PAYMENT_DATA);
+		for (int i = 0; i < nodesData.getLength(); i++)
+		{
+			ref = XMLUtil.parseAttribute(nodesData.item(i), REF, null);
+			value = XMLUtil.parseValue(nodesData.item(i), null);
+			value = nodesData.item(i).getFirstChild().getNodeValue();
+			m_paymentData.put(ref, value);
+		}
+
+		m_transferNumber = XMLUtil.parseValue(XMLUtil.getFirstChildByName(elemRoot, TRANSFER_NUM), (long) 0);
+		m_amount = XMLUtil.parseValue(XMLUtil.getFirstChildByName(elemRoot, AMOUNT), (double) 0);
+		m_currency = XMLUtil.parseValue(XMLUtil.getFirstChildByName(elemRoot, CURRENCY), null);
+	}
+
+	/**
+	 * Sets the payment amount
+	 * @param a_amount double
+	 */
+	public void setAmount(double a_amount)
+	{
+		m_amount = a_amount;
+	}
+
+	/**
+	 * Sets the currency the user wants to pay in
+	 * @param a_currency String
+	 */
+	public void setCurrency(String a_currency)
+	{
+		m_currency = a_currency;
+	}
+
+	/**
+	 * Sets the transfer number that belongs to this message
+	 * @param a_transferNumber long
+	 */
+	public void setTransferNumber(long a_transferNumber)
+	{
+		m_transferNumber = a_transferNumber;
+	}
+
+	/**
+	 * Adds a <PaymentData> element
+	 * @param a_reference String The reference, of the input field
+	 * @param a_data String The value teh user has entered in the input field
+	 */
+	public void addData(String a_reference, String a_data)
+	{
+		m_paymentData.put(a_reference, a_data);
+	}
+
+	/**
+	 * Gets the payment amount
+	 * @return double
+	 */
+	public double getAmount()
+	{
+		return m_amount;
+	}
+
+	/**
+	 * Gets the transfer number that belongs to this message
+	 * @return long
+	 */
+	public long getTransferNumber()
+	{
+		return m_transferNumber;
+	}
+
+	/**
+	 * Gets the currency the user wants to pay in
+	 * @return String
+	 */
+	public String getCurrency()
+	{
+		return m_currency;
+	}
+
+	/**
+	 * Gets all references that belong to this message
+	 * @return Enumeration
+	 */
+	public Enumeration getReferences()
+	{
+		return m_paymentData.keys();
+	}
+
+	/**
+	 * Gets the value of a <PaymentData> line
+	 * @param a_key String The reference of the input field that should be retrieved
+	 * @return String
+	 */
+	public String getPaymentData(String a_key)
+	{
+		return (String) m_paymentData.get(a_key);
+	}
+
+	/**
+	 * Produces an XML element from the member values
+	 * @param a_doc Document
+	 * @return Element
+	 */
+	public Element toXmlElement(Document a_doc)
+	{
+		String ref;
+		Element elemRoot = a_doc.createElement(XML_ELEMENT_NAME);
+		elemRoot.setAttribute(VERSION, XML_DOCUMENT_VERSION);
+
+		Element elem;
+		elem = a_doc.createElement(TRANSFER_NUM);
+		XMLUtil.setValue(elem, m_transferNumber);
+		elemRoot.appendChild(elem);
+
+		elem = a_doc.createElement(AMOUNT);
+		XMLUtil.setValue(elem, String.valueOf(m_amount));
+		elemRoot.appendChild(elem);
+
+		elem = a_doc.createElement(CURRENCY);
+		XMLUtil.setValue(elem, m_currency);
+		elemRoot.appendChild(elem);
+
+		Enumeration refs = m_paymentData.elements();
+		while (refs.hasMoreElements())
+		{
+			ref = (String) refs.nextElement();
+			elem = a_doc.createElement(PAYMENT_DATA);
+			XMLUtil.setAttribute(elem, REF, ref);
+			XMLUtil.setValue(elem, (String) m_paymentData.get(ref));
+			elemRoot.appendChild(elem);
+		}
+		return elemRoot;
+	}
+
+}

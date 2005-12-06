@@ -188,8 +188,9 @@ public class XMLTransactionOverview implements IXMLEncodable
 	 * Sets a specific tan to used or not used
 	 * @param a_tan long
 	 * @param a_used boolean
+         * @param a_usedDate long
 	 */
-	public void setUsed(long a_tan, boolean a_used)
+	public void setUsed(long a_tan, boolean a_used, long a_usedDate)
 	{
 		for (int i = 0; i < m_tans.size(); i++)
 		{
@@ -197,10 +198,9 @@ public class XMLTransactionOverview implements IXMLEncodable
 			if (line[0].equals(String.valueOf(a_tan)))
 			{
 				String tan = line[0];
-				String date = line[2];
 				m_tans.removeElementAt(i);
 				m_tans.addElement(new String[]
-								  {tan, String.valueOf(a_used), date});
+								  {tan, String.valueOf(a_used), String.valueOf(a_usedDate)});
 			}
 
 		}
