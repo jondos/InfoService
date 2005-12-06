@@ -39,6 +39,7 @@ import anon.util.XMLUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import java.util.Date;
 
 /**
  * Implements {@link DBInterface} for Postgresql
@@ -412,7 +413,7 @@ public class DataBase extends DBInterface
 		{
 			Statement stmt = m_dbConn.createStatement();
 			stmt.executeUpdate("INSERT INTO TRANSFERS VALUES (" + transfer_num + "," +
-							   account_num + "," + deposit + ",'" + validTime + "','f')");
+							   account_num + "," + deposit + ",'" + validTime + "','f', NULL)");
 			stmt.close();
 		}
 		catch (Exception e)
@@ -758,12 +759,13 @@ public class DataBase extends DBInterface
 			//Update deposit
 			if (!used)
 			{
+				Date usedDate = new Date();
 				stmt = m_dbConn.createStatement();
 				stmt.executeUpdate("UPDATE ACCOUNTS SET DEPOSIT=DEPOSIT+" + a_amount + "WHERE ACCOUNTNUMBER=" +
 								   account);
 				//Set transfer number to "used"
 				stmt = m_dbConn.createStatement();
-				stmt.executeUpdate("UPDATE TRANSFERS SET USED=TRUE WHERE TRANSFERNUMBER=" +
+				stmt.executeUpdate("UPDATE TRANSFERS SET USED=TRUE, USEDTIME="+usedDate.getTime()+" WHERE TRANSFERNUMBER=" +
 								   a_transferNumber);
 			}
 			else
@@ -801,5 +803,30 @@ public class DataBase extends DBInterface
 		}
 		return used;
 	}
+
+    public long getUsedDate(long a_tan)
+    {
+        long usedDate = 0;
+        Statement stmt;
+
+        try
+        {
+                stmt = m_dbConn.createStatement();
+                ResultSet r = stmt.executeQuery("SELECT USEDTIME FROM TRANSFERS WHERE TRANSFERNUMBER=" +
+                                                                                a_tan);
+                if (r.next())
+                {
+                        usedDate = r.getLong(1);
+                }
+
+        }
+        catch (Exception e)
+        {
+                LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
+                                          "Could not get used attribute of transfer number. Cause: " + e.getMessage());
+        }
+        return usedDate;
+
+    }
 
 }

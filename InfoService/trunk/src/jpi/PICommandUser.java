@@ -358,8 +358,8 @@ public class PICommandUser implements PICommand
 		Enumeration tans = overview.getTans().elements();
 		while (tans.hasMoreElements())
 		{
-			String tan = (String) tans.nextElement();
-			//Get "used" attribute from database
+			String[] line = (String[]) tans.nextElement();
+			//Get "used" and "date" attribute from database
 			DBInterface db = null;
 			try
 			{
@@ -372,8 +372,12 @@ public class PICommandUser implements PICommand
 			}
 			if (db != null)
 			{
-				boolean used = db.isTanUsed(Long.parseLong(tan));
-				overview.setUsed(Long.parseLong(tan), used);
+				boolean used = db.isTanUsed(Long.parseLong(line[0]));
+				long usedDate = db.getUsedDate(Long.parseLong(line[0]));
+                LogHolder.log(LogLevel.DEBUG, LogType.PAY,
+							  "TAN " + line[0] + " used: " + used);
+				overview.setUsed(Long.parseLong(line[0]), used, usedDate);
+
 			}
 		}
 		return overview;

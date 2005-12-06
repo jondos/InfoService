@@ -450,10 +450,19 @@ public final class JAPUtil
 	{
 		int position;
 
-		while ((position = a_source.indexOf(a_toReplace)) != -1)
+		while ( (position = a_source.indexOf(a_toReplace)) != -1)
 		{
+			int position2 = a_source.indexOf(a_replaceWith);
+			if (a_replaceWith.indexOf(a_toReplace) != -1)
+			{
+				position2 += a_replaceWith.indexOf(a_toReplace);
+			}
+			if (position == position2)
+			{
+				break;
+			}
 			String before = a_source.substring(0, position);
-			String after = a_source.substring(position+a_toReplace.length(), a_source.length());
+			String after = a_source.substring(position + a_toReplace.length(), a_source.length());
 			a_source = before + a_replaceWith + after;
 		}
 
