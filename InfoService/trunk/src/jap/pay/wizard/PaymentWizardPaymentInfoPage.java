@@ -27,18 +27,28 @@
  */
 package jap.pay.wizard;
 
+import java.util.Enumeration;
+import java.util.Vector;
+
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
 
+import anon.pay.BIConnection;
 import anon.pay.PayAccount;
+import anon.pay.xml.XMLPassivePayment;
 import anon.pay.xml.XMLPaymentOption;
 import anon.pay.xml.XMLTransCert;
+import anon.util.Util;
 import gui.JAPMessages;
 import gui.wizard.BasicWizardHost;
 import gui.wizard.BasicWizardPage;
@@ -49,20 +59,22 @@ import jap.platform.AbstractOS;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import java.util.Vector;
-import java.awt.GridLayout;
-import javax.swing.JTextField;
 
-public class PaymentWizardPaymentInfoPage extends BasicWizardPage implements MouseListener
+public class PaymentWizardPaymentInfoPage extends BasicWizardPage implements MouseListener, ActionListener
 {
+	/** Messages */
+	private static final String MSG_SUBMIT = PaymentWizardPaymentInfoPage.class.
+		getName() + "_submit";
 	private XMLPaymentOption m_selectedOption;
 	private XMLTransCert m_transCert;
 	private PayAccount m_payAccount;
 	private JLabel m_fetchingLabel, m_detailedInfoLabel, m_extraInfoLabel;
+	private JButton m_bttnSubmit;
 	private JPanel m_infoPanel, m_inputPanel;
 	private String m_language, m_amount, m_currency;
 	private BasicWizardHost m_host;
 	private Vector m_inputFields;
+	GridBagConstraints m_c = new GridBagConstraints();
 
 	public PaymentWizardPaymentInfoPage(PayAccount a_payAccount, BasicWizardHost a_host)
 	{
@@ -70,23 +82,22 @@ public class PaymentWizardPaymentInfoPage extends BasicWizardPage implements Mou
 		m_host = a_host;
 		m_language = JAPController.getLocale().getLanguage();
 		setPageTitle(JAPMessages.getString("payWizPaymentInfoTitle"));
-		GridBagConstraints c = new GridBagConstraints();
 		m_fetchingLabel = new JLabel(JAPMessages.getString("fetchingTransferNumber"),
 									 JAPUtil.loadImageIcon(JAPConstants.BUSYFN, true), JLabel.CENTER);
 		Font f = m_fetchingLabel.getFont();
 		m_fetchingLabel.setFont(new Font(f.getName(), f.getStyle(), f.getSize() - 1));
 		m_fetchingLabel.setVerticalTextPosition(JLabel.TOP);
 		m_fetchingLabel.setHorizontalTextPosition(JLabel.CENTER);
-		c.insets = new Insets(5, 5, 5, 5);
-		c.anchor = c.NORTHWEST;
-		c.gridx = 0;
-		c.gridy = 0;
-		c.weightx = 0;
-		c.weighty = 0;
+		m_c.insets = new Insets(5, 5, 5, 5);
+		m_c.anchor = m_c.NORTHWEST;
+		m_c.gridx = 0;
+		m_c.gridy = 0;
+		m_c.weightx = 0;
+		m_c.weighty = 0;
 		m_panelComponents.add(m_fetchingLabel);
 		m_fetchingLabel.setVisible(false);
 		createInfoPanel();
-		m_panelComponents.add(m_infoPanel, c);
+		m_panelComponents.add(m_infoPanel, m_c);
 	}
 
 	private void createInfoPanel()
@@ -129,10 +140,13 @@ public class PaymentWizardPaymentInfoPage extends BasicWizardPage implements Mou
 						m_transCert = m_payAccount.charge();
 
 						m_fetchingLabel.setVisible(false);
+
 						if (m_selectedOption.getType().equalsIgnoreCase(XMLPaymentOption.OPTION_PASSIVE))
 						{
 							createInputPanel();
-							m_panelComponents.add(m_inputPanel);
+							m_panelComponents.remove(m_infoPanel);
+							m_panelComponents.add(m_inputPanel, m_c);
+							m_panelComponents.repaint();
 						}
 						else
 						{
@@ -156,9 +170,9 @@ public class PaymentWizardPaymentInfoPage extends BasicWizardPage implements Mou
 
 	}
 
-	private void updateExtraInfo()
+	public void updateExtraInfo()
 	{
-		if (m_transCert != null)
+		if (m_transCert != null) // && m_selectedOption.getType().equalsIgnoreCase(XMLPaymentOption.OPTION_ACTIVE))
 		{
 			String extraInfo = m_selectedOption.getExtraInfo(m_language);
 			extraInfo = JAPUtil.replaceAll(extraInfo, "%t", String.valueOf(m_transCert.getTransferNumber()));
@@ -196,7 +210,6 @@ public class PaymentWizardPaymentInfoPage extends BasicWizardPage implements Mou
 		m_selectedOption = a_option;
 		setPageTitle("<html>" + a_option.getHeading(m_language) + "</html>");
 		m_detailedInfoLabel.setText("<html>" + a_option.getDetailedInfo(m_language) + "</html>");
-		updateExtraInfo();
 	}
 
 	public void setSelectedCurrency(String a_currency)
@@ -212,23 +225,40 @@ public class PaymentWizardPaymentInfoPage extends BasicWizardPage implements Mou
 	public void createInputPanel()
 	{
 		m_inputFields = new Vector();
-		Vector inputFields = null;//m_selectedOption.getInputFields();
-		m_inputPanel = new JPanel(new GridLayout(30,2));
+		Vector inputFields = m_selectedOption.getInputFields();
+		m_inputPanel = new JPanel(new GridBagLayout());
+		GridBagConstraints c = new GridBagConstraints();
+		c.anchor = c.NORTHWEST;
+		c.fill = c.NONE;
+		c.gridx = 0;
+		c.gridy = 0;
+		c.weightx = 0;
+		c.weighty = 0;
+		c.insets = new Insets(5, 5, 5, 5);
 
-		for (int i = 0;i<inputFields.size();i++)
+		for (int i = 0; i < inputFields.size(); i++)
 		{
 			String[] field = (String[]) inputFields.elementAt(i);
+
 			if (field[2].equalsIgnoreCase(m_language))
 			{
-				JLabel l = new JLabel(field[1]);
+				JLabel l = new JLabel("<html>" + field[1] + "</html>");
 				JTextField t = new JTextField(15);
 				t.setName(field[0]);
 				m_inputFields.addElement(t);
-				m_inputPanel.add(l);
-				m_inputPanel.add(t);
+				m_inputPanel.add(l, c);
+				c.gridx++;
+				m_inputPanel.add(t, c);
+				c.gridy++;
+				c.gridx--;
 			}
 		}
-
+		c.weightx = 1;
+		c.weightx = 1;
+		m_bttnSubmit = new JButton(JAPMessages.getString(MSG_SUBMIT));
+		m_bttnSubmit.addActionListener(this);
+		c.gridx++;
+		m_inputPanel.add(m_bttnSubmit, c);
 	}
 
 	public void mouseClicked(MouseEvent e)
@@ -239,14 +269,52 @@ public class PaymentWizardPaymentInfoPage extends BasicWizardPage implements Mou
 			String link = m_extraInfoLabel.getText();
 			link = JAPUtil.replaceAll(link, "<br>", "");
 			link = JAPUtil.replaceAll(link, "<p>", "");
-			link = JAPUtil.replaceAll(link, "<html>", "");
-			link = JAPUtil.replaceAll(link, "</html>", "");
+			link = JAPUtil.replaceAll(link, "<html>", " ");
+			link = JAPUtil.replaceAll(link, "</html>", " ");
 			link = JAPUtil.replaceAll(link, "<font color=blue><u>", "");
 			link = JAPUtil.replaceAll(link, "</u></font>", "");
-			link = JAPUtil.replaceAll(link, " ", "");
+			link = link.trim();
 
 			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Opening " + link + " in browser.");
 			os.openURLInBrowser(link);
+		}
+	}
+
+	/**
+	 * Submits information the user has entered for a passive
+	 * payment to the payment instance
+	 */
+	private void submitPassiveInfo()
+	{
+		/** Construct PassivePayment object */
+		XMLPassivePayment pp = new XMLPassivePayment();
+		pp.setTransferNumber(m_transCert.getTransferNumber());
+		pp.setAmount(Util.parseFloat(m_amount));
+		pp.setCurrency(m_currency);
+		pp.setPaymentName(m_selectedOption.getName());
+		Enumeration fields = m_inputFields.elements();
+		while (fields.hasMoreElements())
+		{
+			JTextField tf = (JTextField) fields.nextElement();
+			pp.addData(tf.getName(), tf.getText());
+		}
+
+		/** Post data to payment instance */
+		BIConnection biConn = new BIConnection(m_payAccount.getBI());
+		try
+		{
+			biConn.connect();
+			biConn.authenticate(m_payAccount.getAccountCertificate(), m_payAccount.getSigningInstance());
+			if (!biConn.sendPassivePayment(pp))
+			{
+				/** @todo Inform user that payment instance did not accept PassivePayment*/
+			}
+			biConn.disconnect();
+		}
+		catch (Exception e)
+		{
+			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
+						  "Could not send PassivePayment to payment instance: " + e.getMessage());
 		}
 	}
 
@@ -264,5 +332,13 @@ public class PaymentWizardPaymentInfoPage extends BasicWizardPage implements Mou
 
 	public void mouseExited(MouseEvent e)
 	{
+	}
+
+	public void actionPerformed(ActionEvent e)
+	{
+		if (e.getSource() == m_bttnSubmit)
+		{
+			submitPassiveInfo();
+		}
 	}
 }

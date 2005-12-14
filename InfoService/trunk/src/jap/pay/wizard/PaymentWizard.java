@@ -101,6 +101,7 @@ public class PaymentWizard extends BasicWizard
 			m_infoPage.setSelectedCurrency(m_methodSelectionPage.getSelectedCurrency());
 			m_infoPage.setAmount(m_methodSelectionPage.getAmount());
 			m_infoPage.fetchTransferNumber();
+			m_infoPage.updateExtraInfo();
 		}
 		return null;
 	}

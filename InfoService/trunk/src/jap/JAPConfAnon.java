@@ -65,6 +65,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import anon.infoservice.InfoServiceHolder;
+import anon.infoservice.ListenerInterface;
 import anon.infoservice.MixCascade;
 import anon.infoservice.MixInfo;
 import gui.JAPMultilineLabel;
@@ -335,7 +336,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		c.gridy = 0;
 		c.gridwidth = 3;
 		m_manualPanel.add(m_manHostField, c);
-		m_manPortField = new JAPJIntField(5, 5);
+		m_manPortField = new JAPJIntField(ListenerInterface.PORT_MAX_VALUE);
 		m_manPortField.setText(a_port);
 		c.gridy = 1;
 		c.fill = c.NONE;

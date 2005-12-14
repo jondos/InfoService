@@ -171,6 +171,7 @@ public class TransactionOverviewDialog extends JDialog implements ActionListener
 				MyTableModel tableModel = new MyTableModel(overview);
 				m_tList.setEnabled(true);
 				m_tList.setModel(tableModel);
+
 				m_fetchingLabel.setVisible(false);
 			}
 		};

@@ -53,6 +53,7 @@ import anon.crypto.XMLSignature;
 import anon.pay.xml.XMLPaymentOptions;
 import anon.pay.xml.XMLTransactionOverview;
 import java.util.Date;
+import anon.pay.xml.XMLPassivePayment;
 
 public class BIConnection
 {
@@ -254,6 +255,29 @@ public class BIConnection
 		Document doc = m_httpClient.readAnswer();
 		XMLTransactionOverview overview = new XMLTransactionOverview(doc.getDocumentElement());
 		return overview;
+	}
+
+	/**
+	 * Sends data the user has entered for a passive payment to the payment
+	 * instance.
+	 * @param a_passivePayment XMLPassivePayment
+	 * @throws Exception
+	 */
+	public boolean sendPassivePayment(XMLPassivePayment a_passivePayment) throws Exception
+	{
+		m_httpClient.writeRequest("POST", "passivepayment",
+								  XMLUtil.toString(a_passivePayment.toXmlElement(XMLUtil.createDocument()
+			)));
+	Document doc = m_httpClient.readAnswer();
+	XMLErrorMessage err = new XMLErrorMessage(doc.getDocumentElement());
+	if (err.getErrorCode() == XMLErrorMessage.ERR_OK)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 	}
 
 }

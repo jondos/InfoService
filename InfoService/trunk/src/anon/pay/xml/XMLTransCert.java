@@ -187,9 +187,11 @@ public class XMLTransCert implements IXMLEncodable
 		XMLUtil.setValue(elem, m_validTime.toString());
 		elemRoot.appendChild(elem);
 		elem = a_doc.createElement("ReceivedDate");
+		if (m_receivedDate != null)
+		{
 		XMLUtil.setValue(elem, m_receivedDate.getTime());
 		elemRoot.appendChild(elem);
-
+		}
 		return elemRoot;
 	}
 

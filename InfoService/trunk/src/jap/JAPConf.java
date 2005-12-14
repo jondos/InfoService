@@ -64,6 +64,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 
 import anon.infoservice.ImmutableListenerInterface;
+import anon.infoservice.ListenerInterface;
 import anon.infoservice.ProxyInterface;
 import gui.JAPMultilineLabel;
 import gui.JAPJIntField;
@@ -351,7 +352,7 @@ final public class JAPConf extends JDialog implements ActionListener
 		m_labelPortnumber1.setFont(m_fontControls);
 		m_labelPortnumber2 = new JLabel(JAPMessages.getString("settingsPort2"));
 		m_labelPortnumber2.setFont(m_fontControls);
-		m_tfListenerPortNumber = new JAPJIntField(5, 5);
+		m_tfListenerPortNumber = new JAPJIntField(ListenerInterface.PORT_MAX_VALUE);
 		m_tfListenerPortNumber.setFont(m_fontControls);
 		m_tfListenerPortNumber.addActionListener(new ActionListener()
 		{
@@ -447,7 +448,7 @@ final public class JAPConf extends JDialog implements ActionListener
 		m_comboProxyType.addItem(JAPMessages.getString("settingsProxyTypeSOCKS"));
 		m_tfProxyHost = new JTextField(20);
 		m_tfProxyHost.setFont(m_fontControls);
-		m_tfProxyPortNumber = new JAPJIntField(5, 5);
+		m_tfProxyPortNumber = new JAPJIntField(ListenerInterface.PORT_MAX_VALUE);
 		m_tfProxyPortNumber.setFont(m_fontControls);
 		ProxyInterface proxyInterface = JAPModel.getInstance().getProxyInterface();
 		boolean bUseProxy = (proxyInterface != null && proxyInterface.isValid());

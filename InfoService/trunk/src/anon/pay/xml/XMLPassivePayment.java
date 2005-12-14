@@ -46,6 +46,7 @@ import anon.util.XMLParseException;
  *
  * <PassivePayment version="1.0">
  *    <TransferNumber>123456789</TransferNumber>
+ *    <PaymentName>CreditCard</PaymentType>
  *    <Amount>3</Amount>
  *    <Currency>EUR</Currency>
  *    <PaymentData ref="owner">Tobias Bayer</PaymentData>
@@ -67,11 +68,13 @@ public class XMLPassivePayment implements IXMLEncodable
 	private static final String CURRENCY = "Currency";
 	private static final String PAYMENT_DATA = "PaymentData";
 	private static final String REF = "ref";
+	private static final String PAYMENT_NAME = "PaymentName";
 
 	private Hashtable m_paymentData = new Hashtable();
 	private long m_transferNumber;
 	private String m_currency;
 	private double m_amount;
+	private String m_paymentName;
 
 	/**
 	 * Constructor
@@ -149,6 +152,26 @@ public class XMLPassivePayment implements IXMLEncodable
 		m_transferNumber = XMLUtil.parseValue(XMLUtil.getFirstChildByName(elemRoot, TRANSFER_NUM), (long) 0);
 		m_amount = XMLUtil.parseValue(XMLUtil.getFirstChildByName(elemRoot, AMOUNT), (double) 0);
 		m_currency = XMLUtil.parseValue(XMLUtil.getFirstChildByName(elemRoot, CURRENCY), null);
+		m_paymentName = XMLUtil.parseValue(XMLUtil.getFirstChildByName(elemRoot, PAYMENT_NAME), null);
+
+	}
+
+	/**
+	 * Sets the payment method name
+	 * @param a_paymentName String
+	 */
+	public void setPaymentName(String a_paymentName)
+	{
+		m_paymentName = a_paymentName;
+	}
+
+	/**
+	 * Gets the payment method name
+	 * @return String
+	 */
+	public String getPaymentName()
+	{
+		return m_paymentName;
 	}
 
 	/**
@@ -248,6 +271,10 @@ public class XMLPassivePayment implements IXMLEncodable
 		Element elem;
 		elem = a_doc.createElement(TRANSFER_NUM);
 		XMLUtil.setValue(elem, m_transferNumber);
+		elemRoot.appendChild(elem);
+
+		elem = a_doc.createElement(PAYMENT_NAME);
+		XMLUtil.setValue(elem, m_paymentName);
 		elemRoot.appendChild(elem);
 
 		elem = a_doc.createElement(AMOUNT);

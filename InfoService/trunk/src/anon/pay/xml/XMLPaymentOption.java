@@ -237,6 +237,24 @@ public class XMLPaymentOption implements IXMLEncodable
 							 {info, type, language});
 		}
 
+		NodeList nodesInput = elemRoot.getElementsByTagName("input");
+		try
+		{
+			for (int i = 0; i < nodesInput.getLength(); i++)
+			{
+				String label = nodesInput.item(i).getFirstChild().getFirstChild().getNodeValue();
+				String lang = ( (Element) nodesInput.item(i).getFirstChild()).getAttribute(
+					"lang");
+				String ref = ( (Element) nodesInput.item(i)).getAttribute("ref");
+				m_inputFields.addElement(new String[]
+								  {ref, label, lang});
+			}
+		}
+		catch (Exception e)
+		{
+			m_inputFields = new Vector();
+		}
+
 		try
 		{
 		String imageLink = XMLUtil.parseValue(XMLUtil.getFirstChildByName(elemRoot, "ImageLink").
@@ -301,6 +319,11 @@ public class XMLPaymentOption implements IXMLEncodable
 		return m_type;
 	}
 
+	public String getName()
+	{
+		return m_name;
+	}
+
 	public String getExtraInfoType(String a_langShort)
 	{
 		for (int i = 0; i < m_extraInfos.size(); i++)
@@ -312,6 +335,11 @@ public class XMLPaymentOption implements IXMLEncodable
 			}
 		}
 		return getExtraInfoType("en");
+	}
+
+	public Vector getInputFields()
+	{
+		return (Vector)m_inputFields.clone();
 	}
 
 }

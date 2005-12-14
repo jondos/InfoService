@@ -51,6 +51,7 @@ public class PIAnswer
 	public final static int TYPE_BALANCE = 6;
 	public final static int TYPE_PAYMENT_OPTIONS = 11;
 	public final static int TYPE_TRANSACTION_OVERVIEW = 12;
+	public final static int TYPE_PASSIVE_PAYMENT = 13;
 
 	//Bi --> AI
 	public final static int TYPE_PAYOFF = 7;
