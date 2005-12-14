@@ -946,7 +946,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 
 		addInfoServiceHostField = new JTextField(20);
 		addInfoServiceHostField.setFont(getFontSetting());
-		addInfoServicePortField = new JAPJIntField(5);
+		addInfoServicePortField = new JAPJIntField(ListenerInterface.PORT_MAX_VALUE);
 		addInfoServicePortField.setFont(getFontSetting());
 		addInfoServiceNameField = new JTextField(20);
 		addInfoServiceNameField.setFont(getFontSetting());

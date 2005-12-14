@@ -81,12 +81,12 @@ import org.w3c.dom.Node;
 import anon.util.Base64;
 import anon.util.IXMLEncodable;
 import anon.util.XMLUtil;
+import anon.util.IResourceInstantiator;
 import anon.util.ResourceLoader;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import org.bouncycastle.asn1.ASN1InputStream;
-import anon.util.IResourceInstantiator;
 
 
 /**
@@ -937,14 +937,17 @@ final public class JAPCertificate extends X509CertificateStructure implements IX
 
 	private static final class X509CertificateInstantiator implements IResourceInstantiator
 	{
-		public Object getInstance(File a_file, File a_topDirectory) throws Exception
+		public Object getInstance(File a_file, File a_topDirectory)
+			throws Exception
 		{
 				return JAPCertificate.getInstance(new FileInputStream(a_file));
 	}
 
-		public Object getInstance(ZipEntry a_entry, ZipFile a_file) throws Exception
+		public Object getInstance(ZipEntry a_entry, ZipFile a_file)
+			throws Exception
 		{
 			return JAPCertificate.getInstance(a_file.getInputStream(a_entry));
 		}
+
 	}
 }

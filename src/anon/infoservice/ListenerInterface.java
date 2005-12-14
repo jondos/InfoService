@@ -32,7 +32,6 @@
 
 package anon.infoservice;
 
-import java.net.InetAddress;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
@@ -52,6 +51,9 @@ import anon.util.XMLUtil;
  */
 public class ListenerInterface implements ImmutableListenerInterface, IXMLEncodable
 {
+	public static final int PORT_MIN_VALUE = 1;
+	public static final int PORT_MAX_VALUE = 65535;
+
 	/**
 	 * This is the host of this interface (hostname or IP).
 	 */
@@ -160,7 +162,7 @@ public class ListenerInterface implements ImmutableListenerInterface, IXMLEncoda
 	 */
 	public static boolean isValidPort(int a_port)
 	{
-		if ( (a_port < 1) || (a_port > 65536))
+		if ( (a_port < PORT_MIN_VALUE) || (a_port > PORT_MAX_VALUE))
 		{
 			return false;
 		}

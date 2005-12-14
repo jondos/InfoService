@@ -29,9 +29,9 @@ package jap;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.io.IOException;
 import java.net.URL;
 import java.util.Vector;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Cursor;
@@ -59,8 +59,7 @@ import javax.swing.event.HyperlinkListener;
 import javax.swing.text.Document;
 
 import anon.util.ResourceLoader;
-import java.io.StringReader;
-import gui.*;
+import gui.JAPMessages;
 
 /* classes modified from Swing Example "Metalworks" */
 /** Help window for the JAP. Thi is a singleton meaning that there exists only one help window all the time.*/

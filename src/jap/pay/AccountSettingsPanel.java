@@ -35,12 +35,16 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import java.awt.BorderLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.GridLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -63,7 +67,6 @@ import anon.pay.PayAccount;
 import anon.pay.PayAccountsFile;
 import anon.pay.xml.XMLAccountInfo;
 import anon.pay.xml.XMLBalance;
-import anon.pay.xml.XMLEasyCC;
 import anon.pay.xml.XMLTransCert;
 import anon.util.XMLUtil;
 import gui.ByteNumberCellRenderer;
@@ -79,10 +82,10 @@ import jap.pay.wizard.PaymentWizard;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import java.util.Vector;
-import anon.pay.xml.XMLTransactionOverview;
-import anon.pay.BIConnection;
-import java.util.Date;
+import javax.swing.JSeparator;
+import java.awt.Dimension;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 /**
  * The Jap Conf Module (Settings Tab Page) for the Accounts and payment Management
@@ -94,21 +97,48 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 {
 
 	/** Messages */
-	private static final String MSG_TRANSACTION_OVERVIEW_BUTTON = AccountSettingsPanel.class.
-		getName() + "_transaction_overview_button";
+	private static final String MSG_BUTTON_TRANSACTIONS = AccountSettingsPanel.class.
+		getName() + "_button_transactions";
+	private static final String MSG_BUTTON_DELETE = AccountSettingsPanel.class.
+		getName() + "_button_delete";
+	private static final String MSG_BUTTON_EXPORT = AccountSettingsPanel.class.
+		getName() + "_button_export";
 	private static final String MSG_TRANSACTION_OVERVIEW_DIALOG = AccountSettingsPanel.class.
 		getName() + "_transaction_overview_dialog";
+	private static final String MSG_ACCOUNT_SPENT = AccountSettingsPanel.class.
+		getName() + "_account_spent";
+	private static final String MSG_ACCOUNT_DEPOSIT = AccountSettingsPanel.class.
+		getName() + "_account_deposit";
+	private static final String MSG_ACCOUNT_BALANCE = AccountSettingsPanel.class.
+		getName() + "_account_balance";
+	private static final String MSG_ACCOUNT_VALID = AccountSettingsPanel.class.
+		getName() + "_account_valid";
+	private static final String MSG_ACCOUNT_DETAILS = AccountSettingsPanel.class.
+		getName() + "_account_details";
+	private static final String MSG_ACCOUNT_CREATION_DATE = AccountSettingsPanel.class.
+		getName() + "_account_creation_date";
+	private static final String MSG_ACCOUNT_STATEMENT_DATE = AccountSettingsPanel.class.
+		getName() + "_account_statement_date";
+	private static final String MSG_BUTTON_CHARGE = AccountSettingsPanel.class.
+		getName() + "_button_charge";
 
 	private JTable m_Table;
 	private JButton m_btnCreateAccount;
 	private JButton m_btnChargeAccount;
 	private JButton m_btnStatement;
-	private JButton m_btnShowDetails;
 	private JButton m_btnActivate;
 	private JButton m_btnDeleteAccount;
 	private JButton m_btnExportAccount;
 	private JButton m_btnImportAccount;
 	private JButton m_btnTransactions;
+
+	private JLabel m_labelCreationDate;
+	private JLabel m_labelStatementDate;
+	private JLabel m_labelDeposit;
+	private JLabel m_labelSpent;
+	private JLabel m_labelBalance;
+	private JLabel m_labelValid;
+
 	private MyTableModel m_MyTableModel;
 
 	public AccountSettingsPanel()
@@ -132,30 +162,34 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 	public void recreateRootPanel()
 	{
 		JPanel rootPanel = getRootPanel();
-		PayAccountsFile accounts = PayAccountsFile.getInstance();
-		PayAccount activeAccount = accounts.getActiveAccount();
-
 		/* clear the whole root panel */
 		rootPanel.removeAll();
-		rootPanel.setLayout(new BorderLayout());
+		rootPanel.setLayout(new GridBagLayout());
 		rootPanel.setBorder(new TitledBorder(JAPMessages.getString("ngPseudonymAccounts")));
 
-		JPanel centerPanel = new JPanel(new BorderLayout());
-
 		m_Table = new JTable();
+		m_Table.setPreferredScrollableViewportSize(new Dimension(550,200));
 		m_MyTableModel = new MyTableModel();
 		m_Table.setModel(m_MyTableModel);
 		m_Table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		m_Table.setDefaultRenderer(java.sql.Timestamp.class, new TimestampCellRenderer(false));
 		m_Table.setDefaultRenderer(Long.class, new ByteNumberCellRenderer());
-		centerPanel.add(new JScrollPane(m_Table), BorderLayout.CENTER);
-
-		GridLayout gl = new GridLayout(16, 1);
-		gl.setVgap(10);
-		JPanel eastPanel = new JPanel(gl);
+		m_Table.addMouseListener(new MouseAdapter()
+		{
+			public void mouseClicked(MouseEvent e)
+			{
+				//Activate account on double click
+				if (e.getClickCount() == 2)
+				{
+					int selectedRow = m_Table.getSelectedRow();
+					doActivateAccount(getSelectedAccount());
+					m_Table.setRowSelectionInterval(selectedRow, selectedRow);
+				}
+			}
+		}
+		);
 
 		ActionListener myActionListener = new MyActionListener();
-
 		//Ask to be notified of selection changes.
 		ListSelectionModel rowSM = m_Table.getSelectionModel();
 		rowSM.addListSelectionListener(new ListSelectionListener()
@@ -163,77 +197,165 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 			public void valueChanged(ListSelectionEvent e)
 			{
 				enableDisableButtons();
+				doShowDetails(getSelectedAccount());
 			}
 		});
 
-		eastPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
+		JPanel buttonsPanel = new JPanel(new GridBagLayout());
+		GridBagConstraints c = new GridBagConstraints();
+		c.fill = c.HORIZONTAL;
+		c.anchor = c.NORTHWEST;
+		c.weightx = 0;
+		c.weighty = 0;
+		c.gridx = 0;
+		c.gridy = 0;
+		c.insets = new Insets(5, 5, 5, 5);
 
 		m_btnCreateAccount = new JButton(JAPMessages.getString("ngCreateAccount"));
 		m_btnCreateAccount.addActionListener(myActionListener);
-		eastPanel.add(m_btnCreateAccount);
+		buttonsPanel.add(m_btnCreateAccount, c);
 
-		m_btnChargeAccount = new JButton(JAPMessages.getString("ngChargeAccount"));
-		m_btnChargeAccount.addActionListener(myActionListener);
-		eastPanel.add(m_btnChargeAccount);
-		/** @todo Reactivate*/
-		m_btnChargeAccount.setEnabled(true);
-
-		m_btnStatement = new JButton(JAPMessages.getString("ngStatement"));
-		m_btnStatement.addActionListener(myActionListener);
-		eastPanel.add(m_btnStatement);
-		/** @todo Reactivate*/
-		m_btnChargeAccount.setEnabled(activeAccount != null);
-
-		m_btnShowDetails = new JButton(JAPMessages.getString("ngAccountDetails"));
-		m_btnShowDetails.addActionListener(myActionListener);
-		eastPanel.add(m_btnShowDetails);
-
-		m_btnDeleteAccount = new JButton(JAPMessages.getString("ngDeleteAccount"));
-		m_btnDeleteAccount.addActionListener(myActionListener);
-		eastPanel.add(m_btnDeleteAccount);
-
-		m_btnExportAccount = new JButton(JAPMessages.getString("ngExportAccount"));
-		m_btnExportAccount.addActionListener(myActionListener);
-		eastPanel.add(m_btnExportAccount);
-
+		c.gridx++;
+		c.weightx = 1;
+		c.weighty = 1;
 		m_btnImportAccount = new JButton(JAPMessages.getString("ngImportAccount"));
 		m_btnImportAccount.addActionListener(myActionListener);
-		eastPanel.add(m_btnImportAccount);
+		buttonsPanel.add(m_btnImportAccount, c);
 
-		m_btnActivate = new JButton(JAPMessages.getString("ngActivateAccount"));
-		m_btnActivate.addActionListener(myActionListener);
-		eastPanel.add(m_btnActivate);
-
-		m_btnTransactions = new JButton(JAPMessages.getString(MSG_TRANSACTION_OVERVIEW_BUTTON));
-		m_btnTransactions.addActionListener(myActionListener);
-		eastPanel.add(m_btnTransactions);
-
-		centerPanel.add(eastPanel, BorderLayout.EAST);
-		rootPanel.add(centerPanel, BorderLayout.CENTER);
+		c = new GridBagConstraints();
+		c.fill = c.NONE;
+		c.anchor = c.NORTHWEST;
+		c.weightx = 0;
+		c.weighty = 0;
+		c.gridx = 0;
+		c.gridy = 0;
+		c.insets = new Insets(5, 5, 5, 5);
+		rootPanel.add(new JScrollPane(m_Table), c);
+		c.gridy++;
+		rootPanel.add(buttonsPanel, c);
+		c.gridy++;
+		JSeparator sep = new JSeparator(JSeparator.HORIZONTAL);
+		sep.setPreferredSize(new Dimension(560, 10));
+		rootPanel.add(sep, c);
+		c.weightx = 1;
+		c.weighty = 1;
+		c.gridy++;
+		c.fill = c.HORIZONTAL;
+		rootPanel.add(this.createDetailsPanel(), c);
 		enableDisableButtons();
+	}
+
+	/**
+	 * Creates a new lower view of the dialog for displaying account details.
+	 * @return JPanel
+	 */
+	private JPanel createDetailsPanel()
+	{
+		JPanel p = new JPanel(new GridBagLayout());
+		GridBagConstraints c = new GridBagConstraints();
+		c.fill = c.NONE;
+		c.anchor = c.NORTHWEST;
+		c.weightx = 0;
+		c.weighty = 0;
+		c.gridx = 0;
+		c.gridy = 0;
+		c.insets = new Insets(5, 5, 5, 5);
+		p.add(new JLabel(JAPMessages.getString(MSG_ACCOUNT_DETAILS)), c);
+
+		c.insets = new Insets(5, 10, 5, 5);
+		c.gridy++;
+		p.add(new JLabel(JAPMessages.getString(MSG_ACCOUNT_CREATION_DATE)), c);
+		c.gridx++;
+		m_labelCreationDate = new JLabel();
+		p.add(m_labelCreationDate, c);
+
+		c.gridx--;
+		c.gridy++;
+		p.add(new JLabel(JAPMessages.getString(MSG_ACCOUNT_STATEMENT_DATE)), c);
+		c.gridx++;
+		m_labelStatementDate = new JLabel();
+		p.add(m_labelStatementDate, c);
+
+		c.gridx--;
+		c.gridy++;
+		p.add(new JLabel(JAPMessages.getString(MSG_ACCOUNT_DEPOSIT)), c);
+		c.gridx++;
+		m_labelDeposit = new JLabel();
+		p.add(m_labelDeposit, c);
+
+		c.gridx--;
+		c.gridy++;
+		p.add(new JLabel(JAPMessages.getString(MSG_ACCOUNT_SPENT)), c);
+		c.gridx++;
+		m_labelSpent = new JLabel();
+		p.add(m_labelSpent, c);
+
+		c.gridx--;
+		c.gridy++;
+		p.add(new JLabel(JAPMessages.getString(MSG_ACCOUNT_BALANCE)), c);
+		c.gridx++;
+		m_labelBalance = new JLabel();
+		p.add(m_labelBalance, c);
+
+		c.gridx--;
+		c.gridy++;
+		p.add(new JLabel(JAPMessages.getString(MSG_ACCOUNT_VALID)), c);
+		c.gridx++;
+		m_labelValid = new JLabel();
+		p.add(m_labelValid, c);
+
+		ActionListener myActionListener = new MyActionListener();
+
+		JPanel buttonsPanel = new JPanel(new GridBagLayout());
+		GridBagConstraints d = new GridBagConstraints();
+		d.fill = c.HORIZONTAL;
+		d.anchor = c.NORTHWEST;
+		d.weightx = 0;
+		d.weighty = 0;
+		d.gridx = 0;
+		d.gridy = 0;
+		d.insets = new Insets(5, 5, 5, 5);
+
+		m_btnChargeAccount = new JButton(JAPMessages.getString(MSG_BUTTON_CHARGE));
+		m_btnChargeAccount.setEnabled(false);
+		m_btnChargeAccount.addActionListener(myActionListener);
+		buttonsPanel.add(m_btnChargeAccount, d);
+
+		d.gridx++;
+		m_btnTransactions = new JButton(JAPMessages.getString(MSG_BUTTON_TRANSACTIONS));
+		m_btnTransactions.addActionListener(myActionListener);
+		buttonsPanel.add(m_btnTransactions, d);
+
+		d.gridx++;
+		m_btnExportAccount = new JButton(JAPMessages.getString(MSG_BUTTON_EXPORT));
+		m_btnExportAccount.addActionListener(myActionListener);
+		buttonsPanel.add(m_btnExportAccount, d);
+
+		d.gridx++;
+		d.weightx = 1;
+		d.weighty = 1;
+		m_btnDeleteAccount = new JButton(JAPMessages.getString(MSG_BUTTON_DELETE));
+		m_btnDeleteAccount.addActionListener(myActionListener);
+		buttonsPanel.add(m_btnDeleteAccount, d);
+
+		c.anchor = c.NORTHWEST;
+		c.weightx = 1;
+		c.weighty = 1;
+		c.gridx = 0;
+		c.gridy++;
+		c.gridwidth = 2;
+		p.add(buttonsPanel, c);
+
+		return p;
 	}
 
 	private void enableDisableButtons()
 	{
 		boolean enable = (m_Table.getSelectedRow() >= 0);
-		/** @todo Reactivate*/
 		m_btnChargeAccount.setEnabled(enable);
-		m_btnStatement.setEnabled(enable);
 		m_btnTransactions.setEnabled(enable);
-		m_btnShowDetails.setEnabled(enable); ;
-		if ( (enable) &&
-			(PayAccountsFile.getInstance().getActiveAccount() !=
-			 PayAccountsFile.getInstance().getAccountAt(m_Table.getSelectedRow())))
-		{
-			m_btnActivate.setEnabled(true);
-		}
-		else
-		{
-			m_btnActivate.setEnabled(false);
-		}
 		m_btnDeleteAccount.setEnabled(enable);
 		m_btnExportAccount.setEnabled(enable);
-
 	}
 
 	/**
@@ -257,10 +379,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 			else if (source == m_btnStatement)
 			{
 				doGetStatement(getSelectedAccount());
-			}
-			else if (source == m_btnShowDetails)
-			{
-				doShowDetails(getSelectedAccount());
 			}
 			else if (source == m_btnActivate)
 			{
@@ -297,7 +415,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 	}
 
 	/**
-	 * doShowDetails - shows account details in a messagebox
+	 * doShowDetails - shows account details in the details panel
 	 */
 	private void doShowDetails(PayAccount selectedAccount)
 	{
@@ -305,7 +423,28 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		{
 			return;
 		}
-		JFrame view = JAPController.getView();
+
+		/** If there is no account info or the account info is older than 24 hours,
+		 * fetch a new statement from the Payment Instance.
+		 */
+		if (!selectedAccount.hasAccountInfo() ||
+			(selectedAccount.getAccountInfo().getBalance().getTimestamp().getTime() <
+			 (System.currentTimeMillis() - 1000 * 60 * 60 * 24)))
+		{
+			doGetStatement(selectedAccount);
+		}
+
+		XMLAccountInfo accountInfo = selectedAccount.getAccountInfo();
+		XMLBalance balance = accountInfo.getBalance();
+
+		m_labelCreationDate.setText(JAPUtil.formatTimestamp(selectedAccount.getCreationTime(), false));
+		m_labelStatementDate.setText(JAPUtil.formatTimestamp(balance.getTimestamp(), true));
+		m_labelDeposit.setText(JAPUtil.formatBytesValue(balance.getDeposit()));
+		m_labelSpent.setText(JAPUtil.formatBytesValue(balance.getSpent()));
+		m_labelBalance.setText(JAPUtil.formatBytesValue(balance.getDeposit() - balance.getSpent()));
+		m_labelValid.setText(JAPUtil.formatTimestamp(balance.getValidTime(), true));
+
+		/*JFrame view = JAPController.getView();
 		if (!selectedAccount.hasAccountInfo())
 		{
 			int choice = JOptionPane.showOptionDialog(
@@ -386,7 +525,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 			view, msg,
 			JAPMessages.getString("ngAccountDetailsTxt") + " " + selectedAccount.getAccountNumber(),
 			JOptionPane.INFORMATION_MESSAGE
-			);
+		 );*/
 	}
 
 	/**

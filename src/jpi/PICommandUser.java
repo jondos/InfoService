@@ -62,6 +62,7 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import anon.pay.xml.XMLTransactionOverview;
+import anon.pay.xml.XMLPassivePayment;
 
 /**
  * This class contains the functionality for talking to a JAP. For
@@ -317,7 +318,21 @@ public class PICommandUser implements PICommand
 						reply = PIAnswer.getErrorAnswer(XMLErrorMessage.ERR_INTERNAL_SERVER_ERROR);
 					}
 				}
-
+				else if (request.method.equals("POST") && request.url.equals("/passivepayment"))
+				{
+					try
+					{
+						reply = new PIAnswer(PIAnswer.TYPE_PASSIVE_PAYMENT,
+											 storePassivePayment(request.data));
+						// go to state init again, user can authenticate again with different account
+						init();
+					}
+					catch (Exception ex)
+					{
+						LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, ex);
+						reply = PIAnswer.getErrorAnswer(XMLErrorMessage.ERR_INTERNAL_SERVER_ERROR);
+					}
+				}
 				break;
 		}
 		if (reply == null)
@@ -336,6 +351,28 @@ public class PICommandUser implements PICommand
 		XMLPaymentOptions paymentOptions = Configuration.getPaymentOptions();
 
 		return paymentOptions;
+	}
+
+	/**
+     * Stores a PassivePayment object the user has sent to the database
+     * @param a_data byte[]
+     * @return IXMLEncodable
+     */
+    private IXMLEncodable storePassivePayment(byte[] a_data)
+	{
+		try
+		{
+			XMLPassivePayment pp = new XMLPassivePayment(a_data);
+            /** @todo Store in database*/
+
+		}
+		catch (Exception e)
+		{
+			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, "Could not parse XMLPassivePayment");
+			return new XMLErrorMessage(XMLErrorMessage.ERR_WRONG_FORMAT);
+		}
+		return new XMLErrorMessage(XMLErrorMessage.ERR_OK);
+
 	}
 
 	/**
