@@ -31,65 +31,75 @@ import java.util.Hashtable;
 
 import org.w3c.dom.Node;
 
-public class SignatureCreator {
-  
-  /**
-   * Stores the instance of SignatureCreator (Singleton).
-   */
-  private static SignatureCreator ms_scInstance;
+public class SignatureCreator
+{
 
+	/**
+	 * Stores the instance of SignatureCreator (Singleton).
+	 */
+	private static SignatureCreator ms_scInstance;
 
-  private Hashtable m_signatureKeys;
- 
-  /**
-   * Returns the instance of SignatureCreator (Singleton). If there is no instance, there is a
-   * new one created.
-   *
-   * @return The SignatureCreator instance.
-   */
-  public static SignatureCreator getInstance() {
-    synchronized (SignatureCreator.class) {
-      if (ms_scInstance == null) {
-        ms_scInstance = new SignatureCreator();
-      }
-    }
-    return ms_scInstance;
-  }
+	private Hashtable m_signatureKeys;
 
-  
-  /**
-   * Creates a new instance of SignatureVerifier.
-   */
-  private SignatureCreator() {
-    m_signatureKeys = new Hashtable();
-  }
+	/**
+	 * Returns the instance of SignatureCreator (Singleton). If there is no instance, there is a
+	 * new one created.
+	 *
+	 * @return The SignatureCreator instance.
+	 */
+	public static SignatureCreator getInstance()
+	{
+		synchronized (SignatureCreator.class)
+		{
+			if (ms_scInstance == null)
+			{
+				ms_scInstance = new SignatureCreator();
+			}
+		}
+		return ms_scInstance;
+	}
 
+	/**
+	 * Creates a new instance of SignatureVerifier.
+	 */
+	private SignatureCreator()
+	{
+		m_signatureKeys = new Hashtable();
+	}
 
-  public void setSigningKey(int a_purpose, PKCS12 a_signatureKey) {
-    synchronized (m_signatureKeys) {
-      m_signatureKeys.put(new Integer(a_purpose), a_signatureKey);
-    }
-  }
-  
-  public boolean signXml(int a_documentClass, Node a_nodeToSign) {
-    boolean nodeSigned = false;
-    PKCS12 signatureKey = null;
-    synchronized (m_signatureKeys) {
-      signatureKey = (PKCS12)(m_signatureKeys.get(new Integer(a_documentClass)));
-    }
-    if (signatureKey != null) {
-      XMLSignature createdSignature = null;
-      try {
-        createdSignature = XMLSignature.sign(a_nodeToSign, signatureKey);
-      }
-      catch (Exception e) {
-      }
-      if (createdSignature != null) {
-        /* signing the node was successful */
-        nodeSigned = true;
-      }
-    }
-    return nodeSigned;
-  }
+	public void setSigningKey(int a_purpose, PKCS12 a_signatureKey)
+	{
+		synchronized (m_signatureKeys)
+		{
+			m_signatureKeys.put(new Integer(a_purpose), a_signatureKey);
+		}
+	}
+
+	public boolean signXml(int a_documentClass, Node a_nodeToSign)
+	{
+		boolean nodeSigned = false;
+		PKCS12 signatureKey = null;
+		synchronized (m_signatureKeys)
+		{
+			signatureKey = (PKCS12) (m_signatureKeys.get(new Integer(a_documentClass)));
+		}
+		if (signatureKey != null)
+		{
+			XMLSignature createdSignature = null;
+			try
+			{
+				createdSignature = XMLSignature.sign(a_nodeToSign, signatureKey);
+			}
+			catch (Exception e)
+			{
+			}
+			if (createdSignature != null)
+			{
+				/* signing the node was successful */
+				nodeSigned = true;
+			}
+		}
+		return nodeSigned;
+	}
 
 }
