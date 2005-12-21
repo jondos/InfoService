@@ -287,7 +287,7 @@ public class Configuration
 								addCertificateWithoutVerification(currentCertificate,
 								JAPCertificate.CERTIFICATE_TYPE_ROOT_MIX, true, false);
 							LogHolder.log(LogLevel.WARNING, LogType.MISC,
-										  "Added the following file to the store of trusted root certificates: " +
+										  "Added the following file to the store of the trusted root certificates: " +
 										  currentCertificateFile);
 						}
 						else
