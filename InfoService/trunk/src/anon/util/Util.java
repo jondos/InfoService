@@ -349,11 +349,8 @@ public final class Util
 		switch (a_character)
 		{
 			case '\u00e4': a_transformedUmlauts[a_position] = "ae"; return true;
-			//case 'Ä': a_transformedUmlauts[a_position] = "Ae"; return true;
 			case '\u00f6': a_transformedUmlauts[a_position] = "oe"; return true;
-			//case 'Ö': a_transformedUmlauts[a_position] = "Oe"; return true;
 			case '\u00fc': a_transformedUmlauts[a_position] = "ue"; return true;
-			//case 'Ü': a_transformedUmlauts[a_position] = "Ue"; return true;
 			default: a_transformedUmlauts[a_position] = null; return false;
 		}
 	}
