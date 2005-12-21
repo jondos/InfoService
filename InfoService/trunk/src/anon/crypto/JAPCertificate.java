@@ -88,7 +88,6 @@ import logging.LogLevel;
 import logging.LogType;
 import org.bouncycastle.asn1.ASN1InputStream;
 
-
 /**
  * A certificate class.
  */
@@ -226,7 +225,7 @@ final public class JAPCertificate extends X509CertificateStructure implements IX
 				bin = new ByteArrayInputStream(Base64.decode(sbuf.toString()));
 			}
 
-			if ((bin == null) && (a_certificate[1] == 0x80))
+			if ( (bin == null) && (a_certificate[1] == 0x80))
 			{
 				// a BER encoded certificate
 				ASN1InputStream in = new ASN1InputStream(new ByteArrayInputStream(a_certificate));
@@ -925,26 +924,24 @@ final public class JAPCertificate extends X509CertificateStructure implements IX
 			extSubjectKeyIdentifier =
 				new X509Extension(false,
 								  ASN1OctetString.getInstance(
-										new SubjectKeyIdentifier(
-											  a_subjectPublicKeyInfo).getDERObject()));
+									  new SubjectKeyIdentifier(
+										  a_subjectPublicKeyInfo).getDERObject()));
 
-	///removed because reported to be buggy...!
+			///removed because reported to be buggy...!
 
-	//exts.put(X509Extensions.SubjectKeyIdentifier, extSubjectKeyIdentifier);
-		//	setExtensions(new X509Extensions(exts));
+			//exts.put(X509Extensions.SubjectKeyIdentifier, extSubjectKeyIdentifier);
+			//	setExtensions(new X509Extensions(exts));
 		}
 	}
 
 	private static final class X509CertificateInstantiator implements IResourceInstantiator
 	{
-		public Object getInstance(File a_file, File a_topDirectory)
-			throws Exception
+		public Object getInstance(File a_file, File a_topDirectory) throws Exception
 		{
-				return JAPCertificate.getInstance(new FileInputStream(a_file));
-	}
+			return JAPCertificate.getInstance(new FileInputStream(a_file));
+		}
 
-		public Object getInstance(ZipEntry a_entry, ZipFile a_file)
-			throws Exception
+		public Object getInstance(ZipEntry a_entry, ZipFile a_file) throws Exception
 		{
 			return JAPCertificate.getInstance(a_file.getInputStream(a_entry));
 		}

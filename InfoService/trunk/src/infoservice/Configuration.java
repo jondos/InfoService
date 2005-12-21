@@ -271,7 +271,7 @@ public class Configuration
 			{
 				LogHolder.log(LogLevel.DEBUG, LogType.MISC,
 							  "Signature verification is enabled, loading certificates...");
-				/* load the root certificates */
+				/* load the trusted mix root certificates */
 				String trustedRootCertificateFiles = a_properties.getProperty("trustedRootCertificateFiles");
 				if ( (trustedRootCertificateFiles != null) && (!trustedRootCertificateFiles.trim().equals("")))
 				{
@@ -287,19 +287,45 @@ public class Configuration
 								addCertificateWithoutVerification(currentCertificate,
 								JAPCertificate.CERTIFICATE_TYPE_ROOT_MIX, true, false);
 							LogHolder.log(LogLevel.WARNING, LogType.MISC,
-										  "Added the following file to the store of the trusted root certificates: " +
+										  "Added the following file to the store of the trusted mix root certificates: " +
 										  currentCertificateFile);
 						}
 						else
 						{
 							LogHolder.log(LogLevel.ERR, LogType.MISC,
-										  "Error loading trusted root certificate: " + currentCertificateFile);
+										  "Error loading trusted mix root certificate: " + currentCertificateFile);
 						}
 					}
 				}
 				else
 				{
 					LogHolder.log(LogLevel.WARNING, LogType.MISC, "No trusted root certificates specified.");
+				}
+				/* load the trusted infoservice root certificates */
+				trustedRootCertificateFiles = a_properties.getProperty("trustedInfoServiceRootCertificateFiles");
+				if ( (trustedRootCertificateFiles != null) && (!trustedRootCertificateFiles.trim().equals("")))
+				{
+					StringTokenizer stTrustedRootCertificates = new StringTokenizer(
+						trustedRootCertificateFiles.trim(), ",");
+					while (stTrustedRootCertificates.hasMoreTokens())
+					{
+						String currentCertificateFile = stTrustedRootCertificates.nextToken().trim();
+						JAPCertificate currentCertificate = loadX509Certificate(currentCertificateFile);
+						if (currentCertificate != null)
+						{
+							SignatureVerifier.getInstance().getVerificationCertificateStore().
+								addCertificateWithoutVerification(currentCertificate,
+								JAPCertificate.CERTIFICATE_TYPE_ROOT_INFOSERVICE, true, false);
+							LogHolder.log(LogLevel.WARNING, LogType.MISC,
+										  "Added the following file to the store of the trusted infoservice root certificates: " +
+										  currentCertificateFile);
+						}
+						else
+						{
+							LogHolder.log(LogLevel.ERR, LogType.MISC,
+										  "Error loading trusted infoservice root certificate: " + currentCertificateFile);
+						}
+					}
 				}
 				/* load the infoservice certificates */
 				LogHolder.log(LogLevel.WARNING, LogType.MISC,
@@ -322,7 +348,7 @@ public class Configuration
 							SignatureVerifier.getInstance().getVerificationCertificateStore().
 								addCertificateWithoutVerification(currentCertificate,
 								JAPCertificate.CERTIFICATE_TYPE_INFOSERVICE, true, false);
-							LogHolder.log(LogLevel.DEBUG, LogType.MISC,
+							LogHolder.log(LogLevel.WARNING, LogType.MISC,
 										  "Added the following file to the store of trusted infoservice certificates: " +
 										  currentCertificateFile);
 						}
