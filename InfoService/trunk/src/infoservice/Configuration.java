@@ -302,6 +302,8 @@ public class Configuration
 					LogHolder.log(LogLevel.WARNING, LogType.MISC, "No trusted root certificates specified.");
 				}
 				/* load the infoservice certificates */
+				LogHolder.log(LogLevel.WARNING, LogType.MISC,
+							  "Try to load trusted InfoService certificates specified.");
 				String trustedInfoServiceCertificateFiles = a_properties.getProperty(
 					"trustedInfoServiceCertificateFiles");
 				if ( (trustedInfoServiceCertificateFiles != null) &&
@@ -309,6 +311,8 @@ public class Configuration
 				{
 					StringTokenizer stTrustedInfoServiceCertificates = new StringTokenizer(
 						trustedInfoServiceCertificateFiles.trim(), ",");
+					LogHolder.log(LogLevel.WARNING, LogType.MISC,
+								  "trustedInfoServiceCertificateFiles: " + trustedInfoServiceCertificateFiles);
 					while (stTrustedInfoServiceCertificates.hasMoreTokens())
 					{
 						String currentCertificateFile = stTrustedInfoServiceCertificates.nextToken().trim();
