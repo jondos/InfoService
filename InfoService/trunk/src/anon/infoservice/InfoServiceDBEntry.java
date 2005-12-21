@@ -50,6 +50,8 @@ import logging.LogType;
 
 import java.util.zip.GZIPInputStream;
 import java.io.ByteArrayInputStream;
+import anon.crypto.SignatureCreator;
+
 /**
  * Holds the information for an infoservice.
  */
@@ -488,14 +490,14 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 		}
 
 		/* sign the XML node */
-		/*try
-		   {
-		 SignatureManager.getInstance().signXml(infoServiceNode);
-		   }
-		   catch (Exception a_e)
-		   {
-		 LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, "Document could not be signed!");
-		   }*/
+		try
+		{
+			SignatureCreator.getInstance().signXml(SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE,infoServiceNode);
+		}
+		catch (Exception a_e)
+		{
+			LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, "Document could not be signed!");
+		}
 		return infoServiceNode;
 	}
 
@@ -1150,16 +1152,16 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 			Document doc = getXmlDocument(HttpRequestStructure.createGetRequest("/compressedmixminionnodes"));
 			Element mixminionNodeList = doc.getDocumentElement();
 			String strCompressedMixminionNodesList = XMLUtil.parseValue(mixminionNodeList, null);
-			ByteArrayInputStream bin=new ByteArrayInputStream( Base64.decode(strCompressedMixminionNodesList));
-			GZIPInputStream gzipIn=new GZIPInputStream(bin,4096);
-			StringBuffer sblist=new StringBuffer(200000);
-			byte[] bout=new byte[4096];
-			int len=0;
-			while((len=gzipIn.read(bout))>0)
+			ByteArrayInputStream bin = new ByteArrayInputStream(Base64.decode(strCompressedMixminionNodesList));
+			GZIPInputStream gzipIn = new GZIPInputStream(bin, 4096);
+			StringBuffer sblist = new StringBuffer(200000);
+			byte[] bout = new byte[4096];
+			int len = 0;
+			while ( (len = gzipIn.read(bout)) > 0)
 			{
-				sblist.append(new String(bout,0,len));
+				sblist.append(new String(bout, 0, len));
 			}
-			list=sblist.toString();
+			list = sblist.toString();
 		}
 		catch (Exception e)
 		{
