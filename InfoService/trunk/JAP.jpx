@@ -452,6 +452,7 @@
   <node name="anon.crypto" type="Package"/>
   <node name="anon.infoservice" type="Package"/>
   <node name="anon.mixminion" type="Package"/>
+  <node name="anon.mixminion.mmrdescription" type="Package"/>
   <node name="anon.pay" type="Package"/>
   <node name="anon.pay.xml" type="Package"/>
   <node name="anon.server" type="Package"/>
