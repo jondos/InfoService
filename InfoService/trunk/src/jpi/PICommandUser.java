@@ -354,16 +354,16 @@ public class PICommandUser implements PICommand
 	}
 
 	/**
-     * Stores a PassivePayment object the user has sent to the database
-     * @param a_data byte[]
-     * @return IXMLEncodable
-     */
-    private IXMLEncodable storePassivePayment(byte[] a_data)
+	 * Stores a PassivePayment object the user has sent to the database
+	 * @param a_data byte[]
+	 * @return IXMLEncodable
+	 */
+	private IXMLEncodable storePassivePayment(byte[] a_data)
 	{
 		try
 		{
 			XMLPassivePayment pp = new XMLPassivePayment(a_data);
-            /** @todo Store in database*/
+			/** @todo Store in database*/
 
 		}
 		catch (Exception e)
@@ -411,10 +411,8 @@ public class PICommandUser implements PICommand
 			{
 				boolean used = db.isTanUsed(Long.parseLong(line[0]));
 				long usedDate = db.getUsedDate(Long.parseLong(line[0]));
-                LogHolder.log(LogLevel.DEBUG, LogType.PAY,
-							  "TAN " + line[0] + " used: " + used);
-				overview.setUsed(Long.parseLong(line[0]), used, usedDate);
-
+				long amount = db.getTransferAmount(Long.parseLong(line[0]));
+				overview.setUsed(Long.parseLong(line[0]), used, usedDate, amount);
 			}
 		}
 		return overview;
