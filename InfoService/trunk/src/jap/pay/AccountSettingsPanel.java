@@ -29,18 +29,19 @@ package jap.pay;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.sql.Timestamp;
 import java.util.Enumeration;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -48,9 +49,9 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JSeparator;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
-import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -70,6 +71,7 @@ import anon.pay.xml.XMLBalance;
 import anon.pay.xml.XMLTransCert;
 import anon.util.XMLUtil;
 import gui.ByteNumberCellRenderer;
+import gui.GUIUtils;
 import gui.JAPMessages;
 import gui.TimestampCellRenderer;
 import jap.AbstractJAPConfModule;
@@ -82,10 +84,6 @@ import jap.pay.wizard.PaymentWizard;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import javax.swing.JSeparator;
-import java.awt.Dimension;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 
 /**
  * The Jap Conf Module (Settings Tab Page) for the Accounts and payment Management
@@ -121,6 +119,17 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		getName() + "_account_statement_date";
 	private static final String MSG_BUTTON_CHARGE = AccountSettingsPanel.class.
 		getName() + "_button_charge";
+	private static final String MSG_BUTTON_SELECT = AccountSettingsPanel.class.
+		getName() + "_button_select";
+	private static final String MSG_BUTTON_CHANGE_PASSWORD = AccountSettingsPanel.class.
+		getName() + "_button_change_password";
+	private static final String MSG_NEW_PASSWORD = AccountSettingsPanel.class.
+		getName() + "_new_password";
+	private static final String MSG_OLD_PASSWORD = AccountSettingsPanel.class.
+		getName() + "_old_password";
+	private static final String MSG_DIALOG_ACCOUNT_PASSWORD = AccountSettingsPanel.class.
+		getName() + "_dialog_account_password";
+
 
 	private JTable m_Table;
 	private JButton m_btnCreateAccount;
@@ -131,6 +140,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 	private JButton m_btnExportAccount;
 	private JButton m_btnImportAccount;
 	private JButton m_btnTransactions;
+	private JButton m_btnSelect;
+	private JButton m_btnPassword;
 
 	private JLabel m_labelCreationDate;
 	private JLabel m_labelStatementDate;
@@ -168,7 +179,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		rootPanel.setBorder(new TitledBorder(JAPMessages.getString("ngPseudonymAccounts")));
 
 		m_Table = new JTable();
-		m_Table.setPreferredScrollableViewportSize(new Dimension(550,200));
+		m_Table.setPreferredScrollableViewportSize(new Dimension(450, 200));
 		m_MyTableModel = new MyTableModel();
 		m_Table.setModel(m_MyTableModel);
 		m_Table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -188,6 +199,9 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 			}
 		}
 		);
+		m_Table.getColumnModel().getColumn(0).setPreferredWidth(250);
+		m_Table.getColumnModel().getColumn(1).setPreferredWidth(150);
+		m_Table.getColumnModel().getColumn(2).setPreferredWidth(50);
 
 		ActionListener myActionListener = new MyActionListener();
 		//Ask to be notified of selection changes.
@@ -216,11 +230,21 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		buttonsPanel.add(m_btnCreateAccount, c);
 
 		c.gridx++;
-		c.weightx = 1;
-		c.weighty = 1;
+		m_btnPassword = new JButton(JAPMessages.getString(MSG_BUTTON_CHANGE_PASSWORD));
+		m_btnPassword.addActionListener(myActionListener);
+		buttonsPanel.add(m_btnPassword, c);
+
+		c.gridx++;
 		m_btnImportAccount = new JButton(JAPMessages.getString("ngImportAccount"));
 		m_btnImportAccount.addActionListener(myActionListener);
 		buttonsPanel.add(m_btnImportAccount, c);
+
+		c.gridx++;
+		c.weightx = 1;
+		c.weighty = 1;
+		m_btnSelect = new JButton(JAPMessages.getString(MSG_BUTTON_SELECT));
+		m_btnSelect.addActionListener(myActionListener);
+		buttonsPanel.add(m_btnSelect, c);
 
 		c = new GridBagConstraints();
 		c.fill = c.NONE;
@@ -235,7 +259,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		rootPanel.add(buttonsPanel, c);
 		c.gridy++;
 		JSeparator sep = new JSeparator(JSeparator.HORIZONTAL);
-		sep.setPreferredSize(new Dimension(560, 10));
+		sep.setPreferredSize(new Dimension(460, 10));
 		rootPanel.add(sep, c);
 		c.weightx = 1;
 		c.weighty = 1;
@@ -292,7 +316,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 
 		c.gridx--;
 		c.gridy++;
-		p.add(new JLabel(JAPMessages.getString(MSG_ACCOUNT_BALANCE)), c);
+		p.add(new JLabel(JAPMessages.getString(MSG_ACCOUNT_BALANCE) + ":"), c);
 		c.gridx++;
 		m_labelBalance = new JLabel();
 		p.add(m_labelBalance, c);
@@ -400,8 +424,32 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 			{
 				doShowTransactions(getSelectedAccount());
 			}
+			else if (source == m_btnSelect)
+			{
+				doActivateAccount(getSelectedAccount());
+			}
+			else if (source == m_btnPassword)
+			{
+				doChangePassword();
+			}
 
 		}
+	}
+
+	/**
+	 * Asks the user for a new payment password
+	 */
+	private void doChangePassword()
+	{
+		if (JAPController.getInstance().getPaymentPassword() != null)
+		{
+		JAPPasswordReader pass = new JAPPasswordReader(false, JAPMessages.getString(MSG_DIALOG_ACCOUNT_PASSWORD));
+		String password = pass.readPassword(JAPMessages.getString(MSG_OLD_PASSWORD));
+
+		}
+		JAPPasswordReader pass = new JAPPasswordReader(true, JAPMessages.getString(MSG_DIALOG_ACCOUNT_PASSWORD));
+		String password = pass.readPassword(JAPMessages.getString(MSG_NEW_PASSWORD));
+		JAPController.getInstance().setPaymentPassword(password);
 	}
 
 	/**
@@ -445,86 +493,86 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		m_labelValid.setText(JAPUtil.formatTimestamp(balance.getValidTime(), true));
 
 		/*JFrame view = JAPController.getView();
-		if (!selectedAccount.hasAccountInfo())
-		{
-			int choice = JOptionPane.showOptionDialog(
-				view, JAPMessages.getString("ngNoStatement"), JAPMessages.getString("ngNoStatementTitle"),
-				JOptionPane.YES_NO_OPTION,
-				JOptionPane.QUESTION_MESSAGE,
-				null, null, null
-				);
-			if (choice == JOptionPane.YES_OPTION)
-			{
-				if (!doGetStatement(selectedAccount))
-				{
-					return;
-				}
-			}
-			else
-			{
-				return;
-			}
-		}
-		else
-		{
-			// if timestamp is older than 24 hours... maybe user wants to fetch
-			// a new statement
-			java.sql.Timestamp t = selectedAccount.getAccountInfo().getBalance().getTimestamp();
-			if (t.getTime() < (System.currentTimeMillis() - 1000 * 60 * 60 * 24))
-			{
-				int choice = JOptionPane.showOptionDialog(
-					view, JAPMessages.getString("ngOldStatement"),
-					JAPMessages.getString("ngOldStatementTitle"),
-					JOptionPane.YES_NO_OPTION,
-					JOptionPane.QUESTION_MESSAGE,
-					null, null, null
-					);
-				if (choice == JOptionPane.YES_OPTION)
-				{
-					doGetStatement(selectedAccount);
-				}
-			}
-		}
-		XMLAccountInfo accountInfo = selectedAccount.getAccountInfo();
-		XMLBalance balance = accountInfo.getBalance();
-		String msg =
-			"<html><h2>" + JAPMessages.getString("ngAccountDetailsTxt") + " " +
-			selectedAccount.getAccountNumber() + "</h2>" +
-			"<table>" +
-			"<tr><td>" + JAPMessages.getString("creationDate") + "</td><td>" +
-			JAPUtil.formatTimestamp(selectedAccount.getCreationTime(), false) + "</td></tr>" +
-			"<tr><td>" + JAPMessages.getString("ngStatementDate") + "</td><td>" +
-			JAPUtil.formatTimestamp(balance.getTimestamp(), true) + "</td></tr>" +
-			"<tr><td> </td></tr>" +
-			"<tr><td>" + JAPMessages.getString("deposit") + "</td><td>" +
-			JAPUtil.formatBytesValue(balance.getDeposit()) + "</td></tr>" +
-			"<tr><td>" + JAPMessages.getString("spent") + "</td><td>" +
-			JAPUtil.formatBytesValue(balance.getSpent()) + "</td></tr>" +
-			"<tr><td>" + JAPMessages.getString("balance") + "</td><td>" +
-			JAPUtil.formatBytesValue(balance.getDeposit() - balance.getSpent()) +
-			"</td></tr>" +
-			"<tr><td>" + JAPMessages.getString("validTo") + "</td><td>" +
-			JAPUtil.formatTimestamp(balance.getValidTime(), true) + "</td></tr>" +
-			"</table>";
-		Enumeration ccs = accountInfo.getCCs();
-		XMLEasyCC cc = null;
-		if (ccs.hasMoreElements())
-		{
-			msg += "<hr><h3>" + JAPMessages.getString("costconfirmations") + "</h3>";
-			do
-			{
-				cc = ( (XMLEasyCC) (ccs.nextElement()));
-				msg += JAPMessages.getString("rttMixCascade") + " " + cc.getAIName() + ": " +
-					JAPUtil.formatBytesValue(cc.getTransferredBytes()) + "<br>";
-			}
-			while (ccs.hasMoreElements());
-		}
-		msg += "</html>";
+		   if (!selectedAccount.hasAccountInfo())
+		   {
+		 int choice = JOptionPane.showOptionDialog(
+		  view, JAPMessages.getString("ngNoStatement"), JAPMessages.getString("ngNoStatementTitle"),
+		  JOptionPane.YES_NO_OPTION,
+		  JOptionPane.QUESTION_MESSAGE,
+		  null, null, null
+		  );
+		 if (choice == JOptionPane.YES_OPTION)
+		 {
+		  if (!doGetStatement(selectedAccount))
+		  {
+		   return;
+		  }
+		 }
+		 else
+		 {
+		  return;
+		 }
+		   }
+		   else
+		   {
+		 // if timestamp is older than 24 hours... maybe user wants to fetch
+		 // a new statement
+		 java.sql.Timestamp t = selectedAccount.getAccountInfo().getBalance().getTimestamp();
+		 if (t.getTime() < (System.currentTimeMillis() - 1000 * 60 * 60 * 24))
+		 {
+		  int choice = JOptionPane.showOptionDialog(
+		   view, JAPMessages.getString("ngOldStatement"),
+		   JAPMessages.getString("ngOldStatementTitle"),
+		   JOptionPane.YES_NO_OPTION,
+		   JOptionPane.QUESTION_MESSAGE,
+		   null, null, null
+		   );
+		  if (choice == JOptionPane.YES_OPTION)
+		  {
+		   doGetStatement(selectedAccount);
+		  }
+		 }
+		   }
+		   XMLAccountInfo accountInfo = selectedAccount.getAccountInfo();
+		   XMLBalance balance = accountInfo.getBalance();
+		   String msg =
+		 "<html><h2>" + JAPMessages.getString("ngAccountDetailsTxt") + " " +
+		 selectedAccount.getAccountNumber() + "</h2>" +
+		 "<table>" +
+		 "<tr><td>" + JAPMessages.getString("creationDate") + "</td><td>" +
+		 JAPUtil.formatTimestamp(selectedAccount.getCreationTime(), false) + "</td></tr>" +
+		 "<tr><td>" + JAPMessages.getString("ngStatementDate") + "</td><td>" +
+		 JAPUtil.formatTimestamp(balance.getTimestamp(), true) + "</td></tr>" +
+		 "<tr><td> </td></tr>" +
+		 "<tr><td>" + JAPMessages.getString("deposit") + "</td><td>" +
+		 JAPUtil.formatBytesValue(balance.getDeposit()) + "</td></tr>" +
+		 "<tr><td>" + JAPMessages.getString("spent") + "</td><td>" +
+		 JAPUtil.formatBytesValue(balance.getSpent()) + "</td></tr>" +
+		 "<tr><td>" + JAPMessages.getString("balance") + "</td><td>" +
+		 JAPUtil.formatBytesValue(balance.getDeposit() - balance.getSpent()) +
+		 "</td></tr>" +
+		 "<tr><td>" + JAPMessages.getString("validTo") + "</td><td>" +
+		 JAPUtil.formatTimestamp(balance.getValidTime(), true) + "</td></tr>" +
+		 "</table>";
+		   Enumeration ccs = accountInfo.getCCs();
+		   XMLEasyCC cc = null;
+		   if (ccs.hasMoreElements())
+		   {
+		 msg += "<hr><h3>" + JAPMessages.getString("costconfirmations") + "</h3>";
+		 do
+		 {
+		  cc = ( (XMLEasyCC) (ccs.nextElement()));
+		  msg += JAPMessages.getString("rttMixCascade") + " " + cc.getAIName() + ": " +
+		   JAPUtil.formatBytesValue(cc.getTransferredBytes()) + "<br>";
+		 }
+		 while (ccs.hasMoreElements());
+		   }
+		   msg += "</html>";
 
-		JOptionPane.showMessageDialog(
-			view, msg,
-			JAPMessages.getString("ngAccountDetailsTxt") + " " + selectedAccount.getAccountNumber(),
-			JOptionPane.INFORMATION_MESSAGE
+		   JOptionPane.showMessageDialog(
+		 view, msg,
+		 JAPMessages.getString("ngAccountDetailsTxt") + " " + selectedAccount.getAccountNumber(),
+		 JOptionPane.INFORMATION_MESSAGE
 		 );*/
 	}
 
@@ -571,48 +619,48 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		   if (choice == JOptionPane.YES_OPTION)
 		   {
 		 /** @todo find out why the wait splash screen looks so ugly
-			JAPWaitSplash splash = null;
-			try
-			{
-		  splash = JAPWaitSplash.start("Fetching transfer number...", "Please wait");
-		  Thread.sleep(5);
-		  transferCertificate = selectedAccount.charge();
-		  splash.abort();
-			}
-			catch (Exception ex)
-			{
-		  splash.abort();
-		  LogHolder.log(LogLevel.DEBUG, LogType.PAY, ex);
-		  JOptionPane.showMessageDialog(
-		   view,
-		   "<html>" + JAPMessages.getString("ngTransferNumberError") + "<br>" + ex.getMessage() +
-		   "</html>",
-		   JAPMessages.getString("error"), JOptionPane.ERROR_MESSAGE
-		   );
-		  return;
-			}
+		   JAPWaitSplash splash = null;
+		   try
+		   {
+			splash = JAPWaitSplash.start("Fetching transfer number...", "Please wait");
+			Thread.sleep(5);
+			transferCertificate = selectedAccount.charge();
+			splash.abort();
+		   }
+		   catch (Exception ex)
+		   {
+			splash.abort();
+			LogHolder.log(LogLevel.DEBUG, LogType.PAY, ex);
+			JOptionPane.showMessageDialog(
+		  view,
+		  "<html>" + JAPMessages.getString("ngTransferNumberError") + "<br>" + ex.getMessage() +
+		  "</html>",
+		  JAPMessages.getString("error"), JOptionPane.ERROR_MESSAGE
+		  );
+			return;
+		   }
 
-			// try to launch webbrowser
-			AbstractOS os = AbstractOS.getInstance();
-			String url = transferCertificate.getBaseUrl();
-			url += "?transfernum=" + transferCertificate.getTransferNumber();
-			try
-			{
-		  os.openURLInBrowser(url);
-			}
-			catch (Exception e)
-			{
-		  JOptionPane.showMessageDialog(
-		   view,
-		   "<html>" + JAPMessages.getString("ngCouldNotFindBrowser") + "<br>" +
-		   "<h3>" + url + "</h3></html>",
-		   JAPMessages.getString("ngCouldNotFindBrowserTitle"),
-		   JOptionPane.INFORMATION_MESSAGE
-		   );
-			}
+		   // try to launch webbrowser
+		   AbstractOS os = AbstractOS.getInstance();
+		   String url = transferCertificate.getBaseUrl();
+		   url += "?transfernum=" + transferCertificate.getTransferNumber();
+		   try
+		   {
+			os.openURLInBrowser(url);
+		   }
+		   catch (Exception e)
+		   {
+			JOptionPane.showMessageDialog(
+		  view,
+		  "<html>" + JAPMessages.getString("ngCouldNotFindBrowser") + "<br>" +
+		  "<h3>" + url + "</h3></html>",
+		  JAPMessages.getString("ngCouldNotFindBrowserTitle"),
+		  JOptionPane.INFORMATION_MESSAGE
+		  );
+		   }
 
-			m_MyTableModel.fireTableDataChanged();
-		   }*/
+		   m_MyTableModel.fireTableDataChanged();
+		  }*/
 	}
 
 	/**
@@ -776,11 +824,11 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 			JAPMessages.getString("ngExportAccount"),
 			JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE,
 			null, null, null);
-		if (choice == JOptionPane.YES_OPTION)
+		/*if (choice == JOptionPane.YES_OPTION)
 		{
 			strPassword = new JAPPasswordReader(true).readPassword(JAPMessages.getString("choosePassword"));
 			encrypt = true;
-		}
+		}*/
 
 		JFileChooser chooser = new JFileChooser();
 		MyFileFilter filter = new MyFileFilter();
@@ -878,7 +926,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 					{
 						String strMessage = JAPMessages.getString("ngPasswordDecrypt");
 						String strPassword = null;
-						JAPPasswordReader pr = new JAPPasswordReader(false);
+					/*	JAPPasswordReader pr = new JAPPasswordReader(false);
 						while (true)
 						{
 							// ask for password
@@ -900,7 +948,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 								continue;
 							}
 							break ;
-						}
+						}*/
 					}
 				}
 			}
@@ -1112,7 +1160,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 
 		public int getColumnCount()
 		{
-			return 5;
+			return 3;
 		}
 
 		public int getRowCount()
@@ -1127,12 +1175,9 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 				case 0:
 					return Object.class;
 				case 1:
-					return java.sql.Timestamp.class;
+					return Icon.class;
 				case 2:
-					return Long.class;
-				case 3:
-					return java.sql.Timestamp.class;
-				case 4:
+					return String.class;
 				default:
 					return Object.class;
 			}
@@ -1146,26 +1191,42 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 				case 0:
 					return new Long(account.getAccountNumber());
 				case 1:
-					return account.getCreationTime();
+					if (account.hasAccountInfo())
+					{
+						long dep = account.getDeposit();
+						long spe = account.getSpent();
+						if (dep == 0 || dep - spe == 0)
+						{
+							return GUIUtils.loadImageIcon(JAPConstants.IMAGE_COINS_EMPTY, true);
+						}
+						else
+						{
+							double onePercent = 100.0 / (double) dep;
+							long percent = (long) (onePercent * spe);
+							if (percent < 25)
+							{
+								return GUIUtils.loadImageIcon(JAPConstants.IMAGE_COINS_FULL, true);
+							}
+							else if (percent > 25 && percent < 50)
+							{
+								return GUIUtils.loadImageIcon(JAPConstants.IMAGE_COINS_QUITEFULL, true);
+							}
+							else if (percent > 50 && percent < 75)
+							{
+								return GUIUtils.loadImageIcon(JAPConstants.IMAGE_COINS_MEDIUM, true);
+							}
+							else if (percent > 75 && percent < 99)
+							{
+								return GUIUtils.loadImageIcon(JAPConstants.IMAGE_COINS_LOW, true);
+							}
+							else
+							{
+								return GUIUtils.loadImageIcon(JAPConstants.IMAGE_COINS_EMPTY, true);
+							}
+						}
+					}
+					return null;
 				case 2:
-					if (account.hasAccountInfo())
-					{
-						return new Long(account.getAccountInfo().getBalance().getCredit());
-					}
-					else
-					{
-						return new Long(0);
-					}
-				case 3:
-					if (account.hasAccountInfo())
-					{
-						return account.getAccountInfo().getBalance().getValidTime();
-					}
-					else
-					{
-						return new Timestamp(0);
-					}
-				case 4:
 					if (account.equals(m_accounts.getActiveAccount()))
 					{
 						return JAPMessages.getString("active");
@@ -1174,6 +1235,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 					{
 						return "-----";
 					}
+
 				default:
 					return JAPMessages.getString("unknown");
 			}
@@ -1186,12 +1248,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 				case 0:
 					return JAPMessages.getString("accountNr");
 				case 1:
-					return JAPMessages.getString("creationDate");
+					return JAPMessages.getString(MSG_ACCOUNT_BALANCE);
 				case 2:
-					return JAPMessages.getString("credit");
-				case 3:
-					return JAPMessages.getString("validTo");
-				case 4:
 					return JAPMessages.getString("active");
 				default:
 					return "---";

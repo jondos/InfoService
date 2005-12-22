@@ -85,6 +85,11 @@ public final class JAPModel
 	 */
 	private boolean m_forwardingStateModuleVisible;
 
+	/**
+	 * Stores the password for account data encryption
+	 */
+	private String m_paymentPassword;
+
 	private JAPModel()
 	{
 		try
@@ -482,6 +487,16 @@ public final class JAPModel
 	public boolean isProxyAuthenticationUsed()
 	{
 		return m_bUseProxyAuthentication;
+	}
+
+	public void setPaymentPassword(String a_password)
+	{
+		m_paymentPassword = a_password;
+	}
+
+	public String getPaymentPassword()
+	{
+		return m_paymentPassword;
 	}
 
 }

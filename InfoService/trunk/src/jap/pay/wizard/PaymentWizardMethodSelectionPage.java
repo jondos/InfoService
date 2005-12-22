@@ -53,10 +53,11 @@ import gui.wizard.BasicWizardHost;
 import gui.wizard.BasicWizardPage;
 import jap.JAPConstants;
 import jap.JAPController;
-import jap.JAPUtil;
+import gui.GUIUtils;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import gui.JAPJIntField;
 
 public class PaymentWizardMethodSelectionPage extends BasicWizardPage implements ActionListener
 {
@@ -67,7 +68,7 @@ public class PaymentWizardMethodSelectionPage extends BasicWizardPage implements
 	private boolean m_fetched = false;
 	private XMLPaymentOption m_selectedPaymentOption;
 	private PayAccount m_payAccount;
-	private JTextField m_tfAmount;
+	private JAPJIntField m_tfAmount;
 	private JComboBox m_cbCurrency;
 	private BasicWizardHost m_host;
 
@@ -78,7 +79,7 @@ public class PaymentWizardMethodSelectionPage extends BasicWizardPage implements
 		setPageTitle(JAPMessages.getString("payWizMethodSelectionTitle"));
 		m_rbGroup = new ButtonGroup();
 		m_c = new GridBagConstraints();
-		m_fetchingLabel = new JLabel(JAPMessages.getString("fetchingMethods"), JAPUtil.loadImageIcon(JAPConstants.BUSYFN, true), JLabel.CENTER);
+		m_fetchingLabel = new JLabel(JAPMessages.getString("fetchingMethods"), GUIUtils.loadImageIcon(JAPConstants.BUSYFN, true), JLabel.CENTER);
 		Font f = m_fetchingLabel.getFont();
 		m_fetchingLabel.setFont(new Font(f.getName(), f.getStyle(), f.getSize()-1));
 		m_fetchingLabel.setVerticalTextPosition(JLabel.TOP);
@@ -167,7 +168,7 @@ public class PaymentWizardMethodSelectionPage extends BasicWizardPage implements
 		JLabel label = new JLabel(JAPMessages.getString("payAmount"));
 		m_panelComponents.add(label, m_c);
 		m_c.gridwidth = 1;
-		m_tfAmount = new JTextField(5);
+		m_tfAmount = new JAPJIntField(5);
 		m_c.gridy++;
 		m_panelComponents.add(m_tfAmount, m_c);
 		m_c.gridx++;

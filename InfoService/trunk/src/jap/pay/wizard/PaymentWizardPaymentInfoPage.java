@@ -34,6 +34,10 @@ import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -48,7 +52,7 @@ import anon.pay.PayAccount;
 import anon.pay.xml.XMLPassivePayment;
 import anon.pay.xml.XMLPaymentOption;
 import anon.pay.xml.XMLTransCert;
-import anon.util.Util;
+import gui.GUIUtils;
 import gui.JAPMessages;
 import gui.wizard.BasicWizardHost;
 import gui.wizard.BasicWizardPage;
@@ -59,17 +63,23 @@ import jap.platform.AbstractOS;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.util.Util;
 
 public class PaymentWizardPaymentInfoPage extends BasicWizardPage implements MouseListener, ActionListener
 {
 	/** Messages */
-	private static final String MSG_SUBMIT = PaymentWizardPaymentInfoPage.class.
-		getName() + "_submit";
+	private static final String MSG_BUTTON_SUBMIT = PaymentWizardPaymentInfoPage.class.
+		getName() + "_button_submit";
+	private static final String MSG_BUTTON_COPY = PaymentWizardPaymentInfoPage.class.
+		getName() + "_button_copy";
+	private static final String MSG_BUTTON_OPEN = PaymentWizardPaymentInfoPage.class.
+		getName() + "_button_open";
+
 	private XMLPaymentOption m_selectedOption;
 	private XMLTransCert m_transCert;
 	private PayAccount m_payAccount;
 	private JLabel m_fetchingLabel, m_detailedInfoLabel, m_extraInfoLabel;
-	private JButton m_bttnSubmit;
+	private JButton m_bttnSubmit, m_bttnCopy, m_bttnOpen;
 	private JPanel m_infoPanel, m_inputPanel;
 	private String m_language, m_amount, m_currency;
 	private BasicWizardHost m_host;
@@ -83,18 +93,20 @@ public class PaymentWizardPaymentInfoPage extends BasicWizardPage implements Mou
 		m_language = JAPController.getLocale().getLanguage();
 		setPageTitle(JAPMessages.getString("payWizPaymentInfoTitle"));
 		m_fetchingLabel = new JLabel(JAPMessages.getString("fetchingTransferNumber"),
-									 JAPUtil.loadImageIcon(JAPConstants.BUSYFN, true), JLabel.CENTER);
+									 GUIUtils.loadImageIcon(JAPConstants.BUSYFN, true), JLabel.CENTER);
 		Font f = m_fetchingLabel.getFont();
 		m_fetchingLabel.setFont(new Font(f.getName(), f.getStyle(), f.getSize() - 1));
 		m_fetchingLabel.setVerticalTextPosition(JLabel.TOP);
 		m_fetchingLabel.setHorizontalTextPosition(JLabel.CENTER);
 		m_c.insets = new Insets(5, 5, 5, 5);
 		m_c.anchor = m_c.NORTHWEST;
+		m_c.fill = m_c.NONE;
 		m_c.gridx = 0;
 		m_c.gridy = 0;
 		m_c.weightx = 0;
 		m_c.weighty = 0;
-		m_panelComponents.add(m_fetchingLabel);
+		m_panelComponents.setLayout(new GridBagLayout());
+		m_panelComponents.add(m_fetchingLabel, m_c);
 		m_fetchingLabel.setVisible(false);
 		createInfoPanel();
 		m_panelComponents.add(m_infoPanel, m_c);
@@ -112,10 +124,22 @@ public class PaymentWizardPaymentInfoPage extends BasicWizardPage implements Mou
 		m_detailedInfoLabel = new JLabel();
 		p.add(m_detailedInfoLabel, c);
 		c.gridy++;
-		c.weightx = 1;
-		c.weighty = 1;
 		m_extraInfoLabel = new JLabel(" ");
 		p.add(m_extraInfoLabel, c);
+
+		c.gridy++;
+
+		m_bttnCopy = new JButton(JAPMessages.getString(MSG_BUTTON_COPY));
+		m_bttnCopy.addActionListener(this);
+		p.add(m_bttnCopy, c);
+
+		c.gridx++;
+		c.weightx = 1;
+		c.weighty = 1;
+		m_bttnOpen = new JButton(JAPMessages.getString(MSG_BUTTON_OPEN));
+		m_bttnOpen.addActionListener(this);
+		p.add(m_bttnOpen, c);
+		m_bttnOpen.setVisible(false);
 
 		m_infoPanel = p;
 	}
@@ -152,8 +176,12 @@ public class PaymentWizardPaymentInfoPage extends BasicWizardPage implements Mou
 						{
 							m_infoPanel.setVisible(true);
 							updateExtraInfo();
+							if (!m_selectedOption.getExtraInfoType(m_language).equalsIgnoreCase(
+								XMLPaymentOption.EXTRA_LINK))
+							{
+								m_host.setFinishEnabled(true);
+							}
 						}
-						m_host.setFinishEnabled(true);
 					}
 					catch (Exception e)
 					{
@@ -185,6 +213,11 @@ public class PaymentWizardPaymentInfoPage extends BasicWizardPage implements Mou
 			{
 				/** Make label clickable */
 				makeLabelClickable(m_extraInfoLabel);
+				m_bttnOpen.setVisible(true);
+			}
+			else
+			{
+				m_bttnOpen.setVisible(false);
 			}
 		}
 	}
@@ -255,7 +288,7 @@ public class PaymentWizardPaymentInfoPage extends BasicWizardPage implements Mou
 		}
 		c.weightx = 1;
 		c.weightx = 1;
-		m_bttnSubmit = new JButton(JAPMessages.getString(MSG_SUBMIT));
+		m_bttnSubmit = new JButton(JAPMessages.getString(MSG_BUTTON_SUBMIT));
 		m_bttnSubmit.addActionListener(this);
 		c.gridx++;
 		m_inputPanel.add(m_bttnSubmit, c);
@@ -277,6 +310,7 @@ public class PaymentWizardPaymentInfoPage extends BasicWizardPage implements Mou
 
 			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Opening " + link + " in browser.");
 			os.openURLInBrowser(link);
+			m_host.setFinishEnabled(true);
 		}
 	}
 
@@ -318,6 +352,26 @@ public class PaymentWizardPaymentInfoPage extends BasicWizardPage implements Mou
 		}
 	}
 
+	/**
+	 * Copies the extra payment info to the system clipboard
+	 */
+	private void copyExtraInfoToClipboard()
+	{
+		Clipboard sysClip = Toolkit.getDefaultToolkit().getSystemClipboard();
+		String link = m_extraInfoLabel.getText();
+		link = JAPUtil.replaceAll(link, "<br>", "");
+		link = JAPUtil.replaceAll(link, "<p>", "");
+		link = JAPUtil.replaceAll(link, "<html>", " ");
+		link = JAPUtil.replaceAll(link, "</html>", " ");
+		link = JAPUtil.replaceAll(link, "<font color=blue><u>", "");
+		link = JAPUtil.replaceAll(link, "</u></font>", "");
+		link = link.trim();
+
+		Transferable transfer = new StringSelection(link);
+		sysClip.setContents(transfer, null);
+		m_host.setFinishEnabled(true);
+	}
+
 	public void mousePressed(MouseEvent e)
 	{
 	}
@@ -339,6 +393,10 @@ public class PaymentWizardPaymentInfoPage extends BasicWizardPage implements Mou
 		if (e.getSource() == m_bttnSubmit)
 		{
 			submitPassiveInfo();
+		}
+		else if (e.getSource() == m_bttnCopy)
+		{
+			copyExtraInfoToClipboard();
 		}
 	}
 }
