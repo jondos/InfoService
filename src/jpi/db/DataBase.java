@@ -421,7 +421,7 @@ public class DataBase extends DBInterface
 		{
 			Statement stmt = m_dbConn.createStatement();
 			stmt.executeUpdate("INSERT INTO TRANSFERS VALUES (" + transfer_num + "," +
-							   account_num + "," + deposit + ",'" + validTime + "','f', NULL)");
+							   account_num + "," + deposit + ",'" + validTime + "','f', NULL, NULL)");
 			stmt.close();
 		}
 		catch (Exception e)
@@ -784,6 +784,7 @@ public class DataBase extends DBInterface
 				//Set transfer number to "used"
 				stmt = m_dbConn.createStatement();
 				stmt.executeUpdate("UPDATE TRANSFERS SET USED=TRUE, USEDTIME=" + usedDate.getTime() +
+								   ", AMOUNT=" + a_amount +
 								   " WHERE TRANSFERNUMBER=" +
 								   a_transferNumber);
 			}
@@ -846,6 +847,35 @@ public class DataBase extends DBInterface
 		}
 		return usedDate;
 
+	}
+
+    /**
+     * Gets the charging amount for a certain transfer number
+     * @param a_tan long
+     * @return long
+     */
+    public long getTransferAmount(long a_tan)
+	{
+		long amount = 0;
+		Statement stmt;
+
+		try
+		{
+			stmt = m_dbConn.createStatement();
+			ResultSet r = stmt.executeQuery("SELECT AMOUNT FROM TRANSFERS WHERE TRANSFERNUMBER=" +
+											a_tan);
+			if (r.next())
+			{
+				amount = r.getLong(1);
+			}
+
+		}
+		catch (Exception e)
+		{
+			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
+						  "Could not get amount attribute of transfer number. Cause: " + e.getMessage());
+		}
+		return amount;
 	}
 
 }

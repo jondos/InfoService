@@ -174,7 +174,7 @@ public abstract class DBInterface
 	 * @throws Exception
 	 */
 	/*	public abstract long getCosts(long accountNumber,
-			 String aiName) throws Exception;*/
+	   String aiName) throws Exception;*/
 
 	/*
 	 * Liefert die H\uFFFDhe der durch die BI an die AI beglichenen Kosten eines
@@ -186,7 +186,7 @@ public abstract class DBInterface
 	 * @throws Exception
 	 */
 	/*	public abstract long getPayCosts(long accountNumber,
-			 String aiName) throws Exception;*/
+	   String aiName) throws Exception;*/
 
 	/**
 	 * L\uFFFDscht die Tabellen in der Datenbank.
@@ -419,4 +419,7 @@ public abstract class DBInterface
 	public abstract boolean isTanUsed(long a_tan);
 
 	public abstract long getUsedDate(long a_tan);
+
+	public abstract long getTransferAmount(long a_tan);
+
 }

@@ -29,14 +29,13 @@ package anon.pay.xml;
 
 import java.io.ByteArrayInputStream;
 import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.Vector;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import anon.util.IXMLEncodable;
-import java.util.Vector;
 
 /**
  * This class is used by JAP to ask the Payment Instance about
@@ -46,7 +45,7 @@ import java.util.Vector;
  *
  * <TransactionOverview version="1.0">
  *    <TransferNumber used="false">232343455</TransferNumber>
- *    <TransferNumber used="true" date="234358734908">435675747</TransferNumber>
+ *    <TransferNumber used="true" date="234358734908" amount="13242424">435675747</TransferNumber>
  * </TransactionOverview>
  *
  *
@@ -96,7 +95,7 @@ public class XMLTransactionOverview implements IXMLEncodable
 	{
 		m_tans = new Vector();
 		if (!elemRoot.getTagName().equals(XML_ELEMENT_NAME) ||
-			!elemRoot.getAttribute("version").equals("1.0"))
+			!elemRoot.getAttribute("version").equals("1.1"))
 		{
 			throw new Exception("TransactionOverview wrong format or wrong version number");
 		}
@@ -123,11 +122,22 @@ public class XMLTransactionOverview implements IXMLEncodable
 				date = "0";
 			}
 
+			String amount;
+			if ( ( (Element) nodesTans.item(i)).getAttribute("amount") != null)
+			{
+				amount = ( (Element) nodesTans.item(i)).getAttribute("amount");
+			}
+			else
+			{
+				amount = "0";
+			}
+
 			String[] line =
 				{
 				tan,
 				used,
-				date
+				date,
+				amount
 			};
 			m_tans.addElement(line);
 		}
@@ -137,7 +147,7 @@ public class XMLTransactionOverview implements IXMLEncodable
 	public Element toXmlElement(Document a_doc)
 	{
 		Element elemRoot = a_doc.createElement("TransactionOverview");
-		elemRoot.setAttribute("version", "1.0");
+		elemRoot.setAttribute("version", "1.1");
 
 		Element elem;
 		Enumeration tans = m_tans.elements();
@@ -147,6 +157,7 @@ public class XMLTransactionOverview implements IXMLEncodable
 			elem = a_doc.createElement("TransferNumber");
 			elem.setAttribute("used", line[1]);
 			elem.setAttribute("date", line[2]);
+			elem.setAttribute("amount", line[3]);
 			elem.appendChild(a_doc.createTextNode(line[0]));
 			elemRoot.appendChild(elem);
 		}
@@ -188,9 +199,9 @@ public class XMLTransactionOverview implements IXMLEncodable
 	 * Sets a specific tan to used or not used
 	 * @param a_tan long
 	 * @param a_used boolean
-         * @param a_usedDate long
+	 * @param a_usedDate long
 	 */
-	public void setUsed(long a_tan, boolean a_used, long a_usedDate)
+	public void setUsed(long a_tan, boolean a_used, long a_usedDate, long amount)
 	{
 		for (int i = 0; i < m_tans.size(); i++)
 		{
@@ -200,7 +211,8 @@ public class XMLTransactionOverview implements IXMLEncodable
 				String tan = line[0];
 				m_tans.removeElementAt(i);
 				m_tans.addElement(new String[]
-								  {tan, String.valueOf(a_used), String.valueOf(a_usedDate)});
+								  {tan, String.valueOf(a_used), String.valueOf(a_usedDate),
+								  String.valueOf(amount)});
 			}
 
 		}
@@ -213,7 +225,7 @@ public class XMLTransactionOverview implements IXMLEncodable
 	public void addTan(long a_tan)
 	{
 		m_tans.addElement(new String[]
-				   {String.valueOf(a_tan), "false", "0"});
+						  {String.valueOf(a_tan), "false", "0", "0"});
 	}
 
 }
