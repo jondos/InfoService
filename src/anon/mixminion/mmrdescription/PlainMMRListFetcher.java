@@ -45,7 +45,7 @@ public class PlainMMRListFetcher implements MMRListFetcher
 	 * @param port
 	 * port of the directory server
 	 */
-	public PlainMMRListFetcher( /*String addr, int port*/)
+	public PlainMMRListFetcher(/*String addr, int port*/)
 
 	{
 		m_MMRListServer = "mixminion.net";
@@ -61,13 +61,13 @@ public class PlainMMRListFetcher implements MMRListFetcher
 						  "[UPDATE OR-LIST] Starting update on " + m_MMRListServer + ":" + m_MMRListPort);
 			HTTPConnection http = new HTTPConnection(m_MMRListServer, m_MMRListPort);
 			HTTPResponse resp = http.Get("/directory/Directory.gz");
-
+			
 			if (resp.getStatusCode() != 200)
 			{
 				return null;
 			}
 			String doc = resp.getText();
-
+			
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[UPDATE OR-LIST] Update finished");
 			return doc;
 		}

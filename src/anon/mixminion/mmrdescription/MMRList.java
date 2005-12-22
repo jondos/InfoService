@@ -34,6 +34,7 @@ import java.util.Hashtable;
 import java.util.Vector;
 
 import anon.crypto.MyRandom;
+import anon.mixminion.mmrdescription.MMRDescription;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -60,7 +61,7 @@ public class MMRList
 		m_mixminionroutersWithNames = new Hashtable();
 		m_mmrlistFetcher = fetcher;
 		m_rand = new MyRandom();
-
+		
 	}
 
 	/**
@@ -131,16 +132,15 @@ public class MMRList
 	{
 		MMRDescription mmrd = getByName(name);
 		m_mixminionrouters.removeElement(mmrd);
-		if (mmrd.isExitNode())
+		if(mmrd.isExitNode())
 		{
 			m_exitnodes.removeElement(mmrd);
-		}
-		else
+		} else
 		{
 			m_middlenodes.removeElement(mmrd);
 		}
 		m_mixminionroutersWithNames.remove(name);
-
+		
 	}
 
 	/**
@@ -151,7 +151,7 @@ public class MMRList
 	public synchronized MMRDescription getByRandom(Vector allowedNames)
 	{
 		String mmrName = (String) allowedNames.elementAt( (m_rand.nextInt(allowedNames.size())));
-
+				
 		return (MMRDescription) getByName(mmrName);
 	}
 
@@ -160,40 +160,48 @@ public class MMRList
 	 * @return
 	 */
 	public synchronized MMRDescription getByRandom()
-	{
-		return (MMRDescription)this.m_mixminionrouters.elementAt( (m_rand.nextInt(m_mixminionrouters.size())));
+	{	
+		return (MMRDescription) this.m_mixminionrouters.elementAt( (m_rand.nextInt(m_mixminionrouters.size())));		
 	}
 
 	/**
-	 * selects a MMR randomly
+	 * selects a Routing List randomly, last element is surely an exit-node
 	 * tries to blanace the probability of exit and non-exit nodes
-	 * @param length
+	 * @param hops int
 	 * length of the circuit
-	 * @return
+	 * @return routers vector
 	 */
 
-	public synchronized MMRDescription getByRandom(int length)
+	public synchronized Vector getByRandom(int hops)
 	{
-		//we know that the last node is an exit node, so we have to calculate a new probaility
-		//p(x') = (p(x)-1/length)*(length/(length-1))
-		//p(x) ... probability for exit nodes    p(x') ... new probability for exit nodes
-		//p(x) = exit_nodes/number_of_routers
-		int number_of_routers = m_mixminionrouters.size();
-		int numerator = length * m_exitnodes.size() - number_of_routers;
-		int denominator = (length - 1) * number_of_routers;
-
-		//TODO: line can be removed if tor balance exit nodes and middlerouters in the right way
-		//we double the probability of middlerouters, because original tor doesn't use them so often
-		denominator *= 2;
-
-		if (m_rand.nextInt(denominator) > numerator)
-		{
-			return (MMRDescription)this.m_middlenodes.elementAt(m_rand.nextInt(m_middlenodes.size()));
+		//FIXME
+		Vector routers = new Vector();
+		MMRDescription x = null;
+		boolean contains=true;
+				
+		for (int i=0; i<hops; i++) {
+			
+			while (contains) {
+			contains = false;	
+			x = getByRandom();
+			if (routers.contains(x)) contains = true;
+			}
+			contains=true;
+			routers.add(i,x);
 		}
-		else
-		{
-			return (MMRDescription)this.m_exitnodes.elementAt(m_rand.nextInt(m_exitnodes.size()));
+
+		contains = true;
+		boolean exit = false;
+		while (contains || !exit) {
+			contains = false;
+			x = getByRandom();
+			if (routers.contains(x)) contains = true;
+			exit = x.isExitNode();
 		}
+			
+			routers.add(hops,x);
+		return routers;
+		
 	}
 
 	/**
@@ -212,28 +220,27 @@ public class MMRList
 		return null;
 	}
 
+	
 	/**
 	 * parses the document and creates a list with all MMRDescriptions
 	 * @param strDocument
 	 * @throws Exception
 	 * @return false if document is not a valid directory, true otherwise
 	 */
-
+	
 	private boolean parseDocument(String strDocument) throws Exception
 	{
 		Vector mmrs = new Vector();
 		Vector mnodes = new Vector();
 		Vector enodes = new Vector();
-
+		
 		Hashtable mmrswn = new Hashtable();
 		LineNumberReader reader = new LineNumberReader(new StringReader(strDocument));
 		Date published = null;
 		String aktLine = reader.readLine();
 
-		if (aktLine == null)
-		{
+		if(aktLine==null)
 			return false;
-		}
 		for (; ; )
 		{
 			aktLine = reader.readLine();
@@ -241,33 +248,27 @@ public class MMRList
 			{
 				break;
 			}
-
+			
+			
 			if (aktLine.startsWith("[Server]"))
 			{
 				MMRDescription mmrd = MMRDescription.parse(reader);
-				if ( (mmrd != null) && !mmrswn.containsKey(mmrd.getName()) /*&& mmrd.hasValidDates()*/)
+				if ((mmrd != null) && !mmrswn.containsKey(mmrd.getName()) /*&& mmrd.hasValidDates()*/)
 				{
-					if (mmrd.isExitNode())
-					{
-						enodes.addElement(mmrd);
-					}
-					else
-					{
-						mnodes.addElement(mmrd);
-					}
-
+					if (mmrd.isExitNode()) enodes.addElement(mmrd);
+					else mnodes.addElement(mmrd);
+					
 					mmrs.addElement(mmrd);
 					mmrswn.put(mmrd.getName(), mmrd);
 				}
-
+								
 				LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Added: " + mmrd);
-			}
+					}
 		}
-
+		
 		m_middlenodes = mnodes;
 		m_exitnodes = enodes;
-		LogHolder.log(LogLevel.DEBUG, LogType.MISC,
-					  "ExitNodes : " + enodes.size() + " MiddleNodes : " + mnodes.size());
+		LogHolder.log(LogLevel.DEBUG, LogType.MISC, "ExitNodes : "+enodes.size()+" MiddleNodes : " +mnodes.size());
 		m_mixminionrouters = mmrs;
 		m_mixminionroutersWithNames = mmrswn;
 		return true;
