@@ -84,6 +84,7 @@ import jap.pay.wizard.PaymentWizard;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import java.util.Date;
 
 /**
  * The Jap Conf Module (Settings Tab Page) for the Accounts and payment Management
@@ -130,6 +131,10 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		getName() + "_old_password";
 	private static final String MSG_DIALOG_ACCOUNT_PASSWORD = AccountSettingsPanel.class.
 		getName() + "_dialog_account_password";
+	private static final String MSG_ACCOUNT_INVALID = AccountSettingsPanel.class.
+		getName() + "_account_invalid";
+	private static final String MSG_ACCOUNT_INVALID_TITLE = AccountSettingsPanel.class.
+		getName() + "_account_invalid_title";
 
 	private JButton m_btnCreateAccount;
 	private JButton m_btnChargeAccount;
@@ -502,11 +507,11 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		 * fetch a new statement from the Payment Instance.
 		 */
 		/*if (!selectedAccount.hasAccountInfo() ||
-			(selectedAccount.getAccountInfo().getBalance().getTimestamp().getTime() <
-			 (System.currentTimeMillis() - 1000 * 60 * 60 * 24)))
-		{
-			doGetStatement(selectedAccount);
-		}*/
+		 (selectedAccount.getAccountInfo().getBalance().getTimestamp().getTime() <
+		  (System.currentTimeMillis() - 1000 * 60 * 60 * 24)))
+		   {
+		 doGetStatement(selectedAccount);
+		   }*/
 
 		XMLAccountInfo accountInfo = selectedAccount.getAccountInfo();
 		XMLBalance balance = accountInfo.getBalance();
@@ -670,6 +675,14 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 			return;
 		}
 		JFrame view = JAPController.getView();
+
+		if (selectedAccount.getBalanceValidTime().before(new Date()))
+		{
+			JOptionPane.showMessageDialog(view, JAPMessages.getString(MSG_ACCOUNT_INVALID),
+										  JAPMessages.getString(MSG_ACCOUNT_INVALID_TITLE),
+										  JOptionPane.WARNING_MESSAGE);
+			return;
+		}
 		XMLTransCert transferCertificate = null;
 
 		PaymentWizard paymentWiz = new PaymentWizard(selectedAccount);
@@ -685,48 +698,48 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		   if (choice == JOptionPane.YES_OPTION)
 		   {
 		 /** @todo find out why the wait splash screen looks so ugly
-		   JAPWaitSplash splash = null;
-		   try
-		   {
-			splash = JAPWaitSplash.start("Fetching transfer number...", "Please wait");
-			Thread.sleep(5);
-			transferCertificate = selectedAccount.charge();
-			splash.abort();
-		   }
-		   catch (Exception ex)
-		   {
-			splash.abort();
-			LogHolder.log(LogLevel.DEBUG, LogType.PAY, ex);
-			JOptionPane.showMessageDialog(
-		  view,
-		  "<html>" + JAPMessages.getString("ngTransferNumberError") + "<br>" + ex.getMessage() +
-		  "</html>",
-		  JAPMessages.getString("error"), JOptionPane.ERROR_MESSAGE
-		  );
-			return;
-		   }
+			JAPWaitSplash splash = null;
+			try
+			{
+		  splash = JAPWaitSplash.start("Fetching transfer number...", "Please wait");
+		  Thread.sleep(5);
+		  transferCertificate = selectedAccount.charge();
+		  splash.abort();
+			}
+			catch (Exception ex)
+			{
+		  splash.abort();
+		  LogHolder.log(LogLevel.DEBUG, LogType.PAY, ex);
+		  JOptionPane.showMessageDialog(
+		   view,
+		   "<html>" + JAPMessages.getString("ngTransferNumberError") + "<br>" + ex.getMessage() +
+		   "</html>",
+		   JAPMessages.getString("error"), JOptionPane.ERROR_MESSAGE
+		   );
+		  return;
+			}
 
-		   // try to launch webbrowser
-		   AbstractOS os = AbstractOS.getInstance();
-		   String url = transferCertificate.getBaseUrl();
-		   url += "?transfernum=" + transferCertificate.getTransferNumber();
-		   try
-		   {
-			os.openURLInBrowser(url);
-		   }
-		   catch (Exception e)
-		   {
-			JOptionPane.showMessageDialog(
-		  view,
-		  "<html>" + JAPMessages.getString("ngCouldNotFindBrowser") + "<br>" +
-		  "<h3>" + url + "</h3></html>",
-		  JAPMessages.getString("ngCouldNotFindBrowserTitle"),
-		  JOptionPane.INFORMATION_MESSAGE
-		  );
-		   }
+			// try to launch webbrowser
+			AbstractOS os = AbstractOS.getInstance();
+			String url = transferCertificate.getBaseUrl();
+			url += "?transfernum=" + transferCertificate.getTransferNumber();
+			try
+			{
+		  os.openURLInBrowser(url);
+			}
+			catch (Exception e)
+			{
+		  JOptionPane.showMessageDialog(
+		   view,
+		   "<html>" + JAPMessages.getString("ngCouldNotFindBrowser") + "<br>" +
+		   "<h3>" + url + "</h3></html>",
+		   JAPMessages.getString("ngCouldNotFindBrowserTitle"),
+		   JOptionPane.INFORMATION_MESSAGE
+		   );
+			}
 
-		   m_MyTableModel.fireTableDataChanged();
-		  }*/
+			m_MyTableModel.fireTableDataChanged();
+		   }*/
 	}
 
 	/**
