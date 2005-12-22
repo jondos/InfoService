@@ -31,6 +31,9 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Random;
 import java.util.Vector;
 
@@ -39,7 +42,6 @@ import anon.util.XMLUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import java.util.Date;
 
 /**
  * Implements {@link DBInterface} for Postgresql
@@ -297,16 +299,22 @@ public class DataBase extends DBInterface
 	// Documentation see DBInterface
 	public void addAccount(long accountNumber,
 						   String xmlPublicKey,
-						   java.sql.Timestamp creationTime,
+						   Timestamp creationTime,
 						   String accountCert) throws Exception
 	{
+		//Account is valid for two months
+		Calendar cal = Calendar.getInstance();
+		cal.setTimeInMillis(creationTime.getTime());
+		cal.add(Calendar.MONTH, 2);
+		Timestamp validTime = new Timestamp(cal.getTimeInMillis());
+
 		LogHolder.log(LogLevel.DEBUG, LogType.PAY,
 					  "DataBase.addAccount() called for accountnumber " + accountNumber);
 		/**@todo Replace third argument with 0 when account charging is working*/
 		String statement =
 			"INSERT INTO ACCOUNTS VALUES (" +
 			accountNumber + ",'" + xmlPublicKey +
-			"',100000000,'" + creationTime + "',0,'" + creationTime + "','"
+			"',100000000,'" + validTime + "',0,'" + creationTime + "','"
 			+ accountCert + "')";
 		try
 		{
@@ -740,6 +748,8 @@ public class DataBase extends DBInterface
 		Statement stmt;
 		long account;
 		boolean used;
+		Timestamp validTime = null;
+
 		try
 		{
 			//Get account for transfernumber
@@ -756,8 +766,16 @@ public class DataBase extends DBInterface
 				throw new Exception("Transfer no. " + a_transferNumber + " is not in database");
 			}
 			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Fetched account no. " + account);
+
+			//Check if account has expired
+			stmt = m_dbConn.createStatement();
+			r = stmt.executeQuery("SELECT DEPOSITVALIDTIME FROM ACCOUNTS WHERE ACCOUNTNUMBER=" + account);
+			if (r.next())
+			{
+				validTime = r.getTimestamp(1);
+			}
 			//Update deposit
-			if (!used)
+			if (!used && validTime.after(new Date()))
 			{
 				Date usedDate = new Date();
 				stmt = m_dbConn.createStatement();
@@ -765,12 +783,13 @@ public class DataBase extends DBInterface
 								   account);
 				//Set transfer number to "used"
 				stmt = m_dbConn.createStatement();
-				stmt.executeUpdate("UPDATE TRANSFERS SET USED=TRUE, USEDTIME="+usedDate.getTime()+" WHERE TRANSFERNUMBER=" +
+				stmt.executeUpdate("UPDATE TRANSFERS SET USED=TRUE, USEDTIME=" + usedDate.getTime() +
+								   " WHERE TRANSFERNUMBER=" +
 								   a_transferNumber);
 			}
 			else
 			{
-				LogHolder.log(LogLevel.ERR, LogType.PAY, "Transfer number already used.");
+				LogHolder.log(LogLevel.ERR, LogType.PAY, "Transfer number already used or account expired.");
 			}
 		}
 		catch (Exception e)
@@ -804,29 +823,29 @@ public class DataBase extends DBInterface
 		return used;
 	}
 
-    public long getUsedDate(long a_tan)
-    {
-        long usedDate = 0;
-        Statement stmt;
+	public long getUsedDate(long a_tan)
+	{
+		long usedDate = 0;
+		Statement stmt;
 
-        try
-        {
-                stmt = m_dbConn.createStatement();
-                ResultSet r = stmt.executeQuery("SELECT USEDTIME FROM TRANSFERS WHERE TRANSFERNUMBER=" +
-                                                                                a_tan);
-                if (r.next())
-                {
-                        usedDate = r.getLong(1);
-                }
+		try
+		{
+			stmt = m_dbConn.createStatement();
+			ResultSet r = stmt.executeQuery("SELECT USEDTIME FROM TRANSFERS WHERE TRANSFERNUMBER=" +
+											a_tan);
+			if (r.next())
+			{
+				usedDate = r.getLong(1);
+			}
 
-        }
-        catch (Exception e)
-        {
-                LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
-                                          "Could not get used attribute of transfer number. Cause: " + e.getMessage());
-        }
-        return usedDate;
+		}
+		catch (Exception e)
+		{
+			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
+						  "Could not get used attribute of transfer number. Cause: " + e.getMessage());
+		}
+		return usedDate;
 
-    }
+	}
 
 }

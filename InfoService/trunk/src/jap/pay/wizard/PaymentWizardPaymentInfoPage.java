@@ -121,6 +121,7 @@ public class PaymentWizardPaymentInfoPage extends BasicWizardPage implements Mou
 		c.fill = c.NONE;
 		c.insets = new Insets(5, 5, 5, 5);
 		c.anchor = c.NORTHWEST;
+		c.gridwidth = 2;
 		m_detailedInfoLabel = new JLabel();
 		p.add(m_detailedInfoLabel, c);
 		c.gridy++;
@@ -128,7 +129,7 @@ public class PaymentWizardPaymentInfoPage extends BasicWizardPage implements Mou
 		p.add(m_extraInfoLabel, c);
 
 		c.gridy++;
-
+		c.gridwidth = 1;
 		m_bttnCopy = new JButton(JAPMessages.getString(MSG_BUTTON_COPY));
 		m_bttnCopy.addActionListener(this);
 		p.add(m_bttnCopy, c);
