@@ -33,7 +33,10 @@ import java.util.Enumeration;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -41,23 +44,22 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import javax.swing.Icon;
+import javax.swing.DefaultListCellRenderer;
+import javax.swing.DefaultListModel;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
-import javax.swing.JTable;
-import javax.swing.ListSelectionModel;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-import javax.swing.table.AbstractTableModel;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -70,10 +72,8 @@ import anon.pay.xml.XMLAccountInfo;
 import anon.pay.xml.XMLBalance;
 import anon.pay.xml.XMLTransCert;
 import anon.util.XMLUtil;
-import gui.ByteNumberCellRenderer;
 import gui.GUIUtils;
 import gui.JAPMessages;
-import gui.TimestampCellRenderer;
 import jap.AbstractJAPConfModule;
 import jap.JAPConstants;
 import jap.JAPController;
@@ -91,7 +91,8 @@ import logging.LogType;
  * @author Bastian Voigt, Tobias Bayer
  * @version 1.0
  */
-public class AccountSettingsPanel extends AbstractJAPConfModule implements ChangeListener
+public class AccountSettingsPanel extends AbstractJAPConfModule implements ChangeListener,
+	ListSelectionListener
 {
 
 	/** Messages */
@@ -130,8 +131,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 	private static final String MSG_DIALOG_ACCOUNT_PASSWORD = AccountSettingsPanel.class.
 		getName() + "_dialog_account_password";
 
-
-	private JTable m_Table;
 	private JButton m_btnCreateAccount;
 	private JButton m_btnChargeAccount;
 	private JButton m_btnStatement;
@@ -149,8 +148,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 	private JLabel m_labelSpent;
 	private JLabel m_labelBalance;
 	private JLabel m_labelValid;
-
-	private MyTableModel m_MyTableModel;
+	private CoinstackProgressBar m_coinstack;
+	private JList m_listAccounts;
 
 	public AccountSettingsPanel()
 	{
@@ -178,42 +177,23 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		rootPanel.setLayout(new GridBagLayout());
 		rootPanel.setBorder(new TitledBorder(JAPMessages.getString("ngPseudonymAccounts")));
 
-		m_Table = new JTable();
-		m_Table.setPreferredScrollableViewportSize(new Dimension(450, 200));
-		m_MyTableModel = new MyTableModel();
-		m_Table.setModel(m_MyTableModel);
-		m_Table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		m_Table.setDefaultRenderer(java.sql.Timestamp.class, new TimestampCellRenderer(false));
-		m_Table.setDefaultRenderer(Long.class, new ByteNumberCellRenderer());
-		m_Table.addMouseListener(new MouseAdapter()
+		m_listAccounts = new JList();
+		m_listAccounts.addListSelectionListener(this);
+		m_listAccounts.setPreferredSize(new Dimension(200, 200));
+		m_listAccounts.addMouseListener(new MouseAdapter()
 		{
 			public void mouseClicked(MouseEvent e)
 			{
 				//Activate account on double click
 				if (e.getClickCount() == 2)
 				{
-					int selectedRow = m_Table.getSelectedRow();
 					doActivateAccount(getSelectedAccount());
-					m_Table.setRowSelectionInterval(selectedRow, selectedRow);
 				}
 			}
 		}
 		);
-		m_Table.getColumnModel().getColumn(0).setPreferredWidth(250);
-		m_Table.getColumnModel().getColumn(1).setPreferredWidth(150);
-		m_Table.getColumnModel().getColumn(2).setPreferredWidth(50);
 
 		ActionListener myActionListener = new MyActionListener();
-		//Ask to be notified of selection changes.
-		ListSelectionModel rowSM = m_Table.getSelectionModel();
-		rowSM.addListSelectionListener(new ListSelectionListener()
-		{
-			public void valueChanged(ListSelectionEvent e)
-			{
-				enableDisableButtons();
-				doShowDetails(getSelectedAccount());
-			}
-		});
 
 		JPanel buttonsPanel = new JPanel(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
@@ -253,19 +233,47 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		c.weighty = 0;
 		c.gridx = 0;
 		c.gridy = 0;
+		c.gridheight = 3;
 		c.insets = new Insets(5, 5, 5, 5);
-		rootPanel.add(new JScrollPane(m_Table), c);
+		rootPanel.add(m_listAccounts, c);
+
+		c.gridx++;
+		c.gridheight = 1;
+		rootPanel.add(new JLabel(JAPMessages.getString(MSG_ACCOUNT_CREATION_DATE)), c);
+		c.gridx++;
+		m_labelCreationDate = new JLabel();
+		rootPanel.add(m_labelCreationDate, c);
+
+		c.gridx--;
 		c.gridy++;
+		rootPanel.add(new JLabel(JAPMessages.getString(MSG_ACCOUNT_STATEMENT_DATE)), c);
+		c.gridx++;
+		m_labelStatementDate = new JLabel();
+		rootPanel.add(m_labelStatementDate, c);
+
+		c.gridx--;
+		c.gridy++;
+		rootPanel.add(new JLabel(JAPMessages.getString(MSG_ACCOUNT_VALID)), c);
+		c.gridx++;
+		m_labelValid = new JLabel();
+		rootPanel.add(m_labelValid, c);
+
+		c.gridy++;
+		c.gridx = 0;
+		c.gridwidth = 3;
 		rootPanel.add(buttonsPanel, c);
+
 		c.gridy++;
 		JSeparator sep = new JSeparator(JSeparator.HORIZONTAL);
-		sep.setPreferredSize(new Dimension(460, 10));
+		sep.setPreferredSize(new Dimension(520, 10));
 		rootPanel.add(sep, c);
+
 		c.weightx = 1;
 		c.weighty = 1;
 		c.gridy++;
 		c.fill = c.HORIZONTAL;
 		rootPanel.add(this.createDetailsPanel(), c);
+		updateAccountList();
 		enableDisableButtons();
 	}
 
@@ -284,24 +292,19 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		c.gridx = 0;
 		c.gridy = 0;
 		c.insets = new Insets(5, 5, 5, 5);
+		c.gridwidth = 2;
 		p.add(new JLabel(JAPMessages.getString(MSG_ACCOUNT_DETAILS)), c);
 
+		c.gridwidth = 1;
 		c.insets = new Insets(5, 10, 5, 5);
 		c.gridy++;
-		p.add(new JLabel(JAPMessages.getString(MSG_ACCOUNT_CREATION_DATE)), c);
-		c.gridx++;
-		m_labelCreationDate = new JLabel();
-		p.add(m_labelCreationDate, c);
+		c.gridheight = 3;
+		m_coinstack = new CoinstackProgressBar(GUIUtils.loadImageIcon(JAPConstants.IMAGE_COIN_COINSTACK, true),
+											   0, 8);
+		p.add(m_coinstack, c);
 
-		c.gridx--;
-		c.gridy++;
-		p.add(new JLabel(JAPMessages.getString(MSG_ACCOUNT_STATEMENT_DATE)), c);
+		c.gridheight = 1;
 		c.gridx++;
-		m_labelStatementDate = new JLabel();
-		p.add(m_labelStatementDate, c);
-
-		c.gridx--;
-		c.gridy++;
 		p.add(new JLabel(JAPMessages.getString(MSG_ACCOUNT_DEPOSIT)), c);
 		c.gridx++;
 		m_labelDeposit = new JLabel();
@@ -320,13 +323,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		c.gridx++;
 		m_labelBalance = new JLabel();
 		p.add(m_labelBalance, c);
-
-		c.gridx--;
-		c.gridy++;
-		p.add(new JLabel(JAPMessages.getString(MSG_ACCOUNT_VALID)), c);
-		c.gridx++;
-		m_labelValid = new JLabel();
-		p.add(m_labelValid, c);
 
 		ActionListener myActionListener = new MyActionListener();
 
@@ -367,15 +363,43 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		c.weighty = 1;
 		c.gridx = 0;
 		c.gridy++;
-		c.gridwidth = 2;
+		c.gridwidth = 3;
 		p.add(buttonsPanel, c);
 
 		return p;
 	}
 
+	private void updateAccountList()
+	{
+		PayAccount account;
+		DefaultListModel listModel = new DefaultListModel();
+		Enumeration accounts = PayAccountsFile.getInstance().getAccounts();
+		int selectedItem = m_listAccounts.getSelectedIndex();
+
+		CustomRenderer cr = new CustomRenderer();
+		m_listAccounts.setCellRenderer(cr);
+
+		while (accounts.hasMoreElements())
+		{
+			account = (PayAccount) accounts.nextElement();
+			listModel.addElement(account);
+		}
+
+		m_listAccounts.setModel(listModel);
+
+		if (selectedItem != -1)
+		{
+			m_listAccounts.setSelectedIndex(selectedItem);
+		}
+		else
+		{
+			m_listAccounts.setSelectedIndex(0);
+		}
+	}
+
 	private void enableDisableButtons()
 	{
-		boolean enable = (m_Table.getSelectedRow() >= 0);
+		boolean enable = (getSelectedAccount() != null);
 		m_btnChargeAccount.setEnabled(enable);
 		m_btnTransactions.setEnabled(enable);
 		m_btnDeleteAccount.setEnabled(enable);
@@ -443,11 +467,13 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 	{
 		if (JAPController.getInstance().getPaymentPassword() != null)
 		{
-		JAPPasswordReader pass = new JAPPasswordReader(false, JAPMessages.getString(MSG_DIALOG_ACCOUNT_PASSWORD));
-		String password = pass.readPassword(JAPMessages.getString(MSG_OLD_PASSWORD));
+			JAPPasswordReader pass = new JAPPasswordReader(false,
+				JAPMessages.getString(MSG_DIALOG_ACCOUNT_PASSWORD));
+			String password = pass.readPassword(JAPMessages.getString(MSG_OLD_PASSWORD));
 
 		}
-		JAPPasswordReader pass = new JAPPasswordReader(true, JAPMessages.getString(MSG_DIALOG_ACCOUNT_PASSWORD));
+		JAPPasswordReader pass = new JAPPasswordReader(true,
+			JAPMessages.getString(MSG_DIALOG_ACCOUNT_PASSWORD));
 		String password = pass.readPassword(JAPMessages.getString(MSG_NEW_PASSWORD));
 		JAPController.getInstance().setPaymentPassword(password);
 	}
@@ -475,12 +501,12 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		/** If there is no account info or the account info is older than 24 hours,
 		 * fetch a new statement from the Payment Instance.
 		 */
-		if (!selectedAccount.hasAccountInfo() ||
+		/*if (!selectedAccount.hasAccountInfo() ||
 			(selectedAccount.getAccountInfo().getBalance().getTimestamp().getTime() <
 			 (System.currentTimeMillis() - 1000 * 60 * 60 * 24)))
 		{
 			doGetStatement(selectedAccount);
-		}
+		}*/
 
 		XMLAccountInfo accountInfo = selectedAccount.getAccountInfo();
 		XMLBalance balance = accountInfo.getBalance();
@@ -491,6 +517,54 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		m_labelSpent.setText(JAPUtil.formatBytesValue(balance.getSpent()));
 		m_labelBalance.setText(JAPUtil.formatBytesValue(balance.getDeposit() - balance.getSpent()));
 		m_labelValid.setText(JAPUtil.formatTimestamp(balance.getValidTime(), true));
+
+		long dep = selectedAccount.getDeposit();
+		long spe = selectedAccount.getSpent();
+		if (dep == 0 || dep - spe == 0)
+		{
+			m_coinstack.setValue(0);
+		}
+		else
+		{
+			double onePercent = 100.0 / (double) dep;
+			long percent = (long) (onePercent * spe);
+			if (percent < 25)
+			{
+				m_coinstack.setValue(8);
+			}
+			else if (percent > 12 && percent < 25)
+			{
+				m_coinstack.setValue(7);
+			}
+			else if (percent > 25 && percent < 37)
+			{
+				m_coinstack.setValue(6);
+			}
+			else if (percent > 37 && percent < 50)
+			{
+				m_coinstack.setValue(5);
+			}
+			else if (percent > 50 && percent < 62)
+			{
+				m_coinstack.setValue(4);
+			}
+			else if (percent > 62 && percent < 75)
+			{
+				m_coinstack.setValue(3);
+			}
+			else if (percent > 75 && percent < 87)
+			{
+				m_coinstack.setValue(2);
+			}
+			else if (percent > 87 && percent < 99)
+			{
+				m_coinstack.setValue(1);
+			}
+			else
+			{
+				m_coinstack.setValue(0);
+			}
+		}
 
 		/*JFrame view = JAPController.getView();
 		   if (!selectedAccount.hasAccountInfo())
@@ -582,15 +656,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 	 */
 	private PayAccount getSelectedAccount()
 	{
-		PayAccountsFile accounts = PayAccountsFile.getInstance();
-
-		// try to find the account the user wishes to charge
-		int selectedRow = m_Table.getSelectedRow();
-		if (selectedRow < 0)
-		{
-			return null;
-		}
-		return accounts.getAccountAt(selectedRow);
+		return (PayAccount) m_listAccounts.getSelectedValue();
 	}
 
 	/**
@@ -763,7 +829,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 				JOptionPane.ERROR_MESSAGE
 				);
 		}
-		m_MyTableModel.fireTableDataChanged();
+		updateAccountList();
 	}
 
 	/**
@@ -798,7 +864,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 				);
 			return false;
 		}
-		m_MyTableModel.fireTableDataChanged();
+		updateAccountList();
 		return true;
 	}
 
@@ -825,10 +891,10 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 			JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE,
 			null, null, null);
 		/*if (choice == JOptionPane.YES_OPTION)
-		{
-			strPassword = new JAPPasswordReader(true).readPassword(JAPMessages.getString("choosePassword"));
-			encrypt = true;
-		}*/
+		   {
+		 strPassword = new JAPPasswordReader(true).readPassword(JAPMessages.getString("choosePassword"));
+		 encrypt = true;
+		   }*/
 
 		JFileChooser chooser = new JFileChooser();
 		MyFileFilter filter = new MyFileFilter();
@@ -926,29 +992,29 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 					{
 						String strMessage = JAPMessages.getString("ngPasswordDecrypt");
 						String strPassword = null;
-					/*	JAPPasswordReader pr = new JAPPasswordReader(false);
-						while (true)
-						{
-							// ask for password
-							strPassword = pr.readPassword(strMessage);
+						/*	JAPPasswordReader pr = new JAPPasswordReader(false);
+						 while (true)
+						 {
+						  // ask for password
+						  strPassword = pr.readPassword(strMessage);
 
-							if (strPassword == null) // user pressed "cancel"
-							{
-								break;
-							}
-							try
-							{
-								elemAccount = XMLEncryption.decryptElement(elemCrypt, strPassword);
-							}
-							catch (Exception ex)
-							{
-								strMessage = JAPMessages.getString("ngPasswordTryAgain") +
-									JAPMessages.getString("ngPasswordDecrypt");
-								strPassword = null;
-								continue;
-							}
-							break ;
-						}*/
+						  if (strPassword == null) // user pressed "cancel"
+						  {
+						   break;
+						  }
+						  try
+						  {
+						   elemAccount = XMLEncryption.decryptElement(elemCrypt, strPassword);
+						  }
+						  catch (Exception ex)
+						  {
+						   strMessage = JAPMessages.getString("ngPasswordTryAgain") +
+						 JAPMessages.getString("ngPasswordDecrypt");
+						   strPassword = null;
+						   continue;
+						  }
+						  break ;
+						 }*/
 					}
 				}
 			}
@@ -968,7 +1034,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 					importedAccount = new PayAccount(elemAccount);
 					PayAccountsFile accounts = PayAccountsFile.getInstance();
 					accounts.addAccount(importedAccount);
-					m_MyTableModel.fireTableDataChanged();
+					updateAccountList();
 				}
 			}
 			catch (Exception ex)
@@ -1081,7 +1147,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 			try
 			{
 				accounts.deleteAccount(selectedAccount.getAccountNumber());
-				m_MyTableModel.fireTableDataChanged();
+				updateAccountList();
 			}
 			catch (Exception ex)
 			{
@@ -1147,118 +1213,62 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 	{
 		if (e.getSource() instanceof AccountCreator)
 		{
-			m_MyTableModel.fireTableDataChanged();
+			updateAccountList();
 		}
 	}
 
-	/**
-	 * Table model implementation
-	 */
-	private class MyTableModel extends AbstractTableModel
+	public void valueChanged(ListSelectionEvent e)
 	{
-		PayAccountsFile m_accounts = PayAccountsFile.getInstance();
-
-		public int getColumnCount()
+		if (e.getSource() == m_listAccounts)
 		{
-			return 3;
+			doShowDetails(getSelectedAccount());
+			enableDisableButtons();
 		}
+	}
+}
 
-		public int getRowCount()
+class CustomRenderer extends DefaultListCellRenderer
+{
+	public Component getListCellRendererComponent(JList list, Object value,
+												  int index, boolean isSelected, boolean cellHasFocus)
+	{
+		JLabel l;
+		Component comp = super.getListCellRendererComponent(list, value,
+			index, isSelected, cellHasFocus);
+		if (comp instanceof JComponent && value != null && value instanceof PayAccount)
 		{
-			return m_accounts.getNumAccounts();
-		}
+			l = new JLabel(String.valueOf( ( (PayAccount) value).getAccountNumber()),
+						   GUIUtils.loadImageIcon(JAPConstants.IMAGE_COINS_FULL, true), LEFT);
 
-		public Class getColumnClass(int c)
-		{
-			switch (c)
+			if (isSelected)
 			{
-				case 0:
-					return Object.class;
-				case 1:
-					return Icon.class;
-				case 2:
-					return String.class;
-				default:
-					return Object.class;
+				l.setOpaque(true);
+				l.setBackground(Color.lightGray);
+			}
+			Font f = l.getFont();
+			if ( ( (PayAccount) value).equals(PayAccountsFile.getInstance().getActiveAccount()))
+			{
+				l.setFont(new Font(f.getName(), Font.BOLD, f.getSize()));
+			}
+			else
+			{
+				l.setFont(new Font(f.getName(), Font.PLAIN, f.getSize()));
 			}
 		}
-
-		public Object getValueAt(int rowIndex, int columnIndex)
+		else
 		{
-			PayAccount account = m_accounts.getAccountAt(rowIndex);
-			switch (columnIndex)
+			if (value != null)
 			{
-				case 0:
-					return new Long(account.getAccountNumber());
-				case 1:
-					if (account.hasAccountInfo())
-					{
-						long dep = account.getDeposit();
-						long spe = account.getSpent();
-						if (dep == 0 || dep - spe == 0)
-						{
-							return GUIUtils.loadImageIcon(JAPConstants.IMAGE_COINS_EMPTY, true);
-						}
-						else
-						{
-							double onePercent = 100.0 / (double) dep;
-							long percent = (long) (onePercent * spe);
-							if (percent < 25)
-							{
-								return GUIUtils.loadImageIcon(JAPConstants.IMAGE_COINS_FULL, true);
-							}
-							else if (percent > 25 && percent < 50)
-							{
-								return GUIUtils.loadImageIcon(JAPConstants.IMAGE_COINS_QUITEFULL, true);
-							}
-							else if (percent > 50 && percent < 75)
-							{
-								return GUIUtils.loadImageIcon(JAPConstants.IMAGE_COINS_MEDIUM, true);
-							}
-							else if (percent > 75 && percent < 99)
-							{
-								return GUIUtils.loadImageIcon(JAPConstants.IMAGE_COINS_LOW, true);
-							}
-							else
-							{
-								return GUIUtils.loadImageIcon(JAPConstants.IMAGE_COINS_EMPTY, true);
-							}
-						}
-					}
-					return null;
-				case 2:
-					if (account.equals(m_accounts.getActiveAccount()))
-					{
-						return JAPMessages.getString("active");
-					}
-					else
-					{
-						return "-----";
-					}
+				l = new JLabel(value.toString());
 
-				default:
-					return JAPMessages.getString("unknown");
 			}
-		}
-
-		public String getColumnName(int col)
-		{
-			switch (col)
+			else
 			{
-				case 0:
-					return JAPMessages.getString("accountNr");
-				case 1:
-					return JAPMessages.getString(MSG_ACCOUNT_BALANCE);
-				case 2:
-					return JAPMessages.getString("active");
-				default:
-					return "---";
+				l = new JLabel();
 			}
+
 		}
 
-		public boolean isCellEditable(int col, int row)
-		{
-			return false;
-		}
+		return l;
 	}
 }

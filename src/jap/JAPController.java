@@ -86,6 +86,7 @@ import update.JAPUpdateWizard;
 import jap.forward.*;
 import anon.pay.IAIEventListener;
 import gui.*;
+import anon.pay.PayAccount;
 
 /* This is the Controller of All. It's a Singelton!*/
 public final class JAPController extends Observable implements IProxyListener, Observer,
@@ -2711,5 +2712,30 @@ public final class JAPController extends Observable implements IProxyListener, O
 	public void setPaymentPassword(String a_password)
 	{
 		JAPModel.getInstance().setPaymentPassword(a_password);
+	}
+
+	/**
+	 * Fetches new statements for all accounts from the payment instance
+	 */
+	public void updateAccountStatements()
+	{
+		/** Update account statements*/
+		Enumeration accounts = PayAccountsFile.getInstance().getAccounts();
+		while (accounts.hasMoreElements())
+		{
+			PayAccount account = (PayAccount) accounts.nextElement();
+			try
+			{
+				LogHolder.log(LogLevel.DEBUG, LogType.PAY,
+							  "Fetching statement for account: " + account.getAccountNumber());
+				account.fetchAccountInfo();
+			}
+			catch (Exception e)
+			{
+				LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
+							  "Could not fetch statement for account: " + account.getAccountNumber());
+			}
+		}
+
 	}
 }
