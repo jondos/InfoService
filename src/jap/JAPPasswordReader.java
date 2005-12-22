@@ -13,7 +13,7 @@ import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 
 import anon.util.IMiscPasswordReader;
-import gui.*;
+import gui.JAPMessages;
 
 /**
  * PasswordReader that displays a dialog window.
@@ -22,6 +22,7 @@ import gui.*;
 public class JAPPasswordReader implements ActionListener, IMiscPasswordReader
 {
 	private String passwd = null;
+	private String m_title;
 	private JDialog dialog = null;
 	private JPasswordField pwdField1, pwdField2;
 	private boolean m_bRepeat;
@@ -30,8 +31,9 @@ public class JAPPasswordReader implements ActionListener, IMiscPasswordReader
 	 * Creates a JAPPasswordReader object.
 	 * @param repeat boolean if true, the password must be repeated, i.e. entered two times.
 	 */
-	public JAPPasswordReader(boolean repeat)
+	public JAPPasswordReader(boolean repeat, String a_title)
 	{
+		m_title = a_title;
 		m_bRepeat = repeat;
 	}
 
@@ -108,7 +110,7 @@ public class JAPPasswordReader implements ActionListener, IMiscPasswordReader
 		JOptionPane o = new JOptionPane(message,
 										JOptionPane.QUESTION_MESSAGE, 0
 										, null, options);
-		dialog = o.createDialog(JAPController.getView(), JAPMessages.getString("passwdDlgTitle"));
+		dialog = o.createDialog(JAPController.getView(), m_title);
 		dialog.toFront();
 		dialog.setVisible(true);
 		return passwd;

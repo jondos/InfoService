@@ -91,6 +91,13 @@ import gui.*;
 public final class JAPController extends Observable implements IProxyListener, Observer,
 	AnonServiceEventListener, IAIEventListener
 {
+
+	/** Messages */
+	private static final String MSG_DIALOG_ACCOUNT_PASSWORD = JAPController.class.
+		getName() + "_dialog_account_password";
+	private static final String MSG_ACCOUNT_PASSWORD = JAPController.class.
+		getName() + "_account_password";
+
 	/**
 	 * Stores all MixCascades we know (information comes from infoservice or was entered by a user).
 	 * This list may or may not include the current active MixCascade.
@@ -859,19 +866,13 @@ public final class JAPController extends Observable implements IProxyListener, O
 					{
 						// it is encrypted -> ask user for password
 						Element elemPlainTxt;
-						String strMessage =
-							"<html>Please enter password for decrypting your accounts data</html>";
 
 						while (true)
 						{
 							/** @todo handle cancel button properly */
-							/** @todo internationalize msgs */
-							/** @todo use an IPasswordReader dialog here */
-							m_strPayAccountsPassword = JOptionPane.showInputDialog(
-								m_View, strMessage,
-								"Jap Account Data",
-								JOptionPane.QUESTION_MESSAGE | JOptionPane.OK_CANCEL_OPTION
-								);
+							m_strPayAccountsPassword = new JAPPasswordReader(false,
+								JAPMessages.getString(MSG_DIALOG_ACCOUNT_PASSWORD)).readPassword(JAPMessages.
+								getString(MSG_ACCOUNT_PASSWORD));
 
 							try
 							{
@@ -880,7 +881,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 							}
 							catch (Exception ex)
 							{
-								strMessage = "<html>Wrong password. Please try again</html>";
 								continue;
 							}
 							break ;
@@ -2693,5 +2693,23 @@ public final class JAPController extends Observable implements IProxyListener, O
 		{
 			this.setAnonMode(false);
 		}
+	}
+
+	/**
+	 * Gets the password for payment data encryption
+	 * @return String
+	 */
+	public String getPaymentPassword()
+	{
+		return JAPModel.getInstance().getPaymentPassword();
+	}
+
+	/**
+	 * Sets the password for payment data encryption
+	 * @param a_password Strign
+	 */
+	public void setPaymentPassword(String a_password)
+	{
+		JAPModel.getInstance().setPaymentPassword(a_password);
 	}
 }

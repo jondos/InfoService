@@ -166,6 +166,12 @@ public final class JAPConstants
 	public static final String CERTENABLEDICON = "cenabled.gif";
 	public static final String CERTDISABLEDICON = "cdisabled.gif";
 
+	public static final String IMAGE_COINS_FULL = "coins-full.gif";
+	public static final String IMAGE_COINS_QUITEFULL = "coins-quitefull.gif";
+	public static final String IMAGE_COINS_MEDIUM = "coins-medium.gif";
+	public static final String IMAGE_COINS_LOW = "coins-low.gif";
+	public static final String IMAGE_COINS_EMPTY = "coins-empty.gif";
+
 	static final String[] METERFNARRAY =
 		{
 		"meterD.gif", // anonymity deactivated
