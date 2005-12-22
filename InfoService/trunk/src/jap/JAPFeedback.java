@@ -30,6 +30,9 @@ package jap;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.pay.PayAccountsFile;
+import java.util.Enumeration;
+import anon.pay.PayAccount;
 
 final class JAPFeedback implements Runnable
 {
@@ -56,6 +59,7 @@ final class JAPFeedback implements Runnable
 			{
 				controller.getCurrentMixCascade().fetchCurrentStatus();
 				controller.notifyJAPObservers();
+				controller.updateAccountStatements();
 			}
 			try
 			{

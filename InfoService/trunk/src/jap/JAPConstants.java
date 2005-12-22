@@ -171,6 +171,7 @@ public final class JAPConstants
 	public static final String IMAGE_COINS_MEDIUM = "coins-medium.gif";
 	public static final String IMAGE_COINS_LOW = "coins-low.gif";
 	public static final String IMAGE_COINS_EMPTY = "coins-empty.gif";
+	public static final String IMAGE_COIN_COINSTACK = "coinstack.gif";
 
 	static final String[] METERFNARRAY =
 		{
