@@ -61,7 +61,7 @@ public class MMRList
 		m_mixminionroutersWithNames = new Hashtable();
 		m_mmrlistFetcher = fetcher;
 		m_rand = new MyRandom();
-		
+
 	}
 
 	/**
@@ -140,7 +140,7 @@ public class MMRList
 			m_middlenodes.removeElement(mmrd);
 		}
 		m_mixminionroutersWithNames.remove(name);
-		
+
 	}
 
 	/**
@@ -151,7 +151,7 @@ public class MMRList
 	public synchronized MMRDescription getByRandom(Vector allowedNames)
 	{
 		String mmrName = (String) allowedNames.elementAt( (m_rand.nextInt(allowedNames.size())));
-				
+
 		return (MMRDescription) getByName(mmrName);
 	}
 
@@ -160,8 +160,8 @@ public class MMRList
 	 * @return
 	 */
 	public synchronized MMRDescription getByRandom()
-	{	
-		return (MMRDescription) this.m_mixminionrouters.elementAt( (m_rand.nextInt(m_mixminionrouters.size())));		
+	{
+		return (MMRDescription) this.m_mixminionrouters.elementAt( (m_rand.nextInt(m_mixminionrouters.size())));
 	}
 
 	/**
@@ -178,16 +178,16 @@ public class MMRList
 		Vector routers = new Vector();
 		MMRDescription x = null;
 		boolean contains=true;
-				
+
 		for (int i=0; i<hops; i++) {
-			
+
 			while (contains) {
-			contains = false;	
+			contains = false;
 			x = getByRandom();
 			if (routers.contains(x)) contains = true;
 			}
 			contains=true;
-			routers.add(i,x);
+			routers.addElement(x);
 		}
 
 		contains = true;
@@ -198,10 +198,10 @@ public class MMRList
 			if (routers.contains(x)) contains = true;
 			exit = x.isExitNode();
 		}
-			
-			routers.add(hops,x);
+
+			routers.addElement(x);
 		return routers;
-		
+
 	}
 
 	/**
@@ -220,20 +220,20 @@ public class MMRList
 		return null;
 	}
 
-	
+
 	/**
 	 * parses the document and creates a list with all MMRDescriptions
 	 * @param strDocument
 	 * @throws Exception
 	 * @return false if document is not a valid directory, true otherwise
 	 */
-	
+
 	private boolean parseDocument(String strDocument) throws Exception
 	{
 		Vector mmrs = new Vector();
 		Vector mnodes = new Vector();
 		Vector enodes = new Vector();
-		
+
 		Hashtable mmrswn = new Hashtable();
 		LineNumberReader reader = new LineNumberReader(new StringReader(strDocument));
 		Date published = null;
@@ -248,8 +248,8 @@ public class MMRList
 			{
 				break;
 			}
-			
-			
+
+
 			if (aktLine.startsWith("[Server]"))
 			{
 				MMRDescription mmrd = MMRDescription.parse(reader);
@@ -257,15 +257,15 @@ public class MMRList
 				{
 					if (mmrd.isExitNode()) enodes.addElement(mmrd);
 					else mnodes.addElement(mmrd);
-					
+
 					mmrs.addElement(mmrd);
 					mmrswn.put(mmrd.getName(), mmrd);
 				}
-								
+
 				LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Added: " + mmrd);
 					}
 		}
-		
+
 		m_middlenodes = mnodes;
 		m_exitnodes = enodes;
 		LogHolder.log(LogLevel.DEBUG, LogType.MISC, "ExitNodes : "+enodes.size()+" MiddleNodes : " +mnodes.size());
