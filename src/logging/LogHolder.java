@@ -285,6 +285,7 @@ public final class LogHolder
 		StringWriter swriter = new StringWriter();
 		PrintWriter pwriter = new PrintWriter(swriter);
 		String strOwnClass = "   ";
+		int index;
 
 		new Exception().printStackTrace(pwriter);
 
@@ -293,16 +294,32 @@ public final class LogHolder
 		while (tokenizer.hasMoreTokens())
 		{
 			tokenizer.nextToken(); // jump over the "at"
-			/* jump over all local class calls */
-			if (!(strCurrentMethod = tokenizer.nextToken()).replace('/','.') .startsWith(
-				 LogHolder.class.getName()) && !strCurrentMethod.startsWith(strOwnClass))
-			{
 
+			/* identify the current stack trace method */
+			strCurrentMethod = tokenizer.nextToken().replace('/','.');
+			if (strCurrentMethod.indexOf('(') > 0)
+			{
+				while (strCurrentMethod.indexOf(')') < 0)
+				{
+					strCurrentMethod += tokenizer.nextToken();
+				}
+			}
+			/* jump over all local class calls */
+			if (!strCurrentMethod.startsWith(LogHolder.class.getName()) &&
+				!strCurrentMethod.startsWith(strOwnClass) &&
+				!strCurrentMethod.startsWith(Throwable.class.getName()) &&
+				!strCurrentMethod.startsWith(Exception.class.getName()))
+			{
 				if (a_bSkipOwnClass && strOwnClass.trim().length() == 0)
 				{
 					// get the class name of the calling class
-					strOwnClass = strCurrentMethod.substring(0,strCurrentMethod.indexOf('('));
+					strOwnClass = strCurrentMethod;
+					if ((index = strCurrentMethod.indexOf('(')) > 0)
+					{
+						strOwnClass = strCurrentMethod.substring(0, index);
+					}
 					strOwnClass = strOwnClass.substring(0, strOwnClass.lastIndexOf('.'));
+					//System.out.println(strOwnClass);
 					}
 				else
 				{

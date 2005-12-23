@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2000 - 2004, The JAP-Team
+ Copyright (c) 2000 - 2005, The JAP-Team
  All rights reserved.
  Redistribution and use in source and binary forms, with or without modification,
  are permitted provided that the following conditions are met:
@@ -67,8 +67,7 @@ public final class ByteSignature
 			return false;
 		}
 
-		// synchronization is needed so that no one else can reinit the signature algorithm
-		synchronized (a_publicKey.getSignatureAlgorithm())
+		//synchronized (a_publicKey.getSignatureAlgorithm())
 		{
 			return a_publicKey.getSignatureAlgorithm().verify(a_message, a_signature);
 		}
@@ -94,18 +93,47 @@ public final class ByteSignature
 	 */
 	public static byte[] sign(byte[] a_message, IMyPrivateKey a_privateKey)
 	{
-		byte[] signature;
-
 		if (a_privateKey == null)
 		{
 			return null;
 		}
 		// synchronization is needed so that no one else can reinit the signature algorithm
-		synchronized (a_privateKey.getSignatureAlgorithm())
+		//synchronized (a_privateKey.getSignatureAlgorithm())
 		{
-			signature = a_privateKey.getSignatureAlgorithm().sign(a_message);
+			return a_privateKey.getSignatureAlgorithm().sign(a_message);
+		}
+	}
+
+	/**
+	 * Creates, from a given byte array, a readable byte string of the form AA:C3:02:21:...
+	 * @param a_bytes a byte array
+	 * @return a readable byte string of the form AA:C3:02:21:...
+	 */
+	public static String toHexString(byte[] a_bytes)
+	{
+		String currentValue;
+		String value = "";
+
+		if (a_bytes == null || a_bytes.length == 0)
+		{
+			return value;
 		}
 
-		return signature;
+		for (int i = 0; i < a_bytes.length; i++)
+		{
+			currentValue = Integer.toHexString(255 & a_bytes[i]).toUpperCase();
+			if (currentValue.length() == 1)
+			{
+				currentValue = "0" + currentValue;
+			}
+
+			value += currentValue;
+			if (i + 1 < a_bytes.length)
+			{
+				value += ":";
+			}
+		}
+
+		return value;
 	}
 }

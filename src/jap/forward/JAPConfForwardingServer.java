@@ -71,7 +71,7 @@ import gui.JAPDialog;
 import jap.AbstractJAPConfModule;
 import jap.JAPConstants;
 import jap.JAPController;
-import jap.JAPHelp;
+import gui.JAPHelp;
 import gui.JAPMessages;
 import jap.JAPModel;
 import jap.JAPUtil;
@@ -79,6 +79,7 @@ import jap.MessageSystem;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import gui.*;
 
 /**
  * This is the configuration GUI for the JAP forwarding server component.

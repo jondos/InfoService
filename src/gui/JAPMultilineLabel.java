@@ -28,16 +28,33 @@
 package gui;
 
 import java.awt.GridLayout;
+import java.awt.Font;
 import java.util.StringTokenizer;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
+/**
+ * This class is needed for JDKs < 1.3 as they cannot recognize new lines "\n" in a JLabel.
+ */
 final public class JAPMultilineLabel extends JPanel
 {
-	public JAPMultilineLabel(String s)
+	private Font m_font;
+
+	public JAPMultilineLabel(String a_strText)
 	{
-		this.setText(s);
+		this(a_strText, new JLabel().getFont());
+	}
+
+	public JAPMultilineLabel(Font a_font)
+	{
+		this("", a_font);
+	}
+
+	public JAPMultilineLabel(String a_strText, Font a_font)
+	{
+		m_font = a_font;
+		this.setText(a_strText);
 	}
 
 	/**
@@ -46,14 +63,17 @@ final public class JAPMultilineLabel extends JPanel
 	 */
 	public void setText(String a_strText)
 	{
+		JLabel label;
+		StringTokenizer st;
+
 		removeAll();
-		GridLayout g = new GridLayout(0, 1, 0, 0);
-		setLayout(g);
-		StringTokenizer st = new StringTokenizer(a_strText, "\n");
+		setLayout(new GridLayout(0, 1, 0, 0));
+		st = new StringTokenizer(a_strText, "\n");
 		while (st.hasMoreElements())
 		{
-			JLabel l = new JLabel(st.nextToken());
-			add(l);
+			label = new JLabel(st.nextToken());
+			label.setFont(m_font);
+			add(label);
 		}
 	}
 }
