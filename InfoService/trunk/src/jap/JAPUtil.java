@@ -279,7 +279,7 @@ public final class JAPUtil
 	 */
 	public static void centerFrame(Window f)
 	{
-		GUIUtils.centerFrame(f);
+		GUIUtils.centerOnScreen(f);
 	}
 
 	public static void upRightFrame(Window f)

@@ -180,20 +180,20 @@ public final class JAPJIntField extends JTextField
 	 * This interface represents bounds for the integer text field, this means what numbers (max/min)
 	 * are allowed to enter.
 	 */
-	public interface IntFieldBounds
+	public static interface IntFieldBounds
 	{
 		/**
 		 * Returns if zero is allowed.
 		 * @return true if zero is allowed; false otherwise
 		 */
-		public boolean isZeroAllowed();
+		boolean isZeroAllowed();
 
 		/**
 		 * Returns the maximum value that is allowed to enter.
 		 * @return the maximum value that is allowed to enter or a value smaller than zero if there is
 		 * no upper bound
 		 */
-		public int getMaximum();
+		int getMaximum();
 			}
 
 	/**
@@ -295,7 +295,7 @@ public final class JAPJIntField extends JTextField
 		}
 		}
 
-	private static final int parseNumberOfDigits(int a_integer)
+	private static int parseNumberOfDigits(int a_integer)
 		{
 			int digits;
 

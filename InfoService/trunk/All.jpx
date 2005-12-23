@@ -34,7 +34,7 @@
   <property category="sys" name="ExcludeClassEnabled" value="0"/>
   <property category="sys" name="IncludeTestPath" value="1"/>
   <property category="sys" name="InstanceVisibility" value="2"/>
-  <property category="sys" name="JDK" value="java version 1.3.1_15-b01"/>
+  <property category="sys" name="JDK" value="java version 1.4.2_04-b05"/>
   <property category="sys" name="JvmVersion" value="1.2"/>
   <property category="sys" name="LastTag" value="0"/>
   <property category="sys" name="Libraries" value="ApacheBzip2;ApacheFTPClient;http;BouncyCastleLightForJAP;Log4j;mac;XML-1.1;PostgeSql;Apache XML-RPC;junitx;Jama;JavaMail;JUnit;Swing"/>
@@ -57,6 +57,8 @@
   <node name="anon.infoservice" type="Package"/>
   <node name="anon.infoservice.test" type="Package"/>
   <node name="anon.mixminion" type="Package"/>
+  <node name="anon.mixminion.message" type="Package"/>
+  <node name="anon.mixminion.mmrdescription" type="Package"/>
   <node name="anon.pay" type="Package"/>
   <node name="anon.pay.xml" type="Package"/>
   <node name="anon.server" type="Package"/>
