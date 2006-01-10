@@ -112,6 +112,7 @@
   <property category="sys" name="MakeStable" value="0"/>
   <property category="sys" name="OutPath" value="classes_infoservice"/>
   <property category="sys" name="SourcePath" value="src;test"/>
+  <property category="sys" name="SourceVersion" value="1.5"/>
   <property category="sys" name="TestPath" value="test"/>
   <property category="sys" name="Title" value=""/>
   <property category="sys" name="TitleLabel" value="\u00dcberschrift:"/>
