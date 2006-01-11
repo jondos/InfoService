@@ -25,17 +25,15 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package forward.client.captcha;
+package anon.util.captcha;
 
 import java.awt.Image;
-import java.io.ByteArrayInputStream;
 import java.math.BigInteger;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 import anon.crypto.MyAES;
-import anon.infoservice.ListenerInterface;
 import anon.util.Base64;
 import anon.util.ZLibTools;
 
@@ -80,9 +78,9 @@ public class ZipBinaryImageCaptchaClient implements IImageEncodedCaptcha
 	private int m_characterNumber;
 
 	/**
-	 * Stores the encoded forwarder information.
+	 * Stores the encoded information.
 	 */
-	private byte[] m_encodedForwarder;
+	private byte[] m_encodedData;
 
 	/**
 	 * Creates a new instance of ZipBinaryImageClient, which handles all captchas of the
@@ -94,6 +92,9 @@ public class ZipBinaryImageCaptchaClient implements IImageEncodedCaptcha
 	 */
 	public ZipBinaryImageCaptchaClient(Element a_captchaEncodedNode) throws Exception
 	{
+		byte[] compressedImageData;
+		byte[] unCompressedImageData;
+
 		/* process the CaptchaEncoded node tree */
 		/* first check the format */
 		NodeList captchaDataFormatNodes = a_captchaEncodedNode.getElementsByTagName("CaptchaDataFormat");
@@ -114,8 +115,8 @@ public class ZipBinaryImageCaptchaClient implements IImageEncodedCaptcha
 			throw (new Exception("ZipBinaryImageCaptchaClient: Error in XML structure. (CaptchaData node)."));
 		}
 		Element captchaDataNode = (Element) (captchaDataNodes.item(0));
-		byte[] compressedImageData = Base64.decode(captchaDataNode.getFirstChild().getNodeValue());
-		byte[] unCompressedImageData = ZLibTools.decompress(compressedImageData);
+		compressedImageData = Base64.decode(captchaDataNode.getFirstChild().getNodeValue());
+		unCompressedImageData = ZLibTools.decompress(compressedImageData);
 		if (unCompressedImageData == null)
 		{
 			throw (new Exception("ZipBinaryImageCaptchaClient: Error while decompressing the captcha data."));
@@ -125,15 +126,16 @@ public class ZipBinaryImageCaptchaClient implements IImageEncodedCaptcha
 		{
 			throw (new Exception("ZipBinaryImageCaptchaClient: The image is invalid."));
 		}
-		/* get the encoded forwarder information */
-		NodeList forwarderCipherNodes = a_captchaEncodedNode.getElementsByTagName("ForwarderCipher");
-		if (forwarderCipherNodes.getLength() == 0)
+		/* get the encoded information */
+		NodeList cipherNodes = a_captchaEncodedNode.getElementsByTagName("DataCipher");
+
+		if (cipherNodes.getLength() == 0)
 		{
 			throw (new Exception(
-				"ZipBinaryImageCaptchaClient: Error in XML structure. (ForwarderCipher node)."));
+				"ZipBinaryImageCaptchaClient: Error in XML structure. (DataCipher node)."));
 		}
-		Element forwarderCipherNode = (Element) (forwarderCipherNodes.item(0));
-		m_encodedForwarder = Base64.decode(forwarderCipherNode.getFirstChild().getNodeValue());
+		Element forwarderCipherNode = (Element) (cipherNodes.item(0));
+		m_encodedData = Base64.decode(forwarderCipherNode.getFirstChild().getNodeValue());
 		/* get the other parameters */
 		NodeList captchaKeyBitsNodes = a_captchaEncodedNode.getElementsByTagName("CaptchaKeyBits");
 		if (captchaKeyBitsNodes.getLength() == 0)
@@ -167,7 +169,6 @@ public class ZipBinaryImageCaptchaClient implements IImageEncodedCaptcha
 		}
 		Element captchaCharacterNumberNode = (Element) (captchaCharacterNumberNodes.item(0));
 		m_characterNumber = Integer.parseInt(captchaCharacterNumberNode.getFirstChild().getNodeValue());
-		/* that's it */
 	}
 
 	/**
@@ -196,18 +197,16 @@ public class ZipBinaryImageCaptchaClient implements IImageEncodedCaptcha
 	}
 
 	/**
-	 * Solves the captcha and returns the included connection information for a forwarder as a
-	 * ListenerInterface. The key is the character string visible in the captcha image. If the
+	 * Solves the captcha and returns the encoded information. The key is the character string visible in the captcha image. If the
 	 * wrong key is specified, an Exception is thrown.
 	 *
 	 * @param a_key The key for solving the captcha (it's the string which is shown in the captcha
 	 *              image).
 	 *
-	 * @return The ListenerInterface with the connection information to a forwarder.
+	 * @return The encoded data
 	 */
-	public ListenerInterface solveCaptcha(String a_key) throws Exception
+	public byte[] solveCaptcha(String a_key, byte[] a_startsWith) throws Exception
 	{
-		ListenerInterface returnInterface = null;
 		if (a_key.length() != m_characterNumber)
 		{
 			throw (new Exception(
@@ -258,6 +257,7 @@ public class ZipBinaryImageCaptchaClient implements IImageEncodedCaptcha
 		{
 			extraKey[i] = 0;
 		}
+		boolean plainDataValid = true;
 		do
 		{
 			/* now put the keys together, the format of the final 128 bit AES key is: bytes 0 .. x are 0,
@@ -274,44 +274,45 @@ public class ZipBinaryImageCaptchaClient implements IImageEncodedCaptcha
 							 extraKey.length);
 			MyAES aes = new MyAES();
 			aes.init(false, finalKey);
-			byte[] plainForwarderData = aes.processBlockECB(m_encodedForwarder);
-			/* check whether the plain forwarder data are valid, bytes 0 .. 9 must be zero */
-			int j = 0;
-			boolean plainDataValid = true;
-			while ( (j < 10) && (plainDataValid == true))
+			/** How many blocks?*/
+			int len = m_encodedData.length;
+			int blocks = len / 16;
+			byte[] decBlock = new byte[16];
+			byte[] sourceBlock = new byte[16];
+			byte[] plainForwarderData = new byte[blocks * 16];
+
+			for (int i = 0; i < blocks; i++)
 			{
-				if (plainForwarderData[j] != 0)
+				System.arraycopy(m_encodedData, i * 16, sourceBlock, 0, 16);
+				decBlock = aes.processBlockECB(sourceBlock);
+				System.arraycopy(decBlock, 0, plainForwarderData, i * 16, 16);
+			}
+
+			/* check whether the plain data is valid*/
+			plainDataValid = true;
+			for (int i = 0; i < a_startsWith.length; i++)
+			{
+				if (plainForwarderData[i] != a_startsWith[i])
 				{
 					plainDataValid = false;
 				}
-				j = j + 1;
 			}
-			if (plainDataValid == true)
-			{
-				/* with a extremely high chance, we have decrypted the correct forwarder information */
-				ByteArrayInputStream ipAddressStream = new ByteArrayInputStream(plainForwarderData, 10, 4);
-				/* read the IP address */
-				String ipAddress = Integer.toString(ipAddressStream.read());
-				for (int i = 0; i < 3; i++)
-				{
-					ipAddress = ipAddress + "." + Integer.toString(ipAddressStream.read());
-				}
-				ByteArrayInputStream portStream = new ByteArrayInputStream(plainForwarderData, 14, 2);
-				int port = portStream.read();
-				port = (port * 256) + portStream.read();
-				returnInterface = new ListenerInterface(ipAddress, port);
-			}
-			else
+
+			if (!plainDataValid)
 			{
 				/* we have used the wrong key -> try the next extra key, if the current one was the last,
 				 * an Exception is thrown and we will end the solveCaptcha method
 				 */
 				extraKey = generateNextKey(extraKey, mod8ExtraKeyBits);
 			}
+			else
+			{
+				return plainForwarderData;
+			}
 		}
-		while (returnInterface == null);
+		while (!plainDataValid);
 		/* we have solved the captcha */
-		return returnInterface;
+		return null;
 	}
 
 	/**

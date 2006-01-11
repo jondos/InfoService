@@ -40,51 +40,51 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 import anon.infoservice.InfoServiceHolder;
-import forward.client.captcha.IImageEncodedCaptcha;
-import forward.client.captcha.ZipBinaryImageCaptchaClient;
+import anon.util.captcha.IImageEncodedCaptcha;
+import anon.util.captcha.ZipBinaryImageCaptchaClient;
 
 /**
  * This class provides some tools for the forwarding client to fetch and handle the information
  * about a forwarder.
  */
 public class ForwarderInformationGrabber {
-  
+
   /**
    * This is the error code indicating that everything was fine.
-   */ 
+   */
   public static final int RETURN_SUCCESS = 0;
-  
+
   /**
    * This is the error code indicating that there was an error while fetching the data directly
    * from the infoservice. This can happen, if we cannot reach any infoservice or if no
    * infoservice knows any forwarder.
    */
   public static final int RETURN_INFOSERVICE_ERROR = 1;
-  
+
   /**
    * This error code indicates, that there was an unexpected error, maybe the data fetched are
    * in the wrong format.
    */
-  public static final int RETURN_UNKNOWN_ERROR = 2; 
-  
+  public static final int RETURN_UNKNOWN_ERROR = 2;
+
   /**
    * This error occurs, if we don't know the captcha format which is used by the fetched
    * forwarder information structure.
    */
   public static final int RETURN_NO_CAPTCHA_IMPLEMENTATION = 3;
 
-  
+
   /**
    * This stores the error (if any) which occured, while the information was fetched or parsed.
    */
-  private int m_errorCode; 
-  
+  private int m_errorCode;
+
   /**
    * This stores the captcha, if we have successfully parsed the forwarder information.
    */
   private IImageEncodedCaptcha m_captcha;
 
-   
+
   /**
    * Creates a new ForwarderInformationGrabber and tries to fetch the information about a
    * forwarder from the infoservices. Check the getErrorCode() method after the instance is
@@ -115,9 +115,9 @@ public class ForwarderInformationGrabber {
        * infoservice or no infoservice knows a forwarder
        */
       m_errorCode = RETURN_INFOSERVICE_ERROR;
-    }     
+    }
   }
-  
+
   /**
    * Creates a new ForwarderInformationGrabber instance and parses the supplied information
    * structure. Check the getErrorCode() method after the instance is constructed to see, if
@@ -155,10 +155,10 @@ public class ForwarderInformationGrabber {
     catch (Exception e) {
       /* invalid input, the XML information pasted in by the user should always be valid */
       m_errorCode = RETURN_UNKNOWN_ERROR;
-    } 
+    }
   }
 
-  
+
   /**
    * Returns the error code which may occured while creating this instance of
    * ForwarderInformationGrabber. See the RETURN constants in this class.
@@ -168,7 +168,7 @@ public class ForwarderInformationGrabber {
   public int getErrorCode() {
     return m_errorCode;
   }
-  
+
   /**
    * Returns the structure which includes the captcha with the forwarder information. The value
    * may be null, if there occured an error while constucting this instance of
@@ -180,7 +180,7 @@ public class ForwarderInformationGrabber {
     return m_captcha;
   }
 
-  
+
   /**
    * Finds the correct captcha implementation for the supplied captcha. We use the
    * CaptchaDataFormat node of the supplied structure to search matching local implementations.
@@ -193,7 +193,7 @@ public class ForwarderInformationGrabber {
    *                                           implementation.
    *         RETURN_UNKNOWN_ERROR, if there occured an unexpected error, maybe because of invalid
    *                               data in the supplied structure.
-   */ 
+   */
   private int findCaptchaImplementation(Element a_captchaEncodedNode) {
     int returnCode = RETURN_UNKNOWN_ERROR;
     /* read the captcha format */
@@ -218,9 +218,9 @@ public class ForwarderInformationGrabber {
     }
     else {
       /* no CaptchaDataFormat node */
-      returnCode = RETURN_UNKNOWN_ERROR; 
-    }     
+      returnCode = RETURN_UNKNOWN_ERROR;
+    }
     return returnCode;
   }
-  
-}   
+
+}
