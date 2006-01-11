@@ -70,7 +70,7 @@ import anon.infoservice.MixCascade;
 import forward.client.ClientForwardException;
 import forward.client.ForwardConnectionDescriptor;
 import forward.client.ForwarderInformationGrabber;
-import forward.client.captcha.IImageEncodedCaptcha;
+import anon.util.captcha.IImageEncodedCaptcha;
 import gui.JAPHtmlMultiLineLabel;
 import logging.LogHolder;
 import logging.LogLevel;
@@ -79,6 +79,7 @@ import jap.*;
 import gui.dialog.JAPDialog;
 import gui.*;
 import gui.dialog.*;
+import java.io.ByteArrayInputStream;
 
 /**
  * This is implementation of the dialog shown when starting a forwarded connection. The dialog is
@@ -245,19 +246,19 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 				else if (grabber.getErrorCode() == ForwarderInformationGrabber.RETURN_INFOSERVICE_ERROR)
 				{
 					occuredError.addElement(
-					  JAPMessages.getString("settingsRoutingClientGrabCapchtaInfoServiceError"));
+						JAPMessages.getString("settingsRoutingClientGrabCapchtaInfoServiceError"));
 				}
 				else if (grabber.getErrorCode() ==
 						 ForwarderInformationGrabber.RETURN_NO_CAPTCHA_IMPLEMENTATION)
 				{
 					occuredError.addElement(
-					  JAPMessages.getString("settingsRoutingClientGrabCapchtaImplementationError"));
+						JAPMessages.getString("settingsRoutingClientGrabCapchtaImplementationError"));
 				}
 				else
 				{
 					/* an unknown error occured */
 					occuredError.addElement(
-					  JAPMessages.getString("settingsRoutingClientGrabCaptchaUnknownError"));
+						JAPMessages.getString("settingsRoutingClientGrabCaptchaUnknownError"));
 				}
 			}
 		});
@@ -331,7 +332,7 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 				{
 					JPopupMenu rightButtonMenu = new JPopupMenu();
 					JMenuItem pasteItem = new JMenuItem(
-									   JAPMessages.getString("settingsRoutingClientConfigDialog1MailAnswerPopupPaste"));
+						JAPMessages.getString("settingsRoutingClientConfigDialog1MailAnswerPopupPaste"));
 					pasteItem.addActionListener(new ActionListener()
 					{
 						public void actionPerformed(ActionEvent event)
@@ -380,14 +381,16 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 				if (dataParser.getErrorCode() == ForwarderInformationGrabber.RETURN_NO_CAPTCHA_IMPLEMENTATION)
 				{
 					JOptionPane.showMessageDialog(client1MailPanel,
-												  JAPMessages.getString("settingsRoutingClientGrabCapchtaImplementationError"),
+												  JAPMessages.getString(
+						"settingsRoutingClientGrabCapchtaImplementationError"),
 												  JAPMessages.getString("error"), JOptionPane.ERROR_MESSAGE);
 					client1MailDialog.dispose();
 				}
 				if (dataParser.getErrorCode() == ForwarderInformationGrabber.RETURN_UNKNOWN_ERROR)
 				{
 					JOptionPane.showMessageDialog(client1MailPanel,
-												  JAPMessages.getString("settingsRoutingClientConfigDialog1MailParseError"),
+												  JAPMessages.getString(
+						"settingsRoutingClientConfigDialog1MailParseError"),
 												  JAPMessages.getString("error"), JOptionPane.ERROR_MESSAGE);
 					settingsRoutingAnswerArea.setText("");
 				}
@@ -515,12 +518,12 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 		JLabel captchaImageLabel = new JLabel(new ImageIcon(a_captcha.getImage()));
 
 		JLabel settingsRoutingClientConfigDialogCaptchaCharacterSetLabel = new JLabel(
-			  JAPMessages.getString("settingsRoutingClientConfigDialogCaptchaCharacterSetLabel")
-			  + " " + a_captcha.getCharacterSet());
+			JAPMessages.getString("settingsRoutingClientConfigDialogCaptchaCharacterSetLabel")
+			+ " " + a_captcha.getCharacterSet());
 		settingsRoutingClientConfigDialogCaptchaCharacterSetLabel.setFont(getFontSetting());
 		JLabel settingsRoutingClientConfigDialogCaptchaCharacterNumberLabel =
 			new JLabel(JAPMessages.getString("settingsRoutingClientConfigDialogCaptchaCharacterNumberLabel") +
-					   " " +Integer.toString(a_captcha.getCharacterNumber()));
+					   " " + Integer.toString(a_captcha.getCharacterNumber()));
 		settingsRoutingClientConfigDialogCaptchaCharacterNumberLabel.setFont(getFontSetting());
 
 		JLabel settingsRoutingClientConfigDialogCaptchaInsertCaptchaLabel =
@@ -547,7 +550,8 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 							int i = 0;
 							while ( (i < a_stringToInsert.length()) && (invalidCharacters == false))
 							{
-								if (a_captcha.getCharacterSet().indexOf(a_stringToInsert.toUpperCase().substring(i, i + 1)) <
+								if (a_captcha.getCharacterSet().indexOf(a_stringToInsert.toUpperCase().
+									substring(i, i + 1)) <
 									0)
 								{
 									/* we have found an invalid character */
@@ -614,7 +618,21 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 				/* if the Next button is pressed, we try to solve the captcha */
 				try
 				{
-					ListenerInterface forwarder = a_captcha.solveCaptcha(captchaField.getText().trim());
+					byte[] test = new byte[10];
+					byte[] plainForwarderData = a_captcha.solveCaptcha(captchaField.getText().trim(), test);
+					/* with a extremely high chance, we have decrypted the correct forwarder information */
+					ByteArrayInputStream ipAddressStream = new ByteArrayInputStream(plainForwarderData, 10, 4);
+					/* read the IP address */
+					String ipAddress = Integer.toString(ipAddressStream.read());
+					for (int i = 0; i < 3; i++)
+					{
+						ipAddress = ipAddress + "." + Integer.toString(ipAddressStream.read());
+					}
+					ByteArrayInputStream portStream = new ByteArrayInputStream(plainForwarderData, 14, 2);
+					int port = portStream.read();
+					port = (port * 256) + portStream.read();
+
+					ListenerInterface forwarder = new ListenerInterface(ipAddress, port);
 					/* no error occured -> the solution is valid -> try to connect to that forwarder */
 					forwarderInterface.addElement(forwarder);
 					captchaDialog.dispose();
@@ -623,7 +641,8 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 				{
 					/* the inserted key is not valid */
 					JOptionPane.showMessageDialog(captchaPanel,
-												  JAPMessages.getString("settingsRoutingClientConfigDialogCaptchaError"),
+												  JAPMessages.getString(
+						"settingsRoutingClientConfigDialogCaptchaError"),
 												  JAPMessages.getString("error"), JOptionPane.ERROR_MESSAGE);
 					captchaField.setText("");
 				}
@@ -631,7 +650,7 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 		});
 
 		JButton settingsRoutingClientConfigDialogCaptchaCancelButton = new JButton(
-			  JAPMessages.getString("cancelButton"));
+			JAPMessages.getString("cancelButton"));
 		settingsRoutingClientConfigDialogCaptchaCancelButton.setFont(getFontSetting());
 		settingsRoutingClientConfigDialogCaptchaCancelButton.addActionListener(new ActionListener()
 		{
@@ -729,7 +748,7 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 	{
 		final JAPDialog connectDialog =
 			new JAPDialog(getRootComponent(),
-			JAPMessages.getString("settingsRoutingClientConfigConnectToForwarderTitle"));
+						  JAPMessages.getString("settingsRoutingClientConfigConnectToForwarderTitle"));
 		connectDialog.setResizable(false);
 		connectDialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 
@@ -747,7 +766,7 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 				{
 					/* error while connecting -> show a message and go back to step 1 */
 					occuredError.addElement(
-					JAPMessages.getString("settingsRoutingClientConfigConnectToForwarderError"));
+						JAPMessages.getString("settingsRoutingClientConfigConnectToForwarderError"));
 				}
 			}
 		});
@@ -798,10 +817,9 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 	{
 		final JAPDialog offerDialog =
 			new JAPDialog(getRootComponent(),
-			JAPMessages.getString("settingsRoutingClientConfigGetOfferTitle"));
+						  JAPMessages.getString("settingsRoutingClientConfigGetOfferTitle"));
 		offerDialog.setResizable(false);
 		offerDialog.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-
 
 		/* this Vector contains a message, if an error occured */
 		final Vector occuredError = new Vector();
@@ -828,17 +846,17 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 					if (e.getErrorCode() == ClientForwardException.ERROR_CONNECTION_ERROR)
 					{
 						occuredError.addElement(
-						  JAPMessages.getString("settingsRoutingClientGetOfferConnectError"));
+							JAPMessages.getString("settingsRoutingClientGetOfferConnectError"));
 					}
 					else if (e.getErrorCode() == ClientForwardException.ERROR_VERSION_ERROR)
 					{
 						occuredError.addElement(
-						  JAPMessages.getString("settingsRoutingClientGetOfferVersionError"));
+							JAPMessages.getString("settingsRoutingClientGetOfferVersionError"));
 					}
 					else
 					{
 						occuredError.addElement(
-						 JAPMessages.getString("settingsRoutingClientGetOfferUnknownError"));
+							JAPMessages.getString("settingsRoutingClientGetOfferUnknownError"));
 					}
 				}
 				offerDialog.dispose();
@@ -863,8 +881,6 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 		worker.updateDialog();
 		offerDialog.pack();
 		offerDialog.setVisible(true);
-
-
 
 		ForwardConnectionDescriptor returnValue = null;
 
@@ -900,13 +916,14 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 		client2Dialog.getContentPane().add(client2Panel);
 
 		JLabel settingsRoutingClientConfigDialog2GuaranteedBandwidthLabel =
-			new JLabel(JAPMessages.getString("settingsRoutingClientConfigDialog2GuaranteedBandwidthLabel") + " " +
-			Integer.toString(a_connectionDescriptor.getGuaranteedBandwidth()));
+			new JLabel(JAPMessages.getString("settingsRoutingClientConfigDialog2GuaranteedBandwidthLabel") +
+					   " " +
+					   Integer.toString(a_connectionDescriptor.getGuaranteedBandwidth()));
 		settingsRoutingClientConfigDialog2GuaranteedBandwidthLabel.setFont(getFontSetting());
 
 		JLabel settingsRoutingClientConfigDialog2MaxBandwidthLabel =
 			new JLabel(JAPMessages.getString("settingsRoutingClientConfigDialog2MaxBandwidthLabel") + " " +
-			Integer.toString(a_connectionDescriptor.getMaximumBandwidth()));
+					   Integer.toString(a_connectionDescriptor.getMaximumBandwidth()));
 		settingsRoutingClientConfigDialog2MaxBandwidthLabel.setFont(getFontSetting());
 
 		JLabel settingsRoutingClientConfigDialog2DummyTrafficLabel = new JLabel();
@@ -914,13 +931,13 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 		if (a_connectionDescriptor.getMinDummyTrafficInterval() != -1)
 		{
 			settingsRoutingClientConfigDialog2DummyTrafficLabel.setText(
-						 JAPMessages.getString("settingsRoutingClientConfigDialog2DummyTrafficLabel") + " " +
+				JAPMessages.getString("settingsRoutingClientConfigDialog2DummyTrafficLabel") + " " +
 				Integer.toString(a_connectionDescriptor.getMinDummyTrafficInterval() / 1000));
 		}
 		else
 		{
 			settingsRoutingClientConfigDialog2DummyTrafficLabel.setText(
-						 JAPMessages.getString("settingsRoutingClientConfigDialog2DummyTrafficLabel") + " " +
+				JAPMessages.getString("settingsRoutingClientConfigDialog2DummyTrafficLabel") + " " +
 				JAPMessages.getString("settingsRoutingClientConfigDialog2DummyTrafficLabelNoNeed"));
 		}
 
@@ -988,7 +1005,7 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 		});
 
 		TitledBorder settingsRoutingClientConfigDialog2Border = new TitledBorder(
-			  JAPMessages.getString("settingsRoutingClientConfigDialog2Border"));
+			JAPMessages.getString("settingsRoutingClientConfigDialog2Border"));
 		settingsRoutingClientConfigDialog2Border.setTitleFont(getFontSetting());
 		client2Panel.setBorder(settingsRoutingClientConfigDialog2Border);
 
@@ -1080,7 +1097,6 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 		announceDialog.setResizable(false);
 		announceDialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 
-
 		/* this Vector contains a message, if an error occured. */
 		final Vector occuredError = new Vector();
 
@@ -1101,36 +1117,35 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 					if (e.getErrorCode() == ClientForwardException.ERROR_CONNECTION_ERROR)
 					{
 						occuredError.addElement(
-						  JAPMessages.getString("settingsRoutingClientAnnounceCascadeConnectError"));
+							JAPMessages.getString("settingsRoutingClientAnnounceCascadeConnectError"));
 					}
 					else
 					{
 						occuredError.addElement(
-						  JAPMessages.getString("settingsRoutingClientAnnounceCascadeUnknownError"));
+							JAPMessages.getString("settingsRoutingClientAnnounceCascadeUnknownError"));
 					}
 				}
 			}
 		});
 
-	WorkerContentPane worker = new WorkerContentPane(announceDialog,
-		JAPMessages.getString("settingsRoutingClientConfigDialogAnnounceCascadeLabel"), announceThread);
+		WorkerContentPane worker = new WorkerContentPane(announceDialog,
+			JAPMessages.getString("settingsRoutingClientConfigDialogAnnounceCascadeLabel"), announceThread);
 
-	worker.getButtonCancel().addActionListener(new ActionListener()
+		worker.getButtonCancel().addActionListener(new ActionListener()
 		{
-		public void actionPerformed(ActionEvent event)
+			public void actionPerformed(ActionEvent event)
 			{
-			/* if the Cancel button is pressed, stop the connection -> the selectMixCascade()
-			 * method ends with an exception
-			 */
-			JAPModel.getInstance().getRoutingSettings().setRoutingMode(JAPRoutingSettings.
-				ROUTING_MODE_DISABLED);
+				/* if the Cancel button is pressed, stop the connection -> the selectMixCascade()
+				 * method ends with an exception
+				 */
+				JAPModel.getInstance().getRoutingSettings().setRoutingMode(JAPRoutingSettings.
+					ROUTING_MODE_DISABLED);
 			}
 		});
-	worker.setInterruptThreadSafe(false);
-	worker.updateDialog();
-	announceDialog.pack();
+		worker.setInterruptThreadSafe(false);
+		worker.updateDialog();
+		announceDialog.pack();
 		announceDialog.setVisible(true);
-
 
 		boolean returnValue = false;
 

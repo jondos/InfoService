@@ -25,43 +25,40 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package forward.client.captcha;
+package anon.util.captcha;
 
 import java.awt.Image;
-
-import anon.infoservice.ListenerInterface;
 
 /**
  * This defines some methods, every image based captcha for JAP has to implement.
  */
-public interface IImageEncodedCaptcha {
-  
-  /**
-   * Returns the image with the captcha data.
-   */
-  public Image getImage();
-  
-  /**
-   * Returns the character set which was used when the captcha was created. Only characters from
-   * this set are in the captcha image.
-   */
-  public String getCharacterSet();
-  
-  /**
-   * Returns the number of characters which are included in the captcha.
-   */
-  public int getCharacterNumber();
-  
-  /**
-   * Solves the captcha and returns the included connection information for a forwarder as a
-   * ListenerInterface. The key is the character string visible in the captcha image. If the
-   * wrong key is specified, an Exception is thrown.
-   *
-   * @param a_key The key for solving the captcha (it's the string which is shown in the captcha
-   *              image).
-   *
-   * @return The ListenerInterface with the connection information to a forwarder.
-   */
-  public ListenerInterface solveCaptcha(String a_key) throws Exception;
-  
+public interface IImageEncodedCaptcha
+{
+
+	/**
+	 * Returns the image with the captcha data.
+	 */
+	public Image getImage();
+
+	/**
+	 * Returns the character set which was used when the captcha was created. Only characters from
+	 * this set are in the captcha image.
+	 */
+	public String getCharacterSet();
+
+	/**
+	 * Returns the number of characters which are included in the captcha.
+	 */
+	public int getCharacterNumber();
+
+	/**
+	 * Tries to solve the captcha and returns a byte array with the contents.
+	 * If the captcha could not be solved, null is returned.
+	 * @param a_key String
+	 * @param a_startsWith byte[]
+	 * @return byte[]
+	 * @throws Exception
+	 */
+	public byte[] solveCaptcha(String a_key, byte[] a_startsWith) throws Exception;
+
 }
