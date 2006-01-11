@@ -37,80 +37,74 @@ import javax.swing.JProgressBar;
 /**
  * This class is an extended progress bar that uses coin images for displaying
  * progress
+ *
+ * @author Hannes Federrath, Tobias Bayer
  */
 public class CoinstackProgressBar extends JProgressBar
 {
-	protected Image coinImage;
-	protected int y_offset = 6;
-	protected int x_offset = 6;
-	protected int y_factor;
-	protected int[] x_shift =
-		{
-		0, 3, 1, -2, -1, 0, -1, 0};
-	protected int x_pos;
-	protected int y_pos;
-	protected int img_height;
-	protected int img_width;
-	protected int height;
-	protected int width;
+	private static final int Y_OFFSET = 6;
+	private static final int X_OFFSET = 6;
+	private static final int[] X_SHIFT = {0, 3, 1, -2, -1, 0, -1, 0};
+
+	private Image m_imgCoinImage;
+	private int m_yFactor;
+	private int m_xPos;
+	private int m_yPos;
+	private int m_imageHeight;
+	private int m_imageWidth;
+	private int m_height;
+	private int m_width;
 
 	public CoinstackProgressBar(ImageIcon imageIcon, int min, int max)
 	{
-		coinImage = imageIcon.getImage();
-		prepareImage(coinImage, this);
-		//check if image was loaded (necessary to determine correct height and width)
-		while ( (checkImage(coinImage, this) & ALLBITS) != ALLBITS)
-		{
-			try
-			{
-				Thread.sleep(50);
-			}
-			catch (InterruptedException iex)
-			{}
-		}
-		img_height = coinImage.getHeight(this);
-		img_width = coinImage.getWidth(this);
-		y_factor = img_height / 3;
+		m_imgCoinImage = imageIcon.getImage();
+		prepareImage(m_imgCoinImage, this);
+		m_imageHeight = m_imgCoinImage.getHeight(this);
+		m_imageWidth = m_imgCoinImage.getWidth(this);
+		m_yFactor = m_imageHeight / 3;
 		setMinimum(min);
 		setMaximum(max);
-		width = 2 * x_offset + img_width + 4 + 3;
-		height = 2 * y_offset + img_height + y_factor * (max - min - 1);
+		m_width = 2 * X_OFFSET + m_imageWidth + 4 + 3;
+		m_height = 2 * Y_OFFSET + m_imageHeight + m_yFactor * (max - min - 1);
 	}
 
 	public void paint(Graphics g)
 	{
+		int y_pos_end;
+		int y_rule_middle;
+
 		//calculate height (necessary if setMaximum or setMinimum was called)
-		height = 2 * y_offset + img_height + y_factor * (getMaximum() - getMinimum() - 1);
+		m_height = 2 * Y_OFFSET + m_imageHeight + m_yFactor * (getMaximum() - getMinimum() - 1);
 		//set color of lines
 		g.setColor(Color.gray);
 		//draw vertical line
-		x_pos = x_offset;
-		y_pos = height - y_offset;
-		int y_pos_end = y_pos - (img_height + (y_factor) * (getMaximum() - getMinimum() - 1));
-		g.drawLine(x_pos, y_pos, x_pos, y_pos_end);
+		m_xPos = X_OFFSET;
+		m_yPos = m_height - Y_OFFSET;
+		y_pos_end = m_yPos - (m_imageHeight + (m_yFactor) * (getMaximum() - getMinimum() - 1));
+		g.drawLine(m_xPos, m_yPos, m_xPos, y_pos_end);
 		//draw horizontal lines
-		int y_rule_middle = y_pos - (y_pos - y_pos_end) / 2;
-		g.drawLine(x_pos, y_pos, x_pos + 3, y_pos);
-		g.drawLine(x_pos, y_pos_end, x_pos + 3, y_pos_end);
-		g.drawLine(x_pos, y_rule_middle, x_pos + 3, y_rule_middle);
+		y_rule_middle = m_yPos - (m_yPos - y_pos_end) / 2;
+		g.drawLine(m_xPos, m_yPos, m_xPos + 3, m_yPos);
+		g.drawLine(m_xPos, y_pos_end, m_xPos + 3, y_pos_end);
+		g.drawLine(m_xPos, y_rule_middle, m_xPos + 3, y_rule_middle);
 		//no coin to draw if mimimum value
 		if (getValue() == getMinimum())
 		{
 			return;
 		}
 		//draw coin
-		int x_pos = x_offset + 4;
-		int y_pos = height - y_offset - img_height + 1;
+		int x_pos = X_OFFSET + 4;
+		int y_pos = m_height - Y_OFFSET - m_imageHeight + 1;
 		for (int i = 0; i < (getValue() - getMinimum()); i++)
 		{
-			x_pos = x_pos + x_shift[i % x_shift.length];
-			g.drawImage(coinImage, x_pos, y_pos, this);
-			y_pos = y_pos - y_factor;
+			x_pos = x_pos + X_SHIFT[i % X_SHIFT.length];
+			g.drawImage(m_imgCoinImage, x_pos, y_pos, this);
+			y_pos = y_pos - m_yFactor;
 		}
 	}
 
 	public Dimension getPreferredSize()
 	{
-		return new Dimension(width, height);
+		return new Dimension(m_width, m_height);
 	}
 }
