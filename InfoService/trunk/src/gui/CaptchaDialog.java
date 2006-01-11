@@ -75,12 +75,12 @@ public class CaptchaDialog extends JDialog implements ActionListener
 		Container rootPanel = this.getContentPane();
 		GridBagConstraints c = new GridBagConstraints();
 		rootPanel.setLayout(new GridBagLayout());
-		c.anchor = c.NORTHWEST;
+		c.anchor = GridBagConstraints.NORTHWEST;
 		c.weightx = 0;
 		c.weighty = 0;
 		c.gridwidth = 2;
 		c.insets = new Insets(5, 5, 5, 5);
-		c.fill = c.NONE;
+		c.fill = GridBagConstraints.NONE;
 		c.gridy = 0;
 		c.gridx = 0;
 
@@ -97,7 +97,7 @@ public class CaptchaDialog extends JDialog implements ActionListener
 
 		c.gridy++;
 		c.gridwidth = 1;
-		c.anchor = c.NORTHEAST;
+		c.anchor = GridBagConstraints.NORTHEAST;
 		m_btnCancel = new JButton("Cancel");
 		m_btnCancel.addActionListener(this);
 		rootPanel.add(m_btnCancel, c);
@@ -109,10 +109,10 @@ public class CaptchaDialog extends JDialog implements ActionListener
 		m_btnOk.addActionListener(this);
 		rootPanel.add(m_btnOk, c);
 
-		this.pack();
-		this.setModal(true);
+		pack();
+		setModal(true);
 		GUIUtils.positionRightUnderWindow(this, a_parent);
-		this.show();
+		setVisible(true);
 	}
 
 	public void actionPerformed(ActionEvent a_e)
@@ -120,14 +120,14 @@ public class CaptchaDialog extends JDialog implements ActionListener
 		Object source = a_e.getSource();
 		if (source == m_btnCancel)
 		{
-			this.hide();
+			dispose();
 		}
 		else if (source == m_btnOk)
 		{
 			try
 			{
 				m_solution = m_captcha.solveCaptcha(m_tfSolution.getText().trim(), m_beginsWith.getBytes());
-				this.hide();
+				dispose();
 			}
 			catch (Exception e)
 			{
