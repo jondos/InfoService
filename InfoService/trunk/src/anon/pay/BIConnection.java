@@ -28,9 +28,8 @@
 package anon.pay;
 
 /**
- * Diese Klasse kapselt eine Verbindung zur BI, fuehrt die Authentikation durch
- * und enth\uFFFDlt Methoden, um Kontoaufladungs- und andere Requests an die BI zu
- * schicken.
+ * This class encapsulates a connection to the Payment Instance, performs authentication
+ * and contains other methods for interaction with the Payment Instance.
  *
  * @author Grischan Glaenzel, Bastian Voigt, Tobias Bayer
  */
@@ -54,6 +53,9 @@ import anon.pay.xml.XMLPaymentOptions;
 import anon.pay.xml.XMLTransactionOverview;
 import java.util.Date;
 import anon.pay.xml.XMLPassivePayment;
+import java.util.Vector;
+import anon.util.captcha.IImageEncodedCaptcha;
+import anon.util.captcha.ZipBinaryImageCaptchaClient;
 
 public class BIConnection
 {
@@ -61,6 +63,10 @@ public class BIConnection
 
 	private Socket m_socket;
 	private HttpClient m_httpClient;
+
+	private Vector m_biConnectionListeners;
+
+	private byte[] m_captchaSolution;
 
 	/**
 	 * Constructor
@@ -70,11 +76,11 @@ public class BIConnection
 	public BIConnection(BI theBI)
 	{
 		m_theBI = theBI;
+		m_biConnectionListeners = new Vector();
 	}
 
 	/**
-	 * Baut eine TCP-Verbindung zur Bezahlinstanz auf und initialisiert den
-	 * HttpClient.
+	 * Connects to the Payment Instance via TCP and inits the HttpClient.
 	 *
 	 * @throws Exception Wenn Fehler beim Verbindungsaufbau
 	 */
@@ -89,9 +95,9 @@ public class BIConnection
 	}
 
 	/**
-	 * Schliesst die Verbindung zur Bezahlinstanz.
+	 * Closes the connection.
 	 *
-	 * @throws IOException Wenn Fehler beim Verbindungsabbau
+	 * @throws IOException
 	 */
 	public void disconnect() throws Exception
 	{
@@ -137,7 +143,7 @@ public class BIConnection
 	}
 
 	/**
-	 * Fetches payment options
+	 * Fetches payment options.
 	 * @return XMLPaymentOptions
 	 * @throws Exception
 	 */
@@ -193,13 +199,23 @@ public class BIConnection
 			XMLUtil.toString(XMLUtil.toXMLDocument(pubKey))
 			);
 		Document doc = m_httpClient.readAnswer();
-		String tagname = doc.getDocumentElement().getTagName();
+		//Answer document should contain a captcha, let the user solve it and extract the XMLChallenge
+		IImageEncodedCaptcha captcha = new ZipBinaryImageCaptchaClient(doc.getDocumentElement());
+		fireGotCaptcha(captcha);
+		/** Cut off everything beyond the last ">" to extract only the XML challenge
+		 *  without the cipher padding.
+		 */
+		if (m_captchaSolution != null)
+		{
+			String challengeString = new String(m_captchaSolution);
+			int pos = challengeString.lastIndexOf(">");
+			challengeString = challengeString.substring(0, pos + 1);
+			Document challengeDoc = XMLUtil.toXMLDocument(challengeString);
+			XMLChallenge xmlchallenge = new XMLChallenge(challengeDoc);
 
 		// perform challenge-response authentication
 		XMLAccountCertificate xmlCert = null;
-		if (tagname.equals(XMLChallenge.XML_ELEMENT_NAME))
-		{
-			XMLChallenge xmlchallenge = new XMLChallenge(doc);
+
 			byte[] challenge = xmlchallenge.getChallengeForSigning();
 			byte[] response = signKey.signBytes(challenge);
 			XMLResponse xmlResponse = new XMLResponse(response);
@@ -216,16 +232,13 @@ public class BIConnection
 			{
 				throw new Exception(
 					"The JPI is evil (sent a valid certificate, but with a wrong publickey)");
-
 			}
+			return xmlCert;
 		}
-		else if (tagname.equals(XMLErrorMessage.XML_ELEMENT_NAME))
+		else
 		{
-			throw new Exception("The BI sent an errormessage: " +
-								new XMLErrorMessage(doc).getErrorDescription() +
-								" Authentication failed.");
+			throw new Exception("Could not solve captcha");
 		}
-		return xmlCert;
 	}
 
 	/**
@@ -278,6 +291,39 @@ public class BIConnection
 	{
 		return false;
 	}
+	}
+
+	/**
+	 * Adds an IBIConnectionListener
+	 * @param a_listener IBIConnectionListener
+	 */
+	public void addConnectionListener(IBIConnectionListener a_listener)
+	{
+		if (!m_biConnectionListeners.contains(a_listener))
+		{
+			m_biConnectionListeners.addElement(a_listener);
+		}
+	}
+
+	/**
+	 * Signals a received captcha to all registered IBICOnnectionListeners.
+	 * @param a_captcha IImageEncodedCaptcha
+	 */
+	private void fireGotCaptcha(IImageEncodedCaptcha a_captcha)
+	{
+		for (int i = 0; i < m_biConnectionListeners.size(); i++)
+		{
+			( (IBIConnectionListener) m_biConnectionListeners.elementAt(i)).gotCaptcha(this, a_captcha);
+		}
+	}
+
+	/**
+	 * Sets the solution of a captcha for registering an account.
+	 * @param a_solution byte[]
+	 */
+	public void setCaptchaSolution(byte[] a_solution)
+	{
+		m_captchaSolution = a_solution;
 	}
 
 }

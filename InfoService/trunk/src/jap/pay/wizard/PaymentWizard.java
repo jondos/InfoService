@@ -36,6 +36,7 @@ import gui.wizard.BasicWizard;
 import gui.wizard.BasicWizardHost;
 import gui.wizard.WizardPage;
 import jap.JAPController;
+import anon.pay.xml.XMLPaymentOption;
 
 /**
  * This wizard guides the user through the account charging process
@@ -102,6 +103,7 @@ public class PaymentWizard extends BasicWizard
 			m_infoPage.setAmount(m_methodSelectionPage.getAmount());
 			m_infoPage.fetchTransferNumber();
 			m_infoPage.updateExtraInfo();
+
 		}
 		return null;
 	}

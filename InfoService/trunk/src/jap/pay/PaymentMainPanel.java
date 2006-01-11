@@ -30,7 +30,7 @@ package jap.pay;
 /**
  * This class is the main payment view on JAP's main gui window
  *
- * @author Bastian Voigt
+ * @author Bastian Voigt, Tobias Bayer
  * @version 1.0
  */
 import java.sql.Timestamp;
@@ -43,8 +43,6 @@ import java.awt.GridBagLayout;
 import java.awt.Image;
 import java.awt.Insets;
 import java.awt.MediaTracker;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -52,17 +50,34 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 
+import anon.pay.BIConnection;
 import anon.pay.PayAccount;
 import anon.pay.PayAccountsFile;
 import anon.pay.xml.XMLErrorMessage;
+import anon.util.captcha.IImageEncodedCaptcha;
+import gui.CaptchaDialog;
+import gui.GUIUtils;
+import gui.JAPMessages;
+import gui.MyProgressBarUI;
+import jap.JAPConf;
+import jap.JAPConstants;
+import jap.JAPController;
+import jap.JAPModel;
+import jap.JAPNewView;
+import jap.JAPUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import jap.*;
-import gui.*;
 
 public class PaymentMainPanel extends JPanel
 {
+
+	/** Messages */
+	private static final String MSG_TITLE = PaymentMainPanel.class.getName() +
+		"_title";
+	private static final String MSG_LASTUPDATE = PaymentMainPanel.class.getName() +
+		"_lastupdate";
+
 	/**
 	 * Icons for the account icon display
 	 */
@@ -77,8 +92,8 @@ public class PaymentMainPanel extends JPanel
 	/** shows the current balance as text */
 	private JLabel m_BalanceText;
 
-	/** shows the account number and the timestamp of last update */
-	private JLabel m_AccountText;
+	/** show the date of the last balance update */
+	private JLabel m_lastUpdateLabel;
 
 	/** this button opens the configuration tab for payment */
 	private JButton m_ConfigButton;
@@ -86,6 +101,7 @@ public class PaymentMainPanel extends JPanel
 	/** the main jap window */
 	private JAPNewView m_view;
 
+	/** Listens to payment events */
 	private MyPaymentListener m_MyPaymentListener = new MyPaymentListener();
 
 	public PaymentMainPanel(final JAPNewView view)
@@ -99,46 +115,61 @@ public class PaymentMainPanel extends JPanel
 		this.setLayout(l);
 
 		// the date of last update
-		m_AccountText = new JLabel("LastUpdate");
+		JLabel label = new JLabel(JAPMessages.getString(MSG_TITLE));
 		//m_AccountText.setBorder(new EtchedBorder());
 		c.anchor = GridBagConstraints.NORTHWEST;
-		c.fill = GridBagConstraints.HORIZONTAL;
+		c.fill = c.NONE;//GridBagConstraints.HORIZONTAL;
 		c.gridx = 1;
 		c.gridy = 0;
-		c.gridwidth = 2;
+		c.gridwidth = 3;
 		c.weighty = 0;
 		c.weightx = 1;
 		c.insets = new Insets(0, 5, 0, 0);
-		this.add(m_AccountText, c);
+		this.add(label, c);
+
+		label = new JLabel(JAPMessages.getString(MSG_LASTUPDATE));
+		c.insets = new Insets(10, 10, 10, 10);
+		c.weightx = 0;
+		c.gridy++;
+		c.gridwidth = 1;
+		this.add(label, c);
+
+		c.gridx++;
+		m_lastUpdateLabel = new JLabel();
+		this.add(m_lastUpdateLabel, c);
 
 		// the current balance (progressbar + label)
+		MyProgressBarUI progressUi = new MyProgressBarUI(false);
+		progressUi.setFilledBarColor(Color.blue);
 		m_BalanceProgressBar = new JProgressBar(0, 100);
+		m_BalanceProgressBar.setUI(progressUi);
 		m_BalanceProgressBar.setValue(77);
-		c.anchor = GridBagConstraints.SOUTHWEST;
+		m_BalanceProgressBar.setBorderPainted(false);
+		c.anchor = GridBagConstraints.NORTHWEST;
 		c.fill = GridBagConstraints.HORIZONTAL;
-		c.weightx = 1;
 		c.gridwidth = 1;
-		c.gridx = 1;
-		c.gridy = 1;
-		c.insets = new Insets(0, 5, 0, 0);
+		c.gridx = 2;
+		c.gridy++;
+		c.insets = new Insets(10, 10, 10, 0);
 		this.add(m_BalanceProgressBar, c);
 		m_BalanceText = new JLabel("Balance");
-		c.anchor = GridBagConstraints.SOUTHWEST;
-		c.gridx = 2;
+		c.gridx = 1;
+		c.weightx = 1;
 		this.add(m_BalanceText, c);
 
 		// the icon label in the middle
 		m_AccountIconLabel = new JLabel(m_accountIcons[1]);
-		c.anchor = GridBagConstraints.CENTER;
+		c.anchor = GridBagConstraints.NORTHEAST;
 		c.fill = GridBagConstraints.VERTICAL;
 		c.weighty = 1;
+		c.weightx = 0;
 		c.gridheight = 2;
 		c.gridx = 3;
 		c.gridy = 0;
-		this.add(m_AccountIconLabel, c);
+		//this.add(m_AccountIconLabel, c);
 
 		// the JButton on the right
-		m_ConfigButton = new JButton(JAPMessages.getString("ngPaymentCharge"));
+		/*	m_ConfigButton = new JButton(JAPMessages.getString("ngPaymentCharge"));
 		c.insets.left = 0;
 		c.insets.right = 5;
 		c.gridheight = 2;
@@ -153,7 +184,7 @@ public class PaymentMainPanel extends JPanel
 			{
 				view.showConfigDialog(JAPConf.PAYMENT_TAB);
 			}
-		});
+		 });*/
 
 		PayAccountsFile.getInstance().addPaymentListener(m_MyPaymentListener);
 		updateDisplay(null);
@@ -170,7 +201,6 @@ public class PaymentMainPanel extends JPanel
 		// payment disabled
 		if (activeAccount == null)
 		{
-			m_AccountText.setText(JAPMessages.getString("ngPaymentDisabled"));
 			m_AccountIconLabel.setIcon(m_accountIcons[0]);
 			m_BalanceText.setText("");
 			m_BalanceText.setEnabled(false);
@@ -182,8 +212,6 @@ public class PaymentMainPanel extends JPanel
 		else if ( (activeAccount.getCertifiedCredit() <= (activeAccount.getDeposit() / 10)) ||
 				 (activeAccount.getCertifiedCredit() <= (1024 * 1024)))
 		{
-			m_AccountText.setText(JAPMessages.getString("ngPaymentRecharge"));
-			m_AccountText.setForeground(Color.red);
 			m_AccountIconLabel.setIcon(m_accountIcons[2]);
 			m_BalanceText.setEnabled(true);
 			m_BalanceText.setText(JAPUtil.formatBytesValue(activeAccount.getCertifiedCredit()));
@@ -196,11 +224,8 @@ public class PaymentMainPanel extends JPanel
 		{
 			Timestamp t = activeAccount.getBalance().getTimestamp();
 			SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm");
-			//String dateText = t.getDay() + "." + (t.getMonth() + 1) + "." + (t.getYear() + 1900) + " " +
-			//	t.getHours() + ":" + t.getMinutes();
 			String dateText = sdf.format(t);
-			m_AccountText.setText(JAPMessages.getString("ngPaymentBalanceDate") + ": " + dateText);
-			m_AccountText.setForeground(Color.black);
+			m_lastUpdateLabel.setText(dateText);
 			m_AccountIconLabel.setIcon(m_accountIcons[1]);
 			m_BalanceText.setEnabled(true);
 			m_BalanceText.setText(JAPUtil.formatBytesValue(activeAccount.getCertifiedCredit()));
@@ -349,6 +374,18 @@ public class PaymentMainPanel extends JPanel
 				JOptionPane.YES_NO_OPTION, JOptionPane.ERROR_MESSAGE,
 				null, null, null);
 		}
+
+		/**
+		 * The BIConnection got a captcha. Let the user solve it and set the
+		 * solution to the BIConnection.
+		 * @param a_source Object
+		 * @param a_captcha IImageEncodedCaptcha
+		 */
+		public void gotCaptcha(Object a_source, final IImageEncodedCaptcha a_captcha)
+		{
+			CaptchaDialog c = new CaptchaDialog(a_captcha, "<Cha", JAPController.getView());
+			( (BIConnection) a_source).setCaptchaSolution(c.getSolution());
+		}
 	}
 
 	/**
@@ -362,7 +399,7 @@ public class PaymentMainPanel extends JPanel
 		{
 			for (int i = 0; i < JAPConstants.ACCOUNTICONFNARRAY.length; i++)
 			{
-				m_accountIcons[i] = JAPUtil.loadImageIcon(JAPConstants.ACCOUNTICONFNARRAY[i], false);
+				m_accountIcons[i] = GUIUtils.loadImageIcon(JAPConstants.ACCOUNTICONFNARRAY[i], false);
 			}
 		}
 		else // scale down for small displays
@@ -370,7 +407,7 @@ public class PaymentMainPanel extends JPanel
 			MediaTracker m = new MediaTracker(this);
 			for (int i = 0; i < JAPConstants.ACCOUNTICONFNARRAY.length; i++)
 			{
-				Image tmp = JAPUtil.loadImageIcon(JAPConstants.ACCOUNTICONFNARRAY[i], true).getImage();
+				Image tmp = GUIUtils.loadImageIcon(JAPConstants.ACCOUNTICONFNARRAY[i], true).getImage();
 				int w = tmp.getWidth(null);
 				tmp = tmp.getScaledInstance( (int) (w * 0.75), -1, Image.SCALE_SMOOTH);
 				m.addImage(tmp, i);

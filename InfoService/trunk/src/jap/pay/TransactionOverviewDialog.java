@@ -30,6 +30,7 @@ package jap.pay;
 import java.util.Date;
 import java.util.Vector;
 
+import anon.util.Util;
 import java.awt.FlowLayout;
 import java.awt.Frame;
 import java.awt.GridBagConstraints;
@@ -69,8 +70,8 @@ public class TransactionOverviewDialog extends JDialog implements ActionListener
 		getName() + "_fetching";
 	private static final String MSG_TAN = TransactionOverviewDialog.class.
 		getName() + "_tan";
-	private static final String MSG_USED = TransactionOverviewDialog.class.
-		getName() + "_used";
+	private static final String MSG_AMOUNT = TransactionOverviewDialog.class.
+		getName() + "_amount";
 	private static final String MSG_USED_DATE = TransactionOverviewDialog.class.
 		getName() + "_used_date";
 	private static final String MSG_RECEIVED_DATE = TransactionOverviewDialog.class.
@@ -220,7 +221,7 @@ public class TransactionOverviewDialog extends JDialog implements ActionListener
 				case 1:
 					return Date.class;
 				case 2:
-					return Boolean.class;
+					return String.class;
 				case 3:
 					return Date.class;
 				default:
@@ -246,7 +247,17 @@ public class TransactionOverviewDialog extends JDialog implements ActionListener
 						}
 					}
 				case 2:
-					return new Boolean(line[1]);
+					if (new Boolean(line[1]).booleanValue())
+					{
+						float amount = Util.parseFloat(line[3]);
+						amount /= (1024 * 1024);
+						int amountInt = Math.round(amount);
+						return String.valueOf(amountInt) + " MB";
+					}
+					else
+					{
+						return "";
+					}
 				case 3:
 					if (!line[2].equals("0"))
 					{
@@ -270,7 +281,7 @@ public class TransactionOverviewDialog extends JDialog implements ActionListener
 				case 1:
 					return JAPMessages.getString(MSG_RECEIVED_DATE);
 				case 2:
-					return JAPMessages.getString(MSG_USED);
+					return JAPMessages.getString(MSG_AMOUNT);
 				case 3:
 					return JAPMessages.getString(MSG_USED_DATE);
 
@@ -284,5 +295,4 @@ public class TransactionOverviewDialog extends JDialog implements ActionListener
 			return false;
 		}
 	}
-
 }

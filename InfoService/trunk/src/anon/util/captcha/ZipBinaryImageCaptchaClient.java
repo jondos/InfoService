@@ -303,7 +303,14 @@ public class ZipBinaryImageCaptchaClient implements IImageEncodedCaptcha
 				/* we have used the wrong key -> try the next extra key, if the current one was the last,
 				 * an Exception is thrown and we will end the solveCaptcha method
 				 */
+				try
+				{
 				extraKey = generateNextKey(extraKey, mod8ExtraKeyBits);
+				}
+				catch (Exception e)
+				{
+					return null;
+				}
 			}
 			else
 			{

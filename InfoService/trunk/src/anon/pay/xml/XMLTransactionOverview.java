@@ -56,7 +56,9 @@ public class XMLTransactionOverview implements IXMLEncodable
 	public static final Object XML_ELEMENT_NAME = "TransactionOverview";
 
 	/** Contains transfer numbers, their "used" attribute and the used date. The data is
-	 * represented as a String[] with first element: tan, second element: used, third element: date**/
+	 * represented as a String[] with first element: tan, second element: used, third element: date,
+	 * fourth element: amount
+	 **/
 	private Vector m_tans = new Vector();
 
 	public XMLTransactionOverview()
