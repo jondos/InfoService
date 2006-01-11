@@ -71,6 +71,7 @@
 <node name="anon.tor.ordescription" type="Package"/>
 <node name="anon.tor.util" type="Package"/>
 <node name="anon.util" type="Package"/>
+<node name="anon.util.captcha" type="Package"/>
 <node name="anon.xmlrpc" type="Package"/>
 <node name="forward.client" type="Package"/>
 <node name="forward.client.captcha" type="Package"/>

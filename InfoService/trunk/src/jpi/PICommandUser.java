@@ -374,23 +374,34 @@ public class PICommandUser implements PICommand
 	 */
 	private IXMLEncodable storePassivePayment(byte[] a_data)
 	{
+		XMLPassivePayment pp = null;
 		try
 		{
-			XMLPassivePayment pp = new XMLPassivePayment(a_data);
-			/** @todo Store in database*/
-
+			pp = new XMLPassivePayment(a_data);
 		}
 		catch (Exception e)
 		{
 			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, "Could not parse XMLPassivePayment");
 			return new XMLErrorMessage(XMLErrorMessage.ERR_WRONG_FORMAT);
 		}
+		/** Store in database*/
+		DBInterface db = null;
+		try
+		{
+			db = DBSupplier.getDataBase();
+			db.storePassivePayment(pp);
+		}
+		catch (Exception e)
+		{
+			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
+						  "Could not store passive payment data in database!");
+		}
 		return new XMLErrorMessage(XMLErrorMessage.ERR_OK);
 
 	}
 
 	/**
-	 * Fills the transaction overview XML structure with true/false from the database.
+	 * Fills the transaction overview XML structure with values from the database.
 	 * @param a_data byte[]
 	 * @return IXMLEncodable
 	 */

@@ -35,6 +35,7 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import logging.SystemErrLog;
+import jpi.helper.ICreditCardHelper;
 
 public class JPIMain
 {
@@ -139,6 +140,22 @@ public class JPIMain
 		Thread aiThread = new Thread(aiServer);
 		aiThread.start();
 
+		//start the credit card helper
+		String strHelperClass = "jpi.helper."+Configuration.getCreditCardHelper() + "CreditCardHelper";
+		LogHolder.log(LogLevel.INFO, LogType.PAY, "JPIMain: Launching CreditCardHelper: " + strHelperClass);
+		try
+		{
+			Class helper = (Class) Class.forName(strHelperClass);
+			ICreditCardHelper helperObj = (ICreditCardHelper) helper.newInstance();
+			Thread helperThread = new Thread(helperObj);
+			helperThread.start();
+		}
+		catch (Exception e)
+		{
+			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
+						  "JPIMain: Could not load helper class: " + strHelperClass);
+		}
+
         // start InfoService thread for InfoService connections
 		LogHolder.log(LogLevel.INFO, LogType.PAY,
 					  "JPIMain: Launching InfoService thread for InfoService connections");
@@ -149,7 +166,7 @@ public class JPIMain
 
 		// start PayPalHelper thread for IPN acceptance
 		LogHolder.log(LogLevel.INFO, LogType.PAY, "JPIMain: Launching PayPalHelper thread");
-		PayPalHelper payPal = new PayPalHelper(9999);
+		PayPalHelper payPal = new PayPalHelper(Integer.parseInt(Configuration.getPayPalPort()));
 		Thread payPalThread = new Thread(payPal);
 		payPalThread.start();
 
