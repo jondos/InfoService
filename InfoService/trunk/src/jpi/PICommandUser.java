@@ -63,6 +63,16 @@ import logging.LogLevel;
 import logging.LogType;
 import anon.pay.xml.XMLTransactionOverview;
 import anon.pay.xml.XMLPassivePayment;
+import infoservice.japforwarding.*;
+import org.w3c.dom.Element;
+import org.w3c.dom.Document;
+import java.math.BigInteger;
+import javax.xml.parsers.DocumentBuilderFactory;
+import java.security.SecureRandom;
+import anon.crypto.MyAES;
+import anon.util.Base64;
+import anon.crypto.MyRandom;
+import anon.pay.xml.XMLCaptcha;
 
 /**
  * This class contains the functionality for talking to a JAP. For
@@ -86,6 +96,9 @@ public class PICommandUser implements PICommand
 	static final int STATE_AUTH_SEND = 20; // ?
 	static final int STATE_AUTH_CHA_SENT = 22; // waiting for response to challenge from user
 	static final int STATE_AUTH_OK = 24; // login procedure done, auth ok
+
+	private static final int CAPTCHA_KEY_BITS = 48;
+	private static final int EXTRA_KEY_BITS = 16;
 
 	/**
 	 * Erzeugt und initialisiert ein {@link PICommandUser} Objekt.
@@ -177,7 +190,8 @@ public class PICommandUser implements PICommand
 					}
 					try
 					{
-						reply = new PIAnswer(PIAnswer.TYPE_CHALLENGE_REQUEST, getChallengeXML());
+						reply = new PIAnswer(PIAnswer.TYPE_CAPTCHA_REQUEST, getCreationChallengeXML());
+						//	reply = new PIAnswer(PIAnswer.TYPE_CHALLENGE_REQUEST, getChallengeXML());
 						m_iCurrentState = STATE_REG_CHA_SENT;
 					}
 					catch (Exception e)
@@ -430,6 +444,16 @@ public class PICommandUser implements PICommand
 		String chStr = XMLUtil.toString(XMLUtil.toXMLDocument(xmlChallenge));
 		m_arbChallenge = xmlChallenge.getChallengeForSigning();
 		return xmlChallenge;
+	}
+
+	private IXMLEncodable getCreationChallengeXML() throws Exception
+	{
+		XMLChallenge xmlChallenge = (XMLChallenge) getChallengeXML();
+		XMLCaptcha captcha = new XMLCaptcha(xmlChallenge.toXmlElement(XMLUtil.createDocument()).
+			toString().getBytes(),
+			CAPTCHA_KEY_BITS, EXTRA_KEY_BITS
+			);
+		return captcha;
 	}
 
 	/**

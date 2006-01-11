@@ -29,6 +29,7 @@ package jpi;
 
 import anon.util.IXMLEncodable;
 import anon.pay.xml.XMLErrorMessage;
+import org.w3c.dom.Element;
 
 /**
  * Datencontainer f\uFFFDr eine Bezahlinstanz-Http-Antwort.
@@ -52,6 +53,7 @@ public class PIAnswer
 	public final static int TYPE_PAYMENT_OPTIONS = 11;
 	public final static int TYPE_TRANSACTION_OVERVIEW = 12;
 	public final static int TYPE_PASSIVE_PAYMENT = 13;
+	public final static int TYPE_CAPTCHA_REQUEST = 14;
 
 	//Bi --> AI
 	public final static int TYPE_PAYOFF = 7;
