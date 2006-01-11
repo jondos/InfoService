@@ -49,7 +49,7 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import jap.*;
-import gui.JAPDialog;
+import gui.dialog.JAPDialog;
 import gui.*;
 
 /**

@@ -76,8 +76,9 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import jap.*;
-import gui.JAPDialog;
+import gui.dialog.JAPDialog;
 import gui.*;
+import gui.dialog.*;
 
 /**
  * This is implementation of the dialog shown when starting a forwarded connection. The dialog is
@@ -217,48 +218,8 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 	{
 		final JAPDialog infoserviceDialog = new JAPDialog(getRootComponent(),
 			JAPMessages.getString("settingsRoutingClientConfigDialogInfoServiceTitle"));
-		infoserviceDialog.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-		JPanel infoservicePanel = new JPanel();
-		infoserviceDialog.getContentPane().add(infoservicePanel);
-
-		JLabel settingsRoutingClientConfigDialogInfoServiceLabel = new JLabel(
-			  JAPMessages.getString("settingsRoutingClientConfigDialogInfoServiceLabel"));
-		settingsRoutingClientConfigDialogInfoServiceLabel.setFont(getFontSetting());
-		JLabel busyLabel = new JLabel(JAPUtil.loadImageIcon(JAPConstants.BUSYFN, true));
-		JButton settingsRoutingClientConfigDialogInfoServiceCancelButton =
-			new JButton(JAPMessages.getString("cancelButton"));
-		settingsRoutingClientConfigDialogInfoServiceCancelButton.setFont(getFontSetting());
-
-		GridBagLayout infoservicePanelLayout = new GridBagLayout();
-		infoservicePanel.setLayout(infoservicePanelLayout);
-
-		GridBagConstraints infoservicePanelConstraints = new GridBagConstraints();
-		infoservicePanelConstraints.anchor = GridBagConstraints.NORTH;
-		infoservicePanelConstraints.fill = GridBagConstraints.NONE;
-		infoservicePanelConstraints.weighty = 0.0;
-
-		infoservicePanelConstraints.gridx = 0;
-		infoservicePanelConstraints.gridy = 0;
-		infoservicePanelConstraints.insets = new Insets(5, 5, 0, 5);
-		infoservicePanelLayout.setConstraints(settingsRoutingClientConfigDialogInfoServiceLabel,
-											  infoservicePanelConstraints);
-		infoservicePanel.add(settingsRoutingClientConfigDialogInfoServiceLabel);
-
-		infoservicePanelConstraints.gridx = 0;
-		infoservicePanelConstraints.gridy = 1;
-		infoservicePanelConstraints.insets = new Insets(10, 5, 20, 5);
-		infoservicePanelLayout.setConstraints(busyLabel, infoservicePanelConstraints);
-		infoservicePanel.add(busyLabel);
-
-		infoservicePanelConstraints.gridx = 0;
-		infoservicePanelConstraints.gridy = 2;
-		infoservicePanelConstraints.insets = new Insets(0, 5, 5, 5);
-		infoservicePanelConstraints.weighty = 1.0;
-		infoservicePanelLayout.setConstraints(settingsRoutingClientConfigDialogInfoServiceCancelButton,
-											  infoservicePanelConstraints);
-		infoservicePanel.add(settingsRoutingClientConfigDialogInfoServiceCancelButton);
-
-		infoserviceDialog.pack();
+		infoserviceDialog.setResizable(false);
+		infoserviceDialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 
 		/* this Vector contains a message, if an error occured. */
 		final Vector occuredError = new Vector();
@@ -274,7 +235,6 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 				 * infoservices
 				 */
 				ForwarderInformationGrabber grabber = new ForwarderInformationGrabber();
-				infoserviceDialog.dispose();
 				/* clear the interrupted flag, if it is set */
 				Thread.interrupted();
 				if (grabber.getErrorCode() == ForwarderInformationGrabber.RETURN_SUCCESS)
@@ -302,39 +262,12 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 			}
 		});
 
-		settingsRoutingClientConfigDialogInfoServiceCancelButton.addActionListener(new ActionListener()
-		{
-			public void actionPerformed(ActionEvent event)
-			{
-				/* if the Cancel button is pressed, interrupt fetching of the forwarder information -> it
-				 * is stopped immediately
-				 */
-				infoserviceThread.interrupt();
-			}
-		});
-
-		/* for synchronization purposes, it is necessary to show the dialog first and start the thread
-		 * after that event
-		 */
-		infoserviceDialog.addWindowListener(new WindowAdapter()
-		{
-			public void windowOpened(WindowEvent a_event)
-			{
-				infoserviceDialog.removeWindowListener(this);
-				infoserviceThread.start();
-			}
-		});
-
+		WorkerContentPane worker = new WorkerContentPane(infoserviceDialog,
+			JAPMessages.getString("settingsRoutingClientConfigDialogInfoServiceLabel"), infoserviceThread);
+		worker.setInterruptThreadSafe(false);
+		worker.updateDialog();
+		infoserviceDialog.pack();
 		infoserviceDialog.setVisible(true);
-
-		/* wait until the fetch-thread is ready */
-		try
-		{
-			infoserviceThread.join();
-		}
-		catch (InterruptedException e)
-		{
-		}
 
 		IImageEncodedCaptcha returnValue = null;
 
@@ -342,13 +275,12 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 		{
 			returnValue = (IImageEncodedCaptcha) (fetchedCaptcha.firstElement());
 		}
-		else
+		else if (occuredError.size() > 0)
 		{
 			/* there occured an error while fetching the information about a forwarder from the
 			 * InfoServices
 			 */
-			JOptionPane.showMessageDialog(infoservicePanel, (String) (occuredError.firstElement()),
-										  JAPMessages.getString("error"), JOptionPane.ERROR_MESSAGE);
+			JAPDialog.showErrorDialog(m_parentComponent, (String) (occuredError.firstElement()), LogType.NET);
 		}
 
 		return returnValue;
@@ -795,11 +727,11 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 	 */
 	private boolean showConfigClientDialogConnectToForwarder()
 	{
-		final JAPDialog connectDialog = new JAPDialog(getRootComponent(),
+		final JAPDialog connectDialog =
+			new JAPDialog(getRootComponent(),
 			JAPMessages.getString("settingsRoutingClientConfigConnectToForwarderTitle"));
-		connectDialog.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-		JPanel connectPanel = new JPanel();
-		connectDialog.getContentPane().add(connectPanel);
+		connectDialog.setResizable(false);
+		connectDialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 
 		/* this Vector contains a message, if an error occured. */
 		final Vector occuredError = new Vector();
@@ -817,7 +749,6 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 					occuredError.addElement(
 					JAPMessages.getString("settingsRoutingClientConfigConnectToForwarderError"));
 				}
-				connectDialog.dispose();
 			}
 		});
 
@@ -828,105 +759,30 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 			currentForwarderString = currentForwarder.getHost() + ":" +
 				Integer.toString(currentForwarder.getPort());
 		}
-		JLabel settingsRoutingClientConfigDialogConnectToForwarderInfoLabel =
-			new JLabel(JAPMessages.getString("settingsRoutingClientConfigDialogConnectToForwarderInfoLabel") + " " +
-			currentForwarderString);
-		settingsRoutingClientConfigDialogConnectToForwarderInfoLabel.setFont(getFontSetting());
-		JLabel settingsRoutingClientConfigDialogConnectToForwarderLabel =
-			new JLabel(JAPMessages.getString("settingsRoutingClientConfigDialogConnectToForwarderLabel"));
-		settingsRoutingClientConfigDialogConnectToForwarderLabel.setFont(getFontSetting());
-		JLabel busyLabel = new JLabel(JAPUtil.loadImageIcon(JAPConstants.BUSYFN, true));
-		JButton settingsRoutingClientConfigDialogConnectToForwarderCancelButton =
-			new JButton(JAPMessages.getString("cancelButton"));
-		settingsRoutingClientConfigDialogConnectToForwarderCancelButton.setFont(getFontSetting());
-		settingsRoutingClientConfigDialogConnectToForwarderCancelButton.addActionListener(new ActionListener()
-		{
-			public void actionPerformed(ActionEvent event)
-			{
-				/* if the Cancel button is pressed, simply interrupt the connect thread -> because of the
-				 * used SocketFactory class, the Socket creation should be stopped immediately ->
-				 * setRoutingMode will return false
-				 */
-				connectThread.interrupt();
-			}
-		});
 
-		GridBagLayout connectPanelLayout = new GridBagLayout();
-		connectPanel.setLayout(connectPanelLayout);
-
-		GridBagConstraints connectPanelConstraints = new GridBagConstraints();
-		connectPanelConstraints.anchor = GridBagConstraints.NORTHWEST;
-		connectPanelConstraints.fill = GridBagConstraints.NONE;
-		connectPanelConstraints.weighty = 0.0;
-
-		connectPanelConstraints.gridx = 0;
-		connectPanelConstraints.gridy = 0;
-		connectPanelConstraints.insets = new Insets(5, 5, 0, 5);
-		connectPanelLayout.setConstraints(settingsRoutingClientConfigDialogConnectToForwarderLabel,
-										  connectPanelConstraints);
-		connectPanel.add(settingsRoutingClientConfigDialogConnectToForwarderLabel);
-
-		connectPanelConstraints.gridx = 0;
-		connectPanelConstraints.gridy = 1;
-		connectPanelConstraints.insets = new Insets(10, 5, 0, 5);
-		connectPanelLayout.setConstraints(settingsRoutingClientConfigDialogConnectToForwarderInfoLabel,
-										  connectPanelConstraints);
-		connectPanel.add(settingsRoutingClientConfigDialogConnectToForwarderInfoLabel);
-
-		connectPanelConstraints.gridx = 0;
-		connectPanelConstraints.gridy = 2;
-		connectPanelConstraints.anchor = GridBagConstraints.NORTH;
-		connectPanelConstraints.insets = new Insets(10, 5, 20, 5);
-		connectPanelLayout.setConstraints(busyLabel, connectPanelConstraints);
-		connectPanel.add(busyLabel);
-
-		connectPanelConstraints.gridx = 0;
-		connectPanelConstraints.gridy = 3;
-		connectPanelConstraints.insets = new Insets(0, 5, 5, 5);
-		connectPanelConstraints.weighty = 1.0;
-		connectPanelLayout.setConstraints(settingsRoutingClientConfigDialogConnectToForwarderCancelButton,
-										  connectPanelConstraints);
-		connectPanel.add(settingsRoutingClientConfigDialogConnectToForwarderCancelButton);
-
+		WorkerContentPane worker = new WorkerContentPane(connectDialog,
+			JAPMessages.getString("settingsRoutingClientConfigDialogConnectToForwarderLabel"),
+			JAPMessages.getString("settingsRoutingClientConfigDialogConnectToForwarderInfoLabel") + " " +
+			currentForwarderString, connectThread);
+		worker.setInterruptThreadSafe(false);
+		worker.updateDialog();
 		connectDialog.pack();
-
-		/* for synchronization purposes, it is necessary to show the dialog first and start the thread
-		 * after that event
-		 */
-		connectDialog.addWindowListener(new WindowAdapter()
-		{
-			public void windowOpened(WindowEvent a_event)
-			{
-				connectDialog.removeWindowListener(this);
-				connectThread.start();
-			}
-		});
-
 		connectDialog.setVisible(true);
-
-		/* wait until the connect-thread is ready */
-		try
-		{
-			connectThread.join();
-		}
-		catch (InterruptedException e)
-		{
-		}
 
 		boolean returnValue = false;
 
-		if (occuredError.size() == 0)
+		if (worker.hasValidValue() && occuredError.size() == 0)
 		{
 			/* no error occured -> contacting the forwarder was successful */
 			returnValue = true;
 		}
-		else
+		else if (occuredError.size() > 0)
 		{
 			/* there occured an error while connecting to the forwarder -> show a message and go back to
 			 * step 1
 			 */
-			JOptionPane.showMessageDialog(connectPanel, (String) (occuredError.firstElement()),
-										  JAPMessages.getString("error"), JOptionPane.ERROR_MESSAGE);
+			JAPDialog.showErrorDialog(getRootComponent(), (String) (occuredError.firstElement()),
+									  LogType.NET);
 		}
 
 		return returnValue;
@@ -940,60 +796,12 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 	 */
 	private ForwardConnectionDescriptor showConfigClientDialogGetOffer()
 	{
-		final JAPDialog offerDialog = new JAPDialog(getRootComponent(),
+		final JAPDialog offerDialog =
+			new JAPDialog(getRootComponent(),
 			JAPMessages.getString("settingsRoutingClientConfigGetOfferTitle"));
+		offerDialog.setResizable(false);
 		offerDialog.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-		JPanel offerPanel = new JPanel();
-		offerDialog.getContentPane().add(offerPanel);
 
-		JLabel settingsRoutingClientConfigDialogGetOfferLabel =
-			new JLabel(JAPMessages.getString("settingsRoutingClientConfigDialogGetOfferLabel"));
-		settingsRoutingClientConfigDialogGetOfferLabel.setFont(getFontSetting());
-		JLabel busyLabel = new JLabel(JAPUtil.loadImageIcon(JAPConstants.BUSYFN, true));
-		JButton settingsRoutingClientConfigDialogGetOfferCancelButton =
-			new JButton(JAPMessages.getString("cancelButton"));
-		settingsRoutingClientConfigDialogGetOfferCancelButton.setFont(getFontSetting());
-		settingsRoutingClientConfigDialogGetOfferCancelButton.addActionListener(new ActionListener()
-		{
-			public void actionPerformed(ActionEvent event)
-			{
-				/* if the Cancel button is pressed, stop the connection -> the getConnectionDescriptor()
-				 * method ends with an exception
-				 */
-				JAPModel.getInstance().getRoutingSettings().setRoutingMode(JAPRoutingSettings.
-					ROUTING_MODE_DISABLED);
-			}
-		});
-
-		GridBagLayout offerPanelLayout = new GridBagLayout();
-		offerPanel.setLayout(offerPanelLayout);
-
-		GridBagConstraints offerPanelConstraints = new GridBagConstraints();
-		offerPanelConstraints.anchor = GridBagConstraints.NORTH;
-		offerPanelConstraints.fill = GridBagConstraints.NONE;
-		offerPanelConstraints.weighty = 0.0;
-
-		offerPanelConstraints.gridx = 0;
-		offerPanelConstraints.gridy = 0;
-		offerPanelConstraints.insets = new Insets(5, 5, 0, 5);
-		offerPanelLayout.setConstraints(settingsRoutingClientConfigDialogGetOfferLabel, offerPanelConstraints);
-		offerPanel.add(settingsRoutingClientConfigDialogGetOfferLabel);
-
-		offerPanelConstraints.gridx = 0;
-		offerPanelConstraints.gridy = 1;
-		offerPanelConstraints.insets = new Insets(10, 5, 20, 5);
-		offerPanelLayout.setConstraints(busyLabel, offerPanelConstraints);
-		offerPanel.add(busyLabel);
-
-		offerPanelConstraints.gridx = 0;
-		offerPanelConstraints.gridy = 2;
-		offerPanelConstraints.insets = new Insets(0, 5, 5, 5);
-		offerPanelConstraints.weighty = 1.0;
-		offerPanelLayout.setConstraints(settingsRoutingClientConfigDialogGetOfferCancelButton,
-										offerPanelConstraints);
-		offerPanel.add(settingsRoutingClientConfigDialogGetOfferCancelButton);
-
-		offerDialog.pack();
 
 		/* this Vector contains a message, if an error occured */
 		final Vector occuredError = new Vector();
@@ -1037,28 +845,26 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 			}
 		});
 
-		/* for synchronization purposes, it is necessary to show the dialog first and start the thread
-		 * after that event
-		 */
-		offerDialog.addWindowListener(new WindowAdapter()
+		WorkerContentPane worker = new WorkerContentPane(offerDialog,
+			JAPMessages.getString("settingsRoutingClientConfigDialogGetOfferLabel"), offerThread);
+
+		worker.getButtonCancel().addActionListener(new ActionListener()
 		{
-			public void windowOpened(WindowEvent a_event)
+			public void actionPerformed(ActionEvent event)
 			{
-				offerDialog.removeWindowListener(this);
-				offerThread.start();
+				/* if the Cancel button is pressed, stop the connection -> the getConnectionDescriptor()
+				 * method ends with an exception
+				 */
+				JAPModel.getInstance().getRoutingSettings().setRoutingMode(JAPRoutingSettings.
+					ROUTING_MODE_DISABLED);
 			}
 		});
-
+		worker.setInterruptThreadSafe(false);
+		worker.updateDialog();
+		offerDialog.pack();
 		offerDialog.setVisible(true);
 
-		/* wait until the fetch-offer thread is ready */
-		try
-		{
-			offerThread.join();
-		}
-		catch (InterruptedException e)
-		{
-		}
+
 
 		ForwardConnectionDescriptor returnValue = null;
 
@@ -1067,13 +873,12 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 			/* no error occured -> fetching the connection offer from the forwarder was successful */
 			returnValue = (ForwardConnectionDescriptor) (fetchedDescriptor.firstElement());
 		}
-		else
+		else if (occuredError.size() > 0)
 		{
 			/* there occured an error while fetching the connection offer from the forwarder -> show a
 			 * message and go back to step 1
 			 */
-			JOptionPane.showMessageDialog(offerPanel, (String) (occuredError.firstElement()),
-										  JAPMessages.getString("error"), JOptionPane.ERROR_MESSAGE);
+			JAPDialog.showErrorDialog(getRootComponent(), (String) (occuredError.firstElement()), LogType.NET);
 		}
 
 		return returnValue;
@@ -1272,59 +1077,9 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 	{
 		final JAPDialog announceDialog = new JAPDialog(getRootComponent(),
 			JAPMessages.getString("settingsRoutingClientConfigDialogAnnounceCascadeTitle"));
-		announceDialog.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-		JPanel announcePanel = new JPanel();
-		announceDialog.getContentPane().add(announcePanel);
+		announceDialog.setResizable(false);
+		announceDialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 
-		JLabel settingsRoutingClientConfigDialogAnnounceCascadeLabel =
-			new JLabel(JAPMessages.getString("settingsRoutingClientConfigDialogAnnounceCascadeLabel"));
-		settingsRoutingClientConfigDialogAnnounceCascadeLabel.setFont(getFontSetting());
-		JLabel busyLabel = new JLabel(JAPUtil.loadImageIcon(JAPConstants.BUSYFN, true));
-		JButton settingsRoutingClientConfigDialogAnnounceCascadeCancelButton =
-			new JButton(JAPMessages.getString("cancelButton"));
-		settingsRoutingClientConfigDialogAnnounceCascadeCancelButton.setFont(getFontSetting());
-		settingsRoutingClientConfigDialogAnnounceCascadeCancelButton.addActionListener(new ActionListener()
-		{
-			public void actionPerformed(ActionEvent event)
-			{
-				/* if the Cancel button is pressed, stop the connection -> the selectMixCascade()
-				 * method ends with an exception
-				 */
-				JAPModel.getInstance().getRoutingSettings().setRoutingMode(JAPRoutingSettings.
-					ROUTING_MODE_DISABLED);
-			}
-		});
-
-		GridBagLayout announcePanelLayout = new GridBagLayout();
-		announcePanel.setLayout(announcePanelLayout);
-
-		GridBagConstraints announcePanelConstraints = new GridBagConstraints();
-		announcePanelConstraints.anchor = GridBagConstraints.NORTH;
-		announcePanelConstraints.fill = GridBagConstraints.NONE;
-		announcePanelConstraints.weighty = 0.0;
-
-		announcePanelConstraints.gridx = 0;
-		announcePanelConstraints.gridy = 0;
-		announcePanelConstraints.insets = new Insets(5, 5, 0, 5);
-		announcePanelLayout.setConstraints(settingsRoutingClientConfigDialogAnnounceCascadeLabel,
-										   announcePanelConstraints);
-		announcePanel.add(settingsRoutingClientConfigDialogAnnounceCascadeLabel);
-
-		announcePanelConstraints.gridx = 0;
-		announcePanelConstraints.gridy = 1;
-		announcePanelConstraints.insets = new Insets(10, 5, 20, 5);
-		announcePanelLayout.setConstraints(busyLabel, announcePanelConstraints);
-		announcePanel.add(busyLabel);
-
-		announcePanelConstraints.gridx = 0;
-		announcePanelConstraints.gridy = 2;
-		announcePanelConstraints.insets = new Insets(0, 5, 5, 5);
-		announcePanelConstraints.weighty = 1.0;
-		announcePanelLayout.setConstraints(settingsRoutingClientConfigDialogAnnounceCascadeCancelButton,
-										   announcePanelConstraints);
-		announcePanel.add(settingsRoutingClientConfigDialogAnnounceCascadeCancelButton);
-
-		announceDialog.pack();
 
 		/* this Vector contains a message, if an error occured. */
 		final Vector occuredError = new Vector();
@@ -1354,32 +1109,28 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 						  JAPMessages.getString("settingsRoutingClientAnnounceCascadeUnknownError"));
 					}
 				}
-				announceDialog.dispose();
 			}
 		});
 
-		/* for synchronization purposes, it is necessary to show the dialog first and start the thread
-		 * after that event
-		 */
-		announceDialog.addWindowListener(new WindowAdapter()
+	WorkerContentPane worker = new WorkerContentPane(announceDialog,
+		JAPMessages.getString("settingsRoutingClientConfigDialogAnnounceCascadeLabel"), announceThread);
+
+	worker.getButtonCancel().addActionListener(new ActionListener()
 		{
-			public void windowOpened(WindowEvent a_event)
+		public void actionPerformed(ActionEvent event)
 			{
-				announceDialog.removeWindowListener(this);
-				announceThread.start();
+			/* if the Cancel button is pressed, stop the connection -> the selectMixCascade()
+			 * method ends with an exception
+			 */
+			JAPModel.getInstance().getRoutingSettings().setRoutingMode(JAPRoutingSettings.
+				ROUTING_MODE_DISABLED);
 			}
 		});
-
+	worker.setInterruptThreadSafe(false);
+	worker.updateDialog();
+	announceDialog.pack();
 		announceDialog.setVisible(true);
 
-		/* wait until the announce thread is ready */
-		try
-		{
-			announceThread.join();
-		}
-		catch (InterruptedException e)
-		{
-		}
 
 		boolean returnValue = false;
 
@@ -1390,14 +1141,13 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 			JAPController.getInstance().setAnonMode(true);
 			returnValue = true;
 		}
-		else
+		else if (occuredError.size() > 0)
 		{
 			/* there occured an error while announcing the selected mixcascade at the forwarder */
-			JOptionPane.showMessageDialog(announcePanel, (String) (occuredError.firstElement()),
-										  JAPMessages.getString("error"), JOptionPane.ERROR_MESSAGE);
+			JAPDialog.showErrorDialog(m_parentComponent, (String) (occuredError.firstElement()),
+									  LogType.NET);
 		}
 
 		return returnValue;
 	}
-
 }

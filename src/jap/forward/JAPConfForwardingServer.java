@@ -67,7 +67,7 @@ import javax.swing.text.PlainDocument;
 import anon.infoservice.InfoServiceDBEntry;
 import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.MixCascade;
-import gui.JAPDialog;
+import gui.dialog.JAPDialog;
 import jap.AbstractJAPConfModule;
 import jap.JAPConstants;
 import jap.JAPController;
@@ -80,6 +80,7 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import gui.*;
+import gui.dialog.*;
 
 /**
  * This is the configuration GUI for the JAP forwarding server component.
@@ -1439,16 +1440,8 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 	{
 		final JAPDialog fetchMixCascadesDialog = new JAPDialog(a_parentComponent,
 			JAPMessages.getString("settingsForwardingServerConfigAllowedCascadesFetchMixCascadesDialogTitle"));
-		fetchMixCascadesDialog.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-		JPanel fetchMixCascadesPanel = new JPanel();
-		fetchMixCascadesDialog.getContentPane().add(fetchMixCascadesPanel);
-
-		JLabel settingsRoutingServerFetchMixCascadesDialogFetchLabel =
-			new JLabel(
-				JAPMessages.getString(
-					"settingsForwardingServerConfigAllowedCascadesFetchMixCascadesDialogFetchLabel"));
-		settingsRoutingServerFetchMixCascadesDialogFetchLabel.setFont(getFontSetting());
-		JLabel busyLabel = new JLabel(JAPUtil.loadImageIcon(JAPConstants.BUSYFN, true));
+		fetchMixCascadesDialog.setResizable(false);
+		fetchMixCascadesDialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 
 		final Vector fetchedCascades = new Vector();
 		final Vector errorOccured = new Vector();
@@ -1458,7 +1451,6 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 			public void run()
 			{
 				Vector knownMixCascades = InfoServiceHolder.getInstance().getMixCascades();
-				fetchMixCascadesDialog.dispose();
 				/* clear the interrupted flag, if it is set */
 				Thread.interrupted();
 				if (knownMixCascades == null)
@@ -1489,79 +1481,22 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 			}
 		});
 
-		JButton settingsRoutingFetchMixCascadesDialogCancelButton =
-			new JButton(JAPMessages.getString("cancelButton"));
-		settingsRoutingFetchMixCascadesDialogCancelButton.setFont(getFontSetting());
-		settingsRoutingFetchMixCascadesDialogCancelButton.addActionListener(new ActionListener()
-		{
-			public void actionPerformed(ActionEvent event)
-			{
-				/* if the Cancel button is pressed, interrupt fetching of the mixcascades -> it is stopped
-				 * immediately
-				 */
-				fetchMixCascadesThread.interrupt();
-			}
-		});
-
-		GridBagLayout fetchMixCascadesPanelLayout = new GridBagLayout();
-		fetchMixCascadesPanel.setLayout(fetchMixCascadesPanelLayout);
-
-		GridBagConstraints fetchMixCascadesPanelConstraints = new GridBagConstraints();
-		fetchMixCascadesPanelConstraints.anchor = GridBagConstraints.NORTH;
-		fetchMixCascadesPanelConstraints.fill = GridBagConstraints.NONE;
-		fetchMixCascadesPanelConstraints.weighty = 0.0;
-
-		fetchMixCascadesPanelConstraints.gridx = 0;
-		fetchMixCascadesPanelConstraints.gridy = 0;
-		fetchMixCascadesPanelConstraints.insets = new Insets(5, 5, 0, 5);
-		fetchMixCascadesPanelLayout.setConstraints(settingsRoutingServerFetchMixCascadesDialogFetchLabel,
-			fetchMixCascadesPanelConstraints);
-		fetchMixCascadesPanel.add(settingsRoutingServerFetchMixCascadesDialogFetchLabel);
-
-		fetchMixCascadesPanelConstraints.gridx = 0;
-		fetchMixCascadesPanelConstraints.gridy = 1;
-		fetchMixCascadesPanelConstraints.insets = new Insets(10, 5, 10, 5);
-		fetchMixCascadesPanelLayout.setConstraints(busyLabel, fetchMixCascadesPanelConstraints);
-		fetchMixCascadesPanel.add(busyLabel);
-
-		fetchMixCascadesPanelConstraints.gridx = 0;
-		fetchMixCascadesPanelConstraints.gridy = 2;
-		fetchMixCascadesPanelConstraints.insets = new Insets(0, 5, 5, 5);
-		fetchMixCascadesPanelConstraints.weighty = 1.0;
-		fetchMixCascadesPanelLayout.setConstraints(settingsRoutingFetchMixCascadesDialogCancelButton,
-			fetchMixCascadesPanelConstraints);
-		fetchMixCascadesPanel.add(settingsRoutingFetchMixCascadesDialogCancelButton);
-
-		/* for synchronization purposes, it is necessary to show the dialog first and start the thread
-		 * after that event
-		 */
-		fetchMixCascadesDialog.addWindowListener(new WindowAdapter()
-		{
-			public void windowOpened(WindowEvent a_event)
-			{
-				fetchMixCascadesDialog.removeWindowListener(this);
-				fetchMixCascadesThread.start();
-			}
-		});
-
+		WorkerContentPane worker = new WorkerContentPane(fetchMixCascadesDialog,
+			JAPMessages.getString(
+					 "settingsForwardingServerConfigAllowedCascadesFetchMixCascadesDialogFetchLabel"),
+			fetchMixCascadesThread);
+		worker.setInterruptThreadSafe(false);
+		worker.updateDialog();
 		fetchMixCascadesDialog.pack();
 		fetchMixCascadesDialog.setVisible(true);
 
-		/* wait until the fetch-thread is ready */
-		try
-		{
-			fetchMixCascadesThread.join();
-		}
-		catch (InterruptedException e)
-		{
-		}
-
 		if (errorOccured.size() > 0)
 		{
-			JOptionPane.showMessageDialog(a_parentComponent,
+			JAPDialog.showErrorDialog(
+				a_parentComponent,
 										  JAPMessages.getString(
 											  "settingsForwardingServerConfigAllowedCascadesFetchMixCascadesDialogFetchCascadesError"),
-										  JAPMessages.getString("error"), JOptionPane.ERROR_MESSAGE);
+				LogType.NET);
 		}
 
 		return fetchedCascades;

@@ -2321,6 +2321,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	public void registerMainView(AbstractJAPMainView v)
 	{
 		m_View = v;
+		JAPHelp.init(v, null);
 	}
 
 	public static AbstractJAPMainView getView()
