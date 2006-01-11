@@ -72,7 +72,7 @@ import java.security.SecureRandom;
 import anon.crypto.MyAES;
 import anon.util.Base64;
 import anon.crypto.MyRandom;
-import anon.pay.xml.XMLCaptcha;
+import jpi.util.XMLCaptcha;
 
 /**
  * This class contains the functionality for talking to a JAP. For
