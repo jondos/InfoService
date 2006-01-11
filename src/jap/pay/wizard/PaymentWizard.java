@@ -98,6 +98,7 @@ public class PaymentWizard extends BasicWizard
 		//Fetch transfer number, get detailed info
 		else if (m_PageIndex == 2)
 		{
+			m_infoPage.setPaymentOptions(m_methodSelectionPage.getPaymentOptions());
 			m_infoPage.setSelectedPaymentOption(m_methodSelectionPage.getSelectedPaymentOption());
 			m_infoPage.setSelectedCurrency(m_methodSelectionPage.getSelectedCurrency());
 			m_infoPage.setAmount(m_methodSelectionPage.getAmount());

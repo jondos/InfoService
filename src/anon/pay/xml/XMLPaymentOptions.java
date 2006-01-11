@@ -40,6 +40,7 @@ import java.util.Enumeration;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import org.w3c.dom.Node;
 
 /**
  * This class represents a XMLPaymentOptions structure.
@@ -49,6 +50,7 @@ public class XMLPaymentOptions implements IXMLEncodable
 {
 	private Vector m_currencies = new Vector();
 	private Vector m_paymentOptions = new Vector();
+	private String m_acceptedCreditCards;
 
 	public XMLPaymentOptions(String xml) throws Exception
 	{
@@ -87,6 +89,10 @@ public class XMLPaymentOptions implements IXMLEncodable
 			elemRoot.appendChild(elem);
 		}
 
+		elem = a_doc.createElement("AcceptedCards");
+		elem.appendChild(a_doc.createTextNode(m_acceptedCreditCards));
+		elemRoot.appendChild(elem);
+
 		return elemRoot;
 	}
 
@@ -108,6 +114,9 @@ public class XMLPaymentOptions implements IXMLEncodable
 		{
 			m_paymentOptions.addElement( (Element) options.item(i));
 		}
+
+		Node node = XMLUtil.getFirstChildByName(elemRoot, "AcceptedCards");
+		m_acceptedCreditCards = XMLUtil.parseValue(node, "");
 	}
 
 	public XMLPaymentOptions(Document document) throws Exception
@@ -179,6 +188,16 @@ public class XMLPaymentOptions implements IXMLEncodable
 	public Vector getCurrencies()
 	{
 		//return new Vector(m_currencies);
-		return (Vector)m_currencies.clone();
+		return (Vector) m_currencies.clone();
+	}
+
+	public void setAcceptedCreditCards(String a_acceptedCreditCards)
+	{
+		m_acceptedCreditCards = a_acceptedCreditCards;
+	}
+
+	public String getAcceptedCreditCards()
+	{
+		return m_acceptedCreditCards;
 	}
 }

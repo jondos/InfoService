@@ -425,6 +425,9 @@ public class Configuration
 			ms_paymentOptions.addCurrency(currency);
 		}
 
+		//parse accepted credit cards
+		ms_paymentOptions.setAcceptedCreditCards(props.getProperty("acceptedcards", ""));
+
 		//parse options
 		i = 1;
 		while (true)

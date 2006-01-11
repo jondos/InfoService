@@ -65,6 +65,10 @@ import logging.LogLevel;
 import logging.LogType;
 import anon.util.Util;
 import javax.swing.JOptionPane;
+import javax.swing.JComboBox;
+import anon.pay.xml.XMLPaymentOptions;
+import java.util.StringTokenizer;
+import java.awt.Component;
 
 public class PaymentWizardPaymentInfoPage extends BasicWizardPage implements MouseListener, ActionListener
 {
@@ -84,6 +88,7 @@ public class PaymentWizardPaymentInfoPage extends BasicWizardPage implements Mou
 	private static final String MSG_NOTSENTTITLE = PaymentWizardPaymentInfoPage.class.
 		getName() + "_notsenttitle";
 
+	private XMLPaymentOptions m_paymentOptions;
 	private XMLPaymentOption m_selectedOption;
 	private XMLTransCert m_transCert;
 	private PayAccount m_payAccount;
@@ -275,8 +280,17 @@ public class PaymentWizardPaymentInfoPage extends BasicWizardPage implements Mou
 		m_amount = a_amount;
 	}
 
+	public void setPaymentOptions(XMLPaymentOptions a_options)
+	{
+		m_paymentOptions = a_options;
+	}
+
 	public void createInputPanel()
 	{
+		JTextField textField = null;
+		JLabel label = null;
+		JComboBox comboBox = null;
+
 		m_inputFields = new Vector();
 		Vector inputFields = m_selectedOption.getInputFields();
 		m_inputPanel = new JPanel(new GridBagLayout());
@@ -299,13 +313,34 @@ public class PaymentWizardPaymentInfoPage extends BasicWizardPage implements Mou
 
 			if (field[2].equalsIgnoreCase(m_language))
 			{
-				JLabel l = new JLabel("<html>" + field[1] + "</html>");
-				JTextField t = new JTextField(15);
-				t.setName(field[0]);
-				m_inputFields.addElement(t);
-				m_inputPanel.add(l, c);
+				label = new JLabel("<html>" + field[1] + "</html>");
+				//If the input field asks for credit card type we use a combobox
+				//that displays all accepted cards instead of a simple text field
+				if (field[0].equalsIgnoreCase("creditcardtype"))
+				{
+					String acceptedCards = m_paymentOptions.getAcceptedCreditCards();
+					StringTokenizer st = new StringTokenizer(acceptedCards, ",");
+					comboBox = new JComboBox();
+					comboBox.setName(field[0]);
+					while (st.hasMoreTokens())
+					{
+						comboBox.addItem(st.nextToken());
+					}
+					m_inputFields.addElement(comboBox);
+					m_inputPanel.add(label, c);
+					c.gridx++;
+					m_inputPanel.add(comboBox, c);
+				}
+				else
+				{
+					textField = new JTextField(15);
+					textField.setName(field[0]);
+					m_inputFields.addElement(textField);
+					m_inputPanel.add(label, c);
 				c.gridx++;
-				m_inputPanel.add(t, c);
+					m_inputPanel.add(textField, c);
+				}
+
 				c.gridy++;
 				c.gridx--;
 			}
@@ -366,8 +401,16 @@ public class PaymentWizardPaymentInfoPage extends BasicWizardPage implements Mou
 		Enumeration fields = m_inputFields.elements();
 		while (fields.hasMoreElements())
 		{
-			JTextField tf = (JTextField) fields.nextElement();
-			pp.addData(tf.getName(), tf.getText());
+					Component comp = (Component) fields.nextElement();
+					if (comp instanceof JTextField)
+					{
+						pp.addData( ( (JTextField) comp).getName(), ( (JTextField) comp).getText());
+					}
+					else if (comp instanceof JComboBox)
+					{
+						pp.addData( ( (JComboBox) comp).getName(),
+								   (String) ( (JComboBox) comp).getSelectedItem());
+					}
 		}
 
 		/** Post data to payment instance */
