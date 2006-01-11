@@ -320,11 +320,10 @@ public class DataBase extends DBInterface
 
 		LogHolder.log(LogLevel.DEBUG, LogType.PAY,
 					  "DataBase.addAccount() called for accountnumber " + accountNumber);
-		/**@todo Replace third argument with 0 when account charging is working*/
 		String statement =
 			"INSERT INTO ACCOUNTS VALUES (" +
 			accountNumber + ",'" + xmlPublicKey +
-			"',100000000,'" + validTime + "',0,'" + creationTime + "','"
+			"',0,'" + validTime + "',0,'" + creationTime + "','"
 			+ accountCert + "')";
 		try
 		{

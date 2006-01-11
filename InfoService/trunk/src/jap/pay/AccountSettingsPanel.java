@@ -135,6 +135,12 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		getName() + "_account_invalid";
 	private static final String MSG_ACCOUNT_INVALID_TITLE = AccountSettingsPanel.class.
 		getName() + "_account_invalid_title";
+	private static final String MSG_ACCOUNTCREATE = AccountSettingsPanel.class.
+		getName() + "_accountcreate";
+	private static final String MSG_CREATEERROR = AccountSettingsPanel.class.
+		getName() + "_createerror";
+	private static final String MSG_CREATEERRORTITLE = AccountSettingsPanel.class.
+		getName() + "_createerrortitle";
 
 	private JButton m_btnCreateAccount;
 	private JButton m_btnChargeAccount;
@@ -155,6 +161,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 	private JLabel m_labelValid;
 	private CoinstackProgressBar m_coinstack;
 	private JList m_listAccounts;
+	private JLabel m_busyLabel;
 
 	public AccountSettingsPanel()
 	{
@@ -278,6 +285,16 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		c.gridy++;
 		c.fill = c.HORIZONTAL;
 		rootPanel.add(this.createDetailsPanel(), c);
+
+		m_busyLabel = new JLabel("   ", GUIUtils.loadImageIcon(JAPConstants.BUSYFN, true), JLabel.CENTER);
+		m_busyLabel.setVerticalTextPosition(JLabel.TOP);
+		m_busyLabel.setHorizontalTextPosition(JLabel.CENTER);
+		c.gridy++;
+		c.weightx = 0;
+		c.weighty = 0;
+		rootPanel.add(m_busyLabel, c);
+		m_busyLabel.setVisible(false);
+
 		updateAccountList();
 		enableDisableButtons();
 	}
@@ -748,8 +765,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 	 */
 	private void doCreateAccount()
 	{
-		JFrame view = JAPController.getView();
-
 		//Show a window that contains all known Payment Instances and let the user select one. (tb)
 		/*BI theBI = getBIforAccountCreation();*/
 		//BI for semi-open test cascade
@@ -768,29 +783,59 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		if (theBI != null)
 		{
 			int choice = JOptionPane.showOptionDialog(
-				view, JAPMessages.getString("ngCreateKeyPair"),
+				JAPController.getView(), JAPMessages.getString("ngCreateKeyPair"),
 				JAPMessages.getString("ngCreateAccount"),
 				JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE,
 				null, null, null
 				);
 			if (choice == JOptionPane.YES_OPTION)
 			{
+				busy(true, JAPMessages.getString(MSG_ACCOUNTCREATE));
+				final BI bi = theBI;
+				Runnable doIt = new Runnable()
+				{
+					public void run()
+					{
 				try
 				{
-					AccountCreator worker = new AccountCreator(theBI, JAPController.getView());
-					worker.addChangeListener(this);
-					worker.start();
+							PayAccount p = PayAccountsFile.getInstance().createAccount(bi, true);
+							p.fetchAccountInfo();
+							updateAccountList();
+							busy(false, "");
 				}
 				catch (Exception ex)
 				{
 					LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, ex);
+							busy(false, "");
 					JOptionPane.showMessageDialog(
-						view,
-						JAPMessages.getString("Error creating account: ") + ex,
-						JAPMessages.getString("error"), JOptionPane.ERROR_MESSAGE
+								JAPController.getView(),
+								JAPMessages.getString(MSG_CREATEERROR) + " " + ex.getMessage(),
+								JAPMessages.getString(MSG_CREATEERRORTITLE), JOptionPane.ERROR_MESSAGE
 						);
 				}
 			}
+				};
+				Thread t = new Thread(doIt);
+				t.start();
+			}
+		}
+	}
+
+	/**
+	 * Show or hide the busy label and apply the message to it.
+	 * @param a_busy boolean
+	 * @param a_message String
+	 */
+	private void busy(boolean a_busy, String a_message)
+	{
+		if (a_busy == true)
+		{
+			m_busyLabel.setText(a_message);
+			m_busyLabel.setVisible(true);
+		}
+		else
+		{
+			m_busyLabel.setVisible(false);
 		}
 	}
 
