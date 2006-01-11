@@ -62,6 +62,7 @@ import logging.LogLevel;
 import logging.LogType;
 import anon.crypto.JAPCertificate;
 import anon.infoservice.InfoServiceHolder;
+import anon.util.captcha.IImageEncodedCaptcha;
 
 /**
  * This class encapsulates a collection of accounts. One of the accounts in the collection
@@ -96,7 +97,7 @@ import anon.infoservice.InfoServiceHolder;
  * @author Bastian Voigt, Tobias Bayer
  * @version 1.0
  */
-public class PayAccountsFile implements IXMLEncodable
+public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 {
 	private boolean m_bIsInitialized = false;
 
@@ -130,6 +131,7 @@ public class PayAccountsFile implements IXMLEncodable
 	// singleton!
 	private PayAccountsFile()
 	{
+
 	}
 
 	/**
@@ -541,6 +543,7 @@ public class PayAccountsFile implements IXMLEncodable
 					  a_bi.getPortNumber());
 
 		BIConnection biConn = new BIConnection(a_bi);
+		biConn.addConnectionListener(this);
 		biConn.connect();
 		XMLAccountCertificate cert = biConn.register(xmlKey, signingInstance);
 		biConn.disconnect();
@@ -696,5 +699,23 @@ public class PayAccountsFile implements IXMLEncodable
 		}
 
 		return theBI;
+	}
+	/**
+	 * This method is called whenever a captcha has been received from the
+	 * Payment Instance.
+	 * @param a_source Object
+	 * @param a_captcha IImageEncodedCaptcha
+	 */
+	public void gotCaptcha(Object a_source, final IImageEncodedCaptcha a_captcha)
+	{
+		synchronized (m_paymentListeners)
+		{
+			Enumeration enumListeners = m_paymentListeners.elements();
+			while (enumListeners.hasMoreElements())
+			{
+				( (IPaymentListener) enumListeners.nextElement()).gotCaptcha(a_source, a_captcha);
+			}
+		}
+
 	}
 }

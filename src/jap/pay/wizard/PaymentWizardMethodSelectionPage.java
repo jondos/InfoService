@@ -40,7 +40,6 @@ import javax.swing.ButtonGroup;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JRadioButton;
-import javax.swing.JTextField;
 
 import anon.pay.BI;
 import anon.pay.BIConnection;
@@ -168,7 +167,7 @@ public class PaymentWizardMethodSelectionPage extends BasicWizardPage implements
 		JLabel label = new JLabel(JAPMessages.getString("payAmount"));
 		m_panelComponents.add(label, m_c);
 		m_c.gridwidth = 1;
-		m_tfAmount = new JAPJIntField(5);
+		m_tfAmount = new JAPJIntField(15);
 		m_c.gridy++;
 		m_panelComponents.add(m_tfAmount, m_c);
 		m_c.gridx++;

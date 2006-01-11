@@ -27,18 +27,15 @@
  */
 package anon.pay.xml;
 
-import java.io.ByteArrayInputStream;
 import java.util.Enumeration;
 import java.util.Hashtable;
-import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import anon.util.IXMLEncodable;
-import anon.util.XMLUtil;
-import org.w3c.dom.Node;
 import anon.util.XMLParseException;
+import anon.util.XMLUtil;
 
 /**
  * This class is used by JAP to send information necessary to process a
@@ -145,7 +142,6 @@ public class XMLPassivePayment implements IXMLEncodable
 		{
 			ref = XMLUtil.parseAttribute(nodesData.item(i), REF, null);
 			value = XMLUtil.parseValue(nodesData.item(i), null);
-			value = nodesData.item(i).getFirstChild().getNodeValue();
 			m_paymentData.put(ref, value);
 		}
 
@@ -258,6 +254,27 @@ public class XMLPassivePayment implements IXMLEncodable
 	}
 
 	/**
+	 * Returns a string with all payment data fields.
+	 * @return String
+	 */
+	public String getAllPaymentData()
+	{
+		String data = "";
+		String key;
+		Enumeration e = m_paymentData.keys();
+		while (e.hasMoreElements())
+		{
+			key = (String) e.nextElement();
+			data += key + " = " + (String) m_paymentData.get(key);
+			if (e.hasMoreElements())
+			{
+				data += "\n";
+			}
+		}
+		return data;
+	}
+
+	/**
 	 * Produces an XML element from the member values
 	 * @param a_doc Document
 	 * @return Element
@@ -285,7 +302,7 @@ public class XMLPassivePayment implements IXMLEncodable
 		XMLUtil.setValue(elem, m_currency);
 		elemRoot.appendChild(elem);
 
-		Enumeration refs = m_paymentData.elements();
+		Enumeration refs = m_paymentData.keys();
 		while (refs.hasMoreElements())
 		{
 			ref = (String) refs.nextElement();

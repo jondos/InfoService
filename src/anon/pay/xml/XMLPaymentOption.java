@@ -311,7 +311,7 @@ public class XMLPaymentOption implements IXMLEncodable
 				return extraInfo[0];
 			}
 		}
-		return getExtraInfo("en");
+		return null;
 	}
 
 	public String getType()
