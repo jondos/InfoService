@@ -1,15 +1,16 @@
-package anon.util.captcha;
+package jpi.util;
+
+import java.math.BigInteger;
+import java.security.SecureRandom;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import anon.util.IXMLEncodable;
-import infoservice.japforwarding.CaptchaGeneratorFactory;
-import infoservice.japforwarding.CaptchaGenerator;
-import anon.crypto.MyRandom;
-import java.math.BigInteger;
 import anon.crypto.MyAES;
+import anon.crypto.MyRandom;
 import anon.util.Base64;
-import java.security.SecureRandom;
+import anon.util.IXMLEncodable;
+import infoservice.japforwarding.CaptchaGenerator;
+import infoservice.japforwarding.CaptchaGeneratorFactory;
 
 public class XMLCaptcha implements IXMLEncodable
 {
