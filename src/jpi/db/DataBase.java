@@ -42,6 +42,7 @@ import anon.util.XMLUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.pay.xml.XMLPassivePayment;
 
 /**
  * Implements {@link DBInterface} for Postgresql
@@ -107,7 +108,16 @@ public class DataBase extends DBInterface
 		"ACCOUNTNUMBER BIGINT REFERENCES ACCOUNTS ON DELETE CASCADE," +
 		"DEPOSIT BIGINT," +
 		"VALIDTIME TIMESTAMP (0)," +
-		"USED BOOLEAN)",
+		"USED BOOLEAN))",
+
+		"CREATE TABLE PASSIVEPAYMENT (" +
+		"ID BIGSERIAL PRIMARY KEY," +
+		"TRANSFERNUMBER BIGINT," +
+		"AMOUNT BIGINT," +
+		"CURRENCY VARCHAR(10)," +
+		"DATA VARCHAR(2000)," +
+		"CHARGED BOOLEAN, " +
+		"TYPE VARCHAR(30))",
 
 		"CREATE TABLE RATES (" +
 		"ID SERIAL PRIMARY KEY," +
@@ -765,7 +775,6 @@ public class DataBase extends DBInterface
 			{
 				throw new Exception("Transfer no. " + a_transferNumber + " is not in database");
 			}
-			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Fetched account no. " + account);
 
 			//Check if account has expired
 			stmt = m_dbConn.createStatement();
@@ -775,6 +784,9 @@ public class DataBase extends DBInterface
 				validTime = r.getTimestamp(1);
 			}
 			//Update deposit
+			LogHolder.log(LogLevel.DEBUG, LogType.PAY,
+						  "Charging account " + account + " with " + a_amount + " bytes.");
+
 			if (!used && validTime.after(new Date()))
 			{
 				Date usedDate = new Date();
@@ -876,6 +888,85 @@ public class DataBase extends DBInterface
 						  "Could not get amount attribute of transfer number. Cause: " + e.getMessage());
 		}
 		return amount;
+	}
+
+	public void storePassivePayment(XMLPassivePayment a_passivePayment) throws Exception
+	{
+		String data = a_passivePayment.getAllPaymentData();
+		String statement =
+			"INSERT INTO PASSIVEPAYMENT VALUES (" +
+			"DEFAULT, " +
+			a_passivePayment.getTransferNumber() + "," +
+			a_passivePayment.getAmount() + "," +
+			"'" + a_passivePayment.getCurrency() + "'," +
+			"'" + data + "'," +
+			"FALSE, '" +
+			a_passivePayment.getPaymentName() + "')";
+		try
+		{
+			Statement stmt = m_dbConn.createStatement();
+			stmt.executeUpdate(statement);
+			stmt.close();
+		}
+		catch (SQLException e)
+		{
+			LogHolder.log(LogLevel.ERR, LogType.PAY, "Could not store passive payment info");
+			e.printStackTrace();
+			throw new Exception();
+		}
+
+	}
+
+	public Vector getPendingPassivePayments()
+	{
+		Vector payments = new Vector();
+		String[] passivePayment;
+		String statement =
+			"SELECT ID, TYPE, TRANSFERNUMBER, AMOUNT, CURRENCY FROM PASSIVEPAYMENT WHERE CHARGED=FALSE";
+		try
+		{
+			Statement stmt = m_dbConn.createStatement();
+			ResultSet r = stmt.executeQuery(statement);
+			while (r.next())
+			{
+				passivePayment = new String[5];
+				passivePayment[0] = String.valueOf(r.getLong(1));
+				passivePayment[1] = r.getString(2);
+				passivePayment[2] = String.valueOf(r.getLong(3));
+				passivePayment[3] = String.valueOf(r.getLong(4));
+				passivePayment[4] = r.getString(5);
+				payments.addElement(passivePayment);
+			}
+			stmt.close();
+			return payments;
+		}
+		catch (Exception e)
+		{
+			LogHolder.log(LogLevel.ERR, LogType.PAY, "Could not retrieve passive payments from database");
+			return null;
+		}
+	}
+
+	public String getPassivePaymentData(long a_id)
+	{
+		/** @todo Get payment data for particular id */
+		return null;
+	}
+
+	public void markPassivePaymentDone(long a_id)
+	{
+		String statement = "UPDATE PASSIVEPAYMENT SET CHARGED=TRUE WHERE ID=" + a_id;
+		try
+		{
+			Statement stmt = m_dbConn.createStatement();
+			stmt.executeUpdate(statement);
+			stmt.close();
+		}
+		catch (Exception e)
+		{
+			LogHolder.log(LogLevel.ERR, LogType.PAY, "Could not update passive payment in database");
+		}
+
 	}
 
 }

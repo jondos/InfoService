@@ -28,6 +28,8 @@
 package jpi.db;
 
 import anon.pay.xml.XMLEasyCC;
+import anon.pay.xml.XMLPassivePayment;
+import java.util.Vector;
 
 /**
  * The interface to the database. Implementation for Postgresql see
@@ -421,5 +423,13 @@ public abstract class DBInterface
 	public abstract long getUsedDate(long a_tan);
 
 	public abstract long getTransferAmount(long a_tan);
+
+	public abstract void storePassivePayment(XMLPassivePayment a_passivePayment) throws Exception;
+
+	public abstract Vector getPendingPassivePayments();
+
+	public abstract String getPassivePaymentData(long a_id);
+
+	public abstract void markPassivePaymentDone(long a_id);
 
 }

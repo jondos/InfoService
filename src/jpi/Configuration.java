@@ -225,6 +225,22 @@ public class Configuration
 		return ms_paymentOptions;
 	}
 
+	/** Holds the credit card helper class name. The class is named *CreditCardHelper.
+	 * The configuration file must provide *
+	 */
+	private static String ms_creditCardHelper;
+	public static String getCreditCardHelper()
+	{
+		return ms_creditCardHelper;
+	}
+
+	/**Holds the port where the JPI receives PayPal IPNs */
+	private static String ms_payPalport;
+	public static String getPayPalPort()
+	{
+		return ms_payPalport;
+	}
+
 	/**
 	 * Load configuration from properties file,
 	 * initialize keys and certificates,
@@ -496,6 +512,12 @@ public class Configuration
 			ms_paymentOptions.addOption(option);
 			i++;
 		}
+
+		// Parse the CreditCardHelper classname
+		ms_creditCardHelper = props.getProperty("creditcardhelper", "Dummy");
+
+		//Parse the PayPal IPN port
+		ms_payPalport = props.getProperty("paypalport", "9999");
 
 		return true;
 	}
