@@ -110,7 +110,6 @@ public final class JAPConstants
 	static final boolean DEFAULT_MINIMIZE_ON_STARTUP = false;
 
 	static final String JAPLocalFilename = "JAP.jar";
-	public static final int MAXHELPLANGUAGES = 6;
 	public static final String TITLE = "JAP";
 	public static final String TITLEOFICONIFIEDVIEW = "JAP";
 	static final String AUTHOR = "(c) 2000 The JAP-Team";
@@ -158,10 +157,6 @@ public final class JAPConstants
 	public static final String IMAGE_DELETE = "deleteicon.gif";
 	public static final String IMAGE_COPY = "copyicon.gif";
 	public static final String IMAGE_COPY_CONFIG = "copyintoicon.gif";
-
-	public static final String IMAGE_HOME = "home.gif";
-	public static final String IMAGE_PREV = "previous.gif";
-	public static final String IMAGE_NEXT = "next.gif";
 
 	public static final String CERTENABLEDICON = "cenabled.gif";
 	public static final String CERTDISABLEDICON = "cdisabled.gif";

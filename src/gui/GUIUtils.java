@@ -27,49 +27,159 @@
  */
 package gui;
 
-import java.awt.MediaTracker;
-import java.awt.Toolkit;
+import java.net.URL;
+import java.util.Hashtable;
+
 import java.awt.Component;
-import javax.swing.ImageIcon;
-import javax.swing.JTextPane;
-import javax.swing.JLabel;
-import java.awt.Font;
-import java.awt.Window;
 import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Image;
+import java.awt.MediaTracker;
 import java.awt.Point;
+import java.awt.Toolkit;
+import java.awt.Window;
+import javax.swing.ImageIcon;
+import javax.swing.JLabel;
+import javax.swing.JTextPane;
+
+import anon.util.ResourceLoader;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 
 /**
  * This class contains helper methods for the GUI.
  */
 public final class GUIUtils
 {
-	public static final String IMGPATHHICOLOR = "images/";
-	public static final String IMGPATHLOWCOLOR = "images/lowcolor/";
+	/**
+	 * The default path to store images.
+	 */
+	public static final String MSG_DEFAULT_IMGAGE_PATH = GUIUtils.class.getName() + "_imagePath";
+	/**
+	 * Images with a smaller pixes size than 16 bit should be stored in this path. Their names must
+	 * be equal to the corresponding images in the default path.
+	 */
+	public static final String MSG_DEFAULT_IMGAGE_PATH_LOWCOLOR =
+		GUIUtils.class.getName() + "_imagePathLowColor";
+
+	// all loaded icons are stored in the cache and do not need to be reloaded from file
+	private static Hashtable ms_iconCache = new Hashtable();
 
 	/**
-	 * Loads an Image from a File or a Resource.
-	 * @param strImage the Resource or filename of the Image
-	 * @param sync true if the loading is synchron, false if it should be asynchron
-	 * @return the loaded image or an empty icon if the image could not be loaded
+	 * Loads an ImageIcon from the classpath or the current directory.
+	 * The icon may be contained in an archive (JAR) or a directory structure. If the icon could
+	 * not be found in the classpath, it is loaded from the current directory.
+	 * If even the current directory does not contain the icon, it is loaded from the default image path.
+	 * Once an icon is loaded, it is stored in a memory cache, so that further calls of this method
+	 * do not load the icon from the file system, but from the cache.
+	 * @param a_strRelativeImagePath the relative resource path or filename of the Image
+	 * @return the loaded ImageIcon or null if the icon could not be loaded
+	 *         (getImageLoadStatus() == java.awt.MediaTracker.ERRORED)
 	 */
-	public static ImageIcon loadImageIcon(String strImage, boolean sync)
+	public static ImageIcon loadImageIcon(String a_strRelativeImagePath)
 	{
-		ImageIcon img = null;
+		return loadImageIcon(a_strRelativeImagePath, true);
+	}
 
-		// try loading the lowcolor images
-		if (Toolkit.getDefaultToolkit().getColorModel().getPixelSize() <= 16)
+	/**
+	 * Loads an ImageIcon from the classpath or the current directory.
+	 * The icon may be contained in an archive (JAR) or a directory structure. If the icon could
+	 * not be found in the classpath, it is loaded from the current directory.
+	 * If even the current directory does not contain the icon, it is loaded from the default image path.
+	 * Once an icon is loaded, it is stored in a memory cache, so that further calls of this method
+	 * do not load the icon from the file system, but from the cache.
+	 * The image may be loaded synchronously so that the method only returns when the image has been
+	 * loaded completely (or an error occured), or asynchronously so that the method returns even if
+	 * the image has not been loaded yet.
+	 * @param a_strRelativeImagePath the relative resource path or filename of the Image
+	 * @param a_bSync true if the image should be loaded synchronously; false otherwise
+	 * @return the loaded ImageIcon or null if the icon could not be loaded
+	 *         (getImageLoadStatus() == java.awt.MediaTracker.ERRORED)
+	 */
+	public static ImageIcon loadImageIcon(String a_strRelativeImagePath, boolean a_bSync)
+	{
+		ImageIcon img;
+		int statusBits;
+
+		// try to load the image from the cache
+		if (ms_iconCache.containsKey(a_strRelativeImagePath))
 		{
-			img = ImageIconLoader.loadImageIcon(IMGPATHLOWCOLOR + strImage, sync);
+			return new ImageIcon((Image)ms_iconCache.get(a_strRelativeImagePath));
 		}
-		// if loading of lowcolor images was not successful or
-		//    we have to load the hicolor images
+
+		// load image from the local classpath or the local directory
+		img = loadImageIconInternal(ResourceLoader.getResourceURL(a_strRelativeImagePath));
+
+		if (img == null && (Toolkit.getDefaultToolkit().getColorModel().getPixelSize() <= 16))
+		{
+			// load the image from the low color image path
+			img = loadImageIconInternal(
+				 ResourceLoader.getResourceURL(
+						 JAPMessages.getString(MSG_DEFAULT_IMGAGE_PATH_LOWCOLOR) + a_strRelativeImagePath));
+		}
+
 		if (img == null || img.getImageLoadStatus() == MediaTracker.ERRORED)
 		{
-			img = ImageIconLoader.loadImageIcon(IMGPATHHICOLOR + strImage, sync);
+			// load the image from the default image path
+			img = loadImageIconInternal(
+						 ResourceLoader.getResourceURL(
+							   JAPMessages.getString(MSG_DEFAULT_IMGAGE_PATH) + a_strRelativeImagePath));
+		}
+
+		if (img != null)
+		{
+			if (a_bSync)
+			{
+				statusBits = MediaTracker.ABORTED | MediaTracker.ERRORED | MediaTracker.COMPLETE;
+				while ( (img.getImageLoadStatus() & statusBits) == 0)
+				{
+					Thread.yield();
+				}
+			}
+
+			// write the image to the cache
+			ms_iconCache.put(a_strRelativeImagePath, img.getImage());
+		}
+
+		statusBits = MediaTracker.ABORTED | MediaTracker.ERRORED;
+		if (img == null || (img.getImageLoadStatus() & statusBits) != 0)
+		{
+			LogHolder.log(LogLevel.INFO, LogType.GUI,
+						  "Could not load requested image '" + a_strRelativeImagePath + "'!");
 		}
 
 		return img;
 	}
+
+	private static ImageIcon loadImageIconInternal(URL a_imageURL)
+	{
+		try
+		{
+			return new ImageIcon(a_imageURL);
+		}
+		catch (NullPointerException a_e)
+		{
+			return null;
+		}
+	}
+
+	/**
+	 * Finds the first parent that is a window.
+	 * @param a_parentComponent a Component
+	 * @return the first parent that is a window
+	 */
+	public static Window getParentWindow(Component a_parentComponent)
+	{
+		Component parentComponent = a_parentComponent;
+		while (parentComponent != null && ! (parentComponent instanceof Window))
+		{
+
+			parentComponent = parentComponent.getParent();
+		}
+		return (Window)parentComponent;
+	}
+
 
 	/**
 	 * Positions a window on the screen relative to a parent window so that its position is optimised.

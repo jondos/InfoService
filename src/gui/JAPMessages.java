@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2000, The JAP-Team
+ Copyright (c) 2000-2005, The JAP-Team
  All rights reserved.
  Redistribution and use in source and binary forms, with or without modification,
  are permitted provided that the following conditions are met:
@@ -29,8 +29,10 @@
 package gui;
 
 import java.util.Locale;
+import java.util.Hashtable;
 import java.util.PropertyResourceBundle;
 import java.util.ResourceBundle;
+import java.util.MissingResourceException;
 import java.text.MessageFormat;
 import java.awt.Frame;
 
@@ -39,46 +41,101 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 
-
+/**
+ * Use this class to display GUI texts in the user's language. The texts Strings are loaded from
+ * properties files, so-called Resource Bundles. The default resource bundle is english and its
+ * name ends with '_en.properties'. Resource bundle files in other languages must have language specific
+ * endings as given by ISO 639. The default resource bundle must always be present and must contain all
+ * language strings. The other bundles may contain a subset of these strings.
+ * @see http://www.w3.org/WAI/ER/IG/ert/iso639.htm
+ */
 public final class JAPMessages
 {
-	private static ResourceBundle msg = null;
+	private static ResourceBundle ms_resourceBundle = null;
+	private static ResourceBundle ms_defaultResourceBundle = null;
+	private static Locale ms_locale;
+	private static Hashtable ms_cachedMessages;
 
 	private JAPMessages()
 	{
 	}
 
-	/* Initalize with the System default Locale...*/
+	/**
+	 * Initialises the resource bundle with the System default Locale. The initialisation may be repeated
+	 * with a new Locale.
+	 * @param a_resourceBundleFilename a file name for the resource bundle; the language code for the
+	 * locale will be added programmatically (e.g. _en, _de, ...).
+	 */
 	public static void init(String a_resourceBundleFilename)
 	{
 		// Load Texts for Messages and Windows
-		init(Locale.getDefault(), a_resourceBundleFilename);
+		init(null, a_resourceBundleFilename);
 	}
 
-	/* Init with the specified Locale**/
+	/**
+	 * Initialises the resource bundle with the specified Locale. The initialisation may be repeated
+	 * with a new Locale.
+	 * @param locale a Locale
+	 * @param a_resourceBundleFilename a file name for the resource bundle; the language code for the
+	 * locale will be added programmatically (e.g. _en, _de, ...).
+	 */
 	public static void init(Locale locale, String a_resourceBundleFilename)
 	{
-		// Load Texts for Messages and Windows
 		try
 		{
-			msg = PropertyResourceBundle.getBundle(a_resourceBundleFilename, locale);
+			ms_defaultResourceBundle = PropertyResourceBundle.getBundle(a_resourceBundleFilename,
+				Locale.ENGLISH);
 		}
-		catch (Exception e1)
+		catch (Exception a_e)
+		{
+			JAPAWTMsgBox.MsgBox(new Frame(),
+								"File not found: " + a_resourceBundleFilename + "_en" +
+								".properties\nYour package of JAP may be corrupted.\n" +
+								"Try again to download or install the package.",
+								"Error");
+			System.exit(1);
+		}
+
+		try
+		{
+			ms_resourceBundle = PropertyResourceBundle.getBundle(a_resourceBundleFilename, locale);
+		}
+		catch (Exception a_e)
 		{
 			try
 			{
-				msg = PropertyResourceBundle.getBundle(a_resourceBundleFilename);
+				if (locale == null || !locale.equals(Locale.getDefault()))
+				{
+					locale = Locale.getDefault();
+					ms_resourceBundle = PropertyResourceBundle.getBundle(a_resourceBundleFilename, locale);
+				}
+				else
+				{
+					throw a_e;
+				}
 			}
 			catch (Exception e)
 			{
-				JAPAWTMsgBox.MsgBox(new Frame(),
-									"File not found: " + a_resourceBundleFilename +
-									".properties\nYour package of JAP may be corrupted.\n"+
-									"Try again to download or install the package.",
-									"Error");
-				System.exit( -1);
+				ms_resourceBundle = null;
 			}
 		}
+		if (ms_resourceBundle == null || locale.getLanguage().equals(Locale.ENGLISH))
+		{
+			locale = Locale.ENGLISH;
+			ms_resourceBundle = ms_defaultResourceBundle;
+		}
+
+		ms_cachedMessages = new Hashtable();
+		ms_locale = locale;
+	}
+
+	/**
+	 * Returns the Locale that is used by this class to get the messages.
+	 * @return the Locale that is used by this class to get the messages
+	 */
+	public static Locale getLocale()
+	{
+		return ms_locale;
 	}
 
 	/**
@@ -88,18 +145,49 @@ public final class JAPMessages
 	 */
 	public static String getString(String a_key)
 	{
+		String string = (String)ms_cachedMessages.get(a_key);
+
+		if (string != null)
+		{
+			return string;
+		}
+
 		try
 		{
-			String s=msg.getString(a_key);
-			if(s==null||s.length()==0)
-				return a_key;
-			return s;
+			string = ms_resourceBundle.getString(a_key);
+			if (string == null || string.trim().length() == 0)
+			{
+				throw new MissingResourceException("Resource is empty",
+					PropertyResourceBundle.class.getName(), a_key);
+			}
+
 		}
 		catch (Exception e)
 		{
+			try
+			{
+				if (ms_resourceBundle != ms_defaultResourceBundle)
+				{
+					string = ms_defaultResourceBundle.getString(a_key);
+					LogHolder.log(LogLevel.DEBUG, LogType.GUI,
+								  "Could not load messsage string '" + a_key + "' for the locale '" +
+								  ms_locale.getLanguage() + "'. Using default resource bundle.", true);
+				}
+			}
+			catch (Exception a_e)
+			{
+				string = null;
+			}
+
+			if (string == null || string.trim().length() == 0)
+			{
 			LogHolder.log(LogLevel.INFO, LogType.GUI, "Could not load messsage string: " + a_key, true);
-			return a_key;
+				string = a_key;
 		}
+	}
+
+		ms_cachedMessages.put(a_key, string);
+		return string;
 	}
 
 	/**
@@ -132,5 +220,4 @@ public final class JAPMessages
 	{
 		return getString(a_key, Util.toArray(a_argument));
 	}
-
 }
