@@ -33,7 +33,7 @@ import java.util.Vector;
 import anon.util.Util;
 
 /**
- * Objects of this class store a country code an can translate it into
+ * Objects of this class store a country code and can translate it into
  * the localised name of the corresponding country.
  *
  * @author Kuno G. Gruen
@@ -41,7 +41,7 @@ import anon.util.Util;
  * @see http://www.iso.ch/iso/en/prods-services/iso3166ma/02iso-3166-code-lists/iso_3166-1_decoding_table.html
  * @version ISO 3166 on 25.10.05
  */
-public class CountryMapper
+public class CountryMapper extends AbstractISOCodeMapper
 {
 	private static final String[] ms_ctrArr =
 		{
@@ -81,12 +81,6 @@ public class CountryMapper
 
 	private static final String MSG_CHOOSE_COUNTRY = CountryMapper.class.getName() + "_ChooseCountry";
 
-	private final int MAX_LENGTH;
-	private boolean m_bUseDefaultLocale;
-	private String m_iso2;
-	private Locale m_locale;
-
-
 	/**
 	 * Constructs an empty CountryMapper object. Its toString() method
 	 * returns a message that requests to choose a valid country code.
@@ -94,7 +88,7 @@ public class CountryMapper
 	 */
 	public CountryMapper()
 	{
-		this(null, 0);
+		super();
 	}
 
 	/**
@@ -105,7 +99,7 @@ public class CountryMapper
 	 */
 	public CountryMapper(int a_maxCountryLength)
 	{
-		this(null, a_maxCountryLength);
+		super(a_maxCountryLength);
 	}
 
 	/**
@@ -119,7 +113,7 @@ public class CountryMapper
 	public CountryMapper(String a_ISO2CountryCode, int a_maxCountryLength)
 		throws IllegalArgumentException
 	{
-		this(a_ISO2CountryCode, a_maxCountryLength, null);
+		super(a_ISO2CountryCode, a_maxCountryLength);
 	}
 
 	/**
@@ -132,7 +126,7 @@ public class CountryMapper
 	public CountryMapper(String a_ISO2CountryCode)
 		throws IllegalArgumentException
 	{
-		this(a_ISO2CountryCode, 0, null);
+		super(a_ISO2CountryCode);
 	}
 
 	/**
@@ -146,7 +140,7 @@ public class CountryMapper
 	public CountryMapper(String a_ISO2CountryCode, Locale a_locale)
 		throws IllegalArgumentException
 	{
-		this(a_ISO2CountryCode, 0, a_locale);
+		super(a_ISO2CountryCode, a_locale);
 	}
 
 	/**
@@ -158,33 +152,10 @@ public class CountryMapper
 	 * @param a_maxCountryLength the maximum length of the toString() output
 	 * @throws IllegalArgumentException
 	 */
-	public CountryMapper(String a_ISO2CountryCode, int a_maxCountryLength,
-						 Locale a_locale) throws IllegalArgumentException
+	public CountryMapper(String a_ISO2CountryCode, int a_maxCountryLength, Locale a_locale)
+		throws IllegalArgumentException
 	{
-		MAX_LENGTH = a_maxCountryLength;
-
-		if (a_ISO2CountryCode == null || a_ISO2CountryCode.trim().length() == 0)
-		{
-			a_ISO2CountryCode = "";
-		}
-		if (a_ISO2CountryCode.length() > 0 && a_ISO2CountryCode.length() != 2)
-		{
-			throw new IllegalArgumentException(
-				"ISO Country code must have a length of two characters!");
-		}
-
-		m_iso2 = a_ISO2CountryCode.trim().toUpperCase();
-
-		if (a_locale == null)
-		{
-			m_bUseDefaultLocale = true;
-			m_locale = Locale.getDefault();
-		}
-		else
-		{
-			m_bUseDefaultLocale = false;
-			m_locale = a_locale;
-		}
+		super(a_ISO2CountryCode, a_maxCountryLength, a_locale);
 	}
 
 	/**
@@ -243,94 +214,13 @@ public class CountryMapper
 		return Util.sortStrings(localisedCountries);
 	}
 
-	/**
-	 * Returns the ISO country code stored in this CountryMapper object. The country code may be an empty
-	 * String of the length zero or a valid two-letter country code.
-	 * @return the ISO country code stored in this CountryMapper object
-	 */
-	public String getISOCountryCode()
+	protected final String getChooseMessage()
 	{
-		return m_iso2;
+		return JAPMessages.getString(MSG_CHOOSE_COUNTRY);
 	}
 
-	/**
-	 * Returns if the ISO country codes of two CountryMapper objects are equal.
-	 * @param a_object an Object
-	 * @return true if the ISO country codes of two CountryMapper objects are
-	 *         equal; false otherwise
-	 */
-	public boolean equals(Object a_object)
+	protected String getJRETransaltionOfISOCode(String a_ISOCountryCode, Locale a_locale)
 	{
-		if (a_object == null || !(a_object instanceof CountryMapper))
-		{
-			return false;
-		}
-		return getISOCountryCode().equals(
-			  ((CountryMapper)a_object).getISOCountryCode());
-	}
-
-	/**
-	 * Returns the hash code of the ISO country code.
-	 * @return the hash code of the ISO country code
-	 */
-	public int hashCode()
-	{
-		return getISOCountryCode().hashCode();
-	}
-
-	/**
-	 * Returns the localised name of the ISO country code of this
-	 * CountryMapper object. The output may depend on the current locale or
-	 * on the locale that may be defined in the constructor.
-	 * @return the localised name of the ISO country code
-	 */
-	public String toString()
-	{
-		String strCName;
-		String temp;
-		Locale locale;
-
-		if (m_iso2.length() == 0)
-		{
-			strCName = JAPMessages.getString(MSG_CHOOSE_COUNTRY);
-		}
-		else
-		{
-			if (m_bUseDefaultLocale)
-			{
-				locale = Locale.getDefault();
-			}
-			else
-			{
-				locale = m_locale;
-			}
-
-			strCName = getJRETransaltionOfCountryCode(m_iso2, locale);
-
-			if (strCName == null || strCName.equals(m_iso2) ||
-				// some old JREs cannot resolve the country code correctly
-				strCName.equals(getJRETransaltionOfCountryCode("AA", locale)))
-			{
-				temp = CountryMapper.class.getName() + "_" + m_iso2;
-				strCName = JAPMessages.getString(temp);
-				if (strCName.equals(temp))
-				{
-					// the country could not be translated
-					strCName = m_iso2;
-				}
-			}
-		}
-
-		if (MAX_LENGTH > 0 && strCName.length() > MAX_LENGTH)
-		{
-			strCName = strCName.substring(0, MAX_LENGTH);
-		}
-
-		return strCName;
-	}
-
-	private static String getJRETransaltionOfCountryCode(String a_contryCode, Locale a_locale)
-	{
-		return new Locale(a_locale.getLanguage(), a_contryCode).getDisplayCountry();
+		return new Locale(a_locale.getLanguage(), a_ISOCountryCode).getDisplayCountry(a_locale);
 	}
 }

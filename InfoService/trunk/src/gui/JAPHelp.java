@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2000, The JAP-Team
+ Copyright (c) 2000-2006, The JAP-Team
  All rights reserved.
  Redistribution and use in source and binary forms, with or without modification,
  are permitted provided that the following conditions are met:
@@ -29,7 +29,9 @@ package gui;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.IOException;
 import java.net.URL;
+import java.util.Locale;
 import java.util.Vector;
 
 import java.awt.BorderLayout;
@@ -37,123 +39,109 @@ import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Frame;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
-import javax.swing.JDialog;
+import javax.swing.JComponent;
 import javax.swing.JEditorPane;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.LookAndFeel;
 import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
 import javax.swing.text.Document;
 
 import anon.util.ResourceLoader;
-import gui.JAPMessages;
-import jap.JAPController;
-import jap.JAPUtil;
-import jap.JAPConstants;
+import gui.JAPHelpContext.IHelpContext;
+import gui.dialog.JAPDialog;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 
-/* classes modified from Swing Example "Metalworks" */
-/** Help window for the JAP. Thi is a singleton meaning that there exists only one help window all the time.*/
-public final class JAPHelp extends JDialog implements ActionListener, PropertyChangeListener, WindowListener
+/**
+ * Help window for the JAP. This is a singleton meaning that there exists only one help window all the time.
+ * Each supported language is specified by the property languageCode[i], where [i] is the
+ * language index starting with '1'. To fully support a language, at least the file index_xx.html is needed,
+ * where xx is the two-letter language code given in the property. The number of supported languages is
+ * unlimited, as long as the indices are incremented by '1'.
+ * The help files are stored in one or more directories, specified by the message properties 'helpPath' and
+ * helpPath[i]. It is enough to specify the property 'helpPath', specific directories for each language
+ * are optional.
+ * (classes modified from Swing Example "Metalworks")
+ * @see gui.LanguageMapper
+ * @see gui.JAPMessages
+ */
+public final class JAPHelp extends JAPDialog
 {
-        private String helpPath = " ";
-        private String helpLang = " ";
-        private String langShort = " ";
-        private JComboBox language;
-        HtmlPane m_htmlpaneTheHelpPane;
+	public static final String INDEX_CONTEXT = "index";
+
+	// messages
+	public static final String MSG_HELP_BUTTON = JAPHelp.class.getName() + ("_helpButton");
+	public static final String MSG_HELP_MENU_ITEM = JAPHelp.class.getName() + ("_helpMenuItem");
+	private static final String MSG_CLOSE_BUTTON = JAPHelp.class.getName() + ("_closeButton");
+	private static final String MSG_HELP_WINDOW = JAPHelp.class.getName() + ("_helpWindow");
+	private static final String MSG_HELP_PATH = JAPHelp.class.getName() + ("_helpPath");
+	private static final String MSG_LANGUAGE_CODE = JAPHelp.class.getName() + ("_languageCode");
+	private static final String MSG_ERROR_EXT_URL = JAPHelp.class.getName() + ("_errorExtURL");
+
+	// images
+	private static final String IMG_HOME = JAPHelp.class.getName() + "_home.gif";
+	private static final String IMG_PREVIOUS = JAPHelp.class.getName() + ("_previous.gif");
+	private static final String IMG_NEXT = JAPHelp.class.getName() + ("_next.gif");
+
+	private String m_helpPath = " ";
+	private LanguageMapper m_language = new LanguageMapper();
+	private JComboBox m_comBoxLanguage;
+	private HtmlPane m_htmlpaneTheHelpPane;
 
         private JButton m_closeButton;
         private JButton m_backButton;
         private JButton m_forwardButton;
         private JButton m_homeButton;
 
-        private JDialog m_virtualParent;
-
         private boolean m_initializing;
         private JAPHelpContext m_helpContext;
 
         private static JAPHelp ms_theJAPHelp = null;
 
-        private JAPHelp(JFrame parent)
+	private JAPHelp(Frame parent, IExternalURLCaller a_urlCaller)
         {
-                super(JAPController.getView(), JAPMessages.getString("helpWindow"), false);
-                init();
-        }
+		super(parent, JAPMessages.getString(MSG_HELP_WINDOW), false);
 
-        public static JAPHelp getInstance()
-        {
-                if (ms_theJAPHelp == null)
-                {
-                        ms_theJAPHelp = new JAPHelp(JAPController.getView());
-                }
-                return ms_theJAPHelp;
-        }
-
-        /**
-         * If the parent is a JDialog, we have to use it as virtualParent. It then gets
-         * invisble when the help window arises and visible again when the help window
-         * is closed. This is a workaround for the missing ability to make a JDialog parent
-         * of another JDialog in JDK 1.1.8 (Swing).
-         * @param parent JFrame
-         * @param virtualParent JDialog
-         */
-        private void init()
-        {
                 m_initializing = true;
                 m_helpContext = new JAPHelpContext();
-                m_htmlpaneTheHelpPane = new HtmlPane();
-                m_htmlpaneTheHelpPane.addPropertyChangeListener(this);
-                this.addWindowListener(this);
+		m_htmlpaneTheHelpPane = new HtmlPane(a_urlCaller);
+		m_htmlpaneTheHelpPane.addPropertyChangeListener(new HelpListener());
 
                 JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
-                language = new JComboBox();
+		m_comBoxLanguage = new JComboBox();
 
-                LookAndFeel laf = UIManager.getLookAndFeel();
-                boolean bMetalWorkAround = false;
-                if (laf != null && UIManager.getCrossPlatformLookAndFeelClassName().equals(laf.getClass().getName())) //stupid but is necessary for JDK 1.5 and Metal L&F on Windows XP (and maybe others)
-                {
-                        bMetalWorkAround = true;
-                }
-
-                m_backButton = new JButton(JAPUtil.loadImageIcon(JAPConstants.IMAGE_PREV, true));
-                if (bMetalWorkAround)
-                {
+		m_backButton = new JButton(GUIUtils.loadImageIcon(IMG_PREVIOUS, true));
                         m_backButton.setBackground(Color.gray); //this together with the next lines sems to be
-                }
                 m_backButton.setOpaque(false); //stupid but is necessary for JDK 1.5 on Windows XP (and maybe others)
                 m_backButton.setBorder(new EmptyBorder(0, 0, 0, 0));
                 m_backButton.setFocusPainted(false);
 
-                m_forwardButton = new JButton(JAPUtil.loadImageIcon(JAPConstants.IMAGE_NEXT, true));
-                if (bMetalWorkAround)
-                {
+		m_forwardButton = new JButton(GUIUtils.loadImageIcon(IMG_NEXT, true));
                         m_forwardButton.setBackground(Color.gray); //this together with the next lines sems to be
-                }
                 m_forwardButton.setOpaque(false); //stupid but is necessary for JDK 1.5 on Windows XP (and maybe others)
                 m_forwardButton.setBorder(new EmptyBorder(0, 0, 0, 0));
                 m_forwardButton.setFocusPainted(false);
-                m_homeButton = new JButton(JAPUtil.loadImageIcon(JAPConstants.IMAGE_HOME, true));
-                if (bMetalWorkAround)
-                {
+
+		m_homeButton = new JButton(GUIUtils.loadImageIcon(IMG_HOME, true));
                         m_homeButton.setBackground(Color.gray); //this together with the next lines sems to be
-                }
                 m_homeButton.setOpaque(false); //stupid but is necessary for JDK 1.5 on Windows XP (and maybe others)
                 m_homeButton.setBorder(new EmptyBorder(0, 0, 0, 0));
                 m_homeButton.setFocusPainted(false);
-                m_closeButton = new JButton(JAPMessages.getString("closeButton"));
+
+		m_closeButton = new JButton(JAPMessages.getString(MSG_CLOSE_BUTTON));
                 m_forwardButton.setEnabled(false);
                 m_backButton.setEnabled(false);
 
@@ -161,99 +149,169 @@ public final class JAPHelp extends JDialog implements ActionListener, PropertyCh
                 buttonPanel.add(m_backButton);
                 buttonPanel.add(m_forwardButton);
                 buttonPanel.add(new JLabel("   "));
-                buttonPanel.add(language);
+		buttonPanel.add(m_comBoxLanguage);
                 buttonPanel.add(new JLabel("   "));
                 buttonPanel.add(m_closeButton);
 
                 getContentPane().add(m_htmlpaneTheHelpPane, BorderLayout.CENTER);
                 getContentPane().add(buttonPanel, BorderLayout.NORTH);
-                //getContentPane().add(container);
                 getRootPane().setDefaultButton(m_closeButton);
-                m_closeButton.addActionListener(this);
-                m_backButton.addActionListener(this);
-                m_forwardButton.addActionListener(this);
-                m_homeButton.addActionListener(this);
-                language.addActionListener(this);
-                for (int i = 1; i < JAPConstants.MAXHELPLANGUAGES; i++)
+		m_closeButton.addActionListener(new HelpListener());
+		m_backButton.addActionListener(new HelpListener());
+		m_forwardButton.addActionListener(new HelpListener());
+		m_homeButton.addActionListener(new HelpListener());
+		m_comBoxLanguage.addActionListener(new HelpListener());
+		for (int i = 1; true; i++)
                 {
                         try
                         {
-                                String path = JAPMessages.getString("helpPath" + String.valueOf(i));
+				String langCode = JAPMessages.getString(MSG_LANGUAGE_CODE + String.valueOf(i));
+				LanguageMapper lang = new LanguageMapper(langCode, new Locale(langCode, ""));
+				m_comBoxLanguage.addItem(lang);
 
-                                helpLang = JAPMessages.getString("lang" + String.valueOf(i));
-                                String lshort = JAPMessages.getString("langshort" + String.valueOf(i));
+				if ((m_helpPath.equals(" ") && m_language.getISOCode().length() == 0) ||
+					lang.getISOCode().equals(JAPMessages.getLocale().getLanguage()))
+				{
+					m_helpPath = getHelpPath(i);
+					m_language = lang;
+					m_comBoxLanguage.setSelectedIndex(i - 1);
+				}
+			}
+			catch (Exception e)
+			{
+				break;
+			}
+		}
 
-                                // This checks if the entry exists in the properties file
-                                // if yes, the item will be added
-                                if ( (helpLang.equals("lang" + String.valueOf(i))) != true)
+		// set window size
+		( (JComponent) getContentPane()).setPreferredSize(new Dimension(
+			Math.min(Toolkit.getDefaultToolkit().getScreenSize().width - 50, 600),
+			Math.min(Toolkit.getDefaultToolkit().getScreenSize().height - 80, 350)));
+		pack();
+		m_initializing = false;
+	}
+
+	/**
+	 * Creates and initialises a new global help object with the given frame as parent frame.
+	 * @param a_parent the parent frame of the help object
+	 * @param a_urlCaller the caller that is used to open external URLs (may be null)
+	 */
+	public static void init(Frame a_parent, IExternalURLCaller a_urlCaller)
+	{
+		if (ms_theJAPHelp == null)
                                 {
-                                        language.addItem(helpLang);
+			ms_theJAPHelp = new JAPHelp(a_parent, a_urlCaller);
+		}
                                 }
 
-                                // Make sure to use the language with number 1 listed in the properties file
-                                if (helpPath.equals(" ") && langShort.equals(" "))
+	/**
+	 * Returns the current help instance.
+	 * @return the current help instance
+	 */
+	public static JAPHelp getInstance()
                                 {
-                                        helpPath = path;
-                                        langShort = lshort;
+		return ms_theJAPHelp;
                                 }
-                        }
-                        catch (Exception e)
+
+	/**
+	 * An instance of this interface is needed to open external URLs.
+	 */
+	public static interface IExternalURLCaller
                         {
+		/**
+		 * Returns if the caller was able to open the URL in the browser
+		 * @param a_url a URL
+		 * @return if the caller was able to open the URL in the browser
+		 */
+		boolean openURL(URL a_url);
                         }
+
+	/**
+	 * Creates a button that opens the help window with the given context.
+	 * @param a_helpContext a help context
+	 * @return a button that opens the help window with the given context
+	 */
+	public static JButton createHelpButton(IHelpContext a_helpContext)
+	{
+		JButton helpButton = new JButton(JAPMessages.getString(MSG_HELP_BUTTON));
+		helpButton.addActionListener(new HelpContextActionListener(a_helpContext));
+		return helpButton;
                 }
-                pack();
-                JAPUtil.centerFrame(this);
-                m_initializing = false;
+
+	/**
+	 * Creates a menu item that opens the help window with the given context.
+	 * @param a_helpContext a help context
+	 * @return a menu item that opens the help window with the given context
+	 */
+	public static JMenuItem createHelpMenuItem(IHelpContext a_helpContext)
+	{
+		JMenuItem helpButton = new JMenuItem(JAPMessages.getString(MSG_HELP_MENU_ITEM));
+		helpButton.addActionListener(new HelpContextActionListener(a_helpContext));
+		return helpButton;
         }
 
-        public Dimension getPreferredSize()
+	public void loadCurrentContext()
         {
-                Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
-                d.width = Math.min(d.width - 50, 850 /*400*/);
-                d.height = Math.min(d.height - 80, 600 /*300*/);
-                return d;
+		setVisible(true);
         }
 
-        public void actionPerformed(ActionEvent e)
+	public void setVisible(boolean a_bVisible)
+	{
+		if (a_bVisible)
         {
-                if (e.getSource() == language && !m_initializing)
+			try
+			{
+				m_htmlpaneTheHelpPane.loadContext(m_helpPath, m_helpContext.getContext(), m_language);
+				if (!isVisible())
                 {
-                        helpPath = JAPMessages.getString("helpPath" + String.valueOf(language.getSelectedIndex() + 1));
-                        langShort = JAPMessages.getString("langshort" + String.valueOf(language.getSelectedIndex() + 1));
-                        m_htmlpaneTheHelpPane.load(helpPath + m_helpContext.getContext() +
-                                                                           "_" + langShort +
-                                                                           ".html");
+					super.setVisible(true);
                 }
-                else if (e.getSource() == m_closeButton)
+			}
+			catch (Exception e)
                 {
-                        closePressed();
                 }
-                else if (e.getSource() == m_backButton)
+		}
+		else
                 {
-                        backPressed();
+			super.setVisible(false);
                 }
-                else if (e.getSource() == m_forwardButton)
+	}
+
+	/**
+	 * Returns the context object
+	 * @return JAPHelpContext
+	 */
+	public JAPHelpContext getContextObj()
                 {
-                        forwardPressed();
+		return m_helpContext;
                 }
-                else if (e.getSource() == m_homeButton)
+
+	private static final class HelpContextActionListener implements ActionListener
                 {
-                        homePressed();
+		private IHelpContext m_helpContext;
+
+		public HelpContextActionListener(IHelpContext a_helpContext)
+		{
+			m_helpContext = a_helpContext;
+		}
+
+		public void actionPerformed(ActionEvent a_event)
+		{
+			getInstance().getContextObj().setContext(m_helpContext);
+			getInstance().loadCurrentContext();
+			getInstance().toFront();
+			getInstance().requestFocus();
                 }
         }
 
         private void homePressed()
         {
-                m_htmlpaneTheHelpPane.load(helpPath + "index_" + langShort + ".html");
+		m_htmlpaneTheHelpPane.loadContext(m_helpPath, INDEX_CONTEXT, m_language);
         }
 
         private void closePressed()
         {
                 setVisible(false);
-                if (m_virtualParent != null)
-                {
-                        m_virtualParent.setVisible(true);
-                }
         }
 
         private void backPressed()
@@ -292,29 +350,33 @@ public final class JAPHelp extends JDialog implements ActionListener, PropertyCh
                 }
         }
 
-        public void loadCurrentContext()
+	private class HelpListener implements ActionListener, PropertyChangeListener
         {
-                try
+		public void actionPerformed(ActionEvent e)
                 {
-                        String currentContext = m_helpContext.getContext();
-                        m_htmlpaneTheHelpPane.load(helpPath + currentContext + "_" + langShort + ".html");
-                        if (!isVisible())
+			if (e.getSource() == m_comBoxLanguage && !m_initializing)
                         {
-                                setVisible(true);
+				m_helpPath = getHelpPath(m_comBoxLanguage.getSelectedIndex() + 1);
+				m_language = new LanguageMapper(JAPMessages.getString(MSG_LANGUAGE_CODE +
+					String.valueOf(m_comBoxLanguage.getSelectedIndex() + 1)));
+				m_htmlpaneTheHelpPane.loadContext(m_helpPath, m_helpContext.getContext(), m_language);
                         }
+			else if (e.getSource() == m_closeButton)
+			{
+				closePressed();
                 }
-                catch (Exception e)
+			else if (e.getSource() == m_backButton)
                 {
+				backPressed();
                 }
+			else if (e.getSource() == m_forwardButton)
+			{
+				forwardPressed();
         }
-
-        /**
-         * Returns the context object
-         * @return JAPHelpContext
-         */
-        public JAPHelpContext getContextObj()
+			else if (e.getSource() == m_homeButton)
         {
-                return m_helpContext;
+				homePressed();
+			}
         }
 
         /**
@@ -328,51 +390,30 @@ public final class JAPHelp extends JDialog implements ActionListener, PropertyCh
                         checkNavigationButtons();
                 }
         }
-
-        public void windowOpened(WindowEvent e)
-        {
         }
 
-        public void windowClosing(WindowEvent e)
+	private final class HtmlPane extends JScrollPane implements HyperlinkListener
         {
-                closePressed();
-        }
-
-        public void windowClosed(WindowEvent e)
-        {
-        }
-
-        public void windowIconified(WindowEvent e)
-        {
-        }
-
-        public void windowDeiconified(WindowEvent e)
-        {
-        }
-
-        public void windowActivated(WindowEvent e)
-        {
-        }
-
-        public void windowDeactivated(WindowEvent e)
-        {
-        }
-}
-
-final class HtmlPane extends JScrollPane implements HyperlinkListener
-{
+		private IExternalURLCaller m_urlCaller;
         private JEditorPane html;
         private URL url;
         private Cursor cursor;
         private Vector m_history;
+		private Vector m_historyViewports;
         private int m_historyPosition;
 
-        public HtmlPane()
+		public HtmlPane(IExternalURLCaller a_urlCaller)
         {
-                html = new JEditorPane();
+			if (a_urlCaller == null)
+			{
+				a_urlCaller = new IExternalURLCaller(){public boolean openURL(URL a_url) {return false;}};
+			}
+			m_urlCaller = a_urlCaller;
+			html = new JEditorPane("text/html", "<html><body></body></html>");
                 html.setEditable(false);
                 html.addHyperlinkListener(this);
                 m_history = new Vector();
+			m_historyViewports = new Vector();
                 m_historyPosition = -1;
 
                 getViewport().add(html);
@@ -391,6 +432,8 @@ final class HtmlPane extends JScrollPane implements HyperlinkListener
         {
                 m_historyPosition--;
                 this.loadURL( (URL) m_history.elementAt(m_historyPosition));
+			//getViewport().setViewPosition((Point)m_historyViewports.elementAt(m_historyPosition));
+
         }
 
         /**
@@ -400,6 +443,8 @@ final class HtmlPane extends JScrollPane implements HyperlinkListener
         {
                 m_historyPosition++;
                 this.loadURL( (URL) m_history.elementAt(m_historyPosition));
+			//getViewport().setViewPosition((Point)m_historyViewports.elementAt(m_historyPosition));
+
         }
 
         /**
@@ -415,13 +460,63 @@ final class HtmlPane extends JScrollPane implements HyperlinkListener
                 }
         }
 
-        public void load(String fn)
+		public boolean loadContext(String a_strHelpPath, String a_strContext, LanguageMapper a_language)
         {
-                URL url = ResourceLoader.getResourceURL(fn);
+			URL url = ResourceLoader.getResourceURL(
+				 a_strHelpPath + a_strContext + "_" + a_language.getISOCode() + ".html");
+			boolean bLoaded = false;
+
                 if (url != null)
                 {
                         linkActivated(url);
+				bLoaded = true;
                 }
+			else
+			{
+				LogHolder.log(LogLevel.WARNING, LogType.GUI,
+							  "Could not load help context '" + a_strContext +
+							  "_" + a_language.getISOCode() + "'");
+
+				if(a_strContext != null)
+				{
+					if (!a_strContext.equals(INDEX_CONTEXT))
+					{
+						// try to load the index page
+						bLoaded = loadContext(a_strHelpPath, INDEX_CONTEXT, a_language);
+					}
+					else if (a_language.equals(new LanguageMapper("EN")))
+					{
+						LogHolder.log(LogLevel.ERR, LogType.GUI,
+									  "No index help file for language '" + a_language.getISOCode() +
+									  "', help files seem to be corrupt!");
+						return true;
+					}
+
+					if (!bLoaded)
+					{
+						// the help files for this language seem to be corrupted; switch to english
+						LanguageMapper english = new LanguageMapper("EN");
+						int i;
+						for (i = 0; i < m_comBoxLanguage.getItemCount(); i++)
+						{
+							if (((LanguageMapper)m_comBoxLanguage.getItemAt(i)).equals(english) &&
+								m_comBoxLanguage.getSelectedIndex() != i)
+							{
+								m_comBoxLanguage.setSelectedIndex(i);
+								new HelpListener().actionPerformed(new ActionEvent(m_comBoxLanguage,0,""));
+								break;
+							}
+						}
+
+						LogHolder.log(LogLevel.WARNING, LogType.GUI,
+									  "No index help file for language '" + a_language.getISOCode() +
+									  "', switching to '" + english.getISOCode() + "'");
+
+						bLoaded = true;
+					}
+				}
+			}
+			return bLoaded;
         }
 
         public void hyperlinkUpdate(HyperlinkEvent e)
@@ -440,10 +535,9 @@ final class HtmlPane extends JScrollPane implements HyperlinkListener
                 }
         }
 
-        protected void linkActivated(URL u)
+		private void linkActivated(URL u)
         {
-                Cursor waitCursor = Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR);
-                html.setCursor(waitCursor);
+			html.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
                 SwingUtilities.invokeLater(new PageLoader(u));
                 //Update history
                 this.addToHistory(u);
@@ -499,14 +593,13 @@ final class HtmlPane extends JScrollPane implements HyperlinkListener
          * Loads URL without adding it to the history
          * @param a_url URL
          */
-        protected void loadURL(URL a_url)
+		private void loadURL(URL a_url)
         {
-                Cursor waitCursor = Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR);
-                html.setCursor(waitCursor);
+			html.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
                 SwingUtilities.invokeLater(new PageLoader(a_url));
         }
 
-        final class PageLoader implements Runnable
+		private final class PageLoader implements Runnable
         {
                 PageLoader(URL u)
                 {
@@ -523,15 +616,20 @@ final class HtmlPane extends JScrollPane implements HyperlinkListener
                                 // automatic validation is activated.
                                 html.getParent().repaint();
                         }
-                        else
+				else if (
+					url.getProtocol().startsWith(ResourceLoader.SYSTEM_RESOURCE_TYPE_FILE)  ||
+					url.getProtocol().startsWith(ResourceLoader.SYSTEM_RESOURCE_TYPE_ZIP) ||
+					url.getProtocol().startsWith(ResourceLoader.SYSTEM_RESOURCE_TYPE_JAR) ||
+					url.getProtocol().startsWith(ResourceLoader.SYSTEM_RESOURCE_TYPE_GENERIC))
                         {
                                 Document doc = html.getDocument();
                                 try
                                 {
                                         html.setPage(url);
                                 }
-                                catch (Throwable ioe)
+					catch (IOException ioe)
                                 {
+						/** @todo if this is a context page, try to load the english version */
                                         html.setDocument(doc);
                                         getToolkit().beep();
                                 }
@@ -543,6 +641,84 @@ final class HtmlPane extends JScrollPane implements HyperlinkListener
                                         SwingUtilities.invokeLater(this);
                                 }
                         }
+				else
+				{
+					if (!m_urlCaller.openURL(url))
+					{
+						html.setCursor(cursor);
+						JAPDialog.showMessageDialog(html.getParent(), JAPMessages.getString(MSG_ERROR_EXT_URL),
+												 new ExternalLinkedInformation(url));
+					}
+					if (m_historyPosition > 0)
+					{
+						m_historyPosition--;
+						m_history.removeElementAt(m_history.size() - 1);
+					}
+				}
+			}
+
+			/**
+			 * Needed to copy an external URL that could not be opened to the clip board.
+			 */
+			private class ExternalLinkedInformation implements JAPDialog.ILinkedInformation
+			{
+				private URL m_url;
+
+				public ExternalLinkedInformation(URL a_url)
+				{
+					m_url = a_url;
+				}
+
+				/**
+				 * Returns the URL that could not be opened in the help window.
+				 * @return the URL
+				 */
+				public String getMessage()
+				{
+					return m_url.toString();
+				}
+
+				/**
+				 * No action is performed on clicking the link.
+				 * @param a_bState is ignored
+				 */
+				public void clicked(boolean a_bState)
+				{
+				}
+
+				/**
+				 * Returns TYPE_SELECTABLE_LINK.
+				 * @return TYPE_SELECTABLE_LINK
+				 */
+				public int getType()
+				{
+					return TYPE_SELECTABLE_LINK;
+				}
+
+				/**
+				 * Returns true, as the dialog does not need to open an other window.
+				 * @return true
+				 */
+				public boolean isApplicationModalityForced()
+				{
+					return true;
+				}
+			}
+		}
+	}
+
+	private static String getHelpPath(int a_languageIndex)
+	{
+		String strMessage = MSG_HELP_PATH + String.valueOf(a_languageIndex);
+		String strHelpPath = JAPMessages.getString(strMessage);
+
+		if (strHelpPath.equals(strMessage) || strHelpPath.trim().length() == 0)
+		{
+			return JAPMessages.getString(MSG_HELP_PATH);
                 }
+
+		return strHelpPath;
         }
 }
+
+

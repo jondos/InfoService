@@ -116,11 +116,45 @@ public final class Util
 	}
 
 	/**
+	 * Tests if two charactet arrays are equal.
+	 * @param arrayOne a charactet array
+	 * @param arrayTwo another charactet array
+	 * @return true if the two charactet arrays are equal or both arrays are null; false otherwise
+	 */
+	public static boolean arraysEqual(char[] arrayOne, char[] arrayTwo)
+	{
+		if (arrayOne == null && arrayTwo == null)
+		{
+			return true;
+		}
+
+		if (arrayOne == null || arrayTwo == null)
+		{
+			return false;
+		}
+
+		if (arrayOne.length != arrayTwo.length)
+		{
+			return false;
+		}
+
+		for (int i = 0; i < arrayOne.length; i++)
+		{
+			if (arrayOne[i] != arrayTwo[i])
+			{
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	/**
 	 * Tests if a_length positions of two arrays are equal.
 	 * @param a_arrayA byte[]
-	 * @param a_APos int
+	 * @param a_Aoff int
 	 * @param a_arrayB byte[]
-	 * @param a_BPos int
+	 * @param a_Boff int
 	 * @param a_length int
 	 * @return boolean
 	 */
@@ -310,8 +344,8 @@ public final class Util
 	 * Uses the Bubble Sort method to sort a vector of objects by comparing
 	 * the output of the toString() method.
 	 * @param a_vector a Vector
-	 * @return a sorted Vector
-	 * @todo Umlauts are not sorted correctly
+	 * @param buffer a buffer
+	 * @param bufferIndices indices for the buffer
 	 */
 	private static void bubbleSortStrings(Vector a_vector, String buffer[], int bufferIndices[])
 	{

@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2000 - 2004, The JAP-Team
+ Copyright (c) 2000 - 2005, The JAP-Team
  All rights reserved.
  Redistribution and use in source and binary forms, with or without modification,
  are permitted provided that the following conditions are met:
@@ -32,20 +32,31 @@ package gui;
  */
 public final class JAPHelpContext
 {
+	public static final String INDEX = "index";
+
 	private String m_currentContext;
 
 	public JAPHelpContext()
 	{
-		m_currentContext="index";
+		m_currentContext = INDEX;
 	}
 
 	/**
-	 * Sets the current help context
+	 * Sets the current help context.
 	 * @param a_helpFile String
 	 */
 	public void setContext(String a_helpFile)
 	{
 		m_currentContext = a_helpFile;
+	}
+
+	/**
+	 * Sets the current help context.
+	 * @param a_helpContext IHelpContext
+	 */
+	public void setContext(IHelpContext a_helpContext)
+	{
+		setContext(a_helpContext.getHelpContext());
 	}
 
 	/**
@@ -55,5 +66,13 @@ public final class JAPHelpContext
 	public String getContext()
 	{
 		return m_currentContext;
+	}
+
+	/**
+	 * An interface that is used to get the help context of an object.
+	 */
+	public interface IHelpContext
+	{
+		String getHelpContext();
 	}
 }

@@ -28,61 +28,112 @@
 package gui;
 
 import java.util.StringTokenizer;
+
 import java.awt.Font;
 import javax.swing.JLabel;
+import javax.swing.text.PlainView;
+import javax.swing.text.View;
+
 import anon.util.ClassUtil;
 
 /**
- * This class provides support for labels with more than one line which can also display HTML
- * styled text.
+ * This class provides support for labels with more than one line which can also display HTML styled text.
  */
 public class JAPHtmlMultiLineLabel extends JLabel
 {
+	public static final int FONT_STYLE_PLAIN = Font.PLAIN;
+	public static final int FONT_STYLE_ITALIC = Font.ITALIC;
+	public static final int FONT_STYLE_BOLD = Font.BOLD;
 	public static final String TAG_BREAK = "<br>";
 	public static final String TAG_A_OPEN = "<a href=\"\">";
 	public static final String TAG_A_CLOSE = "</a>";
+	public static final int UNLIMITED_LABEL_HEIGHT = 5000;
 	private static final String TAG_HTML_OPEN = "<html>";
 	private static final String TAG_HTML_CLOSE = "</html>";
 	private static final String TAG_BODY_OPEN = "<body>";
 	private static final String TAG_BODY_CLOSE = "</body>";
 
+
 	/**
-	 * Stores the HTML text displayed by this JAPHtmlMultiLineLabel without the header and the
-	 * trailer.
+	 * Stores the HTML text displayed by this JAPHtmlMultiLineLabel without the header and the trailer.
 	 */
 	private String m_rawText;
 	private Font m_font;
 
 	/**
    * Creates a new JAPHtmlMultiLineLabel.
-	 *
 	 * @param a_text Any HTML 3.2 conform text, which is allowed in the body of an HTML 3.2 structure
 	 *               (without the leading and trailing <html> and <body> tags).
    * @param a_defaultFont The font to use as the default font for the text (set in the HTML body
    *                      tag). So any part of the text, which is not influenced by special
    *                      modifiers is displayed with this default font. If the specified Font is
    *                      BOLD, the text is also included within a <b> tag.
+	 * @param a_alignment One of the following constants defined in SwingConstants:
+	 * LEFT, CENTER, RIGHT, LEADING or TRAILING.
 	 */
-	public JAPHtmlMultiLineLabel(String a_text, Font a_defaultFont)
+	public JAPHtmlMultiLineLabel(String a_text, Font a_defaultFont, int a_alignment)
 	{
+		super("", a_alignment);
 		m_rawText = a_text;
 		setFont(a_defaultFont);
 	}
 
 	/**
 	 * Creates a new JAPHtmlMultiLineLabel.
-	 *
+	 * @param a_text Any HTML 3.2 conform text, which is allowed in the body of an HTML 3.2 structure
+	 *               (without the leading and trailing <html> and <body> tags).
+	 * @param a_defaultFont The font to use as the default font for the text (set in the HTML body
+	 *                      tag). So any part of the text, which is not influenced by special
+	 *                      modifiers is displayed with this default font. If the specified Font is
+	 *                      BOLD, the text is also included within a <b> tag.
+	 */
+	public JAPHtmlMultiLineLabel(String a_text, Font a_defaultFont)
+	{
+		this(a_text, a_defaultFont, LEFT);
+	}
+
+	/**
+	 * Creates a new JAPHtmlMultiLineLabel.
+	 * @param a_text Any HTML 3.2 conform text, which is allowed in the body of an HTML 3.2 structure
+	 *               (without the leading and trailing <html> and <body> tags).
+	 * @param a_alignment One of the following constants defined in SwingConstants:
+	 * LEFT, CENTER, RIGHT, LEADING or TRAILING.
+	 */
+	public JAPHtmlMultiLineLabel(String a_text, int a_alignment)
+	{
+		this(a_text, null, a_alignment);
+	}
+
+	/**
+	 * Creates a new JAPHtmlMultiLineLabel.
+	 * @param a_alignment One of the following constants defined in SwingConstants:
+	 * LEFT, CENTER, RIGHT, LEADING or TRAILING.
+	 */
+	public JAPHtmlMultiLineLabel(int a_alignment)
+	{
+		this(null, null, a_alignment);
+	}
+
+	/**
+	 * Creates a new JAPHtmlMultiLineLabel.
 	 * @param a_text Any HTML 3.2 conform text, which is allowed in the body of an HTML 3.2 structure
 	 *               (without the leading and trailing <html> and <body> tags).
 	 */
 	public JAPHtmlMultiLineLabel(String a_text)
 	{
-		this(a_text, null);
+		this(a_text, null, LEFT);
+	}
+
+	/**
+	 * Creates a new JAPHtmlMultiLineLabel.
+	 */
+	public JAPHtmlMultiLineLabel()
+	{
+		this("", null, LEFT);
 	}
 
 	/**
 	 * Changes the text displayed by the JAPHtmlMultiLineLabel.
-	 *
 	 * @param a_newText Any HTML 3.2 conform text, which is allowed in the body of an HTML 3.2 structure
 	 *               (without the leading and trailing <html> and <body> tags).
 	 */
@@ -100,7 +151,7 @@ public class JAPHtmlMultiLineLabel extends JLabel
 			/* call changeFont() to create the header and trailer of the HTML structure and display the
 			 * new text
 			 */
-			changeFont(getFont());
+			setFont(getFont());
 		}
 	}
 
@@ -114,6 +165,60 @@ public class JAPHtmlMultiLineLabel extends JLabel
 		}
 
 		return m_font;
+	}
+
+	/**
+	 * Sets the preferred width of this label.
+	 * @param a_width the preferred width of this label
+	 */
+	public void setPreferredWidth(int a_width)
+	{
+		View htmlView;
+		View dummyView;
+		float x, y;
+
+		htmlView = ((View)getClientProperty("html"));
+
+		// store the original size for debugging purposes
+		x = htmlView.getPreferredSpan(View.X_AXIS);
+		y = htmlView.getPreferredSpan(View.Y_AXIS);
+
+		try
+		{
+			// set the desired maximum width
+			htmlView.setSize( (float) a_width, UNLIMITED_LABEL_HEIGHT);
+		}
+		catch (NullPointerException a_e)
+		{
+			// this is a JDK 1.2.2 Bug; it is not possible to set the View width, reset it to original values
+			htmlView.setSize(x, y);
+
+			/*
+			 * Replace the html view by a dummy view that returns 'null' as Container.
+			 * Otherwise javax.swing.text.LabelView$LabelFragment.createFragment gets the Graphics object
+			 * from the parent Container which is 'null'. Therefore, a NullPointerException is thrown.
+			 */
+			dummyView = new PlainView(htmlView.getElement())
+			{
+				public java.awt.Container getContainer()
+				{
+					return null;
+				}
+			};
+			htmlView.getView(0).setParent(dummyView);
+
+			// set the desired maximum width
+			htmlView.setSize( (float) a_width, UNLIMITED_LABEL_HEIGHT);
+
+			// reset the original parent
+			htmlView.getView(0).setParent(htmlView);
+		}
+	}
+
+
+	public void setFontStyle(int a_style)
+	{
+		setFont(new Font(getFont().getName(), a_style, getFont().getSize()));
 	}
 
 	/**
@@ -179,7 +284,7 @@ public class JAPHtmlMultiLineLabel extends JLabel
 	 */
 	public static String formatTextAsHTML(String a_HTMLtext, Font a_defaultFont)
 	{
-		if (a_HTMLtext == null || a_HTMLtext.trim().length() == 0)
+		if (a_HTMLtext == null)
 		{
 			return a_HTMLtext;
 		}
@@ -272,6 +377,7 @@ public class JAPHtmlMultiLineLabel extends JLabel
 	 * @param a_HTMLtext a String
 	 * @param a_openTAG an HTML open tag
 	 * @param a_closeTAG the corresponding HTML close TAG
+	 * @todo make the parsing better...
 	 * @return the String without the embracing tag
 	 */
 	private static String removeTAG(String a_HTMLtext, String a_openTAG, String a_closeTAG)
@@ -292,7 +398,7 @@ public class JAPHtmlMultiLineLabel extends JLabel
 		stop = a_HTMLtext.length();
 		if (strTemp.startsWith(strOpenTagWithoutBrace))
 		{
-			start = strTemp.indexOf(">");
+			start = strTemp.indexOf(">") + 1;
 		}
 		if (strTemp.endsWith(a_closeTAG))
 		{

@@ -44,7 +44,7 @@ public final class JAPJIntField extends JTextField
 	/** choose this value if the integer text field should have no upper bound */
 	public static final int NO_MAXIMUM_BOUND = -1;
 
-	private static final String MSG_NO_VALID_INTEGER = gui.JAPJIntField.class.getName() + "_no_valid_integer";
+	private static final String MSG_NO_VALID_INTEGER = gui.JAPJIntField.class.getName() + "_noValidInteger";
 
 	private IntFieldBounds m_bounds;
 	private boolean b_bAutoTransferFocus;

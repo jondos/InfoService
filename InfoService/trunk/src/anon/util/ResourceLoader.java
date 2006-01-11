@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2000 - 2005, The JAP-Team
+ Copyright (c) 2000 - 2006, The JAP-Team
  All rights reserved.
  Redistribution and use in source and binary forms, with or without modification,
  are permitted provided that the following conditions are met:
@@ -49,10 +49,11 @@ import java.util.zip.ZipFile;
  */
 public final class ResourceLoader
 {
-	private static final String SYSTEM_RESOURCE_TYPE_ZIP = "ZIP";
-	private static final String SYSTEM_RESOURCE_TYPE_JAR = "JAR";
-	private static final String SYSTEM_RESOURCE_TYPE_FILE = "FILE";
-	private static final String SYSTEM_RESOURCE = "systemresource:/";
+	public static final String SYSTEM_RESOURCE_TYPE_ZIP = "zip";
+	public static final String SYSTEM_RESOURCE_TYPE_JAR = "jar";
+	public static final String SYSTEM_RESOURCE_TYPE_FILE = "file";
+	public static final String SYSTEM_RESOURCE_TYPE_GENERIC = "systemresource";
+	private static final String SYSTEM_RESOURCE = SYSTEM_RESOURCE_TYPE_GENERIC + ":/";
 	private static final String SYSTEM_RESOURCE_ENDSIGN = "/+/";
 	private static final String DIR_UP = "../";
 	private static final String DIR_CURRENT = "./";
@@ -63,7 +64,7 @@ public final class ResourceLoader
 	/// holds references to all files in the class path as File objects for caching purposes
 	private static Vector ms_classpathFiles;
 	/// holds absolute URLs to the resources as Strings; relative paths may be attached
-	private static Vector ms_classpathResourceURLs = new Vector();
+	private static Object ms_classpathResourceLock = new Object();
 	/// the resource types: either SYSTEM_RESOURCE_TYPE_ZIP or SYSTEM_RESOURCE_TYPE_FILE
 	private static Vector ms_classpathResourceTypes;
 	/// stores the parent directory of the jar file that holds this class for caching purposes
@@ -440,17 +441,17 @@ public final class ResourceLoader
 		// find the beginning of the [id] string
 		a_systemResource =
 			a_systemResource.substring(SYSTEM_RESOURCE.length(), a_systemResource.length());
-		if (a_systemResource.toUpperCase().startsWith(SYSTEM_RESOURCE_TYPE_ZIP))
+		if (a_systemResource.toLowerCase().startsWith(SYSTEM_RESOURCE_TYPE_ZIP))
 		{
 			a_systemResource = a_systemResource.substring(
 				SYSTEM_RESOURCE_TYPE_ZIP.length(), a_systemResource.length());
 		}
-		else if (a_systemResource.toUpperCase().startsWith(SYSTEM_RESOURCE_TYPE_JAR))
+		else if (a_systemResource.toLowerCase().startsWith(SYSTEM_RESOURCE_TYPE_JAR))
 		{
 			a_systemResource = a_systemResource.substring(
 				SYSTEM_RESOURCE_TYPE_JAR.length(), a_systemResource.length());
 		}
-		else if (a_systemResource.toUpperCase().startsWith(SYSTEM_RESOURCE_TYPE_FILE))
+		else if (a_systemResource.toLowerCase().startsWith(SYSTEM_RESOURCE_TYPE_FILE))
 		{
 			a_systemResource = a_systemResource.substring(
 				SYSTEM_RESOURCE_TYPE_FILE.length(), a_systemResource.length());
@@ -1079,25 +1080,24 @@ public final class ResourceLoader
 	 */
 	private static Vector readFilesFromClasspath()
 	{
-		String classpath = System.getProperty("java.class.path");
+		String classpath = ClassUtil.getClassPath();
 
 		if (ms_classpath == null || !ms_classpath.equals(classpath))
 		{
-			synchronized (ms_classpathResourceURLs)
+			/**@todo Ihis lock has almost no effect; or has it? Check the code!*/
+			synchronized (ms_classpathResourceLock)
 			{
 			StringTokenizer tokenizer;
 
 			ms_classpath = classpath;
 			ms_classpathFiles = new Vector();
-				ms_classpathResourceURLs = new Vector();
 				ms_classpathResourceTypes = new Vector();
 
-			tokenizer = new StringTokenizer(ms_classpath, System.getProperty("path.separator"));
+				tokenizer = new StringTokenizer(ms_classpath, File.pathSeparator);
 			while (tokenizer.hasMoreTokens())
 			{
 					ms_classpathFiles.addElement(
 					   new File(new File(tokenizer.nextToken()).getAbsolutePath()));
-					ms_classpathResourceURLs.addElement( (Class)null);
 					ms_classpathResourceTypes.addElement( (String)null);
 				}
 			}

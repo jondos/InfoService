@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2000 - 2005, The JAP-Team
+ Copyright (c) 2000 - 2006, The JAP-Team
  All rights reserved.
  Redistribution and use in source and binary forms, with or without modification,
  are permitted provided that the following conditions are met:
@@ -68,6 +68,84 @@ public final class ClassUtil
 	}
 
 	/**
+	 * Represents a package name.
+	 * @see http://java.sun.com/docs/books/jls/second_edition/html/packages.doc.html
+	 */
+	public final static class Package
+	{
+		private String m_strPackage;
+
+		public Package(Class a_class)
+		{
+			if (a_class == null || a_class.getName().indexOf(".") < 0)
+			{
+				m_strPackage = "";
+			}
+			else
+			{
+				m_strPackage = a_class.getName().substring(0, a_class.getName().lastIndexOf("."));
+			}
+		}
+
+		public Package(String a_strPackage)
+		{
+			if (m_strPackage == null || m_strPackage.trim().length() == 0)
+			{
+				m_strPackage = "";
+
+			}
+			else
+			{
+				if (new StringTokenizer(m_strPackage).countTokens() > 1)
+				{
+					throw new IllegalArgumentException("Package names may not contain whitespaces!");
+				}
+				else
+				{
+					for (int i = 0; i < m_strPackage.length(); i++)
+					{
+						if (Character.isLetterOrDigit(m_strPackage.charAt(i)) ||
+							m_strPackage.charAt(i) == '.')
+						{
+							continue;
+						}
+						else if (m_strPackage.charAt(i) == '\\' && m_strPackage.length() > (i + 5) &&
+								 m_strPackage.charAt(i + 1) == 'u')
+						{
+							boolean bUnicode = true;
+
+							for (int j = i + 2; j < (i + 5); j++)
+							{
+								if (!Character.isDigit(m_strPackage.charAt(j)))
+								{
+									bUnicode = false;
+									break;
+								}
+							}
+
+							if (bUnicode)
+							{
+								// this seems to be a unicode mapping; skip the unicode; \\u -> @
+								i += 5;
+								continue;
+							}
+						}
+						throw new IllegalArgumentException("Illegal character in package name: " +
+							m_strPackage.charAt(i));
+					}
+
+					m_strPackage = a_strPackage;
+				}
+			}
+		}
+
+		public String getPackage()
+		{
+			return m_strPackage;
+		}
+	}
+
+	/**
 	 * Gets the name of a class without package (everything before the last "." is removed).
 	 * @param a_class a Class
 	 * @return the name of the class without package
@@ -113,6 +191,15 @@ public final class ClassUtil
 	public static Class getCallingClassStatic()
 	{
 		return new ClassGetter().getCallingClassStatic();
+	}
+
+	/**
+	 * Returns the current java class path.
+	 * @return the current java class path
+	 */
+	public static String getClassPath()
+	{
+		return System.getProperty("java.class.path");
 	}
 
 	/**
@@ -188,11 +275,15 @@ public final class ClassUtil
 
 	 // temporarily deactivate standard error to suppress printStackStrace() messages
 	 syserror = System.err;
-	 System.setErr(dummyStream);
 	 try
 	 {
+			System.setErr(dummyStream);
+
 	  // load all classes for the specified class
 	  loadClassesInternal(a_rootClass);
+
+			// reactivate standard error
+			System.setErr(syserror);
 
 	  // load all classes for this class
 	  loadClassesInternal(thisClass);
@@ -212,8 +303,7 @@ public final class ClassUtil
 	   a_e.printStackTrace();
 	  }
 	 }
-	 // reactivate standard error
-	 System.setErr(syserror);
+
 
 	 return ms_loadedClasses.elements();
 	  }
