@@ -38,15 +38,27 @@ import anon.util.Util;
  */
 public final class LogHolder
 {
+	/**
+	 * prints the log message only
+	 */
+	public static final int DETAIL_LEVEL_LOWEST = 0;
+	/**
+	 * prints the log message, the class name and the source line of the log message
+	 */
+	public static final int DETAIL_LEVEL_LOWER = 1;
+	/**
+	 * prints the log message, package, classname, method name and the source line of the log message;
+	 * this enables some IDEs to jump to the log source by clicking on the message line
+	 */
+	public static final int DETAIL_LEVEL_HIGH = 2;
+	/**
+	 * additionally prints the whole stack trace of an error log if available
+	 */
+	public static final int DETAIL_LEVEL_HIGHEST = 3;
+
 	private static final String TRACED_LOG_MESSAGE = "[Traced log Message]:";
 	private static final int LINE_LENGTH_HIGH_DETAIL = 40;
 	private static final int LINE_LENGTH_HIGHEST_DETAIL = 80;
-
-	/// the lowest detail level that is possible
-	public static final int DETAIL_LEVEL_LOWEST = 0;
-	public static final int DETAIL_LEVEL_HIGH = 1;
-	/// the highest detail level that is possible
-	public static final int DETAIL_LEVEL_HIGHEST = 2;
 
 	/**
 	 * Stores the instance of LogHolder (Singleton).
@@ -89,6 +101,8 @@ public final class LogHolder
 
 	/**
 	 * Sets the detail level of all log messages. Use one of the class constants to set it.
+	 * The detail levels range from 0 (DETAIL_LEVEL_LOWEST) to DETAIL_LEVEL_HIGHEST.
+	 * The higher the detail level, the more detailed information will be written to the logs.
 	 * @param a_messageDetailLevel the detail level of all log messages
 	 */
 	public static void setDetailLevel(int a_messageDetailLevel)
@@ -131,11 +145,12 @@ public final class LogHolder
 			{
 				getInstance().getLogInstance().log(logLevel, logType, a_throwable.getMessage());
 			}
-			else if (m_messageDetailLevel == DETAIL_LEVEL_HIGH)
+			else if (m_messageDetailLevel > DETAIL_LEVEL_LOWEST &&
+					 m_messageDetailLevel < DETAIL_LEVEL_HIGHEST)
 			{
 				getInstance().getLogInstance().log(logLevel, logType, a_throwable.toString());
 			}
-			else
+			else if (m_messageDetailLevel == DETAIL_LEVEL_HIGHEST)
 			{
 				getInstance().getLogInstance().log(logLevel, logType, Util.getStackTrace(a_throwable));
 			}
@@ -161,7 +176,7 @@ public final class LogHolder
 			{
 				getInstance().getLogInstance().log(logLevel, logType, message);
 			}
-			else if (m_messageDetailLevel == DETAIL_LEVEL_HIGH)
+			else if (m_messageDetailLevel == DETAIL_LEVEL_LOWER)
 			{
 				if (a_bAddCallingClass)
 				{
@@ -319,7 +334,11 @@ public final class LogHolder
 						strOwnClass = strCurrentMethod.substring(0, index);
 					}
 					strOwnClass = strOwnClass.substring(0, strOwnClass.lastIndexOf('.'));
-					//System.out.println(strOwnClass);
+					// filter out internal classes
+					if (strOwnClass.indexOf("$") > 0)
+					{
+						strOwnClass = strOwnClass.substring(0, strOwnClass.indexOf("$"));
+					}
 					}
 				else
 				{
