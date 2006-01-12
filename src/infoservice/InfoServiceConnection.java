@@ -293,6 +293,7 @@ public class InfoServiceConnection implements Runnable
 						int aktLen = Math.min(len, 10000);
 						streamToClient.write(theResponse, index, aktLen);
 						index += aktLen;
+						len-=aktLen;
 					}
 				}
 				catch (Exception e)
