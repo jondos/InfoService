@@ -53,6 +53,7 @@ final public class TimedOutputStream extends OutputStream
 				if (m_bRun)
 				{
 					Thread.sleep(m_msTimeout);
+					m_ThisThread =null;
 				}
 				else
 				{
