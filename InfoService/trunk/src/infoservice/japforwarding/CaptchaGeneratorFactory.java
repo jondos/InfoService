@@ -34,42 +34,45 @@ import infoservice.japforwarding.captcha.ZipBinaryImageCaptchaGenerator;
  * This class is a factory for creating objects, which implements the CaptchaGenerator interface.
  * This class is a singleton;
  */
-public class CaptchaGeneratorFactory {
-  
-  /**
-   * Stores the instance of CaptchaGeneratorFactory (Singleton).
-   */
-  private static CaptchaGeneratorFactory ms_cgfInstance;
-  
-  /**
-   * Returns the instance of CaptchaGeneratorFactory (Singleton). If there is no instance, a new
-   * one is created.
-   *
-   * @return The CaptchaGeneratorFactory instance.
-   */
-  public static CaptchaGeneratorFactory getInstance() {
-    if (ms_cgfInstance == null) {
-      ms_cgfInstance = new CaptchaGeneratorFactory();
-    }
-    return ms_cgfInstance;
-  }
+public class CaptchaGeneratorFactory
+{
 
-  
-  /**
-   * This creates a new CaptchaGeneratorFactory.
-   */
-  private CaptchaGeneratorFactory() {
-  }
-  
-  
-  /**
-   * Returns an object, which implements the CaptchaGenerator interface.
-   *
-   * @return A new instance of a CaptchaGenerator.
-   */
-  public CaptchaGenerator getCaptchaGenerator() {
-    /* at the moment, we create always 300x100 zipped binary image */
-    return new ZipBinaryImageCaptchaGenerator(300, 100);
-  }
-    
+	/**
+	 * Stores the instance of CaptchaGeneratorFactory (Singleton).
+	 */
+	private static CaptchaGeneratorFactory ms_cgfInstance;
+
+	/**
+	 * Returns the instance of CaptchaGeneratorFactory (Singleton). If there is no instance, a new
+	 * one is created.
+	 *
+	 * @return The CaptchaGeneratorFactory instance.
+	 */
+	public static CaptchaGeneratorFactory getInstance()
+	{
+		if (ms_cgfInstance == null)
+		{
+			ms_cgfInstance = new CaptchaGeneratorFactory();
+		}
+		return ms_cgfInstance;
+	}
+
+	/**
+	 * This creates a new CaptchaGeneratorFactory.
+	 */
+	private CaptchaGeneratorFactory()
+	{
+	}
+
+	/**
+	 * Returns an object, which implements the CaptchaGenerator interface.
+	 *
+	 * @return A new instance of a CaptchaGenerator.
+	 */
+	public CaptchaGenerator getCaptchaGenerator()
+	{
+		/* at the moment, we create always 300x100 zipped binary image */
+		return new ZipBinaryImageCaptchaGenerator(300, 100);
+	}
+
 }
