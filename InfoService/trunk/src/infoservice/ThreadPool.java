@@ -30,10 +30,10 @@ package infoservice;
 
 import java.util.Vector;
 
-public class ThreadPool
+public final class ThreadPool
 {
 
-	class ThreadPoolRequest
+	private final class ThreadPoolRequest
 	{
 		Runnable target;
 		Object lock;
@@ -45,14 +45,14 @@ public class ThreadPool
 		}
 	}
 
-	class ThreadPoolThread extends Thread
+	private final class ThreadPoolThread extends Thread
 	{
 		ThreadPool parent;
 		boolean shouldRun = true;
 
-		ThreadPoolThread(ThreadPool parent, int i)
+		ThreadPoolThread(ThreadPool parent, int i, String name)
 		{
-			super("ThreadPoolThread " + i);
+			super(name + " - ThreadPoolThread " + i);
 			this.parent = parent;
 		}
 
@@ -78,7 +78,6 @@ public class ThreadPool
 						}
 						catch (ClassCastException cce)
 						{
-							System.err.println("Unexpected data");
 							obj = null;
 						}
 						if (obj == null)
@@ -128,15 +127,15 @@ public class ThreadPool
 		}
 	}
 
-	Vector objects;
-	int nObjects = 0;
-	int nMaxThreads = 0;
-	CondVar cvAvailable, cvEmpty;
-	BusyFlag cvFlag;
-	ThreadPoolThread poolThreads[];
-	boolean terminated = false;
+	private Vector objects;
+	private int nObjects = 0;
+	private int nMaxThreads = 0;
+	private CondVar cvAvailable, cvEmpty;
+	private BusyFlag cvFlag;
+	private ThreadPoolThread poolThreads[];
+	private boolean terminated = false;
 
-	public ThreadPool(int n)
+	public ThreadPool(String name, int n)
 	{
 		cvFlag = new BusyFlag();
 		cvAvailable = new CondVar(cvFlag);
@@ -144,9 +143,13 @@ public class ThreadPool
 		objects = new Vector();
 		nMaxThreads = n;
 		poolThreads = new ThreadPoolThread[n];
+		if (name == null)
+		{
+			name = "";
+		}
 		for (int i = 0; i < n; i++)
 		{
-			poolThreads[i] = new ThreadPoolThread(this, i);
+			poolThreads[i] = new ThreadPoolThread(this, i, name);
 			poolThreads[i].start();
 		}
 	}
