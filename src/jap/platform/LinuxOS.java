@@ -52,7 +52,7 @@ public class LinuxOS extends AbstractOS
 		}
 	}
 
-	public void openURLInBrowser(String a_url)
+	public boolean openURLInBrowser(String a_url)
 	{
 		boolean success = false;
 		try
@@ -73,13 +73,15 @@ public class LinuxOS extends AbstractOS
 			}
 			if (!success)
 			{
-				throw new Exception("Cannot open URL in browser");
+				return false;
 			}
 		}
 		catch (Exception ex)
 		{
 			LogHolder.log(LogLevel.ERR, LogType.MISC, "Cannot open URL in browser");
+			return false;
 		}
+		return success;
 	}
 
 	public String getConfigPath()

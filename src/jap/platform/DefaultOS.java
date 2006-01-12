@@ -43,9 +43,10 @@ public class DefaultOS extends AbstractOS
 
 	}
 
-	public void openURLInBrowser(String a_url)
+	public boolean openURLInBrowser(String a_url)
 	{
 		LogHolder.log(LogLevel.INFO, LogType.MISC, "DefaultOS class is uncapable of opening URLs");
+		return false;
 	}
 
 	public String getConfigPath()

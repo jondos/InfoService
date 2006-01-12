@@ -80,8 +80,9 @@ public abstract class AbstractOS
 	/**
 	 * Implementations of this method must open an URL in the system's internet browser
 	 * @param a_url a URL as String
+	 * @return boolean whether the URL could be opened
 	 */
-	public abstract void openURLInBrowser(String a_url);
+	public abstract boolean openURLInBrowser(String a_url);
 
 	/**
 	 * Implementations must return a valid path to the config file.

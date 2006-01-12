@@ -25,51 +25,23 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package jap.platform;
+package gui;
 
-import com.apple.mrj.MRJFileUtils;
-import jap.JAPConstants;
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
+import java.net.URL;
+
+import gui.JAPHelp.IExternalURLCaller;
+import jap.platform.AbstractOS;
 
 /**
- * This class is instantiated by AbstractOS if the current OS is MacOS or MacOSX
+ * Implementation of the IExternalURLCaller interface.
+ *
+ * @author Tobias Bayer
  */
-public class MacOS extends AbstractOS
+public class ExternalURLCaller implements IExternalURLCaller
 {
-	public MacOS() throws Exception
+	public boolean openURL(URL a_url)
 	{
-		if (System.getProperty("mrj.version") == null)
-		{
-			throw new Exception("Operating system is not MacOS");
-		}
-	}
-
-	public boolean openURLInBrowser(String a_url)
-	{
-		try
-		{
-			MRJFileUtils.openURL(a_url);
-			return true;
-		}
-		catch (Exception a_e)
-		{
-			LogHolder.log(LogLevel.ERR, LogType.MISC, "Cannot open URL in browser");
-			return false;
-		}
-	}
-
-	public String getConfigPath()
-	{
-		//Return path in users's home/Library/Preferences
-		if (System.getProperty("os.name").equalsIgnoreCase("Mac OS"))
-		{
-			return System.getProperty("user.home", ".") +"/"+ JAPConstants.XMLCONFFN;
-		}
-		else
-		{
-			return System.getProperty("user.home", "") + "/Library/Preferences/" + JAPConstants.XMLCONFFN;
-		}
+		AbstractOS os = AbstractOS.getInstance();
+		return os.openURLInBrowser(a_url.toString());
 	}
 }
