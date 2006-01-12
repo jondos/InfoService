@@ -70,12 +70,12 @@ Kompatibilitätsfunktionen für alte JAP-Clients:
   - diese Funktionen werden in Zukunft wohl entfernt werden und sind deshalb nicht mehr
     zu verwenden
 
-  /servers: GET: wie /cascades nur im alten Format
-  /feedback/cascadeid: GET: wie /statusinfo/cascadeid nur im alten Format
+  /servers: GET: wie /cascades nur im alten Format [REMOVED!]
+  /feedback/cascadeid: GET: wie /statusinfo/cascadeid nur im alten Format [REMOVED!]
   /forward/URL: GET: forwarded eine GET-Anfrage nach der URL und liefert deren Antwort,
-                     wurde für Java-Webstart-JAP-Update verwendet
+                     wurde für Java-Webstart-JAP-Update verwendet [REMOVED!]
   /aktVersion: GET: liefert Versionsnummer der neuesten JAP-Client-Software (nn.nn.nnn) als
-                    Plain-Text und wurde von alten JAP-Clients verwendet
+                    Plain-Text und wurde von alten JAP-Clients verwendet [REMOVED!]
   /proxyAddresses: GET: liefert Adressen der Proxy-Server am Ende der Kaskaden als
                         Plain-Text (1:1 aus Properties-Datei übernommen), wird von
                         irgendwelchen alten Auswertungsscripten verwendet

@@ -112,11 +112,12 @@ public class InfoServiceConnection implements Runnable
 						  "): Cannot set socket timeout: " + e.toString());
 		}
 		InputStream streamFromClient = null;
-		BufferedOutputStream streamToClient = null;
+		OutputStream streamToClient = null;
 		try
 		{
 			streamFromClient = m_socket.getInputStream();
-			streamToClient = new BufferedOutputStream(new TimedOutputStream(m_socket.getOutputStream(),Constants.COMMUNICATION_TIMEOUT));
+			streamToClient = new TimedOutputStream(m_socket.getOutputStream(),
+				Constants.COMMUNICATION_TIMEOUT);
 		}
 		catch (Exception e)
 		{
@@ -250,38 +251,26 @@ public class InfoServiceConnection implements Runnable
 			if (response == null)
 			{
 				/* no error until yet -> process the command via the server implementation */
-				/* dirty: for compatibility reasons the InfoService has to support the fucking getForward()
-				 *        method
-				 * @todo -> remove it
-				 */
-				if (requestUrl.startsWith("/forward") &&
-					(internalRequestMethodCode == Constants.REQUEST_METHOD_GET))
+				if (m_serverImplementation != null)
 				{
-					response = getForward(streamToClient, requestUrl);
-				}
-				else
-				{
-					if (m_serverImplementation != null)
-					{
-						response = m_serverImplementation.processCommand(internalRequestMethodCode,
-							requestUrl, postData, m_socket.getInetAddress());
-						if (response == null)
-						{
-							LogHolder.log(LogLevel.ERR, LogType.NET,
-										  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
-										  "): Response could not be generated: Request: " + requestMethod +
-										  " " + requestUrl);
-							response = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_NOT_FOUND);
-						}
-					}
-					else
+					response = m_serverImplementation.processCommand(internalRequestMethodCode,
+						requestUrl, postData, m_socket.getInetAddress());
+					if (response == null)
 					{
 						LogHolder.log(LogLevel.ERR, LogType.NET,
 									  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
-									  "): Server implementation not available.");
-						response = new HttpResponseStructure(HttpResponseStructure.
-							HTTP_RETURN_INTERNAL_SERVER_ERROR);
+									  "): Response could not be generated: Request: " + requestMethod +
+									  " " + requestUrl);
+						response = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_NOT_FOUND);
 					}
+				}
+				else
+				{
+					LogHolder.log(LogLevel.ERR, LogType.NET,
+								  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
+								  "): Server implementation not available.");
+					response = new HttpResponseStructure(HttpResponseStructure.
+						HTTP_RETURN_INTERNAL_SERVER_ERROR);
 				}
 			}
 
@@ -294,7 +283,17 @@ public class InfoServiceConnection implements Runnable
 								  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
 								  "): Response for request: " + requestUrl + ": " +
 								  (new String(response.getResponseData())));
-					streamToClient.write(response.getResponseData());
+					byte[] theResponse = response.getResponseData();
+					int index = 0;
+					int len = theResponse.length;
+					//we send the data bakch to the client in chunks of 10000 bytes in order
+					//to avoid unwanted timeouts for large messages and slow connections
+					while (len > 0)
+					{
+						int aktLen = Math.min(len, 10000);
+						streamToClient.write(theResponse, index, aktLen);
+						index += aktLen;
+					}
 				}
 				catch (Exception e)
 				{
@@ -353,69 +352,6 @@ public class InfoServiceConnection implements Runnable
 		LogHolder.log(LogLevel.DEBUG, LogType.NET,
 					  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
 					  "): Connection thread finished.");
-	}
-
-	/**
-	 * This function only for compatibility and will be removed soon. It is used by old JAP clients
-	 * to get the JAR file of new JAP versions.
-	 * @todo remove it
-	 *
-	 * @deprecated This function only for compatibility and will be removed soon. It is used by old JAP clients
-	 * to get the JAR file of new JAP versions.
-	 * @param toClient The OutputStream of the client connection.
-	 * @param strURL The URL of the file to fetch.
-	 *
-	 * @return An HttpResponseStructure which should be send to the client or null, if no answer
-	 *         than the answer this method has already sent, shall be sent back to the client.
-	 */
-	private HttpResponseStructure getForward(OutputStream toClient, String strURL)
-	{
-		Socket conn = null;
-		try
-		{
-			strURL = URLDecoder.decode(strURL);
-			strURL = strURL.substring(9);
-			URL url = new URL(strURL);
-			//Security check --> at the moment hard coded!!!
-			if (!url.getProtocol().equalsIgnoreCase("http") ||
-				!url.getHost().equalsIgnoreCase("infoservice.inf.tu-dresden.de") || url.getPort() != 8080)
-			{
-				LogHolder.log(LogLevel.ERR, LogType.NET,
-							  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
-							  "): Forwarding to non-allowed URL tried: " + strURL);
-				return (new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_BAD_REQUEST));
-			}
-			conn = new Socket(url.getHost(), url.getPort());
-			conn.setSoTimeout(Constants.COMMUNICATION_TIMEOUT);
-			OutputStreamWriter toServer = new OutputStreamWriter(conn.getOutputStream());
-			toServer.write("GET " + url.getFile() + " HTTP/1.0" + "\r\n" + "\r\n");
-			toServer.flush();
-			InputStream in = conn.getInputStream();
-			byte[] buff = new byte[2048];
-			int len = 0;
-			while ( (len = in.read(buff)) > 0)
-			{
-				toClient.write(buff, 0, len);
-			}
-			toClient.flush();
-			conn.close();
-		}
-		catch (Exception e)
-		{
-			LogHolder.log(LogLevel.ERR, LogType.NET,
-						  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
-						  "): Error while forwarding a client request to the URL: " + strURL + " Error: " +
-						  e.toString());
-			try
-			{
-				conn.close();
-			}
-			catch (Exception ie)
-			{
-			}
-		}
-		/* nothing else than the already sent data shall be sent back to the client */
-		return null;
 	}
 
 	/**

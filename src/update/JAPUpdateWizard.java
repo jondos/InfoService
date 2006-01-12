@@ -347,7 +347,7 @@ public final class JAPUpdateWizard extends BasicWizard implements Runnable
 										m_strAktJapJarExtension);
 			FileInputStream fis = new FileInputStream(m_fileAktJapJar);
 			FileOutputStream fos = new FileOutputStream(m_fileJapJarCopy);
-			int len;
+			int len=-1;
 			int totalLength = (int) m_fileAktJapJar.length();
 			while ( (len = fis.read(buffer)) != -1)
 			{
@@ -376,7 +376,7 @@ public final class JAPUpdateWizard extends BasicWizard implements Runnable
 	/**
 	 * This class manages the download process of a new Jap version jar file.
 	 */
-	private class JapDownloadManager implements Runnable
+	final class JapDownloadManager implements Runnable
 	{
 
 		/**
@@ -437,7 +437,7 @@ public final class JAPUpdateWizard extends BasicWizard implements Runnable
 					/* if someone waiting for the end of the download, notify him */
 					synchronized (this)
 					{
-						notify();
+						notifyAll();
 					}
 					return;
 				}
@@ -450,18 +450,18 @@ public final class JAPUpdateWizard extends BasicWizard implements Runnable
 				while (len > 0)
 				{
 					System.arraycopy(buff, 0, newJarBuff, currentPos, len);
-					currentPos = currentPos + len;
+					currentPos +=  len;
 					// the Download has the Zone from 5 to 455 in the ProgressBar
 					int value = ( (450 * currentPos) / lenTotal);
 					downloadPage.progressBar.setValue( (value + 5));
 					downloadPage.progressBar.repaint();
-					if (updateAborted == true)
+					if (updateAborted)
 					{
 						in.close();
 						/* if someone waiting for the end of the download, notify him */
 						synchronized (this)
 						{
-							notify();
+							notifyAll();
 						}
 						return;
 					}
@@ -472,7 +472,7 @@ public final class JAPUpdateWizard extends BasicWizard implements Runnable
 				/* if someone waiting for the end of the download, notify him */
 				synchronized (this)
 				{
-					notify();
+					notifyAll();
 				}
 			}
 			catch (Exception e)
@@ -480,7 +480,7 @@ public final class JAPUpdateWizard extends BasicWizard implements Runnable
 				/* if someone waiting for the end of the download, notify him */
 				synchronized (this)
 				{
-					notify();
+					notifyAll();
 				}
 			}
 		}
@@ -528,7 +528,7 @@ public final class JAPUpdateWizard extends BasicWizard implements Runnable
 	private int downloadUpdate()
 	{
 		URL codeBase = japVersionInfo.getCodeBase();
-		URL jarUrl;
+		URL jarUrl=null;
 		try
 		{
 			if (welcomePage.isIncrementalUpdate())
@@ -655,7 +655,7 @@ private boolean checkSignature()
 			FileInputStream fis = new FileInputStream(m_fileNewJapJar);
 			FileOutputStream fos = new FileOutputStream(m_fileAktJapJar);
 			byte buffer[] = new byte[2048];
-			int n;
+			int n=-1;
 			while ( (n = fis.read(buffer)) != -1)
 			{
 				fos.write(buffer, 0, n);
@@ -679,13 +679,13 @@ private boolean checkSignature()
 	// by the system
 	private void resetChanges()
 	{
-		if (!updateAborted)
+		if (updateAborted)
 		{
-			m_Status = UPDATESTATUS_ERROR;
+			m_Status = UPDATESTATUS_ABORTED;
 		}
 		else
 		{
-			m_Status = UPDATESTATUS_ABORTED;
+			m_Status = UPDATESTATUS_ERROR;
 		}
 		if (m_fileJapJarCopy != null)
 		{

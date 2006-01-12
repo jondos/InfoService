@@ -1069,103 +1069,6 @@ public class InfoServiceCommands implements JWSInternalCommands
 	}
 
 	/**
-	 * This method only for compatibility with old versions of the JAP client (JAP < 00.02.016) and
-	 * will be removed soon. It sends the needed minimum version number of the JAP client software
-	 * as plain text to the client.
-	 * @todo remove it
-	 *
-	 * @return The HTTP response for the client.
-	 */
-	private HttpResponseStructure japGetAktVersion()
-	{
-		/* this is only the default, if we don't know the minimum JAP version */
-		HttpResponseStructure httpResponse = new HttpResponseStructure(HttpResponseStructure.
-			HTTP_RETURN_NOT_FOUND);
-		JAPMinVersion minVersionEntry = (JAPMinVersion) (Database.getInstance(JAPMinVersion.class).
-			getEntryById("JAPMinVersion"));
-		if (minVersionEntry != null)
-		{
-			httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_TYPE_TEXT_PLAIN,
-				minVersionEntry.getJapSoftware().getVersion());
-		}
-		return httpResponse;
-	}
-
-	/**
-	 * Sends the complete list of all known mixcascades to the client (old format). This method is
-	 * only needed for compatibility with JAP clients < 00.02.016 and will be removed soon.
-	 * @todo: remove it
-	 *
-	 * @return The HTTP response for the client.
-	 */
-	private HttpResponseStructure japFetchCascadesOld()
-	{
-		/* this is only the default, if something is going wrong */
-		HttpResponseStructure httpResponse = new HttpResponseStructure(HttpResponseStructure.
-			HTTP_RETURN_INTERNAL_SERVER_ERROR);
-		try
-		{
-			Document doc = XMLUtil.createDocument();
-			/* create the MixCascades element */
-			Element mixCascadesNode = doc.createElement("MixCascades");
-			/* append the nodes of all mixcascades we know */
-			Enumeration knownMixCascades = Database.getInstance(MixCascade.class).
-				getEntrySnapshotAsEnumeration();
-			while (knownMixCascades.hasMoreElements())
-			{
-				/* import the MixCascade node (old format) in this document */
-				Element mixCascadeNode = (Element) (XMLUtil.importNode(doc,
-					( (MixCascade) (knownMixCascades.nextElement())).getOldClientMixCascadeXmlStructure(), true));
-				mixCascadesNode.appendChild(mixCascadeNode);
-			}
-			doc.appendChild(mixCascadesNode);
-			/* send the XML document to the client */
-			httpResponse = new HttpResponseStructure(doc);
-		}
-		catch (Exception e)
-		{
-			LogHolder.log(LogLevel.ERR, LogType.MISC, e);
-		}
-		return httpResponse;
-	}
-
-	/**
-	 * Sends the XML encoded status of the mixcascade with the ID given by anonHost. It uses
-	 * the old JAP client version (with AnonLevel) of the XML structure. This function is only
-	 * for compatibility and will be removed soon.
-	 * @todo remove it
-	 *
-	 * @param a_anonHost The ID of the mixcascade.
-	 *
-	 * @return The HTTP response for the client.
-	 */
-	private HttpResponseStructure japFeedback(String a_anonHost)
-	{
-		/* this is only the default, if something is going wrong */
-		HttpResponseStructure httpResponse = new HttpResponseStructure(HttpResponseStructure.
-			HTTP_RETURN_INTERNAL_SERVER_ERROR);
-		try
-		{
-			StatusInfo statusEntry = (StatusInfo) Database.getInstance(StatusInfo.class).getEntryById(
-				a_anonHost);
-			if (statusEntry == null)
-			{
-				httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_NOT_FOUND);
-			}
-			else
-			{
-				httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_TYPE_TEXT_XML,
-					statusEntry.getOldClientStatusXmlData());
-			}
-		}
-		catch (Exception e)
-		{
-			LogHolder.log(LogLevel.ERR, LogType.MISC, e);
-		}
-		return httpResponse;
-	}
-
-	/**
 	 * This function only for compatibility and will be removed soon. It sends the addresses of
 	 * the proxy servers at the end of the cascades as plain text to the client. The info about
 	 * the proxies is the unchanged line from the properties file. This function is used by some
@@ -1342,25 +1245,6 @@ public class InfoServiceCommands implements JWSInternalCommands
 		{
 			// request for JNLP File (WebStart or Update Request
 			httpResponse = getJnlpFile(command, method);
-		}
-		else if ( (command.equals("/aktVersion")) && (method == Constants.REQUEST_METHOD_GET))
-		{
-			/* old method to get the current version of the client software */
-			/** @todo remove it */
-			httpResponse = japGetAktVersion();
-		}
-		else if ( (command.equals("/servers")) && (method == Constants.REQUEST_METHOD_GET))
-		{
-			/* old format for cascades, don't use it any more, only for compatibility */
-			/** @todo remove it */
-			httpResponse = japFetchCascadesOld();
-		}
-		else if ( (command.startsWith("/feedback/")) && (method == Constants.REQUEST_METHOD_GET))
-		{
-			/* old format for statusinfo, don't use it any more, only for compatibility */
-			/** @todo remove it */
-			String pathInfo = command.substring(10);
-			httpResponse = japFeedback(pathInfo);
 		}
 		else if ( (command.equals("/proxyAddresses")) && (method == Constants.REQUEST_METHOD_GET))
 		{
