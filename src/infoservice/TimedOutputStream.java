@@ -25,7 +25,7 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package anon.util;
+package infoservice;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -40,14 +40,24 @@ final public class TimedOutputStream extends OutputStream
 	private OutputStream m_Out;
 	private long m_msTimeout;
 	private volatile boolean m_bWriteStarted;
-
+	private static ThreadPool ms_ThreadPool;
 	private class TimedOutputStreamInterrupt implements Runnable
 	{
+		private Thread m_ThisThread=null;
+		private volatile boolean m_bRun = true;
 		public void run()
 		{
+			m_ThisThread = Thread.currentThread();
 			try
 			{
-				Thread.sleep(m_msTimeout);
+				if (m_bRun)
+				{
+					Thread.sleep(m_msTimeout);
+				}
+				else
+				{
+					return;
+				}
 			}
 			catch (InterruptedException ex)
 			{
@@ -64,10 +74,27 @@ final public class TimedOutputStream extends OutputStream
 			{
 			}
 		}
+
+		public void interrupt()
+		{
+			m_bRun = false;
+			if (m_ThisThread != null)
+			{
+				m_ThisThread.interrupt();
+			}
+		}
 	}
 
 	private TimedOutputStream()
 	{
+	}
+
+	/** Calls this with an resonable value for nrOfthreads. This number tells the class how many concurrent write() operations are possible
+	 *
+	 */
+	public static void init(int nrOfThreads)
+	{
+		ms_ThreadPool = new ThreadPool("TimedOutputStream",nrOfThreads);
 	}
 
 	/**
@@ -92,9 +119,9 @@ final public class TimedOutputStream extends OutputStream
 	 */
 	public synchronized void write(int b) throws IOException
 	{
-		Thread t = new Thread(new TimedOutputStreamInterrupt());
+		TimedOutputStreamInterrupt t = new TimedOutputStreamInterrupt();
+		ms_ThreadPool.addRequest(t);
 		m_bWriteStarted = true;
-		t.start();
 		try
 		{
 			m_Out.write(b);
@@ -123,9 +150,9 @@ final public class TimedOutputStream extends OutputStream
 
 	public synchronized void write(byte[] b, int i1, int i2) throws IOException
 	{
-		Thread t = new Thread(new TimedOutputStreamInterrupt());
+		TimedOutputStreamInterrupt t = new TimedOutputStreamInterrupt();
+		ms_ThreadPool.addRequest(t);
 		m_bWriteStarted = true;
-		t.start();
 		try
 		{
 			m_Out.write(b, i1, i2);
