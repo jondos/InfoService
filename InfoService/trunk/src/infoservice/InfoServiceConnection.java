@@ -44,7 +44,6 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 
-
 /**
  * This is a simple implementation of an HTTP server. This implementation doesn't support the most
  * HTTP/1.1 stuff (like persistent connections or special encodings). But parsing an HTTP/1.1
@@ -97,262 +96,269 @@ public class InfoServiceConnection implements Runnable
 	 */
 	public void run()
 	{
-		LogHolder.log(LogLevel.DEBUG, LogType.NET,
-					  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
-					  "): Handle connection from: " + m_socket.getInetAddress().getHostAddress() + ":" +
-					  m_socket.getPort());
 		try
 		{
-			m_socket.setSoTimeout(Constants.COMMUNICATION_TIMEOUT);
-		}
-		catch (Exception e)
-		{
-			LogHolder.log(LogLevel.WARNING, LogType.NET,
+			LogHolder.log(LogLevel.DEBUG, LogType.NET,
 						  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
-						  "): Cannot set socket timeout: " + e.toString());
-		}
-		InputStream streamFromClient = null;
-		OutputStream streamToClient = null;
-		try
-		{
-			streamFromClient = m_socket.getInputStream();
-			streamToClient = new TimedOutputStream(m_socket.getOutputStream(),
-				Constants.COMMUNICATION_TIMEOUT);
-		}
-		catch (Exception e)
-		{
-			LogHolder.log(LogLevel.ERR, LogType.NET,
-						  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
-						  "): Error while accessing the socket streams: " + e.toString());
-		}
-
-		if ( (streamFromClient != null) && (streamToClient != null))
-		{
-			HttpResponseStructure response = null;
-			int internalRequestMethodCode = 0;
-			String requestMethod = "";
-			String requestUrl = "";
-			byte[] postData = null;
-
+						  "): Handle connection from: " + m_socket.getInetAddress().getHostAddress() + ":" +
+						  m_socket.getPort());
 			try
 			{
-				/* first line is the Request-Line with the format:
-				 * METHOD <space> REQUEST-URI <space> HTTP-VERSION <CRLF>
-				 * Attention: <CRLF> is removed from readRequestLine()
-				 */
-				InfoServiceConnectionReader connectionReader = new InfoServiceConnectionReader(
-					streamFromClient, Constants.MAX_REQUEST_HEADER_SIZE);
-				String requestLine = readRequestLine(connectionReader);
-				LogHolder.log(LogLevel.DEBUG, LogType.NET,
+				m_socket.setSoTimeout(Constants.COMMUNICATION_TIMEOUT);
+			}
+			catch (Exception e)
+			{
+				LogHolder.log(LogLevel.WARNING, LogType.NET,
 							  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
-							  "): Request line: " + requestLine);
-				StringTokenizer requestLineTokenizer = new StringTokenizer(requestLine, " ");
-				if (requestLineTokenizer.countTokens() != 3)
-				{
-					throw (new Exception("Invalid HTTP request line: " + requestLine));
-				}
-				requestMethod = requestLineTokenizer.nextToken();
-				requestUrl = requestLineTokenizer.nextToken();
-				if (requestMethod.equals("POST"))
-				{
-					internalRequestMethodCode = Constants.REQUEST_METHOD_POST;
-				}
-				else if (requestMethod.equals("GET"))
-				{
-					internalRequestMethodCode = Constants.REQUEST_METHOD_GET;
-				}
-				else if (requestMethod.equals("HEAD"))
-				{
-					internalRequestMethodCode = Constants.REQUEST_METHOD_GET;
-				}
-				else
-				{
-					throw (new Exception("Unknown HTTP request method: " + requestMethod));
-				}
-
-				int contentLength = 0;
-				/* now process the HTTP request header */
-				Enumeration headerLines = readHeader(connectionReader).elements();
-				while (headerLines.hasMoreElements())
-				{
-					String currentHeaderLine = (String) (headerLines.nextElement());
-					LogHolder.log(LogLevel.DEBUG, LogType.NET,
-								  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
-								  "): Processing header line: " + currentHeaderLine);
-					/* everything until the first ':' is the field-name, everything after the first ':'
-					 * belongs to the field-value
-					 */
-					int fieldDelimiterPos = currentHeaderLine.indexOf(":");
-					if (fieldDelimiterPos < 0)
-					{
-						throw (new Exception("Invalid header line: " + currentHeaderLine));
-					}
-					String currentHeaderFieldName = currentHeaderLine.substring(0, fieldDelimiterPos);
-					/* leading or trailing whitspaces can be removed from a field value */
-					String currentHeaderFieldValue = currentHeaderLine.substring(fieldDelimiterPos + 1).trim();
-					if (currentHeaderFieldName.equalsIgnoreCase("Content-Length"))
-					{
-						try
-						{
-							contentLength = Integer.parseInt(currentHeaderFieldValue);
-							LogHolder.log(LogLevel.DEBUG, LogType.NET,
-										  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
-										  "): Read 'Content-Length: " + Integer.toString(contentLength) +
-										  "' from header.");
-						}
-						catch (Exception e)
-						{
-							throw (new Exception("Invalid Content-Length: " + currentHeaderLine + " " +
-												 e.toString()));
-						}
-					}
-				}
-
-				/* read the POST data, if it is a POST request */
-				if ( (internalRequestMethodCode == Constants.REQUEST_METHOD_POST) && (contentLength >= 0))
-				{
-					/* the volume of post data should be limited -> check the limit */
-					if (contentLength > Configuration.getInstance().getMaxPostContentLength())
-					{
-						throw (new Exception(
-							"POST: Content is longer than allowed maximum POST content length."));
-					}
-					ByteArrayOutputStream postDataRead = new ByteArrayOutputStream(contentLength);
-					int currentPos = 0;
-					while (currentPos < contentLength)
-					{
-						int byteRead = streamFromClient.read();
-						if (byteRead == -1)
-						{
-							throw (new Exception(
-								"POST: Content was shorter than specified in the header. Content length from header: " +
-								Integer.toString(contentLength) + " Real content length: " +
-								Integer.toString(currentPos)));
-						}
-						currentPos++;
-						postDataRead.write(byteRead);
-					}
-					postData = postDataRead.toByteArray();
-					LogHolder.log(LogLevel.DEBUG, LogType.NET,
-								  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
-								  "): Post-Data received for request: " + requestUrl + ": " +
-								  postDataRead.toString());
-				}
+							  "): Cannot set socket timeout: " + e.toString());
+			}
+			InputStream streamFromClient = null;
+			OutputStream streamToClient = null;
+			try
+			{
+				streamFromClient = m_socket.getInputStream();
+				streamToClient = new TimedOutputStream(m_socket.getOutputStream(),
+					Constants.COMMUNICATION_TIMEOUT);
 			}
 			catch (Exception e)
 			{
 				LogHolder.log(LogLevel.ERR, LogType.NET,
 							  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
-							  "): Invalid request - not processed: " + e.toString());
-				response = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_BAD_REQUEST);
+							  "): Error while accessing the socket streams: " + e.toString());
 			}
 
-			/* request parsing done -> process the request, if there was no error */
-			if (response == null)
+			if ( (streamFromClient != null) && (streamToClient != null))
 			{
-				/* no error until yet -> process the command via the server implementation */
-				if (m_serverImplementation != null)
-				{
-					response = m_serverImplementation.processCommand(internalRequestMethodCode,
-						requestUrl, postData, m_socket.getInetAddress());
-					if (response == null)
-					{
-						LogHolder.log(LogLevel.ERR, LogType.NET,
-									  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
-									  "): Response could not be generated: Request: " + requestMethod +
-									  " " + requestUrl);
-						response = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_NOT_FOUND);
-					}
-				}
-				else
-				{
-					LogHolder.log(LogLevel.ERR, LogType.NET,
-								  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
-								  "): Server implementation not available.");
-					response = new HttpResponseStructure(HttpResponseStructure.
-						HTTP_RETURN_INTERNAL_SERVER_ERROR);
-				}
-			}
+				HttpResponseStructure response = null;
+				int internalRequestMethodCode = 0;
+				String requestMethod = "";
+				String requestUrl = "";
+				byte[] postData = null;
 
-			/* send our response back to the client */
-			if (response != null)
-			{
 				try
 				{
+					/* first line is the Request-Line with the format:
+					 * METHOD <space> REQUEST-URI <space> HTTP-VERSION <CRLF>
+					 * Attention: <CRLF> is removed from readRequestLine()
+					 */
+					InfoServiceConnectionReader connectionReader = new InfoServiceConnectionReader(
+						streamFromClient, Constants.MAX_REQUEST_HEADER_SIZE);
+					String requestLine = readRequestLine(connectionReader);
 					LogHolder.log(LogLevel.DEBUG, LogType.NET,
 								  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
-								  "): Response for request: " + requestUrl + ": " +
-								  (new String(response.getResponseData())));
-					byte[] theResponse = response.getResponseData();
-					int index = 0;
-					int len = theResponse.length;
-					//we send the data bakch to the client in chunks of 10000 bytes in order
-					//to avoid unwanted timeouts for large messages and slow connections
-					while (len > 0)
+								  "): Request line: " + requestLine);
+					StringTokenizer requestLineTokenizer = new StringTokenizer(requestLine, " ");
+					if (requestLineTokenizer.countTokens() != 3)
 					{
-						int aktLen = Math.min(len, 10000);
-						streamToClient.write(theResponse, index, aktLen);
-						index += aktLen;
-						len-=aktLen;
+						throw (new Exception("Invalid HTTP request line: " + requestLine));
+					}
+					requestMethod = requestLineTokenizer.nextToken();
+					requestUrl = requestLineTokenizer.nextToken();
+					if (requestMethod.equals("POST"))
+					{
+						internalRequestMethodCode = Constants.REQUEST_METHOD_POST;
+					}
+					else if (requestMethod.equals("GET"))
+					{
+						internalRequestMethodCode = Constants.REQUEST_METHOD_GET;
+					}
+					else if (requestMethod.equals("HEAD"))
+					{
+						internalRequestMethodCode = Constants.REQUEST_METHOD_GET;
+					}
+					else
+					{
+						throw (new Exception("Unknown HTTP request method: " + requestMethod));
+					}
+
+					int contentLength = 0;
+					/* now process the HTTP request header */
+					Enumeration headerLines = readHeader(connectionReader).elements();
+					while (headerLines.hasMoreElements())
+					{
+						String currentHeaderLine = (String) (headerLines.nextElement());
+						LogHolder.log(LogLevel.DEBUG, LogType.NET,
+									  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
+									  "): Processing header line: " + currentHeaderLine);
+						/* everything until the first ':' is the field-name, everything after the first ':'
+						 * belongs to the field-value
+						 */
+						int fieldDelimiterPos = currentHeaderLine.indexOf(":");
+						if (fieldDelimiterPos < 0)
+						{
+							throw (new Exception("Invalid header line: " + currentHeaderLine));
+						}
+						String currentHeaderFieldName = currentHeaderLine.substring(0, fieldDelimiterPos);
+						/* leading or trailing whitspaces can be removed from a field value */
+						String currentHeaderFieldValue = currentHeaderLine.substring(fieldDelimiterPos + 1).
+							trim();
+						if (currentHeaderFieldName.equalsIgnoreCase("Content-Length"))
+						{
+							try
+							{
+								contentLength = Integer.parseInt(currentHeaderFieldValue);
+								LogHolder.log(LogLevel.DEBUG, LogType.NET,
+											  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
+											  "): Read 'Content-Length: " + Integer.toString(contentLength) +
+											  "' from header.");
+							}
+							catch (Exception e)
+							{
+								throw (new Exception("Invalid Content-Length: " + currentHeaderLine + " " +
+									e.toString()));
+							}
+						}
+					}
+
+					/* read the POST data, if it is a POST request */
+					if ( (internalRequestMethodCode == Constants.REQUEST_METHOD_POST) && (contentLength >= 0))
+					{
+						/* the volume of post data should be limited -> check the limit */
+						if (contentLength > Configuration.getInstance().getMaxPostContentLength())
+						{
+							throw (new Exception(
+								"POST: Content is longer than allowed maximum POST content length."));
+						}
+						ByteArrayOutputStream postDataRead = new ByteArrayOutputStream(contentLength);
+						int currentPos = 0;
+						while (currentPos < contentLength)
+						{
+							int byteRead = streamFromClient.read();
+							if (byteRead == -1)
+							{
+								throw (new Exception(
+									"POST: Content was shorter than specified in the header. Content length from header: " +
+									Integer.toString(contentLength) + " Real content length: " +
+									Integer.toString(currentPos)));
+							}
+							currentPos++;
+							postDataRead.write(byteRead);
+						}
+						postData = postDataRead.toByteArray();
+						LogHolder.log(LogLevel.DEBUG, LogType.NET,
+									  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
+									  "): Post-Data received for request: " + requestUrl + ": " +
+									  postDataRead.toString());
 					}
 				}
 				catch (Exception e)
 				{
 					LogHolder.log(LogLevel.ERR, LogType.NET,
 								  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
-								  "): Error while sending the response to the client: " + e.toString());
+								  "): Invalid request - not processed: " + e.toString());
+					response = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_BAD_REQUEST);
+				}
+
+				/* request parsing done -> process the request, if there was no error */
+				if (response == null)
+				{
+					/* no error until yet -> process the command via the server implementation */
+					if (m_serverImplementation != null)
+					{
+						response = m_serverImplementation.processCommand(internalRequestMethodCode,
+							requestUrl, postData, m_socket.getInetAddress());
+						if (response == null)
+						{
+							LogHolder.log(LogLevel.ERR, LogType.NET,
+										  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
+										  "): Response could not be generated: Request: " + requestMethod +
+										  " " + requestUrl);
+							response = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_NOT_FOUND);
+						}
+					}
+					else
+					{
+						LogHolder.log(LogLevel.ERR, LogType.NET,
+									  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
+									  "): Server implementation not available.");
+						response = new HttpResponseStructure(HttpResponseStructure.
+							HTTP_RETURN_INTERNAL_SERVER_ERROR);
+					}
+				}
+
+				/* send our response back to the client */
+				if (response != null)
+				{
+					try
+					{
+						LogHolder.log(LogLevel.DEBUG, LogType.NET,
+									  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
+									  "): Response for request: " + requestUrl + ": " +
+									  (new String(response.getResponseData())));
+						byte[] theResponse = response.getResponseData();
+						int index = 0;
+						int len = theResponse.length;
+						//we send the data bakch to the client in chunks of 10000 bytes in order
+						//to avoid unwanted timeouts for large messages and slow connections
+						while (len > 0)
+						{
+							int aktLen = Math.min(len, 10000);
+							streamToClient.write(theResponse, index, aktLen);
+							index += aktLen;
+							len -= aktLen;
+						}
+					}
+					catch (Exception e)
+					{
+						LogHolder.log(LogLevel.ERR, LogType.NET,
+									  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
+									  "): Error while sending the response to the client: " + e.toString());
+					}
+				}
+				try
+				{
+					streamToClient.flush();
+				}
+				catch (Exception e)
+				{
+					/* if we get an error here, normally there was already one -> log only for debug reasons */
+					LogHolder.log(LogLevel.DEBUG, LogType.NET,
+								  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
+								  "): Error while flushing output stream to client: " + e.toString());
 				}
 			}
+
+			/* try to close everything */
 			try
 			{
-				streamToClient.flush();
+				streamFromClient.close();
 			}
 			catch (Exception e)
 			{
 				/* if we get an error here, normally there was already one -> log only for debug reasons */
 				LogHolder.log(LogLevel.DEBUG, LogType.NET,
 							  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
-							  "): Error while flushing output stream to client: " + e.toString());
+							  "): Error while closing input stream from client: " + e.toString());
 			}
-		}
-
-		/* try to close everything */
-		try
-		{
-			streamFromClient.close();
-		}
-		catch (Exception e)
-		{
-			/* if we get an error here, normally there was already one -> log only for debug reasons */
+			try
+			{
+				streamToClient.close();
+			}
+			catch (Exception e)
+			{
+				/* if we get an error here, normally there was already one -> log only for debug reasons */
+				LogHolder.log(LogLevel.DEBUG, LogType.NET,
+							  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
+							  "): Error while closing output stream to client: " + e.toString());
+			}
+			try
+			{
+				m_socket.close();
+			}
+			catch (Exception e)
+			{
+				/* if we get an error here, normally there was already one -> log only for debug reasons */
+				LogHolder.log(LogLevel.DEBUG, LogType.NET,
+							  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
+							  "): Error while closing connection: " + e.toString());
+			}
 			LogHolder.log(LogLevel.DEBUG, LogType.NET,
 						  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
-						  "): Error while closing input stream from client: " + e.toString());
+						  "): Connection thread finished.");
 		}
-		try
+		catch (Throwable t)
 		{
-			streamToClient.close();
 		}
-		catch (Exception e)
-		{
-			/* if we get an error here, normally there was already one -> log only for debug reasons */
-			LogHolder.log(LogLevel.DEBUG, LogType.NET,
-						  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
-						  "): Error while closing output stream to client: " + e.toString());
-		}
-		try
-		{
-			m_socket.close();
-		}
-		catch (Exception e)
-		{
-			/* if we get an error here, normally there was already one -> log only for debug reasons */
-			LogHolder.log(LogLevel.DEBUG, LogType.NET,
-						  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
-						  "): Error while closing connection: " + e.toString());
-		}
-		LogHolder.log(LogLevel.DEBUG, LogType.NET,
-					  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
-					  "): Connection thread finished.");
 	}
 
 	/**
