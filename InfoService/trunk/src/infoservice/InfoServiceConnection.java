@@ -117,9 +117,9 @@ public class InfoServiceConnection implements Runnable
 			try
 			{
 				streamFromClient = m_socket.getInputStream();
-				streamToClient = new TimedOutputStream(m_socket.getOutputStream(),
-					Constants.COMMUNICATION_TIMEOUT);
-	//			streamToClient = m_socket.getOutputStream();
+		//		streamToClient = new TimedOutputStream(m_socket.getOutputStream(),
+		//			Constants.COMMUNICATION_TIMEOUT);
+				streamToClient = m_socket.getOutputStream();
 			}
 			catch (Exception e)
 			{
