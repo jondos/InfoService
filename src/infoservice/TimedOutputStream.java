@@ -41,7 +41,7 @@ final public class TimedOutputStream extends OutputStream
 	private long m_msTimeout;
 	private volatile boolean m_bWriteStarted;
 	private static ThreadPool ms_ThreadPool;
-	private class TimedOutputStreamInterrupt implements Runnable
+	final private class TimedOutputStreamInterrupt implements Runnable
 	{
 		private Thread m_ThisThread=null;
 		private volatile boolean m_bRun = true;
@@ -118,7 +118,7 @@ final public class TimedOutputStream extends OutputStream
 	 *   been closed.
 	 * @todo Diese java.io.OutputStream-Methode implementieren
 	 */
-	public synchronized void write(int b) throws IOException
+	public void write(int b) throws IOException
 	{
 		TimedOutputStreamInterrupt t = new TimedOutputStreamInterrupt();
 		ms_ThreadPool.addRequest(t);
@@ -144,15 +144,15 @@ final public class TimedOutputStream extends OutputStream
 		t.interrupt();
 	}
 
-	public synchronized void write(byte[] b) throws IOException
+	public void write(byte[] b) throws IOException
 	{
 		write(b, 0, b.length);
 	}
 
-	public synchronized void write(byte[] b, int i1, int i2) throws IOException
+	public void write(byte[] b, int i1, int i2) throws IOException
 	{
 		TimedOutputStreamInterrupt t = new TimedOutputStreamInterrupt();
-		ms_ThreadPool.addRequest(t);
+		//ms_ThreadPool.addRequest(t);
 		m_bWriteStarted = true;
 		try
 		{
