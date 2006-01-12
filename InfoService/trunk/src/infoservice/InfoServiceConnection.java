@@ -119,6 +119,7 @@ public class InfoServiceConnection implements Runnable
 				streamFromClient = m_socket.getInputStream();
 				streamToClient = new TimedOutputStream(m_socket.getOutputStream(),
 					Constants.COMMUNICATION_TIMEOUT);
+				streamToClient = m_socket.getOutputStream();
 			}
 			catch (Exception e)
 			{
@@ -290,13 +291,13 @@ public class InfoServiceConnection implements Runnable
 						int len = theResponse.length;
 						//we send the data bakch to the client in chunks of 10000 bytes in order
 						//to avoid unwanted timeouts for large messages and slow connections
-						while (len > 0)
+						/*while (len > 0)
 						{
 							int aktLen = Math.min(len, 10000);
-							streamToClient.write(theResponse, index, aktLen);
-							index += aktLen;
+							*/streamToClient.write(theResponse, index, len);
+							/*index += aktLen;
 							len -= aktLen;
-						}
+						}*/
 					}
 					catch (Exception e)
 					{

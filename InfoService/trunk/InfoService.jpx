@@ -34,13 +34,21 @@
 <property category="javaFormatting" name="packagePrefixGroups" value="java;javax;BLANK_LINE;java.awt;javax.swing;BLANK_LINE;org;(*)"/>
 <property category="javaFormatting" name="wrapAtColumn" value="110"/>
 <property category="javadoc" name="custom.tags.1" value="todo;a;To Do:"/>
-<property category="optimize.5" name="OptimizableType" value="com.borland.jbuilder.optimize.IntroOptimizeitThreadDebugger"/>
+<property category="optimize.0" name="OptimizableType" value="intuitive.ide.borland.jb10.ProfilerBootstrap"/>
+<property category="optimize.0" name="oipr.EnableUnitTest" value="0"/>
+<property category="optimize.0" name="oipr.FilterFile" value="G:\projects\Jap\InfoService.oif"/>
+<property category="optimize.5" name="OptimizableType" value="intuitive.ide.borland.jb10.ProfilerBootstrap"/>
+<property category="optimize.5" name="oipr.AttachProcess" value="1"/>
+<property category="optimize.5" name="oipr.EnableUnitTest" value="0"/>
 <property category="optimize.5" name="oipr.FilterFile" value="G:\projects\Jap\InfoService.oif"/>
+<property category="optimize.5" name="oipr.HostAttach" value="infoservice.inf.tu-dresden.de"/>
+<property category="optimize.5" name="oipr.PortAttach" value="4060"/>
+<property category="optimize.5" name="oipr.UseServerFilter" value="0"/>
 <property category="runtime" name="ConfigurationCount" value="5"/>
 <property category="runtime.0" name="BuildTargetOnRun" value="com.borland.jbuilder.build.ProjectBuilder$ProjectBuildAction;make"/>
 <property category="runtime.0" name="ConfigurationName" value="InfoService"/>
 <property category="runtime.0" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
-<property category="runtime.0" name="application.class" value="InfoService"/>
+<property category="runtime.0" name="application.class" value="infoservice.InfoService"/>
 <property category="runtime.0" name="application.parameters" value="documentation/SampleConfiguration/InfoService.properties"/>
 <property category="runtime.1" name="BuildTargetOnRun" value="com.borland.jbuilder.build.ProjectBuilder$ProjectBuildAction;make"/>
 <property category="runtime.1" name="ConfigurationName" value="GenerateKey"/>
@@ -77,6 +85,7 @@
 <property category="runtime.5" name="BuildTargetOnRun" value="com.borland.jbuilder.build.ProjectBuilder$ProjectBuildAction;make"/>
 <property category="runtime.5" name="ConfigurationName" value="Remote Debug of Anon InfoService"/>
 <property category="runtime.5" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
+<property category="runtime.5" name="application.class" value="infoservice.InfoService"/>
 <property category="runtime.5" name="custom.init_required" value="0"/>
 <property category="runtime.5" name="custom.jdk" value="java version 1.5.0_01-b08"/>
 <property category="runtime.5" name="custom.override_jdk" value="1"/>
