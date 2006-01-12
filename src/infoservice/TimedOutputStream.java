@@ -70,7 +70,7 @@ final public class TimedOutputStream extends OutputStream
 					m_Out.close();
 				}
 			}
-			catch (IOException ex1)
+			catch (Exception ex1)
 			{
 			}
 		}
