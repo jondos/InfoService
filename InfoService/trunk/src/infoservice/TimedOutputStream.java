@@ -151,9 +151,10 @@ final public class TimedOutputStream extends OutputStream
 
 	public void write(byte[] b, int i1, int i2) throws IOException
 	{
-		TimedOutputStreamInterrupt t = new TimedOutputStreamInterrupt();
+		Thread t = new Thread(new TimedOutputStreamInterrupt());
 		//ms_ThreadPool.addRequest(t);
 		m_bWriteStarted = true;
+		t.start();
 		try
 		{
 			m_Out.write(b, i1, i2);

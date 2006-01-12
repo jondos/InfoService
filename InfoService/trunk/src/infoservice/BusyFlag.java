@@ -28,7 +28,7 @@
  */
 package infoservice;
 
-public class BusyFlag
+public final class BusyFlag
 {
 	protected Thread busyflag = null;
 	protected int busycount = 0;

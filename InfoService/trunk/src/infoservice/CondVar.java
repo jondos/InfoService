@@ -28,7 +28,7 @@
  */
 package infoservice;
 
-public class CondVar
+public final class CondVar
 {
 	private BusyFlag SyncVar;
 
@@ -77,7 +77,7 @@ public class CondVar
 				sv.freeBusyFlag();
 			}
 
-			// Use wait() method	
+			// Use wait() method
 			try
 			{
 				if (millis == 0)
