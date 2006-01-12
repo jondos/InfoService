@@ -142,8 +142,8 @@ public class InfoService
 		LogHolder.log(LogLevel.EMERG, LogType.MISC, System.getProperty("os.name"));
 		LogHolder.log(LogLevel.EMERG, LogType.MISC, System.getProperty("os.arch"));
 		LogHolder.log(LogLevel.EMERG, LogType.MISC, System.getProperty("os.version"));
-		m_ThreadPool = new ThreadPool("ISConnection", Constants.MAX_NR_OF_CONCURRENT_CONNECTIONS);
-		TimedOutputStream.init(Constants.MAX_NR_OF_CONCURRENT_CONNECTIONS);
+		m_ThreadPool = new ThreadPool("ISConnection", Configuration.getInstance().getNrOfConcurrentConnections());
+		TimedOutputStream.init(Configuration.getInstance().getNrOfConcurrentConnections());
 		Enumeration enumer = Configuration.getInstance().getHardwareListeners().elements();
 		while (enumer.hasMoreElements())
 		{

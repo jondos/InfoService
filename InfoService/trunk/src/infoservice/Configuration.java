@@ -163,6 +163,10 @@ public class Configuration
 	 */
 	private boolean m_holdForwarderList;
 
+	/** Stores how many concurrent connections the InfoService can handle
+	 *
+	 */
+	private int m_NrOfThreads;
 	public Configuration(Properties a_properties) throws Exception
 	{
 		/* for running in non-graphic environments, we need the awt headless support, it is only
@@ -657,6 +661,20 @@ public class Configuration
 			m_httpDateFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.US);
 			m_httpDateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
 
+
+			m_NrOfThreads = Constants.MAX_NR_OF_CONCURRENT_CONNECTIONS;
+			try
+			{
+				String b = a_properties.getProperty("maxNrOfConcurrentConnections").trim();
+				m_NrOfThreads=Integer.parseInt(b);
+			}
+			catch (Exception e)
+			{
+				LogHolder.log(LogLevel.WARNING, LogType.MISC,
+							  "Could not read 'maxNrOfConcurrentConnections' setting - default to: " +
+							  m_NrOfThreads);
+			}
+
 		}
 		catch (Exception e)
 		{
@@ -688,6 +706,11 @@ public class Configuration
 		return m_hardwareListenerList;
 	}
 
+/** Returns how many concurrent connections this IS should handle*/
+	public int getNrOfConcurrentConnections()
+	{
+		return m_NrOfThreads;
+	}
 	/**
 	 * Returns the ListenerInterfaces of all Interfaces our infoservice
 	 * propagates to others.
