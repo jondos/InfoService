@@ -30,6 +30,8 @@ package infoservice;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.InterruptedIOException;
+import java.util.Hashtable;
+import java.util.Enumeration;
 
 /** This class implements an OutputStream, where a timeout for the write() operations can be set.
  *
@@ -38,64 +40,68 @@ import java.io.InterruptedIOException;
 final public class TimedOutputStream extends OutputStream
 {
 	private OutputStream m_Out;
-	private long m_msTimeout;
-	private volatile boolean m_bWriteStarted;
-	private static ThreadPool ms_ThreadPool;
-	final private class TimedOutputStreamInterrupt implements Runnable
+	private long m_TimeoutInTicks;
+	long m_TimeOutTick;
+	private volatile boolean m_bTimedOut;
+	private static Thread ms_threadInterrupt;
+	private static Hashtable ms_hashtableOutputStreams;
+	private static long ms_currentTick;
+	final static long MS_PER_TICK = 10000;
+
+	final static private class TimedOutputStreamInterrupt implements Runnable
 	{
-		private Thread m_ThisThread=null;
-		private volatile boolean m_bRun = true;
+		//private volatile boolean m_bRun = true;
 		public void run()
 		{
-			m_ThisThread = Thread.currentThread();
-			try
+			ms_currentTick = 0;
+			while (true)
 			{
-				if (m_bRun)
+				try
 				{
-					Thread.sleep(m_msTimeout);
-					m_ThisThread =null;
+					Thread.sleep(MS_PER_TICK);
 				}
-				else
+				catch (InterruptedException ex)
 				{
-					return;
+					continue;
 				}
-			}
-			catch (InterruptedException ex)
-			{
-			}
-			try
-			{
-				if (m_bWriteStarted)
+				ms_currentTick++;
+				try
 				{
-					m_bWriteStarted = false;
-					m_Out.close();
+					Enumeration elements = ms_hashtableOutputStreams.elements();
+					while (elements.hasMoreElements())
+					{
+						TimedOutputStream elem = (TimedOutputStream) elements.nextElement();
+						if (ms_currentTick > elem.m_TimeOutTick)
+						{
+							try
+							{
+								elem.m_bTimedOut=true;
+								elem.close();
+							}
+							catch (Throwable t)
+							{
+							}
+						}
+					}
 				}
-			}
-			catch (Exception ex1)
-			{
+				catch (Exception ex1)
+				{
+				}
 			}
 		}
 
-		public void interrupt()
-		{
-			m_bRun = false;
-			if (m_ThisThread != null)
-			{
-				m_ThisThread.interrupt();
-			}
-		}
 	}
 
 	private TimedOutputStream()
 	{
 	}
 
-	/** Calls this with an resonable value for nrOfthreads. This number tells the class how many concurrent write() operations are possible
-	 *
-	 */
-	public static void init(int nrOfThreads)
+	public static void init()
 	{
-		ms_ThreadPool = new ThreadPool("TimedOutputStream",nrOfThreads);
+		ms_hashtableOutputStreams = new Hashtable(1000);
+		ms_threadInterrupt = new Thread(new TimedOutputStreamInterrupt(),"TimedOutputStream");
+		ms_threadInterrupt.setDaemon(true);
+		ms_threadInterrupt.start();
 	}
 
 	/**
@@ -106,7 +112,7 @@ final public class TimedOutputStream extends OutputStream
 	public TimedOutputStream(OutputStream parent, long msTimeout)
 	{
 		m_Out = parent;
-		m_msTimeout = msTimeout;
+		m_TimeoutInTicks = msTimeout / MS_PER_TICK;
 	}
 
 	/**
@@ -120,28 +126,26 @@ final public class TimedOutputStream extends OutputStream
 	 */
 	public void write(int b) throws IOException
 	{
-		TimedOutputStreamInterrupt t = new TimedOutputStreamInterrupt();
-		ms_ThreadPool.addRequest(t);
-		m_bWriteStarted = true;
+		m_TimeOutTick = ms_currentTick + m_TimeoutInTicks;
+		ms_hashtableOutputStreams.put(this, this);
+		m_bTimedOut = false;
 		try
 		{
 			m_Out.write(b);
 		}
 		catch (IOException e)
 		{
-			if (!m_bWriteStarted) //I/O was interrupted
+			ms_hashtableOutputStreams.remove(this);
+			if (m_bTimedOut) //I/O was interrupted
 			{
 				throw new InterruptedIOException("TimedOutputStream: write() timed out!");
 			}
 			else
 			{
-				m_bWriteStarted = false;
-				t.interrupt();
 				throw e;
 			}
 		}
-		m_bWriteStarted = false;
-		t.interrupt();
+		ms_hashtableOutputStreams.remove(this);
 	}
 
 	public void write(byte[] b) throws IOException
@@ -151,29 +155,26 @@ final public class TimedOutputStream extends OutputStream
 
 	public void write(byte[] b, int i1, int i2) throws IOException
 	{
-		Thread t = new Thread(new TimedOutputStreamInterrupt());
-		//ms_ThreadPool.addRequest(t);
-		m_bWriteStarted = true;
-		//t.start();
+		m_TimeOutTick = ms_currentTick + m_TimeoutInTicks;
+		ms_hashtableOutputStreams.put(this, this);
+		m_bTimedOut = false;
 		try
 		{
 			m_Out.write(b, i1, i2);
 		}
 		catch (IOException e)
 		{
-			if (!m_bWriteStarted) //I/O was interrupted
+			ms_hashtableOutputStreams.remove(this);
+			if (m_bTimedOut) //I/O was interrupted
 			{
 				throw new InterruptedIOException("TimedOutputStream: write() timed out!");
 			}
 			else
 			{
-				m_bWriteStarted = false;
-				t.interrupt();
 				throw e;
 			}
 		}
-		m_bWriteStarted = false;
-		t.interrupt();
+		ms_hashtableOutputStreams.remove(this);
 	}
 
 	public void close() throws IOException
