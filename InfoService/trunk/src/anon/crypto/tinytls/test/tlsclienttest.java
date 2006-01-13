@@ -8,7 +8,7 @@ import logging.SystemErrLog;
 import anon.crypto.JAPCertificate;
 import java.io.OutputStream;
 import java.net.Socket;
-import anon.util.TimedOutputStream;
+import infoservice.TimedOutputStream;
 public class tlsclienttest
 {
 
@@ -24,7 +24,8 @@ public class tlsclienttest
 //		out.write("GET /index.html HTTP/1.0\r\n\r\n".getBytes());
 //		out.flush();
 		InputStream in = tls.getInputStream();
-		OutputStream out=new TimedOutputStream(tls.getOutputStream(),1000);
+		TimedOutputStream.init();
+		OutputStream out=new TimedOutputStream(tls.getOutputStream(),20000);
 //	while(in!=null)
 		byte w[]=new byte[1000000];
 		tls.setSoTimeout(1000);

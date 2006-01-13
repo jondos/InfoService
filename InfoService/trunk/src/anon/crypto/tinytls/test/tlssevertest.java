@@ -19,11 +19,11 @@ public class tlssevertest
 
 		LogHolder.setLogInstance(new SystemErrLog());
 
-		FileInputStream fs = new FileInputStream("testkey.pfx");
+/*		FileInputStream fs = new FileInputStream("testkey.pfx");
 		PKCS12 pkcs = PKCS12.getInstance(fs, "".toCharArray());
 		MyDSAPrivateKey key = (MyDSAPrivateKey) pkcs.getPrivateKey();
 		JAPCertificate cert = JAPCertificate.getInstance(pkcs.getX509Certificate());
-
+*/
 		ServerSocket tlsserver = new ServerSocket(3456);//new TinyTLSServer(3456);
 		//tlsserver.setDSSParameters(cert, key);
 		while (true)
