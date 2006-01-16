@@ -32,7 +32,6 @@ import java.util.Enumeration;
 import java.util.Observable;
 import java.util.Observer;
 
-import java.awt.BorderLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -43,7 +42,6 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.border.TitledBorder;
@@ -59,7 +57,9 @@ import javax.swing.JCheckBox;
 import javax.swing.JSeparator;
 import java.awt.event.ItemListener;
 import java.awt.event.ItemEvent;
-import gui.*;
+import gui.JAPMessages;
+import gui.JAPHelp;
+import gui.dialog.JAPDialog;
 
 /**
  * This is the configuration GUI for the cert.
@@ -366,14 +366,14 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 				//if (cert == null)
 				if (cert == null && decode_error)
 				{
-					JAPConf.showError(JAPMessages.getString("certInputErrorTitle"));
-
+					JAPDialog.showMessageDialog(getRootPanel(),
+												JAPMessages.getString("certInputErrorTitle"));
 				}
 				if (cert != null)
 				{
 
 					SignatureVerifier.getInstance().getVerificationCertificateStore().
-						addCertificateWithoutVerification(cert, JAPCertificate.CERTIFICATE_TYPE_ROOT_MIX, true,false);
+						addCertificateWithoutVerification(cert, JAPCertificate.CERTIFICATE_TYPE_ROOT_MIX, true, false);
 				}
 			}
 		});
@@ -660,7 +660,8 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 	{
 		super.onResetToDefaultsPressed();
 		m_cbCertCheckEnabled.setSelected(JAPConstants.DEFAULT_CERT_CHECK_ENABLED);
-}
+	}
+
 	protected void onRootPanelShown()
 	{
 		//Register help context

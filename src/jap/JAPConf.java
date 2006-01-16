@@ -796,20 +796,6 @@ final public class JAPConf extends JDialog implements ActionListener
 		setVisible(false);
 	}
 
-	/**Shows a Dialog about whats going wrong
-	 */
-	public static void showError(String msg)
-	{
-		JAPDialog.showErrorDialog(ms_JapConfInstance, msg, LogType.MISC);
-	}
-
-	/**Shows a Dialog with some info
-	 */
-	public static void showInfo(String msg)
-	{
-		JAPDialog.showMessageDialog(ms_JapConfInstance, msg, JAPMessages.getString("information"));
-	}
-
 	/** Checks if all Input in all Fiels make sense. Displays InfoBoxes about what is wrong.
 	 * @return true if all is ok
 	 *					false otherwise
@@ -831,7 +817,7 @@ final public class JAPConf extends JDialog implements ActionListener
 		}
 		if (!ProxyInterface.isValidPort(i))
 		{
-			showError(JAPMessages.getString("errorListenerPortWrong"));
+			JAPDialog.showErrorDialog(ms_JapConfInstance, JAPMessages.getString("errorListenerPortWrong"), LogType.MISC);
 			return false;
 		}
 		iListenerPort = i;
@@ -841,7 +827,7 @@ final public class JAPConf extends JDialog implements ActionListener
 			s = m_tfProxyHost.getText().trim();
 			if (s == null || s.equals(""))
 			{
-				showError(JAPMessages.getString("errorFirewallHostNotNull"));
+				JAPDialog.showErrorDialog(ms_JapConfInstance, JAPMessages.getString("errorFirewallHostNotNull"), LogType.MISC);
 				this.selectCard(PROXY_TAB);
 				return false;
 			}
@@ -855,7 +841,7 @@ final public class JAPConf extends JDialog implements ActionListener
 			}
 			if (!ProxyInterface.isValidPort(i))
 			{
-				showError(JAPMessages.getString("errorFirewallServicePortWrong"));
+				JAPDialog.showErrorDialog(ms_JapConfInstance, JAPMessages.getString("errorFirewallServicePortWrong"), LogType.MISC);
 				this.selectCard(PROXY_TAB);
 				return false;
 			}
@@ -864,7 +850,7 @@ final public class JAPConf extends JDialog implements ActionListener
 				s = m_tfProxyAuthenticationUserID.getText().trim();
 				if (s == null || s.equals(""))
 				{
-					showError(JAPMessages.getString("errorFirewallAuthUserIDNotNull"));
+					JAPDialog.showErrorDialog(ms_JapConfInstance, JAPMessages.getString("errorFirewallAuthUserIDNotNull"), LogType.MISC);
 					this.selectCard(PROXY_TAB);
 					return false;
 				}
