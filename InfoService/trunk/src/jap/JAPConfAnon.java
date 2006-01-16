@@ -71,12 +71,13 @@ import anon.infoservice.MixInfo;
 import gui.JAPMultilineLabel;
 import gui.ServerListPanel;
 import gui.JAPJIntField;
-import jap.platform.AbstractOS;
+import platform.AbstractOS;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import jap.forward.*;
 import gui.*;
+import java.net.URL;
 
 class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, ActionListener,
 	ListSelectionListener, ItemListener, KeyListener, Observer
@@ -931,7 +932,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			AbstractOS os = AbstractOS.getInstance();
 			try
 			{
-				os.openURLInBrowser(url);
+				os.openURL(new URL(url));
 			}
 			catch (Exception a_e)
 			{

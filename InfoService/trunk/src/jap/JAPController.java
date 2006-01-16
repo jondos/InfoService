@@ -75,7 +75,7 @@ import anon.util.ResourceLoader;
 import anon.util.XMLUtil;
 import forward.server.ForwardServerManager;
 import gui.JAPHtmlMultiLineLabel;
-import jap.platform.AbstractOS;
+import platform.AbstractOS;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -454,7 +454,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 		if (!success)
 		{
 			/* no config file at any position->use OS-specific path for storing a new one*/
-			JAPModel.getInstance().setConfigFile(AbstractOS.getInstance().getConfigPath());
+			JAPModel.getInstance().setConfigFile(AbstractOS.getInstance().getConfigPath()+JAPConstants.XMLCONFFN);
 		}
 		if (a_strJapConfFile != null)
 		{
@@ -470,7 +470,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 				/* no config file was specified on the command line and the default config files don't
 				 * exist -> store the configuration in the OS-specific directory
 				 */
-				JAPModel.getInstance().setConfigFile(AbstractOS.getInstance().getConfigPath());
+				JAPModel.getInstance().setConfigFile(AbstractOS.getInstance().getConfigPath()+JAPConstants.XMLCONFFN);
 			}
 		}
 		if (success)
@@ -979,7 +979,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	 */
 	private boolean loadConfigFileOSdependent()
 	{
-		String japConfFile = AbstractOS.getInstance().getConfigPath();
+		String japConfFile = AbstractOS.getInstance().getConfigPath()+JAPConstants.XMLCONFFN;
 		LogHolder.log(LogLevel.INFO, LogType.MISC,
 					  "JAPController: loadConfigFile: Trying to load configuration from: " + japConfFile);
 		try
@@ -2321,7 +2321,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	public void registerMainView(AbstractJAPMainView v)
 	{
 		m_View = v;
-		JAPHelp.init(v, new ExternalURLCaller());
+		JAPHelp.init(v, AbstractOS.getInstance());
 	}
 
 	public static AbstractJAPMainView getView()

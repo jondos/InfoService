@@ -25,76 +25,63 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package jap.platform;
+package platform;
 
-import java.io.File;
-
-import jap.JAPConstants;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import gui.JAPHelp.IExternalURLCaller;
+import java.net.URL;
 
 /**
- * This class is instantiated by AbstractOS if the current OS is Windows
+ * This abstract class provides access to OS-specific implementations of certain
+ * functions. It tries to instantiate an OS-specific class by determining on which
+ * operating system JAP is currently running.
  */
-public class WindowsOS extends AbstractOS
+public abstract class AbstractOS implements IExternalURLCaller
 {
-	public static final String[] BROWSERLIST =
+	/**
+	 * Make sure that the default OS is the last OS in the array.
+	 */
+	private static String[] REGISTERED_PLATFORM_CLASSES =
 		{
-		"firefox", "iexplore", "explorer", "mozilla", "konqueror", "mozilla-firefox",
-		"firebird", "opera"
-	};
+		"platform.LinuxOS", "platform.WindowsOS", "platform.MacOS",
+		"platform.DefaultOS"};
 
-	public WindowsOS() throws Exception
+	/**
+	 * The instanciated operation system class.
+	 * (no, ms_operating system does not mean only Microsoft OS are supported... ;-))
+	 */
+	private static AbstractOS ms_operatingSystem;
+
+	/**
+	 * Instantiates an OS-specific class. If no specific class is found, the default OS
+	 * (which is a dummy implementation) is instanciated.
+	 * @return the instanciated operating system class
+	 */
+	public static final AbstractOS getInstance()
 	{
-		String osName = System.getProperty("os.name", "").toLowerCase();
-		if (osName.indexOf("win") == -1)
-		{
-			throw new Exception("Operating system is not Windows");
-		}
-	}
-
-	public boolean openURLInBrowser(String a_url)
-	{
-		boolean success = false;
-
-		String[] browser = BROWSERLIST;
-		a_url="\""+a_url+"\"";
-		for (int i = 0; i < browser.length; i++)
+		for (int i = 0; ms_operatingSystem == null && i < REGISTERED_PLATFORM_CLASSES.length; i++)
 		{
 			try
 			{
-				Runtime.getRuntime().exec(new String[]
-										  {browser[i], a_url});
-				success = true;
-				break;
+				ms_operatingSystem =
+					(AbstractOS) Class.forName(REGISTERED_PLATFORM_CLASSES[i]).newInstance();
 			}
-			catch (Exception ex)
+			catch (Exception a_e)
 			{
-				return false;
+				LogHolder.log(LogLevel.DEBUG, LogType.MISC,
+							  "Cannot instantiate class " + REGISTERED_PLATFORM_CLASSES[i] +
+							  ". Trying to instanciate an other platform class.");
 			}
 		}
-		if (!success)
-		{
-			LogHolder.log(LogLevel.ERR, LogType.MISC, "Cannot open URL in browser");
-			return false;
-		}
-		return success;
+
+		return ms_operatingSystem;
 	}
 
-	public String getConfigPath()
-	{
-		String vendor = System.getProperty("java.vendor", "unknown");
-		String dir = "";
-		if (vendor.trim().toLowerCase().startsWith("microsoft"))
-		{
-			dir = System.getProperty("user.dir", ".");
-		}
-		else
-		{
-			dir = System.getProperty("user.home", ".");
-		}
-		return dir + File.separator + JAPConstants.XMLCONFFN;
-	}
+	/**
+	 * Implementations must return a valid path to the config file.
+	 */
+	public abstract String getConfigPath();
 
 }

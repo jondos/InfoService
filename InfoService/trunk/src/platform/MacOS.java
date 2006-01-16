@@ -25,68 +25,51 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package jap.platform;
+package platform;
 
-import jap.JAPConstants;
+import com.apple.mrj.MRJFileUtils;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import java.net.URL;
 
 /**
- * This class is instantiated by AbstractOS if the current OS is Linux
+ * This class is instantiated by AbstractOS if the current OS is MacOS or MacOSX
  */
-public class LinuxOS extends AbstractOS
+public class MacOS extends AbstractOS
 {
-	public static final String[] BROWSERLIST =
-		{
-		"firefox", "iexplore", "explorer", "mozilla", "konqueror", "mozilla-firefox",
-		"firebird", "opera"
-	};
-
-	public LinuxOS() throws Exception
+	public MacOS() throws Exception
 	{
-		String osName = System.getProperty("os.name", "").toLowerCase();
-		if (osName.indexOf("linux") == -1)
+		if (System.getProperty("mrj.version") == null)
 		{
-			throw new Exception("Operating system is not Linux");
+			throw new Exception("Operating system is not MacOS");
 		}
 	}
 
-	public boolean openURLInBrowser(String a_url)
+	public boolean openURL(URL a_url)
 	{
-		boolean success = false;
 		try
 		{
-			String[] browser = BROWSERLIST;
-			for (int i = 0; i < browser.length; i++)
-			{
-				try
-				{
-					Runtime.getRuntime().exec(new String[]
-											  {browser[i], a_url});
-					success = true;
-					break;
-				}
-				catch (Exception ex)
-				{
-				}
-			}
-			if (!success)
-			{
-				return false;
-			}
+			MRJFileUtils.openURL(a_url.toString());
+			return true;
 		}
-		catch (Exception ex)
+		catch (Exception a_e)
 		{
 			LogHolder.log(LogLevel.ERR, LogType.MISC, "Cannot open URL in browser");
 			return false;
 		}
-		return success;
 	}
 
 	public String getConfigPath()
 	{
-		//Return path in user's home directory with hidden file (preceded by ".")
-		return System.getProperty("user.home", "") + "/." + JAPConstants.XMLCONFFN;
+		//Return path in users's home/Library/Preferences
+		if (System.getProperty("os.name").equalsIgnoreCase("Mac OS"))
+		{
+			return System.getProperty("user.home", ".") +"/";
+		}
+		else
+		{
+			return System.getProperty("user.home", "") + "/Library/Preferences/";
+		}
 	}
 }
