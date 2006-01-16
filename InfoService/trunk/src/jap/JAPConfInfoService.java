@@ -45,12 +45,10 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JList;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.JTabbedPane;
-import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.ListCellRenderer;
 import javax.swing.ListSelectionModel;
@@ -72,7 +70,9 @@ import logging.LogType;
 import java.awt.FlowLayout;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
-import gui.*;
+import gui.JAPMessages;
+import gui.JAPHelp;
+import gui.dialog.JAPDialog;
 
 /**
  * This is the configuration GUI for the infoservice.
@@ -322,19 +322,21 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 								final private boolean m_bError;
 								RunnableSwing(boolean b)
 								{
-									m_bError=b;
+									m_bError = b;
 								}
+
 								public void run()
 								{
 									if (m_bError)
 									{
-										JAPConf.showError(JAPMessages.getString(
-											"settingsInfoServiceConfigBasicSettingsFetchInfoServicesError"));
+										JAPDialog.showErrorDialog(getRootPanel(), JAPMessages.getString("settingsInfoServiceConfigBasicSettingsFetchInfoServicesError"),
+										  LogType.MISC);
 									}
 									settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton.
 										setEnabled(true);
 								}
 							}
+
 							SwingUtilities.invokeLater(new RunnableSwing(bError));
 						}
 					}
@@ -993,10 +995,10 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 				}
 				catch (Exception e)
 				{
-					JOptionPane.showMessageDialog(addInfoServicePanel,
+					JAPDialog.showErrorDialog(addInfoServicePanel,
 												  JAPMessages.getString(
 						"settingsInfoServiceConfigBasicSettingsAddInfoServiceAddError"),
-												  JAPMessages.getString("error"), JOptionPane.ERROR_MESSAGE);
+											  LogType.MISC);
 				}
 			}
 		});

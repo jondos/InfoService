@@ -51,12 +51,9 @@ import java.awt.event.MouseListener;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JFrame;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JList;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
@@ -76,8 +73,10 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import jap.forward.*;
-import gui.*;
 import java.net.URL;
+import gui.dialog.JAPDialog;
+import gui.JAPMessages;
+import gui.JAPHelp;
 
 class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, ActionListener,
 	ListSelectionListener, ItemListener, KeyListener, Observer
@@ -364,9 +363,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			}
 			catch (Exception a_e)
 			{
-				JAPUtil.showMessageBox( (JFrame)this.getRootPanel().getParent(),
-									   JAPMessages.getString("errorCreateCascadeDesc"),
-									   JAPMessages.getString("errorCreateCascade"), JOptionPane.ERROR_MESSAGE);
+				JAPDialog.showErrorDialog(this.getRootPanel(), JAPMessages.getString("errorCreateCascadeDesc"),
+										  LogType.MISC);
 			}
 		}
 		else
@@ -706,11 +704,9 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				{
 					if (!JAPModel.isSmallDisplay() && bErr)
 					{
-						JOptionPane.showMessageDialog(JAPController.getView(),
+						JAPDialog.showErrorDialog(getRootPanel(),
 							JAPMessages.getString("settingsNoServersAvailable"),
-							JAPMessages.getString("settingsNoServersAvailableTitle"),
-							JOptionPane.INFORMATION_MESSAGE);
-
+							LogType.MISC);
 					}
 					//No mixcascades returned by Infoservice
 					deactivate();
@@ -843,10 +839,9 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				if (m_Controller.getCurrentMixCascade().equals(oldCascade))
 				{
 					m_Controller.setCurrentMixCascade(c);
-					JOptionPane.showMessageDialog(this.getRootPanel(),
+					JAPDialog.showMessageDialog(this.getRootPanel(),
 												  JAPMessages.getString("activeCascadeEdited"),
-											  JAPMessages.getString("information"),
-											  JOptionPane.INFORMATION_MESSAGE);
+												  JAPMessages.getString("information"));
 
 					//add: message that active cascade cannot be deleted
 				}
@@ -857,17 +852,15 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		}
 			else
 			{
-				JOptionPane.showMessageDialog(this.getRootPanel(), JAPMessages.getString("cascadeExistsDesc"),
-											  JAPMessages.getString("errorCreateCascade"),
-											  JOptionPane.ERROR_MESSAGE);
+				JAPDialog.showErrorDialog(this.getRootPanel(), JAPMessages.getString("cascadeExistsDesc"),
+											  LogType.MISC);
 			}
 		}
 		catch (Exception a_e)
 		{
 			LogHolder.log(LogLevel.ERR, LogType.MISC, "Cannot edit cascade");
-			JOptionPane.showMessageDialog(this.getRootPanel(), JAPMessages.getString("errorCreateCascadeDesc"),
-										  JAPMessages.getString("errorCreateCascade"),
-										  JOptionPane.ERROR_MESSAGE);
+			JAPDialog.showErrorDialog(this.getRootPanel(), JAPMessages.getString("errorCreateCascadeDesc"),
+										  LogType.MISC);
 
 		}
 	}
@@ -882,10 +875,9 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			MixCascade cascade = (MixCascade) m_listMixCascade.getSelectedValue();
 			if (m_Controller.getCurrentMixCascade().equals(cascade))
 			{
-				JOptionPane.showMessageDialog(this.getRootPanel(),
+				JAPDialog.showErrorDialog(this.getRootPanel(),
 											  JAPMessages.getString("activeCascadeDelete"),
-											  JAPMessages.getString("errorCreateCascade"),
-											  JOptionPane.ERROR_MESSAGE);
+											  LogType.MISC);
 			}
 			else
 			{
@@ -1010,11 +1002,9 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 					{
 						if (!JAPModel.isSmallDisplay() && bErr)
 						{
-							JOptionPane.showMessageDialog(JAPController.getView(),
+								JAPDialog.showMessageDialog(getRootPanel(),
 								JAPMessages.getString("settingsNoServersAvailable"),
-								JAPMessages.getString("settingsNoServersAvailableTitle"),
-								JOptionPane.INFORMATION_MESSAGE);
-
+									JAPMessages.getString("settingsNoServersAvailableTitle"));
 						}
 						//No mixcascades returned by Infoservice
 						deactivate();

@@ -44,7 +44,6 @@ import java.awt.Image;
 import java.awt.Insets;
 import java.awt.MediaTracker;
 import javax.swing.ImageIcon;
-import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -77,6 +76,8 @@ public class PaymentMainPanel extends JPanel
 		"_title";
 	private static final String MSG_LASTUPDATE = PaymentMainPanel.class.getName() +
 		"_lastupdate";
+	private static final String MSG_PAYMENTNOTACTIVE = PaymentMainPanel.class.getName() +
+		"_paymentnotactive";
 
 	/**
 	 * Icons for the account icon display
@@ -95,8 +96,8 @@ public class PaymentMainPanel extends JPanel
 	/** show the date of the last balance update */
 	private JLabel m_lastUpdateLabel;
 
-	/** this button opens the configuration tab for payment */
-	private JButton m_ConfigButton;
+	/** show the date of the last balance update */
+	private JLabel m_dateLabel;
 
 	/** the main jap window */
 	private JAPNewView m_view;
@@ -127,12 +128,12 @@ public class PaymentMainPanel extends JPanel
 		c.insets = new Insets(0, 5, 0, 0);
 		this.add(label, c);
 
-		label = new JLabel(JAPMessages.getString(MSG_LASTUPDATE));
+		m_dateLabel = new JLabel(JAPMessages.getString(MSG_LASTUPDATE));
 		c.insets = new Insets(10, 10, 10, 10);
 		c.weightx = 0;
 		c.gridy++;
 		c.gridwidth = 1;
-		this.add(label, c);
+		this.add(m_dateLabel, c);
 
 		c.gridx++;
 		m_lastUpdateLabel = new JLabel();
@@ -141,9 +142,9 @@ public class PaymentMainPanel extends JPanel
 		// the current balance (progressbar + label)
 		MyProgressBarUI progressUi = new MyProgressBarUI(false);
 		progressUi.setFilledBarColor(Color.blue);
-		m_BalanceProgressBar = new JProgressBar(0, 100);
+		m_BalanceProgressBar = new JProgressBar(0, 100000000);
 		m_BalanceProgressBar.setUI(progressUi);
-		m_BalanceProgressBar.setValue(77);
+		m_BalanceProgressBar.setValue(0);
 		m_BalanceProgressBar.setBorderPainted(false);
 		c.anchor = GridBagConstraints.NORTHWEST;
 		c.fill = GridBagConstraints.HORIZONTAL;
@@ -152,7 +153,7 @@ public class PaymentMainPanel extends JPanel
 		c.gridy++;
 		c.insets = new Insets(10, 10, 10, 0);
 		this.add(m_BalanceProgressBar, c);
-		m_BalanceText = new JLabel("Balance");
+		m_BalanceText = new JLabel(" ");
 		c.gridx = 1;
 		c.weightx = 1;
 		this.add(m_BalanceText, c);
@@ -202,14 +203,14 @@ public class PaymentMainPanel extends JPanel
 		if (activeAccount == null)
 		{
 			m_AccountIconLabel.setIcon(m_accountIcons[0]);
-			m_BalanceText.setText("");
-			m_BalanceText.setEnabled(false);
+			m_dateLabel.setText(JAPMessages.getString(MSG_PAYMENTNOTACTIVE));
+			m_dateLabel.setEnabled(false);
 			m_BalanceProgressBar.setValue(0);
 			m_BalanceProgressBar.setEnabled(false);
 		}
 
 		// account is nearly empty :-(
-		else if ( (activeAccount.getCertifiedCredit() <= (activeAccount.getDeposit() / 10)) ||
+		/*else if ( (activeAccount.getCertifiedCredit() <= (activeAccount.getDeposit() / 10)) ||
 				 (activeAccount.getCertifiedCredit() <= (1024 * 1024)))
 		{
 			m_AccountIconLabel.setIcon(m_accountIcons[2]);
@@ -217,7 +218,7 @@ public class PaymentMainPanel extends JPanel
 			m_BalanceText.setText(JAPUtil.formatBytesValue(activeAccount.getCertifiedCredit()));
 			m_BalanceProgressBar.setValue(0);
 			m_BalanceProgressBar.setEnabled(true);
-		}
+		}*/
 
 		// we got everything under control, situation normal
 		else
@@ -226,11 +227,13 @@ public class PaymentMainPanel extends JPanel
 			SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm");
 			String dateText = sdf.format(t);
 			m_lastUpdateLabel.setText(dateText);
+			m_dateLabel.setText(JAPMessages.getString(MSG_LASTUPDATE));
+			m_dateLabel.setEnabled(true);
 			m_AccountIconLabel.setIcon(m_accountIcons[1]);
 			m_BalanceText.setEnabled(true);
 			m_BalanceText.setText(JAPUtil.formatBytesValue(activeAccount.getCertifiedCredit()));
-			m_BalanceProgressBar.setMaximum( (int) activeAccount.getDeposit());
-			m_BalanceProgressBar.setValue( (int) activeAccount.getCertifiedCredit());
+			m_BalanceProgressBar.setMaximum( (int) (activeAccount.getDeposit()/100));
+			m_BalanceProgressBar.setValue( (int) (activeAccount.getCertifiedCredit()/100));
 			m_BalanceProgressBar.setEnabled(true);
 		}
 	}

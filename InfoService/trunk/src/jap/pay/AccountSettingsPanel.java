@@ -29,6 +29,7 @@ package jap.pay;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.util.Date;
 import java.util.Enumeration;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -74,19 +75,18 @@ import anon.pay.xml.XMLTransCert;
 import anon.util.XMLUtil;
 import gui.GUIUtils;
 import gui.JAPMessages;
+import gui.dialog.JAPDialog;
+import gui.dialog.WorkerContentPane;
 import jap.AbstractJAPConfModule;
 import jap.JAPConstants;
 import jap.JAPController;
 import jap.JAPPasswordReader;
 import jap.JAPUtil;
-import jap.JAPWaitSplash;
 import jap.pay.wizard.PaymentWizard;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import java.util.Date;
-import gui.dialog.JAPDialog;
-import gui.dialog.WorkerContentPane;
+import anon.util.ResourceLoader;
 
 /**
  * The Jap Conf Module (Settings Tab Page) for the Accounts and payment Management
@@ -149,6 +149,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		getName() + "_getaccountstatement";
 	private static final String MSG_GETACCOUNTSTATEMENTTITLE = AccountSettingsPanel.class.
 		getName() + "_getaccountstatementtitle";
+	private static final String MSG_ACCOUNTCREATEDESC = AccountSettingsPanel.class.
+		getName() + "_accountcreatedesc";
 
 	private JButton m_btnCreateAccount;
 	private JButton m_btnChargeAccount;
@@ -170,7 +172,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 	private JLabel m_labelValid;
 	private CoinstackProgressBar m_coinstack;
 	private JList m_listAccounts;
-	private JLabel m_busyLabel;
 
 	public AccountSettingsPanel()
 	{
@@ -295,15 +296,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		c.fill = c.HORIZONTAL;
 		rootPanel.add(this.createDetailsPanel(), c);
 
-		m_busyLabel = new JLabel("   ", GUIUtils.loadImageIcon(JAPConstants.BUSYFN, true), JLabel.CENTER);
-		m_busyLabel.setVerticalTextPosition(JLabel.TOP);
-		m_busyLabel.setHorizontalTextPosition(JLabel.CENTER);
-		c.gridy++;
-		c.weightx = 0;
-		c.weighty = 0;
-		rootPanel.add(m_busyLabel, c);
-		m_busyLabel.setVisible(false);
-
 		updateAccountList();
 		enableDisableButtons();
 	}
@@ -422,6 +414,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		}
 
 		m_listAccounts.setModel(listModel);
+		m_listAccounts.revalidate();
 
 		if (selectedItem != -1)
 		{
@@ -435,11 +428,23 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 
 	private void enableDisableButtons()
 	{
+		if (m_listAccounts.getModel().getSize()>0)
+		{
 		boolean enable = (getSelectedAccount() != null);
 		m_btnChargeAccount.setEnabled(enable);
 		m_btnTransactions.setEnabled(enable);
 		m_btnDeleteAccount.setEnabled(enable);
 		m_btnExportAccount.setEnabled(enable);
+			m_btnReload.setEnabled(enable);
+		}
+		else
+		{
+			m_btnChargeAccount.setEnabled(false);
+			m_btnTransactions.setEnabled(false);
+			m_btnDeleteAccount.setEnabled(false);
+			m_btnExportAccount.setEnabled(false);
+			m_btnReload.setEnabled(false);
+		}
 	}
 
 	/**
@@ -549,6 +554,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		   }*/
 
 		XMLAccountInfo accountInfo = selectedAccount.getAccountInfo();
+		if (accountInfo != null)
+		{
 		XMLBalance balance = accountInfo.getBalance();
 
 		m_labelCreationDate.setText(JAPUtil.formatTimestamp(selectedAccount.getCreationTime(), false));
@@ -605,89 +612,19 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 				m_coinstack.setValue(0);
 			}
 		}
-
-		/*JFrame view = JAPController.getView();
-		   if (!selectedAccount.hasAccountInfo())
-		   {
-		 int choice = JOptionPane.showOptionDialog(
-		  view, JAPMessages.getString("ngNoStatement"), JAPMessages.getString("ngNoStatementTitle"),
-		  JOptionPane.YES_NO_OPTION,
-		  JOptionPane.QUESTION_MESSAGE,
-		  null, null, null
-		  );
-		 if (choice == JOptionPane.YES_OPTION)
-		 {
-		  if (!doGetStatement(selectedAccount))
-		  {
-		   return;
-		  }
-		 }
-		 else
-		 {
-		  return;
-		 }
 		   }
 		   else
 		   {
-		 // if timestamp is older than 24 hours... maybe user wants to fetch
-		 // a new statement
-		 java.sql.Timestamp t = selectedAccount.getAccountInfo().getBalance().getTimestamp();
-		 if (t.getTime() < (System.currentTimeMillis() - 1000 * 60 * 60 * 24))
-		 {
-		  int choice = JOptionPane.showOptionDialog(
-		   view, JAPMessages.getString("ngOldStatement"),
-		   JAPMessages.getString("ngOldStatementTitle"),
-		   JOptionPane.YES_NO_OPTION,
-		   JOptionPane.QUESTION_MESSAGE,
-		   null, null, null
-		   );
-		  if (choice == JOptionPane.YES_OPTION)
-		  {
-		   doGetStatement(selectedAccount);
-		  }
-		 }
-		   }
-		   XMLAccountInfo accountInfo = selectedAccount.getAccountInfo();
-		   XMLBalance balance = accountInfo.getBalance();
-		   String msg =
-		 "<html><h2>" + JAPMessages.getString("ngAccountDetailsTxt") + " " +
-		 selectedAccount.getAccountNumber() + "</h2>" +
-		 "<table>" +
-		 "<tr><td>" + JAPMessages.getString("creationDate") + "</td><td>" +
-		 JAPUtil.formatTimestamp(selectedAccount.getCreationTime(), false) + "</td></tr>" +
-		 "<tr><td>" + JAPMessages.getString("ngStatementDate") + "</td><td>" +
-		 JAPUtil.formatTimestamp(balance.getTimestamp(), true) + "</td></tr>" +
-		 "<tr><td> </td></tr>" +
-		 "<tr><td>" + JAPMessages.getString("deposit") + "</td><td>" +
-		 JAPUtil.formatBytesValue(balance.getDeposit()) + "</td></tr>" +
-		 "<tr><td>" + JAPMessages.getString("spent") + "</td><td>" +
-		 JAPUtil.formatBytesValue(balance.getSpent()) + "</td></tr>" +
-		 "<tr><td>" + JAPMessages.getString("balance") + "</td><td>" +
-		 JAPUtil.formatBytesValue(balance.getDeposit() - balance.getSpent()) +
-		 "</td></tr>" +
-		 "<tr><td>" + JAPMessages.getString("validTo") + "</td><td>" +
-		 JAPUtil.formatTimestamp(balance.getValidTime(), true) + "</td></tr>" +
-		 "</table>";
-		   Enumeration ccs = accountInfo.getCCs();
-		   XMLEasyCC cc = null;
-		   if (ccs.hasMoreElements())
-		   {
-		 msg += "<hr><h3>" + JAPMessages.getString("costconfirmations") + "</h3>";
-		 do
-		 {
-		  cc = ( (XMLEasyCC) (ccs.nextElement()));
-		  msg += JAPMessages.getString("rttMixCascade") + " " + cc.getAIName() + ": " +
-		   JAPUtil.formatBytesValue(cc.getTransferredBytes()) + "<br>";
-		 }
-		 while (ccs.hasMoreElements());
-		   }
-		   msg += "</html>";
+			m_coinstack.setValue(0);
+			m_labelCreationDate.setText("");
+			m_labelStatementDate.setText("");
+			m_labelDeposit.setText("");
+			m_labelSpent.setText("");
+			m_labelBalance.setText("");
+			m_labelValid.setText("");
 
-		   JOptionPane.showMessageDialog(
-		 view, msg,
-		 JAPMessages.getString("ngAccountDetailsTxt") + " " + selectedAccount.getAccountNumber(),
-		 JOptionPane.INFORMATION_MESSAGE
-		 );*/
+		   }
+
 	}
 
 	/**
@@ -791,10 +728,11 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		{
 			theBI = new BI(JAPConstants.PI_ID, JAPConstants.PI_NAME, JAPConstants.PI_HOST,
 						   JAPConstants.PI_PORT,
-						   JAPCertificate.getInstance(JAPConstants.CERTSPATH + JAPConstants.PI_CERT));
+						   JAPCertificate.getInstance(ResourceLoader.loadResource(JAPConstants.CERTSPATH + JAPConstants.PI_CERT)));
 		}
 		catch (Exception e)
 		{
+			e.printStackTrace();
 			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, "Could not create Test-PI: " + e.getMessage());
 		}
 
@@ -808,52 +746,34 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 				);
 			if (choice == JOptionPane.YES_OPTION)
 			{
-				busy(true, JAPMessages.getString(MSG_ACCOUNTCREATE));
 				final BI bi = theBI;
 				Runnable doIt = new Runnable()
 				{
+
 					public void run()
 					{
 				try
 				{
 							PayAccount p = PayAccountsFile.getInstance().createAccount(bi, true);
 							p.fetchAccountInfo();
-							updateAccountList();
-							busy(false, "");
 				}
 				catch (Exception ex)
 				{
-					LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, ex);
-							busy(false, "");
-					JOptionPane.showMessageDialog(
-								JAPController.getView(),
+							JAPDialog.showErrorDialog(
+								getRootPanel(),
 								JAPMessages.getString(MSG_CREATEERROR) + " " + ex.getMessage(),
-								JAPMessages.getString(MSG_CREATEERRORTITLE), JOptionPane.ERROR_MESSAGE
-						);
+								LogType.PAY);
 				}
 			}
 				};
-				Thread t = new Thread(doIt);
-				t.start();
-			}
+				JAPDialog d = new JAPDialog(this.getRootPanel(), JAPMessages.getString(MSG_ACCOUNTCREATE), true);
+				WorkerContentPane p = new WorkerContentPane(d, JAPMessages.getString(MSG_ACCOUNTCREATEDESC), doIt);
+				p.setInterruptThreadSafe(false);
+				p.updateDialog();
+				d.pack();
+				d.setVisible(true);
+				updateAccountList();
 		}
-	}
-
-	/**
-	 * Show or hide the busy label and apply the message to it.
-	 * @param a_busy boolean
-	 * @param a_message String
-	 */
-	private void busy(boolean a_busy, String a_message)
-	{
-		if (a_busy == true)
-		{
-			m_busyLabel.setText(a_message);
-			m_busyLabel.setVisible(true);
-		}
-		else
-		{
-			m_busyLabel.setVisible(false);
 		}
 	}
 
@@ -936,6 +856,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		};
 		WorkerContentPane worker = new WorkerContentPane(busy, JAPMessages.getString(MSG_GETACCOUNTSTATEMENT),
 			t);
+		worker.setInterruptThreadSafe(false);
 		worker.updateDialog();
 		busy.pack();
 		busy.setVisible(true);
@@ -1232,6 +1153,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 	 */
 	protected void onRootPanelShown()
 	{
+		updateAccountList();
 	}
 
 	/**
@@ -1288,8 +1210,11 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 	{
 		if (e.getSource() == m_listAccounts)
 		{
+			if (m_listAccounts.getModel().getSize() > 0)
+			{
 			doShowDetails(getSelectedAccount());
 			enableDisableButtons();
+			}
 		}
 	}
 }
