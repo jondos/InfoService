@@ -1078,7 +1078,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	 */
 	public final boolean moveToPreviousContentPane()
 	{
-		return moveToContentPane(m_previousContentPane, false);
+		return moveToContentPane(false);
 	}
 
 	/**
@@ -1135,6 +1135,28 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	}
 
 	/**
+	 * If the previous content pane of this one calls moveToNextContentPane(), this content pane may tell him
+	 * to skip it and move forward to the next one.
+	 * Returns <CODE> false </CODE> by default but may be overwritten by subclasses.
+	 * @return true if this content pane would like to be skipped as next content pane; false otherwise
+	 */
+	public boolean isSkippedAsNextContentPane()
+	{
+		return false;
+	}
+
+	/**
+	 * If the next content pane of this one calls moveToPreviousContentPane(), this content pane may tell him
+	 * to skip it and move forward to the next one.
+	 * Returns <CODE> false </CODE> by default but may be overwritten by subclasses.
+	 * @return true if this content pane would like to be skipped as previous content pane; false otherwise
+	 */
+	public boolean isSkippedAsPreviousContentPane()
+	{
+		return false;
+	}
+
+	/**
 	 * Shows the next content pane in the dialog if it exists. Otherwise, the dialog is closed according
 	 * to the default ON_CLICK operation. If no ON_CLICK operation is set, nothing is done by default.
 	 * If the content pane exists, its checkUpdate() method is interpreted and the errors are handled.
@@ -1143,7 +1165,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	 */
 	public final boolean moveToNextContentPane()
 	{
-		return moveToContentPane(m_nextContentPane, true);
+		return moveToContentPane(true);
 	}
 
 	/**
@@ -1846,63 +1868,76 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	 * Shows a given content pane in the dialog if it exists. Otherwise, the dialog is closed according
 	 * to the default ON_CLICK operation. If no ON_CLICK operation is set, nothing is done by default.
 	 * If the content pane exists, its checkUpdate() method is interpreted and the errors are handled.
-	 * @param a_contentPane a DialogContentPane
-	 * @param a_bFocusNextButton true if the "Next" button should be focused; false if the "previous" button
-	 * is focused
+	 * @param a_bNext true if a move to the next content pane is done; false if a move to
+	 * the previous content pane is done
 	 * @return if a move to the given content pane was done; false if no previous content pane does exist
 	 * or if it refused to update the dialog
 	 */
-	private boolean moveToContentPane(DialogContentPane a_contentPane, boolean a_bFocusNextButton)
+	private boolean moveToContentPane(boolean a_bNext)
 	{
+		DialogContentPane currentContentPane;
+
 		for (int i = m_rememberedErrors.size() - 1; i >= 0; i--)
 		{
 			( (CheckError) m_rememberedUpdateErrors.elementAt(i)).undoErrorAction();
 			m_rememberedUpdateErrors.removeElementAt(i);
 		}
 
-		if (a_contentPane != null)
+		currentContentPane = this;
+		if (a_bNext)
 		{
-			CheckError[] error = a_contentPane.updateDialog();
+			while ((currentContentPane = currentContentPane.getNextContentPane()) != null &&
+				   currentContentPane.isSkippedAsNextContentPane());
+		}
+		else
+		{
+			while ((currentContentPane = currentContentPane.getPreviousContentPane()) != null &&
+				   currentContentPane.isSkippedAsPreviousContentPane());
+		}
+
+		if (currentContentPane != null)
+		{
+			CheckError[] error = currentContentPane.updateDialog();
 			boolean bFocused = false;
 
 			if (error == null || error.length == 0)
 			{
-				if (a_contentPane.isVisible())
+				if (currentContentPane.isVisible())
 				{
-					if (a_bFocusNextButton)
+					if (a_bNext)
 					{
-						if (a_contentPane.getButtonYesOK() != null &&
-							a_contentPane.getButtonYesOK().isEnabled())
+						if (currentContentPane.getButtonYesOK() != null &&
+							currentContentPane.getButtonYesOK().isEnabled())
 						{
-							a_contentPane.getButtonYesOK().requestFocus();
-							getDialog().getRootPane().setDefaultButton(a_contentPane.getButtonYesOK());
+							currentContentPane.getButtonYesOK().requestFocus();
+							getDialog().getRootPane().setDefaultButton(currentContentPane.getButtonYesOK());
 							bFocused = true;
 						}
 					}
 					else
 					{
-						if (a_contentPane.getButtonNo() != null &&
-							a_contentPane.getButtonNo().isEnabled())
+						if (currentContentPane.getButtonNo() != null &&
+							currentContentPane.getButtonNo().isEnabled())
 						{
-							a_contentPane.getButtonNo().requestFocus();
-							getDialog().getRootPane().setDefaultButton(a_contentPane.getButtonNo());
+							currentContentPane.getButtonNo().requestFocus();
+							getDialog().getRootPane().setDefaultButton(currentContentPane.getButtonNo());
 							bFocused = true;
 						}
-						else if (a_contentPane.getButtonYesOK() != null &&
-								 a_contentPane.getButtonYesOK().isEnabled())
+						else if (currentContentPane.getButtonYesOK() != null &&
+								 currentContentPane.getButtonYesOK().isEnabled())
 						{
-							a_contentPane.getButtonYesOK().requestFocus();
-							getDialog().getRootPane().setDefaultButton(a_contentPane.getButtonYesOK());
+							currentContentPane.getButtonYesOK().requestFocus();
+							getDialog().getRootPane().setDefaultButton(currentContentPane.getButtonYesOK());
 							bFocused = true;
 						}
 					}
 					if (!bFocused)
 					{
-						if (a_contentPane.getButtonCancel() != null &&
-							a_contentPane.getButtonCancel().isEnabled())
+						if (currentContentPane.getButtonCancel() != null &&
+							currentContentPane.getButtonCancel().isEnabled())
 						{
-							a_contentPane.getButtonCancel().requestFocus();
-							getDialog().getRootPane().setDefaultButton(a_contentPane.getButtonCancel());
+							currentContentPane.getButtonCancel().requestFocus();
+							getDialog().getRootPane().setDefaultButton(currentContentPane.getButtonCancel());
 						}
 					}
 				}

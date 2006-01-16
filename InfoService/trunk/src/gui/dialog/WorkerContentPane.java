@@ -139,6 +139,17 @@ public class WorkerContentPane extends DialogContentPane implements
 		}
 	}
 
+
+	/**
+	 * Returns true by default, that means this worker content pane is skipped if a move from the next
+	 * content pane to this one is done.
+	 * @return true
+	 */
+	public boolean isSkippedAsPreviousContentPane()
+	{
+		return true;
+	}
+
 	/**
 	 * Interrupts the Thread.
 	 * @return CheckError[]
