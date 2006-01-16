@@ -28,8 +28,10 @@
 package gui;
 
 import java.awt.Container;
+import java.awt.Frame;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.ImageIcon;
@@ -42,9 +44,6 @@ import anon.util.captcha.IImageEncodedCaptcha;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import java.awt.Insets;
-import java.awt.Window;
-import java.awt.Frame;
 
 /**
  * This class displays a dialog for solving a captcha.
@@ -58,6 +57,10 @@ public class CaptchaDialog extends JDialog implements ActionListener
 		"_title";
 	private static final String MSG_SOLVE = CaptchaDialog.class.getName() +
 		"_solve";
+	private static final String MSG_OK = CaptchaDialog.class.getName() +
+		"_ok";
+	private static final String MSG_CANCEL = CaptchaDialog.class.getName() +
+		"_cancel";
 
 	private JTextField m_tfSolution;
 	private JButton m_btnOk;
@@ -88,7 +91,7 @@ public class CaptchaDialog extends JDialog implements ActionListener
 		rootPanel.add(image, c);
 
 		c.gridy++;
-		JLabel l = new JLabel(JAPMessages.getString(MSG_SOLVE));
+		JLabel l = new JLabel("<html>"+JAPMessages.getString(MSG_SOLVE)+"</html>");
 		rootPanel.add(l, c);
 
 		c.gridy++;
@@ -97,15 +100,14 @@ public class CaptchaDialog extends JDialog implements ActionListener
 
 		c.gridy++;
 		c.gridwidth = 1;
-		c.anchor = GridBagConstraints.NORTHEAST;
-		m_btnCancel = new JButton("Cancel");
+		m_btnCancel = new JButton(JAPMessages.getString(MSG_CANCEL));
 		m_btnCancel.addActionListener(this);
 		rootPanel.add(m_btnCancel, c);
 
 		c.gridx++;
-		c.weightx = 1;
 		c.weighty = 1;
-		m_btnOk = new JButton("OK");
+		c.weightx = 1;
+		m_btnOk = new JButton(JAPMessages.getString(MSG_OK));
 		m_btnOk.addActionListener(this);
 		rootPanel.add(m_btnOk, c);
 

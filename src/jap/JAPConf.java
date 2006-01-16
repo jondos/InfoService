@@ -50,7 +50,6 @@ import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.JSlider;
@@ -76,6 +75,7 @@ import java.awt.event.ComponentEvent;
 import jap.pay.*;
 import jap.forward.*;
 import gui.*;
+import gui.dialog.JAPDialog;
 
 final public class JAPConf extends JDialog implements ActionListener
 {
@@ -800,16 +800,14 @@ final public class JAPConf extends JDialog implements ActionListener
 	 */
 	public static void showError(String msg)
 	{
-		JOptionPane.showMessageDialog(ms_JapConfInstance, msg, JAPMessages.getString("error"),
-									  JOptionPane.ERROR_MESSAGE);
+		JAPDialog.showErrorDialog(ms_JapConfInstance, msg, LogType.MISC);
 	}
 
 	/**Shows a Dialog with some info
 	 */
 	public static void showInfo(String msg)
 	{
-		JOptionPane.showMessageDialog(ms_JapConfInstance, msg, JAPMessages.getString("information"),
-									  JOptionPane.INFORMATION_MESSAGE);
+		JAPDialog.showMessageDialog(ms_JapConfInstance, msg, JAPMessages.getString("information"));
 	}
 
 	/** Checks if all Input in all Fiels make sense. Displays InfoBoxes about what is wrong.
