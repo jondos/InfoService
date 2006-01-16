@@ -840,10 +840,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				{
 					m_Controller.setCurrentMixCascade(c);
 					JAPDialog.showMessageDialog(this.getRootPanel(),
-												  JAPMessages.getString("activeCascadeEdited"),
-												  JAPMessages.getString("information"));
-
-					//add: message that active cascade cannot be deleted
+												  JAPMessages.getString("activeCascadeEdited"));
 				}
 				m_Controller.getMixCascadeDatabase().removeElement(oldCascade);
 

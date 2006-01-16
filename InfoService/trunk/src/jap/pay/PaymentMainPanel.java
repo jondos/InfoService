@@ -67,6 +67,7 @@ import jap.JAPUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.pay.xml.XMLBalance;
 
 public class PaymentMainPanel extends JPanel
 {
@@ -223,7 +224,10 @@ public class PaymentMainPanel extends JPanel
 		// we got everything under control, situation normal
 		else
 		{
-			Timestamp t = activeAccount.getBalance().getTimestamp();
+			XMLBalance balance = activeAccount.getBalance();
+			if (balance != null)
+			{
+				Timestamp t = balance.getTimestamp();
 			SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm");
 			String dateText = sdf.format(t);
 			m_lastUpdateLabel.setText(dateText);
@@ -232,10 +236,11 @@ public class PaymentMainPanel extends JPanel
 			m_AccountIconLabel.setIcon(m_accountIcons[1]);
 			m_BalanceText.setEnabled(true);
 			m_BalanceText.setText(JAPUtil.formatBytesValue(activeAccount.getCertifiedCredit()));
-			m_BalanceProgressBar.setMaximum( (int) (activeAccount.getDeposit()/100));
-			m_BalanceProgressBar.setValue( (int) (activeAccount.getCertifiedCredit()/100));
+				m_BalanceProgressBar.setMaximum( (int) (activeAccount.getDeposit() / 100));
+				m_BalanceProgressBar.setValue( (int) (activeAccount.getCertifiedCredit() / 100));
 			m_BalanceProgressBar.setEnabled(true);
 		}
+	}
 	}
 
 	/**

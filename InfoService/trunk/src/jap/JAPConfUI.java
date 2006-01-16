@@ -50,6 +50,7 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import gui.*;
+import gui.dialog.JAPDialog;
 
 final class JAPConfUI extends AbstractJAPConfModule
 {
@@ -149,7 +150,8 @@ final class JAPConfUI extends AbstractJAPConfModule
 			{
 				if (!m_bIgnoreComboUIEvents && e.getStateChange() == ItemEvent.SELECTED)
 				{
-					JAPConf.showInfo(JAPMessages.getString("confLookAndFeelChanged"));
+					JAPDialog.showMessageDialog(getRootPanel(),
+												JAPMessages.getString("confLookAndFeelChanged"));
 				}
 			}
 		});
@@ -173,7 +175,8 @@ final class JAPConfUI extends AbstractJAPConfModule
 				{
 					try
 					{
-						JAPConf.showInfo(JAPMessages.getString("confLanguageChanged"));
+						JAPDialog.showMessageDialog(getRootPanel(),
+												JAPMessages.getString("confLanguageChanged"));
 					}
 					catch (Exception ie)
 					{
@@ -212,7 +215,8 @@ final class JAPConfUI extends AbstractJAPConfModule
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				JAPConf.showInfo(JAPMessages.getString("confViewChanged"));
+				JAPDialog.showMessageDialog(getRootPanel(),
+												JAPMessages.getString("confViewChanged"));
 			}
 		};
 		m_rbViewNormal.addActionListener(listener);
@@ -281,7 +285,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 		}
 		else
 		{
-			JAPController.setLocale(new Locale("pt",""));
+			JAPController.setLocale(new Locale("pt", ""));
 		}
 		JAPController.setSaveMainWindowPosition(m_cbSaveWindowPositions.isSelected());
 		int defaultView = JAPConstants.VIEW_NORMAL;
@@ -372,7 +376,8 @@ final class JAPConfUI extends AbstractJAPConfModule
 		m_rbViewSimplified.setSelected(JAPConstants.DEFAULT_VIEW == JAPConstants.VIEW_SIMPLIFIED);
 		m_rbViewSystray.setSelected(JAPConstants.DEFAULT_MOVE_TO_SYSTRAY_ON_STARTUP);
 		m_rbViewMini.setSelected(JAPConstants.DEFAULT_MINIMIZE_ON_STARTUP);
-		updateThirdPanel(JAPConstants.DEFAULT_MOVE_TO_SYSTRAY_ON_STARTUP||JAPConstants.DEFAULT_MINIMIZE_ON_STARTUP);
+		updateThirdPanel(JAPConstants.DEFAULT_MOVE_TO_SYSTRAY_ON_STARTUP ||
+						 JAPConstants.DEFAULT_MINIMIZE_ON_STARTUP);
 	}
 
 	private void updateThirdPanel(boolean bAfterStart)
