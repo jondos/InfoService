@@ -59,7 +59,7 @@ import gui.wizard.BasicWizardPage;
 import jap.JAPConstants;
 import jap.JAPController;
 import jap.JAPUtil;
-import jap.platform.AbstractOS;
+import platform.AbstractOS;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -69,6 +69,8 @@ import javax.swing.JComboBox;
 import anon.pay.xml.XMLPaymentOptions;
 import java.util.StringTokenizer;
 import java.awt.Component;
+import java.net.URL;
+import java.net.MalformedURLException;
 
 public class PaymentWizardPaymentInfoPage extends BasicWizardPage implements MouseListener, ActionListener
 {
@@ -374,7 +376,14 @@ public class PaymentWizardPaymentInfoPage extends BasicWizardPage implements Mou
 			link = link.trim();
 
 			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Opening " + link + " in browser.");
-			os.openURLInBrowser(link);
+			try
+			{
+				os.openURL(new URL(link));
+			}
+			catch(MalformedURLException me)
+			{
+				LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, "Malformed URL");
+			}
 			m_host.setFinishEnabled(true);
 		}
 	}

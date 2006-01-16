@@ -63,6 +63,7 @@ import gui.dialog.JAPDialog;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import platform.AbstractOS;
 
 /**
  * Help window for the JAP. This is a singleton meaning that there exists only one help window all the time.
@@ -169,7 +170,7 @@ public final class JAPHelp extends JAPDialog
 				LanguageMapper lang = new LanguageMapper(langCode, new Locale(langCode, ""));
 				m_comBoxLanguage.addItem(lang);
 
-				if ((m_helpPath.equals(" ") && m_language.getISOCode().length() == 0) ||
+				if ( (m_helpPath.equals(" ") && m_language.getISOCode().length() == 0) ||
 					lang.getISOCode().equals(JAPMessages.getLocale().getLanguage()))
 				{
 					m_helpPath = getHelpPath(i);
@@ -406,7 +407,13 @@ public final class JAPHelp extends JAPDialog
         {
 			if (a_urlCaller == null)
 			{
-				a_urlCaller = new IExternalURLCaller(){public boolean openURL(URL a_url) {return false;}};
+				a_urlCaller = new IExternalURLCaller()
+				{
+					public boolean openURL(URL a_url)
+					{
+						return false;
+					}
+				};
 			}
 			m_urlCaller = a_urlCaller;
 			html = new JEditorPane("text/html", "<html><body></body></html>");
@@ -477,7 +484,7 @@ public final class JAPHelp extends JAPDialog
 							  "Could not load help context '" + a_strContext +
 							  "_" + a_language.getISOCode() + "'");
 
-				if(a_strContext != null)
+				if (a_strContext != null)
 				{
 					if (!a_strContext.equals(INDEX_CONTEXT))
 					{
@@ -499,11 +506,11 @@ public final class JAPHelp extends JAPDialog
 						int i;
 						for (i = 0; i < m_comBoxLanguage.getItemCount(); i++)
 						{
-							if (((LanguageMapper)m_comBoxLanguage.getItemAt(i)).equals(english) &&
+							if ( ( (LanguageMapper) m_comBoxLanguage.getItemAt(i)).equals(english) &&
 								m_comBoxLanguage.getSelectedIndex() != i)
 							{
 								m_comBoxLanguage.setSelectedIndex(i);
-								new HelpListener().actionPerformed(new ActionEvent(m_comBoxLanguage,0,""));
+								new HelpListener().actionPerformed(new ActionEvent(m_comBoxLanguage, 0, ""));
 								break;
 							}
 						}
@@ -720,5 +727,3 @@ public final class JAPHelp extends JAPDialog
 		return strHelpPath;
         }
 }
-
-

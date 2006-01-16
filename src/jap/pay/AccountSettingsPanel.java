@@ -85,6 +85,8 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import java.util.Date;
+import gui.dialog.JAPDialog;
+import gui.dialog.WorkerContentPane;
 
 /**
  * The Jap Conf Module (Settings Tab Page) for the Accounts and payment Management
@@ -103,6 +105,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		getName() + "_button_delete";
 	private static final String MSG_BUTTON_EXPORT = AccountSettingsPanel.class.
 		getName() + "_button_export";
+	private static final String MSG_BUTTONRELOAD = AccountSettingsPanel.class.
+		getName() + "_buttonreload";
 	private static final String MSG_TRANSACTION_OVERVIEW_DIALOG = AccountSettingsPanel.class.
 		getName() + "_transaction_overview_dialog";
 	private static final String MSG_ACCOUNT_SPENT = AccountSettingsPanel.class.
@@ -141,6 +145,10 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		getName() + "_createerror";
 	private static final String MSG_CREATEERRORTITLE = AccountSettingsPanel.class.
 		getName() + "_createerrortitle";
+	private static final String MSG_GETACCOUNTSTATEMENT = AccountSettingsPanel.class.
+		getName() + "_getaccountstatement";
+	private static final String MSG_GETACCOUNTSTATEMENTTITLE = AccountSettingsPanel.class.
+		getName() + "_getaccountstatementtitle";
 
 	private JButton m_btnCreateAccount;
 	private JButton m_btnChargeAccount;
@@ -152,6 +160,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 	private JButton m_btnTransactions;
 	private JButton m_btnSelect;
 	private JButton m_btnPassword;
+	private JButton m_btnReload;
 
 	private JLabel m_labelCreationDate;
 	private JLabel m_labelStatementDate;
@@ -364,6 +373,11 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		buttonsPanel.add(m_btnChargeAccount, d);
 
 		d.gridx++;
+		m_btnReload = new JButton(JAPMessages.getString(MSG_BUTTONRELOAD));
+		m_btnReload.addActionListener(myActionListener);
+		buttonsPanel.add(m_btnReload, d);
+
+		d.gridx++;
 		m_btnTransactions = new JButton(JAPMessages.getString(MSG_BUTTON_TRANSACTIONS));
 		m_btnTransactions.addActionListener(myActionListener);
 		buttonsPanel.add(m_btnTransactions, d);
@@ -477,6 +491,10 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 			else if (source == m_btnPassword)
 			{
 				doChangePassword();
+			}
+			else if (source == m_btnReload)
+			{
+				doGetStatement( (PayAccount) m_listAccounts.getSelectedValue());
 			}
 
 		}
@@ -891,39 +909,36 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 	}
 
 	/**
-	 * doGetStatement - fetches an account statement (=german kontoauszug)
+	 * doGetStatement - fetches an account statement
 	 */
-	private boolean doGetStatement(PayAccount selectedAccount)
+	private void doGetStatement(final PayAccount a_selectedAccount)
 	{
-		if (selectedAccount == null)
+		if (a_selectedAccount == null)
 		{
-			return false;
+			return;
 		}
-		JFrame view = JAPController.getView();
-		JAPWaitSplash splash = null;
+		JAPDialog busy = new JAPDialog(this.getRootPanel(),
+									   JAPMessages.getString(MSG_GETACCOUNTSTATEMENTTITLE), true);
+		Thread t = new Thread()
+		{
+			public void run()
+			{
 		try
 		{
-			splash = JAPWaitSplash.start(
-				JAPMessages.getString("Fetching account statement"),
-				JAPMessages.getString("Please wait")
-				);
-			selectedAccount.fetchAccountInfo();
-			splash.abort();
+					a_selectedAccount.fetchAccountInfo();
+					updateAccountList();
 		}
-		catch (Exception ex)
+				catch (Exception e)
 		{
-			splash.abort();
-			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Exception FetchStatement: " + ex.toString());
-			JOptionPane.showMessageDialog(
-				view,
-				JAPMessages.getString("Error fetching account statement: ") + ex.getMessage(),
-				JAPMessages.getString("error"),
-				JOptionPane.ERROR_MESSAGE
-				);
-			return false;
+					LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, "Could not get account statement");
 		}
-		updateAccountList();
-		return true;
+			}
+		};
+		WorkerContentPane worker = new WorkerContentPane(busy, JAPMessages.getString(MSG_GETACCOUNTSTATEMENT),
+			t);
+		worker.updateDialog();
+		busy.pack();
+		busy.setVisible(true);
 	}
 
 	/**
@@ -1133,10 +1148,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 				null, null, null);
 			if (choice == JOptionPane.YES_OPTION)
 			{
-				if (!doGetStatement(selectedAccount))
-				{
-					return;
-				}
+				doGetStatement(selectedAccount);
 			}
 		}
 		if (selectedAccount.hasAccountInfo())
@@ -1153,10 +1165,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 					null, null, null);
 				if (choice == JOptionPane.YES_OPTION)
 				{
-					if (!doGetStatement(selectedAccount))
-					{
-						return;
-					}
+					doGetStatement(selectedAccount);
 				}
 			}
 

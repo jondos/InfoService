@@ -42,6 +42,7 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import HTTPClient.Util;
+import jpi.Configuration;
 
 /**
  * This class verifies received PayPal IPNs and updates the database.
@@ -139,15 +140,13 @@ public class IncomingPayPalConnection implements Runnable
 						if (request.getParameter("payment_status").indexOf("Completed") != -1)
 						{
 							LogHolder.log(LogLevel.INFO, LogType.PAY, "Payment is completed");
-							/**@todo Check database for already processed txn_id,
-							 * check mc_currency*/
-
+							/**@todo check mc_currency*/
 							//Charge account
 							long transfernum = Long.parseLong(request.getParameter("item_name"));
 							double amount = Double.parseDouble(request.getParameter("mc_gross"));
-							/**@todo Get rate*/
-							double ratePerKb = 0.00005;
-							amount = 1024 * (amount / ratePerKb);
+							amount *= 100;
+							double ratePerMB = Configuration.getRatePerMB();
+							amount = 1024*1024 * (amount / ratePerMB);
 							DBInterface db = DBSupplier.getDataBase();
 							LogHolder.log(LogLevel.INFO, LogType.PAY,
 										  "Charging account with  " + (long) amount + " kBytes");

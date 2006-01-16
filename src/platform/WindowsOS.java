@@ -25,51 +25,76 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package jap.platform;
+package platform;
 
-import com.apple.mrj.MRJFileUtils;
-import jap.JAPConstants;
+import java.io.File;
+
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import java.net.URL;
 
 /**
- * This class is instantiated by AbstractOS if the current OS is MacOS or MacOSX
+ * This class is instantiated by AbstractOS if the current OS is Windows
  */
-public class MacOS extends AbstractOS
+public class WindowsOS extends AbstractOS
 {
-	public MacOS() throws Exception
-	{
-		if (System.getProperty("mrj.version") == null)
+	public static final String[] BROWSERLIST =
 		{
-			throw new Exception("Operating system is not MacOS");
+		"firefox", "iexplore", "explorer", "mozilla", "konqueror", "mozilla-firefox",
+		"firebird", "opera"
+	};
+
+	public WindowsOS() throws Exception
+	{
+		String osName = System.getProperty("os.name", "").toLowerCase();
+		if (osName.indexOf("win") == -1)
+		{
+			throw new Exception("Operating system is not Windows");
 		}
 	}
 
-	public boolean openURLInBrowser(String a_url)
+	public boolean openURL(URL a_url)
 	{
-		try
+		boolean success = false;
+
+		String[] browser = BROWSERLIST;
+		String url="\""+a_url.toString()+"\"";
+		for (int i = 0; i < browser.length; i++)
 		{
-			MRJFileUtils.openURL(a_url);
-			return true;
+			try
+			{
+				Runtime.getRuntime().exec(new String[]
+										  {browser[i], url});
+				success = true;
+				break;
+			}
+			catch (Exception ex)
+			{
+				return false;
+			}
 		}
-		catch (Exception a_e)
+		if (!success)
 		{
 			LogHolder.log(LogLevel.ERR, LogType.MISC, "Cannot open URL in browser");
 			return false;
 		}
+		return success;
 	}
 
 	public String getConfigPath()
 	{
-		//Return path in users's home/Library/Preferences
-		if (System.getProperty("os.name").equalsIgnoreCase("Mac OS"))
+		String vendor = System.getProperty("java.vendor", "unknown");
+		String dir = "";
+		if (vendor.trim().toLowerCase().startsWith("microsoft"))
 		{
-			return System.getProperty("user.home", ".") +"/"+ JAPConstants.XMLCONFFN;
+			dir = System.getProperty("user.dir", ".");
 		}
 		else
 		{
-			return System.getProperty("user.home", "") + "/Library/Preferences/" + JAPConstants.XMLCONFFN;
+			dir = System.getProperty("user.home", ".");
 		}
+		return dir + File.separator;
 	}
+
 }

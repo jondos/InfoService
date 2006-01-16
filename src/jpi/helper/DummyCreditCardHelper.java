@@ -35,6 +35,7 @@ import logging.LogLevel;
 import logging.LogType;
 import jpi.db.DBInterface;
 import jpi.db.DBSupplier;
+import jpi.Configuration;
 
 /**
  * This class is processes dummy credit card payments
@@ -64,13 +65,15 @@ public class DummyCreditCardHelper implements ICreditCardHelper
 					String[] payment = (String[]) payments.elementAt(i);
 					if (payment[1].equalsIgnoreCase("CreditCard"))
 					{
-						double ratePerKb = 0.00005;
-						long amount = 1024 * ( (long) (Long.parseLong(payment[3]) / ratePerKb));
+						double ratePerMB = Configuration.getRatePerMB();
+						long cents = Long.parseLong(payment[3]) * 100;
+						double mb = cents/ratePerMB;
+						double amount = 1024 * 1024 * mb;
 						LogHolder.log(LogLevel.DEBUG, LogType.PAY,
 									  "Charging account with transfernumber: " + payment[2]
-									  + " Amount: " + amount);
+									  + " Amount: " + (long)amount);
 
-						db.chargeAccount(Long.parseLong(payment[2]), amount);
+						db.chargeAccount(Long.parseLong(payment[2]), (long)amount);
 						db.markPassivePaymentDone(Long.parseLong(payment[0]));
 					}
 				}

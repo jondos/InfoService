@@ -25,12 +25,12 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package jap.platform;
+package platform;
 
-import jap.JAPConstants;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import java.net.URL;
 
 /**
  * This class is instantiated by AbstractOS if the OS cannot be determined.
@@ -43,7 +43,7 @@ public class DefaultOS extends AbstractOS
 
 	}
 
-	public boolean openURLInBrowser(String a_url)
+	public boolean openURL(URL a_url)
 	{
 		LogHolder.log(LogLevel.INFO, LogType.MISC, "DefaultOS class is uncapable of opening URLs");
 		return false;
@@ -51,8 +51,7 @@ public class DefaultOS extends AbstractOS
 
 	public String getConfigPath()
 	{
-		return System.getProperty("user.home", "") + "/" +
-			JAPConstants.XMLCONFFN;
+		return System.getProperty("user.home", "") + "/";
 	}
 
 }

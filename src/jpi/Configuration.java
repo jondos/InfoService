@@ -241,6 +241,14 @@ public class Configuration
 		return ms_payPalport;
 	}
 
+	/** holds the rate per megabyte (in cents) */
+	private static double ms_ratePerMB;
+
+	public static double getRatePerMB()
+	{
+		return ms_ratePerMB;
+	}
+
 	/**
 	 * Load configuration from properties file,
 	 * initialize keys and certificates,
@@ -521,6 +529,9 @@ public class Configuration
 
 		//Parse the PayPal IPN port
 		ms_payPalport = props.getProperty("paypalport", "9999");
+
+		//Parse rate per MB
+		ms_ratePerMB = Double.parseDouble(props.getProperty("ratepermb", "1.0"));
 
 		return true;
 	}
