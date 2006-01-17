@@ -87,6 +87,7 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import anon.util.ResourceLoader;
+import javax.swing.JProgressBar;
 
 /**
  * The Jap Conf Module (Settings Tab Page) for the Accounts and payment Management
@@ -170,7 +171,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 	private JLabel m_labelSpent;
 	private JLabel m_labelBalance;
 	private JLabel m_labelValid;
-	private CoinstackProgressBar m_coinstack;
+	private JProgressBar m_coinstack;
 	private JList m_listAccounts;
 
 	public AccountSettingsPanel()
@@ -322,8 +323,9 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		c.insets = new Insets(5, 10, 5, 5);
 		c.gridy++;
 		c.gridheight = 3;
-		m_coinstack = new CoinstackProgressBar(GUIUtils.loadImageIcon(JAPConstants.IMAGE_COIN_COINSTACK, true),
-											   0, 8);
+		m_coinstack=new JProgressBar(0,8);
+		m_coinstack.setUI( new CoinstackProgressBarUI(GUIUtils.loadImageIcon(JAPConstants.IMAGE_COIN_COINSTACK, true),
+											   0, 8));
 		p.add(m_coinstack, c);
 
 		c.gridheight = 1;
@@ -428,13 +430,13 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 
 	private void enableDisableButtons()
 	{
-		if (m_listAccounts.getModel().getSize()>0)
+		if (m_listAccounts.getModel().getSize() > 0)
 		{
-		boolean enable = (getSelectedAccount() != null);
-		m_btnChargeAccount.setEnabled(enable);
-		m_btnTransactions.setEnabled(enable);
-		m_btnDeleteAccount.setEnabled(enable);
-		m_btnExportAccount.setEnabled(enable);
+			boolean enable = (getSelectedAccount() != null);
+			m_btnChargeAccount.setEnabled(enable);
+			m_btnTransactions.setEnabled(enable);
+			m_btnDeleteAccount.setEnabled(enable);
+			m_btnExportAccount.setEnabled(enable);
 			m_btnReload.setEnabled(enable);
 		}
 		else
@@ -556,65 +558,65 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		XMLAccountInfo accountInfo = selectedAccount.getAccountInfo();
 		if (accountInfo != null)
 		{
-		XMLBalance balance = accountInfo.getBalance();
+			XMLBalance balance = accountInfo.getBalance();
 
-		m_labelCreationDate.setText(JAPUtil.formatTimestamp(selectedAccount.getCreationTime(), false));
-		m_labelStatementDate.setText(JAPUtil.formatTimestamp(balance.getTimestamp(), true));
-		m_labelDeposit.setText(JAPUtil.formatBytesValue(balance.getDeposit()));
-		m_labelSpent.setText(JAPUtil.formatBytesValue(balance.getSpent()));
-		m_labelBalance.setText(JAPUtil.formatBytesValue(balance.getDeposit() - balance.getSpent()));
-		m_labelValid.setText(JAPUtil.formatTimestamp(balance.getValidTime(), true));
+			m_labelCreationDate.setText(JAPUtil.formatTimestamp(selectedAccount.getCreationTime(), false));
+			m_labelStatementDate.setText(JAPUtil.formatTimestamp(balance.getTimestamp(), true));
+			m_labelDeposit.setText(JAPUtil.formatBytesValue(balance.getDeposit()));
+			m_labelSpent.setText(JAPUtil.formatBytesValue(balance.getSpent()));
+			m_labelBalance.setText(JAPUtil.formatBytesValue(balance.getDeposit() - balance.getSpent()));
+			m_labelValid.setText(JAPUtil.formatTimestamp(balance.getValidTime(), true));
 
-		long dep = selectedAccount.getDeposit();
-		long spe = selectedAccount.getSpent();
-		if (dep == 0 || dep - spe == 0)
-		{
-			m_coinstack.setValue(0);
-		}
-		else
-		{
-			double onePercent = 100.0 / (double) dep;
-			long percent = (long) (onePercent * spe);
-			if (percent < 25)
-			{
-				m_coinstack.setValue(8);
-			}
-			else if (percent > 12 && percent < 25)
-			{
-				m_coinstack.setValue(7);
-			}
-			else if (percent > 25 && percent < 37)
-			{
-				m_coinstack.setValue(6);
-			}
-			else if (percent > 37 && percent < 50)
-			{
-				m_coinstack.setValue(5);
-			}
-			else if (percent > 50 && percent < 62)
-			{
-				m_coinstack.setValue(4);
-			}
-			else if (percent > 62 && percent < 75)
-			{
-				m_coinstack.setValue(3);
-			}
-			else if (percent > 75 && percent < 87)
-			{
-				m_coinstack.setValue(2);
-			}
-			else if (percent > 87 && percent < 99)
-			{
-				m_coinstack.setValue(1);
-			}
-			else
+			long dep = selectedAccount.getDeposit();
+			long spe = selectedAccount.getSpent();
+			if (dep == 0 || dep - spe == 0)
 			{
 				m_coinstack.setValue(0);
 			}
+			else
+			{
+				double onePercent = 100.0 / (double) dep;
+				long percent = (long) (onePercent * spe);
+				if (percent < 25)
+				{
+					m_coinstack.setValue(8);
+				}
+				else if (percent > 12 && percent < 25)
+				{
+					m_coinstack.setValue(7);
+				}
+				else if (percent > 25 && percent < 37)
+				{
+					m_coinstack.setValue(6);
+				}
+				else if (percent > 37 && percent < 50)
+				{
+					m_coinstack.setValue(5);
+				}
+				else if (percent > 50 && percent < 62)
+				{
+					m_coinstack.setValue(4);
+				}
+				else if (percent > 62 && percent < 75)
+				{
+					m_coinstack.setValue(3);
+				}
+				else if (percent > 75 && percent < 87)
+				{
+					m_coinstack.setValue(2);
+				}
+				else if (percent > 87 && percent < 99)
+				{
+					m_coinstack.setValue(1);
+				}
+				else
+				{
+					m_coinstack.setValue(0);
+				}
+			}
 		}
-		   }
-		   else
-		   {
+		else
+		{
 			m_coinstack.setValue(0);
 			m_labelCreationDate.setText("");
 			m_labelStatementDate.setText("");
@@ -623,7 +625,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 			m_labelBalance.setText("");
 			m_labelValid.setText("");
 
-		   }
+		}
 
 	}
 
@@ -670,48 +672,48 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		   if (choice == JOptionPane.YES_OPTION)
 		   {
 		 /** @todo find out why the wait splash screen looks so ugly
-			JAPWaitSplash splash = null;
-			try
-			{
-		  splash = JAPWaitSplash.start("Fetching transfer number...", "Please wait");
-		  Thread.sleep(5);
-		  transferCertificate = selectedAccount.charge();
-		  splash.abort();
-			}
-			catch (Exception ex)
-			{
-		  splash.abort();
-		  LogHolder.log(LogLevel.DEBUG, LogType.PAY, ex);
-		  JOptionPane.showMessageDialog(
-		   view,
-		   "<html>" + JAPMessages.getString("ngTransferNumberError") + "<br>" + ex.getMessage() +
-		   "</html>",
-		   JAPMessages.getString("error"), JOptionPane.ERROR_MESSAGE
-		   );
-		  return;
-			}
+		  JAPWaitSplash splash = null;
+		  try
+		  {
+		   splash = JAPWaitSplash.start("Fetching transfer number...", "Please wait");
+		   Thread.sleep(5);
+		   transferCertificate = selectedAccount.charge();
+		   splash.abort();
+		  }
+		  catch (Exception ex)
+		  {
+		   splash.abort();
+		   LogHolder.log(LogLevel.DEBUG, LogType.PAY, ex);
+		   JOptionPane.showMessageDialog(
+			view,
+			"<html>" + JAPMessages.getString("ngTransferNumberError") + "<br>" + ex.getMessage() +
+			"</html>",
+			JAPMessages.getString("error"), JOptionPane.ERROR_MESSAGE
+			);
+		   return;
+		  }
 
-			// try to launch webbrowser
-			AbstractOS os = AbstractOS.getInstance();
-			String url = transferCertificate.getBaseUrl();
-			url += "?transfernum=" + transferCertificate.getTransferNumber();
-			try
-			{
-		  os.openURLInBrowser(url);
-			}
-			catch (Exception e)
-			{
-		  JOptionPane.showMessageDialog(
-		   view,
-		   "<html>" + JAPMessages.getString("ngCouldNotFindBrowser") + "<br>" +
-		   "<h3>" + url + "</h3></html>",
-		   JAPMessages.getString("ngCouldNotFindBrowserTitle"),
-		   JOptionPane.INFORMATION_MESSAGE
-		   );
-			}
+		  // try to launch webbrowser
+		  AbstractOS os = AbstractOS.getInstance();
+		  String url = transferCertificate.getBaseUrl();
+		  url += "?transfernum=" + transferCertificate.getTransferNumber();
+		  try
+		  {
+		   os.openURLInBrowser(url);
+		  }
+		  catch (Exception e)
+		  {
+		   JOptionPane.showMessageDialog(
+			view,
+			"<html>" + JAPMessages.getString("ngCouldNotFindBrowser") + "<br>" +
+			"<h3>" + url + "</h3></html>",
+			JAPMessages.getString("ngCouldNotFindBrowserTitle"),
+			JOptionPane.INFORMATION_MESSAGE
+			);
+		  }
 
-			m_MyTableModel.fireTableDataChanged();
-		   }*/
+		  m_MyTableModel.fireTableDataChanged();
+			}*/
 	}
 
 	/**
@@ -728,7 +730,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		{
 			theBI = new BI(JAPConstants.PI_ID, JAPConstants.PI_NAME, JAPConstants.PI_HOST,
 						   JAPConstants.PI_PORT,
-						   JAPCertificate.getInstance(ResourceLoader.loadResource(JAPConstants.CERTSPATH + JAPConstants.PI_CERT)));
+						   JAPCertificate.getInstance(ResourceLoader.loadResource(JAPConstants.CERTSPATH +
+				JAPConstants.PI_CERT)));
 		}
 		catch (Exception e)
 		{
@@ -752,28 +755,29 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 
 					public void run()
 					{
-				try
-				{
+						try
+						{
 							PayAccount p = PayAccountsFile.getInstance().createAccount(bi, true);
 							p.fetchAccountInfo();
-				}
-				catch (Exception ex)
-				{
+						}
+						catch (Exception ex)
+						{
 							JAPDialog.showErrorDialog(
 								getRootPanel(),
 								JAPMessages.getString(MSG_CREATEERROR) + " " + ex.getMessage(),
 								LogType.PAY);
-				}
-			}
+						}
+					}
 				};
 				JAPDialog d = new JAPDialog(this.getRootPanel(), JAPMessages.getString(MSG_ACCOUNTCREATE), true);
-				WorkerContentPane p = new WorkerContentPane(d, JAPMessages.getString(MSG_ACCOUNTCREATEDESC), doIt);
+				WorkerContentPane p = new WorkerContentPane(d, JAPMessages.getString(MSG_ACCOUNTCREATEDESC),
+					doIt);
 				p.setInterruptThreadSafe(false);
 				p.updateDialog();
 				d.pack();
 				d.setVisible(true);
 				updateAccountList();
-		}
+			}
 		}
 	}
 
@@ -843,15 +847,15 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		{
 			public void run()
 			{
-		try
-		{
+				try
+				{
 					a_selectedAccount.fetchAccountInfo();
 					updateAccountList();
-		}
+				}
 				catch (Exception e)
-		{
+				{
 					LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, "Could not get account statement");
-		}
+				}
 			}
 		};
 		WorkerContentPane worker = new WorkerContentPane(busy, JAPMessages.getString(MSG_GETACCOUNTSTATEMENT),
@@ -1212,8 +1216,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		{
 			if (m_listAccounts.getModel().getSize() > 0)
 			{
-			doShowDetails(getSelectedAccount());
-			enableDisableButtons();
+				doShowDetails(getSelectedAccount());
+				enableDisableButtons();
 			}
 		}
 	}
