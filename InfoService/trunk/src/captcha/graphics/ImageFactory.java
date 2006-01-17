@@ -35,8 +35,6 @@ import java.lang.reflect.Method;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import infoservice.japforwarding.captcha.graphics.infoservice.*;
-
 /**
  * This class creates Images using the BufferedImage implementation from Java 1.2 and above. This
  * class can be compiled also within Java 1.1 but cannot be used there (because BufferedImage is

@@ -50,29 +50,20 @@ import anon.pay.xml.XMLCloseAck;
 import anon.pay.xml.XMLEasyCC;
 import anon.pay.xml.XMLErrorMessage;
 import anon.pay.xml.XMLJapPublicKey;
+import anon.pay.xml.XMLPassivePayment;
 import anon.pay.xml.XMLPaymentOptions;
 import anon.pay.xml.XMLResponse;
 import anon.pay.xml.XMLTransCert;
+import anon.pay.xml.XMLTransactionOverview;
 import anon.util.IXMLEncodable;
 import anon.util.XMLUtil;
 import jpi.db.Balance;
 import jpi.db.DBInterface;
 import jpi.db.DBSupplier;
+import jpi.util.XMLCaptcha;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import anon.pay.xml.XMLTransactionOverview;
-import anon.pay.xml.XMLPassivePayment;
-import infoservice.japforwarding.*;
-import org.w3c.dom.Element;
-import org.w3c.dom.Document;
-import java.math.BigInteger;
-import javax.xml.parsers.DocumentBuilderFactory;
-import java.security.SecureRandom;
-import anon.crypto.MyAES;
-import anon.util.Base64;
-import anon.crypto.MyRandom;
-import jpi.util.XMLCaptcha;
 
 /**
  * This class contains the functionality for talking to a JAP. For
@@ -461,8 +452,8 @@ public class PICommandUser implements PICommand
 	{
 		XMLChallenge xmlChallenge = (XMLChallenge) getChallengeXML();
 		XMLCaptcha captcha = new XMLCaptcha(xmlChallenge.toXmlElement(XMLUtil.createDocument()).
-			toString().getBytes(),
-			CAPTCHA_KEY_BITS, EXTRA_KEY_BITS
+											toString().getBytes(),
+											CAPTCHA_KEY_BITS, EXTRA_KEY_BITS
 			);
 		return captcha;
 	}

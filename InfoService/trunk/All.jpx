@@ -93,8 +93,6 @@
 <node name="infoservice" type="Package"/>
 <node name="infoservice.japforwarding" type="Package"/>
 <node name="infoservice.japforwarding.captcha" type="Package"/>
-<node name="infoservice.japforwarding.captcha.graphics" type="Package"/>
-<node name="infoservice.japforwarding.captcha.graphics.infoservice" type="Package"/>
 <node name="infoservice.mailsystem" type="Package"/>
 <node name="infoservice.mailsystem.central" type="Package"/>
 <node name="infoservice.mailsystem.central.commands" type="Package"/>
