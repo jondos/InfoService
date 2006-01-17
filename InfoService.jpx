@@ -159,6 +159,7 @@
 <node name="anon.crypto" type="Package"/>
 <node name="anon.infoservice" type="Package"/>
 <node name="anon.util" type="Package"/>
+<node name="captcha" type="Package"/>
 <node name="infoservice" type="Package"/>
 <node name="InfoService.jar" type="Archive">
 <property category="archiving" name="archiverClass" value="com.borland.jbuilder.wizard.archive.ApplicationArchiver"/>

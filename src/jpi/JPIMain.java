@@ -36,11 +36,26 @@ import logging.LogLevel;
 import logging.LogType;
 import logging.SystemErrLog;
 import jpi.helper.ICreditCardHelper;
+import java.util.Properties;
 
 public class JPIMain
 {
 	public static void main(String argv[])
 	{
+		try
+		{
+			/* for running in non-graphic environments, we need the awt headless support, it is only
+			 * available since Java 1.4, so running the service in a non-graphic environment is
+			 * only possible with Java versions since 1.4
+			 */
+			/* set the property in Java 1.0 compatible style */
+			Properties systemProperties = System.getProperties();
+			systemProperties.put("java.awt.headless", "true");
+			System.setProperties(systemProperties);
+		}
+		catch (Throwable t)
+		{
+		}
 		// wrong commandline arguments
 		if ( (argv.length < 1) || (argv.length > 3))
 		{
@@ -141,7 +156,7 @@ public class JPIMain
 		aiThread.start();
 
 		//start the credit card helper
-		String strHelperClass = "jpi.helper."+Configuration.getCreditCardHelper() + "CreditCardHelper";
+		String strHelperClass = "jpi.helper." + Configuration.getCreditCardHelper() + "CreditCardHelper";
 		LogHolder.log(LogLevel.INFO, LogType.PAY, "JPIMain: Launching CreditCardHelper: " + strHelperClass);
 		try
 		{
@@ -156,12 +171,12 @@ public class JPIMain
 						  "JPIMain: Could not load helper class: " + strHelperClass);
 		}
 
-        // start InfoService thread for InfoService connections
+		// start InfoService thread for InfoService connections
 		LogHolder.log(LogLevel.INFO, LogType.PAY,
 					  "JPIMain: Launching InfoService thread for InfoService connections");
-        InfoServiceThread infoServer = new InfoServiceThread();
-        Thread infoServiceThread = new Thread(infoServer);
-        infoServiceThread.start();
+		InfoServiceThread infoServer = new InfoServiceThread();
+		Thread infoServiceThread = new Thread(infoServer);
+		infoServiceThread.start();
 		LogHolder.log(LogLevel.INFO, LogType.PAY, "Initialization complete, JPIMain Thread terminating");
 
 		// start PayPalHelper thread for IPN acceptance
