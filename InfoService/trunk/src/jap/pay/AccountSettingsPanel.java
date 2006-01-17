@@ -88,7 +88,7 @@ import logging.LogLevel;
 import logging.LogType;
 import anon.util.ResourceLoader;
 import javax.swing.JProgressBar;
-
+import gui.JAPHelp;
 /**
  * The Jap Conf Module (Settings Tab Page) for the Accounts and payment Management
  *
