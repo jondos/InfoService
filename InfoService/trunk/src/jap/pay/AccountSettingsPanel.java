@@ -430,7 +430,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 
 	private void enableDisableButtons()
 	{
-		if (m_listAccounts.getModel().getSize() > 0)
+		if (m_listAccounts.getModel().getSize()>0)
 		{
 			boolean enable = (getSelectedAccount() != null);
 			m_btnChargeAccount.setEnabled(enable);
@@ -730,8 +730,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		{
 			theBI = new BI(JAPConstants.PI_ID, JAPConstants.PI_NAME, JAPConstants.PI_HOST,
 						   JAPConstants.PI_PORT,
-						   JAPCertificate.getInstance(ResourceLoader.loadResource(JAPConstants.CERTSPATH +
-				JAPConstants.PI_CERT)));
+						   JAPCertificate.getInstance(ResourceLoader.loadResource(JAPConstants.CERTSPATH + JAPConstants.PI_CERT)));
 		}
 		catch (Exception e)
 		{
@@ -770,11 +769,10 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 					}
 				};
 				JAPDialog d = new JAPDialog(this.getRootPanel(), JAPMessages.getString(MSG_ACCOUNTCREATE), true);
-				WorkerContentPane p = new WorkerContentPane(d, JAPMessages.getString(MSG_ACCOUNTCREATEDESC),
-					doIt);
-				p.setInterruptThreadSafe(false);
+				WorkerContentPane p = new WorkerContentPane(d, JAPMessages.getString(MSG_ACCOUNTCREATEDESC), doIt, false);
 				p.updateDialog();
 				d.pack();
+				d.setLocationCenteredOnOwner();
 				d.setVisible(true);
 				updateAccountList();
 			}
@@ -863,6 +861,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		worker.setInterruptThreadSafe(false);
 		worker.updateDialog();
 		busy.pack();
+		busy.setLocationCenteredOnOwner();
 		busy.setVisible(true);
 	}
 
@@ -1157,6 +1156,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 	 */
 	protected void onRootPanelShown()
 	{
+		//Register help context
+		JAPHelp.getInstance().getContextObj().setContext("index");
 		updateAccountList();
 	}
 

@@ -2225,6 +2225,16 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	}
 
 	/**
+	 * Centers the dialog on the parent window, that means either the parent, if it is a window,
+	 * or the the first window that contains the parent.
+	 * Sets the location of the dialog 'manually'. After that, no automatic alignment is done by this dialog.
+	 */
+	public final void setLocationCenteredOnOwner()
+	{
+		setLocationCenteredOn(m_parentWindow);
+	}
+
+	/**
 	 * Centers this dialog relative to the screen.
 	 * Sets the location of the dialog 'manually'. After that, no automatic alignment is done by this dialog.
 	 */
