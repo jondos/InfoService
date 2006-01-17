@@ -21,36 +21,36 @@ import javax.swing.JTextField;
 
 import anon.util.Base64;
 import anon.util.ZLibTools;
-import infoservice.japforwarding.captcha.ZipBinaryImageCaptchaGenerator;
+import captcha.ZipBinaryImageCaptchaGenerator;
 
 public class TestZipBinaryImageCaptcha {
-  
+
   private Random textRandom;
-  
+
   private int wrongCaptchas;
-  
+
   private int correctCaptchas;
-  
+
   private JLabel wrongLabel;
-  
+
   private JLabel correctLabel;
-  
+
   private JLabel lastLabel;
-  
+
   private JButton nextButton;
-  
+
   private JPanel mainPanel;
-  
+
   private JLabel captchaLabel;
-  
+
   private JTextField codeField;
-  
+
   private String lastString;
-  
+
   private JLabel codeLabel;
-  
+
   private JLabel sizeLabel;
-  
+
   public TestZipBinaryImageCaptcha() throws Exception {
     textRandom = new Random();
     correctCaptchas = 0;
@@ -82,11 +82,11 @@ public class TestZipBinaryImageCaptcha {
           sizeLabel.setText("Base64-encoded-size: " + NumberFormat.getInstance().format(currentCaptcha.length()) + " Bytes");
           codeField.setText("");
           correctLabel.setText("Correct: " + Integer.toString(correctCaptchas));
-          wrongLabel.setText("Wrong: " + Integer.toString(wrongCaptchas)); 
+          wrongLabel.setText("Wrong: " + Integer.toString(wrongCaptchas));
         }
         catch (Exception e) {
           System.out.println(e.toString());
-        }      
+        }
       }
     });
     codeLabel = new JLabel("Captcha-Code:");
@@ -156,11 +156,11 @@ public class TestZipBinaryImageCaptcha {
     mainPanelLayout.setConstraints(lastLabel, mainPanelConstraints);
     mainPanel.add(lastLabel);
   }
-  
+
   public JPanel getMainPanel() {
     return mainPanel;
   }
-  
+
   public String getRandomString(int stringLength) {
     String randomString = "";
     while (stringLength > 0) {
@@ -171,7 +171,7 @@ public class TestZipBinaryImageCaptcha {
     }
     return randomString;
   }
-  
+
   public static void main(String[] args) {
     try {
       JFrame testFrame = new JFrame("CaptchaTest");
@@ -179,7 +179,7 @@ public class TestZipBinaryImageCaptcha {
       testFrame.getContentPane().add(captchaTest.getMainPanel());
       testFrame.setLocation(300, 200);
       testFrame.pack();
-      testFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+      testFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
       testFrame.setVisible(true);
     }
     catch (Exception e) {
