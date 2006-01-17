@@ -33,6 +33,8 @@ import java.awt.Graphics;
 import java.awt.Image;
 import javax.swing.ImageIcon;
 import javax.swing.JProgressBar;
+import javax.swing.plaf.basic.BasicProgressBarUI;
+import javax.swing.JComponent;
 
 /**
  * This class is an extended progress bar that uses coin images for displaying
@@ -40,7 +42,7 @@ import javax.swing.JProgressBar;
  *
  * @author Hannes Federrath, Tobias Bayer
  */
-public class CoinstackProgressBar extends JProgressBar
+public class CoinstackProgressBarUI extends BasicProgressBarUI
 {
 	private static final int Y_OFFSET = 6;
 	private static final int X_OFFSET = 6;
@@ -55,32 +57,32 @@ public class CoinstackProgressBar extends JProgressBar
 	private int m_height;
 	private int m_width;
 
-	public CoinstackProgressBar(ImageIcon imageIcon, int min, int max)
+	public CoinstackProgressBarUI(ImageIcon imageIcon, int min, int max)
 	{
+		super();
 		m_imgCoinImage = imageIcon.getImage();
-		prepareImage(m_imgCoinImage, this);
-		m_imageHeight = m_imgCoinImage.getHeight(this);
-		m_imageWidth = m_imgCoinImage.getWidth(this);
+		m_imageHeight = m_imgCoinImage.getHeight(null);
+		m_imageWidth = m_imgCoinImage.getWidth(null);
 		m_yFactor = m_imageHeight / 3;
-		setMinimum(min);
-		setMaximum(max);
 		m_width = 2 * X_OFFSET + m_imageWidth + 4 + 3;
 		m_height = 2 * Y_OFFSET + m_imageHeight + m_yFactor * (max - min - 1);
 	}
 
-	public void paint(Graphics g)
+	public void paint(Graphics g,JComponent c)
 	{
+		JProgressBar pb = (JProgressBar) c;
+
 		int y_pos_end;
 		int y_rule_middle;
 
 		//calculate height (necessary if setMaximum or setMinimum was called)
-		m_height = 2 * Y_OFFSET + m_imageHeight + m_yFactor * (getMaximum() - getMinimum() - 1);
+		m_height = 2 * Y_OFFSET + m_imageHeight + m_yFactor * (pb.getMaximum() - pb.getMinimum() - 1);
 		//set color of lines
 		g.setColor(Color.gray);
 		//draw vertical line
 		m_xPos = X_OFFSET;
 		m_yPos = m_height - Y_OFFSET;
-		y_pos_end = m_yPos - (m_imageHeight + (m_yFactor) * (getMaximum() - getMinimum() - 1));
+		y_pos_end = m_yPos - (m_imageHeight + (m_yFactor) * (pb.getMaximum() - pb.getMinimum() - 1));
 		g.drawLine(m_xPos, m_yPos, m_xPos, y_pos_end);
 		//draw horizontal lines
 		y_rule_middle = m_yPos - (m_yPos - y_pos_end) / 2;
@@ -88,22 +90,27 @@ public class CoinstackProgressBar extends JProgressBar
 		g.drawLine(m_xPos, y_pos_end, m_xPos + 3, y_pos_end);
 		g.drawLine(m_xPos, y_rule_middle, m_xPos + 3, y_rule_middle);
 		//no coin to draw if mimimum value
-		if (getValue() == getMinimum())
+		if (pb.getValue() == pb.getMinimum())
 		{
 			return;
 		}
 		//draw coin
 		int x_pos = X_OFFSET + 4;
 		int y_pos = m_height - Y_OFFSET - m_imageHeight + 1;
-		for (int i = 0; i < (getValue() - getMinimum()); i++)
+		for (int i = 0; i < (pb.getValue() - pb.getMinimum()); i++)
 		{
 			x_pos = x_pos + X_SHIFT[i % X_SHIFT.length];
-			g.drawImage(m_imgCoinImage, x_pos, y_pos, this);
+			g.drawImage(m_imgCoinImage, x_pos, y_pos, null);
 			y_pos = y_pos - m_yFactor;
 		}
 	}
 
-	public Dimension getPreferredSize()
+	public Dimension getMinimumSize(JComponent c)
+	{
+		return new Dimension(m_width, m_height);
+	}
+
+	public Dimension getPreferredSize(JComponent c)
 	{
 		return new Dimension(m_width, m_height);
 	}
