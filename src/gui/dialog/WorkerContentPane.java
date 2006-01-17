@@ -62,6 +62,12 @@ public class WorkerContentPane extends DialogContentPane implements
 		this(a_parentDialog, a_strText, "", null, a_workerRunnable);
 	}
 
+	public WorkerContentPane(JAPDialog a_parentDialog, String a_strText, Runnable a_workerRunnable,
+							 boolean a_showCancelButton)
+	{
+		this(a_parentDialog, a_strText, "", null, a_workerRunnable, a_showCancelButton);
+	}
+
 	public WorkerContentPane(JAPDialog a_parentDialog, String a_strText, String a_strTitle,
 							 Runnable a_workerRunnable)
 	{
@@ -77,8 +83,16 @@ public class WorkerContentPane extends DialogContentPane implements
 	public WorkerContentPane(JAPDialog a_parentDialog, String a_strText, String a_strTitle,
 							 DialogContentPane a_previousContentPane, Runnable a_workerRunnable)
 	{
+		this(a_parentDialog, a_strText, a_strTitle,
+			 a_previousContentPane, a_workerRunnable, true);
+	}
+
+	public WorkerContentPane(JAPDialog a_parentDialog, String a_strText, String a_strTitle,
+							 DialogContentPane a_previousContentPane, Runnable a_workerRunnable,
+							 boolean a_showCancelButton)
+	{
 		super(a_parentDialog, a_strText, new Layout(a_strTitle),
-			  new Options(OPTION_TYPE_CANCEL, a_previousContentPane));
+			  a_showCancelButton ? new Options(OPTION_TYPE_CANCEL, a_previousContentPane):null);
 		setDefaultButtonOperation(ON_CLICK_DISPOSE_DIALOG | ON_CANCEL_SHOW_PREVIOUS_CONTENT);
 		m_workerRunnable = a_workerRunnable;
 
@@ -139,17 +153,6 @@ public class WorkerContentPane extends DialogContentPane implements
 		}
 	}
 
-
-	/**
-	 * Returns true by default, that means this worker content pane is skipped if a move from the next
-	 * content pane to this one is done.
-	 * @return true
-	 */
-	public boolean isSkippedAsPreviousContentPane()
-	{
-		return true;
-	}
-
 	/**
 	 * Interrupts the Thread.
 	 * @return CheckError[]
@@ -172,9 +175,10 @@ public class WorkerContentPane extends DialogContentPane implements
 			super(a_runnable);
 			if (a_runnable instanceof Thread)
 			{
-				m_thread = (Thread)a_runnable;
+				m_thread = (Thread) a_runnable;
 			}
 		}
+
 		public void interrupt()
 		{
 			if (m_thread != null)
