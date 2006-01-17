@@ -492,7 +492,8 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 		/* sign the XML node */
 		try
 		{
-			SignatureCreator.getInstance().signXml(SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE,infoServiceNode);
+			SignatureCreator.getInstance().signXml(SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE,
+				infoServiceNode);
 		}
 		catch (Exception a_e)
 		{
@@ -859,7 +860,7 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 				/* signature is valid */
 				try
 				{
-					mixCascades.addElement(new MixCascade(mixCascadeNode));
+					mixCascades.addElement(new MixCascade(mixCascadeNode, true));
 				}
 				catch (Exception e)
 				{
@@ -870,9 +871,20 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 			}
 			else
 			{
-				LogHolder.log(LogLevel.ERR, LogType.MISC,
+				LogHolder.log(LogLevel.INFO, LogType.MISC,
 							  "Cannot verify the signature for MixCascade entry: " +
 							  XMLUtil.toString(mixCascadeNode));
+				try
+				{
+					mixCascades.addElement(new MixCascade(mixCascadeNode, false));
+				}
+				catch (Exception e)
+				{
+					/* an error while parsing the node occured -> we don't use this mixcascade */
+					LogHolder.log(LogLevel.EXCEPTION, LogType.MISC,
+								  "InfoService: getMixCascades: Error in MixCascade XML node.");
+				}
+
 			}
 		}
 		return mixCascades;

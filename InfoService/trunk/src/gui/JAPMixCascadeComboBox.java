@@ -132,6 +132,8 @@ final class JAPMixCascadeComboBoxListCellRender implements ListCellRenderer
 	private JLabel m_componentUserServer;
 	private JLabel m_componentUserDefinedCascade;
 	private JLabel m_componentAvailableCascade;
+	private JLabel m_componentNotCertifiedCascade;
+
 	public JAPMixCascadeComboBoxListCellRender()
 	{
 		m_componentNoServer = new JLabel(JAPMessages.getString("ngMixComboNoServers"));
@@ -158,6 +160,13 @@ final class JAPMixCascadeComboBoxListCellRender implements ListCellRenderer
 		m_componentAvailableCascade.setHorizontalAlignment(SwingConstants.LEFT);
 		m_componentAvailableCascade.setOpaque(true);
 		m_componentAvailableCascade.setBorder(new EmptyBorder(1, 3, 1, 3));
+
+		m_componentNotCertifiedCascade = new JLabel(JAPUtil.loadImageIcon(JAPConstants.
+			IMAGE_CASCADE_NOT_CERTIFIED, true));
+		m_componentNotCertifiedCascade.setHorizontalAlignment(SwingConstants.LEFT);
+		m_componentNotCertifiedCascade.setOpaque(true);
+		m_componentNotCertifiedCascade.setBorder(new EmptyBorder(1, 3, 1, 3));
+
 	}
 
 	public Component getListCellRendererComponent(JList list, Object value, int index,
@@ -187,7 +196,14 @@ final class JAPMixCascadeComboBoxListCellRender implements ListCellRenderer
 		}
 		else
 		{
+			if (cascade.isCertified())
+			{
 			l = m_componentAvailableCascade;
+			}
+			else
+			{
+				l = m_componentNotCertifiedCascade;
+			}
 		}
 		l.setText(cascade.getName());
 		if (isSelected)

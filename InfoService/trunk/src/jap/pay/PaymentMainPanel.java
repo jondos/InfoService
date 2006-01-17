@@ -68,6 +68,7 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import anon.pay.xml.XMLBalance;
+import gui.dialog.JAPDialog;
 
 public class PaymentMainPanel extends JPanel
 {
@@ -120,7 +121,7 @@ public class PaymentMainPanel extends JPanel
 		JLabel label = new JLabel(JAPMessages.getString(MSG_TITLE));
 		//m_AccountText.setBorder(new EtchedBorder());
 		c.anchor = GridBagConstraints.NORTHWEST;
-		c.fill = c.NONE;//GridBagConstraints.HORIZONTAL;
+		c.fill = c.NONE; //GridBagConstraints.HORIZONTAL;
 		c.gridx = 1;
 		c.gridy = 0;
 		c.gridwidth = 3;
@@ -306,7 +307,12 @@ public class PaymentMainPanel extends JPanel
 					JAPMessages.getString("ngPaymentTabTitle"), JOptionPane.YES_NO_OPTION,
 					JOptionPane.QUESTION_MESSAGE, null, null, null) == JOptionPane.YES_OPTION)
 				{
+					JAPController.getInstance().setAnonMode(false);
 					m_view.showConfigDialog(JAPConf.PAYMENT_TAB);
+				}
+				else
+				{
+					JAPController.getInstance().setAnonMode(false);
 				}
 			}
 			else
@@ -374,13 +380,9 @@ public class PaymentMainPanel extends JPanel
 		 */
 		public void accountError(XMLErrorMessage msg)
 		{
-			/** @todo internationalize */
-			JOptionPane.showOptionDialog(
-				PaymentMainPanel.this,
+			JAPDialog.showErrorDialog(PaymentMainPanel.this,
 				JAPMessages.getString("aiErrorMessage") + msg.getErrorDescription(),
-				JAPMessages.getString("error"),
-				JOptionPane.YES_NO_OPTION, JOptionPane.ERROR_MESSAGE,
-				null, null, null);
+									  LogType.PAY);
 		}
 
 		/**

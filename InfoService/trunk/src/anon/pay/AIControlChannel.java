@@ -85,6 +85,7 @@ public class AIControlChannel extends SyncControlChannel
 		}
 		catch (Exception ex)
 		{
+			ex.printStackTrace();
 			LogHolder.log(LogLevel.DEBUG, LogType.PAY, ex);
 			PayAccountsFile.getInstance().signalAccountError(
 				new XMLErrorMessage(XMLErrorMessage.ERR_INTERNAL_SERVER_ERROR,
@@ -208,6 +209,8 @@ public class AIControlChannel extends SyncControlChannel
 		{
 			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "AI requested balance");
 			PayAccount currentAccount = PayAccountsFile.getInstance().getActiveAccount();
+			if (currentAccount != null)
+			{
 			XMLBalance b = currentAccount.getBalance();
 			if (m_bFirstBalance || (b == null) || ( (b.getTimestamp()).before(t)))
 			{
@@ -236,6 +239,7 @@ public class AIControlChannel extends SyncControlChannel
 				AIControlChannel.this.sendXMLMessage(XMLUtil.toXMLDocument(b));
 			}
 			m_bFirstBalance = false;
+			}
 		}
 		if (request.isAccountRequest())
 		{
