@@ -25,7 +25,7 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package infoservice.japforwarding.captcha.graphics.infoservice;
+package captcha.graphics;
 
 import java.awt.Color;
 import java.awt.Image;
@@ -87,8 +87,8 @@ public class BinaryImageCreator {
     }
     catch (Exception e) {
       /* should not happen */
-    }       
+    }
     return resultData;
   }
-    
-}    
+
+}

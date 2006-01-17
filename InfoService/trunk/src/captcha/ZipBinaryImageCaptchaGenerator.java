@@ -34,7 +34,7 @@
  * The ASP.NET code was translated into Java (with some modifications).
  */
 
-package infoservice.japforwarding.captcha;
+package captcha;
 
 import java.awt.Color;
 import java.awt.Font;
@@ -44,17 +44,21 @@ import java.util.Random;
 
 import anon.util.Base64;
 import anon.util.ZLibTools;
-import infoservice.japforwarding.CaptchaGenerator;
-import infoservice.japforwarding.captcha.graphics.infoservice.BinaryImageCreator;
-import infoservice.japforwarding.captcha.graphics.infoservice.ImageFactory;
-import infoservice.japforwarding.captcha.graphics.infoservice.PerspectiveProjection;
-import infoservice.japforwarding.captcha.graphics.infoservice.Quadrangle;
+import captcha.graphics.BinaryImageCreator;
+import captcha.graphics.ImageFactory;
+import captcha.graphics.PerspectiveProjection;
+import captcha.graphics.Quadrangle;
+
+
+
+
+
 
 /**
  * This class creates zipped binary image captchas (the embedded text is visible on an image in
  * our own binary image format).
  */
-public class ZipBinaryImageCaptchaGenerator implements CaptchaGenerator
+public class ZipBinaryImageCaptchaGenerator implements ICaptchaGenerator
 {
 
 	/**

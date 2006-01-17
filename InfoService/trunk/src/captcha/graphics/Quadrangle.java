@@ -25,19 +25,19 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package infoservice.japforwarding.captcha.graphics.infoservice;
+package captcha.graphics;
 
 /**
  * This class is the representation of an quadrangle (not necessarily a rectangle).
  */
 public class Quadrangle {
-  
+
   /**
    * Stores the 4 corners of the quadrangle (4 x 2 matrix).
    */
   private int[][] m_corners;
 
-  
+
   /**
    * Creates a new quadrangle given by the 4 corners (x and y values). Attention: The order of the
    * corners can matter in some cases.
@@ -60,7 +60,7 @@ public class Quadrangle {
     m_corners[2][0] = a_x2;
     m_corners[2][1] = a_y2;
     m_corners[3][0] = a_x3;
-    m_corners[3][1] = a_y3;    
+    m_corners[3][1] = a_y3;
   }
 
 
@@ -68,7 +68,7 @@ public class Quadrangle {
    * Returns the X position of the first corner.
    *
    * @return The X position of the first corner.
-   */  
+   */
   public int getX0() {
     return m_corners[0][0];
   }
@@ -77,7 +77,7 @@ public class Quadrangle {
    * Returns the Y position of the first corner.
    *
    * @return The Y position of the first corner.
-   */    
+   */
   public int getY0() {
     return m_corners[0][1];
   }
@@ -86,7 +86,7 @@ public class Quadrangle {
    * Returns the X position of the second corner.
    *
    * @return The X position of the second corner.
-   */    
+   */
   public int getX1() {
     return m_corners[1][0];
   }
@@ -95,7 +95,7 @@ public class Quadrangle {
    * Returns the Y position of the second corner.
    *
    * @return The Y position of the second corner.
-   */      
+   */
   public int getY1() {
     return m_corners[1][1];
   }
@@ -104,7 +104,7 @@ public class Quadrangle {
    * Returns the X position of the third corner.
    *
    * @return The X position of the third corner.
-   */    
+   */
   public int getX2() {
     return m_corners[2][0];
   }
@@ -113,7 +113,7 @@ public class Quadrangle {
    * Returns the Y position of the third corner.
    *
    * @return The Y position of the third corner.
-   */      
+   */
   public int getY2() {
     return m_corners[2][1];
   }
@@ -122,16 +122,16 @@ public class Quadrangle {
    * Returns the X position of the fourth corner.
    *
    * @return The X position of the fourth corner.
-   */    
+   */
   public int getX3() {
     return m_corners[3][0];
   }
-  
+
   /**
    * Returns the Y position of the fourth corner.
    *
    * @return The Y position of the fourth corner.
-   */    
+   */
   public int getY3() {
     return m_corners[3][1];
   }

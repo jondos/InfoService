@@ -25,7 +25,7 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package infoservice.japforwarding.captcha.graphics.infoservice;
+package captcha.graphics;
 
 import java.awt.Image;
 import java.awt.image.ImageProducer;
@@ -35,6 +35,7 @@ import java.lang.reflect.Method;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import infoservice.japforwarding.captcha.graphics.infoservice.*;
 
 /**
  * This class creates Images using the BufferedImage implementation from Java 1.2 and above. This
@@ -42,7 +43,7 @@ import logging.LogType;
  * not available within Java 1.1).
  */
 public class ImageFactory {
-  
+
   /**
    * Constructs a new Image (BufferedImage implementation) with the default color model (ARGB). If
    * Java < 1.2 (no BufferedImage available) is used, null is returned.
@@ -64,7 +65,7 @@ public class ImageFactory {
       bufferedImageConstructorParamTypes[1] = int.class;
       bufferedImageConstructorParamTypes[2] = int.class;
       /* get the correct image type value (default RGBA color model) */
-      Field argbImageType = bufferedImageClass.getField("TYPE_INT_ARGB"); 
+      Field argbImageType = bufferedImageClass.getField("TYPE_INT_ARGB");
       /* initialize the parameters for the constructor */
       Object[] bufferedImageConstructorParams = new Object[3];
       bufferedImageConstructorParams[0] = new Integer(a_width);
@@ -116,7 +117,7 @@ public class ImageFactory {
       LogHolder.log(LogLevel.EMERG, LogType.MISC, "Error while creating Image from ImageProducer: " + e.toString());
       returnImage = null;
     }
-    return returnImage;      
+    return returnImage;
   }
-  
+
 }

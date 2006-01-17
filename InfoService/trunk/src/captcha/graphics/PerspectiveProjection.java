@@ -25,7 +25,7 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package infoservice.japforwarding.captcha.graphics.infoservice;
+package captcha.graphics;
 
 import java.awt.Color;
 import java.awt.Image;
@@ -34,17 +34,19 @@ import java.awt.image.PixelGrabber;
 
 import Jama.Matrix;
 
+import infoservice.japforwarding.captcha.graphics.infoservice.*;
+
 /**
  * This class is the implementation for a perspective projection between two images of the same
  * size (the areas of projection can be chosen within the constructor).
  */
 public class PerspectiveProjection {
-  
+
   /**
    * Stores the projection matrix needed for the trnasformation of the image pixels.
    */
   private Matrix m_projectionMatrix;
-  
+
   /**
    * Creates a new instance of PerspectiveProjection.
    *
@@ -114,12 +116,12 @@ public class PerspectiveProjection {
     coefficients[4] [3]  = (double)1;
     coefficients[4] [4]  = (double)(a_orig.getX1());
     coefficients[4] [5]  = (double)(a_orig.getY1());
-    coefficients[4] [9]  = (double)(-a_image.getX1());     
+    coefficients[4] [9]  = (double)(-a_image.getX1());
     coefficients[5] [6]  = (double)1;
     coefficients[5] [7]  = (double)(a_orig.getX1());
     coefficients[5] [8]  = (double)(a_orig.getY1());
-    coefficients[5] [9]  = (double)(-a_image.getY1());     
-    
+    coefficients[5] [9]  = (double)(-a_image.getY1());
+
     coefficients[6] [0]  = (double)1;
     coefficients[6] [1]  = (double)(a_orig.getX2());
     coefficients[6] [2]  = (double)(a_orig.getY2());
@@ -127,12 +129,12 @@ public class PerspectiveProjection {
     coefficients[7] [3]  = (double)1;
     coefficients[7] [4]  = (double)(a_orig.getX2());
     coefficients[7] [5]  = (double)(a_orig.getY2());
-    coefficients[7] [10] = (double)(-a_image.getX2());     
+    coefficients[7] [10] = (double)(-a_image.getX2());
     coefficients[8] [6]  = (double)1;
     coefficients[8] [7]  = (double)(a_orig.getX2());
     coefficients[8] [8]  = (double)(a_orig.getY2());
-    coefficients[8] [10] = (double)(-a_image.getY2());     
-    
+    coefficients[8] [10] = (double)(-a_image.getY2());
+
     coefficients[9] [0]  = (double)1;
     coefficients[9] [1]  = (double)(a_orig.getX3());
     coefficients[9] [2]  = (double)(a_orig.getY3());
@@ -140,17 +142,17 @@ public class PerspectiveProjection {
     coefficients[10][3]  = (double)1;
     coefficients[10][4]  = (double)(a_orig.getX3());
     coefficients[10][5]  = (double)(a_orig.getY3());
-    coefficients[10][11] = (double)(-a_image.getX3());     
+    coefficients[10][11] = (double)(-a_image.getX3());
     coefficients[11][6]  = (double)1;
     coefficients[11][7]  = (double)(a_orig.getX3());
     coefficients[11][8]  = (double)(a_orig.getY3());
-    coefficients[11][11] = (double)(-a_image.getY3());     
-    
+    coefficients[11][11] = (double)(-a_image.getY3());
+
     /* now solve the equations by calculating the inverse matrix for the coefficients and
      * multiply it with the absolute values
      */
     Matrix solution = (new Matrix(coefficients)).solve(new Matrix(absolute));
-    
+
     /* rows 0 .. 8 are the values m00, m01, m02, m10, m11, m12, m20, m21, m22 we need for the
      * projection matrix
      */
@@ -164,10 +166,10 @@ public class PerspectiveProjection {
     projectionMatrix[2][0] = solution.get(6, 0);
     projectionMatrix[2][1] = solution.get(7, 0);
     projectionMatrix[2][2] = solution.get(8, 0);
-    
-    m_projectionMatrix = new Matrix(projectionMatrix);  
+
+    m_projectionMatrix = new Matrix(projectionMatrix);
   }
-  
+
   /**
    * Performs the projection between original and image as configured in the constructor. The
    * image of the projection is a new Image with the same size as the original Image. This method
@@ -182,7 +184,7 @@ public class PerspectiveProjection {
   public Image transform(Image a_input, Color a_defaultColor) throws Exception {
     int height = a_input.getHeight(null);
     int width = a_input.getWidth(null);
-    
+
     /* create the matrix with the original coordinates (homogenous format) */
     double[][] coordinates = new double [3][height*width];
     for (int i = 0; i < height; i++) {
@@ -193,19 +195,19 @@ public class PerspectiveProjection {
       }
     }
     Matrix imageCoordinates = m_projectionMatrix.times(new Matrix(coordinates));
-    
+
     /* normalize the image coordinates */
     double[][] normalImageCoordinates = new double[2][width * height];
     for (int i = 0; i < width * height; i++) {
       normalImageCoordinates[0][i] = imageCoordinates.get(1, i) / imageCoordinates.get(0, i);
       normalImageCoordinates[1][i] = imageCoordinates.get(2, i) / imageCoordinates.get(0, i);
     }
-    
+
     /* now create the transformation map for the pixels, we take for every image point the best
      * matching original pixel
      */
     int[] imageMap = new int[width * height];
-    double[] distanceMap = new double[width * height];   
+    double[] distanceMap = new double[width * height];
     for (int i = 0; i < width * height; i++) {
       imageMap[i] = -1;
     }
@@ -217,7 +219,7 @@ public class PerspectiveProjection {
       if ((x >= 0) && (x < width) && (y >= 0) && (y < height)) {
         /* the image pixel is within the destination image -> calculate the distance from the
          * next pixel
-         */    
+         */
         double distance = Math.sqrt(((exactX - (double)x) * (exactX - (double)x)) + ((exactY - (double)y) * (exactY - (double)y)));
         if (imageMap[y * width + x] == -1) {
           /* no souce pixel has clamed that image point yet */
@@ -233,7 +235,7 @@ public class PerspectiveProjection {
           }
         }
       }
-    }  
+    }
     /* now we have the transformation pixel mapping -> transform the image */
     PixelGrabber originalImage = new PixelGrabber(a_input, 0, 0, width, height, true);
     originalImage.grabPixels();
@@ -250,7 +252,7 @@ public class PerspectiveProjection {
       }
     }
     MemoryImageSource outputImage = new MemoryImageSource(width, height, outputImagePixels, 0, width);
-    
+
     return ImageFactory.createImage(outputImage);
   }
 }
