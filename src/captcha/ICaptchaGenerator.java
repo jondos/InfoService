@@ -25,54 +25,49 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-
-package infoservice.japforwarding;
-
-import infoservice.japforwarding.captcha.ZipBinaryImageCaptchaGenerator;
+package captcha;
 
 /**
- * This class is a factory for creating objects, which implements the CaptchaGenerator interface.
- * This class is a singleton;
+ * This defines the methods, every captcha generator has to implement.
  */
-public class CaptchaGeneratorFactory
+public interface ICaptchaGenerator
 {
 
 	/**
-	 * Stores the instance of CaptchaGeneratorFactory (Singleton).
-	 */
-	private static CaptchaGeneratorFactory ms_cgfInstance;
-
-	/**
-	 * Returns the instance of CaptchaGeneratorFactory (Singleton). If there is no instance, a new
-	 * one is created.
+	 * Returns the string of valid captcha characters. The data which are included in the captcha
+	 * can be words over this alphabet.
 	 *
-	 * @return The CaptchaGeneratorFactory instance.
+	 * @return An alphabet with characters this CaptchaGenerator supports.
 	 */
-	public static CaptchaGeneratorFactory getInstance()
-	{
-		if (ms_cgfInstance == null)
-		{
-			ms_cgfInstance = new CaptchaGeneratorFactory();
-		}
-		return ms_cgfInstance;
-	}
+	public String getValidCharacters();
 
 	/**
-	 * This creates a new CaptchaGeneratorFactory.
-	 */
-	private CaptchaGeneratorFactory()
-	{
-	}
-
-	/**
-	 * Returns an object, which implements the CaptchaGenerator interface.
+	 * Returns the maximum number of characters of the captcha generators alphabet, which are
+	 * supported as input when creating a captcha.
 	 *
-	 * @return A new instance of a CaptchaGenerator.
+	 * @return The maximum captcha generator input word length.
 	 */
-	public CaptchaGenerator getCaptchaGenerator()
-	{
-		/* at the moment, we create always 300x100 zipped binary image */
-		return new ZipBinaryImageCaptchaGenerator(300, 100);
-	}
+	public int getMaximumStringLength();
+
+	/**
+	 * Creates a new captcha from the given input word. The input must be a word over the captcha
+	 * generators alphabet. It haven't to be longer than the maximum string length supported from
+	 * the captcha generator. This mehtod can throw an exception, if the input string is longer
+	 * than the maximum supported length or if there are not allowed letters in. The return value
+	 * is a Base64 encoded string with the captcha data.
+	 *
+	 * @param a_captchaString The input, which shall be included in the captcha.
+	 *
+	 * @return A Base64 encoded string with the captcha data.
+	 */
+	public String createCaptcha(String a_captchaString) throws Exception;
+
+	/**
+	 * Returns the format of the captcha data (e.g. JPEG). So the JAP client of the blockee can
+	 * present the data corrctly.
+	 *
+	 * @return A string with the data format of the captcha.
+	 */
+	public String getCaptchaDataFormat();
 
 }

@@ -9,8 +9,8 @@ import anon.crypto.MyAES;
 import anon.crypto.MyRandom;
 import anon.util.Base64;
 import anon.util.IXMLEncodable;
-import infoservice.japforwarding.CaptchaGenerator;
-import infoservice.japforwarding.CaptchaGeneratorFactory;
+import captcha.ICaptchaGenerator;
+import captcha.CaptchaGeneratorFactory;
 
 public class XMLCaptcha implements IXMLEncodable
 {
@@ -20,7 +20,7 @@ public class XMLCaptcha implements IXMLEncodable
 	private int m_keyBits, m_extraKeyBits;
 	private String m_captchaCharacters, m_captchaDataString, m_cipheredData;
 	private int m_neededCharacters;
-	private CaptchaGenerator m_captchaGenerator;
+	private ICaptchaGenerator m_captchaGenerator;
 
 	public XMLCaptcha(byte[] a_data, int a_keyBits, int a_extraKeyBits) throws Exception
 	{

@@ -42,6 +42,7 @@ import anon.crypto.MyRandom;
 import anon.infoservice.AbstractDatabaseEntry;
 import anon.infoservice.Constants;
 import anon.util.Base64;
+import captcha.*;
 
 /**
  * This is the implementation of a JAP forwarder entry, which can be stored in the forwarder
@@ -211,7 +212,7 @@ public class ForwarderDBEntry extends AbstractDatabaseEntry
 	 */
 	public Element createCaptchaNode() throws Exception
 	{
-		CaptchaGenerator captchaGenerator = CaptchaGeneratorFactory.getInstance().getCaptchaGenerator();
+		ICaptchaGenerator captchaGenerator = CaptchaGeneratorFactory.getInstance().getCaptchaGenerator();
 		String captchaCharacters = captchaGenerator.getValidCharacters();
 		/* calculate the number of needed captcha characters to get as close to the defined captcha
 		 * key length as possible
