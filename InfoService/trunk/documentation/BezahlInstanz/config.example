@@ -11,14 +11,7 @@
 # Every BI needs a unique ID. It is recommended to use a random String, starting
 # with "bi"
 
-id biMyBiID
-
-##############################################################################
-#Every BI should have a humane readable name, which could for instance
-#be show on a user interface
-name My BI
-
-
+id TestPaymentInstance
 
 ##############################################################################
 # Some network settings
@@ -26,16 +19,12 @@ name My BI
 # hostname: the JPI's hostname
 # japport: TCP Port where the JPI listens for JAP connections
 # aiport: TCP Port where the JPI listens for AI connections
+# tls: use encryption? can be one of "on" or "off"
 
-hostname bezahl.instanz.de
+hostname 132.199.130.150 
 japport 2342
 aiport 4223
-
-##############################################################################
-# InfoService settings - where to post data about ourselves
-
-infoservicehost infoservice.inf.tu-dresden.de
-infoserviceport 80
+tls on
 
 ##############################################################################
 #
@@ -59,12 +48,11 @@ webpayurl=http://my.pay.de/
 # user interaction. If you do not specify a password here, the JPI
 # will ask you for the password on startup
 
-dbhost localhost
+dbhost 127.0.0.1
 dbport 5432
-dbname paydb
-dbusername pay
-dbpassword password
-
+dbname bidb
+dbusername biuser
+dbpassword bipass
 
 
 ##############################################################################
@@ -77,8 +65,8 @@ dbpassword password
 # user interaction. If you do not specify a password here, the JPI
 # will ask you for the password on startup.
 
-keyfile test.pfx
-keyfilepassword
+keyfile /home/bat07318/bi.pfx
+keyfilepassword bi
 
 
 
@@ -107,49 +95,81 @@ keyfilepassword
 #logfilethreshold 7
 #logstderrthreshold 7
 
-###############################################################################
-# Accepted payment options
-###############################################################################
+infoserviceport=11001
+infoservicehost=132.199.130.150
+
+creditcardhelper=Dummy
+acceptedcards=JAP-Testcard
+ratepermb=0.5
+
 currency1=EUR
-currency2=USD
+#currency2=USD
 
-option1name=MoneyTransfer
-option1type=active
-option1heading1=Zahlung per Ueberweisung
+#option3name=MoneyTransfer
+#option3type=active
+#option3heading1=&Uuml;berweisung
+#option3headinglang1=de
+#option3heading2=Money transfer
+#option3headinglang2=en
+#option3detailedinfo1=Bitte bezahlen Sie den Betrag per &Uuml;berweisung
+#option3detailedinfolang1=de
+#option3detailedinfo2=Please pay the chosen amount by money transfer
+#option3detailedinfolang2=en
+#option3extrainfo1=Inhaber: JAP-Team<br>Kontonummer: 12345<br>BLZ: 3456778<br>Sparkasse Hintamberg<br> <br>Verwendungszweck: %t<br>Betrag: %a %c
+#option3extrainfolang1=de
+#option3extrainfotype1=text
+#option3extrainfo2=Holder: JAP-Team<br>Account: 12345<br>Bank number:  3456778<br>Sparkasse Hintamberg<br> <br>Reference: %t<br>Amount: %a %c
+#option3extrainfolang2=en
+#option3extrainfotype2=text
+
+#option2name=PayPal
+#option2type=active
+#option2heading1=PayPal
+#option2headinglang1=de
+#option2heading2=PayPal
+#option2headinglang2=en
+#option2detailedinfo1=Bitte benutzen Sie den angezeigten Link zum Bezahlen per PayPal.
+#option2detailedinfolang1=de
+#option2detailedinfo2=Please use the displayed link for paying by PayPal.
+#option2detailedinfolang2=en
+#option2extrainfo1=https://www.sandbox.paypal.com/cgi-bin/webscr?cmd=_xclick<br>&business=payments@payment-test.de<br>&item_name=%#t&currency_code=%c<br>&amount=%a
+#option2extrainfolang1=de
+#option2extrainfotype1=link
+#option2extrainfo2=https://www.sandbox.paypal.com/cgi-bin/webscr?cmd=_xclick<br>&business=payments@payment-test.de<br>&item_name=%t&currency_code=%c<br>&amount=%a
+#option2extrainfolang2=en
+#option2extrainfotype2=link
+
+option1name=CreditCard
+option1type=passive
+option1heading1=Kreditkarte
 option1headinglang1=de
-option1heading2=Money transfer
+option1heading2=Credit card
 option1headinglang2=en
-option1detailedinfo1=Bitte bezahlen Sie den Betrag per Ueberweisung
+option1detailedinfo1=Bitte geben Sie die ben&ouml;tigten Daten ein.<br>W&auml;hrend der Testphase k&ouml;nnen Sie<br>Ihr Konto mit fiktiven Daten aufladen.
 option1detailedinfolang1=de
-option1detailedinfo2=Please pay the chosen amount by money transfer
+option1detailedinfo2=Please enter the necessary data.<br>During test phase you can<br>charge your account by supplying fictional data.
 option1detailedinfolang2=en
-option1extrainfo1=Inhaber: JAP-Team, Kontonummer 12345, BLZ 3456778, Sparkasse Hintamberg
-option1extrainfolang1=de
-option1extrainfotype1=text
-option1extrainfo2=Holder: JAP-Team, Account 12345, Bank number  3456778, Sparkasse Hintamberg
-option1extrainfolang2=en
-option1extrainfotype2=text
-
-option2name=CreditCard
-option2type=passive
-option2heading1=Zahlung per Kreditkarte
-option2headinglang1=de
-option2heading2=Credit card
-option2headinglang2=en
-option2detailedinfo1=Bitte geben Sie die benoetigten Daten ein
-option2detailedinfolang1=de
-option2detailedinfo2=Please enter the necessary data
-option2detailedinfolang2=en
-option2input1=Kreditkartengesellschaft
-option2inputlang1=de
-option2inputref1=company
-option2input2=Credit Card company
-option2inputlang2=en
-option2inputref2=company
-option2input3=Nummer
-option2inputlang3=de
-option2inputref3=number
-option2input3=Number
-option2inputlang3=en
-option2inputref3=number
-
+option1input1=Kreditkarte
+option1inputlang1=de
+option1inputref1=creditcardtype
+option1input2=Credit card 
+option1inputlang2=en
+option1inputref2=creditcardtype
+option1input3=Nummer
+option1inputlang3=de
+option1inputref3=number
+option1input4=Number
+option1inputlang4=en
+option1inputref4=number
+option1input5=G&uuml;ltig bis
+option1inputlang5=de
+option1inputref5=valid
+option1input6=Valid to
+option1inputlang6=en
+option1inputref6=valid
+option1input7=Inhaber
+option1inputlang7=de
+option1inputref7=owner
+option1input8=Owner
+option1inputlang8=en
+option1inputref8=owner
