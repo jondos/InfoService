@@ -268,15 +268,23 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	/**
 	 * Classes of this type are used to append a clickable and/or selectable message at the end of a
 	 * dialog message. You may define any after-click-action that you want, for example open a help window.
+	 * If an ILinkedInformation implements the interface JAPHelpContext.IHelpContext,
+	 * a help button is shown that opens the specified help context on clicking.
 	 */
 	public static interface ILinkedInformation
 	{
-		public static final String MSG_MORE_INFO = LinkedHelpContext.class.getName() + "_moreInfo";
+		public static final String MSG_MORE_INFO = ILinkedInformation.class.getName() + "_moreInfo";
 
-		public static final int TYPE_LINK = 0;
-		public static final int TYPE_SELECTABLE_LINK = 1;
-		public static final int TYPE_CHECKBOX_TRUE = 2;
-		public static final int TYPE_CHECKBOX_FALSE = 3;
+		/** Shows a clickable link or a help button if JAPHelpContext.IHelpContext is implemented */
+		public static final int TYPE_DEFAULT = 0;
+		/** Shows a clickable link and (!!) a help button if JAPHelpContext.IHelpContext is implemented */
+		public static final int TYPE_LINK = 1;
+		/** Shows a selectable link and (!!) a help button if JAPHelpContext.IHelpContext is implemented */
+		public static final int TYPE_SELECTABLE_LINK = 2;
+		/** Shows a checkbox and (!!) a help button if JAPHelpContext.IHelpContext is implemented */
+		public static final int TYPE_CHECKBOX_TRUE = 3;
+		/** Shows a checkbox and (!!) a help button if JAPHelpContext.IHelpContext is implemented */
+		public static final int TYPE_CHECKBOX_FALSE = 4;
 
 		/**
 		 * Returns the information message. This must be normal text, HTML is not allowed and
@@ -311,7 +319,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	/**
 	 * Shows a checkbox with a message on the dialog window.
 	 */
-	public static class LinkedCheckBox implements ILinkedInformation
+	public static class LinkedCheckBox extends LinkedHelpContext
 	{
 		private static final String MSG_REMEMBER_ANSWER = LinkedCheckBox.class.getName() + "_rememberAnswer";
 		private static final String MSG_DO_NOT_SHOW_AGAIN = LinkedCheckBox.class.getName() + "_doNotShowAgain";
@@ -326,7 +334,27 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		 */
 		public LinkedCheckBox(boolean a_bDefault)
 		{
-			this(JAPMessages.getString(MSG_DO_NOT_SHOW_AGAIN), a_bDefault);
+			this(a_bDefault, (JAPHelpContext.IHelpContext)null);
+		}
+
+		/**
+		 * Creates a new linked checkbox with the default message MSG_DO_NOT_SHOW_AGAIN.
+		 * @param a_bDefault the default value of the checkbox
+		 * @param a_helpContext the help context that is opened when the help button is clicked
+		 */
+		public LinkedCheckBox(boolean a_bDefault, JAPHelpContext.IHelpContext a_helpContext)
+		{
+			this(JAPMessages.getString(MSG_DO_NOT_SHOW_AGAIN), a_bDefault, a_helpContext);
+		}
+
+		/**
+		 * Creates a new linked checkbox with the default message MSG_DO_NOT_SHOW_AGAIN.
+		 * @param a_bDefault the default value of the checkbox
+		 * @param a_strHelpContext the help context that is opened when the help button is clicked
+		 */
+		public LinkedCheckBox(boolean a_bDefault, String a_strHelpContext)
+		{
+			this(JAPMessages.getString(MSG_DO_NOT_SHOW_AGAIN), a_bDefault, a_strHelpContext);
 		}
 
 		/**
@@ -336,6 +364,34 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		 */
 		public LinkedCheckBox(String a_strMessage, boolean a_bDefault)
 		{
+			this(a_strMessage, a_bDefault, (JAPHelpContext.IHelpContext)null);
+		}
+
+		/**
+		 * Creates a new linked checkbox.
+		 * @param a_strMessage a message to be displayed with the checkbox
+		 * @param a_bDefault the default value of the checkbox
+		 * @param a_strHelpContext the help context that is opened when the help button is clicked
+		 */
+		public LinkedCheckBox(String a_strMessage, boolean a_bDefault, final String a_strHelpContext)
+		{
+			this(a_strMessage, a_bDefault, new JAPHelpContext.IHelpContext()
+			{
+				public String getHelpContext(){ return a_strHelpContext;}
+			});
+		}
+
+		/**
+		 * Creates a new linked checkbox.
+		 * @param a_strMessage a message to be displayed with the checkbox
+		 * @param a_bDefault the default value of the checkbox
+		 * @param a_helpContext the help context that is opened when the help button is clicked
+		 */
+		public LinkedCheckBox(String a_strMessage, boolean a_bDefault,
+							  JAPHelpContext.IHelpContext a_helpContext)
+		{
+			super(a_helpContext);
+
 			m_strMessage = a_strMessage;
 			m_bDefault = a_bDefault;
 			m_bState = m_bDefault;
@@ -380,15 +436,6 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 			}
 			return TYPE_CHECKBOX_FALSE;
 		}
-
-		/**
-		 * Returns <CODE>false</CODE> as default but may be overwritten.
-		 * @return <CODE>false</CODE>
-		 */
-		public boolean isApplicationModalityForced()
-		{
-			return false;
-		}
 	}
 
 	/**
@@ -432,9 +479,10 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 
 	/**
 	 * This implementation of ILinkedInformation registers a help context in the dialog and displays a
-	 * help button that opens this context.
+	 * help button that opens this context. Subclasses may override it to show an additional link
+	 * or a checkbox.
 	 */
-	public static final class LinkedHelpContext implements ILinkedInformation, JAPHelpContext.IHelpContext
+	public static class LinkedHelpContext implements ILinkedInformation, JAPHelpContext.IHelpContext
 	{
 		private JAPHelpContext.IHelpContext m_helpContext;
 
@@ -455,7 +503,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 			};
 		}
 
-		public String getHelpContext()
+		public final String getHelpContext()
 		{
 			if (m_helpContext == null)
 			{
@@ -473,28 +521,25 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 			return null;
 		}
 		/**
-		 * Opens a help window with the registered context.
+		 * Does nothing.
 		 * @param a_bState is ignored
 		 */
 		public void clicked(boolean a_bState)
 		{
-			JAPHelp.getInstance().getContextObj().setContext(m_helpContext);
-			JAPHelp.getInstance().setVisible(true);
-			JAPHelp.getInstance().requestFocus();
 		}
 		/**
-		 * Returns TYPE_LINK.
-		 * @return TYPE_LINK
+		 * Returns TYPE_DEFAULT.
+		 * @return TYPE_DEFAULT
 		 */
 		public int getType()
 		{
-			return TYPE_LINK;
+			return TYPE_DEFAULT;
 		}
 		/**
 		 * Returns false as otherwise the help window would not be accessible.
 		 * @return false
 		 */
-		public boolean isApplicationModalityForced()
+		public final boolean isApplicationModalityForced()
 		{
 			return false;
 		}
@@ -989,14 +1034,18 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		if (a_linkedInformation != null)
 		{
 			bForceApplicationModality = a_linkedInformation.isApplicationModalityForced();
-		}
+
 		/*
 		 * If the linked information contains a help context, display the help button instead of a link
 		 */
 		if (a_linkedInformation instanceof JAPHelpContext.IHelpContext)
 		{
 			helpContext = (JAPHelpContext.IHelpContext)a_linkedInformation;
+				if (a_linkedInformation.getType() == ILinkedInformation.TYPE_DEFAULT)
+				{
 			a_linkedInformation = null;
+				}
+			}
 		}
 
 		if (a_linkedInformation != null && a_linkedInformation.getMessage() != null &&

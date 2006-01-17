@@ -107,6 +107,11 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 	private boolean m_userDefined;
 
 	/**
+	 * True if the certificate of the cascade is signed by a root certificate.
+	 */
+	private boolean m_isCertified = true;
+
+	/**
 	 * Returns the name of the XML element constructed by this class.
 	 *
 	 * @return The name of the XML element constructed by this class (MixCascade).
@@ -114,6 +119,12 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 	public static String getXmlElementName()
 	{
 		return "MixCascade";
+	}
+
+	public MixCascade(Element a_mixCascadeNode, boolean a_isCertified) throws Exception
+	{
+		this(a_mixCascadeNode);
+		m_isCertified = a_isCertified;
 	}
 
 	/**
@@ -675,7 +686,7 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 			/* if this is a user-defined MixCascade entry, add the UserDefined node (has no children) */
 			Element userDefinedNode = doc.createElement("UserDefined");
 			mixCascadeNode.appendChild(userDefinedNode);
-			XMLUtil.setAttribute(mixCascadeNode,"userDefined",true);
+			XMLUtil.setAttribute(mixCascadeNode, "userDefined", true);
 		}
 		return mixCascadeNode;
 	}
@@ -774,6 +785,11 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 		}
 		mixCascadeNode.appendChild(mixesNode);
 		return mixCascadeNode;
+	}
+
+	public boolean isCertified()
+	{
+		return m_isCertified;
 	}
 
 }

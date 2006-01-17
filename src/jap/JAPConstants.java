@@ -147,6 +147,7 @@ public final class JAPConstants
 	public static final String IMAGE_INFORMATION = "information.gif";
 	public static final String IMAGE_ERROR = "error.gif";
 	public static final String IMAGE_CASCADE_MANUELL = "servermanuell.gif";
+	public static final String IMAGE_CASCADE_NOT_CERTIFIED = "servermanuell.gif";
 	public static final String IMAGE_CASCADE_INTERNET = "serverfrominternet.gif";
 	public static final String IMAGE_INFOSERVICE_MANUELL = "infoservicemanuell.gif";
 	public static final String IMAGE_INFOSERVICE_INTERNET = "infoservicefrominternet.gif";
