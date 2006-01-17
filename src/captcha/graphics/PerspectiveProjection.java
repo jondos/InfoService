@@ -34,7 +34,7 @@ import java.awt.image.PixelGrabber;
 
 import Jama.Matrix;
 
-import infoservice.japforwarding.captcha.graphics.infoservice.*;
+
 
 /**
  * This class is the implementation for a perspective projection between two images of the same
