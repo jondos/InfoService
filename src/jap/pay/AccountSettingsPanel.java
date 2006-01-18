@@ -55,6 +55,7 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.JSeparator;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
@@ -72,8 +73,10 @@ import anon.pay.PayAccountsFile;
 import anon.pay.xml.XMLAccountInfo;
 import anon.pay.xml.XMLBalance;
 import anon.pay.xml.XMLTransCert;
+import anon.util.ResourceLoader;
 import anon.util.XMLUtil;
 import gui.GUIUtils;
+import gui.JAPHelp;
 import gui.JAPMessages;
 import gui.dialog.JAPDialog;
 import gui.dialog.WorkerContentPane;
@@ -86,9 +89,7 @@ import jap.pay.wizard.PaymentWizard;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import anon.util.ResourceLoader;
-import javax.swing.JProgressBar;
-import gui.JAPHelp;
+
 /**
  * The Jap Conf Module (Settings Tab Page) for the Accounts and payment Management
  *
@@ -323,9 +324,9 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		c.insets = new Insets(5, 10, 5, 5);
 		c.gridy++;
 		c.gridheight = 3;
-		m_coinstack=new JProgressBar(0,8);
-		m_coinstack.setUI( new CoinstackProgressBarUI(GUIUtils.loadImageIcon(JAPConstants.IMAGE_COIN_COINSTACK, true),
-											   0, 8));
+		m_coinstack = new JProgressBar(0, 8);
+		m_coinstack.setUI(new CoinstackProgressBarUI(GUIUtils.loadImageIcon(JAPConstants.IMAGE_COIN_COINSTACK, true),
+			0, 8));
 		p.add(m_coinstack, c);
 
 		c.gridheight = 1;
@@ -430,7 +431,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 
 	private void enableDisableButtons()
 	{
-		if (m_listAccounts.getModel().getSize()>0)
+		if (m_listAccounts.getModel().getSize() > 0)
 		{
 			boolean enable = (getSelectedAccount() != null);
 			m_btnChargeAccount.setEnabled(enable);
@@ -672,48 +673,48 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		   if (choice == JOptionPane.YES_OPTION)
 		   {
 		 /** @todo find out why the wait splash screen looks so ugly
-		  JAPWaitSplash splash = null;
-		  try
-		  {
-		   splash = JAPWaitSplash.start("Fetching transfer number...", "Please wait");
-		   Thread.sleep(5);
-		   transferCertificate = selectedAccount.charge();
-		   splash.abort();
-		  }
-		  catch (Exception ex)
-		  {
-		   splash.abort();
-		   LogHolder.log(LogLevel.DEBUG, LogType.PAY, ex);
-		   JOptionPane.showMessageDialog(
-			view,
-			"<html>" + JAPMessages.getString("ngTransferNumberError") + "<br>" + ex.getMessage() +
-			"</html>",
-			JAPMessages.getString("error"), JOptionPane.ERROR_MESSAGE
-			);
-		   return;
-		  }
+		   JAPWaitSplash splash = null;
+		   try
+		   {
+			splash = JAPWaitSplash.start("Fetching transfer number...", "Please wait");
+			Thread.sleep(5);
+			transferCertificate = selectedAccount.charge();
+			splash.abort();
+		   }
+		   catch (Exception ex)
+		   {
+			splash.abort();
+			LogHolder.log(LogLevel.DEBUG, LogType.PAY, ex);
+			JOptionPane.showMessageDialog(
+		  view,
+		  "<html>" + JAPMessages.getString("ngTransferNumberError") + "<br>" + ex.getMessage() +
+		  "</html>",
+		  JAPMessages.getString("error"), JOptionPane.ERROR_MESSAGE
+		  );
+			return;
+		   }
 
-		  // try to launch webbrowser
-		  AbstractOS os = AbstractOS.getInstance();
-		  String url = transferCertificate.getBaseUrl();
-		  url += "?transfernum=" + transferCertificate.getTransferNumber();
-		  try
-		  {
-		   os.openURLInBrowser(url);
-		  }
-		  catch (Exception e)
-		  {
-		   JOptionPane.showMessageDialog(
-			view,
-			"<html>" + JAPMessages.getString("ngCouldNotFindBrowser") + "<br>" +
-			"<h3>" + url + "</h3></html>",
-			JAPMessages.getString("ngCouldNotFindBrowserTitle"),
-			JOptionPane.INFORMATION_MESSAGE
-			);
-		  }
+		   // try to launch webbrowser
+		   AbstractOS os = AbstractOS.getInstance();
+		   String url = transferCertificate.getBaseUrl();
+		   url += "?transfernum=" + transferCertificate.getTransferNumber();
+		   try
+		   {
+			os.openURLInBrowser(url);
+		   }
+		   catch (Exception e)
+		   {
+			JOptionPane.showMessageDialog(
+		  view,
+		  "<html>" + JAPMessages.getString("ngCouldNotFindBrowser") + "<br>" +
+		  "<h3>" + url + "</h3></html>",
+		  JAPMessages.getString("ngCouldNotFindBrowserTitle"),
+		  JOptionPane.INFORMATION_MESSAGE
+		  );
+		   }
 
-		  m_MyTableModel.fireTableDataChanged();
-			}*/
+		   m_MyTableModel.fireTableDataChanged();
+		  }*/
 	}
 
 	/**
@@ -730,7 +731,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		{
 			theBI = new BI(JAPConstants.PI_ID, JAPConstants.PI_NAME, JAPConstants.PI_HOST,
 						   JAPConstants.PI_PORT,
-						   JAPCertificate.getInstance(ResourceLoader.loadResource(JAPConstants.CERTSPATH + JAPConstants.PI_CERT)));
+						   JAPCertificate.getInstance(ResourceLoader.loadResource(JAPConstants.CERTSPATH +
+				JAPConstants.PI_CERT)));
 		}
 		catch (Exception e)
 		{
@@ -769,7 +771,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 					}
 				};
 				JAPDialog d = new JAPDialog(this.getRootPanel(), JAPMessages.getString(MSG_ACCOUNTCREATE), true);
-				WorkerContentPane p = new WorkerContentPane(d, JAPMessages.getString(MSG_ACCOUNTCREATEDESC), doIt, false);
+				WorkerContentPane p = new WorkerContentPane(d, JAPMessages.getString(MSG_ACCOUNTCREATEDESC),
+					doIt, false);
 				p.updateDialog();
 				d.pack();
 				d.setLocationCenteredOnOwner();
