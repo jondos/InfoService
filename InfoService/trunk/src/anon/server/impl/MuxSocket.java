@@ -100,7 +100,7 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 	private SymCipher m_cipherOutAI;
 
 	// 2004-10-18 (Bastian Voigt)
-	private long m_transferredBytes; // accounting for payment
+	private volatile long m_transferredBytes; // accounting for payment
 
 	public final static int KEY_SIZE = 16;
 	public final static int DATA_SIZE = 992;
@@ -962,7 +962,7 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 						try
 						{
 							tmpEntry.channel.recv(buff, 3, len);
-							m_transferredBytes += len; // count bytes for payment
+							updateTransferredBytes(len); // count bytes for payment
 						}
 						catch (Exception e)
 						{
@@ -1185,7 +1185,7 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 			//m_outDataStream.write(outBuff2,0,DATA_SIZE);
 			//Send it...
 			sendMixPacket();
-			m_transferredBytes += len; // count bytes for payment
+			updateTransferredBytes(len); // count bytes for payment
 			//JAPAnonService.increaseNrOfBytes(len);
 			//if(entry!=null&&entry.bIsSuspended)
 			//	return E_CHANNEL_SUSPENDED;
@@ -1223,20 +1223,26 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 	 *
 	 * @return long transferred bytes
 	 */
-	public long getTransferredBytes()
+	/*public long getTransferredBytes()
 	{
 		return m_transferredBytes;
-	}
+	}*/
 
 	/**
 	 * Resets the payload counter to 0 and returns the value as it was before
 	 * the reset.
 	 */
-	public long getAndResetTransferredBytes()
+	public synchronized long getAndResetTransferredBytes()
 	{
 		long tmp = m_transferredBytes;
 		m_transferredBytes = 0;
 		return tmp;
+	}
+
+	/** Updates the transferred bytes.*/
+	private synchronized void updateTransferredBytes(long c)
+	{
+		m_transferredBytes+=c;
 	}
 
 	/**
