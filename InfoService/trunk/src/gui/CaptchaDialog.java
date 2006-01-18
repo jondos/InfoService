@@ -44,6 +44,11 @@ import anon.util.captcha.IImageEncodedCaptcha;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.Document;
+import javax.swing.text.AttributeSet;
+import javax.swing.text.PlainDocument;
+import gui.dialog.JAPDialog;
 
 /**
  * This class displays a dialog for solving a captcha.
@@ -61,6 +66,8 @@ public class CaptchaDialog extends JDialog implements ActionListener
 		"_ok";
 	private static final String MSG_CANCEL = CaptchaDialog.class.getName() +
 		"_cancel";
+	private static final String MSG_WRONGCHARNUM = CaptchaDialog.class.getName() +
+		"_wrongcharnum";
 
 	private JTextField m_tfSolution;
 	private JButton m_btnOk;
@@ -91,11 +98,47 @@ public class CaptchaDialog extends JDialog implements ActionListener
 		rootPanel.add(image, c);
 
 		c.gridy++;
-		JLabel l = new JLabel("<html>"+JAPMessages.getString(MSG_SOLVE)+"</html>");
+		JLabel l = new JLabel("<html>" + JAPMessages.getString(MSG_SOLVE) + "</html>");
 		rootPanel.add(l, c);
 
 		c.gridy++;
-		m_tfSolution = new JTextField(20);
+		final IImageEncodedCaptcha captcha = a_captcha;
+		m_tfSolution = new JTextField(20)
+		{
+			protected Document createDefaultModel()
+			{
+				return (new PlainDocument()
+				{
+					public void insertString(int a_position, String a_stringToInsert,
+											 AttributeSet a_attributes) throws BadLocationException
+					{
+						if (getLength() + a_stringToInsert.length() <= captcha.getCharacterNumber())
+						{
+							/* the new text fits in the box */
+							boolean invalidCharacters = false;
+							int i = 0;
+							while ( (i < a_stringToInsert.length()) && (invalidCharacters == false))
+							{
+								if (captcha.getCharacterSet().indexOf(a_stringToInsert.toUpperCase().
+									substring(i, i + 1)) <
+									0)
+								{
+									/* we have found an invalid character */
+									invalidCharacters = true;
+								}
+								i++;
+							}
+							if (invalidCharacters == false)
+							{
+								/* only insert strings, which fit in the box and have no invalid characters */
+								super.insertString(a_position, a_stringToInsert.toUpperCase(), a_attributes);
+							}
+						}
+					}
+				});
+			}
+		};
+
 		rootPanel.add(m_tfSolution, c);
 
 		c.gridy++;
@@ -126,6 +169,8 @@ public class CaptchaDialog extends JDialog implements ActionListener
 		}
 		else if (source == m_btnOk)
 		{
+			if (m_captcha.getCharacterNumber() == m_tfSolution.getText().length())
+			{
 			try
 			{
 				m_solution = m_captcha.solveCaptcha(m_tfSolution.getText().trim(), m_beginsWith.getBytes());
@@ -134,6 +179,13 @@ public class CaptchaDialog extends JDialog implements ActionListener
 			catch (Exception e)
 			{
 				LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, "Error solving captcha!");
+				}
+			}
+			else
+			{
+				JAPDialog.showErrorDialog(this,
+										  JAPMessages.getString(MSG_WRONGCHARNUM) + " " + m_captcha.getCharacterNumber()+".",
+										  LogType.MISC);
 			}
 		}
 	}

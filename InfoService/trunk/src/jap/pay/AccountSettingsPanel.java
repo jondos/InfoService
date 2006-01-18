@@ -731,8 +731,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		{
 			theBI = new BI(JAPConstants.PI_ID, JAPConstants.PI_NAME, JAPConstants.PI_HOST,
 						   JAPConstants.PI_PORT,
-						   JAPCertificate.getInstance(ResourceLoader.loadResource(JAPConstants.CERTSPATH +
-				JAPConstants.PI_CERT)));
+						   JAPCertificate.getInstance(ResourceLoader.loadResource(JAPConstants.CERTSPATH + JAPConstants.PI_CERT)));
 		}
 		catch (Exception e)
 		{
@@ -771,8 +770,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 					}
 				};
 				JAPDialog d = new JAPDialog(this.getRootPanel(), JAPMessages.getString(MSG_ACCOUNTCREATE), true);
-				WorkerContentPane p = new WorkerContentPane(d, JAPMessages.getString(MSG_ACCOUNTCREATEDESC),
-					doIt, false);
+				WorkerContentPane p = new WorkerContentPane(d, JAPMessages.getString(MSG_ACCOUNTCREATEDESC), doIt, false);
 				p.updateDialog();
 				d.pack();
 				d.setLocationCenteredOnOwner();
