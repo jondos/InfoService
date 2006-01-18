@@ -770,7 +770,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 					}
 				};
 				JAPDialog d = new JAPDialog(this.getRootPanel(), JAPMessages.getString(MSG_ACCOUNTCREATE), true);
-				WorkerContentPane p = new WorkerContentPane(d, JAPMessages.getString(MSG_ACCOUNTCREATEDESC), doIt, false);
+				WorkerContentPane p = new WorkerContentPane(d, JAPMessages.getString(MSG_ACCOUNTCREATEDESC), doIt);
+				p.getButtonCancel().setVisible(false);
 				p.updateDialog();
 				d.pack();
 				d.setLocationCenteredOnOwner();
@@ -1206,10 +1207,10 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 
 	public void stateChanged(ChangeEvent e)
 	{
-		if (e.getSource() instanceof AccountCreator)
+	/*	if (e.getSource() instanceof AccountCreator)
 		{
 			updateAccountList();
-		}
+		}*/
 	}
 
 	public void valueChanged(ListSelectionEvent e)
