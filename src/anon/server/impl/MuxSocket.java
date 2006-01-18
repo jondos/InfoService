@@ -919,6 +919,7 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 				continue;
 			}
 
+			updateBytesForAccounting(); // count bytes for payment
 			ChannelListEntry tmpEntry = (ChannelListEntry) m_ChannelList.get(new Integer(channel));
 			if (tmpEntry != null)
 			{
@@ -962,7 +963,6 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 						try
 						{
 							tmpEntry.channel.recv(buff, 3, len);
-							updateTransferredBytes(len); // count bytes for payment
 						}
 						catch (Exception e)
 						{
@@ -1185,7 +1185,7 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 			//m_outDataStream.write(outBuff2,0,DATA_SIZE);
 			//Send it...
 			sendMixPacket();
-			updateTransferredBytes(len); // count bytes for payment
+			updateBytesForAccounting(); // count bytes for payment
 			//JAPAnonService.increaseNrOfBytes(len);
 			//if(entry!=null&&entry.bIsSuspended)
 			//	return E_CHANNEL_SUSPENDED;
@@ -1240,9 +1240,9 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 	}
 
 	/** Updates the transferred bytes.*/
-	private synchronized void updateTransferredBytes(long c)
+	private synchronized void updateBytesForAccounting()
 	{
-		m_transferredBytes+=c;
+		m_transferredBytes+=PACKET_SIZE;
 	}
 
 	/**
