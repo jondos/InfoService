@@ -563,7 +563,7 @@ public class Configuration
 			if (fetchTorNodesList == true)
 			{
 				/* set some default values */
-				long fetchTorNodesListInterval = 600 * (long) 1000;
+				long fetchTorNodesListInterval = 600L * 1000L;
 				/* overwrite the default values */
 				long tempInterval = Long.parseLong(a_properties.getProperty("fetchTorNodesListInterval").trim()) *
 					1000;
@@ -589,7 +589,7 @@ public class Configuration
 						TorDirectoryAgent.getInstance().addTorDirectoryServer(new TorDirectoryServer(new
 							TorDirectoryServerUrl(torDirectoryServer.getHost(), torServerPort,
 												  torDirectoryServer.getFile()),
-							(long) 1000 * 365 * 24 * 3600 * 1000, true));
+							 1000L * 365L * 24L * 3600L * 1000L, true));
 					}
 					catch (Exception e)
 					{
@@ -612,7 +612,7 @@ public class Configuration
 			if (fetchMixminionNodesList)
 			{
 				/* set some default values */
-				long fetchMixminionNodesListInterval = 600 * (long) 1000;
+				long fetchMixminionNodesListInterval = 600L * 1000L;
 				/* overwrite the default values */
 				long tempInterval = Long.parseLong(a_properties.getProperty("fetchMixminionNodesListInterval").
 					trim()) *
