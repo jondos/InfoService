@@ -741,13 +741,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 
 		if (theBI != null)
 		{
-			int choice = JOptionPane.showOptionDialog(
-				JAPController.getView(), JAPMessages.getString("ngCreateKeyPair"),
-				JAPMessages.getString("ngCreateAccount"),
-				JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE,
-				null, null, null
-				);
-			if (choice == JOptionPane.YES_OPTION)
+			boolean choice = JAPDialog.showYesNoDialog(this.getRootPanel().getParent().getParent(), JAPMessages.getString("ngCreateKeyPair"));
+			if (choice)
 			{
 				final BI bi = theBI;
 				Runnable doIt = new Runnable()
@@ -763,7 +758,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 						catch (Exception ex)
 						{
 							JAPDialog.showErrorDialog(
-								getRootPanel(),
+								getRootPanel().getParent().getParent(),
 								JAPMessages.getString(MSG_CREATEERROR) + " " + ex.getMessage(),
 								LogType.PAY);
 						}
@@ -1159,7 +1154,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 	protected void onRootPanelShown()
 	{
 		//Register help context
-		JAPHelp.getInstance().getContextObj().setContext("index");
+		JAPHelp.getInstance().getContextObj().setContext("payment");
 		updateAccountList();
 	}
 

@@ -878,11 +878,17 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 						while (true)
 						{
-							/** @todo handle cancel button properly */
-							m_strPayAccountsPassword = new JAPPasswordReader(false,
-								JAPMessages.getString(MSG_DIALOG_ACCOUNT_PASSWORD)).readPassword(JAPMessages.
-								getString(MSG_ACCOUNT_PASSWORD));
+							JAPDialog d = new JAPDialog((Component)null, JAPMessages.getString(MSG_ACCPASSWORDTITLE), true);
+							PasswordContentPane p = new PasswordContentPane(d,
+								PasswordContentPane.PASSWORD_ENTER,
+								JAPMessages.getString(MSG_ACCPASSWORD));
+							p.updateDialog();
+							d.pack();
+							d.setVisible(true);
+							m_strPayAccountsPassword = new String(p.getPassword());
 
+							if (m_strPayAccountsPassword != null)
+							{
 							try
 							{
 								elemPlainTxt = XMLEncryption.decryptElement(elemAccounts,
@@ -894,10 +900,14 @@ public final class JAPController extends Observable implements IProxyListener, O
 							}
 							break ;
 						}
+						}
 
+						if (m_strPayAccountsPassword != null)
+						{
 						PayAccountsFile.init(elemPlainTxt);
 
 						m_bPaymentFirstTime = false;
+					}
 					}
 					else
 					{
@@ -2475,7 +2485,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 								case JAPRoutingSettings.REGISTRATION_NO_INFOSERVICES:
 								{
 									JAPDialog.showErrorDialog(m_View,
-										JAPMessages.getString("settingsRoutingServerRegistrationEmptyListError"),
+										JAPMessages.getString(
+											"settingsRoutingServerRegistrationEmptyListError"),
 										LogType.MISC);
 									break;
 								}
@@ -2489,14 +2500,16 @@ public final class JAPController extends Observable implements IProxyListener, O
 								case JAPRoutingSettings.REGISTRATION_INFOSERVICE_ERRORS:
 								{
 									JAPDialog.showErrorDialog(m_View,
-										JAPMessages.getString("settingsRoutingServerRegistrationInfoservicesError"),
+										JAPMessages.getString(
+											"settingsRoutingServerRegistrationInfoservicesError"),
 										LogType.MISC);
 									break;
 								}
 								case JAPRoutingSettings.REGISTRATION_VERIFY_ERRORS:
 								{
 									JAPDialog.showErrorDialog(m_View,
-										JAPMessages.getString("settingsRoutingServerRegistrationVerificationError"),
+										JAPMessages.getString(
+											"settingsRoutingServerRegistrationVerificationError"),
 										LogType.MISC);
 									break;
 								}
@@ -2622,7 +2635,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 		{
 			return new BI(JAPConstants.PI_ID, JAPConstants.PI_NAME, JAPConstants.PI_HOST,
 						  JAPConstants.PI_PORT,
-						  JAPCertificate.getInstance(ResourceLoader.loadResource(JAPConstants.CERTSPATH + JAPConstants.PI_CERT)));
+						  JAPCertificate.getInstance(ResourceLoader.loadResource(JAPConstants.CERTSPATH +
+				JAPConstants.PI_CERT)));
 		}
 		catch (Exception e)
 		{

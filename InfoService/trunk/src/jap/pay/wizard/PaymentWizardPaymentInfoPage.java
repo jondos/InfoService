@@ -27,9 +27,13 @@
  */
 package jap.pay.wizard;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Enumeration;
+import java.util.StringTokenizer;
 import java.util.Vector;
 
+import java.awt.Component;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -43,15 +47,17 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
-import anon.pay.BIConnection;
 import anon.pay.PayAccount;
 import anon.pay.xml.XMLPassivePayment;
 import anon.pay.xml.XMLPaymentOption;
+import anon.pay.xml.XMLPaymentOptions;
 import anon.pay.xml.XMLTransCert;
+import anon.util.Util;
 import gui.GUIUtils;
 import gui.JAPMessages;
 import gui.wizard.BasicWizardHost;
@@ -59,43 +65,25 @@ import gui.wizard.BasicWizardPage;
 import jap.JAPConstants;
 import jap.JAPController;
 import jap.JAPUtil;
-import platform.AbstractOS;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import anon.util.Util;
-import javax.swing.JOptionPane;
-import javax.swing.JComboBox;
-import anon.pay.xml.XMLPaymentOptions;
-import java.util.StringTokenizer;
-import java.awt.Component;
-import java.net.URL;
-import java.net.MalformedURLException;
+import platform.AbstractOS;
 
 public class PaymentWizardPaymentInfoPage extends BasicWizardPage implements MouseListener, ActionListener
 {
 	/** Messages */
-	private static final String MSG_BUTTON_SUBMIT = PaymentWizardPaymentInfoPage.class.
-		getName() + "_button_submit";
 	private static final String MSG_BUTTON_COPY = PaymentWizardPaymentInfoPage.class.
 		getName() + "_button_copy";
 	private static final String MSG_BUTTON_OPEN = PaymentWizardPaymentInfoPage.class.
 		getName() + "_button_open";
-	private static final String MSG_SENT = PaymentWizardPaymentInfoPage.class.
-		getName() + "_sent";
-	private static final String MSG_SENTTITLE = PaymentWizardPaymentInfoPage.class.
-		getName() + "_senttitle";
-	private static final String MSG_NOTSENT = PaymentWizardPaymentInfoPage.class.
-		getName() + "_notsent";
-	private static final String MSG_NOTSENTTITLE = PaymentWizardPaymentInfoPage.class.
-		getName() + "_notsenttitle";
 
 	private XMLPaymentOptions m_paymentOptions;
 	private XMLPaymentOption m_selectedOption;
 	private XMLTransCert m_transCert;
 	private PayAccount m_payAccount;
 	private JLabel m_fetchingLabel, m_detailedInfoLabel, m_extraInfoLabel, m_sendingLabel;
-	private JButton m_bttnSubmit, m_bttnCopy, m_bttnOpen;
+	private JButton m_bttnCopy, m_bttnOpen;
 	private JPanel m_infoPanel, m_inputPanel;
 	private String m_language, m_amount, m_currency;
 	private BasicWizardHost m_host;
@@ -195,9 +183,10 @@ public class PaymentWizardPaymentInfoPage extends BasicWizardPage implements Mou
 							m_infoPanel.setVisible(true);
 							updateExtraInfo();
 							if (!m_selectedOption.getExtraInfoType(m_language).equalsIgnoreCase(
-								XMLPaymentOption.EXTRA_LINK))
+								XMLPaymentOption.EXTRA_LINK) && !m_selectedOption.getType().equals("CreditCard"))
 							{
 								m_host.setFinishEnabled(true);
+								m_host.setNextEnabled(false);
 							}
 						}
 					}
@@ -348,11 +337,6 @@ public class PaymentWizardPaymentInfoPage extends BasicWizardPage implements Mou
 			}
 		}
 
-		c.gridx++;
-		m_bttnSubmit = new JButton(JAPMessages.getString(MSG_BUTTON_SUBMIT));
-		m_bttnSubmit.addActionListener(this);
-		m_inputPanel.add(m_bttnSubmit, c);
-
 		c.gridy++;
 		c.weightx = 1;
 		c.weightx = 1;
@@ -392,14 +376,7 @@ public class PaymentWizardPaymentInfoPage extends BasicWizardPage implements Mou
 	 * Submits information the user has entered for a passive
 	 * payment to the payment instance
 	 */
-	private void submitPassiveInfo()
-	{
-		m_bttnSubmit.setEnabled(false);
-		m_sendingLabel.setVisible(true);
-
-		Runnable doIt = new Runnable()
-		{
-			public void run()
+	public XMLPassivePayment getPassiveInfo()
 			{
 		/** Construct PassivePayment object */
 		XMLPassivePayment pp = new XMLPassivePayment();
@@ -422,46 +399,7 @@ public class PaymentWizardPaymentInfoPage extends BasicWizardPage implements Mou
 					}
 		}
 
-		/** Post data to payment instance */
-		BIConnection biConn = new BIConnection(m_payAccount.getBI());
-		try
-		{
-			biConn.connect();
-			biConn.authenticate(m_payAccount.getAccountCertificate(), m_payAccount.getSigningInstance());
-			if (!biConn.sendPassivePayment(pp))
-			{
-						JOptionPane.showMessageDialog(m_host.getDialogParent(),
-							JAPMessages.getString(MSG_NOTSENT),
-							JAPMessages.getString(MSG_NOTSENTTITLE),
-							JOptionPane.ERROR_MESSAGE);
-
-			}
-			biConn.disconnect();
-					m_host.setFinishEnabled(true);
-					m_sendingLabel.setVisible(false);
-
-					//Show success info
-					JOptionPane.showMessageDialog(m_host.getDialogParent(), JAPMessages.getString(MSG_SENT),
-												  JAPMessages.getString(MSG_SENTTITLE),
-												  JOptionPane.INFORMATION_MESSAGE);
-
-		}
-		catch (Exception e)
-		{
-			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
-						  "Could not send PassivePayment to payment instance: " + e.getMessage());
-					JOptionPane.showMessageDialog(m_host.getDialogParent(),
-							JAPMessages.getString(MSG_NOTSENT),
-							JAPMessages.getString(MSG_NOTSENTTITLE),
-							JOptionPane.ERROR_MESSAGE);
-
-		}
-
-			}
-		};
-
-		Thread t = new Thread(doIt);
-		t.start();
+		return pp;
 	}
 
 	/**
@@ -502,11 +440,7 @@ public class PaymentWizardPaymentInfoPage extends BasicWizardPage implements Mou
 
 	public void actionPerformed(ActionEvent e)
 	{
-		if (e.getSource() == m_bttnSubmit)
-		{
-			submitPassiveInfo();
-		}
-		else if (e.getSource() == m_bttnCopy)
+		if (e.getSource() == m_bttnCopy)
 		{
 			copyExtraInfoToClipboard();
 		}

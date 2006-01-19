@@ -52,12 +52,14 @@ import javax.swing.JProgressBar;
 import anon.pay.BIConnection;
 import anon.pay.PayAccount;
 import anon.pay.PayAccountsFile;
+import anon.pay.xml.XMLBalance;
 import anon.pay.xml.XMLErrorMessage;
 import anon.util.captcha.IImageEncodedCaptcha;
 import gui.CaptchaDialog;
 import gui.GUIUtils;
 import gui.JAPMessages;
 import gui.MyProgressBarUI;
+import gui.dialog.JAPDialog;
 import jap.JAPConf;
 import jap.JAPConstants;
 import jap.JAPController;
@@ -67,8 +69,6 @@ import jap.JAPUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import anon.pay.xml.XMLBalance;
-import gui.dialog.JAPDialog;
 
 public class PaymentMainPanel extends JPanel
 {
@@ -80,6 +80,8 @@ public class PaymentMainPanel extends JPanel
 		"_lastupdate";
 	private static final String MSG_PAYMENTNOTACTIVE = PaymentMainPanel.class.getName() +
 		"_paymentnotactive";
+	private static final String MSG_NEARLYEMPTY = PaymentMainPanel.class.getName() +
+		"_nearlyempty";
 
 	/**
 	 * Icons for the account icon display
@@ -106,6 +108,9 @@ public class PaymentMainPanel extends JPanel
 
 	/** Listens to payment events */
 	private MyPaymentListener m_MyPaymentListener = new MyPaymentListener();
+
+	/** has user been notified about nearly empty accout? */
+	private boolean m_notifiedEmpty = false;
 
 	public PaymentMainPanel(final JAPNewView view)
 	{
@@ -211,17 +216,6 @@ public class PaymentMainPanel extends JPanel
 			m_BalanceProgressBar.setEnabled(false);
 		}
 
-		// account is nearly empty :-(
-		/*else if ( (activeAccount.getCertifiedCredit() <= (activeAccount.getDeposit() / 10)) ||
-				 (activeAccount.getCertifiedCredit() <= (1024 * 1024)))
-		{
-			m_AccountIconLabel.setIcon(m_accountIcons[2]);
-			m_BalanceText.setEnabled(true);
-			m_BalanceText.setText(JAPUtil.formatBytesValue(activeAccount.getCertifiedCredit()));
-			m_BalanceProgressBar.setValue(0);
-			m_BalanceProgressBar.setEnabled(true);
-		}*/
-
 		// we got everything under control, situation normal
 		else
 		{
@@ -240,6 +234,15 @@ public class PaymentMainPanel extends JPanel
 				m_BalanceProgressBar.setMaximum( (int) (activeAccount.getDeposit() / 100));
 				m_BalanceProgressBar.setValue( (int) (activeAccount.getCertifiedCredit() / 100));
 			m_BalanceProgressBar.setEnabled(true);
+
+				// account is nearly empty
+				if (activeAccount.getCertifiedCredit() <= (1024 * 1024) && !m_notifiedEmpty)
+				{
+					JAPDialog.showMessageDialog(JAPController.getView(),
+												JAPMessages.getString(MSG_NEARLYEMPTY));
+					m_notifiedEmpty = true;
+				}
+
 		}
 	}
 	}
@@ -393,7 +396,7 @@ public class PaymentMainPanel extends JPanel
 		 */
 		public void gotCaptcha(Object a_source, final IImageEncodedCaptcha a_captcha)
 		{
-			CaptchaDialog c = new CaptchaDialog(a_captcha, "<Cha", JAPController.getView());
+			CaptchaDialog c = new CaptchaDialog(a_captcha, "<Cha", JAPConf.getInstance().getView());
 			( (BIConnection) a_source).setCaptchaSolution(c.getSolution());
 		}
 	}
