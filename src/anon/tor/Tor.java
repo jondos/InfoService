@@ -335,12 +335,6 @@ public class Tor implements Runnable, AnonService
 					m_circuitLengthMin;
 				//check if know about some Onion Routers...
 				Date listPublished = m_orList.getPublished();
-				if (listPublished != null)
-				{
-					long t1 = listPublished.getTime();
-					long t2 = System.currentTimeMillis();
-					long t3 = t2 - t1;
-				}
 				if (m_orList.size() == 0 ||
 					(listPublished != null && listPublished.getTime() < System.currentTimeMillis() - 3600000
 					/*list is older than 1 hour*/

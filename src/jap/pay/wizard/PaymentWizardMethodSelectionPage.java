@@ -57,6 +57,7 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import gui.JAPJIntField;
+import gui.JAPJIntField.IntFieldBounds;
 
 public class PaymentWizardMethodSelectionPage extends BasicWizardPage implements ActionListener
 {
@@ -78,9 +79,10 @@ public class PaymentWizardMethodSelectionPage extends BasicWizardPage implements
 		setPageTitle(JAPMessages.getString("payWizMethodSelectionTitle"));
 		m_rbGroup = new ButtonGroup();
 		m_c = new GridBagConstraints();
-		m_fetchingLabel = new JLabel(JAPMessages.getString("fetchingMethods"), GUIUtils.loadImageIcon(JAPConstants.BUSYFN, true), JLabel.CENTER);
+		m_fetchingLabel = new JLabel(JAPMessages.getString("fetchingMethods"),
+									 GUIUtils.loadImageIcon(JAPConstants.BUSYFN, true), JLabel.CENTER);
 		Font f = m_fetchingLabel.getFont();
-		m_fetchingLabel.setFont(new Font(f.getName(), f.getStyle(), f.getSize()-1));
+		m_fetchingLabel.setFont(new Font(f.getName(), f.getStyle(), f.getSize() - 1));
 		m_fetchingLabel.setVerticalTextPosition(JLabel.TOP);
 		m_fetchingLabel.setHorizontalTextPosition(JLabel.CENTER);
 		m_c.gridx = 0;
@@ -128,7 +130,7 @@ public class PaymentWizardMethodSelectionPage extends BasicWizardPage implements
 							getLanguage());
 						while (headings.hasMoreElements())
 						{
-							addOption((String) headings.nextElement());
+							addOption( (String) headings.nextElement());
 						}
 						addCurrencies(m_paymentOptions.getCurrencies());
 						m_fetchingLabel.setVisible(false);
@@ -153,7 +155,7 @@ public class PaymentWizardMethodSelectionPage extends BasicWizardPage implements
 	private void addOption(String a_name)
 	{
 		m_c.gridy++;
-		JRadioButton rb = new JRadioButton("<html>"+a_name+"</html>");
+		JRadioButton rb = new JRadioButton("<html>" + a_name + "</html>");
 		rb.setName(a_name);
 		rb.addActionListener(this);
 		m_rbGroup.add(rb);
@@ -167,7 +169,20 @@ public class PaymentWizardMethodSelectionPage extends BasicWizardPage implements
 		JLabel label = new JLabel(JAPMessages.getString("payAmount"));
 		m_panelComponents.add(label, m_c);
 		m_c.gridwidth = 1;
-		m_tfAmount = new JAPJIntField(15);
+		m_tfAmount = new JAPJIntField(new IntFieldBounds()
+		{
+			public boolean isZeroAllowed()
+			{
+				return false;
+			}
+
+			public int getMaximum()
+			{
+				return 15;
+			}
+
+		}
+		);
 		m_c.gridy++;
 		m_panelComponents.add(m_tfAmount, m_c);
 		m_c.gridx++;
@@ -179,15 +194,13 @@ public class PaymentWizardMethodSelectionPage extends BasicWizardPage implements
 
 	public String getSelectedCurrency()
 	{
-		return (String)m_cbCurrency.getSelectedItem();
+		return (String) m_cbCurrency.getSelectedItem();
 	}
 
 	public String getAmount()
 	{
 		return m_tfAmount.getText();
 	}
-
-
 
 	public XMLPaymentOptions getPaymentOptions()
 	{
@@ -204,7 +217,8 @@ public class PaymentWizardMethodSelectionPage extends BasicWizardPage implements
 		if (e.getSource() instanceof JRadioButton)
 		{
 			String selectedHeading = ( (JRadioButton) e.getSource()).getName();
-			m_selectedPaymentOption = m_paymentOptions.getOption(selectedHeading, JAPController.getLocale().getLanguage());
+			m_selectedPaymentOption = m_paymentOptions.getOption(selectedHeading,
+				JAPController.getLocale().getLanguage());
 		}
 	}
 
