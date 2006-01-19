@@ -35,6 +35,7 @@ import gui.wizard.BasicWizard;
 import gui.wizard.BasicWizardHost;
 import gui.wizard.WizardPage;
 import jap.JAPController;
+import java.awt.Dimension;
 
 /**
  * This wizard guides the user through the account charging process
@@ -67,6 +68,8 @@ public class PaymentWizard extends BasicWizard
 		addWizardPage(3, m_submitPage);
 
 		m_host.setHelpEnabled(false);
+		m_host.getDialogParent().setPreferredSize(new Dimension(640, 480));
+
 		invokeWizard();
 	}
 
