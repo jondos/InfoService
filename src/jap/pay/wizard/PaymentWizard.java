@@ -30,13 +30,11 @@ package jap.pay.wizard;
 import javax.swing.JOptionPane;
 
 import anon.pay.PayAccount;
-import anon.pay.xml.XMLPaymentOptions;
 import gui.JAPMessages;
 import gui.wizard.BasicWizard;
 import gui.wizard.BasicWizardHost;
 import gui.wizard.WizardPage;
 import jap.JAPController;
-import anon.pay.xml.XMLPaymentOption;
 
 /**
  * This wizard guides the user through the account charging process
@@ -49,8 +47,8 @@ public class PaymentWizard extends BasicWizard
 	PaymentWizardWelcomePage m_welcomePage;
 	PaymentWizardMethodSelectionPage m_methodSelectionPage;
 	PaymentWizardPaymentInfoPage m_infoPage;
+	SubmitPage m_submitPage;
 	PayAccount m_payAccount;
-	private XMLPaymentOptions m_paymentOptions;
 
 	public PaymentWizard(PayAccount a_payAccount)
 	{
@@ -61,9 +59,13 @@ public class PaymentWizard extends BasicWizard
 		m_welcomePage = new PaymentWizardWelcomePage();
 		m_methodSelectionPage = new PaymentWizardMethodSelectionPage(a_payAccount, m_host);
 		m_infoPage = new PaymentWizardPaymentInfoPage(a_payAccount, m_host);
+		m_submitPage = new SubmitPage(a_payAccount, m_host);
+
 		addWizardPage(0, m_welcomePage);
 		addWizardPage(1, m_methodSelectionPage);
 		addWizardPage(2, m_infoPage);
+		addWizardPage(3, m_submitPage);
+
 		m_host.setHelpEnabled(false);
 		invokeWizard();
 	}
@@ -89,6 +91,8 @@ public class PaymentWizard extends BasicWizard
 			return null;
 		}
 
+
+
 		super.next();
 		//Fetch methods from BI if MethodSelection page is shown
 		if (m_PageIndex == 1)
@@ -105,6 +109,10 @@ public class PaymentWizard extends BasicWizard
 			m_infoPage.fetchTransferNumber();
 			m_infoPage.updateExtraInfo();
 
+		}
+		else if (m_PageIndex == 3)
+		{
+			m_submitPage.submitPassivePayment(m_infoPage.getPassiveInfo());
 		}
 		return null;
 	}

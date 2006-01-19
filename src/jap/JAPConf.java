@@ -76,6 +76,8 @@ import jap.pay.*;
 import jap.forward.*;
 import gui.*;
 import gui.dialog.JAPDialog;
+import java.awt.Frame;
+import java.awt.Window;
 
 final public class JAPConf extends JDialog implements ActionListener
 {
@@ -1068,6 +1070,11 @@ final public class JAPConf extends JDialog implements ActionListener
 		{
 			m_tfProxyPortNumber.setText("");
 		}
+	}
+
+	public Window getView()
+	{
+		return (Window)this;
 	}
 
 }

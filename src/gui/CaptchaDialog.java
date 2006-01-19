@@ -49,13 +49,14 @@ import javax.swing.text.Document;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.PlainDocument;
 import gui.dialog.JAPDialog;
+import java.awt.Window;
 
 /**
  * This class displays a dialog for solving a captcha.
  *
  * @author Tobias Bayer
  */
-public class CaptchaDialog extends JDialog implements ActionListener
+public class CaptchaDialog extends JAPDialog implements ActionListener
 {
 	/** Messages*/
 	private static final String MSG_TITLE = CaptchaDialog.class.getName() +
@@ -76,10 +77,9 @@ public class CaptchaDialog extends JDialog implements ActionListener
 	private IImageEncodedCaptcha m_captcha;
 	private String m_beginsWith;
 
-	public CaptchaDialog(IImageEncodedCaptcha a_captcha, String a_beginsWith, Frame a_parent)
+	public CaptchaDialog(IImageEncodedCaptcha a_captcha, String a_beginsWith, Window a_parent)
 	{
-		super(a_parent);
-		this.setTitle(JAPMessages.getString(MSG_TITLE));
+		super(a_parent, JAPMessages.getString(MSG_TITLE), true);
 		m_captcha = a_captcha;
 		m_beginsWith = a_beginsWith;
 		Container rootPanel = this.getContentPane();
@@ -155,8 +155,7 @@ public class CaptchaDialog extends JDialog implements ActionListener
 		rootPanel.add(m_btnOk, c);
 
 		pack();
-		setModal(true);
-		GUIUtils.positionRightUnderWindow(this, a_parent);
+		setLocationCenteredOnOwner();
 		setVisible(true);
 	}
 
