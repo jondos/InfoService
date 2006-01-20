@@ -106,7 +106,7 @@ public class TorDirectoryAgent implements Runnable
 	}
 
 	/**
-	 * Adds a TorDirectoryServer to the database of known tor directory servers. This method can also be
+	 * Adds a TorDirectoryServer to the database of known tor directory servers. This method can be
 	 * used to add default directory servers (the expire time should be set to a nearly infinite
 	 * value).
 	 *
@@ -114,18 +114,7 @@ public class TorDirectoryAgent implements Runnable
 	 */
 	public void addTorDirectoryServer(TorDirectoryServer a_torDirectoryServer)
 	{
-		Database db = Database.getInstance(TorDirectoryServer.class);
-		TorDirectoryServer entry = (TorDirectoryServer) db.getEntryById(a_torDirectoryServer.getId());
-		//do not overwrite  a user defined entry with a non user defined one!
-		if (entry != null && entry.isUserDefined() && !a_torDirectoryServer.isUserDefined())
-		{
-			LogHolder.log(LogLevel.WARNING, LogType.NET,
-						  "TorDirectoryAgent: addTorDirectoryServer: " + a_torDirectoryServer.getId() +
-						  " will not overwrite this entry with a non user defined one!");
-			return;
-		}
-
-		db.update(a_torDirectoryServer);
+		Database.getInstance(TorDirectoryServer.class).update(a_torDirectoryServer);
 		LogHolder.log(LogLevel.DEBUG, LogType.NET,
 					  "TorDirectoryAgent: addTorDirectoryServer: " + a_torDirectoryServer.getId() +
 					  " was updated or added to the list of known TOR directory servers.");
@@ -211,7 +200,7 @@ public class TorDirectoryAgent implements Runnable
 				while ( (i < torServers.size()) && (preferedServerFound == false))
 				{
 					if ( ( (TorDirectoryServer) (torServers.elementAt(i))).getId().equals(
-						preferedDirectoryServer.getId()) == true)
+						preferedDirectoryServer.getId()))
 					{
 						torServers.removeElementAt(i);
 						preferedServerFound = true;
@@ -223,6 +212,10 @@ public class TorDirectoryAgent implements Runnable
 			}
 			Element torNodesListNode = null;
 			Element torNodesListCompressedNode = null;
+			//all servers timed out --> restart with configured ones...
+			//if(torServers.size()==0)
+			//{
+			//}
 			while ( (torNodesListNode == null) && (torServers.size() > 0))
 			{
 				TorDirectoryServer currentDirectoryServer = (TorDirectoryServer) (torServers.firstElement());

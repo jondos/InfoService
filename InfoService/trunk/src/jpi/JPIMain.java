@@ -75,6 +75,7 @@ public class JPIMain
 						  "JPIMain: Error loading configuration, I'm going to die now");
 			System.exit(0);
 		}
+        log1.setLogLevel(Configuration.getLogStderrThreshold());
 		if (Configuration.getLogFileName() != null)
 		{
 			FileLog log2 = new FileLog(Configuration.getLogFileName(), 1000000, 10);
@@ -83,11 +84,6 @@ public class JPIMain
 			ChainedLog l = new ChainedLog(log1, log2);
 			LogHolder.setLogInstance(l);
 		}
-		log1.setLogLevel(Configuration.getLogStderrThreshold());
-		log1 = new SystemErrLog();
-		LogHolder.setLogInstance(log1);
-		log1.setLogType(LogType.ALL);
-		LogHolder.setDetailLevel(LogHolder.DETAIL_LEVEL_HIGHEST);
 
 		// process command line args
 		boolean newdb = false;
