@@ -108,6 +108,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 		getName() + "_accpasswordtitle";
 	private static final String MSG_ACCPASSWORD = JAPController.class.
 		getName() + "_accpassword";
+	private static final String MSG_ACCPASSWORDENTERTITLE = JAPController.class.
+		getName() + "_accpasswordentertitle";
+	private static final String MSG_ACCPASSWORDENTER = JAPController.class.
+		getName() + "_accpasswordenter";
 
 	/**
 	 * Stores all MixCascades we know (information comes from infoservice or was entered by a user).
@@ -134,11 +138,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 	private boolean mbDoNotAbuseReminder = false; // indicates if new warning message in setAnonMode (containing Do no abuse) has been shown
 	private boolean mbGoodByMessageNeverRemind = false; // indicates if Warning message before exit has been deactivated forever
 	private boolean m_bForwarderNotExplain = false; //indicates if the warning message about forwarding should be shown
-
-	private boolean m_bPaymentFirstTime = false; // indicates if encryption dialog should be showed before saving payment configuration data
-
-	/** @todo check is it ok to have the password in memory while Jap is running? if not, user must enter it everytime */
-	private String m_strPayAccountsPassword = null; // password for encrypting the payment data
 
 	public String status1 = " ";
 	public String status2 = " ";
@@ -878,21 +877,22 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 						while (true)
 						{
-							JAPDialog d = new JAPDialog((Component)null, JAPMessages.getString(MSG_ACCPASSWORDTITLE), true);
+							JAPDialog d = new JAPDialog( (Component)null,
+								JAPMessages.getString(MSG_ACCPASSWORDENTERTITLE), true);
 							PasswordContentPane p = new PasswordContentPane(d,
 								PasswordContentPane.PASSWORD_ENTER,
-								JAPMessages.getString(MSG_ACCPASSWORD));
+								JAPMessages.getString(MSG_ACCPASSWORDENTER));
 							p.updateDialog();
 							d.pack();
 							d.setVisible(true);
-							m_strPayAccountsPassword = new String(p.getPassword());
+							setPaymentPassword(new String(p.getPassword()));
 
-							if (m_strPayAccountsPassword != null)
+							if (getPaymentPassword() != null)
 							{
 							try
 							{
 								elemPlainTxt = XMLEncryption.decryptElement(elemAccounts,
-									m_strPayAccountsPassword);
+										getPaymentPassword());
 							}
 							catch (Exception ex)
 							{
@@ -902,11 +902,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 						}
 						}
 
-						if (m_strPayAccountsPassword != null)
+						if (getPaymentPassword() != null)
 						{
 						PayAccountsFile.init(elemPlainTxt);
-
-						m_bPaymentFirstTime = false;
 					}
 					}
 					else
@@ -917,19 +915,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 						if (elemAccounts != null)
 						{
 							PayAccountsFile.init(elemAccounts);
-							if (PayAccountsFile.getInstance().getNumAccounts() == 0)
-							{
-								m_bPaymentFirstTime = true;
-							}
-							else
-							{
-								m_bPaymentFirstTime = false;
-							}
 						}
 						else
 						{
 							PayAccountsFile.init(null);
-							m_bPaymentFirstTime = true;
 						}
 					}
 				}
@@ -1309,31 +1298,16 @@ public final class JAPController extends Observable implements IProxyListener, O
 				{
 					elemPIs.appendChild( ( (BI) pis.nextElement()).toXmlElement(doc));
 				}
+				if (PayAccountsFile.getInstance().getNumAccounts() > 0)
+				{
 				Element elemAccounts = accounts.toXmlElement(doc);
 				elemPayment.appendChild(elemAccounts);
-				if (m_bPaymentFirstTime && PayAccountsFile.getInstance().getNumAccounts() > 0)
-				{
-					// payment functionality was used for the first time, ask user for password...
-					/** @todo maybe check password length/strength?? */
-					boolean choice = JAPDialog.showYesNoDialog(m_View,
-						JAPMessages.getString(MSG_ENCRYPTACCOUNT),
-						JAPMessages.getString(MSG_ENCRYPTACCOUNTTITLE));
 
-					if (choice)
-					{
-						JAPDialog d = new JAPDialog(m_View, JAPMessages.getString(MSG_ACCPASSWORDTITLE), true);
-						PasswordContentPane p = new PasswordContentPane(d, PasswordContentPane.PASSWORD_NEW,
-							JAPMessages.getString(MSG_ACCPASSWORD));
-						p.updateDialog();
-						d.pack();
-						d.setVisible(true);
-						m_strPayAccountsPassword = new String(p.getPassword());
-					}
-				}
-				if (m_strPayAccountsPassword != null && !m_strPayAccountsPassword.equals(""))
+					if (getPaymentPassword() != null && !getPaymentPassword().equals(""))
 				{
 					// encrypt XML
-					XMLEncryption.encryptElement(elemAccounts, m_strPayAccountsPassword);
+						XMLEncryption.encryptElement(elemAccounts, getPaymentPassword());
+					}
 				}
 			}
 

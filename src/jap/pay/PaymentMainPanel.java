@@ -236,7 +236,7 @@ public class PaymentMainPanel extends JPanel
 			m_BalanceProgressBar.setEnabled(true);
 
 				// account is nearly empty
-				if (activeAccount.getCertifiedCredit() <= (1024 * 1024) && !m_notifiedEmpty)
+				if (activeAccount.getCertifiedCredit() <= (1024 * 1024) && !m_notifiedEmpty && activeAccount.getCertifiedCredit() != 0)
 				{
 					JAPDialog.showMessageDialog(JAPController.getView(),
 												JAPMessages.getString(MSG_NEARLYEMPTY));

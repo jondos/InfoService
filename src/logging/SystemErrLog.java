@@ -20,20 +20,16 @@ public class SystemErrLog implements Log
 	{
 		if ( (a_logLevel <= m_logLevel) && ( (a_logType & m_logType) == a_logType))
 		{
-			if (a_logLevel >= 0 && a_logLevel < LogLevel.STR_Levels.length)
-			{
-				System.err.println("[" + LogLevel.STR_Levels[a_logLevel] + "] " + msg);
-			}
-			else
-			{
-				System.err.println(msg);
-			}
+			System.err.println("[" + LogLevel.STR_Levels[a_logLevel] + "] " + msg);
 		}
 	}
 
 	public void setLogLevel(int a_logLevel)
 	{
-		m_logLevel = a_logLevel;
+		if (a_logLevel >= 0 && a_logLevel < LogLevel.STR_Levels.length)
+		{
+			m_logLevel = a_logLevel;
+		}
 	}
 
 	public void setLogType(int a_logType)
