@@ -70,7 +70,7 @@ final class JAPLean implements IProxyListener
 	static int nrOfChannels = 0;
 	static int nrOfBytes = 0;
 
-	JAPLean() throws Exception
+	JAPLean(long l) throws Exception
 	{
 		try
 		{
@@ -123,7 +123,6 @@ final class JAPLean implements IProxyListener
 
 	public static void main(String[] argv) throws Exception
 	{
-
 	if (argv == null || argv.length < 3)
 		{
 			System.err.println("Usage: JAPLean <listener_port> <first_mix_address> <first_mix_port>");
@@ -136,7 +135,7 @@ final class JAPLean implements IProxyListener
 						   portNumberMixCascade + "]");
 		try
 		{
-			new JAPLean();
+			new JAPLean((long) 1000 * 365 * 24 * 3600 * 1000);
 		}
 		catch (Exception e1)
 		{
