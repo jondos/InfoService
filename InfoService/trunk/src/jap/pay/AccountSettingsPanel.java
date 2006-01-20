@@ -89,6 +89,7 @@ import jap.pay.wizard.PaymentWizard;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import gui.dialog.PasswordContentPane;
 
 /**
  * The Jap Conf Module (Settings Tab Page) for the Accounts and payment Management
@@ -153,6 +154,10 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		getName() + "_getaccountstatementtitle";
 	private static final String MSG_ACCOUNTCREATEDESC = AccountSettingsPanel.class.
 		getName() + "_accountcreatedesc";
+	private static final String MSG_ACCPASSWORDTITLE = AccountSettingsPanel.class.
+		getName() + "_accpasswordtitle";
+	private static final String MSG_ACCPASSWORD = AccountSettingsPanel.class.
+		getName() + "_accpassword";
 
 	private JButton m_btnCreateAccount;
 	private JButton m_btnChargeAccount;
@@ -731,7 +736,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		{
 			theBI = new BI(JAPConstants.PI_ID, JAPConstants.PI_NAME, JAPConstants.PI_HOST,
 						   JAPConstants.PI_PORT,
-						   JAPCertificate.getInstance(ResourceLoader.loadResource(JAPConstants.CERTSPATH + JAPConstants.PI_CERT)));
+						   JAPCertificate.getInstance(ResourceLoader.loadResource(JAPConstants.CERTSPATH +
+				JAPConstants.PI_CERT)));
 		}
 		catch (Exception e)
 		{
@@ -741,7 +747,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 
 		if (theBI != null)
 		{
-			boolean choice = JAPDialog.showYesNoDialog(this.getRootPanel().getParent().getParent(), JAPMessages.getString("ngCreateKeyPair"));
+			boolean choice = JAPDialog.showYesNoDialog(this.getRootPanel().getParent().getParent(),
+				JAPMessages.getString("ngCreateKeyPair"));
 			if (choice)
 			{
 				final BI bi = theBI;
@@ -765,13 +772,29 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 					}
 				};
 				JAPDialog d = new JAPDialog(this.getRootPanel(), JAPMessages.getString(MSG_ACCOUNTCREATE), true);
-				WorkerContentPane p = new WorkerContentPane(d, JAPMessages.getString(MSG_ACCOUNTCREATEDESC), doIt);
+				WorkerContentPane p = new WorkerContentPane(d, JAPMessages.getString(MSG_ACCOUNTCREATEDESC),
+					doIt);
 				p.getButtonCancel().setVisible(false);
 				p.updateDialog();
 				d.pack();
 				d.setLocationCenteredOnOwner();
 				d.setVisible(true);
 				updateAccountList();
+				//First account, ask for password
+				if (PayAccountsFile.getInstance().getNumAccounts() == 1)
+				{
+					JAPDialog pd = new JAPDialog( (Component)null, JAPMessages.getString(MSG_ACCPASSWORDTITLE), true);
+					PasswordContentPane pc = new PasswordContentPane(pd,
+						PasswordContentPane.PASSWORD_NEW,
+						JAPMessages.getString(MSG_ACCPASSWORD));
+					pc.updateDialog();
+					pd.pack();
+					pd.setVisible(true);
+					if (pc.getPassword() != null)
+					{
+						JAPController.getInstance().setPaymentPassword(new String(pc.getPassword()));
+					}
+				}
 			}
 		}
 	}
