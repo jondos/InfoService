@@ -134,7 +134,7 @@ public class Message
 			// end
 			for (int i = header2.getSecrets().size() - 1; i >= 0; i--)
 			{
-				byte[] SK2_i = (byte[]) header2.getSecrets().get(i);
+				byte[] SK2_i = (byte[]) header2.getSecrets().elementAt(i);
 				byte[] K = MixMinionCryptoUtil.hash(ByteArrayUtil.conc(SK2_i, "PAYLOAD ENCRYPT".getBytes()));
 				P = MixMinionCryptoUtil.SPRP_Encrypt(K, P);
 			}
@@ -154,7 +154,7 @@ public class Message
 				"HIDE PAYLOAD".getBytes())), P);
 			for (int i = header1.getSecrets().size() - 1; i >= 0; i--)
 			{
-				byte[] SK1_i = (byte[]) header1.getSecrets().get(i);
+				byte[] SK1_i = (byte[]) header1.getSecrets().elementAt(i);
 				H2 = MixMinionCryptoUtil.SPRP_Encrypt(MixMinionCryptoUtil.hash(ByteArrayUtil.conc(SK1_i,
 					"HEADER ENCRYPT".getBytes())), H2);
 				P = MixMinionCryptoUtil.SPRP_Encrypt(MixMinionCryptoUtil.hash(ByteArrayUtil.conc(SK1_i,
