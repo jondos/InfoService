@@ -111,7 +111,7 @@ public abstract class FECCode
 	 * @param packetLength the packetLength in bytes.  All of the buffers
 	 * in src and repair are assumed to be this long.
 	 */
-	protected abstract void encode(byte[][] src, int[] srcOff, byte[][] repair,
+	public abstract void encode(byte[][] src, int[] srcOff, byte[][] repair,
 								   int[] repairOff, int[] index,
 								   int packetLength);
 
