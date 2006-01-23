@@ -41,6 +41,7 @@ import anon.tor.TorSocksChannel;
 public class Mixminion implements AnonService
 {
 	private static Mixminion ms_theMixminionInstance = null;
+	private ImmutableProxyInterface m_proxyInterface;
 
 	private Mixminion()
 	{
@@ -54,6 +55,11 @@ public class Mixminion implements AnonService
 	public int setProxy(ImmutableProxyInterface a_Proxy)
 	{
 		return 0;
+	}
+	
+	public ImmutableProxyInterface getProxy()
+	{
+		return m_proxyInterface;
 	}
 
 	public void shutdown()

@@ -31,7 +31,6 @@ import java.io.LineNumberReader;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-//import java.util.Iterator;
 import java.util.TimeZone;
 import anon.crypto.MyRSAPublicKey;
 import anon.util.Base64;
@@ -55,7 +54,7 @@ public class MMRDescription
 	private byte[] m_digest;
 	private byte[] m_keydigest;
 	private boolean m_isExitNode;
-
+	
 	private Date m_datePublished;
 	private Date m_validafter;
 	private Date m_validuntil;
@@ -66,8 +65,8 @@ public class MMRDescription
 		ms_DateFormatFull.setTimeZone(TimeZone.getTimeZone("GMT"));
 		ms_DateFormatDateOnly.setTimeZone(TimeZone.getTimeZone("GMT"));
 	}
-
-
+	
+	
 
 	/**
 	 * Constructor
@@ -145,23 +144,23 @@ public class MMRDescription
 	/**
 	 * gets the digest
 	 * @return
-	 * digest
+	 * digest 
 	 */
 	public byte[] getDigest()
 	{
 		return this.m_digest;
 	}
-
+	
 	/**
 	 * gets the keydigest
 	 * @return
-	 * digest
+	 * digest 
 	 */
 	public byte[] getKeyDigest()
 	{
 		return this.m_keydigest;
 	}
-
+	
 	/**
 	 * sets this server as exit node or not
 	 * @param bm_isExitNode
@@ -180,7 +179,7 @@ public class MMRDescription
 	{
 		return m_isExitNode;
 	}
-
+	
 	/**
 	 * gets the address of the MMR
 	 * @return
@@ -221,60 +220,64 @@ public class MMRDescription
 	{
 		return m_strSoftware;
 	}
-
+	
 	/**
 	 * gets the Routing Informations of this MMR
 	 * @return routingInformation Vector
 	 * Vector with two byte[], first is the Routing Type, Second the Routing Information
 	 */
 	public Vector getRoutingInformation()
-	{
+	{	
 		byte[] a = m_address.getBytes();
 		byte[] p = ByteArrayUtil.inttobyte(m_port,2);
-		byte[] ri = new byte[a.length+p.length+m_digest.length];
+		byte[] ri = new byte[a.length+p.length+m_keydigest.length];
 		byte[] rt = ByteArrayUtil.inttobyte(3,2);
-		ri = ByteArrayUtil.conc(p,m_digest,a);
+		ri = ByteArrayUtil.conc(p,m_keydigest,a);
 		Vector routingInformation = new Vector();
-		routingInformation.addElement(rt);
-		routingInformation.addElement(ri);
+		routingInformation.add(rt);
+		routingInformation.add(ri);
 		return routingInformation;
 	}
-
+	
 	/**
-	 *
+	 * 
 	 * @param email vector with strings max 8
 	 * @return vector with routingtype, routinginformation
 	 */
 	public Vector getExitInformation(Vector email) {
-
+		
 		Vector exitInformation = getRoutingInformation();
-		//if no e-mail adress is specified return a vector with a drop and log error
-		if (email.capacity()<1) {
-			exitInformation.addElement( ByteArrayUtil.inttobyte(0,2));
+		//if no e-mail adress is specified return a vector with a drop and log error 
+		if (email.size()<1) {
+			exitInformation.add(0, ByteArrayUtil.inttobyte(0,2));
 	    	LogHolder.log(LogLevel.ERR, LogType.MISC,
 			  "[Building ExitInformation]: no Recipients; Packet will be dropped! ");
 			return exitInformation;
 		}
 		else {
-			String s = "00"; //for the space between two email-adresses
+			byte[] s = ("00").getBytes(); //for the space between two email-adresses
 			int count = 0;
-			exitInformation.insertElementAt(ByteArrayUtil.inttobyte(4,2),0);
-	/*		Iterator it = email.iterator();
-			while (it.hasNext()) {
-				String mail = (String) it.next();
-				exitInformation.add(1,ByteArrayUtil.conc((byte[])exitInformation.get(1),s.getBytes(), mail.getBytes()));
+
+			exitInformation.set(0,ByteArrayUtil.inttobyte(256,2));
+			byte[] deliverydata= new byte[0];
+						
+			for (int i = 0; i < email.size(); i++) {
+				String mail = (String) email.get(i);
+				deliverydata = ByteArrayUtil.conc(deliverydata,s, mail.getBytes());
 				count++;
 				if (count>8) {
 			    	LogHolder.log(LogLevel.ERR, LogType.MISC,
 					  "[Building ExitInformation]: more than 8 Recipients; 9+ will not receive ");
 					break;
 				}
-			}*/
+			}
+			
+			exitInformation.set(1,ByteArrayUtil.conc((byte[])exitInformation.get(1),deliverydata));
 		}
-
+		
 		return exitInformation;
 	}
-
+	
 	/**
 	 * test if two OR's are identical
 	 * returns also true, if the routers are in the same family
@@ -310,8 +313,8 @@ public class MMRDescription
 		try
 		{
 			//TODO only store the things we need in variables, otherwise make a readline to jump over them
-
-
+			
+			
 			//skip [Server]
 			//Descriptor-Version
 			String descrver = reader.readLine().substring(20);
@@ -363,7 +366,7 @@ public class MMRDescription
 			String outversion = reader.readLine().substring(9);
 			//Outgoing Protocols
 			String outprotocols = reader.readLine().substring(11);
-
+			
 		//exitnode,mbox and/or fragmented delivery
 			String temp="";
 			boolean exitNode=false;
@@ -380,12 +383,12 @@ public class MMRDescription
 			//build the new MMRDescription
 			MMRDescription mmrd = new MMRDescription(hostname, nickname, Integer.parseInt(port),
 								software, digest, keydigest, exitNode, published,validafter, validuntil);
-
+			
 			if (!mmrd.setIdentityKey(identity) || !mmrd.setPacketKey(packetkey))
 				{
 				 return null;
 				}
-
+									
 			return mmrd;
 
 

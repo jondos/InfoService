@@ -31,8 +31,6 @@
  */
 package anon.util;
 
-import java.util.StringTokenizer;
-
 /**
  * @author stefan
  *
@@ -240,5 +238,103 @@ public class ByteArrayUtil
 		}
 
 		return true;
+	}
+
+	/**
+	 * Tests if a_length positions of two arrays are equal.
+	 * @param a_arrayA char[]
+	 * @param a_APos int
+	 * @param a_arrayB char[]
+	 * @param a_BPos int
+	 * @param a_length int
+	 * @return boolean
+	 */
+	public static final boolean equal(char[] a_arrayA, int a_Aoff,
+									  char[] a_arrayB, int a_Boff,
+									  int a_length)
+	{
+		if (a_length <= 0)
+		{
+			return true;
+		}
+		if (a_arrayA == null || a_arrayB == null || a_Aoff < 0 || a_Boff < 0)
+		{
+			return false;
+		}
+		if (a_Aoff + a_length > a_arrayA.length ||
+			a_Boff + a_length > a_arrayB.length)
+		{
+			return false;
+		}
+
+		for (int i = 0; i < a_length; i++)
+		{
+			if (a_arrayA[a_Aoff + i] != a_arrayB[a_Boff + i])
+			{
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	/** Set len bytes starting form off to zero*/
+	public static void bzero(byte[]ar,int off,int len)
+	{
+		for(int i=off;i<off+len;i++)
+		{
+			ar[i]=0;
+		}
+	}
+
+	/** Set len bytes starting form off to zero*/
+	public static void bzero(char[]ar,int off,int len)
+	{
+		for(int i=off;i<off+len;i++)
+		{
+			ar[i]=0;
+		}
+	}
+
+	/** Copies len bytes starting from offin to out starting at outoff. Two bytes are concatenated to form a single char*/
+	public static void byteArrayToCharArray(byte in[],int inoff,char[]out,int outoff,int len)
+	{
+		boolean bFirst=true;
+		for(int i=inoff;i<inoff+len;i++)
+		{
+			if(bFirst)
+			{
+				out[outoff]=(char)in[inoff];
+				out[outoff]<<=8;
+				out[outoff]&=0xFF00;
+				bFirst=false;
+			}
+			else
+			{
+				out[outoff]|=(in[inoff]&0x00FF);
+				outoff++;
+				bFirst=true;
+			}
+		}
+	}
+	/** Copies len bytes starting from offin to out starting at outoff.*/
+	public static void charArrayToByteArray(char in[],int inoff,byte[]out,int outoff,int len)
+{
+	boolean bFirst=true;
+	for(int i=outoff;i<outoff+len;i++)
+	{
+		if(bFirst)
+		{
+			out[i]=(byte)((in[inoff]>>8)&0x00FF);
+			bFirst=false;
+		}
+		else
+		{
+			out[i]|=(byte)((in[inoff]&0x00FF));
+			inoff++;
+			bFirst=true;
+		}
+	}
+
 	}
 }
