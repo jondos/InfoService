@@ -78,7 +78,7 @@ public class PureCode extends FECCode
 	 * and produces as output a packet pointed to by fec, computed
 	 * with index "index".
 	 */
-	protected void encode(byte[][] src, int[] srcOff, byte[][] repair,
+	public void encode(byte[][] src, int[] srcOff, byte[][] repair,
 						  int[] repairOff, int[] index, int packetLength)
 	{
 		for (int i = 0; i < repair.length; i++)

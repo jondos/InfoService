@@ -76,7 +76,7 @@ public class Pure16Code extends PureCode {
      * and produces as output a packet pointed to by fec, computed
      * with index "index".
      */
-    protected void encode(byte[][] src, int[] srcOff, byte[][] repair,
+    public void encode(byte[][] src, int[] srcOff, byte[][] repair,
                           int[] repairOff, int[] index, int packetLength) {
         if (packetLength % 2 != 0) {
             throw new IllegalArgumentException("For 16 bit codes, buffers "+
