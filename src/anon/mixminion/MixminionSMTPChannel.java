@@ -106,8 +106,8 @@ public class MixminionSMTPChannel extends AbstractChannel
         {
             if (s.toUpperCase().startsWith("RCPT TO"))
             {
-              //  String rec = s.split("<")[1].split(">")[0]; // RCPT TO:<John@Smith.net> //
-             //   m_receiver.addElement(rec);
+				String rec=s.substring(s.indexOf('<')+1,s.indexOf('>'));// RCPT TO:<John@Smith.net> //
+                m_receiver.addElement(rec);
                 toClient("250 OK\n");
             }
             else if (s.toUpperCase().startsWith("DATA"))
