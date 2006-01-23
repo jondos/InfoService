@@ -11,19 +11,19 @@ public class MixminionSMTPChannel extends AbstractChannel
 {
     /** the current State of the SMTPChannel **/
     private int m_state = -1;
-    
+
     /** a Receiver-List of the eMail **/
     private Vector m_receiver = new Vector();
-    
+
     /** the Text of the eMail **/
     private String m_text = "";
 
-    
+
     public MixminionSMTPChannel()
     {
         super();
         m_state = 0;
-        
+
         try
         {
             String first = "220 127.0.0.1 SMTP JAP_MailServer\n";
@@ -34,12 +34,12 @@ public class MixminionSMTPChannel extends AbstractChannel
             e.printStackTrace();
 	}
     }
-    
+
 
     protected void close_impl()
 	{
         // TODO Automatisch erstellter Methoden-Stub
-        
+
     }
 
     protected void toClient(String message) throws IOException
@@ -91,7 +91,7 @@ public class MixminionSMTPChannel extends AbstractChannel
         {
             if(s.toUpperCase().startsWith("MAIL FROM"))
             {
-                m_receiver.clear(); // Empfänger-Liste leeren
+                m_receiver.removeAllElements(); // Empfänger-Liste leeren
                 m_text = ""; // Text-Nachricht leeren
                 m_state = 3;
                 toClient("250 OK\n");
@@ -106,9 +106,9 @@ public class MixminionSMTPChannel extends AbstractChannel
         {
             if (s.toUpperCase().startsWith("RCPT TO"))
             {
-                String rec = s.split("<")[1].split(">")[0]; // RCPT TO:<John@Smith.net> //
-                m_receiver.add(rec);
-                toClient("250 OK\n");   
+              //  String rec = s.split("<")[1].split(">")[0]; // RCPT TO:<John@Smith.net> //
+             //   m_receiver.addElement(rec);
+                toClient("250 OK\n");
             }
             else if (s.toUpperCase().startsWith("DATA"))
             {
@@ -127,12 +127,14 @@ public class MixminionSMTPChannel extends AbstractChannel
 
             if (m_text.endsWith("\r\n.\r\n")) // wenn "." empfangen //
             {
-                String[] rec = (String[]) m_receiver.toArray(new String[m_receiver.size()]);
+
+                String[] rec = new String[m_receiver.size()];
+	m_receiver.copyInto(rec);
                 EMail eMail = new EMail(rec,m_text);
 
                 Message m = new Message(eMail.getPayload().getBytes(), eMail.getReceiverAsVektor(), 4);
                 boolean success = m.send();
-                
+
                 m_state = 5;
                 if (success==true) toClient("250 OK\n");
                 else toClient("554 Fehler beim Versenden der eMail zum MixMinionServer!\n");
@@ -142,13 +144,13 @@ public class MixminionSMTPChannel extends AbstractChannel
         {
             if (s.toUpperCase().startsWith("QUIT"))
             {
-                m_receiver.add(s);
+                m_receiver.addElement(s);
                 toClient("221 Bye\n");
                 m_state = 99;
             }
             else if(s.toUpperCase().startsWith("MAIL FROM"))
             {
-                m_receiver.clear(); // Empfänger-Liste leeren
+                m_receiver.removeAllElements(); // Empfänger-Liste leeren
                 m_text = ""; // Text-Nachricht leeren
                 m_state = 3;
                 toClient("250 OK\n");
@@ -175,5 +177,5 @@ public class MixminionSMTPChannel extends AbstractChannel
         // TODO Automatisch erstellter Methoden-Stub
         return 1000;
     }
-    
+
 }
