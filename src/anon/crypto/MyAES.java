@@ -47,8 +47,8 @@ public class MyAES
 	private AESFastEngine m_AES;
 
 	/** Same variables for CTR mode*/
-	private byte[] counter;
-	private byte[] counterOut;
+	private byte[] m_arCounter;
+	private byte[] m_arCounterOut;
 	private int m_posCTR;
 	/**
 	 * Creates a new instance of Aes.
@@ -56,8 +56,8 @@ public class MyAES
 	public MyAES()
 	{
 		m_AES = new AESFastEngine();
-		counter = null;
-		counterOut = null;
+		m_arCounter = null;
+		m_arCounterOut = null;
 		m_posCTR = 0;
 	}
 
@@ -84,8 +84,8 @@ public class MyAES
     public synchronized void init(boolean bEncrypt, byte[] a_aesKey,int off,int len) throws Exception
     {
             m_AES.init(bEncrypt, new KeyParameter(a_aesKey,off,len));
-            counter = null;
-            counterOut = null;
+            m_arCounter = null;
+            m_arCounterOut = null;
             m_posCTR = 0;
 
     }
@@ -124,23 +124,23 @@ public class MyAES
 	public void processBytesCTR(byte[] in, int inOff, byte[] out, int outOff, int len) throws
 		Exception
 	{
-		if (counterOut == null)
+		if (m_arCounterOut == null)
 		{
-			counterOut = new byte[16];
+			m_arCounterOut = new byte[16];
 			m_posCTR = 0;
-			counter = new byte[16];
+			m_arCounter = new byte[16];
 		}
 		while (len > 0)
 		{
 
 			if (m_posCTR == 0)
 			{
-				processBlockECB(counter, counterOut);
+				processBlockECB(m_arCounter, m_arCounterOut);
 			}
 
-			while (m_posCTR < counterOut.length)
+			while (m_posCTR < m_arCounterOut.length)
 			{
-				out[outOff] = (byte) (counterOut[m_posCTR] ^ in[inOff]);
+				out[outOff] = (byte) (m_arCounterOut[m_posCTR] ^ in[inOff]);
 				outOff++;
 				inOff++;
 				len--;
@@ -157,9 +157,9 @@ public class MyAES
 
 			int carry = 1;
 
-			for (int i = counter.length - 1; i >= 0; i--)
+			for (int i = m_arCounter.length - 1; i >= 0; i--)
 			{
-				int x = (counter[i] & 0xff) + carry;
+				int x = (m_arCounter[i] & 0xff) + carry;
 
 				if (x > 0xff)
 				{
@@ -170,7 +170,7 @@ public class MyAES
 					carry = 0;
 				}
 
-				counter[i] = (byte) x;
+				m_arCounter[i] = (byte) x;
 			}
 		}
 	}

@@ -1,17 +1,33 @@
 package anon.crypto;
 
+import org.bouncycastle.crypto.Digest;
 import org.bouncycastle.crypto.engines.RSAEngine;
 import org.bouncycastle.crypto.encodings.OAEPEncoding;
+
 
 /** Encryption/Decryption using RSA*/
 public class MyRSA
 {
 	RSAEngine m_RSAEngine;
 	OAEPEncoding m_OAEP;
+
 	public MyRSA()
 	{
 		m_RSAEngine = new RSAEngine();
+		
 		m_OAEP=new OAEPEncoding(m_RSAEngine);
+		
+		
+	}
+	
+	//by Stefan Roenisch
+	public MyRSA(Digest digest)
+	{
+		m_RSAEngine = new RSAEngine();
+		
+		m_OAEP=new OAEPEncoding(m_RSAEngine, digest);
+		
+		
 	}
 
 	/** inits the cipher for encryption*/
@@ -32,5 +48,6 @@ public class MyRSA
 			return m_OAEP.encodeBlock(plain, offset, len);
 		}
 	}
+
 
 }

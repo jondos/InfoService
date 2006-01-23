@@ -35,6 +35,7 @@ import java.util.Vector;
 
 import anon.crypto.MyRandom;
 import anon.mixminion.mmrdescription.MMRDescription;
+import anon.util.Base64;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -61,7 +62,7 @@ public class MMRList
 		m_mixminionroutersWithNames = new Hashtable();
 		m_mmrlistFetcher = fetcher;
 		m_rand = new MyRandom();
-
+		
 	}
 
 	/**
@@ -140,7 +141,7 @@ public class MMRList
 			m_middlenodes.removeElement(mmrd);
 		}
 		m_mixminionroutersWithNames.remove(name);
-
+		
 	}
 
 	/**
@@ -151,7 +152,7 @@ public class MMRList
 	public synchronized MMRDescription getByRandom(Vector allowedNames)
 	{
 		String mmrName = (String) allowedNames.elementAt( (m_rand.nextInt(allowedNames.size())));
-
+				
 		return (MMRDescription) getByName(mmrName);
 	}
 
@@ -160,8 +161,8 @@ public class MMRList
 	 * @return
 	 */
 	public synchronized MMRDescription getByRandom()
-	{
-		return (MMRDescription) this.m_mixminionrouters.elementAt( (m_rand.nextInt(m_mixminionrouters.size())));
+	{	
+		return (MMRDescription) this.m_mixminionrouters.elementAt( (m_rand.nextInt(m_mixminionrouters.size())));		
 	}
 
 	/**
@@ -178,16 +179,16 @@ public class MMRList
 		Vector routers = new Vector();
 		MMRDescription x = null;
 		boolean contains=true;
-
-		for (int i=0; i<hops; i++) {
-
+				
+		for (int i=0; i<hops-1; i++) {
+			
 			while (contains) {
-			contains = false;
+			contains = false;	
 			x = getByRandom();
 			if (routers.contains(x)) contains = true;
 			}
 			contains=true;
-			routers.addElement(x);
+			routers.add(x);
 		}
 
 		contains = true;
@@ -198,10 +199,23 @@ public class MMRList
 			if (routers.contains(x)) contains = true;
 			exit = x.isExitNode();
 		}
-
-			routers.addElement(x);
+			
+			routers.add(x);
+		
+//		//FIXME Fot Testing only
+//		System.out.println("hier" +hops);	
+//		MMRDescription mm = new MMRDescription("127.0.0.1", "rinos", 48099, "", 
+//        Base64.decode("xh0eIaDjLS5czNQIcrHh7ByYyOY="),
+//        Base64.decode("jNJPD1lU4dwAR+DsKrxG4MdWOGg="),
+//        true, new Date(2005,12,12),  new Date(2005,12,12),  new Date(2005,12,12));
+//		mm.setIdentityKey(Base64.decode("MIIBCgKCAQEA584fjC480O/T9PO1AQMw82ULbA89EBCqhCsbXD+jhQHT+XxtVazXRYA+za3Ex1NvPRrQBhYH+FLNHrYvHNo2LD7AT/pKXqeAeMRc18YAuC4A54SctM4jcOkLIHHn57xe1AanAuu4EjodeDKOLCv1fJpcIijeJOM98vE3ejdnfvahaMwNGYdBxovhHAwU8CADdNzYCNbfrl+nm6fZwRXmTHdEmQ6mnTXNiOnaNb6nlSmolNkvUDPXxt2xXR2yEpGJefgJhTasKyhpbMNpeHFF260897qK6HfScd88MX+yQbXNxOP3NI48/hDrmvanSrLZOsh2tKoTIASjDCDGU6xBzQIDAQAB"));
+//		mm.setPacketKey(Base64.decode("MIIBCgKCAQEAr59bKdGXo///LRP0FuTqZA7nl6jABiSiRb4jzeUrwy2eMHQrwVNCMNwLKmt6Pfraa66NCnVW+WKCDffztRWyvX4hBXUBaYNGrqvRo7ZJ9G2HM9vcsbhAb3zeyHgdXF2eTWRhCHJdpRmZjWZPwSTw2uLX3e2bi51aWBX/X5x6uExMFTHdihbVfrxk2kh1eKeMRNTm+UmZ/BWrrxcaTWVSN00EzFFW6urBtuFPQPohLTjqNzrXh90KiMUbd8OqG+8RCA3WbTv8dGJLAScFpoXM6d1h+xMZAfLSpC1ueRW1dn/xbcafw9kEqvmkaz9sZPJImH7NnkbnO9l+Lh8F3kgpsQIDAQAB"));
+//		routers.setElementAt(mm,0);
+//		routers.setElementAt(mm,1);
+//		//end Testing
+			
 		return routers;
-
+		
 	}
 
 	/**
@@ -220,20 +234,20 @@ public class MMRList
 		return null;
 	}
 
-
+	
 	/**
 	 * parses the document and creates a list with all MMRDescriptions
 	 * @param strDocument
 	 * @throws Exception
 	 * @return false if document is not a valid directory, true otherwise
 	 */
-
+	
 	private boolean parseDocument(String strDocument) throws Exception
 	{
 		Vector mmrs = new Vector();
 		Vector mnodes = new Vector();
 		Vector enodes = new Vector();
-
+		
 		Hashtable mmrswn = new Hashtable();
 		LineNumberReader reader = new LineNumberReader(new StringReader(strDocument));
 		Date published = null;
@@ -248,8 +262,8 @@ public class MMRList
 			{
 				break;
 			}
-
-
+			
+			
 			if (aktLine.startsWith("[Server]"))
 			{
 				MMRDescription mmrd = MMRDescription.parse(reader);
@@ -257,15 +271,15 @@ public class MMRList
 				{
 					if (mmrd.isExitNode()) enodes.addElement(mmrd);
 					else mnodes.addElement(mmrd);
-
+					
 					mmrs.addElement(mmrd);
 					mmrswn.put(mmrd.getName(), mmrd);
 				}
-
+								
 				LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Added: " + mmrd);
 					}
 		}
-
+		
 		m_middlenodes = mnodes;
 		m_exitnodes = enodes;
 		LogHolder.log(LogLevel.DEBUG, LogType.MISC, "ExitNodes : "+enodes.size()+" MiddleNodes : " +mnodes.size());
