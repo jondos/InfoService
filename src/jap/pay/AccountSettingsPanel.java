@@ -132,10 +132,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		getName() + "_button_select";
 	private static final String MSG_BUTTON_CHANGE_PASSWORD = AccountSettingsPanel.class.
 		getName() + "_button_change_password";
-	private static final String MSG_NEW_PASSWORD = AccountSettingsPanel.class.
-		getName() + "_new_password";
-	private static final String MSG_OLD_PASSWORD = AccountSettingsPanel.class.
-		getName() + "_old_password";
+	private static final String MSG_OLDPASSWORDWRONG = AccountSettingsPanel.class.
+		getName() + "_oldpasswordwrong";
 	private static final String MSG_DIALOG_ACCOUNT_PASSWORD = AccountSettingsPanel.class.
 		getName() + "_dialog_account_password";
 	private static final String MSG_ACCOUNT_INVALID = AccountSettingsPanel.class.
@@ -520,15 +518,50 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 	{
 		if (JAPController.getInstance().getPaymentPassword() != null)
 		{
-			JAPPasswordReader pass = new JAPPasswordReader(false,
-				JAPMessages.getString(MSG_DIALOG_ACCOUNT_PASSWORD));
-			String password = pass.readPassword(JAPMessages.getString(MSG_OLD_PASSWORD));
+			JAPDialog d = new JAPDialog(this.getRootPanel().getParent().getParent(),
+										JAPMessages.getString(MSG_ACCPASSWORDTITLE), true);
+			PasswordContentPane p = new PasswordContentPane(d, PasswordContentPane.PASSWORD_CHANGE, "")
+			{
+				public char[] getComparedPassword()
+				{
+					return JAPController.getInstance().getPaymentPassword().toCharArray();
+				}
+			};
 
+			p.updateDialog();
+			d.pack();
+			d.setVisible(true);
+			if (p.getValue() != PasswordContentPane.RETURN_VALUE_CANCEL &&
+				p.getValue() != PasswordContentPane.RETURN_VALUE_CLOSED)
+			{
+				JAPController.getInstance().setPaymentPassword(new String(p.getPassword()));
+			}
+			/*String old = new String(p.getOldPassword());
+				if (old.equals(JAPController.getInstance().getPaymentPassword()))
+				{
+			 JAPController.getInstance().setPaymentPassword(new String(p.getPassword()));
+				}
+				else
+				{
+
+			 p.printStatusMessage(JAPMessages.getString(MSG_OLDPASSWORDWRONG), PasswordContentPane.MESSAGE_TYPE_ERROR);
+				d.setVisible(true);
+				}*/
 		}
-		JAPPasswordReader pass = new JAPPasswordReader(true,
-			JAPMessages.getString(MSG_DIALOG_ACCOUNT_PASSWORD));
-		String password = pass.readPassword(JAPMessages.getString(MSG_NEW_PASSWORD));
-		JAPController.getInstance().setPaymentPassword(password);
+		else
+		{
+			JAPDialog d = new JAPDialog(this.getRootPanel().getParent().getParent(),
+										JAPMessages.getString(MSG_ACCPASSWORDTITLE), true);
+			PasswordContentPane p = new PasswordContentPane(d, PasswordContentPane.PASSWORD_NEW, "");
+			p.updateDialog();
+			d.pack();
+			d.setVisible(true);
+			if (p.getValue() != PasswordContentPane.RETURN_VALUE_CANCEL &&
+				p.getValue() != PasswordContentPane.RETURN_VALUE_CLOSED)
+			{
+				JAPController.getInstance().setPaymentPassword(new String(p.getPassword()));
+			}
+		}
 	}
 
 	/**

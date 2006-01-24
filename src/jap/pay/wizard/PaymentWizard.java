@@ -111,7 +111,6 @@ public class PaymentWizard extends BasicWizard
 			m_infoPage.setAmount(m_methodSelectionPage.getAmount());
 			m_infoPage.fetchTransferNumber();
 			m_infoPage.updateExtraInfo();
-
 		}
 		else if (m_PageIndex == 3)
 		{

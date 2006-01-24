@@ -47,6 +47,7 @@ import anon.util.ResourceLoader;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import javax.swing.JOptionPane;
 
 /**
  * This class contains helper methods for the GUI.
@@ -167,18 +168,27 @@ public final class GUIUtils
 
 	/**
 	 * Finds the first parent that is a window.
-	 * @param a_parentComponent a Component
-	 * @return the first parent that is a window
+	 * @param a_component a Component
+	 * @return the first parent that is a window (may be the component itself) or the
+	 * default frame if no parent window was found
 	 */
-	public static Window getParentWindow(Component a_parentComponent)
+	public static Window getParentWindow(Component a_component)
 	{
-		Component parentComponent = a_parentComponent;
-		while (parentComponent != null && ! (parentComponent instanceof Window))
+		Component component = a_component;
+
+		if (component == null)
+		{
+			// no component given; get the default frame instead
+			component = new JOptionPane().createDialog(component, "").getParent();
+		}
+
+		while (component != null && ! (component instanceof Window))
 		{
 
-			parentComponent = parentComponent.getParent();
+			component = component.getParent();
 		}
-		return (Window)parentComponent;
+
+		return (Window)component;
 	}
 
 

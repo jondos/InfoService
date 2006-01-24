@@ -7,7 +7,7 @@
   - Redistributions of source code must retain the above copyright notice,
  this list of conditions and the following disclaimer.
 
-  - Redistributions in binary form must reproduce the above copyright notice,
+  - Redistributions in bisnary form must reproduce the above copyright notice,
  this list of conditions and the following disclaimer in the documentation and/or
  other materials provided with the distribution.
 
@@ -210,6 +210,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		this(getInternalDialog(a_parentDialog), a_strTitle);
 	}
 
+
 	/**
 	 * Creates a new instance of JAPDialog. It is user-resizable.
 	 * @param a_parentComponent The parent component for this dialog. If it is null or the parent
@@ -231,15 +232,16 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		m_internalDialog = new JOptionPane().createDialog(a_parentComponent, a_strTitle);
 		if (m_parentComponent == null)
 		{
+			// get the default frame
 			m_parentComponent = m_internalDialog.getParent();
 		}
-
 		m_internalDialog.getContentPane().removeAll();
 		m_internalDialog.setResizable(true);
 		m_internalDialog.setModal(false);
 		m_internalDialog.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 		//setDefaultCloseOperation(m_internalDialog.getDefaultCloseOperation());
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+
 
 		/* Old JDKs ignore the default closing operation, therefore it is tried to remove the window listener.
 		 * This removes the flimmering effect that occurs when the internal dialog is closed before enabling
@@ -250,8 +252,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 			//listeners = m_internalDialog.getListeners(WindowListener.class);
 			listeners = (EventListener[]) JDialog.class.getMethod(
 						 "getListeners", new Class[]
-				{Class.class}).invoke(m_internalDialog, new Object[]
-									  {WindowListener.class});
+						 {Class.class}).invoke(m_internalDialog, new Object[]{WindowListener.class});
 		}
 		catch (Exception a_e)
 		{
@@ -260,7 +261,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		}
 		for (int i = 0; listeners != null && i < listeners.length; i++)
 		{
-			m_internalDialog.removeWindowListener( (WindowListener) listeners[i]);
+			m_internalDialog.removeWindowListener((WindowListener)listeners[i]);
 		}
 
 		m_dialogWindowAdapter = new DialogWindowAdapter();
@@ -297,14 +298,12 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		 * @return the information message
 		 */
 		public String getMessage();
-
 		/**
 		 * Performs an action when the link is clicked, for example opening a browser
 		 * window, an E-Mail client or a help page.
 		 * @param a_bState sets the current state if the linked information is defined as a checkbox.
 		 */
 		public void clicked(boolean a_bState);
-
 		/**
 		 * Returns the type the the linked information. It may be a simple link in HTML style (TYPE_LINK),
 		 * a selectable link that may be copied to the clipboard (TYPE_SELECTABLE_LINK) or a
@@ -314,7 +313,6 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		 * @return if the user is allowed to copy the link text
 		 */
 		public int getType();
-
 		/**
 		 * Returns if the dialog should block all other windows. This should not be the default
 		 * behaviour as, for example, no help window would be accessible.
@@ -329,8 +327,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	public static class LinkedCheckBox extends LinkedHelpContext
 	{
 		private static final String MSG_REMEMBER_ANSWER = LinkedCheckBox.class.getName() + "_rememberAnswer";
-		private static final String MSG_DO_NOT_SHOW_AGAIN = LinkedCheckBox.class.getName() +
-			"_doNotShowAgain";
+		private static final String MSG_DO_NOT_SHOW_AGAIN = LinkedCheckBox.class.getName() + "_doNotShowAgain";
 
 		private String m_strMessage;
 		private boolean m_bDefault;
@@ -385,10 +382,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		{
 			this(a_strMessage, a_bDefault, new JAPHelpContext.IHelpContext()
 			{
-				public String getHelpContext()
-				{
-					return a_strHelpContext;
-				}
+				public String getHelpContext(){ return a_strHelpContext;}
 			});
 		}
 
@@ -463,7 +457,6 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		{
 			return null;
 		}
-
 		/**
 		 * Does nothing.
 		 * @param a_bState is ignored
@@ -471,7 +464,6 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		public void clicked(boolean a_bState)
 		{
 		}
-
 		/**
 		 * Returns TYPE_LINK.
 		 * @return TYPE_LINK
@@ -480,7 +472,6 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		{
 			return TYPE_LINK;
 		}
-
 		/**
 		 * Returns true.
 		 * @return true
@@ -499,6 +490,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	public static class LinkedHelpContext implements ILinkedInformation, JAPHelpContext.IHelpContext
 	{
 		private JAPHelpContext.IHelpContext m_helpContext;
+
 
 		public LinkedHelpContext(JAPHelpContext.IHelpContext a_helpContext)
 		{
@@ -533,7 +525,6 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		{
 			return null;
 		}
-
 		/**
 		 * Does nothing.
 		 * @param a_bState is ignored
@@ -541,7 +532,6 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		public void clicked(boolean a_bState)
 		{
 		}
-
 		/**
 		 * Returns TYPE_DEFAULT.
 		 * @return TYPE_DEFAULT
@@ -550,7 +540,6 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		{
 			return TYPE_DEFAULT;
 		}
-
 		/**
 		 * Returns false as otherwise the help window would not be accessible.
 		 * @return false
@@ -1003,6 +992,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 								a_messageType, a_icon, a_linkedInformation);
 	}
 
+
 	/**
 	 * Displays a confirm dialog. Words are wrapped automatically if a message line is too long.
 	 * @param a_parentComponent The parent component for this dialog. If it is null or the parent
@@ -1055,7 +1045,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		 */
 		if (a_linkedInformation instanceof JAPHelpContext.IHelpContext)
 		{
-				helpContext = (JAPHelpContext.IHelpContext) a_linkedInformation;
+				helpContext = (JAPHelpContext.IHelpContext)a_linkedInformation;
 				if (a_linkedInformation.getType() == ILinkedInformation.TYPE_DEFAULT)
 				{
 			a_linkedInformation = null;
@@ -1108,7 +1098,8 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		dialogContentPane.setContentPane(dummyBox);
 		dialogContentPane.updateDialog();
 		// trick: a dialog's content pane is always a JComponent; it is needed to set the min/max size
-		contentPane = (JComponent) dialog.getContentPane();
+		contentPane = (JComponent)dialog.getContentPane();
+
 
 		/**
 		 * Calculate the optimal dialog size with respect to the golden ratio.
@@ -1128,7 +1119,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 			createDialog(a_parentComponent, a_title).getContentPane().getSize().width / 2;
 
 		// set the maximum width that is allowed for the content pane
-		int maxWidth = (int) GUIUtils.getParentWindow(a_parentComponent).getSize().width;
+		int maxWidth = (int)GUIUtils.getParentWindow(a_parentComponent).getSize().width;
 		if (maxWidth < minWidth * 4)
 		{
 			maxWidth = minWidth * 4;
@@ -1182,14 +1173,14 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 			}
 			else
 			{
-				currentWidth = bestWidth + (int) (bestDelta / (3.0 * (failed + 1.0)));
+				currentWidth = bestWidth + (int)(bestDelta / (3.0 * (failed + 1.0)));
 				failed++;
 			}
 
 			// the objective function value
 			//System.out.println("bestDelta: " + bestDelta + "  currentDelta:" + currentDelta);
 
-			currentWidth = (int) Math.max(currentWidth, minWidth);
+			currentWidth = (int)Math.max(currentWidth, minWidth);
 			if (currentWidth == bestWidth)
 			{
 				break;
@@ -1213,8 +1204,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		if (strLinkedInformation != null)
 		{
 			if (a_linkedInformation.getType() == ILinkedInformation.TYPE_SELECTABLE_LINK)
-			{
-				/** @todo this is not nice in most of the old JDKs) */
+			{   /** @todo this is not nice in most of the old JDKs) */
 				JTextPane textPane = GUIUtils.createSelectableAndResizeableLabel(dummyBox);
 				/*
 				SimpleAttributeSet attributes;
@@ -1225,8 +1215,8 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 
 				textPane.setText(strLinkedInformation);
 				textPane.setFont(label.getFont());
-				textPane.setMargin(new java.awt.Insets(0, 0, 0, 0));
-				textPane.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 0, 1, 0));
+				textPane.setMargin(new java.awt.Insets(0,0,0,0));
+				textPane.setBorder(javax.swing.BorderFactory.createEmptyBorder(0,0,1,0));
 				textPane.setForeground(java.awt.Color.blue);
 				linkLabel = textPane;
 				linkLabel.addMouseListener(new LinkedInformationClickListener(a_linkedInformation));
@@ -1238,7 +1228,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 					new JCheckBox(strLinkedInformation,
 								  a_linkedInformation.getType() == ILinkedInformation.TYPE_CHECKBOX_TRUE);
 				linkLabel.setFont(label.getFont());
-				( (JCheckBox) linkLabel).addItemListener(
+				((JCheckBox)linkLabel).addItemListener(
 								new LinkedInformationClickListener(a_linkedInformation));
 			}
 			else
@@ -1247,6 +1237,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 					strLinkedInformation + JAPHtmlMultiLineLabel.TAG_A_CLOSE);
 				linkLabel.addMouseListener(new LinkedInformationClickListener(a_linkedInformation));
 			}
+
 
 			dummyBox.add(linkLabel);
 		}
@@ -1263,7 +1254,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		}
 
 		dialogContentPane.updateDialog();
-		( (JComponent) dialog.getContentPane()).setPreferredSize(bestDimension);
+		((JComponent)dialog.getContentPane()).setPreferredSize(bestDimension);
 		dialog.pack();
 		if (bestDelta != getGoldenRatioDelta(dialog))
 		{
@@ -1604,6 +1595,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 								 a_optionType, a_messageType, null, null);
 	}
 
+
 	/**
 	 * Brings up a dialog where the number of choices is determined by the optionType parameter.
 	 * The messageType parameter is primarily used to supply a default icon from the look and feel.
@@ -1706,6 +1698,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		showErrorDialog(a_parentComponent, a_message, a_title, a_logType, null);
 	}
 
+
 	/**
 	 * Displays a dialog showing an error message to the user and logs the error message
 	 * to the currently used Log.
@@ -1778,6 +1771,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	{
 		showErrorDialog(a_parentComponent, null, null, a_logType, a_throwable);
 	}
+
 
 	/**
 	 * Displays a dialog showing an error message to the user and logs the error message
@@ -2157,7 +2151,10 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		{
 			m_bBlockParentWindow = false;
 			m_parentWindow.setEnabled(true);
+			if (m_parentWindow.isVisible())
+			{
 			m_parentWindow.setVisible(true);
+		}
 		}
 
 		m_internalDialog.setVisible(false);
@@ -2426,7 +2423,6 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 				}
 			}
 		}
-
 		public void windowIconified(WindowEvent a_event)
 		{
 			Vector listeners = (Vector) m_windowListeners.clone();
@@ -2438,7 +2434,6 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 			}
 
 		}
-
 		public void windowDeiconified(WindowEvent a_event)
 		{
 			Vector listeners = (Vector) m_windowListeners.clone();
@@ -2449,10 +2444,9 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 				}
 			}
 		}
-
 		public void windowDeactivated(WindowEvent a_event)
 		{
-			Vector listeners = (Vector) m_windowListeners.clone();
+			Vector listeners = (Vector)m_windowListeners.clone();
 			{
 				for (int i = 0; i < listeners.size(); i++)
 				{
@@ -2460,7 +2454,6 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 				}
 			}
 		}
-
 		public void windowActivated(WindowEvent a_event)
 		{
 			Vector listeners = (Vector) m_windowListeners.clone();
@@ -2472,9 +2465,10 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 			}
 		}
 
+
 		public void windowClosed(WindowEvent a_event)
 		{
-			Vector listeners = (Vector) m_windowListeners.clone();
+			Vector listeners = (Vector)m_windowListeners.clone();
 			{
 				for (int i = 0; i < listeners.size(); i++)
 				{
@@ -2571,6 +2565,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		}
 	}
 
+
 	/**
 	 * Activates a LinkedInformation, if it is given as a link.
 	 */
@@ -2590,7 +2585,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 
 		public void itemStateChanged(ItemEvent a_event)
 		{
-			m_linkedInformation.clicked( ( (JCheckBox) a_event.getSource()).isSelected());
+			m_linkedInformation.clicked(((JCheckBox)a_event.getSource()).isSelected());
 		}
 	}
 
@@ -2605,11 +2600,11 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 			layout = new BoxLayout(this, BoxLayout.Y_AXIS);
 			setLayout(layout);
 		}
-
 		public void setPreferredWidth(int a_preferredWidth)
 		{
 			m_preferredWidth = a_preferredWidth;
 		}
+
 
 		public Dimension getPreferredSize()
 		{
@@ -2657,7 +2652,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		{
 			if (a_container.getComponent(i) instanceof Container)
 			{
-				if (requestFocusForFirstFocusableComponent( (Container) a_container.getComponent(i)))
+				if (requestFocusForFirstFocusableComponent((Container)a_container.getComponent(i)))
 				{
 					return true;
 				}
@@ -2685,7 +2680,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 
 		public void focusGained(FocusEvent a_event)
 		{
-			deactivate( (Window) a_event.getComponent());
+			deactivate((Window)a_event.getComponent());
 		}
 
 		public void focusLost(FocusEvent a_event)
@@ -2715,7 +2710,11 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		if (isVisible() && m_bBlockParentWindow && !a_bVisible)
 		{
 			m_parentWindow.setEnabled(true);
+			if (m_parentWindow.isVisible())
+			{
+				// this is a bugfix
 			m_parentWindow.setVisible(true);
+		}
 		}
 
 		m_bBlockParentWindow = (a_bVisible && m_bModal);
@@ -2786,7 +2785,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 						{
 							if ( ( (WindowEvent) event).getID() == WindowEvent.WINDOW_CLOSING)
 							{
-								m_dialogWindowAdapter.windowClosing( (WindowEvent) event);
+								m_dialogWindowAdapter.windowClosing((WindowEvent) event);
 
 								/*
 								 * Hide this event from the internal dialog. This removes the flimmering
@@ -2852,7 +2851,11 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 			{
 				m_bBlockParentWindow = false;
 				m_parentWindow.setEnabled(true);
+				if (m_parentWindow.isVisible())
+				{
+					// this is a bugfix
 				m_parentWindow.setVisible(true);
+				}
 			}
 		}
 
