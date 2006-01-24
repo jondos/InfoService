@@ -151,8 +151,7 @@ public class PaymentWizardPaymentInfoPage extends BasicWizardPage implements Mou
 
 	public void fetchTransferNumber()
 	{
-		if (m_transCert == null)
-		{
+
 			m_host.setFinishEnabled(false);
 			m_infoPanel.setVisible(false);
 			m_fetchingLabel.setVisible(true);
@@ -161,34 +160,15 @@ public class PaymentWizardPaymentInfoPage extends BasicWizardPage implements Mou
 			{
 				public void run()
 				{
+				if (m_transCert == null)
+				{
 					try
 					{
 						LogHolder.log(LogLevel.DEBUG, LogType.PAY,
 									  "Fetching Transaction Certificate from Payment Instance");
 
 						m_transCert = m_payAccount.charge();
-
 						m_fetchingLabel.setVisible(false);
-
-						if (m_selectedOption.getType().equalsIgnoreCase(XMLPaymentOption.OPTION_PASSIVE))
-						{
-							createInputPanel();
-							m_panelComponents.remove(m_infoPanel);
-							m_panelComponents.add(m_inputPanel, m_c);
-							m_panelComponents.repaint();
-							m_panelComponents.revalidate();
-						}
-						else
-						{
-							m_infoPanel.setVisible(true);
-							updateExtraInfo();
-							if (!m_selectedOption.getExtraInfoType(m_language).equalsIgnoreCase(
-								XMLPaymentOption.EXTRA_LINK) && !m_selectedOption.getType().equals("CreditCard"))
-							{
-								m_host.setFinishEnabled(true);
-								m_host.setNextEnabled(false);
-							}
-						}
 					}
 					catch (Exception e)
 					{
@@ -197,13 +177,38 @@ public class PaymentWizardPaymentInfoPage extends BasicWizardPage implements Mou
 						m_fetchingLabel.setVisible(false);
 					}
 				}
+				//Show correct panel
+						if (m_selectedOption.getType().equalsIgnoreCase(XMLPaymentOption.OPTION_PASSIVE))
+						{
+							createInputPanel();
+					m_panelComponents.removeAll();
+							m_panelComponents.add(m_inputPanel, m_c);
+							m_panelComponents.repaint();
+							m_panelComponents.revalidate();
+						}
+						else
+						{
+					m_panelComponents.removeAll();
+					m_panelComponents.add(m_infoPanel, m_c);
+							m_infoPanel.setVisible(true);
+							updateExtraInfo();
+					m_panelComponents.repaint();
+					m_panelComponents.revalidate();
+							if (!m_selectedOption.getExtraInfoType(m_language).equalsIgnoreCase(
+						XMLPaymentOption.EXTRA_LINK) &&
+						!m_selectedOption.getType().equals("CreditCard"))
+							{
+								m_host.setFinishEnabled(true);
+								m_host.setNextEnabled(false);
+							}
+						}
+
+				}
 			};
 
 			Thread t = new Thread(doIt);
 			t.start();
 		}
-
-	}
 
 	public void updateExtraInfo()
 	{
@@ -364,7 +369,7 @@ public class PaymentWizardPaymentInfoPage extends BasicWizardPage implements Mou
 			{
 				os.openURL(new URL(link));
 			}
-			catch(MalformedURLException me)
+			catch (MalformedURLException me)
 			{
 				LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, "Malformed URL");
 			}

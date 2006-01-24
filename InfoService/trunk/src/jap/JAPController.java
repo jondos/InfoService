@@ -112,6 +112,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 		getName() + "_accpasswordentertitle";
 	private static final String MSG_ACCPASSWORDENTER = JAPController.class.
 		getName() + "_accpasswordenter";
+	private static final String MSG_LOSEACCOUNTDATA = JAPController.class.
+		getName() + "_loseaccountdata";
 
 	/**
 	 * Stores all MixCascades we know (information comes from infoservice or was entered by a user).
@@ -873,7 +875,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					if (elemAccounts != null)
 					{
 						// it is encrypted -> ask user for password
-						Element elemPlainTxt;
+						Element elemPlainTxt = null;
 
 						while (true)
 						{
@@ -885,9 +887,24 @@ public final class JAPController extends Observable implements IProxyListener, O
 							p.updateDialog();
 							d.pack();
 							d.setVisible(true);
+							//Check if cancel button was pressed
+							if (!p.hasValidValue())
+							{
+								boolean yes = JAPDialog.showYesNoDialog(d,
+									JAPMessages.getString(MSG_LOSEACCOUNTDATA));
+								if (yes)
+								{
+									break;
+								}
+								else
+								{
+									continue;
+								}
+							}
+
 							setPaymentPassword(new String(p.getPassword()));
 
-							if (getPaymentPassword() != null)
+							if (getPaymentPassword() != null && !getPaymentPassword().trim().equals(""))
 							{
 							try
 							{
@@ -900,6 +917,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 							}
 							break ;
 						}
+
 						}
 
 						if (getPaymentPassword() != null)
