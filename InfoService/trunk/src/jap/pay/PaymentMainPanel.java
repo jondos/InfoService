@@ -69,8 +69,13 @@ import jap.JAPUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import javax.swing.JComponent;
+import javax.swing.SwingConstants;
+import java.awt.Dimension;
+import gui.FlippingPanel;
+import anon.pay.AIControlChannel;
 
-public class PaymentMainPanel extends JPanel
+public class PaymentMainPanel extends FlippingPanel
 {
 
 	/** Messages */
@@ -82,20 +87,23 @@ public class PaymentMainPanel extends JPanel
 		"_paymentnotactive";
 	private static final String MSG_NEARLYEMPTY = PaymentMainPanel.class.getName() +
 		"_nearlyempty";
+	private static final String MSG_SESSIONSPENT = PaymentMainPanel.class.getName() +
+		"_sessionspent";
+	private static final String MSG_TOTALSPENT = PaymentMainPanel.class.getName() +
+		"_totalspent";
 
 	/**
 	 * Icons for the account icon display
 	 */
 	private ImageIcon[] m_accountIcons;
 
-	/** shows different coin icons */
-	private JLabel m_AccountIconLabel;
-
 	/** shows the current balance state */
 	private JProgressBar m_BalanceProgressBar;
+	private JProgressBar m_BalanceSmallProgressBar;
 
 	/** shows the current balance as text */
-	private JLabel m_BalanceText;
+	private JLabel m_BalanceText, m_BalanceTextSmall;
+	;
 
 	/** show the date of the last balance update */
 	private JLabel m_lastUpdateLabel;
@@ -112,87 +120,174 @@ public class PaymentMainPanel extends JPanel
 	/** has user been notified about nearly empty accout? */
 	private boolean m_notifiedEmpty = false;
 
+	private JLabel m_labelTotalSpent;
+	private JLabel m_labelSessionSpent;
+
+	private long m_spentThisSession, m_spentThisSessionStart;
+	private boolean m_startValueSet = false;
+
 	public PaymentMainPanel(final JAPNewView view)
 	{
-		super(null);
+		super(view);
 		m_view = view;
 
 		loadIcons();
-		GridBagLayout l = new GridBagLayout();
-		GridBagConstraints c = new GridBagConstraints();
-		this.setLayout(l);
-
-		// the date of last update
+		JPanel fullPanel = new JPanel();
+		fullPanel.setLayout(new GridBagLayout());
+		GridBagConstraints c1 = new GridBagConstraints();
 		JLabel label = new JLabel(JAPMessages.getString(MSG_TITLE));
-		//m_AccountText.setBorder(new EtchedBorder());
-		c.anchor = GridBagConstraints.NORTHWEST;
-		c.fill = c.NONE; //GridBagConstraints.HORIZONTAL;
-		c.gridx = 1;
-		c.gridy = 0;
-		c.gridwidth = 3;
-		c.weighty = 0;
-		c.weightx = 1;
-		c.insets = new Insets(0, 5, 0, 0);
-		this.add(label, c);
+		c1.insets = new Insets(0, 5, 0, 0);
+		c1.anchor = GridBagConstraints.WEST;
+		c1.weightx = 0;
+		c1.fill = GridBagConstraints.HORIZONTAL;
+		fullPanel.add(label, c1);
+		JComponent spacer = new JPanel();
+		Dimension spacerDimension = new Dimension(label.getFontMetrics(label.getFont()).charWidth('9') * 6, 1);
+		spacer.setPreferredSize(spacerDimension);
+		c1.insets = new Insets(0, 0, 0, 0);
+		c1.gridx = 1;
+		c1.fill = GridBagConstraints.NONE;
+		c1.weightx = 1;
+		fullPanel.add(spacer, c1);
+		m_BalanceText = new JLabel(" ");
+		m_BalanceText.setHorizontalAlignment(JLabel.RIGHT);
+		c1.insets = new Insets(0, 5, 0, 0);
+		c1.weightx = 0;
+		c1.fill = GridBagConstraints.HORIZONTAL;
+		c1.gridx = 2;
+		fullPanel.add(m_BalanceText, c1);
+		label = new JLabel(" ", SwingConstants.RIGHT);
+		c1.weightx = 0;
+		c1.fill = GridBagConstraints.HORIZONTAL;
+		c1.gridx = 3;
+		c1.insets = new Insets(0, 10, 0, 0);
+		fullPanel.add(label, c1);
+		m_BalanceProgressBar = new JProgressBar();
+		MyProgressBarUI ui = new MyProgressBarUI(true);
+		ui.setFilledBarColor(Color.blue);
+		m_BalanceProgressBar.setUI(ui);
+		m_BalanceProgressBar.setMinimum(0);
+		m_BalanceProgressBar.setMaximum(5);
+		m_BalanceProgressBar.setBorderPainted(false);
+		c1.gridx = 4;
+		c1.weightx = 0;
+		c1.fill = GridBagConstraints.NONE;
+		c1.insets = new Insets(0, 5, 0, 0);
+		fullPanel.add(m_BalanceProgressBar, c1);
+
+		m_labelSessionSpent = new JLabel(JAPMessages.getString(MSG_SESSIONSPENT));
+		c1.insets = new Insets(10, 20, 0, 0);
+		c1.gridx = 0;
+		c1.gridy = 1;
+		c1.anchor = GridBagConstraints.WEST;
+		c1.weightx = 0;
+		fullPanel.add(m_labelSessionSpent, c1);
+		spacer = new JPanel();
+		spacer.setPreferredSize(spacerDimension);
+		c1.gridx = 1;
+		c1.insets = new Insets(0, 0, 0, 0);
+		c1.weightx = 1;
+		c1.fill = GridBagConstraints.NONE;
+		fullPanel.add(spacer, c1);
+		m_labelSessionSpent = new JLabel(" ");
+		m_labelSessionSpent.setHorizontalAlignment(JLabel.RIGHT);
+		c1.insets = new Insets(10, 5, 0, 0);
+		c1.gridx = 2;
+		c1.fill = GridBagConstraints.HORIZONTAL;
+		c1.weightx = 0;
+		fullPanel.add(m_labelSessionSpent, c1);
+
+		label = new JLabel(JAPMessages.getString(MSG_TOTALSPENT));
+		c1.insets = new Insets(10, 20, 0, 0);
+		c1.gridx = 0;
+		c1.gridy = 2;
+		c1.anchor = GridBagConstraints.WEST;
+		c1.weightx = 0;
+		fullPanel.add(label, c1);
+		spacer = new JPanel();
+		spacer.setPreferredSize(spacerDimension);
+		c1.gridx = 1;
+		c1.insets = new Insets(0, 0, 0, 0);
+		c1.weightx = 1;
+		c1.fill = GridBagConstraints.NONE;
+		fullPanel.add(spacer, c1);
+		m_labelTotalSpent = new JLabel(" ");
+		m_labelTotalSpent.setHorizontalAlignment(JLabel.RIGHT);
+		c1.insets = new Insets(10, 5, 0, 0);
+		c1.gridx = 2;
+		c1.fill = GridBagConstraints.HORIZONTAL;
+		c1.weightx = 0;
+		fullPanel.add(m_labelTotalSpent, c1);
 
 		m_dateLabel = new JLabel(JAPMessages.getString(MSG_LASTUPDATE));
-		c.insets = new Insets(10, 10, 10, 10);
-		c.weightx = 0;
-		c.gridy++;
-		c.gridwidth = 1;
-		this.add(m_dateLabel, c);
+		c1.insets = new Insets(10, 20, 0, 0);
+		c1.gridx = 0;
+		c1.gridy = 3;
+		c1.anchor = GridBagConstraints.WEST;
+		c1.weightx = 0;
+		fullPanel.add(m_dateLabel, c1);
+		spacer = new JPanel();
+		spacer.setPreferredSize(spacerDimension);
+		c1.gridx = 1;
+		c1.insets = new Insets(0, 0, 0, 0);
+		c1.weightx = 1;
+		c1.fill = GridBagConstraints.NONE;
+		fullPanel.add(spacer, c1);
+		m_lastUpdateLabel = new JLabel(" ");
+		m_lastUpdateLabel.setHorizontalAlignment(JLabel.RIGHT);
+		c1.insets = new Insets(10, 5, 0, 0);
+		c1.gridx = 2;
+		c1.fill = GridBagConstraints.HORIZONTAL;
+		c1.weightx = 0;
+		fullPanel.add(m_lastUpdateLabel, c1);
+		this.setFullPanel(fullPanel);
 
-		c.gridx++;
-		m_lastUpdateLabel = new JLabel();
-		this.add(m_lastUpdateLabel, c);
+		JPanel smallPanel = new JPanel();
+		smallPanel.setLayout(new GridBagLayout());
+		c1 = new GridBagConstraints();
+		label = new JLabel(JAPMessages.getString(MSG_TITLE));
+		c1.insets = new Insets(0, 5, 0, 0);
+		c1.anchor = GridBagConstraints.WEST;
+		c1.weightx = 0;
+		c1.fill = GridBagConstraints.HORIZONTAL;
+		smallPanel.add(label, c1);
+		spacer = new JPanel();
+		spacerDimension = new Dimension(label.getFontMetrics(label.getFont()).charWidth('9') * 6, 1);
+		spacer.setPreferredSize(spacerDimension);
+		c1.insets = new Insets(0, 0, 0, 0);
+		c1.gridx = 1;
+		c1.fill = GridBagConstraints.NONE;
+		c1.weightx = 1;
+		smallPanel.add(spacer, c1);
+		c1.insets = new Insets(0, 5, 0, 0);
+		c1.weightx = 0;
+		c1.fill = GridBagConstraints.HORIZONTAL;
+		c1.gridx = 2;
+		m_BalanceTextSmall = new JLabel(" ");
+		m_BalanceTextSmall.setHorizontalAlignment(JLabel.RIGHT);
+		smallPanel.add(m_BalanceTextSmall, c1);
+		label = new JLabel(" ", SwingConstants.RIGHT);
+		c1.weightx = 0;
+		c1.fill = GridBagConstraints.HORIZONTAL;
+		c1.gridx = 3;
+		c1.insets = new Insets(0, 10, 0, 0);
+		smallPanel.add(label, c1);
 
-		// the current balance (progressbar + label)
-		MyProgressBarUI progressUi = new MyProgressBarUI(false);
-		progressUi.setFilledBarColor(Color.blue);
-		m_BalanceProgressBar = new JProgressBar(0, 100000000);
-		m_BalanceProgressBar.setUI(progressUi);
-		m_BalanceProgressBar.setValue(0);
-		m_BalanceProgressBar.setBorderPainted(false);
-		c.anchor = GridBagConstraints.NORTHWEST;
-		c.fill = GridBagConstraints.HORIZONTAL;
-		c.gridwidth = 1;
-		c.gridx = 2;
-		c.gridy++;
-		c.insets = new Insets(10, 10, 10, 0);
-		this.add(m_BalanceProgressBar, c);
-		m_BalanceText = new JLabel(" ");
-		c.gridx = 1;
-		c.weightx = 1;
-		this.add(m_BalanceText, c);
+		c1.gridx = 4;
+		c1.weightx = 0;
+		c1.fill = GridBagConstraints.NONE;
+		c1.insets = new Insets(0, 5, 0, 0);
+		m_BalanceSmallProgressBar = new JProgressBar();
+		MyProgressBarUI uiSmall = new MyProgressBarUI(true);
+		uiSmall.setFilledBarColor(Color.blue);
+		m_BalanceSmallProgressBar.setUI(uiSmall);
+		m_BalanceSmallProgressBar.setMinimum(0);
+		m_BalanceSmallProgressBar.setMaximum(5);
+		m_BalanceSmallProgressBar.setBorderPainted(false);
 
-		// the icon label in the middle
-		m_AccountIconLabel = new JLabel(m_accountIcons[1]);
-		c.anchor = GridBagConstraints.NORTHEAST;
-		c.fill = GridBagConstraints.VERTICAL;
-		c.weighty = 1;
-		c.weightx = 0;
-		c.gridheight = 2;
-		c.gridx = 3;
-		c.gridy = 0;
-		//this.add(m_AccountIconLabel, c);
+		smallPanel.add(m_BalanceSmallProgressBar, c1);
 
-		// the JButton on the right
-		/*	m_ConfigButton = new JButton(JAPMessages.getString("ngPaymentCharge"));
-		c.insets.left = 0;
-		c.insets.right = 5;
-		c.gridheight = 2;
-		c.gridx = 4;
-		c.gridy = 0;
-		c.anchor = GridBagConstraints.EAST;
-		c.fill = GridBagConstraints.NONE;
-		this.add(m_ConfigButton, c);
-		m_ConfigButton.addActionListener(new ActionListener()
-		{
-			public void actionPerformed(ActionEvent e)
-			{
-				view.showConfigDialog(JAPConf.PAYMENT_TAB);
-			}
-		 });*/
+		this.setSmallPanel(smallPanel);
 
 		PayAccountsFile.getInstance().addPaymentListener(m_MyPaymentListener);
 		updateDisplay(null);
@@ -209,11 +304,15 @@ public class PaymentMainPanel extends JPanel
 		// payment disabled
 		if (activeAccount == null)
 		{
-			m_AccountIconLabel.setIcon(m_accountIcons[0]);
-			m_dateLabel.setText(JAPMessages.getString(MSG_PAYMENTNOTACTIVE));
-			m_dateLabel.setEnabled(false);
+			m_BalanceText.setText(JAPMessages.getString(MSG_PAYMENTNOTACTIVE));
+			m_BalanceTextSmall.setText(JAPMessages.getString(MSG_PAYMENTNOTACTIVE));
+			m_BalanceText.setEnabled(false);
+			m_BalanceTextSmall.setEnabled(false);
+
 			m_BalanceProgressBar.setValue(0);
 			m_BalanceProgressBar.setEnabled(false);
+			m_BalanceSmallProgressBar.setValue(0);
+			m_BalanceSmallProgressBar.setEnabled(false);
 		}
 
 		// we got everything under control, situation normal
@@ -222,21 +321,58 @@ public class PaymentMainPanel extends JPanel
 			XMLBalance balance = activeAccount.getBalance();
 			if (balance != null)
 			{
+				/*if (!m_startValueSet)
+				{
+					m_spentThisSessionStart = activeAccount.getSpent();
+					m_startValueSet = true;
+				}*/
+				//m_spentThisSession = activeAccount.getSpent() - m_spentThisSessionStart;
+
+m_spentThisSession = AIControlChannel.getBytes();
 				Timestamp t = balance.getTimestamp();
-			SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm");
+				SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yy HH:mm");
 			String dateText = sdf.format(t);
 			m_lastUpdateLabel.setText(dateText);
-			m_dateLabel.setText(JAPMessages.getString(MSG_LASTUPDATE));
-			m_dateLabel.setEnabled(true);
-			m_AccountIconLabel.setIcon(m_accountIcons[1]);
 			m_BalanceText.setEnabled(true);
 			m_BalanceText.setText(JAPUtil.formatBytesValue(activeAccount.getCertifiedCredit()));
-				m_BalanceProgressBar.setMaximum( (int) (activeAccount.getDeposit() / 100));
-				m_BalanceProgressBar.setValue( (int) (activeAccount.getCertifiedCredit() / 100));
+				m_BalanceTextSmall.setEnabled(true);
+				m_BalanceTextSmall.setText(JAPUtil.formatBytesValue(activeAccount.getCertifiedCredit()));
+				m_labelSessionSpent.setText(JAPUtil.formatBytesValue(m_spentThisSession));
+				double deposit = (double) activeAccount.getDeposit();
+				double credit = (double) activeAccount.getCertifiedCredit();
+				double percent = credit / deposit;
+				if (percent > 0.8)
+				{
+					m_BalanceProgressBar.setValue(5);
+					m_BalanceSmallProgressBar.setValue(5);
+				}
+				else if (percent > 0.6)
+				{
+					m_BalanceProgressBar.setValue(4);
+					m_BalanceSmallProgressBar.setValue(4);
+				}
+				else if (percent > 0.4)
+				{
+					m_BalanceProgressBar.setValue(3);
+					m_BalanceSmallProgressBar.setValue(3);
+				}
+				else if (percent > 0.2)
+				{
+					m_BalanceProgressBar.setValue(2);
+					m_BalanceSmallProgressBar.setValue(2);
+				}
+				else
+				{
+					m_BalanceProgressBar.setValue(1);
+					m_BalanceSmallProgressBar.setValue(1);
+				}
 			m_BalanceProgressBar.setEnabled(true);
+				m_BalanceSmallProgressBar.setEnabled(true);
 
+				m_labelTotalSpent.setText(JAPUtil.formatBytesValue(activeAccount.getSpent()));
 				// account is nearly empty
-				if (activeAccount.getCertifiedCredit() <= (1024 * 1024) && !m_notifiedEmpty && activeAccount.getCertifiedCredit() != 0)
+				if (activeAccount.getCertifiedCredit() <= (1024 * 1024) && !m_notifiedEmpty &&
+					activeAccount.getCertifiedCredit() != 0)
 				{
 					JAPDialog.showMessageDialog(JAPController.getView(),
 												JAPMessages.getString(MSG_NEARLYEMPTY));

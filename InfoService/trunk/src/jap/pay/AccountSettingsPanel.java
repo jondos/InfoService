@@ -83,7 +83,6 @@ import gui.dialog.WorkerContentPane;
 import jap.AbstractJAPConfModule;
 import jap.JAPConstants;
 import jap.JAPController;
-import jap.JAPPasswordReader;
 import jap.JAPUtil;
 import jap.pay.wizard.PaymentWizard;
 import logging.LogHolder;
@@ -156,6 +155,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		getName() + "_accpasswordtitle";
 	private static final String MSG_ACCPASSWORD = AccountSettingsPanel.class.
 		getName() + "_accpassword";
+	private static final String MSG_CAPTCHANOTSOLVED = AccountSettingsPanel.class.
+		getName() + "_captchanotsolved";
 
 	private JButton m_btnCreateAccount;
 	private JButton m_btnChargeAccount;
@@ -536,20 +537,9 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 			{
 				JAPController.getInstance().setPaymentPassword(new String(p.getPassword()));
 			}
-			/*String old = new String(p.getOldPassword());
-				if (old.equals(JAPController.getInstance().getPaymentPassword()))
-				{
-			 JAPController.getInstance().setPaymentPassword(new String(p.getPassword()));
 				}
 				else
 				{
-
-			 p.printStatusMessage(JAPMessages.getString(MSG_OLDPASSWORDWRONG), PasswordContentPane.MESSAGE_TYPE_ERROR);
-				d.setVisible(true);
-				}*/
-		}
-		else
-		{
 			JAPDialog d = new JAPDialog(this.getRootPanel().getParent().getParent(),
 										JAPMessages.getString(MSG_ACCPASSWORDTITLE), true);
 			PasswordContentPane p = new PasswordContentPane(d, PasswordContentPane.PASSWORD_NEW, "");
@@ -797,11 +787,21 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 						}
 						catch (Exception ex)
 						{
+							if (ex.getMessage().equals("CAPTCHA"))
+							{
+								JAPDialog.showErrorDialog(
+									getRootPanel().getParent().getParent(),
+									JAPMessages.getString(MSG_CREATEERROR) + " " + JAPMessages.getString(MSG_CAPTCHANOTSOLVED),
+									LogType.PAY);
+							}
+							else
+							{
 							JAPDialog.showErrorDialog(
 								getRootPanel().getParent().getParent(),
 								JAPMessages.getString(MSG_CREATEERROR) + " " + ex.getMessage(),
 								LogType.PAY);
 						}
+					}
 					}
 				};
 				JAPDialog d = new JAPDialog(this.getRootPanel(), JAPMessages.getString(MSG_ACCOUNTCREATE), true);
@@ -816,7 +816,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 				//First account, ask for password
 				if (PayAccountsFile.getInstance().getNumAccounts() == 1)
 				{
-					JAPDialog pd = new JAPDialog( (Component)null, JAPMessages.getString(MSG_ACCPASSWORDTITLE), true);
+					JAPDialog pd = new JAPDialog(this.getRootPanel().getParent().getParent(),
+												 JAPMessages.getString(MSG_ACCPASSWORDTITLE), true);
 					PasswordContentPane pc = new PasswordContentPane(pd,
 						PasswordContentPane.PASSWORD_NEW,
 						JAPMessages.getString(MSG_ACCPASSWORD));

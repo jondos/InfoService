@@ -462,31 +462,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 //------------------ Payment Panel
 		if (m_bWithPayment)
 		{
-			m_flippingPanelPayment = new FlippingPanel(this);
-
-			m_flippingPanelPayment.setFullPanel(new PaymentMainPanel(this));
-
-			gbl1 = new GridBagLayout();
-			c1 = new GridBagConstraints();
-			p = new JPanel(gbl1);
-
-			// PAYMENT
-			m_labelPayment = new JLabel(JAPMessages.getString("ngPayment"));
-			m_labelPayment.setHorizontalAlignment(SwingConstants.LEFT);
-			c1.insets = new Insets(0, 5, 0, 0);
-			c1.weightx = 0;
-			c1.anchor = GridBagConstraints.WEST;
-			c1.fill = GridBagConstraints.NONE;
-			p.add(m_labelPayment, c1);
-
-			//	c1.insets = new Insets(0, 2, 0, 0);
-			c1.weightx = 1;
-			c1.anchor = GridBagConstraints.EAST;
-			c1.fill = GridBagConstraints.HORIZONTAL;
-			JLabel labelFill = new JLabel();
-			p.add(labelFill, c1);
-			m_flippingPanelPayment.setSmallPanel(p);
-
+			m_flippingPanelPayment = new PaymentMainPanel(this);
 			c.fill = GridBagConstraints.HORIZONTAL;
 			c.weightx = 1;
 			c.anchor = GridBagConstraints.NORTHWEST;
