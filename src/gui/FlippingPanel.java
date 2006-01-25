@@ -57,7 +57,7 @@ import javax.swing.JPanel;
  *
  * @author ??
  */
-final public class FlippingPanel extends JPanel
+public class FlippingPanel extends JPanel
 {
 	private JPanel m_panelContainer;
 	private JPanel m_panelSmall;

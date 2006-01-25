@@ -237,7 +237,7 @@ public class BIConnection
 		}
 		else
 		{
-			throw new Exception("Could not solve captcha");
+			throw new Exception("CAPTCHA");
 		}
 	}
 

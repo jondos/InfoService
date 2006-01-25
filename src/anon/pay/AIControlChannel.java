@@ -37,6 +37,7 @@ public class AIControlChannel extends SyncControlChannel
 
 	private MuxSocket m_MuxSocket;
 	private boolean m_bFirstBalance;
+	private static long m_totalBytes=0;
 
 	private Vector m_aiListeners = new Vector();
 
@@ -129,6 +130,16 @@ public class AIControlChannel extends SyncControlChannel
 	 */
 	private void processPayRequest(XMLPayRequest request)
 	{
+		if (request.isAccountRequest())
+		{
+			PayAccount currentAccount = PayAccountsFile.getInstance().getActiveAccount();
+			PayAccountsFile.getInstance().signalAccountRequest();
+			if (currentAccount != null)
+			{
+				this.sendXMLMessage(XMLUtil.toXMLDocument(currentAccount.getAccountCertificate()));
+			}
+		}
+
 		XMLEasyCC cc = request.getCC();
 		if (cc != null)
 		{
@@ -161,7 +172,7 @@ public class AIControlChannel extends SyncControlChannel
 				long newBytes = currentAccount.updateCurrentBytes(m_MuxSocket);
 				LogHolder.log(LogLevel.DEBUG, LogType.PAY,
 							  "AI requests to sign " + newBytes + " transferred bytes");
-
+				m_totalBytes = newBytes;
 				// calculate number of bytes transferred with other cascades
 				/*				long transferredWithOtherCascades = 0;
 				 XMLAccountInfo info = currentAccount.getAccountInfo();
@@ -189,7 +200,7 @@ public class AIControlChannel extends SyncControlChannel
 								  "Unrealistic number of bytes to be signed. Spent bytes: " +
 								  oldSpent + " + new bytes we should sign: " + newBytes + " = " + toSign +
 								  " < bytes in last CC: " + cc.getTransferredBytes()); ;
-					this.fireAIEvent(EVENT_UNREAL, cc.getTransferredBytes()-oldSpent-newBytes);
+					this.fireAIEvent(EVENT_UNREAL, cc.getTransferredBytes() - oldSpent - newBytes);
 					//cc.setTransferredBytes(cc.getTransferredBytes()+newBytes);
 				}
 				cc.setPIID(currentAccount.getAccountCertificate().getPIID());
@@ -241,16 +252,6 @@ public class AIControlChannel extends SyncControlChannel
 			m_bFirstBalance = false;
 			}
 		}
-		if (request.isAccountRequest())
-		{
-			PayAccount currentAccount = PayAccountsFile.getInstance().getActiveAccount();
-			/** @todo send notification to GUI - especially if currentAccount == null at this point */
-			PayAccountsFile.getInstance().signalAccountRequest();
-			if (currentAccount != null)
-			{
-				this.sendXMLMessage(XMLUtil.toXMLDocument(currentAccount.getAccountCertificate()));
-			}
-		}
 	}
 
 	private void fireAIEvent(int a_eventType, long a_additionalInfo)
@@ -264,6 +265,11 @@ public class AIControlChannel extends SyncControlChannel
 				( (IAIEventListener) e.nextElement()).unrealisticBytes(a_additionalInfo);
 			}
 		}
+	}
+
+	public static long getBytes()
+	{
+		return m_totalBytes;
 	}
 
 }
