@@ -29,6 +29,7 @@ package gui.dialog;
 
 import java.util.EventListener;
 import java.util.Vector;
+import java.lang.reflect.InvocationTargetException;
 import javax.accessibility.Accessible;
 import javax.accessibility.AccessibleContext;
 
@@ -71,7 +72,6 @@ import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 
 import gui.GUIUtils;
-import gui.JAPHelp;
 import gui.JAPHelpContext;
 import gui.JAPHtmlMultiLineLabel;
 import gui.JAPMessages;
@@ -137,7 +137,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	public static final String MSG_TITLE_ERROR = JAPDialog.class.getName() + "_titleError";
 	public static final String MSG_ERROR_UNDISPLAYABLE = JAPDialog.class.getName() + "_errorUndisplayable";
 
-	private static final int NUMBER_OF_HEURISTIC_ITERATIONS = 5;
+	private static final int NUMBER_OF_HEURISTIC_ITERATIONS = 6;
 
 	private boolean m_bLocationSetManually = false;
 	private boolean m_bModal;
@@ -1040,15 +1040,15 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		{
 			bForceApplicationModality = a_linkedInformation.isApplicationModalityForced();
 
-		/*
-		 * If the linked information contains a help context, display the help button instead of a link
-		 */
-		if (a_linkedInformation instanceof JAPHelpContext.IHelpContext)
-		{
+			/*
+			 * If the linked information contains a help context, display the help button instead of a link
+			 */
+			if (a_linkedInformation instanceof JAPHelpContext.IHelpContext)
+			{
 				helpContext = (JAPHelpContext.IHelpContext)a_linkedInformation;
 				if (a_linkedInformation.getType() == ILinkedInformation.TYPE_DEFAULT)
 				{
-			a_linkedInformation = null;
+					a_linkedInformation = null;
 				}
 			}
 		}
@@ -1082,8 +1082,42 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 												  new DialogContentPane.Options(a_optionType, helpContext));
 		dialogContentPane.setDefaultButtonOperation(DialogContentPane.ON_CLICK_DISPOSE_DIALOG);
 
+		try
+		{
+			if (!SwingUtilities.isEventDispatchThread())
+			{
+				/**
+				 * This logic is needed if the event thread is interrupted. In this case, the HTML rendering
+				 * engine is interrupted, too, and the multi-line label shows always (0,0) as preferred size,
+				 * for example.
+				 */
+				final JAPHtmlMultiLineLabel runLabel = new JAPHtmlMultiLineLabel("Text");
+				SwingUtilities.invokeAndWait(new Runnable()
+				{
+					public void run()
+					{
+						runLabel.setText(runLabel.getText());
+						runLabel.revalidate();
+					}
+				});
+			}
+		}
+		catch (InterruptedException a_e)
+		{
+		}
+		catch (InvocationTargetException a_e)
+		{
+		}
+		// test if labels will be formatted correctly
+		label = new JAPHtmlMultiLineLabel("Text");
+		if (label.getPreferredSize().width == 0 || label.getPreferredSize().height == 0)
+		{
+			LogHolder.log(LogLevel.EMERG, LogType.GUI,
+						  "Dialog label size is invalid! This dialog might not show any label!");
+		}
 		label = new JAPHtmlMultiLineLabel(message);
 		label.setFontStyle(JAPHtmlMultiLineLabel.FONT_STYLE_PLAIN);
+
 		dummyBox = new PreferredWidthBoxPanel();
 		if (strLinkedInformation != null &&
 			(a_linkedInformation.getType() == ILinkedInformation.TYPE_CHECKBOX_TRUE ||
@@ -1097,6 +1131,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		dummyBox.add(label);
 		dialogContentPane.setContentPane(dummyBox);
 		dialogContentPane.updateDialog();
+		//dialog.pack();
 		// trick: a dialog's content pane is always a JComponent; it is needed to set the min/max size
 		contentPane = (JComponent)dialog.getContentPane();
 
@@ -1106,7 +1141,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		 * The width defines the longer side.
 		 */
 		Dimension bestDimension = null;
-		int  minWidth;
+		Dimension  minSize;
 		double currentDelta;
 		double bestDelta;
 		int currentWidth;
@@ -1114,28 +1149,27 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		int failed;
 
 		// get the minimum width and height that is needed to display this dialog without any text
-		minWidth =
-			new JOptionPane("", a_messageType, a_optionType, a_icon).
-			createDialog(a_parentComponent, a_title).getContentPane().getSize().width / 2;
+		minSize = new Dimension(
+			  new JOptionPane("", a_messageType, a_optionType, a_icon).
+			  createDialog(a_parentComponent, a_title).getContentPane().getSize());
+		minSize.setSize(minSize.width / 2, minSize.height);
 
 		// set the maximum width that is allowed for the content pane
 		int maxWidth = (int)GUIUtils.getParentWindow(a_parentComponent).getSize().width;
-		if (maxWidth < minWidth * 4)
+		if (maxWidth < minSize.width * 4)
 		{
-			maxWidth = minWidth * 4;
+			maxWidth = minSize.width * 4;
 		}
 		// if the text in the content pane is short, reduce the max width to the text length
 		maxWidth = Math.min(contentPane.getWidth(), maxWidth);
-
-		// put the content pane in a box and the box in the dialog
-		dummyBox = new PreferredWidthBoxPanel();
-		dummyBox.add(contentPane);
 
 		/**
 		 * Do a quick heuristic to approximate the golden ratio for the dialog size.
 		 */
 		bestDelta = Double.MAX_VALUE;
-		currentWidth = maxWidth;
+		//currentWidth = contentPane.getWidth() / 2;
+		//currentWidth = maxWidth;
+		currentWidth = Math.min(500, contentPane.getWidth());
 		bestWidth =  currentWidth;
 		failed = 0;
 		for (int i = 0; i < NUMBER_OF_HEURISTIC_ITERATIONS; i++)
@@ -1143,8 +1177,10 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 			/**
 			 * Set the exact width of the frame.
 			 * The following trick must be explained:
-			 * Get the HTML view of the label and set its width to the current width of the label that is
-			 * defined by the total width of the surrounding content pane. The height of the view may be
+			 * Put the content pane in a box and the box in the dialog. Set the total with of the box
+			 * and pack the dialog, so that the internal label automatically gets the corresponding height.
+			 * Get the HTML view of the label and set its preferred width to the current width of this label
+			 * that is defined by the total width of the surrounding box. The height of the view may be
 			 * unlimited, as the view will adapt its height automatically so that the whole text is
 			 * displayed respecting the width that has been set.
 			 * @see javax.swing.JLabel.Bounds()
@@ -1153,13 +1189,21 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 			 * @see javax.swing.plaf.basic.BasicHTML
 			 * @see javax.swing.text.html.HTMLEditorKit
 			 */
-			contentPane.setMaximumSize(
-						 new Dimension(currentWidth, JAPHtmlMultiLineLabel.UNLIMITED_LABEL_HEIGHT));
+			dummyBox = new PreferredWidthBoxPanel();
+			dummyBox.add(contentPane);
 			dummyBox.setPreferredWidth(currentWidth);
 			dialog.setContentPane(dummyBox);
+
 			dialog.pack();
 			label.setPreferredWidth(label.getWidth());
 			dialog.pack();
+			if (dummyBox.getHeight() < minSize.height)
+			{
+				// the dialog has a smaller height as needed to display all elements, e.g. the icon
+				LogHolder.log(LogLevel.NOTICE, LogType.GUI, "Dialog height was too small.");
+				dummyBox.setPreferredHeigth(minSize.height);
+				dialog.pack();
+			}
 
 			currentWidth = dummyBox.getWidth();
 			currentDelta = getGoldenRatioDelta(dialog);
@@ -1180,7 +1224,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 			// the objective function value
 			//System.out.println("bestDelta: " + bestDelta + "  currentDelta:" + currentDelta);
 
-			currentWidth = (int)Math.max(currentWidth, minWidth);
+			currentWidth = (int)Math.max(currentWidth, minSize.width);
 			if (currentWidth == bestWidth)
 			{
 				break;
@@ -1238,7 +1282,6 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 				linkLabel.addMouseListener(new LinkedInformationClickListener(a_linkedInformation));
 			}
 
-
 			dummyBox.add(linkLabel);
 		}
 
@@ -1260,7 +1303,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		{
 			LogHolder.log(LogLevel.NOTICE, LogType.GUI, "Calculated dialog size differs from real size!");
 		}
-		LogHolder.log(LogLevel.DEBUG, LogType.GUI, "Dialog golden ratio delta: " + getGoldenRatioDelta(dialog));
+		LogHolder.log(LogLevel.NOTICE, LogType.GUI, "Dialog golden ratio delta: " + getGoldenRatioDelta(dialog));
 
 		dialog.setResizable(false);
 		dialog.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
@@ -2140,8 +2183,8 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 
 	/**
 	 * Disposes the dialog (set it to invisible and releases all resources).
-	 * @todo Causes a Thread deadlock if called from Threads other than the main Thread or the
-	 * AWT Event Thread. Removing the setVisible(false) would solve this problem, but causes a
+	 * @todo Causes a Thread deadlock or throws an exception if called from Threads other than the main
+	 * Thread or the AWT Event Thread. Removing the setVisible(false) would solve this problem, but causes a
 	 * java.lang.IllegalMonitorStateException with JDK 1.2.2.
 	 * If Threads are startet with gui.dialog.WorkerContentPane, everything is OK, so don't worry.
 	 */
@@ -2153,8 +2196,8 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 			m_parentWindow.setEnabled(true);
 			if (m_parentWindow.isVisible())
 			{
-			m_parentWindow.setVisible(true);
-		}
+				m_parentWindow.setVisible(true);
+			}
 		}
 
 		m_internalDialog.setVisible(false);
@@ -2483,8 +2526,8 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		 * closed, for example, ignoring which behaviour is set for it by default.
 		 * For JAPDialogs as parent, the problem is solved by first checking if it is enabled and then
 		 * processing the windowClosing event and informing its listeners. Therefore it is recommended
-		 * only to use JAPDialogs, and, if it is really needed to use a JFrame, a JDialog or an other window,
-		 * to check for it if it is enabled before performing the windowClosing operation.
+		 * only to use JAPDialogs as parent, and, if it is really needed to use as parent a JFrame, a JDialog
+		 * or an other window, to check for it if it is enabled before performing the windowClosing operation.
 		 * @param a_event WindowEvent
 		 */
 		public void windowClosing(WindowEvent a_event)
@@ -2592,27 +2635,43 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	private static class PreferredWidthBoxPanel extends JPanel
 	{
 		private int m_preferredWidth;
+		private int m_preferredHeigth;
 
 		public PreferredWidthBoxPanel()
 		{
 			BoxLayout layout;
 			m_preferredWidth = 0;
+			m_preferredHeigth = 0;
 			layout = new BoxLayout(this, BoxLayout.Y_AXIS);
 			setLayout(layout);
 		}
 		public void setPreferredWidth(int a_preferredWidth)
 		{
+			m_preferredHeigth = 0;
 			m_preferredWidth = a_preferredWidth;
 		}
 
+		public void setPreferredHeigth(int a_preferredHeigth)
+		{
+			m_preferredHeigth = a_preferredHeigth;
+			m_preferredWidth = 0;
+
+		}
 
 		public Dimension getPreferredSize()
 		{
-			if (m_preferredWidth <= 0)
+			if (m_preferredWidth <= 0 && m_preferredHeigth <= 0)
 			{
 				return super.getPreferredSize();
 			}
-			return new Dimension(m_preferredWidth, (int)super.getPreferredSize().height);
+			else if (m_preferredWidth > 0)
+			{
+				return new Dimension(m_preferredWidth, super.getPreferredSize().height);
+			}
+			else
+			{
+				return new Dimension(super.getPreferredSize().width, m_preferredHeigth);
+			}
 		}
 	}
 
@@ -2713,8 +2772,8 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 			if (m_parentWindow.isVisible())
 			{
 				// this is a bugfix
-			m_parentWindow.setVisible(true);
-		}
+				m_parentWindow.setVisible(true);
+			}
 		}
 
 		m_bBlockParentWindow = (a_bVisible && m_bModal);
@@ -2854,7 +2913,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 				if (m_parentWindow.isVisible())
 				{
 					// this is a bugfix
-				m_parentWindow.setVisible(true);
+					m_parentWindow.setVisible(true);
 				}
 			}
 		}

@@ -61,13 +61,13 @@ public class JAPHtmlMultiLineLabel extends JLabel
 	private Font m_font;
 
 	/**
-   * Creates a new JAPHtmlMultiLineLabel.
+	 * Creates a new JAPHtmlMultiLineLabel.
 	 * @param a_text Any HTML 3.2 conform text, which is allowed in the body of an HTML 3.2 structure
 	 *               (without the leading and trailing <html> and <body> tags).
-   * @param a_defaultFont The font to use as the default font for the text (set in the HTML body
-   *                      tag). So any part of the text, which is not influenced by special
-   *                      modifiers is displayed with this default font. If the specified Font is
-   *                      BOLD, the text is also included within a <b> tag.
+	 * @param a_defaultFont The font to use as the default font for the text (set in the HTML body
+	 *                      tag). So any part of the text, which is not influenced by special
+	 *                      modifiers is displayed with this default font. If the specified Font is
+	 *                      BOLD, the text is also included within a <b> tag.
 	 * @param a_alignment One of the following constants defined in SwingConstants:
 	 * LEFT, CENTER, RIGHT, LEADING or TRAILING.
 	 */
@@ -213,6 +213,7 @@ public class JAPHtmlMultiLineLabel extends JLabel
 			// reset the original parent
 			htmlView.getView(0).setParent(htmlView);
 		}
+		invalidate();
 	}
 
 
@@ -224,10 +225,10 @@ public class JAPHtmlMultiLineLabel extends JLabel
 	/**
 	 * Changes the default font of the displayed text.
 	 *
-   * @param a_defaultFont The font to use as the default font for the text (set in the HTML body
-   *                      tag). So any part of the text, which is not influenced by special
-   *                      modifiers is displayed with this default font. If the specified Font is
-   *                      BOLD, the text is also included within a <b> tag.
+	 * @param a_defaultFont The font to use as the default font for the text (set in the HTML body
+	 *                      tag). So any part of the text, which is not influenced by special
+	 *                      modifiers is displayed with this default font. If the specified Font is
+	 *                      BOLD, the text is also included within a <b> tag.
 	 */
 	public void setFont(Font a_defaultFont)
 	{
@@ -238,7 +239,7 @@ public class JAPHtmlMultiLineLabel extends JLabel
 
 		if (JLabel.class.isAssignableFrom(ClassUtil.getCallingClassStatic()) &&
 			!JAPHtmlMultiLineLabel.class.isAssignableFrom(ClassUtil.getCallingClassStatic()))
-	{
+		{
 			// other JLabels use this method as expected (important for superclass calls)
 			super.setFont(a_defaultFont);
 		}
