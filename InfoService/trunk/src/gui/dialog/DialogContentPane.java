@@ -93,6 +93,16 @@ import logging.LogType;
  */
 public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOptions
 {
+	static
+	{
+		// preload java dialog icons
+		new JOptionPane("", MESSAGE_TYPE_ERROR).createDialog(null, "");
+		new JOptionPane("", MESSAGE_TYPE_INFORMATION).createDialog(null, "");
+		new JOptionPane("", MESSAGE_TYPE_WARNING).createDialog(null, "");
+		new JOptionPane("", MESSAGE_TYPE_PLAIN).createDialog(null, "");
+		new JOptionPane("", MESSAGE_TYPE_QUESTION).createDialog(null, "");
+	}
+
 	public static final int ON_CLICK_DO_NOTHING = 0;
 	public static final int ON_CLICK_HIDE_DIALOG = 1;
 	public static final int ON_CLICK_DISPOSE_DIALOG = 2;
