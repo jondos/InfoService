@@ -774,6 +774,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 			/*boolean choice = JAPDialog.showYesNoDialog(this.getRootPanel().getParent().getParent(),
 			 JAPMessages.getString("ngCreateKeyPair"));*/
 			JAPDialog d = new JAPDialog(this.getRootPanel(), JAPMessages.getString(MSG_ACCOUNTCREATE), true);
+			d.setDefaultCloseOperation(JAPDialog.DO_NOTHING_ON_CLOSE);
 
 			SimpleWizardContentPane panel1 = new SimpleWizardContentPane(d,
 				JAPMessages.getString("ngCreateKeyPair"), null, null);
@@ -824,6 +825,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 												 PasswordContentPane.PASSWORD_NEW,
 												 JAPMessages.getString(MSG_ACCPASSWORD));
 					pc.getButtonNo().setEnabled(false);
+					pc.getButtonCancel().setEnabled(false);
 				}
 
 				panel1.updateDialogOptimalSized(panel1);
