@@ -321,20 +321,13 @@ public class PaymentMainPanel extends FlippingPanel
 			XMLBalance balance = activeAccount.getBalance();
 			if (balance != null)
 			{
-				/*if (!m_startValueSet)
-				{
-					m_spentThisSessionStart = activeAccount.getSpent();
-					m_startValueSet = true;
-				}*/
-				//m_spentThisSession = activeAccount.getSpent() - m_spentThisSessionStart;
-
-m_spentThisSession = AIControlChannel.getBytes();
+				m_spentThisSession = AIControlChannel.getBytes();
 				Timestamp t = balance.getTimestamp();
 				SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yy HH:mm");
-			String dateText = sdf.format(t);
-			m_lastUpdateLabel.setText(dateText);
-			m_BalanceText.setEnabled(true);
-			m_BalanceText.setText(JAPUtil.formatBytesValue(activeAccount.getCertifiedCredit()));
+				String dateText = sdf.format(t);
+				m_lastUpdateLabel.setText(dateText);
+				m_BalanceText.setEnabled(true);
+				m_BalanceText.setText(JAPUtil.formatBytesValue(activeAccount.getCertifiedCredit()));
 				m_BalanceTextSmall.setEnabled(true);
 				m_BalanceTextSmall.setText(JAPUtil.formatBytesValue(activeAccount.getCertifiedCredit()));
 				m_labelSessionSpent.setText(JAPUtil.formatBytesValue(m_spentThisSession));
@@ -361,12 +354,17 @@ m_spentThisSession = AIControlChannel.getBytes();
 					m_BalanceProgressBar.setValue(2);
 					m_BalanceSmallProgressBar.setValue(2);
 				}
-				else
+				else if (credit != 0)
 				{
 					m_BalanceProgressBar.setValue(1);
 					m_BalanceSmallProgressBar.setValue(1);
 				}
-			m_BalanceProgressBar.setEnabled(true);
+				else
+				{
+					m_BalanceProgressBar.setValue(0);
+					m_BalanceSmallProgressBar.setValue(0);
+				}
+				m_BalanceProgressBar.setEnabled(true);
 				m_BalanceSmallProgressBar.setEnabled(true);
 
 				m_labelTotalSpent.setText(JAPUtil.formatBytesValue(activeAccount.getSpent()));
@@ -379,8 +377,8 @@ m_spentThisSession = AIControlChannel.getBytes();
 					m_notifiedEmpty = true;
 				}
 
+			}
 		}
-	}
 	}
 
 	/**
@@ -497,8 +495,8 @@ m_spentThisSession = AIControlChannel.getBytes();
 						else
 						{
 							option = JOptionPane.NO_OPTION;
+						}
 					}
-				}
 				}
 			}
 
@@ -520,7 +518,7 @@ m_spentThisSession = AIControlChannel.getBytes();
 		public void accountError(XMLErrorMessage msg)
 		{
 			JAPDialog.showErrorDialog(PaymentMainPanel.this,
-				JAPMessages.getString("aiErrorMessage") + msg.getErrorDescription(),
+									  JAPMessages.getString("aiErrorMessage") + msg.getErrorDescription(),
 									  LogType.PAY);
 		}
 
