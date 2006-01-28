@@ -89,6 +89,7 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import gui.dialog.PasswordContentPane;
+import gui.dialog.SimpleWizardContentPane;
 
 /**
  * The Jap Conf Module (Settings Tab Page) for the Accounts and payment Management
@@ -537,9 +538,9 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 			{
 				JAPController.getInstance().setPaymentPassword(new String(p.getPassword()));
 			}
-				}
-				else
-				{
+		}
+		else
+		{
 			JAPDialog d = new JAPDialog(this.getRootPanel().getParent().getParent(),
 										JAPMessages.getString(MSG_ACCPASSWORDTITLE), true);
 			PasswordContentPane p = new PasswordContentPane(d, PasswordContentPane.PASSWORD_NEW, "");
@@ -701,48 +702,48 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		   if (choice == JOptionPane.YES_OPTION)
 		   {
 		 /** @todo find out why the wait splash screen looks so ugly
-		   JAPWaitSplash splash = null;
-		   try
-		   {
-			splash = JAPWaitSplash.start("Fetching transfer number...", "Please wait");
-			Thread.sleep(5);
-			transferCertificate = selectedAccount.charge();
-			splash.abort();
-		   }
-		   catch (Exception ex)
-		   {
-			splash.abort();
-			LogHolder.log(LogLevel.DEBUG, LogType.PAY, ex);
-			JOptionPane.showMessageDialog(
-		  view,
-		  "<html>" + JAPMessages.getString("ngTransferNumberError") + "<br>" + ex.getMessage() +
-		  "</html>",
-		  JAPMessages.getString("error"), JOptionPane.ERROR_MESSAGE
-		  );
-			return;
-		   }
+			JAPWaitSplash splash = null;
+			try
+			{
+		  splash = JAPWaitSplash.start("Fetching transfer number...", "Please wait");
+		  Thread.sleep(5);
+		  transferCertificate = selectedAccount.charge();
+		  splash.abort();
+			}
+			catch (Exception ex)
+			{
+		  splash.abort();
+		  LogHolder.log(LogLevel.DEBUG, LogType.PAY, ex);
+		  JOptionPane.showMessageDialog(
+		   view,
+		   "<html>" + JAPMessages.getString("ngTransferNumberError") + "<br>" + ex.getMessage() +
+		   "</html>",
+		   JAPMessages.getString("error"), JOptionPane.ERROR_MESSAGE
+		   );
+		  return;
+			}
 
-		   // try to launch webbrowser
-		   AbstractOS os = AbstractOS.getInstance();
-		   String url = transferCertificate.getBaseUrl();
-		   url += "?transfernum=" + transferCertificate.getTransferNumber();
-		   try
-		   {
-			os.openURLInBrowser(url);
-		   }
-		   catch (Exception e)
-		   {
-			JOptionPane.showMessageDialog(
-		  view,
-		  "<html>" + JAPMessages.getString("ngCouldNotFindBrowser") + "<br>" +
-		  "<h3>" + url + "</h3></html>",
-		  JAPMessages.getString("ngCouldNotFindBrowserTitle"),
-		  JOptionPane.INFORMATION_MESSAGE
-		  );
-		   }
+			// try to launch webbrowser
+			AbstractOS os = AbstractOS.getInstance();
+			String url = transferCertificate.getBaseUrl();
+			url += "?transfernum=" + transferCertificate.getTransferNumber();
+			try
+			{
+		  os.openURLInBrowser(url);
+			}
+			catch (Exception e)
+			{
+		  JOptionPane.showMessageDialog(
+		   view,
+		   "<html>" + JAPMessages.getString("ngCouldNotFindBrowser") + "<br>" +
+		   "<h3>" + url + "</h3></html>",
+		   JAPMessages.getString("ngCouldNotFindBrowserTitle"),
+		   JOptionPane.INFORMATION_MESSAGE
+		   );
+			}
 
-		   m_MyTableModel.fireTableDataChanged();
-		  }*/
+			m_MyTableModel.fireTableDataChanged();
+		   }*/
 	}
 
 	/**
@@ -770,9 +771,13 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 
 		if (theBI != null)
 		{
-			boolean choice = JAPDialog.showYesNoDialog(this.getRootPanel().getParent().getParent(),
-				JAPMessages.getString("ngCreateKeyPair"));
-			if (choice)
+			/*boolean choice = JAPDialog.showYesNoDialog(this.getRootPanel().getParent().getParent(),
+			 JAPMessages.getString("ngCreateKeyPair"));*/
+			JAPDialog d = new JAPDialog(this.getRootPanel(), JAPMessages.getString(MSG_ACCOUNTCREATE), true);
+
+			SimpleWizardContentPane panel1 = new SimpleWizardContentPane(d,
+				JAPMessages.getString("ngCreateKeyPair"), null, null);
+			if (true) //if (choice)
 			{
 				final BI bi = theBI;
 				Runnable doIt = new Runnable()
@@ -791,44 +796,45 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 							{
 								JAPDialog.showErrorDialog(
 									getRootPanel().getParent().getParent(),
-									JAPMessages.getString(MSG_CREATEERROR) + " " + JAPMessages.getString(MSG_CAPTCHANOTSOLVED),
+									JAPMessages.getString(MSG_CREATEERROR) + " " +
+									JAPMessages.getString(MSG_CAPTCHANOTSOLVED),
 									LogType.PAY);
 							}
 							else
 							{
-							JAPDialog.showErrorDialog(
-								getRootPanel().getParent().getParent(),
-								JAPMessages.getString(MSG_CREATEERROR) + " " + ex.getMessage(),
-								LogType.PAY);
+								JAPDialog.showErrorDialog(
+									getRootPanel().getParent().getParent(),
+									JAPMessages.getString(MSG_CREATEERROR) + " " + ex.getMessage(),
+									LogType.PAY);
+							}
 						}
 					}
-					}
 				};
-				JAPDialog d = new JAPDialog(this.getRootPanel(), JAPMessages.getString(MSG_ACCOUNTCREATE), true);
-				WorkerContentPane p = new WorkerContentPane(d, JAPMessages.getString(MSG_ACCOUNTCREATEDESC),
+				WorkerContentPane panel2 = new WorkerContentPane(d,
+					JAPMessages.getString(MSG_ACCOUNTCREATEDESC), panel1,
 					doIt);
-				p.getButtonCancel().setVisible(false);
-				p.updateDialog();
-				d.pack();
+				panel2.getButtonCancel().setVisible(false);
+				PasswordContentPane pc = null;
+				//First account, ask for password
+				if (PayAccountsFile.getInstance().getNumAccounts() == 0)
+				{
+					/*JAPDialog pd = new JAPDialog(this.getRootPanel().getParent().getParent(),
+							JAPMessages.getString(MSG_ACCPASSWORDTITLE), true);*/
+					pc = new PasswordContentPane(d, panel2,
+												 PasswordContentPane.PASSWORD_NEW,
+												 JAPMessages.getString(MSG_ACCPASSWORD));
+					pc.getButtonNo().setEnabled(false);
+				}
+
+				panel1.updateDialogOptimalSized(panel1);
 				d.setLocationCenteredOnOwner();
 				d.setVisible(true);
 				updateAccountList();
-				//First account, ask for password
-				if (PayAccountsFile.getInstance().getNumAccounts() == 1)
+				if (pc != null && pc.getPassword() != null)
 				{
-					JAPDialog pd = new JAPDialog(this.getRootPanel().getParent().getParent(),
-												 JAPMessages.getString(MSG_ACCPASSWORDTITLE), true);
-					PasswordContentPane pc = new PasswordContentPane(pd,
-						PasswordContentPane.PASSWORD_NEW,
-						JAPMessages.getString(MSG_ACCPASSWORD));
-					pc.updateDialog();
-					pd.pack();
-					pd.setVisible(true);
-					if (pc.getPassword() != null)
-					{
-						JAPController.getInstance().setPaymentPassword(new String(pc.getPassword()));
-					}
+					JAPController.getInstance().setPaymentPassword(new String(pc.getPassword()));
 				}
+
 			}
 		}
 	}
@@ -1259,10 +1265,10 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 
 	public void stateChanged(ChangeEvent e)
 	{
-	/*	if (e.getSource() instanceof AccountCreator)
-		{
-			updateAccountList();
-		}*/
+		/*	if (e.getSource() instanceof AccountCreator)
+		 {
+		  updateAccountList();
+		 }*/
 	}
 
 	public void valueChanged(ListSelectionEvent e)
