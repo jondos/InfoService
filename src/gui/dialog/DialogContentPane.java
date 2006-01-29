@@ -121,8 +121,6 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	public static final int ON_NO_DISPOSE_DIALOG = 16384;
 	public static final int ON_CANCEL_DISPOSE_DIALOG = 32768;
 
-	private static int MIN_TEXT_LENGTH = 25;
-
 	/**
 	 * Is equal to ON_NO_SHOW_PREVIOUS_CONTENT | ON_YESOK_SHOW_NEXT_CONTENT | ON_CLICK_DISPOSE_DIALOG
 	 * as the typical wizard behaviour . If the default button operation does not contain this behaviour,
@@ -150,6 +148,10 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	public static final int DEFAULT_BUTTON_HELP = 4;
 	public static final int DEFAULT_BUTTON_KEEP = 5;
 
+	private static final int MIN_TEXT_WIDTH = 100;
+	private static final int SPACE_AROUND_TEXT = 5;
+	private static final String MORE_POINTS = "...";
+
 	private DialogContentPane m_nextContentPane;
 	private DialogContentPane m_previousContentPane;
 	private RootPaneContainer m_parentDialog;
@@ -172,13 +174,15 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	private ButtonListener m_buttonListener;
 	private Icon m_icon;
 	private boolean m_bHasHadWizardLayout;
-	private GridBagConstraints m_constraints;
+	private GridBagConstraints m_textConstraints;
 	private Vector m_rememberedErrors = new Vector();
 	private Vector m_rememberedUpdateErrors = new Vector();
 	private Container m_currentlyActiveContentPane;
 	private Vector m_componentListeners = new Vector();
 	private ComponentListener m_currentlyActiveContentPaneComponentListener;
 	private int m_defaultButton;
+	private String m_strText;
+	private boolean m_bCutText = false;
 
 	/**
 	 * Contructs a new dialog content pane. Its layout is predefined, but may change if the content pane
@@ -428,7 +432,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 			a_options = new Options((JAPHelpContext.IHelpContext)null);
 		}
 
-		init(a_parentDialog, a_layout.getTitle(), a_strText, a_options.getOptionType(),
+		init(a_parentDialog, a_layout.getTitle(), a_strText, SwingConstants.CENTER, a_options.getOptionType(),
 			 a_layout.getMessageType(), a_layout.getIcon(), a_options.getHelpContext(),
 			 a_options.getPreviousContentPane());
 	}
@@ -443,6 +447,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	 * you call pack() on the dialog when it is updated with this content pane, the text length is
 	 * auto-formatted so that its width is not bigger than the content with respect to a minimum size.
 	 * Notice: this only works correctly if you call pack() on an invisible dialog.
+	 * @param a_alignment text alignment; you may use the javax.swing.SwingConstants
 	 * @param a_optionType one of the available option types the define the type and number of buttons
 	 * @param a_messageType one of the available message types that define the message layout
 	 * @param a_icon an Icon; if null, the icon will be chosen automatically depending on the message type
@@ -452,9 +457,9 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	 * content pane as next content pane. Call moveToNextContentPane() and moveToPreviousContentPane() to
 	 * move between the panes.
 	 */
-	private void init(RootPaneContainer a_parentDialog, String a_strTitle, String a_strText, int a_optionType,
-					  int a_messageType, Icon a_icon, JAPHelpContext.IHelpContext a_helpContext,
-					  DialogContentPane a_previousContentPane)
+	private void init(RootPaneContainer a_parentDialog, String a_strTitle, String a_strText, int a_alignment,
+					  int a_optionType, int a_messageType, Icon a_icon,
+					  JAPHelpContext.IHelpContext a_helpContext, DialogContentPane a_previousContentPane)
 	{
 		if (a_parentDialog == null)
 		{
@@ -503,19 +508,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 		addDialogComponentListener(new DialogComponentListener());
 		addDialogWindowListener(new DialogWindowListener());
 
-
-		m_constraints = new GridBagConstraints();
-		m_constraints.gridx = 0;
-		m_constraints.gridy = 0;
-		m_constraints.weightx = 1;
-		m_constraints.weighty = 1;
-		m_constraints.gridy = 1;
-		m_constraints.anchor = GridBagConstraints.NORTH;
-		m_constraints.fill = GridBagConstraints.BOTH;
-
-		m_contentPane = new JPanel();
-		m_titlePane.add(m_contentPane, m_constraints);
-
+		setContentPane(new JPanel());
 
 		if (a_strTitle != null)
 		{
@@ -532,15 +525,20 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 
 		if (a_strText != null && a_strText.trim().length() > 0)
 		{
-			m_lblText = new JAPHtmlMultiLineLabel("<font color=#000000>" + a_strText + "</font>",
-				SwingConstants.CENTER);
+			m_strText = a_strText;
+			m_lblText = new JAPHtmlMultiLineLabel(a_strText, a_alignment);
 			m_lblText.setFontStyle(JAPHtmlMultiLineLabel.FONT_STYLE_PLAIN);
 		}
 		// set the contraints for the text label; they are used later
-		m_constraints.gridy = 0;
-		m_constraints.weighty = 0;
-		m_constraints.fill = GridBagConstraints.HORIZONTAL;
-		m_constraints.insets = new Insets(5, 5, 5, 5);
+		m_textConstraints = new GridBagConstraints();
+		m_textConstraints.gridx = 0;
+		m_textConstraints.gridy = 0;
+		m_textConstraints.weightx = 1;
+		m_textConstraints.weighty = 0;
+		m_textConstraints.anchor = GridBagConstraints.NORTH;
+		m_textConstraints.fill = GridBagConstraints.HORIZONTAL;
+		m_textConstraints.insets =
+			new Insets(SPACE_AROUND_TEXT, SPACE_AROUND_TEXT, SPACE_AROUND_TEXT, SPACE_AROUND_TEXT);
 
 		// construct the chain of content panes
 		if (m_previousContentPane != null)
@@ -946,20 +944,22 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	 * as the size that is needed to the contents pane with the maximum width or the maximum size in
 	 * the chain. The chain is defined as the content panes that are returned by calling
 	 * <CODE> getNextContentPane() </CODE> on each one.
-	 * <P> Note 1: This method needs to call updateDialog() for every content pane in the chain. YOu should
+	 * <P> Note 1: This method needs to call updateDialog() for every content pane in the chain. You should
 	 * therefore never call this method on a dialog that is visible! This would cause serious flickering
 	 * in the best case, in the worst case the wrong dialog is shown afterwards (that is the last dialog
 	 * in the chain). </P>
 	 * <P> Note 2: If the content pane that should show up first is not the content pane you gave as
 	 * argument, you will have to call <CODE> updateDialog() </CODE> on it after calling this method.</P>
-
+	 * <P> Note 3: Subsequent calls of pack() on the dialog will de-optimise the dialog size; it is highly
+	 * recommended not to do pack() afterwards! </P>
 	 * @param a_firstContentPane the first DialogContentPane in a chain of content panes; this method will
 	 * call <CODE> updateDialog() </CODE> on it to initialise the dialog
 	 * @todo make sure that several calls of this method lead to the same result
 	 */
 	public static void updateDialogOptimalSized(DialogContentPane a_firstContentPane)
 	{
-		int width, height;
+		int dialogWidth, dialogHeight;
+		int maxTextWidth;
 		DialogContentPane nextContentPane;
 
 		if (a_firstContentPane == null)
@@ -967,47 +967,73 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 			return;
 		}
 
-		width = 0;
-		height = 0;
+		maxTextWidth = MIN_TEXT_WIDTH;
+		nextContentPane = a_firstContentPane;
+		do
+		{
+			// find out the maximum content pane width and set the maximum text width accordingly
+			maxTextWidth =
+				Math.max(maxTextWidth, nextContentPane.getContentPane().getPreferredSize().width);
+			nextContentPane = nextContentPane.getNextContentPane();
+		}
+		while (nextContentPane != null);
+
+		dialogWidth = 0;
+		dialogHeight = 0;
 		nextContentPane = a_firstContentPane;
 		if (a_firstContentPane.m_parentDialog instanceof JDialog)
 		{
-			JDialog dialog = (JDialog)a_firstContentPane.m_parentDialog;
+			JDialog dialog = (JDialog) a_firstContentPane.m_parentDialog;
 			do
 			{
-				nextContentPane.updateDialog();
+				if (nextContentPane.isDialogVisible())
+				{
+					throw new IllegalStateException(
+									   "You may not optimise the dialog size while it is visible!");
+				}
+				nextContentPane.updateDialog(maxTextWidth);
+				nextContentPane.m_rootPane.setPreferredSize(null);
 				dialog.pack();
-				width = Math.max(width, dialog.getSize().width);
-				height = Math.max(height, dialog.getSize().height);
+				dialogWidth = Math.max(dialogWidth, dialog.getSize().width);
+				dialogHeight = Math.max(dialogHeight, dialog.getSize().height);
 				nextContentPane = nextContentPane.getNextContentPane();
 			}
 			while (nextContentPane != null);
-			dialog.setSize(new Dimension(width, height));
+			dialog.setSize(new Dimension(dialogWidth, dialogHeight));
 		}
 		else
 		{
-			JAPDialog dialog = (JAPDialog)a_firstContentPane.m_parentDialog;
+			// this is copy&paste; I do not know how to make it better in this case...
+			JAPDialog dialog = (JAPDialog) a_firstContentPane.m_parentDialog;
 			do
 			{
+				if (nextContentPane.isDialogVisible())
+				{
+					throw new IllegalStateException(
+									   "You may not optimise the dialog size while it is visible!");
+				}
 				nextContentPane.updateDialog();
+				nextContentPane.m_rootPane.setPreferredSize(null);
 				dialog.pack();
-				width = Math.max(width, dialog.getSize().width);
-				height = Math.max(height, dialog.getSize().height);
+				dialogWidth = Math.max(dialogWidth, dialog.getSize().width);
+				dialogHeight = Math.max(dialogHeight, dialog.getSize().height);
 				nextContentPane = nextContentPane.getNextContentPane();
 			}
 			while (nextContentPane != null);
-			dialog.setSize(new Dimension(width, height));
+			dialog.setSize(new Dimension(dialogWidth, dialogHeight));
 		}
 
 		// reset the preferred size of each content pane
 		nextContentPane = a_firstContentPane;
+
 		do
 		{
 			/*
-			 * The root pane's preferred size is as big as the dialog, therefore the content pane should fit
-			 * into the dialog. Otherwise, an additional pack() command would be needed.
+			 * The root pane's preferred size is set as big as the dialog, therefore the content pane
+			 * should fit into the dialog. Please note that this trick will render the pack() command useless.
 			 */
-			nextContentPane.m_rootPane.setPreferredSize(new Dimension(width, height));
+			//nextContentPane.m_rootPane.setPreferredSize(new Dimension(dialogWidth, dialogHeight));
+			nextContentPane.m_rootPane.setPreferredSize(new Dimension(2500, 2500));
 			nextContentPane = nextContentPane.getNextContentPane();
 		}
 		while (nextContentPane != null);
@@ -1208,8 +1234,19 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	 */
 	public final void setContentPane(JComponent a_contentPane)
 	{
-		m_rootPane.remove(m_contentPane);
-		m_rootPane.add(a_contentPane, BorderLayout.CENTER);
+		GridBagConstraints contraints = new GridBagConstraints();
+		contraints.gridx = 0;
+		contraints.gridy = 1;
+		contraints.weightx = 1;
+		contraints.weighty = 1;
+		contraints.anchor = GridBagConstraints.NORTH;
+		contraints.fill = GridBagConstraints.BOTH;
+
+		if (m_contentPane != null)
+		{
+			m_titlePane.remove(m_contentPane);
+		}
+		m_titlePane.add(a_contentPane, contraints);
 		m_contentPane = a_contentPane;
 	}
 
@@ -1325,7 +1362,6 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 						LogHolder.log(LogLevel.DEBUG, a_logType, a_throwable);
 					}
 				}
-
 			}
 			else
 			{
@@ -1336,7 +1372,6 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 		{
 			JAPDialog.showErrorDialog(getContentPane(), LogType.GUI, a_e);
 		}
-
 	}
 
 	/**
@@ -1345,6 +1380,17 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	 * the update has been done
 	 */
 	public final synchronized CheckError[] updateDialog()
+	{
+		return updateDialog(MIN_TEXT_WIDTH);
+	}
+
+	/**
+	 * Replaces the content pane of the parent dialog with the content defined in this object.
+	 * @return the errors returned by checkUpdate() or null or an empty array if no errors occured and
+	 * the update has been done
+	 * @param a_maxTextWidth the maximum width that is allowed for the (optional) text field
+	 */
+	private final synchronized CheckError[] updateDialog(int a_maxTextWidth)
 	{
 		JDialog dialog;
 		JOptionPane pane;
@@ -1378,14 +1424,15 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 			}
 			else
 			{
-				if (m_lblText.getPreferredSize().width > (m_contentPane.getWidth() - 10))
+				if (m_lblText.getPreferredSize().width > (m_contentPane.getWidth() - 2 * SPACE_AROUND_TEXT))
 				{
 					// the width of the label must be restricted to make the pack() operation possible
-					m_lblText.setPreferredWidth(Math.max(m_contentPane.getWidth() - 10, MIN_TEXT_LENGTH));
+					m_lblText.setPreferredWidth(Math.max(m_contentPane.getWidth() - 2 * SPACE_AROUND_TEXT,
+						a_maxTextWidth));
 				}
 			}
 
-			m_titlePane.add(m_lblText, m_constraints);
+			m_titlePane.add(m_lblText, m_textConstraints);
 		}
 
 		clearStatusMessage();
@@ -1603,15 +1650,75 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	}
 
 	/**
+	 * Returns if this content pane is the currently active content pane in the dialog, that means that
+	 * this content pane is shown if the dialog is shown.
+	 * @return if this content pane is the currently active content pane in the dialog
+	 */
+	public final boolean isActive()
+	{
+		return m_currentlyActiveContentPane != null &&
+			m_parentDialog.getContentPane() == m_currentlyActiveContentPane;
+	}
+
+	/**
 	 * Returns if the content pane is part of a visible dialog.
 	 * @return if the content pane is part of a visible dialog
 	 */
 	public final boolean isVisible()
 	{
-		return m_currentlyActiveContentPane != null &&
-			m_parentDialog.getContentPane() == m_currentlyActiveContentPane
-			&& isDialogVisible();
+		return isActive() && isDialogVisible();
 	}
+
+	/**
+	 * Returns the text that is displayed in the content pane.
+	 * @return the text that is displayed in the content pane or <Code>null</Code> if no text is displayed
+	 */
+	public String getText()
+	{
+		return m_strText;
+	}
+/*
+	public synchronized void setText(String a_text)
+	{
+		synchronized (getDialog())
+		{
+			if (isVisible())
+			{
+				getDialog().notifyAll();
+				throw new IllegalStateException("You may not change the text in a visible content pane!");
+			}
+			JAPDialog dialog = new JAPDialog( (JAPDialog)null, "");
+			RootPaneContainer ownerDialog = getDialog();
+			boolean bWasActive = isActive();
+
+			m_parentDialog = dialog;
+			updateDialog();
+
+
+			m_parentDialog = ownerDialog;
+			if (bWasActive)
+			{
+				updateDialog();
+			}
+
+			if (m_lblText != null)
+			{
+				System.out.println("Text label: " + m_lblText.getSize() + " : " + m_lblText.getPreferredSize());
+			}
+			System.out.println("Content pane: " + m_contentPane.getSize() + " : " +
+							   m_contentPane.getPreferredSize());
+			System.out.println("Title pane: " + m_titlePane.getSize() + " : " + m_titlePane.getPreferredSize());
+			if (m_lblMessage != null)
+			{
+				System.out.println("Status label: " + m_lblMessage.getSize() + " : " +
+								   m_lblMessage.getPreferredSize());
+			}
+
+			System.out.println("Root pane: " + m_rootPane.getSize() + " : " + m_rootPane.getPreferredSize());
+
+			getDialog().notifyAll();
+		}
+	}*/
 
 	/**
 	 * Returns the parent Dialog. It is a JDialog or a JAPDialog.
@@ -1777,10 +1884,8 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	private final void printStatusMessageInternal(String a_strMessage, int a_messageType)
 	{
 		String strMessage;
-		Dimension  newSize;
 		String strColor;
 		String strHref;
-		int length;
 
 		// no HTML Tags are allowed in the message
 		strMessage = JAPHtmlMultiLineLabel.removeTagsAndNewLines(a_strMessage);
@@ -1794,10 +1899,8 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 			strColor = "black";
 		}
 
-		// calculate the width of the label
-		newSize = calculateMessageSize(strMessage);
 
-		if (newSize.width > m_lblMessage.getSize().width)
+		if (calculateMessageSize(strMessage).width > m_lblMessage.getSize().width)
 		{
 			String strMessageTitle;
 			if (MESSAGE_TYPE_ERROR == a_messageType)
@@ -1814,8 +1917,23 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 			}
 
 			clearStatusMessage();
-			length = Math.min(strMessage.length(), MIN_TEXT_LENGTH);
-			strMessage = strMessage.substring(0, length) + "...";
+			while (strMessage.length() > 1)
+			{
+				strMessage = strMessage.substring(0, strMessage.length() / 2) + MORE_POINTS;
+				if (calculateMessageSize(strMessage).width <= m_lblMessage.getSize().width)
+				{
+					break;
+				}
+				else
+				{
+					strMessage = strMessage.substring(0, strMessage.length() - MORE_POINTS.length());
+				}
+			}
+			if (strMessage.length() <= 1)
+			{
+				strMessage = MORE_POINTS;
+			}
+
 			strHref =  " href=\"\"";
 			m_lblMessage.setToolTipText(JAPMessages.getString(MSG_SEE_FULL_MESSAGE));
 			m_linkedDialog = new LinkedDialog(a_strMessage, strMessageTitle,
@@ -2193,7 +2311,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 					m_titlePane.remove(m_lblText);
 					m_lblText = new JAPHtmlMultiLineLabel(m_lblText.getText(), m_lblText.getFont(),
 						SwingConstants.CENTER);
-					m_titlePane.add(m_lblText, m_constraints);
+					m_titlePane.add(m_lblText, m_textConstraints);
 					m_titlePane.revalidate();
 				}
 
