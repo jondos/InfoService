@@ -1432,8 +1432,9 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 				if (m_lblText.getPreferredSize().width > (m_contentPane.getWidth() - 2 * SPACE_AROUND_TEXT))
 				{
 					// the width of the label must be restricted to make the pack() operation possible
-					m_lblText.setPreferredWidth(Math.max(m_contentPane.getWidth() - 2 * SPACE_AROUND_TEXT,
-						a_maxTextWidth));
+					m_lblText.setPreferredWidth(Math.max(m_lblText.getMinimumSize().width,
+						Math.max(m_contentPane.getWidth() - 2 * SPACE_AROUND_TEXT,
+								 a_maxTextWidth)));
 				}
 			}
 

@@ -1148,8 +1148,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		int currentWidth;
 		int bestWidth;
 		int failed;
-		int lastLabelHeight;
-		boolean bLabelChangedHeight;
+		int minLabelWidth;
 
 		// get the minimum width and height that is needed to display this dialog without any text
 		minSize = new Dimension(
@@ -1175,6 +1174,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		currentWidth = Math.min(500, contentPane.getWidth());
 		bestWidth =  currentWidth;
 		failed = 0;
+		minLabelWidth = label.getMinimumSize().width;
 		for (int i = 0; i < NUMBER_OF_HEURISTIC_ITERATIONS; i++)
 		{
 			/**
@@ -1192,7 +1192,6 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 			 * @see javax.swing.plaf.basic.BasicHTML
 			 * @see javax.swing.text.html.HTMLEditorKit
 			 */
-			lastLabelHeight = label.getSize().height;
 			dummyBox = new PreferredWidthBoxPanel();
 			dummyBox.add(contentPane);
 			dummyBox.setPreferredWidth(currentWidth);
@@ -1202,7 +1201,6 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 			label.setPreferredWidth(label.getWidth());
 			dialog.pack();
 			// only accept an optimisation if the label height changed; otherwise, the label might be cut off
-			bLabelChangedHeight = lastLabelHeight != label.getSize().height;
 
 			if (dummyBox.getHeight() < minSize.height)
 			{
@@ -1214,7 +1212,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 
 			currentWidth = dummyBox.getWidth();
 			currentDelta = getGoldenRatioDelta(dialog);
-			if (Math.abs(currentDelta) < Math.abs(bestDelta) && bLabelChangedHeight)
+			if (Math.abs(currentDelta) < Math.abs(bestDelta) && (label.getSize().width >= minLabelWidth))
 			{
 				bestDimension = new Dimension(dummyBox.getSize());
 				bestDelta = currentDelta;
