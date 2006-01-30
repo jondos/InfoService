@@ -27,6 +27,7 @@
  */
 package jap;
 
+import java.net.URL;
 import java.util.Enumeration;
 import java.util.Observable;
 import java.util.Observer;
@@ -65,22 +66,26 @@ import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.ListenerInterface;
 import anon.infoservice.MixCascade;
 import anon.infoservice.MixInfo;
+import gui.JAPHelp;
+import gui.JAPJIntField;
+import gui.JAPMessages;
 import gui.JAPMultilineLabel;
 import gui.ServerListPanel;
-import gui.JAPJIntField;
-import platform.AbstractOS;
+import gui.dialog.JAPDialog;
+import jap.forward.JAPRoutingMessage;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import jap.forward.*;
-import java.net.URL;
-import gui.dialog.JAPDialog;
-import gui.JAPMessages;
-import gui.JAPHelp;
+import platform.AbstractOS;
 
 class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, ActionListener,
 	ListSelectionListener, ItemListener, KeyListener, Observer
 {
+
+	/** Messages */
+	private static final String MSG_BUTTONEDITSHOW = JAPConfAnon.class.
+		getName() + "_buttoneditshow";
+
 	private static final String URL_BEGIN = "<html><font color=blue><u>";
 	private static final String URL_END = "</u></font></html>";
 
@@ -123,6 +128,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	private JButton m_editCascadeButton;
 	private JButton m_deleteCascadeButton;
 	private JButton m_cancelCascadeButton;
+	private JButton m_showEditPanelButton;
 
 	private JTextField m_manHostField;
 	private JTextField m_manPortField;
@@ -315,6 +321,24 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		{
 			pRoot.remove(m_manualPanel);
 		}
+
+		if (a_newCascade)
+		{
+			try
+			{
+				MixCascade dummyCascade = new MixCascade(JAPMessages.getString("dummyCascade"), 0);
+				m_Controller.getMixCascadeDatabase().addElement(dummyCascade);
+				this.updateMixCascadeCombo();
+				m_listMixCascade.setSelectedIndex(m_listMixCascade.getModel().getSize() - 1);
+				//m_manHostField.selectAll();
+			}
+			catch (Exception a_e)
+			{
+				JAPDialog.showErrorDialog(this.getRootPanel(), JAPMessages.getString("errorCreateCascadeDesc"),
+										  LogType.MISC);
+			}
+		}
+
 		m_manualPanel = new JPanel();
 		GridBagLayout layout = new GridBagLayout();
 		GridBagConstraints c = new GridBagConstraints();
@@ -348,50 +372,31 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		c.gridwidth = 1;
 		c.fill = GridBagConstraints.NONE;
 		c.anchor = GridBagConstraints.NORTHEAST;
-		if (a_newCascade)
-		{
-			/*m_enterCascadeButton = new JButton(JAPMessages.getString("okButton"));
-			 m_enterCascadeButton.addActionListener(this);
-			 m_manualPanel.add(m_enterCascadeButton, c);*/
-			try
-			{
-				MixCascade dummyCascade = new MixCascade(JAPMessages.getString("dummyCascade"), 0);
-				m_Controller.getMixCascadeDatabase().addElement(dummyCascade);
-				this.updateMixCascadeCombo();
-				m_listMixCascade.setSelectedIndex(m_listMixCascade.getModel().getSize() - 1);
-				m_manHostField.selectAll();
-			}
-			catch (Exception a_e)
-			{
-				JAPDialog.showErrorDialog(this.getRootPanel(), JAPMessages.getString("errorCreateCascadeDesc"),
-										  LogType.MISC);
-			}
-		}
-		else
-		{
-			m_editCascadeButton = new JButton(JAPMessages.getString("okButton"));
-			m_editCascadeButton.addActionListener(this);
-			c.gridx = 1;
-			c.weightx = 1;
-			m_manualPanel.add(m_editCascadeButton, c);
-			m_deleteCascadeButton = new JButton(JAPMessages.getString("manualServiceDelete"));
-			m_deleteCascadeButton.addActionListener(this);
-			c.gridx = 3;
-			c.weightx = 0;
-			m_manualPanel.add(m_deleteCascadeButton, c);
-			m_cancelCascadeButton = new JButton(JAPMessages.getString("cancelButton"));
-			m_cancelCascadeButton.addActionListener(this);
-			c.gridx = 2;
-			m_manualPanel.add(m_cancelCascadeButton, c);
-			m_manHostField.addKeyListener(this);
-			m_manPortField.addKeyListener(this);
-		}
+
+		m_editCascadeButton = new JButton(JAPMessages.getString("okButton"));
+		m_editCascadeButton.addActionListener(this);
+		c.gridx = 1;
+		c.weightx = 1;
+		m_manualPanel.add(m_editCascadeButton, c);
+		m_deleteCascadeButton = new JButton(JAPMessages.getString("manualServiceDelete"));
+		m_deleteCascadeButton.addActionListener(this);
+		c.gridx = 3;
+		c.weightx = 0;
+		m_manualPanel.add(m_deleteCascadeButton, c);
+		m_cancelCascadeButton = new JButton(JAPMessages.getString("cancelButton"));
+		m_cancelCascadeButton.addActionListener(this);
+		c.gridx = 2;
+		m_manualPanel.add(m_cancelCascadeButton, c);
+		m_manHostField.addKeyListener(this);
+		m_manPortField.addKeyListener(this);
+
 		if (m_serverPanel != null)
 		{
 			pRoot.remove(m_serverPanel);
 			pRoot.remove(m_serverInfoPanel);
 			m_serverPanel = null;
 		}
+
 		pRoot.updateUI();
 		m_rootPanelConstraints.gridx = 0;
 		m_rootPanelConstraints.gridy = 2;
@@ -428,6 +433,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 		m_listMixCascade = new JList();
 		m_listMixCascade.addListSelectionListener(this);
+		m_listMixCascade.addMouseListener(this);
 		m_listMixCascade.setFixedCellWidth(30);
 		c.gridx = 0;
 		c.gridy = 1;
@@ -469,8 +475,13 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		m_manualCascadeButton = new JButton(JAPMessages.getString("manualCascade"));
 		m_manualCascadeButton.addActionListener(this);
 		c1.gridx = 2;
-		c1.weightx = 1.0;
 		panelBttns.add(m_manualCascadeButton, c1);
+
+		m_showEditPanelButton = new JButton(JAPMessages.getString(MSG_BUTTONEDITSHOW));
+		m_showEditPanelButton.addActionListener(this);
+		c1.gridx = 3;
+		c1.weightx = 1.0;
+		panelBttns.add(m_showEditPanelButton, c1);
 
 		c.gridx = 0;
 		c.gridy = 5;
@@ -705,8 +716,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 					if (!JAPModel.isSmallDisplay() && bErr)
 					{
 						JAPDialog.showErrorDialog(getRootPanel(),
-							JAPMessages.getString("settingsNoServersAvailable"),
-							LogType.MISC);
+												  JAPMessages.getString("settingsNoServersAvailable"),
+												  LogType.MISC);
 					}
 					//No mixcascades returned by Infoservice
 					deactivate();
@@ -803,6 +814,19 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		{
 			this.deleteManualCascade();
 		}
+		else if (e.getSource() == m_showEditPanelButton)
+		{
+			MixCascade cascade = (MixCascade) m_listMixCascade.getSelectedValue();
+			this.drawManualPanel(cascade.getListenerInterface(0).getHost(),
+								 String.valueOf(cascade.getListenerInterface(0).getPort()),
+								 false);
+			mb_manualCascadeNew = false;
+			m_deleteCascadeButton.setEnabled(true);
+			m_cancelCascadeButton.setEnabled(false);
+			m_oldCascadeHost = m_manHostField.getText();
+			m_oldCascadePort = m_manPortField.getText();
+
+		}
 
 	}
 
@@ -835,29 +859,29 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 			if (valid)
 			{
-			m_Controller.getMixCascadeDatabase().addElement(c);
+				m_Controller.getMixCascadeDatabase().addElement(c);
 				if (m_Controller.getCurrentMixCascade().equals(oldCascade))
 				{
 					m_Controller.setCurrentMixCascade(c);
 					JAPDialog.showMessageDialog(this.getRootPanel(),
-												  JAPMessages.getString("activeCascadeEdited"));
+												JAPMessages.getString("activeCascadeEdited"));
 				}
 				m_Controller.getMixCascadeDatabase().removeElement(oldCascade);
 
-			this.updateMixCascadeCombo();
-			m_listMixCascade.setSelectedIndex(m_listMixCascade.getModel().getSize() - 1);
-		}
+				this.updateMixCascadeCombo();
+				m_listMixCascade.setSelectedIndex(m_listMixCascade.getModel().getSize() - 1);
+			}
 			else
 			{
 				JAPDialog.showErrorDialog(this.getRootPanel(), JAPMessages.getString("cascadeExistsDesc"),
-											  LogType.MISC);
+										  LogType.MISC);
 			}
 		}
 		catch (Exception a_e)
 		{
 			LogHolder.log(LogLevel.ERR, LogType.MISC, "Cannot edit cascade");
 			JAPDialog.showErrorDialog(this.getRootPanel(), JAPMessages.getString("errorCreateCascadeDesc"),
-										  LogType.MISC);
+									  LogType.MISC);
 
 		}
 	}
@@ -873,14 +897,14 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			if (m_Controller.getCurrentMixCascade().equals(cascade))
 			{
 				JAPDialog.showErrorDialog(this.getRootPanel(),
-											  JAPMessages.getString("activeCascadeDelete"),
-											  LogType.MISC);
+										  JAPMessages.getString("activeCascadeDelete"),
+										  LogType.MISC);
 			}
 			else
 			{
-			m_Controller.getMixCascadeDatabase().removeElement(cascade);
-			this.updateMixCascadeCombo();
-		}
+				m_Controller.getMixCascadeDatabase().removeElement(cascade);
+				this.updateMixCascadeCombo();
+			}
 		}
 		catch (Exception a_e)
 		{
@@ -928,24 +952,24 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				LogHolder.log(LogLevel.ERR, LogType.MISC, "Error opening URL in browser");
 			}
 		}
-		/*		else if (e.getSource() == m_listMixCascade)
-		  {
-		   if (e.getClickCount() == 2)
-		   {
-		 int index = m_listMixCascade.locationToIndex(e.getPoint());
-		 MixCascade c;
-		 try
-		 {
-		  c = (MixCascade) m_listMixCascade.getModel().getElementAt(index);
-		 }
-		 catch (ClassCastException a_e)
-		 {
-		  return;
-		 }
-		 m_Controller.setCurrentMixCascade(c);
-		 m_listMixCascade.repaint();
-		   }
-		  }*/
+		else if (e.getSource() == m_listMixCascade)
+		{
+			if (e.getClickCount() == 2)
+			{
+				int index = m_listMixCascade.locationToIndex(e.getPoint());
+				MixCascade c;
+				try
+				{
+					c = (MixCascade) m_listMixCascade.getModel().getElementAt(index);
+				}
+				catch (ClassCastException a_e)
+				{
+					return;
+				}
+				m_Controller.setCurrentMixCascade(c);
+				m_listMixCascade.repaint();
+			}
+		}
 	}
 
 	public void mousePressed(MouseEvent e)
@@ -978,52 +1002,52 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		JAPHelp.getInstance().getContextObj().setContext("services");
 		if (!JAPModel.isInfoServiceDisabled())
 		{
-		if (!m_infoService.isFilled())
-		{
-			m_reloadCascadesButton.setEnabled(false);
-			Runnable doIt = new Runnable()
+			if (!m_infoService.isFilled())
 			{
-				public void run()
+				m_reloadCascadesButton.setEnabled(false);
+				Runnable doIt = new Runnable()
 				{
-					Cursor c = getRootPanel().getCursor();
-					getRootPanel().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-
-					m_Controller.fetchMixCascades(bErr);
-					//Update the temporary infoservice database
-					updateFromInfoservice();
-					updateMixCascadeCombo();
-
-					getRootPanel().setCursor(c);
-
-					if (m_Controller.getMixCascadeDatabase().size() == 0)
+					public void run()
 					{
-						if (!JAPModel.isSmallDisplay() && bErr)
+						Cursor c = getRootPanel().getCursor();
+						getRootPanel().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+
+						m_Controller.fetchMixCascades(bErr);
+						//Update the temporary infoservice database
+						updateFromInfoservice();
+						updateMixCascadeCombo();
+
+						getRootPanel().setCursor(c);
+
+						if (m_Controller.getMixCascadeDatabase().size() == 0)
 						{
+							if (!JAPModel.isSmallDisplay() && bErr)
+							{
 								JAPDialog.showMessageDialog(getRootPanel(),
-								JAPMessages.getString("settingsNoServersAvailable"),
+									JAPMessages.getString("settingsNoServersAvailable"),
 									JAPMessages.getString("settingsNoServersAvailableTitle"));
+							}
+							//No mixcascades returned by Infoservice
+							deactivate();
 						}
-						//No mixcascades returned by Infoservice
-						deactivate();
+						else
+						{
+							// show a window containing all available cascades
+							m_listMixCascade.setEnabled(true);
+						}
+						m_reloadCascadesButton.setEnabled(true);
 					}
-					else
-					{
-						// show a window containing all available cascades
-						m_listMixCascade.setEnabled(true);
-					}
-					m_reloadCascadesButton.setEnabled(true);
+				};
+				Thread t = new Thread(doIt);
+				t.start();
+				try
+				{
+					m_listMixCascade.setSelectedValue(m_Controller.getCurrentMixCascade(), true);
+					valueChanged(new ListSelectionEvent(m_listMixCascade, 0,
+						m_listMixCascade.getModel().getSize(), false));
 				}
-			};
-			Thread t = new Thread(doIt);
-			t.start();
-			try
-			{
-				m_listMixCascade.setSelectedValue(m_Controller.getCurrentMixCascade(), true);
-				valueChanged(new ListSelectionEvent(m_listMixCascade, 0,
-					m_listMixCascade.getModel().getSize(), false));
-			}
-			catch (Exception e)
-			{
+				catch (Exception e)
+				{
 				}
 			}
 		}
@@ -1035,6 +1059,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	 */
 	public void valueChanged(ListSelectionEvent e)
 	{
+		m_showEditPanelButton.setEnabled(false);
 		//Object source = e.getSource();
 		if (!e.getValueIsAdjusting())
 		{
@@ -1062,14 +1087,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 				if (cascade.isUserDefined())
 				{
-					this.drawManualPanel(cascade.getListenerInterface(0).getHost(),
-										 String.valueOf(cascade.getListenerInterface(0).getPort()),
-										 false);
-					mb_manualCascadeNew = false;
-					m_deleteCascadeButton.setEnabled(true);
-					m_cancelCascadeButton.setEnabled(false);
-					m_oldCascadeHost = m_manHostField.getText();
-					m_oldCascadePort = m_manPortField.getText();
+					m_showEditPanelButton.setEnabled(true);
 				}
 
 				if (m_Controller.getCurrentMixCascade().getName().equalsIgnoreCase(cascade.getName()))
