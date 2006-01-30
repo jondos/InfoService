@@ -1029,6 +1029,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		{
 			a_message = "";
 		}
+		a_message = JAPHtmlMultiLineLabel.removeHTMLHEADAndBODYTags(a_message);
 		message = a_message;
 
 		if (a_title == null)
@@ -1147,6 +1148,8 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		int currentWidth;
 		int bestWidth;
 		int failed;
+		int lastLabelHeight;
+		boolean bLabelChangedHeight;
 
 		// get the minimum width and height that is needed to display this dialog without any text
 		minSize = new Dimension(
@@ -1189,6 +1192,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 			 * @see javax.swing.plaf.basic.BasicHTML
 			 * @see javax.swing.text.html.HTMLEditorKit
 			 */
+			lastLabelHeight = label.getSize().height;
 			dummyBox = new PreferredWidthBoxPanel();
 			dummyBox.add(contentPane);
 			dummyBox.setPreferredWidth(currentWidth);
@@ -1197,6 +1201,9 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 			dialog.pack();
 			label.setPreferredWidth(label.getWidth());
 			dialog.pack();
+			// only accept an optimisation if the label height changed; otherwise, the label might be cut off
+			bLabelChangedHeight = lastLabelHeight != label.getSize().height;
+
 			if (dummyBox.getHeight() < minSize.height)
 			{
 				// the dialog has a smaller height as needed to display all elements, e.g. the icon
@@ -1207,7 +1214,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 
 			currentWidth = dummyBox.getWidth();
 			currentDelta = getGoldenRatioDelta(dialog);
-			if (Math.abs(currentDelta) < Math.abs(bestDelta))
+			if (Math.abs(currentDelta) < Math.abs(bestDelta) && bLabelChangedHeight)
 			{
 				bestDimension = new Dimension(dummyBox.getSize());
 				bestDelta = currentDelta;

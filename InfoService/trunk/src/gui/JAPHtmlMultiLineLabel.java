@@ -27,14 +27,21 @@
  */
 package gui;
 
+import java.io.*;
 import java.util.StringTokenizer;
+
 
 import java.awt.Font;
 import javax.swing.JLabel;
 import javax.swing.text.PlainView;
 import javax.swing.text.View;
+import javax.swing.text.html.HTMLDocument;
+import javax.swing.text.html.HTMLWriter;
+import javax.swing.text.BadLocationException;
 
 import anon.util.ClassUtil;
+import logging.LogType;
+import gui.dialog.JAPDialog;
 
 /**
  * This class provides support for labels with more than one line which can also display HTML styled text.
@@ -52,6 +59,9 @@ public class JAPHtmlMultiLineLabel extends JLabel
 	private static final String TAG_HTML_CLOSE = "</html>";
 	private static final String TAG_BODY_OPEN = "<body>";
 	private static final String TAG_BODY_CLOSE = "</body>";
+	private static final String TAG_HEAD_OPEN = "<head>";
+	private static final String TAG_HEAD_CLOSE = "</head>";
+	private static final String CLIENT_PROPERTY_HTML = "html";
 
 
 	/**
@@ -168,6 +178,44 @@ public class JAPHtmlMultiLineLabel extends JLabel
 	}
 
 	/**
+	 * Returns the length of the HTML document in characters.
+	 * @return the length of the HTML document in characters
+	 */
+	public int getHTMLDocumentLength()
+	{
+		return ((View)getClientProperty(CLIENT_PROPERTY_HTML)).getDocument().getLength();
+	}
+
+	public void cutHTMLDocument(int a_length)
+	{
+		HTMLDocument document;
+		StringWriter writer = new StringWriter();
+
+		document = (HTMLDocument)((View)getClientProperty(CLIENT_PROPERTY_HTML)).getDocument();
+		if (a_length > document.getLength())
+		{
+			return;
+		}
+		else if (a_length <= 0)
+		{
+			setText("");
+			return;
+		}
+
+		try
+		{
+			document.remove(a_length, document.getLength() - a_length);
+			new HTMLWriter(writer, document).write();
+			setText(writer.toString());
+		}
+		catch (Exception a_e)
+		{
+			// should never happen
+			JAPDialog.showErrorDialog(this, LogType.GUI, a_e);
+		}
+	}
+
+	/**
 	 * Sets the preferred width of this label.
 	 * @param a_width the preferred width of this label
 	 */
@@ -177,7 +225,7 @@ public class JAPHtmlMultiLineLabel extends JLabel
 		View dummyView;
 		float x, y;
 
-		htmlView = ((View)getClientProperty("html"));
+		htmlView = ((View)getClientProperty(CLIENT_PROPERTY_HTML));
 
 		// store the original size for debugging purposes
 		x = htmlView.getPreferredSpan(View.X_AXIS);
@@ -190,9 +238,6 @@ public class JAPHtmlMultiLineLabel extends JLabel
 		}
 		catch (NullPointerException a_e)
 		{
-			// this is a JDK 1.2.2 Bug; it is not possible to set the View width, reset it to original values
-			htmlView.setSize(x, y);
-
 			/*
 			 * Replace the html view by a dummy view that returns 'null' as Container.
 			 * Otherwise javax.swing.text.LabelView$LabelFragment.createFragment gets the Graphics object
@@ -206,6 +251,9 @@ public class JAPHtmlMultiLineLabel extends JLabel
 				}
 			};
 			htmlView.getView(0).setParent(dummyView);
+
+			// this is a JDK 1.2.2 Bug; it is not possible to set the View width, reset it to original values
+			htmlView.setSize(x, y);
 
 			// set the desired maximum width
 			htmlView.setSize( (float) a_width, UNLIMITED_LABEL_HEIGHT);
@@ -305,7 +353,7 @@ public class JAPHtmlMultiLineLabel extends JLabel
 			trailer = "</b>" + trailer;
 		}
 
-		return header + removeHTMLAndBODYTags(a_HTMLtext) + trailer;
+		return header + removeHTMLHEADAndBODYTags(a_HTMLtext) + trailer;
 	}
 
 	/**
@@ -368,8 +416,38 @@ public class JAPHtmlMultiLineLabel extends JLabel
 	 * @param a_HTMLtext a String
 	 * @return the String without heading and trailing HTML and BODY tags
 	 */
-	public static String removeHTMLAndBODYTags(String a_HTMLtext)
+	public static String removeHTMLHEADAndBODYTags(String a_HTMLtext)
 	{
+		int headStart, headEnd;
+		int remainderStart;
+		String HTMLText = a_HTMLtext.toLowerCase();
+
+		headStart = HTMLText.indexOf(TAG_HEAD_OPEN.substring(0, TAG_HEAD_OPEN.length() - 1));
+		headEnd = HTMLText.indexOf(TAG_HEAD_CLOSE);
+		if (headStart >= 0 || headEnd >= 0)
+		{
+			if (headStart < 0 || headEnd < 0 || headStart >= headEnd)
+			{
+				// invalid document
+				return "";
+			}
+
+			remainderStart = headEnd + TAG_HEAD_CLOSE.length();
+			if (headStart == 0)
+			{
+				a_HTMLtext = a_HTMLtext.substring(remainderStart, a_HTMLtext.length() - remainderStart);
+			}
+			else if (remainderStart == a_HTMLtext.length())
+			{
+				a_HTMLtext = a_HTMLtext.substring(0, headStart);
+			}
+			else
+			{
+				a_HTMLtext = a_HTMLtext.substring(0, headStart) +
+					a_HTMLtext.substring(remainderStart, a_HTMLtext.length());
+			}
+		}
+
 		return removeTAG(removeTAG(a_HTMLtext, TAG_HTML_OPEN, TAG_HTML_CLOSE), TAG_BODY_OPEN, TAG_BODY_CLOSE);
 	}
 
@@ -407,7 +485,7 @@ public class JAPHtmlMultiLineLabel extends JLabel
 		}
 		if ( (start > 0 || stop < a_HTMLtext.length()))
 		{
-			if (start >= stop)
+			if (start < 0 || stop < 0 || start >= stop)
 			{
 				a_HTMLtext = "";
 			}

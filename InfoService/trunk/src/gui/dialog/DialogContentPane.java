@@ -149,8 +149,10 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	public static final int DEFAULT_BUTTON_KEEP = 5;
 
 	private static final int MIN_TEXT_WIDTH = 100;
+	private static final int UNLIMITED_SIZE = 2500;
 	private static final int SPACE_AROUND_TEXT = 5;
 	private static final String MORE_POINTS = "...";
+	private static final int NUMBER_OF_HEURISTIC_ITERATIONS = 6;
 
 	private DialogContentPane m_nextContentPane;
 	private DialogContentPane m_previousContentPane;
@@ -162,6 +164,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	private JAPHtmlMultiLineLabel m_lblMessage;
 	private LinkedDialog m_linkedDialog;
 	private JAPHtmlMultiLineLabel m_lblText;
+	private JAPHtmlMultiLineLabel m_lblSeeFullText;
 	private int m_messageType;
 	private int m_optionType;
 	private int m_defaultButtonOperation;
@@ -182,7 +185,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	private ComponentListener m_currentlyActiveContentPaneComponentListener;
 	private int m_defaultButton;
 	private String m_strText;
-	private boolean m_bCutText = false;
+	private String m_strTitle;
 
 	/**
 	 * Contructs a new dialog content pane. Its layout is predefined, but may change if the content pane
@@ -514,6 +517,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 		{
 			if (a_strTitle.trim().length() > 0)
 			{
+				m_strTitle = a_strTitle;
 				m_titlePane.setBorder(new TitledBorder(a_strTitle));
 			}
 			// the status message bar is only shown if the title is a valid String (may be empty but not null)
@@ -525,8 +529,9 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 
 		if (a_strText != null && a_strText.trim().length() > 0)
 		{
-			m_strText = a_strText;
-			m_lblText = new JAPHtmlMultiLineLabel(a_strText, a_alignment);
+			m_strText = JAPHtmlMultiLineLabel.removeHTMLHEADAndBODYTags(a_strText) ;
+			m_lblText =
+				new JAPHtmlMultiLineLabel("<font color=#000000>" + m_strText + "</font>", a_alignment);
 			m_lblText.setFontStyle(JAPHtmlMultiLineLabel.FONT_STYLE_PLAIN);
 		}
 		// set the contraints for the text label; they are used later
@@ -1033,7 +1038,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 			 * should fit into the dialog. Please note that this trick will render the pack() command useless.
 			 */
 			//nextContentPane.m_rootPane.setPreferredSize(new Dimension(dialogWidth, dialogHeight));
-			nextContentPane.m_rootPane.setPreferredSize(new Dimension(2500, 2500));
+			nextContentPane.m_rootPane.setPreferredSize(new Dimension(UNLIMITED_SIZE, UNLIMITED_SIZE));
 			nextContentPane = nextContentPane.getNextContentPane();
 		}
 		while (nextContentPane != null);
@@ -1236,7 +1241,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	{
 		GridBagConstraints contraints = new GridBagConstraints();
 		contraints.gridx = 0;
-		contraints.gridy = 1;
+		contraints.gridy = 2;
 		contraints.weightx = 1;
 		contraints.weighty = 1;
 		contraints.anchor = GridBagConstraints.NORTH;
@@ -1677,9 +1682,26 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	{
 		return m_strText;
 	}
-/*
-	public synchronized void setText(String a_text)
+
+	/**
+	 * Use this method to set a new text for the content pane. Not that this is only possible if
+	 * <UL>
+	 *   <LI> the content pane is not part of a visible dialog (isVisible() == false) and </LI>
+	 *   <LI> the content pane already has a text field (maybe a dummy String) and </LI>
+	 *   <LI> the parent dialog has a width an height greater than zero (it already has its final size). </LI>
+	 * </UL>
+	 * The new text will not influence the current size or the preferred size of the content pane and
+	 * the dialog. If the text is too big to show it completely, a link is generated that opens an
+	 * extra dialog to view the text.
+	 * @param a_strText a new text for this content pane
+	 */
+	public synchronized void setText(String a_strText)
 	{
+		if (m_strText == null)
+		{
+			throw new IllegalStateException("This content pane does not contain a text field!");
+		}
+
 		synchronized (getDialog())
 		{
 			if (isVisible())
@@ -1687,38 +1709,168 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 				getDialog().notifyAll();
 				throw new IllegalStateException("You may not change the text in a visible content pane!");
 			}
+
 			JAPDialog dialog = new JAPDialog( (JAPDialog)null, "");
 			RootPaneContainer ownerDialog = getDialog();
 			boolean bWasActive = isActive();
+			boolean bWasUnlimitedSize = false;
+			int preferredWidth = m_contentPane.getSize().width - 2 * SPACE_AROUND_TEXT;
+			int currentCut, bestCut;
+			int totalLength;
+			boolean bCutFound = false;
+			GridBagConstraints contraints;
+			Dimension dialogSize;
 
+			if (ownerDialog instanceof JDialog)
+			{
+				dialogSize = ((JDialog)ownerDialog).getSize();
+			}
+			else
+			{
+				dialogSize = ((JAPDialog)ownerDialog).getSize();
+			}
+			if (dialogSize.width == 0 || dialogSize.height == 0)
+			{
+				throw new IllegalStateException("The parent dialog has a size <=0! " +
+												"This is not allowed when changing the text.");
+			}
+			dialog.setSize(dialogSize);
+
+			// remove and add the text field, as it may have been removed in a prior call to this method
+			if (m_lblText != null)
+			{
+				m_titlePane.remove(m_lblText);
+			}
+			m_strText = JAPHtmlMultiLineLabel.removeHTMLHEADAndBODYTags(a_strText);
+			if (m_strText == null || m_strText.trim().length() == 0)
+			{
+				// remove it an do nothing else
+				m_strText = "";
+				return;
+			}
+			m_lblText = new JAPHtmlMultiLineLabel(m_strText, SwingConstants.CENTER);
+			m_lblText.setFontStyle(JAPHtmlMultiLineLabel.FONT_STYLE_PLAIN);
+			m_lblText.setPreferredWidth(preferredWidth);
+			m_titlePane.add(m_lblText, m_textConstraints);
+
+
+			// replace the parent dialog by a dummy dialog to fool the updateDialog() method
 			m_parentDialog = dialog;
+
+			if (m_rootPane.getPreferredSize().equals(new Dimension(UNLIMITED_SIZE, UNLIMITED_SIZE)))
+			{
+				bWasUnlimitedSize = true;
+			}
+			m_rootPane.setPreferredSize(null);
+			if (m_lblSeeFullText != null)
+			{
+				m_titlePane.remove(m_lblSeeFullText);
+				m_lblSeeFullText = null;
+			}
 			updateDialog();
 
+			if (dialog.getContentPane().getSize().height < dialog.getContentPane().getPreferredSize().height)
+			{
+				m_lblSeeFullText = new JAPHtmlMultiLineLabel(
+					"<A href=''>" + //"..." +
+					"(" + JAPMessages.getString(MSG_SEE_FULL_MESSAGE) + ")</A>", m_lblText.getFont(),
+					SwingConstants.CENTER);
+
+				m_lblSeeFullText.setPreferredSize(new Dimension(preferredWidth,
+					m_lblSeeFullText.getPreferredSize().height));
+				m_lblSeeFullText.addMouseListener(new MouseAdapter()
+				{
+					public void mouseClicked(MouseEvent a_event)
+					{
+						if (m_strTitle != null)
+						{
+							JAPDialog.showMessageDialog(m_lblSeeFullText, m_strText, m_strTitle);
+						}
+						else
+						{
+							JAPDialog.showMessageDialog(m_lblSeeFullText, m_strText);
+						}
+					}
+				});
+				contraints = (GridBagConstraints)m_textConstraints.clone();
+				contraints.gridy = 1;
+				contraints.insets = new Insets(0, 0, 0, 0);
+				m_titlePane.add(m_lblSeeFullText, contraints);
+
+				// do a short heuristic to optimize the label size (find the optimal cut)
+				totalLength = m_lblText.getHTMLDocumentLength();
+				currentCut = totalLength / 2;
+				bestCut = 0;
+				for (int i = 0; i < NUMBER_OF_HEURISTIC_ITERATIONS; i++)
+				{
+					if (i == (NUMBER_OF_HEURISTIC_ITERATIONS - 1))
+					{
+						if (bCutFound)
+						{
+							currentCut = bestCut;
+						}
+						else
+						{
+							// no feasible cut has been found; remove the text field completely
+							m_titlePane.remove(m_lblText);
+							m_lblText = null;
+							updateDialog();
+							break;
+						}
+					}
+					m_lblText.setText(m_strText);
+					m_lblText.cutHTMLDocument(currentCut);
+					m_lblText.setText(JAPHtmlMultiLineLabel.removeHTMLHEADAndBODYTags(m_lblText.getText()) +
+									  "...");
+					m_lblText.setPreferredWidth(preferredWidth);
+					updateDialog();
+
+					if (dialog.getContentPane().getSize().height <
+						dialog.getContentPane().getPreferredSize().height)
+				   {
+					   if (bCutFound)
+					   {
+						   currentCut = bestCut + (bestCut / (i + 2));
+					   }
+					   else
+					   {
+						   currentCut /= 2;
+					   }
+				   }
+				   else
+				   {
+					   bCutFound = true;
+					   if (bestCut < currentCut)
+					   {
+						   bestCut = currentCut;
+					   }
+					   currentCut += currentCut / 2;
+				   }
+				}
+			}
+
+			if (m_lblText != null)
+			{
+				m_lblText.setText("<font color=#000000>" +
+				  JAPHtmlMultiLineLabel.removeHTMLHEADAndBODYTags(m_lblText.getText())
+				    + "</font>");
+				m_lblText.setPreferredWidth(preferredWidth);
+			}
 
 			m_parentDialog = ownerDialog;
+			if (bWasUnlimitedSize)
+			{
+				// restore the preferred size of the root pane
+				m_rootPane.setPreferredSize(new Dimension(UNLIMITED_SIZE, UNLIMITED_SIZE));
+			}
 			if (bWasActive)
 			{
 				updateDialog();
 			}
 
-			if (m_lblText != null)
-			{
-				System.out.println("Text label: " + m_lblText.getSize() + " : " + m_lblText.getPreferredSize());
-			}
-			System.out.println("Content pane: " + m_contentPane.getSize() + " : " +
-							   m_contentPane.getPreferredSize());
-			System.out.println("Title pane: " + m_titlePane.getSize() + " : " + m_titlePane.getPreferredSize());
-			if (m_lblMessage != null)
-			{
-				System.out.println("Status label: " + m_lblMessage.getSize() + " : " +
-								   m_lblMessage.getPreferredSize());
-			}
-
-			System.out.println("Root pane: " + m_rootPane.getSize() + " : " + m_rootPane.getPreferredSize());
-
 			getDialog().notifyAll();
 		}
-	}*/
+	}
 
 	/**
 	 * Returns the parent Dialog. It is a JDialog or a JAPDialog.
