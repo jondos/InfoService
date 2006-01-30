@@ -161,6 +161,22 @@ public class WorkerContentPane extends DialogContentPane implements
 	}
 
 	/**
+	 * Interrupts the thread.
+	 */
+	public void interruptWorkerThread()
+	{
+		if (m_workerThread != null)
+		{
+			m_workerInterrupted = true;
+			m_workerThread.interrupt();
+			if (isInterruptThreadSafe())
+			{
+				joinThread();
+			}
+		}
+	}
+
+	/**
 	 * A wrapper for the worker runnable.
 	 */
 	private class InternalThread extends Thread
@@ -184,19 +200,6 @@ public class WorkerContentPane extends DialogContentPane implements
 			super.interrupt();
 		}
 
-	}
-
-	private void interruptWorkerThread()
-	{
-		if (m_workerThread != null)
-		{
-			m_workerInterrupted = true;
-			m_workerThread.interrupt();
-			if (isInterruptThreadSafe())
-			{
-				joinThread();
-			}
-		}
 	}
 
 	private class WorkerComponentListener extends ComponentAdapter implements Runnable
