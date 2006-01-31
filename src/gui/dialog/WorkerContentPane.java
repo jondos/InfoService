@@ -139,6 +139,17 @@ public class WorkerContentPane extends DialogContentPane implements
 		}
 	}
 
+	/**
+	 * Returns if the content pane is ready to start a new thread. If it is not ready, no thread will
+	 * be started when the content pane shows up. Subclasses may override this method to hide and show
+	 * this content pane while a thread is running. Please note that this method should always return
+	 * <CODE> true </CODE> after the thread has stopped.
+	 * @return if the content pane is ready to start a new thread; true by default
+	 */
+	public boolean isReady()
+	{
+		return true;
+	}
 
 	/**
 	 * Returns true by default, that means this worker content pane is skipped if a move from the next
@@ -206,7 +217,10 @@ public class WorkerContentPane extends DialogContentPane implements
 	{
 		public void componentHidden(ComponentEvent a_event)
 		{
-			interruptWorkerThread();
+			if (isReady())
+			{
+				interruptWorkerThread();
+			}
 		}
 
 		/**
@@ -217,7 +231,7 @@ public class WorkerContentPane extends DialogContentPane implements
 		 */
 		public void componentShown(ComponentEvent a_event)
 		{
-			if (isVisible())
+			if (isVisible() && isReady())
 			{
 				m_internalThread = new Thread(this);
 				m_internalThread.start();
