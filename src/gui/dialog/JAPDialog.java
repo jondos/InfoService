@@ -52,6 +52,7 @@ import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
@@ -2834,6 +2835,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 							// another dialog has enabled the parent; set it back to diabled
 							m_parentWindow.setEnabled(false);
 						}
+
 						Class classActiveEvent;
 						try
 						{
@@ -2845,20 +2847,42 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 							classActiveEvent = null;
 						}
 						Object src = event.getSource();
-						if (src == m_internalDialog && event instanceof WindowEvent)
+						if (src == m_internalDialog)
 						{
-							if ( ( (WindowEvent) event).getID() == WindowEvent.WINDOW_CLOSING)
+							if (event instanceof WindowEvent)
 							{
-								m_dialogWindowAdapter.windowClosing((WindowEvent) event);
+								if ( ( (WindowEvent) event).getID() == WindowEvent.WINDOW_CLOSING)
+								{
+									m_dialogWindowAdapter.windowClosing( (WindowEvent) event);
 
+									/*
+									 * Hide this event from the internal dialog. This removes the flimmering
+									 * effect that occurs when the internal dialog is closed before enabling
+									 * the parent window.
+									 */
+									continue;
+								}
+							}
+							else if (event instanceof KeyEvent && getRootPane().getDefaultButton() != null)
+							{
 								/*
-								 * Hide this event from the internal dialog. This removes the flimmering
-								 * effect that occurs when the internal dialog is closed before enabling
-								 * the parent window.
-								 */
-								continue;
+								// default button patch for old JDKs
+								KeyEvent keyEvent = ((KeyEvent) event);
+								if (keyEvent.getKeyCode() == KeyEvent.VK_ENTER &&
+								//	(keyEvent.getID() == KeyEvent.KEY_RELEASED ||
+									 keyEvent.getID() == KeyEvent.KEY_TYPED)
+								{
+									if (keyEvent.getID() == KeyEvent.KEY_TYPED)
+									{
+										getRootPane().getDefaultButton().doClick();
+									}
+									continue;
+								}
+						*/
 							}
 						}
+
+
 						if (classActiveEvent != null && classActiveEvent.isInstance(event))
 						{
 							// ((ActiveEvent) event).dispatch();

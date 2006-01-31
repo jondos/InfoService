@@ -1656,6 +1656,16 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	}
 
 	/**
+	 * Returns if the automatic focus setting of the DialogContentPane class is enabled.
+	 * Subclasses may override this method if they want to set the focus in their internal logic.
+	 * @return if this content pane sets the focus automatically
+	 */
+	public boolean isAutomaticFocusSettingEnabled()
+	{
+		return true;
+	}
+
+	/**
 	 * Returns if this content pane is the currently active content pane in the dialog, that means that
 	 * this content pane is shown if the dialog is shown.
 	 * @return if this content pane is the currently active content pane in the dialog
@@ -2190,7 +2200,10 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 						if (currentContentPane.getButtonYesOK() != null &&
 							currentContentPane.getButtonYesOK().isEnabled())
 						{
-							currentContentPane.getButtonYesOK().requestFocus();
+							if (currentContentPane.isAutomaticFocusSettingEnabled())
+							{
+								currentContentPane.getButtonYesOK().requestFocus();
+							}
 							getDialog().getRootPane().setDefaultButton(currentContentPane.getButtonYesOK());
 							bFocused = true;
 						}
@@ -2200,14 +2213,20 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 						if (currentContentPane.getButtonNo() != null &&
 							currentContentPane.getButtonNo().isEnabled())
 						{
-							currentContentPane.getButtonNo().requestFocus();
+							if (currentContentPane.isAutomaticFocusSettingEnabled())
+							{
+								currentContentPane.getButtonNo().requestFocus();
+							}
 							getDialog().getRootPane().setDefaultButton(currentContentPane.getButtonNo());
 							bFocused = true;
 						}
 						else if (currentContentPane.getButtonYesOK() != null &&
 								 currentContentPane.getButtonYesOK().isEnabled())
 						{
-							currentContentPane.getButtonYesOK().requestFocus();
+							if (currentContentPane.isAutomaticFocusSettingEnabled())
+							{
+								currentContentPane.getButtonYesOK().requestFocus();
+							}
 							getDialog().getRootPane().setDefaultButton(currentContentPane.getButtonYesOK());
 							bFocused = true;
 						}
@@ -2217,7 +2236,10 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 						if (currentContentPane.getButtonCancel() != null &&
 							currentContentPane.getButtonCancel().isEnabled())
 						{
-							currentContentPane.getButtonCancel().requestFocus();
+							if (currentContentPane.isAutomaticFocusSettingEnabled())
+							{
+								currentContentPane.getButtonCancel().requestFocus();
+							}
 							getDialog().getRootPane().setDefaultButton(currentContentPane.getButtonCancel());
 						}
 					}
@@ -2399,7 +2421,10 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 		{
 			if (isVisible() && hasWizardLayout() && getButtonYesOK() != null)
 			{
-				getButtonYesOK().requestFocus();
+				if (isAutomaticFocusSettingEnabled())
+				{
+					getButtonYesOK().requestFocus();
+				}
 				getDialog().getRootPane().setDefaultButton(getButtonYesOK());
 			}
 
