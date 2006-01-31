@@ -212,6 +212,15 @@ public class PasswordContentPane extends DialogContentPane implements IMiscPassw
 	}
 
 	/**
+	 * Returns false in order to set the focus on the first available password field.
+	 * @return false
+	 */
+	public boolean isAutomaticFocusSettingEnabled()
+	{
+		return false;
+	}
+
+	/**
 	 * Needed if an old password is changed. This method returns the old password.
 	 * @return null if uninitialised; otherwise, the old password
 	 */
@@ -347,20 +356,17 @@ public class PasswordContentPane extends DialogContentPane implements IMiscPassw
 	{
 		public void componentShown(ComponentEvent a_event)
 		{
-			if (!hasWizardLayout())
+			if (m_type == PASSWORD_CHANGE)
 			{
-				if (m_type == PASSWORD_CHANGE)
-				{
-					m_textOldPasswd.requestFocus();
-				}
-				else if (m_type == PASSWORD_NEW)
-				{
-					m_textNewPasswd.requestFocus();
-				}
-				else
-				{
-					m_textConfirmPasswd.requestDefaultFocus();
-				}
+				m_textOldPasswd.requestFocus();
+			}
+			else if (m_type == PASSWORD_NEW)
+			{
+				m_textNewPasswd.requestFocus();
+			}
+			else
+			{
+				m_textConfirmPasswd.requestDefaultFocus();
 			}
 		}
 	}
