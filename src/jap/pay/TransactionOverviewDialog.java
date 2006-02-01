@@ -66,6 +66,8 @@ public class TransactionOverviewDialog extends JDialog implements ActionListener
 	/** Messages */
 	private static final String MSG_OK_BUTTON = TransactionOverviewDialog.class.
 		getName() + "_ok_button";
+	private static final String MSG_CANCELBUTTON = TransactionOverviewDialog.class.
+		getName() + "_cancelbutton";
 	private static final String MSG_FETCHING = TransactionOverviewDialog.class.
 		getName() + "_fetching";
 	private static final String MSG_TAN = TransactionOverviewDialog.class.
@@ -131,7 +133,7 @@ public class TransactionOverviewDialog extends JDialog implements ActionListener
 		bttnPanel.add(m_fetchingLabel);
 
 		//The Ok button
-		m_okButton = new JButton(JAPMessages.getString(MSG_OK_BUTTON));
+		m_okButton = new JButton(JAPMessages.getString(MSG_CANCELBUTTON));
 		m_okButton.addActionListener(this);
 		bttnPanel.add(m_okButton);
 
@@ -172,7 +174,7 @@ public class TransactionOverviewDialog extends JDialog implements ActionListener
 				MyTableModel tableModel = new MyTableModel(overview);
 				m_tList.setEnabled(true);
 				m_tList.setModel(tableModel);
-
+				m_okButton.setText(MSG_OK_BUTTON);
 				m_fetchingLabel.setVisible(false);
 			}
 		};
