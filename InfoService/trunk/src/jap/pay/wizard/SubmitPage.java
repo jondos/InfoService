@@ -112,6 +112,8 @@ public class SubmitPage extends BasicWizardPage
 						m_submittingLabel.setVisible(false);
 						m_infoLabel.setText("<html>" + JAPMessages.getString(MSG_NOTSENT) + "</html>");
 						m_infoLabel.setVisible(true);
+						m_host.setFinishEnabled(false);
+
 					}
 					biConn.disconnect();
 					m_host.setFinishEnabled(true);
@@ -121,6 +123,7 @@ public class SubmitPage extends BasicWizardPage
 					//Show success info
 					m_infoLabel.setText("<html>" + JAPMessages.getString(MSG_SENT) + "</html>");
 					m_infoLabel.setVisible(true);
+					m_host.setCancelEnabled(false);
 				}
 				catch (Exception e)
 				{
@@ -129,9 +132,7 @@ public class SubmitPage extends BasicWizardPage
 					m_submittingLabel.setVisible(false);
 					m_infoLabel.setText("<html>" + JAPMessages.getString(MSG_NOTSENT) + "</html>");
 					m_infoLabel.setVisible(true);
-
 				}
-
 			}
 		};
 
