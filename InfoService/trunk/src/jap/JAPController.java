@@ -736,28 +736,13 @@ public final class JAPController extends Observable implements IProxyListener, O
 						if (elemType != null)
 						{
 							int debugtype = LogType.NUL;
-							if (XMLUtil.parseAttribute(elemType, JAPConstants.CONFIG_GUI, false))
+							int[] logTypes = LogType.getAvailableLogTypes();
+							for (int j = 0; j < logTypes.length; j++)
 							{
-								debugtype += LogType.GUI;
-							}
-							if (XMLUtil.parseAttribute(elemType, JAPConstants.CONFIG_NET, false))
-							{
-								debugtype += LogType.NET;
-							}
-							if (XMLUtil.parseAttribute(elemType, JAPConstants.CONFIG_THREAD, false))
-							{
-								debugtype += LogType.THREAD;
-							}
-							if (XMLUtil.parseAttribute(elemType, JAPConstants.CONFIG_PAY, false))
-							{
-								debugtype += LogType.PAY;
-							}
-
-							if (XMLUtil.parseAttribute(elemType, JAPConstants.CONFIG_MISC, false))
-							{
-								debugtype += LogType.MISC;
-								debugtype += LogType.PAY;
-								debugtype += LogType.TOR;
+								if (XMLUtil.parseAttribute(elemType, LogType.getLogTypeName(logTypes[j]), false))
+								{
+									debugtype |= logTypes[j];
+								}
 							}
 							JAPDebug.getInstance().setLogType(debugtype);
 						}
@@ -1258,11 +1243,12 @@ public final class JAPController extends Observable implements IProxyListener, O
 			elemDebug.appendChild(tmp);
 			tmp = doc.createElement(JAPConstants.CONFIG_TYPE);
 			int debugtype = JAPDebug.getInstance().getLogType();
-			XMLUtil.setAttribute(tmp, JAPConstants.CONFIG_GUI, ( (debugtype & LogType.GUI) != 0));
-			XMLUtil.setAttribute(tmp, JAPConstants.CONFIG_NET, ( (debugtype & LogType.NET) != 0));
-			XMLUtil.setAttribute(tmp, JAPConstants.CONFIG_THREAD, ( (debugtype & LogType.THREAD) != 0));
-			XMLUtil.setAttribute(tmp, JAPConstants.CONFIG_MISC, ( (debugtype & LogType.MISC) != 0));
-			XMLUtil.setAttribute(tmp, JAPConstants.CONFIG_PAY, ( (debugtype & LogType.PAY) != 0));
+			int[] availableLogTypes = LogType.getAvailableLogTypes();
+			for (int i = 1; i < availableLogTypes.length; i++)
+			{
+				XMLUtil.setAttribute(tmp, LogType.getLogTypeName(availableLogTypes[i]),
+									 ( (debugtype & availableLogTypes[i]) != 0));
+			}
 
 			elemDebug.appendChild(tmp);
 			if (JAPDebug.isShowConsole() || JAPDebug.isLogToFile())
