@@ -50,7 +50,6 @@ import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
-import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.RootPaneContainer;
@@ -152,6 +151,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	private static final int UNLIMITED_SIZE = 2500;
 	private static final int SPACE_AROUND_TEXT = 5;
 	private static final String MORE_POINTS = "...";
+	/** @todo Implement a better heuristic */
 	private static final int NUMBER_OF_HEURISTIC_ITERATIONS = 6;
 
 	private DialogContentPane m_nextContentPane;
