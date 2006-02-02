@@ -2135,6 +2135,11 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 		JAPHtmlMultiLineLabel dummyLabel;
 		int bestSize, currentSize;
 
+		if (a_strMessage == null || a_strMessage.trim().length() == 0)
+		{
+			return;
+		}
+
 		// no HTML Tags are allowed in the message
 		strMessage = JAPHtmlMultiLineLabel.removeTagsAndNewLines(a_strMessage);
 
@@ -2228,13 +2233,6 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 		{
 			JAPDialog.showConfirmDialog(m_lblMessage, m_strMessage, m_strTitle, m_optionType, m_messageType);
 		}
-	}
-
-	private static Dimension calculateMessageSize(String a_strMessage)
-	{
-		JAPHtmlMultiLineLabel label = new JAPHtmlMultiLineLabel(a_strMessage);
-		label.setFontStyle(JAPHtmlMultiLineLabel.FONT_STYLE_BOLD);
-		return label.getPreferredSize();
 	}
 
 	private void setNextContentPane(DialogContentPane a_nextContentPane)
@@ -2381,9 +2379,8 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 					continue;
 				}
 
-				if (a_errors[i].hasDisplayableErrorMessage() && (
-					displayError == null || displayError.getMessage() == null ||
-					displayError.getMessage().trim().length() == 0))
+				if (displayError == null || a_errors[i].hasDisplayableErrorMessage() && (
+					displayError.getMessage() == null || displayError.getMessage().trim().length() == 0))
 				{
 					displayError = a_errors[i];
 				}
@@ -2470,23 +2467,29 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	{
 		m_panelOptions = Box.createHorizontalBox();
 
-		if (m_btnCancel == null)
+		if (getHelpContext() != null)
 		{
-			m_btnCancel = new JButton();
-			m_btnCancel.addActionListener(m_buttonListener);
+			if ( m_btnHelp == null)
+			{
+				m_btnHelp = JAPHelp.createHelpButton(this);
+			}
+			m_panelOptions.add(m_btnHelp);
+			m_panelOptions.add(Box.createHorizontalStrut(5));
 		}
-		m_btnCancel.setText(JAPMessages.getString(MSG_CANCEL));
-		m_panelOptions.add(m_btnCancel);
 
-		m_panelOptions.add(Box.createHorizontalGlue());
-		if (getPreviousContentPane() != null)
+
+		//if (getPreviousContentPane() != null)
 		{
 			if (m_btnNo == null)
 			{
 				m_btnNo = new JButton();
 				m_btnNo.addActionListener(m_buttonListener);
 			}
-			m_btnNo.setText(JAPMessages.getString(MSG_PREVIOUS));
+			m_btnNo.setText("< " + JAPMessages.getString(MSG_PREVIOUS));
+			if (getPreviousContentPane() == null)
+			{
+				m_btnNo.setEnabled(false);
+			}
 			m_panelOptions.add(m_btnNo);
 		}
 		if (m_btnYesOK == null)
@@ -2496,7 +2499,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 		}
 		if (getNextContentPane() != null)
 		{
-			m_btnYesOK.setText(JAPMessages.getString(MSG_NEXT));
+			m_btnYesOK.setText(JAPMessages.getString(MSG_NEXT) + " >");
 		}
 		else
 		{
@@ -2504,15 +2507,15 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 		}
 		m_panelOptions.add(m_btnYesOK);
 
-		if (getHelpContext() != null)
+		m_panelOptions.add(Box.createHorizontalStrut(5));
+		if (m_btnCancel == null)
 		{
-			if ( m_btnHelp == null)
-			{
-				m_btnHelp = JAPHelp.createHelpButton(this);
-			}
-			m_panelOptions.add(m_btnHelp);
+			m_btnCancel = new JButton();
+			m_btnCancel.addActionListener(m_buttonListener);
 		}
-}
+		m_btnCancel.setText(JAPMessages.getString(MSG_CANCEL));
+		m_panelOptions.add(m_btnCancel);
+	}
 
 	private void createOptions()
 	{
@@ -2558,7 +2561,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 		}
 		public void windowOpened(WindowEvent a_event)
 		{
-			if (isVisible() && hasWizardLayout() && getButtonYesOK() != null)
+			if (isVisible() && hasWizardLayout() && getButtonYesOK() != null && getButtonYesOK().isEnabled())
 			{
 				if (isAutomaticFocusSettingEnabled())
 				{

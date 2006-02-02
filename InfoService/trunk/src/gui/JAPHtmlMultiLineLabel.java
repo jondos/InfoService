@@ -369,6 +369,11 @@ public class JAPHtmlMultiLineLabel extends JLabel
 		StringTokenizer tokenizer;
 		int indexTagBegin, indexTagEnd;
 
+		if (a_text == null)
+		{
+			return null;
+		}
+
 		text = a_text;
 		while (true)
 		{
