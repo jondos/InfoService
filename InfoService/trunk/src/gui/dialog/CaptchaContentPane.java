@@ -86,7 +86,7 @@ public class CaptchaContentPane extends DialogContentPane implements
 		Container rootPanel = this.getContentPane();
 		GridBagConstraints c = new GridBagConstraints();
 		rootPanel.setLayout(new GridBagLayout());
-		c.anchor = GridBagConstraints.NORTHWEST;
+		c.anchor = GridBagConstraints.CENTER;
 		c.weightx = 0;
 		c.weighty = 0;
 		c.gridwidth = 2;

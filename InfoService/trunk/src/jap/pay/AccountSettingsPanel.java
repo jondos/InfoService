@@ -99,7 +99,7 @@ import javax.swing.ListSelectionModel;
  * @author Bastian Voigt, Tobias Bayer
  * @version 1.0
  */
-public class AccountSettingsPanel extends AbstractJAPConfModule implements ChangeListener,
+public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	ListSelectionListener
 {
 
@@ -134,10 +134,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		getName() + "_button_select";
 	private static final String MSG_BUTTON_CHANGE_PASSWORD = AccountSettingsPanel.class.
 		getName() + "_button_change_password";
-	private static final String MSG_OLDPASSWORDWRONG = AccountSettingsPanel.class.
-		getName() + "_oldpasswordwrong";
-	private static final String MSG_DIALOG_ACCOUNT_PASSWORD = AccountSettingsPanel.class.
-		getName() + "_dialog_account_password";
 	private static final String MSG_ACCOUNT_INVALID = AccountSettingsPanel.class.
 		getName() + "_account_invalid";
 	private static final String MSG_ACCOUNT_INVALID_TITLE = AccountSettingsPanel.class.
@@ -146,8 +142,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		getName() + "_accountcreate";
 	private static final String MSG_CREATEERROR = AccountSettingsPanel.class.
 		getName() + "_createerror";
-	private static final String MSG_CREATEERRORTITLE = AccountSettingsPanel.class.
-		getName() + "_createerrortitle";
 	private static final String MSG_GETACCOUNTSTATEMENT = AccountSettingsPanel.class.
 		getName() + "_getaccountstatement";
 	private static final String MSG_GETACCOUNTSTATEMENTTITLE = AccountSettingsPanel.class.
@@ -158,8 +152,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		getName() + "_accpasswordtitle";
 	private static final String MSG_ACCPASSWORD = AccountSettingsPanel.class.
 		getName() + "_accpassword";
-	private static final String MSG_CAPTCHANOTSOLVED = AccountSettingsPanel.class.
-		getName() + "_captchanotsolved";
 	private static final String MSG_OLDSTATEMENT = AccountSettingsPanel.class.
 		getName() + "_oldstatement";
 	private static final String MSG_EXPORTENCRYPT = AccountSettingsPanel.class.
@@ -584,6 +576,13 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 	{
 		if (selectedAccount == null)
 		{
+			m_coinstack.setValue(0);
+			m_labelCreationDate.setText("");
+			m_labelStatementDate.setText("");
+			m_labelDeposit.setText("");
+			m_labelSpent.setText("");
+			m_labelBalance.setText("");
+			m_labelValid.setText("");
 			return;
 		}
 
@@ -666,7 +665,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 			m_labelSpent.setText("");
 			m_labelBalance.setText("");
 			m_labelValid.setText("");
-
 		}
 
 	}
@@ -764,9 +762,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 	 */
 	private void doCreateAccount()
 	{
-		//Show a window that contains all known Payment Instances and let the user select one. (tb)
-		/*BI theBI = getBIforAccountCreation();*/
-		//BI for semi-open test cascade
 		BI theBI = null;
 		try
 		{
@@ -778,6 +773,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		catch (Exception e)
 		{
 			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, "Could not create Test-PI: " + e.getMessage());
+			theBI = getBIforAccountCreation();
 		}
 
 		if (theBI != null)
@@ -1225,6 +1221,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 				accounts.deleteAccount(selectedAccount.getAccountNumber());
 				m_listAccounts.clearSelection();
 				updateAccountList();
+				doShowDetails(null);
 			}
 			catch (Exception ex)
 			{
@@ -1287,14 +1284,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		{
 			PayAccount a = (PayAccount) enumAccounts.nextElement();
 		}
-	}
-
-	public void stateChanged(ChangeEvent e)
-	{
-		/*	if (e.getSource() instanceof AccountCreator)
-		 {
-		  updateAccountList();
-		 }*/
 	}
 
 	public void valueChanged(ListSelectionEvent e)
