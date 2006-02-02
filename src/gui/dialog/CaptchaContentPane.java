@@ -106,7 +106,7 @@ public class CaptchaContentPane extends DialogContentPane implements
 		c.weightx = 1;
 		rootPanel.add(m_tfSolution, c);
 
-		this.getButtonNo().setVisible(false);
+		this.getButtonNo().setEnabled(false);
 	}
 
 	public CheckError[] checkYesOK()

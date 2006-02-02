@@ -30,16 +30,14 @@ package jap.pay;
 import java.util.Date;
 import java.util.Vector;
 
-import anon.util.Util;
 import java.awt.FlowLayout;
-import java.awt.Frame;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.JButton;
-import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -50,9 +48,11 @@ import anon.pay.BIConnection;
 import anon.pay.PayAccount;
 import anon.pay.xml.XMLTransCert;
 import anon.pay.xml.XMLTransactionOverview;
+import anon.util.Util;
+import gui.GUIUtils;
 import gui.JAPMessages;
+import gui.dialog.JAPDialog;
 import jap.JAPConstants;
-import jap.JAPUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -61,7 +61,7 @@ import logging.LogType;
  *
  *  @author Tobias Bayer
  */
-public class TransactionOverviewDialog extends JDialog implements ActionListener
+public class TransactionOverviewDialog extends JAPDialog implements ActionListener
 {
 	/** Messages */
 	private static final String MSG_OK_BUTTON = TransactionOverviewDialog.class.
@@ -84,7 +84,7 @@ public class TransactionOverviewDialog extends JDialog implements ActionListener
 	private PayAccount m_account;
 	private JLabel m_fetchingLabel;
 
-	public TransactionOverviewDialog(Frame owner, String title, boolean modal, PayAccount a_account)
+	public TransactionOverviewDialog(Window owner, String title, boolean modal, PayAccount a_account)
 	{
 		super(owner, title, modal);
 		try
@@ -92,11 +92,9 @@ public class TransactionOverviewDialog extends JDialog implements ActionListener
 			m_account = a_account;
 			setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 			jbInit();
-			pack();
 			setModal(true);
-			setSize(450, 300);
-			JAPUtil.centerFrame(this);
-			show();
+			setSize(500, 300);
+			setVisible(true);
 		}
 		catch (Exception e)
 		{
@@ -127,7 +125,7 @@ public class TransactionOverviewDialog extends JDialog implements ActionListener
 
 		//The fetching label
 		m_fetchingLabel = new JLabel(JAPMessages.getString(MSG_FETCHING),
-									 JAPUtil.loadImageIcon(JAPConstants.BUSYFN, true), JLabel.LEADING);
+									 GUIUtils.loadImageIcon(JAPConstants.BUSYFN, true), JLabel.LEADING);
 		//m_fetchingLabel.setVerticalTextPosition(JLabel.);
 		m_fetchingLabel.setHorizontalTextPosition(JLabel.LEADING);
 		bttnPanel.add(m_fetchingLabel);
@@ -174,7 +172,7 @@ public class TransactionOverviewDialog extends JDialog implements ActionListener
 				MyTableModel tableModel = new MyTableModel(overview);
 				m_tList.setEnabled(true);
 				m_tList.setModel(tableModel);
-				m_okButton.setText(MSG_OK_BUTTON);
+				m_okButton.setText(JAPMessages.getString(MSG_OK_BUTTON));
 				m_fetchingLabel.setVisible(false);
 			}
 		};
