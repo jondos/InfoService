@@ -62,7 +62,9 @@ import logging.LogLevel;
 import logging.LogType;
 import anon.crypto.JAPCertificate;
 import anon.infoservice.InfoServiceHolder;
+import anon.util.captcha.ICaptchaSender;
 import anon.util.captcha.IImageEncodedCaptcha;
+
 
 /**
  * This class encapsulates a collection of accounts. One of the accounts in the collection
@@ -462,6 +464,17 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 		}
 	}
 
+	public void removePaymentListener(IPaymentListener a_listener)
+	{
+		synchronized(m_paymentListeners)
+		{
+			if (m_paymentListeners.contains(a_listener))
+			{
+				m_paymentListeners.removeElement(a_listener);
+			}
+		}
+	}
+
 	/**
 	 * getBI
 	 *
@@ -706,7 +719,7 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 	 * @param a_source Object
 	 * @param a_captcha IImageEncodedCaptcha
 	 */
-	public void gotCaptcha(Object a_source, final IImageEncodedCaptcha a_captcha)
+	public void gotCaptcha(ICaptchaSender a_source, final IImageEncodedCaptcha a_captcha)
 	{
 		synchronized (m_paymentListeners)
 		{

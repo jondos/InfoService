@@ -49,13 +49,12 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 
-import anon.pay.BIConnection;
 import anon.pay.PayAccount;
 import anon.pay.PayAccountsFile;
 import anon.pay.xml.XMLBalance;
 import anon.pay.xml.XMLErrorMessage;
 import anon.util.captcha.IImageEncodedCaptcha;
-import gui.CaptchaDialog;
+import anon.util.captcha.ICaptchaSender;
 import gui.GUIUtils;
 import gui.JAPMessages;
 import gui.MyProgressBarUI;
@@ -74,6 +73,7 @@ import javax.swing.SwingConstants;
 import java.awt.Dimension;
 import gui.FlippingPanel;
 import anon.pay.AIControlChannel;
+
 
 public class PaymentMainPanel extends FlippingPanel
 {
@@ -522,16 +522,9 @@ public class PaymentMainPanel extends FlippingPanel
 									  LogType.PAY);
 		}
 
-		/**
-		 * The BIConnection got a captcha. Let the user solve it and set the
-		 * solution to the BIConnection.
-		 * @param a_source Object
-		 * @param a_captcha IImageEncodedCaptcha
-		 */
-		public void gotCaptcha(Object a_source, final IImageEncodedCaptcha a_captcha)
+
+		public void gotCaptcha(ICaptchaSender a_source, final IImageEncodedCaptcha a_captcha)
 		{
-			CaptchaDialog c = new CaptchaDialog(a_captcha, "<Cha", JAPConf.getInstance().getView());
-			( (BIConnection) a_source).setCaptchaSolution(c.getSolution());
 		}
 	}
 

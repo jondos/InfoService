@@ -90,6 +90,8 @@ import logging.LogLevel;
 import logging.LogType;
 import gui.dialog.PasswordContentPane;
 import gui.dialog.SimpleWizardContentPane;
+import gui.dialog.CaptchaContentPane;
+import javax.swing.ListSelectionModel;
 
 /**
  * The Jap Conf Module (Settings Tab Page) for the Accounts and payment Management
@@ -187,6 +189,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 	private JLabel m_labelValid;
 	private JProgressBar m_coinstack;
 	private JList m_listAccounts;
+	private boolean m_bReady = true;
 
 	public AccountSettingsPanel()
 	{
@@ -216,6 +219,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 
 		m_listAccounts = new JList();
 		m_listAccounts.addListSelectionListener(this);
+		m_listAccounts.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		m_listAccounts.setPreferredSize(new Dimension(200, 200));
 		m_listAccounts.addMouseListener(new MouseAdapter()
 		{
@@ -710,48 +714,48 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 		   if (choice == JOptionPane.YES_OPTION)
 		   {
 		 /** @todo find out why the wait splash screen looks so ugly
-		  JAPWaitSplash splash = null;
-		  try
-		  {
-		   splash = JAPWaitSplash.start("Fetching transfer number...", "Please wait");
-		   Thread.sleep(5);
-		   transferCertificate = selectedAccount.charge();
-		   splash.abort();
-		  }
-		  catch (Exception ex)
-		  {
-		   splash.abort();
-		   LogHolder.log(LogLevel.DEBUG, LogType.PAY, ex);
-		   JOptionPane.showMessageDialog(
-			view,
-			"<html>" + JAPMessages.getString("ngTransferNumberError") + "<br>" + ex.getMessage() +
-			"</html>",
-			JAPMessages.getString("error"), JOptionPane.ERROR_MESSAGE
-			);
-		   return;
-		  }
+			JAPWaitSplash splash = null;
+			try
+			{
+		  splash = JAPWaitSplash.start("Fetching transfer number...", "Please wait");
+		  Thread.sleep(5);
+		  transferCertificate = selectedAccount.charge();
+		  splash.abort();
+			}
+			catch (Exception ex)
+			{
+		  splash.abort();
+		  LogHolder.log(LogLevel.DEBUG, LogType.PAY, ex);
+		  JOptionPane.showMessageDialog(
+		   view,
+		   "<html>" + JAPMessages.getString("ngTransferNumberError") + "<br>" + ex.getMessage() +
+		   "</html>",
+		   JAPMessages.getString("error"), JOptionPane.ERROR_MESSAGE
+		   );
+		  return;
+			}
 
-		  // try to launch webbrowser
-		  AbstractOS os = AbstractOS.getInstance();
-		  String url = transferCertificate.getBaseUrl();
-		  url += "?transfernum=" + transferCertificate.getTransferNumber();
-		  try
-		  {
-		   os.openURLInBrowser(url);
-		  }
-		  catch (Exception e)
-		  {
-		   JOptionPane.showMessageDialog(
-			view,
-			"<html>" + JAPMessages.getString("ngCouldNotFindBrowser") + "<br>" +
-			"<h3>" + url + "</h3></html>",
-			JAPMessages.getString("ngCouldNotFindBrowserTitle"),
-			JOptionPane.INFORMATION_MESSAGE
-			);
-		  }
+			// try to launch webbrowser
+			AbstractOS os = AbstractOS.getInstance();
+			String url = transferCertificate.getBaseUrl();
+			url += "?transfernum=" + transferCertificate.getTransferNumber();
+			try
+			{
+		  os.openURLInBrowser(url);
+			}
+			catch (Exception e)
+			{
+		  JOptionPane.showMessageDialog(
+		   view,
+		   "<html>" + JAPMessages.getString("ngCouldNotFindBrowser") + "<br>" +
+		   "<h3>" + url + "</h3></html>",
+		   JAPMessages.getString("ngCouldNotFindBrowserTitle"),
+		   JOptionPane.INFORMATION_MESSAGE
+		   );
+			}
 
-		  m_MyTableModel.fireTableDataChanged();
-			}*/
+			m_MyTableModel.fireTableDataChanged();
+		   }*/
 	}
 
 	/**
@@ -778,73 +782,77 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements Chang
 
 		if (theBI != null)
 		{
-			/*boolean choice = JAPDialog.showYesNoDialog(GUIUtils.getParentWindow(this.getRootPanel()),
-			 JAPMessages.getString("ngCreateKeyPair"));*/
-			JAPDialog d = new JAPDialog(this.getRootPanel(), JAPMessages.getString(MSG_ACCOUNTCREATE), true);
+			JAPDialog d = new JAPDialog(getRootPanel(), JAPMessages.getString(MSG_ACCOUNTCREATE), true);
 			d.setDefaultCloseOperation(JAPDialog.DO_NOTHING_ON_CLOSE);
+			d.setResizable(false);
 
 			SimpleWizardContentPane panel1 = new SimpleWizardContentPane(d,
 				JAPMessages.getString("ngCreateKeyPair"), null, null);
-			if (true) //if (choice)
-			{
-				final BI bi = theBI;
-				Runnable doIt = new Runnable()
-				{
 
-					public void run()
+			final BI bi = theBI;
+			m_bReady = true;
+			Runnable doIt = new Runnable()
+			{
+				public void run()
+				{
+					m_bReady = false;
+					try
 					{
-						try
+						PayAccount p = PayAccountsFile.getInstance().createAccount(bi, true);
+						p.fetchAccountInfo();
+					}
+					catch (Exception ex)
+					{
+						//User has pressed cancel
+						if (!ex.getMessage().equals("CAPTCHA"))
 						{
-							PayAccount p = PayAccountsFile.getInstance().createAccount(bi, true);
-							p.fetchAccountInfo();
-						}
-						catch (Exception ex)
-						{
-							if (ex.getMessage().equals("CAPTCHA"))
-							{
-								JAPDialog.showErrorDialog(
-									getRootPanel().getParent().getParent(),
-									JAPMessages.getString(MSG_CREATEERROR) + " " +
-									JAPMessages.getString(MSG_CAPTCHANOTSOLVED),
-									LogType.PAY);
-							}
-							else
-							{
-								JAPDialog.showErrorDialog(
-									getRootPanel().getParent().getParent(),
-									JAPMessages.getString(MSG_CREATEERROR) + " " + ex.getMessage(),
-									LogType.PAY);
-							}
+							JAPDialog.showErrorDialog(
+								GUIUtils.getParentWindow(getRootPanel()),
+								JAPMessages.getString(MSG_CREATEERROR) + " " + ex.getMessage(),
+								LogType.PAY);
 						}
 					}
-				};
-				WorkerContentPane panel2 = new WorkerContentPane(d,
-					JAPMessages.getString(MSG_ACCOUNTCREATEDESC), panel1,
-					doIt);
-				panel2.getButtonCancel().setVisible(false);
-				PasswordContentPane pc = null;
-				//First account, ask for password
-				if (PayAccountsFile.getInstance().getNumAccounts() == 0)
+				}
+			};
+			WorkerContentPane panel2 = new WorkerContentPane(d,
+				JAPMessages.getString(MSG_ACCOUNTCREATEDESC), panel1,
+				doIt)
+			{
+				public boolean isReady()
 				{
-					/*JAPDialog pd = new JAPDialog(GUIUtils.getParentWindow(this.getRootPanel()),
-					  JAPMessages.getString(MSG_ACCPASSWORDTITLE), true);*/
-					pc = new PasswordContentPane(d, panel2,
-												 PasswordContentPane.PASSWORD_NEW,
-												 JAPMessages.getString(MSG_ACCPASSWORD));
-					pc.getButtonNo().setEnabled(false);
-					pc.getButtonCancel().setEnabled(false);
+					return m_bReady;
 				}
 
-				panel1.updateDialogOptimalSized(panel1);
-				d.setLocationCenteredOnOwner();
-				d.setVisible(true);
-				updateAccountList();
-				if (pc != null && pc.getPassword() != null)
+				public boolean isSkippedAsPreviousContentPane()
 				{
-					JAPController.getInstance().setPaymentPassword(new String(pc.getPassword()));
+					return false;
 				}
+			};
+			panel2.getButtonCancel().setVisible(false);
 
+			CaptchaContentPane captcha = new CaptchaContentPane(d, panel2);
+			PayAccountsFile.getInstance().addPaymentListener(captcha);
+
+			PasswordContentPane pc = null;
+			//First account, ask for password
+			if (PayAccountsFile.getInstance().getNumAccounts() == 0)
+			{
+				pc = new PasswordContentPane(d, captcha,
+											 PasswordContentPane.PASSWORD_NEW,
+											 JAPMessages.getString(MSG_ACCPASSWORD));
+				pc.getButtonNo().setEnabled(false);
+				pc.getButtonCancel().setEnabled(false);
 			}
+
+			panel1.updateDialogOptimalSized(panel1);
+			d.setLocationCenteredOnOwner();
+			d.setVisible(true);
+			updateAccountList();
+			if (pc != null && pc.getPassword() != null)
+			{
+				JAPController.getInstance().setPaymentPassword(new String(pc.getPassword()));
+			}
+
 		}
 	}
 

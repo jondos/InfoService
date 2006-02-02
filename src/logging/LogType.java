@@ -25,6 +25,10 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
+
+/* Hint: This file may be only a copy of the original file which is always in the JAP source tree!
+ * If you change something - do not forget to add the changes also to the JAP source tree!
+ */
 package logging;
 
 /**
@@ -74,6 +78,17 @@ public final class LogType
 	 */
 	private LogType()
 	{
+	}
+
+	/**
+	 * Returns if the given LogType is a valid log type. Valid means that the LogType is one of those
+	 * defined in this class.
+	 * @param a_logType a log type
+	 * @return if the given LogType is a valid log type
+	 */
+	public static boolean isValidLogType(int a_logType)
+	{
+		return (a_logType >= 0 && a_logType < STR_LOG_TYPES.length);
 	}
 
 	/**

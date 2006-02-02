@@ -1905,6 +1905,10 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 			a_message = JAPMessages.getString(MSG_ERROR_UNKNOWN);
 			bPossibleApplicationError = true;
 		}
+		if (!LogType.isValidLogType(a_logType))
+		{
+			a_logType = LogType.GUI;
+		}
 
 		LogHolder.log(LogLevel.ERR, a_logType, a_message, true);
 		if (a_throwable != null)
@@ -1943,7 +1947,8 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	 * @param a_throwable a Throwable (may be null)
 	 * @param a_message an error message (may be null)
 	 * @return the retrieved error message or null if no error message could be found; this would
-	 * indicate a serious application error
+	 * indicate a serious application error (an empty String as error message will result in a return
+	 * value of null, too)
 	 */
 	public static String retrieveErrorMessage(String a_message, Throwable a_throwable)
 	{
@@ -1952,7 +1957,6 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 			if (a_throwable == null || a_throwable.getMessage() == null)
 			{
 				a_message = null;
-
 			}
 			else
 			{
