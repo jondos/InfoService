@@ -37,6 +37,7 @@ import javax.swing.JLabel;
 import javax.swing.JPasswordField;
 
 import gui.JAPMessages;
+import logging.LogType;
 import anon.util.IMiscPasswordReader;
 import anon.util.Util;
 
@@ -261,7 +262,8 @@ public class PasswordContentPane extends DialogContentPane implements IMiscPassw
 				 m_textNewPasswd.getPassword().length < m_minLength))
 			{
 				errors = new CheckError[]{
-					new CheckError(JAPMessages.getString(MSG_TOO_SHORT, new Integer(m_minLength)))
+					new CheckError(JAPMessages.getString(MSG_TOO_SHORT, new Integer(m_minLength)),
+					LogType.GUI)
 				{
 					public void doErrorAction()
 					{
@@ -286,7 +288,7 @@ public class PasswordContentPane extends DialogContentPane implements IMiscPassw
 					errors = new CheckError[1];
 				}
 
-				errors[0] = new CheckError(JAPMessages.getString(MSG_PASSWORDS_DONT_MATCH))
+				errors[0] = new CheckError(JAPMessages.getString(MSG_PASSWORDS_DONT_MATCH), LogType.GUI)
 				{
 					public void doErrorAction()
 					{
@@ -329,7 +331,7 @@ public class PasswordContentPane extends DialogContentPane implements IMiscPassw
 					errors = new CheckError[1];
 				}
 				{
-					errors[0] = new CheckError(JAPMessages.getString(MSG_WRONG_PASSWORD))
+					errors[0] = new CheckError(JAPMessages.getString(MSG_WRONG_PASSWORD), LogType.GUI)
 					{
 						public void doErrorAction()
 						{

@@ -608,24 +608,32 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	public static class CheckError
 	{
 		private String m_strMessage;
+		private int m_logType;
+		private Throwable m_throwable;
 
 		/**
-		 * A new CheckError with an empty message String. No message will be displayed to the user and
-		 * no error will be logged.
+		 * A new CheckError with a message for the user.
+		 * @param a_strMessage a message for the user; if empty, no message is displayed; if null,
+		 * an error message is auto-generated
+		 * @param the LogType for this error
 		 */
-		public CheckError()
+		public CheckError(String a_strMessage, int a_logType)
 		{
-			this("");
+			this(a_strMessage, a_logType, null);
 		}
 
 		/**
 		 * A new CheckError with a message for the user.
 		 * @param a_strMessage a message for the user; if empty, no message is displayed; if null,
 		 * an error message is auto-generated
+		 * @param a_logType the LogType for this error
+		 * @param a_throwable a throwable that should be logged
 		 */
-		public CheckError(String a_strMessage)
+		public CheckError(String a_strMessage,int a_logType, Throwable a_throwable)
 		{
 			m_strMessage = a_strMessage;
+			m_logType = a_logType;
+			m_throwable = a_throwable;
 		}
 
 		/**
@@ -646,8 +654,26 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 		}
 
 		/**
-		 * The message to display to the user.
-		 * @return the message to display to the user
+		 * Returns the LogType of this CheckError.
+		 * @return the LogType of this CheckError
+		 */
+		public final int getLogType()
+		{
+			return m_logType;
+		}
+
+		/**
+		 * Returns the throwable to be logged or null if this CheckError does not contain any Throwable.
+		 * @return the throwable to be logged or null if this CheckError does not contain any Throwable.
+		 */
+		public final Throwable getThrowable()
+		{
+			return m_throwable;
+		}
+
+		/**
+		 * Returns the message to display to the user or null if this CheckError does not contain any message.
+		 * @return the message to display to the user or null if this CheckError does not contain any message.
 		 */
 		public final String getMessage()
 		{
@@ -1315,6 +1341,19 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 			JAPDialog.showConfirmDialog(getContentPane(), a_message, OPTION_TYPE_DEFAULT, a_messageType);
 		}
 	}
+
+	/**
+	 * Prints an error message in the status bar. If the status bar is not available, a dialog window
+	 * is opened. If the text is too long for the status bar, the text is cut and the user can see it by
+	 * clicking on the stauts bar (a dialog window opens).
+	 * @param a_logType the log type of this error
+	 * @param a_throwable a Throwable that has been catched in the context of this error
+	 */
+	public final void printErrorStatusMessage(int a_logType, Throwable a_throwable)
+	{
+		printErrorStatusMessage(null, a_logType, a_throwable);
+	}
+
 
 	/**
 	 * Prints an error message in the status bar. If the status bar is not available, a dialog window
@@ -2630,6 +2669,9 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 				{
 					errorMessage = a_errors[i].getMessage();
 				}
+				printErrorStatusMessage(a_errors[i].getMessage(), a_errors[i].getLogType(),
+										a_errors[i].getThrowable());
+
 				a_errors[i].doErrorAction();
 				m_rememberedErrors.addElement(a_errors[i]);
 			}
