@@ -4,6 +4,8 @@ import java.util.EventListener;
 
 import anon.pay.xml.XMLErrorMessage;
 import anon.util.captcha.IImageEncodedCaptcha;
+import anon.util.captcha.ICaptchaSender;
+
 
 /**
  * GUI classes can implement this interface and register with the Payment library
@@ -52,5 +54,5 @@ public interface IPaymentListener extends EventListener
 	/**
 	 * Captcha retrieved
 	 */
-	void gotCaptcha(Object a_source, IImageEncodedCaptcha a_captcha);
+	void gotCaptcha(ICaptchaSender a_source, IImageEncodedCaptcha a_captcha);
 	}

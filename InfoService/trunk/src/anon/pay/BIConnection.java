@@ -56,8 +56,10 @@ import anon.pay.xml.XMLPassivePayment;
 import java.util.Vector;
 import anon.util.captcha.IImageEncodedCaptcha;
 import anon.util.captcha.ZipBinaryImageCaptchaClient;
+import anon.util.captcha.ICaptchaSender;
 
-public class BIConnection
+
+public class BIConnection implements ICaptchaSender
 {
 	private BI m_theBI;
 

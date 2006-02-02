@@ -612,10 +612,18 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 		private Throwable m_throwable;
 
 		/**
+		 * Creates a new CheckError that does not show any message to the user.
+		 */
+		public CheckError()
+		{
+			this("", LogType.NUL, null);
+		}
+
+		/**
 		 * A new CheckError with a message for the user.
 		 * @param a_strMessage a message for the user; if empty, no message is displayed; if null,
 		 * an error message is auto-generated
-		 * @param the LogType for this error
+		 * @param a_logType the LogType for this error
 		 */
 		public CheckError(String a_strMessage, int a_logType)
 		{
@@ -678,6 +686,15 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 		public final String getMessage()
 		{
 			return m_strMessage;
+		}
+
+		/**
+		 * Returns if a user-displayable error message can be extracted from this CheckError.
+		 * @return if a user-displayable error message can be extracted from this CheckError
+		 */
+		public final boolean hasDisplayableErrorMessage()
+		{
+			return JAPDialog.retrieveErrorMessage(m_strMessage, m_throwable) != null;
 		}
 	}
 
@@ -1377,6 +1394,32 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	 */
 	public final void printErrorStatusMessage(String a_message, int a_logType, Throwable a_throwable)
 	{
+		printErrorStatusMessage(a_message, a_logType, a_throwable, true);
+	}
+
+	/**
+	 * Replaces the content pane of the parent dialog with the content defined in this object.
+	 * @return the errors returned by checkUpdate() or null or an empty array if no errors occured and
+	 * the update has been done
+	 */
+	public final synchronized CheckError[] updateDialog()
+	{
+		return updateDialog(MIN_TEXT_WIDTH);
+	}
+
+	/**
+	 * Logs an error message an optionally prints it to the status bar.
+	 * If the status bar is not available, a dialog window
+	 * is opened. If the text is too long for the status bar, the text is cut and the user can see it by
+	 * clicking on the stauts bar (a dialog window opens).
+	 * @param a_message an error message
+	 * @param a_logType the log type of this error
+	 * @param a_throwable a Throwable that has been catched in the context of this error
+	 * @param a_bShow if the message is shown to the user or logged only
+	 */
+	private void printErrorStatusMessage(String a_message, int a_logType, Throwable a_throwable,
+								 boolean a_bShow)
+	{
 		boolean bPossibleApplicationError = false;
 
 		try {
@@ -1387,12 +1430,18 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 				a_message = JAPMessages.getString(JAPDialog.MSG_ERROR_UNKNOWN);
 				bPossibleApplicationError = true;
 			}
+			if (!LogType.isValidLogType(a_logType))
+			{
+				a_logType = LogType.GUI;
+			}
 
 
 			if (m_lblMessage != null)
 			{
-				printStatusMessageInternal(a_message, MESSAGE_TYPE_ERROR);
-
+				if (a_bShow)
+				{
+					printStatusMessageInternal(a_message, MESSAGE_TYPE_ERROR);
+				}
 				LogHolder.log(LogLevel.ERR, a_logType, a_message, true);
 				if (a_throwable != null)
 				{
@@ -1409,24 +1458,19 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 			}
 			else
 			{
-				JAPDialog.showErrorDialog(getContentPane(), a_message, a_logType, a_throwable);
+				// no status bar is available; show the error message in an extra dialog
+				if (a_bShow)
+				{
+					JAPDialog.showErrorDialog(getContentPane(), a_message, a_logType, a_throwable);
+				}
 			}
 		}
 		catch (Throwable a_e)
 		{
 			JAPDialog.showErrorDialog(getContentPane(), LogType.GUI, a_e);
 		}
-	}
+}
 
-	/**
-	 * Replaces the content pane of the parent dialog with the content defined in this object.
-	 * @return the errors returned by checkUpdate() or null or an empty array if no errors occured and
-	 * the update has been done
-	 */
-	public final synchronized CheckError[] updateDialog()
-	{
-		return updateDialog(MIN_TEXT_WIDTH);
-	}
 
 	/**
 	 * Replaces the content pane of the parent dialog with the content defined in this object.
@@ -2088,6 +2132,8 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 		String strMessage;
 		String strColor;
 		String strHref;
+		JAPHtmlMultiLineLabel dummyLabel;
+		int bestSize, currentSize;
 
 		// no HTML Tags are allowed in the message
 		strMessage = JAPHtmlMultiLineLabel.removeTagsAndNewLines(a_strMessage);
@@ -2101,8 +2147,8 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 			strColor = "black";
 		}
 
-
-		if (calculateMessageSize(strMessage).width > m_lblMessage.getSize().width)
+		dummyLabel = new JAPHtmlMultiLineLabel(strMessage, m_lblMessage.getFont());
+		if (dummyLabel.getPreferredSize().width > m_lblMessage.getSize().width)
 		{
 			String strMessageTitle;
 			if (MESSAGE_TYPE_ERROR == a_messageType)
@@ -2119,23 +2165,34 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 			}
 
 			clearStatusMessage();
-			while (strMessage.length() > 1)
+			bestSize = strMessage.length();
+			currentSize = strMessage.length() / 2;
+			for (int i = 0; currentSize > 1; i++)
 			{
-				strMessage = strMessage.substring(0, strMessage.length() / 2) + MORE_POINTS;
-				if (calculateMessageSize(strMessage).width <= m_lblMessage.getSize().width)
+				if (i >= NUMBER_OF_HEURISTIC_ITERATIONS && bestSize < strMessage.length())
 				{
 					break;
 				}
+
+				dummyLabel.setText(strMessage.substring(0, currentSize) + MORE_POINTS);
+				if (dummyLabel.getPreferredSize().width <= m_lblMessage.getSize().width)
+				{
+					bestSize = currentSize;
+					currentSize = bestSize + (bestSize / (i + 2));
+				}
 				else
 				{
-					strMessage = strMessage.substring(0, strMessage.length() - MORE_POINTS.length());
+					currentSize /= 2;
 				}
 			}
-			if (strMessage.length() <= 1)
+			if (bestSize <= 5)
 			{
 				strMessage = MORE_POINTS;
 			}
-
+			else
+			{
+				strMessage = strMessage.substring(0, bestSize) + MORE_POINTS;
+			}
 			strHref =  " href=\"\"";
 			m_lblMessage.setToolTipText(JAPMessages.getString(MSG_SEE_FULL_MESSAGE));
 			m_linkedDialog = new LinkedDialog(a_strMessage, strMessageTitle,
@@ -2148,7 +2205,6 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 			strHref = "";
 		}
 		strMessage = "<A style=\"color:" + strColor + "\"" + strHref + "> " + strMessage + " </A>";
-
 		m_lblMessage.setText(strMessage);
 		m_lblMessage.revalidate();
 	}
@@ -2177,11 +2233,8 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	private static Dimension calculateMessageSize(String a_strMessage)
 	{
 		JAPHtmlMultiLineLabel label = new JAPHtmlMultiLineLabel(a_strMessage);
-		label.setFontStyle(JAPHtmlMultiLineLabel.FONT_STYLE_PLAIN);
-		JFrame frame = new JFrame();
-		frame.getContentPane().add(label);
-		frame.pack();
-		return label.getSize();
+		label.setFontStyle(JAPHtmlMultiLineLabel.FONT_STYLE_BOLD);
+		return label.getPreferredSize();
 	}
 
 	private void setNextContentPane(DialogContentPane a_nextContentPane)
@@ -2207,12 +2260,6 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	{
 		DialogContentPane currentContentPane;
 
-		for (int i = m_rememberedErrors.size() - 1; i >= 0; i--)
-		{
-			( (CheckError) m_rememberedUpdateErrors.elementAt(i)).undoErrorAction();
-			m_rememberedUpdateErrors.removeElementAt(i);
-		}
-
 		currentContentPane = this;
 		if (a_bNext)
 		{
@@ -2227,10 +2274,10 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 
 		if (currentContentPane != null)
 		{
-			CheckError[] error = currentContentPane.updateDialog();
+			CheckError[] errors = currentContentPane.updateDialog();
 			boolean bFocused = false;
 
-			if (error == null || error.length == 0)
+			if (checkErrors(errors, m_rememberedUpdateErrors))
 			{
 				if (currentContentPane.isVisible())
 				{
@@ -2287,12 +2334,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 			}
 			else
 			{
-				printStatusMessage(error[0].getMessage(), MESSAGE_TYPE_ERROR);
-				for (int i = 0; i < error.length; i++)
-				{
-					m_rememberedUpdateErrors.addElement(error[i]);
-					error[i].doErrorAction();
-				}
+				// errors occured
 				return false;
 			}
 		}
@@ -2308,6 +2350,64 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 			}
 			return false;
 		}
+	}
+
+	/**
+	 * Undos all error actions of the remembered errors, checks if the given array of errors contains
+	 * one or more errors and adds those errors to the vector
+	 * of remembered errors.
+	 * @param a_errors CheckError[]
+	 * @param a_rememberedErrors Vector
+	 * @return false if the given array of errors contains one or more errors
+	 */
+	private boolean checkErrors(CheckError[] a_errors, Vector a_rememberedErrors)
+	{
+		for (int i = a_rememberedErrors.size() - 1; i >= 0; i--)
+		{
+			( (CheckError) a_rememberedErrors.elementAt(i)).undoErrorAction();
+			a_rememberedErrors.removeElementAt(i);
+		}
+
+		if (a_errors != null && a_errors.length > 0)
+		{
+			CheckError displayError = null;
+
+			for (int i = 0; i < a_errors.length; i++)
+			{
+				if (a_errors[i] == null)
+				{
+					LogHolder.log(LogLevel.ERR, LogType.GUI, "Found a " + CheckError.class.getName() + " " +
+								  "that is null! Ignoring it.");
+					continue;
+				}
+
+				if (a_errors[i].hasDisplayableErrorMessage() && (
+					displayError == null || displayError.getMessage() == null ||
+					displayError.getMessage().trim().length() == 0))
+				{
+					displayError = a_errors[i];
+				}
+				if (JAPDialog.retrieveErrorMessage(
+					a_errors[i].getMessage(), a_errors[i].getThrowable()) != null)
+				{
+					printErrorStatusMessage(a_errors[i].getMessage(), a_errors[i].getLogType(),
+											a_errors[i].getThrowable(), false);
+				}
+				a_rememberedErrors.addElement(a_errors[i]);
+				a_errors[i].doErrorAction();
+			}
+			if (displayError == null)
+			{
+				printStatusMessage(JAPMessages.getString(MSG_OPERATION_FAILED), MESSAGE_TYPE_ERROR);
+			}
+			else
+			{
+				printStatusMessage(JAPDialog.retrieveErrorMessage(
+								displayError.getMessage(), displayError.getThrowable()), MESSAGE_TYPE_ERROR);
+			}
+			return false;
+		}
+		return true;
 	}
 
 
@@ -2644,45 +2744,8 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	private boolean doDefaultButtonOperation(CheckError[] a_errors,
 											 int a_opNext, int a_opPrevious, int a_opHide, int a_opDispose)
 	{
-		for (int i = m_rememberedErrors.size() - 1; i >= 0; i--)
+		if (!checkErrors(a_errors, m_rememberedErrors))
 		{
-			((CheckError)m_rememberedErrors.elementAt(i)).undoErrorAction();
-			m_rememberedErrors.removeElementAt(i);
-		}
-
-		// check if there are any errors that prohibit to continue
-		if (a_errors != null && a_errors.length > 0)
-		{
-			String errorMessage = null;
-
-			for (int i = 0; i < a_errors.length; i++)
-			{
-				if (a_errors[i] == null)
-				{
-					LogHolder.log(LogLevel.ERR, LogType.GUI, "Found a " + CheckError.class.getName() + " " +
-								  "that is null! Ignoring it.");
-					continue;
-				}
-
-				if (a_errors[i].getMessage() != null &&
-					(errorMessage == null || (errorMessage != null && errorMessage.trim().length() == 0)))
-				{
-					errorMessage = a_errors[i].getMessage();
-				}
-				printErrorStatusMessage(a_errors[i].getMessage(), a_errors[i].getLogType(),
-										a_errors[i].getThrowable());
-
-				a_errors[i].doErrorAction();
-				m_rememberedErrors.addElement(a_errors[i]);
-			}
-			if (errorMessage == null)
-			{
-				errorMessage = JAPMessages.getString(MSG_OPERATION_FAILED);
-			}
-			if (errorMessage.trim().length() > 0)
-			{
-				printStatusMessage(errorMessage, MESSAGE_TYPE_ERROR);
-			}
 			return false;
 		}
 
