@@ -563,7 +563,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	 */
 	private void doShowTransactions(PayAccount a_account)
 	{
-		TransactionOverviewDialog d = new TransactionOverviewDialog(GUIUtils.getParentWindow(this.getRootPanel()),
+		TransactionOverviewDialog d = new TransactionOverviewDialog(GUIUtils.getParentWindow(this.
+			getRootPanel()),
 			JAPMessages.getString(MSG_TRANSACTION_OVERVIEW_DIALOG), true, a_account);
 	}
 
@@ -710,48 +711,48 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		   if (choice == JOptionPane.YES_OPTION)
 		   {
 		 /** @todo find out why the wait splash screen looks so ugly
-		  JAPWaitSplash splash = null;
-		  try
-		  {
-		   splash = JAPWaitSplash.start("Fetching transfer number...", "Please wait");
-		   Thread.sleep(5);
-		   transferCertificate = selectedAccount.charge();
-		   splash.abort();
-		  }
-		  catch (Exception ex)
-		  {
-		   splash.abort();
-		   LogHolder.log(LogLevel.DEBUG, LogType.PAY, ex);
-		   JOptionPane.showMessageDialog(
-			view,
-			"<html>" + JAPMessages.getString("ngTransferNumberError") + "<br>" + ex.getMessage() +
-			"</html>",
-			JAPMessages.getString("error"), JOptionPane.ERROR_MESSAGE
-			);
-		   return;
-		  }
+		   JAPWaitSplash splash = null;
+		   try
+		   {
+			splash = JAPWaitSplash.start("Fetching transfer number...", "Please wait");
+			Thread.sleep(5);
+			transferCertificate = selectedAccount.charge();
+			splash.abort();
+		   }
+		   catch (Exception ex)
+		   {
+			splash.abort();
+			LogHolder.log(LogLevel.DEBUG, LogType.PAY, ex);
+			JOptionPane.showMessageDialog(
+		  view,
+		  "<html>" + JAPMessages.getString("ngTransferNumberError") + "<br>" + ex.getMessage() +
+		  "</html>",
+		  JAPMessages.getString("error"), JOptionPane.ERROR_MESSAGE
+		  );
+			return;
+		   }
 
-		  // try to launch webbrowser
-		  AbstractOS os = AbstractOS.getInstance();
-		  String url = transferCertificate.getBaseUrl();
-		  url += "?transfernum=" + transferCertificate.getTransferNumber();
-		  try
-		  {
-		   os.openURLInBrowser(url);
-		  }
-		  catch (Exception e)
-		  {
-		   JOptionPane.showMessageDialog(
-			view,
-			"<html>" + JAPMessages.getString("ngCouldNotFindBrowser") + "<br>" +
-			"<h3>" + url + "</h3></html>",
-			JAPMessages.getString("ngCouldNotFindBrowserTitle"),
-			JOptionPane.INFORMATION_MESSAGE
-			);
-		  }
+		   // try to launch webbrowser
+		   AbstractOS os = AbstractOS.getInstance();
+		   String url = transferCertificate.getBaseUrl();
+		   url += "?transfernum=" + transferCertificate.getTransferNumber();
+		   try
+		   {
+			os.openURLInBrowser(url);
+		   }
+		   catch (Exception e)
+		   {
+			JOptionPane.showMessageDialog(
+		  view,
+		  "<html>" + JAPMessages.getString("ngCouldNotFindBrowser") + "<br>" +
+		  "<h3>" + url + "</h3></html>",
+		  JAPMessages.getString("ngCouldNotFindBrowserTitle"),
+		  JOptionPane.INFORMATION_MESSAGE
+		  );
+		   }
 
-		  m_MyTableModel.fireTableDataChanged();
-			}*/
+		   m_MyTableModel.fireTableDataChanged();
+		  }*/
 	}
 
 	/**
@@ -846,6 +847,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			{
 				JAPController.getInstance().setPaymentPassword(new String(pc.getPassword()));
 			}
+			PayAccountsFile.getInstance().removePaymentListener(captcha);
 
 		}
 	}

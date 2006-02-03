@@ -47,8 +47,6 @@ import anon.util.captcha.IImageEncodedCaptcha;
 import anon.util.captcha.ICaptchaSender;
 import gui.JAPMessages;
 import logging.LogType;
-import anon.pay.PayAccountsFile;
-
 
 /**
  * This class displays a dialog for solving a captcha.
@@ -81,7 +79,8 @@ public class CaptchaContentPane extends DialogContentPane implements
 		super(a_parentDialog, JAPMessages.getString(MSG_SOLVE),
 			  new Layout(JAPMessages.getString(MSG_TITLE), MESSAGE_TYPE_PLAIN),
 			  new Options(OPTION_TYPE_OK_CANCEL, a_previousContentPane));
-		setDefaultButtonOperation(ON_CLICK_DISPOSE_DIALOG | ON_YESOK_SHOW_PREVIOUS_CONTENT);
+		setDefaultButtonOperation(ON_CLICK_DISPOSE_DIALOG | ON_YESOK_SHOW_PREVIOUS_CONTENT |
+								  ON_NO_SHOW_PREVIOUS_CONTENT);
 
 		Container rootPanel = this.getContentPane();
 		GridBagConstraints c = new GridBagConstraints();
@@ -99,14 +98,22 @@ public class CaptchaContentPane extends DialogContentPane implements
 		m_imageLabel.setPreferredSize(new Dimension(300, 150));
 		rootPanel.add(m_imageLabel, c);
 
-
 		c.gridy++;
 		m_tfSolution = new JTextField(20);
 		c.weighty = 1;
 		c.weightx = 1;
 		rootPanel.add(m_tfSolution, c);
+	}
 
-		this.getButtonNo().setEnabled(false);
+	public CheckError[] checkNo()
+	{
+		m_captchaSource.getNewCaptcha();
+		synchronized (m_syncObject)
+		{
+			m_syncObject.notifyAll();
+		}
+
+		return null;
 	}
 
 	public CheckError[] checkYesOK()
@@ -118,7 +125,7 @@ public class CaptchaContentPane extends DialogContentPane implements
 			try
 			{
 				m_solution = m_captcha.solveCaptcha(m_tfSolution.getText().trim(), m_beginsWith.getBytes());
-			    if (m_solution != null)
+				if (m_solution != null)
 				{
 					m_captchaSource.setCaptchaSolution(m_solution);
 					synchronized (m_syncObject)
@@ -200,9 +207,6 @@ public class CaptchaContentPane extends DialogContentPane implements
 				/** @todo Handle exception */
 			}
 		}
-
-	PayAccountsFile.getInstance().removePaymentListener(this);
-
 	}
 
 	public boolean isSkippedAsNextContentPane()

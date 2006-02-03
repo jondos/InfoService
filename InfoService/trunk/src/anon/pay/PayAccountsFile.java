@@ -64,6 +64,7 @@ import anon.crypto.JAPCertificate;
 import anon.infoservice.InfoServiceHolder;
 import anon.util.captcha.ICaptchaSender;
 import anon.util.captcha.IImageEncodedCaptcha;
+import anon.crypto.*;
 
 
 /**
@@ -522,34 +523,20 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 	 */
 	public PayAccount createAccount(BI a_bi, boolean useDSA) throws Exception
 	{
-		IMyPublicKey pubKey = null;
-		IMyPrivateKey privKey = null;
+		AsymmetricCryptoKeyPair keyPair;
 
 		if (useDSA)
 		{
-			SecureRandom random = new SecureRandom();
-			DSAParametersGenerator pGen = new DSAParametersGenerator();
-			DSAKeyPairGenerator kpGen = new DSAKeyPairGenerator();
-			pGen.init(1024, 20, random);
-			kpGen.init(new DSAKeyGenerationParameters(random, pGen.generateParameters()));
-			AsymmetricCipherKeyPair ackp = kpGen.generateKeyPair();
-			pubKey = new MyDSAPublicKey( (DSAPublicKeyParameters) ackp.getPublic());
-			privKey = new MyDSAPrivateKey( (DSAPrivateKeyParameters) ackp.getPrivate());
+			keyPair = DSAKeyPair.getInstance(new SecureRandom(), DSAKeyPair.KEY_LENGTH_1024, 20);
 		}
 		else // use RSA (should not be used at the moment)
 		{
-			RSAKeyPairGenerator pGen = new RSAKeyPairGenerator();
-			RSAKeyGenerationParameters genParam = new RSAKeyGenerationParameters(
-				BigInteger.valueOf(0x11), new SecureRandom(), 512, 25);
-			pGen.init(genParam);
-			AsymmetricCipherKeyPair pair = pGen.generateKeyPair();
-			privKey = new MyRSAPrivateKey( (RSAPrivateCrtKeyParameters) pair.getPrivate());
-			pubKey = new MyRSAPublicKey( (RSAKeyParameters) pair.getPublic());
+			keyPair = RSAKeyPair.getInstance(new SecureRandom(), RSAKeyPair.KEY_LENGTH_1024, 20);
 		}
 
 		JAPSignature signingInstance = new JAPSignature();
-		signingInstance.initSign(privKey);
-		XMLJapPublicKey xmlKey = new XMLJapPublicKey(pubKey);
+		signingInstance.initSign(keyPair.getPrivate());
+		XMLJapPublicKey xmlKey = new XMLJapPublicKey(keyPair.getPublic());
 
 		LogHolder.log(LogLevel.DEBUG, LogType.PAY,
 					  "Attempting to create account at PI " + a_bi.getHostName() + ":" +
@@ -565,7 +552,7 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 		addKnownPI(a_bi);
 
 		// add the new account to the accountsFile
-		PayAccount newAccount = new PayAccount(cert, privKey, signingInstance, a_bi);
+		PayAccount newAccount = new PayAccount(cert, keyPair.getPrivate(), signingInstance, a_bi);
 		addAccount(newAccount);
 		return newAccount;
 	}
