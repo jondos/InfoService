@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2000 - 2004, The JAP-Team
+ Copyright (c) 2000 - 2005, The JAP-Team
  All rights reserved.
  Redistribution and use in source and binary forms, with or without modification,
  are permitted provided that the following conditions are met:
@@ -41,6 +41,8 @@ import org.bouncycastle.crypto.params.RSAPrivateCrtKeyParameters;
  */
 public class RSAKeyPair extends AsymmetricCryptoKeyPair
 {
+	public static final int KEY_LENGTH_2048 = 2048;
+
 	/**
 	 * Creates a new rsa key pair.
 	 * @param a_privateKey an rsa private key
@@ -52,7 +54,9 @@ public class RSAKeyPair extends AsymmetricCryptoKeyPair
 
 	/**
 	 * Creates a new rsa key pair.
-	 * @param a_publicExponent the public encyption exponent
+	 * @param a_publicExponent the public encyption exponent; a small integer denoted e,
+	 *                         often a prime close to a power of 2, for example
+	 *                         3, 5, 7, 17, 257, or 65537.
 	 * @param a_random a random number generator
 	 * @param a_strength The bit-length of n = p*q.
 	 * @param a_certainty The certainty, that the generated numbers are prime.
@@ -82,8 +86,19 @@ public class RSAKeyPair extends AsymmetricCryptoKeyPair
 			return null;
 		}
 
-
 		return keyPair;
 	}
 
+	/**
+	 * Creates a new rsa key pair with a public exponent of 17.
+	 * @param a_random a random number generator
+	 * @param a_strength The bit-length of n = p*q.
+	 * @param a_certainty The certainty, that the generated numbers are prime.
+	 * @return a key pair or null if no key pair could be created with these parameters
+	 */
+
+	public static RSAKeyPair getInstance(SecureRandom a_random, int a_strength, int a_certainty)
+	{
+		return getInstance(new BigInteger("17"), a_random, a_strength, a_certainty);
+	}
 }

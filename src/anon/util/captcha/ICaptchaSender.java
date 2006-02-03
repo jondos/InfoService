@@ -41,4 +41,8 @@ public interface ICaptchaSender
 	 */
 	public void setCaptchaSolution(byte[] a_solution);
 
+	/**
+	 * Notifies the CaptchaSender that it should send a new captcha
+	 */
+	public void getNewCaptcha();
 }

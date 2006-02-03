@@ -34,30 +34,28 @@ package anon.pay;
  * @author Grischan Glaenzel, Bastian Voigt, Tobias Bayer
  */
 import java.net.Socket;
+import java.util.Date;
+import java.util.Vector;
 
 import org.w3c.dom.Document;
-
 import anon.crypto.JAPSignature;
+import anon.crypto.XMLSignature;
+import anon.crypto.tinytls.TinyTLS;
 import anon.pay.xml.XMLAccountCertificate;
 import anon.pay.xml.XMLAccountInfo;
 import anon.pay.xml.XMLBalance;
 import anon.pay.xml.XMLChallenge;
 import anon.pay.xml.XMLErrorMessage;
 import anon.pay.xml.XMLJapPublicKey;
+import anon.pay.xml.XMLPassivePayment;
+import anon.pay.xml.XMLPaymentOptions;
 import anon.pay.xml.XMLResponse;
 import anon.pay.xml.XMLTransCert;
-import anon.crypto.tinytls.TinyTLS;
-import anon.util.XMLUtil;
-import anon.crypto.XMLSignature;
-import anon.pay.xml.XMLPaymentOptions;
 import anon.pay.xml.XMLTransactionOverview;
-import java.util.Date;
-import anon.pay.xml.XMLPassivePayment;
-import java.util.Vector;
+import anon.util.XMLUtil;
+import anon.util.captcha.ICaptchaSender;
 import anon.util.captcha.IImageEncodedCaptcha;
 import anon.util.captcha.ZipBinaryImageCaptchaClient;
-import anon.util.captcha.ICaptchaSender;
-
 
 public class BIConnection implements ICaptchaSender
 {
@@ -69,6 +67,9 @@ public class BIConnection implements ICaptchaSender
 	private Vector m_biConnectionListeners;
 
 	private byte[] m_captchaSolution;
+
+	private boolean m_bSendNewCaptcha;
+	private boolean m_bFirstCaptcha = true;
 
 	/**
 	 * Constructor
@@ -195,15 +196,27 @@ public class BIConnection implements ICaptchaSender
 	 */
 	public XMLAccountCertificate register(XMLJapPublicKey pubKey, JAPSignature signKey) throws Exception
 	{
-		// send our public key
-		m_httpClient.writeRequest(
-			"POST", "register",
-			XMLUtil.toString(XMLUtil.toXMLDocument(pubKey))
-			);
-		Document doc = m_httpClient.readAnswer();
-		//Answer document should contain a captcha, let the user solve it and extract the XMLChallenge
-		IImageEncodedCaptcha captcha = new ZipBinaryImageCaptchaClient(doc.getDocumentElement());
-		fireGotCaptcha(captcha);
+		Document doc;
+		m_bSendNewCaptcha = true;
+		while (m_bSendNewCaptcha)
+		{
+			if (!m_bFirstCaptcha)
+			{
+				this.disconnect();
+				this.connect();
+			}
+			// send our public key
+			m_httpClient.writeRequest(
+				"POST", "register",
+				XMLUtil.toString(XMLUtil.toXMLDocument(pubKey))
+				);
+			doc = m_httpClient.readAnswer();
+
+			//Answer document should contain a captcha, let the user solve it and extract the XMLChallenge
+			IImageEncodedCaptcha captcha = new ZipBinaryImageCaptchaClient(doc.getDocumentElement());
+			m_bSendNewCaptcha = false;
+			fireGotCaptcha(captcha);
+		}
 		/** Cut off everything beyond the last ">" to extract only the XML challenge
 		 *  without the cipher padding.
 		 */
@@ -215,8 +228,8 @@ public class BIConnection implements ICaptchaSender
 			Document challengeDoc = XMLUtil.toXMLDocument(challengeString);
 			XMLChallenge xmlchallenge = new XMLChallenge(challengeDoc);
 
-		// perform challenge-response authentication
-		XMLAccountCertificate xmlCert = null;
+			// perform challenge-response authentication
+			XMLAccountCertificate xmlCert = null;
 
 			byte[] challenge = xmlchallenge.getChallengeForSigning();
 			byte[] response = signKey.signBytes(challenge);
@@ -283,16 +296,16 @@ public class BIConnection implements ICaptchaSender
 		m_httpClient.writeRequest("POST", "passivepayment",
 								  XMLUtil.toString(a_passivePayment.toXmlElement(XMLUtil.createDocument()
 			)));
-	Document doc = m_httpClient.readAnswer();
-	XMLErrorMessage err = new XMLErrorMessage(doc.getDocumentElement());
-	if (err.getErrorCode() == XMLErrorMessage.ERR_OK)
-	{
-		return true;
-	}
-	else
-	{
-		return false;
-	}
+		Document doc = m_httpClient.readAnswer();
+		XMLErrorMessage err = new XMLErrorMessage(doc.getDocumentElement());
+		if (err.getErrorCode() == XMLErrorMessage.ERR_OK)
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 	}
 
 	/**
@@ -326,6 +339,12 @@ public class BIConnection implements ICaptchaSender
 	public void setCaptchaSolution(byte[] a_solution)
 	{
 		m_captchaSolution = a_solution;
+	}
+
+	public void getNewCaptcha()
+	{
+		m_bSendNewCaptcha = true;
+		m_bFirstCaptcha = false;
 	}
 
 }

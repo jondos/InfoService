@@ -224,7 +224,7 @@ public class XMLSignatureTest extends XtendedPrivateTestCase
 		}
 
 		// sign the document with a private key (no certificate is appended)
-		signature = XMLSignature.sign(doc, pkcs12Certificate.getPrivKey());
+		signature = XMLSignature.sign(doc, pkcs12Certificate.getPrivateKey());
 		assertEquals(0, signature.countCertificates());
 
 		// sign the document with a PKCS12 cert (the corresponding X509 certificate is appended)

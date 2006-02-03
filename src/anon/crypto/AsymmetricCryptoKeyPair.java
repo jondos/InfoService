@@ -35,8 +35,10 @@ import java.util.Vector;
 
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
-
-//import anon.util.ClassUtil;
+import anon.util.ClassUtil;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 
 /**
  * A key pair used for signing and encryption with an asymmetric cryptographic algorithm.
@@ -44,9 +46,12 @@ import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
  */
 public class AsymmetricCryptoKeyPair
 {
+	public static final int KEY_LENGTH_512 = 512;
+	public static final int KEY_LENGTH_1024 = 1024;
+
 	// register the mandatory key classes so that they are compiled; do not remove!
-	static final MyDSAPrivateKey dsaKey = null;
-	static final MyRSAPrivateKey rsaKey = null;
+	private static final MyDSAPrivateKey dsaKey = null;
+	private static final MyRSAPrivateKey rsaKey = null;
 
 	/**
 	 * Stores all registered private key classes.
@@ -197,9 +202,9 @@ public class AsymmetricCryptoKeyPair
 		throws InvalidKeyException
 	{
 		Key key = null;
-		Class keyClass=null;
-		Class[] parameterTypes=null;
-		Object[] parameters=null;
+		Class keyClass;
+		Class[] parameterTypes;
+		Object[] parameters;
 
 		parameterTypes = new Class[1];
 		parameters = new Object[1];
@@ -215,7 +220,6 @@ public class AsymmetricCryptoKeyPair
 			}
 			catch (Throwable a_e)
 			{
-				//a_e.printStackTrace();
 				// this is not the right key for this key info; ignore this error
 			}
 		}
@@ -238,11 +242,30 @@ public class AsymmetricCryptoKeyPair
 	{
 		if (ms_privateKeyClasses == null)
 		{
-			ms_privateKeyClasses =new Vector();
-			ms_privateKeyClasses.addElement(MyDSAPrivateKey.class);
-			ms_privateKeyClasses.addElement(MyRSAPrivateKey.class);
-			//ClassUtil.findSubclasses(IMyPrivateKey.class);
-			//ms_privateKeyClasses.removeElement(IMyPrivateKey.class);
+			try
+			{
+				ms_privateKeyClasses = ClassUtil.findSubclasses(IMyPrivateKey.class);
+				ms_privateKeyClasses.removeElement(IMyPrivateKey.class);
+			}
+			catch (Throwable a_e)
+			{
+				LogHolder.log(LogLevel.EXCEPTION, LogType.CRYPTO, a_e);
+			}
+			if (ms_privateKeyClasses == null)
+			{
+				ms_privateKeyClasses = new Vector();
+			}
+
+			if (ms_privateKeyClasses.size() < 2)
+			{
+				LogHolder.log(LogLevel.EXCEPTION, LogType.CRYPTO,
+							  "Private key classes have not been loaded automatically!");
+				// load them manually and prevent double references
+				ms_privateKeyClasses.removeElement(MyDSAPrivateKey.class);
+				ms_privateKeyClasses.removeElement(MyRSAPrivateKey.class);
+				ms_privateKeyClasses.addElement(MyDSAPrivateKey.class);
+				ms_privateKeyClasses.addElement(MyRSAPrivateKey.class);
+			}
 		}
 
 		return ms_privateKeyClasses.elements();
@@ -258,11 +281,30 @@ public class AsymmetricCryptoKeyPair
 	{
 		if (ms_publicKeyClasses == null)
 		{
-			ms_publicKeyClasses=new Vector();
-			ms_publicKeyClasses.addElement(MyDSAPublicKey.class);
-			ms_publicKeyClasses.addElement(MyRSAPublicKey.class);
-			//ms_publicKeyClasses = ClassUtil.findSubclasses(IMyPublicKey.class);
-			//ms_publicKeyClasses.removeElement(IMyPublicKey.class);
+			try
+			{
+				ms_publicKeyClasses = ClassUtil.findSubclasses(IMyPublicKey.class);
+				ms_publicKeyClasses.removeElement(IMyPublicKey.class);
+			}
+			catch (Throwable a_e)
+			{
+				LogHolder.log(LogLevel.EXCEPTION, LogType.CRYPTO, a_e);
+			}
+			if (ms_publicKeyClasses == null)
+			{
+				ms_publicKeyClasses = new Vector();
+			}
+
+			if (ms_publicKeyClasses.size() < 2)
+			{
+				LogHolder.log(LogLevel.EXCEPTION, LogType.CRYPTO,
+							  "Public key classes have not been loaded automatically!");
+				// load them manually and prevent double references
+				ms_publicKeyClasses.removeElement(MyDSAPublicKey.class);
+				ms_publicKeyClasses.removeElement(MyRSAPublicKey.class);
+				ms_publicKeyClasses.addElement(MyDSAPublicKey.class);
+				ms_publicKeyClasses.addElement(MyRSAPublicKey.class);
+			}
 		}
 
 		return ms_publicKeyClasses.elements();
