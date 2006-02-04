@@ -250,6 +250,7 @@ public final class JAPConstants
 	public final static String CONFIG_LOOK_AND_FEEL = "LookAndFeel";
 	public final static String CONFIG_UNKNOWN = "unknown";
 	public final static String CONFIG_GUI = "GUI";
+	public final static String CONFIG_LOG_DETAIL = "Detail";
 	public final static String CONFIG_MAIN_WINDOW = "MainWindow";
 	public final static String CONFIG_SET_ON_STARTUP = "SetOnStartup";
 	public final static String CONFIG_LOCATION = "Location";

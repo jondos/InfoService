@@ -726,11 +726,14 @@ public final class JAPController extends Observable implements IProxyListener, O
 					{
 						Element elemLevel = (Element) XMLUtil.getFirstChildByName(elemDebug,
 							JAPConstants.CONFIG_LEVEL);
-						if (elemLevel != null)
-						{
-							int l = XMLUtil.parseValue(elemLevel, JAPDebug.getInstance().getLogLevel());
-							JAPDebug.getInstance().setLogLevel(l);
-						}
+						JAPDebug.getInstance().setLogLevel(XMLUtil.parseValue(
+											  elemLevel, JAPDebug.getInstance().getLogLevel()));
+
+						Element elemLogDetail = (Element) XMLUtil.getFirstChildByName(elemDebug,
+							JAPConstants.CONFIG_LOG_DETAIL);
+						LogHolder.setDetailLevel(
+											  XMLUtil.parseValue(elemLogDetail, LogHolder.getDetailLevel()));
+
 						Element elemType = (Element) XMLUtil.getFirstChildByName(elemDebug,
 							JAPConstants.CONFIG_TYPE);
 						if (elemType != null)
@@ -1132,7 +1135,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	String getConfigurationAsXmlString()
 	{
 		// Save config to xml file
-		// Achtung!! Fehler im Sun-XML --> NULL-Attributte koennen hinzugefuegt werden,
+		// Achtung!! Fehler im Sun-XML --> NULL-Attribute koennen hinzugefuegt werden,
 		// beim Abspeichern gibt es dann aber einen Fehler!
 		try
 		{
@@ -1241,6 +1244,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 			Text txt = doc.createTextNode(Integer.toString(JAPDebug.getInstance().getLogLevel()));
 			tmp.appendChild(txt);
 			elemDebug.appendChild(tmp);
+			tmp = doc.createElement(JAPConstants.CONFIG_LOG_DETAIL);
+			XMLUtil.setValue(tmp, LogHolder.getDetailLevel());
+			elemDebug.appendChild(tmp);
 			tmp = doc.createElement(JAPConstants.CONFIG_TYPE);
 			int debugtype = JAPDebug.getInstance().getLogType();
 			int[] availableLogTypes = LogType.getAvailableLogTypes();
@@ -1316,7 +1322,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 			}
 
 			e.appendChild(JAPModel.getInstance().getRoutingSettings().getSettingsAsXml(doc));
-
+			XMLUtil.formatHumanReadable(doc);
 			return XMLUtil.toString(doc);
 			//((XmlDocument)doc).write(f);
 		}

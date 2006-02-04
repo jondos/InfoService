@@ -27,44 +27,28 @@
  */
 package anon.pay;
 
-import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.Enumeration;
 import java.util.Vector;
 
-import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
-import org.bouncycastle.crypto.generators.DSAKeyPairGenerator;
-import org.bouncycastle.crypto.generators.DSAParametersGenerator;
-import org.bouncycastle.crypto.generators.RSAKeyPairGenerator;
-import org.bouncycastle.crypto.params.DSAKeyGenerationParameters;
-import org.bouncycastle.crypto.params.DSAPrivateKeyParameters;
-import org.bouncycastle.crypto.params.DSAPublicKeyParameters;
-import org.bouncycastle.crypto.params.RSAKeyGenerationParameters;
-import org.bouncycastle.crypto.params.RSAKeyParameters;
-import org.bouncycastle.crypto.params.RSAPrivateCrtKeyParameters;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-
-import anon.crypto.IMyPrivateKey;
-import anon.crypto.IMyPublicKey;
+import anon.crypto.AsymmetricCryptoKeyPair;
+import anon.crypto.DSAKeyPair;
+import anon.crypto.JAPCertificate;
 import anon.crypto.JAPSignature;
-import anon.crypto.MyDSAPrivateKey;
-import anon.crypto.MyDSAPublicKey;
-import anon.crypto.MyRSAPrivateKey;
-import anon.crypto.MyRSAPublicKey;
+import anon.crypto.RSAKeyPair;
+import anon.infoservice.InfoServiceHolder;
 import anon.pay.xml.XMLAccountCertificate;
 import anon.pay.xml.XMLErrorMessage;
 import anon.pay.xml.XMLJapPublicKey;
 import anon.util.IXMLEncodable;
 import anon.util.XMLUtil;
+import anon.util.captcha.ICaptchaSender;
+import anon.util.captcha.IImageEncodedCaptcha;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import anon.crypto.JAPCertificate;
-import anon.infoservice.InfoServiceHolder;
-import anon.util.captcha.ICaptchaSender;
-import anon.util.captcha.IImageEncodedCaptcha;
-import anon.crypto.*;
 
 
 /**
@@ -519,7 +503,6 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 	 * At the moment, only DSA should be used, because RSA is not supported by the
 	 * AI implementation
 	 *
-	 * @todo check RSA keygen implementation
 	 */
 	public PayAccount createAccount(BI a_bi, boolean useDSA) throws Exception
 	{
