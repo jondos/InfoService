@@ -342,6 +342,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	 * </GUI>
 	 * <Debug>                          //info about debug output
 	 *    <Level>..</Level>              // the amount of output (0 means less.. 7 means max)
+	 *    <Detail>..</Detail>          // the detail level of the log output, sinver version 0.21
 	 *    <Type                          // which type of messages should be logged
 	 *      GUI="true"/"false"          // messages related to the user interface
 	 *      NET="true"/"false"          // messages related to the network
@@ -1142,7 +1143,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 			Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
 			Element e = doc.createElement("JAP");
 			doc.appendChild(e);
-			XMLUtil.setAttribute(e, JAPConstants.CONFIG_VERSION, "0.20");
+			XMLUtil.setAttribute(e, JAPConstants.CONFIG_VERSION, "0.21");
 			//
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_PORT_NUMBER, JAPModel.getHttpListenerPortNumber());
 			//XMLUtil.setAttribute(e,"portNumberSocks", Integer.toString(JAPModel.getSocksListenerPortNumber()));
