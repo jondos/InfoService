@@ -39,8 +39,11 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Insets;
+import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import javax.swing.JButton;
@@ -55,6 +58,7 @@ import javax.swing.JSeparator;
 import javax.swing.JSlider;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
@@ -65,22 +69,25 @@ import javax.swing.tree.TreePath;
 import anon.infoservice.ImmutableListenerInterface;
 import anon.infoservice.ListenerInterface;
 import anon.infoservice.ProxyInterface;
-import gui.JAPMultilineLabel;
+import gui.JAPHelp;
 import gui.JAPJIntField;
+import gui.JAPMessages;
+import gui.JAPMultilineLabel;
+import gui.dialog.JAPDialog;
+import jap.forward.JAPConfForwardingClient;
+import jap.forward.JAPConfForwardingServer;
+import jap.forward.JAPConfForwardingState;
+import jap.pay.AccountSettingsPanel;
 import logging.LogLevel;
 import logging.LogType;
-import javax.swing.SwingUtilities;
-import java.awt.event.ComponentListener;
-import java.awt.event.ComponentEvent;
-import jap.pay.*;
-import jap.forward.*;
-import gui.*;
-import gui.dialog.JAPDialog;
-import java.awt.Frame;
-import java.awt.Window;
+import logging.LogHolder;
 
 final public class JAPConf extends JDialog implements ActionListener
 {
+
+	/** Messages */
+	private static final String MSG_DETAILLEVEL = JAPConf.class.
+		getName() + "_detaillevel";
 
 	final static public String PORT_TAB = "PORT_TAB";
 	final static public String UI_TAB = "UI_TAB";
@@ -134,6 +141,7 @@ final public class JAPConf extends JDialog implements ActionListener
 	private JAPMultilineLabel m_labelConfDebugLevel, m_labelConfDebugTypes;
 
 	private JSlider m_sliderDebugLevel;
+	private JSlider m_sliderDebugDetailLevel;
 
 	private JPanel m_pPort, m_pFirewall, m_pMisc;
 	private JButton m_bttnDefaultConfig, m_bttnCancel, m_bttnHelp;
@@ -634,7 +642,7 @@ final public class JAPConf extends JDialog implements ActionListener
 		c.gridy = 1;
 		p.add(panelLogTypes, c);
 		c.gridy = 2;
-		c.gridwidth = 3;
+		c.gridwidth = 5;
 		c.weightx = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.insets = new Insets(0, 5, 0, 5);
@@ -762,6 +770,49 @@ final public class JAPConf extends JDialog implements ActionListener
 		c.gridy = 1;
 		c.weightx = 1;
 		p.add(panelDebugLevels, c);
+
+		JPanel panelDebugDetailLevel = new JPanel();
+		m_sliderDebugDetailLevel = new JSlider(SwingConstants.VERTICAL, LogHolder.DETAIL_LEVEL_LOWEST,
+											   LogHolder.DETAIL_LEVEL_HIGHEST, LogHolder.getDetailLevel());
+		m_sliderDebugDetailLevel.addChangeListener(new ChangeListener()
+		{
+			public void stateChanged(ChangeEvent e)
+			{
+				LogHolder.setDetailLevel(m_sliderDebugDetailLevel.getValue());
+			}
+		});
+		m_sliderDebugDetailLevel.setPaintTicks(false);
+		m_sliderDebugDetailLevel.setPaintLabels(true);
+		m_sliderDebugDetailLevel.setMajorTickSpacing(1);
+		m_sliderDebugDetailLevel.setMinorTickSpacing(1);
+		m_sliderDebugDetailLevel.setSnapToTicks(true);
+		m_sliderDebugDetailLevel.setPaintTrack(true);
+
+		panelDebugDetailLevel.add(m_sliderDebugDetailLevel);
+
+		c.gridheight = 2;
+		c.gridwidth = 1;
+		c.insets = new Insets(0, 10, 0, 10);
+		c.gridx = 3;
+		c.gridy = 0;
+		c.weightx = 0;
+		c.weighty = 0;
+		c.fill = GridBagConstraints.VERTICAL;
+		p.add(new JSeparator(SwingConstants.VERTICAL), c);
+
+		c.gridheight = 1;
+		c.gridwidth = 1;
+		c.gridx = 4;
+		c.gridy = 0;
+		c.fill = GridBagConstraints.NONE;
+		c.insets = new Insets(5, 5, 5, 5);
+		m_labelConfDebugLevel = new JAPMultilineLabel(JAPMessages.getString(MSG_DETAILLEVEL));
+		p.add(m_labelConfDebugLevel, c);
+
+		c.gridy = 1;
+		c.weightx = 1;
+		p.add(panelDebugDetailLevel, c);
+
 		p.addComponentListener(new ComponentListener()
 		{
 			public void componentShown(ComponentEvent e)
@@ -812,7 +863,8 @@ final public class JAPConf extends JDialog implements ActionListener
 		}
 		if (!ProxyInterface.isValidPort(i))
 		{
-			JAPDialog.showErrorDialog(ms_JapConfInstance, JAPMessages.getString("errorListenerPortWrong"), LogType.MISC);
+			JAPDialog.showErrorDialog(ms_JapConfInstance, JAPMessages.getString("errorListenerPortWrong"),
+									  LogType.MISC);
 			return false;
 		}
 		iListenerPort = i;
@@ -822,7 +874,8 @@ final public class JAPConf extends JDialog implements ActionListener
 			s = m_tfProxyHost.getText().trim();
 			if (s == null || s.equals(""))
 			{
-				JAPDialog.showErrorDialog(ms_JapConfInstance, JAPMessages.getString("errorFirewallHostNotNull"), LogType.MISC);
+				JAPDialog.showErrorDialog(ms_JapConfInstance,
+										  JAPMessages.getString("errorFirewallHostNotNull"), LogType.MISC);
 				this.selectCard(PROXY_TAB);
 				return false;
 			}
@@ -836,7 +889,9 @@ final public class JAPConf extends JDialog implements ActionListener
 			}
 			if (!ProxyInterface.isValidPort(i))
 			{
-				JAPDialog.showErrorDialog(ms_JapConfInstance, JAPMessages.getString("errorFirewallServicePortWrong"), LogType.MISC);
+				JAPDialog.showErrorDialog(ms_JapConfInstance,
+										  JAPMessages.getString("errorFirewallServicePortWrong"),
+										  LogType.MISC);
 				this.selectCard(PROXY_TAB);
 				return false;
 			}
@@ -845,7 +900,9 @@ final public class JAPConf extends JDialog implements ActionListener
 				s = m_tfProxyAuthenticationUserID.getText().trim();
 				if (s == null || s.equals(""))
 				{
-					JAPDialog.showErrorDialog(ms_JapConfInstance, JAPMessages.getString("errorFirewallAuthUserIDNotNull"), LogType.MISC);
+					JAPDialog.showErrorDialog(ms_JapConfInstance,
+											  JAPMessages.getString("errorFirewallAuthUserIDNotNull"),
+											  LogType.MISC);
 					this.selectCard(PROXY_TAB);
 					return false;
 				}
@@ -1006,10 +1063,11 @@ final public class JAPConf extends JDialog implements ActionListener
 		for (int i = 0; i < m_cbLogTypes.length; i++)
 		{
 			m_cbLogTypes[i].setSelected(
-						 ( ( (JAPDebug.getInstance().getLogType() & availableLogTypes[i]) != 0) ?
-						   true : false));
+				( ( (JAPDebug.getInstance().getLogType() & availableLogTypes[i]) != 0) ?
+				 true : false));
 		}
 		m_sliderDebugLevel.setValue(JAPDebug.getInstance().getLogLevel());
+		m_sliderDebugDetailLevel.setValue(LogHolder.getDetailLevel());
 		boolean b = JAPDebug.isLogToFile();
 		m_tfDebugFileName.setEnabled(b);
 		m_bttnDebugFileNameSearch.setEnabled(b);
