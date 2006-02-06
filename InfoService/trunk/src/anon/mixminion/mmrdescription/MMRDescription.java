@@ -27,12 +27,11 @@
  */
 package anon.mixminion.mmrdescription;
 
+import java.io.FileOutputStream;
 import java.io.LineNumberReader;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.TimeZone;
+
 import anon.crypto.MyRSAPublicKey;
+import anon.mixminion.message.MixMinionCryptoUtil;
 import anon.util.Base64;
 import anon.util.ByteArrayUtil;
 
@@ -41,57 +40,40 @@ import java.util.Vector;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import java.security.SecureRandom;
+import anon.mixminion.message.ExitInformation;
+import anon.mixminion.message.RoutingInformation;
 
 public class MMRDescription
 {
-//	FIXME add/delete the needed/unneeded variables for our algorithms
 	private String m_address;
 	private String m_name;
 	private int m_port;
-	private String m_strSoftware;
 	private MyRSAPublicKey m_IdentityKey;
 	private MyRSAPublicKey m_PacketKey;
 	private byte[] m_digest;
 	private byte[] m_keydigest;
 	private boolean m_isExitNode;
-
-	private Date m_datePublished;
-	private Date m_validafter;
-	private Date m_validuntil;
-	private final static DateFormat ms_DateFormatFull = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-	private final static DateFormat ms_DateFormatDateOnly = new SimpleDateFormat("yyyy-MM-dd");
-	static
-	{
-		ms_DateFormatFull.setTimeZone(TimeZone.getTimeZone("GMT"));
-		ms_DateFormatDateOnly.setTimeZone(TimeZone.getTimeZone("GMT"));
-	}
-
-
-
+	private boolean m_allowsFragmened;
 	/**
-	 * Constructor
+	 *
 	 * @param address
-	 * address of the mixminion router
 	 * @param name
-	 * name for the mixminion router
 	 * @param port
-	 * port
-	 * @param strSoftware
-	 * version of the onion router software
+	 * @param digest
+	 * @param keydigest
+	 * @param exit
 	 */
-	public MMRDescription(String address, String name, int port, String strSoftware, byte[] digest,
-			byte[] keydigest, boolean exit, Date published, Date validafter, Date validuntil)
+	public MMRDescription(String address, String name, int port, byte[] digest,
+						  byte[] keydigest, boolean exit, boolean fragmented)
 	{
 		this.m_address = address;
 		this.m_name = name;
 		this.m_port = port;
-		this.m_strSoftware = strSoftware;
 		this.m_digest = digest;
 		this.m_keydigest = keydigest;
 		this.m_isExitNode = exit;
-		this.m_datePublished = published;
-		this.m_validafter = validafter;
-		this.m_validuntil = validuntil;
+		this.m_allowsFragmened = fragmented;
 	}
 
 	/**
@@ -101,7 +83,7 @@ public class MMRDescription
 	 * @return
 	 * true if the key is a rsa key
 	 */
-	public boolean setIdentityKey(byte[] identitykey)
+	private boolean setIdentityKey(byte[] identitykey)
 	{
 		m_IdentityKey = MyRSAPublicKey.getInstance(identitykey);
 		return m_IdentityKey != null;
@@ -124,7 +106,7 @@ public class MMRDescription
 	 * @return
 	 * true if the packetKey is a rsa key
 	 */
-	public boolean setPacketKey(byte[] packetKey)
+	private boolean setPacketKey(byte[] packetKey)
 	{
 		m_PacketKey = MyRSAPublicKey.getInstance(packetKey);
 		return m_PacketKey != null;
@@ -139,7 +121,6 @@ public class MMRDescription
 	{
 		return this.m_PacketKey;
 	}
-
 
 	/**
 	 * gets the digest
@@ -161,15 +142,15 @@ public class MMRDescription
 		return this.m_keydigest;
 	}
 
-	/**
-	 * sets this server as exit node or not
-	 * @param bm_isExitNode
-	 *
-	 */
-	public void setExitNode(boolean bm_isExitNode)
-	{
-		m_isExitNode = bm_isExitNode;
-	}
+//	/**
+//	 * sets this server as exit node or not
+//	 * @param bm_isExitNode
+//	 *
+//	 */
+//	public void setExitNode(boolean bm_isExitNode)
+//	{
+//		m_isExitNode = bm_isExitNode;
+//	}
 
 	/**
 	 * returns if this server is an exit node
@@ -178,6 +159,11 @@ public class MMRDescription
 	public boolean isExitNode()
 	{
 		return m_isExitNode;
+	}
+
+	public boolean allowsFragmented()
+	{
+		return m_allowsFragmened;
 	}
 
 	/**
@@ -189,6 +175,7 @@ public class MMRDescription
 	{
 		return this.m_address;
 	}
+
 	/**
 	 * gets the name of the MMR
 	 * @return
@@ -198,7 +185,6 @@ public class MMRDescription
 	{
 		return this.m_name;
 	}
-
 
 	/**
 	 * gets the port
@@ -210,33 +196,17 @@ public class MMRDescription
 		return m_port;
 	}
 
-
-	/**
-	 * gets the software version of this MMR
-	 * @return
-	 * software version
-	 */
-	public String getSoftware()
-	{
-		return m_strSoftware;
-	}
-
 	/**
 	 * gets the Routing Informations of this MMR
 	 * @return routingInformation Vector
 	 * Vector with two byte[], first is the Routing Type, Second the Routing Information
 	 */
-	public Vector getRoutingInformation()
+	public RoutingInformation getRoutingInformation()
 	{
-		byte[] a = m_address.getBytes();
-		byte[] p = ByteArrayUtil.inttobyte(m_port,2);
-		byte[] ri = new byte[a.length+p.length+m_keydigest.length];
-		byte[] rt = ByteArrayUtil.inttobyte(3,2);
-		ri = ByteArrayUtil.conc(p,m_keydigest,a);
-		Vector routingInformation = new Vector();
-		routingInformation.addElement(rt);
-		routingInformation.addElement(ri);
-		return routingInformation;
+		RoutingInformation ri=new RoutingInformation();
+		ri.m_Type=RoutingInformation.TYPE_FORWARD_TO_HOST;
+		ri.m_Content = ByteArrayUtil.conc(ByteArrayUtil.inttobyte(m_port, 2), m_keydigest, m_address.getBytes());
+		return ri;
 	}
 
 	/**
@@ -244,65 +214,46 @@ public class MMRDescription
 	 * @param email vector with strings max 8
 	 * @return vector with routingtype, routinginformation
 	 */
-	public Vector getExitInformation(Vector email) {
+	public ExitInformation getExitInformation(Vector email)
+	{
+		ExitInformation exitInformation = new ExitInformation();
+		SecureRandom rand = new SecureRandom();
+		byte[] arRand = new byte[20];
+		rand.nextBytes(arRand);
+		arRand[0] &= 0x7F;
 
-		Vector exitInformation = getRoutingInformation();
 		//if no e-mail adress is specified return a vector with a drop and log error
-		if (email.size()<1) {
-			exitInformation.insertElementAt( ByteArrayUtil.inttobyte(0,2),0);
-	    	LogHolder.log(LogLevel.ERR, LogType.MISC,
-			  "[Building ExitInformation]: no Recipients; Packet will be dropped! ");
+		if (email.size() < 1)
+		{
+			exitInformation.m_Type = ExitInformation.TYPE_DROP;
+			exitInformation.m_Content = arRand;
+			LogHolder.log(LogLevel.ERR, LogType.MISC,
+						  "[Building ExitInformation]: no Recipients; Packet will be dropped! ");
 			return exitInformation;
 		}
-		else {
-			byte[] s = ("00").getBytes(); //for the space between two email-adresses
-			int count = 0;
-
-			exitInformation.setElementAt(ByteArrayUtil.inttobyte(256,2),0);
-			byte[] deliverydata= new byte[0];
-
-			for (int i = 0; i < email.size(); i++) {
-				String mail = (String) email.elementAt(i);
-				deliverydata = ByteArrayUtil.conc(deliverydata,s, mail.getBytes());
-				count++;
-				if (count>8) {
-			    	LogHolder.log(LogLevel.ERR, LogType.MISC,
-					  "[Building ExitInformation]: more than 8 Recipients; 9+ will not receive ");
+		else
+		{
+			exitInformation.m_Type = ExitInformation.TYPE_SMTP;
+			byte[] zero = new byte[1];
+			String mail = (String) email.elementAt(0);
+			arRand = ByteArrayUtil.conc(arRand, mail.getBytes());
+			for (int i = 1; i < email.size(); i++)
+			{
+				if (i > 8)
+				{
+					LogHolder.log(LogLevel.ERR, LogType.MISC,
+								  "[Building ExitInformation]: more than 8 Recipients; 9+ will not receive ");
 					break;
 				}
-			}
 
-			exitInformation.setElementAt(ByteArrayUtil.conc((byte[])exitInformation.elementAt(1),deliverydata),1);
+				mail = (String) email.elementAt(i);
+				arRand = ByteArrayUtil.conc(arRand, zero, mail.getBytes());
+			}
+			exitInformation.m_Content = arRand;
 		}
 
 		return exitInformation;
 	}
-
-	/**
-	 * test if two OR's are identical
-	 * returns also true, if the routers are in the same family
-	 * @param or
-	 * OR
-	 * @return
-	 */
-	public boolean isSimilar(Object mixminionrouter)
-	{
-		if (mixminionrouter != null)
-		{
-			if(mixminionrouter instanceof MMRDescription)
-			{
-				MMRDescription or = (MMRDescription)mixminionrouter;
-				if(m_address.equals(or.getAddress()) &&
-				m_name.equals(or.getName()) &&
-				(m_port == or.getPort()))
-				{
-					return true;
-				}
-			}
-		}
-		return false;
-	}
-
 
 	/**Tries to parse an router specification according to the desing document.
 	 * @param reader
@@ -312,99 +263,102 @@ public class MMRDescription
 	{
 		try
 		{
-			//TODO only store the things we need in variables, otherwise make a readline to jump over them
+			reader.readLine(); // skip Descriptor-Version
 
-
-			//skip [Server]
-			//Descriptor-Version
-			String descrver = reader.readLine().substring(20);
-		//Nickname
+			//Nickname
 			String nickname = reader.readLine().substring(10);
-		//Identity
+			//Identity
 			byte[] identity = Base64.decode(reader.readLine().substring(10));
-		//Digest
+			//Digest
 			byte[] digest = Base64.decode(reader.readLine().substring(8));
-		//Signature
+			//Signature
 			byte[] signature = Base64.decode(reader.readLine().substring(11));
-		//published
-			Date published = ms_DateFormatFull.parse(reader.readLine().substring(11));
-		//Valid after
-			Date validafter = ms_DateFormatDateOnly.parse(reader.readLine().substring(13));
-		//Valid until
-			Date validuntil = ms_DateFormatDateOnly.parse(reader.readLine().substring(13));
-		//Packet Key
+
+			reader.readLine(); // skip published
+			reader.readLine(); // skip Valid after
+			reader.readLine(); // skip Valid until
+
+			//Packet Key
 			byte[] packetkey = Base64.decode(reader.readLine().substring(12));
-			//Packet Versions
-			String packetversions = reader.readLine().substring(17);
-		//Software
-			String software = reader.readLine().substring(10);
-			//Secure-Configuration
-			String secureconfiguration = reader.readLine().substring(22);
-			//Contact
-			String contact = reader.readLine().substring(9);
-			//Why Insecure
-			String whyinsecure = reader.readLine().substring(14);
-			//Comments
-			String comments = reader.readLine().substring(10);
-			reader.readLine(); //skip [incoming/MMTP]
-			//Incoming Version
-			String incomversion = reader.readLine().substring(9);
-			//IP
-			String ip = reader.readLine().substring(4);
-		//Hostname
+
+			reader.readLine(); // skip Packet Versions
+			reader.readLine(); // skip Software
+			reader.readLine(); // skip Secure-Configuration
+			reader.readLine(); // skip Contact
+			reader.readLine(); // skip Why Insecure
+			reader.readLine(); // skip Comments
+			reader.readLine(); // skip [incoming/MMTP]
+			reader.readLine(); // skip Incoming Version
+			reader.readLine(); // skip IP
+
+			//Hostname
 			String hostname = reader.readLine().substring(10);
-		//Port
+			//Port
 			String port = reader.readLine().substring(6);
 			//FIXME some routers define no port, they will be dropped
-			if (port.startsWith("gest")) return null;
-		//Key-Digest
+			if (port.startsWith("gest"))
+			{
+				return null;
+			}
+			//Key-Digest
 			byte[] keydigest = Base64.decode(reader.readLine().substring(12));
-			//Incoming Protocols
-			String incomprotocols = reader.readLine().substring(11);
-			reader.readLine(); //Skip [Outgoing/MMTP]
-			//Outgoing Version
-			String outversion = reader.readLine().substring(9);
-			//Outgoing Protocols
-			String outprotocols = reader.readLine().substring(11);
 
-		//exitnode,mbox and/or fragmented delivery
-			String temp="";
-			boolean exitNode=false;
+			reader.readLine(); // skip Incoming Protocols
+			reader.readLine(); // skip [Outgoing/MMTP]
+			reader.readLine(); // skip Outgoing Version
+			reader.readLine(); // skip Outgoing Protocols
+
+			//exitnode,mbox and/or fragmented delivery
+			String temp = "";
+			boolean exitNode = false;
 			boolean mbox = false;
 			boolean fragmented = false;
-			for (;;) {
-				temp=reader.readLine();
-				if (temp.startsWith("[Testing]")) break;
-				if (temp.startsWith("[Delivery/SMTP]")) exitNode=true;
-				if (temp.startsWith("[Delivery/MBOX]")) mbox = true;
-				if (temp.startsWith("[Delivery/Fragmented")) fragmented = true;
+			for (; ; )
+			{
+				temp = reader.readLine();
+				if (temp.startsWith("[Testing]"))
+				{
+					break;
+				}
+				if (temp.startsWith("[Delivery/SMTP]"))
+				{
+					exitNode = true;
+				}
+				if (temp.startsWith("[Delivery/MBOX]"))
+				{
+					mbox = true;
+				}
+				if (temp.startsWith("[Delivery/Fragmented"))
+				{
+					fragmented = true;
+				}
 			}
 
 			//build the new MMRDescription
-			MMRDescription mmrd = new MMRDescription(hostname, nickname, Integer.parseInt(port),
-								software, digest, keydigest, exitNode, published,validafter, validuntil);
+			MMRDescription mmrd = new MMRDescription(hostname, nickname, Integer.parseInt(port), digest,
+				keydigest, exitNode, fragmented);
 
 			if (!mmrd.setIdentityKey(identity) || !mmrd.setPacketKey(packetkey))
-				{
-				 return null;
-				}
-
-			return mmrd;
-
-
-
-
+			{
+				return null;
+			}
+			else
+			{
+				return mmrd;
+			}
 		}
 		catch (Throwable t)
 		{
 			t.printStackTrace();
+			return null;
 		}
-		return null;
+
 	}
+
 	//FIXME only for testing purpose
 	public String toString()
 	{
-		return "MMRRouter: " + this.m_name + " on " + this.m_address + ":" + this.m_port + " Software : "+this.m_strSoftware+" Exitnode:" +this.m_isExitNode;
+		return "MMRRouter: " + this.m_name + " Exitnode:" + this.m_isExitNode;
 	}
 
 }

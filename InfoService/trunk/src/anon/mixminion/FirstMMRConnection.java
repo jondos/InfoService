@@ -356,17 +356,15 @@ public class FirstMMRConnection
 			new FirstMMRConnectionThread(m_description.getAddress(),
 												 m_description.getPort(),
 												 m_inittimeout,
-												 /*m_Mixminion.getProxy()*/
-												 null);
-
-		//test: Verbindung auf localhost
-	/*	FirstMMRConnectionThread forct =
-			new FirstMMRConnectionThread("127.0.0.1",
-												 48099,
-												 m_inittimeout,
 												 m_Mixminion.getProxy());
 
-		*/
+//		//test: Verbindung auf localhost
+//		FirstMMRConnectionThread forct =
+//			new FirstMMRConnectionThread("127.0.0.1",
+//												 48099,
+//												 m_inittimeout,
+//												 m_Mixminion.getProxy());
+		
 	   m_tinyTLS = forct.getConnection();
 		m_tinyTLS.checkRootCertificate(false);
 //		m_tinyTLS.setRootKey(m_description.getIdentityKey());
