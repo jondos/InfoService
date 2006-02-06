@@ -2,15 +2,21 @@ package anon.mixminion.message;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 import org.bouncycastle.crypto.digests.SHA1Digest;
 
 import anon.crypto.MyAES;
 import anon.util.ByteArrayUtil;
+import anon.util.ZLibTools;
 
 /**
  * Some Helping Methods for the MixMinion
@@ -38,7 +44,7 @@ public class MixMinionCryptoUtil
      * @param len int
      * @return the array byte[]
      */
-    static byte[] randomArray(int len) {
+    public static byte[] randomArray(int len) {
         byte[] ret = new byte[len];
         SecureRandom sr = new SecureRandom();
         sr.nextBytes(ret);
@@ -99,7 +105,7 @@ public class MixMinionCryptoUtil
         byte[] data = new byte[len];
         try {
             engine.init(true,key);
-            engine.processBytesCTR(plain,0,data,0,data.length);
+            engine.processBytesCTR(plain,0,data,0,len);
         } catch (Exception e) {
             e.printStackTrace();
             return null;
@@ -183,9 +189,93 @@ public class MixMinionCryptoUtil
 
 
     /**
-     * this Method is for compressing some Data
+     * this Method is for compressing some Data, with the ZLIB-Standard
      */
     static byte[] compressData(byte[] message)
+    {
+        byte[] compress = ZLibTools.compress(message);
+        if (compress[0]!=0x78 || compress[1]+256!=0xDA)
+            throw new RuntimeException("The Compressed Messege didn't start with 0x78DA");
+
+        return compress;
+    }
+
+    
+    /**
+     * this Method is for compressing some Data
+     */
+    private static byte[] ZIPcompressData(byte[] message)
+    {
+        byte[] compress = null;
+        
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ZipOutputStream zip;
+        
+        try
+        {
+            zip = new ZipOutputStream(baos);
+            zip.setLevel(9);
+            zip.setMethod(ZipOutputStream.DEFLATED);
+            ZipEntry e = new ZipEntry("MixMinionZip"); //Name darf anscheind nicht leer sein
+            zip.putNextEntry(e);
+            zip.write(message);
+            zip.flush();
+            zip.close();
+            baos.flush();
+            baos.close();
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+        compress = baos.toByteArray();
+
+        // only for Testing, if the Compression was ok.
+        if (!ByteArrayUtil.equal(message, ZIPextractData(compress)))
+            throw new RuntimeException("Something with Compression/Decompression was wrong!");
+        
+        return compress;
+    }
+    
+    
+    /**
+     * this Method is for extracting some Data 
+     */
+    private static byte[] ZIPextractData(byte[] payload)
+    {
+        byte[] message = null;
+        
+        ByteArrayInputStream bais = new ByteArrayInputStream(payload);
+        ZipInputStream zip;
+        try {
+            zip = new ZipInputStream(bais);
+            ZipEntry e = zip.getNextEntry(); //sonst Null-Pointer-Exception
+
+            boolean go = true;
+            int size = -1;
+            while (go)
+            {
+                size++;
+                int c = zip.read();
+                byte[] b = {(byte) c};
+                if (c != -1) message = ByteArrayUtil.conc(message, b);
+                else go = false;
+            }
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+        
+
+        return message;
+    }
+
+    
+    /**
+     * this Method is for compressing some Data
+     */
+    private static byte[] GZIPcompressData(byte[] message)
     {
         byte[] payload = null;
 
@@ -212,7 +302,7 @@ public class MixMinionCryptoUtil
     /**
      * this Method is for extracting some Data
      */
-    static byte[] extractData(byte[] payload)
+    private static byte[] GZIPextractData(byte[] payload)
     {
         byte[] message = null;
 
@@ -236,10 +326,6 @@ public class MixMinionCryptoUtil
         {
             e.printStackTrace();
         }
-
-
         return message;
     }
-
-
 }

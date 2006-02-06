@@ -35,7 +35,6 @@ import java.util.Vector;
 
 import anon.crypto.MyRandom;
 import anon.mixminion.mmrdescription.MMRDescription;
-import anon.util.Base64;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -151,9 +150,7 @@ public class MMRList
 	 */
 	public synchronized MMRDescription getByRandom(Vector allowedNames)
 	{
-		String mmrName = (String) allowedNames.elementAt( (m_rand.nextInt(allowedNames.size())));
-
-		return (MMRDescription) getByName(mmrName);
+		return (MMRDescription) allowedNames.elementAt( (m_rand.nextInt(allowedNames.size())));
 	}
 
 	/**
@@ -173,49 +170,40 @@ public class MMRList
 	 * @return routers vector
 	 */
 
-	public synchronized Vector getByRandom(int hops)
+	public synchronized Vector getByRandom(int hops, boolean fragmented)
 	{
-		//FIXME
 		Vector routers = new Vector();
 		MMRDescription x = null;
-		boolean contains=true;
+		boolean contains = true;
+		boolean frags = false;
 
 		for (int i=0; i<hops-1; i++) {
-
-			while (contains) {
-			contains = false;
-			x = getByRandom();
-			if (routers.contains(x)) contains = true;
-			}
 			contains=true;
+			while (contains) {
+			x = getByRandom();
+				contains = routers.contains(x);
+			}
 			routers.addElement(x);
 		}
 
 		contains = true;
-		boolean exit = false;
-		while (contains || !exit) {
-			contains = false;
-			x = getByRandom();
-			if (routers.contains(x)) contains = true;
-			exit = x.isExitNode();
+		if (fragmented) {
+			while (contains || !frags) {
+				x = getByRandom(m_exitnodes);
+				contains = routers.contains(x);
+				frags = x.allowsFragmented();
 		}
-
-			routers.addElement(x);
-
-//		//FIXME Fot Testing only
-//		System.out.println("hier" +hops);
-//		MMRDescription mm = new MMRDescription("127.0.0.1", "rinos", 48099, "",
-//        Base64.decode("xh0eIaDjLS5czNQIcrHh7ByYyOY="),
-//        Base64.decode("jNJPD1lU4dwAR+DsKrxG4MdWOGg="),
-//        true, new Date(2005,12,12),  new Date(2005,12,12),  new Date(2005,12,12));
-//		mm.setIdentityKey(Base64.decode("MIIBCgKCAQEA584fjC480O/T9PO1AQMw82ULbA89EBCqhCsbXD+jhQHT+XxtVazXRYA+za3Ex1NvPRrQBhYH+FLNHrYvHNo2LD7AT/pKXqeAeMRc18YAuC4A54SctM4jcOkLIHHn57xe1AanAuu4EjodeDKOLCv1fJpcIijeJOM98vE3ejdnfvahaMwNGYdBxovhHAwU8CADdNzYCNbfrl+nm6fZwRXmTHdEmQ6mnTXNiOnaNb6nlSmolNkvUDPXxt2xXR2yEpGJefgJhTasKyhpbMNpeHFF260897qK6HfScd88MX+yQbXNxOP3NI48/hDrmvanSrLZOsh2tKoTIASjDCDGU6xBzQIDAQAB"));
-//		mm.setPacketKey(Base64.decode("MIIBCgKCAQEAr59bKdGXo///LRP0FuTqZA7nl6jABiSiRb4jzeUrwy2eMHQrwVNCMNwLKmt6Pfraa66NCnVW+WKCDffztRWyvX4hBXUBaYNGrqvRo7ZJ9G2HM9vcsbhAb3zeyHgdXF2eTWRhCHJdpRmZjWZPwSTw2uLX3e2bi51aWBX/X5x6uExMFTHdihbVfrxk2kh1eKeMRNTm+UmZ/BWrrxcaTWVSN00EzFFW6urBtuFPQPohLTjqNzrXh90KiMUbd8OqG+8RCA3WbTv8dGJLAScFpoXM6d1h+xMZAfLSpC1ueRW1dn/xbcafw9kEqvmkaz9sZPJImH7NnkbnO9l+Lh8F3kgpsQIDAQAB"));
-//		routers.setElementAt(mm,0);
-//		routers.setElementAt(mm,1);
-//		//end Testing
+		}
+		else {
+			while (contains ) {
+				x = getByRandom(m_exitnodes);
+				contains = routers.contains(x);
+			}
+		}
+		routers.addElement(x);
+		System.out.println("Last Router frags: " +x.allowsFragmented() +"exit: " + x.isExitNode());
 
 		return routers;
-
 	}
 
 	/**
