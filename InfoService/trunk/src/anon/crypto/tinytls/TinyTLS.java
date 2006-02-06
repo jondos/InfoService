@@ -531,7 +531,7 @@ public class TinyTLS extends Socket
 					int h = 3;
 				}
 				m_handshakemessages = ByteArrayUtil.conc(m_handshakemessages, m_aktTLSRecord.m_Data,
-												  m_aktTLSRecord.m_dataLen);
+					m_aktTLSRecord.m_dataLen);
 				switch (type)
 				{
 					//Server hello
@@ -683,8 +683,14 @@ public class TinyTLS extends Socket
 		 */
 		public void write(int i) throws IOException
 		{
-			this.write(new byte[]
-					   { (byte) i});
+			write(new byte[]
+				  { (byte) i});
+		}
+
+		public void close() throws IOException
+		{
+			sendCloseNotify();
+			m_stream.close();
 		}
 
 		/**
@@ -692,7 +698,7 @@ public class TinyTLS extends Socket
 		 */
 		public void flush() throws IOException
 		{
-			this.m_stream.flush();
+			m_stream.flush();
 		}
 
 		/**
@@ -724,8 +730,8 @@ public class TinyTLS extends Socket
 		public void sendHandshake(int type, byte[] message) throws IOException
 		{
 			byte[] senddata = ByteArrayUtil.conc(new byte[]
-										  { (byte) type}
-										  , ByteArrayUtil.inttobyte(message.length, 3), message);
+												 { (byte) type}
+												 , ByteArrayUtil.inttobyte(message.length, 3), message);
 			send(22, senddata, 0, senddata.length);
 			m_handshakemessages = ByteArrayUtil.conc(m_handshakemessages, senddata);
 		}
@@ -752,8 +758,9 @@ public class TinyTLS extends Socket
 				counter++;
 
 			}
-			byte[] ciphersuites = ByteArrayUtil.conc(ByteArrayUtil.inttobyte(m_supportedciphersuites.size() * 2, 2),
-											  ciphers);
+			byte[] ciphersuites = ByteArrayUtil.conc(ByteArrayUtil.inttobyte(m_supportedciphersuites.size() *
+				2, 2),
+				ciphers);
 			byte[] compression = new byte[]
 				{
 				0x01, 0x00};
@@ -762,8 +769,9 @@ public class TinyTLS extends Socket
 			Random rand = new Random(System.currentTimeMillis());
 			rand.nextBytes(random);
 
-			byte[] message = ByteArrayUtil.conc(PROTOCOLVERSION, gmt_unix_time, random, sessionid, ciphersuites,
-										 compression);
+			byte[] message = ByteArrayUtil.conc(PROTOCOLVERSION, gmt_unix_time, random, sessionid,
+												ciphersuites,
+												compression);
 
 			sendHandshake(1, message);
 			m_clientrandom = ByteArrayUtil.conc(gmt_unix_time, random);
@@ -779,7 +787,7 @@ public class TinyTLS extends Socket
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[CLIENT_CERTIFICATE]");
 			if (m_certificaterequested)
 			{
-				if (m_clientcertificatetypes != null&&m_clientcertificates!=null)
+				if (m_clientcertificatetypes != null && m_clientcertificates != null)
 				{
 					for (int i = 0; i < m_clientcertificatetypes.length; i++)
 					{
@@ -862,7 +870,7 @@ public class TinyTLS extends Socket
 					}
 					catch (InvalidKeyException ex)
 					{
-                        throw new TLSException("cannot encrypt signature", 2, 80);
+						throw new TLSException("cannot encrypt signature", 2, 80);
 					}
 					byte[] signature2 = sig.signPlain(signature);
 
@@ -902,6 +910,18 @@ public class TinyTLS extends Socket
 				 , 0, 1);
 			m_encrypt = true;
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[CLIENT_CHANGE_CIPHER_SPEC]");
+		}
+
+		/**
+		 * send a close notify message to inform the peer that this connection will be closed now message
+		 * @throws IOException
+		 */
+		public void sendCloseNotify() throws IOException
+		{
+			send(21, new byte[]
+				 {1, 0}
+				 , 0, 2);
+			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[CLIENT_CLOSE_NOTIFY]");
 		}
 
 		/**
@@ -1104,6 +1124,13 @@ public class TinyTLS extends Socket
 
 	public void close()
 	{
+		try
+		{
+			m_ostream.close();
+		}
+		catch (IOException ex)
+		{
+		}
 		m_ProxyConnection.close();
 	}
 
