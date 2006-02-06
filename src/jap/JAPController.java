@@ -497,6 +497,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 				{}
 
 				Element root = doc.getDocumentElement();
+				XMLUtil.removeComments(root);
 				NamedNodeMap n = root.getAttributes();
 
 				//
