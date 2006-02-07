@@ -37,7 +37,6 @@ import anon.crypto.PKCS12;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import java.util.Vector;
 import anon.pay.xml.XMLPaymentOptions;
 import anon.pay.xml.XMLPaymentOption;
 
@@ -48,7 +47,7 @@ import anon.pay.xml.XMLPaymentOption;
 public class Configuration
 {
 	/** Versionsnummer --> Please update if you change anything*/
-	public static final String BEZAHLINSTANZ_VERSION = "BI.02.008";
+	public static final String BEZAHLINSTANZ_VERSION = "BI.02.009";
 	public static IMyPrivateKey getPrivateKey()
 	{
 		return m_privateKey;
@@ -249,6 +248,20 @@ public class Configuration
 		return ms_ratePerMB;
 	}
 
+	/** password for external charging */
+	private static String ms_externalChargePassword;
+	public static String getExternalChargePassword()
+	{
+		return ms_externalChargePassword;
+	}
+
+	/**Holds the port for external charging */
+	private static String ms_externalChargePort;
+	public static String getExternalChargePort()
+	{
+		return ms_externalChargePort;
+	}
+
 	/**
 	 * Load configuration from properties file,
 	 * initialize keys and certificates,
@@ -425,12 +438,14 @@ public class Configuration
 		int i = 1;
 		while (true)
 		{
-			String currency = props.getProperty("currency" + i++);
+			String currency = props.getProperty("currency" + i);
 			if (currency == null)
 			{
 				break;
 			}
-			ms_paymentOptions.addCurrency(currency);
+			ms_paymentOptions.addCurrency(currency.toUpperCase());
+
+			i++;
 		}
 
 		//parse accepted credit cards
@@ -532,6 +547,12 @@ public class Configuration
 
 		//Parse rate per MB
 		ms_ratePerMB = Double.parseDouble(props.getProperty("ratepermb", "1.0"));
+
+		//Parse external charge password
+		ms_externalChargePassword = props.getProperty("chargepw", "");
+
+		//Parse external charge port
+		ms_externalChargePort = props.getProperty("chargeport", "9950");
 
 		return true;
 	}

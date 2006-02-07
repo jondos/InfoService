@@ -37,6 +37,7 @@ import logging.LogType;
 import logging.SystemErrLog;
 import jpi.helper.ICreditCardHelper;
 import java.util.Properties;
+import jpi.helper.ExternalChargeHelper;
 
 public class JPIMain
 {
@@ -75,7 +76,6 @@ public class JPIMain
 						  "JPIMain: Error loading configuration, I'm going to die now");
 			System.exit(0);
 		}
-        log1.setLogLevel(Configuration.getLogStderrThreshold());
 		if (Configuration.getLogFileName() != null)
 		{
 			FileLog log2 = new FileLog(Configuration.getLogFileName(), 1000000, 10);
@@ -84,6 +84,11 @@ public class JPIMain
 			ChainedLog l = new ChainedLog(log1, log2);
 			LogHolder.setLogInstance(l);
 		}
+		log1.setLogLevel(Configuration.getLogStderrThreshold());
+		log1 = new SystemErrLog();
+		LogHolder.setLogInstance(log1);
+		log1.setLogType(LogType.ALL);
+		LogHolder.setDetailLevel(LogHolder.DETAIL_LEVEL_HIGHEST);
 
 		// process command line args
 		boolean newdb = false;
@@ -152,7 +157,7 @@ public class JPIMain
 		aiThread.start();
 
 		//start the credit card helper
-		String strHelperClass = "jpi.helper."+Configuration.getCreditCardHelper() + "CreditCardHelper";
+		String strHelperClass = "jpi.helper." + Configuration.getCreditCardHelper() + "CreditCardHelper";
 		LogHolder.log(LogLevel.INFO, LogType.PAY, "JPIMain: Launching CreditCardHelper: " + strHelperClass);
 		try
 		{
@@ -180,6 +185,12 @@ public class JPIMain
 		PayPalHelper payPal = new PayPalHelper(Integer.parseInt(Configuration.getPayPalPort()));
 		Thread payPalThread = new Thread(payPal);
 		payPalThread.start();
+
+		// start ExternalChargeHelper thread for charge request acceptance
+		LogHolder.log(LogLevel.INFO, LogType.PAY, "JPIMain: Launching ExternalChargeHelper thread");
+		ExternalChargeHelper external = new ExternalChargeHelper(Integer.parseInt(Configuration.getExternalChargePort()));
+		Thread externalThread = new Thread(external);
+		externalThread.start();
 
 		LogHolder.log(LogLevel.INFO, LogType.PAY, "Initialization complete, JPIMain Thread terminating");
 	}
