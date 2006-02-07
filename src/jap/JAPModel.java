@@ -90,6 +90,9 @@ public final class JAPModel
 	 */
 	private String m_paymentPassword;
 
+	/** Stores the number of total mixed bytes in this session*/
+	private long m_mixedBytes;
+
 	private JAPModel()
 	{
 		try
@@ -274,7 +277,6 @@ public final class JAPModel
 	{
 		return ms_TheModel.m_bInfoServiceDisabled;
 	}
-
 
 	public String toString()
 	{
@@ -499,4 +501,13 @@ public final class JAPModel
 		return m_paymentPassword;
 	}
 
+	public void setMixedBytes(long a_mixedBytes)
+	{
+		m_mixedBytes = a_mixedBytes;
+	}
+
+	public long getMixedBytes()
+	{
+		return m_mixedBytes;
+	}
 }

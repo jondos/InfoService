@@ -56,7 +56,7 @@ import logging.LogType;
 public class JAP extends Frame
 {
 	// um pay funktionalitaet ein oder auszuschalten
-	private boolean loadPay = false;
+	private boolean loadPay = true;
 	private JAPController m_controller;
 
 	String[] m_arstrCmdnLnArgs = null;

@@ -420,4 +420,15 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		return (AnonServiceImpl) m_Anon;
 	}
 
+	public void packetMixed(long a_totalBytes)
+{
+	Enumeration e = m_anonServiceListener.elements();
+	while (e.hasMoreElements())
+	{
+		( (AnonServiceEventListener) e.nextElement()).packetMixed(a_totalBytes);
+	}
+
+}
+
+
 }
