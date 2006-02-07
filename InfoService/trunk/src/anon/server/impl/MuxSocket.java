@@ -150,6 +150,8 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 	private Vector m_anonServiceListener;
 
 	private volatile boolean m_bConnectionStoppedManually = false;
+	private long m_numSentPackets = 0;
+	private long m_numReceivedPackets = 0;
 
 	private MuxSocket()
 	{
@@ -913,12 +915,13 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 				LogHolder.log(LogLevel.DEBUG, LogType.NET, "MuxSocket:run() Received a Dummy...");
 				continue;
 			}
-			if ( channel < 256)
+			if (channel < 256)
 			{
 				m_ControlChannelDispatcher.proccessMixPacket(channel, flags, buff);
 				continue;
 			}
-
+			m_numReceivedPackets++;
+			firePacketMixed();
 			updateBytesForAccounting(); // count bytes for payment
 			ChannelListEntry tmpEntry = (ChannelListEntry) m_ChannelList.get(new Integer(channel));
 			if (tmpEntry != null)
@@ -1039,6 +1042,7 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 		{
 			m_cipherOut.encryptAES(m_MixPacketSend, 0, m_MixPacketSend, 0, 16);
 		}
+		m_numSentPackets++;
 		m_outStream.write(m_MixPacketSend);
 		m_outStream.flush();
 	}
@@ -1185,6 +1189,7 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 			//m_outDataStream.write(outBuff2,0,DATA_SIZE);
 			//Send it...
 			sendMixPacket();
+			firePacketMixed();
 			updateBytesForAccounting(); // count bytes for payment
 			//JAPAnonService.increaseNrOfBytes(len);
 			//if(entry!=null&&entry.bIsSuspended)
@@ -1242,7 +1247,7 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 	/** Updates the transferred bytes.*/
 	private synchronized void updateBytesForAccounting()
 	{
-		m_transferredBytes+=PACKET_SIZE;
+		m_transferredBytes += PACKET_SIZE;
 	}
 
 	/**
@@ -1287,6 +1292,17 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 		while (e.hasMoreElements())
 		{
 			( (AnonServiceEventListener) e.nextElement()).connectionError();
+		}
+
+	}
+
+	private void firePacketMixed()
+	{
+		long bytes = (m_numReceivedPackets + m_numSentPackets)*PACKET_SIZE;
+		Enumeration e = m_anonServiceListener.elements();
+		while (e.hasMoreElements())
+		{
+			( (AnonServiceEventListener) e.nextElement()).packetMixed(bytes);
 		}
 
 	}

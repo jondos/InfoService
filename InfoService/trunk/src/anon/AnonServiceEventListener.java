@@ -30,4 +30,6 @@ package anon;
 public interface AnonServiceEventListener
 {
 	public void connectionError();
+
+	public void packetMixed(long a_totalBytes);
 }

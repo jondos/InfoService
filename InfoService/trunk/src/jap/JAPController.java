@@ -2690,4 +2690,15 @@ public final class JAPController extends Observable implements IProxyListener, O
 		}
 
 	}
+
+	public void packetMixed(long a_totalBytes)
+	{
+		JAPModel.getInstance().setMixedBytes(a_totalBytes);
+	}
+
+	public long getMixedBytes()
+	{
+		return JAPModel.getInstance().getMixedBytes();
+	}
+
 }

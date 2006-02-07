@@ -256,7 +256,7 @@ final public class AnonServiceImpl implements AnonService, AnonServiceEventListe
 		Enumeration e = m_anonServiceListener.elements();
 		while (e.hasMoreElements())
 		{
-			((AnonServiceEventListener)e.nextElement()).connectionError();
+			( (AnonServiceEventListener) e.nextElement()).connectionError();
 		}
 	}
 
@@ -264,6 +264,16 @@ final public class AnonServiceImpl implements AnonService, AnonServiceEventListe
 	{
 		LogHolder.log(LogLevel.ERR, LogType.NET, "AnonServiceImpl received connectionError");
 		this.fireConnectionError();
+	}
+
+	public void packetMixed(long a_totalBytes)
+	{
+		Enumeration e = m_anonServiceListener.elements();
+		while (e.hasMoreElements())
+		{
+			( (AnonServiceEventListener) e.nextElement()).packetMixed(a_totalBytes);
+		}
+
 	}
 
 	public Pay getPay()

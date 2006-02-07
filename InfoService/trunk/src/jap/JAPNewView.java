@@ -1586,7 +1586,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		// Nr of Bytes transmitted anonymously
 		if (protocolType == IProxyListener.PROTOCOL_WWW)
 		{
-			m_lTrafficWWW = c;
+			m_lTrafficWWW = JAPController.getInstance().getMixedBytes();
 		}
 		else if (protocolType == IProxyListener.PROTOCOL_OTHER)
 		{
