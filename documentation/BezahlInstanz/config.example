@@ -20,10 +20,15 @@ id TestPaymentInstance
 # japport: TCP Port where the JPI listens for JAP connections
 # aiport: TCP Port where the JPI listens for AI connections
 # tls: use encryption? can be one of "on" or "off"
+# chargeport: Port , auf dem die Verbindung fuer externes Aufladen angenommen werden
+# chargepw=31:9F:4D:26:E3:C5:36:B5:DD:87:1B:B2:C5:2E:31:78 (Passwort  fuer die Aufladung, md5-gehashed, hier: PASSWORD)
 
 hostname 132.199.130.150 
 japport 2342
 aiport 4223
+chargeport=9950
+chargepw=31:9F:4D:26:E3:C5:36:B5:DD:87:1B:B2:C5:2E:31:78
+
 tls on
 
 ##############################################################################
