@@ -47,7 +47,7 @@ import anon.pay.xml.XMLPaymentOption;
 public class Configuration
 {
 	/** Versionsnummer --> Please update if you change anything*/
-	public static final String BEZAHLINSTANZ_VERSION = "BI.02.009";
+	public static final String BEZAHLINSTANZ_VERSION = "BI.02.010";
 	public static IMyPrivateKey getPrivateKey()
 	{
 		return m_privateKey;
