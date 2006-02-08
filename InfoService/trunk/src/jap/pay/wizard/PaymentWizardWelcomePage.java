@@ -39,7 +39,6 @@ public class PaymentWizardWelcomePage extends BasicWizardPage
 {
 	public PaymentWizardWelcomePage()
 	{
-		//setPageTitle(JAPMessages.getString("payWizWelcomeTitle"));
 		m_panelComponents.setLayout(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
 		c.anchor = c.NORTHWEST;
@@ -49,7 +48,7 @@ public class PaymentWizardWelcomePage extends BasicWizardPage
 		c.gridy = 0;
 		m_panelComponents.add(new JLabel(JAPMessages.getString("payWizWelcomeMessage")), c);
 		//Increase dialog size
-		for (int i = 0;i<10;i++)
+		for (int i = 0;i<13;i++)
 		{
 			c.gridy++;
 			m_panelComponents.add(new JLabel(" "), c );
