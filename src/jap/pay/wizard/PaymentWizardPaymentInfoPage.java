@@ -414,8 +414,16 @@ public class PaymentWizardPaymentInfoPage extends BasicWizardPage implements Mou
 	{
 		Clipboard sysClip = Toolkit.getDefaultToolkit().getSystemClipboard();
 		String link = m_extraInfoLabel.getText();
+		if (m_selectedOption.getExtraInfoType(m_language).equals(XMLPaymentOption.EXTRA_TEXT))
+		{
+			link = JAPUtil.replaceAll(link, "<br>", "\n");
+			link = JAPUtil.replaceAll(link, "<p>", "\n\n");
+		}
+	    else
+		{
 		link = JAPUtil.replaceAll(link, "<br>", "");
 		link = JAPUtil.replaceAll(link, "<p>", "");
+		}
 		link = JAPUtil.replaceAll(link, "<html>", " ");
 		link = JAPUtil.replaceAll(link, "</html>", " ");
 		link = JAPUtil.replaceAll(link, "<font color=blue><u>", "");

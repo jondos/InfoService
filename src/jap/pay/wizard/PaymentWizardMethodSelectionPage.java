@@ -58,9 +58,14 @@ import logging.LogLevel;
 import logging.LogType;
 import gui.JAPJIntField;
 import gui.JAPJIntField.IntFieldBounds;
+import jap.pay.AccountSettingsPanel;
 
 public class PaymentWizardMethodSelectionPage extends BasicWizardPage implements ActionListener
 {
+	/** Messages */
+	private static final String MSG_PRICE = PaymentWizardMethodSelectionPage.class.
+		getName() + "_price";
+
 	private JLabel m_fetchingLabel;
 	private ButtonGroup m_rbGroup;
 	private XMLPaymentOptions m_paymentOptions;
@@ -155,6 +160,7 @@ public class PaymentWizardMethodSelectionPage extends BasicWizardPage implements
 	private void addOption(String a_name)
 	{
 		m_c.gridy++;
+		m_c.gridwidth = 3;
 		JRadioButton rb = new JRadioButton("<html>" + a_name + "</html>");
 		rb.setName(a_name);
 		rb.addActionListener(this);
@@ -165,8 +171,11 @@ public class PaymentWizardMethodSelectionPage extends BasicWizardPage implements
 	private void addCurrencies(Vector a_currencies)
 	{
 		m_c.gridy++;
-		m_c.gridwidth = 2;
-		JLabel label = new JLabel(JAPMessages.getString("payAmount"));
+		m_c.gridwidth = 3;
+		JLabel label = new JLabel(JAPMessages.getString(MSG_PRICE));
+		m_panelComponents.add(label, m_c);
+		m_c.gridy++;
+		label = new JLabel(JAPMessages.getString("payAmount"));
 		m_panelComponents.add(label, m_c);
 		m_c.gridwidth = 1;
 		m_tfAmount = new JAPJIntField(new IntFieldBounds()

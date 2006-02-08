@@ -35,7 +35,6 @@ package jap.pay;
  */
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
-import java.util.Enumeration;
 
 import java.awt.Color;
 import java.awt.GridBagConstraints;
@@ -45,7 +44,6 @@ import java.awt.Insets;
 import java.awt.MediaTracker;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 
@@ -74,7 +72,6 @@ import java.awt.Dimension;
 import gui.FlippingPanel;
 import anon.pay.AIControlChannel;
 
-
 public class PaymentMainPanel extends FlippingPanel
 {
 
@@ -91,6 +88,8 @@ public class PaymentMainPanel extends FlippingPanel
 		"_sessionspent";
 	private static final String MSG_TOTALSPENT = PaymentMainPanel.class.getName() +
 		"_totalspent";
+	private static final String MSG_ACCOUNTEMPTY = PaymentMainPanel.class.getName() +
+		"_accountempty";
 
 	/**
 	 * Icons for the account icon display
@@ -123,8 +122,7 @@ public class PaymentMainPanel extends FlippingPanel
 	private JLabel m_labelTotalSpent;
 	private JLabel m_labelSessionSpent;
 
-	private long m_spentThisSession, m_spentThisSessionStart;
-	private boolean m_startValueSet = false;
+	private long m_spentThisSession;
 
 	public PaymentMainPanel(final JAPNewView view)
 	{
@@ -434,15 +432,12 @@ public class PaymentMainPanel extends FlippingPanel
 		 */
 		public void accountCertRequested(boolean blubb)
 		{
-			int option = 0;
 			PayAccountsFile accounts = PayAccountsFile.getInstance();
 			if (accounts.getNumAccounts() == 0)
 			{
-				if (JOptionPane.showOptionDialog(
-					PaymentMainPanel.this,
-					"<html>" + JAPMessages.getString("payCreateAccountQuestion") + "</html>",
-					JAPMessages.getString("ngPaymentTabTitle"), JOptionPane.YES_NO_OPTION,
-					JOptionPane.QUESTION_MESSAGE, null, null, null) == JOptionPane.YES_OPTION)
+				boolean yes = JAPDialog.showYesNoDialog(JAPController.getView(),
+					JAPMessages.getString("payCreateAccountQuestion"));
+				if (yes)
 				{
 					JAPController.getInstance().setAnonMode(false);
 					m_view.showConfigDialog(JAPConf.PAYMENT_TAB);
@@ -454,55 +449,21 @@ public class PaymentMainPanel extends FlippingPanel
 			}
 			else
 			{
-				if (accounts.getActiveAccount() != null)
-				{
-					option = JOptionPane.showConfirmDialog(
-						PaymentMainPanel.this,
-						"<html>" + JAPMessages.getString("payUseAccountQuestion") + "</html>",
-						JAPMessages.getString("ngPaymentTabTitle"), JOptionPane.YES_NO_OPTION,
-						JOptionPane.QUESTION_MESSAGE);
-				}
-				else
-				{
-					if (accounts.getNumAccounts() == 1)
-					{
-						/** @todo i18n*/
-						option = JOptionPane.showConfirmDialog(
-							PaymentMainPanel.this,
-							"The mixcascade you are currently using wants to be payed. " +
-							"You have created an account, however it is not marked as " +
-							"active. Jap will now automatically activate this account " +
-							"for you. ",
-							JAPMessages.getString("ngPaymentTabTitle"), JOptionPane.YES_NO_OPTION,
-							JOptionPane.QUESTION_MESSAGE
-							);
-						Enumeration enumE = accounts.getAccounts();
-						accounts.setActiveAccount( (PayAccount) enumE.nextElement());
-					}
-					else
-					{
-						if (JOptionPane.showOptionDialog(
-							PaymentMainPanel.this,
-							"The mixcascade you are currently using wants to be payed. " +
-							"You must activate an account to allow Jap using it for payment. " +
-							"Would you like to choose an active account now?",
-							JAPMessages.getString("ngPaymentTabTitle"),
-							JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE,
-							null, null, null) == JOptionPane.YES_OPTION)
+				if (accounts.getActiveAccount() != null && !JAPController.getInstance().getDontAskPayment())
 						{
-							m_view.showConfigDialog(JAPConf.PAYMENT_TAB);
-						}
-						else
-						{
-							option = JOptionPane.NO_OPTION;
-						}
-					}
-				}
-			}
+					JAPDialog.LinkedCheckBox checkBox = new JAPDialog.LinkedCheckBox(false);
 
-			if (option == JOptionPane.NO_OPTION)
+					int ret = JAPDialog.showConfirmDialog(JAPController.getView(),
+						JAPMessages.getString("payUseAccountQuestion"),
+						JAPDialog.OPTION_TYPE_OK_CANCEL, JAPDialog.MESSAGE_TYPE_INFORMATION,
+						checkBox);
+					JAPController.getInstance().setDontAskPayment(checkBox.getState());
+
+					if (ret != JAPDialog.RETURN_VALUE_OK)
 			{
 				JAPController.getInstance().setAnonMode(false);
+			}
+				}
 			}
 			if (accounts.getActiveAccount() != null)
 			{
@@ -517,11 +478,15 @@ public class PaymentMainPanel extends FlippingPanel
 		 */
 		public void accountError(XMLErrorMessage msg)
 		{
+			String error = msg.getErrorDescription();
+			if (error.indexOf("empty") != -1)
+			{
+				error = JAPMessages.getString(MSG_ACCOUNTEMPTY);
+			}
 			JAPDialog.showErrorDialog(PaymentMainPanel.this,
-									  JAPMessages.getString("aiErrorMessage") + msg.getErrorDescription(),
+									  JAPMessages.getString("aiErrorMessage") + " " + error,
 									  LogType.PAY);
 		}
-
 
 		public void gotCaptcha(ICaptchaSender a_source, final IImageEncodedCaptcha a_captcha)
 		{

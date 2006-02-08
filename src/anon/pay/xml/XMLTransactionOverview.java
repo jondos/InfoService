@@ -205,16 +205,18 @@ public class XMLTransactionOverview implements IXMLEncodable
 	 */
 	public void setUsed(long a_tan, boolean a_used, long a_usedDate, long amount)
 	{
-		for (int i = 0; i < m_tans.size(); i++)
+		Enumeration e = m_tans.elements();
+
+		while(e.hasMoreElements())
 		{
-			String[] line = (String[]) m_tans.elementAt(i);
+			String[] line = (String[]) e.nextElement();
 			if (line[0].equals(String.valueOf(a_tan)))
 			{
 				String tan = line[0];
-				m_tans.removeElementAt(i);
 				m_tans.addElement(new String[]
 								  {tan, String.valueOf(a_used), String.valueOf(a_usedDate),
 								  String.valueOf(amount)});
+				m_tans.removeElement(line);
 			}
 
 		}

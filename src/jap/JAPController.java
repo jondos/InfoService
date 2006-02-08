@@ -140,6 +140,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	private boolean mbDoNotAbuseReminder = false; // indicates if new warning message in setAnonMode (containing Do no abuse) has been shown
 	private boolean mbGoodByMessageNeverRemind = false; // indicates if Warning message before exit has been deactivated forever
 	private boolean m_bForwarderNotExplain = false; //indicates if the warning message about forwarding should be shown
+	private boolean m_bPayCascadeNoAsk = false;
 
 	public String status1 = " ";
 	public String status2 = " ";
@@ -296,7 +297,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	 *
 	 * The configuration is a XML-File with the following structure:
 	 *  <JAP
-	 *    version="0.20"                     // version of the xml struct (DTD) used for saving the configuration
+	 *    version="0.21"                     // version of the xml struct (DTD) used for saving the configuration
 	 *    portNumber=""                     // Listener-Portnumber
 	 *    portNumberSocks=""                // Listener-Portnumber for SOCKS
 	 *    supportSocks=""                   // Will we support SOCKS ?
@@ -314,6 +315,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	 *    DummyTrafficIntervall=".."    //Time of inactivity in milli seconds after which a dummy is send
 	 *    minimizedStartup="true"/"false" // should we start minimized ???
 	 *    neverRemindActiveContent="true"/"false" // should we remind the user about active content ?
+	 *    neverAskPayment="true"/"false" // should we remind the user about payment for cascades ?
 	 *    Locale="LOCALE_IDENTIFIER" (two letter iso 639 code) //the Language for the UI to use
 	 *    LookAndFeel="..."             //the LookAndFeel class name
 	 *  >
@@ -530,6 +532,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 						CONFIG_NEVER_REMIND_GOODBYE), false);
 					m_bForwarderNotExplain = XMLUtil.parseValue(n.getNamedItem(JAPConstants.
 						CONFIG_NEVER_EXPLAIN_FORWARD), false);
+					m_bPayCascadeNoAsk = XMLUtil.parseValue(n.getNamedItem(JAPConstants.
+						CONFIG_NEVER_ASK_PAYMENT), false);
 
 				}
 				catch (Exception ex)
@@ -1179,6 +1183,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_NEVER_REMIND_ACTIVE_CONTENT,
 								 mbActCntMessageNeverRemind);
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_NEVER_EXPLAIN_FORWARD, m_bForwarderNotExplain);
+			XMLUtil.setAttribute(e, JAPConstants.CONFIG_NEVER_ASK_PAYMENT, m_bPayCascadeNoAsk);
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_DO_NOT_ABUSE_REMINDER, mbDoNotAbuseReminder);
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_NEVER_REMIND_GOODBYE, mbGoodByMessageNeverRemind);
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_LOCALE, m_Locale.getLanguage());
@@ -2699,6 +2704,16 @@ public final class JAPController extends Observable implements IProxyListener, O
 	public long getMixedBytes()
 	{
 		return JAPModel.getInstance().getMixedBytes();
+	}
+
+	public boolean getDontAskPayment()
+	{
+		return m_bPayCascadeNoAsk;
+	}
+
+	public void setDontAskPayment(boolean a_payCascadeNoAsk)
+	{
+		m_bPayCascadeNoAsk = a_payCascadeNoAsk;
 	}
 
 }
