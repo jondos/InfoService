@@ -184,6 +184,7 @@ public class CaptchaContentPane extends DialogContentPane implements
 
 	public void gotCaptcha(ICaptchaSender a_source, IImageEncodedCaptcha a_captcha)
 	{
+		getPreviousContentPane().getButtonCancel().setEnabled(true);
 		setCaptcha(a_captcha, "<Cha");
 		m_captchaSource = a_source;
 		SwingUtilities.invokeLater(new Runnable()

@@ -45,6 +45,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
@@ -78,6 +82,7 @@ import gui.GUIUtils;
 import gui.JAPHelp;
 import gui.JAPMessages;
 import gui.dialog.CaptchaContentPane;
+import gui.dialog.IDialogOptions;
 import gui.dialog.JAPDialog;
 import gui.dialog.PasswordContentPane;
 import gui.dialog.SimpleWizardContentPane;
@@ -180,6 +185,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	private JProgressBar m_coinstack;
 	private JList m_listAccounts;
 	private boolean m_bReady = true;
+	private boolean m_bCreatingAccount = false;
 
 	public AccountSettingsPanel()
 	{
@@ -617,35 +623,35 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			{
 				double onePercent = 100.0 / (double) dep;
 				long percent = (long) (onePercent * spe);
-				if (percent < 25)
+				if (percent < 12)
 				{
 					m_coinstack.setValue(8);
 				}
-				else if (percent > 12 && percent < 25)
+				else if (percent >= 12 && percent < 25)
 				{
 					m_coinstack.setValue(7);
 				}
-				else if (percent > 25 && percent < 37)
+				else if (percent >= 25 && percent < 37)
 				{
 					m_coinstack.setValue(6);
 				}
-				else if (percent > 37 && percent < 50)
+				else if (percent >= 37 && percent < 50)
 				{
 					m_coinstack.setValue(5);
 				}
-				else if (percent > 50 && percent < 62)
+				else if (percent >= 50 && percent < 62)
 				{
 					m_coinstack.setValue(4);
 				}
-				else if (percent > 62 && percent < 75)
+				else if (percent >= 62 && percent < 75)
 				{
 					m_coinstack.setValue(3);
 				}
-				else if (percent > 75 && percent < 87)
+				else if (percent >= 75 && percent < 87)
 				{
 					m_coinstack.setValue(2);
 				}
-				else if (percent > 87 && percent < 99)
+				else if (percent >= 87 && percent < 99)
 				{
 					m_coinstack.setValue(1);
 				}
@@ -711,48 +717,48 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		   if (choice == JOptionPane.YES_OPTION)
 		   {
 		 /** @todo find out why the wait splash screen looks so ugly
-		   JAPWaitSplash splash = null;
-		   try
-		   {
-			splash = JAPWaitSplash.start("Fetching transfer number...", "Please wait");
-			Thread.sleep(5);
-			transferCertificate = selectedAccount.charge();
-			splash.abort();
-		   }
-		   catch (Exception ex)
-		   {
-			splash.abort();
-			LogHolder.log(LogLevel.DEBUG, LogType.PAY, ex);
-			JOptionPane.showMessageDialog(
-		  view,
-		  "<html>" + JAPMessages.getString("ngTransferNumberError") + "<br>" + ex.getMessage() +
-		  "</html>",
-		  JAPMessages.getString("error"), JOptionPane.ERROR_MESSAGE
-		  );
-			return;
-		   }
+			JAPWaitSplash splash = null;
+			try
+			{
+		  splash = JAPWaitSplash.start("Fetching transfer number...", "Please wait");
+		  Thread.sleep(5);
+		  transferCertificate = selectedAccount.charge();
+		  splash.abort();
+			}
+			catch (Exception ex)
+			{
+		  splash.abort();
+		  LogHolder.log(LogLevel.DEBUG, LogType.PAY, ex);
+		  JOptionPane.showMessageDialog(
+		   view,
+		   "<html>" + JAPMessages.getString("ngTransferNumberError") + "<br>" + ex.getMessage() +
+		   "</html>",
+		   JAPMessages.getString("error"), JOptionPane.ERROR_MESSAGE
+		   );
+		  return;
+			}
 
-		   // try to launch webbrowser
-		   AbstractOS os = AbstractOS.getInstance();
-		   String url = transferCertificate.getBaseUrl();
-		   url += "?transfernum=" + transferCertificate.getTransferNumber();
-		   try
-		   {
-			os.openURLInBrowser(url);
-		   }
-		   catch (Exception e)
-		   {
-			JOptionPane.showMessageDialog(
-		  view,
-		  "<html>" + JAPMessages.getString("ngCouldNotFindBrowser") + "<br>" +
-		  "<h3>" + url + "</h3></html>",
-		  JAPMessages.getString("ngCouldNotFindBrowserTitle"),
-		  JOptionPane.INFORMATION_MESSAGE
-		  );
-		   }
+			// try to launch webbrowser
+			AbstractOS os = AbstractOS.getInstance();
+			String url = transferCertificate.getBaseUrl();
+			url += "?transfernum=" + transferCertificate.getTransferNumber();
+			try
+			{
+		  os.openURLInBrowser(url);
+			}
+			catch (Exception e)
+			{
+		  JOptionPane.showMessageDialog(
+		   view,
+		   "<html>" + JAPMessages.getString("ngCouldNotFindBrowser") + "<br>" +
+		   "<h3>" + url + "</h3></html>",
+		   JAPMessages.getString("ngCouldNotFindBrowserTitle"),
+		   JOptionPane.INFORMATION_MESSAGE
+		   );
+			}
 
-		   m_MyTableModel.fireTableDataChanged();
-		  }*/
+			m_MyTableModel.fireTableDataChanged();
+		   }*/
 	}
 
 	/**
@@ -777,7 +783,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 
 		if (theBI != null)
 		{
-			JAPDialog d = new JAPDialog(getRootPanel(), JAPMessages.getString(MSG_ACCOUNTCREATE), true);
+			final JAPDialog d = new JAPDialog(getRootPanel(), JAPMessages.getString(MSG_ACCOUNTCREATE), true);
 			d.setDefaultCloseOperation(JAPDialog.DO_NOTHING_ON_CLOSE);
 			d.setResizable(false);
 
@@ -786,10 +792,12 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 
 			final BI bi = theBI;
 			m_bReady = true;
+
 			Runnable doIt = new Runnable()
 			{
 				public void run()
 				{
+					m_bCreatingAccount = true;
 					m_bReady = false;
 					try
 					{
@@ -807,6 +815,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 								LogType.PAY);
 						}
 					}
+					m_bCreatingAccount = false;
 				}
 			};
 			WorkerContentPane panel2 = new WorkerContentPane(d,
@@ -823,10 +832,20 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					return false;
 				}
 			};
+			panel2.setDefaultButtonOperation(WorkerContentPane.ON_CANCEL_DISPOSE_DIALOG);
 			panel2.getButtonCancel().setEnabled(false);
+			panel2.setInterruptThreadSafe(false);
 
-			CaptchaContentPane captcha = new CaptchaContentPane(d, panel2);
+			final CaptchaContentPane captcha = new CaptchaContentPane(d, panel2);
 			PayAccountsFile.getInstance().addPaymentListener(captcha);
+			captcha.addComponentListener(new ComponentAdapter()
+			{
+				public void componentShown(ComponentEvent a_event)
+				{
+					m_bCreatingAccount = false;
+				}
+			});
+
 
 			PasswordContentPane pc = null;
 			//First account, ask for password
@@ -840,7 +859,25 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			}
 
 			panel1.updateDialogOptimalSized(panel1);
+
+			d.addWindowListener(new WindowAdapter()
+			{
+				public void windowClosing(WindowEvent e)
+				{
+					if (!m_bCreatingAccount)
+					{
+						if (captcha.isVisible())
+						{
+							captcha.setValue(IDialogOptions.RETURN_VALUE_CLOSED);
+							captcha.checkCancel();
+						}
+						d.dispose();
+					}
+				}
+			});
+
 			d.setLocationCenteredOnOwner();
+			m_bCreatingAccount = false;
 			d.setVisible(true);
 			updateAccountList();
 			if (pc != null && pc.getPassword() != null)
@@ -961,6 +998,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		{
 			JAPDialog d = new JAPDialog(GUIUtils.getParentWindow(this.getRootPanel()),
 										JAPMessages.getString(MSG_ACCPASSWORDTITLE), true);
+
 			PasswordContentPane p = new PasswordContentPane(d, PasswordContentPane.PASSWORD_NEW, "");
 			p.updateDialog();
 			d.pack();
