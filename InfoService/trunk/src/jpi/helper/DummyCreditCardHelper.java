@@ -44,16 +44,25 @@ import jpi.Configuration;
  */
 public class DummyCreditCardHelper implements ICreditCardHelper
 {
+	private static DummyCreditCardHelper ms_instance;
 	private Vector m_listeners;
 
-	public DummyCreditCardHelper()
+	private DummyCreditCardHelper()
 	{
 		m_listeners = new Vector();
 	}
 
-	public void run()
+	public static DummyCreditCardHelper getInstance()
 	{
-		while (true)
+		if (ms_instance == null)
+		{
+			ms_instance = new DummyCreditCardHelper();
+		}
+		return ms_instance;
+
+	}
+
+	public boolean chargePending()
 		{
 			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Fetching pending credit card payments from database");
 			try
@@ -67,13 +76,13 @@ public class DummyCreditCardHelper implements ICreditCardHelper
 					{
 						double ratePerMB = Configuration.getRatePerMB();
 						long cents = Long.parseLong(payment[3]) * 100;
-						double mb = cents/ratePerMB;
+					double mb = cents / ratePerMB;
 						double amount = 1024 * 1024 * mb;
 						LogHolder.log(LogLevel.DEBUG, LogType.PAY,
 									  "Charging account with transfernumber: " + payment[2]
-									  + " Amount: " + (long)amount);
+								  + " Amount: " + (long) amount);
 
-						db.chargeAccount(Long.parseLong(payment[2]), (long)amount);
+					db.chargeAccount(Long.parseLong(payment[2]), (long) amount);
 						db.markPassivePaymentDone(Long.parseLong(payment[0]));
 					}
 				}
@@ -82,12 +91,20 @@ public class DummyCreditCardHelper implements ICreditCardHelper
 			{
 				LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
 							  "Error while processing pending passive payments!");
-				e.printStackTrace();
+			return false;
+		}
+		return true;
 
 			}
+
+	public void run()
+	{
+		while (true)
+		{
+			chargePending();
 			try
 			{
-				Thread.sleep(120000);
+				Thread.sleep(30000);
 			}
 			catch (Exception e)
 			{}

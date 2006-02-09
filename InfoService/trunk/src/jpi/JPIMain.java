@@ -153,7 +153,7 @@ public class JPIMain
 		aiThread.start();
 
 		//start the credit card helper
-		String strHelperClass = "jpi.helper." + Configuration.getCreditCardHelper() + "CreditCardHelper";
+		/*String strHelperClass = "jpi.helper." + Configuration.getCreditCardHelper() + "CreditCardHelper";
 		LogHolder.log(LogLevel.INFO, LogType.PAY, "JPIMain: Launching CreditCardHelper: " + strHelperClass);
 		try
 		{
@@ -166,7 +166,7 @@ public class JPIMain
 		{
 			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
 						  "JPIMain: Could not load helper class: " + strHelperClass);
-		}
+		}*/
 
 		// start InfoService thread for InfoService connections
 		LogHolder.log(LogLevel.INFO, LogType.PAY,

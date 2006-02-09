@@ -386,9 +386,19 @@ public class PICommandUser implements PICommand
 		{
 			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
 						  "Could not store passive payment data in database!");
-		}
-		return new XMLErrorMessage(XMLErrorMessage.ERR_OK);
+			return new XMLErrorMessage(XMLErrorMessage.ERR_INTERNAL_SERVER_ERROR);
 
+		}
+		if (!DummyCreditCardHelper.getInstance().chargePending())
+		{
+			LogHolder.log(LogLevel.ERR, LogType.PAY,
+						  "Could not directly charge pending payments!");
+			return new XMLErrorMessage(XMLErrorMessage.ERR_INTERNAL_SERVER_ERROR);
+		}
+		else
+		{
+		return new XMLErrorMessage(XMLErrorMessage.ERR_OK);
+		}
 	}
 
 	/**

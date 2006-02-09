@@ -48,7 +48,6 @@ import anon.pay.BIConnection;
 import anon.pay.PayAccount;
 import anon.pay.xml.XMLTransCert;
 import anon.pay.xml.XMLTransactionOverview;
-import anon.util.Util;
 import gui.GUIUtils;
 import gui.JAPMessages;
 import gui.dialog.JAPDialog;
@@ -56,6 +55,7 @@ import jap.JAPConstants;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import jap.JAPUtil;
 
 /** This dialog shows an overview of transaction numbers for an account
  *
@@ -66,6 +66,8 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 	/** Messages */
 	private static final String MSG_OK_BUTTON = TransactionOverviewDialog.class.
 		getName() + "_ok_button";
+	private static final String MSG_RELOADBUTTON = TransactionOverviewDialog.class.
+		getName() + "_reloadbutton";
 	private static final String MSG_CANCELBUTTON = TransactionOverviewDialog.class.
 		getName() + "_cancelbutton";
 	private static final String MSG_FETCHING = TransactionOverviewDialog.class.
@@ -80,7 +82,7 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 		getName() + "_received_date";
 
 	private JTable m_tList;
-	private JButton m_okButton;
+	private JButton m_okButton, m_reloadButton;
 	private PayAccount m_account;
 	private JLabel m_fetchingLabel;
 
@@ -93,7 +95,7 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 			setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 			jbInit();
 			setModal(true);
-			setSize(500, 300);
+			setSize(450, 400);
 			setVisible(true);
 		}
 		catch (Exception e)
@@ -117,18 +119,23 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 		c.gridx = 0;
 		c.gridy = 0;
 		c.weighty = 1;
-		c.fill = c.BOTH;
+		c.fill = GridBagConstraints.BOTH;
 		panel1.add(new JScrollPane(m_tList), c);
 		c.weightx = 0;
 		c.weighty = 0;
 		c.fill = c.NONE;
 
 		//The fetching label
+		c.gridy++;
 		m_fetchingLabel = new JLabel(JAPMessages.getString(MSG_FETCHING),
 									 GUIUtils.loadImageIcon(JAPConstants.BUSYFN, true), JLabel.LEADING);
-		//m_fetchingLabel.setVerticalTextPosition(JLabel.);
 		m_fetchingLabel.setHorizontalTextPosition(JLabel.LEADING);
-		bttnPanel.add(m_fetchingLabel);
+		panel1.add(m_fetchingLabel, c);
+
+		//The Reload button
+		m_reloadButton = new JButton(JAPMessages.getString(MSG_RELOADBUTTON));
+		m_reloadButton.addActionListener(this);
+		bttnPanel.add(m_reloadButton);
 
 		//The Ok button
 		m_okButton = new JButton(JAPMessages.getString(MSG_CANCELBUTTON));
@@ -143,6 +150,14 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 		panel1.add(bttnPanel, c);
 
 		getContentPane().add(panel1);
+		doFill();
+
+	}
+
+	private void doFill()
+	{
+		m_reloadButton.setEnabled(false);
+		m_fetchingLabel.setVisible(true);
 
 		Runnable fillList = new Runnable()
 		{
@@ -174,11 +189,13 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 				m_tList.setModel(tableModel);
 				m_okButton.setText(JAPMessages.getString(MSG_OK_BUTTON));
 				m_fetchingLabel.setVisible(false);
+				m_reloadButton.setEnabled(true);
 			}
 		};
 
 		Thread t = new Thread(fillList);
 		t.start();
+
 	}
 
 	public void actionPerformed(ActionEvent e)
@@ -186,6 +203,10 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 		if (e.getSource() == m_okButton)
 		{
 			dispose();
+		}
+		else if (e.getSource() == m_reloadButton)
+		{
+			doFill();
 		}
 	}
 
@@ -246,13 +267,11 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 							return tc.getReceivedDate();
 						}
 					}
+					return null;
 				case 2:
 					if (new Boolean(line[1]).booleanValue())
 					{
-						float amount = Util.parseFloat(line[3]);
-						amount /= (1024 * 1024);
-						int amountInt = Math.round(amount);
-						return String.valueOf(amountInt) + " MB";
+						return JAPUtil.formatBytesValue(Long.parseLong(line[3]));
 					}
 					else
 					{

@@ -36,6 +36,9 @@ import gui.wizard.BasicWizardHost;
 import gui.wizard.WizardPage;
 import jap.JAPController;
 import java.awt.Dimension;
+import gui.dialog.JAPDialog;
+import logging.LogType;
+import anon.pay.xml.XMLPaymentOption;
 
 /**
  * This wizard guides the user through the account charging process
@@ -44,12 +47,17 @@ import java.awt.Dimension;
  */
 public class PaymentWizard extends BasicWizard
 {
-	BasicWizardHost m_host;
-	PaymentWizardWelcomePage m_welcomePage;
-	PaymentWizardMethodSelectionPage m_methodSelectionPage;
-	PaymentWizardPaymentInfoPage m_infoPage;
-	SubmitPage m_submitPage;
-	PayAccount m_payAccount;
+	/** Messages */
+	private static final String MSG_NOTFILLED = PaymentWizard.class.
+		getName() + "_notfilled";
+
+	private BasicWizardHost m_host;
+	private PaymentWizardWelcomePage m_welcomePage;
+	private PaymentWizardMethodSelectionPage m_methodSelectionPage;
+	private PaymentWizardPaymentInfoPage m_infoPage;
+	private SubmitPage m_submitPage;
+	private PayAccount m_payAccount;
+	private XMLPaymentOption m_selectedOption;
 
 	public PaymentWizard(PayAccount a_payAccount)
 	{
@@ -93,6 +101,11 @@ public class PaymentWizard extends BasicWizard
 				);
 			return null;
 		}
+		if (m_PageIndex == 2 && !m_infoPage.checkFields())
+		{
+			JAPDialog.showErrorDialog(m_host.getDialogParent(), JAPMessages.getString(MSG_NOTFILLED), LogType.PAY);
+			return null;
+		}
 
 
 
@@ -105,6 +118,7 @@ public class PaymentWizard extends BasicWizard
 		//Fetch transfer number, get detailed info
 		else if (m_PageIndex == 2)
 		{
+			m_selectedOption = m_methodSelectionPage.getSelectedPaymentOption();
 			m_infoPage.setPaymentOptions(m_methodSelectionPage.getPaymentOptions());
 			m_infoPage.setSelectedPaymentOption(m_methodSelectionPage.getSelectedPaymentOption());
 			m_infoPage.setSelectedCurrency(m_methodSelectionPage.getSelectedCurrency());
@@ -124,5 +138,10 @@ public class PaymentWizard extends BasicWizard
 		super.finish();
 		m_host.getDialogParent().dispose();
 		return null;
+	}
+
+	public XMLPaymentOption getSelectedOption()
+	{
+		return m_selectedOption;
 	}
 }

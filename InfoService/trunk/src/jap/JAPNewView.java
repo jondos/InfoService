@@ -70,7 +70,10 @@ import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JRadioButton;
 import javax.swing.JSeparator;
+import javax.swing.LookAndFeel;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 
@@ -78,19 +81,19 @@ import anon.infoservice.MixCascade;
 import anon.infoservice.StatusInfo;
 import gui.FlippingPanel;
 import gui.JAPDll;
+import gui.JAPHelp;
+import gui.JAPMessages;
 import gui.JAPMixCascadeComboBox;
 import gui.MyProgressBarUI;
 import gui.StatusPanel;
+import jap.forward.JAPRoutingRegistrationStatusObserver;
+import jap.forward.JAPRoutingServerStatisticsListener;
+import jap.forward.JAPRoutingSettings;
+import jap.pay.PaymentMainPanel;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import proxy.IProxyListener;
-import javax.swing.UIManager;
-import javax.swing.LookAndFeel;
-import javax.swing.SwingUtilities;
-import jap.pay.*;
-import jap.forward.*;
-import gui.*;
 
 final public class JAPNewView extends AbstractJAPMainView implements IJAPMainView, ActionListener,
 	JAPObserver
@@ -468,7 +471,14 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			c.anchor = GridBagConstraints.NORTHWEST;
 			c.gridy = 6;
 			m_flippingPanelPayment.setFlipped(false);
+			if (m_bIsSimpleView)
+			{
+				northPanel.add(m_flippingPanelPayment.getSmallPanel(), c);
+			}
+			else
+			{
 			northPanel.add(m_flippingPanelPayment, c);
+			}
 //-----------------------------------------------------------
 			// Separator
 			c.gridwidth = 2;

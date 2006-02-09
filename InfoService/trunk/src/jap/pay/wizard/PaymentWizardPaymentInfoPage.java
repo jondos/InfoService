@@ -458,4 +458,30 @@ public class PaymentWizardPaymentInfoPage extends BasicWizardPage implements Mou
 			copyExtraInfoToClipboard();
 		}
 	}
+
+	/**
+	 * Checks if all fields have been filled.
+	 * @return boolean
+	 */
+	public boolean checkFields()
+	{
+		boolean ok = true;
+		if (m_selectedOption.getType().equals(XMLPaymentOption.OPTION_PASSIVE))
+		{
+			Enumeration e = m_inputFields.elements();
+			while(e.hasMoreElements())
+			{
+				Component c = (Component)e.nextElement();
+				if (c instanceof JTextField)
+				{
+					JTextField tf = (JTextField) c;
+					if (tf.getText() == null || tf.getText().trim().equals(""))
+					{
+						ok = false;
+					}
+				}
+			}
+		}
+		return ok;
+	}
 }
