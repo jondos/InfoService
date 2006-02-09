@@ -66,6 +66,7 @@ public final class JAPModel
 	private int m_TorMaxConnectionsPerRoute = JAPConstants.DEFAULT_TOR_MAX_CONNECTIONS_PER_ROUTE;
 	private int m_TorMaxRouteLen = JAPConstants.DEFAULT_TOR_MAX_ROUTE_LEN;
 	private int m_TorMinRouteLen = JAPConstants.DEFAULT_TOR_MIN_ROUTE_LEN;
+	private int m_MixminionRouteLen = JAPConstants.DEFAULT_MIXMINION_ROUTE_LEN;
 	private boolean m_bPreCreateAnonRoutes = JAPConstants.DEFAULT_TOR_PRECREATE_ROUTES;
 	private boolean m_bUseProxyAuthentication = false;
 
@@ -479,6 +480,16 @@ public final class JAPModel
 	protected void setTorMinRouteLen(int i)
 	{
 		m_TorMinRouteLen = i;
+	}
+
+	protected void setMixminionRouteLen(int i)
+	{
+		m_MixminionRouteLen = i;
+	}
+	
+	public static int getMixminionRouteLen()
+	{
+		return ms_TheModel.m_MixminionRouteLen;
 	}
 
 	protected void setUseProxyAuthentication(boolean a_bUseAuth)

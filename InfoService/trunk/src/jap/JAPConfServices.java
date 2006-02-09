@@ -32,7 +32,7 @@ import java.awt.GridBagLayout;
 
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
-import gui.*;
+import gui.JAPMessages;
 
 /**
  * This is only a wrapper class for the configuration classes under the services node. It is only
@@ -52,6 +52,11 @@ public class JAPConfServices extends AbstractJAPConfModule
 	 * Stores the module for the TOR tab.
 	 */
 	private JAPConfTor m_torModule;
+
+	/**
+	 * Stores the module for the Mixminion tab.
+	 */
+	private JAPConfMixminion m_mixminionModule;
 
 	/**
 	 * Stores the module for the general tab.
@@ -82,6 +87,7 @@ public class JAPConfServices extends AbstractJAPConfModule
 		 */
 		JAPConfAnon anonModule = getAnonModule();
 		JAPConfTor torModule = getTorModule();
+		JAPConfMixminion mixminionModule = getMixminionModule();
 		JAPConfAnonGeneral anonGeneralModule = getAnonGeneralModule();
 
 		synchronized (this)
@@ -91,6 +97,7 @@ public class JAPConfServices extends AbstractJAPConfModule
 			/* call the handler on the service modules */
 			anonModule.recreateRootPanel();
 			torModule.recreateRootPanel();
+			mixminionModule.recreateRootPanel();
 			anonGeneralModule.recreateRootPanel();
 			/* rebuild the services panel */
 
@@ -99,6 +106,7 @@ public class JAPConfServices extends AbstractJAPConfModule
 			if (JAPModel.getDefaultView() != JAPConstants.VIEW_SIMPLIFIED)
 			{
 				m_tabsAnon.addTab(torModule.getTabTitle(), torModule.getRootPanel());
+				m_tabsAnon.addTab(mixminionModule.getTabTitle(), mixminionModule.getRootPanel());
 				m_tabsAnon.addTab(anonGeneralModule.getTabTitle(), anonGeneralModule.getRootPanel());
 			}
 			GridBagLayout rootPanelLayout = new GridBagLayout();
@@ -138,8 +146,9 @@ public class JAPConfServices extends AbstractJAPConfModule
 		/* forward the event to all service modules */
 		boolean resultValue1 = m_anonModule.okPressed();
 		boolean resultValue2 = m_torModule.okPressed();
-		boolean resultValue3 = m_anonGeneralModule.okPressed();
-		return (resultValue1 && resultValue2 && resultValue3);
+		boolean resultValue3 = m_mixminionModule.okPressed();
+		boolean resultValue4 = m_anonGeneralModule.okPressed();
+		return (resultValue1 && resultValue2 && resultValue3 && resultValue4);
 	}
 
 	/**
@@ -150,6 +159,7 @@ public class JAPConfServices extends AbstractJAPConfModule
 		/* forward the event to all service modules */
 		m_anonModule.cancelPressed();
 		m_torModule.cancelPressed();
+		m_mixminionModule.cancelPressed();
 		m_anonGeneralModule.cancelPressed();
 	}
 
@@ -161,6 +171,7 @@ public class JAPConfServices extends AbstractJAPConfModule
 		/* forward the event to all service modules */
 		m_anonModule.resetToDefaultsPressed();
 		m_torModule.resetToDefaultsPressed();
+		m_mixminionModule.resetToDefaultsPressed();
 		m_anonGeneralModule.resetToDefaultsPressed();
 	}
 
@@ -172,6 +183,7 @@ public class JAPConfServices extends AbstractJAPConfModule
 		/* forward the event to all service modules */
 		m_anonModule.updateValues();
 		m_torModule.updateValues();
+		m_mixminionModule.updateValues();
 		m_anonGeneralModule.updateValues();
 	}
 
@@ -207,6 +219,23 @@ public class JAPConfServices extends AbstractJAPConfModule
 			}
 		}
 		return m_torModule;
+	}
+
+	/**
+	 * Returns the Mixminion module. The module is created, if necessary.
+	 *
+	 * @return The Mixminion configuration module.
+	 */
+	private JAPConfMixminion getMixminionModule()
+	{
+		synchronized (this)
+		{
+			if (m_mixminionModule == null)
+			{
+				m_mixminionModule = new JAPConfMixminion();
+			}
+		}
+		return m_mixminionModule;
 	}
 
 	/**

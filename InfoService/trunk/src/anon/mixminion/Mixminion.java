@@ -40,6 +40,14 @@ import anon.tor.TorSocksChannel;
  */
 public class Mixminion implements AnonService
 {
+//	/maximal mixminion routers, that are used
+	public final static int MAX_ROUTE_LEN = 10;
+
+	///minimal mixminion routers, that are used
+	public final static int MIN_ROUTE_LEN = 2;
+	
+	private int m_RouteLength;
+	
 	private static Mixminion ms_theMixminionInstance = null;
 	private ImmutableProxyInterface m_proxyInterface;
 
@@ -50,6 +58,25 @@ public class Mixminion implements AnonService
 	public int initialize(AnonServerDescription anonServer)
 	{
 		return 0;
+	}
+	
+	/**
+	 * sets RouteLength
+	 *
+	 * @param len
+	 * route length
+	 */
+	public void setRouteLength(int len)
+	{
+		if ( (len >= MIN_ROUTE_LEN) && (len <= MAX_ROUTE_LEN))
+		{
+			m_RouteLength = len;
+		}
+	}
+	
+	public int getRouteLength()
+	{
+		return m_RouteLength;
 	}
 
 	public int setProxy(ImmutableProxyInterface a_Proxy)
