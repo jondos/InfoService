@@ -113,6 +113,7 @@ public class PaymentWizardPaymentInfoPage extends BasicWizardPage implements Mou
 		m_panelComponents.add(m_fetchingLabel, m_c);
 		m_fetchingLabel.setVisible(false);
 		createInfoPanel();
+		m_c.fill = m_c.BOTH;
 		m_panelComponents.add(m_infoPanel, m_c);
 	}
 
