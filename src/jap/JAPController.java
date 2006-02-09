@@ -301,7 +301,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	 *
 	 * The configuration is a XML-File with the following structure:
 	 *  <JAP
-	 *    version="0.21"                     // version of the xml struct (DTD) used for saving the configuration
+	 *    version="0.22"                     // version of the xml struct (DTD) used for saving the configuration
 	 *    portNumber=""                     // Listener-Portnumber
 	 *    portNumberSocks=""                // Listener-Portnumber for SOCKS
 	 *    supportSocks=""                   // Will we support SOCKS ?
@@ -391,6 +391,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 	 * 	 <RouteLen min=" " max=" "/>(since Vresion 0.9) //How long should a route be
 	 *   <PreCreateAnonRoutes>True/False</PreCreateAnonRoutes> //Should the routes be created in advance?
 	 * </Tor>
+	 * <Mixminion>    //  Mixminion related seetings (since Version 0.22)
+	 * 	 <RouteLen>...</RouteLen> //How long should a route be
+	 * </Mixminion>
 	 * <Payment //Since version 0.7
 	 *    biHost="..."                      // BI's Hostname
 	 *    biPort="..."                      // BI's portnumber
@@ -850,6 +853,20 @@ public final class JAPController extends Observable implements IProxyListener, O
 								  "JAPController: loadConfigFile: Error loading Tor configuration.");
 				}
 
+				/*loading Mixminion settings*/
+				try
+				{
+					Element elemMixminion = (Element) XMLUtil.getFirstChildByName(root, JAPConstants.CONFIG_Mixminion);
+					Element elemMM = (Element) XMLUtil.getFirstChildByName(elemMixminion, JAPConstants.CONFIG_ROUTE_LEN);
+					int routeLen=XMLUtil.parseValue(elemMM,JAPModel.getMixminionRouteLen());
+					setMixminionRouteLen(routeLen);
+				}
+				catch (Exception ex)
+				{
+					LogHolder.log(LogLevel.INFO, LogType.MISC,
+								  "JAPController: loadConfigFile: Error loading Mixminion configuration.");
+				}
+
 				/* load Payment settings */
 				if (loadPay)
 				{
@@ -1152,7 +1169,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 			Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
 			Element e = doc.createElement("JAP");
 			doc.appendChild(e);
-			XMLUtil.setAttribute(e, JAPConstants.CONFIG_VERSION, "0.21");
+			XMLUtil.setAttribute(e, JAPConstants.CONFIG_VERSION, "0.22");
 			//
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_PORT_NUMBER, JAPModel.getHttpListenerPortNumber());
 			//XMLUtil.setAttribute(e,"portNumberSocks", Integer.toString(JAPModel.getSocksListenerPortNumber()));
@@ -1303,6 +1320,13 @@ public final class JAPController extends Observable implements IProxyListener, O
 			XMLUtil.setValue(elem, JAPModel.isPreCreateAnonRoutesEnabled());
 			elemTor.appendChild(elem);
 			e.appendChild(elemTor);
+
+			/** add mixminion*/
+			Element elemMixminion = doc.createElement(JAPConstants.CONFIG_Mixminion);
+			Element elemMM = doc.createElement(JAPConstants.CONFIG_ROUTE_LEN);
+			XMLUtil.setValue(elemMM, JAPModel.getMixminionRouteLen());
+			elemMixminion.appendChild(elemMM);
+			e.appendChild(elemMixminion);
 
 			/* save payment configuration */
 			PayAccountsFile accounts = PayAccountsFile.getInstance();
@@ -1995,6 +2019,11 @@ public final class JAPController extends Observable implements IProxyListener, O
 	{
 		m_Model.setTorMaxRouteLen(max);
 		m_Model.setTorMinRouteLen(min);
+	}
+
+	public static void setMixminionRouteLen(int len)
+	{
+		m_Model.setMixminionRouteLen(len);
 	}
 
 	//---------------------------------------------------------------------

@@ -32,6 +32,7 @@ import java.awt.Insets;
 
 import anon.tor.Circuit;
 import anon.tor.Tor;
+import anon.mixminion.Mixminion;
 
 public final class JAPConstants
 {
@@ -207,10 +208,13 @@ public final class JAPConstants
 	public final static int TOR_MAX_CONNECTIONS_PER_ROUTE = Circuit.MAX_STREAMS_OVER_CIRCUIT;
 	public final static int TOR_MAX_ROUTE_LEN = Tor.MAX_ROUTE_LEN;
 	public final static int TOR_MIN_ROUTE_LEN = Tor.MIN_ROUTE_LEN;
+	public final static int MIXMINION_MAX_ROUTE_LEN = Mixminion.MAX_ROUTE_LEN;
+	public final static int MIXMINION_MIN_ROUTE_LEN = Mixminion.MIN_ROUTE_LEN;
 	public final static boolean DEFAULT_TOR_PRECREATE_ROUTES = false;
 	public final static int DEFAULT_TOR_MIN_ROUTE_LEN = Tor.MIN_ROUTE_LEN;
 	public final static int DEFAULT_TOR_MAX_ROUTE_LEN = Tor.MIN_ROUTE_LEN + 1;
 	public final static int DEFAULT_TOR_MAX_CONNECTIONS_PER_ROUTE = Circuit.MAX_STREAMS_OVER_CIRCUIT;
+	public final static int DEFAULT_MIXMINION_ROUTE_LEN = Mixminion.MIN_ROUTE_LEN;
 
 	/**
 	 * The minimum bandwidth per user needed for forwarding. This affects the maximum number
@@ -271,6 +275,7 @@ public final class JAPConstants
 	public final static String CONFIG_CONSOLE = "Console";
 	public final static String CONFIG_FILE = "File";
 	public final static String CONFIG_TOR = "Tor";
+	public final static String CONFIG_Mixminion = "Mixminion";
 	public final static String CONFIG_MAX_CONNECTIONS_PER_ROUTE = "MaxConnectionsPerRoute";
 	public final static String CONFIG_TOR_PRECREATE_ANON_ROUTES = "PreCreateAnonRoutes";
 	public final static String CONFIG_ROUTE_LEN = "RouteLen";

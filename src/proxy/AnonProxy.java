@@ -47,6 +47,7 @@ import anon.server.AnonServiceImpl;
 import anon.server.impl.ProxyConnection;
 import anon.tor.Tor;
 import anon.tor.TorAnonServerDescription;
+import anon.mixminion.Mixminion;
 import jap.JAPModel;
 import logging.LogHolder;
 import logging.LogLevel;
@@ -217,6 +218,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		m_Mixminion = AnonServiceFactory.getAnonServiceInstance("Mixminion");
 		m_Mixminion.setProxy(m_proxyInterface);
 		m_Mixminion.initialize(new MixminonServiceDescription());
+		((Mixminion)m_Mixminion).setRouteLength(JAPModel.getMixminionRouteLen());
 		threadRun = new Thread(this, "JAP - AnonProxy");
 		threadRun.start();
 		return ErrorCodes.E_SUCCESS;
