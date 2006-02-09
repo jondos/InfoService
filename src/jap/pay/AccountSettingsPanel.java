@@ -705,6 +705,10 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		XMLTransCert transferCertificate = null;
 
 		PaymentWizard paymentWiz = new PaymentWizard(selectedAccount);
+		if (paymentWiz.getSelectedOption().getName().equals("CreditCard"))
+		{
+			doGetStatement(selectedAccount);
+		}
 
 		/*int choice = JOptionPane.showOptionDialog(
 		 view,

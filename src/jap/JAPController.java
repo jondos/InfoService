@@ -114,6 +114,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 		getName() + "_accpasswordenter";
 	private static final String MSG_LOSEACCOUNTDATA = JAPController.class.
 		getName() + "_loseaccountdata";
+	private static final String MSG_DISABLE_GOODBYE = JAPController.class.getName() +
+		"_disableGoodByMessage";
+	private static final String MSG_ERROR_SAVING_CONFIG = JAPController.class.getName() +
+	"_errorSavingConfig";
 
 	/**
 	 * Stores all MixCascades we know (information comes from infoservice or was entered by a user).
@@ -2096,41 +2100,37 @@ public final class JAPController extends Observable implements IProxyListener, O
 	 */
 	public static void goodBye(boolean bShowConfigSaveErrorMsg)
 	{
-		try
+		int returnValue;
+		JAPDialog.LinkedCheckBox checkBox;
+		if (!m_Controller.mbGoodByMessageNeverRemind)
 		{
 			// show a Reminder message that active contents should be disabled
-			m_Controller.setAnonMode(false);
-			Object[] options =
+			checkBox = new JAPDialog.LinkedCheckBox(false);
+			returnValue = JAPDialog.showConfirmDialog(getView(),
+				JAPMessages.getString(MSG_DISABLE_GOODBYE),
+				JAPDialog.OPTION_TYPE_OK_CANCEL, JAPDialog.MESSAGE_TYPE_INFORMATION, checkBox);
+			if (returnValue == JAPDialog.RETURN_VALUE_OK)
 				{
-				JAPMessages.getString("okButton")};
-			JCheckBox checkboxRemindNever = new JCheckBox(
-				JAPMessages.getString("disableGoodByMessageNeverRemind"));
-			Object[] message =
-				{
-				JAPMessages.getString("disableGoodByMessage"), checkboxRemindNever};
-			if (!m_Controller.mbGoodByMessageNeverRemind)
-			{
-				JOptionPane.showOptionDialog(getView(),
-											 (Object) message,
-											 JAPMessages.getString("disableGoodByMessageTitle"),
-											 JOptionPane.DEFAULT_OPTION,
-											 JOptionPane.WARNING_MESSAGE,
-											 null, options, options[0]);
-				m_Controller.mbGoodByMessageNeverRemind = checkboxRemindNever.isSelected();
+				m_Controller.mbGoodByMessageNeverRemind = checkBox.getState();
 			}
+		}
+			else
+			{
+			returnValue = JAPDialog.RETURN_VALUE_OK;
+			}
+
+		if (returnValue == JAPDialog.RETURN_VALUE_OK)
+		{
 			boolean error = m_Controller.saveConfigFile();
 			if (error && bShowConfigSaveErrorMsg)
 			{
-				LogHolder.log(LogLevel.ERR, LogType.MISC,
-							  "JAPController: saveConfigFile: Error saving configuration to: " +
-							  JAPModel.getInstance().getConfigFile());
-				JAPDialog.showErrorDialog(m_View, JAPMessages.getString("errorSavingConfig"), LogType.MISC);
-			}
+				JAPDialog.showErrorDialog(m_View, JAPMessages.getString(MSG_ERROR_SAVING_CONFIG,
+					JAPModel.getInstance().getConfigFile()), LogType.MISC);
 		}
-		catch (Throwable t)
-		{
-		}
+
+			m_Controller.setAnonMode(false);
 		System.exit(0);
+	}
 	}
 
 	/** Shows the About dialog
