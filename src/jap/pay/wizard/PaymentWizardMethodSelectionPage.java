@@ -58,7 +58,6 @@ import logging.LogLevel;
 import logging.LogType;
 import gui.JAPJIntField;
 import gui.JAPJIntField.IntFieldBounds;
-import jap.pay.AccountSettingsPanel;
 
 public class PaymentWizardMethodSelectionPage extends BasicWizardPage implements ActionListener
 {
@@ -73,7 +72,7 @@ public class PaymentWizardMethodSelectionPage extends BasicWizardPage implements
 	private boolean m_fetched = false;
 	private XMLPaymentOption m_selectedPaymentOption;
 	private PayAccount m_payAccount;
-	private JAPJIntField m_tfAmount;
+	private JComboBox m_cbAmount;
 	private JComboBox m_cbCurrency;
 	private BasicWizardHost m_host;
 
@@ -178,7 +177,8 @@ public class PaymentWizardMethodSelectionPage extends BasicWizardPage implements
 		label = new JLabel(JAPMessages.getString("payAmount"));
 		m_panelComponents.add(label, m_c);
 		m_c.gridwidth = 1;
-		m_tfAmount = new JAPJIntField(new IntFieldBounds()
+		m_cbAmount = new JComboBox(new String[]{"1", "2", "3", "4", "5", "10", "15"});
+		/*m_tfAmount = new JAPJIntField(new IntFieldBounds()
 		{
 			public boolean isZeroAllowed()
 			{
@@ -191,9 +191,9 @@ public class PaymentWizardMethodSelectionPage extends BasicWizardPage implements
 			}
 
 		}
-		);
+		);*/
 		m_c.gridy++;
-		m_panelComponents.add(m_tfAmount, m_c);
+		m_panelComponents.add(m_cbAmount, m_c);
 		m_c.gridx++;
 		m_c.weightx = 1;
 		m_c.weighty = 1;
@@ -208,7 +208,8 @@ public class PaymentWizardMethodSelectionPage extends BasicWizardPage implements
 
 	public String getAmount()
 	{
-		return m_tfAmount.getText();
+		return (String)m_cbAmount.getSelectedItem();
+		//return m_tfAmount.getText();
 	}
 
 	public XMLPaymentOptions getPaymentOptions()
