@@ -48,14 +48,15 @@ import javax.swing.ImageIcon;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JSeparator;
+
 /**
  * Class for painting a mix cascade in the configuration dialog
  */
 final public class ServerListPanel extends JPanel implements ActionListener
 {
-	private final static ImageIcon ms_iconServerBlau=JAPUtil.loadImageIcon(JAPConstants.IMAGE_SERVER_BLAU, true);
-	private final static ImageIcon ms_iconServerRed=JAPUtil.loadImageIcon(JAPConstants.IMAGE_SERVER_ROT, true);
-	private final static ImageIcon ms_iconServer=JAPUtil.loadImageIcon(JAPConstants.IMAGE_SERVER, true);
+	private final static ImageIcon ms_iconServerBlau = JAPUtil.loadImageIcon(JAPConstants.IMAGE_SERVER_BLAU, true);
+	private final static ImageIcon ms_iconServerRed = JAPUtil.loadImageIcon(JAPConstants.IMAGE_SERVER_ROT, true);
+	private final static ImageIcon ms_iconServer = JAPUtil.loadImageIcon(JAPConstants.IMAGE_SERVER, true);
 	private ButtonGroup m_bgMixe;
 	private int m_selectedIndex;
 	private Vector m_itemListeners;
@@ -67,26 +68,28 @@ final public class ServerListPanel extends JPanel implements ActionListener
 	public ServerListPanel(int a_numberOfMixes, boolean a_enabled)
 	{
 		m_itemListeners = new Vector();
-		GridBagLayout layout = new GridBagLayout();
+		GridBagLayout la = new GridBagLayout();
 		GridBagConstraints constraints = new GridBagConstraints();
 		m_bgMixe = new ButtonGroup();
 		m_selectedIndex = 0;
 
-		this.setLayout(layout);
+		setLayout(la);
 		constraints.anchor = GridBagConstraints.WEST;
+		constraints.weightx = 0;
+		constraints.fill = GridBagConstraints.NONE;
 
 		for (int i = 0; i < a_numberOfMixes; i++)
 		{
+
 			//Insert a line from the previous mix
 			if (i != 0)
 			{
 				JSeparator line = new JSeparator();
 				line.setPreferredSize(new Dimension(50, 3));
 				line.setSize(50, 3);
-				layout.setConstraints(line, constraints);
-				this.add(line);
+				la.setConstraints(line, constraints);
+				add(line);
 			}
-
 			//Create the mix icon and place it in the panel
 			AbstractButton mix = new JRadioButton(ms_iconServer);
 			mix.setToolTipText(JAPMessages.getString("serverPanelAdditional"));
@@ -100,12 +103,21 @@ final public class ServerListPanel extends JPanel implements ActionListener
 			{
 				mix.setSelected(true);
 			}
-			layout.setConstraints(mix, constraints);
-			this.add(mix);
+			if (i == a_numberOfMixes - 1)
+			{
+				constraints.weightx = 1;
+			}
+
+			la.setConstraints(mix, constraints);
+			add(mix);
 			m_bgMixe.add(mix);
 			if (!a_enabled)
+			{
 				mix.setEnabled(false);
+			}
+
 		}
+
 	}
 
 	/**
@@ -116,12 +128,12 @@ final public class ServerListPanel extends JPanel implements ActionListener
 	{
 		Object source = e.getSource();
 		Enumeration mixes = m_bgMixe.getElements();
-		int index=0;
+		int index = 0;
 		while (mixes.hasMoreElements())
 		{
 			if (source == mixes.nextElement())
 			{
-				m_selectedIndex=index;
+				m_selectedIndex = index;
 				ItemEvent itemEvent = new ItemEvent( (AbstractButton) source, ItemEvent.ITEM_STATE_CHANGED,
 					source, ItemEvent.SELECTED);
 				Enumeration enumer = m_itemListeners.elements();
