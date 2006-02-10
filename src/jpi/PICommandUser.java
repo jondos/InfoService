@@ -64,6 +64,8 @@ import jpi.util.XMLCaptcha;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import java.util.Vector;
+import jpi.helper.DummyCreditCardHelper;
 
 /**
  * This class contains the functionality for talking to a JAP. For
@@ -406,7 +408,7 @@ public class PICommandUser implements PICommand
 	 * @param a_data byte[]
 	 * @return IXMLEncodable
 	 */
-	rivate IXMLEncodable getTransactionOverview(byte[] a_data)
+	private IXMLEncodable getTransactionOverview(byte[] a_data)
 		{
 			XMLTransactionOverview overview = null;
 			Vector tans = null;
