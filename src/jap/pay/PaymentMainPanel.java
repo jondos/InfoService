@@ -37,22 +37,27 @@ import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Image;
 import java.awt.Insets;
 import java.awt.MediaTracker;
 import javax.swing.ImageIcon;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
+import javax.swing.SwingConstants;
 
+import anon.pay.AIControlChannel;
 import anon.pay.PayAccount;
 import anon.pay.PayAccountsFile;
 import anon.pay.xml.XMLBalance;
 import anon.pay.xml.XMLErrorMessage;
-import anon.util.captcha.IImageEncodedCaptcha;
 import anon.util.captcha.ICaptchaSender;
+import anon.util.captcha.IImageEncodedCaptcha;
+import gui.FlippingPanel;
 import gui.GUIUtils;
 import gui.JAPMessages;
 import gui.MyProgressBarUI;
@@ -66,11 +71,6 @@ import jap.JAPUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import javax.swing.JComponent;
-import javax.swing.SwingConstants;
-import java.awt.Dimension;
-import gui.FlippingPanel;
-import anon.pay.AIControlChannel;
 
 public class PaymentMainPanel extends FlippingPanel
 {
@@ -288,7 +288,7 @@ public class PaymentMainPanel extends FlippingPanel
 		this.setSmallPanel(smallPanel);
 
 		PayAccountsFile.getInstance().addPaymentListener(m_MyPaymentListener);
-		updateDisplay(null);
+		updateDisplay(PayAccountsFile.getInstance().getActiveAccount());
 	}
 
 	/**
@@ -332,27 +332,27 @@ public class PaymentMainPanel extends FlippingPanel
 				double deposit = (double) activeAccount.getDeposit();
 				double credit = (double) activeAccount.getCertifiedCredit();
 				double percent = credit / deposit;
-				if (percent > 0.8)
+				if (percent > 0.83)
 				{
 					m_BalanceProgressBar.setValue(5);
 					m_BalanceSmallProgressBar.setValue(5);
 				}
-				else if (percent > 0.6)
+				else if (percent > 0.66)
 				{
 					m_BalanceProgressBar.setValue(4);
 					m_BalanceSmallProgressBar.setValue(4);
 				}
-				else if (percent > 0.4)
+				else if (percent > 0.49)
 				{
 					m_BalanceProgressBar.setValue(3);
 					m_BalanceSmallProgressBar.setValue(3);
 				}
-				else if (percent > 0.2)
+				else if (percent > 0.32)
 				{
 					m_BalanceProgressBar.setValue(2);
 					m_BalanceSmallProgressBar.setValue(2);
 				}
-				else if (credit != 0)
+				else if (credit > 0.15)
 				{
 					m_BalanceProgressBar.setValue(1);
 					m_BalanceSmallProgressBar.setValue(1);

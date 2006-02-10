@@ -27,13 +27,13 @@
  */
 package anon.infoservice;
 
-import java.net.InetAddress;
 import java.util.Enumeration;
 import java.util.Vector;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+import org.w3c.dom.Node;
 
 import anon.AnonServerDescription;
 import anon.crypto.JAPCertificate;
@@ -107,6 +107,11 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 	private boolean m_userDefined;
 
 	/**
+	 * True, if this MixCascade is a payment cascade.
+	 */
+	private boolean m_isPayment;
+
+	/**
 	 * True if the certificate of the cascade is signed by a root certificate.
 	 */
 	private boolean m_isCertified = true;
@@ -148,6 +153,18 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 		}
 		Element nameNode = (Element) (nameNodes.item(0));
 		m_strName = nameNode.getFirstChild().getNodeValue();
+
+		/* get payment info */
+		Node payNode = XMLUtil.getFirstChildByName(a_mixCascadeNode, "Payment");
+		if (payNode != null)
+		{
+			m_isPayment = XMLUtil.parseAttribute(payNode, "required", false);
+		}
+		else
+		{
+			m_isPayment = false;
+		}
+
 		/* get the listener interfaces */
 		NodeList networkNodes = a_mixCascadeNode.getElementsByTagName("Network");
 		if (networkNodes.getLength() == 0)
@@ -790,6 +807,11 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 	public boolean isCertified()
 	{
 		return m_isCertified;
+	}
+
+	public boolean isPayment()
+	{
+		return m_isPayment;
 	}
 
 }

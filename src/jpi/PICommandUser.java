@@ -406,43 +406,46 @@ public class PICommandUser implements PICommand
 	 * @param a_data byte[]
 	 * @return IXMLEncodable
 	 */
-	private IXMLEncodable getTransactionOverview(byte[] a_data)
-	{
-		XMLTransactionOverview overview = null;
-		try
+	rivate IXMLEncodable getTransactionOverview(byte[] a_data)
 		{
-			overview = new XMLTransactionOverview(a_data);
-		}
-		catch (Exception e)
-		{
-			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
-						  "Could not create XMLTransactionOverview from POST data:" + e.getMessage());
-		}
-		Enumeration tans = overview.getTans().elements();
-		while (tans.hasMoreElements())
-		{
-			String[] line = (String[]) tans.nextElement();
-			//Get "used" and "date" attribute from database
-			DBInterface db = null;
+			XMLTransactionOverview overview = null;
+			Vector tans = null;
 			try
 			{
-				db = DBSupplier.getDataBase();
+				overview = new XMLTransactionOverview(a_data);
+				tans = (Vector) overview.getTans().clone();
 			}
 			catch (Exception e)
 			{
 				LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
-							  "Could not connect to Database:" + e.getMessage());
+							  "Could not create XMLTransactionOverview from POST data:" + e.getMessage());
+				return null;
 			}
-			if (db != null)
+
+			for (int i=0;i<tans.size();i++)
 			{
-				boolean used = db.isTanUsed(Long.parseLong(line[0]));
-				long usedDate = db.getUsedDate(Long.parseLong(line[0]));
-				long amount = db.getTransferAmount(Long.parseLong(line[0]));
-				overview.setUsed(Long.parseLong(line[0]), used, usedDate, amount);
+				String[] line = (String[]) tans.elementAt(i);
+				//Get "used" and "date" attribute from database
+				DBInterface db = null;
+				try
+				{
+					db = DBSupplier.getDataBase();
+				}
+				catch (Exception e)
+				{
+					LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
+								  "Could not connect to Database:" + e.getMessage());
+				}
+				if (db != null)
+				{
+					boolean used = db.isTanUsed(Long.parseLong(line[0]));
+					long usedDate = db.getUsedDate(Long.parseLong(line[0]));
+					long amount = db.getTransferAmount(Long.parseLong(line[0]));
+					overview.setUsed(Long.parseLong(line[0]), used, usedDate, amount);
+				}
 			}
+			return overview;
 		}
-		return overview;
-	}
 
 	/**
 	 * Generates a random challenge in {@link XMLChallenge} format.

@@ -133,11 +133,12 @@ final class JAPMixCascadeComboBoxListCellRender implements ListCellRenderer
 	private JLabel m_componentUserDefinedCascade;
 	private JLabel m_componentAvailableCascade;
 	private JLabel m_componentNotCertifiedCascade;
+	private JLabel m_componentPaymentCascade;
 
 	public JAPMixCascadeComboBoxListCellRender()
 	{
 		m_componentNoServer = new JLabel(JAPMessages.getString("ngMixComboNoServers"));
-		m_componentNoServer.setIcon(JAPUtil.loadImageIcon(JAPConstants.IMAGE_ERROR, true));
+		m_componentNoServer.setIcon(GUIUtils.loadImageIcon(JAPConstants.IMAGE_ERROR, true));
 		m_componentNoServer.setBorder(new EmptyBorder(0, 3, 0, 3));
 		m_componentNoServer.setForeground(Color.red);
 
@@ -150,22 +151,28 @@ final class JAPMixCascadeComboBoxListCellRender implements ListCellRenderer
 		m_componentUserServer.setBorder(new EmptyBorder(1, 3, 1, 3));
 		m_componentUserServer.setHorizontalAlignment(SwingConstants.LEFT);
 		m_componentUserServer.setOpaque(true);
-		m_componentUserDefinedCascade = new JLabel(JAPUtil.loadImageIcon(JAPConstants.
+		m_componentUserDefinedCascade = new JLabel(GUIUtils.loadImageIcon(JAPConstants.
 			IMAGE_CASCADE_MANUELL, true));
 		m_componentUserDefinedCascade.setOpaque(true);
 		m_componentUserDefinedCascade.setHorizontalAlignment(SwingConstants.LEFT);
 		m_componentUserDefinedCascade.setBorder(new EmptyBorder(1, 3, 1, 3));
-		m_componentAvailableCascade = new JLabel(JAPUtil.loadImageIcon(JAPConstants.
+		m_componentAvailableCascade = new JLabel(GUIUtils.loadImageIcon(JAPConstants.
 			IMAGE_CASCADE_INTERNET, true));
 		m_componentAvailableCascade.setHorizontalAlignment(SwingConstants.LEFT);
 		m_componentAvailableCascade.setOpaque(true);
 		m_componentAvailableCascade.setBorder(new EmptyBorder(1, 3, 1, 3));
 
-		m_componentNotCertifiedCascade = new JLabel(JAPUtil.loadImageIcon(JAPConstants.
+		m_componentNotCertifiedCascade = new JLabel(GUIUtils.loadImageIcon(JAPConstants.
 			IMAGE_CASCADE_NOT_CERTIFIED, true));
 		m_componentNotCertifiedCascade.setHorizontalAlignment(SwingConstants.LEFT);
 		m_componentNotCertifiedCascade.setOpaque(true);
 		m_componentNotCertifiedCascade.setBorder(new EmptyBorder(1, 3, 1, 3));
+
+		m_componentPaymentCascade = new JLabel(GUIUtils.loadImageIcon(JAPConstants.
+			IMAGE_CASCADE_PAYMENT, true));
+		m_componentPaymentCascade.setHorizontalAlignment(SwingConstants.LEFT);
+		m_componentPaymentCascade.setOpaque(true);
+		m_componentPaymentCascade.setBorder(new EmptyBorder(1, 3, 1, 3));
 
 	}
 
@@ -198,7 +205,14 @@ final class JAPMixCascadeComboBoxListCellRender implements ListCellRenderer
 		{
 			if (cascade.isCertified())
 			{
+				if (cascade.isPayment())
+				{
+					l = m_componentPaymentCascade;
+				}
+				else
+				{
 			l = m_componentAvailableCascade;
+				}
 			}
 			else
 			{

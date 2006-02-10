@@ -66,6 +66,7 @@ import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.ListenerInterface;
 import anon.infoservice.MixCascade;
 import anon.infoservice.MixInfo;
+import gui.GUIUtils;
 import gui.JAPHelp;
 import gui.JAPJIntField;
 import gui.JAPMessages;
@@ -77,6 +78,8 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import platform.AbstractOS;
+import javax.swing.SwingConstants;
+import javax.swing.ScrollPaneConstants;
 
 class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, ActionListener,
 	ListSelectionListener, ItemListener, KeyListener, Observer
@@ -93,10 +96,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 	private InfoServiceTempLayer m_infoService;
 
-	//private JAPJIntField m_tfMixPortNumber;
-	//private JTextField m_tfMixHost;
-
-	//private JCheckBox m_cbMixManual;
 	private JButton m_bttnFetchCascades;
 	private JList m_listMixCascade;
 
@@ -151,14 +150,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	public void recreateRootPanel()
 	{
 		Font font = getFontSetting();
-		//m_tfMixHost = new JTextField();
-		//m_tfMixHost.setFont(font);
-		//m_tfMixPortNumber = new JAPJIntField();
-		//m_tfMixPortNumber.setFont(font);
-		//m_tfMixHost.setEditable(false);
-		//m_tfMixPortNumber.setEditable(false);
-		//m_cbMixManual = new JCheckBox(JAPMessages.getString("settingsAnonRadio3"));
-		//m_cbMixManual.setFont(font);
 		m_bttnFetchCascades = new JButton(JAPMessages.getString("settingsAnonFetch"));
 		m_bttnFetchCascades.setFont(font);
 		if (JAPModel.isSmallDisplay())
@@ -178,27 +169,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		m_listMixCascade.setFont(font);
 
 		m_listMixCascade.setEnabled(true);
-		/*m_cbMixManual.addActionListener(new ActionListener()
-		   {
-		 public void actionPerformed(ActionEvent e)
-		 {
-		  if (m_cbMixManual.isSelected())
-		  {
-		   LogHolder.log(LogLevel.DEBUG, LogType.GUI, "JAPConf:m_rbMixStep3 selected");
-		   m_bttnFetchCascades.setEnabled(false);
-		   m_listMixCascade.setEnabled(false);
-		   //m_tfMixHost.setEditable(true);
-		   //m_tfMixPortNumber.setEditable(true);
-		  }
-		  else
-		  {
-		   m_bttnFetchCascades.setEnabled(true);
-		   m_listMixCascade.setEnabled(true);
-		   //m_tfMixHost.setEditable(false);
-		   //m_tfMixPortNumber.setEditable(false);
-		  }
-		 }
-		   });*/
 		drawCompleteDialog();
 	}
 
@@ -212,59 +182,76 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		}
 		GridBagLayout layout = new GridBagLayout();
 		GridBagConstraints c = new GridBagConstraints();
-		c.gridx = 0;
-		c.gridy = 0;
-		c.anchor = GridBagConstraints.NORTHWEST;
-		c.insets = new Insets(5, 5, 5, 5);
-
-		if (a_strCascadeName.length() > 65)
+		if (m_serverPanel == null)
 		{
-			a_strCascadeName = a_strCascadeName.substring(0, 65);
-			a_strCascadeName = a_strCascadeName + "...";
+			m_serverPanel = new JPanel();
+			m_rootPanelConstraints.gridx = 0;
+			m_rootPanelConstraints.gridy = 2;
+			m_rootPanelConstraints.weightx = 1;
+			m_rootPanelConstraints.weighty = 0;
+			m_rootPanelConstraints.anchor = GridBagConstraints.NORTHWEST;
+			m_rootPanelConstraints.fill = GridBagConstraints.BOTH;
+			pRoot.add(m_serverPanel, m_rootPanelConstraints);
 		}
-		JAPMultilineLabel l = new JAPMultilineLabel(JAPMessages.getString("infoAboutCascade")
-			+ "\n" + a_strCascadeName);
-
-		if (m_serverPanel != null)
+		else
 		{
 			m_serverPanel.removeAll();
 		}
 
-		m_serverPanel = new JPanel();
 		m_serverPanel.setLayout(layout);
+		c.gridx = 0;
+		c.gridy = 0;
+		c.anchor = GridBagConstraints.NORTHWEST;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.weightx = 1;
+		c.weighty = 0;
+		c.insets = new Insets(5, 10, 5, 5);
+		if (a_strCascadeName == null || a_strCascadeName.length() < 1)
+		{
+			a_strCascadeName = " ";
+		}
+		else if (a_strCascadeName.length() > 65)
+		{
+			a_strCascadeName = a_strCascadeName.substring(0, 65);
+			a_strCascadeName = a_strCascadeName + "...";
+		}
+		JAPMultilineLabel label = new JAPMultilineLabel(JAPMessages.getString("infoAboutCascade")
+			+ "\n" + a_strCascadeName);
+		m_serverPanel.add(label, c);
+
 		m_serverList = new ServerListPanel(a_numberOfMixes, a_enabled);
 		m_serverList.addItemListener(this);
-
 		c.insets = new Insets(5, 10, 5, 5);
-		m_serverPanel.add(l, c);
 		c.gridy = 1;
 		c.insets = new Insets(2, 20, 2, 2);
 		m_serverPanel.add(m_serverList, c);
-		m_serverList.addItemListener(this);
 
-		m_rootPanelConstraints.gridx = 0;
-		m_rootPanelConstraints.gridy = 2;
-		m_rootPanelConstraints.weightx = 0;
-		m_rootPanelConstraints.weighty = 0;
-		m_rootPanelConstraints.anchor = GridBagConstraints.NORTHWEST;
-		m_rootPanelConstraints.fill = GridBagConstraints.NONE;
-		pRoot.add(m_serverPanel, m_rootPanelConstraints);
 	}
 
 	private void drawServerInfoPanel(String a_operator, String a_url, String a_location)
 	{
 		GridBagLayout layout = new GridBagLayout();
 		GridBagConstraints c = new GridBagConstraints();
-		c.insets = new Insets(5, 10, 5, 5);
 
-		if (m_serverInfoPanel != null)
+		if (m_serverInfoPanel == null)
+		{
+			m_serverInfoPanel = new JPanel();
+			m_rootPanelConstraints.anchor = GridBagConstraints.NORTHWEST;
+			m_rootPanelConstraints.gridx = 0;
+			m_rootPanelConstraints.gridy = 3;
+			m_rootPanelConstraints.weightx = 1.0;
+			m_rootPanelConstraints.weighty = 0;
+			m_rootPanelConstraints.fill = GridBagConstraints.BOTH;
+			pRoot.add(m_serverInfoPanel, m_rootPanelConstraints);
+		}
+		else
 		{
 			m_serverInfoPanel.removeAll();
 		}
-		m_serverInfoPanel = new JPanel();
 		m_serverInfoPanel.setLayout(layout);
 
 		JLabel l = new JLabel(JAPMessages.getString("infoAboutMix"));
+		c.insets = new Insets(5, 10, 5, 5);
 		c.gridx = 0;
 		c.gridy = 0;
 		c.weightx = 0;
@@ -306,13 +293,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		c.gridx = 1;
 		m_serverInfoPanel.add(m_locationLabel, c);
 
-		m_serverInfoPanel.setPreferredSize(new Dimension(300, 200));
-		m_rootPanelConstraints.anchor = GridBagConstraints.NORTHWEST;
-		m_rootPanelConstraints.gridx = 0;
-		m_rootPanelConstraints.gridy = 3;
-		m_rootPanelConstraints.weightx = 1.0;
-		m_rootPanelConstraints.weighty = 0;
-		pRoot.add(m_serverInfoPanel, m_rootPanelConstraints);
 	}
 
 	private void drawManualPanel(String a_hostName, String a_port, boolean a_newCascade)
@@ -395,6 +375,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			pRoot.remove(m_serverPanel);
 			pRoot.remove(m_serverInfoPanel);
 			m_serverPanel = null;
+			m_serverInfoPanel = null;
 		}
 
 		pRoot.updateUI();
@@ -444,7 +425,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		c.fill = GridBagConstraints.BOTH;
 		c.insets = new Insets(5, 5, 0, 5);
 		JScrollPane scroll = new JScrollPane(m_listMixCascade);
-		scroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+		scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 		scroll.setMinimumSize(new Dimension(100, 100));
 		m_cascadesPanel.add(scroll, c);
 
@@ -560,7 +541,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 		pRoot.add(m_cascadesPanel, m_rootPanelConstraints);
 
-		m_rootPanelConstraints.weightx = 0;
+		m_rootPanelConstraints.weightx = 1;
 		m_rootPanelConstraints.weighty = 0;
 		JSeparator sep = new JSeparator();
 		m_rootPanelConstraints.gridy = 1;
@@ -572,40 +553,44 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	{
 		m_rootPanelLayout = new GridBagLayout();
 		m_rootPanelConstraints = new GridBagConstraints();
-
+		m_cascadesPanel = null;
+		m_serverPanel = null;
+		m_serverInfoPanel = null;
+		m_manualPanel = null;
 		pRoot = getRootPanel();
 		pRoot.removeAll();
 		pRoot.setLayout(m_rootPanelLayout);
 		m_rootPanelConstraints.anchor = GridBagConstraints.NORTHWEST;
 
 		drawCascadesPanel();
+		drawServerPanel(3, "", false);
 		drawServerInfoPanel("", "", "");
 	}
 
 	public void itemStateChanged(ItemEvent e)
 	{
-		int server = m_serverList.getSelectedIndex();
-		MixCascade cascade = (MixCascade) m_listMixCascade.getSelectedValue();
-		if (!cascade.isUserDefined())
-		{
-			String selectedMixId = (String) cascade.getMixIds().elementAt(server);
-			try
-			{
-				m_operatorLabel.setText(m_infoService.getOperator(selectedMixId));
-				m_operatorLabel.setToolTipText(m_infoService.getOperator(selectedMixId));
-				m_locationLabel.setText(m_infoService.getLocation(selectedMixId));
-				m_urlLabel.setText(URL_BEGIN + m_infoService.getUrl(selectedMixId)
-								   + URL_END);
-			}
-			catch (Exception ex)
-			{
-				LogHolder.log(LogLevel.ERR, LogType.GUI, "Could not retrieve information from Infoservice");
-				m_operatorLabel.setText("");
-				m_operatorLabel.setToolTipText("");
-				m_locationLabel.setText("");
-				m_urlLabel.setText("");
-			}
-		}
+			int server = m_serverList.getSelectedIndex();
+		 MixCascade cascade = (MixCascade) m_listMixCascade.getSelectedValue();
+		 if (!cascade.isUserDefined())
+		 {
+		  String selectedMixId = (String) cascade.getMixIds().elementAt(server);
+		  try
+		  {
+		   m_operatorLabel.setText(m_infoService.getOperator(selectedMixId));
+		   m_operatorLabel.setToolTipText(m_infoService.getOperator(selectedMixId));
+		   m_locationLabel.setText(m_infoService.getLocation(selectedMixId));
+		   m_urlLabel.setText(URL_BEGIN + m_infoService.getUrl(selectedMixId)
+				  + URL_END);
+		  }
+		  catch (Exception ex)
+		  {
+		   LogHolder.log(LogLevel.ERR, LogType.GUI, "Could not retrieve information from Infoservice");
+		   m_operatorLabel.setText("");
+		   m_operatorLabel.setToolTipText("");
+		   m_locationLabel.setText("");
+		   m_urlLabel.setText("");
+		  }
+		 }
 
 	}
 
@@ -672,20 +657,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 	public void onUpdateValues()
 	{
-		//MixCascade mixCascade = m_Controller.getCurrentMixCascade();
-		//m_tfMixHost.setText(mixCascade.getListenerInterface(0).getHost());
-		//m_tfMixPortNumber.setText(Integer.toString(mixCascade.getListenerInterface(0).getPort()));
 		updateMixCascadeCombo();
-		/*if (!m_cbMixManual.isSelected())
-		   {
-		 try
-		 {
-		  m_listMixCascade.setSelectedValue(mixCascade, true);
-		 }
-		 catch (Exception e)
-		 {
-		 }
-		   }*/
 	}
 
 	private void fetchCascades(boolean bShowError)
@@ -797,7 +769,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		}
 		else if (e.getSource() == m_manualCascadeButton)
 		{
-			this.drawManualPanel(null, null, true);
+			drawManualPanel(null, null, true);
 			mb_manualCascadeNew = true;
 			m_deleteCascadeButton.setEnabled(false);
 			m_cancelCascadeButton.setEnabled(true);
@@ -1059,49 +1031,49 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	 */
 	public void valueChanged(ListSelectionEvent e)
 	{
-		m_showEditPanelButton.setEnabled(false);
-		//Object source = e.getSource();
-		if (!e.getValueIsAdjusting())
-		{
-			if ( /*m_listMixCascade.getLastVisibleIndex() > -1 &&*/
-					m_listMixCascade.getSelectedIndex() > -1)
+			m_showEditPanelButton.setEnabled(false);
+		 //Object source = e.getSource();
+		 if (!e.getValueIsAdjusting())
+		 {
+		  if (m_listMixCascade.getSelectedIndex() > -1)
+		  {
+		   MixCascade cascade = (MixCascade) m_listMixCascade.getSelectedValue();
+		   String cascadeId = cascade.getId();
+
+		   if (m_infoService != null)
+		   {
+			if (m_infoService.getNumOfMixes(cascadeId) == -1)
 			{
-				MixCascade cascade = (MixCascade) m_listMixCascade.getSelectedValue();
-				String cascadeId = cascade.getId();
-
-				if (m_infoService != null)
-				{
-					if (m_infoService.getNumOfMixes(cascadeId) == -1)
-					{
-						this.drawServerPanel(3, "", false);
-					}
-					else
-					{
-						this.drawServerPanel(m_infoService.getNumOfMixes(cascadeId), cascade.getName(), true);
-					}
-					m_numOfUsersLabel.setText(m_infoService.getNumOfUsers(cascadeId));
-					m_reachableLabel.setText(m_infoService.getHosts(cascadeId));
-					m_portsLabel.setText(m_infoService.getPorts(cascadeId));
-				}
-				this.drawServerInfoPanel(null, null, null);
-
-				if (cascade.isUserDefined())
-				{
-					m_showEditPanelButton.setEnabled(true);
-				}
-
-				if (m_Controller.getCurrentMixCascade().getName().equalsIgnoreCase(cascade.getName()))
-				{
-					m_selectCascadeButton.setEnabled(false);
-				}
-				else
-				{
-					m_selectCascadeButton.setEnabled(true);
-				}
-				itemStateChanged(null);
+			 drawServerPanel(3, "", false);
 			}
-		}
+			else
+			{
+			 drawServerPanel(m_infoService.getNumOfMixes(cascadeId), cascade.getName(), true);
+			}
+			m_numOfUsersLabel.setText(m_infoService.getNumOfUsers(cascadeId));
+			m_reachableLabel.setText(m_infoService.getHosts(cascadeId));
+			m_portsLabel.setText(m_infoService.getPorts(cascadeId));
+		   }
+		   drawServerInfoPanel(null, null, null);
+
+		   if (cascade.isUserDefined())
+		   {
+			m_showEditPanelButton.setEnabled(true);
+		   }
+
+		   if (m_Controller.getCurrentMixCascade().getName().equalsIgnoreCase(cascade.getName()))
+		   {
+			m_selectCascadeButton.setEnabled(false);
+		   }
+		   else
+		   {
+			m_selectCascadeButton.setEnabled(true);
+		   }
+		   itemStateChanged(null);
+		  }
+		 }
 	}
+
 
 	/**
 	 * keyTyped
@@ -1203,7 +1175,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 /*
  * Allows usage of icons in elements of the MixCascade list
  */
-class CustomRenderer extends DefaultListCellRenderer
+final class CustomRenderer extends DefaultListCellRenderer
 {
 	public Component getListCellRendererComponent(JList list, Object value,
 												  int index, boolean isSelected, boolean cellHasFocus)
@@ -1216,12 +1188,17 @@ class CustomRenderer extends DefaultListCellRenderer
 			if ( ( (MixCascade) value).isUserDefined())
 			{
 				l = new JLabel( ( (MixCascade) value).getName(),
-							   JAPUtil.loadImageIcon("servermanuell.gif", true), LEFT);
+							   GUIUtils.loadImageIcon(JAPConstants.IMAGE_CASCADE_MANUELL, true), LEFT);
+			}
+			else if ( ( (MixCascade) value).isPayment())
+			{
+				l = new JLabel( ( (MixCascade) value).getName(),
+							   GUIUtils.loadImageIcon(JAPConstants.IMAGE_CASCADE_PAYMENT, true), LEFT);
 			}
 			else
 			{
 				l = new JLabel( ( (MixCascade) value).getName(),
-							   JAPUtil.loadImageIcon("serverfrominternet.gif", true), LEFT);
+							   GUIUtils.loadImageIcon(JAPConstants.IMAGE_CASCADE_INTERNET, true), LEFT);
 			}
 
 			l.setToolTipText( ( (MixCascade) value).getName());
@@ -1263,7 +1240,7 @@ class CustomRenderer extends DefaultListCellRenderer
  * Temporary image of relevant infoservice entries. For better response time
  * of the GUI.
  */
-class InfoServiceTempLayer
+final class InfoServiceTempLayer
 {
 	private Vector m_Cascades;
 	private Vector m_Mixes;
@@ -1497,13 +1474,13 @@ class InfoServiceTempLayer
  *
  * Cascade database entry for the temporary infoservice.
  */
-class TempCascade
+final class TempCascade
 {
 	private String m_id;
 	private String m_users;
 	private String m_ports;
 	private String m_hosts;
-	int m_numOfMixes;
+	private int m_numOfMixes;
 
 	public TempCascade(String a_id, String a_numOfUsers, String a_hosts, String a_ports, int a_numOfMixes)
 	{
@@ -1544,7 +1521,7 @@ class TempCascade
 /**
  * Mix database entry for the temporary cascade
  */
-class TempMix
+final class TempMix
 {
 	private String m_id;
 	private String m_operator;
