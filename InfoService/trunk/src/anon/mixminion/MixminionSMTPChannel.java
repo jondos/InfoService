@@ -33,6 +33,7 @@ import java.util.Vector;
 
 import anon.mixminion.message.Message;
 import anon.server.impl.AbstractChannel;
+import anon.util.ByteArrayUtil;
 
 /** This class implements a channel,which speaks SMTP*/
 public class MixminionSMTPChannel extends AbstractChannel
@@ -76,7 +77,7 @@ public class MixminionSMTPChannel extends AbstractChannel
         recv(message.getBytes(),0,message.length());
 	}
 
-	// 'send' empfängt die Daten vom eMail-Progi
+	// 'send' empfaengt die Daten vom eMail-Progi
     protected void send(byte[] buff, int len) throws IOException {
 		String s = new String(buff, 0, len);
 //        System.out.print("(z=" + z + ") empfange vom Client: " + s);
@@ -119,7 +120,7 @@ public class MixminionSMTPChannel extends AbstractChannel
 		{
             if(s.toUpperCase().startsWith("MAIL FROM"))
 			{
-                m_receiver.removeAllElements(); // Empfänger-Liste leeren
+                m_receiver.removeAllElements(); // Empfaenger-Liste leeren
 				m_text = ""; // Text-Nachricht leeren
 				m_state = 3;
 				toClient("250 OK\r\n");
@@ -157,9 +158,17 @@ public class MixminionSMTPChannel extends AbstractChannel
 			{
                 String[] rec = new String[m_receiver.size()];
 				m_receiver.copyInto(rec);
+
+
                 EMail eMail = new EMail(rec,m_text);
 
-                Message m = new Message(eMail.getPayload().getBytes(), eMail.getReceiverAsVektor(), 2);
+				//FIXME TESTING
+                byte[] h_end= {0x0A};
+                byte[] pl=ByteArrayUtil.conc(h_end, "unser text".getBytes());
+                //byte[] pl = "Dies ist Stefans Test...".getBytes();
+				//END
+                Message m = new Message(pl/*FIXME eMail.getPayload().getBytes()*/, eMail.getReceiverAsVektor(), 5);
+
 				boolean success = m.send();
 
 				m_state = 5;
@@ -177,7 +186,7 @@ public class MixminionSMTPChannel extends AbstractChannel
 			}
             else if(s.toUpperCase().startsWith("MAIL FROM"))
 			{
-                m_receiver.removeAllElements(); // Empfänger-Liste leeren
+                m_receiver.removeAllElements(); // Empfaenger-Liste leeren
 				m_text = ""; // Text-Nachricht leeren
 				m_state = 3;
 				toClient("250 OK\r\n");
@@ -194,7 +203,7 @@ public class MixminionSMTPChannel extends AbstractChannel
 		}
 		else
 		{
-			// Zustand nicht möglich //
+			// Zustand nicht moeglich //
 			throw new RuntimeException("(State=" + m_state + ") This State is not possible");
 		}
 	}

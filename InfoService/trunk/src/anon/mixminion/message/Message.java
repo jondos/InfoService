@@ -38,6 +38,7 @@ import anon.util.ByteArrayUtil;
 
 import anon.mixminion.fec.FECCode;
 import anon.mixminion.fec.FECCodeFactory;
+import anon.util.Base64;
 
 /**
  * @author Jens Kempe
@@ -93,7 +94,9 @@ public class Message
 		catch (Exception e)
 		{}
 
-		String[] frags = null;
+		// Feld für die Fragmente
+		byte[][] frags = null;
+
 		byte[] help = null;
 		// "possibly" falls mehr als 28K dann fragmentieren //
 //        if (compressPayload.length > 28*1024) frags = divideIntoFragments(compressPayload, 28*1024, 4/3);
@@ -112,9 +115,7 @@ public class Message
 			byte[] first = ByteArrayUtil.inttobyte(len, 2);
 			byte[] hash = MixMinionCryptoUtil.hash(ByteArrayUtil.conc(compressPayload, PADDING));
 			byte[] all = ByteArrayUtil.conc(first, hash, compressPayload, PADDING);
-			frags = new String[]
-				{
-				new String(all)};
+			frags = new byte[][] {all};
 			help = all;
 			try
 			{
@@ -124,7 +125,7 @@ public class Message
 			{}
 			try
 			{
-				new FileOutputStream("C:/temp/frag1_2.txt").write(frags[0].getBytes());
+				new FileOutputStream("C:/temp/frag1_2.txt").write(frags[0]);
 			}
 			catch (Exception e)
 			{}
@@ -158,14 +159,13 @@ public class Message
 			frags = divideIntoFragments(compressPayload, 28 * 1024 - FRAGMENT_HEADER_LEN, 4 / 3);
 			byte[] id = MixMinionCryptoUtil.randomArray(20);
 			byte[] sz = ByteArrayUtil.inttobyte(compressPayload.length, 4);
-			String[] payloads = new String[frags.length];
+			byte[][] payloads = new byte[frags.length][28*1024];
 			for (int i = 0; i < frags.length; i++)
 			{
 				long flag = 8388608; // =2^23
 				flag = flag + i;
-				byte[] hash = MixMinionCryptoUtil.hash(ByteArrayUtil.conc(id, sz, frags[i].getBytes()));
-				payloads[i] = new String(ByteArrayUtil.conc(ByteArrayUtil.inttobyte(flag, 3), hash, id, sz,
-					frags[i].getBytes()));
+				byte[] hash = MixMinionCryptoUtil.hash(ByteArrayUtil.conc(id, sz, frags[i]));
+				payloads[i] = ByteArrayUtil.conc(ByteArrayUtil.inttobyte(flag, 3), hash, id, sz, frags[i]);
 			}
 			frags = payloads;
 		}
@@ -185,7 +185,7 @@ public class Message
 			Header header2 = new Header(m_hops, m_recipient);
 			byte[] H1 = header1.getAsByteArray();
 			byte[] H2 = header2.getAsByteArray();
-			byte[] P = help; // frags[i_frag].getBytes(); FIXME FIXME
+			byte[] P = frags[i_frag];
 			// M is the MixMinionPacket Type III
 			byte[] M = null;
 
@@ -216,10 +216,10 @@ public class Message
 			// end
 			// M = H1 | H2 | P
 
-			H2 = MixMinionCryptoUtil.SPRP_Encrypt(MixMinionCryptoUtil.hash(ByteArrayUtil.conc(P,
-				"HIDE HEADER".getBytes())), H2);
-			P = MixMinionCryptoUtil.SPRP_Encrypt(MixMinionCryptoUtil.hash(ByteArrayUtil.conc(H2,
-				"HIDE PAYLOAD".getBytes())), P);
+			H2 = MixMinionCryptoUtil.SPRP_Encrypt(MixMinionCryptoUtil.hash(ByteArrayUtil.conc(
+                    MixMinionCryptoUtil.hash(P), "HIDE HEADER".getBytes())), H2);
+			P = MixMinionCryptoUtil.SPRP_Encrypt(MixMinionCryptoUtil.hash(ByteArrayUtil.conc(
+                    MixMinionCryptoUtil.hash(H2), "HIDE PAYLOAD".getBytes())), P);
 			for (int i = header1.getSecrets().size() - 1; i >= 0; i--)
 			{
 				System.out.println("   s_keys=" + header1.getSecrets().size());
@@ -249,25 +249,30 @@ public class Message
 			// an 1. Server schicken
 			try
 			{
+				Mixminion mixminion = Mixminion.getInstance();
 //                MMRList mmrl = new MMRList(new PlainMMRListFetcher());
 //                System.out.println("MMR-Liste aktualisiert: " + mmrl.updateList());
 
 //Jens: an den 1.Server aus Header und ncht an RandomServer schicken
 //                MMRDescription mmdescr = mmrl.getByRandom();
-				MMRDescription mmdescr = (MMRDescription) header1.getRoute();
+				//MMRDescription mmdescr = (MMRDescription) header1.getRoute();
 
-				Mixminion mixminion = Mixminion.getInstance();
-				FirstMMRConnection fMMRcon = new FirstMMRConnection(mmdescr, mixminion);
-				System.out.println(mmdescr.toString());
+				//FirstMMRConnection fMMRcon = new FirstMMRConnection(mmdescr, mixminion);
+				//System.out.println(mmdescr.toString());
 				// connect to first miminion-router
 
 				/** nur zum testen **/
-//                MMRDescription mm = new MMRDescription("127.0.0.1", "rinos", 48099, "",
-//                                                        Base64.decode("syFg+ty3hWUgY9NBurUpOotdfhg="),
-//                                                        Base64.decode("MIIBCgKCAQEA584fjC480O/T9PO1AQMw82ULbA89EBCqhCsbXD+jhQHT+XxtVazXRYA+za3Ex1NvPRrQBhYH+FLNHrYvHNo2LD7AT/pKXqeAeMRc18YAuC4A54SctM4jcOkLIHHn57xe1AanAuu4EjodeDKOLCv1fJpcIijeJOM98vE3ejdnfvahaMwNGYdBxovhHAwU8CADdNzYCNbfrl+nm6fZwRXmTHdEmQ6mnTXNiOnaNb6nlSmolNkvUDPXxt2xXR2yEpGJefgJhTasKyhpbMNpeHFF260897qK6HfScd88MX+yQbXNxOP3NI48/hDrmvanSrLZOsh2tKoTIASjDCDGU6xBzQIDAQAB"),
-//                                                        true, new Date(2005,12,12),  new Date(2005,12,12),  new Date(2005,12,12));
-//                mm.setIdentityKey(Base64.decode("MIIBCgKCAQEA584fjC480O/T9PO1AQMw82ULbA89EBCqhCsbXD+jhQHT+XxtVazXRYA+za3Ex1NvPRrQBhYH+FLNHrYvHNo2LD7AT/pKXqeAeMRc18YAuC4A54SctM4jcOkLIHHn57xe1AanAuu4EjodeDKOLCv1fJpcIijeJOM98vE3ejdnfvahaMwNGYdBxovhHAwU8CADdNzYCNbfrl+nm6fZwRXmTHdEmQ6mnTXNiOnaNb6nlSmolNkvUDPXxt2xXR2yEpGJefgJhTasKyhpbMNpeHFF260897qK6HfScd88MX+yQbXNxOP3NI48/hDrmvanSrLZOsh2tKoTIASjDCDGU6xBzQIDAQAB"));
-//                fMMRcon = new FirstMMRConnection(mm, mixminion);
+				MMRDescription mmdescr=new MMRDescription("141.76.46.90", "JAP", 48099,
+
+																Base64.decode("JzZdlwSPXEfncFH/tl+A5CZhGN4="),
+
+																Base64.decode("HR6d+Li3vbUBu9NKm500wadrnng="),
+																true, false);
+
+					mmdescr.setIdentityKey(Base64.decode("MIIBCgKCAQEA1XZi7436861AxxYgNEbnVyobQg+wPbuRZNlFJ5x2pDyRNFOQrLG2+pK8Z/AzVxMbEPvLNCIn5nAvuRZGn/aGryhy0bzlX/D0CHG44qagoVb36kGeXv4jvLy/aYu4nxLUrgoEdp0t+J3kWQScnOsOiBwF60l4Acc5+51T/YBctYvSO2OY8VpexB7S2+1pIGjT7rsXVXCK18G0Xms4dt/qPKK/2fzPw/kR06Ggf006JCyFKEDMfDrbZ6gvLS3BiUVZV7ZYACAeznv5Hj/dwRJtT7QGqvJyr6zrZi7epSD41J3Uqh8oYABu5g3cQEtdMc33WLBXdhmjAmTG0wcSZxGyeQIDAQAB"));
+
+					mmdescr.setPacketKey(Base64.decode("MIIBCgKCAQEAkoQcO+eFjs3blj9v1rzCXDjRPJc3pC/R7XyXaYGsqv9ps2KB92mSyFxpSp3XTGE2AWW463AKAV5nz3DksUfhuQ2I0ILccVza0Uey/zvLEI0HCdI52fLopyr9u5+m0zWuGonY7IZYxOcJnNBbeiZIuxK1lRXQwz1r2UGyjewpfb9Zwb7fG7WLVq9mo1EDcewNop2fuA3wy049168SZFWFOd7QrtbnBsRVeVo3ZS/FOVF7PjNU7lGc3uVIWMxaMdY1Y+XjDD8oD+xOXp5jad2qyeqbKbUHZS1CdWt8MmfOMcZ3df+43U4s/q3+1YeyADlRBPOdoo7ZCnY6QVvayXFUBQIDAQAB"));
+                FirstMMRConnection fMMRcon = new FirstMMRConnection(mmdescr, mixminion);
 				/** ende tesen**/
 
 
@@ -304,7 +309,7 @@ public class Message
 	 * @param EXF, expansion factor [Everyone must use the same EXF. The value of EXF is 4/3.]
 	 * @return the fragments of the Message
 	 */
-	String[] divideIntoFragments(byte[] M, int PS, double EXF)
+	byte[][] divideIntoFragments(byte[] M, int PS, double EXF)
 	{
 		System.out.println("   beim Teilen");
 
@@ -356,7 +361,7 @@ public class Message
 
 		System.out.println("   N,num" + N + " " + NUM_CHUNKS);
 
-		String[] FRAGMENTS = new String[NUM_CHUNKS * N];
+		byte[][] FRAGMENTS = new byte [NUM_CHUNKS * N][28*1024];
 		for (int i = 0; i <= NUM_CHUNKS - 1; i++)
 		{
 			for (int j = 0; j <= N - 1; j++)
@@ -371,7 +376,7 @@ public class Message
 	/**
 	 * soll den von der Nachricht m das i'te von N Paketen zurï¿½ckgeben
 	 */
-	String FRAGMENT(String M, int K, int N, int I, int PS)
+	byte[] FRAGMENT(String M, int K, int N, int I, int PS)
 	{
 		//k = number of source packets to encode
 		//n = number of packets to encode to
@@ -430,6 +435,7 @@ public class Message
 		fec.encode(sourceBuffer, srcOffs, repairBuffer, repairOffs, repairIndex, packetsize);
 		//encoded data is now contained in the repairBuffer/repair byte array
 
-		return new String(repairBuffer[I], repairOffs[I], packetsize);
+		//FIXME FIXME überprüfen
+		return new String(repairBuffer[I], repairOffs[I], packetsize).getBytes();
 	}
 }
