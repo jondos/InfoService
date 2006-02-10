@@ -40,6 +40,7 @@ import anon.util.ByteArrayUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.util.Base64;
 
 /**
  * @author Stefan Rönisch
@@ -115,27 +116,60 @@ public class Header
 		m_secrets.addElement(null);
 
 		//Fill routingInformation, routing Type and secrets
-		MMRList mmrlist = new MMRList(new InfoServiceMMRListFetcher());
+		/*MMRList mmrlist = new MMRList(new InfoServiceMMRListFetcher());
 		mmrlist.updateList();
 		//FIXME wasn mit fragmenten?
 		Vector routers = mmrlist.getByRandom(hops, false);
 		m_firstrouter = (MMRDescription) routers.elementAt(0);
 		lastrouter = (MMRDescription) routers.elementAt(hops - 1);
+*/
 
+		MMRDescription mmdescr=new MMRDescription("141.76.46.90", "JAP", 48099,
+
+														Base64.decode("JzZdlwSPXEfncFH/tl+A5CZhGN4="),
+
+														Base64.decode("HR6d+Li3vbUBu9NKm500wadrnng="),
+														true, false);
+
+		mmdescr.setIdentityKey(Base64.decode("MIIBCgKCAQEA1XZi7436861AxxYgNEbnVyobQg+wPbuRZNlFJ5x2pDyRNFOQrLG2+pK8Z/AzVxMbEPvLNCIn5nAvuRZGn/aGryhy0bzlX/D0CHG44qagoVb36kGeXv4jvLy/aYu4nxLUrgoEdp0t+J3kWQScnOsOiBwF60l4Acc5+51T/YBctYvSO2OY8VpexB7S2+1pIGjT7rsXVXCK18G0Xms4dt/qPKK/2fzPw/kR06Ggf006JCyFKEDMfDrbZ6gvLS3BiUVZV7ZYACAeznv5Hj/dwRJtT7QGqvJyr6zrZi7epSD41J3Uqh8oYABu5g3cQEtdMc33WLBXdhmjAmTG0wcSZxGyeQIDAQAB"));
+
+		mmdescr.setPacketKey(Base64.decode("MIIBCgKCAQEAkoQcO+eFjs3blj9v1rzCXDjRPJc3pC/R7XyXaYGsqv9ps2KB92mSyFxpSp3XTGE2AWW463AKAV5nz3DksUfhuQ2I0ILccVza0Uey/zvLEI0HCdI52fLopyr9u5+m0zWuGonY7IZYxOcJnNBbeiZIuxK1lRXQwz1r2UGyjewpfb9Zwb7fG7WLVq9mo1EDcewNop2fuA3wy049168SZFWFOd7QrtbnBsRVeVo3ZS/FOVF7PjNU7lGc3uVIWMxaMdY1Y+XjDD8oD+xOXp5jad2qyeqbKbUHZS1CdWt8MmfOMcZ3df+43U4s/q3+1YeyADlRBPOdoo7ZCnY6QVvayXFUBQIDAQAB"));
+lastrouter=mmdescr;
+		mmdescr=new MMRDescription("141.76.46.90", "JAP", 48099,
+
+														Base64.decode("JzZdlwSPXEfncFH/tl+A5CZhGN4="),
+
+														Base64.decode("HR6d+Li3vbUBu9NKm500wadrnng="),
+														true, false);
+
+		mmdescr.setIdentityKey(Base64.decode("MIIBCgKCAQEA1XZi7436861AxxYgNEbnVyobQg+wPbuRZNlFJ5x2pDyRNFOQrLG2+pK8Z/AzVxMbEPvLNCIn5nAvuRZGn/aGryhy0bzlX/D0CHG44qagoVb36kGeXv4jvLy/aYu4nxLUrgoEdp0t+J3kWQScnOsOiBwF60l4Acc5+51T/YBctYvSO2OY8VpexB7S2+1pIGjT7rsXVXCK18G0Xms4dt/qPKK/2fzPw/kR06Ggf006JCyFKEDMfDrbZ6gvLS3BiUVZV7ZYACAeznv5Hj/dwRJtT7QGqvJyr6zrZi7epSD41J3Uqh8oYABu5g3cQEtdMc33WLBXdhmjAmTG0wcSZxGyeQIDAQAB"));
+
+		mmdescr.setPacketKey(Base64.decode("MIIBCgKCAQEAkoQcO+eFjs3blj9v1rzCXDjRPJc3pC/R7XyXaYGsqv9ps2KB92mSyFxpSp3XTGE2AWW463AKAV5nz3DksUfhuQ2I0ILccVza0Uey/zvLEI0HCdI52fLopyr9u5+m0zWuGonY7IZYxOcJnNBbeiZIuxK1lRXQwz1r2UGyjewpfb9Zwb7fG7WLVq9mo1EDcewNop2fuA3wy049168SZFWFOd7QrtbnBsRVeVo3ZS/FOVF7PjNU7lGc3uVIWMxaMdY1Y+XjDD8oD+xOXp5jad2qyeqbKbUHZS1CdWt8MmfOMcZ3df+43U4s/q3+1YeyADlRBPOdoo7ZCnY6QVvayXFUBQIDAQAB"));
+m_firstrouter=mmdescr;
 		for (int i = 1; i <= internodes; i++)
 		{
 			//secrets
 			m_secrets.addElement(MixMinionCryptoUtil.randomArray(16));
 
 			//Headerkeys, k und junkKeys
-			MMRDescription mmrd = (MMRDescription) routers.elementAt(i - 1);
-			publicKey.addElement(mmrd.getPacketKey());
+			mmdescr=new MMRDescription("141.76.46.90", "JAP", 48099,
+
+														Base64.decode("JzZdlwSPXEfncFH/tl+A5CZhGN4="),
+
+														Base64.decode("HR6d+Li3vbUBu9NKm500wadrnng="),
+														true, false);
+
+	mmdescr.setIdentityKey(Base64.decode("MIIBCgKCAQEA1XZi7436861AxxYgNEbnVyobQg+wPbuRZNlFJ5x2pDyRNFOQrLG2+pK8Z/AzVxMbEPvLNCIn5nAvuRZGn/aGryhy0bzlX/D0CHG44qagoVb36kGeXv4jvLy/aYu4nxLUrgoEdp0t+J3kWQScnOsOiBwF60l4Acc5+51T/YBctYvSO2OY8VpexB7S2+1pIGjT7rsXVXCK18G0Xms4dt/qPKK/2fzPw/kR06Ggf006JCyFKEDMfDrbZ6gvLS3BiUVZV7ZYACAeznv5Hj/dwRJtT7QGqvJyr6zrZi7epSD41J3Uqh8oYABu5g3cQEtdMc33WLBXdhmjAmTG0wcSZxGyeQIDAQAB"));
+
+	mmdescr.setPacketKey(Base64.decode("MIIBCgKCAQEAkoQcO+eFjs3blj9v1rzCXDjRPJc3pC/R7XyXaYGsqv9ps2KB92mSyFxpSp3XTGE2AWW463AKAV5nz3DksUfhuQ2I0ILccVza0Uey/zvLEI0HCdI52fLopyr9u5+m0zWuGonY7IZYxOcJnNBbeiZIuxK1lRXQwz1r2UGyjewpfb9Zwb7fG7WLVq9mo1EDcewNop2fuA3wy049168SZFWFOd7QrtbnBsRVeVo3ZS/FOVF7PjNU7lGc3uVIWMxaMdY1Y+XjDD8oD+xOXp5jad2qyeqbKbUHZS1CdWt8MmfOMcZ3df+43U4s/q3+1YeyADlRBPOdoo7ZCnY6QVvayXFUBQIDAQAB"));
+
+			publicKey.addElement(mmdescr.getPacketKey());
 			junkKeys.addElement( (subKey( (byte[]) m_secrets.elementAt(i), "RANDOM JUNK")));
 			subSecret.addElement( (subKey( (byte[]) m_secrets.elementAt(i), "HEADER SECRET KEY")));
 
 			//Routing Information
-			RoutingInformation ri=mmrd.getRoutingInformation();
-			if ( (i == 1) && (hops > 1))
+			RoutingInformation ri=mmdescr.getRoutingInformation();
+			if ( (i == 1) && (hops > 1))/*(i==internodes)*/
 			{
 				//First Routing Type must be an swp-fwd, except only one hop
 				ri.m_Type=RoutingInformation.TYPE_SWAP_FORWARD_TO_HOST;
@@ -215,7 +249,7 @@ public class Header
 
 			//build the Subheader without the digest
 			byte[] sh0 = makeSHS(VERSION_MAJOR, (byte[]) m_secrets.elementAt(i),
-								 MixMinionCryptoUtil.zeroArray(HASH_LEN),
+								 new byte[HASH_LEN],
 								 ByteArrayUtil.inttobyte(ri.m_Content.length, 2), ri.m_Type, ri.m_Content);
 			int sh_len = sh0.length;
 			//concatenate with the last Subheader

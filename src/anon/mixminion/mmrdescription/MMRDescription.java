@@ -83,7 +83,7 @@ public class MMRDescription
 	 * @return
 	 * true if the key is a rsa key
 	 */
-	private boolean setIdentityKey(byte[] identitykey)
+	public boolean setIdentityKey(byte[] identitykey)
 	{
 		m_IdentityKey = MyRSAPublicKey.getInstance(identitykey);
 		return m_IdentityKey != null;
@@ -106,7 +106,7 @@ public class MMRDescription
 	 * @return
 	 * true if the packetKey is a rsa key
 	 */
-	private boolean setPacketKey(byte[] packetKey)
+	public boolean setPacketKey(byte[] packetKey)
 	{
 		m_PacketKey = MyRSAPublicKey.getInstance(packetKey);
 		return m_PacketKey != null;
