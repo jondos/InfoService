@@ -163,6 +163,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		getName() + "_exported";
 	private static final String MSG_NOTEXPORTED = AccountSettingsPanel.class.
 		getName() + "_notexported";
+	private static final String MSG_CONNECTIONACTIVE = AccountSettingsPanel.class.
+		getName() + "_connectionactive";
 
 	private JButton m_btnCreateAccount;
 	private JButton m_btnChargeAccount;
@@ -836,7 +838,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					return false;
 				}
 			};
-			panel2.setDefaultButtonOperation(WorkerContentPane.ON_CANCEL_DISPOSE_DIALOG);
+			panel2.setDefaultButtonOperation(WorkerContentPane.ON_CLICK_DISPOSE_DIALOG);
 			panel2.getButtonCancel().setEnabled(false);
 			panel2.setInterruptThreadSafe(false);
 
@@ -926,6 +928,13 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		{
 			return;
 		}
+
+	if (JAPController.getInstance().getAnonMode())
+	{
+		JAPDialog.showMessageDialog(GUIUtils.getParentWindow(this.getRootPanel()), JAPMessages.getString(MSG_CONNECTIONACTIVE));
+	return;
+	}
+
 		PayAccountsFile accounts = PayAccountsFile.getInstance();
 		try
 		{
