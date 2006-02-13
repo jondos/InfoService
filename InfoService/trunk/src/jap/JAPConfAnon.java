@@ -88,6 +88,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	/** Messages */
 	private static final String MSG_BUTTONEDITSHOW = JAPConfAnon.class.
 		getName() + "_buttoneditshow";
+	private static final String MSG_PAYCASCADE = JAPConfAnon.class.
+		getName() + "_paycascade";
 
 	private static final String URL_BEGIN = "<html><font color=blue><u>";
 	private static final String URL_END = "</u></font></html>";
@@ -119,6 +121,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	private JLabel m_operatorLabel;
 	private JLabel m_urlLabel;
 	private JLabel m_locationLabel;
+	private JLabel m_payLabel;
 
 	private JButton m_manualCascadeButton;
 	private JButton m_reloadCascadesButton;
@@ -418,7 +421,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		m_listMixCascade.setFixedCellWidth(30);
 		c.gridx = 0;
 		c.gridy = 1;
-		c.gridheight = 3;
+		c.gridheight = 4;
 		c.gridwidth = 1;
 		c.weightx = 1.0;
 		c.weighty = 1.0;
@@ -526,9 +529,18 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		c.fill = GridBagConstraints.HORIZONTAL;
 		m_cascadesPanel.add(m_portsLabel, c);
 
+		c.insets = new Insets(5, 20, 0, 5);
+		c.gridy = 4;
+		c.gridx = 2;
+		c.gridwidth = 2;
+		m_payLabel = new JLabel("");
+		m_cascadesPanel.add(m_payLabel, c);
+
+		c.insets = new Insets(5, 5, 0, 5);
+		c.gridwidth = 1;
 		c.gridx = 3;
 		c.fill = GridBagConstraints.HORIZONTAL;
-		c.gridy = 4;
+		c.gridy = 5;
 		m_cascadesPanel.add(new JLabel("                                               "), c);
 
 		m_rootPanelConstraints.gridx = 0;
@@ -723,6 +735,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		m_numOfUsersLabel.setText("");
 		m_portsLabel.setText("");
 		m_reachableLabel.setText("");
+		m_payLabel.setText("");
 		drawServerPanel(3, "", false);
 
 		drawServerInfoPanel("", "", "");
@@ -1053,6 +1066,14 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			m_numOfUsersLabel.setText(m_infoService.getNumOfUsers(cascadeId));
 			m_reachableLabel.setText(m_infoService.getHosts(cascadeId));
 			m_portsLabel.setText(m_infoService.getPorts(cascadeId));
+					if (m_infoService.isPay(cascadeId))
+					{
+						m_payLabel.setText(JAPMessages.getString(MSG_PAYCASCADE));
+					}
+					else
+					{
+						m_payLabel.setText("");
+					}
 		   }
 		   drawServerInfoPanel(null, null, null);
 
@@ -1073,7 +1094,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		  }
 		 }
 	}
-
 
 	/**
 	 * keyTyped
@@ -1326,7 +1346,8 @@ final class InfoServiceTempLayer
 					}
 
 				}
-				m_Cascades.addElement(new TempCascade(id, numOfUsers, interfaces, ports, numOfMixes));
+				m_Cascades.addElement(new TempCascade(id, numOfUsers, interfaces, ports, numOfMixes,
+					cascade.isPayment()));
 				//Get mixes in cascade
 				Vector mixIds = cascade.getMixIds();
 				for (int k = 0; k < mixIds.size(); k++)
@@ -1468,6 +1489,24 @@ final class InfoServiceTempLayer
 		}
 		return "N/A";
 	}
+
+	/**
+	 * Get payment property of a cascade.
+	 * @param a_cascadeId String
+	 * @return boolean
+	 */
+	public boolean isPay(String a_cascadeId)
+	{
+		for (int i = 0; i < m_Cascades.size(); i++)
+		{
+			if ( ( (TempCascade) m_Cascades.elementAt(i)).getId().equalsIgnoreCase(a_cascadeId))
+			{
+				return ( (TempCascade) m_Cascades.elementAt(i)).isPay();
+			}
+		}
+		return false;
+	}
+
 }
 
 /**
@@ -1480,20 +1519,28 @@ final class TempCascade
 	private String m_users;
 	private String m_ports;
 	private String m_hosts;
+	private boolean m_bIsPay = false;
 	private int m_numOfMixes;
 
-	public TempCascade(String a_id, String a_numOfUsers, String a_hosts, String a_ports, int a_numOfMixes)
+	public TempCascade(String a_id, String a_numOfUsers, String a_hosts, String a_ports, int a_numOfMixes,
+					   boolean a_isPay)
 	{
 		m_id = a_id;
 		m_users = a_numOfUsers;
 		m_hosts = a_hosts;
 		m_ports = a_ports;
 		m_numOfMixes = a_numOfMixes;
+		m_bIsPay = a_isPay;
 	}
 
 	public String getId()
 	{
 		return m_id;
+	}
+
+	public boolean isPay()
+	{
+		return m_bIsPay;
 	}
 
 	public int getNumOfMixes()
