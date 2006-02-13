@@ -60,7 +60,7 @@ final public class AnonServiceImpl implements AnonService, AnonServiceEventListe
 	 * Stores the connection when we use forwarding.
 	 */
 	private ProxyConnection m_proxyConnection = null;
-	private Pay m_Pay = null;
+	//private Pay m_Pay = null;
 
 	public AnonServiceImpl()
 	{
@@ -101,8 +101,6 @@ final public class AnonServiceImpl implements AnonService, AnonServiceEventListe
 				return rc;
 			}
 
-			// start Payment (2004-10-20 Bastian Voigt)
-			m_Pay = new Pay(m_MuxSocket);
 			return ErrorCodes.E_SUCCESS;
 		}
 		catch (Throwable e)
@@ -162,10 +160,6 @@ final public class AnonServiceImpl implements AnonService, AnonServiceEventListe
 
 	public void shutdown()
 	{
-		if (m_Pay != null)
-		{
-			m_Pay.shutdown(); // shutdown payment
-		}
 		m_MuxSocket.stopService();
 	}
 
@@ -278,6 +272,7 @@ final public class AnonServiceImpl implements AnonService, AnonServiceEventListe
 
 	public Pay getPay()
 	{
-		return m_Pay;
+		return m_MuxSocket.getPay();
 	}
+
 }

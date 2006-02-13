@@ -351,13 +351,13 @@
 <property category="sys" name="Copyright" value="Copyright (c) 2001"/>
 <property category="sys" name="CopyrightLabel" value="Copyright:"/>
 <property category="sys" name="DefaultPath" value="src"/>
+<property category="sys" name="Deprecations" value="0"/>
 <property category="sys" name="Description" value=""/>
 <property category="sys" name="DescriptionLabel" value="Beschreibung:"/>
 <property category="sys" name="DocPath" value="doc"/>
 <property category="sys" name="EventMatch" value="false"/>
 <property category="sys" name="EventStyle" value="1"/>
 <property category="sys" name="ExcludeClassEnabled" value="0"/>
-<property category="sys" name="ExistingPaths" value="1"/>
 <property category="sys" name="FallThrougs" value="1"/>
 <property category="sys" name="IncludeTestPath" value="1"/>
 <property category="sys" name="InstanceVisibility" value="0"/>
@@ -366,6 +366,7 @@
 <property category="sys" name="Libraries" value="http;mac;Apache XML-RPC;BouncyCastleLightForJAP;JUnit;junitx;Swing;ApacheBzip2;Log4j;ApacheFTPClient;XML-1.1;XML-1.0"/>
 <property category="sys" name="MakeStable" value="0"/>
 <property category="sys" name="OutPath" value="classes"/>
+<property category="sys" name="ShowWarnings" value="0"/>
 <property category="sys" name="SourcePath" value="src;test"/>
 <property category="sys" name="TestPath" value="test"/>
 <property category="sys" name="Title" value=""/>

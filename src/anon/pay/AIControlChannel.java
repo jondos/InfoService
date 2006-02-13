@@ -37,7 +37,7 @@ public class AIControlChannel extends SyncControlChannel
 
 	private MuxSocket m_MuxSocket;
 	private boolean m_bFirstBalance;
-	private static long m_totalBytes=0;
+	private static long m_totalBytes = 0;
 
 	private Vector m_aiListeners = new Vector();
 
@@ -132,12 +132,7 @@ public class AIControlChannel extends SyncControlChannel
 	{
 		if (request.isAccountRequest())
 		{
-			PayAccount currentAccount = PayAccountsFile.getInstance().getActiveAccount();
-			PayAccountsFile.getInstance().signalAccountRequest();
-			if (currentAccount != null)
-			{
-				this.sendXMLMessage(XMLUtil.toXMLDocument(currentAccount.getAccountCertificate()));
-			}
+			sendAccountCert();
 		}
 
 		XMLEasyCC cc = request.getCC();
@@ -182,7 +177,7 @@ public class AIControlChannel extends SyncControlChannel
 				  while(enu.hasMoreElements())
 				  {
 				   transferredWithOtherCascades +=
-					((XMLEasyCC)enu.nextElement()).getTransferredBytes();
+				 ((XMLEasyCC)enu.nextElement()).getTransferredBytes();
 				  }
 				 }*/
 				XMLEasyCC myLastCC = currentAccount.getAccountInfo().getCC(cc.getAIName());
@@ -222,35 +217,45 @@ public class AIControlChannel extends SyncControlChannel
 			PayAccount currentAccount = PayAccountsFile.getInstance().getActiveAccount();
 			if (currentAccount != null)
 			{
-			XMLBalance b = currentAccount.getBalance();
-			if (m_bFirstBalance || (b == null) || ( (b.getTimestamp()).before(t)))
-			{
-				// balance too old, fetch a new one
-				new Thread(new Runnable()
+				XMLBalance b = currentAccount.getBalance();
+				if (m_bFirstBalance || (b == null) || ( (b.getTimestamp()).before(t)))
 				{
-					public void run()
+					// balance too old, fetch a new one
+					new Thread(new Runnable()
 					{
-						PayAccount currentAccount = PayAccountsFile.getInstance().getActiveAccount();
-						try
+						public void run()
 						{
-							currentAccount.fetchAccountInfo();
-							XMLBalance b = currentAccount.getBalance();
-							AIControlChannel.this.sendXMLMessage(XMLUtil.toXMLDocument(b));
+							PayAccount currentAccount = PayAccountsFile.getInstance().getActiveAccount();
+							try
+							{
+								currentAccount.fetchAccountInfo();
+								XMLBalance b = currentAccount.getBalance();
+								AIControlChannel.this.sendXMLMessage(XMLUtil.toXMLDocument(b));
+							}
+							catch (Exception ex)
+							{
+								LogHolder.log(LogLevel.DEBUG, LogType.PAY, ex);
+							}
 						}
-						catch (Exception ex)
-						{
-							LogHolder.log(LogLevel.DEBUG, LogType.PAY, ex);
-						}
-					}
-				}, "FetchAccountInfo").start();
+					}, "FetchAccountInfo").start();
+				}
+				else
+				{
+					LogHolder.log(LogLevel.DEBUG, LogType.PAY, "sending balance to AI");
+					AIControlChannel.this.sendXMLMessage(XMLUtil.toXMLDocument(b));
+				}
+				m_bFirstBalance = false;
 			}
-			else
-			{
-				LogHolder.log(LogLevel.DEBUG, LogType.PAY, "sending balance to AI");
-				AIControlChannel.this.sendXMLMessage(XMLUtil.toXMLDocument(b));
-			}
-			m_bFirstBalance = false;
-			}
+		}
+	}
+
+	public void sendAccountCert()
+	{
+		PayAccount currentAccount = PayAccountsFile.getInstance().getActiveAccount();
+		PayAccountsFile.getInstance().signalAccountRequest();
+		if (currentAccount != null)
+		{
+			this.sendXMLMessage(XMLUtil.toXMLDocument(currentAccount.getAccountCertificate()));
 		}
 	}
 
