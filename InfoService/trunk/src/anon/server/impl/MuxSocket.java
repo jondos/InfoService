@@ -69,6 +69,7 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import java.io.IOException;
+import anon.pay.Pay;
 
 public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 {
@@ -120,6 +121,7 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 
 	private final static int MAX_CHANNELS_PER_CONNECTION = 50;
 
+	private final static int MIX_PROTOCOL_VERSION_0_9 = 9;
 	private final static int MIX_PROTOCOL_VERSION_0_8 = 8;
 	private final static int MIX_PROTOCOL_VERSION_0_7 = 7;
 	private final static int MIX_PROTOCOL_VERSION_0_5 = 5;
@@ -152,6 +154,9 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 	private volatile boolean m_bConnectionStoppedManually = false;
 	private long m_numSentPackets = 0;
 	private long m_numReceivedPackets = 0;
+
+	private Pay m_Pay = null;
+	private boolean m_bPaymentRequired = false;
 
 	private MuxSocket()
 	{
@@ -470,6 +475,7 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 			String strProtocolVersion = n.getNodeValue().trim();
 			m_bMixProtocolWithTimestamp = false;
 			m_cipherFirstMix = null;
+			m_bPaymentRequired = false;
 
 			if (strProtocolVersion.equals("0.2"))
 			{
@@ -494,6 +500,12 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 				m_bMixProtocolWithTimestamp = true;
 				m_cipherFirstMix = new SymCipher();
 				m_iMixProtocolVersion = MIX_PROTOCOL_VERSION_0_8;
+			}
+			else if (strProtocolVersion.equalsIgnoreCase("0.9"))
+			{
+				m_iMixProtocolVersion = MIX_PROTOCOL_VERSION_0_9;
+				m_cipherFirstMix = new SymCipher();
+				m_bPaymentRequired = true;
 			}
 			else
 			{
@@ -794,6 +806,12 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 					}
 				}
 			}
+			// start Payment (2004-10-20 Bastian Voigt)
+			m_Pay = new Pay(this);
+			if (m_bPaymentRequired)
+			{
+				m_Pay.getAIControlChannel().sendAccountCert();
+			}
 		}
 		return ErrorCodes.E_SUCCESS;
 	}
@@ -802,12 +820,12 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 	{
 		synchronized (this)
 		{
-			//LogHolder.log(LogLevel.DEBUG,LogType.NET,"JAPMuxSocket:stopService()");
-			//m_RunCount--;
-			//if(m_RunCount==0)
+			if (m_Pay != null)
+			{
+				m_Pay.shutdown(); // shutdown payment
+			}
 			m_bConnectionStoppedManually = true;
 			close();
-			//return m_RunCount;
 		}
 	}
 
@@ -1229,9 +1247,9 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 	 * @return long transferred bytes
 	 */
 	/*public long getTransferredBytes()
-	{
-		return m_transferredBytes;
-	}*/
+	  {
+	 return m_transferredBytes;
+	  }*/
 
 	/**
 	 * Resets the payload counter to 0 and returns the value as it was before
@@ -1298,7 +1316,7 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 
 	private void firePacketMixed()
 	{
-		long bytes = (m_numReceivedPackets + m_numSentPackets)*PACKET_SIZE;
+		long bytes = (m_numReceivedPackets + m_numSentPackets) * PACKET_SIZE;
 		Enumeration e = m_anonServiceListener.elements();
 		while (e.hasMoreElements())
 		{
@@ -1332,6 +1350,11 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 			}
 			m_arMixParameters.notifyAll();
 		}
+	}
+
+	public Pay getPay()
+	{
+		return m_Pay;
 	}
 
 }
