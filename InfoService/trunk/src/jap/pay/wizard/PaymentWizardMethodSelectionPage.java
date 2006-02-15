@@ -56,8 +56,6 @@ import gui.GUIUtils;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import gui.JAPJIntField;
-import gui.JAPJIntField.IntFieldBounds;
 
 public class PaymentWizardMethodSelectionPage extends BasicWizardPage implements ActionListener
 {
@@ -158,6 +156,7 @@ public class PaymentWizardMethodSelectionPage extends BasicWizardPage implements
 
 	private void addOption(String a_name)
 	{
+		m_c.insets = new Insets(0, 5, 0, 5);
 		m_c.gridy++;
 		m_c.gridwidth = 3;
 		JRadioButton rb = new JRadioButton("<html>" + a_name + "</html>");
@@ -169,6 +168,7 @@ public class PaymentWizardMethodSelectionPage extends BasicWizardPage implements
 
 	private void addCurrencies(Vector a_currencies)
 	{
+		m_c.insets = new Insets(5, 5, 5, 5);
 		m_c.gridy++;
 		m_c.gridwidth = 3;
 		JLabel label = new JLabel(JAPMessages.getString(MSG_PRICE));

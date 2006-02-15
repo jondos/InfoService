@@ -61,6 +61,7 @@ public class PasswordContentPane extends DialogContentPane implements IMiscPassw
 	private static final String MSG_ENTER_NEW_LBL = PasswordContentPane.class.getName() + "_enterNewPasswordLabel";
 	private static final String MSG_PASSWORDS_DONT_MATCH =
 		PasswordContentPane.class.getName() + "_passwordsDontMatch";
+	private static int PASSWORD_FIELD_LENGTH = 15;
 
 	private JPasswordField m_textOldPasswd, m_textNewPasswd, m_textConfirmPasswd;
 	private char[] m_passwd = null;
@@ -119,7 +120,7 @@ public class PasswordContentPane extends DialogContentPane implements IMiscPassw
 			m_lblOld = new JLabel(JAPMessages.getString(MSG_ENTER_OLD_LBL));
 			layout.setConstraints(m_lblOld, c);
 			getContentPane().add(m_lblOld);
-			m_textOldPasswd = new JPasswordField(20);
+			m_textOldPasswd = new JPasswordField(PASSWORD_FIELD_LENGTH);
 			m_textOldPasswd.setEchoChar('*');
 			c.gridx = 1;
 			c.weightx = 1;
@@ -135,7 +136,7 @@ public class PasswordContentPane extends DialogContentPane implements IMiscPassw
 			c.weightx = 0;
 			c.fill = GridBagConstraints.NONE;
 			getContentPane().add(m_lblNew1, c);
-			m_textNewPasswd = new JPasswordField(20);
+			m_textNewPasswd = new JPasswordField(PASSWORD_FIELD_LENGTH);
 			m_textNewPasswd.setEchoChar('*');
 			c.fill = GridBagConstraints.HORIZONTAL;
 			c.gridx = 1;
@@ -149,7 +150,7 @@ public class PasswordContentPane extends DialogContentPane implements IMiscPassw
 		c.gridy++;
 		c.weightx = 0;
 		getContentPane().add(m_lblNew2, c);
-		m_textConfirmPasswd = new JPasswordField(20);
+		m_textConfirmPasswd = new JPasswordField(PASSWORD_FIELD_LENGTH);
 		m_textConfirmPasswd.setEchoChar('*');
 
 		c.gridx = 1;
@@ -157,7 +158,6 @@ public class PasswordContentPane extends DialogContentPane implements IMiscPassw
 		c.fill = GridBagConstraints.HORIZONTAL;
 		layout.setConstraints(m_textConfirmPasswd, c);
 		getContentPane().add(m_textConfirmPasswd);
-
 
 		addComponentListener(new SetFocusComponentAdapter());
 	}
