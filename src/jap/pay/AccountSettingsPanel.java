@@ -687,7 +687,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 
 	/**
 	 * Charges the selected account
-	 * @todo replace splashscreen by rotating icon
 	 */
 	private void doChargeAccount(PayAccount selectedAccount)
 	{
@@ -707,64 +706,13 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		XMLTransCert transferCertificate = null;
 
 		PaymentWizard paymentWiz = new PaymentWizard(selectedAccount);
+		if (paymentWiz.getSelectedOption() != null)
+		{
 		if (paymentWiz.getSelectedOption().getName().equals("CreditCard"))
 		{
 			doGetStatement(selectedAccount);
 		}
-
-		/*int choice = JOptionPane.showOptionDialog(
-		 view,
-		 JAPMessages.getString("ngFetchTransferNumber"),
-		 JAPMessages.getString("ngPaymentCharge"),
-		 JOptionPane.YES_NO_OPTION,
-		 JOptionPane.QUESTION_MESSAGE,
-		 null, null, null
-		 );
-		   if (choice == JOptionPane.YES_OPTION)
-		   {
-		 /** @todo find out why the wait splash screen looks so ugly
-			JAPWaitSplash splash = null;
-			try
-			{
-		  splash = JAPWaitSplash.start("Fetching transfer number...", "Please wait");
-		  Thread.sleep(5);
-		  transferCertificate = selectedAccount.charge();
-		  splash.abort();
 			}
-			catch (Exception ex)
-			{
-		  splash.abort();
-		  LogHolder.log(LogLevel.DEBUG, LogType.PAY, ex);
-		  JOptionPane.showMessageDialog(
-		   view,
-		   "<html>" + JAPMessages.getString("ngTransferNumberError") + "<br>" + ex.getMessage() +
-		   "</html>",
-		   JAPMessages.getString("error"), JOptionPane.ERROR_MESSAGE
-		   );
-		  return;
-			}
-
-			// try to launch webbrowser
-			AbstractOS os = AbstractOS.getInstance();
-			String url = transferCertificate.getBaseUrl();
-			url += "?transfernum=" + transferCertificate.getTransferNumber();
-			try
-			{
-		  os.openURLInBrowser(url);
-			}
-			catch (Exception e)
-			{
-		  JOptionPane.showMessageDialog(
-		   view,
-		   "<html>" + JAPMessages.getString("ngCouldNotFindBrowser") + "<br>" +
-		   "<h3>" + url + "</h3></html>",
-		   JAPMessages.getString("ngCouldNotFindBrowserTitle"),
-		   JOptionPane.INFORMATION_MESSAGE
-		   );
-			}
-
-			m_MyTableModel.fireTableDataChanged();
-		   }*/
 	}
 
 	/**
@@ -773,6 +721,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	 */
 	private void doCreateAccount()
 	{
+		int numAccounts = m_listAccounts.getModel().getSize();
 		BI theBI = null;
 		try
 		{
@@ -892,6 +841,13 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			}
 			PayAccountsFile.getInstance().removePaymentListener(captcha);
 
+			/** Did the user finish the account creation successfully? */
+			if (numAccounts < m_listAccounts.getModel().getSize())
+			{
+				/** Select new account and start charging wizard */
+				m_listAccounts.setSelectedIndex(m_listAccounts.getModel().getSize()-1);
+				doChargeAccount((PayAccount)m_listAccounts.getSelectedValue());
+			}
 		}
 	}
 
