@@ -764,10 +764,10 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 						//User has pressed cancel
 						if (!ex.getMessage().equals("CAPTCHA"))
 						{
-							JAPDialog.showErrorDialog(
-								GUIUtils.getParentWindow(getRootPanel()),
-								JAPMessages.getString(MSG_CREATEERROR) + " " + ex.getMessage(),
+							JAPDialog.showErrorDialog(d,
+								JAPMessages.getString(MSG_CREATEERROR),
 								LogType.PAY);
+							d.dispose();
 						}
 					}
 					m_bCreatingAccount = false;
@@ -808,7 +808,20 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			{
 				pc = new PasswordContentPane(d, captcha,
 											 PasswordContentPane.PASSWORD_NEW,
-											 JAPMessages.getString(MSG_ACCPASSWORD));
+											 JAPMessages.getString(MSG_ACCPASSWORD))
+				{
+					public boolean isSkippedAsNextContentPane()
+					{
+						if (PayAccountsFile.getInstance().getNumAccounts() > 0)
+						{
+							return false;
+						}
+						else
+						{
+							return true;
+						}
+					}
+				};
 				pc.getButtonNo().setEnabled(false);
 				pc.getButtonCancel().setEnabled(false);
 			}
