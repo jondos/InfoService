@@ -199,9 +199,10 @@ public class WorkerContentPane extends DialogContentPane implements
 			super(a_runnable);
 			if (a_runnable instanceof Thread)
 			{
-				m_thread = (Thread)a_runnable;
+				m_thread = (Thread) a_runnable;
 			}
 		}
+
 		public void interrupt()
 		{
 			if (m_thread != null)
@@ -281,4 +282,22 @@ public class WorkerContentPane extends DialogContentPane implements
 			notifyAll();
 		}
 	}
+
+	public Object getThreadValue()
+	{
+		if (m_workerRunnable instanceof ReturnThread)
+		{
+			return ( (ReturnThread) m_workerRunnable).getValue();
+		}
+		else
+		{
+			return null;
+		}
+	}
+
+	public static abstract class ReturnThread extends Thread
+	{
+		public abstract Object getValue();
+	}
+
 }

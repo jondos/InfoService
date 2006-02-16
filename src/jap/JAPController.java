@@ -518,6 +518,106 @@ public final class JAPController extends Observable implements IProxyListener, O
 				boolean bListenerIsLocal = XMLUtil.parseValue(n.getNamedItem(JAPConstants.
 					CONFIG_LISTENER_IS_LOCAL), true);
 				setHTTPListener(port, bListenerIsLocal, false);
+
+				/* load Payment settings */
+				try
+				{
+					if (loadPay)
+					{
+						Element elemPay = (Element) XMLUtil.getFirstChildByName(root,
+							JAPConstants.CONFIG_PAYMENT);
+
+						Element elemAccounts = (Element) XMLUtil.getFirstChildByName(elemPay,
+							JAPConstants.CONFIG_ENCRYPTED_DATA);
+
+						//Load known Payment instances
+						Node nodePIs = XMLUtil.getFirstChildByName(elemPay,
+							JAPConstants.CONFIG_PAYMENT_INSTANCES);
+						if (nodePIs != null)
+						{
+							Node nodePI = nodePIs.getFirstChild();
+							while (nodePI != null)
+							{
+								PayAccountsFile.getInstance().addKnownPI( (Element) nodePI);
+								nodePI = nodePI.getNextSibling();
+							}
+						}
+						// test: is account data encrypted?
+						if (elemAccounts != null)
+						{
+							// it is encrypted -> ask user for password
+							Element elemPlainTxt = null;
+
+							while (true)
+							{
+								JAPDialog d = new JAPDialog( (Component)null,
+									JAPMessages.getString(MSG_ACCPASSWORDENTERTITLE), true);
+								PasswordContentPane p = new PasswordContentPane(d,
+									PasswordContentPane.PASSWORD_ENTER,
+									JAPMessages.getString(MSG_ACCPASSWORDENTER));
+								p.updateDialog();
+								d.pack();
+								d.setVisible(true);
+								//Check if cancel button was pressed
+								if (!p.hasValidValue())
+								{
+									boolean yes = JAPDialog.showYesNoDialog(d,
+										JAPMessages.getString(MSG_LOSEACCOUNTDATA));
+									if (yes)
+									{
+										break;
+									}
+									else
+									{
+										continue;
+									}
+								}
+
+								setPaymentPassword(new String(p.getPassword()));
+
+								if (getPaymentPassword() != null && !getPaymentPassword().trim().equals(""))
+								{
+									try
+									{
+										elemPlainTxt = XMLEncryption.decryptElement(elemAccounts,
+											getPaymentPassword());
+									}
+									catch (Exception ex)
+									{
+										continue;
+									}
+									break ;
+								}
+
+							}
+
+							if (getPaymentPassword() != null)
+							{
+								PayAccountsFile.init(elemPlainTxt);
+							}
+						}
+						else
+						{
+							// accounts data is not encrypted
+							elemAccounts = (Element) XMLUtil.getFirstChildByName(elemPay,
+								JAPConstants.CONFIG_PAY_ACCOUNTS_FILE);
+							if (elemAccounts != null)
+							{
+								PayAccountsFile.init(elemAccounts);
+							}
+							else
+							{
+								PayAccountsFile.init(null);
+							}
+						}
+					}
+				}
+				catch (Exception e)
+				{
+					LogHolder.log(LogLevel.INFO, LogType.MISC,
+								  "JAPController: loadConfigFile: Error loading Payment configuration.");
+				}
+
 				//port = XMLUtil.parseAttribute(root, "portNumberSocks",
 				//  JAPModel.getSocksListenerPortNumber());
 				//setSocksPortNumber(port);
@@ -856,104 +956,17 @@ public final class JAPController extends Observable implements IProxyListener, O
 				/*loading Mixminion settings*/
 				try
 				{
-					Element elemMixminion = (Element) XMLUtil.getFirstChildByName(root, JAPConstants.CONFIG_Mixminion);
-					Element elemMM = (Element) XMLUtil.getFirstChildByName(elemMixminion, JAPConstants.CONFIG_ROUTE_LEN);
-					int routeLen=XMLUtil.parseValue(elemMM,JAPModel.getMixminionRouteLen());
+					Element elemMixminion = (Element) XMLUtil.getFirstChildByName(root,
+						JAPConstants.CONFIG_Mixminion);
+					Element elemMM = (Element) XMLUtil.getFirstChildByName(elemMixminion,
+						JAPConstants.CONFIG_ROUTE_LEN);
+					int routeLen = XMLUtil.parseValue(elemMM, JAPModel.getMixminionRouteLen());
 					setMixminionRouteLen(routeLen);
 				}
 				catch (Exception ex)
 				{
 					LogHolder.log(LogLevel.INFO, LogType.MISC,
 								  "JAPController: loadConfigFile: Error loading Mixminion configuration.");
-				}
-
-				/* load Payment settings */
-				if (loadPay)
-				{
-					Element elemPay = (Element) XMLUtil.getFirstChildByName(root, JAPConstants.CONFIG_PAYMENT);
-
-					Element elemAccounts = (Element) XMLUtil.getFirstChildByName(elemPay,
-						JAPConstants.CONFIG_ENCRYPTED_DATA);
-
-					//Load known Payment instances
-					Node nodePIs = XMLUtil.getFirstChildByName(elemPay, JAPConstants.CONFIG_PAYMENT_INSTANCES);
-					if (nodePIs != null)
-					{
-						Node nodePI = nodePIs.getFirstChild();
-						while (nodePI != null)
-						{
-							PayAccountsFile.getInstance().addKnownPI( (Element) nodePI);
-							nodePI = nodePI.getNextSibling();
-						}
-					}
-					// test: is account data encrypted?
-					if (elemAccounts != null)
-					{
-						// it is encrypted -> ask user for password
-						Element elemPlainTxt = null;
-
-						while (true)
-						{
-							JAPDialog d = new JAPDialog( (Component)null,
-								JAPMessages.getString(MSG_ACCPASSWORDENTERTITLE), true);
-							PasswordContentPane p = new PasswordContentPane(d,
-								PasswordContentPane.PASSWORD_ENTER,
-								JAPMessages.getString(MSG_ACCPASSWORDENTER));
-							p.updateDialog();
-							d.pack();
-							d.setVisible(true);
-							//Check if cancel button was pressed
-							if (!p.hasValidValue())
-							{
-								boolean yes = JAPDialog.showYesNoDialog(d,
-									JAPMessages.getString(MSG_LOSEACCOUNTDATA));
-								if (yes)
-								{
-									break;
-								}
-								else
-								{
-									continue;
-								}
-							}
-
-							setPaymentPassword(new String(p.getPassword()));
-
-							if (getPaymentPassword() != null && !getPaymentPassword().trim().equals(""))
-							{
-							try
-							{
-								elemPlainTxt = XMLEncryption.decryptElement(elemAccounts,
-										getPaymentPassword());
-							}
-							catch (Exception ex)
-							{
-								continue;
-							}
-							break ;
-						}
-
-						}
-
-						if (getPaymentPassword() != null)
-						{
-						PayAccountsFile.init(elemPlainTxt);
-					}
-					}
-					else
-					{
-						// accounts data is not encrypted
-						elemAccounts = (Element) XMLUtil.getFirstChildByName(elemPay,
-							JAPConstants.CONFIG_PAY_ACCOUNTS_FILE);
-						if (elemAccounts != null)
-						{
-							PayAccountsFile.init(elemAccounts);
-						}
-						else
-						{
-							PayAccountsFile.init(null);
-						}
-					}
 				}
 
 				/* read the settings of the JAP forwarding system, if it is enabled */
@@ -1170,6 +1183,42 @@ public final class JAPController extends Observable implements IProxyListener, O
 			Element e = doc.createElement("JAP");
 			doc.appendChild(e);
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_VERSION, "0.22");
+			/* save payment configuration */
+			try
+			{
+				PayAccountsFile accounts = PayAccountsFile.getInstance();
+				if (accounts != null)
+				{
+					Element elemPayment = doc.createElement(JAPConstants.CONFIG_PAYMENT);
+					e.appendChild(elemPayment);
+
+					//Save the known PIs
+					Element elemPIs = doc.createElement(JAPConstants.CONFIG_PAYMENT_INSTANCES);
+					elemPayment.appendChild(elemPIs);
+					Enumeration pis = accounts.getKnownPIs();
+					while (pis.hasMoreElements())
+					{
+						elemPIs.appendChild( ( (BI) pis.nextElement()).toXmlElement(doc));
+					}
+					if (PayAccountsFile.getInstance().getNumAccounts() > 0)
+					{
+						Element elemAccounts = accounts.toXmlElement(doc);
+						elemPayment.appendChild(elemAccounts);
+
+						if (getPaymentPassword() != null && !getPaymentPassword().equals(""))
+						{
+							// encrypt XML
+							XMLEncryption.encryptElement(elemAccounts, getPaymentPassword());
+						}
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, "Error saving payment configuration");
+				return null;
+			}
+
 			//
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_PORT_NUMBER, JAPModel.getHttpListenerPortNumber());
 			//XMLUtil.setAttribute(e,"portNumberSocks", Integer.toString(JAPModel.getSocksListenerPortNumber()));
@@ -1327,34 +1376,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 			XMLUtil.setValue(elemMM, JAPModel.getMixminionRouteLen());
 			elemMixminion.appendChild(elemMM);
 			e.appendChild(elemMixminion);
-
-			/* save payment configuration */
-			PayAccountsFile accounts = PayAccountsFile.getInstance();
-			if (accounts != null)
-			{
-				Element elemPayment = doc.createElement(JAPConstants.CONFIG_PAYMENT);
-				e.appendChild(elemPayment);
-
-				//Save the known PIs
-				Element elemPIs = doc.createElement(JAPConstants.CONFIG_PAYMENT_INSTANCES);
-				elemPayment.appendChild(elemPIs);
-				Enumeration pis = accounts.getKnownPIs();
-				while (pis.hasMoreElements())
-				{
-					elemPIs.appendChild( ( (BI) pis.nextElement()).toXmlElement(doc));
-				}
-				if (PayAccountsFile.getInstance().getNumAccounts() > 0)
-				{
-				Element elemAccounts = accounts.toXmlElement(doc);
-				elemPayment.appendChild(elemAccounts);
-
-					if (getPaymentPassword() != null && !getPaymentPassword().equals(""))
-				{
-					// encrypt XML
-						XMLEncryption.encryptElement(elemAccounts, getPaymentPassword());
-					}
-				}
-			}
 
 			e.appendChild(JAPModel.getInstance().getRoutingSettings().getSettingsAsXml(doc));
 			XMLUtil.formatHumanReadable(doc);
