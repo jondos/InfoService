@@ -314,7 +314,11 @@ public class ForwarderDBEntry extends AbstractDatabaseEntry
 		Element captchaDataNode = doc.createElement("CaptchaData");
 		captchaDataNode.appendChild(doc.createTextNode(captchaData));
 		captchaEncodedNode.appendChild(captchaDataNode);
-		Element forwarderCipherNode = doc.createElement("ForwarderCipher");
+		Element forwarderCipherNode = doc.createElement("DataCipher");
+		forwarderCipherNode.appendChild(doc.createTextNode(cipheredForwarder));
+		captchaEncodedNode.appendChild(forwarderCipherNode);
+		///@todo remove some day: For compatibility reasons we include also the old format here
+		forwarderCipherNode = doc.createElement("ForwarderCipher");
 		forwarderCipherNode.appendChild(doc.createTextNode(cipheredForwarder));
 		captchaEncodedNode.appendChild(forwarderCipherNode);
 		japForwarderNode.appendChild(captchaEncodedNode);
